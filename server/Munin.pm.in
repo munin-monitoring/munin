@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.22  2004/09/23 16:43:39  jimmyo
+# Don't show warnings/criticals in the HTML interface if the field/graph isn't plotted.
+#
 # Revision 1.21  2004/09/13 21:00:38  jimmyo
 # Added new config option "local_address", to specify which local address outgoing connections (from munin-update) should be used.
 #
@@ -777,7 +780,7 @@ sub munin_get_val
 
 sub munin_node_status
 {
-    my ($config, $limits, $domain, $node) = @_;
+    my ($config, $limits, $domain, $node, $check_draw) = @_;
     my $state = "ok";
 
     return undef unless defined $config->{domain}->{$domain}->{node}->{$node};
@@ -785,7 +788,7 @@ sub munin_node_status
 
     foreach my $service (keys %{$snode})
     {
-	my $fres  = &munin_service_status ($config, $limits, $domain, $node, $service);
+	my $fres  = &munin_service_status ($config, $limits, $domain, $node, $service, $check_draw);
 	if (defined $fres)
 	{
 	    if ($fres eq "critical")
@@ -805,7 +808,7 @@ sub munin_node_status
 
 sub munin_category_status
 {
-    my ($config, $limits, $domain, $node, $category) = @_;
+    my ($config, $limits, $domain, $node, $category, $check_draw) = @_;
     my $state = "ok";
 
     return undef unless defined $config->{domain}->{$domain}->{node}->{$node};
@@ -818,7 +821,7 @@ sub munin_category_status
 	next if ((defined $snode->{client}->{$service}->{graph_category}) and 
 		 ($snode->{client}->{$service}->{graph_category} ne $category));
 
-	my $fres  = &munin_service_status ($config, $limits, $domain, $node, $service);
+	my $fres  = &munin_service_status ($config, $limits, $domain, $node, $service, $check_draw);
 	if (defined $fres)
 	{
 	    if ($fres eq "critical")
@@ -838,7 +841,7 @@ sub munin_category_status
 
 sub munin_service_status
 {
-    my ($config, $limits, $domain, $node, $service) = @_;
+    my ($config, $limits, $domain, $node, $service, $check_draw) = @_;
     my $state = "ok";
 
     return undef unless defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service};
@@ -846,7 +849,7 @@ sub munin_service_status
     {
 	next unless $key =~ /^([^\.]+)\.label$/;
 	my $field = $1;
-	my $fres  = &munin_field_status ($config, $limits, $domain, $node, $service, $field);
+	my $fres  = &munin_field_status ($config, $limits, $domain, $node, $service, $field, $check_draw);
 	if (defined $fres)
 	{
 	    if ($fres eq "critical")
@@ -866,7 +869,7 @@ sub munin_service_status
 
 sub munin_field_status
 {
-    my ($config, $limits, $domain, $node, $service, $field) = @_;
+    my ($config, $limits, $domain, $node, $service, $field, $check_draw) = @_;
     my $state = undef;
 
     # Return undef if nagios is turned off, or the field doesn't have any limits
@@ -876,11 +879,11 @@ sub munin_field_status
 	return undef;
     }
 
-    if (defined $limits->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.critical"})
+    if (defined $limits->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.critical"} and (!defined $check_draw or !$check_draw))
     {
 	return "critical";
     }
-    elsif (defined $limits->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.warning"})
+    elsif (defined $limits->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.warning"} and (!defined $check_draw or !$check_draw))
     {
 	return "warning";
     }

@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.29  2004/09/23 16:43:39  jimmyo
+# Don't show warnings/criticals in the HTML interface if the field/graph isn't plotted.
+#
 # Revision 1.28  2004/09/23 15:23:33  jimmyo
 # Added "comparison" views, to view a whole hostgroup at once.
 #
@@ -354,7 +357,7 @@ for my $domain (@domainorder) {
 				$field_info{'crit'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".critical"} || "None";
 				$field_info{'info'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".info"} || "";
 
-				my $state = &munin_field_status ($config, $limits, $domain, $node, $service, $f);
+				my $state = &munin_field_status ($config, $limits, $domain, $node, $service, $f, 1);
 				if (defined $state)
 				{
 					$field_info{'state_warning'}  = 1 if $state eq "warning";
@@ -366,7 +369,7 @@ for my $domain (@domainorder) {
 		}
 
 		{
-			my $state = &munin_service_status ($config, $limits, $domain, $node, $service);
+			my $state = &munin_service_status ($config, $limits, $domain, $node, $service, 1);
 			if (defined $state)
 			{
 				$service{'state_warning'}  = 1 if $state eq "warning";
@@ -392,7 +395,7 @@ for my $domain (@domainorder) {
 	{
 	    next if $key eq "other";
 	    my %tmp;
-	    my $state = &munin_category_status ($config, $limits, $domain, $node, $key);
+	    my $state = &munin_category_status ($config, $limits, $domain, $node, $key, 1);
 	    print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
 	    if (defined $state)
 	    {
@@ -411,7 +414,7 @@ for my $domain (@domainorder) {
 	{
 	    my $key = 'other';
 	    my %tmp;
-	    my $state = &munin_category_status ($config, $limits, $domain, $node, $key);
+	    my $state = &munin_category_status ($config, $limits, $domain, $node, $key, 1);
 	    print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
 	    if (defined $state)
 	    {
