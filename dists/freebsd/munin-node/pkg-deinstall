@@ -1,6 +1,9 @@
 #! /bin/sh
 #
 # $Log$
+# Revision 1.2.2.1  2004/11/21 10:52:27  lupe
+# make stop_process use old or new start-stop script.
+#
 # Revision 1.2  2004/02/06 18:49:58  lupe
 # Fixes for pkg_add compatibility.
 #
@@ -36,8 +39,8 @@ yesno() {
 }
 
 stop_process() {
-    if [ -x ${PKG_PREFIX}/etc/rc.d/munin-node.sh ]; then
-	${PKG_PREFIX}/etc/rc.d/munin-node.sh stop
+    if [ -x $STARTSTOP ]; then
+	$STARTSTOP stop
     fi
 }
 
@@ -51,9 +54,17 @@ delete_group() {
     fi
 }
 
+OSVERSION=`/sbin/sysctl -n kern.osreldate`
+if [ $OSVERSION -lt 500000 ]; then
+    STARTSTOP=${PKG_PREFIX}/etc/rc.d/munin-node.sh
+else
+    STARTSTOP=/etc/rc.d/munin_node
+fi
+
 case $2 in
     DEINSTALL)
 	stop_process
+	exit 0 # ignore error
 	;;
     POST-DEINSTALL)
 	delete_group munin

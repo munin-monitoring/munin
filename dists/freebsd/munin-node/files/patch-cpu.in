@@ -1,0 +1,15 @@
+--- munin-1.0.4.orig/node/node.d.freebsd/cpu.in	Sun May  9 21:18:35 2004
++++ munin-1.0.4/node/node.d.freebsd/cpu.in	Sat Nov 20 15:32:50 2004
+@@ -59,10 +59,10 @@
+ 	OSV=`/sbin/sysctl -n kern.osrelease | cut -f1 -d.`
+ 	if [ "$OSV" = "4" ]; then
+ 		STATUNITS=`/sbin/sysctl -n kern.clockrate | cut -f16 -d' '`
+-	elif [ "$OSV" = "5" ]; then
++	elif [ "$OSV" -ge "5" ]; then
+ 		STATUNITS=`/sbin/sysctl -n kern.clockrate | cut -f13 -d' '`
+ 	fi
+-#	PERCENT=`/sbin/sysctl -n hw.ncpu | awk '{print ($1)*100}'`
++	PERCENT=`/sbin/sysctl -n hw.ncpu | awk '{print ($1)*100}'`
+ 	SCALE=`echo 'scale=5;' $PERCENT/$STATUNITS | bc -q `
+ 	NCPU=`/sbin/sysctl -n hw.ncpu`
+ 	if [ "$scaleto100" = yes ]; then

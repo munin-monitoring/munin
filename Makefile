@@ -31,7 +31,7 @@ install-main: build
 	for p in server/*.tmpl; do    		              \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
 	done
-	$(INSTALL) -m 0644 server/logo.gif $(CONFDIR)/templates/
+	$(INSTALL) -m 0644 server/logo.png $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/style.css $(CONFDIR)/templates/
 
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/server/munin.conf $(CONFDIR)/
@@ -137,34 +137,34 @@ build-doc: build-doc-stamp
 
 build-doc-stamp:
 	mkdir -p build/doc
-	htmldoc munin-doc-base.html > build/doc/munin-doc.html
-	htmldoc -t pdf --webpage build/doc/munin-doc.html > build/doc/munin-doc.pdf
-	html2text -style pretty -nobs build/doc/munin-doc.html > build/doc/munin-doc.txt
+	-htmldoc munin-doc-base.html > build/doc/munin-doc.html
+	-htmldoc -t pdf --webpage build/doc/munin-doc.html > build/doc/munin-doc.pdf
+	-html2text -style pretty -nobs build/doc/munin-doc.html > build/doc/munin-doc.txt
 
-	htmldoc munin-faq-base.html > build/doc/munin-faq.html
-	htmldoc -t pdf --webpage build/doc/munin-faq.html > build/doc/munin-faq.pdf
-	html2text -style pretty -nobs build/doc/munin-faq.html > build/doc/munin-faq.txt
+	-htmldoc munin-faq-base.html > build/doc/munin-faq.html
+	-htmldoc -t pdf --webpage build/doc/munin-faq.html > build/doc/munin-faq.pdf
+	-html2text -style pretty -nobs build/doc/munin-faq.html > build/doc/munin-faq.txt
 
 	touch build-doc-stamp
 
 build-man: build-man-stamp
 
-build-man-stamp:
+build-man-stamp: build
 	mkdir -p build/doc
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		node/munin-node.in > build/doc/munin-node.8
+		build/node/munin-node > build/doc/munin-node.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		node/munin-run.in > build/doc/munin-run.8
+		build/node/munin-run > build/doc/munin-run.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		node/munin-node-configure.in > build/doc/munin-node-configure.8
+		build/node/munin-node-configure > build/doc/munin-node-configure.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		server/munin-graph.in > build/doc/munin-graph.8
+		build/server/munin-graph > build/doc/munin-graph.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		server/munin-update.in > build/doc/munin-update.8
+		build/server/munin-update > build/doc/munin-update.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		server/munin-html.in > build/doc/munin-html.8
+		build/server/munin-html > build/doc/munin-html.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		server/munin-nagios.in > build/doc/munin-nagios.8
+		build/server/munin-nagios > build/doc/munin-nagios.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		server/munin-cron.pod > build/doc/munin-cron.8
 	pod2man  --section=5 --release=$(RELEASE) --center="Munin Documentation" \

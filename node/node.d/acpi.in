@@ -1,6 +1,9 @@
 #!/bin/sh
 #
 # $Log$
+# Revision 1.1.2.1  2004/10/27 18:00:13  jimmyo
+# Plugin generic/acpi now autodetects even if the acpi version does not contain the acpi_available program (Deb#275538).
+#
 # Revision 1.1  2004/05/06 21:39:54  jimmyo
 # Added plugin acpi, contributed by Alexandre Dupouy.
 #
@@ -9,7 +12,7 @@
 #%# capabilities=autoconf
 
 if [ "$1" = "autoconf" ]; then
-	acpi_available 2>/dev/null >/dev/null
+	acpi_available 2>/dev/null >/dev/null || acpi -t -B 2>/dev/null >/dev/null
         if [ "$?" = "0" ]; then
 		echo yes
 		exit 0

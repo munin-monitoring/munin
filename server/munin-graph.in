@@ -5,6 +5,18 @@
 # $Id$
 #
 # $Log$
+# Revision 1.8.2.4  2004/08/23 10:38:09  jimmyo
+# Fixed bug in munin-graph when choosing colours (Deb#267185).
+#
+# Revision 1.8.2.3  2004/08/18 15:25:09  jimmyo
+# Applied patch from Matthieu Lochegnies to munin-graph, and fixed the same problem elsewhere in the code (Deb#250982, SF#924561).
+#
+# Revision 1.8.2.2  2004/06/08 15:26:04  jimmyo
+# The server programs now open the log file at an earlier point.
+#
+# Revision 1.8.2.1  2004/06/08 14:55:41  jimmyo
+# Noise reduction in munin-update, when plugins say strange things (only log, don\'t complain on stderr).
+#
 # Revision 1.8  2004/05/09 21:11:16  jimmyo
 # New plugin (pm3users) and a bunch of patches from Jacques Caruso.
 #
@@ -98,6 +110,8 @@ my $list_images = 0;
 my $conffile = "@@CONFDIR@@/munin.conf";
 my %draw = ("day" => 1, "week" => 1, "month" => 1, "year" => 1);
 
+my $log = new IO::Handle;
+
 # Get options
 $do_usage=1  unless 
 GetOptions ( "force!"       => \$force_graphing,
@@ -166,7 +180,6 @@ my $config= &munin_config ($conffile);
 
 
 munin_runlock("$config->{rundir}/munin-graph.lock");
-open LOG,">>$config->{logdir}/munin-graph.log";
 open (STATS,">$config->{dbdir}/munin-graph.stats.tmp") or logger("Unable to open $config->{dbdir}/munin-graph.stats.tmp");
 logger("Starting munin-graph");
 
@@ -205,7 +218,7 @@ logger("Munin-graph finished ($graph_time sec)");
 print STATS "GT|total|$graph_time\n";
 rename ("$config->{dbdir}/munin-graph.stats.tmp", "$config->{dbdir}/munin-graph.stats");
 close STATS;
-close LOG;
+close $log;
 
 sub process_domain {
     my ($domain) = @_;
@@ -625,9 +638,9 @@ sub process_node {
 
 		    push (@rrd_negatives, ($node->{client}->{$service}->{$negfield.".draw"} || "LINE2") .
 			":n" . $cdef . "g$negfield" . 
-			(defined $single_value and $single_value ? $single_colour : $COLOUR[$col_count-1%@COLOUR]));
+			((defined $single_value and $single_value) ? $single_colour : $COLOUR[($col_count-1)%@COLOUR]));
 		    push (@rrd_negatives, "HRULE:".$node->{client}->{$service}->{"$negfield.warn"}.
-			(defined $single_value and $single_value ? "#ff0000" : $COLOUR[$col_count-1%@COLOUR]))
+			((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR]))
 			if $node->{client}->{$service}->{"$negfield.warn"};
                     # Special case - renamed field
 
@@ -662,7 +675,7 @@ sub process_node {
 		}
 
 
-		push (@rrd, "HRULE:".$node->{client}->{$service}->{"$field.warn"}.($single_value ? "#ff0000" : $COLOUR[$col_count-1%@COLOUR]))
+		push (@rrd, "HRULE:".$node->{client}->{$service}->{"$field.warn"}.($single_value ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR]))
 		    if $node->{client}->{$service}->{"$field.warn"};
 	    }
 
@@ -775,11 +788,46 @@ sub expand_cdef
     return ($max, $min, $avg);
 }
 
+sub logger_open {
+    my $dirname = shift;
+
+    if (!$log->opened)
+    {
+	unless (open ($log, ">>$dirname/munin-graph.log"))
+	{
+	    print STDERR "Warning: Could not open log file \"$dirname/munin-graph.log\" for writing: $!";
+	}
+    }
+}
+
+
 sub logger {
-  my ($comment) = @_;
-  my $now = strftime "%b %d %H:%M:%S", localtime;
-  print LOG "$now - $comment\n";
-  flush LOG;
+    my ($comment) = @_;
+    my $now = strftime "%b %d %H:%M:%S", localtime;
+ 
+    if ($log->opened)
+    {
+	print $log "$now - $comment\n";
+    }
+    else
+    {
+	if (defined $config->{logdir})
+	{
+	    if (open ($log, ">>$config->{logdir}/munin-graph.log"))
+	    {
+		 print $log "$now - $comment\n";
+	    }
+	    else
+	    {
+		 print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-graph.log\" for writing: $!";
+		 print STDERR "$now - $comment\n";
+	    }
+	}
+	else
+	{
+	    print STDERR "$now - $comment\n";
+	}
+    }
 }
 
 sub parse_path

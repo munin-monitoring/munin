@@ -4,6 +4,15 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.3.2.3  2004/08/23 09:59:42  jimmyo
+# Better error handling when fetching data from RRD files.
+#
+# Revision 1.3.2.2  2004/06/08 15:26:04  jimmyo
+# The server programs now open the log file at an earlier point.
+#
+# Revision 1.3.2.1  2004/06/08 14:55:40  jimmyo
+# Noise reduction in munin-update, when plugins say strange things (only log, don\'t complain on stderr).
+#
 # Revision 1.3  2004/01/29 18:19:58  jimmyo
 # Made Munin compatible with perl 5.005_03 (patch by Lupe Christoph) (SF#884622)
 #
@@ -128,6 +137,11 @@ sub munin_trend {
 sub munin_fetch {
     my ($file,$last,$type) = @_;
     my ($start,$step,$names,$data) = RRDs::fetch $file,$type || "AVERAGE";
+    unless (defined $data)
+    {
+	::logger ("Could not fetch data from $file(".($type||"AVERAGE")."): ". RRDs::error);
+	return undef;
+    }
     my @array = map { @$_[0] } splice(@$data, $#$data - ($last || 1));
     return $array[0] if (!$last);
     return @array;
@@ -400,19 +414,19 @@ sub munin_set_var_path
 
 	if (@sp == 3)
 	{
-	    print STDERR ("Warning: Unknown option \"$sp[2]\" in \"$dom;$host:$sp[0].$sp[1].$sp[2]\".\n")
+	    ::logger ("Warning: Unknown option \"$sp[2]\" in \"$dom;$host:$sp[0].$sp[1].$sp[2]\".")
 		unless grep /^$sp[2]$/, @legal;
 	    $hash->{domain}->{$dom}->{node}->{$host}->{client}->{$sp[0]}->{"$sp[1].$sp[2]"} = $val;
 	}
 	elsif (@sp == 2)
 	{
-	    print STDERR ("Warning: Unknown option \"$sp[1]\" in \"$dom;$host:$sp[0].$sp[1]\".\n")
+	    ::logger ("Warning: Unknown option \"$sp[1]\" in \"$dom;$host:$sp[0].$sp[1]\".")
 		unless grep /^$sp[1]$/, @legal;
 	    $hash->{domain}->{$dom}->{node}->{$host}->{client}->{$sp[0]}->{$sp[1]} = $val;
 	}
 	elsif (@sp == 1)
 	{
-	    print STDERR ("Warning: Unknown option \"$sp[0]\" in \"$dom;$host:$sp[0]\".\n")
+	    ::logger ("Warning: Unknown option \"$sp[0]\" in \"$dom;$host:$sp[0]\".")
 		unless grep /^$sp[0]$/, @legal;
 	    $hash->{domain}->{$dom}->{node}->{$host}->{$sp[0]} = $val;
 	}
@@ -428,7 +442,7 @@ sub munin_set_var_path
 
 	if (@sp == 1)
 	{
-	    print STDERR ("Warning: Unknown option \"$sp[0]\" in \"$dom;$sp[0]\".\n")
+	    ::logger ("Warning: Unknown option \"$sp[0]\" in \"$dom;$sp[0]\".")
 		unless grep /^$sp[0]$/, @legal;
 	    $hash->{domain}->{$dom}->{$sp[0]} = $val;
 	}
@@ -439,7 +453,7 @@ sub munin_set_var_path
     }
     elsif ($var =~ /^\s*([^;:\.]+)\s*$/)
     {
-	print STDERR ("Warning: Unknown option \"$1\" in \"$1\".\n")
+	::logger ("Warning: Unknown option \"$1\" in \"$1\".")
 	    unless grep /^$1$/, @legal;
 	$hash->{$1} = $val;
     }
@@ -515,8 +529,11 @@ sub munin_writeconfig {
     
 sub munin_config {
     my $conffile = shift;
+    $config = shift;
+
     $conffile ||= $configfile;
     $config = &munin_readconfig ($conffile);
+    ::logger_open ($config->{logdir});
     my $data = &munin_readconfig("$config->{dbdir}/datafile", 1, 1);
     
     $data = &munin_overwrite($data,$config);

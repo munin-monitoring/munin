@@ -1,17 +1,41 @@
 bin/munin-cron
+@unexec if cmp -s %D/etc/munin/templates/style.css %D/www/data-dist/munin/style.css; then rm -f %D/www/data-dist/munin/style.css; fi
+@unexec if cmp -s %D/etc/munin/templates/logo.png %D/www/data-dist/munin/logo.png; then rm -f %D/www/data-dist/munin/logo.png; fi
 etc/munin/munin.conf
-etc/munin/templates/logo.gif
+etc/munin/templates/logo.png
 etc/munin/templates/munin-domainview.tmpl
 etc/munin/templates/munin-nodeview.tmpl
 etc/munin/templates/munin-overview.tmpl
 etc/munin/templates/munin-serviceview.tmpl
 etc/munin/templates/style.css
+%%SITE_PERL%%/Munin.pm
 share/munin/munin-graph
 share/munin/munin-html
 share/munin/munin-nagios
 share/munin/munin-update
 @unexec rmdir %D/www/data/munin 2>/dev/null || true
+@unexec rmdir %D/www/data 2>/dev/null || true
 @unexec rmdir %D/var/munin 2>/dev/null || true
+@unexec rmdir %D/var 2>/dev/null || true
 @unexec rmdir %D/share/munin 2>/dev/null || true
 @dirrm etc/munin/templates
 @unexec rmdir %D/etc/munin 2>/dev/null || true
+@unexec echo
+@unexec echo '********************************************************************'
+@unexec echo "If you want to *completely* remove munin-main, you have to"
+@unexec echo
+@unexec echo "    rm -rf %D/var/munin/datafile %D/www/data/munin \\"
+@unexec echo "          "`ls -d /usr/local/var/munin/* | grep -v plugin-state`" \\"
+@unexec if [ -f %D/etc/munin/munin.conf ]; then echo "           %D/etc/munin/munin.conf \\"; fi
+@unexec if [ -d %D/etc/munin/templates ]; then echo "           %D/etc/munin/templates \\"; fi
+@unexec echo "           %D/etc/munin/munin-node.conf %D/etc/munin/plugins \\"
+@unexec echo "           /var/log/munin"
+@unexec echo
+@unexec echo "If you have already deinstalled munin-node, you can also"
+@unexec echo
+@unexec echo "    rmdir %D/etc/munin %D/var/munin"
+@unexec echo
+@unexec echo "These files and directories have to be left on the system because"
+@unexec echo "you may be performing an update. This process can't tell."
+@unexec echo '********************************************************************'
+@unexec echo
