@@ -4,6 +4,7 @@ munin (work)
   * Main: Make sure all rrd-tunes are correct after an upgrade (Deb#296454,
     Deb#296645).
   * Main: Better handling of broken connections (Deb#298108).
+  * Main: HTML cleanup (Deb#296676).
   * Plugin: generic/amavis now has configurable logfile location (Deb#296533).
   * Plugin: linux/irqstats should no longer fail on some systems (Deb#296452).
   * Plugin: modified graph_args of generic/apache_processes, to work around

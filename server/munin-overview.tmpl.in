@@ -19,10 +19,10 @@
  <div class="box">
  <TMPL_LOOP NAME="DOMAINS">
  <ul>
-  <li><span class="domain"><a href="<TMPL_VAR NAME="DOMAIN">/index.html"><TMPL_VAR NAME="DOMAIN"></a></span><TMPL_IF NAME="COMPARE"> :: [ <a href="<TMPL_VAR NAME="DOMAIN">/comparison-day.html">day</a> <a href="<TMPL_VAR NAME="DOMAIN">/comparison-week.html">week</a> <a href="<TMPL_VAR NAME="DOMAIN">/comparison-month.html">month</a> <a href="<TMPL_VAR NAME="DOMAIN">/comparison-year.html">year</a> ]</TMPL_IF>
+  <li><span class="domain"><a href="<TMPL_VAR NAME="DOMAIN">/index.html"><TMPL_VAR ESCAPE="HTML" NAME="DOMAIN"></a></span><TMPL_IF NAME="COMPARE"> :: [ <a href="<TMPL_VAR NAME="DOMAIN">/comparison-day.html">day</a> <a href="<TMPL_VAR NAME="DOMAIN">/comparison-week.html">week</a> <a href="<TMPL_VAR NAME="DOMAIN">/comparison-month.html">month</a> <a href="<TMPL_VAR NAME="DOMAIN">/comparison-year.html">year</a> ]</TMPL_IF>
       <ul>	
 	<TMPL_LOOP NAME="NODES">
-	<li><span class="host"><a href="<TMPL_VAR NAME="DOMAIN">/<TMPL_VAR NAME="NODE">.html"><TMPL_VAR NAME="NODE"></a></span> :: 
+	<li><span class="host"><a href="<TMPL_VAR NAME="DOMAIN">/<TMPL_VAR NAME="NODE">.html"><TMPL_VAR ESCAPE="HTML" NAME="NODE"></a></span> :: 
 	[ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="DOMAIN">/<TMPL_VAR NAME="NODE">.html#<TMPL_VAR NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</li>
         </TMPL_LOOP>
       </ul>
