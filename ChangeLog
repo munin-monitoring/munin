@@ -26,6 +26,7 @@ munin (work)
     Skillingstad.
   * Plugin generic/acpi now autodetects even if the acpi version does not
     contain the acpi_available program.
+  * Minor bugfixes.
 
 munin (1.1.4)
 

@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.20  2004/10/22 14:48:21  jimmyo
+# Minor bugfix.
+#
 # Revision 1.19  2004/09/26 20:41:44  jimmyo
 # Treat long field names properly.
 #
@@ -726,7 +729,7 @@ sub config_node {
   my $fetchdomain;
   chomp($clientdomain) if $clientdomain;
   if (!$clientdomain) {
-      logger("Got unknown reply from client: '$clientdomain' skipping");
+      logger("Got unknown reply from client \"$domain\" -> \"name\" skipping");
       return 0;
   }
   $clientdomain =~ s/\#.*(?:lrrd|munins) (?:client|node) at //;
