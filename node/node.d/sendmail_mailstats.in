@@ -10,6 +10,9 @@
 # 	autoconf (optional)
 #
 # $Log$
+# Revision 1.1.2.1  2004/11/10 15:50:44  jimmyo
+# Fixed typo in generic/sendmail_mailstats (patch by Lupe Christoph, SF#1058128).
+#
 # Revision 1.1  2004/02/18 18:40:03  jimmyo
 # Added Log:
 #
@@ -18,7 +21,7 @@
 TEMP_FILE=/tmp/lrrd-sendmail
 
 if [ "$1" = "autoconf" ]; then
-        if which mailstats 2>&1 > /dev/nul ; then
+        if which mailstats 2>&1 > /dev/null ; then
 		echo yes
 		exit 0
 	else

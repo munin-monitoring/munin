@@ -4,6 +4,9 @@
 # rule, copy ipac-ng and edit variables.
 #
 # $Log$
+# Revision 1.1.2.1  2004/08/18 15:33:41  jimmyo
+# Fixed generic/ipac-ng plugin (it wouldn't run properly)
+#
 # Revision 1.1  2004/05/06 22:42:35  jimmyo
 # Added plugin ipac-ng, contributed by Arturas Slajus.
 #
@@ -55,3 +58,4 @@ if [ "$error" != "1" ]; then
 else
         echo 'up.value 0'
         echo 'down.value 0'
+fi
