@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.7  2004/05/20 20:47:19  jimmyo
+# The server programs now open the log file at an earlier point.
+#
 # Revision 1.6  2004/05/20 12:20:24  jimmyo
 # Added "graph_category" option, to categorise plugins.
 #
@@ -427,7 +430,7 @@ sub munin_set_var_path
 	}
 	elsif (@sp == 2)
 	{
-	    print STDERR ("Warning: Unknown option \"$sp[1]\" in \"$dom;$host:$sp[0].$sp[1]\".\n")
+	    ::logger ("Warning: Unknown option \"$sp[1]\" in \"$dom;$host:$sp[0].$sp[1]\".\n")
 		unless grep /^$sp[1]$/, @legal;
 	    $hash->{domain}->{$dom}->{node}->{$host}->{client}->{$sp[0]}->{$sp[1]} = $val;
 	}
@@ -536,8 +539,10 @@ sub munin_writeconfig {
     
 sub munin_config {
     my $conffile = shift;
+    $config = shift;
     $conffile ||= $configfile;
     $config = &munin_readconfig ($conffile);
+    ::logger_open ($config->{logdir});
     my $data = &munin_readconfig("$config->{dbdir}/datafile", 1, 1);
     
     $data = &munin_overwrite($data,$config);

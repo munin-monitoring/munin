@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.10  2004/05/20 20:47:19  jimmyo
+# The server programs now open the log file at an earlier point.
+#
 # Revision 1.9  2004/05/12 20:52:06  jimmyo
 # Turned -w on in munin-update
 #
@@ -104,6 +107,8 @@ my $cli_do_fork;
 my $cli_timeout;
 my $print_stdout = 0;
 
+my $log = new IO::Handle;
+
 # Get options
 $do_usage=1  unless 
 GetOptions ( "host=s"       => \@limit_hosts,
@@ -190,8 +195,6 @@ if (! -d $config->{rundir})
 	mkdir ($config->{rundir}, 0700);
 }
 munin_runlock("$config->{rundir}/munin-update.lock");
-
-open (LOG,">>$config->{logdir}/munin-update.log") or die "Unable to open $config->{logdir}/munin-update.log\n";
 
 open (STATS,">$config->{dbdir}/munin-update.stats.tmp") or logger("Unable to open $config->{datadir}/munin-update.stats");
 
@@ -360,7 +363,7 @@ close (STATS);
 rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
 
 logger("Munin-update finished ($update_time sec)");
-close (LOG);
+close ($log);
 
 sub process_domain {
   my ($domain) = @_;
@@ -752,14 +755,46 @@ sub use_old_config
 
 
 
+sub logger_open {
+    my $dirname = shift;
+
+    if (!$log->opened)
+    {
+	  unless (open ($log, ">>$dirname/munin-html.log"))
+	  {
+		  print STDERR "Warning: Could not open log file \"$dirname/munin-html.log\" for writing: $!";
+	  }
+    }
+}
+
 sub logger {
   my ($comment) = @_;
   my $now = strftime "%b %d %H:%M:%S", localtime;
-  print ("$now - $$: $comment\n") if $print_stdout;
-  print LOG ("$now - $$: $comment\n");
-  flush LOG;
-}
 
+  if ($log->opened)
+  {
+	  print $log "$now - $comment\n";
+  }
+  else
+  {
+	  if (defined $config->{logdir})
+	  {
+		  if (open ($log, ">>$config->{logdir}/munin-update.log"))
+		  {
+			  print $log "$now - $comment\n";
+		  }
+		  else
+		  {
+			  print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-update.log\" for writing: $!";
+			  print STDERR "$now - $comment\n";
+		  }
+	  }
+	  else
+	  {
+		  print STDERR "$now - $comment\n";
+	  }
+    }
+}
 
 
 1;
