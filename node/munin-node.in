@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.6  2004/01/29 18:07:52  jimmyo
+# Bugfix from bug introduced 30 minutes ago
+#
 # Revision 1.5  2004/01/29 17:36:19  jimmyo
 # Updated copyright information
 #
@@ -523,7 +526,7 @@ sub load_auth_file
 
 		my $g = &get_gid ($group);
 		print "DEBUG: Config: $service->gid = ", $sconf->{$service}{'group'}, "\n" if $DEBUG;
-		if (!defined $sconf->{$service}{'group'} and !$optional)
+		if (!defined $g and !$optional)
 		{
 		    warn "Group \"$group\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
 		    return undef;
