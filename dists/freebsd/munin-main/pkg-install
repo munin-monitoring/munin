@@ -1,15 +1,4 @@
 #! /bin/sh
-#
-# $Log$
-# Revision 1.6.2.1  2005/02/03 14:38:41  lupe
-# Fix Stoopid(tm) typo "if [ crontab ..."
-# Use $b and $e instaead of literal begin/end marks in create_crontab_entries
-# Fix log rotation, it would rotate *.<n>.gz, too!
-# Delete crontab comment
-# use BEGIN_MUNIN_MAIN rather than BEGIN_MUNIN (and END_MUNIN_MAIN) in crontab.
-# Remove Log
-#
-#
 
 ask() {
     local question default answer
