@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.18  2004/09/13 21:00:38  jimmyo
+# Added new config option "local_address", to specify which local address outgoing connections (from munin-update) should be used.
+#
 # Revision 1.17  2004/09/12 22:07:39  jimmyo
 # Munin-update adapts to field type changes (loss-free conversion from COUNTER->DERIVE et al.)
 #
@@ -585,10 +588,23 @@ sub process_node {
     }
   }
 
-  my $socket = new IO::Socket::INET ('PeerAddr' => "$node->{address}:".
+  my $socket;
+  
+  if (&munin_get_val ($config, "local_address", undef, $domain, $node))
+  {
+      $socket = new IO::Socket::INET ('PeerAddr' => "$node->{address}:".
+		  ($node->{port} || $config->{domain}->{$domain}->{port} || 
+		   $config->{port} || "4949"), 
+		   'LocalAddr' => &munin_get_val ($config, "local_address", undef, $domain, $node),
+		  'Proto'    => "tcp", "Timeout" => $timeout);
+  }
+  else
+  {
+      $socket = new IO::Socket::INET ('PeerAddr' => "$node->{address}:".
 		  ($node->{port} || $config->{domain}->{$domain}->{port} || 
 		   $config->{port} || "4949"), 
 		  'Proto'    => "tcp", "Timeout" => $timeout);
+  }
   my $err = ($socket ? "" : $!);
 
   if ($do_fork)

@@ -188,6 +188,7 @@ Explaination:
  <dt>max_processes<dd>Set max number of simultaneous Munin processes.
  <dt>nsca*<dd>Nagios options. See seperate section
  <dt>domain_order<dd>Change the order of domains. (Default is alphabetically sorted.)
+ <dt>local_address<dd>Set the local address to be used for connecting to the nodes.
  <dt>[foo.com;machine.dom.ain]<dd>Add machine.dom.ain to domain foo.com.
  <dt>[machine.dom.ain]<dd>Add machine.dom.ain to domain dom.ain. (A short form of [dom.ain;machine.dom.ain].)
 </dl>
@@ -200,6 +201,7 @@ Domain-level options
 <tt>
 <dl>
  <dt>node_order<dd>Changes order of nodes in a domain. (Default is alphabetically sorted.)
+ <dt>local_address<dd>Set the local address to be used for connecting to the nodes in the domain.
 </dl>
 </tt>
 
@@ -207,6 +209,7 @@ Node-level options
 <tt>
 <dl>
  <dt>address<dd>Set the node address
+ <dt>local_address<dd>Set the local address to be used for connecting to the node.
  <dt>port<dd>Set node port number (default 4949)
  <dt>use_node_name<dd>Set to "yes" or "y" to force getting all the
  default plugins from a node. Good for hosts which changes hostname

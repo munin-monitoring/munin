@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.21  2004/09/13 21:00:38  jimmyo
+# Added new config option "local_address", to specify which local address outgoing connections (from munin-update) should be used.
+#
 # Revision 1.20  2004/09/10 19:24:18  jimmyo
 # Added new option "graph_sums" which creates summarised graphs.
 #
@@ -177,9 +180,10 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"critical", "special_stack", "special_sum", "stack", "sum", "address", 
 	"htaccess", "warn", "use_default_name", "use_node_name", "port", 
 	"graph_noscale", "nsca", "nsca_server", "nsca_config", "extinfo", 
-	"fetch_data", "filename", "max_processes", "nagios", "info", "graph_info",
-	"graph_category", "graph_strategy", "graph_width", "graph_height",
-	"graph_sums", "graph_vlabel_sum_year", "graph_vlabel_sum_week"
+	"fetch_data", "filename", "max_processes", "nagios", "info", 
+	"graph_info", "graph_category", "graph_strategy", "graph_width", 
+	"graph_height", "graph_sums", "graph_vlabel_sum_year", 
+	"graph_vlabel_sum_week", "local_address"
     );
 
 

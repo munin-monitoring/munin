@@ -13,6 +13,8 @@ munin (work)
     Windows boxes.
   * Munin-update adapts to field type changes (loss-free conversion from
     COUNTER->DERIVE et al.)
+  * Added new config option "local_address", to specify which local address
+    outgoing connections (from munin-update) should be used.
 
 munin (1.1.4)
 
