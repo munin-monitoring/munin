@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.41.2.1  2005/01/29 18:22:59  jimmyo
+# Bugfix in munin-cgi-graph with hostnames including - (SF#1111510).
+#
 # Revision 1.41  2005/01/05 18:32:49  jimmyo
 # Main: Tables in service-view now containt the correct "Type" when using data aliases.
 #
@@ -351,15 +354,15 @@ for my $domain (@domainorder) {
 	    my $method = &munin_get ($config, "graph_strategy", "cron");
 	    if ($method eq "cgi")
 	    {
-		$service{imgday}=$config->{'cgiurl_graph'}."/$domain/$node-$service-day.png";
-		$service{imgweek}=$config->{'cgiurl_graph'}."/$domain/$node-$service-week.png";
-		$service{imgmonth}=$config->{'cgiurl_graph'}."/$domain/$node-$service-month.png";
-		$service{imgyear}=$config->{'cgiurl_graph'}."/$domain/$node-$service-year.png";
+		$service{imgday}=$config->{'cgiurl_graph'}."/$domain/$node/$service-day.png";
+		$service{imgweek}=$config->{'cgiurl_graph'}."/$domain/$node/$service-week.png";
+		$service{imgmonth}=$config->{'cgiurl_graph'}."/$domain/$node/$service-month.png";
+		$service{imgyear}=$config->{'cgiurl_graph'}."/$domain/$node/$service-year.png";
 
 		if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
 		{
-		    $service{imgweeksum} = $config->{'cgiurl_graph'}."/$domain/$node-$service-week-sum.png";
-		    $service{imgyearsum} = $config->{'cgiurl_graph'}."/$domain/$node-$service-year-sum.png";
+		    $service{imgweeksum} = $config->{'cgiurl_graph'}."/$domain/$node/$service-week-sum.png";
+		    $service{imgyearsum} = $config->{'cgiurl_graph'}."/$domain/$node/$service-year-sum.png";
 		}
 	
 		if (my ($w, $h) = &calculate_png_size ($config, $domain, $node, $service))
