@@ -19,6 +19,7 @@ munin (1.0.0pre2)
   * Bugfix in plugin mysql_queries - insertions were no longer graphed.
     (SF#881483).
   * Disabled plugins df and df_inode on Solaris (SF#882274).
+  * Make vmstat plugin more portable (SF#882352).
 
 munin (1.0.0pre1)
 

@@ -9,6 +9,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.2  2004/01/29 19:00:42  jimmyo
+# Make vmstat plugin more portable (SF#882352).
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -56,4 +59,4 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-vmstat 1 2| awk 'END { print "wait.value " $1 "\nsleep.value " $2 }' 
+vmstat 1 2 | awk '{wait = $1; sleep = $2} END { print "wait.value " wait "\nsleep.value " sleep }'
