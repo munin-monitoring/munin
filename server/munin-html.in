@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.35  2004/11/21 15:29:19  jimmyo
+# Take line definitions with labels into account.
+#
 # Revision 1.34  2004/11/21 14:39:23  jimmyo
 # Renamed function munin_get_val to munin_get.
 #
@@ -634,7 +637,19 @@ sub calculate_png_size
 	{
 	    if ($field =~ /^([^\.]+)\.label/)
 	    {
-		$height += 15 if (munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $serv, $1));
+		if (munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $serv, $1))
+		{
+		    $height += 15;
+		    my $tmpline = munin_get ($config, "line", undef, $domain, $node, $serv, $1);
+		    if ($tmpline)
+		    {
+			my @tmparr = ($tmpline =~ /:/g);
+			if (scalar (@tmparr) > 2)
+			{ # We've got line definitions with labels...
+			    $height += 15;
+			}
+		    }
+		}
 	    }
 	}
 	# ...and +15 if there's a graph total
@@ -644,6 +659,7 @@ sub calculate_png_size
 
 	return ($width, $height);
 }
+
 sub get_png_size
 {
 	my $filename = shift;
