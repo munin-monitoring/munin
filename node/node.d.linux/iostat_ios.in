@@ -11,6 +11,9 @@
 #       autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.8  2004/09/25 23:47:11  jimmyo
+# Downgraded plugin from manual to contrib.
+#
 # Revision 1.7  2004/09/25 22:15:20  jimmyo
 # Corrected statedir.
 #
@@ -33,7 +36,7 @@
 # Magic markers (optional - used by munin-config and some installation 
 # scripts):
 # 
-#%# family=manual
+#%# family=contrib
 
 use strict;
 
@@ -44,7 +47,7 @@ use Storable qw(store retrieve);
 # (c) 2004 - Per Andreas Buer
 # GPL v2 Yadda yadda.
 
-use constant STATEFILE => '@@PLUGSTATE@@/iostat-aw.state';
+use constant STATEFILE => '@@PLUGSTATE@@/iostat-ios.state';
 
 
 if ($ARGV[0] eq 'config') {
