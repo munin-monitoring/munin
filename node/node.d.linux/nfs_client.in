@@ -1,6 +1,13 @@
 #!/bin/sh
 #
-#%# family=contrib
+# Plugin to monitor NFS client traffic
+#
+# $Log$
+# Revision 1.2  2004/05/15 21:33:29  jimmyo
+# "Upped" som plugins from contrib/manual to manual or auto.
+#
+#
+#%# family=auto
 #%# capabilities=autoconf
 
 NFS=/proc/net/rpc/nfs

@@ -88,3 +88,8 @@ postfix_mailqueue
 postfix_mailvolume
 postfix_mailstats
 sendmail_mailqueue
+linux/nfs_client
+linux/nfsd
+sunos/load
+sunos/processes
+sunos/temperature

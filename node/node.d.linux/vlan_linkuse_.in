@@ -1,7 +1,4 @@
 #!@@PERL@@ -w
-
-#%# family=manual
-
 # Wildcard-script to monitor network interfaces. To monitor an
 # interface, link vlan_<interface> to this file. E.g.
 #
@@ -19,6 +16,9 @@
 # have such rules. Look at the existing for examples.
 #
 # $Log$
+# Revision 1.2  2004/05/15 21:33:29  jimmyo
+# "Upped" som plugins from contrib/manual to manual or auto.
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -32,7 +32,8 @@
 # Cleanups and log entries
 #
 #
-#
+#%# family=manual
+
 
 use strict;
 

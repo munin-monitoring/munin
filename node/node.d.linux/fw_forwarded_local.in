@@ -9,13 +9,16 @@
 #
 #
 # $Log$
+# Revision 1.2  2004/05/15 21:33:29  jimmyo
+# "Upped" som plugins from contrib/manual to manual or auto.
+#
 # Revision 1.1  2004/05/09 21:20:31  jimmyo
 # Added fw_forwarded_local (by Xavier).
 #
 #
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
-#%# family=contrib
+#%# family=manual
 #%# capabilities=autoconf
 
 
