@@ -11,6 +11,8 @@ munin (1.1.1)
     how it works.
   * Linux/ip_ wildcard plugin contributed by Mathy Vanvoorden (SF#954851).
   * Added a definition file (definitions.html) to the server distribution.
+  * Use "sed 1d" instead of "tail +2" in df plugins (patch by Olivier
+    Delhomme).
 
 munin (1.1.0)
 
