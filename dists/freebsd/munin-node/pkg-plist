@@ -1,4 +1,3 @@
-etc/munin/VERSION.node
 etc/munin/munin-node.conf
 etc/munin/plugin-conf.d/plugins.conf
 etc/rc.d/munin-node.sh
@@ -58,3 +57,7 @@ share/munin/plugins/vmstat
 @unexec rm -rf %D/etc/munin/plugins 2>/dev/null || true
 @unexec rmdir %D/etc/munin/plugin-conf.d 2>/dev/null || true
 @unexec rmdir %D/etc/munin 2>/dev/null || true
+@unexec echo "If you want to *completely* remove munin-node, you have to"
+@unexec echo "    rm -rf %D/var/munin and %D/etc/munin %D/www/data/munin"
+@unexec echo "They have to be left on the system because you may be performing"
+@unexec echo "an update. This process can't tell."
