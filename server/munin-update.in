@@ -50,6 +50,7 @@ my $cli_do_fork;
 my $cli_timeout;
 my $print_stdout = 0;
 my $tls;
+my $tls_verified = "";
 
 my $log = new IO::Handle;
 
@@ -605,11 +606,18 @@ sub process_node {
   }
 }
 
-sub verify_tls {
-    my ($ok, $subj_cert, $issuer_cert, $depth, $errorcode, $arg, $chain) = @_;
-    print "Verifying certificate...\n";
+sub tls_verify_callback 
+{
+    my ($ok, $subj_cert, $issuer_cert, $depth, 
+	    $errorcode, $arg, $chain) = @_;
 
-    return 1;
+    if ($ok)
+    {
+	$tls_verified = 1;
+	logger ("TLS Notice: Verified certificate.");
+    }
+
+    return 1; # accept
 }
 
 sub start_tls {
@@ -690,28 +698,16 @@ sub start_tls {
     }
 
     # Now let's define our requirements of the node
-#    $tls_vdepth = 5 if !defined $tls_vdepth;
-#    if (!Net::SSLeay::CTX_set_verify_depth ($ctx, $tls_vdepth))
-#    {
-#	    logger ("TLS Warning: Problem occured when setting verify depth to \"$tls_vdepth\": $!. Continuing with default depth.");
-#    }
-#    if ($tls_paranoia eq "paranoid")
-#    {
-#	if (!Net::SSLeay::CTX_set_verify ($ctx, 
-#		    &Net::SSLeay::SL_VERIFY_FAIL_IF_NO_PEER_CERT, 0))
-#	{
-#	    logger ("TLS Error: Could not force client certificate verification: $!");
-#	    return 0;
-#	}
-#    }
-#    else
-#    {
-#	if (!Net::SSLeay::CTX_set_verify ($ctx, 
-#		    &Net::SSLeay::VERIFY_PEER, 0))
-#	{
-#	    logger ("TLS Notice: Could not force client certificate verification: $!");
-#	}
-#    }
+    $tls_vdepth = 5 if !defined $tls_vdepth;
+    Net::SSLeay::CTX_set_verify_depth ($ctx, $tls_vdepth);
+    if ($tls_paranoia eq "paranoid")
+    {
+ 	Net::SSLeay::CTX_set_verify ($ctx, &Net::SSLeay::SL_VERIFY_FAIL_IF_NO_PEER_CERT, \&tls_verify_callback);
+    }
+    else
+    {
+ 	Net::SSLeay::CTX_set_verify ($ctx, &Net::SSLeay::VERIFY_PEER, \&tls_verify_callback);
+    }
 
     # Create the local tls object
     if (! ($tls = Net::SSLeay::new($ctx)))

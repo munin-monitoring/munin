@@ -26,6 +26,7 @@ use strict;
 use vars qw(@ISA);
 use Getopt::Long;
 use Net::Server::Fork; # any personality will do
+use Data::Dumper;
 
 my $tls;
 my $tls_verified = "";
@@ -611,8 +612,8 @@ sub tls_verify_callback
 
     if ($ok)
     {
-	$tls_verified = Net::SSLeay::X509_NAME_oneline($subj_cert);
-	logger ("TLS Notice: Verified certificate \"$tls_verified\" at depth $depth, chain \"$chain\".");
+	$tls_verified = 1;
+	logger ("TLS Notice: Verified certificate.");
     }
 
     return 1; # accept
@@ -626,6 +627,7 @@ sub start_tls
     my $tls_verify   = shift;
     my $tls_vdepth   = shift;
 
+    my $err;
     my $ctx;
 
     if ($tls_paranoia eq "disabled")
@@ -691,16 +693,19 @@ sub start_tls
     }
 
     # Now let's define our requirements of the node
-#    $tls_vdepth = 5 unless defined $tls_vdepth;
-#    if (Net::SSLeay::CTX_set_verify_depth ($ctx, $tls_vdepth))
-#    {
-#	logger ("TLS Warning: Problem occured when setting verify depth to \"$tls_vdepth\": ".&Net::SSLeay::print_errs().". Continuing with default depth.");
-#    }
-#    if (!Net::SSLeay::CTX_set_verify ($ctx, 
-#		&Net::SSLeay::VERIFY_PEER, &tls_verify_callback))
-#    {
-#	logger ("TLS Warning: Could not force client certificate verification: " . &Net::SSLeay::print_errs());
-#    }
+    $tls_vdepth = 5 unless defined $tls_vdepth;
+    Net::SSLeay::CTX_set_verify_depth ($ctx, $tls_vdepth);
+    $err = &Net::SSLeay::print_errs();
+    if (defined $err and length $err)
+    {
+	logger ("TLS Warning in net_read: $err");
+    }
+    Net::SSLeay::CTX_set_verify ($ctx, &Net::SSLeay::VERIFY_PEER, \&tls_verify_callback);
+    $err = &Net::SSLeay::print_errs();
+    if (defined $err and length $err)
+    {
+	logger ("TLS Warning in net_read: $err");
+    }
 
     # Create the local tls object
     if (! ($tls = Net::SSLeay::new($ctx)))
@@ -731,19 +736,29 @@ sub start_tls
 #   close (STDIN);
 #   close (STDOUT);
     Net::SSLeay::set_rfd($tls, fileno(STDIN));
+    $err = &Net::SSLeay::print_errs();
+    if (defined $err and length $err)
+    {
+	logger ("TLS Warning in net_read: $err");
+    }
     Net::SSLeay::set_wfd($tls, fileno(STDOUT));
+    $err = &Net::SSLeay::print_errs();
+    if (defined $err and length $err)
+    {
+	logger ("TLS Warning in net_read: $err");
+    }
 
     # Try to negotiate the tls connection
-    my $res;
-    if ($res = Net::SSLeay::accept($tls))
-    {
-	logger ("TLS Notice: TLS not enabled: " . &Net::SSLeay::print_errs());
-    }
-    else
+    my $res = Net::SSLeay::accept($tls);
+    if (defined $res and $res)
     {
 	logger ("TLS Notice: TLS enabled.");
 	logger ("TLS Notice: Cipher `" . Net::SSLeay::get_cipher($tls) . "'.");
 	logger ("TLS Notice: client cert: " . Net::SSLeay::dump_peer_certificate($tls));
+    }
+    else
+    {
+	logger ("TLS Notice: TLS not enabled: " . &Net::SSLeay::print_errs());
     }
 
     return $res;
