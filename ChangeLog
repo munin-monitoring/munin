@@ -36,6 +36,7 @@ munin (1.0.0pre2)
   * Bugfix; munin-html wrote bad html, as reported by Adam Heath. (Deb#230322)
   * Rewrite of linux/iostat by Mike Fedyk (Deb##223373,224113).
   * Linux/cpu now graphs all values on a 2.6 kernel (Deb#227946).
+  * Added new plugin linux/nfsd, contributed by Alexandre Dupouy.
 
 munin (1.0.0pre1)
 
