@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.12  2004/08/31 18:12:59  jimmyo
+# Sanitise incoming field names a bit better.
+#
 # Revision 1.11  2004/08/31 18:11:04  jimmyo
 # Sanitise incoming field names a bit better.
 #
@@ -803,7 +806,7 @@ sub sanitize_fieldname
 {
     my $name = shift;
 
-    $name =~ s/\W-/_/g;
+    $name =~ s/[\W-]/_/g;
     $name = substr ($name,-18);
 
     return $name;
