@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.26  2004/09/01 18:30:21  jimmyo
+# Added new options "graph_height" and "graph_width", to beter control size.
+#
 # Revision 1.25  2004/08/23 10:37:31  jimmyo
 # Fixed bug in munin-graph when choosing colours (Deb#267185).
 #
@@ -377,7 +380,8 @@ sub get_header {
 	push @$result, ("--vertical-label", $tmp_field);
     }
 
-    push @$result,"--height", "175";
+    push @$result,"--height", &munin_get_val ($config, "graph_height", "175", $domain, $host, $service);
+    push @$result,"--width", &munin_get_val ($config, "graph_width", "400", $domain, $host, $service);
     push @$result,"--imgformat", "PNG";
     push @$result,"--lazy" if ($force_lazy);
 
