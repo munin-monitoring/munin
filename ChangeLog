@@ -1,5 +1,6 @@
 munin (1.1.1)
 
+  * Bug regarding logo namechange from logo.gif to logo.png, when installing.
   * Allow/deny in munin-node can now be configured per plugin, in addition
     to "globally" for the whole node.
 

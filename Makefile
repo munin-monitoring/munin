@@ -31,7 +31,7 @@ install-main: build
 	for p in server/*.tmpl; do    		              \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
 	done
-	$(INSTALL) -m 0644 server/logo.gif $(CONFDIR)/templates/
+	$(INSTALL) -m 0644 server/logo.png $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/style.css $(CONFDIR)/templates/
 
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/server/munin.conf $(CONFDIR)/
