@@ -1,3 +1,25 @@
+munin (0+1.0.0pre5-1) unstable; urgency=low
+
+  * New upstream release:
+      - Apache plugins' autoconf routines should be fixed, closes: #236144.
+      - The node now applies plugin user settings at startup, closes: #236694.
+      - Fixed link rot in the templates, closes: #236792.
+      - graph_scale improved to use rrdgraph --units-exponent, closes: #236834.
+      - Improves the labels of the Apache plugins, closes: #238594.
+      - Improved sensors_* plugins to better cope with various output from
+        /usr/bin/sensors, closes: #245289.
+      - Adds new plugin for NFS statistics, closes: #223775.
+
+  * debian/rules:
+      - Include "contrib" plugins as well as "auto" and "manual" in the
+        munin-node package, closes: #236939, #236972, #245104.
+
+  * Makefile:
+      - Ignore the return value of htmldoc, as it's begun returning non-zero
+        if it encountered a non-fatal error in the document.
+
+ -- Tore Anderson <tore@debian.org>  Fri, 21 May 2004 20:51:19 +0200
+
 munin (0+1.0.0pre3-1) unstable; urgency=low
 
   * New upstream release, closes: #231049:
