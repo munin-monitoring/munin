@@ -49,8 +49,9 @@ munin (1.2.0-1) unstable; urgency=low
         for the main munin package, as munin-limits requires Text::Balanced.
       - Add libdate-manip-perl as a recommended package for the munin package,
         as the new CGI functionality depends on it.
-      - Add libnet-snmp-perl as a recommended package for the munin-node
-        package, as munin-node-configure-snmp requires it.
+      - Change libnet-snmp-perl to be a recommended package for munin-node
+        instead of only suggested, as the new munin-node-configure-snmp
+        requires it.
 
   * debian/Makefile.config:
       - Install the new CGI in /usr/lib/cgi-bin/, as mandated by the Debian

@@ -10,7 +10,7 @@ Package: munin-node
 Architecture: all
 Depends: ${perl:Depends}, libnet-server-perl, procps
 Recommends: libnet-snmp-perl
-Suggests: munin, libwww-perl, libnet-snmp-perl, libnet-irc-perl, mysql-client, hddtemp, lm-sensors | acpi
+Suggests: munin, libwww-perl, libnet-irc-perl, mysql-client, hddtemp, lm-sensors | acpi
 Conflicts: lrrd-client (<= 0.9.9r5-1)
 Description: Network-wide graphing framework (node)
  Munin is a highly flexible and powerful solution used to create graphs of
