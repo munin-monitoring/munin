@@ -1,5 +1,7 @@
 munin (work)
 
+munin (1.1.2)
+
   * The server programs now open the log file at an earlier point.
   * Munin-limits added to distro.
   * Warnings and criticals now show up in nodeview and overview.
