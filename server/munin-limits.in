@@ -2,6 +2,9 @@
 # Nagios
 #
 # $Log$
+# Revision 1.11  2004/11/13 21:22:59  jimmyo
+# Changed some of the critical/warning output..
+#
 # Revision 1.10  2004/11/13 19:14:08  jimmyo
 # Changed the default warning/critical output a bit.
 #
@@ -56,7 +59,7 @@ my @limit_hosts = ();
 my @limit_services = ();
 my $force_root = 0;
 my %notes = ();
-my $default_notify_text = '${var:graph_title}:${if:cfields  CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range ${var:crange})${if:extinfo : ${var:extinfo}}}.}${if:wfields  WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range ${var:wrange})${if:extinfo : ${var:extinfo}}}.}${if:ufields  UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}';
+my $default_notify_text = '${var:graph_title}:${if:cfields  CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields  WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields  UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}';
 
 my $log = new IO::Handle;
 
@@ -194,8 +197,8 @@ sub process_service {
 	# Some fields that are nice to have in the plugin output
 	$client->{$key.".value"} = $value;
 	$client->{'fields'} = join (' ', map { $_ =~ s/\.label$//; $_} grep (/\.label/, keys %$client));
-	$client->{$key.".crange"} = (defined $critical[0]?$critical[0]:"unset").":".(defined $critical[1]?$critical[1]:"unset");
-	$client->{$key.".wrange"} = (defined $warning[0]?$warning[0]:"unset").":".(defined $warning[1]?$warning[1]:"unset");
+	$client->{$key.".crange"} = (defined $critical[0]?$critical[0]:"").":".(defined $critical[1]?$critical[1]:"");
+	$client->{$key.".wrange"} = (defined $warning[0]?$warning[0]:"").":".(defined $warning[1]?$warning[1]:"");
 	
 	logger ("value: $domain -> $name -> $clientname -> $key : $value") if $DEBUG;
 	if ((defined ($critical[0]) and $value < $critical[0]) or
