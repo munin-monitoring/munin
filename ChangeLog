@@ -1,7 +1,8 @@
-munin (CVS)
+munin (work)
 
   * Node: Added support for optional "user" settings in node.
   * Node: Allow "root" for the per-plugin "group" directive.
+  * Plugins: sort drives in generic/hddtemp_smartcl (SF#1174847).
   * Plugins: Fix autoconf for linux/{nfsd,nfs_client}.
   * Plugins: Make linux/sensors_ handle multiline output better (Deb#300690).
   * Plugins: generic/postfix_mailstats now treats reject-lines better

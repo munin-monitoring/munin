@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!@@PERL@@ -w
 #
 # Plugin to monitor harddrive temperatures through SMART.
 #
@@ -85,7 +85,7 @@ $smartctl = `which smartctl` unless $smartctl;
 chomp $smartctl;
 
 # Still not found? Check obvious places
-my @dirs, qw(/usr/bin /usr/sbin /usr/local/bin /usr/local/sbin);
+my @dirs = qw(/usr/bin /usr/sbin /usr/local/bin /usr/local/sbin);
 until ($smartctl or @dirs == 0) {
   my $dir = shift @dirs;
   my $path = $dir.'/smartctl';
@@ -110,6 +110,9 @@ if ($^O eq 'linux') {
 }
 
 @drives = split ' ', $ENV{drives} if exists $ENV{drives};
+
+# Sort list of drives
+@drives = sort @drives;
 
 if (exists $ARGV[0]) {
   if ($ARGV[0] eq 'autoconf') {
