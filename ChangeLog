@@ -18,6 +18,8 @@ munin (1.0.0pre4)
     (Deb#245289).
   * Changed default ARCH variable in Makefile.config, to support
     older tr-s (SF#898814).
+  * Make "graph_scale no" affect y-axis as well as numbers below the graph
+    (Deb#236834).
 
 munin (1.0.0pre3)
 

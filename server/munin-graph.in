@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.7  2004/04/28 21:32:26  jimmyo
+# Make "graph_scale no" affect y-axis as well as numbers below the graph (Deb#236834).
+#
 # Revision 1.6  2004/02/02 17:28:22  jimmyo
 # Munin-graph now escapes ':' in labels properly.; Fixed bug in munin-graph where it caused a flood of cron-mail.
 #
@@ -262,6 +265,23 @@ sub process_node {
 	    push @rrd,"--height", "175";
 	    push @rrd,"--imgformat", "PNG";
 	    push @rrd,"--lazy" if ($force_lazy);
+
+	    if (exists $node->{client}->{$service}->{graph_noscale} and
+		    !exists $node->{client}->{$service}->{graph_scale})
+	    {
+		if (munin_get_bool_val ($node->{client}->{$service}->{graph_noscale}))
+		{
+		    $node->{client}->{$service}->{graph_scale} = "no";
+		}
+		else
+		{
+		    $node->{client}->{$service}->{graph_scale} = "yes";
+		}
+
+	    }
+	    push (@rrd, "--units-exponent", "0") 
+		if (! munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1));
+
 	    my $col_count;
 	    my $max_field_len = 0;
 	    my @field_order = ();
@@ -607,19 +627,6 @@ sub process_node {
 			(defined $single_value and $single_value ? "#ff0000" : $COLOUR[$col_count-1%@COLOUR]))
 			if $node->{client}->{$service}->{"$negfield.warn"};
                     # Special case - renamed field
-		    if (exists $node->{client}->{$service}->{graph_noscale} and
-			    !exists $node->{client}->{$service}->{graph_scale})
-		    {
-			if (munin_get_bool_val ($node->{client}->{$service}->{graph_noscale}))
-			{
-			    $node->{client}->{$service}->{graph_scale} = "no";
-			}
-			else
-			{
-			    $node->{client}->{$service}->{graph_scale} = "yes";
-			}
-
-		    }
 
 		    push (@rrd, "GPRINT:c$negfield:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
 		    push (@rrd, "GPRINT:c$rrdname:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
