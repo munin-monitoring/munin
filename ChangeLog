@@ -8,6 +8,8 @@ munin (1.0.0pre2)
   * Added support for optional groups.
   * Munin-html: Added support for domain_order.
   * Fixed pod typos patched by Lupe Christoph (SF#884092)
+  * Made Munin compatible with perl 5.005_03 (patch by Lupe Christoph)
+    (SF#884622)
 
 munin (1.0.0pre1)
 
