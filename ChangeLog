@@ -35,6 +35,7 @@ munin (work)
     Fujitsu Siemens ServerView agents.
   * Adapt linux/apt plugin to work properly with Debian testing/unstable
     (patch from Rune N. Skillingstad).
+  * Munin-node now makes sure it runs the plugins from a world-readable dir.
   * Added new plugin generic/apc_nis to monitor APC UPS, contributed by
     xavier.
 
