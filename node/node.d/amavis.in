@@ -16,12 +16,13 @@
 
 TEMP_FILE=/tmp/lrrd-amavis.$$
 AMAVIS_LOG=/var/log/mail/mail.info
-LOGTAIL=`which logtail`
+LOGTAIL=${logtail:-`which logtail`}
+STATEFILE=@@PLUGSTATE@@/amavis.offset
 
 if [ "$amavislog"  ]; then AMAVIS_LOG=$amavislog ; fi
 
 if [ "$1" = "autoconf" ]; then
-        if [ -f ${AMAVIS_LOG} -a -x ${LOGTAIL} ] ; then
+        if [ -f "${AMAVIS_LOG}" -a -n "${LOGTAIL}" -a -x "${LOGTAIL}" ] ; then
 		echo yes
 		exit 0
 	else
@@ -45,6 +46,14 @@ total=U
 virus=U
 spamm=U
 spams=U
+
+`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
+ARGS=0
+if [ $? = 66 ]; then
+    if [ ! -n "$logtail" ]; then
+	ARGS=1
+    fi
+fi
 
 if [ -e $TEMP_FILE -a -f $TEMP_FILE ]
 then

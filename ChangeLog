@@ -6,6 +6,7 @@ munin (work)
   * Plugins: Fix linux/users #! line.
   * Plugins: Changed default log for generic/postfix_mailstats from syslog to
   mail.log. Downgraded it from auto to manual.
+  * Plugins: Made generic/amavis autodetect logtail format.
 
 munin (1.2.0rc1)
 
