@@ -3,6 +3,7 @@ munin (work)
   * Allow floating point values in warning/critical limits.
   * Bugfix in munin-html, when using groups/host names with more than one dot.
   * Updated RPM package creation with regards to the 1.2 series.
+  * Created RPM package creation for SuSE with regards to the 1.2 series.
 
 munin (1.1.6)
 

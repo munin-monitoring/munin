@@ -208,6 +208,24 @@ rpm-src: rpm-pre
 	tar -C .. --dereference --exclude CVS  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
 
++suse-pre:
+	@for file in `find dists/suse/ -type f -name '*.in'`; do                \
+		destname=`echo $$file | sed 's/.in$$//'`;               \
+		echo Generating $$destname..;                           \
+		sed -e 's|@@VERSION@@|$(VERSION)|g'                     \
+		$$file > $$destname;                                \
+	done
+	-cp dists/tarball/plugins.conf .
+#	(cd ..; ln -s munin munin-$(VERSION))
+
+suse: suse-pre
+	tar -C .. --dereference --exclude CVS  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
+	(cd ..; rpmbuild -tb munin-$(RELEASE).tar.gz)
+
+suse-src: suse-pre
+	tar -C .. --dereference --exclude CVS  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
+	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
+
 clean:
 ifeq ($(MAKELEVEL),0)
 	-rm -f debian
