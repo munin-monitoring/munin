@@ -3,6 +3,7 @@ munin (1.0.0pre3)
   * Munin-graph had a perl 5.005_03 compatabilty problem, which slipped
     through to version pre2.
   * Added mkdir to install-man target. (SF#888545)
+  * Added better logging of plugin failures in the node. (SF#881045)
 
 munin (1.0.0pre2)
 
