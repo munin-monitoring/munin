@@ -13,6 +13,7 @@ munin (CVS)
   * Plugins: generic/smart_ exit value no longer triggers criticals.
   * Plugins: linux/df* now ignores bind mounts.
   * Plugins: Added plugin generic/snmp__cpuload.
+  * Plugins: generic/amavis now has configurable logfile location (Deb#296533).
   * Docs: Added man page for munin-node-configure-snmp.
   * Docs: Brushed up the comments in the default munin.conf a bit (Deb#294060).
   * Installation: Create CIGdir if nonexistant.

@@ -15,7 +15,7 @@
 #
 
 TEMP_FILE=`mktemp /tmp/lrrd-amavis.XXXXXX`
-AMAVIS_LOG=/var/log/mail/mail.info
+AMAVIS_LOG=${logfile:-/var/log/mail/mail.info}
 LOGTAIL=${logtail:-`which logtail`}
 STATEFILE=@@PLUGSTATE@@/amavis.offset
 
