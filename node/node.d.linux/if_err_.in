@@ -12,6 +12,9 @@
 # be monitored with this plugin.
 #
 # $Log$
+# Revision 1.4  2004/09/26 22:28:42  jimmyo
+# Suggest wlan interfaces as well as eth interfaces.
+#
 # Revision 1.3  2004/09/25 22:29:16  jimmyo
 # Added info fields to a bunch of plugins.
 #
@@ -53,7 +56,7 @@ fi
 
 if [ "$1" = "suggest" ]; then
 	if [ -r /proc/net/dev ]; then
-		grep eth /proc/net/dev | cut -f1 -d: | sed 's/ //g'
+		egrep '(eth|wlan)' /proc/net/dev | cut -f1 -d: | sed 's/ //g'
 		exit 0
 	else
 		exit 1
