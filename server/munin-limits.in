@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.26  2005/02/16 19:58:25  jimmyo
+# yet another rewrite of munin-limits open call (SF#1115434)
+#
 # Revision 1.25  2005/01/25 20:06:55  jimmyo
 # Make munin-limits work properly with perl 5.6 (SF#1109039).
 #
@@ -457,7 +460,7 @@ sub generate_service_message {
 		logger ("Debug: opening for writing: \"" . join('" "',@cmd) . "\".") if $DEBUG;
 		if ($cmd[0] == ">")
 		{
-		    if (! open ($pipe, $cmd[0], join (' ', @cmd[1 .. $#cmd])))
+		    if (! open ($pipe, join (' ', @cmd)))
 		    {
 			logger ("Fatal: Could not open " . join (' ', @cmd[1 .. $#cmd]) . " for writing: $!");
 			exit 3;
