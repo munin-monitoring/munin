@@ -86,7 +86,7 @@ sub session {
 			 -cols             => \%columns
 		     );
 
-This method cals C<get_table()> with all the given arguments except
+This method calls C<get_table()> with all the given arguments except
 C<-cols>, and then transforms the data into a hash of hashes in the
 following manner:
 
@@ -110,6 +110,16 @@ Example:
             );
 
 given the following SNMP table:
+
+  IF-MIB::ifIndex.1 = INTEGER: 1
+  IF-MIB::ifIndex.2 = INTEGER: 2
+  IF-MIB::ifDescr.1 = STRING: lo0
+  IF-MIB::ifDescr.2 = STRING: lna0
+  IF-MIB::ifType.1 = INTEGER: softwareLoopback(24)
+  IF-MIB::ifType.2 = INTEGER: ethernetCsmacd(6)
+  IF-MIB::ifMtu.1 = INTEGER: 32768
+  IF-MIB::ifMtu.2 = INTEGER: 1500
+  ...
 
 will return a hash like this:
 
@@ -147,6 +157,16 @@ sub get_hash {
     return \%ret;
 }
 
+=head1 TODO
+
+Lots.
+
+=head1 BUGS
+
+C<get_hash()> doesn't handle tables with sparse indices.
+
+=back
+
 
 =head1 SEE ALSO
 
@@ -154,6 +174,13 @@ L<Net::SNMP>
 
 =head1 AUTHOR
 
-Dagfinn Ilmari Mannsåker
+Dagfinn Ilmari Mannsåker E<lt>ilmari@linpro.noE<gt>
+
+=head1 COPYRIGHT
+
+Copyright (c) 2004 Dagfinn Ilmari Mannsåker E<lt>ilmari@linpro.noE<gt>.
+All rights reserved. This program is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; version 2 dated June, 1991.
 
 =cut
