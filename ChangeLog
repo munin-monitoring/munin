@@ -5,6 +5,8 @@ munin (work)
   * SNMP plugins now honour the "host" environment variable if they can't
     deduce the hostname from $0.
   * Small interface improvements in the HTML output.
+  * Changes of min and max values now causes corresponding changes in 
+    the RRD files.
 	
 munin (1.1.4)
 

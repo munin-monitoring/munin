@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.19  2004/09/07 21:45:37  jimmyo
+# Changes of min and max values now causes corresponding changes in the RRD files.
+#
 # Revision 1.18  2004/09/04 21:33:13  jimmyo
 # Handle strange characters better.
 #
@@ -616,7 +619,7 @@ sub munin_get_picture_filename {
 }
 
 sub munin_get_filename {
-	my ($domain,$node,$service,$field) = @_;
+	my ($config,$domain,$node,$service,$field) = @_;
 
 	return ($config->{'dbdir'} . "/$domain/$node-$service-$field-" . lc substr (($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$field.".type"}||"GAUGE"), 0,1). ".rrd");
 

@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.29  2004/09/07 21:45:38  jimmyo
+# Changes of min and max values now causes corresponding changes in the RRD files.
+#
 # Revision 1.28  2004/09/04 21:33:13  jimmyo
 # Handle strange characters better.
 #
@@ -690,7 +693,7 @@ sub get_rrd_filename {
 
 	if ($path =~ /^\s*([^:;]+)[:;]([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
 	{
-	    $result = munin_get_filename ($1, $2, $3, $4);
+	    $result = munin_get_filename ($config, $1, $2, $3, $4);
 	    print "\nDEBUG1: Expanding $path...\n" if $DEBUG;
 	    if (! defined $node->{client}->{$service}->{$field."label"})
 	    {
@@ -707,7 +710,7 @@ sub get_rrd_filename {
 	elsif ($path =~ /^\s*([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
 	{
 	    print "\nDEBUG2: Expanding $path...\n" if $DEBUG;
-	    $result = munin_get_filename ($domain, $1, $2, $3);
+	    $result = munin_get_filename ($config, $domain, $1, $2, $3);
 	    for my $f (@copy_fields)
 	    {
 		if (not exists $node->{client}->{$service}->{"$field.$f"} and
@@ -721,7 +724,7 @@ sub get_rrd_filename {
 	elsif ($path =~ /^\s*([^:\.]+)[:\.]([^:\.]+)\s*$/)
 	{
 	    print "\nDEBUG3: Expanding $path...\n" if $DEBUG;
-	    $result = munin_get_filename ($domain, $name, $1, $2);
+	    $result = munin_get_filename ($config, $domain, $name, $1, $2);
 	    for my $f (@copy_fields)
 	    {
 		if (not exists $node->{client}->{$service}->{"$field.$f"} and
@@ -734,7 +737,7 @@ sub get_rrd_filename {
 	elsif ($path =~ /^\s*([^:\.]+)\s*$/)
 	{
 	    print "\nDEBUG4: Expanding $path...\n" if $DEBUG;
-	    $result = munin_get_filename ($domain, $name, $service, $1);
+	    $result = munin_get_filename ($config, $domain, $name, $service, $1);
 	    for my $f (@copy_fields)
 	    {
 		if (not exists $node->{client}->{$service}->{"$field.$f"} and
@@ -748,7 +751,7 @@ sub get_rrd_filename {
     else
     {
 	print "\nDEBUG5: Doing path...\n" if $DEBUG;
-	$result = munin_get_filename($domain,$name,$service,$field);
+	$result = munin_get_filename($config, $domain,$name,$service,$field);
     }
     return $result;
 }
@@ -1145,19 +1148,19 @@ sub parse_path
 
     if ($path =~ /^\s*([^:]*):([^:]*):([^:]*):([^:]*)\s*$/)
     {
-	$filename = munin_get_filename ($1, $2, $3, $4);
+	$filename = munin_get_filename ($config, $1, $2, $3, $4);
     }
     elsif ($path =~ /^\s*([^:]*):([^:]*):([^:]*)\s*$/)
     {
-	$filename = munin_get_filename ($domain, $1, $2, $3);
+	$filename = munin_get_filename ($config, $domain, $1, $2, $3);
     }
     elsif ($path =~ /^\s*([^:]*):([^:]*)\s*$/)
     {
-	$filename = munin_get_filename ($domain, $node, $1, $2);
+	$filename = munin_get_filename ($config, $domain, $node, $1, $2);
     }
     elsif ($path =~ /^\s*([^:]*)\s*$/)
     {
-	$filename = munin_get_filename ($domain, $node, $service, $1);
+	$filename = munin_get_filename ($config, $domain, $node, $service, $1);
     }
     return $filename;
 }

@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.14  2004/09/07 21:45:38  jimmyo
+# Changes of min and max values now causes corresponding changes in the RRD files.
+#
 # Revision 1.13  2004/09/04 21:33:13  jimmyo
 # Handle strange characters better.
 #
@@ -357,6 +360,8 @@ unlink ("$config->{rundir}/$serversocket");
 my $overwrite = &munin_readconfig($conffile);
 $config = &munin_overwrite($config,$overwrite);
 
+&compare_configs ($oldconfig, $config);
+
 if (&munin_getlock("$config->{rundir}/munin-datafile.lock"))
 {
     &munin_writeconfig("$config->{dbdir}/datafile",$config);
@@ -373,6 +378,107 @@ rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-updat
 
 logger("Munin-update finished ($update_time sec)");
 close ($log);
+
+# compare_configs is used to monitor for config changes which we
+# have to act upon.
+sub compare_configs {
+    my $old = shift;
+    my $new = shift;
+
+    foreach my $dom (%{$new->{domain}})
+    {
+	foreach my $host (%{$new->{domain}->{$dom}->{node}})
+	{
+	    foreach my $serv (%{$new->{domain}->{$dom}->{node}->{$host}->{client}})
+	    {
+		foreach my $field (%{$new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}})
+		{
+		    next unless $field =~ /\.label$/;
+		    $field =~ s/\.label$//;
+		    if (defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"})
+		    {
+			if ((!defined $old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"}) or
+				($old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"} != 
+				 $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"}
+			   ))
+			{
+			    &change_max ($config, $dom, $host, $serv, $field, 
+				    $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"});
+			}
+		    }
+		    if (defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"})
+		    {
+			if ((!defined $old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"}) or
+				($old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"} != 
+				 $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"}
+			   ))
+			{
+			    &change_min ($config, $dom, $host, $serv, $field, 
+				    $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"});
+			}
+		    }
+		}
+	    }
+	}
+    }
+
+    foreach my $dom (%{$old->{domain}})
+    {
+	foreach my $host (%{$old->{domain}->{$dom}->{node}})
+	{
+	    foreach my $serv (%{$old->{domain}->{$dom}->{node}->{$host}->{client}})
+	    {
+		foreach my $field (%{$old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}})
+		{
+		    next unless $field =~ /\.label$/;
+		    $field =~ s/\.label$//;
+		    if (defined $old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"})
+		    {
+			if (!defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"})
+			{
+			    &change_max ($config, $dom, $host, $serv, $field, undef);
+			}
+		    }
+		    if (defined $old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"})
+		    {
+			if (!defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"})
+			{
+			    &change_min ($config, $dom, $host, $serv, $field, undef);
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
+
+sub change_max
+{
+    my $config = shift;
+    my $domain = shift;
+    my $host   = shift;
+    my $serv   = shift;
+    my $field  = shift;
+    my $val    = shift;
+    my $file   = &munin_get_filename ($config, $domain, $host, $serv, $field);
+
+    print STDERR "DEBUG: Changing max of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"undef") . ".\n";
+    RRDs::tune ($file, "-a", "42:".(defined $val?$val:"U"));
+}
+
+sub change_min
+{
+    my $config = shift;
+    my $domain = shift;
+    my $host   = shift;
+    my $serv   = shift;
+    my $field  = shift;
+    my $val    = shift;
+    my $file   = &munin_get_filename ($config, $domain, $host, $serv, $field);
+
+    print STDERR "DEBUG: Changing min of $domain -> $host -> $serv -> $field to ". (defined $val?$val:"undef") . ".\n";
+    RRDs::tune ($file, "-i", "42:".(defined $val?$val:"U"));
+}
 
 sub process_domain {
   my ($domain) = @_;
