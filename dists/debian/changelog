@@ -10,7 +10,7 @@ munin (1.2.2-3) unstable; urgency=high
   
   * Fix autoconf for the linux/nfs* plugins.
 
- -- Dagfinn Ilmari Mannsaker <ilmari@ilmari.org.no>  Wed, 16 Mar 2005 20:45:15 +0100
+ -- Dagfinn Ilmari Mannsaker <ilmari@ilmari.org>  Wed, 16 Mar 2005 20:45:15 +0100
 
 munin (1.2.2-2) unstable; urgency=low
 
