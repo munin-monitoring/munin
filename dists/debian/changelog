@@ -1,4 +1,4 @@
-munin (0+1.0.0pre2-1) unstable; urgency=low
+munin (0+1.0.0pre3-1) unstable; urgency=low
 
   * New upstream release, closes: #231049:
       - Project renamed from "LRRD" to "Munin".  Almost every file in the
