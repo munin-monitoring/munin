@@ -25,7 +25,8 @@ munin (1.0.0pre4)
   * Cleaned up Solaris plugins (SF#944389, ++)
   * New logo by Bianca Pfingsten, sponsored by Mediahaus Biering Grafischer
     Betrieb GmbH. (Thanks :-)
-  * Made solaris-plugin fs_df work without GNU df (SF#944389).
+  * Made solaris plugin fs_df work without GNU df (SF#944389).
+  * New solaris plugin temperature, by Richard van den Berg.
 
 munin (1.0.0pre3)
 
