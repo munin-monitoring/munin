@@ -12,6 +12,7 @@ munin (work)
     (Deb#291849).
   * Plugins: New wildcard plugin generic/courier_ by Micah Anderson 
     (Deb#291854). 
+  * Plugins: New plugin generic/perdition by Micah Anderson (Deb#291855).
 
 
 munin (1.2.0rc1)
