@@ -75,6 +75,8 @@ munin (work)
     * Upped generic/ntp_ to auto family.
     * Upped generic/sendmail_mailstats and generic/sendmail_mailtraffic to
       auto family.
+    * Fixed linux/sensors_ plugin to report warning and critical values
+      for temperatures and voltages if 'sensors' reports them.
 
   - Installation
     * Changed variable name of ARCH to OSTYPE, to avoid name crash on newer
