@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.22  2004/09/07 20:38:33  jimmyo
+# Added the internal field name to the HTML output as a tooltip.
+#
 # Revision 1.21  2004/09/07 18:56:03  jimmyo
 # Small interface improvements in the HTML output.
 #
@@ -291,6 +294,7 @@ for my $domain (@domainorder) {
 				$fieldnum++;
 
 				$field_info{'hr'}      = 1 unless ($fieldnum % 3);
+				$field_info{'field'}   = $f;
 				$field_info{'label'}   = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".label"} || $f;
 				$field_info{'type'}    = lc ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".type"} || "GAUGE");
 				$field_info{'warn'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".warning"} || "None";
