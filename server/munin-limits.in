@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.14  2004/11/18 15:31:37  jimmyo
+# Worked a bit more on the notification system.
+#
 # Revision 1.13  2004/11/18 00:22:02  jimmyo
 # Midway implementation of new notification scheme.
 #
@@ -81,7 +84,9 @@ my @limit_hosts = ();
 my @limit_services = ();
 my $force_root = 0;
 my %notes = ();
-my $default_notify_text = '${var:graph_title}:${if:cfields  CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields  WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields  UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}';
+my %default_text = ( "default" => '${var:group} -> ${var:host} -> ${var:graph_title}:${if:cfields \n\tCRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields \n\tWARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields \n\tUNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}\n',
+    		     "nagios"  => '${var:host}\t${var:worstid}\t${var:graph_title}\t${var:graph_title}:${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}\n'
+		    );
 
 my $log = new IO::Handle;
 
@@ -219,6 +224,11 @@ sub process_service {
 	# Some fields that are nice to have in the plugin output
 	$client->{$key.".value"} = $value;
 	$client->{'fields'} = join (' ', map { $_ =~ s/\.label$//; $_} grep (/\.label/, keys %$client));
+	$client->{'plugin'} = $clientname;
+	$client->{'host'} = $name;
+	$client->{'group'} = $domain;
+	$client->{'worst'} = "OK";
+	$client->{'worstid'} = 0;
 	$client->{$key.".crange"} = (defined $critical[0]?$critical[0]:"").":".(defined $critical[1]?$critical[1]:"");
 	$client->{$key.".wrange"} = (defined $warning[0]?$warning[0]:"").":".(defined $warning[1]?$warning[1]:"");
 	
@@ -227,6 +237,8 @@ sub process_service {
 	    (defined ($critical[1]) and $value > $critical[1])) {
 	    $critical[0] ||= "";
 	    $critical[1] ||= "";
+	    $client->{'worst'} = "CRITICAL";
+	    $client->{'worstid'} = 2;
 	    $notes{$domain}{$name}{$clientname}{"$key.critical"} = 
 		(defined $client->{"$key.extinfo"}?
 		    "$value (not in $critical[0]:$critical[1]): ".
@@ -237,6 +249,8 @@ sub process_service {
 	       (defined ($warning[1]) and $value > $warning[1])) {
 	    	$warning[0] ||= "";
 	    	$warning[1] ||= "";
+		$client->{'worst'} = "WARNING" if $client->{"worst"} eq "OK";
+		$client->{'worstid'} = 1 if $client->{"worstid"} == 0;
 		$notes{$domain}{$name}{$clientname}{"$key.warning"} = 
 		  (defined $client->{"$key.extinfo"}?
 			"$value (not in $warning[0]:$warning[1]): ".
@@ -293,21 +307,21 @@ sub generate_service_message {
     {
 	foreach my $c (keys %{$config->{'contact'}})
 	{
-	    next if $c eq "default"; # Special case, handled after the loop
-	    my $txt = message_expand ($config->{'contact'}->{$c}->{'text'} || $config->{'contact'}->{'default'}->{'text'} || $default_notify_text);
+	    my $pretxt = ($config->{'contact'}->{$c}->{'text'} || $config->{'contact'}->{'default'}->{'text'} || $default_text{$c} || $default_text{'default'});
+	    my $txt = message_expand ($pretxt, $client, "");
+	    $txt =~ s/\\n/\n/g;
+	    $txt =~ s/\\t/\t/g;
 	    my $pipe;
 	    if (!defined $config->{'contact'}->{$c}->{'pipe'})
 	    {
 		my @cmd = split /\s/, message_expand ($config->{'contact'}->{$c}->{'command'} || $config->{'contact'}->{'default'}->{'command'} || undef);
 		logger ("Debug: opening for writing: |" . join('|',@cmd) . "|.") if $DEBUG;
-		open ($pipe, @cmd) or logger ("Warning: Could not run command \"" . join(' ',@cmd) . "\": $!");
+		open ($pipe, $cmd[0], @cmd[1 .. $#cmd]) or logger ("Warning: Could not run command \"" . join(' ',@cmd) . "\": $!");
 		$config->{'contact'}->{$c}->{'pipe'} = $pipe;
 	    }
 	    $pipe = $config->{'contact'}->{$c}->{'pipe'};
-	    print $pipe $txt if (defined $config->{'contact'}->{$c}->{'pipe'});
+	    print $pipe $txt, "\n" if (defined $pipe);
 	}
-        # "default" case
-	$notes{$domain}{$name}{$clientname}{$worst} = message_expand ($config->{'contact'}->{'default'}->{'text'} || $default_notify_text);
     }
 }
 
