@@ -1,10 +1,13 @@
 munin (CVS)
 
+  * Main: yet another rewrite of munin-limits open call (SF#1115434).
   * Node: munin-node didn't treat default_plugin_user properly (Deb#295366).
   * Plugins: linux/if* now treats ra* interfaces as wireless.
   * Plugins: minor bugfix in generic/bind9.
   * Plugins: generic/sendmail_mailqueue handles bigger queues (fix by Mickey
     Everts).
+  * Plugins: Made contrib-plugins generic/amavis and generic/mailstats more
+    secure.
   * Installation: Create CIGdir if nonexistant.
 
 munin (1.2.0rc2)
