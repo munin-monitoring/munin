@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.5  2004/01/29 17:36:19  jimmyo
+# Updated copyright information
+#
 # Revision 1.4  2004/01/29 16:56:54  jimmyo
 # Fixed "group" bug. Added support for multiple and optional groups
 #
@@ -111,7 +114,7 @@ if ($do_version)
 	print "munin-node (munin-node) version $VERSION.
 Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
 
-Copyright (C) 2002-2003
+Copyright (C) 2002-2004
 This is free software released under the GNU Public License. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ";
