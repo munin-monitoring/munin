@@ -34,6 +34,8 @@ munin (CVS)
   * Plugins: Made linux/df work properly with tmpfs and devmapper (Deb#298442).
   * Plugins: Thanks to Stephen Gran, generic/exim_mailstats now graphs rejects
     (Deb#295799).
+  * Plugins: Only run 'exim -bpr' once in generic/exim_mailqueue_alt,
+    and use only awk to process the data.
   * Docs: Added man page for munin-node-configure-snmp.
   * Docs: Brushed up the comments in the default munin.conf a bit (Deb#294060).
   * Docs: Fixed erronous cgiurl docs (SF#1159722).

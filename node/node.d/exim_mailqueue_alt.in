@@ -19,6 +19,10 @@
 #	queuecrit	- critical limit
 #
 # $Log$
+# Revision 1.2  2005/03/17 19:18:36  ilmari
+# Only run 'exim -bpr' once in generic/exim_mailqueue_alt,
+# and use only awk to process the data.
+#
 # Revision 1.1  2004/12/09 20:03:26  jimmyo
 # Added two new plugins contributed by Jacques Caruso, generic/exim_mailqueue_alt and generic/mailscanner.
 #
@@ -40,13 +44,14 @@ if [ "$1" == "config" ]; then
 	echo 'graph_title Exim mailqueue'
 	echo 'graph_args --base 1000 -l 0'
 	echo 'graph_vlabel mails in queue'
+	echo 'graph_order frozen active bounces total'
 	echo 'graph_category exim'
 	echo 'active.label active'
-	echo 'active.draw LINE2'
-	echo 'bounced.label bounced'
-	echo 'bounced.draw LINE2'
+	echo 'active.draw STACK'
+	echo 'bounces.label bounces'
+	echo 'bounces.draw LINE2'
 	echo 'frozen.label frozen'
-	echo 'frozen.draw LINE2'
+	echo 'frozen.draw AREA'
 	echo 'total.label total'
 	echo 'total.draw LINE2'
 	echo "total.warning $QUEUEWARN"
@@ -54,12 +59,13 @@ if [ "$1" == "config" ]; then
 	exit 0
 fi
 
-ACTIVE=`$EXIM -bpr | grep -Ev '(^\ \ |^$|<>|frozen)' | wc -l`
-BOUNCED=`$EXIM -bpr | awk '{print $4}' | grep '<>' | wc -l`
-FROZEN=`$EXIM -bpr | awk '{print $6}' | grep frozen | wc -l`
-TOTAL=`$EXIM -bpc`
-
-echo "active.value $ACTIVE"
-echo "bounced.value $BOUNCED"
-echo "frozen.value $FROZEN"
-echo "total.value $TOTAL"
+$EXIM -bpr | awk 'BEGIN { bounces = 0; frozen = 0; total = 0 }
+                  $4 == "<>" { bounces++; }
+                  $6 == "frozen" { frozen++ }
+                  /<[^>]*>/ { total++ }
+                  END {
+                      print "frozen.value " frozen;
+                      print "bounces.value " bounces;
+                      print "total.value " total;
+                      print "active.value " total - frozen;
+                  }'
