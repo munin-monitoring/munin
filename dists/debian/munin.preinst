@@ -7,7 +7,7 @@ lrrd_sums="
 b9392bbbf0c92338d3958eb68ce650e4:/etc/lrrd/templates/lrrd-nodeview.tmpl
 6ab11f132495f409fb83b67598a4d24b:/etc/lrrd/templates/lrrd-overview.tmpl
 412a16307c1ce81fe14eb74c953d7e8a:/etc/lrrd/templates/lrrd-serviceview.tmpl
-385010f8f050d25723206b1c77f0df5e:/etc/lrrd/templates/logo.png
+6d86361a699097294f7eb07d3301e489:/etc/lrrd/templates/logo.gif
 697bb8b5fdfc8a2f9d38bbfd56cd989c:/etc/lrrd/templates/style.css
 530070017a8147fb54c0cc3c9f259a80:/etc/lrrd/server.conf
 "
