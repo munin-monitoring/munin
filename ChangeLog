@@ -6,6 +6,7 @@ munin (work)
   * Main: Better handling of broken connections (Deb#298108).
   * Main: HTML cleanup (Deb#296676).
   * Main: Re-enable width/height attributes to img tags.
+  * Main: Escape regexps more properly (Deb#296575).
   * Plugin: generic/amavis now has configurable logfile location (Deb#296533).
   * Plugin: linux/irqstats should no longer fail on some systems (Deb#296452).
   * Plugin: modified graph_args of generic/apache_processes, to work around

@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.44.2.4  2005/03/09 17:57:37  jimmyo
+# Escape regexps more properly (Deb#296575).
+#
 # Revision 1.44.2.3  2005/03/06 22:22:40  jimmyo
 # Make sure all rrd-tunes are correct after an upgrade (Deb#296454, Deb#296645).
 #
@@ -1113,7 +1116,7 @@ sub munin_get_field_order
 	($client,$type) = split /\./,$key;
 	if (defined $type and $type eq "label") 
 	{
-	    push @$result,$client if !grep /^$client(?:=|$)/, @$result;;
+	    push @$result,$client if !grep /^\Q$client\E(?:=|$)/, @$result;;
 	} 
     }
     
