@@ -539,12 +539,16 @@ sub process_request {
   }
 }
 
-sub net_read
+sub net_read 
 {
     if (defined $tls)
     {
 	eval { $_ = Net::SSLeay::read($tls); };
-	logger ("TLS Warning: " . &Net::SSLeay::print_errs());
+	my $err = &Net::SSLeay::print_errs();
+	if (defined $err and length $err)
+	{
+	    logger ("TLS Warning: $err");
+	}
     }
     else
     {
@@ -554,14 +558,18 @@ sub net_read
     return $_;
 }
 
-sub net_write
+sub net_write 
 {
     my $text = shift;
     logger ("DEBUG: > $text") if $DEBUG;
     if (defined $tls)
     {
 	eval { Net::SSLeay::write ($tls, $text); };
-	logger ("TLS Warning: " . &Net::SSLeay::print_errs());
+	my $err = &Net::SSLeay::print_errs();
+	if (defined $err and length $err)
+	{
+	    logger ("TLS Warning: $err");
+	}
     }
     else
     {
@@ -596,7 +604,7 @@ sub net_write
 #     logger ("Cipher `" . Net::SSLeay::get_cipher($tls) . "'\n");
 # }
 
-sub tls_verify_callback
+sub tls_verify_callback 
 {
     my ($ok, $subj_cert, $issuer_cert, $depth, 
 	    $errorcode, $arg, $chain) = @_;
@@ -662,6 +670,38 @@ sub start_tls
 	return 0;
     }
 
+    # Should we use a private key?
+    if (defined $tls_priv and length $tls_priv)
+    {
+	if (!Net::SSLeay::CTX_use_PrivateKey_file($ctx, $tls_priv, 
+		&Net::SSLeay::FILETYPE_PEM))
+	{
+	    logger ("TLS Notice: Problem occured when trying to read file with private key \"$tls_priv\": ".&Net::SSLeay::print_errs().". Continuing without private key.");
+	}
+    }
+
+    # How about a certificate?
+    if (defined $tls_cert and length $tls_cert)
+    {
+	if (!Net::SSLeay::CTX_use_certificate_file($ctx, $tls_cert, 
+		&Net::SSLeay::FILETYPE_PEM))
+	{
+	    logger ("TLS Notice: Problem occured when trying to read file with certificate \"$tls_cert\": ".&Net::SSLeay::print_errs().". Continuing without certificate.");
+	}
+    }
+
+    # Now let's define our requirements of the node
+#    $tls_vdepth = 5 unless defined $tls_vdepth;
+#    if (Net::SSLeay::CTX_set_verify_depth ($ctx, $tls_vdepth))
+#    {
+#	logger ("TLS Warning: Problem occured when setting verify depth to \"$tls_vdepth\": ".&Net::SSLeay::print_errs().". Continuing with default depth.");
+#    }
+#    if (!Net::SSLeay::CTX_set_verify ($ctx, 
+#		&Net::SSLeay::VERIFY_PEER, &tls_verify_callback))
+#    {
+#	logger ("TLS Warning: Could not force client certificate verification: " . &Net::SSLeay::print_errs());
+#    }
+
     # Create the local tls object
     if (! ($tls = Net::SSLeay::new($ctx)))
     {
@@ -684,60 +724,25 @@ sub start_tls
 	logger ("TLS Notice: Available cipher list: $cipher_list.");
     }
 
-    # Should we use a private key?
-    if (defined $tls_priv and length $tls_priv)
-    {
-	if (!Net::SSLeay::CTX_use_PrivateKey_file($ctx, $tls_priv, 
-		&Net::SSLeay::FILETYPE_PEM))
-	{
-	    logger ("TLS Notice: Problem occured when trying to read file with private key \"$tls_priv\": ".&Net::SSLeay::print_errs().". Continuing without private key.");
-	}
-    }
-
-    # How about a certificate?
-    if (defined $tls_cert and length $tls_cert)
-    {
-	if (!Net::SSLeay::CTX_use_certificate_file($ctx, $tls_cert, 
-		&Net::SSLeay::FILETYPE_PEM))
-	{
-	    logger ("TLS Notice: Problem occured when trying to read file with certificate \"$tls_cert\": ".&Net::SSLeay::print_errs().". Continuing without certificate.");
-	}
-    }
-
-    # Now let's define our requirements of the node
-    $tls_vdepth = 5 unless defined $tls_vdepth;
-    if (Net::SSLeay::CTX_set_verify_depth ($ctx, $tls_vdepth))
-    {
-	logger ("TLS Warning: Problem occured when setting verify depth to \"$tls_vdepth\": ".&Net::SSLeay::print_errs().". Continuing with default depth.");
-    }
-    if (!Net::SSLeay::CTX_set_verify ($ctx, 
-		&Net::SSLeay::VERIFY_PEER, &tls_verify_callback))
-    {
-	logger ("TLS Warning: Could not force client certificate verification: " . &Net::SSLeay::print_errs());
-    }
-
     # Redirect stdout/stdin to the TLS
-    open(TLSSTDIN, "<&".fileno(STDIN)) or die $!;
-    open(TLSSTDOUT, "<&".fileno(STDIN)) or die $!;
-    logger ("DEBUG: Encrypted filehandles (fileno = ".fileno(TLSSTDIN).", ".fileno(TLSSTDOUT).").") if $DEBUG;
-    close (STDIN);
-    close (STDOUT);
-    Net::SSLeay::set_rfd($tls, fileno(TLSSTDIN));
-    Net::SSLeay::set_wfd($tls, fileno(TLSSTDOUT));
+#   open(TLSSTDIN, "<&".fileno(STDIN)) or die $!;
+#   open(TLSSTDOUT, "<&".fileno(STDIN)) or die $!;
+#   logger ("DEBUG: Encrypted filehandles (fileno = ".fileno(TLSSTDIN).", ".fileno(TLSSTDOUT).").") if $DEBUG;
+#   close (STDIN);
+#   close (STDOUT);
+    Net::SSLeay::set_rfd($tls, fileno(STDIN));
+    Net::SSLeay::set_wfd($tls, fileno(STDOUT));
 
     # Try to negotiate the tls connection
-    my $res = Net::SSLeay::accept($tls);
-
-    if (not (defined $res and $res))
+    if (Net::SSLeay::accept($tls))
+    {
+	logger ("TLS Notice: TLS not enabled: " . &Net::SSLeay::print_errs());
+    }
+    else
     {
 	logger ("TLS Notice: TLS enabled.");
 	logger ("TLS Notice: Cipher `" . Net::SSLeay::get_cipher($tls) . "'.");
 	logger ("TLS Notice: client cert: " . Net::SSLeay::dump_peer_certificate($tls));
-
-    }
-    else
-    {
-	logger ("TLS Notice: TLS not enabled: " . &Net::SSLeay::print_errs());
     }
     &net_read (); # Slurp an empty line.
 
@@ -878,7 +883,7 @@ sub load_auth_file
 	{
 	    $sconf->{$service}{'env'}{"lrrd_$1"} = $2;
 	    net_write ("Saving $service->env->lrrd_$1 = $2...\n") if $DEBUG;
-	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"$1 $2\" should be rewritten to \"env lrrd_$1=$2\").";
+            warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"$1 $2\" should be rewritten to \"env lrrd_$1=$2\").";
 	}
 	elsif (/\S/)
 	{
