@@ -27,6 +27,7 @@ munin (work)
   * Plugin: generic/bind9 now handles syslog format as well (by xavier).
   * Plugin: Two new contrib plugins generic/foldingathome_*, by xavier.
   * Plugin: generic/named a bit more portable (by Will Froning).
+  * Plugin: Sort fields in df*-plugins alphabetically.
 
 munin (1.1.7)
 
