@@ -24,6 +24,9 @@
 # 	ports    - HTTP port numbers
 #
 # $Log$
+# Revision 1.4  2004/02/18 15:47:35  jimmyo
+# The generic/apache_* plugins now have defined max values.
+#
 # Revision 1.3  2004/02/03 17:17:25  jimmyo
 # Generic/apache-plugins have been modified to properly to report the correct autoconf value. Also, bugfixes in _processes and _volume.
 #
@@ -91,6 +94,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" )
 	foreach my $port (@PORTS) {
 		print "accesses$port.label port $port\n";
 		print "accesses$port.type COUNTER\n";
+		print "accesses$port.max 1000000\n";
 	}
 	exit 0;
 }
