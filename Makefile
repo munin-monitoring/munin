@@ -40,7 +40,6 @@ install-main: build
 	$(INSTALL) -m 0755 build/server/munin-cron $(BINDIR)/
 
 	$(INSTALL) -m 0755 build/server/munin-update $(LIBDIR)/
-	$(INSTALL) -m 0755 build/server/munin-nagios $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-html $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-cgi-graph $(CGIDIR)/
@@ -95,7 +94,6 @@ install-man: build-man
 	$(INSTALL) -m 0644 build/doc/munin-run.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-graph.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-update.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-nagios.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-html.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-cron.8 $(MANDIR)/man8/
 
@@ -170,8 +168,6 @@ build-man-stamp:
 		server/munin-update.in > build/doc/munin-update.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		server/munin-html.in > build/doc/munin-html.8
-	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		server/munin-nagios.in > build/doc/munin-nagios.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		server/munin-cron.pod > build/doc/munin-cron.8
 	pod2man  --section=5 --release=$(RELEASE) --center="Munin Documentation" \
