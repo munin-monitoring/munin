@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.44  2005/03/07 17:43:39  jimmyo
+# Re-enable width/height attributes to img tags.
+#
 # Revision 1.43  2005/02/01 21:51:51  jimmyo
 # Added category_order, to complete the *_order options.
 #
@@ -721,8 +724,7 @@ sub get_png_size
 	my $width = undef;
 	my $height = undef;
 
-#if (open (PNG, $filename))
-	if (0)
+	if (open (PNG, $filename))
 	{
 		my $incoming;
 		binmode (PNG);
