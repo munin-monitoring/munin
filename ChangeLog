@@ -2,6 +2,8 @@ munin (work)
 
   * SNMP plugin "df" properly strips the label and serial number from
     Windows drive labels.
+  * SNMP plugins now honour the "host" environment variable if they can't
+    deduce the hostname from $0.
 	
 munin (1.1.4)
 

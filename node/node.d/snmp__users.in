@@ -1,6 +1,9 @@
 #!/usr/bin/perl -w
 #
 # $Log$
+# Revision 1.5  2004/09/07 13:19:22  ilmari
+# SNMP plugins now honour the "host" environment variable if they can't deduce the hostname from zsh.
+#
 # Revision 1.4  2004/09/05 12:00:18  jimmyo
 # Set family and capabilities.
 #
@@ -66,7 +69,7 @@ if ($0 =~ /^(?:|.*\/)snmp_([^_]+)_users$/)
 		$port = $2;
 	}
 }
-else
+elsif (!defined($host))
 {
 	print "# Debug: $0 -- $1\n" if $DEBUG;
 	die "# Error: couldn't understand what I'm supposed to monitor.";
