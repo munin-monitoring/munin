@@ -24,6 +24,8 @@ munin (1.0.0pre2)
     version of the plugin as well. (SF#882354)
   * Fixed bad debug output (forgotten linebreaks) in munin-node-configure
     (SF#882385).
+  * Generic plugins now use printf instead of echo -n, as this is more
+    portable (SF#885564)
 
 munin (1.0.0pre1)
 

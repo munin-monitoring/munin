@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.2  2004/01/29 19:39:00  jimmyo
+# Generic plugins now use printf instead of echo -n, as this is more portable (SF#885564)
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -44,7 +47,7 @@ if [ "$1" = "config" ]; then
 	[ -f $GRAPH_STATSFILE ] || exit 0
 	cat $GRAPH_STATSFILE | grep "GD" | while read i; do
 		name=`echo $i | cut -d"|" -f2 |tr  '.-' '__'`
-		echo -n "$name.label "
+		printf "$name.label "
 		echo $i | cut -d"|" -f2
 		echo "$name.warning 100"
 		echo "$name.critical 179"
@@ -55,6 +58,6 @@ fi
 [ -f $GRAPH_STATSFILE ] || exit 0
 cat $GRAPH_STATSFILE | grep "GD" | while read i; do
         name=`echo $i | cut -d"|" -f2 | tr  '.-' '__'`
-	echo -n "$name.value "
+	printf "$name.value "
 	echo $i | cut -d"|" -f3
 done

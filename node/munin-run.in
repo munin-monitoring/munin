@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.5  2004/01/29 19:39:00  jimmyo
+# Generic plugins now use printf instead of echo -n, as this is more portable (SF#885564)
+#
 # Revision 1.4  2004/01/29 17:36:19  jimmyo
 # Updated copyright information
 #
@@ -452,7 +455,7 @@ sub load_auth_file
 	{
 	    $service = $1;
 	}
-	elsif (/^\s*user\s+(\w+)\s*$/)
+	elsif (/^\s*user\s+(\S+)\s*$/)
 	{
 	    my $tmpid = $1;
 	    $sconf->{$service}{'user'} = &get_uid ($tmpid);

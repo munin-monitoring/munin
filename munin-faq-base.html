@@ -208,7 +208,7 @@ if [ "$1" = "config" ]; then
 fi
 
 # The real data-gathering
-echo -n "load.value "
+printf "load.value "
 cut -f1 -d' ' &lt; /proc/loadavg
 </pre>
 </p>
