@@ -16,6 +16,7 @@ munin (work)
   * Plugins: New plugin generic/perdition by Micah Anderson (Deb#291855).
   * Plugins: Plugin generic/squid_cache now handles multiple caches
     (Deb#288579).
+  * Docs: Documented minimum requirements for use of graph_sums (SF#1109040).
 
 munin (1.3.0)
 
