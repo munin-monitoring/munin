@@ -9,6 +9,7 @@ munin (CVS)
   * Main: Escape regexps more properly (Deb#296575).
   * Main: Correct expires-headers in CGI output (SF#1159742).
   * Node: munin-node didn't treat default_plugin_user properly (Deb#295366).
+  * Node: munin-node-configure now properly respect user plugins.
   * Plugins: linux/if* now treats ra* interfaces as wireless.
   * Plugins: minor bugfix in generic/bind9.
   * Plugins: generic/sendmail_mailqueue handles bigger queues (fix by Mickey
