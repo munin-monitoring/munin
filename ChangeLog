@@ -1,3 +1,7 @@
+munin (work)
+
+  * Minor documentation bugfix.
+   
 munin (1.1.2)
 
   * The server programs now open the log file at an earlier point.
