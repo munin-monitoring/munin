@@ -25,6 +25,7 @@ munin (work)
     generic/exim_mailqueue_alt and generic/mailscanner.
   * Plugin: New version of generic/pm3users_ by plugin creator Jacques Caruso.
   * Plugin: generic/bind9 now handles syslog format as well (by xavier).
+  * Plugin: Two new contrib plugins generic/foldingathome_*, by xavier.
 
 munin (1.1.7)
 
