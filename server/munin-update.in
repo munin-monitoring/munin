@@ -23,6 +23,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.31  2005/01/24 21:58:46  jimmyo
+# Make munin-update shut up when reading from a socket goes wrong.
+#
 # Revision 1.30  2005/01/24 17:25:39  jimmyo
 # Made TLS mode work.
 #
@@ -821,7 +824,7 @@ sub read_socket_single {
       {
 	  $res = <$socket>;
       }
-      chomp $res;
+      chomp $res if defined $res;
       alarm 0;
     };
     if ($timed_out)
