@@ -11,6 +11,7 @@ munin (1.0.0pre2)
   * Made Munin compatible with perl 5.005_03 (patch by Lupe Christoph)
     (SF#884622)
   * Removed sunos/io_-plugin (SF#882357)
+  * Bugfix, apache_processes now takes port numbers into account. (SF#882263)
 
 munin (1.0.0pre1)
 
