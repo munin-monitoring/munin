@@ -47,5 +47,10 @@ munin (1.2.0rc2-1) unstable; urgency=low
 	rrdtool tune lust.fud.no-cpu-user-c.rrd -d 42:DERIVE
 	mv -f lust.fud.no-cpu-user-c.rrd lust.fud.no-cpu-user-d.rrd
 
-    Be warned, however, that by doing this you will lose all data collected
-    since munin-node was first collected.
+    You will have to repeat this process once for each field in each affected
+    plugin.  Also remember to ensure that the "munin" system user have write
+    access to the resulting RRD file when you are finished.  Be warned,
+    however, that by doing this you will lose all data collected since
+    munin-node was upgraded to version 1.2.x.
+
+ -- Tore Anderson <tore@linpro.no>  Wed, 16 Feb 2005 22:46:50 +0100
