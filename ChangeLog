@@ -1,7 +1,8 @@
 munin (work)
 
   * Main: Fix bug with calculation of "Avg:" field when using graph_sums.
-  * Main: Make munin-limits work properly with perl 5.6 (SF#1109039).
+  * Main: Make munin-limits work properly with perl <5.8 (SF#1109039).
+  * Main: Bugfix in munin-cgi-graph with hostnames including - (SF#1111510).
   * Main/Node: Added support for TLS.
   * Plugin: linux/users now has proper hashbang.
   * Plugin: Bugfix in generic/sendmail_mail* autoconf.
