@@ -1,6 +1,9 @@
 #!/usr/bin/perl -w
 #
 # $Log$
+# Revision 1.4  2004/04/30 16:58:14  jimmyo
+# Added max.
+#
 # Revision 1.3  2004/02/22 20:17:58  jimmyo
 # Typo fix
 #
@@ -93,11 +96,13 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	print "recv.type COUNTER\n";
 	print "recv.graph no\n";
 	print "recv.cdef recv,8,*\n";
+	print "recv.max 2000000000\n";
 	print "recv.warn ", (-$warn), "\n" if defined $warn;
 	print "send.label bps\n";
 	print "send.type COUNTER\n";
 	print "send.negative recv\n";
 	print "send.cdef send,8,*\n";
+	print "send.max 2000000000\n";
 	print "send.warn $warn\n" if defined $warn;
 	exit 0; 
 }
