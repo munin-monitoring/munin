@@ -3,6 +3,7 @@ munin (work)
   * Better error handling when fetching data from RRD files.
   * Fixed bug in munin-graph when choosing colours (Deb#267185).
   * Added plugin linux/df_abs
+  * Sanitise incoming fieldnames a bit better.
   
 munin (1.1.3)
 
