@@ -20,7 +20,7 @@ munin (1.2.2-1) unstable; urgency=low
     /etc/munin/plugins/ (overwriting the symlink).  That way, they will not be
     touched during the upgrade.
 
-    You may also download them from <http://www.linpro.no/projects/munin/>.
+    You may also download them from <http://munin.sourceforge.net/>.
 
  -- Tore Anderson <tore@debian.org>  Sun, 13 Mar 2005 00:28:49 +0100
 
