@@ -2,6 +2,9 @@
 # Nagios
 #
 # $Log$
+# Revision 1.9  2004/11/12 23:18:52  jimmyo
+# Added new options notify_enable and notify_text, to allow more finely tuned notifications (both what to notify and what text to send.)
+#
 # Revision 1.8  2004/09/24 16:31:07  jimmyo
 # Bugfixes.
 #
@@ -42,6 +45,7 @@ use strict;
 use Munin;
 use POSIX qw(strftime);
 use Getopt::Long;
+use Text::Balanced qw (extract_bracketed);
 my $DEBUG=0;
 my $conffile = "@@CONFDIR@@/munin.conf";
 my $do_usage = 0;
@@ -49,6 +53,7 @@ my @limit_hosts = ();
 my @limit_services = ();
 my $force_root = 0;
 my %notes = ();
+my $default_notify_text = '${var:graph_title}:${if:cfields  CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range ${var:critical})${if:extinfo : ${var:extinfo}}}.}${if:wfields  WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range ${var:warning})${if:extinfo : ${var:extinfo}}}.}${if:ufields  UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}';
 
 my $log = new IO::Handle;
 
@@ -124,6 +129,7 @@ sub process_node {
   for my $client (keys %{$node->{client}}) {
       logger ("processing service: $client") if $DEBUG;
       process_service($domain,$name,$client,$node->{client}->{$client});
+      generate_service_message ($domain, $name, $client, $node->{client}->{$client});
   }
 }
 
@@ -181,6 +187,10 @@ sub process_service {
 	my $filename = "$config->{dbdir}/$domain/$name-$clientname-$key-".
 	    lc substr (($client->{"$key.type"}||"GAUGE"),0,1) . ".rrd";
 	my $value = sprintf "%.2f",&munin_fetch("$filename");
+
+	# Some fields that are nice to have in the plugin output
+	$client->{$key.".value"} = $value;
+	$client->{'fields'} = join (' ', map { $_ =~ s/\.label$//; $_} grep (/\.label/, keys %$client));
 	
 	logger ("value: $domain -> $name -> $clientname -> $key : $value") if $DEBUG;
 	if ((defined ($critical[0]) and $value < $critical[0]) or
@@ -199,12 +209,132 @@ sub process_service {
 	    	$warning[1] ||= "";
 		$notes{$domain}{$name}{$clientname}{"$key.warning"} = 
 		  (defined $client->{"$key.extinfo"}?
-		        "$value (not in $warning[0]:$warning[1]): ".
-		   	$client->{"$key.extinfo"}:
-		   	"Value is $value. Warning range ($warning[0]:$warning[1]) exceeded");
+			"$value (not in $warning[0]:$warning[1]): ".
+			$client->{"$key.extinfo"}:
+			"Value is $value. Warning range ($warning[0]:$warning[1]) exceeded");
 	}
       }
     }
+}
+
+sub generate_service_message {
+    my $critical= undef;
+    my ($domain, $name,$clientname,$client) = @_;
+    return unless $client;
+    my $worst = "";
+    my @crits = ();
+    my @warns = ();
+    my @unkns = ();
+
+    foreach my $key (keys %{$notes{$domain}{$name}{$clientname}})
+    {
+	if ($key =~ /^([^\.]+)\.critical$/)
+	{
+	    $worst = "critical";
+	    push @crits, $1;
+	}
+    	elsif ($key =~ /^([^\.]+)\.warning$/)
+	{
+	    $worst = "warning" if $worst ne "critical";
+	    push @warns, $1;
+	}
+    	elsif ($key =~ /^([^\.]+)\.unknown$/)
+	{
+	    $worst = "unknown" unless $worst;
+	    push @unkns, $1;
+	}
+    }
+    $client->{'cfields'} = join " ", @crits;
+    $client->{'wfields'} = join " ", @warns;
+    $client->{'ufields'} = join " ", @unkns;
+    $client->{'numcfields'} = scalar @crits;
+    $client->{'numwfields'} = scalar @warns;
+    $client->{'numufields'} = scalar @unkns;
+    my %fs = map { $_ =~ s/\.(critical|warning)$//; $_ => 1;} grep (/\.(critical|warning)$/, keys %$client);
+    foreach (@crits, @warns, @unkns)
+    {
+	delete $fs{$_} if exists $fs{$_};
+    }
+    $client->{'ofields'} = join " ", keys %fs;
+
+    $client->{'numofields'} = keys (%fs);
+
+    if ($worst)
+    {
+	$notes{$domain}{$name}{$clientname}{$worst} = message_expand (munin_get_val ($config, "notify_text", $default_notify_text, $domain, $name, $clientname), $client);
+    }
+}
+
+
+sub message_expand {
+    my $text   = shift;
+    my $client = shift;
+    my $prefix = shift || "";
+    my @res    = ();
+
+    while (length ($text))
+    {   
+	if ($text =~ /^([^\$]+|)(?:\$(\{.*)|)$/)
+	{
+	    push @res, $1;
+	    $text = $2;
+	}   
+	my @a = extract_bracketed ($text, '{}');
+	if ($a[0] =~ /^\{var:(\S+)\}$/)
+	{
+	    $a[0] = (defined $client->{$prefix.$1} ? $client->{$prefix.$1} : "");
+	}
+	elsif ($a[0] =~ /^\{loop<([^>]+)>:\s*(\S+)\s(.+)\}$/)
+	{
+	    my $d = $1;
+	    my $f = $2;
+	    my $t = $3;
+	    my @res  = ();
+	    if (defined $client->{$f})
+	    {
+		foreach my $sub (split /\s+/, $client->{$f})
+		{
+		    push @res, message_expand ($t, $client, $sub.".");
+		}
+	    } 
+	    $a[0] = join ($d, @res);
+	}
+	elsif ($a[0] =~ /^\{loop:\s*(\S+)\s(.+)\}$/)
+	{
+	    my $f = $1;
+	    my $t = $2;
+	    my $res  = "";
+	    if (defined $client->{$f})
+	    {
+		foreach my $sub (split /\s+/, $client->{$f})
+		{
+		    $res .= message_expand ($t, $client, $sub.".");
+		}
+	    } 
+	    $a[0] = $res;
+	}
+	elsif ($a[0] =~ /^\{if:\s*(\!)?(\S+)\s(.+)\}$/)
+	{
+	    my $n = $1;
+	    my $f = $2;
+	    my $t = $3;
+	    my $res  = "";
+	    my $check = (defined $client->{$prefix.$f} and length($client->{$prefix.$f}) and $client->{$prefix.$f} ne "0");
+
+	    $check = (!defined $client->{$prefix.$f} or !length($client->{$prefix.$f}) or $client->{$prefix.$f} eq "0")
+		if $n;
+
+	    if ($check)
+	    {
+		$res .= message_expand ($t, $client, $prefix);
+	    } 
+	    $a[0] = $res;
+	}
+	push @res, $a[0];
+	$text = $a[1];
+    }
+
+    return join ('', @res);
 }
 
 sub logger_open {
@@ -342,4 +472,4 @@ This program is released under the GNU General Public License
 
 =cut
 
-# vim: syntax=perl
+# vim: syntax=perl ts=8

@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.25  2004/11/12 23:18:52  jimmyo
+# Added new options notify_enable and notify_text, to allow more finely tuned notifications (both what to notify and what text to send.)
+#
 # Revision 1.24  2004/09/23 19:46:01  jimmyo
 # Added option "compare".
 #
@@ -192,7 +195,8 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"fetch_data", "filename", "max_processes", "nagios", "info", 
 	"graph_info", "graph_category", "graph_strategy", "graph_width", 
 	"graph_height", "graph_sums", "graph_vlabel_sum_year", 
-	"graph_vlabel_sum_week", "local_address", "compare"
+	"graph_vlabel_sum_week", "local_address", "compare",
+	"notify_enable", "notify_text"
     );
 
 

@@ -1,55 +1,62 @@
 munin (work)
 
-  * Treat long field names properly. Sadly, this will lead to data loss
-    for fields that earlier had their field names truncated. :-(
-  * SNMP plugin "df" properly strips the label and serial number from
-    Windows drive labels.
-  * SNMP plugins now honour the "host" environment variable if they can't
-    deduce the hostname from $0.
-  * Small interface improvements in the HTML output.
-  * Changes of min and max values now causes corresponding changes in 
-    the RRD files.
-  * Use @@PERL@@ in all perl shebang lines.
-  * Added new option "graph_sums" which creates summarised graphs.
-  * Added new SNMP plugins for sensors, reading info from System-Informant on
-    Windows boxes.
-  * Munin-update adapts to field type changes (loss-free conversion from
-    COUNTER->DERIVE et al.)
-  * Added new config option "local_address", to specify which local address
-    outgoing connections (from munin-update) should be used.
-  * New wildcard plugin generic/ping_ to graph ping times.
-  * Added "comparison" views, to view a whole hostgroup at once.
-  * Bugfix in munin-limits.
-  * Replace "rpc" field with "total" in NFS and NFSD plugins.
-  * Added new plugin linux/apt_all, contributed by xavier.
-  * Added new plugins generic/courier_mta*, contributed by Rune N.
-    Skillingstad.
-  * Plugin generic/acpi now autodetects even if the acpi version does not
-    contain the acpi_available program.
-  * Minor bugfixes.
-  * Added plugin linux/irqstast, showing individual interrupt rates.
-  * Fixed typo in linux/fw_forwarded_local (Deb#275535).
-  * Fixed typo in linux/fw_packets (Deb#275537).
-  * Added module Munin::Plugin::SNMP, a Net::SNMP sublcass for plugins.
-  * Added SNMP plugins for temperature and fan info provided by the
-    Fujitsu Siemens ServerView agents.
-  * Adapt linux/apt plugin to work properly with Debian testing/unstable
-    (patch from Rune N. Skillingstad).
-  * Munin-node now makes sure it runs the plugins from a world-readable dir.
-  * Added new plugin generic/apc_nis to monitor APC UPS, contributed by
-    xavier.
-  * Made graph_title a parameter for generic/exim_mailqueue (patch by Torstein
-    T. Svendsen, SF#1060834).
-  * Fixed typo in generic/sendmail_mailstats (patch by Lupe Christoph,
-    SF#1058128).
-  * Applied patch from Torstein T. Svendsen to generic/exim_mailstats, to
-    handle logfiles with timestamps in the name (SF#1055214).
-  * Applied patch from Nicolas Stransky to generic/hddtemp, to fetch temp more
-    elegantly (SF#1052845).
-  * Added new plugin linux/hddtemp_smartctl, made by Peter Gervai
-    (SF#1032727).
-  * Fixed linux/if_(err_) braindamage affecting hosts with vlans or
-    multi-digit interface numbers.
+  - Munin main package:
+    * Treat long field names properly. Sadly, this will lead to data loss
+      for fields that earlier had their field names truncated. :-(
+    * Small interface improvements in the HTML output.
+    * Changes of min and max values now causes corresponding changes in 
+      the RRD files.
+    * Added new option "graph_sums" which creates summarised graphs.
+    * Munin-update adapts to field type changes (loss-free conversion from
+      COUNTER->DERIVE et al.)
+    * Added new config option "local_address", to specify which local address
+      outgoing connections (from munin-update) should be used.
+    * Added "comparison" views, to view a whole hostgroup at once.
+    * Bugfix in munin-limits.
+    * Added new options notify_enable and notify_text, to allow more finely
+      tuned notifications (both what to notify and what text to send.)
+
+  - Munin-node:
+    * Added module Munin::Plugin::SNMP, a Net::SNMP sublcass for plugins.
+    * The node now changes dir to /, to make sure it's in a directory
+      readable by all users.
+
+  - Plugins
+    * SNMP plugin "df" properly strips the label and serial number from
+      Windows drive labels.
+    * SNMP plugins now honour the "host" environment variable if they can't
+      deduce the hostname from $0.
+    * Use @@PERL@@ in all perl shebang lines.
+    * Added new SNMP plugins for sensors, reading info from System-Informant on
+      Windows boxes.
+    * New wildcard plugin generic/ping_ to graph ping times.
+    * Replace "rpc" field with "total" in NFS and NFSD plugins.
+    * Added new plugin linux/apt_all, contributed by xavier.
+    * Added new plugins generic/courier_mta*, contributed by Rune N.
+      Skillingstad.
+    * Plugin generic/acpi now autodetects even if the acpi version does not
+      contain the acpi_available program.
+    * Added plugin linux/irqstast, showing individual interrupt rates.
+    * Fixed typo in linux/fw_forwarded_local (Deb#275535).
+    * Fixed typo in linux/fw_packets (Deb#275537).
+    * Added SNMP plugins for temperature and fan info provided by the
+      Fujitsu Siemens ServerView agents.
+    * Adapt linux/apt plugin to work properly with Debian testing/unstable
+      (patch from Rune N. Skillingstad).
+    * Added new plugin generic/apc_nis to monitor APC UPS, contributed by
+      xavier.
+    * Made graph_title a parameter for generic/exim_mailqueue (patch by Torstein
+      T. Svendsen, SF#1060834).
+    * Fixed typo in generic/sendmail_mailstats (patch by Lupe Christoph,
+      SF#1058128).
+    * Applied patch from Torstein T. Svendsen to generic/exim_mailstats, to
+      handle logfiles with timestamps in the name (SF#1055214).
+    * Applied patch from Nicolas Stransky to generic/hddtemp, to fetch temp more
+      elegantly (SF#1052845).
+    * Added new plugin linux/hddtemp_smartctl, made by Peter Gervai
+      (SF#1032727).
+    * Fixed linux/if_(err_) braindamage affecting hosts with vlans or
+      multi-digit interface numbers.
 
 munin (1.1.4)
 
