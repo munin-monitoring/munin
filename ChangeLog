@@ -6,6 +6,7 @@ munin (1.0.0pre3)
   * Added better logging of plugin failures in the node. (SF#881045)
   * Make install: Fix problems with systems that do not have getent.
     (SF#881046)
+  * Remove dependency on pgrep (use process groups instead). (SF#881049)
 
 munin (1.0.0pre2)
 

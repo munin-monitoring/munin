@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.9  2004/02/01 21:34:59  jimmyo
+# Remove dependency on pgrep (use process groups instead). (SF#881049)
+#
 # Revision 1.8  2004/02/01 20:46:29  jimmyo
 # Added better logging of plugin failures in the node. (SF#881045)
 #
@@ -309,14 +312,13 @@ sub reap_children {
   my $child = shift;
   my $text = shift;
   return unless $child;
-  my @children = (split ('\n', `/usr/bin/pgrep -P $child`), $child); 
-  if (@children) 
+  if (kill (0, $child)) 
     { 
-      print ("# timeout pid ", join (' ', @children), "\n"); 
-      logger ("Plugin timeout: $text");
+      print ("# timeout pid $child\n"); 
+      logger ("Plugin timeout: $text (pid $child)");
       close CHILD; 
-      kill (1, @children); sleep 2; 
-      kill (9, @children);
+      kill (-1, $child); sleep 2; 
+      kill (-9, $child);
     } 
 }
 
@@ -347,6 +349,8 @@ sub run_service {
     }
     else {
       if ($child == 0) {
+	# New process group...
+	POSIX::setsid();
         # Setting environment
 	$sconf{$service}{user}    = &get_var (\%sconf, $service, 'user');
 	$sconf{$service}{group}   = &get_var (\%sconf, $service, 'group');
@@ -380,7 +384,7 @@ sub run_service {
 			    "Bailing out. (wanted uid=".
 			    ($sconf{$service}{'user'} || $defuser). " gid=\"".
 			    $gs. "\"($g), got uid=$> gid=\"$)\"(". 
-			    (split (' ', $)))0]. ").\n");
+			    (split (' ', $)))[0]. ").\n");
 			exit 1;
 		}
 	}
