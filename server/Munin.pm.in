@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.33  2004/11/21 14:30:55  jimmyo
+# Added new field option "line", which draws HRULEs.
+#
 # Revision 1.32  2004/11/19 23:01:41  jimmyo
 # Fixed irqstats plugin so it doesn't use numbers as field names. Also expanded the label if possible, since munin-graph now handles long labels.
 #
@@ -239,7 +242,7 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"graph_height", "graph_sums", "graph_vlabel_sum_year", 
 	"graph_vlabel_sum_week", "local_address", "compare", "cgiurl",
 	"text", "command", "contact", "contacts",  "max_messages", 
-	"always_send", "notify_alias"
+	"always_send", "notify_alias", "line"
     );
 
 

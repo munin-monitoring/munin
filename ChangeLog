@@ -20,12 +20,14 @@ munin (work)
     * Use column headers for min/max/cur/avg if label is too long.
     * Minor template modifications, so the output HTML validates correctly
       (SF#1039850).
+    * Added new field option "line", which draws HRULEs.
+	
 
   - Munin-node:
     * Added module Munin::Plugin::SNMP, a Net::SNMP sublcass for plugins.
     * The node now changes dir to /, to make sure it's in a directory
       readable by all users.
-	* Added per-plugin timeouts, contributed by Chan Wilson (SF#881044).
+    * Added per-plugin timeouts, contributed by Chan Wilson (SF#881044).
 
   - Plugins
     * SNMP plugin "df" properly strips the label and serial number from
