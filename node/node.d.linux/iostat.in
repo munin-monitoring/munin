@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by lrrd-config)
 #
 # $Log$
+# Revision 1.5  2004/02/02 17:52:32  jimmyo
+# Linux/iostat now shows only disks also on machines without devfs.
+#
 # Revision 1.4  2004/02/02 16:54:38  jimmyo
 # Make the iostat plugin work properly.
 #
@@ -171,6 +174,7 @@ sub fetch_detailed()
 				next if ($major ==  58); # LVM devices
 				next if ($major == 254); # LVM2 devices
 				next if ($tmpnam =~ /part\d+$/);
+				next if ($tmpnam =~ /^\s*(?:sd|hd)[a-z]\d+\s*$/);
 
 				$tmpnam =~ s/\/[[:alpha:]]+(\d+)/\/$1/g;
 				$tmpnam =~ s/^([^\/]+)\//$1/;

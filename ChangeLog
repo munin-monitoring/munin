@@ -11,6 +11,7 @@ munin (1.0.0pre3)
   * Make the iostat plugin work properly.
   * Munin-graph now escapes ':' in labels properly.
   * Fixed bug in munin-graph where it caused a flood of cron-mail.
+  * Linux/iostat now shows only disks also on machines without devfs.
 
 munin (1.0.0pre2)
 
