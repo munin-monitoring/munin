@@ -16,6 +16,8 @@ munin (1.1.3)
     hddtemp output (Deb#253497).
   * Force LANG/LC_ALL=C in linux/sensors_, to remove problems in parsing of
     sensors output (SF#972749, SF#972748, Deb#255312).
+  * linux/sensors_temp now understand temp lines without hyst or max settings
+    (Deb#256380).
 
 munin (1.1.2)
 
