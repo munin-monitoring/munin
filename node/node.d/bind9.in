@@ -5,6 +5,9 @@
 # Contributed by Nicolai Langfeldt
 #
 # $Log$
+# Revision 1.2  2004/05/14 21:16:46  jimmyo
+# "Upped" som plugins from contrib/manual to auto.
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -19,8 +22,8 @@
 
 use strict;
 
-my $QUERYLOG='/usr/bind-chroot/log/query.log';
-my $STATEFILE='/opt/munin/tmp/bind9.state';
+my $QUERYLOG=$ENV{logfile} || '/var/log/bind9/query.log';
+my $STATEFILE='@@PLUGSTATE@@/bind9.state';
 my $OTHER=0;
 my %IN;
 

@@ -24,6 +24,9 @@
 # 	ports    - HTTP port numbers
 #
 # $Log$
+# Revision 1.7  2004/05/14 21:16:46  jimmyo
+# "Upped" som plugins from contrib/manual to auto.
+#
 # Revision 1.6  2004/04/27 21:32:06  jimmyo
 # Clarified the vlabels in the apache-plugins (Deb#238594).
 #
@@ -54,7 +57,7 @@
 #
 #
 # Magic markers:
-#%# family=manual
+#%# family=auto
 #%# capabilities=autoconf
 
 my $ret = undef;

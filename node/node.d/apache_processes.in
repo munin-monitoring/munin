@@ -23,6 +23,9 @@
 # 	url      - Override default status-url
 #
 # $Log$
+# Revision 1.6  2004/05/14 21:16:46  jimmyo
+# "Upped" som plugins from contrib/manual to auto.
+#
 # Revision 1.5  2004/04/27 08:46:57  jimmyo
 # Fixed broken autoconf in apache-* plugins (Deb#236144).
 #
@@ -53,7 +56,7 @@
 #
 #
 # Magic markers:
-#%# family=manual
+#%# family=auto
 #%# capabilities=autoconf
 
 my $ret = undef;

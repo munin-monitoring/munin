@@ -20,12 +20,15 @@
 # Revision 0.1  2004/02/24 Andrew Radke
 #
 # $Log$
+# Revision 1.2  2004/05/14 21:16:46  jimmyo
+# "Upped" som plugins from contrib/manual to auto.
+#
 # Revision 1.1  2004/05/09 19:34:26  jimmyo
 # Added plugin hddtemp2, contributred by Andrew Radke, modified by Lupe Christoph.
 #
 #
 # Magic markers:
-#%# family=contrib
+#%# family=auto
 #%# capabilities=autoconf
 
 use strict;

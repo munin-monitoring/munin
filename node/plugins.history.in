@@ -80,3 +80,11 @@ users
 [1.0.0pre3]
 [1.0.0pre4]
 [1.1.0]
+acpi
+apache_accesses
+apache_processes
+apache_volume
+postfix_mailqueue
+postfix_mailvolume
+postfix_mailstats
+sendmail_mailqueue
