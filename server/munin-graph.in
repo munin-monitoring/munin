@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.20  2004/06/23 17:48:06  jimmyo
+# Bugfix in cdef calculations.
+#
 # Revision 1.19  2004/06/22 22:04:45  jimmyo
 # Added --cron option to munin-graph.
 #
@@ -799,7 +802,7 @@ sub process_node {
 		push (@rrd, "CDEF:c$rrdname=g$rrdname");
 		print "DEBUG: Field name after cdef set to $rrdname\n" if $DEBUG;
 	    }
-	    unless (exists $node->{client}->{$service}->{$field.".onlynullcdef"} and $node->{client}->{$service}->{$field.".onlynullcdef"})
+	    elsif (!(exists $node->{client}->{$service}->{$field.".onlynullcdef"} and $node->{client}->{$service}->{$field.".onlynullcdef"}))
 	    {
 		push (@rrd, "CDEF:c$rrdname=g$rrdname" . (($now-$update)>900 ? ",POP,UNKN" : ""));
 	    }
