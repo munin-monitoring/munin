@@ -15,7 +15,7 @@ munin (1.1.1)
     Delhomme).
   * Tuned cdef-code to make it work properly after clean-up.
   * Added "graph_category" option, to categorise plugins.
-  * Set categories to some of the plugins.
+  * Set categories to most of the plugins.
 
 munin (1.1.0)
 

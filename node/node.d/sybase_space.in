@@ -16,9 +16,12 @@
 # 	SYBASE_HOST  - Host
 # 	
 # 	 $Log$
+# 	 Revision 1.2  2004/05/20 19:02:36  jimmyo
+# 	 Set categories on a bunch of plugins
+#
 # 	 Revision 1.1  2004/01/02 18:50:00  jimmyo
 # 	 Renamed occurrances of lrrd -> munin
-#
+# 	
 # 	 Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
 # 	 Import of LRRD CVS tree after renaming to Munin
 # 	
@@ -59,6 +62,7 @@ if (exists $ARGV[0] and $ARGV[0] =~ /^config$/)
 	print "graph_title Sybase database space usage\n";
 	print "graph_args -u 100 -l 0\n";
 	print "graph_vlabel %\n";
+	print "graph_category sybase\n";
 
 	foreach my $db (keys %{$databases})
 	{

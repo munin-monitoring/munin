@@ -14,6 +14,9 @@
 # 	suggest
 #
 # $Log$
+# Revision 1.2  2004/05/20 19:02:37  jimmyo
+# Set categories on a bunch of plugins
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -63,6 +66,7 @@ if [ "$1" = "config" ]; then
 	echo "graph_title VLAN $INTERFACE Traffic"
 	echo 'graph_args --base 1024'
 	echo 'graph_vlabel bps in (-) / out (+)'
+	echo 'graph_category network'
 	echo 'received.label bps'
         echo 'received.type COUNTER'
 	echo 'received.graph no'
