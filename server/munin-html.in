@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.13  2004/05/20 19:05:53  jimmyo
+# Show categories
+#
 # Revision 1.12  2004/05/20 13:57:11  jimmyo
 # Set categories to some of the plugins.
 #
@@ -274,6 +277,8 @@ for my $domain (@domainorder) {
 	    print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
 	    $tmp{name} = ucfirst $key;
 	    $tmp{services} = \@{$tmp_cats{$key}};
+		$tmp{node} = $node;
+		$tmp{domain} = $domain;
 	    push @categories, \%tmp;
 	}
 	if (defined $tmp_cats{'other'})
@@ -283,6 +288,8 @@ for my $domain (@domainorder) {
 	    print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
 	    $tmp{name} = ucfirst $key;
 	    $tmp{services} = \@{$tmp_cats{$key}};
+		$tmp{node} = $node;
+		$tmp{domain} = $domain;
 	    push @categories, \%tmp;
 	}
 	$nodetemplate->param(SERVICES => \@services,
@@ -295,6 +302,7 @@ for my $domain (@domainorder) {
  	print FILE $nodetemplate->output;
 	close FILE;
 	$node{services} = \@services;
+	$node{categories} = \@categories;
 	$node{domain} = $domain;
 	push @nodes,\%node;
 
