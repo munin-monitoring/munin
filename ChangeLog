@@ -1,3 +1,7 @@
+munin (work)
+
+  * Failsafe entry for @@PYTHON@@.
+
 munin (1.1.5)
 
   - Munin main package:
