@@ -19,7 +19,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel seconds'
 	echo 'graph_category network'
 	echo 'graph_info This graph shows ping RTT statistics.'
-	echo "ping.label $name"
+	echo "ping.label $host"
 	echo "ping.info Ping RTT statistics for $host."
 	echo 'ping.draw LINE2'
 	echo 'packetloss.label packet loss'
@@ -28,4 +28,4 @@ if [ "$1" = "config" ]; then
 fi
 
 
-${ping:-ping} ${ping_args:--c 2} ${host:-${file_host:-www.google.com}} | awk '/min\/avg\/max/ { split ($0, arr, "/"); print "ping.value " arr[4]} /% packet loss/ {split ($7, arr2, "%"); print "packetloss.value " arr2[1]}'
+${ping:-ping} ${ping_args:--c 2} ${host:-${file_host:-www.google.com}} | awk '/min\/avg\/max/ { split ($0, arr, "/"); print "ping.value " (arr[4]/1000)} /% packet loss/ {split ($7, arr2, "%"); print "packetloss.value " arr2[1]}'
