@@ -5,6 +5,9 @@
 # Usage: Link or copy into /etc/munin/node.d/
 #
 # $Log$
+# Revision 1.3  2004/05/16 12:41:04  jimmyo
+# Changed load plot from lastminute to last 5 minutes.
+#
 # Revision 1.2  2004/05/16 12:34:26  jimmyo
 # Added "info"-fields to linux/cpu and linux/load plugins, to demonstrate how it works.
 #
@@ -69,7 +72,7 @@ if [ "$1" = "config" ]; then
 	# one is for the graph itself, while the second one is for the field
 	# "load".
 	echo 'graph_info The load average of the machine describes how many processes are in the run-queue (scheduled to run "immediately").'
-	echo 'load.info Average load for the last minute.'
+	echo 'load.info Average load for the five minutes.'
 
 	# Last, if run with the "config"-parameter, quit here (don't
 	# display any data)
@@ -81,7 +84,7 @@ fi
 # "value" subfield for every data field.
 
 echo -n "load.value "
-cut -f1 -d' ' < /proc/loadavg
+cut -f2 -d' ' < /proc/loadavg
 
 # How could this plugin have been written in its simplest form?
 # Something like this:
