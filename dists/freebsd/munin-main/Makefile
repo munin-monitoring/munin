@@ -4,14 +4,20 @@
 #
 # $FreeBSD$
 #
+# $Log$
+# Revision 1.3  2004/02/06 18:40:21  lupe
+# Update to pre3.
+# Fixes for pkg_add compatibility.
+#
+#
 
 PORTNAME=	munin
-PORTVERSION=	1.0.0.p2
+PORTVERSION=	1.0.0.p3
 CATEGORIES=	sysutils perl5
 MASTER_SITES=	${MASTER_SITE_SOURCEFORGE}
 MASTER_SITE_SUBDIR=	munin
 PKGNAMESUFFIX=	-main
-DISTNAME=	munin_1.0.0pre2
+DISTNAME=	munin_1.0.0pre3
 
 MAINTAINER=	lupe@lupe-christoph.de
 COMMENT=	Collector part of Munin
@@ -34,7 +40,7 @@ BUILD_DEPENDS=	${RUN_DEPENDS}
 
 USE_GMAKE=	yes
 PATCH_STRIP=	-p1
-WRKSRC=		${WRKDIR}/munin-1.0.0pre2
+WRKSRC=		${WRKDIR}/munin-1.0.0pre3
 ALL_TARGET=	build build-man
 INSTALL_TARGET=	install-main
 
@@ -43,7 +49,7 @@ MAN8=		munin-cron.8 munin-graph.8 munin-html.8 munin-nagios.8 munin-update.8
 
 pre-install:
 	@${SED} 's@\$$(PREFIX)@${PREFIX}@g' ${FILESDIR}/pkg-message > ${PKGMESSAGE}
-	@PREFIX=${PREFIX} ${SH} pkg-install ${PKGNAME} PRE-INSTALL
+	@PKG_PREFIX=${PREFIX} ${SH} pkg-install ${PKGNAME} PRE-INSTALL
 
 post-install:
 	@${INSTALL_MAN} -d ${PREFIX}/man/man5
@@ -54,7 +60,7 @@ post-install:
 	@${INSTALL_MAN} -C ${WRKSRC}/build/doc/munin-html.8 ${PREFIX}/man/man8
 	@${INSTALL_MAN} -C ${WRKSRC}/build/doc/munin-nagios.8 ${PREFIX}/man/man8
 	@${INSTALL_MAN} -C ${WRKSRC}/build/doc/munin-update.8 ${PREFIX}/man/man8
-	@PREFIX=${PREFIX} ${SH} pkg-install ${PKGNAME} POST-INSTALL
+	@PKG_PREFIX=${PREFIX} ${SH} pkg-install ${PKGNAME} POST-INSTALL
 	@${CAT} ${PKGMESSAGE}
 
 .include <bsd.port.post.mk>
