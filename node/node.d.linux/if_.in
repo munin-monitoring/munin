@@ -7,11 +7,35 @@
 #
 # ...will monitor eth0.
 #
-# Any devince found in /proc/net/dev can be monitored. Examples include
+# Any device found in /proc/net/dev can be monitored. Examples include
 # ipsec*, eth*, irda* and lo. Please note that aliases cannot be
 # monitored with this plugin.
 #
 # $Log$
+# Revision 1.8.2.8  2005/03/07 19:23:07  jimmyo
+# Made linux/if_ work with more versions of iwlist (SF#1150954).
+#
+# Revision 1.8.2.7  2005/02/17 11:35:09  jimmyo
+# Typo fixes.
+#
+# Revision 1.8.2.6  2005/02/16 21:45:48  jimmyo
+# Modified warning note in linux/if_ output.
+#
+# Revision 1.8.2.5  2005/02/16 21:27:33  jimmyo
+# Added warning note in linux/if_ output.
+#
+# Revision 1.8.2.4  2005/02/16 20:59:59  jimmyo
+# Make suggest a tad less trigger happy.
+#
+# Revision 1.8.2.3  2005/02/16 20:31:03  jimmyo
+# Minor bugfix in linux/if_, with info fields.
+#
+# Revision 1.8.2.2  2005/02/16 17:08:10  jimmyo
+# linux/if* now treats ra* interfaces as wireless.
+#
+# Revision 1.8.2.1  2005/01/29 21:17:12  jimmyo
+# Added madwifi support to linux/if_* plugins.
+#
 # Revision 1.8  2004/12/10 10:47:49  jimmyo
 # Change name from ${scale} to ${graph_period}, to be more consistent.
 #
@@ -69,7 +93,7 @@ fi
 
 if [ "$1" = "suggest" ]; then
 	if [ -r /proc/net/dev ]; then
-		egrep '(eth|wlan)' /proc/net/dev | cut -f1 -d: | sed 's/ //g'
+		egrep '^ *(eth|wlan|ath|ra)[0-9]+:' /proc/net/dev | cut -f1 -d: | sed 's/ //g'
 		exit 0
 	else
 		exit 1
@@ -83,7 +107,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000'
 	echo 'graph_vlabel bits in (-) / out (+) per ${graph_period}'
 	echo 'graph_category network'
-	echo "graph_info This graph shows the traffic of the $INTERFACE network interface. Please note that the traffic is showed in bits per second, not bytes."
+	echo "graph_info This graph shows the traffic of the $INTERFACE network interface. Please note that the traffic is shown in bits per second, not bytes. IMPORTANT: Since the data source for this plugin use 32bit counters, this plugin is really unreliable and unsuitable for most 100Mb (or faster) interfaces, where bursts are expected to exceed 50Mbps. This means that this plugin is usuitable for most production environments. To avoid this problem, use the ip_ plugin instead."
 	echo 'down.label received'
         echo 'down.type COUNTER'
         echo 'down.graph no'
@@ -92,16 +116,18 @@ if [ "$1" = "config" ]; then
 	echo 'up.type COUNTER'
 	echo 'up.negative down'
 	echo 'up.cdef up,8,*'
-	if [ "$INTERFACE" = "wlan0" -o "$INTERFACE" = "wlan1" -o "$INTERFACE" = "wlan2" -o "$INTERFACE" = "wlan3" -o "$INTERFACE" = "wlan4" -o "$INTERFACE" = "wlan5" -o "$INTERFACE" = "wlan6" -o "$INTERFACE" = "wlan7" -o "$INTERFACE" = "wlan8" -o "$INTERFACE" = "wlan9" -o "$INTERFACE" = "wlan10" ]
-	then
-		echo -n "up.info Traffic of the $INTERFACE interface. Maximum speed is "
-		which iwlist >/dev/null 2>/dev/null || echo "undeterminable (please install iwlist)."
-		iwlist $INTERFACE rate 2>/dev/null | awk '/Current Bit Rate/ { split ($0, arr, "="); split (arr[2], arr2, "M"); print (arr2[1]*1000000) " bits per second.\nup.max " (arr2[1]*1000000) "\ndown.max "(arr2[1]*1000000); }'
-	else
-		echo -n "$INTERFACE.info Traffic of the $INTERFACE interface. Maximum speed is "
-		which ethtool >/dev/null 2>/dev/null || echo "undeterminable (please install ethtool)."
-		ethtool $INTERFACE 2>/dev/null | awk '/Speed/ { split ($2, arr2, "M"); print (arr2[1]*1000000) " bits per second.\nup.max " (arr2[1]*1000000) "\ndown.max "(arr2[1]*1000000); }'
-	fi
+	case "$INTERFACE" in
+		ath*|wlan*|ra*)
+			echo -n "up.info Traffic of the $INTERFACE interface. Maximum speed is "
+			which iwlist >/dev/null 2>/dev/null || echo "undeterminable (please install iwlist)."
+			iwlist $INTERFACE rate 2>/dev/null | awk '/Current Bit Rate/ { split ($0, arr, "[=:]"); split (arr[2], arr2, "M"); print (arr2[1]*1000000) " bits per second.\nup.max " (arr2[1]*1000000) "\ndown.max "(arr2[1]*1000000); }'
+			;;
+		*)
+			echo -n "up.info Traffic of the $INTERFACE interface. Maximum speed is "
+			which ethtool >/dev/null 2>/dev/null || echo "undeterminable (please install ethtool)."
+			ethtool $INTERFACE 2>/dev/null | awk '/Speed/ { split ($2, arr2, "M"); print (arr2[1]*1000000) " bits per second.\nup.max " (arr2[1]*1000000) "\ndown.max "(arr2[1]*1000000); }'
+			;;
+	esac
 	exit 0
 fi;
 

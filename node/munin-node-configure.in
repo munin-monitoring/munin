@@ -19,6 +19,9 @@
 # Program to suggest configurations and configuration changes.
 #
 # $Log$
+# Revision 1.11.2.1  2005/03/09 21:49:57  jimmyo
+# munin-node-configure now properly respect user plugins.
+#
 # Revision 1.11  2004/12/10 10:40:12  jimmyo
 # Fix bug with underscore in wildcard plugins.
 #
@@ -247,6 +250,7 @@ if (@families)
 		    {
 			foreach my $wild (sort @{$swant})
 			{
+			    next if -e "$servicedir/$plug"."_".$wild; # None of our business...
 			    if (! grep (/^$wild$/, @{$snow}))
 			    {
 				&link_add ($plug, $wild);
@@ -263,6 +267,7 @@ if (@families)
 		}
 		elsif ($now eq "no" and $want eq "yes")
 		{
+		    next if -e "$servicedir/$plug"; # None of our business...
 		    &link_add ($plug);
 		}
 	    }
@@ -290,6 +295,7 @@ if (@families)
 		{
 		    foreach my $wild (sort @{$swant})
 		    {
+			next if -e "$servicedir/$plug"."_".$wild; # None of our business...
 			if (! grep (/^$wild$/, @{$snow}))
 			{
 			    $sugg .= "+$wild ";
@@ -300,6 +306,7 @@ if (@families)
 	    }
 	    else
 	    {
+		next if -e "$servicedir/$plug"; # None of our business...
 		if ($now ne $want)
 		{
 		    $sugg = $want;

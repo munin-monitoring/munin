@@ -1,6 +1,9 @@
 #!/bin/sh
 #
 # $Log$
+# Revision 1.4.2.1  2005/03/07 19:06:13  jimmyo
+# sunos/memory repaired (SF#1143610).
+#
 # Revision 1.4  2004/05/20 19:02:38  jimmyo
 # Set categories on a bunch of plugins
 #
@@ -41,12 +44,12 @@ fi
 #
 # Memory: 320M real, 142M free, 129M swap in use, 1095M swap free
 
-MEMLINE=`$TOP -n -u | /bin/grep "^Memory" | sed 's/M//g'`
+MEMLINE=`$TOP -n -u | /bin/grep "^Memory"`
 
-REAL=`echo $MEMLINE | nawk '$2~/G$/ {sub("G","",$2);$2=$2 * 1024} {printf "%d\n", $2}'`
-REAL=`echo $MEMLINE | nawk '$4~/G$/ {sub("G","",$4);$4=$4 * 1024} {printf "%d\n", $4}'`
-REAL=`echo $MEMLINE | nawk '$6~/G$/ {sub("G","",$6);$6=$6 * 1024} {printf "%d\n", $6}'`
-REAL=`echo $MEMLINE | nawk '$10~/G$/ {sub("G","",$10);$10=$10 * 1024} {printf "%d\n", $10}'`
+REAL=`echo $MEMLINE | nawk '$2~/G$/ {sub("G","",$2);$2=$2 * 1024} $2~/M$/ {printf "%d\n", $2}'`
+FREE=`echo $MEMLINE | nawk '$4~/G$/ {sub("G","",$4);$4=$4 * 1024} $2~/M$/ {printf "%d\n", $4}'`
+SWAPU=`echo $MEMLINE | nawk '$6~/G$/ {sub("G","",$6);$6=$6 * 1024} $2~/M$/ {printf "%d\n", $6}'`
+SWAPF=`echo $MEMLINE | nawk '$10~/G$/ {sub("G","",$10);$10=$10 * 1024} $2~/M$/ {printf "%d\n", $10}'`
 
 MEMUSED=`expr $REAL - $FREE`
 SWAPTOT=`expr $SWAPU + $SWAPF`

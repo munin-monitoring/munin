@@ -25,6 +25,7 @@ install-main: build
 	mkdir -p $(STATEDIR)
 	mkdir -p $(HTMLDIR)
 	mkdir -p $(DBDIR)
+	mkdir -p $(CGIDIR)
 
 	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR) $(RUNDIR) $(HTMLDIR) $(DBDIR)
 
@@ -95,6 +96,8 @@ install-man: build-man
 	$(INSTALL) -m 0644 build/doc/munin-node.conf.5 $(MANDIR)/man5/
 	$(INSTALL) -m 0644 build/doc/munin.conf.5 $(MANDIR)/man5/
 	$(INSTALL) -m 0644 build/doc/munin-node.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-node-configure.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-node-configure-snmp.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-run.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-graph.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-update.8 $(MANDIR)/man8/
@@ -169,6 +172,8 @@ build-man-stamp: build
 		build/node/munin-node > build/doc/munin-node.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		build/node/munin-run > build/doc/munin-run.8
+	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
+		build/node/munin-node-configure-snmp > build/doc/munin-node-configure-snmp.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		build/node/munin-node-configure > build/doc/munin-node-configure.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \

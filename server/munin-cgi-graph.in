@@ -21,6 +21,12 @@
 # $Id$
 #
 # $Log$
+# Revision 1.5.2.2  2005/03/09 20:12:40  jimmyo
+# Correct expires-headers in CGI output (SF#1159742).
+#
+# Revision 1.5.2.1  2005/01/29 18:22:59  jimmyo
+# Bugfix in munin-cgi-graph with hostnames including - (SF#1111510).
+#
 # Revision 1.5  2004/12/22 20:01:15  jimmyo
 # Optimised munin-cgi-graph a bit.
 #
@@ -62,8 +68,8 @@ my $config = &munin_readconfig ($conffile);
 
 my $path = $ENV{PATH_INFO} || "";
 $path =~ s/^\///;
-($dom, $host) = split /\//, $path;
-($host, $serv, $scale) = split /-/, $host, 3;
+($dom, $host, $serv) = split /\//, $path;  
+($serv, $scale) = split /-/, $serv, 2;
 $scale =~ s/\.png$//;
 
 &verify_parameters ($dom, $host, $serv, $scale);
@@ -82,7 +88,7 @@ if (-f $filename)
     {
 	print "Status: 304\n";
 	print "Content-Type: image/png\n";
-	print "Expires: ", ($period{$scale}-($time%$period{$scale})), "s\n";
+	print "Expires: ", strftime ("%a, %d %b %Y %H:%M:%S GMT", gmtime(time+($period{$scale}-($time%$period{$scale})))), "\n";
 	print "Last-Modified: $slast_modified\n";
 	print "\n";
 	exit 0;
@@ -106,7 +112,7 @@ my @stats = stat ($filename);
 my $last_modified = strftime ("%a, %d %b %Y %H:%M:%S %Z", localtime ($stats[9]));
 
 print "Content-Type: image/png\n";
-print "Expires: ", ($period{$scale}-($time%$period{$scale})), "s\n";
+print "Expires: ", strftime ("%a, %d %b %Y %H:%M:%S GMT", gmtime(time+($period{$scale}-($time%$period{$scale})))), "\n";
 print "Last-Modified: $last_modified\n";
 print "\n";
 

@@ -8,6 +8,18 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.5.2.4  2005/03/12 21:35:07  jimmyo
+# Correct history loss in linux/{df,df_inode}.
+#
+# Revision 1.5.2.3  2005/03/10 10:04:48  jimmyo
+# Fixed minor bug introduced with yesterdays change.
+#
+# Revision 1.5.2.2  2005/03/09 19:10:32  jimmyo
+# Made linux/df work properly with tmpfs and devmapper (Deb#298442).
+#
+# Revision 1.5.2.1  2005/02/16 22:50:14  jimmyo
+# linux/df* now ignores bind mounts.
+#
 # Revision 1.5  2004/12/09 20:27:45  jimmyo
 # Sort fields in df*-plugins alphabetically.
 #
@@ -44,6 +56,17 @@ if [ "$1" = "autoconf" ]; then
 	exit 0
 fi
 
+clean_name() {
+    echo $1 $7 $2 | sed 's/[\/.-]/_/g'| awk "{ 
+	if (\$3 == \"tmpfs\")
+		n=\$1\$2
+	else
+		n=\$1
+	print n
+	}"
+}
+
+
 if [ "$1" = "config" ]; then
 
 	echo 'graph_title Filesystem usage (in %)'
@@ -51,8 +74,8 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel %'
 	echo 'graph_category disk'
 	echo 'graph_info This graph shows disk usage on the machine.'
-	df -T -P -l -x none | sed 1d | grep -v "//" | sort | while read i; do
-		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 }'`
+	df -T -P -l -x none -x unknown -x udf -x iso9660 -x romfs -x ramfs | sed 1d | grep -v "//" | sort | while read i; do
+		name=`clean_name $i`
 		echo -n "$name.label "
 		echo $i | awk "{ 
 			dir=\$7
@@ -68,8 +91,8 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-df -P -l  -x none| sed 1d | grep -v "//" | while read i; do
-	name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 ".value " }'`
-	echo -n "$name "
-	echo $i | awk '{ print $5 }' | cut -f1 -d%
+df -T -P -l -x none -x unknown -x udf -x iso9660 -x romfs -x ramfs | sed 1d | grep -v "//" | while read i; do
+	name=`clean_name $i`
+	echo -n "$name.value "
+	echo $i | awk '{ print $6 }' | cut -f1 -d%
 done

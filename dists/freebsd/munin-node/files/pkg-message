@@ -12,9 +12,10 @@ to start, put this line in /etc/rc.conf:
 
 munin_node_enable="YES"
 
-Then, it will be started on the next boot. To start it now, use
-this command:
+Then, it will be started on the next boot. If this line is already
+present, the client will be started now.  Otherwise, edit
+/etc/rc.conf and execute this command:
 
-    /etc/rc.d/munin_node start
+    %%PREFIX%%/etc/rc.d/munin-node.sh start
 ********************************************************************
 

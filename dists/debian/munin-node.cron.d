@@ -9,5 +9,4 @@ MAILTO=root
 # happen), but ensure that there will never be more than two hour (7200
 # seconds) interval between updates..
 */5 * * * *	root [ -x /etc/munin/plugins/apt ] && /etc/munin/plugins/apt update 7200 12 >/dev/null
-*/5 * * * * root [ -x /etc/munin/plugins/apt_all ] && /etc/munin/plugins/apt_all update 7200 12 >/dev/null 2>&1
 

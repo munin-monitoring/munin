@@ -58,6 +58,7 @@ The plugin can output quite a few options:
 <dt><code>graph_total</code><dd>If set, summarise all the datasources' values and use the value of graph_total as a label.</dd>
 <dt><code>graph_scale</code><dd>Default on. If set, enables scaling of awg/min/max/cur values.</dd>
 <dt><code>graph_period</code><dd>Default "second". Set to "minute" to scale (almost) all graphs that are COUNTER or DERIVE based, to show data per minute instead of per second.</dd>
+<dt><code>graph_sums</code><dd>Creates two additional graphs for services using COUNTER or DERIVE fields. The new graphs show values per hour and day. NOTE: This feature requires rrdtool version 1.0.39 or above.</dd>
 <dt><code>graph</code><dd>Set to "yes" or "no". Decides wether to draw the graph. Defaults to "yes".</dd>
 <dt><code>update</code><dd>Set to "yes" or "no". Decides wether munin-update should fetch data for the graph. Defaults to "yes".</dd>
 <dt><code>host_name</code><dd>Override which host name this plugin is run for. Ugly -
@@ -192,7 +193,8 @@ Explaination:
  <dt>htaccess<dd>The default htaccessfile
  <dt>tmpldir<dd>Where the templates reside
  <dt>graph_strategy<dd>Set to "cron" to draw the graphs periodically via cron every 5 minutes. Set to "cgi" to draw on-demand. (default cron)
- <dt>graphcgiurl<dd>URL to the CGI script doing the graphing (if graph_strategy is "cron"). (default <tt>/cgi-bin/munin-cgi-graph</tt>)
+ <dt>cgiurl<dd>URL to the directory where the CGI scripts (for the time being only one) doing the graphing (if graph_strategy is "cron"). (default <tt>/cgi-bin</tt>)
+ <dt>cgiurl_graph<dd>URL to the CGI script doing the graphing (if graph_strategy is "cron"). (default <tt>${cgiurl}/munin-cgi-graph</tt>)
  <dt>fork<dd>If set, run updates of several hosts simultaneously. (default yes)
  <dt>max_processes<dd>Set max number of simultaneous Munin processes.
  <dt>nsca*<dd>Nagios options. See seperate section. Deprecated, use contacts instead.
@@ -276,6 +278,12 @@ Usefull configuration in the server.conf file is:
 	option.</dd>
 <dt>domain_order [domain1] [domain2] .... <dd>In which order the domains
     should be listed, defaults to sorted. This is a top-level option.</dd>
+<dt>category_order_order [category1] [category2] .... <dd>In which order
+    the categories should be listed, defaults to sorted. This is a
+    node-level option.</dd>
+<dt>service_order_order [service1] [service2] .... <dd>In which order
+    the services should be listed, defaults to sorted. This is a
+    node-level option.</dd>
 
 <h3>munin-limits</h3>
 
