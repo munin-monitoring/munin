@@ -21,6 +21,9 @@
 # Simens servers
 #
 # $Log$
+# Revision 1.5  2004/11/23 16:59:38  jimmyo
+# Include SNMP.pm in the files. We don't want any perl modules in the node for the 1.2 series.
+#
 # Revision 1.4  2004/11/16 20:08:26  jimmyo
 # License cleanups.
 #
@@ -37,8 +40,59 @@
 #%# family=snmpauto
 #%# capabilities=snmpconf
 
+package Munin::Plugin::SNMP;
+
+use Net::SNMP;
+@ISA = qw(Net::SNMP);
+
+sub session {
+    my $class = shift;
+    my $host      = $ENV{host}      || undef;
+    my $port      = $ENV{port}      || 161;
+    my $community = $ENV{community} || 'public';
+    my $version   = $ENV{version}   || undef;
+
+    if ($0 =~ /^(?:.*\/)?snmp_([^_]+)_/) {
+	$host = $1;
+	if ($host =~ /^([^:]+):(\d+)$/) {
+	    $host = $1;
+	    $port = $2;
+	}
+    } elsif (!defined($host)) {
+	return unless wantarray; # Scalar or void context
+	return (undef, 'Couldn not find monitoring target.'); # Array context
+    }
+
+    return $class->SUPER::session(-hostname  => $host,
+				  -community => $community,
+				  -port      => $port,
+				  ($version ? (-version => $version) : ()));
+}
+
+sub get_hash {
+    my $self = shift;
+    my %args = @_;
+    my %ret;
+    
+    my $base = $args{'-baseoid'};
+    my $cols = delete $args{'-cols'} or return;
+
+    my $table = $self->get_table(%args)
+      or return;
+
+    my $subtabs = join '|', keys %$cols;
+    my $re = qr/^\Q$base.\E($subtabs)\.(.*)/;
+    for my $key (keys %$table) {
+	$key =~ $re;
+	next unless defined($1 && $2);
+	$ret{$2}{$cols->{$1}} = $table->{$key};
+    }
+    return \%ret;
+}
+
+package main;
+
 use strict;
-use Munin::Plugin::SNMP;
 use Net::SNMP qw(oid_lex_sort);
 
 # The OIDs we're after
