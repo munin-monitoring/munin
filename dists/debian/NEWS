@@ -1,4 +1,4 @@
-munin (1.2.0rc2-1) unstable; urgency=low
+munin (1.2.0-1) unstable; urgency=low
 
   * There are two major bugfixes in the 1.2.x series of Munin since 1.0.x that
     could not be accomplished without introducing a risk of losing historical
@@ -106,7 +106,7 @@ munin (1.2.0rc2-1) unstable; urgency=low
     do the following:
 
         cd /var/lib/munin
-	ls */*.rrd | awk '-F[/-]' '{if(length($4)==18) print}'
+	ls */*.rrd | awk '-F[/-]' '{if(length($4)>=18) print}'
 
     This will output one line for each file that may be affected, for instance:
 
