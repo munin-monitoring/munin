@@ -1,6 +1,7 @@
 munin (work)
 
   * Allow floating point values in warning/critical limits.
+  * Bugfix in munin-html, when using groups/host names with more than one dot.
 
 munin (1.1.6)
 
