@@ -23,6 +23,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.24  2004/11/21 14:39:23  jimmyo
+# Renamed function munin_get_val to munin_get.
+#
 # Revision 1.23  2004/11/16 20:00:44  jimmyo
 # License cleanups.
 #
@@ -623,12 +626,12 @@ sub process_node {
 
   my $socket;
   
-  if (&munin_get_val ($config, "local_address", undef, $domain, $node))
+  if (&munin_get ($config, "local_address", undef, $domain, $node))
   {
       $socket = new IO::Socket::INET ('PeerAddr' => "$node->{address}:".
 		  ($node->{port} || $config->{domain}->{$domain}->{port} || 
 		   $config->{port} || "4949"), 
-		   'LocalAddr' => &munin_get_val ($config, "local_address", undef, $domain, $node),
+		   'LocalAddr' => &munin_get ($config, "local_address", undef, $domain, $node),
 		  'Proto'    => "tcp", "Timeout" => $timeout);
   }
   else

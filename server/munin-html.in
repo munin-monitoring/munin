@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.34  2004/11/21 14:39:23  jimmyo
+# Renamed function munin_get_val to munin_get.
+#
 # Revision 1.33  2004/11/16 20:00:44  jimmyo
 # License cleanups.
 #
@@ -315,7 +318,7 @@ for my $domain (@domainorder) {
 	    $service{service}=$service;
 	    $service{label}=$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_title};
 		
-	    my $method = &munin_get_val ($config, "graph_strategy", "cron");
+	    my $method = &munin_get ($config, "graph_strategy", "cron");
 	    if ($method eq "cgi")
 	    {
 		$service{imgday}=$config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-day.png";
@@ -623,8 +626,8 @@ sub calculate_png_size
 	my $serv   = shift;
 
         # base size of graph rectangle + space outside graph rectangle
-	my $height = munin_get_val ($config, "graph_height", 100, $domain, $node, $serv) + 156;
-	my $width  = munin_get_val ($config, "graph_width" , 400, $domain, $node, $serv) + 93;
+	my $height = munin_get ($config, "graph_height", 100, $domain, $node, $serv) + 156;
+	my $width  = munin_get ($config, "graph_width" , 400, $domain, $node, $serv) + 93;
 
 	# In addition, the height increases by 15 pixels for each label underneath
 	foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$serv}})
@@ -635,7 +638,7 @@ sub calculate_png_size
 	    }
 	}
 	# ...and +15 if there's a graph total
-	$height += 15 if (munin_get_val ($config, "graph_total", undef, $domain, $node, $serv));
+	$height += 15 if (munin_get ($config, "graph_total", undef, $domain, $node, $serv));
 	# ...and +15 if there's min/max-headers above the labels
 	$height += 15 if (munin_graph_column_headers ($config, $domain, $node, $serv));
 

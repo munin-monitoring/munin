@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.38  2004/11/21 14:39:23  jimmyo
+# Renamed function munin_get_val to munin_get.
+#
 # Revision 1.37  2004/11/21 14:30:55  jimmyo
 # Added new field option "line", which draws HRULEs.
 #
@@ -284,7 +287,7 @@ it as the user \"munin\". Aborting.\n\n";
 
 my $config= &munin_config ($conffile);
 
-if (&munin_get_val ($config, "graph_strategy", "cron") ne "cron" and $cron)
+if (&munin_get ($config, "graph_strategy", "cron") ne "cron" and $cron)
 { # We're run from cron, but munin.conf says we use dynamic graph generation
     exit 0;
 }
@@ -437,8 +440,8 @@ sub get_header {
 	push @$result, ("--vertical-label", $tmp_field);
     }
 
-    push @$result,"--height", &munin_get_val ($config, "graph_height", "175", $domain, $host, $service);
-    push @$result,"--width", &munin_get_val ($config, "graph_width", "400", $domain, $host, $service);
+    push @$result,"--height", &munin_get ($config, "graph_height", "175", $domain, $host, $service);
+    push @$result,"--width", &munin_get ($config, "graph_width", "400", $domain, $host, $service);
     push @$result,"--imgformat", "PNG";
     push @$result,"--lazy" if ($force_lazy);
 
@@ -948,7 +951,7 @@ sub process_node {
 		    ((defined $single_value and $single_value) ? $single_colour : $COLOUR[($col_count-1)%@COLOUR]));
 
 		# Draw HRULEs
-		my $linedef = munin_get_val ($config, "line", undef, $domain, $name, $service, $node->{client}->{$service}->{$field.".negative"});
+		my $linedef = munin_get ($config, "line", undef, $domain, $name, $service, $node->{client}->{$service}->{$field.".negative"});
 		if ($linedef)
 		{
 		    my ($number, $colour, $label) = split (/:/, $linedef, 3);
@@ -995,7 +998,7 @@ sub process_node {
 
 
 	    # Draw HRULEs
-	    my $linedef = munin_get_val ($config, "line", undef, $domain, $name, $service, $field);
+	    my $linedef = munin_get ($config, "line", undef, $domain, $name, $service, $field);
 	    if ($linedef)
 	    {
 		my ($number, $colour, $label) = split (/:/, $linedef, 3);
