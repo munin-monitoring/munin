@@ -5,8 +5,10 @@
 # client-conf.d/-options:
 #       
 #	smartctl	-- path to smartctl executable
-#	drives		-- List drives to monitor. E.g. "hda hdc".
-#	type_$dev	-- device type for one drive, e.g. 3ware,0
+#	drives		-- List drives to monitor. E.g. "env.drives hda hdc".
+#	type_$dev	-- device type for one drive, e.g. "env.type_sda 3ware,0"
+#	args_$dev	-- additional arguments to smartctl for one drive,
+#			   e.g. "env.args_hda -v 194,10xCelsius"
 #
 # Note for users of RAID controllers (smartmontools currently only
 # supports 3ware): you can specify the drives attached to your RAID
@@ -14,6 +16,9 @@
 # type like this: type_sda_0 3ware,0.
 #
 # $Log$
+# Revision 1.6  2005/03/03 10:13:51  lupe
+# Add feature to specify additional arguments to smartctl
+#
 # Revision 1.5  2005/02/17 11:13:34  lupe
 # Support more than one drive on RAID controllers. Explain how to configure
 # them.
@@ -134,7 +139,10 @@ if (exists $ARGV[0]) {
 foreach (@drives) {
   my $dev;
   $dev = $_ =~ /(.*)(?:_\d+)/ ? $1 : $_;
-  my $cmd = $smartctl.' -a '.(exists $ENV{'type_'.$_} ? '-d '.$ENV{'type_'.$_}.' ' : '')."/dev/$dev";
+  my $cmd = $smartctl.' -a ';
+  $cmd .= $ENV{'args_'.$_}.' ' if exists $ENV{'args_'.$_};
+  $cmd .= '-d '.$ENV{'type_'.$_}.' ' if exists $ENV{'type_'.$_};
+  $cmd .= "/dev/$dev";
   my $output = `$cmd`;
   if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
     print "$_.value $1\n";
