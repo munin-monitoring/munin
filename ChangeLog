@@ -1,4 +1,4 @@
-munin (CVS)
+munin (work)
 
   * Main: fix the file vs. pipe check in munin-limits.
   * Main: place the munin-limits lock file in rundir, not dbdir.
