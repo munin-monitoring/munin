@@ -4,6 +4,7 @@ munin (work)
   * Fixed bug in munin-graph when choosing colours (Deb#267185).
   * Added plugin linux/df_abs
   * Sanitise incoming fieldnames a bit better.
+  * Small layout improvements.
   
 munin (1.1.3)
 
