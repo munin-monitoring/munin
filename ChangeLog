@@ -6,6 +6,7 @@ munin (1.0.0pre2)
   * Fixed Node/run bug when changing groups.
   * Added support for multiple groups to run the plugin as.
   * Added support for optional groups.
+  * Munin-html: Added support for domain_order.
 
 munin (1.0.0pre1)
 

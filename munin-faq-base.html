@@ -146,6 +146,19 @@ in the field definition. I.e., the above would become:
 </pre>
 </p>
 
+<h3>Q: Can I change the order of the domains?</h3>
+<p>
+	Yes, use the "domain_order" option at the topmost level. To specify
+	that you want the topmost level, either put the option before any
+	host/domain definitions, or reset the host/domain definition with 
+	"[]".
+<pre>
+	[]
+		domain_order foo.bar goo.bar alpha.bar
+</pre>
+The default domain order is alphabetically.
+</p>
+
 <h3>Q: Can I change the order of the nodes under a domain?</h3>
 <p>
 	Yes, use the "node_order" option under a domain. To specify that we

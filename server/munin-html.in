@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.3  2004/01/29 17:13:46  jimmyo
+# Enabled domain_order-option.
+#
 # Revision 1.2  2004/01/15 15:20:01  jimmyo
 # Making things workable after name change. Upping for test verwion.
 #
@@ -118,8 +121,8 @@ my $servicetemplate = HTML::Template->new(filename => "$config->{tmpldir}/munin-
 my @domains;
 
 my @domainorder;
-if ($config->{domain}->{domain_order}) {
-    @domainorder = split / /, $config->{domain}->{domain_order};
+if ($config->{domain_order}) {
+    @domainorder = split / /, $config->{domain_order};
 } else {
     @domainorder = sort (keys %{$config->{domain}});
 }
@@ -139,9 +142,9 @@ foreach my $file( (@files) ) {
 }
 
 #make domain list
-my @domainlist = map { { DOMAIN => $_ } } sort keys %{$config->{domain}};
+my @domainlist = map { { DOMAIN => $_ } } @domainorder;
 my $timestamp = strftime("%Y-%m-%d T %T", localtime);
-for my $domain (sort (keys %{$config->{domain}})) {
+for my $domain (@domainorder) {
     logger("processing domain: $domain");
     my %domain;
     $domain{domain}=$domain;
