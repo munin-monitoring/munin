@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.9  2005/03/12 21:33:02  jimmyo
+# Correct fieldname-generation logic.
+#
 # Revision 1.8  2005/03/10 10:07:54  jimmyo
 # Fixed minor bug introduced with yesterdays change.
 #
@@ -47,7 +50,6 @@
 #%# capabilities=autoconf
 
 MAXLABEL=20
-MAXNAME=15
 
 if [ "$1" = "autoconf" ]; then
 	echo yes
@@ -55,16 +57,13 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 clean_name() {
-    echo $1 $7 $2 | sed 's/[\/.-]/_/g; s/^_dev\(_mapper\)\?_//'| awk "{ 
+    echo $1 $7 $2 | sed 's/[\/.-]/_/g'| awk "{ 
 	if (\$3 == \"tmpfs\")
 		n=\$1\$2
 	else
 		n=\$1
-        if (length(n) > $MAXNAME)
-                print substr(n, length(n)-$MAXNAME+1)
-        else
-                print n
-        }"
+	print n
+	}"
 }
 
 
