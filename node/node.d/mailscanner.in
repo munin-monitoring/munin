@@ -23,6 +23,9 @@
 # 	None known
 #
 # $Log$
+# Revision 1.2  2005/02/16 19:47:11  jimmyo
+# Made contrib-plugins generic/amavis and generic/mailstats more secure.
+#
 # Revision 1.1  2004/12/09 20:03:26  jimmyo
 # Added two new plugins contributed by Jacques Caruso, generic/exim_mailqueue_alt and generic/mailscanner.
 #
@@ -35,7 +38,7 @@ use strict;
 
 my $logfile = '/var/log/mail.log';
 my $logtail = '/usr/sbin/logtail';
-my $offsetfile = '/tmp/lrrd-mailscanner.offset';
+my $offsetfile = 'mktemp /tmp/lrrd-mailscanner.offset.XXXXXX';
 my ($clean, $viruses, $spams, $others, $total) = (0, 0, 0, 0, 0);
 my $cmd = (defined($ARGV[0])) ? $ARGV[0] : '';
 

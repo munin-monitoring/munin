@@ -5,6 +5,8 @@ munin (CVS)
   * Plugins: minor bugfix in generic/bind9.
   * Plugins: generic/sendmail_mailqueue handles bigger queues (fix by Mickey
     Everts).
+  * Plugins: Made contrib-plugins generic/amavis and generic/mailstats more
+    secure.
   * Installation: Create CIGdir if nonexistant.
 
 munin (1.3.1)
