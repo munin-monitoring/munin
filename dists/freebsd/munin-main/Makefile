@@ -5,8 +5,9 @@
 # $FreeBSD$
 #
 # $Log$
-# Revision 1.4  2004/02/08 12:53:06  lupe
-# relocate LIBDIR to .../share/munin
+# Revision 1.5  2004/02/08 14:29:13  lupe
+# Preserve group munin when deleting user munin;
+# check if user or group have been deleted before pkg_delete.
 #
 # Revision 1.3  2004/02/06 18:40:21  lupe
 # Update to pre3.
@@ -16,7 +17,7 @@
 
 PORTNAME=	munin
 PORTVERSION=	1.0.0.p3
-PORTREVISION=	2
+PORTREVISION=	3
 CATEGORIES=	sysutils perl5
 MASTER_SITES=	${MASTER_SITE_SOURCEFORGE}
 MASTER_SITE_SUBDIR=	munin

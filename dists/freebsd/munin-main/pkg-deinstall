@@ -1,4 +1,11 @@
 #! /bin/sh
+#
+# $Log$
+# Revision 1.2  2004/02/08 14:29:13  lupe
+# Preserve group munin when deleting user munin;
+# check if user or group have been deleted before pkg_delete.
+#
+#
 
 ask() {
     local question default answer
@@ -34,16 +41,31 @@ delete_account() {
 
     u=$1
     g=$2
-    if yesno "Do you want me to remove group \"${g}\"" y; then
-	pw groupdel -n ${g}
-	echo "Done."
+    if pw group show ${g} > /dev/null 2>&1; then
+	if yesno "Do you want me to remove group \"${g}\"" y; then
+	    pw group del -n ${g}
+	    echo "Done."
+	else
+	    GID=`pw group show ${g} | awk -F: '{ print $3 }'`
+	fi
     fi
-    if yesno "Do you want me to remove user \"${u}\"" y; then
-	eval home=~${u}
-	pw userdel -n ${u} -r
-	echo "Done."
-	if [ -d "${home}" ]; then
-	    echo "Please remember to remove the home directory \"${home}\""
+    if pw user show ${u} > /dev/null 2>&1; then
+	if yesno "Do you want me to remove user \"${u}\"" y; then
+	    eval home=~${u}
+	    pw user del -n ${u} -r
+	    echo "Done."
+	    if [ -d "${home}" ]; then
+		echo "Please remember to remove the home directory \"${home}\""
+	    fi
+
+	    # pw user del may have removed the group, too.
+	    # Put it back if the admin asked us to retain it.
+	    if [ -n "$GID" ]; then
+		pw group show ${g} > /dev/null 2>&1
+		if [ $? -ne 0 ]; then
+		    pw group add ${g}
+		fi
+	    fi
 	fi
     fi
 }
