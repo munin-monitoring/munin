@@ -14,6 +14,8 @@ munin (1.0.0pre3)
   * Linux/iostat now shows only disks also on machines without devfs.
   * Generic/apache-plugins have been modified to properly to report the
     correct autoconf value. Also, bugfixes in _processes and _volume.
+  * Added new wildcard plugin linux/sensors_ that replaces the i2c plugins
+    (SF#890952).
 
 munin (1.0.0pre2)
 
