@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.32  2004/11/14 20:10:38  jimmyo
+# Made sure the latest feature additions also work with the CGI option.
+#
 # Revision 1.31  2004/09/23 20:04:59  jimmyo
 # Added option "compare".
 #
@@ -188,6 +191,10 @@ my $config;
 my $limits;
 $config = &munin_config ($conffile, $config);
 $limits = &munin_readconfig ($config->{dbdir}."/limits", 1, 1);
+if (!defined $config->{'cgiurl'})
+{
+    $config->{'cgiurl'} = "/munin/dyn/";
+}
 
 logger("Starting munin-html, checking lock");
 
@@ -288,50 +295,67 @@ for my $domain (@domainorder) {
 	    $service{service}=$service;
 	    $service{label}=$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_title};
 		
-		my $method = &munin_get_val ($config, "graph_strategy", "cron");
-		if ($method eq "cgi")
-		{
-			$service{imgday}="/munin/dyn/munin-cgi-graph/$domain/$node-$service-day.png";
-			$service{imgweek}="/munin/dyn/munin-cgi-graph/$domain/$node-$service-week.png";
-			$service{imgmonth}="/munin/dyn/munin-cgi-graph/$domain/$node-$service-month.png";
-			$service{imgyear}="/munin/dyn/munin-cgi-graph/$domain/$node-$service-year.png";
+	    my $method = &munin_get_val ($config, "graph_strategy", "cron");
+	    if ($method eq "cgi")
+	    {
+		$service{imgday}=$config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-day.png";
+		$service{imgweek}=$config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-week.png";
+		$service{imgmonth}=$config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-month.png";
+		$service{imgyear}=$config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-year.png";
 
-			if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
-			{
-			    $service{imgweeksum} = "/munin/dyn/munin-cgi-graph/$domain/$node-$service-week-sum.png";
-			    $service{imgyearsum} = "/munin/dyn/munin-cgi-graph/$domain/$node-$service-year-sum.png";
-			}
+		if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
+		{
+		    $service{imgweeksum} = $config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-week-sum.png";
+		    $service{imgyearsum} = $config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-year-sum.png";
 		}
-		else
+	
+		if (my ($w, $h) = &calculate_png_size ($config, $domain, $node, $service))
 		{
-			$service{imgday}="$node-$service-day.png";
-			$service{imgweek}="$node-$service-week.png";
-			$service{imgmonth}="$node-$service-month.png";
-			$service{imgyear}="$node-$service-year.png";
-
-			for my $scale (@times)
+		    for my $scale (@times)
+		    {
+			$service{"img".$scale."width"} = $w;
+			$service{"img".$scale."height"} = $h;
+		    }
+		    if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
+		    {
+			for my $scale (["week", "year"])
 			{
-				if (my ($w, $h) = &get_png_size (&munin_get_picture_filename ($config, $domain, $node, $service, $scale)))
+			    $service{"img".$scale."sumwidth"} = $w;
+			    $service{"img".$scale."sumheight"} = $h;
+			}
+		    }
+		}
+	    }
+	    else
+	    {
+		    $service{imgday}="$node-$service-day.png";
+		    $service{imgweek}="$node-$service-week.png";
+		    $service{imgmonth}="$node-$service-month.png";
+		    $service{imgyear}="$node-$service-year.png";
+
+		    for my $scale (@times)
+		    {
+			    if (my ($w, $h) = &get_png_size (&munin_get_picture_filename ($config, $domain, $node, $service, $scale)))
+			    {
+				    $service{"img".$scale."width"} = $w;
+				    $service{"img".$scale."height"} = $h;
+			    }
+		    }
+
+		    if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
+		    {
+			$service{imgweeksum} = "$node-$service-week-sum.png";
+			$service{imgyearsum} = "$node-$service-year-sum.png";
+			for my $scale (["week", "year"])
+			{
+				if (my ($w, $h) = &get_png_size (&munin_get_picture_filename ($config, $domain, $node, $service, $scale, 1)))
 				{
-					$service{"img".$scale."width"} = $w;
-					$service{"img".$scale."height"} = $h;
+					$service{"img".$scale."sumwidth"} = $w;
+					$service{"img".$scale."sumheight"} = $h;
 				}
 			}
-
-			if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
-			{
-			    $service{imgweeksum} = "$node-$service-week-sum.png";
-			    $service{imgyearsum} = "$node-$service-year-sum.png";
-			    for my $scale (["week", "year"])
-			    {
-				    if (my ($w, $h) = &get_png_size (&munin_get_picture_filename ($config, $domain, $node, $service, $scale, 1)))
-				    {
-					    $service{"img".$scale."sumwidth"} = $w;
-					    $service{"img".$scale."sumheight"} = $h;
-				    }
-			    }
-			}
-		}
+		    }
+	    }
 	    $service{url}="$node-$service.html";
 	    $service{domain}="$domain";
 	    $service{node}=$node;
@@ -571,13 +595,40 @@ sub logger {
     }
 }
 
+sub calculate_png_size
+{
+    	my $config = shift;
+	my $domain = shift;
+	my $node   = shift;
+	my $serv   = shift;
+
+        # base size of graph rectangle + space outside graph rectangle
+	my $height = munin_get_val ($config, "graph_height", 100, $domain, $node, $serv) + 156;
+	my $width  = munin_get_val ($config, "graph_width" , 400, $domain, $node, $serv) + 93;
+
+	# In addition, the height increases by 15 pixels for each label underneath
+	foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$serv}})
+	{
+	    if ($field =~ /^([^\.]+)\.label/)
+	    {
+		$height += 15 if (munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $serv, $1));
+	    }
+	}
+	# ...and +15 if there's a graph total
+	$height += 15 if (munin_get_val ($config, "graph_total", undef, $domain, $node, $serv));
+	# ...and +15 if there's min/max-headers above the labels
+	$height += 15 if (munin_graph_column_headers ($config, $domain, $node, $serv));
+
+	return ($width, $height);
+}
 sub get_png_size
 {
 	my $filename = shift;
 	my $width = undef;
 	my $height = undef;
 
-	if (open (PNG, $filename))
+#if (open (PNG, $filename))
+	if (0)
 	{
 		my $incoming;
 		binmode (PNG);

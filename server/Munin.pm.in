@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.26  2004/11/14 20:10:38  jimmyo
+# Made sure the latest feature additions also work with the CGI option.
+#
 # Revision 1.25  2004/11/12 23:18:52  jimmyo
 # Added new options notify_enable and notify_text, to allow more finely tuned notifications (both what to notify and what text to send.)
 #
@@ -169,7 +172,9 @@ use Exporter;
 	   'munin_node_status',
 	   'munin_category_status',
 	   'munin_get_picture_filename',
-	   'munin_get_filename');
+	   'munin_get_filename',
+	   'munin_graph_column_headers'
+	   );
 
 use strict;
 use RRDs;
@@ -196,7 +201,7 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"graph_info", "graph_category", "graph_strategy", "graph_width", 
 	"graph_height", "graph_sums", "graph_vlabel_sum_year", 
 	"graph_vlabel_sum_week", "local_address", "compare",
-	"notify_enable", "notify_text"
+	"notify_enable", "notify_text", "cgiurl"
     );
 
 
@@ -636,14 +641,22 @@ sub munin_get_picture_filename {
     my $service = shift;
     my $scale   = shift;
 	my $sum     = shift;
+	my $dir     = $config->{'htmldir'};
+
+    # Sanitise
+	$dir =~ s/[^\w_\/"'\[\]\(\)+=-]/_/;
+	$domain =~ s/[^\w_\/"'\[\]\(\)+=-]/_/;
+	$name =~ s/[^\w_\/"'\[\]\(\)+=-]/_/;
+	$service =~ s/[^\w_\/"'\[\]\(\)+=-]/_/;
+	$scale =~ s/[^\w_\/"'\[\]\(\)+=-]/_/;
 
 	if (defined $sum and $sum)
 	{
-		return "$config->{'htmldir'}/$domain/$name-$service-$scale-sum.png";
+		return "$dir/$domain/$name-$service-$scale-sum.png";
 	}
 	else
 	{
-		return "$config->{'htmldir'}/$domain/$name-$service-$scale.png";
+		return "$dir/$domain/$name-$service-$scale.png";
 	}
 }
 
@@ -905,4 +918,22 @@ sub munin_field_status
     }
 }
 
+sub munin_graph_column_headers
+{
+    my ($config, $domain, $node, $serv) = @_;
+    my $ret = 0;
+
+    foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$serv}})
+    {
+	if ($field =~ /^([^\.]+)\.negative$/ and munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $serv, $1))
+	{
+	    $ret = 1;
+	}
+    }
+
+    return $ret;
+}
+
 1;
+
+# vim: syntax=perl ts=8
