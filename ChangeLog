@@ -1,5 +1,8 @@
 munin (work)
 
+  * Applied patch from Jacques Caruso to make HTML output standards
+    compliant.
+
 munin (1.1.2)
 
   * The server programs now open the log file at an earlier point.
