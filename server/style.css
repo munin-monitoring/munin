@@ -21,6 +21,13 @@ div.logo {
   height: 59px;
 } 
 
+div.lighttext { 
+  background-color: #ffffff;
+  color: #777777;
+  font-style: italic;
+  
+ }
+
 .domain { 
   font-size: medium;
   font-weight: bold;
@@ -149,6 +156,27 @@ td.linkbox {
   border: 0px;
   height: 2px;
 }
+
+a.meek:link { 
+  color: #486aaf;
+  font-size: small;
+ }
+
+a.meek:visited { 
+  color: #af1a00;
+  font-size: small;
+ }
+
+a.meek:active { 
+  color: #486aaf;
+  font-size: small;
+ }
+
+a.meek:hover { 
+  color: #999999;
+  font-size: small;
+ }
+
 
 a:link { 
   color: #486aaf;

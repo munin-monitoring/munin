@@ -4,6 +4,7 @@ munin (work)
     Windows drive labels.
   * SNMP plugins now honour the "host" environment variable if they can't
     deduce the hostname from $0.
+  * Small interface improvements in the HTML output.
 	
 munin (1.1.4)
 
