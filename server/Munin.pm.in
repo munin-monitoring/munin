@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.29  2004/11/19 20:51:24  jimmyo
+# New notification system finished (I think).
+#
 # Revision 1.28  2004/11/18 00:22:01  jimmyo
 # Midway implementation of new notification scheme.
 #
@@ -225,7 +228,8 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"graph_info", "graph_category", "graph_strategy", "graph_width", 
 	"graph_height", "graph_sums", "graph_vlabel_sum_year", 
 	"graph_vlabel_sum_week", "local_address", "compare", "cgiurl",
-	"text", "command", "contact", "contacts",  "max_messages"
+	"text", "command", "contact", "contacts",  "max_messages", 
+	"always_send"
     );
 
 

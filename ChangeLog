@@ -13,9 +13,9 @@ munin (work)
       outgoing connections (from munin-update) should be used.
     * Added "comparison" views, to view a whole hostgroup at once.
     * Bugfix in munin-limits.
-    * Added new options notify_enable and notify_text, to allow more finely
-      tuned notifications (both what to notify and what text to send.)
 	* Draw min/max ranges in all graphs with only one visible field.
+	* Replaced notification system. Munin can now send warning/critical
+	  messages to whatever process/file that is needed.
 
   - Munin-node:
     * Added module Munin::Plugin::SNMP, a Net::SNMP sublcass for plugins.
