@@ -33,6 +33,7 @@ munin (work)
   * Plugin: Added plugin generic/bind9_rndc, by Facq Laurent.
   * Plugin: Two network ups tool plugins (generic/nut_*) contributed by xavier.
   * Plugin: Added plugin generic/mhttping by Greg Connor.
+  * Plugin: linux/cps_ plugin now groks high numbers.
 
 munin (1.1.7)
 
