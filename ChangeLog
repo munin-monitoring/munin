@@ -28,6 +28,7 @@ munin (work)
   * Plugin: Two new contrib plugins generic/foldingathome_*, by xavier.
   * Plugin: generic/named a bit more portable (by Will Froning).
   * Plugin: Sort fields in df*-plugins alphabetically.
+  * Plugin: Added plugin generic/bind9_rndc, by Facq Laurent.
 
 munin (1.1.7)
 
