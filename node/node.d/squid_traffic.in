@@ -15,6 +15,9 @@
 # 	autoconf  (optional - only used by munin-config)
 #
 # $Log$
+# Revision 1.2  2004/03/14 11:33:13  auduny
+# Added squidpatch from Jacques Caruso
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -100,7 +103,7 @@ sub make_auth_header {
     if(!defined $passwd || $passwd eq "") {
 	return "";
     } else {
-	my $auth = encode_base64(($user ? $user : "") . ":$passwd", "");
+	my $auth = MIME::Base64::encode_base64(($user ? $user : "") . ":$passwd", "");
 	return "Authorization: Basic $auth\r\n" .
 	    "Proxy-Authorization: Basic $auth\r\n";
     }
