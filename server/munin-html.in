@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.26  2004/09/13 21:45:55  jimmyo
+# node- and domain_order settings now does not exclude unmentioned entries.
+#
 # Revision 1.25  2004/09/10 21:06:56  jimmyo
 # Made summarised grahps work with dynamically generated graphs.
 #
@@ -195,8 +198,11 @@ my @domains;
 my @domainorder;
 if ($config->{domain_order}) {
     @domainorder = split / /, $config->{domain_order};
-} else {
-    @domainorder = sort (keys %{$config->{domain}});
+}
+foreach my $d (sort (keys %{$config->{domain_order}})) {
+    unless (grep (/^$d$/, @domainorder)) {
+	push @domainorder, $d;
+    }
 }
 
 #Make sure the logo and the stylesheet file is in the html dir
@@ -221,11 +227,16 @@ for my $domain (@domainorder) {
     my %domain;
     $domain{domain}=$domain;
     my @nodes;
-    my @nodeorder;
+    my @nodeorder = ();
     if ($config->{domain}->{$domain}->{node_order}) {
 	@nodeorder = split / /, $config->{domain}->{$domain}->{node_order};
-    } else {
-	@nodeorder = sort (keys %{$config->{domain}->{$domain}->{node}});
+    } 
+    foreach my $n (sort (keys %{$config->{domain}->{$domain}->{node}}))
+    {
+	unless (grep (/^$n$/, @nodeorder))
+	{
+	    push @nodeorder, $n;
+	}
     }
     for my $node (@nodeorder) {
         logger("processing node: $node");
@@ -590,3 +601,4 @@ This program is released under the GNU General Public License
 
 =cut
 
+# vim:syntax=perl:ts=8
