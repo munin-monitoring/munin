@@ -12,6 +12,9 @@
 # monitored with this plugin.
 #
 # $Log$
+# Revision 1.9  2005/01/29 21:17:27  jimmyo
+# Added madwifi support to linux/if_* plugins.
+#
 # Revision 1.8  2004/12/10 10:47:49  jimmyo
 # Change name from ${scale} to ${graph_period}, to be more consistent.
 #
@@ -69,7 +72,7 @@ fi
 
 if [ "$1" = "suggest" ]; then
 	if [ -r /proc/net/dev ]; then
-		egrep '(eth|wlan)' /proc/net/dev | cut -f1 -d: | sed 's/ //g'
+		egrep '(eth|wlan|ath)' /proc/net/dev | cut -f1 -d: | sed 's/ //g'
 		exit 0
 	else
 		exit 1
@@ -92,16 +95,18 @@ if [ "$1" = "config" ]; then
 	echo 'up.type COUNTER'
 	echo 'up.negative down'
 	echo 'up.cdef up,8,*'
-	if [ "$INTERFACE" = "wlan0" -o "$INTERFACE" = "wlan1" -o "$INTERFACE" = "wlan2" -o "$INTERFACE" = "wlan3" -o "$INTERFACE" = "wlan4" -o "$INTERFACE" = "wlan5" -o "$INTERFACE" = "wlan6" -o "$INTERFACE" = "wlan7" -o "$INTERFACE" = "wlan8" -o "$INTERFACE" = "wlan9" -o "$INTERFACE" = "wlan10" ]
-	then
-		echo -n "up.info Traffic of the $INTERFACE interface. Maximum speed is "
-		which iwlist >/dev/null 2>/dev/null || echo "undeterminable (please install iwlist)."
-		iwlist $INTERFACE rate 2>/dev/null | awk '/Current Bit Rate/ { split ($0, arr, "="); split (arr[2], arr2, "M"); print (arr2[1]*1000000) " bits per second.\nup.max " (arr2[1]*1000000) "\ndown.max "(arr2[1]*1000000); }'
-	else
-		echo -n "$INTERFACE.info Traffic of the $INTERFACE interface. Maximum speed is "
-		which ethtool >/dev/null 2>/dev/null || echo "undeterminable (please install ethtool)."
-		ethtool $INTERFACE 2>/dev/null | awk '/Speed/ { split ($2, arr2, "M"); print (arr2[1]*1000000) " bits per second.\nup.max " (arr2[1]*1000000) "\ndown.max "(arr2[1]*1000000); }'
-	fi
+	case "$INTERFACE" in
+		ath*|wlan*)
+			echo -n "up.info Traffic of the $INTERFACE interface. Maximum speed is "
+			which iwlist >/dev/null 2>/dev/null || echo "undeterminable (please install iwlist)."
+			iwlist $INTERFACE rate 2>/dev/null | awk '/Current Bit Rate/ { split ($0, arr, "="); split (arr[2], arr2, "M"); print (arr2[1]*1000000) " bits per second.\nup.max " (arr2[1]*1000000) "\ndown.max "(arr2[1]*1000000); }'
+			;;
+		*)
+			echo -n "$INTERFACE.info Traffic of the $INTERFACE interface. Maximum speed is "
+			which ethtool >/dev/null 2>/dev/null || echo "undeterminable (please install ethtool)."
+			ethtool $INTERFACE 2>/dev/null | awk '/Speed/ { split ($2, arr2, "M"); print (arr2[1]*1000000) " bits per second.\nup.max " (arr2[1]*1000000) "\ndown.max "(arr2[1]*1000000); }'
+			;;
+	esac
 	exit 0
 fi;
 
