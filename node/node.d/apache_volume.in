@@ -24,6 +24,9 @@
 # 	ports    - HTTP port numbers
 #
 # $Log$
+# Revision 1.6  2004/04/27 21:32:06  jimmyo
+# Clarified the vlabels in the apache-plugins (Deb#238594).
+#
 # Revision 1.5  2004/04/27 08:46:57  jimmyo
 # Fixed broken autoconf in apache-* plugins (Deb#236144).
 #
@@ -92,7 +95,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" )
 {
 	print "graph_title Apache volume\n";
 	print "graph_args --base 1000\n";
-	print "graph_vlabel volume\n";
+	print "graph_vlabel bytes per second\n";
 	foreach my $port (@PORTS) {
 		print "volume$port.label port $port\n";
 		print "volume$port.type COUNTER\n";

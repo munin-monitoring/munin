@@ -13,6 +13,7 @@ munin (1.0.0pre4)
   * Fixed bug in mysql-plugins (Deb#233762).
   * Fixed a problem in the node when running as a non-root user and
     using sudo to run the plugins (Deb#236694).
+  * Clarified the vlabels in the apache-plugins (Deb#238594).
 
 munin (1.0.0pre3)
 
