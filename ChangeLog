@@ -33,6 +33,7 @@ munin (1.0.0pre4)
   * Added patch to contrib-plugin linux/nfsd, to graph rpc count (Alexandre
     Dupouy).
   * Added plugin linux/nfs_client, contributed by Alexandre Dupouy.
+  * Added plugin ipac-ng, contributed by Arturas Slajus.
 
 munin (1.0.0pre3)
 
