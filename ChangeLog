@@ -8,6 +8,7 @@ munin (work)
   * Bugfix: munin-graph now logs an illegal STACK in the first field better
     (SF#1081903).
   * Plugin: generic/uptime was re-classified as linux/uptime (SF#1074576).
+  * Plugin: Renamed generic/folding@home to generic/foldingathome (SF#1074241).
 
 munin (1.1.7)
 
