@@ -179,26 +179,6 @@ deb:
 	-ln -s dists/debian
 	fakeroot debian/rules binary
 
-rpm:
-	-rm -rf dists/redhat/munin-* dists/redhat/noarch
-	-dists/redhat/buildtargz.sh
-	-rpmbuild \
-		--define "_specdir dists/redhat"   \
-		--define "_sourcedir dists/redhat" \
-		--define "_srcrpmdir dists/redhat" \
-                -bs dists/redhat/munin.spec
-
-	-rpmbuild \
-		--define "_rpmtopdir `pwd`/dists/redhat" \
-		--define "_sourcedir %{_rpmtopdir}"      \
-		--define "_builddir %{_rpmtopdir}"       \
-		--define "_rpmdir %{_rpmtopdir}"         \
-	        -bb dists/redhat/munin.spec
-
-	-mv dists/redhat/*rpm ..
-	-mv dists/redhat/noarch/*rpm ..
-	-rm -rf dists/redhat/munin-* dists/redhat/noarch
-
 clean:
 ifeq ($(MAKELEVEL),0)
 	-rm -f debian
