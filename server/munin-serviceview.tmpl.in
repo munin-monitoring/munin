@@ -27,12 +27,12 @@
 	  <td colspan=2><hr class="ruler" /></td>
 	</tr>
     <tr>
-      <td><img src="<TMPL_VAR NAME="IMGDAY">" alt="daily graph" /></td>
-      <td><img src="<TMPL_VAR NAME="IMGWEEK">" alt="weekly graph" /></td>
+      <td><img src="<TMPL_VAR NAME="IMGDAY">" alt="daily graph" <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/></td>
+      <td><img src="<TMPL_VAR NAME="IMGWEEK">" alt="weekly graph" <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>/></td>
     </tr>
     <tr>
-      <td><img src="<TMPL_VAR NAME="IMGMONTH">" alt="monthly graph" /></td>
-      <td><img src="<TMPL_VAR NAME="IMGYEAR">" alt="yearly graph" /></td>
+      <td><img src="<TMPL_VAR NAME="IMGMONTH">" alt="monthly graph" <TMPL_IF NAME="IMGMONTHWIDTH">width="<TMPL_VAR NAME="IMGMONTHWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGMONTHHEIGHT">height="<TMPL_VAR NAME="IMGMONTHHEIGHT">"</TMPL_IF>/></td>
+      <td><img src="<TMPL_VAR NAME="IMGYEAR">" alt="yearly graph" <TMPL_IF NAME="IMGYEARWIDTH">width="<TMPL_VAR NAME="IMGYEARWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGYEARHEIGHT">height="<TMPL_VAR NAME="IMGYEARHEIGHT">"</TMPL_IF>/></td>
     </tr>
 	<tr>
 	  <td colspan="2" class="legendbox">
