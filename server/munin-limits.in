@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.15  2004/11/19 18:38:02  jimmyo
+# Worked a bit more on the notification system.
+#
 # Revision 1.14  2004/11/18 15:31:37  jimmyo
 # Worked a bit more on the notification system.
 #
@@ -76,7 +79,7 @@ use strict;
 use Munin;
 use POSIX qw(strftime);
 use Getopt::Long;
-use Text::Balanced qw (extract_bracketed);
+use Text::Balanced qw (extract_multiple extract_delimited extract_quotelike extract_bracketed);
 my $DEBUG=0;
 my $conffile = "@@CONFDIR@@/munin.conf";
 my $do_usage = 0;
@@ -84,8 +87,9 @@ my @limit_hosts = ();
 my @limit_services = ();
 my $force_root = 0;
 my %notes = ();
+my $stdout = 0;
 my %default_text = ( "default" => '${var:group} -> ${var:host} -> ${var:graph_title}:${if:cfields \n\tCRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields \n\tWARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields \n\tUNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}\n',
-    		     "nagios"  => '${var:host}\t${var:worstid}\t${var:graph_title}\t${var:graph_title}:${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}\n'
+    		     "nagios"  => '${var:host}\t${var:worstid}\t${var:graph_title}\t${var:graph_title}:${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}'
 		    );
 
 my $log = new IO::Handle;
@@ -97,6 +101,7 @@ GetOptions ( "force-root!"  => \$force_root,
 	     "service=s"    => \@limit_services,
 	     "config=s"     => \$conffile,
 	     "debug!"       => \$DEBUG,
+	     "stdout!"      => \$stdout,
 	     "help"         => \$do_usage );
 
 if ($do_usage)
@@ -305,7 +310,7 @@ sub generate_service_message {
 
     if ($worst)
     {
-	foreach my $c (keys %{$config->{'contact'}})
+	foreach my $c (split (/\s+/, munin_get_val ($config, "contacts", join (' ', keys %{$config->{'contact'}}), $domain, $name, $clientname)))
 	{
 	    my $pretxt = ($config->{'contact'}->{$c}->{'text'} || $config->{'contact'}->{'default'}->{'text'} || $default_text{$c} || $default_text{'default'});
 	    my $txt = message_expand ($pretxt, $client, "");
@@ -314,8 +319,22 @@ sub generate_service_message {
 	    my $pipe;
 	    if (!defined $config->{'contact'}->{$c}->{'pipe'})
 	    {
-		my @cmd = split /\s/, message_expand ($config->{'contact'}->{$c}->{'command'} || $config->{'contact'}->{'default'}->{'command'} || undef);
-		logger ("Debug: opening for writing: |" . join('|',@cmd) . "|.") if $DEBUG;
+		my @cmd = extract_multiple (
+			message_expand ($config->{'contact'}->{$c}->{'command'} || $config->{'contact'}->{'default'}->{'command'} || undef),
+			[ sub { extract_delimited ($_[0], q{"'})},
+			  qr/\S+/
+			],
+			undef, 1);
+		@cmd = map { s/['"]$//; s/^['"]//; $_ } @cmd;
+		if ($cmd[0] eq "|")
+		{
+		    $cmd[0] = "|-";
+		} 
+		elsif ($cmd[0] !~ /^[|>]/)
+		{
+		    unshift (@cmd, "|-");
+		}
+		logger ("Debug: opening for writing: \"" . join('" "',@cmd) . "\".") if $DEBUG;
 		open ($pipe, $cmd[0], @cmd[1 .. $#cmd]) or logger ("Warning: Could not run command \"" . join(' ',@cmd) . "\": $!");
 		$config->{'contact'}->{$c}->{'pipe'} = $pipe;
 	    }
@@ -413,6 +432,7 @@ sub logger {
   my ($comment) = @_;
   my $now = strftime "%b %d %H:%M:%S", localtime;
 
+  print "$now - $comment\n" if $stdout;
   if ($log->opened)
   {
 	  print $log "$now - $comment\n";

@@ -1,7 +1,6 @@
 #!/bin/sh
 [ -x @@LIBDIR@@/munin-update ] && @@LIBDIR@@/munin-update $@;
 [ -x @@LIBDIR@@/munin-limits ] && @@LIBDIR@@/munin-limits $@;
-[ -x @@LIBDIR@@/munin-nagios ] && @@LIBDIR@@/munin-nagios $@;
 [ -x @@LIBDIR@@/munin-graph  ] && nice @@LIBDIR@@/munin-graph --cron $@;
 [ -x @@LIBDIR@@/munin-html   ] && nice @@LIBDIR@@/munin-html $@;
 
