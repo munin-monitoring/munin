@@ -9,7 +9,6 @@ Group:     System Environment/Daemons
 Summary:   Munin is the Linpro RRD data agent
 BuildArchitectures: noarch
 Provides: perl(RRDs)
-Requires: perl-Config-General
 Requires: perl-HTML-Template
 Requires: perl-Net-Server
 Requires: rrdtool
@@ -139,7 +138,7 @@ fi
 %{_bindir}/munin-cron
 %{_datadir}/munin/munin-graph
 %{_datadir}/munin/munin-html
-%{_datadir}/munin/munin-nagios
+%{_datadir}/munin/munin-limits
 %{_datadir}/munin/munin-update
 %{_libdir}/perl5/*perl/5.*/Munin.pm
 %dir /etc/munin/templates
@@ -150,23 +149,26 @@ fi
 %attr(-, munin, root) %dir /var/lib/munin
 %attr(-, munin, root) %dir /var/log/munin
 %attr(-, munin, root) %dir /var/www/html/munin
+%attr(-, munin, root) %dir /var/www/html/munin/cgi/cgi
 %attr(-, munin, root) /var/www/html/munin/style.css
 %config /var/www/html/munin/.htaccess
 %doc %{_mandir}/man8/munin-graph*
 %doc %{_mandir}/man8/munin-update*
-%doc %{_mandir}/man8/munin-nagios*
+%doc %{_mandir}/man8/munin-limits*
 %doc %{_mandir}/man8/munin-html*
 %doc %{_mandir}/man8/munin-cron*
 %doc %{_mandir}/man5/munin.conf*
 
 %files node
 %defattr(-, root, root)
-%config /etc/munin/munin-node.conf
-%config /etc/munin/plugin-conf.d/munin-node
+%config(noreplace) /etc/munin/munin-node.conf
+%config(noreplace) /etc/munin/plugin-conf.d/munin-node
 %config /etc/init.d/munin-node
+%config(noreplace) /etc/munin/plugins.conf
 %{_sbindir}/munin-run
 %{_sbindir}/munin-node
 %{_sbindir}/munin-node-configure
+%{_sbindir}/munin-node-configure-snmp
 %dir /var/log/munin
 %dir %{_datadir}/munin
 %dir /etc/munin/plugins
