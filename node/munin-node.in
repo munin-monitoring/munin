@@ -734,7 +734,8 @@ sub start_tls
     Net::SSLeay::set_wfd($tls, fileno(STDOUT));
 
     # Try to negotiate the tls connection
-    if (Net::SSLeay::accept($tls))
+    my $res;
+    if ($res = Net::SSLeay::accept($tls))
     {
 	logger ("TLS Notice: TLS not enabled: " . &Net::SSLeay::print_errs());
     }
