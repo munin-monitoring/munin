@@ -23,6 +23,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.28  2004/12/10 09:12:13  jimmyo
+# Fix bug when setting min to 0.
+#
 # Revision 1.27  2004/12/09 16:20:06  jimmyo
 # generic/uptime was re-classified as linux/uptime (SF#1074576).
 #
@@ -461,13 +464,13 @@ sub compare_configs {
 		    if (&is_changed ($old, $new, $dom, $host, $serv, $field, "min"))
 		    {
 			&change_min ($config, $dom, $host, $serv, $field, 
-				($new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"} ?
+				(defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"} ?
 				$new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"} : undef));
 		    }
 		    if (&is_changed ($old, $new, $dom, $host, $serv, $field, "type"))
 		    {
 			&change_type ($oldconfig, $config, $dom, $host, $serv, $field, 
-				($new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".type"} ?
+				(defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".type"} ?
 				$new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".type"} : undef));
 		    }
 		}
