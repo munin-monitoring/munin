@@ -213,8 +213,7 @@ endif
 	-rm -f build-man-stamp
 
 source_dist: clean
-	cp dists/tarball/plugins.conf .
 	(cd ..; ln -s munin munin-$(VERSION))
-	tar -C .. --dereference --exclude CVS --exclude dists -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
+	tar -C .. --dereference --exclude CVS -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
 
 .PHONY: install install-main install-node install-doc install-man build build-doc deb clean source_dist
