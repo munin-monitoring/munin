@@ -37,6 +37,7 @@ munin (1.0.0pre4)
   * Added plugin ipac-ng, contributed by Arturas Slajus.
   * Added plugin hddtemp2, contributred by Andrew Radke, modified by Lupe
     Christoph.
+  * Added Folding@home plugin, contributed by Xavier.
 
 munin (1.0.0pre3)
 
