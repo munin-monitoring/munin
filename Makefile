@@ -42,6 +42,7 @@ install-main: build
 	$(INSTALL) -m 0755 build/server/munin-update $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-html $(LIBDIR)/
+	$(INSTALL) -m 0755 build/server/munin-limits $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-cgi-graph $(CGIDIR)/
 
 	$(INSTALL) -m 0644 build/server/Munin.pm $(PERLLIB)/
@@ -94,6 +95,7 @@ install-man: build-man
 	$(INSTALL) -m 0644 build/doc/munin-run.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-graph.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-update.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-limits.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-html.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-cron.8 $(MANDIR)/man8/
 
@@ -166,6 +168,8 @@ build-man-stamp:
 		server/munin-graph.in > build/doc/munin-graph.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		server/munin-update.in > build/doc/munin-update.8
+	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
+		server/munin-limits.in > build/doc/munin-limits.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		server/munin-html.in > build/doc/munin-html.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
