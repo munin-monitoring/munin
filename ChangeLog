@@ -2,6 +2,7 @@ munin (work)
 
   * Bugfix: munin-limits should log less noise.
   * Bugfix: munin-limits did not notify correctly in all situations.
+  * Bugfix: munin-graph now treats CDEFs in fields with long names properly.
 
 munin (1.1.7)
 
