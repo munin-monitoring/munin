@@ -1,0 +1,57 @@
+#!/bin/sh
+#
+# Script to monitor disk usage.
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional - used by lrrd-config)
+#
+# $Log$
+# Revision 1.1  2004/01/02 15:18:07  jimmyo
+# Initial revision
+#
+# Revision 1.2  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
+# Magic markers (optional - used by lrrd-config and installation
+# scripts):
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+MAXLABEL=20
+
+if [ "$1" = "autoconf" ]; then
+	echo yes
+	exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Filesystem usage (in %)'
+	echo 'graph_args --upper-limit 100 -l 0'
+	echo 'graph_vlabel %'
+	df -P -l -x none | tail +2 | grep -v "//" | while read i; do
+		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 }'`
+		echo -n "$name.label "
+		echo $i | awk "{ 
+			dir=\$6
+			if (length(dir) <= $MAXLABEL)
+				print dir
+			else
+				printf (\"...%s\n\", substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3)) 
+		}"
+		echo "$name.warning 92"
+		echo "$name.critical 98"
+	done
+	exit 0
+fi
+
+df -P -l  -x none| tail +2 | grep -v "//" | while read i; do
+	name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 ".value " }'`
+	echo -n "$name "
+	echo $i | awk '{ print $5 }' | cut -f1 -d%
+done

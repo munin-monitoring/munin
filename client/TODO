@@ -1,0 +1,4 @@
+- Encryption support would enable use over unsecure networks. It should
+  be enabled/disabled in the configuration file. 
+- Use a list of network, described CIDR-style, instead of a regexp in
+  access control mechanism.

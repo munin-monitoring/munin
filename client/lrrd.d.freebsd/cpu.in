@@ -1,0 +1,91 @@
+#!/bin/sh
+#
+# Plugin to monitor CPU usage.
+#
+# Usage: Place in /etc/lrrd/client.d/ (or link it there  using ln -s)
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional - used by lrrd-config)
+#
+# $Log$
+# Revision 1.1  2004/01/02 15:18:07  jimmyo
+# Initial revision
+#
+# Revision 1.3  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
+# Magic markers - optional - used by installation scripts and
+# lrrd-config:
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+
+
+if [ "$1" = "autoconf" ]; then
+    if [ -x /sbin/sysctl ]; then
+        /sbin/sysctl kern.cp_time > /dev/null
+    	if [ $? = "0" ]; then
+	    	echo yes
+    		exit 0
+    	else
+		    echo no
+		    exit 1
+	    fi
+    else
+        echo no
+        exit 1
+    fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	PERCENT=`/sbin/sysctl -n hw.ncpu | awk '{print ($1)*100}'`
+    STATUNITS=`/sbin/sysctl -n kern.clockrate | cut -f16 -d' '`
+    SCALE=`echo 'scale=5;' $PERCENT/$STATUNITS | bc -q `
+#	let SYSWARNING=$PERCENT*30/100
+#	let SYSCRITICAL=$PERCENT*50/100
+#	let INTWARNING=$PERCENT*80/100
+#	let USRWARNING=$PERCENT*80/100
+	echo 'graph_title CPU usage'
+	echo 'graph_order system interrupt user nice idle'
+	echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit $PERCENT "
+	echo 'graph_vlabel %'
+	echo 'system.label system'
+	echo 'system.draw AREA'
+	echo 'system.max 5000'
+	echo 'system.type COUNTER'
+#	echo "system.warning $SYSWARNING" 
+#	echo "system.critical $SYSCRITICAL" 
+	echo 'system.cdef system,'$SCALE',*'
+	echo 'interrupt.label interrupt'
+	echo 'interrupt.draw STACK'
+	echo 'interrupt.max 5000'
+#	echo "interrupt.warning $INTWARNING"
+	echo 'interrupt.type COUNTER'
+	echo 'interrupt.cdef interrupt,'$SCALE',*'
+	echo 'user.label user'
+	echo 'user.draw STACK'
+	echo 'user.max 5000'
+#	echo "user.warning $USRWARNING"
+	echo 'user.type COUNTER'
+	echo 'user.cdef user,'$SCALE',*'
+	echo 'nice.label nice'
+	echo 'nice.draw STACK'
+	echo 'nice.max 5000'
+	echo 'nice.type COUNTER'
+	echo 'nice.cdef nice,'$SCALE',*'
+	echo 'idle.label idle'
+	echo 'idle.draw STACK'
+	echo 'idle.max 5000'
+	echo 'idle.type COUNTER'
+	echo 'idle.cdef idle,'$SCALE',*'
+	exit 0
+fi
+
+/sbin/sysctl kern.cp_time | awk '{ print "user.value " $2 "\nnice.value " $3 "\nsystem.value " $4 "\ninterrupt.value " $5 "\nidle.value " $6 }'
+

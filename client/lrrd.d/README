@@ -1,0 +1,153 @@
+A lrrd-script must fullfill the following requirements:
+
+ * Has to be executeable
+ * Filename should not contain ~ or # (skipping backupfiles)
+ * Accept the argument "config" to configure the rrd, which must return:
+
+     Needed:
+
+        - graph_title <title>
+	  This is the titlebar in the rrdgraph.
+
+     Extra:
+
+	- graph_order <field_order> 
+          In which order the graphs should be plotted.
+
+        - create_args [rrdcreate arguments]
+	  extra arguments to rrdcreate
+
+        - graph_args [rrdgraph arguments]
+	  extra arguments to rrdgraph
+
+        - graph_vlabel [label]
+	  Y-axis label
+
+	- graph_total [label]
+	  If set, summarise all the datasources' values and use the value
+	  of graph_total as a label.
+
+	- graph_scale [yes|no]
+	  Default yes. If unset, scaling of values below the graph (min,
+	  max, cur) will not be done. Good for e.g. load (milliload
+	  doesn't make much sense), but bad for graphs with large numbers.
+
+	- graph [yes|no]
+	  Default yes. If unset, plugin will not be graphed.
+
+	- update [yes|no]
+	  Default yes. If unset, plugin will never more be requested by
+	  the server.
+	
+	- host_name [name]
+	  If set, overrides which host_name the plugin belongs to. Rather
+	  ugly - use the override in the client configuration instead.
+
+   Then you list the tings you want to meassure:
+
+     Needed:
+
+	- <field>.label <label>
+	  This will become on of the lines on you graph. field is the
+	  name of the rrdsource, label is the name we give it in the
+          graph
+	
+     Extra:
+	
+        - <field>.draw [LINE[1-3],AREA,STACK]
+          What type of graph field is (defaults to LINE2)
+
+   	- <field>.type [COUNTER,GAUGE,ABSOLUTE,DERIVE]
+	  What kind of datasource. (default is GAUGE)
+	
+	- <field>.warn <limit>
+	  A HRULE will be written in the graph for this field at
+	  <limit> Later we can do fancy stuff if we cross the limit
+
+	- <field>.graph
+	  If unset, don't graph this field.
+
+	- <field>.skipdraw
+	  Don't draw this field. NOTE: Deprecated. Use graph instead.
+
+	- <field>.negative <negfield>
+	  Use <negfield> as the negative value of this graph.
+
+	- <field>.cdef <cdef>
+	  Feed <cdef> as a CDEF to rrdtool.
+
+ * When called without paramenters your script should return one or more:
+   <field>.value <value>
+
+The rest of the requirements only apply if you want to submit your plugin
+(the extra gizmos are used when installing the package):
+
+ * When called with the parameter "autoconf", should return 'yes' or 'no'
+   as to its own opinion of wether it should be run or not.
+ 
+ * If it's a "wildcard-script", it should accept the parameter
+   "suggest", which should list its probable uses.
+ 
+ * It should contain a magic marker, which matches the following perl
+   regular expression:
+
+    m/^#%# (.+)=(.+)$/;
+
+   where `$1' is the key and `$2' is the value. The currently recognised
+   keys are `family' and `capabilities`, however more may be added in the
+   future. It is customary to place this marker near the top of the
+   plugin.
+   
+ * All plugins should belong to a family, as specified by one of the plugin's
+   magic markers. Currently known families are:
+   
+    - auto
+      This specifies a plugin which is supported by the LRRD developers,
+      and should work `out of the box' on most systems. It may have small
+      requirements to local configuration (such as the mysql_* plugins
+      which require mysqladmin to be able to connect passwordless), but
+      nothing major. Obviously, plugins which encode a certain service in
+      their name (such as exim_*) will require the encoded service to be
+      installed, but will still pass as an `auto'-plugin.
+
+      Perl-scripts which are "auto" cannot "use" any perl modules which are
+      not part of a standard perl installation (like "strict"). Use "require"
+      in "eval"s to find out if the module is available, and give the 
+      appropriate "autoconf" result.
+
+      Installation/setup scripts should typically prompt the user for enabling
+      of the `auto' plugins.
+   
+   - manual
+     This denotes a plugin which is supported by the LRRD developers, but
+     requires significant amount of work from the user to make it work.
+     The plugin should explain briefly what actions are required in comments
+     near the top of the plugin itself. A good example of a manual plugin is
+     the apache_serverstatus-plugin, which requires the user to reconfigure
+     Apache to enable its mod_serverstatus feature.
+
+     Installation/setup scripts should typically not prompt the user for
+     enabling these plugins, unless it has some method of helping the
+     user through the labour needed to make it work properly.
+   
+   - contrib
+     Plugins which are not supported by the LRRD developers, but are provided
+     in the hope that they will be useful to our users. This is typically
+     plugins contributed to us by others, or which have special requirements.
+     The plugin should preferably state an e-mail address in a comment, which
+     the user may contact if he has questions regarding that particular plugin.
+
+     If the family marker is omitted from a plugin, it is assumed to be in the
+     `contrib' family.
+ 
+  * All plugins should list their capabilities. Those that should be
+    listed in the magic marker, are:
+
+    - autoconf
+      Plugin supports autoconf parameter
+
+    - suggest
+      Plugin supports suggest parameter
+   
+When you're done adding a new service, restart lrrd-client.
+lrrd-server will pick it up in it's next sweep.

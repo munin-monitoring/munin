@@ -1,0 +1,70 @@
+#!/bin/sh
+#
+# Plugin to monitor CPU usage.
+#
+# Usage: Place in /etc/lrrd/client.d/ (or link it there  using ln -s)
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional - used by lrrd-config)
+#
+# $Log$
+# Revision 1.1  2004/01/02 15:18:07  jimmyo
+# Initial revision
+#
+# Revision 1.2  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
+# Magic markers - optional - used by installation scripts and
+# lrrd-config:
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+if [ "$1" = "autoconf" ]; then
+	if [ -x /usr/bin/kstat ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 1
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+	echo 'graph_title Paging Out'
+	echo 'graph_order pgout pgpgout pgfree scan'
+	echo "graph_args --base 1000"
+	echo 'pgout.label pgout'
+	echo 'pgout.draw LINE2'
+	echo 'pgout.type COUNTER'
+	echo 'pgpgout.label pgpgout'
+	echo 'pgpgout.draw LINE2'
+	echo 'pgpgout.type COUNTER'
+	echo 'pgfree.label pgfree'
+	echo 'pgfree.draw LINE2'
+	echo 'pgfree.type COUNTER'
+	echo 'scan.label scan'
+	echo 'scan.draw LINE2'
+	echo 'scan.type COUNTER'
+	exit 0
+fi
+
+kstat -p -c misc -m cpu_stat -s '/^(pgout|pgpgout|dfree|scan)$/' | sed -e 's/.*://' | awk '
+BEGIN {
+	map["pgout"] = "pgout"
+	map["pgpgout"] = "pgpgout"
+	map["dfree"] = "pgfree"
+	map["scan"] = "scan"
+}
+length(map[$1]) > 0 {
+	sum[map[$1]] += $2
+}
+END {
+	for (item in sum) {
+		print item ".value", sum[item]
+	}
+}'

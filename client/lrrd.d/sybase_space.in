@@ -1,0 +1,166 @@
+#!@@PERL@@ -w
+#
+# Plugin to monitor sybase database space usage
+#
+# Parameters:
+#
+# 	config
+#
+# You need to add the user to all the databases you want monitored.
+#
+# Configuration variables:
+#
+# 	SYBASE       - Sybase home
+# 	SYBASE_USER  - Username
+# 	SYBASE_PASS  - Password
+# 	SYBASE_HOST  - Host
+# 	
+# 	 $Log$
+# 	 Revision 1.1  2004/01/02 15:18:07  jimmyo
+# 	 Initial revision
+#
+# 	 Revision 1.3  2003/11/10 18:41:33  jimmyo
+# 	 Removed Data::Dumper dependency.
+# 	
+# 	 Revision 1.2  2003/11/07 17:43:16  jimmyo
+# 	 Cleanups and log entries
+# 	
+#
+#
+#%# family=manual
+#%# capabilities=
+
+use strict;
+use DBD::Sybase;
+use DBI;
+
+my $user = $ENV{SYBASE_USER} || "monitor";
+my $pass = $ENV{SYBASE_PASS} || "monitor";
+my $host = $ENV{SYBASE_HOST} || "localhost";
+my $db   = $ENV{SYBASE_DB}   || "master";
+
+$ENV{SYBASE} = $ENV{SYBASE}  || "/usr/local/sybase";
+
+my $dbh = DBI->connect ("dbi:Sybase:$db;host=$host", $user, $pass);
+
+if (!$dbh) 
+{
+	die "Could not run DBI::connect\n";
+}
+
+my $databases = &list_dbs ($dbh);
+
+if (exists $ARGV[0] and $ARGV[0] =~ /^config$/)
+{
+	print "host_name sybase-i.fileflow.com\n";
+	print "graph_title Sybase database space usage\n";
+	print "graph_args -u 100 -l 0\n";
+	print "graph_vlabel %\n";
+
+	foreach my $db (keys %{$databases})
+	{
+		print "$db.label $db\n";
+		print "$db.type GAUGE\n";
+		print "$db.warning 85\n";
+		print "$db.critical 95\n";
+	}
+	exit 0;
+}
+
+my $db_info;
+
+foreach my $db (keys %{$databases})
+{
+	$db_info = &space_db ($dbh, $db, $db_info);
+}
+
+foreach my $db (keys %{$db_info})
+{
+	#print "$db $db_info->{$db}->{used} / $db_info->{$db}->{total} = ", $db_info->{$db}->{used}*100/$db_info->{$db}->{total}, ".\n";
+	print "$db.value ", $db_info->{$db}->{used}*100/$db_info->{$db}->{total}, "\n";
+}
+
+1;
+
+sub list_dbs
+{
+	my $h   = shift;
+	my $dbs = undef;
+
+	if (! $h->do ("use master"))
+	{
+		die "Error: could not \"use master\"...\n";
+	}
+	my $sth = $dbh->prepare ("select name from sysdatabases");
+	my $rv  = $sth->execute;
+	if (! $rv)
+	{
+		die "Error: could not run \"select name from sysdatabases\"...\n";
+	}
+
+	$dbs = $sth->fetchall_hashref ("name");
+
+	return $dbs;
+}
+
+sub space_db
+{
+	my $h   = shift;
+	my $db  = shift;
+	my $dbs = shift;
+
+	if (! $h->do ("use $db"))
+	{
+		die "Error: could not \"use $db\"...\n";
+	}
+	my $sth = $dbh->prepare ("sp_spaceused");
+	my $rv  = $sth->execute;
+
+	if (! $rv)
+	{
+		die "Error: could not use \"sp_spaceused\"...\n";
+	}
+
+	do {
+		while (my $d = $sth->fetchrow_arrayref)
+		{
+			#print join ('|',@{$d}), "...\n";
+			if ($d->[0] =~ /^$db$/)
+			{
+				$dbs->{$db}->{total} = &bytes ($d->[1]);
+			}
+			elsif (!$d->[0])
+			{
+				next;
+			}
+			else
+			{
+				$dbs->{$db}->{used} = &bytes ($d->[0]);
+			}
+		}
+	} while ($sth->{syb_more_results});
+
+	return $dbs;
+}
+
+sub bytes
+{
+	my $val = shift;
+
+	if ($val =~ /^\s*([\d\.]+)\s*kb\s*$/i)
+	{
+		$val = $1*1024;
+	}
+	elsif ($val =~ /^\s*([\d\.]+)\s*mb\s*$/i)
+	{
+		$val = $1*1024*1024;
+	}
+	elsif ($val =~ /^\s*([\d\.]+)\s*gb\s*$/i)
+	{
+		$val = $1*1024*1024*1024;
+	}
+	return $val;
+}
+
+
+# vim:syntax=perl

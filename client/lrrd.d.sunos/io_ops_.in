@@ -1,0 +1,132 @@
+#!/bin/sh
+#
+# Wildcard-plugin to monitor disks. To monitor a disk,
+# link io_<function>_<disk> to this file. E.g.
+#
+#    ln -s /usr/share/lrrd/client/plugins-auto/io_.kstat /etc/lrrd/client.d/io_busy_sd0
+#
+# ...will monitor busy and wait on sd0.
+#
+# These functions are implemented:
+#	busy bytes ops
+#
+# Any device found in /usr/bin/kstat can be monitored.
+#
+# $Log$
+# Revision 1.1  2004/01/02 15:18:07  jimmyo
+# Initial revision
+#
+# Revision 1.2  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
+# Magic markers (optional - used by lrrd-config and some installation
+# scripts):
+#
+#%# family=auto
+#%# capabilities=autoconf suggest
+
+FUNCTION=`basename $0 | sed -e 's/io_//' -e 's/_.*//'`
+MODULE=`basename $0 | sed 's/^.*_//g'`
+CLASS=disk
+PERL=${PERL:-@@PERL@@}
+
+if [ -z "$FUNCTION" ]; then
+	exit
+elif [ $FUNCTION = "busy" ]; then
+	TITLE="Busy & Wait"
+	IN=rtime
+	INNAME=busy
+	OUT=wtime
+	OUTNAME=wait
+	CDEF=",100,*"
+elif [ $FUNCTION = "bytes" ]; then
+	TITLE="I/O"
+	IN=nread
+	INNAME=$IN
+	OUT=nwritten
+	OUTNAME=$OUT
+elif [ $FUNCTION = "ops" ]; then
+	TITLE="Operations"
+	IN=reads
+	INNAME=$IN
+	OUT=writes
+	OUTNAME=$OUT
+fi
+
+if [ "$1" = "autoconf" ]; then
+	if [ -x /usr/bin/kstat ]; then
+		echo yes
+		exit 0
+	else
+		echo "no (/usr/bin/kstat not found)"
+		exit 1
+	fi
+fi
+
+if [ "$1" = "suggest" ]; then
+	if [ -x /usr/bin/kstat ]; then
+		kstat -p -c '/disk|nfs|tape/' -s "/^$IN\$/" | sed -e 's/:.*//' -e 's/ssd/sd/' | sort -u
+		exit 0
+	else
+		exit 1
+	fi
+fi
+
+if [ $MODULE = "sd" ]; then
+	MODULE="/^s?sd$/"
+	NAME="Disk Device"
+elif [ $MODULE = "md" ]; then
+	NAME="Disksuite"
+elif [ $MODULE = "nfs" ]; then
+	NAME="NFS"
+	CLASS=nfs
+elif [ $MODULE = "st" ]; then
+	NAME="Tape"
+	CLASS=tape
+else
+	NAME="Unknown"
+fi
+
+if [ "$1" = "config" ]; then
+	echo "graph_title $NAME $TITLE"
+	echo 'graph_args --base 1024'
+	# Local policy: only three-digit metadisks are monitored
+	# If you don't have perl and Solaris::MapDev:
+##	for dev in `kstat -p -c $CLASS -m $MODULE -s "/^$IN\$/" | awk -F: '$1 != "md" || $2 >= 100 { print $3 }'`; do
+##		echo "${dev}_$IN.label ${dev}_$INNAME"
+##		echo "${dev}_$IN.type COUNTER"
+##		if [ -n "$CDEV" ]; then
+##			echo "${dev}_$IN.cdef ${dev}_$IN$CDEF"
+##		fi
+##		echo "${dev}_$OUT.label ${dev}_$OUTNAME"
+##		echo "${dev}_$OUT.type COUNTER"
+##		if [ -n "$CDEV" ]; then
+##			echo "${dev}_$OUT.cdef ${dev}_$OUT$CDEF"
+##		fi
+##	done
+	# If you do:
+	export IN INNAME OUT OUTNAME CDEF
+	kstat -p -c $CLASS -m $MODULE -s "/^$IN\$/" | \
+	  $PERL -MSolaris::MapDev=inst_to_dev -n -a -F':|\t' \
+	       -e 'next if "'$MODULE'" eq "md" and $F[1] < 100;
+		  $dev = $F[2];
+		  $name = inst_to_dev($dev);
+		  $name =~ s/:/_/g;
+		  $name = length $name ? $name : $dev;
+		  print "${dev}_$ENV{IN}.label ${name}_$ENV{INNAME}\n";
+		  print "${dev}_$ENV{IN}.type COUNTER\n";
+		  print "${dev}_$ENV{IN}.cdef ${dev}_$ENV{IN}$ENV{CDEF}\n" if exists $ENV{CDEF};
+		  print "${dev}_$ENV{OUT}.label ${name}_$ENV{OUTNAME}\n";
+		  print "${dev}_$ENV{OUT}.type COUNTER\n";
+		  print "${dev}_$ENV{OUT}.cdef ${dev}_$ENV{OUT}$ENV{CDEF}\n" if exists $ENV{CDEF};'
+	exit 0
+fi;
+
+# Local policy: only three-digit metadisks are monitored
+kstat -p -c $CLASS -m $MODULE -s "/^($IN|$OUT)\$/" | awk -F: '
+$1 != "md" || $2 >= 100 {
+	split($4, four, "\t")
+	print $3 "_" four[1] ".value", four[2]
+}'

@@ -1,0 +1,53 @@
+#!/bin/sh
+#
+# Wildcard-script to monitor number of processes running as a given user.
+# To monitor a user, link psu_<program> to this file. E.g.
+#
+#    ln -s /usr/share/lrrd/client/plugins-auto/psu_ /etc/lrrd/client.d/psu_lrrd
+#
+# ...will monitor number of processes owned by 'lrrd'.
+#
+# Parameters:
+#
+# 	config   (required)
+# 	autoconf (optional - used by lrrd-config)
+# 	suggest  (optional - used by lrrd-config)
+#
+# $Log$
+# Revision 1.1  2004/01/02 15:18:07  jimmyo
+# Initial revision
+#
+# Revision 1.2  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
+# Magic markers (optional):
+#%# family=auto
+#%# capabilities=autoconf suggest
+
+
+
+name=`basename $0 | sed 's/^psu_//g'`
+
+if [ "$1" = "autoconf" ]; then
+	echo yes
+	exit 0
+fi
+
+if [ "$1" = "suggest" ]; then
+	exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo graph_title Number of processes owned by $name
+	echo 'graph_args --base 1000 --vertical-label processes -l 0'
+	echo "count.label $name"
+	echo 'processes.draw LINE2'
+	exit 0
+fi
+
+echo -n "count.value "
+(pgrep -u "$name"; pgrep -U "$name") | sort -u | wc -l
+

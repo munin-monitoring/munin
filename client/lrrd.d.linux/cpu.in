@@ -1,0 +1,72 @@
+#!/bin/sh
+#
+# Plugin to monitor CPU usage.
+#
+# Usage: Place in /etc/lrrd/client.d/ (or link it there  using ln -s)
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional - used by lrrd-config)
+#
+# $Log$
+# Revision 1.1  2004/01/02 15:18:07  jimmyo
+# Initial revision
+#
+# Revision 1.2  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
+# Magic markers - optional - used by installation scripts and
+# lrrd-config:
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+
+
+if [ "$1" = "autoconf" ]; then
+	if [ -r /proc/stat ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 1
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	PERCENT=`grep '^cpu. ' /proc/stat | wc -l | awk '{print ($1-1)*100}'`
+	SYSWARNING=$(($PERCENT*30/100))
+	SYSCRITICAL=$(($PERCENT*50/100))
+	USRWARNING=$(($PERCENT*80/100))
+	echo 'graph_title CPU usage'
+	echo 'graph_order system user nice idle'
+	echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit $PERCENT "
+	echo 'graph_vlabel %'
+	echo 'system.label system'
+	echo 'system.draw AREA'
+	echo 'system.max 5000'
+	echo 'system.type COUNTER'
+	echo "system.warning $SYSWARNING" 
+	echo "system.critical $SYSCRITICAL" 
+	echo 'user.label user'
+	echo 'user.draw STACK'
+	echo 'user.max 5000'
+	echo "user.warning $USRWARNING"
+	echo 'user.type COUNTER'
+	echo 'nice.label nice'
+	echo 'nice.draw STACK'
+	echo 'nice.max 5000'
+	echo 'nice.type COUNTER'
+	echo 'idle.label idle'
+	echo 'idle.draw STACK'
+	echo 'idle.max 5000'
+	echo 'idle.type COUNTER'
+	exit 0
+fi
+
+awk '/^cpu / { print "user.value " $2 "\nnice.value " $3 "\nsystem.value " $4 "\nidle.value " $5 }' < /proc/stat
+

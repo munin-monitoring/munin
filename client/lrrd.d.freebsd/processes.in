@@ -1,0 +1,43 @@
+#!/bin/sh
+#
+# Plugin to monitor the number of processes on the machine. Much linke
+# doing a "ps | wc -l".
+#
+# Parameters:
+#
+# 	config   (required)
+# 	autoconf (optional - used by lrrd-config)
+#
+# $Log$
+# Revision 1.1  2004/01/02 15:18:07  jimmyo
+# Initial revision
+#
+# Revision 1.2  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
+# Magick markers (optional - used by lrrd-config and som installation
+# scripts):
+#%# family=auto
+#%# capabilities=autoconf
+
+
+
+if [ "$1" = "autoconf" ]; then
+	echo yes 
+	exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Number of Processes'
+	echo 'graph_args --base 1000 -l 0 '
+	echo 'graph_vlabel number of processes'
+	echo 'processes.label processes'
+	echo 'processes.draw LINE2'
+	exit 0
+fi
+
+echo -n "processes.value "
+ps ax | wc -l

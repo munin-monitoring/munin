@@ -1,0 +1,83 @@
+#!/bin/sh
+#
+# Plugin to monitor CPU usage.
+#
+# Usage: Place in /etc/lrrd/client.d/ (or link it there  using ln -s)
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional - used by lrrd-config)
+#
+# $Log$
+# Revision 1.1  2004/01/02 15:18:07  jimmyo
+# Initial revision
+#
+# Revision 1.5  2003/11/07 22:12:51  jimmyo
+# Changed deprecated plugin options
+#
+# Revision 1.4  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
+# Magic markers - optional - used by installation scripts and
+# lrrd-config:
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+if [ "$1" = "autoconf" ]; then
+	if [ -x /usr/bin/kstat ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 1
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+	echo 'graph_title CPU usage'
+	echo 'graph_order total system user waitio idle'
+	echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit 100 "
+	echo 'graph_vlabel %'
+	echo 'total.label total'
+	echo 'total.graph no'
+	echo 'total.type COUNTER'
+	echo 'system.label system'
+	echo 'system.draw AREA'
+	echo 'system.type COUNTER'
+	echo 'system.cdef system,total,/,100,*'
+	echo 'user.label user'
+	echo 'user.draw STACK'
+	echo 'user.type COUNTER'
+	echo 'user.cdef user,total,/,100,*'
+	echo 'waitio.label waitio'
+	echo 'waitio.draw STACK'
+	echo 'waitio.type COUNTER'
+	echo 'waitio.cdef waitio,total,/,100,*'
+	echo 'idle.label idle'
+	echo 'idle.draw STACK'
+	echo 'idle.type COUNTER'
+	echo 'idle.cdef idle,total,/,100,*'
+	exit 0
+fi
+
+kstat -p -c misc -m cpu_stat -s '/^(user|kernel|wait|idle)$/' | sed -e 's/.*://' | awk '
+BEGIN {
+	map["user"] = "user"
+	map["kernel"] = "system"
+	map["wait"] = "waitio"
+	map["idle"] = "idle"
+}
+length(map[$1]) > 0 {
+	sum[map[$1]] += $2
+	total += $2
+}
+END {
+	for (item in sum) {
+		print item ".value", sum[item]
+	}
+	print "total.value", total
+}'

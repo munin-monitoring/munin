@@ -1,0 +1,117 @@
+#!/usr/bin/perl
+#
+# $Id$
+#
+# Copyright 2003 - Per Andreas Buer
+#
+# $Log$
+# Revision 1.1  2004/01/02 15:18:07  jimmyo
+# Initial revision
+#
+# Revision 1.8  2003/12/01 13:31:37  jimmyo
+# Bugfix to make stack/area right
+#
+# Revision 1.7  2003/11/08 00:10:13  jimmyo
+# New mysql_queries plugin
+#
+#
+# Parameters:
+#
+#   config
+#   autoconf
+#
+# Configuration variables
+#
+#   mysqlopts     - Options to pass to mysql
+#   mysqladmin    - Override location of mysqladmin
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+use strict;
+
+my $MYSQLADMIN = $ENV{mysqladmin} || "mysqladmin";
+my $COMMAND    =      "$MYSQLADMIN $ENV{mysqlopts} extended-status";
+
+
+my %WANTED = ( "Com_delete"  => "delete", 
+               "Com_select"  => "select", 
+               "Com_update"  => "update",
+               "Com_replace" => "replace",
+               "Qcache_hits" => "cache_hits",
+             );
+
+my $arg = shift();
+
+if ($arg eq 'config') {
+    print_config();
+    exit();
+} elsif ($arg eq 'autoconf') {
+    unless (test_service() ) {
+        print "yes\n";
+    } else {
+        print "no\n";
+    }
+    exit;
+}
+
+
+open(SERVICE, "$COMMAND |")
+  or die("Coult not execute '$COMMAND': $!");
+
+while (<SERVICE>) {
+    my ($k, $v) = (m/(\w+).*?(\d+(?:\.\d+)?)/);
+    next unless ($k);
+    if (exists $WANTED{$k} ) {
+	print("$WANTED{$k} $v\n");
+    }
+}
+
+close(SERVICE);
+
+
+sub print_config {
+
+    my $num = 0;
+
+    print("graph_title MySQL queries
+graph_args --base 1000
+graph_vlabel queries / sec
+graph_total total\n");
+
+    for my $key (keys %WANTED) {
+        my $title = $WANTED{$key};
+        print("$title.label ${title}\n",
+              "$title.type COUNTER\n",
+              "$title.draw ", ($num) ? "STACK" : "AREA" ,  "\n",
+             );
+        $num++;
+    }
+    
+}
+
+
+sub test_service {
+
+    my $return = 1;
+
+    system ("$MYSQLADMIN --version >/dev/null 2>/dev/null");
+    if ($? == 0)
+    {
+	system ("$COMMAND >/dev/null 2>/dev/null");
+	if ($? == 0)
+	{
+	    print "yes\n";
+	    $return = 0;
+	}
+	else
+	{
+	    print "no (could not connect to mysql)\n";
+	}
+    }
+    else
+    {
+	print "no (mysqadmin not found)\n";
+    }
+    exit $return;
+}

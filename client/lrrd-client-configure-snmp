@@ -1,0 +1,109 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Net::SNMP;
+
+my $DEBUG = 1;
+
+my $sysName      = "1.3.6.1.2.1.1.5.0";
+my $name;
+
+my ($session, $error) = Net::SNMP->session(
+		-hostname  => shift || 'localhost',
+		-community => shift || 'public',
+		-port      => shift || 161
+	);
+
+if (!defined ($session))
+{
+	die "Croaking: $error";
+}
+
+my $response;
+if (!defined ($response = $session->get_request($sysName)))
+{
+	die "Croaking: " . $session->error();
+}
+$name = $response->{$sysName};
+
+interfaces ($name);
+
+sub interfaces
+{
+	my $name = shift;
+	my %interfaces = ();
+	my $num;
+	my $ifNumber     = "1.3.6.1.2.1.2.1.0";
+	my $ifEntryIndex = "1.3.6.1.2.1.2.2.1.1"; # dot something
+	my $ifEntryType  = "1.3.6.1.2.1.2.2.1.3"; # dot something
+	my $ifEntrySpeed = "1.3.6.1.2.1.2.2.1.5"; # dot something
+
+	print "# System name: ", $name, "\n" if $DEBUG;
+
+	if (!defined ($response = $session->get_request($ifNumber)))
+	{
+		die "Croaking: " . $session->error();
+	}
+
+	$num = $response->{$ifNumber} +1; # Add one because of bogus switch entries
+	print "# Number of interfaces: ", $num, "\n" if $DEBUG;
+
+	my $ret = $ifEntryIndex . ".0";
+
+	for (my $i = 0; $i < $num;)
+	{
+		if ($i == 0)
+		{
+			$response = $session->get_request($ret);
+		}
+		if ($i or !defined $response)
+		{
+			$response = $session->get_next_request($ret);
+		}
+		if (!$response)
+		{
+			die "Croaking: ", $session->error();
+		}
+		my @keys = keys %$response;
+		$ret = $keys[0];
+		last unless ($ret =~ /^$ifEntryIndex\.\d+$/);
+		print "# Index $i: ", join ('|', @keys), "\n" if $DEBUG;
+		$interfaces{$response->{$ret}} = 1;
+		$i++;
+	}
+
+	foreach my $key (keys %interfaces)
+	{
+		$response = $session->get_request($ifEntrySpeed . "." . $key);
+		if (!$response)
+		{
+			die "Croaking: ", $session->error();
+		}
+		my @keys = keys %$response;
+		print "# Index $key: ", join ('|', @keys), ": ", $response->{$keys[0]}, "\n" if $DEBUG;
+		if ($response->{$keys[0]} == 0)
+		{
+			delete $interfaces{$key};
+		}
+	}
+
+	foreach my $key (keys %interfaces)
+	{
+		$response = $session->get_request($ifEntryType . "." . $key);
+		if (!$response)
+		{
+			die "Croaking: ", $session->error();
+		}
+		my @keys = keys %$response;
+		print "# Index $key: ", join ('|', @keys), ": ", $response->{$keys[0]}, "\n" if $DEBUG;
+		if ($response->{$keys[0]} != 6)
+		{
+			delete $interfaces{$key};
+		}
+	}
+
+	foreach my $key (sort keys %interfaces)
+	{
+		print "snmp_${name}_if_$key\n";
+	}
+}

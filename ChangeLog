@@ -1,0 +1,376 @@
+lrrd (0.9.9r6)
+
+  * Added BSDish install-sh to make the installation work
+    on both BSD and SysV variants (SF#840744).
+  * Plugin linux/iostat modified. Now runs on 2.6, and now "mirrors" i/o like
+    eth* et al. (Deb#224113, Deb#223373)
+  * Lrrd-client: Don't try to change uid/gid if not running as root.
+    (Deb#224300)
+  * Lrrd-graph: Only log graphing errors (== less cron-mail).
+  * Plugin linux/memory has been improved greatly by Mike Fedyk (Deb#223346)
+  * Some plugins fail more gracefully when using uninstalled perl modules.
+  * Lrrd-client-configure now prints the reason for suggesting to not use
+    a plugin, as long as the plugins gives one.
+  * Lrrd-client: Do a fake clean of the environment because of the taint
+    checking.
+  * Lrrd-client: added configuration option "ignore_file", which takes regex
+    for files to ignore (e.g. rpmnew/save) (Deb#224265).
+  * New plugin: Alexandre Dupouy contributed "hddtemp".
+  * New plugin: Nicolai Langfeldt contributed "bind9".
+  * Lrrd-server: dots supported in plugin names.
+  * New plugin: snmp wildcard plugin for interface graphing.
+
+lrrd (0.9.9r5)
+
+  * lrrd-nagios: enable/disable notifications.
+  * Plugin: mysq_isam_space_ bugfix when printing "value".
+  * lrrd-client/lrrd-run: Two bugfixes.
+  * LRRD.pm: Change \1 to $1 to make lrrd-update shut up.
+  * lrrd-update: Fix bug with timeout handling of children.
+
+lrrd (0.9.9r4)
+
+  * Plugin: changes from Mike Fedyk (Deb#222838, Deb#222841).
+  * lrrd-cron: Check if files are executable before runinng (Deb#221691).
+  * lrrd-update: Added max_processes variable. 
+  * lrrd-update: No more zombies.
+  * lrrd-update: Better handling of dying children and timeouts. (Deb#222674)
+  
+lrrd (0.9.9r3)
+
+  * New plugins (contrib): postfix_mailqueue and named contributed 
+    by Nicolai Langfeldt.
+  * New plugins (contrib): postfix_mailstats and postfix_mailvolume.
+  * LRRD.pm: make sure only legal configuration lines are written to
+    datafile.
+  * lrrd-html: Minor bugfixes (fixes by Chan Wilson).
+  * lrrd-graph: Bugfix when aliasing fields (reported by Chan Wilson).
+
+lrrd (0.9.9r2)
+
+  * LRRD.pm: minor bugfix - no noise about "extinfo".
+  * lrrd-graph: A couple of minor bugfixes.
+   
+lrrd (0.9.9)
+
+  * New plugin: sybase_space. Keeps track of sybase database space usage.
+  * New plugin: psu_ wildcard plugin, by Andras Korn (Deb#214210)
+  * Lrrd-client: addressed uid/gid-issues from Deb#214277
+  * Lrrd-update: client port number now configurable (Deb#214114)
+  * Squid-plugins: now rewritten to use new config format (Deb#214186)
+  * Lrrd-update: each node now has its own lockfile.
+  * Squid-plugins: Modified them to autoconf. Prettier graphs. Now auto.
+  * Lrrd-client: Don't mess with environment. Not my problem.
+  * Lrrd-client: host_name can now be set in the plugin configuration.
+  * Lrrd-client: plugin configuration format changed slightly.
+  * Lrrd-client: added parameter (conffile and cli) to turn paranoia on/off.
+    Default is now off. (Deb#214186, Deb#216401)
+  * New plugin for linux: entropy, graphs available entropy.
+  * Lrrd-client-configure: Remove "use" of Config::General (Deb#216176)
+  * SunOS-plugins: Enhancement submitted by Lupe Christoph. (SF#825937)
+  * SunOS-portability: Various bugfixes reported by Lupe Cristoph. 
+    (SF#825909, SF#825911, SF#825926, SF#825936, SF#826670, SF#826356)
+  * FreeBSD-plugins: Bugfixing patches by Lupe Cristoph applied. (SF#826352,
+    SF#837014)
+  * Lrrd-server: New format for server.conf.
+  * Mysql-plugins: Make mysqladmin/mysqlshow locations configurable.
+    (SF#825974)
+  * Plugins: New plugins by Lupe Cristoph (SF#834529, SF#826002, SF#835208)
+  * Lrrd-server: Only require installed Config::General if using old config
+    format.
+  * Mysql-queries-plugin: rewritten by Per A. Buer.
+  * Lrrd-nagios: Be nice to Nagios, don't DOS it with thousands of services.
+  * Lrrd-client-configure: Check what to do with new plugins when upgrading.
+  * Plugins: contributions by Finn-Arne Johansen (SF#839210, SF#839212,
+    SF#839209, SF#842703, SF#845692)
+  * Lrrd-update: More graceful handling of dead hosts. (SF#841345)
+  * Plugins: graph_noscale redefined to graph_scale.
+  * New plugin surfboard contributed by Andrew Ryder.
+   
+lrrd (0.9.8)
+
+  jo:
+
+  * Plugin bugfix: Applied suggestion from Antti Salmela considering
+    plugins df and df_inode (SF#800984)
+  * Lrrd-update now forks off one process for each host, doing the data
+    downloading in parallel.
+  * Network timeout made configurable via both configuration file, and
+    command-line parameter. default increased to 180 seconds.
+  * Command-line option and configuration file option for not forking
+    added.
+  * Added command-line option to show log lines on stdout as well.
+  * Lrrd-update bugfix: Move socket and pidfile to proper place.
+    (Deb#203173)
+  * Lrrd-update bugfix: Now handles corrupt datafile properly.
+    (Deb#202191)
+  * Plugin bugfix: mysql_isam_space now behaves properly when MySQL is
+    down. (Applied patch from Nicolas Francois resolving Deb#202637)
+  * Lrrd-client now runs with perl -T (taint checking).
+  * Lrrd-html bugfix. (Deb#205999)
+  * Lrrd-update bugfix, patch from Torstein Svendsen, alarm/sigalrm was
+    forgotten on a network read. (Deb#209329)
+  * Lrrd-update bugfix. Move all possible sigalrm-calls into eval-blocks,
+    to avoid hangs and segfaults. _Really_ fixes bug Deb#209329. 
+  * Lrrd-client now drops privileges when running a plugin. The plugin is
+    run as user nobody, group nogroup/nobody as default. This can be
+    overridden in .../client.d/<plugin>.auth.
+  * Mysql-plugins can now use a config file. (Deb#202643)
+  * Bugfix in mysq_isam_space_ plugin. (Deb#202639)
+  * Plugins for FreeBSD 4.8 contributed by Patrick Domack (SF#802895)
+  * Plugin "swap" on Linux modified so it works on 2.6 as well as 2.4.
+  * Lrrd-client now uses conf/auth-file in .../lrrd/client-conf.d/. Passes 
+    config options to clients via environment.
+  * Lrrd-graph bugfix: Cur/Min shown as 0 when using special_*.
+  * Lrrd-update now has "use_default_name"-option, for use when fetching data
+    from a client which may change name.
+  * Lrrd-plugin "memory" ported to perl. (Deb#205019)
+  * Added "--version" option.
+  * Added "graph_total" option, for summarising stacks 
+  * Lrrd-graph now understands "graph_noscale true/yes/1", which drops scaling
+    of Cur/Min/Avg/Max numbers.
+  * New client program "lrrd-run" to run a plugin as the correct user.
+  * Lrrd-client minor bugfix; should now get ARGV after HUP.
+  * Lrrd-client-configure completely rewritten.
+  
+lrrd (0.9.7)
+
+ tore:
+ 
+  * Applied a patch from Don Armstrong which makes the server ignore invalid
+    pidfiles.
+  * Massive changes in the Makefile to allow for more flexible installs.
+  * Hardcode as little as possible.  Use @@foo@@ in the scripts, which will
+    be replaced with whatever 'foo' is set to in Makefile.config.
+  * Added some AIX plugins contributed by Mike Discenza.
+  * Merged the client and server changelogs into this one.
+  * Improved vlabel and title in the port_ wildcard plugin.
+
+lrrd (0.9.6)
+
+ tore:
+
+  * First upload to the Debian archive, had to create an .orig.tar.gz.
+
+lrrd (0.9.5-2)
+
+  * Bugfix: Resolved running-as-root-issue. (#695163)
+  * Bugfix: Resolved lrrd-nagios --force issue (#701671)
+  * Bugfix: Resolved lrrd-nagios --removeok --host issue (#701671)
+  * Bugfix: Resolved lrrd-html logo.gif and style.css-issue (#693939)
+
+lrrd (0.9.5-1)
+
+  * Small bugfixes
+  * Bugfix: plugins lrrd_* now treats hostnames with dashes correctly
+    (#727074)
+
+lrrd (0.9.3-2)
+
+  * lrrd-nagios now has a longer timeout.
+  * lrrd-html now creates much prettier html-pages.
+  * Pod-documentation for /usr/lib/server/lrrd-*, /usr/sbin/lrrd-cron, and
+    /etc/lrrd/server.conf
+  * lrrd-graph now understands <field>_special_sum and _stack.
+  * lrrd-graph now has extended syntax on graph_order-lines.
+  * Field type represented in filename of rrd-file.
+  * All fields in the .rrd-files now have the same name.
+  * lrrd-graph now reuses colours when there are a lot of fields.
+  * lrrd-nagios now reuses send_nsca handles.
+  * lrrd-update can now handle .extinfo-fields.
+  * lrrd-nagios can now handle .extinfo-fields.
+  * Bugfixes, continuing Tore's movment of files
+  * Parameterization of lrrd-*
+  * Installation script for tarball.
+
+lrrd (0.9.3-1)
+
+  * New configtype
+  * Timeouts on server
+
+lrrd (0.9.2-4)
+
+  * Added new node- and service-level option "update", which will replace
+    "fetch_data".
+  * Added new field-level option "graph", which will replace "skipdraw".
+  * Some plugins now have config-files: exim_mail*
+  * ps-plugin made faster (use pgrep instead of ps).
+  * Bugfix in 'iostat'-plugin.
+  * Added 'suggest' and 'autoconf'-parameters to the plugins.
+  * Removed startup check for lrrd-client on '<plugin> config'-output.
+  * "apt"-plugin rewritten for perl. It now uses .extinfo-fields.
+  * Install script for tarball.
+  * lrrd-client now understands --config --help --debug (then latter for 
+    later use).
+  * Created pod-documentation for lrrd-client and client.conf.
+
+lrrd (0.9.2-3)
+
+  * Bugfix; lrrd-nagios didn't treat 0-limits properly. 
+
+lrrd (0.9.2-2)
+
+  * Added graph_vlabel-option.
+  * lrrd-nagios: bugfix when specifying only a minimum warning or critical
+    value.
+  * Proper timeouting also done when 'config'-command issued.
+  * Some clients now use 'graph_vlabel'-option.
+  * Comment changes in some plugins
+  * Bugfix in plugin: 'iostat config'
+
+lrrd (0.9.2-1)
+
+  * Lazy-option to lrrd-graph. 
+    Graphs will only be drawn when needed.
+  * Cleaned up the timeout code a bit.
+
+lrrd (0.9.1-5)
+
+  * Attempt to set exim-variables in the exim_mail*-plugins at install-time,
+    in an attempt to avoid timeouts on high-load systems.
+  * Properly reap plugins that timeout (and their children).
+
+lrrd (0.9.1-4)
+
+  * Bugfix. Numbers with decimals (e.g. load) and "U" are now allowed.
+  * Fixed bug in cronjob for apt
+
+lrrd (0.9.1-3)
+
+  * Fixed small bug in lrrd-graph that caused some glitches in some
+    graphs
+  * Cronjob for apt
+
+lrrd (0.9.1-2)
+
+  * Fixed a bug in lrrd-update that caused rrds not to be updated
+  * Small bug in apt-client
+
+lrrd (0.9.1-1)
+
+  * All networkservices converted from bytes (B) to bits (b)
+  * More bugfixes
+  * Added cronjob to go with apt-service
+
+lrrd (0.9-12)
+
+  * Bugfixes in templates
+  * More logging
+  * More intelligence in lrrd-nagios
+  * Cronjob to remove .ok files once a day
+
+lrrd (0.9-11)
+
+  * Last small fixes with warning and critical-nagiosLast small fixes 
+    with warning and critical-nagios
+  * Skipped a version to sync with server
+  * Included warning and critical on som of the services
+
+lrrd (0.9-10)
+
+  * Fixed logging and logrotate
+
+lrrd (0.9-9)
+
+  * More Nagios Support, now extracted into lrrd-nagios
+  * Fixed logging + logrotate
+
+lrrd (0.9-8)
+
+  * Nagios-support
+  * Do not depend on libnet-io on woody (included in perl5.6)
+
+lrrd (0.9-7)
+
+  * Fixing string under 19 characters
+
+lrrd (0.9-6)
+
+  * We have to substr the other way 
+  * Upping version number
+
+lrrd (0.9-5)
+
+  * Bugfixes. New configfile
+  * Bugfixes in df-services added -P for posix standard 
+
+lrrd (0.9-4)
+
+  * Total rewrite of client
+  * Bugfixes. Memory service gargled
+  * Bugfixes. mailstat service gargled
+
+lrrd (0.9-3)
+
+  * Adapt to new version of client
+  * Bugfixes to clients and a new configfile
+
+lrrd (0.9-2)
+
+  * Fixed host_name 
+
+lrrd (0.9-1)
+
+  *  The new version
+
+lrrd (0.7-1)
+
+  * Total rewrite. Much prettier. Perl er brukt.
+  * Bugfix in postinst (make_html when upgrading). 
+  * Lots of new lrrd-d-modules. Tuning and fixing.
+  * Debconf is out. Added searching for old-name config-files.
+
+lrrd (0.6-8)
+
+  * Renamed mrtgd til lrrd.
+  * Daemon now runs lrrd.d-scripts properly.
+  * Added modules: load memory
+  
+lrrd (0.6-7)
+
+  * make_graph has proper colours.
+  * make_html creates a nicer index.html.
+  * Debconf in use.
+  * Minor bugfixes: init.d-restart
+
+lrrd (0.6-5)
+
+  * make_html makes sure there's an index.html.
+  * Bugfix. Config-file now read earlier.
+
+lrrd (0.6-4)
+
+  * Several bugfixes.
+  * Cron-entry now uses logfiles.
+  * Added config-file.
+
+lrrd (0.6-3)
+
+  * Added debian-dependencies.
+
+lrrd (0.6-2)
+
+  * Added monitoring for apache httpd daemons.
+  * The daemon now backgrounds itself.
+  * The init.d-script now "stop"s.
+
+lrrd (0.6-1)
+
+  * Slightly tested. Going out.
+
+lrrd (0.5-4)
+
+  * Now ready for production environments.
+
+lrrd (0.5-3)
+
+  * Quite a few changes. Beginning to get ready for release.
+
+lrrd (0.5-2)
+
+  * New test.
+
+lrrd (0.5-1)
+
+  * Initial Release.
+

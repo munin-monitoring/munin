@@ -1,0 +1,184 @@
+#!@@PERL@@ -w
+#
+# Plugin to monitor the volume of mails delivered by postfix.
+#
+# Usage: copy or link into /etc/lrrd/client.d/
+#
+# Parameters:
+#
+# 	config   (required)
+# 	autoconf (optional - used by lrrd-config)
+#
+# Config variables:
+#
+# 	logdir       - Which logfile to use
+#	logfile      - What file to read in logdir
+#
+# $Log$
+# Revision 1.1  2004/01/02 15:18:07  jimmyo
+# Initial revision
+#
+# Revision 1.1  2003/11/26 14:45:34  jimmyo
+# New plugins
+#
+# Revision 1.7  2003/11/15 11:10:28  jimmyo
+# Various fixes
+#
+# Revision 1.6  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
+# Magic markers (optional - used by lrrd-config and some installation
+# scripts):
+#
+#%# family=contrib
+#%# capabilities=autoconf
+
+my $statefile = "@@PLUGSTATE@@/lrrd-plugin-postfix_mailvolume.state";
+my $pos   = undef;
+my $volume = 0;
+my $LOGDIR  = $ENV{'logdir'}  || '/var/log';
+my $LOGFILE = $ENV{'logfile'} || 'syslog';
+
+
+if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
+{
+    my $logfile;
+    if (-d $LOGDIR)
+    {
+	$logfile = "$LOGDIR/$LOGFILE";
+
+	if (-f $logfile)
+	{
+            if (-r "$logfile")
+            {
+                print "yes\n";
+                exit 0;
+            }
+            else
+            {
+                print "no (logfile not readable)\n";
+            }
+	}
+	else
+	{
+	    print "no (logfile not found)\n";
+	}
+    }
+    else
+    {
+        print "no (could not find logdir)\n";
+    }
+
+    exit 1;
+}
+
+my $logfile = "$LOGDIR/$LOGFILE";
+my $prevdate = get_prev_date();
+
+if (-f "$logfile.$prevdate")
+{
+    $rotlogfile = "$logfile.$prevdate";
+}
+elsif (-f "$logfile.0")
+{
+    $rotlogfile = $logfile . ".0";
+}
+elsif (-f "$logfile.1")
+{
+    $rotlogfile = $logfile . ".1";
+}
+elsif (-f "$logfile.01")
+{
+    $rotlogfile = $logfile . ".01";
+}
+else
+{
+    $rotlogfile = $logfile . ".0";
+}
+
+if (-f "$statefile")
+{
+    open (IN, "$statefile") or exit 4;
+    if (<IN> =~ /^(\d+):(\d+)/)
+    {
+	($pos, $volume) = ($1, $2);
+    }
+    close IN;
+}
+
+if (! -f $logfile and ! -f $rotlogfile)
+{
+    print "delivered.value U\n";
+    exit 0;
+}
+
+
+$startsize = (stat $logfile)[7];
+
+if (!defined $pos)
+{
+    # Initial run.
+    $pos = $startsize;
+}
+
+if ($startsize < $pos)
+{
+    # Log rotated
+    parseLogfile ($rotlogfile, $pos, (stat $rotlogfile)[7]);
+    $pos = 0;
+}
+
+parseLogfile ($logfile, $pos, $startsize);
+$pos = $startsize;
+
+if ( $ARGV[0] and $ARGV[0] eq "config" )
+{
+    print "graph_title Postfix mail throughput\n";
+    print "graph_args --base 1000 -l 0\n";
+    print "graph_vlabel bytes / min\n";
+    print "graph_scale  no\n";
+    print "volume.label throughput\n";
+    print "volume.type DERIVE\n";
+    print "volume.cdef volume,60,*\n";
+    print "volume.min 0\n";
+    exit 0;
+}
+
+print "volume.value $volume\n";
+
+if(-l $statefile) {
+	die("$statefile is a symbolic link, refusing to touch it.");
+}				
+open (OUT, ">$statefile") or exit 4;
+print OUT "$pos:$volume\n";
+close OUT;
+
+sub parseLogfile 
+{    
+    my ($fname, $start, $stop) = @_;
+    open (LOGFILE, $fname) or exit 3;
+    seek (LOGFILE, $start, 0) or exit 2;
+
+    while (tell (LOGFILE) < $stop) 
+    {
+	my $line =<LOGFILE>;
+	chomp ($line);
+
+	if ($line =~ /qmgr.*from=.*size=([0-9]+)/) 
+	{
+	    $volume += $1;
+	} 
+    }
+    close(LOGFILE);    
+}
+
+sub get_prev_date
+{
+	my @date = localtime (time - 86400);
+	my $prevdate = $date[5]+1900 . $date[4]+1 . $date[3];
+	return $prevdate;
+}
+
+# vim:syntax=perl

@@ -1,0 +1,219 @@
+<html>
+<head>
+	<title>LRRD FAQ</title>
+</head>
+<body bgcolor=white text=black>
+<h2>1. Installation</h2>
+
+<h3>Q: Why only Debian packages? Why not Redhat?</h3>
+<p>
+We're using Debian on our machines and servers. We're working on
+RPM-packages for RedHat 9, though.
+</p>
+<h3>Q: What architectures are supported? What operating systems?</h3>
+<p>
+LRRD is programmed in Perl, which can be installed on most operating
+systems. In addition, it needs some perl modules, which you can fetch
+from <a href="http://www.cpan.org/">CPAN</a>.
+</p>
+<p>
+However, the "plugins" used by the client are often OS or application
+spesific. E.g., many of the Linux-plugins use /proc to gather the data.
+There are some plugins that should work on most architectures. The
+architectures which have their own plugins as well, are
+<tt>
+ <dl>
+  <dt>Linux<dd>
+  <dt>FreeBSD<dd>
+  <dt>SunOS (Solaris)<dd>
+  <dt>AIX<dd>
+ </dl>
+</tt>
+If you port/create/improve plugins, please contribute them to the
+project.
+</p>
+
+<h2>2. Configuration</h2>
+<h3>Q: What should a minimal configuration look like?</h3>
+<p>
+<pre>
+	dbdir     /var/lib/lrrd
+	htmldir   /var/www/lrrd
+	logdir    /var/log/lrrd
+	rundir    /var/run/lrrd
+
+	[bing.foo.bar]
+		address 10.232.33.259
+</pre>
+The server will expand the node to contain all the services it offers.
+</p>
+
+<h3>Q: How du I use the "fieldname.cdef"-thingie?</h3>
+<p>
+The cdef is fed to "rrdtool graph", so the man-page for "rrdgraph" should
+give you a bit more info. I'll try to explain it briefly here, though;
+</p>
+<p>
+The cdef is defined using Reverse Polish Notation (RPN), which means that
+you would say "4,5,+" instead of "4+5". When you create a cdef-field, be
+sure to use the fieldname at least once in the definition, or rrdgraph
+will croak with an error.
+</p>
+<p>
+An example can be found in the plugin "exim_mailstats" - the plugin graphs
+the number of mails that have been received and delivered locally by the
+system. The values are gathered and stored in a "mails per second"-format.
+On most systems, this is a bit odd, since you'll get numbers like "300
+ultramail per second". :-) A cdef is therefore defined to adjust the
+values into "mails per minute" instead - a much more sensible and readable
+number. To do this, the value is just multiplied by 60. The configuration
+line looks like this: <code>received.cdef received,60,*</code> . In
+"normal" math, you'd just say "received=received*60".
+</p>
+<p>
+For a more thorough definition of RPN, take a look at the man-page for
+"rrdgraph".
+</p>
+
+<h3>Q: How do I define aliases with graph_order?</h3>
+<p>
+Normally, graph_order looks something like this:
+<pre>
+graph_order apps buffers cache unused swap
+</pre>
+It can, however, be used to define alises from other graphs. E.g. if you
+want to incorporate the number of http-connections in the
+"processes"-graph (i.e. together with the number of processes on the
+machine), you'd say:
+<pre>
+    graph_order processes connections=port_http.count
+</pre>
+This would first draw the "proesses" data-source (as normal), then draw
+the "count" data-source from the "port_http"-graph. "connections" would
+then be a field-name in the same way as "processes", so you could give it
+a cdef, draw, negative, etc.
+</p>
+<p>
+Example graph_orders:
+<ul>
+<li><code>graph_order bing bofh</code> 
+	(will draw two normal values)</li>
+<li><code>graph_order bing bang=bing</code>
+	(will draw two normal values, the second an alias to the first)</li
+<li><code>graph_order bing bang=graph.bing</code>
+	("loan" a data-source from another graph)</li>
+<li><code>graph_order bing bang=host:graph.bing</code>
+	("loan" a data-source from another host's graph)</li>
+<li><code>graph_order bing bang=domain;host:graph.bing</code>
+	("loan" a data-source from another domain's graph)</li>
+</ul>
+</p>
+
+<h3>Q: How do I use fieldname.stack?</h3>
+<p>
+The format of "special_stack" is the same as the graph_order-arguments
+above. You cannot, however, specify extra arguments for the fields. If you
+want to specify a cdef for the 'whole stack', you can use the fieldname
+defining the special stack. E.g.
+
+<pre>
+[some.machine.boo]
+    total_mail.graph_order total_received
+	total_mail.graph_title Mail received by machine1 and machine2
+	total_mail.graph_vlabel mails/min
+	total_mail.total_received.label not_used
+	total_mail.total_received.stack \
+	    machine1=machine1.your.dom:exim_mailstats.received \
+	    machine2=machine2.your.dom:exim_mailstats.received
+	total_mail.total_received.cdef total_received,60,*
+</pre>
+</p>
+
+<h3>Q: How do I use fieldname.sum?</h3>
+<p>
+Same as special_stack, with one exception: drop the "alias"-bit
+in the field definition. I.e., the above would become:
+<pre>
+[some.machine.boo]
+    total_mail.graph_order total_received
+	total_mail.graph_title Mail received by machine1 and machine2
+	total_mail.graph_vlabel mails/min
+	total_mail.total_received.label mails per minute # Now used
+	total_mail.total_received.sum \
+	    machine1.your.dom:exim_mailstats:received \
+	    machine2.your.dom:exim_mailstats:received
+	total_mail.total_received.cdef total_received,60,*
+</pre>
+</p>
+
+<h3>Q: Can I change the order of the nodes under a domain?</h3>
+<p>
+	Yes, use the "node_order" option under a domain. To specify that we
+	want to modify a variable under the domain, supply an empty host:
+<pre>
+	[bing.foo.bar]
+		address 10.232.33.259
+
+	[fii.foo.bar]
+		address 10.232.33.259
+
+	[goo.foo.bar]
+		address 10.232.33.259
+
+	[foo.bar;]
+		node_order fii.foo.bar bing.foo.bar goo.foo.bar
+</pre>
+The default node order is alphabetically.
+</p>
+
+<h2>3. Client plugins</h2>
+<h3>Q: What is the minimum requirements of a client plugin?</h3>
+<p>
+<ul>
+	<li>Without any parameters it should print "&lt;fieldname&gt;.value &lt;value&gt;"</li>
+	<li>It must support the "config"-parameter</li>
+	<li>With the config-parameter, it should print at least:
+	<ul>
+		<li>&lt;fieldname&gt;.label &lt;label_of_field&gt;</li>
+	</ul></li>
+</ul>
+
+An example plugin (on a linux-system, using /proc/loadavg to graph the load average):
+<pre>
+#!/bin/sh
+
+if [ "$1" = "config" ]; then
+   echo "load.label load"          # Field label (legend)
+
+   # These are not really nedded, but makes the graph prettier.
+   echo "graph_title Load average" # Set main title
+   echo 'graph_args -l 0'          # Y-axis starts at 0
+   echo 'graph_scale no'           # Say 0.04 load, not 40 milliload
+   echo 'graph_vlabel load'        # Y-axis label
+
+   exit 0
+fi
+
+# The real data-gathering
+echo -n "load.value "
+cut -f1 -d' ' &lt; /proc/loadavg
+</pre>
+</p>
+
+<h3>Q: Can I make the plugin run as another user/group than nobody/nogroup?</h3>
+<p>
+	Yes, you can create a file in the plugin configuration directory
+	(client-conf.d). The file should contain the username and group to
+	run the plugin as. E.g., on linux, the exim_mailqueue-plugin need
+	access to the exim mail spool (to count the messages in the queue).
+	It needs "mail" group permissions to do this, so the
+	"exim_mailqueue.auth" contents look like:
+<pre>
+[exim_mailqueue]
+	group mail
+</pre>
+Similarly, you could use the "user" option to run the plugin as a user.
+</p>
+
+</body>
+</html>

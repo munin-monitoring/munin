@@ -1,0 +1,4 @@
+build/doc/client.conf.5
+build/doc/lrrd-client.8
+build/doc/lrrd-client-configure.8
+build/doc/lrrd-run.8

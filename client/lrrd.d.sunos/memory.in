@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# $Log$
+# Revision 1.1  2004/01/02 15:18:07  jimmyo
+# Initial revision
+#
+# Revision 1.2  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
+#
+
+
+TOP=/usr/local/bin/top
+
+if [ "$1" = "config" ]; then
+
+        echo "graph_title Memory usage (in MB)"
+	echo "real.label Physical mem"
+	echo "used.label Mem used"
+	echo "swapt.label Total swap"
+	echo "swapu.label Swap used"
+        exit 0
+fi
+
+# Linjen som grep'es ut kan se ut som dette:
+#
+# Memory: 320M real, 142M free, 129M swap in use, 1095M swap free
+
+MEMLINE=`$TOP -n -u | /bin/grep "^Memory" | sed 's/M//g'`
+
+REAL=`echo $MEMLINE | awk '{print $2}'`
+FREE=`echo $MEMLINE | awk '{print $4}'`
+SWAPU=`echo $MEMLINE | awk '{print $6}'`
+SWAPF=`echo $MEMLINE | awk '{print $10}'`
+
+MEMUSED=`expr $REAL - $FREE`
+SWAPTOT=`expr $SWAPU + $SWAPF`
+
+echo "real.value $REAL"
+echo "used.value $MEMUSED"
+echo "swapt.value $SWAPTOT"
+echo "swapu.value $SWAPU"

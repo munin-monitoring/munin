@@ -1,0 +1,80 @@
+=head1 NAME
+
+client.conf - LRRD-client configuration file
+
+=head1 DESCRIPTION
+
+LRRD-client is the client in a server/client pair that graph, htmlifies
+and optionaly warns nagios about data it gathers. It's designed to let it
+be very easy to graph new datasources.
+
+"client.conf" is the configuration file for lrrd-client.
+
+The format of the file is dictated by the use of Net::Server. A look at
+"perldoc Net::Server" will give a list of options that the file supports
+by using the module.
+
+Additional options:
+
+=over 5
+
+=item B<< host_name <host> >>
+
+If set, overrides the hostname lrrd-client uses in its 'hello'-negotiation
+with the lrrd-server. A "telnet localhost 4949" will show the hostname
+lrrd-client is currently using. If lrrd-client and lrrd-server do not
+agree on the hostname, lrrd-server will skip all the plugins of the
+machine in question.
+
+=item B<< paranoia <yes|no|true|false|on|off|1|0> >>
+
+If set, checks permissions of plugin files, and only tries to run files
+owned by root. Default on.
+
+=item B<< ignore_file <regex> >>
+
+Files matching &lt;regex&gt; in the client.d/ and client-conf.d/
+directories will be overlooked.
+
+=head1 EXAMPLE
+
+A pretty normal configuration file:
+
+	log_level 4
+	log_file /var/log/lrrd/lrrd-client.log
+	port 4949
+	pid_file /var/run/lrrd-client.pid
+	background 1
+	setseid 1
+
+	host *
+	user root
+	group root
+	setsid yes
+
+	ignore_file \.bak$
+	ignore_file \.rpm(save|new)$
+	ignore_file ^README$
+
+	allow ^127\.0\.0\.1$
+
+	ignore_file \.dpkg-(old|new)$
+	ignore_file \.rpm(save|new)$
+
+See the documentation or LRRD homepage L<http://lrrd.sf.net/> for more info.
+
+=head1 AUTHORS
+
+Jimmy Olsen.
+
+=head1 COPYRIGHT
+
+Copyright © 2002 Audun Ytterdal and Jimmy Olsen / Linpro AS.
+
+This is free software; see the source for copying conditions. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+
+This program is released under the GNU General Public License
+
+=cut

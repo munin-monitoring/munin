@@ -1,0 +1,7 @@
+#!/bin/sh
+# We call this from cron since cron in potato is crap.
+[ -x @@LIBDIR@@/lrrd-update ] && @@LIBDIR@@/lrrd-update $@;
+[ -x @@LIBDIR@@/lrrd-nagios ] && @@LIBDIR@@/lrrd-nagios $@;
+[ -x @@LIBDIR@@/lrrd-graph  ] && nice @@LIBDIR@@/lrrd-graph $@;
+[ -x @@LIBDIR@@/lrrd-html   ] && nice @@LIBDIR@@/lrrd-html $@;
+

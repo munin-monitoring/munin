@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# $Log$
+# Revision 1.1  2004/01/02 15:18:07  jimmyo
+# Initial revision
+#
+# Revision 1.5  2003/11/07 22:12:50  jimmyo
+# Changed deprecated plugin options
+#
+# Revision 1.4  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#%# family=contrib
+
+STATEFILE="@@PLUGSTATE@@/plugin-i2c_temp.state"
+
+if [ "$1" = "config" ]; then
+        echo 'graph_title Fan speed'
+	echo 'graph_vtitle RPM'
+	echo 'graph_order fan1=i2c:fan'
+	echo 'graph_args -l 0'
+	echo 'fan1.label fan1'
+	echo 'fan1.graph no'
+        exit 0
+fi
+
+if [ -f "$STATEFILE" ]; then
+	if [ $(($(date +"%s")-$(stat -c "%Z" $STATEFILE))) -gt 60 ]; then
+	    sensors $chips | tee $STATEFILE | awk '/fan/ {++i; print $1 ".value", $2+0}'
+	else
+	    cat $STATEFILE |awk '/fan/ {++i; print $1 ".value", $2+0}'
+	fi
+else
+	sensors $chips | tee $STATEFILE | awk '/fan/ {++i; print $1 ".value", $2+0}'
+fi
+
+

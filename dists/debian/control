@@ -1,0 +1,58 @@
+Source: lrrd
+Section: net
+Priority: extra
+Maintainer: Tore Anderson <tore@debian.org>
+Build-Depends-Indep: debhelper (>> 4.0.0), perl, htmldoc, html2text
+Standards-Version: 3.6.1.0
+
+Package: lrrd-client
+Architecture: all
+Depends: ${perl:Depends}, libnet-server-perl, procps
+Suggests: lrrd-server
+Replaces: lrrd-plugin-apt
+Conflicts: lrrd-plugin-apt
+Description: Linpro's network-wide graphing framework (client)
+ LRRD is a highly flexible and powerful solution used to create graphs of
+ virtually everything imaginable throughout your network, while still
+ maintaining a rattling ease of installation and configuration.
+ .
+ This package contains the `client'. You should install it on all the nodes
+ in your network. It will know how to extract all sorts of data from the
+ node it runs on, and will wait for the `server' to request this data for
+ further processing.
+ .
+ It includes a range of plugins capable of extracting common values such as
+ cpu usage, network usage, load average, and so on. Creating your own plugins
+ which are capable of extracting other system-specific values is very easy,
+ and is often done in a matter of minutes. You can also create plugins which
+ relay information from other devices in your network that can't run LRRD,
+ such as a switch or a server running another operating system, by using
+ SNMP or similar technology.
+ .
+ LRRD is written in Perl, and relies heavily on Tobi Oetiker's excellent
+ RRDtool. To see a real example of LRRD in action, take a peek at
+ <http://www.linpro.no/projects/lrrd/example/>.
+
+Package: lrrd-server
+Architecture: all
+Depends: ${perl:Depends}, librrds-perl, libhtml-template-perl, libdigest-md5-perl, libtime-hires-perl, libstorable-perl
+Recommends: lrrd-client
+Suggests: rrdtool, www-browser, httpd
+Description: Linpro's network-wide graphing framework (server)
+ LRRD is a highly flexible and powerful solution used to create graphs of
+ virtually everything imaginable throughout your network, while still
+ maintaining a rattling ease of installation and configuration.
+ .
+ This package contains the `server'. You will only need one instance of it
+ in your network. It will periodically poll all the `clients' in your network
+ it's aware of for data, which it in turn will use to create graphs and HTML
+ pages, suitable for viewing with your graphical web browser of choice.
+ .
+ It is also able to alert you if any value is outside of a preset boundary,
+ useful if you want to be alerted if a filesystem is about to grow full, for
+ instance. Currently you can only do this by letting LRRD send messages to
+ a Nagios server.
+ .
+ LRRD is written in Perl, and relies heavily on Tobi Oetiker's excellent
+ RRDtool. To see a real example of LRRD in action, take a peek at
+ <http://www.linpro.no/projects/lrrd/example/>.

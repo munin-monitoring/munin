@@ -1,0 +1,68 @@
+Protocol for data exchange between server and client
+----------------------------------------------------
+
+Client commands:
+	
+	- list [node]
+	  	Asks client to list all items available for query for
+		this node. If no node is given, default to node that runs
+		the lrrd-client
+	
+	- nodes
+		List nodes
+
+	- config <query-item>
+		Asks the client for configuration items.
+
+	- fetch <query-item>
+	  	Fetches values.
+
+	- version
+		Print versionstring
+
+List simply lists items available for gathering. E.g. load, cpu, memory,
+df, et alia.
+
+Config gives the basic configuration for an item. See the file 
+"README.config" for a full description.
+
+Example outputs:
+
+	> config load
+	< graph_args --title "Load average"
+	< load.label Load
+	< .
+	> config memory
+	< graph_args --title "Memory usage" --base 1024
+	< used.label Used
+	< used.draw AREA
+	< shared.label Shared
+	< shared.draw STACK
+	< buffers.label Buffers
+	< buffers.draw STACK
+	< cache.label Cache
+	< cache.draw STACK
+	< free.label Free
+	< free.draw STACK
+	< swap.label Swap
+	< swap.draw STACK
+
+Fetch fetches the actual values. Returned data fields:
+
+	- <field>.value
+	  	Numeric value, or 'U'. Required.
+
+Example outputs:
+
+	> fetch load
+	< load.value 0.42
+	< .
+	> fetch memory
+	< used.value 98422784
+	< shared.value 1058086912
+	< buffers.value 2912256
+	< cache.value 8593408
+	< free.value 235753472
+	< swap.value 85053440 
+
+

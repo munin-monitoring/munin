@@ -1,0 +1,597 @@
+#!@@PERL@@ -w
+#
+# Program to suggest configurations and configuration changes.
+#
+# $Log$
+# Revision 1.1  2004/01/02 15:18:06  jimmyo
+# Initial revision
+#
+# Revision 1.11  2003/12/18 16:46:59  jimmyo
+# now prints the reason for suggesting to not use a plugin, as long as the plugins gives one.
+#
+# Revision 1.10  2003/12/17 21:29:26  jimmyo
+# Don\'t try to change uid/gid if not running as root. (Deb#224300)
+#
+# Revision 1.9  2003/11/10 22:05:42  toreanderson
+# bugfux
+#
+# Revision 1.8  2003/11/10 17:52:33  jimmyo
+# Small briainer-typo
+#
+# Revision 1.7  2003/11/10 17:32:18  jimmyo
+# Check what to do with new plugins when upgrading.
+#
+# Revision 1.6  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+
+$| = 1; # Flush after every write to stdout
+
+use strict;
+use Getopt::Long;
+
+my $version    = "@@VERSION@@";
+my $config     = "@@CONFDIR@@/client.conf";
+my $servicedir = "@@CONFDIR@@/client.d";
+my $libdir     = "@@LIBDIR@@/plugins";
+my $bindir     = "@@SBINDIR@@";
+my $installed  = undef;
+my $plugins    = undef;
+my $debug      = 0;
+my $suggest    = 0;
+my $shell      = 0;
+my @afamilies  = ("auto", "manual", "contrib");
+my @dfamilies  = ("auto");
+my @families   = ();
+my $removes    = 0;
+my $do_usage   = 0;
+my $do_error   = 0;
+my $do_version = 0;
+my $newer      = undef;
+
+$do_error = 1 unless GetOptions (
+	"help"         => \$do_usage,
+	"shell!"       => \$shell,
+	"debug!"       => \$debug,
+	"suggest!"     => \$suggest,
+	"config=s"     => \$config,
+	"servicedir=s" => \$servicedir,
+	"remove-also!" => \$removes,
+	"libdir=s"     => \$libdir,
+	"families=s"   => \@families,
+	"version=s"    => \$do_version,
+	"newer=s"      => \$newer
+);
+
+if ($do_error or $do_usage)
+{
+	print "Usage: $0 [options]
+	
+Options:
+	--help			View this help page
+	--version		Show version information
+	--debug			View debug information (very verbose)
+	--config <file>		Override configuration file 
+	                        [$config]
+	--servicedir <dir>	Override plugin dir [$servicedir]
+	--libdir <dir>		Override plugin lib [$libdir]
+	--families <family,...>	Override families (", join(',',@afamilies),") [",join(',',@dfamilies),"]
+	--suggest		Show suggestions instead of status
+	--shell			Show shell commands (implies --suggest)
+	--remove-also		Also show rm-commands when doing --shell
+	--newer <version>	Only show suggestions related to plugins newer
+	                        than version <version>. [0.0.0]
+
+";
+
+	exit ($do_error); # 1 if error, 0 if --help
+}
+
+if ($do_version)
+{
+    print "lrrd-client-configure (lrrd-client) version $version.\n";
+    print "Written by Jimmy Olsen\n";
+    print "\n";
+    print "Copyright (C) 2003\n";
+    print "This is free software released under the GNU Public License. There is
+    NO\n";
+    print "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PU
+    RPOSE.\n";
+    exit 0;
+}
+
+if (defined $newer and (!$shell or $removes))
+{
+    print "Fatal: --newer only supported along with --shell.\n";
+    exit 2;
+}
+
+if (!@families)
+{
+    if ($suggest or $shell)
+    {
+	@families = @dfamilies;
+    }
+    else
+    {
+	@families = @afamilies;
+    }
+}
+@families = split (/,/, join (',', @families));
+
+
+$plugins   = &get_plugins   ($plugins  , $libdir);
+$installed = &get_installed ($installed, $servicedir);
+
+if (! $shell and $suggest)
+{
+    &normal ("Plugin", "Used", "Suggestions");
+    &normal ("------", "----", "-----------");
+}
+elsif (! $shell)
+{
+    &normal ("Plugin", "Used", "Extra information");
+    &normal ("------", "----", "-----------------");
+}
+
+foreach my $plug (sort keys %{$plugins})
+{
+    next unless defined $plugins->{$plug}->{'family'};
+    next unless (grep (/^$plugins->{$plug}->{'family'}$/, @families));
+
+    my $now   = (exists $installed->{$plug}?"yes":"no");
+    my $want  = (exists $plugins->{$plug}->{'default'}?$plugins->{$plug}->{'default'}:"no");
+    my $snow  = (exists $installed->{$plug}->{'suggest'}?$installed->{$plug}->{'suggest'}:undef);
+    my $swant = (exists $plugins->{$plug}->{'suggest'}?$plugins->{$plug}->{'suggest'}:undef);
+    my $sugg  = "";
+
+
+    if ($shell)
+    {
+	if ($plug =~ /_$/) # Wildcard plugin...
+	{
+	    if ($now eq "yes" and $want eq "no")
+	    {
+		if ($snow and @{$snow})
+		{
+		    foreach my $wild (sort @{$snow})
+		    {
+			&link_remove ("$plug$wild");
+		    }
+		}
+	    }
+	    else
+	    {
+		if ($snow and @{$snow})
+		{
+		    foreach my $wild (sort @{$snow})
+		    {
+			if (! grep (/^$wild$/, @{$swant}))
+			{
+			    &link_remove ("$plug$wild");
+			}
+		    }
+		}
+		if ($swant and @{$swant})
+		{
+		    foreach my $wild (sort @{$swant})
+		    {
+			if (! grep (/^$wild$/, @{$snow}))
+			{
+			    &link_add ($plug, $wild);
+			}
+		    }
+		}
+	    }
+	}
+	else
+	{
+	    if ($now eq "yes" and $want eq "no")
+	    {
+		&link_remove ($plug);
+	    }
+	    elsif ($now eq "no" and $want eq "yes")
+	    {
+		&link_add ($plug);
+	    }
+	}
+    }
+    elsif ($suggest)
+    {
+	if ($plug =~ /_$/) # Wildcard plugin...
+	{
+	    if ($now eq "yes" && $want eq "no" or
+		    $now eq "no" && $want eq "yes" && $swant && @{$swant})
+	    {
+		$sugg = "$want ";
+	    }
+	    if ($snow and @{$snow})
+	    {
+		foreach my $wild (sort @{$snow})
+		{
+		    if (! grep (/^$wild$/, @{$swant}))
+		    {
+			$sugg .= "-$wild ";
+		    }
+		}
+	    }
+	    if ($swant and @{$swant})
+	    {
+		foreach my $wild (sort @{$swant})
+		{
+		    if (! grep (/^$wild$/, @{$snow}))
+		    {
+			$sugg .= "+$wild ";
+		    }
+		}
+	    }
+	    &normal ($plug, $now, $sugg);
+	}
+	else
+	{
+	    if ($now ne $want)
+	    {
+		$sugg = $want;
+	    }
+	    elsif (defined $plugins->{$plug}->{'defaultreason'} and
+		    $plugins->{$plug}->{'defaultreason'} =~ /^[^\(]*\((.+)\)\s*$/)
+	    {
+		$sugg = "[$1]";
+	    }
+
+	    &normal ($plug, $now, $sugg);
+	}
+    }
+    else
+    {
+	if ($plug =~ /_$/) # Wildcard plugin...
+	{
+	    if ($snow and @{$snow})
+	    {
+		$sugg = join ' ', @{$snow};
+	    }
+	    &normal ($plug, $now, $sugg);
+	}
+	else
+	{
+	    &normal ($plug, $now, "");
+	}
+	
+    }
+}
+
+sub link_remove
+{
+    my $plug = shift;
+
+    return unless $removes;
+    return unless (-l "$servicedir/$plug"); # Strange...
+
+    print "rm -f $servicedir/$plug\n";
+}
+
+sub link_add
+{
+    my $plug = shift;
+    my $wild = shift;
+
+    if (defined $wild)
+    {
+	print "ln -s $libdir/$plug $servicedir/$plug$wild\n";
+    }
+    else
+    {
+	print "ln -s $libdir/$plug $servicedir/$plug\n";
+    }
+}
+
+sub normal
+{
+    printf ("%-26s | %-4s | %-39s\n", @_);
+}
+
+sub get_installed
+{
+	(my $ps, my $dir) = @_;
+
+	print "DEBUG: Opening \"$dir\" for reading...\n" if $debug;
+	opendir (DIR, $dir) or die "Could not open \"$dir\" for reading: $!";
+	my @installed = readdir (DIR);
+	close (DIR);
+
+	foreach my $inst (@installed)
+	{
+		my $realfile = undef;
+
+		next unless -l "$dir/$inst"; # None of our business...
+		next unless ($realfile = readlink ("$dir/$inst"));
+		next unless ($realfile =~ /^$libdir\//); # None of our business...
+		$realfile =~ s/^.+\///;
+
+		print "DEBUG: Checking file: $inst..." if $debug;
+		if ($realfile =~ /_$/) # Wildcard plugin...
+		{
+		    print "$realfile..." if $debug;
+		    (my $wild = $inst) =~ s/^.+_//;
+		    print "$wild..." if $debug;
+		    push @{$ps->{$realfile}->{'suggest'}}, $wild;
+		}
+		$ps->{$realfile}->{'installed'} = "yes";
+
+		print "\n" if $debug;
+	}
+
+	return $ps;
+}
+
+sub get_plugins
+{
+	(my $ps, my $dir) = @_;
+	my %versions = ();
+
+	if (defined $newer and -f "$dir/plugins.history")
+	{
+	    if (open (HIST, "$dir/plugins.history"))
+	    {
+		my @slurp = <HIST>;
+		my $reached_version = 0;
+		my $ver = "0.0.0";
+		close (HIST);
+		my $uname = lc `uname`;
+		chomp $uname;
+
+		foreach my $line (@slurp)
+		{
+		    chomp $line;
+		    $line =~ s/#.*//g;
+		    $line =~ s/^\s+//g;
+		    $line =~ s/\s+$//g;
+		    next unless $line =~ /\S/;
+
+		    if ($line =~ /^\[([^\]]+)\]$/)
+		    {
+			$ver = $1;
+			print "Setting version to \"$ver\".\n" if $debug;
+			if ($ver eq $newer)
+			{
+			    $reached_version = 1;
+			}
+			elsif ($reached_version)
+			{
+			    $reached_version++;
+			}
+		    }
+		    elsif ($reached_version < 2)
+		    {
+			next;
+		    }
+		    elsif ($line =~ /^([^\/]+)\/(.+)$/)
+		    {
+			if ($uname eq $1)
+			{
+			    $ps->{$2}->{'version'} = $ver;
+			    print "-- Adding plugin \"$2\" to version tree ($ver)...\n" if $debug;
+			}
+		    }
+		    elsif ($line =~ /^(.+)$/)
+		    {
+			$ps->{$1}->{'version'} = $ver;
+			print "-- Adding plugin \"$1\" to version tree ($ver)...\n" if $debug;
+		    }
+		}
+	    }
+	    else
+	    {
+		warn "Warning: Could not open \"$dir/plugins.history\": $!";
+	    }
+	}
+
+	print "DEBUG: Opening \"$dir\" for reading...\n" if $debug;
+	opendir (DIR, $dir) or die "Could not open \"$dir\" for reading: $!";
+	my @plugins = readdir (DIR);
+	close (DIR);
+
+	foreach my $plug (@plugins)
+	{
+		my $path = "$dir/$plug";
+		$path = readlink($path) and $path = $path =~ /^\// ? $path : "$dir/$path" while -l $path;
+		next unless -f $path;
+		next unless -x _;
+
+		next if $plug =~ /^\./;
+
+		$ps->{$plug}->{'family'} = "contrib"; # Set default family...
+
+		print "DEBUG: Checking plugin: $plug..." if $debug;
+		if (! open (FILE, "$dir/$plug"))
+		{
+			warn "WARNING: Could not open file \"$dir/$plug\" for reading ($!). Skipping.";
+			next;
+		}
+		while (<FILE>)
+		{
+			chomp;
+			if (/#%#\s+family\s*=\s*(\S+)\s*$/)
+			{
+				$ps->{$plug}->{'family'} = $1;
+				print "$1..." if $debug;
+			}
+			elsif (/#%#\s+capabilities\s*=\s*(.+)$/)
+			{
+				foreach my $cap (split (/\s+/, $1))
+				{
+					$ps->{$plug}->{'capability'}->{$cap} = 1;
+					print "$cap..." if $debug;
+				}
+			}
+		}
+		close (FILE);
+
+		next unless (grep (/^$ps->{$plug}->{'family'}$/, @families));
+		next if ($ps->{$plug}->{'family'} eq "auto" and defined $newer and 
+			!defined $ps->{$plug}->{'version'});
+
+		if ($ps->{$plug}->{'capability'}->{'autoconf'})
+		{
+			my $fork = open (PLUG, "-|");
+
+			if ($fork == -1)
+			{
+				die "ERROR: Unable to fork: $!"
+			}
+			elsif ($fork == 0) # Child
+			{
+				close (STDERR);
+				open (STDERR, ">&STDOUT");
+				exec ("$bindir/lrrd-run", "--servicedir", $libdir, $plug, "autoconf");
+			}
+			else
+			{
+				$ps->{$plug}->{'defaultreason'} = join (' ', map {chomp; $_} <PLUG>);
+			}
+			close (PLUG);
+			if ($?)
+			{
+				$ps->{$plug}->{'default'} = "no";
+			}
+			else
+			{
+				$ps->{$plug}->{'default'} = "yes";
+			}
+			print $ps->{$plug}->{'default'}, ":", $ps->{$plug}->{'defaultreason'}, "..." if $debug;
+		}
+
+		if ($ps->{$plug}->{'capability'}->{'suggest'})
+		{
+			if (exists $ps->{$plug}->{'default'} and
+					$ps->{$plug}->{'default'} eq "yes")
+			{
+				my $fork = open (PLUG, "-|");
+
+				if ($fork == -1)
+				{
+					die "ERROR: Unable to fork: $!"
+				}
+				elsif ($fork == 0) # Child
+				{
+					exec ("$bindir/lrrd-run", "--servicedir", $libdir, $plug, "suggest");
+				}
+				else
+				{
+					push (@{$ps->{$plug}->{'suggest'}}, split (/\s+/, join (' ', map {chomp; $_} <PLUG>)));
+				}
+				close (PLUG);
+				if ($?)
+				{
+					$ps->{$plug}->{'suggest'} = "";
+				}
+				print join (' ', @{$ps->{$plug}->{'suggest'}}) if $debug;
+
+			}
+		}
+
+		print "\n" if $debug;
+	}
+	return $ps;
+}
+
+1;
+
+=head1 NAME
+
+lrrd-client-configure - A program to view configurations for lrrd-client
+
+=head1 SYNOPSIS
+
+lrrd-client-configure [options]
+
+=head1 OPTIONS
+
+=over 5
+
+=item B<< --help >>
+
+View this help page
+
+=item B<< --version >>
+
+Show version information
+
+=item B<< --debug >>
+
+View debug information (very verbose)
+
+=item B<< --config <file> >>
+
+Override configuration file [@@CONFDIR@@/client.conf]
+
+=item B<< --servicedir <dir> >>
+
+Override plugin dir [@@CONFDIR@@/client.d/]
+
+=item B<< --libdir <dir> >>
+
+Override plugin lib [@@LIBDIR@@/plugins]
+
+=item B<< --families <family,...> >>
+
+Override families [auto]
+
+=item B<< --suggest >>
+
+Show suggestions instead of status
+
+=item B<< --shell >>
+
+Show shell commands (implies --suggest)
+
+=item B<< --remove-also >>
+
+Also show rm-commands when doing --shell
+
+=back
+
+=head1 DESCRIPTION
+
+LRRD-client is the client in a server/client pair that graph, htmlifies
+and optionaly warns nagios about data it gathers. It's designed to let
+it be very easy to graph new datasources.
+
+Lrrd-client-configure is a script to show the current configuration of which
+plugins the client is running, as well as suggestions on what changes to make
+to this configuration. Lrrd-client-configure does this by using lrrd-run(1) to
+ask the plugins themselves of wether they should be run or not.
+
+=head1 FILES
+
+	@@CONFDIR@@/client.conf
+	@@CONFDIR@@/client-conf.d/*
+	@@CONFDIR@@/client.d/*
+	@@LIBDIR@@/plugins/*
+
+=head1 VERSION
+
+This is lrrd-client-configure v@@VERSION@@.
+
+=head1 AUTHORS
+
+Jimmy Olsen.
+
+=head1 BUGS
+
+None known.
+
+=head1 COPYRIGHT
+
+Copyright © 2003 Jimmy Olsen
+
+This is free software; see the source for copying conditions. There is
+NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+
+This program is released under the GNU General Public License
+
+=cut
+
+# vim:syntax=perl

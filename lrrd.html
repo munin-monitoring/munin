@@ -1,0 +1,318 @@
+<html>
+<head>
+<title>LRRD - Linpro RRD
+</title>
+</head>
+<body bgcolor=white text=black>
+<h2>Background</h2>
+LRRD is a server/client pair that graph, htmlifies and optionaly
+warns nagios about data it gathers. It's designed to let it be very easy to
+graph new datasources.
+
+<h2>The Client</h2>
+
+<h3>lrrd-client</h3>
+Lrrd-client is a small perlscript listening to port 4949 using
+Net::Server. It reads all the scripts in /etc/lrrd/lrrd-client.d on
+startup. The client accepts these commands:
+<tt>
+<dl>
+ <dt>list [node]<dd>list available scripts for this node
+ <dt>nodes<dd>List availbale nodes
+ <dt>config [script]<dd>output configuration for [script]
+ <dt>fetch [script]<dd>output script values
+ <dt>version<dd>Output version string
+ <dt>quit<dd>disconnect
+</dl>
+</tt>
+
+<h3>Scripts</h3>
+These scripts can be in your language of choice: bash, perl, python, C,
+or anything else that your system can execute. The scripts can be run in
+several modes, the important ones being without parameters, and with the
+"config"-parameter. When run with "config" as parameter, the script
+should output the configuration of the graph. 
+<pre>
+jo@yes:/etc/lrrd/client.d$ ./load config
+graph_title Load average
+graph_args --base 1000 -l 0
+graph_vlabel load
+graph_scale no
+load.label load
+load.warning 10
+load.critical 120
+</pre>
+The client supports quite a few options.
+<tt>
+<dl>
+<dt>graph_title<dd>The title of the graph, defaults to the servicename.
+<dt>create_args<dd>If set, the arguments will be passed on to rrdcreate.
+<dt>graph_args<dd>If set, the arguments will be passed on to rrdgraph.
+<dt>graph_order<dd>In witch order to draw the datasources. Can also include path aliases on the form alias=domain;host:graph.datasource. See further down for details.
+<dt>graph_vlabel<dd>Y-axis label of the graph. 
+<dt>graph_vtitle<dd>Y-axis label of the graph. NOTE: Deprecated, use graph_vlabel.
+<dt>graph_total<dd>If set, summarise all the datasources' values and use the value of graph_total as a label.
+<dt>graph_scale<dd>Default on. If set, disables scaling of min/max/cur values.
+<dt>graph<dd>Set to "yes" or "no". Decides wether to draw the graph. Defaults to "yes".
+<dt>update<dd>Set to "yes" or "no". Decides wether lrrd-update should fetch data for the graph. Defaults to "yes".
+<dt>host_name<dd>Override which host name this plugin is run for. Ugly -
+see further down on how to do this in the client configuration files
+instead, which is more elegant.
+<dt>{name}.label<dd>REQUIRED. Name of the datasource. You can have many
+datasouces in one graph.
+<dt>{name}.cdef<dd>RPN-expression. Modify the values before graphing. See the FAQ for examples.
+<dt>{name}.draw<dd>What to draw from the data source: AREA, LINE1-3. Defaults to LINE2.
+<dt>{name}.graph<dd>Set to "no" or "yes. Decides wether to graph the data source. Defaults to yes.
+<dt>{name}.max<dd>Maximum value. If the fetched value is below "max", it will be discarded.
+<dt>{name}.min<dd>Minimum value. If the fetched value is below "min", it will be discarded.
+<dt>{name}.negative<dd>Name of field to 'mirror' on the opposite side of zero. See the FAQ for examples.
+<dt>{name}.skipdraw<dd>Disables drawing of datasource. NOTE: Deprecated - use {name}.graph instead.
+<dt>{name}.type<dd>Type of datasource, COUNTER, ABSOLUTE, DERIVE and
+GAUGE, defaults to GAUGE. Read "man rrdcreate" for more info. 
+<dt>{name}.warning<dd>Used by lrrd-nagios. Can be a max value or a range
+sepereated by colon. E.g. "min:", ":max", "min:max", "max".
+<dt>{name}.critical<dd>Same as above.
+</dl>
+</tt>
+{name} is limited to 19 characters, and the characters [a-zA-Z0-9_].<br>
+<p>
+Without options the script should only give out {name}.value
+(value):
+<pre>
+jo@yes:/etc/lrrd/client.d$ ./load
+load.value 0.41
+</pre>
+<p>
+All scriptnames containing other characters than alphanumerics, "-",
+"_", and ".",  or starting with "." will be skipped. 
+</p>
+<p>
+To run a plugin as a specific user and/or group, create a file in the
+plugin configuration. This file is parsed as lrrd-client starts up.  It
+can contain the following options:
+<dl>
+ <dt>[&lt;plugin-name&gt;]<dd>The following lines are for
+ <code>plugin-name</code>.
+ <dt>user &lt;username|userid&gt;<dd>Run plugin as this user
+ <dt>group &lt;groupname|groupid&gt;<dd>Run plugin as this group
+ <dt>command &lt;command&gt;<dd>Run command instad of plugin. "%c" will
+ be expanded to what would otherwise have been run. E.g. "<code>command sudo
+ -u root %c</code>".
+ <dt>env.&lt;var&gt; &lt;contents&gt;<dd>Will cause the environment
+ variable "<code>var</code> to be set to "<code>contents</code>" when
+ running the plugin.
+</dl>
+Example:
+<pre>
+[exim_mailstats]
+group mail
+
+[cps_*]
+user root
+
+# Will cause the variable "mysqlopts" to be set...
+[mysql_*]
+env.mysqlopts --user foo --password fii
+</pre>
+</p>
+
+<h3>File locations</h3>
+According to <a href="http://www.pathname.com/fhs/">FHS</a>, this is
+where you should place the files.
+<h4>System package (Debian, RedHat, maybe others)</h4>
+<dl>
+ <dt>CONFDIR<dd>/etc/lrrd/
+ <dt>SBINDIR<dd>/usr/sbin/
+ <dt>LIBDIR<dd>/usr/share/lrrd/
+ <dt>STATEDIR<dd>/var/run/lrrd/
+ <dt>LOGDIR<dd>/var/log/lrrd/
+</dl>
+
+<h4>Independent install (tarball)</h4>
+<dl>
+ <dt>CONFDIR<dd>/etc/opt/lrrd/
+ <dt>SBINDIR<dd>/opt/lrrd/sbin/
+ <dt>LIBDIR<dd>/opt/lrrd/lib/
+ <dt>STATEDIR<dd>/var/run/lrrd/
+ <dt>LOGDIR<dd>/var/log/lrrd/
+</dl>
+
+
+<h2>The Server</h2>
+The server runs a cronjob as the user lrrd every 5 minutes. The cronjob
+runs lrrd-update,lrrd-nagios,lrrd-graph and lrrd-html one by one. All
+scripts creates a lockfile in @@STATEDIR@@. 
+
+Everytime a script starts, it checks if the pid in the lockfile is alive
+before starting.
+
+<h3>/etc/lrrd/lrrd-server.conf</h3>
+This is the configuration-file for all serverscripts.
+
+<pre>
+#Configfile for lrrd-server
+dbdir       /var/lib/lrrd/
+htmldir     /var/www/lrrd/
+logdir      /var/log/lrrd
+rundir      /var/run/lrrd/
+
+#To warn Nagios
+#nsca           /usr/bin/send_nsca
+#nsca_config    /etc/nagios/send_nsca.cfg
+#nsca_server    nagios.server.org
+
+#
+# Edit and uncomment the following to start surveilance
+#
+#[machine.testdomain.org]
+#  address localhost
+
+</pre>
+
+Explaination:
+
+<tt>
+<dl>
+ <dt>dbdir<dd>Rootdir for alle rrd-files (files go into $dbdir/$domain/)
+ <dt>htmldir<dd>Where to png's and htmlfiles end up
+ <dt>logdir<dd>Where to send logs
+ <dt>rundir<dd>Where to put state files
+ <dt>htaccess<dd>The default htaccessfile
+ <dt>tmpldir<dd>Where the templates reside
+ <dt>fork<dd>If set, run updates of several hosts simultaneously. (default yes)
+ <dt>max_processes<dd>Set max number of simultaneous LRRD processes.
+ <dt>nsca*<dd>Nagios options. See seperate section
+ <dt>[foo.com;machine.dom.ain]<dd>Add machine.dom.ain to domain foo.com.
+ <dt>[machine.dom.ain]<dd>Add machine.dom.ain to domain dom.ain. (A short form of [dom.ain;machine.dom.ain].)
+</dl>
+</tt>
+
+To add a new node, just put in a new section and add the
+<tt>address</tt> option.
+
+Domain-level options
+<tt>
+<dl>
+ <dt>node_order<dd>Changes order of nodes in a domain. (Default is alphabetically sorted.)
+</dl>
+</tt>
+
+Node-level options
+<tt>
+<dl>
+ <dt>address<dd>Set the node address
+ <dt>port<dd>Set node port number (default 4949)
+ <dt>use_node_name<dd>Set to "yes" or "y" to force getting all the
+ default plugins from a client. Good for hosts which changes hostname
+ (e.g. laptops).
+ <dt>use_default_name<dd>Set to "yes" or "y" to force getting all the
+ default plugins from a client. Good for hosts which changes hostname
+ (e.g. laptops). NOTE: Deprecated. Use use_node_name instaed.
+</dl>
+</tt>
+
+Field-level options
+<tt>
+<dl>
+ <dt>sum<dd>Summarise other fields. See the FAQ for how to use this.
+ <dt>stack<dd>Stack other fields. See the FAQ for how to use this.
+ <dt>+++<dd>Check the client configuration (further up) for everything else.
+</dl>
+</tt>
+
+<h3>lrrd-update</h3>
+Lrrd-update reads /etc/lrrd/lrrd-server.conf, searches for nodes,
+and connect to the lrrd-clients using the address-field. When connected
+it will run the list-command to fetch available scripts, then it will
+run config for each script. This configuration will expand in the
+/etc/lrrd/lrrd-server.conf-file and rdd-databases will be created.
+Already expanded configuration will be skipped. Then lrrd-update runs
+through it's newly modified configuration file and runs <tt>fetch</tt> on all
+scripts.
+<h3>lrrd-graph</h3>
+Lrrd-graph reads /etc/lrrd/lrrd-server.conf and graphs all services
+unless <tt>[service].graph no</tt>. The following options are available
+in the configuration
+<dl>
+limited to 19 characters
+<dt>[client].graph_title<dd>The title of the graph
+<dt>[client].graph_order<dd>Which order to graph the lines.
+<dt>[client].graph_args<dd>Extra arguments to the graph
+<dt>[service].label<dd>REQUIRED, the name of the value to be graphed,
+<dt>[service].type<dd>Type of value. COUNTER, GAUGE, defaults to GAUGE.
+NOTE: When GAUGE is used, only "snapshots" of every 5 minutes are
+recorded. Peaks in-between updates will not be graphed. When you use
+COUNTER, the numbers are averaged out over the past 5 minutes, so short
+peaks will show up as substancially lower than they were.
+</dl>
+<h3>lrrd-html</h3>
+Lrrd-html creates the html-pages for the graphs.<br>
+Usefull configuration in the server.conf file is:
+<dt>node_order [node1] [node2] .... <dd>In which order the nodes
+    should be listed, defaults to sorted.
+<h3>lrrd-nagios</h3>
+Lrrd-nagios is a optional script to send a passive alert to a
+nagios-server. For this to work, you need a nagios-nsca server,
+a working send_nsca configuration and the following configuration in
+/etc/lrrd/lrrd-server.conf:
+<pre>
+nsca          /usr/bin/send_nsca
+nsca_config   /etc/nagios/send_nsca.cfg
+nsca_server   [nsca-server] 
+</pre>
+Then add .warning and .critical fields in your configuration or
+directly into you clientscripts.
+The value for these field can be a single maxvalue or a colonseperated
+range 
+<pre>
+processes.warning 10:300
+processes.critical 5:500
+</pre>
+A value lower than 10 or higher then 300 will result in a warning to
+nagios, a value lower than 5 or higher than 500 will result in a
+critical to nagios
+<p>
+Other usefull ranges:
+<pre>
+[service].warning :400
+</pre>
+is equal to:
+<pre>
+[service].warning 400
+</pre>
+Only warn if lower than 300:
+<pre>
+[service].warning 300:
+</pre>
+
+When a service contains .critical or .warning it will chech it's status
+agains the last fetched value. If it's ok, a "{service}.ok" file will be created
+in the $dbdir/$domain directory. If the value is not ok. This file will
+be removed and lrrd-nagios will update nagios every 5 minutes untill the
+value is ok and a new ".ok" file will be created.
+
+<h3>File locations</h3>
+According to <a href="http://www.pathname.com/fhs/">FHS</a>, this is
+where you should place the files.
+<h4>System package (Debian, RedHat, maybe others)</h4>
+<dl>
+ <dt>CONFDIR<dd>/etc/lrrd/
+ <dt>SBINDIR<dd>/usr/sbin/
+ <dt>LIBDIR<dd>/usr/share/lrrd/
+ <dt>STATEDIR<dd>/var/run/lrrd/
+ <dt>LOGDIR<dd>/var/log/lrrd/
+ <dt>DBDIR<dd>/var/lib/lrrd/
+</dl>
+
+<h4>Independent install (tarball)</h4>
+<dl>
+ <dt>CONFDIR<dd>/etc/opt/lrrd/
+ <dt>SBINDIR<dd>/opt/lrrd/sbin/
+ <dt>LIBDIR<dd>/opt/lrrd/lib/
+ <dt>STATEDIR<dd>/var/run/lrrd/
+ <dt>LOGDIR<dd>/var/log/lrrd/
+ <dt>DBDIR<dd>/var/opt/lrrd/
+</dl>
+</body>
+</html>
+

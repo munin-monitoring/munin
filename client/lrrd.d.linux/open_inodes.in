@@ -1,0 +1,49 @@
+#!/bin/sh
+# 
+# Plugin to monitor the number of open files in the system.
+#
+# $Log$
+# Revision 1.1  2004/01/02 15:18:07  jimmyo
+# Initial revision
+#
+# Revision 1.2  2003/11/12 11:49:41  jimmyo
+# Removed warning/critical (floating max)
+#
+# Revision 1.1  2003/11/10 17:46:50  jimmyo
+# Contribution by Finn-Arn Johansen (SF#839210)
+#
+#
+# Parameters:
+# 	
+# 	config   (required)
+# 	autoconf (optional - used by lrrd-config)
+#
+# Magic markers (Used by lrrd-config and some installation scripts.
+# Optional):
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+
+
+if [ "$1" = "autoconf" ]; then
+	if [ -r /proc/sys/fs/inode-nr ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 1
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Inode table usage'
+	echo 'graph_args --base 1000 -l 0'
+	echo 'graph_vlabel number of open inodes'
+	echo 'used.label open inodes'
+	echo 'max.label peak open inodes'
+	exit 0
+fi
+
+awk '{print "used.value " $1-$2 "\nmax.value " $1}' < /proc/sys/fs/inode-nr

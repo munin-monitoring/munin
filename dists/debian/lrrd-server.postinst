@@ -1,0 +1,62 @@
+#! /bin/sh
+
+set -e
+
+prevver="$2"
+
+add_lrrd_system_user() {
+	if ! getent passwd lrrd >/dev/null; then
+		adduser --group --system --no-create-home --home /var/lib/lrrd lrrd;
+	fi	
+
+	# Update-kluge, packages prior to 0.9.8-1 didn't add the system group,
+	# only the user.  Fix this if necessary, and make sure the new group
+	# has the same GID as the lrrd user, unless it's already been taken by
+	# some other system group.
+	#
+	# (Should be removed when a LRRD package is in the stable release.)
+	
+	if [ "$prevver" ] && dpkg --compare-versions "$prevver" "<<" "0.9.8-1"; then
+		if getent group lrrd >/dev/null; then
+			return 0
+		fi
+		local prefgid=$(getent passwd lrrd|awk '{print $3}' 'FS=:')
+		if ! getent group $prefgid >/dev/null; then
+			addgroup --system --gid $prefgid lrrd
+		else
+			addgroup --system lrrd
+		fi
+		echo Setting primary group \"lrrd\" for the LRRD system user..
+		usermod -g lrrd lrrd
+	fi
+}
+
+fixperms() {
+	chown lrrd:adm /var/log/lrrd
+	chmod 0750 /var/log/lrrd
+
+	chown lrrd:root /var/run/lrrd
+	chmod 0755 /var/run/lrrd
+
+	chown lrrd:lrrd /var/www/lrrd
+	chmod 0755 /var/www/lrrd
+
+	chown lrrd:lrrd /var/lib/lrrd
+	chmod 0755 /var/lib/lrrd
+}
+
+case "$1" in
+	configure)
+		add_lrrd_system_user
+		fixperms
+		;;
+	abort-upgrade|abort-deconfigure|abort-remove)
+		:
+		;;
+	*)
+		echo "Called with unknown argument $1, bailing out."
+		exit 1
+		;;
+esac
+
+#DEBHELPER#

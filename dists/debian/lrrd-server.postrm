@@ -1,0 +1,35 @@
+#! /bin/sh
+
+set -e
+
+# workaround for bug #198522
+delete_dir_if_empty() {
+	if [ ! -d "$1" ]; then
+		return 0;
+	fi
+	rmdir --ignore-fail-on-non-empty $1;
+}
+
+if [ "$1" = "purge" ]; then
+
+	echo "The generated web site or accumulated data won't be removed."
+
+	rm -f /var/lib/lrrd/datafile
+	rm -f /var/lib/lrrd/*.stats
+	rm -f /var/lib/lrrd/*/*.ok
+	rm -f /var/run/lrrd/*.lock
+
+	rm -f /var/log/lrrd/lrrd-update.log*
+	rm -f /var/log/lrrd/lrrd-graph.log*
+	rm -f /var/log/lrrd/lrrd-html.log*
+	rm -f /var/log/lrrd/lrrd-nagios.log*
+	
+	delete_dir_if_empty /var/www/lrrd
+	delete_dir_if_empty /var/lib/lrrd
+	delete_dir_if_empty /var/log/lrrd
+	delete_dir_if_empty /var/run/lrrd
+	delete_dir_if_empty /etc/lrrd/templates
+	delete_dir_if_empty /etc/lrrd
+fi
+
+#DEBHELPER#
