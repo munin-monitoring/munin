@@ -27,8 +27,8 @@ munin (0+1.0.0pre2-1) unstable; urgency=low
         spurious peaks to sneak in, closes: #225489, #225626.
 
   * debian/plugins.conf:
-      - Run the Exim mailstats plugin as the group "adm", to ensure we can read
-        the log files we need, closes: #225988.
+      - Run the Exim mailstats plugin in the groups "mail" and "adm", to
+        ensure we can read the log files we need, closes: #225988.
       - Run the Exim mailqueue plugin with "Debian-exim" as a supplementary
         group if it exists, closes: #229860.
 
