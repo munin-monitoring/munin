@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.6  2004/02/02 17:28:22  jimmyo
+# Munin-graph now escapes ':' in labels properly.; Fixed bug in munin-graph where it caused a flood of cron-mail.
+#
 # Revision 1.5  2004/02/01 18:28:58  jimmyo
 # A perl 5.005_03 compatabilty problem, which slipped through to version pre2.
 #
@@ -568,7 +571,7 @@ sub process_node {
 		push (@rrd, ($node->{client}->{$service}->{$field.".draw"} || "LINE2") .
 		      ":" . $cdef . "g$rrdname" . 
 		      ($single_value ? $single_colour : $COLOUR[$col_count++%@COLOUR]) . ":" .
-		      ($node->{client}->{$service}->{"$field.label"} || $field)
+		      (escape ($node->{client}->{$service}->{"$field.label"}) || escape ($field))
 		      . (" " x ($max_field_len + 1 -
 				length ($node->{client}->{$service}->{"$field.label"} || $field))));
 
@@ -598,9 +601,10 @@ sub process_node {
 		    }
 
 		    push (@rrd_negatives, ($node->{client}->{$service}->{$negfield.".draw"} || "LINE2") .
-			  ":n" . $cdef . "g$negfield" . 
-			  ($single_value? $single_colour : $COLOUR[$col_count-1%@COLOUR]));
-		    push (@rrd_negatives, "HRULE:".$node->{client}->{$service}->{"$negfield.warn"}.($single_value ? "#ff0000" : $COLOUR[$col_count-1%@COLOUR]))
+			":n" . $cdef . "g$negfield" . 
+			(defined $single_value and $single_value ? $single_colour : $COLOUR[$col_count-1%@COLOUR]));
+		    push (@rrd_negatives, "HRULE:".$node->{client}->{$service}->{"$negfield.warn"}.
+			(defined $single_value and $single_value ? "#ff0000" : $COLOUR[$col_count-1%@COLOUR]))
 			if $node->{client}->{$service}->{"$negfield.warn"};
                     # Special case - renamed field
 		    if (exists $node->{client}->{$service}->{graph_noscale} and
@@ -790,6 +794,14 @@ sub parse_path
 	$filename = munin_get_filename ($domain, $node, $service, $1);
     }
     return $filename;
+}
+
+sub escape
+{
+    my $text = shift;
+    return undef if not defined $text;
+    $text =~ s/:/\\:/g;
+    return $text;
 }
 
 1;

@@ -9,6 +9,8 @@ munin (1.0.0pre3)
   * Remove dependency on pgrep (use process groups instead). (SF#881049)
   * Documentation updates.
   * Make the iostat plugin work properly.
+  * Munin-graph now escapes ':' in labels properly.
+  * Fixed bug in munin-graph where it caused a flood of cron-mail.
 
 munin (1.0.0pre2)
 
