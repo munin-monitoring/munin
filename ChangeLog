@@ -76,6 +76,7 @@ munin (work)
   - Installation
     * Changed variable name of ARCH to OSTYPE, to avoid name crash on newer
       FreeBSDs (SF#1068238).
+	* Added variable PYTHON, as we now have our first Python plugin.
 
 munin (1.1.4)
 
