@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.13  2004/11/20 22:10:49  jimmyo
+# Clean up output of plugin a bit.
+#
 # Revision 1.12  2004/11/20 22:06:22  jimmyo
 # Clean up output of plugin a bit.
 #
@@ -131,7 +134,14 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	{
 		$warn = $response->{$ifEntrySpeed}/8;
 	}
-	print "graph_title Interface $iface traffic\n";
+	if (length ($name) > 15)
+	{
+		print "graph_title Interface $iface traffic\n";
+	}
+	else
+	{
+		print "graph_title Interface $name traffic\n";
+	}
 	print "graph_order recv send\n";
 	print "graph_args --base 1000\n";
 	print "graph_vlabel bps in (-) / out (+)\n";
