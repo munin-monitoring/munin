@@ -7,6 +7,11 @@
 #   config   (required)
 #   autoconf (optional - only used by munin-config)
 #
+# $Log$
+# Revision 1.2  2004/05/09 19:47:24  jimmyo
+# Added Folding@home plugin, contributed by Xavier.
+#
+#
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
 #%# family=contrib
