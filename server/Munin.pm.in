@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.23  2004/09/23 16:52:55  jimmyo
+# Don't show warnings/criticals in the HTML interface if the field/graph isn't plotted.
+#
 # Revision 1.22  2004/09/23 16:43:39  jimmyo
 # Don't show warnings/criticals in the HTML interface if the field/graph isn't plotted.
 #
@@ -879,11 +882,13 @@ sub munin_field_status
 	return undef;
     }
 
-    if (defined $limits->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.critical"} and (!defined $check_draw or !$check_draw))
+    if (defined $limits->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.critical"} and (!defined $check_draw or !$check_draw or 
+		&munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $service, $field)))
     {
 	return "critical";
     }
-    elsif (defined $limits->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.warning"} and (!defined $check_draw or !$check_draw))
+    elsif (defined $limits->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.warning"} and (!defined $check_draw or !$check_draw or 
+		&munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $service, $field)))
     {
 	return "warning";
     }
