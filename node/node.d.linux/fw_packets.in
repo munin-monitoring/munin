@@ -12,6 +12,9 @@
 # Config variables:
 #
 # $Log$
+# Revision 1.5  2004/11/21 00:17:12  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
 # Revision 1.4  2004/10/27 17:53:48  jimmyo
 # Fixed typo in linux/fw_packets (Deb#275537).
 #
@@ -51,10 +54,12 @@ graph_vlabel Packets/sec
 graph_category network
 received.label Received
 received.draw AREA
-received.type COUNTER
+received.type DERIVE
+received.min 0
 forwarded.label Forwarded
 forwarded.draw LINE2
-forwarded.type COUNTER
+forwarded.type DERIVE
+forwarded.min 0
 EOM
 # Is LINE1 better I wonder?  The lines are meant to show how large a
 # portion of the total received packets gets forwarded.

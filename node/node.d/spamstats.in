@@ -1,6 +1,9 @@
 #!@@PERL@@
 #
 # $Log$
+# Revision 1.2  2004/11/21 00:16:56  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -44,11 +47,13 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "graph_args --base 1000 -v mails/min -l 0\n";
     print "graph_order ham spam\n";
     print "ham.label ham\n";
-    print "ham.type COUNTER\n";
+    print "ham.type DERIVE\n";
+    print "ham.min 0\n";
     print "ham.draw AREA\n";
     print "ham.cdef ham,60,*\n";
     print "spam.label spam\n";
-    print "spam.type COUNTER\n";
+    print "spam.type DERIVE\n";
+    print "spam.min 0\n";
     print "spam.cdef spam,60,*\n";
     print "spam.draw STACK\n";
     exit 0;

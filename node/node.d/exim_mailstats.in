@@ -15,6 +15,9 @@
 # 	exim         - Where's exim?
 #
 # $Log$
+# Revision 1.4  2004/11/21 00:16:56  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
 # Revision 1.3  2004/11/10 15:54:49  jimmyo
 # Applied patch from Torstein T. Svendsen to generic/exim_mailstats, to handle logfiles with timestamps in the name (SF#1055214)
 #
@@ -156,11 +159,13 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "graph_scale  no\n";
 	print "graph_category exim\n";
     print "received.label received\n";
-    print "received.type COUNTER\n";
+    print "received.type DERIVE\n";
+    print "received.min 0\n";
     print "received.draw AREA\n";
     print "received.cdef received,60,*\n";
     print "completed.label completed\n";
-    print "completed.type COUNTER\n";
+    print "completed.type DERIVE\n";
+    print "completed.min 0\n";
     print "completed.cdef completed,60,*\n";
     exit 0;
 }

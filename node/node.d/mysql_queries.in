@@ -5,6 +5,9 @@
 # Copyright 2003-2004 - Per Andreas Buer
 #
 # $Log$
+# Revision 1.8  2004/11/21 00:16:56  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
 # Revision 1.7  2004/09/08 15:25:33  ilmari
 # Use @@PERL@@ in all perl shebang lines.
 #
@@ -105,7 +108,8 @@ graph_total total\n");
     for my $key (keys %WANTED) {
         my $title = $WANTED{$key};
         print("$title.label ${title}\n",
-              "$title.type COUNTER\n",
+              "$title.min 0\n",
+              "$title.type DERIVE\n",
               "$title.max 500000\n",
               "$title.draw ", ($num) ? "STACK" : "AREA" ,  "\n",
              );

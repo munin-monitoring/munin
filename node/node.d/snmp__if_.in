@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.15  2004/11/21 00:16:56  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
 # Revision 1.14  2004/11/20 22:37:21  jimmyo
 # Strip strange characters.
 #
@@ -153,16 +156,18 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	print "graph_info This graph shows traffic for the \"$name\" network interface.\n";
 	print "send.info Bits sent/received by this interface.\n";
 	print "recv.label recv\n";
-	print "recv.type COUNTER\n";
+	print "recv.type DERIVE\n";
 	print "recv.graph no\n";
 	print "recv.cdef recv,8,*\n";
 	print "recv.max 2000000000\n";
+	print "recv.min 0\n";
 	print "recv.warn ", (-$warn), "\n" if defined $warn;
 	print "send.label bps\n";
-	print "send.type COUNTER\n";
+	print "send.type DERIVE\n";
 	print "send.negative recv\n";
 	print "send.cdef send,8,*\n";
 	print "send.max 2000000000\n";
+	print "send.min 0\n";
 	print "send.warn $warn\n" if defined $warn;
 	exit 0; 
 }

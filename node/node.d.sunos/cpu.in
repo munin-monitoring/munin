@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.6  2004/11/21 00:17:12  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
 # Revision 1.5  2004/05/20 19:02:38  jimmyo
 # Set categories on a bunch of plugins
 #
@@ -68,19 +71,23 @@ if [ "$1" = "config" ]; then
 	echo 'graph_scale no'
 	echo 'system.label system'
 	echo 'system.draw AREA'
-	echo 'system.type COUNTER'
+	echo 'system.type DERIVE'
+	echo 'system.min 0'
 	echo "system.max $cpumax"
 	echo 'user.label user'
 	echo 'user.draw STACK'
-	echo 'user.type COUNTER'
+	echo 'user.type DERIVE'
+	echo 'user.min 0'
 	echo "user.max $cpumax"
 	echo "waitio.max $cpumax"
 	echo 'waitio.label waitio'
 	echo 'waitio.draw STACK'
-	echo 'waitio.type COUNTER'
+	echo 'waitio.type DERIVE'
+	echo 'waitio.min 0'
 	echo 'idle.label idle'
 	echo 'idle.draw STACK'
-	echo 'idle.type COUNTER'
+	echo 'idle.type DERIVE'
+	echo 'idle.min 0'
 	echo "idle.max $cpumax"
 	if [ "$scaleto100" = "yes" ]; then
 		echo "system.cdef system,$ncpu,/"

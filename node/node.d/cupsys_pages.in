@@ -16,6 +16,9 @@
 #       maxlabel     - Maximum printers to plot
 #
 # $Log$
+# Revision 1.2  2004/11/21 00:16:56  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
 # Revision 1.1  2004/06/08 14:12:19  jimmyo
 # Added contributed plugin generic/cupsys_pages, contributed by Rune N. Skillingstad.
 #
@@ -119,7 +122,8 @@ if($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_order ".join(" ",sort(keys(%printers)))."\n";
     foreach my $printer (sort(keys %printers)) {
 	print "$printer.label $printer\n";
-	print "$printer.type COUNTER\n";
+	print "$printer.type DERIVE\n";
+	print "$printer.min 0\n";
 	print "$printer.draw $printer,60,*\n";
     }
     exit 0;

@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.8  2004/11/21 00:16:56  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
 # Revision 1.7  2004/11/16 20:08:26  jimmyo
 # License cleanups.
 #
@@ -136,7 +139,8 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	print "graph_info This graph shows errors for fibrechannel controllers.\n";
 	print "errs.info Number of errors per second on this interface.\n";
 	print "errs.label errors\n";
-	print "errs.type COUNTER\n";
+	print "errs.type DERIVE\n";
+	print "errs.min 0\n";
 	print "errs.max 4000000000\n";
 	exit 0; 
 }

@@ -69,6 +69,7 @@ munin (work)
     * Fixed bug in generic/hddtemp2, patch by arturaz (SF#1037002).
     * Added new plugin linux/forks, to graph forks per second.
     * The linux/iostat plugin now ignores devices without traffic (Deb#267195).
+    * Changed a lot of plugins so they use DERIVE instead of COUNTER.
 
   - Installation
     * Changed variable name of ARCH to OSTYPE, to avoid name crash on newer

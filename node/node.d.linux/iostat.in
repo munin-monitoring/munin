@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by lrrd-config)
 #
 # $Log$
+# Revision 1.11  2004/11/21 00:17:12  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
 # Revision 1.10  2004/11/20 23:58:22  jimmyo
 # The linux/iostat plugin now ignores devices without traffic (Deb#267195).
 #
@@ -118,13 +121,15 @@ if ( $ARGV[0] and $ARGV[0] eq "config")
 	foreach my $key (sort by_dev keys %devs)
 	{
 		print $key . "_read.label $devs{$key}->{name}\n";
-		print $key . "_read.type COUNTER\n";
+		print $key . "_read.type DERIVE\n";
 		print $key . "_read.max 900000\n";
+		print $key . "_read.min 0\n";
 		print $key . "_read.graph no\n";
 		print $key . "_write.label $devs{$key}->{name}\n";
 		print $key . "_write.info I/O on device $devs{$key}->{name}\n";
-		print $key . "_write.type COUNTER\n";
+		print $key . "_write.type DERIVE\n";
 		print $key . "_write.max 900000\n";
+		print $key . "_write.min 0\n";
 		print $key . "_write.negative " . $key . "_read\n";
 	}
 	exit 0;

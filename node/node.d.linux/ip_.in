@@ -17,6 +17,9 @@
 # This plugin is based on the if_ plugin.
 #
 #$Log$
+#Revision 1.5  2004/11/21 00:17:12  jimmyo
+#Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
 #Revision 1.4  2004/09/10 23:06:30  jimmyo
 #Added accidentally deleted exit.
 #
@@ -66,12 +69,14 @@ if [ "$1" = "config" ]; then
         echo "graph_title $IP traffic"
         echo 'graph_args --base 1000'
         echo 'graph_vlabel $IP traffic'
-		echo 'graph_category network'
+	echo 'graph_category network'
         echo 'out.label sent (bps)'
-        echo 'out.type COUNTER'
+        echo 'out.type DERIVE'
+        echo 'out.min 0'
         echo 'out.cdef out,8,*'
         echo 'in.label received (bps)'
-        echo 'in.type COUNTER'
+        echo 'in.type DERIVE'
+        echo 'in.min 0'
         echo 'in.cdef in,8,*' 
         exit 0
 fi;

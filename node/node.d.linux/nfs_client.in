@@ -3,6 +3,9 @@
 # Plugin to monitor NFS client traffic
 #
 # $Log$
+# Revision 1.6  2004/11/21 00:17:12  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
 # Revision 1.5  2004/10/01 12:32:09  ilmari
 # complete "rpc" removal
 #
@@ -40,7 +43,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel requests / second'
 	echo 'graph_total total'
 	echo 'graph_category NFS'
-	for a in $proc ; do echo "$a.label $a" ; echo "$a.type COUNTER" ; done
+	for a in $proc ; do echo "$a.label $a" ; echo "$a.type DERIVE"; echo "$a.min 0"; done
 	exit 0
 fi
 
