@@ -1,4 +1,4 @@
-munin (work)
+munin (1.1.5)
 
   - Munin main package:
     * Treat long field names properly. Sadly, this will lead to data loss
@@ -24,7 +24,6 @@ munin (work)
 	
 
   - Munin-node:
-    * Added module Munin::Plugin::SNMP, a Net::SNMP sublcass for plugins.
     * The node now changes dir to /, to make sure it's in a directory
       readable by all users.
     * Added per-plugin timeouts, contributed by Chan Wilson (SF#881044).
