@@ -2,9 +2,17 @@
 #
 # Plugin to monitor usage of bind 9 servers
 #
+# Parameters:
+#
+# 	logfile      - Location of the query log
+# 	statefile    - Where to put temporary statefile.
+#
 # Contributed by Nicolai Langfeldt
 #
 # $Log$
+# Revision 1.3  2004/09/14 20:29:20  jimmyo
+# Added statefile parameter.
+#
 # Revision 1.2  2004/05/14 21:16:46  jimmyo
 # "Upped" som plugins from contrib/manual to auto.
 #
@@ -23,7 +31,7 @@
 use strict;
 
 my $QUERYLOG=$ENV{logfile} || '/var/log/bind9/query.log';
-my $STATEFILE='@@PLUGSTATE@@/bind9.state';
+my $STATEFILE=$ENV{statefile} || '@@PLUGSTATE@@/bind9.state';
 my $OTHER=0;
 my %IN;
 
