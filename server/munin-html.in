@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.16  2004/05/21 06:21:46  jimmyo
+# Removed superfluous debug output.
+#
 # Revision 1.15  2004/05/20 22:30:08  jimmyo
 # * Munin-limits added to distro.
 # * Breached limis now show up in overview and node view.
@@ -291,7 +294,6 @@ for my $domain (@domainorder) {
 		    $tmp{'state_warning'}  = 1 if $state eq "warning";
 		    $tmp{'state_critical'} = 1 if $state eq "critical";
 		    $tmp{'state_unknown'}  = 1 if $state eq "unknown";
-		    print "DEBUG: State of $key set to \"$state\"\n";
 	    }
 	    $tmp{name} = ucfirst $key;
 	    $tmp{services} = \@{$tmp_cats{$key}};
@@ -310,7 +312,6 @@ for my $domain (@domainorder) {
 		    $tmp{'state_warning'}  = 1 if $state eq "warning";
 		    $tmp{'state_critical'} = 1 if $state eq "critical";
 		    $tmp{'state_unknown'}  = 1 if $state eq "unknown";
-		    print "DEBUG: State of $key set to \"$state\"\n";
 	    }
 	    $tmp{name} = ucfirst $key;
 	    $tmp{services} = \@{$tmp_cats{$key}};
