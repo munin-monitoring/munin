@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.47  2005/01/04 08:10:51  jimmyo
+# Fix help text (it was modified by accident).
+#
 # Revision 1.46  2004/12/22 20:01:16  jimmyo
 # Optimised munin-cgi-graph a bit.
 #
@@ -307,7 +310,8 @@ if ($do_version)
 if ($> == 0 and !$force_root)
 {
     print "You are running this program as root, which is neither smart nor necessary. 
-it as the user \"munin\". Aborting.\n\n";
+If you really want to run it as root, use the --force-root option. Else, run
+it as the user \"@@USER@@\". Aborting.\n\n";
     exit (1);
 }
 
