@@ -1,4 +1,4 @@
-munin (work)
+munin (1.1.9)
 
   * Main: Optimised munin-cgi-graph a bit.
   * Main: Internal name (for use in munin.conf) added to the table in
