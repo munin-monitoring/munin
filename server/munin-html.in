@@ -3,6 +3,10 @@
 # $Id$
 #
 # $Log$
+# Revision 1.15  2004/05/20 22:30:08  jimmyo
+# * Munin-limits added to distro.
+# * Breached limis now show up in overview and node view.
+#
 # Revision 1.14  2004/05/20 20:47:20  jimmyo
 # The server programs now open the log file at an earlier point.
 #
@@ -131,7 +135,9 @@ it as the user \"munin\". Aborting.\n\n";
 }
 
 my $config;
+my $limits;
 $config = &munin_config ($conffile, $config);
+$limits = &munin_readconfig ($config->{dbdir}."/limits", 1, 1);
 
 logger("Starting munin-html, checking lock");
 
@@ -250,7 +256,7 @@ for my $domain (@domainorder) {
 				$field_info{'crit'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".critical"} || "None";
 				$field_info{'info'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".info"} || "";
 
-				my $state = &munin_field_status ($config, $domain, $node, $service, $f);
+				my $state = &munin_field_status ($config, $limits, $domain, $node, $service, $f);
 				if (defined $state)
 				{
 					$field_info{'state_warning'}  = 1 if $state eq "warning";
@@ -276,24 +282,40 @@ for my $domain (@domainorder) {
 	}
 	foreach my $key (keys %tmp_cats)
 	{
-		next if $key eq "other";
+	    next if $key eq "other";
 	    my %tmp;
+	    my $state = &munin_category_status ($config, $limits, $domain, $node, $key);
 	    print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
+	    if (defined $state)
+	    {
+		    $tmp{'state_warning'}  = 1 if $state eq "warning";
+		    $tmp{'state_critical'} = 1 if $state eq "critical";
+		    $tmp{'state_unknown'}  = 1 if $state eq "unknown";
+		    print "DEBUG: State of $key set to \"$state\"\n";
+	    }
 	    $tmp{name} = ucfirst $key;
 	    $tmp{services} = \@{$tmp_cats{$key}};
-		$tmp{node} = $node;
-		$tmp{domain} = $domain;
+	    $tmp{node} = $node;
+	    $tmp{domain} = $domain;
 	    push @categories, \%tmp;
 	}
 	if (defined $tmp_cats{'other'})
 	{
-		my $key = 'other';
+	    my $key = 'other';
 	    my %tmp;
+	    my $state = &munin_category_status ($config, $limits, $domain, $node, $key);
 	    print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
+	    if (defined $state)
+	    {
+		    $tmp{'state_warning'}  = 1 if $state eq "warning";
+		    $tmp{'state_critical'} = 1 if $state eq "critical";
+		    $tmp{'state_unknown'}  = 1 if $state eq "unknown";
+		    print "DEBUG: State of $key set to \"$state\"\n";
+	    }
 	    $tmp{name} = ucfirst $key;
 	    $tmp{services} = \@{$tmp_cats{$key}};
-		$tmp{node} = $node;
-		$tmp{domain} = $domain;
+	    $tmp{node} = $node;
+	    $tmp{domain} = $domain;
 	    push @categories, \%tmp;
 	}
 	$nodetemplate->param(SERVICES => \@services,

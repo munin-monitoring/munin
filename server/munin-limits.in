@@ -2,6 +2,10 @@
 # Nagios
 #
 # $Log$
+# Revision 1.5  2004/05/20 22:30:08  jimmyo
+# * Munin-limits added to distro.
+# * Breached limis now show up in overview and node view.
+#
 # Revision 1.4  2004/01/29 17:40:10  jimmyo
 # Fixed pod typos patched by Lupe Christoph (SF#884092)
 #
@@ -36,6 +40,8 @@ my @limit_hosts = ();
 my @limit_services = ();
 my $force_root = 0;
 my %notes = ();
+
+my $log = new IO::Handle;
 
 # Get options
 $do_usage=1  unless 
@@ -76,7 +82,6 @@ it as the user \"munin\". Aborting.\n\n";
 my $config = &munin_config ($conffile);
 my $modified=0;
 
-open LOG,">>$config->{logdir}/munin-limits.log" or die "Unable to create/access $config->{logdir}/munin-limits.log\n";
 logger("Starting munin-limits, checking lock");
 munin_runlock("$config->{dbdir}/munin-limits.lock");
 logger("Created lock: $config->{dbdir}/munin-limits.lock");
@@ -160,11 +165,13 @@ sub process_service {
 	}
 	my $filename = "$config->{dbdir}/$domain/$name-$clientname-$key-".
 	    lc substr (($client->{"$key.type"}||"GAUGE"),0,1) . ".rrd";
-	my $value = sprintf "%.2f",munin_fetch("$filename");
+	my $value = sprintf "%.2f",&munin_fetch("$filename");
 	
 	if ((defined ($critical[0]) and $value < $critical[0]) or
 	    (defined ($critical[1]) and $value > $critical[1])) {
-	    $notes{$name}{$clientname}{'critical'} = 
+	    $critical[0] ||= "";
+	    $critical[1] ||= "";
+	    $notes{$domain}{$name}{$clientname}{"$key.critical"} = 
 		(defined $client->{"$key.extinfo"}?
 		    "$value (not in $critical[0]:$critical[1]): ".
 		    $client->{"$key.extinfo"}:
@@ -172,31 +179,68 @@ sub process_service {
 	}
 	elsif ((defined ($warning[0]) and $value < $warning[0]) or
 	       (defined ($warning[1]) and $value > $warning[1])) {
-		$notes{$name}{$clientname}{'warning'} = 
+	    	$warning[0] ||= "";
+	    	$warning[1] ||= "";
+		$notes{$domain}{$name}{$clientname}{"$key.warning"} = 
 		  (defined $client->{"$key.extinfo"}?
 		        "$value (not in $warning[0]:$warning[1]): ".
 		   	$client->{"$key.extinfo"}:
 		   	"Value is $value. Warning range ($warning[0]:$warning[1]) exceeded");
 	}
       }
-  }
+    }
+}
+
+sub logger_open {
+    my $dirname = shift;
+
+    if (!$log->opened)
+    {
+	  unless (open ($log, ">>$dirname/munin-html.log"))
+	  {
+		  print STDERR "Warning: Could not open log file \"$dirname/munin-html.log\" for writing: $!";
+	  }
+    }
 }
 
 sub logger {
   my ($comment) = @_;
   my $now = strftime "%b %d %H:%M:%S", localtime;
-  print LOG "$now - $comment\n";
+
+  if ($log->opened)
+  {
+	  print $log "$now - $comment";
+  }
+  else
+  {
+	  if (defined $config->{logdir})
+	  {
+		  if (open ($log, ">>$config->{logdir}/munin-graph.log"))
+		  {
+			  print $log "$now - $comment";
+		  }
+		  else
+		  {
+			  print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-graph.log\" for writing: $!";
+			  print STDERR "$now - $comment";
+		  }
+	  }
+	  else
+	  {
+		  print STDERR "$now - $comment";
+	  }
+    }
 }
 
-close LOG;
+close $log;
 
 =head1 NAME
 
-munin-nagios - A program to warn nagios of any off-limit values
+munin-limits - A program to check for any off-limit values
 
 =head1 SYNOPSIS
 
-munin-nagios [options]
+munin-limits [options]
 
 =head1 OPTIONS
 
@@ -212,7 +256,7 @@ Limit hosts to those of E<lt>host<gt>. Multiple --host options may be supplied. 
 
 =item B<< --config <file> >>
 
-Use E<lt>fileE<gt> as configuration file. [/etc/munin/munin.conf]
+Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin.conf]
 
 =item B<< --[no]force >>
 
@@ -238,36 +282,27 @@ If set, view debug messages. [--nodebug]
 
 =head1 DESCRIPTION
 
-Munin-nagios is a part of the package Munin, which is used in combination
+Munin-limits is a part of the package Munin, which is used in combination
 with Munin's node.  Munin is a group of programs to gather data from
 Munin's nodes, graph them, create html-pages, and optionally warn Nagios
 about any off-limit values.
 
-Munin-nagios can warn any nagios-servers about off-limit values.
+Munin-limits checks if any values are above or below the set limits, and saves these notes to a file. This file
+is later used by programs like munin-nagios (to warn nagios) and munin-html (to incorporate them in the web
+display).
 
 If a service has fields with "warning" or "critical"-options (e.g. "load.warning 10"), and the munin-server
-configuration file contains the necessary configuration options, munin-nagios will warn the nagios-server.
-
-=head1 CONFIGURATION
-
-The configuration file "munin.conf" must have the following optinons set correctly for munin-nagios to work:
-
-	nsca         /usr/bin/send_nsca
-	nsca_server  nagios-server.your.dom
-	nsca_config  /etc/nagios/send_nsca.cfg
-	
-In addition NSCA must be installed and configured correctly.
+configuration file contains the necessary configuration options, munin-limits will check its value.
 
 =head1 FILES
 
 	@@CONFDIR@@/munin.conf
 	@@DBDIR@@/*
-	@@LOGDIR@@/munin-nagios
 	@@STATEDIR@@/*
 
 =head1 VERSION
 
-This is munin-nagios version @@VERSION@@
+This is munin-limits version @@VERSION@@
 
 =head1 AUTHORS
 
@@ -275,7 +310,7 @@ Audun Ytterdal and Jimmy Olsen.
 
 =head1 BUGS
 
-munin-nagios does, as of now, not check the syntax of the configuration file.
+munin-limits does, as of now, not check the syntax of the configuration file.
 
 Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
