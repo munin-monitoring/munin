@@ -21,6 +21,7 @@ munin (work)
   * Added "comparison" views, to view a whole hostgroup at once.
   * Bugfix in munin-limits.
   * Replace "rpc" field with "total" in NFS and NFSD plugins.
+  * Added new plugin linux/apt_all, contributed by xavier.
 
 munin (1.1.4)
 
