@@ -17,6 +17,7 @@ munin (work)
     (Deb#288579).
   * Plugins: Improved graph_title of generic/postfix_* (Deb#292083).
   * Plugins: Turn on graph_scale for generic/postfix_mailvolume.
+  * Plugins: Make generic/postfix_mailstats catch more formats (Deb#292110).
   * Docs: Documented minimum requirements for use of graph_sums (SF#1109040).
   * Installation: Make the single python plugin use @@PYTHON@@ again.
 

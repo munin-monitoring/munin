@@ -15,6 +15,9 @@
 #	logfile      - What file to read in logdir
 #
 # $Log$
+# Revision 1.6.2.3  2005/01/25 20:39:16  jimmyo
+# Make generic/postfix_mailstats catch more formats (Deb#292110).
+#
 # Revision 1.6.2.2  2005/01/25 20:24:09  jimmyo
 # Improved graph_title of generic/postfix_* (Deb#292083).
 #
@@ -226,10 +229,9 @@ sub parseLogfile
 	{
 	    $delivered++;
 	} 
-	elsif ($line =~ /reject:/)
+	elsif ($line =~ /reject: \S+ \S+ \S+ (\S+)/)
 	{
-	    my @codes = split (/\s+/, $line);
-	    $rejects->{$codes[13]} ++;
+	    $rejects->{$1} ++;
 	}
     }
     close(LOGFILE);    
