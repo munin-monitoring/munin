@@ -24,6 +24,8 @@ munin (work)
   * Added new plugin linux/apt_all, contributed by xavier.
   * Added new plugins generic/courier_mta*, contributed by Rune N.
     Skillingstad.
+  * Plugin generic/acpi now autodetects even if the acpi version does not
+    contain the acpi_available program.
 
 munin (1.1.4)
 
