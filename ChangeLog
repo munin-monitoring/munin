@@ -61,6 +61,7 @@ munin (work)
     * Fixed linux/if_(err_) braindamage affecting hosts with vlans or
       multi-digit interface numbers.
     * Added wildcard plugin generic/smart_, contributed by Nicolas Stransky.
+    * Added plugin generic/loggrep for generic log grepping.
 
 munin (1.1.4)
 
