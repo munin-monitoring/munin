@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.12  2004/12/22 21:33:48  jimmyo
+# Remove hardcoding of default user/group to run the plugin (SF#1083251).
+#
 # Revision 1.11  2004/12/22 20:48:23  jimmyo
 # Fix bug when encountering strange environment.
 #
@@ -106,8 +109,8 @@ my $do_usage = 0;
 my $DEBUG = 0;
 my $do_version = 0;
 my $VERSION="@@VERSION@@";
-my $defuser = getpwnam ("nobody");
-my $defgroup= getgrnam ("munin");
+my $defuser = getpwnam ("@@PLUGINUSER@@");
+my $defgroup= getgrnam ("@@GROUP@@");
 my $paranoia = 0;
 my @ignores = ();
 

@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.20  2004/12/22 21:33:48  jimmyo
+# Remove hardcoding of default user/group to run the plugin (SF#1083251).
+#
 # Revision 1.19  2004/12/09 20:03:25  jimmyo
 # Added two new plugins contributed by Jacques Caruso, generic/exim_mailqueue_alt and generic/mailscanner.
 #
@@ -140,8 +143,8 @@ my $do_usage = 0;
 my $DEBUG = 0;
 my $do_version = 0;
 my $VERSION="@@VERSION@@";
-my $defuser = getpwnam ("nobody");
-my $defgroup= getgrnam ("munin");
+my $defuser = getpwnam ("@@PLUGINUSER@@");
+my $defgroup= getgrnam ("@@GROUP@@");
 my $paranoia= 0;
 my @ignores = ();
 my %sconf   = ('timeout' => 10);

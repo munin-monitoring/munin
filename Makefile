@@ -140,6 +140,9 @@ build-stamp:
 		    -e 's|@@VERSION@@|$(VERSION)|g'			\
 		    -e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g'			\
 		    -e 's|@@CGIDIR@@|$(CGIDIR)|g'			\
+		    -e 's|@@USER@@|$(USER)|g'				\
+		    -e 's|@@GROUP@@|$(GROUP)|g'				\
+		    -e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g'		\
 		    $$file > build/$$destname;				\
 	done
 	touch build-stamp

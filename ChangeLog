@@ -6,6 +6,8 @@ munin (work)
   * Main: Added option cgiurl_graph.
   * Main: Bugfix when using long labels and CGI graphing.
   * Node: Fix bug when encountering strange environment (Deb#285173).
+  * Node: Remove hardcoding of default user/group to run the plugin as
+    (SF#1083251).
   * Packaging: Expand man-page macros properly on man-page generation 
     (Deb#286399).
   * Plugin: Added plugin generic/dhcpd3, created by Rune N. Skillingstad.
