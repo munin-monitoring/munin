@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.9  2005/01/25 08:48:28  lupe
+# Correct multi-CPU bugs
+#
 # Revision 1.8  2004/12/09 22:12:55  jimmyo
 # Added "graph_period" option, to make "graph_sums" usable.
 #
@@ -75,17 +78,18 @@ if [ "$1" = "config" ]; then
 		STATUNITS=`/sbin/sysctl -n kern.clockrate | cut -f13 -d' '`
 	fi
 	PERCENT=`/sbin/sysctl -n hw.ncpu | awk '{print ($1)*100}'`
-	SCALE=`echo 'scale=5;' $PERCENT/$STATUNITS | bc -q `
 	NCPU=`/sbin/sysctl -n hw.ncpu`
 	if [ "$scaleto100" = yes ]; then
+		CDEF="$STATUNITS,/,100,*,$NCPU,/"
 		PERCENT=100
 	else
+		CDEF="$STATUNITS,/,100,*"
 		PERCENT=$(($NCPU*100))
 	fi
-#	let SYSWARNING=$PERCENT*30/100
-#	let SYSCRITICAL=$PERCENT*50/100
-#	let INTWARNING=$PERCENT*80/100
-#	let USRWARNING=$PERCENT*80/100
+#	SYSWARNING=$PERCENT*30/100
+#	SYSCRITICAL=$PERCENT*50/100
+#	INTWARNING=$PERCENT*80/100
+#	USRWARNING=$PERCENT*80/100
 	echo 'graph_title CPU usage'
 	echo 'graph_order system interrupt user nice idle'
 	echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit $PERCENT "
@@ -100,33 +104,33 @@ if [ "$1" = "config" ]; then
 	echo 'system.min 0'
 #	echo "system.warning $SYSWARNING" 
 #	echo "system.critical $SYSCRITICAL" 
-	echo "system.cdef system,$STATUNITS,/,$PERCENT,*"
+	echo "system.cdef system,$CDEF"
 	echo 'interrupt.label interrupt'
 	echo 'interrupt.draw STACK'
 	echo 'interrupt.max 5000'
 #	echo "interrupt.warning $INTWARNING"
 	echo 'interrupt.type DERIVE'
 	echo 'interrupt.min 0'
-	echo "interrupt.cdef interrupt,$STATUNITS,/,$PERCENT,*"
+	echo "interrupt.cdef interrupt,$CDEF"
 	echo 'user.label user'
 	echo 'user.draw STACK'
 	echo 'user.max 5000'
 #	echo "user.warning $USRWARNING"
 	echo 'user.type DERIVE'
 	echo 'user.min 0'
-	echo "user.cdef user,$STATUNITS,/,$PERCENT,*"
+	echo "user.cdef user,$CDEF"
 	echo 'nice.label nice'
 	echo 'nice.draw STACK'
 	echo 'nice.max 5000'
 	echo 'nice.type DERIVE'
 	echo 'nice.min 0'
-	echo "nice.cdef nice,$STATUNITS,/,$PERCENT,*"
+	echo "nice.cdef nice,$CDEF"
 	echo 'idle.label idle'
 	echo 'idle.draw STACK'
 	echo 'idle.max 5000'
 	echo 'idle.type DERIVE'
 	echo 'idle.min 0'
-	echo "idle.cdef idle,$STATUNITS,/,$PERCENT,*"
+	echo "idle.cdef idle,$CDEF"
 	exit 0
 fi
 
