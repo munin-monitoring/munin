@@ -5,10 +5,13 @@
 # Parameters understood:
 #
 # 	config   (required)
-# 	autoconf (optional - used by lrrd-config)
-#       suggest  (optional - used by lrrd-config)
+# 	autoconf (optional - used by munin-node-configure)
+#       suggest  (optional - used by munin-node-configure)
 #
 # $Log$
+# Revision 1.3  2004/11/21 20:12:32  jimmyo
+# Cosmetics.
+#
 # Revision 1.2  2004/11/21 19:55:28  jimmyo
 # Upped generic/ntp_ to auto family.
 #
@@ -25,7 +28,7 @@
 #
 #
 # Magic markers - optional - used by installation scripts and
-# lrrd-config:
+# munin-node-configure:
 #
 #%# family=auto
 #%# capabilities=autoconf suggest
