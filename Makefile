@@ -150,6 +150,7 @@ build-doc-stamp:
 build-man: build-man-stamp
 
 build-man-stamp:
+    mkdir -p build/doc
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		node/munin-node.in > build/doc/munin-node.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
