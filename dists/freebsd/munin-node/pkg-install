@@ -1,8 +1,8 @@
 #! /bin/sh
 #
 # $Log$
-# Revision 1.1  2004/02/01 18:31:12  lupe
-# Create group "munin" before install, configure (new) plugins after install.
+# Revision 1.2  2004/02/06 18:49:58  lupe
+# Fixes for pkg_add compatibility.
 #
 #
 
@@ -59,16 +59,18 @@ make_group() {
 }
 
 init_plugins() {
-    if [ -f ${PREFIX}/etc/munin/VERSION.node ]; then
-	prevver=$(cat ${PREFIX}/etc/munin/VERSION.node)
+    if [ -f ${PKG_PREFIX}/etc/munin/VERSION.node ]; then
+	prevver=$(cat ${PKG_PREFIX}/etc/munin/VERSION.node)
     fi
+
+    mkdir -p ${PKG_PREFIX}/etc/munin/plugins ${PKG_PREFIX}/var/munin/plugin-state
 
     if [ -n "$prevver" ]; then
 	echo -n "Initializing new plugins.."
-	munin-node-configure --shell --newer "${prevver%-*}" | sh -x
+	${PKG_PREFIX}/sbin/munin-node-configure --shell --newer "${prevver%-*}" | sh -x
     else
 	echo -n "Initializing plugins.."
-	munin-node-configure --shell | sh -x
+	${PKG_PREFIX}/sbin/munin-node-configure --shell | sh -x
     fi
     echo "done."
 }
