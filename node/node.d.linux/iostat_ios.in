@@ -1,4 +1,4 @@
-@@PERL@@
+#!@@PERL@@ -w
 #
 #
 # Plugin for watching io-bound traffic (in blocks) on disks.

@@ -1,6 +1,6 @@
 bin/munin-cron
 etc/munin/munin.conf
-etc/munin/templates/logo.gif
+etc/munin/templates/logo.png
 etc/munin/templates/munin-domainview.tmpl
 etc/munin/templates/munin-nodeview.tmpl
 etc/munin/templates/munin-overview.tmpl
