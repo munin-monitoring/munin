@@ -173,4 +173,4 @@ munin (1.2.0-1) unstable; urgency=low
     You will have to repeat the process for every possibly affected RRD file,
     after which you may safely upgrade your "munin" package.
     
- -- Tore Anderson <tore@linpro.no>  Wed, 16 Feb 2005 22:46:50 +0100
+ -- Tore Anderson <tore@debian.org>  Mon, 21 Feb 2005 00:16:25 +0100

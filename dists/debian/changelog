@@ -47,8 +47,10 @@ munin (1.2.0-1) unstable; urgency=low
   * debian/control:
       - Add dependency on perl-modules (>= 5.8.0) | libparse-recdescent-perl
         for the main munin package, as munin-limits requires Text::Balanced.
-      - Add libdate-manip-perl as a recommended package, as the new CGI
-        functionality depends on it.
+      - Add libdate-manip-perl as a recommended package for the munin package,
+        as the new CGI functionality depends on it.
+      - Add libnet-snmp-perl as a recommended package for the munin-node
+        package, as munin-node-configure-snmp requires it.
 
   * debian/Makefile.config:
       - Install the new CGI in /usr/lib/cgi-bin/, as mandated by the Debian
@@ -73,13 +75,15 @@ munin (1.2.0-1) unstable; urgency=low
 
   * server/munin-limits.in:
       - Change lock file directory to match that of munin-update, munin-graph,
-        and munin-html.
+        and munin-html (grabbed from upstream CVS).
+      - Fix a string comparsions where the "==" operator was used instead of
+        "eq" (grabbed from upstream CVS).
 
   * debian/munin.postinst:
       - Only change user and group ownership on the data files from "lrrd" to
         "munin" when the package is first installed, not on every upgrade.
 
- -- Tore Anderson <tore@debian.org>  Wed, 09 Feb 2005 17:46:05 +0100
+ -- Tore Anderson <tore@debian.org>  Mon, 21 Feb 2005 00:16:25 +0100
 
 munin (1.0.5-1) unstable; urgency=low
 
