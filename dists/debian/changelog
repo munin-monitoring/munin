@@ -1,6 +1,6 @@
 munin (0+1.0.0pre2-1) unstable; urgency=low
 
-  * New upstream release:
+  * New upstream release, closes: #231049:
       - Project renamed from "LRRD" to "Munin".  Almost every file in the
         debian directory has changed both name and content due to this, and
         the changes related to this are far too numerous to detail here.
