@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.24.2.1  2005/01/25 20:07:36  jimmyo
+# Make munin-limits work properly with perl 5.6 (SF#1109039).
+#
 # Revision 1.24  2005/01/05 15:40:35  jimmyo
 # Main: "contacts" can now be set to "none".
 #
@@ -452,7 +455,29 @@ sub generate_service_message {
 		    unshift (@cmd, "|-");
 		}
 		logger ("Debug: opening for writing: \"" . join('" "',@cmd) . "\".") if $DEBUG;
-		open ($pipe, $cmd[0], @cmd[1 .. $#cmd]) or logger ("Warning: Could not run command \"" . join(' ',@cmd) . "\": $!");
+		if ($cmd[0] == ">")
+		{
+		    if (! open ($pipe, $cmd[0], join (' ', @cmd[1 .. $#cmd])))
+		    {
+			logger ("Fatal: Could not open " . join (' ', @cmd[1 .. $#cmd]) . " for writing: $!");
+			exit 3;
+		    }
+		}
+		else
+		{
+		    my $pid = open ($pipe, "|-");
+		    if (!defined $pid)
+		    {
+			logger ("Fatal: Unable to  fork: $!");
+			exit 3;
+		    }
+		    if (!$pid) # Child
+		    {
+			exec (@cmd[1 .. $#cmd]) or logger ("Warning: Could not run command \"" . join(' ',@cmd[1 .. $#cmd]) . "\": $!");
+			exit 5;
+                        # NOTREACHED
+		    }
+		}
 		$config->{'contact'}->{$c}->{'pipe_command'} = $cmd;
 		$config->{'contact'}->{$c}->{'pipe'} = $pipe;
 	    } 
