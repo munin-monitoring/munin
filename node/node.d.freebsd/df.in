@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.4.2.3  2005/01/28 14:52:23  lupe
+# Delete a merge marker
+#
 # Revision 1.4.2.2  2005/01/28 14:51:22  lupe
 # Add graph_info and some filed.info
 #
@@ -19,7 +22,6 @@
 #
 # Revision 1.4  2004/05/20 19:02:36  jimmyo
 # Set categories on a bunch of plugins
->>>>>>> 1.6
 #
 # Revision 1.2.2.1  2005/01/25 10:32:40  lupe
 # Add support for FreeBSD 4.x ramdisks
