@@ -1,3 +1,20 @@
+munin (1.2.3-1) unstable; urgency=medium
+
+  * New upstream release, targeted at Sarge.
+      - Plugin linux/sensors_ now handles yet another form of output from the
+        sensors(1) utility, closes: #300690.
+      - Plugin generic/postfix_mailstats now shouldn't include rejects from
+        the cleanup daemon in the total count, closes: #302220.
+      - Munin-update no longer emits Perl warnings to stdout, closes: #302502.
+
+  * server/munin-limits.in, debian/NEWS:
+      - Apply patch from trunk which redirects all stdout and stderr from the
+        program being run to the log, closes: #301196.  The references to this
+        functionality has been corrected in the NEWS file, and also in the
+        example config file.
+
+ -- Tore Anderson <tore@debian.org>  Sat, 02 Apr 2005 23:33:03 +0200
+
 munin (1.2.2-3) unstable; urgency=high
 
   * node/munin-node.in:

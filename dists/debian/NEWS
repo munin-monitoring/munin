@@ -54,16 +54,6 @@ munin (1.2.0-1) unstable; urgency=low
     unless the latter was explicitly defined in /etc/munin/munin.conf, in which
     case the deprecated entries would be ignored.
 
-    This command is run through a shell, which may be interesting for users of
-    newer versions of NSCA, such as the one in Debian GNU/Linux 3.1, as it has
-    recently begun printing a message after successfully sending NSCA packets.
-    To avoid this, you may simply tack on something such as
-    
-        | grep -v '^[0-9]* data packet(s) sent to host successfully$'
-
-    at the end of the contact command in order to prevent cron from sending
-    mail to root every five minutes.
-
   * Data loss issue 1
     =================
   
