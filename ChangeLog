@@ -25,6 +25,7 @@ munin (work)
     * Added module Munin::Plugin::SNMP, a Net::SNMP sublcass for plugins.
     * The node now changes dir to /, to make sure it's in a directory
       readable by all users.
+	* Added per-plugin timeouts, contributed by Chan Wilson (SF#881044).
 
   - Plugins
     * SNMP plugin "df" properly strips the label and serial number from

@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.17  2004/11/20 23:17:47  jimmyo
+# Added per-plugin timeouts, contributed by Chan Wilson (SF#881044).
+#
 # Revision 1.16  2004/11/16 20:00:42  jimmyo
 # License cleanups.
 #
@@ -135,8 +138,7 @@ my $defuser = getpwnam ("nobody");
 my $defgroup= getgrnam ("munin");
 my $paranoia= 0;
 my @ignores = ();
-my %sconf   = ();
-my $timeout = 10;
+my %sconf   = ('timeout' => 10);
 my $caddr   = "";
 
 $do_usage=1  unless 
@@ -238,7 +240,7 @@ while (<FILE>) {
   }
   elsif (($1 eq "timeout") and defined $2)
   {
-      $timeout = $2;
+      $sconf{'timeout'} = $2;
   }
 }
 
@@ -406,7 +408,7 @@ sub reap_children {
   if (kill (0, $child)) 
     { 
       print ("# timeout pid $child - killing..."); 
-      logger ("Plugin timeout ($timeout seconds): $text (pid $child)");
+      logger ("Plugin timeout: $text (pid $child)");
       kill (-1, $child); sleep 2; 
       kill (-9, $child);
       print ("done\n");
@@ -420,6 +422,9 @@ sub run_service {
   my $timed_out = 0;
   if ($services{$service} and ($caddr eq "" or &has_access ($service))) {
     my $child = 0;
+    my $timeout = get_var (\%sconf, $service, 'timeout');
+    $timeout = $sconf{'timeout'} 
+    	unless defined $timeout and $timeout =~ /^\d+$/;
 
     if ($child = open (CHILD, "-|")) {
       eval {
@@ -555,9 +560,9 @@ sub process_request {
   $caddr = $self->{server}->{peeraddr};
   print "# munin node at $FQDN\n";
   local $SIG{ALRM} = sub { logger ("Connection timed out."); die "timeout" };
-  alarm($timeout);
+  alarm($sconf{'timeout'});
   while( <STDIN> ){
-    alarm($timeout);
+    alarm($sconf{'timeout'});
     chomp;
     if (m/^list\s*([0-9a-zA-Z\.\-]+)?/) {
       &list_services($1);
@@ -689,6 +694,12 @@ sub load_auth_file
 	elsif (/^\s*host_name\s+(.+)\s*$/)
 	{
 	    $sconf->{$service}{'host_name'} = $1;
+	}
+	elsif (/^\s*timeout\s+(\d+)\s*$/)
+	{
+	    $sconf->{$service}{'timeout'} = $1;
+	    print "DEBUG: $service: setting timeout to $1\n"
+		if $DEBUG;
 	}
 	elsif (/^\s*(allow)\s+(.+)\s*$/ or /^\s*(deny)\s+(.+)\s*$/)
 	{
@@ -959,4 +970,4 @@ This program is released under the GNU General Public License
 
 =cut
 
-# vim:syntax=perl
+# vim:syntax=perl ts=8
