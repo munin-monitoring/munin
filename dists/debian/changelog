@@ -4,9 +4,13 @@ munin (1.2.2-3) unstable; urgency=high
       - Fix mis-merge of the optional user patch, restoring per-plugin
         group setting. Thanks to Andras Korn for reporting and
         Robert Loomans for patch (Closes: #299589).
+  
+  * node/munin-node.in, node/munin-run.in:
+      - Allow root for the per-plugin group directive.
+  
   * Fix autoconf for the linux/nfs* plugins.
 
- -- Dagfinn Ilmari Mannsaker <ilmari@ilmari.org>  Wed, 16 Mar 2005 14:59:52 +0100
+ -- Dagfinn Ilmari Mannsaker <ilmari@ilmari.org.no>  Wed, 16 Mar 2005 20:45:15 +0100
 
 munin (1.2.2-2) unstable; urgency=low
 

@@ -1,6 +1,7 @@
 munin (CVS)
 
   * Node: Added support for optional "user" settings in node.
+  * Node: Allow "root" for the per-plugin "group" directive.
   * Plugins: Fix autoconf for linux/{nfsd,nfs_client}.
 
 munin (1.2.2)

@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.12.2.2  2005/03/16 19:55:34  ilmari
+# Allow root for the per-plugin group directive.
+#
 # Revision 1.12.2.1  2005/03/13 12:46:04  jimmyo
 # Added support for optional user settings in node.
 #
@@ -378,7 +381,7 @@ sub run_service {
 			$defuser);
 		my $g  = $defgroup;
 		my $gs = "$g $g" .
-		($sconf{$service}{'group'}?" $sconf{$service}{group}":"");
+		(defined $sconf{$service}{'group'}?" $sconf{$service}{group}":"");
 
 		print "# Want to run as euid/egid $u/$g\n" if $DEBUG;
 

@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.20.2.4  2005/03/16 19:55:34  ilmari
+# Allow root for the per-plugin group directive.
+#
 # Revision 1.20.2.3  2005/03/16 16:50:40  ilmari
 # Fix mis-merge of optional user support
 #
@@ -493,7 +496,7 @@ sub run_service {
 			$defuser);
 		my $g  = $defgroup;
 		my $gs = "$g $g" .
-			($sconf{$service}{'group'}?" $sconf{$service}{group}":"");
+			(defined $sconf{$service}{'group'}?" $sconf{$service}{group}":"");
 
 		print "# Want to run as euid/egid $u/$g\n" if $DEBUG;
 
