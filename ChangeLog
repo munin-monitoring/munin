@@ -12,6 +12,8 @@ munin (1.0.0pre3)
   * Munin-graph now escapes ':' in labels properly.
   * Fixed bug in munin-graph where it caused a flood of cron-mail.
   * Linux/iostat now shows only disks also on machines without devfs.
+  * Generic/apache-plugins have been modified to properly to report the
+    correct autoconf value. Also, bugfixes in _processes and _volume.
 
 munin (1.0.0pre2)
 
