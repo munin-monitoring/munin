@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.38  2004/12/22 20:52:29  jimmyo
+# Corrected filename of munin-cgi-graph.
+#
 # Revision 1.37  2004/12/22 20:13:31  jimmyo
 # Added option cgiurl_graph.
 #
@@ -229,11 +232,11 @@ if (!defined $config->{'graphcgiurl'})
 {
     if (defined $config->{'cgiurl'})
     {
-	$config->{'graphcgiurl'} = $config->{'cgiurl'} . "/munin-graph-cgi";
+	$config->{'graphcgiurl'} = $config->{'cgiurl'} . "/munin-cgi-graph";
     }
     else
     {
-	$config->{'graphcgiurl'} = "/cgi-bin/munin-graph-cgi";
+	$config->{'graphcgiurl'} = "/cgi-bin/munin-cgi-graph";
     }
 }
 
