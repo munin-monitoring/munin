@@ -125,14 +125,9 @@ use strict;
 use vars qw(@ISA);
 use Getopt::Long;
 use Net::Server::Fork; # any personality will do
-use Net::SSLeay qw(die_now die_if_ssl_error);
 
-# TLS init
-Net::SSLeay::load_error_strings();
-Net::SSLeay::SSLeay_add_ssl_algorithms();
-Net::SSLeay::randomize();
-my $ctx; 
 my $tls;
+my $tls_verified = "";
 
 chdir ("/");
 
@@ -268,6 +263,10 @@ while (<FILE>) {
   {
       $sconf{'timeout'} = $2;
   }
+  elsif (defined $1 and defined $2 and not defined $sconf{$1})
+  {
+      $sconf{$1} = $2;
+  }
 }
 
 $FQDN ||= &get_fq_hostname;
@@ -296,9 +295,9 @@ sub show_version {
 
 sub show_nodes {
   for my $node (keys %nodes) {
-    print "$node\n";
+    net_write ("$node\n");
   }
-  print ".\n";
+  net_write (".\n");
 }
 
 sub get_fq_hostname {
@@ -378,7 +377,7 @@ sub list_services {
     my $node = $_[0] || $FQDN;
     net_write (join " ", grep { &has_access ($_); } keys %{$nodes{$node}});
     #print join " ", keys %{$nodes{$node}};
-    net_write ("\n");
+    net_write (".\n");
 }
 
 sub has_access {
@@ -423,6 +422,9 @@ sub has_access {
 sub logger {
     my $text  = shift;
     my @date  = localtime (time);
+
+    chomp ($text);
+    $text =~ s/\n/\\n/g;
 
     printf STDERR ("%d/%02d/%02d-%02d:%02d:%02d [$$] %s\n", $date[5]+1900, $date[4]+1, 
 	    $date[3], $date[2], $date[1], $date[0], $text);
@@ -612,7 +614,22 @@ sub process_request {
       print_service (&run_service($1,"config"));
     } 
     elsif (/^starttls\s*$/i) {
-      start_tls ();
+      my $mode;
+      my $key;
+      my $cert;
+      $key = $cert = &get_var (\%sconf, "tls_pem");
+      $key = &get_var (\%sconf, "tls_private_key")
+	  unless defined $key;
+      $key = "@@CONFDIR@@/munin-node.key" unless defined $key;
+      $cert = &get_var (\%sconf, "tls_certificate")
+	  unless defined $cert;
+      $cert = "@@CONFDIR@@/munin-node.pem" unless defined $cert;
+      $mode = &get_var (\%sconf, 'tls');
+      $mode = "auto" unless defined $mode and length $mode;
+      start_tls ($mode, $cert, $key,
+	      &get_var (\%sconf, 'tls_verify_certificates'),
+	      &get_var (\%sconf, 'tls_verify_depth'),
+	      );
       logger ("DEBUG: Returned from starttls.") if $DEBUG;
     }
     else  {
@@ -625,7 +642,8 @@ sub net_read
 {
     if (defined $tls)
     {
-	eval { $_ = Net::SSLeay::read($tls); } 
+	eval { $_ = Net::SSLeay::read($tls); };
+	logger ("TLS Warning: " . &Net::SSLeay::print_errs());
     }
     else
     {
@@ -641,7 +659,8 @@ sub net_write
     logger ("DEBUG: > $text") if $DEBUG;
     if (defined $tls)
     {
-	eval { Net::SSLeay::write ($tls, $text); }
+	eval { Net::SSLeay::write ($tls, $text); };
+	logger ("TLS Warning: " . &Net::SSLeay::print_errs());
     }
     else
     {
@@ -649,22 +668,154 @@ sub net_write
     }
 }
 
-sub start_tls
+# sub start_tls
+# {
+#     $ctx = Net::SSLeay::CTX_new()     or die_now "CTX_new ($ctx) ($!)";
+#     $tls = Net::SSLeay::new($ctx)     or die_now "new ($tls) ($!)";
+#     Net::SSLeay::set_options($tls, &Net::SSLeay::OP_ALL)
+# 	and die_if_ssl_error("ssl set options");
+# 
+#     Net::SSLeay::use_RSAPrivateKey_file ($tls, '/etc/munin/munin.pem',
+#                                          &Net::SSLeay::FILETYPE_PEM);
+#     die_if_ssl_error("Fatal TLS error with private key.");
+#     Net::SSLeay::use_certificate_file ($tls, '/etc/munin/munin.pem',
+#                                        &Net::SSLeay::FILETYPE_PEM);
+#     die_if_ssl_error("Fatal TLS error with certificate.");
+# 
+#     print "200 TLS OK\n";
+# 
+#     open(TLSSTDIN, "<&".fileno(STDIN)) or die $!;
+#     open(TLSSTDOUT, "<&".fileno(STDIN)) or die $!;
+#     logger ("DEBUG: Encrypted filehandles (fileno = ".fileno(TLSSTDIN).", ".fileno(TLSSTDOUT).").") if $DEBUG;
+#     close (STDIN);
+#     close (STDOUT);
+#     Net::SSLeay::set_rfd($tls, fileno(TLSSTDIN));
+#     Net::SSLeay::set_wfd($tls, fileno(TLSSTDOUT));
+#     Net::SSLeay::accept($tls) and die_if_ssl_error("Fatal error in TLS accept.");
+#     logger ("Cipher `" . Net::SSLeay::get_cipher($tls) . "'\n");
+# }
+
+sub tls_verify_callback
 {
-    $ctx = Net::SSLeay::CTX_new()     or die_now "CTX_new ($ctx) ($!)";
-    $tls = Net::SSLeay::new($ctx)     or die_now "new ($tls) ($!)";
-    Net::SSLeay::set_options($tls, &Net::SSLeay::OP_ALL)
-	and die_if_ssl_error("ssl set options");
+    my ($ok, $subj_cert, $issuer_cert, $depth, 
+	    $errorcode, $arg, $chain) = @_;
 
-    Net::SSLeay::use_RSAPrivateKey_file ($tls, '/etc/munin/munin.pem',
-                                         &Net::SSLeay::FILETYPE_PEM);
-    die_if_ssl_error("Fatal TLS error with private key.");
-    Net::SSLeay::use_certificate_file ($tls, '/etc/munin/munin.pem',
-                                       &Net::SSLeay::FILETYPE_PEM);
-    die_if_ssl_error("Fatal TLS error with certificate.");
+    if ($ok)
+    {
+	$tls_verified = Net::SSLeay::X509_NAME_oneline($subj_cert);
+	logger ("TLS Notice: Verified certificate \"$tls_verified\" at depth $depth, chain \"$chain\".");
+    }
 
+    return 1; # accept
+}
+
+sub start_tls 
+{
+    my $tls_paranoia = shift;
+    my $tls_cert     = shift;
+    my $tls_priv     = shift;
+    my $tls_verify   = shift;
+    my $tls_vdepth   = shift;
+
+    my $ctx;
+
+    if ($tls_paranoia eq "disabled")
+    {
+	logger ("TLS Notice: Refusing TLS request from peer.");
+	return 0
+    }
+
+    logger("Enabling TLS.");
+    if (! eval "require Net::SSLeay;")
+    {
+	if ($tls_paranoia eq "auto")
+	{
+	    logger ("Notice: TLS requested by peer, but Net::SSLeay unavailable.");
+	    return 0;
+	}
+	else # tls really required
+	{
+	    logger ("Fatal: TLS enabled but Net::SSLeay unavailable.");
+	    exit 0;
+	}
+    }
+
+    # Tell the other side that we're able to talk TLS
     print "200 TLS OK\n";
 
+    # Init SSLeay
+    Net::SSLeay::load_error_strings();
+    Net::SSLeay::SSLeay_add_ssl_algorithms();
+    Net::SSLeay::randomize();
+    $ctx = Net::SSLeay::CTX_new();
+    if (!$ctx)
+    {
+	logger ("TLS Error: Could not create SSL_CTX: " . &Net::SSLeay::print_errs());
+	return 0;
+    }
+
+    # Tune a few things...
+    if (Net::SSLeay::CTX_set_options($ctx, &Net::SSLeay::OP_ALL))
+    {
+	logger ("TLS Error: Could not set SSL_CTX options: " . &Net::SSLeay::print_errs());
+	return 0;
+    }
+
+    # Create the local tls object
+    if (! ($tls = Net::SSLeay::new($ctx)))
+    {
+	logger ("TLS Error: Could not create TLS: " . &Net::SSLeay::print_errs());
+	return 0;
+    }
+    if ($DEBUG)
+    {
+	my $i = 0;
+	my $p = '';
+	my $cipher_list = 'Cipher list: ';
+	$p=Net::SSLeay::get_cipher_list($tls,$i);
+	$cipher_list .= $p if $p;
+	do {
+	    $i++;
+	    $cipher_list .= ', ' . $p if $p;
+	    $p=Net::SSLeay::get_cipher_list($tls,$i);
+	} while $p;
+        $cipher_list .= '\n';
+	logger ("TLS Notice: Available cipher list: $cipher_list.");
+    }
+
+    # Should we use a private key?
+    if (defined $tls_priv and length $tls_priv)
+    {
+	if (!Net::SSLeay::CTX_use_PrivateKey_file($ctx, $tls_priv, 
+		&Net::SSLeay::FILETYPE_PEM))
+	{
+	    logger ("TLS Notice: Problem occured when trying to read file with private key \"$tls_priv\": ".&Net::SSLeay::print_errs().". Continuing without private key.");
+	}
+    }
+
+    # How about a certificate?
+    if (defined $tls_cert and length $tls_cert)
+    {
+	if (!Net::SSLeay::CTX_use_certificate_file($ctx, $tls_cert, 
+		&Net::SSLeay::FILETYPE_PEM))
+	{
+	    logger ("TLS Notice: Problem occured when trying to read file with certificate \"$tls_cert\": ".&Net::SSLeay::print_errs().". Continuing without certificate.");
+	}
+    }
+
+    # Now let's define our requirements of the node
+    $tls_vdepth = 5 unless defined $tls_vdepth;
+    if (Net::SSLeay::CTX_set_verify_depth ($ctx, $tls_vdepth))
+    {
+	logger ("TLS Warning: Problem occured when setting verify depth to \"$tls_vdepth\": ".&Net::SSLeay::print_errs().". Continuing with default depth.");
+    }
+    if (!Net::SSLeay::CTX_set_verify ($ctx, 
+		&Net::SSLeay::VERIFY_PEER, &tls_verify_callback))
+    {
+	logger ("TLS Warning: Could not force client certificate verification: " . &Net::SSLeay::print_errs());
+    }
+
+    # Redirect stdout/stdin to the TLS
     open(TLSSTDIN, "<&".fileno(STDIN)) or die $!;
     open(TLSSTDOUT, "<&".fileno(STDIN)) or die $!;
     logger ("DEBUG: Encrypted filehandles (fileno = ".fileno(TLSSTDIN).", ".fileno(TLSSTDOUT).").") if $DEBUG;
@@ -672,8 +823,24 @@ sub start_tls
     close (STDOUT);
     Net::SSLeay::set_rfd($tls, fileno(TLSSTDIN));
     Net::SSLeay::set_wfd($tls, fileno(TLSSTDOUT));
-    Net::SSLeay::accept($tls) and die_if_ssl_error("Fatal error in TLS accept.");
-    logger ("Cipher `" . Net::SSLeay::get_cipher($tls) . "'\n");
+
+    # Try to negotiate the tls connection
+    my $res = Net::SSLeay::accept($tls);
+
+    if (not (defined $res and $res))
+    {
+	logger ("TLS Notice: TLS enabled.");
+	logger ("TLS Notice: Cipher `" . Net::SSLeay::get_cipher($tls) . "'.");
+	logger ("TLS Notice: client cert: " . Net::SSLeay::dump_peer_certificate($tls));
+
+    }
+    else
+    {
+	logger ("TLS Notice: TLS not enabled: " . &Net::SSLeay::print_errs());
+    }
+    &net_read (); # Slurp an empty line.
+
+    return $res;
 }
 
 sub get_uid
@@ -889,6 +1056,10 @@ sub get_var
     my $var     = shift;
     my $env     = shift;
 
+    if (!defined $var and defined $name)
+    {
+	return $sconf{$name};
+    }
     if ($var eq 'env' and !defined $env)
     {
 	%{$env} = ();

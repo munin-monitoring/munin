@@ -762,7 +762,6 @@ sub verify_tls {
 sub start_tls {
     my $socket       = shift;
     my $tls_paranoia = shift;
-    my $tls_pem      = shift;
     my $tls_cert     = shift;
     my $tls_priv     = shift;
     my $tls_verify   = shift;
@@ -774,7 +773,7 @@ sub start_tls {
     if (! eval "require Net::SSLeay;")
     {
 	logger ("Fatal: TLS enabled but Net::SSLeay unavailable.");
-	exit 0;
+	return 0;
     }
 
     # Init SSLeay
@@ -815,6 +814,21 @@ sub start_tls {
 	logger ("TLS Error: Could not create TLS: $!");
 	return 0;
     }
+    if ($DEBUG)
+    {
+	my $i = 0;
+	my $p = '';
+	my $cipher_list = 'Cipher list: ';
+	$p=Net::SSLeay::get_cipher_list($tls,$i);
+	$cipher_list .= $p if $p;
+	do {
+	    $i++;
+	    $cipher_list .= ', ' . $p if $p;
+	    $p=Net::SSLeay::get_cipher_list($tls,$i);
+	} while $p;
+        $cipher_list .= '\n';
+	logger ("TLS Notice: Available cipher list: $cipher_list.");
+    }
 
     # Should we use a private key?
     if (defined $tls_priv and length $tls_priv)
@@ -853,7 +867,7 @@ sub start_tls {
     if ($tls_paranoia eq "paranoid")
     {
 	if (!Net::SSLeay::CTX_set_verify ($ctx, 
-		    &Net::SSLeay::VERIFY_PEER, 0))
+		    &Net::SSLeay::SL_VERIFY_FAIL_IF_NO_PEER_CERT, 0))
 	{
 	    logger ("TLS Error: Could not force client certificate verification: $!");
 	    return 0;
@@ -873,6 +887,16 @@ sub start_tls {
 
     # Try to negotiate the tls connection
     my $res = Net::SSLeay::connect($tls);
+    if (defined $res and $res)
+    {
+	logger ("TLS Notice: TLS enabled.");
+	logger ("TLS Notice: Cipher `" . Net::SSLeay::get_cipher($tls) . "'.");
+	logger ("TLS Notice: client cert: " . Net::SSLeay::dump_peer_certificate($tls));
+    }
+    else
+    {
+	logger ("TLS Error: Could not enable TLS: " . &Net::SSLeay::print_errs());
+    }
 
     return $res;
 }
@@ -997,6 +1021,7 @@ sub config_node {
   my $nodeconf_time = Time::HiRes::time;
 
   my $tls_requirement = &munin_get ($config, "tls", "auto", $domain, $name);
+  logger ("TLS Debug: TLS set to \"$tls_requirement\".");
   if ($tls_requirement ne "disabled")
   {
       my $key;
