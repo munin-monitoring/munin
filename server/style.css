@@ -43,6 +43,21 @@ div.logo {
   border-collapse: collapse;
  }
 
+table.largeinvisiblebox {
+        border-width: thin;
+        border-top: 0px;
+        border-bottom: 0px;
+        border-left: 0px;
+        border-right: 0px;
+        border-color: #999;
+        border-style: solid;
+        padding: 0px 0px 0px 0px;
+	margin: 0px 0px 0px 0px;
+	white-space: nowrap;
+	max-width: 90%;
+        width: 80%;
+}
+
 table.invisiblebox {
         border-width: thin;
         border-top: 0px;
@@ -54,7 +69,7 @@ table.invisiblebox {
         padding: 0px 0px 0px 0px;
 	margin: 0px 0px 0px 0px;
 	white-space: nowrap;
-	max-width: 90%
+	max-width: 90%;
 }
 
 td.graphbox {
