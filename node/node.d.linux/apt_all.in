@@ -60,9 +60,25 @@ use strict;
 $ENV{'LANG'}="C";
 $ENV{'LC_ALL'}="C";
 
-my $statefile = "/var/lib/munin/plugin-state/plugin-apt.state";
-my @releases = ("testing","unstable");
+my $statefile = "@@PLUGSTATE@@/plugin-apt.state";
+my @releases = ("stable", "testing","unstable");
 
+
+sub print_state() {
+	if(-l $statefile) {
+		die("$statefile is a symbolic link, refusing to read it.");
+	}
+	if (! -e "$statefile") {
+	    update_state ();
+	}
+	if (! -e "$statefile") {
+	    die ("$statefile does not exist. Something wicked happened.");
+	}
+	open(STATE, "$statefile")
+		or die("Couldn't open state file $statefile for reading.");
+	print while <STATE>;
+	close STATE;
+}
 
 sub update_state() {
 	if(-l $statefile) {
@@ -70,7 +86,74 @@ sub update_state() {
 	}
 	open(STATE, ">$statefile")
 		or die("Couldn't open state file $statefile for writing.");
-	print STATE "Last update: " . localtime() . "\n";
+	foreach my $release (@releases) {
+	    my $apt="apt-get -u dist-upgrade --print-uris --yes -t $release |";
+	    open (APT, "$apt") or exit 22;
+
+	    my @pending = ();
+	    my $hold    = 0;
+	    my @remove  = ();
+	    my @install = ();
+
+	    while (<APT>)
+	    {
+		    if (/^The following packages will be REMOVED:/)
+		    {
+			    my $where = 0;
+			    while (<APT>)
+			    {
+				    last if (/^\S/);
+				    foreach my $package (split /\s+/)
+				    {
+					    next unless ($package =~ /\S/);
+					    push (@remove, "-$package");
+				    }
+			    }
+		    }
+		    if (/^The following NEW packages will be installed:/)
+		    {
+			    my $where = 0;
+			    while (<APT>)
+			    {
+				    last if (/^\S/);
+				    foreach my $package (split /\s+/)
+				    {
+					    next unless ($package =~ /\S/);
+					    push (@install, "+$package");
+				    }
+			    }
+		    }
+		    if (/^The following packages will be upgraded/)
+		    {
+			    my $where = 0;
+			    while (<APT>)
+			    {
+				    last if (/^\S/);
+				    foreach my $package (split /\s+/)
+				    {
+					    next unless ($package =~ /\S/);
+					    push (@pending, $package);
+				    }
+			    }
+		    }
+		    if (/^\d+\spackages upgraded,\s\d+\snewly installed, \d+ to remove and (\d+)  not upgraded/)
+		    {
+			    $hold = $1;
+		    }
+	    }
+
+	    push (@pending, @install) if @install;
+	    push (@pending, @remove ) if @remove;
+	    close APT;
+
+	    print STATE "pending_$release.value ", scalar (@pending), "\n";
+	    if (@pending)
+	    {
+		    print STATE "pending_$release.extinfo ", join (' ', @pending), "\n";
+	    }
+	    print STATE "hold_$release.value $hold\n";
+
+	}
 	close(STATE);
 }
 
@@ -140,75 +223,8 @@ if ($ARGV[0] and $ARGV[0] eq "update")
 	exit(0);
 }
 
+print_state ();
 
-foreach my $release (@releases) {
-    my $apt="apt-get -u dist-upgrade --print-uris --yes -t $release |";
-open (APT, "$apt") or exit 22;
-
-my @pending = ();
-my $hold    = 0;
-my @remove  = ();
-my @install = ();
-
-while (<APT>)
-{
-	if (/^The following packages will be REMOVED:/)
-	{
-		my $where = 0;
-		while (<APT>)
-		{
-			last if (/^\S/);
-			foreach my $package (split /\s+/)
-			{
-				next unless ($package =~ /\S/);
-				push (@remove, "-$package");
-			}
-		}
-	}
-	if (/^The following NEW packages will be installed:/)
-	{
-		my $where = 0;
-		while (<APT>)
-		{
-			last if (/^\S/);
-			foreach my $package (split /\s+/)
-			{
-				next unless ($package =~ /\S/);
-				push (@install, "+$package");
-			}
-		}
-	}
-	if (/^The following packages will be upgraded/)
-	{
-		my $where = 0;
-		while (<APT>)
-		{
-			last if (/^\S/);
-			foreach my $package (split /\s+/)
-			{
-				next unless ($package =~ /\S/);
-				push (@pending, $package);
-			}
-		}
-	}
-	if (/^\d+\spackages upgraded,\s\d+\snewly installed, \d+ to remove and (\d+)  not upgraded/)
-	{
-		$hold = $1;
-	}
-}
-
-push (@pending, @install) if @install;
-push (@pending, @remove ) if @remove;
-close APT;
-
-print "pending_$release.value ", scalar (@pending), "\n";
-if (@pending)
-{
-	print "pending_$release.extinfo ", join (' ', @pending), "\n";
-}
-print "hold_$release.value $hold\n";
-
-}
 exit 0;
 
 # vim:syntax=perl
