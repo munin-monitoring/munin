@@ -1,10 +1,4 @@
 #! /bin/sh
-#
-# $Log$
-# Revision 1.2  2004/02/06 18:49:58  lupe
-# Fixes for pkg_add compatibility.
-#
-#
 
 ask() {
     local question default answer
@@ -75,6 +69,16 @@ init_plugins() {
     echo "done."
 }
 
+newsyslog() {
+    if grep -q /var/log/munin-node.log /etc/newsyslog.conf; then
+	:
+    else
+	cat >> /etc/newsyslog.conf <<EOT
+/var/log/munin-node.log			644  7	   *	@T00  Z	/var/run/munin/munin-node.pid
+EOT
+    fi
+}
+
 
 ########################################################################
 
@@ -84,5 +88,6 @@ case $2 in
 	;;      
     POST-INSTALL)
 	init_plugins
+	newsyslog
 	;;      
 esac

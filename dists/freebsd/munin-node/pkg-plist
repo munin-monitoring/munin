@@ -2,11 +2,13 @@
 @unexec if cmp -s %D/etc/munin/munin-node.conf %D/etc/munin/munin-node.conf.sample; then rm -f %D/etc/munin/munin-node.conf; fi
 etc/munin/munin-node.conf.sample
 @unexec if cmp -s %D/etc/munin/plugin-conf.d/plugins.conf %D/etc/munin/plugin-conf.d/plugins.conf.sample; then rm -f %D/etc/munin/plugin-conf.d/plugins.conf; fi
+etc/munin/munin-node.conf.sample
 etc/munin/plugin-conf.d/plugins.conf.sample
 @unexec rm %D/etc/rc.d/munin-node.sh 2>/dev/null || true
 @unexec rm /etc/rc.d/munin_node 2>/dev/null || true
 sbin/munin-node
 sbin/munin-node-configure
+sbin/munin-node-configure-snmp
 sbin/munin-run
 %%DATADIR%%/plugins/acpi
 %%DATADIR%%/plugins/amavis
@@ -14,8 +16,13 @@ sbin/munin-run
 %%DATADIR%%/plugins/apache_processes
 %%DATADIR%%/plugins/apache_volume
 %%DATADIR%%/plugins/apc_envunit_
+%%DATADIR%%/plugins/apc_nis
 %%DATADIR%%/plugins/bind9
+%%DATADIR%%/plugins/courier_mta_mailqueue
+%%DATADIR%%/plugins/courier_mta_mailstats
+%%DATADIR%%/plugins/courier_mta_mailvolume
 %%DATADIR%%/plugins/cpu
+%%DATADIR%%/plugins/cupsys_pages
 %%DATADIR%%/plugins/df
 %%DATADIR%%/plugins/df_inode
 %%DATADIR%%/plugins/exim_mailqueue
@@ -23,11 +30,13 @@ sbin/munin-run
 %%DATADIR%%/plugins/folding@home
 %%DATADIR%%/plugins/hddtemp
 %%DATADIR%%/plugins/hddtemp2
+%%DATADIR%%/plugins/hddtempd
 %%DATADIR%%/plugins/if_
 %%DATADIR%%/plugins/if_errcoll_
 %%DATADIR%%/plugins/ipac-ng
 %%DATADIR%%/plugins/ircu
 %%DATADIR%%/plugins/load
+%%DATADIR%%/plugins/loggrep
 %%DATADIR%%/plugins/mailman
 %%DATADIR%%/plugins/memory
 %%DATADIR%%/plugins/multips
@@ -40,7 +49,10 @@ sbin/munin-run
 %%DATADIR%%/plugins/mysql_threads
 %%DATADIR%%/plugins/named
 %%DATADIR%%/plugins/netstat
+%%DATADIR%%/plugins/ntp_
+%%DATADIR%%/plugins/ntp_states
 %%DATADIR%%/plugins/open_files
+%%DATADIR%%/plugins/ping_
 %%DATADIR%%/plugins/plugins.history
 %%DATADIR%%/plugins/pm3users
 %%DATADIR%%/plugins/pop_stats
@@ -54,6 +66,7 @@ sbin/munin-run
 %%DATADIR%%/plugins/sendmail_mailqueue
 %%DATADIR%%/plugins/sendmail_mailstats
 %%DATADIR%%/plugins/sendmail_mailtraffic
+%%DATADIR%%/plugins/smart_
 %%DATADIR%%/plugins/snmp__df
 %%DATADIR%%/plugins/snmp__fc_if_
 %%DATADIR%%/plugins/snmp__fc_if_err_
@@ -61,6 +74,13 @@ sbin/munin-run
 %%DATADIR%%/plugins/snmp__if_err_
 %%DATADIR%%/plugins/snmp__load
 %%DATADIR%%/plugins/snmp__processes
+%%DATADIR%%/plugins/snmp__sensors_fsc_bx_fan
+%%DATADIR%%/plugins/snmp__sensors_fsc_bx_temp
+%%DATADIR%%/plugins/snmp__sensors_fsc_fan
+%%DATADIR%%/plugins/snmp__sensors_fsc_temp
+%%DATADIR%%/plugins/snmp__sensors_mbm_fan
+%%DATADIR%%/plugins/snmp__sensors_mbm_temp
+%%DATADIR%%/plugins/snmp__sensors_mbm_volt
 %%DATADIR%%/plugins/snmp__users
 %%DATADIR%%/plugins/spamstats
 %%DATADIR%%/plugins/squid_cache
@@ -70,9 +90,13 @@ sbin/munin-run
 %%DATADIR%%/plugins/surfboard
 %%DATADIR%%/plugins/swap
 %%DATADIR%%/plugins/sybase_space
+%%DATADIR%%/plugins/uptime
 %%DATADIR%%/plugins/vmstat
+@unexec rm -f /var/run/munin/munin-node.pid
+@unexec rmdir /var/run/munin 2>/dev/null || true
 @unexec rmdir %D/var/munin/plugin-state 2>/dev/null || true
 @unexec rmdir %D/var/munin 2>/dev/null || true
+@unexec rmdir %D/%%DATADIR%%/plugins 2>/dev/null || true
 @unexec rmdir %D/%%DATADIR%% 2>/dev/null || true
 @unexec rmdir %D/etc/munin/plugin-conf.d 2>/dev/null || true
 @unexec rmdir %D/etc/munin 2>/dev/null || true

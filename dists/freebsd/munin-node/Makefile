@@ -6,7 +6,7 @@
 #
 
 PORTNAME=	munin
-PORTVERSION=	1.0.4
+PORTVERSION=	1.1.7
 CATEGORIES=	sysutils perl5
 MASTER_SITES=	${MASTER_SITE_SOURCEFORGE}
 MASTER_SITE_SUBDIR=	munin
@@ -29,10 +29,9 @@ USE_GMAKE=	yes
 PATCH_STRIP=	-p1
 WRKSRC=		${WRKDIR}/${PORTNAME}-${PORTVERSION:S/.p/pre/}
 PKGMESSAGE=	${WRKDIR}/pkg-message
-ALL_TARGET=	DATADIR=${DATADIR} build build-man
-INSTALL_TARGET=	DATADIR=${DATADIR} install-node install-node-plugins
+ALL_TARGET=	DATADIR=${DATADIR} PERL=${PERL} build build-man
+INSTALL_TARGET=	DATADIR=${DATADIR} PERL=${PERL} install-node install-node-plugins
 MAKE_ENV=	LANG=C
-NOPRECIOUSMAKEVARS=yes
 
 MAN5=		munin-node.conf.5
 MAN8=		munin-node-configure.8 munin-node.8 munin-run.8
@@ -54,10 +53,10 @@ pre-install:
 post-install:
 	@${SED} 's@%PREFIX%@${LOCALBASE}@g' ${STARTSTOP_SRC} > ${STARTSTOP_DST}
 	@${CHMOD} +x ${STARTSTOP_DST}
-	${INSTALL_DATA} ${WRKSRC}/build/node/munin-node.conf ${PREFIX}/etc/munin/munin-node.conf.sample
-	${INSTALL_DATA} ${WRKSRC}/plugins.conf ${PREFIX}/etc/munin/plugin-conf.d/plugins.conf.sample
+	@${INSTALL_DATA} ${WRKSRC}/build/node/munin-node.conf ${PREFIX}/etc/munin/munin-node.conf.sample
+	@${INSTALL_DATA} files/plugins.conf ${PREFIX}/etc/munin/plugin-conf.d/plugins.conf.sample
 	@if [ ! -f ${PREFIX}/etc/munin/plugin-conf.d/plugins.conf ]; then \
-		${INSTALL_DATA} ${WRKSRC}/plugins.conf ${PREFIX}/etc/munin/plugin-conf.d/plugins.conf; \
+		${INSTALL_DATA} ${PREFIX}/etc/munin/plugin-conf.d/plugins.conf.sample ${PREFIX}/etc/munin/plugin-conf.d/plugins.conf; \
 	fi
 	@${CAT} ${PKGMESSAGE}
 	@${INSTALL_MAN} -C ${WRKSRC}/build/doc/munin-node.conf.5 ${PREFIX}/man/man5
