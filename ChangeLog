@@ -9,6 +9,7 @@ munin (1.1.0)
   * Added warning and critical statuses to the info table in the service view.
   * Added "info"-fields to linux/cpu and linux/load plugins, to demonstrate
     how it works.
+  * Linux/ip_ wildcard plugin contributed by Mathy Vanvoorden (SF#954851).
 
 munin (1.1.0)
 
