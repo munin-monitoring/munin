@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.42  2005/01/05 17:43:34  jimmyo
+# Main: Bugfix with graphs using both "graph_sums" and data aliases.
+#
 # Revision 1.41  2004/12/25 18:56:59  jimmyo
 # Allow dots in PNG paths (patch by Jacques Caruso).
 #
@@ -294,6 +297,9 @@ sub munin_draw_field {
     my $service = shift;
     my $field   = shift;
 
+    $field =~ s/=.*//;
+
+    print "DEBUG: munin_draw_field: Checking $service -> $field: " . &munin_get_bool_val ($node->{client}->{$service}->{$field.".graph"}, 1) . ".\n" if $DEBUG;;
     return 0 if (exists $node->{client}->{$service}->{$field.".skipdraw"});
     return (&munin_get_bool_val ($node->{client}->{$service}->{$field.".graph"}, 1));
 }

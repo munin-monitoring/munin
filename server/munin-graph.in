@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.49  2005/01/05 17:43:34  jimmyo
+# Main: Bugfix with graphs using both "graph_sums" and data aliases.
+#
 # Revision 1.48  2005/01/04 08:38:51  jimmyo
 # Fix bug which lead to some graphs failing with STACK error.
 #
@@ -709,9 +712,11 @@ sub single_value
     my $graphable = 0;
     if (!defined $node->{client}->{$service}->{"graphable"})
     {
-	foreach my $field (keys %{$node->{client}->{$service}})
+#	foreach my $field (keys %{$node->{client}->{$service}})
+	foreach my $field (&get_field_order ($node, $config, $domain, $host, $service))
 	{
-	    if ($field =~ /^([^\.]+)\.label/)
+	    print "DEBUG: single_value: Checking field \"$field\".\n" if $DEBUG;
+	    if ($field =~ /^([^\.]+)\.label/ or $field =~ /=/)
 	    {
 		$graphable++ if &munin_draw_field ($node, $service, $1);
 	    }
@@ -1158,7 +1163,7 @@ sub process_node {
 		{
 		    if ($rrd_sum[$index] =~ /^(--vertical-label|-v)$/)
 		    {
-			(my $label = $node->{client}->{$service}->{graph_vlabel}) =~ s/\$\{scale\}/$sumtimes{$time}[0]/g;
+			(my $label = $node->{client}->{$service}->{graph_vlabel}) =~ s/\$\{graph_period\}/$sumtimes{$time}[0]/g;
 			splice (@rrd_sum, $index, 2, ("--vertical-label", $label));
 			$index++;
 			$labelled++;
@@ -1171,7 +1176,7 @@ sub process_node {
 			push @defined, "x$fname";
 			my @replace;
 
-			if (defined ($node->{client}->{$service}->{$fname.".type"}) and $node->{client}->{$service}->{$fname.".type"} ne "GAUGE")
+			if (!defined ($node->{client}->{$service}->{$fname.".type"}) or $node->{client}->{$service}->{$fname.".type"} ne "GAUGE")
 			{
 			    if ($time eq "week")
 			    { # Every plot is half an hour. Add two plots and multiply, to get per hour

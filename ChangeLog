@@ -5,6 +5,7 @@ munin (work)
   * Main: Fix bug which lead to some graphs failing with STACK error.
   * Main: Added limit message option "strtrunc".
   * Main: "contacts" can now be set to "none".
+  * Main: Bugfix with graphs using both "graph_sums" and data aliases.
   * Plugins: generic/sendmail_mail{stats,traffic} updated.
   * Plugins: Made generic/samba more portable (fixes by Nicolas Stransky).
   * Plugins: Fixed typo in generic/loggrep breaking implicit labeling.
