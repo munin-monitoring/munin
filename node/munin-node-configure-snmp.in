@@ -29,7 +29,6 @@ my $do_error   = 0;
 
 my $newer      = undef;
 
-my @dplugins = ("if", "if_err", "fc_if", "fc_if_err", "df", "processes", "users", "load");
 my @plugins  = ();
 
 my %plugconf = ();
@@ -50,9 +49,12 @@ $do_error = 1 unless GetOptions (
 
 if (! @plugins)
 {
-	@plugins = @dplugins;
+	@plugins = &get_plugins ($libdir);
 }
+
 @plugins = split (/,/, join (',', @plugins));
+
+print "# DEBUG: Checking plugins: ", join (',', @plugins), "\n" if $debug;
 
 if ($do_error or $do_usage or !@ARGV)
 {
@@ -469,3 +471,63 @@ sub interfaces
 		print "snmp_${name}_if_$key\n";
 	}
 }
+
+sub get_plugins
+{
+	my $dir   = shift;
+	my @plugs = ();
+	my @plugins = ();
+
+	print "DEBUG: Opening \"$dir\" for reading...\n" if $debug;
+	opendir (DIR, $dir) or die "Could not open \"$dir\" for reading: $!";
+	@plugs = readdir (DIR);
+	closedir (DIR);
+
+	foreach my $plug (@plugs)
+	{
+		my $p = undef;
+		my $path = "$dir/$plug";
+		$path = readlink($path) and $path = $path =~ /^\// ? $path : "$dir/$path" while -l $path;
+		next unless -f $path;
+		next unless -x _;
+
+		next if $plug =~ /^\./;
+
+		$p->{'family'} = "contrib"; # Set default family...
+
+			print "DEBUG: Checking plugin: $plug..." if $debug;
+		if (! open (FILE, "$dir/$plug"))
+		{
+			warn "WARNING: Could not open file \"$dir/$plug\" for reading ($!). Skipping.";
+			next;
+		}
+		while (<FILE>)
+		{
+			chomp;
+			if (/#%#\s+family\s*=\s*(\S+)\s*$/)
+			{
+				$p->{'family'} = $1;
+				print "$1..." if $debug;
+			}
+			elsif (/#%#\s+capabilities\s*=\s*(.+)$/)
+			{
+				foreach my $cap (split (/\s+/, $1))
+				{
+					$p->{'capability'}->{$cap} = 1;
+					print "$cap..." if $debug;
+				}
+			}
+		}
+		close (FILE);
+		print "\n" if $debug;
+
+		if (defined $p->{'capability'}->{'snmpconf'})
+		{
+			$plug =~ s/^snmp__//;
+			$plug =~ s/_$//;
+			push (@plugins, $plug);
+		}
+	}
+	return @plugins;
+}
+
