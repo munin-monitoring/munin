@@ -24,7 +24,7 @@
 
   <table class="invisiblebox">
     <tr>
-	  <td colspan=2><hr class="ruler" /></td>
+	  <td colspan="2"><hr class="ruler" /></td>
 	</tr>
     <tr>
       <td><img src="<TMPL_VAR NAME="IMGDAY">" alt="daily graph" <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/></td>
@@ -65,7 +65,7 @@
 		      </tr>
 		    </TMPL_IF>
 		    <tr>
-		      <td align='left' valign='top'><span title="Internal field name (for use in munin.conf): <TMPL_VAR ESCAPE="HTML" NAME="FIELD">"><TMPL_VAR ESCAPE="HTML" NAME="LABEL"></a></td>
+		      <td align='left' valign='top'><span title="Internal field name (for use in munin.conf): <TMPL_VAR ESCAPE="HTML" NAME="FIELD">"><TMPL_VAR ESCAPE="HTML" NAME="LABEL"></span></td>
 		      <td align='center' valign='top'><TMPL_VAR NAME="TYPE"></td>
 		      <td align='center' valign='top'><TMPL_IF NAME="STATE_WARNING"><div class='warntext'></TMPL_IF><TMPL_VAR NAME="WARN"><TMPL_IF NAME="STATE_WARNING"></div></TMPL_IF></td>
 		      <td align='center' valign='top'><TMPL_IF NAME="STATE_CRITICAL"><div class='crittext'></TMPL_IF><TMPL_VAR NAME="CRIT"><TMPL_IF NAME="STATE_CRITICAL"></div></TMPL_IF></td>
@@ -78,7 +78,7 @@
   </TMPL_LOOP>
   <tr><td></td></tr>
   <tr>
-    <td colspan=2 class="linkbox">
+    <td colspan="2" class="linkbox">
       <TMPL_LOOP NAME="DOMAINS">
         <a href="../<TMPL_VAR NAME="DOMAIN">/index.html"><TMPL_VAR NAME="DOMAIN"></a> :
       </TMPL_LOOP>

@@ -18,6 +18,7 @@ munin (work)
 	  messages to whatever process/file that is needed.
 	* Removed the munin-nagios program, as it is no longer needed.
 	* Use column headers for min/max/cur/avg if label is too long.
+	* Minor template modifications, so the output HTML validates correctly.
 
   - Munin-node:
     * Added module Munin::Plugin::SNMP, a Net::SNMP sublcass for plugins.
