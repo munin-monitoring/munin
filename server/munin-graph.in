@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.39  2004/11/21 15:43:08  jimmyo
+# Copy info fields when using aliases.
+#
 # Revision 1.38  2004/11/21 14:39:23  jimmyo
 # Renamed function munin_get_val to munin_get.
 #
@@ -196,7 +199,7 @@ my @limit_hosts = ();
 my @limit_services = ();
 
 # Fields to copy when "aliasing" a field
-my @copy_fields    = ("label", "draw", "type", "rrdfile", "fieldname"); 
+my @copy_fields    = ("label", "draw", "type", "rrdfile", "fieldname", "info"); 
 
 # Force drawing of "graph no". 
 my $force_graphing = 0;
