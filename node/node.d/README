@@ -83,7 +83,9 @@ The rest of the requirements only apply if you want to submit your plugin
 (the extra gizmos are used when installing the package):
 
  * When called with the parameter "autoconf", should return 'yes' or 'no'
-   as to its own opinion of wether it should be run or not.
+   as to its own opinion of wether it should be run or not. The return value
+   should be set accordingly. (It's the return value that's used - the textual
+   result is only for "us humans". :-)
  
  * If it's a "wildcard-script", it should accept the parameter
    "suggest", which should list its probable uses.
@@ -112,23 +114,26 @@ The rest of the requirements only apply if you want to submit your plugin
 
       Perl-scripts which are "auto" cannot "use" any perl modules which are
       not part of a standard perl installation (like "strict"). Use "require"
-      in "eval"s to find out if the module is available, and give the 
-      appropriate "autoconf" result.
+      in "eval"s to find out if the module is available, and give the
+      appropriate "autoconf" result. 
+	  
+      The fields "min" and "max" must exist for data values of type DERIVE,
+      and "max" for data values of type COUNTER.
 
-      Installation/setup scripts should typically prompt the user for enabling
-      of the `auto' plugins.
-   
    - manual
      This denotes a plugin which is supported by the Munin developers, but
      requires significant amount of work from the user to make it work.
      The plugin should explain briefly what actions are required in comments
      near the top of the plugin itself. A good example of a manual plugin is
-     the apache_serverstatus-plugin, which requires the user to reconfigure
-     Apache to enable its mod_serverstatus feature.
+     the apache-plugins, which requires the user to reconfigure Apache to
+     enable its mod_serverstatus feature.
 
      Installation/setup scripts should typically not prompt the user for
      enabling these plugins, unless it has some method of helping the
      user through the labour needed to make it work properly.
+
+     The fields "min" and "max" must exist for data values of type DERIVE,
+     and "max" for data values of type COUNTER.
    
    - contrib
      Plugins which are not supported by the Munin developers, but are provided
@@ -149,5 +154,5 @@ The rest of the requirements only apply if you want to submit your plugin
     - suggest
       Plugin supports suggest parameter
    
-When you're done adding a new service, restart munin-node.
-Munin will pick it up in it's next sweep.
+When you're done adding a new service, restart munin-node. Munin will pick it
+up in it's next sweep.
