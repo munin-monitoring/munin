@@ -2,6 +2,9 @@
 # Nagios
 #
 # $Log$
+# Revision 1.8  2004/09/24 16:31:07  jimmyo
+# Bugfixes.
+#
 # Revision 1.7  2004/09/08 15:25:33  ilmari
 # Use @@PERL@@ in all perl shebang lines.
 #
@@ -119,7 +122,7 @@ sub process_domain {
 sub process_node {
   my ($domain,$name,$node) = @_;
   for my $client (keys %{$node->{client}}) {
-      logger ("processing node: $client") if $DEBUG;
+      logger ("processing service: $client") if $DEBUG;
       process_service($domain,$name,$client,$node->{client}->{$client});
   }
 }
@@ -129,10 +132,10 @@ sub process_service {
   my ($domain, $name,$clientname,$client) = @_;
   return unless $client;
   for my $service (keys %$client) {
-    logger ("processing service: $service") if $DEBUG;
     if ($service =~ /(^.*)\.label/) {
 	my $key = $1;
 	next unless ((exists $client->{"$key.warning"}) || ($client->{"$key.critical"}));
+	logger ("processing field: $key") if $DEBUG;
     	if (@limit_services and !grep (/^$service$/, @limit_services))
 	{
 		next;
@@ -142,37 +145,44 @@ sub process_service {
 	if (defined $client->{"$key.critical"} and 
 	    $client->{"$key.critical"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
 	{
-		$critical[0] = $1 if defined $1;
-		$critical[1] = $2 if defined $2;
+		$critical[0] = $1 if length $1;
+		$critical[1] = $2 if length $2;
+		logger ("processing critical: $domain -> $name -> $clientname -> $key -> $critical[0] : $critical[1]") if $DEBUG;
 	}
 	elsif (defined $client->{"$key.critical"} and
 	    $client->{"$key.critical"} =~ /^\s*([-\d]+)\s*$/)
 	{
 		$critical[1] = $1 if defined $1;
+		logger ("processing critical: $domain -> $name -> $clientname -> $key -> $critical[0] : $critical[1]") if $DEBUG;
 	}
 	elsif (defined $client->{"$key.critical"})
 	{
 	    @critical = (0, 0);
+	    logger ("processing critical: $domain -> $name -> $clientname -> $key -> $critical[0] : $critical[1]") if $DEBUG;
 	}
 	if (defined $client->{"$key.warning"} and 
 	    $client->{"$key.warning"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
 	{
-		$warning[0] = $1 if defined $1;
-		$warning[1] = $2 if defined $2;
+		$warning[0] = $1 if length $1;
+		$warning[1] = $2 if length $2;
+		logger ("processing warning: $domain -> $name -> $clientname -> $key -> $warning[0] : $warning[1]") if $DEBUG;
 	}
 	elsif (defined $client->{"$key.warning"} and
 	    $client->{"$key.warning"} =~ /^\s*([-\d]+)\s*$/)
 	{
 		$warning[1] = $1 if defined $1;
+		logger ("processing warning: $domain -> $name -> $clientname -> $key -> $warning[0] : $warning[1]") if $DEBUG;
 	}
 	elsif (defined $client->{"$key.warning"})
 	{
 	    @warning = (0, 0);
+	    logger ("processing warning: $domain -> $name -> $clientname -> $key -> $warning[0] : $warning[1]") if $DEBUG;
 	}
 	my $filename = "$config->{dbdir}/$domain/$name-$clientname-$key-".
 	    lc substr (($client->{"$key.type"}||"GAUGE"),0,1) . ".rrd";
 	my $value = sprintf "%.2f",&munin_fetch("$filename");
 	
+	logger ("value: $domain -> $name -> $clientname -> $key : $value") if $DEBUG;
 	if ((defined ($critical[0]) and $value < $critical[0]) or
 	    (defined ($critical[1]) and $value > $critical[1])) {
 	    $critical[0] ||= "";
@@ -183,7 +193,7 @@ sub process_service {
 		    $client->{"$key.extinfo"}:
 		    "Value is $value. Critical range ($critical[0]:$critical[1]) exceeded");
 	}
-	elsif ((defined ($warning[0]) and $value < $warning[0]) or
+	elsif ((defined ($warning[0]) and $value < $warning[0]) or 
 	       (defined ($warning[1]) and $value > $warning[1])) {
 	    	$warning[0] ||= "";
 	    	$warning[1] ||= "";
@@ -202,9 +212,9 @@ sub logger_open {
 
     if (!$log->opened)
     {
-	  unless (open ($log, ">>$dirname/munin-html.log"))
+	  unless (open ($log, ">>$dirname/munin-limits.log"))
 	  {
-		  print STDERR "Warning: Could not open log file \"$dirname/munin-html.log\" for writing: $!";
+		  print STDERR "Warning: Could not open log file \"$dirname/munin-limits.log\" for writing: $!";
 	  }
     }
 }
@@ -332,3 +342,4 @@ This program is released under the GNU General Public License
 
 =cut
 
+# vim: syntax=perl

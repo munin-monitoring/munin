@@ -17,6 +17,7 @@ munin (work)
     outgoing connections (from munin-update) should be used.
   * New wildcard plugin generic/ping_ to graph ping times.
   * Added "comparison" views, to view a whole hostgroup at once.
+  * Bugfix in munin-limits.
 
 munin (1.1.4)
 
