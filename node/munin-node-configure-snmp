@@ -21,7 +21,7 @@ my $session;
 my $error;
 my $response;
 
-my @plugins = ("if", "if_err", "df");
+my @plugins = ("if", "if_err", "fc_if", "fc_if_err", "df", "processes");
 
 
 my %plugconf = ();
