@@ -1,0 +1,95 @@
+#!/usr/bin/perl
+#
+# Plugin to monitor harddrive temperatures through SMART.
+#
+# client-conf.d/-options:
+#       
+#	smartctl	-- path to smartctl executable
+#	drives		-- List drives to monitor. E.g. "hda hdc".
+#	type_$dev	-- device type for one drive, e.g. 3ware,0
+#
+# $Log$
+# Revision 1.2  2005/01/25 21:01:21  jimmyo
+# Added plugin generic/hddtemp_smartctl, made by Lupe Christoph. Made it the default hddtemp plugin.
+#
+# Revision 1.1  2004/11/10 16:11:27  jimmyo
+# Added new plugin linux/hddtemp_smartctl, made by Peter Gervai (SF#1032727).
+#
+# Revision 1.0  2004/09/22 
+# New plugin: Peter Gervai <grin(*)grin.hu>
+#
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+use strict;
+
+my $smartctl = exists $ENV{smartctl} ? $ENV{smartctl} : undef;
+
+# If the envvar is not set, look for smartctl
+# first, try $PATH
+$smartctl = `which smartctl` unless $smartctl;
+chomp $smartctl;
+
+# Still not found? Check obvious places
+my @dirs, qw(/usr/bin /usr/sbin /usr/local/bin /usr/local/sbin);
+until ($smartctl or @dirs == 0) {
+  my $dir = shift @dirs;
+  my $path = $dir.'/smartctl';
+  $smartctl = $path if -x $path;
+}
+
+$ENV{LANG} = 'C';
+$ENV{LC_ALL} = 'C';
+my @drives;
+
+# Try to get a default set of drives
+if ($^O eq 'linux') {
+  # On Linux, we know how to enumerate ide drives.
+  # SCSI is not as easy
+  if (-d '/proc/ide') {
+    opendir(IDE, '/proc/ide');
+    @drives = grep /hd[a-z]/, readdir IDE;
+    closedir(IDE);
+  }
+} elsif ($^O eq 'solaris') {
+  @drives = map { s@.*/@@ } glob '/dev/rdsk/c?t?d?s2';
+}
+
+@drives = split ' ', $ENV{drives} if exists $ENV{drives};
+
+if (exists $ARGV[0]) {
+  if ($ARGV[0] eq 'autoconf') {
+    if ($smartctl and -x $smartctl) {
+      if (@drives) {
+        print "yes\n";
+        exit 0;
+      } else {
+        print "no (no drives known)\n";
+        exit 1;
+      }
+    } else {
+      print "no (smartctl not found)\n";
+      exit 1;
+    }
+  } elsif ($ARGV[0] eq 'config') {
+    print "graph_title HDD temperature\n";
+    print "graph_args --base 1000 -l 0\n";
+    print "graph_vlabel temp in °C\n";
+    print "graph_category sensors\n";
+    print "graph_info This graph shows the temperature in degrees Celsius of the hard drives in the machine.\n";
+    print "$_.label $_\n" foreach @drives;
+    exit 0;
+  }
+}
+
+foreach (@drives) {
+  my $cmd = $smartctl.' -A '.(exists $ENV{'type_'.$_} ? '-d '.$ENV{'type_'.$_}.' ' : '')."/dev/$_";
+  my $output = `$cmd`;
+  if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
+    print "$_.value $1\n";
+  } elsif ($output =~ /^(194 Temperature_Celsius.*)/m) {
+    my @F = split ' ', $1;
+    print "$_.value $F[9]\n";
+  }
+}
