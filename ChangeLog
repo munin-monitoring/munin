@@ -9,6 +9,7 @@ munin (work)
   * Added support for SNMP probing.
   * SNMP plugin "if" now accepts PPP interfaces as well as ethernet
     interfaces.
+  * SNMP plugin "df" now understands Windows SNMP daemon.
   
 munin (1.1.3)
 
