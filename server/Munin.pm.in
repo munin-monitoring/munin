@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.39  2004/12/22 20:13:30  jimmyo
+# Added option cgiurl_graph.
+#
 # Revision 1.38  2004/12/22 20:01:14  jimmyo
 # Optimised munin-cgi-graph a bit.
 #
@@ -254,9 +257,10 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"graph_noscale", "nsca", "nsca_server", "nsca_config", "extinfo", 
 	"fetch_data", "filename", "max_processes", "nagios", "info", 
 	"graph_info", "graph_category", "graph_strategy", "graph_width", 
-	"graph_height", "graph_sums", "local_address", "compare", "cgiurl",
+	"graph_height", "graph_sums", "local_address", "compare",
 	"text", "command", "contact", "contacts",  "max_messages", 
-	"always_send", "notify_alias", "line", "state", "graph_period"
+	"always_send", "notify_alias", "line", "state", "graph_period",
+	"cgiurl_graph", "cgiurl"
     );
 
 my %legal_expanded = map { $_ => 1 } @legal;
