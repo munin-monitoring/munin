@@ -8,10 +8,14 @@
 # ...will monitor eth0.
 #
 # Any devince found in /proc/net/dev can be monitored. Examples include
-# ipsec*, eth*, irda* and lo. Please note that vlans and aliases cannot
-# be monitored with this plugin.
+# ipsec*, eth*, irda* and lo. Please note that aliases cannot be
+# monitored with this plugin.
 #
 # $Log$
+# Revision 1.5  2004/11/12 20:08:01  ilmari
+# Fixed linux/if_(err_) braindamage affecting hosts with vlans or
+# multi-digit interface numbers.
+#
 # Revision 1.4  2004/09/26 22:28:42  jimmyo
 # Suggest wlan interfaces as well as eth interfaces.
 #
@@ -84,5 +88,11 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi;
 
-grep $INTERFACE /proc/net/dev | cut -f2 -d: | awk "{ print \"rcvd.value \" \$3 \"\ntrans.value \" \$11}"
-
+# Escape dots in the interface name (eg. vlans) before using it as a regex
+awk -v interface="$INTERFACE" \
+    'BEGIN { gsub(/\./, "\\.", interface) } \
+    $1 ~ "^" interface ":" {
+        split($0, a, /: */); $0 = a[2]; \
+        print "rcvd.value " $3 "\ntrans.value " $11 \
+    }' \
+    /proc/net/dev

@@ -48,6 +48,8 @@ munin (work)
     elegantly (SF#1052845).
   * Added new plugin linux/hddtemp_smartctl, made by Peter Gervai
     (SF#1032727).
+  * Fixed linux/if_(err_) braindamage affecting hosts with vlans or
+    multi-digit interface numbers.
 
 munin (1.1.4)
 
