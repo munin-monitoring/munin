@@ -18,6 +18,8 @@ munin (work)
   * Plugins: generic/mailman now handles regular mailman (Deb#297904).
   * Plugins: New contrib plugin generic/mbmon_ from Arne Schwabe.
   * Plugins: Made linux/df work properly with tmpfs and devmapper (Deb#298442).
+  * Plugins: Thanks to Stephen Gran, generic/exim_mailstats now graphs rejects
+    (Deb#295799).
 
 munin (1.2.0)
 
