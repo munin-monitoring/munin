@@ -2,6 +2,9 @@
 # Nagios
 #
 # $Log$
+# Revision 1.6  2004/06/08 15:30:34  jimmyo
+# The server programs now open the log file at an earlier point.
+#
 # Revision 1.5  2004/05/20 22:30:08  jimmyo
 # * Munin-limits added to distro.
 # * Breached limis now show up in overview and node view.
@@ -209,7 +212,7 @@ sub logger {
 
   if ($log->opened)
   {
-	  print $log "$now - $comment";
+	  print $log "$now - $comment\n";
   }
   else
   {
@@ -217,17 +220,17 @@ sub logger {
 	  {
 		  if (open ($log, ">>$config->{logdir}/munin-graph.log"))
 		  {
-			  print $log "$now - $comment";
+			  print $log "$now - $comment\n";
 		  }
 		  else
 		  {
 			  print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-graph.log\" for writing: $!";
-			  print STDERR "$now - $comment";
+			  print STDERR "$now - $comment\n";
 		  }
 	  }
 	  else
 	  {
-		  print STDERR "$now - $comment";
+		  print STDERR "$now - $comment\n";
 	  }
     }
 }
