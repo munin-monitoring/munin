@@ -21,7 +21,7 @@ tmpldir	@@CONFDIR@@/templates
 #
 # For those with Nagios, the following might come in handy. In addition,
 # the services must be defined in the Nagios server as well.
-#contact.nagios.command /usr/bin/send_nsca nagios.host.comm -c /etc/nsca.conf >/dev/null
+#contact.nagios.command /usr/bin/send_nsca nagios.host.comm -c /etc/nsca.conf
 
 # a simple host tree
 [@@HOSTNAME@@]
