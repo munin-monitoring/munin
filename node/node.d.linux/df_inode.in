@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.7  2005/02/16 22:48:56  jimmyo
+# linux/df* now ignores bind mounts.
+#
 # Revision 1.6  2004/12/09 20:27:45  jimmyo
 # Sort fields in df*-plugins alphabetically.
 #
@@ -48,7 +51,7 @@ fs() {
 }
 
 print_values() {
-	df -P -l -i -x none | sed 1d | grep -v "//" | awk '$5 ~ /[0-9]%/ {print}' | while read i; do
+	df -P -l -i -x none -x unknown | sed 1d | grep -v "//" | awk '$5 ~ /[0-9]%/ {print}' | while read i; do
 		if [ "`fs $i`" = "reiserfs" ] ; then continue ; fi
 		name=`echo $i | sed 's/[\/.]/_/g'| awk '{ print $1 ".value " }'`
 		echo -n "$name "
@@ -72,7 +75,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel %'
 	echo 'graph_category disk'
 	echo 'graph_info This graph shows the inode usage for the partitions of types that use inodes.'
-	df -P -l -i  -x none -T| sed 1d | grep -v "//" | sort | awk '$6 ~ /[0-9]%/ {print}' | awk "
+	df -P -l -i -x unknown  -x none -T| sed 1d | grep -v "//" | sort | awk '$6 ~ /[0-9]%/ {print}' | awk "
 		\$2 !~ /reiserfs/ {
                         dir=\$7
 			name=\$1; gsub(/[\/.]/, \"_\", name);
