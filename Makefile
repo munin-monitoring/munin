@@ -179,6 +179,20 @@ deb:
 	-ln -s dists/debian
 	fakeroot debian/rules binary
 
+rpm-pre:
+	@for file in `find dists/redhat/ -type f -name '*.in'`; do			\
+		destname=`echo $$file | sed 's/.in$$//'`;		\
+		echo Generating $$destname..;				\
+		sed -e 's|@@VERSION@@|$(VERSION)|g'			\
+		    $$file > $$destname;				\
+	done
+
+rpm: rpm-pre source_dist
+	(cd ..; rpm -tb munin_$(RELEASE).tar.gz)
+	
+rpm-src: rpm-pre source_dist
+	(cd ..; rpm -ts munin_$(RELEASE).tar.gz)
+
 clean:
 ifeq ($(MAKELEVEL),0)
 	-rm -f debian

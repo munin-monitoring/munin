@@ -1,5 +1,5 @@
 Name:      munin
-Version:   1.0.0pre3
+Version:   @@VERSION@@
 Release:   2
 Copyright: GPL
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
