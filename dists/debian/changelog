@@ -1,9 +1,10 @@
 munin (1.2.2-3) unstable; urgency=high
 
   * node/munin-node.in:
-      - Fix mis-merge of optional user patch, restoring per-plugin
+      - Fix mis-merge of the optional user patch, restoring per-plugin
         group setting. Thanks to Andras Korn for reporting and
         Robert Loomans for patch (Closes: #299589).
+  * Fix autoconf for the linux/nfs* plugins.
 
  -- Dagfinn Ilmari Mannsaker <ilmari@ilmari.org>  Wed, 16 Mar 2005 14:59:52 +0100
 
