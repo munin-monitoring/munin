@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.4.2.4  2005/02/03 13:28:50  lupe
+# correct field.info
+#
 # Revision 1.4.2.3  2005/01/28 16:24:22  lupe
 # Minor corrections
 #
@@ -90,7 +93,7 @@ if [ "$1" = "config" ]; then
 				print name \".label \" dir
 			else
 				printf (\"%s.label ...%s\n\", name, substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3))
-			print name \".info \" dir \" -> \" name
+			print name \".info \" dir \" -> \" \$1
 			print name \".warning 92\"
 			print name \".critical 98\"
 		}"
