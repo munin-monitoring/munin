@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.31  2004/11/19 22:09:48  jimmyo
+# Write out contact info to datafile correctly.
+#
 # Revision 1.30  2004/11/19 21:32:38  jimmyo
 # Added a --force option to munin-limits, to force sending absolutely all messages.
 #
@@ -605,6 +608,10 @@ sub munin_writeconfig_loop {
 	    if ($a eq "domain" or $a eq "node" or $a eq "client")
 	    {
 		&munin_writeconfig_loop ($data->{$a}, $fh, "$pre");
+	    }
+	    elsif ($a eq "contact" and $pre eq "")
+	    {
+		&munin_writeconfig_loop ($data->{$a}, $fh, "contact.");
 	    }
 	    else
 	    {
