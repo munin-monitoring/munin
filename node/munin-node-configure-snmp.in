@@ -17,13 +17,6 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 #
-# $Log$
-# Revision 1.9  2005/02/16 20:14:21  jimmyo
-# Added man page for munin-node-configure-snmp.
-#
-# Revision 1.8  2004/11/16 20:00:42  jimmyo
-# License cleanups.
-#
 
 use strict;
 use Net::SNMP;

@@ -15,30 +15,6 @@
 # controller(s) as raiddev_num (e.g. sda_0). Then you must specify the
 # type like this: type_sda_0 3ware,0.
 #
-# $Log$
-# Revision 1.6  2005/03/03 10:13:51  lupe
-# Add feature to specify additional arguments to smartctl
-#
-# Revision 1.5  2005/02/17 11:13:34  lupe
-# Support more than one drive on RAID controllers. Explain how to configure
-# them.
-#
-# Revision 1.4  2005/01/29 22:14:02  jimmyo
-# Make the plugin check all rdsks.
-#
-# Revision 1.3  2005/01/26 09:31:36  jimmyo
-# Added license note.
-#
-# Revision 1.2  2005/01/25 21:01:21  jimmyo
-# Added plugin generic/hddtemp_smartctl, made by Lupe Christoph. Made it the default hddtemp plugin.
-#
-# Revision 1.1  2004/11/10 16:11:27  jimmyo
-# Added new plugin linux/hddtemp_smartctl, made by Peter Gervai (SF#1032727).
-#
-# Revision 1.0  2004/09/22 
-# New plugin: Peter Gervai <grin(*)grin.hu>
-#
-#
 #%# family=auto
 #%# capabilities=autoconf
 #

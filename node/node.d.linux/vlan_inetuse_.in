@@ -24,37 +24,6 @@
 # mentioned above. (Both in and out-files must have such rules. Look at the
 # existing for examples.
 #
-# $Log$
-# Revision 1.7  2004/12/10 18:51:44  jimmyo
-# linux/apt* has been forced to LANG=C, to get predictable output.
-#
-# Revision 1.6  2004/12/10 10:47:49  jimmyo
-# Change name from ${scale} to ${graph_period}, to be more consistent.
-#
-# Revision 1.5  2004/12/09 22:12:56  jimmyo
-# Added "graph_period" option, to make "graph_sums" usable.
-#
-# Revision 1.4  2004/11/21 00:17:12  jimmyo
-# Changed a lot of plugins so they use DERIVE instead of COUNTER.
-#
-# Revision 1.3  2004/05/20 19:02:37  jimmyo
-# Set categories on a bunch of plugins
-#
-# Revision 1.2  2004/05/15 21:33:29  jimmyo
-# "Upped" som plugins from contrib/manual to manual or auto.
-#
-# Revision 1.1  2004/01/02 18:50:01  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.4  2003/11/07 22:12:50  jimmyo
-# Changed deprecated plugin options
-#
-# Revision 1.3  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
 #%# family=manual
 
 use strict;

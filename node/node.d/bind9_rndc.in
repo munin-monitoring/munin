@@ -20,14 +20,6 @@
 #			set to empty if the stats are updated otherwise
 #	querystats	location of the statistics file
 #
-# $Log$
-# Revision 1.5  2004/12/15 18:05:40  ilmari
-# - Don't use a state file (the statistics file is enough).
-# - Make rndc and statistics file location configurable.
-# - Linearize control flow.
-# - General style cleanup.
-#
-#
 #%# family=contrib
 
 use strict;

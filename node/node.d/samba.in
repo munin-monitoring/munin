@@ -2,38 +2,6 @@
 # 
 # Plugin to monitor the number of open files in the system.
 #
-# $Log$
-# Revision 1.8  2005/01/29 20:14:21  jimmyo
-# Made generic/samba more portable (fixes by Nicolas Stransky).
-#
-# Revision 1.7  2005/01/05 15:18:13  jimmyo
-# Made generic/samba more portable (fixes by Nicolas Stransky).
-#
-# Revision 1.6  2005/01/04 18:25:33  jimmyo
-# Made generic/samba more portable.
-#
-# Revision 1.5  2005/01/03 22:22:58  jimmyo
-# Plugins: Made generic/samba more portable.
-#
-# Revision 1.4  2004/12/22 21:21:18  jimmyo
-# Cleaned up generic/samba a bit (SF#1087961).
-#
-# Revision 1.3  2004/05/20 19:02:36  jimmyo
-# Set categories on a bunch of plugins
-#
-# Revision 1.2  2004/01/29 19:39:00  jimmyo
-# Generic plugins now use printf instead of echo -n, as this is more portable (SF#885564)
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.1  2003/11/24 10:01:53  jimmyo
-# New plugin by Finn-Arne Johansen
-#
-#
 # Parameters:
 # 	
 # 	config   (required)

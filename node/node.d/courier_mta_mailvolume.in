@@ -16,20 +16,6 @@
 # 	logdir       - Where to find logfiles
 #	logfile      - What file to read in logdir
 #
-# $Log$
-# Revision 1.4  2004/12/10 18:51:43  jimmyo
-# linux/apt* has been forced to LANG=C, to get predictable output.
-#
-# Revision 1.3  2004/12/10 10:47:47  jimmyo
-# Change name from ${scale} to ${graph_period}, to be more consistent.
-#
-# Revision 1.2  2004/12/09 22:12:54  jimmyo
-# Added "graph_period" option, to make "graph_sums" usable.
-#
-# Revision 1.1  2004/10/19 18:45:30  jimmyo
-# Added new plugins generic/courier_mta*, contributed by Rune N. Skillingstad.
-#
-#
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
 #

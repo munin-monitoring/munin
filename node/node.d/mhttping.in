@@ -29,11 +29,6 @@
 #
 # 6. Restart munin-node.
 #
-# $Log$
-# Revision 1.1  2004/12/09 20:42:19  jimmyo
-# Added plugin generic/mhttping by Greg Connor.
-#
-#
 
 use strict ;
 

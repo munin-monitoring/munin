@@ -19,12 +19,6 @@
 #       Net::Netmask
 #       HTTP::Date
 #       
-# $Log$
-# Revision 1.1  2004/12/10 13:16:19  jimmyo
-# Added plugin generic/dhcpd3, created by Rune N. Skillingstad.
-#
-#
-#
 # Magic markers (optinal - used by munin-config and some installation
 # scripts):
 #

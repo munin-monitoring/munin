@@ -30,14 +30,6 @@
 # 
 # 	None known (I'll regret saying that, I know)
 #
-# $Log$
-# Revision 1.1  2004/12/09 20:07:39  jimmyo
-# New version of generic/pm3users_ by plugin creator Jacques Caruso.
-#
-# Revision 1.1  2004/05/09 21:11:15  jimmyo
-# New plugin (pm3users) and a bunch of patches from Jacques Caruso.
-#
-#
 # Magic markers:
 #%# family=contrib
 #%# capabilities=

@@ -6,11 +6,6 @@
 #
 #   config   (required)
 #
-# $Log$
-# Revision 1.1  2004/11/10 15:34:18  jimmyo
-# Added new plugin generic/apc_nis to monitor APC UPS, contributed by xavier.
-#
-#
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
 #%# family=contrib

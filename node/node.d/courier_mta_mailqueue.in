@@ -15,11 +15,6 @@
 #
 #       spooldir     - Where to find mails in queue
 #
-# $Log$
-# Revision 1.1  2004/10/19 18:45:30  jimmyo
-# Added new plugins generic/courier_mta*, contributed by Rune N. Skillingstad.
-#
-#
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
 #

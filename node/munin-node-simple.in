@@ -23,29 +23,6 @@
 # reviewing by sysadmins that want to do simple munin-stuff in high
 # security environments.
 #
-# $Log$
-# Revision 1.3  2004/11/16 20:00:42  jimmyo
-# License cleanups.
-#
-# Revision 1.2  2004/01/15 15:20:01  jimmyo
-# Making things workable after name change. Upping for test verwion.
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:06  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.3  2003/11/24 10:15:56  jimmyo
-# Ready for 0.9.9 release
-#
-# Revision 1.2  2003/11/19 17:26:30  jimmyo
-# Now works with netcat
-#
-# Revision 1.1  2003/11/19 17:09:46  jimmyo
-# New mini-client. Not finished yet (only talks on stdout right now).
-#
-#
 
 use strict;
 

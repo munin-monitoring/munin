@@ -14,22 +14,6 @@
 #       mspqueue     - MSQ queue directory
 #       mtaqueue     - MTA queue directory
 #
-# $Log$
-# Revision 1.6  2005/02/16 19:06:11  jimmyo
-# generic/sendmail_mailqueue handles bigger queues (fix by Mickey Everts).
-#
-# Revision 1.5  2004/11/20 19:31:59  jimmyo
-# Fixed bug in generic/sendmail_mailqueue, when queue is empty.
-#
-# Revision 1.4  2004/05/20 19:02:36  jimmyo
-# Set categories on a bunch of plugins
-#
-# Revision 1.3  2004/05/14 21:16:46  jimmyo
-# "Upped" som plugins from contrib/manual to auto.
-#
-# Revision 1.2  2004/02/18 18:40:02  jimmyo
-# Added Log:
-#
 #%# family=auto
 #%# capabilities=autoconf
 

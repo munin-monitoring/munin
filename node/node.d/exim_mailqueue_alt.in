@@ -18,15 +18,6 @@
 #	queuewarn	- warning limit
 #	queuecrit	- critical limit
 #
-# $Log$
-# Revision 1.2  2005/03/17 19:18:36  ilmari
-# Only run 'exim -bpr' once in generic/exim_mailqueue_alt,
-# and use only awk to process the data.
-#
-# Revision 1.1  2004/12/09 20:03:26  jimmyo
-# Added two new plugins contributed by Jacques Caruso, generic/exim_mailqueue_alt and generic/mailscanner.
-#
-#
 # Magic markers:
 #%# family=contrib
 #%# capabilities=

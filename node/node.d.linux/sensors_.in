@@ -26,33 +26,6 @@
 # 	volt_warn_percent - Percentage over mininum/under maximum for warning
 # 	                    Narrow the voltage bracket by this.
 #
-# $Log$
-# Revision 1.10  2004/12/15 15:40:12  jimmyo
-# Fixed typo in graph_category.
-#
-# Revision 1.9  2004/11/23 17:08:25  ilmari
-# Fixed linux/sensors_ plugin to report warning and critical values for temperatures and voltages if sensors reports them.
-#
-# Revision 1.3.2.3  2004/08/18 17:27:15  jimmyo
-# Made linux/sensors_volt work with negative voltages (Deb#256734).
-#
-# Revision 1.3.2.2  2004/08/18 17:20:29  jimmyo
-# linux/sensors_temp now understand temp lines without hyst or max settings (Deb#256380).
-#
-# Revision 1.3.2.1  2004/08/18 17:01:01  jimmyo
-# Force LANG/LC_ALL=C in linux/sensors_ and generic/hddtemp2, to remove problems in parsing of sensors output (SF#972749, SF#972748, Deb#255312)
-#
-# Revision 1.3  2004/04/28 21:46:41  jimmyo
-# Sensors-* patch from SF#906868.
-#
-# Revision 1.2  2004/04/27 21:55:43  jimmyo
-# Patched temp-part of linux-pugin sensors_* with better regexp (Deb#245289).
-#
-# Revision 1.1  2004/02/05 16:47:02  jimmyo
-# Added new wildcard plugin linux/sensors_ that replaces the i2c plugins (SF#890952).
-#
-#
-#
 # Magic markers:
 #%# family=manual
 #%# capabilities=autoconf suggest

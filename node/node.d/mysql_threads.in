@@ -12,21 +12,6 @@
 #
 #	mysqlopts    - Options to pass to mysql
 #
-# $Log$
-# Revision 1.2  2004/05/20 13:57:12  jimmyo
-# Set categories to some of the plugins.
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.6  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
-#
-#
 #%# family=auto
 #%# capabilities=autoconf
 

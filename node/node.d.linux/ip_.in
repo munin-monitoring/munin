@@ -16,29 +16,6 @@
 #
 # This plugin is based on the if_ plugin.
 #
-#$Log$
-#Revision 1.7  2004/12/10 10:47:49  jimmyo
-#Change name from ${scale} to ${graph_period}, to be more consistent.
-#
-#Revision 1.6  2004/12/09 22:12:56  jimmyo
-#Added "graph_period" option, to make "graph_sums" usable.
-#
-#Revision 1.5  2004/11/21 00:17:12  jimmyo
-#Changed a lot of plugins so they use DERIVE instead of COUNTER.
-#
-#Revision 1.4  2004/09/10 23:06:30  jimmyo
-#Added accidentally deleted exit.
-#
-#Revision 1.3  2004/09/10 23:02:22  jimmyo
-#Plugin linux/ip_ now does more proper autoconfig/suggest.
-#
-#Revision 1.2  2004/05/20 13:57:12  jimmyo
-#Set categories to some of the plugins.
-#
-#Revision 1.1  2004/05/16 16:28:40  jimmyo
-#Linux/ip_ wildcard plugin contributed by Mathy Vanvoorden (SF#954851).
-#
-#
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
 #
