@@ -10,6 +10,8 @@ munin (work)
     critical state.
   * Munin-graph: Added 'graph_sources' option. This is (in effect) the same as
     graph_order, but with a default of 'graph no'.
+  * Applied patch from Matthieu Lochegnies to munin-graph, and fixed the
+    same problem elsewhere in the code (Deb#250982, SF#924561).
 
 munin (1.1.2)
 

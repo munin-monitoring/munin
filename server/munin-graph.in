@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.24  2004/08/18 15:32:20  jimmyo
+# Applied patch from Matthieu Lochegnies to munin-graph, and fixed the same problem elsewhere in the code (Deb#250982, SF#924561).
+#
 # Revision 1.23  2004/07/02 14:19:06  jimmyo
 #   * Munin-graph: Added 'graph_sources' option. This is (in effect) the same as
 #     graph_order, but with a default of 'graph no'.
@@ -896,9 +899,9 @@ sub process_node {
 
 		push (@rrd_negatives, ($node->{client}->{$service}->{$negfield.".draw"} || "LINE2") .
 		    ":ng$negfield" . 
-		    (defined $single_value and $single_value ? $single_colour : $COLOUR[$col_count-1%@COLOUR]));
+		    ((defined $single_value and $single_value) ? $single_colour : $COLOUR[$col_count-1%@COLOUR]));
 		push (@rrd_negatives, "HRULE:".$node->{client}->{$service}->{"$negfield.warn"}.
-		    (defined $single_value and $single_value ? "#ff0000" : $COLOUR[$col_count-1%@COLOUR]))
+		    ((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[$col_count-1%@COLOUR]))
 		    if $node->{client}->{$service}->{"$negfield.warn"};
 		# Special case - renamed field
 
