@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.5  2004/02/01 18:28:58  jimmyo
+# A perl 5.005_03 compatabilty problem, which slipped through to version pre2.
+#
 # Revision 1.4  2004/01/30 15:04:02  jimmyo
 # Code tidying in munin-graph (SF#884625).
 #
@@ -761,7 +764,8 @@ sub expand_cdef
 sub logger {
   my ($comment) = @_;
   my $now = strftime "%b %d %H:%M:%S", localtime;
-  printflush LOG "$now - $comment\n";
+  print LOG "$now - $comment\n";
+  flush LOG;
 }
 
 sub parse_path
