@@ -35,6 +35,8 @@ munin (1.2.0rc2-1) unstable; urgency=low
       - Plugin linux/iostat now ingores devices that have had no I/O operations
         whatsoever and thus are assumed to be unused, closes: #267195.
       - New plugin: linux/forks.  Closes: #225638.
+      - New plugin: linux/uptime.  Closes: #283622.
+      - New plugin: linux/irqstats.  Closes: #224990.
       - New plugin: generic/courier_. Closes: #291854.
       - New plugin: generic/perdition. Closes: #291855.
 
