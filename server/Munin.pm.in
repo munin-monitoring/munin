@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.6  2004/05/20 12:20:24  jimmyo
+# Added "graph_category" option, to categorise plugins.
+#
 # Revision 1.5  2004/05/16 11:27:39  jimmyo
 # Added warning and critical statuses to the info table in the service view.
 #
@@ -124,7 +127,8 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"special_sum", "stack", "sum", "address", "htaccess", "warn",
 	"use_default_name", "use_node_name", "port", "graph_noscale",
 	"nsca", "nsca_server", "nsca_config", "extinfo", "fetch_data",
-	"filename", "max_processes", "nagios", "info", "graph_info"
+	"filename", "max_processes", "nagios", "info", "graph_info", 
+	"graph_category"
     );
 
 

@@ -37,6 +37,32 @@ div.logo {
   border-width: 0px;
   border-collapse: collapse;
  }
+html>body .graphbox {
+        border-width: thin;
+        border-top: 1px;
+        border-bottom: 1px;
+        border-left: 1px;
+        border-right: 1px;
+        border-color: #999;
+        border-style: solid;
+        padding: 4px 4px 4px 4px;
+		margin: 2px 2px 2px 2px;
+		display: table;
+        text-align: left;
+}
+.graphbox {
+        border-width: thin;
+        border-top: 1px;
+        border-bottom: 1px;
+        border-left: 1px;
+        border-right: 1px;
+        border-color: #999;
+        border-style: solid;
+        padding: 4px 4px 4px 4px;
+		margin: 2px 2px 2px 2px;
+		white-space: nowrap;
+		width: 20px;
+}
 .box {
         border-width: thin;
         border-top: 1px;

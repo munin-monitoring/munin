@@ -14,6 +14,7 @@ munin (1.1.1)
   * Use "sed 1d" instead of "tail +2" in df plugins (patch by Olivier
     Delhomme).
   * Tuned cdef-code to make it work properly after clean-up.
+  * Added "graph_category" option, to categorise plugins.
 
 munin (1.1.0)
 

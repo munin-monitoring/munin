@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.11  2004/05/20 12:20:24  jimmyo
+# Added "graph_category" option, to categorise plugins.
+#
 # Revision 1.10  2004/05/16 16:58:41  jimmyo
 # Added a definition file (definitions.html) to the server distribution.
 #
@@ -182,6 +185,8 @@ for my $domain (@domainorder) {
 	$node{node}=$node;
 	$node{url}="$domain/$node.html";
 	my @services;
+	my @categories;
+	my %tmp_cats;
 	my @serviceorder;
 	if ($config->{domain}->{$domain}->{node}->{$node}->{service_order}) {
 	    @serviceorder = split / /, $config->{domain}->{$domain}->{node}->{$node}->{service_order};
@@ -196,9 +201,9 @@ for my $domain (@domainorder) {
 	    next unless (munin_get_bool ($config, "graph", 1, $domain, $node, $service));
 	    my @service;
 	    my %service;
-		my $fieldnum = 0;
-		my @graph_info;
-		my @field_info;
+	    my $fieldnum = 0;
+	    my @graph_info;
+	    my @field_info;
 	    $service{service}=$service;
 	    $service{label}=$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_title};
 	    $service{imgday}="$node-$service-day.png";
@@ -208,6 +213,7 @@ for my $domain (@domainorder) {
 	    $service{url}="$node-$service.html";
 	    $service{domain}="$domain";
 	    $service{node}=$node;
+	    $service{category}= $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_category} || "other";
 
         # Do "help" section
 		if (defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_info})
@@ -247,21 +253,31 @@ for my $domain (@domainorder) {
 
 	    push @services, \%service;
 	    push @service, \%service;
+	    push @{$tmp_cats{$service{'category'}}}, \%service;
 	    $servicetemplate->param(SERVICES => \@service,
 				    SERVICE => $service,
 				    NODE => $node,
 				    DOMAIN => $domain, 
-					DOMAINS => \@domainlist, 
-					TIMESTAMP => $timestamp);
+				    DOMAINS => \@domainlist, 
+				    TIMESTAMP => $timestamp);
 	    open (FILE, ">$config->{htmldir}/$domain/$node-$service.html") or die "Cannot open $config->{htmldir}/$domain/$node-$service.html";
 	    print FILE $servicetemplate->output;
 	    close FILE;
 	}
+	foreach my $key (keys %tmp_cats)
+	{
+	    my %tmp;
+	    print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
+	    $tmp{name} = ucfirst $key;
+	    $tmp{services} = \@{$tmp_cats{$key}};
+	    push @categories, \%tmp;
+	}
 	$nodetemplate->param(SERVICES => \@services,
 			     NODE => $node,
 			     DOMAIN => $domain,
-				 DOMAINS => \@domainlist, 
-				 TIMESTAMP => $timestamp);
+			     DOMAINS => \@domainlist, 
+			     TIMESTAMP => $timestamp,
+			     CATEGORIES => \@categories);
 	open (FILE, ">$config->{htmldir}/$domain/$node.html") or die "Cannot open $config->{htmldir}/$domain/$node.html";
  	print FILE $nodetemplate->output;
 	close FILE;
