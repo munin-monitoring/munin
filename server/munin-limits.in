@@ -1,5 +1,5 @@
 #!@@PERL@@
-#
+# -*- perl  -*-
 # Copyright (C) 2004 Jimmy Olsen
 #
 # This program is free software; you can redistribute it and/or
@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.21  2004/11/26 08:48:50  ilmari
+# Allow floating point values in warning/critical limits.
+#
 # Revision 1.20  2004/11/24 12:01:07  jimmyo
 # Bugfix in munin-limits (it didn't work properly).
 #
@@ -296,14 +299,14 @@ sub get_limits
     my @critical = (undef, undef);
     my @warning  = (undef, undef);
     if (defined $client->{"$key.critical"} and 
-	$client->{"$key.critical"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
+	$client->{"$key.critical"} =~ /^\s*([-+\d.]*):([-+\d.]*)\s*$/)
     {
 	$critical[0] = $1 if length $1;
 	$critical[1] = $2 if length $2;
 	logger ("processing critical: $domain -> $name -> $clientname -> $key -> $critical[0] : $critical[1]") if $DEBUG;
     }
     elsif (defined $client->{"$key.critical"} and
-	$client->{"$key.critical"} =~ /^\s*([-\d]+)\s*$/)
+	$client->{"$key.critical"} =~ /^\s*([-+\d.]+)\s*$/)
     {
 	$critical[1] = $1 if defined $1;
 	logger ("processing critical: $domain -> $name -> $clientname -> $key -> $critical[0] : $critical[1]") if $DEBUG;
@@ -314,14 +317,14 @@ sub get_limits
 	logger ("processing critical: $domain -> $name -> $clientname -> $key -> $critical[0] : $critical[1]") if $DEBUG;
     }
     if (defined $client->{"$key.warning"} and 
-	$client->{"$key.warning"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
+	$client->{"$key.warning"} =~ /^\s*([-+\d.]*):([-+\d.]*)\s*$/)
     {
 	$warning[0] = $1 if length $1;
 	$warning[1] = $2 if length $2;
 	logger ("processing warning: $domain -> $name -> $clientname -> $key -> $warning[0] : $warning[1]") if $DEBUG;
     }
     elsif (defined $client->{"$key.warning"} and
-	$client->{"$key.warning"} =~ /^\s*([-\d]+)\s*$/)
+	$client->{"$key.warning"} =~ /^\s*([-+\d.]+)\s*$/)
     {
 	$warning[1] = $1 if defined $1;
 	logger ("processing warning: $domain -> $name -> $clientname -> $key -> $warning[0] : $warning[1]") if $DEBUG;
