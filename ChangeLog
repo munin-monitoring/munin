@@ -8,6 +8,7 @@ munin (1.0.0pre4)
   * New plugin linux/iostat_ios to graph the number of I/O operations.
     Contributed by Per A. Buer.
   * Added user configuration for generic/postfix* (SF#895680).
+  * Fixed links in HTML templates (Deb#236792).
 
 munin (1.0.0pre3)
 
