@@ -4,7 +4,7 @@ use strict;
 use Net::SNMP;
 use Socket;
 
-my $DEBUG = 1;
+my $DEBUG = 0;
 
 my $config     = "../build/node/munin-node.conf";
 #my $config     = "/etc/munin/munin-node.conf";
@@ -21,7 +21,7 @@ my $session;
 my $error;
 my $response;
 
-my @plugins = ("if", "if_err", "fc_if", "fc_if_err", "df", "processes");
+my @plugins = ("if", "if_err", "fc_if", "fc_if_err", "df", "processes", "users", "load");
 
 
 my %plugconf = ();
@@ -43,10 +43,10 @@ while (my $addr = shift)
 	}   
 	$num = 32 - $num;
 	$num = 2 ** $num;
-	print "# Doing $addr / $num\n";
+	print "# Doing $addr / $num\n" if $DEBUG;
 	for (my $i = 0; $i < $num; $i++)
 	{
-		print "# Doing $addr -> $i...\n";
+		print "# Doing $addr -> $i...\n" if $DEBUG;
 		my $tmpaddr = $addr;
 		if ($tmpaddr =~ /(\d+)\.(\d+)\.(\d+)\.(\d+)/)
 		{
@@ -55,7 +55,7 @@ while (my $addr = shift)
 			$tmpaddr = gethostbyaddr (inet_aton (join ('.', @tmpaddr)), AF_INET);
 			$tmpaddr ||= join ('.', @tmpaddr);
 		}
-		print "# ($tmpaddr)\n";
+		print "# ($tmpaddr)\n" if $DEBUG;
 		do_host ("$tmpaddr", "public");
 	}
 }
@@ -132,15 +132,13 @@ sub snmp_autoconf_plugin
 		{
 			if ($req->[0] =~ /\.$/)
 			{
-				print "# Delaying testing of $req->[0], as we need the indexes first.\n";
+				print "# Delaying testing of $req->[0], as we need the indexes first.\n" if $DEBUG;
 				next;
 			}
-			print "# Testing $req->[0]\n";
 			my $snmp_val = snmp_get_single ($session, $req->[0]);
-			print "# Got $snmp_val...\n";
 			if (!defined $snmp_val or $snmp_val !~ /$req->[1]/)
 			{
-				print "# Nope. Duh.\n";
+				print "# Nope. Duh.\n" if $DEBUG;
 				return undef;
 			}
 		}
@@ -179,18 +177,16 @@ sub snmp_autoconf_plugin
 		{
 			if ($req->[0] !~ /\.$/)
 			{
-				print "# Already tested of $req->[0], before we got hold of the indexes.\n";
+				print "# Already tested of $req->[0], before we got hold of the indexes.\n" if $DEBUG;
 				next;
 			}
 			
 			foreach my $key (keys %$indexes)
 			{
-				print "# Testing $req->[0]$key\n";
 				my $snmp_val = snmp_get_single ($session, $req->[0] . $key);
-				print "# Got $snmp_val...\n";
 				if (!defined $snmp_val or $snmp_val !~ /$req->[1]/)
 				{
-					print "# Nope. Deleting $key from possible solutions.\n";
+					print "# Nope. Deleting $key from possible solutions.\n" if $DEBUG;
 					delete $indexes->{$key}; # Disable
 				}
 			}
@@ -218,11 +214,11 @@ sub fetch_plugin_config
 	}
 	else
 	{
-		print "# Skipping $plugname: Couldn't find plugin \"$libdir/$plugin\".\n";
+		print "# Skipping $plugname: Couldn't find plugin \"$libdir/$plugin\".\n" if $DEBUG;
 		return 0;
 	}
 
-	print "# SNMPconfing plugin \"$plugname\" ( $libdir/$plugin )\n";
+	print "# SNMPconfing plugin \"$plugname\" ( $libdir/$plugin )\n" if $DEBUG;
 
 	my $fork = open (PLUG, "-|");
 
@@ -305,12 +301,12 @@ sub snmp_get_index
 	{
 		if ($i == 0)
 		{
-			print "# Checking for $ret\n";
+			print "# Checking for $ret\n" if $DEBUG;
 			$response = $session->get_request($ret);
 		}
 		if ($i or !defined $response)
 		{
-			print "# Checking for sibling of $ret\n";
+			print "# Checking for sibling of $ret\n" if $DEBUG;
 			$response = $session->get_next_request($ret);
 		}
 		if (!$response)
@@ -319,7 +315,6 @@ sub snmp_get_index
 		}
 		my @keys = keys %$response;
 		$ret = $keys[0];
-		print "# Analyzing $ret\n";
 		last unless ($ret =~ /^$oid\d+$/);
 		print "# Index $i: ", join ('|', @keys), "\n" if $DEBUG;
 		$rhash->{$response->{$ret}} = 1;
