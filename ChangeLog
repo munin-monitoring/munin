@@ -2,6 +2,7 @@ munin (work)
 
   * Failsafe entry for @@PYTHON@@.
   * Bugfix in munin-limits (it didn't work properly).
+  * Added separate makefile target to take care of SNMP-only items.
 
 munin (1.1.5)
 
