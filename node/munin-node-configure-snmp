@@ -2,13 +2,17 @@
 
 use strict;
 use Net::SNMP;
+use Socket;
 
 my $DEBUG = 1;
 
-my $config     = "/etc/munin/munin-node.conf";
-my $servicedir = "/etc/munin/plugins";
-my $libdir     = "/usr/share/munin/plugins";
-my $bindir     = "/usr/sbin/";
+my $config     = "../build/node/munin-node.conf";
+#my $config     = "/etc/munin/munin-node.conf";
+#my $servicedir = "/etc/munin/plugins";
+my $servicedir = ".";
+my $libdir     = "../build/node/node.d/";
+#my $bindir     = "/usr/sbin/";
+my $bindir     = "../build/node/";
 
 my $sysName      = "1.3.6.1.2.1.1.5.0";
 my $name;
@@ -17,7 +21,7 @@ my $session;
 my $error;
 my $response;
 
-my @plugins = ("if");
+my @plugins = ("if", "df");
 
 
 my %plugconf = ();
@@ -28,7 +32,33 @@ foreach my $plugin (@plugins)
 	fetch_plugin_config ($plugin, \%plugconf);
 }
 
-do_host ("prisme.int.linpro.no", "public");
+
+while (my $addr = shift)
+{
+	my $num = 32;
+	if ($addr =~ /([^\/]+)\/(\d+)/)
+	{   
+		$num  = $2;
+		$addr = $1;
+	}   
+	$num = 32 - $num;
+	$num = 2 ** $num;
+	print "# Doing $addr / $num\n";
+	for (my $i = 0; $i < $num; $i++)
+	{
+		print "# Doing $addr -> $i...\n";
+		my $tmpaddr = $addr;
+		if ($tmpaddr =~ /(\d+)\.(\d+)\.(\d+)\.(\d+)/)
+		{
+			my @tmpaddr = split (/\./, $tmpaddr);
+			$tmpaddr[3] += $i;
+			$tmpaddr = gethostbyaddr (inet_aton (join ('.', @tmpaddr)), AF_INET);
+			$tmpaddr ||= join ('.', @tmpaddr);
+		}
+		print "# ($tmpaddr)\n";
+		do_host ("$tmpaddr", "public");
+	}
+}
 
 
 #interfaces ($name);
@@ -53,22 +83,34 @@ sub do_host
 
 	if (!defined ($session))
 	{
-		die "Croaking: $error";
+		print "# Dropping host \"$host\": $error" . "\n";
+		return 0;
 	}
 
 	if (!defined ($response = $session->get_request($sysName)))
 	{
-		die "Croaking: " . $session->error();
+		print "# Dropping host \"$host\": " . $session->error() . "\n";
+		return 0;
 	}
 	$name = $response->{$sysName};
 
 	foreach my $plugin (@plugins)
 	{
-		my @auto = snmp_autoconf_plugin ($plugin, \%plugconf, \%hostconf, $host);
+		my $auto = snmp_autoconf_plugin ($plugin, \%plugconf, \%hostconf, $host);
 
-		foreach my $id (@auto)
+		if (defined $auto)
 		{
-			print "ln -s $libdir/snmp__$plugin", "_ $servicedir/snmp_$host", "_$plugin", "_$id\n";
+			if ($plugconf{$plugin}->{wild})
+			{
+				foreach my $id (@{$auto})
+				{
+					print "ln -s $libdir/snmp__$plugin", "_ $servicedir/snmp_$host", "_$plugin", "_$id\n";
+				}
+			}
+			else
+			{
+				print "ln -s $libdir/snmp__$plugin", " $servicedir/snmp_$host", "_$plugin\n";
+			}
 		}
 	}
 }
@@ -99,7 +141,7 @@ sub snmp_autoconf_plugin
 			if (!defined $snmp_val or $snmp_val !~ /$req->[1]/)
 			{
 				print "# Nope. Duh.\n";
-				return 0;
+				return undef;
 			}
 		}
 	}
@@ -110,7 +152,7 @@ sub snmp_autoconf_plugin
 	if (defined $plugconf->{$plugname}->{num})
 	{
 		$num = snmp_get_single ($session, $plugconf->{$plugname}->{num});
-		return 0 if !defined $num;
+		return undef if !defined $num;
 	}
 	print "# Number of items to autoconf is $num...\n" if $DEBUG;
 
@@ -119,13 +161,15 @@ sub snmp_autoconf_plugin
 	if (defined $plugconf->{$plugname}->{ind})
 	{
 		$indexes = snmp_get_index ($plugconf->{$plugname}->{ind}, $num);
-		return 0 if !defined $indexes;
+		return undef if !defined $indexes;
 	}
 	else
 	{
 		$indexes->{0} = 1;
 	}
 	print "# Got indexes: ", join (',', keys (%{$indexes})), "\n" if $DEBUG;
+
+	return undef unless scalar keys %{$indexes};
 
     # Second round of requirements (now that we have the indexes)
 	if (defined $plugconf->{$plugname}->{req})
@@ -153,34 +197,44 @@ sub snmp_autoconf_plugin
 		}
 	}
 
-	return sort keys %$indexes;
+	my @tmparr = sort keys %$indexes;
+	return \@tmparr;
 }
 
 sub fetch_plugin_config
 {
 	my $plugname = shift;
 	my $plugconf = shift;
-	my $plugin   = "snmp__" . $plugname . "_";
+	my $plugin   = "snmp__" . $plugname;
 
-	if (! -x "$libdir/$plugin")
+	if (-x "$libdir/$plugin" . "_")
+	{
+		$plugin .= "_";
+		$plugconf->{$plugname}->{wild} = 1;
+	}
+	elsif (-x "$libdir/$plugin")
+	{
+		$plugconf->{$plugname}->{wild} = 0;
+	}
+	else
 	{
 		print "# Skipping $plugname: Couldn't find plugin \"$libdir/$plugin\".\n";
 		return 0;
 	}
 
-	print "SNMPconfing plugin \"$plugname\" ( $libdir/$plugin )\n";
+	print "# SNMPconfing plugin \"$plugname\" ( $libdir/$plugin )\n";
 
 	my $fork = open (PLUG, "-|");
 
 	if ($fork == -1)
 	{
-		die "ERROR: Unable to fork: $!";
+		die "# ERROR: Unable to fork: $!";
 	}
 	elsif ($fork == 0) # Child
 	{
 		close (STDERR);
 		open (STDERR, ">&STDOUT");
-		exec ("$bindir/munin-run", "--servicedir", $libdir, $plugin, "snmpconf");
+		exec ("$bindir/munin-run", "--config", $config, "--servicedir", $libdir, $plugin, "snmpconf");
 	}
 	else
 	{
