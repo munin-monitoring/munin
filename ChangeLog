@@ -1,4 +1,4 @@
-munin (work)
+munin (1.1.6)
 
   * Failsafe entry for @@PYTHON@@.
   * Bugfix in munin-limits (it didn't work properly).
