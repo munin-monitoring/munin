@@ -1,3 +1,7 @@
+munin (CVS)
+
+  * Node: Added support for optional "user" settings in node.
+
 munin (1.2.2)
 
   * Plugins: Correct history loss in linux/{df,df_inode}.

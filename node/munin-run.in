@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.12.2.1  2005/03/13 12:46:04  jimmyo
+# Added support for optional user settings in node.
+#
 # Revision 1.12  2004/12/22 21:33:48  jimmyo
 # Remove hardcoding of default user/group to run the plugin (SF#1083251).
 #
@@ -511,12 +514,29 @@ sub load_auth_file
 	}
 	elsif (/^\s*user\s+(\S+)\s*$/)
 	{
-	    my $tmpid = $1;
-	    $sconf->{$service}{'user'} = &get_uid ($tmpid);
-	    if (!defined $sconf->{$service}{'user'})
+	    my $optional = 0;
+		my $user = $1;
+
+	    if ($user =~ /^\(([^)]+)\)$/)
 	    {
-		warn "User \"$tmpid\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
+		$optional = 1;
+		$user = $1;
+	    }
+
+	    my $u = &get_uid ($user);
+	    if (!defined $u and !$optional)
+	    {
+		warn "User \"$user\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
 		return undef;
+	    }
+	    elsif (!defined $u and $optional)
+	    {
+		net_write ("DEBUG: Skipping \"$user\" (optional).\n") if $DEBUG;
+		next;
+	    }
+	    else
+	    {
+		$sconf->{$service}{'user'} = $u;
 	    }
 	}
 	elsif (/^\s*group\s+(.+)\s*$/)
