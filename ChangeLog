@@ -1,5 +1,7 @@
 munin (work)
 
+  * Packaging: Expand man-page macros properly on man-page generation 
+    (Deb#286399).
   * Plugin: Added plugin generic/dhcpd3, created by Rune N. Skillingstad.
   * Plugin: Patch generic/bind9 to report "unnamed" as "other" (Nicolas 
     Stransky).

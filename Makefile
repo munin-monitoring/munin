@@ -160,22 +160,22 @@ build-doc-stamp:
 
 build-man: build-man-stamp
 
-build-man-stamp:
+build-man-stamp: build
 	mkdir -p build/doc
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		node/munin-node.in > build/doc/munin-node.8
+		build/node/munin-node > build/doc/munin-node.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		node/munin-run.in > build/doc/munin-run.8
+		build/node/munin-run > build/doc/munin-run.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		node/munin-node-configure.in > build/doc/munin-node-configure.8
+		build/node/munin-node-configure > build/doc/munin-node-configure.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		server/munin-graph.in > build/doc/munin-graph.8
+		build/server/munin-graph > build/doc/munin-graph.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		server/munin-update.in > build/doc/munin-update.8
+		build/server/munin-update > build/doc/munin-update.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		server/munin-limits.in > build/doc/munin-limits.8
+		build/server/munin-limits > build/doc/munin-limits.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		server/munin-html.in > build/doc/munin-html.8
+		build/server/munin-html > build/doc/munin-html.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		server/munin-cron.pod > build/doc/munin-cron.8
 	pod2man  --section=5 --release=$(RELEASE) --center="Munin Documentation" \
