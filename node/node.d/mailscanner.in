@@ -23,6 +23,9 @@
 # 	None known
 #
 # $Log$
+# Revision 1.3  2005/02/16 19:51:18  jimmyo
+# Made contrib-plugins generic/amavis and generic/mailstats more secure.
+#
 # Revision 1.2  2005/02/16 19:47:11  jimmyo
 # Made contrib-plugins generic/amavis and generic/mailstats more secure.
 #
@@ -38,7 +41,7 @@ use strict;
 
 my $logfile = '/var/log/mail.log';
 my $logtail = '/usr/sbin/logtail';
-my $offsetfile = 'mktemp /tmp/lrrd-mailscanner.offset.XXXXXX';
+my $offsetfile = "@@PLUGSTATE@@/lrrd-mailscanner.offset";
 my ($clean, $viruses, $spams, $others, $total) = (0, 0, 0, 0, 0);
 my $cmd = (defined($ARGV[0])) ? $ARGV[0] : '';
 
