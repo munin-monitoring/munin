@@ -96,6 +96,8 @@ can contain the following options:
  <dt><code>command &lt;command&gt;</code><dd>Run command instad of plugin. "%c" will
  be expanded to what would otherwise have been run. E.g. "<code>command sudo
  -u root %c</code>".
+ <dt><code>allow &lt;regex&gt;</code><dd>Allow hosts matching regex to run this plugin.
+ <dt><code>deny &lt;regex&gt;</code><dd>Deny hosts matching regex from running this plugin.
  <dt><code>env.&lt;var&gt; &lt;contents&gt;</code><dd>Will cause the environment
  variable <code>var</code> to be set to <code>contents</code> when
  running the plugin.
