@@ -278,7 +278,7 @@ sub list_services {
     my $node = $_[0] || $FQDN;
     net_write (join " ", grep { &has_access ($_); } keys %{$nodes{$node}});
     #print join " ", keys %{$nodes{$node}};
-    net_write (".\n");
+    net_write ("\n");
 }
 
 sub has_access {
@@ -406,7 +406,7 @@ sub run_service {
 		my $gs = "$g $g" .
 			($sconf{$service}{'group'}?" $sconf{$service}{group}":"");
 
-		net_write ("# Want to run as euid/egid $u/$g\n") if $DEBUG;
+#		net_write ("# Want to run as euid/egid $u/$g\n") if $DEBUG;
 
 		$( = $g    unless $g == 0;
 		$) = $gs   unless $g == 0;
@@ -415,10 +415,10 @@ sub run_service {
 
 		if ($> != $u or $g != (split (' ', $)))[0])
 		{
-			net_write ("# Can't drop privileges. Bailing out. (wanted uid=",
-			    ($sconf{$service}{'user'} || $defuser), " gid=\"",
-			    $gs, "\"($g), got uid=$> gid=\"$)\"(", 
-			    (split (' ', $)))[0], ").\n");
+#			net_write ("# Can't drop privileges. Bailing out. (wanted uid=",
+#			    ($sconf{$service}{'user'} || $defuser), " gid=\"",
+#			    $gs, "\"($g), got uid=$> gid=\"$)\"(", 
+#			    (split (' ', $)))[0], ").\n");
 			logger ("Plugin \"$service\" Can't drop privileges. ".
 			    "Bailing out. (wanted uid=".
 			    ($sconf{$service}{'user'} || $defuser). " gid=\"".
@@ -427,10 +427,10 @@ sub run_service {
 			exit 1;
 		}
 	}
-	net_write ("# Running as uid/gid/euid/egid $</$(/$>/$)\n") if $DEBUG;
+#	net_write ("# Running as uid/gid/euid/egid $</$(/$>/$)\n") if $DEBUG;
 	if (!&check_perms ("$servicedir/$service"))
 	{
-	    net_write ("# Error: unsafe permissions. Bailing out.");
+#	    net_write ("# Error: unsafe permissions. Bailing out.");
 	    logger ("Error: unsafe permissions. Bailing out.");
 	    exit 2;
 	}
@@ -441,7 +441,7 @@ sub run_service {
 	{
 	    foreach my $key (keys %{$sconf{$service}{'env'}})
 	    {
-		net_write ("# Setting environment $key=$sconf{$service}{env}{$key}\n") if $DEBUG;
+#		net_write ("# Setting environment $key=$sconf{$service}{env}{$key}\n") if $DEBUG;
 		$ENV{"$key"} = $sconf{$service}{'env'}{$key};
 	    }
 	}
@@ -461,17 +461,17 @@ sub run_service {
 		}
 	    }
 	    print STDERR "# About to run \"", join (' ', @run), "\"\n" if $DEBUG;
-	    net_write ("# About to run \"", join (' ', @run), "\"\n") if $DEBUG;
+#	    net_write ("# About to run \"", join (' ', @run), "\"\n") if $DEBUG;
 	    exec (@run) if @run;
 	}
 	else
 	{
-	    net_write ("# Execing...\n") if $DEBUG;
+#	    net_write ("# Execing...\n") if $DEBUG;
 	    exec ("$servicedir/$service", $command);
 	}
       }
       else {
-	net_write ("# Unable to fork.\n");
+#	net_write ("# Unable to fork.\n");
 	logger ("Unable to fork.");
       }
     }
@@ -547,7 +547,7 @@ sub net_read
 	my $err = &Net::SSLeay::print_errs();
 	if (defined $err and length $err)
 	{
-	    logger ("TLS Warning: $err");
+	    logger ("TLS Warning in net_read: $err");
 	}
     }
     else
@@ -568,7 +568,7 @@ sub net_write
 	my $err = &Net::SSLeay::print_errs();
 	if (defined $err and length $err)
 	{
-	    logger ("TLS Warning: $err");
+	    logger ("TLS Warning in net_write: $err");
 	}
     }
     else
@@ -745,7 +745,6 @@ sub start_tls
 	logger ("TLS Notice: Cipher `" . Net::SSLeay::get_cipher($tls) . "'.");
 	logger ("TLS Notice: client cert: " . Net::SSLeay::dump_peer_certificate($tls));
     }
-    &net_read (); # Slurp an empty line.
 
     return $res;
 }
@@ -981,7 +980,7 @@ sub get_var
     {
 	(my $tmpservice = $wildservice) =~ s/\*$//;
 	next unless ($name =~ /^$tmpservice/);
-	net_write ("Checking $wildservice...\n") if $DEBUG;
+#	net_write ("# Checking $wildservice...\n") if $DEBUG;
 
 	if ($var eq 'env')
 	{

@@ -574,7 +574,7 @@ sub process_node {
 		    exit 1;
 		}
 		&fetch_node($domain,$name,$node,$socket);
-		Net::SSLeay::free ($tls) if ($tls); # Shut down TLS
+#		Net::SSLeay::free ($tls) if ($tls); # Shut down TLS
 		close $socket;
 	        alarm (0); # Don't want to interrupt this.
 	        socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
@@ -598,7 +598,7 @@ sub process_node {
       } else {
 		next unless (&config_node($domain,$name,$node,$oldnode,$socket));
 		&fetch_node($domain,$name,$node,$socket);
-		Net::SSLeay::free ($tls) if ($tls); # Shut down TLS
+#		Net::SSLeay::free ($tls) if ($tls); # Shut down TLS
 		close $socket;
       }
 
@@ -750,7 +750,7 @@ sub start_tls {
     {
 	logger ("TLS Error: Could not enable TLS: " . &Net::SSLeay::print_errs());
     }
-
+    read_socket_single(); # Get rid of empty line
     return $res;
 }
 
@@ -762,11 +762,13 @@ sub write_socket_single {
     eval {
 	local $SIG{ALRM} = sub { die "Could not run list on socket: $!\n"};
 	alarm 5;
-	if ($tls)
+	if (defined $tls and $tls)
 	{
-	    unless (Net::SSLeay::write($tls, $text))
+	    Net::SSLeay::write($tls, $text);
+	    my $err = &Net::SSLeay::print_errs();
+	    if (defined $err and length $err)
 	    {
-		logger ("Fatal: error during socket write: $!");
+		logger ("TLS Warning in write_socket_single: $err");
 		exit 9;
 	    }
 	}
@@ -792,6 +794,11 @@ sub read_socket_single {
       if ($tls)
       {
 	  $res = Net::SSLeay::read($tls);
+	  my $err = &Net::SSLeay::print_errs();
+	  if (defined $err and length $err)
+	  {
+	    logger ("TLS Warning in read_socket_single: $err");
+	  }
       }
       else
       {
@@ -822,8 +829,12 @@ sub read_socket {
       if ($tls)
       {
 	  while (defined ($_ = Net::SSLeay::read($tls))) {
+	    my $err = &Net::SSLeay::print_errs();
+	    if (defined $err and length $err)
+	    {
+	      logger ("TLS Warning in read_socket: $err");
+	    }
 	    chomp;
-	    Net::SSLeay::print_errs('SSL_read');
 	    last if (/^\.$/);
 	    push @array,$_;
 	  }
