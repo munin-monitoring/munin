@@ -12,6 +12,7 @@ munin (work)
     an rrdtool bug (Deb#296528).
   * Plugins: All plugins using logtail now properly detect its format
     (Deb#297628).
+  * Plugins: sunos/memory repaired (SF#1143610).
 
 munin (1.2.0)
 
