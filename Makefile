@@ -43,6 +43,7 @@ install-main: build
 	$(INSTALL) -m 0755 build/server/munin-nagios $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-html $(LIBDIR)/
+	$(INSTALL) -m 0755 build/server/munin-cgi-graph $(CGIDIR)/
 
 	$(INSTALL) -m 0644 build/server/Munin.pm $(PERLLIB)/
 
@@ -130,6 +131,7 @@ build-stamp:
 		    -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'			\
 		    -e 's|@@VERSION@@|$(VERSION)|g'			\
 		    -e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g'			\
+		    -e 's|@@CGIDIR@@|$(CGIDIR)|g'			\
 		    $$file > build/$$destname;				\
 	done
 	touch build-stamp

@@ -13,7 +13,8 @@ munin (work)
     special case checking when run from cron.
   * Added dist-directory for Solaris packages.
   * Created munin-cgi-graph, which creates dynamic graphs. 
-  * Added munin.conf option "output_graphs (cgi|cron)" which defaults to cron.
+  * Added munin.conf option "graph_strategy (cgi|cron)" which defaults to
+    cron.
   * Bugfix in cdef calculations.
 
 munin (1.1.1)

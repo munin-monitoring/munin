@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.12  2004/06/24 14:32:17  jimmyo
+# More work on output_graphs (renamed to graph_strategy, amongst others).
+#
 # Revision 1.11  2004/06/23 17:38:39  jimmyo
 # * Created munin-cgi-graph, which creates dynamic graphs.
 # * Added munin.conf option "output_graphs (cgi|cron)" which
@@ -149,7 +152,7 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"use_default_name", "use_node_name", "port", "graph_noscale",
 	"nsca", "nsca_server", "nsca_config", "extinfo", "fetch_data",
 	"filename", "max_processes", "nagios", "info", "graph_info", 
-	"graph_category", "output_graphs",
+	"graph_category", "graph_strategy",
     );
 
 

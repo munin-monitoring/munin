@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.18  2004/06/24 14:32:18  jimmyo
+# More work on output_graphs (renamed to graph_strategy, amongst others).
+#
 # Revision 1.17  2004/06/23 17:38:40  jimmyo
 # * Created munin-cgi-graph, which creates dynamic graphs.
 # * Added munin.conf option "output_graphs (cgi|cron)" which
@@ -231,7 +234,7 @@ for my $domain (@domainorder) {
 	    $service{service}=$service;
 	    $service{label}=$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_title};
 		
-		my $method = &munin_get_val ($config, "output_graphs", "cron");
+		my $method = &munin_get_val ($config, "graph_strategy", "cron");
 		if ($method eq "cgi")
 		{
 			$service{imgday}="/munin/dyn/munin-cgi-graph/$domain/$node-$service-day.png";
