@@ -22,6 +22,9 @@ munin (0+1.0.0pre1-1) unstable; urgency=low
         closes: #223346.
       - The iostat graph is now mirrored over the X axis, making it much
         easier to read, closes: #223373.
+      - Fix buggy HTML in the service view, closes: #230322.
+      - Limit the maximum values from the vmstat plugin to 500000, to avoid
+        spurious peaks to sneak in, closes: #225489.
 
   * debian/plugins.conf:
       - Run the Exim mailstats plugin as the group "adm", to ensure we can read
