@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.22  2005/01/24 17:25:37  jimmyo
+# Made TLS mode work.
+#
 # Revision 1.21  2005/01/10 20:48:58  jimmyo
 # Main/Node: Added support for TLS.
 #
@@ -363,16 +366,16 @@ FILES:
 sub print_service {
   my (@lines) = @_;
   for my $line (@lines) {
-    print "$line\n";
+    net_write ("$line\n");
   }
-  print ".\n";
+  net_write (".\n");
 }
 
 sub list_services {
     my $node = $_[0] || $FQDN;
-    print join " ", grep { &has_access ($_); } keys %{$nodes{$node}};
+    net_write (join " ", grep { &has_access ($_); } keys %{$nodes{$node}});
     #print join " ", keys %{$nodes{$node}};
-    print "\n";
+    net_write ("\n");
 }
 
 sub has_access {
@@ -418,7 +421,7 @@ sub logger {
     my $text  = shift;
     my @date  = localtime (time);
 
-    printf STDERR ("%d/%02d/%02d-%02d:%02d:%02d %s\n", $date[5]+1900, $date[4]+1, 
+    printf STDERR ("%d/%02d/%02d-%02d:%02d:%02d [$$] %s\n", $date[5]+1900, $date[4]+1, 
 	    $date[3], $date[2], $date[1], $date[0], $text);
 }
 
@@ -428,11 +431,11 @@ sub reap_children {
   return unless $child;
   if (kill (0, $child)) 
     { 
-      print ("# timeout pid $child - killing..."); 
+      net_write ("# timeout pid $child - killing..."); 
       logger ("Plugin timeout: $text (pid $child)");
       kill (-1, $child); sleep 2; 
       kill (-9, $child);
-      print ("done\n");
+      net_write ("done\n");
     } 
 }
 
@@ -497,7 +500,7 @@ sub run_service {
 		my $gs = "$g $g" .
 			($sconf{$service}{'group'}?" $sconf{$service}{group}":"");
 
-		print "# Want to run as euid/egid $u/$g\n" if $DEBUG;
+		net_write ("# Want to run as euid/egid $u/$g\n") if $DEBUG;
 
 		$( = $g    unless $g == 0;
 		$) = $gs   unless $g == 0;
@@ -506,10 +509,10 @@ sub run_service {
 
 		if ($> != $u or $g != (split (' ', $)))[0])
 		{
-			print "# Can't drop privileges. Bailing out. (wanted uid=",
+			net_write ("# Can't drop privileges. Bailing out. (wanted uid=",
 			    ($sconf{$service}{'user'} || $defuser), " gid=\"",
 			    $gs, "\"($g), got uid=$> gid=\"$)\"(", 
-			    (split (' ', $)))[0], ").\n";
+			    (split (' ', $)))[0], ").\n");
 			logger ("Plugin \"$service\" Can't drop privileges. ".
 			    "Bailing out. (wanted uid=".
 			    ($sconf{$service}{'user'} || $defuser). " gid=\"".
@@ -518,10 +521,10 @@ sub run_service {
 			exit 1;
 		}
 	}
-	print "# Running as uid/gid/euid/egid $</$(/$>/$)\n" if $DEBUG;
+	net_write ("# Running as uid/gid/euid/egid $</$(/$>/$)\n") if $DEBUG;
 	if (!&check_perms ("$servicedir/$service"))
 	{
-	    print "# Error: unsafe permissions. Bailing out.";
+	    net_write ("# Error: unsafe permissions. Bailing out.");
 	    logger ("Error: unsafe permissions. Bailing out.");
 	    exit 2;
 	}
@@ -532,7 +535,7 @@ sub run_service {
 	{
 	    foreach my $key (keys %{$sconf{$service}{'env'}})
 	    {
-		print "# Setting environment $key=$sconf{$service}{env}{$key}\n" if $DEBUG;
+		net_write ("# Setting environment $key=$sconf{$service}{env}{$key}\n") if $DEBUG;
 		$ENV{"$key"} = $sconf{$service}{'env'}{$key};
 	    }
 	}
@@ -552,17 +555,17 @@ sub run_service {
 		}
 	    }
 	    print STDERR "# About to run \"", join (' ', @run), "\"\n" if $DEBUG;
-	    print "# About to run \"", join (' ', @run), "\"\n" if $DEBUG;
+	    net_write ("# About to run \"", join (' ', @run), "\"\n") if $DEBUG;
 	    exec (@run) if @run;
 	}
 	else
 	{
-	    print "# Execing...\n" if $DEBUG;
+	    net_write ("# Execing...\n") if $DEBUG;
 	    exec ("$servicedir/$service", $command);
 	}
       }
       else {
-	print "# Unable to fork.\n";
+	net_write ("# Unable to fork.\n");
 	logger ("Unable to fork.");
       }
     }
@@ -570,7 +573,7 @@ sub run_service {
     alarm(0);
   }
   else {
-    print "# Unknown service\n";
+    net_write ("# Unknown service\n");
   }
   chomp @lines;
   return (@lines);
@@ -580,13 +583,14 @@ sub process_request {
   my $self = shift;
   $caddr = $self->{server}->{peeraddr};
   $0 .= " [$caddr]";
-  print "# munin node at $FQDN\n";
+  net_write ("# munin node at $FQDN\n");
   local $SIG{ALRM} = sub { logger ("Connection timed out."); die "timeout" };
   alarm($sconf{'timeout'});
-  while( <STDIN> ){
+  while (defined ($_ = net_read())) {
     alarm($sconf{'timeout'});
     chomp;
-    if (m/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
+    logger ("DEBUG: Running command \"$_\".") if $DEBUG;
+    if (/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
       &list_services($1);
     }
     elsif (/^quit/i || /^\./) {
@@ -606,11 +610,40 @@ sub process_request {
     } 
     elsif (/^starttls\s*$/i) {
       start_tls ();
+      logger ("DEBUG: Returned from starttls.") if $DEBUG;
     }
     else  {
-      print "# Unknown command. Try list, nodes, config, fetch, version or quit\n";
+      net_write ("# Unknown command. Try list, nodes, config, fetch, version or quit\n");
     }
   }
+}
+
+sub net_read
+{
+    if (defined $tls)
+    {
+	eval { $_ = Net::SSLeay::read($tls); } 
+    }
+    else
+    {
+	$_ = <STDIN>;
+    }
+    logger ("DEBUG: < $_") if $DEBUG;
+    return $_;
+}
+
+sub net_write
+{
+    my $text = shift;
+    logger ("DEBUG: > $text") if $DEBUG;
+    if (defined $tls)
+    {
+	eval { Net::SSLeay::write ($tls, $text); }
+    }
+    else
+    {
+	print STDOUT $text;
+    }
 }
 
 sub start_tls
@@ -619,10 +652,6 @@ sub start_tls
     $tls = Net::SSLeay::new($ctx)     or die_now "new ($tls) ($!)";
     Net::SSLeay::set_options($tls, &Net::SSLeay::OP_ALL)
 	and die_if_ssl_error("ssl set options");
-
-
-    Net::SSLeay::set_rfd($tls, fileno(STDIN));
-    Net::SSLeay::set_wfd($tls, fileno(STDOUT));
 
     Net::SSLeay::use_RSAPrivateKey_file ($tls, '/etc/munin/munin.pem',
                                          &Net::SSLeay::FILETYPE_PEM);
@@ -633,43 +662,15 @@ sub start_tls
 
     print "200 TLS OK\n";
 
+    open(TLSSTDIN, "<&".fileno(STDIN)) or die $!;
+    open(TLSSTDOUT, "<&".fileno(STDIN)) or die $!;
+    logger ("DEBUG: Encrypted filehandles (fileno = ".fileno(TLSSTDIN).", ".fileno(TLSSTDOUT).").") if $DEBUG;
+    close (STDIN);
+    close (STDOUT);
+    Net::SSLeay::set_rfd($tls, fileno(TLSSTDIN));
+    Net::SSLeay::set_wfd($tls, fileno(TLSSTDOUT));
     Net::SSLeay::accept($tls) and die_if_ssl_error("Fatal error in TLS accept.");
     logger ("Cipher `" . Net::SSLeay::get_cipher($tls) . "'\n");
-
-    my $pid  = open (STDIN , "-|");
-    if (!defined $pid)
-    {
-	logger ("Fatal: Unable to fork: $!");
-	exit 8;
-    }
-    if (!$pid)
-    {
-	$0 .= " [TLS decrypt]";
-	while (my $got = Net::SSLeay::read($tls))
-	{
-	    print $got;
-	}
-	die_if_ssl_error("Fatal: ssl read failiure.");
-	Net::SSLeay::free ($tls); # Tear down connection
-	exit 0;
-    }
-    $pid  = open (STDIN , "-|");
-    if (!defined $pid)
-    {
-	logger ("Fatal: Unable to fork: $!");
-	exit 8;
-    }
-    if (!$pid)
-    {
-	$0 .= " [TLS encrypt]";
-	while (<>)
-	{
-	    Net::SSLeay::write ($tls, uc ($_));
-	    die_if_ssl_error("Fatal: ssl write failiure.");
-	}
-	exit 0;
-    }
-
 }
 
 sub get_uid
@@ -720,7 +721,7 @@ sub load_auth_file
 	s/#.*$//;
 	next unless /\S/;
 	s/\s+$//g;
-	print "DEBUG: Config: $service: $_\n" if $DEBUG;
+	net_write ("DEBUG: Config: $service: $_\n") if $DEBUG;
 	if (/^\s*\[([^\]]+)\]\s*$/)
 	{
 	    $service = $1;
@@ -729,7 +730,7 @@ sub load_auth_file
 	{
 	    my $tmpid = $1;
 	    $sconf->{$service}{'user'} = &get_uid ($tmpid);
-	    print "DEBUG: Config: $service->uid = ", $sconf->{$service}{'user'}, "\n" if $DEBUG;
+	    net_write ("DEBUG: Config: $service->uid = ", $sconf->{$service}{'user'}, "\n") if $DEBUG;
 	    if (!defined $sconf->{$service}{'user'})
 	    {
 		warn "User \"$tmpid\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
@@ -750,7 +751,7 @@ sub load_auth_file
 		}
 
 		my $g = &get_gid ($group);
-		print "DEBUG: Config: $service->gid = ", $sconf->{$service}{'group'}, "\n" 
+		net_write ("DEBUG: Config: $service->gid = ". $sconf->{$service}{'group'}. "\n")
 			if $DEBUG and defined $sconf->{$service}{'group'};
 		if (!defined $g and !$optional)
 		{
@@ -759,7 +760,7 @@ sub load_auth_file
 		}
 		elsif (!defined $g and $optional)
 		{
-		    print "DEBUG: Skipping \"$group\" (optional).\n" if $DEBUG;
+		    net_write ("DEBUG: Skipping \"$group\" (optional).\n") if $DEBUG;
 		    next;
 		}
 		if (!defined $sconf->{$service}{'group'})
@@ -783,7 +784,7 @@ sub load_auth_file
 	elsif (/^\s*timeout\s+(\d+)\s*$/)
 	{
 	    $sconf->{$service}{'timeout'} = $1;
-	    print "DEBUG: $service: setting timeout to $1\n"
+	    net_write ("DEBUG: $service: setting timeout to $1\n")
 		if $DEBUG;
 	}
 	elsif (/^\s*(allow)\s+(.+)\s*$/ or /^\s*(deny)\s+(.+)\s*$/)
@@ -794,18 +795,18 @@ sub load_auth_file
 	elsif (/^\s*env\s+([^=\s]+)\s*=\s*(.+)$/)
 	{
 	    $sconf->{$service}{'env'}{$1} = $2;
-	    print "Saving $service->env->$1 = $2...\n" if $DEBUG;
+	    net_write ("Saving $service->env->$1 = $2...\n") if $DEBUG;
 	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"env $1=$2\" should be rewritten to \"env.$1 $2\").";
 	}
 	elsif (/^\s*env\.(\S+)\s+(.+)$/)
 	{
 	    $sconf->{$service}{'env'}{$1} = $2;
-	    print "Saving $service->env->$1 = $2...\n" if $DEBUG;
+	    net_write ("Saving $service->env->$1 = $2...\n") if $DEBUG;
 	}
 	elsif (/^\s*(\w+)\s+(.+)$/)
 	{
 	    $sconf->{$service}{'env'}{"lrrd_$1"} = $2;
-	    print "Saving $service->env->lrrd_$1 = $2...\n" if $DEBUG;
+	    net_write ("Saving $service->env->lrrd_$1 = $2...\n") if $DEBUG;
 	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"$1 $2\" should be rewritten to \"env lrrd_$1=$2\").";
 	}
 	elsif (/\S/)
@@ -899,7 +900,7 @@ sub get_var
     {
 	(my $tmpservice = $wildservice) =~ s/\*$//;
 	next unless ($name =~ /^$tmpservice/);
-	print "Checking $wildservice...\n" if $DEBUG;
+	net_write ("Checking $wildservice...\n") if $DEBUG;
 
 	if ($var eq 'env')
 	{
@@ -910,7 +911,7 @@ sub get_var
 		    if (! exists $sconf->{$name}{'env'}{$key})
 		    {
 			$sconf->{$name}{'env'}{$key} = $sconf->{$wildservice}{'env'}{$key};
-			print "Saving $wildservice->$key\n" if $DEBUG;
+			net_write ("Saving $wildservice->$key\n") if $DEBUG;
 		    }
 		}
 	    }

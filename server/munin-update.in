@@ -23,6 +23,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.30  2005/01/24 17:25:39  jimmyo
+# Made TLS mode work.
+#
 # Revision 1.29  2005/01/10 20:48:58  jimmyo
 # Main/Node: Added support for TLS.
 #
@@ -569,7 +572,7 @@ sub process_domain {
   for my $key ( keys %{$config->{domain}->{$domain}->{node}}) {
     if (@limit_hosts and !grep (/^$key$/, @limit_hosts))
     {
-	print "Skipping host \"$key\" - not in hostlist\n" if $DEBUG;
+	logger ("Skipping host \"$key\" - not in hostlist\n") if $DEBUG;
 	next;
     }
     if (defined $config->{max_processes} and $config->{max_processes} and 
@@ -765,7 +768,7 @@ sub start_tls {
 
     if (! ($tls = Net::SSLeay::new($ctx)))
     {
-	logger ("Fatal: Could not create SSL: $!");
+	logger ("Fatal: Could not create TLS: $!");
 	exit 14;
     }
     Net::SSLeay::set_fd($tls, fileno($socket));
@@ -777,10 +780,10 @@ sub write_socket_single {
     my $socket = shift;
     my $text   = shift;
     my $timed_out = 0;
-    logger ("DEBUG: Writing to socket: \"$text\".");
+    logger ("DEBUG: Writing to socket: \"$text\".") if $DEBUG;
     eval {
 	local $SIG{ALRM} = sub { die "Could not run list on socket: $!\n"};
-	alarm 5; # Should be enough to check the list
+	alarm 5;
 	if ($tls)
 	{
 	    unless (Net::SSLeay::write($tls, $text))
@@ -788,6 +791,7 @@ sub write_socket_single {
 		logger ("Fatal: error during socket write: $!");
 		exit 9;
 	    }
+	    Net::SSLeay::print_errs('SSL_write');
 	}
 	else
 	{
@@ -795,7 +799,6 @@ sub write_socket_single {
 	}
 	alarm 0;
     };
-    logger ("DEBUG: done: \"$text\".");
     return 1;
 }
 
@@ -811,7 +814,8 @@ sub read_socket_single {
       alarm( $timeout );
       if ($tls)
       {
-	  $res = Net::SSLeay::ssl_read_all($tls);
+	  $res = Net::SSLeay::read($tls);
+	  Net::SSLeay::print_errs('SSL_read');
       }
       else
       {
@@ -825,6 +829,7 @@ sub read_socket_single {
 	logger ("Socket read timed out: $@\n");
 	return undef;
     }
+    logger ("DEBUG: Reading from socket: \"$res\".") if $DEBUG;
     return $res;
 }
 
@@ -840,8 +845,9 @@ sub read_socket {
       alarm( $timeout );
       if ($tls)
       {
-	  while ($_ = Net::SSLeay::read($tls)) {
+	  while (defined ($_ = Net::SSLeay::read($tls))) {
 	    chomp;
+	    Net::SSLeay::print_errs('SSL_read');
 	    last if (/^\.$/);
 	    push @array,$_;
 	  }
@@ -861,6 +867,7 @@ sub read_socket {
 	logger ("Socket read timed out: $@\n");
 	return undef;
     }
+    logger ("DEBUG: Reading from socket: \"".(join ("|",@array))."\".") if $DEBUG;
     return (@array);
 }
 
@@ -1096,6 +1103,7 @@ sub logger {
   if ($log->opened)
   {
 	  print $log "$now - $comment\n";
+	  $log->flush;
   }
   else
   {
@@ -1104,6 +1112,7 @@ sub logger {
 		  if (open ($log, ">>$config->{logdir}/munin-update.log"))
 		  {
 			  print $log "$now - $comment\n";
+			  $log->flush;
 		  }
 		  else
 		  {
