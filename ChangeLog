@@ -17,6 +17,7 @@ munin (work)
   * Plugins: Made linux/if_ work with more versions of iwlist (SF#1150954).
   * Plugins: generic/mailman now handles regular mailman (Deb#297904).
   * Plugins: New contrib plugin generic/mbmon_ from Arne Schwabe.
+  * Plugins: Made linux/df work properly with tmpfs and devmapper (Deb#298442).
 
 munin (1.2.0)
 
