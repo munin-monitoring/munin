@@ -1,4 +1,4 @@
-munin (work)
+munin (1.1.3)
 
   * Applied patch from Jacques Caruso to make HTML output standards
     compliant.
@@ -12,6 +12,8 @@ munin (work)
     graph_order, but with a default of 'graph no'.
   * Applied patch from Matthieu Lochegnies to munin-graph, and fixed the
     same problem elsewhere in the code (Deb#250982, SF#924561).
+  * Force LANG=C in plugin/hddtemp2, to remove problems in parsing of hddtemp
+    output (Deb#253497).
 
 munin (1.1.2)
 
