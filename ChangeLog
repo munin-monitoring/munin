@@ -16,6 +16,8 @@ munin (1.0.0pre2)
     (SF#882131)
   * Made plugins apache_* compatible with older versions of LWP::UserAgent
     (SF#881411).
+  * Bugfix in plugin mysql_queries - insertions were no longer graphed.
+    (SF#881483).
 
 munin (1.0.0pre1)
 
