@@ -16,6 +16,7 @@ munin (work)
   * Plugin: Patched sunos/cpu to work on Solaris 9 (SF#1077899).
   * Plugin: Major improvements to sunos/io_ops,bytes,busy, by Lupe Christoph
     (SF#1077898).
+  * Plugin: Portability enhancementes to sunos/fs_df (SF#1077903).
 
 munin (1.1.7)
 
