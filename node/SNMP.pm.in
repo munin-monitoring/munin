@@ -62,7 +62,7 @@ The community name. Default public.
 
 =item version
 
-The SNMP version to use for the connection. Default 2c.
+The SNMP version to use for the connection. Default auto.
 
 =back
 
@@ -73,7 +73,7 @@ sub session {
     my $host      = $ENV{host}      || undef;
     my $port      = $ENV{port}      || 161;
     my $community = $ENV{community} || 'public';
-    my $version   = $ENV{version}   || '2c';
+    my $version   = $ENV{version}   || undef;
 
     if ($0 =~ /^(?:.*\/)?snmp_([^_]+)_/) {
 	$host = $1;
@@ -89,7 +89,7 @@ sub session {
     return $class->SUPER::session(-hostname  => $host,
 				  -community => $community,
 				  -port      => $port,
-				  -version   => $version);
+				  ($version ? (-version => $version) : ()));
 }
 
 =head2 get_hash() - retrieve a table as a hash of hashes
