@@ -20,6 +20,9 @@
 # Revision 0.1  2004/02/24 Andrew Radke
 #
 # $Log$
+# Revision 1.6  2004/08/18 17:51:05  jimmyo
+# Made generic/hddtemp2 understand environment variables with quotes (Deb#265022).
+#
 # Revision 1.5  2004/08/18 17:01:37  jimmyo
 # Force LANG/LC_ALL=C in linux/sensors_ and generic/hddtemp2, to remove problems in parsing of sensors output (SF#972749, SF#972748, Deb#255312)
 #
@@ -56,6 +59,7 @@ my %config = (
 
 my @disks = (glob("/dev/hd?"), glob("/dev/sd?"));
 if (exists $ENV{ignore}) {
+  $ENV{ignore} =~ s/["']//g;
   my %ignore = map {$_ => 1} split(' ', $ENV{ignore});
   @disks = grep {! exists $ignore{$_} } @disks;
 }
