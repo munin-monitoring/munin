@@ -15,6 +15,9 @@
 #       mtaqueue     - MTA queue directory
 #
 # $Log$
+# Revision 1.5  2004/11/20 19:31:59  jimmyo
+# Fixed bug in generic/sendmail_mailqueue, when queue is empty.
+#
 # Revision 1.4  2004/05/20 19:02:36  jimmyo
 # Set categories on a bunch of plugins
 #
@@ -52,6 +55,6 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-mspmails=`ls ${MSP_QUEUE}/[qQ]* | wc -l`
-mtamails=`ls ${MTA_QUEUE}/[qQ]* | wc -l`
+mspmails=`ls ${MSP_QUEUE}/[qQ]* 2>/dev/null | wc -l`
+mtamails=`ls ${MTA_QUEUE}/[qQ]* 2>/dev/null | wc -l`
 echo "mails.value `expr ${mspmails} + ${mtamails}`"
