@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.5.2.1  2005/02/16 22:50:14  jimmyo
+# linux/df* now ignores bind mounts.
+#
 # Revision 1.5  2004/12/09 20:27:45  jimmyo
 # Sort fields in df*-plugins alphabetically.
 #
@@ -51,7 +54,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel %'
 	echo 'graph_category disk'
 	echo 'graph_info This graph shows disk usage on the machine.'
-	df -T -P -l -x none | sed 1d | grep -v "//" | sort | while read i; do
+	df -T -P -l -x none -x unknown | sed 1d | grep -v "//" | sort | while read i; do
 		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 }'`
 		echo -n "$name.label "
 		echo $i | awk "{ 
@@ -68,7 +71,7 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-df -P -l  -x none| sed 1d | grep -v "//" | while read i; do
+df -P -l -x unknown  -x none| sed 1d | grep -v "//" | while read i; do
 	name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 ".value " }'`
 	echo -n "$name "
 	echo $i | awk '{ print $5 }' | cut -f1 -d%

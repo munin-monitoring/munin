@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.20.2.1  2005/02/16 17:12:03  jimmyo
+# munin-node didn't treat default_plugin_user properly (Deb#295366).
+#
 # Revision 1.20  2004/12/22 21:33:48  jimmyo
 # Remove hardcoding of default user/group to run the plugin (SF#1083251).
 #
@@ -217,7 +220,7 @@ while (<FILE>) {
   elsif (($1 eq "default_plugin_user" or $1 eq "default_client_user") and $2)
   {
       my $tmpid = $2;
-      my $defuser = &get_uid ($tmpid);
+      $defuser = &get_uid ($tmpid);
       if (! defined ($defuser))
       {
 	  die "Default user defined in \"$conffile\" does not exist ($tmpid)";

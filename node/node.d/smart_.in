@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!@@PYTHON@@
 # -*- encoding: iso-8859-1 -*-
 #
 # Wildcard-plugin to monitor S.M.A.R.T attribute values through smartctl,
@@ -45,6 +45,7 @@
 #                 - Additional smartctl args can be passed through "smartargs" environment variable
 # v1.7 29/11/2004 - Add suggest capabilities for NetBSD, OpenBSD, FreeBSD and SunOS.
 #                 - Allow to override completely the smartctl arguments with "smartargs"
+# v1.8 16/02/2005 - Exit status field now only triggers warnings, not criitcals.
 #
 # Copyright (c) 2004 Nicolas Stransky.
 #
@@ -171,7 +172,7 @@ def print_config(hard_drive,smart_values) :
     print('smartctl_exit_status.label smartctl_exit_status')
     print('smartctl_exit_status.draw LINE2')
     # Following line can be commented out. Only useful for warning reports about S.M.A.R.T values
-    print('smartctl_exit_status.critical '+smart_values_state['smartctl_exit_status']["threshold"])
+    print('smartctl_exit_status.warning '+smart_values_state['smartctl_exit_status']["threshold"])
 
 def get_hard_drive_name() :
     try :
