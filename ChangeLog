@@ -32,6 +32,7 @@ munin (1.0.0pre4)
   * Modified sunos/cpu and linux/cpu to take "scaleto100"-parameter.
   * Added patch to contrib-plugin linux/nfsd, to graph rpc count (Alexandre
     Dupouy).
+  * Added plugin linux/nfs_client, contributed by Alexandre Dupouy.
 
 munin (1.0.0pre3)
 
