@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.8  2004/11/20 00:07:19  jimmyo
+# Handle execution problems better.
+#
 # Revision 1.7  2004/11/16 20:00:42  jimmyo
 # License cleanups.
 #
@@ -407,7 +410,10 @@ sub run_service {
     }
     else
     {
-	exec ("$servicedir/$service", $command);
+	if (!exec ("$servicedir/$service", $command))
+	{
+	    print "no (could not execute plugin)\n"; exit 1;
+	}
     }
   } else {
     print "# Unknown service\n";
