@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.22  2004/10/22 16:35:32  jimmyo
+# Don't read on a closed filehandle.
+#
 # Revision 1.21  2004/10/22 14:51:05  jimmyo
 # Minor bugfix.
 #
@@ -688,6 +691,9 @@ sub read_socket_single {
     my( $socket ) = @_;
     my $timed_out=0;
     my $res;
+
+    return undef unless defined $socket;
+
     eval {
       local $SIG{ALRM} = sub { $timed_out=1; close $socket; die "$!\n"};
       alarm( $timeout );
@@ -708,6 +714,9 @@ sub read_socket {
     my ($socket) = @_;
     my @array;
     my $timed_out=0;
+
+    return undef unless defined $socket;
+
     eval {
       local $SIG{ALRM} = sub { $timed_out=1; close $socket; die "$!\n"};
       alarm( $timeout );
