@@ -1,3 +1,7 @@
+munin (work)
+
+  * Plugin: Added plugin generic/dhcpd3, created by Rune N. Skillingstad.
+
 munin (1.1.8)
 
   * Munin-limits: Log less noise.
