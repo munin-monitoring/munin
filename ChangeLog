@@ -62,7 +62,11 @@ munin (work)
       multi-digit interface numbers.
     * Added wildcard plugin generic/smart_, contributed by Nicolas Stransky.
     * Added plugin generic/loggrep for generic log grepping.
-	* Fixed bug in generic/sendmail_mailqueue, when queue is empty.
+    * Fixed bug in generic/sendmail_mailqueue, when queue is empty.
+
+  - Installation
+    * Changed variable name of ARCH to OSTYPE, to avoid name crash on newer
+      FreeBSDs (SF#1068238).
 
 munin (1.1.4)
 

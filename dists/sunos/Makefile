@@ -11,13 +11,13 @@ VERSION	 = $(shell cat ../../RELEASE)
 DIST     = ../../../$(PKGNAME)_$(VERSION).tar.gz
 #BUILD    = $(PKGNAME)-$(VERSION)
 BUILD    = ../../
-ARCH	 = $(shell uname -p)
+OSTYPE	 = $(shell uname -p)
 
 PATH    := "/opt/SUNWspro/bin/:/usr/bin:/bin:/usr/local/bin:/usr/ccs/bin/"
 
 DESTDIR := dists/sunos/install/dist/
 
-all: $(PKGNAME)-$(VERSION)-$(ARCH).pkg $(PKGNAME)-node-$(VERSION)-$(ARCH).pkg
+all: $(PKGNAME)-$(VERSION)-$(OSTYPE).pkg $(PKGNAME)-node-$(VERSION)-$(OSTYPE).pkg
 
 clean: 
 	rm -rf pkginfo build-stamp install install-stamp main node configure-stamp
@@ -61,7 +61,7 @@ node/pkginfo: $(DIST)
 	(echo "# Generated file, do not edit"; \
 	echo "PKG=$(PKGNAME)-node"; \
 	echo "NAME=$(PKGNAME)-node"; \
-	echo "ARCH=$(ARCH)"; \
+	echo "OSTYPE=$(OSTYPE)"; \
 	echo "VERSION=$(VERSION)"; \
 	echo "CATEGORY=application"; \
 	echo "VENDOR=$(VENDOR)"; \
@@ -79,7 +79,7 @@ main/pkginfo: $(DIST)
 	(echo "# Generated file, do not edit"; \
 	echo "PKG=$(PKGNAME)"; \
 	echo "NAME=$(PKGNAME)"; \
-	echo "ARCH=$(ARCH)"; \
+	echo "OSTYPE=$(OSTYPE)"; \
 	echo "VERSION=$(VERSION)"; \
 	echo "CATEGORY=application"; \
 	echo "VENDOR=$(VENDOR)"; \
@@ -124,10 +124,10 @@ install/$(PKGNAME): pkginfo install/main-prototype
 install/$(PKGNAME)-node: pkginfo install/node-prototype
 	cd install; rm prototype || true; ln -s node-prototype prototype; pkgmk -d .
 
-$(PKGNAME)-$(VERSION)-$(ARCH).pkg: install/$(PKGNAME)
+$(PKGNAME)-$(VERSION)-$(OSTYPE).pkg: install/$(PKGNAME)
 	pkgtrans `pwd`/install $@ $(PKGNAME)
-	mv install/$(PKGNAME)-$(VERSION)-$(ARCH).pkg .
+	mv install/$(PKGNAME)-$(VERSION)-$(OSTYPE).pkg .
 
-$(PKGNAME)-node-$(VERSION)-$(ARCH).pkg: install/$(PKGNAME)-node
+$(PKGNAME)-node-$(VERSION)-$(OSTYPE).pkg: install/$(PKGNAME)-node
 	pkgtrans `pwd`/install $@ $(PKGNAME)-node
-	mv install/$(PKGNAME)-node-$(VERSION)-$(ARCH).pkg .
+	mv install/$(PKGNAME)-node-$(VERSION)-$(OSTYPE).pkg .

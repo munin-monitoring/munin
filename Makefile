@@ -71,7 +71,7 @@ install-node: build
 	$(INSTALL) -m 0644 build/node/SNMP.pm $(PERLLIB)/Munin/Plugin/
 
 install-node-plugins: build
-	for p in build/node/node.d.$(ARCH)/* build/node/node.d/*; do    		\
+	for p in build/node/node.d.$(OSTYPE)/* build/node/node.d/*; do    		\
 		if test -f "$$p" ; then                                     		\
 			family=`sed -n 's/^#%# family=\(.*\)$$/\1/p' $$p`;  		\
 			test "$$family" || family=contrib;                  		\
@@ -129,7 +129,7 @@ build-stamp:
 		    -e 's|@@STATEDIR@@|$(STATEDIR)|g'			\
 		    -e 's|@@PERL@@|$(PERL)|g'				\
 		    -e 's|@@PERLLIB@@|$(PERLLIB)|g'			\
-		    -e 's|@@ARCH@@|$(ARCH)|g'				\
+		    -e 's|@@OSTYPE@@|$(OSTYPE)|g'				\
 		    -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'			\
 		    -e 's|@@VERSION@@|$(VERSION)|g'			\
 		    -e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g'			\
