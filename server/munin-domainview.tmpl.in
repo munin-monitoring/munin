@@ -12,12 +12,17 @@
 <body> 
 <table cellpadding="3" border="0">
   <tr>
-    <td><div class="logo">&nbsp;</div></td>
-     <td valign="top">
+    <td rowspan="2"><div class="logo">&nbsp;</div></td>
+    <td valign="top">
          <h2><a href="../index.html">Overview</a> :: <TMPL_VAR NAME="DOMAIN"></h2>
+    </td>    
+  </tr>
+  <tr>
+    <td valign="top">
+      <h2><TMPL_VAR NAME="DOMAIN"> :: [ <a href="comparison-day.html">day</a> <a href="comparison-week.html">week</a> <a href="comparison-month.html">month</a> <a href="comparison-year.html">year</a> ]
     </td>
   </tr>
- </table>
+</table>
 
  <table class="largeinvisiblebox">
  <tr>

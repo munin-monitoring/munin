@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.28  2004/09/23 15:23:33  jimmyo
+# Added "comparison" views, to view a whole hostgroup at once.
+#
 # Revision 1.27  2004/09/14 22:08:58  jimmyo
 # Bugfix with domain_order.
 #
@@ -196,6 +199,12 @@ my $servicetemplate = HTML::Template->new(filename => "$config->{tmpldir}/munin-
 				       die_on_bad_params => 0,
 				       loop_context_vars => 1);
 
+my %comparisontemplates = (  day => HTML::Template->new(filename => "$config->{tmpldir}/munin-comparison-day.tmpl", die_on_bad_params => 0, loop_context_vars => 1),
+	                    week => HTML::Template->new(filename => "$config->{tmpldir}/munin-comparison-week.tmpl", die_on_bad_params => 0, loop_context_vars => 1),
+	                   month => HTML::Template->new(filename => "$config->{tmpldir}/munin-comparison-month.tmpl", die_on_bad_params => 0, loop_context_vars => 1),
+	                    year => HTML::Template->new(filename => "$config->{tmpldir}/munin-comparison-year.tmpl", die_on_bad_params => 0, loop_context_vars => 1)
+			  );
+
 my @domains;
 
 my @domainorder;
@@ -230,6 +239,7 @@ for my $domain (@domainorder) {
     my %domain;
     $domain{domain}=$domain;
     my @nodes;
+    my %comparisons;
     my @nodeorder = ();
     if ($config->{domain}->{$domain}->{node_order}) {
 	@nodeorder = split / /, $config->{domain}->{$domain}->{node_order};
@@ -395,6 +405,7 @@ for my $domain (@domainorder) {
 	    $tmp{node} = $node;
 	    $tmp{domain} = $domain;
 	    push @categories, \%tmp;
+	    $comparisons{$key}{$node} = \%tmp;
 	}
 	if (defined $tmp_cats{'other'})
 	{
@@ -413,6 +424,7 @@ for my $domain (@domainorder) {
 	    $tmp{node} = $node;
 	    $tmp{domain} = $domain;
 	    push @categories, \%tmp;
+	    $comparisons{'other'}{$node} = \%tmp;
 	}
 	$nodetemplate->param(SERVICES => \@services,
 			     NODE => $node,
@@ -439,6 +451,62 @@ for my $domain (@domainorder) {
     
     $domain{nodes} = \@nodes;
     $domain{domain} = $domain;
+
+    my @cats = ();
+    foreach my $key (sort keys %comparisons)
+    {
+	my %cat;
+	my %servlist;
+	my $nodewidth = 0;
+
+	foreach my $node (sort keys %{$comparisons{$key}})
+	{
+	    foreach my $serv (@{$comparisons{$key}{$node}->{services}})
+	    {
+		$servlist{$serv->{service}}{$node} = $serv;
+		$nodewidth = $serv->{imgdaywidth} if (defined $serv->{imgdaywidth} and $serv->{imgdaywidth} > $nodewidth);
+	    }
+	}
+	foreach my $sname (sort keys %servlist)
+	{
+	    my %s;
+	    foreach my $node (@nodeorder)
+	    {
+		if (defined $servlist{$sname}{$node})
+		{
+		    $servlist{$sname}{$node}->{width} = $nodewidth;
+		    push (@{$s{nodes}}, $servlist{$sname}{$node});
+		}
+		else
+		{
+		    my %ts;
+		    $ts{label} = "Not present";
+		    $ts{service} = "$sname";
+		    $ts{title} = "Not present";
+		    $ts{node} = $node;
+		    $ts{width} = $nodewidth;
+		    push (@{$s{nodes}}, \%ts);
+		}
+	    }
+	    push @{$cat{services}}, \%s;
+	}
+	$cat{name} = ucfirst $key;
+	$cat{numnodes} = @nodeorder;
+	$cat{numnodes} = @nodeorder;
+	push @cats, \%cat;
+    }
+
+    foreach my $t (@times)
+    {
+	$comparisontemplates{$t}->param(DOMAIN => $domain,
+			     DOMAINS => \@domainlist, 
+			     TIMESTAMP => $timestamp,
+			     CATEGORIES => \@cats);
+	open (FILE, ">$config->{htmldir}/$domain/comparison-$t.html") or die "Cannot open $config->{htmldir}/$domain/comparison-$t.html";
+	print FILE $comparisontemplates{$t}->output;
+	close FILE;
+    }
+
     push @domains,\%domain;
 }
 
