@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!@@PYTHON@@
 # -*- encoding: iso-8859-1 -*-
 #
 # Wildcard-plugin to monitor S.M.A.R.T attribute values through smartctl,
@@ -7,7 +7,7 @@
 # 
 # To monitor a S.M.A.R.T device, link smart_<device> to this file. 
 # E.g.
-#    ln -s /etc/munin/plugins/custom/smart /etc/munin/plugins/smart_hda
+#    ln -s /usr/share/munin/plugins/smart_ /etc/munin/plugins/smart_hda
 # ...will monitor /dev/hda.
 #
 # Needs following configuration in plugin-conf.d/munin-node:
@@ -15,6 +15,9 @@
 #   user root
 #   group disk
 #
+# Parameters
+# 	smartpath   - Specify path to smartctl program
+# 	smartargs   - Additional arguments passed to smartctl
 #
 # Author: Nicolas Stransky <Nico@neo-lan.net>
 # 
@@ -23,6 +26,10 @@
 # v1.3 14/11/2004 - Compatibility with python<2.2. See comments in the code
 # v1.4 17/11/2004 - Deal with non zero exit codes of smartctl
 #                 - config now prints the critical thresholds, as reported by smartctl
+# v1.5 18/11/2004 - Plot smartctl_exit_code bitmask
+# v1.6 21/11/2004 - Add autoconf and suggest capabilities
+#                 - smartctl path can be passed through "smartpath" environment variable
+#                 - Additional smartctl args can be passed through "smartargs" environment variable
 #
 # Copyright (c) 2004 Nicolas Stransky.
 #
@@ -36,18 +43,29 @@
 # REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE
 # MERCHANTABILITY OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR
 # PURPOSE.
+#
+# $Log$
+# Revision 1.2  2004/11/21 15:58:26  jimmyo
+# Nicolas added autoconf and suggest parameters to the plugin. :-)
+#
+#
+# Magic markers (only needed if your plugin wants to support 
+# munin-node-configure).
+#%# capabilities=autoconf suggest
+#%# family=auto
+
 
 import os, sys, string, pickle
 from math import log
 
-# Increase verbosity of the plugin by putting verbose=1
-verbose=False
+# Increase verbosity of the plugin by putting verbose=True (for 
+# debugging purposes)
 # For python < 2.2 compliance, put verbose=0 instead of "False"
+verbose=False
 
 # Modify to your needs:
 statefiledir='@@PLUGSTATE@@/'
 
-smart_values={}
 
 def verboselog(s):
     sys.stderr.write(plugin_name+': '+s+'\n')
@@ -60,7 +78,7 @@ def read_values(hard_drive) :
     try :
         verboselog('Reading S.M.A.R.T values')
         os.putenv('LC_ALL','C')
-        smart_output=os.popen('/usr/sbin/smartctl -a /dev/'+hard_drive)
+        smart_output=os.popen(os.getenv('smartpath','/usr/sbin/smartctl')+' '+os.getenv('smartargs','')+' -a /dev/'+hard_drive)
         read_values=0
         # For python < 2.2 compliance, switch comments on next 2 lines.
         for l in smart_output :
@@ -77,7 +95,7 @@ def read_values(hard_drive) :
             # smartctl exit code is a bitmask
             num_exit_status=int(log(exit_status/256,2))
             if num_exit_status<=2 :
-                verboselog('smartctl cannot access S.M.A.R.T values on drive '+hard_drive+'. Command exited with Bit '+str(num_exit_status))
+                verboselog('smartctl cannot access S.M.A.R.T values on drive '+hard_drive+'. Command exited with Bit '+str(num_exit_status)+' ('+str(exit_status/256)+')')
                 sys.exit(1)
             else :
                 verboselog('smartctl exited with Bit '+str(num_exit_status)+'. '+hard_drive+' may be FAILING RIGHT NOW !')
@@ -146,27 +164,79 @@ def print_config(hard_drive,smart_values) :
     # Following line can be commented out. Only useful for warning reports about S.M.A.R.T values
     print('smartctl_exit_status.critical '+smart_values_state['smartctl_exit_status']["threshold"]+':')
 
-plugin_name=list(os.path.split(sys.argv[0]))[1]
-try :
-    hard_drive=plugin_name[string.rindex(plugin_name,'_')+1:]
-    if not os.path.exists('/dev/'+hard_drive):
-        verboselog('/dev/'+hard_drive+' not found !')
+def get_hard_drive_name() :
+    try :
+        hard_drive=plugin_name[string.rindex(plugin_name,'_')+1:]
+        if not os.path.exists('/dev/'+hard_drive):
+            verboselog('/dev/'+hard_drive+' not found !')
+            sys.exit(1)
+        return(hard_drive)
+    except :
+        verboselog('No S.M.A.R.T device name found in plugin\'s symlink !')
         sys.exit(1)
-except :
-    sys.stderr.write(plugin_name+': No S.M.A.R.T device name found in plugin\'s symlink !\n')
-    sys.exit(1)
 
+def find_smart_drives() :
+    drives=[]
+    if os.path.exists('/sys/block/'):
+        # Running 2.6, yeah
+        try :
+            for drive in os.listdir('/sys/block/') :
+                try :
+                    read_values(drive)
+                    drives.append(drive)
+                except :
+                    continue
+        except : 
+            verboselog('failed to list devices in /sys/block')
+    else :
+        verboselog('Apparently not running linux2.6, failing back to /proc/partitions')
+        try :
+            partitions=open('/proc/partitions','r')
+            L=partitions.readlines()
+            for l in L :
+                words=string.split(l)
+                if len(words)==0 or words[0][0] not in string.digits : continue
+                if words[0] in ['1','9','58','254'] : continue # Ignore RAM, md, LVM and LVM2 devices
+                if words[-1][-1] not in string.digits : 
+                    try :
+                        read_values(words[-1])
+                        drives.append(words[-1])
+                    except :
+                        continue
+            verboselog('Found drives in /proc/partitions ! '+str(drives))
+        except :
+            verboselog('failed to list devices in /proc/partitions')
+    return(drives)
+
+### Main part ###
+
+smart_values={}
+plugin_name=list(os.path.split(sys.argv[0]))[1]
 verboselog('plugins\' UID: '+str(os.geteuid())+' / plugins\' GID: '+str(os.getegid()))
 
+# Parse arguments
 if len(sys.argv)>1 :
     if sys.argv[1]=="config" :
+        hard_drive=get_hard_drive_name()
         print_config(hard_drive,smart_values)
+        sys.exit(0)
+    elif sys.argv[1]=="autoconf" :
+        if os.path.exists('/usr/sbin/smartctl') : 
+            print('yes')
+            sys.exit(0)
+        else : 
+            print('no (smartmontools not found)')
+            sys.exit(1)
+    elif sys.argv[1]=="suggest" :
+        for drive in find_smart_drives() :
+            print(drive)
         sys.exit(0)
     elif sys.argv[1]!="" :
         verboselog('unknown argument "'+sys.argv[1]+'"')
         sys.exit(1)
 
-#No argument given, doing the real job:
+# No argument given, doing the real job:
+hard_drive=get_hard_drive_name()
 read_values(hard_drive)
 update_state_file()
 print_plugin_values()
