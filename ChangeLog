@@ -9,6 +9,8 @@ munin (work)
     (SF#1081903).
   * Plugin: generic/uptime was re-classified as linux/uptime (SF#1074576).
   * Plugin: Renamed generic/folding@home to generic/foldingathome (SF#1074241).
+  * Plugin: Modify generic/ping_ so it's compatible with Solaris ping
+    (SF#1074545).
 
 munin (1.1.7)
 
