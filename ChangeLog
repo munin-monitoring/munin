@@ -12,6 +12,8 @@ munin (1.0.0pre2)
     (SF#884622)
   * Removed sunos/io_-plugin (SF#882357)
   * Bugfix, apache_processes now takes port numbers into account. (SF#882263)
+  * Changed wildcard plugin ps_ so it can use "env.regex" in plugin-conf.d/
+    (SF#882131)
 
 munin (1.0.0pre1)
 
