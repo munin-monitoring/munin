@@ -31,10 +31,10 @@
   </td></tr>
 
   <TMPL_LOOP NAME="CATEGORIES">
-  <tr><td class="graphbox">
+  <tr><td class="graphbox" id="<TMPL_VAR ESCAPE="HTML" NAME="NAME">">
   <table>
-      <a id="<TMPL_VAR ESCAPE="HTML" NAME="NAME">">&nbsp;</a>
-        <tr><td colspan="2"><h3><TMPL_VAR NAME="NAME"></h3></td></tr>
+      <!-- <a id="<TMPL_VAR ESCAPE="HTML" NAME="NAME">">&nbsp;</a> -->
+        <tr><td colspan="2"><h3 class="nobottom"><TMPL_VAR NAME="NAME"></h3></td></tr>
         <tr><td colspan="2"><hr class="ruler2" /></td></tr>
         <TMPL_LOOP NAME="SERVICES">
           <tr>
@@ -44,6 +44,8 @@
         </TMPL_LOOP>
 	</table>
   </td></tr>
+
+  <tr><td></td></tr>
 
   </TMPL_LOOP>
   <tr><td class="linkbox">

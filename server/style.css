@@ -9,6 +9,11 @@ body {
   
  }
 
+h3.nobottom {
+    margin-top: 20px;
+    margin-bottom: 0px;
+}
+
 div.logo { 
   background-image: url(logo.png);
   background-repeat: no-repeat;  
