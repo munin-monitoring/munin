@@ -38,6 +38,7 @@ munin (CVS)
     (Deb#295799).
   * Plugins: Only run 'exim -bpr' once in generic/exim_mailqueue_alt,
     and use only awk to process the data.
+  * Plugins: Make linux/sensors_ handle multiline output better (Deb#300690).
   * Docs: Added man page for munin-node-configure-snmp.
   * Docs: Brushed up the comments in the default munin.conf a bit (Deb#294060).
   * Docs: Fixed erronous cgiurl docs (SF#1159722).

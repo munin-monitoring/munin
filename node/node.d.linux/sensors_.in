@@ -64,21 +64,21 @@ $ENV{'LC_ALL'} = "C"; # Force parseable output from sensors.
 my $SENSORS = $ENV{'sensors'} || 'sensors';
 my %config = (
 	       fan => {
-		         regex => qr/^([^:]*)\s*:\s+\+?(\d+) RPM.*?(\d+) RPM/m,
+		         regex => qr/^(\S[^:]*)\s*:\s+\+?(\d+) RPM.*?(\d+) RPM/m,
 			 title => 'Fans',
 			 vtitle => 'RPM',
 			 print_threshold => \&fan_threshold,
 			 graph_args => '--base 1000 -l 0'
 	               },
 	       temp => {
-			 regex => qr/^([^:]*)\s*:\s+\+?(\d+(?:\.\d+)?)[° ]C(?:\s+\((?:high|limit)\s*=\s*\+?(\d+(?:\.\d+)?)[° ]C,\s*hyst(?:eresis)?\s*=\s*\+?(\d+(?:\.\d+)?)[° ]C\))?/m,
+			 regex => qr/^(\S[^:]*)\s*:\s+\+?(\d+(?:\.\d+)?)[° ]C(?:\s+\((?:high|limit)\s*=\s*\+?(\d+(?:\.\d+)?)[° ]C,\s*hyst(?:eresis)?\s*=\s*\+?(\d+(?:\.\d+)?)[° ]C\))?/m,
 			 title => 'Temperatures',
 			 vtitle => 'Celsius',
 			 print_threshold => \&temp_threshold,
 			 graph_args => '--base 1000 -l 0'
 	               },
 	       volt => {
-			 regex => qr/^([^:]*)\s*:\s+\+?(-?\d+(?:\.\d+)?) V(?:\s+\(min\s*=\s*\+?(-?\d+(?:\.\d+)?) V,\s*max\s*=\s*\+?(-?\d+(?:\.\d+)?) V\))/m,
+			 regex => qr/^(\S[^:]*)\s*:\s+\+?(-?\d+(?:\.\d+)?) V(?:\s+\(min\s*=\s*\+?(-?\d+(?:\.\d+)?) V,\s*max\s*=\s*\+?(-?\d+(?:\.\d+)?) V\))/m,
 			 title => 'Voltages',
 			 vtitle => 'Volt',
 			 print_threshold => \&volt_threshold,
