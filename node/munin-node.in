@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.15  2004/11/10 15:34:18  jimmyo
+# Added new plugin generic/apc_nis to monitor APC UPS, contributed by xavier.
+#
 # Revision 1.14  2004/05/12 20:33:28  jimmyo
 # Made the allow/deny syntax more flexible.
 #
@@ -81,6 +84,8 @@ use strict;
 use vars qw(@ISA);
 use Getopt::Long;
 use Net::Server::Fork; # any personality will do
+
+chdir ("/");
 
 # "Clean" environment to disable taint-checking on the environment. We _know_
 # that the environment is insecure, but we want to let admins shoot themselves
