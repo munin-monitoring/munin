@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.19  2004/06/22 22:04:45  jimmyo
+# Added --cron option to munin-graph.
+#
 # Revision 1.18  2004/06/19 21:29:35  jimmyo
 # Added option to munin-graph to skip stats generation.
 #
@@ -127,6 +130,7 @@ my $force_lazy = 1;
 my $force_root = 0;
 my $do_usage = 0;
 my $do_version = 0;
+my $cron = 0;
 my $list_images = 0;
 my $skip_locking = 0;
 my $skip_stats = 0;
@@ -152,6 +156,7 @@ GetOptions ( "force!"       => \$force_graphing,
 	     "skip-stats!"  => \$skip_stats,
 	     "debug!"       => \$DEBUG,
 	     "version!"     => \$do_version,
+	     "cron!"        => \$cron,
 	     "help"         => \$do_usage );
 
 if ($do_usage)
@@ -166,6 +171,8 @@ Options:
     --help		View this message.
     --version		View version information.
     --debug		View debug messages.
+    --[no]cron		Behave as expected when run from cron. (Used internally 
+			in Munin.)
     --service <service>	Limit graphed services to <service>. Multiple --service
 			options may be supplied.
     --host <host>	Limit graphed hosts to <host>. Multiple --host options
@@ -203,6 +210,10 @@ it as the user \"munin\". Aborting.\n\n";
 
 my $config= &munin_config ($conffile);
 
+if (&munin_get_val ($config, "output_graphs", "cron") ne "cron" and $cron)
+{ # We're run from cron, but munin.conf says we use dynamic graph generation
+    exit 0;
+}
 
 munin_runlock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
 unless ($skip_stats)
