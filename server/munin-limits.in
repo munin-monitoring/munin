@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.13  2004/11/18 00:22:02  jimmyo
+# Midway implementation of new notification scheme.
+#
 # Revision 1.12  2004/11/16 20:00:44  jimmyo
 # License cleanups.
 #
@@ -288,7 +291,23 @@ sub generate_service_message {
 
     if ($worst)
     {
-	$notes{$domain}{$name}{$clientname}{$worst} = message_expand (munin_get_val ($config, "notify_text", $default_notify_text, $domain, $name, $clientname), $client);
+	foreach my $c (keys %{$config->{'contact'}})
+	{
+	    next if $c eq "default"; # Special case, handled after the loop
+	    my $txt = message_expand ($config->{'contact'}->{$c}->{'text'} || $config->{'contact'}->{'default'}->{'text'} || $default_notify_text);
+	    my $pipe;
+	    if (!defined $config->{'contact'}->{$c}->{'pipe'})
+	    {
+		my @cmd = split /\s/, message_expand ($config->{'contact'}->{$c}->{'command'} || $config->{'contact'}->{'default'}->{'command'} || undef);
+		logger ("Debug: opening for writing: |" . join('|',@cmd) . "|.") if $DEBUG;
+		open ($pipe, @cmd) or logger ("Warning: Could not run command \"" . join(' ',@cmd) . "\": $!");
+		$config->{'contact'}->{$c}->{'pipe'} = $pipe;
+	    }
+	    $pipe = $config->{'contact'}->{$c}->{'pipe'};
+	    print $pipe $txt if (defined $config->{'contact'}->{$c}->{'pipe'});
+	}
+        # "default" case
+	$notes{$domain}{$name}{$clientname}{$worst} = message_expand ($config->{'contact'}->{'default'}->{'text'} || $default_notify_text);
     }
 }
 

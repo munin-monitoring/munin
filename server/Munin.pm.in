@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.28  2004/11/18 00:22:01  jimmyo
+# Midway implementation of new notification scheme.
+#
 # Revision 1.27  2004/11/16 20:00:43  jimmyo
 # License cleanups.
 #
@@ -221,8 +224,8 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"fetch_data", "filename", "max_processes", "nagios", "info", 
 	"graph_info", "graph_category", "graph_strategy", "graph_width", 
 	"graph_height", "graph_sums", "graph_vlabel_sum_year", 
-	"graph_vlabel_sum_week", "local_address", "compare",
-	"notify_enable", "notify_text", "cgiurl"
+	"graph_vlabel_sum_week", "local_address", "compare", "cgiurl",
+	"text", "command", "contact", "contacts",  "max_messages"
     );
 
 
@@ -236,8 +239,7 @@ sub munin_fetch {
     my ($start,$step,$names,$data) = RRDs::fetch $file,$type || "AVERAGE";
     unless (defined $data)
     {
-        ::logger ("Could not fetch data from $file(".($type||"AVERAGE")."): ". R
-RDs::error);
+        ::logger ("Could not fetch data from $file(".($type||"AVERAGE")."): ". RRDs::error);
         return undef;
     }
     my @array = map { @$_[0] } splice(@$data, $#$data - ($last || 1));
@@ -567,6 +569,14 @@ sub munin_set_var_path
 	::logger ("Warning: Unknown option \"$1\" in \"$1\".")
 	    unless grep /^$1$/, @legal;
 	$hash->{$1} = $val;
+    }
+    elsif ($var =~ /^\s*([^\.]+)\.([^\.]+)\.([^\.]+)$/)
+    {
+	::logger ("Warning: Unknown option \"$1\" in \"$var\".")
+	    unless grep /^$1$/, @legal;
+	::logger ("Warning: Unknown option \"$3\" in \"$var\".")
+	    unless grep /^$3$/, @legal;
+	$hash->{$1}->{$2}->{$3} = $val;
     }
     else
     {

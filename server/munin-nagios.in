@@ -1,4 +1,7 @@
 #!@@PERL@@
+<<<<<<< munin-nagios.in
+# Notification
+=======
 #
 # Copyright (C) 2002-2004 Jimmy Olsen
 #
@@ -22,65 +25,8 @@
 # $Id$
 #
 # $Log$
-# Revision 1.9  2004/11/16 20:00:44  jimmyo
-# License cleanups.
-#
-# Revision 1.8  2004/10/27 17:50:01  jimmyo
-# Fixed typo in linux/fw_forwarded_local (Deb#275535).
-#
-# Revision 1.7  2004/09/08 15:25:33  ilmari
-# Use @@PERL@@ in all perl shebang lines.
-#
-# Revision 1.6  2004/06/28 13:30:33  jimmyo
-# Munin-nagios: Only state number of OKs when something is in warning or critical state.
-#
-# Revision 1.5  2004/05/20 20:47:20  jimmyo
-# The server programs now open the log file at an earlier point.
-#
-# Revision 1.4  2004/01/29 17:40:10  jimmyo
-# Fixed pod typos patched by Lupe Christoph (SF#884092)
-#
-# Revision 1.3  2004/01/29 17:34:06  jimmyo
-# Updated copyright information
-#
-# Revision 1.2  2004/01/15 15:20:01  jimmyo
-# Making things workable after name change. Upping for test verwion.
-#
-# Revision 1.1  2004/01/02 18:50:01  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:08  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.14  2003/12/10 11:59:39  jimmyo
-# Enable/disable notifications at any level
-#
-# Revision 1.13  2003/11/12 12:28:37  jimmyo
-# Only send ok-messages if lockfile was created.
-#
-# Revision 1.12  2003/11/12 12:19:29  jimmyo
-# Fix typo
-#
-# Revision 1.11  2003/11/12 12:17:16  jimmyo
-# Fix typo
-#
-# Revision 1.10  2003/11/12 12:07:46  jimmyo
-# Off by one error. Cosmetic only.
-#
-# Revision 1.9  2003/11/12 12:04:45  jimmyo
-# Make sure extinfo comes accross
-#
-# Revision 1.8  2003/11/10 16:09:00  jimmyo
-# Be nice to Nagios - don't DOS it.
-#
-# Revision 1.7  2003/11/07 20:46:12  jimmyo
-# Only require Config::General if using old config format.
-#
-# Revision 1.6  2003/11/07 19:00:17  jimmyo
-# Put lockfiles in the right place
-#
-# Revision 1.5  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
+# Revision 1.10  2004/11/18 00:22:02  jimmyo
+# Midway implementation of new notification scheme.
 #
 #
 
@@ -162,8 +108,8 @@ my $modified=0;
 logger("Starting munin-nagios, checking lock");
 munin_runlock("$config->{rundir}/munin-nagios.lock");
 logger("Created lock: $config->{rundir}/munin-nagios.lock");
-unless ($config->{nsca}) {
-  logger ("No nsca-configuration found, exiting");
+unless ($config->{nsca} or $config->{notify_enable}) {
+  logger ("No notification configuration found, exiting");
   exit;
 }
 
@@ -227,122 +173,127 @@ sub process_service {
   my @oks      = ();
   my $update   = 0;
 
-  for my $service (keys %$client) {
-    logger ("processing service: $service") if $DEBUG;
-    if ($service =~ /(^.*)\.label/) {
-	my $key = $1;
-	next unless ((exists $client->{"$key.warning"}) || ($client->{"$key.critical"}));
-	next unless (munin_get_bool ($config, "nagios", 1, $domain, $name, $clientname, $key));
-    	if (@limit_services and !grep (/^$service$/, @limit_services))
-	{
-		next;
-	}
+  return 0 unless munin_get_bool ($config, "notify_enable", 1, $domain, $name, $clientname);
 
-	my @critical = (undef, undef);
-	my @warning  = (undef, undef);
+  if ($config->{nsca})
+  {
+      for my $service (keys %$client) {
+	logger ("processing service: $service") if $DEBUG;
+	if ($service =~ /(^.*)\.label/) {
+	    my $key = $1;
+	    next unless ((exists $client->{"$key.warning"}) || ($client->{"$key.critical"}));
+	    next unless (munin_get_bool ($config, "nagios", 1, $domain, $name, $clientname, $key));
+	    if (@limit_services and !grep (/^$service$/, @limit_services))
+	    {
+		    next;
+	    }
 
-	if (defined $client->{"$key.critical"} and 
-	    $client->{"$key.critical"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
-	{
-		$critical[0] = $1 if defined $1;
-		$critical[1] = $2 if defined $2;
-	}
-	elsif (defined $client->{"$key.critical"} and
-	    $client->{"$key.critical"} =~ /^\s*([-\d]+)\s*$/)
-	{
-		$critical[1] = $1 if defined $1;
-	}
-	elsif (defined $client->{"$key.critical"})
-	{
-	    @critical = (0, 0);
-	}
-	if (defined $client->{"$key.warning"} and 
-	    $client->{"$key.warning"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
-	{
-		$warning[0] = $1 if defined $1;
-		$warning[1] = $2 if defined $2;
-	}
-	elsif (defined $client->{"$key.warning"} and
-	    $client->{"$key.warning"} =~ /^\s*([-\d]+)\s*$/)
-	{
-		$warning[1] = $1 if defined $1;
-	}
-	elsif (defined $client->{"$key.warning"})
-	{
-	    @warning = (0, 0);
-	}
-	my $filename = "$config->{dbdir}/$domain/$name-$clientname-$key-".
-	    lc substr (($client->{"$key.type"}||"GAUGE"),0,1) . ".rrd";
-	my $value = sprintf "%.2f",munin_fetch("$filename");
-	
-	if ((defined ($critical[0]) and $value < $critical[0]) or
-	    (defined ($critical[1]) and $value > $critical[1])) {
+	    my @critical = (undef, undef);
+	    my @warning  = (undef, undef);
+
+	    if (defined $client->{"$key.critical"} and 
+		$client->{"$key.critical"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
+	    {
+		    $critical[0] = $1 if defined $1;
+		    $critical[1] = $2 if defined $2;
+	    }
+	    elsif (defined $client->{"$key.critical"} and
+		$client->{"$key.critical"} =~ /^\s*([-\d]+)\s*$/)
+	    {
+		    $critical[1] = $1 if defined $1;
+	    }
+	    elsif (defined $client->{"$key.critical"})
+	    {
+		@critical = (0, 0);
+	    }
+	    if (defined $client->{"$key.warning"} and 
+		$client->{"$key.warning"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
+	    {
+		    $warning[0] = $1 if defined $1;
+		    $warning[1] = $2 if defined $2;
+	    }
+	    elsif (defined $client->{"$key.warning"} and
+		$client->{"$key.warning"} =~ /^\s*([-\d]+)\s*$/)
+	    {
+		    $warning[1] = $1 if defined $1;
+	    }
+	    elsif (defined $client->{"$key.warning"})
+	    {
+		@warning = (0, 0);
+	    }
+	    my $filename = "$config->{dbdir}/$domain/$name-$clientname-$key-".
+		lc substr (($client->{"$key.type"}||"GAUGE"),0,1) . ".rrd";
+	    my $value = sprintf "%.2f",munin_fetch("$filename");
+	    
+	    if ((defined ($critical[0]) and $value < $critical[0]) or
+		(defined ($critical[1]) and $value > $critical[1])) {
 #	    print "Sending; $name, $clientname ", $client->{"$key.label"}, ",2,Value is $value. Critical range ($critical[0]:$critical[1]) exceeded\n";
-	  # munin_nscasend($name,$clientname,$client->{"$key.label"},2,
-	  push (@crits, $client->{"$key.label"} . 
-		  (defined $client->{"$key.extinfo"}?
-		   	" ($value ($critical[0]:$critical[1]): ".
-			$client->{"$key.extinfo"} . ")":
-			" $value ($critical[0]:$critical[1])"));
-	  munin_removelock("$config->{dbdir}/$domain/$name-$clientname-$key.ok");
-	}
-	elsif ((defined ($warning[0]) and $value < $warning[0]) or
-	       (defined ($warning[1]) and $value > $warning[1])) {
+	      # munin_nscasend($name,$clientname,$client->{"$key.label"},2,
+	      push (@crits, $client->{"$key.label"} . 
+		      (defined $client->{"$key.extinfo"}?
+			    " ($value ($critical[0]:$critical[1]): ".
+			    $client->{"$key.extinfo"} . ")":
+			    " $value ($critical[0]:$critical[1])"));
+	      munin_removelock("$config->{dbdir}/$domain/$name-$clientname-$key.ok");
+	    }
+	    elsif ((defined ($warning[0]) and $value < $warning[0]) or
+		   (defined ($warning[1]) and $value > $warning[1])) {
 #	    print "Sending; $name, $clientname ", $client->{"$key.label"}, ",2,Value is $value. Warning range ($warning[0]:$warning[1]) exceeded\n";
 #	    print "Extinfo; $name, $clientname ", $client->{"$key.extinfo"}, "\n";
-	  #munin_nscasend($name,$clientname,$client->{"$key.label"},1,
-	  push (@warns, $client->{"$key.label"}.
-		  (defined $client->{"$key.extinfo"}?
-		  	" ($value ($warning[0]:$warning[1]): ".
-		   	$client->{"$key.extinfo"} . ")":
-		   	" $value ($warning[0]:$warning[1])"));
-	  munin_removelock("$config->{dbdir}/$domain/$name-$clientname-$key.ok");
-	}
-	elsif ($value eq "U") {
-          #munin_nscasend($name,$clientname,$client->{"$key.label"},1,
-	  push (@unknowns, $client->{"$key.label"});
-	  munin_removelock("$config->{dbdir}/$domain/$name-$clientname-$key.ok");
-	}
-	else {
-	  push (@oks, $client->{"$key.label"}.
-		  " ($value)");
-	  if (munin_createlock("$config->{dbdir}/$domain/$name-$clientname-$key.ok"))
-	  {
-	    $update ++;
+	      #munin_nscasend($name,$clientname,$client->{"$key.label"},1,
+	      push (@warns, $client->{"$key.label"}.
+		      (defined $client->{"$key.extinfo"}?
+			    " ($value ($warning[0]:$warning[1]): ".
+			    $client->{"$key.extinfo"} . ")":
+			    " $value ($warning[0]:$warning[1])"));
+	      munin_removelock("$config->{dbdir}/$domain/$name-$clientname-$key.ok");
+	    }
+	    elsif ($value eq "U") {
+	      #munin_nscasend($name,$clientname,$client->{"$key.label"},1,
+	      push (@unknowns, $client->{"$key.label"});
+	      munin_removelock("$config->{dbdir}/$domain/$name-$clientname-$key.ok");
+	    }
+	    else {
+	      push (@oks, $client->{"$key.label"}.
+		      " ($value)");
+	      if (munin_createlock("$config->{dbdir}/$domain/$name-$clientname-$key.ok"))
+	      {
+		$update ++;
+	      }
+	    }
 	  }
-	}
       }
-  }
-  if (@crits)
-  {
-    munin_nscasend ($name, $clientname, "", 2, 
-	scalar (@crits) . " CRITICALs: ". join (',', @crits[0 .. (@crits>20?20:@crits)]) .
-	(@warns    ? "; " . scalar (@warns)    . " WARNINGs: " . join (', ', @warns[0 .. (@warns>20?20:@warns-1)]) : "") .
-	(@unknowns ? "; " . scalar (@unknowns) . " UNKNOWNs: " . join (', ', @unknowns[0 .. (@unknowns>20?20:@unknowns-1)]) : "") .
-	(@oks      ? "; " . scalar (@oks)      . " OKs" : "") .
-	".");
-  }
-  elsif (@warns)
-  {
-    munin_nscasend ($name, $clientname, "", 1, 
-	scalar (@warns) . " WARNINGs: " . join (',', @warns[0 .. (@warns>20?20:@warns)]) .
-	(@unknowns ? "; " . scalar (@unknowns) . " UNKNOWNs: "  . join (', ', @unknowns[0 .. (@unknowns>20?20:@unknowns-1)]) : "") .
-	(@oks      ? "; " . scalar (@oks)      . " OKs" : "") .
-	".");
-  }
-  elsif (@unknowns)
-  {
-    munin_nscasend ($name, $clientname, "", 3, 
-	scalar (@unknowns) . " UNKNOWNs: " . join (',', @unknowns[0 .. (@unknowns>20?20:@unknowns-1)]) .
-	(@oks      ? "; " . scalar (@oks)      . " OKs" : "") .
-	".");
-  }
-  elsif (@oks and $update)
-  {
-    munin_nscasend ($name, $clientname, "", 0, 
-	scalar (@oks) . " OKs: " . join (', ', @oks[0 .. (@oks>20?20:@oks-1)]) .
-	".");
-  }
+      if (@crits)
+      {
+	munin_nscasend ($name, $clientname, "", 2, 
+	    scalar (@crits) . " CRITICALs: ". join (',', @crits[0 .. (@crits>20?20:@crits)]) .
+	    (@warns    ? "; " . scalar (@warns)    . " WARNINGs: " . join (', ', @warns[0 .. (@warns>20?20:@warns-1)]) : "") .
+	    (@unknowns ? "; " . scalar (@unknowns) . " UNKNOWNs: " . join (', ', @unknowns[0 .. (@unknowns>20?20:@unknowns-1)]) : "") .
+	    (@oks      ? "; " . scalar (@oks)      . " OKs" : "") .
+	    ".");
+      }
+      elsif (@warns)
+      {
+	munin_nscasend ($name, $clientname, "", 1, 
+	    scalar (@warns) . " WARNINGs: " . join (',', @warns[0 .. (@warns>20?20:@warns)]) .
+	    (@unknowns ? "; " . scalar (@unknowns) . " UNKNOWNs: "  . join (', ', @unknowns[0 .. (@unknowns>20?20:@unknowns-1)]) : "") .
+	    (@oks      ? "; " . scalar (@oks)      . " OKs" : "") .
+	    ".");
+      }
+      elsif (@unknowns)
+      {
+	munin_nscasend ($name, $clientname, "", 3, 
+	    scalar (@unknowns) . " UNKNOWNs: " . join (',', @unknowns[0 .. (@unknowns>20?20:@unknowns-1)]) .
+	    (@oks      ? "; " . scalar (@oks)      . " OKs" : "") .
+	    ".");
+      }
+      elsif (@oks and $update)
+      {
+	munin_nscasend ($name, $clientname, "", 0, 
+	    scalar (@oks) . " OKs: " . join (', ', @oks[0 .. (@oks>20?20:@oks-1)]) .
+	    ".");
+      }
+    }
 }
 
 sub logger_open {
