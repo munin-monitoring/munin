@@ -9,6 +9,9 @@
 #       suggest  (optional - used by lrrd-config)
 #
 # $Log$
+# Revision 1.2  2004/11/21 19:55:28  jimmyo
+# Upped generic/ntp_ to auto family.
+#
 # Revision 1.1  2004/11/21 19:35:23  jimmyo
 # Corrected file name.
 #
@@ -24,7 +27,7 @@
 # Magic markers - optional - used by installation scripts and
 # lrrd-config:
 #
-#%# family=manual
+#%# family=auto
 #%# capabilities=autoconf suggest
 #
 
@@ -35,8 +38,13 @@ use Socket;
 if ($ARGV[0] and $ARGV[0] eq "autoconf") {
 	`ntpq -c help >/dev/null 2>/dev/null`;
 	if ($? eq "0") {
-		print "yes\n";
-		exit 0;
+		if (`ntpq -c "hostnames no" -c peers | wc -l` > 0) {
+			print "yes\n";
+			exit 0;
+		} else {
+			print "no (unable to list peers)\n";
+			exit 1;
+		}
 	} else {
 		print "no (ntpq not found)\n";
 		exit 1;
