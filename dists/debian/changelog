@@ -52,10 +52,11 @@ munin (1.2.0-1) unstable; urgency=low
       - Install the new CGI in /usr/lib/cgi-bin/, as mandated by the Debian
         Policy Manual.
 
-  * debian/munin.cron.d, debian/munin.manpages:
+  * debian/munin.cron.d, debian/munin.manpages, debian/munin.logrotate,
+    debian/munin.postrm:
       - The new upstream release includes "munin-limits", which supersede
-        "munin-nagios".  Update the installed manual pages and cron jobs
-        accordingly.
+        "munin-nagios".  Update the installed manual pages, cron jobs,
+        logrotate configuration, and purge script accordingly.
 
   * debian/plugins.conf:
       - Plugin linux/fw_conntrack is now run as root as this file recently has
@@ -71,6 +72,10 @@ munin (1.2.0-1) unstable; urgency=low
   * server/munin-limits.in:
       - Change lock file directory to match that of munin-update, munin-graph,
         and munin-html.
+
+  * debian/munin.postinst:
+      - Only change user and group ownership on the data files from "lrrd" to
+        "munin" when the package is first installed, not on every upgrade.
 
  -- Tore Anderson <tore@debian.org>  Wed, 09 Feb 2005 17:46:05 +0100
 
