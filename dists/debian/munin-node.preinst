@@ -2,11 +2,27 @@
 
 set -e
 
+lrrd_sums="
+11ba4c57f20b31166cbd3064430506ea:/etc/lrrd/client-conf.d/lrrd-client
+8975c4124fdd1209d5732ce0e68578fa:/etc/lrrd/client.conf
+"
+
 migrate() {
 	local from=$1; shift;
 	local to=$1; shift;
 	
 	[ -r "$from" -a ! -e "$to" ] || return 0;
+
+	for pair in $lrrd_sums; do
+		local sum=${pair%:*}
+		local file=${pair#*:}
+
+		[ "$file" = "$from" ] || continue;
+		
+		if [ "$(md5sum $file | cut -f1 -d' ')" = "$sum" ]; then
+			return 0;
+		fi
+	done
 
 	[ -d ${to%/*} ] || mkdir -p ${to%/*}
 

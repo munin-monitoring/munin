@@ -2,11 +2,32 @@
 
 set -e
 
+lrrd_sums="
+008826a6aa273926ad3d3f14648297fb:/etc/lrrd/templates/lrrd-domainview.tmpl
+b9392bbbf0c92338d3958eb68ce650e4:/etc/lrrd/templates/lrrd-nodeview.tmpl
+6ab11f132495f409fb83b67598a4d24b:/etc/lrrd/templates/lrrd-overview.tmpl
+412a16307c1ce81fe14eb74c953d7e8a:/etc/lrrd/templates/lrrd-serviceview.tmpl
+6d86361a699097294f7eb07d3301e489:/etc/lrrd/templates/logo.gif
+697bb8b5fdfc8a2f9d38bbfd56cd989c:/etc/lrrd/templates/style.css
+530070017a8147fb54c0cc3c9f259a80:/etc/lrrd/server.conf
+"
+
 migrate() {
 	local from=$1; shift;
 	local to=$1; shift;
 	
 	[ -r "$from" -a ! -e "$to" ] || return 0;
+
+	for pair in $lrrd_sums; do
+		local sum=${pair%:*}
+		local file=${pair#*:}
+
+		[ "$file" = "$from" ] || continue;
+		
+		if [ "$(md5sum $file | cut -f1 -d' ')" = "$sum" ]; then
+			return 0;
+		fi
+	done
 
 	[ -d ${to%/*} ] || mkdir -p ${to%/*}
 
@@ -30,12 +51,9 @@ convert_from_lrrd() {
 		's,^(\s*rundir\s*)/var/run/lrrd$,$1/var/run/munin,' \
 		's,^(\s*tmpldir\s*)/etc/lrrd/templates$,$1/etc/munin/templates,'
 	
-	migrate /etc/lrrd/templates/logo.gif /etc/munin/templates/logo.gif
-	migrate /etc/lrrd/templates/style.css /etc/munin/templates/style.css
-	migrate /etc/lrrd/templates/lrrd-domainview.tmpl /etc/munin/templates/munin-domainview.tmpl
-	migrate /etc/lrrd/templates/lrrd-nodeview.tmpl /etc/munin/templates/munin-nodeview.tmpl
-	migrate /etc/lrrd/templates/lrrd-overview.tmpl /etc/munin/templates/munin-overview.tmpl
-	migrate /etc/lrrd/templates/lrrd-serviceview.tmpl /etc/munin/templates/munin-serviceview.tmpl
+	for f in /etc/lrrd/templates/*; do
+		migrate $f /etc/munin/templates${f#/etc/lrrd/templates}
+	done
 
 	migrate /var/lib/lrrd/lrrd-update.stats /var/lib/munin/munin-update.stats
 	migrate /var/lib/lrrd/lrrd-graph.stats /var/lib/munin/munin-graph.stats
