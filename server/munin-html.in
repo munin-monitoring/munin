@@ -20,6 +20,18 @@
 # $Id$
 #
 # $Log$
+# Revision 1.41.2.2  2005/02/01 22:02:32  jimmyo
+# Added category_order, to complete the *_order options.
+#
+# Revision 1.41.2.1  2005/01/29 18:22:59  jimmyo
+# Bugfix in munin-cgi-graph with hostnames including - (SF#1111510).
+#
+# Revision 1.41  2005/01/05 18:32:49  jimmyo
+# Main: Tables in service-view now containt the correct "Type" when using data aliases.
+#
+# Revision 1.40  2005/01/05 18:08:01  jimmyo
+# Main: Tables in service-view now sorted according to graph_order.
+#
 # Revision 1.39  2004/12/22 20:53:50  jimmyo
 # Correct name of config variable.
 #
@@ -321,6 +333,7 @@ for my $domain (@domainorder) {
 	$node{url}="$domain/$node.html";
 	my @services;
 	my @categories;
+	my %categories;
 	my %tmp_cats;
 	my @serviceorder;
 	if ($config->{domain}->{$domain}->{node}->{$node}->{service_order}) {
@@ -345,15 +358,15 @@ for my $domain (@domainorder) {
 	    my $method = &munin_get ($config, "graph_strategy", "cron");
 	    if ($method eq "cgi")
 	    {
-		$service{imgday}=$config->{'cgiurl_graph'}."/$domain/$node-$service-day.png";
-		$service{imgweek}=$config->{'cgiurl_graph'}."/$domain/$node-$service-week.png";
-		$service{imgmonth}=$config->{'cgiurl_graph'}."/$domain/$node-$service-month.png";
-		$service{imgyear}=$config->{'cgiurl_graph'}."/$domain/$node-$service-year.png";
+		$service{imgday}=$config->{'cgiurl_graph'}."/$domain/$node/$service-day.png";
+		$service{imgweek}=$config->{'cgiurl_graph'}."/$domain/$node/$service-week.png";
+		$service{imgmonth}=$config->{'cgiurl_graph'}."/$domain/$node/$service-month.png";
+		$service{imgyear}=$config->{'cgiurl_graph'}."/$domain/$node/$service-year.png";
 
 		if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
 		{
-		    $service{imgweeksum} = $config->{'cgiurl_graph'}."/$domain/$node-$service-week-sum.png";
-		    $service{imgyearsum} = $config->{'cgiurl_graph'}."/$domain/$node-$service-year-sum.png";
+		    $service{imgweeksum} = $config->{'cgiurl_graph'}."/$domain/$node/$service-week-sum.png";
+		    $service{imgyearsum} = $config->{'cgiurl_graph'}."/$domain/$node/$service-year-sum.png";
 		}
 	
 		if (my ($w, $h) = &calculate_png_size ($config, $domain, $node, $service))
@@ -416,33 +429,38 @@ for my $domain (@domainorder) {
 			push @{$service{graphinfo}}, \%graph_info;
 		}
 		$service{fieldlist} .= "<tr><th align='left' valign='top'>Field</th><th align='left' valign='top'>Type</th><th align='left' valign='top'>Warn</th><th align='left' valign='top'>Crit</th><th></tr>";
-		foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}})
+#		foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}})
+		foreach my $f (@{&munin_get_field_order ($config->{domain}->{$domain}->{node}->{$node}, $config, $domain, $node, $service)})
 		{
-			if ($field =~ /^([^\.]+)\.label/)
+			$f =~ s/=(.*)$//;
+			my $path = $1;
+			next unless (&munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $service, $f));
+			print "DEBUG: single_value: Checking field \"$f\" ($path).\n" if $DEBUG;
+
+			if (defined $path)
 			{
-				my $f = $1;
-				next unless (&munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $service, $f));
-
-				my %field_info;
-				$fieldnum++;
-
-				$field_info{'hr'}      = 1 unless ($fieldnum % 3);
-				$field_info{'field'}   = $f;
-				$field_info{'label'}   = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".label"} || $f;
-				$field_info{'type'}    = lc ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".type"} || "GAUGE");
-				$field_info{'warn'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".warning"} || "None";
-				$field_info{'crit'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".critical"} || "None";
-				$field_info{'info'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".info"} || "";
-
-				my $state = &munin_field_status ($config, $limits, $domain, $node, $service, $f, 1);
-				if (defined $state)
-				{
-					$field_info{'state_warning'}  = 1 if $state eq "warning";
-					$field_info{'state_critical'} = 1 if $state eq "critical";
-					$field_info{'state_unknown'}  = 1 if $state eq "unknown";
-				}
-				push @{$service{fieldinfo}}, \%field_info;
+			    munin_get_rrd_filename ($config->{domain}->{$domain}->{node}->{$node}, $config, $domain, $node, $service, $f, $path);
 			}
+
+			my %field_info;
+			$fieldnum++;
+
+			$field_info{'hr'}      = 1 unless ($fieldnum % 3);
+			$field_info{'field'}   = $f;
+			$field_info{'label'}   = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".label"} || $f;
+			$field_info{'type'}    = lc ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".type"} || "GAUGE");
+			$field_info{'warn'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".warning"} || "None";
+			$field_info{'crit'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".critical"} || "None";
+			$field_info{'info'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".info"} || "";
+
+			my $state = &munin_field_status ($config, $limits, $domain, $node, $service, $f, 1);
+			if (defined $state)
+			{
+				$field_info{'state_warning'}  = 1 if $state eq "warning";
+				$field_info{'state_critical'} = 1 if $state eq "critical";
+				$field_info{'state_unknown'}  = 1 if $state eq "unknown";
+			}
+			push @{$service{fieldinfo}}, \%field_info;
 		}
 
 		{
@@ -484,7 +502,7 @@ for my $domain (@domainorder) {
 	    $tmp{services} = \@{$tmp_cats{$key}};
 	    $tmp{node} = $node;
 	    $tmp{domain} = $domain;
-	    push @categories, \%tmp;
+	    $categories{ucfirst $key} = \%tmp;
 	    $comparisons{$key}{$node} = \%tmp;
 	}
 	if (defined $tmp_cats{'other'})
@@ -503,8 +521,23 @@ for my $domain (@domainorder) {
 	    $tmp{services} = \@{$tmp_cats{$key}};
 	    $tmp{node} = $node;
 	    $tmp{domain} = $domain;
-	    push @categories, \%tmp;
+	    $categories{ucfirst $key} = \%tmp;
 	    $comparisons{'other'}{$node} = \%tmp;
+	}
+	# Handle category_order
+	@categories = ();
+	if ($config->{domain}->{$domain}->{node}->{$node}->{category_order}) {
+	    foreach my $cat (split /\s+/, $config->{domain}->{$domain}->{node}->{$node}->{category_order})
+	    {
+		push @categories, $categories{ucfirst $cat};
+	    }
+	    foreach my $cat (sort keys %categories)
+	    {
+		push @categories, $categories{$cat}
+			unless (grep /^$cat$/, @categories);
+	    }
+	} else {
+	    @categories = map { $categories{$_} } sort keys %categories;
 	}
 	$nodetemplate->param(SERVICES => \@services,
 			     NODE => $node,
