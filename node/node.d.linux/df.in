@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.7  2005/03/09 19:09:13  jimmyo
+# Made linux/df work properly with tmpfs and devmapper (Deb#298442)
+#
 # Revision 1.6  2005/02/16 22:48:56  jimmyo
 # linux/df* now ignores bind mounts.
 #
@@ -41,11 +44,26 @@
 #%# capabilities=autoconf
 
 MAXLABEL=20
+MAXNAME=15
 
 if [ "$1" = "autoconf" ]; then
 	echo yes
 	exit 0
 fi
+
+clean_name() {
+    echo $1 $7 $2 | sed 's/[\/.-]/_/g; s/^_dev\(_mapper\)\?_//'| awk "{ 
+	if (\$3 == \"tmpfs\")
+		n=\$1\$2
+	else
+		n=\$1
+        if (length(n) > $MAXNAME)
+                print substr(n, length(n)-$MAXNAME+1)
+        else
+                print n
+        }"
+}
+
 
 if [ "$1" = "config" ]; then
 
@@ -54,8 +72,8 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel %'
 	echo 'graph_category disk'
 	echo 'graph_info This graph shows disk usage on the machine.'
-	df -T -P -l -x none -x unknown | sed 1d | grep -v "//" | sort | while read i; do
-		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 }'`
+	df -T -P -l -x none -x unknown -x udf -x iso9660 -x romfs -x ramfs | sed 1d | grep -v "//" | sort | while read i; do
+		name=`clean_name $i`
 		echo -n "$name.label "
 		echo $i | awk "{ 
 			dir=\$7
@@ -71,8 +89,8 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-df -P -l -x unknown  -x none| sed 1d | grep -v "//" | while read i; do
-	name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 ".value " }'`
-	echo -n "$name "
+df -T -P -l -x none -x unknown -x udf -x iso9660 -x romfs -x ramfs | sed 1d | grep -v "//" | while read i; do
+	name=`clean_name $i`
+	echo -n "$name.value "
 	echo $i | awk '{ print $5 }' | cut -f1 -d%
 done
