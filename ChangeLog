@@ -1,4 +1,4 @@
-munin (work)
+munin (1.2.1)
   * Main: fix the file vs. pipe check in munin-limits.
   * Main: place the munin-limits lock file in rundir, not dbdir.
   * Main: Make sure all rrd-tunes are correct after an upgrade (Deb#296454,
