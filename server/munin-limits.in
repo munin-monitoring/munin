@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.18  2004/11/19 21:32:39  jimmyo
+# Added a --force option to munin-limits, to force sending absolutely all messages.
+#
 # Revision 1.17  2004/11/19 21:05:54  jimmyo
 # Removed the munin-nagios program, as it is no longer needed.
 #
@@ -95,8 +98,10 @@ my @limit_services = ();
 my $force_root = 0;
 my %notes = ();
 my $stdout = 0;
+my $force = 0;
 my %default_text = ( "default" => '${var:group} :: ${var:host} :: ${var:graph_title}${if:cfields \n\tCRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields \n\tWARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields \n\tUNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields \n\tOKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}\n',
-    		     "nagios"  => '${var:host}\t${var:worstid}\t${var:graph_title}\t${var:graph_title}:${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}'
+    		     "nagios"  => '${var:host}\t${var:graph_title}\t${var:worstid}\t${var:graph_title}:${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}',
+    		     "old-nagios"  => '${var:host}\t${var:plugin}\t${var:worstid}\t${var:graph_title}:${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}'
 		    );
 
 my $log = new IO::Handle;
@@ -109,6 +114,7 @@ GetOptions ( "force-root!"  => \$force_root,
 	     "config=s"     => \$conffile,
 	     "debug!"       => \$DEBUG,
 	     "stdout!"      => \$stdout,
+	     "force!"       => \$force,
 	     "help"         => \$do_usage );
 
 if ($do_usage)
@@ -120,6 +126,7 @@ Options:
     --help		View this message.
     --debug		View debug messages.
     --stdout		Log to stdout as well as the log file.
+    --force		Send messages even if they shouldn't normally be sent.
     --service <service>	Limit notified services to <service>. Multiple 
     			--service options may be supplied.
     --host <host>	Limit notified hosts to <host>. Multiple --host 
@@ -150,7 +157,11 @@ logger("Created lock: $config->{dbdir}/munin-limits.lock");
 if (!defined $config->{'contact'}->{'nagios'}->{'command'} and
 	defined $config->{'nsca'})
 {
-    $config->{'contact'}->{'nagios'}->{'command'} = "$config->{nsca} $config->{nsca_server} -c $config->{nsca_config} -to 60";
+    $config->{'contact'}->{'old-nagios'}->{'command'} = "$config->{nsca} $config->{nsca_server} -c $config->{nsca_config} -to 60";
+    $config->{'contact'}->{'old-nagios'}->{'always_send'} = "critical warning";
+}
+if (!defined $config->{'contact'}->{'nagios'}->{'always_send'})
+{
     $config->{'contact'}->{'nagios'}->{'always_send'} = "critical warning";
 }
 
@@ -208,8 +219,9 @@ sub process_service {
 	    $client->{$key.".value"} = $value;
 	    $client->{'fields'} = join (' ', map { $_ =~ s/\.label$//; $_} grep (/\.label/, keys %$client));
 	    $client->{'plugin'} = $clientname;
-	    $client->{'host'} = $name;
-	    $client->{'group'} = $domain;
+	    $client->{'graph_options'} = $client->{'notify_alias'} if defined $client->{'notify_alias'};
+	    $client->{'host'} = $config->{'domain'}->{$domain}->{'node'}->{$name}->{'notify_alias'} || $name;
+	    $client->{'group'} = $config->{'domain'}->{$domain}->{'notify_alias'} || $domain;
 	    $client->{'worst'} = "OK";
 	    $client->{'worstid'} = 0;
 	    $client->{$key.".crange"} = (defined $critical->[0]?$critical->[0]:"").":".(defined $critical->[1]?$critical->[1]:"");
@@ -253,7 +265,8 @@ sub process_service {
 		    $client->{'state_changed'} = 1;
 		}
 	    } 
-	    elsif (defined ($oldnotes->{'domain'}->{$domain}->{'node'}->{$name}->{'client'}->{$clientname}->{"$key.state"}))
+	    elsif (defined ($oldnotes->{'domain'}->{$domain}->{'node'}->{$name}->{'client'}->{$clientname}->{"$key.state"}) or
+		    $force)
 	    {
 		$notes{$domain}{$name}{$clientname}{"$key.ok"} = "OK";
 		$client->{'state_changed'} = 1;
@@ -573,7 +586,7 @@ Force running as root (stupid and unnecessary). [--noforce-root]
 
 =item B<< --removeok >>
 
-Reset warning status (remove .ok-files).
+Reset warning status.
 
 =item B<< --help >>
 

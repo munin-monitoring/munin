@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.30  2004/11/19 21:32:38  jimmyo
+# Added a --force option to munin-limits, to force sending absolutely all messages.
+#
 # Revision 1.29  2004/11/19 20:51:24  jimmyo
 # New notification system finished (I think).
 #
@@ -229,7 +232,7 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"graph_height", "graph_sums", "graph_vlabel_sum_year", 
 	"graph_vlabel_sum_week", "local_address", "compare", "cgiurl",
 	"text", "command", "contact", "contacts",  "max_messages", 
-	"always_send"
+	"always_send", "notify_alias"
     );
 
 
