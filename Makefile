@@ -28,7 +28,9 @@ install-main: build
 
 	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR) $(RUNDIR) $(HTMLDIR) $(DBDIR)
 
-	$(INSTALL) -m 0644 server/*.tmpl $(CONFDIR)/templates/
+	for p in server/*.tmpl; do    		              \
+		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
+	done
 	$(INSTALL) -m 0644 server/logo.gif $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/style.css $(CONFDIR)/templates/
 
@@ -82,7 +84,7 @@ install-node-plugins: build
 install-doc: build-doc
 	mkdir -p $(DOCDIR)
 	mkdir -p $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8
-	$(INSTALL) -m 0644 build/doc/node.conf.5 $(MANDIR)/man5/
+	$(INSTALL) -m 0644 build/doc/munin-node.conf.5 $(MANDIR)/man5/
 	$(INSTALL) -m 0644 build/doc/munin.conf.5 $(MANDIR)/man5/
 	$(INSTALL) -m 0644 build/doc/munin-node.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-run.8 $(MANDIR)/man8/
@@ -154,9 +156,9 @@ build-doc-stamp:
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		server/munin-cron.pod > build/doc/munin-cron.8
 	pod2man  --section=5 --release=$(RELEASE) --center="Munin Documentation" \
-		server/server.conf.pod > build/doc/server.conf.5
+		server/munin.conf.pod > build/doc/munin.conf.5
 	pod2man  --section=5 --release=$(RELEASE) --center="Munin Documentation" \
-		node/node.conf.pod > build/doc/node.conf.5
+		node/munin-node.conf.pod > build/doc/munin-node.conf.5
 
 	touch build-doc-stamp
 
