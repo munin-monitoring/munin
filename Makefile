@@ -131,6 +131,7 @@ build-stamp:
 		    -e 's|@@STATEDIR@@|$(STATEDIR)|g'			\
 		    -e 's|@@PERL@@|$(PERL)|g'				\
 		    -e 's|@@PERLLIB@@|$(PERLLIB)|g'			\
+		    -e 's|@@PYTHON@@|$(PYTHON)|g'				\
 		    -e 's|@@OSTYPE@@|$(OSTYPE)|g'				\
 		    -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'			\
 		    -e 's|@@VERSION@@|$(VERSION)|g'			\
