@@ -16,6 +16,8 @@ munin (1.0.0pre4)
   * Clarified the vlabels in the apache-plugins (Deb#238594).
   * Patched temp-part of linux-pugin sensors_* with better regexp 
     (Deb#245289).
+  * Changed default ARCH variable in Makefile.config, to support
+    older tr-s (SF#898814).
 
 munin (1.0.0pre3)
 
