@@ -1,6 +1,9 @@
 #!/usr/bin/perl -w
 #
 # $Log$
+# Revision 1.7  2004/09/07 12:58:41  ilmari
+# SNMP plugin "df" properly strips the label and serial number fromWindows drive labels.
+#
 # Revision 1.6  2004/09/05 12:00:18  jimmyo
 # Set family and capabilities.
 #
@@ -150,8 +153,7 @@ if (defined $partitions{""})
 	{
 		my $part = get_single ($session, $hrStorageDesc . $id);
 		my $spart = $part;
-		$spart =~ s/ Label: +Serial Number.+$//;
-		$spart =~ s/\\//g;
+		$spart =~ s/:\\ Label:.*/:/;
 		$partitions{$spart}{storage} = $id;
 		$partitions{$spart}{extinfo} = $part;
 		$stor_id->{$id} = $spart;

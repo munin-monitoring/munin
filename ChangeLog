@@ -1,3 +1,8 @@
+munin (work)
+
+  * SNMP plugin "df" properly strips the label and serial number from
+    Windows drive labels.
+	
 munin (1.1.4)
 
   * Better error handling when fetching data from RRD files.
