@@ -1,6 +1,7 @@
 munin (work)
 
   * Main: Allow dots in PNG paths (patch by Jacques Caruso).
+  * Munin-html: Properly size table below graphs in service-view.
 
 munin (1.1.9)
 
