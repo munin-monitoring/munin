@@ -33,6 +33,8 @@ munin (work)
   * Added module Munin::Node::SNMP, a Net::SNMP sublcass for plugins.
   * Added SNMP plugins for temperature and fan info provided by the
     Fujitsu Siemens ServerView agents.
+  * Adapt linux/apt plugin to work properly with Debian testing/unstable
+    (patch from Rune N. Skillingstad).
 
 munin (1.1.4)
 
