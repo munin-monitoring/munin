@@ -1,8 +1,11 @@
-#!/usr/bin/perl
+#!@@PERL@@
 #
 # $Id$
 #
 # $Log$
+# Revision 1.23  2004/09/08 15:25:33  ilmari
+# Use @@PERL@@ in all perl shebang lines.
+#
 # Revision 1.22  2004/09/07 20:38:33  jimmyo
 # Added the internal field name to the HTML output as a tooltip.
 #

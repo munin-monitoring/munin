@@ -1,10 +1,13 @@
-#!/usr/bin/perl -w
+#!@@PERL@@ -w
 #
 # Script to make graphs
 #
 # $Id$
 #
 # $Log$
+# Revision 1.30  2004/09/08 15:25:33  ilmari
+# Use @@PERL@@ in all perl shebang lines.
+#
 # Revision 1.29  2004/09/07 21:45:38  jimmyo
 # Changes of min and max values now causes corresponding changes in the RRD files.
 #

@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!@@PERL@@ -w
 #
 # Plugin to monitor NTP states
 #
@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by lrrd-config)
 #
 # $Log$
+# Revision 1.2  2004/09/08 15:25:33  ilmari
+# Use @@PERL@@ in all perl shebang lines.
+#
 # Revision 1.1  2004/01/30 15:07:38  jimmyo
 # Added generic plugins ntp_ and ntp_states to manual family (SF#887000).
 #

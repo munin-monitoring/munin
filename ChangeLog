@@ -7,7 +7,8 @@ munin (work)
   * Small interface improvements in the HTML output.
   * Changes of min and max values now causes corresponding changes in 
     the RRD files.
-	
+  * Use @@PERL@@ in all perl shebang lines.
+
 munin (1.1.4)
 
   * Better error handling when fetching data from RRD files.

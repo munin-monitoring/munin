@@ -1,6 +1,9 @@
-#!/usr/bin/perl -w
+#!@@PERL@@ -w
 #
 # $Log$
+# Revision 1.9  2004/09/08 15:25:33  ilmari
+# Use @@PERL@@ in all perl shebang lines.
+#
 # Revision 1.8  2004/09/07 13:19:22  ilmari
 # SNMP plugins now honour the "host" environment variable if they can't deduce the hostname from zsh.
 #

@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!@@PERL@@
 #
 # Wildcard plugin to monitor sensors.
 #
@@ -27,6 +27,9 @@
 # 	                    Narrow the voltage bracket by this.
 #
 # $Log$
+# Revision 1.8  2004/09/08 15:25:33  ilmari
+# Use @@PERL@@ in all perl shebang lines.
+#
 # Revision 1.7  2004/08/18 17:27:21  jimmyo
 # Made linux/sensors_volt work with negative voltages (Deb#256734).
 #

@@ -1,9 +1,12 @@
-#!/usr/bin/perl
+#!@@PERL@@
 # Nagios
 #
 # $Id$
 #
 # $Log$
+# Revision 1.7  2004/09/08 15:25:33  ilmari
+# Use @@PERL@@ in all perl shebang lines.
+#
 # Revision 1.6  2004/06/28 13:30:33  jimmyo
 # Munin-nagios: Only state number of OKs when something is in warning or critical state.
 #

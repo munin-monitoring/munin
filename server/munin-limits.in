@@ -1,7 +1,10 @@
-#!/usr/bin/perl
+#!@@PERL@@
 # Nagios
 #
 # $Log$
+# Revision 1.7  2004/09/08 15:25:33  ilmari
+# Use @@PERL@@ in all perl shebang lines.
+#
 # Revision 1.6  2004/06/08 15:30:34  jimmyo
 # The server programs now open the log file at an earlier point.
 #
