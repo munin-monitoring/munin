@@ -15,6 +15,7 @@ munin (work)
   * Plugins: sunos/memory repaired (SF#1143610).
   * Plugins: Made linux/if_ work with more versions of iwlist (SF#1150954).
   * Plugins: generic/mailman now handles regular mailman (Deb#297904).
+  * Plugins: New contrib plugin generic/mbmon_ from Arne Schwabe.
 
 munin (1.2.0)
 
