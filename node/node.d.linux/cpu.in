@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.5  2004/05/16 12:34:26  jimmyo
+# Added "info"-fields to linux/cpu and linux/load plugins, to demonstrate how it works.
+#
 # Revision 1.4  2004/05/06 21:39:54  jimmyo
 # Added plugin acpi, contributed by Alexandre Dupouy.
 #
@@ -72,25 +75,30 @@ if [ "$1" = "config" ]; then
 	echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit $graphlimit"
 	echo 'graph_vlabel %'
 	echo 'graph_scale no'
+	echo 'graph_info This graph shows how CPU time is spent.'
 	echo 'system.label system'
 	echo 'system.draw AREA'
 	echo 'system.max 5000'
 	echo 'system.type COUNTER'
 	echo "system.warning $SYSWARNING" 
 	echo "system.critical $SYSCRITICAL" 
+	echo "system.info CPU time spent by the kernel in system activities" 
 	echo 'user.label user'
 	echo 'user.draw STACK'
 	echo 'user.max 5000'
 	echo "user.warning $USRWARNING"
 	echo 'user.type COUNTER'
+	echo 'user.info CPU time spent by normal programs and daemons'
 	echo 'nice.label nice'
 	echo 'nice.draw STACK'
 	echo 'nice.max 5000'
 	echo 'nice.type COUNTER'
+	echo 'nice.info CPU time spent by nice(1)d programs'
 	echo 'idle.label idle'
 	echo 'idle.draw STACK'
 	echo 'idle.max 5000'
 	echo 'idle.type COUNTER'
+	echo 'idle.info Idle CPU time'
 	if [ "$scaleto100" = "yes" ]; then
 		echo "system.cdef system,$NCPU,/"
 		echo "user.cdef user,$NCPU,/"
@@ -103,14 +111,17 @@ if [ "$1" = "config" ]; then
 		echo 'iowait.draw STACK'
 		echo 'iowait.max 5000'
 		echo 'iowait.type COUNTER'
+		echo 'iowait.info CPU time spent waiting for I/O operations to finish'
 		echo 'irq.label irq'
 		echo 'irq.draw STACK'
 		echo 'irq.max 5000'
 		echo 'irq.type COUNTER'
+		echo 'irq.info CPU time spent handling interrupts'
 		echo 'softirq.label softirq'
 		echo 'softirq.draw STACK'
 		echo 'softirq.max 5000'
 		echo 'softirq.type COUNTER'
+		echo 'softirq.info CPU time spent handling "batched" interrupts'
 		if [ "$scaleto100" = "yes" ]; then
 			echo "iowait.cdef iowait,$NCPU,/"
 			echo "irq.cdef irq,$NCPU,/"
