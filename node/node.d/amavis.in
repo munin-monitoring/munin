@@ -14,7 +14,7 @@
 #       amavislog    - file where amavis logs are written
 #
 
-TEMP_FILE=/tmp/lrrd-amavis
+TEMP_FILE=/tmp/lrrd-amavis.$$
 AMAVIS_LOG=/var/log/mail/mail.info
 LOGTAIL=`which logtail`
 
@@ -41,11 +41,20 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-logtail ${AMAVIS_LOG} | grep 'amavis\[.*\]:' > ${TEMP_FILE}
-total=`cat ${TEMP_FILE} | wc -l`
-virus=`grep INFECTED ${TEMP_FILE} | wc -l`
-spamm=`grep 'Passed.*Hits: 1[0-9][.]' ${TEMP_FILE} | wc -l`
-spams=`grep 'Passed.*Hits: [2-9][0-9][0-9]*[.]' ${TEMP_FILE} | wc -l`
+total=U
+virus=U
+spamm=U
+spams=U
+
+if [ -e $TEMP_FILE -a -f $TEMP_FILE ]
+then
+	logtail ${AMAVIS_LOG} | grep 'amavis\[.*\]:' > ${TEMP_FILE}
+	total=`cat ${TEMP_FILE} | wc -l`
+	virus=`grep INFECTED ${TEMP_FILE} | wc -l`
+	spamm=`grep 'Passed.*Hits: 1[0-9][.]' ${TEMP_FILE} | wc -l`
+	spams=`grep 'Passed.*Hits: [2-9][0-9][0-9]*[.]' ${TEMP_FILE} | wc -l`
+	/bin/rm $TEMP_FILE
+fi
 
 echo "virus.value ${virus}"
 echo "spam_maybe.value ${spamm}"
