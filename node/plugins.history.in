@@ -49,7 +49,6 @@ linux/swap
 
 [0.9.9pre1]
 [0.9.9pre2]
-psu_
 squid_cache
 squid_requests
 squid_traffic
