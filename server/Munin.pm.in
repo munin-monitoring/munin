@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.36  2004/12/08 08:47:44  jimmyo
+# Fix bug where munin-limits didn't warn properly in all situations.
+#
 # Revision 1.35  2004/11/26 13:06:00  jimmyo
 # Bugfix in munin-html, when using groups/host names with more than one dot.
 #
@@ -248,7 +251,7 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"graph_height", "graph_sums", "graph_vlabel_sum_year", 
 	"graph_vlabel_sum_week", "local_address", "compare", "cgiurl",
 	"text", "command", "contact", "contacts",  "max_messages", 
-	"always_send", "notify_alias", "line"
+	"always_send", "notify_alias", "line", "state"
     );
 
 
