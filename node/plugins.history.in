@@ -101,3 +101,4 @@ hddtempd
 linux/irqstats
 linux/forks
 smart_
+ntp_
