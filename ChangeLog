@@ -20,6 +20,8 @@ munin (1.0.0pre2)
     (SF#881483).
   * Disabled plugins df and df_inode on Solaris (SF#882274).
   * Make vmstat plugin more portable (SF#882352).
+  * Moved generic netstat to linux-dir, as it is too spesific. Added Solaris
+    version of the plugin as well. (SF#882354)
 
 munin (1.0.0pre1)
 

@@ -8,6 +8,9 @@
 # 	autoconf (optional - only used by munin-config)
 #
 # $Log$
+# Revision 1.1  2004/01/29 19:21:20  jimmyo
+# Moved generic netstat to linux-dir, as it is too spesific. Added Solaris version of the plugin as well. (SF#882354)
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
