@@ -8,6 +8,7 @@ munin (work)
   * Plugins: Make linux/sensors_ handle multiline output better (Deb#300690).
   * Plugins: generic/postfix_mailstats now treats reject-lines better
     (Deb#302220).
+  * Plugins: Made generic/postfix_mailvolume autoconf less eager.
 
 munin (1.2.2)
 
