@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.10  2004/02/05 17:35:41  jimmyo
+# Made client timeouts configurable (not per plugin).
+#
 # Revision 1.9  2004/02/01 21:34:59  jimmyo
 # Remove dependency on pgrep (use process groups instead). (SF#881049)
 #
@@ -95,7 +98,8 @@ my $defuser = getpwnam ("nobody");
 my $defgroup= getgrnam ("munin");
 my $paranoia= 0;
 my @ignores = ();
-my %sconf  = ();
+my %sconf   = ();
+my $timeout = 10;
 
 $do_usage=1  unless 
 GetOptions ( "config=s"     => \$conffile,
@@ -193,6 +197,10 @@ while (<FILE>) {
   elsif (($1 eq "ignore_file") and defined $2)
   {
       push @ignores, $2;
+  }
+  elsif (($1 eq "timeout") and defined $2)
+  {
+      $timeout = $2;
   }
 }
 
@@ -334,7 +342,7 @@ sub run_service {
     };
 
     if ($child = open (CHILD, "-|")) {
-      alarm(10);
+      alarm($timeout);
       while(<CHILD>) {
 	push @lines,$_;
 	if( $timed_out ) {
@@ -449,9 +457,9 @@ sub process_request {
   my $self = shift;
   print "# munin node at $FQDN\n";
   local $SIG{ALRM} = sub { logger ("Connection timed out."); die "timeout" };
-  alarm(10);
+  alarm($timeout);
   while( <STDIN> ){
-    alarm(30);
+    alarm($timeout);
     chomp;
     if (m/^list\s*([0-9a-zA-Z\.\-]+)?/) {
       &list_services($1);

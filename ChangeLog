@@ -16,6 +16,7 @@ munin (1.0.0pre3)
     correct autoconf value. Also, bugfixes in _processes and _volume.
   * Added new wildcard plugin linux/sensors_ that replaces the i2c plugins
     (SF#890952).
+  * Made client timeouts configurable (not per plugin).
 
 munin (1.0.0pre2)
 
