@@ -129,7 +129,7 @@ build-doc: build-doc-stamp
 
 build-doc-stamp:
 	mkdir -p build/doc
-	htmldoc munin.html > build/doc/munin-doc.html
+	htmldoc munin-doc-base.html > build/doc/munin-doc.html
 	htmldoc -t pdf --webpage build/doc/munin-doc.html > build/doc/munin-doc.pdf
 	html2text -style pretty -nobs build/doc/munin-doc.html > build/doc/munin-doc.txt
 
