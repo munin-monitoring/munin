@@ -116,3 +116,5 @@ sendmail_mailtraffic
 [1.1.8]
 [1.1.9]
 [1.2.0rc1]
+[1.2.0rc2]
+generic/hddtemp_smartctl
