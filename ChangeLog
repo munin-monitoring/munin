@@ -40,6 +40,8 @@ munin (work)
     xavier.
   * Made graph_title a parameter for generic/exim_mailqueue (patch by Torstein
     T. Svendsen, SF#1060834).
+  * Fixed typo in generic/sendmail_mailstats (patch by Lupe Christoph,
+    SF#1058128).
 
 munin (1.1.4)
 
