@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+# Plugin to monitor ping times
+#
+# Parameters:
+#
+# 	ping_args      - Arguments to ping (default "-c 2")
+# 	ping           - Ping program to use
+# 	host           - Host to ping
+#
+#%# family=manual
+
+file_host=`basename $0 | sed 's/^ping_//g'`
+host=${host:-${file_host:-www.google.com}}
+
+if [ "$1" = "config" ]; then
+	echo graph_title Ping times to $host
+	echo 'graph_args --base 1000 -l 0'
+	echo 'graph_vlabel seconds'
+	echo 'graph_category network'
+	echo 'graph_info This graph shows ping RTT statistics.'
+	echo "ping.label $name"
+	echo "ping.info Ping RTT statistics for $host."
+	echo 'ping.draw LINE2'
+	echo 'packetloss.label packet loss'
+	echo 'packetloss.graph no'
+	exit 0
+fi
+
+
+${ping:-ping} ${ping_args:--c 2} ${host:-${file_host:-www.google.com}} | awk '/min\/avg\/max/ { split ($0, arr, "/"); print "ping.value " arr[4]} /% packet loss/ {split ($7, arr2, "%"); print "packetloss.value " arr2[1]}'
