@@ -1,4 +1,10 @@
 #! /bin/sh
+#
+# $Log$
+# Revision 1.3  2004/02/08 14:26:38  lupe
+# relocate LIBDIR to .../share/munin
+#
+#
 
 ask() {
     local question default answer
@@ -111,7 +117,7 @@ case $2 in
 MAILTO=root
 
 */5 * * * *     ${PKG_PREFIX}/bin/munin-cron
-10 10 * * *     ${PKG_PREFIX}/lib/munin-nagios --removeok
+10 10 * * *     ${DATADIR:=${PKG_PREFIX}/share/munin}/munin-nagios --removeok
 #END_MUNIN
 EOT
 	;;      
