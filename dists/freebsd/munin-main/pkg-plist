@@ -10,8 +10,8 @@ share/munin/munin-graph
 share/munin/munin-html
 share/munin/munin-nagios
 share/munin/munin-update
-@dirrm www/data/munin
-@dirrm var/munin/plugin-state
-@dirrm var/munin
+@unexec rmdir %D/www/data/munin 2>/dev/null || true
+@unexec rmdir %D/var/munin 2>/dev/null || true
+@unexec rmdir %D/share/munin 2>/dev/null || true
 @dirrm etc/munin/templates
-@dirrm etc/munin
+@unexec rmdir %D/etc/munin 2>/dev/null || true
