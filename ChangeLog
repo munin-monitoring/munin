@@ -27,7 +27,7 @@ munin (1.0.0pre4)
     Betrieb GmbH. (Thanks :-)
   * Made solaris plugin fs_df work without GNU df (SF#944389).
   * New solaris plugin temperature, by Richard van den Berg.
-  * Two new linux firewall plugins; fw_firewall (by S. Banerian) and
+  * Two new linux firewall plugins; fw_packets (by S. Banerian) and
     fw_conntrack (by Nicolai Langfeldt).
   * Modified sunos/cpu and linux/cpu to take "scaleto100"-parameter.
   * Added patch to contrib-plugin linux/nfsd, to graph rpc count (Alexandre
