@@ -18,6 +18,7 @@ munin (1.0.0pre2)
     (SF#881411).
   * Bugfix in plugin mysql_queries - insertions were no longer graphed.
     (SF#881483).
+  * Disabled plugins df and df_inode on Solaris (SF#882274).
 
 munin (1.0.0pre1)
 

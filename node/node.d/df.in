@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.2  2004/01/29 18:57:39  jimmyo
+# Disabled plugins df and df_inode on Solaris (SF#882274).
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -28,8 +31,13 @@
 MAXLABEL=20
 
 if [ "$1" = "autoconf" ]; then
-	echo yes
-	exit 0
+	if [ `uname -s` = SunOS ]; then
+		echo no
+		exit 1
+	else
+		echo yes
+		exit 0
+	fi
 fi
 
 if [ "$1" = "config" ]; then
