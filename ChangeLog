@@ -23,6 +23,7 @@ munin (work)
   * Plugin: Added more sensible autoconf to generic/munin_graph,munin_update.
   * Plugin: Added two new plugins contributed by Jacques Caruso,
     generic/exim_mailqueue_alt and generic/mailscanner.
+  * Plugin: New version of generic/pm3users_ by plugin creator Jacques Caruso.
 
 munin (1.1.7)
 

@@ -3,32 +3,37 @@
 # Graphs busy channels on L(ivingston|ucent) Portmaster 3 Network Access
 # Servers (maybe PM2 and PM4, too. Dunno 'bout that)...
 #
-# Usage:
-# 	To monitor host pm3-1.foo.example, do:
+# Usage: Copy or link into /etc/munin/plugins/
 #
-# 		ln -s /path/to/pm3users /etc/munin/plugins/pm3users_pm3-1_foo_example
+# Magic Name:
 #
-# 	Then add this to /etc/munin/munin.conf:
-#
-# 		[pm3-1.foo.example]
-# 		    address 127.0.0.1
+# 	pm3users_<hostname>
+# 	pm3users_<ip address>
 #
 # Requirements:
+# 
 # 	Perl Net::SNMP
 #
 # Parameters supported:
-# 	None
+# 
+# 	config (required)
 #
 # Configurable variables:
+# 
+# 	host		- Host name or IP address to poll (default: undefined)
+# 	port		- Port number (default: 161)
+#  	community	- SNMP read community to use (default: public)
 #  	maxpstn		- Number of analog modems onboard the PM3 (default: 20)
 #  	maxisdn		- Number of ISDN channels available (default: 30 == a full E1 line)
-#  	community	- SNMP read community to use (default: public)
 #
 # Bugs:
-# 	The code is pretty stupid and slow
-# 	The `users' label is misleading
+# 
+# 	None known (I'll regret saying that, I know)
 #
 # $Log$
+# Revision 1.1  2004/12/09 20:07:39  jimmyo
+# New version of generic/pm3users_ by plugin creator Jacques Caruso.
+#
 # Revision 1.1  2004/05/09 21:11:15  jimmyo
 # New plugin (pm3users) and a bunch of patches from Jacques Caruso.
 #
@@ -45,37 +50,42 @@ my $modemtable = '1.3.6.1.4.1.307.3.2.1.1.1.13';
 my ($total, $pstn, $isdn) = (0, 0, 0);
 my ($maxpstn, $maxisdn) = (20, 30);
 my ($user, $modem) = ('', '');
-my $community = 'public';
+my ($host, $port, $community) = (undef, 161, 'public');
+my $progname = '';
 my $cmd = (defined($ARGV[0])) ? $ARGV[0] : '';
 
 # Check how we were called to guess the PM3's hostname
-my ($progname, @hostarry) = split(/_/, $0);
-my $hostname = join('.', @hostarry);
+($progname, $host) = split(/_/, $0) if ($0 =~ /^(?:|.*\/)pm3users_/);
 
 # Let's see if our configuration differs from the defaults
+(defined($ENV{'host'})) and $host = $ENV{'host'};
+(defined($ENV{'port'})) and $port = $ENV{'port'};
+(defined($ENV{'community'})) and $community = $ENV{'community'};
+
+# We need an host name
+(defined($host)) or die('# Error: cannot find the host to be monitored');
+
 # XXX maybe there is a way to get this info from the equipment
 # XXX remember to look into this
 (defined($ENV{'maxpstn'})) and $maxpstn = $ENV{'maxpstn'};
 (defined($ENV{'maxisdn'})) and $maxisdn = $ENV{'maxisdn'};
-(defined($ENV{'community'})) and $community = $ENV{'community'};
 my $maxtotal = $maxisdn;
-exit(1) if (!defined($hostname) or ($hostname eq ''));
 
 # Show default values if requested
 if ($cmd eq 'config') {
-	print("host_name $hostname\n");
-	print("graph_title Users on $hostname\n");
+	print("host_name $host\n");
+	print("graph_title Users on $host\n");
 	print("graph_args --lower-limit 0 --upper-limit $maxtotal\n");
-	print("graph_vlabel users\n");
-	print("pstn.label PSTN users\n");
+	print("graph_vlabel channels in use\n");
+	print("pstn.label PSTN\n");
 	print("pstn.max $maxpstn\n");
 	print("pstn.type GAUGE\n");
 	print("pstn.draw AREA\n");
-	print("isdn.label ISDN users\n");
+	print("isdn.label ISDN\n");
 	print("isdn.max $maxisdn\n");
 	print("isdn.type GAUGE\n");
 	print("isdn.draw STACK\n");
-	print("total.label Total users\n");
+	print("total.label Total\n");
 	print("total.max $maxtotal\n");
 	print("total.type GAUGE\n");
 	print("total.draw LINE1\n");
@@ -91,23 +101,20 @@ if ($cmd eq 'config') {
 
 # Else proceed to poll the equipment
 my ($session, $error) = Net::SNMP->session(
-	-hostname	=> $hostname,
+	-hostname	=> $host,
 	-community	=> $community,
-	-port		=> 161
+	-port		=> $port,
 );
 if (defined($session)) {
+	my $user = $session->get_table(
+		-baseoid => $usertable
+	);
+	my $modem = $session->get_table(
+		-baseoid => $modemtable
+	);
+
 	# Interface 1 is the console port, thus we start at 2
 	for my $i (2 .. 61) {
-		my $user = $session->get_request(
-			-varbindlist => ["$usertable.$i"]
-		);
-		my $modem = $session->get_request(
-			-varbindlist => ["$modemtable.$i"]
-		);
-		if (!defined($user) or !defined($modem)) {
-			($total, $pstn) = (0, 0);
-			last;
-		}
 		(scalar($user->{"$usertable.$i"}) ne '') and $total++;
 		(scalar($modem->{"$modemtable.$i"}) ne '') and $pstn++;
 	}
