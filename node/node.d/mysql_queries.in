@@ -5,6 +5,9 @@
 # Copyright 2003 - Per Andreas Buer
 #
 # $Log$
+# Revision 1.2  2004/01/15 16:35:43  jimmyo
+# Bugfix from Dagfinn I. Mannsåker, closing SF#876443, SF#865125.
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -66,7 +69,7 @@ while (<SERVICE>) {
     my ($k, $v) = (m/(\w+).*?(\d+(?:\.\d+)?)/);
     next unless ($k);
     if (exists $WANTED{$k} ) {
-	print("$WANTED{$k} $v\n");
+	print("$WANTED{$k}.value $v\n");
     }
 }
 
