@@ -10,6 +10,7 @@ munin (1.0.0pre4)
   * Added user configuration for generic/postfix* (SF#895680).
   * Fixed links in HTML templates (Deb#236792).
   * Fixed broken autoconf in apache-* plugins (Deb#236144).
+  * Fixed bug in mysql-plugins (Deb#233762).
 
 munin (1.0.0pre3)
 

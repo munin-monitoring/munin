@@ -12,6 +12,9 @@
 #	mysqlopts     - Options to pass to mysql
 #
 # $Log$
+# Revision 1.2  2004/04/27 18:58:53  jimmyo
+# Fixed bug in mysql-plugins (Deb#233762).
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -53,6 +56,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel slow queries / second'
 	echo 'queries.label slow queries'
 	echo 'queries.type COUNTER'
+	echo 'queries.max 500000'
 	exit 0
 fi
 
