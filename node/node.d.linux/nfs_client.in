@@ -3,6 +3,9 @@
 # Plugin to monitor NFS client traffic
 #
 # $Log$
+# Revision 1.5  2004/10/01 12:32:09  ilmari
+# complete "rpc" removal
+#
 # Revision 1.4  2004/10/01 08:40:50  ilmari
 # Remove useless 'rpc' field, add total field
 #
@@ -37,7 +40,6 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel requests / second'
 	echo 'graph_total total'
 	echo 'graph_category NFS'
-	for a in $rpc ; do echo "$a.label $a" ; echo "$a.type COUNTER" ; done
 	for a in $proc ; do echo "$a.label $a" ; echo "$a.type COUNTER" ; done
 	exit 0
 fi
