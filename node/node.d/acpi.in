@@ -1,6 +1,17 @@
 #!/bin/sh
 #
+# Plugin to graph temperatures based on output from ACPI. Needs the
+# "acpi" program to work.
+#
+# Parameters:
+#
+# 	acpi      - Override path to acpi program
+#
+#
 # $Log$
+# Revision 1.5  2004/09/14 20:47:34  jimmyo
+# Updated/simplified plugin.
+#
 # Revision 1.4  2004/05/20 19:02:36  jimmyo
 # Set categories on a bunch of plugins
 #
@@ -39,9 +50,10 @@ if [ "$1" = "config" ]; then
         echo 'graph_args --base 1000 -l 0'
         echo 'graph_vlabel temp in °C'
         echo 'graph_category sensors'
+		echo 'graph_info This graph shows temperatures based on output from ACPI.'
         echo cpu.label cpu
+		echo cpu.info CPU temperature.
         exit 0
 fi
 
-t=$(echo "`acpi -t -B`" | awk '{print $4}' | tr '.' ' ' | cut -f 1 -d ' ')
-echo "cpu.value $t"
+${acpi:-acpi} -t -B | awk '{print "cpu.value " $4}'
