@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.44.2.1  2005/02/01 22:02:30  jimmyo
+# Added category_order, to complete the *_order options.
+#
 # Revision 1.44  2005/01/05 18:32:49  jimmyo
 # Main: Tables in service-view now containt the correct "Type" when using data aliases.
 #
@@ -277,7 +280,7 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"graph_height", "graph_sums", "local_address", "compare",
 	"text", "command", "contact", "contacts",  "max_messages", 
 	"always_send", "notify_alias", "line", "state", "graph_period",
-	"cgiurl_graph", "cgiurl"
+	"cgiurl_graph", "cgiurl", "service_order", "category_order"
     );
 
 my %legal_expanded = map { $_ => 1 } @legal;

@@ -3,6 +3,7 @@ munin (work)
   * Main: Fix bug with calculation of "Avg:" field when using graph_sums.
   * Main: Make munin-limits work properly with perl <5.8 (SF#1109039).
   * Main: Bugfix in munin-cgi-graph with hostnames including - (SF#1111510).
+  * Main: Added category_order, to complete the *_order options.
   * Plugins: Fix sendmail_mail{stats,traffic} autoconf handling.
   * Plugins: Fix linux/users #! line.
   * Plugins: Changed default log for generic/postfix_mailstats from syslog to

@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.41.2.2  2005/02/01 22:02:32  jimmyo
+# Added category_order, to complete the *_order options.
+#
 # Revision 1.41.2.1  2005/01/29 18:22:59  jimmyo
 # Bugfix in munin-cgi-graph with hostnames including - (SF#1111510).
 #
@@ -330,6 +333,7 @@ for my $domain (@domainorder) {
 	$node{url}="$domain/$node.html";
 	my @services;
 	my @categories;
+	my %categories;
 	my %tmp_cats;
 	my @serviceorder;
 	if ($config->{domain}->{$domain}->{node}->{$node}->{service_order}) {
@@ -498,7 +502,7 @@ for my $domain (@domainorder) {
 	    $tmp{services} = \@{$tmp_cats{$key}};
 	    $tmp{node} = $node;
 	    $tmp{domain} = $domain;
-	    push @categories, \%tmp;
+	    $categories{ucfirst $key} = \%tmp;
 	    $comparisons{$key}{$node} = \%tmp;
 	}
 	if (defined $tmp_cats{'other'})
@@ -517,8 +521,23 @@ for my $domain (@domainorder) {
 	    $tmp{services} = \@{$tmp_cats{$key}};
 	    $tmp{node} = $node;
 	    $tmp{domain} = $domain;
-	    push @categories, \%tmp;
+	    $categories{ucfirst $key} = \%tmp;
 	    $comparisons{'other'}{$node} = \%tmp;
+	}
+	# Handle category_order
+	@categories = ();
+	if ($config->{domain}->{$domain}->{node}->{$node}->{category_order}) {
+	    foreach my $cat (split /\s+/, $config->{domain}->{$domain}->{node}->{$node}->{category_order})
+	    {
+		push @categories, $categories{ucfirst $cat};
+	    }
+	    foreach my $cat (sort keys %categories)
+	    {
+		push @categories, $categories{$cat}
+			unless (grep /^$cat$/, @categories);
+	    }
+	} else {
+	    @categories = map { $categories{$_} } sort keys %categories;
 	}
 	$nodetemplate->param(SERVICES => \@services,
 			     NODE => $node,
