@@ -10,6 +10,9 @@ munin (work)
     Deb#288395).
   * Plugins: generic/named probes for more log files before giving up
     (Deb#291849).
+  * Plugins: New wildcard plugin generic/courier_ by Micah Anderson 
+    (Deb#291854). 
+
 
 munin (1.2.0rc1)
 
