@@ -11,10 +11,12 @@ use POSIX qw(strftime);
 my $GRAPHER = "@@LIBDIR@@/munin-graph";
 my $conffile = "@@CONFDIR@@/munin.conf";
 
-my %TIMES   = ( "day"   => ["--noweek", "--nomonth", "--noyear"], 
-		"week"  => ["--noday", "--nomonth", "--noyear"], 
-		"month" => ["--noday", "--noweek", "--noyear"], 
-		"year"  => ["--noday", "--noweek", "--nomonth"]
+my %TIMES   = ( "day"   => ["--noweek", "--nomonth", "--noyear", "--nosumweek", "--nosumyear"], 
+		"week"  => ["--noday", "--nomonth", "--noyear", "--nosumweek", "--nosumyear"], 
+		"month" => ["--noday", "--noweek", "--noyear", "--nosumweek", "--nosumyear"], 
+		"year"  => ["--noday", "--noweek", "--nomonth", "--nosumweek", "--nosumyear"]
+		"sum-week"  => ["--noday", "--nomonth", "--noyear", "--noweek", "--nosumyear"], 
+		"sum-year"  => ["--noday", "--noweek", "--nomonth", "--nosumweek", "--noyear"]
 	    );
 my %period  = ( "day"   => 300,
 		"week"  => 1800,
@@ -32,7 +34,7 @@ my $config= &munin_config ($conffile);
 my $path = $ENV{PATH_INFO} || "";
 $path =~ s/^\///;
 ($dom, $host) = split /\//, $path;
-($host, $serv, $scale) = split /-/, $host;
+($host, $serv, $scale) = split /-/, $host, 3;
 $scale =~ s/\.png$//;
 
 &verify_parameters ($dom, $host, $serv, $scale);
