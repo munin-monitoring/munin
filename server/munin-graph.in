@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.48  2005/01/04 08:38:51  jimmyo
+# Fix bug which lead to some graphs failing with STACK error.
+#
 # Revision 1.47  2005/01/04 08:10:51  jimmyo
 # Fix help text (it was modified by accident).
 #
@@ -710,7 +713,7 @@ sub single_value
 	{
 	    if ($field =~ /^([^\.]+)\.label/)
 	    {
-		$graphable++ unless &munin_draw_field ($node, $service, $1);
+		$graphable++ if &munin_draw_field ($node, $service, $1);
 	    }
 	}
 	$node->{client}->{$service}->{"graphable"} = $graphable;

@@ -1,7 +1,8 @@
 munin (work)
 
   * Main: Allow dots in PNG paths (patch by Jacques Caruso).
-  * Munin-html: Properly size table below graphs in service-view.
+  * Main: Properly size table below graphs in service-view.
+  * Main: Fix bug which lead to some graphs failing with STACK error.
   * Plugins: generic/sendmail_mail{stats,traffic} updated.
   * Plugins: Made generic/samba more portable.
 
