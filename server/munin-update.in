@@ -752,47 +752,129 @@ sub process_node {
   }
 }
 
+sub verify_tls {
+    my ($ok, $subj_cert, $issuer_cert, $depth, $errorcode, $arg, $chain) = @_;
+    print "Verifying certificate...\n";
+
+    return 1;
+}
+
 sub start_tls {
-    my $socket = shift;
+    my $socket       = shift;
+    my $tls_paranoia = shift;
+    my $tls_pem      = shift;
+    my $tls_cert     = shift;
+    my $tls_priv     = shift;
+    my $tls_verify   = shift;
+    my $tls_vdepth   = shift;
+
     my $ctx;
 
     logger("Enabling TLS.");
     if (! eval "require Net::SSLeay;")
     {
 	logger ("Fatal: TLS enabled but Net::SSLeay unavailable.");
-	exit 2;
+	exit 0;
     }
+
+    # Init SSLeay
     Net::SSLeay::load_error_strings();
     Net::SSLeay::SSLeay_add_ssl_algorithms();
     Net::SSLeay::randomize();
     $ctx = Net::SSLeay::CTX_new();
     if (!$ctx)
     {
-	logger ("Fatal: Could not create SSL_CTX");
-	exit 11;
+	logger ("TLS Error: Could not create SSL_CTX");
+	return 0;
     }
+
+    # Tune a few things...
     if (Net::SSLeay::CTX_set_options($ctx, &Net::SSLeay::OP_ALL))
     {
-	logger ("Fatal: Could not set SSL_CTX options");
-	exit 12;
+	logger ("TLS Error: Could not set SSL_CTX options");
+	return 0;
     }
 
+    # Tell the node that we want TLS
     write_socket_single ($socket, "STARTTLS\n");
     my $tlsresponse = read_socket_single ($socket);
+    if (!defined $tlsresponse)
+    {
+	logger ("TLS Error: Bad TLS response \"\".");
+	return 0
+    }
     if ($tlsresponse !~ /^200 /i)
     {
-	logger ("Bad TLS response \"$tlsresponse\".");
-	exit 13;
+	logger ("TLS Error: Bad TLS response \"$tlsresponse\".");
+	return 0;
     }
 
+    # Create the local tls object
     if (! ($tls = Net::SSLeay::new($ctx)))
     {
-	logger ("Fatal: Could not create TLS: $!");
-	exit 14;
+	logger ("TLS Error: Could not create TLS: $!");
+	return 0;
     }
+
+    # Should we use a private key?
+    if (defined $tls_priv and length $tls_priv)
+    {
+	if (!Net::SSLeay::CTX_use_PrivateKey_file($ctx, $tls_priv, 
+		&Net::SSLeay::FILETYPE_PEM))
+	{
+	    if ($tls_paranoia eq "paranoid") 
+	    {
+		logger ("TLS Error: Problem occured when trying to read file with private key \"$tls_priv\": $!");
+		return 0;
+	    }
+	    else
+	    {
+		logger ("TLS Notice: Problem occured when trying to read file with private key \"$tls_priv\": $!. Continuing without private key.");
+	    }
+	}
+    }
+
+    # How about a certificate?
+    if (defined $tls_cert and length $tls_cert)
+    {
+	if (!Net::SSLeay::CTX_use_certificate_file($ctx, $tls_cert, 
+		&Net::SSLeay::FILETYPE_PEM))
+	{
+	    logger ("TLS Warning: Problem occured when trying to read file with private key \"$tls_cert\": $!. Continuing without private key.");
+	}
+    }
+
+    # Now let's define our requirements of the node
+    $tls_vdepth = 5 if !defined $tls_vdepth;
+    if (!Net::SSLeay::CTX_set_verify_depth ($ctx, $tls_vdepth))
+    {
+	    logger ("TLS Warning: Problem occured when setting verify depth to \"$tls_vdepth\": $!. Continuing with default depth.");
+    }
+    if ($tls_paranoia eq "paranoid")
+    {
+	if (!Net::SSLeay::CTX_set_verify ($ctx, 
+		    &Net::SSLeay::VERIFY_PEER, 0))
+	{
+	    logger ("TLS Error: Could not force client certificate verification: $!");
+	    return 0;
+	}
+    }
+    else
+    {
+	if (!Net::SSLeay::CTX_set_verify ($ctx, 
+		    &Net::SSLeay::VERIFY_PEER, 0))
+	{
+	    logger ("TLS Notice: Could not force client certificate verification: $!");
+	}
+    }
+
+    # Connect it to the local fd that munin-update will print to
     Net::SSLeay::set_fd($tls, fileno($socket));
 
-    my $res = Net::SSLeay::connect($tls)
+    # Try to negotiate the tls connection
+    my $res = Net::SSLeay::connect($tls);
+
+    return $res;
 }
 
 sub write_socket_single {
@@ -914,9 +996,27 @@ sub config_node {
   }
   my $nodeconf_time = Time::HiRes::time;
 
-  if (&munin_get_bool ($config, "tls", undef, $domain, $name))
+  my $tls_requirement = &munin_get ($config, "tls", "auto", $domain, $name);
+  if ($tls_requirement ne "disabled")
   {
-      start_tls ($socket);
+      my $key;
+      my $cert;
+      $key = $cert = munin_get ($config, "tls_pem", undef, $domain, $name);
+      $key = &munin_get ($config, "tls_private_key", "@@CONFDIR@@/munin.pem", $domain, $name)
+	  unless defined $key;
+      $cert = &munin_get ($config, "tls_certificate", "@@CONFDIR@@/munin.pem", $domain, $name)
+	  unless defined $cert;
+      if (!start_tls ($socket, $tls_requirement, $cert, $key,
+		  &munin_get ($config, "tls_verify_certificates", undef, $domain, $name),
+		  &munin_get ($config, "tls_verify_depth", undef, $domain, $name),
+		  ))
+      {
+	  if ($tls_requirement eq "paranoid" or $tls_requirement eq "enable")
+	  {
+	      logger ("ERROR: Could not establish TLS connection to \"$domain :: $name\". Skipping.");
+	      exit 13;
+	  }
+      }
   }
 
   logger("Configuring node: $name") if $DEBUG;
@@ -926,6 +1026,7 @@ sub config_node {
     alarm 5; # Should be enough to check the list
     write_socket_single ($socket, "list $fetchdomain\n");
     my $list = read_socket_single ($socket);
+    exit 1 unless defined $list;
     chomp $list;
     @services = split / /,$list;
     alarm 0;
