@@ -1,4 +1,4 @@
-munin (work)
+munin (1.2.0rc1)
 
   * Main: Allow dots in PNG paths (patch by Jacques Caruso).
   * Main: Properly size table below graphs in service-view.
