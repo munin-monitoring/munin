@@ -476,6 +476,44 @@ sub generate_service_message {
 		    }
 		    if (!$pid) # Child
 		    {
+			# Fork of stdout-to-log filter
+			my $logstdout;
+			my $logstderr;
+			my $logpid = open ($logstdout, "|-");
+			if (!defined $logpid)
+			{
+			    logger ("Fatal: Unable to  fork: $!");
+			    exit 3;
+			}
+			if (!$logpid) # Child
+			{
+			    while (<STDIN>)
+			    {
+				chomp;
+				logger ("Command \"$c\" stdout: $_");
+			    }
+			    exit 0;
+			}
+			close (STDOUT);
+			*STDOUT = \$logstdout;
+			my $logpid = open ($logstderr, "|-");
+			if (!defined $logpid)
+			{
+			    logger ("Fatal: Unable to  fork: $!");
+			    exit 3;
+			}
+			if (!$logpid) # Child
+			{
+			    while (<STDIN>)
+			    {
+				chomp;
+				logger ("Command \"$c\" stderr: $_");
+			    }
+			    exit 0;
+			}
+			close (STDERR);
+			*STDERR = \$logstderr;
+
 			exec (@cmd[1 .. $#cmd]) or logger ("Warning: Could not run command \"" . join(' ',@cmd[1 .. $#cmd]) . "\": $!");
 			exit 5;
 			# NOTREACHED

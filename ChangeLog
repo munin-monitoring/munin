@@ -10,6 +10,8 @@ munin (CVS)
   * Main: Re-enable width/height attributes to img tags.
   * Main: Escape regexps more properly (Deb#296575).
   * Main: Correct expires-headers in CGI output (SF#1159742).
+  * Main: Redirect stdout/stderr from munin-limits contact commands, to the
+    munin-limits log file (Deb#301196).
   * Node: munin-node didn't treat default_plugin_user properly (Deb#295366).
   * Node: munin-node-configure now properly respect user plugins.
   * Plugins: linux/if* now treats ra* interfaces as wireless.
