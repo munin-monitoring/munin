@@ -9,6 +9,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.5  2005/01/28 14:47:31  lupe
+# Add graph_info and some filed.info
+#
 # Revision 1.4  2004/11/28 09:43:54  lupe
 # 6-CURRENT support
 #
@@ -66,14 +69,19 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000 -l 0'
 	echo 'graph_vlabel process states'
 	echo 'graph_category processes'
+	echo 'graph_info This graph shows number of processes in each state.'
 	if [ "$OSV" -ge "5" ]; then
 		echo 'running.label running'
+		echo 'running.info processes on CPU or waiting for CPU'
 		echo 'running.type GAUGE'
 		echo 'diskwait.label diskwait'
+		echo 'diskwait.info processes waiting for disk activity'
 		echo 'diskwait.type GAUGE'
 		echo 'pagewait.label pagewait'
+		echo 'pagewait.info processes waiting for page-in'
 		echo 'pagewait.type GAUGE'
 		echo 'sleep.label sleep'
+		echo 'sleep.info processes waiting for some event'
 		echo 'sleep.type GAUGE'
 	else
 		echo 'wait.label wait'

@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.6  2005/01/28 14:47:31  lupe
+# Add graph_info and some filed.info
+#
 # Revision 1.5  2005/01/28 13:25:34  lupe
 # Add support for FreeBSD 4.x ramdisks
 #
@@ -67,17 +70,29 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Inode usage (in %)'
 	echo 'graph_args --upper-limit 100 -l 0'
 	echo 'graph_vlabel %'
-	mfs=0
-	/bin/df -P -i -t noprocfs,devfs,fdescfs,linprocfs,nfs | tail +2 | grep -v "//" | while read i; do
-		case $i in
-		mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
-		*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
-		esac
-		echo -n "$name.label "
-		echo $i | awk '{ print $9 }'
-		echo "$name.warning 92"
-		echo "$name.critical 98" 
-	done
+	echo 'graph_category disk'
+	echo 'graph_info This graph shows the inode usage for the partitions of types that use inodes.'
+	/bin/df -P -i -t noprocfs,devfs,fdescfs,linprocfs,nfs | tail +2 | grep -v "//" | awk "
+		BEGIN {
+			mfs = 0
+		}
+		{
+			name = \$1
+			dir = \$9
+			if (\$1 ~ /^mfs:/) {
+				name = \"mfs\" mfs
+				mfs = mfs + 1
+			} else {
+				gsub(/[^a-zA-Z0-9_]/, \"_\", name)
+			}
+			if (length(dir) <= $MAXLABEL)
+				print name \".label \" dir
+			else
+				printf (\"%s.label ...%s\n\", name, substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3))
+			print name \".info \" dir \" -> \" name
+			print name \".warning 92\"
+			print name \".critical 98\"
+		}"
 	exit 0
 fi
 

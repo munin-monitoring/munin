@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.10  2005/01/28 14:47:31  lupe
+# Add graph_info and some filed.info
+#
 # Revision 1.9  2005/01/25 08:48:28  lupe
 # Correct multi-CPU bugs
 #
@@ -95,6 +98,7 @@ if [ "$1" = "config" ]; then
 	echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit $PERCENT "
 	echo 'graph_vlabel %'
 	echo 'graph_scale no'
+	echo 'graph_info This graph shows how CPU time is spent.'
 	echo 'graph_category system'
 	echo 'graph_period second'
 	echo 'system.label system'
@@ -104,6 +108,7 @@ if [ "$1" = "config" ]; then
 	echo 'system.min 0'
 #	echo "system.warning $SYSWARNING" 
 #	echo "system.critical $SYSCRITICAL" 
+	echo 'system.info CPU time spent by the kernel in system activities'
 	echo "system.cdef system,$CDEF"
 	echo 'interrupt.label interrupt'
 	echo 'interrupt.draw STACK'
@@ -117,18 +122,21 @@ if [ "$1" = "config" ]; then
 	echo 'user.max 5000'
 #	echo "user.warning $USRWARNING"
 	echo 'user.type DERIVE'
+	echo 'user.info CPU time spent by normal programs and daemons'
 	echo 'user.min 0'
 	echo "user.cdef user,$CDEF"
 	echo 'nice.label nice'
 	echo 'nice.draw STACK'
 	echo 'nice.max 5000'
 	echo 'nice.type DERIVE'
+	echo 'nice.info CPU time spent by nice(1)d programs'
 	echo 'nice.min 0'
 	echo "nice.cdef nice,$CDEF"
 	echo 'idle.label idle'
 	echo 'idle.draw STACK'
 	echo 'idle.max 5000'
 	echo 'idle.type DERIVE'
+	echo 'idle.info Idle CPU time'
 	echo 'idle.min 0'
 	echo "idle.cdef idle,$CDEF"
 	exit 0
