@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.32  2004/09/10 20:47:20  jimmyo
+# Changed the calculation of daily sums on the summed year graph.
+#
 # Revision 1.31  2004/09/10 19:24:18  jimmyo
 # Added new option "graph_sums" which creates summarised graphs.
 #
@@ -284,8 +287,8 @@ my %resolutions = (
              "year"  => "86400");
 
 my %sumtimes = ( # time => [ label, seconds-in-period ]
-	    "week"   => ["per hour", 6],
-	    "year"  => ["per day", 288]
+	    "week"   => ["per hour", 12],
+	    "year"   => ["per day", 288]
 	);
 
 for my $key ( keys %{$config->{domain}}) {
@@ -1066,7 +1069,14 @@ sub process_node {
 			push @defined, "x$name";
 			my @replace;
 
-			push @replace, "CDEF:x$name=PREV($name),UN,0,PREV($name),IF,$name,+,300,*,".$sumtimes{$time}->[1].",*";
+			if ($time eq "week")
+			{ # Every plot is half an hour. Add two plots and multiply, to get per hour
+			    push @replace, "CDEF:x$name=PREV($name),UN,0,PREV($name),IF,$name,+,300,*,6,*";
+			}
+			else
+			{ # Every plot is one day exactly. Just multiply.
+			    push @replace, "CDEF:x$name=$name,300,*,288,*";
+			}
 			push @replace, $pre . ":x$name" . $post;
 			splice (@rrd_sum, $index, 1, @replace);
 			$index++;
@@ -1074,7 +1084,7 @@ sub process_node {
 		    elsif ($rrd_sum[$index] =~ /^(--lower-limit|--upper-limit|-l|-u)$/)
 		    {
 			$index++;
-			$rrd_sum[$index] = $rrd_sum[$index] * 300 * $sumtimes{$time}->[1] * 2;
+			$rrd_sum[$index] = $rrd_sum[$index] * 300 * $sumtimes{$time}->[1];
 		    }
 		}
 		unless ($labelled)
@@ -1366,3 +1376,4 @@ PURPOSE.
 This program is released under the GNU General Public License
 
 =cut
+
