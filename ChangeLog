@@ -9,6 +9,8 @@ munin (work)
     mail.log. Downgraded it from auto to manual. (Deb#291720).
   * Plugin: Made generic/amavis autodetect logtail format (Deb#284638, 
     Deb#288395).
+  * Plugins: generic/named probes for more log files before giving up 
+    (Deb#291849).
 
 munin (1.3.0)
 
