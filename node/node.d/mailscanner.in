@@ -16,13 +16,16 @@
 # 
 # 	logfile		- The file where MailScanner logs its action (default: /var/log/mail.log)
 # 	logtail		- The location of the logtail command (default: /usr/sbin/logtail)
-# 	offsetfile	- The location of the offset file (default: /tmp/lrrd-mailscanner.offset)
+# 	offsetfile	- The location of the offset file (default: /tmp/munin-mailscanner.offset)
 #
 # Bugs:
 # 
 # 	None known
 #
 # $Log$
+# Revision 1.4  2005/02/16 19:51:54  jimmyo
+# Made contrib-plugins generic/amavis and generic/mailstats more secure.
+#
 # Revision 1.3  2005/02/16 19:51:18  jimmyo
 # Made contrib-plugins generic/amavis and generic/mailstats more secure.
 #
@@ -41,7 +44,7 @@ use strict;
 
 my $logfile = '/var/log/mail.log';
 my $logtail = '/usr/sbin/logtail';
-my $offsetfile = "@@PLUGSTATE@@/lrrd-mailscanner.offset";
+my $offsetfile = "@@PLUGSTATE@@/munin-mailscanner.offset";
 my ($clean, $viruses, $spams, $others, $total) = (0, 0, 0, 0, 0);
 my $cmd = (defined($ARGV[0])) ? $ARGV[0] : '';
 
