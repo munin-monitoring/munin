@@ -1,6 +1,9 @@
 #!/usr/bin/perl -w
 #
 # $Log$
+# Revision 1.2  2004/09/04 21:58:28  jimmyo
+# Set category and info fields.
+#
 # Revision 1.1  2004/04/30 22:22:07  jimmyo
 # Added to SNMP based fibre-channel plugins: fc_if and fc_if_err.
 #
@@ -95,6 +98,9 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	print "graph_order errs\n";
 	print "graph_args --base 1000\n";
 	print "graph_vlabel errors / second\n";
+	print "graph_category network\n";
+	print "graph_info This graph shows errors for fibrechannel controllers.\n";
+	print "errs.info Number of errors per second on this interface.\n";
 	print "errs.label errors\n";
 	print "errs.type COUNTER\n";
 	print "errs.max 4000000000\n";
