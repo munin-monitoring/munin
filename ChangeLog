@@ -4,6 +4,7 @@ munin (work)
   * Main: Internal name (for use in munin.conf) added to the table in
     service view.
   * Main: Added option cgiurl_graph.
+  * Main: Bugfix when using long labels and CGI graphing.
   * Node: Fix bug when encountering strange environment (Deb#285173).
   * Packaging: Expand man-page macros properly on man-page generation 
     (Deb#286399).

@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.40  2004/12/22 21:08:30  jimmyo
+# Bugfix when using long labels and CGI graphing.
+#
 # Revision 1.39  2004/12/22 20:13:30  jimmyo
 # Added option cgiurl_graph.
 #
@@ -998,6 +1001,7 @@ sub munin_graph_column_headers
 {
     my ($config, $domain, $node, $serv) = @_;
     my $ret = 0;
+    my @fields = ();
 
     foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$serv}})
     {
@@ -1005,9 +1009,13 @@ sub munin_graph_column_headers
 	{
 	    return 1;
 	}
+	elsif ($field =~ /^([^\.]+)\.label$/ and munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $serv, $1))
+	{
+	    push @fields, $1;
+	}
     }
 
-    return 1 if (munin_get_max_label_length ($config->{'domain'}->{$domain}->{'node'}->{$node}, $config, $domain, $node, $serv) > 20);
+    return 1 if (munin_get_max_label_length ($config->{'domain'}->{$domain}->{'node'}->{$node}, $config, $domain, $node, $serv, \@fields) > 20);
 
     return $ret;
 }
