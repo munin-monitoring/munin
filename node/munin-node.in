@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.21  2005/01/10 20:48:58  jimmyo
+# Main/Node: Added support for TLS.
+#
 # Revision 1.20  2004/12/22 21:33:48  jimmyo
 # Remove hardcoding of default user/group to run the plugin (SF#1083251).
 #
@@ -116,6 +119,14 @@ use strict;
 use vars qw(@ISA);
 use Getopt::Long;
 use Net::Server::Fork; # any personality will do
+use Net::SSLeay qw(die_now die_if_ssl_error);
+
+# TLS init
+Net::SSLeay::load_error_strings();
+Net::SSLeay::SSLeay_add_ssl_algorithms();
+Net::SSLeay::randomize();
+my $ctx; 
+my $tls;
 
 chdir ("/");
 
@@ -568,33 +579,97 @@ sub run_service {
 sub process_request {
   my $self = shift;
   $caddr = $self->{server}->{peeraddr};
+  $0 .= " [$caddr]";
   print "# munin node at $FQDN\n";
   local $SIG{ALRM} = sub { logger ("Connection timed out."); die "timeout" };
   alarm($sconf{'timeout'});
   while( <STDIN> ){
     alarm($sconf{'timeout'});
     chomp;
-    if (m/^list\s*([0-9a-zA-Z\.\-]+)?/) {
+    if (m/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
       &list_services($1);
     }
-    elsif (/^quit/ || /^\./) {
+    elsif (/^quit/i || /^\./) {
       exit 1;
     }
-    elsif (/^version/) {
+    elsif (/^version/i) {
       &show_version;
 	}
-    elsif (/^nodes/) {
+    elsif (/^nodes/i) {
       &show_nodes;
     }
-    elsif (/^fetch\s?(\S*)/) {
+    elsif (/^fetch\s?(\S*)/i) {
       print_service (&run_service($1)) 
     }
-    elsif (/^config\s?(\S*)/) {
+    elsif (/^config\s?(\S*)/i) {
       print_service (&run_service($1,"config"));
-    } else  {
+    } 
+    elsif (/^starttls\s*$/i) {
+      start_tls ();
+    }
+    else  {
       print "# Unknown command. Try list, nodes, config, fetch, version or quit\n";
     }
   }
+}
+
+sub start_tls
+{
+    $ctx = Net::SSLeay::CTX_new()     or die_now "CTX_new ($ctx) ($!)";
+    $tls = Net::SSLeay::new($ctx)     or die_now "new ($tls) ($!)";
+    Net::SSLeay::set_options($tls, &Net::SSLeay::OP_ALL)
+	and die_if_ssl_error("ssl set options");
+
+
+    Net::SSLeay::set_rfd($tls, fileno(STDIN));
+    Net::SSLeay::set_wfd($tls, fileno(STDOUT));
+
+    Net::SSLeay::use_RSAPrivateKey_file ($tls, '/etc/munin/munin.pem',
+                                         &Net::SSLeay::FILETYPE_PEM);
+    die_if_ssl_error("Fatal TLS error with private key.");
+    Net::SSLeay::use_certificate_file ($tls, '/etc/munin/munin.pem',
+                                       &Net::SSLeay::FILETYPE_PEM);
+    die_if_ssl_error("Fatal TLS error with certificate.");
+
+    print "200 TLS OK\n";
+
+    Net::SSLeay::accept($tls) and die_if_ssl_error("Fatal error in TLS accept.");
+    logger ("Cipher `" . Net::SSLeay::get_cipher($tls) . "'\n");
+
+    my $pid  = open (STDIN , "-|");
+    if (!defined $pid)
+    {
+	logger ("Fatal: Unable to fork: $!");
+	exit 8;
+    }
+    if (!$pid)
+    {
+	$0 .= " [TLS decrypt]";
+	while (my $got = Net::SSLeay::read($tls))
+	{
+	    print $got;
+	}
+	die_if_ssl_error("Fatal: ssl read failiure.");
+	Net::SSLeay::free ($tls); # Tear down connection
+	exit 0;
+    }
+    $pid  = open (STDIN , "-|");
+    if (!defined $pid)
+    {
+	logger ("Fatal: Unable to fork: $!");
+	exit 8;
+    }
+    if (!$pid)
+    {
+	$0 .= " [TLS encrypt]";
+	while (<>)
+	{
+	    Net::SSLeay::write ($tls, uc ($_));
+	    die_if_ssl_error("Fatal: ssl write failiure.");
+	}
+	exit 0;
+    }
+
 }
 
 sub get_uid
