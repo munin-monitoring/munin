@@ -4,6 +4,8 @@ munin (CVS)
   * Node: Allow "root" for the per-plugin "group" directive.
   * Plugins: Fix autoconf for linux/{nfsd,nfs_client}.
   * Plugins: Make linux/sensors_ handle multiline output better (Deb#300690).
+  * Plugins: generic/postfix_mailstats now treats reject-lines better
+    (Deb#302220).
 
 munin (1.2.2)
 
