@@ -1,5 +1,7 @@
 munin (work)
 
+  * Treat long field names properly. Sadly, this will lead to data loss
+    for fields that earlier had their field names truncated. :-(
   * SNMP plugin "df" properly strips the label and serial number from
     Windows drive labels.
   * SNMP plugins now honour the "host" environment variable if they can't

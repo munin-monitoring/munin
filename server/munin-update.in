@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.19  2004/09/26 20:41:44  jimmyo
+# Treat long field names properly.
+#
 # Revision 1.18  2004/09/13 21:00:38  jimmyo
 # Added new config option "local_address", to specify which local address outgoing connections (from munin-update) should be used.
 #
@@ -762,6 +765,7 @@ sub config_node {
 
   for my $service (@services) {
     my $servname = $service;
+    my $fields = {};
     $servname =~ s/\W/_/g;
     next if (exists ($node->{client}->{$servname}->{fetch_data}) and
 	     $node->{client}->{$servname}->{fetch_data} == 0);
@@ -793,7 +797,7 @@ sub config_node {
       }
       elsif (/^(\w+)\.(\w+)\s+(.+)/) {
 	my ($client,$type,$value) = ($1,$2,$3);
-	$client = &sanitize_fieldname ($client);
+	$client = &sanitise_fieldname ($client, $fields);
 	if (($type) and ($type eq "label")) {
 	    $value =~ s/\\/_/g; # Sanitise labels
 	}
@@ -875,6 +879,7 @@ sub fetch_node {
     print $socket "fetch $realservname\n";
     my @lines = &read_socket($socket);
     return unless $socket;
+    my $fields = {};
     for (@lines) {
       if (/\# timeout/) {
 	logger("Client reported timeout in fetching of $service");
@@ -883,7 +888,7 @@ sub fetch_node {
 	my $key = $1;
 	my $value = $2;
 	my $comment = $3;
-	$key = &sanitize_fieldname ($key);
+	$key = &sanitise_fieldname ($key, $fields);
 	my $fname = "$config->{dbdir}/$domain/$name-$service-$key-".
 	  lc substr (($node->{client}->{$service}->{$key.".type"}||"GAUGE"),0,1).
 	    ".rrd";
@@ -959,14 +964,19 @@ sub logger {
     }
 }
 
-sub sanitize_fieldname
+sub sanitise_fieldname
 {
-    my $name = shift;
+    my $lname = shift;
+    my $done  = shift;
+    my $old   = shift || 0;
 
-    $name =~ s/[\W-]/_/g;
-    $name = substr ($name,-18);
+    $lname =~ s/[\W-]/_/g;
+    return substr ($lname,-18) if $old;
 
-    return $name;
+#$lname = Digest::MD5::md5_hex ($lname) if (defined $done->{$lname});
+    $done->{$lname} = 1;
+
+    return $lname;
 }
 
 

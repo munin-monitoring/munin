@@ -124,6 +124,7 @@ td.legendbox {
 
 td.wrap {
 	white-space: normal;
+	max-width: 1%;
 }
 
 td.linkbox {
