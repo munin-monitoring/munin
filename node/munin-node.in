@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.4  2004/01/29 16:56:54  jimmyo
+# Fixed "group" bug. Added support for multiple and optional groups
+#
 # Revision 1.3  2004/01/17 22:04:29  toreanderson
 # Change the name in process listing to contain only the path to the munin-node
 # executable, without '/usr/bin/perl -wT' prepending it.
@@ -332,9 +335,7 @@ sub run_service {
 		my $u  = (defined $sconf{$service}{'user'}?
 			$sconf{$service}{'user'}:
 			$defuser);
-		my $g  = (defined $sconf{$service}{'group'}?
-			$sconf{$service}{'group'}:
-			$defgroup);
+		my $g  = $defgroup;
 		my $gs = "$g $g" .
 			($sconf{$service}{'group'}?" $sconf{$service}{group}":"");
 
@@ -504,15 +505,39 @@ sub load_auth_file
 		return undef;
 	    }
 	}
-	elsif (/^\s*group\s+(\w+)\s*$/)
+	elsif (/^\s*group\s+(.+)\s*$/)
 	{
 	    my $tmpid = $1;
-	    $sconf->{$service}{'group'} = &get_gid ($tmpid);
-	    print "DEBUG: Config: $service->gid = ", $sconf->{$service}{'user'}, "\n" if $DEBUG;
-	    if (!defined $sconf->{$service}{'group'})
+	    foreach my $group (split /\s*,\s*/, $tmpid)
 	    {
-		warn "Group \"$tmpid\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
-		return undef;
+		my $optional = 0;
+
+		if ($group =~ /^\(([^)]+)\)$/)
+		{
+		    $optional = 1;
+		    $group = $1;
+		}
+
+		my $g = &get_gid ($group);
+		print "DEBUG: Config: $service->gid = ", $sconf->{$service}{'group'}, "\n" if $DEBUG;
+		if (!defined $sconf->{$service}{'group'} and !$optional)
+		{
+		    warn "Group \"$group\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
+		    return undef;
+		}
+		elsif (!defined $g and $optional)
+		{
+		    print "DEBUG: Skipping \"$group\" (optional).\n" if $DEBUG;
+		    next;
+		}
+		if (!defined $sconf->{$service}{'group'})
+		{
+		    $sconf->{$service}{'group'} = $g;
+		}
+		else
+		{
+		    $sconf->{$service}{'group'} .= " $g";
+		}
 	    }
 	}
 	elsif (/^\s*command\s+(.+)\s*$/)

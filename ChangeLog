@@ -1,7 +1,11 @@
 munin (1.0.0pre2)
+
   * Plugin mysql_queries bugfix from Dagfinn I. Mannsåker (SF#876443,
     SF#865125).
   * FreeBSD-plugin load bugfix from Robert Lindgren (SF#865928).
+  * Fixed Node/run bug when changing groups.
+  * Added support for multiple groups to run the plugin as.
+  * Added support for optional groups.
 
 munin (1.0.0pre1)
 

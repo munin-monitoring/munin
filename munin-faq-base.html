@@ -214,6 +214,14 @@ cut -f1 -d' ' &lt; /proc/loadavg
 </pre>
 Similarly, you could use the "user" option to run the plugin as a user.
 </p>
+<p>
+	If more than one group is needed, or some of the groups only exist on certain hosts (and
+	you want a common config file), the syntax supports this:
+<pre>
+[some_plugin]
+	group mail,adm,group1,group2,(group3_that_might_not_exist)
+</pre>
+</p>
 
 </body>
 </html>

@@ -94,7 +94,7 @@ can contain the following options:
  <dt>[&lt;plugin-name&gt;]<dd>The following lines are for
  <code>plugin-name</code>.
  <dt>user &lt;username|userid&gt;<dd>Run plugin as this user
- <dt>group &lt;groupname|groupid&gt;<dd>Run plugin as this group
+ <dt>group &lt;groupname|groupid&gt;[, &lt;groupname|groupid&gt;] [...]<dd>Run plugin as this group. If group is inside paranthesis, don't croak if it's nonexistant.
  <dt>command &lt;command&gt;<dd>Run command instad of plugin. "%c" will
  be expanded to what would otherwise have been run. E.g. "<code>command sudo
  -u root %c</code>".
