@@ -14,6 +14,7 @@ munin (CVS)
     munin-limits log file (Deb#301196).
   * Node: munin-node didn't treat default_plugin_user properly (Deb#295366).
   * Node: munin-node-configure now properly respect user plugins.
+  * Plugins: sort drives in generic/hddtemp_smartcl (SF#1174847).
   * Plugins: linux/if* now treats ra* interfaces as wireless.
   * Plugins: minor bugfix in generic/bind9.
   * Plugins: generic/sendmail_mailqueue handles bigger queues (fix by Mickey

@@ -111,6 +111,9 @@ if ($^O eq 'linux') {
 
 @drives = split ' ', $ENV{drives} if exists $ENV{drives};
 
+# Sort list of drives
+@drives = sort @drives;
+
 if (exists $ARGV[0]) {
   if ($ARGV[0] eq 'autoconf') {
     if ($smartctl and -x $smartctl) {
