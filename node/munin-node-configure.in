@@ -3,6 +3,9 @@
 # Program to suggest configurations and configuration changes.
 #
 # $Log$
+# Revision 1.7  2004/09/03 23:25:16  jimmyo
+# Brushed up the SNMP probe functionality.
+#
 # Revision 1.6  2004/09/03 22:59:03  jimmyo
 # Support comma-formatted snmp-options.
 #
@@ -106,6 +109,8 @@ Options:
 	--remove-also		Also show rm-commands when doing --shell
 	--newer <version>	Only show suggestions related to plugins newer
 	                        than version <version>. [0.0.0]
+	--snmpversion <ver>     Set SNMP version (1, 2c or 3) [2c]
+	--snmpcommunity <comm>  Set SNMP community [public]
 
 ";
 
@@ -131,15 +136,14 @@ if (defined $newer and (!$shell or $removes))
     exit 2;
 }
 
-if (@snmp and !$shell)
-{
-    print "Fatal: --snmp only supported along with --shell.\n";
-    exit 3;
-}
-
 if (!@families)
 {
-    if ($suggest or $shell)
+    if (@snmp)
+    {
+	@families = ();
+	$shell=1;
+    }
+    elsif ($suggest or $shell)
     {
 	@families = @dfamilies;
     }
@@ -148,59 +152,110 @@ if (!@families)
 	@families = @afamilies;
     }
 }
+
 @families = split (/,/, join (',', @families));
 @snmp = split (/,/, join (',', @snmp));
 
-
-$plugins   = &get_plugins   ($plugins  , $libdir);
-$installed = &get_installed ($installed, $servicedir);
-
-if (! $shell and $suggest)
+if (@snmp and !$shell)
 {
-    &normal ("Plugin", "Used", "Suggestions");
-    &normal ("------", "----", "-----------");
-}
-elsif (! $shell)
-{
-    &normal ("Plugin", "Used", "Extra information");
-    &normal ("------", "----", "-----------------");
+    print "Fatal: --snmp only supported along with --shell.\n";
+    exit 3;
 }
 
-foreach my $plug (sort keys %{$plugins})
+if (@families)
 {
-    next unless defined $plugins->{$plug}->{'family'};
-    next unless (grep (/^$plugins->{$plug}->{'family'}$/, @families));
+    $plugins   = &get_plugins   ($plugins  , $libdir);
+    $installed = &get_installed ($installed, $servicedir);
 
-    my $now   = (exists $installed->{$plug}?"yes":"no");
-    my $want  = (exists $plugins->{$plug}->{'default'}?$plugins->{$plug}->{'default'}:"no");
-    my $snow  = (exists $installed->{$plug}->{'suggest'}?$installed->{$plug}->{'suggest'}:undef);
-    my $swant = (exists $plugins->{$plug}->{'suggest'}?$plugins->{$plug}->{'suggest'}:undef);
-    my $sugg  = "";
-
-
-    if ($shell)
+    if (! $shell and $suggest)
     {
-	if ($plug =~ /_$/) # Wildcard plugin...
+	&normal ("Plugin", "Used", "Suggestions");
+	&normal ("------", "----", "-----------");
+    }
+    elsif (! $shell)
+    {
+	&normal ("Plugin", "Used", "Extra information");
+	&normal ("------", "----", "-----------------");
+    }
+
+    foreach my $plug (sort keys %{$plugins})
+    {
+	next unless defined $plugins->{$plug}->{'family'};
+	next unless (grep (/^$plugins->{$plug}->{'family'}$/, @families));
+
+	my $now   = (exists $installed->{$plug}?"yes":"no");
+	my $want  = (exists $plugins->{$plug}->{'default'}?$plugins->{$plug}->{'default'}:"no");
+	my $snow  = (exists $installed->{$plug}->{'suggest'}?$installed->{$plug}->{'suggest'}:undef);
+	my $swant = (exists $plugins->{$plug}->{'suggest'}?$plugins->{$plug}->{'suggest'}:undef);
+	my $sugg  = "";
+
+
+	if ($shell)
 	{
-	    if ($now eq "yes" and $want eq "no")
+	    if ($plug =~ /_$/) # Wildcard plugin...
 	    {
-		if ($snow and @{$snow})
+		if ($now eq "yes" and $want eq "no")
 		{
-		    foreach my $wild (sort @{$snow})
+		    if ($snow and @{$snow})
 		    {
-			&link_remove ("$plug$wild");
+			foreach my $wild (sort @{$snow})
+			{
+			    &link_remove ("$plug$wild");
+			}
+		    }
+		}
+		else
+		{
+		    if ($snow and @{$snow})
+		    {
+			foreach my $wild (sort @{$snow})
+			{
+			    if (! grep (/^$wild$/, @{$swant}))
+			    {
+				&link_remove ("$plug$wild");
+			    }
+			}
+		    }
+		    if ($swant and @{$swant})
+		    {
+			foreach my $wild (sort @{$swant})
+			{
+			    if (! grep (/^$wild$/, @{$snow}))
+			    {
+				&link_add ($plug, $wild);
+			    }
+			}
 		    }
 		}
 	    }
 	    else
 	    {
+		if ($now eq "yes" and $want eq "no")
+		{
+		    &link_remove ($plug);
+		}
+		elsif ($now eq "no" and $want eq "yes")
+		{
+		    &link_add ($plug);
+		}
+	    }
+	}
+	elsif ($suggest)
+	{
+	    if ($plug =~ /_$/) # Wildcard plugin...
+	    {
+		if ($now eq "yes" && $want eq "no" or
+			$now eq "no" && $want eq "yes" && $swant && @{$swant})
+		{
+		    $sugg = "$want ";
+		}
 		if ($snow and @{$snow})
 		{
 		    foreach my $wild (sort @{$snow})
 		    {
 			if (! grep (/^$wild$/, @{$swant}))
 			{
-			    &link_remove ("$plug$wild");
+			    $sugg .= "-$wild ";
 			}
 		    }
 		}
@@ -210,85 +265,43 @@ foreach my $plug (sort keys %{$plugins})
 		    {
 			if (! grep (/^$wild$/, @{$snow}))
 			{
-			    &link_add ($plug, $wild);
+			    $sugg .= "+$wild ";
 			}
 		    }
 		}
+		&normal ($plug, $now, $sugg);
 	    }
-	}
-	else
-	{
-	    if ($now eq "yes" and $want eq "no")
+	    else
 	    {
-		&link_remove ($plug);
-	    }
-	    elsif ($now eq "no" and $want eq "yes")
-	    {
-		&link_add ($plug);
-	    }
-	}
-    }
-    elsif ($suggest)
-    {
-	if ($plug =~ /_$/) # Wildcard plugin...
-	{
-	    if ($now eq "yes" && $want eq "no" or
-		    $now eq "no" && $want eq "yes" && $swant && @{$swant})
-	    {
-		$sugg = "$want ";
-	    }
-	    if ($snow and @{$snow})
-	    {
-		foreach my $wild (sort @{$snow})
+		if ($now ne $want)
 		{
-		    if (! grep (/^$wild$/, @{$swant}))
-		    {
-			$sugg .= "-$wild ";
-		    }
+		    $sugg = $want;
 		}
-	    }
-	    if ($swant and @{$swant})
-	    {
-		foreach my $wild (sort @{$swant})
+		elsif (defined $plugins->{$plug}->{'defaultreason'} and
+			$plugins->{$plug}->{'defaultreason'} =~ /^[^\(]*\((.+)\)\s*$/)
 		{
-		    if (! grep (/^$wild$/, @{$snow}))
-		    {
-			$sugg .= "+$wild ";
-		    }
+		    $sugg = "[$1]";
 		}
-	    }
-	    &normal ($plug, $now, $sugg);
-	}
-	else
-	{
-	    if ($now ne $want)
-	    {
-		$sugg = $want;
-	    }
-	    elsif (defined $plugins->{$plug}->{'defaultreason'} and
-		    $plugins->{$plug}->{'defaultreason'} =~ /^[^\(]*\((.+)\)\s*$/)
-	    {
-		$sugg = "[$1]";
-	    }
 
-	    &normal ($plug, $now, $sugg);
-	}
-    }
-    else
-    {
-	if ($plug =~ /_$/) # Wildcard plugin...
-	{
-	    if ($snow and @{$snow})
-	    {
-		$sugg = join ' ', @{$snow};
+		&normal ($plug, $now, $sugg);
 	    }
-	    &normal ($plug, $now, $sugg);
 	}
 	else
 	{
-	    &normal ($plug, $now, "");
+	    if ($plug =~ /_$/) # Wildcard plugin...
+	    {
+		if ($snow and @{$snow})
+		{
+		    $sugg = join ' ', @{$snow};
+		}
+		&normal ($plug, $now, $sugg);
+	    }
+	    else
+	    {
+		&normal ($plug, $now, "");
+	    }
+	    
 	}
-	
     }
 }
 

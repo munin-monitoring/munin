@@ -129,8 +129,9 @@ sub do_host
 			-hostname  => $host,
 			-community => $comm,
 			-port      => $port,
-			-version   => $ver
+			-version   => $ver,
 		);
+	$session->translate (0);
 
 	if (!defined ($session))
 	{
@@ -332,13 +333,12 @@ sub snmp_get_single
 	my $session = shift;
 	my $oid     = shift;
 
-	if ((!defined ($response = $session->get_request($oid))) or 
-		($response->{$oid} eq "noSuchObject") or 
-		($response->{$oid} eq "noSuchInstance") or 
-		($response->{$oid} eq "endOfMibView"))
+	if ((!defined ($response = $session->get_request($oid))) or
+			$session->error_status)
 	{
 		return undef;
 	}
+	print "# Fetched value \"$response->{$oid}\"\n" if $debug; 
 	return $response->{$oid};
 }
 
@@ -358,12 +358,12 @@ sub snmp_get_index
 			print "# Checking for $ret\n" if $debug;
 			$response = $session->get_request($ret);
 		}
-		if ($i or !defined $response)
+		if ($i or !defined $response or $session->error_status)
 		{
 			print "# Checking for sibling of $ret\n" if $debug;
 			$response = $session->get_next_request($ret);
 		}
-		if (!$response)
+		if (!$response or $session->error_status)
 		{
 			return undef;
 		}
@@ -388,7 +388,8 @@ sub interfaces
 
 	print "# System name: ", $name, "\n" if $debug;
 
-	if (!defined ($response = $session->get_request($ifNumber)))
+	if (!defined ($response = $session->get_request($ifNumber)) or 
+			$session->error_status)
 	{
 		die "Croaking: " . $session->error();
 	}
@@ -404,11 +405,11 @@ sub interfaces
 		{
 			$response = $session->get_request($ret);
 		}
-		if ($i or !defined $response)
+		if ($i or !defined $response or $session->error_status)
 		{
 			$response = $session->get_next_request($ret);
 		}
-		if (!$response)
+		if (!$response or $session->error_status)
 		{
 			die "Croaking: ", $session->error();
 		}
@@ -423,7 +424,7 @@ sub interfaces
 	foreach my $key (keys %interfaces)
 	{
 		$response = $session->get_request($ifEntrySpeed . "." . $key);
-		if (!$response)
+		if (!$response or $session->error_status)
 		{
 			die "Croaking: ", $session->error();
 		}
@@ -438,7 +439,7 @@ sub interfaces
 	foreach my $key (keys %interfaces)
 	{
 		$response = $session->get_request($ifEntryType . "." . $key);
-		if (!$response)
+		if (!$response or $session->error_status)
 		{
 			die "Croaking: ", $session->error();
 		}
