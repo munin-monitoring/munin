@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.28  2004/09/04 21:33:13  jimmyo
+# Handle strange characters better.
+#
 # Revision 1.27  2004/09/01 19:00:22  jimmyo
 # Moved function get_picture_filename from munin-graph to Munin.pm.
 #
@@ -1163,6 +1166,7 @@ sub escape
 {
     my $text = shift;
     return undef if not defined $text;
+    $text =~ s/\\/\\\\/g;
     $text =~ s/:/\\:/g;
     return $text;
 }

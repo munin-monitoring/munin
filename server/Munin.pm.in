@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.18  2004/09/04 21:33:13  jimmyo
+# Handle strange characters better.
+#
 # Revision 1.17  2004/09/01 19:00:22  jimmyo
 # Moved function get_picture_filename from munin-graph to Munin.pm.
 #
@@ -346,7 +349,11 @@ sub munin_parse_config
 	    $line = $prevline . $line;
 	    $prevline = "";
 	}
-	if ($line =~ /\\$/)
+	if ($line =~ /\\\\$/)
+	{
+	    $line =~ s/\\\\$/\\/;
+	}
+	elsif ($line =~ /\\$/)
 	{
 	    ($prevline = $line) =~ s/\\$//;
 	    next;
@@ -553,7 +560,12 @@ sub munin_writeconfig_loop {
 	elsif (defined $data->{$a} and length $data->{$a})
 	{
 	    print "Writing: $pre$a $data->{$a}\n" if $DEBUG;
-	    print $fh "$pre$a $data->{$a}\n";
+	    if ($data->{$a} =~ /\\$/)
+	    { # Backslash as last char has special meaning. Avoid it.
+		print $fh "$pre$a $data->{$a}\\\n"; 
+	    } else {
+		print $fh "$pre$a $data->{$a}\n";
+	    }
 	}
     }
 }

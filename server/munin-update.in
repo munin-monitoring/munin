@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.13  2004/09/04 21:33:13  jimmyo
+# Handle strange characters better.
+#
 # Revision 1.12  2004/08/31 18:12:59  jimmyo
 # Sanitise incoming field names a bit better.
 #
@@ -640,6 +643,9 @@ sub config_node {
       elsif (/^(\w+)\.(\w+)\s+(.+)/) {
 	my ($client,$type,$value) = ($1,$2,$3);
 	$client = &sanitize_fieldname ($client);
+	if (($type) and ($type eq "label")) {
+	    $value =~ s/\\/_/g; # Sanitise labels
+	}
 	$node->{client}->{$servname}->{$client.".".$type} = "$value";
 	logger ("config: $name->$client.$type = $value") if $DEBUG;
 	if (($type) and ($type eq "label")) {
