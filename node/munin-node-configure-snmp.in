@@ -156,12 +156,18 @@ sub do_host
 			{
 				foreach my $id (@{$auto})
 				{
-					print "ln -s $libdir/snmp__$plugin", "_ $servicedir/snmp_$host", "_$plugin", "_$id\n";
+					if (! -e "$servicedir/snmp_$host"."_$plugin"."_$id")
+					{
+						print "ln -s $libdir/snmp__$plugin", "_ $servicedir/snmp_$host", "_$plugin", "_$id\n";
+					}
 				}
 			}
 			else
 			{
-				print "ln -s $libdir/snmp__$plugin", " $servicedir/snmp_$host", "_$plugin\n";
+				if (! -e "$servicedir/snmp_$host"."_$plugin")
+				{
+					print "ln -s $libdir/snmp__$plugin", " $servicedir/snmp_$host", "_$plugin\n";
+				}
 			}
 		}
 	}
