@@ -12,6 +12,9 @@
 # monitored with this plugin.
 #
 # $Log$
+# Revision 1.12  2005/02/16 21:00:29  jimmyo
+# Make suggest a tad less trigger happy.
+#
 # Revision 1.11  2005/02/16 20:32:17  jimmyo
 # Minor bugfix in linux/if_, with info fields.
 #
@@ -78,7 +81,7 @@ fi
 
 if [ "$1" = "suggest" ]; then
 	if [ -r /proc/net/dev ]; then
-		egrep '(eth|wlan|ath|ra)' /proc/net/dev | cut -f1 -d: | sed 's/ //g'
+		egrep '^ *(eth|wlan|ath|ra)[0-9]+:' /proc/net/dev | cut -f1 -d: | sed 's/ //g'
 		exit 0
 	else
 		exit 1
