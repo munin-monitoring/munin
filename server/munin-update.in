@@ -23,6 +23,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.34  2005/03/09 17:57:08  jimmyo
+# Escape regexps more properly (Deb#296575).
+#
 # Revision 1.33  2005/03/06 21:23:29  jimmyo
 # Better handling of broken connections (Deb#298108).
 #
@@ -547,8 +550,8 @@ sub change_type
     my $ofile  = &munin_get_filename ($oconf, $domain, $host, $serv, $field);
     my $nfile  = &munin_get_filename ($nconf, $domain, $host, $serv, $field);
 
-    logger ("INFO: Changing type of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"COUNTER") . ".\n");
-    RRDs::tune ($ofile, "-d", "42:".(defined $val?$val:"COUNTER"));
+    logger ("INFO: Changing type of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"GAUGE") . ".\n");
+    RRDs::tune ($ofile, "-d", "42:".(defined $val?$val:"GAUGE"));
     unless (rename ($ofile, $nfile))
     {
 	logger ("ERROR: Could not rename file: $!\n");
