@@ -9,6 +9,9 @@
 #	type_$dev	-- device type for one drive, e.g. 3ware,0
 #
 # $Log$
+# Revision 1.4  2005/01/29 22:14:02  jimmyo
+# Make the plugin check all rdsks.
+#
 # Revision 1.3  2005/01/26 09:31:36  jimmyo
 # Added license note.
 #
@@ -89,7 +92,7 @@ if ($^O eq 'linux') {
     closedir(IDE);
   }
 } elsif ($^O eq 'solaris') {
-  @drives = map { s@.*/@@ } glob '/dev/rdsk/c?t?d?s2';
+  @drives = map { s@.*/@@ } glob '/dev/rdsk/c*t*d*s2';
 }
 
 @drives = split ' ', $ENV{drives} if exists $ENV{drives};
