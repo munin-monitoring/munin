@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.17  2004/09/12 22:07:39  jimmyo
+# Munin-update adapts to field type changes (loss-free conversion from COUNTER->DERIVE et al.)
+#
 # Revision 1.16  2004/09/10 19:24:18  jimmyo
 # Added new option "graph_sums" which creates summarised graphs.
 #
@@ -401,60 +404,80 @@ sub compare_configs {
 		{
 		    next unless $field =~ /\.label$/;
 		    $field =~ s/\.label$//;
-		    if (defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"})
+		    if (&is_changed ($old, $new, $dom, $host, $serv, $field, "max"))
 		    {
-			if ((!defined $old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"}) or
-				($old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"} != 
-				 $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"}
-			   ))
-			{
-			    &change_max ($config, $dom, $host, $serv, $field, 
-				    $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"});
-			}
+			&change_max ($config, $dom, $host, $serv, $field, 
+				(defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"} ?
+				 $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"} : undef));
 		    }
-		    if (defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"})
+		    if (&is_changed ($old, $new, $dom, $host, $serv, $field, "min"))
 		    {
-			if ((!defined $old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"}) or
-				($old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"} != 
-				 $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"}
-			   ))
-			{
-			    &change_min ($config, $dom, $host, $serv, $field, 
-				    $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"});
-			}
+			&change_min ($config, $dom, $host, $serv, $field, 
+				($new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"} ?
+				$new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"} : undef));
+		    }
+		    if (&is_changed ($old, $new, $dom, $host, $serv, $field, "type"))
+		    {
+			&change_type ($oldconfig, $config, $dom, $host, $serv, $field, 
+				($new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".type"} ?
+				$new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".type"} : undef));
 		    }
 		}
 	    }
 	}
     }
 
-    foreach my $dom (%{$old->{domain}})
+}
+
+sub is_changed
+{
+    my $old     = shift;
+    my $new     = shift;
+    my $dom     = shift;
+    my $host    = shift;
+    my $serv    = shift;
+    my $field   = shift;
+    my $setting = shift;
+
+    if (defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".".$setting})
     {
-	foreach my $host (%{$old->{domain}->{$dom}->{node}})
+	if ((!defined $old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".".$setting}) or
+		($old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".".$setting} ne
+		 $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".".$setting}
+	   ))
 	{
-	    foreach my $serv (%{$old->{domain}->{$dom}->{node}->{$host}->{client}})
-	    {
-		foreach my $field (%{$old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}})
-		{
-		    next unless $field =~ /\.label$/;
-		    $field =~ s/\.label$//;
-		    if (defined $old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"})
-		    {
-			if (!defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"})
-			{
-			    &change_max ($config, $dom, $host, $serv, $field, undef);
-			}
-		    }
-		    if (defined $old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"})
-		    {
-			if (!defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"})
-			{
-			    &change_min ($config, $dom, $host, $serv, $field, undef);
-			}
-		    }
-		}
-	    }
+	    return 1;
 	}
+    }
+
+    if (defined $old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".".$setting})
+    {
+	if (!defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".".$setting})
+	{
+	    return 1;
+	}
+    }
+
+    return 0;
+}
+
+sub change_type
+{
+    my $oconf  = shift;
+    my $nconf  = shift;
+    my $domain = shift;
+    my $host   = shift;
+    my $serv   = shift;
+    my $field  = shift;
+    my $val    = shift;
+    my $ofile  = &munin_get_filename ($oconf, $domain, $host, $serv, $field);
+    my $nfile  = &munin_get_filename ($nconf, $domain, $host, $serv, $field);
+
+    logger ("INFO: Changing type of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"COUNTER") . ".\n");
+    RRDs::tune ($ofile, "-d", "42:".(defined $val?$val:"COUNTER"));
+    unless (rename ($ofile, $nfile))
+    {
+	logger ("ERROR: Could not rename file: $!\n");
     }
 }
 
@@ -468,7 +491,7 @@ sub change_max
     my $val    = shift;
     my $file   = &munin_get_filename ($config, $domain, $host, $serv, $field);
 
-    print STDERR "DEBUG: Changing max of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"undef") . ".\n";
+    logger ("INFO: Changing max of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"undef") . ".\n");
     RRDs::tune ($file, "-a", "42:".(defined $val?$val:"U"));
 }
 
@@ -482,7 +505,7 @@ sub change_min
     my $val    = shift;
     my $file   = &munin_get_filename ($config, $domain, $host, $serv, $field);
 
-    print STDERR "DEBUG: Changing min of $domain -> $host -> $serv -> $field to ". (defined $val?$val:"undef") . ".\n";
+    logger ("INFO: Changing min of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"undef") . ".\n");
     RRDs::tune ($file, "-i", "42:".(defined $val?$val:"U"));
 }
 
@@ -1030,3 +1053,4 @@ This program is released under the GNU General Public License
 
 =cut
 
+# vim:syntax=perl:ts=8

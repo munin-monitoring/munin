@@ -11,6 +11,8 @@ munin (work)
   * Added new option "graph_sums" which creates summarised graphs.
   * Added new SNMP plugins for sensors, reading info from System-Informant on
     Windows boxes.
+  * Munin-update adapts to field type changes (loss-free conversion from
+    COUNTER->DERIVE et al.)
 
 munin (1.1.4)
 
