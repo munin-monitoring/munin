@@ -1,4 +1,4 @@
-munin (1.2.3rc1)
+munin (1.2.3)
 
   * Main: Remove stdout output (Deb#302502).
   * Node: Added support for optional "user" settings in node.
