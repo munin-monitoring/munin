@@ -1,3 +1,7 @@
+munin (work)
+
+  * Main: Fix bug with calculation of "Avg:" field when using graph_sums.
+
 munin (1.3.0)
 
   * Main: Allow dots in PNG paths (patch by Jacques Caruso).
