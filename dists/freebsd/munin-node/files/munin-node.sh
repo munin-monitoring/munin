@@ -12,7 +12,7 @@ case "$1" in
 
 	stop)
 		if [ -f $CONFIG ]; then
-			PIDFILE=`awk '$1 == "pid_file" { print $2 }' /usr/local/etc/munin/client.conf`
+			PIDFILE=`awk '$1 == "pid_file" { print $2 }' $CONFIG`
 			if [ -f $PIDFILE ]; then
 				/bin/kill `cat $PIDFILE` && echo -n ' munin-node'
 			fi
