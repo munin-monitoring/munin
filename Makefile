@@ -196,4 +196,4 @@ source_dist: clean
 	(cd ..; ln -s munin munin-$(VERSION))
 	tar -C .. --dereference --exclude CVS --exclude dists -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
 
-.PHONY: install install-main install-node install-doc install-man build build-doc deb rpm clean source_dist
+.PHONY: install install-main install-node install-doc install-man build build-doc deb clean source_dist
