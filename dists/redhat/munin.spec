@@ -59,12 +59,15 @@ make 	CONFIG=dists/redhat/Makefile.config \
 
 mkdir -p %{buildroot}/etc/init.d
 mkdir -p %{buildroot}/etc/munin/plugins
+mkdir -p %{buildroot}/etc/munin/plugin-conf.d
 mkdir -p %{buildroot}/var/lib/munin
 mkdir -p %{buildroot}/var/log/munin
 
 #install -m 0755 node/redhat/munin-node %{buildroot}/etc/init.d/
 install -m0755 dists/redhat/munin-node.rc %{buildroot}/etc/init.d/munin-node
 install -m 0644 dists/tarball/plugins.conf %{buildroot}/etc/munin/
+install -m0644 dists/tarball/plugins.conf %{buildroot}/etc/munin/plugin-conf.d/munin-node
+
 chmod -x %{buildroot}%{_datadir}/munin/plugins/sybase_space
 ## Server
 
@@ -159,7 +162,7 @@ fi
 %files node
 %defattr(-, root, root)
 %config /etc/munin/munin-node.conf
-%config /etc/munin/plugins.conf
+%config /etc/munin/plugin-conf.d/munin-node
 %config /etc/init.d/munin-node
 %{_sbindir}/munin-run
 %{_sbindir}/munin-node
