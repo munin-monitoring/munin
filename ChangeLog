@@ -13,6 +13,7 @@ munin (work)
   * Plugins: New wildcard plugin generic/courier_ by Micah Anderson 
     (Deb#291854). 
   * Plugins: New plugin generic/perdition by Micah Anderson (Deb#291855).
+  * Plugins: Plugin generic/squid_cache now handles multiple caches.
 
 
 munin (1.2.0rc1)
