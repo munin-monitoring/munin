@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.9  2004/06/08 15:18:21  jimmyo
+# The server programs now open the log file at an earlier point.
+#
 # Revision 1.8  2004/05/20 22:30:08  jimmyo
 # * Munin-limits added to distro.
 # * Breached limis now show up in overview and node view.
@@ -431,7 +434,7 @@ sub munin_set_var_path
 
 	if (@sp == 3)
 	{
-	    print STDERR ("Warning: Unknown option \"$sp[2]\" in \"$dom;$host:$sp[0].$sp[1].$sp[2]\".\n")
+	    ::logger ("Warning: Unknown option \"$sp[2]\" in \"$dom;$host:$sp[0].$sp[1].$sp[2]\".\n")
 		unless grep /^$sp[2]$/, @legal;
 	    $hash->{domain}->{$dom}->{node}->{$host}->{client}->{$sp[0]}->{"$sp[1].$sp[2]"} = $val;
 	}
@@ -443,7 +446,7 @@ sub munin_set_var_path
 	}
 	elsif (@sp == 1)
 	{
-	    print STDERR ("Warning: Unknown option \"$sp[0]\" in \"$dom;$host:$sp[0]\".\n")
+	    ::logger ("Warning: Unknown option \"$sp[0]\" in \"$dom;$host:$sp[0]\".\n")
 		unless grep /^$sp[0]$/, @legal;
 	    $hash->{domain}->{$dom}->{node}->{$host}->{$sp[0]} = $val;
 	}
@@ -459,7 +462,7 @@ sub munin_set_var_path
 
 	if (@sp == 1)
 	{
-	    print STDERR ("Warning: Unknown option \"$sp[0]\" in \"$dom;$sp[0]\".\n")
+	    ::logger ("Warning: Unknown option \"$sp[0]\" in \"$dom;$sp[0]\".\n")
 		unless grep /^$sp[0]$/, @legal;
 	    $hash->{domain}->{$dom}->{$sp[0]} = $val;
 	}
@@ -470,7 +473,7 @@ sub munin_set_var_path
     }
     elsif ($var =~ /^\s*([^;:\.]+)\s*$/)
     {
-	print STDERR ("Warning: Unknown option \"$1\" in \"$1\".\n")
+	::logger ("Warning: Unknown option \"$1\" in \"$1\".\n")
 	    unless grep /^$1$/, @legal;
 	$hash->{$1} = $val;
     }
