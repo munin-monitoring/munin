@@ -1,15 +1,13 @@
 munin (work)
 
-  * Minor documentation bugfix.
-   
-munin (1.1.2)
-
   * The server programs now open the log file at an earlier point.
   * Munin-limits added to distro.
   * Warnings and criticals now show up in nodeview and overview.
   * Makefile no longer stopping when complaining about htmldoc errors
   * Added contributed plugin generic/cupsys_pages, contributed by Rune N.
     Skillingstad.
+  * Minor documentation bugfix.
+  * Added automatic "graph no" to negative field when using negatives.
 
 munin (1.1.1)
 

@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.15  2004/06/16 21:08:33  jimmyo
+# Added automatic "graph no" to negative field when using negatives.
+#
 # Revision 1.14  2004/06/08 15:30:34  jimmyo
 # The server programs now open the log file at an earlier point.
 #
@@ -506,6 +509,15 @@ sub expand_specials
 	    }
 	    $node->{client}->{$service}->{$field.".realname"} = $last_name;
 	    print "Setting node->{client}->{$service}->{$field} -> realname = $last_name...\n" if $DEBUG;
+	}
+	elsif (defined $node->{client}->{$service}->{$field.".negative"})
+	{
+	    my $nf = $node->{client}->{$service}->{$field.".negative"};
+	    unless (defined $node->{client}->{$service}->{$nf.".graph"} or
+		    defined $node->{client}->{$service}->{$nf.".skipdraw"})
+	    {
+		$node->{client}->{$service}->{$nf.".graph"} = "no";
+	    }
 	}
     }
     return $result;
