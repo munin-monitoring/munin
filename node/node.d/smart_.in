@@ -1,0 +1,173 @@
+#!/usr/bin/python
+# -*- encoding: iso-8859-1 -*-
+#
+# Wildcard-plugin to monitor S.M.A.R.T attribute values through smartctl,
+# which is part of smartmontools package:
+#         http://smartmontools.sourceforge.net/
+# 
+# To monitor a S.M.A.R.T device, link smart_<device> to this file. 
+# E.g.
+#    ln -s /etc/munin/plugins/custom/smart /etc/munin/plugins/smart_hda
+# ...will monitor /dev/hda.
+#
+# Needs following configuration in plugin-conf.d/munin-node:
+#   [smart_*]
+#   user root
+#   group disk
+#
+#
+# Author: Nicolas Stransky <Nico@neo-lan.net>
+# 
+# v1.0 22/08/2004 - First draft
+# v1.2 28/08/2004 - Clean up the code, add a verbose option
+# v1.3 14/11/2004 - Compatibility with python<2.2. See comments in the code
+# v1.4 17/11/2004 - Deal with non zero exit codes of smartctl
+#                 - config now prints the critical thresholds, as reported by smartctl
+#
+# Copyright (c) 2004 Nicolas Stransky.
+#
+# Permission to use, copy, and modify this software with or without fee
+# is hereby granted, provided that this entire notice is included in
+# all source code copies of any software which is or includes a copy or
+# modification of this software.
+#
+# THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR
+# IMPLIED WARRANTY. IN PARTICULAR, NONE OF THE AUTHORS MAKES ANY
+# REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE
+# MERCHANTABILITY OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR
+# PURPOSE.
+
+import os, sys, string, pickle
+from math import log
+
+# Increase verbosity of the plugin by putting verbose=1
+verbose=False
+# For python < 2.2 compliance, put verbose=0 instead of "False"
+
+# Modify to your needs:
+statefiledir='@@PLUGSTATE@@/'
+
+smart_values={}
+
+def verboselog(s):
+    sys.stderr.write(plugin_name+': '+s+'\n')
+
+if not verbose :
+    verboselog = lambda s: None
+
+def read_values(hard_drive) :
+    num_exit_status=0
+    try :
+        verboselog('Reading S.M.A.R.T values')
+        os.putenv('LC_ALL','C')
+        smart_output=os.popen('/usr/sbin/smartctl -a /dev/'+hard_drive)
+        read_values=0
+        # For python < 2.2 compliance, switch comments on next 2 lines.
+        for l in smart_output :
+        #for l in smart_output.readlines() :
+            if l[:-1]=='' :
+                read_values=0
+            if read_values==1 :
+                smart_attribute=string.split(l)
+                smart_values[string.replace(smart_attribute[1],'-','_')]={"value":smart_attribute[3],"threshold":smart_attribute[5]}
+            elif l[:18]=="ID# ATTRIBUTE_NAME" :
+                read_values=1
+        exit_status=smart_output.close()
+        if exit_status!=None :
+            # smartctl exit code is a bitmask
+            num_exit_status=int(log(exit_status/256,2))
+            if num_exit_status<=2 :
+                verboselog('smartctl cannot access S.M.A.R.T values on drive '+hard_drive+'. Command exited with Bit '+str(num_exit_status))
+                sys.exit(1)
+            else :
+                verboselog('smartctl exited with Bit '+str(num_exit_status)+'. '+hard_drive+' may be FAILING RIGHT NOW !')
+    except :
+        verboselog('Cannot access S.M.A.R.T values ! Check user rights or propper smartmontools installation. Quitting...')
+        sys.exit(1)
+    if smart_values=={} :
+        verboselog('Can\'t find any S.M.A.R.T value to plot ! Quitting...')
+        sys.exit(1)
+    smart_values["smartctl_exit_status"]={"value":str(num_exit_status),"threshold":"1"}
+
+def open_state_file(mode) :
+    return open(statefiledir+'/smart-'+hard_drive+'.state',mode)
+
+def update_state_file() :
+    smart_values_state={}
+    if os.path.exists(statefiledir+'/smart-'+hard_drive+'.state'):
+        try :
+            verboselog('Opening statefile')
+            smart_values_state=pickle.load(open_state_file("r"))
+        except :
+            verboselog('Error opening existing state file ! Check access rights')
+    # Remember all attributes in the state file.
+    for key in smart_values.keys() :
+        smart_values_state[key]=smart_values[key]
+    try:
+        pickle.dump(smart_values_state,open_state_file("w"))
+    except :
+        verboselog('Error trying to save state file')
+
+def print_plugin_values() :
+    verboselog('Printing S.M.A.R.T values')
+    for key in smart_values.keys() :
+        print(key+".value "+smart_values[key]["value"])
+
+def print_config(hard_drive,smart_values) :
+    if os.path.exists(statefiledir+'/smart-'+hard_drive+'.state'):
+        try :
+            verboselog('Try to recall previous S.M.A.R.T attributes for '+hard_drive)
+            smart_values_state=pickle.load(open_state_file("r"))
+        except :
+            verboselog('Error opening existing state file !')
+            sys.exit(1)
+    else :
+        verboselog('No state file, reading S.M.A.R.T values for the first time')
+        read_values(hard_drive)
+        pickle.dump(smart_values,open_state_file("w"))
+        smart_values_state=smart_values 
+
+    verboselog('Printing configuration')
+    print('graph_title S.M.A.R.T values for drive '+hard_drive)
+    print('graph_vlabel Attribute S.M.A.R.T value')
+    print('graph_args --base 1000 --lower-limit 0')
+    print('graph_category disk')
+    attributes=smart_values_state.keys()
+    attributes.sort()
+    for key in attributes :
+        if key=="smartctl_exit_status" : continue
+        print(key+'.label '+key)
+        print(key+'.draw LINE2')
+        # Following line can be commented out. Only useful for warning reports about S.M.A.R.T values
+        print(key+'.critical '+smart_values_state[key]["threshold"]+':')
+    # Let's place smartctl_exit_status at the end
+    print('smartctl_exit_status.label smartctl_exit_status')
+    print('smartctl_exit_status.draw LINE2')
+    # Following line can be commented out. Only useful for warning reports about S.M.A.R.T values
+    print('smartctl_exit_status.critical '+smart_values_state['smartctl_exit_status']["threshold"]+':')
+
+plugin_name=list(os.path.split(sys.argv[0]))[1]
+try :
+    hard_drive=plugin_name[string.rindex(plugin_name,'_')+1:]
+    if not os.path.exists('/dev/'+hard_drive):
+        verboselog('/dev/'+hard_drive+' not found !')
+        sys.exit(1)
+except :
+    sys.stderr.write(plugin_name+': No S.M.A.R.T device name found in plugin\'s symlink !\n')
+    sys.exit(1)
+
+verboselog('plugins\' UID: '+str(os.geteuid())+' / plugins\' GID: '+str(os.getegid()))
+
+if len(sys.argv)>1 :
+    if sys.argv[1]=="config" :
+        print_config(hard_drive,smart_values)
+        sys.exit(0)
+    elif sys.argv[1]!="" :
+        verboselog('unknown argument "'+sys.argv[1]+'"')
+        sys.exit(1)
+
+#No argument given, doing the real job:
+read_values(hard_drive)
+update_state_file()
+print_plugin_values()
+
