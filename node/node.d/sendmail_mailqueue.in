@@ -14,6 +14,11 @@
 #       mspqueue     - MSQ queue directory
 #       mtaqueue     - MTA queue directory
 #
+# $Log$
+# Revision 1.2  2004/02/18 18:40:02  jimmyo
+# Added Log:
+#
+#
 
 MSP_QUEUE=/var/spool/mqueue-client
 MTA_QUEUE=/var/spool/mqueue

@@ -10,7 +10,7 @@
 # 	autoconf (optional)
 #
 # $Log$
-# Revision 1.2  2004/02/18 18:40:03  jimmyo
+# Revision 1.1  2004/02/18 18:40:03  jimmyo
 # Added Log:
 #
 #
@@ -18,7 +18,7 @@
 TEMP_FILE=/tmp/lrrd-sendmail
 
 if [ "$1" = "autoconf" ]; then
-	if [ -f ${TEMP_FILE} ] ; then
+        if which mailstats 2>&1 > /dev/nul ; then
 		echo yes
 		exit 0
 	else
@@ -29,24 +29,30 @@ fi
 
 if [ "$1" = "config" ]; then
 
-	echo 'graph_title Sendmail email volumes'
-	echo 'graph_order received sent'
-	echo 'graph_vlabel bytes'
+	echo 'graph_title Sendmail email traffic'
+	echo 'graph_order received sent rejected discarded'
+	echo 'graph_vlabel nb'
 	echo 'received.label received'
 	echo 'sent.label sent'
+	echo 'rejected.label rejected'
+	echo 'discarded.label discarded'
 	exit 0
 fi
 
-received=0 ; sent=0
+mailstats -p > ${TEMP_FILE}
+received=0 ; sent=0 ; rejected=0 ; discarded=0
 grep '^ *T' ${TEMP_FILE} | \
 (
 while read line ; do
   set -- ${line}
-  received=`expr ${received} + $5`
-  sent=`expr ${sent} + $3`
-done
-rm -f ${TEMP_FILE}
+  received=`expr ${received} + $4`
+  sent=`expr ${sent} + $2`
+  rejected=`expr ${rejected} + $6`
+  discarded=`expr ${discarded} + $7`
+done 
 
 echo "received.value ${received}"
 echo "sent.value ${sent}"
+echo "rejected.value ${rejected}"
+echo "discarded.value ${discarded}"
 )
