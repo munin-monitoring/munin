@@ -42,6 +42,8 @@ munin (work)
     T. Svendsen, SF#1060834).
   * Fixed typo in generic/sendmail_mailstats (patch by Lupe Christoph,
     SF#1058128).
+  * Applied patch from Torstein T. Svendsen to generic/exim_mailstats, to
+    handle logfiles with timestamps in the name (SF#1055214).
 
 munin (1.1.4)
 
