@@ -52,6 +52,19 @@ div.logo {
         max-width: 90%
 }
 
+.legendbox {
+        border-width: thin;
+        border-top: 1px;
+        border-bottom: 1px;
+        border-left: 1px;
+        border-right: 1px;
+        border-color: #999;
+        border-style: solid;
+        padding: 4px 4px 4px 4px;
+        margin: 2px 2px 2px 2px;
+        text-align: left;
+}
+
 .linkbox {
   border-width: thin;
   border-top: 1px;
@@ -67,6 +80,15 @@ div.logo {
   max-width: 90%
 }
 
+.warntext {
+  font-weight: bold;
+  background-color: #f2ff00;
+}
+
+.crittext {
+  font-weight: bold;
+  background-color: #ff3f00;
+}
 
 a:link { 
   color: #486aaf;

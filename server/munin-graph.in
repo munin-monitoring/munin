@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.11  2004/05/16 00:33:07  jimmyo
+# Added a descriptionary table at the bottom of the service view page. Also added "graph_info" and "<field>.info" which can be used by plugins to supply supplementary information for it.
+#
 # Revision 1.10  2004/05/14 20:22:41  jimmyo
 # Code cleanups.
 #
@@ -565,15 +568,6 @@ sub process_field {
     return (&munin_get_bool_val ($node->{client}->{$service}->{$field.".process"}, 1));
 }
 
-sub draw_field {
-    my $node    = shift;
-    my $service = shift;
-    my $field   = shift;
-
-    return 0 if (exists $node->{client}->{$service}->{$field.".skipdraw"});
-    return (&munin_get_bool_val ($node->{client}->{$service}->{$field.".graph"}, 1));
-}
-
 sub get_picture_filename {
     my $config  = shift;
     my $domain  = shift;
@@ -768,7 +762,7 @@ sub process_node {
 		    push (@rrd, "CDEF:c$rrdname=g$rrdname" . (($now-$update)>900 ? ",POP,UNKN" : ""));
 		}
 
-		next unless &draw_field ($node, $service, $field);
+		next unless &munin_draw_field ($node, $service, $field);
 		print "DEBUG: Drawing field \"$field\".\n" if $DEBUG;
 		
 		if ($single_value) # Only one field. Do min/max range.	

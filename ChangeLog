@@ -1,5 +1,12 @@
 munin (1.1.0)
 
+  * Added a table in the service view page, with information about each 
+    field.
+  * Added plugin options "graph_info" and "<field>.info", which can be used
+    to describe the graph/fields in the above mentioned table.
+
+munin (1.1.0)
+
   * Bug regarding logo namechange from logo.gif to logo.png, when installing.
   * Allow/deny in munin-node can now be configured per plugin, in addition
     to "globally" for the whole node.

@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.7  2004/05/16 00:33:07  jimmyo
+# Added a descriptionary table at the bottom of the service view page. Also added "graph_info" and "<field>.info" which can be used by plugins to supply supplementary information for it.
+#
 # Revision 1.6  2004/05/12 10:46:47  jimmyo
 # Bugfix regarding logo namechange from logo.gif to logo.png, when installing.
 #
@@ -184,6 +187,7 @@ for my $domain (@domainorder) {
 	    next unless (munin_get_bool ($config, "graph", 1, $domain, $node, $service));
 	    my @service;
 	    my %service;
+		my $fieldnum = 0;
 	    $service{service}=$service;
 	    $service{label}=$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_title};
 	    $service{imgday}="$node-$service-day.png";
@@ -193,14 +197,62 @@ for my $domain (@domainorder) {
 	    $service{url}="$node-$service.html";
 	    $service{domain}="$domain";
 	    $service{node}=$node;
+
+        # Do "help" section
+		$service{fieldlist}  = "<table width='100%'>";
+		if (defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_info})
+		{
+			$service{fieldlist} .= '<tr><td align="left" valign="top">' . 
+				$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_info} .
+				'</td></tr>';
+			$service{fieldlist} .= '<tr><td colspan=5><hr size="1" noshade /></td></tr>';
+		}
+		$service{fieldlist} .= "<tr><th align='left' valign='top'>Field</th><th align='left' valign='top'>Type</th><th align='left' valign='top'>Warn</th><th align='left' valign='top'>Crit</th><th></tr>";
+		foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}})
+		{
+			if ($field =~ /^([^\.]+)\.label/)
+			{
+				my $f = $1;
+				next unless (&munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $service, $f));
+				$fieldnum++;
+				if (not $fieldnum % 3)
+				{
+					$service{fieldlist} .= '<tr><td colspan=5><hr size="1" noshade /></td></tr>';
+				}
+				$service{fieldlist} .= "<tr>";
+
+				$service{fieldlist} .= "<td align='left' valign='top'>";
+				$service{fieldlist} .= $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$field};
+				$service{fieldlist} .= "</td><td align='left' valign='top'>";
+				$service{fieldlist} .= lc ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".type"} || "GAUGE");
+				$service{fieldlist} .= "</td><td align='left' valign='top'>";
+#				$service{fieldlist} .= "<div class='warntext'>";
+				$service{fieldlist} .= $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".warning"} || "None";
+#				$service{fieldlist} .= "</div>";
+				$service{fieldlist} .= "</td><td align='left' valign='top'>";
+#				$service{fieldlist} .= "<div class='crittext'>";
+				$service{fieldlist} .= $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".critical"} || "None";
+#				$service{fieldlist} .= "</div>";
+				if (defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".info"})
+				{
+					$service{fieldlist} .= "</td><td align='left' valign='top'>";
+					$service{fieldlist} .= $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".info"};
+				}
+				$service{fieldlist} .= "</td>";
+
+				$service{fieldlist} .= "</tr>";
+			}
+		}
+		$service{fieldlist} .= "</table>";
+
 	    push @services, \%service;
 	    push @service, \%service;
 	    $servicetemplate->param(SERVICES => \@service,
 				    SERVICE => $service,
 				    NODE => $node,
 				    DOMAIN => $domain, 
-                                    DOMAINS => \@domainlist, 
-                                    TIMESTAMP => $timestamp);
+					DOMAINS => \@domainlist, 
+					TIMESTAMP => $timestamp);
 	    open (FILE, ">$config->{htmldir}/$domain/$node-$service.html") or die "Cannot open $config->{htmldir}/$domain/$node-$service.html";
 	    print FILE $servicetemplate->output;
 	    close FILE;
@@ -208,8 +260,8 @@ for my $domain (@domainorder) {
 	$nodetemplate->param(SERVICES => \@services,
 			     NODE => $node,
 			     DOMAIN => $domain,
-                             DOMAINS => \@domainlist, 
-                             TIMESTAMP => $timestamp);
+				 DOMAINS => \@domainlist, 
+				 TIMESTAMP => $timestamp);
 	open (FILE, ">$config->{htmldir}/$domain/$node.html") or die "Cannot open $config->{htmldir}/$domain/$node.html";
  	print FILE $nodetemplate->output;
 	close FILE;
