@@ -9,6 +9,7 @@ munin (CVS)
   * Plugins: Made contrib-plugins generic/amavis and generic/mailstats more
     secure.
   * Plugins: Minor bugfix in linux/if_, with info fields.
+  * Plugins: Added warning note in linux/if_ output.
   * Docs: Added man page for munin-node-configure-snmp.
   * Docs: Brushed up the comments in the default munin.conf a bit (Deb#294060).
   * Installation: Create CIGdir if nonexistant.
