@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.9  2004/05/16 11:27:39  jimmyo
+# Added warning and critical statuses to the info table in the service view.
+#
 # Revision 1.8  2004/05/16 00:36:19  jimmyo
 # Forgo an option
 #
@@ -191,6 +194,8 @@ for my $domain (@domainorder) {
 	    my @service;
 	    my %service;
 		my $fieldnum = 0;
+		my @graph_info;
+		my @field_info;
 	    $service{service}=$service;
 	    $service{label}=$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_title};
 	    $service{imgday}="$node-$service-day.png";
@@ -202,13 +207,11 @@ for my $domain (@domainorder) {
 	    $service{node}=$node;
 
         # Do "help" section
-		$service{fieldlist}  = "<table width='100%'>";
 		if (defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_info})
 		{
-			$service{fieldlist} .= '<tr><td align="left" valign="top" colspan=5>' . 
-				$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_info} .
-				'</td></tr>';
-			$service{fieldlist} .= '<tr><td colspan=5><hr size="1" noshade /></td></tr>';
+			my %graph_info;
+			$graph_info{info} = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_info};
+			push @{$service{graphinfo}}, \%graph_info;
 		}
 		$service{fieldlist} .= "<tr><th align='left' valign='top'>Field</th><th align='left' valign='top'>Type</th><th align='left' valign='top'>Warn</th><th align='left' valign='top'>Crit</th><th></tr>";
 		foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}})
@@ -217,36 +220,27 @@ for my $domain (@domainorder) {
 			{
 				my $f = $1;
 				next unless (&munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $service, $f));
+
+				my %field_info;
 				$fieldnum++;
-				if (not $fieldnum % 3)
-				{
-					$service{fieldlist} .= '<tr><td colspan=5><hr size="1" noshade /></td></tr>';
-				}
-				$service{fieldlist} .= "<tr>";
 
-				$service{fieldlist} .= "<td align='left' valign='top'>";
-				$service{fieldlist} .= $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$field};
-				$service{fieldlist} .= "</td><td align='left' valign='top'>";
-				$service{fieldlist} .= lc ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".type"} || "GAUGE");
-				$service{fieldlist} .= "</td><td align='left' valign='top'>";
-#				$service{fieldlist} .= "<div class='warntext'>";
-				$service{fieldlist} .= $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".warning"} || "None";
-#				$service{fieldlist} .= "</div>";
-				$service{fieldlist} .= "</td><td align='left' valign='top'>";
-#				$service{fieldlist} .= "<div class='crittext'>";
-				$service{fieldlist} .= $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".critical"} || "None";
-#				$service{fieldlist} .= "</div>";
-				if (defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".info"})
-				{
-					$service{fieldlist} .= "</td><td align='left' valign='top'>";
-					$service{fieldlist} .= $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".info"};
-				}
-				$service{fieldlist} .= "</td>";
+				$field_info{'hr'}      = 1 unless ($fieldnum % 3);
+				$field_info{'label'}   = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".label"} || $f;
+				$field_info{'type'}    = lc ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".type"} || "GAUGE");
+				$field_info{'warn'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".warning"} || "None";
+				$field_info{'crit'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".critical"} || "None";
+				$field_info{'info'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".info"} || "";
 
-				$service{fieldlist} .= "</tr>";
+				my $state = &munin_field_status ($config, $domain, $node, $service, $f);
+				if (defined $state)
+				{
+					$field_info{'state_warning'}  = 1 if $state eq "warning";
+					$field_info{'state_critical'} = 1 if $state eq "critical";
+					$field_info{'state_unknown'}  = 1 if $state eq "unknown";
+				}
+				push @{$service{fieldinfo}}, \%field_info;
 			}
 		}
-		$service{fieldlist} .= "</table>";
 
 	    push @services, \%service;
 	    push @service, \%service;

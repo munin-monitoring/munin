@@ -6,6 +6,7 @@ munin (1.1.0)
     to describe the graph/fields in the above mentioned table.
   * Bugfix in the linux/df_inode plugin, regarding filesystems withouth
     inodes.
+  * Added warning and critical statuses to the info table in the service view.
 
 munin (1.1.0)
 

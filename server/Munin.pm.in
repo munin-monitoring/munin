@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.5  2004/05/16 11:27:39  jimmyo
+# Added warning and critical statuses to the info table in the service view.
+#
 # Revision 1.4  2004/05/16 00:33:07  jimmyo
 # Added a descriptionary table at the bottom of the service view page. Also added "graph_info" and "<field>.info" which can be used by plugins to supply supplementary information for it.
 #
@@ -97,6 +100,7 @@ use Exporter;
 	   'munin_get_bool',
 	   'munin_get_bool_val',
 	   'munin_get_val',
+	   'munin_field_status',
 	   'munin_get_filename');
 
 use strict;
@@ -677,5 +681,80 @@ sub munin_get_val
     }
 }
 
+sub munin_field_status
+{
+    my ($config, $domain, $node, $service, $field) = @_;
+    my $state = undef;
+
+    # Return undef if nagios is turned off, or the field doesn't have any limits
+    return undef unless (munin_get_bool ($config, "nagios", 1, $domain, $node, $service, $field));
+    unless ((defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.warning"}) or
+	(defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.critical"}))
+    {
+	return undef;
+    }
+
+    my @critical = (undef, undef);
+    my @warning  = (undef, undef);
+    my $client   = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service};
+
+    # First we resolve the limits, and put them in some arrays
+    if (defined $client->{"$field.critical"} and 
+	$client->{"$field.critical"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
+    {
+	    $critical[0] = $1 if defined $1;
+	    $critical[1] = $2 if defined $2;
+    }
+    elsif (defined $client->{"$field.critical"} and
+	$client->{"$field.critical"} =~ /^\s*([-\d]+)\s*$/)
+    {
+	    $critical[1] = $1 if defined $1;
+    }
+    elsif (defined $client->{"$field.critical"})
+    {
+	@critical = (0, 0);
+    }
+    if (defined $client->{"$field.warning"} and 
+	$client->{"$field.warning"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
+    {
+	    $warning[0] = $1 if defined $1;
+	    $warning[1] = $2 if defined $2;
+    }
+    elsif (defined $client->{"$field.warning"} and
+	$client->{"$field.warning"} =~ /^\s*([-\d]+)\s*$/)
+    {
+	    $warning[1] = $1 if defined $1;
+    }
+    elsif (defined $client->{"$field.warning"})
+    {
+	@warning = (0, 0);
+    }
+
+    # Fetch the last values from the rrd file...
+    my $filename = &munin_get_filename ($domain, $node, $service, $field);
+    my $value = sprintf "%.2f",&munin_fetch($filename);
+
+    # Compare
+    if ((defined ($critical[0]) and $value < $critical[0]) or
+	(defined ($critical[1]) and $value > $critical[1])) 
+    {
+	$state = 'critical';
+    }
+    elsif ((defined ($warning[0]) and $value < $warning[0]) or
+	   (defined ($warning[1]) and $value > $warning[1])) 
+    {
+	$state = 'warning';
+    }
+    elsif ($value eq "U") 
+    {
+      $state = 'unknown';
+    }
+    else 
+    {
+      $state = 'ok';
+    }
+
+    return $state;
+}
 
 1;

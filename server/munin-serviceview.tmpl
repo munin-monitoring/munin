@@ -32,7 +32,46 @@
       <td><img src="<TMPL_VAR NAME="IMGYEAR">" alt="yearly graph" /></td>
     </tr>
 	<tr>
-	  <td colspan=2><div class="legendbox"><TMPL_VAR NAME="FIELDLIST"></div></td>
+	  <td colspan=2><div class="legendbox">
+	    <table width='100%'>
+		  <TMPL_LOOP NAME="GRAPHINFO">
+		    <tr>
+		      <td colspan=5 align='left' valign='top'>
+			    <TMPL_VAR NAME="INFO">
+			  </td>
+		    </tr>
+		    <tr><td colspan=5><hr size="2" noshade /></td></tr>
+		  </TMPL_LOOP>
+		    <tr>
+			  <th align='left' valign='top'>Field</th>
+			  <th align='left' valign='top'>Type</th>
+			  <th align='left' valign='top'>Warn</th>
+			  <th align='left' valign='top'>Crit</th>
+			  <th>
+			</tr>
+		  <TMPL_LOOP NAME="FIELDINFO">
+		    <TMPL_IF NAME="HR">
+		      <tr><td colspan=5><hr size="1" noshade /></td></tr>
+			</TMPL_IF>
+		    <tr>
+		      <td align='left' valign='top'>
+			    <TMPL_VAR NAME="LABEL"></td>
+		      <td align='left' valign='top'>
+			    <TMPL_VAR NAME="TYPE"></td>
+		      <td align='left' valign='top'>
+			    <TMPL_IF NAME="STATE_WARNING"><div class='warntext'></TMPL_IF>
+			    <TMPL_VAR NAME="WARN"></td>
+			    <TMPL_IF NAME="STATE_WARNING"></div></TMPL_IF>
+		      <td align='left' valign='top'>
+			    <TMPL_IF NAME="STATE_CRITICAL"><div class='crittext'></TMPL_IF>
+			    <TMPL_VAR NAME="CRIT"></td>
+			    <TMPL_IF NAME="STATE_CRITICAL"></div></TMPL_IF>
+		      <td align='left' valign='top'>
+			    <TMPL_VAR NAME="INFO"></td>
+		    </tr>
+		  </TMPL_LOOP>
+	    </table>
+	  </div></td>
 	</tr>
   </table>
  </TMPL_LOOP>
