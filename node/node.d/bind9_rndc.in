@@ -1,109 +1,81 @@
 #!@@PERL@@ -w
-#
+# -*- perl -*-
 # Plugin to monitor usage of bind 9 servers using rndc stats
 #
 # Contributed by Laurent Facq 15/06/2004
 # Based on Nicolai Langfeldt bind9 plugin
+# Reworked by Dagfinn Ilmari Mannsåker
 #
-# install :
-#  put :
-#      statistics-file "/var/run/named.stats"; // in the options part of your named.conf
-# then create the STATEFILE :
-#      touch /opt/lrrd/tmp/bind9_rndc.state ; chmod a+w /opt/lrrd/tmp/bind9_rndc.state
+# To intall, put
 #
+#      statistics-file "/var/run/named.stats";
 # 
+# in the options part of your named.conf or set the querystats variable
+# (see below) to where your named puts the statistics file by default.
+#
+# You must also make sure the rndc.key file is readable by the plugin.
+#
+# Environment variables:
+#	rndc		location of the rndc command.
+#			set to empty if the stats are updated otherwise
+#	querystats	location of the statistics file
+#
+# $Log$
+# Revision 1.5  2004/12/15 18:05:40  ilmari
+# - Don't use a state file (the statistics file is enough).
+# - Make rndc and statistics file location configurable.
+# - Linearize control flow.
+# - General style cleanup.
+#
 #
 #%# family=contrib
 
 use strict;
 
-#my $RNDC = '/usr/bin/sudo /usr/sbin/rndc'; # comment out if you already 'rndc stats' by crontab
-my $RNDC = '/usr/sbin/rndc'; # comment out if you already 'rndc stats' by crontab
-
-my $QUERYSTATS='/var/run/named.stats';
-my $STATEFILE='@@PLUGSTATE@@/bind9_rndc.state'; ## really used only for the config, you have to create this file
-my $OTHER=0;
+my $rndc = defined($ENV{rndc}) ? $ENV{rndc} : '/usr/sbin/rndc';
+my $querystats = $ENV{querystats} || '/var/run/named.stats';
 my %IN;
 
-sub get_state {
-    open(Q,"< $STATEFILE") or die;
-    while (<Q>) {
-        chomp;
-        my ($q,$n) = split(/\s+/,$_,2);
-        $IN{$q}=$n unless defined($IN{$q});
-    }
-    close(Q);
-}
-
-
-sub do_stats {
-    my ($k,$l); 
-
-    if ($RNDC) { system("$RNDC stats"); }
+system("$rndc stats") if $rndc;
     
-    open(Q,"< $QUERYSTATS") or die;
-    seek(Q, 400, -1); # go nearly to the en of the file to avoir reading it all (if not often cleaned)
-    while ($l=<Q>) {
-	chomp($l);
+open(my $stats, '<', $querystats) or die "$querystats: $!\n";
+seek($stats , 400, -1);		# go nearly to the end of the file
+				# to avoid reading it all
+
+while (my $line = <$stats>) {
+    chomp $line;
+
+    # We want the last block like this in the file
+    #+++ Statistics Dump +++ (1087277501)
+    #success 106183673
+    #referral 2103636
+    #nxrrset 43534220
+    #nxdomain 47050478
+    #recursion 37303997
+    #failure 17522313
+    #--- Statistics Dump --- (1087277501)
 	
-#+++ Statistics Dump +++ (1087277501)
-#success 106183673
-#referral 2103636
-#nxrrset 43534220
-#nxdomain 47050478
-#recursion 37303997
-#failure 17522313
-#--- Statistics Dump --- (1087277501)
-	
-	#print STDERR $l."\n";
-	if ($l =~ m/\+\+\+ Statistics Dump \+\+\+/)
-	{ # reset 
-	    undef %IN;
-	}
-	else
-	{
-	    my ($what, $nb)= split ('\s+',$l);
-	    if ($what && ($what ne '---'))
-	    {
-		$IN{$what}= $nb;
-		#print STDERR "$what - $nb\n";
-	    }
+    if ($line =~ m/\+\+\+ Statistics Dump \+\+\+/) {
+	# reset
+	undef %IN;
+    } else {
+	my ($what, $nb)= split('\s+', $line);
+	if ($what && ($what ne '---')) {
+	    $IN{$what} = $nb;
 	}
     }
-    close(Q);
-    
-    get_state;
-    
-    open(Q,"> $STATEFILE") or die;
-    foreach $k (keys %IN) {
-	print "query_$k.value ",$IN{$k},"\n";
-	print Q "$k ",$IN{$k},"\n";
-    }
-    close(Q);
 }
-
-
-sub do_config {
-    my $k;
-
-    print "graph_title DNS Queries by status
-graph_vlabel Queries / \${graph_period}
-";
-    
-    get_state;
-    
-    foreach $k (keys %IN) {
-	print "query_$k.label $k
-query_$k.type DERIVE
-query_$k.min 0
-";
-    }
-};
+close($stats);
 
 if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
-    do_config;
-    exit(0);
+    print "graph_title DNS Queries by status\n";
+    print "graph_vlabel queries / \${graph_period}\n";
+
+    for my $key (keys %IN) {
+	print "query_$key.label $key\n";
+	print "query_$key.type DERIVE\n";
+	print "query_$key.min 0\n";
+    }
+} else {
+    print "query_$_.value $IN{$_}\n" for keys %IN;
 }
-
-
-do_stats;
