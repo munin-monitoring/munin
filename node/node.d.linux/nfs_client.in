@@ -3,6 +3,9 @@
 # Plugin to monitor NFS client traffic
 #
 # $Log$
+# Revision 1.8.2.1  2005/03/16 13:45:45  ilmari
+# Fix autoconf for linux/{nfsd,nfs_client}.
+#
 # Revision 1.8  2004/12/10 10:47:49  jimmyo
 # Change name from ${scale} to ${graph_period}, to be more consistent.
 #
@@ -33,11 +36,11 @@ NFS=/proc/net/rpc/nfs
 proc="getattr setattr lookup access readlink read write create mkdir symlink mknod remove rmdir rename link readdir readdirplus fsstat fsinfo pathconf commit"
 
 if [ "$1" = "autoconf" ]; then
-	if [ -x "$NFS" ]; then
+	if [ -f "$NFS" ]; then
 		echo yes
 		exit 0
 	else
-		echo no
+		echo "no (no $NFS)"
 		exit 1
 	fi
 fi
