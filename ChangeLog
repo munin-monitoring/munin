@@ -5,7 +5,7 @@ munin (work)
   * Plugins: Fix sendmail_mail{stats,traffic} autoconf handling.
   * Plugins: Fix linux/users #! line.
   * Plugins: Changed default log for generic/postfix_mailstats from syslog to
-  mail.log. Downgraded it from auto to manual.
+  mail.log. Downgraded it from auto to manual. (Deb#291720).
   * Plugins: Made generic/amavis autodetect logtail format (Deb#284638,
     Deb#288395).
 
