@@ -22,6 +22,8 @@ munin (work)
   * Bugfix in munin-limits.
   * Replace "rpc" field with "total" in NFS and NFSD plugins.
   * Added new plugin linux/apt_all, contributed by xavier.
+  * Added new plugins generic/courier_mta*, contributed by Rune N.
+    Skillingstad.
 
 munin (1.1.4)
 
