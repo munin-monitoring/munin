@@ -17,11 +17,12 @@
          <h2><a href="../index.html">Overview</a> :: <TMPL_VAR NAME="DOMAIN"></h2>
     </td>    
   </tr>
+  <TMPL_IF NAME="COMPARE">
   <tr>
     <td valign="top">
       <h2><TMPL_VAR NAME="DOMAIN"> :: [ <a href="comparison-day.html">day</a> <a href="comparison-week.html">week</a> <a href="comparison-month.html">month</a> <a href="comparison-year.html">year</a> ]
     </td>
-  </tr>
+  </tr></TMPL_IF>
 </table>
 
  <table class="largeinvisiblebox">

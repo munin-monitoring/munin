@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.30  2004/09/23 19:46:01  jimmyo
+# Added option "compare".
+#
 # Revision 1.29  2004/09/23 16:43:39  jimmyo
 # Don't show warnings/criticals in the HTML interface if the field/graph isn't plotted.
 #
@@ -454,6 +457,7 @@ for my $domain (@domainorder) {
     
     $domain{nodes} = \@nodes;
     $domain{domain} = $domain;
+    $domain{compare} = (&munin_get_bool ($config, "compare", 1, $domain) and @nodeorder > 1);
 
     my @cats = ();
     foreach my $key (sort keys %comparisons)
@@ -499,15 +503,18 @@ for my $domain (@domainorder) {
 	push @cats, \%cat;
     }
 
-    foreach my $t (@times)
+    if (&munin_get_bool ($config, "compare", 1, $domain) and @nodeorder > 1)
     {
-	$comparisontemplates{$t}->param(DOMAIN => $domain,
-			     DOMAINS => \@domainlist, 
-			     TIMESTAMP => $timestamp,
-			     CATEGORIES => \@cats);
-	open (FILE, ">$config->{htmldir}/$domain/comparison-$t.html") or die "Cannot open $config->{htmldir}/$domain/comparison-$t.html";
-	print FILE $comparisontemplates{$t}->output;
-	close FILE;
+	foreach my $t (@times)
+	{
+	    $comparisontemplates{$t}->param(DOMAIN => $domain,
+				 DOMAINS => \@domainlist, 
+				 TIMESTAMP => $timestamp,
+				 CATEGORIES => \@cats);
+	    open (FILE, ">$config->{htmldir}/$domain/comparison-$t.html") or die "Cannot open $config->{htmldir}/$domain/comparison-$t.html";
+	    print FILE $comparisontemplates{$t}->output;
+	    close FILE;
+	}
     }
 
     push @domains,\%domain;

@@ -189,19 +189,20 @@ Explaination:
  <dt>nsca*<dd>Nagios options. See seperate section
  <dt>domain_order<dd>Change the order of domains. (Default is alphabetically sorted.)
  <dt>local_address<dd>Set the local address to be used for connecting to the nodes.
- <dt>[foo.com;machine.dom.ain]<dd>Add machine.dom.ain to domain foo.com.
- <dt>[machine.dom.ain]<dd>Add machine.dom.ain to domain dom.ain. (A short form of [dom.ain;machine.dom.ain].)
+ <dt>[foo.com;machine.dom.ain]<dd>Add machine.dom.ain to group foo.com.
+ <dt>[machine.dom.ain]<dd>Add machine.dom.ain to group dom.ain. (A short form of [dom.ain;machine.dom.ain].)
 </dl>
 </tt>
 
 To add a new node, just put in a new section and add the
 <tt>address</tt> option.
 
-Domain-level options
+Group-level options
 <tt>
 <dl>
- <dt>node_order<dd>Changes order of nodes in a domain. (Default is alphabetically sorted.)
- <dt>local_address<dd>Set the local address to be used for connecting to the nodes in the domain.
+ <dt>node_order<dd>Changes order of nodes in a group. (Default is alphabetically sorted.)
+ <dt>local_address<dd>Set the local address to be used for connecting to the nodes in the group.
+ <dt>compare<dd>Generate node comparisons for the nodes in this group.
 </dl>
 </tt>
 
