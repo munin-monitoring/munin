@@ -67,6 +67,7 @@ munin (work)
     * Added plugin generic/loggrep for generic log grepping.
     * Fixed bug in generic/sendmail_mailqueue, when queue is empty.
     * Fixed bug in generic/hddtemp2, patch by arturaz (SF#1037002).
+	* Added new plugin linux/forks, to graph forks per second.
 
   - Installation
     * Changed variable name of ARCH to OSTYPE, to avoid name crash on newer
