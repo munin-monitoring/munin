@@ -28,7 +28,7 @@ install-main: build
 
 	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR) $(RUNDIR) $(HTMLDIR) $(DBDIR)
 
-	for p in server/*.tmpl; do    		              \
+	for p in build/server/*.tmpl; do    		              \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
 	done
 	$(INSTALL) -m 0644 server/logo.png $(CONFDIR)/templates/
