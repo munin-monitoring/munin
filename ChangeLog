@@ -38,6 +38,8 @@ munin (work)
   * Munin-node now makes sure it runs the plugins from a world-readable dir.
   * Added new plugin generic/apc_nis to monitor APC UPS, contributed by
     xavier.
+  * Made graph_title a parameter for generic/exim_mailqueue (patch by Torstein
+    T. Svendsen, SF#1060834).
 
 munin (1.1.4)
 
