@@ -6,10 +6,10 @@ etc/munin/templates/munin-nodeview.tmpl
 etc/munin/templates/munin-overview.tmpl
 etc/munin/templates/munin-serviceview.tmpl
 etc/munin/templates/style.css
-lib/munin-graph
-lib/munin-html
-lib/munin-nagios
-lib/munin-update
+share/munin/munin-graph
+share/munin/munin-html
+share/munin/munin-nagios
+share/munin/munin-update
 @dirrm www/data/munin
 @dirrm var/munin/plugin-state
 @dirrm var/munin
