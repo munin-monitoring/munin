@@ -1,6 +1,9 @@
 #!/usr/bin/perl -w
 #
 # $Log$
+# Revision 1.3  2004/02/22 20:17:58  jimmyo
+# Typo fix
+#
 # Revision 1.2  2004/02/18 21:54:56  jimmyo
 # Did a bit of work on the snmp-thingie.
 #
@@ -89,7 +92,7 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	print "recv.label recv\n";
 	print "recv.type COUNTER\n";
 	print "recv.graph no\n";
-	print "recv.cdef send,8,*\n";
+	print "recv.cdef recv,8,*\n";
 	print "recv.warn ", (-$warn), "\n" if defined $warn;
 	print "send.label bps\n";
 	print "send.type COUNTER\n";
