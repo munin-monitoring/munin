@@ -12,7 +12,7 @@ INSTALL          = ./install-sh
 
 default: build
 
-install: install-main install-node install-node-plugins install-doc
+install: install-main install-node install-node-plugins install-doc install-man
 
 install-main: build
 	$(CHECKUSER)
@@ -81,8 +81,7 @@ install-node-plugins: build
 	#TODO:
 	#configure plugins.
 
-install-doc: build-doc
-	mkdir -p $(DOCDIR)
+install-man: build-man
 	mkdir -p $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8
 	$(INSTALL) -m 0644 build/doc/munin-node.conf.5 $(MANDIR)/man5/
 	$(INSTALL) -m 0644 build/doc/munin.conf.5 $(MANDIR)/man5/
@@ -93,8 +92,15 @@ install-doc: build-doc
 	$(INSTALL) -m 0644 build/doc/munin-nagios.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-html.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-cron.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-doc.* $(DOCDIR)/
-	$(INSTALL) -m 0644 build/doc/munin-faq.* $(DOCDIR)/
+
+install-doc: build-doc
+	mkdir -p $(DOCDIR)
+	$(INSTALL) -m 0644 build/doc/munin-doc.html $(DOCDIR)/
+	$(INSTALL) -m 0644 build/doc/munin-doc.pdf $(DOCDIR)/
+	$(INSTALL) -m 0644 build/doc/munin-doc.txt $(DOCDIR)/
+	$(INSTALL) -m 0644 build/doc/munin-faq.html $(DOCDIR)/
+	$(INSTALL) -m 0644 build/doc/munin-faq.pdf $(DOCDIR)/
+	$(INSTALL) -m 0644 build/doc/munin-faq.txt $(DOCDIR)/
 	$(INSTALL) -m 0644 README.* $(DOCDIR)/
 	$(INSTALL) -m 0644 COPYING $(DOCDIR)/
 	$(INSTALL) -m 0644 node/node.d/README $(DOCDIR)/README.plugins
@@ -139,6 +145,11 @@ build-doc-stamp:
 	htmldoc -t pdf --webpage build/doc/munin-faq.html > build/doc/munin-faq.pdf
 	html2text -style pretty -nobs build/doc/munin-faq.html > build/doc/munin-faq.txt
 
+	touch build-doc-stamp
+
+build-man: build-man-stamp
+
+build-man-stamp:
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		node/munin-node.in > build/doc/munin-node.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
@@ -160,7 +171,7 @@ build-doc-stamp:
 	pod2man  --section=5 --release=$(RELEASE) --center="Munin Documentation" \
 		node/munin-node.conf.pod > build/doc/munin-node.conf.5
 
-	touch build-doc-stamp
+	touch build-man-stamp
 
 deb:
 	-rm debian
@@ -203,4 +214,4 @@ source_dist: clean
 	(cd ..; ln -s munin munin-$(VERSION))
 	tar -C .. --dereference --exclude CVS --exclude dists -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
 
-.PHONY: install install-main install-node install-doc build build-doc deb rpm clean source_dist
+.PHONY: install install-main install-node install-doc install-man build build-doc deb rpm clean source_dist
