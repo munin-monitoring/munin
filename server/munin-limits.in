@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.24.2.4  2005/02/19 16:06:14  ilmari
+# Place the munin-limits lock file in rundir, not dbdir.
+#
 # Revision 1.24.2.3  2005/02/19 16:04:03  ilmari
 # Fix the file vs. pipe check in munin-limits
 #
@@ -182,8 +185,8 @@ my $oldnotes = &munin_readconfig ($config->{'dbdir'}."/limits", 1, 1);
 my $modified=0;
 
 logger("Starting munin-limits, checking lock");
-munin_runlock("$config->{dbdir}/munin-limits.lock");
-logger("Created lock: $config->{dbdir}/munin-limits.lock");
+munin_runlock("$config->{rundir}/munin-limits.lock");
+logger("Created lock: $config->{rundir}/munin-limits.lock");
 
 if (!defined $config->{'contact'}->{'nagios'}->{'command'} and
 	defined $config->{'nsca'})
