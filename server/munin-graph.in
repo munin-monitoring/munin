@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.33  2004/11/13 22:50:49  jimmyo
+# Draw min/max ranges in all graphs with only one visible field.
+#
 # Revision 1.32  2004/09/10 20:47:20  jimmyo
 # Changed the calculation of daily sums on the summed year graph.
 #
@@ -248,7 +251,6 @@ if ($do_version)
 if ($> == 0 and !$force_root)
 {
     print "You are running this program as root, which is neither smart nor necessary. 
-If you really want to run it as root, use the --force-root option. Else, run 
 it as the user \"munin\". Aborting.\n\n";
     exit (1);
 }
@@ -636,7 +638,19 @@ sub single_value
     return 1 if @$order == 1;
     return 1 if (@$order == 2 and $node->{client}->{$service}->{$field.".negative"});
 
-# TODO: check for "graph no" on the fields
+    my $graphable = 0;
+    if (!defined $node->{client}->{$service}->{"graphable"})
+    {
+	foreach my $field (keys %{$node->{client}->{$service}})
+	{
+	    if ($field =~ /^([^\.]+)\.label/)
+	    {
+		$graphable++ unless &munin_draw_field ($node, $service, $1);
+	    }
+	}
+	$node->{client}->{$service}->{"graphable"} = $graphable;
+    }
+    return 1 if ($node->{client}->{$service}->{"graphable"} == 1);
     
     return 0;
 }
@@ -1377,3 +1391,4 @@ This program is released under the GNU General Public License
 
 =cut
 
+# vim: syntax=perl ts=8
