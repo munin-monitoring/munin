@@ -2,6 +2,7 @@ munin (work)
 
   * Main: Fix bug with calculation of "Avg:" field when using graph_sums.
   * Installation: Make the single python plugin use @@PYTHON@@ again.
+  * Plugins: Fix sendmail_mail{stats,traffic} autoconf handling.
 
 munin (1.2.0rc1)
 
