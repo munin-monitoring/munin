@@ -2,16 +2,16 @@
 # Date created:				25 Januar 2004
 # Whom:					Lupe Christoph <lupe@lupe-christoph.de>
 #
-# $FreeBSD: ports/sysutils/munin-main/Makefile,v 1.1 2004/03/02 15:52:48 mat Exp $
+# $FreeBSD: ports/sysutils/munin-main/Makefile,v 1.3 2004/06/03 22:38:35 pav Exp $
 #
 
 PORTNAME=	munin
-PORTVERSION=	1.0.0.p3
+PORTVERSION=	1.0.0.p5
 CATEGORIES=	sysutils perl5
 MASTER_SITES=	${MASTER_SITE_SOURCEFORGE}
 MASTER_SITE_SUBDIR=	munin
 PKGNAMESUFFIX=	-main
-DISTNAME=	munin_1.0.0pre3
+DISTNAME=	${PORTNAME}_${PORTVERSION:S/.p/pre/}
 
 MAINTAINER=	lupe@lupe-christoph.de
 COMMENT=	Collector part of Munin
@@ -31,7 +31,7 @@ RUN_DEPENDS+=	${SITE_PERL}/${PERL_ARCH}/Storable.pm:${PORTSDIR}/devel/p5-Storabl
 
 USE_GMAKE=	yes
 PATCH_STRIP=	-p1
-WRKSRC=		${WRKDIR}/munin-1.0.0pre3
+WRKSRC=		${WRKDIR}/${PORTNAME}-${PORTVERSION:S/.p/pre/}
 PKGMESSAGE=	${WRKDIR}/pkg-message
 ALL_TARGET=	DATADIR=${DATADIR} build build-man
 INSTALL_TARGET=	DATADIR=${DATADIR} install-main
@@ -44,8 +44,6 @@ pre-install:
 	@PKG_PREFIX=${PREFIX} ${SH} pkg-install ${PKGNAME} PRE-INSTALL
 
 post-install:
-	@${INSTALL_MAN} -d ${PREFIX}/man/man5
-	@${INSTALL_MAN} -d ${PREFIX}/man/man8
 	@${INSTALL_MAN} -C ${WRKSRC}/build/doc/munin.conf.5 ${PREFIX}/man/man5
 	@${INSTALL_MAN} -C ${WRKSRC}/build/doc/munin-cron.8 ${PREFIX}/man/man8
 	@${INSTALL_MAN} -C ${WRKSRC}/build/doc/munin-graph.8 ${PREFIX}/man/man8

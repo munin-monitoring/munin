@@ -5,6 +5,12 @@
 # $Id$
 #
 # $Log$
+# Revision 1.8.2.2  2004/06/08 15:26:04  jimmyo
+# The server programs now open the log file at an earlier point.
+#
+# Revision 1.8.2.1  2004/06/08 14:55:42  jimmyo
+# Noise reduction in munin-update, when plugins say strange things (only log, don\'t complain on stderr).
+#
 # Revision 1.8  2004/05/09 21:11:16  jimmyo
 # New plugin (pm3users) and a bunch of patches from Jacques Caruso.
 #
@@ -101,6 +107,8 @@ my $cli_do_fork;
 my $cli_timeout;
 my $print_stdout = 0;
 
+my $log = new IO::Handle;
+
 # Get options
 $do_usage=1  unless 
 GetOptions ( "host=s"       => \@limit_hosts,
@@ -187,8 +195,6 @@ if (! -d $config->{rundir})
 	mkdir ($config->{rundir}, 0700);
 }
 munin_runlock("$config->{rundir}/munin-update.lock");
-
-open (LOG,">>$config->{logdir}/munin-update.log") or die "Unable to open $config->{logdir}/munin-update.log\n";
 
 open (STATS,">$config->{dbdir}/munin-update.stats.tmp") or logger("Unable to open $config->{datadir}/munin-update.stats");
 
@@ -357,7 +363,7 @@ close (STATS);
 rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
 
 logger("Munin-update finished ($update_time sec)");
-close (LOG);
+close ($log);
 
 sub process_domain {
   my ($domain) = @_;
@@ -747,17 +753,47 @@ sub use_old_config
     logger ("Attempting to use old configuration for $domain -> $name.");
 }
 
+sub logger_open {
+    my $dirname = shift;
 
-
-sub logger {
-  my ($comment) = @_;
-  my $now = strftime "%b %d %H:%M:%S", localtime;
-  print ("$now - $$: $comment\n") if $print_stdout;
-  print LOG ("$now - $$: $comment\n");
-  flush LOG;
+    if (!$log->opened)
+    {
+	unless (open ($log, ">>$dirname/munin-update.log"))
+	{
+	    print STDERR "Warning: Could not open log file \"$dirname/munin-update.log\" for writing: $!";
+	}
+    }
 }
 
 
+sub logger {
+    my ($comment) = @_;
+    my $now = strftime "%b %d %H:%M:%S", localtime;
+ 
+    if ($log->opened)
+    {
+	print $log "$now - $comment\n";
+    }
+    else
+    {
+	if (defined $config->{logdir})
+	{
+	    if (open ($log, ">>$config->{logdir}/munin-update.log"))
+	    {
+		 print $log "$now - $comment\n";
+	    }
+	    else
+	    {
+		 print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-update.log\" for writing: $!";
+		 print STDERR "$now - $comment\n";
+	    }
+	}
+	else
+	{
+	    print STDERR "$now - $comment\n";
+	}
+    }
+}
 
 1;
 
