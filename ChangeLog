@@ -3,6 +3,8 @@ munin (work)
   * Bugfix: munin-limits should log less noise.
   * Bugfix: munin-limits did not notify correctly in all situations.
   * Bugfix: munin-graph now treats CDEFs in fields with long names properly.
+  * Plugin: New version of generic/smart_ by plugin creator (Nicolas
+    Stransky) (SF#1072459).
 
 munin (1.1.7)
 

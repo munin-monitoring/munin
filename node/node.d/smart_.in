@@ -45,6 +45,9 @@
 # PURPOSE.
 #
 # $Log$
+# Revision 1.3  2004/12/09 15:16:34  jimmyo
+# New version of generic/smart_ by plugin creator (Nicolas Stransky) (SF#1072459).
+#
 # Revision 1.2  2004/11/21 15:58:26  jimmyo
 # Nicolas added autoconf and suggest parameters to the plugin. :-)
 #
@@ -111,20 +114,11 @@ def open_state_file(mode) :
     return open(statefiledir+'/smart-'+hard_drive+'.state',mode)
 
 def update_state_file() :
-    smart_values_state={}
-    if os.path.exists(statefiledir+'/smart-'+hard_drive+'.state'):
-        try :
-            verboselog('Opening statefile')
-            smart_values_state=pickle.load(open_state_file("r"))
-        except :
-            verboselog('Error opening existing state file ! Check access rights')
-    # Remember all attributes in the state file.
-    for key in smart_values.keys() :
-        smart_values_state[key]=smart_values[key]
     try:
-        pickle.dump(smart_values_state,open_state_file("w"))
+        verboselog('Saving statefile')
+        pickle.dump(smart_values,open_state_file("w"))
     except :
-        verboselog('Error trying to save state file')
+        verboselog('Error trying to save state file ! Check access rights')
 
 def print_plugin_values() :
     verboselog('Printing S.M.A.R.T values')
@@ -162,7 +156,7 @@ def print_config(hard_drive,smart_values) :
     print('smartctl_exit_status.label smartctl_exit_status')
     print('smartctl_exit_status.draw LINE2')
     # Following line can be commented out. Only useful for warning reports about S.M.A.R.T values
-    print('smartctl_exit_status.critical '+smart_values_state['smartctl_exit_status']["threshold"]+':')
+    print('smartctl_exit_status.critical '+smart_values_state['smartctl_exit_status']["threshold"])
 
 def get_hard_drive_name() :
     try :
@@ -221,7 +215,7 @@ if len(sys.argv)>1 :
         print_config(hard_drive,smart_values)
         sys.exit(0)
     elif sys.argv[1]=="autoconf" :
-        if os.path.exists('/usr/sbin/smartctl') : 
+        if os.path.exists(os.getenv('smartpath','/usr/sbin/smartctl')) : 
             print('yes')
             sys.exit(0)
         else : 
