@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.8.2.3  2005/02/03 13:28:50  lupe
+# correct field.info
+#
 # Revision 1.8.2.2  2005/01/28 14:51:22  lupe
 # Add graph_info and some filed.info
 #
@@ -122,6 +125,7 @@ if [ "$1" = "config" ]; then
 #	echo "interrupt.warning $INTWARNING"
 	echo 'interrupt.type DERIVE'
 	echo 'interrupt.min 0'
+	echo 'interrupt.info CPU time spent by the kernel processing interrupts'
 	echo "interrupt.cdef interrupt,$CDEF"
 	echo 'user.label user'
 	echo 'user.draw STACK'
