@@ -1,0 +1,20 @@
+--- munin-1.0.0pre2.orig/node/node.d.freebsd/df_inode.in	Fri Jan  2 19:50:00 2004
++++ munin-1.0.0pre2/node/node.d.freebsd/df_inode.in	Sun Feb  1 16:35:27 2004
+@@ -27,7 +27,7 @@
+ 
+ 
+ print_values() {
+-	/bin/df -P -i -t noprocfs,nfs | tail +2 | grep -v "//" | while read i; do
++	/bin/df -P -i -t noprocfs,devfs,fdescfs,linprocfs,nfs | tail +2 | grep -v "//" | while read i; do
+ 		name=`echo $i | sed 's/[\/.]/_/g'| awk '{ print $1 ".value " }'`
+ 		echo -n "$name "
+ 		echo $i | awk '{ print $8 }' | cut -f1 -d%
+@@ -48,7 +48,7 @@
+ 	echo 'graph_title Inode usage (in %)'
+ 	echo 'graph_args --upper-limit 100 -l 0'
+ 	echo 'graph_vlabel %'
+-	/bin/df -P -i -t noprocfs,nfs | tail +2 | grep -v "//" | while read i; do
++	/bin/df -P -i -t noprocfs,devfs,fdescfs,linprocfs,nfs | tail +2 | grep -v "//" | while read i; do
+ 		name=`echo $i | sed 's/[\/.]/_/g'| awk '{ print $1 }'`
+ 		echo -n "$name.label "
+ 		echo $i | awk '{ print $9 }'
