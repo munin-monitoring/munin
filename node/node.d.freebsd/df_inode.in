@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.2  2004/02/01 19:00:29  lupe
+# Ignore devfs,fdescfs,linprocfs in addition to procfs,nfs.
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -27,7 +30,7 @@
 
 
 print_values() {
-	/bin/df -P -i -t noprocfs,nfs | tail +2 | grep -v "//" | while read i; do
+	/bin/df -P -i -t noprocfs,devfs,fdescfs,linprocfs,nfs | tail +2 | grep -v "//" | while read i; do
 		name=`echo $i | sed 's/[\/.]/_/g'| awk '{ print $1 ".value " }'`
 		echo -n "$name "
 		echo $i | awk '{ print $8 }' | cut -f1 -d%
@@ -48,7 +51,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Inode usage (in %)'
 	echo 'graph_args --upper-limit 100 -l 0'
 	echo 'graph_vlabel %'
-	/bin/df -P -i -t noprocfs,nfs | tail +2 | grep -v "//" | while read i; do
+	/bin/df -P -i -t noprocfs,devfs,fdescfs,linprocfs,nfs | tail +2 | grep -v "//" | while read i; do
 		name=`echo $i | sed 's/[\/.]/_/g'| awk '{ print $1 }'`
 		echo -n "$name.label "
 		echo $i | awk '{ print $9 }'
