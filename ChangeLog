@@ -1,6 +1,7 @@
 munin (work)
 
   * Better error handling when fetching data from RRD files.
+  * Fixed bug in munin-graph when choosing colours (Deb#267185).
   
 munin (1.1.3)
 
