@@ -1,6 +1,7 @@
 munin (CVS)
 
   * Plugins: Correct history loss in linux/{df,df_inode}.
+  * Plugins: Avoid negative spike in generic/exim_mailstats.
 
 munin (1.2.1)
   * Main: fix the file vs. pipe check in munin-limits.
