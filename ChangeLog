@@ -9,6 +9,8 @@ munin (work)
     the RRD files.
   * Use @@PERL@@ in all perl shebang lines.
   * Added new option "graph_sums" which creates summarised graphs.
+  * Added new SNMP plugins for sensors, reading info from System-Informant on
+    Windows boxes.
 
 munin (1.1.4)
 
