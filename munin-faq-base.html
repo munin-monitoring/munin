@@ -225,6 +225,26 @@ restricting a few options:
 This FAQ entry was developed by Lupe Christoph, with the help of Jim Cheetham.
 </p>
 
+<h3>Q: I don't like the bandwith usage graph, how to make it look like MRTG or Cricket graphs?</h3>
+<p>
+For interface eth0 on host foo.bar.example,<pre>
+
+	if_eth0.graph no
+
+	my_ifeth0.graph_args --base 1000 --lower-limit 0
+	my_ifeth0.graph_title Traffic on interface eth0
+	my_ifeth0.graph_order received=foo.bar.example:if_eth0.down sent=foo.bar.example:if_eth0.up
+	my_ifeth0.graph_vlabel Bits per second
+	my_ifeth0.received.cdef received,8,*
+	my_ifeth0.received.draw AREA
+	my_ifeth0.sent.cdef sent,8,*
+	my_ifeth0.sent.draw LINE1
+
+</pre>
+
+(Answer supplied by Jacques Caruso.)
+</p>
+
 <h2>3. Client plugins</h2>
 <h3>Q: What is the minimum requirements of a client plugin?</h3>
 <p>

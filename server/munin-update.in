@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.8  2004/05/09 21:11:16  jimmyo
+# New plugin (pm3users) and a bunch of patches from Jacques Caruso.
+#
 # Revision 1.7  2004/02/10 19:27:02  jimmyo
 # Munin-update now properly ignores nodes with "update no".
 #
@@ -124,7 +127,7 @@ Options:
     --host <host>	Limit graphed hosts to <host>. Multiple --host options
     			may be supplied.
     --config <file>	Use <file> as configuration file. 
-    			[/etc/munin/munin.conf]
+    			[@@CONFDIR@@/munin.conf]
     --[no]debug		View debug messages. [--nodebug]
     --[no]fork		Don't fork one instance for each host. [--fork]
     --[no]stdout	Print log messages to stdout as well. [--nostdout]
@@ -571,7 +574,7 @@ sub config_node {
       $fetchdomain = $name;
   }
   my $nodeconf_time = Time::HiRes::time;
-  logger("Configurating node: $name") if $DEBUG;
+  logger("Configuring node: $name") if $DEBUG;
   my @services;
   eval {
     local $SIG{ALRM} = sub { die "Could not run list on $name ($fetchdomain): $!\n"};
@@ -606,7 +609,7 @@ sub config_node {
     {
 	$node->{client}->{$servname}->{realservname} = $service;
     }
-    logger("Configurating service: $name->$servname") if $DEBUG;
+    logger("Configuring service: $name->$servname") if $DEBUG;
     print $socket "config $service\n";
     my @lines = read_socket($socket);
     return unless $socket;
@@ -677,11 +680,11 @@ sub config_node {
     }
     $serviceconf_time = sprintf ("%.2f",(Time::HiRes::time - $serviceconf_time));
     print STATS "CS|$domain|$name|$servname|$serviceconf_time\n";
-    logger ("Configurated service: $name -> $servname ($serviceconf_time sec)");
+    logger ("Configured service: $name -> $servname ($serviceconf_time sec)");
   }
   $nodeconf_time = sprintf ("%.2f",(Time::HiRes::time - $nodeconf_time));
   print STATS "CN|$domain|$name|$nodeconf_time\n";
-  logger("Configurated node: $name ($nodeconf_time sec)");
+  logger("Configured node: $name ($nodeconf_time sec)");
   return 1;
 }
 
@@ -784,7 +787,7 @@ Limit fetched data to those from E<lt>host<gt>. Multiple --host options may be s
 
 =item B<< --config <file> >>
 
-Use E<lt>fileE<gt> as configuration file. [/etc/munin/munin.conf]
+Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin.conf]
 
 =item B<< --help >>
 

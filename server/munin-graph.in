@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.8  2004/05/09 21:11:16  jimmyo
+# New plugin (pm3users) and a bunch of patches from Jacques Caruso.
+#
 # Revision 1.7  2004/04/28 21:32:26  jimmyo
 # Make "graph_scale no" affect y-axis as well as numbers below the graph (Deb#236834).
 #
@@ -128,7 +131,7 @@ Options:
 			options may be supplied.
     --host <host>	Limit graphed hosts to <host>. Multiple --host options
     			may be supplied.
-    --config <file>	Use <file> as configuration file. [/etc/munin/munin.conf]
+    --config <file>	Use <file> as configuration file. [@@CONFDIR@@/munin.conf]
     --[no]list-images	List the filenames of the images created. 
     			[--nolist-images]
     --[no]day		Create day-graphs.   [--day]
@@ -233,7 +236,7 @@ sub process_node {
 	    my $now  = time;
 	    my $fnum = 0;
 	    my @rrd;
-		my @added = ();
+	    my @added = ();
 
             # See if we should skip it because of conf-options
 	    next unless (ref $node->{client}->{$service});
@@ -299,7 +302,7 @@ sub process_node {
 		    } 
 		}
 	    }
-	    # Array to keep 'preprosess'ed fields.
+	    # Array to keep 'preprocess'ed fields.
 	    my @rrd_preprocess = ();
 	    my $fieldnum = 0;
 	    print "DEBUG: Drawing fields \"", join "\",\"", @field_order, "\".\n" if $DEBUG;
@@ -410,7 +413,7 @@ sub process_node {
 		}
 	    }
 	    @field_order = (@rrd_preprocess, @field_order);
-	    print "DEBUG: DDrawing fields \"", join "\",\"", (@rrd_preprocess, @field_order), "\".\n" if $DEBUG;
+	    print "DEBUG: Drawing fields \"", join "\",\"", (@rrd_preprocess, @field_order), "\".\n" if $DEBUG;
 	    for my $field (@field_order) {
 		my $path = undef;
 		(my $f = $field) =~ s/=.+//;
@@ -430,7 +433,7 @@ sub process_node {
 	    }
 	    # Array to keep negative data until we're finished with positive.
 	    my @rrd_negatives = ();
-	    my $filename = "unkown";
+	    my $filename = "unknown";
 	    my %total_pos;
 	    my %total_neg;
 	    print "DEBUG: Drawing fields \"", join "\",\"", @field_order, "\".\n" if $DEBUG;
@@ -453,7 +456,7 @@ sub process_node {
 		{
 		    if (!defined ($node->{client}->{$service}->{$field.".label"}))
 		    {
-			print "DEBBUG: Setting label: $field\n" if $DEBUG;
+			print "DEBUG: Setting label: $field\n" if $DEBUG;
 			$node->{client}->{$service}->{$field.".label"} = $field;
 		    }
 
@@ -855,7 +858,7 @@ Limit graphed hosts to E<lt>hostE<gt>. Multiple --host options may be supplied. 
 
 =item B<< --config <file> >>
 
-Use E<lt>fileE<gt> as configuration file. [/etc/munin/munin.conf]
+Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin.conf]
 
 =item B<< --[no]list-images >>
 

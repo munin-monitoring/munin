@@ -40,6 +40,7 @@ munin (1.0.0pre4)
   * Added Folding@home plugin, contributed by Xavier.
   * Fixed problem with sunos/memory, when memory was reported in gigabytes
     (SF#930964)
+  * New plugin (pm3users) and a bunch of patches from Jacques Caruso.
 
 munin (1.0.0pre3)
 
