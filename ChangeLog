@@ -28,6 +28,7 @@ munin (1.0.0pre2)
     portable (SF#885564)
   * Added a new plugin generic/multips to count several procs in one graph.
     (SF#885579)
+  * More timeouts in munin-update (Deb#222674).
 
 munin (1.0.0pre1)
 
