@@ -1,6 +1,9 @@
 #!/bin/sh
 #
 # $Log$
+# Revision 1.2  2004/05/14 20:32:06  jimmyo
+# Improved autoconf mechanism
+#
 # Revision 1.1  2004/05/06 21:39:54  jimmyo
 # Added plugin acpi, contributed by Alexandre Dupouy.
 #
@@ -11,11 +14,16 @@
 if [ "$1" = "autoconf" ]; then
 	acpi_available 2>/dev/null >/dev/null
         if [ "$?" = "0" ]; then
-		echo yes
-		exit 0
-	else
-		echo no
+		acpi -t -B 2>/dev/null | grep '\d' >/dev/null 2>/dev/null
+		if [ "$?" = "0" ]; then
+		    echo yes
+		    exit 0
+		fi
+		echo "no (thermal not supported by ACPI)"
 		exit 1
+	else
+		echo "no (ACPI program not found)"
+		exit 2
 	fi
 fi
 
