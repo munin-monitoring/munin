@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.35  2004/11/19 22:26:57  jimmyo
+# Use column headers for min/max/cur/avg if label is too long.
+#
 # Revision 1.34  2004/11/16 20:00:44  jimmyo
 # License cleanups.
 #
@@ -844,6 +847,7 @@ sub process_node {
 
 	# Get max label length
 	$max_field_len = &get_max_label_length ($node, $config, $domain, $name, $service, \@field_order);
+	my $global_headers = ($max_field_len > 20);
 
 	# Array to keep negative data until we're finished with positive.
 	my @rrd_negatives = ();
@@ -921,6 +925,15 @@ sub process_node {
 		push (@rrd, "COMMENT:Avg (-/+)");
 		push (@rrd, "COMMENT:Max (-/+) \\j");
 	    }
+	    elsif ($global_headers == 1)
+	    {
+		push (@rrd, "COMMENT:" . (" " x $max_field_len));
+		push (@rrd, "COMMENT: Cur:");
+		push (@rrd, "COMMENT:Min:");
+		push (@rrd, "COMMENT:Avg:");
+		push (@rrd, "COMMENT:Max:  \\j");
+		$global_headers++;
+	    }
 
 	    push (@rrd, ($node->{client}->{$service}->{$field.".draw"} || "LINE2") .
 		  ":g$rrdname" . 
@@ -979,13 +992,13 @@ sub process_node {
 	    }
 	    else
 	    {
-		push (@rrd, "COMMENT: Cur:");
+		push (@rrd, "COMMENT: Cur:") unless $global_headers;
 		push (@rrd, "GPRINT:c$rrdname:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, "yes")?"%s":"") . "");
-		push (@rrd, "COMMENT: Min:");
+		push (@rrd, "COMMENT: Min:") unless $global_headers;
 		push (@rrd, "GPRINT:i$rrdname:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-		push (@rrd, "COMMENT: Avg:");
+		push (@rrd, "COMMENT: Avg:") unless $global_headers;
 		push (@rrd, "GPRINT:g$rrdname:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-		push (@rrd, "COMMENT: Max:");
+		push (@rrd, "COMMENT: Max:") unless $global_headers;
 		push (@rrd, "GPRINT:a$rrdname:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "\\j");
 		push (@{$total_pos{'min'}}, "i$rrdname");
 		push (@{$total_pos{'avg'}}, "g$rrdname");
@@ -1031,13 +1044,13 @@ sub process_node {
 	    
 	    push (@rrd, "CDEF:dpostotal=ipostotal,UN,ipostotal,UNKN,IF");
 	    push (@rrd, "LINE1:dpostotal#000000:" . $node->{client}->{$service}->{graph_total} . (" " x ($max_field_len - length ($node->{client}->{$service}->{graph_total}) + 1)));
-	    push (@rrd, "COMMENT: Cur:");
+	    push (@rrd, "COMMENT: Cur:") unless $global_headers;
 	    push (@rrd, "GPRINT:gpostotal:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-	    push (@rrd, "COMMENT: Min:");
+	    push (@rrd, "COMMENT: Min:") unless $global_headers;
 	    push (@rrd, "GPRINT:ipostotal:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-	    push (@rrd, "COMMENT: Avg:");
+	    push (@rrd, "COMMENT: Avg:") unless $global_headers;
 	    push (@rrd, "GPRINT:gpostotal:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-	    push (@rrd, "COMMENT: Max:");
+	    push (@rrd, "COMMENT: Max:") unless $global_headers;
 	    push (@rrd, "GPRINT:apostotal:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "\\j");
 	}
 
