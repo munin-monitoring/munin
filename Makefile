@@ -186,12 +186,16 @@ rpm-pre:
 		sed -e 's|@@VERSION@@|$(VERSION)|g'			\
 		    $$file > $$destname;				\
 	done
+	-cp dists/tarball/plugins.conf .
+	(cd ..; ln -s munin munin-$(VERSION))
 
-rpm: rpm-pre source_dist
-	(cd ..; rpm -tb munin_$(RELEASE).tar.gz)
+rpm: rpm-pre
+	tar -C .. --dereference --exclude CVS  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
+	(cd ..; rpm -tb munin-$(RELEASE).tar.gz)
 	
-rpm-src: rpm-pre source_dist
-	(cd ..; rpm -ts munin_$(RELEASE).tar.gz)
+rpm-src: rpm-pre
+	tar -C .. --dereference --exclude CVS  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
+	(cd ..; rpm -ts munin-$(RELEASE).tar.gz)
 
 clean:
 ifeq ($(MAKELEVEL),0)
