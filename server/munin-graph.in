@@ -5,6 +5,10 @@
 # $Id$
 #
 # $Log$
+# Revision 1.22  2004/06/28 12:07:00  jimmyo
+#   * Munin-graph: fixed bug when combining graph_order aliases with
+#    "normal" fields, as reported by Jacques Caruso.
+#
 # Revision 1.21  2004/06/24 14:32:17  jimmyo
 # More work on output_graphs (renamed to graph_strategy, amongst others).
 #
@@ -390,7 +394,7 @@ sub get_field_order
 	my ($client,$type)="";
 	($client,$type) = split /\./,$key;
 	if (defined $type and $type eq "label") {
-	    push @$result,$client if !grep /^$client$/, @$result;;
+	    push @$result,$client if !grep /^$client(?:=|$)/, @$result;;
 	} 
     }
     

@@ -2,6 +2,8 @@ munin (work)
 
   * Applied patch from Jacques Caruso to make HTML output standards
     compliant.
+  * Munin-graph: fixed bug when combining graph_order aliases with
+    "normal" fields, as reported by Jacques Caruso.
 
 munin (1.1.2)
 
