@@ -3,6 +3,7 @@ munin (CVS)
   * Main: Yet another rewrite of munin-limits open call (SF#1115434).
   * Main: Make sure all rrd-tunes are correct after an upgrade (Deb#296454,
     Deb#296645).
+  * Main: Better handling of broken connections (Deb#298108).
   * Node: munin-node didn't treat default_plugin_user properly (Deb#295366).
   * Plugins: linux/if* now treats ra* interfaces as wireless.
   * Plugins: minor bugfix in generic/bind9.

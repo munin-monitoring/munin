@@ -23,6 +23,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.33  2005/03/06 21:23:29  jimmyo
+# Better handling of broken connections (Deb#298108).
+#
 # Revision 1.32  2005/03/06 19:33:20  jimmyo
 # Make sure all rrd-tunes are correct after an upgrade (Deb#296454, Deb#296645).
 #
@@ -823,7 +826,7 @@ sub read_socket_single {
     return undef unless defined $socket;
 
     eval {
-      local $SIG{ALRM} = sub { $timed_out=1; close $socket; die "$!\n"};
+      local $SIG{ALRM} = sub { $timed_out=1; close $socket; logger ("Aborting read: $!"); exit 1;};
       alarm( $timeout );
       if ($tls)
       {
@@ -854,7 +857,7 @@ sub read_socket {
     return undef unless defined $socket;
 
     eval {
-      local $SIG{ALRM} = sub { $timed_out=1; close $socket; die "$!\n"};
+      local $SIG{ALRM} = sub { $timed_out=1; close $socket; logger ("Aborting read: $!"); exit 1;};
       alarm( $timeout );
       if ($tls)
       {
@@ -1027,6 +1030,7 @@ sub config_node {
   }
   $nodeconf_time = sprintf ("%.2f",(Time::HiRes::time - $nodeconf_time));
   print STATS "CN|$domain|$name|$nodeconf_time\n";
+    return 0 unless $socket;
   logger("Configured node: $name ($nodeconf_time sec)");
   return 1;
 }
@@ -1048,9 +1052,10 @@ sub fetch_node {
 	if exists $node->{client}->{$service}->{realservname};
     write_socket_single ($socket, "fetch $realservname\n");
     my @lines = &read_socket($socket);
-    return unless $socket;
+    return 0 unless $socket;
     my $fields = {};
     for (@lines) {
+      next unless defined $_;
       if (/\# timeout/) {
 	logger("Client reported timeout in fetching of $service");
       }
@@ -1084,6 +1089,8 @@ sub fetch_node {
   $nodefetch_time = sprintf ("%.2f",(Time::HiRes::time - $nodefetch_time));
   logger ("Fetched node: $name ($nodefetch_time sec)");
   print STATS "FN|$domain|$name|$nodefetch_time\n";
+
+  return 1;
 }
 
 sub use_old_config
@@ -1112,10 +1119,10 @@ sub logger {
   my ($comment) = @_;
   my $now = strftime "%b %d %H:%M:%S", localtime;
 
-  print "$now - $comment\n" if $print_stdout;
+  print "$now [$$] - $comment\n" if $print_stdout;
   if ($log->opened)
   {
-	  print $log "$now - $comment\n";
+	  print $log "$now [$$] - $comment\n";
 	  $log->flush;
   }
   else
