@@ -12,21 +12,21 @@ delete_dir_if_empty() {
 
 if [ "$1" = "purge" ]; then
 	# delete dangling symlinks
-	test -d /etc/munin/client.d/ && for plugin in $(find /etc/munin/client.d/ -type l); do
+	test -d /etc/munin/plugins/ && for plugin in $(find /etc/munin/plugins/ -type l); do
 		if [ ! -e $(readlink $plugin) ]; then
 			rm $plugin
 		fi
 	done
 
 	rm -f /var/lib/munin/plugin-state/*.state
-	rm -f /var/log/munin/munin-client.log*
+	rm -f /var/log/munin/munin-node.log*
 
 	delete_dir_if_empty /var/lib/munin/plugin-state
 	delete_dir_if_empty /var/lib/munin
 	delete_dir_if_empty /var/run/munin
 	delete_dir_if_empty /var/log/munin
-	delete_dir_if_empty /etc/munin/client-conf.d
-	delete_dir_if_empty /etc/munin/client.d
+	delete_dir_if_empty /etc/munin/plugin-conf.d
+	delete_dir_if_empty /etc/munin/plugins
 	delete_dir_if_empty /etc/munin
 fi
 

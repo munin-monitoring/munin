@@ -1,0 +1,54 @@
+#! /bin/bash
+
+set -e
+
+migrate() {
+	local from=$1; shift;
+	local to=$1; shift;
+	
+	[ -r "$from" -a ! -e "$to" ] || return 0;
+
+	[ -d ${to%/*} ] || mkdir -p ${to%/*}
+
+	cp -d $from $to
+
+	for subst in $*; do
+		perl -pi -e $subst $to
+	done
+}
+
+convert_from_lrrd() {
+
+	[ -e /etc/lrrd/server.conf ] || return 0;
+
+	echo -n "Creating initial Munin configuration based on your LRRD installation.."
+
+	migrate /etc/lrrd/server.conf /etc/munin/munin.conf \
+		's,^(\s*dbdir\s*)/var/lib/lrrd$,$1/var/lib/munin,' \
+		's,^(\s*htmldir\s*)/var/www/lrrd$,$1/var/www/munin,' \
+		's,^(\s*logdir\s*)/var/log/lrrd$,$1/var/log/munin,' \
+		's,^(\s*rundir\s*)/var/run/lrrd$,$1/var/run/munin,' \
+		's,^(\s*tmpldir\s*)/etc/lrrd/templates$,$1/etc/munin/templates,'
+	
+	migrate /etc/lrrd/templates/logo.gif /etc/munin/templates/logo.gif
+	migrate /etc/lrrd/templates/style.css /etc/munin/templates/style.css
+	migrate /etc/lrrd/templates/lrrd-domainview.tmpl /etc/munin/templates/munin-domainview.tmpl
+	migrate /etc/lrrd/templates/lrrd-nodeview.tmpl /etc/munin/templates/munin-nodeview.tmpl
+	migrate /etc/lrrd/templates/lrrd-overview.tmpl /etc/munin/templates/munin-overview.tmpl
+	migrate /etc/lrrd/templates/lrrd-serviceview.tmpl /etc/munin/templates/munin-serviceview.tmpl
+
+	migrate /var/lib/lrrd/lrrd-update.stats /var/lib/munin/munin-update.stats
+	migrate /var/lib/lrrd/lrrd-graph.stats /var/lib/munin/munin-graph.stats
+
+	for f in /var/lib/lrrd/*/*.rrd; do
+		migrate $f /var/lib/munin${f#/var/lib/lrrd}
+	done
+
+	echo $'done.\nYour old LRRD configuration and data is left untouched.'
+}
+
+if [ "$1" = "install" -a -z "$2" ]; then
+	convert_from_lrrd
+fi
+
+#DEBHELPER#

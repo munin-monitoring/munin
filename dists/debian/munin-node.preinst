@@ -1,0 +1,60 @@
+#! /bin/bash
+
+set -e
+
+migrate() {
+	local from=$1; shift;
+	local to=$1; shift;
+	
+	[ -r "$from" -a ! -e "$to" ] || return 0;
+
+	[ -d ${to%/*} ] || mkdir -p ${to%/*}
+
+	cp -d $from $to
+
+	for subst in $*; do
+		perl -pi -e $subst $to
+	done
+}
+
+convert_from_lrrd() {
+
+	[ -e /etc/lrrd/client.conf ] || return 0;
+
+	echo -n "Creating initial Munin-node configuration based on your LRRD installation.."
+
+	migrate /etc/lrrd/client.conf /etc/munin/munin-node.conf \
+		's,^(\s*log_file\s*)/var/log/lrrd/lrrd-client.log$,$1/var/log/munin/munin-node.log,' \
+		's,^(\s*pid_file\s*)/var/run/lrrd/lrrd-client.pid$,$1/var/run/munin/munin-node.pid,'
+	
+	migrate /etc/lrrd/client-conf.d/lrrd-client /etc/munin/plugin-conf.d/munin-node \
+		's,^(\s*user\s*)lrrd,$1munin,' \
+		's,^(\s*group\s*)lrrd,$1munin,'
+	
+	GLOBIGNORE=/etc/lrrd/client-conf.d/lrrd-client
+	for f in /etc/lrrd/client-conf.d/*; do
+		migrate $f /etc/munin/plugin-conf.d${f#/etc/lrrd/client-conf.d} \
+			's,^(\s*user\s*)lrrd,$1munin,' \
+			's,^(\s*group\s*)lrrd,$1munin,'
+	done
+
+	if [ -d /etc/lrrd/client.d ]; then
+		for f in $(find /etc/lrrd/client.d ! -lname '/usr/share/lrrd/plugins/*' -a ! -type d); do
+			migrate $f /etc/munin/plugins${f#/etc/lrrd/client.d}
+		done
+		for f in $(find /etc/lrrd/client.d -lname '/usr/share/lrrd/plugins/*' -a ! -type d); do
+			local link=$(readlink $f)
+			mkdir -p /etc/munin/plugins
+			ln -s /usr/share/munin/plugins${link#/usr/share/lrrd/plugins} \
+				/etc/munin/plugins${f#/etc/lrrd/client.d}
+		done
+	fi
+
+	echo $'done.\nYour old LRRD configuration is left untouched.'
+}
+
+if [ "$1" = "install" -a -z "$2" ]; then
+	convert_from_lrrd
+fi
+
+#DEBHELPER#

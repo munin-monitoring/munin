@@ -1,4 +1,4 @@
-build/doc/client.conf.5
-build/doc/munin-client.8
-build/doc/munin-client-configure.8
+build/doc/munin-node.conf.5
+build/doc/munin-node.8
+build/doc/munin-node-configure.8
 build/doc/munin-run.8

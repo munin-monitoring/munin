@@ -1,27 +1,27 @@
 #! /bin/sh
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/sbin/munin-client
-NAME=munin-client
-PIDFILE=/var/run/munin/munin-client.pid
+DAEMON=/usr/sbin/munin-node
+NAME=munin-node
+PIDFILE=/var/run/munin/munin-node.pid
 
 test -f $DAEMON || exit 0
 
 set -e
 
 is_running() {
-	if [ -e /var/run/munin/munin-client.pid ]; then
-		if kill -0 $(< $PIDFILE ) ; then
+	if [ -e /var/run/munin/munin-node.pid ]; then
+		if kill -0 $(< $PIDFILE ) &>/dev/null; then
 			return 0
 		fi
-	elif pgrep -f /usr/sbin/munin-client >/dev/null; then
+	elif pgrep -f "^$DAEMON\$" >/dev/null; then
 		return 0
 	fi
 	return 1
 }
 
 stop() {
-	echo -n "Stopping munin-client: "
+	echo -n "Stopping munin-node: "
 	if ! is_running; then
 		echo "not running."
 		return 0
@@ -35,7 +35,7 @@ stop() {
 			return 0
 		fi
 		echo -n "failed, trying with signals.."
-		pkill -15 -f /usr/sbin/munin-client
+		pkill -15 -f "^$DAEMON\$"
 		echo -n "SIGTERM.."
 		sleep 1
 		if ! is_running; then
@@ -44,7 +44,7 @@ stop() {
 		fi
 		WAIT=5
 		echo -n "SIGKILL.."
-		pkill -9 -f /usr/sbin/munin-client
+		pkill -9 -f "^$DAEMON\$"
 		while [ $WAIT -ge 0 ] && sleep 1; do
 			if ! is_running; then
 				echo "done."
@@ -60,7 +60,7 @@ stop() {
 }
 
 start() {
-	echo -n "Starting munin-client: "
+	echo -n "Starting munin-node: "
 	if is_running; then
 		echo "already running."
 		exit 0

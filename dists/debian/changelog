@@ -1,8 +1,10 @@
 munin (1.0.0pre1-1) unstable; urgency=low
 
-  * New upstream release, which renames the project from "Munin" to "Munin".
+  * New upstream release, which renames the project from "LRRD" to "Munin".
 
-munin (0.9.9r5-1) unstable; urgency=low
+ -- Tore Anderson <tore@debian.org>  Sat, 17 Jan 2004 21:28:34 +0100
+
+lrrd (0.9.9r5-1) unstable; urgency=low
 
   * New upstream release:
       - Allows for customizing which port to connect to when the server is
@@ -11,9 +13,9 @@ munin (0.9.9r5-1) unstable; urgency=low
         sort-of closes: #214277.
       - Relaxes the paranoia regarding the plugins' ownership and permission
         modes somewhat, closes: #214186, #216401.
-      - Further impovements to the error-handling logic in munin-server, which
+      - Further impovements to the error-handling logic in lrrd-server, which
         hopefully closes: #215739, #222674, #222821.
-      - Removed the spurious use of Config::General in munin-client,
+      - Removed the spurious use of Config::General in lrrd-client,
         closes: #216176.
       - Includes Andras Korn's psu_ wildcard plugin, which counts the number
         of processes owned by specific users, closes: #214210.  Thanks, Andras!
@@ -23,48 +25,48 @@ munin (0.9.9r5-1) unstable; urgency=low
         again, Mike Fedyk!
 
   * debian/control:
-      - Drop dependency on libconfig-general-perl for munin-server, as this
+      - Drop dependency on libconfig-general-perl for lrrd-server, as this
         configuration file format is now deprecated.
       - Change priority to extra, due to the dependency on librrds-perl.
 
   * debian/rules:
       - Polished slightly.
 
-  * debian/munin-client.dirs:
-      - Removed unecessary entry /var/run/munin, which is installed from the
+  * debian/lrrd-client.dirs:
+      - Removed unecessary entry /var/run/lrrd, which is installed from the
         Makefile.
 
-  * debian/munin-client.init:
+  * debian/lrrd-client.init:
       - Rewritten, now sports improved error handling and intrinsic distrust of
         start-stop-daemon's return values, closes: #202190.
 
-  * debian/munin-server.cron.d:
+  * debian/lrrd-server.cron.d:
       - Check if the binaries we're about to run exist and are executable
         before running them, closes: #221691.
 
-  * debian/munin-client.postinst, debian/munin-server.postinst:
-      - If we're updating from the packages which didn't create the munin system
-        group, try to make the GID the same as the already existing munin users'
+  * debian/lrrd-client.postinst, debian/lrrd-server.postinst:
+      - If we're updating from the packages which didn't create the lrrd system
+        group, try to make the GID the same as the already existing lrrd users'
         UID, if it's available.
 
-  * debian/munin-client.postinst:
+  * debian/lrrd-client.postinst:
       - Rewritten as a shell script.
-      - Initial plugin setup now relies on munin-client-configure instead of an
+      - Initial plugin setup now relies on lrrd-client-configure instead of an
         internal function to to initialize plugins.  This also ensures that
         automatic plugins later added to the package will be enabled on
         upgrades.
       - The plugins' state files was inappropriately placed in /var/run, move
         them to /var/lib if any exist in the former location.
 
-  * debian/munin-server.postinst:
+  * debian/lrrd-server.postinst:
       - Actually check how we're called, don't blindly assume we're
         configuring.
 
-  * debian/munin-server.postrm, debian/munin-client.postrm:
+  * debian/lrrd-server.postrm, debian/lrrd-client.postrm:
       - Better handling of empty dirs after purge.  (This is workaround for
         dpkg bug #198522).
 
-  * debian/munin-server.postrm:
+  * debian/lrrd-server.postrm:
       - Remove some ucf stuff I had forgotten about.
 
   * debian/plugins.conf:
@@ -73,12 +75,12 @@ munin (0.9.9r5-1) unstable; urgency=low
   * debian/Makefile.config:
       - Now only contains overrides to the upstream defaults, instead of being
         a full replacement for upstream's Makefile.config.
-      - PLUGSTATE changed from /var/run/munin to /var/lib/munin/plugin-state, as
+      - PLUGSTATE changed from /var/run/lrrd to /var/lib/lrrd/plugin-state, as
         these files should persist after reboots.
 
  -- Tore Anderson <tore@debian.org>  Fri, 28 Nov 2003 23:30:27 +0100
 
-munin (0.9.8-1) unstable; urgency=low
+lrrd (0.9.8-1) unstable; urgency=low
 
   * New upstream release:
     - Fixes several situations where the server would stop gathering data,
@@ -96,36 +98,36 @@ munin (0.9.8-1) unstable; urgency=low
       release.
   * debian/Makefile.config, debian/rules:
     - Updated for the new upstream release.
-  * debian/munin-client.postinst:
-    - Use munin-run instead of invoking the plugins directly, to ensure their
+  * debian/lrrd-client.postinst:
+    - Use lrrd-run instead of invoking the plugins directly, to ensure their
       autoconf values are correct.
-  * debian/munin-server.postinst:
-    - Stop using ucf to handle /etc/munin/server.conf, instead ship is as a
+  * debian/lrrd-server.postinst:
+    - Stop using ucf to handle /etc/lrrd/server.conf, instead ship is as a
       dpkg conffile.  This is made possible by using the new configuration
       setting 'use_default_name'.
-  * debian/munin-client.postinst, debian/munin-server.postinst:
-    - Add the system group munin as well as a system user, and ensure that all
+  * debian/lrrd-client.postinst, debian/lrrd-server.postinst:
+    - Add the system group lrrd as well as a system user, and ensure that all
       data directories are owned and writeble by these.
   * debian/plugins.conf (new):
     - Includes configuration settings for the plugins.
-  * debian/munin-client.docs (new), debian/munin-server.docs (new):
-    - Include the Munin documentation, closes: #203647, #203748.
+  * debian/lrrd-client.docs (new), debian/lrrd-server.docs (new):
+    - Include the LRRD documentation, closes: #203647, #203748.
   * Makefile:
-    - Generate the munin-run manual page from the correct POD file.
+    - Generate the lrrd-run manual page from the correct POD file.
     - Disable cleaning the debian/ tree in the clean target.
 
  -- Tore Anderson <tore@debian.org>  Sat, 04 Oct 2003 16:40:45 +0200
 
-munin (0.9.7-2) unstable; urgency=low
+lrrd (0.9.7-2) unstable; urgency=low
 
-  * Correct path to munin-nagios in /etc/cron.d/munin-server, closes: #202803.
+  * Correct path to lrrd-nagios in /etc/cron.d/lrrd-server, closes: #202803.
   * Use Net::Domain instead of /bin/hostname when generating server.conf,
     to ensure the hostname matches the client's, closes: #203960.
   * Do not determine the hostname and domain during build.
  
  -- Tore Anderson <tore@linpro.no>  Sat, 09 Aug 2003 23:09:21 +0200
 
-munin (0.9.7-1) unstable; urgency=low
+lrrd (0.9.7-1) unstable; urgency=low
 
   * New upstream release.
     - Massive changes in build system, update debian/rules accordingly.
@@ -138,10 +140,10 @@ munin (0.9.7-1) unstable; urgency=low
     loquacious. Therefore, I've killed all of the Debconf questions, and
     instead enable a default set of plugins based on the autoconf and
     suggests routines, closes: #197413.
-  * /etc/munin/client.conf is now a conffile handled by dpkg.
-  * Rewrote munin-client's postinst in Perl.
-  * Include the APT plugin in the munin-client package.  Hence, the
-    munin-client package now Conflicts and Replaces munin-plugin-apt.
+  * /etc/lrrd/client.conf is now a conffile handled by dpkg.
+  * Rewrote lrrd-client's postinst in Perl.
+  * Include the APT plugin in the lrrd-client package.  Hence, the
+    lrrd-client package now Conflicts and Replaces lrrd-plugin-apt.
     Thanks to James Troup for the suggestion.
   * Declare the debhelper compat level in debian/compat instead of in
     debian/rules.
@@ -149,7 +151,7 @@ munin (0.9.7-1) unstable; urgency=low
 
  -- Tore Anderson <tore@linpro.no>  Mon, 14 Jul 2003 20:39:18 +0200
  
-munin (0.9.6-1) unstable; urgency=low
+lrrd (0.9.6-1) unstable; urgency=low
 
   * Initial release, closes: #169079.
 

@@ -1,27 +1,27 @@
-Debian-specific information regarding the Munin client
-=====================================================
+Debian-specific information regarding the Munin node
+====================================================
 
   About the plugins
   -----------------
 
-    The client will scan the directory /etc/munin/client.d for executable
+    The node will scan the directory /etc/munin/plugins for executable
     files (or symlinks to such files), and will treat the results as the
     authoritative list of plugins to run.  The maintainer scripts will have
     created a default set of enabled plugins, attuned to your system.
     You'll find more plugins in /usr/share/munin/plugins, which you can
-    enable by creating symlinks into /etc/munin/client.d as appropriate.
+    enable by creating symlinks into /etc/munin/plugins as appropriate.
 
     Creating your own plugins is very easy.  Read the rest of the included
     documents, take a look at the provided plugins, and write your own.
-    Place it in /etc/munin/client.d/, and restart the client.  The server
-    will automatically notice the new service, and start graphing it.
+    Place it in /etc/munin/plugins/, and restart the client.  The core
+    process will automatically notice the new service, and start graphing it.
 
   Locally modified plugins
   ------------------------
 
     If you wish to change the behaviour of the provided plugins, you are
     strongly encouraged to make a copy of the plugin as installed in
-    /usr/share/munin/plugins/, and place it in /etc/munin/client.d/. Then,
+    /usr/share/munin/plugins/, and place it in /etc/munin/plugins/. Then,
     make your modifications in the copy.  I strenously stress that it is
     discouraged to make local modifications directly in plugins found in the
     /usr/share/munin/plugin/ directories, as these files are managed by
@@ -29,7 +29,7 @@ Debian-specific information regarding the Munin client
     changes will likely break intrusion detection systems which relies
     on dpkg's database for reference.
 
-    It is worth noting that many things can be overrided in the server's
+    It is worth noting that many things can be overrided in the core process'
     configuration file, so it is quite possible that a modification is not
     necessary.
 

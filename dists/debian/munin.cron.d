@@ -1,5 +1,5 @@
 #
-# cron-jobs for munin-server
+# cron-jobs for munin
 #
 
 MAILTO=root
