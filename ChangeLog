@@ -1,4 +1,4 @@
-munin (CVS)
+munin (1.2.2)
 
   * Plugins: Correct history loss in linux/{df,df_inode}.
   * Plugins: Avoid negative spike in generic/exim_mailstats.
