@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.7  2004/02/10 19:27:02  jimmyo
+# Munin-update now properly ignores nodes with "update no".
+#
 # Revision 1.6  2004/01/30 14:28:19  jimmyo
 # More timeouts in munin-update (Deb#222674).
 #
@@ -386,7 +389,7 @@ sub do_node {
 sub process_node {
   my ($domain,$name,$node,$oldnode) = @_;
   return if (exists ($node->{fetch_data}) and !$node->{fetch_data});
-  return if (exists ($node->{update}) and !$node->{update} eq "yes");
+  return if (exists ($node->{update}) and $node->{update} ne "yes");
 
   # Then we fork...
   if ($do_fork)

@@ -1,3 +1,7 @@
+munin (1.0.0pre4)
+
+  * Munin-update now properly ignores node with "update no".
+
 munin (1.0.0pre3)
 
   * Munin-graph had a perl 5.005_03 compatabilty problem, which slipped
