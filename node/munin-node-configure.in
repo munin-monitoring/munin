@@ -19,6 +19,9 @@
 # Program to suggest configurations and configuration changes.
 #
 # $Log$
+# Revision 1.11  2004/12/10 10:40:12  jimmyo
+# Fix bug with underscore in wildcard plugins.
+#
 # Revision 1.10  2004/11/16 20:00:42  jimmyo
 # License cleanups.
 #
@@ -411,7 +414,7 @@ sub get_installed
 		if ($realfile =~ /_$/) # Wildcard plugin...
 		{
 		    print "$realfile..." if $debug;
-		    (my $wild = $inst) =~ s/^.+_//;
+		    (my $wild = $inst) =~ s/^$realfile//;
 		    print "$wild..." if $debug;
 		    push @{$ps->{$realfile}->{'suggest'}}, $wild;
 		}
