@@ -11,6 +11,9 @@
 #	logfile   - set which log file to use
 # 
 # $Log$
+# Revision 1.4.2.1  2005/01/24 20:42:44  jimmyo
+# generic/named probes for more log files before giving up.
+#
 # Revision 1.4  2004/12/10 10:47:47  jimmyo
 # Change name from ${scale} to ${graph_period}, to be more consistent.
 #
@@ -54,7 +57,16 @@
 # linuxes it is /var/log/messages.  But on Debian it is
 # /var/log/daemon which is read restricted so we have to run as a user
 # with read rights, or remove the restrictions.
-SYSLOGFILE=${logfile:-/var/adm/messages}
+
+if [ -n "$logfile" ]; then
+    SYSLOGFILE=$logfile
+else
+    if [ -f /var/adm/messages ]; then
+        SYSLOGFILE=/var/adm/messages
+    else
+        SYSLOGFILE=/var/log/daemon.log
+    fi
+fi
 
 # ----------------------------------------------------------------------
 
