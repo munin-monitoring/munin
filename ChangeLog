@@ -1,3 +1,7 @@
+munin (1.0.0pre5)
+
+  * Bug regarding logo namechange from logo.gif to logo.png, when installing.
+
 munin (1.0.0pre4)
 
   * Munin-update now properly ignores node with "update no".
