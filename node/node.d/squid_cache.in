@@ -32,6 +32,9 @@
 # 	autoconf  (optional - only used by munin-config)
 #
 # $Log$
+# Revision 1.4.2.1  2005/01/24 21:42:52  jimmyo
+# Plugin generic/squid_cache now handles multiple caches.
+#
 # Revision 1.4  2004/11/16 20:18:09  jimmyo
 # License cleanups.
 #
@@ -146,10 +149,14 @@ sub query_squid {
 		  
     $cachemgr->syswrite($request, length($request));
     my @lines = $cachemgr->getlines();
+    my %outs = ('Maximum' => 0, 'Current' => 0);
     for(my $i = 0; $i <= $#lines; $i++) {
 	if($lines[$i] =~ /$target\s+(\d+)/) {
-	    print "$1.value $2\n";
+	    $outs{$1} += $2;
 	}
+    }
+    foreach my $k (keys %outs) {
+	print "$k.value $outs{$k}\n";
     }
 }
 

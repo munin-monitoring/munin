@@ -11,17 +11,14 @@ add_munin_system_user() {
 }
 
 fixperms() {
-	chown munin:adm /var/log/munin
-	chmod 0750 /var/log/munin
-
-	chown munin:root /var/run/munin
-	chmod 0755 /var/run/munin
-
-	chown munin:munin /var/lib/munin
-	chmod 0755 /var/lib/munin
-
-	chown munin:munin /var/lib/munin/plugin-state
-	chmod 0775 /var/lib/munin/plugin-state
+        dpkg-statoverride --list /var/log/munin >/dev/null || \
+		dpkg-statoverride --update --add munin adm 0750 /var/log/munin
+        dpkg-statoverride --list /var/run/munin >/dev/null || \
+		dpkg-statoverride --update --add munin root 0755 /var/run/munin
+        dpkg-statoverride --list /var/lib/munin >/dev/null || \
+		dpkg-statoverride --update --add munin munin 0755 /var/lib/munin
+        dpkg-statoverride --list /var/lib/munin/plugin-state >/dev/null || \
+		dpkg-statoverride --update --add munin munin 0775 /var/lib/munin/plugin-state
 }
 
 init_plugins() {

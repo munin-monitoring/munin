@@ -10,6 +10,12 @@
 # Any device found in /usr/bin/netstat can be monitored.
 #
 # $Log$
+# Revision 1.4.2.1  2005/01/28 14:51:22  lupe
+# Add graph_info and some filed.info
+#
+# Revision 1.5  2005/01/28 14:47:31  lupe
+# Add graph_info and some filed.info
+#
 # Revision 1.4  2004/12/10 10:47:49  jimmyo
 # Change name from ${scale} to ${graph_period}, to be more consistent.
 #
@@ -64,6 +70,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000'
 	echo 'graph_vlabel events / ${graph_period}'
 	echo 'graph_category network'
+	echo "graph_info This graph shows the amount of errors and collisions on the $INTERFACE network interface."
 	echo 'ierrors.label Input Errors'
         echo 'ierrors.type COUNTER'
         echo 'oerrors.label Output Errors'

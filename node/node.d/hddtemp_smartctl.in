@@ -1,0 +1,153 @@
+#!/usr/bin/perl
+#
+# Plugin to monitor harddrive temperatures through SMART.
+#
+# client-conf.d/-options:
+#       
+#	smartctl	-- path to smartctl executable
+#	drives		-- List drives to monitor. E.g. "env.drives hda hdc".
+#	type_$dev	-- device type for one drive, e.g. "env.type_sda 3ware,0"
+#	args_$dev	-- additional arguments to smartctl for one drive,
+#			   e.g. "env.args_hda -v 194,10xCelsius"
+#
+# Note for users of RAID controllers (smartmontools currently only
+# supports 3ware): you can specify the drives attached to your RAID
+# controller(s) as raiddev_num (e.g. sda_0). Then you must specify the
+# type like this: type_sda_0 3ware,0.
+#
+# $Log$
+# Revision 1.1.2.5  2005/03/03 10:22:25  lupe
+# Add feature to specify additional arguments to smartctl
+#
+# Revision 1.1.2.4  2005/02/17 10:59:33  lupe
+# Support more than one drive on RAID controllers. Explain how to configure
+# them.
+#
+# Revision 1.1.2.3  2005/01/29 22:14:36  jimmyo
+# Make the plugin check all rdsks.
+#
+# Revision 1.1.2.2  2005/01/26 09:34:37  jimmyo
+# Added license note.
+#
+# Revision 1.1.2.1  2005/01/25 21:00:05  jimmyo
+# Added plugin generic/hddtemp_smartctl, made by Lupe Christoph. Made it the default hddtemp plugin.
+#
+# Revision 1.1  2004/11/10 16:11:27  jimmyo
+# Added new plugin linux/hddtemp_smartctl, made by Peter Gervai (SF#1032727).
+#
+# Revision 1.0  2004/09/22 
+# New plugin: Peter Gervai <grin(*)grin.hu>
+#
+#
+#%# family=auto
+#%# capabilities=autoconf
+#
+# Copyright (c) 2005, Lutz Peter Christoph
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#   * Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#
+#   * Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in
+#     the documentation and/or other materials provided with the
+#     distribution.
+#
+#   * The name and aliases of Lutz Peter Christoph ("Lupe Christoph",
+#     "Lutz Christoph") may not be used to endorse or promote products
+#     derived from this software without specific prior written
+#     permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+use strict;
+
+my $smartctl = exists $ENV{smartctl} ? $ENV{smartctl} : undef;
+
+# If the envvar is not set, look for smartctl
+# first, try $PATH
+$smartctl = `which smartctl` unless $smartctl;
+chomp $smartctl;
+
+# Still not found? Check obvious places
+my @dirs, qw(/usr/bin /usr/sbin /usr/local/bin /usr/local/sbin);
+until ($smartctl or @dirs == 0) {
+  my $dir = shift @dirs;
+  my $path = $dir.'/smartctl';
+  $smartctl = $path if -x $path;
+}
+
+$ENV{LANG} = 'C';
+$ENV{LC_ALL} = 'C';
+my @drives;
+
+# Try to get a default set of drives
+if ($^O eq 'linux') {
+  # On Linux, we know how to enumerate ide drives.
+  # SCSI is not as easy
+  if (-d '/proc/ide') {
+    opendir(IDE, '/proc/ide');
+    @drives = grep /hd[a-z]/, readdir IDE;
+    closedir(IDE);
+  }
+} elsif ($^O eq 'solaris') {
+  @drives = map { s@.*/@@ } glob '/dev/rdsk/c*t*d*s2';
+}
+
+@drives = split ' ', $ENV{drives} if exists $ENV{drives};
+
+if (exists $ARGV[0]) {
+  if ($ARGV[0] eq 'autoconf') {
+    if ($smartctl and -x $smartctl) {
+      if (@drives) {
+        print "yes\n";
+        exit 0;
+      } else {
+        print "no (no drives known)\n";
+        exit 1;
+      }
+    } else {
+      print "no (smartctl not found)\n";
+      exit 1;
+    }
+  } elsif ($ARGV[0] eq 'config') {
+    print "graph_title HDD temperature\n";
+    print "graph_args --base 1000 -l 0\n";
+    print "graph_vlabel temp in °C\n";
+    print "graph_category sensors\n";
+    print "graph_info This graph shows the temperature in degrees Celsius of the hard drives in the machine.\n";
+    print "$_.label $_\n" foreach @drives;
+    exit 0;
+  }
+}
+
+foreach (@drives) {
+  my $dev;
+  $dev = $_ =~ /(.*)(?:_\d+)/ ? $1 : $_;
+  my $cmd = $smartctl.' -a ';
+  $cmd .= $ENV{'args_'.$_}.' ' if exists $ENV{'args_'.$_};
+  $cmd .= '-d '.$ENV{'type_'.$_}.' ' if exists $ENV{'type_'.$_};
+  $cmd .= "/dev/$dev";
+  my $output = `$cmd`;
+  if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
+    print "$_.value $1\n";
+  } elsif ($output =~ /^(194 Temperature_Celsius.*)/m) {
+    my @F = split ' ', $1;
+    print "$_.value $F[9]\n";
+  }
+}

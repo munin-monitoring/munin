@@ -20,6 +20,18 @@
 # $Id$
 #
 # $Log$
+# Revision 1.51.2.1  2005/01/08 22:38:25  jimmyo
+# Main: Fix bug with calculation of "Avg:" field when using graph_sums.
+#
+# Revision 1.51  2005/01/05 18:32:49  jimmyo
+# Main: Tables in service-view now containt the correct "Type" when using data aliases.
+#
+# Revision 1.50  2005/01/05 18:08:01  jimmyo
+# Main: Tables in service-view now sorted according to graph_order.
+#
+# Revision 1.49  2005/01/05 17:43:34  jimmyo
+# Main: Bugfix with graphs using both "graph_sums" and data aliases.
+#
 # Revision 1.48  2005/01/04 08:38:51  jimmyo
 # Fix bug which lead to some graphs failing with STACK error.
 #
@@ -224,9 +236,6 @@ my $VERSION = "@@VERSION@@";
 # Limit graphing to certain hosts and/or services
 my @limit_hosts = ();
 my @limit_services = ();
-
-# Fields to copy when "aliasing" a field
-my @copy_fields    = ("label", "draw", "type", "rrdfile", "fieldname", "info"); 
 
 # Force drawing of "graph no". 
 my $force_graphing = 0;
@@ -488,40 +497,6 @@ sub get_header {
     return $result;
 }
 
-sub get_field_order
-{
-    my $node    = shift;
-    my $config  = shift;
-    my $domain  = shift;
-    my $host    = shift;
-    my $service = shift;
-    my $result  = [];
-
-    if ($node->{client}->{$service}->{graph_sources}) 
-    {
-	foreach my $gs (split /\s+/, $node->{client}->{$service}->{'graph_sources'})
-	{
-	    push (@$result, "-".$gs);
-	}
-    } 
-    if ($node->{client}->{$service}->{graph_order}) 
-    {
-	push (@$result, split /\s+/, $node->{client}->{$service}->{'graph_order'});
-    } 
-
-    for my $key (keys %{$node->{client}->{$service}}) 
-    {
-	my ($client,$type)="";
-	($client,$type) = split /\./,$key;
-	if (defined $type and $type eq "label") 
-	{
-	    push @$result,$client if !grep /^$client(?:=|$)/, @$result;;
-	} 
-    }
-    
-    return $result;
-}
-
 sub get_sum_command
 {
     my $node    = shift;
@@ -709,9 +684,11 @@ sub single_value
     my $graphable = 0;
     if (!defined $node->{client}->{$service}->{"graphable"})
     {
-	foreach my $field (keys %{$node->{client}->{$service}})
+#	foreach my $field (keys %{$node->{client}->{$service}})
+	foreach my $field (&munin_get_field_order ($node, $config, $domain, $host, $service))
 	{
-	    if ($field =~ /^([^\.]+)\.label/)
+	    print "DEBUG: single_value: Checking field \"$field\".\n" if $DEBUG;
+	    if ($field =~ /^([^\.]+)\.label/ or $field =~ /=/)
 	    {
 		$graphable++ if &munin_draw_field ($node, $service, $1);
 	    }
@@ -740,93 +717,6 @@ sub process_field {
     return (&munin_get_bool_val ($node->{client}->{$service}->{$field.".process"}, 1));
 }
 
-sub get_rrd_filename {
-    my $node    = shift;
-    my $config  = shift;
-    my $domain  = shift;
-    my $name    = shift;
-    my $service = shift;
-    my $field   = shift;
-    my $path    = shift;
-    my $result  = "unknown";
-
-    if ($node->{client}->{$service}->{$field.".filename"})
-    {
-	$result = $node->{client}->{$service}->{$field.".filename"};
-    }
-    elsif ($path)
-    {
-	if (!defined ($node->{client}->{$service}->{$field.".label"}))
-	{
-	    print "DEBUG: Setting label: $field\n" if $DEBUG;
-	    $node->{client}->{$service}->{$field.".label"} = $field;
-	}
-
-	if ($path =~ /^\s*([^:;]+)[:;]([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
-	{
-	    $result = munin_get_filename ($config, $1, $2, $3, $4);
-	    print "\nDEBUG1: Expanding $path...\n" if $DEBUG;
-	    if (! defined $node->{client}->{$service}->{$field."label"})
-	    {
-		for my $f (@copy_fields)
-		{
-		    if (not exists $node->{client}->{$service}->{"$field.$f"} and
-			    exists $config->{'domain'}->{$1}->{'node'}->{$2}->{'client'}->{$3}->{"$4.$f"})
-		    {
-			$node->{client}->{$service}->{"$field.$f"} = $config->{'domain'}->{$1}->{'node'}->{$2}->{'client'}->{$3}->{"$4.$f"};
-		    }
-		}
-	    }
-	}
-	elsif ($path =~ /^\s*([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
-	{
-	    print "\nDEBUG2: Expanding $path...\n" if $DEBUG;
-	    $result = munin_get_filename ($config, $domain, $1, $2, $3);
-	    for my $f (@copy_fields)
-	    {
-		if (not exists $node->{client}->{$service}->{"$field.$f"} and
-			exists $config->{'domain'}->{$domain}->{'node'}->{$1}->{'client'}->{$2}->{"$3.$f"})
-		{
-		    print "DEBUG: Copying $f...\n" if $DEBUG;
-		    $node->{client}->{$service}->{"$field.$f"} = $config->{'domain'}->{$domain}->{'node'}->{$1}->{'client'}->{$2}->{"$3.$f"};
-		}
-	    }
-	}
-	elsif ($path =~ /^\s*([^:\.]+)[:\.]([^:\.]+)\s*$/)
-	{
-	    print "\nDEBUG3: Expanding $path...\n" if $DEBUG;
-	    $result = munin_get_filename ($config, $domain, $name, $1, $2);
-	    for my $f (@copy_fields)
-	    {
-		if (not exists $node->{client}->{$service}->{"$field.$f"} and
-			exists $node->{client}->{$1}->{"$2.$f"})
-		{
-		    $node->{client}->{$service}->{"$field.$f"} = $node->{client}->{$1}->{"$2.$f"};
-		}
-	    }
-	}
-	elsif ($path =~ /^\s*([^:\.]+)\s*$/)
-	{
-	    print "\nDEBUG4: Expanding $path...\n" if $DEBUG;
-	    $result = munin_get_filename ($config, $domain, $name, $service, $1);
-	    for my $f (@copy_fields)
-	    {
-		if (not exists $node->{client}->{$service}->{"$field.$f"} and
-			exists $node->{client}->{$service}->{"$1.$f"})
-		{
-		    $node->{client}->{$service}->{"$field.$f"} = $node->{client}->{$service}->{"$1.$f"};
-		}
-	    }
-	}
-    }
-    else
-    {
-	print "\nDEBUG5: Doing path...\n" if $DEBUG;
-	$result = munin_get_filename($config, $domain,$name,$service,$field);
-    }
-    return $result;
-}
-
 sub process_node {
     my ($domain,$name,$node) = @_;
 
@@ -852,7 +742,7 @@ sub process_node {
 	my $rrdname;
 	my $force_single_value;
 
-	@field_order =  @{&get_field_order ($node, $config, $domain, $name, $service, \$force_single_value)};
+	@field_order =  @{&munin_get_field_order ($node, $config, $domain, $name, $service, \$force_single_value)};
 
 	# Array to keep 'preprocess'ed fields.
 	my @rrd_preprocess = ();
@@ -888,7 +778,7 @@ sub process_node {
 	    }
 		
 	    # Getting name of rrd file
-	    $filename = &get_rrd_filename ($node, $config, $domain, $name, $service, $field, $path);
+	    $filename = &munin_get_rrd_filename ($node, $config, $domain, $name, $service, $field, $path);
 
 	    my $update = RRDs::last ($filename);
 	    $update = 0 if ! defined $update;
@@ -1158,7 +1048,7 @@ sub process_node {
 		{
 		    if ($rrd_sum[$index] =~ /^(--vertical-label|-v)$/)
 		    {
-			(my $label = $node->{client}->{$service}->{graph_vlabel}) =~ s/\$\{scale\}/$sumtimes{$time}[0]/g;
+			(my $label = $node->{client}->{$service}->{graph_vlabel}) =~ s/\$\{graph_period\}/$sumtimes{$time}[0]/g;
 			splice (@rrd_sum, $index, 2, ("--vertical-label", $label));
 			$index++;
 			$labelled++;
@@ -1167,11 +1057,17 @@ sub process_node {
 		    {
 			my ($pre, $fname, $post) = ($1, $2, $3);
 			next if $fname eq "re_zero";
+			if ($post =~ /^:AVERAGE/)
+			{
+			    splice (@rrd_sum, $index, 1, $pre . ":x$fname" . $post);
+			    $index++;
+			    next;
+			}
 			next if grep /^x$fname$/, @defined;
 			push @defined, "x$fname";
 			my @replace;
 
-			if (defined ($node->{client}->{$service}->{$fname.".type"}) and $node->{client}->{$service}->{$fname.".type"} ne "GAUGE")
+			if (!defined ($node->{client}->{$service}->{$fname.".type"}) or $node->{client}->{$service}->{$fname.".type"} ne "GAUGE")
 			{
 			    if ($time eq "week")
 			    { # Every plot is half an hour. Add two plots and multiply, to get per hour

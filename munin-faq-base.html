@@ -55,19 +55,20 @@ sure to use the fieldname at least once in the definition, or rrdgraph
 will croak with an error.
 </p>
 <p>
-An example can be found in the plugin "exim_mailstats" - the plugin graphs
-the number of mails that have been received and delivered locally by the
-system. The values are gathered and stored in a "mails per second"-format.
-On most systems, this is a bit odd, since you'll get numbers like "300
-ultramail per second". :-) A cdef is therefore defined to adjust the
-values into "mails per minute" instead - a much more sensible and readable
-number. To do this, the value is just multiplied by 60. The configuration
-line looks like this: <code>received.cdef received,60,*</code> . In
-"normal" math, you'd just say "received=received*60".
-</p>
-<p>
 For a more thorough definition of RPN, take a look at the man-page for
 "rrdgraph".
+</p>
+<h3>Q: Can I get a graph to show percentages instead of regular values?</h3>
+<p>
+You can modify a graph with two data fields to a percentage view with
+the following cdef (gotten from Nicolai Langfeldt). It uses two field
+names, "hit" and "all", with "hit" being the field you want in
+percentages of "all".
+</p>
+<p>
+<code>
+hit,all,1,all,0,EQ,IF,/,100,*,UNKN,all,0,EQ,IF,UNKN,all,UNKN,EQ,IF
+</code>
 </p>
 
 <h3>Q: How do I define aliases with graph_order?</h3>
@@ -243,6 +244,11 @@ For interface eth0 on host foo.bar.example,<pre>
 </pre>
 
 (Answer supplied by Jacques Caruso.)
+</p>
+
+<h3>Q: I added the graph_sums option, bug I only get one new graph (instead of two).</h3>
+<p>
+The graph_sums option require that rrdtool version 1.0.39 or above is installed.
 </p>
 
 <h2>3. Client plugins</h2>

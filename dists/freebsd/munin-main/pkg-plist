@@ -1,9 +1,8 @@
 bin/munin-cron
-@unexec if cmp -s %D/etc/munin/templates/style.css %D/www/data/munin/style.css; then rm -f %D/www/data/munin/style.css; fi
-@unexec if cmp -s %D/etc/munin/templates/logo.png %D/www/data/munin/logo.png; then rm -f %D/www/data/munin/logo.png; fi
 @unexec if cmp -s %D/etc/munin/munin.conf.sample %D/etc/munin/munin.conf; then rm -f %D/etc/munin/munin.conf; fi
 etc/munin/munin.conf.sample
 etc/munin/templates/definitions.html
+@unexec if cmp -s %D/etc/munin/templates/logo.png %D/www/data/munin/logo.png; then rm -f %D/www/data/munin/logo.png; fi
 etc/munin/templates/logo.png
 etc/munin/templates/munin-comparison-day.tmpl
 etc/munin/templates/munin-comparison-month.tmpl
@@ -13,6 +12,7 @@ etc/munin/templates/munin-domainview.tmpl
 etc/munin/templates/munin-nodeview.tmpl
 etc/munin/templates/munin-overview.tmpl
 etc/munin/templates/munin-serviceview.tmpl
+@unexec if cmp -s %D/etc/munin/templates/style.css %D/www/data/munin/style.css; then rm -f %D/www/data/munin/style.css; fi
 etc/munin/templates/style.css
 @comment PREFIX trouble when testing
 @unexec rm -f `perl -V:sitelib | cut -d= -f2 | sed "s/[\';]//g"`/Munin.pm

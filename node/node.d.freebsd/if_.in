@@ -10,6 +10,15 @@
 # Any device found in /usr/bin/netstat can be monitored.
 #
 # $Log$
+# Revision 1.4.2.3  2005/02/17 10:57:54  lupe
+# Added warning note in if_ output.
+#
+# Revision 1.4.2.2  2005/01/28 16:24:22  lupe
+# Minor corrections
+#
+# Revision 1.4.2.1  2005/01/28 14:51:22  lupe
+# Add graph_info and some filed.info
+#
 # Revision 1.4  2004/12/10 10:47:49  jimmyo
 # Change name from ${scale} to ${graph_period}, to be more consistent.
 #
@@ -68,6 +77,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000'
 	echo 'graph_vlabel bits per ${graph_period} in (-) / out (+)'
 	echo 'graph_category network'
+	echo "graph_info This graph shows the traffic of the $INTERFACE network interface. Please note that the traffic is shown in bits per second, not bytes. IMPORTANT: Since the data source for this plugin use 32bit counters, this plugin is really unreliable and unsuitable for most 100Mb (or faster) interfaces, where bursts are expected to exceed 50Mbps. This means that this plugin is usuitable for most production environments."
 	echo 'rbytes.label received'
         echo 'rbytes.type COUNTER'
         echo 'rbytes.graph no'
@@ -76,6 +86,7 @@ if [ "$1" = "config" ]; then
 	echo 'obytes.type COUNTER'
 	echo 'obytes.negative rbytes'
 	echo 'obytes.cdef obytes,8,*'
+	echo "obytes.info Traffic sent (+) and received (-) on the $INTERFACE network interface."
 	exit 0
 fi;
 

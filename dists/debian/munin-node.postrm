@@ -21,6 +21,17 @@ if [ "$1" = "purge" ]; then
 	rm -f /var/lib/munin/plugin-state/*.state
 	rm -f /var/log/munin/munin-node.log*
 
+	dpkg-statoverride --remove /var/lib/munin/plugin-state
+
+	# These are shared with munin, so only remove them if munin
+	# isn't installed (or already purged).
+	status=$(dpkg --get-selections munin)
+	if [ -z "$status" -o "${status%purge}" != "$status" ]; then
+		dpkg-statoverride --remove /var/log/munin
+		dpkg-statoverride --remove /var/run/munin
+		dpkg-statoverride --remove /var/lib/munin
+	fi
+	
 	delete_dir_if_empty /var/lib/munin/plugin-state
 	delete_dir_if_empty /var/lib/munin
 	delete_dir_if_empty /var/run/munin
