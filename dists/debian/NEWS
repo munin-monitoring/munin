@@ -1,3 +1,29 @@
+munin (1.2.1-1) unstable; urgency=low
+
+  * The "contrib" plugins are not supported from upstream, and have therefore
+    been removed from the package.  They have not been through a thorough QA
+    review, and could therefore contain security holes or simply not work as
+    expected.
+
+    The removed plugins are:
+
+      amavis apc_envunit_ apc_nis bind9 bind9_rndc courier_ dhcpd3
+      exim_mailqueue_alt files_ foldingathome foldingathome_rank
+      foldingathome_wu hddtemp2 hddtempd hddtemp i2c_fan i2c iostat_ios ipac-ng
+      mailman mailscanner mbmon_ mhttping named netopia nut_misc nut_volts
+      perdition pm3users_ pop_stats samba spamstats surfboard users
+
+    Most of these who turn out to be well-written and of general interest, will
+    likely make their way back into the package as auto or manual at a later
+    release.  If you have been using any of these, you should consider aborting
+    the upgrade, and copy the plugins you use from /usr/share/munin/plugins/ to
+    /etc/munin/plugins/ (overwriting the symlink).  That way, they will not be
+    touched during the upgrade.
+
+    You may also download them from <http://www.linpro.no/projects/munin/>.
+
+ -- Tore Anderson <tore@debian.org>  Sat, 12 Mar 2005 20:17:12 +0100
+
 munin (1.2.0-1) unstable; urgency=low
 
   * There are two major bugfixes in the 1.2.x series of Munin since 1.0.x that
@@ -106,7 +132,7 @@ munin (1.2.0-1) unstable; urgency=low
     do the following:
 
         cd /var/lib/munin
-	ls */*.rrd | awk '-F[/-]' '{if(length($4)>=18) print}'
+	ls */*.rrd | awk '-F[/-]' '{if(length($4)==18) print}'
 
     This will output one line for each file that may be affected, for instance:
 

@@ -1,3 +1,53 @@
+munin (1.2.1-1) unstable; urgency=low
+
+  * New upstream release.
+      - Plugin linux/irqstats now handles blank lines in /proc/interrupts,
+        closes: #296452.
+      - Plugins generic/apache_* could in some cases cause spurious spikes,
+        this has now been fixed.  Closes: #296454, #296645.
+      - Plugin linux/df_inode now handles devices with hyphens in their names
+        correctly, closes: #298442.
+      - Plugin generic/exim_mailstats now graphs rejects, closes: #295799.
+      - Earlier versions of munin-update could in some cases complain about
+        "nested quantifiers in regex", now fixed.  Closes: #296575.
+      - Fixes some broken HTML in the templates, closes: #296676.
+      - Updates over very slow connections are now handled more gracefully,
+        closes: #298108.
+
+  * debian/rules, debian/plugins.conf, debian/NEWS:
+      - Do not include contrib plugins in the munin-node package anymore.
+        Sort-of closes: #296533, #297451, #297628, #297904, #298895.
+
+  * debian/rules, debian/munin-node.postinst:
+      - Delay startup of the node significantly, as it may require other
+        monitored services (e.g. ntpd) to be already running.  Also change the
+        startup time if the package is being upgraded, if the current init
+        configuration is the old package's defaults.  Closes: #298793, thanks
+        to Stephen Gran for noticing.
+
+  * debian/plugins.conf:
+      - Run the Courier-MTA and Postfix plugins with necessary additional
+        privileges so they work out of the box, closes: #297654, #296985.
+        Thanks to Charles Fry and Juraj Bednar for pointing this out.
+
+  * debian/control:
+      - Suggest acpi over lm-sensors, and not the other way around as it was
+        earlier.  Both the acpi and sensors_ plugins achieve the same thing,
+        but the former is auto while the latter is manual.
+      - Remove the hddtemp suggestion and replace it with smartmontools,
+        closes: #296361. The hddtemp* plugins was replaced with
+        hddtemp_smartctl in 1.2.0.
+      - Suggest python (>= 2.2), used by the smart_ plugin.
+
+  * debian/munin-node.manpages:
+      - Include munin-node-configure-snmp(8).
+
+  * server/munin-limits.in:
+      - Reverted to upstream version, as the patched required in 1.2.0-1 have
+        been merged.
+
+ -- Tore Anderson <tore@debian.org>  Sat, 12 Mar 2005 20:17:12 +0100
+
 munin (1.2.0-1) unstable; urgency=low
 
   * New upstream release, closes: #264878, #293499, #290099:
