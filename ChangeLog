@@ -18,6 +18,8 @@ munin (work)
     (SF#1077898).
   * Plugin: Portability enhancementes to sunos/fs_df (SF#1077903).
   * Plugin: linux/fw_forwarded_local now initialises properly (Deb#284673).
+  * Plugin: Added more sensible autoconf to generic/sybase_space.
+  * Plugin: Added more sensible autoconf to generic/munin_graph,munin_update.
 
 munin (1.1.7)
 
