@@ -20,7 +20,7 @@ munin (1.0.0pre4)
     older tr-s (SF#898814).
   * Make "graph_scale no" affect y-axis as well as numbers below the graph
     (Deb#236834).
-  * New snmp plugin for disk usage.
+  * New SNMP plugins: df, if_err.
   * Cleaned up Solaris plugins.
 
 munin (1.0.0pre3)
