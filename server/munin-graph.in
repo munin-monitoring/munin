@@ -5,6 +5,10 @@
 # $Id$
 #
 # $Log$
+# Revision 1.23  2004/07/02 14:19:06  jimmyo
+#   * Munin-graph: Added 'graph_sources' option. This is (in effect) the same as
+#     graph_order, but with a default of 'graph no'.
+#
 # Revision 1.22  2004/06/28 12:07:00  jimmyo
 #   * Munin-graph: fixed bug when combining graph_order aliases with
 #    "normal" fields, as reported by Jacques Caruso.
@@ -386,14 +390,24 @@ sub get_field_order
     my $service = shift;
     my $result  = [];
 
-    if ($node->{client}->{$service}->{graph_order}) {
-	@$result = split /\s+/, $node->{client}->{$service}->{'graph_order'};
+    if ($node->{client}->{$service}->{graph_sources}) 
+    {
+	foreach my $gs (split /\s+/, $node->{client}->{$service}->{'graph_sources'})
+	{
+	    push (@$result, "-".$gs);
+	}
+    } 
+    if ($node->{client}->{$service}->{graph_order}) 
+    {
+	push (@$result, split /\s+/, $node->{client}->{$service}->{'graph_order'});
     } 
 
-    for my $key (keys %{$node->{client}->{$service}}) {
+    for my $key (keys %{$node->{client}->{$service}}) 
+    {
 	my ($client,$type)="";
 	($client,$type) = split /\./,$key;
-	if (defined $type and $type eq "label") {
+	if (defined $type and $type eq "label") 
+	{
 	    push @$result,$client if !grep /^$client(?:=|$)/, @$result;;
 	} 
     }
@@ -450,6 +464,17 @@ sub expand_specials
 
     my $fieldnum = 0;
     for my $field (@$order) { # Search for 'specials'...
+
+	if ($field =~ /^-(.+)$/)
+	{
+	    $field = $1;
+	    unless (defined $node->{client}->{$service}->{$field.".graph"} or
+		    defined $node->{client}->{$service}->{$field.".skipdraw"})
+	    {
+		$node->{client}->{$service}->{$field.".graph"} = "no";
+	    }
+	}
+
 	$fieldnum++;
 	my $tmp_field;
 	if (defined ($tmp_field = &get_stack_command ($node, $service, $field)))

@@ -8,6 +8,8 @@ munin (work)
     generic/ipacng.
   * Munin-nagios: Only state number of OKs when something is in warning or
     critical state.
+  * Munin-graph: Added 'graph_sources' option. This is (in effect) the same as
+    graph_order, but with a default of 'graph no'.
 
 munin (1.1.2)
 
