@@ -1,0 +1,34 @@
+#!/bin/sh
+#
+# Plugin to measure uptime. Especially the average and max values on the
+# bigger graphs (yearly) can be interesting.
+#
+# Contributed by Nicolas Salles
+#
+# $Log$
+# Revision 1.1  2004/08/18 17:58:39  jimmyo
+# Added plugin generic/uptime contributed by Nicolas Salles (SF#998665).
+#
+#
+# Magic markers - optional - used by installation scripts and
+# munin-config:
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+if [ "$1" = "autoconf" ]; then
+	echo yes 
+	exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Uptime'
+	echo 'graph_args --base 1000 -l 0 '
+	echo 'graph_vlabel uptime in days'
+	echo 'uptime.label uptime'
+	echo 'uptime.draw AREA'
+	exit 0
+fi
+
+env LC_ALL=C awk '{printf "uptime.value %.2f\n",$1/86400}' /proc/uptime

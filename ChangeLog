@@ -21,6 +21,7 @@ munin (1.1.3)
   * Made linux/sensors_volt work with negative voltages (Deb#256734).
   * Made generic/hddtemp2 understand environment variables with quotes
     (Deb#265022).
+  * Added plugin generic/uptime contributed by Nicolas Salles (SF#998665).
 
 munin (1.1.2)
 
