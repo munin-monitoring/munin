@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.27  2004/09/14 22:08:58  jimmyo
+# Bugfix with domain_order.
+#
 # Revision 1.26  2004/09/13 21:45:55  jimmyo
 # node- and domain_order settings now does not exclude unmentioned entries.
 #
@@ -199,7 +202,7 @@ my @domainorder;
 if ($config->{domain_order}) {
     @domainorder = split / /, $config->{domain_order};
 }
-foreach my $d (sort (keys %{$config->{domain_order}})) {
+foreach my $d (sort (keys %{$config->{domain}})) {
     unless (grep (/^$d$/, @domainorder)) {
 	push @domainorder, $d;
     }
