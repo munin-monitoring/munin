@@ -1,6 +1,9 @@
 #!/usr/bin/perl -w
 #
 # $Log$
+# Revision 1.6  2004/09/05 12:00:18  jimmyo
+# Set family and capabilities.
+#
 # Revision 1.5  2004/09/04 21:58:28  jimmyo
 # Set category and info fields.
 #
@@ -31,7 +34,8 @@
 # Revision 1.1  2003/12/19 20:53:45  jimmyo
 # Created by jo
 #
-#
+#%# family=snmpauto
+#%# capabilities=snmpconf
 
 use strict;
 use Net::SNMP;

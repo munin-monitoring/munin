@@ -3,6 +3,9 @@
 # Program to suggest configurations and configuration changes.
 #
 # $Log$
+# Revision 1.8  2004/09/05 12:00:18  jimmyo
+# Set family and capabilities.
+#
 # Revision 1.7  2004/09/03 23:25:16  jimmyo
 # Brushed up the SNMP probe functionality.
 #
@@ -315,6 +318,7 @@ if (@snmp and $shell)
 	    push (@params, "$bindir/munin-node-configure-snmp");
 	    push (@params, "--snmpversion", $snmpver) if defined $snmpver;
 	    push (@params, "--community", $snmpcomm) if defined $snmpcomm;
+	    push (@params, "--debug") if $debug;
 	    push (@params, @snmp);
 	    exec (@params);
 	    # NOTREACHED
