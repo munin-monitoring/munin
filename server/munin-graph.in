@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.27  2004/09/01 19:00:22  jimmyo
+# Moved function get_picture_filename from munin-graph to Munin.pm.
+#
 # Revision 1.26  2004/09/01 18:30:21  jimmyo
 # Added new options "graph_height" and "graph_width", to beter control size.
 #
@@ -364,7 +367,7 @@ sub get_header {
     my $tmp_field;
 
     # Picture filename
-    push @$result, &get_picture_filename ($config, $domain, $host, $service, $scale);
+    push @$result, &munin_get_picture_filename ($config, $domain, $host, $service, $scale);
 
     # Title
     push @$result, ("--title", &get_title ($node, $service, $scale));
@@ -658,16 +661,6 @@ sub process_field {
     my $service = shift;
     my $field   = shift;
     return (&munin_get_bool_val ($node->{client}->{$service}->{$field.".process"}, 1));
-}
-
-sub get_picture_filename {
-    my $config  = shift;
-    my $domain  = shift;
-    my $name    = shift;
-    my $service = shift;
-    my $scale   = shift;
-
-    return "$config->{'htmldir'}/$domain/$name-$service-$scale.png";
 }
 
 sub get_rrd_filename {
@@ -1013,7 +1006,7 @@ sub process_node {
 	    }
 	    elsif ($list_images) # Command-line option to list images created
 	    {
-		print &get_picture_filename ($config, $domain, $name, $service, $time), "\n";
+		print &munin_get_picture_filename ($config, $domain, $name, $service, $time), "\n";
 	    }
 	}
 

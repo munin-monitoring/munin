@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.17  2004/09/01 19:00:22  jimmyo
+# Moved function get_picture_filename from munin-graph to Munin.pm.
+#
 # Revision 1.16  2004/09/01 18:30:21  jimmyo
 # Added new options "graph_height" and "graph_width", to beter control size.
 #
@@ -141,6 +144,7 @@ use Exporter;
 	   'munin_service_status',
 	   'munin_node_status',
 	   'munin_category_status',
+	   'munin_get_picture_filename',
 	   'munin_get_filename');
 
 use strict;
@@ -587,6 +591,16 @@ sub munin_config {
     
     $data = &munin_overwrite($data,$config);
     return ($data);
+}
+
+sub munin_get_picture_filename {
+    my $config  = shift;
+    my $domain  = shift;
+    my $name    = shift;
+    my $service = shift;
+    my $scale   = shift;
+
+    return "$config->{'htmldir'}/$domain/$name-$service-$scale.png";
 }
 
 sub munin_get_filename {
