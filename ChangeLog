@@ -12,6 +12,8 @@ munin (work)
   * Added --cron option to munin-graph. This is used internally for 
     special case checking when run from cron.
   * Added dist-directory for Solaris packages.
+  * Created munin-cgi-graph, which creates dynamic graphs. 
+  * Added munin.conf option "output_graphs (cgi|cron)" which defaults to cron.
 
 munin (1.1.1)
 

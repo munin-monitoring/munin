@@ -3,6 +3,11 @@
 # $Id$
 #
 # $Log$
+# Revision 1.17  2004/06/23 17:38:40  jimmyo
+# * Created munin-cgi-graph, which creates dynamic graphs.
+# * Added munin.conf option "output_graphs (cgi|cron)" which
+#   defaults to cron.
+#
 # Revision 1.16  2004/05/21 06:21:46  jimmyo
 # Removed superfluous debug output.
 #
@@ -225,10 +230,22 @@ for my $domain (@domainorder) {
 	    my @field_info;
 	    $service{service}=$service;
 	    $service{label}=$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_title};
-	    $service{imgday}="$node-$service-day.png";
-	    $service{imgweek}="$node-$service-week.png";
-	    $service{imgmonth}="$node-$service-month.png";
-	    $service{imgyear}="$node-$service-year.png";
+		
+		my $method = &munin_get_val ($config, "output_graphs", "cron");
+		if ($method eq "cgi")
+		{
+			$service{imgday}="/munin/dyn/munin-cgi-graph/$domain/$node-$service-day.png";
+			$service{imgweek}="/munin/dyn/munin-cgi-graph/$domain/$node-$service-week.png";
+			$service{imgmonth}="/munin/dyn/munin-cgi-graph/$domain/$node-$service-month.png";
+			$service{imgyear}="/munin/dyn/munin-cgi-graph/$domain/$node-$service-year.png";
+		}
+		else
+		{
+			$service{imgday}="$node-$service-day.png";
+			$service{imgweek}="$node-$service-week.png";
+			$service{imgmonth}="$node-$service-month.png";
+			$service{imgyear}="$node-$service-year.png";
+		}
 	    $service{url}="$node-$service.html";
 	    $service{domain}="$domain";
 	    $service{node}=$node;
