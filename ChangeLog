@@ -4,6 +4,7 @@ munin (work)
   * Main: Properly size table below graphs in service-view.
   * Main: Fix bug which lead to some graphs failing with STACK error.
   * Main: Added limit message option "strtrunc".
+  * Main: "contacts" can now be set to "none".
   * Plugins: generic/sendmail_mail{stats,traffic} updated.
   * Plugins: Made generic/samba more portable (fixes by Nicolas Stransky).
 
