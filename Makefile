@@ -7,7 +7,7 @@ include $(DEFAULTS)
 include $(CONFIG)
 
 RELEASE          = $(shell cat RELEASE)
-INSTALL_PLUGINS ?= "auto manual contrib"
+INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
 INSTALL          = ./install-sh
 
 default: build
