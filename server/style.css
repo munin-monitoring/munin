@@ -137,7 +137,7 @@ td.linkbox {
 
 .warntext {
   font-weight: bold;
-  background-color: #f2ff00;
+  background-color: #cccc00;
 }
 
 .crittext {
@@ -178,19 +178,17 @@ a.meek:hover {
  }
 
 
-a:link { 
-  color: #486aaf;
- }
+a.warn:link    { color: #cc9900; }
+a.warn:visited { color: #cc9900; }
+a.warn:active  { color: #cc9900; }
+a.warn:hover   { color: #cc9900; }
 
-a:visited { 
-  color: #af1a00;
- }
+a.crit:link    { color: #cc0000; } 
+a.crit:visited { color: #cc0000; } 
+a.crit:active  { color: #cc0000; } 
+a.crit:hover   { color: #cc0000; } 
 
-a:active { 
-    color: #486aaf;
- }
-
-a:hover { 
-    color: #999999;
- }
-
+a:link    { color: #486aaf; } 
+a:visited { color: #486aaf; } 
+a:active  { color: #486aaf; } 
+a:hover   { color: #486aaf; } 

@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.21  2004/09/07 18:56:03  jimmyo
+# Small interface improvements in the HTML output.
+#
 # Revision 1.20  2004/09/01 19:46:01  jimmyo
 # Removed debug info.
 #
@@ -302,6 +305,16 @@ for my $domain (@domainorder) {
 					$field_info{'state_unknown'}  = 1 if $state eq "unknown";
 				}
 				push @{$service{fieldinfo}}, \%field_info;
+			}
+		}
+
+		{
+			my $state = &munin_service_status ($config, $limits, $domain, $node, $service);
+			if (defined $state)
+			{
+				$service{'state_warning'}  = 1 if $state eq "warning";
+				$service{'state_critical'} = 1 if $state eq "critical";
+				$service{'state_unknown'}  = 1 if $state eq "unknown";
 			}
 		}
 

@@ -30,7 +30,7 @@
       <li><span class="domain"><a href="<TMPL_VAR NAME="NODE">.html#<TMPL_VAR NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
       <ul>
 	<TMPL_LOOP NAME="SERVICES">
-	<li><span class="host"><a href="<TMPL_VAR NAME="NODE">-<TMPL_VAR NAME="SERVICE">.html"><TMPL_VAR ESCAPE="HTML" NAME="LABEL"></a></span></li>
+	<li><span class="host"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="NODE">-<TMPL_VAR NAME="SERVICE">.html"><TMPL_VAR ESCAPE="HTML" NAME="LABEL"></a></span></li>
         </TMPL_LOOP> 
       </ul>
    </li>
