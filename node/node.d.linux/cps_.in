@@ -22,6 +22,9 @@
 # 	suggest  (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.8  2004/12/10 18:55:14  jimmyo
+# Removed hardcoded host_name in linux/cps_.
+#
 # Revision 1.7  2004/12/10 18:51:44  jimmyo
 # linux/apt* has been forced to LANG=C, to get predictable output.
 #
@@ -58,8 +61,6 @@
 #
 
 use strict;
-
-my $HOSTNAME="aibo.runbox.com";
 
 if ( defined $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
@@ -148,7 +149,6 @@ sub config
 	my $port = shift;
 	my $ipvs = shift;
 
-        print "host_name $HOSTNAME\n";
 	print "graph_title Loadbalanced ",($vip?$vip:"*"),"->",$port," connections\n";
 	print "graph_args -l 0\n";
 	print "graph_total total\n";

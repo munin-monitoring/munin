@@ -4,6 +4,7 @@ munin (work)
   * Plugin: Patch generic/bind9 to report "unnamed" as "other" (Nicolas 
     Stransky).
   * Plugin: linux/apt* has been forced to LANG=C, to get predictable output.
+  * Plugin: Removed hardcoded host_name in linux/cps_.
 
 munin (1.1.8)
 
