@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.2  2004/02/01 18:59:54  lupe
+# FreeBSD 5 compatibility.
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -30,26 +33,31 @@
 
 
 if [ "$1" = "autoconf" ]; then
-    if [ -x /sbin/sysctl ]; then
-        /sbin/sysctl kern.cp_time > /dev/null
-    	if [ $? = "0" ]; then
-	    	echo yes
-    		exit 0
-    	else
-		    echo no
-		    exit 1
-	    fi
-    else
-        echo no
-        exit 1
-    fi
+	if [ -x /sbin/sysctl ]; then
+		/sbin/sysctl kern.cp_time > /dev/null
+		if [ $? = "0" ]; then
+			echo yes
+			exit 0
+		else
+			echo no
+			exit 1
+		fi
+	else
+		echo no
+		exit 1
+	fi
 fi
 
 if [ "$1" = "config" ]; then
 
+	OSV=`/sbin/sysctl -n kern.osrelease | cut -f1 -d.`
+	if [ "$OSV" = "4" ]; then
+		STATUNITS=`/sbin/sysctl -n kern.clockrate | cut -f16 -d' '`
+	elif [ "$OSV" = "5" ]; then
+		STATUNITS=`/sbin/sysctl -n kern.clockrate | cut -f13 -d' '`
+	fi
 	PERCENT=`/sbin/sysctl -n hw.ncpu | awk '{print ($1)*100}'`
-    STATUNITS=`/sbin/sysctl -n kern.clockrate | cut -f16 -d' '`
-    SCALE=`echo 'scale=5;' $PERCENT/$STATUNITS | bc -q `
+	SCALE=`echo 'scale=5;' $PERCENT/$STATUNITS | bc -q `
 #	let SYSWARNING=$PERCENT*30/100
 #	let SYSCRITICAL=$PERCENT*50/100
 #	let INTWARNING=$PERCENT*80/100
