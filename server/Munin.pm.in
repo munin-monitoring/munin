@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.44.2.3  2005/03/06 22:22:40  jimmyo
+# Make sure all rrd-tunes are correct after an upgrade (Deb#296454, Deb#296645).
+#
 # Revision 1.44.2.2  2005/03/06 19:32:45  jimmyo
 # Make sure all rrd-tunes are correct after an upgrade (Deb#296454, Deb#296645).
 #
@@ -285,7 +288,8 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"graph_height", "graph_sums", "local_address", "compare",
 	"text", "command", "contact", "contacts",  "max_messages", 
 	"always_send", "notify_alias", "line", "state", "graph_period",
-	"cgiurl_graph", "cgiurl", "service_order", "category_order"
+	"cgiurl_graph", "cgiurl", "service_order", "category_order",
+	"version"
     );
 
 my %legal_expanded = map { $_ => 1 } @legal;
@@ -696,6 +700,7 @@ sub munin_writeconfig_loop {
 	}
 	elsif (defined $data->{$a} and length $data->{$a})
 	{
+	    next if "$pre$a" eq "version"; # Handled separately
 	    print "Writing: $pre$a $data->{$a}\n" if $DEBUG;
 	    if ($data->{$a} =~ /\\$/)
 	    { # Backslash as last char has special meaning. Avoid it.
