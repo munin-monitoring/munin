@@ -46,6 +46,8 @@ munin (work)
     handle logfiles with timestamps in the name (SF#1055214).
   * Applied patch from Nicolas Stransky to generic/hddtemp, to fetch temp more
     elegantly (SF#1052845).
+  * Added new plugin linux/hddtemp_smartctl, made by Peter Gervai
+    (SF#1032727).
 
 munin (1.1.4)
 
