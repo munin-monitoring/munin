@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.24  2004/09/10 19:24:18  jimmyo
+# Added new option "graph_sums" which creates summarised graphs.
+#
 # Revision 1.23  2004/09/08 15:25:33  ilmari
 # Use @@PERL@@ in all perl shebang lines.
 #
@@ -271,6 +274,20 @@ for my $domain (@domainorder) {
 					$service{"img".$scale."width"} = $w;
 					$service{"img".$scale."height"} = $h;
 				}
+			}
+
+			if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
+			{
+			    $service{imgweeksum} = "$node-$service-week-sum.png";
+			    $service{imgyearsum} = "$node-$service-year-sum.png";
+			    for my $scale (["week", "year"])
+			    {
+				    if (my ($w, $h) = &get_png_size (&munin_get_picture_filename ($config, $domain, $node, $service, $scale, 1)))
+				    {
+					    $service{"img".$scale."sumwidth"} = $w;
+					    $service{"img".$scale."sumheight"} = $h;
+				    }
+			    }
 			}
 		}
 	    $service{url}="$node-$service.html";

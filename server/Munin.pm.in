@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.20  2004/09/10 19:24:18  jimmyo
+# Added new option "graph_sums" which creates summarised graphs.
+#
 # Revision 1.19  2004/09/07 21:45:37  jimmyo
 # Changes of min and max values now causes corresponding changes in the RRD files.
 #
@@ -175,7 +178,8 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"htaccess", "warn", "use_default_name", "use_node_name", "port", 
 	"graph_noscale", "nsca", "nsca_server", "nsca_config", "extinfo", 
 	"fetch_data", "filename", "max_processes", "nagios", "info", "graph_info",
-	"graph_category", "graph_strategy", "graph_width", "graph_height"
+	"graph_category", "graph_strategy", "graph_width", "graph_height",
+	"graph_sums", "graph_vlabel_sum_year", "graph_vlabel_sum_week"
     );
 
 
@@ -614,8 +618,16 @@ sub munin_get_picture_filename {
     my $name    = shift;
     my $service = shift;
     my $scale   = shift;
+	my $sum     = shift;
 
-    return "$config->{'htmldir'}/$domain/$name-$service-$scale.png";
+	if (defined $sum and $sum)
+	{
+		return "$config->{'htmldir'}/$domain/$name-$service-$scale-sum.png";
+	}
+	else
+	{
+		return "$config->{'htmldir'}/$domain/$name-$service-$scale.png";
+	}
 }
 
 sub munin_get_filename {

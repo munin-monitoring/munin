@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.31  2004/09/10 19:24:18  jimmyo
+# Added new option "graph_sums" which creates summarised graphs.
+#
 # Revision 1.30  2004/09/08 15:25:33  ilmari
 # Use @@PERL@@ in all perl shebang lines.
 #
@@ -170,7 +173,7 @@ my $list_images = 0;
 my $skip_locking = 0;
 my $skip_stats = 0;
 my $conffile = "@@CONFDIR@@/munin.conf";
-my %draw = ("day" => 1, "week" => 1, "month" => 1, "year" => 1);
+my %draw = ("day" => 1, "week" => 1, "month" => 1, "year" => 1, "sumyear" => 1, "sumweek" => 1);
 
 my $log = new IO::Handle;
 
@@ -186,6 +189,8 @@ GetOptions ( "force!"       => \$force_graphing,
 	     "week!"        => \$draw{'week'},
 	     "month!"       => \$draw{'month'},
 	     "year!"        => \$draw{'year'},
+	     "sumweek!"     => \$draw{'sumweek'},
+	     "sumyear!"     => \$draw{'sumyear'},
 	     "list-images!" => \$list_images,
 	     "skip-locking!"=> \$skip_locking,
 	     "skip-stats!"  => \$skip_stats,
@@ -219,6 +224,8 @@ Options:
     --[no]week		Create week-graphs.  [--week]
     --[no]month		Create month-graphs. [--month]
     --[no]year		Create year-graphs.  [--year]
+    --[no]sumweek	Create summarised week-graphs.  [--summweek]
+    --[no]sumyear	Create summarised year-graphs.  [--sumyear]
 
 ";
     exit 0;
@@ -275,6 +282,11 @@ my %resolutions = (
              "week"  => "1500",
              "month" => "7200",
              "year"  => "86400");
+
+my %sumtimes = ( # time => [ label, seconds-in-period ]
+	    "week"   => ["per hour", 6],
+	    "year"  => ["per day", 288]
+	);
 
 for my $key ( keys %{$config->{domain}}) {
     my $domain_time= Time::HiRes::time;
@@ -372,11 +384,12 @@ sub get_header {
     my $host    = shift;
     my $service = shift;
     my $scale   = shift;
+    my $sum     = shift;
     my $result  = [];
     my $tmp_field;
 
     # Picture filename
-    push @$result, &munin_get_picture_filename ($config, $domain, $host, $service, $scale);
+    push @$result, &munin_get_picture_filename ($config, $domain, $host, $service, $scale, $sum||undef);
 
     # Title
     push @$result, ("--title", &get_title ($node, $service, $scale));
@@ -853,7 +866,7 @@ sub process_node {
 
 	    next unless &munin_draw_field ($node, $service, $field);
 	    print "DEBUG: Drawing field \"$field\".\n" if $DEBUG;
-	    
+
 	    if ($single_value) # Only one field. Do min/max range.	
 	    {
 		push (@rrd, "CDEF:min_max_diff=a$rrdname,i$rrdname,-");
@@ -1016,6 +1029,69 @@ sub process_node {
 	    elsif ($list_images) # Command-line option to list images created
 	    {
 		print &munin_get_picture_filename ($config, $domain, $name, $service, $time), "\n";
+	    }
+	}
+
+	if (&munin_get_bool_val ($node->{client}->{$service}->{"graph_sums"}, 0))
+	{
+	    foreach my $time (keys %sumtimes)
+	    {
+		next unless ($draw{"sum".$time});
+		my @rrd_sum;
+		push @rrd_sum, @{&get_header ($node, $config, $domain, $name, $service, $time, 1)};
+
+		if (time - 300 < $lastupdate)
+		{
+			push @rrd_sum, "--end",(int($lastupdate/$resolutions{$time}))*$resolutions{$time};
+		}
+		push @rrd_sum, @rrd;
+		push (@rrd_sum, "COMMENT:Last update: " . localtime($lastupdate) .  "\\r");
+
+		my $labelled = 0;
+		my @defined = ();
+		for (my $index = 0; $index <= $#rrd_sum; $index++)
+		{
+		    if ($rrd_sum[$index] =~ /^(--vertical-label|-v)$/)
+		    {
+			my $label = $node->{client}->{$service}->{"graph_vlabel_sum_$time"} || $sumtimes{$time}->[0];
+			splice (@rrd_sum, $index, 2, ("--vertical-label", $label));
+			$index++;
+			$labelled++;
+		    }
+		    elsif ($rrd_sum[$index] =~ /^(LINE[123]|STACK|AREA|GPRINT):([^#:]+)([#:].+)$/)
+		    {
+			my ($pre, $name, $post) = ($1, $2, $3);
+			next if $name eq "re_zero";
+			next if grep /^x$name$/, @defined;
+			push @defined, "x$name";
+			my @replace;
+
+			push @replace, "CDEF:x$name=PREV($name),UN,0,PREV($name),IF,$name,+,300,*,".$sumtimes{$time}->[1].",*";
+			push @replace, $pre . ":x$name" . $post;
+			splice (@rrd_sum, $index, 1, @replace);
+			$index++;
+		    }
+		    elsif ($rrd_sum[$index] =~ /^(--lower-limit|--upper-limit|-l|-u)$/)
+		    {
+			$index++;
+			$rrd_sum[$index] = $rrd_sum[$index] * 300 * $sumtimes{$time}->[1] * 2;
+		    }
+		}
+		unless ($labelled)
+		{
+		    my $label = $node->{client}->{$service}->{"graph_vlabel_sum_$time"} || $sumtimes{$time}->[0];
+		    unshift @rrd_sum, "--vertical-label", $label;
+		}
+
+		print "\n\nrrdtool \"graph\" \"", join ("\"\n\t\"",@rrd_sum), "\"\n" if $DEBUG;
+		RRDs::graph (@rrd_sum);
+		if (my $ERROR = RRDs::error) {
+		    logger ("Unable to graph $filename: $ERROR");
+		}
+		elsif ($list_images) # Command-line option to list images created
+		{
+		    print &munin_get_picture_filename ($config, $domain, $name, $service, $time, 1), "\n";
+		}
 	    }
 	}
 

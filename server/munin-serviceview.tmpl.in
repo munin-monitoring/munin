@@ -34,6 +34,12 @@
       <td><img src="<TMPL_VAR NAME="IMGMONTH">" alt="monthly graph" <TMPL_IF NAME="IMGMONTHWIDTH">width="<TMPL_VAR NAME="IMGMONTHWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGMONTHHEIGHT">height="<TMPL_VAR NAME="IMGMONTHHEIGHT">"</TMPL_IF>/></td>
       <td><img src="<TMPL_VAR NAME="IMGYEAR">" alt="yearly graph" <TMPL_IF NAME="IMGYEARWIDTH">width="<TMPL_VAR NAME="IMGYEARWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGYEARHEIGHT">height="<TMPL_VAR NAME="IMGYEARHEIGHT">"</TMPL_IF>/></td>
     </tr>
+<TMPL_IF NAME="IMGWEEKSUM">
+    <tr>
+      <td><img src="<TMPL_VAR NAME="IMGWEEKSUM">" alt="summed weekly graph" <TMPL_IF NAME="IMGWEEKSUMWIDTH">width="<TMPL_VAR NAME="IMGWEEKSUMWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGWEEKSUMHEIGHT">height="<TMPL_VAR NAME="IMGWEEKSUMHEIGHT">"</TMPL_IF>/></td>
+      <td><img src="<TMPL_VAR NAME="IMGYEARSUM">" alt="summed monthly graph" <TMPL_IF NAME="IMGYEARSUMWIDTH">width="<TMPL_VAR NAME="IMGYEARSUMWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGYEARSUMHEIGHT">height="<TMPL_VAR NAME="IMGYEARSUMHEIGHT">"</TMPL_IF>/></td>
+    </tr>
+</TMPL_IF>
 	<tr>
 	  <td colspan="2" class="legendbox">
 	    <table width='100%'>
