@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.15  2004/08/23 10:01:07  jimmyo
+# Better error handling when fetching data from RRD files.
+#
 # Revision 1.14  2004/08/23 09:23:46  jimmyo
 # Better error handling when fetching data from rrd files.
 #
@@ -171,7 +174,12 @@ sub munin_trend {
 sub munin_fetch {
     my ($file,$last,$type) = @_;
     my ($start,$step,$names,$data) = RRDs::fetch $file,$type || "AVERAGE";
-	return undef unless defined $data;
+    unless (defined $data)
+    {
+        ::logger ("Could not fetch data from $file(".($type||"AVERAGE")."): ". R
+RDs::error);
+        return undef;
+    }
     my @array = map { @$_[0] } splice(@$data, $#$data - ($last || 1));
     return $array[0] if (!$last);
     return @array;
