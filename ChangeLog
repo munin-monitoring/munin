@@ -1,6 +1,7 @@
 munin (work)
 
   * Failsafe entry for @@PYTHON@@.
+  * Bugfix in munin-limits (it didn't work properly).
 
 munin (1.1.5)
 
