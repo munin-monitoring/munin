@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.38  2004/12/22 20:01:14  jimmyo
+# Optimised munin-cgi-graph a bit.
+#
 # Revision 1.37  2004/12/09 22:12:56  jimmyo
 # Added "graph_period" option, to make "graph_sums" usable.
 #
@@ -256,6 +259,7 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"always_send", "notify_alias", "line", "state", "graph_period"
     );
 
+my %legal_expanded = map { $_ => 1 } @legal;
 
 sub munin_trend {
     my (@array) = @_;
@@ -422,7 +426,12 @@ sub munin_parse_config
     foreach my $line (@{$lines})
     {
 	chomp $line;
-	$line =~ s/(^|[^\\])#.*/$1/g;  # Skip comments...
+#$line =~ s/(^|[^\\])#.*/$1/g if $line =~ /#/;  # Skip comments...
+	if ($line =~ /#/)
+	{ 
+	    next if ($line =~ /^#/);
+	    $line =~ s/(^|[^\\])#.*/$1/g;
+	}
 	next unless ($line =~ /\S/);  # And empty lines...
 	if (length $prevline)
 	{
@@ -441,7 +450,7 @@ sub munin_parse_config
 	$line =~ s/\s+$//g;           # And trailing whitespace...
 	$line =~ s/^\s+//g;           # And heading whitespace...
 
-	if ($line =~ /^\s*\.(\S+)\s+(.+)\s*$/)
+	if ($line =~ /^\.(\S+)\s+(.+)\s*$/)
 	{
 	    my ($var, $val) = ($1, $2);
 	    $hash = &munin_set_var_path ($hash, $var, $val);
@@ -496,7 +505,7 @@ sub munin_get_var_path
     if ($var =~ /^\s*([^;:]+);([^;:]+):(\S+)\s*$/)
     {
 	my ($dom, $host, $rest) = ($1, $2, $3);
-	my @sp = split (/\s*\.\s*/, $rest);
+	my @sp = split (/\./, $rest);
 
 	if (@sp == 3)
 	{
@@ -518,7 +527,7 @@ sub munin_get_var_path
     elsif ($var =~ /^\s*([^;:]+);([^;:]+)\s*$/)
     {
 	my ($dom, $rest) = ($1, $2);
-	my @sp = split (/\s*\.\s*/, $rest);
+	my @sp = split (/\./, $rest);
 
 	if (@sp == 1)
 	{
@@ -548,27 +557,27 @@ sub munin_set_var_path
     my $val  = shift;
 
     print "DEBUG: Setting var \"$var\" = \"$val\"\n" if $DEBUG;
-    if ($var =~ /^\s*([^;:]+);([^;:]+):(\S+)\s*$/)
+    if ($var =~ /^\s*([^;:]+);([^:]+):(\S+)\s*$/)
     {
 	my ($dom, $host, $rest) = ($1, $2, $3);
-	my @sp = split (/\s*\.\s*/, $rest);
+	my @sp = split (/\./, $rest);
 
 	if (@sp == 3)
 	{
 	    ::logger ("Warning: Unknown option \"$sp[2]\" in \"$dom;$host:$sp[0].$sp[1].$sp[2]\".")
-		unless grep /^$sp[2]$/, @legal;
+		unless defined $legal_expanded{$sp[2]};
 	    $hash->{domain}->{$dom}->{node}->{$host}->{client}->{$sp[0]}->{"$sp[1].$sp[2]"} = $val;
 	}
 	elsif (@sp == 2)
 	{
 	    ::logger ("Warning: Unknown option \"$sp[1]\" in \"$dom;$host:$sp[0].$sp[1]\".")
-		unless grep /^$sp[1]$/, @legal;
+		unless defined $legal_expanded{$sp[1]};
 	    $hash->{domain}->{$dom}->{node}->{$host}->{client}->{$sp[0]}->{$sp[1]} = $val;
 	}
 	elsif (@sp == 1)
 	{
 	    ::logger ("Warning: Unknown option \"$sp[0]\" in \"$dom;$host:$sp[0]\".")
-		unless grep /^$sp[0]$/, @legal;
+		unless defined $legal_expanded{$sp[0]};
 	    $hash->{domain}->{$dom}->{node}->{$host}->{$sp[0]} = $val;
 	}
 	else
@@ -579,12 +588,12 @@ sub munin_set_var_path
     elsif ($var =~ /^\s*([^;:]+);([^;:]+)\s*$/)
     {
 	my ($dom, $rest) = ($1, $2);
-	my @sp = split (/\s*\.\s*/, $rest);
+	my @sp = split (/\./, $rest);
 
 	if (@sp == 1)
 	{
 	    ::logger ("Warning: Unknown option \"$sp[0]\" in \"$dom;$sp[0]\".")
-		unless grep /^$sp[0]$/, @legal;
+		unless defined $legal_expanded{$sp[0]};
 	    $hash->{domain}->{$dom}->{$sp[0]} = $val;
 	}
 	else
@@ -595,15 +604,15 @@ sub munin_set_var_path
     elsif ($var =~ /^\s*([^;:\.]+)\s*$/)
     {
 	::logger ("Warning: Unknown option \"$1\" in \"$1\".")
-	    unless grep /^$1$/, @legal;
+	    unless defined $legal_expanded{$1};
 	$hash->{$1} = $val;
     }
     elsif ($var =~ /^\s*([^\.]+)\.([^\.]+)\.([^\.]+)$/)
     {
 	::logger ("Warning: Unknown option \"$1\" in \"$var\".")
-	    unless grep /^$1$/, @legal;
+	    unless defined $legal_expanded{$1};
 	::logger ("Warning: Unknown option \"$3\" in \"$var\".")
-	    unless grep /^$3$/, @legal;
+	    unless defined $legal_expanded{$3};
 	$hash->{$1}->{$2}->{$3} = $val;
     }
     else

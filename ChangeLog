@@ -1,5 +1,6 @@
 munin (work)
 
+  * Main: Optimised munin-cgi-graph a bit.
   * Packaging: Expand man-page macros properly on man-page generation 
     (Deb#286399).
   * Plugin: Added plugin generic/dhcpd3, created by Rune N. Skillingstad.
