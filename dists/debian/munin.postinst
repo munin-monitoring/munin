@@ -20,6 +20,18 @@ fixperms() {
 
 	chown munin:munin /var/lib/munin
 	chmod 0755 /var/lib/munin
+
+	# Upgrading from LRRD, yes?
+	# This'll generate a lot of chmod/grp's on
+	# the dirs, but what the hell..
+	for f in $(find /var/lib/munin -user lrrd); do
+		chown munin $f
+		chown munin ${f%/*}
+	done
+	for f in $(find /var/lib/munin -group lrrd); do
+		chgrp munin $f
+		chgrp munin ${f%/*}
+	done
 }
 
 case "$1" in

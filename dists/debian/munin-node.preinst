@@ -10,7 +10,7 @@ migrate() {
 
 	[ -d ${to%/*} ] || mkdir -p ${to%/*}
 
-	cp -d $from $to
+	cp -dp $from $to
 
 	for subst in $*; do
 		perl -pi -e $subst $to
