@@ -60,7 +60,7 @@ munin (work)
       (SF#1032727).
     * Fixed linux/if_(err_) braindamage affecting hosts with vlans or
       multi-digit interface numbers.
-	* Added wildcard plugin generic/smart_, contributed by Nicolas Stransky.
+    * Added wildcard plugin generic/smart_, contributed by Nicolas Stransky.
 
 munin (1.1.4)
 
