@@ -9,6 +9,7 @@ munin (work)
   * Minor documentation bugfix.
   * Added automatic "graph no" to negative field when using negatives.
   * Added options to munin-graph to skip locking and stats generation.
+  * Added dist-directory for Solaris packages.
 
 munin (1.1.1)
 
