@@ -1,6 +1,9 @@
 #!@@PERL@@ -w
 #
 # $Log$
+# Revision 1.8  2004/11/12 20:28:03  ilmari
+# No debugging info by default
+#
 # Revision 1.7  2004/09/08 15:25:33  ilmari
 # Use @@PERL@@ in all perl shebang lines.
 #
@@ -44,7 +47,7 @@
 use strict;
 use Net::SNMP;
 
-my $DEBUG = 1;
+my $DEBUG = 0;
 
 my $host      = $ENV{host}      || undef;
 my $port      = $ENV{port}      || 161;
