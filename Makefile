@@ -25,6 +25,7 @@ install-main: build
 	mkdir -p $(STATEDIR)
 	mkdir -p $(HTMLDIR)
 	mkdir -p $(DBDIR)
+	mkdir -p $(CGIDIR)
 
 	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR) $(RUNDIR) $(HTMLDIR) $(DBDIR)
 
