@@ -23,6 +23,9 @@
 # 	url      - Override default status-url
 #
 # $Log$
+# Revision 1.3  2004/01/29 18:47:30  jimmyo
+# Made plugins apache_* compatible with older versions of LWP::UserAgent (SF#881411).
+#
 # Revision 1.2  2004/01/29 18:26:12  jimmyo
 # Bugfix, apache_processes now takes port numbers into account. (SF#882263)
 #
@@ -68,7 +71,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" )
 
         foreach my $port (@PORTS) {
                 my $url = sprintf $URL, $port;
-                my $response = $ua->get($url);
+                my $response = $ua->request(HTTP::Request->new('GET',$url));
                 push @badports, $port unless $response->is_success and $response->content =~ /IdleServe
 rs/;
         }
@@ -115,7 +118,7 @@ foreach my $port (@PORTS)
 {
     my $ua = LWP::UserAgent->new(timeout => 30);
     my $url = sprintf $URL, $port;
-    my $response = $ua->get($url);
+    my $response = $ua->request(HTTP::Request->new('GET',$url));
     if ($response->content =~ /^BusyServers:\s+(.+)$/im) {
 	    print "busy$port.value $1\n";
     } else {

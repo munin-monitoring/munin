@@ -14,6 +14,8 @@ munin (1.0.0pre2)
   * Bugfix, apache_processes now takes port numbers into account. (SF#882263)
   * Changed wildcard plugin ps_ so it can use "env.regex" in plugin-conf.d/
     (SF#882131)
+  * Made plugins apache_* compatible with older versions of LWP::UserAgent
+    (SF#881411).
 
 munin (1.0.0pre1)
 
