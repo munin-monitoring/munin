@@ -21,6 +21,8 @@ munin (work)
   * Plugin: linux/fw_forwarded_local now initialises properly (Deb#284673).
   * Plugin: Added more sensible autoconf to generic/sybase_space.
   * Plugin: Added more sensible autoconf to generic/munin_graph,munin_update.
+  * Plugin: Added two new plugins contributed by Jacques Caruso,
+    generic/exim_mailqueue_alt and generic/mailscanner.
 
 munin (1.1.7)
 

@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.19  2004/12/09 20:03:25  jimmyo
+# Added two new plugins contributed by Jacques Caruso, generic/exim_mailqueue_alt and generic/mailscanner.
+#
 # Revision 1.18  2004/12/09 19:34:54  jimmyo
 # host_name in plugin-conf.d now overrides plugin output.
 #
@@ -785,7 +788,7 @@ sub get_var_arr
     {
 	(my $tmpservice = $wildservice) =~ s/\*$//;
 	next unless ($name =~ /^$tmpservice/);
-	print STDERR "Checking $wildservice...\n" if $DEBUG;
+	print STDERR "# Checking $wildservice...\n" if $DEBUG;
 
 	if (defined $sconf->{$wildservice}{$var})
 	{
