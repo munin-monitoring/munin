@@ -5,6 +5,8 @@ munin (work)
   * Bugfix: munin-graph now treats CDEFs in fields with long names properly.
   * Plugin: New version of generic/smart_ by plugin creator (Nicolas
     Stransky) (SF#1072459).
+  * Bugfix: munin-graph now logs an illegal STACK in the first field better
+    (SF#1081903).
 
 munin (1.1.7)
 

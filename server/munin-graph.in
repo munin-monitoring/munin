@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.42  2004/12/09 16:06:40  jimmyo
+# munin-graph now logs an illegal STACK in the first field better (SF#1081903).
+#
 # Revision 1.41  2004/12/09 12:40:08  jimmyo
 # mumin-graph now treats CDEFs in fields with long names properly.
 #
@@ -304,10 +307,12 @@ if (&munin_get ($config, "graph_strategy", "cron") ne "cron" and $cron)
 }
 
 munin_runlock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
+
 unless ($skip_stats)
 {
 	open (STATS,">$config->{dbdir}/munin-graph.stats.tmp") or logger("Unable to open $config->{dbdir}/munin-graph.stats.tmp");
 }
+
 logger("Starting munin-graph");
 
 my @COLOUR = ("#22ff22", "#0022ff", "#ff0000", "#00aaaa", "#ff00ff",
@@ -513,6 +518,7 @@ sub get_sum_command
 
     return undef;
 }
+
 sub get_stack_command
 {
     my $node    = shift;
@@ -819,7 +825,7 @@ sub process_node {
 	# See if we should skip the service 
 	next if (&skip_service ($node, $service));
 
-	my $col_count;
+	my $field_count = 0;
 	my $max_field_len = 0;
 	my @field_order = ();
 	my $rrdname;
@@ -854,6 +860,11 @@ sub process_node {
 
 	    next unless &process_field ($node, $service, $field);
 	    print "DEBUG: Processing field \"$field\".\n" if $DEBUG;
+
+	    if ($field_count == 0 and munin_get ($config, "draw", "LINE2", $domain, $name, $service, $field) eq "STACK")
+	    { # Illegal -- first field is a STACK
+		logger ("ERROR: First field (\"$field\") of graph \"$domain\" :: \"$name\" :: \"$service\" is STACK. STACK can only be drawn after a LINEx or AREA.");
+	    }
 		
 	    # Getting name of rrd file
 	    $filename = &get_rrd_filename ($node, $config, $domain, $name, $service, $field, $path);
@@ -931,7 +942,7 @@ sub process_node {
 
 	    push (@rrd, ($node->{client}->{$service}->{$field.".draw"} || "LINE2") .
 		  ":g$rrdname" . 
-		  ($single_value ? $single_colour : $COLOUR[$col_count++%@COLOUR]) . ":" .
+		  ($single_value ? $single_colour : $COLOUR[$field_count++%@COLOUR]) . ":" .
 		  (escape ($node->{client}->{$service}->{"$field.label"}) || escape ($field))
 		  . (" " x ($max_field_len + 1 -
 			    length ($node->{client}->{$service}->{"$field.label"} || $field))));
@@ -963,7 +974,7 @@ sub process_node {
 
 		push (@rrd_negatives, ($node->{client}->{$service}->{$negfield.".draw"} || "LINE2") .
 		    ":ng$negfield" . 
-		    ((defined $single_value and $single_value) ? $single_colour : $COLOUR[($col_count-1)%@COLOUR]));
+		    ((defined $single_value and $single_value) ? $single_colour : $COLOUR[($field_count-1)%@COLOUR]));
 
 		# Draw HRULEs
 		my $linedef = munin_get ($config, "line", undef, $domain, $name, $service, $node->{client}->{$service}->{$field.".negative"});
@@ -972,13 +983,13 @@ sub process_node {
 		    my ($number, $colour, $label) = split (/:/, $linedef, 3);
 		    push (@rrd_negatives, "HRULE:".$number.
 			($colour ? "#$colour" :
-			  ((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR]))
+			  ((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]))
 			);
 		}
 		elsif ($node->{client}->{$service}->{"$negfield.warn"})
 		{
 		    push (@rrd_negatives, "HRULE:".$node->{client}->{$service}->{$node->{client}->{$service}->{$field.".negative"}.".warn"}.
-			((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR]));
+			((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
 		}
 
 		push (@rrd, "GPRINT:c$negfield:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
@@ -1020,14 +1031,14 @@ sub process_node {
 		$label =~ s/:/\\:/g if defined $label;
 		push (@rrd, "HRULE:".$number.
 		    ($colour ? "#$colour" :
-		      ((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR])) .
+		      ((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR])) .
 		      ((defined $label and length ($label)) ? ":$label" : ""), 
 		      "COMMENT: \\j"
 		    );
 	    }
 	    elsif ($node->{client}->{$service}->{"$field.warn"})
 	    {
-		push (@rrd, "HRULE:".$node->{client}->{$service}->{"$field.warn"}.($single_value ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR]));
+		push (@rrd, "HRULE:".$node->{client}->{$service}->{"$field.warn"}.($single_value ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
 	    }
 	}
 
