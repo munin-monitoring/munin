@@ -6,6 +6,7 @@ munin (work)
   * Created RPM package creation for SuSE with regards to the 1.2 series.
   * Added --stdout-option to all programs (SF#1073148).
   * Log updates of nonexisting fields better (SF#1073172).
+  * Force plugin linux/apt to use C locale (SF#1072470).
 
 munin (1.1.6)
 
