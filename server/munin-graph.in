@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.18  2004/06/19 21:29:35  jimmyo
+# Added option to munin-graph to skip stats generation.
+#
 # Revision 1.17  2004/06/19 21:21:44  jimmyo
 # Added option to munin-graph to skip locking.
 #
@@ -126,6 +129,7 @@ my $do_usage = 0;
 my $do_version = 0;
 my $list_images = 0;
 my $skip_locking = 0;
+my $skip_stats = 0;
 my $conffile = "@@CONFDIR@@/munin.conf";
 my %draw = ("day" => 1, "week" => 1, "month" => 1, "year" => 1);
 
@@ -145,6 +149,7 @@ GetOptions ( "force!"       => \$force_graphing,
 	     "year!"        => \$draw{'year'},
 	     "list-images!" => \$list_images,
 	     "skip-locking!"=> \$skip_locking,
+	     "skip-stats!"  => \$skip_stats,
 	     "debug!"       => \$DEBUG,
 	     "version!"     => \$do_version,
 	     "help"         => \$do_usage );
@@ -200,7 +205,10 @@ my $config= &munin_config ($conffile);
 
 
 munin_runlock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
-open (STATS,">$config->{dbdir}/munin-graph.stats.tmp") or logger("Unable to open $config->{dbdir}/munin-graph.stats.tmp");
+unless ($skip_stats)
+{
+	open (STATS,">$config->{dbdir}/munin-graph.stats.tmp") or logger("Unable to open $config->{dbdir}/munin-graph.stats.tmp");
+}
 logger("Starting munin-graph");
 
 my @COLOUR = ("#22ff22", "#0022ff", "#ff0000", "#00aaaa", "#ff00ff",
@@ -229,15 +237,15 @@ for my $key ( keys %{$config->{domain}}) {
     &process_domain($key);
     $domain_time = sprintf ("%.2f",(Time::HiRes::time - $domain_time));
     logger("Processed domain: $key ($domain_time sec)");
-    print STATS "GD|$key|$domain_time\n"
+    print STATS "GD|$key|$domain_time\n" unless $skip_stats;
 }
 
 
 $graph_time = sprintf ("%.2f",(Time::HiRes::time - $graph_time));
 logger("Munin-graph finished ($graph_time sec)");
-print STATS "GT|total|$graph_time\n";
+print STATS "GT|total|$graph_time\n" unless $skip_stats;
 rename ("$config->{dbdir}/munin-graph.stats.tmp", "$config->{dbdir}/munin-graph.stats");
-close STATS;
+close STATS unless $skip_stats;
 close $log;
 
 sub process_domain {
@@ -248,7 +256,7 @@ sub process_domain {
 	process_node($domain,$key ,$config->{domain}->{$domain}->{node}->{$key} );	
 	$node_time = sprintf ("%.2f",(Time::HiRes::time - $node_time));
 	logger ("Processed node: $key ($node_time sec)");
-	print STATS "GN|$domain|$key|$node_time\n"
+	print STATS "GN|$domain|$key|$node_time\n" unless $skip_stats;
 	
     }
 }
@@ -955,7 +963,7 @@ sub process_node {
 
 	$service_time = sprintf ("%.2f",(Time::HiRes::time - $service_time));
 	logger ("Graphed service : $service ($service_time sec * 4)");
-	print STATS "GS|$domain|$name|$service|$service_time\n";
+	print STATS "GS|$domain|$name|$service|$service_time\n" unless $skip_stats;
 
 	foreach (@added)
 	{

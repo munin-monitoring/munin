@@ -8,7 +8,7 @@ munin (work)
     Skillingstad.
   * Minor documentation bugfix.
   * Added automatic "graph no" to negative field when using negatives.
-  * Added option to munin-graph to skip locking.
+  * Added options to munin-graph to skip locking and stats generation.
 
 munin (1.1.1)
 
