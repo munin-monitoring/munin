@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.14  2004/11/20 22:37:21  jimmyo
+# Strip strange characters.
+#
 # Revision 1.13  2004/11/20 22:10:49  jimmyo
 # Clean up output of plugin a bit.
 #
@@ -129,6 +132,7 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 		die "Croaking: " . $session->error();
 	}
 	my $name = $response->{$ifEntryDescr};
+	$name =~ s/[^\w\s]//g;
 	my $warn = undef;
 	if (defined ($response = $session->get_request($ifEntrySpeed)))
 	{
