@@ -208,6 +208,7 @@ endif
 	-rm -rf build
 	-rm -f build-stamp
 	-rm -f build-doc-stamp
+	-rm -f build-man-stamp
 
 source_dist: clean
 	cp dists/tarball/plugins.conf .
