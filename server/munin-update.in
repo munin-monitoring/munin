@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.21  2004/10/22 14:51:05  jimmyo
+# Minor bugfix.
+#
 # Revision 1.20  2004/10/22 14:48:21  jimmyo
 # Minor bugfix.
 #
@@ -732,7 +735,7 @@ sub config_node {
       logger("Got unknown reply from client \"$domain\" -> \"name\" skipping");
       return 0;
   }
-  $clientdomain =~ s/\#.*(?:lrrd|munins) (?:client|node) at //;
+  $clientdomain =~ s/\#.*(?:lrrd|munin) (?:client|node) at //;
   if (exists $node->{'use_node_name'} and $node->{'use_node_name'} =~ /^\s*y(?:es)\s*$/i)
   {
       $fetchdomain = $clientdomain;
