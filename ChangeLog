@@ -13,6 +13,7 @@ munin (1.1.1)
   * Added a definition file (definitions.html) to the server distribution.
   * Use "sed 1d" instead of "tail +2" in df plugins (patch by Olivier
     Delhomme).
+  * Tuned cdef-code to make it work properly after clean-up.
 
 munin (1.1.0)
 
