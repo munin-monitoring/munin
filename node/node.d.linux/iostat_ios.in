@@ -11,6 +11,9 @@
 #       autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.7  2004/09/25 22:15:20  jimmyo
+# Corrected statedir.
+#
 # Revision 1.6  2004/09/09 11:12:42  ilmari
 # Remove Data::Dumper dependency
 #
@@ -41,7 +44,7 @@ use Storable qw(store retrieve);
 # (c) 2004 - Per Andreas Buer
 # GPL v2 Yadda yadda.
 
-use constant STATEFILE => '@@STATEDIR@@/iostat-aw.state';
+use constant STATEFILE => '@@PLUGSTATE@@/iostat-aw.state';
 
 
 if ($ARGV[0] eq 'config') {
