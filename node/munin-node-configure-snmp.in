@@ -332,7 +332,10 @@ sub snmp_get_single
 	my $session = shift;
 	my $oid     = shift;
 
-	if ((!defined ($response = $session->get_request($oid))) or ($response->{$oid} eq "noSuchObject"))
+	if ((!defined ($response = $session->get_request($oid))) or 
+		($response->{$oid} eq "noSuchObject") or 
+		($response->{$oid} eq "noSuchInstance") or 
+		($response->{$oid} eq "endOfMibView"))
 	{
 		return undef;
 	}
