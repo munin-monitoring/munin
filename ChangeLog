@@ -33,7 +33,7 @@ munin (1.0.0pre2)
   * Bugfix in install-doc Makefile target (SF#884074).
   * Code tidying in munin-graph (SF#884625).
   * Added generic plugins ntp_ and ntp_states to manual family (SF#887000).
-  * Bugfix; munin-html wrote bad html, as reported by Adam Heath.
+  * Bugfix; munin-html wrote bad html, as reported by Adam Heath. (Deb#230322)
 
 munin (1.0.0pre1)
 
