@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.9  2004/05/13 21:48:49  jimmyo
+# Code cleanups.
+#
 # Revision 1.8  2004/05/09 21:11:16  jimmyo
 # New plugin (pm3users) and a bunch of patches from Jacques Caruso.
 #
@@ -220,6 +223,161 @@ sub process_domain {
     }
 }
 
+sub get_title {
+    my $node    = shift;
+    my $service = shift;
+    my $scale   = shift;
+
+    return ($node->{client}->{$service}->{'graph_title'}?
+	      $node->{client}->{$service}->{'graph_title'}:$service) .
+	      " - by $scale";
+}
+
+sub get_custom_graph_args
+{
+    my $node    = shift;
+    my $service = shift;
+    my $result  = [];
+
+    if ($node->{client}->{$service}->{graph_args}) {
+	push @$result, split /\s/,$node->{client}->{$service}->{graph_args};
+	return $result;
+    }
+    else
+    {
+	return undef;
+    }
+}
+
+sub get_vlabel
+{
+    my $node    = shift;
+    my $service = shift;
+
+    if ($node->{client}->{$service}->{graph_vlabel}) {
+	return $node->{client}->{$service}->{graph_vlabel};
+    }
+    elsif ($node->{client}->{$service}->{graph_vtitle})
+    {
+	return $node->{client}->{$service}->{graph_vtitle};
+    }
+    return undef;
+}
+
+sub should_scale
+{
+    my $node    = shift;
+    my $service = shift;
+
+    if (defined $node->{client}->{$service}->{graph_scale})
+    {
+	return &munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1);
+    }
+    elsif (defined $node->{client}->{$service}->{graph_noscale})
+    {
+	return ! &munin_get_bool_val ($node->{client}->{$service}->{graph_noscale}, 0);
+    }
+
+    return 1;
+}
+
+sub get_header {
+    my $node    = shift;
+    my $config  = shift;
+    my $domain  = shift;
+    my $host    = shift;
+    my $service = shift;
+    my $scale   = shift;
+    my $result  = [];
+    my $tmp_field;
+
+    # Picture filename
+    push @$result, &get_picture_filename ($config, $domain, $host, $service, $scale);
+
+    # Title
+    push @$result, ("--title", &get_title ($node, $service, $scale));
+
+    # When to start the graph
+    push @$result, "--start",$times{$scale};
+
+    # Custom graph args, vlabel and graph title
+    if (defined ($tmp_field = &get_custom_graph_args ($node, $service))) {
+	push (@$result, @{$tmp_field});
+    }
+    if (defined ($tmp_field = &get_vlabel ($node, $service))) {
+	push @$result, ("--vertical-label", $tmp_field);
+    }
+
+    push @$result,"--height", "175";
+    push @$result,"--imgformat", "PNG";
+    push @$result,"--lazy" if ($force_lazy);
+
+    push (@$result, "--units-exponent", "0") 
+	if (! &should_scale ($node, $service));
+
+    return $result;
+}
+
+sub get_field_order
+{
+    my $node    = shift;
+    my $config  = shift;
+    my $domain  = shift;
+    my $host    = shift;
+    my $service = shift;
+    my $scale   = shift;
+    my $result  = [];
+
+    if ($node->{client}->{$service}->{graph_order}) {
+	@$result = split /\s+/, $node->{client}->{$service}->{'graph_order'};
+    } 
+
+    for my $key (keys %{$node->{client}->{$service}}) {
+	my ($client,$type)="";
+	($client,$type) = split /\./,$key;
+	if (defined $type and $type eq "label") {
+	    push @$result,$client if !grep /^$client$/, @$result;;
+	} 
+    }
+    
+    return $result;
+}
+
+sub get_sum_command
+{
+    my $node    = shift;
+    my $service = shift;
+    my $field   = shift;
+
+    if (defined $node->{client}->{$service}->{$field.".special_sum"})
+    {
+	return $node->{client}->{$service}->{$field.".special_sum"};
+    }
+    elsif (defined $node->{client}->{$service}->{$field.".sum"})
+    {
+	return $node->{client}->{$service}->{$field.".sum"};
+    }
+
+    return undef;
+}
+sub get_stack_command
+{
+    my $node    = shift;
+    my $service = shift;
+    my $field   = shift;
+
+    if (defined $node->{client}->{$service}->{$field.".special_stack"})
+    {
+	return $node->{client}->{$service}->{$field.".special_stack"};
+    }
+    elsif (defined $node->{client}->{$service}->{$field.".stack"})
+    {
+	return $node->{client}->{$service}->{$field.".stack"};
+    }
+
+    return undef;
+}
+
 sub process_node {
     my ($domain,$name,$node) = @_;
 
@@ -238,52 +396,11 @@ sub process_node {
 	    my @rrd;
 	    my @added = ();
 
-            # See if we should skip it because of conf-options
-	    next unless (ref $node->{client}->{$service});
-	    next if ($node->{client}->{$service}->{'graph'} and 
-				($node->{client}->{$service}->{'graph'} eq "no" ||
-				($node->{client}->{$service}->{'graph'} eq "on-demand") && !$force_graphing));
-            # See if we should skip it because of command-line arguments
-	    next if (@limit_services and not grep (/^$service$/, @limit_services));
-	    # filename
-	    push @rrd,"$config->{'htmldir'}/$domain/$name-$service-$time.png";
+            # See if we should skip the service 
+	    next if (&skip_service ($node, $service));
 
-	    # title
-	    push @rrd, "--title",($node->{client}->{$service}->{'graph_title'}?
-				  $node->{client}->{$service}->{'graph_title'}:$service) .
-				  " - by $time";
-
-	    # starttime
-	    push @rrd, "--start",$times{$time};
-	    if ($node->{client}->{$service}->{graph_args}) {
-		push @rrd,(split /\s/,$node->{client}->{$service}->{graph_args});
-	    }
-	    if ($node->{client}->{$service}->{graph_vlabel}) {
-		push @rrd, ("--vertical-label", $node->{client}->{$service}->{graph_vlabel});
-	    }
-	    elsif ($node->{client}->{$service}->{graph_vtitle})
-	    {
-		push @rrd, ("--vertical-label", $node->{client}->{$service}->{graph_vtitle});
-	    }
-	    push @rrd,"--height", "175";
-	    push @rrd,"--imgformat", "PNG";
-	    push @rrd,"--lazy" if ($force_lazy);
-
-	    if (exists $node->{client}->{$service}->{graph_noscale} and
-		    !exists $node->{client}->{$service}->{graph_scale})
-	    {
-		if (munin_get_bool_val ($node->{client}->{$service}->{graph_noscale}))
-		{
-		    $node->{client}->{$service}->{graph_scale} = "no";
-		}
-		else
-		{
-		    $node->{client}->{$service}->{graph_scale} = "yes";
-		}
-
-	    }
-	    push (@rrd, "--units-exponent", "0") 
-		if (! munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1));
+	    # Do the header (title, vtitle, size, etc...)
+	    push @rrd, @{&get_header ($node, $config, $domain, $name, $service, $time)};
 
 	    my $col_count;
 	    my $max_field_len = 0;
@@ -291,36 +408,20 @@ sub process_node {
 	    my $rrdname;
 	    my $force_single_value;
 
-	    if ($node->{client}->{$service}->{graph_order}) {
-		@field_order = split /\s+/, $node->{client}->{$service}->{'graph_order'};
-	    } else {
-		for my $key (keys %{$node->{client}->{$service}}) {
-		    my ($client,$type)="";
-		    ($client,$type) = split /\./,$key;
-		    if (defined $type and $type eq "label") {
-			push @field_order,$client;
-		    } 
-		}
-	    }
+	    @field_order =  @{&get_field_order ($node, $config, $domain, $name, $service, $time)};
+
 	    # Array to keep 'preprocess'ed fields.
 	    my @rrd_preprocess = ();
 	    my $fieldnum = 0;
-	    print "DEBUG: Drawing fields \"", join "\",\"", @field_order, "\".\n" if $DEBUG;
+	    print "DEBUG: Preparing to draw fields \"", join "\",\"", @field_order, "\".\n" if $DEBUG;
 	    for my $field (@field_order) { # Search for 'specials'...
 		$fieldnum++;
-		if (exists $node->{client}->{$service}->{$field.".special_stack"})
-		{
-			$node->{client}->{$service}->{$field.".stack"} = $node->{client}->{$service}->{$field.".special_stack"};
-		}
-		if (exists $node->{client}->{$service}->{$field.".special_sum"})
-		{
-			$node->{client}->{$service}->{$field.".sum"} = $node->{client}->{$service}->{$field.".special_sum"};
-		}
-		if (exists $node->{client}->{$service}->{$field.".stack"})
+		my $tmp_field;
+		if (defined ($tmp_field = &get_stack_command ($node, $service, $field)))
 		{
 		    print "DEBUG: Doing special_stack...\n" if $DEBUG;
 		    my @spc_stack = ();
-		    foreach my $pre (split (/\s+/, $node->{client}->{$service}->{$field.".stack"}))
+		    foreach my $pre (split (/\s+/, $tmp_field))
 		    {
 			(my $name = $pre) =~ s/=.+//;
 			if (!@spc_stack)
@@ -355,7 +456,7 @@ sub process_node {
 			}
 		    }
 		}
-		elsif (exists $node->{client}->{$service}->{$field.".sum"})
+		elsif (defined ($tmp_field = &get_sum_command ($node, $service, $field)))
 		{
 		    my @spc_stack = ();
 		    my $last_name = "";
@@ -367,7 +468,7 @@ sub process_node {
 				$force_single_value = 1;
 			}
 			
-		    foreach my $pre (split (/\s+/, $node->{client}->{$service}->{$field.".sum"}))
+		    foreach my $pre (split (/\s+/, $tmp_field))
 		    {
 			(my $path = $pre) =~ s/.+=//;
 			my $name = "z".$fieldnum."_".scalar (@spc_stack);
@@ -578,7 +679,7 @@ sub process_node {
 			    unless ($node->{client}->{$service}->{$field.".negative"});
 			push (@rrd, "AREA:".$cdef."i$rrdname#ffffff");
 			push (@rrd, "STACK:min_max_diff$range_colour");
-			push (@rrd, "LINE1:re_zero#000000")
+			push (@rrd, "LINE2:re_zero#000000")
 			    unless ($node->{client}->{$service}->{$field.".negative"});
 		}
 
@@ -669,7 +770,7 @@ sub process_node {
 	    if (@rrd_negatives)
 	    {
 		push (@rrd, @rrd_negatives);
-		push (@rrd, "LINE1:re_zero#000000"); # Redraw zero.
+		push (@rrd, "LINE2:re_zero#000000"); # Redraw zero.
 		if (exists $node->{client}->{$service}->{graph_total} and 
 			exists $total_pos{'min'} and exists $total_neg{'min'} and 
 			@{$total_pos{'min'}} and @{$total_neg{'min'}})
@@ -723,7 +824,7 @@ sub process_node {
 	    }
 	    elsif ($list_images)
 	    {
-		print "$config->{'htmldir'}/$domain/$name-$service-$time.png\n";
+		print &get_picture_filename ($config, $domain, $name, $service, $time), "\n";
 	    }
 
 	    foreach (@added)
@@ -737,6 +838,37 @@ sub process_node {
 	    print STATS "GS|$domain|$name|$service|$service_time\n" if ($time eq "day");
 	}
     }
+}
+
+sub get_picture_filename
+{
+    my $config  = shift;
+    my $domain  = shift;
+    my $name    = shift;
+    my $service = shift;
+    my $scale   = shift;
+
+    return "$config->{'htmldir'}/$domain/$name-$service-$scale.png";
+}
+
+sub skip_service
+{
+    my $node = shift;
+    my $service = shift;
+
+    # Check to make sure that service exists
+    return 1 unless (ref $node->{client}->{$service});
+
+    # See if we should skip it because of conf-options
+    return 1 if ($node->{client}->{$service}->{'graph'} and 
+	($node->{client}->{$service}->{'graph'} eq "no" ||
+	($node->{client}->{$service}->{'graph'} eq "on-demand") && !$force_graphing));
+
+    # See if we should skip it because of command-line arguments
+    return 1 if (@limit_services and not grep (/^$service$/, @limit_services));
+
+    # Don't skip
+    return 0;
 }
 
 sub expand_cdef
