@@ -8,10 +8,10 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
-# Revision 1.5.2.1  2005/01/28 14:51:22  lupe
-# Add graph_info and some filed.info
+# Revision 1.5.2.2  2005/01/28 16:24:22  lupe
+# Minor corrections
 #
-# Revision 1.6  2005/01/28 14:47:31  lupe
+# Revision 1.5.2.1  2005/01/28 14:51:22  lupe
 # Add graph_info and some filed.info
 #
 # Revision 1.5  2004/12/10 10:47:49  jimmyo
@@ -69,7 +69,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args -l 0 --base 1000'
 	echo 'graph_vlabel pages per ${graph_period} in (-) / out (+)'
 	echo 'graph_category system'
-	echo 'graph_info This graph shows the swap activity of the system."
+	echo 'graph_info This graph shows the swap activity of the system.'
 	echo 'swap_in.label swap'
 	echo 'swap_in.type DERIVE'
 	echo 'swap_in.min 0'
