@@ -97,3 +97,5 @@ sunos/temperature
 [1.1.3]
 generic/hddtempd
 [1.1.4]
+[1.1.5]
+linux/irqstats
