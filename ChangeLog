@@ -22,9 +22,10 @@ munin (1.0.0pre4)
     (Deb#236834).
   * New SNMP plugins: df, if_err, processes, fc_if (fibre-channel), fc_if_err,
     users, load.
-  * Cleaned up Solaris plugins.
+  * Cleaned up Solaris plugins (SF#944389, ++)
   * New logo by Bianca Pfingsten, sponsored by Mediahaus Biering Grafischer
     Betrieb GmbH. (Thanks :-)
+  * Made solaris-plugin fs_df work without GNU df (SF#944389).
 
 munin (1.0.0pre3)
 
