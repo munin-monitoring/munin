@@ -1,3 +1,7 @@
+munin (CVS)
+
+  * Plugins: Correct history loss in linux/{df,df_inode}.
+
 munin (1.2.1)
   * Main: fix the file vs. pipe check in munin-limits.
   * Main: place the munin-limits lock file in rundir, not dbdir.
