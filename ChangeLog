@@ -14,6 +14,8 @@ munin (1.0.0pre4)
   * Fixed a problem in the node when running as a non-root user and
     using sudo to run the plugins (Deb#236694).
   * Clarified the vlabels in the apache-plugins (Deb#238594).
+  * Patched temp-part of linux-pugin sensors_* with better regexp 
+    (Deb#245289).
 
 munin (1.0.0pre3)
 
