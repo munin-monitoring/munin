@@ -8,7 +8,20 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
-# Revision 1.4.2.1  2005/01/28 13:27:27  lupe
+# Revision 1.4.2.2  2005/01/28 14:51:22  lupe
+# Add graph_info and some filed.info
+#
+# Revision 1.6  2005/01/28 14:47:31  lupe
+# Add graph_info and some filed.info
+#
+# Revision 1.5  2005/01/28 13:25:34  lupe
+# Add support for FreeBSD 4.x ramdisks
+#
+# Revision 1.4  2004/05/20 19:02:36  jimmyo
+# Set categories on a bunch of plugins
+>>>>>>> 1.6
+#
+# Revision 1.2.2.1  2005/01/25 10:32:40  lupe
 # Add support for FreeBSD 4.x ramdisks
 #
 # Revision 1.2.2.1  2005/01/25 10:32:40  lupe
@@ -47,6 +60,8 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Filesystem usage (in %)'
 	echo 'graph_args --upper-limit 100 -l 0'
 	echo 'graph_vlabel %'
+	echo 'graph_category disk'
+	echo 'graph_info This graph shows disk usage on the machine.'
 	mfs=0
 	/bin/df -P -t noprocfs,devfs,fdescfs,linprocfs,nfs | tail +2 | grep -v "//" | while read i; do
 		case $i in
@@ -54,7 +69,14 @@ if [ "$1" = "config" ]; then
 		*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
 		esac
 		echo -n "$name.label "
-		echo $i | awk '{ print $6 }'
+		echo $i | awk "{
+			dir=\$6
+			if (length(dir) <= $MAXLABEL)
+				print dir
+			else
+				printf (\"...%s\n\", substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3))
+			print \"$name.info \" \$6 \" -> \" \$1;
+			}"
 		echo "$name.warning 92"
 		echo "$name.critical 98"
 	done
