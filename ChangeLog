@@ -1,6 +1,8 @@
 munin (work)
   * Main: fix the file vs. pipe check in munin-limits.
   * Main: place the munin-limits lock file in rundir, not dbdir.
+  * Main: Make sure all rrd-tunes are correct after an upgrade (Deb#296454,
+    Deb#296645).
   * Plugin: generic/amavis now has configurable logfile location (Deb#296533).
   * Plugin: linux/irqstats should no longer fail on some systems (Deb#296452).
   * Plugin: modified graph_args of generic/apache_processes, to work around
@@ -8,7 +10,7 @@ munin (work)
 
 munin (1.2.0)
 
-  * Main: yet another rewrite of munin-limits open call (SF#1115434).
+  * Main: Yet another rewrite of munin-limits open call (SF#1115434).
   * Node: munin-node didn't treat default_plugin_user properly (Deb#295366).
   * Plugins: linux/if* now treats ra* interfaces as wireless.
   * Plugins: minor bugfix in generic/bind9.
