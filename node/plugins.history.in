@@ -102,3 +102,5 @@ linux/irqstats
 linux/forks
 smart_
 ntp_
+sendmail_mailstats
+sendmail_mailtraffic

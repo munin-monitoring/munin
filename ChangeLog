@@ -73,6 +73,8 @@ munin (work)
     * The linux/iostat plugin now ignores devices without traffic (Deb#267195).
     * Changed a lot of plugins so they use DERIVE instead of COUNTER.
     * Upped generic/ntp_ to auto family.
+    * Upped generic/sendmail_mailstats and generic/sendmail_mailtraffic to
+      auto family.
 
   - Installation
     * Changed variable name of ARCH to OSTYPE, to avoid name crash on newer
