@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by lrrd-config)
 #
 # $Log$
+# Revision 1.3  2004/02/02 16:53:53  jimmyo
+# Make the iostat plugin work properly.
+#
 # Revision 1.2  2004/01/31 19:24:52  jimmyo
 # Rewrite of linux/iostat by Mike Fedyk (Deb##223373,224113).
 #
@@ -160,8 +163,15 @@ sub fetch_detailed()
 				my @fields = split(/\s+/, $3);
 				my $tmpnam = $2;
 				my $major  = $1;
-				$tmpnam =~ s/\//:/g;
+				next if ($major ==   1); # RAM devices
+				next if ($major ==   9); # MD devices
+				next if ($major ==  58); # LVM devices
+				next if ($major == 254); # LVM2 devices
+				next if ($tmpnam =~ /part\d+$/);
+
 				$tmpnam =~ s/:[[:alpha:]]+(\d+)/:$1/g;
+				$tmpnam =~ s/^([^\/]+)\//$1/;
+				$tmpnam =~ s/:disc$//;
 
 				$devs{"dev".$major."_".&get_disk_count($major)} =
 				{

@@ -8,6 +8,7 @@ munin (1.0.0pre3)
     (SF#881046)
   * Remove dependency on pgrep (use process groups instead). (SF#881049)
   * Documentation updates.
+  * Make the iostat plugin work properly.
 
 munin (1.0.0pre2)
 
