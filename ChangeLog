@@ -29,6 +29,7 @@ munin (work)
   * Plugin: generic/named a bit more portable (by Will Froning).
   * Plugin: Sort fields in df*-plugins alphabetically.
   * Plugin: Added plugin generic/bind9_rndc, by Facq Laurent.
+  * Plugin: Two network ups tool plugins (generic/nut_*) contributed by xavier.
 
 munin (1.1.7)
 
