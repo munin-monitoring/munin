@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.47  2005/03/06 19:33:20  jimmyo
+# Make sure all rrd-tunes are correct after an upgrade (Deb#296454, Deb#296645).
+#
 # Revision 1.46  2005/02/01 21:51:50  jimmyo
 # Added category_order, to complete the *_order options.
 #
@@ -262,6 +265,8 @@ use RRDs;
 use Fcntl qw(:DEFAULT :flock);
 use IO::Handle;
 use Symbol 'gensym';
+
+my $VERSION = "@@VERSION@@";
 
 my $nsca = new IO::Handle;
 my $config = undef;
@@ -661,7 +666,7 @@ sub munin_writeconfig_loop {
     my ($data,$fh,$pre) = @_;
     $pre |= "";
 
-    # Write datafile in new format
+    # Write datafile
     foreach my $a (keys %{$data})
     {
 	if (ref ($data->{$a}) eq "HASH")
@@ -718,7 +723,9 @@ sub munin_writeconfig {
 	}
     }
 
-    # Write datafile in new format
+    # Write version
+    print $fh "version $VERSION\n";
+    # Write datafile
     &munin_writeconfig_loop ($data, $fh, "");
     
     if (defined $fh)

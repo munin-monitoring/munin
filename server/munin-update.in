@@ -23,6 +23,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.32  2005/03/06 19:33:20  jimmyo
+# Make sure all rrd-tunes are correct after an upgrade (Deb#296454, Deb#296645).
+#
 # Revision 1.31  2005/01/24 21:58:46  jimmyo
 # Make munin-update shut up when reading from a socket goes wrong.
 #
@@ -454,6 +457,13 @@ close ($log);
 sub compare_configs {
     my $old = shift;
     my $new = shift;
+    my $just_upgraded = 0;
+
+    if (!defined $old->{version} or
+	    $old->{version} ne $VERSION)
+    {
+	$just_upgraded = 1;
+    }
 
     foreach my $dom (%{$new->{domain}})
     {
@@ -465,19 +475,19 @@ sub compare_configs {
 		{
 		    next unless $field =~ /\.label$/;
 		    $field =~ s/\.label$//;
-		    if (&is_changed ($old, $new, $dom, $host, $serv, $field, "max"))
+		    if ($just_upgraded or &is_changed ($old, $new, $dom, $host, $serv, $field, "max"))
 		    {
 			&change_max ($config, $dom, $host, $serv, $field, 
 				(defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"} ?
 				 $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"} : undef));
 		    }
-		    if (&is_changed ($old, $new, $dom, $host, $serv, $field, "min"))
+		    if ($just_upgraded or &is_changed ($old, $new, $dom, $host, $serv, $field, "min"))
 		    {
 			&change_min ($config, $dom, $host, $serv, $field, 
 				(defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"} ?
 				$new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"} : undef));
 		    }
-		    if (&is_changed ($old, $new, $dom, $host, $serv, $field, "type"))
+		    if ($just_upgraded or &is_changed ($old, $new, $dom, $host, $serv, $field, "type"))
 		    {
 			&change_type ($oldconfig, $config, $dom, $host, $serv, $field, 
 				(defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".type"} ?
