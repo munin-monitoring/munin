@@ -11,6 +11,9 @@
 #	logfile   - set which log file to use
 # 
 # $Log$
+# Revision 1.2  2004/12/09 20:23:00  jimmyo
+# generic/named a bit more portable (by Will Froning).
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -50,7 +53,7 @@ SYSLOGFILE=${logfile:-/var/adm/messages}
 # ----------------------------------------------------------------------
 
 pick_stat () {
-    ret=`echo "$2" | sed "s/.*$1=\([0-9]*\).*/\1/"`
+    ret=`echo "$2" | sed "s/.* *$1=\([0-9]*\).*/\1/"`
     if [ ! "$ret" ]; then
     	echo 0;
     else
