@@ -29,6 +29,7 @@ munin (1.0.0pre2)
   * Added a new plugin generic/multips to count several procs in one graph.
     (SF#885579)
   * More timeouts in munin-update (Deb#222674).
+  * Added max value to generic/vmstat plugin (Deb#225489).
 
 munin (1.0.0pre1)
 
