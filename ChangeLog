@@ -38,6 +38,8 @@ munin (1.0.0pre4)
   * Added plugin hddtemp2, contributred by Andrew Radke, modified by Lupe
     Christoph.
   * Added Folding@home plugin, contributed by Xavier.
+  * Fixed problem with sunos/memory, when memory was reported in gigabytes
+    (SF#930964)
 
 munin (1.0.0pre3)
 
