@@ -2,14 +2,17 @@
 #
 # Plugin for watching io-bound traffic (in blocks) on disks.
 #
-# Usage: Link or copy into /etc/munin/node.d/
+# Usage: Link or copy into /etc/lrrd/client.d/
 #
 # Parameters:
 #
 # 	config   (required)
-# 	autoconf (optional - used by munin-config)
+# 	autoconf (optional - used by lrrd-config)
 #
 # $Log$
+# Revision 1.2  2004/01/31 19:24:52  jimmyo
+# Rewrite of linux/iostat by Mike Fedyk (Deb##223373,224113).
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -30,7 +33,7 @@
 #
 #
 #
-# Magic markers (optional - used by munin-config and some installation
+# Magic markers (optional - used by lrrd-config and some installation
 # scripts):
 #
 #%# family=auto
@@ -39,64 +42,38 @@
 use strict;
 
 
+my $detailed_present = my $stat_present = 0;
+if (system("grep -q '' /proc/diskstats > /dev/null 2>&1") == 0
+	|| system("grep -q 'rio rmerge rsect ruse wio wmerge wsect wuse running use aveq' /proc/partitions") == 0)
+{
+	$detailed_present = 1;
+}
+elsif (system("grep -q '^disk_io: [^ ]' /proc/stat") == 0)
+{
+	$stat_present = 1;
+}
+
 if ( $ARGV[0] and $ARGV[0] eq "autoconf")
 {
-	if (system("grep -q '^disk_io: [^ ]' /proc/stat") == 0)
+	if ($detailed_present eq 1 || $stat_present eq 1)
 	{
 		print "yes\n";
 		exit 0;
 	}
-	else
-	{
-		if (system ("iostat >/dev/null 2>&1") == 0)
-		{
-			print "yes\n";
-			exit 0;
-		}
-		print "no\n";
-		exit 1;
-	}
+	print "no\n";
+	exit 1;
 }
 
-open (IN, "/proc/stat") or die "Could not open /proc/stat for reading: $!\n";
+my %devs;
 
-my %devs = ();
-
-while (<IN>)
+if ($detailed_present eq 1)
 {
-	next unless (/^disk_io:\s*(.+)\s*/);
-	foreach my $dev (split /\s+/)
-	{
-		next unless $dev =~ /\S/;
-		next unless ($dev =~ /\((\d+),(\d+)\):\(\d+,\d+,(\d+),\d+,(\d+)\)/);
-		$devs{"dev".$1."_".$2} = [$3, $4];
-	}
+	&fetch_detailed;
 }
-
-close (IN);
-
-if (! %devs)
+# Falling back to /proc/stat
+elsif ($stat_present eq 1)
 {
-    # Falling back to iostat
-	if (open (IOSTAT, "iostat|"))
-	{
-		my $devs = 0;
-		while (<IOSTAT>)
-		{
-			if (/^Device/)
-			{
-				$devs++;
-			}
-			elsif ($devs)
-			{
-				next unless /\S/;
-				my @fields = split (/\s+/, $_);
-				$fields[0] =~ s/-/_/;
-				$devs{$fields[0]} = [$fields[4], $fields[5]];
-			}
-		}
-		close (IOSTAT);
-	}
+	&fetch_stat;
 }
 
 if ( $ARGV[0] and $ARGV[0] eq "config")
@@ -104,36 +81,107 @@ if ( $ARGV[0] and $ARGV[0] eq "config")
 
 	print "graph_title IOstat\n";
 	print "graph_args --base 1024 -l 0\n";
-	print "graph_vlabel blocks written (-) read (+) / second\n";
-	print "graph_total Total\n";
+	print "graph_vlabel (-) reads and writes (+)\n";
 	print "graph_order";
 	foreach my $key (sort by_dev keys %devs)
 	{
-		print " ", $key, "_write ", $key, "_read";
+		print " ", $key, "_read ", $key, "_write ";
 	}
 	print "\n";
 	foreach my $key (sort by_dev keys %devs)
 	{
-		print $key . "_write.label $key\n";
-		print $key . "_write.type COUNTER\n";
-		print $key . "_write.max 10000\n";
-		print $key . "_write.graph no\n";
-		print $key . "_read.label $key\n";
+		print $key . "_read.label $devs{$key}->{name}\n";
 		print $key . "_read.type COUNTER\n";
-		print $key . "_read.max 10000\n";
-		print $key . "_read.negative " . $key . "_write\n";
+		print $key . "_read.max 900000\n";
+		print $key . "_read.graph no\n";
+		print $key . "_write.label $devs{$key}->{name}\n";
+		print $key . "_write.type COUNTER\n";
+		print $key . "_write.max 900000\n";
+		print $key . "_write.negative " . $key . "_read\n";
 	}
 	exit 0;
 }
 
 foreach my $key (sort by_dev keys %devs)
 {
-	print $key, "_write.value ", $devs{$key}->[1], "\n";
-	print $key, "_read.value ", $devs{$key}->[0], "\n";
+	print $key, "_read.value ", $devs{$key}->{rsect}, "\n";
+	print $key, "_write.value ", $devs{$key}->{wsect}, "\n";
 }
 
 sub by_dev {
 	return $a cmp $b;
 }
 
+sub fetch_stat()
+{
+	open (IN, "/proc/stat") or die "Could not open /proc/stat for reading: $!\n";
+
+	while (<IN>)
+	{
+		next unless (/^disk_io:\s*(.+)\s*/);
+		foreach my $dev (split /\s+/)
+		{
+			next unless $dev =~ /\S/;
+			next unless ($dev =~ /\((\d+),(\d+)\):\(\d+,(\d+),(\d+),(\d+),(\d+)\)/);
+			my $name = "dev".$1."_".$2;
+			$devs{$name} =
+			{
+				name => $name,
+				rio => $3, 
+				rsect => $4,
+				wio => $5, 
+				wsect => $6
+			};
+		}
+	}
+
+	close (IN);
+}
+
+my %maj_count;
+sub get_disk_count()
+{
+	my @disk_count;
+	my $major = $_[0];
+	$maj_count{$major} = 0 unless exists($maj_count{$major});
+	$disk_count[0] = $maj_count{$major}++;
+	die "Could not find disk_count for major: $major" unless (exists($disk_count[0]));
+	return $disk_count[0];
+}
+
+sub fetch_detailed()
+{
+	if (open(DETAILED, "/proc/diskstats") or open(DETAILED, "/proc/partitions"))
+	{
+		while (<DETAILED>)
+		{
+			if (/^\s+(\d+)\s+\d+\s*\d*\s+([[:alpha:][:digit:]\/]+)\s+(.*)/)
+			{
+				my @fields = split(/\s+/, $3);
+				my $tmpnam = $2;
+				my $major  = $1;
+				$tmpnam =~ s/\//:/g;
+				$tmpnam =~ s/:[[:alpha:]]+(\d+)/:$1/g;
+
+				$devs{"dev".$major."_".&get_disk_count($major)} =
+				{
+					major => $major,
+					name => $tmpnam,
+					rio => $fields[0],
+					rmerge => $fields[1],
+					rsect => $fields[2],
+					ruse => $fields[3],
+					wio => $fields[4],
+					wmerge => $fields[5],
+					wsect => $fields[6],
+					wuse => $fields[7],
+					running => $fields[8],
+					use => $fields[9],
+					aveq => $fields[10]
+				};
+			}
+		}
+		close (DETAILED);
+	}
+}
 # vim:syntax=perl

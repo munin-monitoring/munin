@@ -34,6 +34,7 @@ munin (1.0.0pre2)
   * Code tidying in munin-graph (SF#884625).
   * Added generic plugins ntp_ and ntp_states to manual family (SF#887000).
   * Bugfix; munin-html wrote bad html, as reported by Adam Heath. (Deb#230322)
+  * Rewrite of linux/iostat by Mike Fedyk (Deb##223373,224113).
 
 munin (1.0.0pre1)
 
