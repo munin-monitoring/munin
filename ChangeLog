@@ -13,12 +13,13 @@ munin (work)
       outgoing connections (from munin-update) should be used.
     * Added "comparison" views, to view a whole hostgroup at once.
     * Bugfix in munin-limits.
-	* Draw min/max ranges in all graphs with only one visible field.
-	* Replaced notification system. Munin can now send warning/critical
-	  messages to whatever process/file that is needed.
-	* Removed the munin-nagios program, as it is no longer needed.
-	* Use column headers for min/max/cur/avg if label is too long.
-	* Minor template modifications, so the output HTML validates correctly.
+    * Draw min/max ranges in all graphs with only one visible field.
+    * Replaced notification system. Munin can now send warning/critical
+      messages to whatever process/file that is needed.
+    * Removed the munin-nagios program, as it is no longer needed.
+    * Use column headers for min/max/cur/avg if label is too long.
+    * Minor template modifications, so the output HTML validates correctly
+      (SF#1039850).
 
   - Munin-node:
     * Added module Munin::Plugin::SNMP, a Net::SNMP sublcass for plugins.
@@ -64,7 +65,7 @@ munin (work)
     * Added wildcard plugin generic/smart_, contributed by Nicolas Stransky.
     * Added plugin generic/loggrep for generic log grepping.
     * Fixed bug in generic/sendmail_mailqueue, when queue is empty.
-	* Fixed bug in generic/hddtemp2, patch by arturaz (SF#1037002).
+    * Fixed bug in generic/hddtemp2, patch by arturaz (SF#1037002).
 
   - Installation
     * Changed variable name of ARCH to OSTYPE, to avoid name crash on newer
