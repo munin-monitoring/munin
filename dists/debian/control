@@ -1,6 +1,6 @@
 Source: munin
 Section: net
-Priority: extra
+Priority: optional
 Maintainer: Tore Anderson <tore@debian.org>
 Build-Depends-Indep: debhelper (>> 4.0.0), perl, htmldoc, html2text
 Standards-Version: 3.6.1.0
@@ -43,8 +43,8 @@ Description: Network-wide graphing framework (grapher/gatherer)
  virtually everything imaginable throughout your network, while still
  maintaining a rattling ease of installation and configuration.
  .
- This package contains the Munin. You will only need one instance of it
- in your network. It will periodically poll all the nodes in your network
+ This package contains the grapher/gatherer. You will only need one instance of
+ it in your network. It will periodically poll all the nodes in your network
  it's aware of for data, which it in turn will use to create graphs and HTML
  pages, suitable for viewing with your graphical web browser of choice.
  .
