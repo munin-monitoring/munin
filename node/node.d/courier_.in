@@ -67,8 +67,8 @@ EOF
     ;;
 esac
 
-`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
 ARGS=0
+`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
 if [ $? = 66 ]; then
     if [ ! -n "$logtail" ]; then
         ARGS=1

@@ -20,6 +20,8 @@ munin (CVS)
   * Plugins: linux/irqstats should no longer fail on some systems (Deb#296452).
   * Plugins: modified graph_args of generic/apache_processes, to work around 
     an rrdtool bug (Deb#296528).
+  * Plugins: All plugins using logtail now properly detect its format
+    (Deb#297628).
   * Docs: Added man page for munin-node-configure-snmp.
   * Docs: Brushed up the comments in the default munin.conf a bit (Deb#294060).
   * Installation: Create CIGdir if nonexistant.
