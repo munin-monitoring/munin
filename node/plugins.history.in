@@ -95,3 +95,6 @@ sunos/processes
 sunos/temperature
 [1.1.1]
 [1.1.2]
+[1.1.3]
+generic/hddtempd
+generic/uptime
