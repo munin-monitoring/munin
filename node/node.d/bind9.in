@@ -10,6 +10,9 @@
 # Contributed by Nicolai Langfeldt
 #
 # $Log$
+# Revision 1.8  2004/12/10 18:51:43  jimmyo
+# linux/apt* has been forced to LANG=C, to get predictable output.
+#
 # Revision 1.7  2004/12/10 14:21:39  jimmyo
 # Patch generic/bind9 to report "unnamed" as "other" (Nicolas Stransky).
 #
@@ -91,7 +94,7 @@ sub do_config {
     my $k;
 
     print "graph_title DNS Queries by type
-graph_vlabel Queries / ${graph_period}
+graph_vlabel Queries / \${graph_period}
 query_other.label Other
 query_other.type DERIVE
 query_other.min 0

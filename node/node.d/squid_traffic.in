@@ -32,6 +32,9 @@
 # 	autoconf  (optional - only used by munin-config)
 #
 # $Log$
+# Revision 1.8  2004/12/10 18:51:43  jimmyo
+# linux/apt* has been forced to LANG=C, to get predictable output.
+#
 # Revision 1.7  2004/12/10 10:47:47  jimmyo
 # Change name from ${scale} to ${graph_period}, to be more consistent.
 #
@@ -168,7 +171,7 @@ sub query_squid {
 if($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title Squid traffic status\n";
     print "graph_args --base 1000\n";
-    print "graph_vlabel bits per ${graph_period}\n";
+    print "graph_vlabel bits per \${graph_period}\n";
     print "graph_order kbytes_in kbytes_out hit_kbytes_out\n";
     print "graph_category squid\n";
     print "kbytes_in.label received\n";

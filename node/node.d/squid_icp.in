@@ -33,6 +33,9 @@
 # 	autoconf  (optional - only used by munin-config)
 #
 # $Log$
+# Revision 1.8  2004/12/10 18:51:43  jimmyo
+# linux/apt* has been forced to LANG=C, to get predictable output.
+#
 # Revision 1.7  2004/12/10 10:47:47  jimmyo
 # Change name from ${scale} to ${graph_period}, to be more consistent.
 #
@@ -188,7 +191,7 @@ my $hosts = &query_squid($squid_host, $squid_port, $user, $passwd);
 if($ARGV[0] and $ARGV[0] eq "config") {
     my $first = 1;
     print "graph_title Squid relay statistics\n";
-    print "graph_vlabel requests / ${graph_period}\n";
+    print "graph_vlabel requests / \${graph_period}\n";
     print "graph_args -l 0 --base 1000\n";
     print "graph_total total\n";
 	print "graph_category squid\n";

@@ -24,6 +24,9 @@
 # 	ports    - HTTP port numbers
 #
 # $Log$
+# Revision 1.12  2004/12/10 18:51:43  jimmyo
+# linux/apt* has been forced to LANG=C, to get predictable output.
+#
 # Revision 1.11  2004/12/10 10:47:47  jimmyo
 # Change name from ${scale} to ${graph_period}, to be more consistent.
 #
@@ -110,7 +113,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" )
 {
 	print "graph_title Apache volume\n";
 	print "graph_args --base 1000\n";
-	print "graph_vlabel bytes per ${graph_period}\n";
+	print "graph_vlabel bytes per \${graph_period}\n";
 	print "graph_category apache\n";
 	foreach my $port (@PORTS) {
 		print "volume$port.label port $port\n";
