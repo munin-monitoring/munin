@@ -26,6 +26,7 @@ munin (CVS)
     (Deb#297628).
   * Plugins: sunos/memory repaired (SF#1143610).
   * Plugins: Made linux/if_ work with more versions of iwlist (SF#1150954).
+  * Plugins: generic/mailman now handles regular mailman (Deb#297904).
   * Docs: Added man page for munin-node-configure-snmp.
   * Docs: Brushed up the comments in the default munin.conf a bit (Deb#294060).
   * Installation: Create CIGdir if nonexistant.
