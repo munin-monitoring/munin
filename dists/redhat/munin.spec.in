@@ -145,7 +145,7 @@ fi
 %dir /etc/munin
 /etc/munin/templates/*
 /etc/cron.d/munin
-%config /etc/munin/munin.conf
+%config(noreplace) /etc/munin/munin.conf
 %attr(-, munin, root) %dir /var/lib/munin
 %attr(-, munin, root) %dir /var/log/munin
 %attr(-, munin, root) %dir /var/www/html/munin
