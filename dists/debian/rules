@@ -12,6 +12,7 @@ build-stamp:
 	
 	$(MAKE) build     $(MAKEOPTS)
 	$(MAKE) build-doc $(MAKEOPTS)
+	$(MAKE) build-man $(MAKEOPTS)
 	
 	$(MAKE) install-main $(MAKEOPTS) \
 		DESTDIR=debian/munin
