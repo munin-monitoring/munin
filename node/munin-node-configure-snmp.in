@@ -29,7 +29,8 @@ my $do_error   = 0;
 
 my $newer      = undef;
 
-my @plugins = ("if", "if_err", "fc_if", "fc_if_err", "df", "processes", "users", "load");
+my @dplugins = ("if", "if_err", "fc_if", "fc_if_err", "df", "processes", "users", "load");
+my @plugins  = ();
 
 my %plugconf = ();
 my %hostconf = ();
@@ -46,6 +47,12 @@ $do_error = 1 unless GetOptions (
     "community=s"   => \$community,
     "newer=s"      => \$newer
 );
+
+if (! @plugins)
+{
+	@plugins = @dplugins;
+}
+@plugins = split (/,/, join (',', @plugins));
 
 if ($do_error or $do_usage or !@ARGV)
 {
