@@ -12,6 +12,7 @@ munin (1.2.0rc2-1) unstable; urgency=low
       - Replaces the old Nagios-specific integration with a much more generic
         framework for sending alerts to wherever you want.  As a side effect,
         this closes: #291168.
+      - Corrects an erroneous commented example in munin.conf, closes: #294060.
       - The munin-node.conf setting default_plugin_user now actually works as
         advertised, closes: #295366, #295367.
       - Plugin generic/bind9 now source its configuration from %ENV,
@@ -35,7 +36,7 @@ munin (1.2.0rc2-1) unstable; urgency=low
         whatsoever and thus are assumed to be unused, closes: #267195.
       - New plugin: linux/forks.  Closes: #225638.
       - New plugin: generic/courier_. Closes: #291854.
-      - New plugin: generic/perdition. Closes:  #291855.
+      - New plugin: generic/perdition. Closes: #291855.
 
   * debian/NEWS:
       - Document the changes that may lead to data loss when upgrading from
