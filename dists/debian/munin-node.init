@@ -10,8 +10,8 @@ test -f $DAEMON || exit 0
 set -e
 
 is_running() {
-	if [ -e /var/run/munin/munin-node.pid ]; then
-		if kill -0 $(< $PIDFILE ) &>/dev/null; then
+	if [ -e $PIDFILE ]; then
+		if kill -0 $(cat $PIDFILE) &>/dev/null; then
 			return 0
 		fi
 	elif pgrep -f "^$DAEMON\$" >/dev/null; then

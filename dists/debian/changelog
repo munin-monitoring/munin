@@ -22,8 +22,8 @@ munin (1.0.0pre1-1) unstable; urgency=low
         easier to read, closes: #223373.
 
   * Almost every file under debian/ has been renamed and/or modified because
-    of the project rename.  There are far too many changes to list here in
-    detail.
+    of the project rename.  There are far too many changes related to this
+    to detail here.
 
   * debian/plugins.conf:
       - Run the Exim plugins with "adm" as a supplementary group, to ensure
@@ -32,6 +32,7 @@ munin (1.0.0pre1-1) unstable; urgency=low
   * debian/munin-node.init:
       - Use a full string match instead of a substring match when looking
         in the process table for running Munin-node processes, closes: #224486.
+      - Remove $(<file) bashism, closes: #230116.
 
   * debian/munin.preinst (new), debian/munin-node.preinst (new):
       - If we're doing an initial install of either of the Munin packages
