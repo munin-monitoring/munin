@@ -4,7 +4,7 @@ munin.conf - Munin configuration file
 
 =head1 DESCRIPTION
 
-Munin is a group of programs to gather data from Munin's eyes, graph
+Munin is a group of programs to gather data from Munin's nodes, graph
 them, create html-pages, and optionally warn Nagios about any off-limit
 values.
 

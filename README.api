@@ -6,7 +6,7 @@ Client commands:
 	- list [node]
 	  	Asks client to list all items available for query for
 		this host. If no host is given, default to host that runs
-		the munin-eye
+		the munin-node
 	
 	- nodes
 		List hosts

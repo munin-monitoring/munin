@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.2  2004/01/15 15:20:01  jimmyo
+# Making things workable after name change. Upping for test verwion.
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -46,7 +49,7 @@ my %services;
 my %nodes;
 my $servicedir="@@CONFDIR@@/plugins";
 my $sconfdir="@@CONFDIR@@/plugin-conf.d";
-my $conffile="@@CONFDIR@@/munin-eye.conf";
+my $conffile="@@CONFDIR@@/munin-node.conf";
 my $sconffile=undef;
 my $FQDN="";
 my $do_usage = 0;
@@ -77,7 +80,7 @@ if ($do_usage)
 Options:
     --help              View this message.
     --config <file>     Use <file> as configuration file. 
-                        [@@CONFDIR@@/munin-eye.conf]
+                        [@@CONFDIR@@/munin-node.conf]
     --servicedir <dir>  Dir where plugins are found. 
                         [@@CONFDIR@@/plugins]
     --sconfdir <dir>    Dir where plugin configurations are found. 
@@ -130,7 +133,7 @@ else
 
 if ($do_version)
 {
-	print "munin-run (munin-eye) version $VERSION.
+	print "munin-run (munin-node) version $VERSION.
 Written by Jimmy Olsen / Linpro AS
 
 Copyright (C) 2002-2003
@@ -586,7 +589,7 @@ sub get_var
 
 =head1 NAME
 
-munin-run - A program to run munin-eye plugins from the command line
+munin-run - A program to run munin-node plugins from the command line
 
 =head1 SYNOPSIS
 
@@ -598,7 +601,7 @@ munin-run [--options] <plugin>
 
 =item B<< --config <configfile> >>
 
-Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin-eye.conf]
+Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin-node.conf]
 
 =item B<< --servicedir <dir> >>
 
@@ -628,26 +631,26 @@ Show version information.
 
 =head1 DESCRIPTION
 
-Munin's eye is a daemon that Munin connects to fetch data. This data is
+Munin's node is a daemon that Munin connects to fetch data. This data is
 stored in .rrd-files, and later graphed and htmlified. It's designed to
 let it be very easy to graph new datasources.
 
-munin-run is a small perlscript to run the plugins used by the munin-eye
+munin-run is a small perlscript to run the plugins used by the munin-node
 daemon from the command line.
 
 For more information, see the documentation section at L<http://munin.sf.net/>.
 
 =head1 FILES
 
-	@@CONFDIR@@/munin-eye.conf
+	@@CONFDIR@@/munin-node.conf
 	@@CONFDIR@@/plugins/*
 	@@CONFDIR@@/plugin-conf.d/*
-	@@STATEDIR@@/munin-eye.pid
-	@@LOGDIR@@/munin-eye
+	@@STATEDIR@@/munin-node.pid
+	@@LOGDIR@@/munin-node
 
 =head1 VERSION
 
-This is munin-eye v@@VERSION@@
+This is munin-node v@@VERSION@@
 
 =head1 AUTHORS
 
@@ -655,7 +658,7 @@ Audun Ytterdal, Jimmy Olsen, and Tore Anderson.
 
 =head1 BUGS
 
-munin-eye does, as of now, not check the syntax of the configuration file.
+munin-node does, as of now, not check the syntax of the configuration file.
 
 Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 

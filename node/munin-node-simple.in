@@ -1,12 +1,15 @@
 #!/usr/bin/perl -wT
 #
-# Simple munin-eye. Should be run from inetd or similar.
+# Simple munin-node. Should be run from inetd or similar.
 #
 # This should be as small and elegant as possible, to make for easier
 # reviewing by sysadmins that want to do simple munin-stuff in high
 # security environments.
 #
 # $Log$
+# Revision 1.2  2004/01/15 15:20:01  jimmyo
+# Making things workable after name change. Upping for test verwion.
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #

@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.2  2004/01/15 15:20:01  jimmyo
+# Making things workable after name change. Upping for test verwion.
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -57,7 +60,7 @@ my %services;
 my %nodes;
 my $servicedir="@@CONFDIR@@/plugins";
 my $sconfdir="@@CONFDIR@@/plugin-conf.d";
-my $conffile="@@CONFDIR@@/munin-eye.conf";
+my $conffile="@@CONFDIR@@/munin-node.conf";
 my $FQDN="";
 my $do_usage = 0;
 my $DEBUG = 0;
@@ -83,7 +86,7 @@ if ($do_usage)
 Options:
     --help              View this message.
     --config <file>     Use <file> as configuration file. 
-                        [/etc/munin/munin-eye.conf]
+                        [/etc/munin/munin-node.conf]
     --[no]paranoia      Only run plugins owned by root. Check permissions.
                         [--noparanoia]
     --debug             View debug messages.
@@ -95,7 +98,7 @@ Options:
 
 if ($do_version)
 {
-	print "munin-eye (munin-eye) version $VERSION.
+	print "munin-node (munin-node) version $VERSION.
 Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
 
 Copyright (C) 2002-2003
@@ -175,7 +178,7 @@ $ENV{FQDN}=$FQDN;
 &load_services;
 
 MyPackage->run(conf_file => $conffile,
-	       pid_file => "@@STATEDIR@@/munin-eye.pid");
+	       pid_file => "@@STATEDIR@@/munin-node.pid");
 exit;
 
 
@@ -184,7 +187,7 @@ exit;
 ### over-ridden subs below
 
 sub show_version {
-  print "munins eye on $FQDN version: $VERSION\n"
+  print "munins node on $FQDN version: $VERSION\n"
 }
 
 sub show_nodes {
@@ -401,7 +404,7 @@ sub run_service {
 
 sub process_request {
   my $self = shift;
-  print "# munins eye at $FQDN\n";
+  print "# munin node at $FQDN\n";
   local $SIG{ALRM} = sub { die "timeout" };
   alarm(10);
   while( <STDIN> ){
@@ -625,12 +628,12 @@ sub get_var
 
 =head1 NAME
 
-munin-eye - A daemon to gather information in cooperation with the main
+munin-node - A daemon to gather information in cooperation with the main
 Munin program
 
 =head1 SYNOPSIS
 
-munin-eye [--options]
+munin-node [--options]
 
 =head1 OPTIONS
 
@@ -638,7 +641,7 @@ munin-eye [--options]
 
 =item B<< --config <configfile> >>
 
-Use E<lt>fileE<gt> as configuration file. [/etc/munin/munin-eye.conf]
+Use E<lt>fileE<gt> as configuration file. [/etc/munin/munin-node.conf]
 
 =item B< --[no]paranoia >
 
@@ -656,11 +659,11 @@ View debug messages.
 
 =head1 DESCRIPTION
 
-Munin's eye is a daemon that Munin connects to fetch data. This data is
+Munin's node is a daemon that Munin connects to fetch data. This data is
 stored in .rrd-files, and later graphed and htmlified. It's designed to
 let it be very easy to graph new datasources.
 
-Munin-eye is a small perlscript listening to port 4949 using
+Munin-node is a small perlscript listening to port 4949 using
 Net::Server. It reads all the plugins in /etc/munin/plugins/ on startup.
 The node accepts the following commands:
 
@@ -669,11 +672,11 @@ The node accepts the following commands:
 =item B<< list [node] >>
 
 list available plugins for host. If no hostname is specified, list plugins
-on host running munin-eye
+on host running munin-node
 
 =item B<< nodes >>
 
-List nodes that has plugins in this munin-eye.
+List nodes that has plugins in this munin-node.
 
 =item B<< config <plugin> >>
 
@@ -717,15 +720,15 @@ For more information, see the documentation section at L<http://munin.sf.net/>.
 
 =head1 FILES
 
-	@@CONFDIR@@/munin-eye.conf
+	@@CONFDIR@@/munin-node.conf
 	@@CONFDIR@@/plugins/*
 	@@CONFDIR@@/plugin-conf.d/*
-	@@STATEDIR@@/munin-eye.pid
-	@@LOGDIR@@/munin-eye
+	@@STATEDIR@@/munin-node.pid
+	@@LOGDIR@@/munin-node
 
 =head1 VERSION
 
-This is munin-eye v@@VERSION@@
+This is munin-node v@@VERSION@@
 
 =head1 AUTHORS
 
@@ -733,7 +736,7 @@ Audun Ytterdal, Jimmy Olsen, and Tore Anderson.
 
 =head1 BUGS
 
-munin-eye does, as of now, not check the syntax of the configuration file.
+munin-node does, as of now, not check the syntax of the configuration file.
 
 Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 

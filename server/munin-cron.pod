@@ -27,8 +27,8 @@ Use E<lt>fileE<gt> as configuration file. [/etc/munin/munin.conf]
 =head1 DESCRIPTION
 
 Munin-cron is a part of the package Munin, which is used in combination
-with Munin's eye.  Munin is a group of programs to gather data from
-Munin's eyes, graph them, create html-pages, and optionally warn Nagios
+with Munin's node.  Munin is a group of programs to gather data from
+Munin's nodes, graph them, create html-pages, and optionally warn Nagios
 about any off-limit values.
 
 Munin-cron batches all the above tasks by running their respective

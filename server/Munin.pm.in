@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.2  2004/01/15 15:20:01  jimmyo
+# Making things workable after name change. Upping for test verwion.
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -243,34 +246,7 @@ sub munin_readconfig {
 	close (CFG);
     }
 
-    if (grep (/^\s*<\s*domain\s*/, @contents))
-    {
-	if (! eval "require Config::General;")
-	{
-	    die "Fatal: Configuration file \"$conf\" uses old configuration format requiring uninstalled perl module Config::General. Bailing out. ($!)";
-	}
-	print "DEBUG: Config file has old format.\n" if $DEBUG;
-	if ($corruptok)
-	{
-	    # Check if the datafile is sane
-	    $@ = undef;
-	    eval {
-		new Config::General($conf);
-	    };
-	    if ($@)
-	    {
-		::logger ("munin_readconfig: \'$conf\' corrupt, starting from scratch. ($@)\n");
-		return undef;
-	    }
-	}
-	my $conffile = new Config::General($conf);
-	$config = { $conffile->getall };
-    }
-    else
-    { # New config format
-	print "DEBUG: Config file has new format.\n" if $DEBUG;
-	$config = &munin_parse_config (\@contents);
-    }
+    $config = &munin_parse_config (\@contents);
 
     # Some important defaults before we return...
     $config->{'rundir'} ||= "/tmp/";

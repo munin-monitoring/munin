@@ -12,7 +12,7 @@ INSTALL          = ./install-sh
 
 default: build
 
-install: install-main install-eye install-eye-plugins install-doc
+install: install-main install-node install-node-plugins install-doc
 
 install-main: build
 	$(CHECKUSER)
@@ -58,13 +58,13 @@ install-node: build
 	$(CHMOD) 775 $(PLUGSTATE)
 	$(CHMOD) 755 $(CONFDIR)/plugin-conf.d
 
-	$(INSTALL) -m 0755 build/eye/munin-eye $(SBINDIR)/
-	$(INSTALL) -m 0755 build/eye/munin-eye-configure $(SBINDIR)/
-	test -f "$(CONFDIR)/munin-eye.conf" || $(INSTALL) -m 0644 build/eye/munin-eye.conf $(CONFDIR)/
-	$(INSTALL) -m 0755 build/eye/munin-run $(SBINDIR)/
+	$(INSTALL) -m 0755 build/node/munin-node $(SBINDIR)/
+	$(INSTALL) -m 0755 build/node/munin-node-configure $(SBINDIR)/
+	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
+	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
 
-install-eye-plugins: build
-	for p in build/eye/plugins.$(ARCH)/* build/eye/plugins/*; do    		\
+install-node-plugins: build
+	for p in build/node/node.d.$(ARCH)/* build/node/node.d/*; do    		\
 		if test -f "$$p" ; then                                     		\
 			family=`sed -n 's/^#%# family=\(.*\)$$/\1/p' $$p`;  		\
 			test "$$family" || family=contrib;                  		\
@@ -74,7 +74,7 @@ install-eye-plugins: build
 			fi;                                                 		\
 		fi                                                          		\
 	done
-	$(INSTALL) -m 0644 build/eye/plugins.history $(LIBDIR)/plugins/
+	$(INSTALL) -m 0644 build/node/plugins.history $(LIBDIR)/plugins/
 
 	#TODO:
 	#configure plugins.
@@ -201,4 +201,4 @@ source_dist: clean
 	(cd ..; ln -s munin munin-$(VERSION))
 	tar -C .. --dereference --exclude CVS --exclude dists -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
 
-.PHONY: install install-main install-eye install-doc build build-doc deb rpm clean source_dist
+.PHONY: install install-main install-node install-doc build build-doc deb rpm clean source_dist

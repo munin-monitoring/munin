@@ -3,6 +3,9 @@
 # Program to suggest configurations and configuration changes.
 #
 # $Log$
+# Revision 1.2  2004/01/15 15:20:00  jimmyo
+# Making things workable after name change. Upping for test verwion.
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -35,7 +38,7 @@ use strict;
 use Getopt::Long;
 
 my $version    = "@@VERSION@@";
-my $config     = "@@CONFDIR@@/munin-eye.conf";
+my $config     = "@@CONFDIR@@/munin-node.conf";
 my $servicedir = "@@CONFDIR@@/plugins";
 my $libdir     = "@@LIBDIR@@/plugins";
 my $bindir     = "@@SBINDIR@@";
@@ -93,7 +96,7 @@ Options:
 
 if ($do_version)
 {
-    print "munin-eye-configure (munin-eye) version $version.\n";
+    print "munin-node-configure (munin-node) version $version.\n";
     print "Written by Jimmy Olsen\n";
     print "\n";
     print "Copyright (C) 2003\n";
@@ -503,11 +506,11 @@ sub get_plugins
 
 =head1 NAME
 
-munin-eye-configure - A program to view configurations for munin-eye
+munin-node-configure - A program to view configurations for munin-node
 
 =head1 SYNOPSIS
 
-munin-eye-configure [options]
+munin-node-configure [options]
 
 =head1 OPTIONS
 
@@ -557,25 +560,25 @@ Also show rm-commands when doing --shell
 
 =head1 DESCRIPTION
 
-Munin's eye is a daemon that Munin connects to fetch data. This data is
+Munin's node is a daemon that Munin connects to fetch data. This data is
 stored in .rrd-files, and later graphed and htmlified. It's designed to
 let it be very easy to graph new datasources.
 
-Munin-eye-configure is a script to show the current configuration of which
+Munin-node-configure is a script to show the current configuration of which
 plugins the host is running, as well as suggestions on what changes to make
-to this configuration. Munin-eye-configure does this by using munin-run(1) to
+to this configuration. Munin-node-configure does this by using munin-run(1) to
 ask the plugins themselves of wether they should be run or not.
 
 =head1 FILES
 
-	@@CONFDIR@@/munin-eye.conf
+	@@CONFDIR@@/munin-node.conf
 	@@CONFDIR@@/plugin-conf.d/*
 	@@CONFDIR@@/plugins/*
 	@@LIBDIR@@/plugins/*
 
 =head1 VERSION
 
-This is munin-eye-configure v@@VERSION@@.
+This is munin-node-configure v@@VERSION@@.
 
 =head1 AUTHORS
 

@@ -4,6 +4,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.2  2004/01/15 15:20:01  jimmyo
+# Making things workable after name change. Upping for test verwion.
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -359,8 +362,8 @@ If set, view debug messages. [--nodebug]
 =head1 DESCRIPTION
 
 Munin-nagios is a part of the package Munin, which is used in
-combination with Munin's eye.  Munin is a group of programs to gather
-data from Munin's eyes, graph them, create html-pages, and optionally
+combination with Munin's node.  Munin is a group of programs to gather
+data from Munin's nodes, graph them, create html-pages, and optionally
 warn Nagios about any off-limit values.
 
 Munin-nagios can warn any nagios-servers about off-limit values.
