@@ -12,6 +12,9 @@
 # monitored with this plugin.
 #
 # $Log$
+# Revision 1.6  2004/11/12 20:09:06  ilmari
+# Remove deprecated host_name outputting
+#
 # Revision 1.5  2004/11/12 20:08:01  ilmari
 # Fixed linux/if_(err_) braindamage affecting hosts with vlans or
 # multi-digit interface numbers.
@@ -45,7 +48,6 @@
 #%# family=auto
 #%# capabilities=autoconf suggest
 
-HOSTNAME=$FQDN
 INTERFACE=`basename $0 | sed 's/^if_err_//g'`
 
 if [ "$1" = "autoconf" ]; then
@@ -68,7 +70,6 @@ if [ "$1" = "suggest" ]; then
 fi
 
 if [ "$1" = "config" ]; then
-        echo "host_name $HOSTNAME"
 	echo "graph_order rcvd trans" 
 	echo "graph_title $INTERFACE errors"
 	echo 'graph_args --base 1000'
