@@ -5,6 +5,9 @@
 # Copyright 2003-2004 - Per Andreas Buer
 #
 # $Log$
+# Revision 1.6  2004/05/20 13:57:12  jimmyo
+# Set categories to some of the plugins.
+#
 # Revision 1.5  2004/04/27 18:58:53  jimmyo
 # Fixed bug in mysql-plugins (Deb#233762).
 #
@@ -93,6 +96,7 @@ sub print_config {
     print("graph_title MySQL queries
 graph_args --base 1000
 graph_vlabel queries / sec
+graph_category mysql
 graph_total total\n");
 
     for my $key (keys %WANTED) {

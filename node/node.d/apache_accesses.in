@@ -24,6 +24,9 @@
 # 	ports    - HTTP port numbers
 #
 # $Log$
+# Revision 1.8  2004/05/20 13:57:11  jimmyo
+# Set categories to some of the plugins.
+#
 # Revision 1.7  2004/05/14 21:16:46  jimmyo
 # "Upped" som plugins from contrib/manual to auto.
 #
@@ -100,6 +103,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" )
 	print "graph_title Apache accesses\n";
 	print "graph_args --base 1000\n";
 	print "graph_vlabel accesses / second\n";
+	print "graph_category apache\n";
 	foreach my $port (@PORTS) {
 		print "accesses$port.label port $port\n";
 		print "accesses$port.type COUNTER\n";

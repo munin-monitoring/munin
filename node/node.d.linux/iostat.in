@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by lrrd-config)
 #
 # $Log$
+# Revision 1.7  2004/05/20 13:57:12  jimmyo
+# Set categories to some of the plugins.
+#
 # Revision 1.6  2004/02/02 18:18:07  jimmyo
 # Changed to an informative vlabel, since the field.label information has been made shorter.
 #
@@ -94,6 +97,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config")
 	print "graph_title IOstat\n";
 	print "graph_args --base 1024 -l 0\n";
 	print "graph_vlabel blocks per second read (-) / written (+)\n";
+	print "graph_category disk\n";
 	print "graph_order";
 	foreach my $key (sort by_dev keys %devs)
 	{

@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.12  2004/05/20 13:57:11  jimmyo
+# Set categories to some of the plugins.
+#
 # Revision 1.11  2004/05/20 12:20:24  jimmyo
 # Added "graph_category" option, to categorise plugins.
 #
@@ -266,6 +269,16 @@ for my $domain (@domainorder) {
 	}
 	foreach my $key (keys %tmp_cats)
 	{
+		next if $key eq "other";
+	    my %tmp;
+	    print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
+	    $tmp{name} = ucfirst $key;
+	    $tmp{services} = \@{$tmp_cats{$key}};
+	    push @categories, \%tmp;
+	}
+	if (defined $tmp_cats{'other'})
+	{
+		my $key = 'other';
 	    my %tmp;
 	    print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
 	    $tmp{name} = ucfirst $key;

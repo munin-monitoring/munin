@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.6  2004/05/20 13:57:12  jimmyo
+# Set categories to some of the plugins.
+#
 # Revision 1.5  2004/05/16 12:34:26  jimmyo
 # Added "info"-fields to linux/cpu and linux/load plugins, to demonstrate how it works.
 #
@@ -76,6 +79,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel %'
 	echo 'graph_scale no'
 	echo 'graph_info This graph shows how CPU time is spent.'
+	echo 'graph_category system'
 	echo 'system.label system'
 	echo 'system.draw AREA'
 	echo 'system.max 5000'
