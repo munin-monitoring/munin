@@ -15,6 +15,9 @@
 # 	exim         - Where's exim?
 #
 # $Log$
+# Revision 1.9  2005/03/12 23:06:30  jimmyo
+# Avoid negative spike in generic/exim_mailstats.
+#
 # Revision 1.8  2005/03/09 19:24:15  jimmyo
 # Thanks to Stephen Gran, generic/exim_mailstats now graphs rejects (Deb#295799).
 #
@@ -195,11 +198,12 @@ if (! -f $logfile and ! -f $rotlogfile)
 if (-f "$statefile")
 {
     open (IN, "$statefile") or exit 4;
-    if (<IN> =~ /^(\d+):(\d+):(\d+):(\d+)/)
+	my $in = <IN>;
+    if ($in =~ /^(\d+):(\d+):(\d+):(\d+)/)
     {
 	($pos, $received, $completed, $rejected) = ($1, $2, $3, $4);
     }
-    elsif (<IN> =~ /^(\d+):(\d+):(\d+)/)
+    elsif ($in =~ /^(\d+):(\d+):(\d+)/)
     {
 	($pos, $received, $completed) = ($1, $2, $3);
 	$rejected = 0;
