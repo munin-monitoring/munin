@@ -1,5 +1,5 @@
 # -*- mode: perl -*-
-package Munin::Node::SNMP;
+package Munin::Plugin::SNMP;
 
 use Net::SNMP;
 @ISA = qw(Net::SNMP);
@@ -8,18 +8,18 @@ use Net::SNMP;
 
 =head1 NAME
 
-Munin::Node::SNMP - Net::SNMP subclass for Munin plugins
+Munin::Plugin::SNMP - Net::SNMP subclass for Munin plugins
 
 =head1 SYNOPSIS
 
-The Munin::Node::SNMP module extends Net::SNMP with methods useful for
+The Munin::Plugin::SNMP module extends Net::SNMP with methods useful for
 Munin plugins.
 
 =head1 METHODS
 
-=head2 session() - create new Munin::Node::SNMP object
+=head2 session() - create new Munin::Plugin::SNMP object
 
-  ($session, $error) = Munin::Node::SNMP->session();
+  ($session, $error) = Munin::Plugin::SNMP->session();
 
 This method overrides the Net::SNMP constructor to get the connection
 info from the plugin name and/or environment. The hostname is taken from

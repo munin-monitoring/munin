@@ -53,7 +53,7 @@ install-node: build
 	mkdir -p $(CONFDIR)/plugin-conf.d
 	mkdir -p $(LIBDIR)/plugins
 	mkdir -p $(SBINDIR)
-	mkdir -p $(PERLLIB)/Munin/Node
+	mkdir -p $(PERLLIB)/Munin/Plugin
 
 	mkdir -p $(LOGDIR)
 	mkdir -p $(STATEDIR)
@@ -69,7 +69,7 @@ install-node: build
 	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
 	
-	$(INSTALL) -m 0644 build/node/SNMP.pm $(PERLLIB)/Munin/Node/
+	$(INSTALL) -m 0644 build/node/SNMP.pm $(PERLLIB)/Munin/Plugin/
 
 install-node-plugins: build
 	for p in build/node/node.d.$(ARCH)/* build/node/node.d/*; do    		\

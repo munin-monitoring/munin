@@ -4,6 +4,9 @@
 # blade on Fujitsu Simens BX series blade servers
 #
 # $Log$
+# Revision 1.2  2004/11/12 20:23:57  ilmari
+# Rename Munin::Node::SNMP to Munin::Plugin::SNMP
+#
 # Revision 1.1  2004/10/27 18:58:26  ilmari
 # Added SNMP plugins for Fujitsu Siemens ServerView temperature and fan sensors
 #
@@ -12,7 +15,7 @@
 #%# capabilities=snmpconf
 
 use strict;
-use Munin::Node::SNMP;
+use Munin::Plugin::SNMP;
 use Net::SNMP qw(oid_lex_sort);
 
 # The OIDs we're after
@@ -42,7 +45,7 @@ if (defined $ARGV[0] and $ARGV[0] eq 'snmpconf') {
 
 my $DEBUG = 1;
 
-my ($session, $error) = Munin::Node::SNMP->session();
+my ($session, $error) = Munin::Plugin::SNMP->session();
 
 if ($error) {
     die "# Error: $error\n";
