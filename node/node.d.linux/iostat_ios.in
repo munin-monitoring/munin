@@ -11,6 +11,9 @@
 #       autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.6  2004/09/09 11:12:42  ilmari
+# Remove Data::Dumper dependency
+#
 # Revision 1.5  2004/08/04 20:37:45  toreanderson
 # Run iostat_ios with Perl warnings.
 #
@@ -34,7 +37,6 @@ use strict;
 use IO::File;
 
 use Storable qw(store retrieve);
-use Data::Dumper;
 
 # (c) 2004 - Per Andreas Buer
 # GPL v2 Yadda yadda.
