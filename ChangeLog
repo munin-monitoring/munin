@@ -1,3 +1,6 @@
+munin (work)
+  * Main: fix the file vs. pipe check in munin-limits.
+
 munin (1.2.0)
 
   * Main: yet another rewrite of munin-limits open call (SF#1115434).

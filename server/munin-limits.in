@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.24.2.3  2005/02/19 16:04:03  ilmari
+# Fix the file vs. pipe check in munin-limits
+#
 # Revision 1.24.2.2  2005/02/16 20:03:31  jimmyo
 # yet another rewrite of munin-limits open call (SF#1115434).
 #
@@ -458,7 +461,7 @@ sub generate_service_message {
 		    unshift (@cmd, "|-");
 		}
 		logger ("Debug: opening for writing: \"" . join('" "',@cmd) . "\".") if $DEBUG;
-		if ($cmd[0] == ">")
+		if ($cmd[0] eq ">")
 		{
 		    if (! open ($pipe, join (' ', @cmd)))
 		    {
