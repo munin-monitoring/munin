@@ -11,6 +11,8 @@ munin (1.0.0pre4)
   * Fixed links in HTML templates (Deb#236792).
   * Fixed broken autoconf in apache-* plugins (Deb#236144).
   * Fixed bug in mysql-plugins (Deb#233762).
+  * Fixed a problem in the node when running as a non-root user and
+    using sudo to run the plugins (Deb#236694).
 
 munin (1.0.0pre3)
 
