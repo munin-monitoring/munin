@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.7  2005/01/28 16:19:17  lupe
+# Minor corrections
+#
 # Revision 1.6  2005/01/28 14:47:31  lupe
 # Add graph_info and some filed.info
 #
@@ -43,8 +46,7 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-
-
+MAXLABEL=20
 
 if [ "$1" = "autoconf" ]; then
 	echo yes
@@ -66,7 +68,7 @@ if [ "$1" = "config" ]; then
 		esac
 		echo -n "$name.label "
 		echo $i | awk "{
-			dir=\$6
+			dir=\$6;
 			if (length(dir) <= $MAXLABEL)
 				print dir
 			else
