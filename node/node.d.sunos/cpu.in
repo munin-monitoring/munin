@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.3  2004/04/30 16:43:00  jimmyo
+# Cleaned up Solaris plugins.
+#
 # Revision 1.2  2004/02/18 16:39:37  jimmyo
 # Turned off scaling of values for cpu-graphs (no more nano-percentages).
 #
@@ -45,29 +48,27 @@ fi
 
 if [ "$1" = "config" ]; then
 	echo 'graph_title CPU usage'
-	echo 'graph_order total system user waitio idle'
-	echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit 100 "
+	echo 'graph_order system user waitio idle'
+	cpumax=`expr \`kstat -p -c misc -s '/^ncpus$/' | cut -f2 -d'	'\` '*' 100`
+	echo "graph_args --base 1000 --lower-limit 0 --rigid --upper-limit $cpumax"
 	echo 'graph_vlabel %'
 	echo 'graph_scale no'
-	echo 'total.label total'
-	echo 'total.graph no'
-	echo 'total.type COUNTER'
 	echo 'system.label system'
 	echo 'system.draw AREA'
 	echo 'system.type COUNTER'
-	echo 'system.cdef system,total,/,100,*'
+	echo "system.max $cpumax"
 	echo 'user.label user'
 	echo 'user.draw STACK'
 	echo 'user.type COUNTER'
-	echo 'user.cdef user,total,/,100,*'
+	echo "user.max $cpumax"
+	echo "waitio.max $cpumax"
 	echo 'waitio.label waitio'
 	echo 'waitio.draw STACK'
 	echo 'waitio.type COUNTER'
-	echo 'waitio.cdef waitio,total,/,100,*'
 	echo 'idle.label idle'
 	echo 'idle.draw STACK'
 	echo 'idle.type COUNTER'
-	echo 'idle.cdef idle,total,/,100,*'
+	echo "idle.max $cpumax"
 	exit 0
 fi
 
@@ -86,5 +87,4 @@ END {
 	for (item in sum) {
 		print item ".value", sum[item]
 	}
-	print "total.value", total
 }'

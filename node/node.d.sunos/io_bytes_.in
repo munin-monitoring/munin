@@ -13,6 +13,9 @@
 # Any device found in /usr/bin/kstat can be monitored.
 #
 # $Log$
+# Revision 1.2  2004/04/30 16:43:00  jimmyo
+# Cleaned up Solaris plugins.
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -120,9 +123,11 @@ if [ "$1" = "config" ]; then
 		  $name = length $name ? $name : $dev;
 		  print "${dev}_$ENV{IN}.label ${name}_$ENV{INNAME}\n";
 		  print "${dev}_$ENV{IN}.type COUNTER\n";
+		  print "${dev}_$ENV{IN}.max 1000000000\n";
 		  print "${dev}_$ENV{IN}.cdef ${dev}_$ENV{IN}$ENV{CDEF}\n" if exists $ENV{CDEF};
 		  print "${dev}_$ENV{OUT}.label ${name}_$ENV{OUTNAME}\n";
 		  print "${dev}_$ENV{OUT}.type COUNTER\n";
+		  print "${dev}_$ENV{OUT}.max 1000000000\n";
 		  print "${dev}_$ENV{OUT}.cdef ${dev}_$ENV{OUT}$ENV{CDEF}\n" if exists $ENV{CDEF};'
 	exit 0
 fi;

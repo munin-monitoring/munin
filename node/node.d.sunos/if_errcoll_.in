@@ -10,6 +10,9 @@
 # Any device found in /usr/bin/kstat can be monitored.
 #
 # $Log$
+# Revision 1.2  2004/04/30 16:43:00  jimmyo
+# Cleaned up Solaris plugins.
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -58,12 +61,15 @@ if [ "$1" = "config" ]; then
 	echo 'ierrors.label Input Errors / min'
         echo 'ierrors.type COUNTER'
         echo 'ierrors.cdef ierrors,60,*'
+        echo 'ierrors.max 2000000000'
         echo 'oerrors.label Output Errors / min'
 	echo 'oerrors.type COUNTER'
 	echo 'oerrors.cdef oerrors,60,*'
+        echo 'oerrors.max 2000000000'
         echo 'collisions.label Collisions / min'
 	echo 'collisions.type COUNTER'
 	echo 'collisions.cdef collisions,60,*'
+        echo 'collisions.max 2000000000'
 	exit 0
 fi;
 
