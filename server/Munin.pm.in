@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.14  2004/08/23 09:23:46  jimmyo
+# Better error handling when fetching data from rrd files.
+#
 # Revision 1.13  2004/07/02 14:19:06  jimmyo
 #   * Munin-graph: Added 'graph_sources' option. This is (in effect) the same as
 #     graph_order, but with a default of 'graph no'.
@@ -168,6 +171,7 @@ sub munin_trend {
 sub munin_fetch {
     my ($file,$last,$type) = @_;
     my ($start,$step,$names,$data) = RRDs::fetch $file,$type || "AVERAGE";
+	return undef unless defined $data;
     my @array = map { @$_[0] } splice(@$data, $#$data - ($last || 1));
     return $array[0] if (!$last);
     return @array;
