@@ -15,6 +15,8 @@ munin (CVS)
   * Plugins: Added plugin generic/snmp__cpuload.
   * Plugins: generic/amavis now has configurable logfile location (Deb#296533).
   * Plugins: linux/irqstats should no longer fail on some systems (Deb#296452).
+  * Plugins: modified graph_args of generic/apache_processes, to work around 
+    an rrdtool bug (Deb#296528).
   * Docs: Added man page for munin-node-configure-snmp.
   * Docs: Brushed up the comments in the default munin.conf a bit (Deb#294060).
   * Installation: Create CIGdir if nonexistant.

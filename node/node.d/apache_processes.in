@@ -23,6 +23,9 @@
 # 	url      - Override default status-url
 #
 # $Log$
+# Revision 1.8  2005/02/24 17:50:40  jimmyo
+# modified graph_args of generic/apache_processes, to work around an rrdtool bug (Deb#296528).
+#
 # Revision 1.7  2004/05/20 13:57:11  jimmyo
 # Set categories to some of the plugins.
 #
@@ -102,7 +105,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" )
 if ( exists $ARGV[0] and $ARGV[0] eq "config" )
 {
         print "graph_title Apache processes\n";
-        print "graph_args --base 1000\n";
+        print "graph_args --base 1000 -l 0\n";
 		print "graph_category apache\n";
 	print "graph_order ";
 	foreach my $port (@PORTS) {
