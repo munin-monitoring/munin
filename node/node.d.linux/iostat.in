@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by lrrd-config)
 #
 # $Log$
+# Revision 1.9  2004/09/25 22:29:16  jimmyo
+# Added info fields to a bunch of plugins.
+#
 # Revision 1.8  2004/08/24 13:37:29  ilmari
 # Add total line
 #
@@ -102,6 +105,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config")
 	print "graph_vlabel blocks per second read (-) / written (+)\n";
 	print "graph_category disk\n";
 	print "graph_total Total\n";
+	print "graph_info This graph shows the I/O to and from block devices.\n";
 	print "graph_order";
 	foreach my $key (sort by_dev keys %devs)
 	{
@@ -115,6 +119,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config")
 		print $key . "_read.max 900000\n";
 		print $key . "_read.graph no\n";
 		print $key . "_write.label $devs{$key}->{name}\n";
+		print $key . "_write.info I/O on device $devs{$key}->{name}\n";
 		print $key . "_write.type COUNTER\n";
 		print $key . "_write.max 900000\n";
 		print $key . "_write.negative " . $key . "_read\n";
