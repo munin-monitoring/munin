@@ -7,6 +7,7 @@ munin (1.0.0pre4)
   * Turned off scaling of values for cpu-graphs (no more nano-percentages).
   * New plugin linux/iostat_ios to graph the number of I/O operations.
     Contributed by Per A. Buer.
+  * Added user configuration for generic/postfix* (SF#895680).
 
 munin (1.0.0pre3)
 
