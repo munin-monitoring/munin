@@ -16,6 +16,7 @@ munin (work)
   * Plugins: New plugin generic/perdition by Micah Anderson (Deb#291855).
   * Plugins: Plugin generic/squid_cache now handles multiple caches
     (Deb#288579).
+  * Plugin: Improved graph_title of generic/postfix_* (Deb#292083).
   * Installation: Make the single python plugin use @@PYTHON@@ again.
   * Docs: Documented minimum requirements for use of graph_sums (SF#1109040).
 
