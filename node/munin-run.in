@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.9  2004/11/20 23:34:35  jimmyo
+# Updated munin-run with extra options already checked into munin-node.
+#
 # Revision 1.8  2004/11/20 00:07:19  jimmyo
 # Handle execution problems better.
 #
@@ -541,6 +544,17 @@ sub load_auth_file
         {
             $sconf->{$service}{'host_name'} = $1;
         } 
+        elsif (/^\s*timeout\s+(\d+)\s*$/)
+        {
+            $sconf->{$service}{'timeout'} = $1;
+            print STDERR "DEBUG: $service: setting timeout to $1\n"
+                if $DEBUG;
+        }
+        elsif (/^\s*(allow)\s+(.+)\s*$/ or /^\s*(deny)\s+(.+)\s*$/)
+        {
+            push (@{$sconf->{$service}{'allow_deny'}}, [$1, $2]);
+                print STDERR "DEBUG: Pushing allow_deny: $1, $2\n" if $DEBUG;
+        }
         elsif (/^\s*env\s+([^=\s]+)\s*=\s*(.+)$/)
         {
             $sconf->{$service}{'env'}{$1} = $2;
