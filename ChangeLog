@@ -6,6 +6,8 @@ munin (work)
     "normal" fields, as reported by Jacques Caruso.
   * Plugin bugfixes from Jacques Caruso, in linux/iostat_ios and
     generic/ipacng.
+  * Munin-nagios: Only state number of OKs when something is in warning or
+    critical state.
 
 munin (1.1.2)
 
