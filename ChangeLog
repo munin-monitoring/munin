@@ -20,6 +20,7 @@ munin (work)
   * Plugins: Made linux/df work properly with tmpfs and devmapper (Deb#298442).
   * Plugins: Thanks to Stephen Gran, generic/exim_mailstats now graphs rejects
     (Deb#295799).
+  * Docs: Fixed erronous cgiurl docs (SF#1159722).
 
 munin (1.2.0)
 
@@ -37,6 +38,7 @@ munin (1.2.0)
   * Plugins: linux/df* now ignores bind mounts.
   * Docs: Added man page for munin-node-configure-snmp.
   * Docs: Brushed up the comments in the default munin.conf a bit (Deb#294060).
+  * Docs: Fixed erronous cgiurl docs (SF#1159722).
   * Installation: Create CIGdir if nonexistant.
 
 munin (1.2.0rc2)

@@ -193,7 +193,8 @@ Explaination:
  <dt>htaccess<dd>The default htaccessfile
  <dt>tmpldir<dd>Where the templates reside
  <dt>graph_strategy<dd>Set to "cron" to draw the graphs periodically via cron every 5 minutes. Set to "cgi" to draw on-demand. (default cron)
- <dt>graphcgiurl<dd>URL to the CGI script doing the graphing (if graph_strategy is "cron"). (default <tt>/cgi-bin/munin-cgi-graph</tt>)
+ <dt>cgiurl<dd>URL to the directory where the CGI scripts (for the time being only one) doing the graphing (if graph_strategy is "cron"). (default <tt>/cgi-bin</tt>)
+ <dt>cgiurl_graph<dd>URL to the CGI script doing the graphing (if graph_strategy is "cron"). (default <tt>${cgiurl}/munin-cgi-graph</tt>)
  <dt>fork<dd>If set, run updates of several hosts simultaneously. (default yes)
  <dt>max_processes<dd>Set max number of simultaneous Munin processes.
  <dt>nsca*<dd>Nagios options. See seperate section. Deprecated, use contacts instead.
