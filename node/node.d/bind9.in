@@ -10,6 +10,9 @@
 # Contributed by Nicolai Langfeldt
 #
 # $Log$
+# Revision 1.9  2005/02/16 18:04:14  jimmyo
+# minor bugfix in generic/bind9.
+#
 # Revision 1.8  2004/12/10 18:51:43  jimmyo
 # linux/apt* has been forced to LANG=C, to get predictable output.
 #
@@ -68,7 +71,7 @@ sub do_stats {
     while (<Q>) {
 	chomp;
 	if (/client \d+\.\d+.\d+.\d+\#\d+: query\: \S+ (\w+) (\w+)/) {
-	    if ($1 eq 'IN' and $q !~ /^TYPE/) {
+	    if ($1 eq 'IN' and $2 !~ /^TYPE/) {
 		$IN{$2}++;
 	    } else {
 		$OTHER++;

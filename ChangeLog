@@ -2,6 +2,7 @@ munin (CVS)
 
   * Node: munin-node didn't treat default_plugin_user properly (Deb#295366).
   * Plugins: linux/if* now treats ra* interfaces as wireless.
+  * Plugins: minor bugfix in generic/bind9.
 
 munin (1.3.1)
 
