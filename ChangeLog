@@ -27,6 +27,7 @@ munin (work)
   * Plugin generic/acpi now autodetects even if the acpi version does not
     contain the acpi_available program.
   * Minor bugfixes.
+  * Added plugin linux/irqstast, showing individual interrupt rates.
 
 munin (1.1.4)
 
