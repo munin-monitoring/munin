@@ -65,7 +65,8 @@ sub session {
 	    $port = $2;
 	}
     } elsif (!defined($host)) {
-	return (undef, 'Couldn not find monitoring target.');
+	return unless wantarray; # Scalar or void context
+	return (undef, 'Couldn not find monitoring target.'); # Array context
     }
 
     return $class->SUPER::session(-hostname  => $host,
