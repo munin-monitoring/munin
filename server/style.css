@@ -10,10 +10,10 @@ body {
  }
 
 div.logo { 
-  background-image: url(logo.gif);
+  background-image: url(logo.png);
   background-repeat: no-repeat;  
-  width: 42px;
-  height: 42px;
+  width: 41px;
+  height: 59px;
 } 
 
 .domain { 
