@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.16  2004/06/19 21:19:28  jimmyo
+# Log to correct log
+#
 # Revision 1.15  2004/06/16 21:08:33  jimmyo
 # Added automatic "graph no" to negative field when using negatives.
 #
@@ -1034,9 +1037,9 @@ sub logger_open {
 
     if (!$log->opened)
     {
-	  unless (open ($log, ">>$dirname/munin-html.log"))
+	  unless (open ($log, ">>$dirname/munin-graph.log"))
 	  {
-		  print STDERR "Warning: Could not open log file \"$dirname/munin-html.log\" for writing: $!";
+		  print STDERR "Warning: Could not open log file \"$dirname/munin-graph.log\" for writing: $!";
 	  }
     }
 }
