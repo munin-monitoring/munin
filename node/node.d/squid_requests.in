@@ -15,6 +15,9 @@
 # 	autoconf  (optional - only used by munin-config)
 #
 # $Log$
+# Revision 1.4  2004/09/26 22:03:52  jimmyo
+# Changd COUNTER -> DERIVE for some plugins. Set min/max values.
+#
 # Revision 1.3  2004/05/20 13:57:12  jimmyo
 # Set categories to some of the plugins.
 #
@@ -144,16 +147,22 @@ if($ARGV[0] and $ARGV[0] eq "config") {
 	print "graph_category squid\n";
     print "hits.label hits\n";
     print "hits.cdef hits,60,*\n";
-    print "hits.type COUNTER\n";
+    print "hits.type DERIVE\n";
     print "hits.draw AREA\n";
+    print "hits.min 0\n";
+    print "hits.max 500000\n";
     print "errors.label errors\n";
     print "errors.cdef errors,60,*\n";
-    print "errors.type COUNTER\n";
+    print "errors.type DERIVE\n";
     print "errors.draw STACK\n";
+    print "errors.min 0\n";
+    print "errors.max 500000\n";
     print "requests.label misses\n";
     print "requests.cdef requests,60,*,hits,-,errors,-\n";
-    print "requests.type COUNTER\n";
+    print "requests.type DERIVE\n";
     print "requests.draw STACK\n";
+    print "requests.min 0\n";
+    print "requests.max 500000\n";
     exit 0;
 }
 
