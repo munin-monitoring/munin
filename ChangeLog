@@ -3,15 +3,16 @@ munin (work)
   * Bugfix: munin-limits should log less noise.
   * Bugfix: munin-limits did not notify correctly in all situations.
   * Bugfix: munin-graph now treats CDEFs in fields with long names properly.
-  * Plugin: New version of generic/smart_ by plugin creator (Nicolas
-    Stransky) (SF#1072459).
   * Bugfix: munin-graph now logs an illegal STACK in the first field better
     (SF#1081903).
+  * Munin-run: Now behaves properly when running invalid plugins (SF#1074242).
+  * Plugin: New version of generic/smart_ by plugin creator (Nicolas
+    Stransky) (SF#1072459).
   * Plugin: generic/uptime was re-classified as linux/uptime (SF#1074576).
   * Plugin: Renamed generic/folding@home to generic/foldingathome (SF#1074241).
   * Plugin: Modify generic/ping_ so it's compatible with Solaris ping
     (SF#1074545).
-  * Munin-run: Now behaves properly when running invalid plugins (SF#1074242).
+  * Plugin: Fixed broken autoconf in generic/sendmail_mailtraffic (SF#1074528).
 
 munin (1.1.7)
 
