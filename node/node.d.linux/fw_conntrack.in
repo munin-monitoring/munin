@@ -1,0 +1,56 @@
+#!/bin/sh
+#
+# Plugin to monitor the number of tracked connections through a Linux 2.4/2.6
+# firewall.
+#
+# Parameters supported:
+#
+#    config
+#    autoconf
+#
+# Bugs:
+#    The connections tables can run full, but where is the limits found?
+#    If we can find them then we can send warnings to nagios.
+#
+# Magic markers?
+#%# family=contrib
+#%# capabilities=autoconf
+
+case $1 in
+    config)
+        cat <<EOF
+graph_title Connections through firewall
+graph_vlabel Connections
+established.label Established
+established.type GAUGE
+fin_wait.label FIN_WAIT
+fin_wait.type GAUGE
+time_wait.label TIME_WAIT
+time_wait.type GAUGE
+udp.label UDP connections
+udp.type GAUGE
+EOF
+        exit 0
+	;;
+    autoconf)
+        if [ -f /proc/net/ip_conntrack ] ; then
+	    echo yes
+	    exit 0
+	else
+	    echo no
+	    exit 1
+	fi
+esac
+
+
+cat /proc/net/ip_conntrack | awk '
+  BEGIN  { STATE["ESTABLISHED"]=0; STATE["FIN_WAIT"]=0; STATE["TIME_WAIT"]=0;
+	   STATE["UDP"]=0; }
+  /^tcp/ { STATE[$4]++; }
+  /^udp/ { STATE["UDP"]++; }
+  END    { print "established.value " STATE["ESTABLISHED"];
+           print "fin_wait.value " STATE["FIN_WAIT"];
+	   print "time_wait.value " STATE["TIME_WAIT"];
+	   print "udp.value " STATE["UDP"];
+	 }'
+
