@@ -6,6 +6,7 @@ munin (work)
   * Bugfix: munin-graph now logs an illegal STACK in the first field better
     (SF#1081903).
   * Munin-run: Now behaves properly when running invalid plugins (SF#1074242).
+  * Munin-node: host_name in plugin-conf.d now overrides plugin output.
   * Plugin: New version of generic/smart_ by plugin creator (Nicolas
     Stransky) (SF#1072459).
   * Plugin: generic/uptime was re-classified as linux/uptime (SF#1074576).

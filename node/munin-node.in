@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.18  2004/12/09 19:34:54  jimmyo
+# host_name in plugin-conf.d now overrides plugin output.
+#
 # Revision 1.17  2004/11/20 23:17:47  jimmyo
 # Added per-plugin timeouts, contributed by Chan Wilson (SF#881044).
 #
@@ -325,7 +328,7 @@ FILES:
 	print "file: '$file'\n" if $DEBUG;
 	$services{$file}=1;
 	my @rows = &run_service($file,"config", 1);
-	my $node = &get_var (\%sconf, $file, 'host_name') || $FQDN;
+	my $node = &get_var (\%sconf, $file, 'host_name');
 
 	for my $row (@rows) {
 	  print "row: $row\n" if $DEBUG;
@@ -333,7 +336,8 @@ FILES:
 	    print "Found host_name, using it\n" if $DEBUG;
 	    $node = $1;
 	  }
-	}
+	} 
+	$node ||= $FQDN;
 	$nodes{$node}{$file}=1;
     }
     closedir DIR;
