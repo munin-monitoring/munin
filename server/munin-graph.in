@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.4  2004/01/30 15:04:02  jimmyo
+# Code tidying in munin-graph (SF#884625).
+#
 # Revision 1.3  2004/01/29 17:34:06  jimmyo
 # Updated copyright information
 #
@@ -730,25 +733,25 @@ sub expand_cdef
     foreach my $field (keys %$service)
     {
 		next unless ($field =~ /^(.+)\.label$/);
-		my $field = $1;		my $rrdname = $field;
-		if (length $field > 15) # Use hash instead.
+		my $fieldname = $1;		my $rrdname = $fieldname;
+		if (length $fieldname > 15) # Use hash instead.
 		{
-			$rrdname = substr (Digest::MD5::md5_hex ($field), -15); 
+			$rrdname = substr (Digest::MD5::md5_hex ($fieldname), -15); 
 		}
-		if (exists $service->{$field.".cdef"} and 
-			length $service->{$field.".cdef"} and
-			$cdef =~ /\b$field\b/ and
-			$field ne $cfield)
+		if (exists $service->{$fieldname.".cdef"} and 
+			length $service->{$fieldname.".cdef"} and
+			$cdef =~ /\b$fieldname\b/ and
+			$fieldname ne $cfield)
 		{
-			$max =~ s/([,=])$field([,=]|$)/$1ca$rrdname$2/g;
-			$min =~ s/([,=])$field([,=]|$)/$1ci$rrdname$2/g;
-			$avg =~ s/([,=])$field([,=]|$)/$1cg$rrdname$2/g;
+			$max =~ s/([,=])$fieldname([,=]|$)/$1ca$rrdname$2/g;
+			$min =~ s/([,=])$fieldname([,=]|$)/$1ci$rrdname$2/g;
+			$avg =~ s/([,=])$fieldname([,=]|$)/$1cg$rrdname$2/g;
 		}
-		if ($cdef =~ /\b$field\b/)
+		if ($cdef =~ /\b$fieldname\b/)
 		{
-			$max =~ s/([,=])$field([,=]|$)/$1a$rrdname$2/g;
-			$min =~ s/([,=])$field([,=]|$)/$1i$rrdname$2/g;
-			$avg =~ s/([,=])$field([,=]|$)/$1g$rrdname$2/g;
+			$max =~ s/([,=])$fieldname([,=]|$)/$1a$rrdname$2/g;
+			$min =~ s/([,=])$fieldname([,=]|$)/$1i$rrdname$2/g;
+			$avg =~ s/([,=])$fieldname([,=]|$)/$1g$rrdname$2/g;
 		}
     }
 
