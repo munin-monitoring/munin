@@ -1,3 +1,15 @@
+munin (1.2.2-2) unstable; urgency=low
+
+  * node/munin-node.in, node/munin-run.in:
+      - Allow plugins to specify users to run as if present, while falling
+        gracefully back on the default user if the specified user doesn't
+        exists.  Patch grabbed from upstream CVS.
+
+  * debian/plugins.conf:
+      - Run the postfix_mailqueue plugin as the postfix user only if it exists.
+
+ -- Tore Anderson <tore@debian.org>  Sun, 13 Mar 2005 13:55:36 +0100
+
 munin (1.2.2-1) unstable; urgency=low
 
   * New upstream release.
