@@ -7,6 +7,7 @@ munin (1.0.0pre3)
   * Make install: Fix problems with systems that do not have getent.
     (SF#881046)
   * Remove dependency on pgrep (use process groups instead). (SF#881049)
+  * Documentation updates.
 
 munin (1.0.0pre2)
 

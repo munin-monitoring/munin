@@ -43,37 +43,35 @@ load.warning 10
 load.critical 120
 </pre>
 The node supports quite a few options.
-<tt>
 <dl>
-<dt>graph_title<dd>The title of the graph, defaults to the servicename.
-<dt>create_args<dd>If set, the arguments will be passed on to rrdcreate.
-<dt>graph_args<dd>If set, the arguments will be passed on to rrdgraph.
-<dt>graph_order<dd>In witch order to draw the datasources. Can also include path aliases on the form alias=domain;host:graph.datasource. See further down for details.
-<dt>graph_vlabel<dd>Y-axis label of the graph. 
-<dt>graph_vtitle<dd>Y-axis label of the graph. NOTE: Deprecated, use graph_vlabel.
-<dt>graph_total<dd>If set, summarise all the datasources' values and use the value of graph_total as a label.
-<dt>graph_scale<dd>Default on. If set, disables scaling of min/max/cur values.
-<dt>graph<dd>Set to "yes" or "no". Decides wether to draw the graph. Defaults to "yes".
-<dt>update<dd>Set to "yes" or "no". Decides wether munin-update should fetch data for the graph. Defaults to "yes".
-<dt>host_name<dd>Override which host name this plugin is run for. Ugly -
+<dt><code>graph_title</code><dd>The title of the graph, defaults to the servicename.</dd>
+<dt><code>create_args</code><dd>If set, the arguments will be passed on to rrdcreate.</dd>
+<dt><code>graph_args</code><dd>If set, the arguments will be passed on to rrdgraph.</dd>
+<dt><code>graph_order</code><dd>In witch order to draw the datasources. Can also include path aliases on the form alias=domain;host:graph.datasource. See further down for details.</dd>
+<dt><code>graph_vlabel</code><dd>Y-axis label of the graph. </dd>
+<dt><code>graph_vtitle</code><dd>Y-axis label of the graph. NOTE: Deprecated, use graph_vlabel.</dd>
+<dt><code>graph_total</code><dd>If set, summarise all the datasources' values and use the value of graph_total as a label.</dd>
+<dt><code>graph_scale</code><dd>Default on. If set, disables scaling of min/max/cur values.</dd>
+<dt><code>graph</code><dd>Set to "yes" or "no". Decides wether to draw the graph. Defaults to "yes".</dd>
+<dt><code>update</code><dd>Set to "yes" or "no". Decides wether munin-update should fetch data for the graph. Defaults to "yes".</dd>
+<dt><code>host_name</code><dd>Override which host name this plugin is run for. Ugly -
 see further down on how to do this in the node configuration files
-instead, which is more elegant.
-<dt>{name}.label<dd>REQUIRED. Name of the datasource. You can have many
-datasouces in one graph.
-<dt>{name}.cdef<dd>RPN-expression. Modify the values before graphing. See the FAQ for examples.
-<dt>{name}.draw<dd>What to draw from the data source: AREA, LINE1-3. Defaults to LINE2.
-<dt>{name}.graph<dd>Set to "no" or "yes. Decides wether to graph the data source. Defaults to yes.
-<dt>{name}.max<dd>Maximum value. If the fetched value is below "max", it will be discarded.
-<dt>{name}.min<dd>Minimum value. If the fetched value is below "min", it will be discarded.
-<dt>{name}.negative<dd>Name of field to 'mirror' on the opposite side of zero. See the FAQ for examples.
-<dt>{name}.skipdraw<dd>Disables drawing of datasource. NOTE: Deprecated - use {name}.graph instead.
-<dt>{name}.type<dd>Type of datasource, COUNTER, ABSOLUTE, DERIVE and
-GAUGE, defaults to GAUGE. Read "man rrdcreate" for more info. 
-<dt>{name}.warning<dd>Used by munin-nagios. Can be a max value or a range
-sepereated by colon. E.g. "min:", ":max", "min:max", "max".
-<dt>{name}.critical<dd>Same as above.
+instead, which is more elegant.</dd>
+<dt><code>{name}.label</code><dd>REQUIRED. Name of the datasource. You can have many
+datasouces in one graph.</dd>
+<dt><code>{name}.cdef</code><dd>RPN-expression. Modify the values before graphing. See the FAQ for examples.</dd>
+<dt><code>{name}.draw</code><dd>What to draw from the data source: AREA, LINE1-3. Defaults to LINE2.</dd>
+<dt><code>{name}.graph</code><dd>Set to "no" or "yes. Decides wether to graph the data source. Defaults to yes.</dd>
+<dt><code>{name}.max</code><dd>Maximum value. If the fetched value is below "max", it will be discarded.</dd>
+<dt><code>{name}.min</code><dd>Minimum value. If the fetched value is below "min", it will be discarded.</dd>
+<dt><code>{name}.negative</code><dd>Name of field to 'mirror' on the opposite side of zero. See the FAQ for examples.</dd>
+<dt><code>{name}.skipdraw</code><dd>Disables drawing of datasource. NOTE: Deprecated - use {name}.graph instead.</dd>
+<dt><code>{name}.type</code><dd>Type of datasource, COUNTER, ABSOLUTE, DERIVE and
+GAUGE, defaults to GAUGE. Read "man rrdcreate" for more info. </dd>
+<dt><code>{name}.warning</code><dd>Used by munin-nagios. Can be a max value or a range
+sepereated by colon. E.g. "min:", ":max", "min:max", "max".</dd>
+<dt><code>{name}.critical</code><dd>Same as above.</dd>
 </dl>
-</tt>
 {name} is limited to 19 characters, and the characters [a-zA-Z0-9_].<br>
 <p>
 Without options the script should only give out {name}.value
@@ -93,13 +91,13 @@ can contain the following options:
 <dl>
  <dt>[&lt;plugin-name&gt;]<dd>The following lines are for
  <code>plugin-name</code>.
- <dt>user &lt;username|userid&gt;<dd>Run plugin as this user
- <dt>group &lt;groupname|groupid&gt;[, &lt;groupname|groupid&gt;] [...]<dd>Run plugin as this group. If group is inside paranthesis, don't croak if it's nonexistant.
- <dt>command &lt;command&gt;<dd>Run command instad of plugin. "%c" will
+ <dt><code>user &lt;username|userid&gt;</code><dd>Run plugin as this user
+ <dt><code>group &lt;groupname|groupid&gt;[, &lt;groupname|groupid&gt;] [...]</code><dd>Run plugin as this group. If group is inside paranthesis, don't croak if it's nonexistant.
+ <dt><code>command &lt;command&gt;</code><dd>Run command instad of plugin. "%c" will
  be expanded to what would otherwise have been run. E.g. "<code>command sudo
  -u root %c</code>".
- <dt>env.&lt;var&gt; &lt;contents&gt;<dd>Will cause the environment
- variable "<code>var</code> to be set to "<code>contents</code>" when
+ <dt><code>env.&lt;var&gt; &lt;contents&gt;</code><dd>Will cause the environment
+ variable <code>var</code> to be set to <code>contents</code> when
  running the plugin.
 </dl>
 Example:
