@@ -1,4 +1,4 @@
-munin (1.2.1-1) unstable; urgency=low
+munin (1.2.2-1) unstable; urgency=low
 
   * New upstream release.
       - Plugin linux/irqstats now handles blank lines in /proc/interrupts,
@@ -29,6 +29,7 @@ munin (1.2.1-1) unstable; urgency=low
       - Run the Courier-MTA and Postfix plugins with necessary additional
         privileges so they work out of the box, closes: #297654, #296985.
         Thanks to Charles Fry and Juraj Bednar for pointing this out.
+      - The smart_ plugin is now run as root (which is necessary).
 
   * debian/control:
       - Suggest acpi over lm-sensors, and not the other way around as it was
@@ -38,6 +39,7 @@ munin (1.2.1-1) unstable; urgency=low
         closes: #296361. The hddtemp* plugins was replaced with
         hddtemp_smartctl in 1.2.0.
       - Suggest python (>= 2.2), used by the smart_ plugin.
+      - A few minor rewrites in the descriptions.
 
   * debian/munin-node.manpages:
       - Include munin-node-configure-snmp(8).
@@ -46,7 +48,7 @@ munin (1.2.1-1) unstable; urgency=low
       - Reverted to upstream version, as the patched required in 1.2.0-1 have
         been merged.
 
- -- Tore Anderson <tore@debian.org>  Sat, 12 Mar 2005 20:17:12 +0100
+ -- Tore Anderson <tore@debian.org>  Sun, 13 Mar 2005 00:28:49 +0100
 
 munin (1.2.0-1) unstable; urgency=low
 

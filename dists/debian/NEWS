@@ -1,4 +1,4 @@
-munin (1.2.1-1) unstable; urgency=low
+munin (1.2.2-1) unstable; urgency=low
 
   * The "contrib" plugins are not supported from upstream, and have therefore
     been removed from the package.  They have not been through a thorough QA
@@ -22,7 +22,7 @@ munin (1.2.1-1) unstable; urgency=low
 
     You may also download them from <http://www.linpro.no/projects/munin/>.
 
- -- Tore Anderson <tore@debian.org>  Sat, 12 Mar 2005 20:17:12 +0100
+ -- Tore Anderson <tore@debian.org>  Sun, 13 Mar 2005 00:28:49 +0100
 
 munin (1.2.0-1) unstable; urgency=low
 
