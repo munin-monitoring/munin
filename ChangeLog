@@ -1,3 +1,7 @@
+munin (work)
+
+  * Main: Allow dots in PNG paths (patch by Jacques Caruso).
+
 munin (1.1.9)
 
   * Main: Optimised munin-cgi-graph a bit.

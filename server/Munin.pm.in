@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.41  2004/12/25 18:56:59  jimmyo
+# Allow dots in PNG paths (patch by Jacques Caruso).
+#
 # Revision 1.40  2004/12/22 21:08:30  jimmyo
 # Bugfix when using long labels and CGI graphing.
 #
@@ -719,24 +722,24 @@ sub munin_get_picture_filename {
     my $name    = shift;
     my $service = shift;
     my $scale   = shift;
-	my $sum     = shift;
-	my $dir     = $config->{'htmldir'};
+    my $sum     = shift;
+    my $dir     = $config->{'htmldir'};
 
     # Sanitise
-	$dir =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
-	$domain =~ s/[^\w_\/"'\[\]\(\)+=\.-]/_/g;
-	$name =~ s/[^\w_\/"'\[\]\(\)+=\.-]/_/g;
-	$service =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
-	$scale =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
+    $dir =~ s/[^\w_\/"'\[\]\(\)+=-]\./_/g;
+    $domain =~ s/[^\w_\/"'\[\]\(\)+=\.-]/_/g;
+    $name =~ s/[^\w_\/"'\[\]\(\)+=\.-]/_/g;
+    $service =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
+    $scale =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
 
-	if (defined $sum and $sum)
-	{
-		return "$dir/$domain/$name-$service-$scale-sum.png";
-	}
-	else
-	{
-		return "$dir/$domain/$name-$service-$scale.png";
-	}
+    if (defined $sum and $sum)
+    {
+	    return "$dir/$domain/$name-$service-$scale-sum.png";
+    }
+    else
+    {
+	    return "$dir/$domain/$name-$service-$scale.png";
+    }
 }
 
 sub munin_get_filename {
