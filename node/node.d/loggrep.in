@@ -36,6 +36,9 @@
 # TODO: Handle rotated logs
 #
 # $Log$
+# Revision 1.5  2005/01/05 16:44:02  ilmari
+# Fixed typo in generic/loggrep breaking implicit labeling.
+#
 # Revision 1.4  2004/12/10 18:51:43  jimmyo
 # linux/apt* has been forced to LANG=C, to get predictable output.
 #
@@ -64,7 +67,7 @@ die("No log file specified") unless defined $logfile;
 
 if (exists $ENV{'regex'}) {
     $regex{'count'}{'regex'} = qr/$ENV{'regex'}/;
-    $regex{'count'}{'label'} = $ENV{'label'} || $ENV{'REGEX'};
+    $regex{'count'}{'label'} = $ENV{'label'} || $ENV{'regex'};
     $regex{'count'}{'value'} = 0;
 }
 

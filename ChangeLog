@@ -7,6 +7,7 @@ munin (work)
   * Main: "contacts" can now be set to "none".
   * Plugins: generic/sendmail_mail{stats,traffic} updated.
   * Plugins: Made generic/samba more portable (fixes by Nicolas Stransky).
+  * Plugins: Fixed typo in generic/loggrep breaking implicit labeling.
 
 munin (1.1.9)
 
