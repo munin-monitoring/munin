@@ -1,6 +1,8 @@
 munin (work)
 
   * Main: Optimised munin-cgi-graph a bit.
+  * Main: Internal name (for use in munin.conf) added to the table in
+    service view.
   * Main: Added option cgiurl_graph.
   * Packaging: Expand man-page macros properly on man-page generation 
     (Deb#286399).
