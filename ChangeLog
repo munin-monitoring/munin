@@ -1,5 +1,6 @@
 munin (work)
 
+  * Main: Remove stdout output (Deb#302502).
   * Node: Added support for optional "user" settings in node.
   * Node: Allow "root" for the per-plugin "group" directive.
   * Plugins: sort drives in generic/hddtemp_smartcl (SF#1174847).
