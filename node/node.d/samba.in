@@ -3,6 +3,9 @@
 # Plugin to monitor the number of open files in the system.
 #
 # $Log$
+# Revision 1.7  2005/01/05 15:18:13  jimmyo
+# Made generic/samba more portable (fixes by Nicolas Stransky).
+#
 # Revision 1.6  2005/01/04 18:25:33  jimmyo
 # Made generic/samba more portable.
 #
@@ -66,8 +69,8 @@ if [ "$1" = "config" ]; then
 fi
 
 printf "proc.value "
-smbstatus -b | grep -v '\$' | sed 1,/^----/d | wc -l 
+smbstatus -p | awk '$2 ~ /[0123456789]+/ && $1 !~ /^IPC\$/ ' | wc -l
 printf "lock.value "
-smbstatus -L | grep -v '\$' | sed 1,/^----/d | wc -l 
+smbstatus -L | awk '$2 ~ /[0123456789]+/ && $1 !~ /^IPC\$/ ' | wc -l
 printf "share.value "
-smbstatus -S | grep -v '\$' | sed 1,/^----/d | wc -l 
+smbstatus -S | awk '$2 ~ /[0123456789]+/ && $1 !~ /^IPC\$/ ' | wc -l
