@@ -18,24 +18,25 @@ munin (1.2.0rc2-1) unstable; urgency=low
     "old-nagios".  Hence the now deprecated munin.conf entries
 
        nsca        /bin/nsca
-       nsca_server nsca.fud.no
-       nsca_config /etc/nsca.cfg
+       nsca_server sloth.fud.no
+       nsca_config /etc/nsca.cf
 
     would implicitly be converted to the entry
 
-       contact.old-nagios.command /bin/nsca nsca.fud.no -c /etc/nsca.cfg -to 60
+       contact.old-nagios.command /bin/nsca sloth.fud.no -c /etc/nsca.cf -to 60
 
     unless the latter was explicitly defined in /etc/munin/munin.conf, in which
     case the deprecated entries would be ignored.
 
     This command is run through a shell, which may be interesting for users of
-    newer versions of NSCA, such as the one in Debian 3.1, as it has recently
-    begun printing a message after successfully sending NSCA packets.  To avoid
-    this, you may simply tack on something such as
+    newer versions of NSCA, such as the one in Debian GNU/Linux 3.1, as it has
+    recently begun printing a message after successfully sending NSCA packets.
+    To avoid this, you may simply tack on something such as
     
         | grep -v '^[0-9]* data packet(s) sent to host successfully$'
 
-    in order to prevent cron from sending mail to root every five minutes.
+    at the end of the contact command in order to prevent cron from sending
+    mail to root every five minutes.
 
   * Data loss issue 1
     =================
@@ -88,12 +89,12 @@ munin (1.2.0rc2-1) unstable; urgency=low
   * Data loss issue 2
     =================
   
-    The 1.0.x series had rather nasty design flaw that made field names that
-    were longer than 18 characters be truncated, removing any excessive
-    characters from the start of the field name.  This led to a nasty bug; if a
-    plugin reported values for two fields, who both had long names where the
-    last 18 charaters were the same, only one RRD file would be generated, and
-    its contents would be unpredictable.  The 1.2.x series do not exhibit this
+    The 1.0.x series had rather nasty design flaw that caused field names
+    longer than 18 characters be truncated, removing any excessive characters
+    from the start of the field name.  This led to a nasty bug; if a plugin
+    reported values for two fields, who both had long names where the last 18
+    charaters were the same, only one RRD file would be generated, and its
+    contents would be unpredictable.  The 1.2.x series do not exhibit this
     behaviour, and will store the entire field name as part of the RRD file
     name.  As this leads to the fact that a new, empty, file will be created
     with the non-truncated field name, the graphs will appear to have been
@@ -113,7 +114,7 @@ munin (1.2.0rc2-1) unstable; urgency=low
 
     The three first strings separated by hyphens in the filename is the
     interesting ones.  The first is the host as named in /etc/munin/munin.conf,
-    the second is the plugin name, and the third is the possibly mangled fiel
+    the second is the plugin name, and the third is the possibly mangled field
     name.  I say "possibly", because any RRD files with a field name that is
     exactly 18 characters long will also be reported, even though they are not
     affected by the change.  To figure out if the file is indeed affected, and
@@ -140,12 +141,11 @@ munin (1.2.0rc2-1) unstable; urgency=low
         _dev_hda5.value  54
         _dev_mapper_pride_usr.value  88
         _dev.value  54
-        none.value  55
     
     The field names are the strings before the periods.  At this point the
     correct field name is obvious - the truncated field name
     "v_mapper_pride_usr" is the last 18 characters of "_dev_mapper_pride_usr",
-    so the latter must be the correct one.  Now that we know that, we can
+    so the latter must be the correct one.  Now that you know that, you can
     rename the RRD file so that the new version can find it:
 
         cd /var/lib/munin/fud.no
@@ -153,7 +153,7 @@ munin (1.2.0rc2-1) unstable; urgency=low
 	   pride.fud.no-df-_dev_mapper_pride_usr-g.rrd
 
     If you find no possible matches, it may be because the RRD file contains
-    data that are no longer collected, which could've happened in our example
+    data that are no longer collected, which could've happened in this example
     if the filesystem in /dev/mapper/pride-usr was unmounted in the past.
     To find out if that is the case, look at the time stamp of the file to
     see when it was last modified.  If that's a long time ago, chances are the
@@ -162,13 +162,13 @@ munin (1.2.0rc2-1) unstable; urgency=low
     If you're really unfortunate, you may end up with multiple possibilities,
     which could've happened in the example used here if both a device named
     /udev/mapper/pride-usr and also one named /dev/mapper/pride-usr was mounted
-    simultaneously.  If this is the case, you can't do nothing else than to
-    inspect the relevant graph as created with Munin 1.0 to see if the field
-    seems to contain the correct data for at least one of the fields, and
-    rename the RRD accordingly.  However, there is a possibility that the RRD
-    will contain useless data that isn't correct for either of the fields.  In
-    any case, you won't be able to bring back correct data for both the fields,
-    as it wasn't collected properly to begin with.
+    simultaneously.  If this is the case, you can't do anything but inspect the
+    relevant graph as created with Munin 1.0 to see if the field seems to
+    contain the correct data for at least one of the fields, and rename the RRD
+    accordingly.  However, there is a possibility that the RRD will contain
+    useless data that isn't correct for either of the fields.  In any case, you
+    won't be able to bring back correct data for both the fields, as it wasn't
+    collected properly to begin with.
 
     You will have to repeat the process for every possibly affected RRD file,
     after which you may safely upgrade your "munin" package.

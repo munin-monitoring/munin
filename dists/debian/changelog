@@ -1,14 +1,14 @@
-munin (1.2.0rc2-1) unstable; urgency=low
+munin (1.2.0-1) unstable; urgency=low
 
   * New upstream release, closes: #264878, #293499, #290099:
       - Many plugins have changed type from COUNTER to DERIVE, to avoid
         spurious spikes when the counters are mistakenly assumed to have
         wrapped.  This change may cause empty graphs to occur, take care to
-        read README.Debian before upgrading the "munin-node" package!
+        read NEWS.Debian before upgrading the "munin-node" package!
         Closes: #225623, #233762.
       - Munin-update no longer truncates long field names, closes: #256370.
-        This may in some cases cause empty graphs, please read README.Debian
-        for more information before upgrading the "munin" package.
+        This may in some cases cause empty graphs, please read NEWS.Debian for
+        more information before upgrading the "munin" package.
       - Replaces the old Nagios-specific integration with a much more generic
         framework for sending alerts to wherever you want.  As a side effect,
         this closes: #291168.
@@ -16,7 +16,7 @@ munin (1.2.0rc2-1) unstable; urgency=low
       - The munin-node.conf setting default_plugin_user now actually works as
         advertised, closes: #295366, #295367.
       - Plugin generic/bind9 now source its configuration from %ENV,
-        closes: #268142, #268142.
+        closes: #268142, #272049.
       - Plugin generic/amavis now autodetects how to correctly invoke logtail,
         closes: #284638, #288395.
       - Plugin generic/squid_cache now correctly calculates cache size when
@@ -42,7 +42,7 @@ munin (1.2.0rc2-1) unstable; urgency=low
 
   * debian/NEWS:
       - Document the changes that may lead to data loss when upgrading from
-        Munin 1.0.x.
+        Munin 1.0.x, and also write a bit about the new munin-limits framework.
 
   * debian/control:
       - Add libdate-manip-perl as a recommended package, as the new CGI
@@ -52,18 +52,27 @@ munin (1.2.0rc2-1) unstable; urgency=low
       - Install the new CGI in /usr/lib/cgi-bin/, as mandated by the Debian
         Policy Manual.
 
+  * debian/munin.cron.d, debian/munin.manpages:
+      - The new upstream release includes "munin-limits", which supersede
+        "munin-nagios".  Update the installed manual pages and cron jobs
+        accordingly.
+
   * debian/plugins.conf:
       - Plugin linux/fw_conntrack is now run as root as this file recently has
         changed to not be world readable, closes: #291226.
       - Plugin linux/if_ is now run as root in order to probe the speed of the
         network interface.
 
-  * debian/munin.cron.d, debian/munin.manpages:
-      - The new upstream release includes "munin-limits", which supersede
-        "munin-nagios".  Update the installed manual pages and cron jobs
-        accordingly.
+  * debian/munin.postinst, debian/munin-node.postinst, debian/munin.postrm,
+    debian/munin-node.postrm:
+      - Use dpkg-statoverride to handle the permissions on the data and log
+        directories.
 
- -- Tore Anderson <tore@linpro.no>  Wed, 09 Feb 2005 17:46:05 +0100
+  * server/munin-limits.in:
+      - Change lock file directory to match that of munin-update, munin-graph,
+        and munin-html.
+
+ -- Tore Anderson <tore@debian.org>  Wed, 09 Feb 2005 17:46:05 +0100
 
 munin (1.0.5-1) unstable; urgency=low
 
