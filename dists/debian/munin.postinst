@@ -4,7 +4,8 @@ set -e
 
 add_munin_system_user() {
 	if ! getent passwd munin >/dev/null; then
-		adduser --group --system --no-create-home --home /var/lib/munin munin;
+		adduser --group --system --no-create-home \
+			--home /var/lib/munin munin;
 	fi	
 }
 
@@ -24,12 +25,16 @@ fixperms() {
 	# Upgrading from LRRD, yes?
 	# This'll generate a lot of chmod/grp's on
 	# the dirs, but what the hell..
-	for f in $(find /var/lib/munin -user lrrd); do
-		chown munin $f ${f%/*}
-	done
-	for f in $(find /var/lib/munin -group lrrd); do
-		chgrp munin $f ${f%/*}
-	done
+	if getent passwd lrrd >/dev/null; then
+		for f in $(find /var/lib/munin -user lrrd); do
+			chown munin $f ${f%/*}
+		done
+	fi
+	if getent group lrrd >/dev/null; then
+		for f in $(find /var/lib/munin -group lrrd); do
+			chgrp munin $f ${f%/*}
+		done
+	fi
 }
 
 case "$1" in
