@@ -14,6 +14,8 @@ munin (work)
     (SF#1074545).
   * Plugin: Fixed broken autoconf in generic/sendmail_mailtraffic (SF#1074528).
   * Plugin: Patched sunos/cpu to work on Solaris 9 (SF#1077899).
+  * Plugin: Major improvements to sunos/io_ops,bytes,busy, by Lupe Christoph
+    (SF#1077898).
 
 munin (1.1.7)
 
