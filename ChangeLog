@@ -4,6 +4,8 @@ munin (work)
   * Installation: Make the single python plugin use @@PYTHON@@ again.
   * Plugins: Fix sendmail_mail{stats,traffic} autoconf handling.
   * Plugins: Fix linux/users #! line.
+  * Plugins: Changed default log for generic/postfix_mailstats from syslog to
+  mail.log. Downgraded it from auto to manual.
 
 munin (1.2.0rc1)
 
