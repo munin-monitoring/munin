@@ -100,3 +100,4 @@ hddtempd
 [1.1.5]
 linux/irqstats
 linux/forks
+smart_
