@@ -44,6 +44,8 @@ munin (work)
     SF#1058128).
   * Applied patch from Torstein T. Svendsen to generic/exim_mailstats, to
     handle logfiles with timestamps in the name (SF#1055214).
+  * Applied patch from Nicolas Stransky to generic/hddtemp, to fetch temp more
+    elegantly (SF#1052845).
 
 munin (1.1.4)
 
