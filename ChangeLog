@@ -1,3 +1,7 @@
+munin (CVS)
+
+  * Plugins: linux/if* now treats ra* interfaces as wireless.
+
 munin (1.2.0rc2)
 
   * Main: Fix bug with calculation of "Avg:" field when using graph_sums.

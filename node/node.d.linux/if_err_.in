@@ -12,6 +12,9 @@
 # monitored with this plugin.
 #
 # $Log$
+# Revision 1.8.2.2  2005/02/16 17:08:11  jimmyo
+# linux/if* now treats ra* interfaces as wireless.
+#
 # Revision 1.8.2.1  2005/01/29 21:17:12  jimmyo
 # Added madwifi support to linux/if_* plugins.
 #
@@ -71,7 +74,7 @@ fi
 
 if [ "$1" = "suggest" ]; then
 	if [ -r /proc/net/dev ]; then
-		egrep '(eth|wlan|ath)' /proc/net/dev | cut -f1 -d: | sed 's/ //g'
+		egrep '(eth|wlan|ath|ra)' /proc/net/dev | cut -f1 -d: | sed 's/ //g'
 		exit 0
 	else
 		exit 1
