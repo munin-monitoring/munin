@@ -12,6 +12,9 @@
 # be monitored with this plugin.
 #
 # $Log$
+# Revision 1.3  2004/09/12 20:54:24  jimmyo
+# Plugin now sets max value.
+#
 # Revision 1.2  2004/05/20 13:57:12  jimmyo
 # Set categories to some of the plugins.
 #
@@ -72,6 +75,12 @@ if [ "$1" = "config" ]; then
 	echo 'up.type COUNTER'
 	echo 'up.negative down'
 	echo 'up.cdef up,8,*'
+	if [ "$INTERFACE" = "wlan0" -o "$INTERFACE" = "wlan1" -o "$INTERFACE" = "wlan2" -o "$INTERFACE" = "wlan3" -o "$INTERFACE" = "wlan4" -o "$INTERFACE" = "wlan5" -o "$INTERFACE" = "wlan6" -o "$INTERFACE" = "wlan7" -o "$INTERFACE" = "wlan8" -o "$INTERFACE" = "wlan9" -o "$INTERFACE" = "wlan10" ]
+	then
+		iwlist $INTERFACE rate 2>/dev/null | awk '/Current Bit Rate/ { split ($0, arr, "="); split (arr[2], arr2, "M"); print "up.max " (arr2[1]*1000000) "\ndown.max "(arr2[1]*1000000); }'
+	else
+		ethtool $INTERFACE 2>/dev/null | awk '/Speed/ { split ($2, arr2, "M"); print "up.max " (arr2[1]*1000000) "\ndown.max "(arr2[1]*1000000); }'
+	fi
 	exit 0
 fi;
 
