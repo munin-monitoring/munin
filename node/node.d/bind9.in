@@ -10,6 +10,9 @@
 # Contributed by Nicolai Langfeldt
 #
 # $Log$
+# Revision 1.7  2004/12/10 14:21:39  jimmyo
+# Patch generic/bind9 to report "unnamed" as "other" (Nicolas Stransky).
+#
 # Revision 1.6  2004/12/10 10:47:47  jimmyo
 # Change name from ${scale} to ${graph_period}, to be more consistent.
 #
@@ -62,7 +65,7 @@ sub do_stats {
     while (<Q>) {
 	chomp;
 	if (/client \d+\.\d+.\d+.\d+\#\d+: query\: \S+ (\w+) (\w+)/) {
-	    if ($1 eq 'IN') {
+	    if ($1 eq 'IN' and $q !~ /^TYPE/) {
 		$IN{$2}++;
 	    } else {
 		$OTHER++;
