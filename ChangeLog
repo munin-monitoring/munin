@@ -1,6 +1,7 @@
 munin (1.0.0pre2)
   * Plugin mysql_queries bugfix from Dagfinn I. Mannsåker (SF#876443,
     SF#865125).
+  * FreeBSD-plugin load bugfix from Robert Lindgren (SF#865928).
 
 munin (1.0.0pre1)
 
