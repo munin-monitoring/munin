@@ -1,5 +1,7 @@
 munin (CVS)
 
+  * Main: fix the file vs. pipe check in munin-limits.
+  * Main: place the munin-limits lock file in rundir, not dbdir.
   * Main: Yet another rewrite of munin-limits open call (SF#1115434).
   * Main: Make sure all rrd-tunes are correct after an upgrade (Deb#296454,
     Deb#296645).

@@ -179,8 +179,8 @@ my $oldnotes = &munin_readconfig ($config->{'dbdir'}."/limits", 1, 1);
 my $modified=0;
 
 logger("Starting munin-limits, checking lock");
-munin_runlock("$config->{dbdir}/munin-limits.lock");
-logger("Created lock: $config->{dbdir}/munin-limits.lock");
+munin_runlock("$config->{rundir}/munin-limits.lock");
+logger("Created lock: $config->{rundir}/munin-limits.lock");
 
 if (!defined $config->{'contact'}->{'nagios'}->{'command'} and
 	defined $config->{'nsca'})
@@ -458,7 +458,7 @@ sub generate_service_message {
 		    unshift (@cmd, "|-");
 		}
 		logger ("Debug: opening for writing: \"" . join('" "',@cmd) . "\".") if $DEBUG;
-		if ($cmd[0] == ">")
+		if ($cmd[0] eq ">")
 		{
 		    if (! open ($pipe, join (' ', @cmd)))
 		    {
