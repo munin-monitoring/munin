@@ -4,6 +4,7 @@ munin (1.0.0pre4)
   * The generic/apache_* plugins now have defined max values.
   * New plugins generic/{sendmail*,amavis,apc_envunit} contributed by Xavier
     Redon.
+  * Turned off scaling of values for cpu-graphs (no more nano-percentages).
 
 munin (1.0.0pre3)
 

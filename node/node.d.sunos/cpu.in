@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.2  2004/02/18 16:39:37  jimmyo
+# Turned off scaling of values for cpu-graphs (no more nano-percentages).
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -45,6 +48,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_order total system user waitio idle'
 	echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit 100 "
 	echo 'graph_vlabel %'
+	echo 'graph_scale no'
 	echo 'total.label total'
 	echo 'total.graph no'
 	echo 'total.type COUNTER'
