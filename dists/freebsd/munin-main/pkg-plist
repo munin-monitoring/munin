@@ -10,7 +10,8 @@ lib/munin-graph
 lib/munin-html
 lib/munin-nagios
 lib/munin-update
-@dirrm www/data
+@dirrm www/data/munin
+@dirrm var/munin/plugin-state
 @dirrm var/munin
 @dirrm etc/munin/templates
 @dirrm etc/munin
