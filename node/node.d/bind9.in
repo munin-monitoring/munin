@@ -10,6 +10,9 @@
 # Contributed by Nicolai Langfeldt
 #
 # $Log$
+# Revision 1.4  2004/12/09 20:16:29  jimmyo
+# generic/bind9 now handles syslog format as well (by xavier).
+#
 # Revision 1.3  2004/09/14 20:29:20  jimmyo
 # Added statefile parameter.
 #
@@ -52,12 +55,13 @@ sub do_stats {
     open(Q,"< $QUERYLOG") or die;
     while (<Q>) {
 	chomp;
-	my (undef,undef,undef,undef,undef,undef,undef,$c,$q) = split(/ /,$_,9);
-	if ($c eq 'IN') {
-	    $IN{$q}++;
-        } else {
-	    $OTHER++;
-        }
+	if (/client \d+\.\d+.\d+.\d+\#\d+: query\: \S+ (\w+) (\w+)/) {
+	    if ($1 eq 'IN') {
+		$IN{$2}++;
+	    } else {
+		$OTHER++;
+	    }
+	}
     }
     close(Q);
 
@@ -83,6 +87,7 @@ query_other.label Other
 query_other.type DERIVE
 query_other.min 0
 query_other.cdef query_other,60,*
+query_other.draw AREA
 ";
     get_state;
 
@@ -91,6 +96,7 @@ query_other.cdef query_other,60,*
 query_$k.type DERIVE
 query_$k.min 0
 query_$k.cdef query_$k,60,*
+query_$k.draw STACK
 ";
     }
 };
