@@ -16,6 +16,7 @@ munin (work)
 	* Draw min/max ranges in all graphs with only one visible field.
 	* Replaced notification system. Munin can now send warning/critical
 	  messages to whatever process/file that is needed.
+	* Removed the munin-nagios program, as it is no longer needed.
 
   - Munin-node:
     * Added module Munin::Plugin::SNMP, a Net::SNMP sublcass for plugins.

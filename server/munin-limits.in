@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.17  2004/11/19 21:05:54  jimmyo
+# Removed the munin-nagios program, as it is no longer needed.
+#
 # Revision 1.16  2004/11/19 20:51:24  jimmyo
 # New notification system finished (I think).
 #
@@ -116,6 +119,7 @@ Options:
     --[no]force-root    Force running, even as root. [--noforce-root]
     --help		View this message.
     --debug		View debug messages.
+    --stdout		Log to stdout as well as the log file.
     --service <service>	Limit notified services to <service>. Multiple 
     			--service options may be supplied.
     --host <host>	Limit notified hosts to <host>. Multiple --host 
@@ -142,6 +146,13 @@ my $modified=0;
 logger("Starting munin-limits, checking lock");
 munin_runlock("$config->{dbdir}/munin-limits.lock");
 logger("Created lock: $config->{dbdir}/munin-limits.lock");
+
+if (!defined $config->{'contact'}->{'nagios'}->{'command'} and
+	defined $config->{'nsca'})
+{
+    $config->{'contact'}->{'nagios'}->{'command'} = "$config->{nsca} $config->{nsca_server} -c $config->{nsca_config} -to 60";
+    $config->{'contact'}->{'nagios'}->{'always_send'} = "critical warning";
+}
 
 for my $domain ( keys %{$config->{domain}}) {
     logger ("processing domain: $domain");
