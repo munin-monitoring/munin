@@ -1,4 +1,4 @@
-munin (work)
+munin (1.1.8)
 
   * Munin-limits: Log less noise.
   * Munin-limits: Notify correctly in all situations.
@@ -74,7 +74,6 @@ munin (1.1.5)
     * Minor template modifications, so the output HTML validates correctly
       (SF#1039850).
     * Added new field option "line", which draws HRULEs.
-	
 
   - Munin-node:
     * The node now changes dir to /, to make sure it's in a directory
