@@ -14,7 +14,7 @@
 #       amavislog    - file where amavis logs are written
 #
 
-TEMP_FILE=/tmp/lrrd-amavis.$$
+TEMP_FILE=`mktemp -p /tmp/ munin-amavis.XXXXXX`
 AMAVIS_LOG=/var/log/mail/mail.info
 LOGTAIL=${logtail:-`which logtail`}
 STATEFILE=@@PLUGSTATE@@/amavis.offset
