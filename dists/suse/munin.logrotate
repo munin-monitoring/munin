@@ -1,0 +1,11 @@
+/var/log/munin/munin-graph.log 
+/var/log/munin/munin-html.log 
+/var/log/munin/munin-nagios.log
+/var/log/munin/munin-update.log {
+	daily
+	missingok
+	rotate 7
+	compress
+	notifempty
+	create 640 munin munin
+}
