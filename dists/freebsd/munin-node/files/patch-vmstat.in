@@ -1,0 +1,29 @@
+--- munin-1.0.4.orig/node/node.d.freebsd/vmstat.in	Sun Feb  1 19:59:54 2004
++++ munin-1.0.4/node/node.d.freebsd/vmstat.in	Sat Nov 20 14:14:54 2004
+@@ -32,7 +32,7 @@
+ OSV=`/sbin/sysctl -n kern.osrelease | cut -f1 -d.`
+ 
+ if [ "$1" = "autoconf" ]; then
+-	if [ "$OSV" = "5" ]; then
++	if [ "$OSV" -ge "5" ]; then
+ 		/sbin/sysctl -n vm.vmtotal 2>/dev/null >/dev/null
+ 		RESULT=$?
+ 		NAME=/sbin/sysctl
+@@ -59,7 +59,7 @@
+ 	echo 'graph_title VMstat'
+ 	echo 'graph_args --base 1000 -l 0'
+ 	echo 'graph_vlabel process states'
+-	if [ "$OSV" = "5" ]; then
++	if [ "$OSV" -ge "5" ]; then
+ 		echo 'running.label running'
+ 		echo 'running.type GAUGE'
+ 		echo 'diskwait.label diskwait'
+@@ -77,7 +77,7 @@
+ 	exit 0
+ fi
+ 
+-if [ "$OSV" = "5" ]; then
++if [ "$OSV" -ge "5" ]; then
+ 	sysctl -n vm.vmtotal | awk '
+ /^Processes:/ {
+ 	print "running.value", $3;

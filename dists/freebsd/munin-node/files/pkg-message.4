@@ -1,10 +1,12 @@
 
 ********************************************************************
 Unless this file already existed, a sample configuration file
-has been placed in %%PREFIX%%/etc/munin/munin.conf.
+has been placed in %%PREFIX%%/etc/munin/munin-node.conf.
 
 Please edit it according to your needs.
 
-The Munin server will be run from cron under the user 'munin'.
+The Munin client will be started at system boot automatically.
+You can start it manually with:
+    %%PREFIX%%/etc/rc.d/munin-node.sh start
 ********************************************************************
 
