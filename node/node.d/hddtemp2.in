@@ -20,6 +20,9 @@
 # Revision 0.1  2004/02/24 Andrew Radke
 #
 # $Log$
+# Revision 1.5  2004/08/18 17:01:37  jimmyo
+# Force LANG/LC_ALL=C in linux/sensors_ and generic/hddtemp2, to remove problems in parsing of sensors output (SF#972749, SF#972748, Deb#255312)
+#
 # Revision 1.4  2004/08/18 16:42:04  jimmyo
 # Force LANG=C in plugin/hddtemp2, to remove problems in parsing of hddtemp output (Deb#253497).
 #
@@ -40,6 +43,7 @@
 use strict;
 
 $ENV{'LANG'} = "C"; # Hardcode lang so the hddtemp program to ease parsing of hddtemp-output.
+$ENV{'LC_ALL'} = "C"; # Hardcode lang so the hddtemp program to ease parsing of hddtemp-output.
 my $HDDTEMP = $ENV{'hddtemp'} || 'hddtemp';
 my %config = (
 	regex => qr/\/dev\/([^:]+): ([^:]+): ([\d.]+) C\n/m,
