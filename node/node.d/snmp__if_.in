@@ -1,6 +1,9 @@
 #!/usr/bin/perl -w
 #
 # $Log$
+# Revision 1.2  2004/02/18 21:54:56  jimmyo
+# Did a bit of work on the snmp-thingie.
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -23,6 +26,15 @@ my $community = $ENV{community} || "public";
 my $iface     = $ENV{interface} || undef;
 
 my $response;
+
+if (defined $ARGV[0] and $ARGV[0] eq "snmpconf")
+{
+	print "number  1.3.6.1.2.1.2.1.0\n";
+	print "index   1.3.6.1.2.1.2.2.1.1.\n";
+	print "require 1.3.6.1.2.1.2.2.1.3. ^6\$\n"; # Type
+	print "require 1.3.6.1.2.1.2.2.1.5. [1-9]\n"; # Speed
+	exit 0;
+}
 
 if ($0 =~ /^(?:|.*\/)snmp_([^_]+)_if_(.+)$/)
 {
