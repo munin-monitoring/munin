@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.40  2004/11/26 13:24:16  jimmyo
+# Added --stdout-option to all programs.
+#
 # Revision 1.39  2004/11/21 15:43:08  jimmyo
 # Copy info fields when using aliases.
 #
@@ -211,6 +214,7 @@ my $cron = 0;
 my $list_images = 0;
 my $skip_locking = 0;
 my $skip_stats = 0;
+my $stdout = 0;
 my $conffile = "@@CONFDIR@@/munin.conf";
 my %draw = ("day" => 1, "week" => 1, "month" => 1, "year" => 1, "sumyear" => 1, "sumweek" => 1);
 
@@ -224,6 +228,7 @@ GetOptions ( "force!"       => \$force_graphing,
 	     "host=s"       => \@limit_hosts,
 	     "service=s"    => \@limit_services,
 	     "config=s"     => \$conffile,
+	     "stdout!"      => \$stdout,
 	     "day!"         => \$draw{'day'},
 	     "week!"        => \$draw{'week'},
 	     "month!"       => \$draw{'month'},
@@ -1259,6 +1264,7 @@ sub logger {
   my ($comment) = @_;
   my $now = strftime "%b %d %H:%M:%S", localtime;
 
+  print "$now - $comment\n" if $stdout;
   if ($log->opened)
   {
 	  print $log "$now - $comment\n";
