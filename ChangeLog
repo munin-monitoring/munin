@@ -35,6 +35,8 @@ munin (1.0.0pre4)
     Dupouy).
   * Added plugin linux/nfs_client, contributed by Alexandre Dupouy.
   * Added plugin ipac-ng, contributed by Arturas Slajus.
+  * Added plugin hddtemp2, contributred by Andrew Radke, modified by Lupe
+    Christoph.
 
 munin (1.0.0pre3)
 
