@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.43  2005/01/05 18:08:01  jimmyo
+# Main: Tables in service-view now sorted according to graph_order.
+#
 # Revision 1.42  2005/01/05 17:43:34  jimmyo
 # Main: Bugfix with graphs using both "graph_sums" and data aliases.
 #
@@ -240,7 +243,8 @@ use Exporter;
 	   'munin_get_picture_filename',
 	   'munin_get_filename',
 	   'munin_graph_column_headers',
-	   'munin_get_max_label_length'
+	   'munin_get_max_label_length',
+	   'munin_get_field_order'
 	   );
 
 use strict;
@@ -1058,6 +1062,41 @@ sub munin_get_max_label_length
     }
     return $result;
 }
+
+sub munin_get_field_order
+{
+    my $node    = shift;
+    my $config  = shift;
+    my $domain  = shift;
+    my $host    = shift;
+    my $service = shift;
+    my $result  = [];
+
+    if ($node->{client}->{$service}->{graph_sources}) 
+    {
+	foreach my $gs (split /\s+/, $node->{client}->{$service}->{'graph_sources'})
+	{
+	    push (@$result, "-".$gs);
+	}
+    } 
+    if ($node->{client}->{$service}->{graph_order}) 
+    {
+	push (@$result, split /\s+/, $node->{client}->{$service}->{'graph_order'});
+    } 
+
+    for my $key (keys %{$node->{client}->{$service}}) 
+    {
+	my ($client,$type)="";
+	($client,$type) = split /\./,$key;
+	if (defined $type and $type eq "label") 
+	{
+	    push @$result,$client if !grep /^$client(?:=|$)/, @$result;;
+	} 
+    }
+    
+    return $result;
+}
+
 
 1;
 

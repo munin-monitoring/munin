@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.40  2005/01/05 18:08:01  jimmyo
+# Main: Tables in service-view now sorted according to graph_order.
+#
 # Revision 1.39  2004/12/22 20:53:50  jimmyo
 # Correct name of config variable.
 #
@@ -416,33 +419,32 @@ for my $domain (@domainorder) {
 			push @{$service{graphinfo}}, \%graph_info;
 		}
 		$service{fieldlist} .= "<tr><th align='left' valign='top'>Field</th><th align='left' valign='top'>Type</th><th align='left' valign='top'>Warn</th><th align='left' valign='top'>Crit</th><th></tr>";
-		foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}})
+#		foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}})
+		foreach my $f (@{&munin_get_field_order ($config->{domain}->{$domain}->{node}->{$node}, $config, $domain, $node, $service)})
 		{
-			if ($field =~ /^([^\.]+)\.label/)
+			$f =~ s/=.*//;
+			next unless (&munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $service, $f));
+			print "DEBUG: single_value: Checking field \"$f\".\n" if $DEBUG;
+
+			my %field_info;
+			$fieldnum++;
+
+			$field_info{'hr'}      = 1 unless ($fieldnum % 3);
+			$field_info{'field'}   = $f;
+			$field_info{'label'}   = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".label"} || $f;
+			$field_info{'type'}    = lc ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".type"} || "GAUGE");
+			$field_info{'warn'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".warning"} || "None";
+			$field_info{'crit'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".critical"} || "None";
+			$field_info{'info'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".info"} || "";
+
+			my $state = &munin_field_status ($config, $limits, $domain, $node, $service, $f, 1);
+			if (defined $state)
 			{
-				my $f = $1;
-				next unless (&munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $service, $f));
-
-				my %field_info;
-				$fieldnum++;
-
-				$field_info{'hr'}      = 1 unless ($fieldnum % 3);
-				$field_info{'field'}   = $f;
-				$field_info{'label'}   = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".label"} || $f;
-				$field_info{'type'}    = lc ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".type"} || "GAUGE");
-				$field_info{'warn'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".warning"} || "None";
-				$field_info{'crit'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".critical"} || "None";
-				$field_info{'info'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".info"} || "";
-
-				my $state = &munin_field_status ($config, $limits, $domain, $node, $service, $f, 1);
-				if (defined $state)
-				{
-					$field_info{'state_warning'}  = 1 if $state eq "warning";
-					$field_info{'state_critical'} = 1 if $state eq "critical";
-					$field_info{'state_unknown'}  = 1 if $state eq "unknown";
-				}
-				push @{$service{fieldinfo}}, \%field_info;
+				$field_info{'state_warning'}  = 1 if $state eq "warning";
+				$field_info{'state_critical'} = 1 if $state eq "critical";
+				$field_info{'state_unknown'}  = 1 if $state eq "unknown";
 			}
+			push @{$service{fieldinfo}}, \%field_info;
 		}
 
 		{

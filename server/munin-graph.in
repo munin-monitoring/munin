@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.50  2005/01/05 18:08:01  jimmyo
+# Main: Tables in service-view now sorted according to graph_order.
+#
 # Revision 1.49  2005/01/05 17:43:34  jimmyo
 # Main: Bugfix with graphs using both "graph_sums" and data aliases.
 #
@@ -491,40 +494,6 @@ sub get_header {
     return $result;
 }
 
-sub get_field_order
-{
-    my $node    = shift;
-    my $config  = shift;
-    my $domain  = shift;
-    my $host    = shift;
-    my $service = shift;
-    my $result  = [];
-
-    if ($node->{client}->{$service}->{graph_sources}) 
-    {
-	foreach my $gs (split /\s+/, $node->{client}->{$service}->{'graph_sources'})
-	{
-	    push (@$result, "-".$gs);
-	}
-    } 
-    if ($node->{client}->{$service}->{graph_order}) 
-    {
-	push (@$result, split /\s+/, $node->{client}->{$service}->{'graph_order'});
-    } 
-
-    for my $key (keys %{$node->{client}->{$service}}) 
-    {
-	my ($client,$type)="";
-	($client,$type) = split /\./,$key;
-	if (defined $type and $type eq "label") 
-	{
-	    push @$result,$client if !grep /^$client(?:=|$)/, @$result;;
-	} 
-    }
-    
-    return $result;
-}
-
 sub get_sum_command
 {
     my $node    = shift;
@@ -713,7 +682,7 @@ sub single_value
     if (!defined $node->{client}->{$service}->{"graphable"})
     {
 #	foreach my $field (keys %{$node->{client}->{$service}})
-	foreach my $field (&get_field_order ($node, $config, $domain, $host, $service))
+	foreach my $field (&munin_get_field_order ($node, $config, $domain, $host, $service))
 	{
 	    print "DEBUG: single_value: Checking field \"$field\".\n" if $DEBUG;
 	    if ($field =~ /^([^\.]+)\.label/ or $field =~ /=/)
@@ -857,7 +826,7 @@ sub process_node {
 	my $rrdname;
 	my $force_single_value;
 
-	@field_order =  @{&get_field_order ($node, $config, $domain, $name, $service, \$force_single_value)};
+	@field_order =  @{&munin_get_field_order ($node, $config, $domain, $name, $service, \$force_single_value)};
 
 	# Array to keep 'preprocess'ed fields.
 	my @rrd_preprocess = ();
