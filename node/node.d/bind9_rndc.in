@@ -87,7 +87,7 @@ sub do_config {
     my $k;
 
     print "graph_title DNS Queries by status
-graph_vlabel Queries / minute
+graph_vlabel Queries / ${scale}
 ";
     
     get_state;
@@ -96,7 +96,6 @@ graph_vlabel Queries / minute
 	print "query_$k.label $k
 query_$k.type DERIVE
 query_$k.min 0
-query_$k.cdef query_$k,60,*
 ";
     }
 };

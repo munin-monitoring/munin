@@ -12,6 +12,9 @@
 # Config variables:
 #
 # $Log$
+# Revision 1.6  2004/12/09 22:12:56  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.5  2004/11/21 00:17:12  jimmyo
 # Changed a lot of plugins so they use DERIVE instead of COUNTER.
 #
@@ -50,7 +53,7 @@ if ( $ARGV[0] ) {
 	print <<EOM;
 graph_title Firewall Throughput
 graph_args --base 1000 -l 0
-graph_vlabel Packets/sec
+graph_vlabel Packets/${scale}
 graph_category network
 received.label Received
 received.draw AREA

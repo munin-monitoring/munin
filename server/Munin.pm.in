@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.37  2004/12/09 22:12:56  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.36  2004/12/08 08:47:44  jimmyo
 # Fix bug where munin-limits didn't warn properly in all situations.
 #
@@ -248,10 +251,9 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"graph_noscale", "nsca", "nsca_server", "nsca_config", "extinfo", 
 	"fetch_data", "filename", "max_processes", "nagios", "info", 
 	"graph_info", "graph_category", "graph_strategy", "graph_width", 
-	"graph_height", "graph_sums", "graph_vlabel_sum_year", 
-	"graph_vlabel_sum_week", "local_address", "compare", "cgiurl",
+	"graph_height", "graph_sums", "local_address", "compare", "cgiurl",
 	"text", "command", "contact", "contacts",  "max_messages", 
-	"always_send", "notify_alias", "line", "state"
+	"always_send", "notify_alias", "line", "state", "graph_period"
     );
 
 

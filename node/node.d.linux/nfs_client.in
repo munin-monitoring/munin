@@ -3,6 +3,9 @@
 # Plugin to monitor NFS client traffic
 #
 # $Log$
+# Revision 1.7  2004/12/09 22:12:56  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.6  2004/11/21 00:17:12  jimmyo
 # Changed a lot of plugins so they use DERIVE instead of COUNTER.
 #
@@ -40,7 +43,7 @@ if [ "$1" = "config" ]; then
 
 	echo 'graph_title NFS Client'
 	echo 'graph_args --base 1000 -l 0'
-	echo 'graph_vlabel requests / second'
+	echo 'graph_vlabel requests / ${scale}'
 	echo 'graph_total total'
 	echo 'graph_category NFS'
 	for a in $proc ; do echo "$a.label $a" ; echo "$a.type DERIVE"; echo "$a.min 0"; done

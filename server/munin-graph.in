@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.43  2004/12/09 22:12:57  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.42  2004/12/09 16:06:40  jimmyo
 # munin-graph now logs an illegal STACK in the first field better (SF#1081903).
 #
@@ -335,8 +338,8 @@ my %resolutions = (
              "year"  => "86400");
 
 my %sumtimes = ( # time => [ label, seconds-in-period ]
-	    "week"   => ["per hour", 12],
-	    "year"   => ["per day", 288]
+	    "week"   => ["hour", 12],
+	    "year"   => ["day", 288]
 	);
 
 for my $key ( keys %{$config->{domain}}) {
@@ -357,7 +360,7 @@ rename ("$config->{dbdir}/munin-graph.stats.tmp", "$config->{dbdir}/munin-graph.
 close STATS unless $skip_stats;
 close $log;
 
-sub process_domain {
+    sub process_domain {
     my ($domain) = @_;
     for my $key ( keys %{$config->{domain}->{$domain}->{node}}) {
 	my $node_time= Time::HiRes::time;
@@ -400,9 +403,11 @@ sub get_vlabel
 {
     my $node    = shift;
     my $service = shift;
+    my $scale   = shift;
 
     if ($node->{client}->{$service}->{graph_vlabel}) {
-	return $node->{client}->{$service}->{graph_vlabel};
+	(my $res = $node->{client}->{$service}->{graph_vlabel}) =~ s/\$\{scale\}/$scale/g;
+	return $res;
     }
     elsif ($node->{client}->{$service}->{graph_vtitle})
     {
@@ -452,7 +457,7 @@ sub get_header {
     if (defined ($tmp_field = &get_custom_graph_args ($node, $service))) {
 	push (@$result, @{$tmp_field});
     }
-    if (defined ($tmp_field = &get_vlabel ($node, $service))) {
+    if (defined ($tmp_field = &get_vlabel ($node, $service, munin_get ($config, "graph_period", "second", $domain, $host, $service)))) {
 	push @$result, ("--vertical-label", $tmp_field);
     }
 
@@ -897,6 +902,10 @@ sub process_node {
 	    {
 		push (@rrd, "CDEF:c$rrdname=g$rrdname" . (($now-$update)>900 ? ",POP,UNKN" : ""));
 	    }
+	    if (graph_by_minute ($config, $domain, $name, $service))
+	    {
+		push (@rrd, &expand_cdef($node->{client}->{$service}, \$rrdname, "$field,60,*"));
+	    }
 	    if ($node->{client}->{$service}->{$field.".cdef"})
 	    {
 		push (@rrd, &expand_cdef($node->{client}->{$service}, \$rrdname, $node->{client}->{$service}->{$field.".cdef"}));
@@ -1133,28 +1142,42 @@ sub process_node {
 		{
 		    if ($rrd_sum[$index] =~ /^(--vertical-label|-v)$/)
 		    {
-			my $label = $node->{client}->{$service}->{"graph_vlabel_sum_$time"} || $sumtimes{$time}->[0];
+			(my $label = $node->{client}->{$service}->{graph_vlabel}) =~ s/\$\{scale\}/$sumtimes{$time}[0]/g;
 			splice (@rrd_sum, $index, 2, ("--vertical-label", $label));
 			$index++;
 			$labelled++;
 		    }
 		    elsif ($rrd_sum[$index] =~ /^(LINE[123]|STACK|AREA|GPRINT):([^#:]+)([#:].+)$/)
 		    {
-			my ($pre, $name, $post) = ($1, $2, $3);
-			next if $name eq "re_zero";
-			next if grep /^x$name$/, @defined;
-			push @defined, "x$name";
+			my ($pre, $fname, $post) = ($1, $2, $3);
+			next if $fname eq "re_zero";
+			next if grep /^x$fname$/, @defined;
+			push @defined, "x$fname";
 			my @replace;
 
 			if ($time eq "week")
 			{ # Every plot is half an hour. Add two plots and multiply, to get per hour
-			    push @replace, "CDEF:x$name=PREV($name),UN,0,PREV($name),IF,$name,+,300,*,6,*";
+			    if (graph_by_minute ($config, $domain, $name, $service))
+			    { # Already multiplied by 60
+				push @replace, "CDEF:x$fname=PREV($fname),UN,0,PREV($fname),IF,$fname,+,5,*,6,*";
+			    }
+			    else
+			    {
+				push @replace, "CDEF:x$fname=PREV($fname),UN,0,PREV($fname),IF,$fname,+,300,*,6,*";
+			    }
 			}
 			else
 			{ # Every plot is one day exactly. Just multiply.
-			    push @replace, "CDEF:x$name=$name,300,*,288,*";
+			    if (graph_by_minute ($config, $domain, $name, $service))
+			    { # Already multiplied by 60
+				push @replace, "CDEF:x$fname=$fname,5,*,288,*";
+			    }
+			    else
+			    {
+				push @replace, "CDEF:x$fname=$fname,300,*,288,*";
+			    }
 			}
-			push @replace, $pre . ":x$name" . $post;
+			push @replace, $pre . ":x$fname" . $post;
 			splice (@rrd_sum, $index, 1, @replace);
 			$index++;
 		    }
@@ -1193,6 +1216,16 @@ sub process_node {
 	@added = ();
     }
     
+}
+
+sub graph_by_minute
+{
+    my $config  = shift;
+    my $domain  = shift;
+    my $name    = shift;
+    my $service = shift;
+
+    return (munin_get ($config, "graph_period", "second", $domain, $name, $service) eq "minute");
 }
 
 sub orig_to_cdef

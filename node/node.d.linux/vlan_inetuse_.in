@@ -25,6 +25,9 @@
 # existing for examples.
 #
 # $Log$
+# Revision 1.5  2004/12/09 22:12:56  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.4  2004/11/21 00:17:12  jimmyo
 # Changed a lot of plugins so they use DERIVE instead of COUNTER.
 #
@@ -182,7 +185,8 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	print "graph_order ", join (' ', @in_fields, @out_fields), "\n";
 	print "graph_title VLAN $INTERFACE internet usage\n";
 	print "graph_total total\n";
-	print "graph_args --base 1000 --vertical-label bps_in_(-)_/_out_(+)\n";
+	print "graph_args --base 1000\n";
+	print "graph_vlabel bits per ${scale} in (-) / out (+)\n";
 	print "graph_category network\n";
 	print @out;
 	exit 0;

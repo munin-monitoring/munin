@@ -7,6 +7,7 @@ munin (work)
     (SF#1081903).
   * Munin-run: Now behaves properly when running invalid plugins (SF#1074242).
   * Munin-node: host_name in plugin-conf.d now overrides plugin output.
+  * Munin-graph: Added "graph_period" option, to make "graph_sums" usable.
   * Plugin: New version of generic/smart_ by plugin creator (Nicolas
     Stransky) (SF#1072459).
   * Plugin: generic/uptime was re-classified as linux/uptime (SF#1074576).

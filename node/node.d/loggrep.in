@@ -32,11 +32,13 @@
 #       regex_<key>   - Additional regexes
 #       label_<key>   - Additional labels
 #       title         - Graph title
-#       time          - Time unit, min (default) or sec
 #
 # TODO: Handle rotated logs
 #
 # $Log$
+# Revision 1.2  2004/12/09 22:12:54  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.1  2004/11/20 05:59:25  ilmari
 # Added plugin generic/loggrep for generic log grepping.
 #
@@ -71,18 +73,16 @@ die("No regexes specified") unless keys %regex;
 my $statefile = "@@PLUGSTATE@@/$name.state";
 
 if ($ARGV[0] and $ARGV[0] eq 'config') {
-    my $time = $ENV{time} || 'min';
     my $title = $ENV{title} || "Entries in $logfile";
     print "graph_title $title\n";
     print "graph_args --base 1000 -l 0\n";
-    print "graph_vlabel entries / $time\n";
+    print "graph_vlabel entries / ${scale}\n";
     print "graph_category other\n";
     for my $key (keys %regex) {
 	print "$key.label $regex{$key}{'label'}\n";
 	print "$key.type DERIVE\n";
 	print "$key.min 0\n";
 	print "$key.draw LINE2\n";
-	print "$key.cdef $key,60,*\n" if $time eq 'min';
     }
     exit 0;
 }

@@ -32,6 +32,9 @@
 # 	autoconf  (optional - only used by munin-config)
 #
 # $Log$
+# Revision 1.6  2004/12/09 22:12:55  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.5  2004/11/16 20:18:09  jimmyo
 # License cleanups.
 #
@@ -162,9 +165,9 @@ sub query_squid {
 if($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title Squid traffic status\n";
     print "graph_args --base 1000\n";
-    print "graph_vlabel bps\n";
+    print "graph_vlabel bits per ${scale}\n";
     print "graph_order kbytes_in kbytes_out hit_kbytes_out\n";
-	print "graph_category squid\n";
+    print "graph_category squid\n";
     print "kbytes_in.label received\n";
     print "kbytes_in.cdef kbytes_in,8096,*\n";
     print "kbytes_in.type DERIVE\n";

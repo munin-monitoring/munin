@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.14  2004/12/09 22:12:55  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.13  2004/11/21 00:16:56  jimmyo
 # Changed a lot of plugins so they use DERIVE instead of COUNTER.
 #
@@ -154,7 +157,7 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	}
 	print "graph_order recv send\n";
 	print "graph_args --base 1000\n";
-	print "graph_vlabel bps in (-) / out (+)\n";
+	print "graph_vlabel bits in (-) / out (+) per ${scale}\n";
 	print "graph_category network\n";
 	print "graph_info This graph shows errors for the \"$name\" network interface.\n";
 	print "send.info Bits unsuccessfully sent/received by this interface.\n";

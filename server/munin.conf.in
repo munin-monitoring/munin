@@ -11,6 +11,9 @@ rundir  @@STATEDIR@@
 # Where to look for the HTML templates
 tmpldir	@@CONFDIR@@/templates
 
+# Make graphs show values per minute instead of per second
+#graph_period minute
+
 # a simple host tree
 [@@HOSTNAME@@]
     address 127.0.0.1

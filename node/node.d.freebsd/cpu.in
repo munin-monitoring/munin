@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.8  2004/12/09 22:12:55  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.7  2004/11/28 09:43:54  lupe
 # 6-CURRENT support
 #
@@ -89,6 +92,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel %'
 	echo 'graph_scale no'
 	echo 'graph_category system'
+	echo 'graph_period second'
 	echo 'system.label system'
 	echo 'system.draw AREA'
 	echo 'system.max 5000'

@@ -10,6 +10,9 @@
 # Contributed by Nicolai Langfeldt
 #
 # $Log$
+# Revision 1.5  2004/12/09 22:12:54  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.4  2004/12/09 20:16:29  jimmyo
 # generic/bind9 now handles syslog format as well (by xavier).
 #
@@ -82,11 +85,10 @@ sub do_config {
     my $k;
 
     print "graph_title DNS Queries by type
-graph_vlabel Queries / minute
+graph_vlabel Queries / ${scale}
 query_other.label Other
 query_other.type DERIVE
 query_other.min 0
-query_other.cdef query_other,60,*
 query_other.draw AREA
 ";
     get_state;
@@ -95,7 +97,6 @@ query_other.draw AREA
 	print "query_$k.label $k
 query_$k.type DERIVE
 query_$k.min 0
-query_$k.cdef query_$k,60,*
 query_$k.draw STACK
 ";
     }

@@ -8,6 +8,9 @@
 # 	autoconf (optional - only used by munin-config)
 #
 # $Log$
+# Revision 1.4  2004/12/09 22:12:55  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.3  2004/11/21 00:16:56  jimmyo
 # Changed a lot of plugins so they use DERIVE instead of COUNTER.
 #
@@ -52,7 +55,7 @@ if [ "$1" = "config" ]; then
 
 	echo 'graph_title Netstat'
 	echo 'graph_args -l 0 --base 1000'
-	echo 'graph_vlabel active connections'
+	echo 'graph_vlabel active connections per ${scale}'
 	echo 'graph_category network'
 	echo 'active.label active'
 	echo 'active.type DERIVE'

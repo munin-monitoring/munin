@@ -24,6 +24,9 @@
 # 	ports    - HTTP port numbers
 #
 # $Log$
+# Revision 1.10  2004/12/09 22:12:54  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.9  2004/09/26 22:14:39  jimmyo
 # Changd COUNTER -> DERIVE for some plugins. Set min/max values.
 #
@@ -105,7 +108,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" )
 {
 	print "graph_title Apache accesses\n";
 	print "graph_args --base 1000\n";
-	print "graph_vlabel accesses / second\n";
+	print "graph_vlabel accesses / ${scale}\n";
 	print "graph_category apache\n";
 	foreach my $port (@PORTS) {
 		print "accesses$port.label port $port\n";
