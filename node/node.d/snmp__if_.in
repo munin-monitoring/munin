@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.12  2004/11/20 22:06:22  jimmyo
+# Clean up output of plugin a bit.
+#
 # Revision 1.11  2004/11/16 20:08:26  jimmyo
 # License cleanups.
 #
@@ -128,12 +131,12 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	{
 		$warn = $response->{$ifEntrySpeed}/8;
 	}
-	print "graph_title $name traffic\n";
+	print "graph_title Interface $iface traffic\n";
 	print "graph_order recv send\n";
 	print "graph_args --base 1000\n";
 	print "graph_vlabel bps in (-) / out (+)\n";
 	print "graph_category network\n";
-	print "graph_info This graph shows traffic for this network interface.\n";
+	print "graph_info This graph shows traffic for the \"$name\" network interface.\n";
 	print "send.info Bits sent/received by this interface.\n";
 	print "recv.label recv\n";
 	print "recv.type COUNTER\n";
