@@ -37,12 +37,12 @@ munin (1.2.0rc2-1) unstable; urgency=low
       - New plugin: generic/courier_. Closes: #291854.
       - New plugin: generic/perdition. Closes:  #291855.
 
-  * debian/munin.NEWS.Debian, debian/munin-node.NEWS.Debian:
+  * debian/NEWS:
       - Document the changes that may lead to data loss when upgrading from
         Munin 1.0.x.
 
   * debian/control:
-      - Add libdate-manip-perl as a reccomended package, as the new CGI
+      - Add libdate-manip-perl as a recommended package, as the new CGI
         functionality depends on it.
 
   * debian/Makefile.config:
