@@ -1,0 +1,47 @@
+#!/bin/sh
+#
+# Plugin to monitor sendmail statistics.
+#
+# Usage: Place in /etc/lrrd/client.d/ (or link it there  using ln -s)
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional)
+#
+
+TEMP_FILE=/tmp/lrrd-sendmail
+
+if [ "$1" = "autoconf" ]; then
+	if [ -f ${TEMP_FILE} ] ; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 1
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Sendmail email volumes'
+	echo 'graph_order received sent'
+	echo 'graph_vlabel bytes'
+	echo 'received.label received'
+	echo 'sent.label sent'
+	exit 0
+fi
+
+received=0 ; sent=0
+grep '^ *T' ${TEMP_FILE} | \
+(
+while read line ; do
+  set -- ${line}
+  received=`expr ${received} + $5`
+  sent=`expr ${sent} + $3`
+done
+rm -f ${TEMP_FILE}
+
+echo "received.value ${received}"
+echo "sent.value ${sent}"
+)
