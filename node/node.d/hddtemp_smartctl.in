@@ -85,7 +85,7 @@ $smartctl = `which smartctl` unless $smartctl;
 chomp $smartctl;
 
 # Still not found? Check obvious places
-my @dirs, qw(/usr/bin /usr/sbin /usr/local/bin /usr/local/sbin);
+my @dirs = qw(/usr/bin /usr/sbin /usr/local/bin /usr/local/sbin);
 until ($smartctl or @dirs == 0) {
   my $dir = shift @dirs;
   my $path = $dir.'/smartctl';
