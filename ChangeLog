@@ -29,6 +29,7 @@ munin (work)
   * Minor bugfixes.
   * Added plugin linux/irqstast, showing individual interrupt rates.
   * Fixed typo in linux/fw_forwarded_local (Deb#275535).
+  * Fixed typo in linux/fw_packets (Deb#275537).
 
 munin (1.1.4)
 
