@@ -14,6 +14,7 @@ munin (work)
   * Plugin: linux/apt* has been forced to LANG=C, to get predictable output.
   * Plugin: Removed hardcoded host_name in linux/cps_.
   * Plugin: Added plugin linux/users, created by Michael Kaiser.
+  * Plugin: Cleaned up generic/samba a bit (SF#1087961).
 
 munin (1.1.8)
 
