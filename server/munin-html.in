@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.8  2004/05/16 00:36:19  jimmyo
+# Forgo an option
+#
 # Revision 1.7  2004/05/16 00:33:07  jimmyo
 # Added a descriptionary table at the bottom of the service view page. Also added "graph_info" and "<field>.info" which can be used by plugins to supply supplementary information for it.
 #
@@ -202,7 +205,7 @@ for my $domain (@domainorder) {
 		$service{fieldlist}  = "<table width='100%'>";
 		if (defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_info})
 		{
-			$service{fieldlist} .= '<tr><td align="left" valign="top">' . 
+			$service{fieldlist} .= '<tr><td align="left" valign="top" colspan=5>' . 
 				$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_info} .
 				'</td></tr>';
 			$service{fieldlist} .= '<tr><td colspan=5><hr size="1" noshade /></td></tr>';
