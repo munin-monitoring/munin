@@ -25,12 +25,10 @@ fixperms() {
 	# This'll generate a lot of chmod/grp's on
 	# the dirs, but what the hell..
 	for f in $(find /var/lib/munin -user lrrd); do
-		chown munin $f
-		chown munin ${f%/*}
+		chown munin $f ${f%/*}
 	done
 	for f in $(find /var/lib/munin -group lrrd); do
-		chgrp munin $f
-		chgrp munin ${f%/*}
+		chgrp munin $f ${f%/*}
 	done
 }
 

@@ -1,6 +1,43 @@
 munin (1.0.0pre1-1) unstable; urgency=low
 
-  * New upstream release, which renames the project from "LRRD" to "Munin".
+  * New upstream release:
+      - Project renamed from "LRRD" to "Munin".
+      - iostat plugin now works on Linux 2.6, closes: #224113.
+      - mysql_queries now appends ".value" to the fields, closes: #224118.
+      - Munin-node now ignores config files names suggesting they're backup
+        files of some sort (such as "foo.dpkg-old"), closes: #224265.
+      - Munin-node now doesn't attempt to drop privileges using setuid() and
+        setgid() if it's not running as root to begin with, closes: #224300.
+      - Untaint %ENV unconditionally;  let the admin shoot himself in the foot
+        if he wants to, closes: #224838, #224878.
+      - XXX: Munin-update now allows any character in service names,
+        closes: #224859.
+      - Munin-graph now handles bogus input from plugins more gracefully,
+        closes: #224942.
+      - Munin-update doesn't any longer complain on stderr if a node times out
+        in mid-transfer, closes: #227650.
+      - Incorporates Mike Fedyk's many improvements to the memory plugin,
+        closes: #223346.
+      - The iostat graph is now mirrored over the X axis, making it much
+        easier to read, closes: #223373.
+
+  * Almost every file under debian/ has been renamed and/or modified because
+    of the project rename.  There are far too many changes to list here in
+    detail.
+
+  * debian/plugins.conf:
+      - Run the Exim plugins with "adm" as a supplementary group, to ensure
+        we can read the log files we need, closes: #225988.
+
+  * debian/munin-node.init:
+      - Use a full string match instead of a substring match when looking
+        in the process table for running Munin-node processes, closes: #224486.
+
+  * debian/munin.preinst (new), debian/munin-node.preinst (new):
+      - If we're doing an initial install of either of the Munin packages
+        on a system with LRRD configuration files and data lying around,
+        create the initial Munin configuration and data set based on the
+        old files from LRRD.
 
  -- Tore Anderson <tore@debian.org>  Sat, 17 Jan 2004 21:28:34 +0100
 
