@@ -3,6 +3,9 @@
 # Program to suggest configurations and configuration changes.
 #
 # $Log$
+# Revision 1.6  2004/09/03 22:59:03  jimmyo
+# Support comma-formatted snmp-options.
+#
 # Revision 1.5  2004/09/03 22:56:51  jimmyo
 # Added support for SNMP probing.
 #
@@ -146,6 +149,7 @@ if (!@families)
     }
 }
 @families = split (/,/, join (',', @families));
+@snmp = split (/,/, join (',', @snmp));
 
 
 $plugins   = &get_plugins   ($plugins  , $libdir);
