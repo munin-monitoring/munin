@@ -17,6 +17,7 @@ munin (1.0.0pre3)
   * Added new wildcard plugin linux/sensors_ that replaces the i2c plugins
     (SF#890952).
   * Made client timeouts configurable (not per plugin).
+  * Improved timeout-handling in node (Deb#224480).
 
 munin (1.0.0pre2)
 

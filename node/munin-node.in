@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.11  2004/02/05 18:05:59  jimmyo
+# Improved timeout-handling in node (Deb#224480).
+#
 # Revision 1.10  2004/02/05 17:35:41  jimmyo
 # Made client timeouts configurable (not per plugin).
 #
@@ -322,11 +325,11 @@ sub reap_children {
   return unless $child;
   if (kill (0, $child)) 
     { 
-      print ("# timeout pid $child\n"); 
-      logger ("Plugin timeout: $text (pid $child)");
-      close CHILD; 
+      print ("# timeout pid $child - killing..."); 
+      logger ("Plugin timeout ($timeout seconds): $text (pid $child)");
       kill (-1, $child); sleep 2; 
       kill (-9, $child);
+      print ("done\n");
     } 
 }
 
@@ -337,18 +340,19 @@ sub run_service {
   my $timed_out = 0;
   if ($services{$service}) {
     my $child = 0;
-    local $SIG{ALRM} = sub { 
-      $timed_out = 1; 
-    };
 
     if ($child = open (CHILD, "-|")) {
-      alarm($timeout);
-      while(<CHILD>) {
-	push @lines,$_;
-	if( $timed_out ) {
-	  reap_children($child, "$service $command");
-	  return ();
-	}
+      eval {
+	  local $SIG{ALRM} = sub { $timed_out=1; die "$!\n"};
+	  alarm($timeout);
+	  while(<CHILD>) {
+	    push @lines,$_;
+	  }
+      };
+      if( $timed_out ) {
+	  reap_children($child, "$service $command: $@");
+	  close (CHILD);
+          return ();
       }
       unless (close CHILD)
       {
