@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.20  2004/09/01 19:46:01  jimmyo
+# Removed debug info.
+#
 # Revision 1.19  2004/09/01 19:44:46  jimmyo
 # Munin-html img-tags now sets image size, which helps when rendering pages with lots of graphs.
 #
@@ -432,27 +435,21 @@ sub get_png_size
 	my $width = undef;
 	my $height = undef;
 
-	print STDERR "DEBUG: Checking size of \"$filename\".\n";
 	if (open (PNG, $filename))
 	{
 		my $incoming;
-		print STDERR "\t- opened.\n";
 		binmode (PNG);
 		if (read (PNG, $incoming, 4))
 		{
-			print STDERR "\t- read first four -- \"$incoming\".\n";
 			if ($incoming =~ /PNG$/)
 			{
 				if (read (PNG, $incoming, 12))
 				{
 					if (read (PNG, $incoming, 4))
 					{
-						print STDERR "\t- read size -- \"$incoming\".\n";
 						$width = unpack ("N", $incoming);
 						read (PNG, $incoming, 4);
-						print STDERR "\t- read size -- \"$incoming\".\n";
 						$height = unpack ("N", $incoming);
-						print STDERR "DEBUG: size $width x $height\n";
 					}
 				}
 			}
