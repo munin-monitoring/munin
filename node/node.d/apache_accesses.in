@@ -24,6 +24,9 @@
 # 	ports    - HTTP port numbers
 #
 # $Log$
+# Revision 1.9  2004/09/26 22:14:39  jimmyo
+# Changd COUNTER -> DERIVE for some plugins. Set min/max values.
+#
 # Revision 1.8  2004/05/20 13:57:11  jimmyo
 # Set categories to some of the plugins.
 #
@@ -106,8 +109,9 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" )
 	print "graph_category apache\n";
 	foreach my $port (@PORTS) {
 		print "accesses$port.label port $port\n";
-		print "accesses$port.type COUNTER\n";
+		print "accesses$port.type DERIVE\n";
 		print "accesses$port.max 1000000\n";
+		print "accesses$port.min 0\n";
 	}
 	exit 0;
 }
