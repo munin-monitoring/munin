@@ -1,0 +1,65 @@
+#!/bin/sh
+#
+# Script to monitor absolute disk usage.
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#
+# $Log$
+# Revision 1.1  2004/08/24 12:26:48  ilmari
+# Added plugin linux/df_abs
+#
+# Magic markers (optional - used by munin-config and installation
+# scripts):
+#
+#%# family=manual
+#%# capabilities=autoconf
+
+MAXLABEL=20
+MAXNAME=15
+
+if [ "$1" = "autoconf" ]; then
+	echo yes
+	exit 0
+fi
+
+clean_name() {
+    echo $1 | sed 's/[\/.-]/_/g; s/^_dev\(_mapper\)\?_//'| awk "{ 
+	if (length(\$1) > $MAXNAME)
+		print substr(\$1, length(\$1)-$MAXNAME+1)
+	else
+		print \$1
+	}"
+}
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Filesystem usage (in bytes)'
+	echo 'graph_args --base 1024 --lower-limit 0'
+	echo 'graph_vlabel bytes'
+	echo 'graph_category disk'
+	df -P -l -x none | sed 1d | grep -v "//" | while read i; do
+		name=`clean_name $i`
+		echo -n "$name.label "
+		echo $i | awk "{ 
+			dir=\$6
+			if (length(dir) <= $MAXLABEL)
+				print dir
+			else
+				printf (\"...%s\n\", substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3)) 
+		}"
+		echo "$name.cdef $name,1024,*"
+		size=`echo $i | awk '{print $2}'`
+		echo "$name.warning $((size / 100 * 92))"
+		echo "$name.critical $((size / 100 * 98))"
+	done
+	exit 0
+fi
+
+df -P -l  -x none| sed 1d | grep -v "//" | while read i; do
+	name=`clean_name $i`
+	echo -n "$name.value "
+	echo $i | awk '{ print $3 }'
+done
