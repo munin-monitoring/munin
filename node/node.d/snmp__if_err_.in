@@ -1,6 +1,9 @@
 #!/usr/bin/perl -w
 #
 # $Log$
+# Revision 1.2  2004/04/30 22:20:22  jimmyo
+# It should now even work. :-)
+#
 # Revision 1.1  2004/04/30 16:59:45  jimmyo
 # New SNMP plugin: if_err
 #
@@ -42,7 +45,7 @@ if (defined $ARGV[0] and $ARGV[0] eq "snmpconf")
 	exit 0;
 }
 
-if ($0 =~ /^(?:|.*\/)snmp_([^_]+)_if_(.+)$/)
+if ($0 =~ /^(?:|.*\/)snmp_([^_]+)_if_err_(.+)$/)
 {
 	$host  = $1;
 	$iface = $2;
@@ -120,18 +123,18 @@ if ($status == 2)
 	exit 0;
 }
 
-if (defined ($response = $session->get_request($ifEntryInOctets)))
+if (defined ($response = $session->get_request($ifEntryInErrors)))
 {
-	print "recv.value ", $response->{$ifEntryInOctets}, "\n";
+	print "recv.value ", $response->{$ifEntryInErrors}, "\n";
 }
 else
 {
 	print "recv.value U\n";
 }
 
-if (defined ($response = $session->get_request($ifEntryOutOctets)))
+if (defined ($response = $session->get_request($ifEntryOutErrors)))
 {
-	print "send.value ", $response->{$ifEntryOutOctets}, "\n";
+	print "send.value ", $response->{$ifEntryOutErrors}, "\n";
 }
 else
 {
