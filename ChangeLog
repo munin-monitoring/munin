@@ -30,6 +30,8 @@ munin (1.0.0pre4)
   * Two new linux firewall plugins; fw_firewall (by S. Banerian) and
     fw_conntrack (by Nicolai Langfeldt).
   * Modified sunos/cpu and linux/cpu to take "scaleto100"-parameter.
+  * Added patch to contrib-plugin linux/nfsd, to graph rpc count (Alexandre
+    Dupouy).
 
 munin (1.0.0pre3)
 
