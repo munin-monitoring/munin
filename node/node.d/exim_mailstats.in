@@ -15,6 +15,9 @@
 # 	exim         - Where's exim?
 #
 # $Log$
+# Revision 1.8  2005/03/09 19:24:15  jimmyo
+# Thanks to Stephen Gran, generic/exim_mailstats now graphs rejects (Deb#295799).
+#
 # Revision 1.7  2004/12/10 18:51:43  jimmyo
 # linux/apt* has been forced to LANG=C, to get predictable output.
 #
@@ -79,6 +82,7 @@ $statefile = "@@PLUGSTATE@@/plugin-exim_mailstats.state";
 $pos   = undef;
 $received = 0;
 $completed = 0;
+$rejected = 0;
 ($dirname = $0) =~ s/[^\/]+$//;
 $EXIM = "/usr/sbin/exim";
 $EXIM = "/usr/sbin/exim4" if (-x "/usr/sbin/exim4"); # a Debianism
@@ -174,6 +178,9 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "completed.label completed\n";
     print "completed.type DERIVE\n";
     print "completed.min 0\n";
+    print "rejected.label rejected\n";                                      
+    print "rejected.type DERIVE\n";
+    print "rejected.min 0\n";
     exit 0;
 }
 
@@ -181,15 +188,21 @@ if (! -f $logfile and ! -f $rotlogfile)
 {
     print "completed.value U\n";
     print "received.value U\n";
+    print "rejected.value U\n";
     exit 0;
 }
 
 if (-f "$statefile")
 {
     open (IN, "$statefile") or exit 4;
-    if (<IN> =~ /^(\d+):(\d+):(\d+)/)
+    if (<IN> =~ /^(\d+):(\d+):(\d+):(\d+)/)
+    {
+	($pos, $received, $completed, $rejected) = ($1, $2, $3, $4);
+    }
+    elsif (<IN> =~ /^(\d+):(\d+):(\d+)/)
     {
 	($pos, $received, $completed) = ($1, $2, $3);
+	$rejected = 0;
     }
     close IN;
 }
@@ -214,12 +227,13 @@ $pos = $startsize;
 
 print "received.value $received\n";
 print "completed.value $completed\n";
+print "rejected.value $rejected\n";
 
 if(-l $statefile) {
 	die("$statefile is a symbolic link, refusing to touch it.");
 }				
 open (OUT, ">$statefile") or exit 4;
-print OUT "$pos:$received:$completed\n";
+print OUT "$pos:$received:$completed:$rejected\n";
 close OUT;
 
 sub parseEximfile 
@@ -241,6 +255,10 @@ sub parseEximfile
 	{
 	    $completed++;
 	}
+        elsif ($line=~/rejected/)
+        {
+            $rejected++;
+        }
     }
     close(LOGFILE);    
 }

@@ -30,6 +30,8 @@ munin (CVS)
   * Plugins: generic/mailman now handles regular mailman (Deb#297904).
   * Plugins: New contrib plugin generic/mbmon_ from Arne Schwabe.
   * Plugins: Made linux/df work properly with tmpfs and devmapper (Deb#298442).
+  * Plugins: Thanks to Stephen Gran, generic/exim_mailstats now graphs rejects
+    (Deb#295799).
   * Docs: Added man page for munin-node-configure-snmp.
   * Docs: Brushed up the comments in the default munin.conf a bit (Deb#294060).
   * Installation: Create CIGdir if nonexistant.
