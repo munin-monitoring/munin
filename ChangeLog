@@ -7,6 +7,8 @@ munin (work)
   * Small layout improvements.
   * Added new options "graph_height" and "graph_width", to beter control size.
   * Added support for SNMP probing.
+  * SNMP plugin "if" now accepts PPP interfaces as well as ethernet
+    interfaces.
   
 munin (1.1.3)
 
