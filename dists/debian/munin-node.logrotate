@@ -1,4 +1,4 @@
-/var/log/lrrd/lrrd-client.log {
+/var/log/munin/munin-client.log {
 	daily
 	missingok
 	rotate 7

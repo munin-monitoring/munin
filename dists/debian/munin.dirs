@@ -1,2 +1,2 @@
-var/www/lrrd
-var/lib/lrrd
+var/www/munin
+var/lib/munin

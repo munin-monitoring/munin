@@ -1,5 +1,5 @@
 #
-# cron-jobs for lrrd-client
+# cron-jobs for munin-client
 #
 
 MAILTO=root
@@ -8,4 +8,4 @@ MAILTO=root
 # an hour (12 invokations an hour, 1 in 12 chance that the update will
 # happen), but ensure that there will never be more than two hour (7200
 # seconds) interval between updates..
-*/5 * * * *	root [ -x /etc/lrrd/client.d/apt ] && /etc/lrrd/client.d/apt update 7200 12 >/dev/null
+*/5 * * * *	root [ -x /etc/munin/client.d/apt ] && /etc/munin/client.d/apt update 7200 12 >/dev/null

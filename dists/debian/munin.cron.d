@@ -1,8 +1,8 @@
 #
-# cron-jobs for lrrd-server
+# cron-jobs for munin-server
 #
 
 MAILTO=root
 
-*/5 * * * *     lrrd if [ -x /usr/bin/lrrd-cron ]; then /usr/bin/lrrd-cron; fi
-10 10 * * *     lrrd if [ -x /usr/share/lrrd/lrrd-nagios ]; then /usr/share/lrrd/lrrd-nagios --removeok; fi
+*/5 * * * *     munin if [ -x /usr/bin/munin-cron ]; then /usr/bin/munin-cron; fi
+10 10 * * *     munin if [ -x /usr/share/munin/munin-nagios ]; then /usr/share/munin/munin-nagios --removeok; fi

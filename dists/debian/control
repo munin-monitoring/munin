@@ -1,18 +1,18 @@
-Source: lrrd
+Source: munin
 Section: net
 Priority: extra
 Maintainer: Tore Anderson <tore@debian.org>
 Build-Depends-Indep: debhelper (>> 4.0.0), perl, htmldoc, html2text
 Standards-Version: 3.6.1.0
 
-Package: lrrd-client
+Package: munin-client
 Architecture: all
 Depends: ${perl:Depends}, libnet-server-perl, procps
-Suggests: lrrd-server
-Replaces: lrrd-plugin-apt
-Conflicts: lrrd-plugin-apt
+Suggests: munin-server
+Replaces: munin-plugin-apt
+Conflicts: munin-plugin-apt
 Description: Linpro's network-wide graphing framework (client)
- LRRD is a highly flexible and powerful solution used to create graphs of
+ Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still
  maintaining a rattling ease of installation and configuration.
  .
@@ -25,21 +25,21 @@ Description: Linpro's network-wide graphing framework (client)
  cpu usage, network usage, load average, and so on. Creating your own plugins
  which are capable of extracting other system-specific values is very easy,
  and is often done in a matter of minutes. You can also create plugins which
- relay information from other devices in your network that can't run LRRD,
+ relay information from other devices in your network that can't run Munin,
  such as a switch or a server running another operating system, by using
  SNMP or similar technology.
  .
- LRRD is written in Perl, and relies heavily on Tobi Oetiker's excellent
- RRDtool. To see a real example of LRRD in action, take a peek at
- <http://www.linpro.no/projects/lrrd/example/>.
+ Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
+ RRDtool. To see a real example of Munin in action, take a peek at
+ <http://www.linpro.no/projects/munin/example/>.
 
-Package: lrrd-server
+Package: munin-server
 Architecture: all
 Depends: ${perl:Depends}, librrds-perl, libhtml-template-perl, libdigest-md5-perl, libtime-hires-perl, libstorable-perl
-Recommends: lrrd-client
+Recommends: munin-client
 Suggests: rrdtool, www-browser, httpd
 Description: Linpro's network-wide graphing framework (server)
- LRRD is a highly flexible and powerful solution used to create graphs of
+ Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still
  maintaining a rattling ease of installation and configuration.
  .
@@ -50,9 +50,9 @@ Description: Linpro's network-wide graphing framework (server)
  .
  It is also able to alert you if any value is outside of a preset boundary,
  useful if you want to be alerted if a filesystem is about to grow full, for
- instance. Currently you can only do this by letting LRRD send messages to
+ instance. Currently you can only do this by letting Munin send messages to
  a Nagios server.
  .
- LRRD is written in Perl, and relies heavily on Tobi Oetiker's excellent
- RRDtool. To see a real example of LRRD in action, take a peek at
- <http://www.linpro.no/projects/lrrd/example/>.
+ Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
+ RRDtool. To see a real example of Munin in action, take a peek at
+ <http://www.linpro.no/projects/munin/example/>.

@@ -1,27 +1,27 @@
 #! /bin/sh
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/sbin/lrrd-client
-NAME=lrrd-client
-PIDFILE=/var/run/lrrd/lrrd-client.pid
+DAEMON=/usr/sbin/munin-client
+NAME=munin-client
+PIDFILE=/var/run/munin/munin-client.pid
 
 test -f $DAEMON || exit 0
 
 set -e
 
 is_running() {
-	if [ -e /var/run/lrrd/lrrd-client.pid ]; then
+	if [ -e /var/run/munin/munin-client.pid ]; then
 		if kill -0 $(< $PIDFILE ) ; then
 			return 0
 		fi
-	elif pgrep -f /usr/sbin/lrrd-client >/dev/null; then
+	elif pgrep -f /usr/sbin/munin-client >/dev/null; then
 		return 0
 	fi
 	return 1
 }
 
 stop() {
-	echo -n "Stopping lrrd-client: "
+	echo -n "Stopping munin-client: "
 	if ! is_running; then
 		echo "not running."
 		return 0
@@ -35,7 +35,7 @@ stop() {
 			return 0
 		fi
 		echo -n "failed, trying with signals.."
-		pkill -15 -f /usr/sbin/lrrd-client
+		pkill -15 -f /usr/sbin/munin-client
 		echo -n "SIGTERM.."
 		sleep 1
 		if ! is_running; then
@@ -44,7 +44,7 @@ stop() {
 		fi
 		WAIT=5
 		echo -n "SIGKILL.."
-		pkill -9 -f /usr/sbin/lrrd-client
+		pkill -9 -f /usr/sbin/munin-client
 		while [ $WAIT -ge 0 ] && sleep 1; do
 			if ! is_running; then
 				echo "done."
@@ -60,7 +60,7 @@ stop() {
 }
 
 start() {
-	echo -n "Starting lrrd-client: "
+	echo -n "Starting munin-client: "
 	if is_running; then
 		echo "already running."
 		exit 0

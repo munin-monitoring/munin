@@ -4,45 +4,45 @@ set -e
 
 prevver="$2"
 
-add_lrrd_system_user() {
-	if ! getent passwd lrrd >/dev/null; then
-		adduser --group --system --no-create-home --home /var/lib/lrrd lrrd;
+add_munin_system_user() {
+	if ! getent passwd munin >/dev/null; then
+		adduser --group --system --no-create-home --home /var/lib/munin munin;
 	fi	
 
 	# Update-kluge, packages prior to 0.9.8-1 didn't add the system group,
 	# only the user.  Fix this if necessary, and make sure the new group
-	# has the same GID as the lrrd user, unless it's already been taken by
+	# has the same GID as the munin user, unless it's already been taken by
 	# some other system group.
 	#
-	# (Should be removed when a LRRD package is in the stable release.)
+	# (Should be removed when a Munin package is in the stable release.)
 	
 	if [ "$prevver" ] && dpkg --compare-versions "$prevver" "<<" "0.9.8-1"; then
-		if getent group lrrd >/dev/null; then
+		if getent group munin >/dev/null; then
 			return 0
 		fi
-		local prefgid=$(getent passwd lrrd|awk '{print $3}' 'FS=:')
+		local prefgid=$(getent passwd munin|awk '{print $3}' 'FS=:')
 		if ! getent group $prefgid >/dev/null; then
-			addgroup --system --gid $prefgid lrrd
+			addgroup --system --gid $prefgid munin
 		else
-			addgroup --system lrrd
+			addgroup --system munin
 		fi
-		echo Setting primary group \"lrrd\" for the LRRD system user..
-		usermod -g lrrd lrrd
+		echo Setting primary group \"munin\" for the Munin system user..
+		usermod -g munin munin
 	fi
 }
 
 fixperms() {
-	chown lrrd:adm /var/log/lrrd
-	chmod 0750 /var/log/lrrd
+	chown munin:adm /var/log/munin
+	chmod 0750 /var/log/munin
 
-	chown lrrd:root /var/run/lrrd
-	chmod 0755 /var/run/lrrd
+	chown munin:root /var/run/munin
+	chmod 0755 /var/run/munin
 
-	chown lrrd:lrrd /var/lib/lrrd
-	chmod 0755 /var/lib/lrrd
+	chown munin:munin /var/lib/munin
+	chmod 0755 /var/lib/munin
 
-	chown lrrd:lrrd /var/lib/lrrd/plugin-state
-	chmod 0775 /var/lib/lrrd/plugin-state
+	chown munin:munin /var/lib/munin/plugin-state
+	chmod 0775 /var/lib/munin/plugin-state
 }
 
 deletelinks_upgradekluge() {
@@ -50,7 +50,7 @@ deletelinks_upgradekluge() {
 	# remove all dangling symlinks.  Remove when Sarge is released.
 
 	if [ "$prevver" ] && dpkg --compare-versions "$prevver" "<=" "0.9.6-1"; then
-		for p in $(find /etc/lrrd/client.d -type l -maxdepth 1); do
+		for p in $(find /etc/munin/client.d -type l -maxdepth 1); do
 			if [ ! -e $(readlink $p) ]; then
 				rm $p
 			fi
@@ -61,27 +61,27 @@ deletelinks_upgradekluge() {
 init_plugins() {
 	if [ "$prevver" ]; then
 		echo -n "Initializing new plugins.."
-		lrrd-client-configure --shell --newer "${prevver%-*}" | sh
+		munin-client-configure --shell --newer "${prevver%-*}" | sh
 	else
 		echo -n "Initializing plugins.."
-		lrrd-client-configure --shell | sh
+		munin-client-configure --shell | sh
 	fi
 	echo "done."
 }
 
-# the plugins' statefiles was inappropriately placed in /var/run/lrrd earlier,
-# move them to the new location in /var/lib/lrrd/plugin-state/.
+# the plugins' statefiles was inappropriately placed in /var/run/munin earlier,
+# move them to the new location in /var/lib/munin/plugin-state/.
 move_statefiles_upgradekluge() {
 	if [ "$prevver" ] && dpkg --compare-versions "$prevver" "<=" "0.9.8-1"; then
 		echo -n "Moving plugin state files to new location.."
-		find /var/run/lrrd -type f -name '*.state' -exec mv {} /var/lib/lrrd/plugin-state/ \;
+		find /var/run/munin -type f -name '*.state' -exec mv {} /var/lib/munin/plugin-state/ \;
 		echo "done."
 	fi
 }	
 
 case "$1" in
 	configure)
-		add_lrrd_system_user
+		add_munin_system_user
 		fixperms
 		deletelinks_upgradekluge
 		init_plugins

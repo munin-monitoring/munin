@@ -1,19 +1,19 @@
-Debian-specific information regarding the LRRD client
+Debian-specific information regarding the Munin client
 =====================================================
 
   About the plugins
   -----------------
 
-    The client will scan the directory /etc/lrrd/client.d for executable
+    The client will scan the directory /etc/munin/client.d for executable
     files (or symlinks to such files), and will treat the results as the
     authoritative list of plugins to run.  The maintainer scripts will have
     created a default set of enabled plugins, attuned to your system.
-    You'll find more plugins in /usr/share/lrrd/plugins, which you can
-    enable by creating symlinks into /etc/lrrd/client.d as appropriate.
+    You'll find more plugins in /usr/share/munin/plugins, which you can
+    enable by creating symlinks into /etc/munin/client.d as appropriate.
 
     Creating your own plugins is very easy.  Read the rest of the included
     documents, take a look at the provided plugins, and write your own.
-    Place it in /etc/lrrd/client.d/, and restart the client.  The server
+    Place it in /etc/munin/client.d/, and restart the client.  The server
     will automatically notice the new service, and start graphing it.
 
   Locally modified plugins
@@ -21,10 +21,10 @@ Debian-specific information regarding the LRRD client
 
     If you wish to change the behaviour of the provided plugins, you are
     strongly encouraged to make a copy of the plugin as installed in
-    /usr/share/lrrd/plugins/, and place it in /etc/lrrd/client.d/. Then,
+    /usr/share/munin/plugins/, and place it in /etc/munin/client.d/. Then,
     make your modifications in the copy.  I strenously stress that it is
     discouraged to make local modifications directly in plugins found in the
-    /usr/share/lrrd/plugin/ directories, as these files are managed by
+    /usr/share/munin/plugin/ directories, as these files are managed by
     dpkg - changes may very well be overwritten on upgrades. Also, such
     changes will likely break intrusion detection systems which relies
     on dpkg's database for reference.
@@ -37,7 +37,7 @@ Debian-specific information regarding the LRRD client
   ---------------------------------------------------------------------------
 
     We've got a mailing list.  You'll find subscription information at
-    <http://lists.sourceforge.net/lists/listinfo/lrrd-users>.  All feedback
+    <http://lists.sourceforge.net/lists/listinfo/munin-users>.  All feedback
     are welcome.
     
     If you feel like sending us things that can't be represented in binary (for
