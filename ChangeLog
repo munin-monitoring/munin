@@ -4,6 +4,7 @@ munin (work)
   * Main: Internal name (for use in munin.conf) added to the table in
     service view.
   * Main: Added option cgiurl_graph.
+  * Node: Fix bug when encountering strange environment.
   * Packaging: Expand man-page macros properly on man-page generation 
     (Deb#286399).
   * Plugin: Added plugin generic/dhcpd3, created by Rune N. Skillingstad.

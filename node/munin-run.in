@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.11  2004/12/22 20:48:23  jimmyo
+# Fix bug when encountering strange environment.
+#
 # Revision 1.10  2004/12/09 17:13:36  jimmyo
 # Munin-run: Now behaves properly when running invalid plugins (SF#1074242).
 #
@@ -82,8 +85,14 @@ use Getopt::Long;
 # in the foot with it, if they want to.
 foreach my $key (keys %ENV)
 {
-	$ENV{$key} =~ /^(.*)$/;
-	$ENV{$key} = $1;
+	if ($ENV{$key} =~ /^(.*)$/)
+	{
+	    $ENV{$key} = $1;
+	}
+	else 
+	{
+	    delete $ENV{$key};
+	}
 }
 
 my %services;
