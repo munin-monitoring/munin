@@ -7,6 +7,9 @@
 # Usage: Link or copy into /etc/munin/node.d/
 #
 # $Log$
+# Revision 1.6  2004/12/10 10:47:49  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
 # Revision 1.5  2004/12/09 22:12:56  jimmyo
 # Added "graph_period" option, to make "graph_sums" usable.
 #
@@ -58,7 +61,7 @@ if [ "$1" = "config" ]; then
 	# lower limit of the graph is '0', and that 1k=1000 (not 1024)
 	echo 'graph_args --base 1000 -l 0'
 	# The Y-axis label
-	echo 'graph_vlabel interrupts & ctx switches / ${scale}'
+	echo 'graph_vlabel interrupts & ctx switches / ${graph_period}'
 	# Graph category
 	echo 'graph_category system'
 	# Graph information

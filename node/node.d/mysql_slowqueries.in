@@ -12,6 +12,9 @@
 #	mysqlopts     - Options to pass to mysql
 #
 # $Log$
+# Revision 1.6  2004/12/10 10:47:47  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
 # Revision 1.5  2004/12/09 22:12:55  jimmyo
 # Added "graph_period" option, to make "graph_sums" usable.
 #
@@ -62,7 +65,7 @@ fi
 if [ "$1" = "config" ]; then
 	echo 'graph_title MySQL slow queries'
 	echo 'graph_args --base 1000 -l 0'
-	echo 'graph_vlabel slow queries / ${scale}'
+	echo 'graph_vlabel slow queries / ${graph_period}'
 	echo 'graph_category mysql'
 	echo 'queries.label slow queries'
 	echo 'queries.type DERIVE'

@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by lrrd-config)
 #
 # $Log$
+# Revision 1.13  2004/12/10 10:47:49  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
 # Revision 1.12  2004/12/09 22:12:56  jimmyo
 # Added "graph_period" option, to make "graph_sums" usable.
 #
@@ -111,7 +114,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config")
 
 	print "graph_title IOstat\n";
 	print "graph_args --base 1024 -l 0\n";
-	print "graph_vlabel blocks per ${scale} read (-) / written (+)\n";
+	print "graph_vlabel blocks per ${graph_period} read (-) / written (+)\n";
 	print "graph_category disk\n";
 	print "graph_total Total\n" if (keys (%devs) > 1);
 	print "graph_info This graph shows the I/O to and from block devices.\n";

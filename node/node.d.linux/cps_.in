@@ -22,6 +22,9 @@
 # 	suggest  (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.5  2004/12/10 10:47:49  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
 # Revision 1.4  2004/12/09 22:12:56  jimmyo
 # Added "graph_period" option, to make "graph_sums" usable.
 #
@@ -143,7 +146,7 @@ sub config
 	print "graph_title Loadbalanced ",($vip?$vip:"*"),"->",$port," connections\n";
 	print "graph_args -l 0\n";
 	print "graph_total total\n";
-	print "graph_vlabel connections / ${scale}\n";
+	print "graph_vlabel connections / ${graph_period}\n";
 	print "graph_category network\n";
 	my $first=1;
 	$vip = $vip || "";

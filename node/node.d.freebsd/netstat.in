@@ -8,6 +8,9 @@
 # 	autoconf (optional - only used by munin-config)
 #
 # $Log$
+# Revision 1.5  2004/12/10 10:47:49  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
 # Revision 1.4  2004/12/09 22:12:55  jimmyo
 # Added "graph_period" option, to make "graph_sums" usable.
 #
@@ -55,7 +58,7 @@ if [ "$1" = "config" ]; then
 
 	echo 'graph_title Netstat'
 	echo 'graph_args -l 0 --base 1000'
-	echo 'graph_vlabel active connections per ${scale}'
+	echo 'graph_vlabel active connections per ${graph_period}'
 	echo 'graph_category network'
 	echo 'active.label active'
 	echo 'active.type DERIVE'

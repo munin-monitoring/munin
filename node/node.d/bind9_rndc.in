@@ -87,7 +87,7 @@ sub do_config {
     my $k;
 
     print "graph_title DNS Queries by status
-graph_vlabel Queries / ${scale}
+graph_vlabel Queries / ${graph_period}
 ";
     
     get_state;

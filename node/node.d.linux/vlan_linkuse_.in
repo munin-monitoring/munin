@@ -16,6 +16,9 @@
 # have such rules. Look at the existing for examples.
 #
 # $Log$
+# Revision 1.6  2004/12/10 10:47:49  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
 # Revision 1.5  2004/12/09 22:12:56  jimmyo
 # Added "graph_period" option, to make "graph_sums" usable.
 #
@@ -70,7 +73,7 @@ while (<IN>)
 			print "graph_title VLAN $INTERFACE internet usage\n";
 			print "graph_args --base 1000\n";
 			print "graph_category network\n";
-			print "graph_vlabel bits per ${scale} in (-) / out (+)\n";
+			print "graph_vlabel bits per ${graph_period} in (-) / out (+)\n";
 			print "in.label bps\n"; 
 			print "in.cdef in,8,*\n"; 
 			print "in.graph no\n"; 

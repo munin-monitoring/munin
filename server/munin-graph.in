@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.45  2004/12/10 10:47:50  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
 # Revision 1.44  2004/12/09 22:30:36  jimmyo
 # Make sure graph_sums arent applied to GAUGE graphs.
 #
@@ -409,7 +412,7 @@ sub get_vlabel
     my $scale   = shift;
 
     if ($node->{client}->{$service}->{graph_vlabel}) {
-	(my $res = $node->{client}->{$service}->{graph_vlabel}) =~ s/\$\{scale\}/$scale/g;
+	(my $res = $node->{client}->{$service}->{graph_vlabel}) =~ s/\$\{graph_period\}/$scale/g;
 	return $res;
     }
     elsif ($node->{client}->{$service}->{graph_vtitle})

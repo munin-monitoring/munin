@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.5  2004/12/10 10:47:50  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
 # Revision 1.4  2004/12/09 22:12:56  jimmyo
 # Added "graph_period" option, to make "graph_sums" usable.
 #
@@ -32,7 +35,7 @@ if (exists $ARGV[0] and $ARGV[0] eq "autoconf") {
 } elsif (exists $ARGV[0] and $ARGV[0] eq "config") {
   print "graph_title Netstat\n";
   print "graph_args -l 0 --base 1000\n";
-  print "graph_vlabel active connections per ${scale}\n";
+  print "graph_vlabel active connections per ${graph_period}\n";
   print "graph_category network\n";
   print "active.label active\n";
   print "active.type DERIVE\n";

@@ -53,7 +53,7 @@ The plugin can output quite a few options:
 <dt><code>graph_height</code><dd>Sets the height (in pixels) of the graph. Defaults to 175.</dd>
 <dt><code>graph_order</code><dd>In witch order to draw the fields. Can also include path aliases on the form alias=domain;host:graph.datasource. See further down for details.</dd>
 <dt><code>graph_vlabel</code><dd>Y-axis label of the graph. </dd>
-<dt><code>graph_vtitle</code><dd>Y-axis label of the graph. NOTE: Deprecated, use graph_vlabel. If the graph is COUNTER or DERIVE based, the variable <tt>${scale}</tt> can be used to access the current scale (second, minute, hour, day).</dd>
+<dt><code>graph_vtitle</code><dd>Y-axis label of the graph. NOTE: Deprecated, use graph_vlabel. If the graph is COUNTER or DERIVE based, the variable <tt>${graph_period}</tt> can be used to access the current scale (second, minute, hour, day).</dd>
 <dt><code>graph_info</code><dd>A description of the graph contents.</dd>
 <dt><code>graph_total</code><dd>If set, summarise all the datasources' values and use the value of graph_total as a label.</dd>
 <dt><code>graph_scale</code><dd>Default on. If set, enables scaling of awg/min/max/cur values.</dd>
