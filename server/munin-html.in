@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.10  2004/05/16 16:58:41  jimmyo
+# Added a definition file (definitions.html) to the server distribution.
+#
 # Revision 1.9  2004/05/16 11:27:39  jimmyo
 # Added warning and critical statuses to the info table in the service view.
 #
@@ -146,7 +149,7 @@ if ($config->{domain_order}) {
 }
 
 #Make sure the logo and the stylesheet file is in the html dir
-my @files = ("style.css", "logo.png");
+my @files = ("style.css", "logo.png", "definitions.html");
 foreach my $file( (@files) ) {
     if ((! -e "$config->{htmldir}/$file") or
 	 (-e "$config->{tmpldir}/$file") and 

@@ -1,4 +1,4 @@
-munin (1.1.0)
+munin (1.1.1)
 
   * Added a table in the service view page, with information about each 
     field.
@@ -10,6 +10,7 @@ munin (1.1.0)
   * Added "info"-fields to linux/cpu and linux/load plugins, to demonstrate
     how it works.
   * Linux/ip_ wildcard plugin contributed by Mathy Vanvoorden (SF#954851).
+  * Added a definition file (definitions.html) to the server distribution.
 
 munin (1.1.0)
 
