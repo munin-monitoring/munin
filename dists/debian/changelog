@@ -43,7 +43,7 @@ munin (0+1.0.0pre2-1) unstable; urgency=low
         create the initial Munin configuration and data set based on the
         old files from LRRD.
 
- -- Tore Anderson <tore@debian.org>  Sat, 17 Jan 2004 21:28:34 +0100
+ -- Tore Anderson <tore@debian.org>  Sun, 01 Feb 2004 02:41:50 +0100
 
 lrrd (0.9.9r5-1) unstable; urgency=low
 
