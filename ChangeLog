@@ -1,3 +1,7 @@
+munin (1.0.0pre1)
+
+  * Renamed from LRRD to Munin.
+  
 lrrd (0.9.9r6)
 
   * Added BSDish install-sh to make the installation work

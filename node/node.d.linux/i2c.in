@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# $Log$
+# Revision 1.1  2004/01/02 18:50:01  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.4  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+
+
+#%# family=contrib
+
+STATEFILE="@@PLUGSTATE@@/plugin-i2c_temp.state"
+
+if [ "$1" = "config" ]; then
+        echo 'graph_title Temperatures'
+	echo 'graph_vtitle Celsius'
+	echo 'graph_args -l 0'
+        echo 'cpu.label cpu'
+	echo 'cpu.warning 60'
+	echo 'cpu.critical 70'
+        echo 'board.label board'
+	echo 'board.warning 40'
+	echo 'board.critical 50'
+        exit 0
+fi
+
+if [ -f "$STATEFILE" ]; then
+	if [ $(($(date +"%s")-$(stat -c "%Z" $STATEFILE))) -gt 60 ]; then
+	    sensors $chips | tee $STATEFILE | awk '/temp[12]/ {++i; print (i%2 ? "board" : "cpu") ".value", $2+0}'
+	else
+	    cat $STATEFILE |awk '/temp[12]/ {++i; print (i%2 ? "board" : "cpu") ".value", $2+0}'
+	fi
+else
+	sensors $chips | tee $STATEFILE | awk '/temp[12]/ {++i; print (i%2 ? "board" : "cpu") ".value", $2+0}'
+fi
+
+

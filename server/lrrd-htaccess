@@ -1,4 +1,0 @@
-AuthUserFile /etc/lrrd/lrrd-htpasswd
-AuthName "LRRD"
-AuthType Basic
-require valid-user

@@ -1,0 +1,291 @@
+#!@@PERL@@ -w
+#
+# Plugin to monitor memory usage.
+#
+# Origional Author: Jimmy Olsen
+# Contributors:
+# Mike Fedyk: Slab, SwapCached, PageTables, VmallocUsed, Mapped, Active, Inactive, 2.4 Rmap & 2.6
+#
+# Parameters:
+#
+# 	config   (required)
+# 	autoconf (optional - only used by munin-config)
+#
+# $Log$
+# Revision 1.1  2004/01/02 18:50:01  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.6  2003/12/18 15:28:04  jimmyo
+# Plugin linux/memory has been improved greatly by Mike Fedyk (Deb#223346)
+#
+# Revision 2.0  2003/12/17 12:20:16  mfedyk
+# Major Enhancements
+#
+# Magic markers (optional - only used by munin-config and some
+# installation scripts):
+#%# family=auto
+#%# capabilities=autoconf
+
+
+if ($ARGV[0] and $ARGV[0] eq "autoconf")
+{
+	if (-r "/proc/meminfo")
+	{
+		print "yes\n";
+		exit 0;
+	}
+	else
+	{
+		print "/proc/meminfo not found\n";
+		exit 1;
+	}
+}
+
+my %mems;
+&fetch_meminfo;
+
+if ($ARGV[0] and $ARGV[0] eq "config")
+{
+	print "graph_args --base 1024 -l 0 --vertical-label Bytes --upper-limit ", $mems{'MemTotal'}, "\n";
+	print "graph_title Memory usage\n";
+	print "graph_order ",
+		"apps ";
+		if (exists $mems{'PageTables'})
+		{
+			print "page_tables ";
+		}
+		if (exists $mems{'SwapCached'})
+		{
+			print "swap_cache ";
+		}
+		if (exists $mems{'VmallocUsed'})
+		{
+			print "vmalloc_used ";
+		}
+		if (exists $mems{'Slab'})
+		{
+			print "slab ";
+		}
+		print "cached ",
+		"buffers ",
+		"free ",
+		"swap ",
+		"\n";
+	print "apps.label apps\n";
+	print "apps.draw AREA\n";
+	print "buffers.label buffers\n";
+	print "buffers.draw STACK\n";
+	print "swap.label swap\n";
+	print "swap.draw STACK\n";
+	print "cached.label cache\n";
+	print "cached.draw STACK\n";
+	print "free.label unused\n";
+	print "free.draw STACK\n";
+	if (exists $mems{'Slab'})
+	{
+		print "slab.label slab_cache\n";
+		print "slab.draw STACK\n";
+	}
+	if (exists $mems{'SwapCached'})
+	{
+		print "swap_cache.label swap_cache\n";
+		print "swap_cache.draw STACK\n";
+	}
+	if (exists $mems{'PageTables'})
+	{
+		print "page_tables.label page_tables\n";
+		print "page_tables.draw STACK\n";
+	}
+	if (exists $mems{'VmallocUsed'})
+	{
+		print "vmalloc_used.label vmalloc_used\n";
+		print "vmalloc_used.draw STACK\n";
+	}
+	if (exists $mems{'Committed_AS'})
+	{
+		print "committed.label committed\n";
+		print "committed.draw LINE2\n";
+		print "committed.warn ", $mems{'SwapTotal'} + $mems{'MemTotal'}, "\n";
+	}
+	if (exists $mems{'Mapped'})
+	{
+		print "mapped.label mapped\n";
+		print "mapped.draw LINE2\n";
+	}
+	if (exists $mems{'Active'})
+	{
+		print "active.label active\n";
+		print "active.draw LINE2\n";
+	}
+	if (exists $mems{'ActiveAnon'})
+	{
+		print "active_anon.label active_anon\n";
+		print "active_anon.draw LINE1\n";
+	}
+	if (exists $mems{'ActiveCache'})
+	{
+		print "active_cache.label active_cache\n";
+		print "active_cache.draw LINE1\n";
+	}
+	if (exists $mems{'Inactive'})
+	{
+		print "inactive.label inactive\n";
+		print "inactive.draw LINE2\n";
+	}
+	if (exists $mems{'Inact_dirty'})
+	{
+		print "inact_dirty.label inactive_dirty\n";
+		print "inact_dirty.draw LINE1\n";
+	}
+	if (exists $mems{'Inact_laundry'})
+	{
+		print "inact_laundry.label inactive_laundry\n";
+		print "inact_laundry.draw LINE1\n";
+	}
+	if (exists $mems{'Inact_clean'})
+	{
+		print "inact_clean.label inactive_clean\n";
+		print "inact_clean.draw LINE1\n";
+	}
+	exit 0;
+}
+
+# Any optional value needs to be initialized to zero if it's used in a calculation below
+# and is has not been set by &fetch_meminfo
+
+if (exists $mems{'Slab'})
+{
+	print "slab.value ", $mems{'Slab'}, "\n";
+}
+else
+{
+	$mems{'Slab'} = 0;
+}
+if (exists $mems{'SwapCached'})
+{
+	print "swap_cache.value ", $mems{'SwapCached'}, "\n";
+}
+else
+{
+	$mems{'SwapCached'} = 0;
+}
+if (exists $mems{'PageTables'})
+{
+	print "page_tables.value ", $mems{'PageTables'}, "\n";
+}
+else
+{
+	$mems{'PageTables'} = 0;
+}
+if (exists $mems{'VmallocUsed'})
+{
+	print "vmalloc_used.value ", $mems{'VmallocUsed'}, "\n";
+}
+else
+{
+	$mems{'VmallocUsed'} = 0;
+}
+
+print "apps.value ", $mems{'MemTotal'}
+	-$mems{'MemFree'}
+	-$mems{'Buffers'}
+	-$mems{'Cached'}
+	-$mems{'SwapCached'}
+	-$mems{'Slab'}
+	-$mems{'PageTables'}
+	-$mems{'VmallocUsed'}
+	,"\n";
+print "free.value ", $mems{'MemFree'}, "\n";
+print "buffers.value ", $mems{'Buffers'}, "\n";
+print "cached.value ", $mems{'Cached'}, "\n";
+print "swap.value ", $mems{'SwapTotal'} - $mems{'SwapFree'}, "\n";
+
+if (exists $mems{'Committed_AS'})
+{
+	print "committed.value ", $mems{'Committed_AS'}, "\n";
+}
+if (exists $mems{'Mapped'})
+{
+	print "mapped.value ", $mems{'Mapped'}, "\n";
+}
+if (exists $mems{'Active'})
+{
+	print "active.value ", $mems{'Active'}, "\n";
+}
+if (exists $mems{'ActiveAnon'})
+{
+	print "active_anon.value ", $mems{'ActiveAnon'}, "\n";
+}
+if (exists $mems{'ActiveCache'})
+{
+	print "active_cache.value ", $mems{'ActiveCache'}, "\n";
+}
+if (exists $mems{'Inactive'})
+{
+	print "inactive.value ", $mems{'Inactive'}, "\n";
+}
+if (exists $mems{'Inact_dirty'})
+{
+	print "inact_dirty.value ", $mems{'Inact_dirty'}, "\n";
+}
+if (exists $mems{'Inact_laundry'})
+{
+	print "inact_laundry.value ", $mems{'Inact_laundry'}, "\n";
+}
+if (exists $mems{'Inact_clean'})
+{
+	print "inact_clean.value ", $mems{'Inact_clean'}, "\n";
+}
+
+sub fetch_meminfo
+{
+	open (IN, "/proc/meminfo") || die "Could not open /proc/meminfo for reading: $!";
+	while (<IN>)
+	{
+		if (/^(\w+):\s*(\d+)\s+kb/i)
+		{
+			$mems{"$1"} = $2 * 1024;
+		}
+	}
+	close (IN);
+	# Only 2.6 and above has slab reported in meminfo, so read slabinfo if it isn't in meminfo
+	if (!$mems{Slab})
+	{
+		&fetch_slabinfo;
+	}
+	# Support 2.4 Rmap VM based kernels
+	if (!$mems{'Inactive'} && $mems{'Inact_dirty'} && $mems{'Inact_laundry'} && $mems{'Inact_clean'})
+	{
+		$mems{'Inactive'} = $mems{'Inact_dirty'} + $mems{'Inact_laundry'} + $mems{'Inact_clean'}
+	}
+}
+
+sub fetch_slabinfo
+{
+	# In 2.0 there is no slabinfo file, so return if the file doesn't open
+	open (IN, "/proc/slabinfo") || return;
+	my @slabinfo;
+	my $tot_slab_pages = 0;
+	my $slab_version = <IN>;
+	if ($slab_version =~ /^slabinfo - version: 1.1/)
+	{
+		while (<IN>)
+		{
+			if (!/^slabinfo/)
+			{
+				@slabinfo = split;
+				$tot_slab_pages += $slabinfo[5];
+			}
+		}
+	}
+	close (IN);
+	if ($tot_slab_pages gt 0)
+	{
+		$mems{'Slab'} = $tot_slab_pages * 4096;
+	}
+}
+
+# vim:syntax=perl

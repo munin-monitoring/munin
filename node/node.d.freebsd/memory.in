@@ -1,0 +1,78 @@
+#!/bin/sh
+#
+# Plugin to monitor memory usage.
+#
+# Parameters:
+#
+# 	config   (required)
+# 	autoconf (optional - only used by munin-config)
+#
+# $Log$
+# Revision 1.1  2004/01/02 18:50:00  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.3  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
+# Magic markers (optional - only used by munin-config and some
+# installation scripts):
+#%# family=auto
+#%# capabilities=autoconf
+
+if [ "$1" = "autoconf" ]; then
+    if [ -x /sbin/sysctl ]; then
+        /sbin/sysctl vm.stats.vm.v_page_size > /dev/null
+    	if [ $? = "0" ]; then
+	    	echo yes
+    		exit 0
+    	else
+		    echo no
+		    exit 1
+	    fi
+    else
+        echo no
+        exit 1
+    fi
+fi
+
+    PAGESIZE=`/sbin/sysctl -n vm.stats.vm.v_page_size`
+    MEMSIZE=`/sbin/sysctl -n vm.stats.vm.v_page_count`
+    MEMMAX=`echo 'scale=2;' $PAGESIZE*$MEMSIZE | bc -q `
+
+if [ "$1" = "config" ]; then
+
+        echo 'graph_args --base 1024 -l 0 --vertical-label Bytes --upper-limit '$MEMMAX
+	echo 'graph_title Memory usage'
+	echo 'graph_order active inactive wired buffers cached free'
+	echo 'active.label active'
+	echo 'active.draw AREA'
+	echo 'inactive.label inactive'
+	echo 'inactive.draw STACK'
+	echo 'wired.label wired'
+	echo 'wired.draw STACK'
+	echo 'buffers.label buffers'
+	echo 'buffers.draw STACK'
+	echo 'cached.label cache'
+	echo 'cached.draw STACK'
+	echo 'free.label free'
+	echo 'free.draw STACK'
+	exit 0
+fi
+
+ACTIVE_COUNT=`/sbin/sysctl -n vm.stats.vm.v_active_count`
+INACTIVE_COUNT=`/sbin/sysctl -n vm.stats.vm.v_inactive_count`
+FREE_COUNT=`/sbin/sysctl -n vm.stats.vm.v_free_count`
+CACHE_COUNT=`/sbin/sysctl -n vm.stats.vm.v_cache_count`
+BUFFERS_COUNT=`/sbin/sysctl -n vfs.bufspace`
+WIRED_COUNT=`/sbin/sysctl -n vm.stats.vm.v_wire_count`
+echo 'print "active.value ";' $ACTIVE_COUNT*$PAGESIZE | bc -q
+echo 'print "inactive.value ";' $INACTIVE_COUNT*$PAGESIZE | bc -q
+echo 'print "cached.value ";' $CACHE_COUNT*$PAGESIZE | bc -q
+echo 'print "free.value ";' $FREE_COUNT*$PAGESIZE | bc -q
+echo 'print "wired.value ";' $WIRED_COUNT*$PAGESIZE | bc -q
+echo buffers.value $BUFFERS_COUNT

@@ -1,13 +1,13 @@
-LRRD consists of two parts - a client and a server. The client runs on 
-each of the machines you want to collect data from. The server does the
-collecting, and draws the graphs.
+Munin consists of the main programs, and a node. The node runs on each of
+the machines you want to collect data from. The main programs does the
+collecting, draws the graphs, and creates the HTML pages. 
 
-To install the server:
+To install the main programs:
 
 	- edit Makefile.config
-	- create the user "lrrd"
-	- make install-server
-	- create a cron-entry to run "lrrd-cron" as the user "lrrd" every 5
+	- create the user "munin"
+	- make install-main
+	- create a cron-entry to run "munin-cron" as the user "munin" every 5
 	  minutes
 
 To install the documentation:
@@ -18,29 +18,27 @@ To install the documentation:
 To install the client:
 
 	- edit Makefile.config
-	- create the group "lrrd"
-	- make install-client install-client-plugins
+	- create the group "munin"
+	- make install-node install-node-plugins
 	- decide which plugins to use (quick auto-solution: 
-	  "lrrd-client-configure --shell | sh")
+	  "munin-node-configure --shell | sh")
 	- start the client (you probably want an init-script for this)
 
-Notes about client plugins
--------------------------
+Notes about node plugins
+--------------------------
 
-"make install-client-plugins" installs the plugins in LIBDIR (defined in
+"make install-node-plugins" installs the plugins in LIBDIR (defined in
 Makefile.config). Put the ones you want to use (or better yet, create
 softlinks) in CONFDIR/client.d/ . An easy way to do this, is the program
-"lrrd-client-configure", using the parameter "--shell". It will then
+"munin-node-configure", using the parameter "--shell". It will then
 suggest commands to do this.
 
 Some of the plugins require some configuration to get running. An
 example configuration file is found in the file "plugins.conf";
 
 Many OSes and releases thereof have different ways of gathering data. A
-lot of OSes still have none (due to us not having access to one). If you
-create plugins for a system which is not already in the package, please
-send us a copy of them, so we can add them for others to use. We'd also
-be happy if you sent us any new plugins on systems already in the
-package.
-
+lot of OSes still have none. If you create plugins for a system which is
+not already in the package, please send us a copy of them, so we can add
+them for others to use. We'd also be happy if you sent us any new plugins
+on systems already in the package.
 

@@ -1,0 +1,69 @@
+#!/bin/sh
+#
+# Plugin to monitor network connections.
+#
+# Parameters:
+#
+# 	config   (required)
+# 	autoconf (optional - only used by munin-config)
+#
+# $Log$
+# Revision 1.1  2004/01/02 18:50:00  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.2  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
+# Magic markers (optional - used by munin-config and some installation
+# scripts):
+#%# family=auto
+#%# capabilities=autoconf
+
+
+
+if [ "$1" = "autoconf" ]; then
+	if ( netstat -s 2>/dev/null >/dev/null ); then
+		echo yes
+		exit 0
+	else
+		if [ $? -eq 127 ]
+		then
+			echo "no (netstat program not found)"
+			exit 1
+		else
+			echo no
+			exit 1
+		fi
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Netstat'
+	echo 'graph_args -l 0 --base 1000'
+	echo 'graph_vlabel active connections'
+	echo 'active.label active'
+	echo 'active.type COUNTER'
+	echo 'active.max 50000'''
+	echo 'passive.label passive'
+	echo 'passive.type COUNTER'
+	echo 'passive.max 50000'''
+	echo 'failed.label failed'
+	echo 'failed.type COUNTER'
+	echo 'failed.max 50000'''
+	echo 'resets.label resets'
+	echo 'resets.type COUNTER'
+	echo 'resets.max 50000'''
+	echo 'established.label established'
+	echo 'established.type GAUGE'
+	echo 'established.max 50000'''
+	exit 0
+fi
+
+netstat -s | awk '/active connections/ { print "active.value " $1 } /passive connection/ { print "passive.value " $1 } /failed connection/ { print "failed.value " $1 } /connection resets/ { print "resets.value " $1 } /connections established/ { print "established.value " $1 }'
+

@@ -1,15 +1,15 @@
-Protocol for data exchange between server and client
+Protocol for data exchange between daemon and client
 ----------------------------------------------------
 
 Client commands:
 	
 	- list [node]
 	  	Asks client to list all items available for query for
-		this node. If no node is given, default to node that runs
-		the lrrd-client
+		this host. If no host is given, default to host that runs
+		the munin-eye
 	
 	- nodes
-		List nodes
+		List hosts
 
 	- config <query-item>
 		Asks the client for configuration items.

@@ -1,0 +1,60 @@
+#!/bin/sh
+# 
+# Plugin to monitor the number of slow queries on a mysql-server
+#
+# Parameters:
+# 	
+# 	configure
+# 	autoconf
+#
+# Configuration variables
+#
+#	mysqlopts     - Options to pass to mysql
+#
+# $Log$
+# Revision 1.1  2004/01/02 18:50:00  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.6  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+MYSQLOPTS="$mysqlopts"
+MYSQLADMIN=${mysqladmin:-mysqladmin}
+
+if [ "$1" = "autoconf" ]; then
+        $MYSQLADMIN --version 2>/dev/null >/dev/null
+        if [ $? -eq 0 ]
+        then
+                $MYSQLADMIN $MYSQLOPTS status 2>/dev/null >/dev/null
+                if [ $? -eq 0 ]
+                then
+                        echo yes
+                        exit 0
+                else
+                        echo "no (could not connect to mysql)"
+                fi
+        else
+                echo "no (mysqladmin not found)"
+        fi
+        exit 1
+fi
+
+if [ "$1" = "config" ]; then
+	echo 'graph_title MySQL slow queries'
+	echo 'graph_args --base 1000 -l 0'
+	echo 'graph_vlabel slow queries / second'
+	echo 'queries.label slow queries'
+	echo 'queries.type COUNTER'
+	exit 0
+fi
+
+/usr/bin/printf "queries.value "
+($MYSQLADMIN $MYSQLOPTS status 2>/dev/null || echo a a a a a a a a U) | awk '{print $9}'

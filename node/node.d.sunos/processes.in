@@ -1,0 +1,65 @@
+#!/bin/sh
+
+# $Log$
+# Revision 1.1  2004/01/02 18:50:01  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.3  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+
+
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Processes'
+	echo 'graph_order total sleeping stopped zombie runnable running'
+	echo 'total.draw AREA'
+	echo 'total.label total'
+	echo 'sleeping.label sleeping'
+	echo 'sleeping.draw AREA'
+	echo 'stopped.label stopped'
+	echo 'stopped.draw STACK'
+	echo 'zombie.label zombie'
+	echo 'zombie.draw STACK'
+	echo 'runnable.label runnable'
+	echo 'runnable.draw STACK'
+	echo 'running.label running'
+	echo 'running.draw STACK'
+
+        exit 0
+fi
+
+# STATS=`/usr/bin/ps -el | /bin/cut -b4 | /bin/tr -s '[\n]' '[ ]'`
+STATS=`/usr/bin/ps -el | /bin/cut -b4`
+
+/bin/printf "total.value"
+/bin/echo $STATS | /bin/wc -w
+
+/bin/printf "running.value "
+# /bin/echo $STATS | /usr/local/bin/perl -ne 'print y/O//, "\n"'
+/usr/local/bin/expr length "`echo $STATS | tr -cd O`"
+# FOO=$(echo $STATS |tr -cd O); echo ${#FOO}
+
+/bin/printf "sleeping.value "
+# /bin/echo $STATS | /usr/local/bin/perl -ne 'print y/S//, "\n"'
+/usr/local/bin/expr length "`echo $STATS | tr -cd S`"
+# FOO=$(echo $STATS |tr -cd S); echo ${#FOO}
+
+/bin/printf "runnable.value "
+# /bin/echo $STATS | /usr/local/bin/perl -ne 'print y/R//, "\n"'
+/usr/local/bin/expr length "`echo $STATS | tr -cd R`"
+# FOO=$(echo $STATS |tr -cd R); echo ${#FOO}
+
+/bin/printf "stopped.value "
+# /bin/echo $STATS | /usr/local/bin/perl -ne 'print y/T//, "\n"'
+/usr/local/bin/expr length "`echo $STATS | tr -cd T`"
+# FOO=$(echo $STATS |tr -cd T); echo ${#FOO}
+
+/bin/printf "zombie.value "
+# /bin/echo $STATS | /usr/local/bin/perl -ne 'print y/Z//, "\n"'
+/usr/local/bin/expr length "`echo $STATS | tr -cd Z`"
+# FOO=$(echo $STATS |tr -cd Z); echo ${#FOO}
