@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.36  2004/11/19 23:01:46  jimmyo
+# Fixed irqstats plugin so it doesn't use numbers as field names. Also expanded the label if possible, since munin-graph now handles long labels.
+#
 # Revision 1.35  2004/11/19 22:26:57  jimmyo
 # Use column headers for min/max/cur/avg if label is too long.
 #
@@ -686,36 +689,6 @@ sub get_field_name
     return $name;
 }
 
-sub get_max_label_length
-{
-    my $node    = shift;
-    my $config  = shift;
-    my $domain  = shift;
-    my $host    = shift;
-    my $service = shift;
-    my $order   = shift;
-    my $result  = 0;
-
-    for my $field (@$order) {
-	my $path = undef;
-	(my $f = $field) =~ s/=.+//;
-	next if (exists $node->{client}->{$service}->{$f.".process"} and
-		 $node->{client}->{$service}->{$f.".process"} ne "yes");
-	next if (exists $node->{client}->{$service}->{$f.".skipdraw"});
-	next unless (!exists $node->{client}->{$service}->{$f.".graph"} or
-			$node->{client}->{$service}->{$f.".graph"} eq "yes");
-	if ($result < length ($node->{client}->{$service}->{$f.".label"} || $f)) {
-	    $result = length ($node->{client}->{$service}->{$f.".label"} || $f);
-	}
-	if (exists $node->{client}->{$service}->{graph_total} and 
-		length $node->{client}->{$service}->{graph_total} > $result)
-	{
-	    $result = length $node->{client}->{$service}->{graph_total};
-	}
-    }
-    return $result;
-}
-
 sub process_field {
     my $node    = shift;
     my $service = shift;
@@ -846,7 +819,7 @@ sub process_node {
 	print "DEBUG: Checking field lengths \"", join "\",\"", (@rrd_preprocess, @field_order), "\".\n" if $DEBUG;
 
 	# Get max label length
-	$max_field_len = &get_max_label_length ($node, $config, $domain, $name, $service, \@field_order);
+	$max_field_len = &munin_get_max_label_length ($node, $config, $domain, $name, $service, \@field_order);
 	my $global_headers = ($max_field_len > 20);
 
 	# Array to keep negative data until we're finished with positive.

@@ -3,6 +3,9 @@
 # Plugin to monitor individual interrupts
 #
 # $Log$
+# Revision 1.2  2004/11/19 23:01:40  jimmyo
+# Fixed irqstats plugin so it doesn't use numbers as field names. Also expanded the label if possible, since munin-graph now handles long labels.
+#
 # Revision 1.1  2004/10/26 09:31:04  ilmari
 # Added plugin linux/irqstast, showing individual interrupt rates.
 #
@@ -70,13 +73,16 @@ graph_args --base 1000 -l 0;
 graph_vlabel interrupts / second
 graph_category system
 EOM
-    print join(' ', 'graph_order', map {$_->{irq}} @irqs), "\n";
+    print join(' ', 'graph_order', map {"i" . $_->{irq}} @irqs), "\n";
     for my $irq (@irqs) {
-	print $irq->{irq}, '.label ', $irq->{irq}, "\n";
-	print $irq->{irq}, '.info Interrupts for device(s): ', $irq->{label}, "\n"
+	my $f = ($irq->{label} || $irq->{irq});
+	$f = $irq->{irq} if (length ($f) > 47);
+	print "i", $irq->{irq}, '.label ', $f, "\n";
+	print "i", $irq->{irq}, '.info Interrupt ', $irq->{irq}, ', for device(s): ', $irq->{label}, "\n"
 	  if $irq->{label};
-	print $irq->{irq}, ".type DERIVE\n";
-	print $irq->{irq}, ".min 0\n";
+	print "i", $irq->{irq}, ".type DERIVE\n";
+	print "i", $irq->{irq}, ".cdef i", $irq->{irq}, ",1000,*\n";
+	print "i", $irq->{irq}, ".min 0\n";
     }
 } else {
     print $_->{irq}, '.value ', $_->{count}, "\n" for @irqs;

@@ -22,6 +22,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.32  2004/11/19 23:01:41  jimmyo
+# Fixed irqstats plugin so it doesn't use numbers as field names. Also expanded the label if possible, since munin-graph now handles long labels.
+#
 # Revision 1.31  2004/11/19 22:09:48  jimmyo
 # Write out contact info to datafile correctly.
 #
@@ -206,7 +209,8 @@ use Exporter;
 	   'munin_category_status',
 	   'munin_get_picture_filename',
 	   'munin_get_filename',
-	   'munin_graph_column_headers'
+	   'munin_graph_column_headers',
+	   'munin_get_max_label_length'
 	   );
 
 use strict;
@@ -972,11 +976,43 @@ sub munin_graph_column_headers
     {
 	if ($field =~ /^([^\.]+)\.negative$/ and munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $serv, $1))
 	{
-	    $ret = 1;
+	    return 1;
 	}
     }
 
+    return 1 if (munin_get_max_label_length ($config->{'domain'}->{$domain}->{'node'}->{$node}, $config, $domain, $node, $serv) > 20);
+
     return $ret;
+}
+
+sub munin_get_max_label_length
+{
+    my $node    = shift;
+    my $config  = shift;
+    my $domain  = shift;
+    my $host    = shift;
+    my $service = shift;
+    my $order   = shift;
+    my $result  = 0;
+
+    for my $field (@$order) {
+	my $path = undef;
+	(my $f = $field) =~ s/=.+//;
+	next if (exists $node->{client}->{$service}->{$f.".process"} and
+		 $node->{client}->{$service}->{$f.".process"} ne "yes");
+	next if (exists $node->{client}->{$service}->{$f.".skipdraw"});
+	next unless (!exists $node->{client}->{$service}->{$f.".graph"} or
+			$node->{client}->{$service}->{$f.".graph"} eq "yes");
+	if ($result < length ($node->{client}->{$service}->{$f.".label"} || $f)) {
+	    $result = length ($node->{client}->{$service}->{$f.".label"} || $f);
+	}
+	if (exists $node->{client}->{$service}->{graph_total} and 
+		length $node->{client}->{$service}->{graph_total} > $result)
+	{
+	    $result = length $node->{client}->{$service}->{graph_total};
+	}
+    }
+    return $result;
 }
 
 1;
