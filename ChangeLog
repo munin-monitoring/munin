@@ -9,6 +9,7 @@ munin (1.0.0pre4)
     Contributed by Per A. Buer.
   * Added user configuration for generic/postfix* (SF#895680).
   * Fixed links in HTML templates (Deb#236792).
+  * Fixed broken autoconf in apache-* plugins (Deb#236144).
 
 munin (1.0.0pre3)
 

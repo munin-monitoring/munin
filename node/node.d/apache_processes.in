@@ -23,6 +23,9 @@
 # 	url      - Override default status-url
 #
 # $Log$
+# Revision 1.5  2004/04/27 08:46:57  jimmyo
+# Fixed broken autoconf in apache-* plugins (Deb#236144).
+#
 # Revision 1.4  2004/02/03 17:17:25  jimmyo
 # Generic/apache-plugins have been modified to properly to report the correct autoconf value. Also, bugfixes in _processes and _volume.
 #
@@ -75,7 +78,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" )
         foreach my $port (@PORTS) {
                 my $url = sprintf $URL, $port;
                 my $response = $ua->request(HTTP::Request->new('GET',$url));
-                push @badports, $port unless $response->is_success and $response->content =~ /Idle(?:Servers|Workers)/;
+                push @badports, $port unless $response->is_success and $response->content =~ /Idle(?:Servers|Workers)/im;
         }
 
 	if (@badports)

@@ -24,6 +24,9 @@
 # 	ports    - HTTP port numbers
 #
 # $Log$
+# Revision 1.5  2004/04/27 08:46:57  jimmyo
+# Fixed broken autoconf in apache-* plugins (Deb#236144).
+#
 # Revision 1.4  2004/02/18 15:47:35  jimmyo
 # The generic/apache_* plugins now have defined max values.
 #
@@ -75,7 +78,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" )
 	foreach my $port (@PORTS) {
 		my $url = sprintf $URL, $port;
 		my $response = $ua->request(HTTP::Request->new('GET',$url));
-		push @badports, $port unless $response->is_success and $response->content =~ /^Total Accesses:/;
+		push @badports, $port unless $response->is_success and $response->content =~ /^Total Accesses:/im;
 	}
 	if (@badports) {
 		print "no (no apache server-status or ExtendedStatus missing on ports @badports)\n";
