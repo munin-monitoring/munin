@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.17  2004/06/19 21:21:44  jimmyo
+# Added option to munin-graph to skip locking.
+#
 # Revision 1.16  2004/06/19 21:19:28  jimmyo
 # Log to correct log
 #
@@ -122,6 +125,7 @@ my $force_root = 0;
 my $do_usage = 0;
 my $do_version = 0;
 my $list_images = 0;
+my $skip_locking = 0;
 my $conffile = "@@CONFDIR@@/munin.conf";
 my %draw = ("day" => 1, "week" => 1, "month" => 1, "year" => 1);
 
@@ -140,6 +144,7 @@ GetOptions ( "force!"       => \$force_graphing,
 	     "month!"       => \$draw{'month'},
 	     "year!"        => \$draw{'year'},
 	     "list-images!" => \$list_images,
+	     "skip-locking!"=> \$skip_locking,
 	     "debug!"       => \$DEBUG,
 	     "version!"     => \$do_version,
 	     "help"         => \$do_usage );
@@ -194,7 +199,7 @@ it as the user \"munin\". Aborting.\n\n";
 my $config= &munin_config ($conffile);
 
 
-munin_runlock("$config->{rundir}/munin-graph.lock");
+munin_runlock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
 open (STATS,">$config->{dbdir}/munin-graph.stats.tmp") or logger("Unable to open $config->{dbdir}/munin-graph.stats.tmp");
 logger("Starting munin-graph");
 
