@@ -13,6 +13,7 @@ munin (work)
   * Plugin: Modify generic/ping_ so it's compatible with Solaris ping
     (SF#1074545).
   * Plugin: Fixed broken autoconf in generic/sendmail_mailtraffic (SF#1074528).
+  * Plugin: Patched sunos/cpu to work on Solaris 9 (SF#1077899).
 
 munin (1.1.7)
 

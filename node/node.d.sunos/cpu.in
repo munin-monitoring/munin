@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.7  2004/12/09 17:20:16  jimmyo
+# Patched sunos/cpu to work on Solaris 9 (SF#1077899).
+#
 # Revision 1.6  2004/11/21 00:17:12  jimmyo
 # Changed a lot of plugins so they use DERIVE instead of COUNTER.
 #
@@ -59,7 +62,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title CPU usage'
 	echo 'graph_order system user waitio idle'
 	echo 'graph_category system'
-	ncpu=`kstat -p -c misc -s '/^ncpus$/' | cut -f2 -d'	'`
+	ncpu=`kstat -p -c misc -n system_misc -s '/^ncpus$/' | cut -f2 -d'	'`
 	cpumax=`expr "$ncpu" '*' 100`
 	if [ "$scaleto100" = "yes" ]; then
 		graphlimit=100
