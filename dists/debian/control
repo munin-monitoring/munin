@@ -35,7 +35,7 @@ Description: Network-wide graphing framework (node)
 
 Package: munin
 Architecture: all
-Depends: ${perl:Depends}, perl-modules (>= 5.8.0), librrds-perl, libhtml-template-perl, libdigest-md5-perl, libtime-hires-perl, libstorable-perl
+Depends: ${perl:Depends}, perl-modules (>= 5.8.0) | libparse-recdescent-perl, librrds-perl, libhtml-template-perl, libdigest-md5-perl, libtime-hires-perl, libstorable-perl
 Recommends: munin-node, libdate-manip-perl
 Suggests: rrdtool, www-browser, httpd
 Conflicts: lrrd-server (<= 0.9.9r5-1)

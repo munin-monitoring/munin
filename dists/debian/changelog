@@ -45,8 +45,8 @@ munin (1.2.0-1) unstable; urgency=low
         Munin 1.0.x, and also write a bit about the new munin-limits framework.
 
   * debian/control:
-      - Add dependency on perl-modules (>= 5.8.0), as munin-limits requires
-        Text::Balanced.
+      - Add dependency on perl-modules (>= 5.8.0) | libparse-recdescent-perl
+        for the main munin package, as munin-limits requires Text::Balanced.
       - Add libdate-manip-perl as a recommended package, as the new CGI
         functionality depends on it.
 
