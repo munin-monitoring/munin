@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.31  2004/09/23 20:04:59  jimmyo
+# Added option "compare".
+#
 # Revision 1.30  2004/09/23 19:46:01  jimmyo
 # Added option "compare".
 #
@@ -450,6 +453,7 @@ for my $domain (@domainorder) {
     $domaintemplate->param(NODES => \@nodes,
                            DOMAIN => $domain, 
                            DOMAINS => \@domainlist, 
+     			   COMPARE => (&munin_get_bool ($config, "compare", 1, $domain) and @nodeorder > 1),
                            TIMESTAMP => $timestamp);
     open (FILE, ">$config->{htmldir}/$domain/index.html") or die "Cannot open $config->{htmldir}/index.html";
     print FILE $domaintemplate->output;
