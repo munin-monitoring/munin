@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.41  2005/01/05 18:32:49  jimmyo
+# Main: Tables in service-view now containt the correct "Type" when using data aliases.
+#
 # Revision 1.40  2005/01/05 18:08:01  jimmyo
 # Main: Tables in service-view now sorted according to graph_order.
 #
@@ -422,9 +425,15 @@ for my $domain (@domainorder) {
 #		foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}})
 		foreach my $f (@{&munin_get_field_order ($config->{domain}->{$domain}->{node}->{$node}, $config, $domain, $node, $service)})
 		{
-			$f =~ s/=.*//;
+			$f =~ s/=(.*)$//;
+			my $path = $1;
 			next unless (&munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $service, $f));
-			print "DEBUG: single_value: Checking field \"$f\".\n" if $DEBUG;
+			print "DEBUG: single_value: Checking field \"$f\" ($path).\n" if $DEBUG;
+
+			if (defined $path)
+			{
+			    munin_get_rrd_filename ($config->{domain}->{$domain}->{node}->{$node}, $config, $domain, $node, $service, $f, $path);
+			}
 
 			my %field_info;
 			$fieldnum++;

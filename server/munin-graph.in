@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.51  2005/01/05 18:32:49  jimmyo
+# Main: Tables in service-view now containt the correct "Type" when using data aliases.
+#
 # Revision 1.50  2005/01/05 18:08:01  jimmyo
 # Main: Tables in service-view now sorted according to graph_order.
 #
@@ -230,9 +233,6 @@ my $VERSION = "@@VERSION@@";
 # Limit graphing to certain hosts and/or services
 my @limit_hosts = ();
 my @limit_services = ();
-
-# Fields to copy when "aliasing" a field
-my @copy_fields    = ("label", "draw", "type", "rrdfile", "fieldname", "info"); 
 
 # Force drawing of "graph no". 
 my $force_graphing = 0;
@@ -714,93 +714,6 @@ sub process_field {
     return (&munin_get_bool_val ($node->{client}->{$service}->{$field.".process"}, 1));
 }
 
-sub get_rrd_filename {
-    my $node    = shift;
-    my $config  = shift;
-    my $domain  = shift;
-    my $name    = shift;
-    my $service = shift;
-    my $field   = shift;
-    my $path    = shift;
-    my $result  = "unknown";
-
-    if ($node->{client}->{$service}->{$field.".filename"})
-    {
-	$result = $node->{client}->{$service}->{$field.".filename"};
-    }
-    elsif ($path)
-    {
-	if (!defined ($node->{client}->{$service}->{$field.".label"}))
-	{
-	    print "DEBUG: Setting label: $field\n" if $DEBUG;
-	    $node->{client}->{$service}->{$field.".label"} = $field;
-	}
-
-	if ($path =~ /^\s*([^:;]+)[:;]([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
-	{
-	    $result = munin_get_filename ($config, $1, $2, $3, $4);
-	    print "\nDEBUG1: Expanding $path...\n" if $DEBUG;
-	    if (! defined $node->{client}->{$service}->{$field."label"})
-	    {
-		for my $f (@copy_fields)
-		{
-		    if (not exists $node->{client}->{$service}->{"$field.$f"} and
-			    exists $config->{'domain'}->{$1}->{'node'}->{$2}->{'client'}->{$3}->{"$4.$f"})
-		    {
-			$node->{client}->{$service}->{"$field.$f"} = $config->{'domain'}->{$1}->{'node'}->{$2}->{'client'}->{$3}->{"$4.$f"};
-		    }
-		}
-	    }
-	}
-	elsif ($path =~ /^\s*([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
-	{
-	    print "\nDEBUG2: Expanding $path...\n" if $DEBUG;
-	    $result = munin_get_filename ($config, $domain, $1, $2, $3);
-	    for my $f (@copy_fields)
-	    {
-		if (not exists $node->{client}->{$service}->{"$field.$f"} and
-			exists $config->{'domain'}->{$domain}->{'node'}->{$1}->{'client'}->{$2}->{"$3.$f"})
-		{
-		    print "DEBUG: Copying $f...\n" if $DEBUG;
-		    $node->{client}->{$service}->{"$field.$f"} = $config->{'domain'}->{$domain}->{'node'}->{$1}->{'client'}->{$2}->{"$3.$f"};
-		}
-	    }
-	}
-	elsif ($path =~ /^\s*([^:\.]+)[:\.]([^:\.]+)\s*$/)
-	{
-	    print "\nDEBUG3: Expanding $path...\n" if $DEBUG;
-	    $result = munin_get_filename ($config, $domain, $name, $1, $2);
-	    for my $f (@copy_fields)
-	    {
-		if (not exists $node->{client}->{$service}->{"$field.$f"} and
-			exists $node->{client}->{$1}->{"$2.$f"})
-		{
-		    $node->{client}->{$service}->{"$field.$f"} = $node->{client}->{$1}->{"$2.$f"};
-		}
-	    }
-	}
-	elsif ($path =~ /^\s*([^:\.]+)\s*$/)
-	{
-	    print "\nDEBUG4: Expanding $path...\n" if $DEBUG;
-	    $result = munin_get_filename ($config, $domain, $name, $service, $1);
-	    for my $f (@copy_fields)
-	    {
-		if (not exists $node->{client}->{$service}->{"$field.$f"} and
-			exists $node->{client}->{$service}->{"$1.$f"})
-		{
-		    $node->{client}->{$service}->{"$field.$f"} = $node->{client}->{$service}->{"$1.$f"};
-		}
-	    }
-	}
-    }
-    else
-    {
-	print "\nDEBUG5: Doing path...\n" if $DEBUG;
-	$result = munin_get_filename($config, $domain,$name,$service,$field);
-    }
-    return $result;
-}
-
 sub process_node {
     my ($domain,$name,$node) = @_;
 
@@ -862,7 +775,7 @@ sub process_node {
 	    }
 		
 	    # Getting name of rrd file
-	    $filename = &get_rrd_filename ($node, $config, $domain, $name, $service, $field, $path);
+	    $filename = &munin_get_rrd_filename ($node, $config, $domain, $name, $service, $field, $path);
 
 	    my $update = RRDs::last ($filename);
 	    $update = 0 if ! defined $update;
