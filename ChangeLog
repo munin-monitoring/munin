@@ -28,6 +28,7 @@ munin (work)
     contain the acpi_available program.
   * Minor bugfixes.
   * Added plugin linux/irqstast, showing individual interrupt rates.
+  * Fixed typo in linux/fw_forwarded_local (Deb#275535).
 
 munin (1.1.4)
 

@@ -4,6 +4,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.8  2004/10/27 17:50:01  jimmyo
+# Fixed typo in linux/fw_forwarded_local (Deb#275535).
+#
 # Revision 1.7  2004/09/08 15:25:33  ilmari
 # Use @@PERL@@ in all perl shebang lines.
 #
@@ -467,3 +470,4 @@ This program is released under the GNU General Public License
 
 =cut
 
+# vim:syntax=perl ts=8
