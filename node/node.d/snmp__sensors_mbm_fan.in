@@ -1,6 +1,19 @@
 #!@@PERL@@ -w
 #
+# Plugin to fetch sensor data from Windows boxes running Motherboard
+# Monitor <http://mbm.livewiredev.com/> and SNMP-Informant - MBM agent
+# <http://www.snmp-informant.com/>.
+#
+# Variables:
+#
+# 	host      - SNMP host
+# 	port      - SNMP port
+# 	community - SNMP community
+#
 # $Log$
+# Revision 1.2  2004/09/12 10:15:07  jimmyo
+# Added some documentation.
+#
 # Revision 1.1  2004/09/12 00:26:52  jimmyo
 # Added new SNMP plugins for sensors, reading info from System-Informant on Windows boxes.
 #
@@ -17,7 +30,6 @@ my $MAXLABEL = 20;
 my $host      = $ENV{host}      || undef;
 my $port      = $ENV{port}      || 161;
 my $community = $ENV{community} || "public";
-my $iface     = $ENV{interface} || undef;
 
 my $response;
 
