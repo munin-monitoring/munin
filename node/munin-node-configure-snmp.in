@@ -3,16 +3,14 @@
 use strict;
 use Net::SNMP;
 use Socket;
+use Getopt::Long;
 
-my $DEBUG = 0;
-
-my $config     = "../build/node/munin-node.conf";
-#my $config     = "/etc/munin/munin-node.conf";
-#my $servicedir = "/etc/munin/plugins";
-my $servicedir = ".";
-my $libdir     = "../build/node/node.d/";
-#my $bindir     = "/usr/sbin/";
-my $bindir     = "../build/node/";
+my $debug      = 0;
+my $version    = "@@VERSION@@";
+my $config     = "@@CONFDIR@@/munin-node.conf";
+my $servicedir = "@@CONFDIR@@/plugins";
+my $libdir     = "@@LIBDIR@@/plugins";
+my $bindir     = "@@SBINDIR@@";
 
 my $sysName      = "1.3.6.1.2.1.1.5.0";
 my $name;
@@ -21,17 +19,68 @@ my $session;
 my $error;
 my $response;
 
-my @plugins = ("if", "if_err", "fc_if", "fc_if_err", "df", "processes", "users", "load");
+my $community = "public";
+my $snmpver   = "2c";
+my $snmpport  = "161";
 
+my $do_usage   = 0;
+my $do_version = 0;
+my $do_error   = 0;
+
+my $newer      = undef;
+
+my @plugins = ("if", "if_err", "fc_if", "fc_if_err", "df", "processes", "users", "load");
 
 my %plugconf = ();
 my %hostconf = ();
 
-foreach my $plugin (@plugins)
+$do_error = 1 unless GetOptions (
+    "help"          => \$do_usage,
+    "debug!"        => \$debug,
+    "config=s"      => \$config,
+    "servicedir=s"  => \$servicedir,
+    "plugins=s"     => \@plugins,
+    "libdir=s"      => \$libdir,
+    "version!"      => \$do_version,
+    "snmpversion=s" => \$snmpver,
+    "community=s"   => \$community,
+    "newer=s"      => \$newer
+);
+
+if ($do_error or $do_usage or !@ARGV)
 {
-	fetch_plugin_config ($plugin, \%plugconf);
+	print "Usage: $0 [options] <netmask> [...]
+
+Options:
+	--help              View this help page
+	--version           Show version information
+	--debug             View debug information (very verbose)
+	--config <file>     Override configuration file
+	                    [$config]
+	--servicedir <dir>  Override plugin dir [$servicedir]
+	--libdir <dir>      Override plugin lib [$libdir]
+
+
+";
+
+	exit (!$do_usage); # 1 if error, 0 if --help
 }
 
+if ($do_version)
+{
+	print "munin-node-configure-snmp (munin-node) version $version.\n";
+	print "Written by Jimmy Olsen\n";
+	print "\n";
+	print "Copyright (C) 2004 Jimmy Olsen\n";
+	print "This is free software released under the GNU Public License. There is NO\n";
+	print "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n";
+	exit 0;
+}
+
+foreach my $plugin (@plugins)
+{
+	&fetch_plugin_config ($plugin, \%plugconf);
+}
 
 while (my $addr = shift)
 {
@@ -43,10 +92,10 @@ while (my $addr = shift)
 	}   
 	$num = 32 - $num;
 	$num = 2 ** $num;
-	print "# Doing $addr / $num\n" if $DEBUG;
+	print "# Doing $addr / $num\n" if $debug;
 	for (my $i = 0; $i < $num; $i++)
 	{
-		print "# Doing $addr -> $i...\n" if $DEBUG;
+		print "# Doing $addr -> $i...\n" if $debug;
 		my $tmpaddr = $addr;
 		if ($tmpaddr =~ /(\d+)\.(\d+)\.(\d+)\.(\d+)/)
 		{
@@ -55,8 +104,8 @@ while (my $addr = shift)
 			$tmpaddr = gethostbyaddr (inet_aton (join ('.', @tmpaddr)), AF_INET);
 			$tmpaddr ||= join ('.', @tmpaddr);
 		}
-		print "# ($tmpaddr)\n" if $DEBUG;
-		do_host ("$tmpaddr", "public");
+		print "# ($tmpaddr)\n" if $debug;
+		&do_host ("$tmpaddr", $community, $snmpver, $snmpport);
 	}
 }
 
@@ -67,7 +116,8 @@ sub do_host
 {
 	my $host = shift;
 	my $comm = shift;
-	my $port = 161;
+	my $ver  = shift;
+	my $port = shift;
 
 	if ($host =~ /([^:]+):(\d+)/)
 	{
@@ -78,7 +128,8 @@ sub do_host
 	($session, $error) = Net::SNMP->session(
 			-hostname  => $host,
 			-community => $comm,
-			-port      => shift || 161
+			-port      => $port,
+			-version   => $ver
 		);
 
 	if (!defined ($session))
@@ -122,23 +173,23 @@ sub snmp_autoconf_plugin
 	my $hostconf = shift;
 	my $host     = shift;
 
-	print "# Running autoconf on $plugname for $host...\n" if $DEBUG;
+	print "# Running autoconf on $plugname for $host...\n" if $debug;
 
     # First round of requirements
 	if (defined $plugconf->{$plugname}->{req})
 	{
-		print "# Checking requirements...\n" if $DEBUG;
+		print "# Checking requirements...\n" if $debug;
 		foreach my $req (@{$plugconf->{$plugname}->{req}})
 		{
 			if ($req->[0] =~ /\.$/)
 			{
-				print "# Delaying testing of $req->[0], as we need the indexes first.\n" if $DEBUG;
+				print "# Delaying testing of $req->[0], as we need the indexes first.\n" if $debug;
 				next;
 			}
 			my $snmp_val = snmp_get_single ($session, $req->[0]);
 			if (!defined $snmp_val or $snmp_val !~ /$req->[1]/)
 			{
-				print "# Nope. Duh.\n" if $DEBUG;
+				print "# Nope. Duh.\n" if $debug;
 				return undef;
 			}
 		}
@@ -152,7 +203,7 @@ sub snmp_autoconf_plugin
 		$num = snmp_get_single ($session, $plugconf->{$plugname}->{num});
 		return undef if !defined $num;
 	}
-	print "# Number of items to autoconf is $num...\n" if $DEBUG;
+	print "# Number of items to autoconf is $num...\n" if $debug;
 
     # Then the index base
 	my $indexes;
@@ -165,19 +216,19 @@ sub snmp_autoconf_plugin
 	{
 		$indexes->{0} = 1;
 	}
-	print "# Got indexes: ", join (',', keys (%{$indexes})), "\n" if $DEBUG;
+	print "# Got indexes: ", join (',', keys (%{$indexes})), "\n" if $debug;
 
 	return undef unless scalar keys %{$indexes};
 
     # Second round of requirements (now that we have the indexes)
 	if (defined $plugconf->{$plugname}->{req})
 	{
-		print "# Checking requirements...\n" if $DEBUG;
+		print "# Checking requirements...\n" if $debug;
 		foreach my $req (@{$plugconf->{$plugname}->{req}})
 		{
 			if ($req->[0] !~ /\.$/)
 			{
-				print "# Already tested of $req->[0], before we got hold of the indexes.\n" if $DEBUG;
+				print "# Already tested of $req->[0], before we got hold of the indexes.\n" if $debug;
 				next;
 			}
 			
@@ -186,7 +237,7 @@ sub snmp_autoconf_plugin
 				my $snmp_val = snmp_get_single ($session, $req->[0] . $key);
 				if (!defined $snmp_val or $snmp_val !~ /$req->[1]/)
 				{
-					print "# Nope. Deleting $key from possible solutions.\n" if $DEBUG;
+					print "# Nope. Deleting $key from possible solutions.\n" if $debug;
 					delete $indexes->{$key}; # Disable
 				}
 			}
@@ -214,11 +265,11 @@ sub fetch_plugin_config
 	}
 	else
 	{
-		print "# Skipping $plugname: Couldn't find plugin \"$libdir/$plugin\".\n" if $DEBUG;
+		print "# Skipping $plugname: Couldn't find plugin \"$libdir/$plugin\".\n" if $debug;
 		return 0;
 	}
 
-	print "# SNMPconfing plugin \"$plugname\" ( $libdir/$plugin )\n" if $DEBUG;
+	print "# SNMPconfing plugin \"$plugname\" ( $libdir/$plugin )\n" if $debug;
 
 	my $fork = open (PLUG, "-|");
 
@@ -250,22 +301,22 @@ sub fetch_plugin_config
 					$val = ".*";
 				}
 				push (@{$plugconf->{$plugname}->{req}}, [$oid, $val]);
-				print "# Registered $plugname  requirement: $oid =~ /$val/\n" if $DEBUG;
+				print "# Registered $plugname  requirement: $oid =~ /$val/\n" if $debug;
 			}
 			elsif ($a =~ /^index$/i and defined $b)
 			{
 				$plugconf->{$plugname}->{ind} = $b;
-				print "# Registered $plugname  index      : $b\n" if $DEBUG;
+				print "# Registered $plugname  index      : $b\n" if $debug;
 			}
 			elsif ($a =~ /^number$/i and defined $b)
 			{
 				$plugconf->{$plugname}->{num} = $b;
-				print "# Registered $plugname  number     : $b\n" if $DEBUG;
+				print "# Registered $plugname  number     : $b\n" if $debug;
 			}
 			elsif ($a =~ /^env\.(\S+)$/)
 			{
 				$plugconf->{$plugname}->{env}->{$1} = $b;
-				print "# Registered $plugname  env        : $b\n" if $DEBUG;
+				print "# Registered $plugname  env        : $b\n" if $debug;
 			}
 			else
 			{
@@ -281,7 +332,7 @@ sub snmp_get_single
 	my $session = shift;
 	my $oid     = shift;
 
-	if (!defined ($response = $session->get_request($oid)))
+	if ((!defined ($response = $session->get_request($oid))) or ($response->{$oid} eq "noSuchObject"))
 	{
 		return undef;
 	}
@@ -301,12 +352,12 @@ sub snmp_get_index
 	{
 		if ($i == 0)
 		{
-			print "# Checking for $ret\n" if $DEBUG;
+			print "# Checking for $ret\n" if $debug;
 			$response = $session->get_request($ret);
 		}
 		if ($i or !defined $response)
 		{
-			print "# Checking for sibling of $ret\n" if $DEBUG;
+			print "# Checking for sibling of $ret\n" if $debug;
 			$response = $session->get_next_request($ret);
 		}
 		if (!$response)
@@ -316,7 +367,7 @@ sub snmp_get_index
 		my @keys = keys %$response;
 		$ret = $keys[0];
 		last unless ($ret =~ /^$oid\d+$/);
-		print "# Index $i: ", join ('|', @keys), "\n" if $DEBUG;
+		print "# Index $i: ", join ('|', @keys), "\n" if $debug;
 		$rhash->{$response->{$ret}} = 1;
 	}
 	return $rhash;
@@ -332,7 +383,7 @@ sub interfaces
 	my $ifEntryType  = "1.3.6.1.2.1.2.2.1.3"; # dot something
 	my $ifEntrySpeed = "1.3.6.1.2.1.2.2.1.5"; # dot something
 
-	print "# System name: ", $name, "\n" if $DEBUG;
+	print "# System name: ", $name, "\n" if $debug;
 
 	if (!defined ($response = $session->get_request($ifNumber)))
 	{
@@ -340,7 +391,7 @@ sub interfaces
 	}
 
 	$num = $response->{$ifNumber} +1; # Add one because of bogus switch entries
-	print "# Number of interfaces: ", $num, "\n" if $DEBUG;
+	print "# Number of interfaces: ", $num, "\n" if $debug;
 
 	my $ret = $ifEntryIndex . ".0";
 
@@ -361,7 +412,7 @@ sub interfaces
 		my @keys = keys %$response;
 		$ret = $keys[0];
 		last unless ($ret =~ /^$ifEntryIndex\.\d+$/);
-		print "# Index $i: ", join ('|', @keys), "\n" if $DEBUG;
+		print "# Index $i: ", join ('|', @keys), "\n" if $debug;
 		$interfaces{$response->{$ret}} = 1;
 		$i++;
 	}
@@ -374,7 +425,7 @@ sub interfaces
 			die "Croaking: ", $session->error();
 		}
 		my @keys = keys %$response;
-		print "# Speed $key: ", join ('|', @keys), ": ", $response->{$keys[0]}, "\n" if $DEBUG;
+		print "# Speed $key: ", join ('|', @keys), ": ", $response->{$keys[0]}, "\n" if $debug;
 		if ($response->{$keys[0]} == 0)
 		{
 			delete $interfaces{$key};
@@ -389,7 +440,7 @@ sub interfaces
 			die "Croaking: ", $session->error();
 		}
 		my @keys = keys %$response;
-		print "# Type  $key: ", join ('|', @keys), ": ", $response->{$keys[0]}, "\n" if $DEBUG;
+		print "# Type  $key: ", join ('|', @keys), ": ", $response->{$keys[0]}, "\n" if $debug;
 		if ($response->{$keys[0]} != 6)
 		{
 			delete $interfaces{$key};

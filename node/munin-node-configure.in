@@ -3,6 +3,9 @@
 # Program to suggest configurations and configuration changes.
 #
 # $Log$
+# Revision 1.5  2004/09/03 22:56:51  jimmyo
+# Added support for SNMP probing.
+#
 # Revision 1.4  2004/01/29 19:25:52  jimmyo
 # Fixed bad debug output (forgotten linebreaks) in munin-node-configure (SF#882385).
 #
@@ -56,6 +59,9 @@ my $shell      = 0;
 my @afamilies  = ("auto", "manual", "contrib");
 my @dfamilies  = ("auto");
 my @families   = ();
+my @snmp       = ();
+my $snmpver    = undef;
+my $snmpcomm   = undef;
 my $removes    = 0;
 my $do_usage   = 0;
 my $do_error   = 0;
@@ -63,17 +69,20 @@ my $do_version = 0;
 my $newer      = undef;
 
 $do_error = 1 unless GetOptions (
-	"help"         => \$do_usage,
-	"shell!"       => \$shell,
-	"debug!"       => \$debug,
-	"suggest!"     => \$suggest,
-	"config=s"     => \$config,
-	"servicedir=s" => \$servicedir,
-	"remove-also!" => \$removes,
-	"libdir=s"     => \$libdir,
-	"families=s"   => \@families,
-	"version=s"    => \$do_version,
-	"newer=s"      => \$newer
+	"help"            => \$do_usage,
+	"shell!"          => \$shell,
+	"debug!"          => \$debug,
+	"suggest!"        => \$suggest,
+	"config=s"        => \$config,
+	"servicedir=s"    => \$servicedir,
+	"remove-also!"    => \$removes,
+	"libdir=s"        => \$libdir,
+	"families=s"      => \@families,
+	"version=s"       => \$do_version,
+	"snmp=s"          => \@snmp,
+	"snmpversion=s"   => \$snmpver,
+	"snmpcommunity=s" => \$snmpcomm,
+	"newer=s"         => \$newer
 );
 
 if ($do_error or $do_usage)
@@ -117,6 +126,12 @@ if (defined $newer and (!$shell or $removes))
 {
     print "Fatal: --newer only supported along with --shell.\n";
     exit 2;
+}
+
+if (@snmp and !$shell)
+{
+    print "Fatal: --snmp only supported along with --shell.\n";
+    exit 3;
 }
 
 if (!@families)
@@ -270,6 +285,35 @@ foreach my $plug (sort keys %{$plugins})
 	    &normal ($plug, $now, "");
 	}
 	
+    }
+}
+
+if (@snmp and $shell)
+{
+    if (-x "$bindir/munin-node-configure-snmp")
+    {
+	if (eval "require Net::SNMP;")
+	{
+	    my @params;
+	    push (@params, "$bindir/munin-node-configure-snmp");
+	    push (@params, "--snmpversion", $snmpver) if defined $snmpver;
+	    push (@params, "--community", $snmpcomm) if defined $snmpcomm;
+	    push (@params, @snmp);
+	    exec (@params);
+	    # NOTREACHED
+	}
+	else
+	{
+	    print STDERR "# ERROR: Cannot perform SNMP probe. SNMP operations require the perl module\n";
+	    print STDERR "# Net::SNMP, which is currently not installed (or not in one of the following\n";
+	    print STDERR "# directories: @INC\n";
+	}
+    }
+    else
+    {
+	print STDERR "# ERROR: Cannot perform SNMP probe. SNMP operations require the SNMP part\n";
+	print STDERR "# of Munin to be installed, which is currently not installed, or not in the \n";
+	print STDERR "# rigt directory: $bindir\n";
     }
 }
 

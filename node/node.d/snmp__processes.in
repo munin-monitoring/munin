@@ -1,6 +1,9 @@
 #!/usr/bin/perl -w
 #
 # $Log$
+# Revision 1.2  2004/09/03 22:56:51  jimmyo
+# Added support for SNMP probing.
+#
 # Revision 1.1  2004/04/30 20:13:53  jimmyo
 # New SNMP plugin for number of procs.
 #
@@ -71,6 +74,7 @@ if (!defined ($session))
 
 if (defined $ARGV[0] and $ARGV[0] eq "config")
 {
+	print "host_name $host\n";
 	print "graph_title Number of Processes
 graph_args --base 1000 -l 0 
 graph_vlabel number of processes

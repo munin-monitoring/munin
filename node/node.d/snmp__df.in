@@ -1,6 +1,9 @@
 #!/usr/bin/perl -w
 #
 # $Log$
+# Revision 1.2  2004/09/03 22:56:51  jimmyo
+# Added support for SNMP probing.
+#
 # Revision 1.1  2004/04/29 22:29:57  jimmyo
 # New SNMP plugin for disk usage.
 #
@@ -121,6 +124,7 @@ my $stor_id   = get_by_regex ($session, $hrStorageDesc, '(^'.join('$|^',keys(%pa
 
 if (defined $ARGV[0] and $ARGV[0] eq "config")
 {
+	print "host_name $host\n";
     print "graph_title Filesystem usage (in %)\n";
     print "graph_args --upper-limit 100 -l 0\n";
     print "graph_vlabel %\n";
