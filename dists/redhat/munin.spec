@@ -1,188 +1,228 @@
-Name:      munin
-Version:   1.0.0pre3
-Release:   2
-Copyright: GPL
-BuildRoot: %{_tmppath}/%{name}-%{version}-root
-URL:       http://www.linpro.no/
-Source:    %{name}-%{version}.tar.gz
-Group:     System Environment/Daemons
-Summary:   Munin is the Linpro RRD data agent
-BuildArchitectures: noarch
-Provides: perl(RRDs)
-Requires: perl-Config-General
-Requires: perl-HTML-Template
-Requires: perl-Net-Server
-Requires: rrdtool
-Obsoletes: lrrd-server
+Name:		munin
+Version:	1.0.2
+Release:	1
+
+Summary:	Network-wide graphing framework (grapher/gatherer)
+License:	GPL
+Group:		System Environment/Daemons
+URL:		http://munin.sourceforge.net
+Packager:	Dagfinn Ilmari Mannsaker <ilmari@linpro.no>
+Vendor:		Linpro AS
+Distribution:	Linpro Red Hat Software Archives
+Source0:	%{name}-%{version}.tar.gz
+Source1:	Makefile.config
+Source2:	munin-node.rc
+Source3:	munin.cron.d
+Source4:	munin.logrotate
+Source5:	munin-node.logrotate
+Source6:	munin-node.cron.d
+Patch0:		pidfilepath.patch
+Patch1:		no-data-dumper.patch
+BuildRoot:	%{_tmppath}/%{name}-%{version}-root
+Prereq:		/sbin/chkconfig, /sbin/service
+BuildArch:	noarch
 
 %description
-Munin, formerly known as The Linpro RRD server, queries a number of
-nodes, and processes the data using RRDtool and presents it on web
-pages.
+Munin is a highly flexible and powerful solution used to create graphs of
+virtually everything imaginable throughout your network, while still
+maintaining a rattling ease of installation and configuration.
+
+This package contains the grapher/gatherer. You will only need one instance of
+it in your network. It will periodically poll all the nodes in your network
+it's aware of for data, which it in turn will use to create graphs and HTML
+pages, suitable for viewing with your graphical web browser of choice.
+
+It is also able to alert you if any value is outside of a preset boundary,
+useful if you want to be alerted if a filesystem is about to grow full, for
+instance. Currently you can only do this by letting Munin send messages to
+a Nagios server.
+
+Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
+RRDtool. To see a real example of Munin in action, take a peek at
+<http://www.linpro.no/projects/munin/example/>.
 
 %package node
-Group: System Environment/Daemons
-Summary: Linpro RRD data agent
-BuildArchitectures: noarch
-Requires: perl-Net-Server
-#Requires: perl-Config-General
-Requires: procps >= 2.0.7
-Requires: sysstat
-Obsoletes: lrrd-client
+Group:		System Environment/Daemons
+Summary:	Network-wide graphing framework (node)
+BuildArch:	noarch
 
 %description node
-The Munin node package returns statistical data on the request of a
-Munin server.
+Munin is a highly flexible and powerful solution used to create graphs of
+virtually everything imaginable throughout your network, while still
+maintaining a rattling ease of installation and configuration.
+
+This package contains node software. You should install it on all the nodes
+in your network. It will know how to extract all sorts of data from the
+node it runs on, and will wait for the gatherer to request this data for
+further processing.
+
+It includes a range of plugins capable of extracting common values such as
+cpu usage, network usage, load average, and so on. Creating your own plugins
+which are capable of extracting other system-specific values is very easy,
+and is often done in a matter of minutes. You can also create plugins which
+relay information from other devices in your network that can't run Munin,
+such as a switch or a server running another operating system, by using
+SNMP or similar technology.
+
+Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
+RRDtool. To see a real example of Munin in action, take a peek at
+<http://www.linpro.no/projects/munin/example/>.
 
 %prep
 %setup -q
+%patch0 -p1
+%patch1 -p0
 mkdir -p %{buildroot}
 
 %build
-
 # htmldoc and html2text are not available for Red Hat. Quick hack with perl:
 # Skip the PDFs.
 perl -pi -e 's,htmldoc munin,cat munin, or s,html(2text|doc),# $&,' Makefile
 perl -pi -e 's,\$\(INSTALL.+\.(pdf|txt) \$\(DOCDIR,# $&,' Makefile
+
 make 	clean
-make 	CONFIG=dists/redhat/Makefile.config \
+make 	CONFIG=%{SOURCE1} \
 	build
 
 %install
 
 ## Node
-make 	CONFIG=dists/redhat/Makefile.config \
+make 	CONFIG=%{SOURCE1} \
 	DOCDIR=%{buildroot}%{_docdir}/munin \
 	MANDIR=%{buildroot}%{_mandir} \
 	DESTDIR=%{buildroot} \
     	install-node install-node-plugins install-doc install-man
 
-mkdir -p %{buildroot}/etc/init.d
-mkdir -p %{buildroot}/etc/munin/plugins
-mkdir -p %{buildroot}/etc/munin/plugin-conf.d
-mkdir -p %{buildroot}/var/lib/munin
+mkdir -p %{buildroot}/var/lib/munin/plugin-state
 mkdir -p %{buildroot}/var/log/munin
+mkdir -p %{buildroot}/var/run/munin
 
-#install -m 0755 node/redhat/munin-node %{buildroot}/etc/init.d/
-install -m0755 dists/redhat/munin-node.rc %{buildroot}/etc/init.d/munin-node
-install -m 0644 dists/tarball/plugins.conf %{buildroot}/etc/munin/
-install -m0644 dists/tarball/plugins.conf %{buildroot}/etc/munin/plugin-conf.d/munin-node
+install -m0644 plugins.conf %{buildroot}/etc/munin/plugin-conf.d/munin-node
 
-chmod -x %{buildroot}%{_datadir}/munin/plugins/sybase_space
+# ugly hack, to prevent DBD::Sybase to become a dependency, as it's not
+# available in RHEL, and doesn't easily build with cpanflute. I don't know
+# enough rpm-fu to prevent it in a clean manner..
+find %{buildroot}/usr/share/munin/plugins -name '*sybase*' -print0 | xargs -0 chmod -x
+
 ## Server
-
-make 	CONFIG=dists/redhat/Makefile.config \
+make 	CONFIG=%{SOURCE1} \
 	DESTDIR=%{buildroot} \
 	install-main
 
-# cf=%{buildroot}/etc/munin/munin.conf; sed 's,/var/www/munin,/var/www/html/munin,g' < $cf > $cf.patch && mv $cf.patch $cf
-
 mkdir -p %{buildroot}/var/www/html/munin
 mkdir -p %{buildroot}/var/log/munin
+mkdir -p %{buildroot}/var/lib/munin
+mkdir -p %{buildroot}/var/run/munin
+
+mkdir -p %{buildroot}/etc/init.d
+install -m0755 %{SOURCE2} %{buildroot}/etc/init.d/munin-node
 mkdir -p %{buildroot}/etc/cron.d
-# silly RPM triggers want to make debug enabled libraries.  let it try.
-mkdir -p %{buildroot}/usr/lib/debug
+install -m0644 %{SOURCE3} %{buildroot}/etc/cron.d/munin
+install -m0644 %{SOURCE6} %{buildroot}/etc/cron.d/munin-node
+mkdir -p %{buildroot}/etc/logrotate.d
+install -m0644 %{SOURCE4} %{buildroot}/etc/logrotate.d/munin
+install -m0644 %{SOURCE5} %{buildroot}/etc/logrotate.d/munin-node
 
-install -m 0755 dists/redhat/munin.cron.d %{buildroot}/etc/cron.d/munin
-install -m 0644 server/munin-htaccess %{buildroot}/var/www/html/munin/.htaccess
-install -m 0755 server/style.css %{buildroot}/var/www/html/munin
-
-install -m 0644 ChangeLog %{buildroot}%{_docdir}/munin/ChangeLog
+install -m0644 ChangeLog %{buildroot}%{_docdir}/munin/ChangeLog
 
 
 %clean
 [ -n "%{buildroot}" -a "%{buildroot}" != / ] && rm -rf %{buildroot}
  
+## Server
+
+%pre
+
+getent group munin >/dev/null || groupadd -r munin
+getent passwd munin > /dev/null || useradd -r -d /var/lib/munin -g munin munin
+
+%post
+mkdir -p /var/log/munin
+mkdir -p /var/lib/munin
+chown -R munin:munin /var/www/html/munin
+chown -R munin:munin /var/log/munin
+chown -R munin:munin /var/run/munin
+chown -R munin:munin /var/lib/munin
+
+
+## Node
+
 %pre node
+
 getent group munin >/dev/null || groupadd -r munin
 getent passwd munin > /dev/null || useradd -r -d /var/lib/munin -g munin munin
 
 %post node
-chmod -R g+w /var/lib/munin/
 if [ $1 = 1 ]
 then
 	/sbin/chkconfig --add munin-node
 	/usr/sbin/munin-node-configure --shell | sh
 fi
-chown -R munin /var/lib/munin
-
+mkdir -p /var/log/munin
+mkdir -p /var/lib/munin/plugin-state
+chown -R munin:munin /var/log/munin
+chown -R munin:munin /var/lib/munin
+chmod g+w /var/lib/munin/plugin-state
+find /usr/share/munin/plugins -name '*sybase*' -print0 | xargs -0 chmod +x
 
 %preun node
 if [ $1 = 0 ]
 then
+	/sbin/service munin-node stop > /dev/null 2>&1
 	/sbin/chkconfig --del munin-node
-	rmdir /var/log/munin 2>/dev/null || echo " "
-fi
-
-%pre
-getent group munin >/dev/null || groupadd -r munin
-getent passwd munin > /dev/null || useradd -r -d /var/lib/munin -g munin munin
-
-%post
-chown -R munin /var/www/html/munin
-chown -R munin /var/log/munin
-chown -R munin /var/lib/munin
-
-%postun
-if [ $1 = 0 ]
-then
-	userdel munin
+	rmdir /var/log/munin 2>/dev/null || true
 fi
 
 %files
 %defattr(-, root, root)
 %doc %{_docdir}/munin/README.api
-#%doc %{_docdir}/munin/README.config
 %doc %{_docdir}/munin/README.plugins
 %doc %{_docdir}/munin/COPYING
 %doc %{_docdir}/munin/ChangeLog
-%{_bindir}/munin-cron
-%{_datadir}/munin/munin-graph
-%{_datadir}/munin/munin-html
-%{_datadir}/munin/munin-nagios
-%{_datadir}/munin/munin-update
-%{_libdir}/perl5/*perl/5.*/Munin.pm
-%dir /etc/munin/templates
-%dir /etc/munin
-/etc/munin/templates/*
-/etc/cron.d/munin
-%config /etc/munin/munin.conf
-%attr(-, munin, root) %dir /var/lib/munin
-%attr(-, munin, root) %dir /var/log/munin
-%attr(-, munin, root) %dir /var/www/html/munin
-%attr(-, munin, root) /var/www/html/munin/style.css
-%config /var/www/html/munin/.htaccess
 %doc %{_mandir}/man8/munin-graph*
 %doc %{_mandir}/man8/munin-update*
 %doc %{_mandir}/man8/munin-nagios*
 %doc %{_mandir}/man8/munin-html*
 %doc %{_mandir}/man8/munin-cron*
 %doc %{_mandir}/man5/munin.conf*
+%{_bindir}/munin-cron
+%{_datadir}/munin/munin-graph
+%{_datadir}/munin/munin-html
+%{_datadir}/munin/munin-nagios
+%{_datadir}/munin/munin-update
+%{_libdir}/perl5/*perl/5.*/Munin.pm
+%config /etc/munin/templates/*
+%config /etc/cron.d/munin
+%config /etc/munin/munin.conf
+%config /etc/logrotate.d/munin
+%dir /var/www/html/munin
+%dir /var/run/munin
 
 %files node
 %defattr(-, root, root)
-%config /etc/munin/munin-node.conf
-%config /etc/munin/plugin-conf.d/munin-node
-%config /etc/init.d/munin-node
-%{_sbindir}/munin-run
-%{_sbindir}/munin-node
-%{_sbindir}/munin-node-configure
-%dir /var/log/munin
-%dir %{_datadir}/munin
-%dir /etc/munin/plugins
-%dir /etc/munin
-%dir /var/lib/munin
-%dir %attr(-, root, munin) /var/lib/munin/plugin-state
-%{_datadir}/munin/plugins/*
 %doc %{_docdir}/munin/COPYING
 %doc %{_docdir}/munin/munin-doc.html
 %doc %{_docdir}/munin/munin-faq.html
 %doc %{_mandir}/man8/munin-run*
 %doc %{_mandir}/man8/munin-node*
 %doc %{_mandir}/man5/munin-node*
-#%doc %{_mandir}/man5/node.conf*
+%{_sbindir}/munin-run
+%{_sbindir}/munin-node
+%{_sbindir}/munin-node-configure
+%{_datadir}/munin/plugins/*
+%config /etc/munin/munin-node.conf
+%config /etc/munin/plugin-conf.d/munin-node
+%config /etc/init.d/munin-node
+%config /etc/cron.d/munin-node
+%config /etc/logrotate.d/munin-node
+%dir /etc/munin/plugins
 
 %changelog
+* Thu Sep 09 2004 Dagfinn Ilmari Mannsaker <ilmar@linpro.no>
+- Update to version 1.0.2.
+* Wed Jul 07 2004 Tore Anderson <tore@linpro.no>
+- Update to version 1.0.0.
+- Modify the spec file quite heavily.  Beware of ugly hax.
 * Sun Feb 01 2004 Ingvar Hagelund <ingvar@linpro.no>
 - Sync with CVS. Version 1.0.0pre2
 * Sun Jan 18 2004 Ingvar Hagelund <ingvar@linpro.no>
@@ -204,5 +244,3 @@ fi
 - Small bugfixes in the rpm package
 * Tue Jun 18 2002 Kjetil Torgrim Homme <kjetilho@linpro.no>
 - new package
-
-

@@ -1,3 +1,44 @@
+munin (1.0.3)
+
+  * Fixed bug in munin-limits when using ranges with only one number
+  * Fixed cronmail-bug in munin-update when client disconnects prematurely.
+  * Fixed bug in munin-update, to stop trying to read closed filehandles.
+  * Fixed typo in linux/fw_forwarded_local (Deb#275535).
+  * Fixed typo in linux/fw_packets (Deb#275537).
+  * Plugin generic/acpi now autodetects even if the acpi version does not
+    contain the acpi_available program (Deb#275538).
+   
+munin (1.0.2)
+
+  * Better error handling when fetching data from RRD files.
+  * Fixed bug in munin-graph when choosing colours (Deb#267185).
+  
+munin (1.0.1)
+
+  * Minor documentation bugfix.
+  * Added missing shebang in iostat_ios (Deb#262708).
+  * Applied patch from Matthieu Lochegnies to munin-graph, and fixed the
+    same problem elsewhere in the code (Deb#250982, SF#924561).
+  * Fixed generic/ipac-ng plugin (it wouldn't run properly).
+  * Force LANG/LC_ALL=C in plugin/hddtemp2, to remove problems in parsing of
+    hddtemp output (Deb#253497).
+  * Force LANG/LC_ALL=C in linux/sensors_, to remove problems in parsing of
+    sensors output (SF#972749, SF#972748, Deb#255312)
+  * linux/sensors_temp now understand temp lines without hyst or max settings
+    (Deb#256380).
+  * Made linux/sensors_volt work with negative voltages (Deb#256734).
+  * Made generic/hddtemp2 understand environment variables with quotes
+    (Deb#265022).
+
+munin (1.0.0)
+
+  * Noise reduction in munin-update, when plugins say strange things (only
+    log, don't complain on stderr).
+
+munin (1.0.0pre5)
+
+  * Bug regarding logo namechange from logo.gif to logo.png, when installing.
+
 munin (1.0.0pre4)
 
   * Munin-update now properly ignores node with "update no".
@@ -27,8 +68,8 @@ munin (1.0.0pre4)
     Betrieb GmbH. (Thanks :-)
   * Made solaris plugin fs_df work without GNU df (SF#944389).
   * New solaris plugin temperature, by Richard van den Berg.
-  * Two new linux firewall plugins; fw_packets (by S. Banerian) and
-    fw_conntrack (by Nicolai Langfeldt).
+  * Two new linux firewall plugins; fw_packets (by S. Banerian),
+    fw_conntrack (by Nicolai Langfeldt), and fw_forwarded_local (by Xavier).
   * Modified sunos/cpu, linux/cpu and freebsd/cpu to take "scaleto100"-
     parameter.
   * Added patch to contrib-plugin linux/nfsd, to graph rpc count (Alexandre
