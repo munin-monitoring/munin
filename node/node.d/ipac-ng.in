@@ -4,6 +4,9 @@
 # rule, copy ipac-ng and edit variables.
 #
 # $Log$
+# Revision 1.2  2004/06/28 12:08:54  jimmyo
+# Plugin bugfixes from Jacques Caruso, in linux/iostat_ios and generic/ipacng.
+#
 # Revision 1.1  2004/05/06 22:42:35  jimmyo
 # Added plugin ipac-ng, contributed by Arturas Slajus.
 #
@@ -55,3 +58,4 @@ if [ "$error" != "1" ]; then
 else
         echo 'up.value 0'
         echo 'down.value 0'
+fi

@@ -1,4 +1,4 @@
-@@PERL@@
+#!@@PERL@@
 #
 #
 # Plugin for watching io-bound traffic (in number of operations) on disks.
@@ -11,6 +11,9 @@
 #       autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.4  2004/06/28 12:08:54  jimmyo
+# Plugin bugfixes from Jacques Caruso, in linux/iostat_ios and generic/ipacng.
+#
 # Revision 1.3  2004/05/20 13:57:12  jimmyo
 # Set categories to some of the plugins.
 #

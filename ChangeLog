@@ -4,6 +4,8 @@ munin (work)
     compliant.
   * Munin-graph: fixed bug when combining graph_order aliases with
     "normal" fields, as reported by Jacques Caruso.
+  * Plugin bugfixes from Jacques Caruso, in linux/iostat_ios and
+    generic/ipacng.
 
 munin (1.1.2)
 
