@@ -26,6 +26,8 @@ munin (1.0.0pre2)
     (SF#882385).
   * Generic plugins now use printf instead of echo -n, as this is more
     portable (SF#885564)
+  * Added a new plugin generic/multips to count several procs in one graph.
+    (SF#885579)
 
 munin (1.0.0pre1)
 
