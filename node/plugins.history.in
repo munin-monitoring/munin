@@ -59,7 +59,6 @@ linux/entropy
 sunos/cpu
 sunos/if_
 sunos/if_errcoll_
-sunos/io_
 sunos/io_busy_
 sunos/io_bytes_
 sunos/io_ops_
