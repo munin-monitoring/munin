@@ -45,7 +45,7 @@
 	    <table width='100%'>
 		  <TMPL_LOOP NAME="GRAPHINFO">
 		    <tr>
-		      <td colspan="5" align='left' valign='top'><TMPL_VAR NAME="INFO"></td>
+		      <td class='wrap' colspan="5" align='left' valign='top'><TMPL_VAR NAME="INFO"></td>
 		    </tr>
 		    <tr>
 		      <td colspan="5"><hr class="ruler2" /></td>
@@ -69,7 +69,7 @@
 		      <td align='center' valign='top'><TMPL_VAR NAME="TYPE"></td>
 		      <td align='center' valign='top'><TMPL_IF NAME="STATE_WARNING"><div class='warntext'></TMPL_IF><TMPL_VAR NAME="WARN"><TMPL_IF NAME="STATE_WARNING"></div></TMPL_IF></td>
 		      <td align='center' valign='top'><TMPL_IF NAME="STATE_CRITICAL"><div class='crittext'></TMPL_IF><TMPL_VAR NAME="CRIT"><TMPL_IF NAME="STATE_CRITICAL"></div></TMPL_IF></td>
-		      <td align='left' valign='top'><TMPL_VAR ESCAPE="HTML" NAME="INFO"></td>
+		      <td class='wrap' align='left' valign='top'><TMPL_VAR ESCAPE="HTML" NAME="INFO"></td>
 		    </tr>
 		  </TMPL_LOOP>
 	    </table>

@@ -76,7 +76,7 @@ table.invisiblebox {
         padding: 0px 0px 0px 0px;
 	margin: 0px 0px 0px 0px;
 	white-space: nowrap;
-	max-width: 90%;
+	max-width: 1%;
 }
 
 td.graphbox {
@@ -120,6 +120,10 @@ td.legendbox {
         margin: 2px 2px 2px 2px;
         text-align: left;
 	width: 100%;
+}
+
+td.wrap {
+	white-space: normal;
 }
 
 td.linkbox {
