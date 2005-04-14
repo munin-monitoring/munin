@@ -296,14 +296,25 @@ sub has_access {
 	{
 		foreach my $rule (@{$ruleset})
 		{
-			print STDERR "DEBUG: Checking access: $host;$serv;", $rule->[0], $rule->[1], ";\n" if $DEBUG;
-#			if ($rule->[1] =~ /\//)
+			logger ("DEBUG: Checking access: $host;$serv;". $rule->[0].";".$rule->[1]) if $DEBUG;
+			if ($rule->[1] eq "tls" and $tls_verified{"verified"})
+			{ # tls
+				if ($rule->[0] eq "allow")
+				{
+					return 1;
+				}
+				else
+				{
+					return 0;
+				}
+			}
+#			elsif ($rule->[1] =~ /\//)
 #			{ # CIDR
 #				print "DEBUG: CIDR $host;$serv;$rule->[1];\n";
 #				return 1;
 #			}
-#			else
-#			{ # regex
+			else
+			{ # regex
 				if ($host =~ m($rule->[1]))
 				{
 					if ($rule->[0] eq "allow")
@@ -315,7 +326,7 @@ sub has_access {
 						return 0;
 					}
 				}
-#			}
+			}
 		}
 	}
 	return 1;
@@ -532,7 +543,7 @@ sub process_request {
       $depth = &get_var (\%sconf, 'tls_verify_depth');
       $depth = 5 unless defined $depth;
       start_tls ($mode, $cert, $key,
-	      &get_var (\%sconf, 'tls_verify_certificates'),
+	      &get_var (\%sconf, 'tls_verify_certificate'),
 	      $depth
 	      );
       logger ("DEBUG: Returned from starttls.") if $DEBUG;
@@ -581,33 +592,6 @@ sub net_write
     }
 }
 
-# sub start_tls
-# {
-#     $ctx = Net::SSLeay::CTX_new()     or die_now "CTX_new ($ctx) ($!)";
-#     $tls = Net::SSLeay::new($ctx)     or die_now "new ($tls) ($!)";
-#     Net::SSLeay::set_options($tls, &Net::SSLeay::OP_ALL)
-# 	and die_if_ssl_error("ssl set options");
-# 
-#     Net::SSLeay::use_RSAPrivateKey_file ($tls, '/etc/munin/munin.pem',
-#                                          &Net::SSLeay::FILETYPE_PEM);
-#     die_if_ssl_error("Fatal TLS error with private key.");
-#     Net::SSLeay::use_certificate_file ($tls, '/etc/munin/munin.pem',
-#                                        &Net::SSLeay::FILETYPE_PEM);
-#     die_if_ssl_error("Fatal TLS error with certificate.");
-# 
-#     print "200 TLS OK\n";
-# 
-#     open(TLSSTDIN, "<&".fileno(STDIN)) or die $!;
-#     open(TLSSTDOUT, "<&".fileno(STDIN)) or die $!;
-#     logger ("DEBUG: Encrypted filehandles (fileno = ".fileno(TLSSTDIN).", ".fileno(TLSSTDOUT).").") if $DEBUG;
-#     close (STDIN);
-#     close (STDOUT);
-#     Net::SSLeay::set_rfd($tls, fileno(TLSSTDIN));
-#     Net::SSLeay::set_wfd($tls, fileno(TLSSTDOUT));
-#     Net::SSLeay::accept($tls) and die_if_ssl_error("Fatal error in TLS accept.");
-#     logger ("Cipher `" . Net::SSLeay::get_cipher($tls) . "'\n");
-# }
-
 sub tls_verify_callback 
 {
     my ($ok, $subj_cert, $issuer_cert, $depth, 
@@ -618,7 +602,7 @@ sub tls_verify_callback
     if ($ok and $tls_verified{"level"} <= $tls_verified{"required_depth"})
     {
     	$tls_verified{"verified"} = 1;
-	logger ("TLS Notice: Verified certificate.");
+	logger ("TLS Notice: Verified certificate.") if $DEBUG;
         return 1; # accept
     }
 
@@ -642,10 +626,11 @@ sub start_tls
     if ($tls_paranoia eq "disabled")
     {
 	logger ("TLS Notice: Refusing TLS request from peer.");
+	net_write ("TLS NOT AVAILABLE\n");
 	return 0
     }
 
-    logger("Enabling TLS.");
+    logger("Enabling TLS.") if $DEBUG;
     if (! eval "require Net::SSLeay;")
     {
 	if ($tls_paranoia eq "auto")
@@ -719,11 +704,11 @@ sub start_tls
     # Tell the other side that we're able to talk TLS
     if ($local_key)
     {
-        print "200 TLS OK\n";
+        print "TLS OK\n";
     }
     else
     {
-        print "200 TLS MAYBE\n";
+        print "TLS MAYBE\n";
     }
 
     # Now let's define our requirements of the node

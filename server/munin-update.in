@@ -198,7 +198,7 @@ if ($do_fork)
 			    my $name    = $children{$key}->[1];
 			    my $oldnode = $children{$key}->[3];
 
-			    logger ("Child has unexpectedly died: $domain -> $name.");
+			    logger ("Reaping child: $domain -> $name.");
 			    delete $children{$key};
 			    use_old_config ($domain, $name, $oldnode);
 			}
@@ -620,7 +620,7 @@ sub tls_verify_callback
     if ($ok)
     {
 	$tls_verified{"verified"} = 1;
-	logger ("TLS Notice: Verified certificate.");
+	logger ("TLS Notice: Verified certificate.") if $DEBUG;
         return 1; # accept
     }
 
@@ -641,7 +641,7 @@ sub start_tls {
 
     %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => $tls_vdepth );
 
-    logger("Enabling TLS.");
+    logger("Enabling TLS.") if $DEBUG;
     if (! eval "require Net::SSLeay;")
     {
 	logger ("Fatal: TLS enabled but Net::SSLeay unavailable.");
@@ -674,11 +674,11 @@ sub start_tls {
 	logger ("TLS Error: Bad TLS response \"\".");
 	return 0
     }
-    if ($tlsresponse =~ /^200 TLS OK/)
+    if ($tlsresponse =~ /^TLS OK/)
     {
     	$remote_key = 1;
     }
-    elsif ($tlsresponse !~ /^200 /i)
+    elsif ($tlsresponse !~ /^TLS MAYBE/i)
     {
 	logger ("TLS Error: Bad TLS response \"$tlsresponse\".");
 	return 0;
@@ -765,7 +765,7 @@ sub start_tls {
 
     # Connect it to the local fd that munin-update will print to
     Net::SSLeay::set_fd($tls, fileno($socket));
-    my $err = &Net::SSLeay::print_errs();
+    $err = &Net::SSLeay::print_errs();
     if (defined $err and length $err)
     {
 	logger ("TLS Error: Could not define encrypted fd: " . $err);
@@ -781,7 +781,7 @@ sub start_tls {
     {
         $res = Net::SSLeay::accept($tls);
     }
-    my $err = &Net::SSLeay::print_errs();
+    $err = &Net::SSLeay::print_errs();
     if (defined $err and length $err)
     {
 	logger ("TLS Error: Could not enable TLS: " . $err);
@@ -792,6 +792,7 @@ sub start_tls {
     elsif (!$tls_verified{"verified"} and $tls_paranoia eq "paranoid")
     {
 	logger ("TLS Error: Could not verify CA: " . Net::SSLeay::dump_peer_certificate($tls));
+	write_socket_single ($tls, "quit\n");
 	Net::SSLeay::free ($tls);
 	Net::SSLeay::CTX_free ($ctx);
 	$tls = undef;
@@ -803,7 +804,7 @@ sub start_tls {
 	logger ("TLS Notice: client cert: " . Net::SSLeay::dump_peer_certificate($tls));
     }
     read_socket_single(); # Get rid of empty line
-    return $res;
+    return $tls;
 }
 
 sub write_socket_single {
@@ -935,7 +936,7 @@ sub config_node {
   my $nodeconf_time = Time::HiRes::time;
 
   my $tls_requirement = &munin_get ($config, "tls", "auto", $domain, $name);
-  logger ("TLS Debug: TLS set to \"$tls_requirement\".");
+  logger ("TLS Debug: TLS set to \"$tls_requirement\".") if $DEBUG;
   if ($tls_requirement ne "disabled")
   {
       my $key;
@@ -946,11 +947,11 @@ sub config_node {
       $cert = &munin_get ($config, "tls_certificate", "@@CONFDIR@@/munin.pem", $domain, $name)
 	  unless defined $cert;
       if (!start_tls ($socket, $tls_requirement, $cert, $key,
-		  &munin_get ($config, "tls_verify_certificates", undef, $domain, $name),
+		  &munin_get ($config, "tls_verify_certificate", undef, $domain, $name),
 		  &munin_get ($config, "tls_verify_depth", 5, $domain, $name),
 		  ))
       {
-	  if ($tls_requirement eq "paranoid" or $tls_requirement eq "enable")
+	  if ($tls_requirement eq "paranoid" or $tls_requirement eq "enabled")
 	  {
 	      logger ("ERROR: Could not establish TLS connection to \"$domain :: $name\". Skipping.");
 	      exit 13;
@@ -1162,6 +1163,8 @@ sub logger {
   my ($comment) = @_;
   my $now = strftime "%b %d %H:%M:%S", localtime;
 
+  chomp ($comment);
+  $comment =~ s/\n/\\n/g;
   print "$now [$$] - $comment\n" if $print_stdout;
   if ($log->opened)
   {
