@@ -29,7 +29,7 @@ use Net::Server::Fork; # any personality will do
 use Data::Dumper;
 
 my $tls;
-my $tls_verified = "";
+my %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => 5 );
 
 chdir ("/");
 
@@ -519,18 +519,21 @@ sub process_request {
       my $mode;
       my $key;
       my $cert;
+      my $depth;
       $key = $cert = &get_var (\%sconf, "tls_pem");
       $key = &get_var (\%sconf, "tls_private_key")
 	  unless defined $key;
-      $key = "@@CONFDIR@@/munin-node.key" unless defined $key;
+      $key = "@@CONFDIR@@/munin-node.pem" unless defined $key;
       $cert = &get_var (\%sconf, "tls_certificate")
 	  unless defined $cert;
       $cert = "@@CONFDIR@@/munin-node.pem" unless defined $cert;
       $mode = &get_var (\%sconf, 'tls');
       $mode = "auto" unless defined $mode and length $mode;
+      $depth = &get_var (\%sconf, 'tls_verify_depth');
+      $depth = 5 unless defined $depth;
       start_tls ($mode, $cert, $key,
 	      &get_var (\%sconf, 'tls_verify_certificates'),
-	      &get_var (\%sconf, 'tls_verify_depth'),
+	      $depth
 	      );
       logger ("DEBUG: Returned from starttls.") if $DEBUG;
     }
@@ -610,13 +613,16 @@ sub tls_verify_callback
     my ($ok, $subj_cert, $issuer_cert, $depth, 
 	    $errorcode, $arg, $chain) = @_;
 
-    if ($ok)
+    $tls_verified{"level"}++;
+
+    if ($ok and $tls_verified{"level"} <= $tls_verified{"required_depth"})
     {
-	$tls_verified = 1;
+    	$tls_verified{"verified"} = 1;
 	logger ("TLS Notice: Verified certificate.");
+        return 1; # accept
     }
 
-    return 1; # accept
+    return 1; # accept anyway
 }
 
 sub start_tls 
@@ -629,6 +635,9 @@ sub start_tls
 
     my $err;
     my $ctx;
+    my $local_key = 0;
+
+    %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => $tls_vdepth );
 
     if ($tls_paranoia eq "disabled")
     {
@@ -651,9 +660,6 @@ sub start_tls
 	}
     }
 
-    # Tell the other side that we're able to talk TLS
-    print "200 TLS OK\n";
-
     # Init SSLeay
     Net::SSLeay::load_error_strings();
     Net::SSLeay::SSLeay_add_ssl_algorithms();
@@ -673,23 +679,51 @@ sub start_tls
     }
 
     # Should we use a private key?
-    if (defined $tls_priv and length $tls_priv)
+    if (-e $tls_priv or $tls_paranoia eq "paranoid")
     {
-	if (!Net::SSLeay::CTX_use_PrivateKey_file($ctx, $tls_priv, 
-		&Net::SSLeay::FILETYPE_PEM))
-	{
-	    logger ("TLS Notice: Problem occured when trying to read file with private key \"$tls_priv\": ".&Net::SSLeay::print_errs().". Continuing without private key.");
-	}
+        if (defined $tls_priv and length $tls_priv)
+        {
+	    if (!Net::SSLeay::CTX_use_PrivateKey_file($ctx, $tls_priv, 
+		    &Net::SSLeay::FILETYPE_PEM))
+	    {
+	        logger ("TLS Notice: Problem occured when trying to read file with private key \"$tls_priv\": ".&Net::SSLeay::print_errs().". Continuing without private key.");
+	    }
+	    else
+	    {
+	        $local_key = 1;
+	    }
+        }
+    }
+    else
+    {
+	logger ("TLS Notice: No key file \"$tls_priv\". Continuing without private key.");
     }
 
     # How about a certificate?
-    if (defined $tls_cert and length $tls_cert)
+    if (-e $tls_cert)
     {
-	if (!Net::SSLeay::CTX_use_certificate_file($ctx, $tls_cert, 
-		&Net::SSLeay::FILETYPE_PEM))
-	{
-	    logger ("TLS Notice: Problem occured when trying to read file with certificate \"$tls_cert\": ".&Net::SSLeay::print_errs().". Continuing without certificate.");
+        if (defined $tls_cert and length $tls_cert)
+        {
+	    if (!Net::SSLeay::CTX_use_certificate_file($ctx, $tls_cert, 
+		    &Net::SSLeay::FILETYPE_PEM))
+	    {
+	        logger ("TLS Notice: Problem occured when trying to read file with certificate \"$tls_cert\": ".&Net::SSLeay::print_errs().". Continuing without certificate.");
+	    }
 	}
+    }
+    else
+    {
+	logger ("TLS Notice: No certificate file \"$tls_cert\". Continuing without certificate.");
+    }
+
+    # Tell the other side that we're able to talk TLS
+    if ($local_key)
+    {
+        print "200 TLS OK\n";
+    }
+    else
+    {
+        print "200 TLS MAYBE\n";
     }
 
     # Now let's define our requirements of the node
@@ -698,13 +732,13 @@ sub start_tls
     $err = &Net::SSLeay::print_errs();
     if (defined $err and length $err)
     {
-	logger ("TLS Warning in net_read: $err");
+	logger ("TLS Warning in set_verify_depth: $err");
     }
     Net::SSLeay::CTX_set_verify ($ctx, &Net::SSLeay::VERIFY_PEER, \&tls_verify_callback);
     $err = &Net::SSLeay::print_errs();
     if (defined $err and length $err)
     {
-	logger ("TLS Warning in net_read: $err");
+	logger ("TLS Warning in set_verify: $err");
     }
 
     # Create the local tls object
@@ -730,38 +764,53 @@ sub start_tls
     }
 
     # Redirect stdout/stdin to the TLS
-#   open(TLSSTDIN, "<&".fileno(STDIN)) or die $!;
-#   open(TLSSTDOUT, "<&".fileno(STDIN)) or die $!;
-#   logger ("DEBUG: Encrypted filehandles (fileno = ".fileno(TLSSTDIN).", ".fileno(TLSSTDOUT).").") if $DEBUG;
-#   close (STDIN);
-#   close (STDOUT);
     Net::SSLeay::set_rfd($tls, fileno(STDIN));
     $err = &Net::SSLeay::print_errs();
     if (defined $err and length $err)
     {
-	logger ("TLS Warning in net_read: $err");
+	logger ("TLS Warning in set_rfd: $err");
     }
     Net::SSLeay::set_wfd($tls, fileno(STDOUT));
     $err = &Net::SSLeay::print_errs();
     if (defined $err and length $err)
     {
-	logger ("TLS Warning in net_read: $err");
+	logger ("TLS Warning in set_wfd: $err");
     }
 
     # Try to negotiate the tls connection
-    my $res = Net::SSLeay::accept($tls);
-    if (defined $res and $res)
+    my $res;
+    if ($local_key)
     {
-	logger ("TLS Notice: TLS enabled.");
-	logger ("TLS Notice: Cipher `" . Net::SSLeay::get_cipher($tls) . "'.");
-	logger ("TLS Notice: client cert: " . Net::SSLeay::dump_peer_certificate($tls));
+        $res = Net::SSLeay::accept($tls);
     }
     else
     {
-	logger ("TLS Notice: TLS not enabled: " . &Net::SSLeay::print_errs());
+        $res = Net::SSLeay::connect($tls);
+    }
+    $err = &Net::SSLeay::print_errs();
+    if (defined $err and length $err)
+    {
+	logger ("TLS Error: Could not enable TLS: " . $err);
+	Net::SSLeay::free ($tls);
+	Net::SSLeay::CTX_free ($ctx);
+	$tls = undef;
+    }
+    elsif (!$tls_verified{"verified"} and $tls_paranoia eq "paranoid")
+    {
+	logger ("TLS Error: Could not verify CA: " . Net::SSLeay::dump_peer_certificate($tls));
+	Net::SSLeay::free ($tls);
+	Net::SSLeay::CTX_free ($ctx);
+	$tls = undef;
+    }
+    else
+    {
+	logger ("TLS Notice: TLS enabled.");
+	logger ("TLS Notice: Cipher `" . Net::SSLeay::get_cipher($tls) . "'.");
+	$tls_verified{"cert"} = Net::SSLeay::dump_peer_certificate($tls);
+	logger ("TLS Notice: client cert: " .$tls_verified{"cert"});
     }
 
-    return $res;
+    return $tls;
 }
 
 sub get_uid

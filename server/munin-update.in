@@ -50,7 +50,7 @@ my $cli_do_fork;
 my $cli_timeout;
 my $print_stdout = 0;
 my $tls;
-my $tls_verified = "";
+my %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => 5 );
 
 my $log = new IO::Handle;
 
@@ -611,13 +611,20 @@ sub tls_verify_callback
     my ($ok, $subj_cert, $issuer_cert, $depth, 
 	    $errorcode, $arg, $chain) = @_;
 
-    if ($ok)
+    if ($tls_verified{"level"}++ > $tls_verified{"required_depth"})
     {
-	$tls_verified = 1;
-	logger ("TLS Notice: Verified certificate.");
+	logger ("TLS Notice: Certificate verification failed at depth ".$tls_verified{"level"}.".");
+    	return 1;
     }
 
-    return 1; # accept
+    if ($ok)
+    {
+	$tls_verified{"verified"} = 1;
+	logger ("TLS Notice: Verified certificate.");
+        return 1; # accept
+    }
+
+    return 1; # accept anyway
 }
 
 sub start_tls {
@@ -629,6 +636,10 @@ sub start_tls {
     my $tls_vdepth   = shift;
 
     my $ctx;
+    my $err;
+    my $remote_key = 0;
+
+    %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => $tls_vdepth );
 
     logger("Enabling TLS.");
     if (! eval "require Net::SSLeay;")
@@ -663,7 +674,11 @@ sub start_tls {
 	logger ("TLS Error: Bad TLS response \"\".");
 	return 0
     }
-    if ($tlsresponse !~ /^200 /i)
+    if ($tlsresponse =~ /^200 TLS OK/)
+    {
+    	$remote_key = 1;
+    }
+    elsif ($tlsresponse !~ /^200 /i)
     {
 	logger ("TLS Error: Bad TLS response \"$tlsresponse\".");
 	return 0;
@@ -672,41 +687,58 @@ sub start_tls {
     # Should we use a private key?
     if (defined $tls_priv and length $tls_priv)
     {
-	if (!Net::SSLeay::CTX_use_PrivateKey_file($ctx, $tls_priv, 
-		&Net::SSLeay::FILETYPE_PEM))
+    	if (-e $tls_priv or $tls_paranoia eq "paranoid")
 	{
-	    if ($tls_paranoia eq "paranoid") 
+	    if (!Net::SSLeay::CTX_use_PrivateKey_file($ctx, $tls_priv, 
+	    	&Net::SSLeay::FILETYPE_PEM))
 	    {
-		logger ("TLS Error: Problem occured when trying to read file with private key \"$tls_priv\": $!");
-		return 0;
-	    }
-	    else
-	    {
-		logger ("TLS Notice: Problem occured when trying to read file with private key \"$tls_priv\": $!. Continuing without private key.");
+	        if ($tls_paranoia eq "paranoid") 
+	        {
+	    	    logger ("TLS Error: Problem occured when trying to read file with private key \"$tls_priv\": $!");
+		    return 0;
+	        }
+	        else
+	        {
+	    	    logger ("TLS Notice: Problem occured when trying to read file with private key \"$tls_priv\": $!. Continuing without private key.");
+	        }
 	    }
 	}
+	else
+	{
+	    logger ("TLS Notice: No key file \"$tls_priv\". Continuing without private key.");
+        }
     }
 
     # How about a certificate?
-    if (defined $tls_cert and length $tls_cert)
+    if (-e $tls_cert)
     {
-	if (!Net::SSLeay::CTX_use_certificate_file($ctx, $tls_cert, 
-		&Net::SSLeay::FILETYPE_PEM))
-	{
-	    logger ("TLS Warning: Problem occured when trying to read file with private key \"$tls_cert\": $!. Continuing without private key.");
-	}
+        if (defined $tls_cert and length $tls_cert)
+        {
+	    if (!Net::SSLeay::CTX_use_certificate_file($ctx, $tls_cert, 
+		    &Net::SSLeay::FILETYPE_PEM))
+	    {
+	        logger ("TLS Warning: Problem occured when trying to read file with private key \"$tls_cert\": $!. Continuing without private key.");
+	    }
+        }
+    }
+    else
+    {
+	logger ("TLS Notice: No certificate file \"$tls_cert\". Continuing without private key.");
     }
 
     # Now let's define our requirements of the node
     $tls_vdepth = 5 if !defined $tls_vdepth;
     Net::SSLeay::CTX_set_verify_depth ($ctx, $tls_vdepth);
-    if ($tls_paranoia eq "paranoid")
+    $err = &Net::SSLeay::print_errs();
+    if (defined $err and length $err)
     {
- 	Net::SSLeay::CTX_set_verify ($ctx, &Net::SSLeay::SL_VERIFY_FAIL_IF_NO_PEER_CERT, \&tls_verify_callback);
+	logger ("TLS Warning in set_verify_depth: $err");
     }
-    else
+    Net::SSLeay::CTX_set_verify ($ctx, &Net::SSLeay::VERIFY_PEER, \&tls_verify_callback);
+    $err = &Net::SSLeay::print_errs();
+    if (defined $err and length $err)
     {
- 	Net::SSLeay::CTX_set_verify ($ctx, &Net::SSLeay::VERIFY_PEER, \&tls_verify_callback);
+	logger ("TLS Warning in set_verify: $err");
     }
 
     # Create the local tls object
@@ -733,18 +765,42 @@ sub start_tls {
 
     # Connect it to the local fd that munin-update will print to
     Net::SSLeay::set_fd($tls, fileno($socket));
+    my $err = &Net::SSLeay::print_errs();
+    if (defined $err and length $err)
+    {
+	logger ("TLS Error: Could not define encrypted fd: " . $err);
+    }
 
     # Try to negotiate the tls connection
-    my $res = Net::SSLeay::connect($tls);
-    if (defined $res and $res)
+    my $res;
+    if ($remote_key)
+    {
+        $res = Net::SSLeay::connect($tls);
+    }
+    else
+    {
+        $res = Net::SSLeay::accept($tls);
+    }
+    my $err = &Net::SSLeay::print_errs();
+    if (defined $err and length $err)
+    {
+	logger ("TLS Error: Could not enable TLS: " . $err);
+	Net::SSLeay::free ($tls);
+	Net::SSLeay::CTX_free ($ctx);
+	$tls = undef;
+    }
+    elsif (!$tls_verified{"verified"} and $tls_paranoia eq "paranoid")
+    {
+	logger ("TLS Error: Could not verify CA: " . Net::SSLeay::dump_peer_certificate($tls));
+	Net::SSLeay::free ($tls);
+	Net::SSLeay::CTX_free ($ctx);
+	$tls = undef;
+    }
+    else
     {
 	logger ("TLS Notice: TLS enabled.");
 	logger ("TLS Notice: Cipher `" . Net::SSLeay::get_cipher($tls) . "'.");
 	logger ("TLS Notice: client cert: " . Net::SSLeay::dump_peer_certificate($tls));
-    }
-    else
-    {
-	logger ("TLS Error: Could not enable TLS: " . &Net::SSLeay::print_errs());
     }
     read_socket_single(); # Get rid of empty line
     return $res;
@@ -891,7 +947,7 @@ sub config_node {
 	  unless defined $cert;
       if (!start_tls ($socket, $tls_requirement, $cert, $key,
 		  &munin_get ($config, "tls_verify_certificates", undef, $domain, $name),
-		  &munin_get ($config, "tls_verify_depth", undef, $domain, $name),
+		  &munin_get ($config, "tls_verify_depth", 5, $domain, $name),
 		  ))
       {
 	  if ($tls_requirement eq "paranoid" or $tls_requirement eq "enable")
