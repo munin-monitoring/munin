@@ -1,8 +1,6 @@
 munin (work)
 
-  * Main/node: Implement full TLS support, including certificate validation
-    on both main and node sides, as well as access control based on cert
-    verification result on node plugin level.
+  * Main/node: Implemented TLS support.
   * Main: fix the file vs. pipe check in munin-limits.
   * Main: place the munin-limits lock file in rundir, not dbdir.
   * Main: Yet another rewrite of munin-limits open call (SF#1115434).
