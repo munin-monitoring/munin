@@ -9,6 +9,7 @@ include $(CONFIG)
 RELEASE          = $(shell cat RELEASE)
 INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
 INSTALL          = ./install-sh
+DIR              = $(shell /bin/pwd | sed 's/^.*\///')
 
 default: build
 
@@ -209,11 +210,11 @@ rpm-pre:
 #	(cd ..; ln -s munin munin-$(VERSION))
 
 rpm: rpm-pre
-	tar -C .. --dereference --exclude CVS  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
+	tar -C .. --dereference --exclude .svn  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -tb munin-$(RELEASE).tar.gz)
 	
 rpm-src: rpm-pre
-	tar -C .. --dereference --exclude CVS  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
+	tar -C .. --dereference --exclude .svn  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
 
 +suse-pre:
@@ -227,11 +228,11 @@ rpm-src: rpm-pre
 #	(cd ..; ln -s munin munin-$(VERSION))
 
 suse: suse-pre
-	tar -C .. --dereference --exclude CVS  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
+	tar -C .. --dereference --exclude .svn  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -tb munin-$(RELEASE).tar.gz)
 
 suse-src: suse-pre
-	tar -C .. --dereference --exclude CVS  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
+	tar -C .. --dereference --exclude .svn  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
 
 clean:
@@ -247,7 +248,7 @@ endif
 	-rm -f build-man-stamp
 
 source_dist: clean
-	(cd ..; ln -s munin munin-$(VERSION))
-	tar -C .. --dereference --exclude CVS -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
+	(cd ..; ln -s $(DIR) munin-$(VERSION))
+	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
 
 .PHONY: install install-main install-node install-doc install-man build build-doc deb clean source_dist
