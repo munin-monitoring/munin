@@ -1044,11 +1044,15 @@ sub config_node {
 	if (! -f "$fname") {
 	  logger ("creating rrd-file for $servname->$subservice");
 	  mkdir "$config->{dbdir}/$domain/",0777;
-	  RRDs::create ("$fname",
+	  my @args = ("$fname",
 			"DS:42:".($node->{client}->{$servname}->{"$client.type"} || "GAUGE").":600:".
 			(defined $node->{client}->{$servname}->{"$client.min"} ? 
 			 $node->{client}->{$servname}->{"$client.min"} :
-			 "U") . ":" . ($node->{client}->{$servname}->{"$client.max"} || "U"),
+			 "U") . ":" . ($node->{client}->{$servname}->{"$client.max"} || "U"));
+	  my $resolution = &munin_get ($config, "graph_data_size", "normal", $domain, $node, $servname);
+	  if ($resolution eq "normal")
+	  {
+	  	push (@args,
 			"RRA:AVERAGE:0.5:1:576", # resolution 5 minutes
 			"RRA:MIN:0.5:1:576",
 			"RRA:MAX:0.5:1:576",
@@ -1061,6 +1065,14 @@ sub config_node {
 			"RRA:AVERAGE:0.5:288:450", # 450 days, resolution 1 day
 			"RRA:MIN:0.5:288:450",
 			"RRA:MAX:0.5:288:450");
+	  }
+	  elsif ($resolution eq "huge")
+	  {
+	  	push (@args, "RRA:AVERAGE:0.5:1:115200"); # resolution 5 minutes, for 400 days
+	  	push (@args, "RRA:MIN:0.5:1:115200"); # Three times? ARGH!
+	  	push (@args, "RRA:MAX:0.5:1:115200"); # Three times? ARGH!
+	  }
+	  RRDs::create @args;
 	  if (my $ERROR = RRDs::error) {
 	    logger ("Unable to create \"$fname\": $ERROR");
 	  }
