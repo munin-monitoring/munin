@@ -1,3 +1,7 @@
+munin (repository)
+
+  * Main: Tuned logging.
+
 munin (1.3.2)
 
   * Main/node: Implemented TLS support.

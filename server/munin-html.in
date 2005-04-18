@@ -510,6 +510,9 @@ sub logger {
 		  if (open ($log, ">>$config->{logdir}/munin-html.log"))
 		  {
 			  print $log "$now - $comment\n";
+			  $log->flush;
+			  close (STDERR);
+			  open (STDERR, ">&", $log);
 		  }
 		  else
 		  {

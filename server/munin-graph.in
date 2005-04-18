@@ -1043,6 +1043,9 @@ sub logger {
 		  if (open ($log, ">>$config->{logdir}/munin-graph.log"))
 		  {
 			  print $log "$now - $comment\n";
+			  $log->flush;
+			  close (STDERR);
+			  open (STDERR, ">&", $log);
 		  }
 		  else
 		  {

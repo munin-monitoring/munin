@@ -1164,9 +1164,9 @@ sub logger_open {
 
     if (!$log->opened)
     {
-	  unless (open ($log, ">>$dirname/munin-html.log"))
+	  unless (open ($log, ">>$dirname/munin-update.log"))
 	  {
-		  print STDERR "Warning: Could not open log file \"$dirname/munin-html.log\" for writing: $!";
+		  print STDERR "Warning: Could not open log file \"$dirname/munin-update.log\" for writing: $!";
 	  }
     }
 }
@@ -1191,6 +1191,8 @@ sub logger {
 		  {
 			  print $log "$now - $comment\n";
 			  $log->flush;
+			  close (STDERR);
+			  open (STDERR, ">&", $log);
 		  }
 		  else
 		  {
