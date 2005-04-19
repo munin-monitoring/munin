@@ -26,7 +26,6 @@ use strict;
 use vars qw(@ISA);
 use Getopt::Long;
 use Net::Server::Fork; # any personality will do
-use Data::Dumper;
 
 my $tls;
 my %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => 5 );
