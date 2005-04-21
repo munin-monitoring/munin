@@ -116,6 +116,7 @@ install-doc: build-doc
 	$(INSTALL) -m 0644 build/doc/munin-faq.txt $(DOCDIR)/
 	$(INSTALL) -m 0644 README.* $(DOCDIR)/
 	$(INSTALL) -m 0644 COPYING $(DOCDIR)/
+	$(INSTALL) -m 0644 build/README-apache-cgi $(DOCDIR)/
 	$(INSTALL) -m 0644 node/node.d/README $(DOCDIR)/README.plugins
 
 build: build-stamp
@@ -210,11 +211,11 @@ rpm-pre:
 #	(cd ..; ln -s munin munin-$(VERSION))
 
 rpm: rpm-pre
-	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
+	tar -C .. --dereference --exclude .svn -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -tb munin-$(RELEASE).tar.gz)
 	
 rpm-src: rpm-pre
-	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
+	tar -C .. --dereference --exclude .svn -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
 
 +suse-pre:
@@ -246,6 +247,8 @@ endif
 	-rm -f build-stamp
 	-rm -f build-doc-stamp
 	-rm -f build-man-stamp
+
+	-rm -f dists/redhat/munin.spec
 
 source_dist: clean
 	(cd ..; ln -s $(DIR) munin-$(VERSION))
