@@ -202,7 +202,11 @@ sub fetch_detailed()
 				my @fields = split(/\s+/, $3);
 				my $tmpnam = $2;
 				my $major  = $1;
-				next if ($tmpnam =~ /\d+$/);
+				if ($tmpnam =~ /\d+$/ ) {
+					# Special case for devices like cXdXpX,
+					# like the cciss driver
+					next unless $tmpnam =~ /\/c\d+d\d+$/
+				}
 				next unless grep { $_ } @fields;
 
 				$tmpnam =~ s/\/[[:alpha:]]+(\d+)/\/$1/g;

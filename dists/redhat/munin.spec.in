@@ -1,6 +1,6 @@
 Name:      munin
 Version:   @@VERSION@@
-Release:   3
+Release:   4
 Summary:   Network-wide graphing framework (grapher/gatherer)
 Copyright: GPL
 Group:     System Environment/Daemons
@@ -232,6 +232,8 @@ fi
 %doc %{_mandir}/man5/munin-node*
 
 %changelog
+* Thu Apr 21 2005 Ingvar Hagelund <ingvar@linpro.no> 1.2.3-4
+- Fixed a bug in the iostat plugin
 * Wed Apr 20 2005 Ingvar Hagelund <ingvar@linpro.no> 1.2.3-3
 - Added the missing /var/run/munin
 * Tue Apr 19 2005 Ingvar Hagelund <ingvar@linpro.no> 1.2.3-2
