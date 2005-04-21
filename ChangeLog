@@ -1,3 +1,7 @@
+munin (working copy)
+
+  * Main: Correct munin-limits pod documentation.
+
 munin (1.2.3)
 
   * Main: Remove stdout output (Deb#302502).
