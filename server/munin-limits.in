@@ -662,10 +662,6 @@ Force sending of messages ieven if you normally wouldn't. [--noforce]
 
 Force running as root (stupid and unnecessary). [--noforce-root]
 
-=item B<< --removeok >>
-
-Reset warning status.
-
 =item B<< --help >>
 
 View help message.
