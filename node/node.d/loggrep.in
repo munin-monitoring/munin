@@ -29,8 +29,12 @@
 #       logfile       - Files to grep (shellglob) (required)
 #       regex         - Regex to look for (required)
 #       label         - Label
+#       counter       - If set the value captured by the first paren
+#                       in the regex is summed instead of coutning lines.
+#                       The value is used for the vertical label.
 #       regex_<key>   - Additional regexes
 #       label_<key>   - Additional labels
+#       counter_<key> - Additional counters (the value is ignored).
 #       title         - Graph title
 #
 # TODO: Handle rotated logs
@@ -43,6 +47,7 @@ use strict;
 
 my %regex;
 my $logfile = $ENV{logfile};
+my $vlabel = defined $ENV{'counter'} ? $ENV{'counter'} : 'entries';
 
 (my $name = $0) =~ s|.*/||;
 
@@ -52,12 +57,14 @@ if (exists $ENV{'regex'}) {
     $regex{'count'}{'regex'} = qr/$ENV{'regex'}/;
     $regex{'count'}{'label'} = $ENV{'label'} || $ENV{'regex'};
     $regex{'count'}{'value'} = 0;
+    $regex{'count'}{'counter'} = defined $ENV{'counter'};
 }
 
 for my $key (map {/^regex_(.+)/} keys %ENV) {
     $regex{$key}{'regex'} = qr/$ENV{"regex_$key"}/;
     $regex{$key}{'label'} = $ENV{"label_$key"} || $ENV{"regex_$key"};
     $regex{$key}{'value'} = 0;
+    $regex{$key}{'counter'} = defined $ENV{"counter_$key"};
 }
 
 die("No regexes specified") unless keys %regex;
@@ -68,7 +75,7 @@ if ($ARGV[0] and $ARGV[0] eq 'config') {
     my $title = $ENV{title} || "Entries in $logfile";
     print "graph_title $title\n";
     print "graph_args --base 1000 -l 0\n";
-    print "graph_vlabel entries / \${graph_period}\n";
+    print "graph_vlabel $vlabel / \${graph_period}\n";
     print "graph_category other\n";
     for my $key (keys %regex) {
 	print "$key.label $regex{$key}{'label'}\n";
@@ -138,7 +145,7 @@ sub parse_log {
 
 	for my $match (values %regex) {
 	    if ($line =~ $match->{'regex'}) {
-		$match->{'value'}++;
+		$match->{'value'} += $match->{'counter'} ? $1 : 1;
 	    }
 	}
     }
