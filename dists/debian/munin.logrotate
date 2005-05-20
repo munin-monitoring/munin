@@ -25,7 +25,7 @@
 	create 640 munin adm
 }
 
-/var/log/munin/munin-nagios.log {
+/var/log/munin/munin-limits.log {
 	daily
 	missingok
 	rotate 7
