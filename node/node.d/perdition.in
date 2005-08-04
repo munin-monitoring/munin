@@ -23,31 +23,15 @@
 # buffy perdition[27754]: Fatal error establishing SSL connection to client
 # buffy perdition[5139]: Fatal error negotiating setup. Exiting child.
 
+mktempfile () {
+@@MKTEMP@@
+}
 
 # Set the location of the perdition logs
 PERDITION_LOG=${logfile:-/var/log/perdition.log}
 OFFSET_FILE=@@PLUGSTATE@@/perdition.offset
 LOGTAIL=${logtail:-/usr/sbin/logtail}
-
-case `uname -s` in
-Linux)
-        TEMP_FILE=`mktemp -p /tmp/ munin-perdition.XXXXXX`
-        if [ $? != 0 ]; then
-                TEMP_FILE=`mktemp /tmp/munin-perdition.XXXXXX`
-        fi
-        ;;
-FreeBSD)
-        TEMP_FILE=`mktemp -t /tmp`
-        STATUS=$?
-        ;;
-esac
-
-if [ -z "$TEMP_FILE" ]; then
-        # Yes, this is unsafe
-        TEMP_FILE=/tmp/munin-perdition.$$
-        rm -rf $TEMP_FILE
-        touch $TEMP_FILE
-fi
+TEMP_FILE=`mktempfile munin-perdition.XXXXXX
 
 if [ ! -f "$TEMP_FILE" ]; then
     exit 3

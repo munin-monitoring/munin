@@ -38,25 +38,11 @@ SERVICE=${service:-`basename $0 | sed 's/^courier_//g'`}
 OFFSET_FILE=@@PLUGSTATE@@/courier_${SERVICE}.offset
 LOGTAIL=${logtail:-/usr/sbin/logtail}
 
-case `uname -s` in
-Linux)
-        TEMP_FILE=`mktemp -p /tmp/ munin-courier.XXXXXX`
-        if [ $? != 0 ]; then
-                TEMP_FILE=`mktemp /tmp/munin-courier.XXXXXX`
-        fi
-        ;;
-FreeBSD)
-        TEMP_FILE=`mktemp -t /tmp`
-        STATUS=$?
-        ;;
-esac
+mktempfile () {
+@@MKTEMP@@
+}
 
-if [ -z "$TEMP_FILE" ]; then
-        # Yes, this is unsafe
-        TEMP_FILE=/tmp/munin-courier.$$
-        rm -rf $TEMP_FILE
-        touch $TEMP_FILE
-fi
+TEMP_FILE=`mktempfile munin-courier.XXXXXX`
 
 if [ ! -f "$TEMP_FILE" ]; then
     exit 3

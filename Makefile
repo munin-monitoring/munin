@@ -142,6 +142,7 @@ build-stamp:
 		    -e 's|@@PYTHON@@|$(PYTHON)|g'				\
 		    -e 's|@@OSTYPE@@|$(OSTYPE)|g'				\
 		    -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'			\
+		    -e 's|@@MKTEMP@@|$(MKTEMP)|g'			\
 		    -e 's|@@VERSION@@|$(VERSION)|g'			\
 		    -e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g'			\
 		    -e 's|@@CGIDIR@@|$(CGIDIR)|g'			\

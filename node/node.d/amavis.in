@@ -14,22 +14,12 @@
 #       amavislog    - file where amavis logs are written
 #
 
+@@MKTEMP@@
+
 AMAVIS_LOG=${logfile:-/var/log/mail/mail.info}
 LOGTAIL=${logtail:-`which logtail`}
 STATEFILE=@@PLUGSTATE@@/amavis.offset
-
-case `uname -s` in
-Linux)
-        TEMP_FILE=`mktemp -p /tmp/ munin-amavis.XXXXXX`
-        if [ $? != 0 ]; then
-                TEMP_FILE=`mktemp /tmp/munin-amavis.XXXXXX`
-        fi
-        ;;
-FreeBSD)
-        TEMP_FILE=`mktemp -t /tmp`
-        STATUS=$?
-        ;;
-esac
+TEMP_FILE=`mktempfile munin-amavis.XXXXXX`
 
 if [ -z "$TEMP_FILE" ]; then
 	# Yes, this is unsafe
