@@ -26,9 +26,28 @@
 
 # Set the location of the perdition logs
 PERDITION_LOG=${logfile:-/var/log/perdition.log}
-TEMP_FILE=`mktemp -p /tmp/ munin-perdition.XXXXXX`
 OFFSET_FILE=@@PLUGSTATE@@/perdition.offset
 LOGTAIL=${logtail:-/usr/sbin/logtail}
+
+case `uname -s` in
+Linux)
+        TEMP_FILE=`mktemp -p /tmp/ munin-perdition.XXXXXX`
+        if [ $? != 0 ]; then
+                TEMP_FILE=`mktemp /tmp/munin-perdition.XXXXXX`
+        fi
+        ;;
+FreeBSD)
+        TEMP_FILE=`mktemp -t /tmp`
+        STATUS=$?
+        ;;
+esac
+
+if [ -z "$TEMP_FILE" ]; then
+        # Yes, this is unsafe
+        TEMP_FILE=/tmp/munin-perdition.$$
+        rm -rf $TEMP_FILE
+        touch $TEMP_FILE
+fi
 
 if [ ! -f "$TEMP_FILE" ]; then
     exit 3

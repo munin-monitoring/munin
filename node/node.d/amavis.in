@@ -14,10 +14,29 @@
 #       amavislog    - file where amavis logs are written
 #
 
-TEMP_FILE=`mktemp -p /tmp/ munin-amavis.XXXXXX`
 AMAVIS_LOG=${logfile:-/var/log/mail/mail.info}
 LOGTAIL=${logtail:-`which logtail`}
 STATEFILE=@@PLUGSTATE@@/amavis.offset
+
+case `uname -s` in
+Linux)
+        TEMP_FILE=`mktemp -p /tmp/ munin-amavis.XXXXXX`
+        if [ $? != 0 ]; then
+                TEMP_FILE=`mktemp /tmp/munin-amavis.XXXXXX`
+        fi
+        ;;
+FreeBSD)
+        TEMP_FILE=`mktemp -t /tmp`
+        STATUS=$?
+        ;;
+esac
+
+if [ -z "$TEMP_FILE" ]; then
+	# Yes, this is unsafe
+        TEMP_FILE=/tmp/munin-amavis.$$
+	rm -rf $TEMP_FILE
+	touch $TEMP_FILE
+fi
 
 if [ "$amavislog"  ]; then AMAVIS_LOG=$amavislog ; fi
 
@@ -66,8 +85,9 @@ then
 	virus=`grep INFECTED ${TEMP_FILE} | wc -l`
 	spamm=`grep 'Passed.*Hits: 1[0-9][.]' ${TEMP_FILE} | wc -l`
 	spams=`grep 'Passed.*Hits: [2-9][0-9][0-9]*[.]' ${TEMP_FILE} | wc -l`
-	/bin/rm $TEMP_FILE
 fi
+
+/bin/rm -f $TEMP_FILE
 
 echo "virus.value ${virus}"
 echo "spam_maybe.value ${spamm}"
