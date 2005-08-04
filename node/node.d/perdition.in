@@ -31,11 +31,6 @@ mktempfile () {
 PERDITION_LOG=${logfile:-/var/log/perdition.log}
 OFFSET_FILE=@@PLUGSTATE@@/perdition.offset
 LOGTAIL=${logtail:-/usr/sbin/logtail}
-TEMP_FILE=`mktempfile munin-perdition.XXXXXX
-
-if [ ! -f "$TEMP_FILE" ]; then
-    exit 3
-fi
 
 case $1 in
     autoconf|detect)
@@ -69,6 +64,12 @@ if [ $? = 66 ]; then
     if [ ! -n "$logtail" ]; then
         ARGS=1
     fi
+fi
+
+TEMP_FILE=`mktempfile munin-perdition.XXXXXX
+
+if [ -z "$TEMP_FILE" -o ! -f "$TEMP_FILE" ]; then
+    exit 3
 fi
 
 if [ $ARGS != 0 ]; then

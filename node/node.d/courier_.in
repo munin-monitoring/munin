@@ -42,12 +42,6 @@ mktempfile () {
 @@MKTEMP@@
 }
 
-TEMP_FILE=`mktempfile munin-courier.XXXXXX`
-
-if [ ! -f "$TEMP_FILE" ]; then
-    exit 3
-fi
-
 case $1 in
     autoconf|detect)
     if [ -f ${COURIER_LOG} -a -x ${LOGTAIL} ] 
@@ -79,6 +73,12 @@ if [ $? = 66 ]; then
     if [ ! -n "$logtail" ]; then
         ARGS=1
     fi
+fi
+
+TEMP_FILE=`mktempfile munin-courier.XXXXXX`
+
+if [ -z "$TEMP_FILE" -o ! -f "$TEMP_FILE" ]; then
+    exit 3
 fi
 
 if [ $ARGS != 0 ]; then
