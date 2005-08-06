@@ -46,33 +46,13 @@ if [ "$1" = "config" ]; then
         exit 0
 fi
 
-# STATS=`/usr/bin/ps -el | /bin/cut -b4 | /bin/tr -s '[\n]' '[ ]'`
-STATS=`/usr/bin/ps -el | /bin/cut -b4`
-
-/bin/printf "total.value"
-/bin/echo $STATS | /bin/wc -w
-
-/bin/printf "running.value "
-# /bin/echo $STATS | /usr/local/bin/perl -ne 'print y/O//, "\n"'
-/usr/local/bin/expr length "`echo $STATS | tr -cd O`"
-# FOO=$(echo $STATS |tr -cd O); echo ${#FOO}
-
-/bin/printf "sleeping.value "
-# /bin/echo $STATS | /usr/local/bin/perl -ne 'print y/S//, "\n"'
-/usr/local/bin/expr length "`echo $STATS | tr -cd S`"
-# FOO=$(echo $STATS |tr -cd S); echo ${#FOO}
-
-/bin/printf "runnable.value "
-# /bin/echo $STATS | /usr/local/bin/perl -ne 'print y/R//, "\n"'
-/usr/local/bin/expr length "`echo $STATS | tr -cd R`"
-# FOO=$(echo $STATS |tr -cd R); echo ${#FOO}
-
-/bin/printf "stopped.value "
-# /bin/echo $STATS | /usr/local/bin/perl -ne 'print y/T//, "\n"'
-/usr/local/bin/expr length "`echo $STATS | tr -cd T`"
-# FOO=$(echo $STATS |tr -cd T); echo ${#FOO}
-
-/bin/printf "zombie.value "
-# /bin/echo $STATS | /usr/local/bin/perl -ne 'print y/Z//, "\n"'
-/usr/local/bin/expr length "`echo $STATS | tr -cd Z`"
-# FOO=$(echo $STATS |tr -cd Z); echo ${#FOO}
+/usr/bin/ps -el | awk '
+{ total++; stat[$2]++ }
+END {
+print "total.value "    0+total;
+print "running.value "  0+stat["O"];
+print "sleeping.value " 0+stat["S"];
+print "runnable.value " 0+stat["R"];
+print "stopped.value "  0+stat["T"];
+print "zombie.value "   0+stat["Z"];
+}'
