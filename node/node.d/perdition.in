@@ -51,7 +51,9 @@ graph_total Total
 connection.label connections
 disconnected.label disconnections
 imap.label IMAP Auths
+imaps.label IMAPS Auths
 pop.label POP Auths
+pops.label POPS Auths
 fatal.label Fatal Errors
 EOF
     exit 0
@@ -66,7 +68,7 @@ if [ $? = 66 ]; then
     fi
 fi
 
-TEMP_FILE=`mktempfile munin-perdition.XXXXXX
+TEMP_FILE=`mktempfile munin-perdition.XXXXXX`
 
 if [ -z "$TEMP_FILE" -o ! -f "$TEMP_FILE" ]; then
     exit 3
@@ -80,7 +82,9 @@ fi
 connection=`grep "Connect:" ${TEMP_FILE} | wc -l`
 disconnected=`grep "Close:" ${TEMP_FILE} | wc -l`
 imap=`grep 'port="143" status="ok"' ${TEMP_FILE} | wc -l`
+imaps=`grep 'port="993" status="ok"' ${TEMP_FILE} | wc -l`
 pop=`grep 'port="110" status="ok"' ${TEMP_FILE} | wc -l`
+pops=`grep 'port="995" status="ok"' ${TEMP_FILE} | wc -l`
 fatal=`grep 'Fatal [e|E]rror' ${TEMP_FILE} | wc -l`
 
 rm ${TEMP_FILE}
@@ -88,5 +92,7 @@ rm ${TEMP_FILE}
 echo "connection.value ${connection}"
 echo "disconnected.value ${disconnected}"
 echo "imap.value ${imap}"
+echo "imaps.value ${imaps}"
 echo "pop.value ${pop}"
+echo "pops.value ${pops}"
 echo "fatal.value ${fatal}"
