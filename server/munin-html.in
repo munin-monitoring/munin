@@ -537,7 +537,7 @@ for my $domain (@domainorder) {
 	    foreach my $cat (sort keys %categories)
 	    {
 		push @categories, $categories{$cat}
-			unless (grep /^$cat$/, @categories);
+			unless (grep { $_->{name} eq $cat } @categories);
 	    }
 	} else {
 	    @categories = map { $categories{$_} } sort keys %categories;
