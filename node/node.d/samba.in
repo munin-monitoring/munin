@@ -37,6 +37,8 @@
 # client-conf.d/-options:
 #       
 #       smbstatus       -- path to smbstatus executable
+#       ignoreipcshare  -- ignore IPC$ whan counting shares
+#                          any string will do
 #
 # Parameters:
 # 	
@@ -78,4 +80,8 @@ fi
 
 $SMBSTATUS -p 2>/dev/null | awk 'BEGIN {lines=0} $1 ~ /^[0-9]+/ {lines++} END {print "proc.value " lines}'
 $SMBSTATUS -L 2>/dev/null | awk 'BEGIN {lines=0} $1 ~ /^[0-9]+/ {lines++} END {print "lock.value " lines}'
-$SMBSTATUS -S 2>/dev/null | awk 'BEGIN {lines=0} $4 ~ /^[0-9]+/ {lines++} END {print "share.value " lines}'
+if [ -n "$ignoreipcshare" ]; then
+	$SMBSTATUS -S 2>/dev/null | awk 'BEGIN {lines=0} $1 == "IPC$" {next} $4 ~ /^[0-9]+/ {lines++} END {print "share.value " lines}'
+else
+	$SMBSTATUS -S 2>/dev/null | awk 'BEGIN {lines=0} $4 ~ /^[0-9]+/ {lines++} END {print "share.value " lines}'
+fi
