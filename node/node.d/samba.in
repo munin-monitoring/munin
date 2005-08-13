@@ -59,7 +59,7 @@ if [ "$1" = "autoconf" ]; then
 		echo yes
 		exit 0
 	else
-		echo no (smbstatus not found)
+		echo no '(smbstatus not found)'
 		exit 1
 	fi
 fi
