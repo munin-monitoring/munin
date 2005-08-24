@@ -53,6 +53,7 @@
 # v1.9 07/07/2005 - Allow to query several drives on the same 3ware card.
 #                 - Correct a bug when '-i' was not listed in smartargs
 #                 - Don't fail if no value was obtained for hard drive model
+# v1.10 19/08/2005 - smartctl_exit_code is now a numerical value
 #
 # Copyright (c) 2004,2005 Nicolas Stransky.
 #
@@ -115,13 +116,13 @@ def read_values(hard_drive) :
                 read_values=1
         exit_status=smart_output.close()
         if exit_status!=None :
-            # smartctl exit code is a bitmask
-            num_exit_status=int(log(exit_status/256,2))
+            # smartctl exit code is a bitmask, check man page.
+            num_exit_status=int(exit_status/256)
             if num_exit_status<=2 :
-                verboselog('smartctl cannot access S.M.A.R.T values on drive '+hard_drive+'. Command exited with Bit '+str(num_exit_status)+' ('+str(exit_status/256)+')')
+                verboselog('smartctl cannot access S.M.A.R.T values on drive '+hard_drive+'. Command exited with code '+str(num_exit_status)+' ('+str(exit_status/256)+')')
                 sys.exit(1)
             else :
-                verboselog('smartctl exited with Bit '+str(num_exit_status)+'. '+hard_drive+' may be FAILING RIGHT NOW !')
+                verboselog('smartctl exited with code '+str(num_exit_status)+'. '+hard_drive+' may be FAILING RIGHT NOW !')
     except :
         verboselog('Cannot access S.M.A.R.T values ! Check user rights or propper smartmontools installation. Quitting...')
         sys.exit(1)
@@ -175,12 +176,12 @@ def print_config(hard_drive,smart_values) :
         if key in ['smartctl_exit_status','model'] : continue
         print(key+'.label '+key)
         print(key+'.draw LINE2')
-        # Following line can be commented out. Only useful for warning reports about S.M.A.R.T values
+        # Following line can be commented out if necessary. Only useful for warning reports about S.M.A.R.T values
         print(key+'.critical '+smart_values_state[key]["threshold"]+':')
     # Let's place smartctl_exit_status at the end
     print('smartctl_exit_status.label smartctl_exit_status')
     print('smartctl_exit_status.draw LINE2')
-    # Following line can be commented out. Only useful for warning reports about S.M.A.R.T values
+    # Following line can be commented out if necessary. Only useful for warning reports about S.M.A.R.T values
     print('smartctl_exit_status.warning '+smart_values_state['smartctl_exit_status']["threshold"])
 
 def get_hard_drive_name() :
