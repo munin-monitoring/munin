@@ -26,7 +26,7 @@ if [ "$1" = "purge" ]; then
 	# These are shared with munin, so only remove them if munin
 	# isn't installed (or already purged).
 	status=$(dpkg --get-selections munin)
-	if [ -z "$status" -o "${status%purge}" != "$status" ]; then
+	if [ -z "$status" ] || [ "${status%purge}" != "$status" ]; then
 		dpkg-statoverride --remove /var/log/munin
 		dpkg-statoverride --remove /var/run/munin
 		dpkg-statoverride --remove /var/lib/munin
