@@ -9,6 +9,7 @@ munin (1.2.4)
   * Server: make munin-graph deal with RRDtool 1.0.x and 1.2.x.
   * Server: Fix thinko in category_order in munin-html.in.
   * Server: Fix handling of 'update no' on services. 
+  * Server: Log warning about nodes without addresses.
   * Node: Prevent list command from polluting the node list.
   * Plugins: Fix tempfile creation by using the best method available on a given
     platform. (amavis, courier_, perdition)

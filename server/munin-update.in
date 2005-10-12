@@ -610,6 +610,10 @@ sub process_node {
   my ($domain,$name,$node,$oldnode) = @_;
   return if (exists ($node->{fetch_data}) and !$node->{fetch_data});
   return if (exists ($node->{update}) and $node->{update} ne "yes");
+  unless ($node->{address}) {
+      logger("No address defined for node: $name");
+      return;
+  }
 
   # Then we fork...
   if ($do_fork)
