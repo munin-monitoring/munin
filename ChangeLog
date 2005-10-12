@@ -2,6 +2,7 @@ munin (repository)
 
   * Main: Tuned logging.
   * Main: Log warning about nodes without addresses in munin-update.
+  * Main: Fix handling of 'update no' on services in munin-update.
   * Plugins: generic/loggrep now supports summing values from log lines.
   * Plugins: SNMP plugins no longer report host_name when checking localhost.
 

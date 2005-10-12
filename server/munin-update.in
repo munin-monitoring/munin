@@ -991,7 +991,7 @@ sub config_node {
     next if (exists ($node->{client}->{$servname}->{fetch_data}) and
 	     $node->{client}->{$servname}->{fetch_data} == 0);
     next if (exists ($node->{client}->{$servname}->{update}) and 
-	     !$node->{client}->{$servname}->{update} eq "yes");
+	     $node->{client}->{$servname}->{update} ne "yes");
     next if (@limit_services and !grep (/^$servname$/, @limit_services));
     my @graph_order = (exists $node->{client}->{$servname}->{graph_order} ? 
 		       split (/\s+/, $node->{client}->{$servname}->{graph_order}) : ());
@@ -1105,7 +1105,7 @@ sub fetch_node {
     next if (exists ($node->{client}->{$service}->{fetch_data}) and 
 	     $node->{client}->{$service}->{fetch_data} == 0);
     next if (exists ($node->{client}->{$service}->{update}) and 
-	     !$node->{client}->{$service}->{update} eq "yes");
+	     $node->{client}->{$service}->{update} ne "yes");
     next if (@limit_services and !grep (/^$service$/, @limit_services));
     my $realservname = $node->{client}->{$service}->{realservname} || $service;
     delete $node->{client}->{$service}->{realservname}
