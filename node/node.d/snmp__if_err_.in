@@ -76,7 +76,7 @@ if (!defined ($session))
 
 if ($ARGV[0] and $ARGV[0] eq "config")
 {
-	print "host_name $host\n";
+	print "host_name $host\n" unless $host eq 'localhost';
 	if (!defined ($response = $session->get_request($ifEntryDescr)))
 	{
 		die "Croaking: " . $session->error();
