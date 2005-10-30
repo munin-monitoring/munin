@@ -68,13 +68,16 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 		next unless $host_ eq $name;
 		print "graph_title NTP statistics for peer $host\n";
 	}
-	print "graph_args --base 1000 --vertical-label msec --lower-limit 0\n";
+	print "graph_args --base 1000 --vertical-label seconds --lower-limit 0\n";
         print "delay.label Delay\n";
         print "delay.draw LINE2\n";
+	print "delay.cdef delay,1000,/\n";
         print "offset.label Offset\n";
         print "offset.draw LINE2\n";
+	print "offset.cdef offset,1000,/\n";
         print "jitter.label Jitter\n";
         print "jitter.draw LINE2\n";
+	print "jitter.cdef offset,1000,/\n";
         exit 0;
 }
 

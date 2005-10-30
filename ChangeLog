@@ -5,6 +5,7 @@ munin (repository)
   * Main: Fix handling of 'update no' on services in munin-update.
   * Plugins: generic/loggrep now supports summing values from log lines.
   * Plugins: SNMP plugins no longer report host_name when checking localhost.
+  * Plugins: Fix generic/ntp_ to report seconds instead of milliseconds.
 
 munin (1.3.2)
 
