@@ -48,6 +48,7 @@ sbin/munin-run
 %%DATADIR%%/plugins/loggrep
 %%DATADIR%%/plugins/mailman
 %%DATADIR%%/plugins/mailscanner
+%%DATADIR%%/plugins/mbmon_
 %%DATADIR%%/plugins/memory
 %%DATADIR%%/plugins/mhttping
 %%DATADIR%%/plugins/multips
@@ -113,12 +114,18 @@ sbin/munin-run
 @unexec rmdir %D/%%DATADIR%% 2>/dev/null || true
 @unexec rmdir %D/etc/munin/plugin-conf.d 2>/dev/null || true
 @unexec rmdir %D/etc/munin 2>/dev/null || true
+@unexec rmdir %%LOCALBASE%%/%%SITE_PERL%%/Munin/Plugin 2>/dev/null || true
+@unexec rmdir %%LOCALBASE%%/%%SITE_PERL%%/Munin 2>/dev/null || true
 @unexec echo
 @unexec echo '********************************************************************'
 @unexec echo "If you want to *completely* remove munin-node, you have to"
 @unexec echo
-@unexec echo "    rm -rf %D/var/munin/plugin-state %D/etc/munin/VERSION.node \\"
-@unexec echo "           %D/etc/munin/munin-node.conf %D/etc/munin/plugins \\"
+@unexec echo "    rm -rf %D/etc/munin/VERSION.node %D/etc/munin/plugins \\"
+@unexec if [ -d %D/var/munin/plugin-state ]; then echo "           %D/var/munin/plugin-state \\"; fi
+@unexec if [ -f %D/etc/munin/munin-node.conf ]; then echo "           %D/etc/munin/munin-node.conf \\"; fi
+@unexec if [ -d %D/var/munin/plugin-state ]; then echo "           %D/var/munin/plugin-state \\"; fi
+@unexec if [ -d %%LOCALBASE%%/%%SITE_PERL%%/Munin/Plugin ]; then echo "           %%LOCALBASE%%/%%SITE_PERL%%/Munin/Plugin \\"; fi
+@unexec if [ -d %%LOCALBASE%%/%%SITE_PERL%%/Munin ]; then echo "           %%LOCALBASE%%/%%SITE_PERL%%/Munin/Plugin \\"; fi
 @unexec echo "           /var/log/munin-node.log*"
 @unexec echo
 @unexec echo "If you have already deinstalled munin-main, you can also"

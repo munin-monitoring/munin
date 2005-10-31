@@ -6,7 +6,7 @@
 #
 
 PORTNAME=	munin
-PORTVERSION=	1.2.0
+PORTVERSION=	1.2.2
 CATEGORIES=	sysutils perl5
 MASTER_SITES=	${MASTER_SITE_SOURCEFORGE}
 MASTER_SITE_SUBDIR=	munin
@@ -21,6 +21,10 @@ BUILD_DEPENDS=	${RUN_DEPENDS}
 
 .include <bsd.port.pre.mk>
 
+.if ${OSVERSION} < 500000
+RUN_DEPENDS=	${LOCALBASE}/etc/rc.subr:${PORTSDIR}/sysutils/rc_subr
+.endif
+
 .if ${PERL_LEVEL} < 500800
 RUN_DEPENDS+=	${SITE_PERL}/Net/Domain.pm:${PORTSDIR}/net/p5-Net
 .endif
@@ -30,7 +34,7 @@ PATCH_STRIP=	-p1
 WRKSRC=		${WRKDIR}/${PORTNAME}-${PORTVERSION:S/.r/rc/}
 PKGMESSAGE=	${WRKDIR}/pkg-message
 ALL_TARGET=	DATADIR=${DATADIR} PERL=${PERL} build build-man
-INSTALL_TARGET=	DATADIR=${DATADIR} PERL=${PERL} install-node install-node-plugins
+INSTALL_TARGET=	DATADIR=${DATADIR} PERL=${PERL} INSTALL_PLUGINS="auto manual snmpauto" install-node install-node-plugins
 MAKE_ENV=	LANG=C
 
 MAN5=		munin-node.conf.5
