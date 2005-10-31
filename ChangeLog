@@ -1,5 +1,6 @@
 munin (1.2.4)
 
+  * Dists: Brought dists.freebsd in line with the FreeBSD ports.
   * Dists: Merged changes from Debian Etch package. See
     dists/debian/changelog.
   * Main: Correct munin-limits pod documentation.
