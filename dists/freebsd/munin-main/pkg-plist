@@ -1,3 +1,7 @@
+@exec mkdir -p /var/run/munin && chown munin:munin /var/run/munin
+@exec mkdir -p /var/log/munin-main && chown munin:munin /var/log/munin-main
+@exec mkdir -p %D/www/data/munin && chown munin:munin %D/www/data/munin
+@exec mkdir -p %D/var/munin && chown munin:munin %D/var/munin
 bin/munin-cron
 @unexec if cmp -s %D/etc/munin/munin.conf.sample %D/etc/munin/munin.conf; then rm -f %D/etc/munin/munin.conf; fi
 etc/munin/munin.conf.sample
@@ -14,8 +18,7 @@ etc/munin/templates/munin-overview.tmpl
 etc/munin/templates/munin-serviceview.tmpl
 @unexec if cmp -s %D/etc/munin/templates/style.css %D/www/data/munin/style.css; then rm -f %D/www/data/munin/style.css; fi
 etc/munin/templates/style.css
-@comment PREFIX trouble when testing
-@unexec rm -f `perl -V:sitelib | cut -d= -f2 | sed "s/[\';]//g"`/Munin.pm
+%%SITE_PERL%%/Munin.pm
 share/munin/munin-graph
 share/munin/munin-html
 share/munin/munin-limits
@@ -23,6 +26,7 @@ share/munin/munin-update
 www/cgi-bin/munin-cgi-graph
 @unexec rm -f /var/run/munin/munin-*.lock
 @unexec rmdir /var/run/munin 2>/dev/null || true
+@unexec rmdir /var/log/munin-main 2>/dev/null || true
 @unexec rmdir %D/www/data/munin 2>/dev/null || true
 @unexec rmdir %D/www/data 2>/dev/null || true
 @unexec rmdir %D/www/cgi-bin 2>/dev/null || true
@@ -34,8 +38,8 @@ www/cgi-bin/munin-cgi-graph
 @unexec echo '********************************************************************'
 @unexec echo "If you want to *completely* remove munin-main, you have to"
 @unexec echo
-@unexec echo "    rm -rf %D/www/data/munin \\"
-@unexec ls -d /usr/local/var/munin/* | grep -v plugin-state | fmt -40 | sed -e 's/^/           /' -e 's/$/ \\/'
+@unexec if [ -d %D/www/data/munin ]; then echo "    rm -rf %D/www/data/munin \\"; fi
+@unexec if [ -d %D/var/munin ]; then ls -d %D/var/munin/* | grep -v plugin-state | fmt -40 | sed -e 's/^/           /' -e 's/$/ \\/'; fi
 @unexec if [ -f %D/etc/munin/munin.conf ]; then echo "           %D/etc/munin/munin.conf \\"; fi
 @unexec if [ -d %D/etc/munin/templates ]; then echo "           %D/etc/munin/templates \\"; fi
 @unexec echo "           /var/log/munin-main"

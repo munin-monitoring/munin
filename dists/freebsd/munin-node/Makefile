@@ -6,7 +6,7 @@
 #
 
 PORTNAME=	munin
-PORTVERSION=	1.2.0.r2
+PORTVERSION=	1.2.0
 CATEGORIES=	sysutils perl5
 MASTER_SITES=	${MASTER_SITE_SOURCEFORGE}
 MASTER_SITE_SUBDIR=	munin
@@ -36,19 +36,17 @@ MAKE_ENV=	LANG=C
 MAN5=		munin-node.conf.5
 MAN8=		munin-node-configure.8 munin-node.8 munin-run.8
 
-PKGMSG=${FILESDIR}/pkg-message
+SUB_FILES=	pkg-message munin-node.sh munin-node-revive.sh
+SUB_LIST=	RC_SUBR=${RC_SUBR}
 USE_RC_SUBR=	YES
 
 pre-install:
-	@${SED} 's@%%PREFIX%%@${PREFIX}@g' ${PKGMSG} > ${PKGMESSAGE}
 	@PKG_PREFIX=${PREFIX} ${SH} pkg-install ${PKGNAME} PRE-INSTALL
 
 post-install:
-	@${SED} -e 's@%%PREFIX%%@${PREFIX}@g' -e 's@%%RC_SUBR%%@${RC_SUBR}@g' ${FILESDIR}/munin-node.sh > ${WRKSRC}/munin-node.sh
-	@${SED} -e 's@%%PREFIX%%@${PREFIX}@g' -e 's@%%RC_SUBR%%@${RC_SUBR}@g' ${FILESDIR}/munin-node-revive.sh > ${WRKSRC}/munin-node-revive.sh
-	${INSTALL_SCRIPT} ${WRKSRC}/munin-node.sh ${PREFIX}/etc/rc.d/munin-node.sh
+	${INSTALL_SCRIPT} ${WRKDIR}/munin-node.sh ${PREFIX}/etc/rc.d/munin-node.sh
 .if ${PERL_LEVEL} < 500800
-	${INSTALL_SCRIPT} ${WRKSRC}/munin-node-revive.sh ${PREFIX}/bin/munin-node-revive
+	${INSTALL_SCRIPT} ${WRKDIR}/munin-node-revive.sh ${PREFIX}/bin/munin-node-revive
 .endif
 	${INSTALL_DATA} ${WRKSRC}/build/node/munin-node.conf ${PREFIX}/etc/munin/munin-node.conf.sample
 	${INSTALL_DATA} files/plugins.conf ${PREFIX}/etc/munin/plugin-conf.d/plugins.conf.sample

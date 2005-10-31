@@ -1,3 +1,6 @@
+@exec mkdir -p %D/etc/munin/plugins
+@exec mkdir -p %D/etc/munin/plugin-conf.d && chmod 755 %D/etc/munin/plugin-conf.d
+@exec mkdir -p %D/var/munin/plugin-state && chgrp munin %D/var/munin/plugin-state && chmod 775 %D/var/munin/plugin-state
 @unexec rm %D/bin/munin-node-revive 2>/dev/null || true
 @comment etc/munin/VERSION.node must remain for upgrade version check
 @unexec if cmp -s %D/etc/munin/munin-node.conf %D/etc/munin/munin-node.conf.sample; then rm -f %D/etc/munin/munin-node.conf; fi
