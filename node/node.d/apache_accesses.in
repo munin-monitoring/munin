@@ -85,7 +85,7 @@ if (! eval "require LWP::UserAgent;")
 my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://127.0.0.1:%d/server-status?auto";
 my @PORTS = exists $ENV{'ports'} ? split(' ', $ENV{'ports'}) : (80);
 
-if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" )
+if ( defined $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
 	if ($ret)
 	{
@@ -110,7 +110,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" )
 	}
 }
 
-if ( exists $ARGV[0] and $ARGV[0] eq "config" )
+if ( defined $ARGV[0] and $ARGV[0] eq "config" )
 {
 	print "graph_title Apache accesses\n";
 	print "graph_args --base 1000\n";

@@ -1,3 +1,7 @@
+munin (working copy)
+  * Plugins: "exists $ARGV[0]" does not work with perl < 5.6.0. use
+    "defined $ARGV[0]".
+
 munin (1.2.4)
 
   * Dists: Brought dists.freebsd in line with the FreeBSD ports.
