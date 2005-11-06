@@ -9,6 +9,9 @@
 #	type_$dev	-- device type for one drive, e.g. "env.type_sda 3ware,0"
 #	args_$dev	-- additional arguments to smartctl for one drive,
 #			   e.g. "env.args_hda -v 194,10xCelsius"
+#                          Use this to make the plugin use the --all or -a option
+#                          if your disk will not return it's temperature when
+#                          only the -A option is used.
 #
 # Note for users of RAID controllers (smartmontools currently only
 # supports 3ware): you can specify the drives attached to your RAID
@@ -59,6 +62,7 @@ my $smartctl = exists $ENV{smartctl} ? $ENV{smartctl} : undef;
 # first, try $PATH
 $smartctl = `which smartctl` unless $smartctl;
 chomp $smartctl;
+$smartctl = undef unless -x $smartctl;
 
 # Still not found? Check obvious places
 my @dirs = qw(/usr/bin /usr/sbin /usr/local/bin /usr/local/sbin);
@@ -82,7 +86,7 @@ if ($^O eq 'linux') {
     closedir(IDE);
   }
 } elsif ($^O eq 'solaris') {
-  @drives = map { s@.*/@@ } glob '/dev/rdsk/c*t*d*s2';
+  @drives = map { s@.*/@@ ; $_ } glob '/dev/rdsk/c*t*d*s2';
 }
 
 @drives = split ' ', $ENV{drives} if exists $ENV{drives};
@@ -90,7 +94,7 @@ if ($^O eq 'linux') {
 # Sort list of drives
 @drives = sort @drives;
 
-if (exists $ARGV[0]) {
+if (defined $ARGV[0]) {
   if ($ARGV[0] eq 'autoconf') {
     if ($smartctl and -x $smartctl) {
       if (@drives) {
@@ -118,10 +122,14 @@ if (exists $ARGV[0]) {
 foreach (@drives) {
   my $dev;
   $dev = $_ =~ /(.*)(?:_\d+)/ ? $1 : $_;
-  my $cmd = $smartctl.' -a ';
+  my $cmd = $smartctl.' -A ';
   $cmd .= $ENV{'args_'.$_}.' ' if exists $ENV{'args_'.$_};
   $cmd .= '-d '.$ENV{'type_'.$_}.' ' if exists $ENV{'type_'.$_};
-  $cmd .= "/dev/$dev";
+  if ($^O eq 'solaris') {
+    $cmd .= "/dev/rdsk/$dev";
+  } else {
+    $cmd .= "/dev/$dev";
+  }
   my $output = `$cmd`;
   if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
     print "$_.value $1\n";

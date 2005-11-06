@@ -20,22 +20,6 @@ fixperms() {
 		dpkg-statoverride --update --add munin munin 0755 /var/www/munin
 	dpkg-statoverride --list /var/lib/munin >/dev/null || \
 		dpkg-statoverride --update --add munin munin 0755 /var/lib/munin
-
-	if [ ! "$prevver" ]; then
-		# Upgrading from LRRD, yes?
-		# This'll generate a lot of chmod/grp's on
-		# the dirs, but what the hell..
-		if getent passwd lrrd >/dev/null; then
-			for f in $(find /var/lib/munin -user lrrd); do
-				chown munin $f ${f%/*}
-			done
-		fi
-		if getent group lrrd >/dev/null; then
-			for f in $(find /var/lib/munin -group lrrd); do
-				chgrp munin $f ${f%/*}
-			done
-		fi
-	fi
 }
 
 case "$1" in

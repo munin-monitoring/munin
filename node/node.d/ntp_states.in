@@ -7,6 +7,10 @@
 # 	config   (required)
 # 	autoconf (optional - used by lrrd-config)
 #
+# Config variables:
+#
+#       lowercase	- lowercase hostnames after lookup
+#
 # Magic markers - optional - used by installation scripts and
 # lrrd-config:
 #
@@ -55,6 +59,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 		my $host = gethostbyaddr(inet_aton($addr));
 		$host = defined $host ? $host->name : $addr;
 		my $name = $host;
+		$host = lc $host if exists $ENV{"lowercase"};
 		$host =~ s/[\.-]/_/g;
 		print "$host.label $name\n";
 		print "$host.draw LINE2\n";
@@ -69,6 +74,7 @@ foreach (`ntpq -c "hostnames no" -c peers`) {
 	my $addr = $2;
 	my $host = gethostbyaddr(inet_aton($addr));
 	$host = defined $host ? $host->name : $addr;
+	$host = lc $host if exists $ENV{"lowercase"};
 	$host =~ s/[\.-]/_/g;
 	print "$host.value ", exists $stateval{$state} ? $stateval{$state} : 0, "\n";
 }

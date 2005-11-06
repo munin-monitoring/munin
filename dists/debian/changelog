@@ -1,3 +1,55 @@
+munin (1.2.3-3) unstable; urgency=medium
+
+  * debian/munin.preinst (removed), debian/munin.postinst, debian/munin.postrm,
+    debian/munin-node.preinst (removed), debian/munin-node.postinst:
+      - Remove all code that handled upgrades from versions earlier than
+        1.2.3-1.  In a way this closes: #308008.
+
+  * debian/munin.postrm, debian/munin-node.postrm:
+      - Replace "test -o" bashism with "||".
+
+  * debian/munin-node.cron.d:
+      - Update APT's package index files periodically if the apt_all plugin
+        enabled, too.  Patch by Tommi Virtanen, thanks!  Closes: #317278.
+
+  * debian/control:
+      - Remove conflict declarations on the old LRRD packages.
+      - Make munin-node suggest ethtool, closes: #311603.
+      - Make Munin depend on rrdtool instead of merely suggesting it.  This is
+        a workaround for bug #323975 and its duplicates.
+      - Add a dependency on adduser for both packages.
+      - Increment standards-version to 3.6.2.1, no changes required.
+
+  * debian/munin-node.init, debian/control:
+      - Reimplemented Munin-Node's init script using LSB functions.
+        Closes: #326912, #326913.
+      - Add a dependency on lsb-base for Munin-Node.
+
+  * server/munin-graph.in, debian/control:
+      - Replaced the patch from 1.2.3-2 with the upstream one from SVN revision
+        954.  This re-enables support for RRDtool 1.0, so the versioned
+        dependency on librrds-perl is dropped.
+
+  * server/munin-cron.in:
+      - Swallow bogus output from RRDtool, closes: #326061.  This is a
+        (hopefully temporary) workaround for bug #325353.
+
+ -- Tore Anderson <tore@debian.org>  Sat, 10 Sep 2005 10:58:08 +0200
+
+munin (1.2.3-2) unstable; urgency=low
+
+  * server/munin-graph.in:
+      - Gave up waiting for the new upstream release, and applied Robert
+        Loomans' patch to make Munin support RRDtool 1.2, closes: #324605,
+        closes: #325280.  Thanks, Robert!  Note that this breaks compability
+        with RRDtool 1.0.  Sarge users should wait for the new upstream release
+        which will support both RRDtool 1.0 and 1.2.
+
+  * debian/control:
+      - Made the munin package depend on librrds-perl in versions 1.2 or above.
+
+ -- Tore Anderson <tore@debian.org>  Wed, 31 Aug 2005 09:11:47 +0200
+ 
 munin (1.2.3-1) unstable; urgency=medium
 
   * New upstream release, targeted at Sarge.

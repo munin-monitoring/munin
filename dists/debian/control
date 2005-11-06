@@ -4,14 +4,13 @@ Priority: optional
 Maintainer: Munin Debian Maintainers <munin-deb-maint@linpro.no>
 Uploaders: Tore Anderson <tore@debian.org>, Dagfinn Ilmari Mannsaker <ilmari@ilmari.org>
 Build-Depends-Indep: debhelper (>> 4.0.0), perl, htmldoc, html2text
-Standards-Version: 3.6.1.1
+Standards-Version: 3.6.2.1
 
 Package: munin-node
 Architecture: all
-Depends: ${perl:Depends}, libnet-server-perl, procps
+Depends: ${perl:Depends}, libnet-server-perl, procps, adduser, lsb-base
 Recommends: libnet-snmp-perl
-Suggests: munin, libwww-perl, libnet-irc-perl, mysql-client, smartmontools, acpi | lm-sensors, python (>= 2.2)
-Conflicts: lrrd-client (<= 0.9.9r5-1)
+Suggests: munin, libwww-perl, libnet-irc-perl, mysql-client, smartmontools, acpi | lm-sensors, python (>= 2.2), ethtool
 Description: network-wide graphing framework (node)
  Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still
@@ -36,10 +35,9 @@ Description: network-wide graphing framework (node)
 
 Package: munin
 Architecture: all
-Depends: ${perl:Depends}, perl-modules (>= 5.8.0) | libparse-recdescent-perl, librrds-perl, libhtml-template-perl, libdigest-md5-perl, libtime-hires-perl, libstorable-perl
+Depends: ${perl:Depends}, perl-modules (>= 5.8.0) | libparse-recdescent-perl, librrds-perl, libhtml-template-perl, libdigest-md5-perl, libtime-hires-perl, libstorable-perl, rrdtool, adduser
 Recommends: munin-node, libdate-manip-perl
-Suggests: rrdtool, www-browser, httpd
-Conflicts: lrrd-server (<= 0.9.9r5-1)
+Suggests: www-browser, httpd
 Description: network-wide graphing framework (grapher/gatherer)
  Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still

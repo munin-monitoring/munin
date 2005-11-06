@@ -59,6 +59,11 @@ fi;
 
 /usr/bin/netstat -i -b -I $INTERFACE | awk '
 /<Link#[0-9]*>/ {
-	print "rbytes.value", $7;
-	print "obytes.value", $10;
+	if (NF == 10) { 
+		print "rbytes.value", $6;
+		print "obytes.value", $9;
+	} else {
+		print "rbytes.value", $7;
+		print "obytes.value", $10;
+	}
 }'

@@ -1,4 +1,4 @@
-#!@@PERL@@
+!@@PERL@@
 
 use strict;
 
@@ -42,7 +42,7 @@ my %graph =  (
 			 }
 );
 
-if ( exists $ARGV[0] and $ARGV[0] eq 'config' ) {
+if ( defined $ARGV[0] and $ARGV[0] eq 'config' ) {
 	print "graph_title UPS Misc - $config{upsname}\n";
 	#print "graph_args -l 110\n";
 	#print "graph_vlabel Misc\n";

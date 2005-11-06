@@ -600,7 +600,7 @@ Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin.conf]
 
 =item B<< --[no]force >>
 
-Force sending of messages ieven if you normally wouldn't. [--noforce]
+Force sending of messages even if you normally wouldn't. [--noforce]
 
 =item B<< --[no]force-root >>
 

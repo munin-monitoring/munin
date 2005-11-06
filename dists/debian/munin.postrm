@@ -25,15 +25,12 @@ if [ "$1" = "purge" ]; then
 	rm -f /var/log/munin/munin-html.log*
 	rm -f /var/log/munin/munin-limits.log*
 
-	# XXX remove after release of Sarge
-	rm -f /var/log/munin/munin-nagios.log*
-
 	dpkg-statoverride --remove /var/www/munin
 
 	# These are shared with munin-node, so only remove them if munin-node
 	# isn't installed (or already purged).
 	status=$(dpkg --get-selections munin-node)
-	if [ -z "$status" -o "${status%purge}" != "$status" ]; then
+	if [ -z "$status" ] || [ "${status%purge}" != "$status" ]; then
 		dpkg-statoverride --remove /var/log/munin
 		dpkg-statoverride --remove /var/run/munin
 		dpkg-statoverride --remove /var/lib/munin

@@ -280,7 +280,7 @@ sub print_service {
 
 sub list_services {
     my $node = $_[0] || $FQDN;
-    net_write (join " ", grep { &has_access ($_); } keys %{$nodes{$node}});
+    net_write join " ", grep { &has_access ($_); } keys %{$nodes{$node}} if exists $nodes{$node};
     #print join " ", keys %{$nodes{$node}};
     net_write ("\n");
 }
