@@ -14,6 +14,7 @@
 #   mysqlopts    - Options to pass to mysql
 #	statefile    - where to put the statefile
 #	ignore       - Tables to ignore. Regex.
+#	absolute     - use tables sizes, not percent of maximum
 #
 # $Log: mysql_isam_space_.in,v $
 # Revision 1.1  2005/11/06 13:18:28  lupe
@@ -216,14 +217,11 @@ sub fetch_state_from_mysql
 			}
                         else
 			{
-				printf OUT ("%s.%s %f\n", $db, $fields[1],
-                                            (100*$fields[$index{Data_length}]/
-                                             $fields[$index{Max_data_length}]));
-				if ($DB eq $db)
-				{
-					$tables->{$fields[1]} = (100*$fields[$index{Data_length}]/
-                                                                 $fields[$index{Max_data_length}]);
-				}
+				my $value =
+					$ABSOLUTE ? $fields[$index{Data_length}]
+					: (100*$fields[$index{Data_length}]/$fields[$index{Max_data_length}]);
+				printf OUT ("%s.%s %f\n", $db, $fields[1], $value);
+				$tables->{$fields[1]} = $value if $DB eq $db;
 			}
 		}
 		close (IN);
