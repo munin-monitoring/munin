@@ -14,7 +14,9 @@
 #       amavislog    - file where amavis logs are written
 #
 
+mktempfile () {
 @@MKTEMP@@
+}       
 
 AMAVIS_LOG=${logfile:-/var/log/mail/mail.info}
 LOGTAIL=${logtail:-`which logtail`}
