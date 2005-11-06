@@ -15,7 +15,10 @@
 #	statefile    - where to put the statefile
 #	ignore       - Tables to ignore. Regex.
 #
-# $Log$
+# $Log: mysql_isam_space_.in,v $
+# Revision 1.1  2005/11/06 13:18:28  lupe
+# Initial revision
+#
 # Revision 1.2  2004/05/20 13:57:12  jimmyo
 # Set categories to some of the plugins.
 #
@@ -214,12 +217,12 @@ sub fetch_state_from_mysql
                         else
 			{
 				printf OUT ("%s.%s %f\n", $db, $fields[1],
-                                            (100*$fields[$index{Max_data_length}]/
-                                             $fields[$index{Data_length}]));
+                                            (100*$fields[$index{Data_length}]/
+                                             $fields[$index{Max_data_length}]));
 				if ($DB eq $db)
 				{
-					$tables->{$fields[1]} = (100*$fields[$index{Max_data_length}]/
-                                                                 $fields[$index{Data_length}]);
+					$tables->{$fields[1]} = (100*$fields[$index{Data_length}]/
+                                                                 $fields[$index{Max_data_length}]);
 				}
 			}
 		}
