@@ -1,6 +1,12 @@
 munin (working copy)
   * Plugins: "exists $ARGV[0]" does not work with perl < 5.6.0. use
     "defined $ARGV[0]".
+  * Plugins: amavis: Add missing funtion mktempfile around @@MKTEMP@@.
+  * Plugins: mysql_isam_space_: Add a configuration variable "absolute" to
+    graph size of tables rather than percent of maximum.
+    Analyze header line from showmysql output and derive columns from it.
+  * Plugins: ntp_ and ntp_states: Lowercase host names in ntp plugins if
+    environment variable "lowercase" is set.
 
 munin (1.2.4)
 
