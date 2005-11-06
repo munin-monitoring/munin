@@ -92,12 +92,18 @@ Options:
 
 if ($do_version)
 {
-    print "munin-node-configure (munin-node) version $version.\n";
-    print "Written by Jimmy Olsen\n";
-    print "\n";
-    print "Copyright (C) 2003-2004 Jimmy Olsen\n";
-    print "This is free software released under the GNU Public License. There is NO\n";
-    print "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n";
+    print <<"EOT";
+munin-node-configure (munin-node) version $version.
+Written by Jimmy Olsen
+
+Copyright (C) 2003-2005 Jimmy Olsen
+
+This is free software released under the GNU General Public License. There
+is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. For details, please refer to the file COPYING that is included
+with this software or refer to
+  http://www.fsf.org/licensing/licenses/gpl.txt
+EOT
     exit 0;
 }
 

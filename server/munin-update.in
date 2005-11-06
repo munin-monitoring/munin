@@ -92,12 +92,18 @@ Options:
 
 if ($do_version)
 {
-    print "munin-update version $VERSION.\n";
-    print "Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS\n";
-    print "\n";
-    print "Copyright (C) 2002-2004\n";
-    print "This is free software released under the GNU Public License. There is NO\n";
-    print "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n";
+    print <<"EOT";
+munin-update version $VERSION.
+Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
+
+Copyright (C) 2002-2005
+
+This is free software released under the GNU General Public License. There
+is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. For details, please refer to the file COPYING that is included
+with this software or refer to
+  http://www.fsf.org/licensing/licenses/gpl.txt
+EOT
     exit 0;
 }
 
