@@ -8,6 +8,10 @@
 # 	autoconf (optional - used by munin-node-configure)
 #       suggest  (optional - used by munin-node-configure)
 #
+# Config variables:
+#
+#       lowercase       - lowercase hostnames after lookup
+#
 # $Log$
 # Revision 1.4  2004/11/21 20:19:09  jimmyo
 # Don't suggest localhost peer.
@@ -66,6 +70,7 @@ if ($ARGV[0] and $ARGV[0] eq "suggest") {
 		my $addr = $1;
 		my $name = gethostbyaddr(inet_aton($addr));
 		$name = defined $name ? $name->name : $addr;
+		$name = lc $name if exists $ENV{"lowercase"};
 		$name =~ s/[\.-]/_/g;
 		print $name, "\n";
 	}
@@ -85,6 +90,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 		my $addr = $1;
 		my $host = gethostbyaddr(inet_aton($addr));
 		$host = defined $host ? $host->name : $addr;
+		$host = lc $host if exists $ENV{"lowercase"};
 		my $host_ = $host;
 		$host_ =~ s/[\.-]/_/g;
 		next unless $host_ eq $name;
@@ -107,6 +113,7 @@ foreach (@lines) {
 	my $addr = $1;
 	my $host = gethostbyaddr(inet_aton($addr));
 	$host = defined $host ? $host->name : $addr;
+	$host = lc $host if exists $ENV{"lowercase"};
 	$host =~ s/[\.-]/_/g;
 	next unless $host eq $name;
 	my @F = split;
