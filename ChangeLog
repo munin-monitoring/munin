@@ -1,4 +1,6 @@
 munin (repository)
+  * Merge changes from 1.2.3->1.2.4. Some of the following entries may not
+  apply.
   * Plugins: "exists $ARGV[0]" does not work with perl < 5.6.0. use
     "defined $ARGV[0]".
   * Dists: Brought dists.freebsd in line with the FreeBSD ports.
@@ -44,27 +46,6 @@ munin (repository)
   * Plugins (Solaris): memory: Rewrite the value computation as a single nawk
   program. Support scale factor "K" (gives values < 1).
   * Plugins (Linux): port_: Correct offset error in TCP6 code.
-
-munin (1.2.3)
-
-  * Main: Remove stdout output (Deb#302502).
-  * Node: Added support for optional "user" settings in node.
-  * Node: Allow "root" for the per-plugin "group" directive.
-  * Plugins: sort drives in generic/hddtemp_smartcl (SF#1174847).
-  * Plugins: Fix autoconf for linux/{nfsd,nfs_client}.
-  * Plugins: Make linux/sensors_ handle multiline output better (Deb#300690).
-  * Plugins: generic/postfix_mailstats now treats reject-lines better
-    (Deb#302220).
-  * Plugins: Made generic/postfix_mailvolume autoconf less eager.
-
-  * Main: Tuned logging.
-  * Main: Log warning about nodes without addresses in munin-update.
-  * Main: Fix handling of 'update no' on services in munin-update.
-  * Plugins: generic/loggrep now supports summing values from log lines.
-  * Plugins: SNMP plugins no longer report host_name when checking localhost.
-  * Plugins: Fix generic/ntp_ to report seconds instead of milliseconds.
-  * Plugins: Fix generic/mysql_isam_space_ to pass user-specified mysqlshow
-    options first.
 
 munin (1.3.2)
 
