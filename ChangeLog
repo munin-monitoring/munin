@@ -1,4 +1,6 @@
 munin (working copy)
+
+  * Server: Display the time period in the title of the comparison pages.
   * Plugins: "exists $ARGV[0]" does not work with perl < 5.6.0. use
     "defined $ARGV[0]".
   * Plugins: amavis: Add missing funtion mktempfile around @@MKTEMP@@.
