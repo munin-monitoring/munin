@@ -152,7 +152,7 @@ sub fetch_state_from_mysql
 	}
 	elsif ($pid == 0)
 	{ # Child
-		exec ($MYSQLSHOW, "--status", "-v", @mysql_opts);
+		exec ($MYSQLSHOW, @mysql_opts, "--status", "-v");
 	}
 
 	my @mysql_status = <IN>;

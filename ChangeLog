@@ -5,6 +5,7 @@ munin (working copy)
   * Plugins: mysql_isam_space_: Add a configuration variable "absolute" to
     graph size of tables rather than percent of maximum.
     Analyze header line from showmysql output and derive columns from it.
+    Pass user-specified options first to mysqlshow.
   * Plugins: ntp_ and ntp_states: Lowercase host names in ntp plugins if
     environment variable "lowercase" is set.
 
