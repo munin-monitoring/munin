@@ -1,4 +1,6 @@
 munin (repository)
+
+  * Server: Display the time period in the title of the comparison pages.
   * Merge changes from 1.2.3->1.2.4. Some of the following entries may not
   apply.
   * Plugins: "exists $ARGV[0]" does not work with perl < 5.6.0. use
