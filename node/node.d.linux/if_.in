@@ -70,12 +70,7 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi;
 
-# Escape dots in the interface name (eg. vlans) before using it as a regex
-awk -v interface="$INTERFACE" \
-    'BEGIN { gsub(/\./, "\\.", interface) } \
-    $1 ~ "^" interface ":" {
-        split($0, a, /: */); $0 = a[2]; \
-        print "down.value " $1 "\nup.value " $9 \
-    }' \
+awk -F '[: \t]+' -v interface="$INTERFACE" \
+    '$2 == interface { print "down.value " $3 "\nup.value " $11; }' \
     /proc/net/dev
 

@@ -48,6 +48,8 @@ munin (repository)
   * Plugins (Solaris): memory: Rewrite the value computation as a single nawk
   program. Support scale factor "K" (gives values < 1).
   * Plugins (Linux): port_: Correct offset error in TCP6 code.
+  * Plugins (Linux): if_: Simplify awk program greatly, suggested by
+    Nicolai Langfeldt <janl@linpro.no>
 
 munin (1.3.2)
 
