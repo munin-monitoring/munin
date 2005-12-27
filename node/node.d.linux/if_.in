@@ -71,6 +71,7 @@ if [ "$1" = "config" ]; then
 fi;
 
 awk -F '[: \t]+' -v interface="$INTERFACE" \
-    '$2 == interface { print "down.value " $3 "\nup.value " $11; }' \
+    '$1 == interface { print "down.value " $2 "\nup.value " $10; exit }
+     $2 == interface { print "down.value " $3 "\nup.value " $11; exit }' \
     /proc/net/dev
 
