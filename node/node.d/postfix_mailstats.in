@@ -142,6 +142,10 @@ if (-f "$statefile")
 	{
 		$rejects->{$1} = $2;
 	}
+        elsif (/^OTHER:(\d+)$/)
+        {
+		$rejects->{OTHER} = $1;
+        }
     }
     close IN;
 }
@@ -231,7 +235,9 @@ sub parseLogfile
 	} 
 	elsif ($line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/)
 	{
-	    $rejects->{$1} ++;
+            my $cause = $1;
+            $cause = 'OTHER' unless $1 =/^\d+$/;
+	    $rejects->{$cause} ++;
 	}
     }
     close(LOGFILE);    
