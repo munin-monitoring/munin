@@ -248,6 +248,7 @@ endif
 	-rm -f build-stamp
 	-rm -f build-doc-stamp
 	-rm -f build-man-stamp
+	-rm -rf t/install
 
 	-rm -f dists/redhat/munin.spec
 
@@ -255,4 +256,26 @@ source_dist: clean
 	(cd ..; ln -s $(DIR) munin-$(VERSION))
 	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
 
-.PHONY: install install-main install-node install-doc install-man build build-doc deb clean source_dist
+ifeq ($(MAKELEVEL),0)
+# Re-exec make with the test config
+test: t/*.t
+	$(MAKE) $@ CONFIG=t/Makefile.config
+else
+test_plugins = id_default id_root env
+test: t/*.t t/install $(addprefix $(CONFDIR)/plugins/,$(test_plugins))
+	@for test in t/*.t; do \
+		echo -n "$$test: "; \
+		PERL5LIB=$(PERLLIB) $(PERL) $$test;\
+	done
+endif
+
+$(CONFDIR)/plugins/id_%: $(LIBDIR)/plugins/id
+	ln -s $< $@
+
+$(CONFDIR)/plugins/%: $(LIBDIR)/plugins/%
+	ln -s $< $@
+
+t/install: 
+	$(MAKE) clean install-node install-node-plugins CONFIG=t/Makefile.config INSTALL_PLUGINS=test
+
+.PHONY: install install-main install-node install-doc install-man build build-doc deb clean source_dist test
