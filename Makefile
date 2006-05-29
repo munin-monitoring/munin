@@ -75,7 +75,7 @@ install-node-non-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure $(SBINDIR)/
 	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
-	
+
 install-node-plugins: build
 	for p in build/node/node.d.$(OSTYPE)/* build/node/node.d/*; do    		\
 		if test -f "$$p" ; then                                     		\
@@ -214,7 +214,7 @@ rpm-pre:
 rpm: rpm-pre
 	tar -C .. --dereference --exclude .svn -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -tb munin-$(RELEASE).tar.gz)
-	
+
 rpm-src: rpm-pre
 	tar -C .. --dereference --exclude .svn -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
