@@ -321,7 +321,8 @@ sub run_service {
 			$defuser);
 		my $g  = $defgroup;
 		my $gs = "$g $g" .
-		($sconf{$service}{'group'}?" $sconf{$service}{group}":"");
+		  (defined($sconf{$service}{'group'}) ? 
+		   " $sconf{$service}{group}" : "");
 
 		print "# Want to run as euid/egid $u/$g\n" if $DEBUG;
 
