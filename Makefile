@@ -212,14 +212,14 @@ rpm-pre:
 #	(cd ..; ln -s munin munin-$(VERSION))
 
 rpm: rpm-pre
-	tar -C .. --dereference --exclude .svn -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
-	(cd ..; rpmbuild -tb munin-$(RELEASE).tar.gz)
+	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
+	(cd ..; rpmbuild -tb munin_$(RELEASE).tar.gz)
 
 rpm-src: rpm-pre
 	tar -C .. --dereference --exclude .svn -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
 
-+suse-pre:
+suse-pre:
 	@for file in `find dists/suse/ -type f -name '*.in'`; do                \
 		destname=`echo $$file | sed 's/.in$$//'`;               \
 		echo Generating $$destname..;                           \
@@ -251,6 +251,7 @@ endif
 	-rm -rf t/install
 
 	-rm -f dists/redhat/munin.spec
+	-rm -f dists/suse/munin.spec
 
 source_dist: clean
 	(cd ..; ln -s $(DIR) munin-$(VERSION))
