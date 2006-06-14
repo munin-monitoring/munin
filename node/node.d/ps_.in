@@ -51,7 +51,7 @@ printf "count.value "
 PGREP=/usr/bin/pgrep
 
 if [ -x "$PGREP" ]; then
-	$PGREP -f -l "$name" | grep "$REGEX" | wc -l
+	$PGREP -f -l "$name" | grep "$REGEX" | grep -v grep | wc -l
 elif [ -x /usr/ucb/ps ]; then
 	# Solaris without pgrep. How old is that?
 	/usr/ucb/ps auxwww | grep "$REGEX" | grep -v grep | wc -l
