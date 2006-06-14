@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# -*- cperl -*-
 #
 # Copyright (C) 2002-2004 Jimmy Olsen, Audun Ytterdal
 #
@@ -147,7 +148,11 @@ if (! -d $config->{rundir})
 }
 munin_runlock("$config->{rundir}/munin-update.lock");
 
-open (STATS,">$config->{dbdir}/munin-update.stats.tmp") or logger("Unable to open $config->{datadir}/munin-update.stats");
+if (!open (STATS,">$config->{dbdir}/munin-update.stats.tmp")) {
+    logger("Unable to open $config->{dbdir}/munin-update.stats");
+    # Use /dev/null instead - if the admin won't fix he won't care
+    open(STATS,">/dev/null") or die "Could not open STATS to /dev/null: $?";
+}
 
 my %children = ();
 my @queue = ();
@@ -165,7 +170,6 @@ if ($do_fork)
 }
 
 logger("Starting munin-update"); 
-
 
 for my $key (keys %{$config->{domain}}) {
   my $domain_time = Time::HiRes::time;
