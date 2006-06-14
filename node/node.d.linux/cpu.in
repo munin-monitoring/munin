@@ -29,23 +29,22 @@ fi
 
 extinfo=""
 
-if (`egrep '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat 2>/dev/null >/dev/null`)
-then
+if egrep -q '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat; then
 	extinfo="iowait irq softirq"
 fi
 
 if [ "$1" = "config" ]; then
 
-	NCPU=`expr \`grep '^cpu. ' /proc/stat | wc -l\` - 1`
-	PERCENT=`expr $NCPU '*' 100`
+	NCPU=$(( $(grep '^cpu. ' /proc/stat | wc -l) - 1))
+	PERCENT=$(($NCPU * 100))
 	if [ "$scaleto100" = "yes" ]; then
 		graphlimit=100
 	else
 		graphlimit=$PERCENT
 	fi
-	SYSWARNING=`expr $PERCENT '*' 30 / 100`
-	SYSCRITICAL=`expr $PERCENT '*' 50 / 100`
-	USRWARNING=`expr $PERCENT '*' 80 / 100`
+	SYSWARNING=$(($PERCENT * 30 / 100))
+	SYSCRITICAL=$(($PERCENT * 50 / 100))
+	USRWARNING=$(($PERCENT * 80 / 100))
 	echo 'graph_title CPU usage'
 	echo "graph_order system user nice idle" $extinfo
 	echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit $graphlimit"
@@ -117,8 +116,7 @@ if [ "$1" = "config" ]; then
 fi
 
 
-if [ ! -z "$extinfo" ]
-then
+if [ ! -z "$extinfo" ]; then
 	awk '/^cpu / { print "user.value " $2 "\nnice.value " $3 "\nsystem.value " $4 "\nidle.value " $5 "\niowait.value " $6 "\nirq.value " $7 "\nsoftirq.value " $8 }' < /proc/stat
 else
 	awk '/^cpu / { print "user.value " $2 "\nnice.value " $3 "\nsystem.value " $4 "\nidle.value " $5 }' < /proc/stat
