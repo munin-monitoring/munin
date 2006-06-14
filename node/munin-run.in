@@ -377,7 +377,7 @@ sub run_service {
     }
     else
     {
-	print STDERR "DEBUG: About to exec \"$servicedir/$service\"." if $DEBUG;
+	print STDERR "DEBUG: About to exec \"$servicedir/$service\"\n" if $DEBUG;
 	if (!exec ("$servicedir/$service", $command))
 	{
 	    print "no (could not execute plugin)\n"; exit 1;

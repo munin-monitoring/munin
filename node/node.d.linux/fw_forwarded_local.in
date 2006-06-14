@@ -1,6 +1,8 @@
 #!/bin/sh
 #
 # Plugin to monitor network connections.
+#  forward: number of connections forwarder
+#  local:   number of connections for the host itself
 #
 # Parameters:
 #
@@ -46,4 +48,17 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-cat /proc/net/ip_conntrack | grep ESTABLISHED | sed 's/.*src=\(.*\) .*dst=\(.*\) sport.*src=\(.*\) .*dst=\(.*\) spo.*/\1 \2 \3 \4/g' | awk 'BEGIN {{FORW=0} {LOCAL=0}} {if($1 != $4){ FORW += 1} else { LOCAL += 1}} END {{print "forward.value "FORW} {print "local.value "LOCAL}}'
+perl -ne '
+    BEGIN { $forward=0; $local=0; }
+
+    if ( ($src, $dst, $isrc, $idst) =
+     /.*ESTABLISHED src=(.*) .*dst=(.*) sport.*src=(.*) .*dst=(.*) sport.*/ ) {
+        if( $src eq $idst) {
+	    $local++;
+	} else {
+            $forward++;
+       }
+    }
+    END { print "forward.value $forward\nlocal.value $local\n" }
+' </proc/net/ip_conntrack
+

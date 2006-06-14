@@ -48,8 +48,9 @@ fi
 
 printf "count.value "
 
-PGREP=`which pgrep`
-if [ -n "$PGREP" ]; then
+PGREP=/usr/bin/pgrep
+
+if [ -x "$PGREP" ]; then
 	$PGREP -f -l "$name" | grep "$REGEX" | wc -l
 elif [ -x /usr/ucb/ps ]; then
 	# Solaris without pgrep. How old is that?

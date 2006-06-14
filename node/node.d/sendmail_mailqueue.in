@@ -20,7 +20,7 @@
 MSP_QUEUE=/var/spool/mqueue-client
 MTA_QUEUE=/var/spool/mqueue
 if [ "$mspqueue"  ]; then MSP_QUEUE=$mspqueue ; fi
-if [ "$mtaqueue"  ]; then MTA_QUEUE=$mspqueue ; fi
+if [ "$mtaqueue"  ]; then MTA_QUEUE=$mtaqueue ; fi
 
 if [ "$1" = "autoconf" ]; then
 	if [ -d ${MSP_QUEUE} -a -d ${MTA_QUEUE} ] ; then
