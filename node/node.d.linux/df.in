@@ -1,11 +1,13 @@
-#!/bin/sh
+#!/usr/bin/perl
 #
-# Script to monitor disk usage.
-#
+# Plugin to monitor disk usage. Rewrite based on original shell-based version
+# 
 # Parameters understood:
 #
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
+#       config   (required)
+#       autoconf (optional - used by munin-config)
+#
+# $Log$
 #
 # Magic markers (optional - used by munin-config and installation
 # scripts):
@@ -13,50 +15,93 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-MAXLABEL=20
+use strict;
 
-if [ "$1" = "autoconf" ]; then
-	echo yes
-	exit 0
-fi
+my $MAXLABEL=25;
 
-clean_name() {
-    echo $1 $7 $2 | sed 's/[\/.-]/_/g'| awk "{ 
-	if (\$3 == \"tmpfs\")
-		n=\$1\$2
-	else
-		n=\$1
-	print n
-	}"
+# Read /proc/mounts
+my %mounts;
+open (MOUNTS,"/proc/mounts") or die "Could not /proc/mounts for reading.";
+while (<MOUNTS>) {
+    # Does perl really not have any shorthand for this? I guess it has.
+    if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
+	$mounts{$2}=$3;
+    }
+}
+close MOUNTS;
+
+sub print_values() {
+    
+    # Read from df
+    open (DF,"/bin/df -P -l |") or die "Could not open pipe from /bin/df, $!";
+    <DF>; # Skip the header
+    while (<DF>) {
+	next if /\/\//;
+	
+	# Parse the output
+	if ( /^(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)/ ) {
+	    my $fs=$mounts{$6};
+	    my $ps=$5;
+	    my $name=$1;
+	    
+	    $ps =~ s/\%//;
+	    $name =~ s/\//_/g;
+	    print $name .  ".value  " . $ps . "\n";
+	}
+    }
+    close DF;
+}
+    
+if ( $ARGV[0] eq "autoconf" ) {
+  if (`perl $0` eq "" ) {
+    print "no\n";
+    exit 1;
+  }
+  elsif ( `uname -s` eq "SunOS\n" ) {
+    print "no\n";
+    exit 1;
+  }
+  else {
+    print "yes\n";
+    exit 0;
+  }
 }
 
+if ( $ARGV[0] eq "config" ) {
 
-if [ "$1" = "config" ]; then
+    # The headers
+    print "graph_title Disk usage (in %)\n";
+    print "graph_args --upper-limit 100 -l 0\n";
+    print "graph_vlabel %\n";
+    
+    # Read from df
+    open (DF,"/bin/df -P -l |") or die "Unable to open pipe from /bin/df";
+    <DF>; # Skip the header
+    while (<DF>) {
+	next if /\/\//;
+	
+	# Parse the output
+	if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
+	    my $fs=$mounts{$6};
+	    my $dir=$6;
+	    my $name=$1; 
+	    
+	    # Create and print labels
+	    $name =~ s/\//_/g;
+	    print $name .  ".label ";
+	    if ( length($dir) <= $MAXLABEL ) {
+		print $dir . "\n";
+	    }
+	    else {
+		printf ("...%s\n", substr ($dir, length($dir)-$MAXLABEL+4,$MAXLABEL-3));
+	    }
+	    
+	    print "$name.warning 92\n";
+	    print "$name.critical 98\n";
+	}
+    }
+    close DF;
+    exit 0;
+}
 
-	echo 'graph_title Filesystem usage (in %)'
-	echo 'graph_args --upper-limit 100 -l 0'
-	echo 'graph_vlabel %'
-	echo 'graph_category disk'
-	echo 'graph_info This graph shows disk usage on the machine.'
-	df -T -P -l -x none -x unknown -x udf -x iso9660 -x romfs -x ramfs | sed 1d | grep -v "//" | sort | while read i; do
-		name=`clean_name $i`
-		echo -n "$name.label "
-		echo $i | awk "{ 
-			dir=\$7
-			if (length(dir) <= $MAXLABEL)
-				print dir
-			else
-				printf (\"...%s\n\", substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3)) 
-			print \"$name.info \" \$7 \" (\" \$2 \") -> \" \$1;
-		}"
-		echo "$name.warning 92"
-		echo "$name.critical 98"
-	done
-	exit 0
-fi
-
-df -T -P -l -x none -x unknown -x udf -x iso9660 -x romfs -x ramfs | sed 1d | grep -v "//" | while read i; do
-	name=`clean_name $i`
-	echo -n "$name.value "
-	echo $i | awk '{ print $6 }' | cut -f1 -d%
-done
+print_values();

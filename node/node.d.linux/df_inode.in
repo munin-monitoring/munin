@@ -1,11 +1,13 @@
-#!/bin/sh
+#!/usr/bin/perl
 #
-# Plugin to monitor inode-usage.
-#
+# Plugin to monitor inode-usage. Rewrite based on original shell-based version
+# 
 # Parameters understood:
 #
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
+#       config   (required)
+#       autoconf (optional - used by munin-config)
+#
+# $Log$
 #
 # Magic markers (optional - used by munin-config and installation
 # scripts):
@@ -13,51 +15,95 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-MAXLABEL=20
+use strict;
 
-fs() {
-	local escaped_mntpt=`echo "$*" | awk '{ print $NF }' | sed 's|/|\\\\/|g'`
-	awk "/^[^ ]* $escaped_mntpt / { print \$3 }" /proc/mounts | grep -v rootfs
+my $MAXLABEL=25;
+
+# Read /proc/mounts
+my %mounts;
+open (MOUNTS,"/proc/mounts") or die "Could not /proc/mounts for reading.";
+while (<MOUNTS>) {
+    # Does perl really not have any shorthand for this? I guess it has.
+    if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
+	$mounts{$2}=$3;
+    }
+}
+close MOUNTS;
+
+sub print_values() {
+    
+    # Read from df
+    open (DF,"/bin/df -P -l -i |") or die "Could not open pipe from /bin/df, $!";
+    <DF>; # Skip the header
+    while (<DF>) {
+	next if /\/\//;
+	
+	# Parse the output
+	if ( /^(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)/ ) {
+	    my $fs=$mounts{$6};
+	    my $ps=$5;
+	    my $name=$1;
+	    next if $fs eq "reiserfs";
+	    
+	    $ps =~ s/\%//;
+	    $name =~ s/\//_/g;
+	    print $name .  ".value  " . $ps . "\n";
+	}
+    }
+    close DF;
+}
+    
+if ( $ARGV[0] eq "autoconf" ) {
+  if (`perl $0` eq "" ) {
+    print "no\n";
+    exit 1;
+  }
+  elsif ( `uname -s` eq "SunOS\n" ) {
+    print "no\n";
+    exit 1;
+  }
+  else {
+    print "yes\n";
+    exit 0;
+  }
 }
 
-print_values() {
-	df -P -l -i -x none -x unknown | sed 1d | grep -v "//" | awk '$5 ~ /[0-9]%/ {print}' | while read i; do
-		if [ "`fs $i`" = "reiserfs" ] ; then continue ; fi
-		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 ".value " }'`
-		echo -n "$name "
-		echo $i | awk '{ print $5 }' | cut -f1 -d%
-	done
+if ( $ARGV[0] eq "config" ) {
+
+    # The headers
+    print "graph_title Inode usage (in %)\n";
+    print "graph_args --upper-limit 100 -l 0\n";
+    print "graph_vlabel %\n";
+    
+    # Read from df
+    open (DF,"/bin/df -P -l -i  |") or die "Unable to open pipe from /bin/df";
+    <DF>; # Skip the header
+    while (<DF>) {
+	next if /\/\//;
+	
+	# Parse the output
+	if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
+	    my $fs=$mounts{$6};
+	    my $dir=$6;
+	    my $name=$1; 
+	    
+	    # Create and print labels
+	    $name =~ s/\//_/g;
+	    next if $fs eq "reiserfs";
+	    print $name .  ".label ";
+	    if ( length($dir) <= $MAXLABEL ) {
+		print $dir . "\n";
+	    }
+	    else {
+		printf ("...%s\n", substr ($dir, length($dir)-$MAXLABEL+4,$MAXLABEL-3));
+	    }
+	    
+	    print "$name.warning 92\n";
+	    print "$name.critical 98\n";
+	}
+    }
+    close DF;
+    exit 0;
 }
 
-if [ "$1" = "autoconf" ]; then
-	if [ "`print_values`" = "" ] ; then
-		echo no
-	else
-		echo yes
-	fi
-	exit 0
-fi
-
-if [ "$1" = "config" ]; then
-
-	echo 'graph_title Inode usage (in %)'
-	echo 'graph_args --upper-limit 100 -l 0'
-	echo 'graph_vlabel %'
-	echo 'graph_category disk'
-	echo 'graph_info This graph shows the inode usage for the partitions of types that use inodes.'
-	df -P -l -i -x unknown  -x none -T| sed 1d | grep -v "//" | sort | awk '$6 ~ /[0-9]%/ {print}' | awk "
-		\$2 !~ /reiserfs/ {
-                        dir=\$7
-			name=\$1; gsub(/[\/.-]/, \"_\", name);
-                        if (length(dir) <= $MAXLABEL)
-                                print name \".label \" dir
-                        else
-                                printf (\"%s.label ...%s\n\", name, substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3))
-			print name \".info \" \$7 \" (\" \$2 \") -> \" \$1;
-			print name \".warning 92\"
-			print name \".critical 98\" 
-                }"
-	exit 0
-fi
-
-print_values
+print_values();
