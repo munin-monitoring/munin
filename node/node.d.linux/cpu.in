@@ -14,7 +14,18 @@
 #
 #%# family=auto
 #%# capabilities=autoconf
-
+#
+# Environment variables:
+#
+#      HZ      Some combinations of hardware and Linux (probably only
+#              2.4 kernels) use 1000 units/second in /proc/stat
+#              corresponding to the systems HZ. (see
+#              /usr/src/linux/include/asm/param.h). But Almost all
+#              systems use 100 units/second and this is our default.
+#              Even if Documentation/proc.txt in the kernel source says
+#              otherwise. - Finding and fix by dz@426.ch
+#
+# $Id$
 
 
 if [ "$1" = "autoconf" ]; then
@@ -27,6 +38,8 @@ if [ "$1" = "autoconf" ]; then
 	fi
 fi
 
+HZ=${HZ:-100}
+
 extinfo=""
 
 if egrep -q '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat; then
@@ -37,7 +50,7 @@ if [ "$1" = "config" ]; then
 
 	NCPU=$(egrep '^cpu[0-9]+ ' /proc/stat | wc -l)
 	PERCENT=$(($NCPU * 100))
-	MAX=$(($NCPU * 5000))
+	MAX=$(($NCPU * 100))
 	if [ "$scaleto100" = "yes" ]; then
 		graphlimit=100
 	else
@@ -118,7 +131,7 @@ fi
 
 
 if [ ! -z "$extinfo" ]; then
-	awk '/^cpu / { print "user.value " $2 "\nnice.value " $3 "\nsystem.value " $4 "\nidle.value " $5 "\niowait.value " $6 "\nirq.value " $7 "\nsoftirq.value " $8 }' < /proc/stat
+	awk -v hz=$HZ '/^cpu / { print "user.value " $2*100/hz "\nnice.value " $3*100/hz "\nsystem.value " $4*100/hz "\nidle.value " $5*100/hz "\niowait.value " $6*100/hz "\nirq.value " $7*100/hz "\nsoftirq.value " $8*100/hz }' < /proc/stat
 else
-	awk '/^cpu / { print "user.value " $2 "\nnice.value " $3 "\nsystem.value " $4 "\nidle.value " $5 }' < /proc/stat
+	awk -v hz=$HZ '/^cpu / { print "user.value " $2*100/hz "\nnice.value " $3*100/hz "\nsystem.value " $4*100/hz "\nidle.value " $5*100/hz }' < /proc/stat
 fi
