@@ -1,6 +1,7 @@
 #!@@PERL@@ -wT
 #
-# Copyright (C) 2004 Audun Ytterdal, Jimmy Olsen
+# Copyright (C) 2002-2006 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
+#    Nicolai Langfeldt
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-#
 #
 # $Id$
 #
@@ -48,16 +48,16 @@ $0 = $1;
 my @ORIG_ARGV = @ARGV;
 my %services;
 my %nodes;
-my $servicedir="@@CONFDIR@@/plugins";
-my $sconfdir="@@CONFDIR@@/plugin-conf.d";
-my $conffile="@@CONFDIR@@/munin-node.conf";
+my $servicedir="$CONFDIR/plugins";
+my $sconfdir="$CONFDIR/plugin-conf.d";
+my $conffile="$CONFDIR/munin-node.conf";
 my $FQDN="";
 my $do_usage = 0;
 my $DEBUG = 0;
 my $do_version = 0;
-my $VERSION="@@VERSION@@";
-my $defuser = getpwnam ("@@PLUGINUSER@@");
-my $defgroup= getgrnam ("@@GROUP@@");
+my $VERSION=$Muninnode::VERSION;
+my $defuser = getpwnam ($PLUGINUSER);
+my $defgroup= getgrnam ($GROUP);
 my $paranoia= 0;
 my @ignores = ();
 my %sconf   = ('timeout' => 10);
@@ -183,7 +183,7 @@ $ENV{FQDN}=$FQDN;
 $ENV{'LC_ALL'}='C';
 
 MyPackage->run(conf_file => $conffile,
-	       pid_file => "@@STATEDIR@@/munin-node.pid");
+	       pid_file => "$STATEDIR/munin-node.pid");
 exit;
 
 
@@ -243,7 +243,7 @@ FILES:
 	}
 	closedir (DIR);
     }
-    
+
     opendir (DIR,$servicedir) || die "Cannot open plugindir: $servicedir $!";
 FILES:
     for my $file (grep { -f "$servicedir/$_" } readdir(DIR)) {
@@ -541,10 +541,10 @@ sub process_request {
       $key = $cert = &get_var (\%sconf, "tls_pem");
       $key = &get_var (\%sconf, "tls_private_key")
 	  unless defined $key;
-      $key = "@@CONFDIR@@/munin-node.pem" unless defined $key;
+      $key = "$CONFDIR/munin-node.pem" unless defined $key;
       $cert = &get_var (\%sconf, "tls_certificate")
 	  unless defined $cert;
-      $cert = "@@CONFDIR@@/munin-node.pem" unless defined $cert;
+      $cert = "$CONFDIR/munin-node.pem" unless defined $cert;
       $mode = &get_var (\%sconf, 'tls');
       $mode = "auto" unless defined $mode and length $mode;
       $depth = &get_var (\%sconf, 'tls_verify_depth');
@@ -1099,64 +1099,24 @@ View debug messages.
 
 =head1 DESCRIPTION
 
-Munin's node is a daemon that Munin connects to fetch data. This data is
-stored in .rrd-files, and later graphed and htmlified. It's designed to
-let it be very easy to graph new datasources.
+Munin's node is a daemon that Munin connects to to fetch data. This
+data is stored and later graphed and htmlified. It's designed to let
+it be very easy to graph new datasources.
 
 Munin-node is a small perlscript listening to port 4949 using
-Net::Server. It reads all the plugins in /etc/munin/plugins/ on startup.
-The node accepts the following commands:
+Net::Server. It reads all the plugins in /etc/munin/plugins on startup.
 
-=over 5
+The network protocol is documented at
+http://munin.projects.linpro.no/wiki/network-protocol
 
-=item B<< list [node] >>
-
-list available plugins for host. If no hostname is specified, list plugins
-on host running munin-node
-
-=item B<< nodes >>
-
-List nodes that has plugins in this munin-node.
-
-=item B<< config <plugin> >>
-
-output plugin configuration
-
-=item B<< fetch <plugin> >>
-
-output plugin values
-
-=item B<< version >>
-
-Print versionstring
-
-=item B<< quit >>
-
-disconnect
-
-=back
-
-=head2 Plugins
-
-These plugins can be in you language of choice: bash, perl, python, C. The
-plugins can be run in two modes: with and without the "config"-parameter. When
-run with "config" as parameter, the plugin should output the configuration of
-the graph. When run without parameters, the plugin should output just values
-
-	# /etc/munin/plugins/load config
-	host_name 
-	graph_title Load average
-	graph_args --base 1000 -l 0
-	graph_vlabel load
-	load.label load
-	load.draw LINE2
-	load.warning 10
-	load.critical 120
-
-	# /etc/munin/plugins/load
-	load.value 0.43
-
-For more information, see the documentation section at L<http://munin.sf.net/>.
+These plugins can be in you language of choice: bash, perl, python,
+C. The plugins can be run in two modes: with and without the
+"config"-parameter. When run with "config" as parameter, the plugin
+should output the configuration of the graph. When run without
+parameters, the plugin should output just values.  Writing plugins is
+easy and fun; please refer to
+http://munin.projects.linpro.no/wiki/HowToWritePlugins and
+http://munin.projects.linpro.no/wiki/plugins
 
 =head1 FILES
 
@@ -1176,13 +1136,17 @@ Audun Ytterdal, Jimmy Olsen, and Tore Anderson.
 
 =head1 BUGS
 
-munin-node does, as of now, not check the syntax of the configuration file.
+Please se http://munin.projects.linpro.no/report/1
+
+munin-node does, as of now, not check the syntax of the configuration
+file.  It also does not check that plugins produces legal field names
+and observes other niceties.
 
 Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
 =head1 COPYRIGHT
 
-Copyright © 2002 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
+Copyright © 2002-2006 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
