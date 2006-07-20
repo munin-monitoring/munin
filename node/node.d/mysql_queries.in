@@ -91,7 +91,7 @@ if ($arg eq 'config') {
 
 
 open(SERVICE, "$COMMAND |")
-  or die("Coult not execute '$COMMAND': $!");
+  or die("Could not execute '$COMMAND': $!");
 
 while (<SERVICE>) {
     my ($k, $v) = (m/(\w+).*?(\d+(?:\.\d+)?)/);
