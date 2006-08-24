@@ -665,9 +665,12 @@ sub process_node {
 		$global_headers++;
 	    }
 
+	    my $custom_colour = $node->{client}->{$service}->{$field.".colour"};
+	    $custom_colour = "#" . $custom_colour if $custom_colour;
+
 	    push (@rrd, ($node->{client}->{$service}->{$field.".draw"} || "LINE2") .
 		  ":g$rrdname" . 
-		  ($single_value ? $single_colour : $COLOUR[$field_count++%@COLOUR]) . ":" .
+		  ($custom_colour || ($single_value ? $single_colour : $COLOUR[$field_count++%@COLOUR])) . ":" .
 		  (escape ($node->{client}->{$service}->{"$field.label"}) || escape ($field))
 		  . (" " x ($max_field_len + 1 -
 			    length ($node->{client}->{$service}->{"$field.label"} || $field))));
