@@ -107,7 +107,7 @@ if [ "$1" = "config" ]; then
 		echo 'iowait.min 0'
 		echo "iowait.max $MAX"
 		echo 'iowait.type DERIVE'
-		echo 'iowait.info CPU time spent waiting for I/O operations to finish'
+		echo 'iowait.info CPU time spent waiting for I/O operations to finish when there is nothing else to do.'
 		echo 'irq.label irq'
 		echo 'irq.draw STACK'
 		echo 'irq.min 0'
@@ -129,9 +129,11 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
+# Note: Counters/derive need to report integer values.  Also we need
+# to avoid 10e+09 and the like %.0f should do this.
 
 if [ ! -z "$extinfo" ]; then
-	awk -v hz=$HZ '/^cpu / { print "user.value " $2*100/hz "\nnice.value " $3*100/hz "\nsystem.value " $4*100/hz "\nidle.value " $5*100/hz "\niowait.value " $6*100/hz "\nirq.value " $7*100/hz "\nsoftirq.value " $8*100/hz }' < /proc/stat
+	awk -v hz=$HZ '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz }' < /proc/stat
 else
-	awk -v hz=$HZ '/^cpu / { print "user.value " $2*100/hz "\nnice.value " $3*100/hz "\nsystem.value " $4*100/hz "\nidle.value " $5*100/hz }' < /proc/stat
+	awk -v hz=$HZ '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz }' < /proc/stat
 fi
