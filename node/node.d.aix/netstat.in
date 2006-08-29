@@ -45,6 +45,7 @@ if($ARGV[0] && $ARGV[0] eq "config")
     print "graph_title Netstat\n";
     print "graph_args -l 0 --base 1000\n";
     print "graph_vlabel requests connections per \${graph_period}\n";
+    print "graph_category network\n";
     print "requests.label requests\n";
     print "requests.type COUNTER\n";
     print "requests.max 50000\n";

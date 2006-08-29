@@ -60,6 +60,7 @@ if($arg eq 'config')
     print "graph_args -r --lower-limit 0 --upper-limit $percent \n";
     print "graph_vlabel %\n";
     print "graph_scale no\n";
+    print "graph_category system\n";
     print "system.label system\n";
     print "system.type GAUGE\n";
     print "system.max 5000\n";

@@ -50,6 +50,7 @@ if($ARGV[0] && $ARGV[0] eq "config")
     print "graph_args --base 1024 -l 0 --vertical-label Bytes --upper-limit ".getTotalSwapBytes()."\n";
     print "graph_title Swap usage\n";
     print "graph_order used total\n";
+    print "graph_category system\n";
     print "used.label used\n";
     print "used.draw STACK\n";
     print "total.label total\n";

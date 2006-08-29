@@ -36,6 +36,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Filesystem usage (in %)'
 	echo 'graph_args --upper-limit 100 -l 0'
 	echo 'graph_vlabel %'
+	echo 'graph_category disk'
 	df -P -k | sed 1d | grep -v "//" | grep -v "nfs" | while read i; do
 		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $6 }'`
 		devName="$name.label "

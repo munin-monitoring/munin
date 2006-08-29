@@ -61,6 +61,7 @@ if($arg eq "config")
     print "graph_args --base 1024 -l 0 --vertical-label Bytes --upper-limit ".getTotalMemBytes()."\n";
     print "graph_title Memory usage\n";
     print "graph_order inuse free pinned swap\n";
+    print "graph_category system\n";
     print "inuse.label inuse\n";
     print "inuse.draw AREA\n";
     print "free.label free\n";
