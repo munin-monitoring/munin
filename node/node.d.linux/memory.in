@@ -200,7 +200,6 @@ print "apps.value ", $mems{'MemTotal'}
 	-$mems{'SwapCached'}
 	-$mems{'Slab'}
 	-$mems{'PageTables'}
-	-$mems{'VmallocUsed'}
 	,"\n";
 print "free.value ", $mems{'MemFree'}, "\n";
 print "buffers.value ", $mems{'Buffers'}, "\n";
