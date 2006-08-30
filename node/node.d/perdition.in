@@ -56,6 +56,13 @@ pop.label POP Auths
 pops.label POPS Auths
 fatal.label Fatal Errors
 EOF
+    # Echo warnnig and critical attributes if set in the plugin config
+    for i in imap imaps pop pops fatal connection disconnected; do
+        warn=\$${i}_warn; eval val=$warn
+        [ "$val" ] && echo "$i.warning ${val}"
+        crit=\$${i}_crit; eval val=$crit
+        [ "$val" ] && echo "$i.critical ${val}"
+    done
     exit 0
     ;;
 esac
