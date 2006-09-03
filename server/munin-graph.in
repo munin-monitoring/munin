@@ -513,7 +513,7 @@ sub single_value
 sub get_field_name
 {
     my $name = shift;
-    
+
     $name = substr (Digest::MD5::md5_hex ($name), -15)
 	if (length $name > 15);
 
@@ -543,7 +543,7 @@ sub process_node {
 	my @rrd;
 	my @added = ();
 
-	# See if we should skip the service 
+	# See if we should skip the service
 	next if (&skip_service ($node, $service));
 
 	my $field_count = 0;
@@ -552,18 +552,31 @@ sub process_node {
 	my $rrdname;
 	my $force_single_value;
 
-	@field_order =  @{&munin_get_field_order ($node, $config, $domain, $name, $service, \$force_single_value)};
+	# munin_set_context($node,$config,$domain,$name,$service);
+
+	@field_order = 
+	  @{&munin_get_field_order($node, $config, $domain, $name,
+				   $service, \$force_single_value)};
 
 	# Array to keep 'preprocess'ed fields.
 	my @rrd_preprocess = ();
-	print "DEBUG: Expanding specials \"", join "\",\"", @field_order, "\".\n" if $DEBUG;
-	@added = @{&expand_specials ($node, $config, $domain, $name, $service, \@rrd_preprocess, \@field_order)};
+	print "DEBUG: Expanding specials \"",
+	  join("\",\"", @field_order), "\".\n"
+	    if $DEBUG;
+
+	@added = 
+	  @{&expand_specials ($node, $config, $domain, $name,
+			      $service, \@rrd_preprocess, \@field_order)};
 
 	@field_order = (@rrd_preprocess, @field_order);
-	print "DEBUG: Checking field lengths \"", join "\",\"", (@rrd_preprocess, @field_order), "\".\n" if $DEBUG;
+	print "DEBUG: Checking field lengths \"",
+	  join("\",\"", @rrd_preprocess), "\".\n"
+	    if $DEBUG;
 
 	# Get max label length
-	$max_field_len = &munin_get_max_label_length ($node, $config, $domain, $name, $service, \@field_order);
+	$max_field_len =
+	  &munin_get_max_label_length ($node, $config, $domain, $name,
+				       $service, \@field_order);
 	my $global_headers = ($max_field_len > 20);
 
 	# Array to keep negative data until we're finished with positive.
@@ -574,16 +587,16 @@ sub process_node {
 	print "DEBUG: Treating fields \"", join "\",\"", @field_order, "\".\n" if $DEBUG;
 	for my $field (@field_order) {
 	    my $path  = undef;
-	    if ($field =~ s/=(.+)//)
-	    {
+	    if ($field =~ s/=(.+)//) {
 		$path = $1;
 	    }
 
 	    next unless &process_field ($node, $service, $field);
 	    print "DEBUG: Processing field \"$field\".\n" if $DEBUG;
 
-	    if ($field_count == 0 and munin_get ($config, "draw", "LINE2", $domain, $name, $service, $field) eq "STACK")
-	    { # Illegal -- first field is a STACK
+	    if ($field_count == 0 and 
+		munin_get ($config, "draw", "LINE2", $domain, $name, $service, $field) eq "STACK") {
+		# Illegal -- first field is a STACK
 		logger ("ERROR: First field (\"$field\") of graph \"$domain\" :: \"$name\" :: \"$service\" is STACK. STACK can only be drawn after a LINEx or AREA.");
 	    }
 		
@@ -592,8 +605,7 @@ sub process_node {
 
 	    my $update = RRDs::last ($filename);
 	    $update = 0 if ! defined $update;
-	    if ($update > $lastupdate)
-	    {
+	    if ($update > $lastupdate) {
 		$lastupdate = $update;
 	    }
 
@@ -603,8 +615,8 @@ sub process_node {
 
 	    # Trim the fieldname to make room for other field names.
 	    $rrdname = &get_field_name ($field);
-	    if ($rrdname ne $field) # A change was made
-	    {
+	    if ($rrdname ne $field) {
+		# A change was made
 		set_cdef_name ($node->{client}->{$service}, $field, $rrdname);
 	    }
 
@@ -614,30 +626,32 @@ sub process_node {
 		  $filename . ":" . $rrdfield . ":MIN");
 	    push (@rrd, "DEF:a$rrdname=" .
 		  $filename . ":" . $rrdfield . ":MAX");
-	    if (exists $node->{client}->{$service}->{$field.".onlynullcdef"} and $node->{client}->{$service}->{$field.".onlynullcdef"})
-	    {
+
+	    if (exists $node->{client}->{$service}->{$field.".onlynullcdef"} and
+		$node->{client}->{$service}->{$field.".onlynullcdef"}) {
 		push (@rrd, "CDEF:c$rrdname=g$rrdname" . (($now-$update)>900 ? ",POP,UNKN" : ""));
 	    }
-	    if (($node->{client}->{$service}->{$field.".type"}||"GAUGE") ne "GAUGE" and graph_by_minute ($config, $domain, $name, $service))
-	    {
+
+	    if (($node->{client}->{$service}->{$field.".type"}||"GAUGE") ne "GAUGE"
+		and graph_by_minute ($config, $domain, $name, $service)) {
 		push (@rrd, &expand_cdef($node->{client}->{$service}, \$rrdname, "$field,60,*"));
 	    }
-	    if ($node->{client}->{$service}->{$field.".cdef"})
-	    {
-		push (@rrd, &expand_cdef($node->{client}->{$service}, \$rrdname, $node->{client}->{$service}->{$field.".cdef"}));
+
+	    if ($node->{client}->{$service}->{$field.".cdef"}) {
+		push (@rrd, &expand_cdef($node->{client}->{$service},
+					 \$rrdname, $node->{client}->{$service}->{$field.".cdef"}));
 		push (@rrd, "CDEF:c$rrdname=g$rrdname");
 		print "DEBUG: Field name after cdef set to $rrdname\n" if $DEBUG;
-	    }
-	    elsif (!(exists $node->{client}->{$service}->{$field.".onlynullcdef"} and $node->{client}->{$service}->{$field.".onlynullcdef"}))
-	    {
+	    } elsif (!(exists $node->{client}->{$service}->{$field.".onlynullcdef"}
+		       and $node->{client}->{$service}->{$field.".onlynullcdef"})) {
 		push (@rrd, "CDEF:c$rrdname=g$rrdname" . (($now-$update)>900 ? ",POP,UNKN" : ""));
 	    }
 
 	    next unless &munin_draw_field ($node, $service, $field);
 	    print "DEBUG: Drawing field \"$field\".\n" if $DEBUG;
 
-	    if ($single_value) # Only one field. Do min/max range.	
-	    {
+	    if ($single_value) {
+		# Only one field. Do min/max range.	
 		push (@rrd, "CDEF:min_max_diff=a$rrdname,i$rrdname,-");
 		push (@rrd, "CDEF:re_zero=min_max_diff,min_max_diff,-") 
 		    unless ($node->{client}->{$service}->{$field.".negative"});
@@ -647,16 +661,13 @@ sub process_node {
 		    unless ($node->{client}->{$service}->{$field.".negative"});
 	    }
 
-	    if ($has_negative and !@rrd_negatives) # Push "global" headers...
-	    {
+	    if ($has_negative and !@rrd_negatives) { # Push "global" headers...
 		push (@rrd, "COMMENT:" . (" " x $max_field_len));
 		push (@rrd, "COMMENT:Cur (-/+)");
 		push (@rrd, "COMMENT:Min (-/+)");
 		push (@rrd, "COMMENT:Avg (-/+)");
 		push (@rrd, "COMMENT:Max (-/+) \\j");
-	    }
-	    elsif ($global_headers == 1)
-	    {
+	    } elsif ($global_headers == 1) {
 		push (@rrd, "COMMENT:" . (" " x $max_field_len));
 		push (@rrd, "COMMENT: Cur$RRDkludge:");
 		push (@rrd, "COMMENT:Min$RRDkludge:");
@@ -669,53 +680,48 @@ sub process_node {
 	    $custom_colour = "#" . $custom_colour if $custom_colour;
 
 	    push (@rrd, ($node->{client}->{$service}->{$field.".draw"} || "LINE2") .
-		  ":g$rrdname" . 
+		  ":g$rrdname" .
 		  ($custom_colour || ($single_value ? $single_colour : $COLOUR[$field_count++%@COLOUR])) . ":" .
 		  (escape ($node->{client}->{$service}->{"$field.label"}) || escape ($field))
 		  . (" " x ($max_field_len + 1 -
 			    length ($node->{client}->{$service}->{"$field.label"} || $field))));
 
-	    # Check for negative fields (typically network traffic)
-	    if ($has_negative)
-	    {
+	    # Check for negative fields (typically network (or disk) traffic)
+	    if ($has_negative) {
 		my $negfield = &orig_to_cdef ($node->{client}->{$service}, $node->{client}->{$service}->{$field.".negative"});
 		print "DEBUG: negfield = $negfield\n" if $DEBUG;
-		if (exists $node->{client}->{$service}->{$negfield.".realname"})
-		{
+		if (exists $node->{client}->{$service}->{$negfield.".realname"}) {
 		    $negfield = $node->{client}->{$service}->{$negfield.".realname"};
 		}
 		
-		if (!@rrd_negatives) # zero-line, to redraw zero afterwards.
-		{
+		if (!@rrd_negatives) {
+		    # zero-line, to redraw zero afterwards.
 		    push (@rrd_negatives, "CDEF:re_zero=g$negfield,UN,0,0,IF");
 		}
 
 		push (@rrd_negatives, "CDEF:ng$negfield=g$negfield,-1,*");
 
-		if ($single_value) # Only one field. Do min/max range.	
-		{
-			push (@rrd, "CDEF:neg_min_max_diff=i$negfield,a$negfield,-");
-			push (@rrd, "CDEF:ni$negfield=i$negfield,-1,*");
-			push (@rrd, "AREA:ni$negfield#ffffff");
-			push (@rrd, "STACK:neg_min_max_diff$range_colour");
+		if ($single_value) {
+		    # Only one field. Do min/max range.	
+		    push (@rrd, "CDEF:neg_min_max_diff=i$negfield,a$negfield,-");
+		    push (@rrd, "CDEF:ni$negfield=i$negfield,-1,*");
+		    push (@rrd, "AREA:ni$negfield#ffffff");
+		    push (@rrd, "STACK:neg_min_max_diff$range_colour");
 		}
 
 		push (@rrd_negatives, ($node->{client}->{$service}->{$negfield.".draw"} || "LINE2") .
-		    ":ng$negfield" . 
+		    ":ng$negfield" .
 		    ((defined $single_value and $single_value) ? $single_colour : $COLOUR[($field_count-1)%@COLOUR]));
 
 		# Draw HRULEs
 		my $linedef = munin_get ($config, "line", undef, $domain, $name, $service, $node->{client}->{$service}->{$field.".negative"});
-		if ($linedef)
-		{
+		if ($linedef) {
 		    my ($number, $colour, $label) = split (/:/, $linedef, 3);
 		    push (@rrd_negatives, "HRULE:".$number.
 			($colour ? "#$colour" :
 			  ((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]))
 			);
-		}
-		elsif ($node->{client}->{$service}->{"$negfield.warn"})
-		{
+		} elsif ($node->{client}->{$service}->{"$negfield.warn"}) {
 		    push (@rrd_negatives, "HRULE:".$node->{client}->{$service}->{$node->{client}->{$service}->{$field.".negative"}.".warn"}.
 			((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
 		}
@@ -734,9 +740,7 @@ sub process_node {
 		push (@{$total_neg{'min'}}, "i$negfield");
 		push (@{$total_neg{'avg'}}, "g$negfield");
 		push (@{$total_neg{'max'}}, "a$negfield");
-	    }
-	    else
-	    {
+	    } else {
 		push (@rrd, "COMMENT: Cur$RRDkludge:") unless $global_headers;
 		push (@rrd, "GPRINT:c$rrdname:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, "yes")?"%s":"") . "");
 		push (@rrd, "COMMENT: Min$RRDkludge:") unless $global_headers;
@@ -753,8 +757,7 @@ sub process_node {
 
 	    # Draw HRULEs
 	    my $linedef = munin_get ($config, "line", undef, $domain, $name, $service, $field);
-	    if ($linedef)
-	    {
+	    if ($linedef) {
 		my ($number, $colour, $label) = split (/:/, $linedef, 3);
 		$label =~ s/:/\\:/g if defined $label;
 		push (@rrd, "HRULE:".$number.
@@ -763,21 +766,18 @@ sub process_node {
 		      ((defined $label and length ($label)) ? ":$label" : ""), 
 		      "COMMENT: \\j"
 		    );
-	    }
-	    elsif ($node->{client}->{$service}->{"$field.warn"})
-	    {
+	    } elsif ($node->{client}->{$service}->{"$field.warn"}) {
 		push (@rrd, "HRULE:".$node->{client}->{$service}->{"$field.warn"}.($single_value ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
 	    }
 	}
 
-	if (@rrd_negatives)
-	{
+	if (@rrd_negatives) {
 	    push (@rrd, @rrd_negatives);
 	    push (@rrd, "LINE2:re_zero#000000"); # Redraw zero.
-	    if (exists $node->{client}->{$service}->{graph_total} and 
-		    exists $total_pos{'min'} and exists $total_neg{'min'} and 
-		    @{$total_pos{'min'}} and @{$total_neg{'min'}})
-	    {
+	    if (exists $node->{client}->{$service}->{graph_total} and
+		exists $total_pos{'min'} and exists $total_neg{'min'} and
+		@{$total_pos{'min'}} and @{$total_neg{'min'}}) {
+
 		push (@rrd, "CDEF:ipostotal=".join (",", map { "$_,UN,0,$_,IF" } @{$total_pos{'min'}}).(",+" x (@{$total_pos{'min'}}-1)));
 		push (@rrd, "CDEF:gpostotal=".join (",", map { "$_,UN,0,$_,IF" } @{$total_pos{'avg'}}).(",+" x (@{$total_pos{'avg'}}-1)));
 		push (@rrd, "CDEF:apostotal=".join (",", map { "$_,UN,0,$_,IF" } @{$total_pos{'max'}}).(",+" x (@{$total_pos{'max'}}-1)));
@@ -796,12 +796,11 @@ sub process_node {
 		push (@rrd, "GPRINT:apostotal:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "\\j");
 	    }
 	}
-	elsif (exists $node->{client}->{$service}->{graph_total} and exists $total_pos{'min'} and @{$total_pos{'min'}})
-	{
+	elsif (exists $node->{client}->{$service}->{graph_total} and exists $total_pos{'min'} and @{$total_pos{'min'}}) {
 	    push (@rrd, "CDEF:ipostotal=".join (",", map { "$_,UN,0,$_,IF" } @{$total_pos{'min'}}).(",+" x (@{$total_pos{'min'}}-1)));
 	    push (@rrd, "CDEF:gpostotal=".join (",", map { "$_,UN,0,$_,IF" } @{$total_pos{'avg'}}).(",+" x (@{$total_pos{'avg'}}-1)));
 	    push (@rrd, "CDEF:apostotal=".join (",", map { "$_,UN,0,$_,IF" } @{$total_pos{'max'}}).(",+" x (@{$total_pos{'max'}}-1)));
-	    
+
 	    push (@rrd, "CDEF:dpostotal=ipostotal,UN,ipostotal,UNKN,IF");
 	    push (@rrd, "LINE1:dpostotal#000000:" . $node->{client}->{$service}->{graph_total} . (" " x ($max_field_len - length ($node->{client}->{$service}->{graph_total}) + 1)));
 	    push (@rrd, "COMMENT: Cur$RRDkludge:") unless $global_headers;
@@ -816,7 +815,7 @@ sub process_node {
 
 	for my $time (keys %times) {
 	    next unless ($draw{$time});
-	    my @complete;
+	    my @complete = ();
 	    logger ("Processing $name -> $time") if $DEBUG;
 
 	    # Do the header (title, vtitle, size, etc...)
@@ -824,54 +823,44 @@ sub process_node {
 	    push @complete, @rrd;
 
 	    push (@complete, "COMMENT:Last update$RRDkludge: " . RRDescape(scalar localtime($lastupdate)) .  "\\r");
-	    
-	    if (time - 300 < $lastupdate)
-	    {
-		    push @complete, "--end",(int($lastupdate/$resolutions{$time}))*$resolutions{$time};
+
+	    if (time - 300 < $lastupdate) {
+		push @complete, "--end",(int($lastupdate/$resolutions{$time}))*$resolutions{$time};
 	    }
 	    print "\n\nrrdtool \"graph\" \"", join ("\"\n\t\"",@complete), "\"\n" if $DEBUG;
 	    RRDs::graph (@complete);
 	    if (my $ERROR = RRDs::error) {
 		logger ("Unable to graph $filename: $ERROR");
-	    }
-	    elsif ($list_images) # Command-line option to list images created
-	    {
+	    } elsif ($list_images) {
+		# Command-line option to list images created
 		print &munin_get_picture_filename ($config, $domain, $name, $service, $time), "\n";
 	    }
 	}
 
-	if (&munin_get_bool_val ($node->{client}->{$service}->{"graph_sums"}, 0))
-	{
-	    foreach my $time (keys %sumtimes)
-	    {
+	if (&munin_get_bool_val ($node->{client}->{$service}->{"graph_sums"}, 0)) {
+	    foreach my $time (keys %sumtimes) {
 		next unless ($draw{"sum".$time});
 		my @rrd_sum;
 		push @rrd_sum, @{&get_header ($node, $config, $domain, $name, $service, $time, 1)};
 
-		if (time - 300 < $lastupdate)
-		{
-			push @rrd_sum, "--end",(int($lastupdate/$resolutions{$time}))*$resolutions{$time};
+		if (time - 300 < $lastupdate) {
+		    push @rrd_sum, "--end",(int($lastupdate/$resolutions{$time}))*$resolutions{$time};
 		}
 		push @rrd_sum, @rrd;
 		push (@rrd_sum, "COMMENT:Last update$RRDkludge: " . RRDescape(scalar localtime($lastupdate)) .  "\\r");
 
 		my $labelled = 0;
 		my @defined = ();
-		for (my $index = 0; $index <= $#rrd_sum; $index++)
-		{
-		    if ($rrd_sum[$index] =~ /^(--vertical-label|-v)$/)
-		    {
+		for (my $index = 0; $index <= $#rrd_sum; $index++) {
+		    if ($rrd_sum[$index] =~ /^(--vertical-label|-v)$/) {
 			(my $label = $node->{client}->{$service}->{graph_vlabel}) =~ s/\$\{graph_period\}/$sumtimes{$time}[0]/g;
 			splice (@rrd_sum, $index, 2, ("--vertical-label", $label));
 			$index++;
 			$labelled++;
-		    }
-		    elsif ($rrd_sum[$index] =~ /^(LINE[123]|STACK|AREA|GPRINT):([^#:]+)([#:].+)$/)
-		    {
+		    } elsif ($rrd_sum[$index] =~ /^(LINE[123]|STACK|AREA|GPRINT):([^#:]+)([#:].+)$/) {
 			my ($pre, $fname, $post) = ($1, $2, $3);
 			next if $fname eq "re_zero";
-			if ($post =~ /^:AVERAGE/)
-			{
+			if ($post =~ /^:AVERAGE/) {
 			    splice (@rrd_sum, $index, 1, $pre . ":x$fname" . $post);
 			    $index++;
 			    next;
@@ -880,27 +869,22 @@ sub process_node {
 			push @defined, "x$fname";
 			my @replace;
 
-			if (!defined ($node->{client}->{$service}->{$fname.".type"}) or $node->{client}->{$service}->{$fname.".type"} ne "GAUGE")
-			{
-			    if ($time eq "week")
-			    { # Every plot is half an hour. Add two plots and multiply, to get per hour
-				if (graph_by_minute ($config, $domain, $name, $service))
-				{ # Already multiplied by 60
+			if (!defined ($node->{client}->{$service}->{$fname.".type"}) or
+			    $node->{client}->{$service}->{$fname.".type"} ne "GAUGE") {
+			    if ($time eq "week") {
+				# Every plot is half an hour. Add two plots and multiply, to get per hour
+				if (graph_by_minute ($config, $domain, $name, $service)) {
+				    # Already multiplied by 60
 				    push @replace, "CDEF:x$fname=PREV($fname),UN,0,PREV($fname),IF,$fname,+,5,*,6,*";
-				}
-				else
-				{
+				} else {
 				    push @replace, "CDEF:x$fname=PREV($fname),UN,0,PREV($fname),IF,$fname,+,300,*,6,*";
 				}
-			    }
-			    else
-			    { # Every plot is one day exactly. Just multiply.
-				if (graph_by_minute ($config, $domain, $name, $service))
-				{ # Already multiplied by 60
+			    } else {
+				# Every plot is one day exactly. Just multiply.
+				if (graph_by_minute ($config, $domain, $name, $service)) {
+				    # Already multiplied by 60
 				    push @replace, "CDEF:x$fname=$fname,5,*,288,*";
-				}
-				else
-				{
+				} else {
 				    push @replace, "CDEF:x$fname=$fname,300,*,288,*";
 				}
 			    }
@@ -908,26 +892,24 @@ sub process_node {
 			push @replace, $pre . ":x$fname" . $post;
 			splice (@rrd_sum, $index, 1, @replace);
 			$index++;
-		    }
-		    elsif ($rrd_sum[$index] =~ /^(--lower-limit|--upper-limit|-l|-u)$/)
-		    {
+		    } elsif ($rrd_sum[$index] =~ /^(--lower-limit|--upper-limit|-l|-u)$/) {
 			$index++;
 			$rrd_sum[$index] = $rrd_sum[$index] * 300 * $sumtimes{$time}->[1];
 		    }
 		}
-		unless ($labelled)
-		{
+
+		unless ($labelled) {
 		    my $label = $node->{client}->{$service}->{"graph_vlabel_sum_$time"} || $sumtimes{$time}->[0];
 		    unshift @rrd_sum, "--vertical-label", $label;
 		}
 
 		print "\n\nrrdtool \"graph\" \"", join ("\"\n\t\"",@rrd_sum), "\"\n" if $DEBUG;
 		RRDs::graph (@rrd_sum);
+
 		if (my $ERROR = RRDs::error) {
 		    logger ("Unable to graph $filename: $ERROR");
-		}
-		elsif ($list_images) # Command-line option to list images created
-		{
+		} elsif ($list_images) {
+		    # Command-line option to list images created
 		    print &munin_get_picture_filename ($config, $domain, $name, $service, $time, 1), "\n";
 		}
 	    }
@@ -937,17 +919,15 @@ sub process_node {
 	logger ("Graphed service : $service ($service_time sec * 4)");
 	print STATS "GS|$domain|$name|$service|$service_time\n" unless $skip_stats;
 
-	foreach (@added)
-	{
-	    delete $node->{client}->{$service}->{$_} if exists $node->{client}->{$service}->{$_};
+	foreach (@added) {
+	    delete $node->{client}->{$service}->{$_}
+	      if exists $node->{client}->{$service}->{$_};
 	}
 	@added = ();
     }
-    
 }
 
-sub graph_by_minute
-{
+sub graph_by_minute {
     my $config  = shift;
     my $domain  = shift;
     my $name    = shift;
@@ -956,8 +936,7 @@ sub graph_by_minute
     return (munin_get ($config, "graph_period", "second", $domain, $name, $service) eq "minute");
 }
 
-sub orig_to_cdef
-{
+sub orig_to_cdef {
     my $service = shift;
     my $field   = shift;
 
@@ -968,8 +947,7 @@ sub orig_to_cdef
     return $field;
 }
 
-sub set_cdef_name
-{
+sub set_cdef_name {
     my $service = shift;
     my $field   = shift;
     my $new     = shift;
@@ -978,8 +956,7 @@ sub set_cdef_name
     print "DEBUG: set_cdef_name from $field to $new.\n" if $DEBUG;
 }
 
-sub skip_service
-{
+sub skip_service {
     my $node = shift;
     my $service = shift;
 
@@ -998,8 +975,7 @@ sub skip_service
     return 0;
 }
 
-sub expand_cdef
-{
+sub expand_cdef {
     my $service     = shift;
     my $cfield_ref  = shift;
     my $cdef        = shift;
