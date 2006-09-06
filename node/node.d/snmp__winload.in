@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!@@PERL@@
 #
 # Copyright (C) 2004-2006 Jimmy Olsen, Dagfinn Ilmari Mannsaaker
 #
