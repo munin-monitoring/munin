@@ -577,7 +577,7 @@ sub process_node {
 	$max_field_len =
 	  &munin_get_max_label_length ($node, $config, $domain, $name,
 				       $service, \@field_order);
-	my $global_headers = ($max_field_len > 20);
+	my $global_headers = ($max_field_len > 16);
 
 	# Array to keep negative data until we're finished with positive.
 	my @rrd_negatives = ();
