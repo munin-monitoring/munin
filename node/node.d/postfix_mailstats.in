@@ -108,7 +108,7 @@ if (-f "$statefile")
 if (! -f $logfile and ! -f $rotlogfile)
 {
     print "delivered.value U\n";
-    foreach my $i (keys %{$rejects})
+    foreach my $i (sort keys %{$rejects})
     {
     	print "r$i.value U\n";
     }
@@ -146,7 +146,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "delivered.type DERIVE\n";
     print "delivered.draw AREA\n";
     print "delivered.min 0\n";
-    foreach my $i (keys %{$rejects})
+    foreach my $i (sort keys %{$rejects})
     {
 	    print "r$i.label reject $i\n";
 	    print "r$i.type DERIVE\n";
@@ -157,7 +157,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
 }
 
 print "delivered.value $delivered\n";
-foreach my $i (keys %{$rejects})
+foreach my $i (sort keys %{$rejects})
 {
 	print "r$i.value ", $rejects->{$i}, "\n";
 }
@@ -167,7 +167,7 @@ if(-l $statefile) {
 }				
 open (OUT, ">$statefile") or exit 4;
 print OUT "$pos:$delivered\n";
-foreach my $i (keys %{$rejects})
+foreach my $i (sort keys %{$rejects})
 {
 	print OUT "$i:", $rejects->{$i}, "\n";
 }
