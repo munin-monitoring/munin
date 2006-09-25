@@ -106,7 +106,7 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	{
 		print "committed.label committed\n";
 		print "committed.draw LINE2\n";
-		print "committed.warn ", $mems{'SwapTotal'} + $mems{'MemTotal'}, "\n";
+		print "committed.warning ", $mems{'SwapTotal'} + $mems{'MemTotal'}, "\n";
 		print "committed.info The amount of memory that would be used if all the memory that's been allocated were to be used.\n";
 	}
 	if (exists $mems{'Mapped'})
