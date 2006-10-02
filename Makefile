@@ -8,6 +8,15 @@ INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
 INSTALL          = ./install-sh
 DIR              = $(shell /bin/pwd | sed 's/^.*\///')
 INFILES		 = $(shell find . -name '*.in')
+PLUGINS		 = $(wildcard node/node.d.$(OSTYPE)/* node/node.d/*)
+MANCENTER        = "Munin Documentation"
+MAN8		 = node/munin-node node/munin-run \
+			node/munin-node-configure-snmp \
+			node/munin-node-configure \
+			server/munin-graph server/munin-update \
+			server/munin-limits server/munin-html
+PODMAN8          = server/munin-cron
+PODMAN5          = server/munin.conf node/munin-node.conf
 
 default: build
 
@@ -74,16 +83,18 @@ install-node-non-snmp: build
 	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
 
-install-node-plugins: build
-	for p in build/node/node.d.$(OSTYPE)/* build/node/node.d/*; do    		\
-		if test -f "$$p" ; then                                     		\
-			family=`sed -n 's/^#%# family=\(.*\)$$/\1/p' $$p`;  		\
-			test "$$family" || family=contrib;                  		\
-			if echo $(INSTALL_PLUGINS) | grep $$family >/dev/null; then 	\
-				test -f "$(LIBDIR)/plugins/`basename $$p`"		\
-				|| $(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;    		\
-			fi;                                                 		\
-		fi                                                          		\
+
+install-node-plugins: build $(PLUGINS) Makefile Makefile.config
+	for p in build/node/node.d.$(OSTYPE)/* build/node/node.d/*; do \
+	    if test -f "$$p" ; then                                    \
+		family=`sed -n 's/^#%# family=\(.*\)$$/\1/p' $$p`;     \
+		test "$$family" || family=contrib;                     \
+		if echo $(INSTALL_PLUGINS) |                           \
+		   grep $$family >/dev/null; then 	               \
+			test -f "$(LIBDIR)/plugins/`basename $$p`"     \
+			|| $(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;  \
+		fi;                                                    \
+	    fi                                                         \
 	done
 	$(INSTALL) -m 0644 build/node/plugins.history $(LIBDIR)/plugins/
 
@@ -123,6 +134,7 @@ build: build-stamp
 # %: %.in Makefile Makefile.config
 
 build-stamp: $(INFILES) Makefile Makefile.config
+	touch build-stamp
 	@for file in $(INFILES); do			\
 		destname=`echo $$file | sed 's/.in$$//'`;		\
 		echo Generating build/$$destname..;			\
@@ -140,8 +152,8 @@ build-stamp: $(INFILES) Makefile Makefile.config
 		    -e 's|@@STATEDIR@@|$(STATEDIR)|g'			\
 		    -e 's|@@PERL@@|$(PERL)|g'				\
 		    -e 's|@@PERLLIB@@|$(PERLLIB)|g'			\
-		    -e 's|@@PYTHON@@|$(PYTHON)|g'				\
-		    -e 's|@@OSTYPE@@|$(OSTYPE)|g'				\
+		    -e 's|@@PYTHON@@|$(PYTHON)|g'			\
+		    -e 's|@@OSTYPE@@|$(OSTYPE)|g'			\
 		    -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'			\
 		    -e 's|@@MKTEMP@@|$(MKTEMP)|g'			\
 		    -e 's|@@VERSION@@|$(VERSION)|g'			\
@@ -152,11 +164,11 @@ build-stamp: $(INFILES) Makefile Makefile.config
 		    -e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g'		\
 		    $$file > build/$$destname;				\
 	done
-	touch build-stamp
 
-build-doc: build-doc-stamp Makefile
+build-doc: build-doc-stamp Makefile Makefile.config
 
 build-doc-stamp:
+	touch build-doc-stamp
 	mkdir -p build/doc
 	-htmldoc munin-doc-base.html > build/doc/munin-doc.html
 	-htmldoc -t pdf --webpage build/doc/munin-doc.html > build/doc/munin-doc.pdf
@@ -166,36 +178,21 @@ build-doc-stamp:
 	-htmldoc -t pdf --webpage build/doc/munin-faq.html > build/doc/munin-faq.pdf
 	-html2text -style pretty -nobs build/doc/munin-faq.html > build/doc/munin-faq.txt
 
-	touch build-doc-stamp
-
 build-man: build-man-stamp 
 
-build-man-stamp: build
-	mkdir -p build/doc
-	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/node/munin-node > build/doc/munin-node.8
-	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/node/munin-run > build/doc/munin-run.8
-	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/node/munin-node-configure-snmp > build/doc/munin-node-configure-snmp.8
-	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/node/munin-node-configure > build/doc/munin-node-configure.8
-	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/server/munin-graph > build/doc/munin-graph.8
-	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/server/munin-update > build/doc/munin-update.8
-	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/server/munin-limits > build/doc/munin-limits.8
-	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/server/munin-html > build/doc/munin-html.8
-	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		server/munin-cron.pod > build/doc/munin-cron.8
-	pod2man  --section=5 --release=$(RELEASE) --center="Munin Documentation" \
-		server/munin.conf.pod > build/doc/munin.conf.5
-	pod2man  --section=5 --release=$(RELEASE) --center="Munin Documentation" \
-		node/munin-node.conf.pod > build/doc/munin-node.conf.5
-
+build-man-stamp: build Makefile Makefile.config
 	touch build-man-stamp
+	mkdir -p build/doc
+	for f in $(MAN8); do \
+	   pod2man --section=8 --release=$(RELEASE) --center=$(MANCENTER) build/"$$f" > build/doc/`basename $$f`.8; \
+	done
+	for f in $(PODMAN8); do \
+	   pod2man --section=8 --release=$(RELEASE) --center=$(MANCENTER) "$$f".pod > build/doc/`basename $$f .pod`.8; \
+	done
+	for f in $(PODMAN5); do \
+	   pod2man --section=5 --release=$(RELEASE) --center=$(MANCENTER) "$$f".pod > build/doc/`basename $$f .pod`.5; \
+	done
+
 
 deb:
 	-rm debian

@@ -8,9 +8,13 @@ To install the main programs:
 	- create the user "munin"
 	- make install-main
 	- create a cron-entry to run "munin-cron" as the user "munin" every 5
-	  minutes
-	- if you want to use the dynamic graphs, configure the cgi directory
-	  (an example for apache can be found in README-apache-cgi).
+	  minutes.  You might find cron files for your system in the
+          build/resources directory.
+
+	- if you want to use the dynamic graphs: Configure the cgi
+	  directory, you will find a apache config example in
+	  build/resources.  NOTE: Dynamic graphs are not exactly
+          perfect. Se also http://munin.projects.linpro.no/wiki/CgiHowto
 
 To install the documentation:
 
