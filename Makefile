@@ -1,15 +1,13 @@
-#! /usr/bin/make -f
+# Gnu make only.  Seriously.
 
-DEFAULTS = Makefile.config
-CONFIG = Makefile.config
-
-include $(DEFAULTS)
-include $(CONFIG)
+# Defaults/paths from this file
+include Makefile.config
 
 RELEASE          = $(shell cat RELEASE)
 INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
 INSTALL          = ./install-sh
 DIR              = $(shell /bin/pwd | sed 's/^.*\///')
+INFILES		 = $(shell find . -name '*.in')
 
 default: build
 
@@ -89,10 +87,10 @@ install-node-plugins: build
 	done
 	$(INSTALL) -m 0644 build/node/plugins.history $(LIBDIR)/plugins/
 
-	#TODO:
-	#configure plugins.
+#TODO:
+#configure plugins.
 
-install-man: build-man
+install-man: build-man Makefile Makefile.config
 	mkdir -p $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8
 	$(INSTALL) -m 0644 build/doc/munin-node.conf.5 $(MANDIR)/man5/
 	$(INSTALL) -m 0644 build/doc/munin.conf.5 $(MANDIR)/man5/
@@ -121,10 +119,13 @@ install-doc: build-doc
 
 build: build-stamp
 
-build-stamp:
-	@for file in `find . -type f -name '*.in'`; do			\
+# Recursive pattern rule needed.
+# %: %.in Makefile Makefile.config
+
+build-stamp: $(INFILES) Makefile Makefile.config
+	@for file in $(INFILES); do			\
 		destname=`echo $$file | sed 's/.in$$//'`;		\
-		echo Generating $$destname..;				\
+		echo Generating build/$$destname..;			\
 		mkdir -p build/`dirname $$file`;			\
 		sed -e 's|@@PREFIX@@|$(PREFIX)|g'			\
 		    -e 's|@@CONFDIR@@|$(CONFDIR)|g'			\
@@ -153,7 +154,7 @@ build-stamp:
 	done
 	touch build-stamp
 
-build-doc: build-doc-stamp
+build-doc: build-doc-stamp Makefile
 
 build-doc-stamp:
 	mkdir -p build/doc
@@ -167,7 +168,7 @@ build-doc-stamp:
 
 	touch build-doc-stamp
 
-build-man: build-man-stamp
+build-man: build-man-stamp 
 
 build-man-stamp: build
 	mkdir -p build/doc
@@ -269,12 +270,6 @@ test: t/*.t t/install $(addprefix $(CONFDIR)/plugins/,$(test_plugins))
 		PERL5LIB=$(PERLLIB) $(PERL) $$test;\
 	done
 endif
-
-$(CONFDIR)/plugins/id_%: $(LIBDIR)/plugins/id
-	ln -s $< $@
-
-$(CONFDIR)/plugins/%: $(LIBDIR)/plugins/%
-	ln -s $< $@
 
 t/install: 
 	$(MAKE) clean install-node install-node-plugins CONFIG=t/Makefile.config INSTALL_PLUGINS=test
