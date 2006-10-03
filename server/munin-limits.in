@@ -156,7 +156,7 @@ sub process_service {
 	    $client->{$key.".value"} = $value;
 	    $client->{'fields'} = join (' ', map { $_ =~ s/\.label$//; $_} grep (/\.label/, keys %$client));
 	    $client->{'plugin'} = $clientname;
-	    $client->{'graph_options'} = $client->{'notify_alias'} if defined $client->{'notify_alias'};
+	    $client->{'graph_title'} = $client->{'notify_alias'} if defined $client->{'notify_alias'};
 	    $client->{'host'} = $config->{'domain'}->{$domain}->{'node'}->{$name}->{'notify_alias'} || $name;
 	    $client->{'group'} = $config->{'domain'}->{$domain}->{'notify_alias'} || $domain;
 	    $client->{'worst'} = "OK";
