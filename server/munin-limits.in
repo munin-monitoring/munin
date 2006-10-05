@@ -642,7 +642,7 @@ This is munin-limits version @@VERSION@@
 
 =head1 AUTHORS
 
-Audun Ytterdal and Jimmy Olsen.
+Knut Haugen, Audun Ytterdal and Jimmy Olsen.
 
 =head1 BUGS
 
@@ -652,7 +652,7 @@ Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
 =head1 COPYRIGHT
 
-Copyright © 2002-2004 Knut Haugen, Audun Ytterdal, and Jimmy Olsen / Linpro AS.
+Copyright © 2002-2006 Knut Haugen, Audun Ytterdal, and Jimmy Olsen / Linpro AS.
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
