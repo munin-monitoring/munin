@@ -8,6 +8,18 @@ To install the main programs:
 	- create the user "munin"
 	- make install-main
 
+        - In your HTMLDIR/munin you will now find a .htaccess file
+          looking for passwords in CONFDIR/munin-htpasswd.  Install
+          the users you need in munin-htpasswd with the htpasswd
+	  command.  Check that authentication is required, if it's not 
+	  please refer to build/resources/apache-passwd.conf.
+
+	  If you prefer that munin be openly available remove the
+	  .htaccess file.
+
+          If you already have a .htaccess file it will not be
+          overwritten.
+
 	- create a cron-entry to run "munin-cron" as the user "munin"
 	  every 5 minutes.  You might find cron files for your system
 	  under the build/dists subdirectory, or perhaps in the

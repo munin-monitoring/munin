@@ -20,7 +20,7 @@ PODMAN5          = server/munin.conf node/munin-node.conf
 
 default: build
 
-install: install-main install-node install-node-plugins install-doc install-man
+install: install-main install-node install-node-plugins install-man
 
 install-main: build
 	$(CHECKUSER)
@@ -43,6 +43,7 @@ install-main: build
 	$(INSTALL) -m 0644 server/logo.png $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/style.css $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/definitions.html $(CONFDIR)/templates/
+	test -f $(HTMLDIR)/munin/.htaccess || $(INSTALL) -m 0644 build/server/munin-htaccess $(HTMLDIR)/munin/.htaccess
 
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/server/munin.conf $(CONFDIR)/
 
@@ -117,16 +118,9 @@ install-man: build-man Makefile Makefile.config
 
 install-doc: build-doc
 	mkdir -p $(DOCDIR)
-	$(INSTALL) -m 0644 build/doc/munin-doc.html $(DOCDIR)/
-	$(INSTALL) -m 0644 build/doc/munin-doc.pdf $(DOCDIR)/
-	$(INSTALL) -m 0644 build/doc/munin-doc.txt $(DOCDIR)/
-	$(INSTALL) -m 0644 build/doc/munin-faq.html $(DOCDIR)/
-	$(INSTALL) -m 0644 build/doc/munin-faq.pdf $(DOCDIR)/
-	$(INSTALL) -m 0644 build/doc/munin-faq.txt $(DOCDIR)/
-	$(INSTALL) -m 0644 README.* $(DOCDIR)/
+	$(INSTALL) -m 0644 README $(DOCDIR)/
 	$(INSTALL) -m 0644 COPYING $(DOCDIR)/
-	$(INSTALL) -m 0644 build/README-apache-cgi $(DOCDIR)/
-	$(INSTALL) -m 0644 node/node.d/README $(DOCDIR)/README.plugins
+	$(INSTALL) -m 0644 build/resources/* $(DOCDIR)/resources
 
 build: build-stamp
 
@@ -170,13 +164,6 @@ build-doc: build-doc-stamp Makefile Makefile.config
 build-doc-stamp:
 	touch build-doc-stamp
 	mkdir -p build/doc
-	-htmldoc munin-doc-base.html > build/doc/munin-doc.html
-	-htmldoc -t pdf --webpage build/doc/munin-doc.html > build/doc/munin-doc.pdf
-	-html2text -style pretty -nobs build/doc/munin-doc.html > build/doc/munin-doc.txt
-
-	-htmldoc munin-faq-base.html > build/doc/munin-faq.html
-	-htmldoc -t pdf --webpage build/doc/munin-faq.html > build/doc/munin-faq.pdf
-	-html2text -style pretty -nobs build/doc/munin-faq.html > build/doc/munin-faq.txt
 
 build-man: build-man-stamp 
 
