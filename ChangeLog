@@ -1,5 +1,6 @@
 munin (working copy)
 
+  * Server: Fixed ticket #118
   * Server: Display the time period in the title of the comparison pages.
   * Plugins: "exists $ARGV[0]" does not work with perl < 5.6.0. use
     "defined $ARGV[0]".
