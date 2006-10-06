@@ -1,4 +1,5 @@
 #!@@PERL@@ -wT
+# -*- cperl -*-
 #
 # Copyright (C) 2002-2006 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
 #    Nicolai Langfeldt
@@ -48,9 +49,9 @@ $0 = $1;
 my @ORIG_ARGV = @ARGV;
 my %services;
 my %nodes;
-my $servicedir="$CONFDIR/plugins";
-my $sconfdir="$CONFDIR/plugin-conf.d";
-my $conffile="$CONFDIR/munin-node.conf";
+my $servicedir="@@CONFDIR@@/plugins";
+my $sconfdir="@@CONFDIR@@/plugin-conf.d";
+my $conffile="@@CONFDIR@@/munin-node.conf";
 my $FQDN="";
 my $do_usage = 0;
 my $DEBUG = 0;
@@ -541,10 +542,10 @@ sub process_request {
       $key = $cert = &get_var (\%sconf, "tls_pem");
       $key = &get_var (\%sconf, "tls_private_key")
 	  unless defined $key;
-      $key = "$CONFDIR/munin-node.pem" unless defined $key;
+      $key = "@@CONFDIR@@/munin-node.pem" unless defined $key;
       $cert = &get_var (\%sconf, "tls_certificate")
 	  unless defined $cert;
-      $cert = "$CONFDIR/munin-node.pem" unless defined $cert;
+      $cert = "@@CONFDIR@@/munin-node.pem" unless defined $cert;
       $mode = &get_var (\%sconf, 'tls');
       $mode = "auto" unless defined $mode and length $mode;
       $depth = &get_var (\%sconf, 'tls_verify_depth');
