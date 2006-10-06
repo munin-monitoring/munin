@@ -273,7 +273,7 @@ for my $domain (@domainorder) {
 	    $service{url}="$node-$service.html";
 	    $service{domain}="$domain";
 	    $service{node}=$node;
-	    $service{category}= $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_category} || "other";
+	    $service{category}= lc $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_category} || "other";
 
         # Do "help" section
 		if (defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_info})
