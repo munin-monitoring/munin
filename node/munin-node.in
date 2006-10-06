@@ -57,8 +57,8 @@ my $do_usage = 0;
 my $DEBUG = 0;
 my $do_version = 0;
 my $VERSION=$Muninnode::VERSION;
-my $defuser = getpwnam ($PLUGINUSER);
-my $defgroup= getgrnam ($GROUP);
+my $defuser = getpwnam ("@@PLUGINUSER@@");
+my $defgroup= getgrnam ("@@GROUP@@");
 my $paranoia= 0;
 my @ignores = ();
 my %sconf   = ('timeout' => 10);
@@ -184,7 +184,7 @@ $ENV{FQDN}=$FQDN;
 $ENV{'LC_ALL'}='C';
 
 MyPackage->run(conf_file => $conffile,
-	       pid_file => "$STATEDIR/munin-node.pid");
+	       pid_file => "@@STATEDIR@@/munin-node.pid");
 exit;
 
 
@@ -285,7 +285,10 @@ sub print_service {
 
 sub list_services {
     my $node = $_[0] || $FQDN;
-    net_write join " ", grep { &has_access ($_); } keys %{$nodes{$node}} if exists $nodes{$node};
+    net_write( join( " ",
+		     grep( { &has_access ($_); } keys %{$nodes{$node}} )
+		     ) )
+      if exists $nodes{$node};
     #print join " ", keys %{$nodes{$node}};
     net_write ("\n");
 }
