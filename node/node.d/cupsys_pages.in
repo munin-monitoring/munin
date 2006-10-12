@@ -102,7 +102,6 @@ parselogfile($logfile, $pos, $startsize);
 $pos = $startsize;
 
 # Write back to state file
-print "Foo! $statefile\n";
 open (STATFILE, ">$statefile") or exit 4;
 print STATFILE "$pos\n";
 foreach my $printer (sort(keys %printers)) {
