@@ -13,6 +13,8 @@ munin (working copy)
     environment variable "lowercase" is set.
   * Replaced calls to net_write() with print(), as the former showed up
     in 1.3.x and is a undefined subroutine in 1.2.x (Deb#388789).
+  * Fix Trac #39 - incorrect error handling when opening STATS handle in
+    munin-update
 
 munin (1.2.4)
 
