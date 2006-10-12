@@ -263,14 +263,15 @@ while (<FILE>) {
 
 $FQDN ||= &get_fq_hostname;
 
-$ENV{FQDN}=$FQDN;
+$ENV{'FQDN'}=$FQDN;
+
+# Some locales uses "," as decimal separator. This can mess up a lot
+# of plugins.
+$ENV{'LC_ALL'}='C';
 
 &load_services;
 
 exit;
-
-
-
 
 ### over-ridden subs below
 

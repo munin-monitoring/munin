@@ -269,6 +269,10 @@ $FQDN ||= &get_fq_hostname;
 
 $ENV{FQDN}=$FQDN;
 
+# Some locales uses "," as decimal separator. This can mess up a lot
+# of plugins.
+$ENV{'LC_ALL'}='C';
+
 MyPackage->run(conf_file => $conffile,
 	       pid_file => "@@STATEDIR@@/munin-node.pid");
 exit;

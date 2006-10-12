@@ -16,6 +16,11 @@ munin (working copy)
   * Fix Trac #39 - incorrect error handling when opening STATS handle in
     munin-update
   * Fix Trac #103 - wrong category of multips
+  * Fix Trac #75 - locale changes decimal separator
+  * Fix Trac #113, documentation problem
+  * Fix Debian #314610, Munin #92 - handling of held packages in apt plugin.
+  * Change global headers limit to 16 or longer labels - 20 was too much
+    even with rrd 1.0
 
 munin (1.2.4)
 
