@@ -681,7 +681,7 @@ sub load_auth_file
   	    }
  	    elsif (!defined $u and $optional)
  	    {
- 		net_write ("DEBUG: Skipping \"$user\" (optional).\n") if $DEBUG;
+ 		print ("DEBUG: Skipping \"$user\" (optional).\n") if $DEBUG;
  		next;
  	    }
  	    else
