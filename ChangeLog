@@ -15,6 +15,7 @@ munin (working copy)
     in 1.3.x and is a undefined subroutine in 1.2.x (Deb#388789).
   * Fix Trac #39 - incorrect error handling when opening STATS handle in
     munin-update
+  * Fix Trac #103 - wrong category of multips
 
 munin (1.2.4)
 
