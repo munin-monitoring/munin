@@ -59,6 +59,10 @@ munin (1.2.4)
   * Plugins (Solaris): memory: Rewrite the value computation as a single nawk
   program. Support scale factor "K" (gives values < 1).
   * Plugins (Linux): port_: Correct offset error in TCP6 code.
+  * Node: use Sys::Hostname::hostname()+gethostbyname() instead of
+    Net::Domain::hostfqdn() in order to determine the fully-qualified host
+    name of the host.  The latter appears to be brain-damaged, see
+    <http://bugs.debian.org/275024> for background (Deb#307462, Trac#89).
 
 munin (1.2.3)
 
