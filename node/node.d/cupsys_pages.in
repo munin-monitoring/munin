@@ -1,4 +1,3 @@
-#
 #!@@PERL@@ -w
 #
 # Plugin to monitor number of pages pr printer printed by CUPS
