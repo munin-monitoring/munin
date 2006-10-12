@@ -212,8 +212,8 @@ sub show_nodes {
 sub get_fq_hostname {
     my $hostname;
     eval {
-        require Net::Domain;
-        $hostname = Net::Domain::hostfqdn();
+        require Sys::Hostname;
+        $hostname = (gethostbyname(Sys::Hostname::hostname()))[0];
     };
     return $hostname if $hostname;
 

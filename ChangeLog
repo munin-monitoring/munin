@@ -52,6 +52,10 @@ munin (repository)
   * Plugins (Linux): port_: Correct offset error in TCP6 code.
   * Plugins (Linux): if_: Simplify awk program greatly, suggested by
     Nicolai Langfeldt <janl@linpro.no>
+  * Node: use Sys::Hostname::hostname()+gethostbyname() instead of
+    Net::Domain::hostfqdn() in order to determine the fully-qualified host
+    name of the host.  The latter appears to be brain-damaged, see
+    <http://bugs.debian.org/275024> for background (Deb#307462, Trac#89).
 
 munin (1.3.2)
 
