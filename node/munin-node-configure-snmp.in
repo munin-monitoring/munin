@@ -166,6 +166,7 @@ sub do_host
 			-version   => $ver,
 		);
 	$session->translate (0);
+	die $error if $error;
 
 	if (!defined ($session))
 	{
