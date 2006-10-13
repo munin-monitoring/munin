@@ -813,7 +813,7 @@ sub process_node {
  		      '--font' ,'LEGEND:7:@@LIBDIR@@/VeraMono.ttf',
  		      '--font' ,'UNIT:7:@@LIBDIR@@/VeraMono.ttf',
 
- 		      '--font' ,'AXIS:7:@@LIBDIR/VeraMono.ttf');
+ 		      '--font' ,'AXIS:7:@@LIBDIR@@/VeraMono.ttf');
 	    }
 
 	    logger ("Processing $name -> $time") if $DEBUG;
