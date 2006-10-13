@@ -1,4 +1,4 @@
-munin (working copy)
+munin (1.2.5)
 
   * Server: Fixed ticket #118
   * Server: Display the time period in the title of the comparison pages.
