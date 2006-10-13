@@ -21,6 +21,7 @@ munin (working copy)
   * Fix Debian #314610, Munin #92 - handling of held packages in apt plugin.
   * Change global headers limit to 16 or longer labels - 20 was too much
     even with rrd 1.0
+  * Plugin cupsys_pages:  No @ no more (trac #70, #66)
 
 munin (1.2.4)
 
