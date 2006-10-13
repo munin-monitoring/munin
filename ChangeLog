@@ -1,5 +1,6 @@
 munin (repository)
 
+  * Server: Fixed (reopened) ticket #54
   * Server: Fixed ticket #118
   * Server: Display the time period in the title of the comparison pages.
   * Node: Make it possible to run plugins with group root.
