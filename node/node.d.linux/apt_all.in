@@ -61,7 +61,7 @@ $ENV{'LANG'}="C";
 $ENV{'LC_ALL'}="C";
 
 my $statefile = "/var/lib/munin/plugin-state/plugin-apt.state";
-my @releases = ("testing","unstable");
+my @releases = ("stable","testing","unstable");
 
 
 sub update_state() {
@@ -191,7 +191,7 @@ while (<APT>)
 			}
 		}
 	}
-	if (/^\d+\spackages upgraded,\s\d+\snewly installed, \d+ to remove and (\d+)  not upgraded/)
+	if (/^\d+\supgraded,\s\d+\snewly installed, \d+ to remove and (\d+) not upgraded/)
 	{
 		$hold = $1;
 	}

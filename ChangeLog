@@ -25,6 +25,9 @@ munin (1.2.5)
   * Fix Trac 104, by bundling Bitstream Vera Mono and using that to get
     smaller fonts if using RRDtool 1.2.
   * Plugin cupsys_pages:  No @ no more (trac #70, #66)
+  * Plugins: apt_all now correctly parses output frow recent versions of apt,
+    making the hold count work again.  Also include "stable" in the list of
+    distributions (Trac #92, Deb#314610).
 
 munin (1.2.4)
 
