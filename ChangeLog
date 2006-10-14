@@ -53,6 +53,8 @@ munin (repository)
   * Plugins (Linux): port_: Correct offset error in TCP6 code.
   * Plugins (Linux): if_: Simplify awk program greatly, suggested by
     Nicolai Langfeldt <janl@linpro.no>
+  * Plugins: Added plugin generic/digitemp_.
+  * Plugins: Added plugin linux/yum.
   * Node: use Sys::Hostname::hostname()+gethostbyname() instead of
     Net::Domain::hostfqdn() in order to determine the fully-qualified host
     name of the host.  The latter appears to be brain-damaged, see
