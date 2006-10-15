@@ -1,5 +1,6 @@
 munin (repository)
 
+  * Server: Applied changeset 1081 from 1.3.3rc, closing ticket #34.
   * Server: Fixed (reopened) ticket #54
   * Server: Fixed ticket #118
   * Server: Display the time period in the title of the comparison pages.
