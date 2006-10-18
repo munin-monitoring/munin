@@ -7,7 +7,7 @@ tested in the release process.  Install it in @@LIBDIR@@.
 
 This script will generate a page, by services, with all hosts
 included. handy if you want to watch memory usage on all of your
-infrastructure
+infrastructure.
 
 =head1 installation
 
@@ -28,16 +28,16 @@ in @@CONFDIR@@/templates/munin-overview.tmpl:
  <div class="box">
     <a href=every-services-all-boxes>every services on all boxes</a>
 
-=head1 todo
+=head1 TODO
 
 use the proprer template system in munin, and munin-html to generate
 the page, not just guessing it from the files
 
-=head1 license
+=head1 License
 
 LGPL-2.1 
 
-=head1 authors / credits
+=head1 Authors / credits
 
 8D Technologies
 
@@ -47,19 +47,21 @@ LGPL-2.1
 
 use strict;
 
+my $munin_www='@@HTMLDIR@@';
+
 my %host;
 my %plugin;
 my %domain;
 
-    my $htmlpluginfileindex="@@HTMLDIR@@/every-services-all-boxes/index.html";
-    
+    my $htmlpluginfileindex="$munin_www/every-services-all-boxes/index.html";
+
     open (IPF,">$htmlpluginfileindex") || die "cant open $htmlpluginfileindex : $!";
 
     print IPF "<html><head><title>every services for all boxes</title></head><body><table>\n";
 
 while (<>)
 {
-    if (m|@@HTMLDIR@@/([\.\w]+)/([\.\w]+)-([\.\w]+)-(\w+).png|)
+    if (m|$munin_www/([\.\w]+)/([\.-\w]+)-([\.\w]+)-(\w+).png|)
     {
 	$domain{$1}=1;
 	$host{$2}=$1;
@@ -67,7 +69,6 @@ while (<>)
 
 
     }
-    
 }
 
 my @prefered_plugins=("memory","swap","hddtemp_smartctl","sensors_temp");
@@ -75,8 +76,8 @@ my @prefered_plugins=("memory","swap","hddtemp_smartctl","sensors_temp");
 foreach (@prefered_plugins,sort keys %plugin)
 {
     my $plugin=$_;
-    my $htmlpluginfile="@@HTMLDIR@@/every-services-all-boxes/munin-$plugin-all-boxes.html";
-    
+    my $htmlpluginfile="$munin_www/every-services-all-boxes/munin-$plugin-all-boxes.html";
+
     open (PF,">$htmlpluginfile") || die "cant open $htmlpluginfile : $!";
 
     print PF "<html><head><title>$plugin all boxes</title></head><body><table>\n";
@@ -96,7 +97,7 @@ foreach (@prefered_plugins,sort keys %plugin)
 		#print "host in domain : $host\n";
 		# test existence here
 
-		if ( -f "@@HTMLDIR@@/$domain/$host-$plugin-week.png" )
+		if ( -f "$munin_www/$domain/$host-$plugin-week.png" )
 		{
 		    print PF qq|<tr><td colspan=2><center> <a href="../$domain/$host.html">$host</a> <a href="../$domain/$host-$plugin.html">$plugin</a></center></tr></td>\n|;
 		    print PF "<tr>\n";
@@ -111,8 +112,3 @@ foreach (@prefered_plugins,sort keys %plugin)
     close PF;
 }
 
-
-#foreach (keys %host)
-#{
-#    print "host : $_\n";
-#}
