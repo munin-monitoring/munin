@@ -143,6 +143,7 @@ sub munin_nscasend {
 }
 
 sub munin_createlock {
+  # Create lock file - if possible
   my ($lockname) = @_;
   if (-e $lockname && (! -w $lockname || ! -f $lockname)) {
       die "Error writing to $lockname, wrong permissions";
@@ -182,11 +183,12 @@ sub munin_runlock {
 
 sub munin_getlock {
   my ($lockname) = @_;
-    unless (&munin_createlock($lockname)) {
+    if (!&munin_createlock($lockname)) {
       # Is the lockpid alive?
-      open LOCK,$lockname;
+      open LOCK,$lockname or
+	die "Could not open $lockname for reading: $!\n";
       my $pid = <LOCK>;
-      if ($pid =~ /^\d+$/ and kill(0,$pid)) {
+      if (defined($pid) and $pid =~ /^\d+$/ and kill(0,$pid)) {
 	  return 0;
       }
       &munin_removelock ($lockname);
