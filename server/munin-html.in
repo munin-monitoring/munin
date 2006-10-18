@@ -1,6 +1,6 @@
 #!@@PERL@@
 #
-# Copyright (C) 2002-2004 Jimmy Olsen, Audun Ytterdal
+# Copyright (C) 2002-2006 Jimmy Olsen, Audun Ytterdal
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -287,7 +287,7 @@ my @domains;
 
 my @domainorder;
 if ($config->{domain_order}) {
-    @domainorder = split / /, $config->{domain_order};
+    @domainorder = split /\s+/, $config->{domain_order};
 }
 foreach my $d (sort (keys %{$config->{domain}})) {
     unless (grep (/^$d$/, @domainorder)) {
@@ -320,7 +320,7 @@ for my $domain (@domainorder) {
     my %comparisons;
     my @nodeorder = ();
     if ($config->{domain}->{$domain}->{node_order}) {
-	@nodeorder = split / /, $config->{domain}->{$domain}->{node_order};
+	@nodeorder = split /\s+/, $config->{domain}->{$domain}->{node_order};
     } 
     foreach my $n (sort (keys %{$config->{domain}->{$domain}->{node}}))
     {
@@ -340,7 +340,7 @@ for my $domain (@domainorder) {
 	my %tmp_cats;
 	my @serviceorder;
 	if ($config->{domain}->{$domain}->{node}->{$node}->{service_order}) {
-	    @serviceorder = split / /, $config->{domain}->{$domain}->{node}->{$node}->{service_order};
+	    @serviceorder = split /\s+/, $config->{domain}->{$domain}->{node}->{$node}->{service_order};
 	} else {
 	    @serviceorder = sort (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}});
 	}
