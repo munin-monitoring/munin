@@ -1,0 +1,10 @@
+# If the .htaccess file does not work you will need something like the
+# following:
+
+<Directory /@@HTMLDIR@@>
+	AllowOverride AuthConfig
+</Directory>
+
+# If you don't like .htaccess files (they have some overhead compared
+# to the apache config files include the contents of the .htaccess
+# file in the above stanza instead of the AllowOverride statement.
