@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# -*- cperl -*-
 # 
 # Plugin to monitor individual interrupts
 #
@@ -15,11 +16,22 @@ if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
 	exit(1);
     }
 }
-open my $in, '<', '/proc/interrupts'
-  or die "Can't open /proc/interrupts: $!\n";
 
-my @cpus = split(' ', <$in>);
-my $cpus = scalar @cpus;
+my $sun;
+$sun = 1 if (`uname -m` =~ /sparc/);
+
+my @cpus;
+my $cpus;
+if ($sun) {
+    @cpus = grep (/^cpu\d+/, `cat /proc/stat`);
+    $cpus = scalar @cpus;
+} else {
+    open my $in, '<', '/proc/interrupts'
+      or die "Can't open /proc/interrupts: $!\n";
+    @cpus = split(' ', <$in>);
+    $cpus = scalar @cpus;
+}
+
 my $cpu;
 
 if ($0 =~ /(?:.*\/)?irqstats_(.+)/) {
@@ -39,7 +51,12 @@ sub sum (@) {
 
 while (my $line = <$in>) {
     my ($irq, $label, $type);
-    my @data = split(' ', $line, $cpus + 3);
+    my @data;
+    if ($sun) {
+	@data = split (' ', $line, $cpus + 2);
+    } else {
+	@data = split(' ', $line, $cpus + 3);
+    }
     chomp @data;
     $irq = shift @data;
     next unless length $irq;
