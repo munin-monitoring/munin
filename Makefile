@@ -22,6 +22,8 @@ default: build
 
 install: install-main install-node install-node-plugins install-man
 
+uninstall: uninstall-main
+
 install-main: build
 	$(CHECKUSER)
 	mkdir -p $(CONFDIR)/templates
@@ -43,25 +45,57 @@ install-main: build
 	$(INSTALL) -m 0644 server/logo.png $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/style.css $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/definitions.html $(CONFDIR)/templates/
-	test -f $(HTMLDIR)/munin/.htaccess || $(INSTALL) -m 0644 build/server/munin-htaccess $(HTMLDIR)/munin/.htaccess
-
+	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/server/munin-htaccess $(HTMLDIR)/.htaccess
+	$(INSTALL) -m 0755 server/VeraMono.ttf $(LIBDIR)/
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/server/munin.conf $(CONFDIR)/
-
 	$(INSTALL) -m 0755 build/server/munin-cron $(BINDIR)/
-
 	$(INSTALL) -m 0755 build/server/munin-update $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-html $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-limits $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-cgi-graph $(CGIDIR)/
-
 	$(INSTALL) -m 0644 build/server/Munin.pm $(PERLLIB)/
+
+uninstall-main: build
+	for p in build/server/*.tmpl; do    	    \
+		rm -f $(CONFDIR)/templates/"$$p"  ; \
+	done
+	rm -f $(CONFDIR)/templates/logo.png
+	rm -f $(CONFDIR)/templates/style.css
+	rm -f $(CONFDIR)/templates/definitions.html
+	rm -f $(HTMLDIR)/.htaccess
+
+	rm -f $(CONFDIR)/munin.conf 
+
+	rm -f $(BINDIR)/munin-cron 
+
+	rm -f $(LIBDIR)/munin-update
+	rm -f $(LIBDIR)/munin-graph
+	rm -f $(LIBDIR)/munin-html
+	rm -f $(LIBDIR)/munin-limits
+	rm -f $(CGIDIR)/munin-cgi-graph
+
+	rm -f $(PERLLIB)/Munin.pm 
+	-rmdir $(CONFDIR)/templates
+	-rmdir $(CONFDIR)
+	-rmdir $(LIBDIR)
+	-rmdir $(BINDIR)
+
+	-rmdir $(LOGDIR)
+	-rmdir $(STATEDIR)
+	-rmdir $(HTMLDIR)
+	-rmdir $(DBDIR)
+	-rmdir $(CGIDIR)
 
 install-node: build install-node-non-snmp install-node-snmp
 	echo Done.
 
 install-node-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(SBINDIR)/
+
+uninstall-node-snmp: build
+	rm -f $(SBINDIR)/munin-node-configure-snmp
+	-rmdir $(SBINDIR)
 
 install-node-non-snmp: build
 	$(CHECKGROUP)
@@ -85,6 +119,17 @@ install-node-non-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
 
 
+uninstall-node-non-snmp: build
+	rm -f $(SBINDIR)/munin-node 
+	rm -f $(SBINDIR)/munin-node-configure
+	rm -f $(CONFDIR)/munin-node.conf 
+	rm -f $(SBINDIR)/munin-run
+
+
+	-rmdir $(CONFDIR)/plugin-conf.d
+	-rmdir $(CONFDIR)
+	-rmdir $(SBINDIR)
+
 install-node-plugins: build $(PLUGINS) Makefile Makefile.config
 	for p in build/node/node.d.$(OSTYPE)/* build/node/node.d/*; do \
 	    if test -f "$$p" ; then                                    \
@@ -98,6 +143,12 @@ install-node-plugins: build $(PLUGINS) Makefile Makefile.config
 	    fi                                                         \
 	done
 	$(INSTALL) -m 0644 build/node/plugins.history $(LIBDIR)/plugins/
+
+uninstall-node-plugins: build $(PLUGINS)
+	for p in build/node/node.d.$(OSTYPE)/* build/node/node.d/*; do \
+	    rm -f $(LIBDIR)/plugins/`basename $$p` \
+	done
+	rm -f $(LIBDIR)/plugins/plugins.history
 
 #TODO:
 #configure plugins.
@@ -115,6 +166,20 @@ install-man: build-man Makefile Makefile.config
 	$(INSTALL) -m 0644 build/doc/munin-limits.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-html.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-cron.8 $(MANDIR)/man8/
+
+uninstall-man: build-man
+	rm -f $(MANDIR)/man5/munin-node.conf.5 
+	rm -f $(MANDIR)/man5/munin.conf.5 
+	rm -f $(MANDIR)/man8/munin-node.8
+	$(INSTALL) -m 0644 build/doc/munin-node-configure.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-node-configure-snmp.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-run.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-graph.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-update.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-limits.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-html.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-cron.8 $(MANDIR)/man8/
+	mkdir -p $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8
 
 install-doc: build-doc
 	mkdir -p $(DOCDIR)

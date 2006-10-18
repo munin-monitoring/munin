@@ -17,9 +17,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-#
 # $Id$
-#
+
 $|=1;
 
 use strict;
@@ -817,6 +816,13 @@ sub process_node {
 	for my $time (keys %times) {
 	    next unless ($draw{$time});
 	    my @complete = ();
+	    if ($RRDkludge) {
+		push (@complete,
+ 		      '--font' ,'LEGEND:7:@@LIBDIR@@/VeraMono.ttf',
+ 		      '--font' ,'UNIT:7:@@LIBDIR@@/VeraMono.ttf',
+ 		      '--font' ,'AXIS:7:@@LIBDIR@@/VeraMono.ttf');
+	    }
+
 	    logger ("Processing $name -> $time") if $DEBUG;
 
 	    # Do the header (title, vtitle, size, etc...)
