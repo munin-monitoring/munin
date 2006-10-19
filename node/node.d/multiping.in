@@ -1,0 +1,69 @@
+#!/bin/sh
+#
+# Copyright (C) 2004 Jimmy Olsen
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#
+# Plugin to monitor ping times
+#
+# Parameters:
+#
+# 	ping_args      - Arguments to ping (default "-c 2")
+# 	ping_args2     - Arguments after the host name (required for Solaris)
+# 	ping           - Ping program to use
+# 	host           - Host to ping
+#
+# Arguments for Solaris:
+#      ping_args      -s
+#      ping_args2     56 2
+#
+# Configuration example
+# [ping_]
+# env.host www.google.com www.yahoo.com
+#
+#
+#%# family=manual
+
+if [ -z "$host" ]; then
+    file_host=`basename $0 | sed 's/^ping_//g'`
+    host=${host:-${file_host:-www.google.com}}
+fi
+
+if [ "$1" = "config" ]; then
+    echo graph_title Ping times
+    echo 'graph_args --base 1000 -l 0'
+    echo 'graph_vlabel seconds'
+    echo 'graph_category network'
+    echo 'graph_info This graph shows ping RTT statistics.'
+    for hosts in $host; do
+	site=`expr $site + 1`
+	echo "site$site.label $hosts"
+	echo "site$site.info Ping RTT statistics for $hosts."
+	echo "site$site.draw LINE2"
+	echo "site${site}_packetloss.label $hosts packet loss"
+	echo "site${site}_packetloss.graph no"
+    done
+    exit 0
+fi
+
+for hosts in $host 
+do
+    export site=`expr $site + 1`
+    ${ping:-ping} ${ping_args:-'-c 2'} ${hosts} ${ping_args2} \
+	| perl -n -e 'print "site$ENV{'site'}.value ", $1 / 1000, "\n" 
+        if m@min/avg/max.*\s\d+(?:\.\d+)?/(\d+(?:\.\d+)?)/\d+(?:\.\d+)?@; 
+        print "packetloss.value $1\n" if /(\d+)% packet loss/;'
+done
