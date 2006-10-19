@@ -41,10 +41,8 @@ if [ "$1" = "config" ]; then
 	echo 'graph_category network'
 	echo 'forward.label forward'
 	echo 'forward.type GAUGE'
-	echo 'forward.max 500'''
 	echo 'local.label local'
 	echo 'local.type GAUGE'
-	echo 'local.max 500'''
 	exit 0
 fi
 
