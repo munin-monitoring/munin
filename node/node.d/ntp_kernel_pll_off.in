@@ -1,0 +1,43 @@
+#! /bin/sh
+#
+# $Id: ntp_kernel_pll_off.in,v 1.1.1.1 2006/06/04 20:53:57 he Exp $
+#
+# Plugin to monitor the kernel's PLL offset for the NTP
+# status.
+#
+# Usage: Link or copy into /etc/munin/node.d/
+#
+# Magic markers (optional - only used by munin-config and some
+# installation scripts):
+#
+#%# family=manual
+#%# capabilities=autoconf
+
+# If run with the "autoconf"-parameter, give our opinion on wether we
+# should be run on this system or not. This is optinal, and only used by
+# munin-config. In the case of this plugin, we should most probably
+# always be included.
+
+if [ "$1" = "autoconf" ]; then
+    if ntpdc -c help >/dev/null 2>&1; then
+	echo yes
+	exit 0
+    else
+	echo no
+	exit 1
+    fi
+fi
+
+if [ "$1" = "config" ]; then
+    echo 'graph_title NTP kernel PLL offset (secs)'
+#    echo 'graph-args --logarithmic'
+    echo 'graph_vlabel PLL offset (secs)'
+    echo 'graph_category other'
+    echo 'graph_info The kernel offset for the phase-locked loop used by NTP'
+    echo 'ntp_pll_off.label pll-offset'
+    echo 'ntp_pll_off.info Phase-locked loop offset in seconds'
+    exit 0
+fi
+
+echo -n 'ntp_pll_off.value '
+ntpdc -c kern | awk '/^pll offset:/ { print $3 }'

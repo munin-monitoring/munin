@@ -1,0 +1,117 @@
+#!/bin/sh
+#
+# Plugin for watching io-bound traffic (in bytes) on disks.
+#
+# Parameters:
+#
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#
+# $Log: iostat.in,v $
+# Revision 1.1.1.1  2006/06/04 20:53:57  he
+# Import the client version of the Munin system monitoring/graphing
+# tool -- project homepage is at http://munin.sourceforge.net/
+#
+# This package has added support for NetBSD, via a number of new plugin
+# scripts where specific steps needs to be taken to collect information.
+#
+# I also modified the ntp_ plugin script to make it possible to not
+# plot the NTP poll delay, leaving just jitter and offset, which IMO
+# produces a more telling graph.
+#
+#
+#
+#
+# Magick markers (optional - used by munin-config and som installation
+# scripts):
+#%# family=auto
+#%# capabilities=autoconf
+
+if [ "$1" = "autoconf" ]; then
+    if [ -x /usr/sbin/iostat ]; then
+	echo yes 
+	exit 0
+    else
+	echo "no (no /usr/sbin/iostat executable)"
+	exit 1
+    fi
+fi
+
+nf=`/usr/sbin/iostat -I -x | tail -1 | awk '{ print NF }'`
+if [ $nf -eq 5 ]; then
+    oldformat=true
+else
+    oldformat=false
+fi
+
+if [ "$1" = "config" ]; then
+
+    echo 'graph_title IOstat by bytes'
+    echo 'graph_args --base 1024 -l 0 '
+
+    if ! $oldformat; then
+	echo 'graph_vlabel MB per ${graph_period} read (-) / written (+)'
+    else
+	echo 'graph_vlabel MB per ${graph_period} read+written'
+    fi
+
+    echo 'graph_category disk'
+    echo 'graph_info This graph shows the I/O to and from block devices'
+
+    drives=`/usr/sbin/iostat -I -x | awk '
+/^device/ { next; }
+// { print $1; }'`
+
+    echo -n 'graph_order'
+    for d in $drives; do
+	if $oldformat; then
+	    echo -n ' '${d}'_io'
+	else
+	    echo -n ' '${d}'_read '${d}'_write'
+	fi
+    done
+    echo
+
+    if $oldformat; then
+	for d in $drives; do
+	    echo "${d}_io.label ${d}"
+	    echo "${d}_io.info I/O on device ${d}"
+	    echo "${d}_io.type DERIVE"
+	    echo "${d}_io.max 2000"
+	    echo "${d}_io.min 0"
+	done
+    else
+	for d in $drives; do
+	    echo "${d}_read.label ${d}"
+	    echo "${d}_read.type DERIVE"
+	    echo "${d}_read.max 2000"
+	    echo "${d}_read.min 0"
+	    echo "${d}_read.graph no"
+
+	    echo "${d}_write.label ${d}"
+	    echo "${d}_write.info I/O on device ${d}"
+	    echo "${d}_write.type DERIVE"
+	    echo "${d}_write.max 2000"
+	    echo "${d}_write.min 0"
+	    echo "${d}_write.negative ${d}_read"
+	done
+    fi
+    exit 0
+fi
+
+if $oldformat; then
+    /usr/sbin/iostat -I -x | awk '
+/^device/ { next; }
+{
+    print $1 "_io.value " int($5);
+}
+'
+else
+    /usr/sbin/iostat -I -x | awk '
+/^device/ { next; }
+{
+    print $1 "_read.value " int($5);
+    print $1 "_write.value " int($9);
+}
+'
+fi

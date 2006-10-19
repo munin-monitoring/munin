@@ -1,4 +1,5 @@
 # Gnu make only.  Seriously.
+# $Id$
 
 # Defaults/paths from this file
 include Makefile.config

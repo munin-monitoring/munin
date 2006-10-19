@@ -1,0 +1,76 @@
+#!/bin/sh
+#
+# Script to monitor disk usage.
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#
+# $Log: df.in,v $
+# Revision 1.1.1.1  2006/06/04 20:53:57  he
+# Import the client version of the Munin system monitoring/graphing
+# tool -- project homepage is at http://munin.sourceforge.net/
+#
+# This package has added support for NetBSD, via a number of new plugin
+# scripts where specific steps needs to be taken to collect information.
+#
+# I also modified the ntp_ plugin script to make it possible to not
+# plot the NTP poll delay, leaving just jitter and offset, which IMO
+# produces a more telling graph.
+#
+#
+#
+# Magic markers (optional - used by munin-config and installation
+# scripts):
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+MAXLABEL=20
+
+TYPES=noprocfs,devfs,fdescfs,ptyfs,kernfs,nfs
+
+
+if [ "$1" = "autoconf" ]; then
+	echo yes
+	exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Filesystem usage (in %)'
+	echo 'graph_args --upper-limit 100 -l 0'
+	echo 'graph_vlabel %'
+	echo 'graph_category disk'
+	echo 'graph_info This graph shows disk usage on the machine.'
+	mfs=0
+	/bin/df -P -t $TYPES | tail +2 | grep -v "//" | while read i; do
+		case $i in
+		mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
+		*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
+		esac
+		echo -n "$name.label "
+		echo $i | awk "{
+			dir=\$6;
+			if (length(dir) <= $MAXLABEL)
+				print dir
+			else
+				printf (\"...%s\n\", substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3))
+			print \"$name.info \" \$6 \" -> \" \$1;
+			}"
+		echo "$name.warning 92"
+		echo "$name.critical 98"
+	done
+	exit 0
+fi
+
+mfs=0
+/bin/df -P -t $TYPES | tail +2 | grep -v "//" | while read i; do
+	case $i in
+	mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
+	*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
+	esac
+	echo -n "$name.value "
+	echo $i | awk '{ print $5 }' | cut -f1 -d%
+done

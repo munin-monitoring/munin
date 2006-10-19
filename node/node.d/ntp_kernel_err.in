@@ -1,0 +1,43 @@
+#! /bin/sh
+#
+# $Id: ntp_kernel_err.in,v 1.1.1.1 2006/06/04 20:53:57 he Exp $
+#
+# Plugin to monitor the estimated error for the kernel NTP
+# status.
+#
+# Usage: Link or copy into /etc/munin/node.d/
+#
+# Magic markers (optional - only used by munin-config and some
+# installation scripts):
+#
+#%# family=manual
+#%# capabilities=autoconf
+
+# If run with the "autoconf"-parameter, give our opinion on wether we
+# should be run on this system or not. This is optinal, and only used by
+# munin-config. In the case of this plugin, we should most probably
+# always be included.
+
+if [ "$1" = "autoconf" ]; then
+    if ntpdc -c help >/dev/null 2>&1; then
+	echo yes
+	exit 0
+    else
+	echo no
+	exit 1
+    fi
+fi
+
+if [ "$1" = "config" ]; then
+    echo 'graph_title NTP kernel PLL estimated error (secs)'
+#    echo 'graph_args --logarithmic'
+    echo 'graph_vlabel est. err (secs)'
+    echo 'graph_category other'
+    echo 'graph_info The kernels estimated error for the phase-locked loop used by NTP'
+    echo 'ntp_err.label est-error'
+    echo 'ntp_err.info Estimated error for the kernel PLL'
+    exit 0
+fi
+
+echo -n 'ntp_err.value '
+ntpdc -c kern | awk '/^estimated error:/ { print $3 }'

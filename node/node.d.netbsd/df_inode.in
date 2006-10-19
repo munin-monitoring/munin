@@ -1,0 +1,91 @@
+#!/bin/sh
+#
+# Plugin to monitor inode-usage.
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#
+# $Log: df_inode.in,v $
+# Revision 1.1.1.1  2006/06/04 20:53:57  he
+# Import the client version of the Munin system monitoring/graphing
+# tool -- project homepage is at http://munin.sourceforge.net/
+#
+# This package has added support for NetBSD, via a number of new plugin
+# scripts where specific steps needs to be taken to collect information.
+#
+# I also modified the ntp_ plugin script to make it possible to not
+# plot the NTP poll delay, leaving just jitter and offset, which IMO
+# produces a more telling graph.
+#
+#
+#
+#
+# Magic markers (optional - used by munin-config and installation
+# scripts):
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+MAXLABEL=20
+
+TYPES=noprocfs,devfs,fdescfs,ptyfs,kernfs,nfs
+
+print_values() {
+    mfs=0
+    /bin/df -P -i -t $TYPES | tail +2 | grep -v "//" | \
+    while read i; do
+	case $i in
+	    mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
+	    *) name=`echo $i | awk '{
+		gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'`
+		;;
+	esac
+	echo -n "$name.value "
+	echo $i | awk '{ print $8 }' | cut -f1 -d%
+    done
+}
+
+if [ "$1" = "autoconf" ]; then
+    if [ "`print_values`" = "" ] ; then
+	echo no
+	exit 1
+    else
+	echo yes
+	exit 0
+    fi
+fi
+
+if [ "$1" = "config" ]; then
+
+    echo 'graph_title Inode usage (in %)'
+    echo 'graph_args --upper-limit 100 -l 0'
+    echo 'graph_vlabel %'
+    echo 'graph_category disk'
+    echo 'graph_info This graph shows the inode usage for the partitions of types that use inodes.'
+    /bin/df -P -i -t $TYPES | tail +2 | grep -v "//" | awk "
+		BEGIN {
+		    mfs = 0
+		}
+		{
+		    name = \$1
+		    dir = \$9
+		    if (\$1 ~ /^mfs:/) {
+			name = \"mfs\" mfs
+			mfs = mfs + 1
+		    } else {
+			gsub(/[^a-zA-Z0-9_]/, \"_\", name)
+		    }
+		    if (length(dir) <= $MAXLABEL)
+			print name \".label \" dir
+		    else
+			printf (\"%s.label ...%s\n\", name, substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3))
+			print name \".info \" dir \" -> \" name
+			print name \".warning 92\"
+			print name \".critical 98\"
+		 }"
+    exit 0
+fi
+
+print_values

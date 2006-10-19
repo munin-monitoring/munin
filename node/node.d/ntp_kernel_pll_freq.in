@@ -1,0 +1,50 @@
+#! /bin/sh
+#
+# $Id: ntp_kernel_pll_freq.in,v 1.1.1.1 2006/06/04 20:53:57 he Exp $
+#
+# Plugin to monitor the kernel's PLL frequency for the NTP
+# status.
+#
+# Usage: Link or copy into /etc/munin/node.d/
+#
+# Magic markers (optional - only used by munin-config and some
+# installation scripts):
+#
+#%# family=manual
+#%# capabilities=autoconf
+
+# If run with the "autoconf"-parameter, give our opinion on wether we
+# should be run on this system or not. This is optinal, and only used by
+# munin-config. In the case of this plugin, we should most probably
+# always be included.
+
+if [ "$1" = "autoconf" ]; then
+    if ntpdc -c help >/dev/null 2>&1; then
+	echo yes
+	exit 0
+    else
+	echo no
+	exit 1
+    fi
+fi
+
+if [ -f @@CONFDIR@@/ntp-freq-comp ]; then
+    fcomp=`cat @@CONFDIR@@/ntp-freq-comp`
+else
+    fcomp=0
+fi
+
+if [ "$1" = "config" ]; then
+    echo 'graph_title NTP kernel PLL frequency (ppm +' ${fcomp}')'
+#    echo 'graph-args --logarithmic'
+    echo 'graph_args --alt-autoscale'
+    echo 'graph_vlabel PLL frequency (ppm +' ${fcomp}')'
+    echo 'graph_category other'
+    echo 'graph_info The frequency for the kernel phase-locked loop used by NTP'
+    echo 'ntp_pll_freq.label pll-freq'
+    echo 'ntp_pll_freq.info Phase-locked loop frequency in parts per million'
+    exit 0
+fi
+
+echo -n 'ntp_pll_freq.value '
+ntpdc -c kern | awk -v fcomp=$fcomp '/^pll frequency:/ { print $3 + fcomp }'

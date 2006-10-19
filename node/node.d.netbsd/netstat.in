@@ -1,0 +1,94 @@
+#!/bin/sh
+#
+# Plugin to monitor network connections.
+#
+# Parameters:
+#
+# 	config   (required)
+# 	autoconf (optional - only used by munin-config)
+#
+# $Log: netstat.in,v $
+# Revision 1.1.1.1  2006/06/04 20:53:57  he
+# Import the client version of the Munin system monitoring/graphing
+# tool -- project homepage is at http://munin.sourceforge.net/
+#
+# This package has added support for NetBSD, via a number of new plugin
+# scripts where specific steps needs to be taken to collect information.
+#
+# I also modified the ntp_ plugin script to make it possible to not
+# plot the NTP poll delay, leaving just jitter and offset, which IMO
+# produces a more telling graph.
+#
+#
+#
+#
+# Magic markers (optional - used by munin-config and some installation
+# scripts):
+#%# family=auto
+#%# capabilities=autoconf
+
+
+
+if [ "$1" = "autoconf" ]; then
+	if ( netstat -s 2>/dev/null >/dev/null ); then
+		echo yes
+		exit 0
+	else
+		if [ $? -eq 127 ]
+		then
+			echo "no (netstat program not found)"
+			exit 1
+		else
+			echo no
+			exit 1
+		fi
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Netstat'
+	echo 'graph_args -l 0 --base 1000'
+	echo 'graph_vlabel active connections per ${graph_period}'
+	echo 'graph_category network'
+	echo 'graph_period second'
+	echo 'graph_info This graph shows the TCP activity of all the network interfaces combined.'
+
+	echo 'active.label active'
+	echo 'active.type DERIVE'
+	echo 'active.min 0'
+	echo 'active.max 50000'
+	echo 'active.info The number of active TCP openings per second.'
+
+	echo 'passive.label passive'
+	echo 'passive.type DERIVE'
+	echo 'passive.min 0'
+	echo 'passive.max 50000'
+	echo 'passive.info The number of passive TCP openings per second.'
+
+	echo 'failed.label failed'
+	echo 'failed.type DERIVE'
+	echo 'failed.min 0'
+	echo 'failed.max 50000'
+	echo 'failed.info The number of failed TCP connection attempts per second.'
+
+	echo 'resets.label resets'
+	echo 'resets.type DERIVE'
+	echo 'resets.min 0'
+	echo 'resets.max 50000'
+	echo 'resets.info The number of TCP connection resets.'
+
+	echo 'established.label established'
+	echo 'established.type DERIVE'
+	echo 'established.min 0'
+	echo 'established.max 50000'
+	echo 'established.info The number of currently open connections.'
+	exit 0
+fi
+
+netstat -s | awk '
+/connection requests/     { print "active.value " $1 }
+/connection accepts/      { print "passive.value " $1 }
+/bad connection/          { print "failed.value " $1 }
+/reset/                   { print "resets.value " $1 }
+/connections established/ { print "established.value " $1 }'
