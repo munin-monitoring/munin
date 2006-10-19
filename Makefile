@@ -145,8 +145,8 @@ install-node-plugins: build $(PLUGINS) Makefile Makefile.config
 		test "$$family" || family=contrib;                     \
 		if echo $(INSTALL_PLUGINS) |                           \
 		   grep $$family >/dev/null; then 	               \
-			test -f "$(LIBDIR)/plugins/`basename $$p`"     \
-			|| $(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;  \
+			echo installing $$p;                           \
+			$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;     \
 		fi;                                                    \
 	    fi                                                         \
 	done

@@ -1,8 +1,10 @@
-Munin consists of the main programs, and a node. The node runs on each of
-the machines you want to collect data from. The main programs does the
-collecting, draws the graphs, and creates the HTML pages.
+Munin consists of the main (central server) programs, and the node
+program.  The node runs on each of the machines you want to collect
+data from. The main programs does the collecting, draws the graphs,
+and creates the HTML pages.
 
-To install the main programs:
+To install the main programs (you might want to install a node first,
+that way there is data to collect):
 
 	- edit Makefile.config
 	- create the user "munin"
@@ -14,8 +16,9 @@ To install the main programs:
 	  command.  Check that authentication is required, if it's not 
 	  please refer to build/resources/apache-passwd.conf.
 
-	  If you prefer that munin be openly available remove the
-	  .htaccess file.
+	  If you prefer that munin be openly available make the
+	  .htaccess file empty ( : >.htaccess ) - that way it will
+	  not be overwritten later.
 
           If you already have a .htaccess file it will not be
           overwritten.
@@ -39,8 +42,11 @@ To install a node:
 
 	- edit Makefile.config
 	- create the group "munin"
-	- make install-node install-node-plugins
-	- decide which plugins to use (quick auto-plug-and-play
+	- make install-node install-node-plugins (NOTE: This installs
+	  all plugins in the distribution, no matter what you already
+	  have, if you want to save some plugins you've installed yourself
+	  or have customized please make a backup copy).
+	- decide which plugins to use.  The quick auto-plug-and-play
           solution: "munin-node-configure --shell | sh")
 	- start the node agent. You probably want an init-script for
           this and you might find a good one under build/dists

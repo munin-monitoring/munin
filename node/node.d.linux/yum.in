@@ -11,8 +11,6 @@
 #%# capabilities=autoconf
 use strict;
 
-# Make sure the locale is sane
-$ENV{'LC_ALL'} = 'C';
 my $statefile = '@@PLUGSTATE@@/yum.state';
 
 sub update {
@@ -22,7 +20,7 @@ sub update {
 
     open my $state, '>', $statefile
 	or die "Can't open $statefile for writing: $!\n";
-    
+
     open my $yum, '-|', 'yum list updates'
 	or die "Can't run 'yum list updates': $!";
 
@@ -44,9 +42,11 @@ sub autoconf {
     my $ret = system('yum --version >/dev/null 2>/dev/null');
     if ($ret == 0) {
 	print "yes\n";
+	exit 0;
     }
     else {
-	print "no (can't run yum)\n";
+	print "no\n";
+	exit 1;
     }
 }
 
@@ -62,7 +62,7 @@ sub report {
 
     open my $state, '<', $statefile
 	or die "Can't open $statefile for reading: $!\n";
-    
+
     chomp(@packages = <$state>);
     close $state;
 
