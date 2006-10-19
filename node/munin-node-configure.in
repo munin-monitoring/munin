@@ -1,6 +1,7 @@
 #!@@PERL@@ -w
+# -*- perl -*-
 #
-# Copyright (C) 2004 Jimmy Olsen
+# Copyright (C) 2003-2006 Jimmy Olsen
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -45,6 +46,7 @@ my $do_usage   = 0;
 my $do_error   = 0;
 my $do_version = 0;
 my $newer      = undef;
+my $debugopt   =''; # Pass --debug to children or not
 
 $do_error = 1 unless GetOptions (
 	"help"            => \$do_usage,
@@ -96,7 +98,7 @@ if ($do_version)
 munin-node-configure (munin-node) version $version.
 Written by Jimmy Olsen
 
-Copyright (C) 2003-2005 Jimmy Olsen
+Copyright (C) 2003-2006 Jimmy Olsen
 
 This is free software released under the GNU General Public License. There
 is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -112,6 +114,8 @@ if (defined $newer and (!$shell or $removes))
     print "Fatal: --newer only supported along with --shell.\n";
     exit 2;
 }
+
+$debugopt='--debug' if $debug;
 
 if (!@families)
 {
@@ -286,6 +290,7 @@ if (@families)
     }
 }
 
+
 if (@snmp and $shell)
 {
     if (-x "$bindir/munin-node-configure-snmp")
@@ -453,6 +458,9 @@ sub get_plugins
 		$path = readlink($path) and $path = $path =~ /^\// ? $path : "$dir/$path" while -l $path;
 		next unless -f $path;
 		next unless -x _;
+		next if $plug =~ /~$/;    # Emacs droppings
+		next if $plug =~ /.bak$/; # Backup file
+		next if $plug =~ /.swp$/; # Vi droppings
 
 		next if $plug =~ /^\./;
 
@@ -493,65 +501,66 @@ sub get_plugins
 			next;
 		}
 
-		if ($ps->{$plug}->{'capability'}->{'autoconf'})
-		{
+		if ($ps->{$plug}->{'capability'}->{'autoconf'})	{
+
+		    my @cmd=("$bindir/munin-run");
+		    push(@cmd,$debugopt) if $debug;
+		    push(@cmd,"--servicedir",$libdir, $plug, "autoconf");
+
+		    print "\nRunning: ",join(' ',@cmd),"\n" if $debug;
+
+		    my $fork = open (PLUG, "-|");
+
+		    if ($fork == -1) {
+			die "ERROR: Unable to fork: $!"
+		    } elsif ($fork == 0) { # Child
+#			close (STDERR);
+#			open (STDERR, ">&STDOUT");
+			exec (@cmd);
+		    } else {
+			$ps->{$plug}->{'defaultreason'} =
+			  join (' ', map {chomp; $_} <PLUG>);
+		    }
+		    close (PLUG);
+		    if ($?) {
+			$ps->{$plug}->{'default'} = "no";
+		    } else {
+			$ps->{$plug}->{'default'} = "yes";
+		    }
+		    print $ps->{$plug}->{'default'}, ":",
+		      $ps->{$plug}->{'defaultreason'}, "..."
+			if $debug;
+		}
+
+		if ($ps->{$plug}->{'capability'}->{'suggest'}) {
+		    if (exists $ps->{$plug}->{'default'} and
+			$ps->{$plug}->{'default'} eq "yes") {
+
+			my @cmd=("$bindir/munin-run");
+			push(@cmd,$debugopt) if $debug;
+			push(@cmd,"--servicedir",$libdir, $plug, "suggest");
+
+			print "\nRunning: ",join(' ',@cmd),"\n" if $debug;
+
 			my $fork = open (PLUG, "-|");
 
-			if ($fork == -1)
-			{
-				die "ERROR: Unable to fork: $!"
-			}
-			elsif ($fork == 0) # Child
-			{
-				close (STDERR);
-				open (STDERR, ">&STDOUT");
-				exec ("$bindir/munin-run", "--servicedir", $libdir, $plug, "autoconf");
-			}
-			else
-			{
-				$ps->{$plug}->{'defaultreason'} = join (' ', map {chomp; $_} <PLUG>);
+			if ($fork == -1) {
+			    die "ERROR: Unable to fork: $!"
+			} elsif ($fork == 0) { # Child
+			    exec (@cmd);
+			} else {
+			    push (@{$ps->{$plug}->{'suggest'}},
+				  split (/\s+/,
+					 join (' ', map {chomp; $_} <PLUG>)));
 			}
 			close (PLUG);
-			if ($?)
-			{
-				$ps->{$plug}->{'default'} = "no";
+			if ($?) {
+			    $ps->{$plug}->{'suggest'} = "";
 			}
-			else
-			{
-				$ps->{$plug}->{'default'} = "yes";
-			}
-			print $ps->{$plug}->{'default'}, ":", $ps->{$plug}->{'defaultreason'}, "..." if $debug;
+			print join (' ', @{$ps->{$plug}->{'suggest'}})
+			  if $debug;
+		    }
 		}
-
-		if ($ps->{$plug}->{'capability'}->{'suggest'})
-		{
-			if (exists $ps->{$plug}->{'default'} and
-					$ps->{$plug}->{'default'} eq "yes")
-			{
-				my $fork = open (PLUG, "-|");
-
-				if ($fork == -1)
-				{
-					die "ERROR: Unable to fork: $!"
-				}
-				elsif ($fork == 0) # Child
-				{
-					exec ("$bindir/munin-run", "--servicedir", $libdir, $plug, "suggest");
-				}
-				else
-				{
-					push (@{$ps->{$plug}->{'suggest'}}, split (/\s+/, join (' ', map {chomp; $_} <PLUG>)));
-				}
-				close (PLUG);
-				if ($?)
-				{
-					$ps->{$plug}->{'suggest'} = "";
-				}
-				print join (' ', @{$ps->{$plug}->{'suggest'}}) if $debug;
-
-			}
-		}
-
 		print "\n" if $debug;
 	}
 	return $ps;
@@ -660,7 +669,7 @@ None known.
 
 =head1 COPYRIGHT
 
-Copyright © 2003 Jimmy Olsen
+Copyright © 2003-2006 Jimmy Olsen
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
