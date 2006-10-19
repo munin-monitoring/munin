@@ -150,6 +150,9 @@ install-node-plugins: build $(PLUGINS) Makefile Makefile.config
 		fi;                                                    \
 	    fi                                                         \
 	done
+	-mkdir -p $(PLUGSTATE)
+	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
+	$(CHMOD) 0664 $(PLUGSTATE)
 	$(INSTALL) -m 0644 build/node/plugins.history $(LIBDIR)/plugins/
 
 uninstall-node-plugins: build $(PLUGINS)
