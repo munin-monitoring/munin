@@ -1,36 +1,40 @@
-# MAINTAINER VERSION OF Makefile.config
-# -*- Makefile -*-
+# This is the Makefile.config file to use for a "clean" distribution.
 #
-# This file is rigged to overwrite the a debian munin-package as that
-# is what janl uses.
-#
-# $Id$
-
 # This file specifies where Munin will look for things after you've
 # run 'make' in the source directory.  Modify it to suit your needs.
 
 # DESTDIR is empty during building, and optionally set to point to
 # a shadow tree during make install.
 
-# Include the default config
-include Makefile.config-dist
+#
+# the base of the Munin installation.
+# 
+PREFIX     = $(DESTDIR)/opt/munin
 
-# Then override
+# Where Munin keeps its configurations (server.conf, client.conf, ++)
+CONFDIR    = $(DESTDIR)/etc/opt/munin
 
-PREFIX     = $(DESTDIR)/usr
-CONFDIR    = $(DESTDIR)/etc/munin
-DOCDIR     = $(PREFIX)/share/doc/munin
-MANDIR     = $(PREFIX)/share/man
+# Server only - where to put munin-cron
+BINDIR     = $(PREFIX)/bin
+
+# Client only - where to put munin-node, munin-node-configure, and munin-run
+SBINDIR    = $(PREFIX)/sbin
+
+# Where to put text and html documentation
+DOCDIR     = $(PREFIX)/doc
+
+# Where to put man pages
+MANDIR     = $(PREFIX)/man
 
 # Where to put internal binaries and plugin repository
-LIBDIR     = $(PREFIX)/share/munin
+LIBDIR     = $(PREFIX)/lib
 
 # Server only - Output directory
-HTMLDIR    = /var/www/munin
-CGIDIR     = $(HTMLDIR)/../cgi
+HTMLDIR    = $(PREFIX)/var/www
+CGIDIR     = $(HTMLDIR)/cgi
 
 # Client only - Where to put RRD files and other intenal data
-DBDIR      = $(DESTDIR)/var/lib/munin
+DBDIR      = $(DESTDIR)/var/opt/munin
 
 # Client only - Where plugins should put their states. Must be writable by
 # group "munin", and should be preserved between reboots

@@ -25,6 +25,12 @@ install: install-main install-node install-node-plugins install-man
 
 uninstall: uninstall-main
 
+# This removes the installed config so that the next install-pass installs
+# a new config.  Target suitable for maintainers
+unconfig:
+	rm -f $(HTMLDIR)/.htaccess
+	rm -f $(CONFDIR)/munin.conf
+
 install-main: build
 	$(CHECKUSER)
 	mkdir -p $(CONFDIR)/templates
@@ -40,14 +46,15 @@ install-main: build
 
 	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR) $(RUNDIR) $(HTMLDIR) $(DBDIR)
 
-	for p in build/server/*.tmpl; do    		              \
+	for p in build/server/*.tmpl; do    		         \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
 	done
 	$(INSTALL) -m 0644 server/logo.png $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/style.css $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/definitions.html $(CONFDIR)/templates/
-	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/server/munin-htaccess $(HTMLDIR)/.htaccess
 	$(INSTALL) -m 0755 server/VeraMono.ttf $(LIBDIR)/
+	$(INSTALL) -m 0644 resources/favicon.ico $(HTMLDIR)/
+	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/server/munin-htaccess $(HTMLDIR)/.htaccess
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/server/munin.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/server/munin-cron $(BINDIR)/
 	$(INSTALL) -m 0755 build/server/munin-update $(LIBDIR)/
@@ -91,6 +98,9 @@ uninstall-main: build
 install-node: build install-node-non-snmp install-node-snmp
 	echo Done.
 
+uninstall-node: uninstall-node-non-snmp uninstall-node-snmp
+	echo Undone.
+
 install-node-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(SBINDIR)/
 
@@ -119,14 +129,11 @@ install-node-non-snmp: build
 	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
 
-
 uninstall-node-non-snmp: build
 	rm -f $(SBINDIR)/munin-node 
 	rm -f $(SBINDIR)/munin-node-configure
 	rm -f $(CONFDIR)/munin-node.conf 
 	rm -f $(SBINDIR)/munin-run
-
-
 	-rmdir $(CONFDIR)/plugin-conf.d
 	-rmdir $(CONFDIR)
 	-rmdir $(SBINDIR)
@@ -172,21 +179,24 @@ uninstall-man: build-man
 	rm -f $(MANDIR)/man5/munin-node.conf.5 
 	rm -f $(MANDIR)/man5/munin.conf.5 
 	rm -f $(MANDIR)/man8/munin-node.8
-	$(INSTALL) -m 0644 build/doc/munin-node-configure.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-node-configure-snmp.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-run.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-graph.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-update.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-limits.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-html.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-cron.8 $(MANDIR)/man8/
-	mkdir -p $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8
+	rm -f $(MANDIR)/man8/munin-node-configure.8 
+	rm -f $(MANDIR)/man8/munin-node-configure-snmp.8
+	rm -f $(MANDIR)/man8/munin-run.8
+	rm -f $(MANDIR)/man8/munin-graph.8 
+	rm -f $(MANDIR)/man8/munin-update.8 
+	rm -f $(MANDIR)/man8/munin-limits.8
+	rm -f $(MANDIR)/man8/munin-html.8
+	rm -f $(MANDIR)/man8/munin-cron.8 
+	-rmdir $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8 $(MANDIR)
 
 install-doc: build-doc
-	mkdir -p $(DOCDIR)
+	mkdir -p $(DOCDIR)/resources
 	$(INSTALL) -m 0644 README $(DOCDIR)/
 	$(INSTALL) -m 0644 COPYING $(DOCDIR)/
 	$(INSTALL) -m 0644 build/resources/* $(DOCDIR)/resources
+
+uninstall-doc: build-doc
+	rm -rf $(DOCDIR)
 
 build: build-stamp
 
@@ -248,11 +258,13 @@ build-man-stamp: build Makefile Makefile.config
 
 
 deb:
+	(! grep MAINTAINER Makefile.config)
 	-rm debian
 	-ln -s dists/debian
 	fakeroot debian/rules binary
 
 rpm-pre:
+	(! grep MAINTAINER Makefile.config)
 	@for file in `find dists/redhat/ -type f -name '*.in'`; do			\
 		destname=`echo $$file | sed 's/.in$$//'`;		\
 		echo Generating $$destname..;				\
@@ -271,6 +283,7 @@ rpm-src: rpm-pre
 	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
 
 suse-pre:
+	(! grep MAINTAINER Makefile.config)
 	@for file in `find dists/suse/ -type f -name '*.in'`; do                \
 		destname=`echo $$file | sed 's/.in$$//'`;               \
 		echo Generating $$destname..;                           \
@@ -305,8 +318,10 @@ endif
 	-rm -f dists/suse/munin.spec
 
 source_dist: clean
-	(cd ..; ln -s $(DIR) munin-$(VERSION))
+	(! grep MAINTAINER Makefile.config)
+	(cd .. && ln -s $(DIR) munin-$(VERSION))
 	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
+	(cd .. && rm munin-$(VERSION))
 
 ifeq ($(MAKELEVEL),0)
 # Re-exec make with the test config
