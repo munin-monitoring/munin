@@ -1,7 +1,7 @@
 This is a pre-release checklist for the maintainer.
 
+ * Does make node-monkeywrench run without abnormal abortions?
  * Is .htaccess installed?
  * rm -f /etc/munin/plugins/* 
       Does munin-node-configure -d show any autoconf errors?
- * 
  

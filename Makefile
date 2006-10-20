@@ -339,6 +339,15 @@ test: t/*.t t/install $(addprefix $(CONFDIR)/plugins/,$(test_plugins))
 	done
 endif
 
+node-monkeywrench: install-node
+	rm -rf $(CONFDIR)/plugins
+	rm -rf $(LIBDIR)/plugins
+	mkdir -p $(LIBDIR)/plugins
+	mkdir -p $(CONFDIR)/plugins
+	cp monkeywrench/plugin-break*_ $(LIBDIR)/plugins/
+	$(SBINDIR)/munin-node-configure --suggest
+	echo 'Done?'
+
 t/install: 
 	$(MAKE) clean install-node install-node-plugins CONFIG=t/Makefile.config INSTALL_PLUGINS=test
 
