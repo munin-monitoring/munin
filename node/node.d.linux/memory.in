@@ -106,8 +106,12 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	{
 		print "committed.label committed\n";
 		print "committed.draw LINE2\n";
-		print "committed.warning ", $mems{'SwapTotal'} + $mems{'MemTotal'}, "\n";
-		print "committed.info The amount of memory that would be used if all the memory that's been allocated were to be used.\n";
+		# Linux machines frequently overcommit - this is not a
+		# error condition or even worrying.  But sometimes
+		# overcommit shows memory leaks so we want to graph
+		# it.
+		# print "committed.warning ", $mems{'SwapTotal'} + $mems{'MemTotal'}, "\n";
+		print "committed.info The amount of memory allocated by the kernel to programs. Overcommitting is normal, but may indicate memory leaks.\n";
 	}
 	if (exists $mems{'Mapped'})
 	{
