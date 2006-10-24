@@ -12,9 +12,13 @@
 #
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
-#%# family=manual
+#%# family=auto
 #%# capabilities=autoconf
-
+#
+# NOTE: MUST RUN AS ROOT.
+# @@CONFDIR@@/plugin-conf.d/global or other file in that dir must contain:
+# [fw*]
+#      user root
 
 
 if [ "$1" = "autoconf" ]; then

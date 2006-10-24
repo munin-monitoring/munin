@@ -13,6 +13,8 @@
 #
 #       amavislog    - file where amavis logs are written
 #
+# #%# family=auto
+# #%# capabilities=autoconf
 
 mktempfile () {
 @@MKTEMP@@

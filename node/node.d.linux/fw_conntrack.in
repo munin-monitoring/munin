@@ -10,6 +10,11 @@
 #    config
 #    autoconf
 #
+# NOTE: MUST RUN AS ROOT.
+# @@CONFDIR@@/plugin-conf.d/global or other file in that dir must contain:
+# [fw*]
+#      user root
+#
 # Bugs:
 #    The connections tables can run full, but where is the limits found?
 #    If we can find them then we can send warnings to nagios.
@@ -30,7 +35,7 @@
 # NATed will almost always be the same as the total
 #
 # Magic markers?
-#%# family=manual
+#%# family=auto
 #%# capabilities=autoconf
 
 case $1 in

@@ -47,7 +47,9 @@ To install a node:
 	  have, if you want to save some plugins you've installed yourself
 	  or have customized please make a backup copy).
 	- decide which plugins to use.  The quick auto-plug-and-play
-          solution: "munin-node-configure --shell | sh")
+          solution: 
+            munin-node-configure --shell --families=contrib,auto | sh -x
+
 	- start the node agent. You probably want an init-script for
           this and you might find a good one under build/dists
 

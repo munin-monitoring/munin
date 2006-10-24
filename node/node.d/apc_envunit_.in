@@ -15,9 +15,12 @@
 #       oid       - OID Prefix for humidity probes
 #       community - Community to use to access the APC unit
 #
-
+# #%# family=auto
+# #%# capabilities=autoconf
 #
 # Configuration for temperature or humidity probes 
+#
+# FIXME: Candidate to be snmp__apc
 #
 
 type=`echo $0 | sed -e 's/.*_\(.*\)/\1/'`

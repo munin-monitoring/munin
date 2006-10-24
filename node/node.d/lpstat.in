@@ -12,8 +12,8 @@
 #                                                                           #
 #############################################################################
 #
-# %#% family=auto
-# %#% capabilities=autoconf
+# #%# family=auto
+# #%# capabilities=autoconf
 
 use strict;
 use Getopt::Std;

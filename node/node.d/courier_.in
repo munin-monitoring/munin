@@ -26,7 +26,6 @@
 #
 # courierpop3login:
 # Jan 22 06:28:24 raven courierpop3login: Connection, ip=[::ffff:192.168.0.1]
-5B
 # Jan 22 06:48:22 raven courierpop3login: DISCONNECTED, user=someuser, ip=[::ffff:192.168.0.1], top=0, retr=0, time=21
 # Jan 22 06:28:24 raven courierpop3login: LOGIN, user=someuser, ip=[::ffff:192.168.0.1]
 # Jan 22 06:28:25 raven courierpop3login: LOGOUT, user=someuser, ip=[::ffff:192.168.0.1], top=0, retr=0, time=0
@@ -46,7 +45,9 @@ case $1 in
     autoconf|detect)
     if [ -f ${COURIER_LOG} -a -x ${LOGTAIL} ] 
     then
-	echo yes
+	# Makes no sense for wildcard plugin to autoconf to yes
+	# unless you can provide suggestions.
+	echo no
 	exit 0
     else
 	echo "no (either $COURIER_LOG was not found, or logtail was not in your path)"

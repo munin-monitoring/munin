@@ -126,8 +126,9 @@ if (defined $newer and (!$shell or $removes))
     exit 2;
 }
 
-if (!@families)
-{
+if (@families) {
+    @families = split /,/ , $families[0];
+} else {
     if (@snmp)
     {
 	@families = ();

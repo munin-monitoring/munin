@@ -15,8 +15,10 @@
 statefile=@@PLUGSTATE@@/plugin-fah_wu.state
 
 if [ "$1" = "autoconf" ]; then
-    echo yes
-    exit 0
+    # Didn't check anything
+    # echo yes
+    echo no
+    exit 1
 fi
 
 if [ "$1" = "config" ]; then
