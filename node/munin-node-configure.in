@@ -48,10 +48,12 @@ my $do_version = 0;
 my $newer      = undef;
 my $debugopt   = '--debug'; # Pass --debug to children or not
 my @errors     = ();
+my $exiterror  = 1;
 
 $do_error = 1 unless GetOptions (
 	"help"            => \$do_usage,
 	"shell!"          => \$shell,
+        "exitnoterror!"   => \$exiterror,
 	"debug!"          => \$debug,
 	"suggest!"        => \$suggest,
 	"config=s"        => \$config,
@@ -81,6 +83,7 @@ Options:
 	--families <family,...>	Override families (", join(',',@afamilies),") [",join(',',@dfamilies),"]
 	--suggest		Show suggestions instead of status
 	--shell			Show shell commands (implies --suggest)
+        --exitnoterror          Do not consider non-zero exit-value as error
 	--remove-also		Also show rm-commands when doing --shell
 	--newer <version>	Only show suggestions related to plugins newer
 	                        than version <version>. [0.0.0]
@@ -509,7 +512,10 @@ sub get_plugins {
 	    next;
 	}
 
+
 	if ($ps->{$plug}->{'capability'}->{'autoconf'}) {
+
+	    my $gotjunk=0;  # Seen junk?
 
 	    my @cmd=("$bindir/munin-run");
 	    push(@cmd,$debugopt) if $debug;
@@ -528,37 +534,66 @@ sub get_plugins {
 	    } else {
 		# The join map we used here before was somehow
 		# fragile.  This construct is possible to
-		# debug.
+		# debug.L
 
 		my @pr = ();	# Plugin response
 
+		# IFF the plugin exits with non-zero exit code we will
+		# not use it no matter what. Instead we report it as
+		# an error.  This is to be able to tell a error free
+		# execution from a erronous one.
+		#
+		# Also, if the plugin outputs junk we handle that as
+		# an error.
+
 		while (<PLUG>) {
 		    chomp;
-		    if (m/^yes$/ or m/^no(.*)?$/) {
+		    if (m/^yes$/ or m/^no(\s+.*)?$/) {
 			# Some recognized response
 			print "# Got yes/no: $_\n" if $debug;
 			push(@pr,$_);
+		    } elsif (m/^#/) {
+			# Likely debug output from munin-run
+			print "# munin-run says: $_\n" if $debug;
 		    } else {
 			# Something else
-			push(@errors,"Got junk from $plug: $_");
+			push(@errors,"Got from $plug: $_");
 			print "# Got junk: $_\n" if $debug;
+			$gotjunk=1;
 		    }
 		}
 
 		$ps->{$plug}->{'defaultreason'}=join(' ',@pr);
+
+		# Do we have a yes?
+		if ($ps->{$plug}->{'defaultreason'} =~ m/yes/) {
+		    $ps->{$plug}->{'default'} = "yes"
+		} else {
+		    $ps->{$plug}->{'default'} = "no"
+		}
 	    }
 	    close (PLUG);
-	    if ($?) {
-		$ps->{$plug}->{'default'} = "no";
-	    } else {
-		$ps->{$plug}->{'default'} = "yes";
+	    my $pluges   = $?;
+	    my $plugexit = $?>>8;
+	    my $plugsig  = $? & 127;
+
+	    # Override to no if there were errors.
+	    if ($pluges and !$exiterror) {
+		push(@errors,
+		     "Non-zero exit value from $plug: $plugexit/$plugsig");
+		print "# Non-zero exit value from $plug: $plugexit/$plugsig\n"
+		  if $debug;
 	    }
-	    print "# ",$ps->{$plug}->{'default'}, ":",
-	      $ps->{$plug}->{'defaultreason'}, "..."
-		if $debug;
+	    if ($? or $gotjunk) {
+		$ps->{$plug}->{'default'} = "no";
+	    }
+	    print "# ",$ps->{$plug}->{'default'} if $debug;
 	}
 
 	if ($ps->{$plug}->{'capability'}->{'suggest'}) {
+
+	    my @sugg = ();
+
 	    if (exists $ps->{$plug}->{'default'} and
 		$ps->{$plug}->{'default'} eq "yes") {
 
@@ -582,7 +617,6 @@ sub get_plugins {
 		} else {
 		    # Fragile loop, blah blah (se above)
 
-		    my @sugg;
 
 		    while (<PLUG>) {
 			chomp;
@@ -595,17 +629,26 @@ sub get_plugins {
 			    push(@sugg,$_);
 			}
 		    }
-		    @{$ps->{$plug}->{'suggest'}} = @sugg;
 		}
 		close (PLUG);
 		if ($?) {
-		    @{$ps->{$plug}->{'suggest'}} = ();
+		    @sugg = ();
+		    print "# Plugin exit code: $? - voiding suggestions\n"
+			if $debug;
 		}
-		print "# Suggested: ",
-		  join (' ', @{$ps->{$plug}->{'suggest'}}),"\n"
-		    if $debug;
 
-		push(@errors,"ERROR: empty suggest from $plug");
+		@{$ps->{$plug}->{'suggest'}} = @sugg;
+
+		if ($debug) {
+		    print "# Suggested: ",
+		      join (' ', @{$ps->{$plug}->{'suggest'}}),"\n";
+		    
+		    print "# ERROR: empty suggest from $plug\n"
+			if !@sugg;
+		}
+
+		push(@errors,"ERROR: empty suggest from $plug")
+		    unless @sugg;
 	    }
 	}
 	print "\n" if $debug;

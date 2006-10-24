@@ -20,13 +20,14 @@ if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
 my $sun;
 $sun = 1 if (`uname -m` =~ /sparc/);
 
+my $in;
 my @cpus;
 my $cpus;
+
 if ($sun) {
     @cpus = grep (/^cpu\d+/, `cat /proc/stat`);
     $cpus = scalar @cpus;
 } else {
-    my $in;
     open $in, '<', '/proc/interrupts'
       or die "Can't open /proc/interrupts: $!\n";
     @cpus = split(' ', <$in>);
