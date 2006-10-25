@@ -13,6 +13,8 @@
 #%# family=auto
 #%# capabilities=autoconf
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 # FIXME: Rewrite the frikking mountpoint loops in awk
 
 if [ "$1" = "autoconf" ]; then
@@ -32,9 +34,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel %'
 	echo 'graph_scale no'
 	df -P -l  | sed 1d | grep -v "//" | sort | while read i; do
-		name=$(echo $i | 
-		    awk '{ n=$1; sub(/^\//,"",n); gsub(/[^A-Za-z0-9_]/,"_",n);
-                           print n; }')
+		name=$(clean_fieldname $(echo $i | awk '{ n=$1; print n; }'))
 		printf "$name.label "
 		echo $i | awk "{ print \$6 }"
 		echo "$name.warning 92"
@@ -44,9 +44,7 @@ if [ "$1" = "config" ]; then
 fi
 
 df -P -l | sed 1d | grep -v "//" | while read i; do
-	name=$(echo $i |
-	       awk '{ n=$1; sub(/^\//,"",n); gsub(/[^A-Za-z0-9_]/,"_",n);
-                      print n; }')
+	name=$(clean_fieldname $(echo $i | awk '{ n=$1; print n; }'))
 	printf "$name "
 	echo $i | awk '{ print $5 }' | cut -f1 -d%
 done

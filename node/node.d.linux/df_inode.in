@@ -1,14 +1,15 @@
 #!@@PERL@@
 # -*- perl -*-
 #
-# Plugin to monitor inode-usage. Rewrite based on original shell-based version
-# 
+# Plugin to monitor inode-usage. Rewrite based on original shell-based
+# version
+#
 # Parameters understood:
 #
 #       config   (required)
 #       autoconf (optional - used by munin-config)
 #
-# $Log$
+# $Id$
 #
 # Magic markers (optional - used by munin-config and installation
 # scripts):
@@ -17,6 +18,7 @@
 #%# capabilities=autoconf
 
 use strict;
+use Munin::Plugin;
 
 # Read /proc/mounts
 my %mounts;
@@ -40,13 +42,13 @@ sub print_values() {
 	# Parse the output
 	if ( /^(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)/ ) {
 	    my $fs=$mounts{$6};
-	    my $ps=$5;
-	    my $name=$1;
 	    next if $fs eq "reiserfs";
 
+	    my $ps=$5;
+	    my $name=clean_fieldname($1);
+
 	    $ps =~ s/\%//;
-	    $name =~ s/^\///;
-	    $name =~ s/[^A-Za-z0-9_]/_/g;
+
 	    print $name .  ".value  " . $ps . "\n";
 	}
     }
@@ -81,13 +83,12 @@ if ( $ARGV[0] eq "config" ) {
 	# Parse the output
 	if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
 	    my $fs=$mounts{$6};
+	    next if $fs eq "reiserfs";
+
 	    my $dir=$6;
-	    my $name=$1; 
+	    my $name=clean_fieldname($1);
 
 	    # Create and print labels
-	    $name =~ s/^\///;
-	    $name =~ s/[^A-Za-z0-9_]/_/g;
-	    next if $fs eq "reiserfs";
 	    print "$name.label $dir\n";
 	    print "$name.warning 92\n";
 	    print "$name.critical 98\n";

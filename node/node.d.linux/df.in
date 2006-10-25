@@ -2,13 +2,13 @@
 # -*- perl -*-
 #
 # Plugin to monitor disk usage. Rewrite based on original shell-based version
-# 
+#
 # Parameters understood:
 #
 #       config   (required)
 #       autoconf (optional - used by munin-config)
 #
-# $Log$
+# $Id$
 #
 # Magic markers (optional - used by munin-config and installation
 # scripts):
@@ -17,14 +17,10 @@
 #%# capabilities=autoconf
 
 use strict;
+use Munin::Plugin;
 
-# IFF anyone is to trunkate labels it's munin-graph.  Label trunkation
-# in plugins is the wrong place to put complexity.
-
-# my $MAXLABEL=25;
-
-# Read /proc/mounts
 my %mounts;
+
 open (MOUNTS,"/proc/mounts") or die "Could not /proc/mounts for reading.";
 while (<MOUNTS>) {
     # Does perl really not have any shorthand for this? I guess it has.
@@ -46,11 +42,9 @@ sub print_values() {
 	if ( /^(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)/ ) {
 	    my $fs=$mounts{$6};
 	    my $ps=$5;
-	    my $name=$1;
+	    my $name=clean_fieldname($1);
 
 	    $ps =~ s/\%//;
-	    $name =~ s/^\///;
-	    $name =~ s/[^A-Za-z0-9_]/_/g;
 	    print $name, ".value ", $ps, "\n";
 	}
     }
@@ -86,12 +80,10 @@ if ( $ARGV[0] eq "config" ) {
 	if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
 	    my $fs=$mounts{$6};
 	    my $dir=$6;
-	    my $name=$1;
+	    my $name=clean_fieldname($1);
 
 	    # Create and print labels
-	    $name =~ s/^\///;
-	    $name =~ s/[^A-Za-z0-9_]/_/g;
-	    print $name,  ".label ", $dir, "\n";
+	    print $name, ".label ", $dir, "\n";
 
 	    # FIXME: These ought to be tunable
 	    print "$name.warning 92\n";

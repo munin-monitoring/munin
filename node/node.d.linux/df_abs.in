@@ -10,17 +10,17 @@
 # Magic markers (optional - used by munin-config and installation
 # scripts):
 #
+# $Id$
+#
 #%# family=manual
 #%# capabilities=autoconf
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
 
 if [ "$1" = "autoconf" ]; then
 	echo yes
 	exit 0
 fi
-
-clean_name() {
-    echo "$@" | sed 's/[\/.-]/_/g; s/^_dev\(_mapper\)\?_//'
-}
 
 if [ "$1" = "config" ]; then
 
@@ -31,7 +31,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_total Total'
 	df -P -l -x none -x unknown | sed 1d | grep -v "//" | 
 	   while read dev size used avail cap mnt; do
-	       name="$(clean_name $dev)"
+	       name="$(clean_fieldname $dev)"
 	       echo "$name.label $mnt"
 	       echo "$name.cdef $name,1024,*"
 	       echo "$name.warning $((size * 92 / 100))"
@@ -42,5 +42,5 @@ fi
 
 df -P -l -x unknown  -x none | sed 1d | grep -v "//" | 
    while read dev size used avail cap mnt; do
-	echo "$(clean_name $dev).value $used"
+	echo "$(clean_fieldname $dev).value $used"
 done

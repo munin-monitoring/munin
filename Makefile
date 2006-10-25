@@ -156,12 +156,16 @@ install-node-plugins: build $(PLUGINS) Makefile Makefile.config
 	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
 	$(CHMOD) 0664 $(PLUGSTATE)
 	$(INSTALL) -m 0644 build/node/plugins.history $(LIBDIR)/plugins/
+	$(INSTALL) -m 0644 build/node/plugin.sh $(LIBDIR)/plugins/
+	mkdir -p $(PERLLIB)/Munin
+	$(INSTALL) -m 0644 build/node/Plugin.pm $(PERLLIB)/Munin/
 
 uninstall-node-plugins: build $(PLUGINS)
 	for p in build/node/node.d.$(OSTYPE)/* build/node/node.d/*; do \
 	    rm -f $(LIBDIR)/plugins/`basename $$p` \
 	done
 	rm -f $(LIBDIR)/plugins/plugins.history
+	rm -f $(LIBDIR)/plugins/plugin.sh
 
 #TODO:
 #configure plugins.
