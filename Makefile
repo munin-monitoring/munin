@@ -138,8 +138,10 @@ uninstall-node-non-snmp: build
 	-rmdir $(CONFDIR)
 	-rmdir $(SBINDIR)
 
+# ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE
+# GENERIC ONES
 install-node-plugins: build $(PLUGINS) Makefile Makefile.config
-	for p in build/node/node.d.$(OSTYPE)/* build/node/node.d/*; do \
+	for p in build/node/node.d/* build/node/node.d.$(OSTYPE)/* ; do \
 	    if test -f "$$p" ; then                                    \
 		family=`sed -n 's/^#%# family=\(.*\)$$/\1/p' $$p`;     \
 		test "$$family" || family=contrib;                     \
