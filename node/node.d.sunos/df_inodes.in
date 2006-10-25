@@ -2,12 +2,18 @@
 
 # Configuration variables
 #
-#   fs_df  - path to df executable (GNU df makes life easier)
+#   df  - path to df executable (GNU df makes life easier)
 #
-#%# family=manual
+#%# family=auto
+#%# capabilites=autoconf
 
-DF=${fs_df:-/usr/bin/df}
+DF=${df:-/usr/bin/df}
 TAIL=/usr/bin/tail
+
+if [ "$1" = 'autoconf' ]; then
+    echo yes
+    exit 0
+fi
 
 if $DF -P -l -i >/dev/null 2>&1; then
 	DF="$DF -P -l -i"
