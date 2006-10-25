@@ -9,6 +9,10 @@
 #       config   (required)
 #       autoconf (optional - used by munin-config)
 #
+# Environment
+#       exclude: space separated list if fs types to exclude.
+#                iso9660 by default
+#
 # $Id$
 #
 # Magic markers (optional - used by munin-config and installation
@@ -31,10 +35,13 @@ while (<MOUNTS>) {
 }
 close MOUNTS;
 
+my $exclude=$ENV{'exclude'} || 'iso9660';
+my $dfopts = "-P -l -i ".join(' -x ',split('\s+',$exclude));
+
 sub print_values() {
 
     # Read from df
-    open (DF,"/bin/df -P -l -i |") or die "Could not open pipe from /bin/df, $!";
+    open (DF,"df $dfopts |") or die "Could not open pipe from df: $!";
     <DF>; # Skip the header
     while (<DF>) {
 	next if /\/\//;
@@ -53,10 +60,11 @@ sub print_values() {
 	}
     }
     close DF;
+    die "Error executing df. Exit code $?\n" if $?;
 }
 
 if ( $ARGV[0] eq "autoconf" ) {
-  if (`perl $0` eq "" ) {
+  if (`@@PERL@@ $0` eq "" ) {
     print "no\n";
     exit 1;
   } else {
@@ -75,7 +83,7 @@ if ( $ARGV[0] eq "config" ) {
     print "graph_category disk\n";
 
     # Read from df
-    open (DF,"/bin/df -P -l -i  |") or die "Unable to open pipe from /bin/df";
+    open (DF,"df $dfopts |") or die "Unable to open pipe from df: $!";
     <DF>; # Skip the header
     while (<DF>) {
 	next if /\/\//;
@@ -95,6 +103,7 @@ if ( $ARGV[0] eq "config" ) {
 	}
     }
     close DF;
+    die "Error executing df. Exit code $?\n" if $?;
     exit 0;
 }
 
