@@ -29,9 +29,13 @@ if [ "$1" = "config" ]; then
 
         echo 'graph_title Filesystem inode usage (in %)'
         echo 'graph_args --upper-limit 100'
-		echo 'graph_category disk'
+	echo 'graph_category disk'
+	echo 'graph_scale no'
         eval $DF | $TAIL +2 | while read i; do
-                name=`echo $i | sed 's/[\/.-]/_/g' | awk '{ print $1 }'`
+                name=$(echo $i |
+		       awk '{ n=$1; sub(/^\//,"",n);
+                              gsub(/[^A-Za-z0-9_]/,"_",n);
+                              print n; }')
 		# Ignore tmpfs.
 		if [ "$name" != "swap" ]; then
 			printf "$name.label "
@@ -44,7 +48,10 @@ if [ "$1" = "config" ]; then
 fi
 
 eval $DF | $TAIL +2 | while read i; do
-        name=`echo $i | sed 's/[\/.-]/_/g' | awk '{ print $1 }'`
+        name=$(echo $i |
+	       awk '{ n=$1; sub(/^\//,"",n);
+                      gsub(/[^A-Za-z0-9_]/,"_",n);
+                      print n; }')
 	# Ignore tmpfs.
 	if [ "$name" != "swap" ]; then
 		printf "$name.value "

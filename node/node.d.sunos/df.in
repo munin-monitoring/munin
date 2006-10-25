@@ -1,9 +1,13 @@
 #!/bin/sh
+#
+# Parameters:
+#   df - full path of df executable
+#
 
 #%# family=auto
 #%# capabilites=autoconf
 
-DF=/usr/sbin/df
+DF=${df:-/usr/sbin/df}
 TAIL=/usr/bin/tail
 
 if [ "$1" = 'autoconf' ]; then
@@ -15,9 +19,19 @@ if [ "$1" = "config" ]; then
 
         echo 'graph_title Filesystem usage (in %)'
         echo 'graph_args --upper-limit 100'
-		echo 'graph_category disk'
+	echo 'graph_category disk'
+	echo 'graph_scale no'
+
+	# Using the mount point as name is silly as / becomes '' after
+	# the needed substitutions.  So in this incarnation we use the
+	# device name.  Since the plugin already changed names this
+	# should be ok.
+
         $DF -k -l | $TAIL +2 | while read i; do
-                name=`echo $i | sed 's/[\/.-]/_/g' | awk '{ print $6 }' | $TAIL -15c`
+                name=$(echo $i |
+		       awk '{ n=$1; sub(/^\//,"",n);
+                              gsub(/[^A-Za-z0-9_]/,"_",n);
+                              print n; }')
                 printf "$name.label "
                 echo $i | awk '{ print $6 }'
                 printf "$name.warn "
@@ -27,7 +41,10 @@ if [ "$1" = "config" ]; then
 fi
 
 $DF -k -l | $TAIL +2 | while read i; do
-        name=`echo $i | sed 's/[\/.-]/_/g' | awk '{ print $6 }' | $TAIL -15c`
+        name=$(echo $i |
+	       awk '{ n=$1; sub(/^\//,"",n);
+                      gsub(/[^A-Za-z0-9_]/,"_",n);
+                      print n; }')
         printf "$name.value "
         echo $i | awk '{ print $5 }' | cut -f1 -d% 
 done

@@ -1,3 +1,4 @@
+
 #
 # This file contains plugin history. It only contains history for plugins in
 # the "auto" family. The history started as of 0.9.8.
@@ -180,3 +181,5 @@ tomcat_access
 tomcat_jvm
 tomcat_threads
 tomcat_volume
+sunos/df
+sunos/df_inode

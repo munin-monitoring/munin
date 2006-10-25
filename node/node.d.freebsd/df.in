@@ -13,8 +13,6 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-MAXLABEL=20
-
 if [ "$1" = "autoconf" ]; then
 	echo yes
 	exit 0
@@ -26,6 +24,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --upper-limit 100 -l 0'
 	echo 'graph_vlabel %'
 	echo 'graph_category disk'
+	echo 'graph_scale no'
 	echo 'graph_info This graph shows disk usage on the machine.'
 	mfs=0
 	/bin/df -P -t noprocfs,devfs,fdescfs,linprocfs,nfs | tail +2 | grep -v "//" | while read i; do
@@ -34,14 +33,7 @@ if [ "$1" = "config" ]; then
 		*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
 		esac
 		echo -n "$name.label "
-		echo $i | awk "{
-			dir=\$6;
-			if (length(dir) <= $MAXLABEL)
-				print dir
-			else
-				printf (\"...%s\n\", substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3))
-			print \"$name.info \" \$6 \" -> \" \$1;
-			}"
+		echo $i | awk '{ print $6 }'
 		echo "$name.warning 92"
 		echo "$name.critical 98"
 	done

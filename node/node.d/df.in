@@ -13,10 +13,10 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-MAXLABEL=20
+# FIXME: Rewrite the frikking mountpoint loops in awk
 
 if [ "$1" = "autoconf" ]; then
-	if [ `uname -s` = SunOS ]; then
+	if [ $(uname -s) = SunOS ]; then
 		echo no
 		exit 1
 	else
@@ -30,16 +30,13 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Filesystem usage (in %)'
 	echo 'graph_args --upper-limit 100 -l 0'
 	echo 'graph_vlabel %'
+	echo 'graph_scale no'
 	df -P -l  | sed 1d | grep -v "//" | sort | while read i; do
-		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 }'`
+		name=$(echo $i | 
+		    awk '{ n=$1; sub(/^\//,"",n); gsub(/[^A-Za-z0-9_]/,"_",n);
+                           print n; }')
 		printf "$name.label "
-		echo $i | awk "{ 
-			dir=\$6
-			if (length(dir) <= $MAXLABEL)
-				print dir
-			else
-				printf (\"...%s\n\", substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3)) 
-		}"
+		echo $i | awk "{ print \$6 }"
 		echo "$name.warning 92"
 		echo "$name.critical 98"
 	done
@@ -47,7 +44,9 @@ if [ "$1" = "config" ]; then
 fi
 
 df -P -l | sed 1d | grep -v "//" | while read i; do
-	name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 ".value " }'`
+	name=$(echo $i |
+	       awk '{ n=$1; sub(/^\//,"",n); gsub(/[^A-Za-z0-9_]/,"_",n);
+                      print n; }')
 	printf "$name "
 	echo $i | awk '{ print $5 }' | cut -f1 -d%
 done

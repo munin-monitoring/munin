@@ -28,8 +28,6 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-MAXLABEL=20
-
 TYPES=noprocfs,devfs,fdescfs,ptyfs,kernfs,nfs
 
 print_values() {
@@ -63,6 +61,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_args --upper-limit 100 -l 0'
     echo 'graph_vlabel %'
     echo 'graph_category disk'
+    echo 'graph_scale no'
     echo 'graph_info This graph shows the inode usage for the partitions of types that use inodes.'
     /bin/df -P -i -t $TYPES | tail +2 | grep -v "//" | awk "
 		BEGIN {
@@ -77,13 +76,10 @@ if [ "$1" = "config" ]; then
 		    } else {
 			gsub(/[^a-zA-Z0-9_]/, \"_\", name)
 		    }
-		    if (length(dir) <= $MAXLABEL)
-			print name \".label \" dir
-		    else
-			printf (\"%s.label ...%s\n\", name, substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3))
-			print name \".info \" dir \" -> \" name
-			print name \".warning 92\"
-			print name \".critical 98\"
+		    print name \".label \" dir
+		    print name \".info \" dir \" -> \" name
+		    print name \".warning 92\"
+		    print name \".critical 98\"
 		 }"
     exit 0
 fi

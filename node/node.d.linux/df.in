@@ -1,4 +1,5 @@
-#!/usr/bin/perl
+#!@@PERL@@
+# -*- perl -*-
 #
 # Plugin to monitor disk usage. Rewrite based on original shell-based version
 # 
@@ -17,7 +18,10 @@
 
 use strict;
 
-my $MAXLABEL=25;
+# IFF anyone is to trunkate labels it's munin-graph.  Label trunkation
+# in plugins is the wrong place to put complexity.
+
+# my $MAXLABEL=25;
 
 # Read /proc/mounts
 my %mounts;
@@ -31,7 +35,7 @@ while (<MOUNTS>) {
 close MOUNTS;
 
 sub print_values() {
-    
+
     # Read from df
     open (DF,"/bin/df -P -l |") or die "Could not open pipe from /bin/df, $!";
     <DF>; # Skip the header
@@ -43,25 +47,21 @@ sub print_values() {
 	    my $fs=$mounts{$6};
 	    my $ps=$5;
 	    my $name=$1;
-	    
+
 	    $ps =~ s/\%//;
-	    $name =~ s/\//_/g;
-	    print $name .  ".value  " . $ps . "\n";
+	    $name =~ s/^\///;
+	    $name =~ s/[^A-Za-z0-9_]/_/g;
+	    print $name, ".value ", $ps, "\n";
 	}
     }
     close DF;
 }
-    
+
 if ( $ARGV[0] eq "autoconf" ) {
   if (`perl $0` eq "" ) {
     print "no\n";
     exit 1;
-  }
-  elsif ( `uname -s` eq "SunOS\n" ) {
-    print "no\n";
-    exit 1;
-  }
-  else {
+  } else {
     print "yes\n";
     exit 0;
   }
@@ -73,7 +73,9 @@ if ( $ARGV[0] eq "config" ) {
     print "graph_title Disk usage (in %)\n";
     print "graph_args --upper-limit 100 -l 0\n";
     print "graph_vlabel %\n";
-    
+    print "graph_scale no\n";
+    print "graph_category disk\n";
+
     # Read from df
     open (DF,"/bin/df -P -l |") or die "Unable to open pipe from /bin/df";
     <DF>; # Skip the header
@@ -84,18 +86,14 @@ if ( $ARGV[0] eq "config" ) {
 	if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
 	    my $fs=$mounts{$6};
 	    my $dir=$6;
-	    my $name=$1; 
-	    
+	    my $name=$1;
+
 	    # Create and print labels
-	    $name =~ s/\//_/g;
-	    print $name .  ".label ";
-	    if ( length($dir) <= $MAXLABEL ) {
-		print $dir . "\n";
-	    }
-	    else {
-		printf ("...%s\n", substr ($dir, length($dir)-$MAXLABEL+4,$MAXLABEL-3));
-	    }
-	    
+	    $name =~ s/^\///;
+	    $name =~ s/[^A-Za-z0-9_]/_/g;
+	    print $name,  ".label ", $dir, "\n";
+
+	    # FIXME: These ought to be tunable
 	    print "$name.warning 92\n";
 	    print "$name.critical 98\n";
 	}
