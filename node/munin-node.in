@@ -45,6 +45,23 @@ foreach my $key (keys %ENV)
 $0 =~ /^(.*)$/; # for some strange reason won't "$0 = $0;" work.
 $0 = $1;
 
+# Make configuration settings available at runtime.
+$ENV{'MUNIN_CONFDIR'}    = '@@CONFDIR@@'; # /etc/munin, /etc/opt/munin or such
+$ENV{'MUNIN_BINDIR'}     = '@@BINDIR@@';
+$ENV{'MUNIN_SBINDIR'}    = '@@SBINDIR@@';
+$ENV{'MUNIN_DOCDIR'}     = '@@DOCDIR@@';
+$ENV{'MUNIN_LIBDIR'}     = '@@LIBDIR@@';  # LIBDIR/plugins contains plugin.sh
+$ENV{'MUNIN_HTMLDIR'}    = '@@CONFDIR@@';
+$ENV{'MUNIN_CGIDIR'}     = '@@CONFDIR@@';
+$ENV{'MUNIN_DBDIR'}      = '@@CONFDIR@@';
+$ENV{'MUNIN_PLUGSTATE'}  = '@@CONFDIR@@'; # Put plugin state files here!
+$ENV{'MUNIN_LOGDIR'}     = '@@CONFDIR@@';
+$ENV{'MUNIN_STATEDIR'}   = '@@CONFDIR@@'; # This is for .pid files
+$ENV{'MUNIN_USER'}       = '@@USER@@';    # User munin runs as (mostly)
+$ENV{'MUNIN_GROUP'}      = '@@GROUP@@';   # Group ditto
+$ENV{'MUNIN_PLUGINUSER'} = '@@PLUGINUSER@@'; # Default user for plugin running
+$ENV{'MUNIN_VERSION'}    = '@@VERSION@@';
+
 @ISA = qw(Net::Server::Fork);
 my @ORIG_ARGV = @ARGV;
 my %services;
