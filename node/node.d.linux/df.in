@@ -35,7 +35,7 @@ while (<MOUNTS>) {
 close MOUNTS;
 
 my $exclude=$ENV{'exclude'} || 'iso9660';
-my $dfopts = "-P -l ".join(' -x ',split('\s+',$exclude));
+my $dfopts = "-P -l ".join(' -x ',('',split('\s+',$exclude)));
 
 sub print_values() {
 
@@ -60,13 +60,13 @@ sub print_values() {
 }
 
 if ( $ARGV[0] eq "autoconf" ) {
-  if (`@@PERL@@ $0` eq "" ) {
-    print "no\n";
-    exit 1;
-  } else {
-    print "yes\n";
-    exit 0;
-  }
+    if (`@@PERL@@ $0` eq "" ) {
+	print "no\n";
+	exit 1;
+    } else {
+	print "yes\n";
+	exit 0;
+    }
 }
 
 if ( $ARGV[0] eq "config" ) {

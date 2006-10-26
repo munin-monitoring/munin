@@ -36,7 +36,7 @@ while (<MOUNTS>) {
 close MOUNTS;
 
 my $exclude=$ENV{'exclude'} || 'iso9660';
-my $dfopts = "-P -l -i ".join(' -x ',split('\s+',$exclude));
+my $dfopts = "-P -l -i ".join(' -x ',('',split('\s+',$exclude)));
 
 sub print_values() {
 
