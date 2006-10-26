@@ -241,6 +241,8 @@ build-stamp: $(INFILES) Makefile Makefile.config
 		    -e 's|@@USER@@|$(USER)|g'				\
 		    -e 's|@@GROUP@@|$(GROUP)|g'				\
 		    -e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g'		\
+		    -e 's|@@GOODSH@@|$(GOODSH)|g'			\
+		    -e 's|@@BASH@@|$(BASH)|g'				\
 		    $$file > build/$$destname;				\
 	done
 

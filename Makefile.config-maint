@@ -50,11 +50,12 @@ PERL       = $(shell which perl)
 PYTHON     = /usr/bin/env python
 
 # A modern shell.  We're not looking for arrays, but $() and other modern
-# stuff is expected.
-# Linux: /bin/bash
-# SunOS/Solaris: /usr/xpg4/bin/sh or /bin/ksh
+# stuff is expected.  The expression below will work on posix systems.
+# This includes Linux, FreeBSD, Solaris, AIX and others.
+#
+# On linux /bin/sh.  SunOS/Solaris: /usr/xpg4/bin/sh
 # In general: bash or ksh will work
-GOODSH     = /bin/bash
+GOODSH     = $(shell PATH=`getconf PATH` sh -c 'type sh | sed "s/.* //"')
 
 # Path of bash for bash specific plugins
 BASH       = /bin/bash
