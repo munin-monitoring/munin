@@ -55,6 +55,10 @@ $ENV{'MUNIN_USER'}       = '@@USER@@';    # User munin runs as (mostly)
 $ENV{'MUNIN_GROUP'}      = '@@GROUP@@';   # Group ditto
 $ENV{'MUNIN_PLUGINUSER'} = '@@PLUGINUSER@@'; # Default user for plugin running
 $ENV{'MUNIN_VERSION'}    = '@@VERSION@@';
+$ENV{'MUNIN_PERL'}       = '@@PERL@@';
+$ENV{'MUNIN_GOODSHELL'}  = '@@GOODSHELL@@';
+$ENV{'MUNIN_BASH'}       = '@@BASH@@';
+$ENV{'MUNIN_PYTHON'}     = '@@PYTHON@@';
 
 my %services;
 my %nodes;
