@@ -122,7 +122,7 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	{
 		print "vmalloc_used.label vmalloc_used\n";
 		print "vmalloc_used.draw STACK\n";
-		print "vmalloc_used.info Virtual memory used by the kernel (used when the memory does not have to be physically contigious).\n";
+		print "vmalloc_used.info Virtual memory used by the kernel (used when the memory does not have to be physically contiguous).\n";
 	}
 	if (exists $mems{'Committed_AS'})
 	{
