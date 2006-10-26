@@ -1,5 +1,5 @@
-#!/bin/sh
-
+#!@@GOODSH@@
+#
 # Configuration variables
 #
 #   df  - path to df executable (GNU df makes life easier)
@@ -10,11 +10,14 @@
 DF=${df:-/usr/bin/df}
 TAIL=/usr/bin/tail
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 if [ "$1" = 'autoconf' ]; then
     echo yes
     exit 0
 fi
 
+# Figure out correct way to invoke df and what output to use
 if $DF -P -l -i >/dev/null 2>&1; then
 	DF="$DF -P -l -i"
 	FSNAME=6
@@ -26,35 +29,33 @@ else
 fi
 
 if [ "$1" = "config" ]; then
-
-        echo 'graph_title Filesystem inode usage (in %)'
-        echo 'graph_args --upper-limit 100'
-	echo 'graph_category disk'
-	echo 'graph_scale no'
-        eval $DF | $TAIL +2 | while read i; do
-                name=$(echo $i |
-		       awk '{ n=$1; sub(/^\//,"",n);
-                              gsub(/[^A-Za-z0-9_]/,"_",n);
-                              print n; }')
-		# Ignore tmpfs.
-		if [ "$name" != "swap" ]; then
-			printf "$name.label "
-			echo $i | awk '{ print $'$FSNAME' }'
-			printf "$name.warn "
-			echo 95
-		fi
-        done
-        exit 0
-fi
-
-eval $DF | $TAIL +2 | while read i; do
-        name=$(echo $i |
-	       awk '{ n=$1; sub(/^\//,"",n);
-                      gsub(/[^A-Za-z0-9_]/,"_",n);
-                      print n; }')
+    echo 'graph_title Filesystem inode usage (in %)'
+    echo 'graph_args --upper-limit 100'
+    echo 'graph_category disk'
+    echo 'graph_scale no'
+    $DF | $TAIL +2 | while read dev two three four five six; do
+	name=$(clean_fieldname $dev)
 	# Ignore tmpfs.
 	if [ "$name" != "swap" ]; then
-		printf "$name.value "
-		echo $i | awk '{ p=$'$PCNT'; i=index(p, "%"); print substr(p, 1, i-1) }'
+	    case $FSNAME in
+		5) mnt=$five;;
+		6) mnt=$six;;
+	    esac
+	    echo "$name.label $mnt"
+	    echo "$name.warn 95"
 	fi
+    done
+    exit 0
+fi
+
+$DF | $TAIL +2 | while read dev two three four five six; do
+    name=$(clean_fieldname $dev)
+    # Ignore tmpfs.
+    if [ "$name" != "swap" ]; then
+	case $PCNT in
+	    5) pct=$five;;
+	    4) pct=$four;;
+	esac
+	echo "$name.value $pct" | cut -d'%' -f1
+    fi
 done

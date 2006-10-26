@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Parameters:
 #   df - full path of df executable
@@ -7,6 +7,9 @@
 #%# family=auto
 #%# capabilites=autoconf
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+# Why does df_inode and df on solaris use different df versions?
 DF=${df:-/usr/sbin/df}
 TAIL=/usr/bin/tail
 
@@ -27,24 +30,15 @@ if [ "$1" = "config" ]; then
 	# device name.  Since the plugin already changed names this
 	# should be ok.
 
-        $DF -k -l | $TAIL +2 | while read i; do
-                name=$(echo $i |
-		       awk '{ n=$1; sub(/^\//,"",n);
-                              gsub(/[^A-Za-z0-9_]/,"_",n);
-                              print n; }')
-                printf "$name.label "
-                echo $i | awk '{ print $6 }'
-                printf "$name.warn "
-                echo 95
+        $DF -k -l | $TAIL +2 | while read dev size used avail pct mnt; do
+                name=$(clean_fieldname $dev)
+                echo "$name.label $mnt"
+                echo "$name.warn 95"
         done
         exit 0
 fi
 
-$DF -k -l | $TAIL +2 | while read i; do
-        name=$(echo $i |
-	       awk '{ n=$1; sub(/^\//,"",n);
-                      gsub(/[^A-Za-z0-9_]/,"_",n);
-                      print n; }')
-        printf "$name.value "
-        echo $i | awk '{ print $5 }' | cut -f1 -d% 
+$DF -k -l | $TAIL +2 | while read dev size used avail pct mnt; do
+        name=$(clean_fieldname $dev)
+        echo "$name.value $pct" | cut -f1 -d% 
 done
