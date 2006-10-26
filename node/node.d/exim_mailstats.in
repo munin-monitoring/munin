@@ -33,7 +33,7 @@ sub get_exim_logfile {
 	my @t=localtime($time);
 	my $ts = sprintf("%04d%02d%02d",$t[5]+1900, $t[4]+1, $t[3]);
 	$logfile =~ s/\%D/$ts/g;
-    }        
+    }
     my @lfiles = split(/\s?:\s?/, $logfile);
     foreach (@lfiles) {
 	return $_ unless /^syslog/;
@@ -56,7 +56,7 @@ $LOGDIR = $ENV{'logdir'} || undef;
 if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
     my $logfile;
-    
+
     if(defined($LOGDIR)) {
 	if(! -d $LOGDIR) {
 	    print "no (logdir does not exist)\n";

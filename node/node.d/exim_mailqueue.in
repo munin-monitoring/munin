@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor exim queue size
 #
@@ -24,16 +24,22 @@
 
 DIRNAME=`dirname $0`
 SPOOLDIR="unset"
-EXIM=`which exim 2>/dev/null || which exim4 2>/dev/null`
-QUEUEWARN=100
-QUEUECRIT=200
+# You cannot trust the exit status of which
+EXIM=`which exim 2>/dev/null`
+case $EXIM:$? in
+    *:1|no*) EXIM=`which exim4 2>/dev/null`
+esac
+case $EXIM:$? in
+    *:1|no*) EXIM=''
+esac
+
 GRAPHTITLE='Exim Mailqueue'
 
-if [ "$spooldir"  ]; then  SPOOLDIR=$spooldir ; fi
-if [ "$exim"      ]; then      EXIM=$exim     ; fi
-if [ "$queuewarn" ]; then QUEUEWARN=$queuewarn; fi
-if [ "$queuecrit" ]; then QUEUECRIT=$queuecrit; fi
-if [ "$graphtitle" ]; then GRAPHTITLE=$graphtitle; fi
+SPOOLDIR=${spooldir:-unset}
+EXIM=${exim:-unset}
+QUEUEWARN=${queuewarn:-100}
+QUEUECRIT=${queuecrit:-200}
+GRAPHTITLE=${graphtitle:-$GRAPHTITLE}
 
 if [ "$SPOOLDIR" = "unset" ]
 then
@@ -41,7 +47,12 @@ then
 fi
 
 if [ "$1" = "autoconf" ]; then
-	if ( $EXIM -bV 2>/dev/null >/dev/null ); then
+    if [ -z "$EXIM" ]; then
+	echo no
+	exit 1
+    fi
+	
+	if $EXIM -bV 2>/dev/null >/dev/null; then
 		if ( /usr/bin/find $SPOOLDIR -iname "*-H" -print 2>/dev/null >/dev/null ); then
 			echo yes
 			exit 0
