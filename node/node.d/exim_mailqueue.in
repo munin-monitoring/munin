@@ -25,9 +25,9 @@
 DIRNAME=`dirname $0`
 SPOOLDIR="unset"
 # You cannot trust the exit status of which
-EXIM=`which exim 2>/dev/null`
+EXIM=$(which exim 2>/dev/null)
 case $EXIM:$? in
-    *:1|no*) EXIM=`which exim4 2>/dev/null`
+    *:1|no*) EXIM=$(which exim4 2>/dev/null)
 esac
 case $EXIM:$? in
     *:1|no*) EXIM=''
@@ -43,7 +43,7 @@ GRAPHTITLE=${graphtitle:-$GRAPHTITLE}
 
 if [ "$SPOOLDIR" = "unset" ]
 then
-	SPOOLDIR=`($EXIM -bP spool_directory | awk '{ print $3 "/input" }') 2>/dev/null`
+	SPOOLDIR=$( ($EXIM -bP spool_directory | awk '{ print $3 "/input" }') 2>/dev/null)
 fi
 
 if [ "$1" = "autoconf" ]; then
