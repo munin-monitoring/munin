@@ -16,12 +16,21 @@ that way there is data to collect):
 	  command.  Check that authentication is required, if it's not 
 	  please refer to build/resources/apache-passwd.conf.
 
+	  The .htaccess file may not be accessed unless you have the
+	  right AllowOverride in the central Apache configuration.
+	  This may fix that (see also
+	  build/resources/apache-passwd.conf):
+
+		<Location /munin>
+			AllowOverride AuthConfig Limit
+		</Location>
+
+          If you already have a .htaccess file in HTMLDIR it will not
+          be overwritten.
+
 	  If you prefer that munin be openly available make the
 	  .htaccess file empty ( : >.htaccess ) - that way it will
 	  not be overwritten later.
-
-          If you already have a .htaccess file it will not be
-          overwritten.
 
 	- create a cron-entry to run "munin-cron" as the user "munin"
 	  every 5 minutes.  You might find cron files for your system
