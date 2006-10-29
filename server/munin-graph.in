@@ -614,6 +614,7 @@ sub process_node {
 	my $filename = "unknown";
 	my %total_pos;
 	my %total_neg;
+	my $autostacking=0;
 	print "DEBUG: Treating fields \"", join "\",\"", @field_order, "\".\n" if $DEBUG;
 	for my $field (@field_order) {
 	    my $path  = undef;
@@ -636,16 +637,18 @@ sub process_node {
 	    }
 
 	    if ($fielddraw eq 'AREASTACK') {
-		if ($field_count==0) {
+		if ($autostacking==0) {
 		    $fielddraw='AREA';
+		    $autostacking=1;
 		} else {
 		    $fielddraw='STACK';
 		}
 	    }
 
 	    if ($fielddraw =~ /LINESTACK(\d+(?:.\d+)?)/ ) {
-		if ($field_count==0) {
+		if ($autostacking==0) {
 		    $fielddraw="LINE$1";
+		    $autostacking=1;
 		} else {
 		    $fielddraw='STACK';
 		}
