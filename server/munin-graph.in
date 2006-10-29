@@ -32,7 +32,7 @@ use Time::HiRes;
 
 my $graph_time= Time::HiRes::time;
 my $DEBUG = 0;
-my $VERSION = "@@VERSION@@";
+my $VERSION = '@@VERSION@@';
 
 # Limit graphing to certain hosts and/or services
 my @limit_hosts = ();
@@ -623,14 +623,37 @@ sub process_node {
 	    next unless &process_field ($node, $service, $field);
 	    print "DEBUG: Processing field \"$field\".\n" if $DEBUG;
 
-	    if ($field_count == 0 and
-		munin_get ($config, "draw", "LINE2", $domain, $name, $service, $field) eq "STACK") {
+	    my $fielddraw = munin_get ($config, "draw", "LINE2", $domain,
+				       $name, $service, $field);
+
+	    if ($field_count == 0 and $fielddraw eq 'STACK') {
 		# Illegal -- first field is a STACK
-		logger ("ERROR: First field (\"$field\") of graph \"$domain\" :: \"$name\" :: \"$service\" is STACK. STACK can only be drawn after a LINEx or AREA.");
+		logger ("ERROR: First field (\"$field\") of graph \"$domain\"".
+			":: \"$name\" :: \"$service\" is STACK. STACK can ".
+			"only be drawn after a LINEx or AREA.");
+		$fielddraw = "LINE2";
+	    }
+
+	    if ($fielddraw eq 'AREASTACK') {
+		if ($field_count==0) {
+		    $fielddraw='AREA';
+		} else {
+		    $fielddraw='STACK';
+		}
+	    }
+
+	    if ($fielddraw =~ /LINESTACK(\d+(?:.\d+)?)/ ) {
+		if ($field_count==0) {
+		    $fielddraw="LINE$1";
+		} else {
+		    $fielddraw='STACK';
+		}
 	    }
 
 	    # Getting name of rrd file
-	    $filename = &munin_get_rrd_filename ($node, $config, $domain, $name, $service, $field, $path);
+	    $filename = &munin_get_rrd_filename ($node, $config, $domain,
+						 $name, $service, $field,
+						 $path);
 
 	    my $update = RRDs::last ($filename);
 	    $update = 0 if ! defined $update;
@@ -638,9 +661,16 @@ sub process_node {
 		$lastupdate = $update;
 	    }
 
-	    my $rrdfield = ($node->{client}->{$service}->{$field.".rrdfield"} || "42");
-	    my $single_value = $force_single_value || &single_value ($node, $config, $domain, $name, $service, $field, \@field_order);
-	    my $has_negative = exists $node->{client}->{$service}->{$field.".negative"};
+	    # It does not look like $fieldname.rrdfield is possible to set
+	    my $rrdfield = ($node->{client}->{$service}->{$field.".rrdfield"}
+			    || "42");
+
+	    my $single_value = $force_single_value ||
+	      &single_value ($node, $config, $domain, $name,
+			     $service, $field, \@field_order);
+
+	    my $has_negative =
+	      exists $node->{client}->{$service}->{$field.".negative"};
 
 	    # Trim the fieldname to make room for other field names.
 	    $rrdname = &get_field_name ($field);
@@ -656,19 +686,24 @@ sub process_node {
 	    push (@rrd, "DEF:a$rrdname=" .
 		  $filename . ":" . $rrdfield . ":MAX");
 
-	    if (exists $node->{client}->{$service}->{$field.".onlynullcdef"} and
+	    if (exists $node->{client}->{$service}->{$field.".onlynullcdef"}
+		and
 		$node->{client}->{$service}->{$field.".onlynullcdef"}) {
-		push (@rrd, "CDEF:c$rrdname=g$rrdname" . (($now-$update)>900 ? ",POP,UNKN" : ""));
+		push (@rrd, "CDEF:c$rrdname=g$rrdname" .
+		      (($now-$update)>900 ? ",POP,UNKN" : ""));
 	    }
 
-	    if (($node->{client}->{$service}->{$field.".type"}||"GAUGE") ne "GAUGE"
+	    if (($node->{client}->{$service}->{$field.".type"}||"GAUGE")
+		ne "GAUGE"
 		and graph_by_minute ($config, $domain, $name, $service)) {
-		push (@rrd, &expand_cdef($node->{client}->{$service}, \$rrdname, "$field,60,*"));
+		push (@rrd, &expand_cdef($node->{client}->{$service},
+					 \$rrdname, "$field,60,*"));
 	    }
 
 	    if ($node->{client}->{$service}->{$field.".cdef"}) {
-		push (@rrd, &expand_cdef($node->{client}->{$service},
-					 \$rrdname, $node->{client}->{$service}->{$field.".cdef"}));
+		push (@rrd,&expand_cdef($node->{client}->{$service},
+					\$rrdname,
+					$node->{client}->{$service}->{$field.".cdef"}));
 		push (@rrd, "CDEF:c$rrdname=g$rrdname");
 		print "DEBUG: Field name after cdef set to $rrdname\n" if $DEBUG;
 	    } elsif (!(exists $node->{client}->{$service}->{$field.".onlynullcdef"}
@@ -718,8 +753,7 @@ sub process_node {
 
 	    $field_count++;
 
-	    push (@rrd, ($node->{client}->{$service}->{$field.".draw"} || "LINE2") .
-		  ":g$rrdname" . $colour . ":" .
+	    push (@rrd, $fielddraw . ":g$rrdname" . $colour . ":" .
 		  (escape ($node->{client}->{$service}->{"$field.label"}) || escape ($field))
 		  . (" " x ($max_field_len + 1 -
 			    length ($node->{client}->{$service}->{"$field.label"} || $field))));
@@ -747,8 +781,7 @@ sub process_node {
 		    push (@rrd, "STACK:neg_min_max_diff$range_colour");
 		}
 
-		push (@rrd_negatives, ($node->{client}->{$service}->{$negfield.".draw"} || "LINE2") .
-		    ":ng$negfield" . $colour );
+		push (@rrd_negatives, $fielddraw . ":ng$negfield" . $colour );
 
 		# Draw HRULEs
 		my $linedef = munin_get ($config, "line", undef, $domain, $name, $service, $node->{client}->{$service}->{$field.".negative"});
