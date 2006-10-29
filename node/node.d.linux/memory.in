@@ -19,6 +19,8 @@
 # Magic markers (optional - used by munin-config and some
 # installation scripts):
 #
+# $Id$
+#
 #%# family=auto
 #%# capabilities=autoconf
 
@@ -96,7 +98,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	print "vmalloc_used.label vmalloc_used\n";
 	# print "vmalloc_used.draw STACK\n";
 	print "vmalloc_used.draw LINE2\n";
-	print "vmalloc_used.info 'VMalloc' (kernel) memory used"
+	print "vmalloc_used.info 'VMalloc' (kernel) memory used\n"
     }
     if (exists $mems{'Committed_AS'}) {
 	print "committed.label committed\n";
