@@ -590,13 +590,14 @@ sub process_node {
 	my $global_headers = 1;
 
 	# Default format for printing under graph.
-	my $rrdformat="%6.2lf";
+	my $avgformat;
+	my $rrdformat=$avgformat="%6.2lf";
 
 	if (exists $node->{client}->{$service}->{graph_args} and
 	    $node->{client}->{$service}->{graph_args} =~ /--base\s+1024/) {
 	    # If the base unit is 1024 then 1012.56 is a valid
 	    # number to show.  That's 7 positions, not 6.
-	    $rrdformat="%7.2lf";
+	    $rrdformat=$avgformat="%7.2lf";
 	}
 
 	if (exists $node->{client}->{$service}->{graph_printf} ) {
@@ -799,8 +800,8 @@ sub process_node {
 		push (@rrd, "GPRINT:c$rrdname:LAST:$rrdformat" . $rrdscale . "");
 		push (@rrd, "GPRINT:i$negfield:MIN:$rrdformat" . $rrdscale . "/\\g");
 		push (@rrd, "GPRINT:i$rrdname:MIN:$rrdformat" . $rrdscale . "");
-		push (@rrd, "GPRINT:g$negfield:AVERAGE:$rrdformat" . $rrdscale . "/\\g");
-		push (@rrd, "GPRINT:g$rrdname:AVERAGE:$rrdformat" . $rrdscale . "");
+		push (@rrd, "GPRINT:g$negfield:AVERAGE:$avgformat" . $rrdscale . "/\\g");
+		push (@rrd, "GPRINT:g$rrdname:AVERAGE:$avgformat" . $rrdscale . "");
 		push (@rrd, "GPRINT:a$negfield:MAX:$rrdformat" . $rrdscale . "/\\g");
 		push (@rrd, "GPRINT:a$rrdname:MAX:$rrdformat" . $rrdscale . "\\j");
 		push (@{$total_pos{'min'}}, "i$rrdname");
@@ -815,7 +816,7 @@ sub process_node {
 		push (@rrd, "COMMENT: Min$RRDkludge:") unless $global_headers;
 		push (@rrd, "GPRINT:i$rrdname:MIN:$rrdformat" . $rrdscale . "");
 		push (@rrd, "COMMENT: Avg$RRDkludge:") unless $global_headers;
-		push (@rrd, "GPRINT:g$rrdname:AVERAGE:$rrdformat" . $rrdscale . "");
+		push (@rrd, "GPRINT:g$rrdname:AVERAGE:$avgformat" . $rrdscale . "");
 		push (@rrd, "COMMENT: Max$RRDkludge:") unless $global_headers;
 		push (@rrd, "GPRINT:a$rrdname:MAX:$rrdformat" . $rrdscale . "\\j");
 		push (@{$total_pos{'min'}}, "i$rrdname");
@@ -861,8 +862,8 @@ sub process_node {
 		push (@rrd, "GPRINT:gpostotal:LAST:$rrdformat" . $rrdscale . "");
 		push (@rrd, "GPRINT:inegtotal:MIN:$rrdformat" . $rrdscale . "/\\g");
 		push (@rrd, "GPRINT:ipostotal:MIN:$rrdformat" . $rrdscale . "");
-		push (@rrd, "GPRINT:gnegtotal:AVERAGE:$rrdformat" . $rrdscale . "/\\g");
-		push (@rrd, "GPRINT:gpostotal:AVERAGE:$rrdformat" . $rrdscale . "");
+		push (@rrd, "GPRINT:gnegtotal:AVERAGE:$avgformat" . $rrdscale . "/\\g");
+		push (@rrd, "GPRINT:gpostotal:AVERAGE:$avgformat" . $rrdscale . "");
 		push (@rrd, "GPRINT:anegtotal:MAX:$rrdformat" . $rrdscale . "/\\g");
 		push (@rrd, "GPRINT:apostotal:MAX:$rrdformat" . $rrdscale . "\\j");
 	    }
@@ -879,7 +880,7 @@ sub process_node {
 	    push (@rrd, "COMMENT: Min$RRDkludge:") unless $global_headers;
 	    push (@rrd, "GPRINT:ipostotal:MIN:$rrdformat" . $rrdscale . "");
 	    push (@rrd, "COMMENT: Avg$RRDkludge:") unless $global_headers;
-	    push (@rrd, "GPRINT:gpostotal:AVERAGE:$rrdformat" . $rrdscale . "");
+	    push (@rrd, "GPRINT:gpostotal:AVERAGE:$avgformat" . $rrdscale ."");
 	    push (@rrd, "COMMENT: Max$RRDkludge:") unless $global_headers;
 	    push (@rrd, "GPRINT:apostotal:MAX:$rrdformat" . $rrdscale . "\\j");
 	}
