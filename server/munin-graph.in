@@ -623,7 +623,7 @@ sub process_node {
 	    next unless &process_field ($node, $service, $field);
 	    print "DEBUG: Processing field \"$field\".\n" if $DEBUG;
 
-	    if ($field_count == 0 and 
+	    if ($field_count == 0 and
 		munin_get ($config, "draw", "LINE2", $domain, $name, $service, $field) eq "STACK") {
 		# Illegal -- first field is a STACK
 		logger ("ERROR: First field (\"$field\") of graph \"$domain\" :: \"$name\" :: \"$service\" is STACK. STACK can only be drawn after a LINEx or AREA.");
@@ -705,15 +705,21 @@ sub process_node {
 		$global_headers++;
 	    }
 
-	    my $custom_colour='';
+	    my $colour;
+
 	    if (exists $node->{client}->{$service}->{$field.".colour"}) {
-		my $custom_colour = "#".
+		$colour = "#".
 		  $node->{client}->{$service}->{$field.".colour"};
+	    } elsif ($single_value) {
+		$colour = $single_colour;
+	    } else {
+		$colour = $COLOUR[$field_count%@COLOUR];
 	    }
 
+	    $field_count++;
+
 	    push (@rrd, ($node->{client}->{$service}->{$field.".draw"} || "LINE2") .
-		  ":g$rrdname" .
-		  ($custom_colour || ($single_value ? $single_colour : $COLOUR[$field_count++%@COLOUR])) . ":" .
+		  ":g$rrdname" . $colour . ":" .
 		  (escape ($node->{client}->{$service}->{"$field.label"}) || escape ($field))
 		  . (" " x ($max_field_len + 1 -
 			    length ($node->{client}->{$service}->{"$field.label"} || $field))));
@@ -742,20 +748,18 @@ sub process_node {
 		}
 
 		push (@rrd_negatives, ($node->{client}->{$service}->{$negfield.".draw"} || "LINE2") .
-		    ":ng$negfield" .
-		    ((defined $single_value and $single_value) ? $single_colour : $COLOUR[($field_count-1)%@COLOUR]));
+		    ":ng$negfield" . $colour );
 
 		# Draw HRULEs
 		my $linedef = munin_get ($config, "line", undef, $domain, $name, $service, $node->{client}->{$service}->{$field.".negative"});
 		if ($linedef) {
-		    my ($number, $colour, $label) = split (/:/, $linedef, 3);
+		    my ($number, $ldcolour, $label) = split (/:/, $linedef, 3);
 		    push (@rrd_negatives, "HRULE:".$number.
-			($colour ? "#$colour" :
-			  ((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]))
-			);
+			($ldcolour ? "#$ldcolour" : $colour));
+
 		} elsif ($node->{client}->{$service}->{"$negfield.warn"}) {
 		    push (@rrd_negatives, "HRULE:".$node->{client}->{$service}->{$node->{client}->{$service}->{$field.".negative"}.".warn"}.
-			((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
+			  (defined $single_value and $single_value) ? "#ff0000" : $colour);
 		}
 
 		push (@rrd, "GPRINT:c$negfield:LAST:$rrdformat" . $rrdscale . "/\\g");
@@ -789,16 +793,19 @@ sub process_node {
 	    # Draw HRULEs
 	    my $linedef = munin_get ($config, "line", undef, $domain, $name, $service, $field);
 	    if ($linedef) {
-		my ($number, $colour, $label) = split (/:/, $linedef, 3);
+		my ($number, $ldcolour, $label) = split (/:/, $linedef, 3);
 		$label =~ s/:/\\:/g if defined $label;
 		push (@rrd, "HRULE:".$number.
-		    ($colour ? "#$colour" :
-		      ((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR])) .
+		    ($ldcolour ? "#$ldcolour" :
+		      ((defined $single_value and $single_value) ?
+		       "#ff0000" : $colour)).
 		      ((defined $label and length ($label)) ? ":$label" : ""),
 		      "COMMENT: \\j"
 		    );
 	    } elsif ($node->{client}->{$service}->{"$field.warn"}) {
-		push (@rrd, "HRULE:".$node->{client}->{$service}->{"$field.warn"}.($single_value ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
+		push (@rrd,"HRULE:".
+		      $node->{client}->{$service}->{"$field.warn"}.
+		      ($single_value ? "#ff0000" : $colour));
 	    }
 	}
 
