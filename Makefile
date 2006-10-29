@@ -214,6 +214,7 @@ build: build-stamp
 
 build-stamp: $(INFILES) Makefile Makefile.config
 	touch build-stamp
+	rm -rf build
 	@for file in $(INFILES); do			\
 		destname=`echo $$file | sed 's/.in$$//'`;		\
 		echo Generating build/$$destname..;			\
