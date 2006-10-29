@@ -1,7 +1,15 @@
+IF you're working on a SVN checkout:
+
+	- cp Makefile.config-dist Makefile.conf
+
+	  This overwrites the maintainers copy of Makefile.conf.
+
+
+
 Munin consists of the main (central server) programs, and the node
-program.  The node runs on each of the machines you want to collect
-data from. The main programs does the collecting, draws the graphs,
-and creates the HTML pages.
+program and the associated plugins.  The node runs on each of the
+machines you want to collect data from.  The main programs does the
+collecting, draws the graphs, and creates the HTML pages.
 
 To install the main programs (you might want to install a node first,
 that way there is data to collect):
