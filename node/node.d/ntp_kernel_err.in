@@ -1,4 +1,4 @@
-#! /bin/sh
+#!@@GOODSH@@
 #
 # $Id: ntp_kernel_err.in,v 1.1.1.1 2006/06/04 20:53:57 he Exp $
 #
@@ -19,13 +19,12 @@
 # always be included.
 
 if [ "$1" = "autoconf" ]; then
-    if ntpdc -c help >/dev/null 2>&1; then
-	echo yes
-	exit 0
-    else
-	echo no
-	exit 1
-    fi
+    # Not all ntpdc's are equal
+    ntpdc -c kern 2>/dev/null | 
+    awk 'BEGIN { ev=1; }
+         /^estimated error:/ { ev=0; } 
+         END { if (ev == 0) { print "yes";} else { print "no"; } exit ev; }'
+    exit $?
 fi
 
 if [ "$1" = "config" ]; then
