@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Wildcard-plugin to monitor disks. To monitor a disk,
 # link io_<function>_<disk> to this file. E.g.
