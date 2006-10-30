@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 # 
 # Plugin to monitor available entropy
 #
@@ -10,8 +10,6 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-
-
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/sys/kernel/random/entropy_avail ]; then
 		echo yes
@@ -21,7 +19,6 @@ if [ "$1" = "autoconf" ]; then
 		exit 1
 	fi
 fi
-
  
 if [ "$1" = "config" ]; then
 	echo 'graph_title Available entropy'

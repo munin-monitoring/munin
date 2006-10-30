@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 # 
 # Plugin to monitor the number of open files in the system.
 #
@@ -13,16 +13,15 @@
 #%# family=contrib
 #%# capabilities=autoconf
 
-
-PROC=`basename $0 | sed 's/^files_//g'`
-TMPFILE="@@PLUGSTATE@@/munin-files_${PROC}.state"
+PROC=${0##*/files_}
+TMPFILE="$MUNIN_PLUGSTATE/munin-files_${PROC}.state"
 
 if [ "$1" = "autoconf" ]; then
 	if [ -x /usr/sbin/lsof ]; then
 		echo yes
 		exit 0
 	else
-		echo no
+		echo "no (no lsof)"
 		exit 1
 	fi
 fi

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 # 
 # Plugin to monitor the number of open files in the system.
 #
@@ -12,8 +12,6 @@
 #
 #%# family=auto
 #%# capabilities=autoconf
-
-
 
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/sys/fs/inode-nr ]; then

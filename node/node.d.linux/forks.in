@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor the number of forks per second on the machine.
 #
@@ -11,8 +11,6 @@
 # scripts):
 #%# family=auto
 #%# capabilities=autoconf
-
-
 
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/stat ]; then

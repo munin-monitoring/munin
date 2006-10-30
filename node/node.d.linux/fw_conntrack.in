@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # fw_conntrack: Plugin to monitor the number of tracked connections
 # through a Linux 2.4/2.6 firewall.

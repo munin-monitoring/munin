@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to measure uptime. Especially the average and max values on the
 # bigger graphs (yearly) can be interesting.
@@ -26,4 +26,4 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-env LC_ALL=C awk '{printf "uptime.value %.2f\n",$1/86400}' /proc/uptime
+awk '{printf "uptime.value %.2f\n",$1/86400}' /proc/uptime

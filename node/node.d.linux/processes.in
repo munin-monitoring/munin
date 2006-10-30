@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor the number of processes on the machine. Much linke
 # doing a "ps | wc -l".
@@ -12,8 +12,6 @@
 # scripts):
 #%# family=auto
 #%# capabilities=autoconf
-
-
 
 if [ "$1" = "autoconf" ]; then
 	echo yes 
