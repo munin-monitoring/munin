@@ -1,4 +1,5 @@
-#!/bin/sh
+#!@@GOODSH@@
+# -*- sh -*-
 #
 # Script to monitor disk usage.
 #
@@ -15,36 +16,38 @@
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 
-# FIXME: Rewrite the frikking mountpoint loops in awk
+print_values () {
+    df -P -l 2>/dev/null | sed -e 1d -e '/\/\//d' -e 's/%//' | 
+    while read dev size used free pct fs; do
+	echo "$(clean_fieldname $dev).value $pct"
+    done
+}
+
 
 if [ "$1" = "autoconf" ]; then
-	if [ $(uname -s) = SunOS ]; then
-		echo no
-		exit 1
-	else
-		echo yes
-		exit 0
-	fi
+    if [ -z "$(print_values)" ] ; then
+	echo no
+	exit 1
+    else
+	echo yes
+	exit 0
+    fi
 fi
 
 if [ "$1" = "config" ]; then
-
-	echo 'graph_title Filesystem usage (in %)'
-	echo 'graph_args --upper-limit 100 -l 0'
-	echo 'graph_vlabel %'
-	echo 'graph_scale no'
-	df -P -l  | sed 1d | grep -v "//" | sort | while read i; do
-		name=$(clean_fieldname $(echo $i | awk '{ n=$1; print n; }'))
-		printf "$name.label "
-		echo $i | awk "{ print \$6 }"
-		echo "$name.warning 92"
-		echo "$name.critical 98"
-	done
-	exit 0
+    echo 'graph_title Filesystem usage (in %)'
+    echo 'graph_args --upper-limit 100 -l 0'
+    echo 'graph_vlabel %'
+    echo 'graph_scale no'
+    df -P -l  | sed -e 1d -e '/\/\//d' -e 's/%//' | sort | 
+    while read dev size used free pct fs; do
+	name=$(clean_fieldname $dev)
+	echo "$name.label $fs"
+	echo "$name.warning 92"
+	echo "$name.critical 98"
+    done
+    exit 0
 fi
 
-df -P -l | sed 1d | grep -v "//" | while read i; do
-	name=$(clean_fieldname $(echo $i | awk '{ n=$1; print n; }'))
-	printf "$name "
-	echo $i | awk '{ print $5 }' | cut -f1 -d%
-done
+print_values
+
