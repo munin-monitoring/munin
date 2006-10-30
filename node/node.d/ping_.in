@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Copyright (C) 2004 Jimmy Olsen
 #

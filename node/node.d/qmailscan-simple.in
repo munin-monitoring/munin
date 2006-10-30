@@ -1,9 +1,9 @@
-#!/bin/sh
+#!@@GOODSH@@
+# -*- sh -*-
 #
 # Plugin to count the daily amount of Virii (qmailscan)
 #
 # Contributed by David Obando (david@cryptix.de) - 03.12.2005
-#
 #
 
 # define the logfiles. when you rotate them at any other time than 00:00 you have to define two logfiles:
@@ -26,4 +26,4 @@ if [ "$1" = "config" ]; then
         exit 0
 fi
 
-echo -n "virus.value " && grep "`date +%d\ %b\ %Y`" $LOG0 $LOG1 | wc -l
+echo -n "virus.value " && grep "$(date "+%d %b %Y")" $LOG0 $LOG1 | wc -l

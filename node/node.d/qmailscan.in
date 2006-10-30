@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 #
 # Plugin to show the Types of Virii. Works with qmailscan and clamav

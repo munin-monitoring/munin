@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor Dallas 1-wire temperature sensors using digitemp
 #

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor Motherboard temparature using mbmon
 #  (http://www.nt.phys.kyushu-u.ac.jp/shimizu/download/download.html)
@@ -20,10 +20,7 @@
 #%# family=contrib
 #%# capabilities=autoconf suggest
 
-
-
 what=`basename $0 | sed 's/^mbmon_//g'`
-
 
 if [ "$1" = "suggest" ]; then
 	printf "TEMP\nFAN\nVoltage\n"

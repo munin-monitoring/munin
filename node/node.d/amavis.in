@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor the amavis mail filter.
 #
@@ -17,14 +17,12 @@
 # #%# capabilities=autoconf
 
 mktempfile () {
-@@MKTEMP@@
+    $MUNIN_MKTEMP
 }
 
-AMAVIS_LOG=${logfile:-/var/log/mail/mail.info}
+AMAVIS_LOG=${amavislog:-/var/log/mail/mail.info}
 LOGTAIL=${logtail:-`which logtail`}
-STATEFILE=@@PLUGSTATE@@/amavis.offset
-
-if [ "$amavislog"  ]; then AMAVIS_LOG=$amavislog ; fi
+STATEFILE=$MUNIN_PLUGSTATE/amavis.offset
 
 if [ "$1" = "autoconf" ]; then
         if [ -f "${AMAVIS_LOG}" -a -n "${LOGTAIL}" -a -x "${LOGTAIL}" ] ; then

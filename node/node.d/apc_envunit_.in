@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor APC environmental units (temperature/humidity)
 #
@@ -52,6 +52,7 @@ SNMPOPTS="-Ov -Oq -v1 -c ${COMMUNITY}"
 
 if [ "$1" = "autoconf" ]; then
   if [ -z "${UNITS}" -o -z "${SNMPGET}" ] ; then echo "no" ; exit 1 ; fi
+  if [ ! -x "$SNMPGET" ] ; then echo "no (no snmpget executable)"; exit 1; fi
   for m in ${UNITS} ; do
     if ping -c1 -q $m  >/dev/null 2>&1 ; then continue ; fi
     echo "no" ; exit 1

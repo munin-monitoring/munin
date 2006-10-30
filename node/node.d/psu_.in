@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Wildcard-script to monitor number of processes running as a given user.
 # To monitor a user, link psu_<program> to this file. E.g.
@@ -16,8 +16,6 @@
 # Magic markers (optional):
 #%# family=manual
 #%# capabilities=autoconf suggest
-
-
 
 name=`basename $0 | sed 's/^psu_//g'`
 

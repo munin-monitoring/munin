@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor the number of procs in io-sleep and other wait
 # states. Uses `vmstat`.

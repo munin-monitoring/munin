@@ -1,4 +1,5 @@
-#!/bin/sh
+#!@@GOODSH@@
+# -*- sh -*-
 #
 # Script to monitor number of processes. Programs are configured
 # in client-conf.d
@@ -45,8 +46,8 @@ for name in $names; do
 	printf "$name.value "
 
 	eval REGEX='"${regex_'$name'-\<'$name'\>}"'
-	PGREP=`which pgrep`
-	if [ -n "$PGREP" ]; then
+	PGREP=$(which pgrep)
+	if [ -n "$PGREP" -a -x "$PGREP" ]; then
 		$PGREP -f -l "$name" | grep "$REGEX" | wc -l
 	elif [ -x /usr/ucb/ps ]; then
 		# Solaris without pgrep. How old is that?
