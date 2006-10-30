@@ -1,4 +1,5 @@
-#!/bin/sh
+#!@@GOODSH@@
+# -*- sh -*-
 #
 # Script to monitor munin-graph
 #
@@ -10,15 +11,15 @@
 # Magic markers (optional - used by munin-config and installation
 # scripts):
 #
-#%# family=manual
+#%# family=auto
 #%# capabilities=autoconf
 
 if [ ! "$GRAPH_STATSFILE" ] ; then
-	GRAPH_STATSFILE=@@DBDIR@@/munin-graph.stats
+	GRAPH_STATSFILE=$MUNIN_DBDIR/munin-graph.stats
 fi
 
 if [ "$1" = "autoconf" ]; then
-	if [ -f $GRAPH_STATSFILE ]; then
+	if [ -r $GRAPH_STATSFILE ]; then
 	    echo "yes"
 	    exit 0
 	fi
