@@ -1,12 +1,29 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
-#%# family=manual
+#%# family=auto
+#%# capabilities=autoconf
+#
+# Show memory stats based on top output
+#
+# Parameters
+#   env.top /path/to/top
+#
+# FIXME1: Reporting size in MB is Wrong. Report bytes and let rrd scale units
+# FIXME2: Using kstat would be much better!
 
+TOP=${top:-/usr/local/bin/top}
 
-TOP=/usr/local/bin/top
+if [ "$1" = "autoconf" ]; then
+    if [ -x $TOP ] ; then
+	echo yes
+	exit 0
+    else
+	echo "no (no executable: $TOP)"
+	exit 1
+    fi
+fi
 
 if [ "$1" = "config" ]; then
-
         echo "graph_title Memory usage (in MB)"
 		echo 'graph_category system'
 	echo "real.label Physical mem"
