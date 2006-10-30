@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Wildcard-script to monitor network interfaces. To monitor an
 # interface, link vlan_<interface> to this file. E.g.
@@ -16,31 +16,33 @@
 #%# family=manual
 #%# capabilities=autoconf suggest
 
-INTERFACE=`basename $0 | sed 's/^vlan_//g' | tr '_' '.'` 
+INTERFACE=$(basename $0 | sed 's/^vlan_//g' | tr '_' '.')
 
 if [ "$1" = "autoconf" ]; then
-	if [ -d /proc/net/vlan -a -r /proc/net/vlan -a -x /proc/net/vlan ]
-	then
-		echo yes
-		exit 0
-	else
-		echo no
-		exit 1
-	fi
+    if [ ! -d /proc/net/vlan ] ; then 
+	echo "no (no vlan support)"
+	exit 1
+    fi
+    if [ ! -d -r /proc/net/vlan ] ; then
+	echo "no (cannot not read /proc/net/vlan)"
+	exit 1
+    fi
+    if [ ! -x /proc/net/vlan ] ; then
+	echo "no (cannot cd to /proc/net/vlan)"
+	exit 1
+    fi
+
+    echo yes
+    exit 0
 fi
 
 if [ "$1" = "suggest" ]; then
-	if [ -d /proc/net/vlan -a -r /proc/net/vlan -a -x /proc/net/vlan ]
-	then
-		for file in /proc/net/vlan/*
-		do
-			if [ ! "$file" = "/proc/net/vlan/config" ]
-			then
-				basename $file | tr '.' '_'
-			fi
-		done
+    for file in /proc/net/vlan/*; do
+	if [ ! "$file" = "/proc/net/vlan/config" ]; then
+	    basename $file | tr '.' '_'
 	fi
-	exit 0
+    done
+    exit 0
 fi
 
 if [ "$1" = "config" ]; then
@@ -62,7 +64,7 @@ if [ "$1" = "config" ]; then
 	echo 'transmitted.cdef transmitted,8,*'
 	echo 'transmitted.draw AREA'
 	exit 0
-fi;
+fi
 
 awk "/bytes received/ { print \"received.value \" \$4 } /bytes transmitted/ { print \"transmitted.value \" \$4 }" < /proc/net/vlan/$INTERFACE
 
