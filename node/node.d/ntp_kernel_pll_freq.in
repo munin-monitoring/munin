@@ -11,7 +11,7 @@
 # Magic markers (optional - only used by munin-config and some
 # installation scripts):
 #
-#%# family=manual
+#%# family=auto
 #%# capabilities=autoconf
 
 # If run with the "autoconf"-parameter, give our opinion on wether we
@@ -35,10 +35,9 @@ fi
 
 if [ "$1" = "config" ]; then
     echo 'graph_title NTP kernel PLL frequency (ppm +' ${fcomp}')'
-#    echo 'graph-args --logarithmic'
     echo 'graph_args --alt-autoscale'
     echo 'graph_vlabel PLL frequency (ppm +' ${fcomp}')'
-    echo 'graph_category other'
+    echo 'graph_category time'
     echo 'graph_info The frequency for the kernel phase-locked loop used by NTP'
     echo 'ntp_pll_freq.label pll-freq'
     echo 'ntp_pll_freq.info Phase-locked loop frequency in parts per million'
