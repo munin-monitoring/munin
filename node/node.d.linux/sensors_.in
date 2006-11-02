@@ -117,7 +117,10 @@ if (defined $ARGV[0] and $ARGV[0] eq 'suggest') {
 
 $0 =~ /sensors_(.+)*$/;
 my $func = $1;
-exit 2 unless defined $func;
+unless (defined $func and exists $config{$func}) {
+  print STDERR 'plugin must be called as one of ',join(' ', map { 'sensors_'.$_ } keys %config), "\n";
+  exit 2;
+}
 
 if ( defined $ARGV[0] and $ARGV[0] eq 'config' ) {
   print "graph_title $config{$func}->{title}\n";
