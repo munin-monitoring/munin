@@ -45,8 +45,6 @@ if [ "$units" ]; then UNITS=$units ; fi
 if [ "$oid" ]; then TOID=$oid ; fi
 if [ "$community" ]; then COMMUNITY=$community ; fi
 
-UNITS="rg20-sonde b105-sonde"
-COMMUNITY="zorglub"
 SNMPOPTS="-Ov -Oq -v1 -c ${COMMUNITY}"
 
 if [ "$1" = "autoconf" ]; then
