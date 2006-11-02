@@ -96,7 +96,7 @@ if [ "$1" = "config" ]; then
 fi
 
 if [ "$OSV" -ge "5" ]; then
-	/sbin/sysctl -n vm.vmtotal | awk '
+	/sbin/sysctl -n vm.vmtotal | /usr/bin/awk '
 /^Processes:/ {
 	print "running.value", $3;
 	print "diskwait.value", $6;
@@ -104,5 +104,5 @@ if [ "$OSV" -ge "5" ]; then
 	print "sleep.value", $11+0;
 }'
 else
-	vmstat 1 2| awk 'END { print "wait.value " $1 "\nsleep.value " $2 }' 
+	/usr/bin/vmstat 1 2 | /usr/bin/awk 'END { print "wait.value " $1 "\nsleep.value " $2 }' 
 fi

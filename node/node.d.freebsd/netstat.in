@@ -45,7 +45,7 @@
 
 
 if [ "$1" = "autoconf" ]; then
-	if ( netstat -s 2>/dev/null >/dev/null ); then
+	if ( /bin/netstat -s 2>/dev/null >/dev/null ); then
 		echo yes
 		exit 0
 	else
@@ -96,5 +96,5 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-netstat -s | awk '/connection requests/ { print "active.value " $1 } /connection accepts/ { print "passive.value " $1 } /bad connection/ { print "failed.value " $1 } /reset/ { print "resets.value " $1 } /connections established/ { print "established.value " $1 }'
+/bin/netstat -s | awk '/connection requests/ { print "active.value " $1 } /connection accepts/ { print "passive.value " $1 } /bad connection/ { print "failed.value " $1 } /reset/ { print "resets.value " $1 } /connections established/ { print "established.value " $1 }'
 

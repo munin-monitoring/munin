@@ -55,4 +55,4 @@ if [ "$1" = "config" ]; then
 fi
 
 echo -n "processes.value "
-ps ax | wc -l
+/bin/ps ax | /usr/bin/wc -l
