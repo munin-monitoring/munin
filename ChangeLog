@@ -1,56 +1,236 @@
-munin (repository)
+-*- text -*-
 
-  * Server: Applied changeset 1081 from 1.3.3rc, closing ticket #34.
-  * Server: Fixed (reopened) ticket #54
-  * Server: Fixed ticket #118
-  * Server: Display the time period in the title of the comparison pages.
-  * Node: Make it possible to run plugins with group root.
-  * Merge changes from 1.2.3->1.2.4. Some of the following entries may not
-  apply.
+munin (1.3.3, r910-r1236)
+
+  It's very likely that the entries for 1.3.3 contain some duplicates.
+  In part because it's been going on for more than a year, in part
+  because a large part has been constructed from the svn commit log.
+
+  * Linux plugins: Use @@GOODSH@@ (posix-shell) there too
+  * linux/vlan: Better autoconf messages
+  * Solaris plugins: bring them @@GOODSH@@ and some elementary civilization
+  * sunos memory: Make autoconf'able
+  * Bring the goodness og @@GOODSH@@ to the generic plugins
+  * node.d/df and df_inode plugins: Rewrite like the last 20 years of shell
+	enhancments happened
+  * munin monitoring plugins: Make them auto-installing
+  * ntp_ and ntp_states plugins: Insert graph_category, make them "auto"
+	 and invent category "time" as well
+  * ntp_kernel_* plugins: Not ntpdc's were created equal, autodetect better
+  * munin-cgi-graph: Patch to limit number of concurrent rrdgraph processes
+  * munin-html: Do not generate height/width attributes when in cgi mode
+  * munin-html: Log runtime - like with munin-graph etc.
+  * users plugin: Make vehicle for *STACK draw types
+  * munin-graph: Support draw types AREASTACK and LINESTACK which is not
+	sensitive to order like LINE/STACK and AREA/STACK
+  * INSTALL: Document what to do first when working with a svn checkout
+  * munin-graph: Simplify colour processing
+  * Makefile: Remove build before rebuilding it
+  * users plugin: Further fixing. Make testbed for field.colour and
+	graph_printf
+  * munin-graph/Munin.pm: Support graph_printf
+  * users plugin: Move to platform independent directory
+  * users plugin: change familiy to auto, make generic
+  * linux/memory: Further adjustments w.r.t. correct handling of vmalloc_used
+  * Fix typo "contigious"
+  * munin-node-simple: Fix @@ variable typos
+  * SunOS df plugins: use @@GOODSH@@
+  * Define GOODSH and BASH in Makefile.config to be used by shell plugins
+  * exim_* plugins: Problems with "which exim" on Solaris corrected
+  * Put "host" thing in munin-node.conf template config
+  * munin-node docs: Mention two most importand Net::Server config options.
+  * Linux df* plugins: Configurable filesystem-type exclution. cds by defaut
+  * plugin.sh: Utility functions for shell plugins
+  * Munin::Plugin: Utility functions for perl plugins
+  * Sample plugins: Convert to use plugin.sh and Munin::Plugin
+  * Makefile: Install utility files
+  * Munin-run/node: Put most @@ config params from install time into
+	plugin environment.  This means that plugins can access
+	@@PLUGSTATE@@ as $MUNIN_PLUGSTATE, and so on.
+  * df* plugins on all architectures: Make fieldnames comply to charset
+	restrictions
+  * Makefile: Install platform-specific plugins after generic plugins so
+	that the former override the latter ones
+  * Munin-graph: Installed kluge for rrd 1.2 to make lines narrower to
+	compensate for crayon-effect.
+  * Munin-update: Add code to interpret Scientific notation (3E-20) for
+	RRD so plugins don't have to
+  * Bring SunOS df plugin names into line with other platforms
+  * Make SunOS df plugins auto/autoconf
+  * Linux/memory plugin: Remove warning on overcommit
+  * Partial audit of correct magicmarkers in generic and linux plugins
+  * Multiple plugins: Correct autoconf/suggest action slightly
+  * lpstat: New plugin for print queue depths
+  * Munin-node-configure: Make more robust, make it present plugin
+	errors and exit with error if there are any. Write testcases and
+	node-monkeywrench target in Makefile to test the error handling.
+  * munin-run: Make --debug messages consistent wrt STDERR/STDOUT and
+	prefix with # to make them obvious to users and munin-node-configure
+  * Makefile: Create plugin state directory with correct ownership and
+	permissions
+  * port_ plugin did not use @@PLUGSTATE@@ for plugin state
+  * ipmi plugin: Incorrect handeling of 'autoconf' method
+  * YUM plugin did not autoconf correctly
+  * install-node-plugins now installs all plugins in the distribution -
+	no matter if they existed already - how else do we get bugfixed
+	plugins installed?
+  * Inform about ruthless installation practices in INSTALL document
+  * Add maintainer version of Makefile.config - and stop it from being
+	   distributed as the actual Makefile.config by accident
+  * Add favicon.ico file and install
+  * Add other convinience features for the maintainer to Makefile
+  * linux/fw_forwarded_local: Removed arbitrary max settings (trac #149)
+  * Contributed plugins for netbsd
+  * New ntpdc based ntp plugins to show kernel params
+  * New plugin: Multiping shows multiple ping results in one graph (trac #109)
+  * munin-node: Fix depreciated environment setting messages (trac #377)
+  * Document what graph_strategy cgi does (wiki docs, trac #98)
+  * Add a possibly helpful readme file to dists/sunos
+  * Contrib: (updated) hack to generate pages of each-service-on-every-host
+  * Munin.pm: Fix uninitialized value problem in lock reading code.
+  * linux/irqstats plugin: Fix bug related to different /proc/interupts
+	format on Sparc hardware (trac #436)
+  * Added init script for Solaris in resources directory
+  * Add uptime plugin for solaris (trac #419)
+  * Squid plugins: Add timeout to http connection call
+  * Correct years of (C) in snmp__winmem
+  * nutups_: new plugin for ups checking through "nut".
+  * munin-html: Split on /\s+/ instead of / / to ensure more robust handling
+	of user input
+  * Fix rrd 1.2 font size problem causing line wrap (#104)
+  * Fold in contributed hack to generate single service comparative pages
+  * Node: Clear up some operator presidence causing problems in perl 5.8.7
+  * Update copyright years and put copyright info into the new README file
+  * Install a .htaccess file by default and document it
+  * Move surfboard plugin, not Linux specific.  I suspect this plugin is
+	 redundant and snmp__if_ can do the same job
+  * Bugfix to support notify_alias at service level
+  * Put configuration-file snippets into resource directory and use install
+	@@ substitutions in them
+  * Makefile: Better dependencies
+  * Add digitemp and yum plugins
+  * Make munin-node-configure-snmp die gracefully with a potentially useful
+    error message if Net::SNMP->session() fails.  Patch helpfully provided by
+    Cyril Bouthors <cyb@debian.org>, thanks!
+  * New AIX load plugin
+  * Plugins from Lars Strand: linux/threads linux/proc_pri
+  * New version of linux/if_ plugin that also handles mii-tool dependent
+	interfaces and handles absence of tools better.
+  * linux/memory: warn -> warning
+  * postfix/mailstats: sort keys instead of keys, prettyer that way
+  * Windows SNMP plugins: Memory and cpuload plugins seems pretty broken
+	reinstate other versions.
+  * New SNMP lugins: snmp__rdp_users and snmp__winload
+  * Change global headers limit to 16 or longer labels - 20 was too much
+	even with rrd 1.0
+  * linux/memory: Saner values on 64 bit machines - ticket #119
+  * SNMP based uptime grapher - ticket #141
+  * Linux/load:	Make warn/crit levels configurable by environment (ticket #44)
+  * Aix plugins: Better graph_categories
+  * New plugin: qmailscan by David Obando, lists viruses found by name
+  * New plugins: freebsd/uptime, linux/quota_usage, snmp: cmc_tc_sensor
+	r1054 | janl | 2006-08-25 01:31:44 +0200 (fre, 25 aug 2006) | 2 lines
+  * Linux/apt: Better counting: Debian #314610, Munin #92
+  * New plugins for Tomcat from runesk
+  * Applied patch to allow _aggregated graph
+  * spamstats plugin: Check if logfile exists before reading
+  * Delete obsolete plugins: i2c*
+  * ACPI plugin is linux specific
+  * linux/cpu: Various fixes relating to 1000Hz machines, closing #228.
+  * Applied field.colour patch by munin@iambitter.org, ticket #54
+  * New plugin: IPMI plugin added
+  * apc_envunit_ plugin: Remove hard coded defaults that overrode
+	configuration.
+  * freebsd/vmstat: Avoid calling sysctl through $PATH. That variable is
+	changed on process restart.
+  * Get rid of undefined variable warnings in mailscanner - patch by
+	dz@426.ch (trac #227)
+  * cups plugin: No @ in field names (#66, #70)
+  * sendmail_mailqueue plugins: Follow symlinks (#102)
+  * hddtemp_smartctl: different attribute ID for temperature (#81)
+  * ps_ plugin: Counted grep as well as the process
+  * New plugin: cpuspeed for linux.
+  * Linux/multips: wrong category of multips (#103)
+  * Munin-node/run: Set LC_ALL to C to avoid locale changes to program output
+  * Linux/cpu plugin: Scale to >10 CPUs (trac #37)
+  * Linux/df: Rewritten df plugins in perl. The old plugins were extremely
+    slow on busy system due to massive forking
+  * sendmail_mqueue: (#65) wrong seek call
+  * munin-update: (#39) incorrect error handling when opening STATS handle
+  * New plugin: Linux/nfs4_client: should be folded with nfs_client when we
+    get multigraph
+  * node/munin-run: Inserted missing \n
+  * linux/nfs_client: Fixed input processing inefficiency
+  * linux/nfsd: Ditto
+  * linux/fw_forwarded_local: Ditto
+  * ps_ plugin: pgrep? /usr/bin/pgrep!
+  * sendmail_mailqueue plugin: Replaced a $mspqueue too many
+  * Synced most rpm specfile changes from Fedora package into unstable tree
+  * A RedHat specific sendmail plugin config file
+  * Add testing framework and some tests for munin-run.
+  * Updated to final 1.2.4 version [merged change r98r984 from
+    /branches/1.2-stable
+  * Change copyright notice in programs to mention the GNU *General*
+    Public License, Expand on "no warranty". Mention COPYING and
+    http://www.fsf.org/licensing/licenses/gpl.txt.
+    Extend copyright to 2005.
+  * Fix generic/mysql_isam_space_ to pass user-specified mysqlshow
+    options first.
+  * Fix generic/ntp_ to report seconds instead of milliseconds.
+  * Fix handling of 'update no' on services in munin-update.
+  * Log warning about nodes without addresses in munin-update.
+  * SNMP plugins no longer report host_name when checking localhost.
+  * Remade the horizontal logo
+  * Added two svg versions of the logo: original and horizontal
+  * Merged debian packaging changes from 1.2
+    [changes r615:920 from /branches/1.2-stable/dists/debian and
+    r855:891 from /branches/debian/sarge/dists/debian]
+  * Added support for summing values from log lines.
+  * Correct munin-limits pod.
+  * Tuned logging.
+  * Added support for huge rrd files.
+  * Changed paths in Makefile wrt move from cvs to svn.
+  * Make it possible to run plugins with group root.
   * Plugins: "exists $ARGV[0]" does not work with perl < 5.6.0. use
     "defined $ARGV[0]".
   * Dists: Brought dists.freebsd in line with the FreeBSD ports.
   * Dists: Merged changes from Debian Etch package. See
     dists/debian/changelog.
-  * Main: Correct munin-limits pod documentation.
   * Server: filter a trivial error message from RRDtool (Deb#326061)
   * Server: A patch from trunk that makes munin-limits eat stdout/err from the
     contact.foo.command option in munin.conf. (Deb#301196)
-  * Server: make munin-graph deal with RRDtool 1.0.x and 1.2.x.
   * Server: Fix thinko in category_order in munin-html.in.
-  * Server: Fix handling of 'update no' on services. 
-  * Server: Log warning about nodes without addresses.
   * Node: Prevent list command from polluting the node list.
-  * Plugins: Fix tempfile creation by using the best method available on a given
-    platform. (amavis, courier_, perdition)
+  * Plugins: Fix tempfile creation by using the best method available on a
+	given platform. (amavis, courier_, perdition)
   * Plugins: Fix to support the Linux cciss driver in the iostat plugin.
   * Plugins: squid_requests: Put the CDEF back that computes misses.
   * Plugins: postfix_mailvolume: Fix bad exit code test for `which postconf`.
   * Plugins: hddtemp_smartctl: Fix bugs on Solaris.  Revert back to using -A
-  (attributes) rather than -a (all).  That can be specified through the
-  args_$dev mechanism.  THIS CAN BREAK EXISTING SETUPS!
+    (attributes) rather than -a (all).  That can be specified through the
+    args_$dev mechanism.  THIS CAN BREAK EXISTING SETUPS!
   * Plugins: samba: Make location of smbstatus program configurable.
-  Streamline computation of foo.value. Correct typos and a thinko. Add
-  configurable "ignoreipcshare". Make awk program a lot more complicated to
-  deal with variations of smbstatus output. Quote error message with
-  parentheseis.
+    Streamline computation of foo.value. Correct typos and a thinko. Add
+    configurable "ignoreipcshare". Make awk program a lot more complicated to
+    deal with variations of smbstatus output. Quote error message with
+    parentheseis.
   * Plugins: smart_: Allow to query several drives on the same 3ware card.
-  Correct a bug when '-i' was not listed in smartargs.  Don't fail if
-  no value was obtained for hard drive model. Minor enhancements and
-  minor bug fixes from Nicolas STRANSKY <Nico@neo-lan.net>. smartctl exit
-  code is a value composed of bits. Allow more than one to be turned on
-  simultaneously by using the exit code itself rather than the log2 of it.
+    Correct a bug when '-i' was not listed in smartargs.  Don't fail if
+    no value was obtained for hard drive model. Minor enhancements and
+    minor bug fixes from Nicolas STRANSKY <Nico@neo-lan.net>. smartctl exit
+    code is a value composed of bits. Allow more than one to be turned on
+    simultaneously by using the exit code itself rather than the log2 of it.
   * Plugins: perdition: Add missing backquote on mktempfile line. Support
-  IMAPS and POP3S protocols.
+    IMAPS and POP3S protocols.
   * Plugins (FreeBSD): if_, if_errcoll_: Shift field numbers in awk for
-  interfaces that have no MAC address.
+    interfaces that have no MAC address.
   * Plugins (Solaris): fs_df, fs_inodes: Allow '-' in mountpoints.
   * Plugins (Solaris): processes: Replaced numerous calls to various programs
-  with a single awk program.
+    with a single awk program.
   * Plugins (Solaris): netstat: "exists $ARGV[0]" does not work with perl <
-  5.6.0. use "defined $ARGV[0]".
+    5.6.0. use "defined $ARGV[0]".
   * Plugins (Solaris): memory: Rewrite the value computation as a single nawk
-  program. Support scale factor "K" (gives values < 1).
+    program. Support scale factor "K" (gives values < 1).
   * Plugins (Linux): port_: Correct offset error in TCP6 code.
   * Plugins (Linux): if_: Simplify awk program greatly, suggested by
     Nicolai Langfeldt <janl@linpro.no>
