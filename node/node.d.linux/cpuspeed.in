@@ -38,11 +38,11 @@ EOF
 
 for c in /sys/devices/system/cpu/cpu*; do
     N=${c##*/cpu}
-    MAXHZ=$(<$c/cpufreq/cpuinfo_max_freq)
+    MAXHZ=$(cat $c/cpufreq/cpuinfo_max_freq)
     cat <<EOF
 cpu$N.label CPU $N
 cpu$N.max $MAXHZ
-cpu$N.min $(<$c/cpufreq/cpuinfo_min_freq)
+cpu$N.min $(cat $c/cpufreq/cpuinfo_min_freq)
 cpu$N.type GAUGE
 EOF
     if [ "$scaleto100" = "yes" ]; then
@@ -55,5 +55,5 @@ fi
 
 for c in /sys/devices/system/cpu/cpu*; do
     N=${c##*/cpu}
-    echo "cpu$N.value $(<$c/cpufreq/scaling_cur_freq)"
+    echo "cpu$N.value $(cat $c/cpufreq/scaling_cur_freq)"
 done
