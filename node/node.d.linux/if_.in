@@ -25,7 +25,7 @@ findspeed () {
     # Who whould have thought it's so much work to determine the
     # maximum speed of a network interface.  Buckle up!
 
-    IWLIST=$(type --path iwlist)
+    IWLIST="$(type -p iwlist)"
 
     WIRELESS=0
     # Do not use interface name to guess technology.  Many many
@@ -50,9 +50,10 @@ findspeed () {
     # Find speed in Mbps. - or not
     case $WIRELESS:$IWLIST in
 	0:*)
-	    ETHTOOL=$(type --path ethtool)
+	    ETHTOOL="$(type -p ethtool)"
 	    if [ -x "$ETHTOOL" ]; then
-		SPEED="$($ETHTOOL $INTERFACE | awk '/Speed:/ { print $2; }')"
+		SPEED="$($ETHTOOL $INTERFACE |
+                         awk '/Speed:/ { gsub(/[^0-9]*/,"",$2); print $2; }')"
 		case $SPEED in
 		    [0-9]*) :;; # OK
 		    *)      SPEED=U;; # Could be "unknown"
@@ -75,7 +76,7 @@ findspeed () {
 	    ;;
     esac
 
-    MIITOOL=$(type --path mii-tool)
+    MIITOOL="$(type -p mii-tool)"
     case $SPEED:$MIITOOL in
 	U:/*)
 	    SPEED="$($MIITOOL $INTERFACE 2>&1)"
