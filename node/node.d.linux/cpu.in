@@ -42,7 +42,10 @@ HZ=${HZ:-100}
 extinfo=""
 
 if egrep -q '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat; then
-	extinfo="iowait irq softirq"
+        extinfo="iowait irq softirq"
+	if egrep -q '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat; then
+	    extextinfo="steal"
+	fi
 fi
 
 if [ "$1" = "config" ]; then
@@ -125,13 +128,28 @@ if [ "$1" = "config" ]; then
 			echo "softirq.cdef softirq,$NCPU,/"
 		fi
 	fi
+
+        if [ ! -z "$extextinfo" ]
+        then
+                echo 'steal.label steal'
+                echo 'steal.draw STACK'
+                echo 'steal.min 0'
+                echo "steal.max $MAX"
+                echo 'steal.type DERIVE'
+                echo 'steal.info The time that a virtual CPU had runnable tasks, but the virtual CPU itself was not running'
+                if [ "$scaleto100" = "yes" ]; then
+                        echo "steal.cdef steal,$NCPU,/"
+		fi
+	fi
 	exit 0
 fi
 
 # Note: Counters/derive need to report integer values.  Also we need
 # to avoid 10e+09 and the like %.0f should do this.
 
-if [ ! -z "$extinfo" ]; then
+if [ ! -z "$extextinfo" ]; then
+	awk -v hz=$HZ '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\nsteal.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz, $9*100/hz }' < /proc/stat
+elif [ ! -z "$extinfo" ]; then
 	awk -v hz=$HZ '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz }' < /proc/stat
 else
 	awk -v hz=$HZ '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz }' < /proc/stat
