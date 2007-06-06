@@ -71,7 +71,7 @@ my %config = (
 			 graph_args => '--base 1000 -l 0'
 	               },
 	       temp => {
-			 regex => qr/^(\S[^:]*)\s*:\s+\+?(\d+(?:\.\d+)?)[° ]C(?:\s+\((?:high|limit)\s*=\s*\+?(\d+(?:\.\d+)?)[° ]C,\s*hyst(?:eresis)?\s*=\s*\+?(\d+(?:\.\d+)?)[° ]C\))?/m,
+			 regex => qr/^(\S[^:]*)\s*:\s+\+?(-?\d+(?:\.\d+)?)[° ]C(?:\s+\((?:high|limit)\s*=\s*\+?(-?\d+(?:\.\d+)?)[° ]C,\s*hyst(?:eresis)?\s*=\s*\+?(-?\d+(?:\.\d+)?)[° ]C\))?/m,
 			 title => 'Temperatures',
 			 vtitle => 'Celsius',
 			 print_threshold => \&temp_threshold,
