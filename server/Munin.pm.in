@@ -264,6 +264,7 @@ sub munin_parse_config
 	{ 
 	    next if ($line =~ /^#/);
 	    $line =~ s/(^|[^\\])#.*/$1/g;
+	    $line =~ s/\\#/#/g;
 	}
 	next unless ($line =~ /\S/);  # And empty lines...
 	if (length $prevline)
@@ -494,12 +495,13 @@ sub munin_writeconfig_loop {
 	elsif (defined $data->{$a} and length $data->{$a})
 	{
 	    next if "$pre$a" eq "version"; # Handled separately
-	    print "Writing: $pre$a $data->{$a}\n" if $DEBUG;
-	    if ($data->{$a} =~ /\\$/)
+            (my $outstring = $data->{$a}) =~ s/([^\\])#/$1\\#/g;
+	    print "Writing: $pre$a $outstring\n" if $DEBUG;
+	    if ($outstring =~ /\\$/)
 	    { # Backslash as last char has special meaning. Avoid it.
-		print $fh "$pre$a $data->{$a}\\\n"; 
+		print $fh "$pre$a $outstring\\\n"; 
 	    } else {
-		print $fh "$pre$a $data->{$a}\n";
+		print $fh "$pre$a $outstring\n";
 	    }
 	}
     }
