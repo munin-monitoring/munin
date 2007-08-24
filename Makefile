@@ -244,6 +244,7 @@ build-stamp: $(INFILES) Makefile Makefile.config
 		    -e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g'		\
 		    -e 's|@@GOODSH@@|$(GOODSH)|g'			\
 		    -e 's|@@BASH@@|$(BASH)|g'				\
+		    -e 's|@@HASSETR@@|$(HASSETR)|g'			\
 		    $$file > build/$$destname;				\
 	done
 

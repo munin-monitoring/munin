@@ -99,3 +99,7 @@ CHECKGROUP = $(shell $(GETENT) group $(GROUP) >/dev/null 2>/dev/null || (echo "e
 CHOWN      = chown
 CHMOD      = chmod
 CHGRP      = chgrp
+
+# Check whether setruid functionality can be used
+HASSETR = $(shell perl -e 'use Config; my @vars=("d_setruid", "d_setreuid", "d_setresuid"); foreach my $$var (@vars) { if ($$Config{$$var} eq "define") { print "1\n"; exit 0; } } print "0\n"; exit 0;' )
+

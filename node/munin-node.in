@@ -28,6 +28,9 @@ use vars qw(@ISA);
 use Getopt::Long;
 use Net::Server::Fork; # any personality will do
 
+# Variable is set at build, with values detected by the makefiles
+my $HAS_SETR = @@HASSETR@@;
+
 my $tls;
 my %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => 5 );
 
@@ -458,9 +461,12 @@ sub run_service {
 
 #		net_write ("# Want to run as euid/egid $u/$g\n") if $DEBUG;
 
-		$( = $g    unless $g == 0;
+		if ($HAS_SETR)
+		{
+			$( = $g    unless $g == 0;
+			$< = $u    unless $u == 0;
+		}
 		$) = $gs   unless $g == 0;
-		$< = $u    unless $u == 0;
 		$> = $u    unless $u == 0;
 
 		if ($> != $u or $g != (split (' ', $)))[0])
