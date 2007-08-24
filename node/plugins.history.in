@@ -179,3 +179,9 @@ tomcat_jvm
 tomcat_threads
 tomcat_volume
 users
+[1.3.4]
+darwin/if_
+darwin/load
+darwin/netstat
+darwin/if_err
+darwin/processes
