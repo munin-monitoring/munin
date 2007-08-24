@@ -85,7 +85,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	print "offset.cdef offset,1000,/\n";
         print "jitter.label Jitter\n";
         print "jitter.draw LINE2\n";
-	print "jitter.cdef offset,1000,/\n";
+	print "jitter.cdef jitter,1000,/\n";
         exit 0;
 }
 
