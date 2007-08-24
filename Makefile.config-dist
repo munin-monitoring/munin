@@ -95,6 +95,9 @@ PLUGINUSER = nobody
 GETENT = $(shell which getent || which true 2>/dev/null)
 CHECKUSER  = $(shell $(GETENT) passwd $(USER) >/dev/null 2>/dev/null || (echo "echo User $(USER) nonexistant. Create the user and retry; exit 2"))
 CHECKGROUP = $(shell $(GETENT) group $(GROUP) >/dev/null 2>/dev/null || (echo "echo Group $(GROUP) nonexistant. Create the group and retry; exit 2"))
+# For OSX, comment out the previous two lines and comment in these
+#CHECKUSER  = $(shell nicl . -read /users/$(USER) >/dev/null 2>/dev/null || (echo "echo User $(USER) nonexistant. Create the user and retry; exit 2"))
+#CHECKGROUP = $(shell nicl . -read /groups/$(GROUP) >/dev/null 2>/dev/null || (echo "echo Group $(GROUP) nonexistant. Create the group and retry; exit 2"))
 
 CHOWN      = chown
 CHMOD      = chmod
