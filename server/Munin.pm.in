@@ -185,8 +185,12 @@ sub munin_getlock {
 	  die "Could not open $lockname for reading: $!\n";
 	my $pid = <LOCK>;
 	close(LOCK) or die "Could not close $lockname: $!\n";
-	if (defined($pid) and $pid =~ /^\d+$/ and kill(0,$pid)) {
-	    return 0;
+        # Make sure it's a proper pid
+	if (defined($pid) and $pid =~ /^(\d+)$/ and $1 != 1) {
+	    $pid = $1;
+	    if (kill(0, $pid)) {
+	        return 0;
+	    }
 	}
 	&munin_removelock($lockname);
 	&munin_createlock($lockname);
