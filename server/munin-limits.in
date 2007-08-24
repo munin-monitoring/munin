@@ -150,7 +150,13 @@ sub process_service {
 
 	    my $filename = "$config->{dbdir}/$domain/$name-$clientname-$key-".
 	    lc substr (($client->{"$key.type"}||"GAUGE"),0,1) . ".rrd";
-	    my $value = sprintf "%.2f",&munin_fetch("$filename");
+	    my $value = &munin_fetch("$filename");
+            # De-taint.
+	    if (!defined $value) {
+	        $value = "unknown";
+	    } else {
+	        $value = sprintf "%.2f",$value;
+	    }
 
 	    # Some fields that are nice to have in the plugin output
 	    $client->{$key.".value"} = $value;
@@ -165,7 +171,21 @@ sub process_service {
 	    $client->{$key.".wrange"} = (defined $warning->[0]?$warning->[0]:"").":".(defined $warning->[1]?$warning->[1]:"");
 
 	    logger ("value: $domain -> $name -> $clientname -> $key : $value") if $DEBUG;
-	    if ((defined ($critical->[0]) and $value < $critical->[0]) or
+	    if ($value eq "unknown") {
+		$critical->[0] ||= "";
+		$critical->[1] ||= "";
+		$client->{'worst'} = "UNKNOWN" if $client->{"worst"} eq "OK";
+		$client->{'worstid'} = 3 if $client->{"worstid"} == 0;
+		$notes{$domain}{$name}{$clientname}{"$key.state"} = "unknown";
+		$notes{$domain}{$name}{$clientname}{"$key.unknown"} = 
+		(defined $client->{"$key.extinfo"} ? "unknown: " . $client->{"$key.extinfo"} : "Value is unknown.");
+		if (!defined ($oldnotes->{'domain'}->{$domain}->{'node'}->{$name}->{'client'}->{$clientname}->{"$key.state"}) or 
+			$oldnotes->{'domain'}->{$domain}->{'node'}->{$name}->{'client'}->{$clientname}->{"$key.state"} ne "unknown")
+		{
+		    $client->{'state_changed'} = 1;
+		}
+	    }
+	    elsif ((defined ($critical->[0]) and $value < $critical->[0]) or
 	    (defined ($critical->[1]) and $value > $critical->[1])) {
 		$critical->[0] ||= "";
 		$critical->[1] ||= "";
@@ -188,8 +208,8 @@ sub process_service {
 	    {
 		$warning->[0] ||= "";
 		$warning->[1] ||= "";
-		$client->{'worst'} = "WARNING" if $client->{"worst"} eq "OK";
-		$client->{'worstid'} = 1 if $client->{"worstid"} == 0;
+		$client->{'worst'} = "WARNING" if $client->{"worst"} ne "CRITICAL";
+		$client->{'worstid'} = 1 if $client->{"worstid"} != 2;
 		$notes{$domain}{$name}{$clientname}{"$key.state"} = "warning";
 		$notes{$domain}{$name}{$clientname}{"$key.warning"} = 
 		(defined $client->{"$key.extinfo"}?
@@ -268,6 +288,7 @@ sub generate_service_message {
     my $worst = "";
     my %stats = ('critical' => [], 'warning' => [], 'unknown' => [], 'foks' => [], 'ok' => []);
 
+    logger ("generating service message: $domain -> $name -> $clientname") if $DEBUG;
     foreach my $key (keys %{$notes{$domain}{$name}{$clientname}})
     {
 	if ($key =~ /^([^\.]+)\.critical$/)
@@ -282,7 +303,7 @@ sub generate_service_message {
 	}
     	elsif ($key =~ /^([^\.]+)\.unknown$/)
 	{
-	    $worst = "unknown" unless $worst;
+	    $worst = "unknown" if (!$worst or $worst eq "ok");
 	    push @{$stats{'unknown'}}, $1;
 	}
     	elsif ($key =~ /^([^\.]+)\.ok$/)
@@ -432,6 +453,7 @@ sub generate_service_message {
 		$config->{'contact'}->{$c}->{'pipe'} = $pipe;
 	    } 
 	    $pipe = $config->{'contact'}->{$c}->{'pipe'};
+	    logger ("sending message: \"$txt\"") if ($DEBUG);
 	    print $pipe $txt, "\n" if (defined $pipe);
 	    $config->{'contact'}->{$c}->{'num_messages'}++;
 	}
