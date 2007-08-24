@@ -374,7 +374,7 @@ for my $domain (@domainorder) {
 			      DOMAINS => \@domainlist, 
 			      TIMESTAMP => $timestamp);
       open (FILE, ">$config->{htmldir}/$domain/$node-$service.html") or
-	die "Cannot open $config->{htmldir}/$domain/$node-$service.html";
+	die "Cannot open $config->{htmldir}/$domain/$node-$service.html: $!";
       print FILE $servicetemplate->output;
       close FILE;
     }
@@ -436,7 +436,7 @@ for my $domain (@domainorder) {
 			 TIMESTAMP => $timestamp,
 			 CATEGORIES => \@categories);
     open (FILE, ">$config->{htmldir}/$domain/$node.html") or
-      die "Cannot open $config->{htmldir}/$domain/$node.html";
+      die "Cannot open $config->{htmldir}/$domain/$node.html: $!";
     print FILE $nodetemplate->output;
     close FILE;
     $node{services} = \@services;
@@ -453,7 +453,7 @@ for my $domain (@domainorder) {
 				     and @nodeorder > 1),
 			 TIMESTAMP => $timestamp);
   open (FILE, ">$config->{htmldir}/$domain/index.html") or
-    die "Cannot open $config->{htmldir}/index.html";
+    die "Cannot open $config->{htmldir}/$domain/index.html: $!";
   print FILE $domaintemplate->output;
   close FILE;
 
@@ -507,7 +507,7 @@ for my $domain (@domainorder) {
 				      TIMESTAMP => $timestamp,
 				      CATEGORIES => \@cats);
       open (FILE, ">$config->{htmldir}/$domain/comparison-$t.html") or
-	die "Cannot open $config->{htmldir}/$domain/comparison-$t.html";
+	die "Cannot open $config->{htmldir}/$domain/comparison-$t.html: $!";
       print FILE $comparisontemplates{$t}->output;
       close FILE;
     }
@@ -517,7 +517,7 @@ for my $domain (@domainorder) {
 
 $template->param(DOMAINS => \@domains, 
                  TIMESTAMP => $timestamp);
-open (FILE, ">$config->{htmldir}/index.html") or die "Cannot open $config->{htmldir}/index.html";
+open (FILE, ">$config->{htmldir}/index.html") or die "Cannot open $config->{htmldir}/index.html: $!";
 print FILE $template->output;
 close FILE;
 
