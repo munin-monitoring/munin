@@ -148,7 +148,7 @@ if (! -d $config->{rundir})
 munin_runlock("$config->{rundir}/munin-update.lock");
 
 if (!open (STATS,">$config->{dbdir}/munin-update.stats.tmp")) {
-    logger("Unable to open $config->{dbdir}/munin-update.stats");
+    logger("[WARNING] Unable to open $config->{dbdir}/munin-update.stats");
     # Use /dev/null instead - if the admin won't fix he won't care
     open(STATS,">/dev/null") or die "Could not open STATS to /dev/null: $?";
 }
@@ -168,7 +168,7 @@ if ($do_fork)
     listen (Server, SOMAXCONN);
 }
 
-logger("Starting munin-update"); 
+logger("Starting munin-update");
 
 for my $key (keys %{$config->{domain}}) {
   my $domain_time = Time::HiRes::time;
@@ -247,7 +247,7 @@ if ($do_fork)
 		if ($@)
 		{
 			$bad_procs++;
-			logger ("Error communicating with process: $@");
+			logger ("[WARNING] Error communicating with process: $@");
 		}
 		else
 		{
@@ -259,7 +259,7 @@ if ($do_fork)
 			};
 			if ($@)
 			{
-				logger ("Error during fd_retrieve of config: $@");
+				logger ("[WARNING] Error during fd_retrieve of config: $@");
 
 				my $domain  = $children{$pid}->[0];
 				my $name    = $children{$pid}->[1];
@@ -414,11 +414,11 @@ sub change_type
     my $ofile  = &munin_get_filename ($oconf, $domain, $host, $serv, $field);
     my $nfile  = &munin_get_filename ($nconf, $domain, $host, $serv, $field);
 
-    logger ("INFO: Changing type of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"GAUGE") . ".\n");
+    logger ("[WARNING] Changing type of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"GAUGE") . ".\n");
     RRDs::tune ($ofile, "-d", "42:".(defined $val?$val:"GAUGE"));
     unless (rename ($ofile, $nfile))
     {
-	logger ("ERROR: Could not rename file: $!\n");
+	logger ("[ERROR] Could not rename file: $!\n");
     }
 }
 
@@ -432,7 +432,7 @@ sub change_max
     my $val    = shift;
     my $file   = &munin_get_filename ($config, $domain, $host, $serv, $field);
 
-    logger ("INFO: Changing max of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"undef") . ".\n");
+    logger ("[WARNING] Changing max of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"undef") . ".\n");
     RRDs::tune ($file, "-a", "42:".(defined $val?$val:"U"));
 }
 
@@ -446,7 +446,7 @@ sub change_min
     my $val    = shift;
     my $file   = &munin_get_filename ($config, $domain, $host, $serv, $field);
 
-    logger ("INFO: Changing min of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"undef") . ".\n");
+    logger ("[WARNING] Changing min of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"undef") . ".\n");
     RRDs::tune ($file, "-i", "42:".(defined $val?$val:"U"));
 }
 
@@ -485,7 +485,7 @@ sub process_node {
   return if (exists ($node->{fetch_data}) and !$node->{fetch_data});
   return if (exists ($node->{update}) and $node->{update} ne "yes");
   unless ($node->{address}) {
-      logger("No address defined for node: $name");
+      logger("[ERROR] No address defined for node: $name");
       return;
   }
 
@@ -509,7 +509,7 @@ sub process_node {
   # First we get lock...
   unless (&munin_getlock("$config->{rundir}/munin-$domain-$name.lock"))
   {
-    logger ("Could not get lock for $node -> $name. Skipping node.");
+    logger ("[ERROR] Could not get lock for $node -> $name. Skipping node.");
     if ($do_fork)
     { # Send the old config to the server before we die
         socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
@@ -557,7 +557,7 @@ sub process_node {
       my @tmp = ($$, $domain, $name);
 
       if (!$socket) {
-	logger ("Could not connect to $name($node->{address}): $err - Attempting to use old configuration");
+	logger ("[ERROR] Could not connect to $name($node->{address}): $err - Attempting to use old configuration");
 	# If we can't reach the client. Using old Configuration.
 	if (ref $oldnode) {
 	  $config->{domain}->{$domain}->{node}->{$name} = $oldnode;
@@ -605,7 +605,7 @@ sub process_node {
   else # No forking...
   {
       if (!$socket) {
-	logger ("Could not connect to $name($node->{address}): $err\nAttempting to use old configuration");
+	logger ("[ERROR] Could not connect to $name($node->{address}): $err\nAttempting to use old configuration");
 	# If we can't reach the client. Using old Configuration.
 	if (ref $oldnode) {
 	  $config->{domain}->{$domain}->{node}->{$name} = $oldnode;
@@ -631,20 +631,20 @@ sub tls_verify_callback
     if ($ok)
     {
 	$tls_verified{"verified"} = 1;
-	logger ("TLS Notice: Verified certificate.") if $DEBUG;
+	logger ("[TLS] Verified certificate.") if $DEBUG;
         return 1; # accept
     }
 
     if(!($tls_verified{"verify"} eq "yes"))
     {
-    	logger ("TLS Notice: Certificate failed verification, but we aren't verifying.") if $DEBUG;
+    	logger ("[TLS] Certificate failed verification, but we aren't verifying.") if $DEBUG;
 	$tls_verified{"verified"} = 1;
     	return 1;
     }
 
     if ($tls_verified{"level"} > $tls_verified{"required_depth"})
     {
-	logger ("TLS Notice: Certificate verification failed at depth ".$tls_verified{"level"}.".");
+	logger ("[TLS] Certificate verification failed at depth ".$tls_verified{"level"}.".");
 	$tls_verified{"verified"} = 0;
     	return 0;
     }
@@ -667,10 +667,10 @@ sub start_tls {
 
     %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => $tls_vdepth, "verify" => $tls_verify);
 
-    logger("Enabling TLS.") if $DEBUG;
+    logger("[TLS] Enabling TLS.") if $DEBUG;
     if (! eval "require Net::SSLeay;")
     {
-	logger ("Fatal: TLS enabled but Net::SSLeay unavailable.");
+	logger ("[ERROR] TLS enabled but Net::SSLeay unavailable.");
 	return 0;
     }
 
@@ -681,14 +681,14 @@ sub start_tls {
     $ctx = Net::SSLeay::CTX_new();
     if (!$ctx)
     {
-	logger ("TLS Error: Could not create SSL_CTX");
+	logger ("[ERROR] Could not create SSL_CTX");
 	return 0;
     }
 
     # Tune a few things...
     if (Net::SSLeay::CTX_set_options($ctx, &Net::SSLeay::OP_ALL))
     {
-	logger ("TLS Error: Could not set SSL_CTX options");
+	logger ("[ERROR] Could not set SSL_CTX options");
 	return 0;
     }
 
@@ -697,7 +697,7 @@ sub start_tls {
     my $tlsresponse = read_socket_single ($socket);
     if (!defined $tlsresponse)
     {
-	logger ("TLS Error: Bad TLS response \"\".");
+	logger ("[ERROR] Bad TLS response \"\".");
 	return 0
     }
     if ($tlsresponse =~ /^TLS OK/)
@@ -706,7 +706,7 @@ sub start_tls {
     }
     elsif ($tlsresponse !~ /^TLS MAYBE/i)
     {
-	logger ("TLS Error: Bad TLS response \"$tlsresponse\".");
+	logger ("[ERROR] Bad TLS response \"$tlsresponse\".");
 	return 0;
     }
 
@@ -720,18 +720,18 @@ sub start_tls {
 	    {
 	        if ($tls_paranoia eq "paranoid") 
 	        {
-	    	    logger ("TLS Error: Problem occured when trying to read file with private key \"$tls_priv\": $!");
+	    	    logger ("[ERROR] Problem occured when trying to read file with private key \"$tls_priv\": $!");
 		    return 0;
 	        }
 	        else
 	        {
-	    	    logger ("TLS Notice: Problem occured when trying to read file with private key \"$tls_priv\": $!. Continuing without private key.");
+	    	    logger ("[ERROR] Problem occured when trying to read file with private key \"$tls_priv\": $!. Continuing without private key.");
 	        }
 	    }
 	}
 	else
 	{
-	    logger ("TLS Notice: No key file \"$tls_priv\". Continuing without private key.");
+	    logger ("[WARNING] No key file \"$tls_priv\". Continuing without private key.");
         }
     }
 
@@ -743,13 +743,13 @@ sub start_tls {
 	    if (!Net::SSLeay::CTX_use_certificate_file($ctx, $tls_cert, 
 		    &Net::SSLeay::FILETYPE_PEM))
 	    {
-	        logger ("TLS Warning: Problem occured when trying to read file with certificate \"$tls_cert\": $!. Continuing without certificate.");
+	        logger ("[WARNING] Problem occured when trying to read file with certificate \"$tls_cert\": $!. Continuing without certificate.");
 	    }
         }
     }
     else
     {
-	logger ("TLS Notice: No certificate file \"$tls_cert\". Continuing without certificate.");
+	logger ("[WARNING] No certificate file \"$tls_cert\". Continuing without certificate.");
     }
 
     # How about a CA certificate?
@@ -757,7 +757,7 @@ sub start_tls {
     {
     	if(!Net::SSLeay::CTX_load_verify_locations($ctx, $tls_ca_cert, ''))
     	{
-    	    logger ("TLS Notice: Problem occured when trying to read file with the CA's certificate \"$tls_ca_cert\": ".&Net::SSLeay::print_errs().". Continuing without CA's certificate.");
+    	    logger ("[WARNING] Problem occured when trying to read file with the CA's certificate \"$tls_ca_cert\": ".&Net::SSLeay::print_errs().". Continuing without CA's certificate.");
    	 }
     }
 
@@ -768,19 +768,19 @@ sub start_tls {
     $err = &Net::SSLeay::print_errs();
     if (defined $err and length $err)
     {
-	logger ("TLS Warning in set_verify_depth: $err");
+	logger ("[WARNING] in set_verify_depth: $err");
     }
     Net::SSLeay::CTX_set_verify ($ctx, &Net::SSLeay::VERIFY_PEER, \&tls_verify_callback);
     $err = &Net::SSLeay::print_errs();
     if (defined $err and length $err)
     {
-	logger ("TLS Warning in set_verify: $err");
+	logger ("[WARNING] in set_verify: $err");
     }
 
     # Create the local tls object
     if (! ($tls = Net::SSLeay::new($ctx)))
     {
-	logger ("TLS Error: Could not create TLS: $!");
+	logger ("[ERROR] Could not create TLS: $!");
 	return 0;
     }
     if ($DEBUG)
@@ -796,7 +796,7 @@ sub start_tls {
 	    $p=Net::SSLeay::get_cipher_list($tls,$i);
 	} while $p;
         $cipher_list .= '\n';
-	logger ("TLS Notice: Available cipher list: $cipher_list.");
+	logger ("[TLS] Available cipher list: $cipher_list.");
     }
 
     # Connect it to the local fd that munin-update will print to
@@ -804,7 +804,7 @@ sub start_tls {
     $err = &Net::SSLeay::print_errs();
     if (defined $err and length $err)
     {
-	logger ("TLS Error: Could not define encrypted fd: " . $err);
+	logger ("[WARNING] Could not define encrypted fd: " . $err);
     }
 
     # Try to negotiate the tls connection
@@ -820,14 +820,14 @@ sub start_tls {
     $err = &Net::SSLeay::print_errs();
     if (defined $err and length $err)
     {
-	logger ("TLS Error: Could not enable TLS: " . $err);
+	logger ("[ERROR] Could not enable TLS: " . $err);
 	Net::SSLeay::free ($tls);
 	Net::SSLeay::CTX_free ($ctx);
 	$tls = undef;
     }
     elsif (!$tls_verified{"verified"} and $tls_paranoia eq "paranoid")
     {
-	logger ("TLS Error: Could not verify CA: " . Net::SSLeay::dump_peer_certificate($tls));
+	logger ("[ERROR] Could not verify CA: " . Net::SSLeay::dump_peer_certificate($tls));
 	write_socket_single ($tls, "quit\n");
 	Net::SSLeay::free ($tls);
 	Net::SSLeay::CTX_free ($ctx);
@@ -835,9 +835,9 @@ sub start_tls {
     }
     else
     {
-	logger ("TLS Notice: TLS enabled.");
-	logger ("TLS Notice: Cipher `" . Net::SSLeay::get_cipher($tls) . "'.");
-	logger ("TLS Notice: client cert: " . Net::SSLeay::dump_peer_certificate($tls));
+	logger ("[TLS] TLS enabled.");
+	logger ("[TLS] Cipher `" . Net::SSLeay::get_cipher($tls) . "'.");
+	logger ("[TLS] client cert: " . Net::SSLeay::dump_peer_certificate($tls));
     }
     read_socket_single(); # Get rid of empty line
     return $tls;
@@ -847,7 +847,7 @@ sub write_socket_single {
     my $socket = shift;
     my $text   = shift;
     my $timed_out = 0;
-    logger ("DEBUG: Writing to socket: \"$text\".") if $DEBUG;
+    logger ("[DEBUG] Writing to socket: \"$text\".") if $DEBUG;
     eval {
 	local $SIG{ALRM} = sub { die "Could not run list on socket: $!\n"};
 	alarm 5;
@@ -857,7 +857,7 @@ sub write_socket_single {
 	    my $err = &Net::SSLeay::print_errs();
 	    if (defined $err and length $err)
 	    {
-		logger ("TLS Warning in write_socket_single: $err");
+		logger ("[WARNING] in write_socket_single: $err");
 		exit 9;
 	    }
 	}
@@ -878,7 +878,7 @@ sub read_socket_single {
     return undef unless defined $socket;
 
     eval {
-      local $SIG{ALRM} = sub { $timed_out=1; close $socket; logger ("Aborting read: $!"); exit 1;};
+      local $SIG{ALRM} = sub { $timed_out=1; close $socket; logger ("[WARNING] Timeout: Aborting read: $!"); exit 1;};
       alarm( $timeout );
       if ($tls)
       {
@@ -886,7 +886,7 @@ sub read_socket_single {
 	  my $err = &Net::SSLeay::print_errs();
 	  if (defined $err and length $err)
 	  {
-	    logger ("TLS Warning in read_socket_single: $err");
+	    logger ("[WARNING] read_socket_single: $err");
 	  }
       }
       else
@@ -898,10 +898,10 @@ sub read_socket_single {
     };
     if ($timed_out)
     {
-	logger ("Socket read timed out: $@\n");
+	logger ("[WARNING] Socket read timed out: $@\n");
 	return undef;
     }
-    logger ("DEBUG: Reading from socket: \"$res\".") if $DEBUG;
+    logger ("[DEBUG] Reading from socket: \"$res\".") if $DEBUG;
     return $res;
 }
 
@@ -913,7 +913,7 @@ sub read_socket {
     return undef unless defined $socket;
 
     eval {
-      local $SIG{ALRM} = sub { $timed_out=1; close $socket; logger ("Aborting read: $!"); exit 1;};
+      local $SIG{ALRM} = sub { $timed_out=1; close $socket; logger ("[WARNING] Timeout, aborting read: $!"); exit 1;};
       alarm( $timeout );
       if ($tls)
       {
@@ -921,7 +921,7 @@ sub read_socket {
 	    my $err = &Net::SSLeay::print_errs();
 	    if (defined $err and length $err)
 	    {
-	      logger ("TLS Warning in read_socket: $err");
+	      logger ("[WARNING] in read_socket: $err");
 	    }
 	    chomp;
 	    last if (/^\.$/);
@@ -940,10 +940,10 @@ sub read_socket {
     };
     if ($timed_out)
     {
-	logger ("Socket read timed out: $@\n");
+	logger ("[WARNING] Socket read timed out: $@\n");
 	return undef;
     }
-    logger ("DEBUG: Reading from socket: \"".(join ("|",@array))."\".") if $DEBUG;
+    logger ("[DEBUG] Reading from socket: \"".(join ("|",@array))."\".") if $DEBUG;
     return (@array);
 }
 
@@ -953,7 +953,7 @@ sub config_node {
   my $fetchdomain;
   chomp($clientdomain) if $clientdomain;
   if (!$clientdomain) {
-      logger("Got unknown reply from client \"$domain\" -> \"name\" skipping");
+      logger("[WARNING] Got unknown reply from client \"$domain\" -> \"name\" skipping");
       return 0;
   }
   $clientdomain =~ s/\#.*(?:lrrd|munin) (?:client|node) at //;
@@ -972,7 +972,7 @@ sub config_node {
   my $nodeconf_time = Time::HiRes::time;
 
   my $tls_requirement = &munin_get ($config, "tls", "auto", $domain, $name);
-  logger ("TLS Debug: TLS set to \"$tls_requirement\".") if $DEBUG;
+  logger ("[DEBUG]: TLS set to \"$tls_requirement\".") if $DEBUG;
   if ($tls_requirement ne "disabled")
   {
       my $key;
@@ -994,13 +994,13 @@ sub config_node {
       {
 	  if ($tls_requirement eq "paranoid" or $tls_requirement eq "enabled")
 	  {
-	      logger ("ERROR: Could not establish TLS connection to \"$domain :: $name\". Skipping.");
+	      logger ("[ERROR] Could not establish TLS connection to \"$domain :: $name\". Skipping.");
 	      exit 13;
 	  }
       }
   }
 
-  logger("Configuring node: $name") if $DEBUG;
+  logger("[DEBUG] Configuring node: $name") if $DEBUG;
   my @services;
   eval {
     local $SIG{ALRM} = sub { die "Could not run list on $name ($fetchdomain): $!\n"};
@@ -1037,7 +1037,7 @@ sub config_node {
     {
 	$node->{client}->{$servname}->{realservname} = $service;
     }
-    logger("Configuring service: $name->$servname") if $DEBUG;
+    logger("[DEBUG] Configuring service: $name->$servname") if $DEBUG;
     write_socket_single ($socket, "config $service\n");
     my @lines = read_socket($socket);
     return unless $socket;
@@ -1060,7 +1060,7 @@ sub config_node {
 	    $value =~ s/\\/_/g; # Sanitise labels
 	}
 	$node->{client}->{$servname}->{$client.".".$type} = "$value";
-	logger ("config: $name->$client.$type = $value") if $DEBUG;
+	logger ("[DEBUG] config: $name->$client.$type = $value") if $DEBUG;
 	if (($type) and ($type eq "label")) {
 	  push (@graph_order,$client)
 	    unless grep (/^$client$/, @graph_order);
@@ -1069,7 +1069,7 @@ sub config_node {
 	my ($keyword) = $1;
 	my ($value) = $2;
 	$node->{client}->{$servname}->{$keyword} = $value;
-	logger ("Config: $keyword = $value") if $DEBUG;
+	logger ("[DEBUG] Config: $keyword = $value") if $DEBUG;
 	if ($keyword eq "graph_order") {
 	  @graph_order = split (/\s+/, $node->{client}->{$servname}->{graph_order});
 	}
@@ -1115,7 +1115,7 @@ sub config_node {
 	  }
 	  RRDs::create @args;
 	  if (my $ERROR = RRDs::error) {
-	    logger ("Unable to create \"$fname\": $ERROR");
+	    logger ("[ERROR] In RRD: unable to create \"$fname\": $ERROR");
 	  }
 	}
     }
@@ -1135,10 +1135,10 @@ sub config_node {
 sub fetch_node {
     my ($domain,$name,$node,$socket) = @_;
     my $nodefetch_time = Time::HiRes::time;
-    logger("Fetching node: $name") if $DEBUG;
+    logger("[DEBUG] Fetching node: $name") if $DEBUG;
     for my $service (keys %{$node->{client}}) {
 	my $servicefetch_time = Time::HiRes::time;
-	logger("Fetching service: $name->$service") if $DEBUG;
+	logger("[DEBUG] Fetching service: $name->$service") if $DEBUG;
 	next if (exists ($node->{client}->{$service}->{fetch_data}) and 
 		 $node->{client}->{$service}->{fetch_data} == 0);
 	next if (exists ($node->{client}->{$service}->{update}) and 
@@ -1182,13 +1182,13 @@ sub fetch_node {
 			  substr(($node->{client}->{$service}->{$key.".type"}||
 				  "GAUGE"),0,1).".rrd";
 
-		    logger("Updating $fname with $value") if $DEBUG;
+		    logger("[DEBUG] Updating $fname with $value") if $DEBUG;
 		    RRDs::update ("$fname", "N:$value");
 		    if (my $ERROR = RRDs::error) {
-			logger ("Unable to update $fname: $ERROR");
+			logger ("[ERROR] In RRD: unable to update $fname: $ERROR");
 		    }
 		} else {
-		    logger ("Unable to update $domain -> $name -> $service -> $key: No such field (no \"label\" field defined when running plugin with \"config\").");
+		    logger ("[ERROR] Unable to update $domain -> $name -> $service -> $key: No such field (no \"label\" field defined when running plugin with \"config\").");
 		}
 	    } elsif (/(\w+)\.extinfo\s+(.+)/) {
 		$config->{domain}->{$domain}->{node}->{$name}->{client}->{$service}->{$1.".extinfo"} = $2;
@@ -1252,7 +1252,7 @@ sub logger {
 		  }
 		  else
 		  {
-			  print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-update.log\" for writing: $!";
+			  print STDERR "[WARNING] Could not open log file \"$config->{logdir}/munin-update.log\" for writing: $!";
 			  print STDERR "$now - $comment\n";
 		  }
 	  }
