@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# -*- perl -*-
 #
 # Plugin to monitor packages that should be installed on systems using
 # apt-get (mostly Debian, but also RedHat).
@@ -47,19 +48,19 @@ my @releases = ("stable", "testing","unstable");
 
 
 sub print_state() {
-	if(-l $statefile) {
-		die("$statefile is a symbolic link, refusing to read it.");
-	}
-	if (! -e "$statefile") {
-	    update_state ();
-	}
-	if (! -e "$statefile") {
-	    die ("$statefile does not exist. Something wicked happened.");
-	}
-	open(STATE, "$statefile")
-		or die("Couldn't open state file $statefile for reading.");
-	print while <STATE>;
-	close STATE;
+    if(-l $statefile) {
+	die("$statefile is a symbolic link, refusing to read it.");
+    }
+    if (! -e "$statefile") {
+	update_state ();
+    }
+    if (! -e "$statefile") {
+	die ("$statefile does not exist. Something wicked happened.");
+    }
+    open(STATE, "$statefile")
+	or die("Couldn't open state file $statefile for reading.");
+    print while <STATE>;
+    close STATE;
 }
 
 sub update_state() {
@@ -165,20 +166,21 @@ if ($ARGV[0] and $ARGV[0] eq "autoconf")
 	}
 }
 
-if ($ARGV[0] and $ARGV[0] eq "config")
-{
+if ($ARGV[0] and $ARGV[0] eq "config") {
 
-        print "graph_title Pending packages\n";
-	foreach my $release (@releases) {
-        print "pending_$release.label pending_$release\n";
-        print "pending_$release.warning 0:0\n";
-        print "hold_$release.label hold_$release\n";
-	}
-        exit 0;
+    print "graph_title Pending packages\n";
+    print "graph_vlabel Total packages\n";
+    print "graph_category system\n";
+
+    foreach my $release (@releases) {
+	print "pending_$release.label pending_$release\n";
+	print "pending_$release.warning 0:0\n";
+	print "hold_$release.label hold_$release\n";
+    }
+    exit 0;
 }
 
-if ($ARGV[0] and $ARGV[0] eq "update")
-{
+if ($ARGV[0] and $ARGV[0] eq "update") {
 	my $maxinterval = $ARGV[1] ? $ARGV[1] : update_helpandexit;
 	my $probability = $ARGV[2] ? $ARGV[2] : update_helpandexit;
 	
