@@ -12,11 +12,17 @@
 #                          Use this to make the plugin use the --all or -a option
 #                          if your disk will not return it's temperature when
 #                          only the -A option is used.
+#	dev_$dev	-- monitoring device for one drive, e.g. twe0
 #
 # Note for users of RAID controllers (smartmontools currently only
 # supports 3ware): you can specify the drives attached to your RAID
 # controller(s) as raiddev_num (e.g. sda_0). Then you must specify the
 # type like this: type_sda_0 3ware,0.
+#
+# Recent versions of the kernel driver use a separate major device number
+# for monitoring purposes, like /dev/twe<n> or /dev/twa<n>. This can be
+# put in the e.g. dev_sda environment variable, to allow the user to keep
+# sda as the name of the disk.
 #
 #%# family=auto
 #%# capabilities=autoconf
@@ -52,6 +58,8 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $Id$
 
 
 use strict;
@@ -125,11 +133,10 @@ foreach (@drives) {
   my $cmd = $smartctl.' -A ';
   $cmd .= $ENV{'args_'.$_}.' ' if exists $ENV{'args_'.$_};
   $cmd .= '-d '.$ENV{'type_'.$_}.' ' if exists $ENV{'type_'.$_};
-  if ($^O eq 'solaris') {
-    $cmd .= "/dev/rdsk/$dev";
-  } else {
-    $cmd .= "/dev/$dev";
-  }
+  $cmd .= '/dev/';
+  $cmd .= 'rdsk/' if $^O eq 'solaris';
+  $cmd .= exists $ENV{'dev_'.$_} ? $ENV{'dev_'.$_} : $dev;
+
   my $output = `$cmd`;
   if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
     print "$_.value $1\n";
