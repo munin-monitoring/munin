@@ -60,6 +60,21 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
     exit 1;
 }
 
+
+if ( $ARGV[0] and $ARGV[0] eq "config" )
+{
+    print "graph_title Postfix bytes throughput\n";
+    print "graph_args --base 1000 -l 0\n";
+    print "graph_vlabel bytes / \${graph_period}\n";
+    print "graph_scale yes\n";
+    print "graph_category postfix\n";
+    print "volume.label throughput\n";
+    print "volume.type DERIVE\n";
+    print "volume.min 0\n";
+    exit 0;
+}
+
+
 my $logfile = "$LOGDIR/$LOGFILE";
 my $prevdate = get_prev_date();
 
@@ -118,19 +133,6 @@ if ($startsize < $pos)
 
 parseLogfile ($logfile, $pos, $startsize);
 $pos = $startsize;
-
-if ( $ARGV[0] and $ARGV[0] eq "config" )
-{
-    print "graph_title Postfix bytes throughput\n";
-    print "graph_args --base 1000 -l 0\n";
-    print "graph_vlabel bytes / \${graph_period}\n";
-    print "graph_scale  yes\n";
-    print "graph_category  postfix\n";
-    print "volume.label throughput\n";
-    print "volume.type DERIVE\n";
-    print "volume.min 0\n";
-    exit 0;
-}
 
 print "volume.value $volume\n";
 
