@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# -*- perl -*-
 #
 # Copyright (C) 2004 Jimmy Olsen, Dagfinn Ilmari Mannsaaker
 #
@@ -20,6 +21,37 @@
 #%# family=snmpauto
 #%# capabilities=snmpconf
 
+=head2 PLUGIN CONFIGURATION
+
+This plugin expects to be linked with the hostname and interface name
+defined in the linkage, eg,
+
+     ln -s /usr/share/munin/plugins/snmp__if_ \
+       /etc/munin/plugins/snmp_router.host.domain_if_3
+
+A port number can be defined in the linkage as well:
+
+     ln -s /usr/share/munin/plugins/snmp__if_ \
+       /etc/munin/plugins/snmp_router.host.domain:3922_if_3
+
+SNMP configuration variables are passed in via environment
+variables specified in $(MUNIN_PLUGIN_CONFIGDIR), eg,
+/etc/munin/plugin-conf.d/snmp_router.host.domain_if_3
+
+Valid SNMP configuration variables are:
+
+env.host              Overrides hostname specified in linkage
+env.port              Overrides port number specified in linkage
+env.community         Specify the SNMP v1 or SNMP v2c community string.
+env.snmpV3            Set to 1 to enable SNMP v3 auth connections
+snmpV3_username               SNMPv3 username
+snmpV3_authpassword   SNMPv3 auth password
+snmpV3_authprotocol   SNMPv3 auth protocol
+snmpV3_privpassword   SNMPv3 private password
+
+=cut
+
+
 use strict;
 use Net::SNMP;
 
@@ -29,6 +61,18 @@ my $host      = $ENV{host}      || undef;
 my $port      = $ENV{port}      || 161;
 my $community = $ENV{community} || "public";
 my $iface     = $ENV{interface} || undef;
+
+my $useMibEntryDescr = $ENV{useMibEntryDescr} || undef;
+
+my ($snmpV3_username,     $snmpV3_authpassword,
+    $snmpV3_authprotocol, $snmpV3_privpassword,);
+
+if ($ENV{snmpV3}) {
+  $snmpV3_username     = $ENV{snmpV3_username};
+  $snmpV3_authpassword = $ENV{snmpV3_authpassword};
+  $snmpV3_authprotocol = $ENV{snmpV3_authprotocol};
+  $snmpV3_privpassword = $ENV{snmpV3_privpassword};
+}
 
 my $response;
 
@@ -81,15 +125,31 @@ my $ifEntrySpeed     = "1.3.6.1.2.1.2.2.1.5.$iface";
 my $ifEntryStatus    = "1.3.6.1.2.1.2.2.1.8.$iface";
 my $ifEntryInOctets  = "1.3.6.1.2.1.2.2.1.10.$iface";
 my $ifEntryOutOctets = "1.3.6.1.2.1.2.2.1.16.$iface";
+my $sysDescr         = '1.3.6.1.2.1.1.1.0';
 
-my ($session, $error) = Net::SNMP->session(
-		-hostname  => $host,
-		-community => $community,
-		-port      => $port
+my ($session, $error);
+
+if ($ENV{snmpV3}) {
+    ($session, $error) =
+	Net::SNMP->session(
+			   -hostname       => $host,
+			   -version        => 'snmpv3',
+			   -port           => $port,
+			   -username       => $snmpV3_username,
+			   -authpassword   => $snmpV3_authpassword,
+			   -authprotocol   => $snmpV3_authprotocol,
+			   -privpassword   => $snmpV3_privpassword,
+			   );
+} else {
+   ($session, $error) =
+       Net::SNMP->session(
+			  -hostname  => $host,
+			  -community => $community,
+			  -port      => $port
 	);
+}
 
-if (!defined ($session))
-{
+if (!defined ($session)) {
 	die "Croaking: $error";
 }
 
@@ -103,18 +163,15 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	my $name = $response->{$ifEntryDescr};
 	$name =~ s/[^\w\s]//g;
 	my $warn = undef;
-	if (defined ($response = $session->get_request($ifEntrySpeed)))
-	{
-		$warn = $response->{$ifEntrySpeed}/8;
+	if (defined ($response = $session->get_request($ifEntrySpeed))) {
+	    $warn = $response->{$ifEntrySpeed}/8;
 	}
-	if (length ($name) > 15)
-	{
-		print "graph_title Interface $iface traffic\n";
-	}
-	else
-	{
-		print "graph_title Interface $name traffic\n";
-	}
+	# W00t?  Respondents seem to prefer $name so use it and forget $iface
+	# if (length ($name) > 15) {
+	# print "graph_title Interface $iface traffic\n";
+        # } else {
+	print "graph_title Interface $name traffic\n";
+	# }
 	print "graph_order recv send\n";
 	print "graph_args --base 1000\n";
 	print "graph_vlabel bits in (-) / out (+) per \${graph_period}\n";
