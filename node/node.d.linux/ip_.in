@@ -1,4 +1,5 @@
 #!@@GOODSH@@
+# -*- sh -*-
 #
 # Wildcard-plugin to monitor IP addresses through iptables. To monitor an
 # IP, link ip_<ipaddress> to this file. E.g.
@@ -12,6 +13,9 @@
 #    iptables -A INPUT -d 192.168.0.1
 #    iptables -A OUTPUT -s 192.168.0.1
 #
+# If the IP number contains a ":" anywhere it is assumed to be a ip6 IP
+# number and ip6tables are used instead of iptables.
+#
 # Furthermore, this plugin needs to be run as root for iptables to work
 #
 # This plugin is based on the if_ plugin.
@@ -24,6 +28,16 @@
 
 
 IP=${0##*/ip_}
+
+case $IP in
+    *:*) # I know this! This is IPv6!
+	# This is a fun hack to make the plugin ip6 compatible.
+	# Suggested in ticket #439 by "jodal".
+	eval 'function iptables() {
+	    /sbin/ip6tables "$@"
+	}'
+	;;
+esac
 
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/net/dev ]; then
