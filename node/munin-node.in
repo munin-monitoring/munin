@@ -32,7 +32,7 @@ use Net::Server::Fork; # any personality will do
 my $HAS_SETR = @@HASSETR@@;
 
 my $tls;
-my %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => 5 );
+my %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => 5, "verify" => "no" );
 
 chdir ("/");
 
@@ -543,6 +543,13 @@ sub run_service {
 
 sub process_request {
   my $self = shift;
+
+  my $tls_started = 0;
+  my $mode;
+
+  $mode = &get_var (\%sconf, 'tls');
+  $mode = "auto" unless defined $mode and length $mode;
+
   $caddr = $self->{server}->{peeraddr};
   $0 .= " [$caddr]";
   net_write ("# munin node at $FQDN\n");
@@ -551,6 +558,15 @@ sub process_request {
   while (defined ($_ = net_read())) {
     alarm($sconf{'timeout'});
     chomp;
+    if(!$tls_started and ($mode eq "paranoid" or $mode eq "enabled"))
+    {
+      if(!(/^starttls\s*$/i))
+      {
+        logger ("ERROR: Client did not request TLS. Closing.");
+	net_write ("# I require TLS. Closing.");
+        last;
+      }
+    }
     logger ("DEBUG: Running command \"$_\".") if $DEBUG;
     if (/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
       &list_services($1);
@@ -571,10 +587,11 @@ sub process_request {
       print_service (&run_service($1,"config"));
     } 
     elsif (/^starttls\s*$/i) {
-      my $mode;
       my $key;
       my $cert;
       my $depth;
+      my $ca_cert;
+      my $tls_verify;
       $key = $cert = &get_var (\%sconf, "tls_pem");
       $key = &get_var (\%sconf, "tls_private_key")
 	  unless defined $key;
@@ -582,14 +599,24 @@ sub process_request {
       $cert = &get_var (\%sconf, "tls_certificate")
 	  unless defined $cert;
       $cert = "@@CONFDIR@@/munin-node.pem" unless defined $cert;
-      $mode = &get_var (\%sconf, 'tls');
-      $mode = "auto" unless defined $mode and length $mode;
+      $ca_cert = &get_var(\%sconf, "tls_ca_certificate");
+      $ca_cert = "@@CONFDIR@@/cacert.pem" unless defined $ca_cert;
       $depth = &get_var (\%sconf, 'tls_verify_depth');
       $depth = 5 unless defined $depth;
-      start_tls ($mode, $cert, $key,
-	      &get_var (\%sconf, 'tls_verify_certificate'),
-	      $depth
-	      );
+      $tls_verify = &get_var (\%sconf, 'tls_verify_certificate');
+      $tls_verify = "no" unless defined $tls_verify;
+      if (!start_tls ($mode, $cert, $key, $ca_cert, $tls_verify, $depth))
+      {
+          if ($mode eq "paranoid" or $mode eq "enabled")
+          {
+              logger ("ERROR: Could not establish TLS connection. Closing.");
+              last;
+          }
+      }
+      else
+      {
+          $tls_started=1;
+      }
       logger ("DEBUG: Returned from starttls.") if $DEBUG;
     }
     else  {
@@ -608,6 +635,7 @@ sub net_read
 	{
 	    logger ("TLS Warning in net_read: $err");
 	}
+	if($_ eq '') { undef $_; } #returning '' signals EOF
     }
     else
     {
@@ -640,17 +668,32 @@ sub tls_verify_callback
 {
     my ($ok, $subj_cert, $issuer_cert, $depth, 
 	    $errorcode, $arg, $chain) = @_;
+#    logger ("ok is ${ok}");
 
     $tls_verified{"level"}++;
 
-    if ($ok and $tls_verified{"level"} <= $tls_verified{"required_depth"})
+    if ($ok)
     {
-    	$tls_verified{"verified"} = 1;
-	logger ("TLS Notice: Verified certificate.") if $DEBUG;
+        $tls_verified{"verified"} = 1;
+        logger ("TLS Notice: Verified certificate.") if $DEBUG;
         return 1; # accept
     }
 
-    return 1; # accept anyway
+    if(!($tls_verified{"verify"} eq "yes"))
+    {
+        logger ("TLS Notice: Certificate failed verification, but we aren't verifying.") if $DEBUG;
+	$tls_verified{"verified"} = 1;
+        return 1;
+    }
+
+    if ($tls_verified{"level"} > $tls_verified{"required_depth"})
+    {
+        logger ("TLS Notice: Certificate verification failed at depth ".$tls_verified{"level"}.".");
+        $tls_verified{"verified"} = 0;
+        return 0;
+    }
+
+    return 0; # Verification failed
 }
 
 sub start_tls 
@@ -658,6 +701,7 @@ sub start_tls
     my $tls_paranoia = shift;
     my $tls_cert     = shift;
     my $tls_priv     = shift;
+    my $tls_ca_cert  = shift;
     my $tls_verify   = shift;
     my $tls_vdepth   = shift;
 
@@ -665,7 +709,7 @@ sub start_tls
     my $ctx;
     my $local_key = 0;
 
-    %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => $tls_vdepth );
+    %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => $tls_vdepth, "verify" => $tls_verify );
 
     if ($tls_paranoia eq "disabled")
     {
@@ -743,6 +787,15 @@ sub start_tls
     else
     {
 	logger ("TLS Notice: No certificate file \"$tls_cert\". Continuing without certificate.");
+    }
+
+    # How about a CA certificate?
+    if (-e $tls_ca_cert)
+    {
+        if(!Net::SSLeay::CTX_load_verify_locations($ctx, $tls_ca_cert, ''))
+        {
+            logger ("TLS Notice: Problem occured when trying to read file with the CA's certificate \"$tls_ca_cert\": ".&Net::SSLeay::print_errs().". Continuing without CA's certificate.");
+        }
     }
 
     # Tell the other side that we're able to talk TLS

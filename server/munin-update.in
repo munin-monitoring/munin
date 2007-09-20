@@ -50,7 +50,7 @@ my $cli_do_fork;
 my $cli_timeout;
 my $print_stdout = 0;
 my $tls;
-my %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => 5 );
+my %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => 5, "verify" => "no");
 
 my $log = new IO::Handle;
 
@@ -624,12 +624,9 @@ sub tls_verify_callback
 {
     my ($ok, $subj_cert, $issuer_cert, $depth, 
 	    $errorcode, $arg, $chain) = @_;
+#    logger ("ok is ${ok}");
 
-    if ($tls_verified{"level"}++ > $tls_verified{"required_depth"})
-    {
-	logger ("TLS Notice: Certificate verification failed at depth ".$tls_verified{"level"}.".");
-    	return 1;
-    }
+    $tls_verified{"level"}++;
 
     if ($ok)
     {
@@ -638,7 +635,21 @@ sub tls_verify_callback
         return 1; # accept
     }
 
-    return 1; # accept anyway
+    if(!($tls_verified{"verify"} eq "yes"))
+    {
+    	logger ("TLS Notice: Certificate failed verification, but we aren't verifying.") if $DEBUG;
+	$tls_verified{"verified"} = 1;
+    	return 1;
+    }
+
+    if ($tls_verified{"level"} > $tls_verified{"required_depth"})
+    {
+	logger ("TLS Notice: Certificate verification failed at depth ".$tls_verified{"level"}.".");
+	$tls_verified{"verified"} = 0;
+    	return 0;
+    }
+
+    return 0; # Verification failed
 }
 
 sub start_tls {
@@ -646,6 +657,7 @@ sub start_tls {
     my $tls_paranoia = shift;
     my $tls_cert     = shift;
     my $tls_priv     = shift;
+    my $tls_ca_cert  = shift;
     my $tls_verify   = shift;
     my $tls_vdepth   = shift;
 
@@ -653,7 +665,7 @@ sub start_tls {
     my $err;
     my $remote_key = 0;
 
-    %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => $tls_vdepth );
+    %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => $tls_vdepth, "verify" => $tls_verify);
 
     logger("Enabling TLS.") if $DEBUG;
     if (! eval "require Net::SSLeay;")
@@ -731,14 +743,24 @@ sub start_tls {
 	    if (!Net::SSLeay::CTX_use_certificate_file($ctx, $tls_cert, 
 		    &Net::SSLeay::FILETYPE_PEM))
 	    {
-	        logger ("TLS Warning: Problem occured when trying to read file with private key \"$tls_cert\": $!. Continuing without private key.");
+	        logger ("TLS Warning: Problem occured when trying to read file with certificate \"$tls_cert\": $!. Continuing without certificate.");
 	    }
         }
     }
     else
     {
-	logger ("TLS Notice: No certificate file \"$tls_cert\". Continuing without private key.");
+	logger ("TLS Notice: No certificate file \"$tls_cert\". Continuing without certificate.");
     }
+
+    # How about a CA certificate?
+    if (-e $tls_ca_cert)
+    {
+    	if(!Net::SSLeay::CTX_load_verify_locations($ctx, $tls_ca_cert, ''))
+    	{
+    	    logger ("TLS Notice: Problem occured when trying to read file with the CA's certificate \"$tls_ca_cert\": ".&Net::SSLeay::print_errs().". Continuing without CA's certificate.");
+   	 }
+    }
+
 
     # Now let's define our requirements of the node
     $tls_vdepth = 5 if !defined $tls_vdepth;
@@ -955,15 +977,20 @@ sub config_node {
   {
       my $key;
       my $cert;
+      my $depth;
+      my $ca_cert;
+      my $tls_verify;
       $key = $cert = munin_get ($config, "tls_pem", undef, $domain, $name);
       $key = &munin_get ($config, "tls_private_key", "@@CONFDIR@@/munin.pem", $domain, $name)
 	  unless defined $key;
       $cert = &munin_get ($config, "tls_certificate", "@@CONFDIR@@/munin.pem", $domain, $name)
 	  unless defined $cert;
-      if (!start_tls ($socket, $tls_requirement, $cert, $key,
-		  &munin_get ($config, "tls_verify_certificate", undef, $domain, $name),
-		  &munin_get ($config, "tls_verify_depth", 5, $domain, $name),
-		  ))
+      $ca_cert = &munin_get ($config, "tls_ca_certificate", "@@CONFDIR@@/cacert.pem", $domain, $name)
+	  unless defined $ca_cert;
+      $tls_verify=&munin_get ($config, "tls_verify_certificate", "no", $domain, $name);
+      $depth=&munin_get ($config, "tls_verify_depth", 5, $domain, $name);
+
+      if (!start_tls ($socket, $tls_requirement, $cert, $key, $ca_cert, $tls_verify, $depth))
       {
 	  if ($tls_requirement eq "paranoid" or $tls_requirement eq "enabled")
 	  {
