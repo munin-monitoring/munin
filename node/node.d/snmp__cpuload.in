@@ -16,7 +16,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-#
 #%# family=snmpauto
 #%# capabilities=snmpconf
 
@@ -82,7 +81,9 @@ cpu.info Percentage of CPU used.
 	exit 0;
 }
 
-print "cpu.value ", &get_single ($session, "1.3.6.1.2.1.25.3.3.1.2.1"), "\n";
+my $value = &get_single ($session, "1.3.6.1.2.1.25.3.3.1.2.1") || "U";
+
+print "cpu.value ", $value, "\n";
 
 sub get_single
 {
