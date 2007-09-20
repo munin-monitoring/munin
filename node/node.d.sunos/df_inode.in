@@ -1,8 +1,12 @@
 #!@@GOODSH@@
+# -*- sh -*-
 #
-# Configuration variables
+# $Id$
 #
-#   df  - path to df executable (GNU df makes life easier)
+# Environment
+#   df       - path to df executable (GNU df makes life easier)
+#   warning  - warning percentage, default 92
+#   critical - critical percentage, default 98
 #
 #%# family=auto
 #%# capabilites=autoconf
@@ -42,7 +46,8 @@ if [ "$1" = "config" ]; then
 		6) mnt=$six;;
 	    esac
 	    echo "$name.label $mnt"
-	    echo "$name.warn 95"
+	    echo "$name.warning ${warning:-92}"
+	    echo "$name.critical ${critical:-98}"
 	fi
     done
     exit 0

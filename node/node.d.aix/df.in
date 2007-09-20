@@ -1,4 +1,7 @@
-#!/bin/sh
+#!@@GOODSH@@
+# -*- sh -*-
+#
+# $Id$
 #
 # Script to monitor disk usage.
 #
@@ -16,6 +19,10 @@
 #
 # 	config   (required)
 # 	autoconf (optional - used by munin-config)
+#
+# Environment:
+#       warning  Warning percentage, default 92
+#       critical Critical percentage, default 98
 #
 # Magic markers (optional - used by munin-config and installation
 # scripts):
@@ -40,8 +47,8 @@ if [ "$1" = "config" ]; then
 		devName="$name.label "
 		fsLabel=`echo $i | awk '{ print $6 }'`
                 echo $devName$fsLabel
-		echo "$name.warning 92"
-		echo "$name.critical 98"
+		echo "$name.warning ${warning:-92}"
+		echo "$name.critical ${critical:-98}"
 	done
 	exit 0
 fi

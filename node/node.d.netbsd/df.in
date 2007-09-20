@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Script to monitor disk usage.
 #
@@ -7,9 +7,11 @@
 # 	config   (required)
 # 	autoconf (optional - used by munin-config)
 #
-# Revision 1.1.1.1  2006/06/04 20:53:57  he
-# Import the client version of the Munin system monitoring/graphing
-# tool -- project homepage is at http://munin.sourceforge.net/
+# Environment
+#       warning  Percentage at which to give warning, default 92
+#       critical Percentage at which to give critical, default 98
+#
+# $Id: $
 #
 # This package has added support for NetBSD, via a number of new plugin
 # scripts where specific steps needs to be taken to collect information.
@@ -43,8 +45,8 @@ if [ "$1" = "config" ]; then
 		esac
 		echo -n "$name.label "
 		echo $i | awk '{ print $6 }'
-		echo "$name.warning 92"
-		echo "$name.critical 98"
+		echo "$name.warning ${warning:-92}"
+		echo "$name.critical ${critical:-98}"
 	done
 	exit 0
 fi

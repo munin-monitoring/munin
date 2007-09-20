@@ -1,4 +1,6 @@
-#!/bin/sh
+#!@@GOODSH@@
+#
+# $Id$
 #
 # Plugin to monitor inode-usage.
 #
