@@ -1,0 +1,158 @@
+#!/usr/bin/perl -w
+#
+# Copyright (C) 2006 Lars Strand
+#
+# Munin plugin to monitor network connection by use of SNMP.
+# Based on snmp__df plugin.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+# $Log$
+#
+#%# family=snmpauto
+#%# capabilities=snmpconf
+
+use strict;
+use Net::SNMP;
+
+my $DEBUG = 0;
+
+my $host      = $ENV{host}      || undef;
+my $port      = $ENV{port}      || 161;
+my $community = $ENV{community} || "public";
+
+my $response;
+
+my %tcpStates = ( 1 =>  [0, "GAUGE", "closed", "Connections waiting for a termination request acknowledgment from the remote TCP."],
+		  2 =>  [0, "GAUGE", "listen", "Connections waiting for a request from any remote TCP and port."],
+		  3 =>  [0, "GAUGE", "synSent", "Connections waiting for a matching request after having sent a connection request."],
+		  4 =>  [0, "GAUGE", "synReceived", "Connections waiting for a confirming request acknowledgment after having both received and sent a connection request."],
+		  5 =>  [0, "GAUGE", "established", "Connections opened and data received can be delivered to the user. The normal state for the data transfer phase of the connection."],
+		  6 =>  [0, "GAUGE", "finWait1", "Connections waiting for a termination request from the remote TCP, or an acknowledgment of the connection termination request previously sent."],
+		  7 =>  [0, "GAUGE", "finWait2", "Connections waiting for a termination request from the remote TCP."],
+		  8 =>  [0, "GAUGE", "closeWait", "Connections waiting for a termination request from the local user."],
+		  9 =>  [0, "GAUGE", "lastAck", "Connections waiting for an acknowledgment of the termination request previously sent to the remote TCP (which includes an acknowledgment of its connection termination request)."],
+		  10 => [0, "GAUGE", "closing", "Connections waiting for a termination request acknowledgment from the remote TCP."],
+		  11 => [0, "GAUGE", "timeWait", "Connections waiting for enough time to pass to be sure the remote TCP received the acknowledgment of its termination request."],
+		  12 => [0, "GAUGE", "deleteTCP", "Connections terminated by a SNMP Managment Station (put)"]
+		  );
+
+if (defined $ARGV[0] and $ARGV[0] eq "snmpconf")
+{
+    print "require 1.3.6.1.2.1.6.13.1.1. [0-9]\n";
+    exit 0;
+}
+
+if ($0 =~ /^(?:|.*\/)snmp_([^_]+)_netstat$/)
+{
+    $host  = $1;
+    if ($host =~ /^([^:]+):(\d+)$/)
+    {
+	$host = $1;
+	$port = $2;
+    }
+}
+elsif (!defined($host))
+{
+    print "# Debug: $0 -- $1\n" if $DEBUG;
+    die "# Error: couldn't understand what I'm supposed to monitor.";
+}
+
+if (defined $ARGV[0] and $ARGV[0] eq "config")
+{
+    print "host_name $host\n";
+    print "graph_title Netstat\n";
+    print "graph_args -l 0 --base 1000\n";
+    print "graph_period seconds\n";
+    print "graph_category network\n";
+    print "graph_order closed listen synSent synReceived established finWait1 finWait2 closeWait lastAck closing timeWait deleteTCP\n";
+    print "graph_vlabel active connection\n";
+    print "graph_info This graph shows the TCP activity of all the network interfaces combined.\n";
+    
+    foreach my $state (keys %tcpStates) {
+	print "$tcpStates{$state}[2].label $tcpStates{$state}[2]\n";
+	print "$tcpStates{$state}[2].type $tcpStates{$state}[1]\n";
+	print "$tcpStates{$state}[2].max 50000\n";
+	print "$tcpStates{$state}[2].min 0\n";
+	print "$tcpStates{$state}[2].info $tcpStates{$state}[3]\n";
+    }
+   
+    exit 0;
+}
+
+my $tcpConnState = "1.3.6.1.2.1.6.13.1.1.";
+
+my ($session, $error) = Net::SNMP->session(
+	   -hostname  => $host,
+	   -community => $community,
+	   -port      => $port
+        );
+
+if (!defined ($session))
+{
+    die "Croaking: $error";
+}
+
+my $connections = get_by_regex($session, $tcpConnState, "[1-9]");
+
+# the values
+while (my ($id, $state) = each(%$connections)) {
+    $tcpStates{$state}[0] += 1;
+}
+
+foreach my $state (keys %tcpStates) {
+    print "$tcpStates{$state}[2].value $tcpStates{$state}[0]\n";
+}
+
+sub get_by_regex
+{
+    my $handle = shift;
+    my $oid    = shift;
+    my $regex  = shift;
+    my $result = {};
+    my $num    = 0;
+    my $ret    = $oid . "0";
+    my $response;
+    
+    print "# Starting browse of $oid...\n" if $DEBUG;
+    
+    while (1)
+    {
+	if ($num == 0)
+	{
+	    print "# Checking for $ret...\n" if $DEBUG;
+	    $response = $handle->get_request ($ret);
+	}
+	if ($num or !defined $response)
+	{
+	    print "# Checking for sibling of $ret...\n" if $DEBUG;
+	    $response = $handle->get_next_request ($ret);
+	}
+	if (!$response)
+	{
+	    return undef;
+	}
+	my @keys = keys %$response;
+	$ret = $keys[0];
+	print "# Analyzing $ret (compared to $oid)...\n" if $DEBUG;
+	last unless ($ret =~ /^$oid/);
+	$num++;
+	next unless ($response->{$ret} =~ /$regex/);
+	@keys = split (/\./, $ret);
+	$result->{$keys[-1]} = $response->{$ret};;
+	print "# Index $num: ", $keys[-1], " (", $response->{$ret}, ")\n" if $DEBUG;
+    };
+    return $result;
+}
