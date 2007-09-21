@@ -1,4 +1,5 @@
 #!@@PERL@@  -Tw
+# -*- perl -*-
 #
 # Copyright (C) 2004 Jimmy Olsen
 #
@@ -124,10 +125,9 @@ until ( $lock ) {
 
 &graph ($filename);
 
-munin_removelock($lock);
+munin_removelock($config->{rundir}.'/'.$lock);
 
-sub graph
-{
+sub graph {
     my $filename = shift;
 
     open (GRAPH, $filename) or die "Warning: Could not open picture file \"$filename\" for reading: $!\n";
