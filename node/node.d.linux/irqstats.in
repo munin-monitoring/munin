@@ -61,7 +61,7 @@ while (my $line = <$in>) {
     }
     chomp @data;
     $irq = shift @data;
-    next unless defined($irc) and length $irq;
+    next unless defined($irq) and length $irq;
     chop $irq;
     if ($irq =~ /^\d+$/) {
 	$label = pop @data;
