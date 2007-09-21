@@ -1,6 +1,6 @@
 #!@@PERL@@ -w
 # -*- cperl -*-
-# 
+#
 # Plugin to monitor individual interrupts
 #
 #%# family=auto
@@ -61,7 +61,7 @@ while (my $line = <$in>) {
     }
     chomp @data;
     $irq = shift @data;
-    next unless length $irq;
+    next unless defined($irc) and length $irq;
     chop $irq;
     if ($irq =~ /^\d+$/) {
 	$label = pop @data;
