@@ -1,4 +1,5 @@
 #!@@PERL@@
+# -*- perl -*-
 #
 # Plugin to monitor network connections.
 #
@@ -21,7 +22,7 @@
 #
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
-#%# family=contrib
+#%# family=auto
 #%# capabilities=autoconf
 
 use strict;
@@ -43,7 +44,7 @@ if($ARGV[0] && $ARGV[0] eq "autoconf")
 if($ARGV[0] && $ARGV[0] eq "config")
   {
     print "graph_title Netstat\n";
-    print "graph_args -l 0 --base 1000\n";
+    print "graph_args -l 0 --base 1000 --logarithmic\n";
     print "graph_vlabel requests connections per \${graph_period}\n";
     print "graph_category network\n";
     print "requests.label requests\n";
@@ -69,9 +70,8 @@ my(%toFind) = ("requests" => "connection requests",
               
 my($item,$line,@lineArray);
 
-foreach $item (keys(%toFind))
-  {
+foreach $item (keys(%toFind)) {
     $line = `/usr/bin/netstat -s|grep '$toFind{$item}'`;
     @lineArray = split(/ +/,$line);
     print "$item.value $lineArray[0]\n";
-  }
+}

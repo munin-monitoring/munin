@@ -39,7 +39,7 @@ fi
 if [ "$1" = "config" ]; then
 
 	echo 'graph_title Netstat'
-	echo 'graph_args -l 0 --base 1000'
+	echo 'graph_args -l 0 --base 1000 --logarithmic'
 	echo 'graph_vlabel active connections'
 	echo 'graph_category network'
 	echo 'graph_period second'
@@ -71,5 +71,9 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-netstat -s | awk '/active connections/ { print "active.value " $1 } /passive connection ope/ { print "passive.value " $1 } /failed connection/ { print "failed.value " $1 } /connection resets/ { print "resets.value " $1 } /connections established/ { print "established.value " $1 }'
-
+netstat -s | awk '
+/active connections/      { print "active.value " $1 }
+/passive connection ope/  { print "passive.value " $1 }
+/failed connection/       { print "failed.value " $1 }
+/connection resets/       { print "resets.value " $1 }
+/connections established/ { print "established.value " $1 }'

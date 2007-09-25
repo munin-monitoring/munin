@@ -1,4 +1,5 @@
-#!/bin/sh
+#!@@GOODSH@@
+# -*- sh -*-
 #
 # Plugin to monitor network connections.
 #
@@ -27,8 +28,6 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-
-
 if [ "$1" = "autoconf" ]; then
 	if ( netstat -s 2>/dev/null >/dev/null ); then
 		echo yes
@@ -48,7 +47,7 @@ fi
 if [ "$1" = "config" ]; then
 
 	echo 'graph_title Netstat'
-	echo 'graph_args -l 0 --base 1000'
+	echo 'graph_args -l 0 --base 1000 --logarithmic'
 	echo 'graph_vlabel active connections per ${graph_period}'
 	echo 'graph_category network'
 	echo 'graph_period second'

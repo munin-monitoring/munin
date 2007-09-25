@@ -1,4 +1,5 @@
-#!/bin/sh
+#!@@GOODSH@@
+# -*- sh -*-
 #
 # Plugin to monitor network connections.
 #
@@ -33,7 +34,7 @@ fi
 if [ "$1" = "config" ]; then
 
 	echo 'graph_title Netstat'
-	echo 'graph_args -l 0 --base 1000'
+	echo 'graph_args -l 0 --base 1000 --logarithmic'
 	echo 'graph_vlabel active connections per ${graph_period}'
 	echo 'graph_category network'
 	echo 'graph_period second'
@@ -66,5 +67,9 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-netstat -s | awk '/connection requests/ { print "active.value " $1 } /connection accepts/ { print "passive.value " $1 } /bad connection/ { print "failed.value " $1 } /reset/ { print "resets.value " $1 } /connections established/ { print "established.value " $1 }'
-
+netstat -s | awk '
+/connection requests/     { print "active.value " $1 }
+/connection accepts/      { print "passive.value " $1 }
+/bad connection/          { print "failed.value " $1 }
+/reset/                   { print "resets.value " $1 }
+/connections established/ { print "established.value " $1 }'

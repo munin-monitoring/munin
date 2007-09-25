@@ -1,4 +1,5 @@
-#!/bin/sh
+#!@@GOODSH@@
+# -*- sh -*-
 #
 # Plugin for watching io-bound traffic (in bytes) on disks.
 #
@@ -18,8 +19,6 @@
 # I also modified the ntp_ plugin script to make it possible to not
 # plot the NTP poll delay, leaving just jitter and offset, which IMO
 # produces a more telling graph.
-#
-#
 #
 #
 # Magick markers (optional - used by munin-config and som installation
@@ -47,7 +46,7 @@ fi
 if [ "$1" = "config" ]; then
 
     echo 'graph_title IOstat by bytes'
-    echo 'graph_args --base 1024 -l 0 '
+    echo 'graph_args --base 1024 -l 0 --logarithmic'
 
     if ! $oldformat; then
 	echo 'graph_vlabel MB per ${graph_period} read (-) / written (+)'
