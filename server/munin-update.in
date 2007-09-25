@@ -757,7 +757,7 @@ sub start_tls {
     {
     	if(!Net::SSLeay::CTX_load_verify_locations($ctx, $tls_ca_cert, ''))
     	{
-    	    logger ("[WARNING] Problem occured when trying to read file with the CA's certificate \"$tls_ca_cert\": ".&Net::SSLeay::print_errs().". Continuing without CA's certificate.");
+    	    logger ("[WARNING] Problem occured when trying to read file with the CA's certificate \"$tls_ca_cert\": ".&Net::SSLeay::print_errs("").". Continuing without CA's certificate.");
    	 }
     }
 
@@ -765,13 +765,13 @@ sub start_tls {
     # Now let's define our requirements of the node
     $tls_vdepth = 5 if !defined $tls_vdepth;
     Net::SSLeay::CTX_set_verify_depth ($ctx, $tls_vdepth);
-    $err = &Net::SSLeay::print_errs();
+    $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err)
     {
 	logger ("[WARNING] in set_verify_depth: $err");
     }
     Net::SSLeay::CTX_set_verify ($ctx, &Net::SSLeay::VERIFY_PEER, \&tls_verify_callback);
-    $err = &Net::SSLeay::print_errs();
+    $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err)
     {
 	logger ("[WARNING] in set_verify: $err");
@@ -801,7 +801,7 @@ sub start_tls {
 
     # Connect it to the local fd that munin-update will print to
     Net::SSLeay::set_fd($tls, fileno($socket));
-    $err = &Net::SSLeay::print_errs();
+    $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err)
     {
 	logger ("[WARNING] Could not define encrypted fd: " . $err);
@@ -817,7 +817,7 @@ sub start_tls {
     {
         $res = Net::SSLeay::accept($tls);
     }
-    $err = &Net::SSLeay::print_errs();
+    $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err)
     {
 	logger ("[ERROR] Could not enable TLS: " . $err);
@@ -854,7 +854,7 @@ sub write_socket_single {
 	if (defined $tls and $tls)
 	{
 	    Net::SSLeay::write($tls, $text);
-	    my $err = &Net::SSLeay::print_errs();
+	    my $err = &Net::SSLeay::print_errs("");
 	    if (defined $err and length $err)
 	    {
 		logger ("[WARNING] in write_socket_single: $err");
@@ -883,7 +883,7 @@ sub read_socket_single {
       if ($tls)
       {
 	  $res = Net::SSLeay::read($tls);
-	  my $err = &Net::SSLeay::print_errs();
+	  my $err = &Net::SSLeay::print_errs("");
 	  if (defined $err and length $err)
 	  {
 	    logger ("[WARNING] read_socket_single: $err");
@@ -918,7 +918,7 @@ sub read_socket {
       if ($tls)
       {
 	  while (defined ($_ = Net::SSLeay::read($tls))) {
-	    my $err = &Net::SSLeay::print_errs();
+	    my $err = &Net::SSLeay::print_errs("");
 	    if (defined $err and length $err)
 	    {
 	      logger ("[WARNING] in read_socket: $err");

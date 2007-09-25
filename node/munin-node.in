@@ -630,7 +630,7 @@ sub net_read
     if (defined $tls)
     {
 	eval { $_ = Net::SSLeay::read($tls); };
-	my $err = &Net::SSLeay::print_errs();
+	my $err = &Net::SSLeay::print_errs("");
 	if (defined $err and length $err)
 	{
 	    logger ("TLS Warning in net_read: $err");
@@ -652,7 +652,7 @@ sub net_write
     if (defined $tls)
     {
 	eval { Net::SSLeay::write ($tls, $text); };
-	my $err = &Net::SSLeay::print_errs();
+	my $err = &Net::SSLeay::print_errs("");
 	if (defined $err and length $err)
 	{
 	    logger ("TLS Warning in net_write: $err");
@@ -740,14 +740,14 @@ sub start_tls
     $ctx = Net::SSLeay::CTX_new();
     if (!$ctx)
     {
-	logger ("TLS Error: Could not create SSL_CTX: " . &Net::SSLeay::print_errs());
+	logger ("TLS Error: Could not create SSL_CTX: " . &Net::SSLeay::print_errs(""));
 	return 0;
     }
 
     # Tune a few things...
     if (Net::SSLeay::CTX_set_options($ctx, &Net::SSLeay::OP_ALL))
     {
-	logger ("TLS Error: Could not set SSL_CTX options: " . &Net::SSLeay::print_errs());
+	logger ("TLS Error: Could not set SSL_CTX options: " . &Net::SSLeay::print_errs(""));
 	return 0;
     }
 
@@ -759,7 +759,7 @@ sub start_tls
 	    if (!Net::SSLeay::CTX_use_PrivateKey_file($ctx, $tls_priv, 
 		    &Net::SSLeay::FILETYPE_PEM))
 	    {
-	        logger ("TLS Notice: Problem occured when trying to read file with private key \"$tls_priv\": ".&Net::SSLeay::print_errs().". Continuing without private key.");
+	        logger ("TLS Notice: Problem occured when trying to read file with private key \"$tls_priv\": ".&Net::SSLeay::print_errs("").". Continuing without private key.");
 	    }
 	    else
 	    {
@@ -780,7 +780,7 @@ sub start_tls
 	    if (!Net::SSLeay::CTX_use_certificate_file($ctx, $tls_cert, 
 		    &Net::SSLeay::FILETYPE_PEM))
 	    {
-	        logger ("TLS Notice: Problem occured when trying to read file with certificate \"$tls_cert\": ".&Net::SSLeay::print_errs().". Continuing without certificate.");
+	        logger ("TLS Notice: Problem occured when trying to read file with certificate \"$tls_cert\": ".&Net::SSLeay::print_errs("").". Continuing without certificate.");
 	    }
 	}
     }
@@ -794,7 +794,7 @@ sub start_tls
     {
         if(!Net::SSLeay::CTX_load_verify_locations($ctx, $tls_ca_cert, ''))
         {
-            logger ("TLS Notice: Problem occured when trying to read file with the CA's certificate \"$tls_ca_cert\": ".&Net::SSLeay::print_errs().". Continuing without CA's certificate.");
+            logger ("TLS Notice: Problem occured when trying to read file with the CA's certificate \"$tls_ca_cert\": ".&Net::SSLeay::print_errs("").". Continuing without CA's certificate.");
         }
     }
 
@@ -811,13 +811,13 @@ sub start_tls
     # Now let's define our requirements of the node
     $tls_vdepth = 5 unless defined $tls_vdepth;
     Net::SSLeay::CTX_set_verify_depth ($ctx, $tls_vdepth);
-    $err = &Net::SSLeay::print_errs();
+    $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err)
     {
 	logger ("TLS Warning in set_verify_depth: $err");
     }
     Net::SSLeay::CTX_set_verify ($ctx, &Net::SSLeay::VERIFY_PEER, \&tls_verify_callback);
-    $err = &Net::SSLeay::print_errs();
+    $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err)
     {
 	logger ("TLS Warning in set_verify: $err");
@@ -826,7 +826,7 @@ sub start_tls
     # Create the local tls object
     if (! ($tls = Net::SSLeay::new($ctx)))
     {
-	logger ("TLS Error: Could not create TLS: " . &Net::SSLeay::print_errs());
+	logger ("TLS Error: Could not create TLS: " . &Net::SSLeay::print_errs(""));
 	return 0;
     }
     if ($DEBUG)
@@ -847,13 +847,13 @@ sub start_tls
 
     # Redirect stdout/stdin to the TLS
     Net::SSLeay::set_rfd($tls, fileno(STDIN));
-    $err = &Net::SSLeay::print_errs();
+    $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err)
     {
 	logger ("TLS Warning in set_rfd: $err");
     }
     Net::SSLeay::set_wfd($tls, fileno(STDOUT));
-    $err = &Net::SSLeay::print_errs();
+    $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err)
     {
 	logger ("TLS Warning in set_wfd: $err");
@@ -869,7 +869,7 @@ sub start_tls
     {
         $res = Net::SSLeay::connect($tls);
     }
-    $err = &Net::SSLeay::print_errs();
+    $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err)
     {
 	logger ("TLS Error: Could not enable TLS: " . $err);
