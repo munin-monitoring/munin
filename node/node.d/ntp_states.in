@@ -58,11 +58,17 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 		next unless /^.(\d+\.\d+\.\d+\.\d+)/;
 		next if /^.224\.0\.1\.1/;
 		my $addr = $1;
-		my $host = gethostbyaddr(inet_aton($addr));
-		$host = defined $host ? $host->name : $addr;
+		my $host;
+		if( my $lcid= /^.127\.127\.1\.(\d+)/) {
+			$lcid = $lcid - 1;
+			$host = "LOCAL($lcid)";
+		} else {
+			$host = gethostbyaddr(inet_aton($addr));
+			$host = defined $host ? $host->name : $addr;
+		}
 		my $name = $host;
 		$host = lc $host if exists $ENV{"lowercase"};
-		$host =~ s/[\.-]/_/g;
+		$host =~ s/[\.\-()]/_/g;
 		print "$host.label $name\n";
 		print "$host.draw LINE2\n";
 	}
@@ -74,10 +80,16 @@ foreach (`ntpq -c "hostnames no" -c peers`) {
 	next if /^.224\.0\.1\.1/;
 	my $state = $1;
 	my $addr = $2;
-	my $host = gethostbyaddr(inet_aton($addr));
-	$host = defined $host ? $host->name : $addr;
+	my $host;
+	if( my $lcid= /^.127\.127\.1\.(\d+)/) {
+		$lcid = $lcid - 1;
+		$host = "LOCAL($lcid)"
+	} else {
+		$host = gethostbyaddr(inet_aton($addr));
+		$host = defined $host ? $host->name : $addr;
+	}
 	$host = lc $host if exists $ENV{"lowercase"};
-	$host =~ s/[\.-]/_/g;
+	$host =~ s/[\.\-()]/_/g;
 	print "$host.value ", exists $stateval{$state} ? $stateval{$state} : 0, "\n";
 }
 

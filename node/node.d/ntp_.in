@@ -49,12 +49,17 @@ if ($ARGV[0] and $ARGV[0] eq "suggest") {
 	foreach (@lines) {
 		next unless /^.(\d+\.\d+\.\d+\.\d+)/;
 		next if /^.224\.0\.1\.1/;
-		next if /^.127\./;
 		my $addr = $1;
-		my $name = gethostbyaddr(inet_aton($addr));
-		$name = defined $name ? $name->name : $addr;
+		my $name;
+		if( my $lcid= /^.127\.127\.1\.(\d+)/) {
+			$lcid = $lcid - 1;
+			$name = "LOCAL($lcid)";
+		} else {
+			$name = gethostbyaddr(inet_aton($addr));
+			$name = defined $name ? $name->name : $addr;
+		}
 		$name = lc $name if exists $ENV{"lowercase"};
-		$name =~ s/[\.-]/_/g;
+		$name =~ s/[\.\-()]/_/g;
 		print $name, "\n";
 	}
 	exit 0;
@@ -71,11 +76,17 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 		next unless /^.(\d+\.\d+\.\d+\.\d+)/;
 		next if /^.224\.0\.1\.1/;
 		my $addr = $1;
-		my $host = gethostbyaddr(inet_aton($addr));
-		$host = defined $host ? $host->name : $addr;
+		my $host;
+		if( my $lcid= /^.127\.127\.1\.(\d+)/) {
+			$lcid = $lcid - 1;
+			$host = "LOCAL($lcid)"
+		} else {
+			$host = gethostbyaddr(inet_aton($addr));
+			$host = defined $host ? $host->name : $addr;
+		}
 		$host = lc $host if exists $ENV{"lowercase"};
 		my $host_ = $host;
-		$host_ =~ s/[\.-]/_/g;
+		$host_ =~ s/[\.\-()]/_/g;
 		next unless $host_ eq $name;
 		print "graph_title NTP statistics for peer $host\n";
 	}
@@ -98,10 +109,16 @@ foreach (@lines) {
 	next unless /^.(\d+\.\d+\.\d+\.\d+)/;
 	next if /^.224\.0\.1\.1/;
 	my $addr = $1;
-	my $host = gethostbyaddr(inet_aton($addr));
-	$host = defined $host ? $host->name : $addr;
+	my $host;
+	if( my $lcid= /^.127\.127\.1\.(\d+)/) {
+		$lcid = $lcid - 1;
+		$host = "LOCAL($lcid)"
+	} else {
+		$host = gethostbyaddr(inet_aton($addr));
+		$host = defined $host ? $host->name : $addr;
+	}
 	$host = lc $host if exists $ENV{"lowercase"};
-	$host =~ s/[\.-]/_/g;
+	$host =~ s/[\.\-()]/_/g;
 	next unless $host eq $name;
 	my @F = split;
 	print <<"EOT";
