@@ -51,6 +51,9 @@ my $vlabel = defined $ENV{'counter'} ? $ENV{'counter'} : 'entries';
 
 (my $name = $0) =~ s|.*/||;
 
+(my $host_name = $0) =~ s|.*_([^_]+)_.*|$1|;
+
+
 die("No log file specified") unless defined $logfile;
 
 if (exists $ENV{'regex'}) {
@@ -77,6 +80,9 @@ if ($ARGV[0] and $ARGV[0] eq 'config') {
     print "graph_args --base 1000 -l 0\n";
     print "graph_vlabel $vlabel / \${graph_period}\n";
     print "graph_category other\n";
+    if ($host_name && $host_name ne $name) {
+       print "host_name $host_name\n";
+    }
     for my $key (keys %regex) {
 	print "$key.label $regex{$key}{'label'}\n";
 	print "$key.type DERIVE\n";
