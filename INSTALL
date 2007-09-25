@@ -22,9 +22,9 @@ Installing
 
 IF you're working on a SVN checkout:
 
-	- cp Makefile.config-dist Makefile.conf
+	- cp Makefile.config-dist Makefile.config
 
-	  This overwrites the maintainers copy of Makefile.conf.
+	  This overwrites the maintainers copy of Makefile.config.
 
 
 
