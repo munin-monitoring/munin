@@ -16,7 +16,11 @@
 # Magic markers - optional - used by installation scripts and
 # munin-node-configure:
 #
-#%# family=auto
+# This plugin is now "manual" because it's not very useful, it
+# is imposible to determine which peer is used as "master". There
+# is a ntp_offset plugin that reports a more useful value.
+#
+#%# family=manual
 #%# capabilities=autoconf suggest
 #
 
