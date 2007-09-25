@@ -1,0 +1,42 @@
+#!@@PERL@@ -w
+# -*- perl -*-
+# 
+
+use strict;
+use DBI;
+
+my $dbhost = $ENV{'dbhost'} || '127.0.0.1';
+my $dbport = $ENV{'dbport'} || '5432';
+my $dbname = $ENV{'dbname'} || 'template1';
+my $dbuser = $ENV{'dbuser'} || 'postgres';
+
+my $Con = "DBI:Pg:dbname=$dbname;host=$dbhost;port=$dbport";
+my $Dbh = DBI->connect ($Con, $dbuser,'',{RaiseError =>1}) || 
+    die "Unable to access Database $dbname on host $dbhost as user $dbuser.\nError returned was: ". $DBI::errstr;
+
+if ($ARGV[0] && $ARGV[0] eq 'config') {
+    my $sql_max = "SHOW max_connections;";
+    my $sth_max = $Dbh->prepare($sql_max);
+    $sth_max->execute();
+    my ($max_conn) = $sth_max->fetchrow();
+    my $warning = int ($max_conn * 0.7);
+    my $critical = int ($max_conn * 0.8);
+    print <<EOF;
+graph_title Postgres active connections
+graph_args -l 0 --base 1000
+graph_vlabel Active connections
+graph_category Postgresql
+graph_info Shows active Postgresql connections
+connections.label Active connections
+connections.info Active connections
+connections.type GAUGE
+connections.warning $warning
+connections.critical $critical
+EOF
+} else {
+    my $sql_curr = "SELECT COUNT (*) FROM pg_stat_activity;";
+    my $sth_curr = $Dbh->prepare($sql_curr);
+    $sth_curr->execute();
+    my ($curr_conn) = $sth_curr->fetchrow();
+    print "connections.value $curr_conn\n";
+}

@@ -1,0 +1,175 @@
+#!@@PERL@@ -w
+# -*- perl -*-
+
+# Written by Bjrn Ruberg (bjorn@linpro.no) 2006
+# Rewritten by Moses Moore 2006-04-08  moc.iazom@sesom
+# Licenced under GPL
+
+# Magic markers
+#%# family=auto
+#%# capabilities=autoconf suggest
+
+use strict;
+use DBI;
+use vars qw ( $debug $suggest $configure $dbh );
+
+# Package maintainers should provide an environment
+# file for the /etc/munin/plugin-conf.d/ directory
+# to override these values if necessary.
+# NOTE: The plugin (also when auto configured) should
+# be run by the postgresql user account.
+
+# Need these variables at an early stage to enable
+# autoconf and suggest
+my $dbhost = $ENV{'dbhost'} || ''; # Connect to localhost by default
+my $dbname = $ENV{'dbname'} || 'template1';
+my $dbport = $ENV{'dbport'} || '5432';
+my $dbuser = $ENV{'dbuser'} || 'postgres';
+my $dbpass = $ENV{'dbpass'} || '';
+
+if (exists $ARGV[0]) {
+    if ($ARGV[0] eq 'autoconf') {
+        # Check for DBD::Pg
+        if (! eval "require DBD::Pg;") {
+            print "no (DBD::Pg not found)";
+            exit 1;
+        }
+        # Then we try to detect Postgres presence by connecting to
+        # 'template1'.
+        my $dsn = "dbi:Pg:dbname=template1";
+        $dsn .= ";host=$dbhost" if $dbhost;
+	$dsn .= ";port=$dbport" if $dbport;
+        my $tempdbh = DBI->connect ($dsn, $dbuser, $dbpass);
+        if ($tempdbh) {
+            print "yes\n";
+            exit 0;
+        } else {
+            print "no (Can't connect to given host, please check environment settings)\n";
+            exit 1;
+        }
+    } elsif ($ARGV[0] and $ARGV[0] eq 'debug') {
+        # Set config flag
+        $debug = 1;
+    } elsif ($ARGV[0] and $ARGV[0] eq 'config') {
+        # Set config flag
+        $configure = 1;
+    } elsif ($ARGV[0] eq 'suggest') {
+        # doesn't always work
+        my @datasources = DBI->data_sources ('Pg');
+        foreach my $dsn (grep !/\=template\d$/, @datasources) {
+            (my $db = $dsn) =~ s/^.*=//;
+            print "$db\n";
+        }
+        exit 0;
+    }
+}
+
+# Must do this here, after checking for autoconf/suggest/etc, because the
+# plugin must be able to run before it is linked to the databases.
+my (undef, undef, $dbname) = split (/_/, $0, 3);
+die "No dbname configured (did you make the proper symlink?)" unless $dbname;
+
+my @datasources = DBI->data_sources ('Pg')
+    or die ("Can't read any possible data sources: $?");
+
+my $dsn = "DBI:Pg:dbname=$dbname";
+$dsn .= ";host=$dbhost" if $dbhost;
+$dsn .= ";port=$dbport" if $dbport;
+print "#$dsn\n" if $debug;
+my $dbh = DBI->connect ($dsn, $dbuser, $dbpass, {RaiseError =>1});
+unless($dbh) {
+    die("Database $dbname\@$dbhost (". $DBI::errstr .")\n");
+}
+
+if ($configure) {
+    print <<_EOM;
+graph_title Postgres database $dbname
+graph_args -l 0 --base 1024
+graph_vlabel bytes
+graph_category Postgresql
+graph_info Size
+size.label Database size (bytes)
+size.info Database size
+size.type GAUGE
+size.draw AREA
+indexsize.label Index size (bytes)
+indexsize.info Index size
+indexsize.type GAUGE
+indexsize.draw STACK
+metasize.label Meta database size (bytes)
+metasize.info Meta database size
+metasize.type GAUGE
+metasize.draw STACK
+metaindexsize.label Meta index size (bytes)
+metaindexsize.info Meta index size
+metaindexsize.type GAUGE
+metaindexsize.draw STACK
+_EOM
+} else {
+    my $database_pages = 0;
+    my $database_indexes = 0;
+    my $metadatabase_pages = 0;
+    my $metadatabase_indexes = 0;
+    my @names = $dbh->tables;
+    
+    # Find relfilenode and relpages from the given table
+    my $q_ind = "SELECT relkind, relfilenode, relpages FROM pg_class
+                     WHERE relname = ?
+                     UNION
+                     SELECT relkind, relfilenode, relpages FROM pg_class
+                     WHERE relfilenode IN (SELECT indexrelid FROM pg_index 
+                     WHERE indrelid IN (SELECT relfilenode FROM pg_class
+                     WHERE relname = ?))";
+    my $sth = $dbh->prepare ($q_ind) or die $dbh->errstr;
+    
+    # Iterate over the tables in the database
+    foreach my $table (@names) {
+        my $meta = 1;
+        print "#TABLE: $table\n" if $debug;
+        my $table_pages = 0;
+        my $table_indexes = 0;
+        my $metatable_pages = 0;
+        my $metatable_indexes = 0;
+        # "public" tables are the user data
+        $meta = 0 if $table =~ /^public\./;
+        $table =~ s/^.*\.//;
+        
+        # Call the query with $table twice for each side of the UNION
+        $sth->execute ($table, $table) or die $dbh->errstr;
+        while (my ($relkind, $relfilenode, $relpages) = $sth->fetchrow_array) {
+            if ($relkind eq 'r') {
+                $table_pages     += $relpages if $meta == 0;
+                $metatable_pages += $relpages if $meta == 1;
+            } elsif ($relkind eq 'i') {
+                $table_indexes     += $relpages if $meta == 0;
+                $metatable_indexes += $relpages if $meta == 1;
+            }
+            # Define the query
+            my $q2 = "SELECT SUM(relpages) 
+                      FROM pg_class 
+                      WHERE relname IN (?, ?)";
+            my $sth2 = $dbh->prepare ($q2);
+            $sth2->execute ("pg_toast_${relfilenode}",
+                            "pg_toast_${relfilenode}_index");
+            my $relpages = $sth2->fetchrow_array;
+            if ($relkind eq 'r') {
+                $table_pages     += $relpages if $meta == 0;
+                $metatable_pages += $relpages if $meta == 1;
+            } elsif ($relkind eq 'i') {
+                $table_indexes     += $relpages if $meta == 0;
+                $metatable_indexes += $relpages if $meta == 1;
+            }
+            print "#\tR:$relfilenode\tP:$table_pages\tI:$table_indexes\n" if $debug;
+        }
+        $database_pages       += $table_pages;
+        $database_indexes     += $table_indexes;
+        $metadatabase_pages   += $metatable_pages;
+        $metadatabase_indexes += $metatable_indexes;
+    }    
+    $sth->finish;
+    $dbh->disconnect;
+    print "size\.value " . $database_pages * 8192 . "\n";
+    print "indexsize\.value " . $database_indexes * 8192 . "\n";
+    print "metasize\.value " . $metadatabase_pages * 8192 . "\n";
+    print "metaindexsize\.value " . $metadatabase_indexes * 8192 . "\n";
+}

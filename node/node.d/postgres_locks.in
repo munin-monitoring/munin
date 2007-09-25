@@ -1,0 +1,75 @@
+#!@@PERL@@ -w
+# -*- perl -*-
+#
+# Show postgres lock statistics
+#
+# Parameters:
+#
+#       config   (required)
+#
+# Config variables:
+#
+#       dbhost     - Which database server to use. Defaults to
+#                    'localhost'. 
+#       dbport     - Which port on the database server to connect to.
+#                    Defaults to '5432'.
+#       dbuser     - A Postgresql user account with read permission to
+#                    the given database. Defaults to
+#                    'postgres'. Anyway, Munin must be told which user
+#                    this plugin should be run as. 
+#       dbpass     - The corresponding password, if
+#                    applicable. Default to undef. Remember that
+#                    pg_hba.conf must be configured accordingly.
+#
+# Magic markers
+#%# family=auto
+#%# capabilities=suggest
+
+use strict;
+use DBI;
+
+# See postgress_block_read_ for docs
+
+my $dbhost = $ENV{'dbhost'} || '127.0.0.1';
+my $dbport = $ENV{'dbport'} || '5432';
+my $dbname = $ENV{'dbname'} || 'template1';
+my $dbuser = $ENV{'dbuser'} || 'postgres';
+
+if ($ARGV[0] && $ARGV[0] eq "config") {
+    print <<EOF;
+graph_title Postgres locks
+graph_args --base 1000
+graph_vlabel Locks
+graph_category Postgresql
+graph_info Shows Postgresql locks
+locks.label Locks
+locks.info Locks (more info here, please... :)
+locks.type GAUGE
+locks.warning 5
+locks.critical 10
+exlocks.label Exclusive locks
+exlocks.info Exclusive locks (here too, please... :)
+exlocks.type GAUGE
+exlocks.warning 5
+exlocks.critical 10
+EOF
+} else {
+    my $Con = "DBI:Pg:dbname=$dbname;host=$dbhost;port=$dbport";
+    my $Dbh = DBI->connect ($Con, $dbuser,
+			    '',
+			    {RaiseError =>1}) || die "Unable to access Database $dbname on host $dbhost as user $dbuser.\nError returned was: ". $DBI::errstr;
+
+    my $sql="SELECT mode,COUNT(mode) FROM pg_locks GROUP BY mode ORDER BY mode;";
+    my $sth = $Dbh->prepare ($sql);
+    $sth->execute ();
+    my $locks = 0;
+    my $exlocks = 0;
+    while (my ($mode, $count) = $sth->fetchrow ()) {
+	if ($mode =~ /exclusive/i) {
+	    $exlocks = $exlocks + $count;
+	}
+	$locks = $locks+$count;
+    }
+    print "locks.value $locks\n";
+    print "exlocks.value $exlocks\n";
+}
