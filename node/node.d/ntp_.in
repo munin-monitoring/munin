@@ -11,7 +11,9 @@
 #
 # Config variables:
 #
-#       lowercase       - lowercase hostnames after lookup
+#   [ntp_*]
+#       env.lowercase       - lowercase hostnames after lookup
+#       env.nodelay 1       - Set to 1 to remove delay
 #
 # Magic markers - optional - used by installation scripts and
 # munin-node-configure:
@@ -22,11 +24,12 @@
 #
 #%# family=manual
 #%# capabilities=autoconf suggest
-#
 
 use strict;
 use Net::hostent;
 use Socket;
+
+my $nodelay = $ENV{'nodelay'} || 0;
 
 if ($ARGV[0] and $ARGV[0] eq "autoconf") {
 	`ntpq -c help >/dev/null 2>/dev/null`;
@@ -92,14 +95,15 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	}
 	print "graph_args --base 1000 --vertical-label seconds --lower-limit 0\n";
 	print "graph_category time\n";
-        print "delay.label Delay\n";
-        print "delay.draw LINE2\n";
+	print "delay.label Delay\n";
+	print "delay.draw LINE\n";
+	print "delay.graph no\n" if $nodelay;
 	print "delay.cdef delay,1000,/\n";
         print "offset.label Offset\n";
-        print "offset.draw LINE2\n";
+        print "offset.draw LINE\n";
 	print "offset.cdef offset,1000,/\n";
         print "jitter.label Jitter\n";
-        print "jitter.draw LINE2\n";
+        print "jitter.draw LINE\n";
 	print "jitter.cdef jitter,1000,/\n";
         exit 0;
 }

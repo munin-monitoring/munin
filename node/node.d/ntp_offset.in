@@ -9,6 +9,9 @@
 # 	config   (required)
 # 	autoconf (optional - used by munin-node-configure)
 #
+#       [ntp_*]
+#           env.nodelay 1       - Set to 1 to remove delay
+#
 # Magic markers - optional - used by installation scripts and
 # munin-node-configure:
 #
@@ -60,6 +63,9 @@ jitter.draw LINE2
 jitter.cdef jitter,1000,/
 info Currently our peer is $peer.  Please refer to ntp docs and ntpc docs for further explanations of these numbers.
 EOF
+    case $nodelay in
+	1) echo "delay.graph no";;
+    esac
 }
 
 do_ () {
