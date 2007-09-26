@@ -1,4 +1,5 @@
 #!@@PERL@@
+# -*- perl -*-
 #
 # Plugin to monitor the number of mails received and delivered by exim.
 #
@@ -19,7 +20,6 @@
 #
 #%# family=auto
 #%# capabilities=autoconf
-
 
 sub get_exim_logfile {
     my ($spec, $type, $time) = @_;
@@ -158,7 +158,7 @@ if (! -f $logfile and ! -f $rotlogfile)
 
 if (-f "$statefile")
 {
-    open (IN, "$statefile") or exit 4;
+    open (IN, "$statefile") or die "Cannot open $statefile: $!\n";
 	my $in = <IN>;
     if ($in =~ /^(\d+):(\d+):(\d+):(\d+)/)
     {
@@ -197,15 +197,15 @@ print "rejected.value $rejected\n";
 if(-l $statefile) {
 	die("$statefile is a symbolic link, refusing to touch it.");
 }				
-open (OUT, ">$statefile") or exit 4;
+open (OUT, ">$statefile") or die "cannot open $statefile for writing: $!\n";
 print OUT "$pos:$received:$completed:$rejected\n";
 close OUT;
 
 sub parseEximfile 
 {    
     my ($fname, $start, $stop) = @_;
-    open (LOGFILE, $fname) or exit 3;
-    seek (LOGFILE, $start, 0) or exit 2;
+    open (LOGFILE, $fname) or die "Cannot open $fname for reading: $!\n";
+    seek (LOGFILE, $start, 0) or die "Cannot seek to $start in $fname: $!\n";
 
     while (tell (LOGFILE) < $stop) 
     {

@@ -1,4 +1,5 @@
 #!@@GOODSH@@
+# -*- sh -*-
 #
 # Plugin to monitor exim queue size
 #
@@ -22,7 +23,7 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-DIRNAME=`dirname $0`
+DIRNAME=$(dirname $0)
 SPOOLDIR="unset"
 # You cannot trust the exit status of which
 EXIM=$(which exim 2>/dev/null)
