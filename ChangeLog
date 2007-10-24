@@ -6,6 +6,8 @@ munin (1.3.3, r910-r1236)
   In part because it's been going on for more than a year, in part
   because a large part has been constructed from the svn commit log.
 
+  * linux/interrupts: replace sed|egrep|awk pipeline with a single awk
+  * script.
   * Linux plugins: Use @@GOODSH@@ (posix-shell) there too
   * linux/vlan: Better autoconf messages
   * Solaris plugins: bring them @@GOODSH@@ and some elementary civilization

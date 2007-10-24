@@ -60,7 +60,5 @@ fi
 
 # The real work
 
-sed 's/intr/intr.value/;s/ctxt/ctx.value/' < /proc/stat \
-  | egrep 'intr|ctx' \
-  | awk '{ print $1" "$2 }'
-
+awk '$1 == "intr" { print "intr.value " $2 }
+     $1 == "ctxt" { print "ctx.value " $2 }' /proc/stat
