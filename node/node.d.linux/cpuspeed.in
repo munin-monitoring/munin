@@ -51,7 +51,6 @@ if [ "$1" = "config" ]; then
         MINHZ=$(cat $c/cpufreq/cpuinfo_min_freq)
 
         echo "cpu$N.label CPU $N"
-        echo "cpu$N.draw LINE"
         echo "cpu$N.type DERIVE"
         echo "cpu$N.max $MAXHZ"
         echo "cpu$N.min $MINHZ"
