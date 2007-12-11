@@ -24,6 +24,8 @@
 # put in the e.g. dev_sda environment variable, to allow the user to keep
 # sda as the name of the disk.
 #
+# To avoid spinning up sleeping disks, you need the hdparm command in your PATH.
+#
 #%# family=auto
 #%# capabilities=autoconf
 #
@@ -130,12 +132,18 @@ if (defined $ARGV[0]) {
 foreach (@drives) {
   my $dev;
   $dev = $_ =~ /(.*)(?:_\d+)/ ? $1 : $_;
+
+  my $fulldev = '/dev/';
+  $fulldev .= 'rdsk/' if $^O eq 'solaris';
+  $fulldev .= exists $ENV{'dev_'.$_} ? $ENV{'dev_'.$_} : $dev;
+
+  # Avoid spinning up sleeping disks
+  next if `hdparm -C $fulldev 2>/dev/null` =~ /standby/;
+
   my $cmd = $smartctl.' -A ';
   $cmd .= $ENV{'args_'.$_}.' ' if exists $ENV{'args_'.$_};
   $cmd .= '-d '.$ENV{'type_'.$_}.' ' if exists $ENV{'type_'.$_};
-  $cmd .= '/dev/';
-  $cmd .= 'rdsk/' if $^O eq 'solaris';
-  $cmd .= exists $ENV{'dev_'.$_} ? $ENV{'dev_'.$_} : $dev;
+  $cmd .= $fulldev;
 
   my $output = `$cmd`;
   if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
