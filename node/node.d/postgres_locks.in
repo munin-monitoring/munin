@@ -13,7 +13,7 @@
 #                    'localhost'. 
 #       dbport     - Which port on the database server to connect to.
 #                    Defaults to '5432'.
-#       dbuser     - A Postgresql user account with read permission to
+#       dbuser     - A PostgreSQL user account with read permission to
 #                    the given database. Defaults to
 #                    'postgres'. Anyway, Munin must be told which user
 #                    this plugin should be run as. 
@@ -40,8 +40,8 @@ if ($ARGV[0] && $ARGV[0] eq "config") {
 graph_title Postgres locks
 graph_args --base 1000
 graph_vlabel Locks
-graph_category Postgresql
-graph_info Shows Postgresql locks
+graph_category PostgreSQL
+graph_info Shows PostgreSQL locks
 locks.label Locks
 locks.info Locks (more info here, please... :)
 locks.type GAUGE

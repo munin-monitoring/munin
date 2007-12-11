@@ -1,7 +1,7 @@
 #!@@PERL@@
 # -*- perl -*-
 
-# Plugin to monitor Postgresql query rate; returns the number of 
+# Plugin to monitor PostgreSQL query rate; returns the number of 
 # sequential scans initiated, rows returned by sequential reads,
 # index scans initiated, rows returned by index scans, inserts,
 # updates, and deletes.
@@ -29,10 +29,10 @@
 #         /etc/munin/plugins/postgres_block_read_SomeDatabase
 #       This should, however, be given through autoconf and suggest.
 #
-#       If required, give username, password and/or Postgresql server
+#       If required, give username, password and/or PostgreSQL server
 #       host through environment variables. 
 # 
-#       You must also activate Postgresql statistics. See
+#       You must also activate PostgreSQL statistics. See
 #       http://www.postgresql.org/docs/8.2/interactive/monitoring-stats.html
 #       for how to enable this. Specifically, the following lines must
 #       exist in your postgresql.conf:
@@ -51,7 +51,7 @@
 #                    'localhost'. 
 #       dbport     - Which port on the database server to connect to.
 #                    Defaults to '5432'.
-#       dbuser     - A Postgresql user account with read permission to
+#       dbuser     - A PostgreSQL user account with read permission to
 #                    the given database. Defaults to
 #                    'postgres'. Anyway, Munin must be told which user
 #                    this plugin should be run as. 
@@ -138,7 +138,7 @@ if ($configure) {
 graph_title Postgres queries on $dbname
 graph_args --base 1000
 graph_vlabel Queries per \${graph_period}
-graph_category Postgresql
+graph_category PostgreSQL
 graph_info Shows number of select, insert, update and delete queries
 sel_seq.label s_selects
 sel_seq.info Sequential selects on all tables

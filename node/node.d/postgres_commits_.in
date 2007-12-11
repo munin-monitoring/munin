@@ -1,7 +1,7 @@
 #!@@PERL@@
 # -*- perl -*-
 
-# Plugin to monitor Postgresql commits/rollbacks.  
+# Plugin to monitor PostgreSQL commits/rollbacks.  
 # 
 # "Why should I care?"
 # - Too many commits can really bog down the database, as it checks all
@@ -45,11 +45,11 @@
 #       on this server on one graph.  This isn't recommended, and
 #       will not be offered by 'suggest', but it's here if you want it.
 #
-#       If required, give username, password and/or Postgresql server
+#       If required, give username, password and/or PostgreSQL server
 #       host through environment variables... but for most sites you
 #       should be able to omit username and password.
 # 
-#       You must also activate Postgresql statistics. See
+#       You must also activate PostgreSQL statistics. See
 #       http://www.postgresql.org/docs/8.2/interactive/monitoring-stats.html
 #       for how to enable this. Specifically, the following lines must
 #       exist in your postgresql.conf:
@@ -68,7 +68,7 @@
 #                    'localhost'. 
 #       dbport     - Which port on the database server to connect to.
 #                    Defaults to '5432'.
-#       dbuser     - A Postgresql user account with read permission for
+#       dbuser     - A PostgreSQL user account with read permission for
 #                    the database.  If you specified database '_All',
 #                    this user will need read access to the system
 #                    database 'template1'.
@@ -167,7 +167,7 @@ if ($configure) {
   print "graph_title Postgres commits/rollbacks on $maybe_dbname\n";
   print "graph_args --base 1000\n";
   print "graph_vlabel Sessions per \${graph_period}\n";
-  print "graph_category Postgresql\n";
+  print "graph_category PostgreSQL\n";
   print "graph_info Shows number of commits and rollbacks\n";
   if ($maybe_dbname eq 'All') {
     foreach my $ds (@datasources) {

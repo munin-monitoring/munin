@@ -86,7 +86,7 @@ if ($configure) {
 graph_title Postgres database $dbname
 graph_args -l 0 --base 1024
 graph_vlabel bytes
-graph_category Postgresql
+graph_category PostgreSQL
 graph_info Size
 size.label Database size (bytes)
 size.info Database size

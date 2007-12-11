@@ -25,8 +25,8 @@ if ($ARGV[0] && $ARGV[0] eq 'config') {
 graph_title Postgres active connections
 graph_args -l 0 --base 1000
 graph_vlabel Active connections
-graph_category Postgresql
-graph_info Shows active Postgresql connections
+graph_category PostgreSQL
+graph_info Shows active PostgreSQL connections
 connections.label Active connections
 connections.info Active connections
 connections.type GAUGE

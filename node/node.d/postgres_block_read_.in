@@ -1,14 +1,14 @@
 #!@@PERL@@ -w
 # -*- perl -*-
 
-# Plugin to monitor Postgresql memory usage; gives number of blocks
+# Plugin to monitor PostgreSQL memory usage; gives number of blocks
 # read from disk and from memory, showing how much of the database is
-# served from Postgresql's memory buffer.
+# served from PostgreSQL's memory buffer.
 #
 # PLEASE NOTE: This plugin may not present the whole truth - the truth
 # may actually be even better than this plugin will show you! That is
-# because Postgresql statistics only considers memory block reads from
-# its own allocated memory. When Postgresql reads from disk, it may
+# because PostgreSQL statistics only considers memory block reads from
+# its own allocated memory. When PostgreSQL reads from disk, it may
 # actually still be read from memory, but from the _kernel_'s
 # memory. Summarily, your database server may run even better than
 # this plugin will indicate. See
@@ -28,10 +28,10 @@
 #         /etc/munin/plugins/postgres_block_read_SomeDatabase
 #       This should, however, be given through autoconf and suggest.
 #
-#       If required, give username, password and/or Postgresql server
+#       If required, give username, password and/or PostgreSQL server
 #       host through environment variables. 
 # 
-#       You must also activate Postgresql statistics. See
+#       You must also activate PostgreSQL statistics. See
 #       http://www.postgresql.org/docs/7.4/interactive/monitoring-stats.html
 #       for how to enable this. Specifically, the following lines must
 #       exist in your postgresql.conf:
@@ -50,7 +50,7 @@
 #                    'localhost'. 
 #       dbport     - Which port on the database server to connect to.
 #                    Defaults to '5432'.
-#       dbuser     - A Postgresql user account with read permission to
+#       dbuser     - A PostgreSQL user account with read permission to
 #                    the given database. Defaults to
 #                    'postgres'. Anyway, Munin must be told which user
 #                    this plugin should be run as. 
@@ -134,7 +134,7 @@ if ($configure) {
 graph_title Postgres data reads from $dbname
 graph_args --base 1000
 graph_vlabel Blocks read per \${graph_period}
-graph_category Postgresql
+graph_category PostgreSQL
 graph_info Shows number of blocks read from disk and from memory
 from_disk.label Read from disk
 from_disk.info Read from disk
