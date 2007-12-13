@@ -30,7 +30,7 @@ use DBI;
 
 # See postgress_block_read_ for docs
 
-my $dbhost = $ENV{'dbhost'} || '127.0.0.1';
+my $dbhost = $ENV{'dbhost'} || '';
 my $dbport = $ENV{'dbport'} || '5432';
 my $dbname = $ENV{'dbname'} || 'template1';
 my $dbuser = $ENV{'dbuser'} || 'postgres';
@@ -54,8 +54,11 @@ exlocks.warning 5
 exlocks.critical 10
 EOF
 } else {
-    my $Con = "DBI:Pg:dbname=$dbname;host=$dbhost;port=$dbport";
-    my $Dbh = DBI->connect ($Con, $dbuser,
+    my $dsn = "dbi:Pg:";
+    $dsn .= "dbname=$dbname;" if $dbname;
+    $dsn .= "host=$dbhost;" if $dbhost;
+    $dsn .= "port=$dbport;" if $dbport;
+    my $Dbh = DBI->connect ($dsn, $dbuser,
 			    '',
 			    {RaiseError =>1}) || die "Unable to access Database $dbname on host $dbhost as user $dbuser.\nError returned was: ". $DBI::errstr;
 

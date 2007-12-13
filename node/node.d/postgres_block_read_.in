@@ -70,7 +70,7 @@ use vars qw ( $debug $suggest $configure $dbh );
 # Need these variables at an early stage to enable
 # autoconf and suggest
 my $dbhost = $ENV{'dbhost'} || ''; # Connect to localhost by default
-my $dbhost = $ENV{'dbport'} || '5432';
+my $dbport = $ENV{'dbport'} || '5432';
 my $dbname = $ENV{'dbname'} || 'template1';
 my $dbuser = $ENV{'dbuser'} || 'postgres';
 my $dbpass = $ENV{'dbpass'} || '';
@@ -84,9 +84,10 @@ if (exists $ARGV[0]) {
         }
         # Then we try to detect Postgres presence by connecting to
         # 'template1'.
-        my $dsn = "dbi:Pg:dbname=template1";
-        $dsn .= ";host=$dbhost" if $dbhost;
-        $dsn .= ";port=$dbport" if $dbport;
+        my $dsn = "dbi:Pg:";
+        $dsn .= "dbname=$dbname;" if $dbname;
+        $dsn .= "host=$dbhost;" if $dbhost;
+        $dsn .= "port=$dbport;" if $dbport;
         my $tempdbh = DBI->connect ($dsn, $dbuser, $dbpass);
         if ($tempdbh) {
             print "yes\n";
@@ -114,15 +115,16 @@ if (exists $ARGV[0]) {
 
 # Must do this here, after checking for autoconf/suggest/etc, because the
 # plugin must be able to run before it is linked to the databases.
-my (undef, undef, undef, $dbname) = split (/_/, $0, 4);
+(undef, undef, undef, $dbname) = split (/_/, $0, 4);
 die "No dbname configured (did you make the proper symlink?)" unless $dbname;
 
 my @datasources = DBI->data_sources ('Pg')
     or die ("Can't read any possible data sources: $?");
 
-my $dsn = "DBI:Pg:dbname=$dbname";
-$dsn .= ";host=$dbhost" if $dbhost;
-$dsn .= ";port=$dbport" if $dbport;
+my $dsn = "DBI:Pg:";
+$dsn .= "dbname=$dbname;" if $dbname;
+$dsn .= "host=$dbhost;" if $dbhost;
+$dsn .= "port=$dbport;" if $dbport;
 print "#$dsn\n" if $debug;
 my $dbh = DBI->connect ($dsn, $dbuser, $dbpass, {RaiseError =>1});
 unless($dbh) {
