@@ -20,6 +20,10 @@
 #
 # This plugin is based on the if_ plugin.
 #
+# Parameters
+#     env.input <input chain name>
+#     env.output <output chain name>
+#
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
 #
@@ -28,6 +32,8 @@
 
 
 IP=${0##*/ip_}
+INPUT=${input:-INPUT}
+OUTPUT=${output:-OUTPUT}
 
 case $IP in
     *:*) # I know this! This is IPv6!
@@ -41,7 +47,7 @@ esac
 
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/net/dev ]; then
-		iptables -L INPUT -v -n -x >/dev/null 2>/dev/null
+		iptables -L ${INPUT} -v -n -x >/dev/null 2>/dev/null
 		if [ $? -gt 0 ]; then
 			echo "no (could not run iptables as user `whoami`)"
 			exit 1
@@ -56,7 +62,7 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 if [ "$1" = "suggest" ]; then
-	iptables -L INPUT -v -n -x 2>/dev/null | awk '$8 ~ /[0-9]/ { if (done[$8]!=1) {print $8; done[$8]=1;}}'
+	iptables -L ${INPUT} -v -n -x 2>/dev/null | awk '$8 ~ /[0-9]/ { if (done[$8]!=1) {print $8; done[$8]=1;}}'
 	exit 0
 fi
 
@@ -78,6 +84,6 @@ if [ "$1" = "config" ]; then
         exit 0
 fi;
 
-iptables -L INPUT -v -n -x | grep -m1 $IP | awk "{ print \"in.value \" \$2 }"
-iptables -L OUTPUT -v -n -x | grep -m1 $IP | awk "{ print \"out.value \" \$2 }"
+iptables -L ${INPUT} -v -n -x | grep -m1 $IP | awk "{ print \"in.value \" \$2 }"
+iptables -L ${OUTPUT} -v -n -x | grep -m1 $IP | awk "{ print \"out.value \" \$2 }"
 
