@@ -11,7 +11,8 @@
 # Magic markers (optional - used by munin-config and installation
 # scripts):
 #
-#%# family=auto
+# Family set to manual, plugin superseeded by munin_stats.
+#%# family=manual
 #%# capabilities=autoconf
 
 if [ ! "$UPDATE_STATSFILE" ]; then
