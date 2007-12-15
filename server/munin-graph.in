@@ -1185,11 +1185,15 @@ with Munin's node.  Munin is a group of programs to gather data from
 Munin's nodes, graph them, create html-pages, and optionally warn Nagios
 about any off-limit values.
 
-munin-graph does the graphing. It is usually only used from within munin-cron.
+munin-graph does the graphing. It is usually only used from within
+munin-cron.  If munin.conf sets "graph_strategy cgi" then munin-graph
+does no work, instead munin-html generates references to the graphing
+CGI.  Please see http://munin.projects.linpro.no/wiki/CgiHowto for
+more information about CGI grpahing.
 
 It checks the rrd-files for updated values, and redraws the graphs if
 needed. To force redrawing of graphs (after setup-changes et alia), use
-'--nolazy'. 
+'--nolazy'.
 
 =head1 FILES
 
