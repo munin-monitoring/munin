@@ -35,3 +35,7 @@ ignore_file \.rpm(save|new)$
 
 allow ^127\.0\.0\.1$
 
+# uncomment this to only listen on the loopback/localhost interface
+#
+# host 127.0.0.1
+
