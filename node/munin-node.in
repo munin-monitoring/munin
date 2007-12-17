@@ -750,20 +750,20 @@ sub load_auth_file
 	}
 	elsif (/^\s*env\s+([^=\s]+)\s*=\s*(.+)$/)
 	{
-	    $sconf->{$service}{'env'}{$1} = $2;
-	    print "Saving $service->env->$1 = $2...\n" if $DEBUG;
-	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"env $1=$2\" should be rewritten to \"env.$1 $2\").";
+	    # $sconf->{$service}{'env'}{$1} = $2;
+	    # net_write ("Saving $service->env->$1 = $2...\n") if $DEBUG;
+	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"env $1=$2\" should be rewritten to \"env.$1 $2. Ignored.\").";
 	}
 	elsif (/^\s*env\.(\S+)\s+(.+)$/)
 	{
 	    $sconf->{$service}{'env'}{$1} = $2;
-	    print "Saving $service->env->$1 = $2...\n" if $DEBUG;
+	    net_write ("Saving $service->env->$1 = $2...\n") if $DEBUG;
 	}
 	elsif (/^\s*(\w+)\s+(.+)$/)
 	{
-	    $sconf->{$service}{'env'}{"lrrd_$1"} = $2;
-	    print "Saving $service->env->lrrd_$1 = $2...\n" if $DEBUG;
-	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"$1 $2\" should be rewritten to \"env lrrd_$1=$2\").";
+	    # $sconf->{$service}{'env'}{"lrrd_$1"} = $2;
+	    # net_write ("Saving $service->env->lrrd_$1 = $2...\n") if $DEBUG;
+        warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"$1 $2\" should be rewritten to \"env.$1 $2. Ignored.\").";
 	}
 	elsif (/\S/)
 	{
