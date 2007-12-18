@@ -1,10 +1,45 @@
 #!@@PERL@@ -w
 # -*- perl -*-
-
+#
+# Plugin to monitor PostgreSQL disk usage.
+#
 # Written by Bjrn Ruberg (bjorn@linpro.no) 2006
 # Rewritten by Moses Moore 2006-04-08  moc.iazom@sesom
 # Licenced under GPL
-
+#
+# Parameters:
+# 	
+# 	config
+# 	autoconf
+#
+# Configuration variables:
+#
+#	PGHOST		- Database server to use. Defaults to using ident
+#			  authentication with the local server.
+#	PGPORT		- Port to connect to. Defaults to '5432'.
+#	PGDATABASE	- Database to connect to. Defaults to 'template1'.
+#			  Note that this can be different from the database to
+#			  monitor, which is defined via the symlink.
+#	PGUSER		- User to connect as, if necessary.
+#	PGPASSWORD	- Corresponding password to use, if necessary.
+#
+#	(See libpq documentation for more.)
+#	Note that PGDATABASE will default to 'template1' in this plugin, and
+#	without PGHOST it will try ident authentication with the local server,
+#	as the user that the plugin is running as.
+#
+# Configuration example:
+#
+#	# Use local server, ident authentication with the 'postgres' user.
+#	[postgres_*]
+#	user postgres
+#
+#	# Use local server, TCP authentication with a username and password.
+#	[postgres_*]
+#	env.PGHOST localhost
+#	env.PGUSER someuser
+#	env.PGPASSWORD somepassword
+#
 # Magic markers
 #%# family=auto
 #%# capabilities=autoconf suggest
@@ -13,19 +48,8 @@ use strict;
 use DBI;
 use vars qw ( $debug $suggest $configure $dbh );
 
-# Package maintainers should provide an environment
-# file for the /etc/munin/plugin-conf.d/ directory
-# to override these values if necessary.
-# NOTE: The plugin (also when auto configured) should
-# be run by the postgresql user account.
-
-# Need these variables at an early stage to enable
-# autoconf and suggest
-my $dbhost = $ENV{'dbhost'} || ''; # Connect to localhost by default
-my $dbname = $ENV{'dbname'} || 'template1';
-my $dbport = $ENV{'dbport'} || '5432';
-my $dbuser = $ENV{'dbuser'} || 'postgres';
-my $dbpass = $ENV{'dbpass'} || '';
+# Default to template1 database.
+$ENV{'PGDATABASE'} ||= 'template1';
 
 if (exists $ARGV[0]) {
     if ($ARGV[0] eq 'autoconf') {
@@ -34,13 +58,8 @@ if (exists $ARGV[0]) {
             print "no (DBD::Pg not found)";
             exit 1;
         }
-        # Then we try to detect Postgres presence by connecting to
-        # 'template1'.
-        $my $dsn = "dbi:Pg:";
-        $dsn .= "dbname=$dbname;" if $dbname;
-        $dsn .= "host=$dbhost;" if $dbhost;
-        $dsn .= "port=$dbport;" if $dbport;
-        my $tempdbh = DBI->connect ($dsn, $dbuser, $dbpass);
+        # Then we try to detect PostgreSQL presence.
+        my $tempdbh = DBI->connect ('dbi:Pg:', '', '');
         if ($tempdbh) {
             print "yes\n";
             exit 0;
@@ -67,20 +86,17 @@ if (exists $ARGV[0]) {
 
 # Must do this here, after checking for autoconf/suggest/etc, because the
 # plugin must be able to run before it is linked to the databases.
+
+# Note that $dbname is not necessarily the same as $ENV{'PGDATABASE'}.
 my (undef, undef, $dbname) = split (/_/, $0, 3);
 die "No dbname configured (did you make the proper symlink?)" unless $dbname;
 
 my @datasources = DBI->data_sources ('Pg')
     or die ("Can't read any possible data sources: $?");
 
-my $dsn = "DBI:Pg:";
-$dsn .= "dbname=$dbname;" if $dbname;
-$dsn .= "host=$dbhost;" if $dbhost;
-$dsn .= "port=$dbport;" if $dbport;
-print "#$dsn\n" if $debug;
-my $dbh = DBI->connect ($dsn, $dbuser, $dbpass, {RaiseError =>1});
+my $dbh = DBI->connect ('dbi:Pg', '', '', {RaiseError =>1});
 unless($dbh) {
-    die("Database $dbname\@$dbhost (". $DBI::errstr .")\n");
+    die("Error connecting to database. (". $DBI::errstr .")\n");
 }
 
 if ($configure) {

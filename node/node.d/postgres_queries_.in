@@ -19,6 +19,8 @@
 #  2007/09/25: v1.0 Moses Moore <moc.iazom@sesom>
 #    Nicolai Langfeldt - "I wounder if one of you would be bothered
 #    to rework [this] over the pattern of postgres_block_read_ ..."
+#  2007/12/17 v1.0.1  Tim Retout <tim.retout@credativ.co.uk>
+#    Use libpq environment variables for configuration.
 #
 # Usage:
 #
@@ -42,22 +44,36 @@
 #
 #
 # Parameters:
+# 	
+# 	config
+# 	autoconf
 #
-#       config   (required)
+# Configuration variables:
 #
-# Config variables:
+#	PGHOST		- Database server to use. Defaults to using ident
+#			  authentication with the local server.
+#	PGPORT		- Port to connect to. Defaults to '5432'.
+#	PGDATABASE	- Database to connect to. Defaults to 'template1'.
+#	PGUSER		- User to connect as, if necessary.
+#	PGPASSWORD	- Corresponding password to use, if necessary.
 #
-#       dbhost     - Which database server to use. Defaults to
-#                    'localhost'. 
-#       dbport     - Which port on the database server to connect to.
-#                    Defaults to '5432'.
-#       dbuser     - A PostgreSQL user account with read permission to
-#                    the given database. Defaults to
-#                    'postgres'. Anyway, Munin must be told which user
-#                    this plugin should be run as. 
-#       dbpass     - The corresponding password, if
-#                    applicable. Default to undef. Remember that
-#                    pg_hba.conf must be configured accordingly.
+#	(See libpq documentation for more.)
+#	Note that PGDATABASE will default to 'template1' in this plugin, and
+#	without PGHOST it will try ident authentication with the local server,
+#	as the user that the plugin is running as.
+#
+# Configuration example:
+#
+#	# Use local server, ident authentication with the 'postgres' user.
+#	[postgres_*]
+#	user postgres
+#
+#	# Use local server, TCP authentication with a username and password.
+#	[postgres_*]
+#	env.PGHOST localhost
+#	env.PGUSER someuser
+#	env.PGPASSWORD somepassword
+#
 #
 # Magic markers
 #%# family=auto
@@ -67,15 +83,9 @@ use strict;
 use DBI;
 use Data::Dumper;
 use vars qw ( $debug $suggest $configure $dbh );
-use vars qw ( $dbhost $dbport $dbname $dbuser $dbpass );
 
-# Need these variables at an early stage to enable
-# autoconf and suggest
-$dbhost = $ENV{'dbhost'} || ''; # Connect to localhost by default
-$dbport = $ENV{'dbport'} || '5432';
-$dbname = $ENV{'dbname'} || 'template1';
-$dbuser = $ENV{'dbuser'} || 'postgres';
-$dbpass = $ENV{'dbpass'} || '';
+# Default to template1 database.
+$ENV{'PGDATABASE'} ||= 'template1';
 
 if (exists $ARGV[0]) {
     if ($ARGV[0] eq 'autoconf') {
@@ -84,12 +94,8 @@ if (exists $ARGV[0]) {
             print "no (DBD::Pg not found)";
             exit 1;
         }
-        # Then we try to detect Postgres presence by connecting to $dbname
-        my $dsn = "dbi:Pg:";
-        $dsn .= "dbname=$dbname;" if $dbname;
-        $dsn .= "host=$dbhost;" if $dbhost;
-        $dsn .= "port=$dbport;" if $dbport;
-        my $tempdbh = DBI->connect ($dsn, $dbuser, $dbpass);
+        # Then we try to detect Postgres presence.
+        my $tempdbh = DBI->connect ('dbi:Pg:', '', '');
         if ($tempdbh) {
             print "yes\n";
             exit 0;
@@ -124,14 +130,9 @@ die "No dbname configured (did you make the proper symlink?)" unless $dbname;
 my @datasources = DBI->data_sources ('Pg')
     or die ("Can't read any possible data sources: $?");
 
-my $dsn = "DBI:Pg:";
-$dsn .= "dbname=$dbname;" if $dbname;
-$dsn .= "host=$dbhost;" if $dbhost;
-$dsn .= "port=$dbport;" if $dbport;
-print "#$dsn\n" if $debug;
-my $dbh = DBI->connect ($dsn, $dbuser, $dbpass, {RaiseError =>1});
+my $dbh = DBI->connect ('dbi:Pg:', '', '', {RaiseError =>1});
 unless($dbh) {
-    die("Database $dbname\@$dbhost (". $DBI::errstr .")\n");
+    die("Error connecting to database. (". $DBI::errstr .")\n");
 }
 
 if ($configure) {

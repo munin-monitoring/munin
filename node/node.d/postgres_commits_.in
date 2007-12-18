@@ -29,6 +29,8 @@
 #    to rework [this] over the pattern of postgres_block_read_ ..."
 #    Omitted tracking numbackends because it is an instantaneous
 #    measurement (GAUGE) instead of a cumulative (DERIVE) one.
+#  2007/12/12: v1.01  Tim Retout <tim.retout@credativ.co.uk>
+#    Use libpq environment variables for configuration.
 #
 # Usage:
 #
@@ -59,41 +61,51 @@
 #
 #
 # Parameters:
+# 	
+# 	config
+# 	autoconf
 #
-#       config   (required)
+# Configuration variables:
 #
-# Config variables:
+#	PGHOST		- Database server to use. Defaults to using ident
+#			  authentication with the local server.
+#	PGPORT		- Port to connect to. Defaults to '5432'.
+#	PGDATABASE	- Database to connect to. Defaults to 'template1'.
+#			  Note that this can be different from the database to
+#			  monitor, which is defined via the symlink.
+#	PGUSER		- User to connect as, if necessary.
+#	PGPASSWORD	- Corresponding password to use, if necessary.
 #
-#       dbhost     - Which database server to use. Defaults to
-#                    'localhost'. 
-#       dbport     - Which port on the database server to connect to.
-#                    Defaults to '5432'.
-#       dbuser     - A PostgreSQL user account with read permission for
-#                    the database.  If you specified database '_All',
-#                    this user will need read access to the system
-#                    database 'template1'.
-#       dbpass     - The corresponding password, if necessary. 
-#                    Defaults to undef. Remember that
-#                    pg_hba.conf must be configured accordingly.
+#	(See libpq documentation for more.)
+#	Note that PGDATABASE will default to 'template1' in this plugin, and
+#	without PGHOST it will try ident authentication with the local server,
+#	as the user that the plugin is running as.
+#
+# Configuration example:
+#
+#	# Use local server, ident authentication with the 'postgres' user.
+#	[postgres_*]
+#	user postgres
+#
+#	# Use local server, TCP authentication with a username and password.
+#	[postgres_*]
+#	env.PGHOST localhost
+#	env.PGUSER someuser
+#	env.PGPASSWORD somepassword
 #
 # Magic markers
 #%# family=auto
 #%# capabilities=autoconf suggest
 
 use strict;
+use warnings;
 use DBI;
 use Data::Dumper;
 use vars qw ( $debug $suggest $configure $dbh );
-use vars qw ( $dbhost $dbport $dbname $dbuser $dbpass );
 use vars qw ( @datasources );
 
-# Need these variables at an early stage to enable
-# autoconf and suggest
-$dbhost = $ENV{'dbhost'} || ''; # Connect to localhost by default
-$dbport = $ENV{'dbport'} || '5432';
-$dbname = $ENV{'dbname'} || 'template1';
-$dbuser = $ENV{'dbuser'} || 'postgres';
-$dbpass = $ENV{'dbpass'} || '';
+# Default to template1 database.
+$ENV{'PGDATABASE'} ||= 'template1';
 
 my ($maybe_dbname) = ($0 =~ m/postgres_commits_(\S+)$/);
 if ($maybe_dbname eq 'All' or $ARGV[0] eq 'suggest') {
@@ -114,12 +126,8 @@ if (exists $ARGV[0]) {
             print "no (DBD::Pg not found)";
             exit 1;
         }
-        # Then we try to detect Postgres presence by connecting to
-        # 'template1'.
-        my $dsn = "dbi:Pg:dbname=$dbname";
-        $dsn .= ";host=$dbhost" if $dbhost;
-        $dsn .= ";port=$dbport" if $dbport;
-        my $tempdbh = DBI->connect ($dsn, $dbuser, $dbpass);
+	# Try to detect PostgreSQL presence.
+        my $tempdbh = DBI->connect ('dbi:Pg', '', '');
         if ($tempdbh) {
             print "yes\n";
             exit 0;
@@ -145,22 +153,18 @@ if (exists $ARGV[0]) {
 }
 
 die "No dbname configured (did you make the proper symlink?)" unless $maybe_dbname;
-$dbname = $maybe_dbname unless ($maybe_dbname eq 'All');
+# Note that $dbname is the database being monitored, and can be different from
+# $ENV{'PGDATABASE'}.
+my $dbname = $maybe_dbname unless ($maybe_dbname eq 'All');
 if ($maybe_dbname eq 'All' and not @datasources) {
   print "# Sorry, can't use the _All trick; no postgresql databases detected.\n";
   print "# Please make softlinks for each database name.\n";
   exit 1;
 }
 
-
-my $dsn = "DBI:Pg:dbname=$dbname";  
-# if 'All', defaults to $ENV{dbname} or 'template1'
-$dsn .= ";host=$dbhost" if $dbhost;
-$dsn .= ";port=$dbport" if $dbport;
-print "#$dsn\n" if $debug;
-my $dbh = DBI->connect ($dsn, $dbuser, $dbpass, {RaiseError =>1});
+my $dbh = DBI->connect ('dbi:Pg', '', '', {RaiseError =>1});
 unless($dbh) {
-    die("Database $dbname\@$dbhost (". $DBI::errstr .")\n");
+    die("Error connecting to database. (". $DBI::errstr .")\n");
 }
 
 if ($configure) {

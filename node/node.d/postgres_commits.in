@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Plugin to monitor postgresql
+# Plugin to monitor postgresql commits
 # 
 #
 # Parameters:
@@ -10,18 +10,48 @@
 #
 # Configuration variables
 #
-# Revision 0.0001  2005/03/10  Vajtsz
-# this is my first munin plugin sorry for dummy code
+#	PGHOST
+#	PGPORT
+#	PGDATABASE
+#	PGUSER
+#
+#	(See libpq documentation for more.)
+#	Note that PGDATABASE will default to 'template1' in this plugin, and
+#	without PGHOST it will try ident authentication with the local server,
+#	as the user that the plugin is running as.
+#
+# Configuration example:
+#
+#	# Use local server, ident authentication with the 'postgres' user.
+#	[postgres_*]
+#	user postgres
+#
+#	# Use local server, TCP authentication with a username and password.
+#	[postgres_*]
+#	env.PGHOST localhost
+#	env.PGUSER someuser
+#	env.PGPASSWORD somepassword
+#
+# Revision history:
+#
+# 2005-10-03 v0.0001  Vajtsz
+#	this is my first munin plugin sorry for dummy code
+# 2007-12-14 v0.0002  Tim Retout <tim.retout@credativ.co.uk>
+#	Use libpq environment variables for configuration. Document the two
+#	most common cases.
 #
 #
 #
 #%# family=auto
 #%# capabilities=autoconf
 
-#
-sel_user=teszt
-test_dbase=fokonyv2006
-psql_comm='psql -U '$sel_user' -d '$test_dbase' -c'
+# It is not guaranteed that a database exists with the same name as the user,
+# but template1 should generally be there.
+if [ $PGDATABASE == "" ]; then
+	PGDATABASE="template1"
+fi
+
+psql_comm='psql -c'
 
 if [ "$1" = "autoconf" ]; then
         psql  --version 2>/dev/null >/dev/null

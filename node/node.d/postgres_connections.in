@@ -1,25 +1,53 @@
-#!@@PERL@@ -w
+#!@@PERL@@
 # -*- perl -*-
-# 
+#
+# Plugin to monitor number of PostgreSQL database connections.
+#
+# Parameters:
+# 	
+# 	config
+# 	autoconf
+#
+# Configuration variables:
+#
+#	PGHOST		- Database server to use. Defaults to using ident
+#			  authentication with the local server.
+#	PGPORT		- Port to connect to. Defaults to '5432'.
+#	PGDATABASE	- Database to connect to. Defaults to 'template1'.
+#	PGUSER		- User to connect as, if necessary.
+#	PGPASSWORD	- Corresponding password to use, if necessary.
+#
+#	(See libpq documentation for more.)
+#	Note that PGDATABASE will default to 'template1' in this plugin, and
+#	without PGHOST it will try ident authentication with the local server,
+#	as the user that the plugin is running as.
+#
+# Configuration example:
+#
+#	# Use local server, ident authentication with the 'postgres' user.
+#	[postgres_*]
+#	user postgres
+#
+#	# Use local server, TCP authentication with a username and password.
+#	[postgres_*]
+#	env.PGHOST localhost
+#	env.PGUSER someuser
+#	env.PGPASSWORD somepassword
+#
 
 use strict;
+use warnings;
 use DBI;
 
-my $dbhost = $ENV{'dbhost'} || '';
-my $dbport = $ENV{'dbport'} || '5432';
-my $dbname = $ENV{'dbname'} || 'template1';
-my $dbuser = $ENV{'dbuser'} || 'postgres';
+# Default to template1 database.
+$ENV{'PGDATABASE'} ||= 'template1';
 
-my $dsn = "dbi:Pg:";
-$dsn .= "dbname=$dbname;" if $dbname;
-$dsn .= "host=$dbhost;" if $dbhost;
-$dsn .= "port=$dbport;" if $dbport;
-my $Dbh = DBI->connect ($dsn, $dbuser,'',{RaiseError =>1}) || 
-    die "Unable to access Database $dbname on host $dbhost as user $dbuser.\nError returned was: ". $DBI::errstr;
+my $dbh = DBI->connect ('dbi:Pg:', '','',{RaiseError =>1}) || 
+    die "Unable to access database. Error returned was: ". $DBI::errstr;
 
 if ($ARGV[0] && $ARGV[0] eq 'config') {
     my $sql_max = "SHOW max_connections;";
-    my $sth_max = $Dbh->prepare($sql_max);
+    my $sth_max = $dbh->prepare($sql_max);
     $sth_max->execute();
     my ($max_conn) = $sth_max->fetchrow();
     my $warning = int ($max_conn * 0.7);
@@ -38,7 +66,7 @@ connections.critical $critical
 EOF
 } else {
     my $sql_curr = "SELECT COUNT (*) FROM pg_stat_activity;";
-    my $sth_curr = $Dbh->prepare($sql_curr);
+    my $sth_curr = $dbh->prepare($sql_curr);
     $sth_curr->execute();
     my ($curr_conn) = $sth_curr->fetchrow();
     print "connections.value $curr_conn\n";
