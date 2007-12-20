@@ -385,12 +385,12 @@ sub generate_service_message {
     	elsif ($key =~ /^([^\.]+)\.ok$/)
 	{
 	    $worst = "ok" unless $worst;
-	    push @{$stats{'oks'}}, $1;
+	    push @{$stats{'ok'}}, $1;
 	    push @{$stats{'foks'}}, $1;
 	}
 	else
 	{
-	    push @{$stats{'oks'}}, $1;
+	    push @{$stats{'ok'}}, $1;
 	}
     }
     $client->{'cfields'}  = join " ", @{$stats{'critical'}};
