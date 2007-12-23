@@ -76,9 +76,11 @@ install-node-non-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure $(SBINDIR)/
 	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
-	
+
+# ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE 
+# GENERIC ONES 
 install-node-plugins: build
-	for p in build/node/node.d.$(OSTYPE)/* build/node/node.d/*; do    		\
+	for p in build/node/node.d/* build/node/node.d.$(OSTYPE)/*; do    		\
 		if test -f "$$p" ; then                                     		\
 			family=`sed -n 's/^#%# family=\(.*\)$$/\1/p' $$p`;  		\
 			test "$$family" || family=contrib;                  		\
