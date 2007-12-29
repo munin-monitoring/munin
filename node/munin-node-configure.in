@@ -1,6 +1,7 @@
 #!@@PERL@@ -w
+# -*- perl -*-
 #
-# Copyright (C) 2004 Jimmy Olsen
+# Copyright (C) 2003-2006 Jimmy Olsen
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,65 +18,6 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 # Program to suggest configurations and configuration changes.
-#
-# $Log$
-# Revision 1.11.2.1  2005/03/09 21:49:57  jimmyo
-# munin-node-configure now properly respect user plugins.
-#
-# Revision 1.11  2004/12/10 10:40:12  jimmyo
-# Fix bug with underscore in wildcard plugins.
-#
-# Revision 1.10  2004/11/16 20:00:42  jimmyo
-# License cleanups.
-#
-# Revision 1.9  2004/09/07 19:33:32  jimmyo
-# Documented the SNMP options a bit better.
-#
-# Revision 1.8  2004/09/05 12:00:18  jimmyo
-# Set family and capabilities.
-#
-# Revision 1.7  2004/09/03 23:25:16  jimmyo
-# Brushed up the SNMP probe functionality.
-#
-# Revision 1.6  2004/09/03 22:59:03  jimmyo
-# Support comma-formatted snmp-options.
-#
-# Revision 1.5  2004/09/03 22:56:51  jimmyo
-# Added support for SNMP probing.
-#
-# Revision 1.4  2004/01/29 19:25:52  jimmyo
-# Fixed bad debug output (forgotten linebreaks) in munin-node-configure (SF#882385).
-#
-# Revision 1.3  2004/01/29 17:36:19  jimmyo
-# Updated copyright information
-#
-# Revision 1.2  2004/01/15 15:20:00  jimmyo
-# Making things workable after name change. Upping for test verwion.
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:06  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.11  2003/12/18 16:46:59  jimmyo
-# now prints the reason for suggesting to not use a plugin, as long as the plugins gives one.
-#
-# Revision 1.10  2003/12/17 21:29:26  jimmyo
-# Don\'t try to change uid/gid if not running as root. (Deb#224300)
-#
-# Revision 1.9  2003/11/10 22:05:42  toreanderson
-# bugfux
-#
-# Revision 1.8  2003/11/10 17:52:33  jimmyo
-# Small briainer-typo
-#
-# Revision 1.7  2003/11/10 17:32:18  jimmyo
-# Check what to do with new plugins when upgrading.
-#
-# Revision 1.6  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
 #
 
 $| = 1; # Flush after every write to stdout
@@ -104,6 +46,7 @@ my $do_usage   = 0;
 my $do_error   = 0;
 my $do_version = 0;
 my $newer      = undef;
+my $debugopt   =''; # Pass --debug to children or not
 
 $do_error = 1 unless GetOptions (
 	"help"            => \$do_usage,
@@ -151,12 +94,18 @@ Options:
 
 if ($do_version)
 {
-    print "munin-node-configure (munin-node) version $version.\n";
-    print "Written by Jimmy Olsen\n";
-    print "\n";
-    print "Copyright (C) 2003-2004 Jimmy Olsen\n";
-    print "This is free software released under the GNU Public License. There is NO\n";
-    print "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n";
+    print <<"EOT";
+munin-node-configure (munin-node) version $version.
+Written by Jimmy Olsen
+
+Copyright (C) 2003-2006 Jimmy Olsen
+
+This is free software released under the GNU General Public License. There
+is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. For details, please refer to the file COPYING that is included
+with this software or refer to
+  http://www.fsf.org/licensing/licenses/gpl.txt
+EOT
     exit 0;
 }
 
@@ -165,6 +114,8 @@ if (defined $newer and (!$shell or $removes))
     print "Fatal: --newer only supported along with --shell.\n";
     exit 2;
 }
+
+$debugopt='--debug' if $debug;
 
 if (!@families)
 {
@@ -339,6 +290,7 @@ if (@families)
     }
 }
 
+
 if (@snmp and $shell)
 {
     if (-x "$bindir/munin-node-configure-snmp")
@@ -506,6 +458,9 @@ sub get_plugins
 		$path = readlink($path) and $path = $path =~ /^\// ? $path : "$dir/$path" while -l $path;
 		next unless -f $path;
 		next unless -x _;
+		next if $plug =~ /~$/;    # Emacs droppings
+		next if $plug =~ /.bak$/; # Backup file
+		next if $plug =~ /.swp$/; # Vi droppings
 
 		next if $plug =~ /^\./;
 
@@ -546,65 +501,66 @@ sub get_plugins
 			next;
 		}
 
-		if ($ps->{$plug}->{'capability'}->{'autoconf'})
-		{
+		if ($ps->{$plug}->{'capability'}->{'autoconf'})	{
+
+		    my @cmd=("$bindir/munin-run");
+		    push(@cmd,$debugopt) if $debug;
+		    push(@cmd,"--servicedir",$libdir, $plug, "autoconf");
+
+		    print "\nRunning: ",join(' ',@cmd),"\n" if $debug;
+
+		    my $fork = open (PLUG, "-|");
+
+		    if ($fork == -1) {
+			die "ERROR: Unable to fork: $!"
+		    } elsif ($fork == 0) { # Child
+#			close (STDERR);
+#			open (STDERR, ">&STDOUT");
+			exec (@cmd);
+		    } else {
+			$ps->{$plug}->{'defaultreason'} =
+			  join (' ', map {chomp; $_} <PLUG>);
+		    }
+		    close (PLUG);
+		    if ($?) {
+			$ps->{$plug}->{'default'} = "no";
+		    } else {
+			$ps->{$plug}->{'default'} = "yes";
+		    }
+		    print $ps->{$plug}->{'default'}, ":",
+		      $ps->{$plug}->{'defaultreason'}, "..."
+			if $debug;
+		}
+
+		if ($ps->{$plug}->{'capability'}->{'suggest'}) {
+		    if (exists $ps->{$plug}->{'default'} and
+			$ps->{$plug}->{'default'} eq "yes") {
+
+			my @cmd=("$bindir/munin-run");
+			push(@cmd,$debugopt) if $debug;
+			push(@cmd,"--servicedir",$libdir, $plug, "suggest");
+
+			print "\nRunning: ",join(' ',@cmd),"\n" if $debug;
+
 			my $fork = open (PLUG, "-|");
 
-			if ($fork == -1)
-			{
-				die "ERROR: Unable to fork: $!"
-			}
-			elsif ($fork == 0) # Child
-			{
-				close (STDERR);
-				open (STDERR, ">&STDOUT");
-				exec ("$bindir/munin-run", "--servicedir", $libdir, $plug, "autoconf");
-			}
-			else
-			{
-				$ps->{$plug}->{'defaultreason'} = join (' ', map {chomp; $_} <PLUG>);
+			if ($fork == -1) {
+			    die "ERROR: Unable to fork: $!"
+			} elsif ($fork == 0) { # Child
+			    exec (@cmd);
+			} else {
+			    push (@{$ps->{$plug}->{'suggest'}},
+				  split (/\s+/,
+					 join (' ', map {chomp; $_} <PLUG>)));
 			}
 			close (PLUG);
-			if ($?)
-			{
-				$ps->{$plug}->{'default'} = "no";
+			if ($?) {
+			    $ps->{$plug}->{'suggest'} = "";
 			}
-			else
-			{
-				$ps->{$plug}->{'default'} = "yes";
-			}
-			print $ps->{$plug}->{'default'}, ":", $ps->{$plug}->{'defaultreason'}, "..." if $debug;
+			print join (' ', @{$ps->{$plug}->{'suggest'}})
+			  if $debug;
+		    }
 		}
-
-		if ($ps->{$plug}->{'capability'}->{'suggest'})
-		{
-			if (exists $ps->{$plug}->{'default'} and
-					$ps->{$plug}->{'default'} eq "yes")
-			{
-				my $fork = open (PLUG, "-|");
-
-				if ($fork == -1)
-				{
-					die "ERROR: Unable to fork: $!"
-				}
-				elsif ($fork == 0) # Child
-				{
-					exec ("$bindir/munin-run", "--servicedir", $libdir, $plug, "suggest");
-				}
-				else
-				{
-					push (@{$ps->{$plug}->{'suggest'}}, split (/\s+/, join (' ', map {chomp; $_} <PLUG>)));
-				}
-				close (PLUG);
-				if ($?)
-				{
-					$ps->{$plug}->{'suggest'} = "";
-				}
-				print join (' ', @{$ps->{$plug}->{'suggest'}}) if $debug;
-
-			}
-		}
-
 		print "\n" if $debug;
 	}
 	return $ps;
@@ -713,7 +669,7 @@ None known.
 
 =head1 COPYRIGHT
 
-Copyright © 2003 Jimmy Olsen
+Copyright © 2003-2006 Jimmy Olsen
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
