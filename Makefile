@@ -258,4 +258,13 @@ source_dist: clean
 	(cd ..; ln -s $(DIR) munin-$(VERSION))
 	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
 
+node-monkeywrench: install-node
+	rm -rf $(CONFDIR)/plugins
+	rm -rf $(LIBDIR)/plugins
+	mkdir -p $(LIBDIR)/plugins
+	mkdir -p $(CONFDIR)/plugins
+	cp monkeywrench/plugin-break*_ $(LIBDIR)/plugins/
+	$(SBINDIR)/munin-node-configure --suggest
+	echo 'Done?'
+
 .PHONY: install install-main install-node install-doc install-man build build-doc deb clean source_dist
