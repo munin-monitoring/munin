@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# -*- perl -*-
 #
 # Plugin to monitor harddrive temperatures through SMART.
 #
@@ -24,7 +25,7 @@
 # put in the e.g. dev_sda environment variable, to allow the user to keep
 # sda as the name of the disk.
 #
-# To avoid spinning up sleeping disks, you need the hdparm command in your PATH.
+# To avoid spinning up sleeping disks, you need the hdparm command in your PATH
 #
 #%# family=auto
 #%# capabilities=autoconf
@@ -63,7 +64,6 @@
 #
 # $Id$
 
-
 use strict;
 
 my $smartctl = exists $ENV{smartctl} ? $ENV{smartctl} : undef;
@@ -95,6 +95,10 @@ if ($^O eq 'linux') {
     @drives = grep /hd[a-z]/, readdir IDE;
     closedir(IDE);
   }
+
+  # "SCSI disks" could be both SCSI or SATA - we can't know which
+  # without probing them.
+
 } elsif ($^O eq 'solaris') {
   @drives = map { s@.*/@@ ; $_ } glob '/dev/rdsk/c*t*d*s2';
 }
