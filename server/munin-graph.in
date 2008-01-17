@@ -1,6 +1,6 @@
 #!@@PERL@@ -w
 #
-# Copyright (C) 2002-2004 Jimmy Olsen, Audun Ytterdal
+# Copyright (C) 2002-2006 Jimmy Olsen, Audun Ytterdal, Nicolai Langfeldt
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -41,7 +41,14 @@ my @limit_services = ();
 # RRDtool 1.2 requires \\: in comments
 my $RRDkludge = $RRDs::VERSION < 1.2 ? '' : '\\';
 
-# Force drawing of "graph no". 
+# And RRDtool 1.2 and later has draws lines with crayons so we hack
+# the LINE* options a bit.
+my $LINEkluge=0;
+if ($RRDs::VERSION >= 1.2) {
+    $LINEkluge=1;
+}
+
+# Force drawing of "graph no".
 my $force_graphing = 0;
 my $force_lazy = 1;
 my $force_root = 0;
@@ -557,8 +564,13 @@ sub process_node {
 	print "DEBUG: Checking field lengths \"", join "\",\"", (@rrd_preprocess, @field_order), "\".\n" if $DEBUG;
 
 	# Get max label length
-	$max_field_len = &munin_get_max_label_length ($node, $config, $domain, $name, $service, \@field_order);
-	my $global_headers = ($max_field_len > 16);
+	$max_field_len =
+	  &munin_get_max_label_length ($node, $config, $domain, $name,
+				       $service, \@field_order);
+	# my $global_headers = ($max_field_len >= 16);
+	# Global headers makes the value tables easier to read no matter how
+	# wide the labels are.
+	my $global_headers = 1;
 
 	# Array to keep negative data until we're finished with positive.
 	my @rrd_negatives = ();
@@ -823,22 +835,29 @@ sub process_node {
 
 	    # Do the header (title, vtitle, size, etc...)
 	    push @complete, @{&get_header ($node, $config, $domain, $name, $service, $time)};
+	    if ($LINEkluge) {
+		@rrd = map { s/LINE3:/LINE2.2:/; $_; } @rrd;
+		@rrd = map { s/LINE2:/LINE1.6:/; $_; } @rrd;
+		# LINE1 is thin enough.
+	    }
 	    push @complete, @rrd;
 
-	    push (@complete, "COMMENT:Last update$RRDkludge: " . RRDescape(scalar localtime($lastupdate)) .  "\\r");
-	    
-	    if (time - 300 < $lastupdate)
-	    {
-		    push @complete, "--end",(int($lastupdate/$resolutions{$time}))*$resolutions{$time};
+	    push (@complete, "COMMENT:Last update$RRDkludge: " . 
+		  RRDescape(scalar localtime($lastupdate)) .  "\\r");
+
+	    if (time - 300 < $lastupdate) {
+		push @complete, "--end",
+		  (int($lastupdate/$resolutions{$time}))*$resolutions{$time};
 	    }
-	    print "\n\nrrdtool \"graph\" \"", join ("\"\n\t\"",@complete), "\"\n" if $DEBUG;
+	    print "\n\nrrdtool \"graph\" \"",
+	      join ("\"\n\t\"",@complete), "\"\n" if $DEBUG;
 	    RRDs::graph (@complete);
 	    if (my $ERROR = RRDs::error) {
 		logger ("Unable to graph $filename: $ERROR");
-	    }
-	    elsif ($list_images) # Command-line option to list images created
-	    {
-		print &munin_get_picture_filename ($config, $domain, $name, $service, $time), "\n";
+	    } elsif ($list_images) {
+		# Command-line option to list images created
+		print &munin_get_picture_filename ($config, $domain, $name,
+						   $service, $time),"\n";
 	    }
 	}
 
@@ -1208,7 +1227,7 @@ This is munin-graph version 0.9.2-3
 
 =head1 AUTHORS
 
-Audun Ytterdal and Jimmy Olsen.
+Audun Ytterdal, Jimmy Olsen, Tore Anderson, Nicolai Langfeldt.
 
 =head1 BUGS
 
@@ -1218,7 +1237,7 @@ Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
 =head1 COPYRIGHT
 
-Copyright © 2002-2004 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
+Copyright (C) 2002-2006 Audun Ytterdal, Jimmy Olsen, Tore Anderson, and Nicolai Langfeldt
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
