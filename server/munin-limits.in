@@ -431,8 +431,6 @@ sub generate_service_message {
 			    }
 			    exit 0;
 			}
-			close (STDOUT);
-			*STDOUT = \$logstdout;
 			my $logpid = open ($logstderr, "|-");
 			if (!defined $logpid)
 			{
@@ -448,8 +446,8 @@ sub generate_service_message {
 			    }
 			    exit 0;
 			}
-			close (STDERR);
-			*STDERR = \$logstderr;
+			open (STDOUT, ">&", $logstdout);
+			open (STDERR, ">&", $logstderr);
 
 			exec (@cmd[1 .. $#cmd]) or logger ("Warning: Could not run command \"" . join(' ',@cmd[1 .. $#cmd]) . "\": $!");
 			exit 5;
@@ -555,8 +553,7 @@ sub logger_open {
 	if (!open ($log, ">>$dirname/munin-limits.log")) {
 	    print STDERR "Warning: Could not open log file \"$dirname/munin-limits.log\" for writing: $!";
 	} else {
-	    close (STDERR);
-	    *STDERR = \$log;
+	    open (STDERR, ">&", $log);
 	}
     }
 }
