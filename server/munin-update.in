@@ -1168,7 +1168,7 @@ sub fetch_node {
 		    if ($magnitude < 0) {
 			# Preserve at least 4 significant digits
 			$magnitude=abs($magnitude)+4;
-			$value=sprintf("%.%magnitudef",$value);
+			$value=sprintf("%.*f",$magnitude,$value);
 		    } else {
 			$value=sprintf("%.4f",$value);
 		    }
