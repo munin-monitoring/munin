@@ -1,6 +1,6 @@
 =head1 NAME
 
-munin-cron - A program to batch other munin programs
+munin-cron - A program to batch other Munin master programs
 
 =head1 SYNOPSIS
 
@@ -20,7 +20,7 @@ Limit hosts to E<lt>hostE<gt>. Multiple --host options may be supplied. [unset]
 
 =item B<< --config <file> >>
 
-Use E<lt>fileE<gt> as configuration file. [/etc/munin/munin.conf]
+Use E<lt>fileE<gt> as configuration file. [F<@@CONFDIR@@/munin.conf>]
 
 =back
 
@@ -41,7 +41,7 @@ Audun Ytterdal and Jimmy Olsen.
 
 =head1 COPYRIGHT
 
-Copyright (C) 2002-2006 Audun Ytterdal and Jimmy Olsen / Linpro AS.
+Copyright (C) 2002-2008 Audun Ytterdal and Jimmy Olsen / Linpro AS.
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

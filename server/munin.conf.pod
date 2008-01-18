@@ -31,16 +31,16 @@ something like:
 	[machine1.your.dom]
 		address localhost
 
-The default location of munin.conf is @@CONFDIR@@/munin.conf. If your
-placement deviates from this norm, use the "--config
+The default location of F<munin.conf> is F<@@CONFDIR@@/munin.conf>.
+If your placement deviates from this norm, use the "--config
 E<lt>fileE<gt>"-option when running the munin-* programs.
 
 Munin-update will expand all node-entries in this file, and save them
-to @@DBDIR@@/datafile, which is used by all programs in the package
+to F<@@DBDIR@@/datafile>, which is used by all programs in the package
 together with this file.
 
 Any directives in this file will override directives of the same name
-in "datafile".  E.g., if you want to change the title of the
+in F<datafile>.  E.g., if you want to change the title of the
 "load"-graph in the above minimum configuration, you would modify the
 two bottom lines to:
 
@@ -48,7 +48,7 @@ two bottom lines to:
 		address localhost
 		load.graph_title Edited title of the load-graph
 
-This will override the "graph_title" attribute of the "load"
+This will override the C<graph_title> attribute of the C<load>
 field/data series while keeping all the others at their default.
 
 =head1 GLOBAL DIRECTIVES
@@ -58,41 +58,44 @@ group definitions.
 
 =over
 
-=item B<dbdir> <path>
+=item B<dbdir> I<path>
 
 Directory for generated database files.  Required.
 
-=item B<logdir> <path>
+=item B<logdir> I<path>
 
 Directory for log files.  Required.
 
-=item B<htmldir> <path>
+=item B<htmldir> I<path>
 
 Directory for HTML pages and graphs.  Required.
 
-=item B<rundir> <path>
+=item B<rundir> I<path>
 
 Directory for files tracking munin's current running state.  Required.
 
-=item B<tmpldir> <path>
+=item B<tmpldir> I<path>
 
 Directory for templates used to generate HTML pages.  Required.
 
-=item B<fork> <value>
+=item B<fork> I<value>
 
 This directive determines whether munin-update fork when gathering
 information from nodes.  Possible values are C<yes> and C<no>.
 Default is C<yes>.  If you set it to C<no> munin-update will collect
-data from the nodes in sequence rather than in paralell and this will
+data from the nodes in sequence rather than in parallel and this will
 take considerably more time.  Affects: munin-update.
 
-=item B<graph_data_size> <value>
+=item B<graph_data_size> I<value>
 
 This directive sets the resolution of the RRD files that are created.
 Possible values are C<normal> and C<huge>.  Default is C<normal>.
-Affects: munin-update.
+C<Huge> is really huge, it saves the complete data with 5 minute
+resolution for 400 days.  This will probably increase the I/O load on
+your Munin master, and currently has very little benefit.  Affects:
+munin-update.
 
-=item B<graph_strategy> <value>
+=item B<graph_strategy> I<value>
 
 This directive can be C<cron> or C<cgi>.  This determines whether
 graphs will be produced when the cron job is run or whether they will
@@ -102,11 +105,12 @@ required to enable CGI graphing, see
 L<http://munin.projects.linpro.no/wiki/CgiHowto> for more details.
 Default is C<cron>.  Affects: munin-graph and munin-html.
 
-=item B<local_address> <value>
+=item B<local_address> I<value>
 
-The local address to connect any node from.  This can be overriden by
-a group or global directive.  Munin will attempt to guess an
-appropriate interface.
+The local address to connect any node from in case the master has
+several IP interfaces.  This can be overriden by a group or global
+directive.  Without this directive Munins traffic will originate from
+the master server according to the IP routing table.
 
 =item B<max_processes> <value>
 

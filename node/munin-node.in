@@ -1197,16 +1197,16 @@ Munin-node is a small perlscript listening to port 4949 using
 Net::Server. It reads all the plugins in /etc/munin/plugins on startup.
 
 The network protocol is documented at
-http://munin.projects.linpro.no/wiki/network-protocol
+L<http://munin.projects.linpro.no/wiki/network-protocol>
 
-These plugins can be in you language of choice: bash, perl, python,
+These plugins can be in your language of choice: bash, perl, python,
 C. The plugins can be run in two modes: with and without the
 "config"-parameter. When run with "config" as parameter, the plugin
 should output the configuration of the graph. When run without
 parameters, the plugin should output just values.  Writing plugins is
 easy and fun; please refer to
-http://munin.projects.linpro.no/wiki/HowToWritePlugins and
-http://munin.projects.linpro.no/wiki/plugins
+L<http://munin.projects.linpro.no/wiki/HowToWritePlugins> and
+L<http://munin.projects.linpro.no/wiki/plugins>
 
 =head1 FILES
 
@@ -1226,7 +1226,7 @@ Audun Ytterdal, Jimmy Olsen, and Tore Anderson.
 
 =head1 BUGS
 
-Please se http://munin.projects.linpro.no/report/1
+Please see L<http://munin.projects.linpro.no/report/1>
 
 munin-node does, as of now, not check the syntax of the configuration
 file.  It also does not check that plugins produces legal field names
@@ -1243,6 +1243,11 @@ NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
 PURPOSE.
 
 This program is released under the GNU General Public License
+
+=head1 SEE ALSO
+
+For information on configuration options, please refer to the man page for
+F<munin-node.conf>.
 
 =cut
 
