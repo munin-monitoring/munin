@@ -64,7 +64,7 @@ exlocks.warning 5
 exlocks.critical 10
 EOF
 } else {
-    my $dbh = DBI->connect ('dbi:Pg', '', '', {RaiseError =>1})
+    my $dbh = DBI->connect ('dbi:Pg:', '', '', {RaiseError =>1})
         || die "Unable to access database.\nError returned was: ". $DBI::errstr;
 
     my $sql="SELECT mode,COUNT(mode) FROM pg_locks GROUP BY mode ORDER BY mode;";

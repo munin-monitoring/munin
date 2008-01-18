@@ -94,7 +94,7 @@ die "No dbname configured (did you make the proper symlink?)" unless $dbname;
 my @datasources = DBI->data_sources ('Pg')
     or die ("Can't read any possible data sources: $?");
 
-my $dbh = DBI->connect ('dbi:Pg', '', '', {RaiseError =>1});
+my $dbh = DBI->connect ('dbi:Pg:', '', '', {RaiseError =>1});
 unless($dbh) {
     die("Error connecting to database. (". $DBI::errstr .")\n");
 }

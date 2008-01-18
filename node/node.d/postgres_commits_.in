@@ -127,7 +127,7 @@ if (exists $ARGV[0]) {
             exit 1;
         }
 	# Try to detect PostgreSQL presence.
-        my $tempdbh = DBI->connect ('dbi:Pg', '', '');
+        my $tempdbh = DBI->connect ('dbi:Pg:', '', '');
         if ($tempdbh) {
             print "yes\n";
             exit 0;
@@ -162,7 +162,7 @@ if ($maybe_dbname eq 'All' and not @datasources) {
   exit 1;
 }
 
-my $dbh = DBI->connect ('dbi:Pg', '', '', {RaiseError =>1});
+my $dbh = DBI->connect ('dbi:Pg:', '', '', {RaiseError =>1});
 unless($dbh) {
     die("Error connecting to database. (". $DBI::errstr .")\n");
 }
