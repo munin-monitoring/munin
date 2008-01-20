@@ -155,6 +155,9 @@ build-stamp:
 		    -e 's|@@USER@@|$(USER)|g'				\
 		    -e 's|@@GROUP@@|$(GROUP)|g'				\
 		    -e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g'		\
+		    -e 's|@@GOODSH@@|$(GOODSH)|g'			\
+		    -e 's|@@BASH@@|$(BASH)|g'				\
+		    -e 's|@@HASSETR@@|$(HASSETR)|g'			\
 		    $$file > build/$$destname;				\
 	done
 	touch build-stamp

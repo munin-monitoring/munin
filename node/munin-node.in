@@ -28,6 +28,9 @@ use vars qw(@ISA);
 use Getopt::Long;
 use Net::Server::Fork; # any personality will do
 
+# Variable is set at build, with values detected by the makefiles
+my $HAS_SETR = @@HASSETR@@;
+
 chdir ("/");
 
 # "Clean" environment to disable taint-checking on the environment. We _know_
@@ -41,6 +44,7 @@ foreach my $key (keys %ENV)
 
 $0 =~ /^(.*)$/; # for some strange reason won't "$0 = $0;" work.
 $0 = $1;
+
 # Make configuration settings available at runtime.
 $ENV{'MUNIN_PREFIX'}     = '@@PREFIX@@';
 $ENV{'MUNIN_CONFDIR'}    = '@@CONFDIR@@';   # /etc/munin,/etc/opt/munin or such
@@ -259,7 +263,7 @@ FILES:
 	}
 	closedir (DIR);
     }
-    
+
     opendir (DIR,$servicedir) || die "Cannot open plugindir: $servicedir $!";
 FILES:
     for my $file (grep { -f "$servicedir/$_" } readdir(DIR)) {
@@ -429,9 +433,12 @@ sub run_service {
 
 		print "# Want to run as euid/egid $u/$g\n" if $DEBUG;
 
-		$( = $g    unless $g == 0;
+		if ($HAS_SETR)
+		{
+			$( = $g    unless $g == 0;
+			$< = $u    unless $u == 0;
+		}
 		$) = $gs   unless $g == 0;
-		$< = $u    unless $u == 0;
 		$> = $u    unless $u == 0;
 
 		if ($> != $u or $g != (split (' ', $)))[0])

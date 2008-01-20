@@ -24,6 +24,9 @@ use strict;
 use vars qw(@ISA);
 use Getopt::Long;
 
+# Variable is set at build, with values detected by the makefiles
+my $HAS_SETR = @@HASSETR@@;
+
 # "Clean" environment to disable taint-checking on the environment. We _know_
 # that the environment is insecure, but we want to let admins shoot themselves
 # in the foot with it, if they want to.
@@ -353,9 +356,12 @@ sub run_service {
 
 		print "# Want to run as euid/egid $u/$g\n" if $DEBUG;
 
-		$( = $g    unless $g == 0;
+		if ($HAS_SETR)
+		{
+			$( = $g    unless $g == 0;
+			$< = $u    unless $u == 0;
+		}
 		$) = $gs   unless $g == 0;
-		$< = $u    unless $u == 0;
 		$> = $u    unless $u == 0;
 
 		if ($> != $u or $g != (split (' ', $)))[0])
