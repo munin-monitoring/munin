@@ -1,47 +1,14 @@
-#!/bin/sh
+#!@@PERL@@
+# -*- perl -*-
 #
-# Script to monitor disk usage.
+# Plugin to monitor disk usage. Rewrite based on original shell-based version
 #
 # Parameters understood:
 #
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
+#       config   (required)
+#       autoconf (optional - used by munin-config)
 #
-# $Log$
-# Revision 1.5.2.4  2005/03/12 21:35:07  jimmyo
-# Correct history loss in linux/{df,df_inode}.
-#
-# Revision 1.5.2.3  2005/03/10 10:04:48  jimmyo
-# Fixed minor bug introduced with yesterdays change.
-#
-# Revision 1.5.2.2  2005/03/09 19:10:32  jimmyo
-# Made linux/df work properly with tmpfs and devmapper (Deb#298442).
-#
-# Revision 1.5.2.1  2005/02/16 22:50:14  jimmyo
-# linux/df* now ignores bind mounts.
-#
-# Revision 1.5  2004/12/09 20:27:45  jimmyo
-# Sort fields in df*-plugins alphabetically.
-#
-# Revision 1.4  2004/09/25 22:29:16  jimmyo
-# Added info fields to a bunch of plugins.
-#
-# Revision 1.3  2004/05/20 13:57:12  jimmyo
-# Set categories to some of the plugins.
-#
-# Revision 1.2  2004/05/18 22:04:30  jimmyo
-# Use "sed 1d" instead of "tail +2" in df plugins (patch by Olivier Delhomme).
-#
-# Revision 1.1  2004/01/02 18:50:01  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.2  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
-#
+# $Id$
 #
 # Magic markers (optional - used by munin-config and installation
 # scripts):
@@ -49,50 +16,82 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-MAXLABEL=20
+use strict;
+use Munin::Plugin;
 
-if [ "$1" = "autoconf" ]; then
-	echo yes
-	exit 0
-fi
+my %mounts;
 
-clean_name() {
-    echo $1 $7 $2 | sed 's/[\/.-]/_/g'| awk "{ 
-	if (\$3 == \"tmpfs\")
-		n=\$1\$2
-	else
-		n=\$1
-	print n
-	}"
+open (MOUNTS,"/proc/mounts") or die "Could not /proc/mounts for reading.";
+while (<MOUNTS>) {
+    # Does perl really not have any shorthand for this? I guess it has.
+    if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
+	$mounts{$2}=$3;
+    }
+}
+close MOUNTS;
+
+sub print_values() {
+
+    # Read from df
+    open (DF,"/bin/df -P -l |") or die "Could not open pipe from /bin/df, $!";
+    <DF>; # Skip the header
+    while (<DF>) {
+	next if /\/\//;
+	
+	# Parse the output
+	if ( /^(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)/ ) {
+	    my $fs=$mounts{$6};
+	    my $ps=$5;
+	    my $name=clean_fieldname($1);
+
+	    $ps =~ s/\%//;
+	    print $name, ".value ", $ps, "\n";
+	}
+    }
+    close DF;
 }
 
+if ( $ARGV[0] eq "autoconf" ) {
+  if (`perl $0` eq "" ) {
+    print "no\n";
+    exit 1;
+  } else {
+    print "yes\n";
+    exit 0;
+  }
+}
 
-if [ "$1" = "config" ]; then
+if ( $ARGV[0] eq "config" ) {
 
-	echo 'graph_title Filesystem usage (in %)'
-	echo 'graph_args --upper-limit 100 -l 0'
-	echo 'graph_vlabel %'
-	echo 'graph_category disk'
-	echo 'graph_info This graph shows disk usage on the machine.'
-	df -T -P -l -x none -x unknown -x udf -x iso9660 -x romfs -x ramfs | sed 1d | grep -v "//" | sort | while read i; do
-		name=`clean_name $i`
-		echo -n "$name.label "
-		echo $i | awk "{ 
-			dir=\$7
-			if (length(dir) <= $MAXLABEL)
-				print dir
-			else
-				printf (\"...%s\n\", substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3)) 
-			print \"$name.info \" \$7 \" (\" \$2 \") -> \" \$1;
-		}"
-		echo "$name.warning 92"
-		echo "$name.critical 98"
-	done
-	exit 0
-fi
+    # The headers
+    print "graph_title Disk usage (in %)\n";
+    print "graph_args --upper-limit 100 -l 0\n";
+    print "graph_vlabel %\n";
+    print "graph_scale no\n";
+    print "graph_category disk\n";
 
-df -T -P -l -x none -x unknown -x udf -x iso9660 -x romfs -x ramfs | sed 1d | grep -v "//" | while read i; do
-	name=`clean_name $i`
-	echo -n "$name.value "
-	echo $i | awk '{ print $6 }' | cut -f1 -d%
-done
+    # Read from df
+    open (DF,"/bin/df -P -l |") or die "Unable to open pipe from /bin/df";
+    <DF>; # Skip the header
+    while (<DF>) {
+	next if /\/\//;
+	
+	# Parse the output
+	if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
+	    my $fs=$mounts{$6};
+	    my $dir=$6;
+	    my $name=clean_fieldname($1);
+
+	    # Create and print labels
+	    print $name, ".label ", $dir, "\n";
+
+	    # FIXME: These ought to be tunable
+	    print "$name.warning 92\n";
+	    print "$name.critical 98\n";
+	}
+    }
+    close DF;
+    exit 0;
+}
+
+print_values();

@@ -1,0 +1,12 @@
+# -*- shell -*-
+# Support functions for shell munin plugins
+#
+
+clean_fieldname () {
+    # Clean up field name so it complies with munin requirements.
+    #
+    # usage: name="$(clean_fieldname "$item")"
+    # 
+    echo "$@" | sed -e 's/^[^A-Za-z_]/_/' -e 's/[^A-Za-z0-9_]/_/g'
+}
+

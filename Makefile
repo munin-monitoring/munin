@@ -91,6 +91,9 @@ install-node-plugins: build
 		fi                                                          		\
 	done
 	$(INSTALL) -m 0644 build/node/plugins.history $(LIBDIR)/plugins/
+	$(INSTALL) -m 0644 build/node/plugin.sh $(LIBDIR)/plugins/
+	mkdir -p $(PERLLIB)/Munin
+	$(INSTALL) -m 0644 build/node/Plugin.pm $(PERLLIB)/Munin/
 
 	#TODO:
 	#configure plugins.
