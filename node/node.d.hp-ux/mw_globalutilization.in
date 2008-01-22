@@ -71,7 +71,7 @@ unlink $datafile;
 # "GLOB","02/01/05","16:55",   299,        5 ,   27.77,   14.00,    1.83,  1.63,
 
 
-my ($d,$d,$d,$d,$d, $GBL_MEM_UTIL, $GBL_SWAP_SPACE_UTIL, $GBL_CPU_TOTAL_UTIL, $GBL_DISK_UTIL_PEAK) = split /\,/,$last;
+my (undef, undef, undef, undef, $d, $GBL_MEM_UTIL, $GBL_SWAP_SPACE_UTIL, $GBL_CPU_TOTAL_UTIL, $GBL_DISK_UTIL_PEAK) = split /\,/,$last;
 
 print "GBL_DISK_UTIL_PEAK.value $GBL_DISK_UTIL_PEAK\n";
 print "GBL_SWAP_SPACE_UTIL.value $GBL_SWAP_SPACE_UTIL\n";

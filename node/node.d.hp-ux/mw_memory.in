@@ -18,7 +18,6 @@
 #
 #%# family=contrib
 
-
 use strict;
 
 my $reptdata = "format DATAFILE
@@ -72,7 +71,7 @@ unlink $datafile;
 # "Rec ","        ","     "," Sec  "," Proc ","Memory","      ","      "," Peak ",
 # "Type","  Date  ","Time ","/Intvl","Sample","  %   ","Swap %","CPU % ","Disk %",
 # "GLOB","02/01/05","16:55",   299,        5 ,   27.77,   14.00,    1.83,  1.63,
-my ($d,$d,$d,$d,$d, $USER, $SYS, $SYSCACHE) = split /\,/,$last;
+my (undef, undef, undef, undef, $d, $USER, $SYS, $SYSCACHE) = split /\,/,$last;
 my $CACHE = $SYSCACHE - $SYS;
 
 print "GBL_MEM_SYS_UTIL.value $SYS\n";
