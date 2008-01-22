@@ -13,7 +13,7 @@
 #
 # contributed by <ralph.grothe@itdz-berlin.de>
 #
-#%# family=contrib
+#%# family=auto
 #%# capabilities=autoconf suggest
 
 PATH=/usr/bin:/usr/sbin
