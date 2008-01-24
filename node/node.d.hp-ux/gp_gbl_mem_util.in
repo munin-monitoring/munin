@@ -4,16 +4,20 @@
 #	      (should only run on HP-UX with GlancePlus (GP) installed therefore)		
 #
 # Requires:   Separate GP adviser syntax file whose location is made known
-#             by ADVISER environment variable which is set in matching section
-#             of /etc/opt/munin/plugin-conf.d/plugins.conf 
-#             May look like:
+#             by ADVISER environment variable which defaults to
+#             @@LIBDIR@@/gp_gbl_mem_util.adv.
+#
+#             Configuration for this plugin may look like this, the example
+#             shows the defaults, so only set them to override them.
+#             All the environment settings are needed by Glance.
 #
 #	[gp_*]
-#	    # glance needs these
 #	    env.HOME	    /home/munin
 #             Munin users home dir, could also be /var/opt/munin
 #	    env.ADVISER_INT 4
 #	    env.ADVISER_ITS 2
+#           env.GLANCE /opt/perf/bin/glance
+#
 #	[gp_gbl_mem_util]
 #	    env.ADVISER	    @@LIBDIR@@/gp_gbl_mem_util.adv
 #
@@ -41,21 +45,30 @@
 #
 #	    For "installation" of plugin run as root:
 #
-# /opt/munin/sbin/munin-node-configure --families manual --shell|grep gp_gbl_mem_util|sh -
+# @@SBINDIR@@/munin-node-configure --families auto --shell|grep gp_gbl_mem_util|sh -
 #
 #	    and restart your munin-node
 #
-#
 # Contributed by <ralph dot grothe at itdz minus berlin dot de>
 #
+# $Id: $
 #
-#%# family=manual
+#%# family=auto
 #%# capabilities=autoconf
 
 PATH=/usr/bin:/usr/sbin
-GLANCE=/opt/perf/bin/glance
 MUNIN_RUN=@@SBINDIR@@/munin-run
 PLUGIN=${0##*/}
+
+# These variables are required to run Glance
+: ${GLANCE:=/opt/perf/bin/glance}
+: ${HOME:=/home/munin}
+: ${ADVISER_INT:=4}
+: ${ADVISER_ITS:=2}
+: ${ADVISER:=@@LIBDIR@@/$PLUGIN.adv}
+
+export PATH
+export HOME
 
 if [[ $1 = autoconf ]]; then
     if [[ $(uname -s) != HP-UX ]]; then
@@ -73,14 +86,9 @@ if [[ $1 = autoconf ]]; then
 	    exit 1
 	fi
     fi
-    if [[ -z $ADVISER_CMD ]]; then
-	if [ -f $MUNIN_RUN ]; then
-	    ADVISER_CMD=$(grep '$sconfdir*=' $MUNIN_RUN|cut -d\" -f2)
-	    [ -d "$ADVISER_CMD" ] && ADVISER_CMD=$ADVISER_CMD/$PLUGIN.adv
-	fi
-    fi
-    if [ ! -f "$ADVISER_CMD" ]; then
-	echo "no (Found no adviser command file, please copy $PLUGIN.adv in place)"
+
+    if [ ! -f $ADVISER ]; then
+	echo "no (Found no adviser command file, please copy $PLUGIN.adv to $ADVISER)"
 	exit 1
     fi
     echo yes

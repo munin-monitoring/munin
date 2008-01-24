@@ -138,8 +138,11 @@ uninstall-node-non-snmp: build
 	-rmdir $(CONFDIR)
 	-rmdir $(SBINDIR)
 
+
 # ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE
 # GENERIC ONES
+
+# Some HP-UX plugins needs *.adv support files in LIBDIR
 install-node-plugins: build $(PLUGINS) Makefile Makefile.config
 	for p in build/node/node.d/* build/node/node.d.$(OSTYPE)/* ; do \
 	    if test -f "$$p" ; then                                    \
@@ -152,6 +155,7 @@ install-node-plugins: build $(PLUGINS) Makefile Makefile.config
 		fi;                                                    \
 	    fi                                                         \
 	done
+	-mv $(LIBDIR)/plugins/*.adv $(LIBDIR)
 	-mkdir -p $(PLUGSTATE)
 	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
 	$(CHMOD) 0664 $(PLUGSTATE)
@@ -166,9 +170,11 @@ uninstall-node-plugins: build $(PLUGINS)
 	done
 	rm -f $(LIBDIR)/plugins/plugins.history
 	rm -f $(LIBDIR)/plugins/plugin.sh
+	-rm -f $(LIBDIR)/*.adv
 
 #TODO:
-#configure plugins.
+# configure plugins.  Or not. Better done under the direction of the installer
+# or the packager.
 
 install-man: build-man Makefile Makefile.config
 	mkdir -p $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8
