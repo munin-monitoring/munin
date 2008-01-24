@@ -154,7 +154,7 @@ This directive sets the CA certificate to be used to verify the node's
 certificate, if tls_verify_certificate is set to C<yes>.  Default is
 @@CONFDIR@@/cacert.pem.  Affects: munin-update.
 
-=item B<tls-verify_depth> <value>
+=item B<tls_verify_depth> <value>
 
 This directive sets how many signings up a chain of signatures TLS is
 willing to go to reach a known, trusted CA when verifying a
