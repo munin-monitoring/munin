@@ -563,7 +563,7 @@ sub process_request {
       if(!(/^starttls\s*$/i))
       {
         logger ("ERROR: Client did not request TLS. Closing.");
-	net_write ("# I require TLS. Closing.");
+	net_write ("# I require TLS. Closing.\n");
         last;
       }
     }
