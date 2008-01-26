@@ -11,8 +11,9 @@
 #       autoconf (optional - used by munin-config)
 #
 # Environment
-#       exclude: space separated list if fs types to exclude.
-#                iso9660 by default
+#       exclude: space separated list if fs types to exclude.  by default a
+#                list of special, read-only or dynamically allocating file
+#                systems
 #       warning: Warning percentage, default 92.
 #       critical: Critical percentage, default 98.
 #
@@ -38,7 +39,7 @@ while (<MOUNTS>) {
 }
 close MOUNTS;
 
-my $exclude=$ENV{'exclude'} || 'iso9660';
+my $exclude=$ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs';
 my $warning=$ENV{'warning'} || '92';
 my $critical=$ENV{'critical'} || '98';
 my $dfopts = "-P -l ".join(' -x ',('',split('\s+',$exclude)));
