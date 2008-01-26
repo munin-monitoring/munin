@@ -85,8 +85,7 @@ install-node-plugins: build
 			family=`sed -n 's/^#%# family=\(.*\)$$/\1/p' $$p`;  		\
 			test "$$family" || family=contrib;                  		\
 			if echo $(INSTALL_PLUGINS) | grep $$family >/dev/null; then 	\
-				test -f "$(LIBDIR)/plugins/`basename $$p`"		\
-				|| $(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;    		\
+				$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;    		\
 			fi;                                                 		\
 		fi                                                          		\
 	done
