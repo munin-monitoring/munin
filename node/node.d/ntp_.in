@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# -*- perl -*-
 #
 # Plugin to monitor NTP statistics
 #
@@ -12,32 +13,14 @@
 #
 #       lowercase       - lowercase hostnames after lookup
 #
-# $Log$
-# Revision 1.4  2004/11/21 20:19:09  jimmyo
-# Don't suggest localhost peer.
-#
-# Revision 1.3  2004/11/21 20:12:32  jimmyo
-# Cosmetics.
-#
-# Revision 1.2  2004/11/21 19:55:28  jimmyo
-# Upped generic/ntp_ to auto family.
-#
-# Revision 1.1  2004/11/21 19:35:23  jimmyo
-# Corrected file name.
-#
-# Revision 1.2  2004/09/08 15:25:33  ilmari
-# Use @@PERL@@ in all perl shebang lines.
-#
-# Revision 1.1  2004/01/30 15:07:38  jimmyo
-# Added generic plugins ntp_ and ntp_states to manual family (SF#887000).
-#
-#
-#
-#
 # Magic markers - optional - used by installation scripts and
 # munin-node-configure:
 #
-#%# family=auto
+# This plugin is now "manual" because it's not very useful, it
+# is imposible to determine which peer is used as "master". There
+# is a ntp_offset plugin that reports a more useful value.
+#
+#%# family=manual
 #%# capabilities=autoconf suggest
 #
 
@@ -96,13 +79,17 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 		next unless $host_ eq $name;
 		print "graph_title NTP statistics for peer $host\n";
 	}
-	print "graph_args --base 1000 --vertical-label msec --lower-limit 0\n";
+	print "graph_args --base 1000 --vertical-label seconds --lower-limit 0\n";
+	print "graph_category time\n";
         print "delay.label Delay\n";
         print "delay.draw LINE2\n";
+	print "delay.cdef delay,1000,/\n";
         print "offset.label Offset\n";
         print "offset.draw LINE2\n";
+	print "offset.cdef offset,1000,/\n";
         print "jitter.label Jitter\n";
         print "jitter.draw LINE2\n";
+	print "jitter.cdef jitter,1000,/\n";
         exit 0;
 }
 
