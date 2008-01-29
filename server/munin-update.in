@@ -33,6 +33,7 @@ use POSIX qw(strftime);
 use POSIX ":sys_wait_h";
 use Storable qw(fd_retrieve nstore_fd);
 
+my $TIMEOUT = 240;
 my $DEBUG=0;
 my $VERSION="@@VERSION@@";
 my $serversocket  = "munin-server-socket.$$";
@@ -183,8 +184,9 @@ for my $key (keys %{$config->{domain}}) {
 
 if ($do_fork)
 {
+    my $timeout_start = time();
     $SIG{ALRM} = sub { die "Timed out waiting for children. $!\n"};
-    alarm (240);
+    alarm ($TIMEOUT);
 
     for (;(scalar (keys %children) - $bad_procs > 0);)
     {
@@ -209,7 +211,7 @@ if ($do_fork)
 		alarm (10);
 		accept (Client, Server);
 	    };
-	    alarm (0);
+	    alarm ($TIMEOUT - time() + $timeout_start);
 	    if ($@)
 	    {
 		if (@queue and defined $config->{max_processes} and
