@@ -213,6 +213,10 @@ rename ("$config->{dbdir}/munin-graph.stats.tmp", "$config->{dbdir}/munin-graph.
 close STATS unless $skip_stats;
 close $log;
 
+munin_removelock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
+
+# ### The End
+
 sub process_domain {
     my ($domain) = @_;
     for my $key ( keys %{$config->{domain}->{$domain}->{node}}) {
