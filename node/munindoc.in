@@ -44,7 +44,7 @@ my $plugin_re = quotemeta($plugin);
 @ARGV=();
 
 # Dirs in which to look for $plugin.pod and $plugin files.
-my @DIRS = ('@@LIBDIR@@/plugins','@@CONFDIR/plugins', '@@PERLLIB@@')
+my @DIRS = ('@@LIBDIR@@/plugins','@@CONFDIR@@/plugins', '@@PERLLIB@@');
 # my @DIRS = ('/usr/share/munin/plugins','/etc/munin/plugins');
 
 File::Find::find({wanted => \&wanted_pod}, @DIRS);
