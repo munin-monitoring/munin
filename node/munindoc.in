@@ -39,6 +39,8 @@ my @myargv = @ARGV;	# Save the ARGV we want for ourselves.
 
 my ($plugin) = @myargv; # First argument is a plugin name
 
+die "munindoc: Please name a plugin\n" unless $plugin;
+
 my $plugin_re = quotemeta($plugin);
 
 @ARGV=();
