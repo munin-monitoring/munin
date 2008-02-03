@@ -1,5 +1,4 @@
-package Munin::Plugin;
-# -*- perl -*-
+package Munin::Plugin; # -*- cperl -*-
 #
 # Utility functions for perl munin plugins.
 #
@@ -36,8 +35,10 @@ If your Munin installation predates the MUNIN_* environment variables
       env.MUNIN_PLUGSTATE /lib/munin/plugin-state
       env.MUNIN_LIBDIR /usr/share/munin
 
-IF, indeed that is the munin plugin state directory and library
-directory.
+IF, indeed that is the munin plugin state directory.  The default
+install directory for Munin::Plugin is in a Perl supported directory,
+the "use lib" is there for the cases where this is not so, and the
+variable needs to be set to stop Perl from complaining.
 
 The module exports these functions: clean_fieldname,
 set_state_name, save_state, restore_state, tail_open, tail_close.
@@ -50,7 +51,7 @@ use Exporter;
 	     tail_open, tail_close);
 
 use strict;
-use VARS qw($me $pluginstatedir $statefile $DEBUG);
+use vars qw($me $pluginstatedir $statefile $DEBUG);
 
 =head2 Variables
 
@@ -98,11 +99,10 @@ The two last points can be worked around by the plugin configuration
 shown at the beginning of this document.
 
 =cut
-# This is because perl mode is confused: '
 
 $pluginstatedir = $ENV{'MUNIN_PLUGSTATE'} || '@@PLUGSTATE@@';
 
-if ($statedir =~ /^@@/) {
+if ($pluginstatedir =~ /^@@/) {
     die "# Unable to determine PLUGSTATE, please see plugindoc Munin::Plugin-";
 };
 
@@ -115,7 +115,7 @@ C<set_state_name ($)> procedure (see below).
 
 =cut
 
-$statefile = "$statedir/$me";
+$statefile = "$pluginstatedir/$me";
 
 =head3 $Munin::Plugin::DEBUG
 
@@ -374,17 +374,32 @@ sub tail_close ($) {
 
 
 
+# Test like this:
+# MUNIN_PLUGSTATE=/var/lib/munin/plugin-state -e 'require "Plugin.pm.in"; Munin::Plugin::_test;' -- or something.
+
 sub _test () {
-    my $pos = 0;
+    my $pos;
     my $fh;
+    my $reset;
+
+    warn "Testing tail and state file.  Press ^C to stop\n";
 
     do {
-	$fh = tail_open('/var/log/messages',$pos);
+	$pos = undef;
+
+	($pos) = restore_state();
+	$pos = 0 unless defined($pos);
+
+	($fh,$reset) = tail_open('/var/log/messages',$pos);
 	while (<$fh>) {
 	    print;
 	}
 	$pos = tail_close($fh);
-
 	print "**Position is $pos\n";
+	save_state($pos);
     } while sleep 1;
 }
+
+# _test();
+
+1;
