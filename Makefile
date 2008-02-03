@@ -95,7 +95,7 @@ uninstall-main: build
 	-rmdir $(DBDIR)
 	-rmdir $(CGIDIR)
 
-install-node: build install-node-non-snmp install-node-snmp
+install-node: build install-node-non-snmp install-node-snmp install-munindoc
 	echo Done.
 
 uninstall-node: uninstall-node-non-snmp uninstall-node-snmp
@@ -103,6 +103,9 @@ uninstall-node: uninstall-node-non-snmp uninstall-node-snmp
 
 install-node-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(SBINDIR)/
+
+install-munindoc: build
+	$(INSTALL) -m 0755 build/node/munindoc $(BINDIR)/
 
 uninstall-node-snmp: build
 	rm -f $(SBINDIR)/munin-node-configure-snmp
