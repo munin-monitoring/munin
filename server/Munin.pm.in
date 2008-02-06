@@ -1,5 +1,4 @@
-package Munin;
-# -*- perl -*-
+package Munin; # -*- perl -*-
 #
 # Copyright (C) 2003-2004 Jimmy Olsen, Audun Ytterdal
 #
@@ -70,7 +69,7 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"dbdir", "logdir", "htmldir", "include", "domain_order", "node_order", 
 	"graph_order", "graph_sources", "fork", "graph_title", "create_args", 
 	"graph_args", "graph_vlabel", "graph_vtitle", "graph_total", 
-	"graph_scale", "graph", "update", "host_name", "label", "cdef", "draw", 
+	"graph_scale", "graph", "update", "host_name", "label", "cdef", "draw",
 	"graph", "max", "min", "negative", "skipdraw", "type", "warning", 
 	"critical", "special_stack", "special_sum", "stack", "sum", "address", 
 	"htaccess", "warn", "use_default_name", "use_node_name", "port", 
@@ -193,8 +192,8 @@ sub munin_getlock {
 	    }
 	}
 	&munin_removelock($lockname);
-	&munin_createlock($lockname);
     }
+    &munin_createlock($lockname);
     return 1;
 }
 
