@@ -919,7 +919,7 @@ sub process_node {
  		      '--font' ,'UNIT:7:@@LIBDIR@@/VeraMono.ttf',
  		      '--font' ,'AXIS:7:@@LIBDIR@@/VeraMono.ttf');
 	    }
-	    push(@complete,'-W', $watermark);
+	    push(@complete,'-W', $watermark) if $RRDs::VERSION >= 1.2;
 
 	    logger ("Processing $name -> $time") if $DEBUG;
 
