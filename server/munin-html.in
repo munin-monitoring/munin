@@ -88,9 +88,10 @@ EOT
 
 if ($> == 0 and !$force_root)
 {
-    print "You are running this program as root, which is neither smart nor necessary.
-If you really want to run it as root, use the --force-root option. Else, run
-it as the user \"munin\". Aborting.\n\n";
+    print "You are running this program as root, which is dumb and will
+cause many problems later.  Please run it as user '@@USER@@'.
+If you really want to run it as root, use the --force-root option.
+Aborting.\n\n";
     exit (1);
 }
 
