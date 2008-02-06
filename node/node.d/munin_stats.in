@@ -32,7 +32,7 @@
 use strict;
 my $log;
 my @logs = ("update","graph","html","limits");
-my $logdir = $ENV{'MUNIN_LOGDIR'} or '@@LOGDIR@@';
+my $logdir = ($ENV{'MUNIN_LOGDIR'} || '@@LOGDIR@@');
 
 
 if ($ARGV[0] and $ARGV[0] eq 'autoconf') {
