@@ -165,15 +165,21 @@ my @COLOUR = ("#22ff22", "#0022ff", "#ff0000", "#00aaaa", "#ff00ff",
 	      "#800080", "#688e23", "#408080", "#808000", "#000000", "#00FF00",
 	      "#0080FF", "#FF8000", "#800000", "#FB31FB");
 
-my @NEWCOLOUR =
+my @NEWCOLOUR;
+
+{
+    # Note, not in use yet
+    no warnings;
+    @NEWCOLOUR =
      # Reds  Greens  Blues   Oranges Dk yell Dk blue Purple  Green/lime
-  qw(
-     #FF0000 #00CC00 #0066B3 #FF8000 #FFCC00 #330099 #990099 #CCFF00
-     #B30000 #008F00 #00487D #B35A00 #B38F00 #24006B #6B006B #8FB300
-     #FFBFBF #BFFFBF #BFE4FF #FFDFBF #FFF2BF #D5BFFF #FFBFFF #F2FFBF
-     #FF8080 #80FF80 #80C9FF #FFC080 #FFE680 #AA80FF #FF80FF #E6FF80
-    );
-    # Line variations: Pure, earthy, pastel, dark pastel
+      qw(
+         #FF0000 #00CC00 #0066B3 #FF8000 #FFCC00 #330099 #990099 #CCFF00
+         #B30000 #008F00 #00487D #B35A00 #B38F00 #24006B #6B006B #8FB300
+         #FFBFBF #BFFFBF #BFE4FF #FFDFBF #FFF2BF #D5BFFF #FFBFFF #F2FFBF
+         #FF8080 #80FF80 #80C9FF #FFC080 #FFE680 #AA80FF #FF80FF #E6FF80
+        );
+        # Line variations: Pure, earthy, pastel, dark pastel
+}
 
 my $range_colour = "#22ff22";
 my $single_colour = "#00aa00";
@@ -194,6 +200,8 @@ my %sumtimes = ( # time => [ label, seconds-in-period ]
 	    "week"   => ["hour", 12],
 	    "year"   => ["day", 288]
 	);
+
+my $watermark = "Munin $VERSION";
 
 for my $key ( keys %{$config->{domain}}) {
     my $domain_time= Time::HiRes::time;
@@ -222,11 +230,10 @@ sub process_domain {
     for my $key ( keys %{$config->{domain}->{$domain}->{node}}) {
 	my $node_time= Time::HiRes::time;
 
-	process_node($domain,$key ,$config->{domain}->{$domain}->{node}->{$key} );	
+	process_node($domain,$key ,$config->{domain}->{$domain}->{node}->{$key} );
 	$node_time = sprintf ("%.2f",(Time::HiRes::time - $node_time));
 	logger ("Processed node: $key ($node_time sec)");
 	print STATS "GN|$domain|$key|$node_time\n" unless $skip_stats;
-	
     }
 }
 
@@ -912,6 +919,7 @@ sub process_node {
  		      '--font' ,'UNIT:7:@@LIBDIR@@/VeraMono.ttf',
  		      '--font' ,'AXIS:7:@@LIBDIR@@/VeraMono.ttf');
 	    }
+	    push(@complete,'-W', $watermark);
 
 	    logger ("Processing $name -> $time") if $DEBUG;
 
