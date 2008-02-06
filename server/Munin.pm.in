@@ -23,9 +23,9 @@ package Munin; # -*- perl -*-
 
 use Exporter;
 @ISA = ('Exporter');
-@EXPORT = ('munin_trend', 
-	   'munin_fetch', 
-	   'munin_nscasend', 
+@EXPORT = ('munin_trend',
+	   'munin_fetch',
+	   'munin_nscasend',
 	   'munin_createlock',
 	   'munin_removelock',
 	   'munin_runlock',
@@ -66,30 +66,30 @@ my $DEBUG=0;
 my $configfile="@@CONFDIR@@/munin.conf";
 
 my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
-	"dbdir", "logdir", "htmldir", "include", "domain_order", "node_order", 
-	"graph_order", "graph_sources", "fork", "graph_title", "create_args", 
-	"graph_args", "graph_vlabel", "graph_vtitle", "graph_total", 
+	"dbdir", "logdir", "htmldir", "include", "domain_order", "node_order",
+	"graph_order", "graph_sources", "fork", "graph_title", "create_args",
+	"graph_args", "graph_vlabel", "graph_vtitle", "graph_total",
 	"graph_scale", "graph", "update", "host_name", "label", "cdef", "draw",
-	"graph", "max", "min", "negative", "skipdraw", "type", "warning", 
-	"critical", "special_stack", "special_sum", "stack", "sum", "address", 
-	"htaccess", "warn", "use_default_name", "use_node_name", "port", 
-	"graph_noscale", "nsca", "nsca_server", "nsca_config", "extinfo", 
-	"fetch_data", "filename", "max_processes", "nagios", "info", 
-	"graph_info", "graph_category", "graph_strategy", "graph_width", 
+	"graph", "max", "min", "negative", "skipdraw", "type", "warning",
+	"critical", "special_stack", "special_sum", "stack", "sum", "address",
+	"htaccess", "warn", "use_default_name", "use_node_name", "port",
+	"graph_noscale", "nsca", "nsca_server", "nsca_config", "extinfo",
+	"fetch_data", "filename", "max_processes", "nagios", "info",
+	"graph_info", "graph_category", "graph_strategy", "graph_width",
 	"graph_height", "graph_sums", "local_address", "compare",
-	"text", "command", "contact", "contacts",  "max_messages", 
+	"text", "command", "contact", "contacts",  "max_messages",
 	"always_send", "notify_alias", "line", "state", "graph_period",
 	"cgiurl_graph", "cgiurl", "tls", "service_order", "category_order",
-	"version", "tls_certificate", "tls_private_key", "tls_pem", 
+	"version", "tls_certificate", "tls_private_key", "tls_pem",
 	"tls_verify_certificate", "tls_verify_depth", "tls_ca_certificate",
-	"graph_data_size", "colour", "graph_printf", "ok", "unknown"
+	"graph_data_size", "colour", "graph_printf", "ok", "unknown",
+	     "palette"
     );
 
 my %legal_expanded = map { $_ => 1 } @legal;
 
 # Fields to copy when "aliasing" a field
-my @copy_fields    = ("label", "draw", "type", "rrdfile", "fieldname", "info"); 
-
+my @copy_fields    = ("label", "draw", "type", "rrdfile", "fieldname", "info");
 
 sub munin_trend {
     my (@array) = @_;
@@ -244,10 +244,10 @@ sub munin_readconfig {
     $config = &munin_parse_config (\@contents);
 
     # Some important defaults before we return...
-    $config->{'rundir'} ||= "/tmp/";
-    $config->{'dbdir'}  ||= "/var/lib/munin/";
-    $config->{'logdir'} ||= "/var/log/";
-    $config->{'tmpldir'}||= "/etc/munin/templates/";
+    $config->{'rundir'} ||= "/var/lock";
+    $config->{'dbdir'}  ||= "@@DBDIR@@";
+    $config->{'logdir'} ||= "@@LOGDIR@@";
+    $config->{'tmpldir'}||= "@@CONFDIR@@/templates/";
     $config->{'htmldir'}||= "@@HTMLDIR@@/";
     return ($config);
 }
@@ -263,74 +263,53 @@ sub munin_parse_config
     {
 	chomp $line;
 #$line =~ s/(^|[^\\])#.*/$1/g if $line =~ /#/;  # Skip comments...
-	if ($line =~ /#/)
-	{ 
+	if ($line =~ /#/) {
 	    next if ($line =~ /^#/);
 	    $line =~ s/(^|[^\\])#.*/$1/g;
 	    $line =~ s/\\#/#/g;
 	}
 	next unless ($line =~ /\S/);  # And empty lines...
-	if (length $prevline)
-	{
+	if (length $prevline) {
 	    $line = $prevline . $line;
 	    $prevline = "";
 	}
-	if ($line =~ /\\\\$/)
-	{
+	if ($line =~ /\\\\$/) {
 	    $line =~ s/\\\\$/\\/;
-	}
-	elsif ($line =~ /\\$/)
-	{
+	} elsif ($line =~ /\\$/) {
 	    ($prevline = $line) =~ s/\\$//;
 	    next;
 	}
 	$line =~ s/\s+$//g;           # And trailing whitespace...
 	$line =~ s/^\s+//g;           # And heading whitespace...
 
-	if ($line =~ /^\.(\S+)\s+(.+)\s*$/)
-	{
+	if ($line =~ /^\.(\S+)\s+(.+)\s*$/) {
 	    my ($var, $val) = ($1, $2);
 	    $hash = &munin_set_var_path ($hash, $var, $val);
-	}
-	elsif ($line =~ /^\s*\[([^\]]*)]\s*$/)
-	{
+	} elsif ($line =~ /^\s*\[([^\]]*)]\s*$/) {
 	    $prefix = $1;
-	    if ($prefix =~ /^([^:;]+);([^:;]+)$/)
-	    {
+	    if ($prefix =~ /^([^:;]+);([^:;]+)$/) {
 		$prefix .= ":";
-	    }
-	    elsif ($prefix =~ /^([^:;]+);$/)
-	    {
+	    } elsif ($prefix =~ /^([^:;]+);$/) {
 		$prefix .= "";
-	    }
-	    elsif ($prefix =~ /^([^:;]+);([^:;]+):(.*)$/)
-	    {
+	    } elsif ($prefix =~ /^([^:;]+);([^:;]+):(.*)$/) {
 		$prefix .= ".";
-	    }
-	    elsif ($prefix =~ /^([^:;]+)$/)
-	    {
+	    } elsif ($prefix =~ /^([^:;]+)$/) {
 		(my $domain = $prefix) =~ s/^[^\.]+\.//;
 		$prefix = "$domain;$prefix:";
-	    }
-	    elsif ($prefix =~ /^([^:;]+):(.*)$/)
-	    {
+	    } elsif ($prefix =~ /^([^:;]+):(.*)$/) {
 		(my $domain = $prefix) =~ s/^[^\.]+\.//;
 		$prefix = "$domain;$prefix.";
 	    }
-	}
-	elsif ($line =~ /^\s*(\S+)\s+(.+)\s*$/)
-	{
+	} elsif ($line =~ /^\s*(\S+)\s+(.+)\s*$/) {
 	    my ($var, $val) = ($1, $2);
 	    $hash = &munin_set_var_path ($hash, "$prefix$var", $val);
-	}
-	else
-	{
+	} else {
 	    warn "Malformed configuration line \"$line\".";
 	}
     }
-
     return $hash;
 }
+
 
 sub munin_get_var_path
 {
