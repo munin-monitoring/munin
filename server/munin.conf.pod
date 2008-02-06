@@ -86,6 +86,11 @@ Default is C<yes>.  If you set it to C<no> munin-update will collect
 data from the nodes in sequence rather than in parallel and this will
 take considerably more time.  Affects: munin-update.
 
+=item B<palette> I<default|old>
+
+Choose palette between the very nice "C<default>", and the good old
+"C<old>".
+
 =item B<graph_data_size> I<value>
 
 This directive sets the resolution of the RRD files that are created.
