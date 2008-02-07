@@ -9,6 +9,7 @@ Requirements
 - Perl modules for plugins: Depends on the plugins you want to use,
      but not much
 - GNU Make
+- A web server.  Apache HTTPD should be suitable.
 
 Munin is quite often used on Linux, *BSD, Solaris and AIX and recently
 OS X (Darwin).  The server and node should be easy to get working on
@@ -36,24 +37,34 @@ collecting, draws the graphs, and creates the HTML pages.
 To install the main programs (you might want to install a node first,
 that way there is data to collect):
 
-	- edit Makefile.config
+	- Review/edit Makefile.config
 	- create the user "munin"
 	- make install-main
 
         - In your HTMLDIR/munin you will now find a .htaccess file
-          looking for passwords in CONFDIR/munin-htpasswd.  Install
+          with two main features:
+
+	  * Password protection
+
+          It looks for passwords in CONFDIR/munin-htpasswd.  Install
           the users you need in munin-htpasswd with the htpasswd
 	  command.  Check that authentication is required, if it's not 
 	  please refer to build/resources/apache-passwd.conf.
 
-	  The .htaccess file may not be accessed unless you have the
-	  right AllowOverride in the central Apache configuration.
-	  This may fix that (see also
-	  build/resources/apache-passwd.conf):
+	  * Munin page expiery to refresh contents
 
-		<Location /munin>
-			AllowOverride AuthConfig Limit
-		</Location>
+	  This sets the cache expiry of everything in the munin HTML
+	  directory hierarcy to it's creation time +5 minutes 10 seconds.
+	  This helps all different caches understand that a new version
+	  ought to be fetched when the graph is old.
+
+	  This requires mod_expiery to be enabled.
+
+	  NOTE:
+
+	  As noted within the file it will not work unless you have the
+	  right AllowOverride in the central Apache configuration.  See
+	  the file for more information.
 
           If you already have a .htaccess file in HTMLDIR it will not
           be overwritten.
@@ -72,10 +83,12 @@ that way there is data to collect):
 	  build/resources.  NOTE: Dynamic graphs are not exactly
           perfect. Se also http://munin.projects.linpro.no/wiki/CgiHowto
 
+
 To install the documentation:
 
 	- edit Makefile.config
 	- make install-doc install-man
+
 
 To install a node:
 
