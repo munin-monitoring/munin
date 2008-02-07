@@ -8,6 +8,7 @@ Requirements
 - Perl modules for node: Net::Server
 - Perl modules for plugins: Depends on the plugins you want to use,
      but not much
+- GNU Make
 
 Munin is quite often used on Linux, *BSD, Solaris and AIX and recently
 OS X (Darwin).  The server and node should be easy to get working on
@@ -17,6 +18,7 @@ a plugin set for a new OS please email us at
 munin-users@lists.sourceforge.net or enter a ticket in the trac ticket
 base at http://munin.sourceforge.net.
 
+
 Installing
 ==========
 
@@ -25,8 +27,6 @@ IF you're working on a SVN checkout:
 	- cp Makefile.config-dist Makefile.config
 
 	  This overwrites the maintainers copy of Makefile.config.
-
-
 
 Munin consists of the main (central server) programs, and the node
 program and the associated plugins.  The node runs on each of the
