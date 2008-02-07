@@ -60,7 +60,7 @@ my $config = &munin_readconfig ($conffile);
 
 my $path = $ENV{PATH_INFO} || "";
 $path =~ s/^\///;
-($dom, $host, $serv) = split /\//, $path;  
+($dom, $host, $serv) = split /\//, $path;
 ($serv, $scale) = split /-/, $serv, 2;
 $scale =~ s/\.png$//;
 
@@ -76,7 +76,8 @@ if (-f $filename)
     my $slast_modified = strftime ("%a, %d %b %Y %H:%M:%S %Z", localtime ($sstats[9]));
 
     if (defined $ENV{HTTP_IF_MODIFIED_SINCE} and 
-	    !&modified ($ENV{HTTP_IF_MODIFIED_SINCE}, $sstats[9]-1))
+	    !&modified ($ENV{HTTP_IF_MODIFIED_SINCE}, $sstats[9]-1) and
+	    !&modified (gmtime(time+($period{$scale}-($time%$period{$scale}))), $sstats[9]-1))
     {
 	print "Status: 304\n";
 	print "Content-Type: image/png\n";
