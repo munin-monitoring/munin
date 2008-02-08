@@ -4,7 +4,7 @@
 # Plugin to monitor harddrive temperatures through SMART.
 #
 # client-conf.d/-options:
-#       
+#
 #	smartctl	-- path to smartctl executable
 #	drives		-- List drives to monitor. E.g. "env.drives hda hdc".
 #	type_$dev	-- device type for one drive, e.g. "env.type_sda 3ware,0"
@@ -88,17 +88,18 @@ my @drives;
 
 # Try to get a default set of drives
 if ($^O eq 'linux') {
-  # On Linux, we know how to enumerate ide drives.
-  # SCSI is not as easy
+  # On Linux, we know how to enumerate ide drives. SCSI is not as easy
   if (-d '/proc/ide') {
     opendir(IDE, '/proc/ide');
     @drives = grep /hd[a-z]/, readdir IDE;
     closedir(IDE);
   }
-
   # "SCSI disks" could be both SCSI or SATA - we can't know which
   # without probing them.
-
+} elsif ($^O eq 'freebsd') {
+  opendir(DEV, '/dev');
+  @drives = grep /^ad[0-9]+$/, readdir DEV;
+  closedir(DEV);
 } elsif ($^O eq 'solaris') {
   @drives = map { s@.*/@@ ; $_ } glob '/dev/rdsk/c*t*d*s2';
 }
