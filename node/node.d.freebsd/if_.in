@@ -33,7 +33,7 @@ fi
 
 if [ "$1" = "suggest" ]; then
 	if [ -x /usr/bin/netstat ]; then
-		netstat -i -b -n | sed -n -e '/^faith/d' -e '/^lo0/d' -e '/<Link#[0-9]*>/s/\** .*//p'
+		netstat -i -b -n | sed -n -e '/^faith/d' -e '/^lo[0-9]/d' -e '/^pflog/d' -e '/<Link#[0-9]*>/s/\** .*//p'
 		exit 0
 	else
 		exit 1
