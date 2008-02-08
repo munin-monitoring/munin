@@ -126,12 +126,12 @@ as many processes as necessary.  Affects: munin-update.
 =item B<tls> <value>
 
 Can have four values. C<paranoid>, C<enabled>, C<auto>, and
-C<disabled>.  C<Paranoid> and C<enabled> require a TLS connection, and
-C<disabled> will not attempt one at all.
+C<disabled>.  C<Paranoid> and C<enabled> require a TLS connection,
+while C<disabled> will not attempt one at all.
 
 The current default is C<disabled> because C<auto> is broken.  C<Auto>
 causes bad interaction between munin-update and munin-node if the node
-is unprepares to go to TLS.
+is unprepared to go to TLS.
 
 If you see data dropouts (gaps in graphs) please try to disable TLS.
 Affects: munin-update.

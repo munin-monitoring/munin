@@ -973,7 +973,7 @@ sub config_node {
   }
   my $nodeconf_time = Time::HiRes::time;
 
-  # TLS will only be atempted if explicitly enabled.  The default value
+  # TLS should only be attempted if explicitly enabled. The default value
   # is therefore "disabled" (and not "auto" as before).
   my $tls_requirement = &munin_get ($config,"tls","disabled",$domain, $name);
   logger ("[DEBUG]: TLS set to \"$tls_requirement\".") if $DEBUG;
