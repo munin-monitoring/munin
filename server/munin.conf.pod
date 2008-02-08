@@ -126,14 +126,15 @@ as many processes as necessary.  Affects: munin-update.
 =item B<tls> <value>
 
 Can have four values. C<paranoid>, C<enabled>, C<auto>, and
-C<disabled>.  Paranoid and enabled require a TLS connection, auto will
-attempt a connection but continue on failure, and disabled will not
-attempt one at all.  If the perl module Net::SSLeay is available the
-setting is C<auto>.  If the module isn't available it's C<off>.  If
-munin is not propperly configured for TLS and Net::SSLeay is available
-munin-update has been known to fail mysteriously.  If you see data
-dropouts (gaps in graphs) please try to disable TLS.  Affects:
-munin-update.
+C<disabled>.  C<Paranoid> and C<enabled> require a TLS connection, and
+C<disabled> will not attempt one at all.
+
+The current default is C<disabled> because C<auto> is broken.  C<Auto>
+causes bad interaction between munin-update and munin-node if the node
+is unprepares to go to TLS.
+
+If you see data dropouts (gaps in graphs) please try to disable TLS.
+Affects: munin-update.
 
 =item B<tls_verify_certificate> <value>
 
