@@ -1,25 +1,44 @@
 #!@@PERL@@
 # -*- perl -*-
 #
-# Plugin to monitor the number of mails received and delivered by exim.
-#
-# Usage: copy or link into /etc/munin/node.d/
-#
 # Parameters:
 #
 # 	config   (required)
 # 	autoconf (optional - used by munin-config)
-#
-# Config variables:
-#
-# 	logdir       - Override what exim says
-# 	exim         - Where's exim?
 #
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
 #
 #%# family=auto
 #%# capabilities=autoconf
+
+=head1 NAME
+
+exim_mailstats - Plugin to monitor the number of mails received and
+delivered by exim.
+
+=head1 APPLICABLE SYSTEMS
+
+Exim version 3 or 4.
+
+=head1 CONFIGURATION
+
+  [exim*]
+     env.logdir   /path/to/exim-logs/
+     env.logname  mainlog
+     env.exim     /usr/sbin/exim
+
+=head1 INTERPRETATION
+
+=cut
+
+# In most installations the "use lib" can be removed as the Munin
+# modules are installed in perls module path.
+
+use lib $ENV{'MUNIN_LIBDIR'};
+use Munin::Plugin;
+
+##########
 
 sub get_exim_logfile {
     my ($spec, $type, $time) = @_;
@@ -39,7 +58,6 @@ sub get_exim_logfile {
 	return $_ unless /^syslog/;
     }
 }
-
 
 
 $statefile = "@@PLUGSTATE@@/plugin-exim_mailstats.state";
