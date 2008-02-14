@@ -48,7 +48,7 @@ set_state_name, save_state, restore_state, tail_open, tail_close.
 use Exporter;
 @ISA = ('Exporter');
 @EXPORT = qw(clean_fieldname set_state_name save_state restore_state
-	     tail_open, tail_close);
+	     tail_open tail_close);
 
 use strict;
 use vars qw($me $pluginstatedir $statefile $DEBUG);
