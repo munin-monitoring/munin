@@ -14,51 +14,6 @@
 # 	logdir       - Which logfile to use
 #	logfile      - What file to read in logdir
 #
-# $Log$
-# Revision 1.6.2.3  2005/01/25 20:39:16  jimmyo
-# Make generic/postfix_mailstats catch more formats (Deb#292110).
-#
-# Revision 1.6.2.2  2005/01/25 20:24:09  jimmyo
-# Improved graph_title of generic/postfix_* (Deb#292083).
-#
-# Revision 1.6.2.1  2005/01/24 19:44:13  jimmyo
-# Changed default log for generic/postfix_mailstats from syslog to mail.log. Downgraded it from auto to manual.
-#
-# Revision 1.6  2004/12/10 18:51:43  jimmyo
-# linux/apt* has been forced to LANG=C, to get predictable output.
-#
-# Revision 1.5  2004/12/10 10:47:47  jimmyo
-# Change name from ${scale} to ${graph_period}, to be more consistent.
-#
-# Revision 1.4  2004/12/09 22:12:55  jimmyo
-# Added "graph_period" option, to make "graph_sums" usable.
-#
-# Revision 1.3  2004/05/20 19:02:36  jimmyo
-# Set categories on a bunch of plugins
-#
-# Revision 1.2  2004/05/14 21:16:46  jimmyo
-# "Upped" som plugins from contrib/manual to auto.
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.2  2003/11/26 14:55:52  jimmyo
-# Added total summaries
-#
-# Revision 1.1  2003/11/26 14:45:34  jimmyo
-# New plugins
-#
-# Revision 1.7  2003/11/15 11:10:28  jimmyo
-# Various fixes
-#
-# Revision 1.6  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
-#
-#
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
 #
@@ -153,7 +108,7 @@ if (-f "$statefile")
 if (! -f $logfile and ! -f $rotlogfile)
 {
     print "delivered.value U\n";
-    foreach my $i (keys %{$rejects})
+    foreach my $i (sort keys %{$rejects})
     {
     	print "r$i.value U\n";
     }
@@ -191,7 +146,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "delivered.type DERIVE\n";
     print "delivered.draw AREA\n";
     print "delivered.min 0\n";
-    foreach my $i (keys %{$rejects})
+    foreach my $i (sort keys %{$rejects})
     {
 	    print "r$i.label reject $i\n";
 	    print "r$i.type DERIVE\n";
@@ -202,7 +157,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
 }
 
 print "delivered.value $delivered\n";
-foreach my $i (keys %{$rejects})
+foreach my $i (sort keys %{$rejects})
 {
 	print "r$i.value ", $rejects->{$i}, "\n";
 }
@@ -212,7 +167,7 @@ if(-l $statefile) {
 }				
 open (OUT, ">$statefile") or exit 4;
 print OUT "$pos:$delivered\n";
-foreach my $i (keys %{$rejects})
+foreach my $i (sort keys %{$rejects})
 {
 	print OUT "$i:", $rejects->{$i}, "\n";
 }
@@ -236,7 +191,7 @@ sub parseLogfile
 	elsif ($line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/)
 	{
             my $cause = $1;
-            $cause = 'OTHER' unless $1 =/^\d+$/;
+            $cause = 'OTHER' unless $1 =~ /^\d+$/;
 	    $rejects->{$cause} ++;
 	}
     }
