@@ -1,6 +1,7 @@
-#!/bin/sh
+#!@@GOODSH@@
 [ -x @@LIBDIR@@/munin-update ] && @@LIBDIR@@/munin-update $@;
 [ -x @@LIBDIR@@/munin-limits ] && @@LIBDIR@@/munin-limits $@;
-[ -x @@LIBDIR@@/munin-graph  ] && nice @@LIBDIR@@/munin-graph --cron $@ 2>&1 | while read line; do [ x"$line" = x"*** attempt to put segment in horiz list twice" ] && continue; echo $line; done;
+[ -x @@LIBDIR@@/munin-graph  ] && 
+	nice @@LIBDIR@@/munin-graph --cron $@ 2>&1 | 
+	grep -v "*** attempt to put segment in horiz list twice"
 [ -x @@LIBDIR@@/munin-html   ] && nice @@LIBDIR@@/munin-html $@;
-
