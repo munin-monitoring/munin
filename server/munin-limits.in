@@ -22,7 +22,8 @@ use Munin;
 use POSIX qw(strftime);
 use Getopt::Long;
 use Time::HiRes;
-use Text::Balanced qw (extract_multiple extract_delimited extract_quotelike extract_bracketed);
+use Text::Balanced qw (extract_multiple extract_delimited
+		       extract_quotelike extract_bracketed);
 
 my $DEBUG=0;
 my $conffile = "@@CONFDIR@@/munin.conf";
@@ -546,53 +547,31 @@ sub message_expand {
 }
 
 sub logger_open {
+    # Called from the Munin module when we call munin_config
     my $dirname = shift;
 
-    if (!$log->opened)
-    {
-	  unless (open ($log, ">>$dirname/munin-limits.log"))
-	  {
-		  print STDERR "Warning: Could not open log file \"$dirname/munin-limits.log\" for writing: $!";
-	  }
-	  else
-	  {
-		  close (STDERR);
-		  *STDERR = \$log;
-		
-	  }
+
+    if (!$log->opened) {
+	if (!open ($log, ">>$dirname/munin-limits.log")) {
+	    print STDERR "Warning: Could not open log file \"$dirname/munin-limits.log\" for writing: $!";
+	} else {
+	    close (STDERR);
+	    *STDERR = \$log;
+	}
     }
 }
 
-sub logger {
-  my ($comment) = @_;
-  my $now = strftime "%b %d %H:%M:%S", localtime;
 
-  print "$now - $comment\n" if $stdout;
-  if ($log->opened)
-  {
-	  print $log "$now - $comment\n";
-  }
-  else
-  {
-	  if (defined $config->{logdir})
-	  {
-		  if (open ($log, ">>$config->{logdir}/munin-graph.log"))
-		  {
-			  print $log "$now - $comment\n";
-			  $log->flush;
-			  close (STDERR);
-			  open (STDERR, ">&", $log);
-		  }
-		  else
-		  {
-			  print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-graph.log\" for writing: $!";
-			  print STDERR "$now - $comment\n";
-		  }
-	  }
-	  else
-	  {
-		  print STDERR "$now - $comment\n";
-	  }
+sub logger {
+    my ($comment) = @_;
+    my $now = strftime "%b %d %H:%M:%S", localtime;
+
+    print "$now - $comment\n" if $stdout;
+
+    if ($log->opened) {
+	print $log "$now - $comment\n";
+    } else {
+	die "Noone opened our log file at startup!";
     }
 }
 
