@@ -21,6 +21,7 @@ use strict;
 use Munin;
 use POSIX qw(strftime);
 use Getopt::Long;
+use Time::HiRes;
 use Text::Balanced qw (extract_multiple extract_delimited extract_quotelike extract_bracketed);
 
 my $DEBUG=0;
@@ -91,6 +92,8 @@ logger("Starting munin-limits, checking lock");
 munin_runlock("$config->{rundir}/munin-limits.lock");
 logger("Created lock: $config->{rundir}/munin-limits.lock");
 
+my $update_time = Time::HiRes::time;
+
 if (!defined $config->{'contact'}->{'nagios'}->{'command'} and
 	defined $config->{'nsca'})
 {
@@ -107,7 +110,10 @@ for my $domain ( keys %{$config->{domain}}) {
     process_domain($domain);
 }
 &munin_writeconfig ("$config->{dbdir}/limits", \%notes);
-logger("munin-limits finished.");
+
+$update_time = sprintf ("%.2f",(Time::HiRes::time - $update_time));
+
+logger("munin-limits finished ($update_time sec)");
 
 
 sub process_domain {
