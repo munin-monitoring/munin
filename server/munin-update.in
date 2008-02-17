@@ -1020,7 +1020,7 @@ This is munin-update version @@VERSION@@
 
 =head1 AUTHORS
 
-Audun Ytterdal and Jimmy Olsen.
+Audun Ytterdal, Jimmy Olsen, and Tore Anderson.
 
 =head1 BUGS
 
@@ -1030,13 +1030,18 @@ Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
 =head1 COPYRIGHT
 
-Copyright © 2002-2004 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
+Copyright (C) 2002-2006 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
 PURPOSE.
 
 This program is released under the GNU General Public License
+
+=head1 SEE ALSO
+
+For information on configuration options, please refer to the man page for
+F<munin.conf>.
 
 =cut
 

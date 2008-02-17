@@ -158,7 +158,17 @@ my @COLOUR = ("#22ff22", "#0022ff", "#ff0000", "#00aaaa", "#ff00ff",
 	      "#ffa500", "#cc0000", "#0000cc", "#0080C0", "#8080C0", "#FF0080",
 	      "#800080", "#688e23", "#408080", "#808000", "#000000", "#00FF00",
 	      "#0080FF", "#FF8000", "#800000", "#FB31FB");
-my $range_colour = "#22ff22";
+my @NEWCOLOUR =
+     # Reds  Greens  Blues   Oranges Dk yell Dk blue Purple  Green/lime
+  qw(
+     #FF0000 #00CC00 #0066B3 #FF8000 #FFCC00 #330099 #990099 #CCFF00
+     #B30000 #008F00 #00487D #B35A00 #B38F00 #24006B #6B006B #8FB300
+     #FFBFBF #BFFFBF #BFE4FF #FFDFBF #FFF2BF #D5BFFF #FFBFFF #F2FFBF
+     #FF8080 #80FF80 #80C9FF #FFC080 #FFE680 #AA80FF #FF80FF #E6FF80
+    );
+    # Line variations: Pure, earthy, pastel, dark pastel
+
+My $range_colour = "#22ff22";
 my $single_colour = "#00aa00";
 
 my %times = (
@@ -1247,6 +1257,11 @@ NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
 PURPOSE.
 
 This program is released under the GNU General Public License
+
+=head1 SEE ALSO
+
+For information on configuration options, please refer to the man page for
+F<munin.conf>.
 
 =cut
 
