@@ -297,13 +297,10 @@ $config = &munin_overwrite($config,$overwrite);
 
 &compare_configs ($oldconfig, $config);
 
-if (&munin_getlock("$config->{rundir}/munin-datafile.lock"))
-{
+if (&munin_getlock("$config->{rundir}/munin-datafile.lock")) {
     &munin_writeconfig("$config->{dbdir}/datafile",$config);
-}
-else
-{
-    die "Could not create lockfile \"$config->{rundir}/munin-update.lock\"";
+} else {
+    die "Could not create lockfile '$config->{rundir}/munin-update.lock'";
 }
 
 $update_time = sprintf ("%.2f",(Time::HiRes::time - $update_time));
@@ -312,6 +309,10 @@ close (STATS);
 rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
 
 logger("Munin-update finished ($update_time sec)");
+
+munin_removelock("$config->{rundir}/munin-datafile.lock");
+munin_removelock("$config->{rundir}/munin-update.lock");
+
 close ($log);
 
 # compare_configs is used to monitor for config changes which we
@@ -531,9 +532,7 @@ sub process_node {
 		   $config->{port} || "4949"), 
 		   'LocalAddr' => &munin_get ($config, "local_address", undef, $domain, $node),
 		  'Proto'    => "tcp", "Timeout" => $timeout);
-  }
-  else
-  {
+  } else {
       $socket = new IO::Socket::INET ('PeerAddr' => "$node->{address}:".
 		  ($node->{port} || $config->{domain}->{$domain}->{port} || 
 		   $config->{port} || "4949"), 
@@ -541,8 +540,7 @@ sub process_node {
   }
   my $err = ($socket ? "" : $!);
 
-  if ($do_fork)
-  {
+  if ($do_fork) {
       $SIG{ALRM} = sub { close $socket; die "$!\n"};
       alarm ($timeout);
 
@@ -607,6 +605,7 @@ sub process_node {
       }
 
   }
+  munin_removelock("$config->{rundir}/munin-$domain-$name.lock");
 }
 
 sub read_socket_single {

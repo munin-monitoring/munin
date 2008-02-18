@@ -489,6 +489,8 @@ open (FILE, ">$config->{htmldir}/index.html") or die "Cannot open $config->{html
 print FILE $template->output;
 close FILE;
 
+munin_removelock("$config->{rundir}/munin-html.lock");
+
 sub logger_open {
     my $dirname = shift;
 

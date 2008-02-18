@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# -*- cperl -*-
 #
 # Copyright (C) 2002-2006 Jimmy Olsen, Audun Ytterdal, Nicolai Langfeldt
 #
@@ -205,6 +206,10 @@ print STATS "GT|total|$graph_time\n" unless $skip_stats;
 rename ("$config->{dbdir}/munin-graph.stats.tmp", "$config->{dbdir}/munin-graph.stats");
 close STATS unless $skip_stats;
 close $log;
+
+munin_removelock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
+
+# ### The End
 
 sub process_domain {
     my ($domain) = @_;

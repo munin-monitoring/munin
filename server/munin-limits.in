@@ -114,8 +114,9 @@ for my $domain ( keys %{$config->{domain}}) {
 
 $update_time = sprintf ("%.2f",(Time::HiRes::time - $update_time));
 
-logger("munin-limits finished ($update_time sec)");
+munin_removelock("$config->{rundir}/munin-limits.lock");
 
+logger("munin-limits finished ($update_time sec)");
 
 sub process_domain {
     my ($domain) = @_;
