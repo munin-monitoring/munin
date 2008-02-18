@@ -39,7 +39,7 @@ chdir ("/");
 foreach my $key (keys %ENV)
 {
         $ENV{$key} =~ /^(.*)$/;
-        $ENV{$key} = $1;
+        $ENV{$key} = $1 || ''; # It sometimes happens that the match was empty
 }
 
 $0 =~ /^(.*)$/; # for some strange reason won't "$0 = $0;" work.
