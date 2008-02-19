@@ -1,0 +1,103 @@
+#!@@BASH@@
+# -*- sh -*-
+# Copyright (C) 2008 Matthias Schmitz
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+# $Id$
+
+####
+# prints usage
+function usage() {
+echo "Usage: munin-check [options]
+Options: 
+   -h|--help		Show this help.
+   -f|--fix-permissions Fix the permissions of the munin dirs and files. Needs superuser rights."
+}
+
+# Get options from the command line
+TEMP=`getopt -o fh --long fix-permissions,help \
+     -n 'munin-check' -- "$@"`
+
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage ; exit 0; shift ;;
+		-f|--fix-permissions) PLEASE_FIXME="true" ;  shift ;;
+		--) shift ; break ;;
+		*) echo "Internal error!" ; exit 1 ;;
+	esac
+done
+
+
+
+####
+# sets owner to "@@USER@@" 
+function fix_owner() {
+	if [ "`id -u`" = "0" ];
+		then
+			chown -R @@USER@@:@@GROUP@@ $object;
+		else 
+			echo "Fixing the permissions needs superuser rights. You should run \"munin-check -f\" as root."
+		exit 0;
+	fi
+}
+####
+# check if "@@USER@@" is owner, if PLEASE_FIXME set it calls fix_owner()
+function owner_ok(){
+	object=$1;
+
+	if [ -d $object ];
+	then
+		# check the owner of the dir ...
+		if [ "`stat -c%U $object`" != "@@USER@@" ];
+		then
+			echo "#DIR: $object : Wrong owner";
+			if [ "$PLEASE_FIXME" = "true" ];
+			then
+				fix_owner $object;
+			fi
+			
+		fi
+		# ... and then dive into it
+		for subobject in $object/*;
+		do
+			owner_ok $subobject
+		done
+	else
+		if [ "`stat -c%U $object`" != "@@USER@@" ];
+		then
+			echo "#FILE: $object : Wrong owner";
+			if [ "$PLEASE_FIXME" = "true" ];
+			then
+				fix_owner $object
+			fi
+		fi
+	fi
+}
+
+####
+# main
+
+for dir in @@HTMLDIR@@ @@LOGDIR@@ @@STATEDIR@@ @@HTMLDIR@@ @@DBDIR@@;
+do
+	echo "check $dir"
+	owner_ok $dir
+done
+
+

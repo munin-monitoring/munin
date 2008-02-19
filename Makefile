@@ -57,6 +57,7 @@ install-main: build
 	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/server/munin-htaccess $(HTMLDIR)/.htaccess
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/server/munin.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/server/munin-cron $(BINDIR)/
+	$(INSTALL) -m 0755 build/server/munin-check $(BINDIR)/
 	$(INSTALL) -m 0755 build/server/munin-update $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-html $(LIBDIR)/
@@ -76,6 +77,7 @@ uninstall-main: build
 	rm -f $(CONFDIR)/munin.conf 
 
 	rm -f $(BINDIR)/munin-cron 
+	rm -f $(BINDIR)/munin-check
 
 	rm -f $(LIBDIR)/munin-update
 	rm -f $(LIBDIR)/munin-graph
