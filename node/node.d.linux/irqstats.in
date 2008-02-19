@@ -99,3 +99,37 @@ EOM
     print "i", $_->{irq}, '.value ', $_->{count}, "\n" for @irqs;
 }
 
+__END__
+
+=head1 NAME
+
+irqstats - Munin plugin to monitor individual interrupts on a Linux machine
+
+=head1 APPLICABLE SYSTEMS
+
+Any Linux system
+
+=head1 CONFIGURATION
+
+None needed
+
+=head1 INTERPRETATION
+
+The plugin simply shows the number of interrupts on each interrupt
+line.  The lines are identified by the attached equipment rather than
+the IRQ numbers.
+
+High interrupt rates may coincide with high loads on disk, network or
+other I/O, this is normal.
+
+=head1 BUGS
+
+None known
+
+=head1 AUTHOR
+
+Unknown
+
+=head1 LICENSE
+
+GPLv2

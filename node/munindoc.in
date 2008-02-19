@@ -1,0 +1,82 @@
+#!/usr/bin/perl -w
+# -*- perl -*-
+#
+# This script provides the basis for a plugin documentation system for
+# munin.  Please see "man perlpod" for the reference manual to writing
+# pod files.
+#
+# This is a very thin veneer for re-using perldoc for our own purposes.
+#
+# ---
+# Copyright (C) 2008 Nicolai Langfeldt/Linpro AS
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# ---
+#
+# $Id: munin-update.in 1420 2008-01-30 12:17:43Z janl $
+
+require 5;
+
+use strict;
+use Pod::Perldoc;
+use File::Find;
+
+my @found = ();		# Found plugin path names, by priority
+
+my @myargv = @ARGV;	# Save the ARGV we want for ourselves.
+
+my ($plugin) = @myargv; # First argument is a plugin name
+
+die "munindoc: Please name a plugin\n" unless $plugin;
+
+my $plugin_re = quotemeta($plugin);
+
+@ARGV=();
+
+# Dirs in which to look for $plugin.pod and $plugin files.
+my @DIRS = ('@@LIBDIR@@/plugins','@@CONFDIR@@/plugins', '@@PERLLIB@@');
+# my @DIRS = ('/usr/share/munin/plugins','/etc/munin/plugins');
+
+File::Find::find({wanted => \&wanted_pod}, @DIRS);
+File::Find::find({wanted => \&wanted_basename}, @DIRS);
+
+# print "Found: ",join(", ",@found),"\n";
+# exit 0;
+
+# -F  Arguments are file names, not modules
+push(@ARGV,'-F',@found);
+
+exit( Pod::Perldoc->run() );
+
+sub wanted_pod {
+#    print "Want pod: $File::Find::name\n";
+    /^$plugin_re\.pod$/so && push(@found,$File::Find::name);
+}
+
+sub wanted_basename {
+#    print "Want basename: $File::Find::name\n";
+    $_ eq $plugin && push(@found,$File::Find::name);
+}
+
+__END__
+
+=head1 NAME
+
+munindoc - Munin documentation
+
+=head1 DESCRIPTION
+
+This program displays munin documentation found in pod format adjacent
+to plugins (and later other parts of Munin).
