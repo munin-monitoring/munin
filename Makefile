@@ -50,12 +50,14 @@ install-main: build
 
 	$(INSTALL) -m 0644 build/server/Munin.pm $(PERLLIB)/
 
-install-node: build install-node-non-snmp install-node-snmp
+install-node: build install-node-non-snmp install-node-snmp install-munindoc
 	echo Done.
 
 install-node-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(SBINDIR)/
 
+install-munindoc: build 
+        $(INSTALL) -m 0755 build/node/munindoc $(BINDIR)/ 
 install-node-non-snmp: build
 	$(CHECKGROUP)
 	mkdir -p $(CONFDIR)/plugins
