@@ -169,7 +169,7 @@ my @NEWCOLOUR =
     );
     # Line variations: Pure, earthy, pastel, dark pastel
 
-My $range_colour = "#22ff22";
+my $range_colour = "#22ff22";
 my $single_colour = "#00aa00";
 
 my %times = (
