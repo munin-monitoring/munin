@@ -23,7 +23,14 @@ function usage() {
 echo "Usage: munin-check [options]
 Options: 
    -h|--help		Show this help.
-   -f|--fix-permissions Fix the permissions of the munin dirs and files. Needs superuser rights."
+   -f|--fix-permissions Fix the permissions of the munin dirs and files.
+   			Needs superuser rights.
+			
+Please don't use this script if you are using 'graph_strategy cgi'!
+It doesn't care about the right permissions for www-data yet...
+"
+
+
 }
 
 # Get options from the command line
@@ -94,7 +101,7 @@ function owner_ok(){
 ####
 # main
 
-for dir in @@HTMLDIR@@ @@LOGDIR@@ @@STATEDIR@@ @@HTMLDIR@@ @@DBDIR@@;
+for dir in @@HTMLDIR@@ @@LOGDIR@@ @@STATEDIR@@ @@DBDIR@@;
 do
 	echo "check $dir"
 	owner_ok $dir
