@@ -402,11 +402,7 @@ sub munin_find_field {
     my $res = [];
 
     if (ref ($field) ne "Regexp") {
-	if ($field =~ /^\^/) {
-	    $field = qr/^$field$/;
-	} else {
-	    $field = qr/$field/;
-	}
+	$field = qr/^$field$/;
     }
 
     if (ref ($hash) eq "HASH") {
