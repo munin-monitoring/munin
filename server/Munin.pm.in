@@ -1,6 +1,6 @@
 package Munin; # -*- perl -*-
 #
-# Copyright (C) 2003-2004 Jimmy Olsen, Audun Ytterdal
+# Copyright (C) 2003-2007 Jimmy Olsen, Audun Ytterdal
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,6 +22,7 @@ package Munin; # -*- perl -*-
 #
 
 use Exporter;
+
 @ISA = ('Exporter');
 @EXPORT = ('munin_trend',
 	   'munin_fetch',
@@ -44,11 +45,25 @@ use Exporter;
 	   'munin_node_status',
 	   'munin_category_status',
 	   'munin_get_picture_filename',
+	   'munin_get_html_filename',
 	   'munin_get_filename',
 	   'munin_graph_column_headers',
 	   'munin_get_max_label_length',
 	   'munin_get_field_order',
-	   'munin_get_rrd_filename'
+	   'munin_get_rrd_filename',
+	   'munin_get_node_name',
+	   'munin_get_parent_name',
+	   'munin_get_node_loc',
+	   'munin_get_node',
+	   'munin_set_var_loc',
+	   'munin_set_var',
+	   'munin_copy_node_toloc',
+	   'munin_get_separated_node',
+	   'munin_mkdir_p',
+	   'munin_find_field',
+	   'munin_get_parent',
+	   'munin_get_children',
+	   'munin_get_node_partialpath'
 	   );
 
 use strict;
@@ -83,13 +98,14 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"version", "tls_certificate", "tls_private_key", "tls_pem",
 	"tls_verify_certificate", "tls_verify_depth", "tls_ca_certificate",
 	"graph_data_size", "colour", "graph_printf", "ok", "unknown",
-	     "palette"
+	 "palette", "realservname", "cdef_name", "graphable", "process", 
+	 "realname"
     );
 
 my %legal_expanded = map { $_ => 1 } @legal;
 
 # Fields to copy when "aliasing" a field
-my @copy_fields    = ("label", "draw", "type", "rrdfile", "fieldname", "info");
+my @COPY_FIELDS    = ("label", "draw", "type", "rrdfile", "fieldname", "info"); 
 
 sub munin_trend {
     my (@array) = @_;
@@ -109,16 +125,18 @@ sub munin_fetch {
     return @array;
 }
 
+# munin_draw_field: Check whether a field will be visible in the graph or not
+# Parameters:
+# - $hash: A ref to the hash node for the field
+# Returns:
+# - Success: Boolean; true if field will be graphed, false if not
+# - Failure: undef
 sub munin_draw_field {
-    my $node    = shift;
-    my $service = shift;
-    my $field   = shift;
+    my $hash   = shift;
 
-    $field =~ s/=.*//;
-
-    print "DEBUG: munin_draw_field: Checking $service -> $field: " . &munin_get_bool_val ($node->{client}->{$service}->{$field.".graph"}, 1) . ".\n" if $DEBUG;;
-    return 0 if (exists $node->{client}->{$service}->{$field.".skipdraw"});
-    return (&munin_get_bool_val ($node->{client}->{$service}->{$field.".graph"}, 1));
+    return 0 if munin_get_bool ($hash, "skipdraw", 0);
+    return 0 if !munin_get_bool ($hash, "graph", 1);
+    return defined $hash->{"label"};
 }
 
 sub munin_nscasend {
@@ -217,6 +235,7 @@ sub munin_delete {
 sub munin_overwrite {
     my ($configfile,$overwrite) = @_;
     for my $key (keys %$overwrite) {
+        next if $key =~ /^#%#/;
 	if (ref $overwrite->{$key}) {
 	    &munin_overwrite($overwrite->{$key},$configfile->{$key});
 	}
@@ -232,8 +251,8 @@ sub munin_readconfig {
 
     $conf ||= $configfile;
     if (! -r $conf and ! $missingok) {
-		::logger ("munin_readconfig: cannot open '$conf'");
-		return undef;
+	::logger ("munin_readconfig: cannot open '$conf'");
+	return undef;
     }
     if (open (CFG, $conf))
     {
@@ -249,20 +268,21 @@ sub munin_readconfig {
     $config->{'logdir'} ||= "@@LOGDIR@@";
     $config->{'tmpldir'}||= "@@CONFDIR@@/templates/";
     $config->{'htmldir'}||= "@@HTMLDIR@@/";
+    $config->{'#%#parent'}= undef;
+    $config->{'#%#name'}= "root";
     return ($config);
 }
 
 sub munin_parse_config
 {
     my $lines    = shift;
-    my $hash     = undef;
+    my $hash     = {};
     my $prefix   = "";
     my $prevline = "";
 
     foreach my $line (@{$lines})
     {
 	chomp $line;
-#$line =~ s/(^|[^\\])#.*/$1/g if $line =~ /#/;  # Skip comments...
 	if ($line =~ /#/) {
 	    next if ($line =~ /^#/);
 	    $line =~ s/(^|[^\\])#.*/$1/g;
@@ -287,7 +307,7 @@ sub munin_parse_config
 	    $hash = &munin_set_var_path ($hash, $var, $val);
 	} elsif ($line =~ /^\s*\[([^\]]*)]\s*$/) {
 	    $prefix = $1;
-	    if ($prefix =~ /^([^:;]+);([^:;]+)$/) {
+	    if ($prefix =~ /^([^:]+);([^:;]+)$/) {
 		$prefix .= ":";
 	    } elsif ($prefix =~ /^([^:;]+);$/) {
 		$prefix .= "";
@@ -366,132 +386,383 @@ sub munin_get_var_path
     return undef;
 }
 
+ 
+# munin_find_field: Search a hash to find nodes with $field defined
+# Parameters: 
+# - $hash: A hash ref to search
+# - $field: The name of the field to search for, or a regex
+# - $avoid: [optional] Stop traversing further down if this field is found
+# Returns:
+# - Success: A ref to an array of the hash nodes containing $field.
+# - Failure: undef
+sub munin_find_field {
+    my $hash  = shift;
+    my $field = shift;
+    my $avoid = shift;
+    my $res = [];
+
+    if (ref ($field) ne "Regexp") {
+	if ($field =~ /^\^/) {
+	    $field = qr/^$field$/;
+	} else {
+	    $field = qr/$field/;
+	}
+    }
+
+    if (ref ($hash) eq "HASH") {
+	foreach my $key (keys %{$hash}) {
+	    next if $key =~ /^#%#/;
+	    last if defined $avoid and $key eq $avoid;
+	    if ($key =~ $field) {
+		push @$res, $hash;
+	    } elsif (ref ($hash->{$key}) eq "HASH") {
+		push @$res, @{munin_find_field ($hash->{$key}, $field, $avoid)};
+	    }
+	}
+    }
+
+    return $res;
+}
+
+# munin_get_children: Get all child hash nodes
+# Parameters: 
+# - $hash: A hash ref to the parent node
+# Returns:
+# - Success: A ref to an array of the child nodes
+# - Failure: undef
+sub munin_get_children {
+    my $hash  = shift;
+    my $res = [];
+
+    return undef if (ref ($hash) ne "HASH");
+
+    foreach my $key (keys %{$hash}) {
+	next if $key =~ /^#%#/;
+	if (defined $hash->{$key} and ref ($hash->{$key}) eq "HASH") {
+	    push @$res, $hash->{$key};
+	}
+    }
+
+    return $res;
+}
+
+# munin_get_separated_node: Copy a node to a separate node without "specials"
+# Parameters:
+# - $hash: The node to copy
+# Returns:
+# - Success: A ref to a new node without "#%#"-fields
+# - Failure: undef
+sub munin_get_separated_node
+{
+    my $hash = shift;
+    my $ret  = {};
+
+    if (ref ($hash) eq "HASH") {
+	foreach my $key (keys %$hash) {
+	    next if $key =~ /^#%#/;
+	    if (ref ($hash->{$key}) eq "HASH") {
+		$ret->{$key} = munin_get_separated_node ($hash->{$key});
+	    } else {
+		$ret->{$key} = $hash->{$key};
+	    }
+	}
+    } else {
+	return undef;
+    }
+
+    return $ret;
+}
+
+# munin_get_parent_name: Return the name of the parent of the hash node supplied
+# Parameters: 
+# - $hash: A ref to the hash node
+# Returns:
+# - Success: The name of the parent node
+# - Failure: If no parent node exists, "none" is returned.
+sub munin_get_parent_name
+{
+    my $hash = shift;
+
+    if (ref ($hash) eq "HASH" and defined $hash->{'#%#parent'}) {
+	return munin_get_node_name ($hash->{'#%#parent'});
+    } else { 
+	return "none";
+    }
+}
+
+# munin_get_node_name: Return the name of the hash node supplied
+# Parameters: 
+# - $hash: A ref to the hash node
+# Returns:
+# - Success: The name of the node
+sub munin_get_node_name
+{
+    my $hash = shift;
+
+    if (ref ($hash) eq "HASH" and defined $hash->{'#%#name'}) {
+	return $hash->{'#%#name'};
+    } else { 
+	return undef;
+    }
+}
+
+
+# munin_get_node_loc: Get location array for hash node
+# Parameters: 
+# - $hash: A ref to the node
+# Returns:
+# - Success: Ref to an array with the full path of the variable
+# - Failure: undef
+sub munin_get_node_loc {
+    my $hash = shift;
+    my $res = [];
+
+    if (ref ($hash) ne "HASH") { # Not a has node
+    	return undef;
+    }
+    if (defined $hash->{'#%#parent'}) {
+	$res = munin_get_node_loc ($hash->{'#%#parent'});
+	push @$res, munin_get_node_name ($hash) if defined $res;
+    }
+    return $res;
+}
+
+# munin_get_parent: Get parent node of a hash
+# Parameters: 
+# - $hash: A ref to the node
+# Returns:
+# - Success: Ref to an parent
+# - Failure: undef
+sub munin_get_parent {
+    my $hash = shift;
+
+    if (ref ($hash) ne "HASH") { # Not a has node
+    	return undef;
+    }
+    if (defined $hash->{'#%#parent'}) {
+	return $hash->{'#%#parent'};
+    } else {
+	return undef;
+    }
+}
+
+# munin_get_node: Gets a node by loc
+# Parameters: 
+# - $hash: A ref to the hash to set the variable in
+# - $loc: A ref to an array with the full path of the node
+# Returns:
+# - Success: The node ref found by $loc
+# - Failure: undef
+sub munin_get_node
+{
+    my $hash = shift;
+    my $loc  = shift;
+
+    foreach my $tmpvar (@$loc) {
+	if ($tmpvar !~ /\S/) {
+	    ::logger ("Error: munin_get_node: Cannot work on hash node \"$tmpvar\"");
+	    return undef;
+	}
+	return undef if !exists $hash->{$tmpvar};
+	$hash = $hash->{$tmpvar};
+    }
+    return $hash;
+}
+
+# munin_set_var: sets a variable in a hash
+# Parameters: 
+# - $hash: A ref to the hash to set the variable in
+# - $var: The name of the variable
+# - $val: The value to set the variable to
+# Returns:
+# - Success: The $hash we were handed
+# - Failure: undef
+sub munin_set_var
+{
+    my $hash = shift;
+    my $var  = shift;
+    my $val  = shift;
+
+    return munin_set_var_loc ($hash, [$var], $val);
+}
+
+# munin_set_var_loc: sets a variable in a hash
+# Parameters: 
+# - $hash: A ref to the hash to set the variable in
+# - $loc: A ref to an array with the full path of the variable
+# - $val: The value to set the variable to
+# Returns:
+# - Success: The $hash we were handed
+# - Failure: undef
+sub munin_set_var_loc
+{
+    my $hash = shift;
+    my $loc  = shift;
+    my $val  = shift;
+    my @aloc = @$loc;
+
+    my $tmpvar = shift @aloc;
+    $tmpvar = shift @aloc while (defined $tmpvar and $tmpvar =~ /^#%#/);
+    if ($tmpvar !~ /\S/) {
+	::logger ("Error: munin_set_var_loc: Cannot work on hash node \"$tmpvar\"");
+	return undef;
+    }
+    if (@aloc > 0) {
+	if (!defined $hash->{$tmpvar}) { # Init the new node
+	    $hash->{$tmpvar}->{"#%#parent"} = $hash;
+	    $hash->{$tmpvar}->{"#%#name"} = $tmpvar;
+	}
+        return munin_set_var_loc ($hash->{$tmpvar}, \@aloc, $val);
+    } else {
+	::logger ("Warning: munin_set_var_loc: Setting unknown option \"$tmpvar\".")
+	    unless defined $legal_expanded{$tmpvar};
+        $hash->{$tmpvar} = $val;
+	return $hash;
+    }
+}
+
+# munin_get_node_partialpath: gets a node froma partial path
+# Parameters: 
+# - $hash: A ref to the "current" location in the hash tree
+# - $var: A path string with relative location (from the $hash).
+# Returns:
+# - Success: The node
+# - Failure: undef
+sub munin_get_node_partialpath
+{
+    my $hash = shift;
+    my $var  = shift;
+    my $ret  = undef;
+
+    return undef if !defined $hash or ref ($hash) ne "HASH";
+
+    my $root    = munin_get_root_node ($hash);
+    my $hashloc = munin_get_node_loc ($hash);
+    my $varloc  = undef;
+
+    if ($var =~ /^\s*([^:]+):(\S+)\s*$/) {
+	my ($leftstring, $rightstring) = ($1, $2);
+
+	my @leftarr = split (/;/, $leftstring);
+	my @rightarr = split (/\./, $rightstring);
+	push @$varloc, @leftarr, @rightarr
+    } elsif ($var =~ /^\s*([^;:\.]+)\s*$/) {
+	push @$varloc, $var;
+    } elsif ($var =~ /^\s*(.+)\.([^\.:;]+)$/) {
+	my ($leftstring, $rightstring) = ($1, $2);
+
+	my @leftarr = split (/;/, $leftstring);
+	my @rightarr = split (/\./, $rightstring);
+	push @$varloc, @leftarr, @rightarr;
+    } elsif ($var =~ /^\s*(\S+)\s*$/) {
+	my @leftarr = split (/;/, $1);
+	push @$varloc, @leftarr;
+    } else {
+	::logger ("Error: munin_get_node_partialpath: Malformatted variable path \"$var\".");
+    }
+
+    # We've got both parts of the loc (varloc and hashloc) -- let's figure out 
+    # where they meet up.
+    do {
+	$ret = munin_get_node ($root, [@$hashloc, @$varloc]);
+    } while (!defined $ret and pop @$hashloc);
+
+    return $ret;
+}
+
+# munin_set_var_path: sets a variable in a hash
+# Parameters: 
+# - $hash: A ref to the hash to set the variable in
+# - $var: A string with the full path of the variable
+# - $val: The value to set the variable to
+# Returns:
+# - Success: The $hash we were handed
+# - Failure: The $hash we were handed
 sub munin_set_var_path
 {
     my $hash = shift;
     my $var  = shift;
     my $val  = shift;
 
-    print "DEBUG: Setting var \"$var\" = \"$val\"\n" if $DEBUG;
-    if ($var =~ /^\s*([^;:]+);([^:]+):(\S+)\s*$/)
-    {
-	my ($dom, $host, $rest) = ($1, $2, $3);
-	my @sp = split (/\./, $rest);
+    my $result = undef;
 
-	if (@sp == 3)
-	{
-	    ::logger ("Warning: Unknown option \"$sp[2]\" in \"$dom;$host:$sp[0].$sp[1].$sp[2]\".")
-		unless defined $legal_expanded{$sp[2]};
-	    $hash->{domain}->{$dom}->{node}->{$host}->{client}->{$sp[0]}->{"$sp[1].$sp[2]"} = $val;
-	}
-	elsif (@sp == 2)
-	{
-	    ::logger ("Warning: Unknown option \"$sp[1]\" in \"$dom;$host:$sp[0].$sp[1]\".")
-		unless defined $legal_expanded{$sp[1]};
-	    $hash->{domain}->{$dom}->{node}->{$host}->{client}->{$sp[0]}->{$sp[1]} = $val;
-	}
-	elsif (@sp == 1)
-	{
-	    ::logger ("Warning: Unknown option \"$sp[0]\" in \"$dom;$host:$sp[0]\".")
-		unless defined $legal_expanded{$sp[0]};
-	    $hash->{domain}->{$dom}->{node}->{$host}->{$sp[0]} = $val;
-	}
-	else
-	{
-	    warn "munin_set_var: Malformatted variable path \"$var\".";
-	}
-    }
-    elsif ($var =~ /^\s*([^;:]+);([^;:]+)\s*$/)
-    {
-	my ($dom, $rest) = ($1, $2);
-	my @sp = split (/\./, $rest);
+    ::logger ("Debug: munin_set_var_path: Setting var \"$var\" = \"$val\"") if $DEBUG;
+    if ($var =~ /^\s*([^:]+):(\S+)\s*$/) {
+	my ($leftstring, $rightstring) = ($1, $2);
 
-	if (@sp == 1)
-	{
-	    ::logger ("Warning: Unknown option \"$sp[0]\" in \"$dom;$sp[0]\".")
-		unless defined $legal_expanded{$sp[0]};
-	    $hash->{domain}->{$dom}->{$sp[0]} = $val;
-	}
-	else
-	{
-	    warn "munin_set_var: Malformatted variable path \"$var\".";
-	}
+	my @leftarr = split (/;/, $leftstring);
+	my @rightarr = split (/\./, $rightstring);
+	$result = munin_set_var_loc ($hash, [@leftarr, @rightarr], $val);
+    } elsif ($var =~ /^\s*([^;:\.]+)\s*$/) {
+        $result = munin_set_var_loc ($hash, [$1], $val);
+    } elsif ($var =~ /^\s*([^:;]+)$/) {
+	my @leftarr = split (/\./, $1);
+	$result = munin_set_var_loc ($hash, [@leftarr], $val);
+    } elsif ($var =~ /^\s*(.+)\.([^\.:;]+)$/) {
+	my ($leftstring, $rightstring) = ($1, $2);
+
+	my @leftarr = split (/;/, $leftstring);
+	my @rightarr = split (/\./, $rightstring);
+	$result = munin_set_var_loc ($hash, [@leftarr, @rightarr], $val);
+    } elsif ($var =~ /^\s*(\S+)\s*$/) {
+	my @leftarr = split (/;/, $1);
+	$result = munin_set_var_loc ($hash, [@leftarr], $val);
+    } else {
+	::logger ("Error: munin_set_var_path: Malformatted variable path \"$var\".");
     }
-    elsif ($var =~ /^\s*([^;:\.]+)\s*$/)
-    {
-	::logger ("Warning: Unknown option \"$1\" in \"$1\".")
-	    unless defined $legal_expanded{$1};
-	$hash->{$1} = $val;
-    }
-    elsif ($var =~ /^\s*([^\.]+)\.([^\.]+)\.([^\.]+)$/)
-    {
-	::logger ("Warning: Unknown option \"$1\" in \"$var\".")
-	    unless defined $legal_expanded{$1};
-	::logger ("Warning: Unknown option \"$3\" in \"$var\".")
-	    unless defined $legal_expanded{$3};
-	$hash->{$1}->{$2}->{$3} = $val;
-    }
-    else
-    {
-	warn "munin_set_var: Malformatted variable path \"$var\".";
+
+    if (!defined $result) {
+	::logger ("Error: munin_set_var_path: Failed setting \"$var\" = \"$val\".");
     }
 
     return $hash;
 }
 
-sub munin_writeconfig_loop {
-    my ($data,$fh,$pre) = @_;
-    $pre |= "";
+# munin_get_root_node: Get the root node of the hash tree
+# Parameters:
+# - $hash: A hash node to traverse up from
+# Returns:
+# - Success: A ref to the root hash node
+# - Failure: undef
+sub munin_get_root_node
+{
+    my $hash = shift;
 
-    # Write datafile
-    foreach my $a (keys %{$data})
-    {
-	if (ref ($data->{$a}) eq "HASH")
-	{
-	    if ($a eq "domain" or $a eq "node" or $a eq "client")
-	    {
-		&munin_writeconfig_loop ($data->{$a}, $fh, "$pre");
-	    }
-	    elsif ($a eq "contact" and $pre eq "")
-	    {
-		&munin_writeconfig_loop ($data->{$a}, $fh, "contact.");
-	    }
-	    else
-	    {
-		my $lpre = $pre;
-		if ($lpre eq "")
-		{
-		    $lpre = $a.";";
-		}
-		elsif ($lpre =~ /;$/)
-		{
-		    $lpre .= $a.":";
-		}
-		else
-		{
-		    $lpre .= $a.".";
-		}
-		&munin_writeconfig_loop ($data->{$a}, $fh, "$lpre");
-	    }
-	}
-	elsif (defined $data->{$a} and length $data->{$a})
-	{
-	    next if "$pre$a" eq "version"; # Handled separately
-            (my $outstring = $data->{$a}) =~ s/([^\\])#/$1\\#/g;
-	    print "Writing: $pre$a $outstring\n" if $DEBUG;
+    return undef if ref ($hash) ne "HASH";
+
+    while (defined $hash->{'#%#parent'}) {
+	$hash = $hash->{'#%#parent'};
+    }
+
+    return $hash;
+}
+
+sub munin_writeconfig_loop 
+{
+    my ($hash,$fh,$pre) = @_;
+
+    foreach my $key (keys %$hash) {
+	next if $key =~ /#%#/;
+	my $path = (defined $pre ? join(';', ($pre, $key)) : $key);
+	if (ref ($hash->{$key}) eq "HASH") {
+	    munin_writeconfig_loop ($hash->{$key}, $fh, $path);
+	} else {
+	    next if !defined $pre and $key eq "version"; # Handled separately
+	    next if !defined $hash->{$key} or !length $hash->{$key};
+            (my $outstring = $hash->{$key}) =~ s/([^\\])#/$1\\#/g;
+	    print "Writing: $path $outstring\n" if $DEBUG;
 	    if ($outstring =~ /\\$/)
 	    { # Backslash as last char has special meaning. Avoid it.
-		print $fh "$pre$a $outstring\\\n"; 
+		print $fh "$path $outstring\\\n"; 
 	    } else {
-		print $fh "$pre$a $outstring\n";
+		print $fh "$path $outstring\n";
 	    }
 	}
     }
 }
+
 sub munin_writeconfig {
     my ($datafilename,$data,$fh) = @_;
-#   my $datafile = new Config::General();
-#   $datafile->save_file($datafilename,$data);
 
     if (!defined $fh)
     {
@@ -505,7 +776,7 @@ sub munin_writeconfig {
     # Write version
     print $fh "version $VERSION\n";
     # Write datafile
-    &munin_writeconfig_loop ($data, $fh, "");
+    &munin_writeconfig_loop ($data, $fh);
     
     if (defined $fh)
     {
@@ -526,52 +797,161 @@ sub munin_config {
     return ($data);
 }
 
-sub munin_get_picture_filename {
-    my $config  = shift;
-    my $domain  = shift;
-    my $name    = shift;
-    my $service = shift;
-    my $scale   = shift;
-    my $sum     = shift;
-    my $dir     = $config->{'htmldir'};
+# munin_get_html_filename: Get the full path-name of an html file
+# Parameters:
+# - $hash: A ref to the service hash node
+# Returns:
+# - Success: The file name with full path
+# - Failure: undef
+sub munin_get_html_filename {
+    my $hash    = shift;
+    my $loc     = munin_get_node_loc ($hash);
+    my $ret     = munin_get ($hash, 'htmldir');
+    my $plugin  = "index";
 
     # Sanitise
-    $dir =~ s/[^\w_\/"'\[\]\(\)+=-]\./_/g;
-    $domain =~ s/[^\w_\/"'\[\]\(\)+=\.-]/_/g;
-    $name =~ s/[^\w_\/"'\[\]\(\)+=\.-]/_/g;
-    $service =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
+    $ret =~ s/[^\w_\/"'\[\]\(\)+=-]\./_/g;
+    $hash =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
+    @$loc = map { s/\//_/g; $_ } @$loc;
+    @$loc = map { s/^\./_/g; $_ } @$loc;
+	
+    if (defined $hash->{'graph_title'}) {
+	$plugin = pop @$loc or return undef;
+    }
+
+    if (@$loc) { # The rest is used as directory names...
+	$ret .= "/" . join ('/', @$loc);
+    }
+
+    return "$ret/$plugin.html";
+}
+
+# munin_get_picture_filename: Get the full path+name of a picture file
+# Parameters:
+# - $hash: A ref to the service hash node
+# - $scale: The scale (day, week, year, month)
+# - $sum: [optional] Boolean value, whether it's a sum graph or not.
+# Returns:
+# - Success: The file name with full path
+# - Failure: undef
+sub munin_get_picture_filename {
+    my $hash    = shift;
+    my $scale   = shift;
+    my $sum     = shift;
+    my $loc     = munin_get_node_loc ($hash);
+    my $ret     = munin_get ($hash, 'htmldir');
+
+    # Sanitise
+    $ret =~ s/[^\w_\/"'\[\]\(\)+=-]\./_/g;
+    $hash =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
     $scale =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
+    @$loc = map { s/\//_/g; $_ } @$loc;
+    @$loc = map { s/^\./_/g; $_ } @$loc;
+	
+    my $plugin = pop @$loc or return undef;
+    my $node   = pop @$loc or return undef;
 
-    if (defined $sum and $sum)
-    {
-	    return "$dir/$domain/$name-$service-$scale-sum.png";
+    if (@$loc) { # The rest is used as directory names...
+	$ret .= "/" . join ('/', @$loc);
     }
-    else
-    {
-	    return "$dir/$domain/$name-$service-$scale.png";
+
+    if (defined $sum and $sum) {
+	    return "$ret/$node/$plugin-$scale-sum.png";
+    } else {
+	    return "$ret/$node/$plugin-$scale.png";
     }
 }
 
+# munin_path_to_loc: Returns a loc array from a path string
+# Parameters: 
+# - $path: A path string
+# Returns:
+# - Success: A ref to an array with the loc
+# - Failure: undef
+sub munin_path_to_loc
+{
+    my $path = shift;
+
+    my $result = undef;
+
+    if ($path =~ /^\s*([^:]+):(\S+)\s*$/) {
+	my ($leftstring, $rightstring) = ($1, $2);
+
+	my @leftarr = split (/;/, $leftstring);
+	my @rightarr = split (/\./, $rightstring);
+	$result = [@leftarr, @rightarr];
+    } elsif ($path =~ /^\s*([^;:\.]+)\s*$/) {
+        $result = [$1];
+    } elsif ($path =~ /^\s*(.+)\.([^\.:;]+)$/) {
+	my ($leftstring, $rightstring) = ($1, $2);
+
+	my @leftarr = split (/;/, $leftstring);
+	my @rightarr = split (/\./, $rightstring);
+	$result = [@leftarr, @rightarr];
+    } elsif ($path =~ /^\s*(\S+)\s*$/) {
+	my @leftarr = split (/;/, $1);
+	$result = [@leftarr];
+    } else {
+	::logger ("Error: munin_path_to_loc: Malformatted variable path \"$path\".");
+    }
+
+    if (!defined $result) {
+	::logger ("Error: munin_path_to_loc: Failed converting \"$path\".");
+    }
+
+    return $result;
+}
+
+
+# munin_get_filename: Get rrd filename for a field, without any 
+#                     bells or whistles. Used by munin-update to 
+#                     figure out which file to update.
+# Parameters:
+# - $hash: Ref to hash field
+# Returns:
+# - Success: Full path to rrd file
+# - Failure: undef
 sub munin_get_filename {
-	my ($config,$domain,$node,$service,$field) = @_;
+	my $hash = shift;
+	my $loc  = munin_get_node_loc ($hash);
+	my $ret  = munin_get ($hash, "dbdir");
 
-	return ($config->{'dbdir'} . "/$domain/$node-$service-$field-" . lc substr (($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$field.".type"}||"GAUGE"), 0,1). ".rrd");
+	if (!defined $loc or !defined $ret) {
+	    return undef;
+	}
+
+        # Not really a danger (we're not doing this stuff via the shell), so more to avoid 
+        # confusion with silly filenames
+	@$loc = map { s/\//_/g; $_ } @$loc;
+	@$loc = map { s/^\./_/g; $_ } @$loc;
+	
+	my $field  = pop @$loc or return undef;
+	my $plugin = pop @$loc or return undef;
+	my $node   = pop @$loc or return undef;
+
+	if (@$loc) { # The rest is used as directory names...
+	    $ret .= "/" . join ('/', @$loc);
+	}
+
+	return ($ret . "/$node-$plugin-$field-" . lc substr (munin_get($hash, "type", "GAUGE"), 0,1). ".rrd");
 
 }
 
+# munin_get_bool: Get boolean variable
+# Parameters:
+# - $hash: Ref to hash node
+# - $field: Name of field to get
+# - $default: [optional] Value to return if $field isn't set
+# Returns:
+# - Success: 1 or 0 (true or false)
+# - Failure: $default if defined, else undef
 sub munin_get_bool
 {
-    my $conf     = shift;
-    my $field    = shift;
-    my $default  = shift;
-    my $domain   = shift;
-    my $node     = shift;
-    my $service  = shift;
-    my $plot     = shift;
+    my $hash   = shift;
+    my $field  = shift;
+    my $default = shift;
 
-    return undef unless defined $field;
-
-    my $ans = &munin_get ($conf, $field, $default, $domain, $node, $service, $plot);
+    my $ans = &munin_get ($hash, $field, $default);
     return undef if not defined $ans;
 
     if ($ans =~ /^yes$/i or
@@ -579,26 +959,19 @@ sub munin_get_bool
         $ans =~ /^on$/i or
         $ans =~ /^enable$/i or
         $ans =~ /^enabled$/i
-       )
-    {
-    return 1;
-    }
-    elsif ($ans =~ /^no$/i or
+       ) {
+	return 1;
+    } elsif ($ans =~ /^no$/i or
         $ans =~ /^false$/i or
         $ans =~ /^off$/i or
         $ans =~ /^disable$/i or
         $ans =~ /^disabled$/i
-      )
-    {
-    return 0;
-    }
-    elsif ($ans !~ /\D/)
-    {
-    return $ans;
-    }
-    else
-    {
-    return undef;
+      ) {
+	return 0;
+    } elsif ($ans !~ /\D/) {
+	return $ans;
+    } else {
+	return $default;
     }
 }
 
@@ -647,50 +1020,80 @@ sub munin_get_bool_val
     }
 }
 
+# munin_get: Get variable
+# Parameters:
+# - $hash: Ref to hash node
+# - $field: Name of field to get
+# - $default: [optional] Value to return if $field isn't set
+# Returns:
+# - Success: field contents
+# - Failure: $default if defined, else undef
 sub munin_get
 {
-    my $conf     = shift;
-    my $field    = shift;
-    my $default  = shift;
-    my $domain   = shift;
-    my $node     = shift;
-    my $service  = shift;
-    my $plot     = shift;
+    my $hash   = shift;
+    my $field  = shift;
+    my $default = shift;
 
-    if (defined $field)
-    {
-	return $conf->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$plot.$field"}
-		if (defined $domain and defined $node and defined $service and defined $plot and 
-			defined $conf->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$plot.$field"});
+    return $default if (ref ($hash) ne "HASH");
+    return $hash->{$field} if defined $hash->{$field} and ref($hash->{$field}) ne "HASH";
+    return $default if not defined $hash->{'#%#parent'};
+    return munin_get ($hash->{'#%#parent'}, $field, $default);
+}
 
-	
+# munin_copy_node_toloc: Copy hash node at 
+# - $from: Hash node to copy
+# - $to: Where to copy it to
+# - $loc: Path to node under $to
+# Returns:
+# - Success: $to
+# - Failure: undef
+sub munin_copy_node_toloc
+{
+    my $from = shift;
+    my $to   = shift;
+    my $loc  = shift;
 
-	return $conf->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$field}
-		if (defined $domain and defined $node and defined $service and 
-			defined $conf->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$field});
-	return $conf->{domain}->{$domain}->{node}->{$node}->{$field}
-		if (defined $domain and defined $node and 
-			defined $conf->{domain}->{$domain}->{node}->{$node}->{$field});
-	return $conf->{domain}->{$domain}->{$field}
-		if (defined $domain and defined $conf->{domain}->{$domain}->{$field});
-	return $conf->{$field}
-		if (defined $conf->{$field});
-	return $default;
+    return undef unless defined $from and defined $to and defined $loc;
+
+    if (ref ($from) eq "HASH") {
+	foreach my $key (keys %$from) {
+	    next if $key =~ /^#%#/;
+	    if (ref ($from->{$key}) eq "HASH") {
+		munin_copy_node_toloc ($from->{$key}, $to, [@$loc, $key]);
+	    } else {
+		munin_set_var_loc ($to, [@$loc, $key], $from->{$key});
+	    }
+	}
+    } else {
+	$to = $from;
     }
-    else
-    {
-	return $conf->{domain}->{$domain}->{node}->{$node}->{client}->{$service}
-		if (defined $domain and defined $node and defined $service and 
-			defined $conf->{domain}->{$domain}->{node}->{$node}->{client}->{$service});
-	return $conf->{domain}->{$domain}->{node}->{$node}
-		if (defined $domain and defined $node and 
-			defined $conf->{domain}->{$domain}->{node}->{$node});
-	return $conf->{domain}->{$domain}
-		if (defined $domain and defined $conf->{domain}->{$domain});
-	return $conf
-		if (defined $conf);
-	return $default;
+    return $to;
+}
+
+# munin_copy_node: Copy hash node
+# - $from: Hash node to copy
+# - $to: Where to copy it to
+# Returns:
+# - Success: $to
+# - Failure: undef
+sub munin_copy_node
+{
+    my $from = shift;
+    my $to   = shift;
+
+    if (ref ($from) eq "HASH") {
+	foreach my $key (keys %$from) {
+	    if (ref ($from->{$key}) eq "HASH") {
+                # Easier to do with the other copy function
+		munin_copy_node_toloc ($from->{$key}, $to, [$key]); 
+	    } else {
+		munin_set_var_loc ($to, [$key], $from->{$key});
+	    }
+	}
+    } else {
+	$to = $from;
     }
+    return $to;
 }
 
 sub munin_node_status
@@ -721,31 +1124,38 @@ sub munin_node_status
     return $state;
 }
 
-sub munin_category_status
-{
-    my ($config, $limits, $domain, $node, $category, $check_draw) = @_;
-    my $state = "ok";
+# munin_category_status: Gets current status of a category
+# Parameters: 
+# - $hash: A ref to the hash node whose children to check
+# - $limits: A ref to the root node of the limits tree
+# - $category: The category to review
+# - $check_draw: [optional] Ignore undrawn fields
+# Returns:
+# - Success: The status of the field
+# - Failure: undef
+sub munin_category_status {
+    my $hash       = shift || return undef;
+    my $limits     = shift || return undef;
+    my $category   = shift || return undef;
+    my $check_draw = 0;
+    my $state      = "ok";
 
-    return undef unless defined $config->{domain}->{$domain}->{node}->{$node};
-    my $snode = $config->{domain}->{$domain}->{node}->{$node};
+    return undef unless (defined $hash and ref ($hash) eq "HASH");
 
-    foreach my $service (keys %{$snode->{client}})
-    {
-	next if ((not defined $snode->{client}->{$service}->{graph_category}) and
-		$category ne 'other');
-	next if ((defined $snode->{client}->{$service}->{graph_category}) and 
-		 ($snode->{client}->{$service}->{graph_category} ne $category));
+    foreach my $service (@{munin_get_children ($hash)}) {
+	next if (!defined $service or ref ($service) ne "HASH");
+	next if (!defined $service->{'graph_title'});
+	next if ($category ne munin_get ($service, "graph_category", "other"));
+	next if ($check_draw and not munin_get_bool ($service, "graph", 1));
 
-	my $fres  = &munin_service_status ($config, $limits, $domain, $node, $service, $check_draw);
-	if (defined $fres)
-	{
-	    if ($fres eq "critical")
-	    {
+	my $fres  = munin_service_status ($service, $limits, $check_draw);
+	if (defined $fres) {
+	    if ($fres eq "critical") {
 		$state = $fres;
 		last;
-	    }
-	    elsif ($fres eq "warning")
-	    {
+	    } elsif ($fres eq "warning") {
+		$state = $fres;
+	    } elsif ($fres eq "unknown" and $state eq "ok") {
 		$state = $fres;
 	    }
 	}
@@ -754,26 +1164,27 @@ sub munin_category_status
     return $state;
 }
 
-sub munin_service_status
-{
-    my ($config, $limits, $domain, $node, $service, $check_draw) = @_;
+# munin_field_status: Gets current status of a field
+# Parameters: 
+# - $hash: A ref to the field hash node
+# - $limits: A ref to the root node of the limits tree
+# - $check_draw: [optional] Ignore undrawn fields
+# Returns:
+# - Success: The status of the field
+# - Failure: undef
+sub munin_service_status {
+    my ($config, $limits, $check_draw) = @_;
     my $state = "ok";
 
-    return undef unless defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service};
-    foreach my $key (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}})
-    {
-	next unless $key =~ /^([^\.]+)\.label$/;
-	my $field = $1;
-	my $fres  = &munin_field_status ($config, $limits, $domain, $node, $service, $field, $check_draw);
-	if (defined $fres)
-	{
-	    if ($fres eq "critical")
-	    {
+    return undef unless defined $config;
+    for my $fieldnode (@{munin_find_field ($config, "label")}) {
+	my $field = munin_get_node_name ($fieldnode);
+	my $fres  = munin_field_status ($fieldnode, $limits, $check_draw);
+	if (defined $fres) {
+	    if ($fres eq "critical") {
 		$state = $fres;
 		last;
-	    }
-	    elsif ($fres eq "warning")
-	    {
+	    } elsif ($fres eq "warning") {
 		$state = $fres;
 	    }
 	}
@@ -782,31 +1193,27 @@ sub munin_service_status
     return $state;
 }
 
-sub munin_field_status
-{
-    my ($config, $limits, $domain, $node, $service, $field, $check_draw) = @_;
+# munin_field_status: Gets current status of a field
+# Parameters: 
+# - $hash: A ref to the field hash node
+# - $limits: A ref to the root node of the limits tree
+# - $check_draw: [optional] Ignore undrawn fields
+# Returns:
+# - Success: The status of the field
+# - Failure: undef
+sub munin_field_status {
+    my ($hash, $limits, $check_draw) = @_;
     my $state = undef;
 
     # Return undef if nagios is turned off, or the field doesn't have any limits
-    unless ((defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.warning"}) or
-	(defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.critical"}))
-    {
+    if ((!defined munin_get ($hash, "warning", undef)) and (!defined munin_get ($hash, "critical"))) {
 	return undef;
     }
 
-    if (defined $limits->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.critical"} and (!defined $check_draw or !$check_draw or 
-		&munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $service, $field)))
-    {
-	return "critical";
-    }
-    elsif (defined $limits->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.warning"} and (!defined $check_draw or !$check_draw or 
-		&munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $service, $field)))
-    {
-	return "warning";
-    }
-    else
-    {
-	return "ok";
+    if (!defined $check_draw or !$check_draw or munin_draw_field ($hash)) {
+	my $loc  = munin_get_node_loc ($hash);
+	my $node = munin_get_node ($limits, $loc);
+	return $node->{"state"} || "ok";
     }
 }
 
@@ -833,155 +1240,137 @@ sub munin_graph_column_headers
     return $ret;
 }
 
+# munin_get_max_label_length: Get the length of the longest labe in a graph
+# Parameters:
+# - $hash: the graph in question
+# - $order: A ref to an array of fields (graph_order)
+# Returns:
+# - Success: The length of the longest label in the graph
+# - Failure: undef
 sub munin_get_max_label_length
 {
-    my $node    = shift;
-    my $config  = shift;
-    my $domain  = shift;
-    my $host    = shift;
     my $service = shift;
     my $order   = shift;
     my $result  = 0;
+    my $tot     = munin_get ($service, "graph_total");
 
     for my $field (@$order) {
 	my $path = undef;
 	(my $f = $field) =~ s/=.+//;
-	next if (exists $node->{client}->{$service}->{$f.".process"} and
-		 $node->{client}->{$service}->{$f.".process"} ne "yes");
-	next if (exists $node->{client}->{$service}->{$f.".skipdraw"});
-	next unless (!exists $node->{client}->{$service}->{$f.".graph"} or
-			$node->{client}->{$service}->{$f.".graph"} eq "yes");
-	if ($result < length ($node->{client}->{$service}->{$f.".label"} || $f)) {
-	    $result = length ($node->{client}->{$service}->{$f.".label"} || $f);
+	next if (!munin_get_bool ($service->{$f}, "process", 1));
+	next if (munin_get_bool ($service->{$f}, "skipdraw", 0));
+	next if (!munin_get_bool ($service->{$f}, "graph", 1));
+
+	my $len = length (munin_get ($service->{$f}, "label") || $f);
+
+	if ($result < $len) {
+	    $result = $len;
 	}
-	if (exists $node->{client}->{$service}->{graph_total} and 
-		length $node->{client}->{$service}->{graph_total} > $result)
-	{
-	    $result = length $node->{client}->{$service}->{graph_total};
-	}
+    }
+    if (defined $tot and length $tot > $result) {
+	$result = length $tot;
     }
     return $result;
 }
 
+# munin_get_field_order: Get the field order in a graph
+# Parameters:
+# - $hash: A hash ref to the service
+# Returns:
+# - Success: A ref to an array of the field names
+# - Failure: undef
 sub munin_get_field_order
 {
-    my $node    = shift;
-    my $config  = shift;
-    my $domain  = shift;
-    my $host    = shift;
-    my $service = shift;
+    my $hash = shift;
     my $result  = [];
 
-    if ($node->{client}->{$service}->{graph_sources}) 
-    {
-	foreach my $gs (split /\s+/, $node->{client}->{$service}->{'graph_sources'})
-	{
+    return undef if !defined $hash or ref($hash) ne "HASH";
+
+    my $order = munin_get ($hash, "graph_order");
+
+    if (defined $hash->{graph_sources}) {
+	foreach my $gs (split /\s+/, $hash->{'graph_sources'}) {
 	    push (@$result, "-".$gs);
 	}
     } 
-    if ($node->{client}->{$service}->{graph_order}) 
-    {
-	push (@$result, split /\s+/, $node->{client}->{$service}->{'graph_order'});
+    if (defined $order) {
+	push (@$result, split /\s+/, $order);
     } 
 
-    for my $key (keys %{$node->{client}->{$service}}) 
-    {
-	my ($client,$type)="";
-	($client,$type) = split /\./,$key;
-	if (defined $type and $type eq "label") 
-	{
-	    push @$result,$client if !grep /^\Q$client\E(?:=|$)/, @$result;;
-	} 
+    for my $fieldnode (@{munin_find_field ($hash, "label")}) {
+        my $fieldname = munin_get_node_name ($fieldnode);
+	push @$result,$fieldname if !grep /^\Q$fieldname\E(?:=|$)/, @$result;;
     }
     
     return $result;
 }
 
+# munin_get_rrd_filename: Get the name of the rrd file corresponding to a 
+#                         field. Checks for lots of bells and whistles.
+#                         This function is the correct one to use when 
+#                         figuring out where to fetch data from.
+# Parameters:
+# - $field: The hash object of the field
+# - $path: [optional] The path to the field (as given in graph_order/sum/stack/et al)
+# Returns:
+# - Success: A string with the filename of the rrd file
+# - Failure: undef
 sub munin_get_rrd_filename {
-    my $node    = shift;
-    my $config  = shift;
-    my $domain  = shift;
-    my $name    = shift;
-    my $service = shift;
     my $field   = shift;
     my $path    = shift;
-    my $result  = "unknown";
+    my $result  = undef;
+    my $name    = munin_get_node_name ($field);
 
-    if ($node->{client}->{$service}->{$field.".filename"})
-    {
-	$result = $node->{client}->{$service}->{$field.".filename"};
-    }
-    elsif ($path)
-    {
-	if (!defined ($node->{client}->{$service}->{$field.".label"}))
-	{
-	    print "DEBUG: Setting label: $field\n" if $DEBUG;
-	    $node->{client}->{$service}->{$field.".label"} = $field;
-	}
+    # Bail out on bad input data
+    return undef if !defined $field or ref ($field) ne "HASH";
 
-	if ($path =~ /^\s*([^:;]+)[:;]([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
-	{
-	    $result = munin_get_filename ($config, $1, $2, $3, $4);
-	    print "\nDEBUG1: Expanding $path...\n" if $DEBUG;
-	    if (! defined $node->{client}->{$service}->{$field."label"})
-	    {
-		for my $f (@copy_fields)
-		{
-		    if (not exists $node->{client}->{$service}->{"$field.$f"} and
-			    exists $config->{'domain'}->{$1}->{'node'}->{$2}->{'client'}->{$3}->{"$4.$f"})
-		    {
-			$node->{client}->{$service}->{"$field.$f"} = $config->{'domain'}->{$1}->{'node'}->{$2}->{'client'}->{$3}->{"$4.$f"};
-		    }
-		}
+    # If the field has a .filename setting, use it
+    return $result if $result = munin_get ($field, "filename");
+
+    # Handle custom paths (used in .sum, .stack, graph_order, et al)
+    if (defined $path and length $path) {
+
+	my $sourcenode = munin_get_node_partialpath ($field, $path);
+	$result = munin_get_filename ($sourcenode);
+
+	for my $f (@COPY_FIELDS) {
+	    if (not exists $field->{$f} and exists $sourcenode->{$f}) {
+		print "DEBUG: Copying $f...\n" if $DEBUG;
+		munin_set_var_loc ($field, [$f], $sourcenode->{$f});
 	    }
 	}
-	elsif ($path =~ /^\s*([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
-	{
-	    print "\nDEBUG2: Expanding $path...\n" if $DEBUG;
-	    $result = munin_get_filename ($config, $domain, $1, $2, $3);
-	    for my $f (@copy_fields)
-	    {
-		if (not exists $node->{client}->{$service}->{"$field.$f"} and
-			exists $config->{'domain'}->{$domain}->{'node'}->{$1}->{'client'}->{$2}->{"$3.$f"})
-		{
-		    print "DEBUG: Copying $f...\n" if $DEBUG;
-		    $node->{client}->{$service}->{"$field.$f"} = $config->{'domain'}->{$domain}->{'node'}->{$1}->{'client'}->{$2}->{"$3.$f"};
-		}
-	    }
-	}
-	elsif ($path =~ /^\s*([^:\.]+)[:\.]([^:\.]+)\s*$/)
-	{
-	    print "\nDEBUG3: Expanding $path...\n" if $DEBUG;
-	    $result = munin_get_filename ($config, $domain, $name, $1, $2);
-	    for my $f (@copy_fields)
-	    {
-		if (not exists $node->{client}->{$service}->{"$field.$f"} and
-			exists $node->{client}->{$1}->{"$2.$f"})
-		{
-		    $node->{client}->{$service}->{"$field.$f"} = $node->{client}->{$1}->{"$2.$f"};
-		}
-	    }
-	}
-	elsif ($path =~ /^\s*([^:\.]+)\s*$/)
-	{
-	    print "\nDEBUG4: Expanding $path...\n" if $DEBUG;
-	    $result = munin_get_filename ($config, $domain, $name, $service, $1);
-	    for my $f (@copy_fields)
-	    {
-		if (not exists $node->{client}->{$service}->{"$field.$f"} and
-			exists $node->{client}->{$service}->{"$1.$f"})
-		{
-		    $node->{client}->{$service}->{"$field.$f"} = $node->{client}->{$service}->{"$1.$f"};
-		}
-	    }
-	}
-    }
-    else
-    {
-	print "\nDEBUG5: Doing path...\n" if $DEBUG;
-	$result = munin_get_filename($config, $domain,$name,$service,$field);
+    } else {
+	$result = munin_get_filename ($field);
     }
     return $result;
+}
+
+# munin_mkdir_p: Make directory (and path to it)
+# Parameters:
+# - $dirname: Directory to create
+# - $umask: Umask (in addition to the user umask)
+# Returns:
+# - Success: $dirname
+# - Failure: undef
+sub munin_mkdir_p
+{
+    my $dirname = shift;
+    my $umask   = shift;
+
+    return $dirname if (-e $dirname);
+
+
+    ::logger ("Notice: Created directory \"$dirname\".");
+    (my $prev = $dirname) =~ s/\/[^\/]+\/?$//;
+    if (munin_mkdir_p ($prev, $umask)) {
+	if (mkdir ($dirname, $umask)) {
+	    return $dirname;
+	} else {
+	    return undef;
+	}
+    } else {
+	return undef;
+    }
 }
 
 

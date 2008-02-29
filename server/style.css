@@ -37,6 +37,11 @@ div.lighttext {
   font-weight: bold;
  }
 
+.service { 
+  font-size: x-small;
+  font-weight: bold;
+ }
+
 .center { 
   text-align: center;
 }

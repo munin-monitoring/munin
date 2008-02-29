@@ -31,8 +31,9 @@ use POSIX qw(strftime);
 
 my @times = ( "day", "week", "month", "year" );
 
+my @limit_hosts;
 my $DEBUG=0;
-my $VERSION="@@VERSION@@";
+my $VERSION = "@@VERSION@@";
 my $conffile = "@@CONFDIR@@/munin.conf";
 my $force_root = 0;
 my $do_usage = 0;
@@ -144,11 +145,6 @@ my @domainorder;
 if ($config->{domain_order}) {
     @domainorder = split /\s+/, $config->{domain_order};
 }
-foreach my $d (sort (keys %{$config->{domain}})) {
-    unless (grep (/^$d$/, @domainorder)) {
-	push @domainorder, $d;
-    }
-}
 
 #Make sure the logo and the stylesheet file is in the html dir
 my @files = ("style.css", "logo.png", "definitions.html");
@@ -164,363 +160,25 @@ foreach my $file( (@files) ) {
     }
 }
 
-#make domain list
-my @domainlist = map { { DOMAIN => $_ } } @domainorder;
+# For timestamping graphs
 my $timestamp = strftime("%Y-%m-%d T %T", localtime);
-for my $domain (@domainorder) {
-  logger("processing domain: $domain");
-  my %domain;
-  $domain{domain}=$domain;
-  my @nodes;
-  my %comparisons;
-  my @nodeorder = ();
-  if ($config->{domain}->{$domain}->{node_order}) {
-    @nodeorder = split /\s+/, $config->{domain}->{$domain}->{node_order};
-  }
-  foreach my $n (sort (keys %{$config->{domain}->{$domain}->{node}})) {
-    unless (grep (/^$n$/, @nodeorder)) {
-      push @nodeorder, $n;
-    }
-  }
-  for my $node (@nodeorder) {
-    logger("processing node: $node");
-    my %node;
-    $node{node}=$node;
-    $node{url}="$domain/$node.html";
-    my @services;
-    my @categories;
-    my %categories;
-    my %tmp_cats;
-    my @serviceorder;
-    if ($config->{domain}->{$domain}->{node}->{$node}->{service_order}) {
-      @serviceorder = split /\s+/,
-	$config->{domain}->{$domain}->{node}->{$node}->{service_order};
-    } else {
-      @serviceorder = sort
-	keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}};
-    }
 
-    for my $service (@serviceorder) {
-      logger("processing service: $service");
-      next unless
-	defined($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service} )
-	&&  $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service} ne "";
-
-      next unless
-	munin_get_bool ($config, "graph", 1, $domain, $node, $service);
-
-      my @service;
-      my %service;
-      my $fieldnum = 0;
-      my @graph_info;
-      my @field_info;
-      $service{service}=$service;
-      $service{label}=
-	$config->{domain}->{$domain}->{node}->{$node}->{client}->
-	  {$service}->{graph_title};
-
-      my $method = &munin_get ($config, "graph_strategy", "cron");
-      if ($method eq "cgi") {
-	$service{imgday}=$config->{'cgiurl_graph'}.
-	  "/$domain/$node/$service-day.png";
-	$service{imgweek}=$config->{'cgiurl_graph'}.
-	  "/$domain/$node/$service-week.png";
-	$service{imgmonth}=$config->{'cgiurl_graph'}.
-	  "/$domain/$node/$service-month.png";
-	$service{imgyear}=$config->{'cgiurl_graph'}.
-	  "/$domain/$node/$service-year.png";
-
-	if (&munin_get_bool_val($config->{domain}->{$domain}->
-				{node}->{$node}->
-				{client}->{$service}->{"graph_sums"}, 0)) {
-	  $service{imgweeksum} =
-	    $config->{'cgiurl_graph'}."/$domain/$node/$service-week-sum.png";
-	  $service{imgyearsum} =
-	    $config->{'cgiurl_graph'}."/$domain/$node/$service-year-sum.png";
-	}
-
-# There is a disturbance in the force here, the sizes are off.
-#	if (my ($w, $h) =
-#	    &calculate_png_size ($config, $domain, $node, $service)) {
-#	  for my $scale (@times) {
-#	    $service{"img".$scale."width"} = $w;
-#	    $service{"img".$scale."height"} = $h;
-#	  }
-#	  if (&munin_get_bool_val($config->{domain}->{$domain}->
-#				  {node}->{$node}->
-#				  {client}->{$service}->{"graph_sums"}, 0)) {
-#	    for my $scale (["week", "year"]) {
-#	      $service{"img".$scale."sumwidth"} = $w;
-#	      $service{"img".$scale."sumheight"} = $h;
-#	    }
-#	  }
-#       }
-      } else {
-	# graph strategy cron
-	$service{imgday}="$node-$service-day.png";
-	$service{imgweek}="$node-$service-week.png";
-	$service{imgmonth}="$node-$service-month.png";
-	$service{imgyear}="$node-$service-year.png";
-
-	for my $scale (@times) {
-	  if (my ($w, $h) =
-	      &get_png_size(&munin_get_picture_filename($config, $domain,
-							$node, $service,
-							$scale))) {
-	    $service{"img".$scale."width"} = $w;
-	    $service{"img".$scale."height"} = $h;
-	  }
-	}
-
-	if (&munin_get_bool_val ($config->{domain}->{$domain}->
-				 {node}->{$node}->{client}->
-				 {$service}->{"graph_sums"}, 0)) {
-	  $service{imgweeksum} = "$node-$service-week-sum.png";
-	  $service{imgyearsum} = "$node-$service-year-sum.png";
-	  for my $scale (["week", "year"]) {
-	    if (my ($w, $h) =
-		&get_png_size (&munin_get_picture_filename($config,$domain,
-							   $node, $service,
-							   $scale, 1))) {
-	      $service{"img".$scale."sumwidth"} = $w;
-	      $service{"img".$scale."sumheight"} = $h;
-	    }
-	  }
-	}
-      }
-      $service{url}="$node-$service.html";
-      $service{domain}="$domain";
-      $service{node}=$node;
-      $service{category}= lc( $config->{domain}->{$domain}->
-			      {node}->{$node}->{client}->
-			      {$service}->{graph_category} || "other" );
-
-      # Do "help" section
-      if (defined($config->{domain}->{$domain}->
-		  {node}->{$node}->
-		  {client}->{$service}->{graph_info})) {
-	my %graph_info;
-
-	$graph_info{info} = $config->{domain}->{$domain}->
-	  {node}->{$node}->{client}->{$service}->{graph_info};
-
-	push @{$service{graphinfo}}, \%graph_info;
-      }
-
-      $service{fieldlist} .= "<tr><th align='left' valign='top'>Field</th><th align='left' valign='top'>Type</th><th align='left' valign='top'>Warn</th><th align='left' valign='top'>Crit</th><th></tr>";
-      # foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}})
-      foreach my $f (@{&munin_get_field_order ($config->{domain}->{$domain}->{node}->{$node}, $config, $domain, $node, $service)}) {
-	$f =~ s/=(.*)$//;
-	my $path = $1;
-	next unless &munin_draw_field ($config->{domain}->{$domain}->
-				       {node}->{$node}, $service, $f);
-
-	print "DEBUG: single_value: Checking field \"$f\" ($path).\n"
-	  if $DEBUG;
-
-	if (defined $path) {
-	  # HUH? Get the filename and then forget? Some side effect here?
-	  munin_get_rrd_filename ($config->{domain}->{$domain}->
-				  {node}->{$node}, $config, $domain,
-				  $node, $service, $f, $path);
-	}
-
-	my %field_info;
-	$fieldnum++;
-
-	$field_info{'hr'}    = 1 unless ($fieldnum % 3);
-	$field_info{'field'} = $f;
-	$field_info{'label'} = $config->{domain}->{$domain}->
-	  {node}->{$node}->{client}->{$service}->{$f.".label"} || $f;
-
-	$field_info{'type'}  = lc( $config->{domain}->{$domain}->
-				   {node}->{$node}->{client}->{$service}->
-				   {$f.".type"} || "GAUGE" );
-
-	$field_info{'warn'}  = $config->{domain}->{$domain}->
-	  {node}->{$node}->{client}->{$service}->{$f.".warning"} || "None";
-	$field_info{'crit'}  = $config->{domain}->{$domain}->
-	  {node}->{$node}->{client}->{$service}->{$f.".critical"} || "None";
-	$field_info{'info'}  = $config->{domain}->{$domain}->
-	  {node}->{$node}->{client}->{$service}->{$f.".info"} || "";
-
-	my $state = &munin_field_status ($config, $limits, $domain,
-					 $node, $service, $f, 1);
-
-	if (defined $state) {
-	  $field_info{'state_warning'}  = 1 if $state eq "warning";
-	  $field_info{'state_critical'} = 1 if $state eq "critical";
-	  $field_info{'state_unknown'}  = 1 if $state eq "unknown";
-	}
-	push @{$service{fieldinfo}}, \%field_info;
-      }
-
-      {
-	my $state = &munin_service_status ($config, $limits, $domain,
-					   $node, $service, 1);
-	if (defined $state) {
-	  $service{'state_warning'}  = 1 if $state eq "warning";
-	  $service{'state_critical'} = 1 if $state eq "critical";
-	  $service{'state_unknown'}  = 1 if $state eq "unknown";
-	}
-      }
-
-      push @services, \%service;
-      push @service, \%service;
-      push @{$tmp_cats{$service{'category'}}}, \%service;
-      $servicetemplate->param(SERVICES => \@service,
-			      SERVICE => $service,
-			      NODE => $node,
-			      DOMAIN => $domain, 
-			      DOMAINS => \@domainlist, 
-			      TIMESTAMP => $timestamp);
-      open (FILE, ">$config->{htmldir}/$domain/$node-$service.html") or
-	die "Cannot open $config->{htmldir}/$domain/$node-$service.html: $!";
-      print FILE $servicetemplate->output;
-      close FILE;
-    }
-    foreach my $key (keys %tmp_cats) {
-      next if $key eq "other";
-      my %tmp;
-      my $state = &munin_category_status ($config, $limits, $domain,
-					  $node, $key, 1);
-      print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
-      if (defined $state) {
-	$tmp{'state_warning'}  = 1 if $state eq "warning";
-	$tmp{'state_critical'} = 1 if $state eq "critical";
-	$tmp{'state_unknown'}  = 1 if $state eq "unknown";
-      }
-      $tmp{name} = ucfirst $key;
-      $tmp{services} = \@{$tmp_cats{$key}};
-      $tmp{node} = $node;
-      $tmp{domain} = $domain;
-      $categories{ucfirst $key} = \%tmp;
-      $comparisons{$key}{$node} = \%tmp;
-    }
-    if (defined $tmp_cats{'other'}) {
-      my $key = 'other';
-      my %tmp;
-      my $state = &munin_category_status ($config, $limits, $domain,
-					  $node, $key, 1);
-      print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
-      if (defined $state) {
-	$tmp{'state_warning'}  = 1 if $state eq "warning";
-	$tmp{'state_critical'} = 1 if $state eq "critical";
-	$tmp{'state_unknown'}  = 1 if $state eq "unknown";
-      }
-      $tmp{name} = ucfirst $key;
-      $tmp{services} = \@{$tmp_cats{$key}};
-      $tmp{node} = $node;
-      $tmp{domain} = $domain;
-      $categories{ucfirst $key} = \%tmp;
-      $comparisons{'other'}{$node} = \%tmp;
-    }
-    # Handle category_order
-    @categories = ();
-    if ($config->{domain}->{$domain}->{node}->{$node}->{category_order}) {
-      foreach my $cat (split /\s+/,
-		       $config->{domain}->{$domain}->
-		       {node}->{$node}->{category_order}) {
-	push @categories, $categories{ucfirst $cat};
-      }
-      foreach my $cat (sort keys %categories) {
-	push @categories, $categories{$cat}
-	  unless (grep { $_->{name} eq $cat } @categories);
-      }
-    } else {
-      @categories = map { $categories{$_} } sort keys %categories;
-    }
-    $nodetemplate->param(SERVICES => \@services,
-			 NODE => $node,
-			 DOMAIN => $domain,
-			 DOMAINS => \@domainlist,
-			 TIMESTAMP => $timestamp,
-			 CATEGORIES => \@categories);
-    open (FILE, ">$config->{htmldir}/$domain/$node.html") or
-      die "Cannot open $config->{htmldir}/$domain/$node.html: $!";
-    print FILE $nodetemplate->output;
-    close FILE;
-    $node{services} = \@services;
-    $node{categories} = \@categories;
-    $node{domain} = $domain;
-    push @nodes,\%node;
-
-  }
-  $domaintemplate->param(NODES => \@nodes,
-			 DOMAIN => $domain, 
-			 DOMAINS => \@domainlist, 
-			 COMPARE => (&munin_get_bool ($config, "compare", 1,
-						      $domain)
-				     and @nodeorder > 1),
-			 TIMESTAMP => $timestamp);
-  open (FILE, ">$config->{htmldir}/$domain/index.html") or
-    die "Cannot open $config->{htmldir}/$domain/index.html: $!";
-  print FILE $domaintemplate->output;
-  close FILE;
-
-  $domain{nodes} = \@nodes;
-  $domain{domain} = $domain;
-  $domain{compare} = (&munin_get_bool ($config, "compare", 1, $domain) 
-		      and @nodeorder > 1);
-
-  my @cats = ();
-  foreach my $key (sort keys %comparisons) {
-    my %cat;
-    my %servlist;
-    my $nodewidth = 0;
-
-    foreach my $node (sort keys %{$comparisons{$key}}) {
-      foreach my $serv (@{$comparisons{$key}{$node}->{services}}) {
-	$servlist{$serv->{service}}{$node} = $serv;
-	$nodewidth = $serv->{imgdaywidth}
-	  if (defined $serv->{imgdaywidth}
-	      and $serv->{imgdaywidth} > $nodewidth);
-      }
-    }
-    foreach my $sname (sort keys %servlist) {
-      my %s;
-      foreach my $node (@nodeorder) {
-	if (defined $servlist{$sname}{$node}) {
-	  $servlist{$sname}{$node}->{width} = $nodewidth;
-	  push (@{$s{nodes}}, $servlist{$sname}{$node});
-	} else {
-	  my %ts;
-	  $ts{label} = "Not present";
-	  $ts{service} = "$sname";
-	  $ts{title} = "Not present";
-	  $ts{node} = $node;
-	  $ts{width} = $nodewidth;
-	  push (@{$s{nodes}}, \%ts);
-	}
-      }
-      push @{$cat{services}}, \%s;
-    }
-    $cat{name} = ucfirst $key;
-    $cat{numnodes} = @nodeorder;
-    $cat{numnodes} = @nodeorder;
-    push @cats, \%cat;
-  }
-
-  if (&munin_get_bool ($config, "compare", 1, $domain) and @nodeorder > 1) {
-    foreach my $t (@times) {
-      $comparisontemplates{$t}->param(DOMAIN => $domain,
-				      DOMAINS => \@domainlist,
-				      TIMESTAMP => $timestamp,
-				      CATEGORIES => \@cats);
-      open (FILE, ">$config->{htmldir}/$domain/comparison-$t.html") or
-	die "Cannot open $config->{htmldir}/$domain/comparison-$t.html: $!";
-      print FILE $comparisontemplates{$t}->output;
-      close FILE;
-    }
-  }
-  push @domains,\%domain;
+# Preparing the group tree...
+my $groups = get_group_tree ($config);
+if (defined $groups->{"name"} and $groups->{"name"} eq "root") {
+    $groups = $groups->{"groups"}; # root->groups
 }
 
-$template->param(DOMAINS => \@domains, 
-                 TIMESTAMP => $timestamp);
-open (FILE, ">$config->{htmldir}/index.html") or die "Cannot open $config->{htmldir}/index.html: $!";
+# Draw main index
+$template->param(GROUPS    => $groups,
+		 TIMESTAMP => $timestamp);
+my $filename = munin_get_html_filename ($config);
+open (FILE, ">$filename") or
+    die "Cannot open $filename for writing: $!";
 print FILE $template->output;
 close FILE;
+
+generate_group_templates ($groups);
 
 munin_removelock("$config->{rundir}/munin-html.lock");
 
@@ -637,6 +295,310 @@ sub get_png_size
 	}
 
 	return ($width, $height);
+}
+
+sub get_peer_nodes {
+    my $hash      = shift || return undef;
+    my $category  = shift;
+    my $ret       = [];
+    my $link      = "index.html";
+    my $parent    = munin_get_parent ($hash) || return undef;
+    my $me        = munin_get_node_name ($hash);
+    my $pchildren = munin_get_children ($parent);
+
+    foreach my $peer (sort {munin_get_node_name($a) <=> munin_get_node_name($b)} @$pchildren) {
+	next unless defined $peer and ref ($peer) eq "HASH";
+	next if defined $category and lc (munin_get ($peer, "graph_category", "other")) ne $category;
+	logger ("FNORD! ". munin_get_node_name ($peer)." -- ".munin_get_node_name ($parent));
+	my $peername = munin_get_node_name ($peer);
+	next if $peername eq "contact" and munin_get_node_name ($parent) eq "root";
+	if ($peername eq $me) {
+	    unshift @$ret, { "name" => $peername, "link" => undef };
+	} else {
+	    if (defined $peer->{'graph_title'}) {
+		unshift @$ret, { "name" => $peername, "link" => "$peername.html" };
+	    } else {
+		unshift @$ret, { "name" => $peername, "link" => "../$peername/index.html" };
+	    }
+	}
+    }
+    return $ret;
+}
+
+sub get_group_tree {
+    my $hash    = shift;
+    my $base    = shift || "";
+    my $graphs  = [];
+    my $groups  = [];
+    my $cattrav = {};
+    my $cats    = [];
+    my $path    = [];
+    my $rpath   = undef;
+    my $ret     = {};
+    my $csspath;
+
+    foreach my $child (@{munin_get_children ($hash)}) {
+	next unless defined $child and ref ($child) eq "HASH" and keys %$child;
+	next if munin_get_node_name ($child) eq "contact";
+	if (defined $child->{"graph_title"}) {
+	    my $childname = munin_get_node_name ($child);
+	    my $childnode = generate_service_templates ($child);
+	    push @$graphs, { "name" => $childname };
+	    $childnode->{'name'} = $child->{"graph_title"};
+	    $childnode->{'url'} = $base . $childname.".html";
+	    for (my $shrinkpath = $childnode->{'url'}, my $counter = 0; $shrinkpath; $shrinkpath =~ s/^[^\/]+\/?//, $counter++) {
+		$childnode->{'url'.$counter} = $shrinkpath;
+	    }
+	    push @{$cattrav->{ lc munin_get ($child, "graph_category", "other") }}, $childnode;
+	} elsif (ref ($child) eq "HASH") {
+	    push @$groups, get_group_tree ($child, $base . munin_get_node_name ($child) . "/");
+	}
+    }
+
+    # We need the categories in another format.
+    foreach my $cat (sort keys %$cattrav) {
+	my $obj = {};
+	$obj->{'name'} = $cat;
+	$obj->{'url'} = $base."index.html#".$cat;
+	$obj->{'services'} = $cattrav->{$cat};
+	$obj->{'state_'.lc munin_category_status ($hash, $limits, $cat, 1)} = 1;
+	for (my $shrinkpath = $obj->{'url'}, my $counter = 0; $shrinkpath =~ /\//; $shrinkpath =~ s/^[^\/]+\/*//, $counter++) {
+	    $obj->{'url'.$counter} = $shrinkpath;
+	}
+    	push @$cats, $obj;
+    }
+
+    # ...and we need a couple of paths available.
+    @$path = reverse map { { "name" => $_, "path" => (defined $rpath?($rpath.="../")."index.html":($rpath="")) } } reverse ( "Overview", split ('\/', $base) );
+    ($csspath = $path->[0]->{'path'}) =~ s/index.html$/style.css/;
+
+    $ret = { 
+	"name"        => munin_get_node_name ($hash), 
+	"url"         => $base . "index.html", 
+	"path"        => $path,
+	"depth"       => scalar(split("/",$base."index.html"))-1,
+	"filename"    => munin_get_html_filename ($hash),
+	"csspath"     => $csspath,
+	"groups"      => $groups, 
+	"graphs"      => $graphs,
+	"categories"  => $cats,
+	"ngroups"     => scalar (@$groups),
+	"ngraphs"     => scalar (@$graphs),
+	"ncategories" => scalar (@$cats),
+	"peers"       => get_peer_nodes ($hash),
+    };
+    if ($ret->{'url'} ne "/index.html") {
+	for (my $shrinkpath = $ret->{'url'}, my $counter = 0; $shrinkpath =~ /\//; $shrinkpath =~ s/^[^\/]+\/*//, $counter++) {
+	    $ret->{'url'.$counter} = $shrinkpath;
+	}
+    }
+
+    return $ret;
+}
+
+sub generate_group_templates {
+    my $arr = shift || return undef;
+    return undef unless ref ($arr) eq "ARRAY";
+
+    foreach my $key (@$arr) {
+	if (defined $key and ref ($key) eq "HASH") {
+	    if (defined $key->{'ngroups'} and $key->{'ngroups'}) {
+		generate_group_templates ($key->{'groups'});
+
+		my $grouptemplate = HTML::Template->new(
+		    filename => munin_get ($config, "tmpldir", "")."/munin-domainview.tmpl",
+		    die_on_bad_params => 0,
+		    loop_context_vars => 1,
+		    filter => sub { my $ref=shift; $$ref =~ s/URLX/URL$key->{'depth'}/g; }
+		);
+
+		$grouptemplate->param (
+		    GROUPS  => $key->{'groups'},
+		    PATH    => $key->{'path'},
+		    CSSPATH => $key->{'csspath'},
+		    PEERS   => $key->{'peers'},
+		    PARENT  => $key->{'path'}->[-2]->{'name'}
+		);
+		my $filename = $key->{'filename'};
+		open (FILE, ">$filename") or
+		    die "Cannot open $filename for writing: $!";
+		print FILE $grouptemplate->output;
+		close FILE;
+	    } 
+
+	    if (defined $key->{'ngraphs'} and $key->{'ngraphs'}) {
+		my $graphtemplate = HTML::Template->new(
+		    filename => munin_get ($config, "tmpldir", "")."/munin-nodeview.tmpl",
+		    die_on_bad_params => 0,
+		    loop_context_vars => 1,
+		    filter => sub { my $ref=shift; $$ref =~ s/URLX/URL$key->{'depth'}/g; }
+		);
+
+		$graphtemplate->param (
+		    GROUPS      => $key->{'groups'},
+		    PATH        => $key->{'path'},
+		    CSSPATH     => $key->{'csspath'},
+		    PEERS       => $key->{'peers'},
+		    PARENT      => $key->{'path'}->[-2]->{'name'},
+		    NAME        => $key->{'name'},
+		    CATEGORIES  => $key->{'categories'},
+		    NCATEGORIES => $key->{'ncategories'},
+		);
+		my $filename = $key->{'filename'};
+		open (FILE, ">$filename") or
+		    die "Cannot open $filename for writing: $!";
+		print FILE $graphtemplate->output;
+		close FILE;
+	    } 
+	}
+    }
+}
+
+sub generate_service_templates { 
+
+    my $service = shift || return undef;
+    return undef unless munin_get_bool ($service, "graph", 1);
+
+    my %srv;
+    my $fieldnum = 0;
+    my @graph_info;
+    my @field_info;
+    my @loc       = munin_get_node_loc ($service);
+    my $pathnodes = get_path_nodes ($service);
+    my $peers     = get_peer_nodes ($service, lc munin_get ($service, "graph_category", "other"));
+    (my $csspath  = $pathnodes->[0]->{'link'}) =~ s/index.html$/style.css/;
+
+    $srv{'node'}     = munin_get_node_name ($service);
+    logger("processing service: $srv{node}");
+    $srv{'service'}  = $service;
+    $srv{'label'}    = munin_get ($service, "graph_title");
+    $srv{'category'} = lc( munin_get ($service, "graph_category", "other") );
+
+    my $method = munin_get ($service, "graph_strategy", "cron");
+
+    $srv{'url'}      = "$srv{node}.html";
+
+    my $path = join ('/', @loc);
+
+    if ($method eq "cgi") {
+	$srv{'imgday'}  =$config->{'cgiurl_graph'}."/$path-day.png";
+	$srv{'imgweek'} =$config->{'cgiurl_graph'}."/$path-week.png";
+	$srv{'imgmonth'}=$config->{'cgiurl_graph'}."/$path-month.png";
+	$srv{'imgyear'} =$config->{'cgiurl_graph'}."/$path-year.png";
+
+	if (munin_get_bool ($service, "graph_sums", 0)) {
+	    $srv{'imgweeksum'} = $config->{'cgiurl_graph'}."/$path-week-sum.png";
+	    $srv{'imgyearsum'} = $config->{'cgiurl_graph'}."/$path-year-sum.png";
+	}
+    } else {
+	# graph strategy cron
+	 
+	$srv{'imgday'}  ="$srv{node}-day.png";
+	$srv{'imgweek'} ="$srv{node}-week.png";
+	$srv{'imgmonth'}="$srv{node}-month.png";
+	$srv{'imgyear'} ="$srv{node}-year.png";
+
+	for my $scale (@times) {
+	    if (my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale))) {
+		$srv{"img".$scale."width"} = $w;
+		$srv{"img".$scale."height"} = $h;
+	    }
+	}
+
+	if (munin_get_bool ($service, "graph_sums", 0)) {
+	    $srv{imgweeksum} = "$srv{node}-week-sum.png";
+	    $srv{imgyearsum} = "$srv{node}-year-sum.png";
+	    for my $scale (["week", "year"]) {
+		if (my ($w, $h) = get_png_size (munin_get_picture_filename($service, $scale, 1))) {
+		    $srv{"img".$scale."sumwidth"} = $w;
+		    $srv{"img".$scale."sumheight"} = $h;
+		}
+	    }
+	}
+    }
+
+    # Do "help" section
+    if (my $info = munin_get ($service, "graph_info")) {
+	my %graph_info;
+	$graph_info{info} = $info;
+	push @{$srv{graphinfo}}, \%graph_info;
+    }
+
+    $srv{fieldlist} .= "<tr><th align='left' valign='top'>Field</th><th align='left' valign='top'>Type</th><th align='left' valign='top'>Warn</th><th align='left' valign='top'>Crit</th><th></tr>";
+    foreach my $f (@{munin_get_field_order ($service)}) {
+	$f =~ s/=(.*)$//;
+	my $path = $1;
+	next if (!defined $service->{$f});
+	my $fieldobj = $service->{$f};
+	next if (ref ($fieldobj) != "HASH" or !defined $fieldobj->{'label'});
+	next if (!munin_draw_field ($fieldobj));
+
+	logger ("DEBUG: single_value: Checking field \"$f\" ($path).")
+	    if $DEBUG;
+
+	if (defined $path) {
+	    # This call is to make sure field settings are copied
+            # for aliases, .stack, et al. Todo: put that part of
+            # munin_get_rrd_filename into its own functino.
+	    munin_get_rrd_filename ($f, $path);
+	}
+
+	my %field_info;
+	$fieldnum++;
+
+	$field_info{'hr'}    = 1 unless ($fieldnum % 3);
+	$field_info{'field'} = $f;
+	$field_info{'label'} = munin_get ($fieldobj, "label", $f);
+	$field_info{'type'}  = lc( munin_get ($fieldobj, "type", "GAUGE") );
+	$field_info{'warn'}  = munin_get ($fieldobj, "warning");
+	$field_info{'crit'}  = munin_get ($fieldobj, "critical");
+	$field_info{'info'}  = munin_get ($fieldobj, "info");
+
+	my $state = munin_field_status ($fieldobj, $limits, 1);
+	logger ("state of ".join('::',@{munin_get_node_loc ($fieldobj)}).": $state");
+
+	if (defined $state) {
+	    $field_info{'state_warning'}  = 1 if $state eq "warning";
+	    $field_info{'state_critical'} = 1 if $state eq "critical";
+	    $field_info{'state_unknown'}  = 1 if $state eq "unknown";
+	}
+	push @{$srv{'fieldinfo'}}, \%field_info;
+    }
+
+    my $state = munin_service_status ($service, $limits, 1);
+    if (defined $state) {
+	$srv{'state_warning'}  = 1 if $state eq "warning";
+	$srv{'state_critical'} = 1 if $state eq "critical";
+	$srv{'state_unknown'}  = 1 if $state eq "unknown";
+    }
+
+    $servicetemplate->param(SERVICES  => [\%srv],
+			    PATH      => $pathnodes,
+			    PEERS     => $peers,
+			    CSS       => $csspath,
+			    CATEGORY  => ucfirst $srv{'category'},
+			    TIMESTAMP => $timestamp);
+    my $filename = munin_get_html_filename ($service);
+    open (FILE, ">$filename") or
+	die "Cannot open $filename for writing: $!";
+    print FILE $servicetemplate->output;
+    close FILE;
+
+    return \%srv;
+}
+
+sub get_path_nodes {
+    my $hash = shift || return undef;
+    my $ret  = [];
+    my $link = "index.html";
+
+    unshift @$ret, { "name" => munin_get_node_name ($hash), "link" => undef };
+    while ($hash = munin_get_parent ($hash)) {
+	unshift @$ret, { "name" => munin_get_node_name ($hash), "link" => $link };
+	$link = "../" . $link;
+    }
+    $ret->[0]->{'name'} = undef;
+    return $ret;
 }
 
 $update_time = sprintf("%.2f",(Time::HiRes::time - $update_time));

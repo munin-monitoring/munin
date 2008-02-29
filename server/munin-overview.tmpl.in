@@ -17,15 +17,49 @@
     </tr>
  </table>
  <div class="box">
- <TMPL_LOOP NAME="DOMAINS">
+ <TMPL_LOOP NAME="GROUPS">
  <ul>
-  <li><span class="domain"><a href="<TMPL_VAR NAME="DOMAIN">/index.html"><TMPL_VAR ESCAPE="HTML" NAME="DOMAIN"></a></span><TMPL_IF NAME="COMPARE"> :: [ <a href="<TMPL_VAR NAME="DOMAIN">/comparison-day.html">day</a> <a href="<TMPL_VAR NAME="DOMAIN">/comparison-week.html">week</a> <a href="<TMPL_VAR NAME="DOMAIN">/comparison-month.html">month</a> <a href="<TMPL_VAR NAME="DOMAIN">/comparison-year.html">year</a> ]</TMPL_IF>
-      <ul>	
-	<TMPL_LOOP NAME="NODES">
-	<li><span class="host"><a href="<TMPL_VAR NAME="DOMAIN">/<TMPL_VAR NAME="NODE">.html"><TMPL_VAR ESCAPE="HTML" NAME="NODE"></a></span> :: 
-	[ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="DOMAIN">/<TMPL_VAR NAME="NODE">.html#<TMPL_VAR NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</li>
-        </TMPL_LOOP>
-      </ul>
+  <li><TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span><TMPL_IF NAME="COMPARE"> :: [ <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> ]</TMPL_IF>  <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</TMPL_IF>
+      <TMLP_IF NAME="NGROUPS">
+        <TMPL_LOOP NAME="GROUPS">
+          <ul>
+   	    <li><TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span><TMPL_IF NAME="COMPARE"> :: [ <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> ]</TMPL_IF> <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</TMPL_IF>
+	      <TMLP_IF NAME="NGROUPS">
+	        <TMPL_LOOP NAME="GROUPS">
+	          <ul>
+		    <li><TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span><TMPL_IF NAME="COMPARE"> :: [ <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> ]</TMPL_IF> <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</TMPL_IF>
+	      <TMLP_IF NAME="NGROUPS">
+	        <TMPL_LOOP NAME="GROUPS">
+	          <ul>
+		    <li><TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span><TMPL_IF NAME="COMPARE"> :: [ <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> ]</TMPL_IF> <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</TMPL_IF>
+	      <TMLP_IF NAME="NGROUPS">
+	        <TMPL_LOOP NAME="GROUPS">
+	          <ul>
+		    <li><TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span><TMPL_IF NAME="COMPARE"> :: [ <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> ]</TMPL_IF> <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</TMPL_IF>
+	      <TMLP_IF NAME="NGROUPS">
+	        <TMPL_LOOP NAME="GROUPS">
+	          <ul>
+		    <li><TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span><TMPL_IF NAME="COMPARE"> :: [ <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> ]</TMPL_IF> <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</TMPL_IF>
+		    </li>
+	          </ul>
+	        </TMPL_LOOP>
+	      </TMLP_IF>
+		    </li>
+	          </ul>
+	        </TMPL_LOOP>
+	      </TMLP_IF>
+		    </li>
+	          </ul>
+	        </TMPL_LOOP>
+	      </TMLP_IF>
+		    </li>
+	          </ul>
+	        </TMPL_LOOP>
+	      </TMLP_IF>
+            </li>
+          </ul>
+	</TMPL_LOOP>
+      </TMLP_IF>
    </li>
  </ul>
  </TMPL_LOOP>

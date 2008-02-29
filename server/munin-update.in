@@ -158,8 +158,8 @@ my %children = ();
 my @queue = ();
 my $bad_procs = 0;
 my $uaddr;
-if ($do_fork)
-{
+
+if ($do_fork) {
     # Set up socket
     $uaddr =  sockaddr_un("$config->{rundir}/$serversocket");
     socket (Server, PF_UNIX, SOCK_STREAM, 0)     || die "socket: $!";
@@ -171,140 +171,153 @@ if ($do_fork)
 
 logger("Starting munin-update");
 
-for my $key (keys %{$config->{domain}}) {
-  my $domain_time = Time::HiRes::time;
-  logger ("Processing domain: $key");
-  process_domain($key);
-  $domain_time = sprintf ("%.2f",(Time::HiRes::time - $domain_time));
-  print STATS "UD|$key|$domain_time\n"; 
-  logger ("Processed domain: $key ($domain_time sec)");
+# Make array of what is probably needed to update
+my $work_array = [];
+if (@limit_hosts) { # Limit what to update if needed
+    foreach my $nodename (@limit_hosts) {
+	push @$work_array, map { @{munin_find_field ($_->{$nodename}, "address")} } @{munin_find_field($config, $nodename)};
+    }
+} else { # ...else just search for all adresses to update
+    push @$work_array, @{munin_find_field($config, "address")};
 }
 
-#sub REAPER {
-#   my $child;
-#   my $waitedpid;
-#   while (($waitedpid = waitpid(-1,WNOHANG)) > 0) {
-#       logger ("reaped $waitedpid" . ($? ? " with exit $?" : ''));
-#   }
-#   $SIG{CHLD} = \&REAPER;  # loathe sysV
-#}
-#
-#$SIG{CHLD} = \&REAPER;
+# Go through scheduled work to weed out a few bits, and prepare some info
+for my $hashnode (@$work_array) {
+    my $loc = munin_get_node_loc($hashnode);
+    my $name = munin_get_node_name ($hashnode);
 
-if ($do_fork)
-{
-    my $timeout_start = time();
-    $SIG{ALRM} = sub { die "Timed out waiting for children. $!\n"};
-    alarm ($TIMEOUT);
+    # Skip anything that has been disabled with the "update" setting
+    if (!munin_get_bool ($hashnode, "update", "true")) {
+	logger ("Skipping \"$name\" (update disabled by config)");
+	next;
+    }
 
-    for (;(scalar (keys %children) - $bad_procs > 0);)
-    {
+    # We need to connect to this node; queue it
+    logger ("Queuing \"$name\" for update.");
+    push (@queue, [$loc, $hashnode, munin_get_node ($oldconfig, $loc)]);
+}
+
+my $timeout_start = time();
+$SIG{ALRM} = sub { die "Timed out waiting for children. $!\n"};
+alarm ($TIMEOUT);
+
+if ($do_fork) {
+    # Initially set off a bunch of nodes...
+    if (defined $config->{max_processes}) {
+	while (keys %children < ($config->{max_processes}-1-$bad_procs)) {
+	    do_node(@{pop @queue});
+	}
+    } else {
+	do_node(@{pop @queue}) while @queue; # No limit on number of procs
+    }
+    # Loop as long as there are kids or queue...
+    for (;(scalar (keys %children) - $bad_procs > 0) or @queue;) {
+	logger ("Debug: Doing a pass to check children status.") if $DEBUG;
+
+	eval { # eval to call accept() with a timeout
+	    $SIG{ALRM} = sub { # If we timeout we need to use the old config
+		foreach my $key (keys %children) {
+		    if (waitpid ($key, WNOHANG) != 0) {
+			my $loc     = $children{$key}->[0];
+			my $newnode = $children{$key}->[1];
+			my $oldnode = $children{$key}->[2];
+			my $name    = munin_get_node_name ($newnode);
+
+			logger ("Reaping child: $name.");
+			delete $children{$key};
+			munin_copy_node_toloc ($oldnode, $config, $loc);
+		    }
+		}
+		die;
+	    }; # end sub
+
+	    alarm (10);
+	    accept (Client, Server);
+	}; # end eval
+
+	if ($@) {
+	    if (@queue and defined $config->{max_processes} and $config->{max_processes}) {
+		logger ("Debug: Checking whether to spawn off more procs from queue.");
+		while (keys %children < ($config->{max_processes}-1-$bad_procs)) {
+		    logger ("Debug: Popping queue item and spawning new proc.");
+		    do_node(@{pop @queue});
+		}
+	    }
+	    next;
+	}
+
+	alarm ($TIMEOUT - time() + $timeout_start);
+	close STDIN;
+	open (STDIN,  "<&Client")  || die "can't dup client to stdin";
+
+	my $pid;
+	my $name;
+	my $loc;
+	my $tmpref;
+	eval {
+	    $tmpref = fd_retrieve (\*STDIN);
+	};
+	if ($@) {
+	    $bad_procs++;
+	    logger ("[WARNING] Error communicating with process: $@");
+	} else {
+	    ($pid, $loc, $name) = ($tmpref->[0], $tmpref->[1], $tmpref->[2]);
+	    logger ("connection from $name ($pid)");
+
 	    eval {
-		$SIG{ALRM} = sub {
-		    foreach my $key (keys %children)
-		    {
-			if (waitpid ($key, WNOHANG) != 0)
-			{
-			    my $domain  = $children{$key}->[0];
-			    my $name    = $children{$key}->[1];
-			    my $oldnode = $children{$key}->[3];
-
-			    logger ("Reaping child: $domain -> $name.");
-			    delete $children{$key};
-			    use_old_config ($domain, $name, $oldnode);
-			}
-		    }
-		    die;
-		};
-
-		alarm (10);
-		accept (Client, Server);
+		my $newnode = fd_retrieve (\*STDIN);
+		munin_copy_node_toloc ($newnode, $config, $loc);
 	    };
-	    alarm ($TIMEOUT - time() + $timeout_start);
-	    if ($@)
-	    {
-		if (@queue and defined $config->{max_processes} and
-			$config->{max_processes})
-		{
-		    while (keys %children < ($config->{max_processes}-1-$bad_procs))
-		    {
-			my $args = pop @queue;
-			logger ("de-queueing new connection: $args->[1]");
-			do_node($args->[0], $args->[1], $args->[2], $args->[3]);
-		    }
-		}
-		next;
+	    if ($@) {
+		logger ("[WARNING] Error during fd_retrieve of config: $@");
+
+		my $loc     = $children{$pid}->[0];
+		my $newnode = $children{$pid}->[1];
+		my $oldnode = $children{$pid}->[2];
+
+		munin_copy_node_toloc ($oldnode, $config, $loc);
 	    }
-	    close STDIN;
-	    open (STDIN,  "<&Client")  || die "can't dup client to stdin";
-	    
-	    my $pid;
-	    my $name;
-	    my $domain;
-	    my $tmpref;
-		eval {
-			$tmpref = fd_retrieve (\*STDIN);
-		};
-		if ($@)
-		{
-			$bad_procs++;
-			logger ("[WARNING] Error communicating with process: $@");
-		}
-		else
-		{
-			($pid, $domain, $name) = ($tmpref->[0], $tmpref->[1], $tmpref->[2]);
-			logger ("connection from $domain -> $name ($pid)");
-
-			eval {
-				$config->{domain}->{$domain}->{node}->{$name} = fd_retrieve (\*STDIN);
-			};
-			if ($@)
-			{
-				logger ("[WARNING] Error during fd_retrieve of config: $@");
-
-				my $domain  = $children{$pid}->[0];
-				my $name    = $children{$pid}->[1];
-				my $oldnode = $children{$pid}->[3];
-
-				use_old_config ($domain, $name, $oldnode);
-			}
-			delete $children{$pid};
-			waitpid ($pid, 0);
-			logger ("connection from $domain -> $name ($pid) closed");
-		}
-	    if (@queue and defined $config->{max_processes} and
-		    $config->{max_processes} and
-		    scalar (keys %children) < (($config->{max_processes})-1-$bad_procs))
-	    {
-		my $args = pop @queue;
-		logger ("de-queueing new connection: $args->[1]");
-		do_node($args->[0], $args->[1], $args->[2], $args->[3]);
-		close (Client);
-	    }
+	    delete $children{$pid};
+	    waitpid ($pid, 0);
+	    logger ("connection from $name ($pid) closed");
+	}
+	if (@queue and defined $config->{max_processes} and
+	    $config->{max_processes} and
+	    scalar (keys %children) < (($config->{max_processes})-1-$bad_procs)) {
+	    do_node(@{pop @queue});
+	    close (Client);
+	}
     }
     alarm (0);
+} else { # No forking, just poll the nodes sequentially...
+    for (;@queue;) {
+	do_node(@{pop @queue});
+    }
 }
+
+alarm (0);
 
 if ($bad_procs) # Use old configuration for killed children
 {
 	foreach my $key (keys %children)
 	{
-		my $domain  = $children{$key}->[0];
-		my $name    = $children{$key}->[1];
-		my $node    = $children{$key}->[2];
-		my $oldnode = $children{$key}->[3];
+		my $loc     = $children{$key}->[0];
+		my $newnode = $children{$key}->[1];
+		my $oldnode = $children{$key}->[2];
+		my $name    = munin_get_node_name ($newnode);
 
-		use_old_config ($domain, $name, $oldnode);
-		logger ("Attempting to use old configuration for $domain -> $name.");
+		munin_copy_node_toloc ($oldnode, $config, $loc);
+		logger ("Attempting to use old configuration for $name.");
 	}
 }
 
 unlink ("$config->{rundir}/$serversocket");
 
+
 my $overwrite = &munin_readconfig($conffile);
 $config = &munin_overwrite($config,$overwrite);
 
-&compare_configs ($oldconfig, $config);
+compare_configs ($oldconfig, $config);
 
 if (&munin_getlock("$config->{rundir}/munin-datafile.lock")) {
     &munin_writeconfig("$config->{dbdir}/datafile",$config);
@@ -331,165 +344,85 @@ sub compare_configs {
     my $new = shift;
     my $just_upgraded = 0;
 
-    if (!defined $old->{version} or
-	    $old->{version} ne $VERSION)
-    {
+    if (!defined $old->{version} or $old->{version} ne $VERSION) {
 	$just_upgraded = 1;
     }
 
-    foreach my $dom (%{$new->{domain}})
-    {
-	foreach my $host (%{$new->{domain}->{$dom}->{node}})
-	{
-	    foreach my $serv (%{$new->{domain}->{$dom}->{node}->{$host}->{client}})
-	    {
-		foreach my $field (%{$new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}})
-		{
-		    next unless $field =~ /\.label$/;
-		    $field =~ s/\.label$//;
-		    if ($just_upgraded or &is_changed ($old, $new, $dom, $host, $serv, $field, "max"))
-		    {
-			&change_max ($config, $dom, $host, $serv, $field, 
-				(defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"} ?
-				 $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".max"} : undef));
-		    }
-		    if ($just_upgraded or &is_changed ($old, $new, $dom, $host, $serv, $field, "min"))
-		    {
-			&change_min ($config, $dom, $host, $serv, $field, 
-				(defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"} ?
-				$new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"} : undef));
-		    }
-		    if ($just_upgraded or &is_changed ($old, $new, $dom, $host, $serv, $field, "type"))
-		    {
-			&change_type ($oldconfig, $config, $dom, $host, $serv, $field, 
-				(defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".type"} ?
-				$new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".type"} : undef));
-		    }
-		}
-	    }
+    foreach my $node (@{munin_find_field($new, "label")}) {
+	my $oldnode = munin_get_node ($old, munin_get_node_loc ($node));
+	my $name    = munin_get_node_name ($node);
+	my ($oldval, $newval);
+
+	$oldval = munin_get ($oldnode, "max", "");
+	$newval = munin_get ($node, "max", "");
+	if ($just_upgraded or $oldval ne $newval) {
+	    logger ("Notice: compare_configs: $name.max changed from ".(length $oldval?$oldval:"undefined")." to $newval.");
+	    change_max (munin_get_filename ($node), $newval);
+	}
+
+	$oldval = munin_get ($oldnode, "min", "");
+	$newval = munin_get ($node, "min", "");
+	if ($just_upgraded or $oldval ne $newval) {
+	    logger ("Notice: compare_configs: $name.min changed from ".(length $oldval?$oldval:"undefined")." to $newval.");
+	    change_min (munin_get_filename ($node), $newval);
+	}
+
+	$oldval = munin_get ($oldnode, "type", "GAUGE");
+	$newval = munin_get ($node, "type", "GAUGE");
+	if ($just_upgraded or $oldval ne $newval) {
+	    logger ("Notice: compare_configs: $name.type changed from ".(length $oldval?$oldval:"undefined")." to $newval.");
+	    change_type (munin_get_filename ($oldnode), munin_get_filename ($node), $newval);
 	}
     }
-
-}
-
-sub is_changed
-{
-    my $old     = shift;
-    my $new     = shift;
-    my $dom     = shift;
-    my $host    = shift;
-    my $serv    = shift;
-    my $field   = shift;
-    my $setting = shift;
-
-    if (defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".".$setting})
-    {
-	if ((!defined $old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".".$setting}) or
-		($old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".".$setting} ne
-		 $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".".$setting}
-	   ))
-	{
-	    return 1;
-	}
-    }
-
-    if (defined $old->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".".$setting})
-    {
-	if (!defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".".$setting})
-	{
-	    return 1;
-	}
-    }
-
-    return 0;
 }
 
 sub change_type
 {
-    my $oconf  = shift;
-    my $nconf  = shift;
-    my $domain = shift;
-    my $host   = shift;
-    my $serv   = shift;
-    my $field  = shift;
+    my $ofile  = shift;
+    my $nfile  = shift;
     my $val    = shift;
-    my $ofile  = &munin_get_filename ($oconf, $domain, $host, $serv, $field);
-    my $nfile  = &munin_get_filename ($nconf, $domain, $host, $serv, $field);
 
-    logger ("[WARNING] Changing type of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"GAUGE") . ".\n");
-    RRDs::tune ($ofile, "-d", "42:".(defined $val?$val:"GAUGE"));
-    unless (rename ($ofile, $nfile))
-    {
-	logger ("[ERROR] Could not rename file: $!\n");
+    if (defined $ofile and -f $ofile) {
+	logger ("[WARNING]: Changing name of $ofile to $nfile");
+	unless (rename ($ofile, $nfile)) {
+	    logger ("[ERROR]: Could not rename file: $!\n");
+	}
     }
+
+    logger ("INFO: Changing type of $nfile to " . (defined $val?$val:"GAUGE"));
+    RRDs::tune ($nfile, "-d", "42:".(defined $val?$val:"GAUGE"));
 }
 
 sub change_max
 {
-    my $config = shift;
-    my $domain = shift;
-    my $host   = shift;
-    my $serv   = shift;
-    my $field  = shift;
-    my $val    = shift;
-    my $file   = &munin_get_filename ($config, $domain, $host, $serv, $field);
+    my $file  = shift;
+    my $val   = shift;
 
-    logger ("[WARNING] Changing max of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"undef") . ".\n");
+    logger ("[WARNING]: Changing max of \"$file\" to \"$val\".\n");
     RRDs::tune ($file, "-a", "42:".(defined $val?$val:"U"));
 }
 
 sub change_min
 {
-    my $config = shift;
-    my $domain = shift;
-    my $host   = shift;
-    my $serv   = shift;
-    my $field  = shift;
-    my $val    = shift;
-    my $file   = &munin_get_filename ($config, $domain, $host, $serv, $field);
+    my $file  = shift;
+    my $val   = shift;
 
-    logger ("[WARNING] Changing min of $domain -> $host -> $serv -> $field to " . (defined $val?$val:"undef") . ".\n");
+    logger ("[WARNING]: Changing min of \"$file\" to \"$val\".\n");
     RRDs::tune ($file, "-i", "42:".(defined $val?$val:"U"));
 }
 
-sub process_domain {
-  my ($domain) = @_;
-  for my $key ( keys %{$config->{domain}->{$domain}->{node}}) {
-    if (@limit_hosts and !grep (/^$key$/, @limit_hosts))
-    {
-	logger ("Skipping host \"$key\" - not in hostlist\n") if $DEBUG;
-	next;
-    }
-    if (defined $config->{max_processes} and $config->{max_processes} and 
-	    ($config->{max_processes}-1-$bad_procs) < keys %children)
-    {
-	push (@queue, [$domain, $key, $config->{domain}->{$domain}->{node}->{$key},$oldconfig->{domain}->{$domain}->{node}->{$key}]);
-    }
-    else
-    {
-	do_node($domain,$key ,$config->{domain}->{$domain}->{node}->{$key},$oldconfig->{domain}->{$domain}->{node}->{$key});
-    }
-  }
-}
-
 sub do_node {
-  my ($domain, $name, $config, $oldconfig) = @_;
-  my $node_time = Time::HiRes::time;
-  logger("Processing node: $name");
-  process_node($domain,$name ,$config,$oldconfig);
-  $node_time = sprintf ("%.2f",(Time::HiRes::time - $node_time));
-  print STATS "UN|$domain|$name|$node_time\n"; 
-  logger ("Processed node: $name ($node_time sec)");
-}
+  my ($loc, $newconf, $oldconf) = @_;
+  return undef unless munin_get ($newconf, "update", "true"); # Skip unless we're updating it
+  return undef unless munin_get ($newconf, "fetch_data", "true"); # Old name for "update"
 
-sub process_node {
-  my ($domain,$name,$node,$oldnode) = @_;
-  return if (exists ($node->{fetch_data}) and !$node->{fetch_data});
-  return if (exists ($node->{update}) and $node->{update} ne "yes");
-  unless ($node->{address}) {
+  my $name = munin_get ($newconf, "host_name") || munin_get_node_name ($newconf);
+
+  unless ($newconf->{"address"}) {
       logger("[ERROR] No address defined for node: $name");
-      return;
+      return undef;
   }
+  logger ("Debug: do_node: Starting on \"$name\".") if $DEBUG;
 
   # Then we fork...
   if ($do_fork)
@@ -497,11 +430,11 @@ sub process_node {
       my $pid = fork;
       if (!defined($pid)) 
       { # Something went wrong
-	      warn "cannot fork: $!"; 
+	      logger ("Error: Unable to fork: $!"); 
 	      return; 
       } elsif ($pid) 
       { # I'm the parent
-	      $children{$pid} = [$domain, $name, $node, $oldnode];
+	      $children{$pid} = [$loc, $newconf, $oldconf];
 	      return; 
       } # else I'm the child -- go spawn
   }
@@ -509,43 +442,42 @@ sub process_node {
   $0 .= " [$name]";
 
   # First we get lock...
-  unless (&munin_getlock("$config->{rundir}/munin-$domain-$name.lock"))
-  {
-    logger ("[ERROR] Could not get lock for $node -> $name. Skipping node.");
-    if ($do_fork)
-    { # Send the old config to the server before we die
+  unless (&munin_getlock(munin_get($newconf, "rundir")."/munin-".join('-',@{munin_get_node_loc($newconf)})."-".munin_get_node_name($newconf).".lock")) {
+    logger ("[ERROR] Could not get lock for \"$name\". Skipping node.");
+    if ($do_fork) { # Send the old config to the server before we die
         socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
-        connect (SOCK, sockaddr_un ("$config->{rundir}/$serversocket")) || die "connect: $!";
-	if (ref $oldnode) {
-	  $config->{domain}->{$domain}->{node}->{$name} = $oldnode;
-	  alarm (0); # Don't want to interrupt this.
-	  my @tmp = ($$, $domain, $name);
+        connect (SOCK, sockaddr_un (munin_get($newconf, "rundir")."/$serversocket")) || die "connect: $!";
+        alarm (0); # Don't want to interrupt this.
+	my @tmp = ($$, munin_get_node_loc($newconf), $name);
+	if (ref $oldconf) {
+	  copy_node ($oldconf, $newconf);
 	  nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
-	  nstore_fd \%{$config->{domain}->{$domain}->{node}->{$name}}, \*SOCK;
+	  nstore_fd \%{munin_get_separated_node ($newconf)}, \*SOCK;
 	  close SOCK;
+	} else { # Well, we'll have to give _something_ to the server, or it'll time out.
+	  socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
+	  connect (SOCK, sockaddr_un (munin_get($newconf, "rundir")."/$serversocket")) || die "connect: $!";
+	  nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
+	  nstore_fd ({}, \*SOCK);
 	}
 	exit 1;
-    }
-    else
-    {
+    } else {
 	return 0;
     }
   }
 
   my $socket;
   
-  if (&munin_get ($config, "local_address", undef, $domain, $node))
+  if (munin_get ($newconf, "local_address"))
   {
-      $socket = new IO::Socket::INET ('PeerAddr' => "$node->{address}:".
-		  ($node->{port} || $config->{domain}->{$domain}->{port} || 
-		   $config->{port} || "4949"), 
-		   'LocalAddr' => &munin_get ($config, "local_address", undef, $domain, $node),
-		  'Proto'    => "tcp", "Timeout" => $timeout);
+      $socket = new IO::Socket::INET ('PeerAddr' => "$newconf->{address}:".
+	          munin_get ($newconf, "port", "4949"), 
+		  'LocalAddr' => munin_get ($newconf, "local_address", undef),
+		  'Proto'    => "tcp", "Timeout" => munin_get($newconf, "timeout", 60));
   } else {
-      $socket = new IO::Socket::INET ('PeerAddr' => "$node->{address}:".
-		  ($node->{port} || $config->{domain}->{$domain}->{port} || 
-		   $config->{port} || "4949"), 
-		  'Proto'    => "tcp", "Timeout" => $timeout);
+      $socket = new IO::Socket::INET ('PeerAddr' => "$newconf->{address}:".
+	          munin_get ($newconf, "port", "4949"), 
+		  'Proto'    => "tcp", "Timeout" => munin_get($newconf, "timeout", 60));
   }
   my $err = ($socket ? "" : $!);
 
@@ -553,73 +485,68 @@ sub process_node {
       $SIG{ALRM} = sub { close $socket; die "$!\n"};
       alarm ($timeout);
 
-      my @tmp = ($$, $domain, $name);
+      my @tmp = ($$, munin_get_node_loc ($newconf), $name);
 
       if (!$socket) {
-	logger ("[ERROR] Could not connect to $name($node->{address}): $err - Attempting to use old configuration");
+	logger ("[ERROR] Could not connect to $name($newconf->{address}): $err - Attempting to use old configuration");
 	# If we can't reach the client. Using old Configuration.
-	if (ref $oldnode) {
-	  $config->{domain}->{$domain}->{node}->{$name} = $oldnode;
+	if (ref $oldconf) {
+	  copy_node ($oldconf, $newconf);
 	  alarm (0); # Don't want to interrupt this.
 	  socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
-	  connect (SOCK, sockaddr_un ("$config->{rundir}/$serversocket")) || die "connect: $!";
+	  connect (SOCK, sockaddr_un (munin_get($newconf, "rundir")."/$serversocket")) || die "connect: $!";
 	  nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
-	  nstore_fd \%{$config->{domain}->{$domain}->{node}->{$name}}, \*SOCK;
-	  alarm ($timeout);
+	  nstore_fd \%{munin_get_separated_node ($newconf)}, \*SOCK;
 	  close SOCK;
-	}
-	else
-	{ # Well, we'll have to give _something_ to the server, or it'll time out.
+	} else { # Well, we'll have to give _something_ to the server, or it'll time out.
 	  socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
-	  connect (SOCK, sockaddr_un ("$config->{rundir}/$serversocket")) || die "connect: $!";
+	  connect (SOCK, sockaddr_un (munin_get($newconf, "rundir")."/$serversocket")) || die "connect: $!";
 	  nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
 	  nstore_fd ({}, \*SOCK);
 	}
       } else {
 		my $ctx;
-		if (!&config_node($domain,$name,$node,$oldnode,$socket))
-		{
-		    $config->{domain}->{$domain}->{node}->{$name} = $oldnode;
+		if (!config_node($newconf,$oldconf,$socket)) {
+		    copy_node ($oldconf, $newconf);
 		    socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
-		    connect (SOCK, sockaddr_un ("$config->{rundir}/$serversocket")) || die "connect: $!";
+		    connect (SOCK, sockaddr_un (munin_get($newconf, "rundir")."/$serversocket")) || die "connect: $!";
 		    nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
-		    nstore_fd \%{$config->{domain}->{$domain}->{node}->{$name}}, \*SOCK;
+		    nstore_fd \%{munin_get_separated_node ($newconf)}, \*SOCK;
 		    close SOCK;
 		    exit 1;
 		}
-		&fetch_node($domain,$name,$node,$socket);
+		&fetch_node($newconf,$oldconf,$socket);
 #		Net::SSLeay::free ($tls) if ($tls); # Shut down TLS
 		close $socket;
 	        alarm (0); # Don't want to interrupt this.
 	        socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
-	connect (SOCK, sockaddr_un ("$config->{rundir}/$serversocket")) ||
-	  die "connect: $!";
+		connect (SOCK, sockaddr_un ("$config->{rundir}/$serversocket")) || die "connect: $!";
 	        nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
-		nstore_fd \%{$config->{domain}->{$domain}->{node}->{$name}}, \*SOCK;
+	        nstore_fd \%{munin_get_separated_node ($newconf)}, \*SOCK;
 	        alarm ($timeout);
 		close SOCK;
       }
       alarm (0);
-      munin_removelock("$config->{rundir}/munin-$domain-$name.lock");
+      munin_removelock(munin_get($newconf, "rundir")."/munin-".join('-',@{munin_get_node_loc($newconf)})."-".munin_get_node_name($newconf).".lock");
       exit;
   }
   else # No forking...
   {
       if (!$socket) {
-	logger ("[ERROR] Could not connect to $name($node->{address}): $err\nAttempting to use old configuration");
+	logger ("[ERROR] Could not connect to $name($newconf->{address}): $err\nAttempting to use old configuration");
 	# If we can't reach the client. Using old Configuration.
-	if (ref $oldnode) {
-	  $config->{domain}->{$domain}->{node}->{$name} = $oldnode;
+	if (ref $oldconf) {
+	    copy_node ($oldconf, $newconf);
 	}
       } else {
-		next unless (&config_node($domain,$name,$node,$oldnode,$socket));
-		&fetch_node($domain,$name,$node,$socket);
+		next unless (config_node($newconf,$oldconf,$socket));
+		fetch_node($newconf,$oldconf,$socket);
 #		Net::SSLeay::free ($tls) if ($tls); # Shut down TLS
 		close $socket;
       }
 
   }
-  munin_removelock("$config->{rundir}/munin-$domain-$name.lock");
+  munin_removelock(munin_get($newconf, "rundir")."/munin-".join('-',@{munin_get_node_loc($newconf)})."-".munin_get_node_name($newconf).".lock");
 }
 
 sub tls_verify_callback 
@@ -949,155 +876,148 @@ sub read_socket {
     return (@array);
 }
 
-sub config_node {
-  my ($domain,$name,$node,$oldnode,$socket) = @_;
-  my $clientdomain = read_socket_single ($socket);
-  my $fetchdomain;
-  chomp($clientdomain) if $clientdomain;
-  if (!$clientdomain) {
-      logger("[WARNING] Got unknown reply from client \"$domain\" -> \"name\" skipping");
-      return 0;
-  }
-  $clientdomain =~ s/\#.*(?:lrrd|munin) (?:client|node) at //;
-  if (exists $node->{'use_node_name'} and $node->{'use_node_name'} =~ /^\s*y(?:es)\s*$/i)
-  {
-      $fetchdomain = $clientdomain;
-  }
-  elsif (exists $node->{'use_default_name'} and $node->{'use_default_name'} =~ /^\s*y(?:es)\s*$/i)
-  {
-      $fetchdomain = $clientdomain;
-  }
-  else
-  {
-      $fetchdomain = $name;
-  }
-  my $nodeconf_time = Time::HiRes::time;
-
-  # TLS should only be attempted if explicitly enabled. The default value
-  # is therefore "disabled" (and not "auto" as before).
-  my $tls_requirement = &munin_get ($config,"tls","disabled",$domain, $name);
-  logger ("[DEBUG]: TLS set to \"$tls_requirement\".") if $DEBUG;
-  if ($tls_requirement ne "disabled")
-  {
-      my $key;
-      my $cert;
-      my $depth;
-      my $ca_cert;
-      my $tls_verify;
-      $key = $cert = munin_get ($config, "tls_pem", undef, $domain, $name);
-      $key = &munin_get ($config, "tls_private_key", "@@CONFDIR@@/munin.pem", $domain, $name)
-	  unless defined $key;
-      $cert = &munin_get ($config, "tls_certificate", "@@CONFDIR@@/munin.pem", $domain, $name)
-	  unless defined $cert;
-      $ca_cert = &munin_get ($config, "tls_ca_certificate", "@@CONFDIR@@/cacert.pem", $domain, $name)
-	  unless defined $ca_cert;
-      $tls_verify=&munin_get ($config, "tls_verify_certificate", "no", $domain, $name);
-      $depth=&munin_get ($config, "tls_verify_depth", 5, $domain, $name);
-
-      if (!start_tls ($socket, $tls_requirement, $cert, $key, $ca_cert, $tls_verify, $depth))
-      {
-	  if ($tls_requirement eq "paranoid" or $tls_requirement eq "enabled")
-	  {
-	      logger ("[ERROR] Could not establish TLS connection to \"$domain :: $name\". Skipping.");
-	      exit 13;
-	  }
-      }
-  }
-
-  logger("[DEBUG] Configuring node: $name") if $DEBUG;
-  my @services;
-  eval {
-    local $SIG{ALRM} = sub { die "Could not run list on $name ($fetchdomain): $!\n"};
-    alarm 5; # Should be enough to check the list
-    write_socket_single ($socket, "list $fetchdomain\n");
-    my $list = read_socket_single ($socket);
-    exit 1 unless defined $list;
-    chomp $list;
-    @services = split / /,$list;
-    alarm 0;
-  };
-  if ($@) {
-    die unless ($@ =~ m/Could not run list/);
-      logger ("Could not get list from $node->{address}: $!\nAttempting to use old configuration");
-    if (ref $oldnode) {
-      $config->{domain}->{$domain}->{node}->{$name} = $oldnode;
+sub config_node 
+{
+    my ($newconf,$oldconf,$socket) = @_;
+    my $clientdomain = read_socket_single ($socket);
+    my $fetchdomain;
+    my $name = munin_get_node_name ($newconf);
+    chomp($clientdomain) if $clientdomain;
+    if (!$clientdomain) {
+	logger("[WARNING] Got unknown reply from client \"$name\" skipping");
+	return 0;
     }
-    @services = [];
-  }
+    $clientdomain =~ s/\#.*(?:lrrd|munin) (?:client|node) at //;
+    
+    # Decide what to ask for
+    if (munin_get ($newconf, "use_node_name")) {
+	$fetchdomain = $clientdomain;
+    } elsif (munin_get ($newconf, "use_default_name")) {
+	$fetchdomain = $clientdomain;
+    } else {
+	$fetchdomain = $name;
+    }
 
-  for my $service (@services) {
-    my $servname = $service;
-    my $fields = {};
-    $servname =~ s/\W/_/g;
-    next if (exists ($node->{client}->{$servname}->{fetch_data}) and
-	     $node->{client}->{$servname}->{fetch_data} == 0);
-    next if (exists ($node->{client}->{$servname}->{update}) and 
-	     $node->{client}->{$servname}->{update} ne "yes");
-    next if (@limit_services and !grep (/^$servname$/, @limit_services));
-    my @graph_order = (exists $node->{client}->{$servname}->{graph_order} ? 
-		       split (/\s+/, $node->{client}->{$servname}->{graph_order}) : ());
-    my $serviceconf_time = Time::HiRes::time;
-    if ($servname ne $service)
+    # TLS should only be attempted if explicitly enabled. The default value
+    # is therefore "disabled" (and not "auto" as before).
+    my $tls_requirement = &munin_get ($config, "tls", "disabled");
+    logger ("[DEBUG]: TLS set to \"$tls_requirement\".") if $DEBUG;
+    if ($tls_requirement ne "disabled")
     {
-	$node->{client}->{$servname}->{realservname} = $service;
+        my $key;
+        my $cert;
+	my $depth;
+	my $ca_cert;
+	my $tls_verify;
+        $key = $cert = munin_get ($config, "tls_pem");
+        $key = &munin_get ($config, "tls_private_key", "@@CONFDIR@@/munin.pem")
+  	  unless defined $key;
+        $cert = &munin_get ($config, "tls_certificate", "@@CONFDIR@@/munin.pem")
+  	  unless defined $cert;
+        $ca_cert = &munin_get ($config, "tls_ca_certificate", "@@CONFDIR@@/cacert.pem")
+           unless defined $ca_cert;
+        $tls_verify=&munin_get ($config, "tls_verify_certificate", "no");
+        $depth=&munin_get ($config, "tls_verify_depth", 5);
+  
+        if (!start_tls ($socket, $tls_requirement, $cert, $key, $ca_cert, $tls_verify, $depth))
+        {
+  	  if ($tls_requirement eq "paranoid" or $tls_requirement eq "enabled")
+  	  {
+  	      logger ("[ERROR]: Could not establish TLS connection to \"$name\". Skipping.");
+  	      exit 13;
+  	  }
+        }
     }
-    logger("[DEBUG] Configuring service: $name->$servname") if $DEBUG;
-    write_socket_single ($socket, "config $service\n");
-    my @lines = read_socket($socket);
-    return unless $socket;
-    next unless (@lines);
-    for (@lines) {
-      if (/\# timeout/) {
-	logger("Client reported timeout in configuration of $servname");
-	if ($oldnode->{client}->{$servname}) {
-	  logger("Attempting to use old configuration");
-	  $config->{domain}->{$domain}->{node}->{$name}->{client}->{$servname} = $oldnode->{client}->{$servname};
-	} else {
-	  logger("Skipping configuration of $servname");
-	  delete $node->{client}->{$servname};
+
+    logger("[DEBUG] Configuring node: $name") if $DEBUG;
+    my @services;
+    eval {
+	local $SIG{ALRM} = sub { die "Could not run list on $name ($fetchdomain): $!\n"};
+	alarm 5; # Should be enough to check the list
+	write_socket_single ($socket, "list $fetchdomain\n");
+	my $list = read_socket_single ($socket);
+	exit 1 unless defined $list;
+	chomp $list;
+	@services = split / /,$list;
+	alarm 0;
+    };
+    if ($@) {
+	die unless ($@ =~ m/Could not run list/);
+	logger ("Error: Could not get list from $newconf->{address}: $!\nAttempting to use old configuration");
+	if (ref $oldconf) {
+	    copy_node ($oldconf, $newconf);
 	}
-      }
-      elsif (/^(\w+)\.(\w+)\s+(.+)/) {
-	my ($client,$type,$value) = ($1,$2,$3);
-	$client = &sanitise_fieldname ($client, $fields);
-	if (($type) and ($type eq "label")) {
-	    $value =~ s/\\/_/g; # Sanitise labels
-	}
-	$node->{client}->{$servname}->{$client.".".$type} = "$value";
-	logger ("[DEBUG] config: $name->$client.$type = $value") if $DEBUG;
-	if (($type) and ($type eq "label")) {
-	  push (@graph_order,$client)
-	    unless grep (/^$client$/, @graph_order);
-	}
-      } elsif (/(^[^\s\#]+)\s+(.+)/) {
-	my ($keyword) = $1;
-	my ($value) = $2;
-	$node->{client}->{$servname}->{$keyword} = $value;
-	logger ("[DEBUG] Config: $keyword = $value") if $DEBUG;
-	if ($keyword eq "graph_order") {
-	  @graph_order = split (/\s+/, $node->{client}->{$servname}->{graph_order});
-	}
-      }
+	@services = [];
     }
-    for my $subservice (keys %{$node->{client}->{$servname}}) {
-      my ($client,$type) = split /\./,$subservice;
-      my ($value) = $node->{client}->{$servname}->{$subservice};
-      if (($type) and ($type eq "label")) {
-	my $fname = "$config->{dbdir}/$domain/$name-$servname-$client-" . 
-	    lc substr (($node->{client}->{$servname}->{"$client.type"}||"GAUGE"),0,1).
-	    ".rrd";
-	if (! -f "$fname") {
-	  logger ("creating rrd-file for $servname->$subservice");
-	  mkdir "$config->{dbdir}/$domain/",0777;
-	  my @args = ("$fname",
-			"DS:42:".($node->{client}->{$servname}->{"$client.type"} || "GAUGE").":600:".
-			(defined $node->{client}->{$servname}->{"$client.min"} ? 
-			 $node->{client}->{$servname}->{"$client.min"} :
-			 "U") . ":" . ($node->{client}->{$servname}->{"$client.max"} || "U"));
-	  my $resolution = &munin_get ($config, "graph_data_size", "normal", $domain, $node, $servname);
-	  if ($resolution eq "normal")
-	  {
-	  	push (@args,
+
+    for my $service (@services) {
+	my $servname = $service;
+	my $fields = {};
+	$servname =~ s/\W/_/g;
+	munin_set_var_loc ($newconf, [$servname, "realservname"], $service);
+	logger("[DEBUG] Inspecting possible service: $servname") if $DEBUG;
+	next if (!munin_get_bool ($newconf->{$servname}, "update", "true"));
+	next if (!munin_get_bool ($newconf->{$servname}, "fetch_data", "true"));
+	next if (@limit_services and !grep (/^$servname$/, @limit_services));
+
+	my @graph_order = split (/\s+/, munin_get ($newconf->{$service}, "graph_order", ""));
+	my $serviceconf_time = Time::HiRes::time;
+	logger("[DEBUG] Configuring service: $servname") if $DEBUG;
+	write_socket_single ($socket, "config $service\n");
+	my @lines = read_socket($socket);
+	return unless $socket;
+	next unless (@lines);
+	for (@lines) {
+	    if (/\# timeout/) {
+		logger("Client reported timeout in configuration of $servname");
+		if ($oldconf->{$servname}) {
+		    logger("Attempting to use old configuration");
+		    copy_node ($newconf->{$servname}, $oldconf->{$servname});
+		} else {
+		    logger("Skipping configuration of $servname");
+		    delete $newconf->{$servname};
+		}
+	    } elsif (/^(\w+)\.(\w+)\s+(.+)/) {
+		my ($client,$type,$value) = ($1,$2,$3);
+		$client = &sanitise_fieldname ($client, $fields);
+		if (($type) and ($type eq "label")) {
+		    $value =~ s/\\/_/g; # Sanitise labels
+		    push (@graph_order,$client) unless grep (/^$client$/, @graph_order);
+	        }
+	        munin_set_var_loc ($newconf, [$servname, $client, $type], "$value");
+	        logger ("config: $servname->$client.$type = $value") if $DEBUG;
+	    } elsif (/(^[^\s\#]+)\s+(.+)/) {
+		my ($keyword) = $1;
+		my ($value) = $2;
+	        munin_set_var_loc ($newconf, [$servname, $keyword], "$value");
+		logger ("Config: $servname->$keyword = $value") if $DEBUG;
+		if ($keyword eq "graph_order") {
+		    @graph_order = split (/\s+/, $value);
+		}
+	    }
+	}
+	for my $field (keys %{$newconf->{$servname}}) {
+            # Skip anything that isn't a field
+	    next if $field =~ /^#%#/;
+	    next unless (ref ($newconf->{$servname}->{$field}) eq "HASH" and
+		    defined ($newconf->{$servname}->{$field}->{"label"}));
+
+	    my $fhash = $newconf->{$servname}->{$field};
+
+	    # Check if file exists
+	    my $fname = munin_get_filename ($fhash);
+	    (my $dirname = $fname) =~ s/\/[^\/]+$//;
+
+	    if (! -f "$fname") {
+	        logger ("creating rrd-file for $servname->$field: \"$fname\"");
+	        munin_mkdir_p ($dirname, 0777);
+	        my @args = ("$fname",
+			"DS:42:".munin_get($fhash, "type", "GAUGE").":600:".
+			munin_get($fhash, "min", "U") . ":" .  munin_get($fhash, "max", "U"));
+
+	  	my $resolution = &munin_get ($fhash, "graph_data_size", "normal");
+	        if ($resolution eq "normal") {
+		    push (@args,
 			"RRA:AVERAGE:0.5:1:576", # resolution 5 minutes
 			"RRA:MIN:0.5:1:576",
 			"RRA:MAX:0.5:1:576",
@@ -1110,48 +1030,42 @@ sub config_node {
 			"RRA:AVERAGE:0.5:288:450", # 450 days, resolution 1 day
 			"RRA:MIN:0.5:288:450",
 			"RRA:MAX:0.5:288:450");
-	  }
-	  elsif ($resolution eq "huge")
-	  {
-	  	push (@args, "RRA:AVERAGE:0.5:1:115200"); # resolution 5 minutes, for 400 days
-	  	push (@args, "RRA:MIN:0.5:1:115200"); # Three times? ARGH!
-	  	push (@args, "RRA:MAX:0.5:1:115200"); # Three times? ARGH!
-	  }
-	  RRDs::create @args;
-	  if (my $ERROR = RRDs::error) {
-	    logger ("[ERROR] In RRD: unable to create \"$fname\": $ERROR");
-	  }
+		} elsif ($resolution eq "huge") {
+		    push (@args, "RRA:AVERAGE:0.5:1:115200"); # resolution 5 minutes, for 400 days
+		    push (@args, "RRA:MIN:0.5:1:115200"); # Three times? ARGH!
+		    push (@args, "RRA:MAX:0.5:1:115200"); # Three times? ARGH!
+	        }
+		RRDs::create @args;
+	  	if (my $ERROR = RRDs::error) {
+		    logger ("[ERROR] Unable to create \"$fname\": $ERROR");
+	  	}
+	    }
 	}
+	munin_set_var_loc ($newconf, [$servname, "graph_order"], join(' ',@graph_order));
     }
-      $node->{client}->{$servname}->{graph_order} = join(' ',@graph_order);
-    }
-    $serviceconf_time = sprintf ("%.2f",(Time::HiRes::time - $serviceconf_time));
-    print STATS "CS|$domain|$name|$servname|$serviceconf_time\n";
-    logger ("Configured service: $name -> $servname ($serviceconf_time sec)");
-  }
-  $nodeconf_time = sprintf ("%.2f",(Time::HiRes::time - $nodeconf_time));
-  print STATS "CN|$domain|$name|$nodeconf_time\n";
     return 0 unless $socket;
-  logger("Configured node: $name ($nodeconf_time sec)");
-  return 1;
+    return 1;
 }
 
-sub fetch_node {
-    my ($domain,$name,$node,$socket) = @_;
-    my $nodefetch_time = Time::HiRes::time;
+sub fetch_node 
+{
+    my ($newconf,$oldconf,$socket) = @_;
+    my $name = munin_get_node_name ($newconf);
     logger("[DEBUG] Fetching node: $name") if $DEBUG;
-    for my $service (keys %{$node->{client}}) {
-	my $servicefetch_time = Time::HiRes::time;
-	logger("[DEBUG] Fetching service: $name->$service") if $DEBUG;
-	next if (exists ($node->{client}->{$service}->{fetch_data}) and 
-		 $node->{client}->{$service}->{fetch_data} == 0);
-	next if (exists ($node->{client}->{$service}->{update}) and 
-		 $node->{client}->{$service}->{update} ne "yes");
+    for my $service (keys %{$newconf}) {
+	next if ref ($newconf->{$service}) ne "HASH";
+	next if $service =~ /^#%#/;
+	logger("[DEBUG] Fetching service: $service") if $DEBUG;
+	next unless exists ($newconf->{$service}->{"graph_title"});
+	next unless (munin_get_bool ($newconf->{$service}, "update", "true"));
+	next unless (munin_get_bool ($newconf->{$service}, "fetch_data", "true"));
 	next if (@limit_services and !grep (/^$service$/, @limit_services));
-	my $realservname = ( $node->{client}->{$service}->{realservname} ||
-			     $service );
-	delete $node->{client}->{$service}->{realservname}
-	  if exists $node->{client}->{$service}->{realservname};
+
+	# Read (and get rid of) realservname
+	my $realservname = ( $newconf->{$service}->{"realservname"} || $service );
+	delete $newconf->{$service}->{"realservname"}
+	  if exists $newconf->{$service}->{"realservname"};
+
 	write_socket_single ($socket, "fetch $realservname\n");
 	my @lines = &read_socket($socket);
 	return 0 unless $socket;
@@ -1179,12 +1093,8 @@ sub fetch_node {
 		}
 
 		$key = &sanitise_fieldname ($key, $fields);
-		if (exists $node->{client}->{$service}->{$key.".label"}) {
-		    my $fname =
-		      "$config->{dbdir}/$domain/$name-$service-$key-".
-			lc
-			  substr(($node->{client}->{$service}->{$key.".type"}||
-				  "GAUGE"),0,1).".rrd";
+		if (exists $newconf->{$service}->{$key}->{"label"}) {
+		    my $fname = munin_get_filename ($newconf->{$service}->{$key});
 
 		    logger("[DEBUG] Updating $fname with $value") if $DEBUG;
 		    RRDs::update ("$fname", "N:$value");
@@ -1192,31 +1102,14 @@ sub fetch_node {
 			logger ("[ERROR] In RRD: unable to update $fname: $ERROR");
 		    }
 		} else {
-		    logger ("[ERROR] Unable to update $domain -> $name -> $service -> $key: No such field (no \"label\" field defined when running plugin with \"config\").");
+		    logger ("[ERROR] Unable to update $name -> $service -> $key: No such field (no \"label\" field defined when running plugin with \"config\").");
 		}
 	    } elsif (/(\w+)\.extinfo\s+(.+)/) {
-		$config->{domain}->{$domain}->{node}->{$name}->{client}->{$service}->{$1.".extinfo"} = $2;
+		munin_set_var_loc ($newconf, [$service, $service, $1, "extinfo"], $2);
 	    }
 	}
-	$servicefetch_time = sprintf ("%.2f",(Time::HiRes::time - $servicefetch_time));
-	logger ("Fetched service: $name -> $service ($servicefetch_time sec)");
-	print STATS "FS|$domain|$name|$service|$servicefetch_time\n";
     }
-    $nodefetch_time = sprintf ("%.2f",(Time::HiRes::time - $nodefetch_time));
-    logger ("Fetched node: $name ($nodefetch_time sec)");
-    print STATS "FN|$domain|$name|$nodefetch_time\n";
-
     return 1;
-}
-
-sub use_old_config
-{
-    my $domain  = shift;
-    my $name    = shift;
-    my $oldnode = shift;
-
-    $config->{domain}->{$domain}->{node}->{$name} = $oldnode;
-    logger ("Attempting to use old configuration for $domain -> $name.");
 }
 
 sub logger_open {
@@ -1280,6 +1173,22 @@ sub sanitise_fieldname
     $done->{$lname} = 1;
 
     return $lname;
+}
+
+sub copy_node
+{
+    my $from = shift;
+    my $to   = shift;
+    
+    if (ref ($from) eq "HASH") {
+	foreach my $key (keys %$from) {
+	    next if $key =~ /^#%#/;
+	    $to->{$key} = $from->{$key};
+	}
+    } else {
+	$to = $from;
+    }
+    return $to;
 }
 
 1;
@@ -1371,7 +1280,7 @@ Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
 =head1 COPYRIGHT
 
-Copyright (C) 2002-2006 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
+Copyright © 2002-2006 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
