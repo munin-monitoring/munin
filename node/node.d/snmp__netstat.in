@@ -75,7 +75,7 @@ if (defined $ARGV[0] and $ARGV[0] eq "config")
 {
     print "host_name $host\n";
     print "graph_title Netstat\n";
-    print "graph_args -l 0 --base 1000 --logarithmic\n";
+    print "graph_args --base 1000 --logarithmic\n";
     print "graph_period seconds\n";
     print "graph_category network\n";
     print "graph_order closed listen synSent synReceived established finWait1 finWait2 closeWait lastAck closing timeWait deleteTCP\n";

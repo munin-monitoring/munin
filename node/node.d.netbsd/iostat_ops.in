@@ -48,7 +48,7 @@ fi
 if [ "$1" = "config" ]; then
 
     echo 'graph_title IOstat by transfers'
-    echo 'graph_args --base 1000 -l 0 --logarithmic'
+    echo 'graph_args --base 1000 -l 0'
 
     if ! $oldformat; then
 	echo 'graph_vlabel Xfers per ${graph_period} read (-) / written (+)'

@@ -46,7 +46,7 @@ fi
 if [ "$1" = "config" ]; then
 
     echo 'graph_title IOstat by bytes'
-    echo 'graph_args --base 1024 -l 0 --logarithmic'
+    echo 'graph_args --base 1024 -l 0'
 
     if ! $oldformat; then
 	echo 'graph_vlabel MB per ${graph_period} read (-) / written (+)'
