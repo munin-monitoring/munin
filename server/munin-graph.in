@@ -622,7 +622,7 @@ sub process_service {
 	$rrdname = &get_field_name ($fname);
 	if ($rrdname ne $fname) {
 	    # A change was made
-	    munin_set_var ($field, "cdef_name", $rrdname);
+	    munin_set ($field, "cdef_name", $rrdname);
 	}
 
 	push (@rrd, "DEF:g$rrdname=" .

@@ -56,7 +56,7 @@ use Exporter;
 	   'munin_get_node_loc',
 	   'munin_get_node',
 	   'munin_set_var_loc',
-	   'munin_set_var',
+	   'munin_set',
 	   'munin_copy_node_toloc',
 	   'munin_get_separated_node',
 	   'munin_mkdir_p',
@@ -357,7 +357,7 @@ sub munin_get_var_path
 	}
 	else
 	{
-	    warn "munin_set_var: Malformatted variable path \"$var\".";
+	    warn "munin_set_var_path: Malformatted variable path \"$var\".";
 	}
     }
     elsif ($var =~ /^\s*([^;:]+);([^;:]+)\s*$/)
@@ -371,7 +371,7 @@ sub munin_get_var_path
 	}
 	else
 	{
-	    warn "munin_set_var: Malformatted variable path \"$var\".";
+	    warn "munin_set_var_path: Malformatted variable path \"$var\".";
 	}
     }
     elsif ($var =~ /^\s*([^;:\.]+)\s*$/)
@@ -380,7 +380,7 @@ sub munin_get_var_path
     }
     else
     {
-	warn "munin_set_var: Malformatted variable path \"$var\".";
+	warn "munin_set_var_path: Malformatted variable path \"$var\".";
     }
 
     return undef;
@@ -565,7 +565,7 @@ sub munin_get_node
     return $hash;
 }
 
-# munin_set_var: sets a variable in a hash
+# munin_set: sets a variable in a hash
 # Parameters: 
 # - $hash: A ref to the hash to set the variable in
 # - $var: The name of the variable
@@ -573,8 +573,7 @@ sub munin_get_node
 # Returns:
 # - Success: The $hash we were handed
 # - Failure: undef
-sub munin_set_var
-{
+sub munin_set {
     my $hash = shift;
     my $var  = shift;
     my $val  = shift;
