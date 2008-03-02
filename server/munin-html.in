@@ -448,12 +448,13 @@ sub generate_group_templates {
 		);
 
 		$grouptemplate->param (
-		    GROUPS  => $key->{'groups'},
-		    PATH    => $key->{'path'},
-		    CSSPATH => $key->{'csspath'},
-		    PEERS   => $key->{'peers'},
-		    PARENT  => $key->{'path'}->[-2]->{'name'},
-		    COMPARE => $key->{'compare'},
+		    GROUPS    => $key->{'groups'},
+		    PATH      => $key->{'path'},
+		    CSSPATH   => $key->{'csspath'},
+		    PEERS     => $key->{'peers'},
+		    PARENT    => $key->{'path'}->[-2]->{'name'},
+		    COMPARE   => $key->{'compare'},
+		    TIMESTAMP => $timestamp,
 		);
 		my $filename = $key->{'filename'};
 		open (FILE, ">$filename") or
@@ -474,6 +475,7 @@ sub generate_group_templates {
 			    PARENT      => $key->{'path'}->[-2]->{'name'},
 			    CATEGORIES  => $key->{'comparecategories'},
 			    NCATEGORIES => $key->{'ncomparecategories'},
+			    TIMESTAMP   => $timestamp,
 			);
 			open (FILE, ">$file") or die "Cannot open $file for writing: $!";
 			print FILE $comparisontemplates{$t}->output;
@@ -499,6 +501,7 @@ sub generate_group_templates {
 		    NAME        => $key->{'name'},
 		    CATEGORIES  => $key->{'categories'},
 		    NCATEGORIES => $key->{'ncategories'},
+		    TIMESTAMP   => $timestamp,
 		);
 		my $filename = $key->{'filename'};
 		open (FILE, ">$filename") or
@@ -642,6 +645,7 @@ sub generate_service_templates {
 			    PATH      => $pathnodes,
 			    PEERS     => $peers,
 			    CSS       => $csspath,
+			    CSSPATH   => $csspath,
 			    CATEGORY  => ucfirst $srv{'category'},
 			    TIMESTAMP => $timestamp);
     my $filename = munin_get_html_filename ($service);
