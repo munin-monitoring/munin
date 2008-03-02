@@ -117,21 +117,6 @@ if (!defined $config->{'cgiurl_graph'})
 logger("Starting munin-html, checking lock");
 
 munin_runlock("$config->{rundir}/munin-html.lock");
-my $template = HTML::Template->new(filename => "$config->{tmpldir}/munin-overview.tmpl",
-				   die_on_bad_params => 0,
-				   loop_context_vars => 1);
-
-my $domaintemplate = HTML::Template->new(filename => "$config->{tmpldir}/munin-domainview.tmpl",
-				   die_on_bad_params => 0,
-				   loop_context_vars => 1);
-
-my $nodetemplate = HTML::Template->new(filename => "$config->{tmpldir}/munin-nodeview.tmpl",
-				       die_on_bad_params => 0,
-				       loop_context_vars => 1);
-
-my $servicetemplate = HTML::Template->new(filename => "$config->{tmpldir}/munin-serviceview.tmpl",
-				       die_on_bad_params => 0,
-				       loop_context_vars => 1);
 
 my %comparisontemplates = (  day => HTML::Template->new(filename => "$config->{tmpldir}/munin-comparison-day.tmpl", die_on_bad_params => 0, loop_context_vars => 1),
 	                    week => HTML::Template->new(filename => "$config->{tmpldir}/munin-comparison-week.tmpl", die_on_bad_params => 0, loop_context_vars => 1),
@@ -170,6 +155,10 @@ if (defined $groups->{"name"} and $groups->{"name"} eq "root") {
 }
 
 # Draw main index
+my $template = HTML::Template->new(filename => "$config->{tmpldir}/munin-overview.tmpl",
+				   die_on_bad_params => 0,
+				   loop_context_vars => 1);
+
 $template->param(GROUPS    => $groups,
 		 TIMESTAMP => $timestamp);
 my $filename = munin_get_html_filename ($config);
@@ -572,6 +561,9 @@ sub generate_service_templates {
 	$srv{'state_unknown'}  = 1 if $state eq "unknown";
     }
 
+    my $servicetemplate = HTML::Template->new(filename => "$config->{tmpldir}/munin-serviceview.tmpl",
+				       die_on_bad_params => 0,
+				       loop_context_vars => 1);
     $servicetemplate->param(SERVICES  => [\%srv],
 			    PATH      => $pathnodes,
 			    PEERS     => $peers,
