@@ -196,6 +196,10 @@ under different domains (as in the given example).  This can also
 solve a problem if your machine is C<machine1.com>, where having a
 group of C<com> makes little sense.
 
+Multiple groups can be specified by adding more C<groupname;>s, e.g.
+C<[servers;local;mail;mail.foo.net]>, if you need a more hierarchical
+structure.
+
 =head1 NODE DIRECTIVES
 
 These are directives that can follow a node definition and will apply
