@@ -506,7 +506,7 @@ sub do_node {
 	}
       } else {
 		my $ctx;
-		if (!config_node($newconf,$oldconf,$socket)) {
+		if (!config_and_fetch_node($newconf,$oldconf,$socket)) {
 		    copy_node ($oldconf, $newconf);
 		    socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
 		    connect (SOCK, sockaddr_un (munin_get($newconf, "rundir")."/$serversocket")) || die "connect: $!";
@@ -515,8 +515,6 @@ sub do_node {
 		    close SOCK;
 		    exit 1;
 		}
-		&fetch_node($newconf,$oldconf,$socket);
-#		Net::SSLeay::free ($tls) if ($tls); # Shut down TLS
 		close $socket;
 	        alarm (0); # Don't want to interrupt this.
 	        socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
@@ -539,9 +537,7 @@ sub do_node {
 	    copy_node ($oldconf, $newconf);
 	}
       } else {
-		next unless (config_node($newconf,$oldconf,$socket));
-		fetch_node($newconf,$oldconf,$socket);
-#		Net::SSLeay::free ($tls) if ($tls); # Shut down TLS
+		next unless (config_and_fetch_node($newconf,$oldconf,$socket));
 		close $socket;
       }
 
@@ -876,7 +872,7 @@ sub read_socket {
     return (@array);
 }
 
-sub config_node 
+sub config_and_fetch_node 
 {
     my ($newconf,$oldconf,$socket) = @_;
     my $clientdomain = read_socket_single ($socket);
@@ -1042,8 +1038,67 @@ sub config_node
 	    }
 	}
 	munin_set_var_loc ($newconf, [$servname, "graph_order"], join(' ',@graph_order));
+
+	fetch_node_service ($newconf, $socket, $servname, $service);
     }
     return 0 unless $socket;
+    return 1;
+}
+
+sub fetch_node_service {
+    my $newconf      = shift; 
+    my $socket       = shift;
+    my $service      = shift;
+    my $realservname = shift;
+
+    write_socket_single ($socket, "fetch $realservname\n");
+    my @lines = &read_socket($socket);
+    return 0 unless $socket;
+    my $fields = {};
+    for (@lines) {
+	next unless defined $_;
+	if (/\# timeout/) {
+	    logger("Client reported timeout in fetching of $service");
+	} elsif (/(\w+)\.value\s+([\S:]+)\s*(\#.*)?$/) {
+	    my $key = $1;
+	    my $value = $2;
+	    my $comment = $3;
+	    my $when = "N";
+
+	    if ($value =~ /^(\d+):(.+)$/) {
+		$when = $1;
+		$value = $2;
+	    }
+
+	    if ($value =~ /\d[Ee]([+-]?\d+)$/) {
+		# Looks like scientific format.  RRDtool does not
+		# like it so we convert it.
+		my $magnitude = $1;
+		if ($magnitude < 0) {
+		    # Preserve at least 4 significant digits
+		    $magnitude=abs($magnitude)+4;
+		    $value=sprintf("%.*f",$magnitude,$value);
+		} else {
+		    $value=sprintf("%.4f",$value);
+		}
+	    }
+
+	    $key = &sanitise_fieldname ($key, $fields);
+	    if (exists $newconf->{$service}->{$key}->{"label"}) {
+		my $fname = munin_get_filename ($newconf->{$service}->{$key});
+
+		logger("[DEBUG] Updating $fname with $value") if $DEBUG;
+		RRDs::update ("$fname", "$when:$value");
+		if (my $ERROR = RRDs::error) {
+		    logger ("[ERROR] In RRD: unable to update $fname: $ERROR");
+		}
+	    } else {
+		logger ("[ERROR] Unable to update $service -> $key: No such field (no \"label\" field defined when running plugin with \"config\").");
+	    }
+	} elsif (/(\w+)\.extinfo\s+(.+)/) {
+	    munin_set_var_loc ($newconf, [$service, $service, $1, "extinfo"], $2);
+	}
+    }
     return 1;
 }
 
