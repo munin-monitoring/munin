@@ -1,3 +1,158 @@
+munin (1.2.6rc0)
+
+  * Server: Applied r1448, closes Debian #307966 
+  * Server: Applied r1420, improves locking FIXME
+  * Server: merged r1392 (Fix redirect handling in munin-limits)
+    closes Trac #552 and Debian #385358
+  * Server: merged r1391, close Trac #553 FIXME
+  * Server: merged r1379, multiple documentation updates
+  * Server: merged r1322 to munin-limits to provide timing informations for
+    munin_stats
+  * Server: merged r913/r1288, logging tuned & added support for "unknown" in
+    munin-limits, close Trac #29, #43
+  * Server: merged r1385, Filter "attempt to put segment in horiz list twice"
+    better, closes Trac #538 
+  * Server: merged to munin-cgi-graph: 
+  	    r1217: Patch to limit number of concurrent rrdgraph processes
+	    r1322: Path error in unlocking in munin-cgi-graph (Trac #507)
+	    r1323: SysV semaphore locking in munin-cgi-graphh (Trac #499)
+  * Server: merged to Munin.pm
+  	    r1287: Detaint pid before kill(). Fixes Trac #508.
+	    r1155: Fix uninitialized value problem in lock reading code.
+	    r1175: Undo some fuzzy thinking in the locking procedures of
+	    Munin.pm. 
+  * Server: merged r1289, Fixed timeout bug. Closes Trac #168.
+  * Server: merged r1286, Minor bugfix/error message improvements in
+    munin-html
+  * Server: merged r1179 to munin-update, Add code to interpret Scientific
+    notation (3E-20) for RRD so plugins don't have to. 
+  * Server: merged r1180 to munin-graph, luge to make graph lines narrower.
+    Undo the $global_headers = 1; bit
+  * Server: merged r1149 to munin-html, make handling of user input more
+    robust
+  * Server: merged r1341, Fix typo in munin-limits (oks -> ok), closes Debian #387283 
+  * Server: merged r1342, Enhanced doc of cgi mode in munin.conf - closes
+    Debian #307963 
+  * Server: munin-graph, munin-html, merged
+    r1158: Document what graph_strategy cgi does (Trac #98)
+
+  * Plugins: node.d/hddtemp_smartctl: merged r1450, recognize ATA disks on
+    FreeBSD patch from downstream 
+    Add configutaion setting dev_$dev to override the default device (r1229).
+
+  * Plugins: node.d.freebsd/if_, node.d.freebsd/if_errcoll_: merged r1449,
+    removes more interfaces 
+  * Plugins: node.d/apache_accesses, node.d/apache_processes,
+    node.d/apache_volume: merged r1454, munindoc'ify apache plugins
+  * Plugins: node.d.linux/irqstats.in: merged r1431, fix irqstats to work with
+    2.6.24, fixes Debian #463721
+  * Plugins: node.d/postfix_mailstats: Copy postfix_mailstats
+            from trunk to 1.2, replaced a = with a =~
+  * Plugins: node.d.linux/apt_all: merged
+            r871 Make linux/apt_all run faster, Debian #301361 
+	    r1317 apt_all lacked some graph metadata, fixes Trac #478 
+  * Plugins: node.d/exim_mailqueue, node.d/exim_mailqueue_alt,
+    node.d/exim_mailstats: merged
+    	r1189: Problems with "which exim" on Solaris corrected
+        r1193: Undo unposix from earlier changeset
+        r1337: exim_mailstats did not have human readable error
+                 messages, it tried
+  * Plugins: node.d.linux/load: the load plugin use now the
+    environment variables load_warn / load_crit
+  * Plugins: node.d.linux/port_: merged 
+	r793/r794: Add support for caching of network state. Replace
+                   hardcoded offsets 
+        r1167: port_ plugin did not use @@PLUGSTATE@@ for plugin
+               state
+        r1312: Fix Trac #500, report zero open ports as 0 not blank
+  * Plugins: node.d/surfboard: copied from trunk
+  * Plugins: node.d/postfix_mailvolume:  merged r1307, postfix_mailvolume
+    config did too much work, Trac #473 
+  * Plugins: node.d/ntp_, node.d/ntp_states, node.d/ntp_offset: merged 
+ 	r970: (Fix generic/ntp_ to report seconds instead of milliseconds.
+	r1220: Insert graph_category 
+	r1285: Fix bug in node.d/ntp_ where jitter is plotted with the
+	       wrong values. Fixes Trac #520
+	r1329: Make ntp_ plugin manual, it is no longer recommended, the
+	       new ntp_offset is
+ 	r1330: Interprete magical ip-numbers used by ntpd for local
+	       clocks - stops spurious DNS lookups of these, Trac #150
+  * Plugins: node.d.aix/df, node.d.freebsd/df, node.d.freebsd/df_inode,
+    node.d.linux/df, node.d.linux/df_abs, node.d.linux/df_inode, node.d/df,
+    node.d/df_inode: merged 
+	r1185: Configurable filesystem-type exclution.
+	r1303: Make df plugins sensitive to warning and critical environment
+	       variables. 
+	r1384: Update list of file systems we don't want to graph.
+	       Debian #385291
+  * Plugins: node.d/cupsys_pages, merged r1188: Further featurefixing in
+             these plugins
+  * Plugins: node.d.linux/memory: merged changeset
+	r1176: Remove warning on overcommit.
+	r1196: Fix typo "contigious"  
+
+  * Plugins: node.d.linux/irqstats: merged changeset 860:1321 to
+	    branches/1.2-stable/node/node.d.linux/irqstats
+  * Plugins: node.d.linux/netstat: merged r1308, SuSE feature regarding
+    special class of rejections based on timestamps. We do not count them, but
+    will no longer be confused by them. Trac #493
+  * Plugins: node.d.freebsd/if_: merged
+	  r1052: Applied patch to allow _aggregated graph
+	  r1298 / r1299: Disable DNS lookups which are not used (fixes
+	  Trac #509)
+  * Plugins: node.d.linux/sensors_: Allow for negative temperatures in the
+    sensors plugin. Also check for correct function and provide hint if
+    incorrect
+  * Plugins:  node.d.freebsd/memory, node.d.freebsd/netstat,
+    node.d.freebsd/processes, node/node.d.freebsd/vmstat: hardcode absolute
+    paths for awk, bc, netstat, ps and vmstat
+  * Plugins: node.d/apc_envunit_: Remove hard-coded values for
+	  UNITS and COMMUNITY.
+  * Plugins: node.d/mysql_isam_space_: Correct typo referencing @field
+    rather than @fields.  Initialize $ABSOLUTE.
+
+
+
+
+  * Node:  monkeywrench/, munin-node-configure: merged changeset r1169/r1171
+           make munin-node-configure more robust, add testcases
+  * Node: munin-node.conf, munindoc, node.d.linux/irqstats, 
+  	  node.d/mysql_queries: merged r1421, r1428:
+	  Introducing the munindoc command and example
+	  documentation in two plugins.
+  * Node: munin-node: merged r1401, Fix perl warning
+	  relating to strangely empty environment value
+  * Node: Makefile, Makefile.config, munin-node, munin-run: merged 
+  	r1183/r1198:  Put @@ values into environment of munin-node
+	              and munin-run to help plugins
+	r1281: Added detection of setr* at build time. The OSes without these
+	       functions will work anyway.  
+  	r1282: Add commented out lines for user/group detection on OSX.
+	r1170: munin-run: Make --debug messages consistent wrt STDERR/STDOUT
+	and prefix with # to make them obvious to users and
+	munin-node-configure)
+  * Node: dists/freebsd/munin-node/files/plugins.conf,
+          dists/tarball/plugins.conf,
+	  branches/debian/etch/debian/plugins.conf,
+	  branches/debian/lenny/debian/plugins.conf:
+	  merged r1300: Documentation clearification as
+	  requested in Trac #462
+  * Node: Introduce plugin.sh and Munin::Plugin to support plugins
+	  Makefile, node/Plugin.pm, node.d.linux/df,
+	  node.d.linux/df_abs, node.d.linux/df_inode,
+	  node.d/ps_, node/plugin.sh: merged r1184:
+	  plugin.sh: Utility functions for shell plugins
+	  Munin::Plugin: Utility functions for perl plugins
+	  Sample plugins: Convert to use plugin.sh and Munin::Plugin
+	  Makefile: Install utility files
+  * Node: munin-node: merged r1159/r1160, Fix depreciated environment setting
+          messages (Trac #377) 
+  * Node: munin-node.conf.pod, munin-node.conf: merged r1186,r1187:
+  	  Mention two most importand Net::Server config options. 
+
+
+
+
 munin (1.2.5)
 
   * Server: Applied changeset 1081 from 1.3.3rc, closing ticket #34.
