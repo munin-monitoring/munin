@@ -372,10 +372,10 @@ sub get_group_tree {
 	    if ($tmpgroup->{'ngraphs'} > 0) {
 		push @$comparegroups, $tmpgroup;
 		foreach my $tmpcat (@{$tmpgroup->{'categories'}}) {
-		    $comparecatshash->{$tmpcat->{'name'}}->{'name'} = $tmpcat->{'name'};
+		    $comparecatshash->{$tmpcat->{'name'}}->{'groupname'} = $tmpcat->{'name'};
 		    foreach my $tmpserv (@{$tmpcat->{'services'}}) {
 			$comparecatshash->{$tmpcat->{'name'}}->{'services'}->{$tmpserv->{'name'}}->{'nodes'}->{$tmpgroup->{'name'}} = $tmpserv;
-			$comparecatshash->{$tmpcat->{'name'}}->{'services'}->{$tmpserv->{'name'}}->{'nodes'}->{$tmpgroup->{'name'}}->{'name'} = $tmpgroup->{'name'};
+			$comparecatshash->{$tmpcat->{'name'}}->{'services'}->{$tmpserv->{'name'}}->{'nodes'}->{$tmpgroup->{'name'}}->{'nodename'} = $tmpgroup->{'name'};
 		    }
 		}	
 	    }

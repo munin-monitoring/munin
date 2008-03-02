@@ -20,7 +20,7 @@
   </tr>
   <tr>
     <td valign="top">
-      <h2><TMPL_VAR ESCAPE="HTML" NAME="NAME"> :: [ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="#<TMPL_VAR ESCAPE="HTML" NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</h2>
+      <h2><TMPL_VAR ESCAPE="HTML" NAME="NAME"> :: [ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="#<TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME">"><TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME"></a> </TMPL_LOOP>]</h2>
     </td>
   </tr>
 </table>
@@ -31,9 +31,9 @@
   </td></tr>
 
   <TMPL_LOOP NAME="CATEGORIES">
-  <tr><td class="graphbox" id="<TMPL_VAR ESCAPE="HTML" NAME="NAME">">
+  <tr><td class="graphbox" id="<TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME">">
   <table>
-        <tr><td colspan="<TMPL_VAR NAME="NGROUPS">"><h3 class="nobottom"> <TMPL_VAR ESCAPE="HTML" NAME="NAME"></h3></td></tr>
+        <tr><td colspan="<TMPL_VAR NAME="NGROUPS">"><h3 class="nobottom"> <TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME"></h3></td></tr>
         <tr><td colspan="<TMPL_VAR NAME="NGROUPS">"><hr class="ruler2" /></td></tr>
         <TMPL_LOOP NAME="SERVICES">
           <tr>
@@ -41,7 +41,7 @@
             <td valign="top">
 			<table class="invisiblebox">
 			  <tr><td colspan="2"></td></tr>
-			  <tr><td colspan="2"><div class="lighttext"><a href="<TMPL_VAR ESCAPE="URL" NAME="NAME">/index.html"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> :: <TMPL_IF NAME="URL1"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL1">"></TMPL_IF><TMPL_VAR ESCAPE="HTML" NAME="LABEL"><TMPL_IF NAME="URL1"></a></TMPL_IF></div></td></tr>
+			  <tr><td colspan="2"><div class="lighttext"><a href="<TMPL_VAR ESCAPE="URL" NAME="NODENAME">/index.html"><TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> :: <TMPL_IF NAME="URL1"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL1">"></TMPL_IF><TMPL_VAR ESCAPE="HTML" NAME="LABEL"><TMPL_IF NAME="URL1"></a></TMPL_IF></div></td></tr>
 			  <tr><td>
 			<a title="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">"/><TMPL_IF NAME="CIMGWEEK"><a href="<TMPL_VAR NAME="URL1">"><img src="<TMPL_VAR NAME="CIMGWEEK">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>/></a></TMPL_IF>
 			</td></tr>
@@ -57,9 +57,7 @@
 
   </TMPL_LOOP>
   <tr><td class="linkbox">
- <TMPL_LOOP NAME="GROUPS">
-<a href="../<TMPL_VAR NAME="GROUP">/index.html"><TMPL_VAR ESCAPE="HTML" NAME="GROUP"></a> :
-    </TMPL_LOOP>
+       <TMPL_VAR NAME="PARENT"> :<TMPL_LOOP NAME="PEERS">: <TMPL_IF NAME="LINK"><a href="<TMPL_VAR NAME="LINK">"></TMPL_IF><TMPL_VAR NAME="NAME"><TMPL_IF NAME="LINK"></a></TMPL_IF></a> </TMPL_LOOP>
  </td></tr>
 </table>
 
