@@ -28,6 +28,7 @@ use Getopt::Long;
 use Time::HiRes;
 use Munin;
 use POSIX qw(strftime);
+use Data::Dumper;
 
 my @times = ( "day", "week", "month", "year" );
 
@@ -298,7 +299,6 @@ sub get_peer_nodes {
     foreach my $peer (sort {munin_get_node_name($a) <=> munin_get_node_name($b)} @$pchildren) {
 	next unless defined $peer and ref ($peer) eq "HASH";
 	next if defined $category and lc (munin_get ($peer, "graph_category", "other")) ne $category;
-	logger ("FNORD! ". munin_get_node_name ($peer)." -- ".munin_get_node_name ($parent));
 	my $peername = munin_get_node_name ($peer);
 	next if $peername eq "contact" and munin_get_node_name ($parent) eq "root";
 	if ($peername eq $me) {
@@ -361,20 +361,66 @@ sub get_group_tree {
     @$path = reverse map { { "name" => $_, "path" => (defined $rpath?($rpath.="../")."index.html":($rpath="")) } } reverse ( "Overview", split ('\/', $base) );
     ($csspath = $path->[0]->{'path'}) =~ s/index.html$/style.css/;
 
+    # We need a bit more info for the comparison templates
+    my $compare = munin_get_bool ($hash, "compare", 1);
+    my $comparecats = [];
+    my $comparecatshash = {};
+    my $comparegroups = [];
+    if ($compare) {
+	foreach my $tmpgroup (@$groups) {
+	    # First we gather a bit of data into comparecatshash...
+	    if ($tmpgroup->{'ngraphs'} > 0) {
+		push @$comparegroups, $tmpgroup;
+		foreach my $tmpcat (@{$tmpgroup->{'categories'}}) {
+		    $comparecatshash->{$tmpcat->{'name'}}->{'name'} = $tmpcat->{'name'};
+		    foreach my $tmpserv (@{$tmpcat->{'services'}}) {
+			$comparecatshash->{$tmpcat->{'name'}}->{'services'}->{$tmpserv->{'name'}}->{'nodes'}->{$tmpgroup->{'name'}} = $tmpserv;
+			$comparecatshash->{$tmpcat->{'name'}}->{'services'}->{$tmpserv->{'name'}}->{'nodes'}->{$tmpgroup->{'name'}}->{'name'} = $tmpgroup->{'name'};
+		    }
+		}	
+	    }
+	}
+	if (scalar @$comparegroups > 1) {
+            # ...then we restructure it, comparecats need to end up looking like: ->[i]->{'service'}->[i]->{'nodes'}->[i]->{*}
+	    $compare = 1;
+	    foreach my $tmpcat (sort keys %$comparecatshash) {
+		foreach my $tmpserv (sort keys %{$comparecatshash->{$tmpcat}->{'services'}}) {
+		    my @nodelist = map { $comparecatshash->{$tmpcat}->{'services'}->{$tmpserv}->{'nodes'}->{$_} } 
+		    	sort keys %{$comparecatshash->{$tmpcat}->{'services'}->{$tmpserv}->{'nodes'}};
+		    delete $comparecatshash->{$tmpcat}->{'services'}->{$tmpserv}->{'nodes'};
+		    $comparecatshash->{$tmpcat}->{'services'}->{$tmpserv}->{'nodes'} = \@nodelist;
+		}
+		my @servlist = map { $comparecatshash->{$tmpcat}->{'services'}->{$_} } 
+		    sort keys %{$comparecatshash->{$tmpcat}->{'services'}};
+		delete $comparecatshash->{$tmpcat}->{'services'};
+		$comparecatshash->{$tmpcat}->{'services'} = \@servlist;
+	    }
+	    @$comparecats = map { $comparecatshash->{$_} } sort keys %$comparecatshash;
+	} else {
+	    $compare = 0;
+	}
+    }
+
+
     $ret = { 
-	"name"        => munin_get_node_name ($hash), 
-	"url"         => $base . "index.html", 
-	"path"        => $path,
-	"depth"       => scalar(split("/",$base."index.html"))-1,
-	"filename"    => munin_get_html_filename ($hash),
-	"csspath"     => $csspath,
-	"groups"      => $groups, 
-	"graphs"      => $graphs,
-	"categories"  => $cats,
-	"ngroups"     => scalar (@$groups),
-	"ngraphs"     => scalar (@$graphs),
-	"ncategories" => scalar (@$cats),
-	"peers"       => get_peer_nodes ($hash),
+	"name"               => munin_get_node_name ($hash), 
+	"url"                => $base . "index.html", 
+	"path"               => $path,
+	"depth"              => scalar(split("/",$base."index.html"))-1,
+	"filename"           => munin_get_html_filename ($hash),
+	"csspath"            => $csspath,
+	"groups"             => $groups, 
+	"graphs"             => $graphs,
+	"categories"         => $cats,
+	"ngroups"            => scalar (@$groups),
+	"ngraphs"            => scalar (@$graphs),
+	"ncategories"        => scalar (@$cats),
+	"peers"              => get_peer_nodes ($hash),
+	"compare"            => $compare,
+	"comparegroups"      => $comparegroups,
+	"ncomparegroups"     => scalar (@$comparegroups),
+	"comparecategories"  => $comparecats,
+	"ncomparecategories" => scalar (@$comparecats),
     };
     if ($ret->{'url'} ne "/index.html") {
 	for (my $shrinkpath = $ret->{'url'}, my $counter = 0; $shrinkpath =~ /\//; $shrinkpath =~ s/^[^\/]+\/*//, $counter++) {
@@ -406,13 +452,34 @@ sub generate_group_templates {
 		    PATH    => $key->{'path'},
 		    CSSPATH => $key->{'csspath'},
 		    PEERS   => $key->{'peers'},
-		    PARENT  => $key->{'path'}->[-2]->{'name'}
+		    PARENT  => $key->{'path'}->[-2]->{'name'},
+		    COMPARE => $key->{'compare'},
 		);
 		my $filename = $key->{'filename'};
 		open (FILE, ">$filename") or
 		    die "Cannot open $filename for writing: $!";
 		print FILE $grouptemplate->output;
 		close FILE;
+
+		if ($key->{'compare'}) { # Create comparison templates as well
+		    foreach my $t (@times) {
+			(my $file = $key->{'filename'}) =~ s/index.html$//;
+			$file .= "comparison-$t.html";
+			$comparisontemplates{$t}->param (
+			    NAME        => $key->{'name'},
+			    GROUPS      => $key->{'comparegroups'},
+			    PATH        => $key->{'path'},
+			    CSSPATH     => $key->{'csspath'},
+			    PEERS       => $key->{'peers'},
+			    PARENT      => $key->{'path'}->[-2]->{'name'},
+			    CATEGORIES  => $key->{'comparecategories'},
+			    NCATEGORIES => $key->{'ncomparecategories'},
+			);
+			open (FILE, ">$file") or die "Cannot open $file for writing: $!";
+			print FILE $comparisontemplates{$t}->output;
+			close FILE;
+		    }
+		}
 	    } 
 
 	    if (defined $key->{'ngraphs'} and $key->{'ngraphs'}) {
@@ -455,6 +522,7 @@ sub generate_service_templates {
     my @loc       = munin_get_node_loc ($service);
     my $pathnodes = get_path_nodes ($service);
     my $peers     = get_peer_nodes ($service, lc munin_get ($service, "graph_category", "other"));
+    my $parent    = munin_get_parent_name ($service);
     (my $csspath  = $pathnodes->[0]->{'link'}) =~ s/index.html$/style.css/;
 
     $srv{'node'}     = munin_get_node_name ($service);
@@ -482,10 +550,17 @@ sub generate_service_templates {
     } else {
 	# graph strategy cron
 	 
+	# Image locations for regular pages
 	$srv{'imgday'}  ="$srv{node}-day.png";
 	$srv{'imgweek'} ="$srv{node}-week.png";
 	$srv{'imgmonth'}="$srv{node}-month.png";
 	$srv{'imgyear'} ="$srv{node}-year.png";
+
+	# Image locations for comparison pages
+	$srv{'cimgday'}  ="$parent/$srv{node}-day.png";
+	$srv{'cimgweek'} ="$parent/$srv{node}-week.png";
+	$srv{'cimgmonth'}="$parent/$srv{node}-month.png";
+	$srv{'cimgyear'} ="$parent/$srv{node}-year.png";
 
 	for my $scale (@times) {
 	    if (my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale))) {
@@ -544,7 +619,6 @@ sub generate_service_templates {
 	$field_info{'info'}  = munin_get ($fieldobj, "info");
 
 	my $state = munin_field_status ($fieldobj, $limits, 1);
-	logger ("state of ".join('::',@{munin_get_node_loc ($fieldobj)}).": $state");
 
 	if (defined $state) {
 	    $field_info{'state_warning'}  = 1 if $state eq "warning";
