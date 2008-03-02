@@ -1074,10 +1074,16 @@ sub fetch_node
 	    next unless defined $_;
 	    if (/\# timeout/) {
 		logger("Client reported timeout in fetching of $service");
-	    } elsif (/(\w+)\.value\s+(\S+)\s*(\#.*)?$/) {
+	    } elsif (/(\w+)\.value\s+([\S:]+)\s*(\#.*)?$/) {
 		my $key = $1;
 		my $value = $2;
 		my $comment = $3;
+		my $when = "N";
+
+		if ($value =~ /^(\d+):(.+)$/) {
+		    $when = $1;
+		    $value = $2;
+		}
 
 		if ($value =~ /\d[Ee]([+-]?\d+)$/) {
 		    # Looks like scientific format.  RRDtool does not
@@ -1097,7 +1103,7 @@ sub fetch_node
 		    my $fname = munin_get_filename ($newconf->{$service}->{$key});
 
 		    logger("[DEBUG] Updating $fname with $value") if $DEBUG;
-		    RRDs::update ("$fname", "N:$value");
+		    RRDs::update ("$fname", "$when:$value");
 		    if (my $ERROR = RRDs::error) {
 			logger ("[ERROR] In RRD: unable to update $fname: $ERROR");
 		    }
