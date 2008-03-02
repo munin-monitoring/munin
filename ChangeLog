@@ -1,10 +1,12 @@
 munin (1.2.6rc0)
 
   * Server: Applied r1448, closes Debian #307966 
-  * Server: Applied r1420, improves locking FIXME
+  * Server: Applied r1420, Remove .lock-files as they become unused. This
+    removes ambiguity around munin programs still running or not.
   * Server: merged r1392 (Fix redirect handling in munin-limits)
     closes Trac #552 and Debian #385358
-  * Server: merged r1391, close Trac #553 FIXME
+  * Server: merged r1391, close Trac #553, munin-limits: remove unused
+    code which is also confusing 
   * Server: merged r1379, multiple documentation updates
   * Server: merged r1322 to munin-limits to provide timing informations for
     munin_stats
