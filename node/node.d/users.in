@@ -26,6 +26,11 @@ bug).
 
 Only tested extensively on Linux.
 
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
 =head1 VERSION
 
   $Id$
@@ -40,13 +45,7 @@ Modified and made more generic by Nicolai Langfeldt, 2006
 
 GPLv2
 
-# Parameters:
-#
-# 	config
-#       autoconf
-#
-#%# family=auto
-#%# capabilities=autoconf
+=cut
 
 if ( defined($ARGV[0])) {
     if ($ARGV[0] eq 'autoconf') {
