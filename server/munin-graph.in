@@ -383,7 +383,9 @@ sub expand_specials
 		}
 	    }
 	    
-	    munin_set_var_loc ($service, [$fname, "label"], $fname);
+	    if (!defined $service->{$fname}->{"label"}) {
+		munin_set_var_loc ($service, [$fname, "label"], $fname);
+	    }
 	    munin_set_var_loc ($service, [$fname, "filename"], munin_get_rrd_filename ($src));
 
 	} elsif (defined ($tmp_field = get_stack_command ($service->{$field}))) {

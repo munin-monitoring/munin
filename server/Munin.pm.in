@@ -603,7 +603,7 @@ sub munin_set_var_loc
 	return undef;
     }
     if (@aloc > 0) {
-	if (!defined $hash->{$tmpvar}) { # Init the new node
+	if (!defined $hash->{$tmpvar} or !defined $hash->{$tmpvar}->{"#%#name"}) { # Init the new node
 	    $hash->{$tmpvar}->{"#%#parent"} = $hash;
 	    $hash->{$tmpvar}->{"#%#name"} = $tmpvar;
 	}
