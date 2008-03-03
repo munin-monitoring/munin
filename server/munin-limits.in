@@ -323,7 +323,6 @@ sub generate_service_message {
 	if (defined $cas) {
 	    $obsess = grep {scalar(@{$stats{$_}})} (split (/\s+/, lc $cas));
 	}
-	logger ("checking if state has changed $c");
 	if (!$hash->{'state_changed'} and !$obsess) {
 	    next; # No need to send notification
 	}
@@ -420,7 +419,6 @@ sub generate_service_message {
 	    munin_set_var_loc ($contactobj, ["pipe"], $pipe);
 	} 
 	logger ("sending message: \"$txt\"") if ($DEBUG);
-	logger ("bar?");
 	print $pipe $txt, "\n" if (defined $pipe);
 	$contactobj->{"num_messages"} = 1 + munin_get ($contactobj, "num_messages", 0); # $num_messages++
     }
@@ -516,7 +514,11 @@ sub logger {
     if ($log->opened) {
 	print $log "$now - $comment\n";
     } else {
-	die "Noone opened our log file at startup!";
+	if (!open ($log, ">>@@LOGDIR@@/munin-limits.log")) {
+	    print STDERR "Warning: Could not open log file \"@@LOGDIR@@/munin-limits.log\" for writing: $!";
+	} else {
+	    open (STDERR, ">&", $log);
+	}
     }
 }
 
