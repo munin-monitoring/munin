@@ -1132,7 +1132,7 @@ sub munin_category_status {
     my $hash       = shift || return undef;
     my $limits     = shift || return undef;
     my $category   = shift || return undef;
-    my $check_draw = 0;
+    my $check_draw = 1;
     my $state      = "ok";
 
     return undef unless (defined $hash and ref ($hash) eq "HASH");
@@ -1159,7 +1159,7 @@ sub munin_category_status {
     return $state;
 }
 
-# munin_field_status: Gets current status of a field
+# munin_service_status: Gets current status of a service
 # Parameters: 
 # - $hash: A ref to the field hash node
 # - $limits: A ref to the root node of the limits tree
@@ -1198,7 +1198,7 @@ sub munin_service_status {
 # - Failure: undef
 sub munin_field_status {
     my ($hash, $limits, $check_draw) = @_;
-    my $state = undef;
+    my $state = "ok";
 
     # Return undef if nagios is turned off, or the field doesn't have any limits
     if ((!defined munin_get ($hash, "warning", undef)) and (!defined munin_get ($hash, "critical"))) {
@@ -1210,6 +1210,7 @@ sub munin_field_status {
 	my $node = munin_get_node ($limits, $loc);
 	return $node->{"state"} || "ok";
     }
+    return $state;
 }
 
 sub munin_graph_column_headers
