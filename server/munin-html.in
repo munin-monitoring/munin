@@ -329,7 +329,7 @@ sub get_group_tree {
     foreach my $child (@{munin_get_children ($hash)}) {
 	next unless defined $child and ref ($child) eq "HASH" and keys %$child;
 	next if munin_get_node_name ($child) eq "contact";
-	if (defined $child->{"graph_title"}) {
+	if (defined $child->{"graph_title"} and munin_get_bool ($child, "graph", 1)) {
 	    my $childname = munin_get_node_name ($child);
 	    my $childnode = generate_service_templates ($child);
 	    push @$graphs, { "name" => $childname };
@@ -339,7 +339,7 @@ sub get_group_tree {
 		$childnode->{'url'.$counter} = $shrinkpath;
 	    }
 	    push @{$cattrav->{ lc munin_get ($child, "graph_category", "other") }}, $childnode;
-	} elsif (ref ($child) eq "HASH") {
+	} elsif (ref ($child) eq "HASH" and !defined $child->{"graph_title"}) {
 	    push @$groups, get_group_tree ($child, $base . munin_get_node_name ($child) . "/");
 	}
     }
