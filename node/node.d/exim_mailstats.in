@@ -225,7 +225,7 @@ sub parseEximfile {
             $rejected++;
         }
     }
-    close($LOGFILE) or die "Could not close $fname after reading: $!";
+    return tail_close($LOGFILE);
 }
 
 # vim:syntax=perl
