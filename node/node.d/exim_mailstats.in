@@ -44,6 +44,10 @@ Need some input from an exim postmaster here.
 
 None Known
 
+=head1 VERSION
+
+  $Id$
+
 =head1 AUTHOR
 
 Copyright (C) 2002-2008 Torstein Svendsen, Jimmy Olsen, Nicolai Langfeldt
