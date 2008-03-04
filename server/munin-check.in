@@ -142,14 +142,16 @@ for dir in @@DBDIR@@/*; do
     owner_ok $dir @@USER@@
 done
 
-echo "Check @@LOGDIR@@"
+echo "Check miscelaneous"
 norec=yes owner_ok @@LOGDIR@@ root
 
-echo "Check miscelaneous"
-for dir in @@DBDIR@@ @@DBDIR@@/datafile @@DBDIR@@/limits \
+norec=yes owner_ok @@DBDIR@@ @@USER@@
+norec=yes perm_ok @@DBDIR@@ 744
+
+for dir in @@DBDIR@@/datafile @@DBDIR@@/limits \
     @@DBDIR@@/*.stats; do
 	norec=yes owner_ok $dir @@USER@@
-	norec=yes perm_ok $dir 744
+	norec=yes perm_ok $dir 644
 done
 
 norec=yes owner_ok @@PLUGSTATE@@ @@PLUGINUSER@@
@@ -159,3 +161,6 @@ norec=yes perm_ok @@CONFDIR@@/plugin-conf.d 755
 
 echo "Check done.  Please note that this script only checks most things,"
 echo "not all things."
+echo
+echo "Please also note that this script is very new and may be buggy."
+echo
