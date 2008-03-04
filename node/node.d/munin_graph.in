@@ -33,7 +33,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Munin-graph'
 	echo 'graph_vlabel seconds'
 	[ -f $GRAPH_STATSFILE ] || exit 0
-	cat $GRAPH_STATSFILE | grep "GD" | while read i; do
+	cat $GRAPH_STATSFILE | grep "GT" | while read i; do
 		name=`echo $i | cut -d"|" -f2 |tr  '.-' '__'`
 		printf "$name.label "
 		echo $i | cut -d"|" -f2
@@ -44,7 +44,7 @@ if [ "$1" = "config" ]; then
 fi
 
 [ -f $GRAPH_STATSFILE ] || exit 0
-cat $GRAPH_STATSFILE | grep "GD" | while read i; do
+cat $GRAPH_STATSFILE | grep "GT" | while read i; do
         name=`echo $i | cut -d"|" -f2 | tr  '.-' '__'`
 	printf "$name.value "
 	echo $i | cut -d"|" -f3
