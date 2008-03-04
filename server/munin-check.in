@@ -17,6 +17,7 @@
 #
 # $Id$
 
+
 ####
 # prints usage
 function usage() {
@@ -56,43 +57,51 @@ done
 ####
 # sets owner to "@@USER@@" 
 function fix_owner() {
-	if [ "`id -u`" = "0" ];
-		then
-			chown -R @@USER@@:@@GROUP@@ $object;
-		else 
-			echo "Fixing the permissions needs superuser rights. You should run \"munin-check -f\" as root."
-		exit 0;
-	fi
+    fix_object=$1; shift
+    fix_owner=$1; shift
+
+    if [ "$(id -u)" = "0" ]; then
+	# -R is wrong, in case we're not recursing, and if we are
+	# recursing then fix_owner will be called again.  OK, that's
+	# slower, but still more correct.
+	chown $fix_owner $fix_object;
+    else 
+	echo "Fixing the permissions needs superuser rights. You should run \"munin-check -f\" as root."
+	exit 0;
+    fi
 }
+
 ####
 # check if "@@USER@@" is owner, if PLEASE_FIXME set it calls fix_owner()
 function owner_ok(){
-	object=$1;
+	object=$1; shift;
+	correctowner=$1; shift;
 
-	if [ -d $object ];
-	then
+	if [ -d $object ]; then
 		# check the owner of the dir ...
-		if [ "`stat -c%U $object`" != "@@USER@@" ];
-		then
-			echo "#DIR: $object : Wrong owner";
-			if [ "$PLEASE_FIXME" = "true" ];
-			then
-				fix_owner $object;
+	        owner=$(stat -c%U $object)
+		if [ "$owner" != "$correctowner" ]; then
+			echo "#DIR: $object : Wrong owner ($owner != $correctowner)";
+			if [ "$PLEASE_FIXME" = "true" ]; then
+				fix_owner $object $correctowner
 			fi
 			
 		fi
+
+		if [ -n "$norec" ]; then
+		    # The $norec variable cuts off recursion
+		    return 0
+		fi
 		# ... and then dive into it
-		for subobject in $object/*;
-		do
+		for subobject in $object/*; do
 			owner_ok $subobject
 		done
 	else
-		if [ "`stat -c%U $object`" != "@@USER@@" ];
-		then
-			echo "#FILE: $object : Wrong owner";
-			if [ "$PLEASE_FIXME" = "true" ];
-			then
-				fix_owner $object
+	        owner=$(stat -c%U $object)
+		if [ "$owner" != "$correctowner" ]; then
+			echo "#FILE: $object : Wrong owner ($owner != $correctowner)";
+			if [ "$PLEASE_FIXME" = "true" ]; then
+				fix_owner $object $correctowner
 			fi
 		fi
 	fi
@@ -101,10 +110,11 @@ function owner_ok(){
 ####
 # main
 
-for dir in @@HTMLDIR@@ @@LOGDIR@@ @@STATEDIR@@ @@DBDIR@@;
-do
+for dir in @@HTMLDIR@@ @@DBDIR@@; do
 	echo "check $dir"
-	owner_ok $dir
+	owner_ok $dir @@USER@@
 done
 
+norec=yes owner_ok @@LOGDIR@@ root
 
+norec=yes owner_ok @@STATEDIR@@ @@USER@@
