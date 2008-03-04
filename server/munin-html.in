@@ -324,14 +324,15 @@ sub get_group_tree {
     my $path    = [];
     my $rpath   = undef;
     my $ret     = {};
+    my $visible = 0;
     my $csspath;
 
     foreach my $child (@{munin_get_children ($hash)}) {
 	next unless defined $child and ref ($child) eq "HASH" and keys %$child;
-	next if munin_get_node_name ($child) eq "contact";
 	if (defined $child->{"graph_title"} and munin_get_bool ($child, "graph", 1)) {
 	    my $childname = munin_get_node_name ($child);
 	    my $childnode = generate_service_templates ($child);
+	    $visible = 1;
 	    push @$graphs, { "name" => $childname };
 	    $childnode->{'name'} = $child->{"graph_title"};
 	    $childnode->{'url'} = $base . $childname.".html";
@@ -340,9 +341,14 @@ sub get_group_tree {
 	    }
 	    push @{$cattrav->{ lc munin_get ($child, "graph_category", "other") }}, $childnode;
 	} elsif (ref ($child) eq "HASH" and !defined $child->{"graph_title"}) {
-	    push @$groups, get_group_tree ($child, $base . munin_get_node_name ($child) . "/");
+	    push @$groups, grep  { defined $_ } get_group_tree ($child, $base . munin_get_node_name ($child) . "/");
+	    if (scalar @$groups) {
+		$visible = 1;
+	    }
 	}
     }
+
+    return undef unless $visible;
 
     # We need the categories in another format.
     foreach my $cat (sort keys %$cattrav) {
