@@ -74,72 +74,56 @@ function fix_owner() {
 ####
 # check if "@@USER@@" is owner, if PLEASE_FIXME set it calls fix_owner()
 function owner_ok(){
-	object=$1; shift;
-	correctowner=$1; shift;
+    object=$1; shift;
+    correctowner=$1; shift;
 
-	if [ -d $object ]; then
-		# check the owner of the dir ...
-	        owner=$(stat -c%U $object)
-		if [ "$owner" != "$correctowner" ]; then
-			echo "#DIR: $object : Wrong owner ($owner != $correctowner)";
-			if [ "$PLEASE_FIXME" = "true" ]; then
-				fix_owner $object $correctowner
-			fi
-			
-		fi
-
-		if [ -n "$norec" ]; then
-		    # The $norec variable cuts off recursion
-		    return 0
-		fi
-		# ... and then dive into it
-		for subobject in $object/*; do
-			owner_ok $subobject
-		done
-	else
-	        owner=$(stat -c%U $object)
-		if [ "$owner" != "$correctowner" ]; then
-			echo "#FILE: $object : Wrong owner ($owner != $correctowner)";
-			if [ "$PLEASE_FIXME" = "true" ]; then
-				fix_owner $object $correctowner
-			fi
-		fi
+    owner=$(stat -c%U $object)
+    if [ "$owner" != "$correctowner" ]; then
+	echo "# $object : Wrong owner ($owner != $correctowner)";
+	if [ "$PLEASE_FIXME" = "true" ]; then
+	    fix_owner $object $correctowner
 	fi
+    fi
+
+    if [ -d $object ]; then
+	if [ -n "$norec" ]; then
+	    # The $norec variable cuts off recursion
+	    return 0
+	fi
+
+	# ... and then dive into it
+	for subobject in $object/*; do
+		owner_ok $subobject
+	done
+    fi
 }
 
 
 function perm_ok(){
-	object=$1; shift;
-	correctperm=$1; shift;
+    object=$1; shift;
+    correctperm=$1; shift;
 
-	if [ -d $object ]; then
-		# check the owner of the dir ...
-	        perm=$(stat -c%a $object)
-		if [ "$perm" != "$correctperm" ]; then
-			echo "#DIR: $object : Wrong permissions ($perm != $correctperm)";
-			if [ "$PLEASE_FIXME" = "true" ]; then
-				chmod $correctperm $object
-			fi
-			
-		fi
-
-		if [ -n "$norec" ]; then
-		    # The $norec variable cuts off recursion
-		    return 0
-		fi
-		# ... and then dive into it
-		for subobject in $object/*; do
-			owner_ok $subobject
-		done
-	else
-	        owner=$(stat -c%a $object)
-		if [ "$perm" != "$correctperm" ]; then
-			echo "#FILE: $object : Wrong permissions ($perm != $correctperm)";
-			if [ "$PLEASE_FIXME" = "true" ]; then
-				chmod $correctowner $object
-			fi
-		fi
+    perm=$(stat -c%a $object)
+    if [ "$perm" != "$correctperm" ]; then
+	echo "# $object : Wrong permissions ($perm != $correctperm)";
+	if [ "$PLEASE_FIXME" = "true" ]; then
+	    chmod $correctperm $object
 	fi
+    fi
+
+    if [ -d $object ]; then
+	# check the owner of the dir ...
+
+	if [ -n "$norec" ]; then
+	    # The $norec variable cuts off recursion
+	    return 0
+	fi
+
+	# ... and then dive into it
+	for subobject in $object/*; do
+	    owner_ok $subobject
+	done
+    fi
 }
 
 ####
