@@ -42,7 +42,7 @@ Need some input from an exim postmaster here.
 
 =head1 BUGS
 
-None Known
+None known
 
 =head1 VERSION
 
@@ -50,11 +50,16 @@ None Known
 
 =head1 AUTHOR
 
-Copyright (C) 2002-2008 Torstein Svendsen, Jimmy Olsen, Nicolai Langfeldt
+Copyright (C) 2000-2008 Torstein Svendsen, Henrik Grindal Bakken,
+Jimmy Olsen, Nicolai Langfeldt and others.
 
-Original author not documented, but likely Torstein Svendsen in 2002.
-Further messing by Jimmy Olsen the same year.  Bugfixing and cleanup
-by Nicolai Langfeldt 2008.
+Torstein Svendsen recalls originally writing this with Henrik Grindal
+Bakken to create MRTG graphs of exims mailqueues for Linpros client
+RunBox.  Thus this code predates Munin itself.
+
+The first traces of the plugin in CVS seems to be in 2002.  Further
+messing by Jimmy Olsen the same year.  Bugfixing and cleanup by
+Nicolai Langfeldt 2008.
 
 =head1 LICENSE
 
@@ -91,11 +96,39 @@ sub get_exim_logfile {
     return undef;
 }
 
-my $pos   = undef;
+
+my $pos;
 my $received = 0;
 my $completed = 0;
 my $rejected = 0;
 my $dirname;
+
+sub parseEximfile {
+    my ($fname, $start) = @_;
+
+    my ($LOGFILE,$rotated) = tail_open($fname, $start);
+
+    if ($rotated) {
+	# Reset everything if the log has been rotated
+	$pos = $received = $completed = $rejected = 0;
+    }
+
+    my $line;
+
+    while ($line = <$LOGFILE>) {
+	chomp ($line);
+
+	if (substr ($line, 37,2 ) eq '<=') {
+	    $received++;
+	} elsif (substr ($line, 37,9) eq 'Completed') {
+	    $completed++;
+	} elsif ($line=~/rejected/) {
+            $rejected++;
+        }
+    }
+    return tail_close($LOGFILE);
+}
+
 
 ($dirname = $0) =~ s/[^\/]+$//;
 
@@ -109,8 +142,7 @@ my $LOGNAME = $ENV{'logname'} || '';
 
 my $logfile;
 
-if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
-{
+if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
     my $logfile;
 
     if(defined($LOGDIR)) {
@@ -123,6 +155,7 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
     } else {
 
 	my $logfilespec = `$EXIM -bP log_file_path 2>/dev/null`;
+
 	if (! $?) {
 	    $logfile = get_exim_logfile( $logfilespec, 'main');
 	    if (! defined($logfile) ) {
@@ -191,41 +224,23 @@ if (! -f $logfile) {
 
 ($pos,$received,$completed,$rejected) = restore_state();
 
-# No (valid) state present?
-$pos = $received = $completed = $rejected = 0 if !defined($rejected);
+if (!defined($rejected)) {
 
-$pos = parseEximfile ($logfile, $pos);
+    # No state file present.  Avoid startup spike: Do not read log
+    # file up to now, but remember how large it is now, and next
+    # time read from there.
+
+    $pos = (stat $logfile)[7]; # File size
+
+    $received = $completed = $rejected = 0;
+} else {
+    $pos = parseEximfile ($logfile, $pos);
+}
 
 print "received.value $received\n";
 print "completed.value $completed\n";
 print "rejected.value $rejected\n";
 
 save_state($pos,$received,$completed,$rejected);
-
-sub parseEximfile {
-    my ($fname, $start, $stop) = @_;
-
-    my ($LOGFILE,$rotated) = tail_open($fname, $start);
-
-    if ($rotated) {
-	# Reset everything if the log has been rotated
-	$pos = $received = $completed = $rejected = 0;
-    }
-
-    my $line;
-
-    while ($line = <$LOGFILE>) {
-	chomp ($line);
-
-	if (substr ($line, 37,2 ) eq '<=') {
-	    $received++;
-	} elsif (substr ($line, 37,9) eq 'Completed') {
-	    $completed++;
-	} elsif ($line=~/rejected/) {
-            $rejected++;
-        }
-    }
-    return tail_close($LOGFILE);
-}
 
 # vim:syntax=perl
