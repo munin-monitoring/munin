@@ -878,6 +878,7 @@ sub config_and_fetch_node
     my $clientdomain = read_socket_single ($socket);
     my $fetchdomain;
     my $name = munin_get_node_name ($newconf);
+    my $host_time = Time::HiRes::time;
     chomp($clientdomain) if $clientdomain;
     if (!$clientdomain) {
 	logger("[WARNING] Got unknown reply from client \"$name\" skipping");
@@ -1041,6 +1042,8 @@ sub config_and_fetch_node
 
 	fetch_node_service ($newconf, $socket, $servname, $service);
     }
+    $host_time = sprintf ("%.2f", (Time::HiRes::time - $host_time));
+    print STATS "UD|$name|$host_time\n";
     return 0 unless $socket;
     return 1;
 }
