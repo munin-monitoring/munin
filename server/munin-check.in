@@ -74,8 +74,8 @@ function fix_owner() {
 ####
 # check if "@@USER@@" is owner, if PLEASE_FIXME set it calls fix_owner()
 function owner_ok(){
-    object=$1; shift;
-    correctowner=$1; shift;
+    object=$1; shift || exit 1
+    correctowner=$1; shift || exit 1
 
     owner=$(stat -c%U $object)
     if [ "$owner" != "$correctowner" ]; then
@@ -93,15 +93,15 @@ function owner_ok(){
 
 	# ... and then dive into it
 	for subobject in $object/*; do
-		owner_ok $subobject
+		owner_ok $subobject $correctowner
 	done
     fi
 }
 
 
 function perm_ok(){
-    object=$1; shift;
-    correctperm=$1; shift;
+    object=$1; shift || exit 1
+    correctperm=$1; shift || exit 1
 
     perm=$(stat -c%a $object)
     if [ "$perm" != "$correctperm" ]; then
@@ -121,7 +121,7 @@ function perm_ok(){
 
 	# ... and then dive into it
 	for subobject in $object/*; do
-	    owner_ok $subobject
+	    perm_ok $subobject $correctperm
 	done
     fi
 }
