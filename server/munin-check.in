@@ -129,13 +129,23 @@ function perm_ok(){
 ####
 # main
 
-for dir in @@HTMLDIR@@ @@DBDIR@@; do
-	echo "check $dir"
-	owner_ok $dir @@USER@@
+echo "Check @@HTMLDIR@@"
+owner_ok @@HTMLDIR@@ @@USER@@
+
+for dir in @@DBDIR@@/*; do
+    # Do not check the plugin-state directory
+    case $dir in
+	*/plugin-state)
+	    continue;;
+    esac
+    echo "check $dir"
+    owner_ok $dir @@USER@@
 done
 
+echo "Check @@LOGDIR@@"
 norec=yes owner_ok @@LOGDIR@@ root
 
+echo "Check miscelaneous"
 for dir in @@DBDIR@@ @@DBDIR@@/datafile @@DBDIR@@/limits \
     @@DBDIR@@/*.stats; do
 	norec=yes owner_ok $dir @@USER@@
