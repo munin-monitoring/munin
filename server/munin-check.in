@@ -136,14 +136,15 @@ done
 
 norec=yes owner_ok @@LOGDIR@@ root
 
-for dir in @@STATEDIR@@ @@STATEDIR@@/datafile @@STATEDIR@@/limits \
-    @@STATEDIR@@/*.stats; do
+for dir in @@DBDIR@@ @@DBDIR@@/datafile @@DBDIR@@/limits \
+    @@DBDIR@@/*.stats; do
 	norec=yes owner_ok $dir @@USER@@
 	norec=yes perm_ok $dir 744
 done
 
 norec=yes owner_ok @@PLUGSTATE@@ @@PLUGINUSER@@
 norec=yes perm_ok @@PLUGSTATE@@ 775
+
 norec=yes perm_ok @@CONFDIR@@/plugin-conf.d 755
 
 echo "Check done.  Please note that this script only checks most things,"
