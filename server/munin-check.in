@@ -107,6 +107,41 @@ function owner_ok(){
 	fi
 }
 
+
+function perm_ok(){
+	object=$1; shift;
+	correctperm=$1; shift;
+
+	if [ -d $object ]; then
+		# check the owner of the dir ...
+	        perm=$(stat -c%a $object)
+		if [ "$perm" != "$correctperm" ]; then
+			echo "#DIR: $object : Wrong permissions ($perm != $correctperm)";
+			if [ "$PLEASE_FIXME" = "true" ]; then
+				chmod $correctperm $object
+			fi
+			
+		fi
+
+		if [ -n "$norec" ]; then
+		    # The $norec variable cuts off recursion
+		    return 0
+		fi
+		# ... and then dive into it
+		for subobject in $object/*; do
+			owner_ok $subobject
+		done
+	else
+	        owner=$(stat -c%a $object)
+		if [ "$perm" != "$correctperm" ]; then
+			echo "#FILE: $object : Wrong permissions ($perm != $correctperm)";
+			if [ "$PLEASE_FIXME" = "true" ]; then
+				chmod $correctowner $object
+			fi
+		fi
+	fi
+}
+
 ####
 # main
 
@@ -117,4 +152,15 @@ done
 
 norec=yes owner_ok @@LOGDIR@@ root
 
-norec=yes owner_ok @@STATEDIR@@ @@USER@@
+for dir in @@STATEDIR@@ @@STATEDIR@@/datafile @@STATEDIR@@/limits \
+    @@STATEDIR@@/*.stats; do
+	norec=yes owner_ok $dir @@USER@@
+	norec=yes perm_ok $dir 744
+done
+
+norec=yes owner_ok @@PLUGSTATE@@ @@PLUGINUSER@@
+norec=yes perm_ok @@PLUGSTATE@@ 775
+norec=yes perm_ok @@CONFDIR@@/plugin-conf.d 755
+
+echo "Check done.  Please note that this script only checks most things,"
+echo "not all things."
