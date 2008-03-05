@@ -32,6 +32,7 @@ if [ "$1" = "config" ]; then
 
 	echo 'graph_title Munin-update'
 	echo 'graph_vlabel seconds'
+	echo 'graph_category munin'
 	[ -f $UPDATE_STATSFILE ] || exit 0
 	cat $UPDATE_STATSFILE | grep "UD" | while read i; do
 		name=`echo $i | cut -d"|" -f2 |tr  '.-' '__'`

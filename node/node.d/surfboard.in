@@ -2,14 +2,14 @@
 # -*- perl -*-
 #
 # andrew ryder - atr@mrcoffee.org
-# motorola surfboard cablemodems (4100 + 4200 from what I know - most likely
-# more since Motorola uses many of the same settings/chipsets across cablemodems
-# I know this will not work on Toshiba ones (since they use a different url
-# and page
-# this is real simple - it goes to your cable modems ip, generally
-# 192.168.100.1 and grabs a html file and parses it. I use this to 
-# see how good my cable connection. good if you have choices in your area 
-# requires lwp::perl package.
+#
+# motorola surfboard cablemodems (4100 + 4200 from what I know - most
+# likely more since Motorola uses many of the same settings/chipsets
+# across cablemodems I know this will not work on Toshiba ones (since
+# they use a different url and page this is real simple - it goes to
+# your cable modems ip, generally 192.168.100.1 and grabs a html file
+# and parses it. I use this to see how good my cable connection. good
+# if you have choices in your area requires lwp::perl package.
 #
 #%# family=contrib
 
@@ -26,6 +26,7 @@ my $powerlevelu = undef;
 
 if ( $ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title Surfboard Statistics\n";
+    print "graph_category network\n";
     print "graph_order snr downstream upstream\n";
     print "graph_vlabel surfboard statistics\n";
     print "snr.label SnR dB\n";

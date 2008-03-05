@@ -31,6 +31,7 @@ fi
 if [ "$1" = "config" ]; then
 
 	echo 'graph_title Munin-graph'
+	echo 'graph_category munin'
 	echo 'graph_vlabel seconds'
 	[ -f $GRAPH_STATSFILE ] || exit 0
 	cat $GRAPH_STATSFILE | grep "GT" | while read i; do
