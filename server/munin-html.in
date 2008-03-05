@@ -363,7 +363,7 @@ sub get_group_tree {
     }
 
     # ...and we need a couple of paths available.
-    @$path = reverse map { { "name" => $_, "path" => (defined $rpath?($rpath.="../")."index.html":($rpath="")) } } reverse ( "Overview", split ('\/', $base) );
+    @$path = reverse map { { "name" => $_, "path" => (defined $rpath?($rpath.="../")."index.html":($rpath="")) } } reverse ( undef , split ('\/', $base) );
     ($csspath = $path->[0]->{'path'}) =~ s/index.html$/style.css/;
 
     # We need a bit more info for the comparison templates
