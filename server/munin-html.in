@@ -298,6 +298,8 @@ sub get_peer_nodes {
     foreach my $peer (sort {munin_get_node_name($a) <=> munin_get_node_name($b)} @$pchildren) {
 	next unless defined $peer and ref ($peer) eq "HASH";
 	next if defined $category and lc (munin_get ($peer, "graph_category", "other")) ne $category;
+	next if (!defined $peer->{'graph_title'} and (!defined $peer->{'#%#visible'} or !$peer->{'#%#visible'}));
+	next if (defined $peer->{'graph_title'} and !munin_get_bool ($peer, "graph", 1));
 	my $peername = munin_get_node_name ($peer);
 	next if $peername eq "contact" and munin_get_node_name ($parent) eq "root";
 	if ($peername eq $me) {
@@ -348,6 +350,7 @@ sub get_group_tree {
     }
 
     return undef unless $visible;
+    $hash->{'#%#visible'} = 1;
 
     # We need the categories in another format.
     foreach my $cat (sort keys %$cattrav) {
@@ -409,6 +412,7 @@ sub get_group_tree {
 
     $ret = { 
 	"name"               => munin_get_node_name ($hash), 
+	"hashnode"           => $hash,
 	"url"                => $base . "index.html", 
 	"path"               => $path,
 	"depth"              => scalar(split("/",$base."index.html"))-1,
@@ -420,7 +424,6 @@ sub get_group_tree {
 	"ngroups"            => scalar (@$groups),
 	"ngraphs"            => scalar (@$graphs),
 	"ncategories"        => scalar (@$cats),
-	"peers"              => get_peer_nodes ($hash),
 	"compare"            => $compare,
 	"comparegroups"      => $comparegroups,
 	"ncomparegroups"     => scalar (@$comparegroups),
@@ -442,6 +445,8 @@ sub generate_group_templates {
 
     foreach my $key (@$arr) {
 	if (defined $key and ref ($key) eq "HASH") {
+	    $key->{'peers'} = get_peer_nodes ($key->{'hashnode'});
+	    delete $key->{'hashnode'}; # This was only kept there for getting the peers
 	    if (defined $key->{'ngroups'} and $key->{'ngroups'}) {
 		generate_group_templates ($key->{'groups'});
 
@@ -457,7 +462,7 @@ sub generate_group_templates {
 		    PATH      => $key->{'path'},
 		    CSSPATH   => $key->{'csspath'},
 		    PEERS     => $key->{'peers'},
-		    PARENT    => $key->{'path'}->[-2]->{'name'},
+		    PARENT    => $key->{'path'}->[-2]->{'name'} || "Overview",
 		    COMPARE   => $key->{'compare'},
 		    TIMESTAMP => $timestamp,
 		);
