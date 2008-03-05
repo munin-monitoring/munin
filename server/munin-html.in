@@ -357,7 +357,7 @@ sub get_group_tree {
 	my $obj = {};
 	$obj->{'name'} = $cat;
 	$obj->{'url'} = $base."index.html#".$cat;
-	$obj->{'services'} = [ sort { lc ($a->{'graph_title'}) cmp lc ($b->{'graph_title'}) } @{$cattrav->{$cat}} ];
+	$obj->{'services'} = [ sort { lc ($a->{'name'}) cmp lc ($b->{'name'}) } @{$cattrav->{$cat}} ];
 	$obj->{'state_'.lc munin_category_status ($hash, $limits, $cat, 1)} = 1;
 	for (my $shrinkpath = $obj->{'url'}, my $counter = 0; $shrinkpath =~ /\//; $shrinkpath =~ s/^[^\/]+\/*//, $counter++) {
 	    $obj->{'url'.$counter} = $shrinkpath;
