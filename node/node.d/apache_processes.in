@@ -1,13 +1,4 @@
-#!@@PERL@@
-#
-# Magic markers:
-#%# family=auto
-#%# capabilities=autoconf
-#
-# Parameters supported:
-#
-# 	config
-# 	autoconf
+# #!@@PERL@@
 
 =head1 NAME
 
@@ -65,13 +56,18 @@ or some other problem when connecting to your server.  In this case
 increase the C<MaxClients> setting.  Unless there is also no more free
 memory.
 
-=head1 VERSION
+=head1 MAGIC MARKERS
 
-  $Id$
+  #%# family=auto
+  #%# capabilities=autoconf
 
 =head1 BUGS
 
 Does not support digest authentication.
+
+=head1 VERSION
+
+  $Id$
 
 =head1 AUTHOR
 
