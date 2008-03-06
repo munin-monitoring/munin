@@ -22,6 +22,11 @@ the IRQ numbers.
 High interrupt rates may coincide with high loads on disk, network or
 other I/O, this is normal.
 
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
 =head1 VERSION
 
   $Id$
@@ -39,9 +44,6 @@ Unknown
 GPLv2
 
 =cut
-
-#%# family=auto
-#%# capabilities=autoconf
 
 
 use strict;
