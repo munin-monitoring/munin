@@ -2,6 +2,7 @@
 # -*- sh -*-
 
 : <<=cut
+
 =head1 NAME
 
 multips - Munin plugin to monitor number of processes. Which processes
@@ -19,6 +20,9 @@ There is no default configuration.  This is an example:
      env.names pop3d imapd sslwrap
      env.regex_imapd ^[0-9]* imapd:
      env.regex_pop3d ^[0-9]* pop3d:
+
+The regex parts are not needed if the name given in "names" can be
+used to grep with directly.
 
 =head1 INTERPRETATION
 
