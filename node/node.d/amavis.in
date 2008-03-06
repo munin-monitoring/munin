@@ -45,12 +45,16 @@ fi
 
 if [ "$1" = "config" ]; then
 	echo 'graph_title Amavis filter statistics'
-	echo 'graph_order virus spam_maybe spam_sure total'
 	echo 'graph_vlabel #'
+	echo 'graph_category antivirus'
 	echo 'virus.label virus'
+	echo 'virus.info Number of viruses caught in email'
 	echo 'spam_maybe.label probably spam'
+	echo 'spam_maybe.info Emails amavis thinks probably contains spam'
 	echo 'spam_sure.label surely spam'
-	echo 'total.label total'
+	echo 'spam_sure.info Emails amavis is sure contains spam'
+	echo 'total.label total mails'
+	echo 'total.info Total emails evaluated by amavis'
 	exit 0
 fi
 
@@ -59,7 +63,7 @@ virus=U
 spamm=U
 spams=U
 
-TEMP_FILE=`mktempfile munin-amavis.XXXXXX`
+TEMP_FILE=$(mktempfile munin-amavis.XXXXXX)
 
 if [ -n "$TEMP_FILE" -a -f "$TEMP_FILE" ]
 then
@@ -68,10 +72,10 @@ then
 	else
 	    $LOGTAIL ${AMAVIS_LOG} ${STATEFILE} | grep 'amavis\[.*\]:' > ${TEMP_FILE}
 	fi
-	total=`cat ${TEMP_FILE} | wc -l`
-	virus=`grep INFECTED ${TEMP_FILE} | wc -l`
-	spamm=`grep 'Passed.*Hits: 1[0-9][.]' ${TEMP_FILE} | wc -l`
-	spams=`grep 'Passed.*Hits: [2-9][0-9][0-9]*[.]' ${TEMP_FILE} | wc -l`
+	total=$(cat ${TEMP_FILE} | wc -l)
+	virus=$(grep INFECTED ${TEMP_FILE} | wc -l)
+	spamm=$(grep 'Passed.*Hits: 1[0-9][.]' ${TEMP_FILE} | wc -l)
+	spams=$(grep 'Passed.*Hits: [2-9][0-9][0-9]*[.]' ${TEMP_FILE} | wc -l)
 
 	/bin/rm -f $TEMP_FILE
 fi
