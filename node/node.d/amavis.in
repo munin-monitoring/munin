@@ -46,7 +46,7 @@ fi
 if [ "$1" = "config" ]; then
 	echo 'graph_title Amavis filter statistics'
 	echo 'graph_order virus spam_maybe spam_sure total'
-	echo 'graph_vlabel nb'
+	echo 'graph_vlabel #'
 	echo 'virus.label virus'
 	echo 'spam_maybe.label probably spam'
 	echo 'spam_sure.label surely spam'
