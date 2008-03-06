@@ -143,6 +143,7 @@ td.linkbox {
         padding: 4px 4px 4px 4px;
         margin: 2px 2px 2px 2px;
 	width: 100%;
+	white-space: normal;
 }
 
 .warntext {
