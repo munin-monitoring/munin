@@ -1,24 +1,55 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Script to monitor number of processes. Programs are configured
-# in client-conf.d
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - used by lrrd-config)
-#
-# Configuration example
-#
-# [multips]
-# env.names pop3d imapd sslwrap
-# env.regex_imapd ^[0-9]* imapd:
-# env.regex_pop3d ^[0-9]* pop3d:
-# 
-# Magic markers (optional):
-#%# family=manual
-#%# capabilities=autoconf
+
+: <<=cut
+=head1 NAME
+
+multips - Munin plugin to monitor number of processes. Which processes
+are configured in client-conf.d
+
+=head1 APPLICABLE SYSTEMS
+
+Any system with a pgrep, /usr/ucb/ps or other UCB compatible ps command.
+
+=head1 CONFIGURATION
+
+There is no default configuration.  This is an example:
+
+  [multips]
+     env.names pop3d imapd sslwrap
+     env.regex_imapd ^[0-9]* imapd:
+     env.regex_pop3d ^[0-9]* pop3d:
+
+=head1 INTERPRETATION
+
+This plugin simply counts the total number of processes matching the
+configured regular expressions.  The regular expressions are
+interpreted by "grep" (and not egrep or perl).
+
+=head1 MAGIC MARKERS
+
+  #%# family=manual
+  #%# capabilities=autoconf
+
+=head1 VERSION
+
+  $Id$
+
+=head1 BUGS
+
+None known
+
+=head1 AUTHOR
+
+Unknown
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
 
 if [ "$1" = "autoconf" ]; then
 	echo yes
@@ -36,14 +67,19 @@ if [ "$1" = "config" ]; then
 	echo 'graph_category processes'
 	echo 'graph_args --base 1000 --vertical-label processes -l 0'
 	for name in $names; do
-		echo "$name.label $name"
-		echo "$name.draw LINE2"
+	    	fieldname=$(clean_fieldname $name)
+		eval REGEX='"${regex_'$name'-\<'$name'\>}"'
+
+		echo "$fieldname.label $name"
+		echo "$fieldname.draw LINE2"
+		echo "$fieldname.info Processes matching this regular expression: /$REGEX/"
 	done
 	exit 0
 fi
 
 for name in $names; do
-	printf "$name.value "
+        fieldname=$(clean_fieldname $name)
+	printf "$fieldname.value "
 
 	eval REGEX='"${regex_'$name'-\<'$name'\>}"'
 	PGREP=$(which pgrep)
