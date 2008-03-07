@@ -2,7 +2,7 @@ Requirements
 ============
 
 - A reasonable Perl5, both on the server and nodes
-- RRD with perl support
+- RRD with perl support on the server
 - Perl modules for server:  Time::HiRes, Storable, Digest::MD5,
      HTML::Template, Text::Balanced
 - Perl modules for node: Net::Server

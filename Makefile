@@ -125,9 +125,9 @@ install-node-non-snmp: build
 	mkdir -p $(STATEDIR)
 	mkdir -p $(PLUGSTATE)
 
-	$(CHGRP) $(GROUP) $(PLUGSTATE)
-	$(CHMOD) 775 $(PLUGSTATE)
-	$(CHMOD) 755 $(CONFDIR)/plugin-conf.d
+	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
+	$(CHMOD) 0775 $(PLUGSTATE)
+	$(CHMOD) 0755 $(CONFDIR)/plugin-conf.d
 
 	$(INSTALL) -m 0755 build/node/munin-node $(SBINDIR)/
 	$(INSTALL) -m 0755 build/node/munin-node-configure $(SBINDIR)/
@@ -163,7 +163,7 @@ install-node-plugins: build $(PLUGINS) Makefile Makefile.config
 	-mv $(LIBDIR)/plugins/*.adv $(LIBDIR)
 	-mkdir -p $(PLUGSTATE)
 	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
-	$(CHMOD) 0664 $(PLUGSTATE)
+	$(CHMOD) 0775 $(PLUGSTATE)
 	$(INSTALL) -m 0644 build/node/plugins.history $(LIBDIR)/plugins/
 	$(INSTALL) -m 0644 build/node/plugin.sh $(LIBDIR)/plugins/
 	mkdir -p $(PERLLIB)/Munin
