@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor postgresql commits
 # 
@@ -47,7 +47,7 @@
 
 # It is not guaranteed that a database exists with the same name as the user,
 # but template1 should generally be there.
-if [ "$PGDATABASE" == "" ]; then
+if [ -z "$PGDATABASE" ]; then
 	PGDATABASE="template1"
 fi
 

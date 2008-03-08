@@ -32,8 +32,8 @@
 #       This should, however, be given through autoconf and suggest.
 #
 #       If required, give username, password and/or PostgreSQL server
-#       host through environment variables. 
-# 
+#       host through environment variables.
+#
 #       You must also activate PostgreSQL statistics. See
 #       http://www.postgresql.org/docs/8.2/interactive/monitoring-stats.html
 #       for how to enable this. Specifically, the following lines must
@@ -44,7 +44,7 @@
 #
 #
 # Parameters:
-# 	
+#
 # 	config
 # 	autoconf
 #

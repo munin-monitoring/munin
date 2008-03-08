@@ -12,7 +12,7 @@
 #
 # Magic markers (optional - used by munin-config and some installation 
 # scripts):
-# 
+#
 #%# family=auto
 #%# capabilities=autoconf
 
@@ -30,17 +30,17 @@ use constant STATEFILE => '@@PLUGSTATE@@/iostat-ios.state';
 if ($ARGV[0] eq 'autoconf') {
     if (-r "/proc/diskstats" or -r "/proc/partitions") {
 	print "yes\n";
+	exit 0;
     } else {
 	print "no (no /proc/diskstats or /proc/partitions)\n";
+	exit 1;
     }
 }
-
 
 if ($ARGV[0] eq 'config') {
     print_config();
     exit;
 }
-
 
 my ($r, $old_r);
 
@@ -58,7 +58,7 @@ if ($old_r) {
 store_state( $r );
 
 sub filter {
-    my ($major, $minor, $tmpnam);
+    my ($major, $minor, $tmpnam) = @_;
     return 0 if ($major ==   1); # RAM devices
     return 0 if ($major ==   9); # MD devices
     return 0 if ($major ==  58); # LVM devices
@@ -76,7 +76,7 @@ sub get_ios {
     my %R;
     my ($parts, $kernel);
     my @dev;
-    
+
     if (-r "/proc/diskstats") {
         $kernel = 2.6;
         $parts = new IO::File("/proc/diskstats") || die();
