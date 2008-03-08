@@ -17,6 +17,7 @@ This is a pre-release checklist for the maintainer.
    svn --verbose log -r910:1234 | fgrep node.d | grep -w A |
         cut -c 18- | cut -d' ' -f1 | xargs ls -ld
 
+ * Update ChangeLog
 
  * cd ..; svn cp svn://janl@munin.projects.linpro.no/munin/trunk \
 	svn://janl@munin.projects.linpro.no/munin/tags/1.3.4

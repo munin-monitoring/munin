@@ -1,5 +1,185 @@
 -*- text -*-
 
+munin (1.3.4, r1277:1560, 8/3/2008)
+
+ * New acpi thermal_zone plugin
+ * Bugfix linux/if_ plugin (--path=>-p, quoting, ethtool output tolerance)
+ * linux/cpuspeed: $(< ) isn't in POSIX it seems
+ * linux/cpu: "steal" is yet another value in /proc/stat on newer kernels.
+ * We must have a cron job for munin-limits
+ * Added detection of setr* at build time. The OSes without these functions
+   will work anyway (AIX, Darwin)
+ * Added some darwin(osx) plugins.
+ * Better handling of # in plugins and munin.conf (it can now be escaped).
+   Solves #38.
+ * Fix bug in node.d/ntp_ where jitter is plotted with the wrong values.
+   Fixes #520.
+ * Munin.pm: Bugfix in an error message, as well as added low-level reason
+   for dieing. Solves #468.  Detaint pid before kill(). Fixes #508.
+ * munin-limits: Added support for "unknown" Resloves #29, #43.
+ * munin-update: Fixed timeout bug (timeout not working where intended).
+   Closes #168.
+ * freebsd/if_: Disable DNS lookups which are not used (fixes #509)
+ * Documentation clearification as requested in #462
+ * List requirements at start of install document
+ * full SSL support (#490, #489, #8).  Many thanks to Brian De. Wolf for
+   this patch!
+ * As pr #510 make df plugins sensitive to warning and critical environment
+   variables.  Also Solaris plugins issued ".warn" which is just wrong.
+   Two plugins used awk in the inner loop, these were not fixed.
+ * munin-node.conf: Add documentation of host directive
+ * linux/ip_: Fix #439, support ipv6 in linux (not tested, I have no IPv6)
+ * postfix_mailvolume: Fix #473 - config did too much work
+ * linux/netstat: Address #493 - SuSE feature regarding special class
+   of rejections based on timestamps.  We do not count them, but will no
+   longer be confused by them.
+ * snmp__cpuload: Fix #506, what to do when no load value is returned?
+ * ping_: If invoked as ping6_ uses ping6 for pinging
+ * surfboard: Fixes and typos.
+ * linux/port_: Fix #500, report zero open ports as 0 not blank
+ * Integrate a load of snmp_ plugins from Lars Strand
+ * snmp__if_: Fix #453, snmp__if_ now supports SNMPv3 and heavy
+   authentication.  Also always use $name to name the interface.
+ * hddtemp_smartctl: now works with recent kernels and 3ware controllers
+ * apt_all: apt_all lacked some graph metadata, fixes #478
+ * ircu: more robust and more useful (fixes #517, thanks to Zhenech)
+ * Clearify apache-cgi foo
+ * linux/irqstats: Fix unitialized message (#497)
+ * munin-cgi-graph: Path error in unlocking (#507),
+     - SysV semaphore locking, thanks to Fox for patch (closes #499)
+ * loggrep: Support foreign hostnames
+ * INSTALL: Fix filename typo in INSTALL (closes #513)
+ * Add postgresql plugins from #63, muninexchange and openproject.hu
+     - make the support for servernames, port and so on uniform
+ * ntp plugins: Make ntp_ plugin manual, it is no longer recommended,
+     the new ntp_offset is
+     - Interprete magical ip-numbers used by ntpd for local
+       clocks - stops spurious DNS lookups of these (closes #150)
+ * It appears that some versions of Net::SSLeay needs a "" in
+   print_errs("") calls (closes #154)
+ * Add munin_stats plugin written by Rodolphe Quiedeville - and patch to
+   munin-limits to provide timing information by same.  Closes #485.
+   Problem: plugin can take more than 10 seconds to run with long log
+   files, needs to use log-tail and a state file
+ * Make netstat plugins --logarithmic, and autoconfigure
+ * Make iostat* plugins autoconfigure
+ * Make netstat from darwin generic and elliminate identical plugins
+   from other BSD OSes
+ * Add postgres_commits_ and postgres_queries_ contributed by Moses
+   Moore based on work done by Vajtsz and others
+ * exim_mailstats did not have human readable error messages, it tried
+   signaling by coded exit statuses
+ * ntp_*: Implement option to supress showing delay graph (suggested by
+   Håvard Eidnes, fixes #350)
+ * Generic processes plugin submitted by Lars Stand. Thanks!! (#441)
+ * Fix typo in munin-limits (oks -> ok) closes debian #387283
+ * Enhanced doc of cgi mode in munin.conf - closes debian #307963
+ * linux/interrupts:  Replace sed|egrep|awk pipeline with a single awk script
+ * linux/cpuspeed: Report the average frequency, Use the default line style.
+ * hddtemp_smartctl: Fixes to avoid disk-spin-up (fixes 137)
+ * linux/interrupts: Remove & to fix a new pango problem ("&" is illegal
+   entity).  Fixes #537
+ * linux/nfsd4: Add nfs4 server plugin
+ * Postgres plugins: Make graph_category consistent (fixes #534)
+ * linux/ip_: ip_ plugin: add support for alternate chain names
+ * munin_graph: Set category to manual, munin_stats superseeds them
+ * Postgres plugins enhanced by Tim Retout - thanks (closes #541)
+   (Use standard pgsql env variables for DB connection - fixes #544)
+ * colour_tester: Plugin to experiment with the colour palette
+ * hddtemp_smartctl: Insert comment about SCSI vs. SATA on hddtemp plugin
+ * Multiple documentation updates from Brian de. Wolf
+ * Debian packaging: Set correct log file for the postfix_mailvolume plugin
+   (Debian bug #461302)
+ * linux/df: Update list of file systems we don't want to graph.
+   (Debian bug #385291)
+ * munin-cron: Filter "attempt to put segment in horiz list twice" better,
+   closes #538
+ * munin-update: Negative magnitude broken in scientific format
+   interpretation (thanks Matthias)
+ * New functions in Munin::Plugin (state retention, tail functions)
+ * Some preparations for same in plugin.sh
+ * munin-limits: Remove unused code for opening the wrong log file.
+   closes #553 and debian #385358
+ * munin-limits: Fix redirect handling.  Fixes #552 and debian #385358
+ * Quoting fixes in postgres plugins - fixes #546 - thanks to diocles
+ * snmp__if*: Probe switches for interface alias and use it if one is
+   assigned - fixes #551 - thanks to bart for patch
+ * hp-ux: Start of HP-UX plugins from Raph Grothe
+ * Fix perl warning relating to strangely empty environment value
+ * HP-UX munin-node init.d script and rc.config.d file by Ralph Grothe
+ * munin-node: Added a newline on TLS logging
+ * Added tls_ca_certificate to @legal
+ * squid_objectsize: New plugin to show mean object size in Squid.
+   Useful for tuning the caching size.  Thanks to Bjørn
+ * Munin-master programs: Remove locks as we're done with them.
+   Removes ambiguity around left over lock files.
+ * Introducing the munindoc command and example documentation
+ * Munin::Plugin - fix doc and testcase, test better
+ * irqstats: Now work with 2.6.24 kernels (fixes debian #463721), also
+   make "MIS" and "ERR" interrupts be reported on SMP systems
+ * Sensors plugin for nvidia graphics cards
+ * munin_stats: Slight change to remove this error: "Useless use of a
+   constant in void context at /etc/munin/plugins/munin_stats line 35."
+ * munin-graph: Add "Munin $VERSION" watermark to graphs - everyone
+   uses munin but not everyone knows
+ * Munin.pm: Fixed locking bug, lock was not created, and previously
+   there was no error message
+ * Introduced "palette" keyword for configuration along with the named
+   palettes "old" and "default".  The names should be self descriptive
+ * Munin-master programs Stronger warnings about about running as root.
+   Standardized across all server components
+ * Copyright on main programs now extended to 2008.
+ * Add Informix plugin for concurrent session counting contributed by
+   Ralph Grothe
+ * Introduce apache configuration to control html and graph expiry.
+   Document in INSTALL, and remove old example now obsoleted by doc
+ * Fix graph expiery in munin-cgi-graph as well
+ * Munin-graph: Hum, that expiery thing has been fixed quite often.
+   Go with the one I liked the best
+ * freebsd/if_*: FreeBSD if_ and if_errcoll_ from downstream maintainer.
+   Removes more interfaces
+ * hddtemp_smartctl: Recognize ATA disks on FreeBSD (patch from downstream)
+ * New FreeBSD plugin: coretemp, graphs Intel Core (and newer) temperature
+   measured by MSR
+ * Munin-update: Disable tls by default - fixes #452
+ * munindoc'ify apache plugins, document how to do basic authentication
+ * freebsd/dev_cpu_: Add freebsd plugin for cpu-temp and speed
+   (requires Core Duo or newer CPUs)
+ * Document users plugin a bit
+ * linux/sensors: Fix regexp, there may be _no_ space after :
+ * Plugin.pm: Remove comma from quoted word list
+ * munin-check: add the script munin-check for checking permissions of
+   the munin-dirs - Thanks Matthias!
+ * Implement multilevel-groups.
+ * Enabled plugins to send values on the form <epoch>:<value>
+   (enabeling backdating of data)
+ * Rename munin_set_var -> munin_set for consistency purposes.
+ * Fetch services directly after config, to make use of OS caches.
+ * Bugfix: .graph was ignored in some cases in munin-html, ending in
+   trying to show nonexistant graphs.
+ * postfix_mailvolume: multiple fixes for problems found in sibling
+   exim_mailstats plugin:
+  - Use english to communicate errors (not exit statuses)
+  - Discontinue use of rotated log files to elliminate associated bugs
+  - Give reasons for not autoconfiguring plugin
+ * munin-limits: Open log on demand.
+ * Munin.pm Fix false red/yellow markers in html output.
+ * Munin::Plugin: Security fix, do not open symlinks for writing
+ * postfix_mailvolume: Fix bug introduced in previous cleanup to stop
+   startup spike.
+ * munin_graph: Changed munin_graph plugin to graph total time used by
+   munin-graph, since we don't draw graphs grouped by domain anymore.
+ * Correct graph_category on some plugins
+ * style.css: Fixes too wide link issue.
+ * Add getversion command to add SVN revision to unversioned svn checkouts
+ * Remove redundant munin_graph plugin - see munin_stats
+ * linux/if_ plugin: Clearify the 32 bit issue with fast interfaces
+ * linux/irqstats plugin: Incorporate magic markers in pod
+ * node.d/multips plugin: Document, use clean_fieldname to remove bugs,
+   add usefull .info information about processes watched.
+ * Various fixes to amavis plugin
+ * Fix wrong chmod for plugin-state directory
+
 munin (1.3.3, r910-r1236)
 
   It's very likely that the entries for 1.3.3 contain some duplicates.
