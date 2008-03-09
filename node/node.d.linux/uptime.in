@@ -21,6 +21,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Uptime'
 	echo 'graph_args --base 1000 -l 0 '
 	echo 'graph_vlabel uptime in days'
+	echo 'graph_category system'
 	echo 'uptime.label uptime'
 	echo 'uptime.draw AREA'
 	exit 0
