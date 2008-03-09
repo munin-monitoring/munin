@@ -8,7 +8,7 @@
 # Magic markers - optional - used by installation scripts and
 # munin-config:
 #
-#%# family=manual
+#%# family=auto
 #%# capabilities=autoconf
 
 if [ "$1" = "autoconf" ]; then
