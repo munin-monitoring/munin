@@ -37,7 +37,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_args --upper-limit 100'
     echo 'graph_category disk'
     echo 'graph_scale no'
-    $DF | $TAIL +2 | while read dev two three four five six; do
+    eval $DF | $TAIL +2 | while read dev two three four five six; do
 	name=$(clean_fieldname $dev)
 	# Ignore tmpfs.
 	if [ "$name" != "swap" ]; then
@@ -53,7 +53,7 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-$DF | $TAIL +2 | while read dev two three four five six; do
+eval $DF | $TAIL +2 | while read dev two three four five six; do
     name=$(clean_fieldname $dev)
     # Ignore tmpfs.
     if [ "$name" != "swap" ]; then
