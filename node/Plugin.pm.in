@@ -103,7 +103,7 @@ shown at the beginning of this document.
 $pluginstatedir = $ENV{'MUNIN_PLUGSTATE'} || '@@PLUGSTATE@@';
 
 if ($pluginstatedir =~ /^@@/) {
-    die "# Unable to determine PLUGSTATE, please see plugindoc Munin::Plugin-";
+    die "# Unable to determine PLUGSTATE, please see plugindoc Munin::Plugin";
 };
 
 =head3 $Munin::Plugin::statefile
@@ -257,6 +257,10 @@ vector verbatim with \r, \n and % URL encoded.
 
 sub save_state (@) {
     print "State file: $statefile\n" if $DEBUG;
+
+    if (-l $statefile) {
+	die "$me: $statefile is a symbolic link.  Refusing to touch it for security reasons.\n";
+    }
 
     open(STATE,"> $statefile") or
       die "$me: Could not open statefile '$statefile' for writing: $!\n";
