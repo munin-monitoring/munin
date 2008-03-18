@@ -287,6 +287,16 @@ deb:
 	-ln -s dists/debian
 	fakeroot debian/rules binary
 
+tar-pre:
+	(! grep MAINTAINER Makefile.config)
+	find . -name '*~' -exec rm -fv {} \;
+	PWD=`pwd`
+	-rm -f ../munin-$(VERSION)
+	(cd ..; ln -s $(PWD) munin-$(VERSION))
+
+tar: tar-pre
+	GZIP=-9 tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
+
 rpm-pre:
 	(! grep MAINTAINER Makefile.config)
 	@for file in `find dists/redhat/ -type f -name '*.in'`; do			\
