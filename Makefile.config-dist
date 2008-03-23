@@ -84,7 +84,7 @@ HOSTNAME   = $(shell hostname)
 MKTEMP     = $(shell ./test-mktemp)
 
 # Munin version number.
-VERSION    = $(shell cat RELEASE)
+VERSION    = $(shell ./getversion)
 
 # User to run munin as
 USER       = munin
@@ -112,12 +112,9 @@ CHECKGROUP = $(shell $(GETENT) group $(GROUP) >/dev/null 2>/dev/null || (echo "e
 #CHECKUSER  = $(shell $(PWGET) -n $(USER) >/dev/null 2>/dev/null || (echo "echo User $(USER) nonexistant. Create the user and retry; exit 2"))
 #CHECKGROUP = $(shell $(GRGET) -n $(GROUP) >/dev/null 2>/dev/null || (echo "echo Group $(GROUP) nonexistant. Create the group and retry; exit 2"))
 
-
-
 CHOWN      = chown
 CHMOD      = chmod
 CHGRP      = chgrp
 
 # Check whether setruid functionality can be used
 HASSETR = $(shell perl -e 'use Config; my @vars=("d_setruid", "d_setreuid", "d_setresuid"); foreach my $$var (@vars) { if ($$Config{$$var} eq "define") { print "1\n"; exit 0; } } print "0\n"; exit 0;' )
-

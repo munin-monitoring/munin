@@ -1,14 +1,17 @@
 # MAINTAINER VERSION OF Makefile.config
 # -*- Makefile -*-
 #
-# This file is rigged to overwrite the a debian munin-package as that
-# is what janl uses.
+# This file is used by the maintainer for testing and only necessarily
+# works on the maintainers machines.  Please see Makefile.config-dist
+# for the user directed Makefile.config as directed in the INSTALL doc.
 #
-# $Id: Makefile.config 1164 2006-10-19 19:45:50Z janl $
+# $Id: Makefile.config 1551 2008-03-06 20:16:51Z janl $
 
 # This file specifies where Munin will look for things after you've
 # run 'make' in the source directory.  Modify it to suit your needs.
 
+# DESTDIR is meant only for use when making Munin packages.  Unless
+# you're doing packaging do NOT set it. 
 # DESTDIR is empty during building, and optionally set to point to
 # a shadow tree during make install.
 
@@ -50,12 +53,11 @@ PERL       = $(shell which perl)
 PYTHON     = /usr/bin/env python
 
 # A modern shell.  We're not looking for arrays, but $() and other modern
-# stuff is expected.  The expression below will work on posix systems.
-# This includes Linux, FreeBSD, Solaris, AIX and others.
-#
-# On linux /bin/sh.  SunOS/Solaris: /usr/xpg4/bin/sh
+# stuff is expected.
+# Linux: /bin/bash
+# SunOS/Solaris: /usr/xpg4/bin/sh or /bin/ksh
 # In general: bash or ksh will work
-GOODSH     = $(shell PATH=`getconf PATH` sh -c 'type sh | sed "s/.* //"')
+GOODSH     = /bin/bash
 
 # Path of bash for bash specific plugins
 BASH       = /bin/bash
@@ -76,7 +78,7 @@ HOSTNAME   = $(shell hostname)
 MKTEMP     = $(shell ./test-mktemp)
 
 # Munin version number.
-VERSION    = $(shell cat RELEASE)
+VERSION    = $(shell ./getversion)
 
 # User to run munin as
 USER       = munin
@@ -86,6 +88,7 @@ GROUP      = munin
 PLUGINUSER = nobody
 
 # Which command to use to check if the USER and GROUP to run Munin as, exists.
+
 GETENT = $(shell which getent || which true 2>/dev/null)
 CHECKUSER  = $(shell $(GETENT) passwd $(USER) >/dev/null 2>/dev/null || (echo "echo User $(USER) nonexistant. Create the user and retry; exit 2"))
 CHECKGROUP = $(shell $(GETENT) group $(GROUP) >/dev/null 2>/dev/null || (echo "echo Group $(GROUP) nonexistant. Create the group and retry; exit 2"))
@@ -93,6 +96,3 @@ CHECKGROUP = $(shell $(GETENT) group $(GROUP) >/dev/null 2>/dev/null || (echo "e
 CHOWN      = chown
 CHMOD      = chmod
 CHGRP      = chgrp
-
-# Check whether setruid functionality can be used
-HASSETR = $(shell perl -e 'use Config; my @vars=("d_setruid", "d_setreuid", "d_setresuid"); foreach my $$var (@vars) { if ($$Config{$$var} eq "define") { print "1\n"; exit 0; } } print "0\n"; exit 0;' )
