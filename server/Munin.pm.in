@@ -191,8 +191,8 @@ sub munin_getlock {
 	    }
 	}
 	&munin_removelock($lockname);
-	&munin_createlock($lockname);
     }
+    &munin_createlock($lockname);
     return 1;
 }
 
