@@ -1,6 +1,6 @@
 =head1 NAME
 
-node.conf - Munin-node configuration file
+munin-node.conf - Munin-node configuration file
 
 =head1 DESCRIPTION
 
