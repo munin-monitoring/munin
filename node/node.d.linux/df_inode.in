@@ -37,7 +37,7 @@ while (<MOUNTS>) {
 }
 close MOUNTS;
 
-my $exclude=$ENV{'exclude'} || 'iso9660';
+my $exclude=$ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs';
 my $warning=$ENV{'warning'} || 92;
 my $critical=$ENV{'critical'} || 98;
 my $dfopts = "-P -l -i ".join(' -x ',('',split('\s+',$exclude)));
