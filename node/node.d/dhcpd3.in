@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# -*- perl -*-
 #
 # Plugin to monitor dhcp3 leases 
 #
@@ -83,7 +84,7 @@ if($DEBUG) {
 Net::Netmask->import();
 HTTP::Date->import();
 
-parseconfig();
+parseconfig($CONFIGFILE);
 
 if($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title dhcp leases\n";
@@ -96,7 +97,7 @@ if($ARGV[0] and $ARGV[0] eq "config") {
 	print "$network.label $name\n";
     }
     exit 0;
-} 
+}
 
 parseleases();
 
@@ -105,9 +106,19 @@ foreach my $network (sort(keys %leases)) {
 }
 
 sub parseconfig {
-    open(IN, "<$CONFIGFILE") or exit 4;
-    while(<IN>) {
-	if(/subnet\s+(\d+\.\d+\.\d+\.\d+)\s+netmask\s+(\d+\.\d+\.\d+\.\d+)/ && ! /^\s*#/) {
+    my($configfile)=@_;
+
+    local(*IN);
+
+    open(IN, "<$configfile") or exit 4;
+    while (<IN>) {
+	if(/include\s+\"([^"]+)\"/ && ! /^\s*#/){
+	    print "Found included file $1\n" if $DEBUG;
+            parseconfig($1);
+	    next;
+        }
+	if(/subnet\s+(\d+\.\d+\.\d+\.\d+)\s+netmask\s+(\d+\.\d+\.\d+\.\d+)/ &&
+	   ! /^\s*#/) {
 	    initnet($1,$2);
 	}
     }
