@@ -1,0 +1,64 @@
+#!/bin/sh
+# System statistics for FreeBSD
+# Author: Gergely Czuczy <phoemix@harmless.hu>
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+sysctl='/sbin/sysctl'
+
+case $1 in
+    config)
+	cat <<EOF
+graph_title System Statistics
+graph_vlabel per second
+graph_scale no
+graph_category system
+graph_args -l 0
+graph_info FreeBSD systat plugin
+softint.label Software interrupts
+softint.type DERIVE
+softint.min 0
+hardint.label Hardware interrupts
+hardint.type DERIVE
+hardint.min 0
+syscall.label System calls
+syscall.type DERIVE
+syscall.min 0
+cs.label Context switches
+cs.type DERIVE
+cs.min 0
+forks.label Fork rate
+forks.type DERIVE
+forks.min 0
+EOF
+	exit 0
+	;;
+    autoconf)
+	if [ ! -x ${sysctl} ]; then
+	    echo "no (${sysctl} is not executable)"
+	    exit 1
+	fi
+	ostype=`uname -s`
+	if [ ${ostype} = "FreeBSD" ]; then
+	    echo "yes"
+	    exit 0
+	fi
+	echo "no (You're OS is not supported by this plugin)"
+	exit 1
+	;;
+    suggest)
+	exit 0
+	;;
+esac
+
+${sysctl} vm.stats.sys.v_soft vm.stats.sys.v_intr vm.stats.sys.v_syscall vm.stats.sys.v_trap vm.stats.sys.v_swtch \
+    vm.stats.vm.v_forks vm.stats.vm.v_rforks vm.stats.vm.v_vforks| awk '
+BEGIN {forks=0;}
+/^vm.stats.sys.v_soft/{print "softint.value",$2}
+/^vm.stats.sys.v_intr/{print "hardint.value",$2}
+/^vm.stats.sys.v_syscall/{print "syscall.value",$2}
+/^vm.stats.sys.v_swtch/{print "cs.value",$2}
+/^vm.stats.vm.v_[rv]?forks/ {forks+=$2}
+END {print "forks.value",forks;}
+'
