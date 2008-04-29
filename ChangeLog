@@ -1,3 +1,17 @@
+munin (1.2.6rc2)
+	* [r1599] server/Munin.pm.in: added "ok" and "unknown" to @legal,
+	  this is the missing part from r1469 (merged r1288 from trunk)
+
+	* [r1590] node/node.d/multips.in: copied node.d/multips.in from
+	  trunk
+
+	* [r1589] node/node.d.linux/df_abs.in,
+	  node/node.d.linux/df_inode.in: As suggested in Debian #454260 /
+	  Trac #572 exclude the same filesystems in all df*-plugins
+
+	* [r1588] server/munin-graph.in: remove the not used and error
+	  causing array NEWCOLOUR
+
 munin (1.2.6rc1)
 	* [r1584] server/Munin.pm.in: fix locking bug, lock was not created
 	  (same like r1437)
