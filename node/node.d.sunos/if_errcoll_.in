@@ -15,6 +15,8 @@
 #%# family=auto
 #%# capabilities=autoconf suggest
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 INTERFACE=${0##*/if_errcoll_}
 
 if [ "$1" = "autoconf" ]; then
@@ -46,12 +48,18 @@ if [ "$1" = "config" ]; then
 	echo 'ierrors.label Input Errors'
         echo 'ierrors.type COUNTER'
         echo 'ierrors.max 2000000000'
+	print_warning ierrors
+	print_critical ierrors
         echo 'oerrors.label Output Errors'
 	echo 'oerrors.type COUNTER'
         echo 'oerrors.max 2000000000'
+	print_warning oerrors
+	print_critical oerrors
         echo 'collisions.label Collisions'
 	echo 'collisions.type COUNTER'
         echo 'collisions.max 2000000000'
+	print_warning collisions
+	print_critical collisions
 	exit 0
 fi;
 

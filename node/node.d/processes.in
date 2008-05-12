@@ -56,6 +56,8 @@ if [ "$1" = "autoconf" ]; then
 	exit 0
 fi
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 # Define colours
 RUNNABLE='22ff22'         # Green
 SLEEPING='0022ff'         # Blue
@@ -98,10 +100,14 @@ if [ "$1" = "config" ]; then
 	echo "dead.draw STACK"
 	echo "dead.colour $DEAD"
 	echo "dead.info The number of dead processes."
+	print_warning dead
+	print_critical dead
 	echo "paging.label paging"
 	echo "paging.draw STACK"
 	echo "paging.colour $PAGING"
 	echo "paging.info The number of paging processes (<2.6 kernels only)."
+	print_warning paging
+	print_critical paging
 
     elif [ "$OPERSYS" = "SunOS" ]; then
 	echo "graph_order sleeping stopped zombie runnable running total"
@@ -109,11 +115,15 @@ if [ "$1" = "config" ]; then
 	echo "running.draw STACK"
 	echo "running.colour $RUNNING"
 	echo "running.info The number of processes that are running on a processor."
+	print_warning running
+	print_critical running
 	# Be backwards compatible.
 	echo "total.label total"
 	echo "total.draw LINE1"
         echo "total.colour $TOTAL"
 	echo "total.info The total number of processes."
+	print_warning total
+	print_critical total
 
     elif [ "$OPERSYS" = "FreeBSD" ]; then
 	echo "graph_order sleeping idle stopped zombie lock uninterruptible interrupt runnable processes"
@@ -121,10 +131,14 @@ if [ "$1" = "config" ]; then
 	echo "lock.draw STACK"
 	echo "lock.colour $LOCK"
 	echo "lock.info The number of processes that are waiting to acquire a lock."
+	print_warning lock
+	print_critical lock
 	echo "interrupt.label interrupt"
 	echo "interrupt.draw STACK"
 	echo "interrupt.colour $INTERRUPT"
 	echo "interrupt.info The number of idle interrupt threads."
+	print_warning interrupt
+	print_critical interrupt
       
     elif [ "$OPERSYS" = "OpenBSD" ]; then
 	echo "graph_order sleeping idle stopped zombie uninterruptible runnable processes"
@@ -135,6 +149,8 @@ if [ "$1" = "config" ]; then
 	echo "suspended.draw STACK"
 	echo "suspended.colour $SUSPENDED"
 	echo "suspended.info The number of processes that are suspended."
+	print_warning suspended
+	print_critical suspended
 
     elif [ "$OPERSYS" = "Darwin" ]; then
 	echo "graph_order sleeping idle stopped zombie uninterruptible running processes"
@@ -142,6 +158,8 @@ if [ "$1" = "config" ]; then
 	echo "uninterruptible.draw STACK"
 	echo "uninterruptible.colour $UNINTERRUPTIBLE"
 	echo "uninterruptible.info The number of uninterruptible processes (usually IO)."
+	print_warning uninterruptible
+	print_critical uninterruptible
     fi
 
     # Common flags for some OS
@@ -151,15 +169,21 @@ if [ "$1" = "config" ]; then
 	echo "idle.draw STACK"
 	echo "idle.colour $IDLE"
 	echo "idle.info The number of processes that are idle (sleeping for longer than about 20 seconds)."
+	print_warning idle
+	print_critical idle
 	echo "sleeping.label sleeping"
 	echo "sleeping.draw AREA"
 	echo "sleeping.colour $SLEEPING"
 	echo "sleeping.info The number of processes that are sleeping for less than about 20 seconds."
+	print_warning sleeping
+	print_critical sleeping
     else
 	echo "sleeping.label sleeping"
 	echo "sleeping.draw AREA"
 	echo "sleeping.colour $SLEEPING"
 	echo "sleeping.info The number of sleeping processes."
+	print_warning sleeping
+	print_critical sleeping
     fi
    
     if [ "$OPERSYS" = "Linux" ] || [ "$OPERSYS" = "FreeBSD" ] || 
@@ -168,6 +192,8 @@ if [ "$1" = "config" ]; then
 	echo "uninterruptible.draw STACK"
 	echo "uninterruptible.colour $UNINTERRUPTIBLE"
 	echo "uninterruptible.info The number of uninterruptible processes (usually IO)."	
+	print_warning uninterruptible
+	print_critical uninterruptible
     fi
 
     # Common flags
@@ -175,16 +201,22 @@ if [ "$1" = "config" ]; then
     echo "zombie.draw STACK"
     echo "zombie.colour $ZOMBIE"
     echo "zombie.info The number of defunct ("zombie") processes (process terminated and parent not waiting)."
+    print_warning zombie
+    print_critical zombie
 
     echo "stopped.label stopped"
     echo "stopped.draw STACK"
     echo "stopped.colour $STOPPED"
     echo "stopped.info The number of stopped or traced processes."
+    print_warning stopped
+    print_critical stopped
 
     echo "runnable.label runnable"
     echo "runnable.draw STACK"
     echo "runnable.colour $RUNNABLE"
     echo "runnable.info The number of runnable processes (on the run queue)."
+    print_warning runnable
+    print_critical runnable
 
     if [ "$OPERSYS" != "SunOS" ]; then
 	# Not using 'graph_total' due to backwards compability. SunOS uses 'total'.
@@ -193,6 +225,8 @@ if [ "$1" = "config" ]; then
         echo "processes.draw LINE1"
         echo "processes.colour $TOTAL"
         echo "processes.info The total number of processes."
+	print_warning processes
+	print_critical processes
     fi
 
     exit 0

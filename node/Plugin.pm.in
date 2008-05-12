@@ -48,7 +48,7 @@ set_state_name, save_state, restore_state, tail_open, tail_close.
 use Exporter;
 @ISA = ('Exporter');
 @EXPORT = qw(clean_fieldname set_state_name save_state restore_state
-	     tail_open tail_close);
+	     get_thresholds print_thresholds tail_open tail_close);
 
 use strict;
 use vars qw($me $pluginstatedir $statefile $DEBUG);
@@ -300,6 +300,47 @@ sub restore_state {
     }
 
     return _decode_state(@state);
+}
+
+=head ($warning, $critical) = get_thresholds($field, [$warning_env[, $critical_env]])
+
+Search the environment for thresholds for $field and return their values in a
+tuple.  The default environment variables for the default threshold values are
+"warning" and "critical", and can be overriden by the two optional arguments.
+Undefined is returned if the variables do not exist in the environment.
+
+=cut
+
+sub get_thresholds {
+    my ($field, $warning_env, $critical_env) = @_;
+    $warning_env ||= "warning";
+    $critical_env ||= "critical";
+
+    my ($warning, $critical) = ($ENV{"${field}_warning"}, $ENV{"${field}_critical"});
+
+    if(!defined $warning) {
+    	$warning = $ENV{"$warning_env"};
+    }
+
+    if(!defined $critical) {
+        $critical = $ENV{"$critical_env"};
+    }
+
+    return ($warning, $critical);
+}
+
+=head print_thresholds($field, [$warning_env[, $critical_env]])
+
+Pass arguments to get_thresholds and use returned values to print the
+thresholds in the default fashion.
+
+=cut
+
+sub print_thresholds {
+    my $field = $_[0];
+    my ($warning, $critical) = get_thresholds(@_);
+    print "$field.warning $warning\n" if (defined $warning);
+    print "$field.critical $critical\n" if (defined $critical);
 }
 
 

@@ -51,8 +51,8 @@ if [ "$1" = "config" ]; then
     while read dev avail used free pct fs; do
 	name=$(clean_fieldname $dev)
 	echo "$name.label $fs"
-	echo "$name.warning ${warning:-92}"
-	echo "$name.critical ${critical:-98}" 
+	print_warning $name
+	print_critical $name
     done
     exit 0
 fi

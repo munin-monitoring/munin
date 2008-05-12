@@ -13,6 +13,8 @@
 #%# family=auto
 #%# capabilities=autoconf
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/sys/fs/file-nr ]; then
 		echo yes
@@ -32,8 +34,12 @@ if [ "$1" = "config" ]; then
 	echo 'graph_info This graph monitors the Linux open files table.'
 	echo 'used.label open files'
 	echo 'used.info The number of currently open files.'
+	print_warning used
+	print_critical used
 	echo 'max.label max open files'
 	echo 'max.info The maximum supported number of open files. Tune by modifying /proc/sys/fs/file-max.'
+	print_warning max
+	print_critical max
 	awk  '{printf "used.warning %d\nused.critical %d\n",$3*0.92,$3*0.98}' < /proc/sys/fs/file-nr
 	exit 0
 fi

@@ -27,6 +27,8 @@
 #
 # $Id$
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/stat ]; then
 		echo yes
@@ -58,9 +60,6 @@ if [ "$1" = "config" ]; then
 	else
 		graphlimit=$PERCENT
 	fi
-	SYSWARNING=$(($PERCENT * 30 / 100))
-	SYSCRITICAL=$(($PERCENT * 50 / 100))
-	USRWARNING=$(($PERCENT * 80 / 100))
 	echo 'graph_title CPU usage'
 	echo "graph_order system user nice idle" $extinfo
 	echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit $graphlimit"
@@ -74,14 +73,11 @@ if [ "$1" = "config" ]; then
 	echo "system.max $MAX"
 	echo 'system.min 0'
 	echo 'system.type DERIVE'
-	echo "system.warning $SYSWARNING" 
-	echo "system.critical $SYSCRITICAL" 
 	echo "system.info CPU time spent by the kernel in system activities" 
 	echo 'user.label user'
 	echo 'user.draw STACK'
 	echo 'user.min 0'
 	echo "user.max $MAX"
-	echo "user.warning $USRWARNING"
 	echo 'user.type DERIVE'
 	echo 'user.info CPU time spent by normal programs and daemons'
 	echo 'nice.label nice'
@@ -96,6 +92,12 @@ if [ "$1" = "config" ]; then
 	echo "idle.max $MAX"
 	echo 'idle.type DERIVE'
 	echo 'idle.info Idle CPU time'
+
+	for field in system user nice idle; do
+		print_warning "$field"
+		print_critical "$field"
+	done
+
 	if [ "$scaleto100" = "yes" ]; then
 		echo "system.cdef system,$NCPU,/"
 		echo "user.cdef user,$NCPU,/"
@@ -127,6 +129,10 @@ if [ "$1" = "config" ]; then
 			echo "irq.cdef irq,$NCPU,/"
 			echo "softirq.cdef softirq,$NCPU,/"
 		fi
+		for field in iowait irq softirq; do
+			print_warning "$field"
+			print_critical "$field"
+		done
 	fi
 
         if [ ! -z "$extextinfo" ]
@@ -140,6 +146,10 @@ if [ "$1" = "config" ]; then
                 if [ "$scaleto100" = "yes" ]; then
                         echo "steal.cdef steal,$NCPU,/"
 		fi
+		for field in steal; do
+			print_warning "$field"
+			print_critical "$field"
+		done
 	fi
 	exit 0
 fi

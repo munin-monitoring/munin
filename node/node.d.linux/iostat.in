@@ -18,6 +18,7 @@
 
 use strict;
 
+use Munin::Plugin;
 
 my $detailed_present = my $stat_present = 0;
 if (system("grep -q '' /proc/diskstats > /dev/null 2>&1") == 0
@@ -81,6 +82,9 @@ if ( $ARGV[0] and $ARGV[0] eq "config")
 		print $key . "_write.max 900000\n";
 		print $key . "_write.min 0\n";
 		print $key . "_write.negative " . $key . "_read\n";
+
+		print_thresholds($key . "_read");
+		print_thresholds($key . "_write");
 	}
 	exit 0;
 }

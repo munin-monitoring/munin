@@ -17,6 +17,8 @@
 #%# family=auto
 #%# capabilities=autoconf suggest
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 INTERFACE=${0##*/if_err_}
 
 if [ "$1" = "autoconf" ]; then
@@ -55,6 +57,10 @@ if [ "$1" = "config" ]; then
 	echo 'trans.type COUNTER'
 	echo 'trans.negative rcvd'
         echo 'trans.warning 1'
+	print_warning rcvd
+	print_critical rcvd
+	print_warning trans
+	print_critical trans
 	exit 0
 fi;
 

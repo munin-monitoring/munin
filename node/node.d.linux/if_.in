@@ -18,6 +18,8 @@
 #%# family=auto
 #%# capabilities=autoconf suggest
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 INTERFACE=${0##*if_}
 
 findspeed () {
@@ -144,6 +146,10 @@ case $1 in
 	echo 'up.type COUNTER'
 	echo 'up.negative down'
 	echo 'up.cdef up,8,*'
+	print_warning down
+	print_warning up
+	print_critical down
+	print_critical up
 
 	findspeed
 

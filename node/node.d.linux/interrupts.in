@@ -12,6 +12,8 @@
 #%# family=auto
 #%# capabilities=autoconf
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/stat ]; then
 		echo yes
@@ -52,6 +54,11 @@ if [ "$1" = "config" ]; then
 	echo 'ctx.max 100000'
 	echo 'intr.min 0'
 	echo 'ctx.min 0'
+
+	print_warning intr
+	print_critical intr
+	print_warning ctx
+	print_critical ctx
 
 	# Last, if run with the "config"-parameter, quit here (don't
 	# display any data)

@@ -11,6 +11,8 @@
 #%# family=auto
 #%# capabilities=autoconf
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 if [ "$1" = "autoconf" ]; then
 	echo yes 
 	exit 0
@@ -24,6 +26,8 @@ if [ "$1" = "config" ]; then
 	echo 'graph_category system'
 	echo 'uptime.label uptime'
 	echo 'uptime.draw AREA'
+	print_warning uptime
+	print_critical uptime
 	exit 0
 fi
 

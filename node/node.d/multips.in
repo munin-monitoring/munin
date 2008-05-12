@@ -77,6 +77,8 @@ if [ "$1" = "config" ]; then
 		echo "$fieldname.label $name"
 		echo "$fieldname.draw LINE2"
 		echo "$fieldname.info Processes matching this regular expression: /$REGEX/"
+		print_warning "$fieldname"
+		print_critical "$fieldname"
 	done
 	exit 0
 fi

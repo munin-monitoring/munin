@@ -15,6 +15,8 @@
 #%# family=auto
 #%# capabilities=autoconf
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 if [ "$1" = "autoconf" ]; then
 	if [ -x /usr/bin/kstat ]; then
 		echo yes
@@ -35,16 +37,22 @@ if [ "$1" = "config" ]; then
 	echo 'pgin.type DERIVE'
 	echo 'pgin.min 0'
 	echo 'pgin.max 1000000000'
+	print_warning pgin
+	print_critical pgin
 	echo 'pgpgin.label pgpgin'
 	echo 'pgpgin.draw LINE2'
 	echo 'pgpgin.type DERIVE'
 	echo 'pgpgin.min 0'
 	echo 'pgpgin.max 1000000000'
+	print_warning pgpgin
+	print_critical pgpgin
 	echo 'reclaim.label reclaim'
 	echo 'reclaim.draw LINE2'
 	echo 'reclaim.type DERIVE'
 	echo 'reclaim.min 0'
 	echo 'reclaim.max 1000000000'
+	print_warning reclaim
+	print_critical reclaim
 	exit 0
 fi
 

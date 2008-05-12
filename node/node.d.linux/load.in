@@ -19,6 +19,8 @@
 # munin-config. In the case of this plugin, we should most probably
 # always be included.
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 if [ "$1" = "autoconf" ]; then
 	echo yes
 	exit 0
@@ -28,8 +30,6 @@ fi
 # graphs should look. 
  
 if [ "$1" = "config" ]; then
-        LOAD_WARN=${load_warn:-10}
-        LOAD_CRIT=${load_crit:-120}
 
 	# The host name this plugin is for. (Can be overridden to have
 	# one machine answer for several)
@@ -49,11 +49,12 @@ if [ "$1" = "config" ]; then
 	# The fields. "label" is used in the legend. "label" is the only
 	# required subfield. 
 	echo 'load.label load'
-	# These two are optional. They are only used if you have
-	# configured your munin to tell a Nagios-server about any
-	# problems
-	echo "load.warning $LOAD_WARN"
-	echo "load.critical $LOAD_CRIT"
+	# These two read the environment for warning values for the field
+	# "load".  If "load_warning" or "warning" aren't set in the
+	# environment, no warning levels are set.  Likewise for "load_critical"
+	# and "critical".
+	print_warning load
+	print_critical load
 	# This one is purely to add an explanation to the web page. The first
 	# one is for the graph itself, while the second one is for the field
 	# "load".

@@ -20,6 +20,8 @@
 #%# family=auto
 #%# capabilities=autoconf
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 if [ "$1" = "autoconf" ]; then
     if [ -r /sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state ]; then
         echo yes
@@ -54,6 +56,9 @@ if [ "$1" = "config" ]; then
         echo "cpu$N.type DERIVE"
         echo "cpu$N.max $MAXHZ"
         echo "cpu$N.min $MINHZ"
+
+	print_warning "cpu$N"
+	print_critical "cpu$N"
 
         if [ "$scaleto100" = "yes" ]; then
             echo "cpu$N.cdef cpu$N,1000,*,$MAXHZ,/"

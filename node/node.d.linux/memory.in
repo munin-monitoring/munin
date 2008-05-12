@@ -24,6 +24,8 @@
 #%# family=auto
 #%# capabilities=autoconf
 
+use Munin::Plugin;
+
 if ($ARGV[0] and $ARGV[0] eq "autoconf") {
     if (-r "/proc/meminfo") {
 	print "yes\n";
@@ -150,6 +152,9 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	print "inact_clean.label inactive_clean\n";
 	print "inact_clean.draw LINE1\n";
 	print "inact_clean.info Memory not currently used.\n";
+    }
+    for my $field qw(apps buffers swap cached free slab swap_cache page_tables vmalloc_used committed mapped active active_anon active_cache inactive inact_dirty inact_laundry inact_clean) {
+        print_thresholds($field);
     }
     exit 0;
 }

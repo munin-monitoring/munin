@@ -12,6 +12,7 @@
 #%# capabilities=autoconf
 
 use strict;
+use Munin::Plugin;
 
 if (defined $ARGV[0] and $ARGV[0] eq "autoconf") {
   print "yes\n";
@@ -25,21 +26,26 @@ if (defined $ARGV[0] and $ARGV[0] eq "autoconf") {
   print "active.type DERIVE\n";
   print "active.min 0\n";
   print "active.max 50000\n";
+  print_thresholds("active");
   print "passive.label passive\n";
   print "passive.type DERIVE\n";
   print "passive.min 0\n";
   print "passive.max 50000\n";
+  print_thresholds("passive");
   print "failed.label failed\n";
   print "failed.type DERIVE\n";
   print "failed.min 0\n";
   print "failed.max 50000\n";
+  print_thresholds("failed");
   print "resets.label resets\n";
   print "resets.type DERIVE\n";
   print "resets.min 0\n";
   print "resets.max 50000\n";
+  print_thresholds("resets");
   print "established.label established\n";
   print "established.type GAUGE\n";
   print "established.max 50000\n";
+  print_thresholds("established");
   exit;
 }
 

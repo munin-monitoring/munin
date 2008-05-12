@@ -3,6 +3,7 @@
 #%# family=auto
 #%# capabilities=autoconf
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
 
 if [ "$1" = "autoconf" ]; then
         echo 'yes'
@@ -14,6 +15,8 @@ if [ "$1" = "config" ]; then
         echo 'graph_title Load average'
 		echo 'graph_category system'
         echo 'load.label load'
+	print_warning load
+	print_critical load
         exit 0
 fi
 

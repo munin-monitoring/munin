@@ -46,8 +46,8 @@ if [ "$1" = "config" ]; then
 		6) mnt=$six;;
 	    esac
 	    echo "$name.label $mnt"
-	    echo "$name.warning ${warning:-92}"
-	    echo "$name.critical ${critical:-98}"
+	    print_warning "$name"
+	    print_critical "$name"
 	fi
     done
     exit 0

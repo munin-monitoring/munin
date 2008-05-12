@@ -43,12 +43,18 @@ if [ "$1" = "config" ]; then
 	echo 'graph_category disk'
 	echo 'graph_total Total'
 	df -P -l $exclude | sed 1d | grep -v "//" | 
-	   while read dev size used avail cap mnt; do
-	       name="$(clean_fieldname $dev)"
-	       echo "$name.label $mnt"
-	       echo "$name.cdef $name,1024,*"
-	       echo "$name.warning $((size * ${warning:-92} / 100))"
-	       echo "$name.critical $((size * ${critical:-98} / 100))"
+	while read dev size used avail cap mnt; do
+		name="$(clean_fieldname $dev)"
+		echo "$name.label $mnt"
+		echo "$name.cdef $name,1024,*"
+		warn=$(get_warning $name)
+		crit=$(get_critical $name)
+		if [ -n "$warn" ]; then
+			echo "$name.warning $((size * $warn / 100))"
+		fi
+		if [ -n "$crit" ]; then
+			echo "$name.critical $((size * $crit / 100))"
+		fi
 	done
 	exit 0
 fi

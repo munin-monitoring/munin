@@ -13,6 +13,7 @@
 #%# family=auto
 #%# capabilities=autoconf
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
 
 
 if [ "$1" = "autoconf" ]; then
@@ -44,26 +45,36 @@ if [ "$1" = "config" ]; then
 	echo 'active.min 0'
 	echo 'active.max 50000'
 	echo 'active.info The number of active TCP openings per second.'
+	print_warning active
+	print_critical active
 	echo 'passive.label passive'
 	echo 'passive.type DERIVE'
 	echo 'passive.min 0'
 	echo 'passive.max 50000'
 	echo 'passive.info The number of passive TCP openings per second.'
+	print_warning passive
+	print_critical passive
 	echo 'failed.label failed'
 	echo 'failed.type DERIVE'
 	echo 'failed.min 0'
 	echo 'failed.max 50000'
 	echo 'failed.info The number of failed TCP connection attempts per second.'
+	print_warning failed
+	print_critical failed
 	echo 'resets.label resets'
 	echo 'resets.type DERIVE'
 	echo 'resets.min 0'
 	echo 'resets.max 50000'
 	echo 'resets.info The number of TCP connection resets.'
+	print_warning resets
+	print_critical resets
 	echo 'established.label established'
 	echo 'established.type DERIVE'
 	echo 'established.min 0'
 	echo 'established.max 50000'
 	echo 'established.info The number of currently open connections.'
+	print_warning established
+	print_critical established
 	exit 0
 fi
 

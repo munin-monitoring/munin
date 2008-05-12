@@ -80,6 +80,8 @@ GPLv2
 
 =cut
 
+use Munin::Plugin;
+
 my $ret = undef;
 if (! eval "require LWP::UserAgent;")
 {
@@ -140,6 +142,11 @@ if ( defined $ARGV[0] and $ARGV[0] eq "config" )
 	    }
 	    print "idle$port.label idle servers $port\n";
 	    print "idle$port.draw STACK\n";
+	}
+	foreach my $port (@PORTS) {
+		foreach my $type qw "busy idle" {
+			print_thresholds("$type$port");
+		}
 	}
 	exit 0;
 }

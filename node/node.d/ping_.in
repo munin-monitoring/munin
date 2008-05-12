@@ -37,6 +37,8 @@
 #
 #%# family=manual
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 case $0 in
     *ping6_*) 
 	PING=ping6
@@ -63,10 +65,10 @@ if [ "$1" = "config" ]; then
 	echo 'ping.draw LINE2'
 	echo 'packetloss.label packet loss'
 	echo 'packetloss.graph no'
- 	[ -n "$ping_warn" ] && echo "ping.warning $ping_warn"
- 	[ -n "$ping_crit" ] && echo "ping.critical $ping_crit"
- 	[ -n "$packetloss_warn" ] && echo "packetloss.warning $packetloss_warn"
- 	[ -n "$packetloss_crit" ] && echo "packetloss.critical $packetloss_crit"
+	print_warning ping
+	print_warning packetloss
+	print_critical ping
+	print_critical packetloss
 	exit 0
 fi
 

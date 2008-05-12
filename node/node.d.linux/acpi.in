@@ -22,7 +22,7 @@ do_config () {
     echo "graph_title ACPI Thermal zone temperatures"
     echo "graph_vlabel Celcius"
     echo "graph_category sensors"
-    echo "graph_info This graph shows the temperature in different ACPI Thermal zones.  If there is only on it will usualy be the case temperature."
+    echo "graph_info This graph shows the temperature in different ACPI Thermal zones.  If there is only one it will usually be the case temperature."
     echo "$ATZ" |
     awk -F'[ /]' '{
          print $5".label "$5;

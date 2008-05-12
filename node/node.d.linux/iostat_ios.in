@@ -22,6 +22,8 @@ use IO::File;
 
 use Storable qw(store retrieve);
 
+use Munin::Plugin;
+
 # (c) 2004 - Per Andreas Buer
 # GPL v2 Yadda yadda.
 
@@ -130,6 +132,7 @@ sub print_config {
         print("$d.label $d\n",
               "$d.type GAUGE\n",
               "$d.draw LINE2\n");
+	print_thresholds($d);
     }
 }
 

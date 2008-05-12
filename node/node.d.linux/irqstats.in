@@ -45,7 +45,7 @@ GPLv2
 
 =cut
 
-
+use Munin::Plugin;
 use strict;
 
 if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
@@ -145,6 +145,7 @@ EOM
 	  if $irq->{label};
 	print "i", $irq->{irq}, ".type DERIVE\n";
 	print "i", $irq->{irq}, ".min 0\n";
+	print_thresholds("i$irq->{irq}");
     }
 } else {
     print "i", $_->{irq}, '.value ', $_->{count}, "\n" for @irqs;

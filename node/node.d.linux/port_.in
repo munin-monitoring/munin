@@ -20,6 +20,7 @@
 #%# family=manual
 #%# capabilities=autoconf suggest
 
+use Munin::Plugin;
 
 use constant {
     ST_ESTABLISHED => 1,
@@ -175,6 +176,7 @@ if ($ARGV[0] and $ARGV[0] =~ /^\s*config\s*$/i)
     print "graph_vlabel concurrent connections\n";
     print "graph_category network\n";
     print "count.label $name\n";
+    print_thresholds("count");
     exit 0;
 }
 

@@ -12,6 +12,8 @@
 #%# family=auto
 #%# capabilities=autoconf
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/stat ]; then
 		echo yes 
@@ -34,6 +36,8 @@ if [ "$1" = "config" ]; then
 	echo 'forks.min 0'
 	echo 'forks.max 100000'
 	echo 'forks.info The number of forks per second.'
+	print_warning forks
+	print_critical forks
 	exit 0
 fi
 

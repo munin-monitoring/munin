@@ -30,6 +30,7 @@
 #%# family=auto
 #%# capabilities=autoconf suggest
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
 
 IP=${0##*/ip_}
 INPUT=${input:-INPUT}
@@ -81,6 +82,10 @@ if [ "$1" = "config" ]; then
         echo 'in.type DERIVE'
         echo 'in.min 0'
         echo 'in.cdef in,8,*' 
+	print_warning out
+	print_critical out
+	print_warning in
+	print_critical in
         exit 0
 fi;
 

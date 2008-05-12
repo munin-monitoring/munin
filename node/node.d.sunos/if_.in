@@ -16,6 +16,8 @@
 #%# family=auto
 #%# capabilities=autoconf suggest
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 INTERFACE=${0##*/if_}
 
 if [ "$1" = "autoconf" ]; then
@@ -49,11 +51,15 @@ if [ "$1" = "config" ]; then
         echo 'rbytes.max 2000000000'
         echo 'rbytes.graph no'
         echo 'rbytes.cdef rbytes,8,*'
+	print_warning rbytes
+	print_critical rbytes
         echo 'obytes.label bps'
 	echo 'obytes.type COUNTER'
 	echo 'obytes.negative rbytes'
 	echo 'obytes.cdef obytes,8,*'
         echo 'obytes.max 2000000000'
+	print_warning obytes
+	print_critical obytes
 	exit 0
 fi;
 

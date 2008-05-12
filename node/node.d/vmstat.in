@@ -12,7 +12,7 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-
+. $MUNIN_LIBDIR/plugins/plugin.sh
 
 if [ "$1" = "autoconf" ]; then
 	if ( vmstat 1 1 >/dev/null 2>&1 ); then
@@ -41,6 +41,10 @@ if [ "$1" = "config" ]; then
 	echo 'sleep.label I/O sleep'
 	echo 'sleep.type GAUGE'
 	echo 'sleep.max 500000'
+	print_warning wait
+	print_warning sleep
+	print_critical wait
+	print_critical sleep
 	exit 0
 fi
 

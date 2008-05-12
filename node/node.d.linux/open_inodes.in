@@ -13,6 +13,8 @@
 #%# family=auto
 #%# capabilities=autoconf
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/sys/fs/inode-nr ]; then
 		echo yes
@@ -32,8 +34,12 @@ if [ "$1" = "config" ]; then
 	echo 'graph_info This graph monitors the Linux open inode table.'
 	echo 'used.label open inodes'
 	echo 'used.info The number of currently open inodes.'
+	print_warning used
+	print_critical used
 	echo 'max.label inode table size'
 	echo 'max.info The size of the system inode table. This is dynamically adjusted by the kernel.'
+	print_warning max
+	print_critical max
 	exit 0
 fi
 

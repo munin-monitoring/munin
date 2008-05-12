@@ -12,7 +12,7 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-
+. $MUNIN_LIBDIR/plugins/plugin.sh
 
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/stat ]; then
@@ -35,11 +35,15 @@ if [ "$1" = "config" ]; then
 	echo 'swap_in.max 100000'
 	echo 'swap_in.min 0'
 	echo 'swap_in.graph no'
+	print_warning swap_in
+	print_critical swap_in
 	echo 'swap_out.label swap'
 	echo 'swap_out.type DERIVE'
 	echo 'swap_out.max 100000'
 	echo 'swap_out.min 0'
 	echo 'swap_out.negative swap_in'
+	print_warning swap_out
+	print_critical swap_out
 	exit 0
 fi
 

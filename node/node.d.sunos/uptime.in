@@ -5,6 +5,7 @@
 # Adam J. Baker (adam@unb.ca)
 # 
 use strict;
+use Munin::Plugin;
 
 my $KSTAT = '/usr/bin/kstat -p';
 my $STATISTIC = 'unix:0:system_misc:boot_time';
@@ -19,6 +20,7 @@ elsif ($ARGV[0] eq 'config') {
 	print "graph_vlabel uptime in days\n";
 	print "uptime.label uptime\n";
 	print "uptime.draw AREA\n";
+	print_thresholds("uptime");
 }
 
 else {

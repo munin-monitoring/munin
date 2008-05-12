@@ -11,6 +11,8 @@
 # FIXME1: Reporting size in MB is Wrong. Report bytes and let rrd scale units
 # FIXME2: Using kstat would be much better!
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 TOP=${top:-/usr/local/bin/top}
 
 if [ "$1" = "autoconf" ]; then
@@ -30,6 +32,14 @@ if [ "$1" = "config" ]; then
 	echo "used.label Mem used"
 	echo "swapt.label Total swap"
 	echo "swapu.label Swap used"
+	print_warning real
+	print_critical real
+	print_warning used
+	print_critical used
+	print_warning swapt
+	print_critical swapt
+	print_warning swapu
+	print_critical swapu
         exit 0
 fi
 
