@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# $Id: $
+# $Id$
 
 
 ####
@@ -73,6 +73,7 @@ function fix_owner() {
 
 ####
 # check if "@@USER@@" is owner, if PLEASE_FIXME set it calls fix_owner()
+
 function owner_ok(){
     object=$1; shift || exit 1
     correctowner=$1; shift || exit 1
@@ -90,6 +91,10 @@ function owner_ok(){
 	    # The $norec variable cuts off recursion
 	    return 0
 	fi
+
+	case $object in
+	    "lost+found") return 0;;
+	esac
 
 	# ... and then dive into it
 	for subobject in $object/*; do
@@ -118,6 +123,10 @@ function perm_ok(){
 	    # The $norec variable cuts off recursion
 	    return 0
 	fi
+
+	case $object in
+	    "lost+found") return 0;;
+	esac
 
 	# ... and then dive into it
 	for subobject in $object/*; do
