@@ -321,8 +321,7 @@ sub get_group_tree {
     my $visible = 0;
     my $csspath;
 
-    my $children = munin_get_children ($hash);
-    $children = sort_order ($children, $hash->{'group_order'});
+    my $children = munin_get_sorted_children ($hash);
 
     foreach my $child (@$children) {
 	next unless defined $child and ref ($child) eq "HASH" and keys %$child;
@@ -435,27 +434,34 @@ sub get_group_tree {
     return $ret;
 }
 
-sub sort_order {
-    my $arr = shift || return undef;
-    my $group_order = shift || "";
+sub munin_get_sorted_children {
+    my $hash = shift || return undef;
+    my $children = munin_get_children ($hash);
+    my $group_order = $hash->{'group_order'} || "";
     my $ret = [];
 
-    my %hash = map { munin_get_node_name ($_) => $_ } @$arr;
+    my %children = map { munin_get_node_name ($_) => $_ } @$children;
 
     foreach my $group (split /\s+/, $group_order) {
-        if (defined $hash{$group}) {
-	    logger ("DEBUG: sort_order: Adding pre $group") if $DEBUG;
-	    push @$ret, $hash{$group};
-	    delete $hash{$group};
+        if (defined $children{$group}) {
+	    push @$ret, $children{$group};
+	    delete $children{$group};
+	} elsif ($group =~ /^(.+)=([^=]+)$/) {
+	    # "Borrow" the graph from another group
+	    my $groupname = $1;
+	    my $path      = $2;
+	    my $borrowed  = munin_get_node_partialpath ($hash, $path);
+	    if (defined $borrowed) {
+	        munin_copy_node_toloc ($borrowed, $hash, [$groupname]);
+		$hash->{$groupname}->{'#%#origin'} = $borrowed;
+	    }
+	    push @$ret, $hash->{$groupname};
 	}
     }
 
-    foreach my $group (sort { $a cmp $b } keys %hash) {
-        push @$ret, $hash{$group};
-        logger ("DEBUG: sort_order: Adding post $group") if $DEBUG;
+    foreach my $group (sort { $a cmp $b } keys %children) {
+        push @$ret, $children{$group};
     }
-
-    logger ("DEBUG: sort_order: " . join (' ', map { $_->{'name'} } @$ret)) if $DEBUG;
 
     return $ret;
 }
@@ -545,6 +551,28 @@ sub generate_group_templates {
     }
 }
 
+sub borrowed_path {
+    my $hash     = shift;
+    my $prepath  = shift || "";
+    my $postpath = shift || "";
+
+    return undef unless defined $hash and ref ($hash) eq "HASH";
+
+    if (defined $hash->{'#%#origin'}) {
+    	return $prepath . "../" . munin_get_node_name ($hash->{'#%#origin'}) . "/" . $postpath;
+    } else {
+        if (defined $hash->{'#%#parent'}) {
+	    if (defined $hash->{'graph_title'}) {
+	        return borrowed_path ($hash->{'#%#parent'}, $prepath . "../", $postpath);
+	    } else {
+	        return borrowed_path ($hash->{'#%#parent'}, $prepath . "../", munin_get_node_name ($hash) . "/" . $postpath);
+	    }
+	} else {
+	    return undef;
+	}
+    }
+}
+
 sub generate_service_templates { 
 
     my $service = shift || return undef;
@@ -559,6 +587,7 @@ sub generate_service_templates {
     my $peers     = get_peer_nodes ($service, lc munin_get ($service, "graph_category", "other"));
     my $parent    = munin_get_parent_name ($service);
     (my $csspath  = $pathnodes->[0]->{'link'}) =~ s/index.html$/style.css/;
+    my $bp = borrowed_path ($service) || "";
 
     $srv{'node'}     = munin_get_node_name ($service);
     logger("processing service: $srv{node}");
@@ -586,16 +615,16 @@ sub generate_service_templates {
 	# graph strategy cron
 	 
 	# Image locations for regular pages
-	$srv{'imgday'}  ="$srv{node}-day.png";
-	$srv{'imgweek'} ="$srv{node}-week.png";
-	$srv{'imgmonth'}="$srv{node}-month.png";
-	$srv{'imgyear'} ="$srv{node}-year.png";
+	$srv{'imgday'}  ="$bp/$srv{node}-day.png";
+	$srv{'imgweek'} ="$bp/$srv{node}-week.png";
+	$srv{'imgmonth'}="$bp/$srv{node}-month.png";
+	$srv{'imgyear'} ="$bp/$srv{node}-year.png";
 
 	# Image locations for comparison pages
-	$srv{'cimgday'}  ="$parent/$srv{node}-day.png";
-	$srv{'cimgweek'} ="$parent/$srv{node}-week.png";
-	$srv{'cimgmonth'}="$parent/$srv{node}-month.png";
-	$srv{'cimgyear'} ="$parent/$srv{node}-year.png";
+	$srv{'cimgday'}  ="$bp/$parent/$srv{node}-day.png";
+	$srv{'cimgweek'} ="$bp/$parent/$srv{node}-week.png";
+	$srv{'cimgmonth'}="$bp/$parent/$srv{node}-month.png";
+	$srv{'cimgyear'} ="$bp/$parent/$srv{node}-year.png";
 
 	for my $scale (@times) {
 	    if (my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale))) {
@@ -681,6 +710,8 @@ sub generate_service_templates {
 			    CATEGORY  => ucfirst $srv{'category'},
 			    TIMESTAMP => $timestamp);
     my $filename = munin_get_html_filename ($service);
+    my $dirname  = $filename; $dirname =~ s/\/[^\/]*$//;
+    munin_mkdir_p ($dirname, 0755);
     open (FILE, ">$filename") or
 	die "Cannot open $filename for writing: $!";
     print FILE $servicetemplate->output;
