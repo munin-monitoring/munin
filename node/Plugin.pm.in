@@ -79,7 +79,7 @@ You can use this if you need to save several different state files.
 But there is also a function to change the state file name so the
 state file support functions can be used for several state files.
 
-If it's value cannot be determined the plugin will be aborted at once
+If its value cannot be determined the plugin will be aborted at once
 with an explanatory message.  The most likely causes are
 
 =over 8

@@ -54,7 +54,7 @@ that way there is data to collect):
 	  * Munin page expiery to refresh contents
 
 	  This sets the cache expiry of everything in the munin HTML
-	  directory hierarcy to it's creation time +5 minutes 10 seconds.
+	  directory hierarcy to its creation time +5 minutes 10 seconds.
 	  This helps all different caches understand that a new version
 	  ought to be fetched when the graph is old.
 

@@ -11,7 +11,7 @@
 #	args_$dev	-- additional arguments to smartctl for one drive,
 #			   e.g. "env.args_hda -v 194,10xCelsius"
 #                          Use this to make the plugin use the --all or -a option
-#                          if your disk will not return it's temperature when
+#                          if your disk will not return its temperature when
 #                          only the -A option is used.
 #	dev_$dev	-- monitoring device for one drive, e.g. twe0
 #
