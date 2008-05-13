@@ -876,7 +876,7 @@ sub munin_get_picture_filename {
     if (defined $sum and $sum) {
 	    return "$ret/$node/$plugin-$scale-sum.png";
     } elsif (defined $scale) {
-	    return "$ret/$node/$plugin";
+	    return "$ret/$node/$plugin.png";
     } else {
 	    return "$ret/$node/$plugin-$scale.png";
     }
