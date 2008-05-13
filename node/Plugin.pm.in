@@ -304,27 +304,40 @@ sub restore_state {
 
 =head ($warning, $critical) = get_thresholds($field, [$warning_env[, $critical_env]])
 
-Search the environment for thresholds for $field and return their values in a
-tuple.  The default environment variables for the default threshold values are
-"warning" and "critical", and can be overriden by the two optional arguments.
-Undefined is returned if the variables do not exist in the environment.
+Look up the thresholds for the specified field from the environment
+variables named after the field: "$field_warning" and
+"$field_critical".  Return their values.  If there are no
+$field_warning or $field_critical values then look for the variables
+"warning" and "critical" and return those values if any.
+
+IFF the second and/or third arguments are specified then they will be
+used to specify the name of variables giving the the warning and
+critical levels.
+
+If no values are found for a threshold then Perls undefined value is
+returned.
 
 =cut
 
 sub get_thresholds {
     my ($field, $warning_env, $critical_env) = @_;
-    $warning_env ||= "warning";
-    $critical_env ||= "critical";
+    my ($warning, $critical);
 
-    my ($warning, $critical) = ($ENV{"${field}_warning"}, $ENV{"${field}_critical"});
+    # First look for explicitly specified warning environment variables
 
-    if(!defined $warning) {
-    	$warning = $ENV{"$warning_env"};
-    }
+    $warning = $ENV{$warning_env}
+      if defined($warning_env) and defined($ENV{$warning_env});
 
-    if(!defined $critical) {
-        $critical = $ENV{"$critical_env"};
-    }
+    $critical = $ENV{$critical_env}
+      if defined($critical_env) and defined($ENV{$critical_env});
+
+    # Then look for more and more generic ones
+
+    $warning  = $warning || $ENV{$field."_warning"}  ||
+	$ENV{"warning"}  || undef;
+
+    $critical = $critical || $ENV{$field."_critical"} ||
+	$ENV{"critical"} || undef;
 
     return ($warning, $critical);
 }
@@ -332,15 +345,16 @@ sub get_thresholds {
 =head print_thresholds($field, [$warning_env[, $critical_env]])
 
 Pass arguments to get_thresholds and use returned values to print the
-thresholds in the default fashion.
+thresholds in the default fashion.  If no thresholds are found in the
+environment do not print anything.
 
 =cut
 
 sub print_thresholds {
     my $field = $_[0];
     my ($warning, $critical) = get_thresholds(@_);
-    print "$field.warning $warning\n" if (defined $warning);
-    print "$field.critical $critical\n" if (defined $critical);
+    print "$field.warning $warning\n" if defined($warning);
+    print "$field.critical $critical\n" if defined($critical);
 }
 
 

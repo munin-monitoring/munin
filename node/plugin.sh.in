@@ -10,18 +10,27 @@ clean_fieldname () {
     echo "$@" | sed -e 's/^[^A-Za-z_]/_/' -e 's/[^A-Za-z0-9_]/_/g'
 }
 
+# Look up warning environment variables in the following order:
+# $1 = field name
+# $2 = optional override of environment variable name
+#
+# Hmm, this first looks for field_warning, then $2 then warning.  Not the
+# order one expects.
+#
 get_warning () {
-	warn_env="${1}_warning"
-	defwarn_env=${2:-warning}
-	warntmp=$(eval "echo \$${warn_env}")
-	warntmpd=$(eval "echo \$${defwarn_env}")
+    warn_env="${1}_warning"
+    defwarn_env=${2:-warning}
+    # eval export spam=\$${field}_warning
+    warntmp=$(eval "echo \$${warn_env}")
+    warntmpd=$(eval "echo \$${defwarn_env}")
 
-	warnout=${warntmp:-$warntmpd}
+    warnout=${warntmp:-$warntmpd}
 
-	if [ -n "${warnout}" ]; then
-		echo "${warnout}"
-	fi
+    if [ -n "${warnout}" ]; then
+	echo "${warnout}"
+    fi
 }
+
 
 print_warning () {
 	warnout=$(get_warning $1 $2)
@@ -30,6 +39,8 @@ print_warning () {
 	fi
 }
 
+# Ditto for critical values
+#
 get_critical () {
 	crit_env="${1}_critical"
 	defcrit_env=${2:-critical}
