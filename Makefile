@@ -151,7 +151,7 @@ uninstall-node-non-snmp: build
 install-node-plugins: build $(PLUGINS) Makefile Makefile.config
 	for p in build/node/node.d/* build/node/node.d.$(OSTYPE)/* ; do \
 	    if test -f "$$p" ; then                                    \
-		family=`sed -n 's/^#%# family=\(.*\)$$/\1/p' $$p`;     \
+		family=`sed -n 's/^[[:space:]]*#%# family=\(.*\)$$/\1/p' $$p`;\
 		test "$$family" || family=contrib;                     \
 		if echo $(INSTALL_PLUGINS) |                           \
 		   grep $$family >/dev/null; then 	               \
