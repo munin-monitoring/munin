@@ -573,7 +573,7 @@ sub borrowed_path {
     }
 }
 
-sub generate_service_templates { 
+sub generate_service_templates {
 
     my $service = shift || return undef;
     return undef unless munin_get_bool ($service, "graph", 1);
