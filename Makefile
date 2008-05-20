@@ -36,7 +36,7 @@ install-main: build
 	$(INSTALL) -m 0644 server/logo.png $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/style.css $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/definitions.html $(CONFDIR)/templates/
-	$(INSTALL) -m 0755 server/VeraMono.ttf $(LIBDIR)/
+	$(INSTALL) -m 0644 server/VeraMono.ttf $(LIBDIR)/
 
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/server/munin.conf $(CONFDIR)/
 
