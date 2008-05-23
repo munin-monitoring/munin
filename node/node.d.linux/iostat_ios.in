@@ -129,9 +129,12 @@ sub print_config {
           "graph_vlabel ms\n");
 
     for my $d ( @{ get_ios(1) } ) {
-        print("$d.label $d\n",
-              "$d.type GAUGE\n",
-              "$d.draw LINE2\n");
+	print("${d}_rtime.label ${d}_rtime\n",
+	      "${d}_rtime.type GAUGE\n",
+	      "${d}_rtime.draw LINE2\n",
+	      "${d}_wtime.label ${d}_wtime\n",
+	      "${d}_wtime.type GAUGE\n",
+	      "${d}_wtime.draw LINE2\n");
 	print_thresholds($d);
     }
 }
