@@ -57,6 +57,7 @@ install-node-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(SBINDIR)/
 
 install-munindoc: build 
+	mkdir -p $(BINDIR)
 	$(INSTALL) -m 0755 build/node/munindoc $(BINDIR)/ 
 	
 install-node-non-snmp: build
