@@ -1,0 +1,59 @@
+#!@@PERL@@ -w
+# -*- perl -*-
+use strict;
+$ENV{'PATH'} = '/bin:/usr/bin:/usr/sbin';
+# Must run plugin as root for FS type command to work.
+
+# `bdf -i` --> [0]=Filesystem, [1]=kbytes, [2]=used, [3]=avail, [4]=%used, [5]=iused, [6]=ifree, [7]=%iuse, [8]=Mounted on
+# Just 1 round of `bdf` is simpler but picks up CDFS cruft. bdf can't accept multiple FS types in 1 command.
+my @bdf_hfs = `bdf -ilt hfs`;
+shift(@bdf_hfs);
+my @bdf_vxfs = `bdf -ilt vxfs`;
+shift(@bdf_vxfs);
+push(my @bdf, (@bdf_hfs, @bdf_vxfs)); # Recombine `bdf` for each FS.
+my $i = 0;
+foreach(@bdf) {
+    chomp;
+    my @cols = split(/\s+/);
+    if($#cols == 0) { # `bdf` line wraps if device name > 18 chars. This restores 1 array element per filesystem.
+	chomp($_ .= $bdf[$i+1]);
+	splice(@bdf, $i+1, 1);
+    }
+    $i++;
+}
+
+# Above this line straightens out the quirks in bdf output. Below is reformatting the output for munin, based on the df plugin.
+
+my $maxlabel = 20;
+
+if($ARGV[0] and $ARGV[0] eq "config") {
+	print "graph_title Inode usage (in %)\n";
+	print "graph_args --upper-limit 100 -l 0\n";
+	print "graph_vlabel %\n";
+	print "graph_category disk\n";
+	print "graph_info This graph shows disk usage on the machine.\n";
+	foreach(@bdf) {
+		(my $fs, my $mount) = (split(/\s+/))[0,8]; # See top comment for array slice description.
+		chomp(my $fs_type = `fstyp $fs`);
+		(my $name = $fs) =~ s|/|_|g;
+		print "$name.label ";
+		if(length($mount) > $maxlabel) {
+			print "..." . substr($mount, -$maxlabel+3) . "\n";
+		} else {
+			print "$mount\n";
+		}
+		print "$name.info $mount ($fs_type) -> $fs\n";
+		print "$name.warning 92\n";
+		print "$name.critical 98\n";
+	}
+	exit 0;
+}
+
+foreach(@bdf) {
+	(my $fs, my $pct_used) = (split(/\s+/))[0,7];
+	(my $name = $fs) =~ s|/|_|g;
+	$pct_used =~ s/%//g;
+	print "$name.value $pct_used\n";
+}
+
+# vim:syntax=perl
