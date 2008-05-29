@@ -105,6 +105,12 @@ CHECKGROUP = $(shell $(GETENT) group $(GROUP) >/dev/null 2>/dev/null || (echo "e
 #CHECKUSER  = $(shell nicl . -read /users/$(USER) >/dev/null 2>/dev/null || (echo "echo User $(USER) nonexistant. Create the user and retry; exit 2"))
 #CHECKGROUP = $(shell nicl . -read /groups/$(GROUP) >/dev/null 2>/dev/null || (echo "echo Group $(GROUP) nonexistant. Create the group and retry; exit 2"))
 
+# For OSX 10.5 (Leopard), use the following two lines instead of what's above
+#
+#CHECKUSER  = $(shell dscl . -read /Users/$(USER) >/dev/null 2>/dev/null || (echo "echo User $(USER) nonexistant. Create the user and retry; exit 2"))
+#CHECKGROUP = $(shell dscl . -read /Groups/$(GROUP) >/dev/null 2>/dev/null || (echo "echo Group $(GROUP) nonexistant. Create the group and retry; exit 2"))
+
+
 # For HP-UX, use these instead:
 #
 #PWGET = $(shell which pwget) 
