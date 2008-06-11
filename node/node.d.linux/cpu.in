@@ -38,7 +38,7 @@ if [ "$1" = "config" ]; then
 
 	NCPU=$(egrep '^cpu[0-9]+ ' /proc/stat | wc -l)
 	PERCENT=$(($NCPU * 100))
-	MAX=$(($NCPU * 5000))
+	MAX=$(($NCPU * 100))
 	if [ "$scaleto100" = "yes" ]; then
 		graphlimit=100
 	else
