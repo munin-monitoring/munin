@@ -1,4 +1,4 @@
-!@@PERL@@
+#!@@PERL@@
 
 use strict;
 
