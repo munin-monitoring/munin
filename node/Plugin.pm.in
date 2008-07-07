@@ -302,7 +302,7 @@ sub restore_state {
     return _decode_state(@state);
 }
 
-=head ($warning, $critical) = get_thresholds($field, [$warning_env[, $critical_env]])
+=head3 ($warning, $critical) = get_thresholds($field, [$warning_env[, $critical_env]])
 
 Look up the thresholds for the specified field from the environment
 variables named after the field: "$field_warning" and
@@ -342,7 +342,7 @@ sub get_thresholds {
     return ($warning, $critical);
 }
 
-=head print_thresholds($field, [$warning_env[, $critical_env]])
+=head3 print_thresholds($field, [$warning_env[, $critical_env]])
 
 Pass arguments to get_thresholds and use returned values to print the
 thresholds in the default fashion.  If no thresholds are found in the
@@ -358,7 +358,7 @@ sub print_thresholds {
 }
 
 
-=head ($file_handle,$rotated) = tail_open($file_name,$position)
+=head3 ($file_handle,$rotated) = tail_open($file_name,$position)
 
 Open the given file and seek to the given position.  If this position
 is beyond the end of the file the function assumes that the file has
@@ -407,7 +407,7 @@ sub tail_open ($$) {
     return ($fh,$filereset);
 }
 
-=head $position = tail_close($file_handle)
+=head3 $position = tail_close($file_handle)
 
 Close the the file and return the current position in the file.  This
 position should be put in a state vector and stored in a state file
