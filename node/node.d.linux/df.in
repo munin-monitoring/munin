@@ -21,7 +21,7 @@ This configuration snipplet is an example with the defaults:
   env.warning 92
   env.critical 98
 
-Put it in a file in $(CONFDIR)/plugin-conf.d/ and restart the munin-node.
+Put it in a file in @@CONFDIR@@/plugin-conf.d/ and restart the munin-node.
 
 =head1 MAGIC MARKERS
 
