@@ -1,29 +1,50 @@
 #!@@PERL@@
 # -*-  perl -*-
-#
-# $Id$
-#
-# Plugin to monitor disk usage. Rewrite based on original shell-based version
-#
-# Parameters understood:
-#
-#       config   (required)
-#       autoconf (optional - used by munin-config)
-#
-# Environment
-#       exclude: space separated list if fs types to exclude.  by default a
-#                list of special, read-only or dynamically allocating file
-#                systems
-#       warning: Warning percentage, default 92.
-#       critical: Critical percentage, default 98.
-#
-# $Id$
-#
-# Magic markers (optional - used by munin-config and installation
-# scripts):
-#
-#%# family=auto
-#%# capabilities=autoconf
+
+=head1 NAME
+
+df - Munin plugin to monitor disk usage
+
+=head1 APPLICABLE SYSTEMS
+
+Every Linux system with df installed.
+
+=head1 CONFIGURATION
+
+The plugin excludes per default the following special, read-only or dynamically allocating file systems from graphing: "none unknown iso9660 squashfs udf romfs ramfs". 
+To change this set the environment variable "exclude" with a list of space separated fs types. The environment variables "warning" and "critical" sets the percentage from which Munin starts to warn about the disk usage. 
+
+This configuration snipplet is an example with the defaults:
+
+  [df]
+  env.exclude none unknown iso9660 squashfs udf romfs ramfs
+  env.warning 92
+  env.critical 98
+
+Put it in a file in $(CONFDIR)/plugin-conf.d/ and restart the munin-node.
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 BUGS
+
+Multiple mounted file systems like tmpfs or devices in bind mounts are only graphed once.
+
+=head1 VERSION
+
+$Id$
+
+=head1 AUTHOR
+
+Unknown
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
 
 use strict;
 use Munin::Plugin;
