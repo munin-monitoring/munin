@@ -1,0 +1,1452 @@
+#!@@PERL@@ -w
+# -*- cperl -*-
+#
+# Copyright (C) 2002-2008 Jimmy Olsen, Audun Ytterdal
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+# Script to gather data from  the RRD-files with current information.
+#
+#
+# $Id: munin-update.in 1608 2008-05-13 10:38:51Z tfheen $
+
+$| = 1;
+
+use strict;
+use IO::Socket;
+use Munin;
+use Time::HiRes;
+use Getopt::Long;
+use POSIX qw(strftime);
+use POSIX ":sys_wait_h";
+use Storable qw(fd_retrieve nstore_fd);
+
+my $TIMEOUT        = 240;
+my $DEBUG          = 0;
+my $VERSION        = "@@VERSION@@";
+my $serversocket   = "munin-server-socket.$$";
+my $conffile       = "@@CONFDIR@@/munin.conf";
+my $force_root     = 0;
+my $do_usage       = 0;
+my @limit_hosts    = ();
+my @limit_services = ();
+my $update_time    = Time::HiRes::time;
+my $do_fork        = 1;
+my $do_version     = 0;
+my $timeout        = 180;
+my $cli_do_fork;
+my $cli_timeout;
+my $print_stdout = 0;
+my $tls;
+my %tls_verified = ( "level"          => 0,
+                     "cert"           => "",
+                     "verified"       => 0,
+                     "required_depth" => 5,
+                     "verify"         => "no"
+);
+
+my $log = new IO::Handle;
+
+# Get options
+$do_usage = 1
+  unless GetOptions( "host=s"      => \@limit_hosts,
+                     "force-root!" => \$force_root,
+                     "service=s"   => \@limit_services,
+                     "config=s"    => \$conffile,
+                     "debug!"      => \$DEBUG,
+                     "version!"    => \$do_version,
+                     "fork!"       => \$cli_do_fork,
+                     "timeout=i"   => \$cli_timeout,
+                     "stdout!"     => \$print_stdout,
+                     "help"        => \$do_usage
+  );
+
+if ($do_usage) {
+    print "Usage: $0 [options]
+
+Options:
+    --[no]force-root    Force running, even as root. [--noforce-root]
+    --version		View version information.
+    --help		View this message.
+    --service <service>	Limit graphed services to <service>. Multiple --service
+			options may be supplied.
+    --host <host>	Limit graphed hosts to <host>. Multiple --host options
+    			may be supplied.
+    --config <file>	Use <file> as configuration file. 
+    			[@@CONFDIR@@/munin.conf]
+    --[no]debug		View debug messages. [--nodebug]
+    --[no]fork		Don't fork one instance for each host. [--fork]
+    --[no]stdout	Print log messages to stdout as well. [--nostdout]
+    --timeout=<seconds>	TCP timeout when talking to clients. [$timeout]
+
+";
+    exit 0;
+}
+
+if ($do_version) {
+    print <<"EOT";
+munin-gather version $VERSION.
+Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson,
+  Nicolai Langfeldt / Linpro AS
+
+Copyright (C) 2002-2008
+
+This is free software released under the GNU General Public License. There
+is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. For details, please refer to the file COPYING that is included
+with this software or refer to
+  http://www.fsf.org/licensing/licenses/gpl.txt
+EOT
+    exit 0;
+}
+
+if ( $> == 0 and !$force_root ) {
+    print "You are running this program as root, which is dumb and will
+cause many problems later.  Please run it as user '@@USER@@'.
+If you really want to run it as root, use the --force-root option.
+Aborting.\n\n";
+    exit(1);
+}
+
+my $config = &munin_readconfig($conffile);
+
+my $oldconfig;
+
+if ( -e "$config->{dbdir}/gatherstate" ) {
+    $oldconfig = &munin_readconfig( "$config->{dbdir}/gatherstate", 1, 1 );
+}
+
+# CLI parameters override the configuration file.
+if ( defined $cli_timeout ) {
+    $timeout = $cli_timeout;
+} elsif ( exists $config->{'timeout'} ) {
+    $timeout = $config->{'timeout'};
+}
+
+if ( defined $cli_do_fork ) {
+    $do_fork = $cli_do_fork;
+} elsif ( exists $config->{'fork'} ) {
+    $do_fork = ( $config->{'fork'} =~ /yes/i ? 1 : 0 );
+}
+
+if ( !-d $config->{rundir} ) {
+    mkdir( $config->{rundir}, 0700 );
+}
+
+munin_runlock("$config->{rundir}/munin-gather.lock");
+
+if ( !open( STATS, ">$config->{dbdir}/munin-gather.stats.tmp" ) ) {
+    logger("[WARNING] Unable to open $config->{dbdir}/munin-gather.stats");
+
+    # Use /dev/null instead - if the admin won't fix he won't care
+    open( STATS, ">/dev/null" ) or die "Could not open STATS to /dev/null: $?";
+}
+
+my %children  = ();
+my @queue     = ();
+my $bad_procs = 0;
+my $uaddr;
+
+if ($do_fork) {
+
+    # Set up socket
+    $uaddr = sockaddr_un("$config->{rundir}/$serversocket");
+    socket( Server, PF_UNIX, SOCK_STREAM, 0 ) || die "socket: $!";
+    unlink("$config->{'rundir'}/$serversocket");
+    bind( Server, $uaddr );
+    chmod( 0700, "$config->{rundir}/$serversocket" );
+    listen( Server, SOMAXCONN );
+}
+
+logger("Starting munin-gather");
+
+# Make array of what is probably needed to update
+my $work_array = [];
+
+if (@limit_hosts) {    # Limit what to update if needed
+    foreach my $nodename (@limit_hosts) {
+        push @$work_array,
+          map { @{ munin_find_field( $_->{$nodename}, "address" ) } }
+          @{ munin_find_field( $config, $nodename ) };
+    }
+} else {               # ...else just search for all adresses to update
+    push @$work_array, @{ munin_find_field( $config, "address" ) };
+}
+
+# Go through scheduled work to weed out a few bits, and prepare some info
+for my $hashnode (@$work_array) {
+    my $loc  = munin_get_node_loc($hashnode);
+    my $name = munin_get_node_name($hashnode);
+
+    # Skip anything that has been disabled with the "update" setting
+    if ( !munin_get_bool( $hashnode, "update", "true" ) ) {
+        logger("Skipping \"$name\" (update disabled by config)");
+        next;
+    }
+
+    # We need to connect to this node; queue it
+    logger("Queuing \"$name\" for update.");
+    push( @queue, [ $loc, $hashnode, munin_get_node( $oldconfig, $loc ) ] );
+}
+
+my $timeout_start = time();
+$SIG{ALRM} = sub { die "Timed out waiting for children. $!\n" };
+alarm($TIMEOUT);
+
+if ($do_fork) {
+
+    # Initially set off a bunch of nodes...
+    if ( defined $config->{max_processes} ) {
+        while ( keys %children < ( $config->{max_processes} - 1 - $bad_procs ) )
+        {
+            do_node( @{ pop @queue } );
+        }
+    } else {
+        do_node( @{ pop @queue } ) while @queue;   # No limit on number of procs
+    }
+
+    # Loop as long as there are kids or queue...
+    for ( ; ( scalar( keys %children ) - $bad_procs > 0 ) or @queue ; ) {
+        logger("Debug: Doing a pass to check children status.") if $DEBUG;
+
+        eval {    # eval to call accept() with a timeout
+            $SIG{ALRM} = sub {    # If we timeout we need to use the old config
+                foreach my $key ( keys %children ) {
+                    if ( waitpid( $key, WNOHANG ) != 0 ) {
+                        my $loc     = $children{$key}->[0];
+                        my $newnode = $children{$key}->[1];
+                        my $oldnode = $children{$key}->[2];
+                        my $name    = munin_get_node_name($newnode);
+
+                        logger("Reaping child: $name.");
+                        delete $children{$key};
+                        munin_copy_node_toloc( $oldnode, $config, $loc );
+                    }
+                }
+                die;
+            };    # end sub
+
+            alarm(10);
+            accept( Client, Server );
+        };    # end eval
+
+        if ($@) {
+            if (     @queue
+                 and defined $config->{max_processes}
+                 and $config->{max_processes} )
+            {
+                logger(
+"Debug: Checking whether to spawn off more procs from queue." );
+                while ( keys %children <
+                        ( $config->{max_processes} - 1 - $bad_procs ) )
+                {
+                    logger("Debug: Popping queue item and spawning new proc.");
+                    do_node( @{ pop @queue } );
+                }
+            }
+            next;
+        }
+
+        alarm( $TIMEOUT - time() + $timeout_start );
+        close STDIN;
+        open( STDIN, "<&Client" ) || die "can't dup client to stdin";
+
+        my $pid;
+        my $name;
+        my $loc;
+        my $tmpref;
+        eval { $tmpref = fd_retrieve( \*STDIN ); };
+        if ($@) {
+            $bad_procs++;
+            logger("[WARNING] Error communicating with process: $@");
+        } else {
+            ( $pid, $loc, $name ) =
+              ( $tmpref->[0], $tmpref->[1], $tmpref->[2] );
+            logger("connection from $name ($pid)");
+
+            eval {
+                my $newnode = fd_retrieve( \*STDIN );
+                munin_copy_node_toloc( $newnode, $config, $loc );
+            };
+            if ($@) {
+                logger("[WARNING] Error during fd_retrieve of config: $@");
+
+                my $loc     = $children{$pid}->[0];
+                my $newnode = $children{$pid}->[1];
+                my $oldnode = $children{$pid}->[2];
+
+                munin_copy_node_toloc( $oldnode, $config, $loc );
+            }
+            delete $children{$pid};
+            waitpid( $pid, 0 );
+            logger("connection from $name ($pid) closed");
+        }
+        if (     @queue
+             and defined $config->{max_processes}
+             and $config->{max_processes}
+             and scalar( keys %children ) <
+             ( ( $config->{max_processes} ) - 1 - $bad_procs ) )
+        {
+            do_node( @{ pop @queue } );
+            close(Client);
+        }
+    }
+    alarm(0);
+} else {    # No forking, just poll the nodes sequentially...
+    for ( ; @queue ; ) {
+        do_node( @{ pop @queue } );
+    }
+}
+
+alarm(0);
+
+if ($bad_procs)    # Use old configuration for killed children
+{
+    foreach my $key ( keys %children ) {
+        my $loc     = $children{$key}->[0];
+        my $newnode = $children{$key}->[1];
+        my $oldnode = $children{$key}->[2];
+        my $name    = munin_get_node_name($newnode);
+
+        munin_copy_node_toloc( $oldnode, $config, $loc );
+        logger("Attempting to use old configuration for $name.");
+    }
+}
+
+unlink("$config->{rundir}/$serversocket");
+
+my $overwrite = &munin_readconfig($conffile);
+$config = &munin_overwrite( $config, $overwrite );
+
+compare_configs( $oldconfig, $config );
+
+if ( &munin_getlock("$config->{rundir}/munin-datafile.lock") ) {
+    &munin_writeconfig( "$config->{dbdir}/datafile", $config );
+} else {
+    die "Could not create lockfile '$config->{rundir}/munin-update.lock'";
+}
+
+$update_time = sprintf( "%.2f", ( Time::HiRes::time - $update_time ) );
+print STATS "UT|$update_time\n";
+close(STATS);
+rename( "$config->{dbdir}/munin-update.stats.tmp",
+        "$config->{dbdir}/munin-update.stats" );
+
+logger("Munin-update finished ($update_time sec)");
+
+munin_removelock("$config->{rundir}/munin-datafile.lock");
+munin_removelock("$config->{rundir}/munin-update.lock");
+
+close($log);
+
+# compare_configs is used to monitor for config changes which we
+# have to act upon.
+sub compare_configs {
+    my $old           = shift;
+    my $new           = shift;
+    my $just_upgraded = 0;
+
+    if ( !defined $old->{version} or $old->{version} ne $VERSION ) {
+        $just_upgraded = 1;
+    }
+
+    foreach my $node ( @{ munin_find_field( $new, "label" ) } ) {
+        my $oldnode = munin_get_node( $old, munin_get_node_loc($node) );
+        my $name = munin_get_node_name($node);
+        my ( $oldval, $newval );
+
+        $oldval = munin_get( $oldnode, "max", "" );
+        $newval = munin_get( $node,    "max", "" );
+        if ( $just_upgraded or $oldval ne $newval ) {
+            logger(   "Notice: compare_configs: $name.max changed from "
+                    . ( length $oldval ? $oldval : "undefined" )
+                    . " to $newval." );
+            change_max( munin_get_filename($node), $newval );
+        }
+
+        $oldval = munin_get( $oldnode, "min", "" );
+        $newval = munin_get( $node,    "min", "" );
+        if ( $just_upgraded or $oldval ne $newval ) {
+            logger(   "Notice: compare_configs: $name.min changed from "
+                    . ( length $oldval ? $oldval : "undefined" )
+                    . " to $newval." );
+            change_min( munin_get_filename($node), $newval );
+        }
+
+        $oldval = munin_get( $oldnode, "type", "GAUGE" );
+        $newval = munin_get( $node,    "type", "GAUGE" );
+        if ( $just_upgraded or $oldval ne $newval ) {
+            logger(   "Notice: compare_configs: $name.type changed from "
+                    . ( length $oldval ? $oldval : "undefined" )
+                    . " to $newval." );
+            change_type( munin_get_filename($oldnode),
+                         munin_get_filename($node), $newval );
+        }
+    }
+}
+
+sub change_type {
+    my $ofile = shift;
+    my $nfile = shift;
+    my $val   = shift;
+
+    if ( defined $ofile and -f $ofile ) {
+        logger("[WARNING]: Changing name of $ofile to $nfile");
+        unless ( rename( $ofile, $nfile ) ) {
+            logger("[ERROR]: Could not rename file: $!\n");
+        }
+    }
+
+    logger( "INFO: Changing type of $nfile to "
+            . ( defined $val ? $val : "GAUGE" ) );
+    RRDs::tune( $nfile, "-d", "42:" . ( defined $val ? $val : "GAUGE" ) );
+}
+
+sub change_max {
+    my $file = shift;
+    my $val  = shift;
+
+    logger("[WARNING]: Changing max of \"$file\" to \"$val\".\n");
+    RRDs::tune( $file, "-a", "42:" . ( defined $val ? $val : "U" ) );
+}
+
+sub change_min {
+    my $file = shift;
+    my $val  = shift;
+
+    logger("[WARNING]: Changing min of \"$file\" to \"$val\".\n");
+    RRDs::tune( $file, "-i", "42:" . ( defined $val ? $val : "U" ) );
+}
+
+sub do_node {
+    my ( $loc, $newconf, $oldconf ) = @_;
+
+    # Skip unless we're updating it
+    return undef unless munin_get( $newconf, "gather", "true" );
+
+    my $name = munin_get( $newconf, "host_name" )
+      || munin_get_node_name($newconf);
+
+    unless ( $newconf->{"address"} ) {
+        logger("[ERROR] No address defined for node: $name");
+        return undef;
+    }
+    logger("Debug: do_node: Starting on \"$name\".") if $DEBUG;
+
+    # Then we fork...
+    if ($do_fork) {
+        my $pid = fork;
+        if ( !defined($pid) ) {    # Something went wrong
+            logger("Error: Unable to fork: $!");
+            return;
+        } elsif ($pid) {           # I'm the parent
+            $children{$pid} = [ $loc, $newconf, $oldconf ];
+            return;
+        }    # else I'm the child -- go spawn
+    }
+
+    $0 .= " [$name]";
+
+    # First we get lock...
+    unless ( &munin_getlock(
+                            munin_get( $newconf, "rundir" )
+                          . "/munin-"
+                          . join( '-', @{ munin_get_node_loc($newconf) } ) . "-"
+                          . munin_get_node_name($newconf) . ".lock"
+             )
+      )
+    {
+        logger("[ERROR] Could not get lock for \"$name\". Skipping node.");
+        if ($do_fork) {    # Send the old config to the server before we die
+            socket( SOCK, PF_UNIX, SOCK_STREAM, 0 )
+              || die "socket: $!";
+            connect( SOCK,
+                     sockaddr_un(
+                              munin_get( $newconf, "rundir" ) . "/$serversocket"
+                     )
+            ) || die "connect: $!";
+            alarm(0);      # Don't want to interrupt this.
+            my @tmp = ( $$, munin_get_node_loc($newconf), $name );
+            if ( ref $oldconf ) {
+                copy_node( $oldconf, $newconf );
+                nstore_fd \@tmp, \*SOCK
+                  || die "Could not nstore_fd: $!";
+                nstore_fd \%{ munin_get_separated_node($newconf) }, \*SOCK;
+                close SOCK;
+            } else { # Well, we'll have to give _something_ to the server, or it'll time out.
+                socket( SOCK, PF_UNIX, SOCK_STREAM, 0 ) || die "socket: $!";
+                connect( SOCK,
+                         sockaddr_un(
+                              munin_get( $newconf, "rundir" ) . "/$serversocket"
+                         )
+                ) || die "connect: $!";
+                nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
+                nstore_fd( {}, \*SOCK );
+            }
+            exit 1;
+        } else {
+            return 0;
+        }
+    }
+
+    my $socket;
+
+    if ( munin_get( $newconf, "local_address" ) ) {
+        $socket = new IO::Socket::INET(
+                   'PeerAddr' => "$newconf->{address}:"
+                     . munin_get( $newconf, "port", "4949" ),
+                   'LocalAddr' => munin_get( $newconf, "local_address", undef ),
+                   'Proto'     => "tcp",
+                   "Timeout"   => munin_get( $newconf, "timeout",       60 )
+        );
+    } else {
+        $socket = new IO::Socket::INET(
+                               'PeerAddr' => "$newconf->{address}:"
+                                 . munin_get( $newconf, "port", "4949" ),
+                               'Proto'   => "tcp",
+                               "Timeout" => munin_get( $newconf, "timeout", 60 )
+        );
+    }
+    my $err = ( $socket ? "" : $! );
+
+    if ($do_fork) {
+        $SIG{ALRM} = sub { close $socket; die "$!\n" };
+        alarm($timeout);
+
+        my @tmp = ( $$, munin_get_node_loc($newconf), $name );
+
+        if ( !$socket ) {
+            logger(
+"[ERROR] Could not connect to $name($newconf->{address}): $err - Attempting to use old configuration"
+            );
+
+            # If we can't reach the client. Using old Configuration.
+            if ( ref $oldconf ) {
+                copy_node( $oldconf, $newconf );
+                alarm(0);    # Don't want to interrupt this.
+                socket( SOCK, PF_UNIX, SOCK_STREAM, 0 )
+                  || die "socket: $!";
+                connect( SOCK,
+                         sockaddr_un(
+                              munin_get( $newconf, "rundir" ) . "/$serversocket"
+                         )
+                ) || die "connect: $!";
+                nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
+                nstore_fd \%{ munin_get_separated_node($newconf) }, \*SOCK;
+                close SOCK;
+            } else { # Well, we'll have to give _something_ to the server, or it'll time out.
+                socket( SOCK, PF_UNIX, SOCK_STREAM, 0 ) || die "socket: $!";
+                connect( SOCK,
+                         sockaddr_un(
+                              munin_get( $newconf, "rundir" ) . "/$serversocket"
+                         )
+                ) || die "connect: $!";
+                nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
+                nstore_fd( {}, \*SOCK );
+            }
+        } else {
+            my $ctx;
+            if ( !config_and_fetch_node( $newconf, $oldconf, $socket ) ) {
+                copy_node( $oldconf, $newconf );
+                socket( SOCK, PF_UNIX, SOCK_STREAM, 0 ) || die "socket: $!";
+                connect( SOCK,
+                         sockaddr_un(
+                              munin_get( $newconf, "rundir" ) . "/$serversocket"
+                         )
+                ) || die "connect: $!";
+                nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
+                nstore_fd \%{ munin_get_separated_node($newconf) }, \*SOCK;
+                close SOCK;
+                exit 1;
+            }
+            close $socket;
+            alarm(0);    # Don't want to interrupt this.
+            socket( SOCK, PF_UNIX, SOCK_STREAM, 0 ) || die "socket: $!";
+            connect( SOCK, sockaddr_un("$config->{rundir}/$serversocket") )
+              || die "connect: $!";
+            nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
+            nstore_fd \%{ munin_get_separated_node($newconf) }, \*SOCK;
+            alarm($timeout);
+            close SOCK;
+        }
+        alarm(0);
+        munin_removelock(   munin_get( $newconf, "rundir" )
+                          . "/munin-"
+                          . join( '-', @{ munin_get_node_loc($newconf) } ) . "-"
+                          . munin_get_node_name($newconf)
+                          . ".lock" );
+        exit;
+    } else {    # No forking...
+        if ( !$socket ) {
+            logger(
+"[ERROR] Could not connect to $name($newconf->{address}): $err\nAttempting to use old configuration"
+            );
+
+            # If we can't reach the client. Using old Configuration.
+            if ( ref $oldconf ) {
+                copy_node( $oldconf, $newconf );
+            }
+        } else {
+            next
+              unless ( config_and_fetch_node( $newconf, $oldconf, $socket ) );
+            close $socket;
+        }
+    }
+    munin_removelock(   munin_get( $newconf, "rundir" )
+                      . "/munin-"
+                      . join( '-', @{ munin_get_node_loc($newconf) } ) . "-"
+                      . munin_get_node_name($newconf)
+                      . ".lock" );
+}
+
+sub tls_verify_callback {
+    my ( $ok, $subj_cert, $issuer_cert, $depth, $errorcode, $arg, $chain ) = @_;
+
+    #    logger ("ok is ${ok}");
+
+    $tls_verified{"level"}++;
+
+    if ($ok) {
+        $tls_verified{"verified"} = 1;
+        logger("[TLS] Verified certificate.") if $DEBUG;
+        return 1;    # accept
+    }
+
+    if ( !( $tls_verified{"verify"} eq "yes" ) ) {
+        logger(
+              "[TLS] Certificate failed verification, but we aren't verifying.")
+          if $DEBUG;
+        $tls_verified{"verified"} = 1;
+        return 1;
+    }
+
+    if ( $tls_verified{"level"} > $tls_verified{"required_depth"} ) {
+        logger(   "[TLS] Certificate verification failed at depth "
+                . $tls_verified{"level"}
+                . "." );
+        $tls_verified{"verified"} = 0;
+        return 0;
+    }
+
+    return 0;    # Verification failed
+}
+
+sub start_tls {
+    my $socket       = shift;
+    my $tls_paranoia = shift;
+    my $tls_cert     = shift;
+    my $tls_priv     = shift;
+    my $tls_ca_cert  = shift;
+    my $tls_verify   = shift;
+    my $tls_vdepth   = shift;
+
+    my $ctx;
+    my $err;
+    my $remote_key = 0;
+
+    %tls_verified = ( "level"          => 0,
+                      "cert"           => "",
+                      "verified"       => 0,
+                      "required_depth" => $tls_vdepth,
+                      "verify"         => $tls_verify
+    );
+
+    logger("[TLS] Enabling TLS.") if $DEBUG;
+    if ( !eval "require Net::SSLeay;" ) {
+        logger("[ERROR] TLS enabled but Net::SSLeay unavailable.");
+        return 0;
+    }
+
+    # Init SSLeay
+    Net::SSLeay::load_error_strings();
+    Net::SSLeay::SSLeay_add_ssl_algorithms();
+    Net::SSLeay::randomize();
+    $ctx = Net::SSLeay::CTX_new();
+    if ( !$ctx ) {
+        logger("[ERROR] Could not create SSL_CTX");
+        return 0;
+    }
+
+    # Tune a few things...
+    if ( Net::SSLeay::CTX_set_options( $ctx, &Net::SSLeay::OP_ALL ) ) {
+        logger("[ERROR] Could not set SSL_CTX options");
+        return 0;
+    }
+
+    # Tell the node that we want TLS
+    write_socket_single( $socket, "STARTTLS\n" );
+    my $tlsresponse = read_socket_single($socket);
+    if ( !defined $tlsresponse ) {
+        logger("[ERROR] Bad TLS response \"\".");
+        return 0;
+    }
+    if ( $tlsresponse =~ /^TLS OK/ ) {
+        $remote_key = 1;
+    } elsif ( $tlsresponse !~ /^TLS MAYBE/i ) {
+        logger("[ERROR] Bad TLS response \"$tlsresponse\".");
+        return 0;
+    }
+
+    # Should we use a private key?
+    if ( defined $tls_priv and length $tls_priv ) {
+        if ( -e $tls_priv or $tls_paranoia eq "paranoid" ) {
+            if ( !Net::SSLeay::CTX_use_PrivateKey_file(
+                                     $ctx, $tls_priv, &Net::SSLeay::FILETYPE_PEM
+                 )
+              )
+            {
+                if ( $tls_paranoia eq "paranoid" ) {
+                    logger(
+"[ERROR] Problem occured when trying to read file with private key \"$tls_priv\": $!"
+                    );
+                    return 0;
+                } else {
+                    logger(
+"[ERROR] Problem occured when trying to read file with private key \"$tls_priv\": $!. Continuing without private key."
+                    );
+                }
+            }
+        } else {
+            logger(
+"[WARNING] No key file \"$tls_priv\". Continuing without private key." );
+        }
+    }
+
+    # How about a certificate?
+    if ( -e $tls_cert ) {
+        if ( defined $tls_cert and length $tls_cert ) {
+            if ( !Net::SSLeay::CTX_use_certificate_file(
+                                     $ctx, $tls_cert, &Net::SSLeay::FILETYPE_PEM
+                 )
+              )
+            {
+                logger(
+"[WARNING] Problem occured when trying to read file with certificate \"$tls_cert\": $!. Continuing without certificate."
+                );
+            }
+        }
+    } else {
+        logger(
+"[WARNING] No certificate file \"$tls_cert\". Continuing without certificate."
+        );
+    }
+
+    # How about a CA certificate?
+    if ( -e $tls_ca_cert ) {
+        if ( !Net::SSLeay::CTX_load_verify_locations( $ctx, $tls_ca_cert, '' ) )
+        {
+            logger(
+"[WARNING] Problem occured when trying to read file with the CA's certificate \"$tls_ca_cert\": "
+                  . &Net::SSLeay::print_errs("")
+                  . ". Continuing without CA's certificate." );
+        }
+    }
+
+    # Now let's define our requirements of the node
+    $tls_vdepth = 5 if !defined $tls_vdepth;
+    Net::SSLeay::CTX_set_verify_depth( $ctx, $tls_vdepth );
+    $err = &Net::SSLeay::print_errs("");
+    if ( defined $err and length $err ) {
+        logger("[WARNING] in set_verify_depth: $err");
+    }
+    Net::SSLeay::CTX_set_verify( $ctx, &Net::SSLeay::VERIFY_PEER,
+                                 \&tls_verify_callback );
+    $err = &Net::SSLeay::print_errs("");
+    if ( defined $err and length $err ) {
+        logger("[WARNING] in set_verify: $err");
+    }
+
+    # Create the local tls object
+    if ( !( $tls = Net::SSLeay::new($ctx) ) ) {
+        logger("[ERROR] Could not create TLS: $!");
+        return 0;
+    }
+    if ($DEBUG) {
+        my $i           = 0;
+        my $p           = '';
+        my $cipher_list = 'Cipher list: ';
+        $p = Net::SSLeay::get_cipher_list( $tls, $i );
+        $cipher_list .= $p if $p;
+        do {
+            $i++;
+            $cipher_list .= ', ' . $p if $p;
+            $p = Net::SSLeay::get_cipher_list( $tls, $i );
+        } while $p;
+        $cipher_list .= '\n';
+        logger("[TLS] Available cipher list: $cipher_list.");
+    }
+
+    # Connect it to the local fd that munin-update will print to
+    Net::SSLeay::set_fd( $tls, fileno($socket) );
+    $err = &Net::SSLeay::print_errs("");
+    if ( defined $err and length $err ) {
+        logger( "[WARNING] Could not define encrypted fd: " . $err );
+    }
+
+    # Try to negotiate the tls connection
+    my $res;
+    if ($remote_key) {
+        $res = Net::SSLeay::connect($tls);
+    } else {
+        $res = Net::SSLeay::accept($tls);
+    }
+    $err = &Net::SSLeay::print_errs("");
+    if ( defined $err and length $err ) {
+        logger( "[ERROR] Could not enable TLS: " . $err );
+        Net::SSLeay::free($tls);
+        Net::SSLeay::CTX_free($ctx);
+        $tls = undef;
+    } elsif ( !$tls_verified{"verified"} and $tls_paranoia eq "paranoid" ) {
+        logger( "[ERROR] Could not verify CA: "
+                . Net::SSLeay::dump_peer_certificate($tls) );
+        write_socket_single( $tls, "quit\n" );
+        Net::SSLeay::free($tls);
+        Net::SSLeay::CTX_free($ctx);
+        $tls = undef;
+    } else {
+        logger("[TLS] TLS enabled.");
+        logger( "[TLS] Cipher `" . Net::SSLeay::get_cipher($tls) . "'." );
+        logger(
+             "[TLS] client cert: " . Net::SSLeay::dump_peer_certificate($tls) );
+    }
+    read_socket_single();    # Get rid of empty line
+    return $tls;
+}
+
+sub write_socket_single {
+    my $socket    = shift;
+    my $text      = shift;
+    my $timed_out = 0;
+    logger("[DEBUG] Writing to socket: \"$text\".") if $DEBUG;
+    eval {
+        local $SIG{ALRM} = sub { die "Could not run list on socket: $!\n" };
+        alarm 5;
+        if ( defined $tls and $tls ) {
+            Net::SSLeay::write( $tls, $text );
+            my $err = &Net::SSLeay::print_errs("");
+            if ( defined $err and length $err ) {
+                logger("[WARNING] in write_socket_single: $err");
+                exit 9;
+            }
+        } else {
+            print $socket $text;
+        }
+        alarm 0;
+    };
+    return 1;
+}
+
+sub read_socket_single {
+    my $socket    = shift;
+    my $timed_out = 0;
+    my $res;
+
+    return undef unless defined $socket;
+
+    eval {
+        local $SIG{ALRM} = sub {
+            $timed_out = 1;
+            close $socket;
+            logger("[WARNING] Timeout: Aborting read: $!");
+            exit 1;
+        };
+        alarm($timeout);
+        if ($tls) {
+            $res = Net::SSLeay::read($tls);
+            my $err = &Net::SSLeay::print_errs("");
+            if ( defined $err and length $err ) {
+                logger("[WARNING] read_socket_single: $err");
+            }
+        } else {
+            $res = <$socket>;
+        }
+        chomp $res if defined $res;
+        alarm 0;
+    };
+    if ($timed_out) {
+        logger("[WARNING] Socket read timed out: $@\n");
+        return undef;
+    }
+    logger("[DEBUG] Reading from socket: \"$res\".") if $DEBUG;
+    return $res;
+}
+
+sub read_socket {
+    my $socket = shift;
+    my @array;
+    my $timed_out = 0;
+
+    return undef unless defined $socket;
+
+    eval {
+        local $SIG{ALRM} = sub {
+            $timed_out = 1;
+            close $socket;
+            logger("[WARNING] Timeout, aborting read: $!");
+            exit 1;
+        };
+        alarm($timeout);
+        if ($tls) {
+            while ( defined( $_ = Net::SSLeay::read($tls) ) ) {
+                my $err = &Net::SSLeay::print_errs("");
+                if ( defined $err and length $err ) {
+                    logger("[WARNING] in read_socket: $err");
+                }
+                chomp;
+                last if (/^\.$/);
+                push @array, $_;
+            }
+        } else {
+            while (<$socket>) {
+                chomp;
+                last if (/^\.$/);
+                push @array, $_;
+            }
+        }
+        alarm 0;
+    };
+    if ($timed_out) {
+        logger("[WARNING] Socket read timed out: $@\n");
+        return undef;
+    }
+    logger("[DEBUG] Reading from socket: \"" . ( join( "|", @array ) ) . "\"." )
+      if $DEBUG;
+    return (@array);
+}
+
+sub config_and_fetch_node {
+    my ( $newconf, $oldconf, $socket ) = @_;
+    my $clientdomain = read_socket_single($socket);
+    my $fetchdomain;
+    my $name      = munin_get_node_name($newconf);
+    my $host_time = Time::HiRes::time;
+    chomp($clientdomain) if $clientdomain;
+    if ( !$clientdomain ) {
+        logger("[WARNING] Got unknown reply from client \"$name\" skipping");
+        return 0;
+    }
+    $clientdomain =~ s/\#.*(?:lrrd|munin) (?:client|node) at //;
+
+    # Decide what to ask for
+    if ( munin_get( $newconf, "use_node_name" ) ) {
+        $fetchdomain = $clientdomain;
+    } elsif ( munin_get( $newconf, "use_default_name" ) ) {
+        $fetchdomain = $clientdomain;
+    } else {
+        $fetchdomain = $name;
+    }
+
+    # TLS should only be attempted if explicitly enabled. The default value
+    # is therefore "disabled" (and not "auto" as before).
+    my $tls_requirement = &munin_get( $config, "tls", "disabled" );
+    logger("[DEBUG]: TLS set to \"$tls_requirement\".") if $DEBUG;
+    if ( $tls_requirement ne "disabled" ) {
+        my $key;
+        my $cert;
+        my $depth;
+        my $ca_cert;
+        my $tls_verify;
+        $key = $cert = munin_get( $config, "tls_pem" );
+        $key = &munin_get( $config, "tls_private_key", "@@CONFDIR@@/munin.pem" )
+          unless defined $key;
+        $cert =
+          &munin_get( $config, "tls_certificate", "@@CONFDIR@@/munin.pem" )
+          unless defined $cert;
+        $ca_cert =
+          &munin_get( $config, "tls_ca_certificate", "@@CONFDIR@@/cacert.pem" )
+          unless defined $ca_cert;
+        $tls_verify = &munin_get( $config, "tls_verify_certificate", "no" );
+        $depth      = &munin_get( $config, "tls_verify_depth",       5 );
+
+        if ( !start_tls( $socket, $tls_requirement, $cert,
+                         $key,    $ca_cert,         $tls_verify,
+                         $depth
+             )
+          )
+        {
+            if (    $tls_requirement eq "paranoid"
+                 or $tls_requirement eq "enabled" )
+            {
+                logger(
+"[ERROR]: Could not establish TLS connection to \"$name\". Skipping." );
+                exit 13;
+            }
+        }
+    }
+
+    logger("[DEBUG] Configuring node: $name") if $DEBUG;
+    my @services;
+    eval {
+        local $SIG{ALRM} =
+          sub { die "Could not run list on $name ($fetchdomain): $!\n" };
+        alarm 5;    # Should be enough to check the list
+        write_socket_single( $socket, "list $fetchdomain\n" );
+        my $list = read_socket_single($socket);
+        exit 1 unless defined $list;
+        chomp $list;
+        @services = split / /, $list;
+        alarm 0;
+    };
+    if ($@) {
+        die unless ( $@ =~ m/Could not run list/ );
+        logger(
+"Error: Could not get list from $newconf->{address}: $!\nAttempting to use old configuration"
+        );
+        if ( ref $oldconf ) {
+            copy_node( $oldconf, $newconf );
+        }
+        @services = [];
+    }
+
+    for my $service (@services) {
+        my $servname = $service;
+        my $fields   = {};
+        $servname =~ s/\W/_/g;
+        munin_set_var_loc( $newconf, [ $servname, "realservname" ], $service );
+        logger("[DEBUG] Inspecting possible service: $servname") if $DEBUG;
+        next if ( !munin_get_bool( $newconf->{$servname}, "update", "true" ) );
+        next
+          if ( !munin_get_bool( $newconf->{$servname}, "fetch_data", "true" ) );
+        next
+          if ( @limit_services and !grep ( /^$servname$/, @limit_services ) );
+
+        my @graph_order = split( /\s+/,
+                                 munin_get( $newconf->{$service}, "graph_order",
+                                            ""
+                                 )
+        );
+        my $serviceconf_time = Time::HiRes::time;
+        logger("[DEBUG] Configuring service: $servname") if $DEBUG;
+        write_socket_single( $socket, "config $service\n" );
+        my @lines = read_socket($socket);
+        return unless $socket;
+        next   unless (@lines);
+
+        for (@lines) {
+            if (/\# timeout/) {
+                logger("Client reported timeout in configuration of $servname");
+                if ( $oldconf->{$servname} ) {
+                    logger("Attempting to use old configuration");
+                    copy_node( $newconf->{$servname}, $oldconf->{$servname} );
+                } else {
+                    logger("Skipping configuration of $servname");
+                    delete $newconf->{$servname};
+                }
+            } elsif (/^(\w+)\.(\w+)\s+(.+)/) {
+                my ( $client, $type, $value ) = ( $1, $2, $3 );
+                $client = &sanitise_fieldname( $client, $fields );
+                if ( ($type) and ( $type eq "label" ) ) {
+                    $value =~ s/\\/_/g;    # Sanitise labels
+                    push( @graph_order, $client )
+                      unless grep ( /^$client$/, @graph_order );
+                }
+                munin_set_var_loc( $newconf, [ $servname, $client, $type ],
+                                   "$value" );
+                logger("config: $servname->$client.$type = $value") if $DEBUG;
+            } elsif (/(^[^\s\#]+)\s+(.+)/) {
+                my ($keyword) = $1;
+                my ($value)   = $2;
+                munin_set_var_loc( $newconf, [ $servname, $keyword ],
+                                   "$value" );
+                logger("Config: $servname->$keyword = $value") if $DEBUG;
+                if ( $keyword eq "graph_order" ) {
+                    @graph_order = split( /\s+/, $value );
+                }
+            }
+        }
+        for my $field ( keys %{ $newconf->{$servname} } ) {
+
+            # Skip anything that isn't a field
+            next if $field =~ /^#%#/;
+            next
+              unless ( ref( $newconf->{$servname}->{$field} ) eq "HASH"
+                    and defined( $newconf->{$servname}->{$field}->{"label"} ) );
+
+            my $fhash = $newconf->{$servname}->{$field};
+
+            # Check if file exists
+            my $fname = munin_get_filename($fhash);
+            ( my $dirname = $fname ) =~ s/\/[^\/]+$//;
+
+            if ( !-f "$fname" ) {
+                logger("creating rrd-file for $servname->$field: \"$fname\"");
+                munin_mkdir_p( $dirname, 0777 );
+                my @args = ( "$fname",
+                             "DS:42:"
+                               . munin_get( $fhash, "type", "GAUGE" ) . ":600:"
+                               . munin_get( $fhash, "min",  "U" ) . ":"
+                               . munin_get( $fhash, "max",  "U" )
+                );
+
+                my $resolution =
+                  &munin_get( $fhash, "graph_data_size", "normal" );
+                if ( $resolution eq "normal" ) {
+                    push(
+                        @args,
+                        "RRA:AVERAGE:0.5:1:576", # resolution 5 minutes
+                        "RRA:MIN:0.5:1:576",
+                        "RRA:MAX:0.5:1:576",
+                        "RRA:AVERAGE:0.5:6:432", # 9 days, resolution 30 minutes
+                        "RRA:MIN:0.5:6:432",
+                        "RRA:MAX:0.5:6:432",
+                        "RRA:AVERAGE:0.5:24:540",  # 45 days, resolution 2 hours
+                        "RRA:MIN:0.5:24:540",
+                        "RRA:MAX:0.5:24:540",
+                        "RRA:AVERAGE:0.5:288:450", # 450 days, resolution 1 day
+                        "RRA:MIN:0.5:288:450",
+                        "RRA:MAX:0.5:288:450"
+                    );
+                } elsif ( $resolution eq "huge" ) {
+		    # resolution 5 minutes, for 400 days
+                    push( @args, "RRA:AVERAGE:0.5:1:115200" );
+		    # Three times? ARGH!
+                    push( @args, "RRA:MIN:0.5:1:115200" );
+		    # Three times? ARGH!
+                    push( @args, "RRA:MAX:0.5:1:115200" );
+                }
+                RRDs::create @args;
+                if ( my $ERROR = RRDs::error ) {
+                    logger("[ERROR] Unable to create \"$fname\": $ERROR");
+                }
+            }
+        }
+        munin_set_var_loc( $newconf,
+                           [ $servname, "graph_order" ],
+                           join( ' ', @graph_order ) );
+
+        fetch_node_service( $newconf, $socket, $servname, $service );
+    }
+    $host_time = sprintf( "%.2f", ( Time::HiRes::time - $host_time ) );
+    print STATS "UD|$name|$host_time\n";
+    return 0 unless $socket;
+    return 1;
+}
+
+sub fetch_node_service {
+    my $newconf      = shift;
+    my $socket       = shift;
+    my $service      = shift;
+    my $realservname = shift;
+
+    write_socket_single( $socket, "fetch $realservname\n" );
+    my @lines = &read_socket($socket);
+    return 0 unless $socket;
+    my $fields = {};
+    for (@lines) {
+        next unless defined $_;
+        if (/\# timeout/) {
+            logger("Client reported timeout in fetching of $service");
+        } elsif (/(\w+)\.value\s+([\S:]+)\s*(\#.*)?$/) {
+            my $key     = $1;
+            my $value   = $2;
+            my $comment = $3;
+            my $when    = "N";
+
+            if ( $value =~ /^(\d+):(.+)$/ ) {
+                $when  = $1;
+                $value = $2;
+            }
+
+            if ( $value =~ /\d[Ee]([+-]?\d+)$/ ) {
+
+                # Looks like scientific format.  RRDtool does not
+                # like it so we convert it.
+                my $magnitude = $1;
+                if ( $magnitude < 0 ) {
+
+                    # Preserve at least 4 significant digits
+                    $magnitude = abs($magnitude) + 4;
+                    $value = sprintf( "%.*f", $magnitude, $value );
+                } else {
+                    $value = sprintf( "%.4f", $value );
+                }
+            }
+
+            $key = &sanitise_fieldname( $key, $fields );
+            if ( exists $newconf->{$service}->{$key}->{"label"} ) {
+                my $fname = munin_get_filename( $newconf->{$service}->{$key} );
+
+                logger("[DEBUG] Updating $fname with $value") if $DEBUG;
+                RRDs::update( "$fname", "$when:$value" );
+                if ( my $ERROR = RRDs::error ) {
+                    logger("[ERROR] In RRD: unable to update $fname: $ERROR");
+                }
+            } else {
+                logger(
+"[ERROR] Unable to update $service -> $key: No such field (no \"label\" field defined when running plugin with \"config\")."
+                );
+            }
+        } elsif (/(\w+)\.extinfo\s+(.+)/) {
+            munin_set_var_loc( $newconf, [ $service, $service, $1, "extinfo" ],
+                               $2 );
+        }
+    }
+    return 1;
+}
+
+sub fetch_node {
+    my ( $newconf, $oldconf, $socket ) = @_;
+    my $name = munin_get_node_name($newconf);
+    logger("[DEBUG] Fetching node: $name") if $DEBUG;
+    for my $service ( keys %{$newconf} ) {
+        next if ref( $newconf->{$service} ) ne "HASH";
+        next if $service =~ /^#%#/;
+        logger("[DEBUG] Fetching service: $service") if $DEBUG;
+        next unless exists( $newconf->{$service}->{"graph_title"} );
+        next
+          unless ( munin_get_bool( $newconf->{$service}, "update", "true" ) );
+        next
+          unless (
+                 munin_get_bool( $newconf->{$service}, "fetch_data", "true" ) );
+        next if ( @limit_services and !grep ( /^$service$/, @limit_services ) );
+
+        # Read (and get rid of) realservname
+        my $realservname =
+          ( $newconf->{$service}->{"realservname"} || $service );
+        delete $newconf->{$service}->{"realservname"}
+          if exists $newconf->{$service}->{"realservname"};
+
+        write_socket_single( $socket, "fetch $realservname\n" );
+        my @lines = &read_socket($socket);
+        return 0 unless $socket;
+        my $fields = {};
+        for (@lines) {
+            next unless defined $_;
+            if (/\# timeout/) {
+                logger("Client reported timeout in fetching of $service");
+            } elsif (/(\w+)\.value\s+([\S:]+)\s*(\#.*)?$/) {
+                my $key     = $1;
+                my $value   = $2;
+                my $comment = $3;
+                my $when    = "N";
+
+                if ( $value =~ /^(\d+):(.+)$/ ) {
+                    $when  = $1;
+                    $value = $2;
+                }
+
+                if ( $value =~ /\d[Ee]([+-]?\d+)$/ ) {
+
+                    # Looks like scientific format.  RRDtool does not
+                    # like it so we convert it.
+                    my $magnitude = $1;
+                    if ( $magnitude < 0 ) {
+
+                        # Preserve at least 4 significant digits
+                        $magnitude = abs($magnitude) + 4;
+                        $value = sprintf( "%.*f", $magnitude, $value );
+                    } else {
+                        $value = sprintf( "%.4f", $value );
+                    }
+                }
+
+                $key = &sanitise_fieldname( $key, $fields );
+                if ( exists $newconf->{$service}->{$key}->{"label"} ) {
+                    my $fname =
+                      munin_get_filename( $newconf->{$service}->{$key} );
+
+                    logger("[DEBUG] Updating $fname with $value") if $DEBUG;
+                    RRDs::update( "$fname", "$when:$value" );
+                    if ( my $ERROR = RRDs::error ) {
+                        logger(
+                             "[ERROR] In RRD: unable to update $fname: $ERROR");
+                    }
+                } else {
+                    logger(
+"[ERROR] Unable to update $name -> $service -> $key: No such field (no \"label\" field defined when running plugin with \"config\")."
+                    );
+                }
+            } elsif (/(\w+)\.extinfo\s+(.+)/) {
+                munin_set_var_loc( $newconf,
+                                   [ $service, $service, $1, "extinfo" ], $2 );
+            }
+        }
+    }
+    return 1;
+}
+
+sub logger_open {
+    my $dirname = shift;
+
+    if ( !$log->opened ) {
+        unless ( open( $log, ">>$dirname/munin-update.log" ) ) {
+            print STDERR
+"Warning: Could not open log file \"$dirname/munin-update.log\" for writing: $!";
+        }
+    }
+}
+
+sub logger {
+    my ($comment) = @_;
+    my $now = strftime "%b %d %H:%M:%S", localtime;
+
+    chomp($comment);
+    $comment =~ s/\n/\\n/g;
+    print "$now [$$] - $comment\n" if $print_stdout;
+    if ( $log->opened ) {
+        print $log "$now [$$] - $comment\n";
+        $log->flush;
+    } else {
+        if ( defined $config->{logdir} ) {
+            if ( open( $log, ">>$config->{logdir}/munin-update.log" ) ) {
+                print $log "$now - $comment\n";
+                $log->flush;
+                close(STDERR);
+                open( STDERR, ">&", $log );
+            } else {
+                print STDERR
+"[WARNING] Could not open log file \"$config->{logdir}/munin-update.log\" for writing: $!";
+                print STDERR "$now - $comment\n";
+            }
+        } else {
+            print STDERR "$now - $comment\n";
+        }
+    }
+}
+
+sub sanitise_fieldname {
+    my $lname = shift;
+    my $done  = shift;
+    my $old   = shift || 0;
+
+    $lname =~ s/[\W-]/_/g;
+    return substr( $lname, -18 ) if $old;
+
+    #$lname = Digest::MD5::md5_hex ($lname) if (defined $done->{$lname});
+    $done->{$lname} = 1;
+
+    return $lname;
+}
+
+sub copy_node {
+    my $from = shift;
+    my $to   = shift;
+
+    if ( ref($from) eq "HASH" ) {
+        foreach my $key ( keys %$from ) {
+            next if $key =~ /^#%#/;
+            $to->{$key} = $from->{$key};
+        }
+    } else {
+        $to = $from;
+    }
+    return $to;
+}
+
+=head1 NAME
+
+munin-update - A program to gather data from machines running munin-node
+
+=head1 SYNOPSIS
+
+munin-update [options]
+
+=head1 OPTIONS
+
+=over 5
+
+=item B<< --[no]force-root >>
+
+Force running as root (stupid and unnecessary). [--noforce-root]
+
+=item B<< --service <service> >>
+
+Limit fetched data to those of E<lt>serviceE<gt>. Multiple --service options may be supplied. [unset]
+
+=item B<< --host <host> >>
+
+Limit fetched data to those from E<lt>host<gt>. Multiple --host options may be supplied. [unset]
+
+=item B<< --config <file> >>
+
+Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin.conf]
+
+=item B<< --help >>
+
+View help message.
+
+=item B<< --[no]debug >>
+
+If set, view debug messages. [--nodebug]
+
+=item B<< --[no]fork >>
+
+If set, will fork off one process for each host. [--fork]
+
+=item B<< --[no]stdout >>
+
+If set, will print log messages to stdout as well as syslog. [--nostdout]
+
+=item B<< --timeout <seconds> >>
+
+Set the network timeout to <seconds>. [180]
+
+=back
+
+=head1 DESCRIPTION
+
+Munin-update is a part of the package Munin, which is used in
+combination with Munin's node.  Munin is a group of programs to gather
+data from Munin's nodes, graph them, create html-pages, and optionally
+warn Nagios about any off-limit values.
+
+Munin-update does the gathering. It is usually only used from within
+munin-cron.
+
+It contacts each host's munin-node in turn, gathers data from it, and
+stores them in .rrd-files. If necessary, it will create the rrd-files
+and the directories to store them in.
+
+=head1 FILES
+
+	@@CONFDIR@@/munin.conf
+	@@DBDIR@@/*
+	@@LOGDIR@@/munin-update
+	@@STATEDIR@@/*
+
+=head1 VERSION
+
+This is munin-update version @@VERSION@@
+
+=head1 AUTHORS
+
+Audun Ytterdal, Jimmy Olsen, and Tore Anderson.
+
+=head1 BUGS
+
+munin-update does, as of now, not check the syntax of the configuration file.
+
+Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
+
+=head1 COPYRIGHT
+
+Copyright © 2002-2008 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
+Nicolai Langfeldt / Linpro AS.
+
+This is free software; see the source for copying conditions. There is
+NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+
+This program is released under the GNU General Public License
+
+=head1 SEE ALSO
+
+For information on configuration options, please refer to the man page for
+F<munin.conf>.
+
+=cut
+
+# vim:syntax=perl:ts=8
