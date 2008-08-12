@@ -97,9 +97,9 @@ GetOptions ( "config=s"     => \$conffile,
              "paranoia!"    => \$paranoia,
              "help"         => \$do_usage );
 
-if ($do_usage)
+if ($do_usage or ! defined($ARGV[0]))
 {
-    print "Usage: $0 [options]
+    print "Usage: $0 [options] <plugin>
 
 Options:
     --help              View this message.
