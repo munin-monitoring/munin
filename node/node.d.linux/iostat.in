@@ -1,20 +1,39 @@
 #!@@PERL@@ -w
 # -*- perl -*-
-#
-# Plugin for watching io-bound traffic (in blocks) on disks.
-#
-# Usage: Link or copy into /etc/lrrd/client.d/
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - used by lrrd-config)
-#
-# Magic markers (optional - used by lrrd-config and some installation
-# scripts):
-#
-#%# family=auto
-#%# capabilities=autoconf
+=head1 NAME
+
+iostat - Munin plugin to monitor io-bound traffic (in blocks) on disks
+
+=head1 APPLICABLE SYSTEMS
+
+=head1 CONFIGURATION
+
+The plugin detects all block devices from /proc/diskstat or /proc/stat so no further configuration ist needed.
+
+
+=head1 INTERPRETATION
+
+To be written...
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ ##%# capabilities=autoconf
+
+=head1 VERSION
+
+$Id$
+
+=head1 AUTHOR
+
+Unknown
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
 
 use strict;
 
