@@ -23,6 +23,10 @@ This configuration snipplet is an example with the defaults:
 
 Put it in a file in @@CONFDIR@@/plugin-conf.d/ and restart the munin-node.
 
+=head1 USAGE 
+
+Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
+
 =head1 MAGIC MARKERS
 
   #%# family=auto

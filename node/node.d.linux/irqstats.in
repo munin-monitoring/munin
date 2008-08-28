@@ -13,6 +13,10 @@ Any Linux system
 
 None needed
 
+=head1 USAGE
+
+Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
+
 =head1 INTERPRETATION
 
 The plugin simply shows the number of interrupts on each interrupt

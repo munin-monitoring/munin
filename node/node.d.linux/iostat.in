@@ -10,6 +10,9 @@ iostat - Munin plugin to monitor io-bound traffic (in blocks) on disks
 
 The plugin detects all block devices from /proc/diskstat or /proc/stat so no further configuration ist needed.
 
+=head1 USAGE
+
+Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
 
 =head1 INTERPRETATION
 
