@@ -67,8 +67,8 @@ The plugin shows the temperature from the different thermal zones.
 
 =head1 MAGIC MARKERS
 
-#%# family=auto
-#%# capabilities=autoconf
+ #%# family=auto
+ #%# capabilities=autoconf
 
 =head1 BUGS
 
