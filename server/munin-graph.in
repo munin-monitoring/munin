@@ -365,7 +365,7 @@ sub expand_specials
 	    my $sname = munin_get_node_name ($src);
 
 	    next unless defined $src;
-	    logger ("Debug: Copying settings from $sname to $fname.") if $DEBUG;
+	    logger ("DEBUG: Copying settings from $sname to $fname.") if $DEBUG;
 
 	    foreach my $foption ("draw", "type", "rrdfile", "fieldname", "info") {
 		if (!defined $service->{$fname}->{$foption}) {
@@ -408,11 +408,11 @@ sub expand_specials
 		munin_set_var_loc ($service, [$name, "label"], $name);
 		munin_set_var_loc ($service, [$name, "cdef"], "$name,UN,0,$name,IF");
 		if (munin_get ($service->{$field}, "cdef") and !munin_get_bool ($service->{$name}, "onlynullcdef", 0)) {
-		    logger ("NotOnlynullcdef ($field)...") if $DEBUG;
+		    logger ("DEBUG: NotOnlynullcdef ($field)...") if $DEBUG;
 		    $service->{$name}->{"cdef"} .= "," . $service->{$field}->{"cdef"};
 		    $service->{$name}->{"cdef"} =~ s/\b$field\b/$name/g;
 		} else {
-		    logger ("Onlynullcdef ($field)...") if $DEBUG;
+		    logger ("DEBUG: Onlynullcdef ($field)...") if $DEBUG;
 		    munin_set_var_loc ($service, [$name, "onlynullcdef"], 1);
 		    push @$result, "$name.onlynullcdef";
 		}
@@ -444,7 +444,7 @@ sub expand_specials
 	    $service->{$last_name}->{"cdef"} .= "," . join (',+,', @spc_stack[0 .. @spc_stack-2]) . ',+';
 
 	    if (my $tc = munin_get ($service->{$field}, "cdef", 0)) { # Oh bugger...
-		print "Oh bugger...($field)...\n" if $DEBUG;
+		logger ("DEBUG: Oh bugger...($field)...\n") if $DEBUG;
 		$tc =~ s/\b$field\b/$service->{$last_name}->{"cdef"}/;
 		$service->{$last_name}->{"cdef"} = $tc;
 	    }
@@ -475,12 +475,12 @@ sub single_value
     my $graphable = munin_get ($service, "graphable", 0);;
     if (!$graphable) {
 	foreach my $field (@{munin_get_field_order ($service)}) {
-	    logger ("DEBUG: single_value: Checking field \"$field\".");
+	    logger ("DEBUG: single_value: Checking field \"$field\".") if $DEBUG;
 	    $graphable++ if munin_draw_field ($service->{$field});
 	}
 	munin_set_var_loc ($service, ["graphable"], $graphable);
     }
-    logger ("Debug: service ". join (' :: ', @{munin_get_node_loc ($service)}) ." has $graphable elements.");
+    logger ("DEBUG: service ". join (' :: ', @{munin_get_node_loc ($service)}) ." has $graphable elements.") if $DEBUG;
     return ($graphable == 1);
 }
 
@@ -524,7 +524,7 @@ sub process_service {
 
     # Array to keep 'preprocess'ed fields.
     my @rrd_preprocess = ();
-    logger ("Debug: Expanding specials for $sname: \"" . join("\",\"", @field_order) . "\".") if $DEBUG;
+    logger ("DEBUG: Expanding specials for $sname: \"" . join("\",\"", @field_order) . "\".") if $DEBUG;
 
     @added = @{&expand_specials ($service, \@rrd_preprocess, \@field_order, \$force_single_value)};
 
@@ -849,8 +849,8 @@ sub process_service {
 	    push @complete, "--end",
 	      (int($lastupdate/$resolutions{$time}))*$resolutions{$time};
 	}
-	print "\n\nrrdtool \"graph\" \"",
-	  join ("\"\n\t\"",@complete), "\"\n" if $DEBUG;
+	print( "\n\nrrdtool \"graph\" \"",
+	  join ("\"\n\t\"",@complete), "\"\n") if $DEBUG;
 
 	# Make sure directory exists
 	munin_mkdir_p ($picdirname, 0777);
@@ -931,7 +931,7 @@ sub process_service {
 		unshift @rrd_sum, "--vertical-label", $label;
 	    }
 
-	    print "\n\nrrdtool \"graph\" \"", join ("\"\n\t\"",@rrd_sum), "\"\n" if $DEBUG;
+	    print ("\n\nrrdtool \"graph\" \"", join ("\"\n\t\"",@rrd_sum), "\"\n") if $DEBUG;
 
 	    # Make sure directory exists
 	    munin_mkdir_p ($picdirname, 0777);
