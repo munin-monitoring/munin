@@ -1,0 +1,63 @@
+#!/usr/bin/perl -w
+#
+# Magic markers:
+#%# family=auto
+#%# capabilities=autoconf
+
+my $ret = undef;
+
+if (! eval "require LWP::UserAgent;"){
+	$ret = "LWP::UserAgent not found";
+}
+
+chomp(my $fqdn=`hostname -f`);
+
+my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://$fqdn/nginx_status";
+my $port = exists $ENV{'port'} ? $ENV{'port'} : "80";
+
+if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" )
+{
+	if ($ret){
+		print "no ($ret)\n";
+		exit 1;
+	}
+	
+	my $ua = LWP::UserAgent->new(timeout => 30);
+    my $response = $ua->request(HTTP::Request->new('GET',$URL));
+
+	unless ($response->is_success and $response->content =~ /server/im)
+	{
+		print "no (no nginx status on $URL)\n";
+		exit 1;
+	}
+	else
+	{
+		print "yes\n";
+		exit 0;
+	}
+}
+
+if ( exists $ARGV[0] and $ARGV[0] eq "config" )
+{
+	print "graph_title Nginx requests\n";
+    print "graph_args --base 1000\n";
+	print "graph_category nginx\n";
+    print "graph_vlabel Request per second\n";
+    print "request.label req/sec\n";
+    print "request.type DERIVE\n";
+	print "request.min 0\n";
+	print "request.label requests port $port\n";
+	print "request.draw LINE2\n";
+	
+	exit 0;
+}
+
+my $ua = LWP::UserAgent->new(timeout => 30);
+
+my $response = $ua->request(HTTP::Request->new('GET',$URL));
+
+if ($response->content =~ /^\s+(\d+)\s+(\d+)\s+(\d+)/m) {
+    print "request.value $3\n";
+} else {
+    print "request.value U\n";
+}
