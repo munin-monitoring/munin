@@ -1,4 +1,4 @@
-package Munin; # -*- perl -*-
+package Munin; # -*- cperl -*-
 #
 # Copyright (C) 2003-2007 Jimmy Olsen, Audun Ytterdal
 #
@@ -15,7 +15,6 @@ package Munin; # -*- perl -*-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
 #
 #
 # $Id$
@@ -99,7 +98,7 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"tls_verify_certificate", "tls_verify_depth", "tls_ca_certificate",
 	"graph_data_size", "colour", "graph_printf", "ok", "unknown",
 	 "palette", "realservname", "cdef_name", "graphable", "process", 
-	 "realname", "onlynullcdef", "group_order"
+	 "realname", "onlynullcdef", "group_order", "pipe", "pipe_command"
     );
 
 my %legal_expanded = map { $_ => 1 } @legal;

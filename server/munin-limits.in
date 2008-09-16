@@ -175,7 +175,7 @@ sub process_service {
 	# Skip fields without warning/critical definitions
 	next if (!defined $warn and !defined $crit);
 
-	logger ("processing field: ".join ('::', @$fpath)) if $DEBUG;
+	logger ("Debug: processing field: ".join ('::', @$fpath)) if $DEBUG;
 	next if (@limit_services and !grep (/^$service$/, @limit_services));
 
 	($warn, $crit) = get_limits ($field);
@@ -194,7 +194,7 @@ sub process_service {
 	$field->{'crange'} = (defined $crit->[0]?$crit->[0]:"").":".(defined $crit->[1]?$crit->[1]:"");
 	$field->{'wrange'} = (defined $warn->[0]?$warn->[0]:"").":".(defined $warn->[1]?$warn->[1]:"");
 
-	logger ("value: ". join ('::', @{munin_get_node_loc ($hash)}) .": $value (crit: $crit->[0]:$crit->[1]) (warn: $warn->[0]:$warn->[1])") if $DEBUG;
+	logger ("Debug: value: ". join ('::', @{munin_get_node_loc ($hash)}) .": $value (crit: $crit->[0]:$crit->[1]) (warn: $warn->[0]:$warn->[1])") if $DEBUG;
 	if ($value eq "unknown") {
 	    $crit->[0] ||= "";
 	    $crit->[1] ||= "";
@@ -258,25 +258,25 @@ sub get_limits {
     if (defined $crit and $crit =~ /^\s*([-+\d.]*):([-+\d.]*)\s*$/) {
 	$critical[0] = $1 if length $1;
 	$critical[1] = $2 if length $2;
-	logger ("processing critical: $name -> $critical[0] : $critical[1]") if $DEBUG;
+	logger ("Debug: processing critical: $name -> $critical[0] : $critical[1]") if $DEBUG;
     } elsif (defined $crit and $crit =~ /^\s*([-+\d.]+)\s*$/) {
 	$critical[1] = $1 if defined $1;
-	logger ("processing critical: $name -> $critical[0] : $critical[1]") if $DEBUG;
+	logger ("Debug: processing critical: $name -> $critical[0] : $critical[1]") if $DEBUG;
     } elsif (defined $crit) {
 	@critical = (0, 0);
-	logger ("processing critical: $name -> $critical[0] : $critical[1]") if $DEBUG;
+	logger ("Debug: processing critical: $name -> $critical[0] : $critical[1]") if $DEBUG;
     }
 
     if (defined $warn and $warn =~ /^\s*([-+\d.]*):([-+\d.]*)\s*$/) {
 	$warning[0] = $1 if length $1;
 	$warning[1] = $2 if length $2;
-	logger ("processing warning: $name -> $warning[0] : $warning[1]") if $DEBUG;
+	logger ("Debug: processing warning: $name -> $warning[0] : $warning[1]") if $DEBUG;
     } elsif (defined $warn and $warn =~ /^\s*([-+\d.]+)\s*$/) {
 	$warning[1] = $1 if defined $1;
-	logger ("processing warning: $name -> $warning[0] : $warning[1]") if $DEBUG;
+	logger ("Debug: processing warning: $name -> $warning[0] : $warning[1]") if $DEBUG;
     } elsif (defined $warn) {
 	@warning = (0, 0);
-	logger ("processing warning: $name -> $warning[0] : $warning[1]") if $DEBUG;
+	logger ("Debug: processing warning: $name -> $warning[0] : $warning[1]") if $DEBUG;
     }
     return (\@warning, \@critical);
 }
@@ -288,8 +288,8 @@ sub generate_service_message {
     my %stats      = ('critical' => [], 'warning' => [], 'unknown' => [], 'foks' => [], 'ok' => []);
     my $contacts   = munin_get_children (munin_get_node ($config, ["contact"]));
 
-    logger ("generating service message: ". join ('::', @{munin_get_node_loc ($hash)})) if $DEBUG;
-    foreach my $field (@{munin_get_children ($hash)}) {
+    logger ("Debug: generating service message: ". join ('::', @{munin_get_node_loc ($hash)})) if $DEBUG;
+    foreach my $field (@{munin_get_children ( munin_get_node(\%notes, munin_get_node_loc($hash)))}) {
 	if (defined $field->{"state"}) {
 	    push @{$stats{$field->{"state"}}}, munin_get_node_name ($field);
 	    if ($field->{"state"} eq "ok") {
@@ -309,7 +309,7 @@ sub generate_service_message {
     $hash->{'numofields'}  = scalar @{$stats{'ok'}};
 
     my $contactlist =  munin_get ($hash, "contacts", "");
-    logger ("Contact list for ". join ('::', @{munin_get_node_loc ($hash)}) . ": $contactlist");
+    logger ("Debug: Contact list for ". join ('::', @{munin_get_node_loc ($hash)}) . ": $contactlist") if $DEBUG;
     foreach my $c (split (/\s+/, $contactlist)) {
 	next if $c eq "none";
 	my $contactobj = munin_get_node ($config, ["contact", $c]);
@@ -418,7 +418,7 @@ sub generate_service_message {
 	    munin_set_var_loc ($contactobj, ["pipe_command"], $cmd);
 	    munin_set_var_loc ($contactobj, ["pipe"], $pipe);
 	} 
-	logger ("sending message: \"$txt\"") if ($DEBUG);
+	logger ("Debug: sending message: \"$txt\"") if ($DEBUG);
 	print $pipe $txt, "\n" if (defined $pipe);
 	$contactobj->{"num_messages"} = 1 + munin_get ($contactobj, "num_messages", 0); # $num_messages++
     }
