@@ -1,8 +1,59 @@
-#!/usr/bin/perl -w
-#
-# Magic markers:
-#%# family=auto
-#%# capabilities=autoconf
+#!@@PERL@@ -w
+# -*- cperl -*-
+
+=head1 NAME
+
+nginx_request - Munin plugin to show number of requests pr. second to nginx.
+
+=head1 APPLICABLE SYSTEMS
+
+Any nginx host
+
+=head1 CONFIGURATION
+
+This shows the default configuration of this plugin.  You can override
+the status URL.
+
+  [nginx*]
+      env.url http://localhost/nginx_status
+
+Nginx must also be configured.  Firstly the stub-status module must be
+compiled, and secondly it must be configured like this:
+
+  server {
+        listen 127.0.0.1;
+        server_name localhost;
+        location /nginx_status {
+                stub_status on;
+                access_log   off;
+                allow 127.0.0.1;
+                deny all;
+        }
+  }
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 VERSION
+
+  $Id: $
+
+=head1 BUGS
+
+None known
+
+=head1 AUTHOR
+
+Unknown
+
+=head1 LICENSE
+
+Unknown.  Not specified by the unknown author.  Nginx has a BSD
+license.  Munin is GPLv2 licensed.
+
+=cut
 
 my $ret = undef;
 
