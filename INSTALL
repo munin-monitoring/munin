@@ -2,13 +2,13 @@ Requirements
 ============
 
 - A reasonable Perl5, both on the server and nodes
-- RRD with perl support on the server
+- RRD with Perl support on the server
 - Perl modules for server:  Time::HiRes, Storable, Digest::MD5,
      HTML::Template, Text::Balanced
 - Perl modules for node: Net::Server
 - Perl modules for plugins: Depends on the plugins you want to use,
-     but not much
-- GNU Make
+     but not many.
+- GNU Make - do not atempt to use any other make.
 - A web server.  Apache HTTPD should be suitable.
 
 Munin is quite often used on Linux, *BSD, Solaris and AIX and recently
@@ -78,8 +78,8 @@ that way there is data to collect):
 	  under the build/dists subdirectory, or perhaps in the
           build/resources directory.
 
-	- if you want to use the dynamic graphs: Configure the cgi
-	  directory, you will find a apache config example in
+	- if you want to use the dynamic graphs: Configure the CGI
+	  directory, you will find a Apache config example in
 	  build/resources.  NOTE: Dynamic graphs are not exactly
           perfect. Se also http://munin.projects.linpro.no/wiki/CgiHowto
 
@@ -103,7 +103,8 @@ To install a node:
             munin-node-configure --shell --families=contrib,auto | sh -x
 
 	- start the node agent. You probably want an init-script for
-          this and you might find a good one under build/dists
+          this and you might find a good one under build/dists or
+	  in the resources/ directory.
 
 Notes about node plugins
 ========================
