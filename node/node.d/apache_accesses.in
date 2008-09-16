@@ -1,13 +1,5 @@
 #!@@PERL@@
-#
-# Parameters supported:
-#
-# 	config
-# 	autoconf
-#
-# Magic markers:
-#%# family=auto
-#%# capabilities=autoconf
+# -*- cperl -*-
 
 =head1 NAME
 
@@ -58,6 +50,11 @@ This will provide for HTTP basic authentication.
 The plugin shows the number of accesses (pages and other items served)
 globaly on the Apache server.
 
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
 =head1 VERSION
 
   $Id$
@@ -95,7 +92,7 @@ if ( defined $ARGV[0] and $ARGV[0] eq "autoconf" )
 		print "no ($ret)\n";
 		exit 1;
 	}
-	
+
 	my $ua = LWP::UserAgent->new(timeout => 30);
 
 	my @badports;

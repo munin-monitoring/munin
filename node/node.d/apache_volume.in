@@ -1,13 +1,5 @@
 #!@@PERL@@
-#
-# Magic markers:
-#%# family=auto
-#%# capabilities=autoconf
-#
-# Parameters supported:
-#
-# 	config
-# 	autoconf
+# -*- cperl -*-
 
 =head1 NAME
 
@@ -58,6 +50,11 @@ bytes. I.e. how many bytes the server has served.
 
 If there is a flat ceiling effect on the graph you may have reached
 some kind of bandwidth limit on your outgoing connection.
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
 
 =head1 VERSION
 
