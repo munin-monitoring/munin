@@ -259,6 +259,7 @@ build-stamp: $(INFILES) Makefile Makefile.config
 		    -e 's|@@GOODSH@@|$(GOODSH)|g'			\
 		    -e 's|@@BASH@@|$(BASH)|g'				\
 		    -e 's|@@HASSETR@@|$(HASSETR)|g'			\
+		    -e 's|@@SSPOOLDIR@@|$(SSPOOLDIR)|g'			\
 		    $$file > build/$$destname;				\
 	done
 
