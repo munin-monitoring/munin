@@ -267,6 +267,7 @@ sub munin_readconfig {
     $config->{'logdir'} ||= "@@LOGDIR@@";
     $config->{'tmpldir'}||= "@@CONFDIR@@/templates/";
     $config->{'htmldir'}||= "@@HTMLDIR@@/";
+    $config->{'spooldir'}||="@@SSPOOLDIR@@/";
     $config->{'#%#parent'}= undef;
     $config->{'#%#name'}= "root";
     return ($config);

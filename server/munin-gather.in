@@ -121,6 +121,8 @@ Aborting.\n\n";
     exit(1);
 }
 
+&make_spooldir();
+
 my $config = &munin_readconfig($conffile);
 
 my $oldconfig;
@@ -351,6 +353,50 @@ munin_removelock("$config->{rundir}/munin-datafile.lock");
 munin_removelock("$config->{rundir}/munin-update.lock");
 
 close($log);
+
+exit 0;
+
+#### END OF MAIN PROGRAM ####
+
+sub make_spooldir {
+    # Atempt to create the munin-gather spool directory.  This
+    # directory can be located on a ramdisk (recommended) therefore it
+    # will disappear if the machine boots or if the ramdisk is
+    # unmounted and remounted.
+    #
+    # Does not check if we're allowed to create a file in the spooldir.
+    # We can abort later if that fails.
+    #
+    # Die if it fails or something is dangerous.
+    # Return if everything is fine.
+
+    if (-l $config{'spooldir'}) {
+	logger "Error: ".$config{'spooldir'}.
+	  " is a symlink.  This is dangerous, so please remove the symlink. ".
+	    "Aborting";
+	exit 0;
+    }
+
+    # If path is an existing directory and is not a symlink we're fine.
+    return if (-d _);
+
+    # The path exists, but is not a directory.  Bail.
+    if (-e _) {
+	logger "Error: ".$config{'spooldir'}.
+	  " exists but is not a directory. Please remove.  Aborting.";
+	exit 0;
+    }
+
+    # If it's not a symlink and does not exist try to make the directory.
+    if (!mkdir ($config{'spooldir'})) {
+	# Failed to make.  Bail.
+	logger "Error: ".$config{'spooldir'}.
+	  " does not exist, and cannot be created: ".$! ;
+    }
+
+    # Directory has been made.  Done.
+    return;
+}
 
 # compare_configs is used to monitor for config changes which we
 # have to act upon.
