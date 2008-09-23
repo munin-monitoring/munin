@@ -1,3 +1,5 @@
+# -*- makefile -*-
+#
 # This is the Makefile.config file to use for a "clean" distribution.
 #
 # This file specifies where Munin will look for things after you've
@@ -34,6 +36,16 @@ LIBDIR     = $(PREFIX)/lib
 # Server only - Output directory
 HTMLDIR    = $(PREFIX)/var/www
 CGIDIR     = $(HTMLDIR)/cgi
+
+# Server only - spool directory for data gathered from nodes by
+# munin-gather - experimental.  Place on ramdisk to make munin
+# scale better.  On many versions of Linux as well as on Solaris
+# /tmp will be a ramdisk.
+
+SSPOOLDIR  = $(PREFIX)/spool
+
+# Suggested directory name for a pulic ramdisk based tmp directory.
+# SSPOOLDIR = /tmp/muninspool
 
 # Client only - Where to put RRD files and other intenal data
 DBDIR      = $(DESTDIR)/var/opt/munin
