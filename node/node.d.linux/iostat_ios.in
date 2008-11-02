@@ -1,31 +1,64 @@
 #!@@PERL@@ -w
-# -*- perl -*-
-#
-# Plugin for watching io-bound traffic (in number of operations) on disks.
-#
-# Usage: Link or copy into /etc/munin/plugins/
-#
-# Parameters:
-#
-#       config   (required)
-#       autoconf (optional - used by munin-config)
-#
-# Magic markers (optional - used by munin-config and some installation 
-# scripts):
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- cperl -*-
+
+=head1 NAME
+
+iostat_ios - Show IO-operation latency pr. device.
+
+=head1 APPLICABLE SYSTEMS
+
+Any Linux system
+
+=head1 CONFIGURATION
+
+None needed
+
+=head1 USAGE
+
+Link this into @@CONFDIR@@/plugins/ and restart the munin-node.
+
+=head1 INTERPRETATION
+
+The plugin shows the average time a IO-operation needs to complete for
+each disk or block device on the system.
+
+Simple partitioned disks will only show as the whole disk.  When/if
+you use some device layer over that, such as LVM then LV devices will
+show up individualy.
+
+When the IO-operation time here increases it is to be expected that
+the iowait on the CPU graph increases, but please read about how
+iowait reporting works to fully understand that number.
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 VERSION
+
+  $Id$
+
+=head1 BUGS
+
+Should show more usefull device names/lables for device-mapper devices
+such as those used by LVM and so on.
+
+=head1 AUTHOR
+
+(C) 2004 Per Buer.  Documentation and some modifications by Nicolai
+Langfeldt.
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
 
 use strict;
-
 use IO::File;
-
 use Storable qw(store retrieve);
-
 use Munin::Plugin;
-
-# (c) 2004 - Per Andreas Buer
-# GPL v2 Yadda yadda.
 
 use constant STATEFILE => '@@PLUGSTATE@@/iostat-ios.state';
 
@@ -45,16 +78,16 @@ if ($ARGV[0] eq 'config') {
 }
 
 my ($r, $old_r);
+my %name;
 
 $r = get_ios();
-
 
 ($old_r) = get_state();
 
 if ($old_r) {
     cmp_io($old_r, $r);
 } else {
-    print "No historic data present\n";
+    warn "iostat_ios: No historic data present\n";
 }
 
 store_state( $r );
@@ -110,7 +143,12 @@ sub get_ios {
 
          $R{$maj}{$min}{wio}   =  $wio;
          $R{$maj}{$min}{wtime} =  $wtime;
-         push(@dev, "dev${maj}_${min}");
+
+	 my $label = "dev${maj}_${min}";
+
+         push(@dev, $label);
+
+	 $name{$label}         =  $name;
     }
     $parts->close();
 
@@ -126,15 +164,18 @@ sub print_config {
     print("graph_title IO Service time\n",
           "graph_args --base 1000 --logarithmic\n",
           "graph_category disk\n",
-          "graph_vlabel ms\n");
+          "graph_vlabel seconds\n",
+	  "graph_info For each applicable disk device this plugin shows the latency (or delay) for I/O operations on that disk device.  The delay is in part made up of waiting for the disk to flush the data, and if data arrives at the disk faster than it can read or write it then the delay time will include the time needed for waiting in the queue.\n");
 
     for my $d ( @{ get_ios(1) } ) {
-        print("${d}_rtime.label ${d}_rtime\n",
+        print("${d}_rtime.label ",$name{$d}," read\n",
               "${d}_rtime.type GAUGE\n",
               "${d}_rtime.draw LINE2\n",
-              "${d}_wtime.label ${d}_wtime\n",
+              "${d}_rtime.cdef ${d}_rtime,1000,/\n",
+              "${d}_wtime.label ",$name{$d}," write\n",
               "${d}_wtime.type GAUGE\n",
-              "${d}_wtime.draw LINE2\n");
+              "${d}_wtime.draw LINE2\n",
+              "${d}_wtime.cdef ${d}_wtime,1000,/\n");
         print_thresholds($d);
     }
 }
@@ -149,7 +190,6 @@ sub cmp_io {
             my $rio_diff   = $$new_io{$maj}{$min}{rio}  - $$old_io{$maj}{$min}{rio};
             my $rtime_diff   = $$new_io{$maj}{$min}{rtime}  - $$old_io{$maj}{$min}{rtime};
             
-
             my $wio_diff   = $$new_io{$maj}{$min}{wio}  - $$old_io{$maj}{$min}{wio};
             my $wtime_diff   = $$new_io{$maj}{$min}{wtime}  - $$old_io{$maj}{$min}{wtime};
             
