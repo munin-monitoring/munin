@@ -10,6 +10,8 @@
 # Can be set via environment, but default is /var/spool/postfix
 SPOOLDIR=${spooldir:-/var/spool/postfix}
 
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 # Postfix mqueue management: http://www.postfix.cs.uu.nl/queuing.html
 # maildrop: Localy posted mail
 # incoming: Processed local mail and received from network
@@ -40,6 +42,10 @@ incoming.label incoming
 corrupt.label corrupt
 hold.label held
 EOF
+	for field in active deferred maildrop incoming corrupt hold; do
+		print_warning $field
+		print_critical $field
+	done
 	exit 0;;
 esac
 
