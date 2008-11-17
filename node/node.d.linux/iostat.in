@@ -10,8 +10,17 @@ Linux systems.
 
 =head1 CONFIGURATION
 
-The plugin detects block devices from /proc/diskstat or /proc/stat
-so no further configuration is needed.
+The plugin detects block devices from /proc/diskstat or /proc/stat.
+By default it will only show un-numbered devices such as sda and not
+sda0.  By setting
+
+   [iostat]
+   env.SHOW_NUMBERED 1
+
+it will show numbered devices.  This is sometimes needed in
+virtualized environments (e.g. Xen) where sda1 to sda<n> exists but
+not sda.  In a virtualized environment this is usefull to show which
+guest OS/dom-U IO-traffic originates in.
 
 =head1 USAGE
 
@@ -44,7 +53,14 @@ use strict;
 
 use Munin::Plugin;
 
-my $detailed_present = my $stat_present = 0;
+my $detailed_present = 0;
+my $stat_present = 0;
+my $include_numbered = 0;    # By default we want sda but not sda1
+
+if (defined $ENV{'SHOW_NUMBERED'}) {
+    $include_numbered = $ENV{'SHOW_NUMBERED'};
+};
+
 if (system("grep -q '' /proc/diskstats > /dev/null 2>&1") == 0 ||
     system("grep -q 'rio rmerge rsect ruse wio wmerge wsect wuse running use aveq' /proc/partitions") == 0) {
     $detailed_present = 1;
@@ -154,7 +170,7 @@ sub fetch_detailed() {
 		my @fields = split(/\s+/, $3);
 		my $tmpnam = $2;
 		my $major  = $1;
-		if ($tmpnam =~ /\d+$/ ) {
+		if ($tmpnam =~ /\d+$/ and !$include_numbered) {
 		    # Special case for devices like cXdXpX,
 		    # like the cciss driver
 		    next unless $tmpnam =~ /\/c\d+d\d+$/
