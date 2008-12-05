@@ -1,4 +1,5 @@
-#!@@GOODSH@@
+#!@@GOODSH@@ 
+# -*- sh -*-
 # 
 # Plugin to monitor the number of open files in the system.
 #
@@ -41,8 +42,9 @@ if [ "$1" = "config" ]; then
 	echo 'proc.label processes'
 	echo 'lock.label locked files'
 	echo 'share.label Open shares'
-	echo 'max.warning 900'
-	echo 'max.critical 960'
+	# Bug pointed out by kozik: there is no max field.
+	# echo 'max.warning 900'
+	# echo 'max.critical 960'
 	exit 0
 fi
 
