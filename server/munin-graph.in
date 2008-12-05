@@ -654,27 +654,34 @@ sub process_service {
 	logger ("DEBUG: Drawing field \"$fname\".") if $DEBUG;
 
 	if ($single_value) {
-	    # Only one field. Do min/max range.	
+	    # Only one field. Do min/max range.
 	    push (@rrd, "CDEF:min_max_diff=a$rrdname,i$rrdname,-");
-	    push (@rrd, "CDEF:re_zero=min_max_diff,min_max_diff,-") if !munin_get ($field, "negative");
+	    push (@rrd, "CDEF:re_zero=min_max_diff,min_max_diff,-")
+	      if !munin_get ($field, "negative");
+
 	    push (@rrd, "AREA:i$rrdname#ffffff");
 	    push (@rrd, "STACK:min_max_diff$range_colour");
-	    push (@rrd, "LINE2:re_zero#000000") if !munin_get ($field, "negative");
+	    push (@rrd, "LINE2:re_zero#000000") if
+	      !munin_get ($field, "negative");
 	}
 
-	if ($has_negative and !@rrd_negatives) { # Push "global" headers...
+	# Push "global" headers or not
+	if ($has_negative and !@rrd_negatives and $global_headers < 2) {
+	    # Always for -/+ graphs
 	    push (@rrd, "COMMENT:" . (" " x $max_field_len));
-	    push (@rrd, "COMMENT:Cur (-/+)");
+    	    push (@rrd, "COMMENT:Cur (-/+)");
 	    push (@rrd, "COMMENT:Min (-/+)");
 	    push (@rrd, "COMMENT:Avg (-/+)");
 	    push (@rrd, "COMMENT:Max (-/+) \\j");
+	    $global_headers=2; # Avoid further headers/labels
 	} elsif ($global_headers == 1) {
+	    # Or when we want to.
 	    push (@rrd, "COMMENT:" . (" " x $max_field_len));
 	    push (@rrd, "COMMENT: Cur$RRDkludge:");
 	    push (@rrd, "COMMENT:Min$RRDkludge:");
 	    push (@rrd, "COMMENT:Avg$RRDkludge:");
 	    push (@rrd, "COMMENT:Max$RRDkludge:  \\j");
-	    $global_headers++;
+	    $global_headers=2; # Avoid further headers/labels
 	}
 
 	my $colour;
@@ -702,7 +709,7 @@ sub process_service {
 		$negfieldname = $tmpneg;
 		$negfield     = $service->{$negfieldname};
 	    }
-	    
+
 	    if (!@rrd_negatives) {
 		# zero-line, to redraw zero afterwards.
 		push (@rrd_negatives, "CDEF:re_zero=g$negfieldname,UN,0,0,IF");
