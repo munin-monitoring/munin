@@ -1,4 +1,5 @@
 #!@@GOODSH@@
+# -*- sh -*-
 #
 # Plugin to monitor swap IO in number of blocks per second.
 #
@@ -19,7 +20,7 @@ if [ "$1" = "autoconf" ]; then
 		echo yes
 		exit 0
 	else
-		echo no
+		echo "no (no /proc/stat)"
 		exit 1
 	fi
 fi
