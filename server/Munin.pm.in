@@ -566,7 +566,7 @@ sub munin_get_parent {
 }
 
 # munin_get_node: Gets a node by loc
-# Parameters: 
+# Parameters:
 # - $hash: A ref to the hash to set the variable in
 # - $loc: A ref to an array with the full path of the node
 # Returns:
@@ -582,7 +582,9 @@ sub munin_get_node
 	    ::logger ("Error: munin_get_node: Cannot work on hash node \"$tmpvar\"");
 	    return undef;
 	}
-	return undef if !exists $hash->{$tmpvar};
+	# This used to be "return undef" which seems a bit hash and also has
+	# been reported to be harmful. - janl
+	next if !exists $hash->{$tmpvar};
 	$hash = $hash->{$tmpvar};
     }
     return $hash;
