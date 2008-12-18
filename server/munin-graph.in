@@ -1,7 +1,7 @@
 #!@@PERL@@ -w
 # -*- cperl -*-
 #
-# Copyright (C) 2002-2008 Jimmy Olsen, Audun Ytterdal, Nicolai Langfeldt
+# Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal, Nicolai Langfeldt
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -122,7 +122,7 @@ print <<"EOT";
 munin-graph version $VERSION.
 Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
 
-Copyright (C) 2002-2005
+Copyright (C) 2002-2009
 
 This is free software released under the GNU General Public License. There
 is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -1198,7 +1198,7 @@ Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
 =head1 COPYRIGHT
 
-Copyright (C) 2002-2006 Audun Ytterdal, Jimmy Olsen, Tore Anderson, and Nicolai Langfeldt
+Copyright (C) 2002-2009 Audun Ytterdal, Jimmy Olsen, Tore Anderson, and Nicolai Langfeldt
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
