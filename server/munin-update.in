@@ -1,7 +1,7 @@
 #!@@PERL@@ -w
 # -*- cperl -*-
 #
-# Copyright (C) 2002-2008 Jimmy Olsen, Audun Ytterdal
+# Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -38,7 +38,6 @@ my $DEBUG=0;
 my $VERSION="@@VERSION@@";
 my $serversocket  = "munin-server-socket.$$";
 my $conffile = "@@CONFDIR@@/munin.conf";
-my $force_root = 0;
 my $do_usage = 0;
 my @limit_hosts = ();
 my @limit_services = ();
@@ -57,7 +56,6 @@ my $log = new IO::Handle;
 # Get options
 $do_usage=1  unless 
 GetOptions ( "host=s"       => \@limit_hosts,
-             "force-root!"  => \$force_root,
 	     "service=s"    => \@limit_services,
 	     "config=s"     => \$conffile,
 	     "debug!"       => \$DEBUG,
@@ -72,7 +70,6 @@ if ($do_usage)
     print "Usage: $0 [options]
 
 Options:
-    --[no]force-root    Force running, even as root. [--noforce-root]
     --version		View version information.
     --help		View this message.
     --service <service>	Limit graphed services to <service>. Multiple --service
@@ -96,7 +93,7 @@ if ($do_version)
 munin-update version $VERSION.
 Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
 
-Copyright (C) 2002-2005
+Copyright (C) 2002-2009
 
 This is free software released under the GNU General Public License. There
 is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -107,16 +104,16 @@ EOT
     exit 0;
 }
 
-if ($> == 0 and !$force_root)
+if ($> == 0)
 {
-    print "You are running this program as root, which is dumb and will
-cause many problems later.  Please run it as user '@@USER@@'.
-If you really want to run it as root, use the --force-root option.
+    print "This program will easily break if you run it as root as you are
+trying now.  Please run it as user '@@USER@@'.  The correct 'su' command
+on many systems is 'su - munin --shell=/bin/bash'
 Aborting.\n\n";
     exit (1);
 }
 
-my $config= &munin_readconfig ($conffile);
+my $config=&munin_readconfig ($conffile);
 
 my $oldconfig;
 
@@ -125,27 +122,22 @@ if (-e "$config->{dbdir}/datafile") {
 }
 
 # CLI parameters override the configuration file.
-if (defined $cli_timeout)
-{
+if (defined $cli_timeout) {
     $timeout = $cli_timeout;
-}
-elsif (exists $config->{'timeout'})
-{
+} elsif (exists $config->{'timeout'}) {
     $timeout = $config->{'timeout'};
 }
-if (defined $cli_do_fork)
-{
+
+if (defined $cli_do_fork) {
     $do_fork = $cli_do_fork;
-}
-elsif (exists $config->{'fork'})
-{
+} elsif (exists $config->{'fork'}) {
     $do_fork = ($config->{'fork'} =~ /yes/i ? 1 : 0);
 }
 
-if (! -d $config->{rundir})
-{
+if (! -d $config->{rundir}) {
 	mkdir ($config->{rundir}, 0700);
 }
+
 munin_runlock("$config->{rundir}/munin-update.lock");
 
 if (!open (STATS,">$config->{dbdir}/munin-update.stats.tmp")) {
@@ -1268,10 +1260,6 @@ munin-update [options]
 =head1 OPTIONS
 
 =over 5
-
-=item B<< --[no]force-root >>
-
-Force running as root (stupid and unnecessary). [--noforce-root]
 
 =item B<< --service <service> >>
 

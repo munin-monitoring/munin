@@ -35,7 +35,6 @@ my @limit_hosts;
 my $DEBUG=0;
 my $VERSION = "@@VERSION@@";
 my $conffile = "@@CONFDIR@@/munin.conf";
-my $force_root = 0;
 my $do_usage = 0;
 my $do_version = 0;
 my $stdout = 0;
@@ -44,7 +43,6 @@ my $log = new IO::Handle;
 # Get options
 $do_usage=1  unless
 GetOptions ( "host=s"       => \(),
-             "force-root!"  => \$force_root,
 	     "service=s"    => \(),
 	     "config=s"     => \$conffile,
 	     "debug!"       => \$DEBUG,
@@ -57,7 +55,6 @@ if ($do_usage)
     print "Usage: $0 [options]
 
 Options:
-    --[no]force-root    Force running, even as root. [--noforce-root]
     --help		View this message.
     --debug		View debug messages.
     --version		View version information.
@@ -87,11 +84,11 @@ EOT
     exit 0;
 }
 
-if ($> == 0 and !$force_root)
+if ($> == 0)
 {
-    print "You are running this program as root, which is dumb and will
-cause many problems later.  Please run it as user '@@USER@@'.
-If you really want to run it as root, use the --force-root option.
+    print "This program will easily break if you run it as root as you are
+trying now.  Please run it as user '@@USER@@'.  The correct 'su' command
+on many systems is 'su - munin --shell=/bin/bash'
 Aborting.\n\n";
     exit (1);
 }
@@ -750,10 +747,6 @@ munin-html [options]
 =head1 OPTIONS
 
 =over 5
-
-=item B<< --[no]force-root >>
-
-Force running as root (stupid and unnecessary). [--noforce-root]
 
 =item B<< --service <service> >>
 

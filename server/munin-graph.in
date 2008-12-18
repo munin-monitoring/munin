@@ -51,7 +51,6 @@ if ($RRDs::VERSION >= 1.2) {
 # Force drawing of "graph no".
 my $force_graphing = 0;
 my $force_lazy = 1;
-my $force_root = 0;
 my $do_usage = 0;
 my $do_version = 0;
 my $cron = 0;
@@ -68,7 +67,6 @@ my $log = new IO::Handle;
 $do_usage=1  unless 
 GetOptions ( "force!"       => \$force_graphing,
 	     "lazy!"        => \$force_lazy,
-	     "force-root!"  => \$force_root,
 	     "host=s"       => \@limit_hosts,
 	     "service=s"    => \@limit_services,
 	     "config=s"     => \$conffile,
@@ -94,7 +92,6 @@ if ($do_usage)
 Options:
     --[no]force		Force drawing of graphs that are not usually
 			drawn due to options in the config file. [--noforce]
-    --[no]force-root	Force running, even as root. [--noforce-root]
     --[no]lazy		Only redraw graphs when needed. [--lazy]
     --help		View this message.
     --version		View version information.
@@ -136,11 +133,11 @@ EOT
     exit 0;
 }
 
-if ($> == 0 and !$force_root)
+if ($> == 0)
 {
-    print "You are running this program as root, which is dumb and will
-cause many problems later.  Please run it as user '@@USER@@'.
-If you really want to run it as root, use the --force-root option.
+    print "This program will easily break if you run it as root as you are
+trying now.  Please run it as user '@@USER@@'.  The correct 'su' command
+on many systems is 'su - munin --shell=/bin/bash'
 Aborting.\n\n";
     exit (1);
 }
@@ -1126,10 +1123,6 @@ If set, only redraw graphs when it would look different from the existing one. [
 =item B<< --help >>
 
 View help.
-
-=item B<< --[no]force-root >>
-
-Force running as root (stupid and unnecessary). [--noforce-root]
 
 =item B<< --[no]debug >>
 
