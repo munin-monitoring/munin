@@ -1,7 +1,7 @@
 #!@@PERL@@ -w
 # -*- cperl -*-
 #
-# Copyright (C) 2002-2008 Jimmy Olsen, Audun Ytterdal
+# Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal, Nicolai Langfeldt
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,8 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 #
-# Script to gather data from  the RRD-files with current information.
-#
+# Script to gather data from the nods and put in temporary spool files.
 #
 # $Id: munin-update.in 1608 2008-05-13 10:38:51Z tfheen $
 
@@ -33,6 +32,7 @@ use Getopt::Long;
 use POSIX qw(strftime);
 use POSIX ":sys_wait_h";
 use Storable qw(fd_retrieve nstore_fd);
+use Data::Dumper;
 
 my $TIMEOUT        = 240;
 my $DEBUG          = 0;
@@ -47,6 +47,7 @@ my $update_time    = Time::HiRes::time;
 my $do_fork        = 1;
 my $do_version     = 0;
 my $timeout        = 180;
+my $spooldir;
 my $cli_do_fork;
 my $cli_timeout;
 my $print_stdout = 0;
@@ -85,7 +86,7 @@ Options:
 			options may be supplied.
     --host <host>	Limit graphed hosts to <host>. Multiple --host options
     			may be supplied.
-    --config <file>	Use <file> as configuration file. 
+    --config <file>	Use <file> as configuration file.
     			[@@CONFDIR@@/munin.conf]
     --[no]debug		View debug messages. [--nodebug]
     --[no]fork		Don't fork one instance for each host. [--fork]
@@ -99,10 +100,10 @@ Options:
 if ($do_version) {
     print <<"EOT";
 munin-gather version $VERSION.
-Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson,
-  Nicolai Langfeldt / Linpro AS
+Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson, Nicolai Langfeldt /
+Linpro AS
 
-Copyright (C) 2002-2008
+Copyright (C) 2002-2009
 
 This is free software released under the GNU General Public License. There
 is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -113,17 +114,17 @@ EOT
     exit 0;
 }
 
-if ( $> == 0 and !$force_root ) {
-    print "You are running this program as root, which is dumb and will
-cause many problems later.  Please run it as user '@@USER@@'.
-If you really want to run it as root, use the --force-root option.
+if ( $> == 0) {
+    print "This program will easily break if you run it as root as you are
+trying now.  Please run it as user '@@USER@@'.  The correct 'su' command
+on many systems is 'su - munin --shell=/bin/bash'
 Aborting.\n\n";
     exit(1);
 }
 
-&make_spooldir();
-
 my $config = &munin_readconfig($conffile);
+
+&make_spooldir();
 
 my $oldconfig;
 
@@ -163,7 +164,6 @@ my $bad_procs = 0;
 my $uaddr;
 
 if ($do_fork) {
-
     # Set up socket
     $uaddr = sockaddr_un("$config->{rundir}/$serversocket");
     socket( Server, PF_UNIX, SOCK_STREAM, 0 ) || die "socket: $!";
@@ -335,11 +335,7 @@ $config = &munin_overwrite( $config, $overwrite );
 
 compare_configs( $oldconfig, $config );
 
-if ( &munin_getlock("$config->{rundir}/munin-datafile.lock") ) {
-    &munin_writeconfig( "$config->{dbdir}/datafile", $config );
-} else {
-    die "Could not create lockfile '$config->{rundir}/munin-update.lock'";
-}
+&munin_writeconfig( "$config->{dbdir}/gatherstate", $config );
 
 $update_time = sprintf( "%.2f", ( Time::HiRes::time - $update_time ) );
 print STATS "UT|$update_time\n";
@@ -349,8 +345,7 @@ rename( "$config->{dbdir}/munin-update.stats.tmp",
 
 logger("Munin-update finished ($update_time sec)");
 
-munin_removelock("$config->{rundir}/munin-datafile.lock");
-munin_removelock("$config->{rundir}/munin-update.lock");
+munin_removelock("$config->{rundir}/munin-gather.lock");
 
 close($log);
 
@@ -370,8 +365,10 @@ sub make_spooldir {
     # Die if it fails or something is dangerous.
     # Return if everything is fine.
 
-    if (-l $config{'spooldir'}) {
-	logger "Error: ".$config{'spooldir'}.
+    $spooldir = $config->{'spooldir'};
+
+    if (-l $config->{'spooldir'}) {
+	logger "Error: ".$config->{'spooldir'}.
 	  " is a symlink.  This is dangerous, so please remove the symlink. ".
 	    "Aborting";
 	exit 0;
@@ -382,15 +379,15 @@ sub make_spooldir {
 
     # The path exists, but is not a directory.  Bail.
     if (-e _) {
-	logger "Error: ".$config{'spooldir'}.
+	logger "Error: ".$config->{'spooldir'}.
 	  " exists but is not a directory. Please remove.  Aborting.";
 	exit 0;
     }
 
     # If it's not a symlink and does not exist try to make the directory.
-    if (!mkdir ($config{'spooldir'})) {
+    if (!mkdir ($config->{'spooldir'})) {
 	# Failed to make.  Bail.
-	logger "Error: ".$config{'spooldir'}.
+	logger "Error: ".$config->{'spooldir'}.
 	  " does not exist, and cannot be created: ".$! ;
     }
 
@@ -417,9 +414,9 @@ sub compare_configs {
         $oldval = munin_get( $oldnode, "max", "" );
         $newval = munin_get( $node,    "max", "" );
         if ( $just_upgraded or $oldval ne $newval ) {
-            logger(   "Notice: compare_configs: $name.max changed from "
+            logger(   "Notice: compare_configs: $name.max changed from '"
                     . ( length $oldval ? $oldval : "undefined" )
-                    . " to $newval." );
+                    . "' to '$newval'." );
             change_max( munin_get_filename($node), $newval );
         }
 
@@ -979,11 +976,14 @@ sub config_and_fetch_node {
     my $fetchdomain;
     my $name      = munin_get_node_name($newconf);
     my $host_time = Time::HiRes::time;
+
     chomp($clientdomain) if $clientdomain;
+
     if ( !$clientdomain ) {
         logger("[WARNING] Got unknown reply from client \"$name\" skipping");
         return 0;
     }
+
     $clientdomain =~ s/\#.*(?:lrrd|munin) (?:client|node) at //;
 
     # Decide what to ask for
@@ -1005,6 +1005,7 @@ sub config_and_fetch_node {
         my $depth;
         my $ca_cert;
         my $tls_verify;
+
         $key = $cert = munin_get( $config, "tls_pem" );
         $key = &munin_get( $config, "tls_private_key", "@@CONFDIR@@/munin.pem" )
           unless defined $key;
@@ -1034,7 +1035,9 @@ sub config_and_fetch_node {
     }
 
     logger("[DEBUG] Configuring node: $name") if $DEBUG;
+
     my @services;
+
     eval {
         local $SIG{ALRM} =
           sub { die "Could not run list on $name ($fetchdomain): $!\n" };
@@ -1046,6 +1049,7 @@ sub config_and_fetch_node {
         @services = split / /, $list;
         alarm 0;
     };
+
     if ($@) {
         die unless ( $@ =~ m/Could not run list/ );
         logger(
@@ -1056,6 +1060,23 @@ sub config_and_fetch_node {
         }
         @services = [];
     }
+
+    my $spoolf;
+
+    if ( &munin_getlock("$config->{rundir}/munin-spool-$name.lock") ) {
+	# We're good
+    } else {
+	logger "[Warning] the spool of $name (".$config->{rundir}."/spool-$name) is already locked. Skipping to next node\n";
+	return;
+    }
+
+    logger "Spooling into $spooldir$name\n";
+    open($spoolf,">>","$spooldir$name") or
+      die "Could not open $spooldir$name for appending: $!\n";
+
+    print $spoolf "# Fetching services from $name at ".scalar(localtime)."\n"
+      or die "Foo!";
+    print $spoolf "nowis ",time,"\n" or die "Bar!";
 
     for my $service (@services) {
         my $servname = $service;
@@ -1079,289 +1100,36 @@ sub config_and_fetch_node {
         write_socket_single( $socket, "config $service\n" );
         my @lines = read_socket($socket);
         return unless $socket;
-        next   unless (@lines);
+        unless (@lines) {
+	    logger("[WARNING] Empty config output from $service on $name\n");
+	    next;
+	}
 
-        for (@lines) {
-            if (/\# timeout/) {
-                logger("Client reported timeout in configuration of $servname");
-                if ( $oldconf->{$servname} ) {
-                    logger("Attempting to use old configuration");
-                    copy_node( $newconf->{$servname}, $oldconf->{$servname} );
-                } else {
-                    logger("Skipping configuration of $servname");
-                    delete $newconf->{$servname};
-                }
-            } elsif (/^(\w+)\.(\w+)\s+(.+)/) {
-                my ( $client, $type, $value ) = ( $1, $2, $3 );
-                $client = &sanitise_fieldname( $client, $fields );
-                if ( ($type) and ( $type eq "label" ) ) {
-                    $value =~ s/\\/_/g;    # Sanitise labels
-                    push( @graph_order, $client )
-                      unless grep ( /^$client$/, @graph_order );
-                }
-                munin_set_var_loc( $newconf, [ $servname, $client, $type ],
-                                   "$value" );
-                logger("config: $servname->$client.$type = $value") if $DEBUG;
-            } elsif (/(^[^\s\#]+)\s+(.+)/) {
-                my ($keyword) = $1;
-                my ($value)   = $2;
-                munin_set_var_loc( $newconf, [ $servname, $keyword ],
-                                   "$value" );
-                logger("Config: $servname->$keyword = $value") if $DEBUG;
-                if ( $keyword eq "graph_order" ) {
-                    @graph_order = split( /\s+/, $value );
-                }
-            }
-        }
-        for my $field ( keys %{ $newconf->{$servname} } ) {
+	print $spoolf "# config $service\n";
+	print $spoolf join("\n",@lines),"\n";
 
-            # Skip anything that isn't a field
-            next if $field =~ /^#%#/;
-            next
-              unless ( ref( $newconf->{$servname}->{$field} ) eq "HASH"
-                    and defined( $newconf->{$servname}->{$field}->{"label"} ) );
-
-            my $fhash = $newconf->{$servname}->{$field};
-
-            # Check if file exists
-            my $fname = munin_get_filename($fhash);
-            ( my $dirname = $fname ) =~ s/\/[^\/]+$//;
-
-            if ( !-f "$fname" ) {
-                logger("creating rrd-file for $servname->$field: \"$fname\"");
-                munin_mkdir_p( $dirname, 0777 );
-                my @args = ( "$fname",
-                             "DS:42:"
-                               . munin_get( $fhash, "type", "GAUGE" ) . ":600:"
-                               . munin_get( $fhash, "min",  "U" ) . ":"
-                               . munin_get( $fhash, "max",  "U" )
-                );
-
-                my $resolution =
-                  &munin_get( $fhash, "graph_data_size", "normal" );
-                if ( $resolution eq "normal" ) {
-                    push(
-                        @args,
-                        "RRA:AVERAGE:0.5:1:576", # resolution 5 minutes
-                        "RRA:MIN:0.5:1:576",
-                        "RRA:MAX:0.5:1:576",
-                        "RRA:AVERAGE:0.5:6:432", # 9 days, resolution 30 minutes
-                        "RRA:MIN:0.5:6:432",
-                        "RRA:MAX:0.5:6:432",
-                        "RRA:AVERAGE:0.5:24:540",  # 45 days, resolution 2 hours
-                        "RRA:MIN:0.5:24:540",
-                        "RRA:MAX:0.5:24:540",
-                        "RRA:AVERAGE:0.5:288:450", # 450 days, resolution 1 day
-                        "RRA:MIN:0.5:288:450",
-                        "RRA:MAX:0.5:288:450"
-                    );
-                } elsif ( $resolution eq "huge" ) {
-		    # resolution 5 minutes, for 400 days
-                    push( @args, "RRA:AVERAGE:0.5:1:115200" );
-		    # Three times? ARGH!
-                    push( @args, "RRA:MIN:0.5:1:115200" );
-		    # Three times? ARGH!
-                    push( @args, "RRA:MAX:0.5:1:115200" );
-                }
-                RRDs::create @args;
-                if ( my $ERROR = RRDs::error ) {
-                    logger("[ERROR] Unable to create \"$fname\": $ERROR");
-                }
-            }
-        }
-        munin_set_var_loc( $newconf,
-                           [ $servname, "graph_order" ],
-                           join( ' ', @graph_order ) );
-
-        fetch_node_service( $newconf, $socket, $servname, $service );
+	write_socket_single( $socket, "fetch $service\n" );
+	my @lines = &read_socket($socket);
+	return unless $socket;
+	unless (@lines) {
+	    logger("[WARNING] Empty fetch output from $service on $name\n");
+	    next;
+	}
+	
+	print $spoolf "# fetch $service\n";
+	print $spoolf join("\n",@lines),"\n";
     }
+
+    close($spoolf) or die "Could not close spool file ";
+
+    munin_removelock("$config->{rundir}/munin-spool-$name.lock");
+
     $host_time = sprintf( "%.2f", ( Time::HiRes::time - $host_time ) );
     print STATS "UD|$name|$host_time\n";
     return 0 unless $socket;
     return 1;
 }
 
-sub fetch_node_service {
-    my $newconf      = shift;
-    my $socket       = shift;
-    my $service      = shift;
-    my $realservname = shift;
-
-    write_socket_single( $socket, "fetch $realservname\n" );
-    my @lines = &read_socket($socket);
-    return 0 unless $socket;
-    my $fields = {};
-    for (@lines) {
-        next unless defined $_;
-        if (/\# timeout/) {
-            logger("Client reported timeout in fetching of $service");
-        } elsif (/(\w+)\.value\s+([\S:]+)\s*(\#.*)?$/) {
-            my $key     = $1;
-            my $value   = $2;
-            my $comment = $3;
-            my $when    = "N";
-
-            if ( $value =~ /^(\d+):(.+)$/ ) {
-                $when  = $1;
-                $value = $2;
-            }
-
-            if ( $value =~ /\d[Ee]([+-]?\d+)$/ ) {
-
-                # Looks like scientific format.  RRDtool does not
-                # like it so we convert it.
-                my $magnitude = $1;
-                if ( $magnitude < 0 ) {
-
-                    # Preserve at least 4 significant digits
-                    $magnitude = abs($magnitude) + 4;
-                    $value = sprintf( "%.*f", $magnitude, $value );
-                } else {
-                    $value = sprintf( "%.4f", $value );
-                }
-            }
-
-            $key = &sanitise_fieldname( $key, $fields );
-            if ( exists $newconf->{$service}->{$key}->{"label"} ) {
-                my $fname = munin_get_filename( $newconf->{$service}->{$key} );
-
-                logger("[DEBUG] Updating $fname with $value") if $DEBUG;
-                RRDs::update( "$fname", "$when:$value" );
-                if ( my $ERROR = RRDs::error ) {
-                    logger("[ERROR] In RRD: unable to update $fname: $ERROR");
-                }
-            } else {
-                logger(
-"[ERROR] Unable to update $service -> $key: No such field (no \"label\" field defined when running plugin with \"config\")."
-                );
-            }
-        } elsif (/(\w+)\.extinfo\s+(.+)/) {
-            munin_set_var_loc( $newconf, [ $service, $service, $1, "extinfo" ],
-                               $2 );
-        }
-    }
-    return 1;
-}
-
-sub fetch_node {
-    my ( $newconf, $oldconf, $socket ) = @_;
-    my $name = munin_get_node_name($newconf);
-    logger("[DEBUG] Fetching node: $name") if $DEBUG;
-    for my $service ( keys %{$newconf} ) {
-        next if ref( $newconf->{$service} ) ne "HASH";
-        next if $service =~ /^#%#/;
-        logger("[DEBUG] Fetching service: $service") if $DEBUG;
-        next unless exists( $newconf->{$service}->{"graph_title"} );
-        next
-          unless ( munin_get_bool( $newconf->{$service}, "update", "true" ) );
-        next
-          unless (
-                 munin_get_bool( $newconf->{$service}, "fetch_data", "true" ) );
-        next if ( @limit_services and !grep ( /^$service$/, @limit_services ) );
-
-        # Read (and get rid of) realservname
-        my $realservname =
-          ( $newconf->{$service}->{"realservname"} || $service );
-        delete $newconf->{$service}->{"realservname"}
-          if exists $newconf->{$service}->{"realservname"};
-
-        write_socket_single( $socket, "fetch $realservname\n" );
-        my @lines = &read_socket($socket);
-        return 0 unless $socket;
-        my $fields = {};
-        for (@lines) {
-            next unless defined $_;
-            if (/\# timeout/) {
-                logger("Client reported timeout in fetching of $service");
-            } elsif (/(\w+)\.value\s+([\S:]+)\s*(\#.*)?$/) {
-                my $key     = $1;
-                my $value   = $2;
-                my $comment = $3;
-                my $when    = "N";
-
-                if ( $value =~ /^(\d+):(.+)$/ ) {
-                    $when  = $1;
-                    $value = $2;
-                }
-
-                if ( $value =~ /\d[Ee]([+-]?\d+)$/ ) {
-
-                    # Looks like scientific format.  RRDtool does not
-                    # like it so we convert it.
-                    my $magnitude = $1;
-                    if ( $magnitude < 0 ) {
-
-                        # Preserve at least 4 significant digits
-                        $magnitude = abs($magnitude) + 4;
-                        $value = sprintf( "%.*f", $magnitude, $value );
-                    } else {
-                        $value = sprintf( "%.4f", $value );
-                    }
-                }
-
-                $key = &sanitise_fieldname( $key, $fields );
-                if ( exists $newconf->{$service}->{$key}->{"label"} ) {
-                    my $fname =
-                      munin_get_filename( $newconf->{$service}->{$key} );
-
-                    logger("[DEBUG] Updating $fname with $value") if $DEBUG;
-                    RRDs::update( "$fname", "$when:$value" );
-                    if ( my $ERROR = RRDs::error ) {
-                        logger(
-                             "[ERROR] In RRD: unable to update $fname: $ERROR");
-                    }
-                } else {
-                    logger(
-"[ERROR] Unable to update $name -> $service -> $key: No such field (no \"label\" field defined when running plugin with \"config\")."
-                    );
-                }
-            } elsif (/(\w+)\.extinfo\s+(.+)/) {
-                munin_set_var_loc( $newconf,
-                                   [ $service, $service, $1, "extinfo" ], $2 );
-            }
-        }
-    }
-    return 1;
-}
-
-sub logger_open {
-    my $dirname = shift;
-
-    if ( !$log->opened ) {
-        unless ( open( $log, ">>$dirname/munin-update.log" ) ) {
-            print STDERR
-"Warning: Could not open log file \"$dirname/munin-update.log\" for writing: $!";
-        }
-    }
-}
-
-sub logger {
-    my ($comment) = @_;
-    my $now = strftime "%b %d %H:%M:%S", localtime;
-
-    chomp($comment);
-    $comment =~ s/\n/\\n/g;
-    print "$now [$$] - $comment\n" if $print_stdout;
-    if ( $log->opened ) {
-        print $log "$now [$$] - $comment\n";
-        $log->flush;
-    } else {
-        if ( defined $config->{logdir} ) {
-            if ( open( $log, ">>$config->{logdir}/munin-update.log" ) ) {
-                print $log "$now - $comment\n";
-                $log->flush;
-                close(STDERR);
-                open( STDERR, ">&", $log );
-            } else {
-                print STDERR
-"[WARNING] Could not open log file \"$config->{logdir}/munin-update.log\" for writing: $!";
-                print STDERR "$now - $comment\n";
-            }
-        } else {
-            print STDERR "$now - $comment\n";
-        }
-    }
-}
 
 sub sanitise_fieldname {
     my $lname = shift;

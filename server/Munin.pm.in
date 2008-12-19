@@ -22,6 +22,8 @@ package Munin; # -*- cperl -*-
 
 use Exporter;
 
+use vars qw($log);
+
 @ISA = ('Exporter');
 @EXPORT = ('munin_trend',
 	   'munin_fetch',
@@ -62,7 +64,10 @@ use Exporter;
 	   'munin_find_field',
 	   'munin_get_parent',
 	   'munin_get_children',
-	   'munin_get_node_partialpath'
+	   'munin_get_node_partialpath',
+	   'logger_open',
+	   'logger',
+	   '$log',
 	   );
 
 use strict;
@@ -70,6 +75,7 @@ use RRDs;
 use Fcntl qw(:DEFAULT :flock);
 use IO::Handle;
 use Symbol 'gensym';
+use POSIX qw(strftime);
 
 my $VERSION = "@@VERSION@@";
 
@@ -104,7 +110,10 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 my %legal_expanded = map { $_ => 1 } @legal;
 
 # Fields to copy when "aliasing" a field
-my @COPY_FIELDS    = ("label", "draw", "type", "rrdfile", "fieldname", "info"); 
+my @COPY_FIELDS    = ("label", "draw", "type", "rrdfile", "fieldname", "info");
+
+my @dircomponents = split('/',$0);
+my $me = pop(@dircomponents);
 
 sub munin_trend {
     my (@array) = @_;
@@ -804,7 +813,7 @@ sub munin_writeconfig {
 	close ($fh);
     }
 }
-    
+
 sub munin_config {
     my $conffile = shift;
     $config = shift;
@@ -812,7 +821,7 @@ sub munin_config {
     $config = &munin_readconfig ($conffile);
     ::logger_open ($config->{logdir});
     my $data = &munin_readconfig("$config->{dbdir}/datafile", 1, 1);
-    
+
     $data = &munin_overwrite($data,$config);
     return ($data);
 }
@@ -1394,6 +1403,64 @@ sub munin_mkdir_p
 	return undef;
     }
 }
+
+
+#
+# Logging.
+#
+
+$log = new IO::Handle;
+
+sub logger_open {
+    my $dirname = shift;
+
+    if (!$log->opened)
+    {
+	  unless (open ($log, ">>$dirname/$me.log"))
+	  {
+		  print STDERR "Warning: Could not open log file \"$dirname/$me.log\" for writing: $!";
+	  }
+    }
+}
+
+
+sub logger {
+  my ($comment) = @_;
+  my $now = strftime "%b %d %H:%M:%S", localtime;
+
+  chomp ($comment);
+  $comment =~ s/\n/\\n/g;
+  print "$now [$$] - $comment\n" if $::print_stdout;
+  if ($log->opened)
+  {
+	  print $log "$now [$$] - $comment\n";
+	  $log->flush;
+  }
+  else
+  {
+	  if (defined $config->{logdir})
+	  {
+		  if (open ($log, ">>$config->{logdir}/munin-update.log"))
+		  {
+			  print $log "$now - $comment\n";
+			  $log->flush;
+			  close (STDERR);
+			  open (STDERR, ">&", $log);
+		  }
+		  else
+		  {
+			  print STDERR "[WARNING] Could not open log file \"$config->{logdir}/munin-update.log\" for writing: $!";
+			  print STDERR "$now - $comment\n";
+		  }
+	  }
+	  else
+	  {
+		  print STDERR "$now - $comment\n";
+	  }
+    }
+}
+
+
 
 
 1;

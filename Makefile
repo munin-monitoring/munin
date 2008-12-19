@@ -18,7 +18,8 @@ MAN8		 = node/munin-node node/munin-run \
 			node/munin-node-configure-snmp \
 			node/munin-node-configure \
 			server/munin-graph server/munin-update \
-			server/munin-limits server/munin-html
+			server/munin-limits server/munin-html \
+			server/munin-gather
 PODMAN8          = server/munin-cron
 PODMAN5          = server/munin.conf node/munin-node.conf
 
@@ -65,6 +66,7 @@ install-main: build
 	$(INSTALL) -m 0755 build/server/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-html $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-limits $(LIBDIR)/
+	$(INSTALL) -m 0755 build/server/munin-gather $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-cgi-graph $(CGIDIR)/
 	$(INSTALL) -m 0644 build/server/Munin.pm $(PERLLIB)/
 

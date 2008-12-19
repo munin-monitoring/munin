@@ -29,7 +29,6 @@ use Munin;
 use Time::HiRes;
 use RRDs;
 use Getopt::Long;
-use POSIX qw(strftime);
 use POSIX ":sys_wait_h";
 use Storable qw(fd_retrieve nstore_fd);
 
@@ -51,10 +50,8 @@ my $print_stdout = 0;
 my $tls;
 my %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => 5, "verify" => "no");
 
-my $log = new IO::Handle;
-
 # Get options
-$do_usage=1  unless 
+$do_usage=1  unless
 GetOptions ( "host=s"       => \@limit_hosts,
 	     "service=s"    => \@limit_services,
 	     "config=s"     => \$conffile,
@@ -1166,54 +1163,6 @@ sub fetch_node
 	}
     }
     return 1;
-}
-
-sub logger_open {
-    my $dirname = shift;
-
-    if (!$log->opened)
-    {
-	  unless (open ($log, ">>$dirname/munin-update.log"))
-	  {
-		  print STDERR "Warning: Could not open log file \"$dirname/munin-update.log\" for writing: $!";
-	  }
-    }
-}
-
-sub logger {
-  my ($comment) = @_;
-  my $now = strftime "%b %d %H:%M:%S", localtime;
-
-  chomp ($comment);
-  $comment =~ s/\n/\\n/g;
-  print "$now [$$] - $comment\n" if $print_stdout;
-  if ($log->opened)
-  {
-	  print $log "$now [$$] - $comment\n";
-	  $log->flush;
-  }
-  else
-  {
-	  if (defined $config->{logdir})
-	  {
-		  if (open ($log, ">>$config->{logdir}/munin-update.log"))
-		  {
-			  print $log "$now - $comment\n";
-			  $log->flush;
-			  close (STDERR);
-			  open (STDERR, ">&", $log);
-		  }
-		  else
-		  {
-			  print STDERR "[WARNING] Could not open log file \"$config->{logdir}/munin-update.log\" for writing: $!";
-			  print STDERR "$now - $comment\n";
-		  }
-	  }
-	  else
-	  {
-		  print STDERR "$now - $comment\n";
-	  }
-    }
 }
 
 sub sanitise_fieldname

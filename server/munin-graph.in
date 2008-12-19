@@ -1022,43 +1022,6 @@ sub expand_cdef {
     return ($max, $min, $avg);
 }
 
-sub logger_open {
-    my $dirname = shift;
-
-    if (!$log->opened) {
-	unless (open ($log, ">>$dirname/munin-graph.log")) {
-	    print STDERR "Warning: Could not open log file \"$dirname/munin-graph.log\" for writing: $!";
-	}
-    } else {
-	close (STDERR);
-	*STDERR = \$log;
-    }
-}
-
-sub logger {
-    my ($comment) = @_;
-    my $now = strftime "%b %d %H:%M:%S", localtime;
-
-    print "$now - $comment\n" if $stdout;
-    if ($log->opened) {
-	print $log "$now - $comment\n";
-    } else {
-	if (defined $config->{logdir}) {
-	    if (open ($log, ">>$config->{logdir}/munin-graph.log")) {
-		print $log "$now - $comment\n";
-		$log->flush;
-		close (STDERR);
-		open (STDERR, ">&", $log);
-	    } else {
-		print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-graph.log\" for writing: $!";
-		print STDERR "$now - $comment\n";
-	    }
-	} else {
-	    print STDERR "$now - $comment\n";
-	}
-    }
-}
-
 sub parse_path
 {
     my ($path, $domain, $node, $service, $field) = @_;
