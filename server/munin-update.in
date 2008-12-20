@@ -324,8 +324,6 @@ logger("Munin-update finished ($update_time sec)");
 munin_removelock("$config->{rundir}/munin-datafile.lock");
 munin_removelock("$config->{rundir}/munin-update.lock");
 
-close ($log);
-
 # compare_configs is used to monitor for config changes which we
 # have to act upon.
 sub compare_configs {

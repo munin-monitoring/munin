@@ -26,4 +26,3 @@ do_config () {
 eval do_$1
 
 exit 0
- 
