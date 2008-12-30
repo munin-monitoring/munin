@@ -19,6 +19,7 @@ Server:
 
 Node:
 - Perl modules: Net::Server, Time::HiRes
+- All SNMP pugins use Net::SNMP
 - Perl modules for plugins: Depends on the plugins you want to use,
      but not many.
 
