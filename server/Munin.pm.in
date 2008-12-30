@@ -74,6 +74,7 @@ use IO::Handle;
 use Symbol 'gensym';
 use POSIX qw(strftime);
 use Log::Log4perl qw(:easy);
+use Carp;
 
 my $VERSION = "@@VERSION@@";
 
@@ -125,7 +126,7 @@ sub munin_fetch {
     my ($start,$step,$names,$data) = RRDs::fetch $file,$type || "AVERAGE";
     unless (defined $data)
     {
-        ::logger ("Could not fetch data from $file(".($type||"AVERAGE")."): ". RRDs::error);
+        logger ("Could not fetch data from $file(".($type||"AVERAGE")."): ". RRDs::error);
         return undef;
     }
     my @array = map { @$_[0] } splice(@$data, $#$data - ($last || 1));
@@ -227,13 +228,13 @@ sub munin_delete {
     my ($config,$data) = @_;
     for my $domain (keys %{$data->{domain}}) {
 	unless ($config->{domain}->{$domain}) {
-	    ::logger("Removing domain: $domain");
+	    logger("Removing domain: $domain");
 	    delete ($data->{domain}->{$domain});
 	    next;
 	}
 	for my $node (keys %{$data->{domain}->{$domain}->{node}}) {
 	    unless ($config->{domain}->{$domain}->{node}->{$node}) {
-		::logger("Removing node from $domain: $node");
+		logger("Removing node from $domain: $node");
 		delete ($data->{domain}->{$domain}->{node}->{$node});
 	    }
 	}
@@ -264,7 +265,7 @@ sub munin_readconfig {
 
     $conf ||= $configfile;
     if (! -r $conf and ! $missingok) {
-	::logger ("munin_readconfig: cannot open '$conf'");
+	logger ("munin_readconfig: cannot open '$conf'");
 	return undef;
     }
     if (open (CFG, $conf))
@@ -593,7 +594,7 @@ sub munin_get_node
 
     foreach my $tmpvar (@$loc) {
 	if ($tmpvar !~ /\S/) {
-	    ::logger ("Error: munin_get_node: Cannot work on hash node \"$tmpvar\"");
+	    logger ("Error: munin_get_node: Cannot work on hash node \"$tmpvar\"");
 	    return undef;
 	}
 	# This used to be "return undef" which seems a bit hash and also has
@@ -638,7 +639,7 @@ sub munin_set_var_loc
     my $tmpvar = shift @aloc;
     $tmpvar = shift @aloc while (defined $tmpvar and $tmpvar =~ /^#%#/);
     if ($tmpvar !~ /\S/) {
-	::logger ("Error: munin_set_var_loc: Cannot work on hash node \"$tmpvar\"");
+	logger ("Error: munin_set_var_loc: Cannot work on hash node \"$tmpvar\"");
 	return undef;
     }
     if (@aloc > 0) {
@@ -648,7 +649,7 @@ sub munin_set_var_loc
 	}
         return munin_set_var_loc ($hash->{$tmpvar}, \@aloc, $val);
     } else {
-	::logger ("Warning: munin_set_var_loc: Setting unknown option \"$tmpvar\".")
+	logger ("Warning: munin_set_var_loc: Setting unknown option \"$tmpvar\".")
 	    unless defined $legal_expanded{$tmpvar};
         $hash->{$tmpvar} = $val;
 	return $hash;
@@ -692,7 +693,7 @@ sub munin_get_node_partialpath
 	my @leftarr = split (/;/, $1);
 	push @$varloc, @leftarr;
     } else {
-	::logger ("Error: munin_get_node_partialpath: Malformatted variable path \"$var\".");
+	logger ("Error: munin_get_node_partialpath: Malformatted variable path \"$var\".");
     }
 
     # We've got both parts of the loc (varloc and hashloc) -- let's figure out 
@@ -720,7 +721,7 @@ sub munin_set_var_path
 
     my $result = undef;
 
-    ::logger ("Debug: munin_set_var_path: Setting var \"$var\" = \"$val\"") if $DEBUG;
+    logger ("Debug: munin_set_var_path: Setting var \"$var\" = \"$val\"");
     if ($var =~ /^\s*([^:]+):(\S+)\s*$/) {
 	my ($leftstring, $rightstring) = ($1, $2);
 
@@ -742,11 +743,11 @@ sub munin_set_var_path
 	my @leftarr = split (/;/, $1);
 	$result = munin_set_var_loc ($hash, [@leftarr], $val);
     } else {
-	::logger ("Error: munin_set_var_path: Malformatted variable path \"$var\".");
+	logger ("Error: munin_set_var_path: Malformatted variable path \"$var\".");
     }
 
     if (!defined $result) {
-	::logger ("Error: munin_set_var_path: Failed setting \"$var\" = \"$val\".");
+	logger ("Error: munin_set_var_path: Failed setting \"$var\" = \"$val\".");
     }
 
     return $hash;
@@ -824,7 +825,7 @@ sub munin_config {
     $config = shift;
     $conffile ||= $configfile;
     $config = &munin_readconfig ($conffile);
-    ::logger_open ($config->{logdir});
+    logger_open ($config->{logdir});
     my $data = &munin_readconfig("$config->{dbdir}/datafile", 1, 1);
 
     $data = &munin_overwrite($data,$config);
@@ -928,11 +929,11 @@ sub munin_path_to_loc
 	my @leftarr = split (/;/, $1);
 	$result = [@leftarr];
     } else {
-	::logger ("Error: munin_path_to_loc: Malformatted variable path \"$path\".");
+	logger ("Error: munin_path_to_loc: Malformatted variable path \"$path\".");
     }
 
     if (!defined $result) {
-	::logger ("Error: munin_path_to_loc: Failed converting \"$path\".");
+	logger ("Error: munin_path_to_loc: Failed converting \"$path\".");
     }
 
     return $result;
@@ -1399,7 +1400,7 @@ sub munin_mkdir_p
     (my $prev = $dirname) =~ s/\/[^\/]+\/?$//;
     if (munin_mkdir_p ($prev, $umask)) {
 	if (mkdir ($dirname, $umask)) {
-	    ::logger ("Notice: Created directory \"$dirname\".");
+	    logger ("Notice: Created directory \"$dirname\".");
 	    return $dirname;
 	} else {
 	    return undef;
@@ -1417,6 +1418,10 @@ sub munin_mkdir_p
 sub logger_open {
     my $dirname = shift;
 
+    if (!defined($dirname)) {
+	confess("In logger_open, directory for log files undefined");
+    }
+
     if (!$logopened) {
 	Log::Log4perl->easy_init( { level    => $DEBUG,
 				    file     => ">>$dirname/$me.log",
@@ -1430,12 +1435,8 @@ sub logger_open {
 sub logger {
   my ($comment) = @_;
 
-  logger_open($config->{logdir}) unless $logopened;
-
   DEBUG @_;
 }
-
-
 
 1;
 

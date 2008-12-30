@@ -62,8 +62,6 @@ my $stdout = 0;
 my $conffile = "@@CONFDIR@@/munin.conf";
 my %draw = ("day" => 1, "week" => 1, "month" => 1, "year" => 1, "sumyear" => 1, "sumweek" => 1);
 
-my $log = new IO::Handle;
-
 # Get options
 $do_usage=1  unless 
 GetOptions ( "force!"       => \$force_graphing,
@@ -231,7 +229,6 @@ logger("Munin-graph finished ($graph_time sec)");
 print STATS "GT|total|$graph_time\n" unless $skip_stats;
 rename ("$config->{dbdir}/munin-graph.stats.tmp", "$config->{dbdir}/munin-graph.stats");
 close STATS unless $skip_stats;
-close $log;
 
 munin_removelock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
 
