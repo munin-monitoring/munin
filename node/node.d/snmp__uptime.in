@@ -1,117 +1,110 @@
-#!@@PERL@@
-# -*- perl -*-
-#
-# check_uptime.pl - nagios plugin 
-# 
-# Description: plugin to check the devices uptime
-#
-#
-# Copyright (C) 2000 Sebastien Barbereau
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-#
-# Author: Sébastien Barbereau nagdevel@barbich.net
-# COPYRIGHT (c) 2006 Andreas Schuldei
-# merge a nagios plugin with a munin-plugin
+#!@@PERL@@ -w
+# -*- cperl -*-
 
+=head1 NAME
 
-#%# family=snmpauto
-#%# capabilities=snmpconf
+snmp__uptime - Munin plugin to retrive uptime information from a SNMP
+device.
+
+=head1 APPLICABLE SYSTEMS
+
+Uptime should be supported by all SNMP devices that support SNMPv2 and
+up (If I have understood the MIBs rightly :-)
+
+=head1 CONFIGURATION
+
+As a rule SNMP plugins need site specific configuration.  The default
+configuration (shown here) will only work on insecure sites/devices.
+
+   [snmp_*]
+	env.version 2
+        env.community public
+
+In general SNMP is not very secure at all unless you use SNMP version
+3 which supports authentication and privacy (encryption).  But in any
+case the community string for your devices should not be "public".
+
+Please see 'perldoc Munin::Plugin::SNMP' for further configuration
+information.
+
+=head1 INTERPRETATION
+
+The plugin reports how long the device has been up.  This is not the
+same as uptime in percent as used in SLAs.
+
+The day and week graphs for uptime are not very interesting - the
+year, and perhaps the month graphs are more interesting.  The year
+graphs average number will show your devices average uptime the last
+year (actually 400 days).
+
+=head1 MAGIC MARKERS
+
+  #%# family=snmpauto
+  #%# capabilities=snmpconf
+
+=head1 VERSION
+
+  $Id: $
+
+=head1 BUGS
+
+None known.
+
+=head1 AUTHOR
+
+Copyright (C) 2000-2009 by various authors.
+
+Original Nagios plugin: Sébastien Barbereau.
+
+Introduced to Munin in 2006 based on the Nagios plugin by: Andreas
+Schuldei
+
+In 2008 updated for Munin::Plugin::SNMP and documented by Nicolai
+Langfeldt.
+
+=head1 LICENSE
+
+GPLv2 or (at your option) any later version.
+
+=cut
 
 use strict;
-use Net::SNMP;
+use Munin::Plugin::SNMP;
+use vars qw($DEBUG);
 
-my $DEBUG = 1;
-my $MAXLABEL = 20;
-
-my $host      = $ENV{host}      || undef;
-my $port      = $ENV{port}      || 161;
-my $community = $ENV{community} || "public";
-my $iface     = $ENV{interface} || undef;
+$DEBUG = $ENV{'MUNIN_DEBUG'};
 
 my $response;
 
-if (defined $ARGV[0] and $ARGV[0] eq "snmpconf")
-{
+if (defined $ARGV[0] and $ARGV[0] eq "snmpconf") {
         print "require 1.3.6.1.2.1.1.3.0 [0-9]\n"; # Number
         exit 0;
 }
 
-if ($0 =~ /^(?:|.*\/)snmp_([^_]+)_uptime$/)
-{
-        $host  = $1;
-        if ($host =~ /^([^:]+):(\d+)$/)
-        {
-                $host = $1;
-                $port = $2;
-        }
-}
-elsif (!defined($host))
-{
-        print "# Debug: $0 -- $1\n" if $DEBUG;
-        die "# Error: couldn't understand what I'm supposed to monitor.";
-}
-
-
-if (defined $ARGV[0] and $ARGV[0] eq "config")
-{
+if (defined $ARGV[0] and $ARGV[0] eq "config") {
+    my ($host) = Munin::Plugin::SNMP->config_session();
         print "host_name $host\n";
         print "graph_title System Uptime
 graph_args --base 1000 -l 0
 graph_vlabel uptime in days
 graph_category system
-graph_info This graph shows the number of days that the the host is up and running so far. 
+graph_info This graph shows the number of days that the the host is up and running so far.
 uptime.label uptime
 uptime.info The system uptime itself in days.
 uptime.draw AREA
 ";
-
         exit 0;
 }
 
+my $session = Munin::Plugin::SNMP->session(-translate =>
+					   [ -timeticks => 0x0 ]);
 
-my ($session, $error) = Net::SNMP->session(
-                -hostname  => $host,
-                -community => $community,
-                -port      => $port,
-		-translate => [
-		              -timeticks => 0x0
-			      ]
-				     
-        );
+my $uptime = $session->get_single (".1.3.6.1.2.1.1.3.0") || 'U';
 
-if (!defined ($session)) {
-        die "Croaking: $error";
+print "Retrived uptime is '$uptime'\n" if $DEBUG;
+
+if ($uptime ne 'U') {
+    $uptime /= 8640000;
 }
 
-print "uptime.value ", 
-    &get_single ($session, "1.3.6.1.2.1.1.3.0") || 'U',
-    "\n";
-
-sub get_single
-{
-        my $handle = shift;
-        my $oid    = shift;
-
-        print "# Getting single $oid...\n" if $DEBUG;
-
-        $response = $handle->get_request ($oid);
-        if (!defined $response->{$oid})
-        {
-            return undef;
-        }
-	return $response->{$oid}/8640000;
-}
+print "uptime.value ", $uptime, "\n";
