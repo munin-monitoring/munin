@@ -1,4 +1,4 @@
-package Munin::Plugin; # -*- cperl -*-
+# -*- cperl -*-
 #
 # Utility functions for perl munin plugins.
 #
@@ -20,6 +20,8 @@ package Munin::Plugin; # -*- cperl -*-
 #
 # $Id: $
 #
+
+package Munin::Plugin;
 
 =head1 Munin::Plugin
 
@@ -431,7 +433,7 @@ sub tail_close ($) {
     return $position;
 }
 
-
+=head3 
 
 # Test like this:
 # MUNIN_PLUGSTATE=/var/lib/munin/plugin-state -e 'require "Plugin.pm.in"; Munin::Plugin::_test;' -- or something.
@@ -460,5 +462,7 @@ sub _test () {
 }
 
 # _test();
+
+=cut
 
 1;
