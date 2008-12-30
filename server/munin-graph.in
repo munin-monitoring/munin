@@ -29,6 +29,7 @@ use POSIX qw(strftime);
 use Digest::MD5;
 use Getopt::Long;
 use Time::HiRes;
+if ($RRDs::VERSION >= 1.3) { use Encode; }
 
 my $graph_time= Time::HiRes::time;
 my $DEBUG = 0;
@@ -830,8 +831,17 @@ sub process_service {
 
 	my @complete = ();
 	if ($RRDkludge) {
+	    # since rrdtool 1.3 with libpango the LEGEND column alignment
+	    # only works with monospace fonts
+	    if ( $RRDs::VERSION >= 1.3 ) {
+		push (@complete,
+  		      '--font' ,'LEGEND:7:monospace');
+	    } else {
+		push (@complete,
+  		      '--font' ,'LEGEND:7:@@LIBDIR@@/VeraMono.ttf');
+	    }
+
 	    push (@complete,
-		  '--font' ,'LEGEND:7:@@LIBDIR@@/VeraMono.ttf',
 		  '--font' ,'UNIT:7:@@LIBDIR@@/VeraMono.ttf',
 		  '--font' ,'AXIS:7:@@LIBDIR@@/VeraMono.ttf');
 	}
@@ -858,6 +868,16 @@ sub process_service {
 
 	# Make sure directory exists
 	munin_mkdir_p ($picdirname, 0777);
+
+	# Since version 1.3 rrdtool uses libpango which needs its input
+	# as utf8 string. So we assume that every input is in latin1
+	# and decode it to perl's internal representation and then to utf8.
+
+	if ( $RRDs::VERSION >= 1.3 ) {
+	    @complete = map {
+		$_ = encode("utf8", (decode("latin1", $_)));
+	    } @complete;
+	}
 
 	RRDs::graph (@complete);
 	if (my $ERROR = RRDs::error) {
