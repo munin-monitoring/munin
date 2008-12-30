@@ -109,7 +109,7 @@ Options:
                         [@@CONFDIR@@/plugins]
     --sconfdir <dir>    Dir where plugin configurations are found. 
                         [@@CONFDIR@@/plugin-conf.d]
-    --sconffile <dir>   Dir where plugins are found. Overrides sconfdir.
+    --sconffile <file>  Use <file> as plugin configuration. Overrides sconfdir.
                         [undefined]
     --[no]paranoia      Only run plugins owned by root. Check permissions.
                         [--paranoia]
