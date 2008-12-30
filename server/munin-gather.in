@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!@@PERL@@ -w
 # -*- cperl -*-
 #
 # Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal, Nicolai Langfeldt
@@ -31,7 +31,6 @@ use Getopt::Long;
 use POSIX qw(strftime);
 use POSIX ":sys_wait_h";
 use Storable qw(fd_retrieve nstore_fd);
-use Data::Dumper;
 use Log::Log4perl qw(:easy);
 
 my $TIMEOUT        = 240;
