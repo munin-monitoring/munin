@@ -1,23 +1,48 @@
 Requirements
 ============
 
+On all hosts:
 - A reasonable Perl5, both on the server and nodes
-- RRD with Perl support on the server
+- The perl module Time::HiRes
+- If you want TLS to work you'll need Net::SSLeay everywhere
+- GNU Make - do not atempt to use any other make.
+
+Server:
+- A web server.  Apache HTTPD should be suitable.  If you like some other
+  I'd like to install instructions.
+- RRD with Perl support
 - Perl modules for server:  Time::HiRes, Storable, Digest::MD5,
-     HTML::Template, Text::Balanced
-- Perl modules for node: Net::Server
+     HTML::Template, Text::Balanced, Log::Log4perl (which depends on
+     IPC::Shareable, Log::Dispatch, Log::Dispatch::FileRotate,
+     MIME::Lite, Mail::Sender, Mail::Sendmail, MailTools,
+     Params::Validate and TimeDate)
+
+Node:
+- Perl modules: Net::Server, Time::HiRes
 - Perl modules for plugins: Depends on the plugins you want to use,
      but not many.
-- GNU Make - do not atempt to use any other make.
-- A web server.  Apache HTTPD should be suitable.
+
+If you're missing some perl modules and they are not in your package
+system I highly recommend using the cpan shell (as root) to install
+the needed ones:
+
+  perl -MCPAN -e shell
+
 
 Munin is quite often used on Linux, *BSD, Solaris and AIX and recently
-OS X (Darwin).  The server and node should be easy to get working on
-any Unix platform, and plugins should either be easy to adopt from a
-related OS or make new ones based on what you find here.  If you make
-a plugin set for a new OS please email us at
-munin-users@lists.sourceforge.net or enter a ticket in the trac ticket
-base at http://munin.sourceforge.net.
+OS X (Darwin).  Plugins are for the most part user contributed.  The
+server and node should be easy to get working on any Unix platform,
+and plugins should either be easy to adopt from a related OS or make
+new ones based on what you find here.  If you make a plugin set for a
+new OS please email us at munin-users@lists.sourceforge.net or enter a
+ticket in the trac ticket base at http://munin.sourceforge.net.
+
+**************************** Munin-gather ****************************
+
+Munin-gather is an incomplete work in progress for the server side.
+Please ignore it, and if you're a packager certainly don't package it.
+
+**********************************************************************
 
 
 Installing
