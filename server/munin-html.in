@@ -32,7 +32,7 @@ use POSIX qw(strftime);
 my @times = ( "day", "week", "month", "year" );
 
 my @limit_hosts;
-my $DEBUG=0;
+my $MDEBUG=0;
 my $VERSION = "@@VERSION@@";
 my $conffile = "@@CONFDIR@@/munin.conf";
 my $do_usage = 0;
@@ -45,7 +45,7 @@ $do_usage=1  unless
 GetOptions ( "host=s"       => \(),
 	     "service=s"    => \(),
 	     "config=s"     => \$conffile,
-	     "debug!"       => \$DEBUG,
+	     "debug!"       => \$MDEBUG,
 	     "stdout!"      => \$stdout,
 	     "help"         => \$do_usage, 
 	     "version!"     => \$do_version );
@@ -98,6 +98,10 @@ my $update_time = Time::HiRes::time;
 my $config;
 my $limits;
 $config = &munin_config ($conffile, $config);
+
+logger_open($config->{'logdir'});
+logger_debug() if $MDEBUG;
+
 $limits = &munin_readconfig ($config->{dbdir}."/limits", 1, 1);
 if (!defined $config->{'cgiurl_graph'})
 {
@@ -613,8 +617,7 @@ sub generate_service_templates {
 	next if (ref ($fieldobj) != "HASH" or !defined $fieldobj->{'label'});
 	next if (!munin_draw_field ($fieldobj));
 
-	logger ("DEBUG: single_value: Checking field \"$f\" ($path).")
-	    if $DEBUG;
+	DEBUG "DEBUG: single_value: Checking field \"$f\" ($path).";
 
 	if (defined $path) {
 	    # This call is to make sure field settings are copied

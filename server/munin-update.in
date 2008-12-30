@@ -112,6 +112,8 @@ Aborting.\n\n";
 
 my $config=&munin_readconfig ($conffile);
 
+logger_open($config->{'logdir'});
+
 my $oldconfig;
 
 if (-e "$config->{dbdir}/datafile") {

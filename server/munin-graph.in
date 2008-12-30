@@ -143,6 +143,7 @@ Aborting.\n\n";
 }
 
 my $config= &munin_config ($conffile);
+logger_open($config->{'logdir'});
 
 if (&munin_get ($config, "graph_strategy", "cron") ne "cron" and $cron)
 { # We're run from cron, but munin.conf says we use dynamic graph generation
