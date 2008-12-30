@@ -45,7 +45,8 @@ my $RRDkludge = $RRDs::VERSION < 1.2 ? '' : '\\';
 # And RRDtool 1.2 and later has draws lines with crayons so we hack
 # the LINE* options a bit.
 my $LINEkluge=0;
-if ($RRDs::VERSION >= 1.2) {
+if ($RRDs::VERSION >= 1.2 and $RRDs::VERSION < 1.3) {
+    # Only kluge the line widths in RRD 1.2*
     $LINEkluge=1;
 }
 
