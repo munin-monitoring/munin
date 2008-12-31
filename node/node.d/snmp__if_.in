@@ -40,14 +40,14 @@ variables specified in $(MUNIN_PLUGIN_CONFIGDIR), eg,
 
 Valid SNMP configuration variables are:
 
-env.host              Overrides hostname specified in linkage
-env.port              Overrides port number specified in linkage
-env.community         Specify the SNMP v1 or SNMP v2c community string.
-env.snmpV3            Set to 1 to enable SNMP v3 auth connections
-snmpV3_username               SNMPv3 username
-snmpV3_authpassword   SNMPv3 auth password
-snmpV3_authprotocol   SNMPv3 auth protocol
-snmpV3_privpassword   SNMPv3 private password
+  env.host              Overrides hostname specified in linkage
+  env.port              Overrides port number specified in linkage
+  env.community         Specify the SNMP v1 or SNMP v2c community string.
+  env.version           Set SNMP version.  One of 1|2|3|snmpv1|snmpv2c|snmpv3
+  env.snmpV3_username       SNMPv3 username
+  env.snmpV3_authpassword   SNMPv3 auth password
+  env.snmpV3_authprotocol   SNMPv3 auth protocol
+  env.snmpV3_privpassword   SNMPv3 private password
 
 =cut
 
@@ -61,6 +61,7 @@ my $host      = $ENV{host}      || undef;
 my $port      = $ENV{port}      || 161;
 my $community = $ENV{community} || "public";
 my $iface     = $ENV{interface} || undef;
+my $version   = $ENV{version}   || undef;
 
 my $useMibEntryDescr = $ENV{useMibEntryDescr} || undef;
 

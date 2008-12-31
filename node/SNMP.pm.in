@@ -300,7 +300,7 @@ particular device we do not know.
 	my $username  = $ENV{'v3username'};
 
 	if (defined($username)) {
-	    hash( @options, (-username => $username));
+	    push( @options, (-username => $username));
 	}
 
 	if ($privpw) {
