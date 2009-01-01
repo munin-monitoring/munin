@@ -50,7 +50,8 @@ set_state_name, save_state, restore_state, tail_open, tail_close.
 use Exporter;
 @ISA = ('Exporter');
 @EXPORT = qw(clean_fieldname set_state_name save_state restore_state
-	     get_thresholds print_thresholds tail_open tail_close);
+	     get_thresholds print_thresholds tail_open tail_close
+	    scaleNumber);
 
 use strict;
 use vars qw($me $pluginstatedir $statefile $DEBUG);
@@ -420,7 +421,6 @@ in the munin-node log or seen when using munin-run).
 
 =cut
 
-
 sub tail_close ($) {
     my ($fh) = @_;
 
@@ -433,12 +433,97 @@ sub tail_close ($) {
     return $position;
 }
 
-=head3 
+=head3 $string = scaleNumber($number,$unit,$ifZero,$format);
 
-# Test like this:
-# MUNIN_PLUGSTATE=/var/lib/munin/plugin-state -e 'require "Plugin.pm.in"; Munin::Plugin::_test;' -- or something.
+Return a string representation of the given number scaled in SI
+prefixes such as G(iga), M(ega), and k(ilo), m(illi), u (for micro)
+and so on for magnitudes from 10^-24 to 10^24.
 
-sub _test () {
+The $unit is the base unit for the number and is appended to the
+prefix.
+
+The contents of $ifZero is used if the number is 0 (smaller than
+10^-26), instead of any other string.  In some contexts "" (empty
+string) is most apropriate and sometimes "0" without any scale or
+prefix is more apropriate.
+
+$format is C (actually perl) style printf format.  The default is
+"%.1f%s%s"
+
+The $format may be specified as a whole string such as "The interface
+speed is %.1f%s%s.".  In that case, $ifZero could be set to "The
+interface is down" --- some equipment uses a interface speed of 0 for
+a downed interface, and some don't.
+
+=cut
+
+sub scaleNumber {
+    my $number = shift;
+    my $unit = shift;
+    my $zero = shift;
+    my $format = shift || '%.1f%s%s';
+
+    my %large = (1E+24, 'Y',  # yotta
+		 1E+21, 'Z',  # zetta
+		 1E+18, 'E',  # exa
+		 1E+15, 'P',  # peta
+		 1E+12, 'T',  # tera
+		 1E+9,  'G',  # giga
+		 1E+6,  'M',  # mega
+		 1E+3,  'k',  # kilo
+		 1,     '');  # nothing
+
+    my %small = (1,     '',   # nothing
+		 1E-3,  'm',  # milli
+		 1E-6,  'u',  # micro
+		 1E-9,  'n',  # nano
+		 1E-12, 'p',  # pico
+		 1E-15, 'f',  # femto
+		 1E-18, 'a',  # atto
+		 1E-21, 'z',  # zepto
+		 1E-24, 'y'); # yocto
+
+    # Get the absolute and exagerate it slightly since floating point
+    # numbers don't compare very well.
+
+    my $absnum = abs($number) * 1.0000001;
+
+    if ($absnum < 1E-26) {
+	# So small it might as well be naught.  If compared against
+	# 1E-27 we'll get "Illegal division by zero", so we're damn
+	# close to nothing.
+	if (defined($zero)) {
+	    return $zero;
+	} else {
+	    return sprintf $format, $number, '', $unit;
+	}
+    } elsif ($absnum > 1) {
+	my $mag = my $magnitude=0;
+	foreach $magnitude (sort { $a <=> $b } keys %large) {
+	    last if $magnitude >= $absnum;
+	    $mag = $magnitude;
+	}
+	return sprintf $format, $number/$mag, $large{$mag}, $unit;
+    } else {
+	# Less than 1 and more than naught
+	my $mag = my $magnitude=0;
+	foreach $magnitude (sort { $a <=> $b } keys %small) {
+	    last if $magnitude >= $absnum;
+	    $mag = $magnitude;
+	}
+	return sprintf $format, $number/$mag, $small{$mag}, $unit;
+    }
+}
+
+
+=head3 Testing
+
+There is some test stuff in this module.
+
+  Test like this:
+  MUNIN_PLUGSTATE=/var/lib/munin/plugin-state -e 'require "Plugin.pm.in"; Munin::Plugin::_test;' -- or something.
+
+  sub _test () {
     my $pos;
     my $fh;
     my $reset;
@@ -459,10 +544,10 @@ sub _test () {
 	print "**Position is $pos\n";
 	save_state($pos);
     } while sleep 1;
-}
-
-# _test();
+  }
 
 =cut
+
+# _test();
 
 1;

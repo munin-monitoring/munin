@@ -28,6 +28,7 @@ use Getopt::Long;
 use Time::HiRes;
 use Munin;
 use POSIX qw(strftime);
+use Log::Log4perl qw(:easy);
 
 my @times = ( "day", "week", "month", "year" );
 

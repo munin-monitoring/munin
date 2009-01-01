@@ -58,9 +58,10 @@ None known.
 =head1 AUTHOR
 
 Copyright (C) 2004-2009 Jimmy Olsen, Daginn Ilmari Mannsaaker.
+Documentation, porting to Munin::Plugin::SNMP and further grooming by
+Nicolai Langfeldt.
 
-Initial SNMPv3 support by "Confusedhacker".  Documentation and porting
-to Munin::Plugin::SNMP by Nicolai Langfeldt
+Initial SNMPv3 support by "Confusedhacker".
 
 =head1 LICENSE
 
@@ -149,27 +150,15 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     my $warn = undef;
     my $speed = undef;
 
-    if (defined ($response = $session->get_single($ifEntrySpeed))) {
-	$speed = $response;
+    if (defined ($speed = $session->get_single($ifEntrySpeed))) {
 	$warn = $speed/8;
 
-	my $textspeed;
 	# Warn at 1/8th of actuall speed?  Or just remove warning?
 	# Tempted to set warning at 80%. 80% over 5 minutes is pretty
 	# busy.
 
-	if ($speed >= 1000000000) {
-	    $textspeed=sprintf("The interface speed is %.2fGbps.",$speed/1000000000.0);
-	} elsif ($speed >= 1000000) {
-	    $textspeed=sprintf("The interface speed is %.2fMbps.",$speed/1000000.0);
-	} elsif ($speed >= 1000) {
-	    $textspeed=sprintf("The interface speed is %.2fKbps.",$speed/1000.0);
-	} elsif ($speed == 0) {
-	    # If the interface is down it may not have speed.
-	    $textspeed='';
-	} else {
-	    $textspeed="The interface speed is ".$speed."bps.";
-	}
+	my $textspeed = scaleNumber($speed,,'bps','',
+				   'The interface speed is %.1f%s%s.');
 
 	$extrainfo .= " ".$textspeed if $textspeed;
     }
