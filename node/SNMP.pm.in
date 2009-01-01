@@ -439,7 +439,7 @@ sub get_single {
 	      if $::DEBUG;
             return undef;
         }
-	return $response->{$oid}/1;
+	return $response->{$oid};
 }
 
 
