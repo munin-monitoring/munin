@@ -1,10 +1,9 @@
 #!@@PERL@@ -w
-# -*- perl -*-
+# -*- cperl -*-
 
 =head1 NAME
 
-snmp__if_ - wildcard plugin to monitor network interfaces of any
-networked equipment.
+snmp__if_ - SNMP wildcard plugin to monitor network interfaces of any networked equipment.
 
 =head1 APPLICABLE SYSTEMS
 
@@ -14,7 +13,7 @@ as "munin-node-configure --snmp switch.langfeldt.net --snmpversion 2c
 interfaces.  On a typical switch you will get one plugin pr. ethernet
 port.  On a router you might get one plugin pr. VLAN interface.
 
-=CONFIGURATION
+=head1 CONFIGURATION
 
 As a rule SNMP plugins need site specific configuration.  The default
 configuration (shown here) will only work on insecure sites/devices:
@@ -22,9 +21,6 @@ configuration (shown here) will only work on insecure sites/devices:
    [snmp_*]
 	env.version 2
         env.community public
-
-The useMibEntryDescr setting enables using the interface's Description
-value
 
 In general SNMP is not very secure at all unless you use SNMP version
 3 which supports authentication and privacy (encryption).  But in any
@@ -54,6 +50,24 @@ pr. second.
 =head1 BUGS
 
 None known.
+
+=head1 FEATURES
+
+You may get strange results if you use SNMPv1, or SNMPv2 on
+switches that do not support 64 bit byte counters.  If the interface
+traffic exceeds about 50Mbps a 32 bit byte counter will wrap around in
+less than 5 minutes making the graph for the interface show random
+results.
+
+If you have a switch/device that supports 64 bit byte counters this plugin
+will use them and the graph will be fine.  The graph information will
+inform about this.  You must use SNMPv2c or SNMPv3 to be able to use
+64 bit counters - if the device supports them.
+
+This problem is a feature of the device SNMP implementation or your
+usage of it, it is nothing the plugin can fix.  In the future Munin
+may be able to run the plugin more often than the counter wraps
+around.
 
 =head1 AUTHOR
 
@@ -96,6 +110,10 @@ my $iface;
 # .1.3.6.1.2.1.2.2.1.7.65539 = INTEGER: up(1)
 # .1.3.6.1.2.1.2.2.1.8.1 = INTEGER: up(1)
 # .1.3.6.1.2.1.2.2.1.8.65539 = INTEGER: up(1)
+#
+# 64 bit counters:
+# .1.3.6.1.2.1.31.1.1.1.6.   Counter64 ifHCInOctets
+# .1.3.6.1.2.1.31.1.1.1.10.  Counter64 ifHCOutOctets
 
 if (defined $ARGV[0] and $ARGV[0] eq "snmpconf") {
 	print "number  1.3.6.1.2.1.2.1.0\n";
@@ -111,13 +129,15 @@ if ($Munin::Plugin::me =~ /_if_(\d+)$/) {
     die "Could not determine interface number from ".$Munin::Plugin::me."\n";
 }
 
-my $ifEntryDescr     = "1.3.6.1.2.1.2.2.1.2.$iface";
-my $ifEntryAlias     = "1.3.6.1.2.1.31.1.1.1.18.$iface";
-my $ifEntrySpeed     = "1.3.6.1.2.1.2.2.1.5.$iface";
-my $ifEntryStatus    = "1.3.6.1.2.1.2.2.1.8.$iface";
-my $ifEntryInOctets  = "1.3.6.1.2.1.2.2.1.10.$iface";
-my $ifEntryOutOctets = "1.3.6.1.2.1.2.2.1.16.$iface";
-my $sysDescr         = '1.3.6.1.2.1.1.1.0';
+my $ifEntryDescr       = "1.3.6.1.2.1.2.2.1.2.$iface";
+my $ifEntryAlias       = "1.3.6.1.2.1.31.1.1.1.18.$iface";
+my $ifEntrySpeed       = "1.3.6.1.2.1.2.2.1.5.$iface";
+my $ifEntryStatus      = "1.3.6.1.2.1.2.2.1.8.$iface";
+my $ifEntryInOctets    = "1.3.6.1.2.1.2.2.1.10.$iface";
+my $ifEntryOutOctets   = "1.3.6.1.2.1.2.2.1.16.$iface";
+my $ifEntryIn64Octets  = "1.3.6.1.2.1.31.1.1.1.6.$iface";
+my $ifEntryOut64Octets = "1.3.6.1.2.1.31.1.1.1.10.$iface";
+my $sysDescr           = '1.3.6.1.2.1.1.1.0';
 
 my ($session, $error);
 
@@ -125,7 +145,7 @@ my ($session, $error);
 $session = Munin::Plugin::SNMP->session();
 
 if ($ARGV[0] and $ARGV[0] eq "config") {
-    my ($host) = Munin::Plugin::SNMP->config_session();
+    my ($host,undef,$version) = Munin::Plugin::SNMP->config_session();
 
     print "host_name $host\n" unless $host eq 'localhost';
 
@@ -163,6 +183,21 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	$extrainfo .= " ".$textspeed if $textspeed;
     }
 
+    if (defined ($session->get_single($ifEntryIn64Octets))) {
+
+	# If we get an answer at the 64 bit OID then this switch
+	# supports the extended MIB
+
+	$extrainfo .= " This switch supports 64 bit byte counters and these are used by this plugin.";
+    } else {
+	# If not we only have a 32 bit counter and are lost.
+	$extrainfo .= " NOTE! This switch supports only 32 bit byte counters which makes the plugin unreliable and unsuitable for most 100Mb (or faster) interfaces, where bursts are expected to exceed 50Mbps.  This means that for interfaces where much traffic is sent this plugin will report false thruputs and cannot be trusted.";
+
+	# unless perhaps the operator can get us snmp version 2c or 3?
+	$extrainfo .= " I notice that you use SNMP version 1 which does not support 64 bit quantities.  You may get better results if you switch to SNMP version 2c or 3.  Please refer to the plugin documentation."
+	  if $version == 1;
+    }
+
     print "graph_title Interface $alias traffic\n";
     print "graph_order recv send\n";
     print "graph_args --base 1000\n";
@@ -196,14 +231,16 @@ if (defined ($response = $session->get_single($ifEntryStatus))) {
     }
 }
 
-if (defined ($response = $session->get_single($ifEntryInOctets))) {
+if (defined ($response = $session->get_single($ifEntryIn64Octets) ||
+	                 $session->get_single($ifEntryInOctets))) {
     print "recv.value ", $response, "\n";
 } else {
     # No response...
     print "recv.value U\n";
 }
 
-if (defined ($response = $session->get_single($ifEntryOutOctets))) {
+if (defined ($response = $session->get_single($ifEntryOut64Octets) ||
+	                 $session->get_single($ifEntryOutOctets))) {
     print "send.value ", $response, "\n";
 } else {
     # No response...

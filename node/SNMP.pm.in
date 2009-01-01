@@ -1,6 +1,6 @@
 # -*- cperl -*-
 #
-# Copyright (C) 2004-2008 Dagfinn Ilmari Mannsaaker, Nicolai Langfeldt,
+# Copyright (C) 2004-2009 Dagfinn Ilmari Mannsaaker, Nicolai Langfeldt,
 # Linpro AS
 #
 # This program is free software; you can redistribute it and/or
@@ -18,7 +18,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301 USA.
 
-
 # This Module is user documented inline, interspersed with code with
 # perlpod.  The documentation for the session() function is the
 # pattern.  Please maintain it in the same way.
@@ -33,6 +32,14 @@ Munin::Plugin::SNMP - Net::SNMP subclass for Munin plugins
 
 The Munin::Plugin::SNMP module extends Net::SNMP with methods useful for
 Munin plugins.
+
+=head1 SNMP CONFIGURATION
+
+SNMP plugins (that use this module) share a common configuration
+interface implemented in the function session().  Please see the
+documentation for that function for complete instructions and examples
+on how to configure SNMP.  The documentation is located there to
+ensure that it is up to date and matches the code.
 
 =head1 DEBUGGING
 
@@ -61,7 +68,6 @@ sub _pushhash ($$) {
     }
 }
 
-
 =head1 METHODS
 
 =cut
@@ -70,21 +76,27 @@ sub config_session {
 
 =head2 config_session() - Decode environment to get the needed plugin configuration parameters
 
-  ($host) = $Munin::Plugin::SNMP->config_session();
+  ($host,$port,$version,$tail) = $Munin::Plugin::SNMP->config_session();
 
 This is a convenience function for the "config" part of the plugin -
 it decodes the environment/plugin name to retrieve the information
-needed in the configuration phase.  At this time it only returns the
-host name, additional return values may be added later.
+needed in the configuration phase.  It returns a 4 tuple consisting of
+1) the host name 2) the udp port to use 3) the SNMP version to use,
+and 4) the tail of the plugin name: whatever is left of the plugin
+name after "snmp_<host>_".
+
+The tail can be interesting for the "fetch" part of the plugin as
+well.
 
 =cut
 
-    my $host      = $ENV{host}      || undef;
-    my $version;
-    my $port;
+    my $host    = undef;
+    my $version = $ENV{version} || '2';
+    my $port    = $ENV{port}    || 161;
+    my $tail    = undef;
 
     # Decode plugin/symlink name and extract meaning from it - if possible.
-    if ($0 =~ /^(?:.*\/)?snmp(v3)?_([^_]+)_/) {
+    if ($0 =~ /^(?:.*\/)?snmp(v3)?_([^_]+)_(.*)/) {
         my $v3 = $1 || '0';
 	$version = 3 if $v3;
 	$host = $2;
@@ -92,12 +104,18 @@ host name, additional return values may be added later.
 	    $host = $2;
 	    $port = $3;
 	}
+	$tail = $4;
     }
+
+    # The environment overrides the symlink.  The other way around is
+    # not useful.
+    $host = $ENV{host} || $host;
 
     if (!defined($host)) {
 	die 'Could not find hostname.';
     }
-    return ($host);
+
+    return ($host,$port,$version,$tail);
 }
 
 sub session {
@@ -106,28 +124,32 @@ sub session {
 
 =head2 session([optional Net::SNMP options]) - create new Munin::Plugin::SNMP object
 
-  ($session, $error) = Munin::Plugin::SNMP->session();
+  $session = Munin::Plugin::SNMP->session();
 
 This method overrides the Net::SNMP constructor to get the connection
-information from the plugin name and/or environment.
+information from the plugin name and/or environment.  Please note that
+no error string is returned.  The function handles errors internaly -
+giving a error message and calling die.  Calling die is the right
+thing to do.
 
-The hostname is taken from the plugin symlink, which must be on the
+The host name is taken from the plugin symlink, which must be on the
 form C<snmp[v3]_E<lt>hostnameE<gt>_E<lt>plugin_nameE<gt>[_args]>.
 
 The "v3" form is taken to mean that SNMPv3 is to be used.  It is also
-a nomenclature trick providing a separate "namespace" for devices that
-use SNMPv3 so it can be configured separately in munin/plugin-conf.d/
+a name trick providing a separate "namespace" for devices that use
+SNMPv3 so it can be configured separately in munin/plugin-conf.d/
 files.  E.g.:
 
   [snmp_*]
-     env.version 2c
-     env.community floppa
+     env.version 2
+     env.community public
 
   [snmpv3_*]
      env.v3username snmpoperator
      env.v3authpassword s3cr1tpa55w0rd
 
-See below for how to configure for each diffetent case.
+See below for how to configure for each diffetent case.  The first
+case above shows Munins default configuration.
 
 NOTE: munin_node_configure does not yet utilize the "v3" thing.
 
@@ -140,17 +162,23 @@ The following environment variables are consulted:
 If the plugin name (symlink) does not contain the host name this is
 used as the host name to connect to.
 
-=cut
+The host name must be specified, but is usually specified in the
+plugin name.  If the hostname somehow does not resolve in DNS (or the
+hosts file) it is possible to do this:
 
-    my $host      = $ENV{host}      || undef;
+  [snmp_*]
+     env.version 2c
+     env.community floppa
+
+  [snmp_switch1.langfeldt.net]
+     env.host 192.168.2.45
+
+  [snmp_switch2.langfeldt.net]
+     env.host 192.168.2.46
 
 =item env.port
 
-The port to connect to. Default 161.
-
-=cut
-
-    my $port      = $ENV{port}      || 161;
+The port to connect to.  Default 161.
 
 =item env.version
 
@@ -164,18 +192,8 @@ Security is handled differently for versions 1/2c and 3.  See below.
 
 =cut
 
-    my $version = $ENV{version} || '2';
+    my ($host,$port,$version,$tail) = config_session();
 
-    # Decode plugin/symlink name and extract meaning from it - if possible.
-    if ($0 =~ /^(?:.*\/)?snmp(v3)?_([^_]+)_/) {
-        my $v3 = $1 || '0';
-	$version = 3 if $v3;
-	$host = $2;
-	if ($host =~ /^([^:]+):(\d+)$/) {
-	    $host = $2;
-	    $port = $3;
-	}
-    }
     if (!defined($host)) {
 	die 'Could not find hostname.';
     }
