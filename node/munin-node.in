@@ -1,7 +1,7 @@
 #!@@PERL@@ -wT
 # -*- cperl -*-
 #
-# Copyright (C) 2002-2008 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
+# Copyright (C) 2002-2009 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
 #    Nicolai Langfeldt
 #
 # This program is free software; you can redistribute it and/or
@@ -75,6 +75,7 @@ $ENV{'MUNIN_OSTYPE'}     = '@@OSTYPE@@';
 $ENV{'MUNIN_HOSTNAME'}   = '@@HOSTNAME@@';
 $ENV{'MUNIN_MKTEMP'}     = '@@MKTEMP@@';
 
+
 @ISA = qw(Net::Server::Fork);
 my @ORIG_ARGV = @ARGV;
 my %services;
@@ -85,6 +86,7 @@ my $conffile="@@CONFDIR@@/munin-node.conf";
 my $FQDN="";
 my $do_usage = 0;
 my $DEBUG = 0;
+my $PIDEBUG = 0;
 my $do_version = 0;
 my $VERSION=$Muninnode::VERSION;
 my $defuser = getpwnam ("@@PLUGINUSER@@");
@@ -94,24 +96,25 @@ my @ignores = ();
 my %sconf   = ('timeout' => 10);
 my $caddr   = "";
 
-$do_usage=1  unless 
-GetOptions ( "config=s"     => \$conffile,
-             "debug!"       => \$DEBUG,
-             "version!"     => \$do_version,
-             "paranoia!"    => \$paranoia,
-             "help"         => \$do_usage );
+$do_usage=1 unless GetOptions ( "config=s"     => \$conffile,
+				"debug!"       => \$DEBUG,
+				"plugindebug!" => \$PIDEBUG,
+				"version!"     => \$do_version,
+				"paranoia!"    => \$paranoia,
+				"help"         => \$do_usage );
 
-if ($do_usage)
-{
+if ($do_usage) {
     print "Usage: $0 [options]
 
 Options:
     --help              View this message.
-    --config <file>     Use <file> as configuration file. 
-                        [/etc/munin/munin-node.conf]
+    --config <file>     Use <file> as configuration file.
+                        [@@CONFDIR@@/munin-node.conf]
     --[no]paranoia      Only run plugins owned by root. Check permissions.
                         [--noparanoia]
-    --debug             View debug messages.
+    --debug             View debug messages
+    --pidebug           Plugin debug.  Sets the environment variable
+                        MUNIN_DEBUG to 1 so that plugins may enable debugging.
     --version           View version information.
 
 ";
@@ -123,7 +126,7 @@ if ($do_version)
 	print "munin-node (munin-node) version $VERSION.
 Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
 
-Copyright (C) 2002-2005
+Copyright (C) 2002-2009
 
 This is free software released under the GNU General Public License. There
 is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -133,6 +136,9 @@ with this software or refer to
 ";
 	exit 0;
 }
+
+# Export debug setting to plugins.
+$ENV{'MUNIN_DEBUG'} = $PIDEBUG ;
 
 # Reset ARGV (for HUPing)
 @ARGV = @ORIG_ARGV;

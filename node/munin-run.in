@@ -78,6 +78,7 @@ my $sconffile=undef;
 my $FQDN="";
 my $do_usage = 0;
 my $DEBUG = 0;
+my $PIDEBUG = 0;
 my $do_version = 0;
 my $VERSION='@@VERSION@@';
 my $defuser = getpwnam ("@@PLUGINUSER@@");
@@ -90,6 +91,7 @@ my %sconf  = ();
 $do_usage=1  unless
 GetOptions ( "config=s"     => \$conffile,
              "debug!"       => \$DEBUG,
+             "pidebug!"     => \$PIDEBUG,
              "version!"     => \$do_version,
              "servicedir=s" => \$servicedir,
              "sconfdir=s"   => \$sconfdir,
@@ -114,6 +116,8 @@ Options:
     --[no]paranoia      Only run plugins owned by root. Check permissions.
                         [--paranoia]
     --debug             View debug messages.
+    --pidebug           Plugin debug.  Sets the environment variable
+                        MUNIN_DEBUG to 1 so that plugins may enable debugging.
     --version           View version information.
 
 ";
@@ -171,6 +175,8 @@ with this software or refer to
 EOT
 	exit 0;
 }
+
+$ENV{'MUNIN_DEBUG'} = $PIDEBUG ;
 
 # Check permissions of configuration
 
