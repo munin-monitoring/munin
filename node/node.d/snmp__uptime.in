@@ -37,6 +37,12 @@ year, and perhaps the month graphs are more interesting.  The year
 graphs average number will show your devices average uptime the last
 year (actually 400 days).
 
+=head1 MIB INFORMATION
+
+This plugin requires support for the DISMAN-EVENT-MIB authored by the
+IETF Distributed Management Working Group.  It reports the
+contents of the sysUpTimeInstance OID.
+
 =head1 MAGIC MARKERS
 
   #%# family=snmpauto

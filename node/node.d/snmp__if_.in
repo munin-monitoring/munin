@@ -38,6 +38,15 @@ Note: The internal representation of the speeds is in bytes
 pr. second.  The plugin multiplies everyting by 8 to get bits
 pr. second.
 
+=head1 MIB INFORMATION
+
+This plugin requires the IF-MIB the standard IETF MIB for network
+interfaces.  It reports the contents of the
+IF-MIB::ifHCInOctets/IF-MIB::ifHCOutOctets if available,
+IF-MIB::ifInOctets/IF-MIB::ifOutOctets if not.  The former are 64 bit
+counters only available with SNMP 2 and later.  The later are 32 bit
+counters (see FEATURES below).
+
 =head1 MAGIC MARKERS
 
   #%# family=snmpauto
