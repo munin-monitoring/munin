@@ -34,7 +34,6 @@ my @limit_hosts = ();
 my @limit_services = ();
 my @limit_contacts = ();
 my $force_root = 0;
-my %notes = ();
 my $stdout = 0;
 my $force = 0;
 my %default_text = ( "default" => '${var:group} :: ${var:host} :: ${var:graph_title}${if:cfields \n\tCRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields \n\tWARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields \n\tUNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields \n\tOKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}\n',
@@ -171,6 +170,7 @@ sub process_service {
 	my $crit    = munin_get ($field, "critical", undef);
 	my $fpath   = munin_get_node_loc ($field);
 	my $onfield = munin_get_node ($oldnotes, $fpath);
+	my $unknown_limit;
 
 	# Skip fields without warning/critical definitions
 	next if (!defined $warn and !defined $crit);
@@ -178,7 +178,7 @@ sub process_service {
 	logger ("Debug: processing field: ".join ('::', @$fpath)) if $DEBUG;
 	next if (@limit_services and !grep (/^$service$/, @limit_services));
 
-	($warn, $crit) = get_limits ($field);
+	($warn, $crit, $unknown_limit) = get_limits ($field);
 
 	my $filename = munin_get_rrd_filename ($field);
 	my $value = munin_fetch("$filename");
@@ -213,8 +213,8 @@ sub process_service {
 	    $hash->{'worst'} = "CRITICAL";
 	    $hash->{'worstid'} = 2;
 	    munin_set_var_loc (\%notes, [@$fpath, "state"], "critical");
-	    munin_set_var_loc (\%notes, [@$fpath, "critical"], 
-		(defined $field->{"extinfo"}? 
+	    munin_set_var_loc (\%notes, [@$fpath, "critical"],
+		(defined $field->{"extinfo"}?
 		"$value (not in $crit->[0]:$crit->[1]): ".
 		$field->{"extinfo"}:
 		"Value is $value. Critical range ($crit->[0]:$crit->[1]) exceeded"));
@@ -251,6 +251,7 @@ sub get_limits {
     my $hash = shift || return undef;
     my @critical = (undef, undef);
     my @warning  = (undef, undef);
+    my $unknown_limit = 1;
     my $crit = munin_get ($hash, "critical", undef);
     my $warn = munin_get ($hash, "warning", undef);
     my $name = munin_get_node_name ($hash);
@@ -278,7 +279,15 @@ sub get_limits {
 	@warning = (0, 0);
 	logger ("Debug: processing warning: $name -> $warning[0] : $warning[1]") if $DEBUG;
     }
-    return (\@warning, \@critical);
+
+	if (defined $client->{"$key.unknown_limit"} and 
+	$client->{"$key.unknown_limit"} =~ /^\s*(\d+)\s*$/)
+	{
+	$unknown_limit = $1 if defined $1;
+	logger ("processing unknown: $domain -> $name -> $clientname -> $key -> $unknown_limit") if $DEBUG;
+	}
+
+    return (\@warning, \@critical, $unknown_limit);
 }
 
 sub generate_service_message {
