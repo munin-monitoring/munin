@@ -723,7 +723,8 @@ sub munin_set_var_path
 
     my $result = undef;
 
-    logger ("Debug: munin_set_var_path: Setting var \"$var\" = \"$val\"");
+    logger ("Debug: munin_set_var_path: Setting var \"$var\" = \"$val\"")
+      if $DEBUG;
     if ($var =~ /^\s*([^:]+):(\S+)\s*$/) {
 	my ($leftstring, $rightstring) = ($1, $2);
 
