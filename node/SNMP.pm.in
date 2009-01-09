@@ -18,9 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301 USA.
 
+
 # This Module is user documented inline, interspersed with code with
 # perlpod.  The documentation for the session() function is the
 # pattern.  Please maintain it in the same way.
+
 
 # $Id$
 
@@ -76,7 +78,7 @@ sub config_session {
 
 =head2 config_session() - Decode environment to get the needed plugin configuration parameters
 
-  ($host,$port,$version,$tail) = $Munin::Plugin::SNMP->config_session();
+  ($host,$port,$version,$tail) = Munin::Plugin::SNMP->config_session();
 
 This is a convenience function for the "config" part of the plugin -
 it decodes the environment/plugin name to retrieve the information
@@ -117,6 +119,7 @@ well.
 
     return ($host,$port,$version,$tail);
 }
+
 
 sub session {
     my $class = shift;
@@ -356,24 +359,26 @@ particular device we do not know.
 
   $result = $session->get_hash(
                          [-callback        => sub {},]     # non-blocking
-                         [-delay           => $seconds,]   # non-blocking 
-                         [-contextengineid => $engine_id,] # v3 
+                         [-delay           => $seconds,]   # non-blocking
+                         [-contextengineid => $engine_id,] # v3
                          [-contextname     => $name,]      # v3
                          -baseoid          => $oid,
 			 -cols             => \%columns
 		     );
 
-This method calls C<get_table()> with all the given arguments except
-C<-cols>, and then transforms the data into a hash of hashes in the
-following manner:
+This method transforms the -baseoid and -cols to a array of -columns
+and calls C<get_entries()> with all the other arguments.  It then then
+transforms the data into a hash of hashes in the following manner:
 
 The keys of the main hash are the last element(s) of the OIDs, after
 C<$oid> and the matching keys from C<%columns> are removed. The values
 are hashes with keys corresponding to the values of C<%columns> hash and
 values from the subtables corresonding to the keys of C<%columns>.
 
-For this to work, all the keys of C<-cols> must have the same number of
-elements.
+For this to work, all the keys of C<-cols> must have the same number
+of elements.  Also, don't try to specify a next-to-next-to-leaf-node
+baseoid, the principle it breaks both C<get_entries> and the logic in
+C<get_hash>.
 
 Example:
 
@@ -418,10 +423,12 @@ sub get_hash {
     my %args = @_;
     my %ret;
 
-    my $base = $args{'-baseoid'};
+    my $base = delete $args{'-baseoid'};
     my $cols = delete $args{'-cols'} or return;
+    my @bases = map { $base.'.'.$_; } keys %{$cols};
+    $args{-columns} = \@bases;
 
-    my $table = $self->get_table(%args)
+    my $table = $self->get_entries(-columns => \@bases)
       or return;
 
     my $subtabs = join '|', keys %$cols;
@@ -441,6 +448,10 @@ sub get_hash {
 
 If the call fails to get a value the above call sets $uptime to 'U'
 which Munin interprets as "Undefined" and handles accordingly.
+
+If you stop to think about it you should probably use get_hash (it
+gets too much, but is good for arrays) or get_entries - it gets
+exactly what you want, so you mus
 
 =cut
 
@@ -467,7 +478,9 @@ Lots.
 
 =head1 BUGS
 
-C<get_hash()> doesn't handle tables with sparse indices.
+Ilmari wrote: C<get_hash()> doesn't handle tables with sparse indices.
+
+Nicolai Langfeldt: Actually I think it does.
 
 =head1 SEE ALSO
 
@@ -487,6 +500,5 @@ Public License as published by the Free Software Foundation; version 2
 dated June, 1991.
 
 =cut
-
 
 1;
