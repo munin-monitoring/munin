@@ -310,7 +310,6 @@ particular device we do not know.
 =back
 
 =cut
-
 	
 	my $privpw    = $ENV{'v3privpassword'} || '';
 	my $privproto = $ENV{'v3privprotocol'} || 'des';
@@ -378,6 +377,9 @@ For this to work, all the keys of C<-cols> must have the same number
 of elements.  Also, don't try to specify a next-to-next-to-leaf-node
 baseoid, the principle it breaks both C<get_entries> and the logic in
 C<get_hash>.
+
+If (all) the OIDs are unavailable a defined but empty restult is
+returned.
 
 Example:
 
@@ -470,6 +472,58 @@ sub get_single {
 	return $response->{$oid};
 }
 
+=head2 get_by_regex() - Retrive table of values filtered by regex applied to the value
+
+This example shows the usage for a netstat plugin.
+
+  my $tcpConnState = "1.3.6.1.2.1.6.13.1.1.";
+  my $connections = $session->get_by_regex($tcpConnState, "[1-9]");
+
+It gets all OIDs based at $tcpConnState and only returns the ones that
+contain a number in the value.
+
+(It might (or might not) be a good idea to rewrite this to use
+get_table and use perl's grep to filter).
+
+=cut
+
+sub get_by_regex {
+    my $handle = shift;
+    my $oid    = shift;
+    my $regex  = shift;
+    my $result = {};
+    my $num    = 0;
+    my $ret    = $oid . "0";
+    my $response;
+
+    print "# Starting browse of $oid...\n" if $::DEBUG;
+
+    while (1) {
+	if ($num == 0) {
+	    print "# Checking for $ret...\n" if $::DEBUG;
+	    $response = $handle->get_request ($ret);
+	}
+	if ($num or !defined $response) {
+	    print "# Checking for sibling of $ret...\n" if $::DEBUG;
+	    $response = $handle->get_next_request ($ret);
+	}
+	if (!$response) {
+	    return undef;
+	}
+	my @keys = keys %$response;
+	$ret = $keys[0];
+	print "# Analyzing $ret (compared to $oid)...\n" if $::DEBUG;
+	last unless ($ret =~ /^$oid/);
+	$num++;
+	next unless ($response->{$ret} =~ /$regex/);
+	@keys = split (/\./, $ret);
+	$result->{$keys[-1]} = $response->{$ret};;
+	print "# Index $num: ", $keys[-1], " (", $response->{$ret}, ")\n" if $::DEBUG;
+    };
+    return $result;
+}
+
+1;
 
 =head1 TODO
 
