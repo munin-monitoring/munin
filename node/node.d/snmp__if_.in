@@ -139,14 +139,15 @@ if ($Munin::Plugin::me =~ /_if_(\d+)$/) {
 }
 
 my $ifEntryDescr       = "1.3.6.1.2.1.2.2.1.2.$iface";
-my $ifEntryAlias       = "1.3.6.1.2.1.31.1.1.1.18.$iface";
 my $ifEntrySpeed       = "1.3.6.1.2.1.2.2.1.5.$iface";
 my $ifEntryStatus      = "1.3.6.1.2.1.2.2.1.8.$iface";
 my $ifEntryInOctets    = "1.3.6.1.2.1.2.2.1.10.$iface";
 my $ifEntryOutOctets   = "1.3.6.1.2.1.2.2.1.16.$iface";
+
+# Only available with SNMPv2 and up.
+my $ifEntryAlias       = "1.3.6.1.2.1.31.1.1.1.18.$iface";
 my $ifEntryIn64Octets  = "1.3.6.1.2.1.31.1.1.1.6.$iface";
 my $ifEntryOut64Octets = "1.3.6.1.2.1.31.1.1.1.10.$iface";
-my $sysDescr           = '1.3.6.1.2.1.1.1.0';
 
 my ($session, $error);
 
