@@ -207,7 +207,7 @@ my $snmpinfoX = $session->get_hash( # ifXEntry - SNMP v2 and up only
 sub do_config_if {
     my ($host,$version,$if) = @_;
 
-    print "multigraph snmp_if_bytes_$if\n";
+    print "multigraph if/bytes/$if config\n";
 
     print "host_name $host\n" unless $host eq 'localhost';
 
@@ -285,7 +285,7 @@ sub do_config_if {
 sub do_fetch_if ($) {
     my($if) = @_;
 
-    print "multigraph snmp_if_bytes_$if\n";
+    print "multigraph if/bytes/$if fetch\n";
 
     if (defined ($response = $snmpinfo->{$if}->{ifOperStatus}) and
 	$response == 2) {
@@ -316,6 +316,7 @@ sub do_config {
 
     my ($host,undef,$version) = Munin::Plugin::SNMP->config_session();
 
+    # Also do overview graph with all ports summarized
     foreach my $if (sort {$a <=> $b} keys %{$snmpinfo}) {
 	do_config_if($host,$version,$if);
 	do_fetch_if($if); # if $dirtyconfig;
@@ -323,6 +324,10 @@ sub do_config {
 }
 
 sub do_fetch {
+    # Also do overview graph with all ports summarized and collected
+    # meta information in graph_info.
+    # Add to this error graphs and so on.  And meta information about
+    # interface type.
     foreach my $if (sort {$a <=> $b} keys %{$snmpinfo}) {
 	do_fetch_if($if);
     }
