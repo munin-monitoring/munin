@@ -109,14 +109,14 @@ uninstall-node: uninstall-node-non-snmp uninstall-node-snmp
 	echo Undone.
 
 install-node-snmp: build
-	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(SBINDIR)/
+	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(LIBDIR)/
 
 install-munindoc: build
 	$(INSTALL) -m 0755 build/node/munindoc $(BINDIR)/
 
 uninstall-node-snmp: build
-	rm -f $(SBINDIR)/munin-node-configure-snmp
-	-rmdir $(SBINDIR)
+	rm -f $(LIBDIR)/munin-node-configure-snmp
+	-rmdir $(LIBDIR)
 
 install-node-non-snmp: build
 	$(CHECKGROUP)

@@ -306,7 +306,7 @@ if (@families)
 
 if (@snmp and $shell)
 {
-    if (-x "$bindir/munin-node-configure-snmp")
+    if (-x "@@LIBDIR@@/munin-node-configure-snmp")
     {
 	if (eval "require Net::SNMP;")
 	{
