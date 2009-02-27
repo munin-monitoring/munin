@@ -123,10 +123,11 @@ my $opstring;
 # Get semaphore handle
 my $semid = semget($IPC_KEY, 0, 0 );
 
-if(!$semid) {
+if(!defined($semid)) {
     # Or create it if needed
-    $semid = semget($IPC_KEY, 1 , 0666 | IPC_CREAT ) ||
-	die "Creating semaphore: $!";
+    $semid = semget($IPC_KEY, 1 , 0666 | IPC_CREAT );
+
+    die "Creating semaphore: $!" unless defined($semid);
 
     # And initialize to max_cgi_graph_jobs
     $opstring = pack("s!s!s!",0, $max_cgi_graph_jobs,0);
