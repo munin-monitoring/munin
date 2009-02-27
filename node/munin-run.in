@@ -205,7 +205,7 @@ while (<FILE>) {
   elsif (($1 eq "default_plugin_user" or $1 eq "default_client_user") and $2)
   {
       my $tmpid = $2;
-      my $defuser = &get_uid ($tmpid);
+      $defuser = &get_uid ($tmpid);
       if (! defined ($defuser))
       {
 	  die "Default user defined in \"$conffile\" does not exist ($tmpid)";
