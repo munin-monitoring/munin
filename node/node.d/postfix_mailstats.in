@@ -44,17 +44,17 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
             }
             else
             {
-                print "no (logfile not readable)\n";
+                print "no (logfile '$logfile' not readable)\n";
             }
 	}
 	else
 	{
-	    print "no (logfile not found)\n";
+	    print "no (logfile '$logfile' not found)\n";
 	}
     }
     else
     {
-        print "no (could not find logdir)\n";
+        print "no (could not find logdir '$LOGDIR')\n";
     }
 
     exit 1;
