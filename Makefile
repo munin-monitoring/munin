@@ -258,7 +258,7 @@ build/%: %.in
 	    -e 's|@@BASH@@|$(BASH)|g'				\
 	    -e 's|@@HASSETR@@|$(HASSETR)|g'			\
 	    -e 's|@@SSPOOLDIR@@|$(SSPOOLDIR)|g'			\
-	    $< > $@;				\
+	    $< > $@;
 
 
 build-doc: build-doc-stamp Makefile Makefile.config
