@@ -11,7 +11,7 @@ RELEASE          = $(shell cat RELEASE)
 INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
 INSTALL          = ./install-sh
 DIR              = $(shell /bin/pwd | sed 's/^.*\///')
-INFILES		 = $(shell find . -name '*.in')
+INFILES          = $(shell find . -name '*.in' | sed 's/\.\/\(.*\)\.in$$/build\/\1/')
 PLUGINS		 = $(wildcard node/node.d.$(OSTYPE)/* node/node.d/*)
 MANCENTER        = "Munin Documentation"
 MAN8		 = node/munin-node node/munin-run \
@@ -224,47 +224,42 @@ install-doc: build-doc
 uninstall-doc: build-doc
 	rm -rf $(DOCDIR)
 
-build: build-stamp
 
-# Recursive pattern rule needed.
-# %: %.in Makefile Makefile.config
 
-build-stamp: $(INFILES) Makefile Makefile.config
-	touch build-stamp
-	rm -rf build
-	@for file in $(INFILES); do			\
-		destname=`echo $$file | sed 's/.in$$//'`;		\
-		echo Generating build/$$destname..;			\
-		mkdir -p build/`dirname $$file`;			\
-		sed -e 's|@@PREFIX@@|$(PREFIX)|g'			\
-		    -e 's|@@CONFDIR@@|$(CONFDIR)|g'			\
-		    -e 's|@@BINDIR@@|$(BINDIR)|g'			\
-		    -e 's|@@SBINDIR@@|$(SBINDIR)|g'			\
-		    -e 's|@@DOCDIR@@|$(DOCDIR)|g'			\
-		    -e 's|@@LIBDIR@@|$(LIBDIR)|g'			\
-		    -e 's|@@MANDIR@@|$(MANDIR)|g'			\
-		    -e 's|@@LOGDIR@@|$(LOGDIR)|g'			\
-		    -e 's|@@HTMLDIR@@|$(HTMLDIR)|g'			\
-		    -e 's|@@DBDIR@@|$(DBDIR)|g'				\
-		    -e 's|@@STATEDIR@@|$(STATEDIR)|g'			\
-		    -e 's|@@PERL@@|$(PERL)|g'				\
-		    -e 's|@@PERLLIB@@|$(PERLLIB)|g'			\
-		    -e 's|@@PYTHON@@|$(PYTHON)|g'			\
-		    -e 's|@@OSTYPE@@|$(OSTYPE)|g'			\
-		    -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'			\
-		    -e 's|@@MKTEMP@@|$(MKTEMP)|g'			\
-		    -e 's|@@VERSION@@|$(VERSION)|g'			\
-		    -e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g'			\
-		    -e 's|@@CGIDIR@@|$(CGIDIR)|g'			\
-		    -e 's|@@USER@@|$(USER)|g'				\
-		    -e 's|@@GROUP@@|$(GROUP)|g'				\
-		    -e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g'		\
-		    -e 's|@@GOODSH@@|$(GOODSH)|g'			\
-		    -e 's|@@BASH@@|$(BASH)|g'				\
-		    -e 's|@@HASSETR@@|$(HASSETR)|g'			\
-		    -e 's|@@SSPOOLDIR@@|$(SSPOOLDIR)|g'			\
-		    $$file > build/$$destname;				\
-	done
+build: $(INFILES)
+
+build/%: %.in
+	@echo "$< -> $@"
+	@mkdir -p build/`dirname $<`
+	@sed -e 's|@@PREFIX@@|$(PREFIX)|g'			\
+	    -e 's|@@CONFDIR@@|$(CONFDIR)|g'			\
+	    -e 's|@@BINDIR@@|$(BINDIR)|g'			\
+	    -e 's|@@SBINDIR@@|$(SBINDIR)|g'			\
+	    -e 's|@@DOCDIR@@|$(DOCDIR)|g'			\
+	    -e 's|@@LIBDIR@@|$(LIBDIR)|g'			\
+	    -e 's|@@MANDIR@@|$(MANDIR)|g'			\
+	    -e 's|@@LOGDIR@@|$(LOGDIR)|g'			\
+	    -e 's|@@HTMLDIR@@|$(HTMLDIR)|g'			\
+	    -e 's|@@DBDIR@@|$(DBDIR)|g'				\
+	    -e 's|@@STATEDIR@@|$(STATEDIR)|g'			\
+	    -e 's|@@PERL@@|$(PERL)|g'				\
+	    -e 's|@@PERLLIB@@|$(PERLLIB)|g'			\
+	    -e 's|@@PYTHON@@|$(PYTHON)|g'			\
+	    -e 's|@@OSTYPE@@|$(OSTYPE)|g'			\
+	    -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'			\
+	    -e 's|@@MKTEMP@@|$(MKTEMP)|g'			\
+	    -e 's|@@VERSION@@|$(VERSION)|g'			\
+	    -e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g'			\
+	    -e 's|@@CGIDIR@@|$(CGIDIR)|g'			\
+	    -e 's|@@USER@@|$(USER)|g'				\
+	    -e 's|@@GROUP@@|$(GROUP)|g'				\
+	    -e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g'		\
+	    -e 's|@@GOODSH@@|$(GOODSH)|g'			\
+	    -e 's|@@BASH@@|$(BASH)|g'				\
+	    -e 's|@@HASSETR@@|$(HASSETR)|g'			\
+	    -e 's|@@SSPOOLDIR@@|$(SSPOOLDIR)|g'			\
+	    $< > $@;				\
+
 
 build-doc: build-doc-stamp Makefile Makefile.config
 
