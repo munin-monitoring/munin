@@ -155,7 +155,6 @@ if (! -f $conffile) {
   exit 1;
 }
 
-# A hack to overide the hostname if everyhing thing else fails
 open FILE,$conffile or die "Cannot open $conffile\n";
 while (<FILE>) {
   chomp;
@@ -211,6 +210,7 @@ while (<FILE>) {
   }
 }
 
+# A hack to override the hostname if everything else fails
 $FQDN ||= &get_fq_hostname;
 
 $ENV{FQDN}=$FQDN;
@@ -1173,7 +1173,7 @@ munin-node [--options]
 
 =item B<< --config <configfile> >>
 
-Use E<lt>fileE<gt> as configuration file. [/etc/munin/munin-node.conf]
+Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin-node.conf]
 
 =item B< --[no]paranoia >
 
@@ -1196,7 +1196,7 @@ data is stored and later graphed and htmlified. It's designed to let
 it be very easy to graph new datasources.
 
 Munin-node is a small perlscript listening to port 4949 using
-Net::Server. It reads all the plugins in /etc/munin/plugins on startup.
+Net::Server. It reads all the plugins in @@CONFDIR@@/plugins/ on startup.
 
 The network protocol is documented at
 L<http://munin.projects.linpro.no/wiki/network-protocol>
@@ -1216,7 +1216,7 @@ L<http://munin.projects.linpro.no/wiki/plugins>
 	@@CONFDIR@@/plugins/*
 	@@CONFDIR@@/plugin-conf.d/*
 	@@STATEDIR@@/munin-node.pid
-	@@LOGDIR@@/munin-node
+	@@LOGDIR@@/munin-node.log
 
 =head1 VERSION
 

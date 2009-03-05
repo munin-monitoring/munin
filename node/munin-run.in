@@ -237,6 +237,7 @@ while (<FILE>) {
   }   
 }
 
+# A hack to override the hostname if everything else fails
 $FQDN ||= &get_fq_hostname;
 
 $ENV{'FQDN'}=$FQDN;
@@ -688,11 +689,11 @@ Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin-node.conf]
 
 =item B<< --servicedir <dir> >>
 
-Use E<lt>dirE<gt> as plugin dir. [@@CONFDIR@@/plugins]
+Use E<lt>dirE<gt> as plugin dir. [@@CONFDIR@@/plugins/]
 
 =item B<< --sconfdir <dir> >>
 
-Use E<lt>dirE<gt> as plugin configuration dir. [@@CONFDIR@@/plugin-conf.d]
+Use E<lt>dirE<gt> as plugin configuration dir. [@@CONFDIR@@/plugin-conf.d/]
 
 =item B<< --sconffile <file> >>
 
@@ -734,7 +735,7 @@ L<http://munin.sf.net/>.
 	@@CONFDIR@@/plugins/*
 	@@CONFDIR@@/plugin-conf.d/*
 	@@STATEDIR@@/munin-node.pid
-	@@LOGDIR@@/munin-node
+	@@LOGDIR@@/munin-node.log
 
 =head1 VERSION
 
