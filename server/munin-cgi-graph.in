@@ -72,8 +72,7 @@ my $filename = get_picture_filename ($config, $dom, $host, $serv, $scale);
 
 my $time = time;
 
-if (-f $filename)
-{
+if (-f $filename) {
     my @sstats = stat ($filename);
     my $slast_modified = strftime ("%a, %d %b %Y %H:%M:%S %Z", localtime ($sstats[9]));
 
@@ -88,6 +87,24 @@ if (-f $filename)
 	exit 0;
     }
 }
+
+# Get semaphore handle - Before graphing as recommended by snide.
+my $semid = semget($IPC_KEY, 0, 0 );
+
+if(!defined($semid)) {
+    # Or create it if needed
+    $semid = semget($IPC_KEY, 1 , 0666 | IPC_CREAT );
+
+    die "Creating semaphore: $!" unless defined($semid);
+
+    # And initialize to max_cgi_graph_jobs
+    $opstring = pack("s!s!s!",0, $max_cgi_graph_jobs,0);
+    semop($semid,$opstring) || die "$!";
+}
+
+# Decrement, or lock/hang/yield if already 0
+$opstring = pack("s!s!s!",0, -1, 0);
+semop($semid,$opstring);
 
 if (! &graph_usable ($filename, $time))
 {
@@ -120,27 +137,13 @@ my $max_cgi_graph_jobs = &munin_get ($config, "max_cgi_graph_jobs" , 6, $dom);
 
 my $opstring; 
 
-# Get semaphore handle
-my $semid = semget($IPC_KEY, 0, 0 );
-
-if(!defined($semid)) {
-    # Or create it if needed
-    $semid = semget($IPC_KEY, 1 , 0666 | IPC_CREAT );
-
-    die "Creating semaphore: $!" unless defined($semid);
-
-    # And initialize to max_cgi_graph_jobs
-    $opstring = pack("s!s!s!",0, $max_cgi_graph_jobs,0);
-    semop($semid,$opstring) || die "$!";
-}
-
-# Decrement, or lock/hang/yield if already 0
-$opstring = pack("s!s!s!",0, -1, 0);
-semop($semid,$opstring);
+# Sending the graph requires I/O but not the amount of CPU that
+# creating the graph requires.  So we might consider taking sending
+# the graph out of the semaphore protected area.
 
 &graph ($filename);
 
-# Increment (and release waiting processes)
+# Increment (and release waiting processes).
 $opstring = pack("s!s!s!",0, 1, 0);
 semop($semid,$opstring);
 
