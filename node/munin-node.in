@@ -275,7 +275,7 @@ FILES:
 	    }
 	    if (!&load_auth_file ($sconfdir, $file, \%sconf))
 	    {
-		warn "Something wicked happened while reading \"$servicedir/$file\". Check the previous log lines for spesifics.";
+		warn "Something wicked happened while reading \"$servicedir/$file\". Check the previous log lines for specifics.";
 	    }
 	}
 	closedir (DIR);
@@ -407,7 +407,7 @@ sub reap_children {
 sub run_service {
   my ($service,$command,$autoreap) = @_;
   $command ||="";
-  my @lines = ();;
+  my @lines = ();
   my $timed_out = 0;
   if ($services{$service} and ($caddr eq "" or &has_access ($service))) {
     my $child = 0;
@@ -1022,9 +1022,7 @@ sub load_auth_file
 	}
 	elsif (/^\s*env\s+([^=\s]+)\s*=\s*(.+)$/)
 	{
-	    # $sconf->{$service}{'env'}{$1} = $2;
-	    # net_write ("Saving $service->env->$1 = $2...\n") if $DEBUG;
-	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"env $1=$2\" should be rewritten to \"env.$1 $2. Ignored.\").";
+	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"env $1=$2\" should be rewritten to \"env.$1 $2\"). Ignored.";
 	}
 	elsif (/^\s*env\.(\S+)\s+(.+)$/)
 	{
@@ -1033,9 +1031,7 @@ sub load_auth_file
 	}
 	elsif (/^\s*(\w+)\s+(.+)$/)
 	{
-	    # $sconf->{$service}{'env'}{"lrrd_$1"} = $2;
-	    # net_write ("Saving $service->env->lrrd_$1 = $2...\n") if $DEBUG;
-            warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"$1 $2\" should be rewritten to \"env.$1 $2. Ignored.\").";
+            warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"$1 $2\" should be rewritten to \"env.$1 $2\"). Ignored.";
 	}
 	elsif (/\S/)
 	{
