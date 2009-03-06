@@ -36,18 +36,20 @@ sub parse_config_from_file {
 sub parse_config {
     my ($self, $IO_HANDLE) = @_;
 
-    my $FQDN;
-    my $defuser;
-    my $conffile;
-    my $defgroup;
-    my $paranoia;
-    my @ignores;
-    my %sconf;
-
     while (my $line = <$IO_HANDLE>) {
         my @var = $self->_parse_line($line);
+        next unless @var;
         if ($var[0] eq 'ignore') {
-            # FIX push it on ignore stack
+            $self->{ignores} ||= [];
+            push @{$self->{ignores}}, $var[1];
+        } 
+        elsif ($var[0] eq 'unhandled') {
+            $self->{sconf} ||= {};
+            next if defined $self->{sconf}{$var[1]};
+            $self->{sconf}{$var[1]} = $var[2];
+        }
+        else {
+            $self->{$var[0]} = $var[1];
         }
     }
 }
@@ -98,18 +100,22 @@ sub _parse_line {
 
 
 sub _trim {
-    my ($class, $str) = @_;
+    my $class = shift;
+    
+    chomp $_[0];
+    $_[0] =~ s/^\s+//;
+    $_[0] =~ s/\s+$//;
 
-    chomp $str;
-    $str =~ s/^\s+//;
-    $str =~ s/\s+$//;
+    return;
 }
 
 
 sub _strip_comment {
-    my ($class, $str) = @_;
-
-    $str =~ s/#.*//;
+    my $class = shift;
+    
+    $_[0] =~ s/#.*//;
+    
+    return;
 }
 
 

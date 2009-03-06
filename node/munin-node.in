@@ -155,65 +155,25 @@ if (!&check_perms ($servicedir) or !&check_perms ($conffile))
 	die "Fatal error. Bailing out.";
 }
 
-if (! -f $conffile) {
-  print "ERROR: Cannot open $conffile\n";
-  exit 1;
+my $config = Munin::Node::Config->new();
+$FQDN     = $config->{fqdn}     if defined $config->{fqdn};
+$defuser  = $config->{defuser}  if defined $config->{defuser};
+$defgroup = $config->{defgroup} if defined $config->{defgroup};
+$paranoia = $config->{paranoia} if defined $config->{paranoia};
+
+push @ignores, @{$config->{ignores}} if defined $config->{ignores};
+
+if (defined $config->{sconf} && defined $config->{sconf}{timeout}) {
+    $sconf{timeout} = $config->{sconf}{timeout};
 }
 
-open FILE,$conffile or die "Cannot open $conffile\n";
-while (<FILE>) {
-  chomp;
-  s/#.*//;                # no comments
-  s/^\s+//;               # no leading white
-  s/\s+$//;               # no trailing white
-  next unless length;     # anything left?
-  /(^\w*)\s+(.*)/;
-  if (($1 eq "host_name" or $1 eq "hostname") and $2)
-  {
-      $FQDN=$2;
-  }
-  elsif (($1 eq "default_plugin_user" or $1 eq "default_client_user") and $2)
-  {
-      my $tmpid = $2;
-      $defuser = Munin::OS->get_uid($tmpid);
-      if (! defined ($defuser))
-      {
-	  die "Default user defined in \"$conffile\" does not exist ($tmpid)";
-      }
-  }
-  elsif (($1 eq "default_plugin_group" or $1 eq "default_client_group") and $2)
-  {
-      my $tmpid = $2;
-      $defgroup = Munin::OS->get_gid($tmpid);
-      if (! defined ($defgroup))
-      {
-	  die "Default group defined in \"$conffile\" does not exist ($tmpid)";
-      }
-  }
-  elsif (($1 eq "paranoia") and defined $2)
-  {
-	  if ("$2" eq "no" or "$2" eq "false" or "$2" eq "off" or "$2" eq "0")
-	  {
-		  $paranoia = 0;
-	  }
-	  else
-	  {
-		  $paranoia = 1;
-	  }
-  }
-  elsif (($1 eq "ignore_file") and defined $2)
-  {
-      push @ignores, $2;
-  }
-  elsif (($1 eq "timeout") and defined $2)
-  {
-      $sconf{'timeout'} = $2;
-  }
-  elsif (defined $1 and defined $2 and not defined $sconf{$1})
-  {
-      $sconf{$1} = $2;
-  }
+if (defined $config->{sconf}) {
+    while (my ($k, $v) = each %{$config->{sconf}}) {
+        next if defined $sconf{$k};
+        $sconf{$k} = $v;
+    }
 }
+
 
 # A hack to override the hostname if everything else fails
 $FQDN ||= &get_fq_hostname;
@@ -249,20 +209,6 @@ sub show_nodes {
     net_write ("$node\n");
   }
   net_write (".\n");
-}
-
-sub get_fq_hostname {
-    my $hostname;
-    eval {
-        require Sys::Hostname;
-        $hostname = (gethostbyname(Sys::Hostname::hostname()))[0];
-    };
-    return $hostname if $hostname;
-
-    $hostname = `hostname`;  # Fall$
-    chomp($hostname);
-    $hostname =~ s/\s//g;
-    return $hostname;
 }
 
 sub load_services {
