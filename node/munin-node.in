@@ -23,7 +23,7 @@
 
 package MyPackage;
 
-# Trust PERL5LIB
+# Trust PERL5LIB from environment
 use lib map { /(.*)/ } split(/:/, $ENV{PERL5LIB});
 
 use strict;
@@ -44,13 +44,12 @@ chdir ("/");
 # "Clean" environment to disable taint-checking on the environment. We _know_
 # that the environment is insecure, but we want to let admins shoot themselves
 # in the foot with it, if they want to.
-foreach my $key (keys %ENV)
-{
-        $ENV{$key} =~ /^(.*)$/;
-        $ENV{$key} = $1 || ''; # It sometimes happens that the match was empty
+foreach my $key (keys %ENV) {
+    $ENV{$key} =~ /^(.*)$/;
+    $ENV{$key} = $1 || ''; # It sometimes happens that the match was empty
 }
 
-$0 =~ /^(.*)$/; # for some strange reason won't "$0 = $0;" work.
+$0 =~ /^(.*)$/;
 $0 = $1;
 
 # Make configuration settings available at runtime.
@@ -82,17 +81,14 @@ $ENV{'MUNIN_MKTEMP'}     = '@@MKTEMP@@';
 
 
 @ISA = qw(Net::Server::Fork);
-my @ORIG_ARGV = @ARGV;
 my %services;
 my %nodes;
 my $servicedir="@@CONFDIR@@/plugins";
 my $sconfdir="@@CONFDIR@@/plugin-conf.d";
 my $conffile="@@CONFDIR@@/munin-node.conf";
 my $FQDN="";
-my $do_usage = 0;
 my $DEBUG = 0;
 my $PIDEBUG = 0;
-my $do_version = 0;
 my $VERSION=$Muninnode::VERSION;
 my $defuser = getpwnam ("@@PLUGINUSER@@");
 my $defgroup= getgrnam ("@@GROUP@@");
@@ -101,52 +97,10 @@ my @ignores = ();
 my %sconf   = ('timeout' => 10);
 my $caddr   = "";
 
-$do_usage=1 unless GetOptions ( "config=s"     => \$conffile,
-				"debug!"       => \$DEBUG,
-				"plugindebug!" => \$PIDEBUG,
-				"version!"     => \$do_version,
-				"paranoia!"    => \$paranoia,
-				"help"         => \$do_usage );
-
-if ($do_usage) {
-    print "Usage: $0 [options]
-
-Options:
-    --help              View this message.
-    --config <file>     Use <file> as configuration file.
-                        [@@CONFDIR@@/munin-node.conf]
-    --[no]paranoia      Only run plugins owned by root. Check permissions.
-                        [--noparanoia]
-    --debug             View debug messages
-    --pidebug           Plugin debug.  Sets the environment variable
-                        MUNIN_DEBUG to 1 so that plugins may enable debugging.
-    --version           View version information.
-
-";
-    exit 0;
-}
-
-if ($do_version)
-{
-	print "munin-node (munin-node) version $VERSION.
-Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
-
-Copyright (C) 2002-2009
-
-This is free software released under the GNU General Public License. There
-is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
-PURPOSE. For details, please refer to the file COPYING that is included
-with this software or refer to
-  http://www.fsf.org/licensing/licenses/gpl.txt
-";
-	exit 0;
-}
+parse_args();
 
 # Export debug setting to plugins.
 $ENV{'MUNIN_DEBUG'} = $PIDEBUG ;
-
-# Reset ARGV (for HUPing)
-@ARGV = @ORIG_ARGV;
 
 # Check permissions of configuration
 
@@ -176,7 +130,7 @@ if (defined $config->{sconf}) {
 
 
 # A hack to override the hostname if everything else fails
-$FQDN ||= &get_fq_hostname;
+$FQDN ||= Munin::OS->get_fq_hostname();
 
 $ENV{FQDN}=$FQDN;
 
@@ -192,6 +146,64 @@ exit;
 
 
 ### over-ridden subs below
+
+sub parse_args {
+    my $do_usage   = 0;
+    my $do_version = 0;
+    my @ORIG_ARGV  = @ARGV;
+
+    $do_usage = 1 unless GetOptions ( "config=s"     => \$conffile,
+                                      "debug!"       => \$DEBUG,
+                                      "plugindebug!" => \$PIDEBUG,
+                                      "version!"     => \$do_version,
+                                      "paranoia!"    => \$paranoia,
+                                      "help"         => \$do_usage );
+    
+    if ($do_usage) {
+        print_usage();
+        exit 0;
+    }
+    
+    if ($do_version) {
+        print_version();
+        exit 0;
+    }
+
+    # Reset ARGV (for HUPing)
+    @ARGV = @ORIG_ARGV;
+}
+
+sub print_version {
+    print qq{munin-node (munin-node) version $VERSION.
+Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
+
+Copyright (C) 2002-2009
+
+This is free software released under the GNU General Public License. There
+is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. For details, please refer to the file COPYING that is included
+with this software or refer to
+  http://www.fsf.org/licensing/licenses/gpl.txt
+};
+}
+
+
+sub print_usage {
+    print qq{Usage: $0 [options]
+
+Options:
+    --help              View this message.
+    --config <file>     Use <file> as configuration file.
+                        [@@CONFDIR@@/munin-node.conf]
+    --[no]paranoia      Only run plugins owned by root. Check permissions.
+                        [--noparanoia]
+    --debug             View debug messages
+    --pidebug           Plugin debug.  Sets the environment variable
+                        MUNIN_DEBUG to 1 so that plugins may enable debugging.
+    --version           View version information.
+
+};
+}
 
 sub pre_loop_hook {
     my $self = shift;
