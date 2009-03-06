@@ -23,10 +23,13 @@
 
 package MyPackage;
 
+# Trust PERL5LIB
+use lib map { /(.*)/ } split(/:/, $ENV{PERL5LIB});
+
 use strict;
 use vars qw(@ISA);
 use Getopt::Long;
-use Munin::Config;
+use Munin::Node::Config;
 use Munin::OS;
 use Net::Server::Fork; # any personality will do
 
