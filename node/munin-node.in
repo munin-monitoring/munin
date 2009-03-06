@@ -1,4 +1,4 @@
-#!@@PERL@@ -wT
+#!/usr/bin/perl -wT
 # -*- cperl -*-
 #
 # Copyright (C) 2002-2009 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
@@ -30,11 +30,11 @@ use strict;
 use vars qw(@ISA);
 use Getopt::Long;
 use Munin::Node::Config;
+use Munin::Node::Defaults;
 use Munin::OS;
 use Net::Server::Fork; # any personality will do
 
-# Variable is set at build, with values detected by the makefiles
-my $HAS_SETR = @@HASSETR@@;
+my $HAS_SETR = $Munin::Node::Defaults::MUNIN_HASSETR;
 
 my $tls;
 my %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => 5, "verify" => "no" );
@@ -53,45 +53,20 @@ $0 =~ /^(.*)$/;
 $0 = $1;
 
 # Make configuration settings available at runtime.
-$ENV{'MUNIN_PREFIX'}     = '@@PREFIX@@';
-$ENV{'MUNIN_CONFDIR'}    = '@@CONFDIR@@';   # /etc/munin,/etc/opt/munin or such
-$ENV{'MUNIN_BINDIR'}     = '@@BINDIR@@';
-$ENV{'MUNIN_SBINDIR'}    = '@@SBINDIR@@';
-$ENV{'MUNIN_DOCDIR'}     = '@@DOCDIR@@';
-$ENV{'MUNIN_LIBDIR'}     = '@@LIBDIR@@';    # LIBDIR/plugins contains plugin.sh
-$ENV{'MUNIN_HTMLDIR'}    = '@@HTMLDIR@@';
-$ENV{'MUNIN_CGIDIR'}     = '@@CGIDIR@@';
-$ENV{'MUNIN_DBDIR'}      = '@@DBDIR@@';
-$ENV{'MUNIN_PLUGSTATE'}  = '@@PLUGSTATE@@'; # Put plugin state files here!
-$ENV{'MUNIN_MANDIR'}     = '@@MANDIR@@';
-$ENV{'MUNIN_LOGDIR'}     = '@@LOGDIR@@';
-$ENV{'MUNIN_STATEDIR'}   = '@@STATEDIR@@';  # This is for .pid files
-$ENV{'MUNIN_USER'}       = '@@USER@@';      # User munin runs as (mostly)
-$ENV{'MUNIN_GROUP'}      = '@@GROUP@@';     # Group ditto
-$ENV{'MUNIN_PLUGINUSER'} = '@@PLUGINUSER@@';# Default user for plugin running
-$ENV{'MUNIN_VERSION'}    = '@@VERSION@@';
-$ENV{'MUNIN_PERL'}       = '@@PERL@@';
-$ENV{'MUNIN_PERLLIB'}    = '@@PERLLIB@@';
-$ENV{'MUNIN_GOODSH'}     = '@@GOODSH@@';
-$ENV{'MUNIN_BASH'}       = '@@BASH@@';
-$ENV{'MUNIN_PYTHON'}     = '@@PYTHON@@';
-$ENV{'MUNIN_OSTYPE'}     = '@@OSTYPE@@';
-$ENV{'MUNIN_HOSTNAME'}   = '@@HOSTNAME@@';
-$ENV{'MUNIN_MKTEMP'}     = '@@MKTEMP@@';
-
+Munin::Node::Defaults->export_to_environment();
 
 @ISA = qw(Net::Server::Fork);
 my %services;
 my %nodes;
-my $servicedir="@@CONFDIR@@/plugins";
-my $sconfdir="@@CONFDIR@@/plugin-conf.d";
-my $conffile="@@CONFDIR@@/munin-node.conf";
+my $servicedir="$Munin::Node::Defaults::MUNIN_CONFDIR/plugins";
+my $sconfdir="$Munin::Node::Defaults::MUNIN_CONFDIR/plugin-conf.d";
+my $conffile="$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.conf";
 my $FQDN="";
 my $DEBUG = 0;
 my $PIDEBUG = 0;
 my $VERSION=$Muninnode::VERSION;
-my $defuser = getpwnam ("@@PLUGINUSER@@");
-my $defgroup= getgrnam ("@@GROUP@@");
+my $defuser = getpwnam ($Munin::Node::Defaults::MUNIN_PLUGINUSER);
+my $defgroup= getgrnam ($Munin::Node::Defaults::MUNIN_GROUP);
 my $paranoia= 0;
 my @ignores = ();
 my %sconf   = ('timeout' => 10);
@@ -139,7 +114,7 @@ $ENV{FQDN}=$FQDN;
 $ENV{'LC_ALL'}='C';
 
 MyPackage->run(conf_file => $conffile,
-	       pid_file => "@@STATEDIR@@/munin-node.pid");
+	       pid_file => "$Munin::Node::Defaults::MUNIN_STATEDIR/munin-node.pid");
 exit;
 
 
@@ -194,7 +169,7 @@ sub print_usage {
 Options:
     --help              View this message.
     --config <file>     Use <file> as configuration file.
-                        [@@CONFDIR@@/munin-node.conf]
+                        [$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.conf]
     --[no]paranoia      Only run plugins owned by root. Check permissions.
                         [--noparanoia]
     --debug             View debug messages
@@ -564,12 +539,12 @@ sub process_request {
       $key = $cert = &get_var (\%sconf, "tls_pem");
       $key = &get_var (\%sconf, "tls_private_key")
 	  unless defined $key;
-      $key = "@@CONFDIR@@/munin-node.pem" unless defined $key;
+      $key = "$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $key;
       $cert = &get_var (\%sconf, "tls_certificate")
 	  unless defined $cert;
-      $cert = "@@CONFDIR@@/munin-node.pem" unless defined $cert;
+      $cert = "$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $cert;
       $ca_cert = &get_var(\%sconf, "tls_ca_certificate");
-      $ca_cert = "@@CONFDIR@@/cacert.pem" unless defined $ca_cert;
+      $ca_cert = "$Munin::Node::Defaults::MUNIN_CONFDIR/cacert.pem" unless defined $ca_cert;
       $depth = &get_var (\%sconf, 'tls_verify_depth');
       $depth = 5 unless defined $depth;
       $tls_verify = &get_var (\%sconf, 'tls_verify_certificate');
