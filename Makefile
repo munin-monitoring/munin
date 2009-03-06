@@ -139,6 +139,10 @@ install-node-non-snmp: build
 	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
 
+	mkdir -p $(PERLLIB)/Munin/Node
+	$(INSTALL) -m 0644 node/lib/Munin/OS.pm $(PERLLIB)/Munin
+	$(INSTALL) -m 0644 node/lib/Munin/Node/Config.pm $(PERLLIB)/Munin/Node
+
 uninstall-node-non-snmp: build
 	rm -f $(SBINDIR)/munin-node 
 	rm -f $(SBINDIR)/munin-node-configure

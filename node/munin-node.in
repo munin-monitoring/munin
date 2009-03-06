@@ -26,6 +26,8 @@ package MyPackage;
 use strict;
 use vars qw(@ISA);
 use Getopt::Long;
+use Munin::Config;
+use Munin::OS;
 use Net::Server::Fork; # any personality will do
 
 # Variable is set at build, with values detected by the makefiles
@@ -170,7 +172,7 @@ while (<FILE>) {
   elsif (($1 eq "default_plugin_user" or $1 eq "default_client_user") and $2)
   {
       my $tmpid = $2;
-      $defuser = &get_uid ($tmpid);
+      $defuser = Munin::OS->get_uid($tmpid);
       if (! defined ($defuser))
       {
 	  die "Default user defined in \"$conffile\" does not exist ($tmpid)";
@@ -179,7 +181,7 @@ while (<FILE>) {
   elsif (($1 eq "default_plugin_group" or $1 eq "default_client_group") and $2)
   {
       my $tmpid = $2;
-      $defgroup = &get_gid ($tmpid);
+      $defgroup = Munin::OS->get_gid($tmpid);
       if (! defined ($defgroup))
       {
 	  die "Default group defined in \"$conffile\" does not exist ($tmpid)";
@@ -901,30 +903,6 @@ sub start_tls
     return $tls;
 }
 
-sub get_uid
-{
-    my $user = shift;
-    return undef if (!defined $user);
-
-    if ($user !~ /\d/)
-    {
-	$user = getpwnam ($user);
-    }
-    return $user;
-}
-
-sub get_gid
-{
-    my $group = shift;
-    return undef if (!defined $group);
-
-    if ($group !~ /\d/)
-    {
-	$group = getgrnam ($group);
-    }
-    return $group;
-}
-
 sub load_auth_file 
 {
     my ($dir, $file, $sconf) = @_;
@@ -957,7 +935,7 @@ sub load_auth_file
 	elsif (/^\s*user\s+(\S+)\s*$/)
 	{
 	    my $tmpid = $1;
-	    $sconf->{$service}{'user'} = &get_uid ($tmpid);
+	    $sconf->{$service}{'user'} = Munin::OS->get_uid($tmpid);
 	    net_write ("DEBUG: Config: $service->uid = ", $sconf->{$service}{'user'}, "\n") if $DEBUG;
 	    if (!defined $sconf->{$service}{'user'})
 	    {
@@ -978,7 +956,7 @@ sub load_auth_file
 		    $group = $1;
 		}
 
-		my $g = &get_gid ($group);
+		my $g = Munin::OS->get_gid($group);
 		net_write ("DEBUG: Config: $service->gid = ". $sconf->{$service}{'group'}. "\n")
 			if $DEBUG and defined $sconf->{$service}{'group'};
 		if (!defined $g and !$optional)
