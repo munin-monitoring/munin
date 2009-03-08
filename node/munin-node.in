@@ -31,6 +31,7 @@ use vars qw(@ISA);
 use Getopt::Long;
 use Munin::Node::Config;
 use Munin::Node::Defaults;
+use Munin::Node::Logger;
 use Munin::OS;
 use Net::Server::Fork; # any personality will do
 
@@ -315,17 +316,6 @@ sub has_access {
 		}
 	}
 	return 1;
-}
-
-sub logger {
-    my $text  = shift;
-    my @date  = localtime (time);
-
-    chomp ($text);
-    $text =~ s/\n/\\n/g;
-
-    printf STDERR ("%d/%02d/%02d-%02d:%02d:%02d [$$] %s\n", $date[5]+1900, $date[4]+1, 
-	    $date[3], $date[2], $date[1], $date[0], $text);
 }
 
 sub reap_children {

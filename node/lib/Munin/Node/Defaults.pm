@@ -43,12 +43,16 @@ our $MUNIN_HASSETR    = '';
 sub get_defaults {
     my ($class) = @_;
     
+    ## no critic
+
     no strict 'refs';
     my $defaults = {};
     for my $g (keys %{Munin::Node::Defaults::}) {
         next unless $g =~ /MUNIN_/;
         $defaults->{$g} = ${*$g{'SCALAR'}};
     }
+
+    ## use critic
 
     return $defaults;
 }
