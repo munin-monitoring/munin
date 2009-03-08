@@ -131,25 +131,15 @@ sub parse_args {
     $do_usage = 1 unless GetOptions ( "config=s"     => \$conffile,
                                       "debug!"       => \$DEBUG,
                                       "plugindebug!" => \$PIDEBUG,
-                                      "version!"     => \$do_version,
+                                      "version!"     => \&print_version_and_exit,
                                       "paranoia!"    => \$paranoia,
-                                      "help"         => \$do_usage );
+                                      "help"         => \&print_usage_and_exit );
     
-    if ($do_usage) {
-        print_usage();
-        exit 0;
-    }
-    
-    if ($do_version) {
-        print_version();
-        exit 0;
-    }
-
     # Reset ARGV (for HUPing)
     @ARGV = @ORIG_ARGV;
 }
 
-sub print_version {
+sub print_version_and_exit {
     print qq{munin-node (munin-node) version $VERSION.
 Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
 
@@ -161,10 +151,12 @@ PURPOSE. For details, please refer to the file COPYING that is included
 with this software or refer to
   http://www.fsf.org/licensing/licenses/gpl.txt
 };
+
+    exit 0;
 }
 
 
-sub print_usage {
+sub print_usage_and_exit {
     print qq{Usage: $0 [options]
 
 Options:
@@ -179,6 +171,8 @@ Options:
     --version           View version information.
 
 };
+
+    exit 0;
 }
 
 sub pre_loop_hook {
