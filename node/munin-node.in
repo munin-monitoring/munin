@@ -128,12 +128,14 @@ sub parse_args {
     my $do_version = 0;
     my @ORIG_ARGV  = @ARGV;
 
-    $do_usage = 1 unless GetOptions ( "config=s"     => \$conffile,
-                                      "debug!"       => \$DEBUG,
-                                      "plugindebug!" => \$PIDEBUG,
-                                      "version!"     => \&print_version_and_exit,
-                                      "paranoia!"    => \$paranoia,
-                                      "help"         => \&print_usage_and_exit );
+    print_usage_and_exit unless GetOptions ( 
+        "config=s"     => \$conffile,
+        "debug!"       => \$DEBUG,
+        "plugindebug!" => \$PIDEBUG,
+        "paranoia!"    => \$paranoia,
+        "version"      => \&print_version_and_exit,
+        "help"         => \&print_usage_and_exit,
+    );
     
     # Reset ARGV (for HUPing)
     @ARGV = @ORIG_ARGV;
