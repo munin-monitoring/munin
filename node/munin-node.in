@@ -23,22 +23,28 @@
 
 package MyPackage;
 
+use strict;
+use warnings;
+
 # Trust PERL5LIB from environment
 use lib map { /(.*)/ } split(/:/, $ENV{PERL5LIB});
 
-use strict;
-use vars qw(@ISA);
 use Getopt::Long;
 use Munin::Node::Config;
 use Munin::Node::Defaults;
 use Munin::Node::Logger;
 use Munin::OS;
-use Net::Server::Fork; # any personality will do
 
-my $HAS_SETR = $Munin::Node::Defaults::MUNIN_HASSETR;
+use base qw(Net::Server::Fork); # any personality will do
 
 my $tls;
-my %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => 5, "verify" => "no" );
+my %tls_verified = ( 
+    "level"          => 0,
+    "cert"           => "",
+    "verified"       => 0,
+    "required_depth" => 5,
+    "verify"         => "no"
+);
 
 chdir ("/");
 
@@ -56,22 +62,21 @@ $0 = $1;
 # Make configuration settings available at runtime.
 Munin::Node::Defaults->export_to_environment();
 
-@ISA = qw(Net::Server::Fork);
 my %services;
 my %nodes;
-my $servicedir="$Munin::Node::Defaults::MUNIN_CONFDIR/plugins";
-my $sconfdir="$Munin::Node::Defaults::MUNIN_CONFDIR/plugin-conf.d";
-my $conffile="$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.conf";
-my $FQDN="";
-my $DEBUG = 0;
-my $PIDEBUG = 0;
-my $VERSION=$Muninnode::VERSION;
-my $defuser = getpwnam ($Munin::Node::Defaults::MUNIN_PLUGINUSER);
-my $defgroup= getgrnam ($Munin::Node::Defaults::MUNIN_GROUP);
-my $paranoia= 0;
-my @ignores = ();
-my %sconf   = ('timeout' => 10);
-my $caddr   = "";
+my $servicedir = "$Munin::Node::Defaults::MUNIN_CONFDIR/plugins";
+my $sconfdir   = "$Munin::Node::Defaults::MUNIN_CONFDIR/plugin-conf.d";
+my $conffile   = "$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.conf";
+my $FQDN       = "";
+my $DEBUG      = 0;
+my $PIDEBUG    = 0;
+my $VERSION    = $Muninnode::VERSION;
+my $defuser    = getpwnam ($Munin::Node::Defaults::MUNIN_PLUGINUSER);
+my $defgroup   = getgrnam ($Munin::Node::Defaults::MUNIN_GROUP);
+my $paranoia   = 0;
+my @ignores    = ();
+my %sconf      = ('timeout' => 10);
+my $caddr      = "";
 
 parse_args();
 
@@ -80,9 +85,8 @@ $ENV{'MUNIN_DEBUG'} = $PIDEBUG ;
 
 # Check permissions of configuration
 
-if (!&check_perms ($servicedir) or !&check_perms ($conffile))
-{
-	die "Fatal error. Bailing out.";
+if (!&check_perms ($servicedir) || !&check_perms ($conffile)) {
+    die "Fatal error. Bailing out.";
 }
 
 my $config = Munin::Node::Config->new();
@@ -120,8 +124,6 @@ exit;
 
 
 
-
-### over-ridden subs below
 
 sub parse_args {
     my $do_usage   = 0;
@@ -177,6 +179,8 @@ Options:
     exit 0;
 }
 
+
+### over-ridden subs below
 sub pre_loop_hook {
     my $self = shift;
 	print STDERR "In pre_loop_hook.\n" if $DEBUG;
@@ -391,7 +395,7 @@ sub run_service {
 
 #		net_write ("# Want to run as euid/egid $u/$g\n") if $DEBUG;
 
-		if ($HAS_SETR)
+		if ($Munin::Node::Defaults::MUNIN_HASSETR)
 		{
 			$( = $g    unless $g == 0;
 			$< = $u    unless $u == 0;
