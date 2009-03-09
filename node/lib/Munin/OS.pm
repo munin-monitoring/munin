@@ -59,7 +59,7 @@ sub check_perms {
     # Check dir as well
     if (-f "$target") {
 	(my $dirname = $target) =~ s/[^\/]+$//;
-	return check_perms($dirname);
+	return $class->check_perms($dirname);
     }
 
     return 1;

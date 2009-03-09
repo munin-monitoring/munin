@@ -70,8 +70,8 @@ sub main {
     
     # Check permissions of configuration
     
-    unless (Munin::OS::check_perms($servicedir, $paranoia) 
-            && Munin::OS::check_perms($conffile, $paranoia)) {
+    unless (Munin::OS->check_perms($servicedir, $paranoia) 
+            && Munin::OS->check_perms($conffile, $paranoia)) {
         die "Fatal error. Bailing out.";
     }
 
