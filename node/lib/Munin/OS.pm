@@ -53,7 +53,7 @@ sub check_perms {
             "Warning: '$target' has dangerous permissions (%04o)",
             $mode & oct(7777),
         );
-	return 0;
+	return;
     }
 
     # Check dir as well

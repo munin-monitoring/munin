@@ -8,10 +8,22 @@ use Carp;
 use Munin::OS;
 
 
-sub new {
-    my ($class) = @_;
+{
+    my $instance;
 
-    return bless {}, $class;
+    sub instance {
+        my ($class) = @_;
+        
+        return $instance ||= bless {}, $class;
+    }
+}
+
+
+sub reinitialize {
+    my ($self) = @_;
+
+    my $new_self = bless {}, ref $self;
+    %$self = %$new_self;
 }
 
 
@@ -131,27 +143,41 @@ __END__
 
 =head1 NAME 
 
-Munin::Node::Config - FIX
+Munin::Node::Config - Singleton node configuration container. Reads
+configuration files.
 
 
 =head1 SYNOPSIS
 
-FIX
-
+ $config = Munin::Node::Config->instance();
+ $config->parse_config_from_file('/etc/munin/munin-node.conf');
+ print $config->{fqdn}, "\n";
 
 =head1 METHODS
 
 =over
 
-=item $config = $class->new()
+=item B<instance>
 
-Constructor.
+ $config = Munin::Node::Config->instance();
 
-=item $self->parse_config_from_file($file_name)
+Returns the sincgleton instance of this class.
+
+=item B<reinitialize>
+
+ $config->reinitialize();
+
+Deletes all configuration variables
+
+=item B<parse_config_from_file>
+
+ $config->parse_config_from_file($file_name);
 
 FIX
 
-=item $self->parse_config($io_handle)
+=item B<parse_config>
+
+ $config->parse_config($io_handle);
 
 FIX
 

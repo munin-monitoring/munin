@@ -9,7 +9,7 @@ use lib "$FindBin::Bin/../lib";
 
 use_ok('Munin::Node::Config');
 
-my $conf = Munin::Node::Config->new();
+my $conf = Munin::Node::Config->instance();
 isa_ok($conf, 'Munin::Node::Config');
 
 ###############################################################################
@@ -94,7 +94,7 @@ is_deeply(\@res, [paranoia => 0], 'Parsing paranoia');
 #                         P A R S E _ C O N F I G
 
 {
-    my $conf = Munin::Node::Config->new();
+    $conf->reinitialize();
     $conf->parse_config(*DATA);
     my $expected = {
         'fqdn' => 'foo.example.com',

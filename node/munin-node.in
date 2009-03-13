@@ -75,7 +75,8 @@ sub main {
         die "Fatal error. Bailing out.";
     }
 
-    my $config = Munin::Node::Config->new();
+    my $config = Munin::Node::Config->instance();
+    $config->parse_config_from_file($conffile);
     $FQDN     = $config->{fqdn}     if defined $config->{fqdn};
     $defuser  = $config->{defuser}  if defined $config->{defuser};
     $defgroup = $config->{defgroup} if defined $config->{defgroup};
