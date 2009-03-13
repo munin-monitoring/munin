@@ -9,7 +9,7 @@ use Test::More tests => 1;
 my $count = 0;
 
 find(\&fixes, "$FindBin::Bin/../lib");
-ok($count == 0, "Should not find any FIX comments");
+is($count, 0, "Should not find any FIX comments");
 
 sub fixes {
 
