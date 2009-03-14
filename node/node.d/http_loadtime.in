@@ -8,15 +8,12 @@
 #       target      - overrides the default 'index.html' page
 #       PATH        - set a sensible path
 #
-# BUG: SHOULD BE USING MKTEMP; THE /tmp USAGE IS PROBABLY DANGEROUS
-#
-#
 # $Id: $
 #
 #%# family=auto
 #%# capabilities=autoconf
 
-final_target="http://localhost/"
+target=${target:-"http://localhost/"}
 time_bin=$(which time)
 wget_bin=$(which wget)
 
@@ -37,23 +34,18 @@ if [ "$1" = "config" ]; then
     echo "graph_args --base 1000 -l 0"
     echo "graph_vlabel Load time in seconds"
     echo "graph_category network"
-    echo "graph_info This graph shows load time in seconds of $final_target"
+    echo "graph_info This graph shows load time in seconds of $target"
     echo "loadtime.label loadtime"
     echo "loadtime.info Load time"
     exit 0
 fi
 
-[ "$target"  ] && final_target=$target
+TMPDIR=`mktemp -d` || exit 1
 
-trap 'rm -rf /tmp/apache_loadtime' EXIT
+trap "rm -rf $TMPDIR" EXIT
 
-# Make a dir.  Should be safe
-mkdir -p /tmp/apache_loadtime || exit 1
-
-cd /tmp/apache_loadtime || exit 1
-# This does not seem to load prerequisites propperly!
-$time_bin -p $wget_bin -p --no-cache --delete-after $final_target 3>&2 2>/tmp/apache_loadtime/time.tmp
-loadtime=$(awk '/^real / { print $2 }' /tmp/apache_loadtime/time.tmp)
+cd $TMPDIR || exit 1
+loadtime=$($time_bin -p $wget_bin -p --no-cache --delete-after $target -q 2>&1 | awk '/^real / { print $2 }')
 cd ..
 
 echo "loadtime.value $loadtime"
