@@ -142,8 +142,8 @@ foreach (@drives) {
   $fulldev .= 'rdsk/' if $^O eq 'solaris';
   $fulldev .= exists $ENV{'dev_'.$_} ? $ENV{'dev_'.$_} : $dev;
 
-  # Avoid spinning up sleeping disks
-  next if `hdparm -C $fulldev 2>/dev/null` =~ /standby/;
+  # Avoid spinning up sleeping disks only for /dev/sd? or /dev/hd? devices.
+  next if $fulldev =~ /\/dev\/[sh]d?/ && `hdparm -C $fulldev 2>/dev/null` =~ /standby/;
 
   my $cmd = $smartctl.' -A ';
   $cmd .= $ENV{'args_'.$_}.' ' if exists $ENV{'args_'.$_};
