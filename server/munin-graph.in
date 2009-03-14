@@ -730,10 +730,17 @@ sub process_service {
 		my ($number, $ldcolour, $label) = split (/:/, $linedef, 3);
 		push (@rrd_negatives, "HRULE:".$number.
 		    ($ldcolour ? "#$ldcolour" : $colour));
-
 	    } elsif (my $tmpwarn = munin_get ($negfield, "warn")) {
-		push (@rrd_negatives, "HRULE:".$negfieldname.
-		    (defined $single_value and $single_value) ? "#ff0000" : $colour);
+
+		my ($warn_min,$warn_max) =
+		  split(':', $node->{client}->{$service}->{"$field.warn"});
+
+		if ( $warn_min ) {
+		    push (@rrd, "HRULE:".$warn_min.($single_value ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
+		}
+		if ( $warn_max ) {
+		    push (@rrd, "HRULE:".$warn_max.($single_value ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
+		}
 	    }
 
 	    push (@rrd, "GPRINT:c$negfieldname:LAST:$rrdformat" . $rrdscale . "/\\g");
@@ -770,14 +777,23 @@ sub process_service {
 	    my ($number, $ldcolour, $label) = split (/:/, $linedef, 3);
 	    $label =~ s/:/\\:/g if defined $label;
 	    push (@rrd, "HRULE:".$number.
-		($ldcolour ? "#$ldcolour" :
-		  ((defined $single_value and $single_value) ?
-		   "#ff0000" : $colour)).
+		  ($ldcolour ? "#$ldcolour" :
+		   ((defined $single_value and $single_value) ?
+		    "#ff0000" : $colour)).
 		  ((defined $label and length ($label)) ? ":$label" : ""),
 		  "COMMENT: \\j"
-		);
+		 );
 	} elsif (my $tmpwarn = munin_get ($field, "warn")) {
-	    push (@rrd,"HRULE:".$tmpwarn.($single_value ? "#ff0000" : $colour));
+
+	    my ($warn_min,$warn_max) =
+	      split(':', $node->{client}->{$service}->{"$field.warn"});
+
+	    if ( $warn_min ) {
+		push (@rrd, "HRULE:".$warn_min.($single_value ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
+	    }
+	    if ( $warn_max ) {
+		push (@rrd, "HRULE:".$warn_max.($single_value ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
+	    }
 	}
     }
 
