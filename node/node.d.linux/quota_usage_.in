@@ -14,6 +14,7 @@
 
 use strict;
 use warnings;
+use Munin::Plugin;
 
 # We do some magic to allow device strings with underscore to mean a /
 # So to monitor /dev/mapper/vol-foo use quota-usage_mapper_vol-foo
@@ -42,7 +43,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	for my $user (@users_by_usage) {
 		my ($uid, $name) = (getpwnam($user))[2,6];
 		$name = $user if (length($name) < length($user));
-		$user =~ s/-/_/g;
+		$user = clean_fieldname($user);
 		$name = (split(/,/, $name))[0];
 		printf "%s.label %s\n", $user, $name;
 		printf "%s.cdef %s,1024,*\n", $user, $user;
@@ -51,7 +52,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 } else {
 	for my $user (@users_by_usage) {
 		my $esc = $user;
-		$esc =~ s/-/_/g;
+		$esc = clean_fieldname($user);
 		printf "%s.value %s\n", $esc, $users{$user};
 	}
 }
