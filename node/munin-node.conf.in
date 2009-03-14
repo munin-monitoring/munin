@@ -16,6 +16,8 @@ setsid yes
 # Regexps for files to ignore
 
 ignore_file ~$
+ignore_file [#~]$ 
+ignore_file DEADJOE$ 
 ignore_file \.bak$
 ignore_file %$
 ignore_file \.dpkg-(tmp|new|old|dist)$
