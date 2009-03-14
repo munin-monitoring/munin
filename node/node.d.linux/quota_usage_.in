@@ -52,7 +52,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 } else {
 	for my $user (@users_by_usage) {
 		my $esc = $user;
-		$esc = clean_fieldname($user);
+		$esc = clean_fieldname($esc);
 		printf "%s.value %s\n", $esc, $users{$user};
 	}
 }
