@@ -7,14 +7,14 @@ package Munin::OS;
 sub get_uid {
     my ($class, $user) = @_;
     return unless defined $user;
-    return $user =~ /\d/ ? $user : getpwnam($user);
+    return $user =~ /\d+/ ? $user : getpwnam($user);
 }
 
 
 sub get_gid {
     my ($class, $group) = @_;
     return unless defined $group;
-    return $group =~ /\d/ ? $group : getgrnam($group);
+    return $group =~ /\d+/ ? $group : getgrnam($group);
 }
 
 
