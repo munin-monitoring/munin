@@ -125,10 +125,8 @@ CHECKGROUP = $(shell $(GETENT) group $(GROUP) >/dev/null 2>/dev/null || (echo "e
 
 # For HP-UX, use these instead:
 #
-#PWGET = $(shell which pwget) 
-#GRGET = $(shell which grget) 
-#CHECKUSER  = $(shell $(PWGET) -n $(USER) >/dev/null 2>/dev/null || (echo "echo User $(USER) nonexistant. Create the user and retry; exit 2"))
-#CHECKGROUP = $(shell $(GRGET) -n $(GROUP) >/dev/null 2>/dev/null || (echo "echo Group $(GROUP) nonexistant. Create the group and retry; exit 2"))
+#CHECKUSER  = $(shell pwget -n $(USER) >/dev/null 2>/dev/null || (echo "echo User $(USER) nonexistant. Create the user and retry; exit 2"))
+#CHECKGROUP = $(shell grget -n $(GROUP) >/dev/null 2>/dev/null || (echo "echo Group $(GROUP) nonexistant. Create the group and retry; exit 2"))
 
 CHOWN      = chown
 CHMOD      = chmod
