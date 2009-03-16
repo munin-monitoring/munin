@@ -21,33 +21,33 @@ include Makefile.config-dist
 
 # Then override
 
-PREFIX     := $(DESTDIR)/usr
-CONFDIR    := $(DESTDIR)/etc/munin
-DOCDIR     := $(PREFIX)/share/doc/munin
-MANDIR     := $(PREFIX)/share/man
-SSPOOLDIR  := /tmp/muninspool
+PREFIX     = $(DESTDIR)/usr
+CONFDIR    = $(DESTDIR)/etc/munin
+DOCDIR     = $(PREFIX)/share/doc/munin
+MANDIR     = $(PREFIX)/share/man
+SSPOOLDIR  = /tmp/muninspool
 
 
 # Where to put internal binaries and plugin repository
-LIBDIR     := $(PREFIX)/share/munin
+LIBDIR     = $(PREFIX)/share/munin
 
 # Server only - Output directory
-HTMLDIR    := /var/www/munin
-CGIDIR     := $(HTMLDIR)/../cgi
+HTMLDIR    = /var/www/munin
+CGIDIR     = $(HTMLDIR)/../cgi
 
 # Client only - Where to put RRD files and other intenal data
-DBDIR      := $(DESTDIR)/var/lib/munin
+DBDIR      = $(DESTDIR)/var/lib/munin
 
 # Client only - Where plugins should put their states. Must be writable by
 # group "munin", and should be preserved between reboots
-PLUGSTATE  := $(DBDIR)/plugin-state
+PLUGSTATE  = $(DBDIR)/plugin-state
 
 # Where Munin should place its logs.
-LOGDIR     := $(DESTDIR)/var/log/munin
+LOGDIR     = $(DESTDIR)/var/log/munin
 
 # Location of PID files and other statefiles. On the server, must be
 # writable by the user "munin".
-STATEDIR   := $(DESTDIR)/var/run/munin
+STATEDIR   = $(DESTDIR)/var/run/munin
 
 # The perl interpreter to use
 PERL       := $(shell which perl)
@@ -66,7 +66,8 @@ GOODSH     := /bin/bash
 BASH       := /bin/bash
 
 # Server only - Where to install the perl libraries
-PERLLIB    := $(DESTDIR)$(shell $(PERL) -V:sitelib | cut -d"'" -f2)
+PERLSITELIB := $(shell $(PERL) -V:sitelib | cut -d"'" -f2)
+PERLLIB    = $(DESTDIR)$(PERLSITELIB)
 
 # Client only - Install plugins for this architecture
 OSTYPE     := $(shell uname | tr '[A-Z]' '[a-z]')

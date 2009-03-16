@@ -13,53 +13,53 @@
 #
 # the base of the Munin installation.
 # 
-PREFIX     := $(DESTDIR)/opt/munin
+PREFIX     = $(DESTDIR)/opt/munin
 
 # Where Munin keeps its configurations (server.conf, client.conf, ++)
-CONFDIR    := $(DESTDIR)/etc/opt/munin
+CONFDIR    = $(DESTDIR)/etc/opt/munin
 
 # Server only - where to put munin-cron
-BINDIR     := $(PREFIX)/bin
+BINDIR     = $(PREFIX)/bin
 
 # Client only - where to put munin-node, munin-node-configure, and munin-run
-SBINDIR    := $(PREFIX)/sbin
+SBINDIR    = $(PREFIX)/sbin
 
 # Where to put text and html documentation
-DOCDIR     := $(PREFIX)/doc
+DOCDIR     = $(PREFIX)/doc
 
 # Where to put man pages
-MANDIR     := $(PREFIX)/man
+MANDIR     = $(PREFIX)/man
 
 # Where to put internal binaries and plugin repository
-LIBDIR     := $(PREFIX)/lib
+LIBDIR     = $(PREFIX)/lib
 
 # Server only - Output directory
-HTMLDIR    := $(PREFIX)/var/www
-CGIDIR     := $(HTMLDIR)/cgi
+HTMLDIR    = $(PREFIX)/var/www
+CGIDIR     = $(HTMLDIR)/cgi
 
 # Server only - spool directory for data gathered from nodes by
 # munin-gather - experimental.  Place on ramdisk to make munin
 # scale better.  On many versions of Linux as well as on Solaris
 # /tmp will be a ramdisk.
 
-SSPOOLDIR  := $(PREFIX)/spool
+SSPOOLDIR  = $(PREFIX)/spool
 
 # Suggested directory name for a pulic ramdisk based tmp directory.
 # SSPOOLDIR := /tmp/muninspool
 
 # Client only - Where to put RRD files and other intenal data
-DBDIR      := $(DESTDIR)/var/opt/munin
+DBDIR      = $(DESTDIR)/var/opt/munin
 
 # Client only - Where plugins should put their states. Must be writable by
 # group "munin", and should be preserved between reboots
-PLUGSTATE  := $(DBDIR)/plugin-state
+PLUGSTATE  = $(DBDIR)/plugin-state
 
 # Where Munin should place its logs.
-LOGDIR     := $(DESTDIR)/var/log/munin
+LOGDIR     = $(DESTDIR)/var/log/munin
 
 # Location of PID files and other statefiles. On the server, must be
 # writable by the user "munin".
-STATEDIR   := $(DESTDIR)/var/run/munin
+STATEDIR   = $(DESTDIR)/var/run/munin
 
 # The perl interpreter to use
 PERL       := $(shell which perl)
@@ -81,7 +81,8 @@ GOODSH     := $(shell PATH=`getconf PATH` sh -c 'type sh | sed "s/.* //"')
 BASH       := /bin/bash
 
 # Server only - Where to install the perl libraries
-PERLLIB    := $(DESTDIR)$(shell $(PERL) -V:sitelib | cut -d"'" -f2)
+PERLSITELIB := $(shell $(PERL) -V:sitelib | cut -d"'" -f2)
+PERLLIB    = $(DESTDIR)$(PERLSITELIB)
 
 # Client only - Install plugins for this architecture
 OSTYPE     := $(shell uname | tr '[A-Z]' '[a-z]')

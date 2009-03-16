@@ -23,6 +23,9 @@ MAN8		 := node/munin-node node/munin-run \
 PODMAN8          := server/munin-cron
 PODMAN5          := server/munin.conf node/munin-node.conf
 
+foo:
+	echo $(PREFIX)
+
 default: build
 
 install: install-main install-node install-node-plugins install-man
