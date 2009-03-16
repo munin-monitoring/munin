@@ -16,7 +16,7 @@ setsid yes
 # Regexps for files to ignore
 
 ignore_file ~$
-ignore_file [#~]$ 
+#ignore_file [#~]$  # FIX doesn't work. '#' starts a comment
 ignore_file DEADJOE$ 
 ignore_file \.bak$
 ignore_file %$
