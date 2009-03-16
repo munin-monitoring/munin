@@ -56,8 +56,8 @@ set_state_name, save_state, restore_state, tail_open, tail_close.
 =cut
 
 use Exporter;
-@ISA = ('Exporter');
-@EXPORT = qw(clean_fieldname set_state_name save_state restore_state
+our @ISA = ('Exporter');
+our @EXPORT = qw(clean_fieldname set_state_name save_state restore_state
 	     get_thresholds print_thresholds tail_open tail_close
 	    scaleNumber);
 
@@ -297,7 +297,7 @@ sub restore_state {
     # Read a state vector from a plugin appropriate state file
     local $/;
 
-    open my $STATE, '<', $statefile) or return;
+    open my $STATE, '<', $statefile or return;
 
     my @state = split(/\n/, <$STATE>);
 
