@@ -56,6 +56,8 @@ use Exporter;
 use strict;
 use vars qw($me $pluginstatedir $statefile $DEBUG);
 
+use Munin::Node::Defaults;
+
 =head2 Variables
 
 The module instanciates a number of variables in the $Munin::Plugin
@@ -103,11 +105,8 @@ shown at the beginning of this document.
 
 =cut
 
-$pluginstatedir = $ENV{'MUNIN_PLUGSTATE'} || '@@PLUGSTATE@@';
-
-if ($pluginstatedir =~ /^@@/) {
-    die "# Unable to determine PLUGSTATE, please see plugindoc Munin::Plugin";
-};
+$pluginstatedir 
+    = $ENV{'MUNIN_PLUGSTATE'} || $Munin::Node::Defaults::MUNIN_PLUGSTATE;
 
 =head3 $Munin::Plugin::statefile
 
