@@ -52,6 +52,11 @@ calling program and prints debugging messages based on this.
 
 package Munin::Plugin::SNMP;
 
+# This file uses subroutine prototypes. This is concidered a bad
+# practice according to PBP (see page 194).
+
+## no critic Prototypes
+
 use strict;
 use Net::SNMP;
 
@@ -467,7 +472,7 @@ sub get_single {
         if (!defined $response->{$oid}) {
 	    print STDERR "# Error getting $oid: ",$handle->error(),"\n"
 	      if $::DEBUG;
-            return undef;
+            return;
         }
 	return $response->{$oid};
 }
@@ -508,7 +513,7 @@ sub get_by_regex {
 	    $response = $handle->get_next_request ($ret);
 	}
 	if (!$response) {
-	    return undef;
+	    return;
 	}
 	my @keys = keys %$response;
 	$ret = $keys[0];

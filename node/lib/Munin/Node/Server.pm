@@ -306,12 +306,18 @@ sub _run_service {
   my @lines = ();
   my $timed_out = 0;
   if ($services{$service} and ($caddr eq "" or &_has_access ($service))) {
-    my $child = 0;
     my $timeout = _get_var (\%sconf, $service, 'timeout');
     $timeout = $sconf{'timeout'} 
     	unless defined $timeout and $timeout =~ /^\d+$/;
 
-    if ($child = open my $CHILD, "-|") {
+    # FIX Why does Perl::Critic complain on this open? This is IPC not
+    # a regular file open.
+
+    ## no critic
+    my $child_pid = open my $CHILD, '-|';
+    ## use critic
+
+    if ($child_pid) {
       eval {
 	  local $SIG{ALRM} = sub { $timed_out=1; die "$!\n"};
 	  alarm($timeout);
@@ -320,7 +326,7 @@ sub _run_service {
 	  }
       };
       if( $timed_out ) {
-	  _reap_children($child, "$service $command: $@");
+	  _reap_children($child_pid, "$service $command: $@");
 	  close ($CHILD);
           return ();
       }
@@ -342,7 +348,7 @@ sub _run_service {
       }
     }
     else {
-      if ($child == 0) {
+      if ($child_pid == 0) {
 	# New process group...
 	POSIX::setsid();
         # Setting environment

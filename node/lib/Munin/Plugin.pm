@@ -23,6 +23,14 @@
 
 package Munin::Plugin;
 
+use warnings;
+use strict;
+
+# This file uses subroutine prototypes. This is concidered a bad
+# practice according to PBP (see page 194).
+
+## no critic Prototypes
+
 =head1 Munin::Plugin
 
 =head2 Usage
@@ -53,7 +61,6 @@ use Exporter;
 	     get_thresholds print_thresholds tail_open tail_close
 	    scaleNumber);
 
-use strict;
 use vars qw($me $pluginstatedir $statefile $DEBUG);
 
 use Munin::Node::Defaults;
@@ -264,15 +271,15 @@ sub save_state (@) {
 	die "$me: $statefile is a symbolic link.  Refusing to touch it for security reasons.\n";
     }
 
-    open(STATE,"> $statefile") or
+    open my $STATE, '>', $statefile or
       die "$me: Could not open statefile '$statefile' for writing: $!\n";
 
     # Munin-state 1.0 encodes %, \n and \r in URL encoding and leaves
     # the rest.
-    print STATE "%MUNIN-STATE1.0\n";
-    print STATE join("\n",_encode_state(@_)),"\n";
+    print $STATE "%MUNIN-STATE1.0\n";
+    print $STATE join("\n",_encode_state(@_)),"\n";
 
-    close(STATE);
+    close $STATE;
 }
 
 =head3 @state_vector = restore_state()
@@ -290,15 +297,15 @@ sub restore_state {
     # Read a state vector from a plugin appropriate state file
     local $/;
 
-    open(STATE,"<$statefile") or return undef;
+    open my $STATE, '<', $statefile) or return;
 
-    my @state = split(/\n/,<STATE>);
+    my @state = split(/\n/, <$STATE>);
 
     my $filemagic = shift(@state);
 
     if ($filemagic ne '%MUNIN-STATE1.0') {
 	warn "$me: Statefile $statefile has unrecognized magic number: '$filemagic'\n";
-	return undef;
+	return;
     }
 
     return _decode_state(@state);
@@ -384,8 +391,6 @@ in the interest of error-obviousness.
 sub tail_open ($$) {
     my ($file,$position) = @_;
 
-    my $fh;
-
     my $filereset=0;
 
     my $size = (stat($file))[7];
@@ -397,16 +402,16 @@ sub tail_open ($$) {
 	return (undef,undef);
     }
 
-    open($fh,"<$file") or
+    open my $FH, '<', $file or
       die "$me: Could not open input file '$file' for reading: $!\n";
 
     if ($position > $size) {
 	warn "$me: File rotated, starting at start\n";
 	$filereset=1;
-    } elsif (!seek($fh,$position,0)) {
+    } elsif (!seek($FH, $position, 0)) {
 	die "$me: Seek to position $position of '$file' failed: $!\n";
     }
-    return ($fh,$filereset);
+    return ($FH, $filereset);
 }
 
 =head3 $position = tail_close($file_handle)
@@ -421,12 +426,12 @@ in the munin-node log or seen when using munin-run).
 =cut
 
 sub tail_close ($) {
-    my ($fh) = @_;
+    my ($FH) = @_;
 
-    my $position = tell($fh);
+    my $position = tell($FH);
 
     # If this ever hits us I'll be amazed.
-    close($fh) or
+    close($FH) or
       warn "$me: Could not close input file: $!\n";
 
     return $position;
@@ -497,16 +502,16 @@ sub scaleNumber {
 	    return sprintf $format, $number, '', $unit;
 	}
     } elsif ($absnum > 1) {
-	my $mag = my $magnitude=0;
-	foreach $magnitude (sort { $a <=> $b } keys %large) {
+	my $mag = 0;
+	for my $magnitude (sort { $a <=> $b } keys %large) {
 	    last if $magnitude >= $absnum;
 	    $mag = $magnitude;
 	}
 	return sprintf $format, $number/$mag, $large{$mag}, $unit;
     } else {
 	# Less than 1 and more than naught
-	my $mag = my $magnitude=0;
-	foreach $magnitude (sort { $a <=> $b } keys %small) {
+	my $mag = 0;
+	for my $magnitude (sort { $a <=> $b } keys %small) {
 	    last if $magnitude >= $absnum;
 	    $mag = $magnitude;
 	}
