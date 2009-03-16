@@ -105,19 +105,19 @@ sub main {
     # of plugins.
     $ENV{'LC_ALL'}='C';
 
-    Munin::Node::Server->initialize(
-        $servicedir,
-        $sconfdir,
-        $conffile,
-        $FQDN,
-        $DEBUG,
-        $PIDEBUG,
-        $defuser,
-        $defgroup,
-        $paranoia,
-        \@ignores,
-        \%sconf,
-    );
+    $config->reinitialize({
+        servicedir => $servicedir,
+        sconfdir   => $sconfdir,
+        conffile   => $conffile,
+        fqdn       => $FQDN,
+        DEBUG      => $DEBUG,
+        PIDEBUG    => $PIDEBUG,
+        defuser    => $defuser,
+        defgroup   => $defgroup,
+        paranoia   => $paranoia,
+        ignores    => \@ignores,
+        sconf      => \%sconf,
+    });
 
     Munin::Node::Server->run(
         conf_file => $conffile,

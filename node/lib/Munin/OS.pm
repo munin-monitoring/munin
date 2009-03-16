@@ -3,6 +3,7 @@ use strict;
 
 package Munin::OS;
 
+use Munin::Node::Config;
 
 sub get_uid {
     my ($class, $user) = @_;
@@ -34,13 +35,13 @@ sub get_fq_hostname {
 
 #FIX needs a better name
 sub check_perms {
-    my ($class, $target, $paranoia) = @_;
+    my ($class, $target) = @_;
     my @stat;
 
-    #FIX read paranoia from config
+    my $config = Munin::Node::Config->instance();
 
     return unless defined $target;
-    return 1 unless $paranoia;
+    return 1 unless $config->{paranoia};
 
     unless (-e "$target")    {
 	warn "Failed to check permissions on nonexistant target: '$target'";
@@ -95,7 +96,7 @@ Returns the group ID. $group might either be a group name or a group ID.
 
 Returns the fully qualified host name of the machine.
 
-=item $bool = $class->check_perms($target, $paranoia);
+=item $bool = $class->check_perms($target);
 
 FIX
 

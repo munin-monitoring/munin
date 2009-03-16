@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 16;
+use Test::More tests => 18;
 
 use English qw(-no_match_vars);
 use FindBin;
@@ -87,6 +87,19 @@ is_deeply(\@res, [paranoia => 0], 'Parsing paranoia');
     my $str = "foo" ;
     $conf->_strip_comment($str);
     is($str, "foo", "Strip comment 3");
+}
+
+
+###############################################################################
+#                         R E I N I T I A L I Z E
+
+{
+    my $expected = {foo => 'bar'};
+    $conf->reinitialize($expected);
+    is_deeply($conf, $expected);
+
+    $conf->reinitialize();
+    is_deeply($conf, {});
 }
 
 

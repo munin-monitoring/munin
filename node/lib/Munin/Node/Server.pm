@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use English qw(-no_match_vars);
-#use Munin::Node::Config;
+use Munin::Node::Config;
 use Munin::Node::Defaults;
 use Munin::Node::Logger;
 use Munin::OS;
@@ -21,44 +21,12 @@ my %tls_verified = (
 
 my %services;
 my %nodes;
-my $caddr = "";
-
-
-my $servicedir;
-my $sconfdir;
-my $conffile;
-my $FQDN;
-my $DEBUG;
-my $PIDEBUG;
-my $defuser;
-my $defgroup;
-my $paranoia;
-my @ignores;
-my %sconf;
-
-sub initialize {
-    my $class   = shift;
-
-    $servicedir = shift;
-    $sconfdir   = shift;
-    $conffile   = shift;
-    $FQDN       = shift;
-    $DEBUG      = shift;
-    $PIDEBUG    = shift;
-    $defuser    = shift;
-    $defgroup   = shift;
-    $paranoia   = shift;
-    
-    my $t = shift;
-    @ignores    = @{$t};
-    $t = shift;
-    %sconf      = %{$t};
-}
-
+my $caddr  = "";
+my $config = Munin::Node::Config->instance();
 
 sub pre_loop_hook {
     my $self = shift;
-	print STDERR "In pre_loop_hook.\n" if $DEBUG;
+	print STDERR "In pre_loop_hook.\n" if $config->{DEBUG};
     &_load_services;
     $self->SUPER::pre_loop_hook;
 }
@@ -68,18 +36,17 @@ sub process_request {
   my $self = shift;
 
   my $tls_started = 0;
-  my $mode;
 
-  $mode = &_get_var (\%sconf, 'tls');
+  my $mode = &_get_var ('tls');
   $mode = "auto" unless defined $mode and length $mode;
 
   $caddr = $self->{server}->{peeraddr};
   $0 .= " [$caddr]";
-  _net_write ("# munin node at $FQDN\n");
+  _net_write ("# munin node at $config->{fqdn}\n");
   local $SIG{ALRM} = sub { logger ("Connection timed out."); die "timeout" };
-  alarm($sconf{'timeout'});
+  alarm($config->{sconf}{'timeout'});
   while (defined ($_ = _net_read())) {
-    alarm($sconf{'timeout'});
+    alarm($config->{sconf}{'timeout'});
     chomp;
     if(!$tls_started and ($mode eq "paranoid" or $mode eq "enabled"))
     {
@@ -90,7 +57,7 @@ sub process_request {
         last;
       }
     }
-    logger ("DEBUG: Running command \"$_\".") if $DEBUG;
+    logger ("DEBUG: Running command \"$_\".") if $config->{DEBUG};
     if (/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
       &_list_services($1);
     }
@@ -115,18 +82,18 @@ sub process_request {
       my $depth;
       my $ca_cert;
       my $tls_verify;
-      $key = $cert = &_get_var (\%sconf, "tls_pem");
-      $key = &_get_var (\%sconf, "tls_private_key")
+      $key = $cert = &_get_var ("tls_pem");
+      $key = &_get_var ("tls_private_key")
 	  unless defined $key;
       $key = "$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $key;
-      $cert = &_get_var (\%sconf, "tls_certificate")
+      $cert = &_get_var ("tls_certificate")
 	  unless defined $cert;
       $cert = "$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $cert;
-      $ca_cert = &_get_var(\%sconf, "tls_ca_certificate");
+      $ca_cert = &_get_var("tls_ca_certificate");
       $ca_cert = "$Munin::Node::Defaults::MUNIN_CONFDIR/cacert.pem" unless defined $ca_cert;
-      $depth = &_get_var (\%sconf, 'tls_verify_depth');
+      $depth = &_get_var ('tls_verify_depth');
       $depth = 5 unless defined $depth;
-      $tls_verify = &_get_var (\%sconf, 'tls_verify_certificate');
+      $tls_verify = &_get_var ('tls_verify_certificate');
       $tls_verify = "no" unless defined $tls_verify;
       if (!_start_tls ($mode, $cert, $key, $ca_cert, $tls_verify, $depth))
       {
@@ -140,7 +107,7 @@ sub process_request {
       {
           $tls_started=1;
       }
-      logger ("DEBUG: Returned from starttls.") if $DEBUG;
+      logger ("DEBUG: Returned from starttls.") if $config->{DEBUG};
     }
     else  {
       _net_write ("# Unknown command. Try list, nodes, config, fetch, version or quit\n");
@@ -150,7 +117,7 @@ sub process_request {
 
 
 sub _show_version {
-  print "munins node on $FQDN version: $Munin::Node::Defaults::MUNIN_VERSION\n"
+  print "munins node on $config->{fqdn} version: $Munin::Node::Defaults::MUNIN_VERSION\n"
 }
 
 
@@ -163,51 +130,51 @@ sub _show_nodes {
 
 
 sub _load_services {
-    if (opendir (DIR,$sconfdir))
+    if (opendir (DIR,$config->{sconfdir}))
     {
 FILES:
-	for my $file (grep { -f "$sconfdir/$_" } readdir (DIR))
+	for my $file (grep { -f "$config->{sconfdir}/$_" } readdir (DIR))
 	{
 	    next if $file =~ m/^\./; # Hidden files
 	    next if $file !~ m/^([-\w.]+)$/; # Skip if any weird chars
 	    $file = $1; # Not tainted anymore.
-	    foreach my $regex (@ignores)
+	    foreach my $regex (@{$config->{ignores}})
 	    {
 		next FILES if $file =~ /$regex/;
 	    }
-	    if (!&_load_auth_file ($sconfdir, $file, \%sconf))
+	    if (!&_load_auth_file ($config->{sconfdir}, $file))
 	    {
-		warn "Something wicked happened while reading \"$servicedir/$file\". Check the previous log lines for specifics.";
+		warn "Something wicked happened while reading \"$config->{servicedir}/$file\". Check the previous log lines for specifics.";
 	    }
 	}
 	closedir (DIR);
     }
 
-    opendir (DIR,$servicedir) || die "Cannot open plugindir: $servicedir $!";
+    opendir (DIR,$config->{servicedir}) || die "Cannot open plugindir: $config->{servicedir} $!";
 FILES:
-    for my $file (grep { -f "$servicedir/$_" } readdir(DIR)) {
+    for my $file (grep { -f "$config->{servicedir}/$_" } readdir(DIR)) {
 	next if $file =~ m/^\./; # Hidden files
 	next if $file =~ m/.conf$/; # Config files
 	next if $file !~ m/^([-\w.]+)$/; # Skip if any weird chars
 	$file = $1; # Not tainted anymore.
-	foreach my $regex (@ignores)
+	foreach my $regex (@{$config->{ignores}})
 	{
 	    next FILES if $file =~ /$regex/;
 	}
-	next if (! -x "$servicedir/$file"); # File not executeable
-	print "file: '$file'\n" if $DEBUG;
+	next if (! -x "$config->{servicedir}/$file"); # File not executeable
+	print "file: '$file'\n" if $config->{DEBUG};
 	$services{$file}=1;
 	my @rows = &_run_service($file,"config", 1);
-	my $node = &_get_var (\%sconf, $file, 'host_name');
+	my $node = &_get_var ($file, 'host_name');
 
 	for my $row (@rows) {
-	  print "row: $row\n" if $DEBUG;
+	  print "row: $row\n" if $config->{DEBUG};
 	  if ($row =~ m/^host_name (.+)$/) {
-	    print "Found host_name, using it\n" if $DEBUG;
+	    print "Found host_name, using it\n" if $config->{DEBUG};
 	    $node = $1;
 	  }
 	} 
-	$node ||= $FQDN;
+	$node ||= $config->{fqdn};
 	$nodes{$node}{$file}=1;
     }
     closedir DIR;
@@ -224,7 +191,7 @@ sub _print_service {
 
 
 sub _list_services {
-    my $node = $_[0] || $FQDN;
+    my $node = $_[0] || $config->{fqdn};
     _net_write( join( " ",
 		     grep( { &_has_access ($_); } keys %{$nodes{$node}} )
 		     ) )
@@ -237,18 +204,18 @@ sub _list_services {
 sub _has_access {
 	my $serv   = shift;
 	my $host   = $caddr;
-	my $rights = &_get_var_arr (\%sconf, $serv, 'allow_deny');
+	my $rights = &_get_var_arr ($serv, 'allow_deny');
 
 	unless (@{$rights})
 	{
 		return 1;
 	}
-	print STDERR "DEBUG: Checking access: $host;$serv;\n" if $DEBUG;
+	print STDERR "DEBUG: Checking access: $host;$serv;\n" if $config->{DEBUG};
 	foreach my $ruleset (@{$rights})
 	{
 		foreach my $rule (@{$ruleset})
 		{
-			logger ("DEBUG: Checking access: $host;$serv;". $rule->[0].";".$rule->[1]) if $DEBUG;
+			logger ("DEBUG: Checking access: $host;$serv;". $rule->[0].";".$rule->[1]) if $config->{DEBUG};
 			if ($rule->[1] eq "tls" and $tls_verified{"verified"})
 			{ # tls
 				if ($rule->[0] eq "allow")
@@ -305,8 +272,9 @@ sub _run_service {
   $command ||="";
   my @lines = ();
   my $timed_out = 0;
+  my %sconf = %{$config->{sconf}};
   if ($services{$service} and ($caddr eq "" or &_has_access ($service))) {
-    my $timeout = _get_var (\%sconf, $service, 'timeout');
+    my $timeout = _get_var ($service, 'timeout');
     $timeout = $sconf{'timeout'} 
     	unless defined $timeout and $timeout =~ /^\d+$/;
 
@@ -352,22 +320,24 @@ sub _run_service {
 	# New process group...
 	POSIX::setsid();
         # Setting environment
-	$sconf{$service}{user}    = &_get_var (\%sconf, $service, 'user');
-	$sconf{$service}{group}   = &_get_var (\%sconf, $service, 'group');
-	$sconf{$service}{command} = &_get_var (\%sconf, $service, 'command');
-	&_get_var (\%sconf, $service, 'env', \%{$sconf{$service}{env}});
+	$sconf{$service}{user}    = &_get_var ($service, 'user');
+	$sconf{$service}{group}   = &_get_var ($service, 'group');
+	$sconf{$service}{command} = &_get_var ($service, 'command');
+
+        # FIX Not very obvious that _get_var() should have a side effect ...
+	&_get_var ($service, 'env', $sconf{$service}{env});
 	
 	if ($< == 0) # If root...
 	{
 		# Giving up gid egid uid euid
 		my $u  = (defined $sconf{$service}{'user'}?
 			$sconf{$service}{'user'}:
-			$defuser);
-		my $g  = $defgroup;
+			$config->{defuser});
+		my $g  = $config->{defgroup};
 		my $gs = "$g $g" .
 			($sconf{$service}{'group'}?" $sconf{$service}{group}":"");
 
-#		_net_write ("# Want to run as euid/egid $u/$g\n") if $DEBUG;
+#		_net_write ("# Want to run as euid/egid $u/$g\n") if $config->{DEBUG};
 
 		if ($Munin::Node::Defaults::MUNIN_HASSETR)
 		{
@@ -380,19 +350,19 @@ sub _run_service {
 		if ($> != $u or $g != (split (' ', $)))[0])
 		{
 #			_net_write ("# Can't drop privileges. Bailing out. (wanted uid=",
-#			    ($sconf{$service}{'user'} || $defuser), " gid=\"",
+#			    ($sconf{$service}{'user'} || $config->{defuser}), " gid=\"",
 #			    $gs, "\"($g), got uid=$> gid=\"$)\"(", 
 #			    (split (' ', $)))[0], ").\n");
 			logger ("Plugin \"$service\" Can't drop privileges. ".
 			    "Bailing out. (wanted uid=".
-			    ($sconf{$service}{'user'} || $defuser). " gid=\"".
+			    ($sconf{$service}{'user'} || $config->{defuser}). " gid=\"".
 			    $gs. "\"($g), got uid=$> gid=\"$)\"(". 
 			    (split (' ', $)))[0]. ").\n");
 			exit 1;
 		}
 	}
-#	_net_write ("# Running as uid/gid/euid/egid $</$(/$>/$)\n") if $DEBUG;
-	if (!Munin::OS::check_perms("$servicedir/$service", $paranoia))
+#	_net_write ("# Running as uid/gid/euid/egid $</$(/$>/$)\n") if $config->{DEBUG};
+	if (!Munin::OS::check_perms("$config->{servicedir}/$service"))
 	{
 #	    _net_write ("# Error: unsafe permissions. Bailing out.");
 	    logger ("Error: unsafe permissions. Bailing out.");
@@ -405,7 +375,7 @@ sub _run_service {
 	{
 	    foreach my $key (keys %{$sconf{$service}{'env'}})
 	    {
-#		_net_write ("# Setting environment $key=$sconf{$service}{env}{$key}\n") if $DEBUG;
+#		_net_write ("# Setting environment $key=$sconf{$service}{env}{$key}\n") if $config->{DEBUG};
 		$ENV{"$key"} = $sconf{$service}{'env'}{$key};
 	    }
 	}
@@ -417,21 +387,21 @@ sub _run_service {
 	    {
 		if ($t =~ /^%c$/)
 		{
-		    push (@run, "$servicedir/$service", $command);
+		    push (@run, "$config->{servicedir}/$service", $command);
 		}
 		else
 		{
 		    push (@run, $t);
 		}
 	    }
-	    print STDERR "# About to run \"", join (' ', @run), "\"\n" if $DEBUG;
-#	    _net_write ("# About to run \"", join (' ', @run), "\"\n") if $DEBUG;
+	    print STDERR "# About to run \"", join (' ', @run), "\"\n" if $config->{DEBUG};
+#	    _net_write ("# About to run \"", join (' ', @run), "\"\n") if $config->{DEBUG};
 	    exec (@run) if @run;
 	}
 	else
 	{
-#	    _net_write ("# Execing...\n") if $DEBUG;
-	    exec ("$servicedir/$service", $command);
+#	    _net_write ("# Execing...\n") if $config->{DEBUG};
+	    exec ("$config->{servicedir}/$service", $command);
 	}
       }
       else {
@@ -466,7 +436,7 @@ sub _net_read
     {
 	$_ = <STDIN>;
     }
-    logger ("DEBUG: < $_") if $DEBUG;
+    logger ("DEBUG: < $_") if $config->{DEBUG};
     return $_;
 }
 
@@ -474,7 +444,7 @@ sub _net_read
 sub _net_write 
 {
     my $text = shift;
-    logger ("DEBUG: > $text") if $DEBUG;
+    logger ("DEBUG: > $text") if $config->{DEBUG};
     if (defined $tls)
     {
 	eval { Net::SSLeay::write ($tls, $text); };
@@ -502,13 +472,13 @@ sub _tls_verify_callback
     if ($ok)
     {
         $tls_verified{"verified"} = 1;
-        logger ("TLS Notice: Verified certificate.") if $DEBUG;
+        logger ("TLS Notice: Verified certificate.") if $config->{DEBUG};
         return 1; # accept
     }
 
     if(!($tls_verified{"verify"} eq "yes"))
     {
-        logger ("TLS Notice: Certificate failed verification, but we aren't verifying.") if $DEBUG;
+        logger ("TLS Notice: Certificate failed verification, but we aren't verifying.") if $config->{DEBUG};
 	$tls_verified{"verified"} = 1;
         return 1;
     }
@@ -546,7 +516,7 @@ sub _start_tls
 	return 0
     }
 
-    logger("Enabling TLS.") if $DEBUG;
+    logger("Enabling TLS.") if $config->{DEBUG};
     eval {
         require Net::SSLeay;
     };
@@ -660,7 +630,7 @@ sub _start_tls
 	logger ("TLS Error: Could not create TLS: " . &Net::SSLeay::print_errs(""));
 	return 0;
     }
-    if ($DEBUG)
+    if ($config->{DEBUG})
     {
 	my $i = 0;
 	my $p = '';
@@ -729,16 +699,18 @@ sub _start_tls
 
 sub _load_auth_file 
 {
-    my ($dir, $file, $sconf) = @_;
+    my ($dir, $file) = @_;
     my $service = $file;
+
+    my $sconf = $config->{sconf};
 
     if (!defined $dir or !defined $file or !defined $sconf)
     {
 	return;
     }
 
-    return unless Munin::OS::check_perms($dir, $paranoia);
-    return unless Munin::OS::check_perms("$dir/$file", $paranoia);
+    return unless Munin::OS::check_perms($dir);
+    return unless Munin::OS::check_perms("$dir/$file");
 
     open my $IN, '<', "$dir/$file";
     unless ($IN) {
@@ -751,7 +723,7 @@ sub _load_auth_file
 	s/#.*$//;
 	next unless /\S/;
 	s/\s+$//g;
-	_net_write ("DEBUG: Config: $service: $_\n") if $DEBUG;
+	_net_write ("DEBUG: Config: $service: $_\n") if $config->{DEBUG};
 	if (/^\s*\[([^\]]+)\]\s*$/)
 	{
 	    $service = $1;
@@ -760,7 +732,7 @@ sub _load_auth_file
 	{
 	    my $tmpid = $1;
 	    $sconf->{$service}{'user'} = Munin::OS->get_uid($tmpid);
-	    _net_write ("DEBUG: Config: $service->uid = ", $sconf->{$service}{'user'}, "\n") if $DEBUG;
+	    _net_write ("DEBUG: Config: $service->uid = ", $sconf->{$service}{'user'}, "\n") if $config->{DEBUG};
 	    if (!defined $sconf->{$service}{'user'})
 	    {
 		warn "User \"$tmpid\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
@@ -782,7 +754,7 @@ sub _load_auth_file
 
 		my $g = Munin::OS->get_gid($group);
 		_net_write ("DEBUG: Config: $service->gid = ". $sconf->{$service}{'group'}. "\n")
-			if $DEBUG and defined $sconf->{$service}{'group'};
+			if $config->{DEBUG} and defined $sconf->{$service}{'group'};
 		if (!defined $g and !$optional)
 		{
 		    warn "Group \"$group\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
@@ -790,7 +762,7 @@ sub _load_auth_file
 		}
 		elsif (!defined $g and $optional)
 		{
-		    _net_write ("DEBUG: Skipping \"$group\" (optional).\n") if $DEBUG;
+		    _net_write ("DEBUG: Skipping \"$group\" (optional).\n") if $config->{DEBUG};
 		    next;
 		}
 		if (!defined $sconf->{$service}{'group'})
@@ -815,12 +787,12 @@ sub _load_auth_file
 	{
 	    $sconf->{$service}{'timeout'} = $1;
 	    _net_write ("DEBUG: $service: setting timeout to $1\n")
-		if $DEBUG;
+		if $config->{DEBUG};
 	}
 	elsif (/^\s*(allow)\s+(.+)\s*$/ or /^\s*(deny)\s+(.+)\s*$/)
 	{
 	    push (@{$sconf->{$service}{'allow_deny'}}, [$1, $2]);
-		print STDERR "DEBUG: Pushing allow_deny: $1, $2\n" if $DEBUG;
+		print STDERR "DEBUG: Pushing allow_deny: $1, $2\n" if $config->{DEBUG};
 	}
 	elsif (/^\s*env\s+([^=\s]+)\s*=\s*(.+)$/)
 	{
@@ -829,7 +801,7 @@ sub _load_auth_file
 	elsif (/^\s*env\.(\S+)\s+(.+)$/)
 	{
 	    $sconf->{$service}{'env'}{$1} = $2;
-	    _net_write ("Saving $service->env->$1 = $2...\n") if $DEBUG;
+	    _net_write ("Saving $service->env->$1 = $2...\n") if $config->{DEBUG};
 	}
 	elsif (/^\s*(\w+)\s+(.+)$/)
 	{
@@ -850,10 +822,11 @@ sub _load_auth_file
 
 sub _get_var_arr
 {
-    my $sconf   = shift;
     my $name    = shift;
     my $var     = shift;
     my $result  = [];
+
+    my $sconf   = $config->{sconf};
 
     if (exists $sconf->{$name}{$var})
     {
@@ -864,13 +837,13 @@ sub _get_var_arr
     {
 	(my $tmpservice = $wildservice) =~ s/\*$//;
 	next unless ($name =~ /^$tmpservice/);
-	print STDERR "# Checking $wildservice...\n" if $DEBUG;
+	print STDERR "# Checking $wildservice...\n" if $config->{DEBUG};
 
 	if (defined $sconf->{$wildservice}{$var})
 	{
 	    push (@{$result}, $sconf->{$wildservice}{$var});
 	    print STDERR ("DEBUG: Pushing: |", join (';', @{$sconf->{$wildservice}{$var}}), "|\n")
-		if $DEBUG;
+		if $config->{DEBUG};
 	}
     }
     return $result;
@@ -879,14 +852,16 @@ sub _get_var_arr
 
 sub _get_var
 {
-    my $sconf   = shift;
     my $name    = shift;
     my $var     = shift;
     my $env     = shift;
 
+    my $sconf   = $config->{sconf};
+
+
     if (!defined $var and defined $name)
     {
-	return $sconf{$name};
+	return $sconf->{$name};
     }
     if ($var eq 'env' and !defined $env)
     {
@@ -902,7 +877,7 @@ sub _get_var
     {
 	(my $tmpservice = $wildservice) =~ s/\*$//;
 	next unless ($name =~ /^$tmpservice/);
-#	_net_write ("# Checking $wildservice...\n") if $DEBUG;
+#	_net_write ("# Checking $wildservice...\n") if $config->{DEBUG};
 
 	if ($var eq 'env')
 	{
@@ -912,8 +887,10 @@ sub _get_var
 		{
 		    if (! exists $sconf->{$name}{'env'}{$key})
 		    {
+                        # FIX What!? A sideffect in a getter? This
+                        # reeks ...
 			$sconf->{$name}{'env'}{$key} = $sconf->{$wildservice}{'env'}{$key};
-			_net_write ("Saving $wildservice->$key\n") if $DEBUG;
+			_net_write ("Saving $wildservice->$key\n") if $config->{DEBUG};
 		    }
 		}
 	    }

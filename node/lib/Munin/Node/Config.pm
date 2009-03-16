@@ -20,9 +20,11 @@ use Munin::OS;
 
 
 sub reinitialize {
-    my ($self) = @_;
+    my ($self, $attrs) = @_;
 
-    my $new_self = bless {}, ref $self;
+    $attrs ||= {};
+
+    my $new_self = bless $attrs, ref $self;
     %$self = %$new_self;
 }
 
@@ -168,6 +170,10 @@ Returns the sincgleton instance of this class.
  $config->reinitialize();
 
 Deletes all configuration variables
+
+ $config->reinitialize(\%variables);
+
+FIX
 
 =item B<parse_config_from_file>
 
