@@ -22,11 +22,9 @@
 #%# capabilities=autoconf
 
 use strict;
-# use Muninnode;
 use Munin::Plugin;
 
 my $statefile = "@@PLUGSTATE@@/munin-cupsys-pages.state";
-# my $statefile = "$Muninnode::PLUGSTATE/munin-cupsys-pages.state";
 my $pos       = undef;
 my %printers  = ();
 
