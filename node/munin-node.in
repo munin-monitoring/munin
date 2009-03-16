@@ -48,9 +48,10 @@ my %sconf      = ('timeout' => 10);
 sub main {
     chdir ("/");
 
-    # "Clean" environment to disable taint-checking on the environment. We _know_
-    # that the environment is insecure, but we want to let admins shoot themselves
-    # in the foot with it, if they want to.
+    # "Clean" environment to disable taint-checking on the
+    # environment. We _know_ that the environment is insecure, but we
+    # want to let admins shoot themselves in the foot with it, if they
+    # want to.
     foreach my $key (keys %ENV) {
         $ENV{$key} =~ /^(.*)$/;
         $ENV{$key} = $1 || ''; # It sometimes happens that the match was empty
@@ -59,9 +60,8 @@ sub main {
     $0 =~ /^(.*)$/;
     $0 = $1;
 
-    # Make configuration settings available at runtime.
+    # Make build time configuration settings available at runtime.
     Munin::Node::Defaults->export_to_environment();
-
 
     parse_args();
 
