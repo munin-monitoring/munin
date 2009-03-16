@@ -7,21 +7,21 @@
 # Defaults/paths from this file
 include Makefile.config
 
-RELEASE          = $(shell cat RELEASE)
+RELEASE          := $(shell cat RELEASE)
 INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
-INSTALL          = ./install-sh
-DIR              = $(shell /bin/pwd | sed 's/^.*\///')
-INFILES          = $(shell find . -name '*.in' | sed 's/\.\/\(.*\)\.in$$/build\/\1/')
-PLUGINS		 = $(wildcard node/node.d.$(OSTYPE)/* node/node.d/*)
-MANCENTER        = "Munin Documentation"
-MAN8		 = node/munin-node node/munin-run \
+INSTALL          := ./install-sh
+DIR              := $(shell /bin/pwd | sed 's/^.*\///')
+INFILES          := $(shell find . -name '*.in' | sed 's/\.\/\(.*\)\.in$$/build\/\1/')
+PLUGINS		 := $(wildcard node/node.d.$(OSTYPE)/* node/node.d/*)
+MANCENTER        := "Munin Documentation"
+MAN8		 := node/munin-node node/munin-run \
 			node/munin-node-configure-snmp \
 			node/munin-node-configure \
 			server/munin-graph server/munin-update \
 			server/munin-limits server/munin-html \
 			server/munin-gather
-PODMAN8          = server/munin-cron
-PODMAN5          = server/munin.conf node/munin-node.conf
+PODMAN8          := server/munin-cron
+PODMAN5          := server/munin.conf node/munin-node.conf
 
 default: build
 
@@ -267,40 +267,37 @@ build/node/lib/Munin/Node/Defaults.pm: node/lib/Munin/Node/Defaults.pm
                   node/lib/Munin/Node/Defaults.pm > build/node/lib/Munin/Node/Defaults.pm
 
 
-
-
-
 build/%: %.in
 	@echo "$< -> $@"
 	@mkdir -p build/`dirname $<`
-	@sed -e 's|@@PREFIX@@|$(PREFIX)|g'			\
-	    -e 's|@@CONFDIR@@|$(CONFDIR)|g'			\
-	    -e 's|@@BINDIR@@|$(BINDIR)|g'			\
-	    -e 's|@@SBINDIR@@|$(SBINDIR)|g'			\
-	    -e 's|@@DOCDIR@@|$(DOCDIR)|g'			\
-	    -e 's|@@LIBDIR@@|$(LIBDIR)|g'			\
-	    -e 's|@@MANDIR@@|$(MANDIR)|g'			\
-	    -e 's|@@LOGDIR@@|$(LOGDIR)|g'			\
-	    -e 's|@@HTMLDIR@@|$(HTMLDIR)|g'			\
-	    -e 's|@@DBDIR@@|$(DBDIR)|g'				\
-	    -e 's|@@STATEDIR@@|$(STATEDIR)|g'			\
-	    -e 's|@@PERL@@|$(PERL)|g'				\
-	    -e 's|@@PERLLIB@@|$(PERLLIB)|g'			\
-	    -e 's|@@PYTHON@@|$(PYTHON)|g'			\
-	    -e 's|@@OSTYPE@@|$(OSTYPE)|g'			\
-	    -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'			\
-	    -e 's|@@MKTEMP@@|$(MKTEMP)|g'			\
-	    -e 's|@@VERSION@@|$(VERSION)|g'			\
-	    -e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g'			\
-	    -e 's|@@CGIDIR@@|$(CGIDIR)|g'			\
-	    -e 's|@@USER@@|$(USER)|g'				\
-	    -e 's|@@GROUP@@|$(GROUP)|g'				\
-	    -e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g'		\
-	    -e 's|@@GOODSH@@|$(GOODSH)|g'			\
-	    -e 's|@@BASH@@|$(BASH)|g'				\
-	    -e 's|@@HASSETR@@|$(HASSETR)|g'			\
-	    -e 's|@@SSPOOLDIR@@|$(SSPOOLDIR)|g'			\
-	    $< > $@;
+	@sed -e 's|@@PREFIX@@|$(PREFIX)|g'                      \
+             -e 's|@@CONFDIR@@|$(CONFDIR)|g'                    \
+             -e 's|@@BINDIR@@|$(BINDIR)|g'                      \
+             -e 's|@@SBINDIR@@|$(SBINDIR)|g'                    \
+             -e 's|@@DOCDIR@@|$(DOCDIR)|g'                      \
+             -e 's|@@LIBDIR@@|$(LIBDIR)|g'                      \
+             -e 's|@@MANDIR@@|$(MANDIR)|g'                      \
+             -e 's|@@LOGDIR@@|$(LOGDIR)|g'                      \
+             -e 's|@@HTMLDIR@@|$(HTMLDIR)|g'                    \
+             -e 's|@@DBDIR@@|$(DBDIR)|g'                        \
+             -e 's|@@STATEDIR@@|$(STATEDIR)|g'                  \
+             -e 's|@@PERL@@|$(PERL)|g'                          \
+             -e 's|@@PERLLIB@@|$(PERLLIB)|g'                    \
+             -e 's|@@PYTHON@@|$(PYTHON)|g'                      \
+             -e 's|@@OSTYPE@@|$(OSTYPE)|g'                      \
+             -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'                  \
+             -e 's|@@MKTEMP@@|$(MKTEMP)|g'                      \
+             -e 's|@@VERSION@@|$(VERSION)|g'                    \
+             -e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g'                \
+             -e 's|@@CGIDIR@@|$(CGIDIR)|g'                      \
+             -e 's|@@USER@@|$(USER)|g'                          \
+             -e 's|@@GROUP@@|$(GROUP)|g'                        \
+             -e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g'              \
+             -e 's|@@GOODSH@@|$(GOODSH)|g'                      \
+             -e 's|@@BASH@@|$(BASH)|g'                          \
+             -e 's|@@HASSETR@@|$(HASSETR)|g'                    \
+             -e 's|@@SSPOOLDIR@@|$(SSPOOLDIR)|g'                \
+             $< > $@;
 
 
 build-doc: build-doc-stamp Makefile Makefile.config

@@ -21,81 +21,81 @@ include Makefile.config-dist
 
 # Then override
 
-PREFIX     = $(DESTDIR)/usr
-CONFDIR    = $(DESTDIR)/etc/munin
-DOCDIR     = $(PREFIX)/share/doc/munin
-MANDIR     = $(PREFIX)/share/man
-SSPOOLDIR  = /tmp/muninspool
+PREFIX     := $(DESTDIR)/usr
+CONFDIR    := $(DESTDIR)/etc/munin
+DOCDIR     := $(PREFIX)/share/doc/munin
+MANDIR     := $(PREFIX)/share/man
+SSPOOLDIR  := /tmp/muninspool
 
 
 # Where to put internal binaries and plugin repository
-LIBDIR     = $(PREFIX)/share/munin
+LIBDIR     := $(PREFIX)/share/munin
 
 # Server only - Output directory
-HTMLDIR    = /var/www/munin
-CGIDIR     = $(HTMLDIR)/../cgi
+HTMLDIR    := /var/www/munin
+CGIDIR     := $(HTMLDIR)/../cgi
 
 # Client only - Where to put RRD files and other intenal data
-DBDIR      = $(DESTDIR)/var/lib/munin
+DBDIR      := $(DESTDIR)/var/lib/munin
 
 # Client only - Where plugins should put their states. Must be writable by
 # group "munin", and should be preserved between reboots
-PLUGSTATE  = $(DBDIR)/plugin-state
+PLUGSTATE  := $(DBDIR)/plugin-state
 
 # Where Munin should place its logs.
-LOGDIR     = $(DESTDIR)/var/log/munin
+LOGDIR     := $(DESTDIR)/var/log/munin
 
 # Location of PID files and other statefiles. On the server, must be
 # writable by the user "munin".
-STATEDIR   = $(DESTDIR)/var/run/munin
+STATEDIR   := $(DESTDIR)/var/run/munin
 
 # The perl interpreter to use
-PERL       = $(shell which perl)
+PERL       := $(shell which perl)
 
 # The python interpreter to use (used by some plugins)
-PYTHON     = /usr/bin/env python
+PYTHON     := /usr/bin/env python
 
 # A modern shell.  We're not looking for arrays, but $() and other modern
 # stuff is expected.
 # Linux: /bin/bash
 # SunOS/Solaris: /usr/xpg4/bin/sh or /bin/ksh
 # In general: bash or ksh will work
-GOODSH     = /bin/bash
+GOODSH     := /bin/bash
 
 # Path of bash for bash specific plugins
-BASH       = /bin/bash
+BASH       := /bin/bash
 
 # Server only - Where to install the perl libraries
-PERLLIB    = $(DESTDIR)$(shell $(PERL) -V:sitelib | cut -d"'" -f2)
+PERLLIB    := $(DESTDIR)$(shell $(PERL) -V:sitelib | cut -d"'" -f2)
 
 # Client only - Install plugins for this architecture
-OSTYPE     = $(shell uname | tr '[A-Z]' '[a-z]')
+OSTYPE     := $(shell uname | tr '[A-Z]' '[a-z]')
 
 # How to figure out the hostname. (Only used in default configuration
 # files)
-HOSTNAME   = $(shell hostname)
+HOSTNAME   := $(shell hostname)
 
 # What is the safest way to create a tempfile.
 # Default is to figure it out by testing various methods.
 # Replace this with a known platform-specific method
-MKTEMP     = $(shell ./test-mktemp)
+MKTEMP     := $(shell ./test-mktemp)
 
 # Munin version number.
-VERSION    = $(shell ./getversion)
+VERSION    := $(shell ./getversion)
 
 # User to run munin as
-USER       = munin
-GROUP      = munin
+USER       := munin
+GROUP      := munin
 
 # Default user to run the plugins as
-PLUGINUSER = nobody
+PLUGINUSER := nobody
 
 # Which command to use to check if the USER and GROUP to run Munin as, exists.
 
-GETENT = $(shell which getent || which true 2>/dev/null)
-CHECKUSER  = $(shell $(GETENT) passwd $(USER) >/dev/null 2>/dev/null || (echo "echo User $(USER) nonexistant. Create the user and retry; exit 2"))
-CHECKGROUP = $(shell $(GETENT) group $(GROUP) >/dev/null 2>/dev/null || (echo "echo Group $(GROUP) nonexistant. Create the group and retry; exit 2"))
+GETENT     := $(shell which getent || which true 2>/dev/null)
+CHECKUSER  := $(shell $(GETENT) passwd $(USER) >/dev/null 2>/dev/null || (echo "echo User $(USER) nonexistant. Create the user and retry; exit 2"))
+CHECKGROUP := $(shell $(GETENT) group $(GROUP) >/dev/null 2>/dev/null || (echo "echo Group $(GROUP) nonexistant. Create the group and retry; exit 2"))
 
-CHOWN      = chown
-CHMOD      = chmod
-CHGRP      = chgrp
+CHOWN      := chown
+CHMOD      := chmod
+CHGRP      := chgrp
