@@ -188,7 +188,6 @@ exit main() unless caller;
 __END__
 
 
-### over-ridden subs below
 =head1 NAME
 
 munin-node - A daemon to gather information in cooperation with the main
