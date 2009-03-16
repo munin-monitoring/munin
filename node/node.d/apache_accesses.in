@@ -29,7 +29,7 @@ This configuration section shows the defaults of the plugin:
      env.ports 80
 
 The %d in the url will be replaced with the port.  The default port is
-80 as snown.
+80 as shown.
 
 The port list is a space separated list of ports.  NOTE that one
 single Apache can have several open ports, and the plugin needs only
