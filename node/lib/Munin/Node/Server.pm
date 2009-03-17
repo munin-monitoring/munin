@@ -8,7 +8,7 @@ use English qw(-no_match_vars);
 use Munin::Node::Config;
 use Munin::Node::Defaults;
 use Munin::Node::Logger;
-use Munin::OS;
+use Munin::Node::OS;
 
 my $tls;
 my %tls_verified = ( 
@@ -363,7 +363,7 @@ sub _run_service {
 		}
 	}
 #	_net_write ("# Running as uid/gid/euid/egid $</$(/$>/$)\n") if $config->{DEBUG};
-	if (!Munin::OS->check_perms("$config->{servicedir}/$service"))
+	if (!Munin::Node::OS->check_perms("$config->{servicedir}/$service"))
 	{
 #	    _net_write ("# Error: unsafe permissions. Bailing out.");
 	    logger ("Error: unsafe permissions. Bailing out.");
@@ -710,8 +710,8 @@ sub _load_auth_file
 	return;
     }
 
-    return unless Munin::OS->check_perms($dir);
-    return unless Munin::OS->check_perms("$dir/$file");
+    return unless Munin::Node::OS->check_perms($dir);
+    return unless Munin::Node::OS->check_perms("$dir/$file");
 
     open my $IN, '<', "$dir/$file";
     unless ($IN) {
@@ -732,7 +732,7 @@ sub _load_auth_file
 	elsif (/^\s*user\s+(\S+)\s*$/)
 	{
 	    my $tmpid = $1;
-	    $sconf->{$service}{'user'} = Munin::OS->get_uid($tmpid);
+	    $sconf->{$service}{'user'} = Munin::Node::OS->get_uid($tmpid);
 	    _net_write ("DEBUG: Config: $service->uid = ", $sconf->{$service}{'user'}, "\n") if $config->{DEBUG};
 	    if (!defined $sconf->{$service}{'user'})
 	    {
@@ -753,7 +753,7 @@ sub _load_auth_file
 		    $group = $1;
 		}
 
-		my $g = Munin::OS->get_gid($group);
+		my $g = Munin::Node::OS->get_gid($group);
 		_net_write ("DEBUG: Config: $service->gid = ". $sconf->{$service}{'group'}. "\n")
 			if $config->{DEBUG} and defined $sconf->{$service}{'group'};
 		if (!defined $g and !$optional)
@@ -933,7 +933,7 @@ FIX
 
 =over
 
-=item B<pre_loophook>
+=item B<pre_loop_hook>
 
 FIX
 

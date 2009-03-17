@@ -5,7 +5,7 @@ package Munin::Node::Config;
 
 use English qw(-no_match_vars);
 use Carp;
-use Munin::OS;
+use Munin::Node::OS;
 
 
 {
@@ -86,14 +86,14 @@ sub _parse_line {
     }
     elsif ($var_name eq 'default_plugin_user'
                || $var_name eq 'default_client_user') {
-        my $uid = Munin::OS->get_uid($var_value);
+        my $uid = Munin::Node::OS->get_uid($var_value);
         croak "Default user does not exist ($var_value)"
             unless defined $uid;
         return (defuser => $uid);
     }
     elsif ($var_name eq 'default_plugin_group'
                || $var_name eq 'default_client_group') {
-        my $gid = Munin::OS->get_gid($var_value);
+        my $gid = Munin::Node::OS->get_gid($var_value);
         croak "Default group does not exist ($var_value)"
             unless defined $gid;
         return (defgroup => $gid);

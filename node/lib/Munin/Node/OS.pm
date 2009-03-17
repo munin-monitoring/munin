@@ -1,4 +1,4 @@
-package Munin::OS;
+package Munin::Node::OS;
 
 use warnings;
 use strict;
