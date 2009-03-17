@@ -60,6 +60,8 @@ owned by root. Default on.
 Files matching &lt;regex&gt; in the node.d/ and node-conf.d/
 directories will be overlooked.
 
+=back
+
 =head1 EXAMPLE
 
 A pretty normal configuration file:
@@ -85,7 +87,8 @@ A pretty normal configuration file:
 	ignore_file \.dpkg-(old|new)$
 	ignore_file \.rpm(save|new)$
 
-See the documentation or Munin homepage L<http://munin.sf.net/> for more info.
+See the documentation or Munin homepage
+L<http://munin.projects.linpro.no/> for more info.
 
 =head1 AUTHORS
 
