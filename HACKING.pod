@@ -1,0 +1,57 @@
+# this is in pod format (try `perldoc HACKING.pod`)
+
+=pod
+
+=head1 NAME
+
+HACKING.pod - contributing to Munin
+
+
+=head1 SYNOPSIS
+
+This is the guide for Munin internals contributors (developers,
+testers, documenters.)
+
+If you are looking for more information on how to I<use> Munin you
+probably want L<http://munin.projects.linpro.no/wiki/Documentation>
+instead.
+
+
+=head1 GETTING STARTED
+
+FIX
+
+
+=head1 FORMATTING
+
+=head2 perltidy
+
+FIX
+
+
+=head1 TESTS AND COVERAGE
+
+FIX
+
+
+=head1 EXCEPTION HANDLING
+
+Currently there is no unified approach to handling exceptions. Use
+L<Carp>?
+
+  use Carp;
+  croak("Foo happened!");
+
+  use Carp;
+  confess("Foo happened!");
+
+
+=head1 DOCUMENTATION
+
+The API documentation is embedded as POD in the code.  See L<perlpod>
+for more about POD.
+
+More is on L<http://munin.projects.linpro.no/wiki/Documentation>
+
+=cut
+
