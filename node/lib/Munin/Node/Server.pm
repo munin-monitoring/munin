@@ -362,7 +362,7 @@ sub _run_service {
 		}
 	}
 #	_net_write ("# Running as uid/gid/euid/egid $</$(/$>/$)\n") if $config->{DEBUG};
-	if (!Munin::OS::check_perms("$config->{servicedir}/$service"))
+	if (!Munin::OS->check_perms("$config->{servicedir}/$service"))
 	{
 #	    _net_write ("# Error: unsafe permissions. Bailing out.");
 	    logger ("Error: unsafe permissions. Bailing out.");
@@ -709,8 +709,8 @@ sub _load_auth_file
 	return;
     }
 
-    return unless Munin::OS::check_perms($dir);
-    return unless Munin::OS::check_perms("$dir/$file");
+    return unless Munin::OS->check_perms($dir);
+    return unless Munin::OS->check_perms("$dir/$file");
 
     open my $IN, '<', "$dir/$file";
     unless ($IN) {
