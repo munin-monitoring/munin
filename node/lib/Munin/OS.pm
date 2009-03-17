@@ -1,7 +1,7 @@
+package Munin::OS;
+
 use warnings;
 use strict;
-
-package Munin::OS;
 
 use Munin::Node::Config;
 
@@ -20,6 +20,8 @@ sub get_gid {
 
 
 sub get_fq_hostname {
+    my ($class) = @_;
+
     my $hostname = eval {
         require Sys::Hostname;
         return (gethostbyname(Sys::Hostname::hostname()))[0];
@@ -84,19 +86,27 @@ FIX
 
 =over
 
-=item $uid = $class->get_uid($user)
+=item B<get_uid>
+
+ $uid = $class->get_uid($user)
 
 Returns the user ID. $user might either be a user name or a user ID.
 
-=item $gid = $class->get_gid($group)
+=item B<get_gid>
+
+ $gid = $class->get_gid($group)
 
 Returns the group ID. $group might either be a group name or a group ID.
 
-=item $host = $class->get_fq_hostname()
+=item B<get_fq_hostname>
+
+ $host = $class->get_fq_hostname()
 
 Returns the fully qualified host name of the machine.
 
-=item $bool = $class->check_perms($target);
+=item B<check_perms>
+
+ $bool = $class->check_perms($target);
 
 FIX
 

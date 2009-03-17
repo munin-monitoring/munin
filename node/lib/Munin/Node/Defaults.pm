@@ -90,11 +90,15 @@ FIX Document each and every one? Or point to some other doc?
 
 =over
 
-=item \%defaults = $class->get_defaults()
+=item B<get_defaults>
+
+  \%defaults = $class->get_defaults()
 
 FIX
 
-=item $class = $class->export_to_environment()
+=item B<export_to_environment>
+
+  $class = $class->export_to_environment()
 
 FIX
 

@@ -1,5 +1,5 @@
 package Munin::Node::Server;
-use base qw(Net::Server::Fork); # any personality will do
+use base qw(Net::Server::Fork);
 
 use strict;
 use warnings;
@@ -23,6 +23,7 @@ my %services;
 my %nodes;
 my $caddr  = "";
 my $config = Munin::Node::Config->instance();
+
 
 sub pre_loop_hook {
     my $self = shift;
@@ -932,12 +933,12 @@ FIX
 
 =over
 
-=item $self->pre_loop_hook(...)
+=item B<pre_loophook>
 
 FIX
 
-=item $self->process_request(...)
+=item B<process_request>
 
-FIX
+Processes the request ...
 
 =cut
