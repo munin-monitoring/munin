@@ -7,15 +7,31 @@ use Munin::Node::Config;
 
 sub get_uid {
     my ($class, $user) = @_;
-    return unless defined $user;
-    return $user =~ /^\d+$/ ? $user : getpwnam($user);
+    return $class->_get_xid($user, \&_getpwnam, \&_getpwuid);
 }
 
 
 sub get_gid {
     my ($class, $group) = @_;
-    return unless defined $group;
-    return $group =~ /^\d+$/ ? $group : getgrnam($group);
+    return $class->_get_xid($group, \&_getgrnam, \&_getgrgid);
+}
+
+# Wrappers that are needed for creating references to builtins.
+sub _getgrgid { getgrgid(shift); }
+sub _getgrnam { getgrnam(shift); }
+sub _getpwuid { getpwuid(shift); }
+sub _getpwnam { getpwnam(shift); }
+
+sub _get_xid {
+    my ($class, $entity, $name2num, $num2name) = @_;
+    return unless defined $entity;
+
+    if ($entity =~ /^\d+$/) {
+        return unless $num2name->($entity); # Entity does not exist
+        return $entity;
+    } else {
+        return $name2num->($entity);
+    }
 }
 
 
