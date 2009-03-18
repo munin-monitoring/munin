@@ -21,11 +21,10 @@
 #
 
 use strict;
-use vars qw(@ISA);
-use Getopt::Long;
+use warnings;
 
-# Variable is set at build, with values detected by the makefiles
-my $HAS_SETR = @@HASSETR@@;
+use Getopt::Long;
+use Munin::Node::Defaults;
 
 # "Clean" environment to disable taint-checking on the environment. We _know_
 # that the environment is insecure, but we want to let admins shoot themselves
@@ -42,51 +41,27 @@ foreach my $key (keys %ENV)
 $0 =~ /^(.*)$/; # for some strange reason won't "$0 = $0;" work.
 $0 = $1;
 
-# Make configuration settings available at runtime.
-$ENV{'MUNIN_PREFIX'}     = '@@PREFIX@@';
-$ENV{'MUNIN_CONFDIR'}    = '@@CONFDIR@@';   # /etc/munin,/etc/opt/munin or such
-$ENV{'MUNIN_BINDIR'}     = '@@BINDIR@@';
-$ENV{'MUNIN_SBINDIR'}    = '@@SBINDIR@@';
-$ENV{'MUNIN_DOCDIR'}     = '@@DOCDIR@@';
-$ENV{'MUNIN_LIBDIR'}     = '@@LIBDIR@@';    # LIBDIR/plugins contains plugin.sh
-$ENV{'MUNIN_HTMLDIR'}    = '@@HTMLDIR@@';
-$ENV{'MUNIN_CGIDIR'}     = '@@CGIDIR@@';
-$ENV{'MUNIN_DBDIR'}      = '@@DBDIR@@';
-$ENV{'MUNIN_PLUGSTATE'}  = '@@PLUGSTATE@@'; # Put plugin state files here!
-$ENV{'MUNIN_MANDIR'}     = '@@MANDIR@@';
-$ENV{'MUNIN_LOGDIR'}     = '@@LOGDIR@@';
-$ENV{'MUNIN_STATEDIR'}   = '@@STATEDIR@@';  # This is for .pid files
-$ENV{'MUNIN_USER'}       = '@@USER@@';      # User munin runs as (mostly)
-$ENV{'MUNIN_GROUP'}      = '@@GROUP@@';     # Group ditto
-$ENV{'MUNIN_PLUGINUSER'} = '@@PLUGINUSER@@';# Default user for plugin running
-$ENV{'MUNIN_VERSION'}    = '@@VERSION@@';
-$ENV{'MUNIN_PERL'}       = '@@PERL@@';
-$ENV{'MUNIN_PERLLIB'}    = '@@PERLLIB@@';
-$ENV{'MUNIN_GOODSH'}     = '@@GOODSH@@';
-$ENV{'MUNIN_BASH'}       = '@@BASH@@';
-$ENV{'MUNIN_PYTHON'}     = '@@PYTHON@@';
-$ENV{'MUNIN_OSTYPE'}     = '@@OSTYPE@@';
-$ENV{'MUNIN_HOSTNAME'}   = '@@HOSTNAME@@';
-$ENV{'MUNIN_MKTEMP'}     = '@@MKTEMP@@';
+# Make build time configuration settings available at runtime.
+Munin::Node::Defaults->export_to_environment();
 
 my %services;
 my %nodes;
-my $servicedir="@@CONFDIR@@/plugins";
-my $sconfdir="@@CONFDIR@@/plugin-conf.d";
-my $conffile="@@CONFDIR@@/munin-node.conf";
-my $sconffile=undef;
-my $FQDN="";
-my $do_usage = 0;
-my $DEBUG = 0;
-my $PIDEBUG = 0;
+my $servicedir = "$Munin::Node::Defaults::MUNIN_CONFDIR/plugins";
+my $sconfdir   = "$Munin::Node::Defaults::MUNIN_CONFDIR/plugin-conf.d";
+my $conffile   = "$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.conf";
+my $sconffile  = undef;
+my $FQDN       = "";
+my $do_usage   = 0;
+my $DEBUG      = 0;
+my $PIDEBUG    = 0;
 my $do_version = 0;
-my $VERSION='@@VERSION@@';
-my $defuser = getpwnam ("@@PLUGINUSER@@");
-my $defgroup= getgrnam ("@@GROUP@@");
-my $paranoia = 0;
-my @ignores = ();
+my $VERSION    = $Munin::Node::Defaults::MUNIN_VERSION;
+my $defuser    = getpwnam($Munin::Node::Defaults::MUNIN_PLUGINUSER);
+my $defgroup   = getgrnam($Munin::Node::Defaults::MUNIN_GROUP);
+my $paranoia   = 0;
+my @ignores    = ();
 
-my %sconf  = ();
+my %sconf = ();
 
 $do_usage=1  unless
 GetOptions ( "config=s"     => \$conffile,
@@ -106,11 +81,11 @@ if ($do_usage or ! defined($ARGV[0]))
 Options:
     --help              View this message.
     --config <file>     Use <file> as configuration file. 
-                        [@@CONFDIR@@/munin-node.conf]
+                        [$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.conf]
     --servicedir <dir>  Dir where plugins are found. 
-                        [@@CONFDIR@@/plugins]
+                        [$Munin::Node::Defaults::MUNIN_CONFDIR/plugins]
     --sconfdir <dir>    Dir where plugin configurations are found. 
-                        [@@CONFDIR@@/plugin-conf.d]
+                        [$Munin::Node::Defaults::MUNIN_CONFDIR/plugin-conf.d]
     --sconffile <file>  Use <file> as plugin configuration. Overrides sconfdir.
                         [undefined]
     --[no]paranoia      Only run plugins owned by root. Check permissions.
@@ -364,7 +339,7 @@ sub run_service {
 
 		print "# Want to run as euid/egid $u/$g\n" if $DEBUG;
 
-		if ($HAS_SETR)
+		if ($Munin::Node::Defaults::MUNIN_HASSETR)
 		{
 			$( = $g    unless $g == 0;
 			$< = $u    unless $u == 0;
