@@ -4,23 +4,18 @@ use warnings;
 use strict;
 
 use Munin::Node::Config;
+use POSIX;
 
 sub get_uid {
     my ($class, $user) = @_;
-    return $class->_get_xid($user, \&_getpwnam, \&_getpwuid);
+    return $class->_get_xid($user, \&POSIX::getpwnam, \&POSIX::getpwuid);
 }
 
 
 sub get_gid {
     my ($class, $group) = @_;
-    return $class->_get_xid($group, \&_getgrnam, \&_getgrgid);
+    return $class->_get_xid($group, \&POSIX::getgrnam, \&POSIX::getgrgid);
 }
-
-# Wrappers that are needed for creating references to builtins.
-sub _getgrgid { getgrgid(shift); }
-sub _getgrnam { getgrnam(shift); }
-sub _getpwuid { getpwuid(shift); }
-sub _getpwnam { getpwnam(shift); }
 
 sub _get_xid {
     my ($class, $entity, $name2num, $num2name) = @_;
