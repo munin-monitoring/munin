@@ -27,9 +27,9 @@ my $config = Munin::Node::Config->instance();
 
 sub pre_loop_hook {
     my $self = shift;
-	print STDERR "In pre_loop_hook.\n" if $config->{DEBUG};
-    &_load_services;
-    $self->SUPER::pre_loop_hook;
+    print STDERR "In pre_loop_hook.\n" if $config->{DEBUG};
+    _load_services();
+    $self->SUPER::pre_loop_hook();
 }
 
 
@@ -131,29 +131,13 @@ sub _show_nodes {
 
 
 sub _load_services {
-    if (opendir (DIR,$config->{sconfdir}))
-    {
-FILES:
-	for my $file (grep { -f "$config->{sconfdir}/$_" } readdir (DIR))
-	{
-	    next if $file =~ m/^\./; # Hidden files
-	    next if $file !~ m/^([-\w.]+)$/; # Skip if any weird chars
-	    $file = $1; # Not tainted anymore.
-	    foreach my $regex (@{$config->{ignores}})
-	    {
-		next FILES if $file =~ /$regex/;
-	    }
-	    if (!&_load_auth_file ($config->{sconfdir}, $file))
-	    {
-		warn "Something wicked happened while reading \"$config->{servicedir}/$file\". Check the previous log lines for specifics.";
-	    }
-	}
-	closedir (DIR);
-    }
+    $config->process_plugin_configuration_files();
 
     opendir (DIR,$config->{servicedir}) || die "Cannot open plugindir: $config->{servicedir} $!";
 FILES:
     for my $file (grep { -f "$config->{servicedir}/$_" } readdir(DIR)) {
+        # FIX isn't it enough to check that the file is executable and
+        # not in 'ignores'?
 	next if $file =~ m/^\./; # Hidden files
 	next if $file =~ m/.conf$/; # Config files
 	next if $file !~ m/^([-\w.]+)$/; # Skip if any weird chars
@@ -203,53 +187,39 @@ sub _list_services {
 
 
 sub _has_access {
-	my $serv   = shift;
-	my $host   = $caddr;
-	my $rights = &_get_var_arr ($serv, 'allow_deny');
+    my $serv   = shift;
+    my $host   = $caddr;
+    my $rights = _get_var_arr($serv, 'allow_deny');
+    
+    return 1 unless @{$rights};
 
-	unless (@{$rights})
-	{
-		return 1;
-	}
-	print STDERR "DEBUG: Checking access: $host;$serv;\n" if $config->{DEBUG};
-	foreach my $ruleset (@{$rights})
-	{
-		foreach my $rule (@{$ruleset})
-		{
-			logger ("DEBUG: Checking access: $host;$serv;". $rule->[0].";".$rule->[1]) if $config->{DEBUG};
-			if ($rule->[1] eq "tls" and $tls_verified{"verified"})
-			{ # tls
-				if ($rule->[0] eq "allow")
-				{
-					return 1;
-				}
-				else
-				{
-					return 0;
-				}
-			}
-#			elsif ($rule->[1] =~ /\//)
-#			{ # CIDR
-#				print "DEBUG: CIDR $host;$serv;$rule->[1];\n";
-#				return 1;
-#			}
-			else
-			{ # regex
-				if ($host =~ m($rule->[1]))
-				{
-					if ($rule->[0] eq "allow")
-					{
-						return 1;
-					}
-					else
-					{
-						return 0;
-					}
-				}
-			}
-		}
-	}
-	return 1;
+    print STDERR "DEBUG: Checking access: $host;$serv;\n" if $config->{DEBUG};
+    for my $ruleset (@{$rights}) {
+        for my $rule (@{$ruleset}) {
+            logger ("DEBUG: Checking access: $host;$serv;"
+                        . $rule->[0].";".$rule->[1])
+                if $config->{DEBUG};
+
+            # tls
+            if ($rule->[1] eq "tls" and $tls_verified{"verified"}) { 
+                if ($rule->[0] eq "allow") {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+            
+            # regex
+            elsif ($host =~ m($rule->[1])) {
+                if ($rule->[0] eq "allow") {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+        }
+    }
+    return 1;
 }
 
 
@@ -698,129 +668,6 @@ sub _start_tls
 }
 
 
-sub _load_auth_file 
-{
-    my ($dir, $file) = @_;
-    my $service = $file;
-
-    my $sconf = $config->{sconf};
-
-    if (!defined $dir or !defined $file or !defined $sconf)
-    {
-	return;
-    }
-
-    return unless Munin::Node::OS->check_perms($dir);
-    return unless Munin::Node::OS->check_perms("$dir/$file");
-
-    open my $IN, '<', "$dir/$file";
-    unless ($IN) {
-	warn "Could not open file \"$dir/$file\" for reading ($!), skipping plugin\n";
-	return;
-    }
-    while (<$IN>)
-    {
-	chomp;
-	s/#.*$//;
-	next unless /\S/;
-	s/\s+$//g;
-	_net_write ("DEBUG: Config: $service: $_\n") if $config->{DEBUG};
-	if (/^\s*\[([^\]]+)\]\s*$/)
-	{
-	    $service = $1;
-	}
-	elsif (/^\s*user\s+(\S+)\s*$/)
-	{
-	    my $tmpid = $1;
-	    $sconf->{$service}{'user'} = Munin::Node::OS->get_uid($tmpid);
-	    _net_write ("DEBUG: Config: $service->uid = ", $sconf->{$service}{'user'}, "\n") if $config->{DEBUG};
-	    if (!defined $sconf->{$service}{'user'})
-	    {
-		warn "User \"$tmpid\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
-		return;
-	    }
-	}
-	elsif (/^\s*group\s+(.+)\s*$/)
-	{
-	    my $tmpid = $1;
-	    foreach my $group (split /\s*,\s*/, $tmpid)
-	    {
-		my $optional = 0;
-
-		if ($group =~ /^\(([^)]+)\)$/)
-		{
-		    $optional = 1;
-		    $group = $1;
-		}
-
-		my $g = Munin::Node::OS->get_gid($group);
-		_net_write ("DEBUG: Config: $service->gid = ". $sconf->{$service}{'group'}. "\n")
-			if $config->{DEBUG} and defined $sconf->{$service}{'group'};
-		if (!defined $g and !$optional)
-		{
-		    warn "Group \"$group\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
-		    return;
-		}
-		elsif (!defined $g and $optional)
-		{
-		    _net_write ("DEBUG: Skipping \"$group\" (optional).\n") if $config->{DEBUG};
-		    next;
-		}
-		if (!defined $sconf->{$service}{'group'})
-		{
-		    $sconf->{$service}{'group'} = $g;
-		}
-		else
-		{
-		    $sconf->{$service}{'group'} .= " $g";
-		}
-	    }
-	}
-	elsif (/^\s*command\s+(.+)\s*$/)
-	{
-	    @{$sconf->{$service}{'command'}} = split (/\s+/, $1);
-	}
-	elsif (/^\s*host_name\s+(.+)\s*$/)
-	{
-	    $sconf->{$service}{'host_name'} = $1;
-	}
-	elsif (/^\s*timeout\s+(\d+)\s*$/)
-	{
-	    $sconf->{$service}{'timeout'} = $1;
-	    _net_write ("DEBUG: $service: setting timeout to $1\n")
-		if $config->{DEBUG};
-	}
-	elsif (/^\s*(allow)\s+(.+)\s*$/ or /^\s*(deny)\s+(.+)\s*$/)
-	{
-	    push (@{$sconf->{$service}{'allow_deny'}}, [$1, $2]);
-		print STDERR "DEBUG: Pushing allow_deny: $1, $2\n" if $config->{DEBUG};
-	}
-	elsif (/^\s*env\s+([^=\s]+)\s*=\s*(.+)$/)
-	{
-	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"env $1=$2\" should be rewritten to \"env.$1 $2\"). Ignored.";
-	}
-	elsif (/^\s*env\.(\S+)\s+(.+)$/)
-	{
-	    $sconf->{$service}{'env'}{$1} = $2;
-	    _net_write ("Saving $service->env->$1 = $2...\n") if $config->{DEBUG};
-	}
-	elsif (/^\s*(\w+)\s+(.+)$/)
-	{
-            warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"$1 $2\" should be rewritten to \"env.$1 $2\"). Ignored.";
-	}
-	elsif (/\S/)
-	{
-	    warn "Warning: Unknown config option in \"$dir/$file\" under \"[$service]\": $_";
-	}
-
-    }
-    close $IN;
-
-    return 1;
-}
-
-
-
 sub _get_var_arr
 {
     my $name    = shift;
@@ -914,28 +761,25 @@ __END__
 
 =head1 NAME
 
-FIX
-
+Munin::Node::Server - This module implements a Net::Server server for
+the munin node.
 
 =head1 SYNOPSIS
 
-FIX
+ use Munin::Node::Server;
+ Munin::Node::Server->run(...);
+ 
+For arguments to run(), see L<Net::Server>.
 
 =head1 METHODS
 
-=over
-
-=item $class->initialize()
-
-=back
-
-=head1 NET::SERVER "CALLBACKS"
+=head2 NET::SERVER "CALLBACKS"
 
 =over
 
 =item B<pre_loop_hook>
 
-FIX
+Loads all the plugins (services)
 
 =item B<process_request>
 
