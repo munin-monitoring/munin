@@ -1,11 +1,13 @@
 use warnings;
 use strict;
 
-use Test::More tests => 18;
+use Test::More tests => 27;
 
-use English qw(-no_match_vars);
 use FindBin;
 use lib "$FindBin::Bin/../lib";
+
+use English qw(-no_match_vars);
+use Munin::Node::Defaults;
 
 use_ok('Munin::Node::Config');
 
@@ -17,56 +19,66 @@ isa_ok($conf, 'Munin::Node::Config');
 
 ### Corner cases
 
-is($conf->_parse_line(""), undef, "Empty line is undef");
+{
+    is($conf->_parse_line(""), undef, "Empty line is undef");
 
-eval {
-    $conf->_parse_line("foo");
-};
-like($@, qr{Line is not well formed}, "Need a name and a value");
+    eval {
+        $conf->_parse_line("foo");
+    };
+    like($@, qr{Line is not well formed}, "Need a name and a value");
 
-is($conf->_parse_line("#foo"), undef, "Comment is undef");
+    is($conf->_parse_line("#foo"), undef, "Comment is undef");
+}
 
 
 ### Hostname
 
-my @res = $conf->_parse_line("hostname foo");
-is_deeply(\@res, [fqdn => 'foo'], 'Parsing host name');
+{
+    my @res = $conf->_parse_line("hostname foo");
+    is_deeply(\@res, [fqdn => 'foo'], 'Parsing host name');
 
-# The parser is quite forgiving ...
-@res = $conf->_parse_line("hostname foo bar");
-is_deeply(\@res, [fqdn => 'foo bar'],
-          'Parsing invalid host name gives no error');
+    # The parser is quite forgiving ...
+    @res = $conf->_parse_line("hostname foo bar");
+    is_deeply(\@res, [fqdn => 'foo bar'],
+              'Parsing invalid host name gives no error');
+}
 
 
 ### Default user
 
-my $uname = getpwuid $UID;
+{
+    my $uname = getpwuid $UID;
 
-@res = $conf->_parse_line("default_client_user $uname");
-is_deeply(\@res, [defuser => $UID], 'Parsing default user name');
-
-@res = $conf->_parse_line("default_client_user $UID");
-is_deeply(\@res, [defuser => $UID], 'Parsing default user ID');
+    my @res = $conf->_parse_line("default_client_user $uname");
+    is_deeply(\@res, [defuser => $UID], 'Parsing default user name');
+    
+    @res = $conf->_parse_line("default_client_user $UID");
+    is_deeply(\@res, [defuser => $UID], 'Parsing default user ID');
+}
 
 
 ### Default group
 
-my $gid   = (split / /, $GID)[0];
-my $gname = getgrgid $gid;
+{
+    my $gid   = (split / /, $GID)[0];
+    my $gname = getgrgid $gid;
 
-@res = $conf->_parse_line("default_client_group $gname");
-is_deeply(\@res, [defgroup => $gid], 'Parsing default group');
-
-eval {
-    $conf->_parse_line("default_client_group xxxyyyzzz");
-};
-like($@, qr{Default group does not exist}, "Default group exists");
+    my @res = $conf->_parse_line("default_client_group $gname");
+    is_deeply(\@res, [defgroup => $gid], 'Parsing default group');
+    
+    eval {
+        $conf->_parse_line("default_client_group xxxyyyzzz");
+    };
+    like($@, qr{Default group does not exist}, "Default group exists");
+}
 
 
 ### Paranoia
 
-@res = $conf->_parse_line("paranoia off");
-is_deeply(\@res, [paranoia => 0], 'Parsing paranoia');  
+{
+    my @res = $conf->_parse_line("paranoia off");
+    is_deeply(\@res, [paranoia => 0], 'Parsing paranoia');  
+}
 
 ###############################################################################
 #                       _ S T R I P _ C O M M E N T
@@ -96,10 +108,10 @@ is_deeply(\@res, [paranoia => 0], 'Parsing paranoia');
 {
     my $expected = {foo => 'bar'};
     $conf->reinitialize($expected);
-    is_deeply($conf, $expected);
+    is_deeply($conf, $expected, "Reinitialize with new values");
 
     $conf->reinitialize();
-    is_deeply($conf, {});
+    is_deeply($conf, {}, "Reinitialize to empty state");
 }
 
 
@@ -132,7 +144,92 @@ is_deeply(\@res, [paranoia => 0], 'Parsing paranoia');
             '\\.pod$',
         ],
     };
-    is_deeply($conf, $expected);
+    is_deeply($conf, $expected, "Parsing a test config");
+}
+
+
+###############################################################################
+#                    _ P A R S E _ P L U G I N _ L I N E
+
+
+### user
+
+{
+    my $uname = getpwuid $UID;
+
+    my @res = $conf->_parse_plugin_line("user $uname");
+    is_deeply(\@res, [user => $UID], 'Parsing plugin user name');
+
+    @res = $conf->_parse_plugin_line("user $UID");
+    is_deeply(\@res, [user => $UID], 'Parsing plugin user ID');
+
+}
+
+### group
+
+{
+    my $gid   = (split / /, $GID)[0];
+    my $gname = getgrgid $gid;
+
+    my @res = $conf->_parse_plugin_line("group $gname");
+    is_deeply(\@res, [group => $gid], 'Parsing plugin group');
+}
+
+
+{
+    my $gids = $GID;
+    $gids =~ tr/ /,/;
+
+    my @res = $conf->_parse_plugin_line("group $gids");
+    is_deeply(\@res, [group => $GID], 'Parsing plugin group (many)');
+
+    my $gids_with_optional = "$gids,(999999999)";
+    @res = $conf->_parse_plugin_line("group $gids_with_optional");
+    is_deeply(\@res, [group => $GID], 'Parsing plugin group (many with optional nonexistent)');
+}
+
+
+{
+    eval {
+        $conf->_parse_plugin_line("group xxxyyyzzz");
+    };
+    like($@, qr{Group 'xxxyyyzzz' does not exist},
+         "Nonexistent group throws exception");
+}
+
+
+###############################################################################
+#     P R O C E S S _ P L U G I N _ C O N F I G U R A T I O N _ F I L E S                    
+
+{
+    # Capture STDERR in a string
+    my $stderr;
+    open my $olderr, '>&', *STDERR;
+    close STDERR;
+    open STDERR, '>', \$stderr or die $!;
+
+    eval {
+        $conf->reinitialize({
+            sconfdir => $Munin::Node::Defaults::MUNIN_CONFDIR."plugin-conf.d",
+        });
+        $conf->process_plugin_configuration_files();
+    };
+
+    # Close and restore STDERR to original condition.
+    close STDERR;
+    open STDERR, '>&', $olderr;
+
+    #print '-'x70, "\n", $stderr, '-'x70, "\n", $@, '-'x70, "\n";
+
+    is($@, '', "No exceptions");
+    like($stderr, qr{Clutter before section start}, "Clutter file is skipped");
+
+    #use Data::Dumper; warn Dumper($conf);
+
+    is_deeply($conf, {
+        sconfdir => $Munin::Node::Defaults::MUNIN_CONFDIR."plugin-conf.d",
+        sconf=>{Foo => {user => 0}}
+    }, "Checking sconf");
 }
 
 __DATA__

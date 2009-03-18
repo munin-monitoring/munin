@@ -13,7 +13,7 @@ my $COMPONENT_ROOT = dirname(__FILE__) . '/../../..';
 
 
 our $MUNIN_PREFIX     = '';
-our $MUNIN_CONFDIR    = "$COMPONENT_ROOT/config//";
+our $MUNIN_CONFDIR    = "$COMPONENT_ROOT/t/config/";
 our $MUNIN_BINDIR     = '';
 our $MUNIN_SBINDIR    = '';
 our $MUNIN_DOCDIR     = '';

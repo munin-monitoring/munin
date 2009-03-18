@@ -120,7 +120,9 @@ sub process_plugin_configuration_files {
         or croak "Could not open plugin configuration directory: $!";
 
 
-    my @ignores = @{$self->{ignores}};
+    $self->{sconf} ||= {};
+
+    my @ignores = $self->{ignores} ? @{$self->{ignores}} : ();
     push @ignores, '^\.'; # Hidden files
 
   FILES:
@@ -151,7 +153,7 @@ sub process_plugin_configuration_files {
                 $EVAL_ERROR,
                 $self->{sconfdir},
                 $file,
-                $CONF->input_line_number(),
+                $INPUT_LINE_NUMBER,
             );
         }
 
@@ -174,16 +176,16 @@ sub parse_plugin_config {
     while (my $line = <$IO_HANDLE>) {
         $self->_strip_comment($line);
         $self->_trim($line);
-        next unless length $line;
+        next unless $line;
 
 	if ($line =~ m{\A \s* \[ ([^\]]+) \] \s* \z}xms) {
 	    $service = $1;
 	}
         else {
-            carp "Parse error: Clutter before section start." 
+            croak "Parse error: Clutter before section start." 
                 unless $service;
 
-            my @var = $self->_parse_plugin_line($_);
+            my @var = $self->_parse_plugin_line($line);
             next unless @var;
             if ($var[0] eq 'allow_deny') {
                 $sconf->{$service}{$var[0]} ||= [];
@@ -202,9 +204,9 @@ sub parse_plugin_config {
 
 
 sub _parse_plugin_line {
-    my ($class, $line) = @_;
+    my ($self, $line) = @_;
 
-    $line =~~ m{\A \s* env \s+ ([^=\s]+) \s* = \s* (.+) \z}xms
+    $line =~ m{\A \s* env \s+ ([^=\s]+) \s* = \s* (.+) \z}xms
         and croak "Deprecated format: 'env $1=$2' should be rewritten to 'env.$1 $2'";
     $line =~ m{\A \s* (\w+) \s+ (.+) \z}xms
         or croak "Line is not well formed ($line)";
@@ -231,8 +233,9 @@ sub _parse_plugin_line {
                 unless defined $gid || $is_optional;
 
             if (!defined $gid && $is_optional) {
-                carp "DEBUG: Skipping optional nonexistant group '$group'";
-                return;
+                carp "DEBUG: Skipping optional nonexistant group '$group'"
+                    if $self->{DEBUG};
+                next;
             }
             
             push @groups, $gid;
