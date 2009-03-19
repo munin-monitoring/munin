@@ -85,13 +85,14 @@ __END__
 
 =head1 NAME
 
-Munin::OS - FIX
+Munin::Node::OS - OS related utility methods for the munin node.
 
 
 =head1 SYNOPSIS
 
-FIX
-
+ use Munin::Node::OS;
+ my $uid  = Munin::Node::OS->get_uid('foo');
+ my $host = Munin::Node::OS->get_fq_hostname();
 
 =head1 METHODS
 
@@ -101,13 +102,15 @@ FIX
 
  $uid = $class->get_uid($user)
 
-Returns the user ID. $user might either be a user name or a user ID.
+Returns the user ID. $user might either be a user name or a user
+ID. Returns undef if the user is nonexistent.
 
 =item B<get_gid>
 
  $gid = $class->get_gid($group)
 
-Returns the group ID. $group might either be a group name or a group ID.
+Returns the group ID. $group might either be a group name or a group
+ID. Returns undef if the group is nonexistent.
 
 =item B<get_fq_hostname>
 

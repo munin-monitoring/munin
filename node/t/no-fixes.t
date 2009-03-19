@@ -47,6 +47,6 @@ sub fixes {
   $pod_parser->parse_file($file);
   my $pod_count = scalar(grep {/FIX/} split /\n/, $pod);
   printf "Found %d FIX(es) in POD in %s\n",
-      $pod_count,$file;
+      $pod_count,$file if $pod_count;
   $count += $pod_count;
 }

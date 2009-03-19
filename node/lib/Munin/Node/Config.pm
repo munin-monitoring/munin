@@ -324,30 +324,31 @@ Deletes all configuration variables
 
  $config->reinitialize(\%variables);
 
-FIX
+Deletes all configuration variables and reinitalizes the object with
+values from \%variables.
 
 =item B<parse_config_from_file>
 
  $config->parse_config_from_file($file_name);
 
-FIX
+Parses the munin node configuration in $file_name.
 
 =item B<parse_config>
 
  $config->parse_config($io_handle);
 
-FIX
+Parses the munin node configuration from a L<IO::Handle>.
 
 =item B<process_plugin_configuration_files>
 
  $config->process_plugin_configuration_files();
 
-FIX
+Parses all unignored files in the plugin configuration folder.
 
 =item B<parse_plugin_config>
 
  $config->parse_plugin_config($io_handle);
 
-FIX
+Parses the plugin configuration from an L<IO::Handle>.
 
 =cut

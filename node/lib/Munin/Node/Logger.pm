@@ -40,11 +40,15 @@ __END__
 
 =head1 NAME
 
-Munin::Node::Logger - FIX
+Munin::Node::Logger - The logger for munin node. 
 
 =head1 SYNOPSIS
 
-FIX
+Exports a logger() subroutine.
+
+ use Munin::Node::Logger;
+
+ logger("Nice log message");
 
 =head1 SUBROUTINES
 
@@ -52,6 +56,8 @@ FIX
 
 =item B<< logger() >>
 
-FIX
+  logger($message);
+
+Writes $message to STDERR together with the timestamp and process id.
 
 =back

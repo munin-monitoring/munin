@@ -83,7 +83,8 @@ Munin::Node::Defaults - Default values defined by installation scripts
 
 =head1 PACKAGE VARIABLES
 
-FIX Document each and every one? Or point to some other doc?
+See L<http://munin.projects.linpro.no/wiki/MuninInstallProcedure> for
+more information on the variables provided by this package.
 
 
 =head1 METHODS
@@ -94,13 +95,13 @@ FIX Document each and every one? Or point to some other doc?
 
   \%defaults = $class->get_defaults()
 
-FIX
+Returns all the package variables as key value pairs in a hash.
 
 =item B<export_to_environment>
 
   $class = $class->export_to_environment()
 
-FIX
+Export all the package variables to the environment.
 
 =back
 
