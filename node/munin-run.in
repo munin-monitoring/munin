@@ -24,18 +24,20 @@ use strict;
 use warnings;
 
 use Getopt::Long;
+use Munin::Node::Config;
 use Munin::Node::Defaults;
+use Munin::Node::OS;
+
+sub parse_args();
+sub print_usage_and_exit();
+sub print_version_and_exit();
 
 # "Clean" environment to disable taint-checking on the environment. We _know_
 # that the environment is insecure, but we want to let admins shoot themselves
 # in the foot with it, if they want to.
-foreach my $key (keys %ENV)
-{
-	if ($ENV{$key} =~ /^(.*)$/) {
-	    $ENV{$key} = $1;
-	} else {
-	    delete $ENV{$key};
-	}
+foreach my $key (keys %ENV) {
+	$ENV{$key} =~ /^(.*)$/;
+	$ENV{$key} = $1;
 }
 
 $0 =~ /^(.*)$/; # for some strange reason won't "$0 = $0;" work.
@@ -63,41 +65,7 @@ my @ignores    = ();
 
 my %sconf = ();
 
-$do_usage=1  unless
-GetOptions ( "config=s"     => \$conffile,
-             "debug!"       => \$DEBUG,
-             "pidebug!"     => \$PIDEBUG,
-             "version!"     => \$do_version,
-             "servicedir=s" => \$servicedir,
-             "sconfdir=s"   => \$sconfdir,
-             "sconffile=s"  => \$sconffile,
-             "paranoia!"    => \$paranoia,
-             "help"         => \$do_usage );
-
-if ($do_usage or ! defined($ARGV[0]))
-{
-    print "Usage: $0 [options] <plugin>
-
-Options:
-    --help              View this message.
-    --config <file>     Use <file> as configuration file. 
-                        [$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.conf]
-    --servicedir <dir>  Dir where plugins are found. 
-                        [$Munin::Node::Defaults::MUNIN_CONFDIR/plugins]
-    --sconfdir <dir>    Dir where plugin configurations are found. 
-                        [$Munin::Node::Defaults::MUNIN_CONFDIR/plugin-conf.d]
-    --sconffile <file>  Use <file> as plugin configuration. Overrides sconfdir.
-                        [undefined]
-    --[no]paranoia      Only run plugins owned by root. Check permissions.
-                        [--paranoia]
-    --debug             View debug messages.
-    --pidebug           Plugin debug.  Sets the environment variable
-                        MUNIN_DEBUG to 1 so that plugins may enable debugging.
-    --version           View version information.
-
-";
-    exit 0;
-}
+parse_args();
 
 if ($conffile =~ /^([-\/\@_\w\.]+)$/) 
 {
@@ -133,89 +101,40 @@ else
 }
 
 
-
-if ($do_version)
-{
-	print <<"EOT";
-munin-run (munin-node) version $VERSION.
-Written by Jimmy Olsen / Linpro AS
-
-Copyright (C) 2002-2005
-
-This is free software released under the GNU General Public License. There
-is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
-PURPOSE. For details, please refer to the file COPYING that is included
-with this software or refer to
-  http://www.fsf.org/licensing/licenses/gpl.txt
-EOT
-	exit 0;
-}
-
-$ENV{'MUNIN_DEBUG'} = $PIDEBUG ;
+$ENV{'MUNIN_DEBUG'} = $PIDEBUG;
 
 # Check permissions of configuration
-
-if (!&check_perms ($servicedir) or !&check_perms ($conffile))
+unless (Munin::Node::OS->check_perms($servicedir)
+     && Munin::Node::OS->check_perms($conffile))
 {
 	die "Fatal error. Bailing out.";
 }
+	
+my $config = Munin::Node::Config->instance();
+$config->parse_config_from_file($conffile);
 
-if (! -f $conffile) {
-  print "ERROR: Cannot open $conffile\n";
-  exit 1;
-}
+$FQDN     = $config->{fqdn}     if defined $config->{fqdn}; 
+$defuser  = $config->{defuser}  if defined $config->{defuser}; 
+$defgroup = $config->{defgroup} if defined $config->{defgroup}; 
+$paranoia = $config->{paranoia} if defined $config->{paranoia}; 
+ 
+push @ignores, @{$config->{ignores}} if defined $config->{ignores}; 
+ 
+if (defined $config->{sconf} && defined $config->{sconf}{timeout}) { 
+    $sconf{timeout} = $config->{sconf}{timeout}; 
+} 
+ 
+if (defined $config->{sconf}) { 
+    while (my ($k, $v) = each %{$config->{sconf}}) { 
+        next if defined $sconf{$k}; 
+        $sconf{$k} = $v; 
+    } 
+} 
 
-open FILE,$conffile or die "Cannot open $conffile\n";
-while (<FILE>) {
-  chomp;
-  s/#.*//;                # no comments
-  s/^\s+//;               # no leading white
-  s/\s+$//;               # no trailing white
-  next unless length;     # anything left?
-  /(^\w*)\s+(.*)/;
-  if (($1 eq "host_name" or $1 eq "hostname") and $2)
-  {
-      $FQDN=$2;
-  }
-  elsif (($1 eq "default_plugin_user" or $1 eq "default_client_user") and $2)
-  {
-      my $tmpid = $2;
-      $defuser = &get_uid ($tmpid);
-      if (! defined ($defuser))
-      {
-	  die "Default user defined in \"$conffile\" does not exist ($tmpid)";
-      }
-  }
-  elsif (($1 eq "default_plugin_group" or $1 eq "default_client_group") and $2)
-  {
-      my $tmpid = $2;
-      $defgroup = &get_gid ($tmpid);
-      if (! defined ($defgroup))
-      {
-	  die "Default group defined in \"$conffile\" does not exist ($tmpid)";
-      }
-  }
-  elsif (($1 eq "paranoia") and defined $2)
-  {
-      if ("$2" eq "no" or "$2" eq "false" or "$2" eq "off" or "$2" eq "0")
-      {
-          $paranoia = 0;
-      }   
-      else
-      {
-          $paranoia = 1;
-      }   
-  }   
-  elsif (($1 eq "ignore_file") and defined $2)
-  {
-	  push @ignores, $2;
-  }   
-}
+# Override the hostname if everything else fails
+$FQDN ||= Munin::Node::OS->get_fq_hostname();
 
-# A hack to override the hostname if everything else fails
-$FQDN ||= &get_fq_hostname;
-
-$ENV{'FQDN'}=$FQDN;
+$ENV{FQDN}=$FQDN;
 
 # Some locales uses "," as decimal separator. This can mess up a lot
 # of plugins.
@@ -355,10 +274,10 @@ sub run_service {
 		exit 1;
 		}
 		print "# Running as uid/gid/euid/egid $</$(/$>/$)\n" if $DEBUG;
-		if (!&check_perms ("$servicedir/$service"))
+		if (! Munin::Node::OS->check_perms("$servicedir/$service"))
 		{
-		print "# Error: unsafe permissions. Bailing out.";
-		exit 1;
+			print "# Error: unsafe permissions. Bailing out.";
+			exit 1;
 		}
 	}
 
@@ -408,45 +327,6 @@ sub run_service {
   return (@lines);
 }
 
-sub get_fq_hostname {
-    my $hostname;
-    eval {
-        require Sys::Hostname;
-        $hostname = (gethostbyname(Sys::Hostname::hostname()))[0];
-    };
-    return $hostname if $hostname;
-
-    $hostname = `hostname`;  # Fall$
-    chomp($hostname);
-    $hostname =~ s/\s//g;
-    return $hostname;
-}
-
-
-sub get_uid
-{
-    my $user = shift;
-    return undef if (!defined $user);
-
-    if ($user !~ /\d/)
-    {
-	$user = getpwnam ($user);
-    }
-    return $user;
-}
-
-sub get_gid
-{
-    my $group = shift;
-    return undef if (!defined $group);
-
-    if ($group !~ /\d/)
-    {
-	$group = getgrnam ($group);
-    }
-    return $group;
-}
-
 sub load_auth_file 
 {
     my ($dir, $file, $sconf) = @_;
@@ -457,8 +337,7 @@ sub load_auth_file
 	return undef;
     }
 
-    return undef if (length $dir and !&check_perms ($dir));
-    return undef if (!&check_perms ("$dir/$file"));
+    return undef unless Munin::Node::OS->check_perms("$dir/$file");
 
     if (!open (IN, "$dir/$file"))
     {
@@ -477,7 +356,7 @@ sub load_auth_file
 	elsif (/^\s*user\s+(\S+)\s*$/)
 	{
 	    my $tmpid = $1;
-	    $sconf->{$service}{'user'} = &get_uid ($tmpid);
+	    $sconf->{$service}{'user'} = Munin::Node::OS->get_uid($tmpid);
 	    if (!defined $sconf->{$service}{'user'})
 	    {
 		warn "User \"$tmpid\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
@@ -497,7 +376,7 @@ sub load_auth_file
 		    $group = $1;
 		}
 
-		my $g = &get_gid ($group);
+		my $g = Munin::Node::OS->get_gid($group);
 		if (!defined $g and !$optional)
 		{
 		    warn "Group \"$group\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
@@ -562,37 +441,6 @@ sub load_auth_file
     return 1;
 }
 
-sub check_perms
-{
-    my $target = shift;
-    my @stat;
-    return undef if (!defined $target);
-    return 1 if (!$paranoia);
-
-    if (! -e "$target")
-    {
-	warn "Failed to check permissions on nonexistant target: \"$target\"";
-	return undef;
-    }
-
-    @stat = stat ($target);
-    if (!$stat[4] == 0 or
-	($stat[5] != 0 and $stat[2] & 00020) or
-	($stat[2] & 00002))
-    {
-	warn "Warning: \"$target\" has dangerous permissions (", sprintf ("%04o", $stat[2] & 07777), ").";
-	return 0;
-    }
-
-    if (-f "$target") # Check dir as well
-    {
-	(my $dirname = $target) =~ s/[^\/]+$//;
-	return &check_perms ($dirname);
-    }
-
-    return 1;
-}
-
 sub get_var
 {
     my $sconf   = shift;
@@ -642,6 +490,67 @@ sub get_var
     return $env;
 }
 
+
+sub parse_args()
+{
+	print_usage_and_exit() unless GetOptions (
+	        "config=s"     => \$conffile,
+	        "debug!"       => \$DEBUG,
+	        "pidebug!"     => \$PIDEBUG,
+	        "version!"     => \&print_version_and_exit,
+	        "servicedir=s" => \$servicedir,
+	        "sconfdir=s"   => \$sconfdir,
+	        "sconffile=s"  => \$sconffile,
+	        "paranoia!"    => \$paranoia,
+	        "help"         => \&print_usage_and_exit
+	);
+
+	print_usage_and_exit() unless $ARGV[0];
+}
+
+
+sub print_version_and_exit()
+{
+    print qq{munin-run (munin-node) version $Munin::Node::Defaults::MUNIN_VERSION.
+Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
+
+Copyright (C) 2002-2009
+
+This is free software released under the GNU General Public License. There
+is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. For details, please refer to the file COPYING that is included
+with this software or refer to
+  http://www.fsf.org/licensing/licenses/gpl.txt
+};
+
+    exit 0;
+}
+
+
+sub print_usage_and_exit()
+{
+    print qq{Usage: $0 [options] <plugin>
+
+Options:
+    --help              View this message.
+    --config <file>     Use <file> as configuration file.
+                        [$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.conf]
+    --servicedir <dir>  Dir where plugins are found.
+                        [$Munin::Node::Defaults::MUNIN_CONFDIR/plugins]
+    --sconfdir <dir>    Dir where plugin configurations are found.
+                        [$Munin::Node::Defaults::MUNIN_CONFDIR/plugin-conf.d]
+    --sconffile <file>  Use <file> as plugin configuration. Overrides sconfdir.
+                        [undefined]
+    --[no]paranoia      Only run plugins owned by root. Check permissions.
+                        [--noparanoia]
+    --debug             View debug messages
+    --pidebug           Plugin debug.  Sets the environment variable
+                        MUNIN_DEBUG to 1 so that plugins may enable debugging.
+    --version           View version information.
+};
+
+    exit 0;
+}
 
 
 1;

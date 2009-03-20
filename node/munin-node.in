@@ -54,7 +54,7 @@ sub main {
     # want to.
     foreach my $key (keys %ENV) {
         $ENV{$key} =~ /^(.*)$/;
-        $ENV{$key} = $1 || ''; # It sometimes happens that the match was empty
+        $ENV{$key} = $1;
     }
 
     $0 =~ /^(.*)$/;
@@ -128,8 +128,6 @@ sub main {
 }
 
 sub parse_args {
-    my $do_usage   = 0;
-    my $do_version = 0;
     my @ORIG_ARGV  = @ARGV;
 
     print_usage_and_exit() unless GetOptions ( 
