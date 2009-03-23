@@ -133,7 +133,9 @@ sub _show_nodes {
 sub _load_services {
     $config->process_plugin_configuration_files();
 
-    opendir (DIR,$config->{servicedir}) || die "Cannot open plugindir: $config->{servicedir} $!";
+    opendir (DIR,$config->{servicedir}) 
+        || die "Cannot open plugindir: $config->{servicedir} $!";
+
 FILES:
     for my $file (grep { -f "$config->{servicedir}/$_" } readdir(DIR)) {
         # FIX isn't it enough to check that the file is executable and
@@ -142,13 +144,12 @@ FILES:
 	next if $file =~ m/.conf$/; # Config files
 	next if $file !~ m/^([-\w.]+)$/; # Skip if any weird chars
 	$file = $1; # Not tainted anymore.
-	foreach my $regex (@{$config->{ignores}})
-	{
+	foreach my $regex (@{$config->{ignores}}) {
 	    next FILES if $file =~ /$regex/;
 	}
-	next if (! -x "$config->{servicedir}/$file"); # File not executeable
+	next if (! -x "$config->{servicedir}/$file");
 	print "file: '$file'\n" if $config->{DEBUG};
-	$services{$file}=1;
+	$services{$file} = 1;
 	my @rows = &_run_service($file,"config", 1);
 	my $node = &_get_var ($file, 'host_name');
 
@@ -202,20 +203,12 @@ sub _has_access {
 
             # tls
             if ($rule->[1] eq "tls" and $tls_verified{"verified"}) { 
-                if ($rule->[0] eq "allow") {
-                    return 1;
-                } else {
-                    return 0;
-                }
+                return $rule->[0] eq "allow" ? 1 : 0;
             }
             
             # regex
             elsif ($host =~ m($rule->[1])) {
-                if ($rule->[0] eq "allow") {
-                    return 1;
-                } else {
-                    return 0;
-                }
+                return $rule->[0] eq "allow" ? 1 : 0;
             }
         }
     }
@@ -223,31 +216,15 @@ sub _has_access {
 }
 
 
-sub _reap_children {
-  my $child = shift;
-  my $text = shift;
-  return unless $child;
-  if (kill (0, $child)) 
-    { 
-      _net_write ("# timeout pid $child - killing..."); 
-      logger ("Plugin timeout: $text (pid $child)");
-      kill (-1, $child); sleep 2; 
-      kill (-9, $child);
-      _net_write ("done\n");
-    } 
-}
-
-
 sub _run_service {
-  my ($service,$command,$autoreap) = @_;
-  $command ||="";
-  my @lines = ();
-  my $timed_out = 0;
-  my %sconf = %{$config->{sconf}};
-  if ($services{$service} and ($caddr eq "" or &_has_access ($service))) {
-    my $timeout = _get_var ($service, 'timeout');
-    $timeout = $sconf{'timeout'} 
-    	unless defined $timeout and $timeout =~ /^\d+$/;
+    my ($service,$command,$autoreap) = @_;
+
+    $command ||= "";
+
+    unless ($services{$service} && ($caddr eq "" || _has_access($service))) {
+        _net_write("# Unknown service");
+        return ();
+    }
 
     # FIX Why does Perl::Critic complain on this open? This is IPC not
     # a regular file open.
@@ -256,140 +233,162 @@ sub _run_service {
     my $child_pid = open my $CHILD, '-|';
     ## use critic
 
+    unless (defined $child_pid) {
+	logger("Unable to fork.");
+        return ();
+    }
+
+    my @lines;
     if ($child_pid) {
-      eval {
-	  local $SIG{ALRM} = sub { $timed_out=1; die "$!\n"};
-	  alarm($timeout);
-	  while(<$CHILD>) {
-	    push @lines,$_;
-	  }
-      };
-      if( $timed_out ) {
-	  _reap_children($child_pid, "$service $command: $@");
-	  close ($CHILD);
-          return ();
-      }
-      unless (close $CHILD)
-      {
-	  if ($!)
-	  {
-	      # If Net::Server::Fork is currently taking care of reaping,
-	      # we get false errors. Filter them out.
-	      unless (defined $autoreap and $autoreap) 
-	      {
-		  logger ("Error while executing plugin \"$service\": $!");
-	      }
-	  }
-	  else
-	  {
-	      logger ("Plugin \"$service\" exited with status $?. --@lines--");
-	  }
-      }
+        @lines = _read_service_result($CHILD, $service, $command, $child_pid);
     }
     else {
-      if ($child_pid == 0) {
-	# New process group...
-	POSIX::setsid();
-        # Setting environment
-	$sconf{$service}{user}    = &_get_var ($service, 'user');
-	$sconf{$service}{group}   = &_get_var ($service, 'group');
-	$sconf{$service}{command} = &_get_var ($service, 'command');
-
-        # FIX Not very obvious that _get_var() should have a side effect ...
-	&_get_var ($service, 'env', $sconf{$service}{env});
-	
-	if ($< == 0) # If root...
-	{
-		# Giving up gid egid uid euid
-		my $u  = (defined $sconf{$service}{'user'}?
-			$sconf{$service}{'user'}:
-			$config->{defuser});
-		my $g  = $config->{defgroup};
-		my $gs = "$g $g" .
-			($sconf{$service}{'group'}?" $sconf{$service}{group}":"");
-
-#		_net_write ("# Want to run as euid/egid $u/$g\n") if $config->{DEBUG};
-
-		if ($Munin::Node::Defaults::MUNIN_HASSETR)
-		{
-			$( = $g    unless $g == 0;
-			$< = $u    unless $u == 0;
-		}
-		$) = $gs   unless $g == 0;
-		$> = $u    unless $u == 0;
-
-		if ($> != $u or $g != (split (' ', $)))[0])
-		{
-#			_net_write ("# Can't drop privileges. Bailing out. (wanted uid=",
-#			    ($sconf{$service}{'user'} || $config->{defuser}), " gid=\"",
-#			    $gs, "\"($g), got uid=$> gid=\"$)\"(", 
-#			    (split (' ', $)))[0], ").\n");
-			logger ("Plugin \"$service\" Can't drop privileges. ".
-			    "Bailing out. (wanted uid=".
-			    ($sconf{$service}{'user'} || $config->{defuser}). " gid=\"".
-			    $gs. "\"($g), got uid=$> gid=\"$)\"(". 
-			    (split (' ', $)))[0]. ").\n");
-			exit 1;
-		}
-	}
-#	_net_write ("# Running as uid/gid/euid/egid $</$(/$>/$)\n") if $config->{DEBUG};
-	if (!Munin::Node::OS->check_perms("$config->{servicedir}/$service"))
-	{
-#	    _net_write ("# Error: unsafe permissions. Bailing out.");
-	    logger ("Error: unsafe permissions. Bailing out.");
-	    exit 2;
-	}
-
-	# Setting environment...
-	if (exists $sconf{$service}{'env'} and
-			defined $sconf{$service}{'env'})
-	{
-	    foreach my $key (keys %{$sconf{$service}{'env'}})
-	    {
-#		_net_write ("# Setting environment $key=$sconf{$service}{env}{$key}\n") if $config->{DEBUG};
-		$ENV{"$key"} = $sconf{$service}{'env'}{$key};
-	    }
-	}
-	if (exists $sconf{$service}{'command'} and 
-		defined $sconf{$service}{'command'})
-	{
-	    my @run = ();
-	    foreach my $t (@{$sconf{$service}{'command'}})
-	    {
-		if ($t =~ /^%c$/)
-		{
-		    push (@run, "$config->{servicedir}/$service", $command);
-		}
-		else
-		{
-		    push (@run, $t);
-		}
-	    }
-	    print STDERR "# About to run \"", join (' ', @run), "\"\n" if $config->{DEBUG};
-#	    _net_write ("# About to run \"", join (' ', @run), "\"\n") if $config->{DEBUG};
-	    exec (@run) if @run;
-	}
-	else
-	{
-#	    _net_write ("# Execing...\n") if $config->{DEBUG};
-	    exec ("$config->{servicedir}/$service", $command);
-	}
-      }
-      else {
-#	_net_write ("# Unable to fork.\n");
-	logger ("Unable to fork.");
-      }
+        # In child, should never return ...
+        _exec_service($service, $command);
+        # FIX exit here just in case?
     }
+
+    unless (close $CHILD) {
+        if ($!) {
+            # If Net::Server::Fork is currently taking care of reaping,
+            # we get false errors. Filter them out.
+            unless (defined $autoreap && $autoreap)  {
+                logger("Error while executing plugin \"$service\": $!");
+            }
+        }
+        else {
+            logger("Plugin \"$service\" exited with status $CHILD_ERROR. --@lines--");
+        }
+    }
+
     wait;
-    alarm(0);
-  }
-  else {
-    _net_write ("# Unknown service\n");
-  }
-  chomp @lines;
-  return (@lines);
+    alarm 0;
+
+    chomp @lines;
+    return (@lines);
 }
 
+
+sub _read_service_result {
+    my ($CHILD, $service, $command, $child_pid) = @_;
+
+    my $timeout = _get_var ($service, 'timeout');
+    $timeout = $config->{sconf}{'timeout'} 
+    	unless defined $timeout and $timeout =~ /^\d+$/;
+
+    my @lines = ();
+
+    eval {
+        local $SIG{ALRM} = sub { die "Timed out: $!" };
+        alarm($timeout);
+        while (my $line = <$CHILD>) {
+	    push @lines, $line;
+        }
+    };
+    if ($EVAL_ERROR) {
+        if ($EVAL_ERROR =~ /^Timed out/) {
+            my $msg = "Plugin timeout: $service $command: $@ (pid $child_pid) - killing...";
+            _net_write($msg); 
+            logger($msg);
+            Munin::Node::OS->reap_child_group($child_pid);
+            _net_write("# done \n"); 
+        }
+        else {
+            die $EVAL_ERROR;
+        }
+    }
+
+    return @lines;
+}
+
+
+sub _exec_service {
+    my ($service, $command) = @_;
+
+    my %sconf = %{$config->{sconf}};
+
+    POSIX::setsid();
+    # Setting environment
+    # FIX Not very obvious that _get_var() should have a side effect ...
+    $sconf{$service}{user}    = &_get_var ($service, 'user');
+    $sconf{$service}{group}   = &_get_var ($service, 'group');
+    $sconf{$service}{command} = &_get_var ($service, 'command');
+
+    # FIX Not very obvious that _get_var() should have a side effect ...
+    &_get_var ($service, 'env', $sconf{$service}{env});
+
+    _change_real_and_effective_user_and_group($service);
+
+    unless (Munin::Node::OS->check_perms("$config->{servicedir}/$service")) {
+        logger ("Error: unsafe permissions. Bailing out.");
+        exit 2;
+    }
+
+    _set_service_environment();
+    if (exists $sconf{$service}{'command'} && defined $sconf{$service}{'command'}) {
+        my @run = ();
+        for my $t (@{$sconf{$service}{'command'}}) {
+            if ($t =~ /^%c$/) {
+                push (@run, "$config->{servicedir}/$service", $command);
+            } else {
+                push (@run, $t);
+            }
+        }
+        print STDERR "# About to run \"", join (' ', @run), "\"\n" if $config->{DEBUG};
+        exec (@run) if @run;
+    } else {
+        exec "$config->{servicedir}/$service", $command;
+    }
+}
+
+
+sub _set_service_environment {
+    my ($env) = @_;
+    return unless defined $env;
+    while (my ($k, $v) = each %$env) {
+        $ENV{$k} = $v;
+    }
+}
+
+
+sub _change_real_and_effective_user_and_group {
+    my ($service) = @_;
+
+    my $root_uid = 0;
+    my $root_gid = 0;
+
+    if ($REAL_USER_ID == $root_uid) {
+        # Need to test for defined here since a user might be
+        # spesified with UID = 0
+        my $u  = defined $config->{sconf}{$service}{'user'} 
+            ? $config->{sconf}{$service}{'user'}
+                : $config->{defuser};
+        my $g  = $config->{defgroup};
+        my $gs = "$g $g" .      # FIX why $g two times?
+            ($config->{sconf}{$service}{'group'} 
+                 ? " $config->{sconf}{$service}{group}" 
+                     : "");
+
+        eval {
+            if ($Munin::Node::Defaults::MUNIN_HASSETR) {
+                Munin::Node::OS->set_real_group_id($g) 
+                      unless $g == $root_gid;
+                Munin::Node::OS->set_real_user_id($u)
+                      unless $u == $root_uid;
+            }
+    
+            Munin::Node::OS->set_effective_group_id($gs) 
+                  unless $g == $root_gid;
+            Munin::Node::OS->set_effective_user_id($u)
+                  unless $u == $root_uid;
+        };
+        if ($EVAL_ERROR) {
+            logger("Plugin \"$service\" Can't drop privileges: $EVAL_ERROR. "
+                       . "Bailing out.\n");
+            exit 1;
+        }
+    }
+}
 
 sub _net_read 
 {

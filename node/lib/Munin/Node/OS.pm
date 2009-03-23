@@ -3,6 +3,8 @@ package Munin::Node::OS;
 use warnings;
 use strict;
 
+use Carp;
+use English qw(-no_match_vars);
 use Munin::Node::Config;
 use POSIX;
 
@@ -79,6 +81,66 @@ sub check_perms {
     return 1;
 }
 
+
+sub reap_child_group {
+    my ($class, $child_pid) = @_;
+
+    return unless $child_pid;
+    return unless $class->possible_to_signal_process($child_pid);
+    
+    # Negative number signals the process group
+    kill -1, $child_pid; 
+    sleep 2; 
+    kill -9, $child_pid;
+}
+
+
+sub possible_to_signal_process {
+    my ($class, $pid) = @_;
+
+    return kill (0, $pid);
+}
+
+
+sub set_effective_user_id {
+    my ($class, $uid) = @_;
+
+    $class->_set_xid(\$EFFECTIVE_USER_ID, $uid);
+}
+
+
+sub set_real_user_id {
+    my ($class, $uid) = @_;
+
+    $class->_set_xid(\$REAL_USER_ID, $uid);
+}
+
+
+sub set_effective_group_id {
+    my ($class, $gid) = @_;
+
+    $class->_set_xid(\$EFFECTIVE_GROUP_ID, $gid);
+}
+
+
+sub set_real_group_id {
+    my ($class, $gid) = @_;
+
+    $class->_set_xid(\$REAL_GROUP_ID, $gid);
+}
+
+
+sub _set_xid {
+    my ($class, $x, $id) = @_;
+    
+    # According to pervar manpage, assigning to $<, $> etc results in
+    # a system call. So we need to check $! for errors.
+    $! = undef;
+    $$x = $id;
+    croak $! if $!;
+}
+
+
 1;
 
 __END__
@@ -123,5 +185,35 @@ Returns the fully qualified host name of the machine.
  $bool = $class->check_perms($target);
 
 FIX
+
+=item B<reap_child_group>
+
+ $class->reap_child_group($pid);
+
+FIX
+
+Sleeps for 2 seconds.
+
+=item B<possible_to_signal_process>
+
+FIX
+
+=item B<set_effective_user_id>
+
+FIX
+
+=item B<set_effective_group_id>
+
+FIX
+
+=item B<set_real_user_id>
+
+FIX
+
+=item B<set_real_group_id>
+
+FIX 
+
+=back
 
 =cut
