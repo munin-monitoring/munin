@@ -30,8 +30,8 @@ use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
 use Getopt::Long;
 use Munin::Node::Config;
 use Munin::Node::Defaults;
+use Munin::Node::OS;
 use Munin::Node::Server;
-use Munin::OS;
 
 my $servicedir = "$Munin::Node::Defaults::MUNIN_CONFDIR/plugins";
 my $sconfdir   = "$Munin::Node::Defaults::MUNIN_CONFDIR/plugin-conf.d";
@@ -70,8 +70,8 @@ sub main {
     
     # Check permissions of configuration
     
-    unless (Munin::OS->check_perms($servicedir, $paranoia) 
-            && Munin::OS->check_perms($conffile, $paranoia)) {
+    unless (Munin::Node::OS->check_perms($servicedir, $paranoia) 
+            && Munin::Node::OS->check_perms($conffile, $paranoia)) {
         die "Fatal error. Bailing out.";
     }
 
@@ -97,7 +97,7 @@ sub main {
 
 
     # A hack to override the hostname if everything else fails
-    $FQDN ||= Munin::OS->get_fq_hostname();
+    $FQDN ||= Munin::Node::OS->get_fq_hostname();
 
     $ENV{FQDN}=$FQDN;
 

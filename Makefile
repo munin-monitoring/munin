@@ -140,7 +140,7 @@ install-node-non-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
 
 	mkdir -p $(PERLLIB)/Munin/Node
-	$(INSTALL) -m 0644 node/lib/Munin/OS.pm $(PERLLIB)/Munin
+	$(INSTALL) -m 0644 node/lib/Munin/Node/OS.pm $(PERLLIB)/Munin/Node
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Config.pm $(PERLLIB)/Munin/Node
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Logger.pm $(PERLLIB)/Munin/Node
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Server.pm $(PERLLIB)/Munin/Node
