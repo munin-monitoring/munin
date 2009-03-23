@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [ $1 ]; then
+  rm -rf root
+  mkdir root
+  make clean
+fi
+
+make DESTDIR=$HOME/rl/munin/root HTMLDIR=$HOME/rl/munin/root/www
+fakeroot make install DESTDIR=$HOME/rl/munin/root HTMLDIR=$HOME/rl/munin/root/www
+
+if [ $1 ]; then
+  perl -pi -e 's/port 4949/port 4948/' root/etc/munin/munin-node.conf
+  perl -pi -e 's/(address 127\.0\.0\.1)/$1\n    port 4948/' root/etc/munin/munin.conf
+  PERL5LIB=`pwd`/root/usr/local/share/perl/5.10.0/ ./root/usr/sbin/munin-node-configure --shell --families=contrib,auto | sh -x
+fi

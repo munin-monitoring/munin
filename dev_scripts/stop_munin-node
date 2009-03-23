@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [ -f root/var/run/munin/munin-node.pid ]; then
+    cat ./root/var/run/munin/munin-node.pid | sudo xargs kill
+else 
+    echo "Pid file not found. Not stopping"
+fi
