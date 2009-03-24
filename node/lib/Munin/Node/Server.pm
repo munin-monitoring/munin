@@ -9,6 +9,7 @@ use Munin::Node::Config;
 use Munin::Node::Defaults;
 use Munin::Node::Logger;
 use Munin::Node::OS;
+use Munin::Node::Session;
 
 my $tls;
 my %tls_verified = ( 
@@ -21,7 +22,6 @@ my %tls_verified = (
 
 my %services;
 my %nodes;
-my $caddr  = "";
 my $config = Munin::Node::Config->instance();
 
 
@@ -34,86 +34,131 @@ sub pre_loop_hook {
 
 
 sub process_request {
-  my $self = shift;
+    my $self = shift;
 
-  my $tls_started = 0;
+    my $session = Munin::Node::Session->new();
 
-  my $mode = &_get_var ('tls');
-  $mode = "auto" unless defined $mode and length $mode;
+    $session->{tls_started}  = 0;
+    $session->{tls_mode}     = _get_var('tls') || 'auto';
+    $session->{peer_address} = $self->{server}->{peeraddr};
 
-  $caddr = $self->{server}->{peeraddr};
-  $0 .= " [$caddr]";
-  _net_write ("# munin node at $config->{fqdn}\n");
-  local $SIG{ALRM} = sub { logger ("Connection timed out."); die "timeout" };
-  alarm($config->{sconf}{'timeout'});
-  while (defined ($_ = _net_read())) {
+    $PROGRAM_NAME .= " [$session->{peer_address}]";
+
+    _net_write ("# munin node at $config->{fqdn}\n");
+
+    local $SIG{ALRM} = sub {
+        logger ("Connection timed out."); 
+        die "timeout"
+    };
+
+    local $_;
     alarm($config->{sconf}{'timeout'});
-    chomp;
-    if(!$tls_started and ($mode eq "paranoid" or $mode eq "enabled"))
-    {
-      if(!(/^starttls\s*$/i))
-      {
-        logger ("ERROR: Client did not request TLS. Closing.");
-	_net_write ("# I require TLS. Closing.\n");
-        last;
-      }
+    while (defined ($_ = _net_read())) {
+        alarm($config->{sconf}{'timeout'});
+        chomp;
+
+        if (_expect_starttls($session)) {
+            if (!(/^starttls\s*$/i)) {
+                logger ("ERROR: Client did not request TLS. Closing.");
+                _net_write ("# I require TLS. Closing.\n");
+                last;
+            }
+        }
+
+        logger ("DEBUG: Running command \"$_\".") if $config->{DEBUG};
+        if (/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
+            _list_services($session, $1);
+        }
+        elsif (/^cap\s?(.*)/i) {
+            _negotiate_session_capabilities($session, $1);
+        }
+        elsif (/^quit/i || /^\./) {
+            exit 1;
+        } 
+        elsif (/^version/i) {
+            _show_version($session);
+        } 
+        elsif (/^nodes/i) {
+            _show_nodes($session);
+        } elsif (/^fetch\s?(\S*)/i) {
+            _print_service(_run_service($session, $1)) 
+        } elsif (/^config\s?(\S*)/i) {
+            _print_service(_run_service($session, $1, "config"));
+        } elsif (/^starttls\s*$/i) {
+            eval {
+                $session->{tls_started} = _process_starttls_command($session);
+            };
+            if ($EVAL_ERROR) {
+                logger($EVAL_ERROR);
+                last;
+            }
+            logger ("DEBUG: Returned from starttls.") if $config->{DEBUG};
+        } else {
+            _net_write ("# Unknown command. Try cap, list, nodes, config, fetch, version or quit\n");
+        }
     }
-    logger ("DEBUG: Running command \"$_\".") if $config->{DEBUG};
-    if (/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
-      &_list_services($1);
+}
+
+
+sub _expect_starttls {
+    my ($session) = @_;
+    
+    return !$session->{tls_started} 
+        && ($session->{tls_mode} eq 'paranoid' || $session->{tls_mode} eq 'enabled');
+}
+
+
+sub _negotiate_session_capabilities {
+    my ($session, $server_capabilities) = @_;
+
+    my %ncap = map { $_ => 1 } qw(foo bar baz);
+    my %scap = map { $_ => 1 } split(/ /, $server_capabilities);
+
+    my %session_capabilities = map { $_ => 1 } grep { $scap{$_} } keys %ncap;
+    $session->{capabilities} = \%session_capabilities;
+
+    _net_write(sprintf("# Capability negotiation result: %s\n", 
+                       join(' ', keys %session_capabilities)));
+
+}
+
+
+sub _process_starttls_command {
+    my ($session) = @_;
+
+    my $mode = $session->{tls_mode};
+
+    my $key;
+    my $cert;
+    my $depth;
+    my $ca_cert;
+    my $tls_verify;
+
+    $key = $cert = &_get_var ("tls_pem");
+    $key = &_get_var ("tls_private_key") unless defined $key;
+    $key = "$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $key;
+
+    $cert = &_get_var ("tls_certificate") unless defined $cert;
+    $cert = "$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $cert;
+
+    $ca_cert = &_get_var("tls_ca_certificate");
+    $ca_cert = "$Munin::Node::Defaults::MUNIN_CONFDIR/cacert.pem" unless defined $ca_cert;
+
+    $depth = &_get_var ('tls_verify_depth');
+    $depth = 5 unless defined $depth;
+
+    $tls_verify = &_get_var ('tls_verify_certificate');
+    $tls_verify = "no" unless defined $tls_verify;
+
+    if (_start_tls($mode, $cert, $key, $ca_cert, $tls_verify, $depth)) {
+        return 1;
     }
-    elsif (/^quit/i || /^\./) {
-      exit 1;
+    else {
+        if ($mode eq "paranoid" or $mode eq "enabled") {
+            die "ERROR: Could not establish TLS connection. Closing.";
+        }
+        return 0;
     }
-    elsif (/^version/i) {
-      &_show_version;
-	}
-    elsif (/^nodes/i) {
-      &_show_nodes;
-    }
-    elsif (/^fetch\s?(\S*)/i) {
-      _print_service (&_run_service($1)) 
-    }
-    elsif (/^config\s?(\S*)/i) {
-      _print_service (&_run_service($1,"config"));
-    } 
-    elsif (/^starttls\s*$/i) {
-      my $key;
-      my $cert;
-      my $depth;
-      my $ca_cert;
-      my $tls_verify;
-      $key = $cert = &_get_var ("tls_pem");
-      $key = &_get_var ("tls_private_key")
-	  unless defined $key;
-      $key = "$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $key;
-      $cert = &_get_var ("tls_certificate")
-	  unless defined $cert;
-      $cert = "$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $cert;
-      $ca_cert = &_get_var("tls_ca_certificate");
-      $ca_cert = "$Munin::Node::Defaults::MUNIN_CONFDIR/cacert.pem" unless defined $ca_cert;
-      $depth = &_get_var ('tls_verify_depth');
-      $depth = 5 unless defined $depth;
-      $tls_verify = &_get_var ('tls_verify_certificate');
-      $tls_verify = "no" unless defined $tls_verify;
-      if (!_start_tls ($mode, $cert, $key, $ca_cert, $tls_verify, $depth))
-      {
-          if ($mode eq "paranoid" or $mode eq "enabled")
-          {
-              logger ("ERROR: Could not establish TLS connection. Closing.");
-              last;
-          }
-      }
-      else
-      {
-          $tls_started=1;
-      }
-      logger ("DEBUG: Returned from starttls.") if $config->{DEBUG};
-    }
-    else  {
-      _net_write ("# Unknown command. Try list, nodes, config, fetch, version or quit\n");
-    }
-  }
 }
 
 
@@ -150,7 +195,7 @@ FILES:
 	next if (! -x "$config->{servicedir}/$file");
 	print "file: '$file'\n" if $config->{DEBUG};
 	$services{$file} = 1;
-	my @rows = &_run_service($file,"config", 1);
+	my @rows = &_run_service(Munin::Node::Session->new(), $file,"config", 1);
 	my $node = &_get_var ($file, 'host_name');
 
 	for my $row (@rows) {
@@ -177,9 +222,10 @@ sub _print_service {
 
 
 sub _list_services {
-    my $node = $_[0] || $config->{fqdn};
+    my ($session, $node) = @_;
+    $node ||= $config->{fqdn};
     _net_write( join( " ",
-		     grep( { &_has_access ($_); } keys %{$nodes{$node}} )
+		     grep( { &_has_access ($session, $_); } keys %{$nodes{$node}} )
 		     ) )
       if exists $nodes{$node};
     #print join " ", keys %{$nodes{$node}};
@@ -188,8 +234,8 @@ sub _list_services {
 
 
 sub _has_access {
-    my $serv   = shift;
-    my $host   = $caddr;
+    my ($session, $serv) = @_;
+    my $host   = $session->{peer_address};
     my $rights = _get_var_arr($serv, 'allow_deny');
     
     return 1 unless @{$rights};
@@ -217,11 +263,12 @@ sub _has_access {
 
 
 sub _run_service {
-    my ($service,$command,$autoreap) = @_;
+    my ($session, $service, $command, $autoreap) = @_;
 
     $command ||= "";
 
-    unless ($services{$service} && ($caddr eq "" || _has_access($service))) {
+    unless ($services{$service} 
+                && ($session->{peer_address} eq '' || _has_access($session, $service))) {
         _net_write("# Unknown service");
         return ();
     }
