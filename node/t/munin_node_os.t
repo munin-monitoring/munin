@@ -38,7 +38,7 @@ is($os->get_gid(999999999), undef, 'Nonexistent group ID');
 my $root_uid = 0;
 
 SKIP: {
-    skip "Need to be run with sudo", 1 if $REAL_USER_ID != $root_uid;
+    skip "Need to be run with sudo", 2 if $REAL_USER_ID != $root_uid;
 
     my $login = getpwnam $ENV{SUDO_USER};
     die "Test assumes that the user logged in on the controlling terminal is not root" if $login == 0;
