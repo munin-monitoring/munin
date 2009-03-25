@@ -3,7 +3,6 @@
 
 use strict;
 
-use lib $ENV{'MUNIN_LIBDIR'};
 use Munin::Plugin;
 
 my @dircomponents = split('/',$0);
@@ -16,7 +15,7 @@ my @suggest=qw(temp clock volt);
 nvidia_ - Munin wildcard plugin to monitor nvidia graphics cards with
 the help of the nvclock command.
 
-Run as one of nvidia_temp, nvidia_clock or nvidia_volt
+Run as nvidia_temp, nvidia_clock or nvidia_volt
 
 =cut
 
@@ -27,9 +26,10 @@ Linux, FreeBSD and Windows.
 
 =CONFIGURATION
 
-Usually none is needed.  Optional configuration:
+Usually none is needed.  This shows the default configuration:
 
-  env.nvclock = /usr/local/bin/nvclock
+  [nvidia_*]
+     env.nvclock = /usr/bin/nvclock
 
 =cut
 
@@ -67,20 +67,18 @@ standard value is /opt/munin/lib).
 
 =head1 AUTHOR
 
-Copyright (C) 2008 Nicolai Langfeldt / Linpro AS, Oslo
+Copyright (C) 2008-2009 Nicolai Langfeldt / Linpro AS, Oslo
 
 =head1 LICENSE
 
 GPLv2
 
-=head1 PLUGIN HOMEPAGE
+=head1 MAGIC MARKERS
 
-L<http://sf.net/projects/munin/>
+  #%# family=auto
+  #%# capabilities=autoconf suggest
 
 =cut
-
-#%# family=auto
-#%# capabilities=autoconf suggest
 
 delete $ENV{'DISPLAY'};
 
