@@ -111,14 +111,16 @@ sub _expect_starttls {
 sub _negotiate_session_capabilities {
     my ($session, $server_capabilities) = @_;
 
-    my %ncap = map { $_ => 1 } qw(foo bar baz);
-    my %scap = map { $_ => 1 } split(/ /, $server_capabilities);
+    my %node_cap   = map { $_ => 1 } qw(foo bar baz);
+    my %server_cap = map { $_ => 1 } split(/ /, $server_capabilities);
 
-    my %session_capabilities = map { $_ => 1 } grep { $scap{$_} } keys %ncap;
+    my %session_capabilities = map { $_ => 1 } grep { $server_cap{$_} } keys %node_cap;
     $session->{capabilities} = \%session_capabilities;
 
-    _net_write(sprintf("# Capability negotiation result: %s\n", 
-                       join(' ', keys %session_capabilities)));
+    _net_write(sprintf("# Node capabilities: (%s). Session capabilities: (\n", 
+                       join(' ', keys %node_cap)));
+    _net_write(join(' ', keys %session_capabilities) . "\n");
+    _net_write("# )\n");
 
 }
 
