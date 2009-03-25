@@ -16,10 +16,34 @@ If you are looking for more information on how to I<use> Munin you
 probably want L<http://munin.projects.linpro.no/wiki/Documentation>
 instead.
 
+The munin code is marked by years on the battle front. You will
+therefore find code that deviates from the guidelines defined
+here. However, all new code should be made to comply.
+
+These guidelines is a RFC for the time being and are of course
+negotiable.
+
 
 =head1 GETTING STARTED
 
-FIX
+You will find scripts that are nice when developing in the dev_scripts
+folder.
+
+=over
+
+=item B<dev_scripts/install>
+
+=back
+
+
+=head1 PUNCTUATION VARIABLES
+
+Don't use punctuation variables (see PBP page 79.)
+
+ use English qw(-no_match_vars);
+
+We'll add an exception for $_, and $! as they should be fairly widely
+recognized.
 
 
 =head1 FORMATTING
@@ -39,19 +63,33 @@ FIX
 Currently there is no unified approach to handling exceptions. Use
 L<Carp>?
 
-  use Carp;
-  croak("Foo happened!");
+ use Carp;
+ croak("Foo happened!");
 
-  use Carp;
-  confess("Foo happened!");
+ confess("Foo happened!"); # With stack trace
+
+Exceptions are caught with an eval
+
+ eval {
+     # Exceptionally scary code
+ };
+ if ($EVAL_ERROR) {
+     # Handle exception
+ }
+
 
 
 =head1 DOCUMENTATION
 
 The API documentation is embedded as POD in the code.  See L<perlpod>
-for more about POD.
+for more on POD.
 
 More is on L<http://munin.projects.linpro.no/wiki/Documentation>
+
+=head2 WRITING
+
+The POD should be defined all in one place. For plugins you place it at
+the top, else at the bottom.
 
 =cut
 
