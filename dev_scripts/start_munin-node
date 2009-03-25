@@ -3,6 +3,6 @@
 if [ -f root/var/run/munin/munin-node.pid ]; then
     echo "Pid file found. Not starting"
 else
-    sudo env PERL5LIB=`pwd`/root/usr/local/share/perl/5.10.0/ ./root/usr/sbin/munin-node
+    env PERL5LIB=`pwd`/root/usr/local/share/perl/5.10.0/ ./root/usr/sbin/munin-node
 fi
 tail -f root/var/log/munin/munin-node.log
