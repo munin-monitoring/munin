@@ -1,12 +1,20 @@
 #!@@PERL@@
+#
+# Plugin to monitor UPS via the upsc command
+#
+# Parameters:
+#
+#   env.upsname <name@host> (default: "bertha@127.0.0.1")
+#   env.upsc    <command>   (default: "upsc")
+#
 
 use strict;
 
 my %status;
 
 my %config = (
-	upsname => 'bertha@127.0.0.1',
-	upsc => 'upsc'
+	upsname => $ENV{"upsname"} ? $ENV{"upsname"} : 'bertha@127.0.0.1',
+	upsc => $ENV{"upsc"} ? $ENV{"upsc"} : 'upsc'
 );
 
 my %graph =  (
