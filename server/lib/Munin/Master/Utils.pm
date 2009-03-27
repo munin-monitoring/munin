@@ -1,27 +1,19 @@
 package Munin::Master::Utils;
-# -*- cperl -*-
-#
-# Copyright (C) 2003-2007 Jimmy Olsen, Audun Ytterdal
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; version 2 dated June,
-# 1991.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-#
-# $Id$
-#
 
+use strict;
+use warnings;
+
+use Carp;
 use Exporter;
+use Fcntl qw(:DEFAULT :flock);
+use IO::Handle;
+use Log::Log4perl qw(:easy);
+use Munin::Defaults;
+use POSIX qw(strftime);
+use RRDs;
+use Symbol 'gensym';
+
+our (@ISA, @EXPORT);
 
 @ISA = ('Exporter');
 @EXPORT = ('munin_trend',
@@ -70,22 +62,13 @@ use Exporter;
 	   'logger',
 	   );
 
-use strict;
-use RRDs;
-use Fcntl qw(:DEFAULT :flock);
-use IO::Handle;
-use Symbol 'gensym';
-use POSIX qw(strftime);
-use Log::Log4perl qw(:easy);
-use Carp;
-
-my $VERSION = "@@VERSION@@";
+my $VERSION = $Munin::Defaults::MUNIN_VERSION;
 
 my $nsca = new IO::Handle;
 my $config = undef;
 
 my $DEBUG=0;
-my $configfile="@@CONFDIR@@/munin.conf";
+my $configfile="$Munin::Defaults::MUNIN_CONFDIR/munin.conf";
 
 my $logopened = 0;
 
@@ -131,7 +114,7 @@ sub munin_fetch {
     unless (defined $data)
     {
         logger ("Could not fetch data from $file(".($type||"AVERAGE")."): ". RRDs::error);
-        return undef;
+        return;
     }
     my @array = map { @$_[0] } splice(@$data, $#$data - ($last || 1));
     return $array[0] if (!$last);
@@ -210,10 +193,10 @@ sub munin_getlock {
 	# cron every 5 minutes this should not be a real threat.  This
 	# ream of code should complete in less than 5 minutes.
 
-	open LOCK,$lockname or
+	open my $LOCK, '<', $lockname or
 	  LOGCROAK("Could not open $lockname for reading: $!\n");
-	my $pid = <LOCK>;
-	close(LOCK) or LOGCROAK("Could not close $lockname: $!\n");
+	my $pid = <$LOCK>;
+	close($LOCK) or LOGCROAK("Could not close $lockname: $!\n");
         # Make sure it's a proper pid
 	if (defined($pid) and $pid =~ /^(\d+)$/ and $1 != 1) {
 	    $pid = $1;
@@ -269,24 +252,24 @@ sub munin_readconfig {
     $conf ||= $configfile;
     if (! -r $conf and ! $missingok) {
 	WARN "munin_readconfig: cannot open '$conf'";
-	return undef;
+	return;
     }
-    if (open (CFG, $conf)) {
-	@contents = <CFG>;
-	close (CFG);
+    if (open (my $CFG, '<', $conf)) {
+	@contents = <$CFG>;
+	close ($CFG);
     }
 
     $config = &munin_parse_config (\@contents);
 
     # Some important defaults before we return...
-    $config->{'rundir'} ||= "/var/lock";
-    $config->{'dbdir'}  ||= "@@DBDIR@@";
-    $config->{'logdir'} ||= "@@LOGDIR@@";
-    $config->{'tmpldir'}||= "@@CONFDIR@@/templates/";
-    $config->{'htmldir'}||= "@@HTMLDIR@@/";
-    $config->{'spooldir'}||="@@SSPOOLDIR@@/";
-    $config->{'#%#parent'}= undef;
-    $config->{'#%#name'}= "root";
+    $config->{'rundir'}   ||= "/var/lock";
+    $config->{'dbdir'}    ||= $Munin::Defaults::MUNIN_DBDIR;
+    $config->{'logdir'}   ||= $Munin::Defaults::MUNIN_LOGDIR;
+    $config->{'tmpldir'}  ||= "$Munin::Defaults::MUNIN_CONFDIR/templates/";
+    $config->{'htmldir'}  ||= $Munin::Defaults::MUNIN_HTMLDIR;
+    $config->{'spooldir'} ||= $Munin::Defaults::MUNIN_SSPOOLDIR;
+    $config->{'#%#parent'}  = undef;
+    $config->{'#%#name'}    = "root";
 
     return ($config);
 }
@@ -401,7 +384,7 @@ sub munin_get_var_path
 	warn "munin_set_var_path: Malformatted variable path \"$var\".";
     }
 
-    return undef;
+    return;
 }
 
  
@@ -448,7 +431,7 @@ sub munin_get_children {
     my $hash  = shift;
     my $res = [];
 
-    return undef if (ref ($hash) ne "HASH");
+    return if (ref ($hash) ne "HASH");
 
     foreach my $key (keys %{$hash}) {
 	next if $key =~ /^#%#/;
@@ -481,7 +464,7 @@ sub munin_get_separated_node
 	    }
 	}
     } else {
-	return undef;
+	return;
     }
 
     return $ret;
@@ -516,7 +499,7 @@ sub munin_get_node_name
     if (ref ($hash) eq "HASH" and defined $hash->{'#%#name'}) {
 	return $hash->{'#%#name'};
     } else { 
-	return undef;
+	return;
     }
 }
 
@@ -534,7 +517,7 @@ sub munin_get_picture_loc {
     my $res = [];
 
     if (ref ($hash) ne "HASH") { # Not a hash node
-    	return undef;
+    	return;
     }
     if (defined $hash->{'#%#origin'}) {
 	$res = munin_get_picture_loc ($hash->{'#%#origin'});
@@ -555,7 +538,7 @@ sub munin_get_node_loc {
     my $res = [];
 
     if (ref ($hash) ne "HASH") { # Not a has node
-    	return undef;
+    	return;
     }
     if (defined $hash->{'#%#parent'}) {
 	$res = munin_get_node_loc ($hash->{'#%#parent'});
@@ -574,12 +557,12 @@ sub munin_get_parent {
     my $hash = shift;
 
     if (ref ($hash) ne "HASH") { # Not a has node
-    	return undef;
+    	return;
     }
     if (defined $hash->{'#%#parent'}) {
 	return $hash->{'#%#parent'};
     } else {
-	return undef;
+	return;
     }
 }
 
@@ -598,7 +581,7 @@ sub munin_get_node
     foreach my $tmpvar (@$loc) {
 	if ($tmpvar !~ /\S/) {
 	    logger ("Error: munin_get_node: Cannot work on hash node \"$tmpvar\"");
-	    return undef;
+	    return;
 	}
 	# This used to be "return undef" which seems a bit hash and also has
 	# been reported to be harmful. - janl
@@ -643,7 +626,7 @@ sub munin_set_var_loc
     $tmpvar = shift @aloc while (defined $tmpvar and $tmpvar =~ /^#%#/);
     if ($tmpvar !~ /\S/) {
 	logger ("Error: munin_set_var_loc: Cannot work on hash node \"$tmpvar\"");
-	return undef;
+	return;
     }
     if (@aloc > 0) {
 	if (!defined $hash->{$tmpvar} or !defined $hash->{$tmpvar}->{"#%#name"}) { # Init the new node
@@ -672,7 +655,7 @@ sub munin_get_node_partialpath
     my $var  = shift;
     my $ret  = undef;
 
-    return undef if !defined $hash or ref ($hash) ne "HASH";
+    return if !defined $hash or ref ($hash) ne "HASH";
 
     my $root    = munin_get_root_node ($hash);
     my $hashloc = munin_get_node_loc ($hash);
@@ -767,7 +750,7 @@ sub munin_get_root_node
 {
     my $hash = shift;
 
-    return undef if ref ($hash) ne "HASH";
+    return if ref ($hash) ne "HASH";
 
     while (defined $hash->{'#%#parent'}) {
 	$hash = $hash->{'#%#parent'};
@@ -805,7 +788,7 @@ sub munin_writeconfig {
 
     if (!defined $fh) {
 	$fh = gensym();
-	unless (open ($fh, ">$datafilename")) {
+	unless (open ($fh, ">", $datafilename)) {
 	    LOGCROAK "Fatal error: Could not open \"$datafilename\" for writing: $!";
 	}
     }
@@ -852,7 +835,7 @@ sub munin_get_html_filename {
     @$loc = map { s/^\./_/g; $_ } @$loc;
 	
     if (defined $hash->{'graph_title'}) {
-	$plugin = pop @$loc or return undef;
+	$plugin = pop @$loc or return;
     }
 
     if (@$loc) { # The rest is used as directory names...
@@ -884,8 +867,8 @@ sub munin_get_picture_filename {
     @$loc = map { s/\//_/g; $_ } @$loc;
     @$loc = map { s/^\./_/g; $_ } @$loc;
 	
-    my $plugin = pop @$loc or return undef;
-    my $node   = pop @$loc or return undef;
+    my $plugin = pop @$loc or return;
+    my $node   = pop @$loc or return;
 
     if (@$loc) { # The rest is used as directory names...
 	$ret .= "/" . join ('/', @$loc);
@@ -955,7 +938,7 @@ sub munin_get_filename {
 	my $ret  = munin_get ($hash, "dbdir");
 
 	if (!defined $loc or !defined $ret) {
-	    return undef;
+	    return;
 	}
 
         # Not really a danger (we're not doing this stuff via the shell), so more to avoid 
@@ -963,9 +946,9 @@ sub munin_get_filename {
 	@$loc = map { s/\//_/g; $_ } @$loc;
 	@$loc = map { s/^\./_/g; $_ } @$loc;
 	
-	my $field  = pop @$loc or return undef;
-	my $plugin = pop @$loc or return undef;
-	my $node   = pop @$loc or return undef;
+	my $field  = pop @$loc or return;
+	my $plugin = pop @$loc or return;
+	my $node   = pop @$loc or return;
 
 	if (@$loc) { # The rest is used as directory names...
 	    $ret .= "/" . join ('/', @$loc);
@@ -990,7 +973,7 @@ sub munin_get_bool
     my $default = shift;
 
     my $ans = &munin_get ($hash, $field, $default);
-    return undef if not defined $ans;
+    return if not defined $ans;
 
     if ($ans =~ /^yes$/i or
         $ans =~ /^true$/i or
@@ -1054,7 +1037,7 @@ sub munin_get_bool_val
     }
     else
     {
-    return undef;
+    return;
     }
 }
 
@@ -1091,7 +1074,7 @@ sub munin_copy_node_toloc
     my $to   = shift;
     my $loc  = shift;
 
-    return undef unless defined $from and defined $to and defined $loc;
+    return unless defined $from and defined $to and defined $loc;
 
     if (ref ($from) eq "HASH") {
 	foreach my $key (keys %$from) {
@@ -1139,7 +1122,7 @@ sub munin_node_status
     my ($config, $limits, $domain, $node, $check_draw) = @_;
     my $state = "ok";
 
-    return undef unless defined $config->{domain}->{$domain}->{node}->{$node};
+    return unless defined $config->{domain}->{$domain}->{node}->{$node};
     my $snode = $config->{domain}->{$domain}->{node}->{$node};
 
     foreach my $service (keys %{$snode})
@@ -1172,13 +1155,13 @@ sub munin_node_status
 # - Success: The status of the field
 # - Failure: undef
 sub munin_category_status {
-    my $hash       = shift || return undef;
-    my $limits     = shift || return undef;
-    my $category   = shift || return undef;
+    my $hash       = shift || return;
+    my $limits     = shift || return;
+    my $category   = shift || return;
     my $check_draw = 1;
     my $state      = "ok";
 
-    return undef unless (defined $hash and ref ($hash) eq "HASH");
+    return unless (defined $hash and ref ($hash) eq "HASH");
 
     foreach my $service (@{munin_get_children ($hash)}) {
 	next if (!defined $service or ref ($service) ne "HASH");
@@ -1214,7 +1197,7 @@ sub munin_service_status {
     my ($config, $limits, $check_draw) = @_;
     my $state = "ok";
 
-    return undef unless defined $config;
+    return unless defined $config;
     for my $fieldnode (@{munin_find_field ($config, "label")}) {
 	my $field = munin_get_node_name ($fieldnode);
 	my $fres  = munin_field_status ($fieldnode, $limits, $check_draw);
@@ -1245,7 +1228,7 @@ sub munin_field_status {
 
     # Return undef if nagios is turned off, or the field doesn't have any limits
     if ((!defined munin_get ($hash, "warning", undef)) and (!defined munin_get ($hash, "critical"))) {
-	return undef;
+	return;
     }
 
     if (!defined $check_draw or !$check_draw or munin_draw_field ($hash)) {
@@ -1323,7 +1306,7 @@ sub munin_get_field_order
     my $hash = shift;
     my $result  = [];
 
-    return undef if !defined $hash or ref($hash) ne "HASH";
+    return if !defined $hash or ref($hash) ne "HASH";
 
     my $order = munin_get ($hash, "graph_order");
 
@@ -1361,7 +1344,7 @@ sub munin_get_rrd_filename {
     my $name    = munin_get_node_name ($field);
 
     # Bail out on bad input data
-    return undef if !defined $field or ref ($field) ne "HASH";
+    return if !defined $field or ref ($field) ne "HASH";
 
     # If the field has a .filename setting, use it
     return $result if $result = munin_get ($field, "filename");
@@ -1404,10 +1387,10 @@ sub munin_mkdir_p
 	    logger ("Notice: Created directory \"$dirname\".");
 	    return $dirname;
 	} else {
-	    return undef;
+	    return;
 	}
     } else {
-	return undef;
+	return;
     }
 }
 
@@ -1504,4 +1487,27 @@ sub logger {
 
 1;
 
+__END__
+
 # vim: syntax=perl ts=8
+# -*- cperl -*-
+#
+# Copyright (C) 2003-2007 Jimmy Olsen, Audun Ytterdal
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+# $Id$
+#
