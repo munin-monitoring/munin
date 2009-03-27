@@ -208,7 +208,7 @@ sub _parse_plugin_line {
 
     $line =~ m{\A \s* env \s+ ([^=\s]+) \s* = \s* (.+) \z}xms
         and croak "Deprecated format: 'env $1=$2' should be rewritten to 'env.$1 $2'";
-    $line =~ m{\A \s* (\w+) \s+ (.+) \z}xms
+    $line =~ m{\A \s* ([\w\.]+) \s+ (.+) \z}xms
         or croak "Line is not well formed ($line)";
 
     my ($var_name, $var_value) = ($1, $2);
@@ -255,7 +255,7 @@ sub _parse_plugin_line {
         return ('allow_deny' => [$var_name, $var_value]);
     }
     elsif (index($var_name, 'env.') == 0) {
-        return (env => { substr($var_name, 3) => $var_value});
+        return (env => { substr($var_name, length 'env.') => $var_value});
     }
     else {
         croak "Failed to parse line: $line. "
@@ -314,7 +314,7 @@ configuration files.
 
  $config = Munin::Node::Config->instance();
 
-Returns the sincgleton instance of this class.
+Returns the singleton instance of this class.
 
 =item B<reinitialize>
 

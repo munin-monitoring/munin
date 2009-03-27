@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 27;
+use Test::More tests => 28;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
@@ -195,6 +195,14 @@ isa_ok($conf, 'Munin::Node::Config');
     };
     like($@, qr{Group 'xxxyyyzzz' does not exist},
          "Nonexistent group throws exception");
+}
+
+
+### environment
+
+{
+    my @res = $conf->_parse_plugin_line("env.foo fnord");
+    is_deeply(\@res, [ env => { foo => 'fnord' } ], 'Parsing environment variable');
 }
 
 
