@@ -51,52 +51,63 @@ sub process_request {
         die "timeout"
     };
 
-    local $_;
     alarm($config->{sconf}{'timeout'});
-    while (defined ($_ = _net_read())) {
-        alarm($config->{sconf}{'timeout'});
-        chomp;
+    while (defined (my $line = _net_read())) {
+        chomp $line;
+        _process_command_line($session, $line) 
+            or last;
+    }
+}
 
-        if (_expect_starttls($session)) {
-            if (!(/^starttls\s*$/i)) {
-                logger ("ERROR: Client did not request TLS. Closing.");
-                _net_write ("# I require TLS. Closing.\n");
-                last;
-            }
-        }
 
-        logger ("DEBUG: Running command \"$_\".") if $config->{DEBUG};
-        if (/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
-            _list_services($session, $1);
-        }
-        elsif (/^cap\s?(.*)/i) {
-            _negotiate_session_capabilities($session, $1);
-        }
-        elsif (/^quit/i || /^\./) {
-            exit 1;
-        } 
-        elsif (/^version/i) {
-            _show_version($session);
-        } 
-        elsif (/^nodes/i) {
-            _show_nodes($session);
-        } elsif (/^fetch\s?(\S*)/i) {
-            _print_service(_run_service($session, $1)) 
-        } elsif (/^config\s?(\S*)/i) {
-            _print_service(_run_service($session, $1, "config"));
-        } elsif (/^starttls\s*$/i) {
-            eval {
-                $session->{tls_started} = _process_starttls_command($session);
-            };
-            if ($EVAL_ERROR) {
-                logger($EVAL_ERROR);
-                last;
-            }
-            logger ("DEBUG: Returned from starttls.") if $config->{DEBUG};
-        } else {
-            _net_write ("# Unknown command. Try cap, list, nodes, config, fetch, version or quit\n");
+sub _process_command_line {
+    my ($session, $cmd_line) = @_;
+
+    alarm($config->{sconf}{'timeout'});
+
+    local $_ = $cmd_line;
+
+    if (_expect_starttls($session)) {
+        if (!(/^starttls\s*$/i)) {
+            logger ("ERROR: Client did not request TLS. Closing.");
+            _net_write ("# I require TLS. Closing.\n");
+            return 0;
         }
     }
+
+    logger ("DEBUG: Running command \"$_\".") if $config->{DEBUG};
+    if (/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
+        _list_services($session, $1);
+    }
+    elsif (/^cap\s?(.*)/i) {
+        _negotiate_session_capabilities($session, $1);
+    }
+    elsif (/^quit/i || /^\./) {
+        exit 1;
+    } 
+    elsif (/^version/i) {
+        _show_version($session);
+    } 
+    elsif (/^nodes/i) {
+        _show_nodes($session);
+    } elsif (/^fetch\s?(\S*)/i) {
+        _print_service(_run_service($session, $1)) 
+    } elsif (/^config\s?(\S*)/i) {
+        _print_service(_run_service($session, $1, "config"));
+    } elsif (/^starttls\s*$/i) {
+        eval {
+            $session->{tls_started} = _process_starttls_command($session);
+        };
+        if ($EVAL_ERROR) {
+            logger($EVAL_ERROR);
+            return 0;
+        }
+        logger ("DEBUG: Returned from starttls.") if $config->{DEBUG};
+    } else {
+        _net_write ("# Unknown command. Try cap, list, nodes, config, fetch, version or quit\n");
+    }
+
+    return 1;
 }
 
 
