@@ -52,58 +52,25 @@ Munin::Defaults->export_to_environment();
 
 my %services;
 my %nodes;
+
 my $servicedir = "$Munin::Defaults::MUNIN_CONFDIR/plugins";
 my $sconfdir   = "$Munin::Defaults::MUNIN_CONFDIR/plugin-conf.d";
 my $conffile   = "$Munin::Defaults::MUNIN_CONFDIR/munin-node.conf";
 my $sconffile  = undef;
+
 my $FQDN       = "";
-my $do_usage   = 0;
 my $DEBUG      = 0;
 my $PIDEBUG    = 0;
-my $do_version = 0;
-my $VERSION    = $Munin::Defaults::MUNIN_VERSION;
+
 my $defuser    = getpwnam($Munin::Defaults::MUNIN_PLUGINUSER);
 my $defgroup   = getgrnam($Munin::Defaults::MUNIN_GROUP);
+
 my $paranoia   = 0;
 my @ignores    = ();
 
 my %sconf = ();
 
 parse_args();
-
-if ($conffile =~ /^([-\/\@_\w\.]+)$/) 
-{
-    $conffile = $1;                     # $data now untainted
-} 
-else 
-{
-    die "Bad data in $conffile";        # log this somewhere
-}
-if ($sconfdir =~ /^([-\/\@_\w\.]+)$/) 
-{
-    $sconfdir = $1;                     # $data now untainted
-} 
-else 
-{
-    die "Bad data in $sconfdir";        # log this somewhere
-}
-if (defined $sconffile and $sconffile =~ /^([-\/\@_\w\.]+)$/) 
-{
-    $sconffile = $1;                     # $data now untainted
-} 
-elsif (defined $sconffile) 
-{
-    die "Bad data in $sconffile";        # log this somewhere
-}
-if ($servicedir =~ /^([-\/\@_\w\.]+)$/) 
-{
-    $servicedir = $1;                     # $data now untainted
-} 
-else 
-{
-    die "Bad data in $servicedir";        # log this somewhere
-}
-
 
 $ENV{'MUNIN_DEBUG'} = $PIDEBUG;
 
@@ -139,6 +106,21 @@ if (defined $config->{sconf}) {
 $FQDN ||= Munin::Node::OS->get_fq_hostname();
 
 $ENV{FQDN}=$FQDN;
+
+$config->reinitialize({
+        servicedir => $servicedir,
+        sconfdir   => $sconfdir,
+        conffile   => $conffile,
+        sconffile  => $sconffile,
+        fqdn       => $FQDN,
+        DEBUG      => $DEBUG,
+        PIDEBUG    => $PIDEBUG,
+        defuser    => $defuser,
+        defgroup   => $defgroup,
+        paranoia   => $paranoia,
+        ignores    => \@ignores,
+        sconf      => \%sconf,
+});
 
 # Some locales uses "," as decimal separator. This can mess up a lot
 # of plugins.
