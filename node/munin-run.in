@@ -32,24 +32,6 @@ use Munin::Defaults;
 use Munin::Node::Config;
 use Munin::Node::OS;
 
-sub parse_args();
-sub print_usage_and_exit();
-sub print_version_and_exit();
-
-# "Clean" environment to disable taint-checking on the environment. We _know_
-# that the environment is insecure, but we want to let admins shoot themselves
-# in the foot with it, if they want to.
-foreach my $key (keys %ENV) {
-	$ENV{$key} =~ /^(.*)$/;
-	$ENV{$key} = $1;
-}
-
-$0 =~ /^(.*)$/; # for some strange reason won't "$0 = $0;" work.
-$0 = $1;
-
-# Make build time configuration settings available at runtime.
-Munin::Defaults->export_to_environment();
-
 my %services;
 my %nodes;
 
@@ -70,65 +52,81 @@ my @ignores    = ();
 
 my %sconf = ();
 
-parse_args();
-
-$ENV{'MUNIN_DEBUG'} = $PIDEBUG;
-
-# Check permissions of configuration
-unless (Munin::Node::OS->check_perms($servicedir)
-     && Munin::Node::OS->check_perms($conffile))
+sub main
 {
-	die "Fatal error. Bailing out.";
-}
+    # "Clean" environment to disable taint-checking on the environment. We _know_
+    # that the environment is insecure, but we want to let admins shoot themselves
+    # in the foot with it, if they want to.
+    foreach my $key (keys %ENV) {
+    	$ENV{$key} =~ /^(.*)$/;
+    	$ENV{$key} = $1;
+    }
+
+    $0 =~ /^(.*)$/; # for some strange reason won't "$0 = $0;" work.
+    $0 = $1;
+
+    # Make build time configuration settings available at runtime.
+    Munin::Defaults->export_to_environment();
+
+    parse_args();
+
+    $ENV{'MUNIN_DEBUG'} = $PIDEBUG;
+
+    # Check permissions of configuration
+    unless (Munin::Node::OS->check_perms($servicedir)
+         && Munin::Node::OS->check_perms($conffile))
+    {
+        die "Fatal error. Bailing out.";
+    }
 	
-my $config = Munin::Node::Config->instance();
-$config->parse_config_from_file($conffile);
+    my $config = Munin::Node::Config->instance();
+    $config->parse_config_from_file($conffile);
 
-$FQDN     = $config->{fqdn}     if defined $config->{fqdn}; 
-$defuser  = $config->{defuser}  if defined $config->{defuser}; 
-$defgroup = $config->{defgroup} if defined $config->{defgroup}; 
-$paranoia = $config->{paranoia} if defined $config->{paranoia}; 
+    $FQDN     = $config->{fqdn}     if defined $config->{fqdn}; 
+    $defuser  = $config->{defuser}  if defined $config->{defuser}; 
+    $defgroup = $config->{defgroup} if defined $config->{defgroup}; 
+    $paranoia = $config->{paranoia} if defined $config->{paranoia}; 
  
-push @ignores, @{$config->{ignores}} if defined $config->{ignores}; 
+    push @ignores, @{$config->{ignores}} if defined $config->{ignores}; 
  
-if (defined $config->{sconf} && defined $config->{sconf}{timeout}) { 
-    $sconf{timeout} = $config->{sconf}{timeout}; 
-} 
- 
-if (defined $config->{sconf}) { 
-    while (my ($k, $v) = each %{$config->{sconf}}) { 
-        next if defined $sconf{$k}; 
-        $sconf{$k} = $v; 
+    if (defined $config->{sconf} && defined $config->{sconf}{timeout}) { 
+        $sconf{timeout} = $config->{sconf}{timeout}; 
     } 
-} 
+ 
+    if (defined $config->{sconf}) { 
+        while (my ($k, $v) = each %{$config->{sconf}}) { 
+            next if defined $sconf{$k}; 
+            $sconf{$k} = $v; 
+        } 
+    } 
 
-# Override the hostname if everything else fails
-$FQDN ||= Munin::Node::OS->get_fq_hostname();
+    # Override the hostname if everything else fails
+    $FQDN ||= Munin::Node::OS->get_fq_hostname();
 
-$ENV{FQDN}=$FQDN;
+    $ENV{FQDN}=$FQDN;
 
-$config->reinitialize({
-        servicedir => $servicedir,
-        sconfdir   => $sconfdir,
-        conffile   => $conffile,
-        sconffile  => $sconffile,
-        fqdn       => $FQDN,
-        DEBUG      => $DEBUG,
-        PIDEBUG    => $PIDEBUG,
-        defuser    => $defuser,
-        defgroup   => $defgroup,
-        paranoia   => $paranoia,
-        ignores    => \@ignores,
-        sconf      => \%sconf,
-});
+    $config->reinitialize({
+            servicedir => $servicedir,
+            sconfdir   => $sconfdir,
+            conffile   => $conffile,
+            sconffile  => $sconffile,
+            fqdn       => $FQDN,
+            DEBUG      => $DEBUG,
+            PIDEBUG    => $PIDEBUG,
+            defuser    => $defuser,
+            defgroup   => $defgroup,
+            paranoia   => $paranoia,
+            ignores    => \@ignores,
+            sconf      => \%sconf,
+    });
 
-# Some locales uses "," as decimal separator. This can mess up a lot
-# of plugins.
-$ENV{'LC_ALL'}='C';
+    # Some locales uses "," as decimal separator. This can mess up a lot
+    # of plugins.
+    $ENV{'LC_ALL'}='C';
 
-&load_services;
+    load_services();
+}
 
-exit;
 
 ### over-ridden subs below
 
@@ -539,7 +537,10 @@ Options:
 }
 
 
-1;
+exit main() unless caller;
+
+
+__END__
 
 =head1 NAME
 
@@ -634,4 +635,4 @@ This program is released under the GNU General Public License
 
 =cut
 
-# vim:syntax=perl
+# vim:syntax=perl : ts=4 : expandtab
