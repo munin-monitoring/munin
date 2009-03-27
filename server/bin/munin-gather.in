@@ -25,7 +25,7 @@ $| = 1;
 
 use strict;
 use IO::Socket;
-use Munin;
+use Munin::Master::Utils;
 use Time::HiRes;
 use Getopt::Long;
 use POSIX qw(strftime);

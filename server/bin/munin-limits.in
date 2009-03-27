@@ -20,7 +20,7 @@
 
 use strict;
 
-use Munin;
+use Munin::Master::Utils;
 use POSIX qw(strftime);
 use Getopt::Long;
 use Time::HiRes;

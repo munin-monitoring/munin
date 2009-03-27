@@ -1,7 +1,7 @@
 #!@@PERL@@ -w
 # -*- cperl -*-
 #
-# Copyright (C) 2002-2008 Jimmy Olsen, Audun Ytterdal
+# Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,17 +19,16 @@
 #
 # Script to update the RRD-files with current information.
 #
-# $Id: munin-update.in 1608 2008-05-13 10:38:51Z tfheen $
+# $Id$
 
 $|=1;
 
 use strict;
 use IO::Socket;
-use Munin;
+use Munin::Master::Utils;
 use Time::HiRes;
 use RRDs;
 use Getopt::Long;
-use POSIX qw(strftime);
 use POSIX ":sys_wait_h";
 use Storable qw(fd_retrieve nstore_fd);
 
@@ -38,7 +37,6 @@ my $DEBUG=0;
 my $VERSION="@@VERSION@@";
 my $serversocket  = "munin-server-socket.$$";
 my $conffile = "@@CONFDIR@@/munin.conf";
-my $force_root = 0;
 my $do_usage = 0;
 my @limit_hosts = ();
 my @limit_services = ();
@@ -52,12 +50,9 @@ my $print_stdout = 0;
 my $tls;
 my %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => 5, "verify" => "no");
 
-my $log = new IO::Handle;
-
 # Get options
-$do_usage=1  unless 
+$do_usage=1  unless
 GetOptions ( "host=s"       => \@limit_hosts,
-             "force-root!"  => \$force_root,
 	     "service=s"    => \@limit_services,
 	     "config=s"     => \$conffile,
 	     "debug!"       => \$DEBUG,
@@ -72,7 +67,6 @@ if ($do_usage)
     print "Usage: $0 [options]
 
 Options:
-    --[no]force-root    Force running, even as root. [--noforce-root]
     --version		View version information.
     --help		View this message.
     --service <service>	Limit graphed services to <service>. Multiple --service
@@ -96,7 +90,7 @@ if ($do_version)
 munin-update version $VERSION.
 Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
 
-Copyright (C) 2002-2005
+Copyright (C) 2002-2009
 
 This is free software released under the GNU General Public License. There
 is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -107,16 +101,18 @@ EOT
     exit 0;
 }
 
-if ($> == 0 and !$force_root)
+if ($> == 0)
 {
-    print "You are running this program as root, which is dumb and will
-cause many problems later.  Please run it as user '@@USER@@'.
-If you really want to run it as root, use the --force-root option.
+    print "This program will easily break if you run it as root as you are
+trying now.  Please run it as user '@@USER@@'.  The correct 'su' command
+on many systems is 'su - munin --shell=/bin/bash'
 Aborting.\n\n";
     exit (1);
 }
 
-my $config= &munin_readconfig ($conffile);
+my $config=&munin_readconfig ($conffile);
+
+logger_open($config->{'logdir'});
 
 my $oldconfig;
 
@@ -125,27 +121,24 @@ if (-e "$config->{dbdir}/datafile") {
 }
 
 # CLI parameters override the configuration file.
-if (defined $cli_timeout)
-{
+if (defined $cli_timeout) {
     $timeout = $cli_timeout;
-}
-elsif (exists $config->{'timeout'})
-{
+} elsif (exists $config->{'timeout'}) {
     $timeout = $config->{'timeout'};
 }
-if (defined $cli_do_fork)
-{
+
+if (defined $cli_do_fork) {
     $do_fork = $cli_do_fork;
-}
-elsif (exists $config->{'fork'})
-{
+} elsif (exists $config->{'fork'}) {
     $do_fork = ($config->{'fork'} =~ /yes/i ? 1 : 0);
 }
 
-if (! -d $config->{rundir})
-{
+if (! -d $config->{rundir}) {
 	mkdir ($config->{rundir}, 0700);
 }
+
+warn $do_fork;
+
 munin_runlock("$config->{rundir}/munin-update.lock");
 
 if (!open (STATS,">$config->{dbdir}/munin-update.stats.tmp")) {
@@ -334,8 +327,6 @@ logger("Munin-update finished ($update_time sec)");
 
 munin_removelock("$config->{rundir}/munin-datafile.lock");
 munin_removelock("$config->{rundir}/munin-update.lock");
-
-close ($log);
 
 # compare_configs is used to monitor for config changes which we
 # have to act upon.
@@ -1176,54 +1167,6 @@ sub fetch_node
     return 1;
 }
 
-sub logger_open {
-    my $dirname = shift;
-
-    if (!$log->opened)
-    {
-	  unless (open ($log, ">>$dirname/munin-update.log"))
-	  {
-		  print STDERR "Warning: Could not open log file \"$dirname/munin-update.log\" for writing: $!";
-	  }
-    }
-}
-
-sub logger {
-  my ($comment) = @_;
-  my $now = strftime "%b %d %H:%M:%S", localtime;
-
-  chomp ($comment);
-  $comment =~ s/\n/\\n/g;
-  print "$now [$$] - $comment\n" if $print_stdout;
-  if ($log->opened)
-  {
-	  print $log "$now [$$] - $comment\n";
-	  $log->flush;
-  }
-  else
-  {
-	  if (defined $config->{logdir})
-	  {
-		  if (open ($log, ">>$config->{logdir}/munin-update.log"))
-		  {
-			  print $log "$now - $comment\n";
-			  $log->flush;
-			  close (STDERR);
-			  open (STDERR, ">&", $log);
-		  }
-		  else
-		  {
-			  print STDERR "[WARNING] Could not open log file \"$config->{logdir}/munin-update.log\" for writing: $!";
-			  print STDERR "$now - $comment\n";
-		  }
-	  }
-	  else
-	  {
-		  print STDERR "$now - $comment\n";
-	  }
-    }
-}
-
 sub sanitise_fieldname
 {
     my $lname = shift;
@@ -1268,10 +1211,6 @@ munin-update [options]
 =head1 OPTIONS
 
 =over 5
-
-=item B<< --[no]force-root >>
-
-Force running as root (stupid and unnecessary). [--noforce-root]
 
 =item B<< --service <service> >>
 
@@ -1344,7 +1283,7 @@ Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
 =head1 COPYRIGHT
 
-Copyright © 2002-2006 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
+Copyright © 2002-2009 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

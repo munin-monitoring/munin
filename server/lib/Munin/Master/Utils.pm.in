@@ -1,4 +1,5 @@
-package Munin; # -*- cperl -*-
+package Munin::Master::Utils;
+# -*- cperl -*-
 #
 # Copyright (C) 2003-2007 Jimmy Olsen, Audun Ytterdal
 #

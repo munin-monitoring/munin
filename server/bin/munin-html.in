@@ -26,7 +26,7 @@ use strict;
 use HTML::Template;
 use Getopt::Long;
 use Time::HiRes;
-use Munin;
+use Munin::Master::Utils;
 use POSIX qw(strftime);
 use Log::Log4perl qw(:easy);
 

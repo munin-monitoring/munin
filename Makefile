@@ -17,11 +17,11 @@ MANCENTER        := "Munin Documentation"
 MAN8		 := node/munin-node node/munin-run \
 			node/munin-node-configure-snmp \
 			node/munin-node-configure \
-			server/munin-graph server/munin-update \
-			server/munin-limits server/munin-html \
-			server/munin-gather
-PODMAN8          := server/munin-cron
-PODMAN5          := server/munin.conf node/munin-node.conf
+			server/bin/munin-graph server/bin/munin-update \
+			server/bin/munin-limits server/bin/munin-html \
+			server/bin/munin-gather
+PODMAN8          := server/doc/munin-cron
+PODMAN5          := server/doc/munin.conf node/munin-node.conf
 
 default: build
 
@@ -50,25 +50,25 @@ install-main: build
 
 	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR) $(RUNDIR) $(HTMLDIR) $(DBDIR)
 
-	for p in build/server/*.tmpl; do    		         \
+	for p in build/server/www/*.tmpl; do   		         \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
 	done
-	$(INSTALL) -m 0644 server/logo.png $(CONFDIR)/templates/
-	$(INSTALL) -m 0644 server/style.css $(CONFDIR)/templates/
-	$(INSTALL) -m 0644 server/definitions.html $(CONFDIR)/templates/
+	$(INSTALL) -m 0644 server/www/logo.png $(CONFDIR)/templates/
+	$(INSTALL) -m 0644 server/www/style.css $(CONFDIR)/templates/
+	$(INSTALL) -m 0644 server/www/definitions.html $(CONFDIR)/templates/
 	$(INSTALL) -m 0755 server/VeraMono.ttf $(LIBDIR)/
 	$(INSTALL) -m 0644 resources/favicon.ico $(HTMLDIR)/
-	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/server/munin-htaccess $(HTMLDIR)/.htaccess
+	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/server/www/munin-htaccess $(HTMLDIR)/.htaccess
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/server/munin.conf $(CONFDIR)/
-	$(INSTALL) -m 0755 build/server/munin-cron $(BINDIR)/
-	$(INSTALL) -m 0755 build/server/munin-check $(BINDIR)/
-	$(INSTALL) -m 0755 build/server/munin-update $(LIBDIR)/
-	$(INSTALL) -m 0755 build/server/munin-graph $(LIBDIR)/
-	$(INSTALL) -m 0755 build/server/munin-html $(LIBDIR)/
-	$(INSTALL) -m 0755 build/server/munin-limits $(LIBDIR)/
-	$(INSTALL) -m 0755 build/server/munin-gather $(LIBDIR)/
-	$(INSTALL) -m 0755 build/server/munin-cgi-graph $(CGIDIR)/
-	$(INSTALL) -m 0644 build/server/Munin.pm $(PERLLIB)/
+	$(INSTALL) -m 0755 build/server/bin/munin-cron $(BINDIR)/
+	$(INSTALL) -m 0755 build/server/bin/munin-check $(BINDIR)/
+	$(INSTALL) -m 0755 build/server/bin/munin-update $(LIBDIR)/
+	$(INSTALL) -m 0755 build/server/bin/munin-graph $(LIBDIR)/
+	$(INSTALL) -m 0755 build/server/bin/munin-html $(LIBDIR)/
+	$(INSTALL) -m 0755 build/server/bin/munin-limits $(LIBDIR)/
+	$(INSTALL) -m 0755 build/server/bin/munin-gather $(LIBDIR)/
+	$(INSTALL) -m 0755 build/server/bin/munin-cgi-graph $(CGIDIR)/
+	$(INSTALL) -m 0644 build/server/lib/Munin/Master/Utils.pm $(PERLLIB)/
 
 uninstall-main: build
 	for p in build/server/*.tmpl; do    	    \

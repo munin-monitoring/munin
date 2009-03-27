@@ -24,7 +24,7 @@
 #
 
 use RRDs;
-use Munin;
+use Munin::Master::Utils;
 use strict;
 use IO::Handle;
 use Date::Manip;
