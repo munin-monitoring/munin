@@ -27,8 +27,9 @@ use warnings;
 use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
 
 use Getopt::Long;
+
+use Munin::Defaults;
 use Munin::Node::Config;
-use Munin::Node::Defaults;
 use Munin::Node::OS;
 
 sub parse_args();
@@ -47,22 +48,22 @@ $0 =~ /^(.*)$/; # for some strange reason won't "$0 = $0;" work.
 $0 = $1;
 
 # Make build time configuration settings available at runtime.
-Munin::Node::Defaults->export_to_environment();
+Munin::Defaults->export_to_environment();
 
 my %services;
 my %nodes;
-my $servicedir = "$Munin::Node::Defaults::MUNIN_CONFDIR/plugins";
-my $sconfdir   = "$Munin::Node::Defaults::MUNIN_CONFDIR/plugin-conf.d";
-my $conffile   = "$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.conf";
+my $servicedir = "$Munin::Defaults::MUNIN_CONFDIR/plugins";
+my $sconfdir   = "$Munin::Defaults::MUNIN_CONFDIR/plugin-conf.d";
+my $conffile   = "$Munin::Defaults::MUNIN_CONFDIR/munin-node.conf";
 my $sconffile  = undef;
 my $FQDN       = "";
 my $do_usage   = 0;
 my $DEBUG      = 0;
 my $PIDEBUG    = 0;
 my $do_version = 0;
-my $VERSION    = $Munin::Node::Defaults::MUNIN_VERSION;
-my $defuser    = getpwnam($Munin::Node::Defaults::MUNIN_PLUGINUSER);
-my $defgroup   = getgrnam($Munin::Node::Defaults::MUNIN_GROUP);
+my $VERSION    = $Munin::Defaults::MUNIN_VERSION;
+my $defuser    = getpwnam($Munin::Defaults::MUNIN_PLUGINUSER);
+my $defgroup   = getgrnam($Munin::Defaults::MUNIN_GROUP);
 my $paranoia   = 0;
 my @ignores    = ();
 
@@ -261,7 +262,7 @@ sub run_service {
 
 		print "# Want to run as euid/egid $u/$g\n" if $DEBUG;
 
-		if ($Munin::Node::Defaults::MUNIN_HASSETR)
+		if ($Munin::Defaults::MUNIN_HASSETR)
 		{
 			$( = $g    unless $g == 0;
 			$< = $u    unless $u == 0;
@@ -514,7 +515,7 @@ sub parse_args()
 
 sub print_version_and_exit()
 {
-    print qq{munin-run (munin-node) version $Munin::Node::Defaults::MUNIN_VERSION.
+    print qq{munin-run (munin-node) version $Munin::Defaults::MUNIN_VERSION.
 Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
 
 Copyright (C) 2002-2009
@@ -537,11 +538,11 @@ sub print_usage_and_exit()
 Options:
     --help              View this message.
     --config <file>     Use <file> as configuration file.
-                        [$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.conf]
+                        [$Munin::Defaults::MUNIN_CONFDIR/munin-node.conf]
     --servicedir <dir>  Dir where plugins are found.
-                        [$Munin::Node::Defaults::MUNIN_CONFDIR/plugins]
+                        [$Munin::Defaults::MUNIN_CONFDIR/plugins]
     --sconfdir <dir>    Dir where plugin configurations are found.
-                        [$Munin::Node::Defaults::MUNIN_CONFDIR/plugin-conf.d]
+                        [$Munin::Defaults::MUNIN_CONFDIR/plugin-conf.d]
     --sconffile <file>  Use <file> as plugin configuration. Overrides sconfdir.
                         [undefined]
     --[no]paranoia      Only run plugins owned by root. Check permissions.
