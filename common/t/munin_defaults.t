@@ -6,4 +6,4 @@ use lib "$FindBin::Bin/../lib";
 
 use Test::More tests => 1;
 
-use_ok('Munin::Node::Defaults');
+use_ok('Munin::Defaults');

@@ -6,7 +6,7 @@ use warnings;
 
 use English qw(-no_match_vars);
 use Munin::Node::Config;
-use Munin::Node::Defaults;
+use Munin::Defaults;
 use Munin::Node::Logger;
 use Munin::Node::OS;
 use Munin::Node::Session;
@@ -149,13 +149,13 @@ sub _process_starttls_command {
 
     $key = $cert = &_get_var ("tls_pem");
     $key = &_get_var ("tls_private_key") unless defined $key;
-    $key = "$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $key;
+    $key = "$Munin::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $key;
 
     $cert = &_get_var ("tls_certificate") unless defined $cert;
-    $cert = "$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $cert;
+    $cert = "$Munin::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $cert;
 
     $ca_cert = &_get_var("tls_ca_certificate");
-    $ca_cert = "$Munin::Node::Defaults::MUNIN_CONFDIR/cacert.pem" unless defined $ca_cert;
+    $ca_cert = "$Munin::Defaults::MUNIN_CONFDIR/cacert.pem" unless defined $ca_cert;
 
     $depth = &_get_var ('tls_verify_depth');
     $depth = 5 unless defined $depth;
@@ -176,7 +176,7 @@ sub _process_starttls_command {
 
 
 sub _show_version {
-  print "munins node on $config->{fqdn} version: $Munin::Node::Defaults::MUNIN_VERSION\n"
+  print "munins node on $config->{fqdn} version: $Munin::Defaults::MUNIN_VERSION\n"
 }
 
 
@@ -430,7 +430,7 @@ sub _change_real_and_effective_user_and_group {
                      : "");
 
         eval {
-            if ($Munin::Node::Defaults::MUNIN_HASSETR) {
+            if ($Munin::Defaults::MUNIN_HASSETR) {
                 Munin::Node::OS->set_real_group_id($g) 
                       unless $g == $root_gid;
                 Munin::Node::OS->set_real_user_id($u)

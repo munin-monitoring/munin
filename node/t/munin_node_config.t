@@ -7,7 +7,7 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 
 use English qw(-no_match_vars);
-use Munin::Node::Defaults;
+use Munin::Defaults;
 
 use_ok('Munin::Node::Config');
 
@@ -208,9 +208,11 @@ isa_ok($conf, 'Munin::Node::Config');
     close STDERR;
     open STDERR, '>', \$stderr or die $!;
 
+    my $sconfdir = "$FindBin::Bin/config/plugin-conf.d";
+
     eval {
         $conf->reinitialize({
-            sconfdir => $Munin::Node::Defaults::MUNIN_CONFDIR."plugin-conf.d",
+            sconfdir => $sconfdir,
         });
         $conf->process_plugin_configuration_files();
     };
@@ -227,7 +229,7 @@ isa_ok($conf, 'Munin::Node::Config');
     #use Data::Dumper; warn Dumper($conf);
 
     is_deeply($conf, {
-        sconfdir => $Munin::Node::Defaults::MUNIN_CONFDIR."plugin-conf.d",
+        sconfdir => $sconfdir,
         sconf=>{Foo => {user => 0}}
     }, "Checking sconf");
 }

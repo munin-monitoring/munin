@@ -25,7 +25,7 @@ PODMAN5          := server/doc/munin.conf node/munin-node.conf
 
 default: build
 
-install: install-main install-node install-node-plugins install-man
+install: install-main install-common install-node install-node-plugins install-man
 
 uninstall: uninstall-main
 
@@ -108,6 +108,8 @@ install-node: build install-node-non-snmp install-node-snmp install-munindoc
 uninstall-node: uninstall-node-non-snmp uninstall-node-snmp
 	echo Undone.
 
+install-common:
+
 install-node-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(LIBDIR)/
 
@@ -145,7 +147,7 @@ install-node-non-snmp: build
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Logger.pm $(PERLLIB)/Munin/Node
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Server.pm $(PERLLIB)/Munin/Node
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Session.pm $(PERLLIB)/Munin/Node
-	$(INSTALL) -m 0644 build/node/lib/Munin/Node/Defaults.pm $(PERLLIB)/Munin/Node
+	$(INSTALL) -m 0644 build/common/lib/Munin/Defaults.pm $(PERLLIB)/Munin
 
 uninstall-node-non-snmp: build
 	rm -f $(SBINDIR)/munin-node 
@@ -234,10 +236,10 @@ uninstall-doc: build-doc
 
 
 
-build: $(INFILES) build/node/lib/Munin/Node/Defaults.pm
+build: $(INFILES) build/common/lib/Munin/Defaults.pm
 
-build/node/lib/Munin/Node/Defaults.pm: node/lib/Munin/Node/Defaults.pm
-	@mkdir -p build/node/lib/Munin/Node/
+build/common/lib/Munin/Defaults.pm: common/lib/Munin/Defaults.pm
+	@mkdir -p build/common/lib/Munin/
 	perl -pe 's{(PREFIX     \s+=\s).*}{\1q{$(PREFIX)};}x;      \
                   s{(CONFDIR    \s+=\s).*}{\1q{$(CONFDIR)};}x;     \
                   s{(BINDIR     \s+=\s).*}{\1q{$(BINDIR)};}x;      \
@@ -265,7 +267,7 @@ build/node/lib/Munin/Node/Defaults.pm: node/lib/Munin/Node/Defaults.pm
                   s{(BASH	\s+=\s).*}{\1q{$(BASH)};}x;        \
                   s{(HASSETR	\s+=\s).*}{\1q{$(HASSETR)};}x;     \
 	          s{(SSPOOLDIR	\s+=\s).*}{\1q{$(SSPOOLDIR)};}x;'  \
-                  node/lib/Munin/Node/Defaults.pm > build/node/lib/Munin/Node/Defaults.pm
+                  common/lib/Munin/Defaults.pm > build/common/lib/Munin/Defaults.pm
 
 
 build/%: %.in

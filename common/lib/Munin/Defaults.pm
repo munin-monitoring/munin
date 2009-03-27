@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-package Munin::Node::Defaults;
+package Munin::Defaults;
 
 use English qw(-no_match_vars);
 use File::Basename qw(dirname);
@@ -47,7 +47,7 @@ sub get_defaults {
 
     no strict 'refs';
     my $defaults = {};
-    for my $g (keys %{Munin::Node::Defaults::}) {
+    for my $g (keys %{Munin::Defaults::}) {
         next unless $g =~ /MUNIN_/;
         $defaults->{$g} = ${*$g{'SCALAR'}};
     }
@@ -78,7 +78,7 @@ __END__
 
 =head1 NAME
 
-Munin::Node::Defaults - Default values defined by installation scripts
+Munin::Defaults - Default values defined by installation scripts
 
 
 =head1 PACKAGE VARIABLES
