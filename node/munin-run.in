@@ -52,6 +52,7 @@ my @ignores    = ();
 
 my %sconf = ();
 
+my $config;
 my ($plugin, $arg);
 
 sub main
@@ -75,13 +76,15 @@ sub main
     $ENV{'MUNIN_DEBUG'} = $PIDEBUG;
 
     # Check permissions of configuration
+    # FIXME: oops, doesn't honour $paranoia, since it's not yet set in 
+    # config object
     unless (Munin::Node::OS->check_perms($servicedir)
          && Munin::Node::OS->check_perms($conffile))
     {
         die "Fatal error. Bailing out.";
     }
-	
-    my $config = Munin::Node::Config->instance();
+
+    $config = Munin::Node::Config->instance();
     $config->parse_config_from_file($conffile);
 
     $FQDN     = $config->{fqdn}     if defined $config->{fqdn}; 
@@ -130,47 +133,75 @@ sub main
 }
 
 
-sub load_services {
-    my $config = Munin::Node::Config->instance();
-    
+sub load_services
+{
     if ($config->{sconffile}) {
         # FIXME: need method for loading plugin config from a single file
     }
     else {
         $config->process_plugin_configuration_files();
     }
-    
-    opendir (DIR,$servicedir) || die "Cannot open plugindir: $servicedir $!";
-FILES:
-    for my $file (grep { -f "$servicedir/$_" } readdir(DIR)) {
-	next if $file =~ m/^\./; # Hidden files
-	next if $file =~ m/.conf$/; # Config files
-	next if $file !~ m/^([-\w.]+)$/; # Skip if any weird chars
-	$file = $1; # Not tainted anymore.
-	foreach my $regex (@ignores)
-	{
-		next FILES if $file =~ /$regex/;
-	}
-	next if (! -x "$servicedir/$file"); # File not executeable
 
-	next unless ($file eq $plugin);
-	print "# file: '$file'\n" if $DEBUG;
+    get_service_list();
 
-	$services{$file}=1;
-	my @rows = run_service($file, $arg);
-	my $node = $FQDN;
-	for my $row (@rows) {
-	  print "# row: $row\n" if $DEBUG;
-	  if ($row =~ m/^host_name (.+)$/) {
-	    print "# Found host_name, using it\n" if $DEBUG;
-	    $node = $1;
-	  }
-	}
-	$nodes{$node}{$file}=1;
+    if ($services{$plugin}) {
+        print "file: '$plugin'\n" if $config->{DEBUG};
     }
-    closedir DIR;
-    print "ERROR: Could not execute plugin (plugin doesn't exist?).\n";
+    else {
+        print "# ERROR: Plugin '$plugin' doesn't exist.\n";
+        exit 1;
+    }
+
+    # FIXME: $plugin isn't detainted now.
+    my @rows = run_service($services{$plugin}, $arg);
+
+    # shouldn't ever get here.  this is all cruft.
+#   my $node = $FQDN;
+#   for my $row (@rows) {
+#     print "# row: $row\n" if $DEBUG;
+#     if ($row =~ m/^host_name (.+)$/) {
+#       print "# Found host_name, using it\n" if $DEBUG;
+#       $node = $1;
+#     }
+#   }
+#   $nodes{$node}{$plugin}=1;
+
+    print "ERROR: Could not execute plugin.\n";
     exit 1;
+}
+
+
+# returns a hash of plugin-like items in the plugin directory
+sub get_service_list
+{
+    $servicedir = $config->{servicedir};
+
+    opendir my $DIR, $servicedir
+        or die "Cannot open plugindir: $servicedir $!";
+
+FILE:
+    foreach my $file (readdir($DIR)) {
+        # Must be an executable file
+        next unless ( -f "$servicedir/$file" && -x _ );
+
+        # FIX isn't it enough to check that the file is executable and
+        # not in 'ignores'?
+        next if $file =~ m/^\./; # Hidden files
+        next if $file =~ m/.conf$/; # Config files
+        next if $file !~ m/^([-\w.]+)$/; # Skip if any weird chars
+        $file = $1; # Not tainted anymore.
+
+        foreach my $regex (@ignores) {
+            next FILE if $file =~ /$regex/;
+        }
+
+        # Looks good.  Note it
+        $services{$file} = $file;
+    }
+
+    close($DIR);
+
+    return \%services;
 }
 
 
@@ -324,7 +355,7 @@ sub get_var
 }
 
 
-sub parse_args()
+sub parse_args
 {
 	print_usage_and_exit() unless GetOptions (
 	        "config=s"     => \$conffile,
@@ -341,9 +372,9 @@ sub parse_args()
 	print_usage_and_exit() unless $ARGV[0];
 
     $plugin = $ARGV[0];
-    
+
     if ($ARGV[1]) {
-        # Ensure the plugin's argument (if any) is one of the known ones.  
+        # Ensure the plugin's argument (if any) is one of the known ones.
         # Incidentally also makes it taint-safe.
         ($arg) = grep { $_ eq $ARGV[1] } qw/config autoconf snmpconf suggest/;
         warn "# Warning: Unrecognised argument '$ARGV[1]' passed to plugin.\n"
@@ -352,7 +383,7 @@ sub parse_args()
 }
 
 
-sub print_version_and_exit()
+sub print_version_and_exit
 {
     print qq{munin-run (munin-node) version $Munin::Common::Defaults::MUNIN_VERSION.
 Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
@@ -370,7 +401,7 @@ with this software or refer to
 }
 
 
-sub print_usage_and_exit()
+sub print_usage_and_exit
 {
     print qq{Usage: $0 [options] <plugin> [ config | autoconf | snmpconf | suggest ]
 
