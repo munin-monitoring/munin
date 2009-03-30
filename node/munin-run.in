@@ -130,37 +130,14 @@ sub main
 }
 
 
-### over-ridden subs below
-
 sub load_services {
-    if ($sconffile)
-    {
-	if (!&load_auth_file ("", $sconffile, \%sconf))
-	{
-	    warn "Something wicked happened while reading \"$sconffile\". Check the previous log lines for specifics.";
-	}
+    my $config = Munin::Node::Config->instance();
+    
+    if ($config->{sconffile}) {
+        # FIXME: need method for loading plugin config from a single file
     }
-    else
-    {
-	if (opendir (DIR,$sconfdir))
-	{
-FILES:
-	    for my $file (grep { -f "$sconfdir/$_" } readdir (DIR))
-	    {
-		next if $file =~ m/^\./; # Hidden files
-		next if $file !~ m/^([-\w.]+)$/; # Skip if any weird chars
-		$file = $1; # Not tainted anymore.
-		foreach my $regex (@ignores)
-		{
-			next FILES if $file =~ /$regex/;
-		}
-		if (!&load_auth_file ($sconfdir, $file, \%sconf))
-		{
-		    warn "Something wicked happened while reading \"$servicedir/$file\". Check the previous log lines for specifics.";
-		}
-	    }
-	    closedir (DIR);
-	}
+    else {
+        $config->process_plugin_configuration_files();
     }
     
     opendir (DIR,$servicedir) || die "Cannot open plugindir: $servicedir $!";
@@ -195,6 +172,7 @@ FILES:
     print "ERROR: Could not execute plugin (plugin doesn't exist?).\n";
     exit 1;
 }
+
 
 sub run_service {
   my ($service,$command) = @_;
@@ -295,119 +273,6 @@ sub run_service {
   return (@lines);
 }
 
-sub load_auth_file 
-{
-    my ($dir, $file, $sconf) = @_;
-    my $service = $file;
-
-    if (!defined $dir or !defined $file or !defined $sconf)
-    {
-	return undef;
-    }
-
-    return undef unless Munin::Node::OS->check_perms("$dir/$file");
-
-    if (!open (IN, "$dir/$file"))
-    {
-	warn "Could not open file \"$dir/$file\" for reading ($!), skipping plugin\n";
-	return undef;
-    }
-    while (<IN>)
-    {
-	chomp;
-	s/#.*$//;
-	next unless /\S/;
-	if (/^\s*\[([^\]]+)\]\s*$/)
-	{
-	    $service = $1;
-	}
-	elsif (/^\s*user\s+(\S+)\s*$/)
-	{
-	    my $tmpid = $1;
-	    $sconf->{$service}{'user'} = Munin::Node::OS->get_uid($tmpid);
-	    if (!defined $sconf->{$service}{'user'})
-	    {
-		warn "User \"$tmpid\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
-		return undef;
-	    }
-	}
-	elsif (/^\s*group\s+(.+)\s*$/)
-	{
-	    my $tmpid = $1;
-	    foreach my $group (split /\s*,\s*/, $tmpid)
-	    {
-		my $optional = 0;
-
-		if ($group =~ /^\(([^)]+)\)$/)
-		{
-		    $optional = 1;
-		    $group = $1;
-		}
-
-		my $g = Munin::Node::OS->get_gid($group);
-		if (!defined $g and !$optional)
-		{
-		    warn "Group \"$group\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
-		    return undef;
-		}
-		elsif (!defined $g and $optional)
-		{
-		    print "# DEBUG: Skipping \"$group\" (optional).\n"
-		      if $DEBUG;
-		    next;
-		}
-		
-		if (!defined $sconf->{$service}{'group'})
-		{
-		    $sconf->{$service}{'group'} = $g;
-		}
-		else
-		{
-		    $sconf->{$service}{'group'} .= " $g";
-		}
-	    }
-	}
-	elsif (/^\s*command\s+(.+)\s*$/)
-	{
-	    @{$sconf->{$service}{'command'}} = split (/\s+/, $1);
-	}
-        elsif (/^\s*host_name\s+(.+)\s*$/)
-        {
-            $sconf->{$service}{'host_name'} = $1;
-        } 
-        elsif (/^\s*timeout\s+(\d+)\s*$/)
-        {
-            $sconf->{$service}{'timeout'} = $1;
-            print "# DEBUG: $service: setting timeout to $1\n"
-                if $DEBUG;
-        }
-        elsif (/^\s*(allow)\s+(.+)\s*$/ or /^\s*(deny)\s+(.+)\s*$/)
-        {
-            push (@{$sconf->{$service}{'allow_deny'}}, [$1, $2]);
-                print "# DEBUG: Pushing allow_deny: $1, $2\n" if $DEBUG;
-        }
-        elsif (/^\s*env\s+([^=\s]+)\s*=\s*(.+)$/)
-        {
-	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"env $1=$2\" should be rewritten to \"env.$1 $2\"). Ignored.";
-        } 
-        elsif (/^\s*env\.(\S+)\s+(.+)$/)
-        {
-            $sconf->{$service}{'env'}{$1} = $2;
-            print "# Saving $service->env->$1 = $2...\n" if $DEBUG;
-        }
-        elsif (/^\s*(\w+)\s+(.+)$/)
-        {
-	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"$1 $2\" should be rewritten to \"env.$1 $2\"). Ignored.";
-        } 
-        elsif (/\S/)
-        {
-            warn "Warning: Unknown config option in \"$dir/$file\" under \"[$service]\": $_";
-        }
-    }
-    close (IN);
-
-    return 1;
-}
 
 sub get_var
 {
@@ -481,7 +346,8 @@ sub parse_args()
         # Ensure the plugin's argument (if any) is one of the known ones.  
         # Incidentally also makes it taint-safe.
         ($arg) = grep { $_ eq $ARGV[1] } qw/config autoconf snmpconf suggest/;
-        warn "# Warning: Unrecognised argument '$ARGV[1]' passed to plugin.\n";
+        warn "# Warning: Unrecognised argument '$ARGV[1]' passed to plugin.\n"
+            unless $arg;
     }
 }
 
