@@ -25,6 +25,7 @@ $|=1;
 
 use strict;
 use IO::Socket;
+use Munin::Master::Logger;
 use Munin::Master::Utils;
 use Time::HiRes;
 use RRDs;

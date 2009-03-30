@@ -20,6 +20,7 @@
 
 use strict;
 
+use Munin::Master::Logger;
 use Munin::Master::Utils;
 use POSIX qw(strftime);
 use Getopt::Long;

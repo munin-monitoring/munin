@@ -56,10 +56,6 @@ our (@ISA, @EXPORT);
 	   'munin_get_parent',
 	   'munin_get_children',
 	   'munin_get_node_partialpath',
-	   'logger_open',
-	   'logger_debug',
-	   'logger_level',
-	   'logger',
 	   );
 
 my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
@@ -69,8 +65,6 @@ my $config = undef;
 
 my $DEBUG=0;
 my $configfile="$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
-
-my $logopened = 0;
 
 my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"dbdir", "logdir", "htmldir", "include", "domain_order", "node_order",
@@ -140,7 +134,7 @@ sub munin_nscasend {
 
     if (!$nsca->opened)
     {
-	open ($nsca ,"|$config->{nsca} $config->{nsca_server} -c $config->{nsca_config} -to 60");
+	open ($nsca ,'|-', "$config->{nsca} $config->{nsca_server} -c $config->{nsca_config} -to 60");
     }
     if ($label)
     {
@@ -831,8 +825,12 @@ sub munin_get_html_filename {
     # Sanitise
     $ret =~ s/[^\w_\/"'\[\]\(\)+=-]\./_/g;
     $hash =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
-    @$loc = map { s/\//_/g; $_ } @$loc;
-    @$loc = map { s/^\./_/g; $_ } @$loc;
+    @$loc = map { 
+        my $l = $_;
+        $l =~ s/\//_/g; 
+        $l =~ s/^\./_/g;
+        return $l 
+    } @$loc;
 	
     if (defined $hash->{'graph_title'}) {
 	$plugin = pop @$loc or return;
@@ -864,8 +862,12 @@ sub munin_get_picture_filename {
     $ret =~ s/[^\w_\/"'\[\]\(\)+=-]\./_/g;
     $hash =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
     $scale =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
-    @$loc = map { s/\//_/g; $_ } @$loc;
-    @$loc = map { s/^\./_/g; $_ } @$loc;
+    @$loc = map { 
+        my $l = $_;
+        $l =~ s/\//_/g; 
+        $l =~ s/^\./_/g;
+        return $l 
+    } @$loc;
 	
     my $plugin = pop @$loc or return;
     my $node   = pop @$loc or return;
@@ -933,28 +935,32 @@ sub munin_path_to_loc
 # - Success: Full path to rrd file
 # - Failure: undef
 sub munin_get_filename {
-	my $hash = shift;
-	my $loc  = munin_get_node_loc ($hash);
-	my $ret  = munin_get ($hash, "dbdir");
-
-	if (!defined $loc or !defined $ret) {
-	    return;
-	}
-
-        # Not really a danger (we're not doing this stuff via the shell), so more to avoid 
-        # confusion with silly filenames
-	@$loc = map { s/\//_/g; $_ } @$loc;
-	@$loc = map { s/^\./_/g; $_ } @$loc;
+    my $hash = shift;
+    my $loc  = munin_get_node_loc ($hash);
+    my $ret  = munin_get ($hash, "dbdir");
+    
+    if (!defined $loc or !defined $ret) {
+        return;
+    }
+    
+    # Not really a danger (we're not doing this stuff via the
+    # shell), so more to avoid confusion with silly filenames
+    @$loc = map { 
+        my $l = $_;
+        $l =~ s/\//_/g; 
+        $l =~ s/^\./_/g;
+        return $l 
+    } @$loc;
 	
-	my $field  = pop @$loc or return;
-	my $plugin = pop @$loc or return;
-	my $node   = pop @$loc or return;
+    my $field  = pop @$loc or return;
+    my $plugin = pop @$loc or return;
+    my $node   = pop @$loc or return;
 
-	if (@$loc) { # The rest is used as directory names...
-	    $ret .= "/" . join ('/', @$loc);
-	}
+    if (@$loc) { # The rest is used as directory names...
+        $ret .= "/" . join ('/', @$loc);
+    }
 
-	return ($ret . "/$node-$plugin-$field-" . lc substr (munin_get($hash, "type", "GAUGE"), 0,1). ".rrd");
+    return ($ret . "/$node-$plugin-$field-" . lc substr (munin_get($hash, "type", "GAUGE"), 0,1). ".rrd");
 
 }
 
@@ -1395,119 +1401,233 @@ sub munin_mkdir_p
 }
 
 
-#
-# ############# Logging ###########
-#
-# Switching to Log4perl over time.  Management and compatability goes here.
-#
-#
-
-# Early open of the log.  Warning and more urgent messages will go to
-# screen.
-
-Log::Log4perl->easy_init( $WARN );
-
-my $logdir = undef;
-
-sub logger_open {
-    # This is called when we have a directory and file name to log in.
-
-    my $dirname = shift;
-    $logdir=$dirname;
-
-    if (!defined($dirname)) {
-	confess("In logger_open, directory for log files undefined");
-    }
-
-    if (!$logopened) {
-	# I'm a bit uncertain about the :utf8 bit.
-	Log::Log4perl->easy_init( { level    => $INFO,
-				    file     => ":utf8>>$dirname/$me.log" } );
-	# warn "Logging to $dirname/$me.log";
-	$logopened = 1;
-    }
-
-    get_logger('')->info("Opened log file!");
-}
-
-sub logger_debug {
-    # Adjust log level to DEBUG if user gave --debug option
-    my $logger = get_logger('');
-
-    WARN "Setting log level to DEBUG\n";
-
-    if (defined($logdir)) {
-	Log::Log4perl->easy_init( { level    => $DEBUG,
-				    file     => ":utf8>>$logdir/$me.log" },
-				  { level    => $DEBUG,
-				    file     => "STDERR" } );
-    } else {
-	# If we do not have a log file name to log to just send
-	# everything to STDERR
-	Log::Log4perl->easy_init( { level    => $DEBUG,
-				    file     => "STDERR" } );
-    }
-    # And do not open the loggers again now.
-    $logopened=1;
-}
-
-sub logger_level {
-    my ($loglevel) = @_;
-    my $iloglevel;
-
-    my $logger = get_logger('');
-
-    if ($loglevel =~ /^trace$/i) {
-	$iloglevel=$TRACE;
-    } elsif ($loglevel =~ /^debug$/i) {
-	$iloglevel=$DEBUG;
-    } elsif ($loglevel =~ /^info$/i) {
-	$iloglevel=$INFO;
-    } elsif ($loglevel =~ /^warn$/i) {
-	$iloglevel=$WARN;
-    } elsif ($loglevel =~ /^error$/i) {
-	$iloglevel=$ERROR;
-    } elsif ($loglevel =~ /^fatal$/i) {
-	$iloglevel=$FATAL;
-    } else {
-	ERROR "Unknown log level: '$loglevel'\n";
-	return;
-    }
-
-    $logger->level($iloglevel);
-
-    INFO "Setting log level to $loglevel\n";
-}
-
-sub logger {
-  my ($comment) = @_;
-
-  INFO @_;
-}
-
 1;
 
 __END__
 
+=head1 NAME
+
+Munin::Master::Utils - FIX
+
+=head1 SYNOPSIS
+
+FIX
+
+=head1 SUBROUTINES
+
+=over
+
+=item B<munin_category_status>
+
+FIX
+
+=item B<munin_config>
+
+FIX
+
+=item B<munin_copy_node>
+
+FIX
+
+=item B<munin_copy_node_toloc>
+
+FIX
+
+=item B<munin_createlock>
+
+FIX
+
+=item B<munin_delete>
+
+FIX
+
+=item B<munin_draw_field>
+
+FIX
+
+=item B<munin_fetch>
+
+FIX
+
+=item B<munin_field_status>
+
+FIX
+
+=item B<munin_find_field>
+
+FIX
+
+=item B<munin_get>
+
+FIX
+
+=item B<munin_get_bool>
+
+FIX
+
+=item B<munin_get_bool_val>
+
+FIX
+
+=item B<munin_get_children>
+
+FIX
+
+=item B<munin_get_field_order>
+
+FIX
+
+=item B<munin_get_filename>
+
+FIX
+
+=item B<munin_get_html_filename>
+
+FIX
+
+=item B<munin_get_max_label_length>
+
+FIX
+
+=item B<munin_get_node>
+
+FIX
+
+=item B<munin_get_node_loc>
+
+FIX
+
+=item B<munin_get_node_name>
+
+FIX
+
+=item B<munin_get_node_partialpath>
+
+FIX
+
+=item B<munin_get_parent>
+
+FIX
+
+=item B<munin_get_parent_name>
+
+FIX
+
+=item B<munin_get_picture_filename>
+
+FIX
+
+=item B<munin_get_picture_loc>
+
+FIX
+
+=item B<munin_get_root_node>
+
+FIX
+
+=item B<munin_get_rrd_filename>
+
+FIX
+
+=item B<munin_get_separated_node>
+
+FIX
+
+=item B<munin_get_var_path>
+
+FIX
+
+=item B<munin_getlock>
+
+FIX
+
+=item B<munin_graph_column_headers>
+
+FIX
+
+=item B<munin_mkdir_p>
+
+FIX
+
+=item B<munin_node_status>
+
+FIX
+
+=item B<munin_nscasend>
+
+FIX
+
+=item B<munin_overwrite>
+
+FIX
+
+=item B<munin_parse_config>
+
+FIX
+
+=item B<munin_path_to_loc>
+
+FIX
+
+=item B<munin_readconfig>
+
+FIX
+
+=item B<munin_removelock>
+
+FIX
+
+=item B<munin_runlock>
+
+FIX
+
+=item B<munin_service_status>
+
+FIX
+
+=item B<munin_set>
+
+FIX
+
+=item B<munin_set_var_loc>
+
+FIX
+
+=item B<munin_set_var_path>
+
+FIX
+
+=item B<munin_trend>
+
+FIX
+
+=item B<munin_writeconfig>
+
+FIX
+
+=item B<munin_writeconfig_loop>
+
+FIX
+
+=back
+
+=head1 COPYING
+
+Copyright (C) 2003-2007 Jimmy Olsen, Audun Ytterdal
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 dated June,
+1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+
 # vim: syntax=perl ts=8
-# -*- cperl -*-
-#
-# Copyright (C) 2003-2007 Jimmy Olsen, Audun Ytterdal
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; version 2 dated June,
-# 1991.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-#
-# $Id$
-#
