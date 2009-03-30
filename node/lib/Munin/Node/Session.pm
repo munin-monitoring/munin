@@ -9,6 +9,7 @@ sub new {
     my $self = {
         tls_started  => 0,
         peer_address => '',
+        capabilities => {},
     };
 
     return bless $self, $class;
