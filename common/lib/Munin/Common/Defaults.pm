@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-package Munin::Defaults;
+package Munin::Common::Defaults;
 
 use English qw(-no_match_vars);
 use File::Basename qw(dirname);

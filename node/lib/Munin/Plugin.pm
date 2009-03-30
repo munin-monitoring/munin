@@ -63,7 +63,7 @@ our @EXPORT = qw(clean_fieldname set_state_name save_state restore_state
 
 use vars qw($me $pluginstatedir $statefile $DEBUG);
 
-use Munin::Defaults;
+use Munin::Common::Defaults;
 
 =head2 Variables
 
@@ -113,7 +113,7 @@ shown at the beginning of this document.
 =cut
 
 $pluginstatedir 
-    = $ENV{'MUNIN_PLUGSTATE'} || $Munin::Defaults::MUNIN_PLUGSTATE;
+    = $ENV{'MUNIN_PLUGSTATE'} || $Munin::Common::Defaults::MUNIN_PLUGSTATE;
 
 =head3 $Munin::Plugin::statefile
 

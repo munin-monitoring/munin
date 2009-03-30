@@ -7,7 +7,7 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 
 use English qw(-no_match_vars);
-use Munin::Defaults;
+use Munin::Common::Defaults;
 
 use_ok('Munin::Node::Config');
 

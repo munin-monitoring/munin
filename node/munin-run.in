@@ -28,24 +28,24 @@ use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
 
 use Getopt::Long;
 
-use Munin::Defaults;
+use Munin::Common::Defaults;
 use Munin::Node::Config;
 use Munin::Node::OS;
 
 my %services;
 my %nodes;
 
-my $servicedir = "$Munin::Defaults::MUNIN_CONFDIR/plugins";
-my $sconfdir   = "$Munin::Defaults::MUNIN_CONFDIR/plugin-conf.d";
-my $conffile   = "$Munin::Defaults::MUNIN_CONFDIR/munin-node.conf";
+my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
+my $sconfdir   = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
+my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
 my $sconffile  = undef;
 
 my $FQDN       = "";
 my $DEBUG      = 0;
 my $PIDEBUG    = 0;
 
-my $defuser    = getpwnam($Munin::Defaults::MUNIN_PLUGINUSER);
-my $defgroup   = getgrnam($Munin::Defaults::MUNIN_GROUP);
+my $defuser    = getpwnam($Munin::Common::Defaults::MUNIN_PLUGINUSER);
+my $defgroup   = getgrnam($Munin::Common::Defaults::MUNIN_GROUP);
 
 my $paranoia   = 0;
 my @ignores    = ();
@@ -66,7 +66,7 @@ sub main
     $0 = $1;
 
     # Make build time configuration settings available at runtime.
-    Munin::Defaults->export_to_environment();
+    Munin::Common::Defaults->export_to_environment();
 
     parse_args();
 
@@ -242,7 +242,7 @@ sub run_service {
 
 		print "# Want to run as euid/egid $u/$g\n" if $DEBUG;
 
-		if ($Munin::Defaults::MUNIN_HASSETR)
+		if ($Munin::Common::Defaults::MUNIN_HASSETR)
 		{
 			$( = $g    unless $g == 0;
 			$< = $u    unless $u == 0;
@@ -495,7 +495,7 @@ sub parse_args()
 
 sub print_version_and_exit()
 {
-    print qq{munin-run (munin-node) version $Munin::Defaults::MUNIN_VERSION.
+    print qq{munin-run (munin-node) version $Munin::Common::Defaults::MUNIN_VERSION.
 Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
 
 Copyright (C) 2002-2009
@@ -518,11 +518,11 @@ sub print_usage_and_exit()
 Options:
     --help              View this message.
     --config <file>     Use <file> as configuration file.
-                        [$Munin::Defaults::MUNIN_CONFDIR/munin-node.conf]
+                        [$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf]
     --servicedir <dir>  Dir where plugins are found.
-                        [$Munin::Defaults::MUNIN_CONFDIR/plugins]
+                        [$Munin::Common::Defaults::MUNIN_CONFDIR/plugins]
     --sconfdir <dir>    Dir where plugin configurations are found.
-                        [$Munin::Defaults::MUNIN_CONFDIR/plugin-conf.d]
+                        [$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d]
     --sconffile <file>  Use <file> as plugin configuration. Overrides sconfdir.
                         [undefined]
     --[no]paranoia      Only run plugins owned by root. Check permissions.

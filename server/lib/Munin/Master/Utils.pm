@@ -8,7 +8,7 @@ use Exporter;
 use Fcntl qw(:DEFAULT :flock);
 use IO::Handle;
 use Log::Log4perl qw(:easy);
-use Munin::Defaults;
+use Munin::Common::Defaults;
 use POSIX qw(strftime);
 use RRDs;
 use Symbol 'gensym';
@@ -62,13 +62,13 @@ our (@ISA, @EXPORT);
 	   'logger',
 	   );
 
-my $VERSION = $Munin::Defaults::MUNIN_VERSION;
+my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
 
 my $nsca = new IO::Handle;
 my $config = undef;
 
 my $DEBUG=0;
-my $configfile="$Munin::Defaults::MUNIN_CONFDIR/munin.conf";
+my $configfile="$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 
 my $logopened = 0;
 
@@ -263,11 +263,11 @@ sub munin_readconfig {
 
     # Some important defaults before we return...
     $config->{'rundir'}   ||= "/var/lock";
-    $config->{'dbdir'}    ||= $Munin::Defaults::MUNIN_DBDIR;
-    $config->{'logdir'}   ||= $Munin::Defaults::MUNIN_LOGDIR;
-    $config->{'tmpldir'}  ||= "$Munin::Defaults::MUNIN_CONFDIR/templates/";
-    $config->{'htmldir'}  ||= $Munin::Defaults::MUNIN_HTMLDIR;
-    $config->{'spooldir'} ||= $Munin::Defaults::MUNIN_SSPOOLDIR;
+    $config->{'dbdir'}    ||= $Munin::Common::Defaults::MUNIN_DBDIR;
+    $config->{'logdir'}   ||= $Munin::Common::Defaults::MUNIN_LOGDIR;
+    $config->{'tmpldir'}  ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/";
+    $config->{'htmldir'}  ||= $Munin::Common::Defaults::MUNIN_HTMLDIR;
+    $config->{'spooldir'} ||= $Munin::Common::Defaults::MUNIN_SSPOOLDIR;
     $config->{'#%#parent'}  = undef;
     $config->{'#%#name'}    = "root";
 
