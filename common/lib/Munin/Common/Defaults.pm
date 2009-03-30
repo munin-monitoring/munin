@@ -78,7 +78,8 @@ __END__
 
 =head1 NAME
 
-Munin::Defaults - Default values defined by installation scripts
+Munin::Common::Defaults - Default values defined by installation
+scripts.
 
 
 =head1 PACKAGE VARIABLES
