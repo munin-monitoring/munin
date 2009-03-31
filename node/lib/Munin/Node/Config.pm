@@ -193,7 +193,8 @@ sub parse_plugin_config {
             }
             elsif ($var[0] eq 'env') {
                 $sconf->{$service}{'env'} ||= {};
-                $sconf->{$service}{'env'}{$var[0]} = $var[1];
+                my ($key, $value) = %{$var[1]};
+                $sconf->{$service}{$var[0]}{$key} = $value;
             }
             else {
                 $sconf->{$service}{$var[0]} = $var[1];
