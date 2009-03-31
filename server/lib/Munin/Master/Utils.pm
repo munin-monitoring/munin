@@ -5,7 +5,9 @@ use warnings;
 
 use Carp;
 use Exporter;
+use English qw(-no_match_vars);
 use Fcntl qw(:DEFAULT :flock);
+use File::Path;
 use IO::Handle;
 use Log::Log4perl qw(:easy);
 use Munin::Common::Defaults;
@@ -251,9 +253,8 @@ sub munin_readconfig {
     if (open (my $CFG, '<', $conf)) {
 	@contents = <$CFG>;
 	close ($CFG);
+        $config = &munin_parse_config (\@contents);
     }
-
-    $config = &munin_parse_config (\@contents);
 
     # Some important defaults before we return...
     $config->{'rundir'}   ||= "/var/lock";
@@ -829,7 +830,7 @@ sub munin_get_html_filename {
         my $l = $_;
         $l =~ s/\//_/g; 
         $l =~ s/^\./_/g;
-        return $l 
+        $l;
     } @$loc;
 	
     if (defined $hash->{'graph_title'}) {
@@ -866,7 +867,7 @@ sub munin_get_picture_filename {
         my $l = $_;
         $l =~ s/\//_/g; 
         $l =~ s/^\./_/g;
-        return $l 
+        $l;
     } @$loc;
 	
     my $plugin = pop @$loc or return;
@@ -949,7 +950,7 @@ sub munin_get_filename {
         my $l = $_;
         $l =~ s/\//_/g; 
         $l =~ s/^\./_/g;
-        return $l 
+        $l;
     } @$loc;
 	
     my $field  = pop @$loc or return;
@@ -1373,31 +1374,14 @@ sub munin_get_rrd_filename {
     return $result;
 }
 
-# munin_mkdir_p: Make directory (and path to it)
-# Parameters:
-# - $dirname: Directory to create
-# - $umask: Umask (in addition to the user umask)
-# Returns:
-# - Success: $dirname
-# - Failure: undef
-sub munin_mkdir_p
-{
-    my $dirname = shift;
-    my $umask   = shift;
+sub munin_mkdir_p {
+    my ($dirname, $umask) = @_;
 
-    return $dirname if (-e $dirname);
-
-    (my $prev = $dirname) =~ s/\/[^\/]+\/?$//;
-    if (munin_mkdir_p ($prev, $umask)) {
-	if (mkdir ($dirname, $umask)) {
-	    logger ("Notice: Created directory \"$dirname\".");
-	    return $dirname;
-	} else {
-	    return;
-	}
-    } else {
-	return;
-    }
+    eval {
+        mkpath($dirname, {mode => $umask});
+    };
+    return if $EVAL_ERROR;
+    return 1;
 }
 
 
@@ -1547,7 +1531,11 @@ FIX
 
 =item B<munin_mkdir_p>
 
-FIX
+ munin_mkdir_p('/a/path/', oct('777'));
+
+Make a directory and recursivly any nonexistent directory in the path
+to it.
+
 
 =item B<munin_node_status>
 

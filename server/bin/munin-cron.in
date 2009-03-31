@@ -1,7 +1,10 @@
 #!@@GOODSH@@
 [ -x @@LIBDIR@@/munin-update ] && @@LIBDIR@@/munin-update $@;
-[ -x @@LIBDIR@@/munin-limits ] && @@LIBDIR@@/munin-limits $@;
-[ -x @@LIBDIR@@/munin-graph  ] && 
-	nice @@LIBDIR@@/munin-graph --cron $@ 2>&1 | 
-	fgrep -v "*** attempt to put segment in horiz list twice"
+
+# FIX munin-limits and munin-graph doesn't compile in trunk ...
+#[ -x @@LIBDIR@@/munin-limits ] && @@LIBDIR@@/munin-limits $@;
+#[ -x @@LIBDIR@@/munin-graph  ] && 
+#	nice @@LIBDIR@@/munin-graph --cron $@ 2>&1 | 
+#	fgrep -v "*** attempt to put segment in horiz list twice"
+
 [ -x @@LIBDIR@@/munin-html   ] && nice @@LIBDIR@@/munin-html $@;

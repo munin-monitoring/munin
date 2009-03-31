@@ -269,6 +269,12 @@ sub run_service {
 	    $ENV{$key} = $sconf{$service}{env}{$key};
 	}
     }
+
+    # FIX need to untaint $servicedir for some reason. Should probably
+    # be done somewhere else ...
+    $servicedir =~ /(.*)/;
+    $servicedir = $1;
+
     if (exists $sconf{$service}{'command'} and
         defined $sconf{$service}{'command'})
     {

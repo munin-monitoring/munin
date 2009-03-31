@@ -138,8 +138,6 @@ if (! -d $config->{rundir}) {
 	mkdir ($config->{rundir}, 0700);
 }
 
-warn $do_fork;
-
 munin_runlock("$config->{rundir}/munin-update.lock");
 
 if (!open (STATS,">$config->{dbdir}/munin-update.stats.tmp")) {

@@ -41,6 +41,7 @@ install-main: build
 	mkdir -p $(LIBDIR)
 	mkdir -p $(BINDIR)
 	mkdir -p $(PERLLIB)
+	mkdir -p $(PERLLIB)/Munin/Master
 
 	mkdir -p $(LOGDIR)
 	mkdir -p $(STATEDIR)
@@ -68,7 +69,8 @@ install-main: build
 	$(INSTALL) -m 0755 build/server/bin/munin-limits $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/bin/munin-gather $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/bin/munin-cgi-graph $(CGIDIR)/
-	$(INSTALL) -m 0644 build/server/lib/Munin/Master/Utils.pm $(PERLLIB)/
+	$(INSTALL) -m 0644 server/lib/Munin/Master/Utils.pm $(PERLLIB)/Munin/Master
+	$(INSTALL) -m 0644 server/lib/Munin/Master/Logger.pm $(PERLLIB)/Munin/Master
 
 uninstall-main: build
 	for p in build/server/*.tmpl; do    	    \
@@ -127,6 +129,7 @@ install-node-non-snmp: build
 	mkdir -p $(LIBDIR)/plugins
 	mkdir -p $(SBINDIR)
 	mkdir -p $(PERLLIB)/Munin/Plugin
+	mkdir -p $(PERLLIB)/Munin/Common
 
 	mkdir -p $(LOGDIR)
 	mkdir -p $(STATEDIR)
@@ -147,7 +150,7 @@ install-node-non-snmp: build
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Logger.pm $(PERLLIB)/Munin/Node
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Server.pm $(PERLLIB)/Munin/Node
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Session.pm $(PERLLIB)/Munin/Node
-	$(INSTALL) -m 0644 build/common/lib/Munin/Defaults.pm $(PERLLIB)/Munin
+	$(INSTALL) -m 0644 build/common/lib/Munin/Common/Defaults.pm $(PERLLIB)/Munin/Common
 
 uninstall-node-non-snmp: build
 	rm -f $(SBINDIR)/munin-node 
@@ -236,10 +239,10 @@ uninstall-doc: build-doc
 
 
 
-build: $(INFILES) build/common/lib/Munin/Defaults.pm
+build: $(INFILES) build/common/lib/Munin/Common/Defaults.pm
 
-build/common/lib/Munin/Defaults.pm: common/lib/Munin/Defaults.pm
-	@mkdir -p build/common/lib/Munin/
+build/common/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm
+	@mkdir -p build/common/lib/Munin/Common
 	perl -pe 's{(PREFIX     \s+=\s).*}{\1q{$(PREFIX)};}x;      \
                   s{(CONFDIR    \s+=\s).*}{\1q{$(CONFDIR)};}x;     \
                   s{(BINDIR     \s+=\s).*}{\1q{$(BINDIR)};}x;      \
@@ -267,7 +270,7 @@ build/common/lib/Munin/Defaults.pm: common/lib/Munin/Defaults.pm
                   s{(BASH	\s+=\s).*}{\1q{$(BASH)};}x;        \
                   s{(HASSETR	\s+=\s).*}{\1q{$(HASSETR)};}x;     \
 	          s{(SSPOOLDIR	\s+=\s).*}{\1q{$(SSPOOLDIR)};}x;'  \
-                  common/lib/Munin/Defaults.pm > build/common/lib/Munin/Defaults.pm
+                  $< > $@
 
 
 build/%: %.in

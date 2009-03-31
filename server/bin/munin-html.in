@@ -670,7 +670,7 @@ sub generate_service_templates {
     my $dirname  = $filename; $dirname =~ s/\/[^\/]*$//;
     munin_mkdir_p ($dirname, 0755);
     open (FILE, ">$filename") or
-	die "Cannot open $filename for writing: $!";
+	die "Cannot open '$filename' for writing: $!";
     print FILE $servicetemplate->output;
     close FILE;
 

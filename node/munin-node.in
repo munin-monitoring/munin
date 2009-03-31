@@ -29,18 +29,18 @@ use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
 
 use Getopt::Long;
 use Munin::Node::Config;
-use Munin::Node::Defaults;
+use Munin::Common::Defaults;
 use Munin::Node::OS;
 use Munin::Node::Server;
 
-my $servicedir = "$Munin::Node::Defaults::MUNIN_CONFDIR/plugins";
-my $sconfdir   = "$Munin::Node::Defaults::MUNIN_CONFDIR/plugin-conf.d";
-my $conffile   = "$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.conf";
+my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
+my $sconfdir   = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
+my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
 my $FQDN       = "";
 my $DEBUG      = 0;
 my $PIDEBUG    = 0;
-my $defuser    = getpwnam ($Munin::Node::Defaults::MUNIN_PLUGINUSER);
-my $defgroup   = getgrnam ($Munin::Node::Defaults::MUNIN_GROUP);
+my $defuser    = getpwnam ($Munin::Common::Defaults::MUNIN_PLUGINUSER);
+my $defgroup   = getgrnam ($Munin::Common::Defaults::MUNIN_GROUP);
 my $paranoia   = 0;
 my @ignores    = ();
 my %sconf      = ('timeout' => 10);
@@ -61,7 +61,7 @@ sub main {
     $0 = $1;
 
     # Make build time configuration settings available at runtime.
-    Munin::Node::Defaults->export_to_environment();
+    Munin::Common::Defaults->export_to_environment();
 
     parse_args();
 
@@ -121,7 +121,7 @@ sub main {
 
     Munin::Node::Server->run(
         conf_file => $conffile,
-        pid_file => "$Munin::Node::Defaults::MUNIN_STATEDIR/munin-node.pid"
+        pid_file => "$Munin::Common::Defaults::MUNIN_STATEDIR/munin-node.pid"
     );
 
     return 0;
@@ -144,7 +144,7 @@ sub parse_args {
 }
 
 sub print_version_and_exit {
-    print qq{munin-node (munin-node) version $Munin::Node::Defaults::MUNIN_VERSION.
+    print qq{munin-node (munin-node) version $Munin::Common::Defaults::MUNIN_VERSION.
 Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
 
 Copyright (C) 2002-2009
@@ -166,7 +166,7 @@ sub print_usage_and_exit {
 Options:
     --help              View this message.
     --config <file>     Use <file> as configuration file.
-                        [$Munin::Node::Defaults::MUNIN_CONFDIR/munin-node.conf]
+                        [$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf]
     --[no]paranoia      Only run plugins owned by root. Check permissions.
                         [--noparanoia]
     --debug             View debug messages
