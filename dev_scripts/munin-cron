@@ -1,0 +1,3 @@
+#!/bin/bash
+
+env PERL5LIB=`pwd`/root/usr/local/share/perl/5.10.0/ ./root/usr/bin/munin-cron
