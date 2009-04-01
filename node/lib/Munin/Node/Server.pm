@@ -9,6 +9,7 @@ use Munin::Node::Config;
 use Munin::Common::Defaults;
 use Munin::Node::Logger;
 use Munin::Node::OS;
+use Munin::Node::Service;
 use Munin::Node::Session;
 
 my $tls;
@@ -20,8 +21,15 @@ my %tls_verified = (
     "verify"         => "no"
 );
 
+# A set of all services that this node can run.
 my %services;
+
+# Which hosts this node's services applies to. Typically this is the
+# same as the host the node is running on, but some services queries
+# other hosts (e.g SMTP services).
 my %nodes;
+
+
 my $config = Munin::Node::Config->instance();
 
 
@@ -191,37 +199,25 @@ sub _show_nodes {
 sub _load_services {
     $config->process_plugin_configuration_files();
 
-    opendir (DIR,$config->{servicedir}) 
+    opendir (my $DIR, $config->{servicedir}) 
         || die "Cannot open plugindir: $config->{servicedir} $!";
 
-FILES:
-    for my $file (grep { -f "$config->{servicedir}/$_" } readdir(DIR)) {
-        # FIX isn't it enough to check that the file is executable and
-        # not in 'ignores'?
-	next if $file =~ m/^\./; # Hidden files
-	next if $file =~ m/.conf$/; # Config files
-	next if $file !~ m/^([-\w.]+)$/; # Skip if any weird chars
-	$file = $1; # Not tainted anymore.
-	foreach my $regex (@{$config->{ignores}}) {
-	    next FILES if $file =~ /$regex/;
-	}
-	next if (! -x "$config->{servicedir}/$file");
+    for my $file (readdir($DIR)) {
+        next unless Munin::Node::Service->is_a_runnable_service($file);
 	print "file: '$file'\n" if $config->{DEBUG};
-	$services{$file} = 1;
-	my @rows = &_run_service(Munin::Node::Session->new(), $file,"config", 1);
-	my $node = &_get_var ($file, 'host_name');
-
-	for my $row (@rows) {
-	  print "row: $row\n" if $config->{DEBUG};
-	  if ($row =~ m/^host_name (.+)$/) {
-	    print "Found host_name, using it\n" if $config->{DEBUG};
-	    $node = $1;
-	  }
-	} 
-	$node ||= $config->{fqdn};
-	$nodes{$node}{$file}=1;
+        _add_to_services_and_nodes($file);
     }
-    closedir DIR;
+
+    closedir $DIR;
+}
+
+
+sub _add_to_services_and_nodes {
+    my ($service) = @_;
+
+    $services{$service} = 1;
+    my $node = _get_var($service, 'host_name') || $config->{fqdn};
+    $nodes{$node}{$service} = 1;
 }
 
 

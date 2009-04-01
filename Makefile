@@ -149,6 +149,7 @@ install-node-non-snmp: build
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Config.pm $(PERLLIB)/Munin/Node
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Logger.pm $(PERLLIB)/Munin/Node
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Server.pm $(PERLLIB)/Munin/Node
+	$(INSTALL) -m 0644 node/lib/Munin/Node/Service.pm $(PERLLIB)/Munin/Node
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Session.pm $(PERLLIB)/Munin/Node
 	$(INSTALL) -m 0644 build/common/lib/Munin/Common/Defaults.pm $(PERLLIB)/Munin/Common
 
