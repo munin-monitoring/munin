@@ -296,7 +296,9 @@ sub _run_service {
     else {
         # In child, should never return ...
         _exec_service($service, $command);
-        # FIX exit here just in case?
+         # Should never get here ... putting an exit guard here just
+         # in case ...
+        exit 42;
     }
 
     unless (close $CHILD) {

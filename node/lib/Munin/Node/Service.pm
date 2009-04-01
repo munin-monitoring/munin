@@ -42,12 +42,13 @@ __END__
 
 =head1 NAME
 
-Munin::Node::Service - FIX
+Munin::Node::Service - Methods related to handling of Munin services
 
 
 =head1 SYNOPSIS
 
-FIX
+
+ my $bool = Munin::Node::Service->is_a_runnable_service($file_name);
 
 
 =head1 METHODS
@@ -56,8 +57,9 @@ FIX
 
 =item B<is_a_runnable_service>
 
- my $bool = Munin::Node::Service->is_a_runnable_service('foo');
+ my $bool = Munin::Node::Service->is_a_runnable_service($file_name);
 
-FIX
+Runs miscellaneous tests on $file_name. These tests is intended to
+verify that $file_name is a runnable service.
 
 =back

@@ -3,6 +3,7 @@ package Munin::Node::Session;
 use warnings;
 use strict;
 
+
 sub new {
     my ($class) = @_;
 
@@ -22,12 +23,14 @@ __END__
 
 =head1 NAME
 
-Munin::Node::Session - FIX
+Munin::Node::Session - Stores the state for the session between a node
+and a master.
 
 
 =head1 SYNOPSIS
 
-FIX
+ $session = Munin::Node::Session->new();
+ $session->{capabilities} = { foo => 1, bar => 1};
 
 
 =head1 METHODS
@@ -38,7 +41,7 @@ FIX
 
  $class->new();
 
-FIX
+Constructor.
 
 =back
 

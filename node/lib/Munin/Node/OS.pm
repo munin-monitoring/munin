@@ -89,9 +89,9 @@ sub reap_child_group {
     return unless $class->possible_to_signal_process($child_pid);
     
     # Negative number signals the process group
-    kill -1, $child_pid; 
+    kill -1, $child_pid;           # SIGHUP
     sleep 2; 
-    kill -9, $child_pid;
+    kill -9, $child_pid;           # SIGKILL
 }
 
 
@@ -190,29 +190,41 @@ FIX
 
  $class->reap_child_group($pid);
 
-FIX
+Sends SIGHUP and SIGKILL to the process group identified by $pid.
 
-Sleeps for 2 seconds.
+Sleeps for 2 seconds between SIGHUP and SIGKILL.
 
 =item B<possible_to_signal_process>
 
-FIX
+ my $bool = $class->possible_to_signal_process($pid)
+
+Check whether it’s possible to send a signal to $pid (that means, to
+be brief, that the process is owned by the same user, or we are the
+super-user).  This is a useful way to check that a child process is
+alive (even if only as a zombie) and hasn’t changed its UID.
 
 =item B<set_effective_user_id>
 
-FIX
+ eval {
+     $class->set_effective_user_id($uid);
+ };
+ if ($@) {
+     # Failed to set EUID
+ }
+
+The name says it all ...
 
 =item B<set_effective_group_id>
 
-FIX
+See documentation for set_effective_user_id()
 
 =item B<set_real_user_id>
 
-FIX
+See documentation for set_effective_user_id()
 
 =item B<set_real_group_id>
 
-FIX 
+See documentation for set_effective_user_id()
 
 =back
 
