@@ -119,12 +119,24 @@ sub process_plugin_configuration_files {
     opendir my $DIR, $self->{sconfdir}
         or croak "Could not open plugin configuration directory: $!";
 
-
     $self->{sconf} ||= {};
+    
+    my @ignores = $self->{ignores} ? @{$self->{ignores}} : ();
+    push @ignores, '^\.'; # Hidden files
 
+FILE:
     for my $file (grep { -f "$self->{sconfdir}/$_" } readdir ($DIR)) {
-        $self->parse_plugin_config_file($file);
+        # Untaint file
+        return if $file !~ m/^([-\w.]+)$/; # Skip if any weird chars
+        $file = $1;
+        
+        for my $regex (@ignores) {
+            next FILE if $file =~ /$regex/;
+        }
+
+        $self->parse_plugin_config_file("$self->{sconfdir}/$file");
     }
+    
     closedir $DIR
         or carp "Failed to close directory '$self->{sconfdir}': $!";
 }
@@ -133,40 +145,28 @@ sub process_plugin_configuration_files {
 sub parse_plugin_config_file {
     my ($self, $file) = @_;
 
-    # Untaint file
-    return if $file !~ m/^([-\w.]+)$/; # Skip if any weird chars
-    $file = $1;
-
-    my @ignores = $self->{ignores} ? @{$self->{ignores}} : ();
-    push @ignores, '^\.'; # Hidden files
-
-    for my $regex (@ignores) {
-        return if $file =~ /$regex/;
-    }
-
     # check perms on a file also checks the directory permissions
-    return unless Munin::Node::OS->check_perms("$self->{sconfdir}/$file");
-        
-    open my $CONF, '<', "$self->{sconfdir}/$file"
-        or carp "Could not open file '$self->{sconfdir}/$file' for reading ($!),"
-            . "skipping plugin\n";
-    next unless $CONF;
-    
+    return unless Munin::Node::OS->check_perms($file);
+
+    open my $CONF, '<', $file
+        or carp "Could not open file '$file' for reading ($!),"
+            . " skipping plugin\n";
+    return unless $CONF;
+
     eval {
         $self->parse_plugin_config($CONF)
     };
     if ($EVAL_ERROR) {
         carp sprintf(
-            '%s at %s/%s line %d. Skipping the rest of the file',
+            '%s at %s line %d. Skipping the rest of the file',
             $EVAL_ERROR,
-            $self->{sconfdir},
             $file,
             $INPUT_LINE_NUMBER,
         );
     }
 
     close $CONF
-        or carp "Failed to close '$self->{sconfdir}/$file\': $!";
+        or carp "Failed to close '$file': $!";
 }
 
 
