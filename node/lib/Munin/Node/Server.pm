@@ -282,12 +282,7 @@ sub _run_service {
         return ();
     }
 
-    # FIX Why does Perl::Critic complain on this open? This is IPC not
-    # a regular file open.
-
-    ## no critic
     my $child_pid = open my $CHILD, '-|';
-    ## use critic
 
     unless (defined $child_pid) {
 	logger("Unable to fork.");
