@@ -136,7 +136,7 @@ sub main
 sub load_services
 {
     if ($config->{sconffile}) {
-        # FIXME: need method for loading plugin config from a single file
+        $config->parse_plugin_config_file($config->{sconffile});
     }
     else {
         $config->process_plugin_configuration_files();
