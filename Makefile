@@ -21,7 +21,7 @@ MAN8		 := node/munin-node node/munin-run \
 			server/bin/munin-limits server/bin/munin-html \
 			server/bin/munin-gather
 PODMAN8          := server/doc/munin-cron
-PODMAN5          := server/doc/munin.conf node/munin-node.conf
+PODMAN5          := server/doc/munin.conf node/doc/munin-node.conf
 
 default: build
 
@@ -141,7 +141,7 @@ install-node-non-snmp: build
 
 	$(INSTALL) -m 0755 build/node/munin-node $(SBINDIR)/
 	$(INSTALL) -m 0755 build/node/munin-node-configure $(SBINDIR)/
-	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
+	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/doc/munin-node.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
 
 	mkdir -p $(PERLLIB)/Munin/Node
