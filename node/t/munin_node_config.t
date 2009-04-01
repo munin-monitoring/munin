@@ -237,8 +237,9 @@ isa_ok($conf, 'Munin::Node::Config');
     is_deeply($conf, {
         sconfdir => $sconfdir,
         sconf=>{
-            Foo    => {user  => 0, env => {baz => 'zing'}},
+            Foo    => {user => 0, env => {baz => 'zing'}},
             'Foo*' => {group => 0, env => {bar => 'zap'}},
+            'F*'   => {env => {bar => 'zoo'}},
         },
     }, "Checking sconf");
 

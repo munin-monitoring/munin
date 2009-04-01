@@ -273,7 +273,9 @@ sub _parse_plugin_line {
 sub apply_wildcards {
     my ($self) = @_;
 
-    for my $wildservice (grep { /\*$/ } keys %{$self->{sconf}}) {
+    # Need to sort the keys in descending order so that more spesific
+    # wildcards take presedence.
+    for my $wildservice (grep { /\*$/ } reverse sort keys %{$self->{sconf}}) {
         my $ws = substr $wildservice, 0, -1;
 
         for my $service (grep { /[^*]$/ } keys %{$self->{sconf}}) {
@@ -393,10 +395,20 @@ Parses the munin node configuration from a L<IO::Handle>.
 
 Parses all unignored files in the plugin configuration folder.
 
+=item B<parse_plugin_config_file>
+
+FIX
+
 =item B<parse_plugin_config>
 
  $config->parse_plugin_config($io_handle);
 
 Parses the plugin configuration from an L<IO::Handle>.
+
+=item B<apply_wildcards>
+
+FIX
+
+See L<http://munin.projects.linpro.no/wiki/Priority_and_inheritance>
 
 =cut
