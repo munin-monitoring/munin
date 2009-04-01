@@ -12,7 +12,7 @@ INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
 INSTALL          := ./install-sh
 DIR              := $(shell /bin/pwd | sed 's/^.*\///')
 INFILES          := $(shell find . -name '*.in' | sed 's/\.\/\(.*\)\.in$$/build\/\1/')
-PLUGINS		 := $(wildcard node/node.d.$(OSTYPE)/* node/node.d/*)
+PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/*)
 MANCENTER        := "Munin Documentation"
 MAN8		 := node/munin-node node/munin-run \
 			node/munin-node-configure-snmp \
@@ -141,7 +141,7 @@ install-node-non-snmp: build
 
 	$(INSTALL) -m 0755 build/node/munin-node $(SBINDIR)/
 	$(INSTALL) -m 0755 build/node/munin-node-configure $(SBINDIR)/
-	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/doc/munin-node.conf $(CONFDIR)/
+	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
 
 	mkdir -p $(PERLLIB)/Munin/Node
@@ -168,7 +168,7 @@ uninstall-node-non-snmp: build
 
 # Some HP-UX plugins needs *.adv support files in LIBDIR
 install-node-plugins: build $(PLUGINS) Makefile Makefile.config
-	for p in build/node/node.d/* build/node/node.d.$(OSTYPE)/* ; do \
+	for p in build/plugins/node.d/* build/plugins/node.d.$(OSTYPE)/* ; do \
 	    if test -f "$$p" ; then                                    \
 		family=`sed -n 's/^[[:space:]]*#%# family=\(.*\)$$/\1/p' $$p`;\
 		test "$$family" || family=contrib;                     \
@@ -183,14 +183,14 @@ install-node-plugins: build $(PLUGINS) Makefile Makefile.config
 	-mkdir -p $(PLUGSTATE)
 	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
 	$(CHMOD) 0775 $(PLUGSTATE)
-	$(INSTALL) -m 0644 build/node/plugins.history $(LIBDIR)/plugins/
-	$(INSTALL) -m 0644 build/node/plugin.sh $(LIBDIR)/plugins/
+	$(INSTALL) -m 0644 build/plugins/plugins.history $(LIBDIR)/plugins/
+	$(INSTALL) -m 0644 build/plugins/plugin.sh $(LIBDIR)/plugins/
 	mkdir -p $(PERLLIB)/Munin/Plugin
-	$(INSTALL) -m 0644 node/lib/Munin/Plugin.pm $(PERLLIB)/Munin/
-	$(INSTALL) -m 0644 node/lib/Munin/Plugin/SNMP.pm $(PERLLIB)/Munin/Plugin/
+	$(INSTALL) -m 0644 plugins/lib/Munin/Plugin.pm $(PERLLIB)/Munin/
+	$(INSTALL) -m 0644 plugins/lib/Munin/Plugin/SNMP.pm $(PERLLIB)/Munin/Plugin/
 
 uninstall-node-plugins: build $(PLUGINS)
-	for p in build/node/node.d.$(OSTYPE)/* build/node/node.d/*; do \
+	for p in build/plugins/node.d.$(OSTYPE)/* build/plugins/node.d/*; do \
 	    rm -f $(LIBDIR)/plugins/`basename $$p` \
 	done
 	rm -f $(LIBDIR)/plugins/plugins.history
