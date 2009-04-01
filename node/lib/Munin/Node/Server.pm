@@ -243,16 +243,16 @@ sub _list_services {
 
 
 sub _has_access {
-    my ($session, $serv) = @_;
+    my ($session, $service) = @_;
     my $host   = $session->{peer_address};
-    my $rights = _get_var_arr($serv, 'allow_deny');
+    my $rights = _get_var($service, 'allow_deny');
     
     return 1 unless @{$rights};
 
-    print STDERR "DEBUG: Checking access: $host;$serv;\n" if $config->{DEBUG};
+    print STDERR "DEBUG: Checking access: $host;$service;\n" if $config->{DEBUG};
     for my $ruleset (@{$rights}) {
         for my $rule (@{$ruleset}) {
-            logger ("DEBUG: Checking access: $host;$serv;"
+            logger ("DEBUG: Checking access: $host;$service;"
                         . $rule->[0].";".$rule->[1])
                 if $config->{DEBUG};
 
@@ -717,36 +717,6 @@ sub _start_tls
     }
 
     return $tls;
-}
-
-
-sub _get_var_arr
-{
-    my $name    = shift;
-    my $var     = shift;
-    my $result  = [];
-
-    my $sconf   = $config->{sconf};
-
-    if (exists $sconf->{$name}{$var})
-    {
-	push (@{$result}, $sconf->{$name}{$var});
-    }
-
-    foreach my $wildservice (grep (/\*$/, reverse sort keys %{$sconf}))
-    {
-	(my $tmpservice = $wildservice) =~ s/\*$//;
-	next unless ($name =~ /^$tmpservice/);
-	print STDERR "# Checking $wildservice...\n" if $config->{DEBUG};
-
-	if (defined $sconf->{$wildservice}{$var})
-	{
-	    push (@{$result}, $sconf->{$wildservice}{$var});
-	    print STDERR ("DEBUG: Pushing: |", join (';', @{$sconf->{$wildservice}{$var}}), "|\n")
-		if $config->{DEBUG};
-	}
-    }
-    return $result;
 }
 
 
