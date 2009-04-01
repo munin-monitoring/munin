@@ -370,7 +370,7 @@ sub _exec_service {
         exit 2;
     }
 
-    _set_service_environment($sconf->{$service}{env});
+    _set_service_environment($sconf{$service}{env});
     if (exists $sconf{$service}{'command'} && defined $sconf{$service}{'command'}) {
         my @run = ();
         for my $t (@{$sconf{$service}{'command'}}) {
