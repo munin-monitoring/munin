@@ -1,9 +1,6 @@
 use warnings;
 use strict;
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
-
 use Test::More tests => 11;
 use English qw(-no_match_vars);
 

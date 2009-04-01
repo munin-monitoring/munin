@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-# Check for comments ahnd POD flagged with FIX.
+# Check for comments and POD flagged with FIX.
 
 # Are there any modules that already does this?
 # Perl::Critic::Policy::Bangs::ProhibitFlagComments doesn't consider

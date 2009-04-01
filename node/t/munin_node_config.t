@@ -4,8 +4,6 @@ use strict;
 use Test::More tests => 28;
 
 use FindBin;
-use lib "$FindBin::Bin/../lib";
-
 use English qw(-no_match_vars);
 use Munin::Common::Defaults;
 
