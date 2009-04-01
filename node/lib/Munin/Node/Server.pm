@@ -198,6 +198,7 @@ sub _show_nodes {
 
 sub _load_services {
     $config->process_plugin_configuration_files();
+    $config->apply_wildcards();
 
     opendir (my $DIR, $config->{servicedir}) 
         || die "Cannot open plugindir: $config->{servicedir} $!";
@@ -361,14 +362,6 @@ sub _exec_service {
     my %sconf = %{$config->{sconf}};
 
     POSIX::setsid();
-    # Setting environment
-    # FIX Not very obvious that _get_var() should have a side effect ...
-    $sconf{$service}{user}    = &_get_var ($service, 'user');
-    $sconf{$service}{group}   = &_get_var ($service, 'group');
-    $sconf{$service}{command} = &_get_var ($service, 'command');
-
-    # FIX Not very obvious that _get_var() should have a side effect ...
-    &_get_var ($service, 'env', $sconf{$service}{env});
 
     _change_real_and_effective_user_and_group($service);
 
@@ -377,7 +370,7 @@ sub _exec_service {
         exit 2;
     }
 
-    _set_service_environment();
+    _set_service_environment($sconf->{$service}{env});
     if (exists $sconf{$service}{'command'} && defined $sconf{$service}{'command'}) {
         my @run = ();
         for my $t (@{$sconf{$service}{'command'}}) {
@@ -720,61 +713,18 @@ sub _start_tls
 }
 
 
-sub _get_var
-{
-    my $name    = shift;
-    my $var     = shift;
-    my $env     = shift;
+sub _get_var {
+    my ($name, $var) = @_;
 
-    my $sconf   = $config->{sconf};
+    my $sconf = $config->{sconf};
 
+    return unless defined $name;
 
-    if (!defined $var and defined $name)
-    {
-	return $sconf->{$name};
-    }
-    if ($var eq 'env' and !defined $env)
-    {
-	%{$env} = ();
-    }
-    
-    if ($var ne 'env' and exists $sconf->{$name}{$var})
-    {
-	return $sconf->{$name}{$var};
-    }
-    # Deciding environment
-    foreach my $wildservice (grep (/\*$/, reverse sort keys %{$sconf}))
-    {
-	(my $tmpservice = $wildservice) =~ s/\*$//;
-	next unless ($name =~ /^$tmpservice/);
-#	_net_write ("# Checking $wildservice...\n") if $config->{DEBUG};
+    return $sconf->{$name} unless defined $var;
 
-	if ($var eq 'env')
-	{
-	    if (exists $sconf->{$wildservice}{'env'})
-	    {
-		foreach my $key (keys %{$sconf->{$wildservice}{'env'}})
-		{
-		    if (! exists $sconf->{$name}{'env'}{$key})
-		    {
-                        # FIX What!? A sideffect in a getter? This
-                        # reeks ...
-			$sconf->{$name}{'env'}{$key} = $sconf->{$wildservice}{'env'}{$key};
-			_net_write ("Saving $wildservice->$key\n") if $config->{DEBUG};
-		    }
-		}
-	    }
-	}
-	else
-	{
-	    if (! exists $sconf->{$name}{$var} and
-		    exists $sconf->{$wildservice}{$var})
-	    {
-		return ($sconf->{$wildservice}{$var});
-	    }
-	}
-    }
-    return $env;
+    return $sconf->{$name}{$var} if exists $sconf->{$name};
+
+    return;
 }
 
 1;
