@@ -122,48 +122,53 @@ sub process_plugin_configuration_files {
 
     $self->{sconf} ||= {};
 
-    my @ignores = $self->{ignores} ? @{$self->{ignores}} : ();
-    push @ignores, '^\.'; # Hidden files
-
-  FILES:
     for my $file (grep { -f "$self->{sconfdir}/$_" } readdir ($DIR)) {
-
-        # Untaint file
-        next if $file !~ m/^([-\w.]+)$/; # Skip if any weird chars
-        $file = $1;
-
-        for my $regex (@ignores) {
-            next FILES if $file =~ /$regex/;
-        }
-
-        # check perms on a file also checks the directory permissions
-        next unless Munin::Node::OS->check_perms("$self->{sconfdir}/$file");
-        
-        open my $CONF, '<', "$self->{sconfdir}/$file"
-            or carp "Could not open file '$self->{sconfdir}/$file' for reading ($!),"
-                . "skipping plugin\n";
-        next unless $CONF;
-        
-        eval {
-            $self->parse_plugin_config($CONF)
-        };
-        if ($EVAL_ERROR) {
-            carp sprintf(
-                '%s at %s/%s line %d. Skipping the rest of the file',
-                $EVAL_ERROR,
-                $self->{sconfdir},
-                $file,
-                $INPUT_LINE_NUMBER,
-            );
-        }
-
-        close $CONF
-            or carp "Failed to close '$self->{sconfdir}/$file\': $!";
-
+        $self->parse_plugin_config_file($file);
     }
     closedir $DIR
         or carp "Failed to close directory '$self->{sconfdir}': $!";
 }
+
+
+sub parse_plugin_config_file {
+    my ($self, $file) = @_;
+
+    # Untaint file
+    return if $file !~ m/^([-\w.]+)$/; # Skip if any weird chars
+    $file = $1;
+
+    my @ignores = $self->{ignores} ? @{$self->{ignores}} : ();
+    push @ignores, '^\.'; # Hidden files
+
+    for my $regex (@ignores) {
+        return if $file =~ /$regex/;
+    }
+
+    # check perms on a file also checks the directory permissions
+    return unless Munin::Node::OS->check_perms("$self->{sconfdir}/$file");
+        
+    open my $CONF, '<', "$self->{sconfdir}/$file"
+        or carp "Could not open file '$self->{sconfdir}/$file' for reading ($!),"
+            . "skipping plugin\n";
+    next unless $CONF;
+    
+    eval {
+        $self->parse_plugin_config($CONF)
+    };
+    if ($EVAL_ERROR) {
+        carp sprintf(
+            '%s at %s/%s line %d. Skipping the rest of the file',
+            $EVAL_ERROR,
+            $self->{sconfdir},
+            $file,
+            $INPUT_LINE_NUMBER,
+        );
+    }
+
+    close $CONF
+        or carp "Failed to close '$self->{sconfdir}/$file\': $!";
+}
+
 
 
 sub parse_plugin_config {
@@ -261,6 +266,48 @@ sub _parse_plugin_line {
     else {
         croak "Failed to parse line: $line. "
             . "Should it have been 'env.$var_name $var_value'?";
+    }
+}
+
+
+sub apply_wildcards {
+    my ($self) = @_;
+
+    for my $wildservice (grep { /\*$/ } keys %{$self->{sconf}}) {
+        my $ws = substr $wildservice, 0, -1;
+
+        for my $service (grep { /[^*]$/ } keys %{$self->{sconf}}) {
+            next unless $service =~ /^$ws/;
+            
+            $self->_apply_wildcard_to_service($self->{sconf}{$wildservice},
+                                              $service);
+        }
+
+        delete $self->{sconf}{$wildservice};
+    }
+}
+
+
+sub _apply_wildcard_to_service {
+    my ($self, $wildservice, $service) = @_;
+
+    my $sconf = $self->{sconf}{$service};
+
+    # Environment
+    if (exists $wildservice->{'env'}) {
+        for my $key (keys %{$wildservice->{'env'}}) {
+            next if exists $sconf->{'env'} && exists $sconf->{'env'}{$key};
+
+            $sconf->{'env'} ||= {};
+            $sconf->{'env'}{$key} = $wildservice->{'env'}{$key};
+        }
+    }
+
+    for my $key (keys %{$wildservice}) {
+        next if $key eq 'env';           # Already handled
+        next if exists $sconf->{$key};
+
+        $sconf->{$key} = $wildservice->{$key};
     }
 }
 

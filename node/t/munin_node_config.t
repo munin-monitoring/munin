@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 28;
+use Test::More tests => 29;
 
 use FindBin;
 use English qw(-no_match_vars);
@@ -236,8 +236,27 @@ isa_ok($conf, 'Munin::Node::Config');
 
     is_deeply($conf, {
         sconfdir => $sconfdir,
-        sconf=>{Foo => {user => 0}}
+        sconf=>{
+            Foo    => {user  => 0, env => {baz => 'zing'}},
+            'Foo*' => {group => 0, env => {bar => 'zap'}},
+        },
     }, "Checking sconf");
+
+    $conf->apply_wildcards();
+    is_deeply($conf, {
+        sconfdir => $sconfdir,
+        sconf=>{
+            Foo => {
+                user => 0, 
+                group => 0, 
+                env => {
+                    baz => 'zing', 
+                    bar => 'zap',
+                }
+            }
+        }
+    }, "Checking sconf wildcards");
+
 }
 
 __DATA__
