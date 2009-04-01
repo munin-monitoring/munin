@@ -148,10 +148,12 @@ sub parse_plugin_config_file {
     # check perms on a file also checks the directory permissions
     return unless Munin::Node::OS->check_perms($file);
 
-    open my $CONF, '<', $file
-        or carp "Could not open file '$file' for reading ($!),"
-            . " skipping plugin\n";
-    return unless $CONF;
+    my $CONF;
+    unless (open $CONF, '<', $file) {
+        my $err = $!;
+        carp "Could not open file '$file' for reading ($err), skipping.\n";
+        return;
+    }
 
     eval {
         $self->parse_plugin_config($CONF)
