@@ -47,7 +47,7 @@ sub process_request {
     my $session = Munin::Node::Session->new();
 
     $session->{tls_started}  = 0;
-    $session->{tls_mode}     = _get_var('tls') || 'auto';
+    $session->{tls_mode}     = $config->{tls} || 'auto';
     $session->{peer_address} = $self->{server}->{peeraddr};
 
     $PROGRAM_NAME .= " [$session->{peer_address}]";
@@ -155,20 +155,20 @@ sub _process_starttls_command {
     my $ca_cert;
     my $tls_verify;
 
-    $key = $cert = &_get_var ("tls_pem");
-    $key = &_get_var ("tls_private_key") unless defined $key;
+    $key = $cert = $config->{tls_pem};
+    $key = $config->{tls_private_key} unless defined $key;
     $key = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $key;
 
-    $cert = &_get_var ("tls_certificate") unless defined $cert;
+    $cert = $config->{tls_certificate} unless defined $cert;
     $cert = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $cert;
 
-    $ca_cert = &_get_var("tls_ca_certificate");
+    $ca_cert = $config->{tls_ca_certificate};
     $ca_cert = "$Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem" unless defined $ca_cert;
 
-    $depth = &_get_var ('tls_verify_depth');
+    $depth = $config->{tls_verify_depth};
     $depth = 5 unless defined $depth;
 
-    $tls_verify = &_get_var ('tls_verify_certificate');
+    $tls_verify = $config->{tls_verify_certificate};
     $tls_verify = "no" unless defined $tls_verify;
 
     if (_start_tls($mode, $cert, $key, $ca_cert, $tls_verify, $depth)) {
@@ -217,7 +217,7 @@ sub _add_to_services_and_nodes {
     my ($service) = @_;
 
     $services{$service} = 1;
-    my $node = _get_var($service, 'host_name') || $config->{fqdn};
+    my $node = $config->{sconf}{$service}{host_name} || $config->{fqdn};
     $nodes{$node}{$service} = 1;
 }
 
@@ -246,7 +246,16 @@ sub _list_services {
 sub _has_access {
     my ($session, $service) = @_;
     my $host   = $session->{peer_address};
-    my $rights = _get_var($service, 'allow_deny');
+    my $rights = $config->{sconf}{allow_deny};
+
+    # FIX allow_deny doesn't seem to work ... The parser handles these
+    # cases when reading plugin configuration, but the code here and
+    # the wiki docs
+    #
+    #   - http://munin.projects.linpro.no/wiki/munin-node.conf
+    #   - http://munin.projects.linpro.no/wiki/plugin-conf.d
+    #
+    # suggests that this is configured globaly for the node
     
     return 1 unless @{$rights};
 
@@ -326,7 +335,7 @@ sub _run_service {
 sub _read_service_result {
     my ($CHILD, $service, $command, $child_pid) = @_;
 
-    my $timeout = _get_var ($service, 'timeout');
+    my $timeout = $config->{sconf}{$service}{timeout});
     $timeout = $config->{sconf}{'timeout'} 
     	unless defined $timeout and $timeout =~ /^\d+$/;
 
@@ -712,20 +721,6 @@ sub _start_tls
     return $tls;
 }
 
-
-sub _get_var {
-    my ($name, $var) = @_;
-
-    my $sconf = $config->{sconf};
-
-    return unless defined $name;
-
-    return $sconf->{$name} unless defined $var;
-
-    return $sconf->{$name}{$var} if exists $sconf->{$name};
-
-    return;
-}
 
 1;
 
