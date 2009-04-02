@@ -31,6 +31,7 @@ use Getopt::Long;
 use Munin::Common::Defaults;
 use Munin::Node::Config;
 use Munin::Node::OS;
+use Munin::Node::Service;
 
 my %services;
 my %nodes;
@@ -152,51 +153,21 @@ sub load_services
         exit 1;
     }
 
-    # FIXME: $plugin isn't detainted now.
-    my @rows = run_service($services{$plugin}, $arg);
+    run_service($plugin, $arg);
 
-    # shouldn't ever get here.  this is all cruft.
-#   my $node = $FQDN;
-#   for my $row (@rows) {
-#     print "# row: $row\n" if $DEBUG;
-#     if ($row =~ m/^host_name (.+)$/) {
-#       print "# Found host_name, using it\n" if $DEBUG;
-#       $node = $1;
-#     }
-#   }
-#   $nodes{$node}{$plugin}=1;
-
-    print "ERROR: Could not execute plugin.\n";
-    exit 1;
+    # Never reached, but just in case...
+    exit 42;
 }
 
 
 # returns a hash of plugin-like items in the plugin directory
 sub get_service_list
 {
-    $servicedir = $config->{servicedir};
+    opendir my $DIR, $config->{servicedir}
+        or die "Cannot open plugin directory '$config->{servicedir}': $!";
 
-    opendir my $DIR, $servicedir
-        or die "Cannot open plugindir: $servicedir $!";
-
-FILE:
     foreach my $file (readdir($DIR)) {
-        # Must be an executable file
-        next unless ( -f "$servicedir/$file" && -x _ );
-
-        # FIX isn't it enough to check that the file is executable and
-        # not in 'ignores'?
-        next if $file =~ m/^\./; # Hidden files
-        next if $file =~ m/.conf$/; # Config files
-        next if $file !~ m/^([-\w.]+)$/; # Skip if any weird chars
-        $file = $1; # Not tainted anymore.
-
-        foreach my $regex (@ignores) {
-            next FILE if $file =~ /$regex/;
-        }
-
-        # Looks good.  Note it
-        $services{$file} = $file;
+        $services{$file} = Munin::Node::Service->is_a_runnable_service($file);
     }
 
     close($DIR);
@@ -216,12 +187,6 @@ sub run_service {
       $timed_out = 1; 
     };
 
-    # Setting environment
-    $sconf{$service}{user}    = &get_var (\%sconf, $service, 'user');
-    $sconf{$service}{group}   = &get_var (\%sconf, $service, 'group');
-    $sconf{$service}{command} = &get_var (\%sconf, $service, 'command');
-    &get_var (\%sconf, $service, 'env', \%{$sconf{$service}{env}});
-    
 	if ($< == 0) # If root
 	{
 		# Giving up gid egid uid euid
@@ -311,56 +276,6 @@ sub run_service {
 }
 
 
-sub get_var
-{
-    my $sconf   = shift;
-    my $name    = shift;
-    my $var     = shift;
-    my $env     = shift;
-
-    if ($var eq 'env' and !defined $env)
-    {
-        %{$env} = ();
-    }
-    
-    if ($var ne 'env' and exists $sconf->{$name}{$var})
-    {
-        return $sconf->{$name}{$var};
-    }
-    # Deciding environment
-    foreach my $wildservice (grep (/\*$/, reverse sort keys %{$sconf}))
-    {
-        (my $tmpservice = $wildservice) =~ s/\*$//;
-        next unless ($name =~ /^$tmpservice/);
-        print "# Checking $wildservice...\n" if $DEBUG;
-
-        if ($var eq 'env')
-        {
-            if (exists $sconf->{$wildservice}{'env'})
-            {
-                foreach my $key (keys %{$sconf->{$wildservice}{'env'}})
-                {
-                    if (! exists $sconf->{$name}{'env'}{$key})
-                    {
-                        $sconf->{$name}{'env'}{$key} = $sconf->{$wildservice}{'env'}{$key};
-                        print "# Saving $wildservice->$key\n" if $DEBUG;
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (! exists $sconf->{$name}{$var} and
-                    exists $sconf->{$wildservice}{$var})
-            {
-                return ($sconf->{$wildservice}{$var});
-            }
-        }
-    }
-    return $env;
-}
-
-
 sub parse_args
 {
 	print_usage_and_exit() unless GetOptions (
@@ -375,9 +290,15 @@ sub parse_args
 	        "help"         => \&print_usage_and_exit
 	);
 
-	print_usage_and_exit() unless $ARGV[0];
+    print_usage_and_exit() unless $ARGV[0];
 
-    $plugin = $ARGV[0];
+    # Detaint the plugin name
+    if ($ARGV[0] =~ m/^([-\w.]+)$/) {
+        $plugin = $1;
+    }
+    else {
+        die "# ERROR: Unknown service.\n";
+    }
 
     if ($ARGV[1]) {
         # Ensure the plugin's argument (if any) is one of the known ones.
