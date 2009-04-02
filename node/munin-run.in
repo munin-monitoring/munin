@@ -62,8 +62,8 @@ sub main
     # that the environment is insecure, but we want to let admins shoot themselves
     # in the foot with it, if they want to.
     foreach my $key (keys %ENV) {
-    	$ENV{$key} =~ /^(.*)$/;
-    	$ENV{$key} = $1;
+        $ENV{$key} =~ /^(.*)$/;
+        $ENV{$key} = $1;
     }
 
     $0 =~ /^(.*)$/;
@@ -77,7 +77,7 @@ sub main
     $ENV{'MUNIN_DEBUG'} = $PIDEBUG;
 
     # Check permissions of configuration
-    # FIXME: oops, doesn't honour $paranoia, since it's not yet set in 
+    # FIXME: oops, doesn't honour $paranoia, since it's not yet set in
     # config object
     unless (Munin::Node::OS->check_perms($servicedir)
          && Munin::Node::OS->check_perms($conffile))
@@ -88,23 +88,23 @@ sub main
     $config = Munin::Node::Config->instance();
     $config->parse_config_from_file($conffile);
 
-    $FQDN     = $config->{fqdn}     if defined $config->{fqdn}; 
-    $defuser  = $config->{defuser}  if defined $config->{defuser}; 
-    $defgroup = $config->{defgroup} if defined $config->{defgroup}; 
-    $paranoia = $config->{paranoia} if defined $config->{paranoia}; 
- 
-    push @ignores, @{$config->{ignores}} if defined $config->{ignores}; 
- 
-    if (defined $config->{sconf} && defined $config->{sconf}{timeout}) { 
-        $sconf{timeout} = $config->{sconf}{timeout}; 
-    } 
- 
-    if (defined $config->{sconf}) { 
-        while (my ($k, $v) = each %{$config->{sconf}}) { 
-            next if defined $sconf{$k}; 
-            $sconf{$k} = $v; 
-        } 
-    } 
+    $FQDN     = $config->{fqdn}     if defined $config->{fqdn};
+    $defuser  = $config->{defuser}  if defined $config->{defuser};
+    $defgroup = $config->{defgroup} if defined $config->{defgroup};
+    $paranoia = $config->{paranoia} if defined $config->{paranoia};
+
+    push @ignores, @{$config->{ignores}} if defined $config->{ignores};
+
+    if (defined $config->{sconf} && defined $config->{sconf}{timeout}) {
+        $sconf{timeout} = $config->{sconf}{timeout};
+    }
+
+    if (defined $config->{sconf}) {
+        while (my ($k, $v) = each %{$config->{sconf}}) {
+            next if defined $sconf{$k};
+            $sconf{$k} = $v;
+        }
+    }
 
     # Override the hostname if everything else fails
     $FQDN ||= Munin::Node::OS->get_fq_hostname();
@@ -143,16 +143,11 @@ sub load_services
         $config->process_plugin_configuration_files();
     }
 
+    $config->apply_wildcards();
+
     get_service_list();
 
-    if ($services{$plugin}) {
-        print "file: '$plugin'\n" if $config->{DEBUG};
-    }
-    else {
-        print "# ERROR: Plugin '$plugin' doesn't exist.\n";
-        exit 1;
-    }
-
+    print "file: '$plugin'\n" if $config->{DEBUG};
     run_service($plugin, $arg);
 
     # Never reached, but just in case...
@@ -278,17 +273,17 @@ sub run_service {
 
 sub parse_args
 {
-	print_usage_and_exit() unless GetOptions (
-	        "config=s"     => \$conffile,
-	        "debug!"       => \$DEBUG,
-	        "pidebug!"     => \$PIDEBUG,
-	        "version!"     => \&print_version_and_exit,
-	        "servicedir=s" => \$servicedir,
-	        "sconfdir=s"   => \$sconfdir,
-	        "sconffile=s"  => \$sconffile,
-	        "paranoia!"    => \$paranoia,
-	        "help"         => \&print_usage_and_exit
-	);
+    print_usage_and_exit() unless GetOptions (
+            "config=s"     => \$conffile,
+            "debug!"       => \$DEBUG,
+            "pidebug!"     => \$PIDEBUG,
+            "version!"     => \&print_version_and_exit,
+            "servicedir=s" => \$servicedir,
+            "sconfdir=s"   => \$sconfdir,
+            "sconffile=s"  => \$sconffile,
+            "paranoia!"    => \$paranoia,
+            "help"         => \&print_usage_and_exit
+    );
 
     print_usage_and_exit() unless $ARGV[0];
 
@@ -297,7 +292,7 @@ sub parse_args
         $plugin = $1;
     }
     else {
-        die "# ERROR: Unknown service.\n";
+        die "# ERROR: Invalid plugin name.\n";
     }
 
     if ($ARGV[1]) {
@@ -419,11 +414,11 @@ L<http://munin.sf.net/>.
 
 =head1 FILES
 
-	@@CONFDIR@@/munin-node.conf
-	@@CONFDIR@@/plugins/*
-	@@CONFDIR@@/plugin-conf.d/*
-	@@STATEDIR@@/munin-node.pid
-	@@LOGDIR@@/munin-node.log
+    @@CONFDIR@@/munin-node.conf
+    @@CONFDIR@@/plugins/*
+    @@CONFDIR@@/plugin-conf.d/*
+    @@STATEDIR@@/munin-node.pid
+    @@LOGDIR@@/munin-node.log
 
 =head1 VERSION
 
