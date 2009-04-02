@@ -275,8 +275,8 @@ sub _parse_plugin_line {
 sub apply_wildcards {
     my ($self) = @_;
 
-    # Need to sort the keys in descending order so that more spesific
-    # wildcards take presedence.
+    # Need to sort the keys in descending order so that more specific
+    # wildcards take precedence.
     for my $wildservice (grep { /\*$/ } reverse sort keys %{$self->{sconf}}) {
         my $ws = substr $wildservice, 0, -1;
 
@@ -399,7 +399,9 @@ Parses all unignored files in the plugin configuration folder.
 
 =item B<parse_plugin_config_file>
 
-FIX
+ $config->parse_plugin_config_file($file);
+
+Parses the plugin configuration in $file.
 
 =item B<parse_plugin_config>
 
@@ -409,7 +411,10 @@ Parses the plugin configuration from an L<IO::Handle>.
 
 =item B<apply_wildcards>
 
-FIX
+ $config->apply_wildcards();
+
+Applies the contents of any wildcard plugin configuration sections 
+to matching plugins.
 
 See L<http://munin.projects.linpro.no/wiki/Priority_and_inheritance>
 
