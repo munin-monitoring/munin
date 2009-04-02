@@ -20,7 +20,7 @@ MAN8		 := node/munin-node node/munin-run \
 			server/bin/munin-graph server/bin/munin-update \
 			server/bin/munin-limits server/bin/munin-html \
 			server/bin/munin-gather
-PODMAN8          := server/doc/munin-cron
+PODMAN8          := server/doc/munin-cron server/doc/munin
 PODMAN5          := server/doc/munin.conf node/doc/munin-node.conf
 
 default: build
@@ -214,6 +214,8 @@ install-man: build-man Makefile Makefile.config
 	$(INSTALL) -m 0644 build/doc/munin-limits.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-html.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-cron.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin.8 $(MANDIR)/man8/
+
 
 uninstall-man: build-man
 	rm -f $(MANDIR)/man5/munin-node.conf.5 
@@ -227,6 +229,7 @@ uninstall-man: build-man
 	rm -f $(MANDIR)/man8/munin-limits.8
 	rm -f $(MANDIR)/man8/munin-html.8
 	rm -f $(MANDIR)/man8/munin-cron.8 
+	rm -f $(MANDIR)/man8/munin.8 
 	-rmdir $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8 $(MANDIR)
 
 install-doc: build-doc
