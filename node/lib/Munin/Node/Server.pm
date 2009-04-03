@@ -379,7 +379,7 @@ sub _exec_service {
         exit 2;
     }
 
-    _set_service_environment($sconf{$service}{env});
+    Munin::Node::Service->export_service_environment($service);
     if (exists $sconf{$service}{'command'} && defined $sconf{$service}{'command'}) {
         my @run = ();
         for my $t (@{$sconf{$service}{'command'}}) {
@@ -393,15 +393,6 @@ sub _exec_service {
         exec (@run) if @run;
     } else {
         exec "$config->{servicedir}/$service", $command;
-    }
-}
-
-
-sub _set_service_environment {
-    my ($env) = @_;
-    return unless defined $env;
-    while (my ($k, $v) = each %$env) {
-        $ENV{$k} = $v;
     }
 }
 

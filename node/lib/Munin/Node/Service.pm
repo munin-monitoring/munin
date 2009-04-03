@@ -35,6 +35,17 @@ sub is_a_runnable_service {
 }
 
 
+sub export_service_environment {
+    my ($class, $service) = @_;
+
+    my $env = $config->{sconf}{$service}{env};
+    return unless defined $env;
+    while (my ($k, $v) = each %$env) {
+        $ENV{$k} = $v;
+    }
+}
+
+
 1;
 
 __END__
@@ -61,5 +72,11 @@ Munin::Node::Service - Methods related to handling of Munin services
 
 Runs miscellaneous tests on $file_name. These tests is intended to
 verify that $file_name is a runnable service.
+
+=item B<export_service_environment>
+
+ Munin::Node::Service->export_service_enviromnent($service);
+
+Exports all the environment variables specific to service $service.
 
 =back
