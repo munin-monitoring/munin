@@ -244,40 +244,24 @@ sub _list_services {
 
 
 sub _has_access {
-    my ($session, $service) = @_;
+    my ($session) = @_;
     my $host   = $session->{peer_address};
-    my $rights = $config->{sconf}{allow_deny};
+    my $ruleset = $config->{allow_deny} || [];
 
-    # FIX allow_deny doesn't seem to work ... The parser handles these
-    # cases when reading plugin configuration, but the code here and
-    # the wiki docs
-    #
-    #   - http://munin.projects.linpro.no/wiki/munin-node.conf
-    #   - http://munin.projects.linpro.no/wiki/plugin-conf.d
-    #
-    # suggests that this is configured globaly for the node
-    
-    return 1 unless @{$rights};
+    return 1 unless @{$ruleset};
 
-    print STDERR "DEBUG: Checking access: $host;$service;\n" if $config->{DEBUG};
-    for my $ruleset (@{$rights}) {
-        for my $rule (@{$ruleset}) {
-            logger ("DEBUG: Checking access: $host;$service;"
-                        . $rule->[0].";".$rule->[1])
-                if $config->{DEBUG};
-
-            # tls
-            if ($rule->[1] eq "tls" and $tls_verified{"verified"}) { 
-                return $rule->[0] eq "allow" ? 1 : 0;
-            }
-            
-            # regex
-            elsif ($host =~ m($rule->[1])) {
-                return $rule->[0] eq "allow" ? 1 : 0;
-            }
+    for my $rule (@{$ruleset}) {
+        logger(sprintf("DEBUG: Checking access: %s: %s;%s", 
+                       $host, $rule->[0], $rule->[1]))
+            if $config->{DEBUG};
+        
+        if ($host =~ m($rule->[1])) {
+            return $rule->[0] eq "allow" ? 1 : 0;
         }
     }
-    return 1;
+
+    # No rules matched. Return true if in deny mode, else false.
+    return $ruleset->[0][0] eq 'deny';
 }
 
 
@@ -335,7 +319,7 @@ sub _run_service {
 sub _read_service_result {
     my ($CHILD, $service, $command, $child_pid) = @_;
 
-    my $timeout = $config->{sconf}{$service}{timeout});
+    my $timeout = $config->{sconf}{$service}{timeout};
     $timeout = $config->{sconf}{'timeout'} 
     	unless defined $timeout and $timeout =~ /^\d+$/;
 

@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 29;
+use Test::More tests => 35;
 
 use FindBin;
 use English qw(-no_match_vars);
@@ -78,6 +78,20 @@ isa_ok($conf, 'Munin::Node::Config');
     is_deeply(\@res, [paranoia => 0], 'Parsing paranoia');  
 }
 
+
+### allow_deny
+
+{
+    my @res = $conf->_parse_line('allow 127\.0\.0\.1');
+    is_deeply(\@res, [allow_deny => ['allow', '127\.0\.0\.1']], 'Parsing allow');  
+}
+
+{
+    my @res = $conf->_parse_line('deny 127\.0\.0\.1');
+    is_deeply(\@res, [allow_deny => ['deny', '127\.0\.0\.1']], 'Parsing deny');  
+}
+
+
 ###############################################################################
 #                       _ S T R I P _ C O M M E N T
 
@@ -121,6 +135,10 @@ isa_ok($conf, 'Munin::Node::Config');
     $conf->parse_config(*DATA);
     my $expected = {
         'fqdn' => 'foo.example.com',
+        'allow_deny' => [
+            ['allow', '^127\\.0\\.0\\.\d+$'],
+            ['allow', '^10\\.0\\.0\\.\d+$']
+        ],
         'sconf' => {
             'setsid' => 'yes',
             'background' => '1',
@@ -131,7 +149,6 @@ isa_ok($conf, 'Munin::Node::Config');
             'group' => 'root',
             'log_level' => '4',
             'user' => 'root',
-            'allow' => '^127\\.0\\.0\\.1$',
         },
         'ignores' => [
             '~$',
@@ -144,6 +161,36 @@ isa_ok($conf, 'Munin::Node::Config');
     };
     is_deeply($conf, $expected, "Parsing a test config");
 }
+
+
+###############################################################################
+#                  _ A D D _ A L L O W _ D E N Y _ R U L E
+
+{
+    $conf->reinitialize();
+
+    $conf->_add_allow_deny_rule(['deny', 'foo']);
+    is_deeply($conf, {allow_deny => [['deny', 'foo']]});
+
+    eval {
+        $conf->_add_allow_deny_rule(['allow', 'foo']);
+    };
+    like($EVAL_ERROR, qr/You can't mix allow and deny/);
+}
+
+
+{
+    $conf->reinitialize();
+
+    $conf->_add_allow_deny_rule(['allow', 'foo']);
+    is_deeply($conf, {allow_deny => [['allow', 'foo']]});
+
+    eval {
+        $conf->_add_allow_deny_rule(['deny', 'foo']);
+    };
+    like($EVAL_ERROR, qr/You can't mix allow and deny/);
+}
+
 
 
 ###############################################################################
@@ -295,7 +342,8 @@ host_name foo.example.com
 # doesn't understand CIDR-style network notation.  You may repeat
 # the allow line as many times as you'd like
 
-allow ^127\.0\.0\.1$
+allow ^127\.0\.0\.\d+$
+allow ^10\.0\.0\.\d+$
 
 # Which address to bind to;
 host *

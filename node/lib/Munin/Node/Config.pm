@@ -57,6 +57,9 @@ sub parse_config {
             $self->{ignores} ||= [];
             push @{$self->{ignores}}, $var[1];
         } 
+        elsif ($var[0] eq 'allow_deny') {
+            $self->_add_allow_deny_rule($var[1]);
+        }
         elsif ($var[0] eq 'unhandled') {
             $self->{sconf} ||= {};
             next if defined $self->{sconf}{$var[1]};
@@ -98,6 +101,9 @@ sub _parse_line {
             unless defined $gid;
         return (defgroup => $gid);
     }
+    elsif ($var_name eq 'allow' || $var_name eq 'deny') {
+        return ('allow_deny' => [$var_name, $var_value]);
+    }
     elsif ($var_name eq 'paranoia') {
         return (paranoia => $self->_parse_bool($var_value))
     }
@@ -110,6 +116,29 @@ sub _parse_line {
     else {
         return (unhandled => ($var_name => $var_value));
     }
+}
+
+
+sub _add_allow_deny_rule {
+    my ($self, $rule) = @_;
+
+    $self->{allow_deny} ||= [];
+
+    # Doesn't make sense to use allow and deny in the same config.
+    if ($self->_compatible_with_first_allow_deny_rule($rule)) {
+        push @{$self->{allow_deny}}, $rule;
+    }
+    else {
+        croak "You can't mix allow and deny.";
+    }
+}
+
+
+sub _compatible_with_first_allow_deny_rule {
+    my ($self, $rule) = @_;
+
+    return !@{$self->{allow_deny}} 
+        || $self->{allow_deny}[0][0] eq $rule->[0]
 }
 
 
@@ -194,11 +223,7 @@ sub parse_plugin_config {
 
             my @var = $self->_parse_plugin_line($line);
             next unless @var;
-            if ($var[0] eq 'allow_deny') {
-                $sconf->{$service}{$var[0]} ||= [];
-                push @{$sconf->{$service}{$var[0]}}, $var[1];
-            }
-            elsif ($var[0] eq 'env') {
+            if ($var[0] eq 'env') {
                 $sconf->{$service}{'env'} ||= {};
                 my ($key, $value) = %{$var[1]};
                 $sconf->{$service}{$var[0]}{$key} = $value;
@@ -258,9 +283,6 @@ sub _parse_plugin_line {
     }
     elsif ($var_name eq 'timeout') {
         return (timeout => $var_value);
-    }
-    elsif ($var_name eq 'allow' || $var_name eq 'deny') {
-        return ('allow_deny' => [$var_name, $var_value]);
     }
     elsif (index($var_name, 'env.') == 0) {
         return (env => { substr($var_name, length 'env.') => $var_value});
