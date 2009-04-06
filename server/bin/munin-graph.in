@@ -733,13 +733,12 @@ sub process_service {
 		    ($ldcolour ? "#$ldcolour" : $colour));
 	    } elsif (my $tmpwarn = munin_get ($negfield, "warning")) {
 
-		my ($warn_min,$warn_max) =
-		  split(':', $node->{client}->{$service}->{"$field.warning"});
+		my ($warn_min,$warn_max) = split(':', $tmpwarn);
 
-		if ( $warn_min ) {
+		if ( defined($warn_min) ) {
 		    push (@rrd, "HRULE:".$warn_min.($single_value ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
 		}
-		if ( $warn_max ) {
+		if ( defined($warn_max) ) {
 		    push (@rrd, "HRULE:".$warn_max.($single_value ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
 		}
 	    }
@@ -786,13 +785,12 @@ sub process_service {
 		 );
 	} elsif (my $tmpwarn = munin_get ($field, "warning")) {
 
-	    my ($warn_min,$warn_max) =
-	      split(':', $node->{client}->{$service}->{"$field.warning"});
+	    my ($warn_min,$warn_max) = split(':', $tmpwarn);
 
-	    if ( $warn_min ) {
+	    if ( defined( $warn_min ) ) {
 		push (@rrd, "HRULE:".$warn_min.($single_value ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
 	    }
-	    if ( $warn_max ) {
+	    if ( defined( $warn_max ) ) {
 		push (@rrd, "HRULE:".$warn_max.($single_value ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
 	    }
 	}
