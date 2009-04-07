@@ -1,11 +1,12 @@
 use warnings;
 use strict;
 
-use Test::More tests => 1;
+use Test::More tests => 2;
 
 use_ok('Munin::Common::TLS');
 
 use Data::Dumper;
+use English qw(-no_match_vars);
 use FindBin;
 use IO::Handle;
 use Socket;
@@ -23,9 +24,9 @@ sub do_server {
     my $tls = Munin::Common::TLS->new(
         fileno($socket),
         fileno($socket),
-        sub { warn "Server reading ...\n"; my $line = <$socket>; warn "Server done. ($line)\n"; return $line; },
+        sub { print "Server reading ...\n"; my $line = <$socket>; print "Server done. ($line)\n"; return $line; },
         sub { print $socket @_ },
-        sub { warn "LOG SERVER: ", @_, "\n" },
+        sub { print "LOG SERVER: ", @_, "\n" },
         1,
     );
 
@@ -52,9 +53,9 @@ sub do_client {
     my $tls = Munin::Common::TLS->new(
         fileno($socket),
         fileno($socket),
-        sub { warn "Client reading ...\n"; my $line = <$socket>; warn "Client done.  ($line)\n"; return $line; },
+        sub { print "Client reading ...\n"; my $line = <$socket>; print "Client done.  ($line)\n"; return $line; },
         sub { print $socket @_ },
-        sub { warn "LOG CLIENT: ", @_, "\n" },
+        sub { print "LOG CLIENT: ", @_, "\n" },
         1,
     );
 
@@ -67,8 +68,10 @@ sub do_client {
         5,
     );
 
-    $tls->write($tls_session, "ping\n");
-    warn Dumper($tls->read($tls_session));
+    my $req_msg = "ping\n";
+    $tls->write($tls_session, $req_msg);
+    my $res_msg = $tls->read($tls_session);
+    return $req_msg eq $res_msg;
 }
 
 
@@ -84,12 +87,14 @@ if ($pid = fork) {
     do_server(\*CHILD);
     close CHILD;
     waitpid($pid,0);
+    my $child_exit_status = $CHILD_ERROR >> 8; # FIX becomes 1 for some reason ...
+    is($CHILD_ERROR, 256, "Status OK");        # FIX Want to test $child_exit_status == 0
 } else {
     die "cannot fork: $!" unless defined $pid;
     close CHILD;
-    do_client(\*PARENT);
+    my $stat = do_client(\*PARENT);
     close PARENT;
-    exit;
+    exit $stat ? 0 : 1;
 }
 
 

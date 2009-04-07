@@ -395,4 +395,12 @@ FIX
 
 FIX
 
+=item B<read>
+
+FIX
+
+=item B<write>
+
+FIX
+
 =back
