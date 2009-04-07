@@ -67,8 +67,6 @@ sub do_client {
         5,
     );
 
-    sleep 1;
-
     $tls->write($tls_session, "ping\n");
     warn Dumper($tls->read($tls_session));
 }
