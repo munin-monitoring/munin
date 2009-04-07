@@ -7,19 +7,13 @@ use warnings;
 use English qw(-no_match_vars);
 use Munin::Node::Config;
 use Munin::Common::Defaults;
+use Munin::Common::TLSServer;
 use Munin::Node::Logger;
 use Munin::Node::OS;
 use Munin::Node::Service;
 use Munin::Node::Session;
 
 my $tls;
-my %tls_verified = ( 
-    "level"          => 0,
-    "cert"           => "",
-    "verified"       => 0,
-    "required_depth" => 5,
-    "verify"         => "no"
-);
 
 # A set of all services that this node can run.
 my %services;
@@ -171,13 +165,29 @@ sub _process_starttls_command {
     $tls_verify = $config->{tls_verify_certificate};
     $tls_verify = "no" unless defined $tls_verify;
 
-    if (_start_tls($mode, $cert, $key, $ca_cert, $tls_verify, $depth)) {
+    $tls = Munin::Common::TLSServer->new({
+        DEBUG        => $config->{DEBUG},
+        logger       => \&logger,
+        read_fd      => fileno(STDIN),
+        read_func    => sub { die "Shouln't need to read!?" },
+        tls_ca_cert  => $ca_cert,
+        tls_cert     => $cert,
+        tls_paranoia => $mode, 
+        tls_priv     => $key,
+        tls_vdepth   => $depth,
+        tls_verify   => $tls_verify,
+        write_fd     => fileno(STDOUT),
+        write_func   => sub { print @_ },
+    });
+
+    if ($tls->start_tls()) {
         return 1;
     }
     else {
         if ($mode eq "paranoid" or $mode eq "enabled") {
             die "ERROR: Could not establish TLS connection. Closing.";
         }
+        $tls = undef;
         return 0;
     }
 }
@@ -420,281 +430,32 @@ sub _change_real_and_effective_user_and_group {
     }
 }
 
-sub _net_read 
-{
-    if (defined $tls)
-    {
-	eval { $_ = Net::SSLeay::read($tls); };
-	my $err = &Net::SSLeay::print_errs("");
-	if (defined $err and length $err)
-	{
-	    logger ("TLS Warning in _net_read: $err");
-	}
-	if($_ eq '') { undef $_; } #returning '' signals EOF
+sub _net_read {
+    local $_;
+
+    if (defined $tls) {
+        $_ = $tls->read();
     }
-    else
-    {
+    else {
 	$_ = <STDIN>;
     }
-    logger ("DEBUG: < $_") if $config->{DEBUG};
+    logger("DEBUG: < $_") if $config->{DEBUG};
     return $_;
 }
 
 
-sub _net_write 
-{
+sub _net_write {
     my $text = shift;
-    logger ("DEBUG: > $text") if $config->{DEBUG};
-    if (defined $tls)
-    {
-	eval { Net::SSLeay::write ($tls, $text); };
-	my $err = &Net::SSLeay::print_errs("");
-	if (defined $err and length $err)
-	{
-	    logger ("TLS Warning in _net_write: $err");
-	}
+    logger("DEBUG: > $text") if $config->{DEBUG};
+    if (defined $tls) {
+        $tls->write($text);
     }
-    else
-    {
+    else {
 	print STDOUT $text;
     }
 }
 
 
-sub _tls_verify_callback 
-{
-    my ($ok, $subj_cert, $issuer_cert, $depth, 
-	    $errorcode, $arg, $chain) = @_;
-#    logger ("ok is ${ok}");
-
-    $tls_verified{"level"}++;
-
-    if ($ok)
-    {
-        $tls_verified{"verified"} = 1;
-        logger ("TLS Notice: Verified certificate.") if $config->{DEBUG};
-        return 1; # accept
-    }
-
-    if(!($tls_verified{"verify"} eq "yes"))
-    {
-        logger ("TLS Notice: Certificate failed verification, but we aren't verifying.") if $config->{DEBUG};
-	$tls_verified{"verified"} = 1;
-        return 1;
-    }
-
-    if ($tls_verified{"level"} > $tls_verified{"required_depth"})
-    {
-        logger ("TLS Notice: Certificate verification failed at depth ".$tls_verified{"level"}.".");
-        $tls_verified{"verified"} = 0;
-        return 0;
-    }
-
-    return 0; # Verification failed
-}
-
-
-sub _start_tls 
-{
-    my $tls_paranoia = shift;
-    my $tls_cert     = shift;
-    my $tls_priv     = shift;
-    my $tls_ca_cert  = shift;
-    my $tls_verify   = shift;
-    my $tls_vdepth   = shift;
-
-    my $err;
-    my $ctx;
-    my $local_key = 0;
-
-    %tls_verified = ( "level" => 0, "cert" => "", "verified" => 0, "required_depth" => $tls_vdepth, "verify" => $tls_verify );
-
-    if ($tls_paranoia eq "disabled")
-    {
-	logger ("TLS Notice: Refusing TLS request from peer.");
-	_net_write ("TLS NOT AVAILABLE\n");
-	return 0
-    }
-
-    logger("Enabling TLS.") if $config->{DEBUG};
-    eval {
-        require Net::SSLeay;
-    };
-
-    if ($EVAL_ERROR) {
-	if ($tls_paranoia eq "auto")
-	{
-	    logger ("Notice: TLS requested by peer, but Net::SSLeay unavailable.");
-	    return 0;
-	}
-	else # tls really required
-	{
-	    logger ("Fatal: TLS enabled but Net::SSLeay unavailable.");
-	    exit 0;
-	}
-    }
-
-    # Init SSLeay
-    Net::SSLeay::load_error_strings();
-    Net::SSLeay::SSLeay_add_ssl_algorithms();
-    Net::SSLeay::randomize();
-    $ctx = Net::SSLeay::CTX_new();
-    if (!$ctx)
-    {
-	logger ("TLS Error: Could not create SSL_CTX: " . &Net::SSLeay::print_errs(""));
-	return 0;
-    }
-
-    # Tune a few things...
-    if (Net::SSLeay::CTX_set_options($ctx, &Net::SSLeay::OP_ALL))
-    {
-	logger ("TLS Error: Could not set SSL_CTX options: " . &Net::SSLeay::print_errs(""));
-	return 0;
-    }
-
-    # Should we use a private key?
-    if (-e $tls_priv or $tls_paranoia eq "paranoid")
-    {
-        if (defined $tls_priv and length $tls_priv)
-        {
-	    if (!Net::SSLeay::CTX_use_PrivateKey_file($ctx, $tls_priv, 
-		    &Net::SSLeay::FILETYPE_PEM))
-	    {
-	        logger ("TLS Notice: Problem occured when trying to read file with private key \"$tls_priv\": ".&Net::SSLeay::print_errs("").". Continuing without private key.");
-	    }
-	    else
-	    {
-	        $local_key = 1;
-	    }
-        }
-    }
-    else
-    {
-	logger ("TLS Notice: No key file \"$tls_priv\". Continuing without private key.");
-    }
-
-    # How about a certificate?
-    if (-e $tls_cert)
-    {
-        if (defined $tls_cert and length $tls_cert)
-        {
-	    if (!Net::SSLeay::CTX_use_certificate_file($ctx, $tls_cert, 
-		    &Net::SSLeay::FILETYPE_PEM))
-	    {
-	        logger ("TLS Notice: Problem occured when trying to read file with certificate \"$tls_cert\": ".&Net::SSLeay::print_errs("").". Continuing without certificate.");
-	    }
-	}
-    }
-    else
-    {
-	logger ("TLS Notice: No certificate file \"$tls_cert\". Continuing without certificate.");
-    }
-
-    # How about a CA certificate?
-    if (-e $tls_ca_cert)
-    {
-        if(!Net::SSLeay::CTX_load_verify_locations($ctx, $tls_ca_cert, ''))
-        {
-            logger ("TLS Notice: Problem occured when trying to read file with the CA's certificate \"$tls_ca_cert\": ".&Net::SSLeay::print_errs("").". Continuing without CA's certificate.");
-        }
-    }
-
-    # Tell the other side that we're able to talk TLS
-    if ($local_key)
-    {
-        print "TLS OK\n";
-    }
-    else
-    {
-        print "TLS MAYBE\n";
-    }
-
-    # Now let's define our requirements of the node
-    $tls_vdepth = 5 unless defined $tls_vdepth;
-    Net::SSLeay::CTX_set_verify_depth ($ctx, $tls_vdepth);
-    $err = &Net::SSLeay::print_errs("");
-    if (defined $err and length $err)
-    {
-	logger ("TLS Warning in set_verify_depth: $err");
-    }
-    Net::SSLeay::CTX_set_verify ($ctx, &Net::SSLeay::VERIFY_PEER, \&_tls_verify_callback);
-    $err = &Net::SSLeay::print_errs("");
-    if (defined $err and length $err)
-    {
-	logger ("TLS Warning in set_verify: $err");
-    }
-
-    # Create the local tls object
-    if (! ($tls = Net::SSLeay::new($ctx)))
-    {
-	logger ("TLS Error: Could not create TLS: " . &Net::SSLeay::print_errs(""));
-	return 0;
-    }
-    if ($config->{DEBUG})
-    {
-	my $i = 0;
-	my $p = '';
-	my $cipher_list = 'Cipher list: ';
-	$p=Net::SSLeay::get_cipher_list($tls,$i);
-	$cipher_list .= $p if $p;
-	do {
-	    $i++;
-	    $cipher_list .= ', ' . $p if $p;
-	    $p=Net::SSLeay::get_cipher_list($tls,$i);
-	} while $p;
-        $cipher_list .= '\n';
-	logger ("TLS Notice: Available cipher list: $cipher_list.");
-    }
-
-    # Redirect stdout/stdin to the TLS
-    Net::SSLeay::set_rfd($tls, fileno(STDIN));
-    $err = &Net::SSLeay::print_errs("");
-    if (defined $err and length $err)
-    {
-	logger ("TLS Warning in set_rfd: $err");
-    }
-    Net::SSLeay::set_wfd($tls, fileno(STDOUT));
-    $err = &Net::SSLeay::print_errs("");
-    if (defined $err and length $err)
-    {
-	logger ("TLS Warning in set_wfd: $err");
-    }
-
-    # Try to negotiate the tls connection
-    my $res;
-    if ($local_key)
-    {
-        $res = Net::SSLeay::accept($tls);
-    }
-    else
-    {
-        $res = Net::SSLeay::connect($tls);
-    }
-    $err = &Net::SSLeay::print_errs("");
-    if (defined $err and length $err)
-    {
-	logger ("TLS Error: Could not enable TLS: " . $err);
-	Net::SSLeay::free ($tls);
-	Net::SSLeay::CTX_free ($ctx);
-	$tls = undef;
-    }
-    elsif (!$tls_verified{"verified"} and $tls_paranoia eq "paranoid")
-    {
-	logger ("TLS Error: Could not verify CA: " . Net::SSLeay::dump_peer_certificate($tls));
-	Net::SSLeay::free ($tls);
-	Net::SSLeay::CTX_free ($ctx);
-	$tls = undef;
-    }
-    else
-    {
-	logger ("TLS Notice: TLS enabled.");
-	logger ("TLS Notice: Cipher `" . Net::SSLeay::get_cipher($tls) . "'.");
-	$tls_verified{"cert"} = Net::SSLeay::dump_peer_certificate($tls);
-	logger ("TLS Notice: client cert: " .$tls_verified{"cert"});
-    }
-
-    return $tls;
-}
 
 
 1;
