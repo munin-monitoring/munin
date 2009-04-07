@@ -21,23 +21,22 @@ sub do_server {
 
     die "Expected STARTTLS '$line'" unless $line eq 'STARTTLS';
 
-    my $tls = Munin::Common::TLS->new(
-        fileno($socket),
-        fileno($socket),
-        sub { print "Server reading ...\n"; my $line = <$socket>; print "Server done. ($line)\n"; return $line; },
-        sub { print $socket @_ },
-        sub { print "LOG SERVER: ", @_, "\n" },
-        1,
-    );
+    my $tls = Munin::Common::TLS->new({
+        DEBUG        => 1,
+        logger       => sub { print "LOG SERVER: ", @_, "\n" },
+        read_fd      => fileno($socket),
+        read_func    => sub { print "Server reading ...\n"; my $line = <$socket>; print "Server done. ($line)\n"; return $line; },
+        tls_ca_cert  => "$FindBin::Bin/tls/CA/ca_cert.pem",
+        tls_cert     => "$FindBin::Bin/tls/node_cert.pem",
+        tls_paranoia => 1, 
+        tls_priv     => "$FindBin::Bin/tls/node_key.pem",
+        tls_vdepth   => 5,
+        tls_verify   => 1,
+        write_fd     => fileno($socket),
+        write_func   => sub { print $socket @_ },
+    });
 
-    my $tls_session = $tls->start_tls_server(
-        1, 
-        "$FindBin::Bin/tls/node_cert.pem",
-        "$FindBin::Bin/tls/node_key.pem",
-        "$FindBin::Bin/tls/CA/ca_cert.pem",
-        1,
-        5,
-    );
+    my $tls_session = $tls->start_tls_server();
 
     $line = $tls->read();
     $tls->write($line);
@@ -50,23 +49,22 @@ sub do_client {
     #print "Child Pid $$ just read this: `$line'\n";
     #print $socket "Child Pid $$ is sending this\n";
 
-    my $tls = Munin::Common::TLS->new(
-        fileno($socket),
-        fileno($socket),
-        sub { print "Client reading ...\n"; my $line = <$socket>; print "Client done.  ($line)\n"; return $line; },
-        sub { print $socket @_ },
-        sub { print "LOG CLIENT: ", @_, "\n" },
-        1,
-    );
+    my $tls = Munin::Common::TLS->new({
+        DEBUG        => 1,
+        logger       => sub { print "LOG CLIENT: ", @_, "\n" },
+        read_fd      => fileno($socket),
+        read_func    => sub { print "Client reading ...\n"; my $line = <$socket>; print "Client done. ($line)\n"; return $line; },
+        tls_ca_cert  => "$FindBin::Bin/tls/CA/ca_cert.pem",
+        tls_cert     => "$FindBin::Bin/tls/master_cert.pem",
+        tls_paranoia => 1, 
+        tls_priv     => "$FindBin::Bin/tls/master_key.pem",
+        tls_vdepth   => 5,
+        tls_verify   => 1,
+        write_fd     => fileno($socket),
+        write_func   => sub { print $socket @_ },
+    });
 
-    my $tls_session = $tls->start_tls_client(
-        1, 
-        "$FindBin::Bin/tls/master_cert.pem",
-        "$FindBin::Bin/tls/master_key.pem",
-        "$FindBin::Bin/tls/CA/ca_cert.pem",
-        1,
-        5,
-    );
+    my $tls_session = $tls->start_tls_client();
 
     my $req_msg = "ping\n";
     $tls->write($req_msg);

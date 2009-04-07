@@ -7,17 +7,39 @@ use Carp;
 use English qw(-no_match_vars);
 
 sub new {
-    my ($class, $read_fd, $write_fd, $read_func, $write_func, $logger, $debug) = @_;
+    my ($class, $args) = @_;
 
     my $self = {
+        logger             => $args->{logger},
+        read_fd            => $args->{read_fd},
+        read_func          => $args->{read_func},
+        write_fd           => $args->{write_fd},
+        write_func         => $args->{write_func},
+    };
+
+    for my $key (keys %$self) {
+        croak "Required argument missing: $key" unless defined $self->{$key};
+    }
+
+    $self = {
+        %$self,
+        DEBUG              => $args->{DEBUG} || 0,
+        tls_ca_cert        => $args->{tls_ca_cert} || '',
+        tls_cert           => $args->{tls_cert} || '',
+        tls_paranoia       => $args->{tls_paranoia}|| 0,
+        tls_priv           => $args->{tls_priv} || '',
+        tls_vdepth         => $args->{tls_vdepth} || 0,
+        tls_verify         => $args->{tls_verify} || 0,
+    };
+
+    for my $args_key (keys %$args) {
+        croak "Unrecognized argument: $args_key" unless exists $self->{$args_key};
+    }
+
+    $self = {
+        %$self,
         tls_context        => undef,
         tls_session        => undef,
-        read_fd            => $read_fd,
-        write_fd           => $write_fd,
-        read_func          => $read_func,
-        write_func         => $write_func,
-        logger             => $logger,
-        DEBUG              => $debug || 0,
         private_key_loaded => 0,
     };
 
@@ -26,24 +48,11 @@ sub new {
 
 
 sub start_tls_client {
-    my $self = shift;
-
-    my $tls_paranoia = shift;
-    my $tls_cert     = shift;
-    my $tls_priv     = shift;
-    my $tls_ca_cert  = shift;
-    my $tls_verify   = shift;
-    my $tls_vdepth   = shift;
+    my ($self) = @_;
 
     my $remote_key = 0;
 
     $self->_start_tls(
-        $tls_paranoia,
-        $tls_cert,
-        $tls_priv,
-        $tls_ca_cert,
-        $tls_verify,
-        $tls_vdepth,
         sub {
             # Tell the node that we want TLS
             $self->{write_func}("STARTTLS\n");
@@ -72,22 +81,9 @@ sub start_tls_client {
 
 
 sub start_tls_server {
-    my $self         = shift;
-    my $tls_paranoia = shift;
-    my $tls_cert     = shift;
-    my $tls_priv     = shift;
-    my $tls_ca_cert  = shift;
-    my $tls_verify   = shift;
-    my $tls_vdepth   = shift;
-
+    my ($self)       = @_;
 
     $self->_start_tls(
-        $tls_paranoia,
-        $tls_cert,
-        $tls_priv,
-        $tls_ca_cert,
-        $tls_verify,
-        $tls_vdepth,
         sub {
             my ($has_key) = @_;
             if ($has_key) {
@@ -110,13 +106,6 @@ sub start_tls_server {
 sub _start_tls {
     my $self = shift;
 
-    my $tls_paranoia = shift || 0;
-    my $tls_cert     = shift || '';
-    my $tls_priv     = shift || '';
-    my $tls_ca_cert  = shift || '';
-    my $tls_verify   = shift || 0;
-    my $tls_vdepth   = shift || 0; 
-
     my $communicate         = shift;
     my $use_key_if_present  = shift;
     my $unverified_callback = shift;
@@ -125,8 +114,8 @@ sub _start_tls {
         level          => 0, 
         cert           => "",
         verified       => 0, 
-        required_depth => $tls_vdepth, 
-        verify         => $tls_verify,
+        required_depth => $self->{tls_vdepth}, 
+        verify         => $self->{tls_verify},
     );
 
     $self->{logger}("[TLS] Enabling TLS.") if $self->{DEBUG};
@@ -138,17 +127,17 @@ sub _start_tls {
 
     $self->{tls_context} = $self->_creat_tls_context();
 
-    $self->_load_private_key($tls_paranoia, $tls_priv)
+    $self->_load_private_key()
         or return 0;
     
-    $self->_load_certificate($tls_cert);
+    $self->_load_certificate();
 
-    $self->_load_ca_certificate($tls_ca_cert);
+    $self->_load_ca_certificate();
     
     $communicate->($self->{private_key_loaded})
         or return 0;
     
-    $self->_set_peer_requirements($tls_vdepth, $tls_verify, \%tls_verified);
+    $self->_set_peer_requirements(\%tls_verified);
     
     if (! ($self->{tls_session} = Net::SSLeay::new($self->{tls_context})))
     {
@@ -161,7 +150,6 @@ sub _start_tls {
     $self->_set_ssleay_file_descriptors();
 
     $self->_accept_or_connect(
-        $tls_paranoia,
         \%tls_verified,
         $use_key_if_present,
         $unverified_callback,
@@ -215,26 +203,27 @@ sub _creat_tls_context {
 
 
 sub _load_private_key {
-    my ($self, $tls_paranoia, $tls_priv) = @_;
+    my ($self) = @_;
 
-    if (defined $tls_priv and length $tls_priv) {
-    	if (-e $tls_priv or $tls_paranoia eq "paranoid") {
-	    if (Net::SSLeay::CTX_use_PrivateKey_file($self->{tls_context}, $tls_priv, 
+    if (defined $self->{tls_priv} and length $self->{tls_priv}) {
+    	if (-e $self->{tls_priv} or $self->{tls_paranoia} eq "paranoid") {
+	    if (Net::SSLeay::CTX_use_PrivateKey_file($self->{tls_context}, 
+                                                     $self->{tls_priv}, 
                                                      &Net::SSLeay::FILETYPE_PEM)) {
                 $self->{private_key_loaded} = 1;
             }
             else {
-	        if ($tls_paranoia eq "paranoid") {
-	    	    $self->{logger}("[ERROR] Problem occured when trying to read file with private key \"$tls_priv\": $!");
+	        if ($self->{tls_paranoia} eq "paranoid") {
+	    	    $self->{logger}("[ERROR] Problem occured when trying to read file with private key \"$self->{tls_priv}\": $!");
 		    return 0;
 	        }
 	        else {
-	    	    $self->{logger}("[ERROR] Problem occured when trying to read file with private key \"$tls_priv\": $!. Continuing without private key.");
+	    	    $self->{logger}("[ERROR] Problem occured when trying to read file with private key \"$self->{tls_priv}\": $!. Continuing without private key.");
 	        }
 	    }
 	}
 	else {
-	    $self->{logger}("[WARNING] No key file \"$tls_priv\". Continuing without private key.");
+	    $self->{logger}("[WARNING] No key file \"$self->{tls_priv}\". Continuing without private key.");
         }
     }
 
@@ -243,19 +232,19 @@ sub _load_private_key {
 
 
 sub _load_certificate {
-    my ($self, $tls_cert) = @_;
+    my ($self) = @_;
 
-    if ($tls_cert && -e $tls_cert) {
-        if (defined $tls_cert and length $tls_cert) {
+    if ($self->{tls_cert} && -e $self->{tls_cert}) {
+        if (defined $self->{tls_cert} and length $self->{tls_cert}) {
 	    if (!Net::SSLeay::CTX_use_certificate_file($self->{tls_context}, 
-                                                       $tls_cert, 
+                                                       $self->{tls_cert}, 
                                                        &Net::SSLeay::FILETYPE_PEM)) {
-	        $self->{logger}("[WARNING] Problem occured when trying to read file with certificate \"$tls_cert\": $!. Continuing without certificate.");
+	        $self->{logger}("[WARNING] Problem occured when trying to read file with certificate \"$self->{tls_cert}\": $!. Continuing without certificate.");
 	    }
         }
     }
     else {
-	$self->{logger}("[WARNING] No certificate file \"$tls_cert\". Continuing without certificate.");
+	$self->{logger}("[WARNING] No certificate file \"$self->{tls_cert}\". Continuing without certificate.");
     }
 
     return 1;
@@ -263,11 +252,11 @@ sub _load_certificate {
 
 
 sub _load_ca_certificate {
-    my ($self, $tls_ca_cert) = @_;
+    my ($self) = @_;
 
-    if ($tls_ca_cert && -e $tls_ca_cert) {
-    	if(!Net::SSLeay::CTX_load_verify_locations($self->{tls_context}, $tls_ca_cert, '')) {
-    	    $self->{logger}("[WARNING] Problem occured when trying to read file with the CA's certificate \"$tls_ca_cert\": ".&Net::SSLeay::print_errs("").". Continuing without CA's certificate.");
+    if ($self->{tls_ca_cert} && -e $self->{tls_ca_cert}) {
+    	if(!Net::SSLeay::CTX_load_verify_locations($self->{tls_context}, $self->{tls_ca_cert}, '')) {
+    	    $self->{logger}("[WARNING] Problem occured when trying to read file with the CA's certificate \"$self->{tls_ca_cert}\": ".&Net::SSLeay::print_errs("").". Continuing without CA's certificate.");
    	 }
     }
 
@@ -276,10 +265,10 @@ sub _load_ca_certificate {
 
 
 sub _set_peer_requirements {
-    my ($self, $tls_vdepth, $tls_verify, $tls_verified) = @_;
+    my ($self, $tls_verified) = @_;
 
-    $tls_vdepth = 5 if !defined $tls_vdepth;
-    Net::SSLeay::CTX_set_verify_depth ($self->{tls_context}, $tls_vdepth);
+    $self->{tls_vdepth} = 5 if !defined $self->{tls_vdepth};
+    Net::SSLeay::CTX_set_verify_depth ($self->{tls_context}, $self->{tls_vdepth});
     my $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
 	$self->{logger}("[WARNING] in set_verify_depth: $err");
@@ -364,7 +353,7 @@ sub _set_ssleay_file_descriptors {
 
 
 sub _accept_or_connect {
-    my ($self, $tls_paranoia, $tls_verified, $use_key_if_present, $unverified_callback) = @_;
+    my ($self, $tls_verified, $use_key_if_present, $unverified_callback) = @_;
 
     $self->{logger}("Accept/Connect: $self->{private_key_loaded}, " . $use_key_if_present->($self->{private_key_loaded})) if $self->{DEBUG};
     my $res;
@@ -384,7 +373,7 @@ sub _accept_or_connect {
 	Net::SSLeay::CTX_free ($self->{tls_context});
 	$self->{tls_session} = undef;
     }
-    elsif (!$tls_verified->{"verified"} and $tls_paranoia eq "paranoid")
+    elsif (!$tls_verified->{"verified"} and $self->{tls_paranoia} eq "paranoid")
     {
 	$self->{logger}("[ERROR] Could not verify CA: " . Net::SSLeay::dump_peer_certificate($self->{tls_session}));
 	$unverified_callback->();
