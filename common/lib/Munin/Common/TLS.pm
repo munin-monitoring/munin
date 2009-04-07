@@ -376,7 +376,10 @@ sub write {
     my $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
         $self->{logger}("TLS Warning in write: $err");
+        return 0;
     }
+    
+    return 1;
 }
 
 
