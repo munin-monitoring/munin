@@ -47,68 +47,8 @@ sub new {
 }
 
 
-sub start_tls_client {
-    my ($self) = @_;
-
-    my $remote_key = 0;
-
-    $self->_start_tls(
-        sub {
-            # Tell the node that we want TLS
-            $self->{write_func}("STARTTLS\n");
-            my $tlsresponse = $self->{read_func}();
-            if (!defined $tlsresponse) {
-                $self->{logger}("[ERROR] Bad TLS response \"\".");
-                return 0
-            }
-            if ($tlsresponse =~ /^TLS OK/) {
-                $remote_key = 1;
-            }
-            elsif ($tlsresponse !~ /^TLS MAYBE/i) {
-                $self->{logger}("[ERROR] Bad TLS response \"$tlsresponse\".");
-                return 0;
-            }
-        },
-        sub {
-            my ($has_key) = @_;
-            return !$remote_key;
-        },
-        sub {
-            $self->write("quit\n");
-        },
-    );
-}
-
-
-sub start_tls_server {
-    my ($self)       = @_;
-
-    $self->_start_tls(
-        sub {
-            my ($has_key) = @_;
-            if ($has_key) {
-                $self->{write_func}("TLS OK\n");
-            }
-            else {
-                $self->{write_func}("TLS MAYBE\n");
-            }
-            
-            return 1;
-        },
-        sub {
-            my ($has_key) = @_;
-            return $has_key;
-        },
-        sub {},
-    );
-}
-
 sub _start_tls {
     my $self = shift;
-
-    my $communicate         = shift;
-    my $use_key_if_present  = shift;
-    my $unverified_callback = shift;
 
     my %tls_verified = (
         level          => 0, 
@@ -134,7 +74,7 @@ sub _start_tls {
 
     $self->_load_ca_certificate();
     
-    $communicate->($self->{private_key_loaded})
+    $self->_initial_communication()
         or return 0;
     
     $self->_set_peer_requirements(\%tls_verified);
@@ -149,11 +89,7 @@ sub _start_tls {
 
     $self->_set_ssleay_file_descriptors();
 
-    $self->_accept_or_connect(
-        \%tls_verified,
-        $use_key_if_present,
-        $unverified_callback,
-    );
+    $self->_accept_or_connect(\%tls_verified);
 
     return $self->{tls_session};
 }
@@ -353,11 +289,11 @@ sub _set_ssleay_file_descriptors {
 
 
 sub _accept_or_connect {
-    my ($self, $tls_verified, $use_key_if_present, $unverified_callback) = @_;
+    my ($self, $tls_verified) = @_;
 
-    $self->{logger}("Accept/Connect: $self->{private_key_loaded}, " . $use_key_if_present->($self->{private_key_loaded})) if $self->{DEBUG};
+    $self->{logger}("Accept/Connect: $self->{private_key_loaded}, " . $self->_use_key_if_present()) if $self->{DEBUG};
     my $res;
-    if ($use_key_if_present->($self->{private_key_loaded})) {
+    if ($self->_use_key_if_present()) {
         $res = Net::SSLeay::accept($self->{tls_session});
     }
     else {
@@ -376,7 +312,7 @@ sub _accept_or_connect {
     elsif (!$tls_verified->{"verified"} and $self->{tls_paranoia} eq "paranoid")
     {
 	$self->{logger}("[ERROR] Could not verify CA: " . Net::SSLeay::dump_peer_certificate($self->{tls_session}));
-	$unverified_callback->();
+	$self->_on_unverified_cert();
 	Net::SSLeay::free ($self->{tls_session});
 	Net::SSLeay::CTX_free ($self->{tls_context});
 	$self->{tls_session} = undef;
@@ -388,6 +324,9 @@ sub _accept_or_connect {
 	$self->{logger}("[TLS] client cert: " . Net::SSLeay::dump_peer_certificate($self->{tls_session}));
     }
 }
+
+
+sub _on_unverified_cert {}
 
 
 sub read {
@@ -440,14 +379,6 @@ FIX
 =over
 
 =item B<new>
-
-FIX
-
-=item B<start_tls_client>
-
-FIX
-
-=item B<start_tls_server>
 
 FIX
 

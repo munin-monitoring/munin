@@ -1,9 +1,11 @@
 use warnings;
 use strict;
 
-use Test::More tests => 2;
+use Test::More tests => 4;
 
 use_ok('Munin::Common::TLS');
+use_ok('Munin::Common::TLSClient');
+use_ok('Munin::Common::TLSServer');
 
 use Data::Dumper;
 use English qw(-no_match_vars);
@@ -21,7 +23,7 @@ sub do_server {
 
     die "Expected STARTTLS '$line'" unless $line eq 'STARTTLS';
 
-    my $tls = Munin::Common::TLS->new({
+    my $tls = Munin::Common::TLSServer->new({
         DEBUG        => 1,
         logger       => sub { print "LOG SERVER: ", @_, "\n" },
         read_fd      => fileno($socket),
@@ -36,7 +38,7 @@ sub do_server {
         write_func   => sub { print $socket @_ },
     });
 
-    my $tls_session = $tls->start_tls_server();
+    my $tls_session = $tls->start_tls();
 
     $line = $tls->read();
     $tls->write($line);
@@ -49,7 +51,7 @@ sub do_client {
     #print "Child Pid $$ just read this: `$line'\n";
     #print $socket "Child Pid $$ is sending this\n";
 
-    my $tls = Munin::Common::TLS->new({
+    my $tls = Munin::Common::TLSClient->new({
         DEBUG        => 1,
         logger       => sub { print "LOG CLIENT: ", @_, "\n" },
         read_fd      => fileno($socket),
@@ -64,7 +66,7 @@ sub do_client {
         write_func   => sub { print $socket @_ },
     });
 
-    my $tls_session = $tls->start_tls_client();
+    my $tls_session = $tls->start_tls();
 
     my $req_msg = "ping\n";
     $tls->write($req_msg);
