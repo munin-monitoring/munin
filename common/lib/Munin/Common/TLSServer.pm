@@ -44,15 +44,20 @@ sub _use_key_if_present {
 
 1;
 
+__END__
+
+
 =head1 NAME
 
-Munin::Node::TLS - Implements the server side of the STARTTLS protocol
+Munin::Node::TLSServer - Implements the server side of the STARTTLS protocol
 
 
 =head1 SYNOPSIS
 
-FIX
+ # After receiving a STARTTLS request:
 
+ $tls = Munin::Node::TLSServer->new(...);
+ $tls->start_tls();
 
 =head1 METHODS
 
@@ -60,10 +65,14 @@ FIX
 
 =item B<new>
 
-FIX
+ $tls = Munin::Node::TLSServer->new(...);
+
+See L<Munin::Node::TLS> for documentation for constructor arguments.
 
 =item B<start_tls>
 
-FIX
+ $tls->start_tls();
+
+Process a STARTTLS request
 
 =back

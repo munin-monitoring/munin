@@ -61,15 +61,17 @@ sub _on_unverified_cert {
 
 1;
 
+__END__
+
 =head1 NAME
 
-Munin::Node::TLS - Implements the server side of the STARTTLS protocol
+Munin::Node::TLSClient - Implements the client side of the STARTTLS protocol
 
 
 =head1 SYNOPSIS
 
-FIX
-
+ $tls = Munin::Node::TLSClient->new(...);
+ $tls->start_tls();
 
 =head1 METHODS
 
@@ -77,10 +79,14 @@ FIX
 
 =item B<new>
 
-FIX
+ $tls = Munin::Node::TLSClient->new(...);
+
+See L<Munin::Node::TLS> for documentation for constructor arguments.
 
 =item B<start_tls>
 
-FIX
+ $tls->start_tls();
+
+Begin a STARTTLS request
 
 =back

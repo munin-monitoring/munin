@@ -326,6 +326,25 @@ sub _accept_or_connect {
 }
 
 
+# Abstract method
+sub _initial_communication {
+    my ($self) = @_;
+    croak "Abstract method called '_initial_communication', "
+        . "needs to be defined in child" 
+            if ref $self eq __PACKAGE__;
+}
+
+
+# Abstract method
+sub _use_key_if_present {
+    my ($self) = @_;
+    croak "Abstract method called '_use_key_if_present', "
+        . "needs to be defined in child" 
+            if ref $self eq __PACKAGE__;
+}
+
+
+# Redefine in sub class if needed
 sub _on_unverified_cert {}
 
 
@@ -364,14 +383,17 @@ sub write {
 
 1;
 
+__END__
+
 =head1 NAME
 
-Munin::Node::TLS - Implements the STARTTLS protocol
+Munin::Node::TLS - Abstract base class implementing the STARTTLS protocol
 
 
 =head1 SYNOPSIS
 
-FIX
+Should not be called directly. See synopsis for
+L<Munin::Common::TLSServer> and L<Munin::Common::TLSClient>.
 
 
 =head1 METHODS
@@ -380,14 +402,38 @@ FIX
 
 =item B<new>
 
-FIX
+ my $tls = Munin::Common::TLSFoo->new({ # Substitute Foo with Client or Server
+     # Mandatory attributes:  
+     logger      => \&a_logger_func,
+     read_fd     => fileno($socket),
+     read_func   => \&a_socket_read_func,
+     write_fd    => fileno($socket),
+     write_func  => \&a_socket_read_func,
+
+     # Optional attributes                          DEFAULTS
+     DEBUG              => 0,                       # 0
+     tls_ca_cert        => "path/to/ca/cert.pem",   # ''
+     tls_cert           => "path/to/cert.pem",      # ''
+     tls_paranoia       => 1,                       # 0
+     tls_priv           => "path/to/priv_key.pem",  # ''
+     tls_vdepth         => 5,                       # 0
+     tls_verify         => 1,                       # 0
+ });
+
+Constructor. Should not be called directly. This documents the
+attributes that are in common for L<Munin::Common::TLSServer> and
+L<Munin::Common::TLSClient>.
 
 =item B<read>
 
-FIX
+ my $msg = $tls->read();
+
+Encrypted read.
 
 =item B<write>
 
-FIX
+ $tls->write($msg);
+
+Encrypted write.
 
 =back
