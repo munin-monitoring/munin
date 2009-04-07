@@ -39,8 +39,8 @@ sub do_server {
         5,
     );
 
-    $line = $tls->read($tls_session);
-    $tls->write($tls_session, $line);
+    $line = $tls->read();
+    $tls->write($line);
     
 }
 
@@ -69,8 +69,8 @@ sub do_client {
     );
 
     my $req_msg = "ping\n";
-    $tls->write($tls_session, $req_msg);
-    my $res_msg = $tls->read($tls_session);
+    $tls->write($req_msg);
+    my $res_msg = $tls->read();
     return $req_msg eq $res_msg;
 }
 
