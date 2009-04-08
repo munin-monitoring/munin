@@ -10,6 +10,6 @@ cd $BASEDIR
 if [ -f $DESTDIR/var/run/munin/munin-node.pid ]; then
     echo "Pid file found. Not starting"
 else
-    env PERL5LIB=$DESTDIR/$PERLSITELIB $DESTDIR/usr/sbin/munin-node
+    env PERL5LIB=$DESTDIR/$PERLSITELIB $DESTDIR/usr/sbin/munin-node $@
 fi
 tail -f $DESTDIR/var/log/munin/munin-node.log

@@ -6,8 +6,8 @@ FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
 cd $BASEDIR
 
 if [ $1 ]; then
-  rm -rf root
-  mkdir root
+  rm -rf sandbox
+  mkdir sandbox
   make clean
 fi
 
@@ -22,8 +22,8 @@ if [ $1 ]; then
                  s|^(port .*)|\$1
 
 tls disabled
-tls_private_key $BASEDIR/common/t/tls/master_key.pem
-tls_certificate $BASEDIR/common/t/tls/master_cert.pem
+tls_private_key $BASEDIR/common/t/tls/node_key.pem
+tls_certificate $BASEDIR/common/t/tls/node_cert.pem
 tls_ca_certificate $BASEDIR/common/t/tls/CA/ca_cert.pem
 tls_verify_certificate yes
 tls_verify_depth 5
@@ -39,5 +39,5 @@ tls_verify_depth 5
 
 \$1|" $DESTDIR/etc/munin/munin.conf
 
-  PERL5LIB=$DESTDIR/$PERLSITELIB ./root/usr/sbin/munin-node-configure --shell --families=contrib,auto | sh -x
+  PERL5LIB=$DESTDIR/$PERLSITELIB $DESTDIR/usr/sbin/munin-node-configure --shell --families=contrib,auto | sh -x
 fi
