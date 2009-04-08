@@ -451,4 +451,10 @@ Encrypted read.
 
 Encrypted write.
 
+=item B<session_started>
+
+ my $bool = $tls->session_started();
+
+Returns true if the tls object is ready to read/write encrypted data.
+
 =back
