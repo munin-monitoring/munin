@@ -133,7 +133,7 @@ sub _negotiate_session_capabilities {
     _net_write(sprintf("# Node capabilities: (%s). Session capabilities: (\n", 
                        join(' ', keys %node_cap)));
     _net_write(join(' ', keys %session_capabilities) . "\n");
-    _net_write("# )\n");
+    _net_write("# )\n.\n");
 
 }
 

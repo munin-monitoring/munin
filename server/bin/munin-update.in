@@ -25,6 +25,7 @@ $|=1;
 
 use strict;
 use IO::Socket;
+use Munin::Common::Defaults;
 use Munin::Common::TLSClient;
 use Munin::Master::Logger;
 use Munin::Master::Utils;
@@ -36,9 +37,9 @@ use Storable qw(fd_retrieve nstore_fd);
 
 my $TIMEOUT = 240;
 my $DEBUG=0;
-my $VERSION="@@VERSION@@";
+my $VERSION=$Munin::Common::Defaults::MUNIN_VERSION;
 my $serversocket  = "munin-server-socket.$$";
-my $conffile = "@@CONFDIR@@/munin.conf";
+my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 my $do_usage = 0;
 my @limit_hosts = ();
 my @limit_services = ();
@@ -75,7 +76,7 @@ Options:
     --host <host>	Limit graphed hosts to <host>. Multiple --host options
     			may be supplied.
     --config <file>	Use <file> as configuration file. 
-    			[@@CONFDIR@@/munin.conf]
+    			[$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf]
     --[no]debug		View debug messages. [--nodebug]
     --[no]fork		Don't fork one instance for each host. [--fork]
     --[no]stdout	Print log messages to stdout as well. [--nostdout]
@@ -105,7 +106,7 @@ EOT
 if ($> == 0)
 {
     print "This program will easily break if you run it as root as you are
-trying now.  Please run it as user '@@USER@@'.  The correct 'su' command
+trying now.  Please run it as user '$Munin::Common::Defaults::MUNIN_USER'.  The correct 'su' command
 on many systems is 'su - munin --shell=/bin/bash'
 Aborting.\n\n";
     exit (1);
@@ -626,6 +627,15 @@ sub read_socket {
     return (@array);
 }
 
+
+sub read_socket_discard_comments {
+    my ($socket) = @_;
+
+    my @chunks = read_socket($socket);
+    return grep { $_ !~ /^#/} @chunks;
+}
+
+
 sub config_and_fetch_node 
 {
     my ($newconf,$oldconf,$socket) = @_;
@@ -649,51 +659,9 @@ sub config_and_fetch_node
 	$fetchdomain = $name;
     }
 
-    # TLS should only be attempted if explicitly enabled. The default value
-    # is therefore "disabled" (and not "auto" as before).
-    my $tls_requirement = &munin_get ($config, "tls", "disabled");
-    logger ("[DEBUG]: TLS set to \"$tls_requirement\".") if $DEBUG;
-    if ($tls_requirement ne "disabled")
-    {
-        my $key;
-        my $cert;
-	my $depth;
-	my $ca_cert;
-	my $tls_verify;
-        $key = $cert = munin_get ($config, "tls_pem");
-        $key = &munin_get ($config, "tls_private_key", "@@CONFDIR@@/munin.pem")
-  	  unless defined $key;
-        $cert = &munin_get ($config, "tls_certificate", "@@CONFDIR@@/munin.pem")
-  	  unless defined $cert;
-        $ca_cert = &munin_get ($config, "tls_ca_certificate", "@@CONFDIR@@/cacert.pem")
-           unless defined $ca_cert;
-        $tls_verify=&munin_get ($config, "tls_verify_certificate", "no");
-        $depth=&munin_get ($config, "tls_verify_depth", 5);
-  
-        $tls = Munin::Common::TLSClient->new({
-            DEBUG        => $DEBUG,
-            logger       => \&logger,
-            read_fd      => fileno($socket),
-            read_func    => sub { read_socket_single($socket) },
-            tls_ca_cert  => $ca_cert,
-            tls_cert     => $cert,
-            tls_paranoia => $tls_requirement, 
-            tls_priv     => $key,
-            tls_vdepth   => $depth,
-            tls_verify   => $tls_verify,
-            write_fd     => fileno($socket),
-            write_func   => sub { write_socket_single($socket, @_) },
-        });
+    _run_starttls_if_required($socket, $name);
 
-        if (!$tls->start_tls()) {
-            $tls = undef;
-            if ($tls_requirement eq "paranoid" or $tls_requirement eq "enabled")
-            {
-                logger ("[ERROR]: Could not establish TLS connection to \"$name\". Skipping.");
-                exit 13;
-            }
-        }
-    }
+    _negotiate_capabilities($socket);
 
     logger("[DEBUG] Configuring node: $name") if $DEBUG;
     my @services;
@@ -816,6 +784,68 @@ sub config_and_fetch_node
     return 0 unless $socket;
     return 1;
 }
+
+
+sub _run_starttls_if_required {
+    my ($socket, $name) = @_;
+
+    # TLS should only be attempted if explicitly enabled. The default value
+    # is therefore "disabled" (and not "auto" as before).
+    my $tls_requirement = &munin_get ($config, "tls", "disabled");
+    logger ("[DEBUG]: TLS set to \"$tls_requirement\".") if $DEBUG;
+    if ($tls_requirement ne "disabled") {
+        my $key;
+        my $cert;
+	my $depth;
+	my $ca_cert;
+	my $tls_verify;
+        $key = $cert = munin_get ($config, "tls_pem");
+        $key = &munin_get ($config, "tls_private_key", "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.pem")
+  	  unless defined $key;
+        $cert = &munin_get ($config, "tls_certificate", "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.pem")
+  	  unless defined $cert;
+        $ca_cert = &munin_get ($config, "tls_ca_certificate", "$Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem")
+           unless defined $ca_cert;
+        $tls_verify=&munin_get ($config, "tls_verify_certificate", "no");
+        $depth=&munin_get ($config, "tls_verify_depth", 5);
+  
+        $tls = Munin::Common::TLSClient->new({
+            DEBUG        => $DEBUG,
+            logger       => \&logger,
+            read_fd      => fileno($socket),
+            read_func    => sub { read_socket_single($socket) },
+            tls_ca_cert  => $ca_cert,
+            tls_cert     => $cert,
+            tls_paranoia => $tls_requirement, 
+            tls_priv     => $key,
+            tls_vdepth   => $depth,
+            tls_verify   => $tls_verify,
+            write_fd     => fileno($socket),
+            write_func   => sub { write_socket_single($socket, @_) },
+        });
+
+        if (!$tls->start_tls()) {
+            $tls = undef;
+            if ($tls_requirement eq "paranoid" or $tls_requirement eq "enabled") {
+                logger ("[ERROR]: Could not establish TLS connection to \"$name\". Skipping.");
+                exit 13;
+            }
+        }
+    }
+}
+
+
+sub _negotiate_capabilities {
+    my ($socket) = @_;
+
+    my $capabilities = 'foo';
+
+    write_socket_single($socket, "cap $capabilities\n");
+    my ($cap) = read_socket_discard_comments($socket);
+
+    logger("[DEBUG]: Session capabilities: $cap");# if $DEBUG;
+}
+
 
 sub fetch_node_service {
     my $newconf      = shift; 
