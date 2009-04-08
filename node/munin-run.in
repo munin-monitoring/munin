@@ -112,18 +112,19 @@ sub main
     $ENV{FQDN}=$FQDN;
 
     $config->reinitialize({
-            servicedir => $servicedir,
-            sconfdir   => $sconfdir,
-            conffile   => $conffile,
-            sconffile  => $sconffile,
-            fqdn       => $FQDN,
-            DEBUG      => $DEBUG,
-            PIDEBUG    => $PIDEBUG,
-            defuser    => $defuser,
-            defgroup   => $defgroup,
-            paranoia   => $paranoia,
-            ignores    => \@ignores,
-            sconf      => \%sconf,
+        %$config,
+        servicedir => $servicedir,
+        sconfdir   => $sconfdir,
+        conffile   => $conffile,
+        sconffile  => $sconffile,
+        fqdn       => $FQDN,
+        DEBUG      => $DEBUG,
+        PIDEBUG    => $PIDEBUG,
+        defuser    => $defuser,
+        defgroup   => $defgroup,
+        paranoia   => $paranoia,
+        ignores    => \@ignores,
+        sconf      => \%sconf,
     });
 
     # Some locales uses "," as decimal separator. This can mess up a lot

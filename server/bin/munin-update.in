@@ -543,7 +543,7 @@ sub write_socket_single {
     eval {
 	local $SIG{ALRM} = sub { die "Could not run list on socket: $!\n"};
 	alarm 5;
-	if (defined $tls and $tls)
+	if ($tls && $tls->session_started())
 	{
 	    $tls->write($text)
                 or exit 9;
@@ -567,7 +567,7 @@ sub read_socket_single {
     eval {
       local $SIG{ALRM} = sub { $timed_out=1; close $socket; logger ("[WARNING] Timeout: Aborting read: $!"); exit 1;};
       alarm( $timeout );
-      if ($tls)
+      if ($tls && $tls->session_started())
       {
 	  $res = $tls->read();
       }
@@ -670,7 +670,7 @@ sub config_and_fetch_node
         $tls_verify=&munin_get ($config, "tls_verify_certificate", "no");
         $depth=&munin_get ($config, "tls_verify_depth", 5);
   
-        $tls = Munin::Common::TLSServer->new({
+        $tls = Munin::Common::TLSClient->new({
             DEBUG        => $DEBUG,
             logger       => \&logger,
             read_fd      => fileno($socket),

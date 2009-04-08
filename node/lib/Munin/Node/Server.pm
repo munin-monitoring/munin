@@ -149,15 +149,17 @@ sub _process_starttls_command {
     my $ca_cert;
     my $tls_verify;
 
-    $key = $cert = $config->{tls_pem};
-    $key = $config->{tls_private_key} unless defined $key;
-    $key = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $key;
+    $key = $config->{tls_private_key};
+    $key = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.pem" 
+        unless defined $key;
 
-    $cert = $config->{tls_certificate} unless defined $cert;
-    $cert = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.pem" unless defined $cert;
+    $cert = $config->{tls_certificate};
+    $cert = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.pem" 
+        unless defined $cert;
 
     $ca_cert = $config->{tls_ca_certificate};
-    $ca_cert = "$Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem" unless defined $ca_cert;
+    $ca_cert = "$Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem" 
+        unless defined $ca_cert;
 
     $depth = $config->{tls_verify_depth};
     $depth = 5 unless defined $depth;
@@ -433,7 +435,7 @@ sub _change_real_and_effective_user_and_group {
 sub _net_read {
     local $_;
 
-    if (defined $tls) {
+    if ($tls && $tls->session_started()) {
         $_ = $tls->read();
     }
     else {
@@ -447,7 +449,7 @@ sub _net_read {
 sub _net_write {
     my $text = shift;
     logger("DEBUG: > $text") if $config->{DEBUG};
-    if (defined $tls) {
+    if ($tls && $tls->session_started()) {
         $tls->write($text);
     }
     else {

@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 35;
+use Test::More tests => 36;
 
 use FindBin;
 use English qw(-no_match_vars);
@@ -92,6 +92,14 @@ isa_ok($conf, 'Munin::Node::Config');
 }
 
 
+### tls
+
+{
+    my @res = $conf->_parse_line('tls paranoid');
+    is_deeply(\@res, [tls => 'paranoid'], 'Parsing tls');  
+
+}
+
 ###############################################################################
 #                       _ S T R I P _ C O M M E N T
 
@@ -134,12 +142,13 @@ isa_ok($conf, 'Munin::Node::Config');
     $conf->reinitialize();
     $conf->parse_config(*DATA);
     my $expected = {
-        'fqdn' => 'foo.example.com',
-        'allow_deny' => [
+        fqdn => 'foo.example.com',
+        tls => 'enabled',
+        allow_deny => [
             ['allow', '^127\\.0\\.0\\.\d+$'],
             ['allow', '^10\\.0\\.0\\.\d+$']
         ],
-        'sconf' => {
+        sconf => {
             'setsid' => 'yes',
             'background' => '1',
             'log_file' => '/var/log/munin/munin-node.log',
@@ -150,7 +159,7 @@ isa_ok($conf, 'Munin::Node::Config');
             'log_level' => '4',
             'user' => 'root',
         },
-        'ignores' => [
+        ignores => [
             '~$',
             '\\.bak$',
             '%$',
@@ -349,3 +358,4 @@ allow ^10\.0\.0\.\d+$
 host *
 # host 127.0.0.1
 
+tls enabled

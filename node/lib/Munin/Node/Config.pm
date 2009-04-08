@@ -53,7 +53,7 @@ sub parse_config {
     while (my $line = <$IO_HANDLE>) {
         my @var = $self->_parse_line($line);
         next unless @var;
-        if ($var[0] eq 'ignore') {
+        if ($var[0] eq 'ignore_file') {
             $self->{ignores} ||= [];
             push @{$self->{ignores}}, $var[1];
         } 
@@ -84,7 +84,21 @@ sub _parse_line {
 
     my ($var_name, $var_value) = ($1, $2);
 
-    if ($var_name eq 'host_name' || $var_name eq 'hostname') {
+    my %config_variables = map { $_ => 1} qw(
+        ignore_file
+        tls
+        tls_ca_certificate
+        tls_certificate
+        tls_private_key
+        tls_verify_certificate
+        tls_verify_depth
+        timeout
+    );
+
+    if ($config_variables{$var_name}) {
+        return ($var_name => $var_value);
+    }
+    elsif ($var_name eq 'host_name' || $var_name eq 'hostname') {
         return (fqdn => $var_value);
     }
     elsif ($var_name eq 'default_plugin_user'
@@ -106,12 +120,6 @@ sub _parse_line {
     }
     elsif ($var_name eq 'paranoia') {
         return (paranoia => $self->_parse_bool($var_value))
-    }
-    elsif ($var_name eq 'ignore_file') {
-        return ('ignore' => $var_value);
-    }
-    elsif ($var_name eq 'timeout') {
-        return (timeout => $var_value);
     }
     else {
         return (unhandled => ($var_name => $var_value));

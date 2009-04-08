@@ -106,6 +106,7 @@ sub main {
     $ENV{'LC_ALL'}='C';
 
     $config->reinitialize({
+        %$config,
         servicedir => $servicedir,
         sconfdir   => $sconfdir,
         conffile   => $conffile,

@@ -351,6 +351,9 @@ sub _on_unverified_cert {}
 sub read {
     my ($self) = @_;
 
+    croak "Tried to do an encrypted read, but a TLS session is not started" 
+        unless $self->session_started();
+
     local $_;
 
     eval { $_ = Net::SSLeay::read($self->{tls_session}); };
@@ -370,6 +373,9 @@ sub read {
 sub write {
     my ($self, $text) = @_;
 
+    croak "Tried to do an encrypted write, but a TLS session is not started" 
+        unless $self->session_started();
+
     $self->{logger}("DEBUG: > $text") if $self->{DEBUG};
 
     eval { Net::SSLeay::write($self->{tls_session}, $text); };
@@ -382,6 +388,12 @@ sub write {
     return 1;
 }
 
+
+sub session_started {
+    my ($self) = @_;
+
+    return defined $self->{tls_session};
+}
 
 
 1;
