@@ -411,10 +411,12 @@ install-common: build-common
 
 build-common: build-common-pre common/blib/lib/Munin/Common/Defaults.pm
 
-build-common-pre:
-	cd common && perl Build.PL
+build-common-pre: common/Build
 	cd common && ./Build code
 	rm -f common/blib/lib/Munin/Common/Defaults.pm
+
+common/Build: common/Build.PL
+	cd common && perl Build.PL
 
 common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm
 	perl -pe 's{(PREFIX     \s+=\s).*}{\1q{$(PREFIX)};}x;      \
