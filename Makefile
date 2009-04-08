@@ -110,8 +110,6 @@ install-node: build install-node-non-snmp install-node-snmp install-munindoc
 uninstall-node: uninstall-node-non-snmp uninstall-node-snmp
 	echo Undone.
 
-install-common:
-
 install-node-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(LIBDIR)/
 
@@ -151,7 +149,6 @@ install-node-non-snmp: build
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Server.pm $(PERLLIB)/Munin/Node
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Service.pm $(PERLLIB)/Munin/Node
 	$(INSTALL) -m 0644 node/lib/Munin/Node/Session.pm $(PERLLIB)/Munin/Node
-	$(INSTALL) -m 0644 build/common/lib/Munin/Common/Defaults.pm $(PERLLIB)/Munin/Common
 
 uninstall-node-non-snmp: build
 	rm -f $(SBINDIR)/munin-node 
@@ -243,39 +240,7 @@ uninstall-doc: build-doc
 
 
 
-build: $(INFILES) build/common/lib/Munin/Common/Defaults.pm
-
-build/common/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm
-	@mkdir -p build/common/lib/Munin/Common
-	perl -pe 's{(PREFIX     \s+=\s).*}{\1q{$(PREFIX)};}x;      \
-                  s{(CONFDIR    \s+=\s).*}{\1q{$(CONFDIR)};}x;     \
-                  s{(BINDIR     \s+=\s).*}{\1q{$(BINDIR)};}x;      \
-                  s{(SBINDIR    \s+=\s).*}{\1q{$(SBINDIR)};}x;     \
-                  s{(DOCDIR     \s+=\s).*}{\1q{$(DOCDIR)};}x;      \
-                  s{(LIBDIR	\s+=\s).*}{\1q{$(LIBDIR)};}x;      \
-                  s{(MANDIR	\s+=\s).*}{\1q{$(MANDIR)};}x;      \
-                  s{(LOGDIR	\s+=\s).*}{\1q{$(LOGDIR)};}x;      \
-                  s{(HTMLDIR	\s+=\s).*}{\1q{$(HTMLDIR)};}x;     \
-                  s{(DBDIR	\s+=\s).*}{\1q{$(DBDIR)};}x;       \
-                  s{(STATEDIR	\s+=\s).*}{\1q{$(STATEDIR)};}x;    \
-                  s{(PERL	\s+=\s).*}{\1q{$(PERL)};}x;        \
-                  s{(PERLLIB	\s+=\s).*}{\1q{$(PERLLIB)};}x;     \
-                  s{(PYTHON	\s+=\s).*}{\1q{$(PYTHON)};}x;      \
-                  s{(OSTYPE	\s+=\s).*}{\1q{$(OSTYPE)};}x;      \
-                  s{(HOSTNAME	\s+=\s).*}{\1q{$(HOSTNAME)};}x;    \
-                  s{(MKTEMP	\s+=\s).*}{\1q{$(MKTEMP)};}x;      \
-                  s{(VERSION	\s+=\s).*}{\1q{$(VERSION)};}x;     \
-                  s{(PLUGSTATE	\s+=\s).*}{\1q{$(PLUGSTATE)};}x;   \
-                  s{(CGIDIR	\s+=\s).*}{\1q{$(CGIDIR)};}x;      \
-                  s{(USER	\s+=\s).*}{\1q{$(USER)};}x;        \
-                  s{(GROUP	\s+=\s).*}{\1q{$(GROUP)};}x;       \
-                  s{(PLUGINUSER	\s+=\s).*}{\1q{$(PLUGINUSER)};}x;  \
-                  s{(GOODSH	\s+=\s).*}{\1q{$(GOODSH)};}x;      \
-                  s{(BASH	\s+=\s).*}{\1q{$(BASH)};}x;        \
-                  s{(HASSETR	\s+=\s).*}{\1q{$(HASSETR)};}x;     \
-	          s{(SSPOOLDIR	\s+=\s).*}{\1q{$(SSPOOLDIR)};}x;'  \
-                  $< > $@
-
+build: $(INFILES) build-common
 
 build/%: %.in
 	@echo "$< -> $@"
@@ -386,7 +351,7 @@ suse-src: suse-pre
 	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
 
-clean:
+clean: clean-common
 ifeq ($(MAKELEVEL),0)
 	-rm -f debian
 	-ln -sf dists/debian
@@ -433,4 +398,58 @@ node-monkeywrench: install-node
 t/install: 
 	$(MAKE) clean install-node install-node-plugins CONFIG=t/Makefile.config INSTALL_PLUGINS=test
 
-.PHONY: install install-main install-node install-doc install-man build build-doc deb clean source_dist test
+
+
+
+######################################################################
+
+install-common: build-common
+	(cd common/blib/lib/ && find -mindepth 1 -type d) \
+          | xargs --replace={} mkdir -p $(PERLLIB)/{}
+	(cd common/blib/lib/ && find -mindepth 1 -type f) \
+          | xargs --replace={} $(INSTALL) -m 0644 common/blib/lib/{} $(PERLLIB)/Munin/Common/`dirname {}`
+
+build-common: build-common-pre common/blib/lib/Munin/Common/Defaults.pm
+
+build-common-pre:
+	cd common && perl Build.PL
+	cd common && ./Build code
+	rm -f common/blib/lib/Munin/Common/Defaults.pm
+
+common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm
+	perl -pe 's{(PREFIX     \s+=\s).*}{\1q{$(PREFIX)};}x;      \
+                  s{(CONFDIR    \s+=\s).*}{\1q{$(CONFDIR)};}x;     \
+                  s{(BINDIR     \s+=\s).*}{\1q{$(BINDIR)};}x;      \
+                  s{(SBINDIR    \s+=\s).*}{\1q{$(SBINDIR)};}x;     \
+                  s{(DOCDIR     \s+=\s).*}{\1q{$(DOCDIR)};}x;      \
+                  s{(LIBDIR	\s+=\s).*}{\1q{$(LIBDIR)};}x;      \
+                  s{(MANDIR	\s+=\s).*}{\1q{$(MANDIR)};}x;      \
+                  s{(LOGDIR	\s+=\s).*}{\1q{$(LOGDIR)};}x;      \
+                  s{(HTMLDIR	\s+=\s).*}{\1q{$(HTMLDIR)};}x;     \
+                  s{(DBDIR	\s+=\s).*}{\1q{$(DBDIR)};}x;       \
+                  s{(STATEDIR	\s+=\s).*}{\1q{$(STATEDIR)};}x;    \
+                  s{(PERL	\s+=\s).*}{\1q{$(PERL)};}x;        \
+                  s{(PERLLIB	\s+=\s).*}{\1q{$(PERLLIB)};}x;     \
+                  s{(PYTHON	\s+=\s).*}{\1q{$(PYTHON)};}x;      \
+                  s{(OSTYPE	\s+=\s).*}{\1q{$(OSTYPE)};}x;      \
+                  s{(HOSTNAME	\s+=\s).*}{\1q{$(HOSTNAME)};}x;    \
+                  s{(MKTEMP	\s+=\s).*}{\1q{$(MKTEMP)};}x;      \
+                  s{(VERSION	\s+=\s).*}{\1q{$(VERSION)};}x;     \
+                  s{(PLUGSTATE	\s+=\s).*}{\1q{$(PLUGSTATE)};}x;   \
+                  s{(CGIDIR	\s+=\s).*}{\1q{$(CGIDIR)};}x;      \
+                  s{(USER	\s+=\s).*}{\1q{$(USER)};}x;        \
+                  s{(GROUP	\s+=\s).*}{\1q{$(GROUP)};}x;       \
+                  s{(PLUGINUSER	\s+=\s).*}{\1q{$(PLUGINUSER)};}x;  \
+                  s{(GOODSH	\s+=\s).*}{\1q{$(GOODSH)};}x;      \
+                  s{(BASH	\s+=\s).*}{\1q{$(BASH)};}x;        \
+                  s{(HASSETR	\s+=\s).*}{\1q{$(HASSETR)};}x;     \
+	          s{(SSPOOLDIR	\s+=\s).*}{\1q{$(SSPOOLDIR)};}x;'  \
+                  $< > $@
+
+clean-common:
+	cd common && ./Build realclean
+
+######################################################################
+
+
+.PHONY: install install-main install-node install-doc install-man build build-doc deb clean source_dist test install-common build-common clean-common

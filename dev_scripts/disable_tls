@@ -1,0 +1,10 @@
+#!/bin/bash
+
+FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
+BASEDIR=$(readlink -f -- "$FINDBIN/..")
+DESTDIR="$BASEDIR/root"
+
+cd $BASEDIR
+
+perl -pi -e "s/^tls .*/tls disabled/" $DESTDIR/etc/munin/munin-node.conf
+perl -pi -e "s/^tls .*/tls disabled/" $DESTDIR/etc/munin/munin.conf
