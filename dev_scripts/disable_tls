@@ -1,8 +1,7 @@
 #!/bin/bash
 
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
-BASEDIR=$(readlink -f -- "$FINDBIN/..")
-DESTDIR="$BASEDIR/root"
+. $FINDBIN/common.sh
 
 cd $BASEDIR
 
