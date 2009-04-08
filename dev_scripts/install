@@ -12,10 +12,11 @@ if [ $1 ]; then
 fi
 
 make DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www
-fakeroot make install DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www
+fakeroot make install-main install-common install-node install-man DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www
 
 
 if [ $1 ]; then
+    fakeroot make install-node-plugins DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www
     perl -pi -e "s/port 4949/port 4948/; 
                  s/user root/user $USER/; 
                  s/group root/group $USER/;
