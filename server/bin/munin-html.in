@@ -671,7 +671,7 @@ sub generate_service_templates {
     my $filename = munin_get_html_filename ($service);
     my $dirname  = $filename; $dirname =~ s/\/[^\/]*$//;
     munin_mkdir_p ($dirname, oct(755));
-    open (my $FILE, '>', $filename") or
+    open (my $FILE, '>', $filename) or
 	die "Cannot open '$filename' for writing: $!";
     print $FILE $servicetemplate->output;
     close $FILE;

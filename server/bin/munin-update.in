@@ -52,6 +52,7 @@ my $cli_do_fork;
 my $cli_timeout;
 my $print_stdout = 0;
 my $tls;
+my $STATS;
 
 # Get options
 $do_usage=1  unless
@@ -142,10 +143,10 @@ if (! -d $config->{rundir}) {
 
 munin_runlock("$config->{rundir}/munin-update.lock");
 
-if (!open (my $STATS,'>', "$config->{dbdir}/munin-update.stats.tmp")) {
+if (!open ($STATS,'>', "$config->{dbdir}/munin-update.stats.tmp")) {
     logger("[WARNING] Unable to open $config->{dbdir}/munin-update.stats");
     # Use /dev/null instead - if the admin won't fix he won't care
-    open(STATS, '>', "/dev/null") or die "Could not open STATS to /dev/null: $?";
+    open($STATS, '>', "/dev/null") or die "Could not open STATS to /dev/null: $?";
 }
 
 my %children = ();
@@ -320,8 +321,8 @@ if (&munin_getlock("$config->{rundir}/munin-datafile.lock")) {
 }
 
 $update_time = sprintf ("%.2f",(Time::HiRes::time - $update_time));
-print STATS "UT|$update_time\n";
-close (STATS);
+print $STATS "UT|$update_time\n";
+close ($STATS);
 rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
 
 logger("Munin-update finished ($update_time sec)");
@@ -781,7 +782,7 @@ sub config_and_fetch_node
 	fetch_node_service ($newconf, $socket, $servname, $service);
     }
     $host_time = sprintf ("%.2f", (Time::HiRes::time - $host_time));
-    print STATS "UD|$name|$host_time\n";
+    print $STATS "UD|$name|$host_time\n";
     return 0 unless $socket;
     return 1;
 }
@@ -790,8 +791,8 @@ sub config_and_fetch_node
 sub _run_starttls_if_required {
     my ($socket, $name) = @_;
 
-    # TLS should only be attempted if explicitly enabled. The default value
-    # is therefore "disabled" (and not "auto" as before).
+    # TLS should only be attempted if explicitly enabled. The default
+    # value is therefore "disabled" (and not "auto" as before).
     my $tls_requirement = &munin_get ($config, "tls", "disabled");
     logger ("[DEBUG]: TLS set to \"$tls_requirement\".") if $DEBUG;
     if ($tls_requirement ne "disabled") {
