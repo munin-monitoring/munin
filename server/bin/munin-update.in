@@ -39,13 +39,11 @@ use Time::HiRes;
 
 my $DEBUG=0;
 my $STATS;
-my $VERSION=$Munin::Common::Defaults::MUNIN_VERSION;
 my $cli_do_fork;
 my $cli_timeout;
 my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 my $config;
 my $do_fork = 1;
-my $print_stdout = 0;
 my $serversocket  = "munin-server-socket.$$";
 my $timeout = 180;
 my $tls;
@@ -298,7 +296,6 @@ sub parse_args {
         "version!"     => \&print_version_and_exit,
         "fork!"        => \$cli_do_fork,
         "timeout=i"    => \$cli_timeout,
-        "stdout!"      => \$print_stdout,
         "help"         => \&print_usage_and_exit
     );
 }
@@ -325,7 +322,7 @@ Options:
 }
 
 sub print_version_and_exit {
-    print qq{munin-update version $VERSION.
+    print qq{munin-update version $Munin::Common::Defaults::MUNIN_VERSION.
 Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
 
 Copyright (C) 2002-2009
@@ -357,7 +354,7 @@ sub compare_configs {
     my $new = shift;
     my $just_upgraded = 0;
 
-    if (!defined $old->{version} or $old->{version} ne $VERSION) {
+    if (!defined $old->{version} or $old->{version} ne $Munin::Common::Defaults::MUNIN_VERSION) {
 	$just_upgraded = 1;
     }
 
