@@ -255,9 +255,9 @@ sub _parse_plugin_line {
     my ($var_name, $var_value) = ($1, $2);
 
     if ($var_name eq 'user') {
-        my $uid = Munin::Node::OS->get_uid($var_value);
-        croak "User '$var_value' is nonexistant." unless defined $uid;
-        return (user => $uid);
+	# Evaluation of user name is lazy, so that configuration for
+	# plugins that are not used does not cause errors.
+        return (user => $var_value);
     }
     elsif ($var_name eq 'group') {
         

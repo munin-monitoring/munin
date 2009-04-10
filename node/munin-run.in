@@ -189,6 +189,12 @@ sub run_service {
 		my $u  = (defined $sconf{$service}{'user'}?
 			$sconf{$service}{'user'}:
 			$defuser);
+
+		# Resolve unresolved UID now - as it is may not have
+		# been resolved at read-config-time
+
+		$u = Munin::Node::OS->get_uid($u);
+
 		my $g  = $defgroup;
 		my $gs = "$g $g" .
 		  (defined($sconf{$service}{'group'}) ? 

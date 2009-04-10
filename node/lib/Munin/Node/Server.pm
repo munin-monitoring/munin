@@ -405,6 +405,9 @@ sub _change_real_and_effective_user_and_group {
         my $u  = defined $config->{sconf}{$service}{'user'} 
             ? $config->{sconf}{$service}{'user'}
                 : $config->{defuser};
+	# Resolve unresolved UID now - as it is may not have been resolved at
+	# read-config-time
+	$u = Munin::Node::OS->get_uid($u);
         my $g  = $config->{defgroup};
         my $gs = "$g $g" .      # FIX why $g two times?
             ($config->{sconf}{$service}{'group'} 
