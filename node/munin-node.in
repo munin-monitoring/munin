@@ -184,6 +184,8 @@ Options:
 exit main() unless caller;
 
 
+1;
+
 __END__
 
 

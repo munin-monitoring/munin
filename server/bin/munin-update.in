@@ -25,50 +25,286 @@ use strict;
 
 $|=1;
 
+use English qw(-no_match_vars);
+use Getopt::Long;
 use IO::Socket;
 use Munin::Common::Defaults;
 use Munin::Common::TLSClient;
 use Munin::Master::Logger;
 use Munin::Master::Utils;
-use Time::HiRes;
-use RRDs;
-use Getopt::Long;
 use POSIX ":sys_wait_h";
+use RRDs;
 use Storable qw(fd_retrieve nstore_fd);
+use Time::HiRes;
 
-my $TIMEOUT = 240;
 my $DEBUG=0;
+my $STATS;
 my $VERSION=$Munin::Common::Defaults::MUNIN_VERSION;
-my $serversocket  = "munin-server-socket.$$";
-my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
-my $do_usage = 0;
-my @limit_hosts = ();
-my @limit_services = ();
-my $update_time= Time::HiRes::time;
-my $do_fork = 1;
-my $do_version = 0;
-my $timeout = 180;
 my $cli_do_fork;
 my $cli_timeout;
+my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
+my $config;
+my $do_fork = 1;
 my $print_stdout = 0;
+my $serversocket  = "munin-server-socket.$$";
+my $timeout = 180;
 my $tls;
-my $STATS;
+my %children = ();
+my @limit_hosts = ();
+my @limit_services = ();
 
-# Get options
-$do_usage=1  unless
-GetOptions ( "host=s"       => \@limit_hosts,
-	     "service=s"    => \@limit_services,
-	     "config=s"     => \$conffile,
-	     "debug!"       => \$DEBUG,
-	     "version!"     => \$do_version,
-	     "fork!"        => \$cli_do_fork,
-	     "timeout=i"    => \$cli_timeout,
-	     "stdout!"      => \$print_stdout,
-	     "help"         => \$do_usage );
 
-if ($do_usage)
-{
-    print "Usage: $0 [options]
+sub main {
+    my $TIMEOUT = 240;
+    my $bad_procs = 0;
+    my $oldconfig;
+    my @queue = ();
+
+    parse_args();
+    exit_if_run_by_super_user();
+
+    $config = munin_readconfig($conffile);
+
+    logger_open($config->{'logdir'});
+
+
+    if (-e "$config->{dbdir}/datafile") {
+        $oldconfig= &munin_readconfig("$config->{dbdir}/datafile", 1, 1);
+    }
+    
+    # CLI parameters override the configuration file.
+    if (defined $cli_timeout) {
+        $timeout = $cli_timeout;
+    } elsif (exists $config->{'timeout'}) {
+        $timeout = $config->{'timeout'};
+    }
+
+    if (defined $cli_do_fork) {
+        $do_fork = $cli_do_fork;
+    } elsif (exists $config->{'fork'}) {
+        $do_fork = ($config->{'fork'} =~ /yes/i ? 1 : 0);
+    }
+
+    if (! -d $config->{rundir}) {
+	mkdir ($config->{rundir}, oct(700));
+    }
+
+    munin_runlock("$config->{rundir}/munin-update.lock");
+
+    if (!open ($STATS,'>', "$config->{dbdir}/munin-update.stats.tmp")) {
+        logger("[WARNING] Unable to open $config->{dbdir}/munin-update.stats");
+        # Use /dev/null instead - if the admin won't fix he won't care
+        open($STATS, '>', "/dev/null") or die "Could not open STATS to /dev/null: $?";
+    }
+
+    if ($do_fork) {
+        {
+            my $uaddr;
+            # Set up socket
+            $uaddr =  sockaddr_un("$config->{rundir}/$serversocket");
+            socket (Server, PF_UNIX, SOCK_STREAM, 0)     || die "socket: $!";
+            unlink ("$config->{'rundir'}/$serversocket");
+            bind   (Server, $uaddr);
+            chmod (0700, "$config->{rundir}/$serversocket");
+            listen (Server, SOMAXCONN);
+        }
+    }
+
+    logger("Starting munin-update");
+
+    # Make array of what is probably needed to update
+    my $work_array = [];
+    if (@limit_hosts) { # Limit what to update if needed
+        foreach my $nodename (@limit_hosts) {
+            push @$work_array, map { @{munin_find_field ($_->{$nodename}, "address")} } @{munin_find_field($config, $nodename)};
+        }
+    } else { # ...else just search for all adresses to update
+        push @$work_array, @{munin_find_field($config, "address")};
+    }
+
+    # Go through scheduled work to weed out a few bits, and prepare some info
+    for my $hashnode (@$work_array) {
+        my $loc = munin_get_node_loc($hashnode);
+        my $name = munin_get_node_name ($hashnode);
+
+        # Skip anything that has been disabled with the "update" setting
+        if (!munin_get_bool ($hashnode, "update", "true")) {
+            logger ("Skipping \"$name\" (update disabled by config)");
+            next;
+        }
+
+        # We need to connect to this node; queue it
+        logger ("Queuing \"$name\" for update.");
+        push (@queue, [$loc, $hashnode, munin_get_node ($oldconfig, $loc)]);
+    }
+
+    my $timeout_start = time();
+    $SIG{ALRM} = sub { die "Timed out waiting for children. $!\n"};
+    alarm ($TIMEOUT);
+
+    if ($do_fork) {
+        # Initially set off a bunch of nodes...
+        if (defined $config->{max_processes}) {
+            while (keys %children < ($config->{max_processes}-1-$bad_procs)) {
+                do_node(@{pop @queue});
+            }
+        } else {
+            do_node(@{pop @queue}) while @queue; # No limit on number of procs
+        }
+        # Loop as long as there are kids or queue...
+        for (;(scalar (keys %children) - $bad_procs > 0) or @queue;) {
+            logger ("Debug: Doing a pass to check children status.") if $DEBUG;
+            
+            eval { # eval to call accept() with a timeout
+                $SIG{ALRM} = sub { # If we timeout we need to use the old config
+                    foreach my $key (keys %children) {
+                        if (waitpid ($key, WNOHANG) != 0) {
+                            my $loc     = $children{$key}->[0];
+                            my $newnode = $children{$key}->[1];
+                            my $oldnode = $children{$key}->[2];
+                            my $name    = munin_get_node_name ($newnode);
+                            
+                            logger ("Reaping child: $name.");
+                            delete $children{$key};
+                            munin_copy_node_toloc ($oldnode, $config, $loc);
+                        }
+                    }
+                    die;
+                }; # end sub
+
+                alarm (10);
+                accept (Client, Server);
+            }; # end eval
+
+            if ($@) {
+                if (@queue and defined $config->{max_processes} and $config->{max_processes}) {
+                    logger ("Debug: Checking whether to spawn off more procs from queue.");
+                    while (keys %children < ($config->{max_processes}-1-$bad_procs)) {
+                        logger ("Debug: Popping queue item and spawning new proc.");
+                        do_node(@{pop @queue});
+                    }
+                }
+                next;
+            }
+
+            alarm ($TIMEOUT - time() + $timeout_start);
+            close STDIN;
+            open (STDIN,  "<&Client")  || die "can't dup client to stdin";
+
+            my $pid;
+            my $name;
+            my $loc;
+            my $tmpref;
+            eval {
+                $tmpref = fd_retrieve (\*STDIN);
+            };
+            if ($@) {
+                $bad_procs++;
+                logger ("[WARNING] Error communicating with process: $@");
+            } else {
+                ($pid, $loc, $name) = ($tmpref->[0], $tmpref->[1], $tmpref->[2]);
+                logger ("connection from $name ($pid)");
+
+                eval {
+                    my $newnode = fd_retrieve (\*STDIN);
+                    munin_copy_node_toloc ($newnode, $config, $loc);
+                };
+                if ($@) {
+                    logger ("[WARNING] Error during fd_retrieve of config: $@");
+                    
+                    my $loc     = $children{$pid}->[0];
+                    my $newnode = $children{$pid}->[1];
+                    my $oldnode = $children{$pid}->[2];
+
+                    munin_copy_node_toloc ($oldnode, $config, $loc);
+                }
+                delete $children{$pid};
+                waitpid ($pid, 0);
+                logger ("connection from $name ($pid) closed");
+            }
+            if (@queue and defined $config->{max_processes} and
+                    $config->{max_processes} and
+                        scalar (keys %children) < (($config->{max_processes})-1-$bad_procs)) {
+                do_node(@{pop @queue});
+                close (Client);
+            }
+        }
+        alarm (0);
+    } else { # No forking, just poll the nodes sequentially...
+        for (;@queue;) {
+            do_node(@{pop @queue});
+        }
+    }
+
+    alarm (0);
+
+    if ($bad_procs) # Use old configuration for killed children
+    {
+	foreach my $key (keys %children)
+	{
+            my $loc     = $children{$key}->[0];
+            my $newnode = $children{$key}->[1];
+            my $oldnode = $children{$key}->[2];
+            my $name    = munin_get_node_name ($newnode);
+            
+            munin_copy_node_toloc ($oldnode, $config, $loc);
+            logger ("Attempting to use old configuration for $name.");
+	}
+    }
+
+    unlink ("$config->{rundir}/$serversocket");
+
+
+    {
+        my $overwrite = &munin_readconfig($conffile);
+        $config = &munin_overwrite($config,$overwrite);
+    }
+
+    compare_configs ($oldconfig, $config);
+
+    if (munin_getlock("$config->{rundir}/munin-datafile.lock")) {
+        munin_writeconfig("$config->{dbdir}/datafile",$config);
+    } else {
+        die "Could not create lockfile '$config->{rundir}/munin-update.lock'";
+    }
+
+    {
+        my $update_time= Time::HiRes::time;
+        $update_time = sprintf ("%.2f",(Time::HiRes::time - $update_time));
+        print $STATS "UT|$update_time\n";
+        close ($STATS);
+        rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
+    
+        logger("Munin-update finished ($update_time sec)");
+    }
+
+    munin_removelock("$config->{rundir}/munin-datafile.lock");
+    munin_removelock("$config->{rundir}/munin-update.lock");
+
+    return 0;
+}
+
+
+sub parse_args {
+    my $do_usage = 0;
+    my $do_version = 0;
+
+    # Get options
+    print_usage_and_exit() unless GetOptions (
+        "host=s"       => \@limit_hosts,
+        "service=s"    => \@limit_services,
+        "config=s"     => \$conffile,
+        "debug!"       => \$DEBUG,
+        "version!"     => \&print_version_and_exit,
+        "fork!"        => \$cli_do_fork,
+        "timeout=i"    => \$cli_timeout,
+        "stdout!"      => \$print_stdout,
+        "help"         => \&print_usage_and_exit
+    );
+}
+
+sub print_usage_and_exit {
+    print qq{Usage: $0 [options]
 
 Options:
     --version		View version information.
@@ -84,14 +320,12 @@ Options:
     --[no]stdout	Print log messages to stdout as well. [--nostdout]
     --timeout=<seconds>	TCP timeout when talking to clients. [$timeout]
 
-";
+};
     exit 0;
 }
 
-if ($do_version)
-{
-    print <<"EOT";
-munin-update version $VERSION.
+sub print_version_and_exit {
+    print qq{munin-update version $VERSION.
 Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
 
 Copyright (C) 2002-2009
@@ -101,234 +335,20 @@ is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
 PURPOSE. For details, please refer to the file COPYING that is included
 with this software or refer to
   http://www.fsf.org/licensing/licenses/gpl.txt
-EOT
+};
     exit 0;
 }
 
-if ($> == 0)
-{
-    print "This program will easily break if you run it as root as you are
+
+sub exit_if_run_by_super_user {
+    if ($EFFECTIVE_USER_ID == 0) {
+        print qq{This program will easily break if you run it as root as you are
 trying now.  Please run it as user '$Munin::Common::Defaults::MUNIN_USER'.  The correct 'su' command
 on many systems is 'su - munin --shell=/bin/bash'
-Aborting.\n\n";
-    exit (1);
-}
-
-my $config=&munin_readconfig ($conffile);
-
-logger_open($config->{'logdir'});
-
-my $oldconfig;
-
-if (-e "$config->{dbdir}/datafile") {
-  $oldconfig= &munin_readconfig("$config->{dbdir}/datafile", 1, 1);
-}
-
-# CLI parameters override the configuration file.
-if (defined $cli_timeout) {
-    $timeout = $cli_timeout;
-} elsif (exists $config->{'timeout'}) {
-    $timeout = $config->{'timeout'};
-}
-
-if (defined $cli_do_fork) {
-    $do_fork = $cli_do_fork;
-} elsif (exists $config->{'fork'}) {
-    $do_fork = ($config->{'fork'} =~ /yes/i ? 1 : 0);
-}
-
-if (! -d $config->{rundir}) {
-	mkdir ($config->{rundir}, oct(700));
-}
-
-munin_runlock("$config->{rundir}/munin-update.lock");
-
-if (!open ($STATS,'>', "$config->{dbdir}/munin-update.stats.tmp")) {
-    logger("[WARNING] Unable to open $config->{dbdir}/munin-update.stats");
-    # Use /dev/null instead - if the admin won't fix he won't care
-    open($STATS, '>', "/dev/null") or die "Could not open STATS to /dev/null: $?";
-}
-
-my %children = ();
-my @queue = ();
-my $bad_procs = 0;
-my $uaddr;
-
-if ($do_fork) {
-    # Set up socket
-    $uaddr =  sockaddr_un("$config->{rundir}/$serversocket");
-    socket (Server, PF_UNIX, SOCK_STREAM, 0)     || die "socket: $!";
-    unlink ("$config->{'rundir'}/$serversocket");
-    bind   (Server, $uaddr);
-    chmod (0700, "$config->{rundir}/$serversocket");
-    listen (Server, SOMAXCONN);
-}
-
-logger("Starting munin-update");
-
-# Make array of what is probably needed to update
-my $work_array = [];
-if (@limit_hosts) { # Limit what to update if needed
-    foreach my $nodename (@limit_hosts) {
-	push @$work_array, map { @{munin_find_field ($_->{$nodename}, "address")} } @{munin_find_field($config, $nodename)};
-    }
-} else { # ...else just search for all adresses to update
-    push @$work_array, @{munin_find_field($config, "address")};
-}
-
-# Go through scheduled work to weed out a few bits, and prepare some info
-for my $hashnode (@$work_array) {
-    my $loc = munin_get_node_loc($hashnode);
-    my $name = munin_get_node_name ($hashnode);
-
-    # Skip anything that has been disabled with the "update" setting
-    if (!munin_get_bool ($hashnode, "update", "true")) {
-	logger ("Skipping \"$name\" (update disabled by config)");
-	next;
-    }
-
-    # We need to connect to this node; queue it
-    logger ("Queuing \"$name\" for update.");
-    push (@queue, [$loc, $hashnode, munin_get_node ($oldconfig, $loc)]);
-}
-
-my $timeout_start = time();
-$SIG{ALRM} = sub { die "Timed out waiting for children. $!\n"};
-alarm ($TIMEOUT);
-
-if ($do_fork) {
-    # Initially set off a bunch of nodes...
-    if (defined $config->{max_processes}) {
-	while (keys %children < ($config->{max_processes}-1-$bad_procs)) {
-	    do_node(@{pop @queue});
-	}
-    } else {
-	do_node(@{pop @queue}) while @queue; # No limit on number of procs
-    }
-    # Loop as long as there are kids or queue...
-    for (;(scalar (keys %children) - $bad_procs > 0) or @queue;) {
-	logger ("Debug: Doing a pass to check children status.") if $DEBUG;
-
-	eval { # eval to call accept() with a timeout
-	    $SIG{ALRM} = sub { # If we timeout we need to use the old config
-		foreach my $key (keys %children) {
-		    if (waitpid ($key, WNOHANG) != 0) {
-			my $loc     = $children{$key}->[0];
-			my $newnode = $children{$key}->[1];
-			my $oldnode = $children{$key}->[2];
-			my $name    = munin_get_node_name ($newnode);
-
-			logger ("Reaping child: $name.");
-			delete $children{$key};
-			munin_copy_node_toloc ($oldnode, $config, $loc);
-		    }
-		}
-		die;
-	    }; # end sub
-
-	    alarm (10);
-	    accept (Client, Server);
-	}; # end eval
-
-	if ($@) {
-	    if (@queue and defined $config->{max_processes} and $config->{max_processes}) {
-		logger ("Debug: Checking whether to spawn off more procs from queue.");
-		while (keys %children < ($config->{max_processes}-1-$bad_procs)) {
-		    logger ("Debug: Popping queue item and spawning new proc.");
-		    do_node(@{pop @queue});
-		}
-	    }
-	    next;
-	}
-
-	alarm ($TIMEOUT - time() + $timeout_start);
-	close STDIN;
-	open (STDIN,  "<&Client")  || die "can't dup client to stdin";
-
-	my $pid;
-	my $name;
-	my $loc;
-	my $tmpref;
-	eval {
-	    $tmpref = fd_retrieve (\*STDIN);
-	};
-	if ($@) {
-	    $bad_procs++;
-	    logger ("[WARNING] Error communicating with process: $@");
-	} else {
-	    ($pid, $loc, $name) = ($tmpref->[0], $tmpref->[1], $tmpref->[2]);
-	    logger ("connection from $name ($pid)");
-
-	    eval {
-		my $newnode = fd_retrieve (\*STDIN);
-		munin_copy_node_toloc ($newnode, $config, $loc);
-	    };
-	    if ($@) {
-		logger ("[WARNING] Error during fd_retrieve of config: $@");
-
-		my $loc     = $children{$pid}->[0];
-		my $newnode = $children{$pid}->[1];
-		my $oldnode = $children{$pid}->[2];
-
-		munin_copy_node_toloc ($oldnode, $config, $loc);
-	    }
-	    delete $children{$pid};
-	    waitpid ($pid, 0);
-	    logger ("connection from $name ($pid) closed");
-	}
-	if (@queue and defined $config->{max_processes} and
-	    $config->{max_processes} and
-	    scalar (keys %children) < (($config->{max_processes})-1-$bad_procs)) {
-	    do_node(@{pop @queue});
-	    close (Client);
-	}
-    }
-    alarm (0);
-} else { # No forking, just poll the nodes sequentially...
-    for (;@queue;) {
-	do_node(@{pop @queue});
+Aborting.\n\n};
+        exit 1;
     }
 }
-
-alarm (0);
-
-if ($bad_procs) # Use old configuration for killed children
-{
-	foreach my $key (keys %children)
-	{
-		my $loc     = $children{$key}->[0];
-		my $newnode = $children{$key}->[1];
-		my $oldnode = $children{$key}->[2];
-		my $name    = munin_get_node_name ($newnode);
-
-		munin_copy_node_toloc ($oldnode, $config, $loc);
-		logger ("Attempting to use old configuration for $name.");
-	}
-}
-
-unlink ("$config->{rundir}/$serversocket");
-
-
-my $overwrite = &munin_readconfig($conffile);
-$config = &munin_overwrite($config,$overwrite);
-
-compare_configs ($oldconfig, $config);
-
-if (&munin_getlock("$config->{rundir}/munin-datafile.lock")) {
-    &munin_writeconfig("$config->{dbdir}/datafile",$config);
-} else {
-    die "Could not create lockfile '$config->{rundir}/munin-update.lock'";
-}
-
-$update_time = sprintf ("%.2f",(Time::HiRes::time - $update_time));
-print $STATS "UT|$update_time\n";
-close ($STATS);
-rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
-
-logger("Munin-update finished ($update_time sec)");
-
-munin_removelock("$config->{rundir}/munin-datafile.lock");
-munin_removelock("$config->{rundir}/munin-update.lock");
 
 # compare_configs is used to monitor for config changes which we
 # have to act upon.
@@ -661,9 +681,9 @@ sub config_and_fetch_node
 	$fetchdomain = $name;
     }
 
-    _run_starttls_if_required($socket, $name);
+    run_starttls_if_required($socket, $name);
 
-    _negotiate_capabilities($socket);
+    negotiate_capabilities($socket);
 
     logger("[DEBUG] Configuring node: $name") if $DEBUG;
     my @services;
@@ -788,7 +808,7 @@ sub config_and_fetch_node
 }
 
 
-sub _run_starttls_if_required {
+sub run_starttls_if_required {
     my ($socket, $name) = @_;
 
     # TLS should only be attempted if explicitly enabled. The default
@@ -837,7 +857,7 @@ sub _run_starttls_if_required {
 }
 
 
-sub _negotiate_capabilities {
+sub negotiate_capabilities {
     my ($socket) = @_;
 
     my $capabilities = 'foo';
@@ -1008,7 +1028,12 @@ sub copy_node
     return $to;
 }
 
+exit main() unless caller;
+
+
 1;
+
+__END__
 
 =head1 NAME
 
