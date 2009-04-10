@@ -7,7 +7,6 @@ use English qw(-no_match_vars);
 use Carp;
 use Munin::Node::OS;
 
-
 {
     my $instance;
 
@@ -180,10 +179,16 @@ FILE:
 
 
 sub parse_plugin_config_file {
+    # Parse configuration files.  Any errors should cause processing
+    # of the current file to abort with error message, but should not
+    # be fatal.
     my ($self, $file) = @_;
 
     # check perms on a file also checks the directory permissions
-    return unless Munin::Node::OS->check_perms($file);
+    if (!Munin::Node::OS->check_perms($file)) {
+	print STDERR "Plugin configuration $file has unsafe permissions, skipping\n";
+	return;
+    }
 
     my $CONF;
     unless (open $CONF, '<', $file) {
@@ -191,6 +196,9 @@ sub parse_plugin_config_file {
         carp "Could not open file '$file' for reading ($err), skipping.\n";
         return;
     }
+
+    print STDERR "# Processing plugin configuraiton from $file\n"
+	if $self->{DEBUG};
 
     eval {
         $self->parse_plugin_config($CONF)

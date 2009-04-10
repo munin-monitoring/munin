@@ -37,10 +37,13 @@ sub is_a_runnable_service {
 
 sub export_service_environment {
     my ($class, $service) = @_;
+    print STDERR "# Setting up environment\n" if $config->{DEBUG};
 
-    my $env = $config->{sconf}{$service}{env};
+    my $env = $config->{sconf}{$service}{'env'};
+
     return unless defined $env;
     while (my ($k, $v) = each %$env) {
+	print STDERR "# Environment $k = $v\n" if $config->{DEBUG};
         $ENV{$k} = $v;
     }
 }

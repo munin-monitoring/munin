@@ -26,12 +26,14 @@ use warnings;
 # Trust PERL5LIB from environment
 use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
 
+use Carp;
 use Getopt::Long;
 
 use Munin::Common::Defaults;
 use Munin::Node::Config;
 use Munin::Node::OS;
 use Munin::Node::Service;
+use Munin::Node::Server;
 
 my %services;
 my %nodes;
@@ -173,108 +175,16 @@ sub get_service_list
 
 
 sub run_service {
-  my ($service,$command) = @_;
-  $command ||="";
-  my @lines = ();
-  my $timed_out = 0;
-  if ($services{$service}) {
-    my $child = 0;
-    local $SIG{ALRM} = sub { 
-      $timed_out = 1; 
-    };
+    my ($service,$command) = @_;
+    $command ||="";
 
-	if ($< == 0) # If root
-	{
-		# Giving up gid egid uid euid
-		my $u  = (defined $sconf{$service}{'user'}?
-			$sconf{$service}{'user'}:
-			$defuser);
-
-		# Resolve unresolved UID now - as it is may not have
-		# been resolved at read-config-time
-
-		$u = Munin::Node::OS->get_uid($u);
-
-		my $g  = $defgroup;
-		my $gs = "$g $g" .
-		  (defined($sconf{$service}{'group'}) ? 
-		   " $sconf{$service}{group}" : "");
-
-		print "# Want to run as euid/egid $u/$g\n" if $DEBUG;
-
-		if ($Munin::Common::Defaults::MUNIN_HASSETR)
-		{
-			$( = $g    unless $g == 0;
-			$< = $u    unless $u == 0;
-		}
-		$) = $gs   unless $g == 0;
-		$> = $u    unless $u == 0;
-
-		if ($> != $u or $g != (split (' ', $)))[0])
-		{
-		print "# Can't drop privileges. Bailing out. (wanted uid=", 
-		($sconf{$service}{'user'} || $defuser), " gid=\"", 
-		$gs, "\"($g), got uid=$> gid=\"$)\"(", (split (' ', $)))[0], ").\n";
-		exit 1;
-		}
-		print "# Running as uid/gid/euid/egid $</$(/$>/$)\n" if $DEBUG;
-		if (! Munin::Node::OS->check_perms("$servicedir/$service"))
-		{
-			print "# Error: unsafe permissions. Bailing out.";
-			exit 1;
-		}
-	}
-
-    # Setting environment...
-    if (exists $sconf{$service}{'env'} and
-            defined $sconf{$service}{'env'})
-    {
-	foreach my $key (keys %{$sconf{$service}{'env'}})
-	{
-	    print "# Setting environment $key=$sconf{$service}{env}{$key}\n"
-	      if $DEBUG;
-	    $ENV{$key} = $sconf{$service}{env}{$key};
-	}
+    if ($services{$service}) {
+	# There used to be the beginnings of timeout handling here.
+	# but it was never complete.
+	Munin::Node::Server::exec_service($service,$command);
+    } else {
+	print STDERR "# Unknown service\n";
     }
-
-    # FIX need to untaint $servicedir for some reason. Should probably
-    # be done somewhere else ...
-    $servicedir =~ /(.*)/;
-    $servicedir = $1;
-
-    if (exists $sconf{$service}{'command'} and
-        defined $sconf{$service}{'command'})
-    {
-	my @run = ();
-	foreach my $t (@{$sconf{$service}{'command'}})
-	{
-	    if ($t =~ /^%c$/)
-	    {
-		push (@run, "$servicedir/$service", $command);
-	    }
-	    else
-	    {
-		push (@run, $t);
-	    }
-	}
-	print "# About to run \"", join (' ', @run), "\"\n" if $DEBUG;
-	exec (@run) if @run;
-    }
-    else
-    {
-	print "# DEBUG: About to exec \"$servicedir/$service\"\n"
-	  if $DEBUG;
-
-	if (!exec ("$servicedir/$service", $command))
-	{
-	    print "no (could not execute plugin)\n"; exit 1;
-	}
-    }
-  } else {
-    print "# Unknown service\n";
-  }
-  chomp @lines;
-  return (@lines);
 }
 
 

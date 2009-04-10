@@ -5,6 +5,8 @@ use strict;
 use warnings;
 
 use English qw(-no_match_vars);
+use Carp;
+
 use Munin::Node::Config;
 use Munin::Common::Defaults;
 use Munin::Common::TLSServer;
@@ -277,6 +279,8 @@ sub _has_access {
 }
 
 
+# FIX - shouldn't this be in Munin::Node::Service ?
+
 sub _run_service {
     my ($session, $service, $command, $autoreap) = @_;
 
@@ -371,7 +375,7 @@ sub _exec_service {
     _change_real_and_effective_user_and_group($service);
 
     unless (Munin::Node::OS->check_perms("$config->{servicedir}/$service")) {
-        logger ("Error: unsafe permissions. Bailing out.");
+        logger ("Error: unsafe permissions on $service. Bailing out.");
         exit 2;
     }
 
@@ -392,6 +396,10 @@ sub _exec_service {
     }
 }
 
+sub exec_service { # Externaly visible for the use of munin-run
+    _exec_service(@_);
+}
+
 
 sub _change_real_and_effective_user_and_group {
     my ($service) = @_;
@@ -402,36 +410,51 @@ sub _change_real_and_effective_user_and_group {
     if ($REAL_USER_ID == $root_uid) {
         # Need to test for defined here since a user might be
         # spesified with UID = 0
-        my $u  = defined $config->{sconf}{$service}{'user'} 
-            ? $config->{sconf}{$service}{'user'}
-                : $config->{defuser};
+        my $uid = defined $config->{sconf}{$service}{'user'} 
+	     ? $config->{sconf}{$service}{'user'}
+	     : $config->{defuser};
 	# Resolve unresolved UID now - as it is may not have been resolved at
 	# read-config-time
-	$u = Munin::Node::OS->get_uid($u);
-        my $g  = $config->{defgroup};
-        my $gs = "$g $g" .      # FIX why $g two times?
-            ($config->{sconf}{$service}{'group'} 
-                 ? " $config->{sconf}{$service}{group}" 
-                     : "");
+	my $u = Munin::Node::OS->get_uid($uid);
+	croak "User '$uid' is nonexistent." unless defined $u;
+        my $dg  = $config->{defgroup};
+
+	my $g = '';
+	my $gid;
+
+	if ( defined($gid = $config->{sconf}{$service}{'group'}) ) {
+	    $g = Munin::Node::OS->get_gid($gid);
+	    croak "Group '$gid' is nonexistent." unless $g ne '';
+	}
+
+        my $gs = "$dg $dg $g";      # FIX why $g two times?
+			   # like id(1): primary group, then associated groups?
+
+	# FIX - what are those swear-words again?
 
         eval {
             if ($Munin::Common::Defaults::MUNIN_HASSETR) {
-                Munin::Node::OS->set_real_group_id($g) 
-                      unless $g == $root_gid;
+                Munin::Node::OS->set_real_group_id($dg) 
+                      unless $dg == $root_gid;
                 Munin::Node::OS->set_real_user_id($u)
                       unless $u == $root_uid;
             }
     
             Munin::Node::OS->set_effective_group_id($gs) 
-                  unless $g == $root_gid;
+                  unless $dg == $root_gid;
             Munin::Node::OS->set_effective_user_id($u)
                   unless $u == $root_uid;
         };
+
         if ($EVAL_ERROR) {
             logger("Plugin \"$service\" Can't drop privileges: $EVAL_ERROR. "
                        . "Bailing out.\n");
             exit 1;
         }
+
+	print STDERR "# Running $service as uid/gid/euid/egid $</$(/$>/$)\n"
+	    if $config->{DEBUG};
+
     }
 }
 
