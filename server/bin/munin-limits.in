@@ -149,7 +149,7 @@ logger("munin-limits finished ($update_time sec)");
 exit 0;
 
 sub process_service {
-    my $hash       = shift || return undef;
+    my $hash       = shift || return;
     my $parentobj  = munin_get_parent ($hash);
     my $gparentobj = munin_get_parent (munin_get_parent ($hash));
     my $service    = munin_get_node_name ($hash);
@@ -259,7 +259,7 @@ sub process_service {
 
 
 sub get_limits {
-    my $hash = shift || return undef;
+    my $hash = shift || return;
     # This hash will have values that we can look up such as these:
     my @critical = (undef, undef);
     my @warning  = (undef, undef);
@@ -303,7 +303,7 @@ sub get_limits {
 }
 
 sub generate_service_message {
-    my $hash       = shift || return undef;
+    my $hash       = shift || return;
     my $critical   = undef;
     my $worst      = $hash->{"worst"};
     my %stats      = ('critical' => [], 'warning' => [], 'unknown' => [], 'foks' => [], 'ok' => []);
@@ -379,7 +379,12 @@ sub generate_service_message {
 		      qr/\S+/
 		    ],
 		    undef, 1);
-	    @cmd = map { s/['"]$//; s/^['"]//; $_ } @cmd;
+	    @cmd = map {
+                my $c = $_;
+                $c =~ s/['"]$//;
+                $c =~ s/^['"]//; 
+                $c; 
+            } @cmd;
 	    $contactobj->{"num_messages"} = 0;
 	    if ($cmd[0] eq "|") {
 		$cmd[0] = "|-";

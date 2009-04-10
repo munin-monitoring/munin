@@ -49,7 +49,10 @@ GPLv2
 
 =cut
 
+use strict;
 use RRDs;
+
+## no critic Prototypes
 
 my $me=$0;
 

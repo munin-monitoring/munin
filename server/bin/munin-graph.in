@@ -19,9 +19,10 @@
 #
 # $Id$
 
+use strict;
+
 $|=1;
 
-use strict;
 use IO::Socket;
 use RRDs;
 use Munin::Master::Logger;
@@ -154,7 +155,7 @@ if (&munin_get ($config, "graph_strategy", "cron") ne "cron" and $cron)
 munin_runlock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
 
 unless ($skip_stats) {
-    open (STATS,">$config->{dbdir}/munin-graph.stats.tmp") or
+    open (my $STATS, '>', "$config->{dbdir}/munin-graph.stats.tmp") or
       logger("Unable to open $config->{dbdir}/munin-graph.stats.tmp");
 }
 
@@ -229,9 +230,9 @@ for my $service (@$work_array) {
 
 $graph_time = sprintf ("%.2f",(Time::HiRes::time - $graph_time));
 logger("Munin-graph finished ($graph_time sec)");
-print STATS "GT|total|$graph_time\n" unless $skip_stats;
+print $STATS "GT|total|$graph_time\n" unless $skip_stats;
 rename ("$config->{dbdir}/munin-graph.stats.tmp", "$config->{dbdir}/munin-graph.stats");
-close STATS unless $skip_stats;
+close $STATS unless $skip_stats;
 
 munin_removelock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
 
@@ -254,7 +255,7 @@ sub get_custom_graph_args
 	push @$result, split /\s/,$args;
 	return $result;
     } else {
-	return undef;
+	return;
     }
 }
 
@@ -864,9 +865,13 @@ sub process_service {
 	# Do the header (title, vtitle, size, etc...)
 	push @complete, @{get_header ($service, $time)};
 	if ($LINEkluge) {
-	    @rrd = map { s/LINE3:/LINE2.2:/; $_; } @rrd;
-	    @rrd = map { s/LINE2:/LINE1.6:/; $_; } @rrd;
-	    # LINE1 is thin enough.
+	    @rrd = map { 
+                my $line = $_;
+                $line =~ s/LINE3:/LINE2.2:/; 
+                $line =~ s/LINE2:/LINE1.6:/;
+                # LINE1 is thin enough.
+                $line;
+            } @rrd;
 	}
 	push @complete, @rrd;
 
@@ -881,7 +886,7 @@ sub process_service {
 	  join ("\"\n\t\"",@complete), "\"\n") if $DEBUG;
 
 	# Make sure directory exists
-	munin_mkdir_p ($picdirname, 0777);
+	munin_mkdir_p ($picdirname, oct(777));
 
 	# Since version 1.3 rrdtool uses libpango which needs its input
 	# as utf8 string. So we assume that every input is in latin1
@@ -889,7 +894,9 @@ sub process_service {
 
 	if ( $RRDs::VERSION >= 1.3 ) {
 	    @complete = map {
-		$_ = encode("utf8", (decode("latin1", $_)));
+                my $str = $_;
+		$str = encode("utf8", (decode("latin1", $_)));
+                $str;
 	    } @complete;
 	}
 
@@ -972,7 +979,7 @@ sub process_service {
 	    print ("\n\nrrdtool \"graph\" \"", join ("\"\n\t\"",@rrd_sum), "\"\n") if $DEBUG;
 
 	    # Make sure directory exists
-	    munin_mkdir_p ($picdirname, 0777);
+	    munin_mkdir_p ($picdirname, oct(777));
 
 	    RRDs::graph (@rrd_sum);
 
@@ -1005,7 +1012,7 @@ sub orig_to_cdef {
     my $service   = shift;
     my $fieldname = shift;
 
-    return undef unless ref ($service) eq "HASH";
+    return unless ref ($service) eq "HASH";
 
     if (defined $service->{$fieldname}->{"cdef_name"}) {
 	return orig_to_cdef ($service, $service->{$fieldname}->{"cdef_name"});
@@ -1083,7 +1090,7 @@ sub parse_path
 sub escape
 {
     my $text = shift;
-    return undef if not defined $text;
+    return if not defined $text;
     $text =~ s/\\/\\\\/g;
     $text =~ s/:/\\:/g;
     return $text;

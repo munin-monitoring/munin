@@ -20,9 +20,11 @@
 #
 # $Id$
 #
-$|=1;
 
 use strict;
+
+$|=1;
+
 use HTML::Template;
 use Getopt::Long;
 use Time::HiRes;
@@ -160,10 +162,10 @@ generate_group_templates ($groups);
 $template->param(GROUPS    => $groups,
 		 TIMESTAMP => $timestamp);
 my $filename = munin_get_html_filename ($config);
-open (FILE, ">$filename") or
+open (my $FILE, '>', $filename) or
     die "Cannot open $filename for writing: $!";
-print FILE $template->output;
-close FILE;
+print $FILE $template->output;
+close $FILE;
 
 munin_removelock("$config->{rundir}/munin-html.lock");
 
@@ -212,37 +214,37 @@ sub get_png_size
 	my $width = undef;
 	my $height = undef;
 
-	if (open (PNG, $filename))
+	if (open (my $PNG, '<', $filename))
 	{
 		my $incoming;
-		binmode (PNG);
-		if (read (PNG, $incoming, 4))
+		binmode ($PNG);
+		if (read ($PNG, $incoming, 4))
 		{
 			if ($incoming =~ /PNG$/)
 			{
-				if (read (PNG, $incoming, 12))
+				if (read ($PNG, $incoming, 12))
 				{
-					if (read (PNG, $incoming, 4))
+					if (read ($PNG, $incoming, 4))
 					{
 						$width = unpack ("N", $incoming);
-						read (PNG, $incoming, 4);
+						read ($PNG, $incoming, 4);
 						$height = unpack ("N", $incoming);
 					}
 				}
 			}
 		}
-		close (PNG);
+		close ($PNG);
 	}
 
 	return ($width, $height);
 }
 
 sub get_peer_nodes {
-    my $hash      = shift || return undef;
+    my $hash      = shift || return;
     my $category  = shift;
     my $ret       = [];
     my $link      = "index.html";
-    my $parent    = munin_get_parent ($hash) || return undef;
+    my $parent    = munin_get_parent ($hash) || return;
     my $me        = munin_get_node_name ($hash);
     my $pchildren = munin_get_children ($parent);
 
@@ -302,7 +304,7 @@ sub get_group_tree {
 	}
     }
 
-    return undef unless $visible;
+    return unless $visible;
     $hash->{'#%#visible'} = 1;
 
     # We need the categories in another format.
@@ -393,7 +395,7 @@ sub get_group_tree {
 }
 
 sub munin_get_sorted_children {
-    my $hash = shift || return undef;
+    my $hash = shift || return;
     my $children = munin_get_children ($hash);
     my $group_order = $hash->{'group_order'} || "";
     my $ret = [];
@@ -425,8 +427,8 @@ sub munin_get_sorted_children {
 }
 
 sub generate_group_templates {
-    my $arr = shift || return undef;
-    return undef unless ref ($arr) eq "ARRAY";
+    my $arr = shift || return;
+    return unless ref ($arr) eq "ARRAY";
 
     foreach my $key (@$arr) {
 	if (defined $key and ref ($key) eq "HASH") {
@@ -453,10 +455,10 @@ sub generate_group_templates {
 		    TIMESTAMP => $timestamp,
 		);
 		my $filename = $key->{'filename'};
-		open (FILE, ">$filename") or
+		open (my $FILE, '>', $filename) or
 		    die "Cannot open $filename for writing: $!";
-		print FILE $grouptemplate->output;
-		close FILE;
+		print $FILE $grouptemplate->output;
+		close $FILE;
 
 		if ($key->{'compare'}) { # Create comparison templates as well
 		    foreach my $t (@times) {
@@ -473,9 +475,9 @@ sub generate_group_templates {
 			    NCATEGORIES => $key->{'ncomparecategories'},
 			    TIMESTAMP   => $timestamp,
 			);
-			open (FILE, ">$file") or die "Cannot open $file for writing: $!";
-			print FILE $comparisontemplates{$t}->output;
-			close FILE;
+			open (my $FILE, '>', $file) or die "Cannot open $file for writing: $!";
+			print $FILE $comparisontemplates{$t}->output;
+			close $FILE;
 		    }
 		}
 	    } 
@@ -500,10 +502,10 @@ sub generate_group_templates {
 		    TIMESTAMP   => $timestamp,
 		);
 		my $filename = $key->{'filename'};
-		open (FILE, ">$filename") or
+		open (my $FILE, '>', $filename) or
 		    die "Cannot open $filename for writing: $!";
-		print FILE $graphtemplate->output;
-		close FILE;
+		print $FILE $graphtemplate->output;
+		close $FILE;
 	    } 
 	}
     }
@@ -514,7 +516,7 @@ sub borrowed_path {
     my $prepath  = shift || "";
     my $postpath = shift || "";
 
-    return undef unless defined $hash and ref ($hash) eq "HASH";
+    return unless defined $hash and ref ($hash) eq "HASH";
 
     if (defined $hash->{'#%#origin'}) {
     	return $prepath . "../" . munin_get_node_name ($hash->{'#%#origin'}) . "/" . $postpath;
@@ -526,15 +528,15 @@ sub borrowed_path {
 	        return borrowed_path ($hash->{'#%#parent'}, $prepath . "../", munin_get_node_name ($hash) . "/" . $postpath);
 	    }
 	} else {
-	    return undef;
+	    return;
 	}
     }
 }
 
 sub generate_service_templates {
 
-    my $service = shift || return undef;
-    return undef unless munin_get_bool ($service, "graph", 1);
+    my $service = shift || return;
+    return unless munin_get_bool ($service, "graph", 1);
 
     my %srv;
     my $fieldnum = 0;
@@ -668,17 +670,17 @@ sub generate_service_templates {
 			    TIMESTAMP => $timestamp);
     my $filename = munin_get_html_filename ($service);
     my $dirname  = $filename; $dirname =~ s/\/[^\/]*$//;
-    munin_mkdir_p ($dirname, 0755);
-    open (FILE, ">$filename") or
+    munin_mkdir_p ($dirname, oct(755));
+    open (my $FILE, '>', $filename") or
 	die "Cannot open '$filename' for writing: $!";
-    print FILE $servicetemplate->output;
-    close FILE;
+    print $FILE $servicetemplate->output;
+    close $FILE;
 
     return \%srv;
 }
 
 sub get_path_nodes {
-    my $hash = shift || return undef;
+    my $hash = shift || return;
     my $ret  = [];
     my $link = "index.html";
 

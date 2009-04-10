@@ -21,9 +21,10 @@
 #
 # $Id: $
 
+use strict;
+
 $| = 1;
 
-use strict;
 use IO::Socket;
 use Munin::Master::Logger;
 use Munin::Master::Utils;
@@ -150,17 +151,17 @@ if ( defined $cli_do_fork ) {
 }
 
 if ( !-d $config->{rundir} ) {
-    mkdir( $config->{rundir}, 0700 );
+    mkdir( $config->{rundir}, oct(700) );
 }
 
 munin_runlock("$config->{rundir}/munin-gather.lock");
 
-if ( !open( STATS, ">$config->{dbdir}/munin-gather.stats.tmp" ) ) {
+if ( !open(my $STATS, '>', "$config->{dbdir}/munin-gather.stats.tmp" ) ) {
     WARN "Unable to open $config->{dbdir}/munin-gather.stats";
 
     # Use /dev/null instead - if the admin won't fix he won't care
-    open( STATS, ">/dev/null" ) or
-      LOGCROAK("Could not open STATS to /dev/null: $?");
+    open my $STATS, '>', '/dev/null'
+        or LOGCROAK("Could not open STATS to /dev/null: $?");
 }
 
 my %children  = ();
@@ -334,8 +335,8 @@ if ($bad_procs)    # Use old configuration for killed children
 unlink("$config->{rundir}/$serversocket");
 
 $update_time = sprintf( "%.2f", ( Time::HiRes::time - $update_time ) );
-print STATS "UT|$update_time\n";
-close(STATS);
+print $STATS "UT|$update_time\n";
+close($STATS);
 rename( "$config->{dbdir}/munin-gather.stats.tmp",
         "$config->{dbdir}/munin-gather.stats" );
 
@@ -394,14 +395,14 @@ sub do_node {
     my ( $loc, $newconf, $oldconf ) = @_;
 
     # Skip unless we're updating it
-    return undef unless munin_get( $newconf, "gather", "true" );
+    return unless munin_get( $newconf, "gather", "true" );
 
     my $name = munin_get( $newconf, "host_name" )
       || munin_get_node_name($newconf);
 
     unless ( $newconf->{"address"} ) {
         ERROR("No address defined for node: $name");
-        return undef;
+        return;
     }
     DEBUG "do_node: Starting on \"$name\".\n";
 
@@ -631,7 +632,10 @@ sub start_tls {
     );
 
     DEBUG "[TLS] Enabling TLS.\n";
-    if ( !eval "require Net::SSLeay;" ) {
+    eval {
+        require Net::SSLeay;
+    };
+    if ($@) {
         FATAL ("TLS enabled but Net::SSLeay unavailable.");
         return 0;
     }
@@ -809,7 +813,7 @@ sub read_socket_single {
     my $timed_out = 0;
     my $res;
 
-    return undef unless defined $socket;
+    return unless defined $socket;
 
     eval {
         local $SIG{ALRM} = sub {
@@ -833,7 +837,7 @@ sub read_socket_single {
     };
     if ($timed_out) {
         WARN "Socket read timed out: $@\n";
-        return undef;
+        return;
     }
     DEBUG "Reading from socket: \"$res\".\n";
     return $res;
@@ -844,7 +848,7 @@ sub read_socket {
     my @array;
     my $timed_out = 0;
 
-    return undef unless defined $socket;
+    return unless defined $socket;
 
     eval {
         local $SIG{ALRM} = sub {
@@ -874,7 +878,7 @@ sub read_socket {
     };
     if ($timed_out) {
         WARN "Socket read timed out: $@\n";
-        return undef;
+        return;
     }
     DEBUG "Reading from socket: \"" . ( join( "|", @array ) ) . "\".\n";
     return (@array);

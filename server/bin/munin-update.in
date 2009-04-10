@@ -21,9 +21,10 @@
 #
 # $Id$
 
+use strict;
+
 $|=1;
 
-use strict;
 use IO::Socket;
 use Munin::Common::Defaults;
 use Munin::Common::TLSClient;
@@ -136,15 +137,15 @@ if (defined $cli_do_fork) {
 }
 
 if (! -d $config->{rundir}) {
-	mkdir ($config->{rundir}, 0700);
+	mkdir ($config->{rundir}, oct(700));
 }
 
 munin_runlock("$config->{rundir}/munin-update.lock");
 
-if (!open (STATS,">$config->{dbdir}/munin-update.stats.tmp")) {
+if (!open (my $STATS,'>', "$config->{dbdir}/munin-update.stats.tmp")) {
     logger("[WARNING] Unable to open $config->{dbdir}/munin-update.stats");
     # Use /dev/null instead - if the admin won't fix he won't care
-    open(STATS,">/dev/null") or die "Could not open STATS to /dev/null: $?";
+    open(STATS, '>', "/dev/null") or die "Could not open STATS to /dev/null: $?";
 }
 
 my %children = ();
@@ -404,14 +405,14 @@ sub change_min
 
 sub do_node {
   my ($loc, $newconf, $oldconf) = @_;
-  return undef unless munin_get ($newconf, "update", "true"); # Skip unless we're updating it
-  return undef unless munin_get ($newconf, "fetch_data", "true"); # Old name for "update"
+  return unless munin_get ($newconf, "update", "true"); # Skip unless we're updating it
+  return unless munin_get ($newconf, "fetch_data", "true"); # Old name for "update"
 
   my $name = munin_get ($newconf, "host_name") || munin_get_node_name ($newconf);
 
   unless ($newconf->{"address"}) {
       logger("[ERROR] No address defined for node: $name");
-      return undef;
+      return;
   }
   logger ("Debug: do_node: Starting on \"$name\".") if $DEBUG;
 
@@ -563,7 +564,7 @@ sub read_socket_single {
     my $timed_out=0;
     my $res;
 
-    return undef unless defined $socket;
+    return unless defined $socket;
 
     eval {
       local $SIG{ALRM} = sub { $timed_out=1; close $socket; logger ("[WARNING] Timeout: Aborting read: $!"); exit 1;};
@@ -582,7 +583,7 @@ sub read_socket_single {
     if ($timed_out)
     {
 	logger ("[WARNING] Socket read timed out: $@\n");
-	return undef;
+	return;
     }
     logger ("[DEBUG] Reading from socket: \"$res\".") if $DEBUG;
     return $res;
@@ -593,7 +594,7 @@ sub read_socket {
     my @array;
     my $timed_out=0;
 
-    return undef unless defined $socket;
+    return unless defined $socket;
 
     local $_;
 
@@ -621,7 +622,7 @@ sub read_socket {
     if ($timed_out)
     {
 	logger ("[WARNING] Socket read timed out: $@\n");
-	return undef;
+	return;
     }
     logger ("[DEBUG] Reading from socket: \"".(join ("|",@array))."\".") if $DEBUG;
     return (@array);
@@ -744,7 +745,7 @@ sub config_and_fetch_node
 
 	    if (! -f "$fname") {
 	        logger ("creating rrd-file for $servname->$field: \"$fname\"");
-	        munin_mkdir_p ($dirname, 0777);
+	        munin_mkdir_p ($dirname, oct(777));
 	        my @args = ("$fname",
 			"DS:42:".munin_get($fhash, "type", "GAUGE").":600:".
 			munin_get($fhash, "min", "U") . ":" .  munin_get($fhash, "max", "U"));

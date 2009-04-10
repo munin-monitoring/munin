@@ -93,7 +93,7 @@ my $semid = semget($IPC_KEY, 0, 0 );
 
 if(!defined($semid)) {
     # Or create it if needed
-    $semid = semget($IPC_KEY, 1 , 0666 | IPC_CREAT );
+    $semid = semget($IPC_KEY, 1 , oct(666) | IPC_CREAT );
 
     die "Creating semaphore: $!" unless defined($semid);
 
@@ -150,9 +150,10 @@ semop($semid,$opstring);
 sub graph {
     my $filename = shift;
 
-    open (GRAPH, $filename) or die "Warning: Could not open picture file \"$filename\" for reading: $!\n";
-    print while (<GRAPH>);
-    close (GRAPH);
+    open (my $GRAPH, '<', $filename) 
+        or die "Warning: Could not open picture file \"$filename\" for reading: $!\n";
+    print while (<$GRAPH>);
+    close ($GRAPH);
 }
 
 sub get_picture_filename {
@@ -170,7 +171,7 @@ sub logger_open {
 
     if (!$log->opened)
     {
-	unless (open ($log, ">>$dirname/munin-cgi-graph.log"))
+	unless (open ($log, '>>', "$dirname/munin-cgi-graph.log"))
 	{
 	    print STDERR "Warning: Could not open log file \"$dirname/munin-cgi-graph.log\" for writing: $!";
 	}
@@ -189,10 +190,10 @@ sub logger {
   {
           if (defined $config->{logdir})
           {
-                  if (open ($log, ">>$config->{logdir}/munin-cgi-graph.log"))
+                  if (open ($log, '>>', "$config->{logdir}/munin-cgi-graph.log"))
                   {
                           print $log "$now - $comment\n";
-                  }
+                      }
                   else
                   {
                           print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-cgi-graph.log\" for wr
@@ -282,13 +283,13 @@ sub draw_graph {
     push @params, "STDERR>&STDOUT";
 
     my $file = "/dev/null";
-    unless (open (IN, "-|")) 
+    unless (open (my $IN, "-|")) 
     { 
 	%ENV=(); 
 	exec @params;
     }
-    $file = join (' ', <IN>);
-    close (IN);
+    $file = join (' ', <$IN>);
+    close ($IN);
     return $file;
 }
 
