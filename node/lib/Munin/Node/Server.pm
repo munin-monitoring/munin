@@ -15,8 +15,6 @@ use Munin::Node::OS;
 use Munin::Node::Service;
 use Munin::Node::Session;
 
-my $tls;
-
 # A set of all services that this node can run.
 my %services;
 
@@ -42,13 +40,14 @@ sub process_request {
 
     my $session = Munin::Node::Session->new();
 
+    $session->{tls}          = undef;
     $session->{tls_started}  = 0;
     $session->{tls_mode}     = $config->{tls} || 'auto';
     $session->{peer_address} = $self->{server}->{peeraddr};
 
     $PROGRAM_NAME .= " [$session->{peer_address}]";
 
-    _net_write ("# munin node at $config->{fqdn}\n");
+    _net_write($session, "# munin node at $config->{fqdn}\n");
 
     local $SIG{ALRM} = sub {
         logger ("Connection timed out."); 
@@ -56,7 +55,7 @@ sub process_request {
     };
 
     alarm($config->{sconf}{'timeout'});
-    while (defined (my $line = _net_read())) {
+    while (defined (my $line = _net_read($session))) {
         chomp $line;
         _process_command_line($session, $line) 
             or last;
@@ -74,7 +73,7 @@ sub _process_command_line {
     if (_expect_starttls($session)) {
         if (!(/^starttls\s*$/i)) {
             logger ("ERROR: Client did not request TLS. Closing.");
-            _net_write ("# I require TLS. Closing.\n");
+            _net_write($session, "# I require TLS. Closing.\n");
             return 0;
         }
     }
@@ -95,9 +94,9 @@ sub _process_command_line {
     elsif (/^nodes/i) {
         _show_nodes($session);
     } elsif (/^fetch\s?(\S*)/i) {
-        _print_service(_run_service($session, $1)) 
+        _print_service($session, _run_service($session, $1)) 
     } elsif (/^config\s?(\S*)/i) {
-        _print_service(_run_service($session, $1, "config"));
+        _print_service($session, _run_service($session, $1, "config"));
     } elsif (/^starttls\s*$/i) {
         eval {
             $session->{tls_started} = _process_starttls_command($session);
@@ -108,7 +107,7 @@ sub _process_command_line {
         }
         logger ("DEBUG: Returned from starttls.") if $config->{DEBUG};
     } else {
-        _net_write ("# Unknown command. Try cap, list, nodes, config, fetch, version or quit\n");
+        _net_write($session, "# Unknown command. Try cap, list, nodes, config, fetch, version or quit\n");
     }
 
     return 1;
@@ -132,10 +131,10 @@ sub _negotiate_session_capabilities {
     my %session_capabilities = map { $_ => 1 } grep { $server_cap{$_} } keys %node_cap;
     $session->{capabilities} = \%session_capabilities;
 
-    _net_write(sprintf("# Node capabilities: (%s). Session capabilities: (\n", 
+    _net_write($session, sprintf("# Node capabilities: (%s). Session capabilities: (\n", 
                        join(' ', keys %node_cap)));
-    _net_write(join(' ', keys %session_capabilities) . "\n");
-    _net_write("# )\n.\n");
+    _net_write($session, join(' ', keys %session_capabilities) . "\n");
+    _net_write($session, "# )\n.\n");
 
 }
 
@@ -169,7 +168,7 @@ sub _process_starttls_command {
     $tls_verify = $config->{tls_verify_certificate};
     $tls_verify = "no" unless defined $tls_verify;
 
-    $tls = Munin::Common::TLSServer->new({
+    $session->{tls} = Munin::Common::TLSServer->new({
         DEBUG        => $config->{DEBUG},
         logger       => \&logger,
         read_fd      => fileno(STDIN),
@@ -184,29 +183,31 @@ sub _process_starttls_command {
         write_func   => sub { print @_ },
     });
 
-    if ($tls->start_tls()) {
+    if ($session->{tls}->start_tls()) {
         return 1;
     }
     else {
         if ($mode eq "paranoid" or $mode eq "enabled") {
             die "ERROR: Could not establish TLS connection. Closing.";
         }
-        $tls = undef;
+        $session->{tls} = undef;
         return 0;
     }
 }
 
 
 sub _show_version {
-  print "munins node on $config->{fqdn} version: $Munin::Common::Defaults::MUNIN_VERSION\n"
+    print "munins node on $config->{fqdn} version: $Munin::Common::Defaults::MUNIN_VERSION\n"
 }
 
 
 sub _show_nodes {
-  for my $node (keys %nodes) {
-    _net_write ("$node\n");
-  }
-  _net_write (".\n");
+    my ($session) = @_;
+    
+    for my $node (keys %nodes) {
+        _net_write($session, "$node\n");
+    }
+    _net_write($session, ".\n");
 }
 
 
@@ -237,23 +238,23 @@ sub _add_to_services_and_nodes {
 
 
 sub _print_service {
-  my (@lines) = @_;
+  my ($session, @lines) = @_;
   for my $line (@lines) {
-    _net_write ("$line\n");
+    _net_write($session, "$line\n");
   }
-  _net_write (".\n");
+  _net_write($session, ".\n");
 }
 
 
 sub _list_services {
     my ($session, $node) = @_;
     $node ||= $config->{fqdn};
-    _net_write( join( " ",
+    _net_write($session, join( " ",
 		     grep( { &_has_access ($session, $_); } keys %{$nodes{$node}} )
 		     ) )
       if exists $nodes{$node};
     #print join " ", keys %{$nodes{$node}};
-    _net_write ("\n");
+    _net_write($session, "\n");
 }
 
 
@@ -288,7 +289,7 @@ sub _run_service {
 
     unless ($services{$service} 
                 && ($session->{peer_address} eq '' || _has_access($session, $service))) {
-        _net_write("# Unknown service");
+        _net_write($session, "# Unknown service");
         return ();
     }
 
@@ -301,7 +302,7 @@ sub _run_service {
 
     my @lines;
     if ($child_pid) {
-        @lines = _read_service_result($CHILD, $service, $command, $child_pid);
+        @lines = _read_service_result($session, $CHILD, $service, $command, $child_pid);
     }
     else {
         # In child, should never return ...
@@ -333,7 +334,7 @@ sub _run_service {
 
 
 sub _read_service_result {
-    my ($CHILD, $service, $command, $child_pid) = @_;
+    my ($session, $CHILD, $service, $command, $child_pid) = @_;
 
     my $timeout = $config->{sconf}{$service}{timeout};
     $timeout = $config->{sconf}{'timeout'} 
@@ -351,10 +352,10 @@ sub _read_service_result {
     if ($EVAL_ERROR) {
         if ($EVAL_ERROR =~ /^Timed out/) {
             my $msg = "Plugin timeout: $service $command: $@ (pid $child_pid) - killing...";
-            _net_write($msg); 
+            _net_write($session, $msg); 
             logger($msg);
             Munin::Node::OS->reap_child_group($child_pid);
-            _net_write("# done \n"); 
+            _net_write($session, "# done \n"); 
         }
         else {
             die $EVAL_ERROR;
@@ -459,10 +460,12 @@ sub _change_real_and_effective_user_and_group {
 }
 
 sub _net_read {
+    my ($session) = @_;
+
     local $_;
 
-    if ($tls && $tls->session_started()) {
-        $_ = $tls->read();
+    if ($session->{tls} && $session->{tls}->session_started()) {
+        $_ = $session->{tls}->read();
     }
     else {
 	$_ = <STDIN>;
@@ -473,10 +476,10 @@ sub _net_read {
 
 
 sub _net_write {
-    my $text = shift;
+    my ($session, $text) = @_;
     logger("DEBUG: > $text") if $config->{DEBUG};
-    if ($tls && $tls->session_started()) {
-        $tls->write($text);
+    if ($session->{tls} && $session->{tls}->session_started()) {
+        $session->{tls}->write($text);
     }
     else {
 	print STDOUT $text;
