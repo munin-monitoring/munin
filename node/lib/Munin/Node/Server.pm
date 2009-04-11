@@ -30,8 +30,29 @@ my $config = Munin::Node::Config->instance();
 sub pre_loop_hook {
     my $self = shift;
     print STDERR "In pre_loop_hook.\n" if $config->{DEBUG};
+    _load_service_configurations();
     _load_services();
     $self->SUPER::pre_loop_hook();
+}
+
+
+sub _load_service_configurations {
+    $config->process_plugin_configuration_files();
+    $config->apply_wildcards();
+}
+
+
+sub _load_services {
+    opendir (my $DIR, $config->{servicedir}) 
+        || die "Cannot open plugindir: $config->{servicedir} $!";
+
+    for my $file (readdir($DIR)) {
+        next unless Munin::Node::Service->is_a_runnable_service($file);
+	print "file: '$file'\n" if $config->{DEBUG};
+        _add_to_services_and_nodes($file);
+    }
+
+    closedir $DIR;
 }
 
 
@@ -208,23 +229,6 @@ sub _show_nodes {
         _net_write($session, "$node\n");
     }
     _net_write($session, ".\n");
-}
-
-
-sub _load_services {
-    $config->process_plugin_configuration_files();
-    $config->apply_wildcards();
-
-    opendir (my $DIR, $config->{servicedir}) 
-        || die "Cannot open plugindir: $config->{servicedir} $!";
-
-    for my $file (readdir($DIR)) {
-        next unless Munin::Node::Service->is_a_runnable_service($file);
-	print "file: '$file'\n" if $config->{DEBUG};
-        _add_to_services_and_nodes($file);
-    }
-
-    closedir $DIR;
 }
 
 
