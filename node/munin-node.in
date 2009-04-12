@@ -43,7 +43,7 @@ my $defuser    = getpwnam ($Munin::Common::Defaults::MUNIN_PLUGINUSER);
 my $defgroup   = getgrnam ($Munin::Common::Defaults::MUNIN_GROUP);
 my $paranoia   = 0;
 my @ignores    = ();
-my %sconf      = ('timeout' => 10);
+my $timeout    = 10;
 
 sub main {
     chdir ("/");
@@ -84,18 +84,6 @@ sub main {
 
     push @ignores, @{$config->{ignores}} if defined $config->{ignores};
 
-    if (defined $config->{sconf} && defined $config->{sconf}{timeout}) {
-        $sconf{timeout} = $config->{sconf}{timeout};
-    }
-
-    if (defined $config->{sconf}) {
-        while (my ($k, $v) = each %{$config->{sconf}}) {
-            next if defined $sconf{$k};
-            $sconf{$k} = $v;
-        }
-    }
-
-
     # A hack to override the hostname if everything else fails
     $FQDN ||= Munin::Node::OS->get_fq_hostname();
 
@@ -106,7 +94,10 @@ sub main {
     $ENV{'LC_ALL'}='C';
 
     $config->reinitialize({
+        timeout    => $timeout,
+
         %$config,
+
         servicedir => $servicedir,
         sconfdir   => $sconfdir,
         conffile   => $conffile,
@@ -117,7 +108,6 @@ sub main {
         defgroup   => $defgroup,
         paranoia   => $paranoia,
         ignores    => \@ignores,
-        sconf      => \%sconf,
     });
 
     Munin::Node::Server->run(
