@@ -53,7 +53,7 @@ my $defgroup   = getgrnam($Munin::Common::Defaults::MUNIN_GROUP);
 my $paranoia   = 0;
 my @ignores    = ();
 
-my %sconf = ();
+my $timeout    = 0;
 
 my $config;
 my ($plugin, $arg);
@@ -97,24 +97,16 @@ sub main
 
     push @ignores, @{$config->{ignores}} if defined $config->{ignores};
 
-    if (defined $config->{sconf} && defined $config->{sconf}{timeout}) {
-        $sconf{timeout} = $config->{sconf}{timeout};
-    }
-
-    if (defined $config->{sconf}) {
-        while (my ($k, $v) = each %{$config->{sconf}}) {
-            next if defined $sconf{$k};
-            $sconf{$k} = $v;
-        }
-    }
-
     # Override the hostname if everything else fails
     $FQDN ||= Munin::Node::OS->get_fq_hostname();
 
     $ENV{FQDN}=$FQDN;
 
     $config->reinitialize({
+        timesout   => $timeout,
+
         %$config,
+
         servicedir => $servicedir,
         sconfdir   => $sconfdir,
         conffile   => $conffile,
@@ -126,7 +118,6 @@ sub main
         defgroup   => $defgroup,
         paranoia   => $paranoia,
         ignores    => \@ignores,
-        sconf      => \%sconf,
     });
 
     # Some locales uses "," as decimal separator. This can mess up a lot
