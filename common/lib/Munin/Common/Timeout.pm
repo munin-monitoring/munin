@@ -8,7 +8,10 @@ use English qw(-no_match_vars);
 
 
 BEGIN {
-    our @EXPORT = qw(&do_with_timeout, &reset_timeout);
+    our @EXPORT = qw(
+        &do_with_timeout
+        &reset_timeout
+    );
 }
 
 
@@ -18,7 +21,7 @@ my $current_timeout;
 sub do_with_timeout {
     my ($timeout, $block) = @_;
 
-    my $current_timeout = $timeout;
+    $current_timeout = $timeout;
 
     eval {
         local $SIG{ALRM} = sub { die "alarm\n" };
