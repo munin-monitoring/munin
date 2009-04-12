@@ -9,6 +9,7 @@ use Carp;
 
 use Munin::Node::Config;
 use Munin::Common::Defaults;
+use Munin::Common::Timeout;
 use Munin::Common::TLSServer;
 use Munin::Node::Logger;
 use Munin::Node::OS;
@@ -70,16 +71,18 @@ sub process_request {
 
     _net_write($session, "# munin node at $config->{fqdn}\n");
 
-    local $SIG{ALRM} = sub {
-        logger ("Connection timed out."); 
-        die "timeout"
-    };
+    
 
-    alarm($config->{sconf}{'timeout'});
-    while (defined (my $line = _net_read($session))) {
-        chomp $line;
-        _process_command_line($session, $line) 
-            or last;
+    my $timed_out = !do_with_timeout($config->{'timeout'}, sub {
+        while (defined (my $line = _net_read($session))) {
+            chomp $line;
+            _process_command_line($session, $line) 
+                or last;
+        }
+    });
+
+    if ($timed_out) {
+        logger("Connection timed out");
     }
 }
 
@@ -87,7 +90,7 @@ sub process_request {
 sub _process_command_line {
     my ($session, $cmd_line) = @_;
 
-    alarm($config->{sconf}{'timeout'});
+    reset_timeout();
 
     local $_ = $cmd_line;
 
@@ -346,24 +349,17 @@ sub _read_service_result {
 
     my @lines = ();
 
-    eval {
-        local $SIG{ALRM} = sub { die "Timed out: $!" };
-        alarm($timeout);
+    my $timed_out = !do_with_timeout($timeout, sub {
         while (my $line = <$CHILD>) {
 	    push @lines, $line;
         }
-    };
-    if ($EVAL_ERROR) {
-        if ($EVAL_ERROR =~ /^Timed out/) {
-            my $msg = "Plugin timeout: $service $command: $@ (pid $child_pid) - killing...";
-            _net_write($session, $msg); 
-            logger($msg);
-            Munin::Node::OS->reap_child_group($child_pid);
-            _net_write($session, "# done \n"); 
-        }
-        else {
-            die $EVAL_ERROR;
-        }
+    });
+    if ($timed_out) {
+        my $msg = "Plugin timeout: $service $command: $@ (pid $child_pid) - killing...";
+        _net_write($session, $msg); 
+        logger($msg);
+        Munin::Node::OS->reap_child_group($child_pid);
+        _net_write($session, "# done \n"); 
     }
 
     return @lines;
