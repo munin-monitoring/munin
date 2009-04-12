@@ -212,6 +212,10 @@ sub parse_args
         die "# ERROR: Invalid plugin name.\n";
     }
 
+    # Detaint service dir. #FIX do more strict detainting?
+    $servicedir =~ /(.*)/;
+    $servicedir = $1;
+
     if ($ARGV[1]) {
         # Ensure the plugin's argument (if any) is one of the known ones.
         # Incidentally also makes it taint-safe.
