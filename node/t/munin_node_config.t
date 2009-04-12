@@ -212,7 +212,7 @@ isa_ok($conf, 'Munin::Node::Config');
     my $uname = getpwuid $UID;
 
     my @res = $conf->_parse_plugin_line("user $uname");
-    is_deeply(\@res, [user => $UID], 'Parsing plugin user name');
+    is_deeply(\@res, [user => $uname], 'Parsing plugin user name');
 
     @res = $conf->_parse_plugin_line("user $UID");
     is_deeply(\@res, [user => $UID], 'Parsing plugin user ID');
@@ -293,7 +293,7 @@ isa_ok($conf, 'Munin::Node::Config');
     is_deeply($conf, {
         sconfdir => $sconfdir,
         sconf=>{
-            Foo    => {user => 0, env => {baz => 'zing'}},
+            Foo    => {user => 'root', env => {baz => 'zing'}},
             'Foo*' => {group => 0, env => {bar => 'zap'}},
             'F*'   => {env => {bar => 'zoo'}},
         },
@@ -304,7 +304,7 @@ isa_ok($conf, 'Munin::Node::Config');
         sconfdir => $sconfdir,
         sconf=>{
             Foo => {
-                user => 0, 
+                user => 'root', 
                 group => 0, 
                 env => {
                     baz => 'zing', 
