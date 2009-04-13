@@ -21,6 +21,10 @@ my $current_timeout;
 sub do_with_timeout {
     my ($timeout, $block) = @_;
 
+    my $old_alarm           = alarm 0;
+    my $old_handler         = $SIG{ALRM};
+    my $old_current_timeout = $current_timeout;
+
     $current_timeout = $timeout;
 
     eval {
@@ -29,12 +33,29 @@ sub do_with_timeout {
         $block->();
         alarm 0;
     };
-    if ($EVAL_ERROR) {
+    my $err = $EVAL_ERROR;
+
+    my $remaining_alarm = alarm 0;
+
+    $SIG{ALRM} = $old_handler ? $old_handler : 'DEFAULT';
+
+    $current_timeout = $old_current_timeout;
+
+    if ($old_alarm) {
+	my $old_alarm = $old_alarm - $timeout + $remaining_alarm;
+	if ($old_alarm > 0) {
+	    alarm($old_alarm);
+	} else {
+            #It should have gone off already - so set it off
+	    kill 'ALRM', $$;
+	}
+    }
+
+    if ($err) {
         return if $EVAL_ERROR eq "alarm\n";
         die;
     }
 
-    alarm 0;
     return 1;
 }
 
@@ -67,13 +88,17 @@ Munin::Common::Timeout - FIX
  });
 
 
+=head1 DESCRIPTION
+
+See also L<Time::Out>, L<Sys::AlarmCall>
+
 =head1 SUBROUTINES
 
 =over
 
 =item B<do_with_timeout>
 
- my do_with_timeout($seconds, $block)
+ my $finished_with_no_timeout = do_with_timeout($seconds, $block)
      or die "Timed out!";
 
 FIX
