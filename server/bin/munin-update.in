@@ -29,6 +29,7 @@ use English qw(-no_match_vars);
 use Getopt::Long;
 use IO::Socket;
 use Munin::Common::Defaults;
+use Munin::Common::Timeout;
 use Munin::Common::TLSClient;
 use Munin::Master::Logger;
 use Munin::Master::Utils;
@@ -579,28 +580,21 @@ sub write_socket_single {
 
 sub read_socket_single {
     my $socket = shift;
-    my $timed_out=0;
     my $res;
 
     return unless defined $socket;
 
-    eval {
-      local $SIG{ALRM} = sub { $timed_out=1; close $socket; logger ("[WARNING] Timeout: Aborting read: $!"); exit 1;};
-      alarm( $timeout );
-      if ($tls && $tls->session_started())
-      {
+    my $timed_out = !do_with_timeout($timeout, sub { 
+      if ($tls && $tls->session_started()) {
 	  $res = $tls->read();
       }
-      else
-      {
+      else {
 	  $res = <$socket>;
       }
       chomp $res if defined $res;
-      alarm 0;
-    };
-    if ($timed_out)
-    {
-	logger ("[WARNING] Socket read timed out: $@\n");
+    });
+    if ($timed_out) {
+	logger ("[WARNING] Socket read timed out\n");
 	return;
     }
     logger ("[DEBUG] Reading from socket: \"$res\".") if $DEBUG;
@@ -610,35 +604,28 @@ sub read_socket_single {
 sub read_socket {
     my $socket = shift;
     my @array;
-    my $timed_out=0;
 
     return unless defined $socket;
 
     local $_;
 
-    eval {
-      local $SIG{ALRM} = sub { $timed_out=1; close $socket; logger ("[WARNING] Timeout, aborting read: $!"); exit 1;};
-      alarm( $timeout );
-      if ($tls)
-      {
+    my $timed_out = !do_with_timeout($timeout, sub { 
+      if ($tls && $tls->session_started()) {
 	  while (defined ($_ = $tls->read())) {
 	    chomp;
 	    last if (/^\.$/);
-	    push @array,$_;
+	    push @array, $_;
 	  }
       }
-      else
-      {
+      else {
 	  while (<$socket>) {
 	    chomp;
 	    last if (/^\.$/);
-	    push @array,$_;
+	    push @array, $_;
 	  }
       }
-      alarm 0;
-    };
-    if ($timed_out)
-    {
+    });
+    if ($timed_out) {
 	logger ("[WARNING] Socket read timed out: $@\n");
 	return;
     }
