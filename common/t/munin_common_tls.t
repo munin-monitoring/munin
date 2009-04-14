@@ -39,6 +39,7 @@ sub do_server {
     });
 
     my $tls_session = $tls->start_tls();
+    die "STARTTLS failed, missing Net::SSLeay?" unless $tls_session;
 
     $line = $tls->read();
     $tls->write($line);
@@ -67,6 +68,7 @@ sub do_client {
     });
 
     my $tls_session = $tls->start_tls();
+    die "STARTTLS failed, missing Net::SSLeay?" unless $tls_session;
 
     my $req_msg = "ping\n";
     $tls->write($req_msg);
