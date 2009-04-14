@@ -49,12 +49,6 @@ Please ignore it, and if you're a packager certainly don't package it.
 Installing
 ==========
 
-IF you're working on a SVN checkout:
-
-	- cp Makefile.config-dist Makefile.config
-
-	  This overwrites the maintainers copy of Makefile.config.
-
 Munin consists of the main (central server) programs, and the node
 program and the associated plugins.  The node runs on each of the
 machines you want to collect data from.  The main programs does the
