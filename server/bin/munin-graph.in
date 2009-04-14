@@ -154,8 +154,10 @@ if (&munin_get ($config, "graph_strategy", "cron") ne "cron" and $cron)
 
 munin_runlock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
 
+my $STATS;
+
 unless ($skip_stats) {
-    open (my $STATS, '>', "$config->{dbdir}/munin-graph.stats.tmp") or
+    open ($STATS, '>', "$config->{dbdir}/munin-graph.stats.tmp") or
       logger("Unable to open $config->{dbdir}/munin-graph.stats.tmp");
 }
 
@@ -994,7 +996,7 @@ sub process_service {
 
     $service_time = sprintf ("%.2f",(Time::HiRes::time - $service_time));
     logger ("Graphed service : $sname ($service_time sec * 4)");
-    print STATS "GS|$service_time\n" unless $skip_stats;
+    print $STATS "GS|$service_time\n" unless $skip_stats;
 
     foreach (@added) {
 	delete $service->{$_} if exists $service->{$_};
