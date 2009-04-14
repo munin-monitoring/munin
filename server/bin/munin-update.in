@@ -486,20 +486,13 @@ sub do_node {
   unless (&munin_getlock(munin_get($newconf, "rundir")."/munin-".join('-',@{munin_get_node_loc($newconf)})."-".munin_get_node_name($newconf).".lock")) {
     logger ("[ERROR] Could not get lock for \"$name\". Skipping node.");
     if ($do_fork) { # Send the old config to the server before we die
-        socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
-        connect (SOCK, sockaddr_un (munin_get($newconf, "rundir")."/$serversocket")) || die "connect: $!";
         alarm (0); # Don't want to interrupt this.
 	my @tmp = ($$, munin_get_node_loc($newconf), $name);
 	if (ref $oldconf) {
 	  copy_node ($oldconf, $newconf);
-	  nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
-	  nstore_fd \%{munin_get_separated_node ($newconf)}, \*SOCK;
-	  close SOCK;
+          write_refs_to_parent($newconf, \@tmp, \%{munin_get_separated_node ($newconf)});
 	} else { # Well, we'll have to give _something_ to the server, or it'll time out.
-	  socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
-	  connect (SOCK, sockaddr_un (munin_get($newconf, "rundir")."/$serversocket")) || die "connect: $!";
-	  nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
-	  nstore_fd ({}, \*SOCK);
+          write_refs_to_parent($newconf, \@tmp, {});
 	}
 	exit 1;
     } else {
@@ -534,36 +527,22 @@ sub do_node {
 	if (ref $oldconf) {
 	  copy_node ($oldconf, $newconf);
 	  alarm (0); # Don't want to interrupt this.
-	  socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
-	  connect (SOCK, sockaddr_un (munin_get($newconf, "rundir")."/$serversocket")) || die "connect: $!";
-	  nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
-	  nstore_fd \%{munin_get_separated_node ($newconf)}, \*SOCK;
-	  close SOCK;
+          write_refs_to_parent($newconf, \@tmp, \%{munin_get_separated_node ($newconf)});
 	} else { # Well, we'll have to give _something_ to the server, or it'll time out.
-	  socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
-	  connect (SOCK, sockaddr_un (munin_get($newconf, "rundir")."/$serversocket")) || die "connect: $!";
-	  nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
-	  nstore_fd ({}, \*SOCK);
+          write_refs_to_parent($newconf, \@tmp, {});
 	}
-      } else {
-		my $ctx;
-		if (!config_and_fetch_node($newconf,$oldconf,$socket)) {
-		    copy_node ($oldconf, $newconf);
-		    socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
-		    connect (SOCK, sockaddr_un (munin_get($newconf, "rundir")."/$serversocket")) || die "connect: $!";
-		    nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
-		    nstore_fd \%{munin_get_separated_node ($newconf)}, \*SOCK;
-		    close SOCK;
-		    exit 1;
-		}
-		close $socket;
-	        alarm (0); # Don't want to interrupt this.
-	        socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
-		connect (SOCK, sockaddr_un ("$config->{rundir}/$serversocket")) || die "connect: $!";
-	        nstore_fd \@tmp, \*SOCK || die "Could not nstore_fd: $!";
-	        nstore_fd \%{munin_get_separated_node ($newconf)}, \*SOCK;
-	        alarm ($timeout);
-		close SOCK;
+      } 
+      else {
+          my $ctx;
+          if (!config_and_fetch_node($newconf,$oldconf,$socket)) {
+              copy_node ($oldconf, $newconf);
+              write_refs_to_parent($newconf, \@tmp, \%{munin_get_separated_node ($newconf)});
+              exit 1;
+          }
+          close $socket;
+          alarm (0); # Don't want to interrupt this.
+          write_refs_to_parent($newconf, \@tmp, \%{munin_get_separated_node ($newconf)});
+          alarm ($timeout);
       }
       alarm (0);
       munin_removelock(munin_get($newconf, "rundir")."/munin-".join('-',@{munin_get_node_loc($newconf)})."-".munin_get_node_name($newconf).".lock");
@@ -585,6 +564,22 @@ sub do_node {
   }
   munin_removelock(munin_get($newconf, "rundir")."/munin-".join('-',@{munin_get_node_loc($newconf)})."-".munin_get_node_name($newconf).".lock");
 }
+
+
+sub write_refs_to_parent {
+    my ($conf, @refs) = @_;
+
+    socket my $sock, PF_UNIX, SOCK_STREAM, 0
+        or die "socket: $!";
+    connect $sock, sockaddr_un(munin_get($conf, "rundir")."/$serversocket")
+        or die "connect: $!";
+    for my $ref (@refs) {
+        nstore_fd($ref, $sock)
+            or die "Could not nstore_fd: $!";
+    }
+    close $sock;
+}
+
 
 sub write_socket_single {
     my $socket = shift;
