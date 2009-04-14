@@ -628,12 +628,13 @@ sub process_service {
 	    munin_set ($field, "cdef_name", $rrdname);
 	}
 
-	push (@rrd, "DEF:g$rrdname=" .
-	      $filename . ":" . $rrdfield . ":AVERAGE");
-	push (@rrd, "DEF:i$rrdname=" .
-	      $filename . ":" . $rrdfield . ":MIN");
-	push (@rrd, "DEF:a$rrdname=" .
-	      $filename . ":" . $rrdfield . ":MAX");
+	# Push will place the DEF too far down for some CDEFs to work
+	unshift (@rrd, "DEF:g$rrdname=" .
+		 $filename . ":" . $rrdfield . ":AVERAGE");
+	unshift (@rrd, "DEF:i$rrdname=" .
+		 $filename . ":" . $rrdfield . ":MIN");
+	unshift (@rrd, "DEF:a$rrdname=" .
+		 $filename . ":" . $rrdfield . ":MAX");
 
 	if (munin_get_bool ($field, "onlynullcdef", 0)) { 
 	    push (@rrd, "CDEF:c$rrdname=g$rrdname" . (($now-$update)>900 ? ",POP,UNKN" : ""));
