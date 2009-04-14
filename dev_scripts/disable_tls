@@ -5,5 +5,5 @@ FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
 
 cd $BASEDIR
 
-perl -pi -e "s/^tls .*/tls disabled/" $DESTDIR/etc/munin/munin-node.conf
-perl -pi -e "s/^tls .*/tls disabled/" $DESTDIR/etc/munin/munin.conf
+perl -pi -e "s/^tls .*/tls disabled/" $DESTDIR/etc/opt/munin/munin-node.conf
+perl -pi -e "s/^tls .*/tls disabled/" $DESTDIR/etc/opt/munin/munin.conf

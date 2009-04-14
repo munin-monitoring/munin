@@ -28,7 +28,7 @@ tls_certificate $BASEDIR/common/t/tls/node_cert.pem
 tls_ca_certificate $BASEDIR/common/t/tls/CA/ca_cert.pem
 tls_verify_certificate yes
 tls_verify_depth 5
-|; " $DESTDIR/etc/munin/munin-node.conf
+|; " $DESTDIR/etc/opt/munin/munin-node.conf
 
     perl -pi -e "s/(address 127\.0\.0\.1)/\$1\n    port 4948/;
                  s|(# a simple host tree)|tls disabled
@@ -38,7 +38,7 @@ tls_ca_certificate $BASEDIR/common/t/tls/CA/ca_cert.pem
 tls_verify_certificate yes
 tls_verify_depth 5
 
-\$1|" $DESTDIR/etc/munin/munin.conf
+\$1|" $DESTDIR/etc/opt/munin/munin.conf
 
-  PERL5LIB=$DESTDIR/$PERLSITELIB $DESTDIR/usr/sbin/munin-node-configure --shell --families=contrib,auto | sh -x
+  PERL5LIB=$DESTDIR/$PERLSITELIB $DESTDIR/opt/munin/sbin/munin-node-configure --shell --families=contrib,auto | sh -x
 fi
