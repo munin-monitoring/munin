@@ -561,20 +561,15 @@ sub write_socket_single {
     my $text   = shift;
     my $timed_out = 0;
     logger ("[DEBUG] Writing to socket: \"$text\".") if $DEBUG;
-    eval {
-	local $SIG{ALRM} = sub { die "Could not run list on socket: $!\n"};
-	alarm 5;
-	if ($tls && $tls->session_started())
-	{
+    my $timed_out = !do_with_timeout(5, sub { 
+	if ($tls && $tls->session_started()) {
 	    $tls->write($text)
                 or exit 9;
 	}
-	else
-	{
+	else {
 	    print $socket $text;
 	}
-	alarm 0;
-    };
+    });
     return 1;
 }
 
