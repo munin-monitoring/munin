@@ -51,13 +51,13 @@ my $tls;
 my %children = ();
 my @limit_hosts = ();
 my @limit_services = ();
+my @queue = ();
+
 
 
 sub main {
     my $TIMEOUT = 240;
-    my $bad_procs = 0;
     my $oldconfig;
-    my @queue = ();
 
     parse_args();
     exit_if_run_by_super_user();
@@ -97,59 +97,180 @@ sub main {
     }
 
     if ($do_fork) {
-        {
-            my $uaddr;
-            # Set up socket
-            $uaddr =  sockaddr_un("$config->{rundir}/$serversocket");
-            socket (Server, PF_UNIX, SOCK_STREAM, 0)     || die "socket: $!";
-            unlink ("$config->{'rundir'}/$serversocket");
-            bind   (Server, $uaddr);
-            chmod (0700, "$config->{rundir}/$serversocket");
-            listen (Server, SOMAXCONN);
-        }
+        set_up_ipc_socket();
     }
 
     logger("Starting munin-update");
 
-    # Make array of what is probably needed to update
-    my $work_array = [];
-    if (@limit_hosts) { # Limit what to update if needed
-        foreach my $nodename (@limit_hosts) {
-            push @$work_array, map { @{munin_find_field ($_->{$nodename}, "address")} } @{munin_find_field($config, $nodename)};
-        }
-    } else { # ...else just search for all adresses to update
-        push @$work_array, @{munin_find_field($config, "address")};
+    my @work = find_hosts_for_update();
+    @queue   = build_work_queue($oldconfig, @work);
+
+    do_some_work($TIMEOUT);
+
+    unlink ("$config->{rundir}/$serversocket");
+
+    {
+        my $overwrite = munin_readconfig($conffile);
+        $config = munin_overwrite($config, $overwrite);
     }
 
+    compare_configs ($oldconfig, $config);
+
+    if (munin_getlock("$config->{rundir}/munin-datafile.lock")) {
+        munin_writeconfig("$config->{dbdir}/datafile",$config);
+    } else {
+        die "Could not create lockfile '$config->{rundir}/munin-update.lock'";
+    }
+
+
+    write_stats_and_log_update_time();
+
+    munin_removelock("$config->{rundir}/munin-datafile.lock");
+    munin_removelock("$config->{rundir}/munin-update.lock");
+
+    return 0;
+}
+
+
+sub parse_args {
+    my $do_usage = 0;
+    my $do_version = 0;
+
+    # Get options
+    print_usage_and_exit() unless GetOptions (
+        "host=s"       => \@limit_hosts,
+        "service=s"    => \@limit_services,
+        "config=s"     => \$conffile,
+        "debug!"       => \$DEBUG,
+        "version!"     => \&print_version_and_exit,
+        "fork!"        => \$cli_do_fork,
+        "timeout=i"    => \$cli_timeout,
+        "help"         => \&print_usage_and_exit
+    );
+}
+
+sub print_usage_and_exit {
+    print qq{Usage: $0 [options]
+
+Options:
+    --version		View version information.
+    --help		View this message.
+    --service <service>	Limit graphed services to <service>. Multiple --service
+			options may be supplied.
+    --host <host>	Limit graphed hosts to <host>. Multiple --host options
+    			may be supplied.
+    --config <file>	Use <file> as configuration file. 
+    			[$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf]
+    --[no]debug		View debug messages. [--nodebug]
+    --[no]fork		Don't fork one instance for each host. [--fork]
+    --[no]stdout	Print log messages to stdout as well. [--nostdout]
+    --timeout=<seconds>	TCP timeout when talking to clients. [$timeout]
+
+};
+    exit 0;
+}
+
+sub print_version_and_exit {
+    print qq{munin-update version $Munin::Common::Defaults::MUNIN_VERSION.
+Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
+
+Copyright (C) 2002-2009
+
+This is free software released under the GNU General Public License. There
+is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. For details, please refer to the file COPYING that is included
+with this software or refer to
+  http://www.fsf.org/licensing/licenses/gpl.txt
+};
+    exit 0;
+}
+
+
+sub exit_if_run_by_super_user {
+    if ($EFFECTIVE_USER_ID == 0) {
+        print qq{This program will easily break if you run it as root as you are
+trying now.  Please run it as user '$Munin::Common::Defaults::MUNIN_USER'.  The correct 'su' command
+on many systems is 'su - munin --shell=/bin/bash'
+Aborting.\n\n};
+        exit 1;
+    }
+}
+
+
+sub set_up_ipc_socket {
+    my $socket_file = "$config->{rundir}/$serversocket";
+    my $uaddr =  sockaddr_un($socket_file);
+    socket Server, PF_UNIX, SOCK_STREAM, 0
+        or die "socket: $!";
+    unlink $socket_file;
+    bind Server, $uaddr;
+    chmod oct(700), $socket_file;
+    listen Server, SOMAXCONN;
+}
+
+
+sub find_hosts_for_update {
+    my @hosts = ();
+    if (@limit_hosts) {
+        for my $nodename (@limit_hosts) {
+            push @hosts, map { 
+                @{munin_find_field ($_->{$nodename}, "address")} 
+            } @{munin_find_field($config, $nodename)};
+        }
+    } 
+    else {
+        push @hosts, @{munin_find_field($config, "address")};
+    }
+
+    return @hosts;
+}
+
+
+sub build_work_queue {
+    my ($oldconfig, @work) = @_;
+
     # Go through scheduled work to weed out a few bits, and prepare some info
-    for my $hashnode (@$work_array) {
-        my $loc = munin_get_node_loc($hashnode);
-        my $name = munin_get_node_name ($hashnode);
+    for my $host (@work) {
+        my $loc  = munin_get_node_loc($host);
+        my $name = munin_get_node_name($host);
 
         # Skip anything that has been disabled with the "update" setting
-        if (!munin_get_bool ($hashnode, "update", "true")) {
+        if (!munin_get_bool ($host, "update", "true")) {
             logger ("Skipping \"$name\" (update disabled by config)");
             next;
         }
 
         # We need to connect to this node; queue it
         logger ("Queuing \"$name\" for update.");
-        push (@queue, [$loc, $hashnode, munin_get_node ($oldconfig, $loc)]);
+        push (@queue, [$loc, $host, munin_get_node ($oldconfig, $loc)]);
     }
 
-    
+    return @queue;
+}
+
+
+sub start_parallell_do_node {
+    if (defined $config->{max_processes}) {
+        while (keys %children  <  ($config->{max_processes} - 1)) {
+            do_node(@{pop @queue});
+        }
+    } 
+    else {
+        do_node(@{pop @queue}) while @queue; # No limit on number of procs
+    }
+}
+
+# FIX better name :)
+sub do_some_work {
+    my ($TIMEOUT) = @_;
+
+    my $bad_procs = 0;
     do_with_timeout($TIMEOUT, sub {
         if ($do_fork) {
-            # Initially set off a bunch of nodes...
-            if (defined $config->{max_processes}) {
-                while (keys %children < ($config->{max_processes}-1-$bad_procs)) {
-                    do_node(@{pop @queue});
-                }
-            } else {
-                do_node(@{pop @queue}) while @queue; # No limit on number of procs
-            }
+            start_parallell_do_node();
             # Loop as long as there are kids or queue...
             while ((scalar (keys %children) - $bad_procs > 0) or @queue) {
+                
                 logger ("Debug: Doing a pass to check children status.") if $DEBUG;
             
                 my $timed_out = !do_with_timeout(10, sub {
@@ -223,7 +344,7 @@ sub main {
                 }
             }
         } else {     # No forking, just poll the nodes sequentially...
-            for (;@queue;) {
+            while (@queue) {
                 do_node(@{pop @queue});
             }
         }
@@ -242,103 +363,20 @@ sub main {
             logger ("Attempting to use old configuration for $name.");
 	}
     }
+}
 
-    unlink ("$config->{rundir}/$serversocket");
 
-
-    {
-        my $overwrite = &munin_readconfig($conffile);
-        $config = &munin_overwrite($config,$overwrite);
-    }
-
-    compare_configs ($oldconfig, $config);
-
-    if (munin_getlock("$config->{rundir}/munin-datafile.lock")) {
-        munin_writeconfig("$config->{dbdir}/datafile",$config);
-    } else {
-        die "Could not create lockfile '$config->{rundir}/munin-update.lock'";
-    }
-
-    {
-        my $update_time= Time::HiRes::time;
-        $update_time = sprintf ("%.2f",(Time::HiRes::time - $update_time));
-        print $STATS "UT|$update_time\n";
-        close ($STATS);
-        rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
+sub write_stats_and_log_update_time {
+    my $update_time= Time::HiRes::time;
+    $update_time = sprintf ("%.2f",(Time::HiRes::time - $update_time));
+    print $STATS "UT|$update_time\n";
+    close ($STATS);
+    rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
     
-        logger("Munin-update finished ($update_time sec)");
-    }
-
-    munin_removelock("$config->{rundir}/munin-datafile.lock");
-    munin_removelock("$config->{rundir}/munin-update.lock");
-
-    return 0;
+    logger("Munin-update finished ($update_time sec)");
 }
 
 
-sub parse_args {
-    my $do_usage = 0;
-    my $do_version = 0;
-
-    # Get options
-    print_usage_and_exit() unless GetOptions (
-        "host=s"       => \@limit_hosts,
-        "service=s"    => \@limit_services,
-        "config=s"     => \$conffile,
-        "debug!"       => \$DEBUG,
-        "version!"     => \&print_version_and_exit,
-        "fork!"        => \$cli_do_fork,
-        "timeout=i"    => \$cli_timeout,
-        "help"         => \&print_usage_and_exit
-    );
-}
-
-sub print_usage_and_exit {
-    print qq{Usage: $0 [options]
-
-Options:
-    --version		View version information.
-    --help		View this message.
-    --service <service>	Limit graphed services to <service>. Multiple --service
-			options may be supplied.
-    --host <host>	Limit graphed hosts to <host>. Multiple --host options
-    			may be supplied.
-    --config <file>	Use <file> as configuration file. 
-    			[$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf]
-    --[no]debug		View debug messages. [--nodebug]
-    --[no]fork		Don't fork one instance for each host. [--fork]
-    --[no]stdout	Print log messages to stdout as well. [--nostdout]
-    --timeout=<seconds>	TCP timeout when talking to clients. [$timeout]
-
-};
-    exit 0;
-}
-
-sub print_version_and_exit {
-    print qq{munin-update version $Munin::Common::Defaults::MUNIN_VERSION.
-Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
-
-Copyright (C) 2002-2009
-
-This is free software released under the GNU General Public License. There
-is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
-PURPOSE. For details, please refer to the file COPYING that is included
-with this software or refer to
-  http://www.fsf.org/licensing/licenses/gpl.txt
-};
-    exit 0;
-}
-
-
-sub exit_if_run_by_super_user {
-    if ($EFFECTIVE_USER_ID == 0) {
-        print qq{This program will easily break if you run it as root as you are
-trying now.  Please run it as user '$Munin::Common::Defaults::MUNIN_USER'.  The correct 'su' command
-on many systems is 'su - munin --shell=/bin/bash'
-Aborting.\n\n};
-        exit 1;
-    }
-}
 
 # compare_configs is used to monitor for config changes which we
 # have to act upon.
@@ -551,7 +589,6 @@ sub do_node {
 sub write_socket_single {
     my $socket = shift;
     my $text   = shift;
-    my $timed_out = 0;
     logger ("[DEBUG] Writing to socket: \"$text\".") if $DEBUG;
     my $timed_out = !do_with_timeout(5, sub { 
 	if ($tls && $tls->session_started()) {
@@ -562,6 +599,10 @@ sub write_socket_single {
 	    print $socket $text;
 	}
     });
+    if ($timed_out) {
+	logger ("[WARNING] Socket write timed out\n");
+	return;
+    }
     return 1;
 }
 
