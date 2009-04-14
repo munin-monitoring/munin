@@ -36,7 +36,7 @@ munin in a sandbox.
 
 =item B<install>
 
-To make a clean rebuild
+To make a clean rebuild of the sandbox
 
  ./dev_scripts/install 1
 
