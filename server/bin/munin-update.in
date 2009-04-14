@@ -137,25 +137,26 @@ sub main {
         push (@queue, [$loc, $hashnode, munin_get_node ($oldconfig, $loc)]);
     }
 
-    my $timeout_start = time();
-    $SIG{ALRM} = sub { die "Timed out waiting for children. $!\n"};
-    alarm ($TIMEOUT);
-
-    if ($do_fork) {
-        # Initially set off a bunch of nodes...
-        if (defined $config->{max_processes}) {
-            while (keys %children < ($config->{max_processes}-1-$bad_procs)) {
-                do_node(@{pop @queue});
+    
+    do_with_timeout($TIMEOUT, sub {
+        if ($do_fork) {
+            # Initially set off a bunch of nodes...
+            if (defined $config->{max_processes}) {
+                while (keys %children < ($config->{max_processes}-1-$bad_procs)) {
+                    do_node(@{pop @queue});
+                }
+            } else {
+                do_node(@{pop @queue}) while @queue; # No limit on number of procs
             }
-        } else {
-            do_node(@{pop @queue}) while @queue; # No limit on number of procs
-        }
-        # Loop as long as there are kids or queue...
-        for (;(scalar (keys %children) - $bad_procs > 0) or @queue;) {
-            logger ("Debug: Doing a pass to check children status.") if $DEBUG;
+            # Loop as long as there are kids or queue...
+            while ((scalar (keys %children) - $bad_procs > 0) or @queue) {
+                logger ("Debug: Doing a pass to check children status.") if $DEBUG;
             
-            eval { # eval to call accept() with a timeout
-                $SIG{ALRM} = sub { # If we timeout we need to use the old config
+                my $timed_out = !do_with_timeout(10, sub {
+                    accept (Client, Server);
+                }); # end eval
+
+                if ($timed_out) {
                     foreach my $key (keys %children) {
                         if (waitpid ($key, WNOHANG) != 0) {
                             my $loc     = $children{$key}->[0];
@@ -168,74 +169,65 @@ sub main {
                             munin_copy_node_toloc ($oldnode, $config, $loc);
                         }
                     }
-                    die;
-                }; # end sub
 
-                alarm (10);
-                accept (Client, Server);
-            }; # end eval
-
-            if ($@) {
-                if (@queue and defined $config->{max_processes} and $config->{max_processes}) {
-                    logger ("Debug: Checking whether to spawn off more procs from queue.");
-                    while (keys %children < ($config->{max_processes}-1-$bad_procs)) {
-                        logger ("Debug: Popping queue item and spawning new proc.");
-                        do_node(@{pop @queue});
+                    if (@queue and defined $config->{max_processes} and $config->{max_processes}) {
+                        logger ("Debug: Checking whether to spawn off more procs from queue.");
+                        while (keys %children < ($config->{max_processes}-1-$bad_procs)) {
+                            logger ("Debug: Popping queue item and spawning new proc.");
+                            do_node(@{pop @queue});
+                        }
                     }
+            
+                    next;
                 }
-                next;
-            }
 
-            alarm ($TIMEOUT - time() + $timeout_start);
-            close STDIN;
-            open (STDIN,  "<&Client")  || die "can't dup client to stdin";
+                close STDIN;
+                open (STDIN,  "<&Client")  || die "can't dup client to stdin";
 
-            my $pid;
-            my $name;
-            my $loc;
-            my $tmpref;
-            eval {
-                $tmpref = fd_retrieve (\*STDIN);
-            };
-            if ($@) {
-                $bad_procs++;
-                logger ("[WARNING] Error communicating with process: $@");
-            } else {
-                ($pid, $loc, $name) = ($tmpref->[0], $tmpref->[1], $tmpref->[2]);
-                logger ("connection from $name ($pid)");
-
+                my $pid;
+                my $name;
+                my $loc;
+                my $tmpref;
                 eval {
-                    my $newnode = fd_retrieve (\*STDIN);
-                    munin_copy_node_toloc ($newnode, $config, $loc);
+                    $tmpref = fd_retrieve (\*STDIN);
                 };
                 if ($@) {
-                    logger ("[WARNING] Error during fd_retrieve of config: $@");
+                    $bad_procs++;
+                    logger ("[WARNING] Error communicating with process: $@");
+                } else {
+                    ($pid, $loc, $name) = ($tmpref->[0], $tmpref->[1], $tmpref->[2]);
+                    logger ("connection from $name ($pid)");
+
+                    eval {
+                        my $newnode = fd_retrieve (\*STDIN);
+                        munin_copy_node_toloc ($newnode, $config, $loc);
+                    };
+                    if ($@) {
+                        logger ("[WARNING] Error during fd_retrieve of config: $@");
                     
-                    my $loc     = $children{$pid}->[0];
-                    my $newnode = $children{$pid}->[1];
-                    my $oldnode = $children{$pid}->[2];
+                        my $loc     = $children{$pid}->[0];
+                        my $newnode = $children{$pid}->[1];
+                        my $oldnode = $children{$pid}->[2];
 
-                    munin_copy_node_toloc ($oldnode, $config, $loc);
+                        munin_copy_node_toloc ($oldnode, $config, $loc);
+                    }
+                    delete $children{$pid};
+                    waitpid ($pid, 0);
+                    logger ("connection from $name ($pid) closed");
                 }
-                delete $children{$pid};
-                waitpid ($pid, 0);
-                logger ("connection from $name ($pid) closed");
+                if (@queue and defined $config->{max_processes} and
+                        $config->{max_processes} and
+                            scalar (keys %children) < (($config->{max_processes})-1-$bad_procs)) {
+                    do_node(@{pop @queue});
+                    close (Client);
+                }
             }
-            if (@queue and defined $config->{max_processes} and
-                    $config->{max_processes} and
-                        scalar (keys %children) < (($config->{max_processes})-1-$bad_procs)) {
+        } else {     # No forking, just poll the nodes sequentially...
+            for (;@queue;) {
                 do_node(@{pop @queue});
-                close (Client);
             }
         }
-        alarm (0);
-    } else { # No forking, just poll the nodes sequentially...
-        for (;@queue;) {
-            do_node(@{pop @queue});
-        }
-    }
-
-    alarm (0);
+    }) or die "Timed out waiting for children.\n";
 
     if ($bad_procs) # Use old configuration for killed children
     {
