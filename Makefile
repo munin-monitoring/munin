@@ -449,7 +449,7 @@ common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm
                   $< > $@
 
 clean-common:
-	cd common && ./Build realclean
+	-cd common && ./Build realclean
 
 ######################################################################
 
