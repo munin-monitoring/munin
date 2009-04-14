@@ -344,7 +344,7 @@ sub _read_service_result {
     my ($session, $CHILD, $service, $command, $child_pid) = @_;
 
     my $timeout = $config->{sconf}{$service}{timeout};
-    $timeout = $config->{sconf}{'timeout'} 
+    $timeout = $config->{'timeout'} 
     	unless defined $timeout and $timeout =~ /^\d+$/;
 
     my @lines = ();
