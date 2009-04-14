@@ -240,7 +240,7 @@ uninstall-doc: build-doc
 
 
 
-build: $(INFILES) build-common
+build: $(INFILES) build-common build-man
 
 build/%: %.in
 	@echo "$< -> $@"
