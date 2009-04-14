@@ -4,6 +4,7 @@ use strict;
 package Munin::Common::Timeout;
 use base qw(Exporter);
 
+use Carp;
 use English qw(-no_match_vars);
 
 
@@ -20,6 +21,11 @@ my $current_timeout;
 
 sub do_with_timeout {
     my ($timeout, $block) = @_;
+
+    croak "Argument exception: \$timeout" 
+        unless $timeout && $timeout =~ /^\d+$/;
+    croak "Argument exception: \$block" 
+        unless ref $block eq 'CODE';
 
     my $old_alarm           = alarm 0;
     my $old_handler         = $SIG{ALRM};
@@ -39,8 +45,6 @@ sub do_with_timeout {
     $SIG{ALRM} = $old_handler ? $old_handler : 'DEFAULT';
 
     $current_timeout = $old_current_timeout;
-
-    print STDERR ("old_alarm: '$old_alarm', timeout: '$timeout', remaining_alarm: '$remaining_alarm'\n");
 
     if ($old_alarm) {
 	my $old_alarm = $old_alarm - $timeout + $remaining_alarm;
@@ -66,9 +70,8 @@ sub reset_timeout {
     alarm $current_timeout;
 }
 
+
 1;
-
-
 
 
 __END__
