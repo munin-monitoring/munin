@@ -31,7 +31,6 @@ sub do_with_timeout {
         local $SIG{ALRM} = sub { die "alarm\n" };
         alarm $timeout;
         $block->();
-        alarm 0;
     };
     my $err = $EVAL_ERROR;
 
@@ -41,11 +40,14 @@ sub do_with_timeout {
 
     $current_timeout = $old_current_timeout;
 
+    print STDERR ("old_alarm: '$old_alarm', timeout: '$timeout', remaining_alarm: '$remaining_alarm'\n");
+
     if ($old_alarm) {
 	my $old_alarm = $old_alarm - $timeout + $remaining_alarm;
 	if ($old_alarm > 0) {
 	    alarm($old_alarm);
-	} else {
+	} 
+        else {
             #It should have gone off already - so set it off
 	    kill 'ALRM', $$;
 	}
