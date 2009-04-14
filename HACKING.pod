@@ -26,12 +26,54 @@ negotiable.
 
 =head1 GETTING STARTED
 
-You will find scripts that are nice when developing in the dev_scripts
-folder.
+In the dev_script directory you will find scripts that are ment to be
+useful for developing. Most of them are tools for creating and using
+munin in a sandbox.
+
+=head2 THE SANDBOX
 
 =over
 
-=item B<dev_scripts/install>
+=item B<install>
+
+To make a clean rebuild
+
+ ./dev_scripts/install 1
+
+To just install the latest changes
+
+ ./dev_scripts/install
+
+=item B<enable/disable tls>
+
+To test TLS, you can enable a paranoid TLS configuration by running:
+
+ ./dev_scripts/enable_tls
+
+And disable it with:
+
+ ./dev_scripts/disable_tls
+
+=item B<start/stop munin-node>
+
+ ./dev_scripts/start_munin-node [munin-node params ...]
+
+And
+
+ ./dev_scripts/stop_munin-node
+
+To do both:
+
+ ./dev_scripts/restart_munin-node [munin-node params ...]
+
+
+=item B<run>
+
+To run Munin master programs (munin-update, munin-html, munin-cron,
+etc) use the run command.
+
+ ./dev_scripts/run CMD [CMD args ...]
+
 
 =back
 
@@ -55,7 +97,12 @@ FIX
 
 =head1 TESTS AND COVERAGE
 
-FIX
+Use TDD.
+
+In node, server, or common:
+
+ perl Build.PL
+ ./Build test
 
 
 =head1 EXCEPTION HANDLING
