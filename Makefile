@@ -404,10 +404,7 @@ t/install:
 ######################################################################
 
 install-common: build-common
-	(cd common/blib/lib/ && find -mindepth 1 -type d) \
-          | xargs --replace={} mkdir -p $(PERLLIB)/{}
-	(cd common/blib/lib/ && find -mindepth 1 -type f) \
-          | xargs --replace={} $(INSTALL) -m 0644 common/blib/lib/{} $(PERLLIB)/Munin/Common/`dirname {}`
+	cd common && ./Build install --destdir=$(DESTDIR)
 
 build-common: build-common-pre common/blib/lib/Munin/Common/Defaults.pm
 
@@ -448,6 +445,8 @@ common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm
 	          s{(SSPOOLDIR	\s+=\s).*}{\1q{$(SSPOOLDIR)};}x;'  \
                   $< > $@
 
+# We assume here that if common/Build is missing, there is nothing to
+# clean.
 clean-common:
 	-cd common && ./Build realclean
 
