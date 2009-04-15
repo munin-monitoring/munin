@@ -9,7 +9,16 @@ my $build = NodeBuilder->new(
     dist_author    => 'The Munin Team <fix@example.com>',
     dist_abstract  => 'The Munin Node',
     license        => 'gpl',
-    requires       => {},
+    requires       => {
+        perl            => '5',
+        'Net::Server'   => 0,
+        'Time::HiRes'   => 0,
+        #'Munin::Common' => 0,
+    },
     build_requires => {},
+    recommends     => {
+        #'Net::SSLeay' => 0, In Munin::Common?
+        'Net::SNMP'   => 0,
+    },
 );
 $build->create_build_script;

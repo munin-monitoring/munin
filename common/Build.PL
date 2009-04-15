@@ -8,5 +8,9 @@ my $build = Module::Build->new(
     license        => 'gpl',
     requires       => {},
     build_requires => {},
+    recommends     => {
+        'Net::SSLeay' => 0,
+    },
+
 );
 $build->create_build_script;
