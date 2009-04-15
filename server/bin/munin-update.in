@@ -25,6 +25,7 @@ use strict;
 
 $|=1;
 
+use Carp;
 use English qw(-no_match_vars);
 use Getopt::Long;
 use IO::Socket;
@@ -668,16 +669,18 @@ sub read_socket_discard_comments {
 sub config_and_fetch_node 
 {
     my ($newconf,$oldconf,$socket) = @_;
-    my $clientdomain = read_socket_single ($socket);
+
     my $fetchdomain;
     my $name = munin_get_node_name ($newconf);
     my $host_time = Time::HiRes::time;
-    chomp($clientdomain) if $clientdomain;
-    if (!$clientdomain) {
-	logger("[WARNING] Got unknown reply from client \"$name\" skipping");
+
+    my $clientdomain = eval {
+        get_node_domain($socket);
+    };
+    if ($EVAL_ERROR) {
+	logger("[WARNING] $EVAL_ERROR '$name' skipping");
 	return 0;
     }
-    $clientdomain =~ s/\#.*(?:lrrd|munin) (?:client|node) at //;
     
     # Decide what to ask for
     if (munin_get ($newconf, "use_node_name")) {
@@ -694,18 +697,14 @@ sub config_and_fetch_node
 
     logger("[DEBUG] Configuring node: $name") if $DEBUG;
     my @services;
-    eval {
-	local $SIG{ALRM} = sub { die "Could not run list on $name ($fetchdomain): $!\n"};
-	alarm 5; # Should be enough to check the list
-	write_socket_single ($socket, "list $fetchdomain\n");
-	my $list = read_socket_single ($socket);
-	exit 1 unless defined $list;
-	chomp $list;
-	@services = split / /,$list;
-	alarm 0;
-    };
-    if ($@) {
-	die unless ($@ =~ m/Could not run list/);
+    my $timed_out = !do_with_timeout(5, sub {
+        write_socket_single($socket, "list $fetchdomain\n");
+        my $list = read_socket_single($socket);
+        exit 1 unless defined $list;
+        chomp $list;
+        @services = split / /,$list;
+    });
+    if ($timed_out) {
 	logger ("Error: Could not get list from $newconf->{address}: $!\nAttempting to use old configuration");
 	if (ref $oldconf) {
 	    copy_node ($oldconf, $newconf);
@@ -715,97 +714,8 @@ sub config_and_fetch_node
 
     for my $service (@services) {
 	my $servname = $service;
-	my $fields = {};
 	$servname =~ s/\W/_/g;
-	munin_set_var_loc ($newconf, [$servname, "realservname"], $service);
-	logger("[DEBUG] Inspecting possible service: $servname") if $DEBUG;
-	next if (!munin_get_bool ($newconf->{$servname}, "update", "true"));
-	next if (!munin_get_bool ($newconf->{$servname}, "fetch_data", "true"));
-	next if (@limit_services and !grep (/^$servname$/, @limit_services));
-
-	my @graph_order = split (/\s+/, munin_get ($newconf->{$service}, "graph_order", ""));
-	my $serviceconf_time = Time::HiRes::time;
-	logger("[DEBUG] Configuring service: $servname") if $DEBUG;
-	write_socket_single ($socket, "config $service\n");
-	my @lines = read_socket($socket);
-	return unless $socket;
-	next unless (@lines);
-	for (@lines) {
-	    if (/\# timeout/) {
-		logger("Client reported timeout in configuration of $servname");
-		if ($oldconf->{$servname}) {
-		    logger("Attempting to use old configuration");
-		    copy_node ($newconf->{$servname}, $oldconf->{$servname});
-		} else {
-		    logger("Skipping configuration of $servname");
-		    delete $newconf->{$servname};
-		}
-	    } elsif (/^(\w+)\.(\w+)\s+(.+)/) {
-		my ($client,$type,$value) = ($1,$2,$3);
-		$client = &sanitise_fieldname ($client, $fields);
-		if (($type) and ($type eq "label")) {
-		    $value =~ s/\\/_/g; # Sanitise labels
-		    push (@graph_order,$client) unless grep (/^$client$/, @graph_order);
-	        }
-	        munin_set_var_loc ($newconf, [$servname, $client, $type], "$value");
-	        logger ("config: $servname->$client.$type = $value") if $DEBUG;
-	    } elsif (/(^[^\s\#]+)\s+(.+)/) {
-		my ($keyword) = $1;
-		my ($value) = $2;
-	        munin_set_var_loc ($newconf, [$servname, $keyword], "$value");
-		logger ("Config: $servname->$keyword = $value") if $DEBUG;
-		if ($keyword eq "graph_order") {
-		    @graph_order = split (/\s+/, $value);
-		}
-	    }
-	}
-	for my $field (keys %{$newconf->{$servname}}) {
-            # Skip anything that isn't a field
-	    next if $field =~ /^#%#/;
-	    next unless (ref ($newconf->{$servname}->{$field}) eq "HASH" and
-		    defined ($newconf->{$servname}->{$field}->{"label"}));
-
-	    my $fhash = $newconf->{$servname}->{$field};
-
-	    # Check if file exists
-	    my $fname = munin_get_filename ($fhash);
-	    (my $dirname = $fname) =~ s/\/[^\/]+$//;
-
-	    if (! -f "$fname") {
-	        logger ("creating rrd-file for $servname->$field: \"$fname\"");
-	        munin_mkdir_p ($dirname, oct(777));
-	        my @args = ("$fname",
-			"DS:42:".munin_get($fhash, "type", "GAUGE").":600:".
-			munin_get($fhash, "min", "U") . ":" .  munin_get($fhash, "max", "U"));
-
-	  	my $resolution = &munin_get ($fhash, "graph_data_size", "normal");
-	        if ($resolution eq "normal") {
-		    push (@args,
-			"RRA:AVERAGE:0.5:1:576", # resolution 5 minutes
-			"RRA:MIN:0.5:1:576",
-			"RRA:MAX:0.5:1:576",
-			"RRA:AVERAGE:0.5:6:432", # 9 days, resolution 30 minutes
-			"RRA:MIN:0.5:6:432",
-			"RRA:MAX:0.5:6:432",
-			"RRA:AVERAGE:0.5:24:540", # 45 days, resolution 2 hours
-			"RRA:MIN:0.5:24:540",
-			"RRA:MAX:0.5:24:540",
-			"RRA:AVERAGE:0.5:288:450", # 450 days, resolution 1 day
-			"RRA:MIN:0.5:288:450",
-			"RRA:MAX:0.5:288:450");
-		} elsif ($resolution eq "huge") {
-		    push (@args, "RRA:AVERAGE:0.5:1:115200"); # resolution 5 minutes, for 400 days
-		    push (@args, "RRA:MIN:0.5:1:115200"); # Three times? ARGH!
-		    push (@args, "RRA:MAX:0.5:1:115200"); # Three times? ARGH!
-	        }
-		RRDs::create @args;
-	  	if (my $ERROR = RRDs::error) {
-		    logger ("[ERROR] Unable to create \"$fname\": $ERROR");
-	  	}
-	    }
-	}
-	munin_set_var_loc ($newconf, [$servname, "graph_order"], join(' ',@graph_order));
-
+        config_node_service($oldconf, $newconf, $socket, $servname, $service);
 	fetch_node_service ($newconf, $socket, $servname, $service);
     }
     $host_time = sprintf ("%.2f", (Time::HiRes::time - $host_time));
@@ -813,6 +723,22 @@ sub config_and_fetch_node
     return 0 unless $socket;
     return 1;
 }
+
+
+sub get_node_domain {
+    my ($socket) = @_;
+
+    my $node_domain = read_socket_single ($socket);
+    croak "Got no reply from node"
+        unless $node_domain;
+    chomp $node_domain;
+    $node_domain =~ s/\#.*(?:lrrd|munin) (?:client|node) at //
+        or croak "Got unknown reply from node";
+
+
+    return $node_domain;
+}
+
 
 
 sub run_starttls_if_required {
@@ -875,6 +801,104 @@ sub negotiate_capabilities {
     logger("[DEBUG]: Session capabilities: $cap");# if $DEBUG;
 }
 
+
+sub config_node_service {
+    my $oldconf      = shift; 
+    my $newconf      = shift; 
+    my $socket       = shift;
+    my $service      = shift;
+    my $servname = shift;
+
+    my $fields = {};
+    munin_set_var_loc ($newconf, [$servname, "realservname"], $service);
+    logger("[DEBUG] Inspecting possible service: $servname") if $DEBUG;
+    return if (!munin_get_bool ($newconf->{$servname}, "update", "true"));
+    return if (!munin_get_bool ($newconf->{$servname}, "fetch_data", "true"));
+    return if (@limit_services and !grep (/^$servname$/, @limit_services));
+    
+    my @graph_order = split (/\s+/, munin_get ($newconf->{$service}, "graph_order", ""));
+    my $serviceconf_time = Time::HiRes::time;
+    logger("[DEBUG] Configuring service: $servname") if $DEBUG;
+    write_socket_single ($socket, "config $service\n");
+    my @lines = read_socket($socket);
+    return unless $socket;
+    return unless (@lines);
+    for (@lines) {
+        if (/\# timeout/) {
+            logger("Client reported timeout in configuration of $servname");
+            if ($oldconf->{$servname}) {
+                logger("Attempting to use old configuration");
+                copy_node ($newconf->{$servname}, $oldconf->{$servname});
+            } else {
+                logger("Skipping configuration of $servname");
+                delete $newconf->{$servname};
+            }
+        } elsif (/^(\w+)\.(\w+)\s+(.+)/) {
+            my ($client,$type,$value) = ($1,$2,$3);
+            $client = &sanitise_fieldname ($client, $fields);
+            if (($type) and ($type eq "label")) {
+                $value =~ s/\\/_/g; # Sanitise labels
+                push (@graph_order,$client) unless grep (/^$client$/, @graph_order);
+            }
+            munin_set_var_loc ($newconf, [$servname, $client, $type], "$value");
+            logger ("config: $servname->$client.$type = $value") if $DEBUG;
+        } elsif (/(^[^\s\#]+)\s+(.+)/) {
+            my ($keyword) = $1;
+            my ($value) = $2;
+            munin_set_var_loc ($newconf, [$servname, $keyword], "$value");
+            logger ("Config: $servname->$keyword = $value") if $DEBUG;
+            if ($keyword eq "graph_order") {
+                @graph_order = split (/\s+/, $value);
+            }
+        }
+    }
+    for my $field (keys %{$newconf->{$servname}}) {
+        # Skip anything that isn't a field
+        next if $field =~ /^#%#/;
+        next unless (ref ($newconf->{$servname}->{$field}) eq "HASH" and
+                         defined ($newconf->{$servname}->{$field}->{"label"}));
+        
+        my $fhash = $newconf->{$servname}->{$field};
+        
+        # Check if file exists
+        my $fname = munin_get_filename ($fhash);
+        (my $dirname = $fname) =~ s/\/[^\/]+$//;
+        
+        if (! -f "$fname") {
+            logger ("creating rrd-file for $servname->$field: \"$fname\"");
+            munin_mkdir_p ($dirname, oct(777));
+            my @args = ("$fname",
+			"DS:42:".munin_get($fhash, "type", "GAUGE").":600:".
+                            munin_get($fhash, "min", "U") . ":" .  munin_get($fhash, "max", "U"));
+            
+            my $resolution = &munin_get ($fhash, "graph_data_size", "normal");
+            if ($resolution eq "normal") {
+                push (@args,
+                      "RRA:AVERAGE:0.5:1:576", # resolution 5 minutes
+                      "RRA:MIN:0.5:1:576",
+                      "RRA:MAX:0.5:1:576",
+                      "RRA:AVERAGE:0.5:6:432", # 9 days, resolution 30 minutes
+                      "RRA:MIN:0.5:6:432",
+                      "RRA:MAX:0.5:6:432",
+                      "RRA:AVERAGE:0.5:24:540", # 45 days, resolution 2 hours
+                      "RRA:MIN:0.5:24:540",
+                      "RRA:MAX:0.5:24:540",
+                      "RRA:AVERAGE:0.5:288:450", # 450 days, resolution 1 day
+                      "RRA:MIN:0.5:288:450",
+                      "RRA:MAX:0.5:288:450");
+            } elsif ($resolution eq "huge") {
+                push (@args, "RRA:AVERAGE:0.5:1:115200"); # resolution 5 minutes, for 400 days
+                push (@args, "RRA:MIN:0.5:1:115200"); # Three times? ARGH!
+                push (@args, "RRA:MAX:0.5:1:115200"); # Three times? ARGH!
+            }
+            RRDs::create @args;
+            if (my $ERROR = RRDs::error) {
+                logger ("[ERROR] Unable to create \"$fname\": $ERROR");
+            }
+        }
+    }
+    munin_set_var_loc ($newconf, [$servname, "graph_order"], join(' ',@graph_order));
+}
 
 sub fetch_node_service {
     my $newconf      = shift; 
