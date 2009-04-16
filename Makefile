@@ -407,6 +407,7 @@ install-common: build-common
 	cd common && ./Build install --destdir=$(DESTDIR)
 
 build-common: build-common-pre common/blib/lib/Munin/Common/Defaults.pm
+	cd common && ./Build
 
 build-common-pre: common/Build
 	cd common && ./Build code
