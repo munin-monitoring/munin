@@ -11,7 +11,7 @@ use Log::Log4perl qw(:easy);
 our @EXPORT = qw(logger_open logger_debug logger_level logger);
 
 #
-# Switching to Log4perl ove rtime.  Management and compatability goes here.
+# Switching to Log4perl over time.  Management and compatability goes here.
 #
 
 # Early open of the log.  Warning and more urgent messages will go to

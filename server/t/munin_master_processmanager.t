@@ -2,14 +2,20 @@ use warnings;
 use strict;
 
 use Test::More tests => 11;
+use Time::HiRes qw(sleep);
 
 use_ok('Munin::Master::ProcessManager');
 
-######################################################################
+# Uncomment to see log messages
+use Munin::Master::Logger;
+logger_debug();
+
+
+#
+# Define some test workers 
+#
 package Test::Worker;
 use base q(Munin::Master::Worker);
-
-use Time::HiRes qw(sleep);
 
 sub do_work {
     my ($self) = @_;
@@ -19,32 +25,6 @@ sub do_work {
 }
 
 
-package main;
-######################################################################
-
-
-sub result_callback {
-    my ($res) = @_;
-
-    ok($res->[0] == 1 || $res->[0] == 2 || $res->[0] == 3, "$res->[0] in 1,2,3");
-    is_deeply($res, [$res->[0], $res->[0]], "\$res == [X,X], X <- $res->[0]");
-}
-
-{
-    my $pm = Munin::Master::ProcessManager->new(\&result_callback);
-    isa_ok($pm, 'Munin::Master::ProcessManager');
-    
-    $pm->add_workers(
-        Test::Worker->new(1),
-        Test::Worker->new(2),
-        Test::Worker->new(3),
-    );
-
-    $pm->start_work();
-}
-
-
-######################################################################
 package Test::NastyWorker;
 use base q(Munin::Master::Worker);
 
@@ -62,7 +42,32 @@ sub do_work {
 }
 
 package main;
-######################################################################
+
+#
+# The tests
+#
+
+sub result_callback {
+    my ($res) = @_;
+
+    ok($res->[0] == 1 || $res->[0] == 2 || $res->[0] == 3, "$res->[0] in 1,2,3");
+    is_deeply($res, [$res->[0], $res->[0]], "\$res == [X,X], X <- $res->[0]");
+}
+
+
+{
+    my $pm = Munin::Master::ProcessManager->new(\&result_callback);
+    isa_ok($pm, 'Munin::Master::ProcessManager');
+    
+    $pm->add_workers(
+        Test::Worker->new(1),
+        Test::Worker->new(2),
+        Test::Worker->new(3),
+    );
+
+    $pm->start_work();
+}
+
 
 sub result_callback2 {
     my ($res) = @_;
@@ -70,11 +75,13 @@ sub result_callback2 {
     is($res->[1], 1, "Got 1");
 }
 
+
 sub error_callback2 {
     my ($worker_id, $msg) = @_;
 
     ok($msg eq 'Timed out' || $msg eq 'Died', "Got error msg $msg");
 }
+
 
 {
     my $pm = Munin::Master::ProcessManager->new(\&result_callback2, \&error_callback2);

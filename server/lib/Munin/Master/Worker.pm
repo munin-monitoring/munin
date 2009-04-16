@@ -5,6 +5,10 @@ use strict;
 
 use Scalar::Util qw(refaddr);
 
+
+use overload q{""} => 'to_string';
+
+
 sub new {
     my ($class, $identity) = @_;
 
@@ -14,6 +18,13 @@ sub new {
     $self->{ID} = $identity;
 
     return $self;
+}
+
+
+sub to_string {
+    my ($self) = @_;
+
+    return sprintf("%s<%s>", ref $self, $self->{ID}); 
 }
 
 
