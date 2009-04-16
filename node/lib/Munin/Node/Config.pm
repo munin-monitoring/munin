@@ -1,4 +1,5 @@
 package Munin::Node::Config;
+use base qw(Munin::Common::Config);
 
 use strict;
 use warnings;
@@ -13,7 +14,11 @@ use Munin::Node::OS;
     sub instance {
         my ($class) = @_;
         
-        return $instance ||= bless {}, $class;
+        $instance ||= bless {
+            config_file  => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf",
+        }, $class;
+
+        return $instance;
     }
 }
 
@@ -25,24 +30,6 @@ sub reinitialize {
 
     my $new_self = bless $attrs, ref $self;
     %$self = %$new_self;
-}
-
-
-sub parse_config_from_file {
-    my ($self, $file_name) = @_;
-
-    open my $FILE, '<', $file_name 
-        or croak "Cannot open '$file_name': $OS_ERROR";
-
-    eval {
-        $self->parse_config($FILE);
-    };
-    if ($EVAL_ERROR) {
-        croak "Failed to parse config file '$file_name': $EVAL_ERROR";
-    }
-    
-    close $FILE
-        or croak "Cannot close '$file_name': $OS_ERROR";;
 }
 
 
@@ -354,32 +341,6 @@ sub _apply_wildcard_to_service {
 }
 
 
-sub _trim {
-    my $class = shift;
-    
-    chomp $_[0];
-    $_[0] =~ s/^\s+//;
-    $_[0] =~ s/\s+$//;
-
-    return;
-}
-
-
-sub _strip_comment {
-    my $class = shift;
-    
-    $_[0] =~ s/#.*//;
-    
-    return;
-}
-
-
-sub _parse_bool {
-    my ($class, $str) = @_;
-
-    return $str =~ m{\A no|false|off|0 \z}xms ? 0 : 1;
-}
-
 1;
 
 __END__
@@ -416,12 +377,6 @@ Deletes all configuration variables
 
 Deletes all configuration variables and reinitalizes the object with
 values from \%variables.
-
-=item B<parse_config_from_file>
-
- $config->parse_config_from_file($file_name);
-
-Parses the munin node configuration in $file_name.
 
 =item B<parse_config>
 
