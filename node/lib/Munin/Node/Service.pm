@@ -3,8 +3,14 @@ package Munin::Node::Service;
 use warnings;
 use strict;
 
-use Munin::Node::Config;
+use English qw(-no_match_vars);
+use Carp;
 
+use Munin::Node::Config;
+use Munin::Node::OS;
+use Munin::Node::Logger;
+
+use Munin::Common::Defaults;
 
 my $config = Munin::Node::Config->instance();
 
@@ -39,13 +45,68 @@ sub export_service_environment {
     my ($class, $service) = @_;
     print STDERR "# Setting up environment\n" if $config->{DEBUG};
 
-    my $env = $config->{sconf}{$service}{'env'};
+    my $env = $config->{sconf}{$service}{env};
 
     return unless defined $env;
     while (my ($k, $v) = each %$env) {
-	print STDERR "# Environment $k = $v\n" if $config->{DEBUG};
+        print STDERR "# Environment $k = $v\n" if $config->{DEBUG};
         $ENV{$k} = $v;
     }
+}
+
+
+sub change_real_and_effective_user_and_group
+{
+    my ($class, $service) = @_;
+
+    my $root_uid = 0;
+    my $root_gid = 0;
+
+    #if ($REAL_USER_ID == $root_uid) {
+        # Need to test for defined here since a user might be
+        # specified with UID = 0
+        my $uid = defined $config->{sconf}{$service}{user} 
+                    ? $config->{sconf}{$service}{user}
+                    : $config->{defuser};
+        
+        # Resolve unresolved UID now - as it is may not have been resolved
+        # when the config was read.
+        my $u = Munin::Node::OS->get_uid($uid);
+        croak "User '$uid' is nonexistent." unless defined $u;
+        my $dg  = $config->{defgroup};
+
+        my $g = '';
+        my $gid;
+
+        if ( defined($gid = $config->{sconf}{$service}{group}) ) {
+            $g = Munin::Node::OS->get_gid($gid);
+            croak "Group '$gid' is nonexistent." unless $g ne '';
+        }
+
+        # Specify the default group twice: once for setegid(2), and once
+        # for setgroups(2).  See perlvar for the gory details.
+        my $gs = "$dg $dg $g";
+
+        eval {
+            if ($Munin::Common::Defaults::MUNIN_HASSETR) {
+                Munin::Node::OS->set_real_group_id($dg) 
+                      unless $dg == $root_gid;
+                Munin::Node::OS->set_real_user_id($u)
+                      unless $u == $root_uid;
+            }
+
+            Munin::Node::OS->set_effective_group_id($gs) 
+                  unless $dg == $root_gid;
+            Munin::Node::OS->set_effective_user_id($u)
+                  unless $u == $root_uid;
+        };
+
+        if ($EVAL_ERROR) {
+            logger("Plugin \"$service\" Can't drop privileges: $EVAL_ERROR. "
+                       . "Bailing out.\n");
+            exit 1;
+        }
+    #}
 }
 
 
@@ -73,7 +134,7 @@ Munin::Node::Service - Methods related to handling of Munin services
 
  my $bool = Munin::Node::Service->is_a_runnable_service($file_name);
 
-Runs miscellaneous tests on $file_name. These tests is intended to
+Runs miscellaneous tests on $file_name. These tests are intended to
 verify that $file_name is a runnable service.
 
 =item B<export_service_environment>
@@ -82,4 +143,18 @@ verify that $file_name is a runnable service.
 
 Exports all the environment variables specific to service $service.
 
+=item B<change_real_and_effective_user_and_group>
+
+ Munin::Node::Service->change_real_and_effective_user_and_group($service);
+
+Changes the current process' effective group and user IDs to those specified
+in the configuration, or the default user or group otherwise.  Also changes 
+the real group and user IDs if the operating system supports it.
+
+On failure, causes the process to exit.
+
 =back
+
+=cut
+
+# vim:syntax=perl : ts=4 : expandtab

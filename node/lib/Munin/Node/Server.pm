@@ -20,8 +20,8 @@ use Munin::Node::Session;
 my %services;
 
 # Which hosts this node's services applies to. Typically this is the
-# same as the host the node is running on, but some services queries
-# other hosts (e.g SMTP services).
+# same as the host the node is running on, but some services query
+# other hosts (e.g SNMP services).
 my %nodes;
 
 
@@ -373,7 +373,7 @@ sub _exec_service {
 
     POSIX::setsid();
 
-    _change_real_and_effective_user_and_group($service);
+    Munin::Node::Service->change_real_and_effective_user_and_group($service);
 
     unless (Munin::Node::OS->check_perms("$config->{servicedir}/$service")) {
         logger ("Error: unsafe permissions on $service. Bailing out.");
@@ -401,63 +401,6 @@ sub exec_service { # Externaly visible for the use of munin-run
     _exec_service(@_);
 }
 
-
-sub _change_real_and_effective_user_and_group {
-    my ($service) = @_;
-
-    my $root_uid = 0;
-    my $root_gid = 0;
-
-    if ($REAL_USER_ID == $root_uid) {
-        # Need to test for defined here since a user might be
-        # spesified with UID = 0
-        my $uid = defined $config->{sconf}{$service}{'user'} 
-	     ? $config->{sconf}{$service}{'user'}
-	     : $config->{defuser};
-	# Resolve unresolved UID now - as it is may not have been resolved at
-	# read-config-time
-	my $u = Munin::Node::OS->get_uid($uid);
-	croak "User '$uid' is nonexistent." unless defined $u;
-        my $dg  = $config->{defgroup};
-
-	my $g = '';
-	my $gid;
-
-	if ( defined($gid = $config->{sconf}{$service}{'group'}) ) {
-	    $g = Munin::Node::OS->get_gid($gid);
-	    croak "Group '$gid' is nonexistent." unless $g ne '';
-	}
-
-        my $gs = "$dg $dg $g";      # FIX why $g two times?
-			   # like id(1): primary group, then associated groups?
-
-	# FIX - what are those swear-words again?
-
-        eval {
-            if ($Munin::Common::Defaults::MUNIN_HASSETR) {
-                Munin::Node::OS->set_real_group_id($dg) 
-                      unless $dg == $root_gid;
-                Munin::Node::OS->set_real_user_id($u)
-                      unless $u == $root_uid;
-            }
-    
-            Munin::Node::OS->set_effective_group_id($gs) 
-                  unless $dg == $root_gid;
-            Munin::Node::OS->set_effective_user_id($u)
-                  unless $u == $root_uid;
-        };
-
-        if ($EVAL_ERROR) {
-            logger("Plugin \"$service\" Can't drop privileges: $EVAL_ERROR. "
-                       . "Bailing out.\n");
-            exit 1;
-        }
-
-	print STDERR "# Running $service as uid/gid/euid/egid $</$(/$>/$)\n"
-	    if $config->{DEBUG};
-
-    }
-}
 
 sub _net_read {
     my ($session) = @_;
