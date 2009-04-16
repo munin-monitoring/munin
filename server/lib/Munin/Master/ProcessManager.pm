@@ -72,6 +72,7 @@ sub start_work {
             $self->{result_queue}{$worker->{ID}} = $worker;
         }
         else {
+            $0 .= " [$worker]";
             eval {
                 exit $self->_do_work($worker);
             };
@@ -84,7 +85,8 @@ sub start_work {
 
     do_with_timeout($self->{timeout}, sub {
         $self->_collect_results($sock);
-    }); or croak "Work timed out before all workers finished";
+    }) or croak "Work timed out before all workers finished";
+    $self->{workers} = [];
     logger("Work done");
 }
 

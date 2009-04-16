@@ -7,8 +7,8 @@ use Time::HiRes qw(sleep);
 use_ok('Munin::Master::ProcessManager');
 
 # Uncomment to see log messages
-use Munin::Master::Logger;
-logger_debug();
+#use Munin::Master::Logger;
+#logger_debug();
 
 
 #
