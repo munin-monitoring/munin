@@ -170,11 +170,12 @@ sub run_service {
     $command ||="";
 
     if ($services{$service}) {
-	# There used to be the beginnings of timeout handling here.
-	# but it was never complete.
-	Munin::Node::Server::exec_service($service,$command);
-    } else {
-	print STDERR "# Unknown service\n";
+        # no need for a timeout -- the user can kill this process any 
+        # time they want.
+        Munin::Node::Service->exec_service($service,$command);
+    }
+    else {
+        print STDERR "# Unknown service\n";
     }
 }
 
@@ -300,7 +301,7 @@ View this help message.
 
 =item B< --debug >
 
-Print debug messages.  Debug messages are sent to both STDOUT and are
+Print debug messages.  Debug messages are sent to STDOUT and are
 prefixed with "#" (this makes it easier for other parts of munin to
 use munin-run and still have --debug on).  Only errors go to STDERR.
 

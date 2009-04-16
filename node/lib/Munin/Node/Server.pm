@@ -313,9 +313,10 @@ sub _run_service {
     }
     else {
         # In child, should never return ...
-        _exec_service($service, $command);
-         # Should never get here ... putting an exit guard here just
-         # in case ...
+        Munin::Node::Server->exec_service($service, $command);
+        
+	# Should never get here ... putting an exit guard here just
+        # in case ...
         exit 42;
     }
 
@@ -363,42 +364,6 @@ sub _read_service_result {
     }
 
     return @lines;
-}
-
-
-sub _exec_service {
-    my ($service, $command) = @_;
-
-    my %sconf = %{$config->{sconf}};
-
-    POSIX::setsid();
-
-    Munin::Node::Service->change_real_and_effective_user_and_group($service);
-
-    unless (Munin::Node::OS->check_perms("$config->{servicedir}/$service")) {
-        logger ("Error: unsafe permissions on $service. Bailing out.");
-        exit 2;
-    }
-
-    Munin::Node::Service->export_service_environment($service);
-    if (exists $sconf{$service}{'command'} && defined $sconf{$service}{'command'}) {
-        my @run = ();
-        for my $t (@{$sconf{$service}{'command'}}) {
-            if ($t =~ /^%c$/) {
-                push (@run, "$config->{servicedir}/$service", $command);
-            } else {
-                push (@run, $t);
-            }
-        }
-        print STDERR "# About to run \"", join (' ', @run), "\"\n" if $config->{DEBUG};
-        exec (@run) if @run;
-    } else {
-        exec "$config->{servicedir}/$service", $command;
-    }
-}
-
-sub exec_service { # Externaly visible for the use of munin-run
-    _exec_service(@_);
 }
 
 

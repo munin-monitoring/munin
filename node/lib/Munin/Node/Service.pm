@@ -62,7 +62,7 @@ sub change_real_and_effective_user_and_group
     my $root_uid = 0;
     my $root_gid = 0;
 
-    #if ($REAL_USER_ID == $root_uid) {
+    if ($REAL_USER_ID == $root_uid) {
         # Need to test for defined here since a user might be
         # specified with UID = 0
         my $uid = defined $config->{sconf}{$service}{user} 
@@ -106,7 +106,40 @@ sub change_real_and_effective_user_and_group
                        . "Bailing out.\n");
             exit 1;
         }
-    #}
+    }
+}
+
+
+sub exec_service {
+    my ($class, $service, $command) = @_;
+
+    my %sconf = %{$config->{sconf}};
+
+    POSIX::setsid();
+
+    $class->change_real_and_effective_user_and_group($service);
+
+    unless (Munin::Node::OS->check_perms("$config->{servicedir}/$service")) {
+        logger ("Error: unsafe permissions on $service. Bailing out.");
+        exit 2;
+    }
+
+    $class->export_service_environment($service);
+
+    if (exists $sconf{$service}{command} && defined $sconf{$service}{command}) {
+        my @run = ();
+        for my $t (@{$sconf{$service}{command}}) {
+            if ($t =~ /^%c$/) {
+                push (@run, "$config->{servicedir}/$service", $command);
+            } else {
+                push (@run, $t);
+            }
+        }
+        print STDERR "# About to run \"", join (' ', @run), "\"\n" if $config->{DEBUG};
+        exec (@run) if @run;
+    } else {
+        exec "$config->{servicedir}/$service", $command;
+    }
 }
 
 
