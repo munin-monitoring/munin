@@ -20,7 +20,7 @@ use base q(Munin::Master::Worker);
 sub do_work {
     my ($self) = @_;
 
-    sleep rand 0.3;
+    1 for (0 .. rand 1_000_000); # sleep and alarm does not mix ...
     return $self->{ID};
 }
 
@@ -34,11 +34,11 @@ sub do_work {
     croak "I'm nasty!";
 }
 
-package Test::SleepyWorker;
+package Test::SpinningWorker;
 use base q(Munin::Master::Worker);
 
 sub do_work {
-    sleep 10 while (1);
+    1 while (1);
 }
 
 package main;
@@ -88,7 +88,7 @@ sub error_callback2 {
     
     $pm->add_workers(
         Test::NastyWorker->new(),
-        Test::SleepyWorker->new(),
+        Test::SpinningWorker->new(),
         Test::Worker->new(1),
     );
 

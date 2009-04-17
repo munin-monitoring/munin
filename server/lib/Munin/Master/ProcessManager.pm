@@ -111,6 +111,11 @@ sub _collect_results {
 
         $self->{result_callback}($res) if defined $real_res;
     }
+
+    while (%{$self->{active_workers}}) {
+        $self->_vet_finished_workers();
+    }
+
 }
 
 
@@ -121,6 +126,7 @@ sub _vet_finished_workers {
         if ($CHILD_ERROR) {
             $self->_handle_worker_error($worker_pid);
         }
+        logger("Reaping $self->{active_workers}{$worker_pid} $CHILD_ERROR");
         delete $self->{active_workers}{$worker_pid};
     }
 }
