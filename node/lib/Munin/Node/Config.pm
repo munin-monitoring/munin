@@ -184,7 +184,7 @@ sub parse_plugin_config_file {
         return;
     }
 
-    print STDERR "# Processing plugin configuraiton from $file\n"
+    print STDERR "# Processing plugin configuration from $file\n"
 	if $self->{DEBUG};
 
     eval {

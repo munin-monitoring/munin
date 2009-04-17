@@ -107,6 +107,14 @@ sub change_real_and_effective_user_and_group
             exit 1;
         }
     }
+    else {
+        if (defined $config->{sconf}{$service}{user}
+         or defined $config->{sconf}{$service}{group})
+        {
+            print "# Warning: Root privileges are required to change user/group.  "
+                . "The plugin may not behave as expected.\n";
+        }
+    }
 }
 
 
@@ -185,6 +193,15 @@ in the configuration, or the default user or group otherwise.  Also changes
 the real group and user IDs if the operating system supports it.
 
 On failure, causes the process to exit.
+
+=item B<exec_service>
+
+ Munin::Node::Service->exec_service($service);
+
+Replaces the current process with an instance of service $service running with 
+the correct environment and privileges.
+
+This function never returns.
 
 =back
 
