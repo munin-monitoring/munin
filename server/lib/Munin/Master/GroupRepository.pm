@@ -72,7 +72,7 @@ sub _process_host_section {
     my $group = $self->_process_group_section($group_definition, {});
     
     my $host_name = substr $definition, rindex($definition, ';')+1;
-    my $host =  Munin::Master::Host->new($host_name, $attributes);
+    my $host =  Munin::Master::Host->new($host_name, $group, $attributes);
     $group->add_host($host);
 
     return $host;
@@ -89,6 +89,17 @@ sub _extract_group_name_from_host_name {
         : substr $host_name, $dot_loc;
 }
 
+
+sub get_all_hosts {
+    my ($self) = @_;
+    
+    my @hosts = ();
+    for my $group (values %{$self->{groups}}) {
+        push @hosts, $group->get_all_hosts();
+    }
+                   
+    return @hosts;
+}
 
 1;
 

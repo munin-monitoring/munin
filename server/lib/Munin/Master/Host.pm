@@ -7,12 +7,13 @@ use Carp;
 
 
 sub new {
-    my ($class, $host_name, $attributes) = @_;
+    my ($class, $host_name, $group, $attributes) = @_;
 
     $attributes ||= {};
 
     my $self = {
         host_name => $host_name,
+        group     => $group,
         %$attributes,
     };
 

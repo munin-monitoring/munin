@@ -1,0 +1,152 @@
+#! /usr/bin/perl
+
+use warnings;
+use strict;
+
+use English qw(-no_match_vars);
+use Munin::Master::Update;
+use Munin::Master::Logger;
+use Munin::Master::Config;
+use Getopt::Long;
+use Pod::Usage;
+
+
+logger_debug();
+Getopt::Long::Configure(qw(auto_help));
+
+
+
+sub main {
+    exit_if_run_by_super_user();
+    configure();
+    my $update = Munin::Master::Update->new();
+    $update->run();
+
+    return 0;
+}
+
+
+sub configure {
+    my $config = Munin::Master::Config->instance();
+    my %args = parse_args();
+    $config->parse_config_from_file($args{config_file});
+    $config->set(\%args);
+
+    use Data::Dumper; warn Dumper($config);
+}
+
+
+sub parse_args {
+    my $do_usage = 0;
+    my $do_version = 0;
+
+    my %args = (
+        "version" => \&print_version_and_exit,
+    );
+
+    GetOptions (
+        \%args, 
+        "config_file=s",
+        "version!",
+    ) or pod2usage(1);
+
+    delete $args{version};
+
+    return %args;
+}
+
+
+sub print_version_and_exit {
+    print qq{munin-update version $Munin::Common::Defaults::MUNIN_VERSION.
+
+Copyright (C) 2002-2009 Redpill Linpro AS
+
+This is free software released under the GNU General Public
+License. There is NO warranty; not even for MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. For details, please refer to the file
+COPYING that is included with this software or refer to
+http://www.fsf.org/licensing/licenses/gpl.txt
+};
+    exit 0;
+}
+
+
+sub exit_if_run_by_super_user {
+    if ($EFFECTIVE_USER_ID == 0) {
+        print qq{This program will easily break if you run it as root as you are
+trying now.  Please run it as user '$Munin::Common::Defaults::MUNIN_USER'.  The correct 'su' command
+on many systems is 'su - munin --shell=/bin/bash'
+Aborting.
+};
+        exit 1;
+    }
+}
+
+exit main() unless caller;
+
+
+1;
+
+__END__
+
+=head1 NAME
+
+munin-update - A program to gather data from machines running munin-node
+
+
+=head1 SYNOPSIS
+
+munin-update [options]
+
+ Options:
+     --version               View version information.
+     --help                  View this message.
+     --config_file=<file>    Use <file> as configuration file. 
+
+
+=head1 OPTIONS
+
+=over 5
+
+=item B<< --config_file=<file> >>
+
+Use E<lt>fileE<gt> as the configuration file.
+
+=item B<< --help >>
+
+Print the help message then exit.
+
+=item B<< --version >>
+
+Print version information then exit.
+
+=back
+
+
+=head1 DESCRIPTION
+
+
+Munin-update is a part of the package Munin, which is used in
+combination with Munin's node.  Munin is a group of programs to gather
+data from Munin's nodes, graph them, create html-pages, and optionally
+warn Nagios about any off-limit values.
+
+Munin-update does the gathering. It is usually only used from within
+munin-cron.
+
+It contacts each host's munin-node in turn, gathers data from it, and
+stores them in .rrd-files. If necessary, it will create the rrd-files
+and the directories to store them in.
+
+
+=head1 COPYRIGHT
+
+Copyright © 2002-2009 Redpill Linpro AS
+
+This is free software; see the source for copying conditions. There is
+NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+
+This program is released under the GNU General Public License
+
+
