@@ -10,7 +10,7 @@ do_ () { # Fetch
     echo "$ATZ" | tr ' ' '\n' | awk -F'[ /\t]*' '{
          ZONE=$5
          getline < $0
-         print ZONE"_value "$2
+         print ZONE".value "$2
     }'
     exit 0
 }
