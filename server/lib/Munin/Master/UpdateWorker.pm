@@ -23,13 +23,14 @@ sub new {
 sub do_work {
     my ($self) = @_;
 
-    my $retval;
+    my $retval = {};
 
     $self->{node}->session(sub {
-        $self->{node}->negotiate_capabilities();
-        my @services = $self->{node}->list_services();
+        my @capabilities = $self->{node}->negotiate_capabilities();
+        my @services     = $self->{node}->list_services();
         
-        $retval = \@services;
+        $retval->{services}     = \@services;
+        $retval->{capabilities} = \@capabilities;
     });
 
     return $retval;

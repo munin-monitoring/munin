@@ -378,7 +378,7 @@ sub _net_read {
     else {
 	$_ = <STDIN>;
     }
-    logger("DEBUG: < $_") if $config->{DEBUG};
+    logger('DEBUG: < ' . (defined $_ ? $_ : 'undef')) if $config->{DEBUG};
     return $_;
 }
 

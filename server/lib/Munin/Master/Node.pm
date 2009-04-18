@@ -20,6 +20,8 @@ sub new {
         host    => $host,
         tls     => undef,
         socket  => undef,
+        master_capabilities => qw(foo),
+        io_timeout => 5,
     };
 
     return bless $self, $class;
@@ -55,7 +57,7 @@ sub _run_starttls_if_required {
     # TLS should only be attempted if explicitly enabled. The default
     # value is therefore "disabled" (and not "auto" as before).
     my $tls_requirement = $config->{tls};
-    logger("[DEBUG]: TLS set to \"$tls_requirement\".") if $config->{debug};
+    logger("[DEBUG] TLS set to \"$tls_requirement\".") if $config->{debug};
     return if $tls_requirement eq 'disabled';
     $self->{tls} = Munin::Common::TLSClient->new({
         DEBUG        => $config->{debug},
@@ -75,7 +77,7 @@ sub _run_starttls_if_required {
     if (!$self->{tls}->start_tls()) {
         $self->{tls} = undef;
         if ($tls_requirement eq "paranoid" or $tls_requirement eq "enabled") {
-            croak("[ERROR]: Could not establish TLS connection to '$self->{address}'. Skipping.");
+            croak("[ERROR] Could not establish TLS connection to '$self->{address}'. Skipping.");
         }
     }
 }
@@ -88,7 +90,25 @@ sub _do_close {
     $self->{socket} = undef;
 }
 
-sub negotiate_capabilities {}
+sub negotiate_capabilities {
+    my ($self) = @_;
+
+    $self->_write_socket_single("cap $self->{master_capabilities}\n");
+    my @lines = $self->_read_socket();
+
+    if (index($lines[0], '# Unknown command') == 0) {
+        return ('NA');
+    }
+
+    my $node_capabilities = substr $lines[0], 2, index($lines[0], ')');
+    my $session_capabilities = $lines[1];
+
+    logger("[DEBUG] $node_capabilities") if $config->{debug};
+    logger("[DEBUG] Session capabilities: $session_capabilities") 
+        if $config->{debug};
+
+    return split / /, $session_capabilities;
+}
 
 sub list_services {
     my ($self) = @_;
@@ -111,18 +131,18 @@ sub _write_socket_single {
     my ($self, $text) = @_;
 
     logger("[DEBUG] Writing to socket: \"$text\".") if $config->{debug};
-    my $timed_out = !do_with_timeout(5, sub { 
-	if ($self->{tls} && $self->{tls}->session_started()) {
-	    $self->{tls}->write($text)
+    my $timed_out = !do_with_timeout($self->{io_timeout}, sub { 
+        if ($self->{tls} && $self->{tls}->session_started()) {
+            $self->{tls}->write($text)
                 or exit 9;
-	}
-	else {
-	    print { $self->{socket} } $text;
-	}
+        }
+        else {
+            print { $self->{socket} } $text;
+        }
     });
     if ($timed_out) {
-	logger("[WARNING] Socket write timed out\n");
-	return;
+        logger("[WARNING] Socket write timed out\n");
+        return;
     }
     return 1;
 }
@@ -131,24 +151,50 @@ sub _read_socket_single {
     my ($self) = @_;
     my $res;
 
-    my $timed_out = !do_with_timeout(5, sub { 
+    my $timed_out = !do_with_timeout($self->{io_timeout}, sub { 
       if ($self->{tls} && $self->{tls}->session_started()) {
           $res = $self->{tls}->read();
       }
       else {
-	  $res = readline $self->{socket};
+          $res = readline $self->{socket};
       }
       chomp $res if defined $res;
     });
     if ($timed_out) {
-	logger("[WARNING] Socket read timed out\n");
-	return;
+        logger("[WARNING] Socket read timed out\n");
+        return;
     }
     logger("[DEBUG] Reading from socket: \"$res\".") if $config->{debug};
     return $res;
 }
 
+
+sub _read_socket {
+    my ($self) = @_;
+    my @array = (); 
+
+    my $timed_out = !do_with_timeout($self->{io_timeout}, sub { 
+        while (1) {
+            my $line = $self->{tls} && $self->{tls}->session_started()
+                ? $self->{tls}->read()
+                : readline $self->{socket};
+            last unless defined $line;
+            last if $line =~ /^\.\n$/;
+            chomp $line;
+            push @array, $line;
+        }
+    });
+    if ($timed_out) {
+        logger ("[WARNING] Socket read timed out: $@\n");
+        return;
+    }
+    logger ("[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".") if $config->{debug};
+    return @array;
+}
+
+
 1;
+
 
 __END__
 
