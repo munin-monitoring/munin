@@ -951,12 +951,15 @@ sub fetch_node_service {
 		logger ("[ERROR] Unable to update $service -> $key: No such field (no \"label\" field defined when running plugin with \"config\").");
 	    }
 	} elsif (/(\w+)\.extinfo\s+(.+)/) {
+            # FIX never used?
 	    munin_set_var_loc ($newconf, [$service, $service, $1, "extinfo"], $2);
 	}
     }
     return 1;
 }
 
+
+# FIX never called?
 sub fetch_node 
 {
     my ($newconf,$oldconf,$socket) = @_;

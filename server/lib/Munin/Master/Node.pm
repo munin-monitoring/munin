@@ -27,10 +27,11 @@ sub new {
     return bless $self, $class;
 }
 
-sub session {
+sub do_in_session {
     my ($self, $block) = @_;
 
     $self->_do_connect();
+    $self->_run_starttls_if_required();
     $block->();
     $self->_do_close();
 }
@@ -47,9 +48,8 @@ sub _do_connect {
     ) or croak "Failed to create socket: $!";
 
     my $greeting = $self->_node_read_single();
-
-    $self->_run_starttls_if_required();
 }
+
 
 sub _run_starttls_if_required {
     my ($self) = @_;
@@ -90,6 +90,7 @@ sub _do_close {
     $self->{socket} = undef;
 }
 
+
 sub negotiate_capabilities {
     my ($self) = @_;
 
@@ -110,6 +111,7 @@ sub negotiate_capabilities {
     return split / /, $session_capabilities;
 }
 
+
 sub list_services {
     my ($self) = @_;
     
@@ -119,10 +121,12 @@ sub list_services {
     return split / /, $list;
 }
 
+
 sub fetch_service_config {
     my ($self, $service) = @_;
 
-    logger("[DEBUG] Configuring service: $service") if $config->{debug};
+    logger("[DEBUG] Fetching service configuration for '$service'")
+        if $config->{debug};
     $self->_node_write_single("config $service\n");
 
     my @lines = $self->_node_read();
@@ -133,14 +137,11 @@ sub fetch_service_config {
     for my $line (@lines) {
         croak "Client reported timeout in configuration of '$service'"
             if $line =~ /\# timeout/;
-        
         next unless $line;
         next if $line =~ /^\#/;
         
-
         if ($line =~ m{\A (\w+)\.(\w+) \s+ (.+) }xms) {
             push @data_source_config, [$1, $2, $3];
-            # FIX sanitise $1 and $2 if label some where
             logger("config: $service->$1.$2 = $3") if $config->{debug};
             # FIX graph_order
         } 
@@ -154,7 +155,38 @@ sub fetch_service_config {
     return (global => \@global_config, data_source => \@data_source_config);
 }
 
-sub fetch_service_data {}
+
+sub fetch_service_data {
+    my ($self, $service) = @_;
+
+    $self->_node_write_single("fetch $service\n");
+    my @lines = $self->_node_read();
+
+    my @values = ();
+
+    for my $line (@lines) {
+        croak "Client reported timeout in configuration of '$service'"
+            if $line =~ /\# timeout/;
+        next unless $line;
+        next if $line =~ /^\#/;
+        
+        if ($line =~ m{ (\w+)\.value \s+ ([\S:]+) }xms) {
+            my ($data_source, $value, $when) = ($1, $2, 'N');
+
+	    if ($value =~ /^(\d+):(.+)$/) {
+		$when = $1;
+		$value = $2;
+	    }
+
+            push @values, [$data_source, $value, $when]
+        }
+        else {
+            croak "Protocol exception: unrecogniced line '$line'";
+        }
+    }
+
+    return @values;
+}
 
 
 sub _node_write_single {
