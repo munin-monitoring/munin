@@ -47,6 +47,7 @@ sub parse_args {
     GetOptions (
         \%args, 
         "config_file=s",
+        "debug!",
         "version!",
     ) or pod2usage(1);
 
@@ -99,6 +100,7 @@ munin-update - A program to gather data from machines running munin-node
 munin-update [options]
 
  Options:
+     --[no]debug             Enable [or disable] debug messages.
      --version               View version information.
      --help                  View this message.
      --config_file=<file>    Use <file> as configuration file. 
@@ -107,6 +109,10 @@ munin-update [options]
 =head1 OPTIONS
 
 =over 5
+
+=item B<< --[no]debug >>
+
+If set, log debug messages.
 
 =item B<< --config_file=<file> >>
 
@@ -148,5 +154,4 @@ NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
 PURPOSE.
 
 This program is released under the GNU General Public License
-
 

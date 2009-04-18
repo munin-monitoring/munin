@@ -15,11 +15,18 @@ use Munin::Common::Defaults;
         my ($class) = @_;
         
         $instance ||= bless {
-            config_file  => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf",
-            dbdir        => $Munin::Common::Defaults::MUNIN_DBDIR,
-            logdir       => $Munin::Common::Defaults::MUNIN_LOGDIR,
-            rundir       => $Munin::Common::Defaults::MUNIN_RUNDIR,
-            tmpldir      => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates",
+            config_file            => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf",
+            dbdir                  => $Munin::Common::Defaults::MUNIN_DBDIR,
+            debug                  => 0,
+            logdir                 => $Munin::Common::Defaults::MUNIN_LOGDIR,
+            rundir                 => $Munin::Common::Defaults::MUNIN_RUNDIR,
+            tls                    => 'disabled',
+            tls_ca_certificate     => "Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem",
+            tls_certificate        => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.pem",
+            tls_private_key        => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.pem",
+            tls_verify_certificate => "no",
+            tls_verify_depth       => 5,
+            tmpldir                => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates",
         }, $class;
         
         return $instance;

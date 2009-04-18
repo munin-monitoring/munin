@@ -26,7 +26,6 @@ sub do_work {
     my $retval;
 
     $self->{node}->session(sub {
-        $self->_run_starttls_if_required();
         $self->{node}->negotiate_capabilities();
         my @services = $self->{node}->list_services();
         
