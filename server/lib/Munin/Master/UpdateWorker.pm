@@ -5,6 +5,7 @@ use warnings;
 use strict;
 
 use Carp;
+use English qw(-no_match_vars);
 use Munin::Master::Node;
 
 sub new {
@@ -29,6 +30,19 @@ sub do_work {
         my @capabilities = $self->{node}->negotiate_capabilities();
         my @services     = $self->{node}->list_services();
         
+        for my $service (@services) {
+            eval {
+                my %service_config = $self->{node}->fetch_service_config($service);
+                use Data::Dumper; warn Dumper(\%service_config);
+
+            };
+            if ($EVAL_ERROR) {
+                # FIX use old config if exists, else stop all further
+                # processing og service
+            }
+
+        }
+
         $retval->{services}     = \@services;
         $retval->{capabilities} = \@capabilities;
     });

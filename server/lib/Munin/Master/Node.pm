@@ -46,7 +46,7 @@ sub _do_connect {
         Timeout   => 60,
     ) or croak "Failed to create socket: $!";
 
-    my $greeting = $self->_read_socket_single();
+    my $greeting = $self->_node_read_single();
 
     $self->_run_starttls_if_required();
 }
@@ -63,7 +63,7 @@ sub _run_starttls_if_required {
         DEBUG        => $config->{debug},
         logger       => \&logger,
         read_fd      => fileno($self->{socket}),
-        read_func    => sub { _read_socket_single($self) },
+        read_func    => sub { _node_read_single($self) },
         tls_ca_cert  => $config->{tls_ca_certificate},
         tls_cert     => $config->{tls_certificate},
         tls_paranoia => $tls_requirement, 
@@ -93,8 +93,8 @@ sub _do_close {
 sub negotiate_capabilities {
     my ($self) = @_;
 
-    $self->_write_socket_single("cap $self->{master_capabilities}\n");
-    my @lines = $self->_read_socket();
+    $self->_node_write_single("cap $self->{master_capabilities}\n");
+    my @lines = $self->_node_read();
 
     if (index($lines[0], '# Unknown command') == 0) {
         return ('NA');
@@ -113,21 +113,51 @@ sub negotiate_capabilities {
 sub list_services {
     my ($self) = @_;
     
-    $self->_write_socket_single("list\n"); # FIX specify which host
-    my $list = $self->_read_socket_single();
+    $self->_node_write_single("list\n"); # FIX specify which host
+    my $list = $self->_node_read_single();
     
     return split / /, $list;
 }
 
-sub fetch_service_config {}
+sub fetch_service_config {
+    my ($self, $service) = @_;
+
+    logger("[DEBUG] Configuring service: $service") if $config->{debug};
+    $self->_node_write_single("config $service\n");
+
+    my @lines = $self->_node_read();
+    
+    my @global_config = ();
+    my @data_source_config = ();
+
+    for my $line (@lines) {
+        croak "Client reported timeout in configuration of '$service'"
+            if $line =~ /\# timeout/;
+        
+        next unless $line;
+        next if $line =~ /^\#/;
+        
+
+        if ($line =~ m{\A (\w+)\.(\w+) \s+ (.+) }xms) {
+            push @data_source_config, [$1, $2, $3];
+            # FIX sanitise $1 and $2 if label some where
+            logger("config: $service->$1.$2 = $3") if $config->{debug};
+            # FIX graph_order
+        } 
+        elsif ($line =~ m{\A (\w+) \s+ (.+) }xms) {
+            push @global_config, [$1, $2];
+            logger ("Config: $service->$1 = $2") if $config->{debug};
+            # FIX graph_order
+        }
+    }
+
+    return (global => \@global_config, data_source => \@data_source_config);
+}
 
 sub fetch_service_data {}
 
-sub _starttls {}
 
-
-
-sub _write_socket_single {
+sub _node_write_single {
     my ($self, $text) = @_;
 
     logger("[DEBUG] Writing to socket: \"$text\".") if $config->{debug};
@@ -147,7 +177,7 @@ sub _write_socket_single {
     return 1;
 }
 
-sub _read_socket_single {
+sub _node_read_single {
     my ($self) = @_;
     my $res;
 
@@ -169,7 +199,7 @@ sub _read_socket_single {
 }
 
 
-sub _read_socket {
+sub _node_read {
     my ($self) = @_;
     my @array = (); 
 
