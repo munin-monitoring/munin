@@ -356,11 +356,10 @@ sub _read_service_result {
         }
     });
     if ($timed_out) {
-        my $msg = "Plugin timeout: $service $command: $@ (pid $child_pid) - killing...";
-        _net_write($session, $msg); 
-        logger($msg);
+        my $msg = "timeout: $service $command: $@ (pid $child_pid). Killing it";
+        _net_write($session, "# $msg\n"); 
+        logger("Plugin $msg");
         Munin::Node::OS->reap_child_group($child_pid);
-        _net_write($session, "# done \n"); 
     }
 
     return @lines;
