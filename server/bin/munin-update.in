@@ -684,8 +684,6 @@ sub config_and_fetch_node
     # Decide what to ask for
     if (munin_get ($newconf, "use_node_name")) {
 	$fetchdomain = $clientdomain;
-    } elsif (munin_get ($newconf, "use_default_name")) {
-	$fetchdomain = $clientdomain;
     } else {
 	$fetchdomain = $name;
     }
