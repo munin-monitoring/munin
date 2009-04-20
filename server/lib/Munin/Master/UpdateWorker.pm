@@ -66,7 +66,7 @@ __END__
 
 =head1 NAME
 
-FIX
+Munin::Master::UpdateWorker - FIX
 
 =head1 SYNOPSIS
 
@@ -74,5 +74,15 @@ FIX
 
 =head1 METHODS
 
+=over
+
+=item B<new>
+
 FIX
+
+=item B<do_work>
+
+FIX
+
+=back
 

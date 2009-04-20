@@ -108,7 +108,7 @@ __END__
 
 =head1 NAME
 
-FIX
+Munin::Master::GroupRepository - FIX
 
 =head1 SYNOPSIS
 
@@ -116,5 +116,15 @@ FIX
 
 =head1 METHODS
 
+=over
+
+=item B<new>
+
 FIX
+
+=item B<get_all_hosts>
+
+FIX
+
+=back
 
