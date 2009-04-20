@@ -35,13 +35,20 @@ __END__
 
 =head1 NAME
 
-FIX
+Manin::Master::Worker - Abstract base class for workers.
 
 =head1 SYNOPSIS
 
-FIX
+See L<Munin::Master::ProcessManager>.
 
 =head1 METHODS
 
+=over
+
+=item B<new>
+
 FIX
 
+=item B<to_string>
+
+FIX

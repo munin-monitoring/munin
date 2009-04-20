@@ -52,7 +52,7 @@ __END__
 
 =head1 NAME
 
-FIX
+Munin::Master::Group - Holds information on host groups.
 
 =head1 SYNOPSIS
 
@@ -60,5 +60,22 @@ FIX
 
 =head1 METHODS
 
+=over 
+
+=item B<new>
+
 FIX
 
+=item B<add_attributes>
+
+FIX
+
+=item B<add_host>
+
+FIX
+
+=item B<get_all_hosts>
+
+FIX
+
+=back

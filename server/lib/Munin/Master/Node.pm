@@ -265,13 +265,42 @@ __END__
 
 =head1 NAME
 
-FIX
+Munin::Master::Node - Provides easy access to the munin node
 
 =head1 SYNOPSIS
 
-FIX
+ use Munin::Master::Node;
+ my $node = Munin::Master::Node->new('localhost', '4949', 'foo');
+ $node->do_in_session(sub{
+     ... # Call misc. methods on $node
+ });
 
 =head1 METHODS
 
+=over
+
+=item B<new>
+
 FIX
 
+=item B<do_in_session>
+
+FIX
+
+=item B<negotiate_capabilities>
+
+FIX
+
+=item B<list_services>
+
+FIX
+
+=item B<fetch_service_config>
+
+FIX
+
+=item B<fetch_service_data>
+
+FIX
+
+=back

@@ -206,13 +206,37 @@ __END__
 
 =head1 NAME
 
-FIX
+Munin::Master::ProcessManager - Manager for parallell exeution of Workers.
 
 =head1 SYNOPSIS
+
+ use Munin::Master::ProcessManager;
+ my $pm = Munin::Master::ProcessManager->new(sub {
+     my ($res) = @_;
+     # Do something with $res ...
+ });
+ $pm->add_workers(...);
+ $pm->start_work();
+
+=head1 DESCRIPTION
 
 FIX
 
 =head1 METHODS
 
+=over
+
+=item B<new>
+
 FIX
+
+=item B<add_workers>
+
+FIX
+
+=item B<start_work>
+
+FIX
+
+=back
 

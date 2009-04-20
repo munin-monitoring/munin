@@ -85,7 +85,7 @@ __END__
 
 =head1 NAME
 
-FIX
+Munin::Master::Config - Holds the master configuration.
 
 =head1 SYNOPSIS
 
@@ -93,5 +93,22 @@ FIX
 
 =head1 METHODS
 
+=over
+
+=item B<instance>
+
 FIX
 
+=item B<parse_config>
+
+FIX
+
+=item B<set>
+
+FIX
+
+=item B<get_groups_and_hosts>
+
+FIX
+
+=back

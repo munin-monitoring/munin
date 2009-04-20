@@ -28,13 +28,24 @@ __END__
 
 =head1 NAME
 
-FIX
+Munin::Master::Host - Holds information on hosts we are interested in
+collection data from. 
 
 =head1 SYNOPSIS
 
 FIX
 
+=head1 DESCRIPTION
+
+Note that a host and a node is not the same thing. FIX elaborate
+
 =head1 METHODS
 
+=over
+
+=item B<new>
+
 FIX
+
+=back
 
