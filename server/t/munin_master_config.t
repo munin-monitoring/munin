@@ -12,7 +12,8 @@ my $config = Munin::Master::Config->instance();
 $config->parse_config(\*DATA);
 
 is_deeply($config,
-          {                                                                                                                                    
+          {
+              'debug' => 0,
               'tls_private_key' => '/opt/munin/common/t/tls/master_key.pem',                                                          
               'tls_ca_certificate' => '/opt/munin/common/t/tls/CA/ca_cert.pem',                                                       
               'rundir' => '/opt/munin/sandbox/var/run/munin',                                                                         
