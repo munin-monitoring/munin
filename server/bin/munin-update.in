@@ -303,7 +303,9 @@ sub do_some_work {
                 }
 
                 close STDIN;
+                ## no critic
                 open (STDIN,  "<&Client")  || die "can't dup client to stdin";
+                ## critic
 
                 my $pid;
                 my $name;

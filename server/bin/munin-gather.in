@@ -264,7 +264,9 @@ if ($do_fork) {
 
         alarm( $TIMEOUT - time() + $timeout_start );
         close STDIN;
+        ## no critic
         open( STDIN, "<&Client" ) or LOGCROAK("can't dup client to stdin");
+        ## critic
 
         my $pid;
         my $name;

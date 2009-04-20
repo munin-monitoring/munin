@@ -393,10 +393,12 @@ sub generate_service_message {
 	    }
 	    DEBUG ("Debug: opening \"$c\" for writing: \"" . join('" "',@cmd) . "\".");
 	    if ($cmd[0] eq ">") {
+                ## no critic
 		if (! open ($pipe, join (' ', @cmd))) {
 		    logger ("Fatal: Could not open " . join (' ', @cmd[1 .. $#cmd]) . " for writing: $!");
 		    exit 3;
 		}
+                ## critic
 	    } else {
 		my $pid = open ($pipe, "|-");
 		if (!defined $pid) {
