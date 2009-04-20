@@ -237,7 +237,7 @@ sub _tls_verify_callback {
             return 1;           # accept
         }
         
-        if (!($tls_verified->{"verify"} eq "yes")) {
+        if (!($tls_verified->{"verify"})) {
             $self->{logger}("[TLS] Certificate failed verification, but we aren't verifying.") if $self->{DEBUG};
             $tls_verified->{"verified"} = 1;
             return 1;

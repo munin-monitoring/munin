@@ -8,6 +8,13 @@ use English qw(-no_match_vars);
 use Carp;
 use Munin::Node::OS;
 
+
+my %booleans = map {$_ => 1} qw(
+    paranoia
+    tls_verify_certificate
+);
+
+
 {
     my $instance;
 
@@ -72,17 +79,18 @@ sub _parse_line {
 
     my %config_variables = map { $_ => 1} qw(
         ignore_file
+        paranoia
+        timeout
         tls
         tls_ca_certificate
         tls_certificate
         tls_private_key
         tls_verify_certificate
         tls_verify_depth
-        timeout
     );
 
     if ($config_variables{$var_name}) {
-        return ($var_name => $var_value);
+        return ($var_name => $booleans{$var_name} ? $self->_parse_bool($var_value) : $var_value);
     }
     elsif ($var_name eq 'host_name' || $var_name eq 'hostname') {
         return (fqdn => $var_value);
@@ -103,9 +111,6 @@ sub _parse_line {
     }
     elsif ($var_name eq 'allow' || $var_name eq 'deny') {
         return ('allow_deny' => [$var_name, $var_value]);
-    }
-    elsif ($var_name eq 'paranoia') {
-        return (paranoia => $self->_parse_bool($var_value))
     }
     else {
         return (unhandled => ($var_name => $var_value));

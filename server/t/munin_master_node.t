@@ -1,15 +1,18 @@
 use warnings;
 use strict;
 
+use Munin::Master::Config;
 use Test::More tests => 11;
 use Test::MockObject::Extends;
 use Test::Exception;
 
 use_ok('Munin::Master::Node');
 
+my $config = Munin::Master::Config->instance();
+$config->{node}{use_node_name} = 1;
 
 sub setup {
-    my $node = Munin::Master::Node->new();
+    my $node = Munin::Master::Node->new('127.0.0.1', 4949, 'node');
     my $node_mock = Test::MockObject::Extends->new($node);
     
     $node_mock->mock('_node_write_single', sub {});
@@ -93,6 +96,8 @@ sub setup {
 {
     my $node = setup();
     $node->mock('_node_read_single', sub { return 'foo bar baz'; });
+
+    $node->{node_name} = 'node';
 
     my @res = $node->list_services();
 

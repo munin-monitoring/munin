@@ -11,27 +11,27 @@ my $config = Munin::Master::Config->instance();
 
 $config->parse_config(\*DATA);
 
-is_deeply($config,
-          {
-              'debug' => 0,
-              'tls_private_key' => '/opt/munin/common/t/tls/master_key.pem',                                                          
-              'tls_ca_certificate' => '/opt/munin/common/t/tls/CA/ca_cert.pem',                                                       
-              'rundir' => '/opt/munin/sandbox/var/run/munin',                                                                         
-              'tls_certificate' => '/opt/munin/common/t/tls/master_cert.pem',                                                         
-              'config_file' => '../common/lib/Munin/Common/../../../t/config//munin.conf',                                                         
-              'logdir' => '/opt/munin/sandbox/var/log/munin',                                                                         
-              'htmldir' => '/opt/munin/sandbox/www',                                                                                  
-              'tls_verify_certificate' => 'yes',                                                                                                 
-              'tls' => 'disabled',                                                                                                               
-              'tmpldir' => '/opt/munin/sandbox/etc/opt/munin/templates',                                                              
-              'marvin' => {                                                                                                                      
-                  'use_node_name' => 'yes',                                                                                            
-                  'address' => '127.0.0.1',                                                                                            
-                  'port' => '4948'                                                                                                     
-              },                                                                                                                     
-              'dbdir' => '/opt/munin/sandbox/var/opt/munin',                                                                          
-              'tls_verify_depth' => '5'                                                                                                          
-          });
+is_deeply($config, {
+    'config_file' => '../common/lib/Munin/Common/../../../t/config//munin.conf',
+    'dbdir' => '/opt/munin/sandbox/var/opt/munin',
+    'debug' => 0,
+    'fork'  => 1,
+    'htmldir' => '/opt/munin/sandbox/www',
+    'logdir' => '/opt/munin/sandbox/var/log/munin',
+    'marvin' => {
+        'use_node_name' => 1,
+        'address' => '127.0.0.1',
+        'port' => '4948'
+    },
+    'rundir' => '/opt/munin/sandbox/var/run/munin',
+    'tls' => 'disabled',
+    'tls_ca_certificate' => '/opt/munin/common/t/tls/CA/ca_cert.pem',
+    'tls_certificate' => '/opt/munin/common/t/tls/master_cert.pem',
+    'tls_private_key' => '/opt/munin/common/t/tls/master_key.pem',
+    'tls_verify_certificate' => 1,
+    'tls_verify_depth' => '5',
+    'tmpldir' => '/opt/munin/sandbox/etc/opt/munin/templates',
+});
 
 __DATA__
 
@@ -58,7 +58,7 @@ tmpldir	/opt/munin/sandbox/etc/opt/munin/templates
 #
 #graph_strategy cgi
 
-# Drop somejuser@fnord.comm and anotheruser@blibb.comm an email everytime 
+# Drop somejuser@fnord.comm and anotheruser@blibb.comm an email everytime
 # something changes (OK -> WARNING, CRITICAL -> OK, etc)
 #contact.someuser.command mail -s "Munin notification" somejuser@fnord.comm
 #contact.anotheruser.command mail -s "Munin notification" anotheruser@blibb.comm

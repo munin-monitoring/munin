@@ -48,8 +48,20 @@ sub _strip_comment {
 }
 
 
+sub _looks_like_a_bool {
+    my ($class, $str) = @_;
+
+    my %bools = map { $_ => 1} qw(yes no true false on off 1 0);
+
+    return $bools{$str};
+}
+
+
 sub _parse_bool {
     my ($class, $str) = @_;
+
+    croak "Parse exception: '$str' is not a bool." 
+        unless $class->_looks_like_a_bool($str);
 
     return $str =~ m{\A no|false|off|0 \z}xms ? 0 : 1;
 }

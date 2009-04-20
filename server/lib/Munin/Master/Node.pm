@@ -48,6 +48,16 @@ sub _do_connect {
     ) or croak "Failed to create socket: $!";
 
     my $greeting = $self->_node_read_single();
+    $self->{node_name} = $self->_extract_name_from_greeting($greeting);
+}
+
+
+sub _extract_name_from_greeting {
+    my ($self, $greeting) = @_;
+    croak "Got no reply from node" unless $greeting;
+    $greeting =~ /\#.*(?:lrrd|munin) (?:client|node) at (\S+)/
+        or croak "Got unknown reply from node";
+    return $1;
 }
 
 
@@ -115,7 +125,13 @@ sub negotiate_capabilities {
 sub list_services {
     my ($self) = @_;
     
-    $self->_node_write_single("list\n"); # FIX specify which host
+    my $host = $config->{$self->{host}}{use_node_name} 
+        ? $self->{node_name}
+        : $self->{host};
+
+    croak "Couldn't find out which host to list" unless $host;
+
+    $self->_node_write_single("list $self->{host}\n");
     my $list = $self->_node_read_single();
     
     return split / /, $list;

@@ -8,6 +8,15 @@ use Carp;
 use English qw(-no_match_vars);
 use Munin::Common::Defaults;
 
+
+my %booleans = map {$_ => 1} qw(
+    debug
+    fork
+    tls_verify_certificate
+    use_node_name
+);
+
+
 {
     my $instance;
 
@@ -25,7 +34,7 @@ use Munin::Common::Defaults;
             tls_ca_certificate     => "Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem",
             tls_certificate        => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.pem",
             tls_private_key        => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.pem",
-            tls_verify_certificate => "no",
+            tls_verify_certificate => 0,
             tls_verify_depth       => 5,
             tmpldir                => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates",
         }, $class;
@@ -50,7 +59,7 @@ sub parse_config {
             $section = $self->{$1};
         }
         elsif ($line =~ m { \A \s* (\S+) \s+ (.*) }xms) {
-            $section->{$1} = $2;
+            $section->{$1} = $booleans{$1} ? $self->_parse_bool($2) : $2;
         }
         else {
             croak "Parse error: $line";
