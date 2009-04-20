@@ -164,7 +164,6 @@ Options:
     			[$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf]
     --[no]debug		View debug messages. [--nodebug]
     --[no]fork		Don't fork one instance for each host. [--fork]
-    --[no]stdout	Print log messages to stdout as well. [--nostdout]
     --timeout=<seconds>	TCP timeout when talking to clients. [$timeout]
 
 };
@@ -1104,10 +1103,6 @@ If set, view debug messages. [--nodebug]
 =item B<< --[no]fork >>
 
 If set, will fork off one process for each host. [--fork]
-
-=item B<< --[no]stdout >>
-
-If set, will print log messages to stdout as well as syslog. [--nostdout]
 
 =item B<< --timeout <seconds> >>
 
