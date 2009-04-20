@@ -150,6 +150,9 @@ sub fetch_service_config {
             logger ("Config: $service->$1 = $2") if $config->{debug};
             # FIX graph_order
         }
+        else {
+            croak "Protocol exception: unrecogniced line '$line'";
+        }
     }
 
     return (global => \@global_config, data_source => \@data_source_config);
