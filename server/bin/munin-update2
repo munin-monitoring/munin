@@ -48,6 +48,7 @@ sub parse_args {
         \%args, 
         "config_file=s",
         "debug!",
+        "fork!",
         "version!",
     ) or pod2usage(1);
 
@@ -102,6 +103,8 @@ munin-update [options]
  Options:
      --[no]debug             Enable [or disable] debug messages.
      --version               View version information.
+     --[no]fork              Query hosts in parallell (--fork), or 
+                             sequentially (--nofork). [--fork]
      --help                  View this message.
      --config_file=<file>    Use <file> as configuration file. 
 
@@ -112,11 +115,15 @@ munin-update [options]
 
 =item B<< --[no]debug >>
 
-If set, log debug messages.
+If set, log debug messages. [--nodebug]
 
 =item B<< --config_file=<file> >>
 
 Use E<lt>fileE<gt> as the configuration file.
+
+=item B<< --[no]fork >>
+
+If set, will fork off one process for each host. [--fork]
 
 =item B<< --help >>
 

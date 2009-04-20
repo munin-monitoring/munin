@@ -18,6 +18,7 @@ use Munin::Common::Defaults;
             config_file            => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf",
             dbdir                  => $Munin::Common::Defaults::MUNIN_DBDIR,
             debug                  => 0,
+            fork                   => 1,
             logdir                 => $Munin::Common::Defaults::MUNIN_LOGDIR,
             rundir                 => $Munin::Common::Defaults::MUNIN_RUNDIR,
             tls                    => 'disabled',

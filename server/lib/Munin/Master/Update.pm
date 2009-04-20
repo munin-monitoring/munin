@@ -11,14 +11,13 @@ use Munin::Master::ProcessManager;
 use Munin::Master::Utils;
 
 
+my $config = Munin::Master::Config->instance();
+
+
 sub new {
     my ($class) = @_;
 
-    my $self = {
-        config => Munin::Master::Config->instance(),
-    };
-
-    return bless $self, $class;
+    return bless {}, $class;
 }
 
 
@@ -26,16 +25,27 @@ sub run {
     my ($self) = @_;
     
     $self->_create_rundir_if_missing();
-    my %gah = $self->{config}->get_groups_and_hosts();
+    my %gah = $config->get_groups_and_hosts();
     my $gr  = Munin::Master::GroupRepository->new(\%gah);
 
     my @hosts = $gr->get_all_hosts();
     my @workers = map { Munin::Master::UpdateWorker->new($_) } @hosts;
-    my $pm = Munin::Master::ProcessManager->new(sub { use Data::Dumper; warn Dumper(\@_); });
-    $pm->add_workers(@workers);
 
-    $self->_do_locked("$self->{config}{rundir}/munin-update.lock", sub {
-        $pm->start_work();
+
+    $self->_do_locked("$config->{rundir}/munin-update.lock", sub {
+        if ($config->{fork}) {
+            my $pm = Munin::Master::ProcessManager->new(sub {
+                use Data::Dumper; warn Dumper(\@_); 
+            });
+            $pm->add_workers(@workers);
+            $pm->start_work();
+        }
+        else {
+            for my $worker (@workers) {
+                my $res = $worker->do_work();
+                use Data::Dumper; warn Dumper($res);
+            }
+        }
     });
 }
 
@@ -43,8 +53,8 @@ sub run {
 sub _create_rundir_if_missing {
     my ($self) = @_;
 
-    unless (-d $self->{config}{rundir}) {
-	mkdir $self->{config}{rundir}, oct(700)
+    unless (-d $config->{rundir}) {
+	mkdir $config->{rundir}, oct(700)
             or croak "Failed to create rundir: $!";
         
     }
@@ -69,7 +79,7 @@ __END__
 
 =head1 NAME
 
-FIX
+Munin::Master::Update - FIX
 
 =head1 SYNOPSIS
 
@@ -77,5 +87,15 @@ FIX
 
 =head1 METHODS
 
+=over
+
+=item B<new>
+
 FIX
+
+=item B<run>
+
+FIX
+
+=back
 
