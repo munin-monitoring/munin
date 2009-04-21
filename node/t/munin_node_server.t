@@ -23,7 +23,9 @@ use warnings;
         capabilities => {
             foo => 1,
         },
-    });
+    },
+
+    "Negotiate a single capability");
 }
 
 {
@@ -33,7 +35,9 @@ use warnings;
     is_deeply($session, {
         capabilities => {
         },
-    });
+    },
+    
+    "No capabilities offered");
 }
 
 {
@@ -44,7 +48,9 @@ use warnings;
         capabilities => {
             foo => 1,
         },
-    });
+    },
+    
+    "Ignore unknown capability");
 }
 
 
