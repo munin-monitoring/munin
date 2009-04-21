@@ -46,19 +46,13 @@ sub _final_char_is {
 sub _process_group_section {
     my ($self, $definition, $attributes) = @_;
 
-    my $parent = $self;
-
     chop $definition if $self->_final_char_is(';', $definition);
 
     croak "Invalid group section definition" unless length $definition;
 
-    for my $group_name (split /;/, $definition) {
-        $parent->{groups}{$group_name} ||= Munin::Master::Group->new($group_name, $parent);
-        $parent = $parent->{groups}{$group_name};
-    }
-
-    $parent->add_attributes($attributes);
-    return $parent;
+    $self->{groups}{$definition} ||= Munin::Master::Group->new($definition);
+    $self->{groups}{$definition}->add_attributes($attributes);
+    return $self->{groups}{$definition};
 }
 
 
