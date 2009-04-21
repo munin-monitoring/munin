@@ -148,7 +148,7 @@ sub fetch_service_config {
     my @lines = $self->_node_read();
     
     my @global_config = ();
-    my @data_source_config = ();
+    my %data_source_config = ();
 
     for my $line (@lines) {
         croak "Client reported timeout in configuration of '$service'"
@@ -157,7 +157,8 @@ sub fetch_service_config {
         next if $line =~ /^\#/;
         
         if ($line =~ m{\A (\w+)\.(\w+) \s+ (.+) }xms) {
-            push @data_source_config, [$1, $2, $3];
+            $data_source_config{$1} ||= {};
+            $data_source_config{$1}{$2} = $3;
             logger("config: $service->$1.$2 = $3") if $config->{debug};
             # FIX graph_order
         } 
@@ -171,7 +172,7 @@ sub fetch_service_config {
         }
     }
 
-    return (global => \@global_config, data_source => \@data_source_config);
+    return (global => \@global_config, data_source => \%data_source_config);
 }
 
 
