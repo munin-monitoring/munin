@@ -124,11 +124,19 @@ sub main
     # of plugins.
     $ENV{'LC_ALL'}='C';
 
-    load_services();
+    load_service_configs();
+    
+    get_service_list();
+
+    print "file: '$plugin'\n" if $config->{DEBUG};
+    run_service($plugin, $arg);
+
+    # Never reached, but just in case...
+    exit 42;
 }
 
 
-sub load_services
+sub load_service_configs
 {
     if ($config->{sconffile}) {
         $config->parse_plugin_config_file($config->{sconffile});
@@ -138,14 +146,6 @@ sub load_services
     }
 
     $config->apply_wildcards();
-
-    get_service_list();
-
-    print "file: '$plugin'\n" if $config->{DEBUG};
-    run_service($plugin, $arg);
-
-    # Never reached, but just in case...
-    exit 42;
 }
 
 
@@ -160,14 +160,13 @@ sub get_service_list
     }
 
     close($DIR);
-
-    return \%services;
 }
 
 
 sub run_service {
     my ($service,$command) = @_;
-    $command ||="";
+    
+    $command ||= '';
 
     if ($services{$service}) {
         # no need for a timeout -- the user can kill this process any 
@@ -269,7 +268,7 @@ __END__
 
 =head1 NAME
 
-munin-run - A program to run munin-node plugins from the command line
+munin-run - A program to run Munin plugins from the command line
 
 =head1 SYNOPSIS
 
@@ -293,19 +292,28 @@ Use E<lt>dirE<gt> as plugin configuration dir. [@@CONFDIR@@/plugin-conf.d/]
 
 =item B<< --sconffile <file> >>
 
-Use E<lt>fileE<gt> as plugin configuration. [undefined]
+Use E<lt>fileE<gt> as plugin configuration. Overrides sconfdir.  [undefined]
 
-=item B< --help >
+=item B<--paranoia >
+
+Only run plugins owned by root. Check permissions.  [disabled]
+
+=item B<--help >
 
 View this help message.
 
-=item B< --debug >
+=item B<--debug >
 
 Print debug messages.  Debug messages are sent to STDOUT and are
 prefixed with "#" (this makes it easier for other parts of munin to
 use munin-run and still have --debug on).  Only errors go to STDERR.
 
-=item B< --version >
+=item B<--pidebug >
+
+Plugin debug.  Sets the environment variable MUNIN_DEBUG to 1 so 
+that plugins may enable debugging.  [disabled]
+
+=item B<--version >
 
 Show version information.
 
@@ -314,13 +322,12 @@ Show version information.
 =head1 DESCRIPTION
 
 Munin-node is a daemon that Munin connects to fetch data.  This data
-is stored in .rrd-files on the central server , and later graphed and
+is stored in RRD files on the central server, and later graphed and
 htmlified.
 
-munin-run is a perlscript to run the plugins used by the munin-node
-daemon from the command line.  It's helpful to debug plugins as they
-are run the same way with the same user and same environment settings
-as within the munin-node.
+munin-run is a Perl script to run Munin plugins from the command-line.  
+It's useful when debugging plugins, as they are run the same way with 
+the same user and same environment settings as within the munin-node.
 
 For more information, see the documentation section at
 L<http://munin.sf.net/>.
@@ -343,13 +350,11 @@ Audun Ytterdal, Jimmy Olsen, Tore Anderson, Nicolai Langfeldt.
 
 =head1 BUGS
 
-munin-node does, as of now, not check the syntax of the configuration file.
-
 Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
 =head1 COPYRIGHT
 
-Copyright (C) 2002-2006 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
+Copyright (C) 2002-2009 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
 Nicolai Langfeldt / Linpro AS.
 
 This is free software; see the source for copying conditions. There is
