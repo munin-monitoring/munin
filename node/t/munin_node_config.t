@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 36;
+use Test::More tests => 37;
 
 use FindBin;
 use English qw(-no_match_vars);
@@ -130,8 +130,12 @@ isa_ok($conf, 'Munin::Node::Config');
     $conf->reinitialize($expected);
     is_deeply($conf, $expected, "Reinitialize with new values");
 
+    my $oldconf = $conf;
+    
     $conf->reinitialize();
     is_deeply($conf, {}, "Reinitialize to empty state");
+
+    is($conf, $oldconf, "Reinitialize preserves config references");
 }
 
 
@@ -179,12 +183,12 @@ isa_ok($conf, 'Munin::Node::Config');
     $conf->reinitialize();
 
     $conf->_add_allow_deny_rule(['deny', 'foo']);
-    is_deeply($conf, {allow_deny => [['deny', 'foo']]});
+    is_deeply($conf, {allow_deny => [['deny', 'foo']]}, "Parsing a 'deny' rule");
 
     eval {
         $conf->_add_allow_deny_rule(['allow', 'foo']);
     };
-    like($EVAL_ERROR, qr/You can't mix allow and deny/);
+    like($EVAL_ERROR, qr/You can't mix allow and deny/, "'allow' rule cannot be added to a 'deny' ruleset");
 }
 
 
@@ -192,12 +196,12 @@ isa_ok($conf, 'Munin::Node::Config');
     $conf->reinitialize();
 
     $conf->_add_allow_deny_rule(['allow', 'foo']);
-    is_deeply($conf, {allow_deny => [['allow', 'foo']]});
+    is_deeply($conf, {allow_deny => [['allow', 'foo']]}, "Parsing an 'allow' rule");
 
     eval {
         $conf->_add_allow_deny_rule(['deny', 'foo']);
     };
-    like($EVAL_ERROR, qr/You can't mix allow and deny/);
+    like($EVAL_ERROR, qr/You can't mix allow and deny/, "'deny' rule cannot be added to an 'allow' ruleset");
 }
 
 
