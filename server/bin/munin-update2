@@ -10,15 +10,17 @@ use Munin::Master::Config;
 use Getopt::Long;
 use Pod::Usage;
 
-
-logger_debug();
 Getopt::Long::Configure(qw(auto_help));
 
+my $config = Munin::Master::Config->instance();
 
 
 sub main {
     exit_if_run_by_super_user();
     configure();
+
+    logger_debug() if ($config->{debug});
+
     my $update = Munin::Master::Update->new();
     $update->run();
 
@@ -27,7 +29,6 @@ sub main {
 
 
 sub configure {
-    my $config = Munin::Master::Config->instance();
     my %args = parse_args();
     $config->parse_config_from_file($args{config_file});
     $config->set(\%args);
@@ -46,6 +47,8 @@ sub parse_args {
 
     GetOptions (
         \%args, 
+        "host=s@",
+        "service=s@",
         "config_file=s",
         "debug!",
         "fork!",
@@ -53,6 +56,12 @@ sub parse_args {
     ) or pod2usage(1);
 
     delete $args{version};
+
+    $args{limit_hosts} = { map { $_ => 1 } @{$args{host}} };
+    delete $args{host};
+
+    $args{limit_services} = { map { $_ => 1 } @{$args{service}} };;
+    delete $args{service};
 
     return %args;
 }
@@ -101,6 +110,10 @@ munin-update - A program to gather data from machines running munin-node
 munin-update [options]
 
  Options:
+     --service <service>     Limit graphed services to <service>. Multiple
+ 			     --service options may be supplied.
+     --host <host>	     Limit graphed hosts to <host>. Multiple --host 
+                             options may be supplied.
      --[no]debug             Enable [or disable] debug messages.
      --version               View version information.
      --[no]fork              Query hosts in parallell (--fork), or 
@@ -112,6 +125,14 @@ munin-update [options]
 =head1 OPTIONS
 
 =over 5
+
+=item B<< --service <service> >>
+
+Limit fetched data to those of E<lt>serviceE<gt>. Multiple --service options may be supplied. [unset]
+
+=item B<< --host <host> >>
+
+Limit fetched data to those from E<lt>host<gt>. Multiple --host options may be supplied. [unset]
 
 =item B<< --[no]debug >>
 

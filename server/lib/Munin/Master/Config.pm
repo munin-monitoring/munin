@@ -37,6 +37,7 @@ my %booleans = map {$_ => 1} qw(
             tls_verify_certificate => 0,
             tls_verify_depth       => 5,
             tmpldir                => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates",
+            groups_and_hosts       => {},
         }, $class;
         
         return $instance;
@@ -55,8 +56,8 @@ sub parse_config {
         next unless length $line;
         
         if ($line =~ m{\A \[ ([^]]+) \] \s* \z}xms) {
-            $self->{$1} ||= {};
-            $section = $self->{$1};
+            $self->{groups_and_hosts}{$1} ||= {};
+            $section = $self->{groups_and_hosts}{$1};
         }
         elsif ($line =~ m { \A \s* (\S+) \s+ (.*) }xms) {
             $section->{$1} = $booleans{$1} ? $self->_parse_bool($2) : $2;
@@ -71,11 +72,7 @@ sub parse_config {
 sub get_groups_and_hosts {
     my ($self) = @_;
     
-    my %groups_and_hosts = ();
-    while (my ($key, $val) = each %$self) {
-        $groups_and_hosts{$key} = $val if ref $val eq 'HASH';
-    }
-    return %groups_and_hosts;
+    return %{$self->{groups_and_hosts}};
 }
 
 

@@ -128,7 +128,7 @@ sub negotiate_capabilities {
 sub list_services {
     my ($self) = @_;
     
-    my $host = $config->{$self->{host}}{use_node_name} 
+    my $host = $config->{groups_and_hosts}{$self->{host}}{use_node_name} 
         ? $self->{node_name}
         : $self->{host};
 

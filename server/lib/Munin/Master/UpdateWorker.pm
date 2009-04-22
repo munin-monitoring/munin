@@ -37,6 +37,10 @@ sub do_work {
         my @services = $self->{node}->list_services();
         
         for my $service (@services) {
+            if (%{$config->{limit_services}}) {
+                next unless $config->{limit_services}{$service};
+            }
+
             my %service_config = eval {
                 $self->{node}->fetch_service_config($service);
             };

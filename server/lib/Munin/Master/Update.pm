@@ -25,12 +25,7 @@ sub run {
     my ($self) = @_;
     
     $self->_create_rundir_if_missing();
-    my %gah = $config->get_groups_and_hosts();
-    my $gr  = Munin::Master::GroupRepository->new(\%gah);
-
-    my @hosts = $gr->get_all_hosts();
-    my @workers = map { Munin::Master::UpdateWorker->new($_) } @hosts;
-
+    my @workers = $self->_create_workers();
 
     $self->_do_locked("$config->{rundir}/munin-update.lock", sub {
         if ($config->{fork}) {
@@ -58,6 +53,22 @@ sub _create_rundir_if_missing {
             or croak "Failed to create rundir: $!";
         
     }
+}
+
+
+sub _create_workers {
+    my ($self) = @_;
+
+    my %gah = $config->get_groups_and_hosts();
+    my $gr  = Munin::Master::GroupRepository->new(\%gah);
+
+    my @hosts = $gr->get_all_hosts();
+
+    if (%{$config->{limit_hosts}}) {
+        @hosts = grep { $config->{limit_hosts}{$_->{host_name}} } @hosts
+    }
+
+    return map { Munin::Master::UpdateWorker->new($_) } @hosts;
 }
 
 
