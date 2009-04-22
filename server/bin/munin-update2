@@ -140,7 +140,7 @@ If set, log debug messages. [--nodebug]
 
 =item B<< --config_file=<file> >>
 
-Use E<lt>fileE<gt> as the configuration file.
+Use E<lt>fileE<gt> as the configuration file. [@@CONFDIR@@/munin.conf]
 
 =item B<< --[no]fork >>
 
@@ -173,6 +173,27 @@ stores them in .rrd-files. If necessary, it will create the rrd-files
 and the directories to store them in.
 
 
+=head1 FILES
+
+	@@CONFDIR@@/munin.conf
+	@@DBDIR@@/*
+	@@LOGDIR@@/munin-update
+	@@STATEDIR@@/*
+
+
+=head1 BUGS
+
+For a list of bugs concerning munin-update, see FIX<point to right
+ticket report>.
+
+Please report bugs in the bug tracker at L<http://munin.projects.linpro.no/>.
+
+
+=head1 AUTHORS
+
+The Munin Team. FIX
+
+
 =head1 COPYRIGHT
 
 Copyright © 2002-2009 Redpill Linpro AS
@@ -181,5 +202,5 @@ This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
 PURPOSE.
 
-This program is released under the GNU General Public License
+This program is released under the GNU General Public License.
 

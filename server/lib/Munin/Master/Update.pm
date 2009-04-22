@@ -90,11 +90,13 @@ __END__
 
 =head1 NAME
 
-Munin::Master::Update - FIX
+Munin::Master::Update - Contacts Munin Nodes, gathers data from
+service data sources, and stores this information in RRD files.
 
 =head1 SYNOPSIS
 
-FIX
+ my $update = Munin::Master::Update->new();
+ $update->run();
 
 =head1 METHODS
 
@@ -102,11 +104,15 @@ FIX
 
 =item B<new>
 
-FIX
+ my $update = Munin::Master::Update->new();
+
+Constructor.
 
 =item B<run>
 
-FIX
+ $update->run();
+
+This is where all the work gets done.
 
 =back
 
