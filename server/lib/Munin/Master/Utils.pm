@@ -99,10 +99,12 @@ my @COPY_FIELDS    = ("label", "draw", "type", "rrdfile", "fieldname", "info");
 my @dircomponents = split('/',$0);
 my $me = pop(@dircomponents);
 
+
 sub munin_trend {
     my (@array) = @_;
     return ($array[$#array] - $array[0]);
 }
+
 
 sub munin_fetch {
     my ($file,$last,$type) = @_;
@@ -117,12 +119,7 @@ sub munin_fetch {
     return @array;
 }
 
-# munin_draw_field: Check whether a field will be visible in the graph or not
-# Parameters:
-# - $hash: A ref to the hash node for the field
-# Returns:
-# - Success: Boolean; true if field will be graphed, false if not
-# - Failure: undef
+
 sub munin_draw_field {
     my $hash   = shift;
 
@@ -130,6 +127,7 @@ sub munin_draw_field {
     return 0 if !munin_get_bool ($hash, "graph", 1);
     return defined $hash->{"label"};
 }
+
 
 sub munin_nscasend {
     my ($name,$service,$label,$level,$comment) = @_;
@@ -150,6 +148,7 @@ sub munin_nscasend {
     }
 }
 
+
 sub munin_createlock {
     # Create lock file, fail and die if not possible.
     my ($lockname) = @_;
@@ -163,6 +162,7 @@ sub munin_createlock {
     }
 }
 
+
 sub munin_removelock {
     # Remove lock or die trying.
     my ($lockname) = @_;
@@ -171,6 +171,7 @@ sub munin_removelock {
       LOGCROAK("Error deleting lock $lockname: $!\n");
 }
 
+
 sub munin_runlock {
     my ($lockname) = @_;
     unless (&munin_getlock($lockname)) {
@@ -178,6 +179,7 @@ sub munin_runlock {
     }
     return 1;
 }
+
 
 sub munin_getlock {
     my ($lockname) = @_;
@@ -206,6 +208,7 @@ sub munin_getlock {
     return 1;
 }
 
+
 sub munin_delete {
     my ($config,$data) = @_;
     for my $domain (keys %{$data->{domain}}) {
@@ -226,9 +229,6 @@ sub munin_delete {
 
 
 sub munin_overwrite {
-    # Take contents of one config-namespace and replace/insert the
-    # instances needed.
-
     my ($configfile,$overwrite) = @_;
     for my $key (keys %$overwrite) {
         next if $key =~ /^#%#/;
@@ -239,6 +239,7 @@ sub munin_overwrite {
     }
     return ($configfile);
 }
+
 
 sub munin_readconfig {
     my ($conf, $missingok, $corruptok) = @_;
@@ -268,6 +269,7 @@ sub munin_readconfig {
 
     return ($config);
 }
+
 
 sub munin_parse_config
 {
@@ -383,14 +385,6 @@ sub munin_get_var_path
 }
 
  
-# munin_find_field: Search a hash to find nodes with $field defined
-# Parameters: 
-# - $hash: A hash ref to search
-# - $field: The name of the field to search for, or a regex
-# - $avoid: [optional] Stop traversing further down if this field is found
-# Returns:
-# - Success: A ref to an array of the hash nodes containing $field.
-# - Failure: undef
 sub munin_find_field {
     my $hash  = shift;
     my $field = shift;
@@ -416,12 +410,7 @@ sub munin_find_field {
     return $res;
 }
 
-# munin_get_children: Get all child hash nodes
-# Parameters: 
-# - $hash: A hash ref to the parent node
-# Returns:
-# - Success: A ref to an array of the child nodes
-# - Failure: undef
+
 sub munin_get_children {
     my $hash  = shift;
     my $res = [];
@@ -438,12 +427,7 @@ sub munin_get_children {
     return $res;
 }
 
-# munin_get_separated_node: Copy a node to a separate node without "specials"
-# Parameters:
-# - $hash: The node to copy
-# Returns:
-# - Success: A ref to a new node without "#%#"-fields
-# - Failure: undef
+
 sub munin_get_separated_node
 {
     my $hash = shift;
@@ -465,12 +449,7 @@ sub munin_get_separated_node
     return $ret;
 }
 
-# munin_get_parent_name: Return the name of the parent of the hash node supplied
-# Parameters: 
-# - $hash: A ref to the hash node
-# Returns:
-# - Success: The name of the parent node
-# - Failure: If no parent node exists, "none" is returned.
+
 sub munin_get_parent_name
 {
     my $hash = shift;
@@ -482,11 +461,7 @@ sub munin_get_parent_name
     }
 }
 
-# munin_get_node_name: Return the name of the hash node supplied
-# Parameters: 
-# - $hash: A ref to the hash node
-# Returns:
-# - Success: The name of the node
+
 sub munin_get_node_name
 {
     my $hash = shift;
@@ -499,14 +474,6 @@ sub munin_get_node_name
 }
 
 
-# munin_get_picture_loc: Get location array for hash node for picture # 
-#                        purposes. Differs from munin_get_node_loc in that it
-#                        honors #%#origin metadata 
-# Parameters: 
-# - $hash: A ref to the node
-# Returns:
-# - Success: Ref to an array with the full path of the variable
-# - Failure: undef
 sub munin_get_picture_loc {
     my $hash = shift;
     my $res = [];
@@ -522,12 +489,8 @@ sub munin_get_picture_loc {
     }
     return $res;
 }
-# munin_get_node_loc: Get location array for hash node
-# Parameters: 
-# - $hash: A ref to the node
-# Returns:
-# - Success: Ref to an array with the full path of the variable
-# - Failure: undef
+
+
 sub munin_get_node_loc {
     my $hash = shift;
     my $res = [];
@@ -542,12 +505,7 @@ sub munin_get_node_loc {
     return $res;
 }
 
-# munin_get_parent: Get parent node of a hash
-# Parameters: 
-# - $hash: A ref to the node
-# Returns:
-# - Success: Ref to an parent
-# - Failure: undef
+
 sub munin_get_parent {
     my $hash = shift;
 
@@ -561,13 +519,7 @@ sub munin_get_parent {
     }
 }
 
-# munin_get_node: Gets a node by loc
-# Parameters:
-# - $hash: A ref to the hash to set the variable in
-# - $loc: A ref to an array with the full path of the node
-# Returns:
-# - Success: The node ref found by $loc
-# - Failure: undef
+
 sub munin_get_node
 {
     my $hash = shift;
@@ -586,14 +538,6 @@ sub munin_get_node
     return $hash;
 }
 
-# munin_set: sets a variable in a hash
-# Parameters: 
-# - $hash: A ref to the hash to set the variable in
-# - $var: The name of the variable
-# - $val: The value to set the variable to
-# Returns:
-# - Success: The $hash we were handed
-# - Failure: undef
 sub munin_set {
     my $hash = shift;
     my $var  = shift;
@@ -602,14 +546,7 @@ sub munin_set {
     return munin_set_var_loc ($hash, [$var], $val);
 }
 
-# munin_set_var_loc: sets a variable in a hash
-# Parameters: 
-# - $hash: A ref to the hash to set the variable in
-# - $loc: A ref to an array with the full path of the variable
-# - $val: The value to set the variable to
-# Returns:
-# - Success: The $hash we were handed
-# - Failure: undef
+
 sub munin_set_var_loc
 {
     my $hash = shift;
@@ -637,13 +574,7 @@ sub munin_set_var_loc
     }
 }
 
-# munin_get_node_partialpath: gets a node from a partial path
-# Parameters: 
-# - $hash: A ref to the "current" location in the hash tree
-# - $var: A path string with relative location (from the $hash).
-# Returns:
-# - Success: The node
-# - Failure: undef
+
 sub munin_get_node_partialpath
 {
     my $hash = shift;
@@ -686,14 +617,7 @@ sub munin_get_node_partialpath
     return $ret;
 }
 
-# munin_set_var_path: sets a variable in a hash
-# Parameters: 
-# - $hash: A ref to the hash to set the variable in
-# - $var: A string with the full path of the variable
-# - $val: The value to set the variable to
-# Returns:
-# - Success: The $hash we were handed
-# - Failure: The $hash we were handed
+
 sub munin_set_var_path
 {
     my $hash = shift;
@@ -735,12 +659,7 @@ sub munin_set_var_path
     return $hash;
 }
 
-# munin_get_root_node: Get the root node of the hash tree
-# Parameters:
-# - $hash: A hash node to traverse up from
-# Returns:
-# - Success: A ref to the root hash node
-# - Failure: undef
+
 sub munin_get_root_node
 {
     my $hash = shift;
@@ -753,6 +672,7 @@ sub munin_get_root_node
 
     return $hash;
 }
+
 
 sub munin_writeconfig_loop 
 {
@@ -778,6 +698,7 @@ sub munin_writeconfig_loop
     }
 }
 
+
 sub munin_writeconfig {
     my ($datafilename,$data,$fh) = @_;
 
@@ -800,6 +721,7 @@ sub munin_writeconfig {
     }
 }
 
+
 sub munin_config {
     my $conffile = shift;
     $config = shift;
@@ -811,12 +733,7 @@ sub munin_config {
     return ($data);
 }
 
-# munin_get_html_filename: Get the full path-name of an html file
-# Parameters:
-# - $hash: A ref to the service hash node
-# Returns:
-# - Success: The file name with full path
-# - Failure: undef
+
 sub munin_get_html_filename {
     my $hash    = shift;
     my $loc     = munin_get_node_loc ($hash);
@@ -844,14 +761,7 @@ sub munin_get_html_filename {
     return "$ret/$plugin.html";
 }
 
-# munin_get_picture_filename: Get the full path+name of a picture file
-# Parameters:
-# - $hash: A ref to the service hash node
-# - $scale: [optional] The scale (day, week, year, month)
-# - $sum: [optional] Boolean value, whether it's a sum graph or not.
-# Returns:
-# - Success: The file name with full path
-# - Failure: undef
+
 sub munin_get_picture_filename {
     my $hash    = shift;
     my $scale   = shift;
@@ -886,12 +796,7 @@ sub munin_get_picture_filename {
     }
 }
 
-# munin_path_to_loc: Returns a loc array from a path string
-# Parameters: 
-# - $path: A path string
-# Returns:
-# - Success: A ref to an array with the loc
-# - Failure: undef
+
 sub munin_path_to_loc
 {
     my $path = shift;
@@ -927,14 +832,6 @@ sub munin_path_to_loc
 }
 
 
-# munin_get_filename: Get rrd filename for a field, without any 
-#                     bells or whistles. Used by munin-update to 
-#                     figure out which file to update.
-# Parameters:
-# - $hash: Ref to hash field
-# Returns:
-# - Success: Full path to rrd file
-# - Failure: undef
 sub munin_get_filename {
     my $hash = shift;
     my $loc  = munin_get_node_loc ($hash);
@@ -965,14 +862,7 @@ sub munin_get_filename {
 
 }
 
-# munin_get_bool: Get boolean variable
-# Parameters:
-# - $hash: Ref to hash node
-# - $field: Name of field to get
-# - $default: [optional] Value to return if $field isn't set
-# Returns:
-# - Success: 1 or 0 (true or false)
-# - Failure: $default if defined, else undef
+
 sub munin_get_bool
 {
     my $hash   = shift;
@@ -1048,14 +938,7 @@ sub munin_get_bool_val
     }
 }
 
-# munin_get: Get variable
-# Parameters:
-# - $hash: Ref to hash node
-# - $field: Name of field to get
-# - $default: [optional] Value to return if $field isn't set
-# Returns:
-# - Success: field contents
-# - Failure: $default if defined, else undef
+
 sub munin_get
 {
     my $hash   = shift;
@@ -1068,13 +951,7 @@ sub munin_get
     return munin_get ($hash->{'#%#parent'}, $field, $default);
 }
 
-# munin_copy_node_toloc: Copy hash node at 
-# - $from: Hash node to copy
-# - $to: Where to copy it to
-# - $loc: Path to node under $to
-# Returns:
-# - Success: $to
-# - Failure: undef
+
 sub munin_copy_node_toloc
 {
     my $from = shift;
@@ -1098,12 +975,7 @@ sub munin_copy_node_toloc
     return $to;
 }
 
-# munin_copy_node: Copy hash node
-# - $from: Hash node to copy
-# - $to: Where to copy it to
-# Returns:
-# - Success: $to
-# - Failure: undef
+
 sub munin_copy_node
 {
     my $from = shift;
@@ -1123,6 +995,7 @@ sub munin_copy_node
     }
     return $to;
 }
+
 
 sub munin_node_status
 {
@@ -1152,15 +1025,7 @@ sub munin_node_status
     return $state;
 }
 
-# munin_category_status: Gets current status of a category
-# Parameters: 
-# - $hash: A ref to the hash node whose children to check
-# - $limits: A ref to the root node of the limits tree
-# - $category: The category to review
-# - $check_draw: [optional] Ignore undrawn fields
-# Returns:
-# - Success: The status of the field
-# - Failure: undef
+
 sub munin_category_status {
     my $hash       = shift || return;
     my $limits     = shift || return;
@@ -1192,14 +1057,6 @@ sub munin_category_status {
     return $state;
 }
 
-# munin_service_status: Gets current status of a service
-# Parameters: 
-# - $hash: A ref to the field hash node
-# - $limits: A ref to the root node of the limits tree
-# - $check_draw: [optional] Ignore undrawn fields
-# Returns:
-# - Success: The status of the field
-# - Failure: undef
 sub munin_service_status {
     my ($config, $limits, $check_draw) = @_;
     my $state = "ok";
@@ -1221,14 +1078,7 @@ sub munin_service_status {
     return $state;
 }
 
-# munin_field_status: Gets current status of a field
-# Parameters: 
-# - $hash: A ref to the field hash node
-# - $limits: A ref to the root node of the limits tree
-# - $check_draw: [optional] Ignore undrawn fields
-# Returns:
-# - Success: The status of the field
-# - Failure: undef
+
 sub munin_field_status {
     my ($hash, $limits, $check_draw) = @_;
     my $state = "ok";
@@ -1269,13 +1119,7 @@ sub munin_graph_column_headers
     return $ret;
 }
 
-# munin_get_max_label_length: Get the length of the longest labe in a graph
-# Parameters:
-# - $hash: the graph in question
-# - $order: A ref to an array of fields (graph_order)
-# Returns:
-# - Success: The length of the longest label in the graph
-# - Failure: undef
+
 sub munin_get_max_label_length
 {
     my $service = shift;
@@ -1302,12 +1146,7 @@ sub munin_get_max_label_length
     return $result;
 }
 
-# munin_get_field_order: Get the field order in a graph
-# Parameters:
-# - $hash: A hash ref to the service
-# Returns:
-# - Success: A ref to an array of the field names
-# - Failure: undef
+
 sub munin_get_field_order
 {
     my $hash = shift;
@@ -1334,16 +1173,7 @@ sub munin_get_field_order
     return $result;
 }
 
-# munin_get_rrd_filename: Get the name of the rrd file corresponding to a 
-#                         field. Checks for lots of bells and whistles.
-#                         This function is the correct one to use when 
-#                         figuring out where to fetch data from.
-# Parameters:
-# - $field: The hash object of the field
-# - $path: [optional] The path to the field (as given in graph_order/sum/stack/et al)
-# Returns:
-# - Success: A string with the filename of the rrd file
-# - Failure: undef
+
 sub munin_get_rrd_filename {
     my $field   = shift;
     my $path    = shift;
@@ -1374,6 +1204,7 @@ sub munin_get_rrd_filename {
     return $result;
 }
 
+
 sub munin_mkdir_p {
     my ($dirname, $umask) = @_;
 
@@ -1391,11 +1222,11 @@ __END__
 
 =head1 NAME
 
-Munin::Master::Utils - FIX
+Munin::Master::Utils - Exports a lot of utility functions.
 
 =head1 SYNOPSIS
 
-FIX
+ use Munin::Master::Utils;
 
 =head1 SUBROUTINES
 
@@ -1403,131 +1234,345 @@ FIX
 
 =item B<munin_category_status>
 
-FIX
+Gets current status of a category.
+
+Parameters: 
+ - $hash: A ref to the hash node whose children to check
+ - $limits: A ref to the root node of the limits tree
+ - $category: The category to review
+ - $check_draw: [optional] Ignore undrawn fields
+
+Returns:
+ - Success: The status of the field
+ - Failure: undef
+
 
 =item B<munin_config>
 
-FIX
+
 
 =item B<munin_copy_node>
 
-FIX
+Copy hash node.
+
+Parameters:
+ - $from: Hash node to copy
+ - $to: Where to copy it to
+
+Returns:
+ - Success: $to
+ - Failure: undef
+
 
 =item B<munin_copy_node_toloc>
 
-FIX
+Copy hash node at.
+
+Parameters:
+ - $from: Hash node to copy
+ - $to: Where to copy it to
+ - $loc: Path to node under $to
+
+Returns:
+ - Success: $to
+ - Failure: undef
+
 
 =item B<munin_createlock>
 
-FIX
+
 
 =item B<munin_delete>
 
-FIX
+
 
 =item B<munin_draw_field>
 
-FIX
+Check whether a field will be visible in the graph or not.
+
+Parameters:
+ - $hash: A ref to the hash node for the field
+
+Returns:
+ - Success: Boolean; true if field will be graphed, false if not
+ - Failure: undef
 
 =item B<munin_fetch>
 
-FIX
+
 
 =item B<munin_field_status>
 
-FIX
+Gets current status of a field.
+
+Parameters: 
+ - $hash: A ref to the field hash node
+ - $limits: A ref to the root node of the limits tree
+ - $check_draw: [optional] Ignore undrawn fields
+
+Returns:
+ - Success: The status of the field
+ - Failure: undef
+
 
 =item B<munin_find_field>
 
-FIX
+Search a hash to find nodes with $field defined.
+
+Parameters: 
+ - $hash: A hash ref to search
+ - $field: The name of the field to search for, or a regex
+ - $avoid: [optional] Stop traversing further down if this field is found
+
+Returns:
+ - Success: A ref to an array of the hash nodes containing $field.
+ - Failure: undef
+
 
 =item B<munin_get>
 
-FIX
+Get variable.
+
+Parameters:
+ - $hash: Ref to hash node
+ - $field: Name of field to get
+ - $default: [optional] Value to return if $field isn't set
+
+Returns:
+ - Success: field contents
+ - Failure: $default if defined, else undef
+
 
 =item B<munin_get_bool>
 
-FIX
+Get boolean variable.
+
+Parameters:
+ - $hash: Ref to hash node
+ - $field: Name of field to get
+ - $default: [optional] Value to return if $field isn't set
+
+Returns:
+ - Success: 1 or 0 (true or false)
+ - Failure: $default if defined, else undef
+
 
 =item B<munin_get_bool_val>
 
-FIX
+
 
 =item B<munin_get_children>
 
-FIX
+Get all child hash nodes.
+
+Parameters: 
+ - $hash: A hash ref to the parent node
+
+Returns:
+ - Success: A ref to an array of the child nodes
+ - Failure: undef
+
 
 =item B<munin_get_field_order>
 
-FIX
+Get the field order in a graph.
+
+Parameters:
+ - $hash: A hash ref to the service
+
+Returns:
+ - Success: A ref to an array of the field names
+ - Failure: undef
+
 
 =item B<munin_get_filename>
 
-FIX
+Get rrd filename for a field, without any bells or whistles. Used by
+munin-update to figure out which file to update.
+
+Parameters:
+ - $hash: Ref to hash field
+
+Returns:
+ - Success: Full path to rrd file
+ - Failure: undef
+
 
 =item B<munin_get_html_filename>
 
-FIX
+Get the full path-name of an html file.
+
+Parameters:
+ - $hash: A ref to the service hash node
+
+Returns:
+ - Success: The file name with full path
+ - Failure: undef
+
 
 =item B<munin_get_max_label_length>
 
-FIX
+Get the length of the longest labe in a graph.
+
+Parameters:
+ - $hash: the graph in question
+ - $order: A ref to an array of fields (graph_order)
+
+Returns:
+ - Success: The length of the longest label in the graph
+ - Failure: undef
+
 
 =item B<munin_get_node>
 
-FIX
+Gets a node by loc.
+
+Parameters:
+ - $hash: A ref to the hash to set the variable in
+ - $loc: A ref to an array with the full path of the node
+
+Returns:
+ - Success: The node ref found by $loc
+ - Failure: undef
 
 =item B<munin_get_node_loc>
 
-FIX
+Get location array for hash node.
+
+Parameters: 
+ - $hash: A ref to the node
+
+Returns:
+ - Success: Ref to an array with the full path of the variable
+ - Failure: undef
+
 
 =item B<munin_get_node_name>
 
-FIX
+Return the name of the hash node supplied.
+
+Parameters: 
+ - $hash: A ref to the hash node
+
+Returns:
+ - Success: The name of the node
+
 
 =item B<munin_get_node_partialpath>
 
-FIX
+Gets a node from a partial path.
+
+Parameters: 
+ - $hash: A ref to the "current" location in the hash tree
+ - $var: A path string with relative location (from the $hash).
+
+Returns:
+ - Success: The node
+ - Failure: undef
+
 
 =item B<munin_get_parent>
 
-FIX
+Get parent node of a hash.
+
+Parameters: 
+ - $hash: A ref to the node
+
+Returns:
+ - Success: Ref to an parent
+ - Failure: undef
+
 
 =item B<munin_get_parent_name>
 
-FIX
+Return the name of the parent of the hash node supplied
+
+Parameters: 
+ - $hash: A ref to the hash node
+
+Returns:
+ - Success: The name of the parent node
+ - Failure: If no parent node exists, "none" is returned.
+
 
 =item B<munin_get_picture_filename>
 
-FIX
+Get the full path+name of a picture file.
+
+Parameters:
+ - $hash: A ref to the service hash node
+ - $scale: [optional] The scale (day, week, year, month)
+ - $sum: [optional] Boolean value, whether it's a sum graph or not.
+
+Returns:
+ - Success: The file name with full path
+ - Failure: undef
+
 
 =item B<munin_get_picture_loc>
 
-FIX
+Get location array for hash node for picture purposes. Differs from
+munin_get_node_loc in that it honors #%#origin metadata 
+
+Parameters: 
+ - $hash: A ref to the node 
+
+Returns: 
+ - Success: Ref to an array with the full path of the variable
+ - Failure: undef
+
 
 =item B<munin_get_root_node>
 
-FIX
+Get the root node of the hash tree.
+
+Parameters:
+ - $hash: A hash node to traverse up from
+
+Returns:
+ - Success: A ref to the root hash node
+ - Failure: undef
+
 
 =item B<munin_get_rrd_filename>
 
-FIX
+Get the name of the rrd file corresponding to a field. Checks for lots
+of bells and whistles.  This function is the correct one to use when
+figuring out where to fetch data from.
+
+Parameters:
+ - $field: The hash object of the field
+ - $path: [optional] The path to the field (as given in graph_order/sum/stack/et al)
+
+Returns:
+ - Success: A string with the filename of the rrd file
+ - Failure: undef
+
 
 =item B<munin_get_separated_node>
 
-FIX
+
+Copy a node to a separate node without "specials".
+
+Parameters:
+ - $hash: The node to copy
+
+Returns:
+ - Success: A ref to a new node without "#%#"-fields
+ - Failure: undef
+
 
 =item B<munin_get_var_path>
 
-FIX
+
 
 =item B<munin_getlock>
 
-FIX
+
 
 =item B<munin_graph_column_headers>
 
-FIX
+
 
 =item B<munin_mkdir_p>
 
@@ -1539,63 +1584,112 @@ to it.
 
 =item B<munin_node_status>
 
-FIX
+
 
 =item B<munin_nscasend>
 
-FIX
+
 
 =item B<munin_overwrite>
 
-FIX
+Take contents of one config-namespace and replace/insert the instances
+needed.
 
 =item B<munin_parse_config>
 
-FIX
+
 
 =item B<munin_path_to_loc>
 
-FIX
+Returns a loc array from a path string.
+
+Parameters: 
+ - $path: A path string
+
+Returns:
+ - Success: A ref to an array with the loc
+ - Failure: undef
+
 
 =item B<munin_readconfig>
 
-FIX
+
 
 =item B<munin_removelock>
 
-FIX
+
 
 =item B<munin_runlock>
 
-FIX
+
 
 =item B<munin_service_status>
 
-FIX
+Gets current status of a service.
+
+Parameters: 
+ - $hash: A ref to the field hash node
+ - $limits: A ref to the root node of the limits tree
+ - $check_draw: [optional] Ignore undrawn fields
+
+Returns:
+ - Success: The status of the field
+ - Failure: undef
+
 
 =item B<munin_set>
 
-FIX
+Sets a variable in a hash.
+
+Parameters: 
+ - $hash: A ref to the hash to set the variable in
+ - $var: The name of the variable
+ - $val: The value to set the variable to
+
+Returns:
+ - Success: The $hash we were handed
+ - Failure: undef
+
 
 =item B<munin_set_var_loc>
 
-FIX
+Sets a variable in a hash.
+
+Parameters: 
+ - $hash: A ref to the hash to set the variable in
+ - $loc: A ref to an array with the full path of the variable
+ - $val: The value to set the variable to
+
+Returns:
+ - Success: The $hash we were handed
+ - Failure: undef
+
 
 =item B<munin_set_var_path>
 
-FIX
+Sets a variable in a hash.
+
+Parameters: 
+ - $hash: A ref to the hash to set the variable in
+ - $var: A string with the full path of the variable
+ - $val: The value to set the variable to
+
+Returns:
+ - Success: The $hash we were handed
+ - Failure: The $hash we were handed
+
 
 =item B<munin_trend>
 
-FIX
+
 
 =item B<munin_writeconfig>
 
-FIX
+
 
 =item B<munin_writeconfig_loop>
 
-FIX
+
 
 =back
 
