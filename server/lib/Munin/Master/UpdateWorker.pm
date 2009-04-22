@@ -77,7 +77,10 @@ sub _update_rrd_files {
     for my $ds_name (keys %{$service_config->{data_source}}) {
         $self->_set_rrd_data_source_defaults($service_config->{data_source}{$ds_name});
 
-        # FIX verify existence of key data source attributes (label etc)
+        unless ($service_config->{data_source}{$ds_name}{label}) {
+            logger("[ERROR] Unable to update $service -> $ds_name: Missing data source configuration attribute: label");
+            next;
+        }
 
         my $rrd_file
             = $self->_create_rrd_file_if_needed($service, $ds_name, 
