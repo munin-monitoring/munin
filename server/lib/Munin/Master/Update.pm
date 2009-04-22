@@ -6,13 +6,14 @@ use strict;
 use Carp;
 use Munin::Master::Config;
 use Munin::Master::GroupRepository;
+use Munin::Master::Logger;
 use Munin::Master::UpdateWorker;
 use Munin::Master::ProcessManager;
 use Munin::Master::Utils;
+use Time::HiRes;
 
 
 my $config = Munin::Master::Config->instance();
-
 
 sub new {
     my ($class) = @_;
@@ -25,12 +26,15 @@ sub run {
     my ($self) = @_;
     
     $self->_create_rundir_if_missing();
-    my @workers = $self->_create_workers();
 
-    $self->_do_locked("$config->{rundir}/munin-update.lock", sub {
+    $self->_do_with_lock_and_timing("$config->{rundir}/munin-update.lock", sub {
+        my ($STATS) = @_;
+        my @workers = $self->_create_workers();
+
         if ($config->{fork}) {
             my $pm = Munin::Master::ProcessManager->new(sub {
-                use Data::Dumper; warn Dumper(\@_); 
+                my ($res) = @_;
+                printf $STATS "UD|%s|%.2f\n", @$res;
             });
             $pm->add_workers(@workers);
             $pm->start_work();
@@ -72,11 +76,27 @@ sub _create_workers {
 }
 
 
-sub _do_locked {
+sub _do_with_lock_and_timing {
     my ($self, $lock, $block) = @_;
 
     munin_runlock($lock);
-    my $retval = $block->();
+
+    my $update_time = Time::HiRes::time;
+    my $STATS;
+    if (!open ($STATS, '>', "$config->{dbdir}/munin-update.stats.tmp")) {
+        logger("[WARNING] Unable to open $config->{dbdir}/munin-update.stats");
+        # Use /dev/null instead - if the admin won't fix he won't care
+        open($STATS, '>', "/dev/null") or die "Could not open STATS to /dev/null: $?";
+    }
+
+    my $retval = $block->($STATS);
+
+    $update_time = sprintf("%.2f", (Time::HiRes::time - $update_time));
+    print $STATS "UT|$update_time\n";
+    close ($STATS);
+    rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
+    logger("Munin-update finished ($update_time sec)");
+
     munin_removelock($lock);
 
     return $retval;

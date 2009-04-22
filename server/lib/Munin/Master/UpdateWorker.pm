@@ -13,6 +13,8 @@ use Munin::Master::Config;
 use Munin::Master::Logger;
 use Munin::Master::Node;
 use RRDs;
+use Time::HiRes;
+
 
 my $config = Munin::Master::Config->instance();
 
@@ -31,6 +33,8 @@ sub new {
 
 sub do_work {
     my ($self) = @_;
+
+    my $update_time = Time::HiRes::time;
 
     $self->{node}->do_in_session(sub {
         $self->{node}->negotiate_capabilities();
@@ -67,7 +71,7 @@ sub do_work {
         use Data::Dumper; warn Dumper(\@services);
     });
 
-    return 1;
+    return Time::HiRes::time - $update_time;
 }
 
 
