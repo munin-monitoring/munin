@@ -134,7 +134,7 @@ sub setup {
     
     my %res = $node->fetch_service_config('foo');
 
-    is_deeply(\%res,  {
+    is_deeply(\%res, {
         global => [[qw(foo bar)], [qw(zap gabonk)]], 
         data_source => {baz => { bar => 'foo'}},
     }, 'Fetch service config');
@@ -167,8 +167,11 @@ sub setup {
         );
     });
 
-    my @res = $node->fetch_service_data('foo');
+    my %res = $node->fetch_service_data('foo');
 
-    is_deeply(\@res, [[qw(foo bar N)], [qw(zap gabonk N)], [qw(baz foo N)]],
-              'Fetch service data');
+    is_deeply(\%res, {
+        foo => {value => 'bar', when => 'N'}, 
+        zap => {value => 'gabonk', when => 'N'},
+        baz => {value => 'foo', when => 'N'},
+    }, 'Fetch service data');
 }

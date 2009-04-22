@@ -11,6 +11,7 @@ use Munin::Master::Logger;
 
 my $config = Munin::Master::Config->instance();
 
+
 sub new {
     my ($class, $address, $port, $host) = @_;
 
@@ -27,6 +28,7 @@ sub new {
     return bless $self, $class;
 }
 
+
 sub do_in_session {
     my ($self, $block) = @_;
 
@@ -35,6 +37,7 @@ sub do_in_session {
     $block->();
     $self->_do_close();
 }
+
 
 sub _do_connect {
     my ($self) = @_;
@@ -131,7 +134,7 @@ sub list_services {
 
     croak "Couldn't find out which host to list" unless $host;
 
-    $self->_node_write_single("list $self->{host}\n");
+    $self->_node_write_single("list $host\n");
     my $list = $self->_node_read_single();
     
     return split / /, $list;
@@ -182,7 +185,7 @@ sub fetch_service_data {
     $self->_node_write_single("fetch $service\n");
     my @lines = $self->_node_read();
 
-    my @values = ();
+    my %values = ();
 
     for my $line (@lines) {
         croak "Client reported timeout in configuration of '$service'"
@@ -198,14 +201,14 @@ sub fetch_service_data {
 		$value = $2;
 	    }
 
-            push @values, [$data_source, $value, $when]
+            $values{$data_source} = { value => $value, when => $when };
         }
         else {
             croak "Protocol exception: unrecogniced line '$line'";
         }
     }
 
-    return @values;
+    return %values;
 }
 
 

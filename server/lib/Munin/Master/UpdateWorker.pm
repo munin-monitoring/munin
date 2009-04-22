@@ -32,8 +32,6 @@ sub new {
 sub do_work {
     my ($self) = @_;
 
-    my $retval = {};
-
     $self->{node}->do_in_session(sub {
         $self->{node}->negotiate_capabilities();
         my @services = $self->{node}->list_services();
@@ -48,11 +46,7 @@ sub do_work {
                 # processing of service
             }
 
-            use Data::Dumper; warn Dumper(\%service_config);
-
-            $self->_create_rrd_files_if_needed($service, $service_config{data_source});
-
-            my @service_data = eval {
+            my %service_data = eval {
                 $self->{node}->fetch_service_data($service);
             };
             if ($EVAL_ERROR) {
@@ -60,29 +54,54 @@ sub do_work {
                 next;
             }
 
-            use Data::Dumper; warn Dumper(\@service_data);
+            $self->_update_rrd_files($service, \%service_config, \%service_data);
+
+            use Data::Dumper; warn Dumper(\%service_config);
+            use Data::Dumper; warn Dumper(\%service_data);
         }
 
-        $retval->{services} = \@services;
+        use Data::Dumper; warn Dumper(\@services);
     });
 
-    return $retval;
+    return 1;
 }
 
 
-sub _create_rrd_files_if_needed {
-    my ($self, $service, $data_sources) = @_;
+sub _update_rrd_files {
+    my ($self, $service, $service_config, $service_data) = @_;
 
-    for my $ds_name (keys %$data_sources) {
-        $data_sources->{$ds_name}{type} ||= 'GAUGE';
-        $data_sources->{$ds_name}{min}  ||= 'U';
-        $data_sources->{$ds_name}{max}  ||= 'U';
+    for my $ds_name (keys %{$service_config->{data_source}}) {
+        $self->_set_rrd_data_source_defaults($service_config->{data_source}{$ds_name});
 
-        my $rrd_file = $self->_get_rrd_file_name($service, $ds_name, $data_sources->{$ds_name});
-        unless (-f $rrd_file) {
-            $self->_create_rrd_file($rrd_file, $service, $ds_name, $data_sources->{$ds_name});
-        }
+        # FIX verify existence of key data source attributes (label etc)
+
+        my $rrd_file
+            = $self->_create_rrd_file_if_needed($service, $ds_name, 
+                                                $service_config->{data_source}{$ds_name});
+
+        $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name});
     }
+}
+
+
+sub _set_rrd_data_source_defaults {
+    my ($self, $data_source) = @_;
+
+    $data_source->{type} ||= 'GAUGE';
+    $data_source->{min}  ||= 'U';
+    $data_source->{max}  ||= 'U';
+}
+
+
+sub _create_rrd_file_if_needed {
+    my ($self, $service, $ds_name, $ds_config) = @_;
+
+    my $rrd_file = $self->_get_rrd_file_name($service, $ds_name, $ds_config);
+    unless (-f $rrd_file) {
+        $self->_create_rrd_file($rrd_file, $service, $ds_name, $ds_config);
+    }
+
+    return $rrd_file;
 }
 
 
@@ -144,6 +163,18 @@ sub _create_rrd_file {
     }
 }
 
+
+sub _update_rrd_file {
+    my ($self, $rrd_file, $ds_name, $ds_values) = @_;
+
+    # FIX handle scientific format
+
+    logger("[DEBUG] Updating $rrd_file with $ds_values->{value}") if $config->{debug};
+    RRDs::update ($rrd_file, "$ds_values->{when}:$ds_values->{value}");
+    if (my $ERROR = RRDs::error) {
+        logger ("[ERROR] In RRD: unable to update $rrd_file: $ERROR");
+    }
+}
 
 1;
 
