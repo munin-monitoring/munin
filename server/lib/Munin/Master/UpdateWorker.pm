@@ -112,18 +112,26 @@ sub _create_rrd_file_if_needed {
 sub _get_rrd_file_name {
     my ($self, $service, $ds_name, $ds_config) = @_;
     
-    # FIX escape silly characters
-
     my $type_id = lc(substr(($ds_config->{type}), 0, 1));
+    my $group = $self->{host}{group}{group_name};
     my $file = sprintf("%s.%s-%s-%s-%s.rrd",
                        $self->{host}{host_name},
-                       $self->{host}{group}{group_name},
+                       $group,
                        $service,
                        $ds_name,
                        $type_id);
 
+    # Not really a danger (we're not doing this stuff via the shell),
+    # so more to avoid confusion with silly filenames.
+    ($group, $file) = map { 
+        my $p = $_;
+        $p =~ tr/\//_/; 
+        $p =~ s/^\./_/g;
+        $p;
+    } ($group, $file);
+	
     return File::Spec->catfile($config->{dbdir}, 
-                               $self->{host}{group}{group_name},
+                               $group,
                                $file);
 }
 
