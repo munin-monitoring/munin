@@ -179,10 +179,23 @@ sub _create_rrd_file {
 sub _update_rrd_file {
     my ($self, $rrd_file, $ds_name, $ds_values) = @_;
 
-    # FIX handle scientific format
+    my $value = $ds_values->{value};
 
-    logger("[DEBUG] Updating $rrd_file with $ds_values->{value}") if $config->{debug};
-    RRDs::update ($rrd_file, "$ds_values->{when}:$ds_values->{value}");
+    if ($value =~ /\d[Ee]([+-]?\d+)$/) {
+        # Looks like scientific format.  RRDtool does not
+        # like it so we convert it.
+        my $magnitude = $1;
+        if ($magnitude < 0) {
+            # Preserve at least 4 significant digits
+            $magnitude = abs($magnitude) + 4;
+            $value = sprintf("%.*f", $magnitude, $value);
+        } else {
+            $value = sprintf("%.4f", $value);
+        }
+    }
+
+    logger("[DEBUG] Updating $rrd_file with $value") if $config->{debug};
+    RRDs::update ($rrd_file, "$ds_values->{when}:$value");
     if (my $ERROR = RRDs::error) {
         logger ("[ERROR] In RRD: unable to update $rrd_file: $ERROR");
     }

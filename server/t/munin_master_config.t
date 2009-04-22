@@ -21,7 +21,7 @@ is_deeply($config, {
         'marvin' => {
             'use_node_name' => 1,
             'address' => '127.0.0.1',
-            'port' => '4948'
+            'port' => '4948',
         },
     },
     'htmldir' => '/opt/munin/sandbox/www',
