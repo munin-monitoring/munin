@@ -147,7 +147,7 @@ sub _create_rrd_file {
                 $ds_config->{type}, $ds_config->{min}, $ds_config->{max}),
     );
             
-    my $resolution = 'normal';     #FIX &munin_get ($fhash, "graph_data_size", "normal");
+    my $resolution = $config->{graph_data_size};
     if ($resolution eq 'normal') {
         push (@args,
               "RRA:AVERAGE:0.5:1:576",   # resolution 5 minutes

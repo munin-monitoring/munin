@@ -28,6 +28,7 @@ my %booleans = map {$_ => 1} qw(
             dbdir                  => $Munin::Common::Defaults::MUNIN_DBDIR,
             debug                  => 0,
             fork                   => 1,
+            graph_data_size        => 'normal',
             logdir                 => $Munin::Common::Defaults::MUNIN_LOGDIR,
             rundir                 => $Munin::Common::Defaults::MUNIN_RUNDIR,
             tls                    => 'disabled',

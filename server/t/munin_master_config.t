@@ -16,6 +16,7 @@ is_deeply($config, {
     'dbdir' => '/opt/munin/sandbox/var/opt/munin',
     'debug' => 0,
     'fork'  => 1,
+    'graph_data_size' => 'normal',
     'groups_and_hosts' => {
         'marvin' => {
             'use_node_name' => 1,
