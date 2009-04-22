@@ -72,9 +72,6 @@ sub main
     # file, the former should take precedence
     $paranoia = $config->{paranoia} if defined $config->{paranoia};
 
-    # Export debug setting to plugins.
-    $ENV{MUNIN_DEBUG} = $config->{PIDEBUG};
-
     # Check permissions of configuration
     unless (Munin::Node::OS->check_perms($config->{servicedir})
          && Munin::Node::OS->check_perms($config->{conffile}))
@@ -90,8 +87,6 @@ sub main
     # Override the hostname if everything else fails
     $config->{fqdn} ||= Munin::Node::OS->get_fq_hostname();
 
-    $ENV{FQDN} = $config->{fqdn};
-
     $config->reinitialize({
         %$config,
 
@@ -104,6 +99,10 @@ sub main
     # Some locales uses "," as decimal separator. This can mess up a lot
     # of plugins.
     $ENV{LC_ALL} = 'C';
+
+    # Export some variables plugins might be interested in
+    $ENV{MUNIN_DEBUG} = $config->{PIDEBUG};
+    $ENV{FQDN} = $config->{fqdn};
 
     load_service_configs();
     
@@ -145,7 +144,7 @@ sub get_service_list
 
 
 sub run_service {
-    my ($service,$command) = @_;
+    my ($service, $command) = @_;
     
     $command ||= '';
 
@@ -193,10 +192,6 @@ sub parse_args
         die "# ERROR: Invalid plugin name.\n";
     }
 
-    # Detaint service dir. #FIX do more strict detainting?
-    $servicedir =~ /(.*)/;
-    $servicedir = $1;
-
     if ($ARGV[1]) {
         # Ensure the plugin's argument (if any) is one of the known ones.
         # Incidentally also makes it taint-safe.
@@ -204,6 +199,10 @@ sub parse_args
         warn "# Warning: Unrecognised argument '$ARGV[1]' passed to plugin.\n"
             unless $arg;
     }
+
+    # Detaint service dir. #FIX do more strict detainting?
+    $servicedir =~ /(.*)/;
+    $servicedir = $1;
 
     # Update the config
     $config->reinitialize({
@@ -218,6 +217,7 @@ sub parse_args
         paranoia   => $paranoia,
     });
 
+    return;
 }
 
 
