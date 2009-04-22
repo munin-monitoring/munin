@@ -136,7 +136,7 @@ sub setup {
 
     is_deeply(\%res,  {
         global => [[qw(foo bar)], [qw(zap gabonk)]], 
-        data_source => [[qw(baz bar foo)]]
+        data_source => {baz => { bar => 'foo'}},
     }, 'Fetch service config');
 }
 
