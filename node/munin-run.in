@@ -53,8 +53,6 @@ my $defgroup   = getgrnam($Munin::Common::Defaults::MUNIN_GROUP);
 my $paranoia   = 0;
 my @ignores    = ();
 
-my $timeout    = 0;
-
 my $config;
 my ($plugin, $arg);
 
@@ -76,7 +74,8 @@ sub main
 
     parse_args();
 
-    $ENV{'MUNIN_DEBUG'} = $PIDEBUG;
+    # Export debug setting to plugins.
+    $ENV{MUNIN_DEBUG} = $PIDEBUG;
 
     # Check permissions of configuration
     # FIXME: oops, doesn't honour $paranoia, since it's not yet set in
@@ -100,11 +99,9 @@ sub main
     # Override the hostname if everything else fails
     $FQDN ||= Munin::Node::OS->get_fq_hostname();
 
-    $ENV{FQDN}=$FQDN;
+    $ENV{FQDN} = $FQDN;
 
     $config->reinitialize({
-        timesout   => $timeout,
-
         %$config,
 
         servicedir => $servicedir,
@@ -122,7 +119,7 @@ sub main
 
     # Some locales uses "," as decimal separator. This can mess up a lot
     # of plugins.
-    $ENV{'LC_ALL'}='C';
+    $ENV{LC_ALL} = 'C';
 
     load_service_configs();
     
@@ -263,6 +260,8 @@ Options:
 
 exit main() unless caller;
 
+
+1;
 
 __END__
 
