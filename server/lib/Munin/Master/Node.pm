@@ -45,9 +45,9 @@ sub _do_connect {
     $self->{socket} = IO::Socket::INET->new(
         PeerAddr  => $self->{address},
         PeerPort  => $self->{port},
-        LocalAddr => undef,
+        LocalAddr => $config->{local_address},
         Proto     => 'tcp', 
-        Timeout   => 60,
+        Timeout   => $config->{timeout},
     ) or croak "Failed to create socket: $!";
 
     my $greeting = $self->_node_read_single();
