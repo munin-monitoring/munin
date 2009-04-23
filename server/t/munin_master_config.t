@@ -26,6 +26,7 @@ is_deeply($config, {
     },
     'htmldir' => '/opt/munin/sandbox/www',
     'logdir' => '/opt/munin/sandbox/var/log/munin',
+    'max_processes' => 2 ** 53,
     'rundir' => '/opt/munin/sandbox/var/run/munin',
     'tls' => 'disabled',
     'tls_ca_certificate' => '/opt/munin/common/t/tls/CA/ca_cert.pem',

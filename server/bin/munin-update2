@@ -20,7 +20,6 @@ use Pod::Usage;
 # - Honour more config variables: TCP: local address and timeout. update
 # - More log messages?
 # - timeout cli option
-# - max processes
 # - use old configuration for failing workers
 
 

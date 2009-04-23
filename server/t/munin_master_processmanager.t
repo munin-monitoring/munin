@@ -6,9 +6,13 @@ use Time::HiRes qw(sleep);
 
 use_ok('Munin::Master::ProcessManager');
 
-# Uncomment to see log messages
+### Uncomment to see log messages
+#
 #use Munin::Master::Logger;
 #logger_debug();
+#use Munin::Master::Config;
+#my $config = Munin::Master::Config->instance();
+#$config->{debug} = 1;
 
 
 #
@@ -58,7 +62,7 @@ sub result_callback {
 {
     my $pm = Munin::Master::ProcessManager->new(\&result_callback);
     isa_ok($pm, 'Munin::Master::ProcessManager');
-    
+ 
     $pm->add_workers(
         Test::Worker->new(1),
         Test::Worker->new(2),
@@ -85,7 +89,9 @@ sub error_callback2 {
 
 {
     my $pm = Munin::Master::ProcessManager->new(\&result_callback2, \&error_callback2);
-    
+ 
+    $pm->{worker_timeout} = 1;
+   
     $pm->add_workers(
         Test::NastyWorker->new(),
         Test::SpinningWorker->new(),

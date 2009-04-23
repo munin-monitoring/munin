@@ -60,50 +60,84 @@ sub add_workers {
 sub start_work {
     my ($self) = @_;
     
-    $self->{iterator_index} = 0;
+    logger("Starting work") if $config->{debug};
     
     my $sock = $self->_prepare_unix_socket();
 
-    for my $worker (@{$self->{workers}}) {
-        my $pid = fork;
-        if (!defined $pid) {
-            croak "$!";
-        }
-        elsif ($pid) {
-            $self->{active_workers}{$pid} = $worker;
-            $self->{result_queue}{$worker->{ID}} = $worker;
-        }
-        else {
-            $0 .= " [$worker]";
-            eval {
-                exit $self->_do_work($worker);
-            };
-            if ($EVAL_ERROR) {
-                logger("[ERROR] $worker died with '$EVAL_ERROR'");
-                exit $E_DIED;
-            }
-        } 
-    }
-
+    $self->_start_waiting_workers();
+    
     do_with_timeout($self->{timeout}, sub {
         $self->_collect_results($sock);
     }) or croak "Work timed out before all workers finished";
+
     $self->{workers} = [];
-    logger("Work done");
+    logger("Work done") if $config->{debug};
+
+    $self->_free_socket($sock);
 }
+
+
+sub _prepare_unix_socket {
+    my ($self) = @_;
+
+    unlink $self->{socket_file}
+        or $! ne 'No such file or directory' && croak "unlink failed: $!";
+    socket my $sock, PF_UNIX, SOCK_STREAM, 0
+        or croak "socket failed: $!";
+    bind $sock, sockaddr_un($self->{socket_file})
+        or croak "bind failed: $!";
+    chmod oct(700), $self->{socket_file}
+        or croak "chomd failed: $!";
+    listen $sock, SOMAXCONN
+        or croak "listen failed: $!";
+    
+    return $sock;
+}
+
+
+sub _start_waiting_workers {
+    my ($self) = @_;
+
+    while (@{$self->{workers}}) {
+        logger(sprintf "Active: " . scalar %{$self->{active_workers}});
+        last if scalar keys %{$self->{active_workers}} == $self->{max_concurrent};
+        $self->_start_next_worker();
+    }
+}
+
+sub _start_next_worker {
+    my ($self) = @_;
+
+    my $worker = pop @{$self->{workers}};
+
+    my $pid = fork;
+    if (!defined $pid) {
+        croak "$!";
+    }
+    elsif ($pid) {
+        $self->{active_workers}{$pid} = $worker;
+        $self->{result_queue}{$worker->{ID}} = $worker;
+    }
+    else {
+        $0 .= " [$worker]";
+        exit $self->_do_work($worker);
+    } 
+}
+
 
 
 sub _collect_results {
     my ($self, $sock) = @_;
 
     while (%{$self->{result_queue}}) {
-        $self->_vet_finished_workers();
-
         my $worker_sock;
         my $timed_out = !do_with_timeout($self->{accept_timeout}, sub {
             accept $worker_sock, $sock;
         });
-        next if $timed_out;
+        if ($timed_out) {
+            logger("[WARNING] Call to accept timed out: %{$self->{result_queue}}");
+            next;
+        }
         next unless fileno $worker_sock;
 
         my $res = fd_retrieve($worker_sock);
@@ -112,12 +146,27 @@ sub _collect_results {
         delete $self->{result_queue}{$worker_id};
 
         $self->{result_callback}($res) if defined $real_res;
+
+        do {
+            $self->_vet_finished_workers();
+            $self->_start_waiting_workers();
+        } while (!%{$self->{result_queue}} && @{$self->{workers}});
     }
 
     while (%{$self->{active_workers}}) {
         $self->_vet_finished_workers();
     }
 
+}
+
+
+sub _free_socket {
+    my ($self, $sock) = @_;
+
+    unlink $self->{socket_file}
+        or $! ne 'No such file or directory' && croak "unlink failed: $!";
+    close $sock
+        or croak "socket close failed: $!";
 }
 
 
@@ -145,44 +194,34 @@ sub _handle_worker_error {
     my $exit_code = $CHILD_ERROR >> 8;
     $self->{error_callback}($self->{worker_pids}{$worker_pid},
                             $code2msg{$exit_code} || $exit_code);
-    delete $self->{result_queue}{$worker_id};
 
-}
-
-
-
-sub _prepare_unix_socket {
-    my ($self) = @_;
-
-    unlink $self->{socket_file}
-        or $! ne 'No such file or directory' && croak "unlink failed: $!";
-    socket my $sock, PF_UNIX, SOCK_STREAM, 0
-        or croak "socket failed: $!";
-    bind $sock, sockaddr_un($self->{socket_file})
-        or croak "bind failed: $!";
-    chmod oct(700), $self->{socket_file}
-        or croak "chomd failed: $!";
-    listen $sock, SOMAXCONN
-        or croak "listen failed: $!";
-    
-    return $sock;
 }
 
 
 sub _do_work {
     my ($self, $worker) = @_;
 
+    logger("Starting $worker") if $config->{debug};
+
     my $retval = 0;
 
     my $res;
-    my $timed_out = !do_with_timeout($self->{worker_timeout}, sub {
-        $res = $worker->do_work();
-    });
-    if ($timed_out) {
-        logger("[ERROR] $worker timed out");
+    eval {
+        my $timed_out = !do_with_timeout($self->{worker_timeout}, sub {
+            $res = $worker->do_work();
+        });
+        if ($timed_out) {
+            logger("[ERROR] $worker timed out");
+            $res = undef;
+            $retval = $E_TIMED_OUT;
+        }
+    };
+    if ($EVAL_ERROR) {
+        logger("[ERROR] $worker died with '$EVAL_ERROR'");
         $res = undef;
-        $retval = $E_TIMED_OUT;
+        $retval = $E_DIED;
     }
+
     
     my $sock;
     unless (socket $sock, PF_UNIX, SOCK_STREAM, 0) {

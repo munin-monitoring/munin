@@ -32,7 +32,7 @@ my %booleans = map {$_ => 1} qw(
             graph_data_size        => 'normal',
             logdir                 => $Munin::Common::Defaults::MUNIN_LOGDIR,
             max_processes          => $MAXINT,
-            rundir                 => $Munin::Common::Defaults::MUNIN_RUNDIR,
+            rundir                 => '/tmp',
             tls                    => 'disabled',
             tls_ca_certificate     => "Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem",
             tls_certificate        => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.pem",
