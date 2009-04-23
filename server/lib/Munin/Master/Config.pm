@@ -8,6 +8,7 @@ use Carp;
 use English qw(-no_match_vars);
 use Munin::Common::Defaults;
 
+my $MAXINT = 2 ** 53;
 
 my %booleans = map {$_ => 1} qw(
     debug
@@ -30,6 +31,7 @@ my %booleans = map {$_ => 1} qw(
             fork                   => 1,
             graph_data_size        => 'normal',
             logdir                 => $Munin::Common::Defaults::MUNIN_LOGDIR,
+            max_processes          => $MAXINT,
             rundir                 => $Munin::Common::Defaults::MUNIN_RUNDIR,
             tls                    => 'disabled',
             tls_ca_certificate     => "Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem",

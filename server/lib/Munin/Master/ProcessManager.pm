@@ -7,6 +7,7 @@ use Carp;
 use English qw(-no_match_vars);
 use IO::Socket;
 use Munin::Common::Timeout;
+use Munin::Master::Config;
 use Munin::Master::Logger;
 use POSIX qw(:sys_wait_h);
 use Storable qw(nstore_fd fd_retrieve);
@@ -15,6 +16,7 @@ use Storable qw(nstore_fd fd_retrieve);
 my $E_DIED      = 18;
 my $E_TIMED_OUT = 19;
 
+my $config = Munin::Master::Config->instance();
 
 sub new {
     my ($class, $result_callback, $error_callback) = @_;
@@ -25,14 +27,14 @@ sub new {
     $error_callback ||= sub { warn "Worker failed: @_" };
 
     my $self = {
-        max_concurrent  => 2,
-        socket_file     => '/tmp/MuninMasterProcessManager.sock',
+        max_concurrent  => $config->{max_processes},
+        socket_file     => "$config->{rundir}/munin-master-processmanager-$$.sock",
         result_callback => $result_callback,
         error_callback  => $error_callback,
 
-        worker_timeout  => 1,
-        timeout         => 10,
-        accept_timeout  => 1,
+        worker_timeout  => 180,
+        timeout         => 240,
+        accept_timeout  => 10,
 
         active_workers  => {},
         result_queue    => {},
