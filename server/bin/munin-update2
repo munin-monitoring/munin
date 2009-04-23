@@ -17,7 +17,6 @@ use Pod::Usage;
 # - marshall config
 # - nested groups
 # - locking: when writing config, for each node
-# - Honour more config variables: update
 # - More log messages?
 # - use old configuration for failing workers
 

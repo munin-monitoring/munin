@@ -14,6 +14,7 @@ my %booleans = map {$_ => 1} qw(
     debug
     fork
     tls_verify_certificate
+    update
     use_node_name
 );
 

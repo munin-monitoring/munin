@@ -75,6 +75,8 @@ sub _create_workers {
         @hosts = grep { $config->{limit_hosts}{$_->{host_name}} } @hosts
     }
 
+    @hosts = grep { $_->{update} } @hosts;
+
     return map { Munin::Master::UpdateWorker->new($_) } @hosts;
 }
 

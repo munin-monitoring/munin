@@ -14,8 +14,15 @@ sub new {
     my $self = {
         host_name => $host_name,
         group     => $group,
+
+        port          => 4949,
+        update        => 1,
+        use_node_name => 1,
+        
         %$attributes,
     };
+
+    croak "Attribute 'address' is required" unless $self->{address};
 
     return bless $self, $class;
 }
