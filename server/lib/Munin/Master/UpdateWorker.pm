@@ -202,7 +202,7 @@ sub _update_rrd_file {
     }
 
     logger("[DEBUG] Updating $rrd_file with $value") if $config->{debug};
-    RRDs::update ($rrd_file, "$ds_values->{when}:$value");
+    RRDs::update($rrd_file, "$ds_values->{when}:$value");
     if (my $ERROR = RRDs::error) {
         logger ("[ERROR] In RRD: unable to update $rrd_file: $ERROR");
     }

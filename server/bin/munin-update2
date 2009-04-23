@@ -10,6 +10,20 @@ use Munin::Master::Config;
 use Getopt::Long;
 use Pod::Usage;
 
+# TODO
+#
+# - sanitise_fieldname
+# - compare new and old config and act on changes
+# - marshall config
+# - nested groups
+# - locking: when writing config, for each node
+# - Honour more config variables: TCP: local address and timeout. update
+# - More log messages?
+# - timeout cli option
+# - max processes
+# - use old configuration for failing workers
+
+
 Getopt::Long::Configure(qw(auto_help));
 
 my $config = Munin::Master::Config->instance();

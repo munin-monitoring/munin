@@ -29,6 +29,9 @@ sub run {
 
     $self->_do_with_lock_and_timing("$config->{rundir}/munin-update.lock", sub {
         my ($STATS) = @_;
+
+        logger("Starting munin-update");
+
         my @workers = $self->_create_workers();
 
         if ($config->{fork}) {
