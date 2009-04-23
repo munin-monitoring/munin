@@ -12,6 +12,7 @@ use File::Spec;
 use Munin::Master::Config;
 use Munin::Master::Logger;
 use Munin::Master::Node;
+use Munin::Master::Utils;
 use RRDs;
 use Time::HiRes;
 
@@ -35,6 +36,15 @@ sub do_work {
     my ($self) = @_;
 
     my $update_time = Time::HiRes::time;
+
+    my $lock_file = sprintf '%s/munin-%s-%s.lock',
+        $config->{rundir},
+            $self->{host}{group}{group_name},
+                $self->{host}{host_name};
+
+    munin_getlock($lock_file)
+        or croak "Could not get lock for '$self->{host}{host_name}'. Skipping node.";
+
 
     $self->{node}->do_in_session(sub {
         $self->{node}->negotiate_capabilities();
@@ -70,6 +80,8 @@ sub do_work {
 
         use Data::Dumper; warn Dumper(\@services);
     });
+
+    munin_removelock($lock_file);
 
     return Time::HiRes::time - $update_time;
 }

@@ -15,8 +15,8 @@ use Pod::Usage;
 # - sanitise_fieldname
 # - compare new and old config and act on changes
 # - marshall config
+# - Write marshalled config to file (take lock in advance)
 # - nested groups
-# - locking: when writing config, for each node
 # - More log messages?
 # - use old configuration for failing workers
 
@@ -48,8 +48,6 @@ sub configure {
     my %args = parse_args();
     $config->parse_config_from_file($args{config_file});
     $config->set(\%args);
-
-    use Data::Dumper; warn Dumper($config);
 }
 
 
