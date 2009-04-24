@@ -12,7 +12,6 @@ use Pod::Usage;
 
 # TODO
 #
-# - compare new and old config and act on changes
 # - More log messages?
 # - use old configuration for failing workers
 # - graph order
