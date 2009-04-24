@@ -27,7 +27,7 @@ sub new {
         old_version         => undef,
         service_configs     => {},
         workers             => [],
-        failed_workers      => {},
+        failed_workers      => [],
         group_repository    => Munin::Master::GroupRepository->new(\%gah),
         config_dump_file    => "$config->{dbdir}/datafile",
     }, $class;
@@ -229,12 +229,12 @@ sub _compare_and_act_on_config_changes {
                 next unless $old_ds_config || $just_upgraded;
 
                 $old_ds_config ||= {max => '', min => '', type => 'GAUGE'};
-
+                
                 my $rrd_file 
                     = $self->_get_rrd_file_name($host, $service, $data_source, $old_ds_config->{type});
 
                 # type must come last because it renames the file
-                # referenced by min and max
+                # referenced by min and max ($rrd_file)
                 for my $what (qw(min max type)) {
                     if ($just_upgraded || $ds_config->{$what} ne $old_ds_config->{$what}) {
                         logger ("Notice: compare_configs: $host.$service.$data_source.$what changed from "
@@ -323,6 +323,8 @@ sub _write_new_service_configs {
     my $lock_file = "$config->{rundir}/munin-datafile.lock";
     munin_runlock($lock_file);
 
+    $self->_copy_old_service_config_for_failed_workers();
+
     open my $dump, '>', $self->{config_dump_file}
         or croak "Fatal error: Could not open '$self->{config_dump_file}' for writing: $!";
 
@@ -344,6 +346,15 @@ sub _write_new_service_configs {
         or croak "Fatal error: Could not close '$self->{config_dump_file}': $!";
 
     munin_removelock($lock_file);
+}
+
+
+sub _copy_old_service_config_for_failed_workers {
+    my ($self) = @_;
+
+    for my $worker (@{$self->{failed_workers}}) {
+        $self->{service_configs}{$worker} = $self->{old_service_configs}{$worker};
+    }
 }
 
 

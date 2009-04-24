@@ -13,7 +13,6 @@ use Pod::Usage;
 # TODO
 #
 # - More log messages?
-# - use old configuration for failing workers
 # - graph order
 #
 # - Include data from Munin::Master::Config in config dump?
