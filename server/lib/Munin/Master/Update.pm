@@ -108,7 +108,8 @@ sub _run_workers {
 
     if ($config->{fork}) {
         my $pm = Munin::Master::ProcessManager
-            ->new($self->_create_self_aware_worker_result_handler());
+            ->new($self->_create_self_aware_worker_result_handler(),
+                  $self->_create_self_aware_worker_exception_handler());
         $pm->add_workers(@{$self->{workers}});
         $pm->start_work();
     }
@@ -137,6 +138,16 @@ sub _handle_worker_result {
     printf { $self->{STATS} } "UD|%s|%.2f\n", $worker_id, $time_used;
 
     $self->{service_configs}{$worker_id} = $service_configs;
+}
+
+
+sub _create_self_aware_worker_exception_handler {
+    my ($self) = @_;
+
+    return sub {
+        my ($worker_id, $reason) = @_;
+        push @{$self->{failed_workers}}, $worker_id;
+    };
 }
 
 
