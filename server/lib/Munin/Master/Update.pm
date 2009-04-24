@@ -18,7 +18,14 @@ my $config = Munin::Master::Config->instance();
 sub new {
     my ($class) = @_;
 
-    return bless {}, $class;
+    my %gah = $config->get_groups_and_hosts();
+
+    return bless {
+        STATS            => undef,
+        service_configs  => {},
+        workers          => [],
+        group_repository => Munin::Master::GroupRepository->new(\%gah),
+    }, $class;
 }
 
 
@@ -27,27 +34,14 @@ sub run {
     
     $self->_create_rundir_if_missing();
 
-    $self->_do_with_lock_and_timing("$config->{rundir}/munin-update.lock", sub {
-        my ($STATS) = @_;
-
+    $self->_do_with_lock_and_timing(sub {
         logger("Starting munin-update");
 
-        my @workers = $self->_create_workers();
-
-        if ($config->{fork}) {
-            my $pm = Munin::Master::ProcessManager->new(sub {
-                my ($res) = @_;
-                printf $STATS "UD|%s|%.2f\n", @$res;
-            });
-            $pm->add_workers(@workers);
-            $pm->start_work();
-        }
-        else {
-            for my $worker (@workers) {
-                my $res = $worker->do_work();
-                use Data::Dumper; warn Dumper($res);
-            }
-        }
+        $self->{workers} = $self->_create_workers();
+        $self->_run_workers();
+        $self->_read_old_service_config();
+        $self->_compare_and_act_on_config_changes();
+        $self->_write_new_service_config();
     });
 }
 
@@ -66,10 +60,7 @@ sub _create_rundir_if_missing {
 sub _create_workers {
     my ($self) = @_;
 
-    my %gah = $config->get_groups_and_hosts();
-    my $gr  = Munin::Master::GroupRepository->new(\%gah);
-
-    my @hosts = $gr->get_all_hosts();
+    my @hosts = $self->{group_repository}->get_all_hosts();
 
     if (%{$config->{limit_hosts}}) {
         @hosts = grep { $config->{limit_hosts}{$_->{host_name}} } @hosts
@@ -77,34 +68,112 @@ sub _create_workers {
 
     @hosts = grep { $_->{update} } @hosts;
 
-    return map { Munin::Master::UpdateWorker->new($_) } @hosts;
+    return [ map { Munin::Master::UpdateWorker->new($_) } @hosts ];
 }
 
 
 sub _do_with_lock_and_timing {
-    my ($self, $lock, $block) = @_;
+    my ($self, $block) = @_;
 
+    my $lock = "$config->{rundir}/munin-update.lock";
     munin_runlock($lock);
 
     my $update_time = Time::HiRes::time;
-    my $STATS;
-    if (!open ($STATS, '>', "$config->{dbdir}/munin-update.stats.tmp")) {
+    if (!open ($self->{STATS}, '>', "$config->{dbdir}/munin-update.stats.tmp")) {
         logger("[WARNING] Unable to open $config->{dbdir}/munin-update.stats");
         # Use /dev/null instead - if the admin won't fix he won't care
-        open($STATS, '>', "/dev/null") or die "Could not open STATS to /dev/null: $?";
+        open($self->{STATS}, '>', "/dev/null") or die "Could not open STATS to /dev/null: $?";
     }
 
-    my $retval = $block->($STATS);
+    my $retval = $block->();
 
     $update_time = sprintf("%.2f", (Time::HiRes::time - $update_time));
-    print $STATS "UT|$update_time\n";
-    close ($STATS);
+    print { $self->{STATS} } "UT|$update_time\n";
+    close ($self->{STATS});
+    $self->{STATS} = undef;
     rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
     logger("Munin-update finished ($update_time sec)");
 
     munin_removelock($lock);
 
     return $retval;
+}
+
+
+sub _run_workers {
+    my ($self) = @_;
+
+    if ($config->{fork}) {
+        my $pm = Munin::Master::ProcessManager
+            ->new($self->_create_self_aware_worker_result_handler());
+        $pm->add_workers(@{$self->{workers}});
+        $pm->start_work();
+    }
+    else {
+        for my $worker (@{$self->{workers}}) {
+            my $res = $worker->do_work();
+            $self->_handle_worker_result([$worker->{ID}, $res]);
+        }
+    }
+}
+
+
+sub _create_self_aware_worker_result_handler {
+    my ($self) = @_;
+
+    return sub { $self->_handle_worker_result(@_); };
+}
+
+
+sub _handle_worker_result {
+    my ($self, $res) = @_;
+
+    my ($worker_id, $time_used, $service_configs) 
+        = ($res->[0], $res->[1]{time_used}, $res->[1]{service_configs});
+
+    printf { $self->{STATS} } "UD|%s|%.2f\n", $worker_id, $time_used;
+
+    $self->{service_configs}{$worker_id} = $service_configs;
+}
+
+
+sub _read_old_config_and_service_config {
+    my ($self) = @_;
+}
+
+
+sub _compare_and_act_on_config_changes {
+    my ($self) = @_;
+}
+
+
+sub _write_new_config_and_service_config {
+    my ($self) = @_;
+
+    my $lock_file = "$config->{rundir}/munin-datafile.lock";
+    munin_runlock($lock_file);
+
+    my $config_dump_file = "$config->{dbdir}/datafile";
+    open my $dump, '>', $config_dump_file
+        or croak "Fatal error: Could not open '$config_dump_file' for writing: $!";
+
+    for my $node (keys %{$self->{service_configs}}) {
+        for my $service (keys %{$self->{service_configs}{$node}}) {
+            for my $attr (@{$self->{service_configs}{$node}{$service}{global}}) {
+                print $dump "$node:$service.$attr->[0] $attr->[1]\n";
+            }
+            for my $data_source (keys %{$self->{service_configs}{$node}{$service}{data_source}}) {
+                for my $attr (keys %{$self->{service_configs}{$node}{$service}{data_source}{$data_source}}) {
+                    print $dump "$node:$service.$data_source.$attr $self->{service_configs}{$node}{$service}{data_source}{$data_source}{$attr}\n";
+                }
+            }
+        }
+    }
+
+    close $dump
+        or croak "Fatal error: Could not close '$config_dump_file': $!";
+
+    munin_removelock($lock_file);
 }
 
 

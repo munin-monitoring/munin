@@ -14,12 +14,11 @@ use Pod::Usage;
 #
 # - sanitise_fieldname
 # - compare new and old config and act on changes
-# - marshall config
-# - Write marshalled config to file (take lock in advance)
+# - Include data from Munin::Master::Config in config dump?
 # - nested groups
 # - More log messages?
 # - use old configuration for failing workers
-
+# - graph order
 
 Getopt::Long::Configure(qw(auto_help));
 

@@ -31,7 +31,7 @@ my %booleans = map {$_ => 1} qw(
             debug                  => 0,
             fork                   => 1,
             graph_data_size        => 'normal',
-            local_address          => undef,
+            local_address          => 0,
             logdir                 => $Munin::Common::Defaults::MUNIN_LOGDIR,
             max_processes          => $MAXINT,
             rundir                 => '/tmp',
@@ -87,8 +87,6 @@ sub set {
     
     %$self = (%$self, %$config); 
 }
-
-
 
 
 1;

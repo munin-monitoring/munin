@@ -22,7 +22,7 @@ my $config = Munin::Master::Config->instance();
 sub new {
     my ($class, $host) = @_;
 
-    my $self = $class->SUPER::new($host->{host_name});
+    my $self = $class->SUPER::new("$host->{group}{group_name};$host->{host_name}");
     $self->{host} = $host;
     $self->{node} = Munin::Master::Node->new($host->{address},
                                              $host->{port},
@@ -45,6 +45,7 @@ sub do_work {
     munin_getlock($lock_file)
         or croak "Could not get lock for '$self->{host}{host_name}'. Skipping node.";
 
+    my %all_service_configs = ();
 
     $self->{node}->do_in_session(sub {
         $self->{node}->negotiate_capabilities();
@@ -54,7 +55,7 @@ sub do_work {
             if (%{$config->{limit_services}}) {
                 next unless $config->{limit_services}{$service};
             }
-
+            
             my %service_config = eval {
                 $self->{node}->fetch_service_config($service);
             };
@@ -74,16 +75,20 @@ sub do_work {
 
             $self->_update_rrd_files($service, \%service_config, \%service_data);
 
-            use Data::Dumper; warn Dumper(\%service_config);
-            use Data::Dumper; warn Dumper(\%service_data);
+            #use Data::Dumper; warn Dumper(\%service_config);
+            #use Data::Dumper; warn Dumper(\%service_data);
+            $all_service_configs{$service} = \%service_config;
         }
 
-        use Data::Dumper; warn Dumper(\@services);
+        #use Data::Dumper; warn Dumper(\@services);
     });
 
     munin_removelock($lock_file);
 
-    return Time::HiRes::time - $update_time;
+    return {
+        time_used => Time::HiRes::time - $update_time,
+        service_configs => \%all_service_configs,
+    }
 }
 
 
