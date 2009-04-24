@@ -4,6 +4,7 @@ use warnings;
 use strict;
 
 use Carp;
+use Munin::Common::Defaults;
 use Munin::Master::Config;
 use Munin::Master::GroupRepository;
 use Munin::Master::Logger;
@@ -23,6 +24,7 @@ sub new {
     return bless {
         STATS               => undef,
         old_service_configs => {},
+        old_version         => undef,
         service_configs     => {},
         workers             => [],
         failed_workers      => {},
@@ -161,7 +163,12 @@ sub _read_old_service_configs {
     open my $dump, '<', $self->{config_dump_file}
         or croak "Fatal error: Could not open '$self->{config_dump_file}' for reading: $!";
 
+    my $version = <$dump>;
+    chop $version;
+    $self->{old_version} =  substr $version, length('version ');
+
     while (my $line = <$dump>) {
+        chop $line;
         $line =~ /^([^:]+):([^ ]+) (.*)$/;
         my ($host, $value) = ($1, $3);
         my $t = $2;
@@ -195,6 +202,118 @@ sub _read_old_service_configs {
 
 sub _compare_and_act_on_config_changes {
     my ($self) = @_;
+
+    # FIX why do we need to tune RRD files after upgrade? Shouldn't we
+    # create a upgrade script or something instead?
+    my $just_upgraded = 0;
+
+    if (!defined $self->{old_version} 
+            || $self->{old_version} ne $Munin::Common::Defaults::MUNIN_VERSION) {
+        $just_upgraded = 1;
+    }
+
+    my %changers = (
+        'max'  => \&_change_max,
+        'min'  => \&_change_min,
+        'type' => \&_change_type,
+    );
+
+    for my $host (keys %{$self->{service_configs}}) {
+        for my $service (keys %{$self->{service_configs}{$host}}) {
+            for my $data_source (keys %{$self->{service_configs}{$host}{$service}{data_source}}) {
+                my $ds_config = $self->{service_configs}{$host}{$service}{data_source}{$data_source};
+                my $old_ds_config = $self->{old_service_configs}{$host} 
+                    && $self->{old_service_configs}{$host}{$service}
+                        && $self->{old_service_configs}{$host}{$service}{data_source}{$data_source};
+
+                next unless $old_ds_config || $just_upgraded;
+
+                $old_ds_config ||= {max => '', min => '', type => 'GAUGE'};
+
+                my $rrd_file 
+                    = $self->_get_rrd_file_name($host, $service, $data_source, $old_ds_config->{type});
+
+                # type must come last because it renames the file
+                # referenced by min and max
+                for my $what (qw(min max type)) {
+                    if ($just_upgraded || $ds_config->{$what} ne $old_ds_config->{$what}) {
+                        logger ("Notice: compare_configs: $host.$service.$data_source.$what changed from "
+                                    .(length $old_ds_config->{$what}?$old_ds_config->{$what}:"undefined")." to $ds_config->{$what}.");
+                        $changers{$what}->($self, $ds_config->{$what}, $rrd_file);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+sub _change_type {
+    my ($self, $new, $file) = @_;
+
+    $new ||= 'GAUGE';
+
+    my $type_id = lc(substr($new, 0, 1));
+    my $new_file = $file;
+    $new_file =~ s/\w.rrd/$type_id.rrd/;
+
+    logger("[INFO]: Changing name of $file to $new_file");
+    unless (rename ($file, $new_file)) {
+        logger ("[ERROR]: Could not rename '$file': $!\n");
+    }
+    
+
+    logger("[INFO]: Changing type of $new_file to \"$new\",\n");
+    RRDs::tune($new_file, "-d", "42:$new");
+}
+
+
+sub _change_max {
+    my ($self, $new, $file) = @_;
+
+    $new ||= 'U';
+
+    logger("[INFO]: Changing max of \"$file\" to \"$new\".\n");
+    RRDs::tune($file, "-a", "42:$new");
+}
+
+
+sub _change_min {
+    my ($self, $new, $file) = @_;
+
+    $new ||= 'U';
+
+    logger("[INFO]: Changing min of \"$file\" to \"$new\".\n");
+    RRDs::tune($file, "-i", "42:$new");
+}
+
+
+# FIX merge with Update::Worker::_get_rrd_file_name
+sub _get_rrd_file_name {
+    my ($self, $host, $service, $ds_name, $ds_type) = @_;
+    
+    my $type_id = lc(substr(($ds_type), 0, 1));
+    my ($g, $h) = split /;/, $host;
+    my $file = sprintf("%s.%s-%s-%s-%s.rrd",
+                       $h,
+                       $g,
+                       $service,
+                       $ds_name,
+                       $type_id);
+
+    # Not really a danger (we're not doing this stuff via the shell),
+    # so more to avoid confusion with silly filenames.
+    ($g, $file) = map { 
+        my $p = $_;
+        $p =~ tr/\//_/; 
+        $p =~ s/^\./_/g;
+        $p;
+    } ($g, $file);
+	
+    my $rrd_file = File::Spec->catfile($config->{dbdir}, 
+                                       $g,
+                                       $file);
+    croak "RRD file '$rrd_file' not found" unless -e $rrd_file;
 }
 
 
@@ -207,6 +326,7 @@ sub _write_new_service_configs {
     open my $dump, '>', $self->{config_dump_file}
         or croak "Fatal error: Could not open '$self->{config_dump_file}' for writing: $!";
 
+    print $dump "version $Munin::Common::Defaults::MUNIN_VERSION\n";
     for my $host (keys %{$self->{service_configs}}) {
         for my $service (keys %{$self->{service_configs}{$host}}) {
             for my $attr (@{$self->{service_configs}{$host}{$service}{global}}) {
