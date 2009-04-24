@@ -77,12 +77,11 @@ fi
 if [ "$1" = "config" ]; then
 
 	NCPU=$(egrep '^cpu[0-9]+ ' /proc/stat | wc -l)
-	PERCENT=$(($NCPU * 100))
 	MAX=$(($NCPU * 100))
 	if [ "$scaleto100" = "yes" ]; then
 		graphlimit=100
 	else
-		graphlimit=$PERCENT
+		graphlimit=$MAX
 	fi
 	echo 'graph_title CPU usage'
 	echo "graph_order system user nice idle" $extinfo
