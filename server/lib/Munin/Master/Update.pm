@@ -21,10 +21,13 @@ sub new {
     my %gah = $config->get_groups_and_hosts();
 
     return bless {
-        STATS            => undef,
-        service_configs  => {},
-        workers          => [],
-        group_repository => Munin::Master::GroupRepository->new(\%gah),
+        STATS               => undef,
+        old_service_configs => {},
+        service_configs     => {},
+        workers             => [],
+        failed_workers      => {},
+        group_repository    => Munin::Master::GroupRepository->new(\%gah),
+        config_dump_file    => "$config->{dbdir}/datafile",
     }, $class;
 }
 
@@ -39,9 +42,9 @@ sub run {
 
         $self->{workers} = $self->_create_workers();
         $self->_run_workers();
-        $self->_read_old_service_config();
+        $self->{old_service_configs} = $self->_read_old_service_configs();
         $self->_compare_and_act_on_config_changes();
-        $self->_write_new_service_config();
+        $self->_write_new_service_configs();
     });
 }
 
@@ -137,8 +140,45 @@ sub _handle_worker_result {
 }
 
 
-sub _read_old_config_and_service_config {
+sub _read_old_service_configs {
     my ($self) = @_;
+
+    return {} unless -e $self->{config_dump_file};
+
+    my %service_configs = ();
+
+    open my $dump, '<', $self->{config_dump_file}
+        or croak "Fatal error: Could not open '$self->{config_dump_file}' for reading: $!";
+
+    while (my $line = <$dump>) {
+        $line =~ /^([^:]+):([^ ]+) (.*)$/;
+        my ($host, $value) = ($1, $3);
+        my $t = $2;
+        my ($service, @attribute) = split /\./, $t;
+
+        #use Data::Dumper; warn Dumper([$host, $value, \@attribute]);
+        
+
+        $service_configs{$host} ||= {};
+        $service_configs{$host}{$service} ||= {global => [], data_source => {}};
+
+        if (@attribute == 2) {
+            $service_configs{$host}{$service}{data_source}{$attribute[0]} ||= {};
+            $service_configs{$host}{$service}{data_source}{$attribute[0]}{$attribute[1]}
+                = $value;
+        }
+        else {
+            push @{$service_configs{$host}{$service}{global}}, [@attribute, $value];
+        }
+    }
+
+    close $dump
+        or croak "Fatal error: Could not close '$self->{config_dump_file}': $!";
+
+    use Data::Dumper; warn Dumper(\%service_configs);
+
+    return \%service_configs;
+    
 }
 
 
@@ -147,31 +187,30 @@ sub _compare_and_act_on_config_changes {
 }
 
 
-sub _write_new_config_and_service_config {
+sub _write_new_service_configs {
     my ($self) = @_;
 
     my $lock_file = "$config->{rundir}/munin-datafile.lock";
     munin_runlock($lock_file);
 
-    my $config_dump_file = "$config->{dbdir}/datafile";
-    open my $dump, '>', $config_dump_file
-        or croak "Fatal error: Could not open '$config_dump_file' for writing: $!";
+    open my $dump, '>', $self->{config_dump_file}
+        or croak "Fatal error: Could not open '$self->{config_dump_file}' for writing: $!";
 
-    for my $node (keys %{$self->{service_configs}}) {
-        for my $service (keys %{$self->{service_configs}{$node}}) {
-            for my $attr (@{$self->{service_configs}{$node}{$service}{global}}) {
-                print $dump "$node:$service.$attr->[0] $attr->[1]\n";
+    for my $host (keys %{$self->{service_configs}}) {
+        for my $service (keys %{$self->{service_configs}{$host}}) {
+            for my $attr (@{$self->{service_configs}{$host}{$service}{global}}) {
+                print $dump "$host:$service.$attr->[0] $attr->[1]\n";
             }
-            for my $data_source (keys %{$self->{service_configs}{$node}{$service}{data_source}}) {
-                for my $attr (keys %{$self->{service_configs}{$node}{$service}{data_source}{$data_source}}) {
-                    print $dump "$node:$service.$data_source.$attr $self->{service_configs}{$node}{$service}{data_source}{$data_source}{$attr}\n";
+            for my $data_source (keys %{$self->{service_configs}{$host}{$service}{data_source}}) {
+                for my $attr (keys %{$self->{service_configs}{$host}{$service}{data_source}{$data_source}}) {
+                    print $dump "$host:$service.$data_source.$attr $self->{service_configs}{$host}{$service}{data_source}{$data_source}{$attr}\n";
                 }
             }
         }
     }
 
     close $dump
-        or croak "Fatal error: Could not close '$config_dump_file': $!";
+        or croak "Fatal error: Could not close '$self->{config_dump_file}': $!";
 
     munin_removelock($lock_file);
 }
@@ -184,7 +223,7 @@ __END__
 
 =head1 NAME
 
-Munin::Master::Update - Contacts Munin Nodes, gathers data from
+Munin::Master::Update - Contacts Munin Nodes, gathers data from their
 service data sources, and stores this information in RRD files.
 
 =head1 SYNOPSIS

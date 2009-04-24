@@ -12,13 +12,14 @@ use Pod::Usage;
 
 # TODO
 #
-# - sanitise_fieldname
 # - compare new and old config and act on changes
-# - Include data from Munin::Master::Config in config dump?
-# - nested groups
 # - More log messages?
 # - use old configuration for failing workers
 # - graph order
+#
+# - Include data from Munin::Master::Config in config dump?
+# - sanitise_fieldnames? (Isn't this already done by the plugins?)
+# - nested groups
 
 Getopt::Long::Configure(qw(auto_help));
 
