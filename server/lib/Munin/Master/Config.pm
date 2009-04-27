@@ -31,6 +31,7 @@ my %booleans = map {$_ => 1} qw(
             debug                  => 0,
             fork                   => 1,
             graph_data_size        => 'normal',
+            groups_and_hosts       => {},
             local_address          => 0,
             logdir                 => $Munin::Common::Defaults::MUNIN_LOGDIR,
             max_processes          => $MAXINT,
@@ -43,7 +44,6 @@ my %booleans = map {$_ => 1} qw(
             tls_verify_certificate => 0,
             tls_verify_depth       => 5,
             tmpldir                => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates",
-            groups_and_hosts       => {},
         }, $class;
         
         return $instance;
@@ -64,6 +64,11 @@ sub parse_config {
         if ($line =~ m{\A \[ ([^]]+) \] \s* \z}xms) {
             $self->{groups_and_hosts}{$1} ||= {};
             $section = $self->{groups_and_hosts}{$1};
+        }
+        elsif ($line =~ m { \A \s* (\S+)\.(\S+) \s+ (.*) }xms) {
+            $section->{service_config} ||= {};
+            $section->{service_config}{$1} ||= {};
+            $section->{service_config}{$1}{$2} = $booleans{$2} ? $self->_parse_bool($3) : $3;
         }
         elsif ($line =~ m { \A \s* (\S+) \s+ (.*) }xms) {
             $section->{$1} = $booleans{$1} ? $self->_parse_bool($2) : $2;

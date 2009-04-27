@@ -12,31 +12,37 @@ my $config = Munin::Master::Config->instance();
 $config->parse_config(\*DATA);
 
 is_deeply($config, {
-    'config_file' => '../common/lib/Munin/Common/../../../t/config//munin.conf',
-    'dbdir' => '/opt/munin/sandbox/var/opt/munin',
-    'debug' => 0,
-    'fork'  => 1,
-    'graph_data_size' => 'normal',
-    'groups_and_hosts' => {
-        'marvin' => {
-            'use_node_name' => 1,
-            'address' => '127.0.0.1',
-            'port' => '4948',
+    config_file => '../common/lib/Munin/Common/../../../t/config//munin.conf',
+    dbdir => '/opt/munin/sandbox/var/opt/munin',
+    debug => 0,
+    fork  => 1,
+    graph_data_size => 'normal',
+    groups_and_hosts => {
+        marvin => {
+            use_node_name => 1,
+            address => '127.0.0.1',
+            port => '4948',
+            service_config => {
+                load1 => {
+                    graph_title => 'Loads side by side',
+                    graph_order => 'fii=fii.foo.com:load.load fay=fay.foo.com:load.load',
+                },
+            },
         },
     },
-    'htmldir' => '/opt/munin/sandbox/www',
-    'local_address' => '0',
-    'logdir' => '/opt/munin/sandbox/var/log/munin',
-    'max_processes' => 2 ** 53,
-    'rundir' => '/opt/munin/sandbox/var/run/munin',
-    'timeout' => 180,
-    'tls' => 'disabled',
-    'tls_ca_certificate' => '/opt/munin/common/t/tls/CA/ca_cert.pem',
-    'tls_certificate' => '/opt/munin/common/t/tls/master_cert.pem',
-    'tls_private_key' => '/opt/munin/common/t/tls/master_key.pem',
-    'tls_verify_certificate' => 1,
-    'tls_verify_depth' => '5',
-    'tmpldir' => '/opt/munin/sandbox/etc/opt/munin/templates',
+    htmldir => '/opt/munin/sandbox/www',
+    local_address => '0',
+    logdir => '/opt/munin/sandbox/var/log/munin',
+    max_processes => 2 ** 53,
+    rundir => '/opt/munin/sandbox/var/run/munin',
+    timeout => 180,
+    tls => 'disabled',
+    tls_ca_certificate => '/opt/munin/common/t/tls/CA/ca_cert.pem',
+    tls_certificate => '/opt/munin/common/t/tls/master_cert.pem',
+    tls_private_key => '/opt/munin/common/t/tls/master_key.pem',
+    tls_verify_certificate => 1,
+    tls_verify_depth => '5',
+    tmpldir => '/opt/munin/sandbox/etc/opt/munin/templates',
 });
 
 __DATA__
@@ -85,6 +91,8 @@ tls_verify_depth 5
     address 127.0.0.1
     port 4948
     use_node_name yes
+    load1.graph_title Loads side by side
+    load1.graph_order fii=fii.foo.com:load.load fay=fay.foo.com:load.load
 
 # 
 # A more complex example of a host tree
