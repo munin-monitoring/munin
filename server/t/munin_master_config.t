@@ -25,7 +25,7 @@ is_deeply($config, {
         },
     },
     'htmldir' => '/opt/munin/sandbox/www',
-    'local_address' => undef,
+    'local_address' => '0',
     'logdir' => '/opt/munin/sandbox/var/log/munin',
     'max_processes' => 2 ** 53,
     'rundir' => '/opt/munin/sandbox/var/run/munin',
