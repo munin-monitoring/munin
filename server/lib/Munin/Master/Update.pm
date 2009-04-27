@@ -46,7 +46,7 @@ sub run {
         $self->_run_workers();
         $self->{old_service_configs} = $self->_read_old_service_configs();
         $self->_compare_and_act_on_config_changes();
-        $self->_write_new_service_configs();
+        $self->_write_new_service_configs_locked();
     });
 }
 
@@ -317,35 +317,42 @@ sub _get_rrd_file_name {
 }
 
 
-sub _write_new_service_configs {
+sub _write_new_service_configs_locked {
     my ($self) = @_;
 
     my $lock_file = "$config->{rundir}/munin-datafile.lock";
     munin_runlock($lock_file);
 
-    $self->_copy_old_service_config_for_failed_workers();
-
     open my $dump, '>', $self->{config_dump_file}
         or croak "Fatal error: Could not open '$self->{config_dump_file}' for writing: $!";
 
-    print $dump "version $Munin::Common::Defaults::MUNIN_VERSION\n";
-    for my $host (keys %{$self->{service_configs}}) {
-        for my $service (keys %{$self->{service_configs}{$host}}) {
-            for my $attr (@{$self->{service_configs}{$host}{$service}{global}}) {
-                print $dump "$host:$service.$attr->[0] $attr->[1]\n";
-            }
-            for my $data_source (keys %{$self->{service_configs}{$host}{$service}{data_source}}) {
-                for my $attr (keys %{$self->{service_configs}{$host}{$service}{data_source}{$data_source}}) {
-                    print $dump "$host:$service.$data_source.$attr $self->{service_configs}{$host}{$service}{data_source}{$data_source}{$attr}\n";
-                }
-            }
-        }
-    }
+    $self->_write_new_service_configs($dump);
 
     close $dump
         or croak "Fatal error: Could not close '$self->{config_dump_file}': $!";
 
     munin_removelock($lock_file);
+}
+
+
+sub _write_new_service_configs {
+    my ($self, $io) = @_;
+
+    $self->_copy_old_service_config_for_failed_workers();
+
+    print $io "version $Munin::Common::Defaults::MUNIN_VERSION\n";
+    for my $host (keys %{$self->{service_configs}}) {
+        for my $service (keys %{$self->{service_configs}{$host}}) {
+            for my $attr (@{$self->{service_configs}{$host}{$service}{global}}) {
+                print $io "$host:$service.$attr->[0] $attr->[1]\n";
+            }
+            for my $data_source (keys %{$self->{service_configs}{$host}{$service}{data_source}}) {
+                for my $attr (keys %{$self->{service_configs}{$host}{$service}{data_source}{$data_source}}) {
+                    print $io "$host:$service.$data_source.$attr $self->{service_configs}{$host}{$service}{data_source}{$data_source}{$attr}\n";
+                }
+            }
+        }
+    }
 }
 
 

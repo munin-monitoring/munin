@@ -23,7 +23,7 @@ sub new {
 sub _initialize {
     my ($self, $groups_and_hosts) = @_;
 
-    use Data::Dumper; warn Dumper($groups_and_hosts);
+    #use Data::Dumper; warn Dumper($groups_and_hosts);
 
     for my $gah (keys %$groups_and_hosts) {
         croak "Invalid section name" unless $gah =~ /^[\w;.]+$/;
