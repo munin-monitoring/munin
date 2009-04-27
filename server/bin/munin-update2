@@ -12,8 +12,6 @@ use Pod::Usage;
 
 # TODO
 #
-# - graph order
-#
 # - Include data from Munin::Master::Config in config dump?
 # - nested groups
 

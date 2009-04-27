@@ -153,6 +153,8 @@ sub fetch_service_config {
     my @global_config = ();
     my %data_source_config = ();
 
+    my @graph_order = ();
+
     for my $line (@lines) {
         croak "Client reported timeout in configuration of '$service'"
             if $line =~ /\# timeout/;
@@ -160,25 +162,39 @@ sub fetch_service_config {
         next if $line =~ /^\#/;
         
         if ($line =~ m{\A (\w+)\.(\w+) \s+ (.+) }xms) {
-            my $ds_name = $self->_sanitise_fieldname($1);
+            my ($ds_name, $ds_var, $ds_val) = ($1, $2, $3);
+            $ds_name = $self->_sanitise_fieldname($ds_name);
             $data_source_config{$ds_name} ||= {};
-            $data_source_config{$ds_name}{$2} = $3;
-            logger("config: $service->$ds_name.$2 = $3") if $config->{debug};
-            # FIX graph_order
+            $data_source_config{$ds_name}{$ds_var} = $ds_val;
+            logger("config: $service->$ds_name.$ds_var = $ds_val") if $config->{debug};
+            push @graph_order, $ds_name if ($ds_var eq 'label');
         } 
         elsif ($line =~ m{\A (\w+) \s+ (.+) }xms) {
             push @global_config, [$1, $2];
             logger ("Config: $service->$1 = $2") if $config->{debug};
-            # FIX graph_order
         }
         else {
             croak "Protocol exception: unrecogniced line '$line'";
         }
     }
 
+    $self->_validate_data_sources(\%data_source_config);
+
+    push @global_config, ['graph_order', join(' ', @graph_order)]
+        unless grep { $_->[0] eq 'graph_order' } @global_config;
+
     return (global => \@global_config, data_source => \%data_source_config);
 }
 
+
+sub _validate_data_sources {
+    my ($self, $data_source_config) = @_;
+
+    for my $ds (keys %$data_source_config) {
+        croak "Missing required attribute 'label' for data source '$ds'"
+            unless defined $data_source_config->{$ds}{label};
+    }
+}
 
 sub fetch_service_data {
     my ($self, $service) = @_;

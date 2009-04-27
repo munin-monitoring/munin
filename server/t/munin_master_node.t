@@ -2,7 +2,7 @@ use warnings;
 use strict;
 
 use Munin::Master::Config;
-use Test::More tests => 11;
+use Test::More tests => 13;
 use Test::MockObject::Extends;
 use Test::Exception;
 
@@ -111,8 +111,6 @@ sub setup {
 {
     my $node = setup();
     $node->mock('_node_read', sub { return ('# timeout: bla bla bla') });
-
-    
     throws_ok { $node->fetch_service_config('foo') }
         qr/Client reported timeout in configuration of 'foo'/,
             'Fetch service config - Timeout throws exception';
@@ -130,14 +128,64 @@ sub setup {
             'baz.bar foo',
         );
     });
+    throws_ok { $node->fetch_service_config('foo') }
+        qr/Missing required attribute 'label' for data source 'baz'/,
+            'Fetch service config - Missing "label" throws exception';
+}
 
-    
+
+{
+    my $node = setup();
+    $node->mock('_node_read', sub { 
+        return (
+            '',
+            '# bla bla bla',
+            'foo bar',
+            'zap gabonk',
+            'baz.label foo',
+            'zip.label bar',
+        );
+    });
     my %res = $node->fetch_service_config('foo');
-
     is_deeply(\%res, {
-        global => [[qw(foo bar)], [qw(zap gabonk)]], 
-        data_source => {baz => { bar => 'foo'}},
-    }, 'Fetch service config');
+        global => [
+            [qw(foo bar)],
+            [qw(zap gabonk)],
+            ['graph_order', 'baz zip']
+        ], 
+        data_source => {
+            baz => {label => 'foo'},
+            zip => {label => 'bar'},
+        },
+    }, 'Fetch service config - implicit graph order');
+}
+
+
+{
+    my $node = setup();
+    $node->mock('_node_read', sub { 
+        return (
+            '',
+            '# bla bla bla',
+            'foo bar',
+            'zap gabonk',
+            'baz.label foo',
+            'zip.label bar',
+            'graph_order zip baz',
+        );
+    });
+    my %res = $node->fetch_service_config('foo');
+    is_deeply(\%res, {
+        global => [
+            [qw(foo bar)],
+            [qw(zap gabonk)],
+            ['graph_order', 'zip baz']
+        ], 
+        data_source => {
+            baz => {label => 'foo'},
+            zip => {label => 'bar'},
+        },
+    }, 'Fetch service config - explicit graph_order');
 }
 
 
