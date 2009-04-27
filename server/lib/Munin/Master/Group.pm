@@ -13,7 +13,6 @@ sub new {
     my $self = {
         group_name => $group_name,
         hosts      => {},
-        groups     => {},
     };
 
     return bless $self, $class;
@@ -22,6 +21,11 @@ sub new {
 
 sub add_attributes {
     my ($self, $attributes) = @_;
+
+    my %valid_attributes = map {$_ => 1} qw(node_order local_address contacts);
+
+    croak "Invalid attributes: " . join(', ', keys %$attributes)
+        if grep { !$valid_attributes{$_} } keys %$attributes;
 
     %$self = (%$self, %$attributes);
 }
@@ -34,15 +38,22 @@ sub add_host {
 }
 
 
+sub give_attributes_to_hosts {
+    my ($self) = @_;
+
+    my %not_inheritable = map {$_ => 1} qw(group_name hosts node_order);
+    my %attributes = grep { !$not_inheritable{$_} } %$self;
+
+    map { $_->add_attribtes_if_not_exists(\%attributes) } $self->get_all_hosts();
+
+    return 1;
+}
+
+
 sub get_all_hosts {
     my ($self) = @_;
     
-    my @hosts = ();
-    for my $group (values %{$self->{groups}}) {
-        push @hosts, $group->get_all_hosts();
-    }
-                   
-    return (values %{$self->{hosts}}, @hosts);
+    return values %{$self->{hosts}};
 }
 
 1;

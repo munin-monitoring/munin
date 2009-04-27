@@ -56,15 +56,7 @@ sub do_work {
                 next unless $config->{limit_services}{$service};
             }
             
-            my %service_config = eval {
-                $self->{node}->fetch_service_config($service);
-            };
-            if ($EVAL_ERROR) {
-                logger($EVAL_ERROR);
-                # FIX use old config if exists, else stop all further
-                # processing of service
-            }
-
+            my %service_config = $self->_fetch_service_config($service);
             my %service_data = eval {
                 $self->{node}->fetch_service_data($service);
             };
@@ -89,6 +81,26 @@ sub do_work {
         time_used => Time::HiRes::time - $update_time,
         service_configs => \%all_service_configs,
     }
+}
+
+
+sub _fetch_service_config {
+    my ($self, $service) = @_;
+
+    my %service_config = eval {
+        $self->{node}->fetch_service_config($service);
+    };
+    if ($EVAL_ERROR) {
+        logger($EVAL_ERROR);
+        next;
+    }
+
+    if ($self->{host}{service_config} && $self->{host}{service_config}{$service}) {
+        %service_config
+            = (%service_config, %{$self->{host}{service_config}{$service}});
+    }
+
+    return %service_config;
 }
 
 

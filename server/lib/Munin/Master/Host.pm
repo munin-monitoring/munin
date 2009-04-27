@@ -28,6 +28,13 @@ sub new {
 }
 
 
+sub add_attributes_if_not_exists {
+    my ($self, $attributes) = @_;
+
+    %$self = (%$attributes, %$self);
+}
+
+
 1;
 
 
