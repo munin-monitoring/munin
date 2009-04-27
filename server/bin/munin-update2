@@ -12,11 +12,9 @@ use Pod::Usage;
 
 # TODO
 #
-# - More log messages?
 # - graph order
 #
 # - Include data from Munin::Master::Config in config dump?
-# - sanitise_fieldnames? (Isn't this already done by the plugins?)
 # - nested groups
 
 Getopt::Long::Configure(qw(auto_help));

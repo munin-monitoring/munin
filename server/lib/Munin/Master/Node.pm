@@ -160,9 +160,10 @@ sub fetch_service_config {
         next if $line =~ /^\#/;
         
         if ($line =~ m{\A (\w+)\.(\w+) \s+ (.+) }xms) {
-            $data_source_config{$1} ||= {};
-            $data_source_config{$1}{$2} = $3;
-            logger("config: $service->$1.$2 = $3") if $config->{debug};
+            my $ds_name = $self->_sanitise_fieldname($1);
+            $data_source_config{$ds_name} ||= {};
+            $data_source_config{$ds_name}{$2} = $3;
+            logger("config: $service->$ds_name.$2 = $3") if $config->{debug};
             # FIX graph_order
         } 
         elsif ($line =~ m{\A (\w+) \s+ (.+) }xms) {
@@ -196,6 +197,8 @@ sub fetch_service_data {
         if ($line =~ m{ (\w+)\.value \s+ ([\S:]+) }xms) {
             my ($data_source, $value, $when) = ($1, $2, 'N');
 
+            $data_source = $self->_sanitise_fieldname($data_source);
+
 	    if ($value =~ /^(\d+):(.+)$/) {
 		$when = $1;
 		$value = $2;
@@ -209,6 +212,14 @@ sub fetch_service_data {
     }
 
     return %values;
+}
+
+
+sub _sanitise_fieldname {
+    my ($self, $name) = @_;
+
+    $name =~ s/[\W-]/_/g;
+    return substr($name, -18);
 }
 
 

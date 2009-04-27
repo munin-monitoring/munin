@@ -65,6 +65,11 @@ sub _create_rundir_if_missing {
 sub _create_workers {
     my ($self) = @_;
 
+    # FIX log skipped and queued workers:
+    # logger("Skipping '$name' (update disabled by config)");
+    # logger("Queuing '$name' for update.");
+
+
     my @hosts = $self->{group_repository}->get_all_hosts();
 
     if (%{$config->{limit_hosts}}) {
