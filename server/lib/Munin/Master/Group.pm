@@ -44,7 +44,7 @@ sub give_attributes_to_hosts {
     my %not_inheritable = map {$_ => 1} qw(group_name hosts node_order);
     my %attributes = grep { !$not_inheritable{$_} } %$self;
 
-    map { $_->add_attribtes_if_not_exists(\%attributes) } $self->get_all_hosts();
+    map { $_->add_attributes_if_not_exists(\%attributes) } values %{$self->{hosts}};
 
     return 1;
 }

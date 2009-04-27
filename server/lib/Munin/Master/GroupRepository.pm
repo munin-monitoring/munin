@@ -33,7 +33,7 @@ sub _initialize {
             : \&_process_host_section;
         $process->($self, $gah, $groups_and_hosts->{$gah});
     }
-    for my $group (keys %{$self->{groups}}) {
+    for my $group (values %{$self->{groups}}) {
         $group->give_attributes_to_hosts();
     }
 }
