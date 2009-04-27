@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 11;
+use Test::More tests => 17;
 use Time::HiRes qw(sleep);
 
 use_ok('Munin::Master::ProcessManager');
@@ -62,6 +62,21 @@ sub result_callback {
 {
     my $pm = Munin::Master::ProcessManager->new(\&result_callback);
     isa_ok($pm, 'Munin::Master::ProcessManager');
+ 
+    $pm->add_workers(
+        Test::Worker->new(1),
+        Test::Worker->new(2),
+        Test::Worker->new(3),
+    );
+
+    $pm->start_work();
+}
+
+
+{
+    my $pm = Munin::Master::ProcessManager->new(\&result_callback);
+
+    $pm->{max_concurrent} = 1;
  
     $pm->add_workers(
         Test::Worker->new(1),

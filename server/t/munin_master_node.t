@@ -2,7 +2,8 @@ use warnings;
 use strict;
 
 use Munin::Master::Config;
-use Test::More tests => 13;
+use Test::More tests => 16;
+use Test::MockModule;
 use Test::MockObject::Extends;
 use Test::Exception;
 
@@ -26,6 +27,35 @@ sub setup {
 {
     my $node = Munin::Master::Node->new();
     isa_ok($node, 'Munin::Master::Node');
+}
+
+
+######################################################################
+
+
+{
+    my $node = setup();
+    $node->mock('_node_read_single', sub { 
+        return '# munin node at foo.example.com' 
+    });
+    my $inet = Test::MockModule->new('IO::Socket::INET');
+    $inet->mock(new => sub { return {} });
+
+    $node->_do_connect();
+
+    is($node->{node_name}, 'foo.example.com');
+}
+
+
+######################################################################
+
+
+{
+    my $node = Munin::Master::Node->new();
+    is($node->_extract_name_from_greeting('# munin node at foo.example.com'),
+       'foo.example.com', 'Node name from new greeting');
+    is($node->_extract_name_from_greeting('# lrrd client at foo.example.com'),
+       'foo.example.com', 'Node name from old greeting');
 }
 
 
