@@ -119,9 +119,7 @@ sub change_real_and_effective_user_and_group
 
 
 sub exec_service {
-    my ($class, $service, $command) = @_;
-
-    my %sconf = %{$config->{sconf}};
+    my ($class, $service, $arg) = @_;
 
     POSIX::setsid();
 
@@ -134,20 +132,32 @@ sub exec_service {
 
     $class->export_service_environment($service);
 
-    if (exists $sconf{$service}{command} && defined $sconf{$service}{command}) {
-        my @run = ();
+    my @command = _service_command($service, $arg);
+    print STDERR "# About to run '", join (' ', @command), "'\n" if $config->{DEBUG};
+    exec @command;
+}
+
+
+sub _service_command
+{
+    my ($service, $argument) = @_;
+
+    my @run = ();
+    my %sconf = %{$config->{sconf}};
+
+    if ($sconf{$service}{command}) {
         for my $t (@{$sconf{$service}{command}}) {
             if ($t =~ /^%c$/) {
-                push (@run, "$config->{servicedir}/$service", $command);
+                push (@run, "$config->{servicedir}/$service", $argument);
             } else {
                 push (@run, $t);
             }
         }
-        print STDERR "# About to run \"", join (' ', @run), "\"\n" if $config->{DEBUG};
-        exec (@run) if @run;
     } else {
-        exec "$config->{servicedir}/$service", $command;
+        @run = ("$config->{servicedir}/$service", $argument);
     }
+
+    return @run;
 }
 
 
