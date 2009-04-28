@@ -163,37 +163,10 @@ sub _read_old_service_configs {
 
     return {} unless -e $self->{config_dump_file};
 
-    my %service_configs = ();
-
     open my $dump, '<', $self->{config_dump_file}
         or croak "Fatal error: Could not open '$self->{config_dump_file}' for reading: $!";
 
-    my $version = <$dump>;
-    chop $version;
-    $self->{old_version} =  substr $version, length('version ');
-
-    while (my $line = <$dump>) {
-        chop $line;
-        $line =~ /^([^:]+):([^ ]+) (.*)$/;
-        my ($host, $value) = ($1, $3);
-        my $t = $2;
-        my ($service, @attribute) = split /\./, $t;
-
-        #use Data::Dumper; warn Dumper([$host, $value, \@attribute]);
-        
-
-        $service_configs{$host} ||= {};
-        $service_configs{$host}{$service} ||= {global => [], data_source => {}};
-
-        if (@attribute == 2) {
-            $service_configs{$host}{$service}{data_source}{$attribute[0]} ||= {};
-            $service_configs{$host}{$service}{data_source}{$attribute[0]}{$attribute[1]}
-                = $value;
-        }
-        else {
-            push @{$service_configs{$host}{$service}{global}}, [@attribute, $value];
-        }
-    }
+    my %service_configs = $self->_parse_service_config_dump($dump);
 
     close $dump
         or croak "Fatal error: Could not close '$self->{config_dump_file}': $!";
@@ -202,6 +175,55 @@ sub _read_old_service_configs {
 
     return \%service_configs;
     
+}
+
+
+sub _parse_service_config_dump {
+    my ($self, $io) = @_;
+
+    my %service_configs = ();
+
+    my $version = <$io>;
+    chop $version;
+    $self->{old_version} =  substr $version, length('version ');
+
+    while (my $line = <$io>) {
+        chop $line;
+        my ($key, $value) = split / /, $line;
+
+        my @key_components = split /;/, $key;
+
+        if (@key_components == 1 || @key_components == 3) {
+            # Ignore. These are configuration variables from
+            # $CONF_DIR/munin.conf. We only care about service
+            # configuration.
+            next;
+        }
+        
+        if (@key_components > 5 || @key_components < 4) {
+            croak "Failed to parse line from datafile: $line";
+        }
+        
+        my ($group, $host, $service, @rest) = @key_components;
+        $host = "$group;$host";
+
+        #use Data::Dumper; warn Dumper([$host, $value, \@attribute]);
+        
+
+        $service_configs{$host} ||= {};
+        $service_configs{$host}{$service} ||= {global => [], data_source => {}};
+
+        if (@rest == 2) {
+            $service_configs{$host}{$service}{data_source}{$rest[0]} ||= {};
+            $service_configs{$host}{$service}{data_source}{$rest[0]}{$rest[1]}
+                = $value;
+        }
+        else {
+            push @{$service_configs{$host}{$service}{global}}, [@rest, $value];
+        }
+    }
+
+    return %service_configs;
 }
 
 
@@ -236,14 +258,15 @@ sub _compare_and_act_on_config_changes {
                 $old_ds_config ||= {max => '', min => '', type => 'GAUGE'};
                 
                 my $rrd_file 
-                    = $self->_get_rrd_file_name($host, $service, $data_source, $old_ds_config->{type});
+                    = $self->_get_rrd_file_name($host, $service, $data_source, $ds_config->{type});
 
                 # type must come last because it renames the file
                 # referenced by min and max ($rrd_file)
                 for my $what (qw(min max type)) {
                     if ($just_upgraded || $ds_config->{$what} ne $old_ds_config->{$what}) {
-                        logger ("Notice: compare_configs: $host.$service.$data_source.$what changed from "
-                                    .(length $old_ds_config->{$what}?$old_ds_config->{$what}:"undefined")." to $ds_config->{$what}.");
+                        logger("Notice: compare_configs: $host.$service.$data_source.$what changed from '" 
+                                   . (defined $old_ds_config->{$what} ? $old_ds_config->{$what} : "undefined") 
+                                       . "' to '$ds_config->{$what}'.");
                         $changers{$what}->($self, $ds_config->{$what}, $rrd_file);
                     }
                 }
@@ -319,6 +342,8 @@ sub _get_rrd_file_name {
                                        $g,
                                        $file);
     croak "RRD file '$rrd_file' not found" unless -e $rrd_file;
+
+    return $rrd_file;
 }
 
 
@@ -349,11 +374,11 @@ sub _write_new_service_configs {
     for my $host (keys %{$self->{service_configs}}) {
         for my $service (keys %{$self->{service_configs}{$host}}) {
             for my $attr (@{$self->{service_configs}{$host}{$service}{global}}) {
-                print $io "$host:$service.$attr->[0] $attr->[1]\n";
+                print $io "$host;$service;$attr->[0] $attr->[1]\n";
             }
             for my $data_source (keys %{$self->{service_configs}{$host}{$service}{data_source}}) {
                 for my $attr (keys %{$self->{service_configs}{$host}{$service}{data_source}{$data_source}}) {
-                    print $io "$host:$service.$data_source.$attr $self->{service_configs}{$host}{$service}{data_source}{$data_source}{$attr}\n";
+                    print $io "$host;$service;$data_source;$attr $self->{service_configs}{$host}{$service}{data_source}{$data_source}{$attr}\n";
                 }
             }
         }
