@@ -143,17 +143,18 @@ sub _service_command
     my ($service, $argument) = @_;
 
     my @run = ();
-    my %sconf = %{$config->{sconf}};
+    my $sconf = $config->{sconf};
 
-    if ($sconf{$service}{command}) {
-        for my $t (@{$sconf{$service}{command}}) {
-            if ($t =~ /^%c$/) {
-                push (@run, "$config->{servicedir}/$service", $argument);
+    if ($sconf->{$service}{command}) {
+        for my $t (@{ $sconf->{$service}{command} }) {
+            if ($t eq '%c') {
+                push @run, ("$config->{servicedir}/$service", $argument);
             } else {
-                push (@run, $t);
+                push @run, ($t);
             }
         }
-    } else {
+    }
+    else {
         @run = ("$config->{servicedir}/$service", $argument);
     }
 
