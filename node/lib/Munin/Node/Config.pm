@@ -7,6 +7,7 @@ use warnings;
 use English qw(-no_match_vars);
 use Carp;
 use Munin::Node::OS;
+use Munin::Common::Defaults;
 
 
 my %booleans = map {$_ => 1} qw(
