@@ -29,7 +29,6 @@ use Getopt::Long;
 
 use Munin::Common::Defaults;
 
-my $version    = $Munin::Common::Defaults::MUNIN_VERSION;
 my $config     = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
 my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
 my $libdir     = "$Munin::Common::Defaults::MUNIN_LIBDIR/plugins";
@@ -51,10 +50,6 @@ my $snmpver    = undef;
 my $snmpcomm   = undef;
 
 my $removes    = 0;
-
-my $do_usage   = 0;
-my $do_error   = 0;
-my $do_version = 0;
 
 my $newer      = undef;
 my $debugopt   = '--debug'; # Pass --debug to children or not
@@ -82,6 +77,36 @@ sub parse_args
 		"newer=s"         => \$newer
 	);
 
+	if (defined $newer and (!$shell or $removes)) {
+	    print STDERR "Fatal: --newer only supported along with --shell.\n";
+	    exit 2;
+	}
+
+	if (@families) {
+	    @families = split /,/ , $families[0];
+	} else {
+	    if (@snmp) {
+		@families = ();
+		$shell=1;
+	    }
+	    elsif ($suggest or $shell) {
+		@families = @default_families;
+	    }
+	    else {
+		@families = @all_families;
+	    }
+	}
+
+	# Normalize input in case it was taken from commandline?
+	# This seems like a noop no matter what went before.
+	# @families = split (/,/, join (',', @families));
+	# @snmp = split (/,/, join (',', @snmp));
+
+	if (@snmp and !$shell) {
+	    print STDERR "Fatal: --snmp only supported along with --shell.\n";
+	    exit 3;
+	}
+
 	exit 0; # FIXME :-)
 }
 
@@ -89,17 +114,20 @@ sub parse_args
 sub print_usage_and_exit
 {
 
+	my $all_families = join(', ', @all_families);
+	my $default_families = join(', ', @default_families);
+
 	print qq{Usage: $0 [options]
-	
+
 Options:
 	--help			View this help page
 	--version		Show version information
 	--debug			View debug information (very verbose)
-	--config <file>		Override configuration file 
+	--config <file>		Override configuration file
 	                        [$config]
-	--servicedir <dir>	Override plugin dir [$servicedir]
+	--servicedir <dir>	Override plugin directory [$servicedir]
 	--libdir <dir>		Override plugin lib [$libdir]
-	--families <family,...>	Override families (", join(',',@all_families),") [",join(',',@default_families),"]
+	--families <family,...>	Override families ($all_families) [$default_families]
 	--suggest		Show suggestions instead of status
 	--shell			Show shell commands (implies --suggest)
         --exitnoterror          Do not consider non-zero exit-value as error
@@ -108,14 +136,16 @@ Options:
 	                        than version <version>. [0.0.0]
 	--snmp <host|cidr>      Do SNMP probing on the host or CIDR network.
 	--snmpversion <ver>     Set SNMP version (1, 2c or 3) [2c]
-	--snmpcommunity <comm>  Set SNMP community [public]
+	--snmpcommunity <comm>  Set SNMP community string [public]
 
-By default this program shows which plugins are activated on the
-system.  If you specify --suggest it will present a table of plugins
-that will probably work (according to the plugins autoconf command).
+By default this program shows which plugins are activated on the system.
+
+If you specify --suggest it will present a table of plugins that will
+probably work (according to the plugins autoconf command).
+
 If you specify --shell shell commands to install those same plugins
-will be printed.  These can be reviewed or piped directly into a shell
-to install the plugins.
+will be printed. These can be reviewed or piped directly into a shell to
+install the plugins.
 
 };
 
@@ -126,7 +156,7 @@ to install the plugins.
 sub print_version_and_exit
 {
 
-    print qq{munin-node-configure (munin-node) version $version.
+    print qq{munin-node-configure (munin-node) version $Munin::Common::Defaults::MUNIN_VERSION.
 Written by Jimmy Olsen
 
 Copyright (C) 2003-2006 Jimmy Olsen
@@ -144,41 +174,6 @@ with this software or refer to
 
 ### current end of function definitions
 parse_args();
-
-if (defined $newer and (!$shell or $removes))
-{
-    print STDERR "Fatal: --newer only supported along with --shell.\n";
-    exit 2;
-}
-
-if (@families) {
-    @families = split /,/ , $families[0];
-} else {
-    if (@snmp)
-    {
-	@families = ();
-	$shell=1;
-    }
-    elsif ($suggest or $shell)
-    {
-	@families = @default_families;
-    }
-    else
-    {
-	@families = @all_families;
-    }
-}
-
-# Normalize input in case it was taken from commandline?
-# This seems like a noop no matter what went before.
-# @families = split (/,/, join (',', @families));
-# @snmp = split (/,/, join (',', @snmp));
-
-if (@snmp and !$shell)
-{
-    print STDERR "Fatal: --snmp only supported along with --shell.\n";
-    exit 3;
-}
 
 if (@families)
 {
@@ -365,6 +360,9 @@ if (@errors) {
     exit 1;
 }
 
+
+### XXX functions start here XXX
+
 sub link_remove
 {
     my $plug = shift;
@@ -375,25 +373,20 @@ sub link_remove
     print "rm -f $servicedir/$plug\n";
 }
 
+
 sub link_add
 {
-    my $plug = shift;
-    my $wild = shift;
-
-    if (defined $wild)
-    {
+	my $plug = shift;
+	my $wild = shift || '';
 	print "ln -s $libdir/$plug $servicedir/$plug$wild\n";
-    }
-    else
-    {
-	print "ln -s $libdir/$plug $servicedir/$plug\n";
-    }
 }
+
 
 sub normal
 {
     printf ("%-26s | %-4s | %-39s\n", @_);
 }
+
 
 sub get_installed {
 	(my $ps, my $dir) = @_;
@@ -427,6 +420,7 @@ sub get_installed {
 
 	return $ps;
 }
+
 
 sub get_plugins {
     (my $ps, my $dir) = @_;
@@ -666,7 +660,7 @@ sub get_plugins {
 		if ($debug) {
 		    print "# Suggested: ",
 		      join (' ', @{$ps->{$plug}->{'suggest'}}),"\n";
-		    
+
 		    print "# ERROR: empty suggest from $plug\n"
 			if !@sugg;
 		}
