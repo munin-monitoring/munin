@@ -290,7 +290,7 @@ t/install:
 ######################################################################
 
 install-node: build-node install-node-pre
-	cd node && ./Build install			\
+	cd node && $(PERL) Build install		\
             --install_path lib=$(PERLLIB)		\
             --install_path sbin=$(SBINDIR)		\
             --install_path script=$(BINDIR)		\
@@ -318,20 +318,20 @@ install-node-pre: build
 
 
 build-node:
-	cd node && ./Build
+	cd node && $(PERL) Build
 
 node/Build: node/Build.PL
-	cd node && perl Build.PL
+	cd node && $(PERL) Build.PL
 
 # We assume here that if node/Build is missing, there is nothing to
 # clean.
 clean-node:
-	-cd node && ./Build realclean
+	-cd node && $(PERL) Build realclean
 
 ######################################################################
 
 install-common: build-common
-	cd common && ./Build install			\
+	cd common && $(PERL) Build install		\
             --install_path lib=$(PERLLIB)		\
             --install_path sbin=$(SBINDIR)		\
             --install_path script=$(BINDIR)		\
@@ -339,17 +339,17 @@ install-common: build-common
             --install_path libdoc=$(MANDIR)/man3	\
 
 build-common: build-common-pre common/blib/lib/Munin/Common/Defaults.pm
-	cd common && ./Build
+	cd common && $(PERL) Build
 
 build-common-pre: common/Build
-	cd common && ./Build code
+	cd common && $(PERL) Build code
 	rm -f common/blib/lib/Munin/Common/Defaults.pm
 
 common/Build: common/Build.PL
-	cd common && perl Build.PL
+	cd common && $(PERL) Build.PL
 
 common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm
-	perl -pe 's{(PREFIX     \s+=\s).*}{\1q{$(PREFIX)};}x;      \
+	$(PERL) -pe 's{(PREFIX     \s+=\s).*}{\1q{$(PREFIX)};}x;   \
                   s{(CONFDIR    \s+=\s).*}{\1q{$(CONFDIR)};}x;     \
                   s{(BINDIR     \s+=\s).*}{\1q{$(BINDIR)};}x;      \
                   s{(SBINDIR    \s+=\s).*}{\1q{$(SBINDIR)};}x;     \
@@ -381,7 +381,7 @@ common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm
 # We assume here that if common/Build is missing, there is nothing to
 # clean.
 clean-common:
-	-cd common && ./Build realclean
+	-cd common && $(PERL) Build realclean
 
 ######################################################################
 
