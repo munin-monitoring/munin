@@ -22,8 +22,11 @@
 $| = 1; # Flush after every write to stdout
 
 use strict;
+use warnings;
+
 use Getopt::Long;
 # use Data::Dumper;
+
 use Munin::Common::Defaults;
 
 my $version    = $Munin::Common::Defaults::MUNIN_VERSION;
@@ -31,21 +34,28 @@ my $config     = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
 my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
 my $libdir     = "$Munin::Common::Defaults::MUNIN_LIBDIR/plugins";
 my $bindir     = $Munin::Common::Defaults::MUNIN_SBINDIR;
+
 my $installed  = undef;
 my $plugins    = undef;
+
 my $debug      = 0;
 my $suggest    = 0;
 my $shell      = 0;
-my @afamilies  = ("auto", "manual", "contrib");
-my @dfamilies  = ("auto");
-my @families   = ();
+
+my @all_families     = ("auto", "manual", "contrib");
+my @default_families = ("auto");
+my @families         = ();
+
 my @snmp       = ();
 my $snmpver    = undef;
 my $snmpcomm   = undef;
+
 my $removes    = 0;
+
 my $do_usage   = 0;
 my $do_error   = 0;
 my $do_version = 0;
+
 my $newer      = undef;
 my $debugopt   = '--debug'; # Pass --debug to children or not
 my @errors     = ();
@@ -81,7 +91,7 @@ Options:
 	                        [$config]
 	--servicedir <dir>	Override plugin dir [$servicedir]
 	--libdir <dir>		Override plugin lib [$libdir]
-	--families <family,...>	Override families (", join(',',@afamilies),") [",join(',',@dfamilies),"]
+	--families <family,...>	Override families (", join(',',@all_families),") [",join(',',@default_families),"]
 	--suggest		Show suggestions instead of status
 	--shell			Show shell commands (implies --suggest)
         --exitnoterror          Do not consider non-zero exit-value as error
@@ -137,11 +147,11 @@ if (@families) {
     }
     elsif ($suggest or $shell)
     {
-	@families = @dfamilies;
+	@families = @default_families;
     }
     else
     {
-	@families = @afamilies;
+	@families = @all_families;
     }
 }
 
@@ -174,8 +184,6 @@ if (@families)
 
     foreach my $plug (sort keys %{$plugins})
     {
-#	print "New plugin: ", Dumper $plugins->{$plug},"\n";
-
 	next unless defined $plugins->{$plug}->{'family'};
 	next unless (grep (/^$plugins->{$plug}->{'family'}$/, @families));
 
@@ -536,7 +544,7 @@ sub get_plugins {
 	    } else {
 		# The join map we used here before was somehow
 		# fragile.  This construct is possible to
-		# debug.L
+		# debug.
 
 		my @pr = ();	# Plugin response
 
@@ -655,7 +663,6 @@ sub get_plugins {
 	}
 	print "\n" if $debug;
     }
-    #	print Dumper $ps;
     return $ps;
 }
 
@@ -774,4 +781,3 @@ This program is released under the GNU General Public License
 
 =cut
 
-# vim:syntax=perl
