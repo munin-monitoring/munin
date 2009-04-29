@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!/usr/bin/perl -w
 # -*- perl -*-
 #
 # Copyright (C) 2003-2006 Jimmy Olsen, Nicolai Langfeldt.
@@ -24,12 +24,13 @@ $| = 1; # Flush after every write to stdout
 use strict;
 use Getopt::Long;
 # use Data::Dumper;
+use Munin::Common::Defaults;
 
-my $version    = "@@VERSION@@";
-my $config     = "@@CONFDIR@@/munin-node.conf";
-my $servicedir = "@@CONFDIR@@/plugins";
-my $libdir     = "@@LIBDIR@@/plugins";
-my $bindir     = "@@SBINDIR@@";
+my $version    = $Munin::Common::Defaults::MUNIN_VERSION;
+my $config     = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
+my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
+my $libdir     = "$Munin::Common::Defaults::MUNIN_LIBDIR/plugins";
+my $bindir     = $Munin::Common::Defaults::MUNIN_SBINDIR;
 my $installed  = undef;
 my $plugins    = undef;
 my $debug      = 0;
@@ -306,7 +307,7 @@ if (@families)
 
 if (@snmp and $shell)
 {
-    if (-x "@@LIBDIR@@/munin-node-configure-snmp")
+    if (-x "$bindir/munin-node-configure-snmp")
     {
 	if (eval "require Net::SNMP;")
 	{

@@ -14,10 +14,7 @@ DIR              := $(shell /bin/pwd | sed 's/^.*\///')
 INFILES          := $(shell find . -name '*.in' | sed 's/\.\/\(.*\)\.in$$/build\/\1/')
 PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/*)
 MANCENTER        := "Munin Documentation"
-MAN8		 := node/munin-node node/munin-run \
-			node/munin-node-configure-snmp \
-			node/munin-node-configure \
-			server/bin/munin-graph server/bin/munin-update \
+MAN8		 := server/bin/munin-graph server/bin/munin-update \
 			server/bin/munin-limits server/bin/munin-html \
 			server/bin/munin-gather
 PODMAN8          := server/doc/munin-cron server/doc/munin
@@ -27,7 +24,8 @@ default: build
 
 install: install-main install-common install-node install-node-plugins install-man
 
-uninstall: uninstall-main
+uninstall: 
+	echo "Uninstall is not implemented yet"
 
 # This removes the installed config so that the next install-pass installs
 # a new config.  Target suitable for maintainers
@@ -72,92 +70,6 @@ install-main: build
 	$(INSTALL) -m 0644 server/lib/Munin/Master/Utils.pm $(PERLLIB)/Munin/Master
 	$(INSTALL) -m 0644 server/lib/Munin/Master/Logger.pm $(PERLLIB)/Munin/Master
 
-uninstall-main: build
-	for p in build/server/*.tmpl; do    	    \
-		rm -f $(CONFDIR)/templates/"$$p"  ; \
-	done
-	rm -f $(CONFDIR)/templates/logo.png
-	rm -f $(CONFDIR)/templates/style.css
-	rm -f $(CONFDIR)/templates/definitions.html
-	rm -f $(HTMLDIR)/.htaccess
-
-	rm -f $(CONFDIR)/munin.conf 
-
-	rm -f $(BINDIR)/munin-cron 
-	rm -f $(BINDIR)/munin-check
-
-	rm -f $(LIBDIR)/munin-update
-	rm -f $(LIBDIR)/munin-graph
-	rm -f $(LIBDIR)/munin-html
-	rm -f $(LIBDIR)/munin-limits
-	rm -f $(CGIDIR)/munin-cgi-graph
-
-	rm -f $(PERLLIB)/Munin.pm 
-	-rmdir $(CONFDIR)/templates
-	-rmdir $(CONFDIR)
-	-rmdir $(LIBDIR)
-	-rmdir $(BINDIR)
-
-	-rmdir $(LOGDIR)
-	-rmdir $(STATEDIR)
-	-rmdir $(HTMLDIR)
-	-rmdir $(DBDIR)
-	-rmdir $(CGIDIR)
-
-install-node: build install-node-non-snmp install-node-snmp install-munindoc
-	echo Done.
-
-uninstall-node: uninstall-node-non-snmp uninstall-node-snmp
-	echo Undone.
-
-install-node-snmp: build
-	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(LIBDIR)/
-
-install-munindoc: build
-	$(INSTALL) -m 0755 build/node/munindoc $(BINDIR)/
-
-uninstall-node-snmp: build
-	rm -f $(LIBDIR)/munin-node-configure-snmp
-	-rmdir $(LIBDIR)
-
-install-node-non-snmp: build
-	$(CHECKGROUP)
-	mkdir -p $(CONFDIR)/plugins
-	mkdir -p $(CONFDIR)/plugin-conf.d
-	mkdir -p $(LIBDIR)/plugins
-	mkdir -p $(SBINDIR)
-	mkdir -p $(PERLLIB)/Munin/Plugin
-	mkdir -p $(PERLLIB)/Munin/Common
-
-	mkdir -p $(LOGDIR)
-	mkdir -p $(STATEDIR)
-	mkdir -p $(PLUGSTATE)
-
-	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
-	$(CHMOD) 0775 $(PLUGSTATE)
-	$(CHMOD) 0755 $(CONFDIR)/plugin-conf.d
-
-	$(INSTALL) -m 0755 build/node/munin-node $(SBINDIR)/
-	$(INSTALL) -m 0755 build/node/munin-node-configure $(SBINDIR)/
-	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
-	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
-
-	mkdir -p $(PERLLIB)/Munin/Node
-	$(INSTALL) -m 0644 node/lib/Munin/Node/OS.pm $(PERLLIB)/Munin/Node
-	$(INSTALL) -m 0644 node/lib/Munin/Node/Config.pm $(PERLLIB)/Munin/Node
-	$(INSTALL) -m 0644 node/lib/Munin/Node/Logger.pm $(PERLLIB)/Munin/Node
-	$(INSTALL) -m 0644 node/lib/Munin/Node/Server.pm $(PERLLIB)/Munin/Node
-	$(INSTALL) -m 0644 node/lib/Munin/Node/Service.pm $(PERLLIB)/Munin/Node
-	$(INSTALL) -m 0644 node/lib/Munin/Node/Session.pm $(PERLLIB)/Munin/Node
-
-uninstall-node-non-snmp: build
-	rm -f $(SBINDIR)/munin-node 
-	rm -f $(SBINDIR)/munin-node-configure
-	rm -f $(CONFDIR)/munin-node.conf 
-	rm -f $(SBINDIR)/munin-run
-	-rmdir $(CONFDIR)/plugin-conf.d
-	-rmdir $(CONFDIR)
-	-rmdir $(SBINDIR)
 
 
 # ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE
@@ -165,6 +77,9 @@ uninstall-node-non-snmp: build
 
 # Some HP-UX plugins needs *.adv support files in LIBDIR
 install-node-plugins: build $(PLUGINS) Makefile Makefile.config
+#	mkdir -p $(CONFDIR)/plugins
+#	mkdir -p $(CONFDIR)/plugin-conf.d
+#	mkdir -p $(LIBDIR)/plugins
 	for p in build/plugins/node.d/* build/plugins/node.d.$(OSTYPE)/* ; do \
 	    if test -f "$$p" ; then                                    \
 		family=`sed -n 's/^[[:space:]]*#%# family=\(.*\)$$/\1/p' $$p`;\
@@ -186,14 +101,6 @@ install-node-plugins: build $(PLUGINS) Makefile Makefile.config
 	$(INSTALL) -m 0644 plugins/lib/Munin/Plugin.pm $(PERLLIB)/Munin/
 	$(INSTALL) -m 0644 plugins/lib/Munin/Plugin/SNMP.pm $(PERLLIB)/Munin/Plugin/
 
-uninstall-node-plugins: build $(PLUGINS)
-	for p in build/plugins/node.d.$(OSTYPE)/* build/plugins/node.d/*; do \
-	    rm -f $(LIBDIR)/plugins/`basename $$p` \
-	done
-	rm -f $(LIBDIR)/plugins/plugins.history
-	rm -f $(LIBDIR)/plugins/plugin.sh
-	-rm -f $(LIBDIR)/*.adv
-
 #TODO:
 # configure plugins.  Or not. Better done under the direction of the installer
 # or the packager.
@@ -202,10 +109,6 @@ install-man: build-man Makefile Makefile.config
 	mkdir -p $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8
 	$(INSTALL) -m 0644 build/doc/munin-node.conf.5 $(MANDIR)/man5/
 	$(INSTALL) -m 0644 build/doc/munin.conf.5 $(MANDIR)/man5/
-	$(INSTALL) -m 0644 build/doc/munin-node.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-node-configure.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-node-configure-snmp.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-run.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-graph.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-update.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-limits.8 $(MANDIR)/man8/
@@ -214,33 +117,16 @@ install-man: build-man Makefile Makefile.config
 	$(INSTALL) -m 0644 build/doc/munin.8 $(MANDIR)/man8/
 
 
-uninstall-man: build-man
-	rm -f $(MANDIR)/man5/munin-node.conf.5 
-	rm -f $(MANDIR)/man5/munin.conf.5 
-	rm -f $(MANDIR)/man8/munin-node.8
-	rm -f $(MANDIR)/man8/munin-node-configure.8 
-	rm -f $(MANDIR)/man8/munin-node-configure-snmp.8
-	rm -f $(MANDIR)/man8/munin-run.8
-	rm -f $(MANDIR)/man8/munin-graph.8 
-	rm -f $(MANDIR)/man8/munin-update.8 
-	rm -f $(MANDIR)/man8/munin-limits.8
-	rm -f $(MANDIR)/man8/munin-html.8
-	rm -f $(MANDIR)/man8/munin-cron.8 
-	rm -f $(MANDIR)/man8/munin.8 
-	-rmdir $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8 $(MANDIR)
-
 install-doc: build-doc
 	mkdir -p $(DOCDIR)/resources
 	$(INSTALL) -m 0644 README $(DOCDIR)/
 	$(INSTALL) -m 0644 COPYING $(DOCDIR)/
 	$(INSTALL) -m 0644 build/resources/* $(DOCDIR)/resources
 
-uninstall-doc: build-doc
-	rm -rf $(DOCDIR)
 
 
 
-build: $(INFILES) build-common build-man
+build: $(INFILES) build-common build-node build-man
 
 build/%: %.in
 	@echo "$< -> $@"
@@ -403,8 +289,54 @@ t/install:
 
 ######################################################################
 
+install-node: build-node install-node-pre
+	cd node && ./Build install			\
+            --install_path lib=$(PERLLIB)		\
+            --install_path sbin=$(SBINDIR)		\
+            --install_path script=$(BINDIR)		\
+            --install_path bindoc=$(MANDIR)/man1	\
+            --install_path libdoc=$(MANDIR)/man3	\
+
+install-node-pre: build 
+	$(CHECKGROUP)
+	mkdir -p $(CONFDIR)/plugins
+	mkdir -p $(CONFDIR)/plugin-conf.d
+	mkdir -p $(LIBDIR)/plugins
+	mkdir -p $(SBINDIR)
+	mkdir -p $(PERLLIB)/Munin/Plugin
+	mkdir -p $(PERLLIB)/Munin/Common
+
+	mkdir -p $(LOGDIR)
+	mkdir -p $(STATEDIR)
+	mkdir -p $(PLUGSTATE)
+
+	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
+	$(CHMOD) 0775 $(PLUGSTATE)
+	$(CHMOD) 0755 $(CONFDIR)/plugin-conf.d
+
+	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
+
+
+build-node:
+	cd node && ./Build
+
+node/Build: node/Build.PL
+	cd node && perl Build.PL
+
+# We assume here that if node/Build is missing, there is nothing to
+# clean.
+clean-node:
+	-cd node && ./Build realclean
+
+######################################################################
+
 install-common: build-common
-	cd common && ./Build install --destdir=$(DESTDIR)
+	cd common && ./Build install			\
+            --install_path lib=$(PERLLIB)		\
+            --install_path sbin=$(SBINDIR)		\
+            --install_path script=$(BINDIR)		\
+            --install_path bindoc=$(MANDIR)/man1	\
+            --install_path libdoc=$(MANDIR)/man3	\
 
 build-common: build-common-pre common/blib/lib/Munin/Common/Defaults.pm
 	cd common && ./Build
