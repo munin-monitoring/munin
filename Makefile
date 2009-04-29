@@ -256,7 +256,7 @@ suse-src: suse-pre
 	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
 
-clean: clean-common
+clean: clean-common clean-node
 ifeq ($(MAKELEVEL),0)
 	-rm -f debian
 	-ln -sf dists/debian
@@ -343,7 +343,7 @@ install-node-pre: build
 	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
 
 
-build-node:
+build-node: node/Build
 	cd node && $(PERL) Build
 
 node/Build: node/Build.PL
