@@ -256,7 +256,7 @@ suse-src: suse-pre
 	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
 
-clean: clean-common clean-node
+clean: clean-common clean-node clean-master
 ifeq ($(MAKELEVEL),0)
 	-rm -f debian
 	-ln -sf dists/debian
@@ -306,9 +306,19 @@ t/install:
 	$(MAKE) clean install-node install-node-plugins CONFIG=t/Makefile.config INSTALL_PLUGINS=test
 
 
-test-master:
+######################################################################
+
+test-master: master/Build
 	cd master && $(PERL) Build test
 
+
+master/Build: master/Build.PL
+	cd master && $(PERL) Build.PL
+
+# We assume here that if master/Build is missing, there is nothing to
+# clean.
+clean-master:
+	-cd master && $(PERL) Build realclean
 
 
 
