@@ -181,7 +181,7 @@ sub fetch_service_config {
     $self->_validate_data_sources(\%data_source_config);
 
     push @global_config, ['graph_order', join(' ', @graph_order)]
-        unless grep { $_->[0] eq 'graph_order' } @global_config;
+        unless !@graph_order || grep { $_->[0] eq 'graph_order' } @global_config;
 
     return (global => \@global_config, data_source => \%data_source_config);
 }

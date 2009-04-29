@@ -57,6 +57,10 @@ sub do_work {
             }
             
             my %service_config = $self->_fetch_service_config($service);
+            unless (%service_config) {
+                logger("[WARNING] Service $service returned no config");
+                next;
+            }
             my %service_data = eval {
                 $self->{node}->fetch_service_data($service);
             };
@@ -66,9 +70,6 @@ sub do_work {
             }
 
             $self->_update_rrd_files($service, \%service_config, \%service_data);
-
-            #use Data::Dumper; warn Dumper(\%service_config);
-            #use Data::Dumper; warn Dumper(\%service_data);
             $all_service_configs{$service} = \%service_config;
         }
 
@@ -91,8 +92,10 @@ sub _fetch_service_config {
         $self->{node}->fetch_service_config($service);
     };
     if ($EVAL_ERROR) {
+        # FIX Report failed service so that we can use the old service
+        # config.
         logger($EVAL_ERROR);
-        next;
+        return;
     }
 
     if ($self->{host}{service_config} && $self->{host}{service_config}{$service}) {
@@ -119,7 +122,12 @@ sub _update_rrd_files {
             = $self->_create_rrd_file_if_needed($service, $ds_name, 
                                                 $service_config->{data_source}{$ds_name});
 
-        $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name});
+        if (%$service_data) {
+            $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name});
+        }
+        else {
+            logger("[WARNING] Service $service returned no data");
+        }
     }
 }
 
@@ -150,9 +158,8 @@ sub _get_rrd_file_name {
     
     my $type_id = lc(substr(($ds_config->{type}), 0, 1));
     my $group = $self->{host}{group}{group_name};
-    my $file = sprintf("%s.%s-%s-%s-%s.rrd",
+    my $file = sprintf("%s-%s-%s-%s.rrd",
                        $self->{host}{host_name},
-                       $group,
                        $service,
                        $ds_name,
                        $type_id);

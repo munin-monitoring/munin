@@ -322,9 +322,8 @@ sub _get_rrd_file_name {
     
     my $type_id = lc(substr(($ds_type), 0, 1));
     my ($g, $h) = split /;/, $host;
-    my $file = sprintf("%s.%s-%s-%s-%s.rrd",
+    my $file = sprintf("%s-%s-%s-%s.rrd",
                        $h,
-                       $g,
                        $service,
                        $ds_name,
                        $type_id);
