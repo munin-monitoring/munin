@@ -20,9 +20,11 @@ MAN8		 := master/bin/munin-graph master/bin/munin-update \
 PODMAN8          := master/doc/munin-cron master/doc/munin
 PODMAN5          := master/doc/munin.conf node/doc/munin-node.conf
 
+.PHONY: install install-main install-node install-doc install-man install-common build build-doc deb clean source_dist build-common clean-common test test-master test-node test-common 
+
 default: build
 
-install: install-main install-common install-node install-node-plugins install-man
+install: install-master install-common install-node install-node-plugins install-man
 
 uninstall: 
 	echo "Uninstall is not implemented yet"
@@ -33,7 +35,7 @@ unconfig:
 	rm -f $(HTMLDIR)/.htaccess
 	rm -f $(CONFDIR)/munin.conf
 
-install-main: build
+install-master: build
 	$(CHECKUSER)
 	mkdir -p $(CONFDIR)/templates
 	mkdir -p $(LIBDIR)
@@ -259,13 +261,15 @@ source_dist: clean
 	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd .. && rm munin-$(VERSION))
 
+test: test-node test-common test-master
+
 ifeq ($(MAKELEVEL),0)
 # Re-exec make with the test config
-test: t/*.t
+old-test: t/*.t
 	$(MAKE) $@ CONFIG=t/Makefile.config
 else
 test_plugins = id_default id_root env
-test: t/*.t t/install $(addprefix $(CONFDIR)/plugins/,$(test_plugins))
+old-test: t/*.t t/install $(addprefix $(CONFDIR)/plugins/,$(test_plugins))
 	@for test in t/*.t; do \
 		echo -n "$$test: "; \
 		PERL5LIB=$(PERLLIB) $(PERL) $$test;\
@@ -283,6 +287,11 @@ node-monkeywrench: install-node
 
 t/install: 
 	$(MAKE) clean install-node install-node-plugins CONFIG=t/Makefile.config INSTALL_PLUGINS=test
+
+
+test-master:
+	cd master && $(PERL) Build test
+
 
 
 
@@ -327,6 +336,9 @@ node/Build: node/Build.PL
 # clean.
 clean-node:
 	-cd node && $(PERL) Build realclean
+
+test-node:
+	cd node && $(PERL) Build test
 
 ######################################################################
 
@@ -383,7 +395,9 @@ common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm
 clean-common:
 	-cd common && $(PERL) Build realclean
 
+test-common:
+	cd common && $(PERL) Build test
+
 ######################################################################
 
 
-.PHONY: install install-main install-node install-doc install-man build build-doc deb clean source_dist test install-common build-common clean-common
