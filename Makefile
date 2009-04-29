@@ -69,8 +69,28 @@ install-master: build
 	$(INSTALL) -m 0755 build/master/bin/munin-limits $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/bin/munin-gather $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/bin/munin-cgi-graph $(CGIDIR)/
-	$(INSTALL) -m 0644 master/lib/Munin/Master/Utils.pm $(PERLLIB)/Munin/Master
+	$(INSTALL) -m 0644 master/lib/Munin/Master/Config.pm $(PERLLIB)/Munin/Master
+	$(INSTALL) -m 0644 master/lib/Munin/Master/Group.pm $(PERLLIB)/Munin/Master
+	$(INSTALL) -m 0644 master/lib/Munin/Master/GroupRepository.pm $(PERLLIB)/Munin/Master
+	$(INSTALL) -m 0644 master/lib/Munin/Master/Host.pm $(PERLLIB)/Munin/Master
 	$(INSTALL) -m 0644 master/lib/Munin/Master/Logger.pm $(PERLLIB)/Munin/Master
+	$(INSTALL) -m 0644 master/lib/Munin/Master/Node.pm $(PERLLIB)/Munin/Master
+	$(INSTALL) -m 0644 master/lib/Munin/Master/ProcessManager.pm $(PERLLIB)/Munin/Master
+	$(INSTALL) -m 0644 master/lib/Munin/Master/Update.pm $(PERLLIB)/Munin/Master
+	$(INSTALL) -m 0644 master/lib/Munin/Master/UpdateWorker.pm $(PERLLIB)/Munin/Master
+	$(INSTALL) -m 0644 master/lib/Munin/Master/Utils.pm $(PERLLIB)/Munin/Master
+	$(INSTALL) -m 0644 master/lib/Munin/Master/Worker.pm $(PERLLIB)/Munin/Master
+
+
+
+
+
+
+
+
+
+
+
 
 
 
