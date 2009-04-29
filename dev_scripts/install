@@ -13,7 +13,7 @@ if [ $1 ]; then
 fi
 
 make DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www
-fakeroot make install-main install-common install-node install-man DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www
+fakeroot make install-master install-common install-node install-man DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www
 
 
 if [ $1 ]; then

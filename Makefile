@@ -20,7 +20,7 @@ MAN8		 := master/bin/munin-graph master/bin/munin-update \
 PODMAN8          := master/doc/munin-cron master/doc/munin
 PODMAN5          := master/doc/munin.conf node/doc/munin-node.conf
 
-.PHONY: install install-main install-node install-doc install-man install-common build build-doc deb clean source_dist build-common clean-common test test-master test-node test-common 
+.PHONY: install install-master install-node install-doc install-man install-common build build-doc deb clean source_dist build-common clean-common test test-master test-node test-common 
 
 default: build
 
@@ -63,7 +63,7 @@ install-master: build
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/master/munin.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/master/bin/munin-cron $(BINDIR)/
 	$(INSTALL) -m 0755 build/master/bin/munin-check $(BINDIR)/
-	$(INSTALL) -m 0755 build/master/bin/munin-update $(LIBDIR)/
+	$(INSTALL) -m 0755 master/bin/munin-update $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/bin/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/bin/munin-html $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/bin/munin-limits $(LIBDIR)/
@@ -79,9 +79,6 @@ install-master: build
 
 # Some HP-UX plugins needs *.adv support files in LIBDIR
 install-node-plugins: build $(PLUGINS) Makefile Makefile.config
-#	mkdir -p $(CONFDIR)/plugins
-#	mkdir -p $(CONFDIR)/plugin-conf.d
-#	mkdir -p $(LIBDIR)/plugins
 	for p in build/plugins/node.d/* build/plugins/node.d.$(OSTYPE)/* ; do \
 	    if test -f "$$p" ; then                                    \
 		family=`sed -n 's/^[[:space:]]*#%# family=\(.*\)$$/\1/p' $$p`;\
