@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 37;
+use Test::More tests => 33;
 
 use FindBin;
 use English qw(-no_match_vars);
@@ -83,12 +83,12 @@ isa_ok($conf, 'Munin::Node::Config');
 
 {
     my @res = $conf->_parse_line('allow 127\.0\.0\.1');
-    is_deeply(\@res, [allow_deny => ['allow', '127\.0\.0\.1']], 'Parsing allow');  
+    is_deeply(\@res, [], 'Parsing: allow is ignored');  
 }
 
 {
     my @res = $conf->_parse_line('deny 127\.0\.0\.1');
-    is_deeply(\@res, [allow_deny => ['deny', '127\.0\.0\.1']], 'Parsing deny');  
+    is_deeply(\@res, [], 'Parsing: deny is ignored');  
 }
 
 
@@ -148,10 +148,6 @@ isa_ok($conf, 'Munin::Node::Config');
     my $expected = {
         fqdn => 'foo.example.com',
         tls => 'enabled',
-        allow_deny => [
-            ['allow', '^127\\.0\\.0\\.\d+$'],
-            ['allow', '^10\\.0\\.0\\.\d+$']
-        ],
         sconf => {
             'setsid' => 'yes',
             'background' => '1',
@@ -174,36 +170,6 @@ isa_ok($conf, 'Munin::Node::Config');
     };
     is_deeply($conf, $expected, "Parsing a test config");
 }
-
-
-###############################################################################
-#                  _ A D D _ A L L O W _ D E N Y _ R U L E
-
-{
-    $conf->reinitialize();
-
-    $conf->_add_allow_deny_rule(['deny', 'foo']);
-    is_deeply($conf, {allow_deny => [['deny', 'foo']]}, "Parsing a 'deny' rule");
-
-    eval {
-        $conf->_add_allow_deny_rule(['allow', 'foo']);
-    };
-    like($EVAL_ERROR, qr/You can't mix allow and deny/, "'allow' rule cannot be added to a 'deny' ruleset");
-}
-
-
-{
-    $conf->reinitialize();
-
-    $conf->_add_allow_deny_rule(['allow', 'foo']);
-    is_deeply($conf, {allow_deny => [['allow', 'foo']]}, "Parsing an 'allow' rule");
-
-    eval {
-        $conf->_add_allow_deny_rule(['deny', 'foo']);
-    };
-    like($EVAL_ERROR, qr/You can't mix allow and deny/, "'deny' rule cannot be added to an 'allow' ruleset");
-}
-
 
 
 ###############################################################################

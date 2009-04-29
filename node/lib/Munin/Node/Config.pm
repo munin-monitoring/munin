@@ -51,9 +51,6 @@ sub parse_config {
             $self->{ignores} ||= [];
             push @{$self->{ignores}}, $var[1];
         } 
-        elsif ($var[0] eq 'allow_deny') {
-            $self->_add_allow_deny_rule($var[1]);
-        }
         elsif ($var[0] eq 'unhandled') {
             $self->{sconf} ||= {};
             next if defined $self->{sconf}{$var[1]};
@@ -78,7 +75,16 @@ sub _parse_line {
 
     my ($var_name, $var_value) = ($1, $2);
 
-    my %config_variables = map { $_ => 1} qw(
+    my %handled_by_net_server_fork = map { $_ => 1 } qw(
+         allow
+         deny
+         cidr_allow
+         cidr_deny
+    );
+
+    return if $self->_handled_by_net_server($var_name);
+
+    my %config_variables = map { $_ => 1 } qw(
         ignore_file
         paranoia
         timeout
@@ -110,35 +116,25 @@ sub _parse_line {
             unless defined $gid;
         return (defgroup => $gid);
     }
-    elsif ($var_name eq 'allow' || $var_name eq 'deny') {
-        return ('allow_deny' => [$var_name, $var_value]);
-    }
     else {
         return (unhandled => ($var_name => $var_value));
     }
 }
 
 
-sub _add_allow_deny_rule {
-    my ($self, $rule) = @_;
+{
 
-    $self->{allow_deny} ||= [];
-
-    # Doesn't make sense to use allow and deny in the same config.
-    if ($self->_compatible_with_first_allow_deny_rule($rule)) {
-        push @{$self->{allow_deny}}, $rule;
+    my %handled_by_net_server = map { $_ => 1 } qw(
+          allow
+          deny
+          cidr_allow
+          cidr_deny
+     );
+    
+    sub _handled_by_net_server {
+        my ($self, $var_name) = @_;
+        return $handled_by_net_server{$var_name};
     }
-    else {
-        croak "You can't mix allow and deny.";
-    }
-}
-
-
-sub _compatible_with_first_allow_deny_rule {
-    my ($self, $rule) = @_;
-
-    return !@{$self->{allow_deny}} 
-        || $self->{allow_deny}[0][0] eq $rule->[0]
 }
 
 

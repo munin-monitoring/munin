@@ -256,34 +256,9 @@ sub _print_service {
 sub _list_services {
     my ($session, $node) = @_;
     $node ||= $config->{fqdn};
-    _net_write($session, join( " ",
-		     grep( { &_has_access ($session, $_); } keys %{$nodes{$node}} )
-		     ) )
-      if exists $nodes{$node};
-    #print join " ", keys %{$nodes{$node}};
+    _net_write($session, join(" ", keys %{$nodes{$node}}))
+        if exists $nodes{$node};
     _net_write($session, "\n");
-}
-
-
-sub _has_access {
-    my ($session) = @_;
-    my $host   = $session->{peer_address};
-    my $ruleset = $config->{allow_deny} || [];
-
-    return 1 unless @{$ruleset};
-
-    for my $rule (@{$ruleset}) {
-        logger(sprintf("DEBUG: Checking access: %s: %s;%s", 
-                       $host, $rule->[0], $rule->[1]))
-            if $config->{DEBUG};
-        
-        if ($host =~ m($rule->[1])) {
-            return $rule->[0] eq "allow" ? 1 : 0;
-        }
-    }
-
-    # No rules matched. Return true if in deny mode, else false.
-    return $ruleset->[0][0] eq 'deny';
 }
 
 
@@ -294,8 +269,7 @@ sub _run_service {
 
     $command ||= "";
 
-    unless ($services{$service} 
-                && ($session->{peer_address} eq '' || _has_access($session, $service))) {
+    unless ($services{$service}) {
         _net_write($session, "# Unknown service");
         return ();
     }
@@ -334,7 +308,6 @@ sub _run_service {
     }
 
     wait;
-    alarm 0;
 
     chomp @lines;
     return (@lines);
