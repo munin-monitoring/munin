@@ -12,15 +12,16 @@ INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
 INSTALL          := ./install-sh
 DIR              := $(shell /bin/pwd | sed 's/^.*\///')
 INFILES          := $(shell find . -name '*.in' | sed 's/\.\/\(.*\)\.in$$/build\/\1/')
+INFILES_MASTER   := $(shell find master -name '*.in' | sed 's/\(.*\)\.in$$/build\/\1/')
 PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/*)
 MANCENTER        := "Munin Documentation"
-MAN8		 := master/bin/munin-graph master/bin/munin-update \
-			master/bin/munin-limits master/bin/munin-html \
-			master/bin/munin-gather
+MAN8		 := master/_bin/munin-graph master/_bin/munin-update \
+			master/_bin/munin-limits master/_bin/munin-html \
+			master/_bin/munin-gather
 PODMAN8          := master/doc/munin-cron master/doc/munin
 PODMAN5          := master/doc/munin.conf node/doc/munin-node.conf
 
-.PHONY: install install-pre install-master install-node-prime install-node-pre install-common-prime install-doc install-man \
+.PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
         build build-common-prime build-common-pre build-doc \
         deb source_dist \
         test clean \
@@ -39,26 +40,26 @@ unconfig:
 
 ######################################################################
 
-install: install-master install-common-prime install-node-prime install-node-plugins install-man
+install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-man
 
 install-pre: Makefile Makefile.config
 	$(CHECKUSER)
 	mkdir -p $(LOGDIR)
 	mkdir -p $(STATEDIR)
 	mkdir -p $(CONFDIR)
+	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR)
 
-install-master: build install-pre
+install-master-prime: $(INFILES_MASTER) install-pre install-master
 	mkdir -p $(CONFDIR)/templates
 	mkdir -p $(LIBDIR)
 	mkdir -p $(BINDIR)
 	mkdir -p $(PERLLIB)
 	mkdir -p $(PERLLIB)/Munin/Master
-
 	mkdir -p $(HTMLDIR)
 	mkdir -p $(DBDIR)
 	mkdir -p $(CGIDIR)
 
-	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR) $(RUNDIR) $(HTMLDIR) $(DBDIR)
+	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR)
 
 	for p in build/master/www/*.tmpl; do   		         \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
@@ -68,41 +69,29 @@ install-master: build install-pre
 	$(INSTALL) -m 0644 master/www/definitions.html $(CONFDIR)/templates/
 	$(INSTALL) -m 0755 master/VeraMono.ttf $(LIBDIR)/
 	$(INSTALL) -m 0644 resources/favicon.ico $(HTMLDIR)/
+
 	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/master/www/munin-htaccess $(HTMLDIR)/.htaccess
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/master/munin.conf $(CONFDIR)/
-	$(INSTALL) -m 0755 build/master/bin/munin-cron $(BINDIR)/
-	$(INSTALL) -m 0755 build/master/bin/munin-check $(BINDIR)/
-	$(INSTALL) -m 0755 master/bin/munin-update $(LIBDIR)/
-	$(INSTALL) -m 0755 build/master/bin/munin-graph $(LIBDIR)/
-	$(INSTALL) -m 0755 build/master/bin/munin-html $(LIBDIR)/
-	$(INSTALL) -m 0755 build/master/bin/munin-limits $(LIBDIR)/
-	$(INSTALL) -m 0755 build/master/bin/munin-gather $(LIBDIR)/
-	$(INSTALL) -m 0755 build/master/bin/munin-cgi-graph $(CGIDIR)/
-	$(INSTALL) -m 0644 master/lib/Munin/Master/Config.pm $(PERLLIB)/Munin/Master
-	$(INSTALL) -m 0644 master/lib/Munin/Master/Group.pm $(PERLLIB)/Munin/Master
-	$(INSTALL) -m 0644 master/lib/Munin/Master/GroupRepository.pm $(PERLLIB)/Munin/Master
-	$(INSTALL) -m 0644 master/lib/Munin/Master/Host.pm $(PERLLIB)/Munin/Master
-	$(INSTALL) -m 0644 master/lib/Munin/Master/Logger.pm $(PERLLIB)/Munin/Master
-	$(INSTALL) -m 0644 master/lib/Munin/Master/Node.pm $(PERLLIB)/Munin/Master
-	$(INSTALL) -m 0644 master/lib/Munin/Master/ProcessManager.pm $(PERLLIB)/Munin/Master
-	$(INSTALL) -m 0644 master/lib/Munin/Master/Update.pm $(PERLLIB)/Munin/Master
-	$(INSTALL) -m 0644 master/lib/Munin/Master/UpdateWorker.pm $(PERLLIB)/Munin/Master
-	$(INSTALL) -m 0644 master/lib/Munin/Master/Utils.pm $(PERLLIB)/Munin/Master
-	$(INSTALL) -m 0644 master/lib/Munin/Master/Worker.pm $(PERLLIB)/Munin/Master
 
+	$(INSTALL) -m 0755 build/master/_bin/munin-cron $(BINDIR)/
+	$(INSTALL) -m 0755 build/master/_bin/munin-check $(BINDIR)/
+	$(INSTALL) -m 0755 master/_bin/munin-update $(LIBDIR)/
+	$(INSTALL) -m 0755 build/master/_bin/munin-graph $(LIBDIR)/
+	$(INSTALL) -m 0755 build/master/_bin/munin-html $(LIBDIR)/
+	$(INSTALL) -m 0755 build/master/_bin/munin-limits $(LIBDIR)/
+	$(INSTALL) -m 0755 build/master/_bin/munin-gather $(LIBDIR)/
+	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/
 
 # ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE
 # GENERIC ONES
 
 # Some HP-UX plugins needs *.adv support files in LIBDIR
-install-node-plugins: build $(PLUGINS) Makefile Makefile.config
+install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	$(CHECKGROUP)
 
 	mkdir -p $(CONFDIR)/plugins
 	mkdir -p $(CONFDIR)/plugin-conf.d
 	mkdir -p $(LIBDIR)/plugins
-	mkdir -p $(PERLLIB)/Munin/Plugin
-
 	mkdir -p $(PLUGSTATE)
 
 	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
@@ -121,18 +110,21 @@ install-node-plugins: build $(PLUGINS) Makefile Makefile.config
 	    fi                                                         \
 	done
 	-mv $(LIBDIR)/plugins/*.adv $(LIBDIR)
-	-mkdir -p $(PLUGSTATE)
-	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
-	$(CHMOD) 0775 $(PLUGSTATE)
 	$(INSTALL) -m 0644 build/plugins/plugins.history $(LIBDIR)/plugins/
 	$(INSTALL) -m 0644 build/plugins/plugin.sh $(LIBDIR)/plugins/
-	mkdir -p $(PERLLIB)/Munin/Plugin
-	$(INSTALL) -m 0644 plugins/lib/Munin/Plugin.pm $(PERLLIB)/Munin/
-	$(INSTALL) -m 0644 plugins/lib/Munin/Plugin/SNMP.pm $(PERLLIB)/Munin/Plugin/
 
 #TODO:
 # configure plugins.  Or not. Better done under the direction of the installer
 # or the packager.
+
+install-node-prime: install-node-pre install-node
+
+install-node-pre: build/node/munin-node.conf install-pre
+	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
+
+
+install-common-prime: build-common install-common
+
 
 install-man: build-man Makefile Makefile.config
 	mkdir -p $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8
@@ -155,7 +147,7 @@ install-doc: build-doc
 
 ######################################################################
 
-build: $(INFILES) build-common-prime build-node build-man
+build: $(INFILES) build-master build-common-prime build-node build-plugins build-man
 
 build/%: %.in
 	@echo "$< -> $@"
@@ -189,6 +181,42 @@ build/%: %.in
              -e 's|@@SSPOOLDIR@@|$(SSPOOLDIR)|g'                \
              $< > $@;
 
+
+build-common-prime: build-common-pre common/blib/lib/Munin/Common/Defaults.pm build-common
+
+build-common-pre: common/Build
+	cd common && $(PERL) Build code
+	rm -f common/blib/lib/Munin/Common/Defaults.pm
+
+common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm
+	$(PERL) -pe 's{(PREFIX     \s+=\s).*}{\1q{$(PREFIX)};}x;   \
+                  s{(CONFDIR    \s+=\s).*}{\1q{$(CONFDIR)};}x;     \
+                  s{(BINDIR     \s+=\s).*}{\1q{$(BINDIR)};}x;      \
+                  s{(SBINDIR    \s+=\s).*}{\1q{$(SBINDIR)};}x;     \
+                  s{(DOCDIR     \s+=\s).*}{\1q{$(DOCDIR)};}x;      \
+                  s{(LIBDIR	\s+=\s).*}{\1q{$(LIBDIR)};}x;      \
+                  s{(MANDIR	\s+=\s).*}{\1q{$(MANDIR)};}x;      \
+                  s{(LOGDIR	\s+=\s).*}{\1q{$(LOGDIR)};}x;      \
+                  s{(HTMLDIR	\s+=\s).*}{\1q{$(HTMLDIR)};}x;     \
+                  s{(DBDIR	\s+=\s).*}{\1q{$(DBDIR)};}x;       \
+                  s{(STATEDIR	\s+=\s).*}{\1q{$(STATEDIR)};}x;    \
+                  s{(PERL	\s+=\s).*}{\1q{$(PERL)};}x;        \
+                  s{(PERLLIB	\s+=\s).*}{\1q{$(PERLLIB)};}x;     \
+                  s{(PYTHON	\s+=\s).*}{\1q{$(PYTHON)};}x;      \
+                  s{(OSTYPE	\s+=\s).*}{\1q{$(OSTYPE)};}x;      \
+                  s{(HOSTNAME	\s+=\s).*}{\1q{$(HOSTNAME)};}x;    \
+                  s{(MKTEMP	\s+=\s).*}{\1q{$(MKTEMP)};}x;      \
+                  s{(VERSION	\s+=\s).*}{\1q{$(VERSION)};}x;     \
+                  s{(PLUGSTATE	\s+=\s).*}{\1q{$(PLUGSTATE)};}x;   \
+                  s{(CGIDIR	\s+=\s).*}{\1q{$(CGIDIR)};}x;      \
+                  s{(USER	\s+=\s).*}{\1q{$(USER)};}x;        \
+                  s{(GROUP	\s+=\s).*}{\1q{$(GROUP)};}x;       \
+                  s{(PLUGINUSER	\s+=\s).*}{\1q{$(PLUGINUSER)};}x;  \
+                  s{(GOODSH	\s+=\s).*}{\1q{$(GOODSH)};}x;      \
+                  s{(BASH	\s+=\s).*}{\1q{$(BASH)};}x;        \
+                  s{(HASSETR	\s+=\s).*}{\1q{$(HASSETR)};}x;     \
+	          s{(SSPOOLDIR	\s+=\s).*}{\1q{$(SSPOOLDIR)};}x;'  \
+                  $< > $@
 
 build-doc: build-doc-stamp Makefile Makefile.config
 
@@ -277,7 +305,7 @@ source_dist: clean
 ######################################################################
 
 ifeq ($(MAKELEVEL),0)
-clean: clean-common clean-node clean-master
+clean: clean-common clean-node clean-master clean-plugins
 	-rm -f debian
 	-ln -sf dists/debian
 	-fakeroot debian/rules clean
@@ -297,7 +325,7 @@ endif
 
 ######################################################################
 
-test: test-node test-common test-master
+test: test-node test-common test-master test-plugins
 
 ifeq ($(MAKELEVEL),0)
 # Re-exec make with the test config
@@ -327,53 +355,6 @@ t/install:
 
 ######################################################################
 
-install-node-prime: install-node-pre install-node
-
-install-node-pre: build/node/munin-node.conf install-pre
-	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
-
-
-install-common-prime: build-common install-common
-
-
-build-common-prime: build-common-pre common/blib/lib/Munin/Common/Defaults.pm build-common
-
-build-common-pre: common/Build
-	cd common && $(PERL) Build code
-	rm -f common/blib/lib/Munin/Common/Defaults.pm
-
-common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm
-	$(PERL) -pe 's{(PREFIX     \s+=\s).*}{\1q{$(PREFIX)};}x;   \
-                  s{(CONFDIR    \s+=\s).*}{\1q{$(CONFDIR)};}x;     \
-                  s{(BINDIR     \s+=\s).*}{\1q{$(BINDIR)};}x;      \
-                  s{(SBINDIR    \s+=\s).*}{\1q{$(SBINDIR)};}x;     \
-                  s{(DOCDIR     \s+=\s).*}{\1q{$(DOCDIR)};}x;      \
-                  s{(LIBDIR	\s+=\s).*}{\1q{$(LIBDIR)};}x;      \
-                  s{(MANDIR	\s+=\s).*}{\1q{$(MANDIR)};}x;      \
-                  s{(LOGDIR	\s+=\s).*}{\1q{$(LOGDIR)};}x;      \
-                  s{(HTMLDIR	\s+=\s).*}{\1q{$(HTMLDIR)};}x;     \
-                  s{(DBDIR	\s+=\s).*}{\1q{$(DBDIR)};}x;       \
-                  s{(STATEDIR	\s+=\s).*}{\1q{$(STATEDIR)};}x;    \
-                  s{(PERL	\s+=\s).*}{\1q{$(PERL)};}x;        \
-                  s{(PERLLIB	\s+=\s).*}{\1q{$(PERLLIB)};}x;     \
-                  s{(PYTHON	\s+=\s).*}{\1q{$(PYTHON)};}x;      \
-                  s{(OSTYPE	\s+=\s).*}{\1q{$(OSTYPE)};}x;      \
-                  s{(HOSTNAME	\s+=\s).*}{\1q{$(HOSTNAME)};}x;    \
-                  s{(MKTEMP	\s+=\s).*}{\1q{$(MKTEMP)};}x;      \
-                  s{(VERSION	\s+=\s).*}{\1q{$(VERSION)};}x;     \
-                  s{(PLUGSTATE	\s+=\s).*}{\1q{$(PLUGSTATE)};}x;   \
-                  s{(CGIDIR	\s+=\s).*}{\1q{$(CGIDIR)};}x;      \
-                  s{(USER	\s+=\s).*}{\1q{$(USER)};}x;        \
-                  s{(GROUP	\s+=\s).*}{\1q{$(GROUP)};}x;       \
-                  s{(PLUGINUSER	\s+=\s).*}{\1q{$(PLUGINUSER)};}x;  \
-                  s{(GOODSH	\s+=\s).*}{\1q{$(GOODSH)};}x;      \
-                  s{(BASH	\s+=\s).*}{\1q{$(BASH)};}x;        \
-                  s{(HASSETR	\s+=\s).*}{\1q{$(HASSETR)};}x;     \
-	          s{(SSPOOLDIR	\s+=\s).*}{\1q{$(SSPOOLDIR)};}x;'  \
-                  $< > $@
-
-######################################################################
-
 build-%: %/Build
 	cd $* && $(PERL) Build
 
@@ -391,9 +372,7 @@ install-%: %/Build
 test-%: %/Build
 	cd $* && $(PERL) Build test || true
 
-# We assume here that if $*/Build is missing, there is nothing to
-# clean.
-clean-%:
-	test -f "$*/Build" && cd $* && $(PERL) Build realclean || true
+clean-%: %/Build
+	cd $* && $(PERL) Build realclean
 
 

@@ -22,6 +22,6 @@ my $build = MasterBuilder->new(
     build_requires => {},
     recommends     => {
         #'Net::SSLeay' => 0, In Munin::Common?
-    }
+    },
 );
 $build->create_build_script;

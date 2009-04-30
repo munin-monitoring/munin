@@ -86,8 +86,9 @@ To install a node:
 	- Edit Makefile.config
 	- Create the group "munin"
 	- make
-	- make install-node install-node-plugins (NOTE: This overwrites
-	  any existing plugins.)
+	- make install-common-prime install-node-prime
+	  install-plugins-prime (NOTE: This overwrites any existing
+	  plugins.)
 	- Decide which plugins to use.  The quick auto-plug-and-play
           solution: 
             munin-node-configure --shell --families=contrib,auto | sh -x
