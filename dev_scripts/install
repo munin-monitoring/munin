@@ -8,17 +8,17 @@ cd $BASEDIR
 if [ $1 ]; then
     rm -rf sandbox
     mkdir sandbox
-    make clean
+    make clean || exit
     echo "**********************************************************************"
 fi
 
-make DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www
-fakeroot make install-master install-common install-node install-man DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www
+make DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www || exit
+fakeroot make install-master install-common-prime install-node-prime install-man DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www || exit
 
 
 if [ $1 ]; then
     echo "**********************************************************************"
-    fakeroot make install-node-plugins DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www
+    fakeroot make install-node-plugins DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www || exit
     echo "**********************************************************************"
     perl -pi -e "s/port 4949/port 4948/; 
                  s/user root/user $USER/; 

@@ -20,11 +20,13 @@ MAN8		 := master/bin/munin-graph master/bin/munin-update \
 PODMAN8          := master/doc/munin-cron master/doc/munin
 PODMAN5          := master/doc/munin.conf node/doc/munin-node.conf
 
-.PHONY: install install-master install-node install-doc install-man install-common build build-doc deb clean source_dist build-common clean-common test test-master test-node test-common 
+.PHONY: install install-pre install-master install-node-prime install-node-pre install-common-prime install-doc install-man \
+        build build-common-prime build-common-pre build-doc \
+        deb source_dist \
+        test clean \
+        clean-% test-% build-% install-% 
 
 default: build
-
-install: install-master install-common install-node install-node-plugins install-man
 
 uninstall: 
 	echo "Uninstall is not implemented yet"
@@ -35,16 +37,23 @@ unconfig:
 	rm -f $(HTMLDIR)/.htaccess
 	rm -f $(CONFDIR)/munin.conf
 
-install-master: build
+######################################################################
+
+install: install-master install-common-prime install-node-prime install-node-plugins install-man
+
+install-pre: Makefile Makefile.config
 	$(CHECKUSER)
+	mkdir -p $(LOGDIR)
+	mkdir -p $(STATEDIR)
+	mkdir -p $(CONFDIR)
+
+install-master: build install-pre
 	mkdir -p $(CONFDIR)/templates
 	mkdir -p $(LIBDIR)
 	mkdir -p $(BINDIR)
 	mkdir -p $(PERLLIB)
 	mkdir -p $(PERLLIB)/Munin/Master
 
-	mkdir -p $(LOGDIR)
-	mkdir -p $(STATEDIR)
 	mkdir -p $(HTMLDIR)
 	mkdir -p $(DBDIR)
 	mkdir -p $(CGIDIR)
@@ -82,23 +91,24 @@ install-master: build
 	$(INSTALL) -m 0644 master/lib/Munin/Master/Worker.pm $(PERLLIB)/Munin/Master
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 # ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE
 # GENERIC ONES
 
 # Some HP-UX plugins needs *.adv support files in LIBDIR
 install-node-plugins: build $(PLUGINS) Makefile Makefile.config
+	$(CHECKGROUP)
+
+	mkdir -p $(CONFDIR)/plugins
+	mkdir -p $(CONFDIR)/plugin-conf.d
+	mkdir -p $(LIBDIR)/plugins
+	mkdir -p $(PERLLIB)/Munin/Plugin
+
+	mkdir -p $(PLUGSTATE)
+
+	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
+	$(CHMOD) 0775 $(PLUGSTATE)
+	$(CHMOD) 0755 $(CONFDIR)/plugin-conf.d
+
 	for p in build/plugins/node.d/* build/plugins/node.d.$(OSTYPE)/* ; do \
 	    if test -f "$$p" ; then                                    \
 		family=`sed -n 's/^[[:space:]]*#%# family=\(.*\)$$/\1/p' $$p`;\
@@ -143,9 +153,9 @@ install-doc: build-doc
 	$(INSTALL) -m 0644 build/resources/* $(DOCDIR)/resources
 
 
+######################################################################
 
-
-build: $(INFILES) build-common build-node build-man
+build: $(INFILES) build-common-prime build-node build-man
 
 build/%: %.in
 	@echo "$< -> $@"
@@ -201,6 +211,8 @@ build-man-stamp: build Makefile Makefile.config
 	   pod2man --section=5 --release=$(RELEASE) --center=$(MANCENTER) "$$f".pod > build/doc/`basename $$f .pod`.5; \
 	done
 
+######################################################################
+# DIST RULES
 
 deb:
 	(! grep MAINTAINER Makefile.config)
@@ -256,12 +268,22 @@ suse-src: suse-pre
 	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
 
-clean: clean-common clean-node clean-master
+source_dist: clean
+	(! grep MAINTAINER Makefile.config)
+	(cd .. && ln -s $(DIR) munin-$(VERSION))
+	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
+	(cd .. && rm munin-$(VERSION))
+
+######################################################################
+
 ifeq ($(MAKELEVEL),0)
+clean: clean-common clean-node clean-master
 	-rm -f debian
 	-ln -sf dists/debian
 	-fakeroot debian/rules clean
 	-rm -f debian
+else
+clean:
 endif
 	-rm -rf build
 	-rm -f build-stamp
@@ -272,11 +294,8 @@ endif
 	-rm -f dists/redhat/munin.spec
 	-rm -f dists/suse/munin.spec
 
-source_dist: clean
-	(! grep MAINTAINER Makefile.config)
-	(cd .. && ln -s $(DIR) munin-$(VERSION))
-	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
-	(cd .. && rm munin-$(VERSION))
+
+######################################################################
 
 test: test-node test-common test-master
 
@@ -303,89 +322,25 @@ node-monkeywrench: install-node
 	echo 'Done?'
 
 t/install: 
-	$(MAKE) clean install-node install-node-plugins CONFIG=t/Makefile.config INSTALL_PLUGINS=test
+	$(MAKE) clean install-node-prime install-node-plugins CONFIG=t/Makefile.config INSTALL_PLUGINS=test
 
 
 ######################################################################
 
-test-master: master/Build
-	cd master && $(PERL) Build test
+install-node-prime: install-node-pre install-node
 
-
-master/Build: master/Build.PL
-	cd master && $(PERL) Build.PL
-
-# We assume here that if master/Build is missing, there is nothing to
-# clean.
-clean-master:
-	-cd master && $(PERL) Build realclean
-
-
-
-
-######################################################################
-
-install-node: build-node install-node-pre
-	cd node && $(PERL) Build install		\
-            --install_path lib=$(PERLLIB)		\
-            --install_path sbin=$(SBINDIR)		\
-            --install_path script=$(BINDIR)		\
-            --install_path bindoc=$(MANDIR)/man1	\
-            --install_path libdoc=$(MANDIR)/man3	\
-
-install-node-pre: build 
-	$(CHECKGROUP)
-	mkdir -p $(CONFDIR)/plugins
-	mkdir -p $(CONFDIR)/plugin-conf.d
-	mkdir -p $(LIBDIR)/plugins
-	mkdir -p $(SBINDIR)
-	mkdir -p $(PERLLIB)/Munin/Plugin
-	mkdir -p $(PERLLIB)/Munin/Common
-
-	mkdir -p $(LOGDIR)
-	mkdir -p $(STATEDIR)
-	mkdir -p $(PLUGSTATE)
-
-	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
-	$(CHMOD) 0775 $(PLUGSTATE)
-	$(CHMOD) 0755 $(CONFDIR)/plugin-conf.d
-
+install-node-pre: build/node/munin-node.conf install-pre
 	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
 
 
-build-node: node/Build
-	cd node && $(PERL) Build
+install-common-prime: build-common install-common
 
-node/Build: node/Build.PL
-	cd node && $(PERL) Build.PL
 
-# We assume here that if node/Build is missing, there is nothing to
-# clean.
-clean-node:
-	-cd node && $(PERL) Build realclean
-
-test-node:
-	cd node && $(PERL) Build test
-
-######################################################################
-
-install-common: build-common
-	cd common && $(PERL) Build install		\
-            --install_path lib=$(PERLLIB)		\
-            --install_path sbin=$(SBINDIR)		\
-            --install_path script=$(BINDIR)		\
-            --install_path bindoc=$(MANDIR)/man1	\
-            --install_path libdoc=$(MANDIR)/man3	\
-
-build-common: build-common-pre common/blib/lib/Munin/Common/Defaults.pm
-	cd common && $(PERL) Build
+build-common-prime: build-common-pre common/blib/lib/Munin/Common/Defaults.pm build-common
 
 build-common-pre: common/Build
 	cd common && $(PERL) Build code
 	rm -f common/blib/lib/Munin/Common/Defaults.pm
-
-common/Build: common/Build.PL
-	cd common && $(PERL) Build.PL
 
 common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm
 	$(PERL) -pe 's{(PREFIX     \s+=\s).*}{\1q{$(PREFIX)};}x;   \
@@ -417,14 +372,28 @@ common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm
 	          s{(SSPOOLDIR	\s+=\s).*}{\1q{$(SSPOOLDIR)};}x;'  \
                   $< > $@
 
-# We assume here that if common/Build is missing, there is nothing to
-# clean.
-clean-common:
-	-cd common && $(PERL) Build realclean
-
-test-common:
-	cd common && $(PERL) Build test
-
 ######################################################################
+
+build-%: %/Build
+	cd $* && $(PERL) Build
+
+install-%: %/Build
+	cd $* && $(PERL) Build install			\
+            --install_path lib=$(PERLLIB)		\
+            --install_path sbin=$(SBINDIR)		\
+            --install_path script=$(BINDIR)		\
+            --install_path bindoc=$(MANDIR)/man1	\
+            --install_path libdoc=$(MANDIR)/man3	\
+
+%/Build: %/Build.PL
+	cd $* && $(PERL) Build.PL
+
+test-%: %/Build
+	cd $* && $(PERL) Build test || true
+
+# We assume here that if $*/Build is missing, there is nothing to
+# clean.
+clean-%:
+	test -f "$*/Build" && cd $* && $(PERL) Build realclean || true
 
 

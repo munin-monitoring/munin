@@ -29,17 +29,13 @@ sub new {
 sub ACTION_docs {
     my ($self) = @_;
 
-    warn "HERE";
-
     $self->SUPER::ACTION_docs;
     my @files = (
         Module::Build::Base->_files_in('blib/bindoc'),
         Module::Build::Base->_files_in('blib/libdoc'),
     );
 
-    use Data::Dumper; warn Dumper(\@files);
-
-    warn $Munin::Common::Defaults::MUNIN_CONFDIR;
+    #use Data::Dumper; warn Dumper(\@files);
 
     for my $file (@files) {
         open my $fh, '<', $file or die $OS_ERROR;
