@@ -27,45 +27,50 @@ use warnings;
 use Getopt::Long;
 # use Data::Dumper;
 
+use Munin::Node::Config;
 use Munin::Common::Defaults;
 
-my $config     = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
-my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
-my $libdir     = "$Munin::Common::Defaults::MUNIN_LIBDIR/plugins";
+my $config = Munin::Node::Config->instance();
+
 my $bindir     = $Munin::Common::Defaults::MUNIN_SBINDIR;
 
 my $installed  = undef;
 my $plugins    = undef;
 
-my $debug      = 0;
-my $suggest    = 0;
-my $shell      = 0;
-
 my @all_families     = ("auto", "manual", "contrib");
 my @default_families = ("auto");
-my @families         = ();
 
-my @snmp       = ();
-my $snmpver    = undef;
-my $snmpcomm   = undef;
-
-my $removes    = 0;
-
-my $newer      = undef;
 my $debugopt   = '--debug'; # Pass --debug to children or not
 my @errors     = ();
-my $exiterror  = 1;
 
 
 sub parse_args
 {
+	my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
+	my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
+	my $libdir     = "$Munin::Common::Defaults::MUNIN_LIBDIR/plugins";
+
+	my $debug      = 0;
+
+	my $suggest    = 0;
+	my $shell      = 0;
+	my $removes    = 0;
+	my $newer      = undef;
+	my $exiterror  = 1;
+
+	my @families   = ();
+
+	my @snmp       = ();
+	my $snmpver    = undef;
+	my $snmpcomm   = undef;
+
 	print_usage_and_exit() unless GetOptions(
 		"help"            => \&print_usage_and_exit,
 		"shell!"          => \$shell,
 		"exitnoterror!"   => \$exiterror,
 		"debug!"          => \$debug,
 		"suggest!"        => \$suggest,
-		"config=s"        => \$config,
+		"config=s"        => \$conffile,
 		"servicedir=s"    => \$servicedir,
 		"remove-also!"    => \$removes,
 		"libdir=s"        => \$libdir,
@@ -83,7 +88,7 @@ sub parse_args
 	}
 
 	if (@families) {
-	    @families = split /,/ , $families[0];
+	    @families = split /,/, $families[0];
 	} else {
 	    if (@snmp) {
 		@families = ();
@@ -107,6 +112,26 @@ sub parse_args
 	    exit 3;
 	}
 
+	$config->reinitialize({
+		newer => $newer,
+		shell => $shell,
+		exit_not_error => $exiterror,
+		suggest => $suggest,
+		remove_also => $removes,
+
+		families => \@families,
+
+		conffile => $conffile,
+		servicedir => $servicedir,
+		libdir => $libdir,
+
+		snmp => \@snmp,
+		snmp_version => $snmpver,
+		snmp_community => $snmpcomm,
+
+		DEBUG => $debug,
+	});
+
 	exit 0; # FIXME :-)
 }
 
@@ -123,10 +148,12 @@ Options:
 	--help			View this help page
 	--version		Show version information
 	--debug			View debug information (very verbose)
-	--config <file>		Override configuration file
+	--config <file>         Override configuration file
 	                        [$config]
-	--servicedir <dir>	Override plugin directory [$servicedir]
-	--libdir <dir>		Override plugin lib [$libdir]
+	--servicedir <dir>	Override plugin directory
+	                        [$Munin::Common::Defaults::MUNIN_CONFDIR/plugins]
+	--libdir <dir>		Override plugin lib
+	                        [$Munin::Common::Defaults::MUNIN_LIBDIR/plugins]
 	--families <family,...>	Override families ($all_families) [$default_families]
 	--suggest		Show suggestions instead of status
 	--shell			Show shell commands (implies --suggest)
@@ -175,17 +202,17 @@ with this software or refer to
 ### current end of function definitions
 parse_args();
 
-if (@families)
+if (@{ $config->{families} })
 {
-    $plugins   = &get_plugins   ($plugins  , $libdir);
-    $installed = &get_installed ($installed, $servicedir);
+    $plugins   = &get_plugins   ($plugins  , $config->{libdir});
+    $installed = &get_installed ($installed, $config->{servicedir});
 
-    if (! $shell and $suggest)
+    if (! $config->{shell} and $config->{suggest})
     {
 	&normal ("Plugin", "Used", "Suggestions");
 	&normal ("------", "----", "-----------");
     }
-    elsif (! $shell)
+    elsif (! $config->{shell})
     {
 	&normal ("Plugin", "Used", "Extra information");
 	&normal ("------", "----", "-----------------");
@@ -194,7 +221,7 @@ if (@families)
     foreach my $plug (sort keys %{$plugins})
     {
 	next unless defined $plugins->{$plug}->{'family'};
-	next unless (grep (/^$plugins->{$plug}->{'family'}$/, @families));
+	next unless (grep (/^$plugins->{$plug}->{'family'}$/ ,@{ $config->{families} }));
 
 	my $now   = (exists $installed->{$plug}?"yes":"no");
 	my $want  = (exists $plugins->{$plug}->{'default'}?$plugins->{$plug}->{'default'}:"no");
@@ -203,7 +230,7 @@ if (@families)
 	my $sugg  = "";
 
 
-	if ($shell)
+	if ($config->{shell})
 	{
 	    if ($plug =~ /_$/) # Wildcard plugin...
 	    {
@@ -233,7 +260,7 @@ if (@families)
 		    {
 			foreach my $wild (sort @{$swant})
 			{
-			    next if -e "$servicedir/$plug"."_".$wild; # None of our business...
+			    next if -e "$config->{servicedir}/$plug"."_".$wild; # None of our business...
 			    if (! grep (/^$wild$/, @{$snow}))
 			    {
 				&link_add ($plug, $wild);
@@ -250,12 +277,12 @@ if (@families)
 		}
 		elsif ($now eq "no" and $want eq "yes")
 		{
-		    next if -e "$servicedir/$plug"; # None of our business...
+		    next if -e "$config->{servicedir}/$plug"; # None of our business...
 		    &link_add ($plug);
 		}
 	    }
 	}
-	elsif ($suggest)
+	elsif ($config->{suggest})
 	{
 	    if ($plug =~ /_$/) # Wildcard plugin...
 	    {
@@ -278,7 +305,7 @@ if (@families)
 		{
 		    foreach my $wild (sort @{$swant})
 		    {
-			next if -e "$servicedir/$plug"."_".$wild; # None of our business...
+			next if -e "$config->{servicedir}/$plug"."_".$wild; # None of our business...
 			if (! grep (/^$wild$/, @{$snow}))
 			{
 			    $sugg .= "+$wild ";
@@ -289,7 +316,7 @@ if (@families)
 	    }
 	    else
 	    {
-		next if -e "$servicedir/$plug"; # None of our business...
+		next if -e "$config->{servicedir}/$plug"; # None of our business...
 		if ($now ne $want)
 		{
 		    $sugg = $want;
@@ -322,7 +349,7 @@ if (@families)
 }
 
 
-if (@snmp and $shell)
+if (@{ $config->{snmp} } and $config->{shell})
 {
     if (-x "$bindir/munin-node-configure-snmp")
     {
@@ -330,11 +357,11 @@ if (@snmp and $shell)
 	{
 	    my @params;
 	    push (@params, "$bindir/munin-node-configure-snmp");
-	    push (@params, "--snmpversion", $snmpver) if defined $snmpver;
-	    push (@params, "--community", $snmpcomm) if defined $snmpcomm;
-	    push (@params, $debugopt) if $debug;
-	    push (@params, @snmp);
-	    print "# executing: ",join(' ',@params),"\n" if $debug;
+	    push (@params, "--snmpversion", $config->{snmp_version}) if defined $config->{snmpver};
+	    push (@params, "--community", $config->{snmp_community}) if defined $config->{snmp_community};
+	    push (@params, $debugopt) if $config->{DEBUG};
+	    push (@params, @{ $config->{snmp} });
+	    print "# executing: ",join(' ',@params),"\n" if $config->{DEBUG};
 	    exec (@params);
 	    # NOTREACHED
 	}
@@ -367,10 +394,10 @@ sub link_remove
 {
     my $plug = shift;
 
-    return unless $removes;
-    return unless (-l "$servicedir/$plug"); # Strange...
+    return unless $config->{remove_also};
+    return unless (-l "$config->{servicedir}/$plug"); # Strange...
 
-    print "rm -f $servicedir/$plug\n";
+    print "rm -f $config->{servicedir}/$plug\n";
 }
 
 
@@ -378,7 +405,7 @@ sub link_add
 {
 	my $plug = shift;
 	my $wild = shift || '';
-	print "ln -s $libdir/$plug $servicedir/$plug$wild\n";
+	print "ln -s $config->{libdir}/$plug $config->{servicedir}/$plug$wild\n";
 }
 
 
@@ -391,10 +418,10 @@ sub normal
 sub get_installed {
 	(my $ps, my $dir) = @_;
 
-	print "# Opening \"$dir\" for reading...\n" if $debug;
+	print "# Opening \"$dir\" for reading...\n" if $config->{DEBUG};
 	opendir (DIR, $dir) or die "Could not open \"$dir\" for reading: $!\n";
 	my @installed = readdir (DIR);
-	print "# Found ",scalar(@installed)," files\n" if $debug;
+	print "# Found ",scalar(@installed)," files\n" if $config->{DEBUG};
 	close (DIR);
 
 	foreach my $inst (@installed) {
@@ -402,20 +429,20 @@ sub get_installed {
 
 		next unless -l "$dir/$inst"; # None of our business...
 		next unless ($realfile = readlink ("$dir/$inst"));
-		next unless ($realfile =~ /^$libdir\//); # None of our business...
+		next unless ($realfile =~ /^$config->{libdir}\//); # None of our business...
 		$realfile =~ s/^.+\///;
 
-		print "# Checking file: $inst..." if $debug;
+		print "# Checking file: $inst..." if $config->{DEBUG};
 		if ($realfile =~ /_$/) # Wildcard plugin...
 		{
-		    print "# $realfile..." if $debug;
+		    print "# $realfile..." if $config->{DEBUG};
 		    (my $wild = $inst) =~ s/^$realfile//;
-		    print "# $wild..." if $debug;
+		    print "# $wild..." if $config->{DEBUG};
 		    push @{$ps->{$realfile}->{'suggest'}}, $wild;
 		}
 		$ps->{$realfile}->{'installed'} = "yes";
 
-		print "\n" if $debug;
+		print "\n" if $config->{DEBUG};
 	}
 
 	return $ps;
@@ -426,7 +453,7 @@ sub get_plugins {
     (my $ps, my $dir) = @_;
     my %versions = ();
 
-    if (defined $newer and -f "$dir/plugins.history") {
+    if (defined $config->{newer} and -f "$dir/plugins.history") {
 	if (open (HIST, "$dir/plugins.history")) {
 	    my @slurp = <HIST>;
 	    my $reached_version = 0;
@@ -444,8 +471,8 @@ sub get_plugins {
 
 		if ($line =~ /^\[([^\]]+)\]$/) {
 		    $ver = $1;
-		    print "# Setting version to \"$ver\".\n" if $debug;
-		    if ($ver eq $newer) {
+		    print "# Setting version to \"$ver\".\n" if $config->{DEBUG};
+		    if ($ver eq $config->{newer}) {
 			$reached_version = 1;
 		    } elsif ($reached_version) {
 			$reached_version++;
@@ -456,12 +483,12 @@ sub get_plugins {
 		    if ($uname eq $1) {
 			$ps->{$2}->{'version'} = $ver;
 			print "# - Adding plugin '$2' to version tree ",
-			  "($ver)...\n" if $debug;
+			  "($ver)...\n" if $config->{DEBUG};
 		    }
 		} elsif ($line =~ /^(.+)$/) {
 		    $ps->{$1}->{'version'} = $ver;
 		    print "# - Adding plugin \"$1\" to version tree ",
-		      "($ver)...\n" if $debug;
+		      "($ver)...\n" if $config->{DEBUG};
 		}
 	    }
 	} else {
@@ -469,38 +496,38 @@ sub get_plugins {
 	}
     }
 
-    print "# Opening \"$dir\" for reading...\n" if $debug;
+    print "# Opening \"$dir\" for reading...\n" if $config->{DEBUG};
     opendir (DIR, $dir) or die "Could not open \"$dir\" for reading: $!\n";
     my @plugins = readdir (DIR);
-    print "# Found ",scalar(@plugins)," files\n" if $debug;
+    print "# Found ",scalar(@plugins)," files\n" if $config->{DEBUG};
     close (DIR);
 
     foreach my $plug (@plugins) {
 	my $path = "$dir/$plug";
 	next if $plug =~ /^\./;
-	print "# Considering $dir/$plug for checking\n" if $debug;
+	print "# Considering $dir/$plug for checking\n" if $config->{DEBUG};
 	# If anyone ever uses a relative symlink this will break so bad
 	$path = readlink($path) and
 	  $path = $path =~ /^\// ? $path : "$dir/$path"
 	    while -l $path;
 	if (!-f $path) {
-	    print "# File is not a file\n" if $debug;
+	    print "# File is not a file\n" if $config->{DEBUG};
 	    next;
 	}
 	if (!-x _) {
-	    print "# File is not executable\n" if $debug;
+	    print "# File is not executable\n" if $config->{DEBUG};
 	    next;
 	}
 	if ($plug =~ /~$/    or # Emacs droppings
 	    $plug =~ /.bak$/ or # Backup file
 	    $plug =~ /.swp$/) { # Vi droppings
-	    print "# File is a backup/leftover file\n" if $debug;
+	    print "# File is a backup/leftover file\n" if $config->{DEBUG};
 	    next;
 	}
 
 	$ps->{$plug}->{'family'} = "contrib"; # Set default family...
 
-	print "# Checking plugin: $plug..." if $debug;
+	print "# Checking plugin: $plug..." if $config->{DEBUG};
 	if (! open (FILE, "$dir/$plug")) {
 	    warn "WARNING: Could not open file '$dir/$plug' for reading $!.".
 	      "Skipping.\n";
@@ -510,23 +537,23 @@ sub get_plugins {
 	    chomp;
 	    if (/#%#\s+family\s*=\s*(\S+)\s*$/) {
 		$ps->{$plug}->{'family'} = $1;
-		print "# $1..." if $debug;
+		print "# $1..." if $config->{DEBUG};
 	    } elsif (/#%#\s+capabilities\s*=\s*(.+)$/) {
 		foreach my $cap (split (/\s+/, $1)) {
 		    $ps->{$plug}->{'capability'}->{$cap} = 1;
-		    print "# $cap..." if $debug;
+		    print "# $cap..." if $config->{DEBUG};
 		}
 	    }
 	}
 	close (FILE);
 
-	unless (grep (/^$ps->{$plug}->{'family'}$/, @families)) {
-	    print "\n" if $debug;
+	unless (grep (/^$ps->{$plug}->{'family'}$/, @{ $config->{families} })) {
+	    print "\n" if $config->{DEBUG};
 	    next;
 	}
-	if ($ps->{$plug}->{'family'} eq "auto" and defined $newer and
+	if ($ps->{$plug}->{'family'} eq "auto" and defined $config->{newer} and
 	    !defined $ps->{$plug}->{'version'}) {
-	    print "\n" if $debug;
+	    print "\n" if $config->{DEBUG};
 	    next;
 	}
 
@@ -536,10 +563,10 @@ sub get_plugins {
 	    my $gotjunk=0;  # Seen junk?
 
 	    my @cmd=("$bindir/munin-run");
-	    push(@cmd,$debugopt) if $debug;
-	    push(@cmd,"--servicedir",$libdir, $plug, "autoconf");
+	    push(@cmd,$debugopt) if $config->{DEBUG};
+	    push(@cmd,"--servicedir",$config->{libdir}, $plug, "autoconf");
 
-	    print "\n# Running: ",join(' ',@cmd),"\n" if $debug;
+	    print "\n# Running: ",join(' ',@cmd),"\n" if $config->{DEBUG};
 
 	    my $fork = open (PLUG, "-|");
 
@@ -568,15 +595,15 @@ sub get_plugins {
 		    chomp;
 		    if (m/^yes$/ or m/^no(\s+.*)?$/) {
 			# Some recognized response
-			print "# Got yes/no: $_\n" if $debug;
+			print "# Got yes/no: $_\n" if $config->{DEBUG};
 			push(@pr,$_);
 		    } elsif (m/^#/) {
 			# Likely debug output from munin-run
-			print "# munin-run says: $_\n" if $debug;
+			print "# munin-run says: $_\n" if $config->{DEBUG};
 		    } else {
 			# Something else
 			push(@errors,"Got from $plug: $_");
-			print "# Got junk: $_\n" if $debug;
+			print "# Got junk: $_\n" if $config->{DEBUG};
 			$gotjunk=1;
 		    }
 		}
@@ -596,16 +623,16 @@ sub get_plugins {
 	    my $plugsig  = $? & 127;
 
 	    # Override to no if there were errors.
-	    if ($pluges and !$exiterror) {
+	    if ($pluges and !$config->{exit_not_error}) {
 		push(@errors,
 		     "Non-zero exit value from $plug: $plugexit/$plugsig");
 		print "# Non-zero exit value from $plug: $plugexit/$plugsig\n"
-		  if $debug;
+		  if $config->{DEBUG};
 	    }
 	    if ($? or $gotjunk) {
 		$ps->{$plug}->{'default'} = "no";
 	    }
-	    print "# ",$ps->{$plug}->{'default'} if $debug;
+	    print "# ",$ps->{$plug}->{'default'} if $config->{DEBUG};
 	}
 
 	if ($ps->{$plug}->{'capability'}->{'suggest'}) {
@@ -617,10 +644,10 @@ sub get_plugins {
 
 		my @cmd=("$bindir/munin-run");
 		# Debug here breaks stuff.
-		# push(@cmd,$debugopt) if $debug;
-		push(@cmd,"--servicedir",$libdir, $plug, "suggest");
+		# push(@cmd,$debugopt) if $config->{DEBUG};
+		push(@cmd,"--servicedir",$config->{libdir}, $plug, "suggest");
 
-		print "\n# Running: ",join(' ',@cmd),"\n" if $debug;
+		print "\n# Running: ",join(' ',@cmd),"\n" if $config->{DEBUG};
 
 		my $fork = open (PLUG, "-|");
 
@@ -640,10 +667,10 @@ sub get_plugins {
 			chomp;
 			if (m/^#/) {
 			    # debug output from munin-run
-			    print "# Got junk: $_\n" if $debug;
+			    print "# Got junk: $_\n" if $config->{DEBUG};
 			} else {
 			    # This ought to be a suggestion.
-			    print "# Got suggestion: $_\n" if $debug;
+			    print "# Got suggestion: $_\n" if $config->{DEBUG};
 			    push(@sugg,$_);
 			}
 		    }
@@ -652,12 +679,12 @@ sub get_plugins {
 		if ($?) {
 		    @sugg = ();
 		    print "# Plugin exit code: $? - voiding suggestions\n"
-			if $debug;
+			if $config->{DEBUG};
 		}
 
 		@{$ps->{$plug}->{'suggest'}} = @sugg;
 
-		if ($debug) {
+		if ($config->{DEBUG}) {
 		    print "# Suggested: ",
 		      join (' ', @{$ps->{$plug}->{'suggest'}}),"\n";
 
@@ -669,7 +696,7 @@ sub get_plugins {
 		    unless @sugg;
 	    }
 	}
-	print "\n" if $debug;
+	print "\n" if $config->{DEBUG};
     }
     return $ps;
 }
