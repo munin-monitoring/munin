@@ -82,10 +82,23 @@ sub parse_args
 		"newer=s"         => \$newer
 	);
 
-	if (defined $newer and (!$shell or $removes)) {
+	# Sanity-check arguments
+	if ($newer and not $newer =~ /^\d+\.\d+\.\d+/) {
+		# FIXME: not a very good warning....
+		warn "# ERROR: $newer is not a valid argument to --newer.  Ignoring.\n";
+		undef $newer;
+	}
+
+	if ($newer and (!$shell or $removes)) {
 	    print STDERR "Fatal: --newer only supported along with --shell.\n";
 	    exit 2;
 	}
+
+	if (@snmp and !$shell) {
+	    print STDERR "Fatal: --snmp only supported along with --shell.\n";
+	    exit 3;
+	}
+
 
 	if (@families) {
 	    @families = split /,/, $families[0];
@@ -100,16 +113,6 @@ sub parse_args
 	    else {
 		@families = @all_families;
 	    }
-	}
-
-	# Normalize input in case it was taken from commandline?
-	# This seems like a noop no matter what went before.
-	# @families = split (/,/, join (',', @families));
-	# @snmp = split (/,/, join (',', @snmp));
-
-	if (@snmp and !$shell) {
-	    print STDERR "Fatal: --snmp only supported along with --shell.\n";
-	    exit 3;
 	}
 
 	$config->reinitialize({
@@ -156,10 +159,10 @@ Options:
 	--families <family,...>	Override families ($all_families) [$default_families]
 	--suggest		Show suggestions instead of status
 	--shell			Show shell commands (implies --suggest)
-        --exitnoterror          Do not consider non-zero exit-value as error
+	--exitnoterror          Do not consider non-zero exit-value as error
 	--remove-also		Also show rm-commands when doing --shell
-	--newer <version>	Only show suggestions related to plugins newer
-	                        than version <version>. [0.0.0]
+	--newer <version>	Only show suggestions related to plugins included
+	                        more recently than version <version>.
 	--snmp <host|cidr>      Do SNMP probing on the host or CIDR network.
 	--snmpversion <ver>     Set SNMP version (1, 2c or 3) [2c]
 	--snmpcommunity <comm>  Set SNMP community string [public]
@@ -369,7 +372,7 @@ if (@{ $config->{snmp} } and $config->{shell})
     {
 	print STDERR "# ERROR: Cannot perform SNMP probe. SNMP operations require the SNMP part\n";
 	print STDERR "# of Munin to be installed, which is currently not installed, or not in the \n";
-	print STDERR "# rigt directory: $bindir\n";
+	print STDERR "# right directory: $bindir\n";
     }
 }
 
@@ -409,7 +412,7 @@ sub normal
 
 
 sub get_installed {
-	(my $ps, my $dir) = @_;
+	my ($ps, $dir) = @_;
 
 	print "# Opening \"$dir\" for reading...\n" if $config->{DEBUG};
 	opendir (DIR, $dir) or die "Could not open \"$dir\" for reading: $!\n";
@@ -441,19 +444,28 @@ sub get_installed {
 	return $ps;
 }
 
+
 sub load_plugin_history
 {
-    if (defined $config->{newer} and -f "$config->{libdir}/plugins.history") {
-	if (open (HIST, "$config->{libdir}/plugins.history")) {
-	    my @slurp = <HIST>;
-	    my $reached_version = 0;
-	    my $ver = "0.0.0";
-	    close (HIST);
-	    my $uname = lc `uname`;
-	    chomp $uname;
+	my $hist_file = "$config->{libdir}/plugins.history";
+	my $HIST;
 
-	    foreach my $line (@slurp) {
-		chomp $line;
+	unless ( -f $hist_file) {
+		die "# ERROR: Plugin history file '$hist_file' doesn't exist.\n";
+	}
+	
+	unless (open $HIST, '<', $hist_file) {
+		die "# ERROR: Could not open '$hist_file': $!\n";
+	}
+	    
+	my $reached_version = 0;
+	my $ver = "0.0.0";
+	
+	my $uname = lc `uname`; # FIXME: use Config; $Config{osname}; instead?
+	chomp $uname;
+
+	while (my $line = <$HIST>) {
+		# FIXME: use Munin::Common::Config?
 		$line =~ s/#.*//g;
 		$line =~ s/^\s+//g;
 		$line =~ s/\s+$//g;
@@ -467,30 +479,31 @@ sub load_plugin_history
 		    } elsif ($reached_version) {
 			$reached_version++;
 		    }
-		} elsif ($reached_version < 2) {
+		}
+		elsif ($reached_version < 2) {
 		    next;
-		} elsif ($line =~ /^([^\/]+)\/(.+)$/) {
+		}
+		elsif ($line =~ /^([^\/]+)\/(.+)$/) {
 		    if ($uname eq $1) {
 			$plugins->{$2}->{'version'} = $ver;
 			print "# - Adding plugin '$2' to version tree ",
 			  "($ver)...\n" if $config->{DEBUG};
 		    }
-		} elsif ($line =~ /^(.+)$/) {
+		}
+		elsif ($line =~ /^(.+)$/) {
 		    $plugins->{$1}->{'version'} = $ver;
 		    print "# - Adding plugin \"$1\" to version tree ",
 		      "($ver)...\n" if $config->{DEBUG};
 		}
-	    }
-	} else {
-	    warn "Warning: Could not open \"$config->{libdir}/plugins.history\": $!\n";
 	}
-    }
+	close $HIST;
+	return;
 }
 
 
-sub load_plugins {
-
-    load_plugin_history();
+sub load_plugins
+{
+	load_plugin_history() if $config->{newer};
 
 exit 0; # FIXME :-)
     
