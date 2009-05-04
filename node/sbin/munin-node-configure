@@ -25,6 +25,8 @@ use strict;
 use warnings;
 
 use Getopt::Long;
+use POSIX;
+
 use Data::Dumper;
 
 use Munin::Node::Config;
@@ -415,7 +417,7 @@ sub load_installed_plugins
 {
 	print "# Opening '$config->{servicedir}' for reading...\n" if $config->{DEBUG};
 	
-	opendir ($SERVICEDIR, $config->{servicedir})
+	opendir (my $SERVICEDIR, $config->{servicedir})
 		or die "Could not open '$config->{servicedir}' for reading: $!\n";
 	
 	my $found = 0;
@@ -423,9 +425,11 @@ sub load_installed_plugins
 	while (my $inst = readdir $SERVICEDIR) {
 		my $realfile = undef;
 
-		next unless -l "$config->{servicedir}/$inst"
+		# Ignore non-symlinks, and symlinks that point anywhere other 
+		# than the plugin library
+		next unless -l "$config->{servicedir}/$inst";
 		next unless ($realfile = readlink ("$config->{servicedir}/$inst"));
-		next unless ($realfile =~ /^$config->{libdir}\//)
+		next unless ($realfile =~ /^$config->{libdir}\//);
 		
 		$realfile =~ s/^.+\///;	# get basename
 
@@ -465,9 +469,10 @@ sub load_plugin_history
 	    
 	my $reached_version = 0;
 	my $ver = "0.0.0";
-	
-	my $uname = lc `uname`; # FIXME: use Config; $Config{osname}; instead?
-	chomp $uname;
+
+	# $^O or $Config{osname} are based on the platform perl was built on, 
+	# not where it's currently running.  But this should always be correct 
+	my $uname = lc((POSIX::uname())[0]);
 
 	while (my $line = <$HIST>) {
 		# FIXME: use Munin::Common::Config?
