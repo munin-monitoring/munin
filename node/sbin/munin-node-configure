@@ -205,7 +205,7 @@ parse_args();
 
 if (@{ $config->{families} }) {
     load_plugins();
-    $installed = &get_installed ($installed, $config->{servicedir});
+    load_installed_plugins();
 
     if (! $config->{shell} and $config->{suggest}) {
 	&normal ("Plugin", "Used", "Suggestions");
@@ -411,37 +411,42 @@ sub normal
 }
 
 
-sub get_installed {
-	my ($ps, $dir) = @_;
+sub load_installed_plugins
+{
+	print "# Opening '$config->{servicedir}' for reading...\n" if $config->{DEBUG};
+	
+	opendir ($SERVICEDIR, $config->{servicedir})
+		or die "Could not open '$config->{servicedir}' for reading: $!\n";
+	
+	my $found = 0;
 
-	print "# Opening \"$dir\" for reading...\n" if $config->{DEBUG};
-	opendir (DIR, $dir) or die "Could not open \"$dir\" for reading: $!\n";
-	my @installed = readdir (DIR);
-	print "# Found ",scalar(@installed)," files\n" if $config->{DEBUG};
-	close (DIR);
-
-	foreach my $inst (@installed) {
+	while (my $inst = readdir $SERVICEDIR) {
 		my $realfile = undef;
 
-		next unless -l "$dir/$inst"; # None of our business...
-		next unless ($realfile = readlink ("$dir/$inst"));
-		next unless ($realfile =~ /^$config->{libdir}\//); # None of our business...
-		$realfile =~ s/^.+\///;
+		next unless -l "$config->{servicedir}/$inst"
+		next unless ($realfile = readlink ("$config->{servicedir}/$inst"));
+		next unless ($realfile =~ /^$config->{libdir}\//)
+		
+		$realfile =~ s/^.+\///;	# get basename
 
 		print "# Checking file: $inst..." if $config->{DEBUG};
-		if ($realfile =~ /_$/) # Wildcard plugin...
-		{
-		    print "# $realfile..." if $config->{DEBUG};
-		    (my $wild = $inst) =~ s/^$realfile//;
-		    print "# $wild..." if $config->{DEBUG};
-		    push @{$ps->{$realfile}->{'suggest'}}, $wild;
+		if ($realfile =~ /_$/) {
+			# Wildcard plugin...
+			print "# $realfile..." if $config->{DEBUG};
+			(my $wild = $inst) =~ s/^$realfile//;
+			print "# $wild..." if $config->{DEBUG};
+			push @{$installed->{$realfile}->{'suggest'}}, $wild;
 		}
-		$ps->{$realfile}->{'installed'} = "yes";
+		$installed->{$realfile}->{'installed'} = "yes";
 
 		print "\n" if $config->{DEBUG};
-	}
 
-	return $ps;
+		$found++;
+	}
+	close ($SERVICEDIR);
+	
+	print "# Found $found installed services.\n" if $config->{DEBUG};
+	return;
 }
 
 
