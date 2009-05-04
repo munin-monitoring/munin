@@ -30,14 +30,14 @@ use POSIX;
 use Data::Dumper;
 
 use Munin::Node::Config;
+use Munin::Node::Service;
 use Munin::Common::Defaults;
 
 my $config = Munin::Node::Config->instance();
 
-my $bindir     = $Munin::Common::Defaults::MUNIN_SBINDIR;
+my $bindir = $Munin::Common::Defaults::MUNIN_SBINDIR;
 
-my $installed  = undef;
-my $plugins    = undef;
+my ($installed, $plugins);
 
 my @all_families     = ("auto", "manual", "contrib");
 my @default_families = ("auto");
@@ -84,6 +84,8 @@ sub parse_args
 		"newer=s"         => \$newer
 	);
 
+	$config->parse_config_from_file($conffile);
+
 	# Sanity-check arguments
 	if ($newer and not $newer =~ /^\d+\.\d+\.\d+/) {
 		# FIXME: not a very good warning....
@@ -118,6 +120,8 @@ sub parse_args
 	}
 
 	$config->reinitialize({
+		%$config,
+
 		newer => $newer,
 		shell => $shell,
 		exit_not_error => $exiterror,
@@ -206,7 +210,10 @@ with this software or refer to
 parse_args();
 
 if (@{ $config->{families} }) {
-    load_plugins();
+    load_available_plugins();
+
+exit; # FIXME :-)
+
     load_installed_plugins();
 
     if (! $config->{shell} and $config->{suggest}) {
@@ -423,7 +430,7 @@ sub load_installed_plugins
 	my $found = 0;
 
 	while (my $inst = readdir $SERVICEDIR) {
-		my $realfile = undef;
+		my $realfile;
 
 		# Ignore non-symlinks, and symlinks that point anywhere other 
 		# than the plugin library
@@ -511,72 +518,104 @@ sub load_plugin_history
 }
 
 
-sub load_plugins
+# FIXME: ewww.  stolen from Munin::Node::Service
+# couldn't re-use it directly because it assumes plugins can only be in
+# $config->{servicedir}
+sub is_a_runnable_plugin
+{
+	my $file = shift;
+
+	my $path = "$config->{libdir}/$file";
+
+	return unless -f $path && -x _;
+
+	# FIX isn't it enough to check that the file is executable and not
+	# in 'ignores'? Can hidden files and config files be
+	# unintentionally executable? What does config files do in the
+	# service directory? Shouldn't we complain if there is junk in the
+	# service directory?
+	return if $file =~ m/^\./;               # Hidden files
+	return if $file =~ m/.conf$/;            # Config files
+
+	return if $file !~ m/^([-\w.]+)$/;       # Skip if any weird chars
+	$file = $1;                              # Not tainted anymore.
+
+	foreach my $regex (@{$config->{ignores}}) {
+		return if $file =~ /$regex/;
+	}
+
+	return 1;
+}
+
+
+sub load_available_plugins
 {
 	load_plugin_history() if $config->{newer};
 
-exit 0; # FIXME :-)
-    
-    print "# Opening \"$config->{libdir}\" for reading...\n" if $config->{DEBUG};
-    opendir (DIR, $config->{libdir}) or die "Could not open \"$config->{libdir}\" for reading: $!\n";
-    my @plugins = readdir (DIR);
-    print "# Found ",scalar(@plugins)," files\n" if $config->{DEBUG};
-    close (DIR);
+	print "# Opening \"$config->{libdir}\" for reading...\n" if $config->{DEBUG};
 
-    foreach my $plug (@plugins) {
-	my $path = "$config->{libdir}/$plug";
-	next if $plug =~ /^\./;
-	print "# Considering $config->{libdir}/$plug for checking\n" if $config->{DEBUG};
-	# If anyone ever uses a relative symlink this will break so bad
-	$path = readlink($path) and
-	  $path = $path =~ /^\// ? $path : "$config->{libdir}/$path"
-	    while -l $path;
-	if (!-f $path) {
-	    print "# File is not a file\n" if $config->{DEBUG};
-	    next;
-	}
-	if (!-x _) {
-	    print "# File is not executable\n" if $config->{DEBUG};
-	    next;
-	}
-	if ($plug =~ /~$/    or # Emacs droppings
-	    $plug =~ /.bak$/ or # Backup file
-	    $plug =~ /.swp$/) { # Vi droppings
-	    print "# File is a backup/leftover file\n" if $config->{DEBUG};
-	    next;
-	}
+	opendir (my $LIBDIR, $config->{libdir})
+		or die "Could not open '$config->{libdir}' for reading: $!\n";
 
-	$plugins->{$plug}->{'family'} = "contrib"; # Set default family...
+	my $found = 0;
 
-	print "# Checking plugin: $plug..." if $config->{DEBUG};
-	if (! open (FILE, "$config->{libdir}/$plug")) {
-	    warn "WARNING: Could not open file '$config->{libdir}/$plug' for reading $!.".
-	      "Skipping.\n";
-	    next;
-	}
-	while (<FILE>) {
-	    chomp;
-	    if (/#%#\s+family\s*=\s*(\S+)\s*$/) {
-		$plugins->{$plug}->{'family'} = $1;
-		print "# $1..." if $config->{DEBUG};
-	    } elsif (/#%#\s+capabilities\s*=\s*(.+)$/) {
-		foreach my $cap (split (/\s+/, $1)) {
-		    $plugins->{$plug}->{'capability'}->{$cap} = 1;
-		    print "# $cap..." if $config->{DEBUG};
+	while (my $plug = readdir $LIBDIR) {
+		my $path = "$config->{libdir}/$plug";
+
+		unless (is_a_runnable_plugin($plug)) {
+			print "# Ignoring '$path'.\n";
+			next;
 		}
-	    }
-	}
-	close (FILE);
 
-	unless (grep (/^$plugins->{$plug}->{'family'}$/, @{ $config->{families} })) {
-	    print "\n" if $config->{DEBUG};
-	    next;
-	}
-	if ($plugins->{$plug}->{'family'} eq "auto" and defined $config->{newer} and
-	    !defined $plugins->{$plug}->{'version'}) {
-	    print "\n" if $config->{DEBUG};
-	    next;
-	}
+		print "# Considering '$path':\n" if $config->{DEBUG};
+
+		# FIXME: should there ever be symlinks in here?  do we even need
+		# care unless we're going to try running it?
+		while (-l $path) {
+			$path = readlink($path);
+			$path = ($path =~ /^\//) ? $path 
+			                         : "$config->{libdir}/$path"
+		}
+
+		$plugins->{$plug}->{'family'} = "contrib"; # Set default family...
+
+		print "#\tReading magic markers.\n" if $config->{DEBUG};
+		my $FILE;
+		unless (open ($FILE, "$path")) {
+			warn "WARNING: Could not open plugin '$path' for reading $!.".
+			"Skipping.\n";
+			next;
+		}
+
+		while (<$FILE>) {
+			if (/#%#\s+family\s*=\s*(\S+)\s*$/) {
+				$plugins->{$plug}->{'family'} = $1;
+				print "#\tSetting family to '$1'.\n"
+					if $config->{DEBUG};
+			}
+			elsif (/#%#\s+capabilities\s*=\s*(.+)$/) {
+				foreach my $cap (split (/\s+/, $1)) {
+					$plugins->{$plug}->{'capability'}->{$cap} = 1;
+					print "#\tAdding capability '$cap'.\n" if $config->{DEBUG};
+				}
+			}
+		}
+		
+		close ($FILE);
+
+		unless (grep (/^$plugins->{$plug}->{'family'}$/, @{ $config->{families} })) {
+			print "\n" if $config->{DEBUG};
+			next;
+		}
+
+		# Ignore if --newer was used, and the plugin was too old		
+		if ($plugins->{$plug}->{'family'} eq "auto" 
+		    and defined $config->{newer}
+		    and !defined $plugins->{$plug}->{'version'})
+		{
+			print "\n" if $config->{DEBUG};
+			next;
+		}
 
 
 	if ($plugins->{$plug}->{'capability'}->{'autoconf'}) {
@@ -718,8 +757,12 @@ exit 0; # FIXME :-)
 	    }
 	}
 	print "\n" if $config->{DEBUG};
-    }
-    return $plugins;
+	}
+
+	print "# Found $found plugins.\n" if $config->{DEBUG};
+	close ($LIBDIR);
+
+	return;
 }
 
 1;

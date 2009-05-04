@@ -24,7 +24,7 @@ sub is_a_runnable_service {
 
     # FIX isn't it enough to check that the file is executable and not
     # in 'ignores'? Can hidden files and config files be
-    # unintantionally executable? What does config files do in the
+    # unintentionally executable? What does config files do in the
     # service directory? Shouldn't we complain if there is junk in the
     # service directory?
     return if $file =~ m/^\./;               # Hidden files
