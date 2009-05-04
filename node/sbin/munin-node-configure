@@ -548,6 +548,39 @@ sub is_a_runnable_plugin
 }
 
 
+sub read_magic_markers
+{
+	my $file = shift;
+	my (%mm, $FILE);
+
+	print "#\tReading magic markers.\n" if $config->{DEBUG};
+	
+	unless (open ($FILE, $file)) {
+		warn "WARNING: Could not open plugin '$file' for reading $!.".
+		"Skipping.\n";
+		next;
+	}
+
+	while (<$FILE>) {
+		if (/#%#\s+family\s*=\s*(\S+)\s*$/) {
+			$mm{family} = $1;
+			print "#\tSetting family to '$1'.\n"
+				if $config->{DEBUG};
+		}
+		elsif (/#%#\s+capabilities\s*=\s*(.+)$/) {
+			my @caps = split (/\s+/, $1);
+			$mm{capabilities} = \@caps;
+			print "#\tCapabilities are: ", join(' ', @caps), ".\n"
+				if $config->{DEBUG};
+		}
+	}
+	
+	close ($FILE);
+
+	return \%mm;
+}
+
+
 sub load_available_plugins
 {
 	load_plugin_history() if $config->{newer};
@@ -577,43 +610,23 @@ sub load_available_plugins
 			                         : "$config->{libdir}/$path"
 		}
 
-		$plugins->{$plug}->{'family'} = "contrib"; # Set default family...
+		my $mm = read_magic_markers($path);
+		$plugins->{$plug}->{family} = $mm->{family} || "contrib";
+		foreach my $capability (@{ $mm->{capabilities} }) {
+			$plugins->{$plug}->{capability}->{$capability} = 1;
+		}
 
-		print "#\tReading magic markers.\n" if $config->{DEBUG};
-		my $FILE;
-		unless (open ($FILE, "$path")) {
-			warn "WARNING: Could not open plugin '$path' for reading $!.".
-			"Skipping.\n";
+		unless (grep (/^$plugins->{$plug}->{family}$/, @{ $config->{families} })) {
+			print "#\tFamily '$plugins->{$plug}->{family}' is currently ignored.  Skipping.\n";
 			next;
 		}
 
-		while (<$FILE>) {
-			if (/#%#\s+family\s*=\s*(\S+)\s*$/) {
-				$plugins->{$plug}->{'family'} = $1;
-				print "#\tSetting family to '$1'.\n"
-					if $config->{DEBUG};
-			}
-			elsif (/#%#\s+capabilities\s*=\s*(.+)$/) {
-				foreach my $cap (split (/\s+/, $1)) {
-					$plugins->{$plug}->{'capability'}->{$cap} = 1;
-					print "#\tAdding capability '$cap'.\n" if $config->{DEBUG};
-				}
-			}
-		}
-		
-		close ($FILE);
-
-		unless (grep (/^$plugins->{$plug}->{'family'}$/, @{ $config->{families} })) {
-			print "\n" if $config->{DEBUG};
-			next;
-		}
-
-		# Ignore if --newer was used, and the plugin was too old		
 		if ($plugins->{$plug}->{'family'} eq "auto" 
 		    and defined $config->{newer}
 		    and !defined $plugins->{$plug}->{'version'})
 		{
-			print "\n" if $config->{DEBUG};
+			print "#\tPlugin is older than $config->{newer}.  Skipping.\n"
+				if $config->{DEBUG};
 			next;
 		}
 
