@@ -237,7 +237,8 @@ sub main
 		configure_snmp();
 	}
 	else {
-		#print_installed_list();
+		# if $config->{shell}, implies $config->{suggest}
+		print_status_list();
 	}
 
 	exit; # FIXME :-)
@@ -387,6 +388,29 @@ sub configure_snmp
 
 	# Not reached, but just in case...
 	exit 42;
+}
+
+
+# For each available plugin, prints a line detailing whether or not it's
+# installed, and (if it's a wildcard plugin) what 
+sub print_status_list
+{
+	foreach my $plug (sort keys %{$plugins}) {
+		my $now   = $installed->{$plug}
+		            ? "yes"
+		            : "no";
+		my $suggested = $installed->{$plug}->{'suggest'}
+		                ? $installed->{$plug}->{'suggest'}
+		                : [];
+
+		my $sugg = '';
+
+		if ($plug =~ /_$/ and @$suggested) {
+			# It's a wildcard, and there are suggestions
+			$sugg = join ' ', @$suggested;
+		}
+		normal($plug, $now, $sugg);
+	}
 }
 
 
@@ -546,31 +570,26 @@ sub is_a_runnable_plugin
 sub read_magic_markers
 {
 	my $file = shift;
-	my (%mm, $FILE);
+	my (%mm, $PLUGIN);
 
 	print "#\tReading magic markers.\n" if $config->{DEBUG};
 
-	unless (open ($FILE, $file)) {
+	unless (open ($PLUGIN, '<', $file)) {
 		warn "WARNING: Could not open plugin '$file' for reading $!.".
-		"Skipping.\n";
+			"Skipping.\n";
 		next;
 	}
 
-	while (<$FILE>) {
-		if (/#%#\s+family\s*=\s*(\S+)\s*$/) {
+	while (<$PLUGIN>) {
+		if (/#%#\s+family\s*=\s*(\S+)\s*/) {
 			$mm{family} = $1;
-			print "#\tSetting family to '$1'.\n"
-				if $config->{DEBUG};
 		}
-		elsif (/#%#\s+capabilities\s*=\s*(.+)$/) {
-			my @caps = split (/\s+/, $1);
-			$mm{capabilities} = \@caps;
-			print "#\tCapabilities are: ", join(', ', @caps), ".\n"
-				if $config->{DEBUG};
+		elsif (/#%#\s+capabilities\s*=\s*(.+)/) {
+			$mm{capabilities} = [ split (/\s+/, $1) ];
 		}
 	}
 
-	close ($FILE);
+	close ($PLUGIN);
 
 	return \%mm;
 }
@@ -580,7 +599,7 @@ sub load_available_plugins
 {
 	load_plugin_history() if $config->{newer};
 
-	print "# Opening \"$config->{libdir}\" for reading...\n" if $config->{DEBUG};
+	print "# Reading available plugins from '$config->{libdir}'\n" if $config->{DEBUG};
 
 	opendir (my $LIBDIR, $config->{libdir})
 		or die "Could not open '$config->{libdir}' for reading: $!\n";
@@ -607,9 +626,20 @@ sub load_available_plugins
 		}
 
 		my $mm = read_magic_markers($path);
+		
 		$plugins->{$plug}->{family} = $mm->{family} || "contrib";
+		print "#\tSet family to '$plugins->{$plug}->{family}'.\n"
+			if $config->{DEBUG};
+		
 		foreach my $capability (@{ $mm->{capabilities} }) {
 			$plugins->{$plug}->{capability}->{$capability} = 1;
+		}
+		
+		if ($config->{DEBUG}) {
+			my $caps = @{ $mm->{capabilities} }
+			           ? join(', ', @{ $mm->{capabilities} })
+			           : '<none>';
+			print "#\tCapabilities are: $caps\n";
 		}
 
 		unless (grep (/^$plugins->{$plug}->{family}$/, @{ $config->{families} })) {
@@ -817,7 +847,7 @@ __END__
 
 =head1 NAME
 
-munin-node-configure - A program to view configurations for munin-node
+munin-node-configure - View and modify which plugins are enabled
 
 =head1 SYNOPSIS
 
@@ -894,8 +924,8 @@ let it be very easy to graph new datasources.
 
 Munin-node-configure is a script to show the current configuration of which
 plugins the host is running, as well as suggestions on what changes to make
-to this configuration. Munin-node-configure does this by using munin-run(1) to
-ask the plugins themselves of wether they should be run or not.
+to this configuration. It does this by using munin-run(1) to ask the plugins
+themselves whether they should be run or not.
 
 =head1 FILES
 
