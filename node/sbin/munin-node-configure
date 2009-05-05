@@ -220,7 +220,6 @@ sub print_header
 	return;
 }
 
-### current end of function definitions
 
 sub main
 {
@@ -356,6 +355,7 @@ sub main
 	exit 0;
 }
 
+
 sub configure_snmp
 {
 	unless (-x "$bindir/munin-node-configure-snmp") {
@@ -388,6 +388,7 @@ sub configure_snmp
 	# Not reached, but just in case...
 	exit 42;
 }
+
 
 sub link_remove
 {
@@ -590,7 +591,8 @@ sub load_available_plugins
 		my $path = "$config->{libdir}/$plug";
 
 		unless (is_a_runnable_plugin($plug)) {
-			print "# Ignoring '$path'.\n";
+			print "# Ignoring '$path'.\n"
+				if $config->{DEBUG};
 			next;
 		}
 
@@ -611,7 +613,8 @@ sub load_available_plugins
 		}
 
 		unless (grep (/^$plugins->{$plug}->{family}$/, @{ $config->{families} })) {
-			print "#\tFamily '$plugins->{$plug}->{family}' is currently ignored.  Skipping.\n";
+			print "#\tFamily '$plugins->{$plug}->{family}' is currently ignored.  Skipping.\n"
+				if $config->{DEBUG};
 			next;
 		}
 
