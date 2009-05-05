@@ -206,24 +206,33 @@ with this software or refer to
 }
 
 
+sub print_header
+{
+	if ($config->{suggest}) {
+		normal("Plugin", "Used", "Suggestions");
+		normal("------", "----", "-----------");
+	}
+	else {
+		normal("Plugin", "Used", "Extra information");
+		normal("------", "----", "-----------------");
+	}
+
+	return;
+}
+
 ### current end of function definitions
-parse_args();
 
-if (@{ $config->{families} }) {
-    load_available_plugins();
+sub main
+{
+	parse_args();
 
-exit; # FIXME :-)
+	if (@{ $config->{families} }) {
+		load_available_plugins();
+		load_installed_plugins();
 
-    load_installed_plugins();
+		print_header() unless $config->{shell};
 
-    if (! $config->{shell} and $config->{suggest}) {
-	&normal ("Plugin", "Used", "Suggestions");
-	&normal ("------", "----", "-----------");
-    }
-    elsif (! $config->{shell}) {
-	&normal ("Plugin", "Used", "Extra information");
-	&normal ("------", "----", "-----------------");
-    }
+		exit;
 
     foreach my $plug (sort keys %{$plugins}) {
 	next unless defined $plugins->{$plug}->{'family'};
@@ -393,7 +402,8 @@ if (@errors) {
 }
 
 
-### XXX functions start here XXX
+}
+
 
 sub link_remove
 {
@@ -811,7 +821,12 @@ sub plugin_suggestions
 }
 
 
+exit main() unless caller;
+
+
 1;
+
+__END__
 
 =head1 NAME
 
