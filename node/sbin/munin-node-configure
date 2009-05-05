@@ -233,7 +233,7 @@ sub main
 	if ($config->{suggest}) {
 		#print_suggestions();
 	}
-	elsif ($config->{snmp}) {
+	elsif (@{ $config->{snmp} }) {
 		configure_snmp();
 	}
 	else {
