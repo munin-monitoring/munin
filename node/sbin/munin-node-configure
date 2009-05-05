@@ -226,141 +226,123 @@ sub main
 {
 	parse_args();
 
-	if (@{ $config->{families} }) {
-		load_available_plugins();
-		load_installed_plugins();
+	load_available_plugins();
+	load_installed_plugins();
 
-		print_header() unless $config->{shell};
+	print_header() unless $config->{shell};
 
-		foreach my $plug (sort keys %{$plugins}) {
-			# FIXME: next two lines should already be done
-			# in load_available_plugins
-			next unless defined $plugins->{$plug}->{'family'};
-			next unless (grep (/^$plugins->{$plug}->{'family'}$/ ,@{ $config->{families} }));
+	if ($config->{suggest}) {
+		#print_suggestions();
+	}
+	elsif ($config->{snmp}) {
+		configure_snmp();
+	}
+	else {
+		#print_installed_list();
+	}
 
-			my $now   = (exists $installed->{$plug}?"yes":"no");
-			my $want  = (exists $plugins->{$plug}->{'default'}?$plugins->{$plug}->{'default'}:"no");
-			my $snow  = (exists $installed->{$plug}->{'suggest'}?$installed->{$plug}->{'suggest'}:undef);
-			my $swant = (exists $plugins->{$plug}->{'suggest'}?$plugins->{$plug}->{'suggest'}:undef);
-			my $sugg  = "";
+	exit; # FIXME :-)
 
-			if ($config->{shell}) {
-				if ($plug =~ /_$/) {
-					# wildcard plugin
-					if ($now eq "yes" and $want eq "no") {
-						if ($snow and @{$snow}) {
-							foreach my $wild (sort @{$snow}) {
-								link_remove("$plug$wild");
-							}
-						}
-					}
-					else {
-						if ($snow and @{$snow}) {
-							foreach my $wild (sort @{$snow}) {
-								if (! grep (/^$wild$/, @{$swant})) {
-									link_remove("$plug$wild");
-								}
-							}
-						}
-						if ($swant and @{$swant}) {
-							foreach my $wild (sort @{$swant}) {
-								next if -e "$config->{servicedir}/$plug"."_".$wild;
-								if (! grep (/^$wild$/, @{$snow})) {
-									link_add($plug, $wild);
-								}
-							}
+	foreach my $plug (sort keys %{$plugins}) {
+		# FIXME: next two lines should already be done
+		# in load_available_plugins...
+		next unless defined $plugins->{$plug}->{'family'};
+		next unless (grep (/^$plugins->{$plug}->{'family'}$/ ,@{ $config->{families} }));
+
+		my $now   = (exists $installed->{$plug}?"yes":"no");
+		my $want  = (exists $plugins->{$plug}->{'default'}?$plugins->{$plug}->{'default'}:"no");
+		my $snow  = (exists $installed->{$plug}->{'suggest'}?$installed->{$plug}->{'suggest'}:undef);
+		my $swant = (exists $plugins->{$plug}->{'suggest'}?$plugins->{$plug}->{'suggest'}:undef);
+		my $sugg  = "";
+
+		if ($config->{shell}) {
+			if ($plug =~ /_$/) {
+				# wildcard plugin
+				if ($now eq "yes" and $want eq "no") {
+					if ($snow and @{$snow}) {
+						foreach my $wild (sort @{$snow}) {
+							link_remove("$plug$wild");
 						}
 					}
 				}
 				else {
-					if ($now eq "yes" and $want eq "no") {
-						link_remove($plug);
-					}
-					elsif ($now eq "no" and $want eq "yes") {
-						next if -e "$config->{servicedir}/$plug"; # None of our business...
-						link_add($plug);
-					}
-				}
-			}
-			elsif ($config->{suggest}) {
-				if ($plug =~ /_$/) {
-					# wildcard plugin
-					if ($now eq "yes" && $want eq "no"
-					 or $now eq "no" && $want eq "yes" && $swant && @{$swant})
-					{
-						$sugg = "$want ";
-					}
 					if ($snow and @{$snow}) {
 						foreach my $wild (sort @{$snow}) {
 							if (! grep (/^$wild$/, @{$swant})) {
-								$sugg .= "-$wild ";
+								link_remove("$plug$wild");
 							}
 						}
 					}
 					if ($swant and @{$swant}) {
 						foreach my $wild (sort @{$swant}) {
-							next if -e "$config->{servicedir}/$plug"."_".$wild; # None of our business...
+							next if -e "$config->{servicedir}/$plug"."_".$wild;
 							if (! grep (/^$wild$/, @{$snow})) {
-								$sugg .= "+$wild ";
+								link_add($plug, $wild);
 							}
 						}
 					}
-					normal($plug, $now, $sugg);
-				}
-				else {
-					next if -e "$config->{servicedir}/$plug"; # None of our business...
-					if ($now ne $want) {
-						$sugg = $want;
-					}
-					elsif (defined $plugins->{$plug}->{'defaultreason'}
-					   and $plugins->{$plug}->{'defaultreason'} =~ /^[^\(]*\((.+)\)\s*$/)
-					{
-						$sugg = "[$1]";
-					}
-
-					normal($plug, $now, $sugg);
 				}
 			}
 			else {
-				if ($plug =~ /_$/) {
-					# wildcard
-				if ($snow and @{$snow}) {
-					$sugg = join ' ', @{$snow};
+				if ($now eq "yes" and $want eq "no") {
+					link_remove($plug);
 				}
-					normal($plug, $now, $sugg);
-				}
-				else {
-					normal($plug, $now, "");
+				elsif ($now eq "no" and $want eq "yes") {
+					next if -e "$config->{servicedir}/$plug"; # None of our business...
+					link_add($plug);
 				}
 			}
 		}
-	}
-
-	if (@{ $config->{snmp} } and $config->{shell}) {
-		if (-x "$bindir/munin-node-configure-snmp") {
-			if (eval "require Net::SNMP;") {
-				my @params;
-
-				push (@params, "$bindir/munin-node-configure-snmp");
-				push (@params, "--snmpversion", $config->{snmp_version}) if defined $config->{snmpver};
-				push (@params, "--community", $config->{snmp_community}) if defined $config->{snmp_community};
-				push (@params, $debugopt) if $config->{DEBUG};
-				push (@params, @{ $config->{snmp} });
-
-				print "# executing: ",join(' ',@params),"\n" if $config->{DEBUG};
-				exec (@params);
-				# NOTREACHED
+		elsif ($config->{suggest}) {
+			if ($plug =~ /_$/) {
+				# wildcard plugin
+				if ($now eq "yes" && $want eq "no"
+				 or $now eq "no" && $want eq "yes" && $swant && @{$swant})
+				{
+					$sugg = "$want ";
+				}
+				if ($snow and @{$snow}) {
+					foreach my $wild (sort @{$snow}) {
+						if (! grep (/^$wild$/, @{$swant})) {
+							$sugg .= "-$wild ";
+						}
+					}
+				}
+				if ($swant and @{$swant}) {
+					foreach my $wild (sort @{$swant}) {
+						next if -e "$config->{servicedir}/$plug"."_".$wild; # None of our business...
+						if (! grep (/^$wild$/, @{$snow})) {
+							$sugg .= "+$wild ";
+						}
+					}
+				}
+				normal($plug, $now, $sugg);
 			}
 			else {
-				print STDERR "# ERROR: Cannot perform SNMP probe. SNMP operations require the perl module\n";
-				print STDERR "# Net::SNMP, which is currently not installed (or not in one of the following\n";
-				print STDERR "# directories: @INC\n";
+				next if -e "$config->{servicedir}/$plug"; # None of our business...
+				if ($now ne $want) {
+					$sugg = $want;
+				}
+				elsif (defined $plugins->{$plug}->{'defaultreason'}
+				   and $plugins->{$plug}->{'defaultreason'} =~ /^[^\(]*\((.+)\)\s*$/)
+				{
+					$sugg = "[$1]";
+				}
+
+				normal($plug, $now, $sugg);
 			}
 		}
 		else {
-			print STDERR "# ERROR: Cannot perform SNMP probe. SNMP operations require the SNMP part\n";
-			print STDERR "# of Munin to be installed, which is currently not installed, or not in the \n";
-			print STDERR "# right directory: $bindir\n";
+			if ($plug =~ /_$/) {
+				# wildcard
+				if ($snow and @{$snow}) {
+					$sugg = join ' ', @{$snow};
+				}
+				normal($plug, $now, $sugg);
+			}
+			else {
+				normal($plug, $now, "");
+			}
 		}
 	}
 
@@ -374,6 +356,38 @@ sub main
 	exit 0;
 }
 
+sub configure_snmp
+{
+	unless (-x "$bindir/munin-node-configure-snmp") {
+		print STDERR "# ERROR: Cannot perform SNMP probe. SNMP operations require the SNMP part\n";
+		print STDERR "# of Munin to be installed, which is currently not installed, or not in the \n";
+		print STDERR "# right directory: $bindir\n";
+
+		exit 1;
+	}
+
+	unless (eval "require Net::SNMP;") {
+		print STDERR "# ERROR: Cannot perform SNMP probe. SNMP operations require the perl module\n";
+		print STDERR "# Net::SNMP, which is currently not installed (or not in one of the following\n";
+		print STDERR "# directories: @INC\n";
+
+		exit 1;
+	}
+
+	my @params;
+
+	push (@params, "$bindir/munin-node-configure-snmp");
+	push (@params, "--snmpversion", $config->{snmp_version}) if defined $config->{snmpver};
+	push (@params, "--community", $config->{snmp_community}) if defined $config->{snmp_community};
+	push (@params, $debugopt) if $config->{DEBUG};
+	push (@params, @{ $config->{snmp} });
+
+	print "# executing: ",join(' ',@params),"\n" if $config->{DEBUG};
+	exec (@params);
+
+	# Not reached, but just in case...
+	exit 42;
+}
 
 sub link_remove
 {
