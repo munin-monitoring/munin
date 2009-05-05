@@ -226,7 +226,7 @@ sub main
 {
 	parse_args();
 
-	load_available_plugins();
+	$plugins   = load_available_plugins();
 	$installed = load_installed_plugins();
 
 	print_header() unless $config->{shell};
@@ -613,42 +613,44 @@ sub read_magic_markers
 
 sub load_available_plugins
 {
+	my %found;  # index of plugins found
+	
 	load_plugin_history() if $config->{newer};
 
-	print "# Reading available plugins from '$config->{libdir}'\n" if $config->{DEBUG};
+	print "# Searching '$config->{libdir}' for available plugins.\n"
+		if $config->{DEBUG};
 
 	opendir (my $LIBDIR, $config->{libdir})
-		or die "Could not open '$config->{libdir}' for reading: $!\n";
-
-	my $found = 0;
+		or die "Fatal: Could not open '$config->{libdir}' for reading: $!\n";
 
 	while (my $plug = readdir $LIBDIR) {
 		my $path = "$config->{libdir}/$plug";
+		my %plugin;
 
 		unless (is_a_runnable_plugin($plug)) {
-			print "# Ignoring '$path'.\n"
-				if $config->{DEBUG};
+			print "# Ignoring '$path'.\n" if $config->{DEBUG};
 			next;
 		}
 
-		print "# Considering '$path':\n" if $config->{DEBUG};
+		print "# Considering '$path'\n" if $config->{DEBUG};
 
 		# FIXME: should there ever be symlinks in here?  do we even need
 		# care unless we're going to try running it?
 		while (-l $path) {
 			$path = readlink($path);
-			$path = ($path =~ /^\//) ? $path
-			                         : "$config->{libdir}/$path"
+			$path = ($path =~ /^\//)
+			         ? $path
+			         : "$config->{libdir}/$path"
 		}
 
 		my $mm = read_magic_markers($path);
 
-		$plugins->{$plug}->{family} = $mm->{family} || "contrib";
-		print "#\tSet family to '$plugins->{$plug}->{family}'.\n"
+		$plugin{family} = $mm->{family} || "contrib";
+		print "#\tSet family to '$plugin{family}'.\n"
 			if $config->{DEBUG};
 
 		foreach my $capability (@{ $mm->{capabilities} }) {
-			$plugins->{$plug}->{capability}->{$capability} = 1;
+			$plugin{capabilities}->{$capability} = 1;
 		}
 
 		if ($config->{DEBUG}) {
@@ -658,32 +660,34 @@ sub load_available_plugins
 			print "#\tCapabilities are: $caps\n";
 		}
 
-		unless (grep (/^$plugins->{$plug}->{family}$/, @{ $config->{families} })) {
-			print "#\tFamily '$plugins->{$plug}->{family}' is currently ignored.  Skipping.\n"
+		unless (grep (/^$plugin{family}$/, @{ $config->{families} })) {
+			print "#\tFamily '$plugin{family}' is currently ignored.  Skipping.\n"
 				if $config->{DEBUG};
 			next;
 		}
 
-		if ($plugins->{$plug}->{'family'} eq "auto"
+		if ($plugin{family} eq "auto"
 		    and defined $config->{newer}
-		    and !defined $plugins->{$plug}->{'version'})
+		    and !defined $plugin{version})
 		{
 			print "#\tPlugin is older than $config->{newer}.  Skipping.\n"
 				if $config->{DEBUG};
 			next;
 		}
 
-#		plugin_autoconf($path, $plugins->{$plug})
-#			if ($plugins->{$plug}->{'capability'}->{'autoconf'});
+#		plugin_autoconf($path, $plugin)
+#			if ($plugin{capabilities}->{autoconf});
 
-#		my $suggestions = plugin_suggestions($path, $plugins->{$plug})
-#			if ($plugins->{$plug}->{'capability'}->{'suggest'});
+#		my $suggestions = plugin_suggestions($path, $plugin)
+#			if ($plugin{capabilities}->{suggest});
+	
+		$found{$plug} = \%plugin;
 	}
-
-	print "# Found $found plugins.\n" if $config->{DEBUG};
 	close ($LIBDIR);
 
-	return;
+	printf "# %u plugins available.\n", scalar keys %found
+		if $config->{DEBUG};
+	return \%found;
 }
 
 
