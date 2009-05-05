@@ -41,7 +41,6 @@ my $bindir = $Munin::Common::Defaults::MUNIN_SBINDIR;
 my @all_families     = ("auto", "manual", "contrib");
 my @default_families = ("auto");
 
-my $debugopt   = '--debug'; # Pass --debug to children or not
 my @errors     = ();
 
 
@@ -255,11 +254,6 @@ sub main
 
 	###########
 	foreach my $plug (sort keys %{$plugins}) {
-		# FIXME: next two lines should already be done
-		# in load_available_plugins...
-		next unless defined $plugins->{$plug}->{'family'};
-		next unless (grep (/^$plugins->{$plug}->{'family'}$/ ,@{ $config->{families} }));
-
 		my $now   = (exists $installed->{$plug}?"yes":"no");
 		my $want  = (exists $plugins->{$plug}->{'default'}?$plugins->{$plug}->{'default'}:"no");
 		my $snow  = (exists $installed->{$plug}->{'suggest'}?$installed->{$plug}->{'suggest'}:undef);
@@ -385,7 +379,7 @@ sub configure_snmp
 	push (@params, "$bindir/munin-node-configure-snmp");
 	push (@params, "--snmpversion", $config->{snmp_version}) if defined $config->{snmpver};
 	push (@params, "--community", $config->{snmp_community}) if defined $config->{snmp_community};
-	push (@params, $debugopt) if $config->{DEBUG};
+	push (@params, '--debug') if $config->{DEBUG};
 	push (@params, @{ $config->{snmp} });
 
 	print "# executing: ",join(' ',@params),"\n" if $config->{DEBUG};
@@ -447,7 +441,7 @@ sub link_add
 
 sub normal
 {
-    printf ("%-26s | %-4s | %-39s\n", @_);
+	printf ("%-26s | %-4s | %-39s\n", @_);
 }
 
 
@@ -717,7 +711,7 @@ sub plugin_autoconf
 		"--servicedir", $config->{libdir},
 		$file, "autoconf"
 	);
-	push @cmd, ($debugopt) if $config->{DEBUG};
+	push @cmd, ('--debug') if $config->{DEBUG};
 
 	print "\n# Running: ", join(' ', @cmd), "\n"
 		if $config->{DEBUG};
@@ -822,7 +816,7 @@ sub plugin_suggestions
 	);
 
 	# Debug here breaks stuff.
-	# push(@cmd,$debugopt) if $config->{DEBUG};
+	# push(@cmd,'--debug') if $config->{DEBUG};
 
 	print "# Running: ",join(' ', @cmd),"\n" if $config->{DEBUG};
 
