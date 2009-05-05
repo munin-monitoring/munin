@@ -201,7 +201,7 @@ PURPOSE. For details, please refer to the file COPYING that is included
 with this software or refer to
   http://www.fsf.org/licensing/licenses/gpl.txt
 };
-	
+
 	exit 0;
 }
 
@@ -232,176 +232,146 @@ sub main
 
 		print_header() unless $config->{shell};
 
-		exit;
+		foreach my $plug (sort keys %{$plugins}) {
+			# FIXME: next two lines should already be done
+			# in load_available_plugins
+			next unless defined $plugins->{$plug}->{'family'};
+			next unless (grep (/^$plugins->{$plug}->{'family'}$/ ,@{ $config->{families} }));
 
-    foreach my $plug (sort keys %{$plugins}) {
-	next unless defined $plugins->{$plug}->{'family'};
-	next unless (grep (/^$plugins->{$plug}->{'family'}$/ ,@{ $config->{families} }));
+			my $now   = (exists $installed->{$plug}?"yes":"no");
+			my $want  = (exists $plugins->{$plug}->{'default'}?$plugins->{$plug}->{'default'}:"no");
+			my $snow  = (exists $installed->{$plug}->{'suggest'}?$installed->{$plug}->{'suggest'}:undef);
+			my $swant = (exists $plugins->{$plug}->{'suggest'}?$plugins->{$plug}->{'suggest'}:undef);
+			my $sugg  = "";
 
-	my $now   = (exists $installed->{$plug}?"yes":"no");
-	my $want  = (exists $plugins->{$plug}->{'default'}?$plugins->{$plug}->{'default'}:"no");
-	my $snow  = (exists $installed->{$plug}->{'suggest'}?$installed->{$plug}->{'suggest'}:undef);
-	my $swant = (exists $plugins->{$plug}->{'suggest'}?$plugins->{$plug}->{'suggest'}:undef);
-	my $sugg  = "";
-
-	if ($config->{shell})
-	{
-	    if ($plug =~ /_$/) # Wildcard plugin...
-	    {
-		if ($now eq "yes" and $want eq "no")
-		{
-		    if ($snow and @{$snow})
-		    {
-			foreach my $wild (sort @{$snow})
-			{
-			    &link_remove ("$plug$wild");
+			if ($config->{shell}) {
+				if ($plug =~ /_$/) {
+					# wildcard plugin
+					if ($now eq "yes" and $want eq "no") {
+						if ($snow and @{$snow}) {
+							foreach my $wild (sort @{$snow}) {
+								link_remove("$plug$wild");
+							}
+						}
+					}
+					else {
+						if ($snow and @{$snow}) {
+							foreach my $wild (sort @{$snow}) {
+								if (! grep (/^$wild$/, @{$swant})) {
+									link_remove("$plug$wild");
+								}
+							}
+						}
+						if ($swant and @{$swant}) {
+							foreach my $wild (sort @{$swant}) {
+								next if -e "$config->{servicedir}/$plug"."_".$wild;
+								if (! grep (/^$wild$/, @{$snow})) {
+									link_add($plug, $wild);
+								}
+							}
+						}
+					}
+				}
+				else {
+					if ($now eq "yes" and $want eq "no") {
+						link_remove($plug);
+					}
+					elsif ($now eq "no" and $want eq "yes") {
+						next if -e "$config->{servicedir}/$plug"; # None of our business...
+						link_add($plug);
+					}
+				}
 			}
-		    }
-		}
-		else
-		{
-		    if ($snow and @{$snow})
-		    {
-			foreach my $wild (sort @{$snow})
-			{
-			    if (! grep (/^$wild$/, @{$swant}))
-			    {
-				&link_remove ("$plug$wild");
-			    }
+			elsif ($config->{suggest}) {
+				if ($plug =~ /_$/) {
+					# wildcard plugin
+					if ($now eq "yes" && $want eq "no"
+					 or $now eq "no" && $want eq "yes" && $swant && @{$swant})
+					{
+						$sugg = "$want ";
+					}
+					if ($snow and @{$snow}) {
+						foreach my $wild (sort @{$snow}) {
+							if (! grep (/^$wild$/, @{$swant})) {
+								$sugg .= "-$wild ";
+							}
+						}
+					}
+					if ($swant and @{$swant}) {
+						foreach my $wild (sort @{$swant}) {
+							next if -e "$config->{servicedir}/$plug"."_".$wild; # None of our business...
+							if (! grep (/^$wild$/, @{$snow})) {
+								$sugg .= "+$wild ";
+							}
+						}
+					}
+					normal($plug, $now, $sugg);
+				}
+				else {
+					next if -e "$config->{servicedir}/$plug"; # None of our business...
+					if ($now ne $want) {
+						$sugg = $want;
+					}
+					elsif (defined $plugins->{$plug}->{'defaultreason'}
+					   and $plugins->{$plug}->{'defaultreason'} =~ /^[^\(]*\((.+)\)\s*$/)
+					{
+						$sugg = "[$1]";
+					}
+
+					normal($plug, $now, $sugg);
+				}
 			}
-		    }
-		    if ($swant and @{$swant})
-		    {
-			foreach my $wild (sort @{$swant})
-			{
-			    next if -e "$config->{servicedir}/$plug"."_".$wild; # None of our business...
-			    if (! grep (/^$wild$/, @{$snow}))
-			    {
-				&link_add ($plug, $wild);
-			    }
+			else {
+				if ($plug =~ /_$/) {
+					# wildcard
+				if ($snow and @{$snow}) {
+					$sugg = join ' ', @{$snow};
+				}
+					normal($plug, $now, $sugg);
+				}
+				else {
+					normal($plug, $now, "");
+				}
 			}
-		    }
 		}
-	    }
-	    else
-	    {
-		if ($now eq "yes" and $want eq "no")
-		{
-		    &link_remove ($plug);
-		}
-		elsif ($now eq "no" and $want eq "yes")
-		{
-		    next if -e "$config->{servicedir}/$plug"; # None of our business...
-		    &link_add ($plug);
-		}
-	    }
 	}
-	elsif ($config->{suggest})
-	{
-	    if ($plug =~ /_$/) # Wildcard plugin...
-	    {
-		if ($now eq "yes" && $want eq "no" or
-			$now eq "no" && $want eq "yes" && $swant && @{$swant})
-		{
-		    $sugg = "$want ";
-		}
-		if ($snow and @{$snow})
-		{
-		    foreach my $wild (sort @{$snow})
-		    {
-			if (! grep (/^$wild$/, @{$swant}))
-			{
-			    $sugg .= "-$wild ";
+
+	if (@{ $config->{snmp} } and $config->{shell}) {
+		if (-x "$bindir/munin-node-configure-snmp") {
+			if (eval "require Net::SNMP;") {
+				my @params;
+
+				push (@params, "$bindir/munin-node-configure-snmp");
+				push (@params, "--snmpversion", $config->{snmp_version}) if defined $config->{snmpver};
+				push (@params, "--community", $config->{snmp_community}) if defined $config->{snmp_community};
+				push (@params, $debugopt) if $config->{DEBUG};
+				push (@params, @{ $config->{snmp} });
+
+				print "# executing: ",join(' ',@params),"\n" if $config->{DEBUG};
+				exec (@params);
+				# NOTREACHED
 			}
-		    }
-		}
-		if ($swant and @{$swant})
-		{
-		    foreach my $wild (sort @{$swant})
-		    {
-			next if -e "$config->{servicedir}/$plug"."_".$wild; # None of our business...
-			if (! grep (/^$wild$/, @{$snow}))
-			{
-			    $sugg .= "+$wild ";
+			else {
+				print STDERR "# ERROR: Cannot perform SNMP probe. SNMP operations require the perl module\n";
+				print STDERR "# Net::SNMP, which is currently not installed (or not in one of the following\n";
+				print STDERR "# directories: @INC\n";
 			}
-		    }
 		}
-		&normal ($plug, $now, $sugg);
-	    }
-	    else
-	    {
-		next if -e "$config->{servicedir}/$plug"; # None of our business...
-		if ($now ne $want)
-		{
-		    $sugg = $want;
+		else {
+			print STDERR "# ERROR: Cannot perform SNMP probe. SNMP operations require the SNMP part\n";
+			print STDERR "# of Munin to be installed, which is currently not installed, or not in the \n";
+			print STDERR "# right directory: $bindir\n";
 		}
-		elsif (defined $plugins->{$plug}->{'defaultreason'} and
-			$plugins->{$plug}->{'defaultreason'} =~ /^[^\(]*\((.+)\)\s*$/)
-		{
-		    $sugg = "[$1]";
-		}
-
-		&normal ($plug, $now, $sugg);
-	    }
 	}
-	else
-	{
-	    if ($plug =~ /_$/) # Wildcard plugin...
-	    {
-		if ($snow and @{$snow})
-		{
-		    $sugg = join ' ', @{$snow};
-		}
-		&normal ($plug, $now, $sugg);
-	    }
-	    else
-	    {
-		&normal ($plug, $now, "");
-	    }
+
+	if (@errors) {
+		print STDERR "# There were some errors:\n";
+		print STDERR "# ",join("\n# ",@errors),"\n";
+
+		exit 1;
 	}
-    }
-}
 
-
-if (@{ $config->{snmp} } and $config->{shell})
-{
-    if (-x "$bindir/munin-node-configure-snmp")
-    {
-	if (eval "require Net::SNMP;")
-	{
-	    my @params;
-	    push (@params, "$bindir/munin-node-configure-snmp");
-	    push (@params, "--snmpversion", $config->{snmp_version}) if defined $config->{snmpver};
-	    push (@params, "--community", $config->{snmp_community}) if defined $config->{snmp_community};
-	    push (@params, $debugopt) if $config->{DEBUG};
-	    push (@params, @{ $config->{snmp} });
-	    print "# executing: ",join(' ',@params),"\n" if $config->{DEBUG};
-	    exec (@params);
-	    # NOTREACHED
-	}
-	else
-	{
-	    print STDERR "# ERROR: Cannot perform SNMP probe. SNMP operations require the perl module\n";
-	    print STDERR "# Net::SNMP, which is currently not installed (or not in one of the following\n";
-	    print STDERR "# directories: @INC\n";
-	}
-    }
-    else
-    {
-	print STDERR "# ERROR: Cannot perform SNMP probe. SNMP operations require the SNMP part\n";
-	print STDERR "# of Munin to be installed, which is currently not installed, or not in the \n";
-	print STDERR "# right directory: $bindir\n";
-    }
-}
-
-if (@errors) {
-    print STDERR "# There were some errors:\n";
-    print STDERR "# ",join("\n# ",@errors),"\n";
-
-    exit 1;
-}
-
-
+	exit 0;
 }
 
 
@@ -433,21 +403,21 @@ sub normal
 sub load_installed_plugins
 {
 	print "# Opening '$config->{servicedir}' for reading...\n" if $config->{DEBUG};
-	
+
 	opendir (my $SERVICEDIR, $config->{servicedir})
 		or die "Could not open '$config->{servicedir}' for reading: $!\n";
-	
+
 	my $found = 0;
 
 	while (my $inst = readdir $SERVICEDIR) {
 		my $realfile;
 
-		# Ignore non-symlinks, and symlinks that point anywhere other 
+		# Ignore non-symlinks, and symlinks that point anywhere other
 		# than the plugin library
 		next unless -l "$config->{servicedir}/$inst";
 		next unless ($realfile = readlink ("$config->{servicedir}/$inst"));
 		next unless ($realfile =~ /^$config->{libdir}\//);
-		
+
 		$realfile =~ s/^.+\///;	# get basename
 
 		print "# Checking file: $inst..." if $config->{DEBUG};
@@ -465,7 +435,7 @@ sub load_installed_plugins
 		$found++;
 	}
 	close ($SERVICEDIR);
-	
+
 	print "# Found $found installed services.\n" if $config->{DEBUG};
 	return;
 }
@@ -479,16 +449,16 @@ sub load_plugin_history
 	unless ( -f $hist_file) {
 		die "# ERROR: Plugin history file '$hist_file' doesn't exist.\n";
 	}
-	
+
 	unless (open $HIST, '<', $hist_file) {
 		die "# ERROR: Could not open '$hist_file': $!\n";
 	}
-	    
+
 	my $reached_version = 0;
 	my $ver = "0.0.0";
 
-	# $^O or $Config{osname} are based on the platform perl was built on, 
-	# not where it's currently running.  But this should always be correct 
+	# $^O or $Config{osname} are based on the platform perl was built on,
+	# not where it's currently running.  But this should always be correct
 	my $uname = lc((POSIX::uname())[0]);
 
 	while (my $line = <$HIST>) {
@@ -564,7 +534,7 @@ sub read_magic_markers
 	my (%mm, $FILE);
 
 	print "#\tReading magic markers.\n" if $config->{DEBUG};
-	
+
 	unless (open ($FILE, $file)) {
 		warn "WARNING: Could not open plugin '$file' for reading $!.".
 		"Skipping.\n";
@@ -584,7 +554,7 @@ sub read_magic_markers
 				if $config->{DEBUG};
 		}
 	}
-	
+
 	close ($FILE);
 
 	return \%mm;
@@ -616,7 +586,7 @@ sub load_available_plugins
 		# care unless we're going to try running it?
 		while (-l $path) {
 			$path = readlink($path);
-			$path = ($path =~ /^\//) ? $path 
+			$path = ($path =~ /^\//) ? $path
 			                         : "$config->{libdir}/$path"
 		}
 
@@ -631,7 +601,7 @@ sub load_available_plugins
 			next;
 		}
 
-		if ($plugins->{$plug}->{'family'} eq "auto" 
+		if ($plugins->{$plug}->{'family'} eq "auto"
 		    and defined $config->{newer}
 		    and !defined $plugins->{$plug}->{'version'})
 		{
@@ -657,7 +627,7 @@ sub load_available_plugins
 sub plugin_autoconf
 {
 	my ($file, $plugin) = @_;
-	
+
 	my $gotjunk = 0; # did the plugin produce spurious output?
 
 	my @cmd = (
@@ -680,7 +650,7 @@ sub plugin_autoconf
 		# In child
 		close (STDERR);
 		open (STDERR, ">&STDOUT");
-		
+
 		exec (@cmd);
 	}
 	else {
@@ -698,7 +668,7 @@ sub plugin_autoconf
 		# FIXME: need to handle plugin not timing out
 
 		while (my $line = <$PLUGIN_OUTPUT>) {
-			if ($line =~ /^yes$/ 
+			if ($line =~ /^yes$/
 			 or $line =~ /^no(?:\s+.*)?$/)
 			{
 				# Some recognized response
@@ -741,11 +711,11 @@ sub plugin_autoconf
 	    print "#\tNon-zero exit value: $plugin_exit/$plugin_signal\n"
 	      if $config->{DEBUG};
 	}
-	
+
 	if ($plugin_status or $gotjunk) {
 	    $plugin->{'default'} = "no";
 	}
-	
+
 	print "# ",$plugin->{'default'} if $config->{DEBUG};
 
 	return;
@@ -776,9 +746,9 @@ sub plugin_suggestions
 	if ($fork == -1) {
 		die "ERROR: Unable to fork: $!\n"
 	}
-	elsif ($fork == 0) { 
+	elsif ($fork == 0) {
 		# In child
-		# 
+		#
 		# We would redirect stderr, but with suggest
 		# it's hard to sort errors from the suggestions
 		# as we have no idea what the suggestions might
