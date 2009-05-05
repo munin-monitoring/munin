@@ -38,8 +38,6 @@ my $config = Munin::Node::Config->instance();
 
 my $bindir = $Munin::Common::Defaults::MUNIN_SBINDIR;
 
-my ($installed, $plugins);
-
 my @all_families     = ("auto", "manual", "contrib");
 my @default_families = ("auto");
 
@@ -226,24 +224,36 @@ sub main
 {
 	parse_args();
 
-	$plugins   = load_available_plugins();
-	$installed = load_installed_plugins();
+	my $plugins   = load_available_plugins();
+	my $installed = load_installed_plugins();
 
 	print_header() unless $config->{shell};
 
 	if ($config->{suggest}) {
+		#get_suggestions($plugins);
 		#print_suggestions();
 	}
 	elsif (@{ $config->{snmp} }) {
+		# Hand off to munin-node-configure-snmp
 		configure_snmp();
 	}
 	else {
-		# if $config->{shell}, implies $config->{suggest}
-		print_status_list();
+		# FIXME: if $config->{shell}, implies $config->{suggest}
+		print_status_list($plugins, $installed);
 	}
 
-	exit; # FIXME :-)
+	
+	exit 0 unless scalar @errors;
 
+	print STDERR "# There were some errors:\n";
+	foreach my $err (@errors) {
+		print STDERR "#\t$err\n";
+	}
+
+	exit 1;
+
+
+	###########
 	foreach my $plug (sort keys %{$plugins}) {
 		# FIXME: next two lines should already be done
 		# in load_available_plugins...
@@ -347,17 +357,11 @@ sub main
 		}
 	}
 
-	if (@errors) {
-		print STDERR "# There were some errors:\n";
-		print STDERR "# ",join("\n# ",@errors),"\n";
-
-		exit 1;
-	}
-
 	exit 0;
 }
 
 
+# Hands control off to munin-node-configure-snmp to configure SNMP plugins
 sub configure_snmp
 {
 	unless (-x "$bindir/munin-node-configure-snmp") {
@@ -393,28 +397,34 @@ sub configure_snmp
 
 
 # For each available plugin, prints a line detailing whether or not it's
-# installed, and (if it's a wildcard plugin) what 
+# installed, and (if it's a wildcard plugin) what identities are currently
+# in use
 sub print_status_list
 {
-	foreach my $plug (sort keys %{$plugins}) {
-		my $now   = $installed->{$plug}
-		            ? "yes"
-		            : "no";
-		my $suggested = $installed->{$plug}->{'suggest'}
-		                ? $installed->{$plug}->{'suggest'}
-		                : [];
+	my ($plugins, $installed) = @_;
 
-		my $sugg = '';
+	foreach my $plug (sort keys %$plugins) {
+		my $now   = $installed->{$plug}
+		              ? "yes"
+		              : "no";
+		my $suggested = $installed->{$plug}->{suggest}
+		                  ? $installed->{$plug}->{suggest}
+		                  : [];
+
+		my $suggestions = '';
 
 		if ($plug =~ /_$/ and @$suggested) {
 			# It's a wildcard, and there are suggestions
-			$sugg = join ' ', @$suggested;
+			$suggestions = join ' ', @$suggested;
 		}
-		normal($plug, $now, $sugg);
+		
+		normal($plug, $now, $suggestions);
 	}
 }
 
 
+# If the user requested it, prints a shell-command to remove a given
+# symlink from the servicedir
 sub link_remove
 {
     my $plug = shift;
@@ -430,6 +440,7 @@ sub link_add
 {
 	my $plug = shift;
 	my $wild = shift || '';
+	
 	print "ln -s $config->{libdir}/$plug $config->{servicedir}/$plug$wild\n";
 }
 
@@ -443,8 +454,8 @@ sub normal
 sub load_installed_plugins
 {
 	my %found;  # information on installed plugins
-	my $service_count = 0;  # the number of services currently installed
-	                        # may not be the same as keys %found
+	my $service_count = 0;  # the number of services currently installed.  may not 
+	                        # be equal to (keys %found) if some are wildcards
 	
 	print "# Searching '$config->{servicedir}' for installed plugins.\n"
 		if $config->{DEBUG};
@@ -498,19 +509,18 @@ sub load_installed_plugins
 
 sub load_plugin_history
 {
+	my ($plugins) = @_;
+	
 	my $hist_file = "$config->{libdir}/plugins.history";
-	my $HIST;
-
-	unless ( -f $hist_file) {
-		die "# ERROR: Plugin history file '$hist_file' doesn't exist.\n";
-	}
-
-	unless (open $HIST, '<', $hist_file) {
-		die "# ERROR: Could not open '$hist_file': $!\n";
-	}
 
 	my $reached_version = 0;
 	my $ver = "0.0.0";
+
+	print "# Loading plugin history from '$hist_file'\n"
+		if $config->{DEBUG};
+
+	open(my $HIST, '<', $hist_file)
+		or die "# ERROR: Could not open '$hist_file': $!\n";
 
 	# $^O or $Config{osname} are based on the platform perl was built on,
 	# not where it's currently running.  But this should always be correct
@@ -537,18 +547,19 @@ sub load_plugin_history
 		}
 		elsif ($line =~ /^([^\/]+)\/(.+)$/) {
 		    if ($uname eq $1) {
-			$plugins->{$2}->{'version'} = $ver;
+			$plugins->{$2}->{version} = $ver;
 			print "# - Adding plugin '$2' to version tree ",
 			  "($ver)...\n" if $config->{DEBUG};
 		    }
 		}
 		elsif ($line =~ /^(.+)$/) {
-		    $plugins->{$1}->{'version'} = $ver;
+		    $plugins->{$1}->{version} = $ver;
 		    print "# - Adding plugin \"$1\" to version tree ",
 		      "($ver)...\n" if $config->{DEBUG};
 		}
 	}
 	close $HIST;
+	
 	return;
 }
 
@@ -583,6 +594,10 @@ sub is_a_runnable_plugin
 }
 
 
+# Extracts any magic-markers from $file.  Returns a hashref potentially
+# containing the following keys:
+# 	family       -- what family the plugin belongs to
+# 	capabilities -- list of what capabilities it supports
 sub read_magic_markers
 {
 	my $file = shift;
@@ -593,7 +608,7 @@ sub read_magic_markers
 	unless (open ($PLUGIN, '<', $file)) {
 		warn "WARNING: Could not open plugin '$file' for reading $!.".
 			"Skipping.\n";
-		next;
+		return;
 	}
 
 	while (<$PLUGIN>) {
@@ -604,7 +619,6 @@ sub read_magic_markers
 			$mm{capabilities} = [ split (/\s+/, $1) ];
 		}
 	}
-
 	close ($PLUGIN);
 
 	return \%mm;
@@ -691,6 +705,7 @@ sub load_available_plugins
 }
 
 
+# Runs the given plugin, and records whether it thinks it should be installed
 sub plugin_autoconf
 {
 	my ($file, $plugin) = @_;
@@ -702,7 +717,6 @@ sub plugin_autoconf
 		"--servicedir", $config->{libdir},
 		$file, "autoconf"
 	);
-
 	push @cmd, ($debugopt) if $config->{DEBUG};
 
 	print "\n# Running: ", join(' ', @cmd), "\n"
@@ -789,11 +803,14 @@ sub plugin_autoconf
 }
 
 
+# Runs the given wildcard plugin, and returns a list of suggested
+# profiles
 sub plugin_suggestions
 {
 	my ($file, $plugin) = @_;
 	my @sugg = ();
 
+	# Only run if the autoconf gave the go-ahead
 	return unless (exists $plugin->{'default'}
 	           and $plugin->{'default'} eq "yes");
 
@@ -855,6 +872,8 @@ sub plugin_suggestions
 		if $config->{DEBUG};
 	push @errors, ("ERROR: empty suggest from $file")
 		unless @sugg;
+
+	return;
 }
 
 
