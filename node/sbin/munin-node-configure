@@ -26,6 +26,7 @@ use warnings;
 
 use Getopt::Long;
 use POSIX;
+use File::Basename;
 
 use Data::Dumper;
 
@@ -441,41 +442,55 @@ sub normal
 
 sub load_installed_plugins
 {
-	print "# Opening '$config->{servicedir}' for reading...\n" if $config->{DEBUG};
+	print "# Searching '$config->{servicedir}' for installed plugins.\n"
+		if $config->{DEBUG};
 
 	opendir (my $SERVICEDIR, $config->{servicedir})
-		or die "Could not open '$config->{servicedir}' for reading: $!\n";
+		or die "ERROR: Could not open '$config->{servicedir}' for reading: $!\n";
 
 	my $found = 0;
 
-	while (my $inst = readdir $SERVICEDIR) {
+	while (my $link = readdir $SERVICEDIR) {
 		my $realfile;
+		my $path = "$config->{servicedir}/$link";
 
 		# Ignore non-symlinks, and symlinks that point anywhere other
 		# than the plugin library
-		next unless -l "$config->{servicedir}/$inst";
-		next unless ($realfile = readlink ("$config->{servicedir}/$inst"));
+		next unless -l $path;
+		unless ($realfile = readlink($path)) {
+			print "# Warning: symlink '$config->{servicedir}/$link' is broken.\n";
+			next;
+		}
+
+		# FIXME: do we really care where it points?  what if the user has
+		# installed from more than one plugin library?
 		next unless ($realfile =~ /^$config->{libdir}\//);
 
-		$realfile =~ s/^.+\///;	# get basename
+		$realfile = fileparse($realfile);
 
-		print "# Checking file: $inst..." if $config->{DEBUG};
+		$installed->{$realfile} ||= {};
+
+		print "# Found '$link'\n" if $config->{DEBUG};
+
 		if ($realfile =~ /_$/) {
-			# Wildcard plugin...
-			print "# $realfile..." if $config->{DEBUG};
-			(my $wild = $inst) =~ s/^$realfile//;
-			print "# $wild..." if $config->{DEBUG};
+			print "#\tWildcard plugin '$link' resolves to '$realfile'\n"
+				if $config->{DEBUG};
+
+			# FIXME: doesn't work with snmp__* plugins
+			(my $wild = $link) =~ s/^$realfile//;
+
+			print "#\tAdding suggestion '$wild'\n"
+				if $config->{DEBUG};
 			push @{$installed->{$realfile}->{'suggest'}}, $wild;
 		}
 		$installed->{$realfile}->{'installed'} = "yes";
-
-		print "\n" if $config->{DEBUG};
 
 		$found++;
 	}
 	close ($SERVICEDIR);
 
-	print "# Found $found installed services.\n" if $config->{DEBUG};
+	print "# $found services installed.\n" if $config->{DEBUG};
+
 	return;
 }
 
@@ -626,15 +641,15 @@ sub load_available_plugins
 		}
 
 		my $mm = read_magic_markers($path);
-		
+
 		$plugins->{$plug}->{family} = $mm->{family} || "contrib";
 		print "#\tSet family to '$plugins->{$plug}->{family}'.\n"
 			if $config->{DEBUG};
-		
+
 		foreach my $capability (@{ $mm->{capabilities} }) {
 			$plugins->{$plug}->{capability}->{$capability} = 1;
 		}
-		
+
 		if ($config->{DEBUG}) {
 			my $caps = @{ $mm->{capabilities} }
 			           ? join(', ', @{ $mm->{capabilities} })
@@ -660,7 +675,7 @@ sub load_available_plugins
 		plugin_autoconf($path, $plugins->{$plug})
 			if ($plugins->{$plug}->{'capability'}->{'autoconf'});
 
-		my $suggestions = plugin_suggestions()
+		my $suggestions = plugin_suggestions($path, $plugins->{$plug})
 			if ($plugins->{$plug}->{'capability'}->{'suggest'});
 	}
 
