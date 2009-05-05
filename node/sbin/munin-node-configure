@@ -227,7 +227,7 @@ sub main
 	parse_args();
 
 	load_available_plugins();
-	load_installed_plugins();
+	$installed = load_installed_plugins();
 
 	print_header() unless $config->{shell};
 
@@ -442,56 +442,57 @@ sub normal
 
 sub load_installed_plugins
 {
+	my %found;  # information on installed plugins
+	my $service_count = 0;  # the number of services currently installed
+	                        # may not be the same as keys %found
+	
 	print "# Searching '$config->{servicedir}' for installed plugins.\n"
 		if $config->{DEBUG};
 
 	opendir (my $SERVICEDIR, $config->{servicedir})
 		or die "ERROR: Could not open '$config->{servicedir}' for reading: $!\n";
 
-	my $found = 0;
-
-	while (my $link = readdir $SERVICEDIR) {
+	while (my $service = readdir $SERVICEDIR) {
 		my $realfile;
-		my $path = "$config->{servicedir}/$link";
+		my $path = "$config->{servicedir}/$service";
 
 		# Ignore non-symlinks, and symlinks that point anywhere other
 		# than the plugin library
 		next unless -l $path;
 		unless ($realfile = readlink($path)) {
-			print "# Warning: symlink '$config->{servicedir}/$link' is broken.\n";
+			print "# Warning: symlink '$config->{servicedir}/$service' is broken.\n";
 			next;
 		}
-
-		# FIXME: do we really care where it points?  what if the user has
-		# installed from more than one plugin library?
 		next unless ($realfile =~ /^$config->{libdir}\//);
 
 		$realfile = fileparse($realfile);
 
-		$installed->{$realfile} ||= {};
+		$found{$realfile} ||= {};
 
-		print "# Found '$link'\n" if $config->{DEBUG};
+		print "# Found '$service'\n" if $config->{DEBUG};
 
 		if ($realfile =~ /_$/) {
-			print "#\tWildcard plugin '$link' resolves to '$realfile'\n"
+			print "#\tWildcard plugin '$service' resolves to '$realfile'\n"
 				if $config->{DEBUG};
 
 			# FIXME: doesn't work with snmp__* plugins
-			(my $wild = $link) =~ s/^$realfile//;
+			(my $wild = $service) =~ s/^$realfile//;
 
 			print "#\tAdding suggestion '$wild'\n"
 				if $config->{DEBUG};
-			push @{$installed->{$realfile}->{'suggest'}}, $wild;
-		}
-		$installed->{$realfile}->{'installed'} = "yes";
 
-		$found++;
+			$found{$realfile}->{wildcard} = 1;
+
+			$found{$realfile}->{suggest} ||= [];
+			push @{ $found{$realfile}->{suggest} }, $wild;
+		}
+
+		$service_count++;
 	}
 	close ($SERVICEDIR);
 
-	print "# $found services installed.\n" if $config->{DEBUG};
-
-	return;
+	print "# $service_count services currently installed.\n" if $config->{DEBUG};
+	return \%found;
 }
 
 
@@ -672,11 +673,11 @@ sub load_available_plugins
 			next;
 		}
 
-		plugin_autoconf($path, $plugins->{$plug})
-			if ($plugins->{$plug}->{'capability'}->{'autoconf'});
+#		plugin_autoconf($path, $plugins->{$plug})
+#			if ($plugins->{$plug}->{'capability'}->{'autoconf'});
 
-		my $suggestions = plugin_suggestions($path, $plugins->{$plug})
-			if ($plugins->{$plug}->{'capability'}->{'suggest'});
+#		my $suggestions = plugin_suggestions($path, $plugins->{$plug})
+#			if ($plugins->{$plug}->{'capability'}->{'suggest'});
 	}
 
 	print "# Found $found plugins.\n" if $config->{DEBUG};
