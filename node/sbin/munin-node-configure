@@ -570,7 +570,7 @@ sub read_magic_markers
 		elsif (/#%#\s+capabilities\s*=\s*(.+)$/) {
 			my @caps = split (/\s+/, $1);
 			$mm{capabilities} = \@caps;
-			print "#\tCapabilities are: ", join(' ', @caps), ".\n"
+			print "#\tCapabilities are: ", join(', ', @caps), ".\n"
 				if $config->{DEBUG};
 		}
 	}
@@ -630,146 +630,11 @@ sub load_available_plugins
 			next;
 		}
 
+		plugin_autoconf($path, $plugins->{$plug})
+			if ($plugins->{$plug}->{'capability'}->{'autoconf'});
 
-	if ($plugins->{$plug}->{'capability'}->{'autoconf'}) {
-
-	    my $gotjunk=0;  # Seen junk?
-
-	    my @cmd=("$bindir/munin-run");
-	    push(@cmd,$debugopt) if $config->{DEBUG};
-	    push(@cmd,"--servicedir",$config->{libdir}, $plug, "autoconf");
-
-	    print "\n# Running: ",join(' ',@cmd),"\n" if $config->{DEBUG};
-
-	    my $fork = open (PLUG, "-|");
-
-	    if ($fork == -1) {
-		die "ERROR: Unable to fork: $!\n"
-	    } elsif ($fork == 0) { # Child
-		close (STDERR);
-		open (STDERR, ">&STDOUT");
-		exec (@cmd);
-	    } else {
-		# The join map we used here before was somehow
-		# fragile.  This construct is possible to
-		# debug.
-
-		my @pr = ();	# Plugin response
-
-		# IFF the plugin exits with non-zero exit code we will
-		# not use it no matter what. Instead we report it as
-		# an error.  This is to be able to tell a error free
-		# execution from a erronous one.
-		#
-		# Also, if the plugin outputs junk we handle that as
-		# an error.
-
-		while (<PLUG>) {
-		    chomp;
-		    if (m/^yes$/ or m/^no(\s+.*)?$/) {
-			# Some recognized response
-			print "# Got yes/no: $_\n" if $config->{DEBUG};
-			push(@pr,$_);
-		    } elsif (m/^#/) {
-			# Likely debug output from munin-run
-			print "# munin-run says: $_\n" if $config->{DEBUG};
-		    } else {
-			# Something else
-			push(@errors,"Got from $plug: $_");
-			print "# Got junk: $_\n" if $config->{DEBUG};
-			$gotjunk=1;
-		    }
-		}
-
-		$plugins->{$plug}->{'defaultreason'}=join(' ',@pr);
-
-		# Do we have a yes?
-		if ($plugins->{$plug}->{'defaultreason'} =~ m/yes/) {
-		    $plugins->{$plug}->{'default'} = "yes"
-		} else {
-		    $plugins->{$plug}->{'default'} = "no"
-		}
-	    }
-	    close (PLUG);
-	    my $pluges   = $?;
-	    my $plugexit = $?>>8;
-	    my $plugsig  = $? & 127;
-
-	    # Override to no if there were errors.
-	    if ($pluges and !$config->{exit_not_error}) {
-		push(@errors,
-		     "Non-zero exit value from $plug: $plugexit/$plugsig");
-		print "# Non-zero exit value from $plug: $plugexit/$plugsig\n"
-		  if $config->{DEBUG};
-	    }
-	    if ($? or $gotjunk) {
-		$plugins->{$plug}->{'default'} = "no";
-	    }
-	    print "# ",$plugins->{$plug}->{'default'} if $config->{DEBUG};
-	}
-
-	if ($plugins->{$plug}->{'capability'}->{'suggest'}) {
-
-	    my @sugg = ();
-
-	    if (exists $plugins->{$plug}->{'default'} and
-		$plugins->{$plug}->{'default'} eq "yes") {
-
-		my @cmd=("$bindir/munin-run");
-		# Debug here breaks stuff.
-		# push(@cmd,$debugopt) if $config->{DEBUG};
-		push(@cmd,"--servicedir",$config->{libdir}, $plug, "suggest");
-
-		print "\n# Running: ",join(' ',@cmd),"\n" if $config->{DEBUG};
-
-		my $fork = open (PLUG, "-|");
-
-		if ($fork == -1) {
-		    die "ERROR: Unable to fork: $!\n"
-		} elsif ($fork == 0) { # Child
-		    # We would redirect stderr, but with suggest
-		    # it's hard to sort errors from the suggestions
-		    # as we have no idea what the suggestions might
-		    # be.
-		    exec (@cmd);
-		} else {
-		    # Fragile loop, blah blah (se above)
-
-
-		    while (<PLUG>) {
-			chomp;
-			if (m/^#/) {
-			    # debug output from munin-run
-			    print "# Got junk: $_\n" if $config->{DEBUG};
-			} else {
-			    # This ought to be a suggestion.
-			    print "# Got suggestion: $_\n" if $config->{DEBUG};
-			    push(@sugg,$_);
-			}
-		    }
-		}
-		close (PLUG);
-		if ($?) {
-		    @sugg = ();
-		    print "# Plugin exit code: $? - voiding suggestions\n"
-			if $config->{DEBUG};
-		}
-
-		@{$plugins->{$plug}->{'suggest'}} = @sugg;
-
-		if ($config->{DEBUG}) {
-		    print "# Suggested: ",
-		      join (' ', @{$plugins->{$plug}->{'suggest'}}),"\n";
-
-		    print "# ERROR: empty suggest from $plug\n"
-			if !@sugg;
-		}
-
-		push(@errors,"ERROR: empty suggest from $plug")
-		    unless @sugg;
-	    }
-	}
-	print "\n" if $config->{DEBUG};
+		my $suggestions = plugin_suggestions()
+			if ($plugins->{$plug}->{'capability'}->{'suggest'});
 	}
 
 	print "# Found $found plugins.\n" if $config->{DEBUG};
@@ -777,6 +642,174 @@ sub load_available_plugins
 
 	return;
 }
+
+
+sub plugin_autoconf
+{
+	my ($file, $plugin) = @_;
+	
+	my $gotjunk = 0; # did the plugin produce spurious output?
+
+	my @cmd = (
+		"$bindir/munin-run",
+		"--servicedir", $config->{libdir},
+		$file, "autoconf"
+	);
+
+	push @cmd, ($debugopt) if $config->{DEBUG};
+
+	print "\n# Running: ", join(' ', @cmd), "\n"
+		if $config->{DEBUG};
+
+	my $fork = open (my $PLUGIN_OUTPUT, "-|");
+
+	if ($fork == -1) {
+		die "ERROR: Unable to fork: $!\n"
+	}
+	elsif ($fork == 0) {
+		# In child
+		close (STDERR);
+		open (STDERR, ">&STDOUT");
+		
+		exec (@cmd);
+	}
+	else {
+		# In parent
+		#
+		# IFF the plugin exits with non-zero exit code we will
+		# not use it no matter what. Instead we report it as
+		# an error.  This is to be able to tell a error free
+		# execution from a erronous one.
+		#
+		# Also, if the plugin outputs junk we handle that as
+		# an error.
+		my @response;
+
+		# FIXME: need to handle plugin not timing out
+
+		while (my $line = <$PLUGIN_OUTPUT>) {
+			if ($line =~ /^yes$/ 
+			 or $line =~ /^no(?:\s+.*)?$/)
+			{
+				# Some recognized response
+				print "# Got yes/no: $line"
+					if $config->{DEBUG};
+				push @response, ($line);
+			}
+			elsif ($line =~ /^#/) {
+				# Likely debug output from munin-run
+				print "# munin-run says: $line"
+					if $config->{DEBUG};
+			}
+			else {
+				# Something else
+				push @errors, ("Got from $file: $line");
+				print "# Got junk: $line"
+					if $config->{DEBUG};
+				$gotjunk = 1;
+			}
+		}
+
+		$plugin->{'defaultreason'} = join(' ', @response);
+
+		# Do we have a yes?
+		if ($plugin->{'defaultreason'} =~ /yes/) {
+			$plugin->{'default'} = "yes"
+		} else {
+			$plugin->{'default'} = "no"
+		}
+	}
+	close ($PLUGIN_OUTPUT);
+
+	my $plugin_status = $?;
+	my $plugin_exit   = $? >> 8;
+	my $plugin_signal = $? & 127;
+
+	# Override to no if there were errors.
+	if ($plugin_status and !$config->{exit_not_error}) {
+	    push @errors, ("Non-zero exit value from $file: $plugin_exit/$plugin_signal");
+	    print "#\tNon-zero exit value: $plugin_exit/$plugin_signal\n"
+	      if $config->{DEBUG};
+	}
+	
+	if ($plugin_status or $gotjunk) {
+	    $plugin->{'default'} = "no";
+	}
+	
+	print "# ",$plugin->{'default'} if $config->{DEBUG};
+
+	return;
+}
+
+
+sub plugin_suggestions
+{
+	my ($file, $plugin) = @_;
+	my @sugg = ();
+
+	return unless (exists $plugin->{'default'}
+	           and $plugin->{'default'} eq "yes");
+
+	my @cmd = (
+		"$bindir/munin-run",
+		"--servicedir", $config->{libdir},
+		$file,
+		"suggest"
+	);
+
+	# Debug here breaks stuff.
+	# push(@cmd,$debugopt) if $config->{DEBUG};
+
+	print "# Running: ",join(' ', @cmd),"\n" if $config->{DEBUG};
+
+	my $fork = open(my $PLUGIN_OUTPUT, "-|");
+	if ($fork == -1) {
+		die "ERROR: Unable to fork: $!\n"
+	}
+	elsif ($fork == 0) { 
+		# In child
+		# 
+		# We would redirect stderr, but with suggest
+		# it's hard to sort errors from the suggestions
+		# as we have no idea what the suggestions might
+		# be.
+		exec (@cmd);
+	}
+	else {
+		# In parent
+		while (my $line = <$PLUGIN_OUTPUT>) {
+			if (m/^#/) {
+				# debug output from munin-run
+				print "# Got junk: $line"
+					if $config->{DEBUG};
+			}
+			else {
+				# This ought to be a suggestion.
+				print "# Got suggestion: $line"
+					if $config->{DEBUG};
+				push @sugg, ($line);
+			}
+		}
+	}
+	close ($PLUGIN_OUTPUT);
+
+	if ($?) {
+		@sugg = ();
+		print "# Plugin exit code: $? - voiding suggestions\n"
+			if $config->{DEBUG};
+	}
+
+	$plugin->{'suggest'} = \@sugg;
+
+	print "# Suggested: ", join (', ', @{$plugin->{'suggest'}}), "\n"
+		if $config->{DEBUG};
+
+	print "ERROR: empty suggest from $file\n"
+		if $config->{DEBUG};
+	push @errors, ("ERROR: empty suggest from $file")
+		unless @sugg;
+}
+
 
 1;
 
