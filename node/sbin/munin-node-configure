@@ -229,7 +229,7 @@ sub main
 	print_header() unless $config->{shell};
 
 	if ($config->{suggest}) {
-		#get_suggestions($plugins);
+		get_suggestions($plugins);
 		#print_suggestions();
 	}
 	elsif (@{ $config->{snmp} }) {
@@ -241,7 +241,7 @@ sub main
 		print_status_list($plugins, $installed);
 	}
 
-	
+
 	exit 0 unless scalar @errors;
 
 	print STDERR "# There were some errors:\n";
@@ -337,21 +337,31 @@ sub main
 				normal($plug, $now, $sugg);
 			}
 		}
-		else {
-			if ($plug =~ /_$/) {
-				# wildcard
-				if ($snow and @{$snow}) {
-					$sugg = join ' ', @{$snow};
-				}
-				normal($plug, $now, $sugg);
-			}
-			else {
-				normal($plug, $now, "");
-			}
+	}
+
+}
+
+
+# Queries each available autoconf plugin for whether or not it 
+# should be installed, and (if it's a wildcard plugin) its suggested profiles
+sub get_suggestions
+{
+	my ($plugins) = @_;
+
+	while (my ($name, $plug_info) = each %$plugins) {
+		next unless $plug_info->{capabilities}{autoconf};
+		
+		plugin_autoconf($name, $plug_info);
+		
+		if ($plug_info->{default} eq 'yes'
+		    and $plug_info->{wildcard}
+		    and $plug_info->{capabilities}{suggest})
+		{
+			plugin_suggestions($name, $plug_info);
 		}
 	}
 
-	exit 0;
+	return;
 }
 
 
@@ -674,21 +684,12 @@ sub load_available_plugins
 			next;
 		}
 
-		if ($plugin{family} eq "auto"
-		    and defined $config->{newer}
-		    and !defined $plugin{version})
-		{
+		if (($plugin{family} eq "auto") and $config->{newer} and $plugin{version}) {
 			print "#\tPlugin is older than $config->{newer}.  Skipping.\n"
 				if $config->{DEBUG};
 			next;
 		}
 
-#		plugin_autoconf($path, $plugin)
-#			if ($plugin{capabilities}->{autoconf});
-
-#		my $suggestions = plugin_suggestions($path, $plugin)
-#			if ($plugin{capabilities}->{suggest});
-	
 		$found{$plug} = \%plugin;
 	}
 	close ($LIBDIR);
@@ -699,7 +700,8 @@ sub load_available_plugins
 }
 
 
-# Runs the given plugin, and records whether it thinks it should be installed
+# Runs the given plugin, and records whether it thinks it should be installed.
+# Sets the 'default' and 'defaultreason' fields
 sub plugin_autoconf
 {
 	my ($file, $plugin) = @_;
@@ -730,7 +732,7 @@ sub plugin_autoconf
 	}
 	else {
 		# In parent
-		#
+
 		# IFF the plugin exits with non-zero exit code we will
 		# not use it no matter what. Instead we report it as
 		# an error.  This is to be able to tell a error free
@@ -801,18 +803,17 @@ sub plugin_autoconf
 # profiles
 sub plugin_suggestions
 {
-	my ($file, $plugin) = @_;
+	my ($name, $info) = @_;
 	my @sugg = ();
 
 	# Only run if the autoconf gave the go-ahead
-	return unless (exists $plugin->{'default'}
-	           and $plugin->{'default'} eq "yes");
+	return unless (exists $info->{default}
+	           and $info->{default} eq "yes");
 
 	my @cmd = (
 		"$bindir/munin-run",
-		"--servicedir", $config->{libdir},
-		$file,
-		"suggest"
+		'--servicedir', $config->{libdir},
+		$name, 'suggest'
 	);
 
 	# Debug here breaks stuff.
@@ -857,15 +858,16 @@ sub plugin_suggestions
 			if $config->{DEBUG};
 	}
 
-	$plugin->{'suggest'} = \@sugg;
+	$info->{suggest} = \@sugg;
 
-	print "# Suggested: ", join (', ', @{$plugin->{'suggest'}}), "\n"
+	print "# Suggested: ", join (', ', @sugg), "\n"
 		if $config->{DEBUG};
 
-	print "ERROR: empty suggest from $file\n"
-		if $config->{DEBUG};
-	push @errors, ("ERROR: empty suggest from $file")
-		unless @sugg;
+	unless (@sugg) {
+		print "ERROR: empty suggest from $name\n"
+			if $config->{DEBUG};
+		push @errors, ("ERROR: empty suggest from $name");
+	}
 
 	return;
 }
