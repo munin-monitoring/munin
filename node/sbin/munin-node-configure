@@ -598,14 +598,14 @@ sub is_a_runnable_plugin
 }
 
 
-# Extracts any magic-markers from $file.  Returns a hashref potentially
-# containing the following keys:
-# 	family       -- what family the plugin belongs to
-# 	capabilities -- list of what capabilities it supports
+# Extracts any magic-markers from $file and notes them.
 sub read_magic_markers
 {
-	my $file = shift;
-	my (%mm, $PLUGIN);
+	my ($info, $file) = @_;
+	my $PLUGIN;
+
+	$info->{family} = 'contrib';
+	$info->{capabilities} = {};
 
 	print "#\tReading magic markers.\n" if $config->{DEBUG};
 
@@ -617,15 +617,22 @@ sub read_magic_markers
 
 	while (<$PLUGIN>) {
 		if (/#%#\s+family\s*=\s*(\S+)\s*/) {
-			$mm{family} = $1;
+			$info->{family} = $1;
+			print "#\tSet family to '$1'.\n" if $config->{DEBUG};
+
 		}
 		elsif (/#%#\s+capabilities\s*=\s*(.+)/) {
-			$mm{capabilities} = [ split (/\s+/, $1) ];
+			my @caps = split(/\s+/, $1);
+			foreach my $capability (@caps) {
+				$info->{capabilities}{$capability} = 1;
+			}
+
+			printf "#\tCapabilities are: %s\n", join(', ', @caps)
+				if $config->{DEBUG};
 		}
 	}
 	close ($PLUGIN);
-
-	return \%mm;
+	return;
 }
 
 
@@ -661,22 +668,7 @@ sub load_available_plugins
 			         : "$config->{libdir}/$path"
 		}
 
-		my $mm = read_magic_markers($path);
-
-		$plugin{family} = $mm->{family} || "contrib";
-		print "#\tSet family to '$plugin{family}'.\n"
-			if $config->{DEBUG};
-
-		foreach my $capability (@{ $mm->{capabilities} }) {
-			$plugin{capabilities}->{$capability} = 1;
-		}
-
-		if ($config->{DEBUG}) {
-			my $caps = @{ $mm->{capabilities} }
-			           ? join(', ', @{ $mm->{capabilities} })
-			           : '<none>';
-			print "#\tCapabilities are: $caps\n";
-		}
+		read_magic_markers(\%plugin, $path);
 
 		unless (grep (/^$plugin{family}$/, @{ $config->{families} })) {
 			print "#\tFamily '$plugin{family}' is currently ignored.  Skipping.\n"
