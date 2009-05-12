@@ -568,36 +568,6 @@ sub load_plugin_history
 }
 
 
-# FIXME: ewww.  stolen from Munin::Node::Service
-# couldn't re-use it directly because it assumes plugins can only be in
-# $config->{servicedir}
-sub is_a_runnable_plugin
-{
-	my $file = shift;
-
-	my $path = "$config->{libdir}/$file";
-
-	return unless -f $path && -x _;
-
-	# FIX isn't it enough to check that the file is executable and not
-	# in 'ignores'? Can hidden files and config files be
-	# unintentionally executable? What does config files do in the
-	# service directory? Shouldn't we complain if there is junk in the
-	# service directory?
-	return if $file =~ m/^\./;               # Hidden files
-	return if $file =~ m/.conf$/;            # Config files
-
-	return if $file !~ m/^([-\w.]+)$/;       # Skip if any weird chars
-	$file = $1;                              # Not tainted anymore.
-
-	foreach my $regex (@{$config->{ignores}}) {
-		return if $file =~ /$regex/;
-	}
-
-	return 1;
-}
-
-
 # Extracts any magic-markers from $file and notes them.
 sub read_magic_markers
 {
@@ -652,7 +622,7 @@ sub load_available_plugins
 		my $path = "$config->{libdir}/$plug";
 		my %plugin;
 
-		unless (is_a_runnable_plugin($plug)) {
+		unless (Munin::Node::Service->is_a_runnable_service($plug, $config->{libdir})) {
 			print "# Ignoring '$path'.\n" if $config->{DEBUG};
 			next;
 		}

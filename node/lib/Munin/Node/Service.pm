@@ -16,9 +16,11 @@ my $config = Munin::Node::Config->instance();
 
 
 sub is_a_runnable_service {
-    my ($class, $file) = @_;
+    my ($class, $file, $dir) = @_;
     
-    my $path = "$config->{servicedir}/$file";
+    $dir ||= $config->{servicedir};
+
+    my $path = "$dir/$file";
 
     return unless -f $path && -x _;
 
@@ -184,10 +186,12 @@ Munin::Node::Service - Methods related to handling of Munin services
 
 =item B<is_a_runnable_service>
 
- my $bool = Munin::Node::Service->is_a_runnable_service($file_name);
+ my $bool = Munin::Node::Service->is_a_runnable_service($file_name, $dir);
 
-Runs miscellaneous tests on $file_name. These tests are intended to
-verify that $file_name is a runnable service.
+Runs miscellaneous tests on $file_name in directory $dir. These tests are 
+intended to verify that $file_name is a runnable service.
+
+If not specified, $dir defaults to $config->{servicedir}
 
 =item B<export_service_environment>
 
