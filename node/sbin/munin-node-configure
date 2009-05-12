@@ -52,10 +52,7 @@ sub parse_args
 
 	my $debug      = 0;
 
-	my $suggest    = 0;
-	my $shell      = 0;
-	my $removes    = 0;
-	my $newer      = undef;
+	my ($suggest, $shell, $removes, $newer);
 	my $exiterror  = 1;
 
 	my @families   = ();
@@ -174,7 +171,7 @@ Options:
 By default this program shows which plugins are activated on the system.
 
 If you specify --suggest, it will present a table of plugins that will
-probably work (according to the plugins autoconf command).
+probably work (according to the plugins' autoconf command).
 
 If you specify --shell, shell commands to install those same plugins
 will be printed. These can be reviewed or piped directly into a shell to
@@ -246,7 +243,7 @@ sub main
 
 	print STDERR "# There were some errors:\n";
 	foreach my $err (@errors) {
-		print STDERR "#\t$err\n";
+		print STDERR "#\t$err";
 	}
 
 	exit 1;
