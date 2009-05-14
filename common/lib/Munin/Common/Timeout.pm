@@ -59,7 +59,7 @@ sub do_with_timeout {
 
     if ($err) {
         return if $EVAL_ERROR eq "alarm\n";
-        die;
+        die;  # Propagate any other exceptions
     }
 
     return 1;
@@ -79,7 +79,7 @@ __END__
 
 =head1 NAME
 
-Munin::Common::Timeout - FIX
+Munin::Common::Timeout - Run code with a timeout.
 
 
 =head1 SYNOPSIS
@@ -106,13 +106,19 @@ See also L<Time::Out>, L<Sys::AlarmCall>
  my $finished_with_no_timeout = do_with_timeout($seconds, $block)
      or die "Timed out!";
 
-FIX
+Executes $block with a timeout of $seconds.  Returns true if it 
+completed within the timeout.  If the timeout is reached and the 
+code is still running, it halts it and returns false.
+
+Calls to do_with_timeout() can be nested.  Any exceptions raised 
+by $block are propagated.
 
 =item B<reset_timeout>
 
  reset_timeout();
 
-FIX
+When called from within $block, resets its timeout to its original
+value.
 
 =back
 
