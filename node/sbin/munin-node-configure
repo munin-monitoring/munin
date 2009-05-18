@@ -442,8 +442,8 @@ sub link_add
 	my $plug = shift;
 	my $wild = shift || '';
 
-	$from = "$config->{libdir}/$plug";
-	$to = "$config->{servicedir}/$plug$wild";
+	my $from = "$config->{libdir}/$plug";
+	my $to = "$config->{servicedir}/$plug$wild";
 
 	print "ln -s '$from' '$to'\n";
 }
