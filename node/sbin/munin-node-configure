@@ -104,7 +104,7 @@ sub parse_args
 	    @families = split /,/, $families[0];
 	} else {
 	    if (@snmp) {
-		@families = ();
+		@families = ('snmpauto');
 		$shell=1;
 	    }
 	    elsif ($suggest or $shell) {
@@ -234,7 +234,7 @@ sub main
 	}
 	elsif (@{ $config->{snmp} }) {
 		# Hand off to munin-node-configure-snmp
-		configure_snmp();
+		configure_snmp($plugins);
 	}
 	else {
 		# FIXME: if $config->{shell}, implies $config->{suggest}
@@ -350,9 +350,9 @@ sub get_suggestions
 
 	while (my ($name, $plug_info) = each %$plugins) {
 		next unless $plug_info->{capabilities}{autoconf};
-		
+
 		fetch_plugin_autoconf($name, $plug_info);
-		
+
 		if ($plug_info->{default} eq 'yes'
 		    and $plug_info->{wildcard}
 		    and $plug_info->{capabilities}{suggest})
@@ -368,11 +368,18 @@ sub get_suggestions
 # Hands control off to munin-node-configure-snmp to configure SNMP plugins
 sub configure_snmp
 {
+	my $plugins = shift;
+
 	unless (eval { require Munin::Node::SNMPConfig; }) {
 		print STDERR "# ERROR: Cannot perform SNMP probe since Munin::Node::SNMPConfig module is not loaded.\n";
 		print $@;
 
 		exit 1;
+	}
+
+	while (my ($name, $plug_info) = each %$plugins) {
+		next unless $plug_info->{capabilities}{snmpconf};
+		fetch_plugin_snmpconf($name, $plug_info);
 	}
 
 	die "Not yet implemented...";
@@ -820,28 +827,22 @@ sub fetch_plugin_suggestions
 	return;
 }
 
+
+# Runs a given snmpconf-capable plugin, and notes the parameters it returns
 sub fetch_plugin_snmpconf
 {
 	my $plugname = shift;
 	my $plugconf = shift;
-	my $plugin   = "snmp__" . $plugname;
 
-	if (-x "$config->{libdir}/$plugin" . "_")
-	{
-		$plugin .= "_";
-		$plugconf->{$plugname}->{wild} = 1;
-	}
-	elsif (-x "$config->{libdir}/$plugin")
-	{
-		$plugconf->{$plugname}->{wild} = 0;
-	}
-	else
-	{
-		print "# Skipping $plugname: Couldn't find plugin \"$config->{libdir}/$plugin\".\n" if $config->{DEBUG};
-		return 0;
-	}
+	my @cmd = (
+		"$bindir/munin-run",
+		'--config', $config->{conffile},
+		'--servicedir', $config->{libdir},
+		$plugname,
+		'snmpconf'
+	);
 
-	print "# SNMPconfing plugin \"$plugname\" ( $config->{libdir}/$plugin )\n" if $config->{DEBUG};
+	print "# Running: ",join(' ', @cmd),"\n" if $config->{DEBUG};
 
 	my $fork = open (PLUG, "-|");
 
@@ -853,7 +854,7 @@ sub fetch_plugin_snmpconf
 	{
 		close (STDERR);
 		open (STDERR, ">&STDOUT");
-		exec ("$Munin::Common::Defaults::MUNIN_SBINDIR/munin-run", "--config", $config, "--servicedir", $config->{libdir}, $plugin, "snmpconf");
+		exec (@cmd);
 	}
 	else
 	{
@@ -872,27 +873,27 @@ sub fetch_plugin_snmpconf
 				{
 					$val = ".*";
 				}
-				push (@{$plugconf->{$plugname}->{req}}, [$oid, $val]);
+				push (@{$plugconf->{req}}, [$oid, $val]);
 				print "# Registered $plugname  requirement: $oid =~ /$val/\n" if $config->{DEBUG};
 			}
 			elsif ($a =~ /^index$/i and defined $b)
 			{
-				$plugconf->{$plugname}->{ind} = $b;
+				$plugconf->{ind} = $b;
 				print "# Registered $plugname  index      : $b\n" if $config->{DEBUG};
 			}
 			elsif ($a =~ /^number$/i and defined $b)
 			{
-				$plugconf->{$plugname}->{num} = $b;
+				$plugconf->{num} = $b;
 				print "# Registered $plugname  number     : $b\n" if $config->{DEBUG};
 			}
 			elsif ($a =~ /^env\.(\S+)$/)
 			{
-				$plugconf->{$plugname}->{env}->{$1} = $b;
+				$plugconf->{env}->{$1} = $b;
 				print "# Registered $plugname  env        : $b\n" if $config->{DEBUG};
 			}
 			else
 			{
-				print "# Couldn't parse line line $_\n";
+				print "# Couldn't parse line $_\n";
 			}
 		}
 	}
