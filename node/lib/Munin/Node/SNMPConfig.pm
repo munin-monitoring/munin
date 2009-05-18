@@ -9,14 +9,12 @@ use Socket;
 use Munin::Common::Defaults;
 use Munin::Node::Config;
 
+use Exporter ();
+our @ISA = qw/Exporter/;
+our @EXPORT = qw//;
 
 
 my $config = Munin::Node::Config->instance();
-
-my $version    = $Munin::Common::Defaults::MUNIN_VERSION;
-my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
-my $libdir     = "$Munin::Common::Defaults::MUNIN_LIBDIR/plugins";
-my $bindir     = $Munin::Common::Defaults::MUNIN_SBINDIR;
 
 my $sysName      = "1.3.6.1.2.1.1.5.0";
 my $name;
@@ -25,23 +23,10 @@ my $session;
 my $error;
 my $response;
 
-my $config->{snmp_community} = "public";
-my $config->{snmp_version}   = "2c";
-my $snmpport  = "161";
+my @plugins;
 
-my @plugins  = ();
-
-my %plugconf = ();
-my %hostconf = ();
-
-$do_error = 1 unless GetOptions (
-    "servicedir=s"  => \$servicedir,
-    "libdir=s"      => \$libdir,
-    "snmpversion=s" => \$config->{snmp_version},
-    "community=s"   => \$config->{snmp_community},
-);
-
-@plugins = &get_plugins ($libdir);
+my %plugconf;
+my %hostconf;
 
 foreach my $plugin (@plugins)
 {
@@ -71,7 +56,7 @@ while (my $addr = shift)
 			$tmpaddr ||= join ('.', @tmpaddr);
 		}
 		print "# ($tmpaddr)\n" if $config->{DEBUG};
-		&do_host ("$tmpaddr", $config->{snmp_community}, $config->{snmp_version}, $snmpport);
+		&do_host ("$tmpaddr", $config->{snmp_community}, $config->{snmp_version}, $config->{snmp_port});
 	}
 }
 
@@ -123,17 +108,17 @@ sub do_host
 			{
 				foreach my $id (@{$auto})
 				{
-					if (! -e "$servicedir/snmp_$host"."_$plugin"."_$id")
+					if (! -e "$config->{servicedir}/snmp_$host"."_$plugin"."_$id")
 					{
-						print "ln -s $libdir/snmp__$plugin", "_ $servicedir/snmp_$host", "_$plugin", "_$id\n";
+						print "ln -s $config->{libdir}/snmp__$plugin", "_ $config->{servicedir}/snmp_$host", "_$plugin", "_$id\n";
 					}
 				}
 			}
 			else
 			{
-				if (! -e "$servicedir/snmp_$host"."_$plugin")
+				if (! -e "$config->{servicedir}/snmp_$host"."_$plugin")
 				{
-					print "ln -s $libdir/snmp__$plugin", " $servicedir/snmp_$host", "_$plugin\n";
+					print "ln -s $config->{libdir}/snmp__$plugin", " $config->{servicedir}/snmp_$host", "_$plugin\n";
 				}
 			}
 		}
@@ -228,22 +213,22 @@ sub fetch_plugin_config
 	my $plugconf = shift;
 	my $plugin   = "snmp__" . $plugname;
 
-	if (-x "$libdir/$plugin" . "_")
+	if (-x "$config->{libdir}/$plugin" . "_")
 	{
 		$plugin .= "_";
 		$plugconf->{$plugname}->{wild} = 1;
 	}
-	elsif (-x "$libdir/$plugin")
+	elsif (-x "$config->{libdir}/$plugin")
 	{
 		$plugconf->{$plugname}->{wild} = 0;
 	}
 	else
 	{
-		print "# Skipping $plugname: Couldn't find plugin \"$libdir/$plugin\".\n" if $config->{DEBUG};
+		print "# Skipping $plugname: Couldn't find plugin \"$config->{libdir}/$plugin\".\n" if $config->{DEBUG};
 		return 0;
 	}
 
-	print "# SNMPconfing plugin \"$plugname\" ( $libdir/$plugin )\n" if $config->{DEBUG};
+	print "# SNMPconfing plugin \"$plugname\" ( $config->{libdir}/$plugin )\n" if $config->{DEBUG};
 
 	my $fork = open (PLUG, "-|");
 
@@ -255,7 +240,7 @@ sub fetch_plugin_config
 	{
 		close (STDERR);
 		open (STDERR, ">&STDOUT");
-		exec ("$bindir/munin-run", "--config", $config, "--servicedir", $libdir, $plugin, "snmpconf");
+		exec ("$Munin::Common::Defaults::MUNIN_SBINDIR/munin-run", "--config", $config, "--servicedir", $config->{libdir}, $plugin, "snmpconf");
 	}
 	else
 	{
@@ -432,13 +417,13 @@ sub interfaces
 
 
 
-
-		if (defined $p->{'capability'}->{'snmpconf'})
-		{
-			$plug =~ s/^snmp__//;
-			$plug =~ s/_$//;
-			push (@plugins, $plug);
-		}
+#
+#		if (defined $p->{'capability'}->{'snmpconf'})
+#		{
+#			$plug =~ s/^snmp__//;
+#			$plug =~ s/_$//;
+#			push (@plugins, $plug);
+#		}
 
 1;
 
