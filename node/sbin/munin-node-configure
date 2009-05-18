@@ -50,16 +50,16 @@ sub parse_args
 	my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
 	my $libdir     = "$Munin::Common::Defaults::MUNIN_LIBDIR/plugins";
 
-	my $debug      = 0;
-
+	my $debug;
 	my ($suggest, $shell, $removes, $newer);
 	my $exiterror  = 1;
 
-	my @families   = ();
+	my @families;
 
-	my @snmp       = ();
-	my $snmpver    = undef;
-	my $snmpcomm   = undef;
+	my @snmp;
+	my $snmpver    = '2c';
+	my $snmpcomm   = 'public';
+	my $snmpport   = 161;
 
 	print_usage_and_exit() unless GetOptions(
 		"help"            => \&print_usage_and_exit,
@@ -76,6 +76,7 @@ sub parse_args
 		"snmp=s"          => \@snmp,
 		"snmpversion=s"   => \$snmpver,
 		"snmpcommunity=s" => \$snmpcomm,
+		"snmpport=i"      => \$snmpport,
 		"newer=s"         => \$newer
 	);
 
@@ -132,6 +133,7 @@ sub parse_args
 		snmp => \@snmp,
 		snmp_version => $snmpver,
 		snmp_community => $snmpcomm,
+		snmp_port => $snmpport,
 
 		DEBUG => $debug,
 	});
@@ -167,6 +169,7 @@ Options:
 	--snmp <host|cidr>      Do SNMP probing on the host or CIDR network.
 	--snmpversion <ver>     Set SNMP version (1, 2c or 3) [2c]
 	--snmpcommunity <comm>  Set SNMP community string [public]
+	--snmpport <port>       Set SNMP port [161]
 
 By default this program shows which plugins are activated on the system.
 
@@ -365,35 +368,14 @@ sub get_suggestions
 # Hands control off to munin-node-configure-snmp to configure SNMP plugins
 sub configure_snmp
 {
-	unless (-x "$bindir/munin-node-configure-snmp") {
-		print STDERR "# ERROR: Cannot perform SNMP probe. SNMP operations require the SNMP part\n";
-		print STDERR "# of Munin to be installed, which is currently not installed, or not in the \n";
-		print STDERR "# right directory: $bindir\n";
+	unless (eval { require Munin::Node::SNMPConfig; }) {
+		print STDERR "# ERROR: Cannot perform SNMP probe since Munin::Node::SNMPConfig module is not loaded.\n";
+		print $@;
 
 		exit 1;
 	}
 
-	unless (eval "require Net::SNMP;") {
-		print STDERR "# ERROR: Cannot perform SNMP probe. SNMP operations require the perl module\n";
-		print STDERR "# Net::SNMP, which is currently not installed (or not in one of the following\n";
-		print STDERR "# directories: @INC\n";
-
-		exit 1;
-	}
-
-	my @params;
-
-	push (@params, "$bindir/munin-node-configure-snmp");
-	push (@params, "--snmpversion", $config->{snmp_version}) if defined $config->{snmpver};
-	push (@params, "--community", $config->{snmp_community}) if defined $config->{snmp_community};
-	push (@params, '--debug') if $config->{DEBUG};
-	push (@params, @{ $config->{snmp} });
-
-	print "# executing: ",join(' ',@params),"\n" if $config->{DEBUG};
-	exec (@params);
-
-	# Not reached, but just in case...
-	exit 42;
+	die "Not yet implemented...";
 }
 
 
