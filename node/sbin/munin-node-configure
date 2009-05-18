@@ -433,7 +433,7 @@ sub link_remove
     return unless $config->{remove_also};
     return unless (-l "$config->{servicedir}/$plug"); # Strange...
 
-    print "rm -f $config->{servicedir}/$plug\n";
+    print "rm -f '$config->{servicedir}/$plug'\n";
 }
 
 
@@ -441,8 +441,11 @@ sub link_add
 {
 	my $plug = shift;
 	my $wild = shift || '';
-	
-	print "ln -s $config->{libdir}/$plug $config->{servicedir}/$plug$wild\n";
+
+	$from = "$config->{libdir}/$plug";
+	$to = "$config->{servicedir}/$plug$wild";
+
+	print "ln -s '$from' '$to'\n";
 }
 
 
@@ -796,16 +799,20 @@ sub plugin_suggestions
 	else {
 		# In parent
 		while (my $line = <$PLUGIN_OUTPUT>) {
-			if (m/^#/) {
+			if ($line =~ m/^#/) {
 				# debug output from munin-run
 				print "# Got junk: $line"
 					if $config->{DEBUG};
 			}
-			else {
+			elsif ($line =~ /^[\w\.+]$/) { # FIXME: too restrictive?
 				# This ought to be a suggestion.
 				print "# Got suggestion: $line"
 					if $config->{DEBUG};
 				push @sugg, ($line);
+			}
+			else {
+				print "# Got bad suggestion: $line"
+					if $config->{DEBUG};
 			}
 		}
 	}
