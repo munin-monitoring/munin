@@ -351,13 +351,13 @@ sub get_suggestions
 	while (my ($name, $plug_info) = each %$plugins) {
 		next unless $plug_info->{capabilities}{autoconf};
 		
-		plugin_autoconf($name, $plug_info);
+		fetch_plugin_autoconf($name, $plug_info);
 		
 		if ($plug_info->{default} eq 'yes'
 		    and $plug_info->{wildcard}
 		    and $plug_info->{capabilities}{suggest})
 		{
-			plugin_suggestions($name, $plug_info);
+			fetch_plugin_suggestions($name, $plug_info);
 		}
 	}
 
@@ -646,7 +646,7 @@ sub load_available_plugins
 
 # Runs the given plugin, and records whether it thinks it should be installed.
 # Sets the 'default' and 'defaultreason' fields
-sub plugin_autoconf
+sub fetch_plugin_autoconf
 {
 	my ($file, $plugin) = @_;
 
@@ -745,7 +745,7 @@ sub plugin_autoconf
 
 # Runs the given wildcard plugin, and returns a list of suggested
 # profiles
-sub plugin_suggestions
+sub fetch_plugin_suggestions
 {
 	my ($name, $info) = @_;
 	my @sugg = ();
@@ -818,6 +818,85 @@ sub plugin_suggestions
 	}
 
 	return;
+}
+
+sub fetch_plugin_snmpconf
+{
+	my $plugname = shift;
+	my $plugconf = shift;
+	my $plugin   = "snmp__" . $plugname;
+
+	if (-x "$config->{libdir}/$plugin" . "_")
+	{
+		$plugin .= "_";
+		$plugconf->{$plugname}->{wild} = 1;
+	}
+	elsif (-x "$config->{libdir}/$plugin")
+	{
+		$plugconf->{$plugname}->{wild} = 0;
+	}
+	else
+	{
+		print "# Skipping $plugname: Couldn't find plugin \"$config->{libdir}/$plugin\".\n" if $config->{DEBUG};
+		return 0;
+	}
+
+	print "# SNMPconfing plugin \"$plugname\" ( $config->{libdir}/$plugin )\n" if $config->{DEBUG};
+
+	my $fork = open (PLUG, "-|");
+
+	if ($fork == -1)
+	{
+		die "# ERROR: Unable to fork: $!";
+	}
+	elsif ($fork == 0) # Child
+	{
+		close (STDERR);
+		open (STDERR, ">&STDOUT");
+		exec ("$Munin::Common::Defaults::MUNIN_SBINDIR/munin-run", "--config", $config, "--servicedir", $config->{libdir}, $plugin, "snmpconf");
+	}
+	else
+	{
+		while (<PLUG>)
+		{
+			chomp;
+			s/^\s+//;
+			s/\s+$//;
+			my ($a, $b) = split (/\s+/, $_, 2);
+			next unless defined $a;
+
+			if ($a =~ /^require$/i and defined $b)
+			{
+				my ($oid, $val) = split (/\s+/, $b);
+				if (! defined $val)
+				{
+					$val = ".*";
+				}
+				push (@{$plugconf->{$plugname}->{req}}, [$oid, $val]);
+				print "# Registered $plugname  requirement: $oid =~ /$val/\n" if $config->{DEBUG};
+			}
+			elsif ($a =~ /^index$/i and defined $b)
+			{
+				$plugconf->{$plugname}->{ind} = $b;
+				print "# Registered $plugname  index      : $b\n" if $config->{DEBUG};
+			}
+			elsif ($a =~ /^number$/i and defined $b)
+			{
+				$plugconf->{$plugname}->{num} = $b;
+				print "# Registered $plugname  number     : $b\n" if $config->{DEBUG};
+			}
+			elsif ($a =~ /^env\.(\S+)$/)
+			{
+				$plugconf->{$plugname}->{env}->{$1} = $b;
+				print "# Registered $plugname  env        : $b\n" if $config->{DEBUG};
+			}
+			else
+			{
+				print "# Couldn't parse line line $_\n";
+			}
+		}
+	}
+	return 0;
 }
 
 
