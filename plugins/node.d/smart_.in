@@ -38,7 +38,7 @@
 #   group disk
 #   env.smartargs -H -l error -d 3ware,2
 #
-# Author: Nicolas Stransky <Nico@neo-lan.net>
+# Author: Nicolas Stransky  <Nico@stransky.cx>
 # 
 # v1.0 22/08/2004 - First draft
 # v1.2 28/08/2004 - Clean up the code, add a verbose option
@@ -88,7 +88,7 @@ verbose=False
 # Suppress SMART warnings (True/False)
 report_warnings=True
 # Modify to your needs:
-statefiledir='@@STATEDIR@@'
+statefiledir='@@PLUGSTATE@@'
 # You may not modify anything below this line
 
 import os, sys, string, pickle
