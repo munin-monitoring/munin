@@ -27,6 +27,7 @@ use POSIX;
 use File::Basename;
 
 use Data::Dumper;
+use Carp;
 
 use Munin::Node::Config;
 use Munin::Node::Service;
@@ -253,20 +254,20 @@ sub main
 {
 	parse_args();
 
-	my $plugins   = load_available_plugins();
-	my $installed = load_installed_plugins();
+	my $plugins = load_available_plugins();
+	load_installed_plugins($plugins);
 
 	print_header() unless $config->{shell};
 
 	if ($config->{suggest}) {
-		show_suggestions($plugins, $installed);
+		show_suggestions($plugins);
 	}
 	elsif (@{ $config->{snmp} }) {
 		configure_snmp($plugins);
 	}
 	else {
 		# FIXME: if $config->{shell}, implies $config->{suggest}
-		print_status_list($plugins, $installed);
+		print_status_list($plugins);
 	}
 
 	exit 0 unless scalar @errors;
@@ -285,12 +286,10 @@ sub main
 # appropriately
 sub show_suggestions
 {
-	my ($plugins, $installed) = @_;
+	my ($plugins) = @_;
 
 	foreach my $plugin (keys %$plugins) {
-		
 		my $plug_info = $plugins->{$plugin};
-		my $inst_info = $installed->{$plug_info->{name}} || {};
 
 		next unless $plug_info->{capabilities}{autoconf};
 
@@ -302,19 +301,19 @@ sub show_suggestions
 				and $plug_info->{capabilities}{suggest});
 
 			if ($config->{shell}) {
-				manage_symlinks($plug_info, $inst_info);
+				manage_symlinks($plug_info);
 			}
 			else {
-				print_suggestion_row($plug_info, $inst_info);
+				print_suggestion_row($plug_info);
 			}
 		}
 		elsif ($plug_info->{default} eq 'no') {
 			if ($config->{shell}) {
 				# Scrub it from existence!
-				remove_all_links($inst_info);
+				remove_all_links($plug_info);
 			}
 			else {
-				print_suggestion_row($plug_info, $inst_info);
+				print_suggestion_row($plug_info);
 			}
 		}
 	}
@@ -333,7 +332,7 @@ sub print_suggestion_row
 
 	if ($plug_info->{wildcard}) {
 		my ($same, $add, $remove) = diff_suggestions($plug_info->{suggestions},
-		                                             $inst_info->{suggestions});
+		                                             $plug_info->{installed});
 		my @suggestions = @$same;
 		push @suggestions, map { '+' . $_ } @$add;
 		push @suggestions, map { '-' . $_ } @$remove;
@@ -376,17 +375,16 @@ sub configure_snmp
 # in use
 sub print_status_list
 {
-	my ($plugins, $installed) = @_;
+	my ($plugins) = @_;
 
 	foreach my $plug (sort keys %$plugins) {
-		my $now   = $installed->{$plug} ? "yes" : "no";
-		my $suggested = $installed->{$plug}->{suggest}
-		                  ? $installed->{$plug}->{suggest}
-		                  : [];
+		my $plugin = $plugins->{$plug};
+		my $now = $plugin->{installed} ? "yes" : "no";
+		my $suggested = $plugin->{installed} || [];
 
 		my $suggestions = '';
 
-		if ($plug =~ /_$/ and @$suggested) {
+		if ($plugin->{wildcard} and @$suggested) {
 			# It's a wildcard, and there are suggestions
 			$suggestions = join ' ', @$suggested;
 		}
@@ -400,20 +398,20 @@ sub print_status_list
 # state by adding or removing symlinks
 sub manage_symlinks
 {
-	my ($wanted, $now) = @_;
+	my ($plugin) = @_;
 
-	if ($wanted->{wildcard}) {
-		my ($same, $add, $remove) = diff_suggestions($wanted->{suggestions},
-		                                             $now->{suggestions});
+	if ($plugin->{wildcard}) {
+		my ($same, $add, $remove) = diff_suggestions($plugin->{suggestions},
+		                                             $plugin->{installed});
 		foreach my $to_add (@$add) {
-			link_add($wanted->{name}, $to_add);
+			link_add($plugin->{name}, $to_add);
 		}
 		foreach my $to_remove (@$remove) {
-			link_remove($wanted->{name}, $to_remove);
+			link_remove($plugin->{name}, $to_remove);
 		}
 	}
 	else {
-		link_add($wanted->{name});
+		link_add($plugin->{name});
 	}
 }
 
@@ -422,15 +420,8 @@ sub remove_all_links
 {
 	my ($plugin) = @_;
 
-	return unless keys %$plugin;  # Not installed
-
-	if ($plugin->{wildcard}) {
-		foreach my $link ($plugin->{suggestions}) {
-			link_remove($link);
-		}
-	}
-	else {
-		link_remove($plugin->{name});
+	foreach my $link (@{ $plugin->{installed} }) {
+		link_remove($link);
 	}
 
 	return;
@@ -470,6 +461,8 @@ sub normal
 
 sub load_installed_plugins
 {
+	my ($plugins) = @_;
+	
 	my %found;  # information on installed plugins
 	my $service_count = 0;  # the number of services currently installed.  may not
 	                        # be equal to (keys %found) if some are wildcards
@@ -495,14 +488,16 @@ sub load_installed_plugins
 
 		$realfile = fileparse($realfile);
 
-		$found{$realfile} ||= {};
-
-		$found{$realfile}->{name} = $service;
-		$found{$realfile}->{path} = $realfile;
+		unless ($plugins->{$realfile}) {
+			print "# '$service' corresponds to an unknown plugin.\n";
+			next;
+		}
 
 		print "# Found '$service'\n" if $config->{DEBUG};
 
-		if ($realfile =~ /_$/) {
+		$plugins->{$realfile}->{installed} = [];
+
+		if ($plugins->{$realfile}->{wildcard}) {
 			print "#\tWildcard plugin '$service' resolves to '$realfile'\n"
 				if $config->{DEBUG};
 
@@ -512,10 +507,7 @@ sub load_installed_plugins
 			print "#\tAdding suggestion '$wild'\n"
 				if $config->{DEBUG};
 
-			$found{$realfile}->{wildcard} = 1;
-
-			$found{$realfile}->{suggestions} ||= [];
-			push @{ $found{$realfile}->{suggestions} }, $wild;
+			push @{ $plugins->{$realfile}->{installed} }, $wild;
 		}
 
 		$service_count++;
@@ -523,7 +515,7 @@ sub load_installed_plugins
 	close ($SERVICEDIR);
 
 	print "# $service_count services currently installed.\n" if $config->{DEBUG};
-	return \%found;
+	return;
 }
 
 
