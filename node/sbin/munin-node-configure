@@ -463,7 +463,6 @@ sub load_installed_plugins
 {
 	my ($plugins) = @_;
 	
-	my %found;  # information on installed plugins
 	my $service_count = 0;  # the number of services currently installed.  may not
 	                        # be equal to (keys %found) if some are wildcards
 
@@ -489,7 +488,8 @@ sub load_installed_plugins
 		$realfile = fileparse($realfile);
 
 		unless ($plugins->{$realfile}) {
-			print "# '$service' corresponds to an unknown plugin.\n";
+			print "#\t'$service' corresponds to an ignored plugin ($realfile).  Skipping.\n"
+				if $config->{DEBUG};
 			next;
 		}
 
