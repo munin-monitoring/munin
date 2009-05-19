@@ -287,15 +287,17 @@ sub show_suggestions
 {
 	my ($plugins, $installed) = @_;
 
-	while (my ($name, $plug_info) = each %$plugins) {
+	foreach my $plugin (keys %$plugins) {
+		
+		my $plug_info = $plugins->{$plugin};
+		my $inst_info = $installed->{$plug_info->{name}} || {};
+
 		next unless $plug_info->{capabilities}{autoconf};
 
-		my $inst_info = $installed->{$name} || {};
-
-		fetch_plugin_autoconf($name, $plug_info);
+		fetch_plugin_autoconf($plug_info);
 
 		if ($plug_info->{default} eq 'yes') {
-			fetch_plugin_suggestions($name, $plug_info)
+			fetch_plugin_suggestions($plug_info)
 				if ($plug_info->{wildcard}
 				and $plug_info->{capabilities}{suggest});
 
@@ -377,9 +379,7 @@ sub print_status_list
 	my ($plugins, $installed) = @_;
 
 	foreach my $plug (sort keys %$plugins) {
-		my $now   = $installed->{$plug}
-		              ? "yes"
-		              : "no";
+		my $now   = $installed->{$plug} ? "yes" : "no";
 		my $suggested = $installed->{$plug}->{suggest}
 		                  ? $installed->{$plug}->{suggest}
 		                  : [];
@@ -400,8 +400,21 @@ sub print_status_list
 # state by adding or removing symlinks
 sub manage_symlinks
 {
-	# FIXME!
-	warn "missing...";
+	my ($wanted, $now) = @_;
+
+	if ($wanted->{wildcard}) {
+		my ($same, $add, $remove) = diff_suggestions($wanted->{suggestions},
+		                                             $now->{suggestions});
+		foreach my $to_add (@$add) {
+			link_add($wanted->{name}, $to_add);
+		}
+		foreach my $to_remove (@$remove) {
+			link_remove($wanted->{name}, $to_remove);
+		}
+	}
+	else {
+		link_add($wanted->{name});
+	}
 }
 
 # prints shell-commands to remove all the links for the plugin
@@ -409,15 +422,15 @@ sub remove_all_links
 {
 	my ($plugin) = @_;
 
-	warn "missing...";
-	return unless $plugin;
+	return unless keys %$plugin;  # Not installed
 
 	if ($plugin->{wildcard}) {
-		# remove plain links
-		link_remove($plugin->{name});
+		foreach my $link ($plugin->{suggestions}) {
+			link_remove($link);
+		}
 	}
 	else {
-		# remove wildcard links
+		link_remove($plugin->{name});
 	}
 
 	return;
@@ -483,6 +496,9 @@ sub load_installed_plugins
 		$realfile = fileparse($realfile);
 
 		$found{$realfile} ||= {};
+
+		$found{$realfile}->{name} = $service;
+		$found{$realfile}->{path} = $realfile;
 
 		print "# Found '$service'\n" if $config->{DEBUG};
 
@@ -671,14 +687,14 @@ sub load_available_plugins
 # Sets the 'default' and 'defaultreason' fields
 sub fetch_plugin_autoconf
 {
-	my ($file, $plugin) = @_;
+	my ($plugin) = @_;
 
 	my $gotjunk = 0; # did the plugin produce spurious output?
 
 	my @cmd = (
 		"$bindir/munin-run",
 		"--servicedir", $config->{libdir},
-		$file, "autoconf"
+		$plugin->{name}, "autoconf"
 	);
 	push @cmd, ('--debug') if $config->{DEBUG};
 
@@ -731,7 +747,7 @@ sub fetch_plugin_autoconf
 			}
 			else {
 				# Something else
-				push @errors, ("Got from $file: $line");
+				push @errors, ("Got from $plugin->{name}: $line");
 				print "# Got junk: $line"
 					if $config->{DEBUG};
 				$gotjunk = 1;
@@ -750,7 +766,7 @@ sub fetch_plugin_autoconf
 
 	# Override to no if there were errors.
 	if ($plugin_status and !$config->{exit_not_error}) {
-	    push @errors, ("Non-zero exit value from $file: $plugin_exit/$plugin_signal");
+	    push @errors, ("Non-zero exit value from $plugin->{name}: $plugin_exit/$plugin_signal");
 	    print "#\tNon-zero exit value: $plugin_exit/$plugin_signal\n"
 	      if $config->{DEBUG};
 	}
@@ -769,7 +785,7 @@ sub fetch_plugin_autoconf
 # profiles
 sub fetch_plugin_suggestions
 {
-	my ($name, $info) = @_;
+	my ($info) = @_;
 	my @sugg = ();
 
 	# Only run if the autoconf gave the go-ahead
@@ -779,7 +795,7 @@ sub fetch_plugin_suggestions
 	my @cmd = (
 		"$bindir/munin-run",
 		'--servicedir', $config->{libdir},
-		$name, 'suggest'
+		$info->{name}, 'suggest'
 	);
 
 	# Debug here breaks stuff.
@@ -834,9 +850,9 @@ sub fetch_plugin_suggestions
 		if $config->{DEBUG};
 
 	unless (@sugg) {
-		print "ERROR: empty suggest from $name\n"
+		print "ERROR: empty suggest from $info->{name}\n"
 			if $config->{DEBUG};
-		push @errors, ("ERROR: empty suggest from $name");
+		push @errors, ("ERROR: empty suggest from $info->{name}");
 	}
 
 	return;
