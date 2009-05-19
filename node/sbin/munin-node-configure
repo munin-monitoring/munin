@@ -338,7 +338,6 @@ sub print_suggestion_row
 		push @suggestions, map { '-' . $_ } @$remove;
 
 		$msg = join ' ', @suggestions;
-
 	}
 	elsif ($plug_info->{defaultreason}) {
 		# Report why it's not being used
@@ -346,6 +345,7 @@ sub print_suggestion_row
 	}
 
 	normal($plug_info->{name}, $now, $msg);
+	return;
 }
 
 
@@ -391,6 +391,8 @@ sub print_status_list
 
 		normal($plug, $now, $suggestions);
 	}
+
+	return;
 }
 
 
@@ -413,6 +415,8 @@ sub manage_symlinks
 	else {
 		link_add($plugin->{name});
 	}
+
+	return;
 }
 
 # prints shell-commands to remove all the links for the plugin
@@ -462,7 +466,7 @@ sub normal
 sub load_installed_plugins
 {
 	my ($plugins) = @_;
-	
+
 	my $service_count = 0;  # the number of services currently installed.  may not
 	                        # be equal to (keys %found) if some are wildcards
 
@@ -487,13 +491,13 @@ sub load_installed_plugins
 
 		$realfile = fileparse($realfile);
 
+		print "# Found '$service'\n" if $config->{DEBUG};
+
 		unless ($plugins->{$realfile}) {
-			print "#\t'$service' corresponds to an ignored plugin ($realfile).  Skipping.\n"
+			print "#\tCorresponds to an ignored plugin ($realfile).  Skipping.\n"
 				if $config->{DEBUG};
 			next;
 		}
-
-		print "# Found '$service'\n" if $config->{DEBUG};
 
 		$plugins->{$realfile}->{installed} = [];
 
@@ -867,7 +871,7 @@ sub fetch_plugin_snmpconf
 
 	print "# Running: ",join(' ', @cmd),"\n" if $config->{DEBUG};
 
-	my $fork = open (PLUG, "-|");
+	my $fork = open (my $PLUGIN_OUTPUT, "-|");
 
 	if ($fork == -1)
 	{
@@ -881,7 +885,7 @@ sub fetch_plugin_snmpconf
 	}
 	else
 	{
-		while (<PLUG>)
+		while (<$PLUGIN_OUTPUT>)
 		{
 			chomp;
 			s/^\s+//;
