@@ -19,8 +19,6 @@
 #
 # Program to suggest what plugins to use and not
 
-$| = 1; # Flush after every write to stdout
-
 use strict;
 use warnings;
 
@@ -219,7 +217,7 @@ sub print_header
 }
 
 
-# reports which wildcard plugin identities should be added, removed, 
+# reports which wildcard plugin identities should be added, removed,
 # or left as they are.  in (sort of) mathematical terms:
 # 	(remove) = (installed) \ (suggested)
 # 	(add)    = (suggested) \ (installed)
@@ -261,11 +259,9 @@ sub main
 	print_header() unless $config->{shell};
 
 	if ($config->{suggest}) {
-		get_suggestions($plugins);
-		#print_suggestions();
+		show_suggestions($plugins, $installed);
 	}
 	elsif (@{ $config->{snmp} }) {
-		# Hand off to munin-node-configure-snmp
 		configure_snmp($plugins);
 	}
 	else {
@@ -273,127 +269,82 @@ sub main
 		print_status_list($plugins, $installed);
 	}
 
-
 	exit 0 unless scalar @errors;
 
 	print STDERR "# There were some errors:\n";
 	foreach my $err (@errors) {
-		print STDERR "#\t$err";
+		print STDERR "#\t$err\n";
 	}
 
 	exit 1;
-
-
-	###########
-	foreach my $plug (sort keys %{$plugins}) {
-		my $now   = (exists $installed->{$plug}?"yes":"no");
-		my $want  = (exists $plugins->{$plug}->{'default'}?$plugins->{$plug}->{'default'}:"no");
-		my $snow  = (exists $installed->{$plug}->{'suggest'}?$installed->{$plug}->{'suggest'}:undef);
-		my $swant = (exists $plugins->{$plug}->{'suggest'}?$plugins->{$plug}->{'suggest'}:undef);
-		my $sugg  = "";
-
-		if ($config->{shell}) {
-			if ($plug =~ /_$/) {
-				# wildcard plugin
-				if ($now eq "yes" and $want eq "no") {
-					if ($snow and @{$snow}) {
-						foreach my $wild (sort @{$snow}) {
-							link_remove("$plug$wild");
-						}
-					}
-				}
-				else {
-					if ($snow and @{$snow}) {
-						foreach my $wild (sort @{$snow}) {
-							if (! grep (/^$wild$/, @{$swant})) {
-								link_remove("$plug$wild");
-							}
-						}
-					}
-					if ($swant and @{$swant}) {
-						foreach my $wild (sort @{$swant}) {
-							next if -e "$config->{servicedir}/$plug"."_".$wild;
-							if (! grep (/^$wild$/, @{$snow})) {
-								link_add($plug, $wild);
-							}
-						}
-					}
-				}
-			}
-			else {
-				if ($now eq "yes" and $want eq "no") {
-					link_remove($plug);
-				}
-				elsif ($now eq "no" and $want eq "yes") {
-					next if -e "$config->{servicedir}/$plug"; # None of our business...
-					link_add($plug);
-				}
-			}
-		}
-		elsif ($config->{suggest}) {
-			if ($plug =~ /_$/) {
-				# wildcard plugin
-				if ($now eq "yes" && $want eq "no"
-				 or $now eq "no" && $want eq "yes" && $swant && @{$swant})
-				{
-					$sugg = "$want ";
-				}
-				if ($snow and @{$snow}) {
-					foreach my $wild (sort @{$snow}) {
-						if (! grep (/^$wild$/, @{$swant})) {
-							$sugg .= "-$wild ";
-						}
-					}
-				}
-				if ($swant and @{$swant}) {
-					foreach my $wild (sort @{$swant}) {
-						next if -e "$config->{servicedir}/$plug"."_".$wild; # None of our business...
-						if (! grep (/^$wild$/, @{$snow})) {
-							$sugg .= "+$wild ";
-						}
-					}
-				}
-				normal($plug, $now, $sugg);
-			}
-			else {
-				next if -e "$config->{servicedir}/$plug"; # None of our business...
-				if ($now ne $want) {
-					$sugg = $want;
-				}
-				elsif (defined $plugins->{$plug}->{'defaultreason'}
-				   and $plugins->{$plug}->{'defaultreason'} =~ /^[^\(]*\((.+)\)\s*$/)
-				{
-					$sugg = "[$1]";
-				}
-
-				normal($plug, $now, $sugg);
-			}
-		}
-	}
-
 }
 
 
-# Queries each available autoconf plugin for whether or not it 
-# should be installed, and (if it's a wildcard plugin) its suggested profiles
-sub get_suggestions
+# Asks each available autoconf plugin whether or not it should be installed,
+# and (if it's a wildcard plugin) its suggested profiles.  Then displays them
+# appropriately
+sub show_suggestions
 {
-	my ($plugins) = @_;
+	my ($plugins, $installed) = @_;
 
 	while (my ($name, $plug_info) = each %$plugins) {
 		next unless $plug_info->{capabilities}{autoconf};
 
+		my $inst_info = $installed->{$name} || {};
+
 		fetch_plugin_autoconf($name, $plug_info);
 
-		if ($plug_info->{default} eq 'yes'
-		    and $plug_info->{wildcard}
-		    and $plug_info->{capabilities}{suggest})
-		{
-			fetch_plugin_suggestions($name, $plug_info);
+		if ($plug_info->{default} eq 'yes') {
+			fetch_plugin_suggestions($name, $plug_info)
+				if ($plug_info->{wildcard}
+				and $plug_info->{capabilities}{suggest});
+
+			if ($config->{shell}) {
+				manage_symlinks($plug_info, $inst_info);
+			}
+			else {
+				print_suggestion_row($plug_info, $inst_info);
+			}
+		}
+		elsif ($plug_info->{default} eq 'no') {
+			if ($config->{shell}) {
+				# Scrub it from existence!
+				remove_all_links($inst_info);
+			}
+			else {
+				print_suggestion_row($plug_info, $inst_info);
+			}
 		}
 	}
 
 	return;
+}
+
+
+# prints out the tabular representation of the suggestion
+sub print_suggestion_row
+{
+	my ($plug_info, $inst_info) = @_;
+
+	my $msg = '';  # either [reason], or +/-suggestions
+	my $now = keys %$inst_info ? 'yes' : 'no';
+
+	if ($plug_info->{wildcard}) {
+		my ($same, $add, $remove) = diff_suggestions($plug_info->{suggestions},
+		                                             $inst_info->{suggestions});
+		my @suggestions = @$same;
+		push @suggestions, map { '+' . $_ } @$add;
+		push @suggestions, map { '-' . $_ } @$remove;
+
+		$msg = join ' ', @suggestions;
+
+	}
+	elsif ($plug_info->{defaultreason}) {
+		# Report why it's not being used
+		$msg = "[$plug_info->{defaultreason}]";
+	}
+
+	normal($plug_info->{name}, $now, $msg);
 }
 
 
@@ -403,7 +354,7 @@ sub configure_snmp
 	my $plugins = shift;
 
 	unless (eval { require Munin::Node::SNMPConfig; }) {
-		print STDERR "# ERROR: Cannot perform SNMP probe since Munin::Node::SNMPConfig module is not loaded.\n";
+		print STDERR "# ERROR: Cannot perform SNMP probing since Munin::Node::SNMPConfig module is not loaded.\n";
 		print $@;
 
 		exit 1;
@@ -439,9 +390,37 @@ sub print_status_list
 			# It's a wildcard, and there are suggestions
 			$suggestions = join ' ', @$suggested;
 		}
-		
+
 		normal($plug, $now, $suggestions);
 	}
+}
+
+
+# prints shell commands to get the system into the recommended
+# state by adding or removing symlinks
+sub manage_symlinks
+{
+	# FIXME!
+	warn "missing...";
+}
+
+# prints shell-commands to remove all the links for the plugin
+sub remove_all_links
+{
+	my ($plugin) = @_;
+
+	warn "missing...";
+	return unless $plugin;
+
+	if ($plugin->{wildcard}) {
+		# remove plain links
+		link_remove($plugin->{name});
+	}
+	else {
+		# remove wildcard links
+	}
+
+	return;
 }
 
 
@@ -479,9 +458,9 @@ sub normal
 sub load_installed_plugins
 {
 	my %found;  # information on installed plugins
-	my $service_count = 0;  # the number of services currently installed.  may not 
+	my $service_count = 0;  # the number of services currently installed.  may not
 	                        # be equal to (keys %found) if some are wildcards
-	
+
 	print "# Searching '$config->{servicedir}' for installed plugins.\n"
 		if $config->{DEBUG};
 
@@ -519,8 +498,8 @@ sub load_installed_plugins
 
 			$found{$realfile}->{wildcard} = 1;
 
-			$found{$realfile}->{suggest} ||= [];
-			push @{ $found{$realfile}->{suggest} }, $wild;
+			$found{$realfile}->{suggestions} ||= [];
+			push @{ $found{$realfile}->{suggestions} }, $wild;
 		}
 
 		$service_count++;
@@ -535,7 +514,7 @@ sub load_installed_plugins
 sub load_plugin_history
 {
 	my ($plugins) = @_;
-	
+
 	my $hist_file = "$config->{libdir}/plugins.history";
 
 	my $reached_version = 0;
@@ -584,7 +563,7 @@ sub load_plugin_history
 		}
 	}
 	close $HIST;
-	
+
 	return;
 }
 
@@ -630,7 +609,7 @@ sub read_magic_markers
 sub load_available_plugins
 {
 	my %found;  # index of plugins found
-	
+
 	load_plugin_history() if $config->{newer};
 
 	print "# Searching '$config->{libdir}' for available plugins.\n"
@@ -658,6 +637,11 @@ sub load_available_plugins
 			         ? $path
 			         : "$config->{libdir}/$path"
 		}
+
+		$plugin{wildcard}++ if $path =~ /_$/;
+
+		$plugin{name} = $plug;  # the name of the plugin file
+		$plugin{path} = $path;  # the absolute path to the script
 
 		read_magic_markers(\%plugin, $path);
 
@@ -723,18 +707,22 @@ sub fetch_plugin_autoconf
 		#
 		# Also, if the plugin outputs junk we handle that as
 		# an error.
-		my @response;
+		my ($response, $reason);
 
 		# FIXME: need to handle plugin not timing out
 
 		while (my $line = <$PLUGIN_OUTPUT>) {
-			if ($line =~ /^yes$/
-			 or $line =~ /^no(?:\s+.*)?$/)
+			if ($line =~ /^(yes)$/
+			 or $line =~ /^(no)(?:\s+\((.*)\))?$/)
 			{
 				# Some recognized response
 				print "# Got yes/no: $line"
 					if $config->{DEBUG};
-				push @response, ($line);
+
+				$response = $1;
+				$reason = $2 || '';
+
+				last;
 			}
 			elsif ($line =~ /^#/) {
 				# Likely debug output from munin-run
@@ -750,14 +738,9 @@ sub fetch_plugin_autoconf
 			}
 		}
 
-		$plugin->{'defaultreason'} = join(' ', @response);
+		$plugin->{default} = $response;
+		$plugin->{defaultreason} = $reason;
 
-		# Do we have a yes?
-		if ($plugin->{'defaultreason'} =~ /yes/) {
-			$plugin->{'default'} = "yes"
-		} else {
-			$plugin->{'default'} = "no"
-		}
 	}
 	close ($PLUGIN_OUTPUT);
 
@@ -845,7 +828,7 @@ sub fetch_plugin_suggestions
 			if $config->{DEBUG};
 	}
 
-	$info->{suggest} = \@sugg;
+	$info->{suggestions} = \@sugg;
 
 	print "# Suggested: ", join (', ', @sugg), "\n"
 		if $config->{DEBUG};
