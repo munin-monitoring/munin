@@ -1,6 +1,7 @@
 use warnings;
 use strict;
 
+# If you change the class path take a look in get_defaults too, please!
 package Munin::Common::Defaults;
 
 use English qw(-no_match_vars);
@@ -47,7 +48,7 @@ sub get_defaults {
 
     no strict 'refs';
     my $defaults = {};
-    for my $g (keys %{Munin::Defaults::}) {
+    for my $g (keys %{"Munin::Common::Defaults::"}) {
         next unless $g =~ /MUNIN_/;
         $defaults->{$g} = ${*$g{'SCALAR'}};
     }
