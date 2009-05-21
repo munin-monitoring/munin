@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# Munin test plugin: 
+#
+# Doesn't provide any suggestions
+#
+# #%# family=test
+# #%# capabilities=autoconf suggest
+
+. t/plugins/default_funcs.sh
+
+do_suggest ()
+{
+	echo one
+	echo two
+	echo three >&2
+	exit 0
+}
+
+
+do_$1
+

@@ -1,7 +1,8 @@
 use warnings;
 use strict;
 
-use Test::More tests => 14;
+use Test::More tests => 20;
+use Data::Dumper;
 
 require_ok('sbin/munin-node-configure');
 
@@ -71,7 +72,6 @@ $config->reinitialize({
 }
 
 
-
 ### fetch_plugin_autoconf
 {
 	my @tests = (
@@ -127,6 +127,66 @@ $config->reinitialize({
 		# we know the name is right, and this saves having to mess with 
 		# $expected
 		delete $plugin->{name};
+
+		is_deeply($plugin, $expected, $msg);
+	}
+}
+
+### fetch_plugin_suggest
+{
+	my @tests = (
+		[
+			'good',
+			{ suggestions => [ qw/one two three/ ], default => 'yes' },
+			"Plugin provided a list of valid suggestions",
+		],
+		[
+			'good-no-autoconf',
+			{ default => 'no' },
+			"Plugin didn't pass autoconf",
+		],
+		[
+			'bad-empty',
+			{ suggestions => [], default => 'yes' },
+			"Plugin provided no suggestions",
+		],
+		[
+			'bad-illegal-chars',
+			{ suggestions => [ qw/one two/ ], default => 'yes' },
+			"Plugin produced a suggestion containing illegal characters",
+		],
+		[
+			'bad-junk-stderr',
+			{ suggestions => [], default => 'yes' },
+			"Plugin wrote junk to stderr -- all suggestions voided",
+		],
+		[
+			'bad-exit1',
+			{ suggestions => [], default => 'yes' },
+			"Plugin returned non-zero -- all suggestions voided",
+		],
+
+#		[
+#			'',
+#			{ suggestions => [], default => 'yes' },
+#			"",
+#		],
+	);
+
+	while (my $test = shift @tests) {
+		my ($name, $expected, $msg) = @$test;
+
+		my $plugin = { name => "suggest-${name}_" };
+
+		fetch_plugin_autoconf($plugin);
+		fetch_plugin_suggestions($plugin);
+
+		# we know the name is right, and this saves having to mess with 
+		# $expected
+		delete $plugin->{name};
+
+		# don't care about this
+		delete $plugin->{defaultreason};
 
 		is_deeply($plugin, $expected, $msg);
 	}
