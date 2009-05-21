@@ -694,8 +694,7 @@ sub fetch_plugin_autoconf
 	);
 	push @cmd, ('--debug') if $config->{DEBUG};
 
-	print "\n# Running: ", join(' ', @cmd), "\n"
-		if $config->{DEBUG};
+	print "\n# Running: ", join(' ', @cmd), "\n" if $config->{DEBUG};
 
 	my $fork = open (my $PLUGIN_OUTPUT, "-|");
 
@@ -725,15 +724,13 @@ sub fetch_plugin_autoconf
 
 		while (my $line = <$PLUGIN_OUTPUT>) {
 			if ($line =~ /^(yes)$/
-			 or $line =~ /^(no)(?:\s+\((.*)\))?$/)
+			 or $line =~ /^(no)(?:\s+\((.*)\))?\s*$/)
 			{
 				# Some recognized response
 				print "# Got yes/no: $line"
 					if $config->{DEBUG};
 
-				$response = $1;
-				$reason = $2 || '';
-
+				($response, $reason) = ($1, $2);
 				last;
 			}
 			elsif ($line =~ /^#/) {
@@ -744,15 +741,13 @@ sub fetch_plugin_autoconf
 			else {
 				# Something else
 				push @errors, ("Got from $plugin->{name}: $line");
-				print "# Got junk: $line"
-					if $config->{DEBUG};
+				print "# Got junk: $line" if $config->{DEBUG};
 				$gotjunk = 1;
 			}
 		}
 
 		$plugin->{default} = $response;
 		$plugin->{defaultreason} = $reason;
-
 	}
 	close ($PLUGIN_OUTPUT);
 
@@ -768,10 +763,8 @@ sub fetch_plugin_autoconf
 	}
 
 	if ($plugin_status or $gotjunk) {
-	    $plugin->{'default'} = "no";
+	    $plugin->{default} = 'no';
 	}
-
-	print "# ",$plugin->{'default'} if $config->{DEBUG};
 
 	return;
 }

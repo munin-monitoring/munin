@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Munin test plugin: autoconf prints an unrecognised response
+#
+# #%# family=
+# #%# capabilities=autoconf
+
+do_autoconf()
+{
+	echo oui
+	exit 0
+}
+
+
+do_$1 
+

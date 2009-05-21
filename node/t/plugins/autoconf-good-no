@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Munin test plugin: autoconf says no
+#
+# #%# family=
+# #%# capabilities=autoconf
+
+do_autoconf()
+{
+	echo no
+	exit 0
+}
+
+
+do_$1 
+
