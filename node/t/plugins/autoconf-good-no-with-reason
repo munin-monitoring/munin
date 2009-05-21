@@ -2,7 +2,7 @@
 
 # Munin test plugin: autoconf says no, and gives a reason
 #
-# #%# family=
+# #%# family=test
 # #%# capabilities=autoconf
 
 do_autoconf()
