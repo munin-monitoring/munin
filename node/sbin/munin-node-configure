@@ -813,10 +813,11 @@ sub fetch_plugin_suggestions
 				print "# Got junk: $line"
 					if $config->{DEBUG};
 			}
-			elsif ($line =~ /^[\w\.+]$/) { # FIXME: too restrictive?
+			elsif ($line =~ /^[\w\.]+$/) { # FIXME: too restrictive?
 				# This ought to be a suggestion.
 				print "# Got suggestion: $line"
 					if $config->{DEBUG};
+				chomp $line;
 				push @sugg, ($line);
 			}
 			else {
