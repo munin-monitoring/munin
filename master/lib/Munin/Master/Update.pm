@@ -171,7 +171,7 @@ sub _read_old_service_configs {
     close $dump
         or croak "Fatal error: Could not close '$self->{config_dump_file}': $!";
 
-    use Data::Dumper; warn Dumper(\%service_configs);
+    #use Data::Dumper; warn Dumper(\%service_configs);
 
     return \%service_configs;
     
