@@ -248,7 +248,7 @@ sub get_peer_nodes {
     my $me        = munin_get_node_name ($hash);
     my $pchildren = munin_get_children ($parent);
 
-    foreach my $peer (sort {munin_get_node_name($a) <=> munin_get_node_name($b)} @$pchildren) {
+    foreach my $peer (sort {munin_get_node_name($a) cmp munin_get_node_name($b)} @$pchildren) {
 	next unless defined $peer and ref ($peer) eq "HASH";
 	next if defined $category and lc (munin_get ($peer, "graph_category", "other")) ne $category;
 	next if (!defined $peer->{'graph_title'} and (!defined $peer->{'#%#visible'} or !$peer->{'#%#visible'}));
