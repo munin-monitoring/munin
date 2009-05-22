@@ -21,6 +21,7 @@
 # $Id$
 #
 
+use warnings;
 use strict;
 
 $|=1;
@@ -42,7 +43,6 @@ my $conffile = "@@CONFDIR@@/munin.conf";
 my $do_usage = 0;
 my $do_version = 0;
 my $stdout = 0;
-my $log = new IO::Handle;
 
 # Get options
 $do_usage=1  unless
@@ -618,10 +618,10 @@ sub generate_service_templates {
 	my $path = $1;
 	next if (!defined $service->{$f});
 	my $fieldobj = $service->{$f};
-	next if (ref ($fieldobj) != "HASH" or !defined $fieldobj->{'label'});
+	next if (ref ($fieldobj) ne "HASH" or !defined $fieldobj->{'label'});
 	next if (!munin_draw_field ($fieldobj));
 
-	DEBUG "DEBUG: single_value: Checking field \"$f\" ($path).";
+	#DEBUG "DEBUG: single_value: Checking field \"$f\" ($path).";
 
 	if (defined $path) {
 	    # This call is to make sure field settings are copied
@@ -696,7 +696,6 @@ sub get_path_nodes {
 $update_time = sprintf("%.2f",(Time::HiRes::time - $update_time));
 
 logger("munin-html finished ($update_time sec)");
-close $log;
 
 =head1 NAME
 
