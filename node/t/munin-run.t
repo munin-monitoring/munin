@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 require_ok('sbin/munin-run');
 
@@ -44,8 +44,11 @@ my $config = Munin::Node::Config->instance();
 	is($plugin, 'plugin', 'Plugin name is read from @ARGV');
 	is($argument, 'config', 'Argument is read from @ARGV');
 
+	@ARGV = qw(plugin);
+	($plugin, $argument) = parse_args();
+	is($argument, undef, 'No argument was given');
+	
 	@ARGV = qw(plugin bad_argument);
-
 	($plugin, $argument) = parse_args();
 	is($argument, undef, 'Invalid argument is ignored');
 }
