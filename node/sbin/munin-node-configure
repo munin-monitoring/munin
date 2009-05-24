@@ -203,21 +203,6 @@ with this software or refer to
 }
 
 
-sub print_header
-{
-	if ($config->{suggest}) {
-		normal("Plugin", "Used", "Suggestions");
-		normal("------", "----", "-----------");
-	}
-	else {
-		normal("Plugin", "Used", "Extra information");
-		normal("------", "----", "-----------------");
-	}
-
-	return;
-}
-
-
 # reports which wildcard plugin identities should be added, removed,
 # or left as they are.  in (sort of) mathematical terms:
 # 	(remove) = (installed) \ (suggested)
@@ -257,8 +242,6 @@ sub main
 	my $plugins = load_available_plugins();
 	load_installed_plugins($plugins);
 
-	print_header() unless $config->{shell};
-
 	if ($config->{suggest}) {
 		show_suggestions($plugins);
 	}
@@ -287,6 +270,11 @@ sub main
 sub show_suggestions
 {
 	my ($plugins) = @_;
+
+	unless ($config->{shell}) {
+		normal("Plugin", "Used", "Suggestions");
+		normal("------", "----", "-----------");
+	}
 
 	foreach my $plugin (keys %$plugins) {
 		my $plug_info = $plugins->{$plugin};
@@ -376,6 +364,9 @@ sub configure_snmp
 sub print_status_list
 {
 	my ($plugins) = @_;
+
+	normal("Plugin", "Used", "Extra information");
+	normal("------", "----", "-----------------");
 
 	foreach my $plug (sort keys %$plugins) {
 		my $plugin = $plugins->{$plug};
