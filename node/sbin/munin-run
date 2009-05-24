@@ -45,7 +45,7 @@ my $defgroup   = getgrnam($Munin::Common::Defaults::MUNIN_GROUP);
 
 my $paranoia   = 0;
 
-my $config = Munin::Node::Config->instance();    
+my $config = Munin::Node::Config->instance();
 
 sub main
 {
@@ -92,14 +92,19 @@ sub main
     $ENV{MUNIN_DEBUG} = $config->{PIDEBUG};
     $ENV{FQDN} = $config->{fqdn};
 
-    load_service_configs();
-    
-    get_service_list();
+    unless (Munin::Node::Service->is_a_runnable_service($plugin)) {
+        print STDERR "# Unknown service '$plugin'\n";
+        exit 1;
+    }
 
-    print "file: '$plugin'\n" if $config->{DEBUG};
-    run_service($plugin, $arg);
+    load_service_configs();
+
+    # no need for a timeout -- the user can kill this process any
+    # time they want.
+    Munin::Node::Service->exec_service($plugin, $arg || '');
 
     # Never reached, but just in case...
+    print STDERR "# FATAL: Failed to exec.";
     exit 42;
 }
 
@@ -133,36 +138,6 @@ sub load_service_configs
     }
 
     $config->apply_wildcards();
-}
-
-
-# returns a hash of plugin-like items in the plugin directory
-sub get_service_list
-{
-    opendir my $DIR, $config->{servicedir}
-        or die "Cannot open plugin directory '$config->{servicedir}': $!";
-
-    foreach my $file (readdir($DIR)) {
-        $services{$file} = Munin::Node::Service->is_a_runnable_service($file);
-    }
-
-    close($DIR);
-}
-
-
-sub run_service {
-    my ($service, $command) = @_;
-    
-    $command ||= '';
-
-    if ($services{$service}) {
-        # no need for a timeout -- the user can kill this process any 
-        # time they want.
-        Munin::Node::Service->exec_service($service,$command);
-    }
-    else {
-        print STDERR "# Unknown service\n";
-    }
 }
 
 
@@ -214,7 +189,7 @@ sub parse_args
     # Update the config
     $config->reinitialize({
         %$config,
-        
+
         servicedir => $servicedir,
         sconfdir   => $sconfdir,
         conffile   => $conffile,
@@ -323,7 +298,7 @@ use munin-run and still have --debug on).  Only errors go to STDERR.
 
 =item B<--pidebug >
 
-Plugin debug.  Sets the environment variable MUNIN_DEBUG to 1 so 
+Plugin debug.  Sets the environment variable MUNIN_DEBUG to 1 so
 that plugins may enable debugging.  [disabled]
 
 =item B<--version >
@@ -338,8 +313,8 @@ Munin-node is a daemon that Munin connects to fetch data.  This data
 is stored in RRD files on the central server, and later graphed and
 htmlified.
 
-munin-run is a Perl script to run Munin plugins from the command-line.  
-It's useful when debugging plugins, as they are run the same way with 
+munin-run is a Perl script to run Munin plugins from the command-line.
+It's useful when debugging plugins, as they are run the same way with
 the same user and same environment settings as within the munin-node.
 
 For more information, see the documentation section at

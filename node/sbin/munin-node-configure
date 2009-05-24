@@ -82,7 +82,7 @@ sub parse_args
 	$config->parse_config_from_file($conffile);
 
 	# Sanity-check arguments
-	if ($newer and not $newer =~ /^\d+\.\d+\.\d+/) {
+	if ($newer and $newer !~ /^\d+\.\d+\.\d+/) {
 		# FIXME: not a very good warning....
 		warn "# ERROR: $newer is not a valid argument to --newer.  Ignoring.\n";
 		undef $newer;
