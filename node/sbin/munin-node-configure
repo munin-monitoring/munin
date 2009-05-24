@@ -583,7 +583,7 @@ sub load_plugin_history
 # Extracts any magic-markers from $file and notes them.
 sub read_magic_markers
 {
-	my ($info, $file) = @_;
+	my ($info) = @_;
 	my $PLUGIN;
 
 	$info->{family} = 'contrib';
@@ -591,8 +591,8 @@ sub read_magic_markers
 
 	print "#\tReading magic markers.\n" if $config->{DEBUG};
 
-	unless (open ($PLUGIN, '<', $file)) {
-		warn "WARNING: Could not open plugin '$file' for reading $!.".
+	unless (open ($PLUGIN, '<', $info->{path})) {
+		warn "WARNING: Could not open plugin '$info->{path}' for reading $!.".
 			"Skipping.\n";
 		return;
 	}
@@ -655,7 +655,7 @@ sub load_available_plugins
 		$plugin{name} = $plug;  # the name of the plugin file
 		$plugin{path} = $path;  # the absolute path to the script
 
-		read_magic_markers(\%plugin, $path);
+		read_magic_markers(\%plugin);
 
 		unless (grep (/^$plugin{family}$/, @{ $config->{families} })) {
 			print "#\tFamily '$plugin{family}' is currently ignored.  Skipping.\n"

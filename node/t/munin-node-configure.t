@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 20;
+use Test::More tests => 25;
 use Data::Dumper;
 
 require_ok('sbin/munin-node-configure');
@@ -69,6 +69,42 @@ $config->reinitialize({
 		);
 	}
 
+}
+
+
+### read_magic_markers
+{
+	my $plugin = {
+		path => "$config->{libdir}/magicmarkers",
+	};
+	read_magic_markers($plugin);
+
+	is($plugin->{family}, 'magic', '"family" magic marker is read');
+
+	is_deeply($plugin->{capabilities},
+	          { suggest => 1, autoconf => 1, other => 1 },
+		  '"capabilities" magic marker is read');
+
+
+	$plugin->{path} = "$config->{libdir}/magicmarkers-nofamily";
+	read_magic_markers($plugin);
+	
+	is($plugin->{family}, 'contrib', 'Plugin family defaults to "contrib"');
+
+}
+
+
+### load_available_plugins
+{
+	my $plugins = load_available_plugins();
+	is_deeply($plugins, {}, 'Plugins in ignored families are not registered');
+
+	$config->{families} = [ qw/test/ ];
+	$plugins = load_available_plugins();
+
+	is($plugins->{'default_funcs.sh'}, undef, "Non-executable file is ignored");
+	is($plugins->{'.'}, undef, "'.' link is ignored");
+	is($plugins->{'..'}, undef, "'..' link is ignored");
 }
 
 
