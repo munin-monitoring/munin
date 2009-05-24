@@ -1,9 +1,7 @@
 use warnings;
 use strict;
 
-package Munin::Test;
-
-use Test::More tests => 4;
+use Test::More tests => 7;
 
 require_ok('sbin/munin-run');
 
@@ -24,10 +22,10 @@ my $config = Munin::Node::Config->instance();
 		--paranoia
 		--debug
 		--pidebug
-		plugin
+		plugin config
 	);
 
-	parse_args();
+	my ($plugin, $argument) = parse_args();
 
 	is_deeply(
 		$config,
@@ -43,6 +41,13 @@ my $config = Munin::Node::Config->instance();
 		'Command-line arguments set the correct configuration items'
 	);
 
+	is($plugin, 'plugin', 'Plugin name is read from @ARGV');
+	is($argument, 'config', 'Argument is read from @ARGV');
+
+	@ARGV = qw(plugin bad_argument);
+
+	($plugin, $argument) = parse_args();
+	is($argument, undef, 'Invalid argument is ignored');
 }
 
 

@@ -46,7 +46,6 @@ my $defgroup   = getgrnam($Munin::Common::Defaults::MUNIN_GROUP);
 my $paranoia   = 0;
 
 my $config = Munin::Node::Config->instance();    
-my ($plugin, $arg);
 
 sub main
 {
@@ -64,7 +63,7 @@ sub main
     # Make build time configuration settings available at runtime.
     Munin::Common::Defaults->export_to_environment();
 
-    parse_args();
+    my ($plugin, $arg) = parse_args();
 
     merge_node_config();
 
@@ -173,10 +172,10 @@ sub parse_args
     my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
     my $sconfdir   = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
     my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
-    my $sconffile  = undef;
+    my $sconffile;
 
-    my $DEBUG      = 0;
-    my $PIDEBUG    = 0;
+    my ($DEBUG, $PIDEBUG);
+    my ($plugin, $arg);
 
     print_usage_and_exit() unless GetOptions (
             "config=s"     => \$conffile,
@@ -225,7 +224,7 @@ sub parse_args
         paranoia   => $paranoia,
     });
 
-    return;
+    return ($plugin, $arg);
 }
 
 
