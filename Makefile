@@ -43,7 +43,7 @@ unconfig:
 install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-man
 
 install-pre: Makefile Makefile.config
-	$(CHECKUSER)
+	@$(CHECKUSER)
 	mkdir -p $(LOGDIR)
 	mkdir -p $(STATEDIR)
 	mkdir -p $(CONFDIR)
@@ -87,7 +87,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 
 # Some HP-UX plugins needs *.adv support files in LIBDIR
 install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
-	$(CHECKGROUP)
+	@$(CHECKGROUP)
 
 	mkdir -p $(CONFDIR)/plugins
 	mkdir -p $(CONFDIR)/plugin-conf.d
