@@ -5,7 +5,10 @@ use strict;
 
 use Carp;
 use English qw(-no_match_vars);
+
 use Munin::Node::Config;
+use Munin::Common::Timeout;
+
 use POSIX;
 
 sub get_uid {
@@ -79,6 +82,67 @@ sub check_perms {
     }
 
     return 1;
+}
+
+
+# NOTE:
+#
+# Since each pipe is only read from once, the child will block 
+# (and eventually time out) if it tries to print more data to 
+# either filehandle than the corresponding pipe's capacity.
+#
+# POSIX requires PIPE_BUF to be >=512 bytes, which should be
+# sufficient for even the most verbose plugins.  In any case,
+# most recent Unices seem to provide at least a whole page
+# (usually 4kB).
+sub run_as_child
+{
+    my ($self, $timeout, $code, @args) = @_;
+
+    pipe my ($out_read, $out_write)
+        or carp "Error creating out pipe: $!";
+    pipe my ($err_read, $err_write)
+        or carp "Error creating err pipe: $!";
+
+    if (my $pid = fork) {
+        # In parent
+        close $out_write; close $err_write;
+
+        # Give the child till the timeout to finish up
+        my $reaper = sub { waitpid($pid, 0); };
+        my $timed_out = !do_with_timeout($timeout, $reaper);
+
+        Munin::Node::OS->reap_child_group($pid)
+		if $timed_out;
+
+        chomp(my @out = <$out_read>);
+        chomp(my @err = <$err_read>);
+
+        close $out_read; close $err_read;
+
+        return {
+            stdout => \@out,
+            stderr => \@err,
+            retval => $?,
+            timed_out => $timed_out,
+        };
+    }
+    elsif (defined $pid) {
+        # In child
+        close $out_read; close $err_read;
+
+        POSIX::setsid();
+
+        # use the pipes to replace STD{OUT,ERR}
+        open(STDOUT, '>&=', fileno($out_write));
+        open(STDERR, '>&=', fileno($err_write));
+
+        exit $code->(@args);
+    }
+    else {
+        # oops.
+        carp "Unable to fork: $!";
+    }
 }
 
 
@@ -185,6 +249,31 @@ Returns the fully qualified host name of the machine.
  $bool = $class->check_perms($target);
 
 FIX
+
+=item B<run_as_child>
+
+  $result = run_as_child($timeout, $coderef, @arguments);
+
+Creates a child process to run $code and waits for up to 
+$timeout seconds for it to complete.  Returns a hashref
+containg the following keys:
+
+=over
+
+=item C<stdout>, C<stderr>
+
+Array references containing the output of these filehandles;
+
+=item C<retval>
+
+The result of wait();
+
+=item C<timed_out>
+
+True if the child had to be interrupted.
+
+=back
+
 
 =item B<reap_child_group>
 
