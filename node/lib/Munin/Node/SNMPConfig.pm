@@ -149,7 +149,7 @@ sub snmp_autoconf_plugin
 			if (!defined $snmp_val or $snmp_val !~ /$req->[1]/)
 			{
 				print "# Nope. Duh.\n" if $config->{DEBUG};
-				return undef;
+				return;
 			}
 		}
 	}
@@ -160,7 +160,7 @@ sub snmp_autoconf_plugin
 	if (defined $plugconf->{$plugname}->{num})
 	{
 		$num = snmp_get_single ($session, $plugconf->{$plugname}->{num});
-		return undef if !defined $num;
+		return if !defined $num;
 	}
 	print "# Number of items to autoconf is $num...\n" if $config->{DEBUG};
 
@@ -169,7 +169,7 @@ sub snmp_autoconf_plugin
 	if (defined $plugconf->{$plugname}->{ind})
 	{
 		$indexes = snmp_get_index ($plugconf->{$plugname}->{ind}, $num);
-		return undef if !defined $indexes;
+		return if !defined $indexes;
 	}
 	else
 	{
@@ -177,7 +177,7 @@ sub snmp_autoconf_plugin
 	}
 	print "# Got indexes: ", join (',', keys (%{$indexes})), "\n" if $config->{DEBUG};
 
-	return undef unless scalar keys %{$indexes};
+	return unless scalar keys %{$indexes};
 
     # Second round of requirements (now that we have the indexes)
 	if (defined $plugconf->{$plugname}->{req})
@@ -215,7 +215,7 @@ sub snmp_get_single
 	if ((!defined ($response = $session->get_request($oid))) or
 			$session->error_status)
 	{
-		return undef;
+		return;
 	}
 	print "# Fetched value \"$response->{$oid}\"\n" if $config->{DEBUG}; 
 	return $response->{$oid};
@@ -244,7 +244,7 @@ sub snmp_get_index
 		}
 		if (!$response or $session->error_status)
 		{
-			return undef;
+			return;
 		}
 		my @keys = keys %$response;
 		$ret = $keys[0];
