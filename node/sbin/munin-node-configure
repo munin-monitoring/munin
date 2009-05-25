@@ -212,6 +212,9 @@ sub diff_suggestions
 {
 	my ($installed, $suggested) = @_;
 
+	$installed ||= [];
+	$suggested ||= [];
+
 	my (%remove, %add, %same);
 
 	@remove{ @$installed } = ();
@@ -313,14 +316,16 @@ sub show_suggestions
 # prints out the tabular representation of the suggestion
 sub print_suggestion_row
 {
-	my ($plug_info, $inst_info) = @_;
+	my ($plug_info) = @_;
 
 	my $msg = '';  # either [reason], or +/-suggestions
-	my $now = keys %$inst_info ? 'yes' : 'no';
+	my $now = $plug_info->{installed} ? 'yes' : 'no';
 
 	if ($plug_info->{wildcard}) {
-		my ($same, $add, $remove) = diff_suggestions($plug_info->{suggestions},
-		                                             $plug_info->{installed});
+		my ($same, $add, $remove)
+			= diff_suggestions($plug_info->{installed},
+		                           $plug_info->{suggestions});
+
 		my @suggestions = @$same;
 		push @suggestions, map { '+' . $_ } @$add;
 		push @suggestions, map { '-' . $_ } @$remove;
@@ -394,8 +399,10 @@ sub manage_symlinks
 	my ($plugin) = @_;
 
 	if ($plugin->{wildcard}) {
-		my ($same, $add, $remove) = diff_suggestions($plugin->{suggestions},
-		                                             $plugin->{installed});
+		my ($same, $add, $remove)
+			= diff_suggestions($plugin->{suggestions},
+		                           $plugin->{installed});
+		
 		foreach my $to_add (@$add) {
 			link_add($plugin->{name}, $to_add);
 		}
@@ -409,6 +416,7 @@ sub manage_symlinks
 
 	return;
 }
+
 
 # prints shell-commands to remove all the links for the plugin
 sub remove_all_links
@@ -571,7 +579,7 @@ sub load_plugin_history
 }
 
 
-# Extracts any magic-markers from $file and notes them.
+# Extracts any magic-markers from the plugin
 sub read_magic_markers
 {
 	my ($info) = @_;
@@ -697,7 +705,7 @@ sub fetch_plugin_autoconf
 		close (STDERR);
 		open (STDERR, ">&STDOUT");
 
-		exec (@cmd);
+		exec (@cmd) or print "failed to exec: $!\n" and exit 42;
 	}
 	else {
 		# In parent
@@ -794,7 +802,7 @@ sub fetch_plugin_suggestions
 		# it's hard to sort errors from the suggestions
 		# as we have no idea what the suggestions might
 		# be.
-		exec (@cmd);
+		exec (@cmd) or print "failed to exec: $!\n" and exit 42;
 	}
 	else {
 		# In parent
@@ -866,7 +874,7 @@ sub fetch_plugin_snmpconf
 	{
 		close (STDERR);
 		open (STDERR, ">&STDOUT");
-		exec (@cmd);
+		exec (@cmd) or print "failed to exec: $!\n" and exit 42;
 	}
 	else
 	{

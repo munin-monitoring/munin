@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 25;
+use Test::More tests => 28;
 use Data::Dumper;
 
 require_ok('sbin/munin-node-configure');
@@ -51,6 +51,11 @@ $config->reinitialize({
 			[qw/a b c d e/], [qw/c d e f g/],
 			[ [qw/c d e/], [qw/f g/], [qw/a b/] ],
 			'Some plugin identities to be added, some removed, some common.',
+		],
+		[
+			undef, undef,
+			[ [qw//], [qw//], [qw//] ],
+			'Arguments are undefined',
 		],
 
 #		[
@@ -158,6 +163,7 @@ $config->reinitialize({
 		my ($name, $expected, $msg) = @$test;
 
 		my $plugin = { name => "autoconf-$name" };
+
 		fetch_plugin_autoconf($plugin);
 
 		# we know the name is right, and this saves having to mess with 
