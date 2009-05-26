@@ -26,7 +26,7 @@ sub _initialize {
     #use Data::Dumper; warn Dumper($groups_and_hosts);
 
     for my $gah (keys %$groups_and_hosts) {
-        croak "Invalid section name" unless $gah =~ /^[\w;.]+$/;
+        croak "Invalid section name [" . $gah . "], check munin configuration file, failed" unless $gah =~ /^[\w;.]+$/;
 
         my $process = $self->_final_char_is(';', $gah)
             ? \&_process_group_section
