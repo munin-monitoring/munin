@@ -113,7 +113,6 @@ __END__
 
 munin-update - A program to gather data from machines running munin-node
 
-
 =head1 SYNOPSIS
 
 munin-update [options]
