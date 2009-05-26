@@ -9,7 +9,7 @@ use English qw(-no_match_vars);
 use Munin::Node::Config;
 use Munin::Common::Timeout;
 
-use POSIX;
+use POSIX ();
 
 sub get_uid {
     my ($class, $user) = @_;

@@ -23,7 +23,7 @@ use strict;
 use warnings;
 
 use Getopt::Long;
-use POSIX;
+use POSIX ();
 use File::Basename;
 
 use Data::Dumper;
