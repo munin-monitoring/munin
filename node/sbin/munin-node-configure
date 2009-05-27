@@ -216,7 +216,6 @@ sub diff_suggestions
 	$suggested ||= [];
 
 	my (%remove, %add, %same);
-
 	@remove{ @$installed } = ();
 	@add{ @$suggested }    = ();
 	@same{ @$installed }   = (1) x scalar @$installed;
