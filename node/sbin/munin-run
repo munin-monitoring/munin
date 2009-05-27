@@ -33,7 +33,6 @@ use Munin::Common::Defaults;
 use Munin::Node::Config;
 use Munin::Node::OS;
 use Munin::Node::Service;
-use Munin::Node::Server;
 
 my %services;
 my %nodes;
