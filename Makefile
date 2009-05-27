@@ -85,6 +85,8 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 # ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE
 # GENERIC ONES
 
+install-node-plugins: install-plugins-prime
+
 # Some HP-UX plugins needs *.adv support files in LIBDIR
 install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	@$(CHECKGROUP)
