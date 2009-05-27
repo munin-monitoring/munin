@@ -370,7 +370,7 @@ sub get_group_tree {
 	"hashnode"           => $hash,
 	"url"                => $base . "index.html", 
 	"path"               => $path,
-	"depth"              => scalar(split("/",$base."index.html"))-1,
+	"depth"              => scalar(my @splitted_base = split("/",$base."index.html"))-1,
 	"filename"           => munin_get_html_filename ($hash),
 	"csspath"            => $csspath,
 	"groups"             => $groups, 
