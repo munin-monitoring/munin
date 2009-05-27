@@ -40,8 +40,6 @@ my $bindir = $Munin::Common::Defaults::MUNIN_SBINDIR;
 my @all_families     = ("auto", "manual", "contrib");
 my @default_families = ("auto");
 
-my @errors     = ();
-
 
 sub parse_args
 {
@@ -255,11 +253,11 @@ sub main
 		print_status_list($plugins);
 	}
 
-	exit 0 unless scalar @errors;
+	exit 0 unless list_errors();
 
 	print STDERR "# There were some errors:\n";
-	foreach my $err (@errors) {
-		print STDERR "#\t$err\n";
+	foreach my $err (list_errors()) {
+		print STDERR "# $err\n";
 	}
 
 	exit 1;
@@ -738,8 +736,8 @@ sub fetch_plugin_autoconf
 			}
 			else {
 				# Something else
-				push @errors, ("Got from $plugin->{name}: $line");
-				print "# Got junk: $line" if $config->{DEBUG};
+				log_error($plugin->{name},
+				          "Got junk from $plugin->{name}: $line");
 				$gotjunk = 1;
 			}
 		}
@@ -755,9 +753,7 @@ sub fetch_plugin_autoconf
 
 	# Override to no if there were errors.
 	if ($plugin_status and !$config->{exit_not_error}) {
-	    push @errors, ("Non-zero exit value from $plugin->{name}: $plugin_exit/$plugin_signal");
-	    print "#\tNon-zero exit value: $plugin_exit/$plugin_signal\n"
-	      if $config->{DEBUG};
+	    log_error($plugin->{name}, "Non-zero exit value: $plugin_exit/$plugin_signal");
 	}
 
 	if ($plugin_status or $gotjunk) {
@@ -819,8 +815,8 @@ sub fetch_plugin_suggestions
 				push @sugg, ($line);
 			}
 			else {
-				print "# Got bad suggestion: $line"
-					if $config->{DEBUG};
+				log_error($info->{name},
+				          "Got bad suggestion from : $line");
 			}
 		}
 	}
@@ -828,19 +824,15 @@ sub fetch_plugin_suggestions
 
 	if ($?) {
 		@sugg = ();
-		print "# Plugin exit code: $? - voiding suggestions\n"
-			if $config->{DEBUG};
+		log_error($info->{name}, "Plugin exit code: $? - voiding suggestions");
 	}
 
 	$info->{suggestions} = \@sugg;
 
-	print "# Suggested: ", join (', ', @sugg), "\n"
-		if $config->{DEBUG};
+	print "# Suggested: ", join (', ', @sugg), "\n" if $config->{DEBUG};
 
 	unless (@sugg) {
-		print "ERROR: empty suggest from $info->{name}\n"
-			if $config->{DEBUG};
-		push @errors, ("ERROR: empty suggest from $info->{name}");
+		log_error($info->{name}, "No suggestions");
 	}
 
 	return;
@@ -912,11 +904,52 @@ sub fetch_plugin_snmpconf
 			}
 			else
 			{
-				print "# Couldn't parse line $_\n";
+				#log_error($info->{name}, "Couldn't parse line $_");
 			}
 		}
 	}
 	return 0;
+}
+
+
+# Subs for logging errors from plugins
+{
+my %errors;
+
+# Logs an error, and prints it out if debugging is on
+sub log_error
+{
+	my ($plugin, $msg) = @_;
+
+	chomp $msg;
+
+	$errors{$plugin} ||= [];
+	push @{ $errors{$plugin} }, $msg;
+
+	print STDERR $msg, "\n" if $config->{DEBUG};
+
+	return;
+}
+
+
+sub clear_errors
+{
+	%errors = ();
+	return;
+}
+
+
+sub list_errors
+{
+	my @error_list;
+	while (my ($plugin, $errors) = each %errors) {
+		push @error_list, "Errors from $plugin:";
+		push @error_list, map { "\t$_" } @$errors;
+	}
+	return @error_list;
+}
+
+
 }
 
 
