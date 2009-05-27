@@ -61,5 +61,9 @@ Note that a host and a node is not the same thing. FIX elaborate
 
 FIX
 
+=item B<add_attributes_if_not_exists>
+
+FIX
+
 =back
 

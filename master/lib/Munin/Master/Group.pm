@@ -85,6 +85,10 @@ FIX
 
 FIX
 
+=item B<give_attributes_to_hosts>
+
+FIX
+
 =item B<get_all_hosts>
 
 FIX
