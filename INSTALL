@@ -48,10 +48,14 @@ node on ... the nodes.
 
 To install both master and node:
 
-	- Review/edit Makefile.config
-	- Create the user "munin"
+	- Review/edit Makefile.config to suite your needs.
+
+	- Create the user "munin".
+
 	- make
+
 	- make install
+
         - In your HTMLDIR you will now find a .htaccess file with two
           main features:
 
@@ -62,10 +66,8 @@ To install both master and node:
 	  * Munin page expiery to refresh contents. This requires mod_expiery
 	    to be enabled.
 
-	  NOTE:
-	  
-	  Both these features require the relevant AllowOverride statement in
-	  Apache. AuthConfig and Indexes, respectively. 
+	  NOTE: Both these features require the relevant AllowOverride
+	  statement in Apache. AuthConfig and Indexes, respectively.
 
           If you already have a .htaccess file in HTMLDIR it will not
           be overwritten.
@@ -82,27 +84,39 @@ To install both master and node:
 
 	- If you want to use the dynamic graphs: Configure the CGI
 	  directory, you will find a Apache config example in
-	  build/resources.  NOTE: Dynamic graphs are not exactly
-          perfect. Se also http://munin.projects.linpro.no/wiki/CgiHowto
+	  build/resources.  
+	  
+	  NOTE: Dynamic graphs are not exactly perfect. Se also
+          http://munin.projects.linpro.no/wiki/CgiHowto
 
 To install a node:
 
-	- Edit Makefile.config
-	- Create the group "munin"
+	- Edit Makefile.config to suite your needs.
+
+	- Create the group "munin".
+
 	- make
-	- make install-common-prime install-node-prime
-	  install-plugins-prime (NOTE: This overwrites any existing
-	  plugins.)
+
+	- make install-common-prime install-node-prime install-plugins-prime
+
+	  NOTE: This overwrites any existing plugins.
+
 	- Decide which plugins to use.  The quick auto-plug-and-play
           solution: 
           munin-node-configure --shell --families=contrib,auto | sh -x
+
 	- Review CONFDIR/munin-node.conf. Ensure that your munin-master can
 	  access it.
-	- Start the node agent. You probably want an init-script for
-          this and you might find a good one under build/dists or
-	  in the resources/ directory.
+
+	- Start the node agent (as root) SBINDIR/munin-node.
+
+	  You probably want to use an init-script instead and you
+          might find a good one under dists/ or in the resources/
+          directory (maybe you need to edit the init script, check the
+          given paths in the script you might use).
 
 For further build alternatives, see Makefile.
+
 
 Munin-gather
 ============
