@@ -6,7 +6,6 @@
 
 HACKING.pod - contributing to Munin
 
-
 =head1 SYNOPSIS
 
 This is the guide for Munin internals contributors (developers,

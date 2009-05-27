@@ -1,55 +1,59 @@
-Requirements
-============
+Munin installation requirements
+===============================
 
 On all hosts:
+
 - A reasonable Perl5
+
 - The perl module Time::HiRes
+
 - For TLS to work you'll need Net::SSLeay everywhere
+
 - GNU Make - do not atempt to use any other make.
 
 Server:
+
 - A web server.  Apache HTTPD should be suitable.
+
 - RRD with Perl support
-- Perl modules for server:  Time::HiRes, Storable, Digest::MD5,
-     HTML::Template, Text::Balanced, Log::Log4perl (which depends on
-     IPC::Shareable, Log::Dispatch, Log::Dispatch::FileRotate,
-     MIME::Lite, Mail::Sender, Mail::Sendmail, MailTools,
-     Params::Validate and TimeDate)
+
+- Perl modules for server: Time::HiRes, Storable, Digest::MD5,
+  HTML::Template, Text::Balanced, Log::Log4perl (which depends on
+  IPC::Shareable, Log::Dispatch, Log::Dispatch::FileRotate,
+  MIME::Lite, Mail::Sender, Mail::Sendmail, MailTools,
+  Params::Validate and TimeDate)
 
 Node:
+
 - Perl modules: Net::Server, Time::HiRes
+
 - All SNMP pugins use Net::SNMP
+
 - Perl modules for plugins: Depends on the plugins you want to use,
-     but not many.
+  but not many.
 
 If you're missing some perl modules and they are not in your package
-system it's recommended to use the cpan shell (as root) to install
-the needed ones:
+system it's recommended to use the cpan shell (as root) to install the
+needed ones:
 
   perl -MCPAN -e shell
-
-
-Munin-gather
-============
-
-Munin-gather is an incomplete work in progress for the server side.
-Please ignore it, and if you're a packager certainly don't package it.
 
 
 Installing
 ==========
 
 There are make targets for node, master, documentation and man files.
-Generally you want to install everything on the master, and just the node
-on ... the nodes.
+Generally you want to install everything on the master, and just the
+node on ... the nodes.
 
 To install both master and node:
+
 	- Review/edit Makefile.config
 	- Create the user "munin"
 	- make
 	- make install
-        - In your HTMLDIR/munin you will now find a .htaccess file
-          with two main features:
+        - In your HTMLDIR you will now find a .htaccess file with two
+          main features:
 
 	  * Password protection. Users/passwords are kept in
 	    CONFDIR/munin-httpasswd. Use htpasswd to create/modify users in
@@ -91,7 +95,7 @@ To install a node:
 	  plugins.)
 	- Decide which plugins to use.  The quick auto-plug-and-play
           solution: 
-            munin-node-configure --shell --families=contrib,auto | sh -x
+          munin-node-configure --shell --families=contrib,auto | sh -x
 	- Review CONFDIR/munin-node.conf. Ensure that your munin-master can
 	  access it.
 	- Start the node agent. You probably want an init-script for
@@ -99,6 +103,13 @@ To install a node:
 	  in the resources/ directory.
 
 For further build alternatives, see Makefile.
+
+Munin-gather
+============
+
+Munin-gather is an incomplete work in progress for the server side.
+Please ignore it, and if you're a packager certainly don't package it.
+
 
 Notes about node plugins
 ========================
