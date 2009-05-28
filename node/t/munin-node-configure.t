@@ -212,7 +212,7 @@ $config->reinitialize({
 			"Plugin produced a suggestion containing illegal characters",
 		],
 		[
-			'bad-junk-stderr',
+			'bad-junk',
 			{ suggestions => [], default => 'yes' },
 			"Plugin wrote junk to stderr -- all suggestions voided",
 		],
