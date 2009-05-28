@@ -746,6 +746,7 @@ sub fetch_plugin_autoconf
 		if ($plugin_exit) {
 			log_error($plugin->{name},
 			          "Non-zero exit during autoconf ($plugin_exit)");
+			return if ($plugin_exit != 1);
 		}
 	}
 
