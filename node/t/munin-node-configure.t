@@ -1,7 +1,8 @@
 use warnings;
 use strict;
 
-use Test::More tests => 28;
+use Test::More tests => 35;
+
 use Data::Dumper;
 
 require_ok('sbin/munin-node-configure');
@@ -118,12 +119,12 @@ $config->reinitialize({
 	my @tests = (
 		[
 			'good-yes',
-			{ default => 'yes', defaultreason => undef },
+			{ default => 'yes' },
 			'Plugin autoconf replied "yes"'
 		],
 		[
 			'good-no',
-			{ default => 'no', defaultreason => undef },
+			{ default => 'no' },
 			'Plugin autoconf replied "no"'
 		],
 		[
@@ -133,28 +134,28 @@ $config->reinitialize({
 		],
 		[
 			'bad-exit1',
-			{ default => 'no', defaultreason => undef },
+			{ default => 'no' },
 			'Plugin replied "no", but returns non-zero',	# FIXME: test for the error it emits!
 		],
 		[
 			'bad-no-answer',
-			{ default => 'no', defaultreason => undef },
+			{ default => 'no' },
 			"Plugin doesn't print any recognised response",
 		],
 		[
 			'bad-cruft',
-			{ default => 'no', defaultreason => undef },
+			{ default => 'no' },
 			"Plugin replied 'yes', but with junk",
 		],
 		[
 			'bad-cruft-stderr',
-			{ default => 'no', defaultreason => undef },
+			{ default => 'no' },
 			"Plugin replied 'yes', but with junk to stderr",
 		],
 
 #		[
 #			'',
-#			{ default => '', defaultreason => undef },
+#			{ default => '', defaultreason => },
 #			"",
 #		],
 	);
@@ -170,9 +171,15 @@ $config->reinitialize({
 		# $expected
 		delete $plugin->{name};
 
-		is_deeply($plugin, $expected, $msg);
+		# check the two parameters the sub sets (default, defaultreason)
+		is($plugin->{default}, $expected->{default},
+			"$msg - result");
+		
+		is($plugin->{defaultreason},$expected->{defaultreason},
+			"$msg - reason");
 	}
 }
+
 
 ### fetch_plugin_suggest
 {
