@@ -164,6 +164,22 @@ sub _service_command
 }
 
 
+sub fork_service
+{
+    my ($class, $service, $arg) = @_;
+
+    my $run_service = sub {
+        $class->exec_service($service, $arg);
+        # shouldn't be reached
+        print STDERR "# ERROR: Failed to exec.\n";
+        exit 42;
+    };
+
+    # FIXME: use the plugin's timeout
+    return Munin::Node::OS->run_as_child(10, $run_service);
+}
+
+
 1;
 
 __END__
@@ -178,7 +194,8 @@ Munin::Node::Service - Methods related to handling of Munin services
 
 
  my $bool = Munin::Node::Service->is_a_runnable_service($file_name);
-
+ $result = Munin::Node::Service->fork_service($file_name)
+    if $bool;
 
 =head1 METHODS
 
@@ -211,12 +228,23 @@ On failure, causes the process to exit.
 
 =item B<exec_service>
 
- Munin::Node::Service->exec_service($service);
+ Munin::Node::Service->exec_service($service, [$argument]);
 
 Replaces the current process with an instance of service $service running with 
 the correct environment and privileges.
 
 This function never returns.
+
+=item B<fork_service>
+
+ $result = Munin::Node::Service->fork_service($service, [$argument]);
+
+Identical to exec_service(), except it forks off a child to run the service.
+If the service takes longer than its configured timeout, it will be terminated.
+
+Returns a hash reference containing (among other things) the service's output
+and exit value.  (See documentation for run_as_child() in
+L<Munin::Node::Service> for a comprehensive description.)
 
 =back
 
