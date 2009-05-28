@@ -148,7 +148,7 @@ sub parse_args
     my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
     my $sconffile;
 
-    my ($DEBUG, $PIDEBUG);
+    my ($DEBUG, $PIDEBUG) = (0, 0);
     my ($plugin, $arg);
 
     print_usage_and_exit() unless GetOptions (
