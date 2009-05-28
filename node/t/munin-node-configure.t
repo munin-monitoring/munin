@@ -13,7 +13,8 @@ my $config = Munin::Node::Config->instance();
 my $PWD = POSIX::getcwd();
 
 $config->reinitialize({
-	libdir => "$PWD/t/plugins",
+	libdir  => "$PWD/t/plugins",
+	timeout => 10,
 });
 
 
