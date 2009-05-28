@@ -224,7 +224,7 @@ The network protocol is documented at
 L<http://munin.projects.linpro.no/wiki/network-protocol>
 
 These plugins can be in your language of choice: bash, perl, python,
-C. The plugins can be run in two modes: with and without the
+C. The plugins can be run in two modes: with or without the
 "config"-parameter. When run with "config" as parameter, the plugin
 should output the configuration of the graph. When run without
 parameters, the plugin should output just values.  Writing plugins is
