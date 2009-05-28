@@ -168,6 +168,9 @@ sub fork_service
 {
     my ($class, $service, $arg) = @_;
 
+    my $timeout = $config->{sconf}{$service}{timeout} 
+                  || $config->{timeout};
+
     my $run_service = sub {
         $class->exec_service($service, $arg);
         # shouldn't be reached
@@ -175,8 +178,7 @@ sub fork_service
         exit 42;
     };
 
-    # FIXME: use the plugin's timeout
-    return Munin::Node::OS->run_as_child(10, $run_service);
+    return Munin::Node::OS->run_as_child($timeout, $run_service);
 }
 
 
