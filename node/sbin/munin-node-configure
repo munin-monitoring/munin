@@ -156,14 +156,16 @@ Options:
 	--help			View this help page
 	--version		Show version information
 	--debug			View debug information (very verbose)
+
 	--config <file>         Override configuration file
 	                        [$config]
 	--servicedir <dir>	Override plugin directory
-	                        [$Munin::Common::Defaults::MUNIN_CONFDIR/plugins]
+	                        [$Munin::Common::Defaults::MUNIN_CONFDIR/plugins/]
 	--sconfdir <dir>	Override plugin configuration directory
 	                        [$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d]
 	--libdir <dir>		Override plugin lib
-	                        [$Munin::Common::Defaults::MUNIN_LIBDIR/plugins]
+	                        [$Munin::Common::Defaults::MUNIN_LIBDIR/plugins/]
+
 	--families <family,...>	Override families ($all_families) [$default_families]
 	--suggest		Show suggestions instead of status
 	--shell			Show shell commands (implies --suggest)
@@ -171,6 +173,7 @@ Options:
 	--remove-also		Also show rm-commands when doing --shell
 	--newer <version>	Only show suggestions related to plugins included
 	                        more recently than version <version>.
+
 	--snmp <host|cidr>      Do SNMP probing on the host or CIDR network.
 	--snmpversion <ver>     Set SNMP version (1, 2c or 3) [2c]
 	--snmpcommunity <comm>  Set SNMP community string [public]
@@ -284,12 +287,13 @@ sub show_suggestions
 		normal("------", "----", "-----------");
 	}
 
+	# We're going to be running plugins
+	prepare_plugin_environment();
+
 	foreach my $plugin (keys %$plugins) {
 		my $plug_info = $plugins->{$plugin};
 
 		next unless $plug_info->{capabilities}{autoconf};
-
-		prepare_plugin_environment();
 
 		fetch_plugin_autoconf($plug_info);
 
@@ -409,7 +413,7 @@ sub manage_symlinks
 		my ($same, $add, $remove)
 			= diff_suggestions($plugin->{suggestions},
 		                           $plugin->{installed});
-		
+
 		foreach my $to_add (@$add) {
 			link_add($plugin->{name}, $to_add);
 		}
@@ -688,15 +692,15 @@ sub load_available_plugins
 sub prepare_plugin_environment
 {
 	Munin::Common::Defaults->export_to_environment();
-	
+
 	# Export some variables plugins might be interested in
 	$ENV{MUNIN_DEBUG} = $config->{PIDEBUG};
 	$ENV{FQDN} = $config->{fqdn} || Munin::Node::OS->get_fq_hostname();
-	
+
 	# Some locales uses "," as decimal separator. This can mess up a lot
 	# of plugins.
 	$ENV{LC_ALL} = 'C';
-	
+
 	$config->{defuser} = getpwnam($Munin::Common::Defaults::MUNIN_PLUGINUSER)
 		unless defined $config->{defuser};
 	$config->{defgroup} = getgrnam($Munin::Common::Defaults::MUNIN_GROUP)
@@ -704,7 +708,7 @@ sub prepare_plugin_environment
 
 	$config->process_plugin_configuration_files();
 	$config->apply_wildcards();
-	
+
 	return;
 }
 
@@ -746,7 +750,7 @@ sub fetch_plugin_autoconf
 		if ($plugin_exit) {
 			log_error($plugin->{name},
 			          "Non-zero exit during autoconf ($plugin_exit)");
-			return if ($plugin_exit != 1);
+			return unless ($plugin_exit == 1 and $config->{exit_not_error});
 		}
 	}
 
@@ -783,74 +787,61 @@ sub fetch_plugin_autoconf
 }
 
 
-# Runs the given wildcard plugin, and returns a list of suggested
-# profiles
+# Runs the given wildcard plugin and saves a list of suggested profiles
+# in the 'suggestions' field
 sub fetch_plugin_suggestions
 {
-	my ($info) = @_;
-	my @sugg = ();
+	my ($plugin) = @_;
 
 	# Only run if the autoconf gave the go-ahead
-	return unless (exists $info->{default}
-	           and $info->{default} eq "yes");
+	return unless (exists $plugin->{default}
+	           and $plugin->{default} eq "yes");
 
-	my @cmd = (
-		"$bindir/munin-run",
-		'--servicedir', $config->{libdir},
-		$info->{name}, 'suggest'
-	);
+	my @suggestions;
+	$plugin->{suggestions} = \@suggestions;
 
-	# Debug here breaks stuff.
-	# push(@cmd,'--debug') if $config->{DEBUG};
+	my $res = Munin::Node::Service->fork_service($plugin->{name}, 'suggest');
 
-	print "# Running: ",join(' ', @cmd),"\n" if $config->{DEBUG};
-
-	my $fork = open(my $PLUGIN_OUTPUT, "-|");
-	if ($fork == -1) {
-		die "ERROR: Unable to fork: $!\n"
+	# No if it timed out
+	if ($res->{timed_out}) {
+		log_error($plugin->{name}, 'Timed out during suggest');
+		return;
 	}
-	elsif ($fork == 0) {
-		# In child
-		#
-		# We would redirect stderr, but with suggest
-		# it's hard to sort errors from the suggestions
-		# as we have no idea what the suggestions might
-		# be.
-		exec (@cmd) or print "failed to exec: $!\n" and exit 42;
+
+	# Non-zero exit is an immediate fail
+	if ($res->{retval}) {
+		my $plugin_exit   = $res->{retval} >> 8;
+		my $plugin_signal = $res->{retval} & 127;
+
+		log_error($plugin->{name},
+		          "Died during suggest: $plugin_exit/$plugin_signal");
+		return;
 	}
-	else {
-		# In parent
-		while (my $line = <$PLUGIN_OUTPUT>) {
-			if ($line =~ m/^#/) {
-				# debug output from munin-run
-				print "# Got junk: $line"
-					if $config->{DEBUG};
-			}
-			elsif ($line =~ /^[\w\.]+$/) { # FIXME: too restrictive?
-				# This ought to be a suggestion.
-				print "# Got suggestion: $line"
-					if $config->{DEBUG};
-				chomp $line;
-				push @sugg, ($line);
-			}
-			else {
-				log_error($info->{name}, "Bad suggestion: $line");
-			}
+
+	# No if there is anything on stderr that's not debug
+	if (grep !/^#/, @{ $res->{stderr} }) {
+		log_error($plugin->{name}, "Junk printed to stderr");
+		# FIXME: log the other output
+		return;
+	}
+
+	# Get the list while ignoring debug output
+	my @suggested = grep !/^#/, @{ $res->{stdout} };
+
+	foreach my $line (@suggested) {
+		if ($line =~ /^[\w.]+$/) { # FIXME: too restrictive?
+			# This looks like it should be a suggestion.
+			print "# Good suggestion: $line\n" if $config->{DEBUG};
+			push @suggestions, $line;
+		}
+		else {
+			log_error($plugin->{name}, "Bad suggestion: $line");
 		}
 	}
-	close ($PLUGIN_OUTPUT);
 
-	if ($?) {
-		@sugg = ();
-		log_error($info->{name}, "Plugin exit code: $? - voiding suggestions");
-	}
-
-	$info->{suggestions} = \@sugg;
-
-	print "# Suggested: ", join (', ', @sugg), "\n" if $config->{DEBUG};
-
-	unless (@sugg) {
-		log_error($info->{name}, "No suggestions");
+	unless (@suggestions) {
+		log_error($plugin->{name}, "No suggestions");
+		return;
 	}
 
 	return;
@@ -944,7 +935,7 @@ sub log_error
 	$errors{$plugin} ||= [];
 	push @{ $errors{$plugin} }, $msg;
 
-	print STDERR $msg, "\n" if $config->{DEBUG};
+	print $msg, "\n" if $config->{DEBUG};
 
 	return;
 }
