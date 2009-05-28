@@ -1,13 +1,14 @@
 use warnings;
 use strict;
 
-use Test::More tests => 5;
+use Test::More tests => 6;
 
 use_ok('Munin::Node::Service');
 
 my $config = Munin::Node::Config->instance();
 
 $config->reinitialize({
+	timeout => 10,
 	servicedir => '/service/directory',
 	sconf => {
 		test => {
@@ -60,4 +61,11 @@ $config->reinitialize({
 		'Custom service command with substitution.'
 	);
 }
+
+### fork_service
+{
+	my $ret = Munin::Node::Service->fork_service('foo');
+	is($ret->{retval} >> 8, 42, 'Attempted to run non-existant service');
+}
+
 
