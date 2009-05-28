@@ -729,20 +729,25 @@ sub fetch_plugin_autoconf
 		return;
 	}
 
-# FIXME: make this work
-#	if ($res->{retval}) {
-#		# Non-zero exit is an immediate fail
-#		my $plugin_exit   = $res->{retval} >> 8;
-#		my $plugin_signal = $res->{retval} & 127;
-#
-#		# FIXME: signal-death should always be a fail!
-#		if ($res->{retval} and !$config->{exit_not_error}) {
-#			log_error($plugin->{name},
-#			          "Non-zero exit during autoconf: $plugin_exit/$plugin_signal");
-#		}
-#
-#		return;
-#	}
+	if ($res->{retval}) {
+		# Non-zero exit is an immediate fail
+		my $plugin_exit   = $res->{retval} >> 8;
+		my $plugin_signal = $res->{retval} & 127;
+
+		# Definitely a bad sign
+		if ($plugin_signal) {
+			log_error($plugin->{name},
+			          "Was killed with signal $plugin_signal during autoconf");
+			return;
+		}
+
+		# Verboten according to the specification, but lots of plugins
+		# still do it.  So making it a non-fatal error for the time being
+		if ($plugin_exit) {
+			log_error($plugin->{name},
+			          "Non-zero exit during autoconf ($plugin_exit)");
+		}
+	}
 
 	# No if there is anything on stderr that's not debug
 	if (grep !/^#/, @{ $res->{stderr} }) {

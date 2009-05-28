@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 35;
+use Test::More tests => 37;
 
 use Data::Dumper;
 
@@ -153,6 +153,12 @@ $config->reinitialize({
 			{ default => 'no' },
 			"Plugin replied 'yes', but with junk to stderr",
 		],
+		[
+			'bad-signal',
+			{ default => 'no' },
+			"Plugin replied yes, but died due to a signal",
+		],
+	# NOTE: each additional entry causes 2 tests to be run
 
 #		[
 #			'',
