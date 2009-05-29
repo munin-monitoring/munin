@@ -101,7 +101,7 @@ sub parse_args
 
 
 	if (@families) {
-	    @families = split /,/, $families[0];
+	    @families = split(/,/, $families[0]);
 	} else {
 	    if (@snmp) {
 		@families = ('snmpauto');
@@ -290,7 +290,7 @@ sub show_suggestions
 	# We're going to be running plugins
 	prepare_plugin_environment();
 
-	foreach my $plugin (keys %$plugins) {
+	foreach my $plugin (sort keys %$plugins) {
 		my $plug_info = $plugins->{$plugin};
 
 		next unless $plug_info->{capabilities}{autoconf};
