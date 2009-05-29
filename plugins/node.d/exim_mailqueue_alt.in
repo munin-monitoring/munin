@@ -39,7 +39,7 @@ EXIM=${exim:-$EXIM}
 QUEUEWARN=${queuewarn:-100}
 QUEUECRIT=${queuecrit:-200}
 
-if [ "$1" == "config" ]; then
+if [ "$1" = "config" ]; then
 	echo 'graph_title Exim mailqueue'
 	echo 'graph_args --base 1000 -l 0'
 	echo 'graph_vlabel mails in queue'

@@ -33,7 +33,7 @@ if [ "$1" = "config" ]; then
 fi
 
 rank=`wget "http://vspx27.stanford.edu/cgi-bin/main.py?qtype=userpage&username=8d" -q -t 1 -T 5 -O - | egrep "<TD> <font size=3> <b> [0-9]* </b> of [0-9]* </font></TD>" | sed 's/.*<font size=3> <b> \([0-9]*\) .*/\1/'`
-if [ "$rank" == "" ]; then
+if [ "$rank" = "" ]; then
 	if [ -f $statefile ]; then
 		echo rank.value `cat $statefile`
 	fi
