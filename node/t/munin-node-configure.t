@@ -177,6 +177,8 @@ $config->reinitialize({
 
 		my $plugin = { name => "autoconf-$name" };
 
+		clear_errors();
+
 		fetch_plugin_autoconf($plugin);
 
 		# we know the name is right, and this saves having to mess with 
@@ -184,11 +186,11 @@ $config->reinitialize({
 		delete $plugin->{name};
 
 		# check the two parameters the sub sets (default, defaultreason)
-		is($plugin->{default}, $expected->{default},
-			"$msg - result");
+		is($plugin->{default}, $expected->{default}, "$msg - result")
+			or diag(list_errors());
 		
-		is($plugin->{defaultreason},$expected->{defaultreason},
-			"$msg - reason");
+		is($plugin->{defaultreason}, $expected->{defaultreason}, "$msg - reason")
+			or diag(list_errors());
 	}
 }
 
@@ -239,6 +241,8 @@ $config->reinitialize({
 
 		my $plugin = { name => "suggest-${name}_" };
 
+		clear_errors();
+
 		fetch_plugin_autoconf($plugin);
 		fetch_plugin_suggestions($plugin);
 
@@ -249,7 +253,8 @@ $config->reinitialize({
 		# don't care about this
 		delete $plugin->{defaultreason};
 
-		is_deeply($plugin, $expected, $msg);
+		is_deeply($plugin, $expected, $msg)
+			or diag(list_errors());
 	}
 }
 
