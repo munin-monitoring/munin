@@ -51,7 +51,7 @@ sub parse_args
 
 	my $debug;
 	my ($suggest, $shell, $removes, $newer);
-	my $exiterror  = 1;
+	my $exit_not_error  = 1;
 
 	my @families;
 
@@ -63,7 +63,7 @@ sub parse_args
 	print_usage_and_exit() unless GetOptions(
 		"help"            => \&print_usage_and_exit,
 		"shell!"          => \$shell,
-		"exitnoterror!"   => \$exiterror,
+		"exitnoterror!"   => \$exit_not_error,
 		"debug!"          => \$debug,
 		"suggest!"        => \$suggest,
 		"config=s"        => \$conffile,
@@ -122,7 +122,7 @@ sub parse_args
 
 		newer => $newer,
 		shell => $shell,
-		exit_not_error => $exiterror,
+		exit_not_error => $exit_not_error,
 		suggest => $suggest,
 		remove_also => $removes,
 
@@ -266,7 +266,7 @@ sub main
 
 	exit 0 unless list_errors();
 
-	print STDERR "# There were some errors:\n";
+	print STDERR "# The following plugins caused errors:\n";
 	foreach my $err (list_errors()) {
 		print STDERR "# $err\n";
 	}
@@ -329,7 +329,7 @@ sub print_suggestion_row
 {
 	my ($plug_info) = @_;
 
-	my $msg = '';  # either [reason], or +/-suggestions
+	my $msg = '';  # either [reason] or (+add/-remove)
 	my $now = $plug_info->{installed} ? 'yes' : 'no';
 
 	if ($plug_info->{wildcard}) {
@@ -341,14 +341,15 @@ sub print_suggestion_row
 		push @suggestions, map { '+' . $_ } @$add;
 		push @suggestions, map { '-' . $_ } @$remove;
 
-		$msg = join ' ', @suggestions;
+		$msg = '(' . join(' ', @suggestions) . ')'
+			if scalar @suggestions;
 	}
 	elsif ($plug_info->{defaultreason}) {
 		# Report why it's not being used
 		$msg = "[$plug_info->{defaultreason}]";
 	}
 
-	normal($plug_info->{name}, $now, $msg);
+	normal($plug_info->{name}, $now, "$plug_info->{default} $msg");
 	return;
 }
 
@@ -446,12 +447,14 @@ sub remove_all_links
 # symlink from the servicedir
 sub link_remove
 {
-    my $plug = shift;
+	my $plug = shift;
 
-    return unless $config->{remove_also};
-    return unless (-l "$config->{servicedir}/$plug"); # Strange...
+	return unless $config->{remove_also};
+	return unless (-l "$config->{servicedir}/$plug"); # Strange...
 
-    print "rm -f '$config->{servicedir}/$plug'\n";
+	print "rm -f '$config->{servicedir}/$plug'\n";
+
+	return;
 }
 
 
@@ -464,12 +467,15 @@ sub link_add
 	my $to = "$config->{servicedir}/$plug$wild";
 
 	print "ln -s '$from' '$to'\n";
+
+	return;
 }
 
 
 sub normal
 {
 	printf ("%-26s | %-4s | %-39s\n", @_);
+	return;
 }
 
 
@@ -667,7 +673,7 @@ sub load_available_plugins
 
 		read_magic_markers(\%plugin);
 
-		unless (grep (/^$plugin{family}$/, @{ $config->{families} })) {
+		unless (grep { $plugin{family} eq $_ } @{ $config->{families} }) {
 			print "#\tFamily '$plugin{family}' is currently ignored.  Skipping.\n"
 				if $config->{DEBUG};
 			next;
@@ -794,8 +800,7 @@ sub fetch_plugin_suggestions
 	my ($plugin) = @_;
 
 	# Only run if the autoconf gave the go-ahead
-	return unless (exists $plugin->{default}
-	           and $plugin->{default} eq "yes");
+	return unless ($plugin->{default} eq "yes");
 
 	my @suggestions;
 	$plugin->{suggestions} = \@suggestions;
