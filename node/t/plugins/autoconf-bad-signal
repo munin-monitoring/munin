@@ -12,7 +12,7 @@ do_autoconf()
 {
 	echo yes
 	
-	kill -ILL $$ 
+	kill -PIPE $$ 
 	exit 0
 }
 
