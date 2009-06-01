@@ -35,11 +35,10 @@ use Munin::Common::Defaults;
 
 my $config = Munin::Node::Config->instance();
 
-my $bindir = $Munin::Common::Defaults::MUNIN_SBINDIR;
 my $timeout = 10;
 
-my @all_families     = ("auto", "manual", "contrib");
-my @default_families = ("auto");
+my @all_families     = qw/auto manual contrib/;
+my @default_families = qw/auto/;
 
 
 sub parse_args
@@ -360,15 +359,17 @@ sub configure_snmp
 	my $plugins = shift;
 
 	unless (eval { require Munin::Node::SNMPConfig; }) {
-		print STDERR "# ERROR: Cannot perform SNMP probing since Munin::Node::SNMPConfig module is not loaded.\n";
+		print STDERR "# ERROR: Cannot perform SNMP probing since Munin::Node::SNMPConfig module is not installed.\n";
 		print $@;
 
 		exit 1;
 	}
 
-	while (my ($name, $plug_info) = each %$plugins) {
+	prepare_plugin_environment();
+
+	foreach my $plug_info (values %$plugins) {
 		next unless $plug_info->{capabilities}{snmpconf};
-		fetch_plugin_snmpconf($name, $plug_info);
+		fetch_plugin_snmpconf($plug_info);
 	}
 
 	die "Not yet implemented...";
@@ -856,72 +857,62 @@ sub fetch_plugin_suggestions
 # Runs a given snmpconf-capable plugin, and notes the parameters it returns
 sub fetch_plugin_snmpconf
 {
-	my $plugname = shift;
-	my $plugconf = shift;
+	my ($plugin) = @_;
 
-	my @cmd = (
-		"$bindir/munin-run",
-		'--config', $config->{conffile},
-		'--servicedir', $config->{libdir},
-		$plugname,
-		'snmpconf'
-	);
+	# FIXME: ewww :-(  but needed to make exec_service() work
+	$config->{servicedir} = $config->{libdir};
 
-	print "# Running: ",join(' ', @cmd),"\n" if $config->{DEBUG};
+	my $res = Munin::Node::Service->fork_service($plugin->{name}, 'snmpconf');
 
-	my $fork = open (my $PLUGIN_OUTPUT, "-|");
-
-	if ($fork == -1)
-	{
-		die "# ERROR: Unable to fork: $!";
+	# No if it timed out
+	if ($res->{timed_out}) {
+		log_error($plugin->{name}, 'Timed out during snmpconf');
+		return;
 	}
-	elsif ($fork == 0) # Child
-	{
-		close (STDERR);
-		open (STDERR, ">&STDOUT");
-		exec (@cmd) or print "failed to exec: $!\n" and exit 42;
-	}
-	else
-	{
-		while (<$PLUGIN_OUTPUT>)
-		{
-			chomp;
-			s/^\s+//;
-			s/\s+$//;
-			my ($a, $b) = split (/\s+/, $_, 2);
-			next unless defined $a;
 
-			if ($a =~ /^require$/i and defined $b)
-			{
-				my ($oid, $val) = split (/\s+/, $b);
-				if (! defined $val)
-				{
-					$val = ".*";
-				}
-				push (@{$plugconf->{req}}, [$oid, $val]);
-				print "# Registered $plugname  requirement: $oid =~ /$val/\n" if $config->{DEBUG};
-			}
-			elsif ($a =~ /^index$/i and defined $b)
-			{
-				$plugconf->{ind} = $b;
-				print "# Registered $plugname  index      : $b\n" if $config->{DEBUG};
-			}
-			elsif ($a =~ /^number$/i and defined $b)
-			{
-				$plugconf->{num} = $b;
-				print "# Registered $plugname  number     : $b\n" if $config->{DEBUG};
-			}
-			elsif ($a =~ /^env\.(\S+)$/)
-			{
-				$plugconf->{env}->{$1} = $b;
-				print "# Registered $plugname  env        : $b\n" if $config->{DEBUG};
-			}
-			else
-			{
-				#log_error($info->{name}, "Couldn't parse line $_");
-			}
+	# Non-zero exit is an immediate fail
+	if ($res->{retval}) {
+		my $plugin_exit   = $res->{retval} >> 8;
+		my $plugin_signal = $res->{retval} & 127;
+
+		log_error($plugin->{name},
+		          "Died during snmpconf: $plugin_exit/$plugin_signal");
+		return;
+	}
+
+	# No if there is anything on stderr that's not debug
+	if (grep !/^#/, @{ $res->{stderr} }) {
+		log_error($plugin->{name}, "Junk printed to stderr");
+		# FIXME: log the other output
+		return;
+	}
+
+	foreach my $line (@{ $res->{stdout} }) {
+		chomp $line;
+		$line =~ s/^\s+//;
+		$line =~ s/\s+$//;
+		my ($a, $b) = split (/\s+/, $line, 2);
+		next unless defined $a;
+
+		if ($a eq 'require' and $b) {
+			my ($oid, $val) = split (/\s+/, $b);
+			$val ||= '.*';
+			push (@{$plugin->{req}}, [$oid, $val]);
+			print "# Registered $plugin->{name}  requirement: $oid =~ /$val/\n" if $config->{DEBUG};
+		}
+		elsif ($a eq 'index' and $b) {
+			$plugin->{ind} = $b;
+			print "# Registered $plugin->{name}  index      : $b\n" if $config->{DEBUG};
+		}
+		elsif ($a eq 'number' and $b) {
+			$plugin->{num} = $b;
+			print "# Registered $plugin->{name}  number     : $b\n" if $config->{DEBUG};
+		}
+		else {
+			log_error($plugin->{name}, "Couldn't parse line: $line");
 		}
 	}
+
 	return 0;
 }
 
