@@ -1,16 +1,17 @@
 #!/bin/sh
 
-# Munin test plugin:
+# Munin test plugin: 
 #
-# autoconf says no, and doesn't exit 0
+# autoconf says yes, but it times out
 #
 # #%# family=test
 # #%# capabilities=autoconf
 
 do_autoconf()
 {
-	echo no
-	exit 1
+	echo yes
+	sleep 100
+	exit 0
 }
 
 

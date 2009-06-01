@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 37;
+use Test::More tests => 39;
 
 use Data::Dumper;
 
@@ -157,6 +157,11 @@ $config->reinitialize({
 			'bad-signal',
 			{ default => 'no' },
 			"Plugin replied yes, but died due to a signal",
+		],
+		[
+			'bad-timeout',
+			{ default => 'no' },
+			"Plugin timed out",
 		],
 	# NOTE: each additional entry causes 2 tests to be run
 

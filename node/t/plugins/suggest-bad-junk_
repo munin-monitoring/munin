@@ -2,7 +2,7 @@
 
 # Munin test plugin: 
 #
-# Doesn't provide any suggestions
+# Provides suggestions, but prints junk to stderr
 #
 # #%# family=test
 # #%# capabilities=autoconf suggest
