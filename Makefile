@@ -21,7 +21,7 @@ MAN8		 := master/_bin/munin-graph master/_bin/munin-update \
 PODMAN8          := master/doc/munin-cron master/doc/munin
 PODMAN5          := master/doc/munin.conf node/doc/munin-node.conf
 
-.PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
+.PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-munindoc install-doc install-man \
         build build-common-prime build-common-pre build-doc \
         deb source_dist \
         test clean \
@@ -40,7 +40,7 @@ unconfig:
 
 ######################################################################
 
-install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-man
+install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-man install-munindoc
 
 install-pre: Makefile Makefile.config
 	@$(CHECKUSER)
@@ -81,6 +81,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	$(INSTALL) -m 0755 build/master/_bin/munin-limits $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-gather $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/
+
 
 # ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE
 # GENERIC ONES
@@ -145,6 +146,10 @@ install-doc: build-doc
 	$(INSTALL) -m 0644 README $(DOCDIR)/
 	$(INSTALL) -m 0644 COPYING $(DOCDIR)/
 	$(INSTALL) -m 0644 build/resources/* $(DOCDIR)/resources
+
+install-munindoc: build
+	mkdir -p $(BINDIR)
+	$(INSTALL) -m 0755 build/node/bin/munindoc $(BINDIR)/
 
 
 ######################################################################
@@ -364,7 +369,6 @@ install-%: %/Build
 	cd $* && $(PERL) Build install			\
             --install_path lib=$(PERLLIB)		\
             --install_path sbin=$(SBINDIR)		\
-            --install_path script=$(BINDIR)		\
             --install_path bindoc=$(MANDIR)/man1	\
             --install_path libdoc=$(MANDIR)/man3	\
 
@@ -376,5 +380,4 @@ test-%: %/Build
 
 clean-%: %/Build
 	cd $* && $(PERL) Build realclean
-
 
