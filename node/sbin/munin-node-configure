@@ -296,27 +296,12 @@ sub show_suggestions
 
 		fetch_plugin_autoconf($plug_info);
 
-		if ($plug_info->{default} eq 'yes') {
-			fetch_plugin_suggestions($plug_info)
-				if ($plug_info->{wildcard}
-				and $plug_info->{capabilities}{suggest});
+		fetch_plugin_suggestions($plug_info)
+			if ($plug_info->{wildcard}
+			and $plug_info->{capabilities}{suggest});
 
-			if ($config->{shell}) {
-				manage_symlinks($plug_info);
-			}
-			else {
-				print_suggestion_row($plug_info);
-			}
-		}
-		elsif ($plug_info->{default} eq 'no') {
-			if ($config->{shell}) {
-				# Scrub it from existence!
-				remove_all_links($plug_info);
-			}
-			else {
-				print_suggestion_row($plug_info);
-			}
-		}
+		$config->{shell} ? manage_links($plug_info)
+		                 : print_suggestion_row($plug_info);
 	}
 
 	return;
@@ -407,14 +392,20 @@ sub print_status_list
 
 # prints shell commands to get the system into the recommended
 # state by adding or removing symlinks
-sub manage_symlinks
+sub manage_links
 {
 	my ($plugin) = @_;
 
-	if ($plugin->{wildcard}) {
-		my ($same, $add, $remove)
-			= diff_suggestions($plugin->{suggestions},
-		                           $plugin->{installed});
+	if ($plugin->{default} eq 'no') {
+		# Damnatio memoriae!
+		foreach my $link (@{ $plugin->{installed} }) {
+			link_remove($link);
+		}
+	}
+	elsif ($plugin->{wildcard}) {
+		# Add and remove wildcard links to get them in sync
+		my ($same, $add, $remove) = diff_suggestions($plugin->{suggestions},
+		                                             $plugin->{installed});
 
 		foreach my $to_add (@$add) {
 			link_add($plugin->{name}, $to_add);
@@ -424,20 +415,8 @@ sub manage_symlinks
 		}
 	}
 	else {
+		# Just add a straight link
 		link_add($plugin->{name});
-	}
-
-	return;
-}
-
-
-# prints shell-commands to remove all the links for the plugin
-sub remove_all_links
-{
-	my ($plugin) = @_;
-
-	foreach my $link (@{ $plugin->{installed} }) {
-		link_remove($link);
 	}
 
 	return;
