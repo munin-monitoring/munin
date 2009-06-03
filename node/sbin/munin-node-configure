@@ -41,6 +41,35 @@ my @all_families     = qw/auto manual contrib/;
 my @default_families = qw/auto/;
 
 
+sub main
+{
+	parse_args();
+
+	my $plugins = load_available_plugins();
+	load_installed_plugins($plugins);
+
+	if ($config->{suggest}) {
+		show_suggestions($plugins);
+	}
+	elsif (@{ $config->{snmp} }) {
+		configure_snmp($plugins);
+	}
+	else {
+		# FIXME: if $config->{shell}, implies $config->{suggest}
+		print_status_list($plugins);
+	}
+
+	exit 0 unless list_errors();
+
+	print STDERR "# The following plugins caused errors:\n";
+	foreach my $err (list_errors()) {
+		print STDERR "# $err\n";
+	}
+
+	exit 1;
+}
+
+
 sub parse_args
 {
 	my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
@@ -245,32 +274,32 @@ sub diff_suggestions
 }
 
 
-sub main
+# For each available plugin, prints a line detailing whether or not it's
+# installed, and (if it's a wildcard plugin) what identities are currently
+# in use
+sub print_status_list
 {
-	parse_args();
+	my ($plugins) = @_;
 
-	my $plugins = load_available_plugins();
-	load_installed_plugins($plugins);
+	normal("Plugin", "Used", "Extra information");
+	normal("------", "----", "-----------------");
 
-	if ($config->{suggest}) {
-		show_suggestions($plugins);
-	}
-	elsif (@{ $config->{snmp} }) {
-		configure_snmp($plugins);
-	}
-	else {
-		# FIXME: if $config->{shell}, implies $config->{suggest}
-		print_status_list($plugins);
-	}
+	foreach my $plug (sort keys %$plugins) {
+		my $plugin = $plugins->{$plug};
+		my $now = $plugin->{installed} ? "yes" : "no";
+		my $suggested = $plugin->{installed} || [];
 
-	exit 0 unless list_errors();
+		my $suggestions = '';
 
-	print STDERR "# The following plugins caused errors:\n";
-	foreach my $err (list_errors()) {
-		print STDERR "# $err\n";
+		if ($plugin->{wildcard} and @$suggested) {
+			# It's a wildcard, and there are suggestions
+			$suggestions = join ' ', @$suggested;
+		}
+
+		normal($plug, $now, $suggestions);
 	}
 
-	exit 1;
+	return;
 }
 
 
@@ -334,58 +363,6 @@ sub print_suggestion_row
 	}
 
 	normal($plug_info->{name}, $now, "$plug_info->{default} $msg");
-	return;
-}
-
-
-# Hands control off to munin-node-configure-snmp to configure SNMP plugins
-sub configure_snmp
-{
-	my $plugins = shift;
-
-	unless (eval { require Munin::Node::SNMPConfig; }) {
-		print STDERR "# ERROR: Cannot perform SNMP probing since Munin::Node::SNMPConfig module is not installed.\n";
-		print $@;
-
-		exit 1;
-	}
-
-	prepare_plugin_environment();
-
-	foreach my $plug_info (values %$plugins) {
-		next unless $plug_info->{capabilities}{snmpconf};
-		fetch_plugin_snmpconf($plug_info);
-	}
-
-	die "Not yet implemented...";
-}
-
-
-# For each available plugin, prints a line detailing whether or not it's
-# installed, and (if it's a wildcard plugin) what identities are currently
-# in use
-sub print_status_list
-{
-	my ($plugins) = @_;
-
-	normal("Plugin", "Used", "Extra information");
-	normal("------", "----", "-----------------");
-
-	foreach my $plug (sort keys %$plugins) {
-		my $plugin = $plugins->{$plug};
-		my $now = $plugin->{installed} ? "yes" : "no";
-		my $suggested = $plugin->{installed} || [];
-
-		my $suggestions = '';
-
-		if ($plugin->{wildcard} and @$suggested) {
-			# It's a wildcard, and there are suggestions
-			$suggestions = join ' ', @$suggested;
-		}
-
-		normal($plug, $now, $suggestions);
-	}
-
 	return;
 }
 
@@ -456,6 +433,29 @@ sub normal
 {
 	printf ("%-26s | %-4s | %-39s\n", @_);
 	return;
+}
+
+
+# Hands control off to munin-node-configure-snmp to configure SNMP plugins
+sub configure_snmp
+{
+	my $plugins = shift;
+
+	unless (eval { require Munin::Node::SNMPConfig; }) {
+		print STDERR "# ERROR: Cannot perform SNMP probing since Munin::Node::SNMPConfig module is not installed.\n";
+		print $@;
+
+		exit 1;
+	}
+
+	prepare_plugin_environment();
+
+	foreach my $plug_info (values %$plugins) {
+		next unless $plug_info->{capabilities}{snmpconf};
+		fetch_plugin_snmpconf($plug_info);
+	}
+
+	die "Not yet implemented...";
 }
 
 
