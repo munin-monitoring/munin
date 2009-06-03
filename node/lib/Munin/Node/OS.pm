@@ -100,9 +100,9 @@ sub run_as_child
     my ($self, $timeout, $code, @args) = @_;
 
     pipe my ($out_read, $out_write)
-        or carp "Error creating out pipe: $!";
+        or carp "Error creating stdout pipe: $!";
     pipe my ($err_read, $err_write)
-        or carp "Error creating err pipe: $!";
+        or carp "Error creating stderr pipe: $!";
 
     if (my $pid = fork) {
         # In parent
@@ -113,7 +113,7 @@ sub run_as_child
         my $timed_out = !do_with_timeout($timeout, $reaper);
 
         Munin::Node::OS->reap_child_group($pid)
-		if $timed_out;
+	    if $timed_out;
 
         chomp(my @out = <$out_read>);
         chomp(my @err = <$err_read>);
@@ -248,7 +248,9 @@ Returns the fully qualified host name of the machine.
 
  $bool = $class->check_perms($target);
 
-FIX
+If paranoia is enabled, returns false unless $target is owned by root,
+and has safe permissions.  If $target is a file, also checks the
+directory it inhabits.
 
 =item B<run_as_child>
 
@@ -273,6 +275,8 @@ The result of wait();
 True if the child had to be interrupted.
 
 =back
+
+System errors will cause it to carp.
 
 
 =item B<reap_child_group>
