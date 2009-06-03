@@ -115,10 +115,6 @@ To install a node:
           directory (maybe you need to edit the init script, check the
           given paths in the script you might use).
 
-	  For Debian packaging and init scripts, trunk/dists/debian is
-	  deprecated, and is present for historical reasons.  A branch
-	  for svn-buildpackage has been created at branches/debian,
-	  with subdirectories for each release codename.
 
 For further build alternatives, see Makefile.
 
