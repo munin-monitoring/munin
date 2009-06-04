@@ -183,10 +183,14 @@ sub print_usage_and_exit
 Options:
 	--help			View this help page
 	--version		Show version information
-	--debug			View debug information (very verbose)
+
+	--debug                 View debug information (very verbose).  All
+                                debugging output is printed on STDOUT but each
+                                line is prefixed with '#'.  Only errors are
+                                printed on STDERR.
 
 	--config <file>         Override configuration file
-	                        [$config]
+	                        [$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf]
 	--servicedir <dir>	Override plugin directory
 	                        [$Munin::Common::Defaults::MUNIN_CONFDIR/plugins/]
 	--sconfdir <dir>	Override plugin configuration directory
@@ -199,10 +203,18 @@ Options:
 	--shell			Show shell commands (implies --suggest)
 	--exitnoterror          Do not consider non-zero exit-value as error
 	--remove-also		Also show rm-commands when doing --shell
-	--newer <version>	Only show suggestions related to plugins included
-	                        more recently than version <version>.
 
-	--snmp <host|cidr>      Do SNMP probing on the host or CIDR network.
+	--newer <version>       Only show suggestions related to plugins
+	                        included more recently than version <version>.
+                                Only supported along with --shell.
+
+	--snmp <host|cidr>      Do SNMP probing on the host or CIDR network
+                                (e.g. "192.168.1.0/24"). This may take some
+                                time, especially if the probe includes many
+                                hosts. This option can be specified multiple
+                                times, or once with a comma-separated list, to
+                                include more than one host/CIDR.
+
 	--snmpversion <ver>     Set SNMP version (1, 2c or 3) [2c]
 	--snmpcommunity <comm>  Set SNMP community string [public]
 	--snmpport <port>       Set SNMP port [161]
@@ -988,7 +1000,7 @@ Override plugin lib [@@LIBDIR@@/plugins/]
 
 =item B<< --families <family,...> >>
 
-Override families [auto]
+Override families (auto, manual, contrib) [auto]
 
 =item B<< --suggest >>
 
@@ -998,37 +1010,53 @@ Show suggestions instead of status
 
 Show shell commands (implies --suggest)
 
+=item B<< --exitnoterror >>
+
+Do not consider non-zero exit-value as error
+
 =item B<< --remove-also >>
 
 Also show rm-commands when doing --shell
 
+=item B<< --newer <version> >>
+
+Only show suggestions related to plugins included more recently than
+version <version>. Only supported along with --shell.
+
 =item B<< --snmp <host|cidr,...> >>
 
-Do SNMP probing on the host or CIDR network (e.g. "192.168.1.0/24"). This
-may take some time, especially if the probe includes many hosts. This option
-can be specified multiple times, or once with a comma-separated list, to
-include more than one host/CIDR.
+Do SNMP probing on the host or CIDR network
+(e.g. "192.168.1.0/24"). This may take some time, especially if the
+probe includes many hosts. This option can be specified multiple
+times, or once with a comma-separated list, to include more than one
+host/CIDR.  Only supported along with --shell.
 
 =item B<< --snmpversion <ver> >>
 
-Set the SNMP version (1, 2c or 3) to use when probing. Default is "2c".
+Set the SNMP version (1, 2c or 3) to use when probing. Default is
+"2c".
 
 =item B<< --snmpcommunity <comm> >>
 
-Set SNMP community to use when probing. Default is "public".
+Set SNMP community string to use when probing. Default is "public".
+
+=item B<< --snmpport <port> >>
+
+Set SNMP port. Default is "161".
 
 =back
 
 =head1 DESCRIPTION
 
-Munin's node is a daemon that Munin connects to fetch data. This data is
-stored in .rrd-files, and later graphed and htmlified. It's designed to
-let it be very easy to graph new datasources.
+Munin's node is a daemon that Munin connects to fetch data. This data
+is stored in .rrd-files, and later graphed and htmlified. It's
+designed to let it be very easy to graph new datasources.
 
-Munin-node-configure is a script to show the current configuration of which
-plugins the host is running, as well as suggestions on what changes to make
-to this configuration. It does this by using munin-run(1) to ask the plugins
-themselves whether they should be run or not.
+Munin-node-configure is a script to show the current configuration of
+which plugins the host is running, as well as suggestions on what
+changes to make to this configuration. It does this by using
+munin-run(1) to ask the plugins themselves whether they should be run
+or not.
 
 =head1 FILES
 
