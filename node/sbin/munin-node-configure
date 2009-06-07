@@ -52,7 +52,8 @@ sub main
 		show_suggestions($plugins);
 	}
 	elsif (@{ $config->{snmp} }) {
-		configure_snmp($plugins);
+		init_snmp($plugins);
+		probe_snmp_hosts($config->{snmp});
 	}
 	else {
 		# FIXME: if $config->{shell}, implies $config->{suggest}
@@ -252,6 +253,46 @@ with this software or refer to
 }
 
 
+sub normal
+{
+	printf ("%-26s | %-4s | %-39s\n", @_);
+	return;
+}
+
+
+### Reporting current status ###################################################
+
+# For each available plugin, prints a line detailing whether or not it's
+# installed, and (if it's a wildcard plugin) what identities are currently
+# in use
+sub print_status_list
+{
+	my ($plugins) = @_;
+
+	normal("Plugin", "Used", "Extra information");
+	normal("------", "----", "-----------------");
+
+	foreach my $plug (sort keys %$plugins) {
+		my $plugin = $plugins->{$plug};
+		my $now = $plugin->{installed} ? "yes" : "no";
+		my $suggested = $plugin->{installed} || [];
+
+		my $suggestions = '';
+
+		if ($plugin->{wildcard} and @$suggested) {
+			# It's a wildcard, and there are suggestions
+			$suggestions = join ' ', @$suggested;
+		}
+
+		normal($plug, $now, $suggestions);
+	}
+
+	return;
+}
+
+
+### Reporting and managing suggestions #########################################
+
 # reports which wildcard plugin identities should be added, removed,
 # or left as they are.  in (sort of) mathematical terms:
 # 	(remove) = (installed) \ (suggested)
@@ -283,35 +324,6 @@ sub diff_suggestions
 	my @remove = sort keys %remove;
 
 	return (\@same, \@add, \@remove);
-}
-
-
-# For each available plugin, prints a line detailing whether or not it's
-# installed, and (if it's a wildcard plugin) what identities are currently
-# in use
-sub print_status_list
-{
-	my ($plugins) = @_;
-
-	normal("Plugin", "Used", "Extra information");
-	normal("------", "----", "-----------------");
-
-	foreach my $plug (sort keys %$plugins) {
-		my $plugin = $plugins->{$plug};
-		my $now = $plugin->{installed} ? "yes" : "no";
-		my $suggested = $plugin->{installed} || [];
-
-		my $suggestions = '';
-
-		if ($plugin->{wildcard} and @$suggested) {
-			# It's a wildcard, and there are suggestions
-			$suggestions = join ' ', @$suggested;
-		}
-
-		normal($plug, $now, $suggestions);
-	}
-
-	return;
 }
 
 
@@ -392,7 +404,7 @@ sub manage_links
 		}
 	}
 	elsif ($plugin->{wildcard}) {
-		# Add and remove wildcard links to get them in sync
+		# Yes, and wildcard.  Add and remove links to get them in sync
 		my ($same, $add, $remove) = diff_suggestions($plugin->{suggestions},
 		                                             $plugin->{installed});
 
@@ -404,7 +416,7 @@ sub manage_links
 		}
 	}
 	else {
-		# Just add a straight link
+		# Yes, but not wildcard: just add a straight link
 		link_add($plugin->{name});
 	}
 
@@ -433,7 +445,7 @@ sub link_add
 	my $wild = shift || '';
 
 	my $from = "$config->{libdir}/$plug";
-	my $to = "$config->{servicedir}/$plug$wild";
+	my $to   = "$config->{servicedir}/$plug$wild";
 
 	print "ln -s '$from' '$to'\n";
 
@@ -441,42 +453,57 @@ sub link_add
 }
 
 
-sub normal
-{
-	printf ("%-26s | %-4s | %-39s\n", @_);
-	return;
-}
+### SNMP probing ###############################################################
 
-
-# Hands control off to munin-node-configure-snmp to configure SNMP plugins
-sub configure_snmp
+# Prepares for SNMP probing
+sub init_snmp
 {
 	my $plugins = shift;
 
 	unless (eval { require Munin::Node::SNMPConfig; }) {
-		print STDERR "# ERROR: Cannot perform SNMP probing since Munin::Node::SNMPConfig module is not installed.\n";
+		print STDERR "# ERROR: Cannot perform SNMP probing since "
+		           . "Munin::Node::SNMPConfig module is not installed.\n";
 		print $@;
-
 		exit 1;
 	}
 
-	prepare_plugin_environment();
+	Munin::Node::SNMPConfig->import();
 
+	prepare_plugin_environment();
+	
 	foreach my $plug_info (values %$plugins) {
 		next unless $plug_info->{capabilities}{snmpconf};
 		fetch_plugin_snmpconf($plug_info);
 	}
 
-	die "Not yet implemented...";
+	return;
 }
 
+
+
+sub probe_snmp_hosts
+{
+	my ($snmp_hostlist, $plugins) = @_;
+	
+	# Allow the user to mix multiple invocations of --snmp with the comma-delimited form
+	my @host_specs = map { split /,/ } @$snmp_hostlist;
+
+	# FIXME: should preserve hostnames as much as possible.
+	foreach my $host (expand_hosts(@host_specs)) {
+		snmp_probe_host($host, $plugins);
+	}
+
+	return;
+}
+
+
+### Plugin and service enumeration #############################################
 
 sub load_installed_plugins
 {
 	my ($plugins) = @_;
 
-	my $service_count = 0;  # the number of services currently installed.  may not
-	                        # be equal to (keys %found) if some are wildcards
+	my $service_count = 0;  # the number of services currently installed.
 
 	print "# Searching '$config->{servicedir}' for installed plugins.\n"
 		if $config->{DEBUG};
@@ -547,7 +574,7 @@ sub load_plugin_history
 		or die "# ERROR: Could not open '$hist_file': $!\n";
 
 	# $^O or $Config{osname} are based on the platform perl was built on,
-	# not where it's currently running.  But this should always be correct
+	# not where it's currently running.  This should always be correct
 	my $uname = lc((POSIX::uname())[0]);
 
 	while (my $line = <$HIST>) {
@@ -628,7 +655,7 @@ sub read_magic_markers
 
 sub load_available_plugins
 {
-	my %found;  # index of plugins found
+	my %found;  # Plugins found
 
 	load_plugin_history() if $config->{newer};
 
@@ -687,6 +714,8 @@ sub load_available_plugins
 }
 
 
+### Running plugins and analysing responses ####################################
+
 sub prepare_plugin_environment
 {
 	Munin::Common::Defaults->export_to_environment();
@@ -722,6 +751,8 @@ sub fetch_plugin_autoconf
 
 	# FIXME: ewww :-(  but needed to make exec_service() work
 	$config->{servicedir} = $config->{libdir};
+
+	print "# Running autoconf on $plugin->{name}\n" if $config->{DEBUG};
 
 	my $res = Munin::Node::Service->fork_service($plugin->{name}, 'autoconf');
 
@@ -797,6 +828,8 @@ sub fetch_plugin_suggestions
 	my @suggestions;
 	$plugin->{suggestions} = \@suggestions;
 
+	print "# Running suggest on $plugin->{name}\n" if $config->{DEBUG};
+
 	my $res = Munin::Node::Service->fork_service($plugin->{name}, 'suggest');
 
 	# No if it timed out
@@ -853,6 +886,8 @@ sub fetch_plugin_snmpconf
 	# FIXME: ewww :-(  but needed to make exec_service() work
 	$config->{servicedir} = $config->{libdir};
 
+	print "# Running snmpconf on $plugin->{name}\n" if $config->{DEBUG};
+
 	my $res = Munin::Node::Service->fork_service($plugin->{name}, 'snmpconf');
 
 	# No if it timed out
@@ -886,18 +921,18 @@ sub fetch_plugin_snmpconf
 		next unless defined $a;
 
 		if ($a eq 'require' and $b) {
-			my ($oid, $val) = split (/\s+/, $b);
-			$val ||= '.*';
+			my ($oid, $val) = ($b =~ /\A ([.\d]+) \s+ (.+) \z/mx);
 			push (@{$plugin->{req}}, [$oid, $val]);
-			print "# Registered $plugin->{name}  requirement: $oid =~ /$val/\n" if $config->{DEBUG};
+			print "#\tRegistered 'require': $oid =~ /$val/\n"
+				if $config->{DEBUG};
 		}
 		elsif ($a eq 'index' and $b) {
 			$plugin->{ind} = $b;
-			print "# Registered $plugin->{name}  index      : $b\n" if $config->{DEBUG};
+			print "#\tRegistered 'index'  : $b\n" if $config->{DEBUG};
 		}
 		elsif ($a eq 'number' and $b) {
 			$plugin->{num} = $b;
-			print "# Registered $plugin->{name}  number     : $b\n" if $config->{DEBUG};
+			print "#\tRegistered 'number' : $b\n" if $config->{DEBUG};
 		}
 		else {
 			log_error($plugin->{name}, "Couldn't parse line: $line");
@@ -908,7 +943,7 @@ sub fetch_plugin_snmpconf
 }
 
 
-# Subs for logging errors from plugins
+### Plugin error reporting #####################################################
 {
 my %errors;
 
