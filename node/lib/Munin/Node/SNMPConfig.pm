@@ -6,196 +6,199 @@ use warnings;
 use Net::SNMP;
 use Socket;
 
-use Munin::Common::Defaults;
-use Munin::Node::Config;
+use Data::Dumper;
 
 use Exporter ();
 our @ISA = qw/Exporter/;
-our @EXPORT = qw//;
+our @EXPORT = qw/expand_hosts snmp_probe_host/;
 
+
+use Munin::Common::Defaults;
+use Munin::Node::Config;
 
 my $config = Munin::Node::Config->instance();
 
-my $sysName      = "1.3.6.1.2.1.1.5.0";
-my $name;
 
-my $session;
-my $error;
-my $response;
+### Network address manipulation ###############################################
 
-my @plugins;
-
-my %plugconf;
-my %hostconf;
-
-foreach my $plugin (@plugins)
+# converts an IP address (char* in network byte order, as returned by 
+# gethostbyname, et al) and optional netmask into the corresponding
+# range of IPs.
+#
+# If you haven't guessed, this is IPv4 only.
+sub _hosts_in_net
 {
-	&fetch_plugin_config ($plugin, \%plugconf);
-}
+	my ($addr, $mask) = @_;
 
-while (my $addr = shift)
-{
-	my $num = 32;
-	if ($addr =~ /([^\/]+)\/(\d+)/)
-	{   
-		$num  = $2;
-		$addr = $1;
-	}   
-	$num = 32 - $num;
-	$num = 2 ** $num;
-	print "# Doing $addr / $num\n" if $config->{DEBUG};
-	for (my $i = 0; $i < $num; $i++)
-	{
-		print "# Doing $addr -> $i...\n" if $config->{DEBUG};
-		my $tmpaddr = $addr;
-		if ($tmpaddr =~ /(\d+)\.(\d+)\.(\d+)\.(\d+)/)
-		{
-			my @tmpaddr = split (/\./, $tmpaddr);
-			$tmpaddr[3] += $i;
-			$tmpaddr = gethostbyaddr (inet_aton (join ('.', @tmpaddr)), AF_INET);
-			$tmpaddr ||= join ('.', @tmpaddr);
-		}
-		print "# ($tmpaddr)\n" if $config->{DEBUG};
-		&do_host ("$tmpaddr", $config->{snmp_community}, $config->{snmp_version}, $config->{snmp_port});
-	}
+	# This won't work with a netmask of 0.  then again, no-one wants to
+	# SNMP-scan the whole internet, even if they think they do.
+	$mask ||= 32;
+
+	die "Invalid netmask: $mask\n"
+		unless ($mask =~ /^\d+$/ and $mask <= 32);
+
+	my $net = unpack('N', $addr);  # ntohl()
+
+	# Evil maths cribbed from nmap
+	my $low  = $net & (0 - (1 << (32 - $mask)));
+	my $high = $net | ((1 << (32 - $mask)) - 1);
+
+	return map { inet_ntoa(pack 'N', $_) } $low .. $high;
 }
 
 
-#interfaces ($name);
-
-sub do_host
+# Resolves a hostname or IP, and returns the address as a bitstring in
+# network byte order.
+sub _resolve
 {
-	my $host = shift;
-	my $comm = shift;
-	my $ver  = shift;
-	my $port = shift;
+	my ($host) = @_;
 
-	if ($host =~ /([^:]+):(\d+)/)
-	{
-		$host = $1;
-		$port = $2;
+	my ($name, $aliases, $addrtype, $length, @addrs)
+		= gethostbyname($host);
+
+	die "Unable to resolve $host\n" unless $name;
+
+	if (scalar @addrs > 1) {
+		warn sprintf "Hostname %s resolves to %u IPs.  Using %s\n",
+		                   $host,
+		                   scalar(@addrs),
+		                   inet_ntoa($addrs[0]);
 	}
+	warn sprintf "# Resolved %s to %s\n", $host, inet_ntoa($addrs[0])
+		if $config->{DEBUG};
 
-	($session, $error) = Net::SNMP->session(
+	return $addrs[0];
+}
+
+
+# converts a list of hostnames, IPs or CIDR ranges to the 
+# corresponding IPs.
+sub expand_hosts
+{
+	my (@unexpanded) = @_;
+	my @hosts;
+
+	foreach my $item (@unexpanded) {
+		warn "Processing $item\n" if $config->{DEBUG};
+
+		my ($host, $mask) = split '/', $item, 2;
+		$host = _resolve($host);
+		push @hosts, _hosts_in_net($host, $mask);
+	}
+	return @hosts;
+}
+
+
+### SNMP Probing ###############################################################
+
+sub snmp_probe_host
+{
+	my ($host, $plugins) = @_;
+
+	print "# SNMP-probing $host\n" if $config->{DEBUG};
+
+	my ($session, $error) = Net::SNMP->session(
 			-hostname  => $host,
-			-community => $comm,
-			-port      => $port,
-			-version   => $ver,
-		);
-	$session->translate (0);
-	die $error if $error;
+			-community => $config->{snmp_community},
+			-port      => $config->{snmp_port},
+			-version   => $config->{snmp_version},
+	);
 
-	if (!defined ($session))
-	{
-		print "# Dropping host \"$host\": $error" . "\n";
+	unless ($session) {
+		print "# Dropping host '$host': $error\n";
 		return 0;
 	}
 
-	if (!defined ($response = $session->get_request($sysName)))
-	{
-		print "# Dropping host \"$host\": " . $session->error() . "\n";
-		return 0;
-	}
-	$name = $response->{$sysName};
+	# Disable ASN1 translation.  FIXME: is this required?  why?
+	$session->translate(0);
 
-	foreach my $plugin (@plugins)
-	{
-		my $auto = snmp_autoconf_plugin ($plugin, \%plugconf, \%hostconf, $host);
+	foreach my $plugin (values %$plugins) {
+		print "# Running autoconf on $plugin->{name} for $host...\n"
+			if $config->{DEBUG};
 
-		if (defined $auto)
-		{
-			if ($plugconf{$plugin}->{wild})
-			{
-				foreach my $id (@{$auto})
-				{
-					if (! -e "$config->{servicedir}/snmp_$host"."_$plugin"."_$id")
-					{
-						print "ln -s $config->{libdir}/snmp__$plugin", "_ $config->{servicedir}/snmp_$host", "_$plugin", "_$id\n";
-					}
-				}
-			}
-			else
-			{
-				if (! -e "$config->{servicedir}/snmp_$host"."_$plugin")
-				{
-					print "ln -s $config->{libdir}/snmp__$plugin", " $config->{servicedir}/snmp_$host", "_$plugin\n";
-				}
-			}
+		my $auto = _snmp_autoconf_plugin($plugin, $session);
+
+		unless ($auto) {
+			print "# Host '$host' doesn't support $plugin->{name}\n"
+				if $config->{DEBUG};
+			next;
+		}
+
+		# FIXME: this should be done back in munin-node-configure itself
+		# though will require more flexibility since some SNMP plugins have
+		# two wildcard parameters
+		if ($plugin->{wild}) {
+			# adds a link for each id in @$auto
+		}
+		else {
+			# adds a regular link
 		}
 	}
+
+	print "# Finished probing $host\n" if $config->{DEBUG};
+
+	$session->close;
+	return 1;
 }
 
-sub snmp_autoconf_plugin
+
+sub _snmp_autoconf_plugin
 {
-	my $plugname = shift;
-	my $plugconf = shift;
-	my $hostconf = shift;
-	my $host     = shift;
+	my ($plugin, $session) = @_;
 
-	print "# Running autoconf on $plugname for $host...\n" if $config->{DEBUG};
+	my $num = 1;  # Number of items to autoconf
+	my $indexes;  # Index base
 
-    # First round of requirements
-	if (defined $plugconf->{$plugname}->{req})
-	{
+	# First round of requirements
+	if ($plugin->{req}) {
 		print "# Checking requirements...\n" if $config->{DEBUG};
-		foreach my $req (@{$plugconf->{$plugname}->{req}})
-		{
-			if ($req->[0] =~ /\.$/)
-			{
-				print "# Delaying testing of $req->[0], as we need the indexes first.\n" if $config->{DEBUG};
+		foreach my $req (@{$plugin->{req}}) {
+			if ($req->[0] =~ /\.$/) {
+				print "# Delaying testing of $req->[0], as we need the indexes first.\n"
+					if $config->{DEBUG};
 				next;
 			}
-			my $snmp_val = snmp_get_single ($session, $req->[0]);
-			if (!defined $snmp_val or $snmp_val !~ /$req->[1]/)
-			{
+
+			my $snmp_val = _snmp_get_single($session, $req->[0]);
+
+			if (!defined $snmp_val or $snmp_val !~ /$req->[1]/) {
 				print "# Nope. Duh.\n" if $config->{DEBUG};
 				return;
 			}
 		}
 	}
 
-    # We need the number of "things" to autoconf
-
-	my $num = 1;
-	if (defined $plugconf->{$plugname}->{num})
-	{
-		$num = snmp_get_single ($session, $plugconf->{$plugname}->{num});
-		return if !defined $num;
+	# We need the number of "things" to autoconf
+	if ($plugin->{num}) {
+		$num = _snmp_get_single($session, $plugin->{num});
+		return unless $num;
 	}
-	print "# Number of items to autoconf is $num...\n" if $config->{DEBUG};
+	print "# $num items to autoconf\n" if $config->{DEBUG};
 
-    # Then the index base
-	my $indexes;
-	if (defined $plugconf->{$plugname}->{ind})
-	{
-		$indexes = snmp_get_index ($plugconf->{$plugname}->{ind}, $num);
-		return if !defined $indexes;
+	# Then the index base
+	if ($plugin->{ind}) {
+		$indexes = _snmp_get_index($session, $plugin->{ind}, $num);
+		return unless $indexes;
 	}
-	else
-	{
+	else {
 		$indexes->{0} = 1;
 	}
 	print "# Got indexes: ", join (',', keys (%{$indexes})), "\n" if $config->{DEBUG};
 
 	return unless scalar keys %{$indexes};
 
-    # Second round of requirements (now that we have the indexes)
-	if (defined $plugconf->{$plugname}->{req})
-	{
+	# Second round of requirements (now that we have the indexes)
+	if (defined $plugin->{req}) {
 		print "# Checking requirements...\n" if $config->{DEBUG};
-		foreach my $req (@{$plugconf->{$plugname}->{req}})
-		{
-			if ($req->[0] !~ /\.$/)
-			{
+		foreach my $req (@{$plugin->{req}}) {
+			if ($req->[0] !~ /\.$/) {
 				print "# Already tested of $req->[0], before we got hold of the indexes.\n" if $config->{DEBUG};
 				next;
 			}
-			
-			foreach my $key (keys %$indexes)
-			{
-				my $snmp_val = snmp_get_single ($session, $req->[0] . $key);
-				if (!defined $snmp_val or $snmp_val !~ /$req->[1]/)
-				{
+
+			foreach my $key (keys %$indexes) {
+				my $snmp_val = _snmp_get_single($session, $req->[0] . $key);
+				if (!defined $snmp_val or $snmp_val !~ /$req->[1]/) {
 					print "# Nope. Deleting $key from possible solutions.\n" if $config->{DEBUG};
 					delete $indexes->{$key}; # Disable
 				}
@@ -207,54 +210,70 @@ sub snmp_autoconf_plugin
 	return \@tmparr;
 }
 
-sub snmp_get_single
+
+# Retrieves the value for the given OID from the session
+sub _snmp_get_single
 {
 	my $session = shift;
 	my $oid     = shift;
 
-	if ((!defined ($response = $session->get_request($oid))) or
-			$session->error_status)
-	{
+	my $response = $session->get_request($oid);
+
+	unless (defined $response) {
+		print "# Request failed for oid '$oid'"
+			if $config->{DEBUG};
 		return;
 	}
-	print "# Fetched value \"$response->{$oid}\"\n" if $config->{DEBUG}; 
+
+	print "# Fetched value \"$response->{$oid}\"\n"
+		if $config->{DEBUG};
+
 	return $response->{$oid};
 }
 
-sub snmp_get_index
+
+# takes an index 
+sub _snmp_get_index
 {
-	my $oid   = shift;
-	my $num   = shift;
+	my ($session, $oid, $num) = @_;
+
 	my $ret   = $oid . "0";
-	my $rhash = {};
+	my %rhash;
+
+	my $response;
 
 	$num++; # Avaya switch b0rkenness...
 
-	for (my $i = 0; $i < $num; $i++)
-	{
-		if ($i == 0)
-		{
-			print "# Checking for $ret\n" if $config->{DEBUG};
-			$response = $session->get_request($ret);
-		}
-		if ($i or !defined $response or $session->error_status)
-		{
+	print "# Checking for $ret\n" if $config->{DEBUG};
+	$response = $session->get_request($ret);
+
+	foreach my $ii (0 .. $num) {
+		if ($ii or !defined $response or $session->error_status) {
 			print "# Checking for sibling of $ret\n" if $config->{DEBUG};
 			$response = $session->get_next_request($ret);
 		}
-		if (!$response or $session->error_status)
-		{
+		if (!$response or $session->error_status) {
 			return;
 		}
 		my @keys = keys %$response;
 		$ret = $keys[0];
 		last unless ($ret =~ /^$oid\d+$/);
-		print "# Index $i: ", join ('|', @keys), "\n" if $config->{DEBUG};
-		$rhash->{$response->{$ret}} = 1;
+
+		print "# Index $ii: ", join ('|', @keys), "\n" if $config->{DEBUG};
+
+		$rhash{$response->{$ret}} = 1;
 	}
-	return $rhash;
+	return \%rhash;
 }
 
+
+1;
+
+
+__END__
+
+
+### FIXME: not used?
 sub interfaces
 {
 	my $name = shift;
@@ -267,7 +286,7 @@ sub interfaces
 
 	print "# System name: ", $name, "\n" if $config->{DEBUG};
 
-	if (!defined ($response = $session->get_request($ifNumber)) or 
+	if (!defined ($response = $session->get_request($ifNumber)) or
 			$session->error_status)
 	{
 		die "Croaking: " . $session->error();
@@ -337,65 +356,46 @@ sub interfaces
 }
 
 
-
-#
-#		if (defined $p->{'capability'}->{'snmpconf'})
-#		{
-#			$plug =~ s/^snmp__//;
-#			$plug =~ s/_$//;
-#			push (@plugins, $plug);
-#		}
-
-1;
-
-__END__
-
-
 =head1 NAME
 
-munin-node-configure-snmp - A sub-program used by munin-node-configure to
-do the actual SNMP probing.
+Munin::Node::SNMPConfig - FIX
+
 
 =head1 SYNOPSIS
 
-munin-node-configure-snmp [options] <host/cidr> [host/cidr] [...]
+  @hosts = ('switch1', 'host1/24,10.0.0.60/30');
 
-=head1 DESCRIPTION
+  foreach my $host (expand_hosts(@hosts)) {
+    snmp_probe_host($host, $plugins);
+  }
 
-Munin's node is a daemon that Munin connects to fetch data. This data is
-stored in .rrd-files, and later graphed and htmlified. It's designed to
-let it be very easy to graph new datasources.
 
-Munin-node-configure-snmp is a program that is used by another program in
-the Munin package, munin-node-configure, to do SNMP probing of hosts or
-networks.
+=head1 SUBROUTINES
 
-This program is only meant to be run by other programs in the Munin
-package, not by hand.
+=over
 
-=head1 VERSION
+=item B<expand_hosts>
 
-This is munin-node v@@VERSION@@
+  @expanded = expand_hosts(@list);
 
-=head1 AUTHORS
+Takes a list 
+and returns the IPs (in dotted-quad format).
 
-Jimmy Olsen.
+Items can be specified as a hostname or dotted-quad IP, either with or
+without a netmask, or as a comma-separated list of the above.
 
-=head1 BUGS
+Currently only IPv4 addresses are supported.
 
-munin-node-configure-snmp does not have any known bugs.
 
-Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
+=item B<snmp_probe_host>
 
-=head1 COPYRIGHT
+  snmp_probe_host($host, $plugins);
 
-Copyright © 2004 Jimmy Olsen.
+Works out what plugins $host supports, based on whether the OIDs required by
+the plugin are supported by the device.
 
-This is free software; see the source for copying conditions. There is
-NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
-PURPOSE.
 
-This program is released under the GNU General Public License
+=back
 
 =cut
 
