@@ -53,7 +53,7 @@ sub main
 	}
 	elsif (@{ $config->{snmp} }) {
 		init_snmp($plugins);
-		probe_snmp_hosts($config->{snmp});
+		probe_snmp_hosts($config->{snmp}, $plugins);
 	}
 	else {
 		# FIXME: if $config->{shell}, implies $config->{suggest}
