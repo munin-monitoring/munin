@@ -100,7 +100,7 @@ sub main
 
     # no need for a timeout -- the user can kill this process any
     # time they want.
-    Munin::Node::Service->exec_service($plugin, $arg || '');
+    Munin::Node::Service->exec_service($config->{servicedir}, $plugin, $arg);
 
     # Never reached, but just in case...
     print STDERR "# FATAL: Failed to exec.";

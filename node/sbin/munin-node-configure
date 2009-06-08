@@ -48,15 +48,14 @@ sub main
 	my $plugins = load_available_plugins();
 	load_installed_plugins($plugins);
 
-	if ($config->{suggest}) {
-		show_suggestions($plugins);
-	}
-	elsif (@{ $config->{snmp} }) {
+	if (@{ $config->{snmp} }) {
 		init_snmp($plugins);
 		probe_snmp_hosts($config->{snmp}, $plugins);
 	}
+	elsif ($config->{suggest} or $config->{shell}) {
+		show_suggestions($plugins);
+	}
 	else {
-		# FIXME: if $config->{shell}, implies $config->{suggest}
 		print_status_list($plugins);
 	}
 
@@ -370,16 +369,13 @@ sub print_suggestion_row
 	my $now = $plug_info->{installed} ? 'yes' : 'no';
 
 	if ($plug_info->{wildcard}) {
-		my ($same, $add, $remove)
-			= diff_suggestions($plug_info->{installed},
-		                           $plug_info->{suggestions});
-
+		my ($same, $add, $remove) = diff_suggestions($plug_info->{installed},
+		                                             $plug_info->{suggestions});
 		my @suggestions = @$same;
 		push @suggestions, map { '+' . $_ } @$add;
 		push @suggestions, map { '-' . $_ } @$remove;
 
-		$msg = '(' . join(' ', @suggestions) . ')'
-			if scalar @suggestions;
+		$msg = '(' . join(' ', @suggestions) . ')' if @suggestions;
 	}
 	elsif ($plug_info->{defaultreason}) {
 		# Report why it's not being used
@@ -749,12 +745,11 @@ sub fetch_plugin_autoconf
 	# Default to the safe option
 	$plugin->{default} = 'no';
 
-	# FIXME: ewww :-(  but needed to make exec_service() work
-	$config->{servicedir} = $config->{libdir};
-
 	print "# Running autoconf on $plugin->{name}\n" if $config->{DEBUG};
 
-	my $res = Munin::Node::Service->fork_service($plugin->{name}, 'autoconf');
+	my $res = Munin::Node::Service->fork_service($config->{libdir},
+	                                             $plugin->{name},
+	                                             'autoconf');
 
 	# No if it timed out
 	if ($res->{timed_out}) {
@@ -830,7 +825,9 @@ sub fetch_plugin_suggestions
 
 	print "# Running suggest on $plugin->{name}\n" if $config->{DEBUG};
 
-	my $res = Munin::Node::Service->fork_service($plugin->{name}, 'suggest');
+	my $res = Munin::Node::Service->fork_service($config->{libdir},
+	                                             $plugin->{name},
+	                                             'suggest');
 
 	# No if it timed out
 	if ($res->{timed_out}) {
@@ -883,12 +880,11 @@ sub fetch_plugin_snmpconf
 {
 	my ($plugin) = @_;
 
-	# FIXME: ewww :-(  but needed to make exec_service() work
-	$config->{servicedir} = $config->{libdir};
-
 	print "# Running snmpconf on $plugin->{name}\n" if $config->{DEBUG};
 
-	my $res = Munin::Node::Service->fork_service($plugin->{name}, 'snmpconf');
+	my $res = Munin::Node::Service->fork_service($config->{libdir},
+	                                             $plugin->{name},
+	                                             'snmpconf');
 
 	# No if it timed out
 	if ($res->{timed_out}) {

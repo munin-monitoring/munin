@@ -287,7 +287,7 @@ sub _run_service {
     }
     else {
         # In child, should never return ...
-        Munin::Node::Service->exec_service($service, $command);
+        Munin::Node::Service->exec_service($config->{servicedir}, $service, $command);
         
 	# Should never get here ... putting an exit guard here just
         # in case ...

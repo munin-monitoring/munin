@@ -121,20 +121,20 @@ sub change_real_and_effective_user_and_group
 
 
 sub exec_service {
-    my ($class, $service, $arg) = @_;
+    my ($class, $dir, $service, $arg) = @_;
 
     POSIX::setsid();
 
     $class->change_real_and_effective_user_and_group($service);
 
-    unless (Munin::Node::OS->check_perms("$config->{servicedir}/$service")) {
+    unless (Munin::Node::OS->check_perms("$dir/$service")) {
         logger ("Error: unsafe permissions on $service. Bailing out.");
         exit 2;
     }
 
     $class->export_service_environment($service);
 
-    my @command = _service_command($service, $arg);
+    my @command = _service_command($dir, $service, $arg);
     print STDERR "# About to run '", join (' ', @command), "'\n" if $config->{DEBUG};
     exec @command;
 }
@@ -142,7 +142,7 @@ sub exec_service {
 
 sub _service_command
 {
-    my ($service, $argument) = @_;
+    my ($dir, $service, $argument) = @_;
 
     my @run = ();
     my $sconf = $config->{sconf};
@@ -150,14 +150,14 @@ sub _service_command
     if ($sconf->{$service}{command}) {
         for my $t (@{ $sconf->{$service}{command} }) {
             if ($t eq '%c') {
-                push @run, ("$config->{servicedir}/$service", $argument);
+                push @run, ("$dir/$service", $argument);
             } else {
                 push @run, ($t);
             }
         }
     }
     else {
-        @run = ("$config->{servicedir}/$service", $argument);
+        @run = ("$dir/$service", $argument);
     }
 
     return @run;
@@ -166,13 +166,13 @@ sub _service_command
 
 sub fork_service
 {
-    my ($class, $service, $arg) = @_;
+    my ($class, $dir, $service, $arg) = @_;
 
     my $timeout = $config->{sconf}{$service}{timeout} 
                   || $config->{timeout};
 
     my $run_service = sub {
-        $class->exec_service($service, $arg);
+        $class->exec_service($dir, $service, $arg);
         # shouldn't be reached
         print STDERR "# ERROR: Failed to exec.\n";
         exit 42;
@@ -230,16 +230,16 @@ On failure, causes the process to exit.
 
 =item B<exec_service>
 
- Munin::Node::Service->exec_service($service, [$argument]);
+ Munin::Node::Service->exec_service($directory, $service, [$argument]);
 
-Replaces the current process with an instance of service $service running with 
-the correct environment and privileges.
+Replaces the current process with an instance of service $service in $directory,
+running with the correct environment and privileges.
 
 This function never returns.
 
 =item B<fork_service>
 
- $result = Munin::Node::Service->fork_service($service, [$argument]);
+ $result = Munin::Node::Service->fork_service($directory, $service, [$argument]);
 
 Identical to exec_service(), except it forks off a child to run the service.
 If the service takes longer than its configured timeout, it will be terminated.

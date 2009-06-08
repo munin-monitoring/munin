@@ -38,25 +38,27 @@ $config->reinitialize({
 
 ### _service_command
 {
-	my ($plugin, $argument) = ('test', 'config');
+	my $dir      = '/service/directory';
+	my $plugin   = 'test';
+	my $argument = 'config';
 
 	$config->{sconf}{test}{command} = undef;
 	is_deeply(
-		[ Munin::Node::Service::_service_command($plugin, $argument) ],
+		[ Munin::Node::Service::_service_command($dir, $plugin, $argument) ],
 		[ "/service/directory/$plugin", $argument ],
 		'No custom service command.'
 	);
 
 	$config->{sconf}{test}{command} = [ qw/a b c d/ ];
 	is_deeply(
-		[ Munin::Node::Service::_service_command($plugin, $argument) ],
+		[ Munin::Node::Service::_service_command($dir, $plugin, $argument) ],
 		[ qw/a b c d/ ],
 		'Custom service command without substitution.'
 	);
 
 	$config->{sconf}{test}{command} = [ qw/a b %c d/ ];
 	is_deeply(
-		[ Munin::Node::Service::_service_command($plugin, $argument) ],
+		[ Munin::Node::Service::_service_command($dir, $plugin, $argument) ],
 		[ 'a', 'b', "/service/directory/$plugin", $argument, 'd' ],
 		'Custom service command with substitution.'
 	);
@@ -64,7 +66,7 @@ $config->reinitialize({
 
 ### fork_service
 {
-	my $ret = Munin::Node::Service->fork_service('foo');
+	my $ret = Munin::Node::Service->fork_service('/fnord', 'foo');
 	is($ret->{retval} >> 8, 42, 'Attempted to run non-existant service');
 }
 
