@@ -7,9 +7,6 @@ use Socket;
 
 use_ok('Munin::Node::SNMPConfig');
 
-my $_192_168_2_123 = inet_aton('192.168.2.123');
-my $_192_168_2_1   = inet_aton('192.168.2.1');
-
 # use the 192.0.2.0/24 block, since that's what the 
 my @slash_24 = map { "192.168.2.$_" } 0 .. 255;
 
@@ -37,6 +34,9 @@ my @slash_24 = map { "192.168.2.$_" } 0 .. 255;
 	my $hosts_in_net = \&Munin::Node::SNMPConfig::_hosts_in_net;
 	my (@ips, @expected);
 
+	my $_192_168_2_123 = inet_aton('192.168.2.123');
+	my $_192_168_2_1   = inet_aton('192.168.2.1');
+
 	@ips = $hosts_in_net->($_192_168_2_123, 24);
 	is_deeply(\@ips, \@slash_24, 'Class C is expanded correctly');
 
@@ -56,19 +56,19 @@ sub _resolve
 	my $name = shift;
 
 	my @valid = (
-		[ '192.168.2.123', 'test', $_192_168_2_123 ],
-		[ '192.168.2.1', 'gateway', $_192_168_2_1 ],
+		[ '192.168.2.123', 'test'    ],
+		[ '192.168.2.1',   'gateway' ],
 	);
 
 	foreach my $host (@valid) {
 		my ($ip, $hostname, $resolved) = @$host;
 
-		return $resolved if $name eq $ip
-		                 or $name eq $hostname
-		                 or $name eq "$hostname.example.com";
+		return inet_aton($ip) if $name eq $ip
+		                      or $name eq $hostname
+		                      or $name eq "$hostname.example.com";
 	}
 
-	die "##### $name: invalid test value! #####";
+	die "Unable to resolve $name: invalid test value!";
 }
 
 no warnings;
