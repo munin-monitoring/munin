@@ -22,7 +22,7 @@ if [ $1 ]; then
     echo "**********************************************************************"
     perl -pi -e "s/port 4949/port 4948/; 
                  s/user root/user $USER/; 
-                 s/group root/group $USER/;
+                 s/group root/group $GROUPS/;
                  s|^(port .*)|\$1
 
 tls disabled
