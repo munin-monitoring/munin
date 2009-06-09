@@ -12,7 +12,6 @@ use Munin::Common::Defaults;
 use Munin::Common::Timeout;
 use Munin::Common::TLSServer;
 use Munin::Node::Logger;
-use Munin::Node::OS;
 use Munin::Node::Service;
 use Munin::Node::Session;
 
@@ -40,6 +39,7 @@ sub pre_loop_hook {
 sub _load_service_configurations {
     $config->process_plugin_configuration_files();
     $config->apply_wildcards();
+    return;
 }
 
 
@@ -49,11 +49,12 @@ sub _load_services {
 
     for my $file (readdir($DIR)) {
         next unless Munin::Node::Service->is_a_runnable_service($file);
-	print "file: '$file'\n" if $config->{DEBUG};
+        print STDERR "file: '$file'\n" if $config->{DEBUG};
         _add_to_services_and_nodes($file);
     }
 
     closedir $DIR;
+    return;
 }
 
 
@@ -70,8 +71,6 @@ sub process_request {
     $PROGRAM_NAME .= " [$session->{peer_address}]";
 
     _net_write($session, "# munin node at $config->{fqdn}\n");
-
-    
 
     my $timed_out = !do_with_timeout($config->{'timeout'}, sub {
         while (defined (my $line = _net_read($session))) {
@@ -117,11 +116,14 @@ sub _process_command_line {
     } 
     elsif (/^nodes/i) {
         _show_nodes($session);
-    } elsif (/^fetch\s?(\S*)/i) {
+    }
+    elsif (/^fetch\s?(\S*)/i) {
         _print_service($session, _run_service($session, $1)) 
-    } elsif (/^config\s?(\S*)/i) {
+    }
+    elsif (/^config\s?(\S*)/i) {
         _print_service($session, _run_service($session, $1, "config"));
-    } elsif (/^starttls\s*$/i) {
+    }
+    elsif (/^starttls\s*$/i) {
         eval {
             $session->{tls_started} = _process_starttls_command($session);
         };
@@ -130,7 +132,8 @@ sub _process_command_line {
             return 0;
         }
         logger ("DEBUG: Returned from starttls.") if $config->{DEBUG};
-    } else {
+    }
+    else {
         _net_write($session, "# Unknown command. Try cap, list, nodes, config, fetch, version or quit\n");
     }
 
@@ -239,6 +242,8 @@ sub _add_to_services_and_nodes {
     my ($service) = @_;
 
     $services{$service} = 1;
+    # FIXME: may need to query the plugin to get host_name.  eg. in the case of
+    # SNMP plugins.
     my $node = $config->{sconf}{$service}{host_name} || $config->{fqdn};
     $nodes{$node}{$service} = 1;
 }
@@ -262,80 +267,42 @@ sub _list_services {
 }
 
 
-# FIX - shouldn't this be in Munin::Node::Service ?
-
 sub _run_service {
+    # FIXME: $autoreap is never set?
     my ($session, $service, $command, $autoreap) = @_;
-
-    $command ||= "";
 
     unless ($services{$service}) {
         _net_write($session, "# Unknown service");
-        return ();
+        return;
     }
 
-    my $child_pid = open my $CHILD, '-|';
+    my $res = eval { Munin::Node::Service->fork_service($config->{servicedir},
+                                                        $service,
+                                                        $command);
+    };
 
-    unless (defined $child_pid) {
-	logger("Unable to fork.");
-        return ();
+    if ($EVAL_ERROR) {
+        # Error forking, building pipes, etc
+        logger("System error: $EVAL_ERROR");
+        return;
     }
 
-    my @lines;
-    if ($child_pid) {
-        @lines = _read_service_result($session, $CHILD, $service, $command, $child_pid);
-    }
-    else {
-        # In child, should never return ...
-        Munin::Node::Service->exec_service($config->{servicedir}, $service, $command);
-        
-	# Should never get here ... putting an exit guard here just
-        # in case ...
-        exit 42;
-    }
-
-    unless (close $CHILD) {
-        if ($!) {
-            # If Net::Server::Fork is currently taking care of reaping,
-            # we get false errors. Filter them out.
-            unless (defined $autoreap && $autoreap)  {
-                logger("Error while executing plugin \"$service\": $!");
-            }
-        }
-        else {
-            logger("Plugin \"$service\" exited with status $CHILD_ERROR. --@lines--");
-        }
-    }
-
-    wait;
-
-    chomp @lines;
-    return (@lines);
-}
-
-
-sub _read_service_result {
-    my ($session, $CHILD, $service, $command, $child_pid) = @_;
-
-    my $timeout = $config->{sconf}{$service}{timeout};
-    $timeout = $config->{'timeout'} 
-    	unless defined $timeout and $timeout =~ /^\d+$/;
-
-    my @lines = ();
-
-    my $timed_out = !do_with_timeout($timeout, sub {
-        while (my $line = <$CHILD>) {
-	    push @lines, $line;
-        }
-    });
-    if ($timed_out) {
-        my $msg = "timeout: $service $command: $@ (pid $child_pid). Killing it";
-        _net_write($session, "# $msg\n"); 
+    if ($res->{timed_out}) {
+        my $msg = "timeout: $service $command.";
+        _net_write($session, "# $msg\n");
         logger("Plugin $msg");
-        Munin::Node::OS->reap_child_group($child_pid);
+        return;
     }
 
-    return @lines;
+    if ($res->{retval}) {
+        my $plugin_exit   = $res->{retval} >> 8;
+        my $plugin_signal = $res->{retval} & 127;
+
+#       logger(qq{Plugin '$service' exited with status $CHILD_ERROR. --@lines--});
+        return;
+    }
+
+    return (@{ $res->{stdout} });
 }
 
 
@@ -348,7 +315,7 @@ sub _net_read {
         $_ = $session->{tls}->read();
     }
     else {
-	$_ = <STDIN>;
+        $_ = <STDIN>;
     }
     logger('DEBUG: < ' . (defined $_ ? $_ : 'undef')) if $config->{DEBUG};
     return $_;
@@ -362,11 +329,9 @@ sub _net_write {
         $session->{tls}->write($text);
     }
     else {
-	print STDOUT $text;
+        print STDOUT $text;
     }
 }
-
-
 
 
 1;
@@ -400,3 +365,4 @@ Loads all the plugins (services)
 Processes the request ...
 
 =cut
+vim: ts=4 : expandtab
