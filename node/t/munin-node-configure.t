@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 39;
+use Test::More tests => 41;
 
 use Data::Dumper;
 
@@ -186,14 +186,9 @@ $config->reinitialize({
 
 		fetch_plugin_autoconf($plugin);
 
-		# we know the name is right, and this saves having to mess with 
-		# $expected
-		delete $plugin->{name};
-
 		# check the two parameters the sub sets (default, defaultreason)
 		is($plugin->{default}, $expected->{default}, "$msg - result")
 			or diag(list_errors());
-		
 		is($plugin->{defaultreason}, $expected->{defaultreason}, "$msg - reason")
 			or diag(list_errors());
 	}
