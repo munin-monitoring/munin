@@ -1,12 +1,13 @@
 #!/bin/sh
 
-# Munin test plugin: autoconf prints no response
+# Munin test plugin: autoconf prints an unrecognised response
 #
 # #%# family=test
 # #%# capabilities=autoconf
 
 do_autoconf()
 {
+	echo oui
 	exit 0
 }
 

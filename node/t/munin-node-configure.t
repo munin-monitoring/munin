@@ -141,7 +141,12 @@ $config->reinitialize({
 		[
 			'bad-no-answer',
 			{ default => 'no' },
-			"Plugin doesn't print any recognised response",
+			"Plugin exits without printing anything",
+		],
+		[
+			'bad-unrecognised-answer',
+			{ default => 'no' },
+			"Plugin doesn't print a recognised response",
 		],
 		[
 			'bad-cruft',
