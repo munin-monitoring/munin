@@ -30,6 +30,8 @@ sub _hosts_in_net
 {
 	my ($addr, $mask) = @_;
 
+	my @ret;
+
 	# This won't work with a netmask of 0.  then again, no-one wants to
 	# SNMP-scan the whole internet, even if they think they do.
 	$mask ||= 32;
@@ -39,11 +41,15 @@ sub _hosts_in_net
 
 	my $net = unpack('N', $addr);  # ntohl()
 
-	# Evil maths cribbed from nmap
+	# Evil maths courtesy of nmap's TargetGroup.cc
 	my $low  = $net & (0 - (1 << (32 - $mask)));
 	my $high = $net | ((1 << (32 - $mask)) - 1);
 
-	return map { inet_ntoa(pack 'N', $_) } $low .. $high;
+	# turns out the .. operator can't handle unsigned integers
+	for (my $ip = $low; $ip <= $high; $ip++) {
+		push @ret, inet_ntoa(pack 'N', $ip);
+	}
+	return @ret;
 }
 
 
