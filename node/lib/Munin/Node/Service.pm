@@ -123,7 +123,7 @@ sub change_real_and_effective_user_and_group
 sub exec_service {
     my ($class, $dir, $service, $arg) = @_;
 
-    POSIX::setsid();
+    $arg ||= '';
 
     $class->change_real_and_effective_user_and_group($service);
 
