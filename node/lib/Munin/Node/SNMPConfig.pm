@@ -130,15 +130,8 @@ sub snmp_probe_host
 			next;
 		}
 
-		# FIXME: this should be done back in munin-node-configure itself
-		# though will require more flexibility since some SNMP plugins have
-		# two wildcard parameters
-		if ($plugin->{wild}) {
-			# adds a link for each id in @$auto
-		}
-		else {
-			# adds a regular link
-		}
+		$plugin->{suggestions} ||= [];
+		push @{ $plugin->{suggestions} }, $host;
 	}
 
 	print "# Finished probing $host\n" if $config->{DEBUG};
@@ -220,25 +213,21 @@ sub _snmp_autoconf_plugin
 # Retrieves the value for the given OID from the session
 sub _snmp_get_single
 {
-	my $session = shift;
-	my $oid     = shift;
+	my ($session, $oid) = @_;
 
 	my $response = $session->get_request($oid);
 
 	unless (defined $response) {
-		print "# Request failed for oid '$oid'"
-			if $config->{DEBUG};
+		print "# Request failed for oid '$oid'\n" if $config->{DEBUG};
 		return;
 	}
 
-	print "# Fetched value \"$response->{$oid}\"\n"
-		if $config->{DEBUG};
-
+	print "# Fetched value '$response->{$oid}'\n" if $config->{DEBUG};
 	return $response->{$oid};
 }
 
 
-# takes an index 
+# Walks the entries immediately under $oid
 sub _snmp_get_index
 {
 	my ($session, $oid, $num) = @_;
@@ -253,12 +242,15 @@ sub _snmp_get_index
 	print "# Checking for $ret\n" if $config->{DEBUG};
 	$response = $session->get_request($ret);
 
+warn Dumper $response;
+
 	foreach my $ii (0 .. $num) {
 		if ($ii or !defined $response or $session->error_status) {
 			print "# Checking for sibling of $ret\n" if $config->{DEBUG};
 			$response = $session->get_next_request($ret);
 		}
-		if (!$response or $session->error_status) {
+		unless ($response) {
+			printf "# Error fetching $ret: %s\n", $session->error_status() if $config->{DEBUG};
 			return;
 		}
 		my @keys = keys %$response;

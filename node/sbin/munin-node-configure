@@ -51,8 +51,10 @@ sub main
 	if (@{ $config->{snmp} }) {
 		init_snmp($plugins);
 		probe_snmp_hosts($config->{snmp}, $plugins);
+		show_suggestions($plugins);
 	}
 	elsif ($config->{suggest} or $config->{shell}) {
+		gather_suggestions($plugins);
 		show_suggestions($plugins);
 	}
 	else {
@@ -122,18 +124,11 @@ sub parse_args
 	    exit 2;
 	}
 
-	if (@snmp and !$shell) {
-	    print STDERR "Fatal: --snmp only supported along with --shell.\n";
-	    exit 3;
-	}
-
-
 	if (@families) {
 	    @families = split(/,/, $families[0]);
 	} else {
 	    if (@snmp) {
 		@families = ('snmpauto');
-		$shell=1;
 	    }
 	    elsif ($suggest or $shell) {
 		@families = @default_families;
@@ -327,16 +322,10 @@ sub diff_suggestions
 
 
 # Asks each available autoconf plugin whether or not it should be installed,
-# and (if it's a wildcard plugin) its suggested profiles.  Then displays them
-# appropriately
-sub show_suggestions
+# and (if it's a wildcard plugin) its suggested profiles.
+sub gather_suggestions
 {
 	my ($plugins) = @_;
-
-	unless ($config->{shell}) {
-		normal("Plugin", "Used", "Suggestions");
-		normal("------", "----", "-----------");
-	}
 
 	# We're going to be running plugins
 	prepare_plugin_environment();
@@ -351,7 +340,26 @@ sub show_suggestions
 		fetch_plugin_suggestions($plug_info)
 			if ($plug_info->{wildcard}
 			and $plug_info->{capabilities}{suggest});
+	}
 
+	return;
+}
+
+
+# Displays the suggestions in an appropriate form (shell commands or a table)
+sub show_suggestions
+{
+	my ($plugins) = @_;
+
+	unless ($config->{shell}) {
+		normal("Plugin", "Used", "Suggestions");
+		normal("------", "----", "-----------");
+	}
+
+	foreach my $plugin (sort keys %$plugins) {
+		my $plug_info = $plugins->{$plugin};
+
+		next unless $plug_info->{capabilities}{autoconf};
 		$config->{shell} ? manage_links($plug_info)
 		                 : print_suggestion_row($plug_info);
 	}
@@ -466,7 +474,7 @@ sub init_snmp
 	Munin::Node::SNMPConfig->import();
 
 	prepare_plugin_environment();
-	
+
 	foreach my $plug_info (values %$plugins) {
 		next unless $plug_info->{capabilities}{snmpconf};
 		fetch_plugin_snmpconf($plug_info);
@@ -474,7 +482,6 @@ sub init_snmp
 
 	return;
 }
-
 
 
 sub probe_snmp_hosts
@@ -916,17 +923,22 @@ sub fetch_plugin_snmpconf
 		my ($a, $b) = split (/\s+/, $line, 2);
 		next unless defined $a;
 
-		if ($a eq 'require' and $b) {
-			my ($oid, $val) = ($b =~ /\A ([.\d]+) \s+ (.+) \z/mx);
+		print "#\tAnalysing line: $line\n" if $config->{DEBUG};
+
+		if ($a eq 'require' and defined $b) {
+			# FIXME: can also be '1.2.3.4', not just '1.2.3. $regex' or something
+			my ($oid, $val) = ($b =~ /\A ([.\d]+) (?: \s+ (.+) )? \z/mx);
+			
 			push (@{$plugin->{req}}, [$oid, $val]);
+			
 			print "#\tRegistered 'require': $oid =~ /$val/\n"
 				if $config->{DEBUG};
 		}
-		elsif ($a eq 'index' and $b) {
+		elsif ($a eq 'index' and defined $b) {
 			$plugin->{ind} = $b;
 			print "#\tRegistered 'index'  : $b\n" if $config->{DEBUG};
 		}
-		elsif ($a eq 'number' and $b) {
+		elsif ($a eq 'number' and defined $b) {
 			$plugin->{num} = $b;
 			print "#\tRegistered 'number' : $b\n" if $config->{DEBUG};
 		}
