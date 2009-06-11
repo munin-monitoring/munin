@@ -487,7 +487,7 @@ sub init_snmp
 sub probe_snmp_hosts
 {
 	my ($snmp_hostlist, $plugins) = @_;
-	
+
 	# Allow the user to mix multiple invocations of --snmp with the comma-delimited form
 	my @host_specs = map { split /,/ } @$snmp_hostlist;
 
@@ -792,13 +792,23 @@ sub fetch_plugin_autoconf
 		return;
 	}
 
-	# Only one (non-debug) line should have been printed
-	unless (grep(!/^#/, @{ $res->{stdout} }) == 1) {
+	my @response = grep !/^#/, @{ $res->{stdout} };
+
+	return parse_autoconf_response($plugin, @response);
+}
+
+
+sub parse_autoconf_response
+{
+	my ($plugin, @response) = @_;
+
+	# If there's anything else, it means more than one line was printed
+	unless (scalar(@response) == 1) {
 		log_error($plugin->{name}, 'Wrong amount of autoconf'); # FIXME
 		return;
 	}
 
-	my $line = shift @{ $res->{stdout} };
+	my $line = shift @response;
 
 	# The line it did print isn't in a valid format
 	unless ($line =~ /^(yes)$/
@@ -827,8 +837,9 @@ sub fetch_plugin_suggestions
 	# Only run if the autoconf gave the go-ahead
 	return unless ($plugin->{default} eq "yes");
 
-	my @suggestions;
-	$plugin->{suggestions} = \@suggestions;
+	# FIXME: is this required?  there shouldn't be any need to check
+	# suggestions if the plugin suffered a fatal error.
+	$plugin->{suggestions} = [];
 
 	print "# Running suggest on $plugin->{name}\n" if $config->{DEBUG};
 
@@ -862,18 +873,26 @@ sub fetch_plugin_suggestions
 	# Get the list while ignoring debug output
 	my @suggested = grep !/^#/, @{ $res->{stdout} };
 
+	return parse_suggest_response($plugin, @suggested);
+}
+
+
+sub parse_suggest_response
+{
+	my ($plugin, @suggested) = @_;
+
 	foreach my $line (@suggested) {
 		if ($line =~ /^[\w.]+$/) { # FIXME: too restrictive?
 			# This looks like it should be a suggestion.
 			print "# Good suggestion: $line\n" if $config->{DEBUG};
-			push @suggestions, $line;
+			push @{ $plugin->{suggestions} }, $line;
 		}
 		else {
 			log_error($plugin->{name}, "Bad suggestion: $line");
 		}
 	}
 
-	unless (@suggestions) {
+	unless (@{ $plugin->{suggestions} }) {
 		log_error($plugin->{name}, "No suggestions");
 		return;
 	}
@@ -916,7 +935,17 @@ sub fetch_plugin_snmpconf
 		return;
 	}
 
-	foreach my $line (@{ $res->{stdout} }) {
+	my @response = grep !/^#/, @{ $res->{stdout} };
+
+	return parse_snmpconf_response($plugin, @response);
+}
+
+
+sub parse_snmpconf_response
+{
+	my ($plugin, @response) = @_;
+
+	foreach my $line (@response) {
 		chomp $line;
 		$line =~ s/^\s+//;
 		$line =~ s/\s+$//;
@@ -928,9 +957,9 @@ sub fetch_plugin_snmpconf
 		if ($a eq 'require' and defined $b) {
 			# FIXME: can also be '1.2.3.4', not just '1.2.3. $regex' or something
 			my ($oid, $val) = ($b =~ /\A ([.\d]+) (?: \s+ (.+) )? \z/mx);
-			
+
 			push (@{$plugin->{req}}, [$oid, $val]);
-			
+
 			print "#\tRegistered 'require': $oid =~ /$val/\n"
 				if $config->{DEBUG};
 		}
@@ -947,7 +976,7 @@ sub fetch_plugin_snmpconf
 		}
 	}
 
-	return 0;
+	return;
 }
 
 
