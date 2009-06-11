@@ -9,8 +9,7 @@ do_autoconf () {
 }
 
 do_config () {
-    # Missing graph_title - this is the indicator used by munin if the
-    # graph is configured.
+    # Config - correct
     echo graph_title Broken fetch plugin
     echo graph_args -l 0
     echo graph_info Floppa
@@ -18,11 +17,11 @@ do_config () {
 }
 
 do_ () {
-    # Fetch - emit valid data
+    # Fetch - incorrect
     echo test.valoe 5
 }
 
 eval do_$1
 
 exit 0
- 
+

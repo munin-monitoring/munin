@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# To test munin-gather/update: This plugin is to emit broken
+# To test munin-gather/update: This plugin emits broken
 # configuration when run with "config".
 
 do_autoconf () {
