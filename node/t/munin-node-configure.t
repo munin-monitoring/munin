@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 41;
+use Test::More tests => 48;
 
 use Data::Dumper;
 
@@ -257,4 +257,99 @@ $config->reinitialize({
 			or diag(list_errors());
 	}
 }
+
+
+### parse_snmpconf_response
+{
+	my @tests = (
+		[
+			[ 'require 1.3.6.1.2.1.25.2.2.0'   ],
+			{
+				require_exact => [ '1.3.6.1.2.1.25.2.2.0', ],
+			},
+			'Require - OID'
+		],
+		[
+			[ 'require .1.3.6.1.2.1.25.2.2.0' ],
+			{
+				require_exact => [ '1.3.6.1.2.1.25.2.2.0' ],
+			},
+			'Require - OID with leading dot (which gets stripped)'
+		],
+		[
+			[ 'require 1.3.6.1.2.1.2.2.1.5.   [0-9]' ],
+			{ 
+				require_match => [
+					[ '1.3.6.1.2.1.2.2.1.5.', '[0-9]' ],
+				],
+			},
+			'Require - OID root with regex'
+		],
+		[
+			[ 'require 1.3.6.1.2.1.2.2.1.5.', ],
+			{},
+			'Require - OID root without regex is an error'
+		],
+		[
+			[ 'require 1.3.6.1.2.1.8888.1.1.6.1.5.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.    ^2$', ],
+			{
+				require_match => [
+					[ '1.3.6.1.2.1.8888.1.1.6.1.5.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.', '^2$' ],
+				],
+			},
+			'Require - Very long OID with regex'
+		],
+		[
+			[
+				'require 1.3.6.1.2.1.2.2.1.5.  [0-9]',
+				'require 1.3.6.1.2.1.2.2.1.10. [0-9]',
+				'require 1.3.6.1.2.1.2.2.2.5',
+			],
+			{ 
+				require_match => [
+					[ '1.3.6.1.2.1.2.2.1.5.',  '[0-9]', ],
+				  	[ '1.3.6.1.2.1.2.2.1.10.', '[0-9]', ],
+				],
+				require_exact => [
+					'1.3.6.1.2.1.2.2.2.5'
+				],
+			},
+			'Require - Multiple require statements'
+		],
+		[
+			[ 'number  1.3.6.1.2.1.2.1.0', ],
+			{
+				number => '1.3.6.1.2.1.2.1.0',
+			},
+			'Number - OID'
+		],
+		[
+			[ 'number  1.3.6.1.2.1.2.1.', ],
+			{},
+			'Number - OID root is an error'
+		],
+	
+	#	[
+	#		[ '', ],
+	#		[ '', ],
+	#		undef,
+	#		undef,
+	#		'Require - '
+	#	],
+	);
+
+
+	while (my $test = shift @tests) {
+		my ($response, $expected, $msg) = @$test;
+
+		my $plugin = { name => 'test' };
+	
+		parse_snmpconf_response($plugin, @$response);
+
+		delete $plugin->{name};
+
+		is_deeply($plugin, $expected, $msg);
+	}
+}
+
 

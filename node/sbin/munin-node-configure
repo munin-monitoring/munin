@@ -946,35 +946,45 @@ sub parse_snmpconf_response
 	my ($plugin, @response) = @_;
 
 	foreach my $line (@response) {
-		chomp $line;
 		$line =~ s/^\s+//;
 		$line =~ s/\s+$//;
-		my ($a, $b) = split (/\s+/, $line, 2);
-		next unless defined $a;
+		my ($key, $value) = split /\s+/, $line, 2;
+
+		next unless defined $key and defined $value;
 
 		print "#\tAnalysing line: $line\n" if $config->{DEBUG};
 
-		if ($a eq 'require' and defined $b) {
-			# FIXME: can also be '1.2.3.4', not just '1.2.3. $regex' or something
-			my ($oid, $val) = ($b =~ /\A ([.\d]+) (?: \s+ (.+) )? \z/mx);
-
-			push (@{$plugin->{req}}, [$oid, $val]);
-
-			print "#\tRegistered 'require': $oid =~ /$val/\n"
-				if $config->{DEBUG};
+		if ($key eq 'require') {
+			if ($value =~ /\A \.? ( [0-9.]+ \. ) \s+ (.+) \z/mx) {
+				$plugin->{require_match} ||= [];
+				push @{ $plugin->{require_match} }, [$1, $2];
+			}
+			elsif ($value =~ /\A \.? ( [0-9.]+ [0-9]+ ) \z/mx) {
+				$plugin->{require_exact} ||= [];
+				push @{ $plugin->{require_exact} }, $1;
+			}
+			else {
+				log_error($plugin->{name},
+					"Invalid format for 'require': $value\n");
+			}
 		}
-		elsif ($a eq 'index' and defined $b) {
-			$plugin->{ind} = $b;
-			print "#\tRegistered 'index'  : $b\n" if $config->{DEBUG};
+		elsif ($key eq 'index') {
+			# FIXME: error if index already given
+			$plugin->{index} = $value;
+			print "#\tRegistered 'index'  : $value\n" if $config->{DEBUG};
 		}
-		elsif ($a eq 'number' and defined $b) {
-			$plugin->{num} = $b;
-			print "#\tRegistered 'number' : $b\n" if $config->{DEBUG};
+		elsif ($key eq 'number') {
+			# FIXME: error if number already given
+			$plugin->{number} = $value;
+			print "#\tRegistered 'number' : $value\n" if $config->{DEBUG};
 		}
 		else {
-			log_error($plugin->{name}, "Couldn't parse line: $line");
+			log_error($plugin->{name}, "Couldn't parse line: $line\n");
 		}
 	}
+
+	# FIXME: error if -- index without number, or vice versa
+	#                    double-wildcard and no index and number
 
 	return;
 }
