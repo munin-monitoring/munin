@@ -141,6 +141,8 @@ sub snmp_probe_host
 }
 
 
+# Sets the 'default' field and add to the suggestions for suggestion reporting
+# code in m-n-c to work
 sub _snmp_autoconf_plugin
 {
 	my ($plugin, $session) = @_;
@@ -148,57 +150,47 @@ sub _snmp_autoconf_plugin
 	my $num = 1;  # Number of items to autoconf
 	my $indexes;  # Index base
 
+	$plugin->{default} = 'no';
+
 	# First round of requirements
-	if ($plugin->{req}) {
+	if ($plugin->{require_exact}) {
 		print "# Checking requirements...\n" if $config->{DEBUG};
-		foreach my $req (@{$plugin->{req}}) {
-			if ($req->[0] =~ /\.$/) {
-				print "# Delaying testing of $req->[0], as we need the indexes first.\n"
-					if $config->{DEBUG};
-				next;
-			}
-
-			my $snmp_val = _snmp_get_single($session, $req->[0]);
-
-			if (!defined $snmp_val or $snmp_val !~ /$req->[1]/) {
-				print "# Nope. Duh.\n" if $config->{DEBUG};
+		foreach my $req (@{$plugin->{require_exact}}) {
+			unless (defined _snmp_get_single($session, $req)) {
+				print "# No.\n" if $config->{DEBUG};
 				return;
 			}
 		}
 	}
 
 	# We need the number of "things" to autoconf
-	if ($plugin->{num}) {
-		$num = _snmp_get_single($session, $plugin->{num});
-		return unless $num;
+	if ($plugin->{number}) {
+		unless ($num = _snmp_get_single($session, $plugin->{number})) {
+			print "# Unable to resolve number of items\n"
+				if $config->{DEBUG};
+			return;
+		}
 	}
 	print "# $num items to autoconf\n" if $config->{DEBUG};
 
 	# Then the index base
-	if ($plugin->{ind}) {
-		$indexes = _snmp_get_index($session, $plugin->{ind}, $num);
-		return unless $indexes;
+	if ($plugin->{index}) {
+		$indexes = _snmp_get_index($session, $plugin->{index}, $num);
+		return unless $indexes or scalar keys %{$indexes};
 	}
 	else {
 		$indexes->{0} = 1;
 	}
-	print "# Got indexes: ", join (',', keys (%{$indexes})), "\n" if $config->{DEBUG};
-
-	return unless scalar keys %{$indexes};
+	print "# Got indexes: ", join (',', keys (%$indexes)), "\n" if $config->{DEBUG};
 
 	# Second round of requirements (now that we have the indexes)
-	if (defined $plugin->{req}) {
+	if (defined $plugin->{required_match}) {
 		print "# Checking requirements...\n" if $config->{DEBUG};
-		foreach my $req (@{$plugin->{req}}) {
-			if ($req->[0] !~ /\.$/) {
-				print "# Already tested of $req->[0], before we got hold of the indexes.\n" if $config->{DEBUG};
-				next;
-			}
-
+		foreach my $req (@{$plugin->{required_match}}) {
 			foreach my $key (keys %$indexes) {
 				my $snmp_val = _snmp_get_single($session, $req->[0] . $key);
 				if (!defined $snmp_val or $snmp_val !~ /$req->[1]/) {
-					print "# Nope. Deleting $key from possible solutions.\n" if $config->{DEBUG};
+					print "# No. Deleting $key from possible solutions.\n" if $config->{DEBUG};
 					delete $indexes->{$key}; # Disable
 				}
 			}
@@ -227,22 +219,20 @@ sub _snmp_get_single
 }
 
 
-# Walks the entries immediately under $oid
+# Walks the entries immediately under $oid_root
 sub _snmp_get_index
 {
-	my ($session, $oid, $num) = @_;
+	my ($session, $oid_root, $num) = @_;
 
-	my $ret   = $oid . "0";
+	my $ret = $oid_root . "0";
+	
 	my %rhash;
-
 	my $response;
 
 	$num++; # Avaya switch b0rkenness...
 
 	print "# Checking for $ret\n" if $config->{DEBUG};
 	$response = $session->get_request($ret);
-
-warn Dumper $response;
 
 	foreach my $ii (0 .. $num) {
 		if ($ii or !defined $response or $session->error_status) {
@@ -255,7 +245,7 @@ warn Dumper $response;
 		}
 		my @keys = keys %$response;
 		$ret = $keys[0];
-		last unless ($ret =~ /^$oid\d+$/);
+		last unless ($ret =~ /^$oid_root\d+$/);
 
 		print "# Index $ii: ", join ('|', @keys), "\n" if $config->{DEBUG};
 

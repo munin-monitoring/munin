@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 48;
+use Test::More tests => 52;
 
 use Data::Dumper;
 
@@ -200,7 +200,12 @@ $config->reinitialize({
 	my @tests = (
 		[
 			'good',
-			{ suggestions => [ qw/one two three/ ], default => 'yes' },
+			{
+				default => 'yes',
+				suggestions => [
+					qw/one two three/
+				],
+			},
 			"Plugin provided a list of valid suggestions",
 		],
 		[
@@ -215,7 +220,12 @@ $config->reinitialize({
 		],
 		[
 			'bad-illegal-chars',
-			{ suggestions => [ qw/one two/ ], default => 'yes' },
+			{
+				default => 'yes',
+				suggestions => [
+					qw/one two/
+				],
+			},
 			"Plugin produced a suggestion containing illegal characters",
 		],
 		[
@@ -328,13 +338,39 @@ $config->reinitialize({
 			{},
 			'Number - OID root is an error'
 		],
+		[
+			[ 'index 1.3.6.1.2.1.2.1.0', ],
+			{
+				'index' => '1.3.6.1.2.1.2.1.0',
+			},
+			'Index - OID'
+		],
+		[
+			[ 'number  1.3.6.1.2.1.2.1.', ],
+			{},
+			'Index - OID root is an error'
+		],
+		[
+			[
+				'index	1.3.6.1.2.1.2.2.0',
+				'number 1.3.6.1.2.1.2.1.0  ',
+				'', # blank line
+				'require 1.3.6.1.2.1.2.2.2.5',
+			],
+			{
+				require_exact => [
+					'1.3.6.1.2.1.2.2.2.5',
+				],
+				number => '1.3.6.1.2.1.2.1.0',
+				'index' => '1.3.6.1.2.1.2.2.0',
+			},
+			'Putting it all together'
+		],
 	
 	#	[
 	#		[ '', ],
-	#		[ '', ],
-	#		undef,
-	#		undef,
-	#		'Require - '
+	#		{},
+	#		''
 	#	],
 	);
 

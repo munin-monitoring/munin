@@ -958,10 +958,16 @@ sub parse_snmpconf_response
 			if ($value =~ /\A \.? ( [0-9.]+ \. ) \s+ (.+) \z/mx) {
 				$plugin->{require_match} ||= [];
 				push @{ $plugin->{require_match} }, [$1, $2];
+				
+				print "#\tRegistered 'require'  : $1 =~ /$2/\n"
+					if $config->{DEBUG};
 			}
 			elsif ($value =~ /\A \.? ( [0-9.]+ [0-9]+ ) \z/mx) {
 				$plugin->{require_exact} ||= [];
 				push @{ $plugin->{require_exact} }, $1;
+				
+				print "#\tRegistered 'require'  : $1\n"
+					if $config->{DEBUG};
 			}
 			else {
 				log_error($plugin->{name},
