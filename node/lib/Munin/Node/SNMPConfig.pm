@@ -153,11 +153,17 @@ sub _snmp_autoconf_plugin
 	$plugin->{default} = 'no';
 
 	# First round of requirements
-	if ($plugin->{require_exact}) {
-		print "# Checking requirements...\n" if $config->{DEBUG};
-		foreach my $req (@{$plugin->{require_exact}}) {
-			unless (defined _snmp_get_single($session, $req)) {
-				print "# No.\n" if $config->{DEBUG};
+	if ($plugin->{require_oid}) {
+		print "# Checking required OIDs...\n" if $config->{DEBUG};
+		foreach my $req (@{$plugin->{require_oid}}) {
+			my $response =  _snmp_get_single($session, $req->[0]);
+			if (! defined $response) {
+				print "# No response.\n" if $config->{DEBUG};
+				return;
+			}
+			elsif ($req->[1] and $response !~ /$req->[1]/) {
+				print "# Response didn't match.\n"
+					if $config->{DEBUG};
 				return;
 			}
 		}
@@ -184,9 +190,9 @@ sub _snmp_autoconf_plugin
 	print "# Got indexes: ", join (',', keys (%$indexes)), "\n" if $config->{DEBUG};
 
 	# Second round of requirements (now that we have the indexes)
-	if (defined $plugin->{required_match}) {
+	if (defined $plugin->{required_root}) {
 		print "# Checking requirements...\n" if $config->{DEBUG};
-		foreach my $req (@{$plugin->{required_match}}) {
+		foreach my $req (@{$plugin->{required_root}}) {
 			foreach my $key (keys %$indexes) {
 				my $snmp_val = _snmp_get_single($session, $req->[0] . $key);
 				if (!defined $snmp_val or $snmp_val !~ /$req->[1]/) {

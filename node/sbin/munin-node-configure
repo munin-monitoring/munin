@@ -941,6 +941,9 @@ sub fetch_plugin_snmpconf
 }
 
 
+my $oid_pattern      = qr/^[0-9.]+[0-9]+$/;
+my $oid_root_pattern = qr/^[0-9.]+\.$/;
+
 sub parse_snmpconf_response
 {
 	my ($plugin, @response) = @_;
@@ -955,19 +958,25 @@ sub parse_snmpconf_response
 		print "#\tAnalysing line: $line\n" if $config->{DEBUG};
 
 		if ($key eq 'require') {
-			if ($value =~ /\A \.? ( [0-9.]+ \. ) \s+ (.+) \z/mx) {
-				$plugin->{require_match} ||= [];
-				push @{ $plugin->{require_match} }, [$1, $2];
+			my ($oid, $regex) = split /\s+/, $value, 2;
+
+			if ($oid =~ /$oid_root_pattern/) {
+				$plugin->{require_root} ||= [];
+				push @{ $plugin->{require_root} }, [$oid, $regex];
 				
-				print "#\tRegistered 'require'  : $1 =~ /$2/\n"
-					if $config->{DEBUG};
+				if ($config->{DEBUG}) {
+					print "#\tRegistered 'require': $oid\n";
+					print "#\t\tFiltering on /$regex/\n" if $regex;
+				}
 			}
-			elsif ($value =~ /\A \.? ( [0-9.]+ [0-9]+ ) \z/mx) {
-				$plugin->{require_exact} ||= [];
-				push @{ $plugin->{require_exact} }, $1;
+			elsif ($oid =~ /$oid_pattern/) {
+				$plugin->{require_oid} ||= [];
+				push @{ $plugin->{require_oid} }, [$oid, $regex];
 				
-				print "#\tRegistered 'require'  : $1\n"
-					if $config->{DEBUG};
+				if ($config->{DEBUG}) {
+					print "#\tRegistered 'require': $oid\n";
+					print "#\t\tFiltering on /$regex/\n" if $regex;
+				}
 			}
 			else {
 				log_error($plugin->{name},
@@ -975,12 +984,28 @@ sub parse_snmpconf_response
 			}
 		}
 		elsif ($key eq 'index') {
-			# FIXME: error if index already given
+			if ($plugin->{index}) {
+				log_error($plugin->{name}, 'index redefined');
+				next;
+			}
+			unless ($value =~ /$oid_root_pattern/) {
+				log_error($plugin->{name}, 'index must be an OID root');
+				next;
+			}
+
 			$plugin->{index} = $value;
 			print "#\tRegistered 'index'  : $value\n" if $config->{DEBUG};
 		}
 		elsif ($key eq 'number') {
-			# FIXME: error if number already given
+			if ($plugin->{number}) {
+				log_error($plugin->{name}, 'number redefined');
+				next;
+			}
+			unless ($value =~ /$oid_pattern/) {
+				log_error($plugin->{name}, 'number must be an OID');
+				next;
+			}
+
 			$plugin->{number} = $value;
 			print "#\tRegistered 'number' : $value\n" if $config->{DEBUG};
 		}
@@ -988,9 +1013,6 @@ sub parse_snmpconf_response
 			log_error($plugin->{name}, "Couldn't parse line: $line\n");
 		}
 	}
-
-	# FIXME: error if -- index without number, or vice versa
-	#                    double-wildcard and no index and number
 
 	return;
 }
