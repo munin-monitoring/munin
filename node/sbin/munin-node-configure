@@ -330,9 +330,7 @@ sub gather_suggestions
 	# We're going to be running plugins
 	prepare_plugin_environment();
 
-	foreach my $plugin (sort keys %$plugins) {
-		my $plug_info = $plugins->{$plugin};
-
+	foreach my $plug_info (values %$plugins) {
 		next unless $plug_info->{capabilities}{autoconf};
 
 		fetch_plugin_autoconf($plug_info);
@@ -518,10 +516,13 @@ sub load_installed_plugins
 		my $realfile;
 		my $path = "$config->{servicedir}/$service";
 
+		next unless Munin::Node::Service->is_a_runnable_service($service);
+
 		# Ignore non-symlinks, and symlinks that point anywhere other
 		# than the plugin library
 		next unless -l $path;
 		unless ($realfile = readlink($path)) {
+			# FIXME: should be a given, since it's tested by is_a_runnable_service()
 			print "# Warning: symlink '$config->{servicedir}/$service' is broken.\n";
 			next;
 		}
@@ -537,7 +538,7 @@ sub load_installed_plugins
 			next;
 		}
 
-		$plugins->{$realfile}->{installed} = [];
+		$plugins->{$realfile}->{installed} ||= [];
 
 		if ($plugins->{$realfile}->{wildcard}) {
 			print "#\tWildcard plugin '$service' resolves to '$realfile'\n"
@@ -1032,7 +1033,7 @@ sub log_error
 	$errors{$plugin} ||= [];
 	push @{ $errors{$plugin} }, $msg;
 
-	print $msg, "\n" if $config->{DEBUG};
+	print "# ", $msg, "\n" if $config->{DEBUG};
 
 	return;
 }
