@@ -32,7 +32,7 @@ SSPOOLDIR  = /tmp/muninspool
 LIBDIR     = $(PREFIX)/share/munin
 
 # Server only - Output directory
-HTMLDIR    = /var/www/munin
+HTMLDIR    = $(DESTDIR)/var/www/munin
 CGIDIR     = $(HTMLDIR)/../cgi
 
 # Client only - Where to put RRD files and other intenal data
