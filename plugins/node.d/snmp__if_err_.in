@@ -133,7 +133,6 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 
     # Any error is too many
     my $warn = 1;
-    my $warn = undef;
 
     print "graph_title Interface $alias errors\n";
     print "graph_order recv send\n";
