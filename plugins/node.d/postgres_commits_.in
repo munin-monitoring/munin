@@ -108,7 +108,7 @@ use vars qw ( @datasources );
 $ENV{'PGDATABASE'} ||= 'template1';
 
 my ($maybe_dbname) = ($0 =~ m/postgres_commits_(\S+)$/);
-if ($maybe_dbname eq 'All' or $ARGV[0] eq 'suggest') {
+if (($maybe_dbname and $maybe_dbname eq 'All') or ($ARGV[0] eq 'suggest')) {
   # doesn't always work.
   my @dsnnames = DBI->data_sources('Pg');
   foreach my $dsn (grep !/\=template\d$/, @dsnnames) {
@@ -119,7 +119,7 @@ if ($maybe_dbname eq 'All' or $ARGV[0] eq 'suggest') {
   }
 }
 
-if (exists $ARGV[0]) {
+if ($ARGV[0]) {
     if ($ARGV[0] eq 'autoconf') {
         # Check for DBD::Pg
         if (! eval "require DBD::Pg;") {
@@ -127,14 +127,10 @@ if (exists $ARGV[0]) {
             exit 1;
         }
 	# Try to detect PostgreSQL presence.
-        my $tempdbh = DBI->connect ('dbi:Pg:', '', '');
-        if ($tempdbh) {
-            print "yes\n";
-            exit 0;
-        } else {
-            print "no (Can't connect to given host, please check environment settings)\n";
-            exit 1;
-        }
+        DBI->connect('dbi:Pg:', '', '', { PrintError => 0 })
+		? print "yes\n"
+		: print "no (Can't connect to given host, please check environment settings)\n";
+        exit 0;
     } elsif ($ARGV[0] eq 'debug') {
         # Set debug flag
         $debug = 1;
@@ -211,7 +207,7 @@ if ($configure) {
     }
 } else {
     my $sql = "SELECT xact_commit, xact_rollback from pg_stat_database where datname = ?";
-;
+
     print "# $sql ($dbname)\n" if $debug;
     my $sth = $dbh->prepare($sql);
     $sth->execute($dbname);
