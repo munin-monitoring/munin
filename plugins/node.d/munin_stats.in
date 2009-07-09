@@ -39,10 +39,12 @@ if ($ARGV[0] and $ARGV[0] eq 'autoconf') {
     foreach $log (@logs) {
 	my $update = "$logdir/munin-$log.log";
 	if (! -r $update) {
-	    print STDERR "no (Can't read $update)\n";
-	    exit 1;
+	    print "no (Can't read $update)\n";
+	    exit 0;
 	}
     }
+    print "yes";
+    exit 0;
 }
 
 
