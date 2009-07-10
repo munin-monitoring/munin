@@ -93,7 +93,7 @@ if (exists $ARGV[0]) {
         }
         # Then we try to detect Postgres presence by connecting to
         # 'template1'.
-        my $tempdbh = DBI->connect ('dbi:Pg:', '', '');
+        my $tempdbh = DBI->connect ('dbi:Pg:', '', '', { PrintError => 0 });
         if ($tempdbh) {
             print "yes\n";
             exit 0;
