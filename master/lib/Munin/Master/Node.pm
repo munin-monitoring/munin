@@ -174,7 +174,7 @@ sub fetch_service_config {
             logger ("Config: $service->$1 = $2") if $config->{debug};
         }
         else {
-            croak "Protocol exception: unrecogniced line '$line'";
+            croak "Protocol exception: unrecognised line '$line'";
         }
     }
 
