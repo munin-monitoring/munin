@@ -87,7 +87,7 @@ sub _prepare_unix_socket {
     bind $sock, sockaddr_un($self->{socket_file})
         or croak "bind failed: $!";
     chmod oct(700), $self->{socket_file}
-        or croak "chomd failed: $!";
+        or croak "chmod failed: $!";
     listen $sock, SOMAXCONN
         or croak "listen failed: $!";
     
@@ -135,7 +135,7 @@ sub _collect_results {
             accept $worker_sock, $sock;
         });
         if ($timed_out) {
-            logger("[WARNING] Call to accept timed out: %{$self->{result_queue}}");
+            logger("[WARNING] Call to accept timed out: " . join keys %{$self->{result_queue}});
             next;
         }
         next unless fileno $worker_sock;
@@ -177,7 +177,10 @@ sub _vet_finished_workers {
         if ($CHILD_ERROR) {
             $self->_handle_worker_error($worker_pid);
         }
-        logger("Reaping $self->{active_workers}{$worker_pid} $CHILD_ERROR");
+        my $child_exit   = $CHILD_ERROR >> 8;
+	my $child_signal = $CHILD_ERROR & 127; 
+
+	logger("Reaping $self->{active_workers}{$worker_pid} $child_exit/$child_signal");
         delete $self->{active_workers}{$worker_pid};
     }
 }
