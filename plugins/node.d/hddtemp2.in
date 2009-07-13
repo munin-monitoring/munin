@@ -58,12 +58,12 @@ if ( defined $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
     } else {
       print "no (program $HDDTEMP died)\n";
     }
-    exit 1;
+    exit 0;
   }
 
   unless ($text =~ / C/) {
     print "no (no temperature readings)\n";
-    exit 1;
+    exit 0;
   }
 
   print "yes\n";

@@ -15,7 +15,7 @@ FUNCTION=$(basename $0 | cut -d_ -f3)
 if [ "$1" = "autoconf" ]; then
 	[ -x /bin/upsc ] && [ -r /etc/nut/ups.conf ] && echo yes && exit 0
 	echo "no (/bin/upsc or /etc/nut/ups.conf not found)"
-	exit 1
+	exit 0
 fi
 
 if [ "$1" = "suggest" ]; then

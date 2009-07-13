@@ -40,7 +40,7 @@ case $1 in
 	exit 0
     else
 	echo "no (either $PERDITION_LOG was not found, or logtail was not in your path)"
-	exit 1
+	exit 0
     fi
     ;;
     config)

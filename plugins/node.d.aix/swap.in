@@ -41,7 +41,7 @@ if($ARGV[0] && $ARGV[0] eq "autoconf")
     else
       {
         print "no\n";
-        exit 1;
+        exit 0;
       }
   }
 

@@ -122,7 +122,7 @@ if ($ARGV[0] and $ARGV[0] =~ /^\s*autoconf\s*$/i)
     else
     {
 	print "no\n";
-	exit 1;
+	exit 0;
     }
 }
 

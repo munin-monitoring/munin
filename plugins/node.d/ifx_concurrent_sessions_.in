@@ -95,7 +95,7 @@ if (@ARGV && $ARGV[0] =~ /autoconf|suggest/) {
 	}
 	else {
 	    print "no (Could not find oninit on this host)\n";
-	    exit 1;
+	    exit 0;
 	}
     }
 

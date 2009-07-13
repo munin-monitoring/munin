@@ -43,7 +43,7 @@ if($arg && $arg eq "autoconf") {
         exit 0;
     } else {
         print "no (need /usr/bin/iostat and /usr/sbin/lspv)\n";
-        exit 1;
+        exit 0;
     }
 }
  

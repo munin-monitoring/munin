@@ -33,7 +33,7 @@ print_values () {
 if [ "$1" = "autoconf" ]; then
     if [ -z "$(print_values)" ] ; then
 	echo no
-	exit 1
+	exit 0
     else
 	echo yes
 	exit 0

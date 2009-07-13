@@ -21,7 +21,7 @@ if [ "$1" = "autoconf" ]; then
 	exit 0
     else
 	echo "no (no executable: $TOP)"
-	exit 1
+	exit 0
     fi
 fi
 

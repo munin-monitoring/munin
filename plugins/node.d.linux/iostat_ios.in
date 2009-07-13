@@ -68,7 +68,7 @@ if ($ARGV[0] eq 'autoconf') {
 	exit 0;
     } else {
 	print "no (no /proc/diskstats or /proc/partitions)\n";
-	exit 1;
+	exit 0;
     }
 }
 

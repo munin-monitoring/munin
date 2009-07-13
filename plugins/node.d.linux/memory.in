@@ -32,7 +32,7 @@ if ($ARGV[0] and $ARGV[0] eq "autoconf") {
 	exit 0;
     } else {
 	print "no (/proc/meminfo not found)\n";
-	exit 1;
+	exit 0;
     }
 }
 

@@ -50,7 +50,7 @@ fi
 if [ "$1" = "autoconf" ]; then
     if [ -z "$EXIM" ]; then
 	echo no
-	exit 1
+	exit 0
     fi
 	
 	if $EXIM -bV 2>/dev/null >/dev/null; then
@@ -60,20 +60,20 @@ if [ "$1" = "autoconf" ]; then
 		else
 			if [ $? -eq 1 ]; then
 				echo "no (permission denied on spooldir)"
-				exit 1
+				exit 0
 			else
 				echo "no"
-				exit 1
+				exit 0
 			fi
 		fi
 	else
 		if [ $? -eq 127 ]
 		then
 			echo "no (exim not found)"
-			exit 1
+			exit 0
 		else
 			echo no
-			exit 1
+			exit 0
 		fi
 	fi
 fi

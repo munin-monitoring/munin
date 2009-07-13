@@ -24,14 +24,14 @@ LANSCAN=/usr/sbin/lanscan
 if [[ $1 = autoconf ]]; then
     if ! uname -s|grep -qEi hp-?ux; then
 	echo "no (OS doesn't seem to be HP-UX but reports as '$(uname -s)')"
-	exit 1
+	exit 0
     fi
     if [ -x $LANADMIN ]; then
         echo yes
         exit 0
     else
         echo "no ($LANADMIN not found)"
-        exit 1
+        exit 0
     fi
 fi
 

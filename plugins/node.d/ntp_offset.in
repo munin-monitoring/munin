@@ -19,16 +19,16 @@
 #%# capabilities=autoconf
 
 do_autoconf () {
-    ntpq -c help >/dev/null 2>&1 || { echo 'no (no ntpq program)'; exit 1; }
+    ntpq -c help >/dev/null 2>&1 || { echo 'no (no ntpq program)'; exit 0; }
     
     case "$(ntpq -n -p 2>/dev/null | wc -l)" in
 	0)
             echo 'no (unable to list peers)'
-	    exit 1
+	    exit 0
 	    ;;
     	1|2)
 	    echo 'no (no peers?)'
-	    exit 1
+	    exit 0
 	    ;;
 	*)
 	    echo yes

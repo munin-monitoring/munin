@@ -53,7 +53,7 @@ if ($ARGV[0] eq "autoconf")
     if (!$dbh)
     {
 	print "no (Could not connect to database.)\n";
-	exit 1;
+	exit 0;
     }
     print "yes\n";
     exit 0;

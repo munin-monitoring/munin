@@ -24,10 +24,10 @@ if [ "$1" = "autoconf" ]; then
 		if [ $? -eq 127 ]
 		then
 			echo "no (netstat program not found)"
-			exit 1
+			exit 0
 		else
 			echo no
-			exit 1
+			exit 0
 		fi
 	fi
 fi

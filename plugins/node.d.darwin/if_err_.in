@@ -113,7 +113,7 @@ case $1 in
 	    exit 0
 	else
 	    echo "no (netstat not found)"
-	    exit 1
+	    exit 0
 	fi
 	;;
     suggest)

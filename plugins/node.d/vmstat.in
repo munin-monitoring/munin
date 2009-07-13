@@ -21,10 +21,10 @@ if [ "$1" = "autoconf" ]; then
 	else
 		if [ $? -eq 127 ]; then
 			echo "no (could not run \"vmstat\")"
-			exit 1
+			exit 0
 		else
 			echo no
-			exit 1
+			exit 0
 		fi
 	fi
 fi

@@ -46,7 +46,7 @@ sub autoconf {
     }
     else {
 	print "no\n";
-	exit 1;
+	exit 0;
     }
 }
 

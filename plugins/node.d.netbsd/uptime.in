@@ -31,15 +31,15 @@ if [ "$1" = "autoconf" ]; then
 		exit 0
 	    else
 		echo no '(no /bin/date)'
-		exit 1
+		exit 0
 	    fi
 	else
 	    echo no '(sysctl kern.boottime failed)' 2>&1
-	    exit 1
+	    exit 0
 	fi
     else
 	echo no '(no /sbin/sysctl)'
-	exit 1
+	exit 0
     fi
 fi
 

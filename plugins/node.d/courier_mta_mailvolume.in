@@ -51,7 +51,7 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
     } else {
 	print "no (could not find executable)\n";
     }
-    exit 1;
+    exit 0;
 }
 
 my $logfile = "$LOGDIR/$LOGFILE";

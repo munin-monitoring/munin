@@ -21,15 +21,15 @@ INTERFACE=$(basename $0 | sed 's/^vlan_//g' | tr '_' '.')
 if [ "$1" = "autoconf" ]; then
     if [ ! -d /proc/net/vlan ] ; then 
 	echo "no (no vlan support)"
-	exit 1
+	exit 0
     fi
     if [ ! -d -r /proc/net/vlan ] ; then
 	echo "no (cannot not read /proc/net/vlan)"
-	exit 1
+	exit 0
     fi
     if [ ! -x /proc/net/vlan ] ; then
 	echo "no (cannot cd to /proc/net/vlan)"
-	exit 1
+	exit 0
     fi
 
     echo yes

@@ -37,7 +37,7 @@ EOF
     autoconf)
 	if [ ! -x ${sysctl} ]; then
 	    echo "no (${sysctl} is not executable)"
-	    exit 1
+	    exit 0
 	fi
 	ostype=`uname -s`
 	if [ ${ostype} = "FreeBSD" ]; then
@@ -45,7 +45,7 @@ EOF
 	    exit 0
 	fi
 	echo "no (You're OS is not supported by this plugin)"
-	exit 1
+	exit 0
 	;;
     suggest)
 	exit 0

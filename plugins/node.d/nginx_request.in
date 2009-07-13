@@ -70,7 +70,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
 	if ($ret){
 		print "no ($ret)\n";
-		exit 1;
+		exit 0;
 	}
 	
 	my $ua = LWP::UserAgent->new(timeout => 30);
@@ -79,7 +79,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" )
 	unless ($response->is_success and $response->content =~ /server/im)
 	{
 		print "no (no nginx status on $URL)\n";
-		exit 1;
+		exit 0;
 	}
 	else
 	{

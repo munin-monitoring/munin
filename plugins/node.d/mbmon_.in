@@ -37,7 +37,7 @@ if [ "$1" = "autoconf" ]; then
 		else
 			echo "no (mbmon could not read sensor values)"
 		fi
-		exit 1
+		exit 0
 	fi
 	exit 0
 fi

@@ -68,7 +68,7 @@ sub print_values() {
 if ( $ARGV[0] eq "autoconf" ) {
   if (`@@PERL@@ $0` eq "" ) {
     print "no\n";
-    exit 1;
+    exit 0;
   } else {
     print "yes\n";
     exit 0;

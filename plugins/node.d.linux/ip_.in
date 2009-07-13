@@ -51,14 +51,14 @@ if [ "$1" = "autoconf" ]; then
 		iptables -L ${INPUT} -v -n -x >/dev/null 2>/dev/null
 		if [ $? -gt 0 ]; then
 			echo "no (could not run iptables as user `whoami`)"
-			exit 1
+			exit 0
 		else
 			echo yes
 			exit 0
 		fi
 	else
 		echo "no (/proc/net/dev not found)"
-		exit 1
+		exit 0
 	fi
 fi
 

@@ -23,7 +23,7 @@ if [ "$1" = "autoconf" ]; then
     [ "x$wget_bin" = "x" ] && result=2
     if [ "$result" != "yes" ]; then
 	echo "no (need time and wget programs)"
-	exit 1
+	exit 0
     fi
     echo yes
     exit 0

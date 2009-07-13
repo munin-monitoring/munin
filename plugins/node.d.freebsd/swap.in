@@ -22,11 +22,11 @@ if [ "$1" = "autoconf" ]; then
     		exit 0
     	else
 		    echo no
-		    exit 1
+		    exit 0
 	    fi
     else
         echo no
-        exit 1
+        exit 0
     fi
 fi
 

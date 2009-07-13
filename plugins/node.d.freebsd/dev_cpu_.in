@@ -58,7 +58,7 @@ autoconf() {
 		exit 0
 	else
 		echo "no (function not supported by kernel)"
-		exit 1
+		exit 0
 	fi
 }
 

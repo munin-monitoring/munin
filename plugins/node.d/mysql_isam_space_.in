@@ -246,7 +246,7 @@ sub print_autoconf
 	if (! -x $MYSQLSHOW)
 	{
 		print "no (mysqlshow not found)\n";
-		exit 1;
+		exit 0;
 	}
 
 	# Fork off mysqlshow
@@ -280,7 +280,7 @@ sub print_autoconf
 	{
 		print "no\n";
 	}
-	exit 1;
+	exit 0;
 }
 
 # vim:syntax=perl

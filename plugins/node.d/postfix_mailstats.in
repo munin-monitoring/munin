@@ -57,7 +57,7 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
         print "no (could not find logdir '$LOGDIR')\n";
     }
 
-    exit 1;
+    exit 0;
 }
 
 my $logfile = "$LOGDIR/$LOGFILE";

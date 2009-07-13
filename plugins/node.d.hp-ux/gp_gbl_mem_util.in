@@ -73,7 +73,7 @@ export HOME
 if [[ $1 = autoconf ]]; then
     if [[ $(uname -s) != HP-UX ]]; then
 	echo "no (This doesn't seem to be HP-UX but reports as '$(uname -s)')"
-	exit 1
+	exit 0
     fi
     set +u
     if [ ! -x $GLANCE ]; then
@@ -83,13 +83,13 @@ if [[ $1 = autoconf ]]; then
 	    [[ -n $GLANCE ]] && [ -x $GLANCE ] || exit 1
 	else
 	    echo "no (Found no glance executable in a standard location)"
-	    exit 1
+	    exit 0
 	fi
     fi
 
     if [ ! -f $ADVISER ]; then
 	echo "no (Found no adviser command file, please copy $PLUGIN.adv to $ADVISER)"
-	exit 1
+	exit 0
     fi
     echo yes
     exit 0

@@ -69,7 +69,7 @@ if ($arg eq 'config') {
     } else {
         print "no\n";
     }
-    exit;
+    exit 0;
 }
 
 
@@ -112,9 +112,6 @@ graph_total total\n");
 
 
 sub test_service {
-
-    my $return = 1;
-
     system ("$MYSQLADMIN --version >/dev/null 2>/dev/null");
     if ($? == 0)
     {
@@ -122,7 +119,6 @@ sub test_service {
 	if ($? == 0)
 	{
 	    print "yes\n";
-	    $return = 0;
 	}
 	else
 	{
@@ -133,5 +129,5 @@ sub test_service {
     {
 	print "no (mysqladmin not found)\n";
     }
-    exit $return;
+    exit 0;
 }

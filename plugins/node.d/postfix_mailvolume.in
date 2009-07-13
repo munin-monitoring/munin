@@ -92,7 +92,7 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
 	print "no (postfix not found)\n";
     }
 
-    exit 1;
+    exit 0;
 }
 
 

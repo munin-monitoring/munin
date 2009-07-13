@@ -148,7 +148,7 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
     if(defined($LOGDIR)) {
 	if(! -d $LOGDIR) {
 	    print "no (logdir does not exist)\n";
-	    exit 1;
+	    exit 0;
 	}
 	$logfile = $LOGDIR . '/' . ($LOGNAME || 'mainlog');
 
@@ -160,14 +160,14 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
 	    $logfile = get_exim_logfile( $logfilespec, 'main');
 	    if (! defined($logfile) ) {
 		print "no (not able to parse output of '$EXIM -bP log_file_path' = '$logfilespec')\n";
-		exit 1;
+		exit 0;
 	    }
 	} elsif ($? eq "127") {
 	    print "no (exim not found)\n";
-	    exit 1;
+	    exit 0;
 	} else {
 	    print "no ('$EXIM -bP log_file_path' returned an error)\n";
-	    exit 1;
+	    exit 0;
 	}
     }
 
@@ -180,7 +180,7 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
 	}
     }
 
-    exit 1;
+    exit 0;
 }
 
 

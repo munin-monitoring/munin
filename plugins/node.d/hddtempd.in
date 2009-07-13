@@ -61,7 +61,7 @@ if ($ARGV[0] and $ARGV[0] eq "autoconf") {
 
 	if ($failed) {
 		print "no (failed to connect to $address port $port)\n";
-		exit 1;
+		exit 0;
 	} else {
 		print "yes\n";
 		exit 0;

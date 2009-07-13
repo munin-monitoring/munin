@@ -64,7 +64,7 @@ sub autoconf {
     if ($ret)
     {
 	    print "no ($ret)\n";
-	    exit 1;
+	    exit 0;
     }
 
     my $cachemgr = IO::Socket::INET->new(PeerAddr => $host,
@@ -75,7 +75,7 @@ sub autoconf {
     if (!$cachemgr)
     {
 	print "no (could not connect: $!)\n";
-	exit 1;
+	exit 0;
     }
 
     my $request = "GET cache_object://$host/counters HTTP/1.0\r\n" .

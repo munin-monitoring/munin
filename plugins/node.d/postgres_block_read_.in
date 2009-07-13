@@ -89,7 +89,7 @@ if (exists $ARGV[0]) {
         # Check for DBD::Pg
         if (! eval "require DBD::Pg;") {
             print "no (DBD::Pg not found)";
-            exit 1;
+            exit 0;
         }
         # Then we try to detect Postgres presence by connecting to
         # 'template1'.
@@ -99,7 +99,7 @@ if (exists $ARGV[0]) {
             exit 0;
         } else {
             print "no (Can't connect to given host, please check environment settings)\n";
-            exit 1;
+            exit 0;
         }
     } elsif ($ARGV[0] eq 'debug') {
         # Set debug flag

@@ -37,11 +37,11 @@ if [ "$1" = "autoconf" ]; then
 	    exit 0
 	else
 	    echo no '(no sensors available via envstat(8))'
-	    exit 1
+	    exit 0
 	fi
     else
 	echo no '(/usr/sbin/envstat not executable)'
-	exit 1
+	exit 0
     fi
 fi
 	

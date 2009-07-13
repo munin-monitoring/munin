@@ -18,7 +18,7 @@ if ($ARGV[0] and $ARGV[0] eq "autoconf")
     if ($ret)
     {
 	print "no ($ret)\n";
-	exit 1;
+	exit 0;
     }
     my $irc = new Net::IRC;
     my $conn;
@@ -27,7 +27,7 @@ if ($ARGV[0] and $ARGV[0] eq "autoconf")
     if (!$conn)
     {
 	print "no (Couldn't connect to IRC server)\n";
-	exit 1;
+	exit 0;
     }
     print "yes\n";
     exit 0;

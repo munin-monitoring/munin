@@ -82,17 +82,17 @@ sub autoconf
 	elsif (($?>>8) == 2)
 	{
 		print "no (permission denied)\n";
-		exit 1;
+		exit 0;
 	}
 	elsif ($? == 127)
 	{
 		print "no (ipvsadm not found)\n";
-		exit 1;
+		exit 0;
 	}
 	else
 	{
 		print "no\n";
-		exit 1;
+		exit 0;
 	}
 }
 sub suggest

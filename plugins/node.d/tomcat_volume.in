@@ -56,7 +56,7 @@ my $url = sprintf $URL, $USER, $PASSWORD, $PORT;
 if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
     if($ret) {
 	print "no ($ret)\n";
-	exit 1;
+	exit 0;
     }
     my $au = LWP::UserAgent->new(timeout => $TIMEOUT);
     my $repsonse = $au->request(HTTP::Request->new('GET',$url));
@@ -65,7 +65,7 @@ if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
 	exit 0;
     } else {
 	print "no (no tomcat status)\n";
-	exit 1;
+	exit 0;
     }
 }
 

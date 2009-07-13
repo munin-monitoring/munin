@@ -124,7 +124,7 @@ if ($ARGV[0]) {
         # Check for DBD::Pg
         if (! eval "require DBD::Pg;") {
             print "no (DBD::Pg not found)";
-            exit 1;
+            exit 0;
         }
 	# Try to detect PostgreSQL presence.
         DBI->connect('dbi:Pg:', '', '', { PrintError => 0 })

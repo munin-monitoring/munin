@@ -19,9 +19,9 @@ CONFIG=no
 case $1 in
     autoconf)
         ! test -x /usr/bin/ipmitool && 
-	  echo 'no (no /usr/bin/ipmitool)' && exit 1
+	  echo 'no (no /usr/bin/ipmitool)' && exit 0
 	! (/sbin/lsmod | grep -q ipmi) &&
-	  echo 'no (impi module not loaded' && exit 1
+	  echo 'no (impi module not loaded' && exit 0
 	echo yes
         exit 0
 	;;
