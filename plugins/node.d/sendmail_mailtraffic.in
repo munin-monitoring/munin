@@ -2,11 +2,11 @@
 #
 # Plugin to monitor sendmail statistics.
 #
-# Usage: Place in /etc/lrrd/client.d/ (or link it there  using ln -s)
+# Usage: Place in /etc/munin/plugins/ (or link it there using ln -s)
 #
 # Config variables:
 #
-#       mailstats - path to mailstats command
+#       env.mailstats - path to mailstats command
 #
 # Parameters understood:
 #
@@ -17,16 +17,17 @@
 #%# capabilities=autoconf
 #%# family=auto
 
-if [ -n "$mailstats" ]; then MAILSTATS=$mailstats; else MAILSTATS=`which mailstats`; fi
+if [ -n "$mailstats" ];
+	then MAILSTATS=$mailstats;
+	else MAILSTATS=`which mailstats 2>/dev/null`;
+fi
 
 if [ "$1" = "autoconf" ]; then
-	if [ -n "$MAILSTATS" -a -x "$MAILSTATS" ]; then
-		echo yes
-		exit 0
-	else
-		echo "no (no mailstats command)"
-		exit 1
+	if [ -n "$MAILSTATS" -a -x "$MAILSTATS" ]
+		then echo yes
+		else echo "no (no mailstats command)"
 	fi
+	exit 0
 fi
 
 if [ "$1" = "config" ]; then
