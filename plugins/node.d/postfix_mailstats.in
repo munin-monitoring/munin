@@ -93,14 +93,10 @@ if (-f "$statefile")
     }
     while (<IN>)
     {
-    	if (/^(\d+):(\d+)$/)
+    	if (/^([0-9a-z.\-]+):(\d+)$/)
 	{
 		$rejects->{$1} = $2;
 	}
-        elsif (/^OTHER:(\d+)$/)
-        {
-		$rejects->{OTHER} = $1;
-        }
     }
     close IN;
 }
@@ -188,11 +184,10 @@ sub parseLogfile
 	{
 	    $delivered++;
 	} 
-	elsif ($line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/)
+	elsif ($line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/ ||
+	       $line =~ /postfix\/cleanup.* reject: (\S+)/)
 	{
-            my $cause = $1;
-            $cause = 'OTHER' unless $1 =~ /^\d+$/;
-	    $rejects->{$cause} ++;
+	    $rejects->{$1} ++;
 	}
     }
     close(LOGFILE);    
