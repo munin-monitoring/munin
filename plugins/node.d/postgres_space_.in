@@ -1,48 +1,64 @@
 #!@@PERL@@ -w
 # -*- perl -*-
 #
-# Plugin to monitor PostgreSQL disk usage.
-#
-# Written by Bjrn Ruberg (bjorn@linpro.no) 2006
-# Rewritten by Moses Moore 2006-04-08  moc.iazom@sesom
-# Licenced under GPL
-#
-# Parameters:
-# 	
-# 	config
-# 	autoconf
-#
-# Configuration variables:
-#
-#	PGHOST		- Database server to use. Defaults to using ident
-#			  authentication with the local server.
-#	PGPORT		- Port to connect to. Defaults to '5432'.
-#	PGDATABASE	- Database to connect to. Defaults to 'template1'.
-#			  Note that this can be different from the database to
-#			  monitor, which is defined via the symlink.
-#	PGUSER		- User to connect as, if necessary.
-#	PGPASSWORD	- Corresponding password to use, if necessary.
-#
-#	(See libpq documentation for more.)
-#	Note that PGDATABASE will default to 'template1' in this plugin, and
-#	without PGHOST it will try ident authentication with the local server,
-#	as the user that the plugin is running as.
-#
-# Configuration example:
-#
-#	# Use local server, ident authentication with the 'postgres' user.
-#	[postgres_*]
-#	user postgres
-#
-#	# Use local server, TCP authentication with a username and password.
-#	[postgres_*]
-#	env.PGHOST localhost
-#	env.PGUSER someuser
-#	env.PGPASSWORD somepassword
-#
-# Magic markers
-#%# family=auto
-#%# capabilities=autoconf suggest
+=head1 NAME
+
+postgresql_space_ - Plugin to monitor PostgreSQL disk usage.
+
+=head1 CONFIGURATION
+
+The plugin supports the following parameters:
+	
+ config
+ autoconf
+
+To configure the plugin set configuration variables in
+@@CONFDIR@@/plugin-conf.d/postgres :
+
+ PGHOST		- Database server to use. Defaults to using ident
+		  authentication with the local server.
+ PGPORT		- Port to connect to. Defaults to '5432'.
+ PGDATABASE	- Database to connect to. Defaults to 'template1'.
+		  Note that this can be different from the database to
+		  monitor, which is defined via the symlink.
+ PGUSER		- User to connect as, if necessary.
+ PGPASSWORD	- Corresponding password to use, if necessary.
+
+(See libpq documentation for more.)
+
+Note that PGDATABASE will default to 'template1' in this plugin, and
+without PGHOST it will try ident authentication with the local server,
+as the user that the plugin is running as.
+
+Configuration example:
+
+# Use local server, ident authentication with the 'postgres' user.
+ [postgres_*]
+ user postgres
+
+# Use local server, TCP authentication with a username and password.
+ [postgres_*]
+ env.PGHOST localhost
+ env.DATABASE myappdb
+ env.PGUSER someuser
+ env.PGPASSWORD somepassword
+
+=head1 AUTHOR
+
+ Written by Bjrn Ruberg (bjorn@linpro.no) 2006
+ Rewritten by Moses Moore 2006-04-08  moc.iazom@sesom
+
+=head1 LICENSE
+
+Licenced under GPL
+
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
 
 use strict;
 use DBI;
