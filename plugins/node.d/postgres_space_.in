@@ -5,12 +5,21 @@
 
 postgresql_space_ - Plugin to monitor PostgreSQL disk usage.
 
+=head1 INSTALLATION
+
+Link the plugin to @@CONFDIR@@/plugins/ :
+  ln -s @@LIBDIR@@/plugins/postgres_space_ @@CONFDIR@@/plugins/postgres_space_dbname
+
+The database name from the link is only used in the graph title. You have to
+configure the name of the database to connect in the configuration file. 
+
 =head1 CONFIGURATION
 
 The plugin supports the following parameters:
 	
- config
- autoconf
+ config 	(required)
+ autoconf	(optional - used by munin-node-configure)
+
 
 To configure the plugin set configuration variables in
 @@CONFDIR@@/plugin-conf.d/postgres :
@@ -35,11 +44,12 @@ Configuration example:
 # Use local server, ident authentication with the 'postgres' user.
  [postgres_*]
  user postgres
+ env.PGDATABASE myappdb
 
 # Use local server, TCP authentication with a username and password.
  [postgres_*]
  env.PGHOST localhost
- env.DATABASE myappdb
+ env.PGDATABASE myappdb
  env.PGUSER someuser
  env.PGPASSWORD somepassword
 
@@ -187,11 +197,11 @@ _EOM
                             "pg_toast_${relfilenode}_index");
             my $relpages = $sth2->fetchrow_array;
             if ($relkind eq 'r') {
-                $table_pages     += $relpages if $meta == 0;
-                $metatable_pages += $relpages if $meta == 1;
+                $table_pages     += $relpages if defined($relpages) and $meta == 0;
+                $metatable_pages += $relpages if defined($relpages) and $meta == 1;
             } elsif ($relkind eq 'i') {
-                $table_indexes     += $relpages if $meta == 0;
-                $metatable_indexes += $relpages if $meta == 1;
+                $table_indexes     += $relpages if defined($relpages) and $meta == 0;
+                $metatable_indexes += $relpages if defined($relpages) and $meta == 1;
             }
             print "#\tR:$relfilenode\tP:$table_pages\tI:$table_indexes\n" if $debug;
         }
