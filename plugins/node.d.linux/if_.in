@@ -1,22 +1,43 @@
-#!/bin/bash
+#!@@BASH@@
+# -*- sh -*-
 
-# Wildcard-plugin to monitor traffic and errors on network
-# interfaces. To monitor an interface, link if_<interface> to this
-# file. E.g.
+: << =cut
 
-#    ln -s /usr/share/node/node/plugins-auto/if_ /etc/munin/node.d/if_eth0
+=head1 NAME
 
-# ...will monitor eth0.
+if_ - Wildcard-plugin to monitor traffic and errors on network
+interfaces.
 
-# Any device found in /proc/net/dev can be monitored. Examples include
-# ipsec*, eth*, irda* and lo. Please note that aliases cannot be
-# monitored with this plugin.
+=head1 CONFIGURATION
 
-# Magic markers (optional - used by munin-config and some installation
-# scripts):
+This plugin does not use environment variables.
 
-#%# family=auto
-#%# capabilities=autoconf suggest
+This is a wildcard plugin. To monitor an interface, link
+if_<interface> to this file. E.g.
+
+  ln -s /usr/share/node/node/plugins-auto/if_ \
+        /etc/munin/node.d/if_eth0
+
+...will monitor eth0.
+
+Any device found in /proc/net/dev can be monitored. Examples include
+ipsec*, eth*, irda* and lo. Please note that aliases cannot be
+monitored with this plugin.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 

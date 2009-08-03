@@ -1,4 +1,5 @@
 #!@@PERL@@
+# -*- perl -*-
 #
 # Plugin to monitor hard drive temperatures.
 #

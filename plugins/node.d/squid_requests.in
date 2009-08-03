@@ -1,40 +1,45 @@
 #!@@PERL@@ -w
-#
-# Copyright (C) 2004 Jimmy Olsen, Audun Ytterdal, Tore Anderson
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; version 2 dated June,
-# 1991.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-#
-# Plugin to monitor squid requests.
-#
-# Configuration variables:
-#
-# 	squidhost    - host (default "localhost")
-# 	squidport    - port (default "3128")
-# 	squiduser    - username (default "")
-# 	squidpasswd  - password (default "")
-#
-# Parameters:
-#
-# 	config    (required)
-# 	autoconf  (optional - only used by munin-config)
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- perl -*-
 
-# $Id$
+=head1 NAME
+
+squid_requests - Plugin to monitor squid requests.
+
+=head1 CONFIGURATION
+
+Configuration variables:
+
+ squidhost   - host (default "localhost")
+ squidport   - port (default "3128")
+ squiduser   - username (default "")
+ squidpasswd - password (default "")
+
+=head1 AUTHOR
+
+Copyright (C) 2004 Jimmy Olsen, Audun Ytterdal, Tore Anderson
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 dated June,
+1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 my $ret = undef;
 

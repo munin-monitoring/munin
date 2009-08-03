@@ -1,15 +1,52 @@
 #!@@GOODSH@@
-#
-#%# family=auto
-#%# capabilities=autoconf
-#
-# Show memory stats based on top output
-#
-# Parameters
-#   env.top /path/to/top
-#
-# FIXME1: Reporting size in MB is Wrong. Report bytes and let rrd scale units
-# FIXME2: Using kstat would be much better!
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+memory - Show memory stats based on top output
+
+=head1 CONFIGURATION
+
+The following environment variables are used in this plugin
+
+=over 4
+
+=item top
+
+The path to "top" (Default: "/usr/local/bin/top")
+
+=back
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 BUGS
+
+=over 4
+
+=item Reporting size
+
+Fixme: Reporting size in MB is Wrong. Report bytes and let rrd scale units
+
+=item Should use kstat
+
+Fixme: Using kstat would be much better!
+
+=back
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 

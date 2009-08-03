@@ -1,6 +1,13 @@
 #!@@PERL@@ -w
-#
-# Plugin to monitor APC UPS via the nis port of apcupsd.
+# -*- perl -*-
+
+=head1 NAME
+
+apc_nis - Plugin to monitor APC UPS via the nis port of apcupsd
+
+=cut
+
+# 
 #
 # Parameters:
 #

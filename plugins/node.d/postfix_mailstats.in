@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# -*- perl -*-
 #
 # Plugin to monitor the number of mails delivered and rejected by postfix.
 #

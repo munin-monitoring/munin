@@ -1,27 +1,35 @@
 #!@@PERL@@ -w
 # -*- perl -*-
-#
-# Plugin to monitor the throuhgput of a firewall.
-#
-# Usage: copy or link into /etc/munin/node.d/
-#
-# Parameters:
-#
-#       config   (required)
-#       autoconf (optional - used by munin-config)
-#
-# NOTE: MUST RUN AS ROOT.
-# @@CONFDIR@@/plugin-conf.d/global or other file in that dir must contain:
-# [fw*]
-#      user root
-#
-# Config variables:
-#
-# Magic markers (optional - used by munin-config and some installation
-# scripts):
-#
-#%# family=auto
-#%# capabilities=autoconf
+
+=head1 NAME
+
+fw_packets - Plugin to monitor the throuhgput of a firewall
+
+=head1 CONFIGURATION
+
+This plugin must run with root privileges
+
+=head1 CONFIGURATION EXAMPLE
+
+@@CONFDIR@@/plugin-conf.d/global or other file in that dir must contain:
+
+ [fw*]
+  user root
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 if ( $ARGV[0] ) {
 

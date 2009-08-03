@@ -1,28 +1,47 @@
 #!@@PERL@@ -w
 # -*- perl -*-
-#
-# Plugin to monitor memory usage.
-#
-# Origional Author: Jimmy Olsen
-# Contributors:
-#     Mike Fedyk: Slab, SwapCached, PageTables, VmallocUsed, Mapped, 
-#                 Active, Inactive, 2.4 Rmap & 2.6
-#     Juha-Matti Tapio: Input on swap_cache and VMalloc Used on 64 bit
-#                 machines.
-#     Nicolai Langfeldt: Editor.
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - only used by munin-config)
-#
-# Magic markers (optional - used by munin-config and some
-# installation scripts):
-#
-# $Id$
-#
-#%# family=auto
-#%# capabilities=autoconf
+
+=head1 NAME
+
+memory - Plugin to monitor memory usage
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHORS
+
+Original Author: Jimmy Olsen
+
+=head2 CONTRIBUTORS
+
+=over 4
+
+=item Mike Fedyk
+
+Slab, SwapCached, PageTables, VmallocUsed, Mapped, Active, Inactive,
+2.4 Rmap & 2.6
+
+=item Juha-Matti Tapio
+
+Input on swap_cache and VMalloc Used on 64 bit machines.
+
+=item Nicolai Langfeldt
+
+Editor
+
+=back
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 use Munin::Plugin;
 

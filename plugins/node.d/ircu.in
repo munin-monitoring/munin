@@ -1,10 +1,33 @@
 #!@@PERL@@
 # -*- perl -*-
-#
-# $Id$
-#
+
+=head1 NAME
+
+ircu - Plugin to graph the number of clients, channels and servers on
+an IRC network.
+
+=head1 CONFIGURATION
+
+No configuration.
+
+=head1 USAGE
+
+This plugin connects to an IRC server running on the local host.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
 #%# family=manual
 #%# capabilities=autoconf
+
+=cut
 
 my $ret = undef;
 

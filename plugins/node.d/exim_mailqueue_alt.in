@@ -1,27 +1,48 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Plugin to monitor Exim's mail queue
-#
-# Usage: Link into /etc/munin/plugins/
-#
-# Requirements:
-#
-# 	Needs to be run as user mail
-#
-# Parameters:
-#
-# 	config (required)
-#
-# Configurable variables:
-#
-# 	exim		- exim binary location
-#	queuewarn	- warning limit
-#	queuecrit	- critical limit
-#
-# Magic markers:
-#%# family=contrib
-#%# capabilities=
+
+: << =cut
+
+=head1 NAME
+
+exim_mailqueue_alt - Plugin to monitor the exim mail queue
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+ exim      - exim binary location
+ queuewarn - warning limit
+ queuecrit - critical limit
+
+The plugin needs to be run as the same user as exim, commonly "mail".
+
+=head2 EXAMPLE CONFIGURATION
+
+ [exim_mailqueue_alt]
+  user mail
+  env.queuewarn  2000
+  env.queuecrit 10000
+
+For a Debian based system, a minimal example configuration would be:
+
+ [exim_mailqueue_alt]
+  user Debian-exim
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=
+
+=cut
 
 PATH='/bin:/sbin:/usr/bin:/usr/sbin'
 # You cannot trust the exit status of which

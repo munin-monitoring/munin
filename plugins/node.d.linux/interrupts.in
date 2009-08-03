@@ -1,16 +1,31 @@
 #!@@GOODSH@@
-# 
-# Plugin to monitor the number of interrupts and context switches on a system. 
-#
-# Idea and base from Ragnar Wisløff.
-#
-# Usage: Link or copy into /etc/munin/node.d/
-#
-# Magic markers (optional - only used by munin-config and some
-# installation scripts):
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+interrupts - Plugin to monitor the number of interrupts and context
+switches on a system.
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Idea and base from Ragnar Wisløff.
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 

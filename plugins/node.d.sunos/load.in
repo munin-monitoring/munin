@@ -1,7 +1,30 @@
 #!@@GOODSH@@
+# -*- sh -*-
 
-#%# family=auto
-#%# capabilities=autoconf
+: << =cut
+
+=head1 NAME
+
+load - Plugin to monitor system load
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 

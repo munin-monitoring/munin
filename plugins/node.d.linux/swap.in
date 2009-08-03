@@ -1,17 +1,30 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Plugin to monitor swap IO in number of blocks per second.
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Magic markers (used by munin-config and some installation scripts (i.e.
-# optional)):
-#%# family=auto
-#%# capabilities=autoconf
+
+: << =cut
+
+=head1 NAME
+
+swap - Plugin to monitor swap IO in number of blocks per second
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 

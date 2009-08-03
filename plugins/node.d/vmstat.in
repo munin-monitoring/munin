@@ -1,16 +1,35 @@
 #!@@GOODSH@@
-#
-# Plugin to monitor the number of procs in io-sleep and other wait
-# states. Uses `vmstat`.
-#
-# Parameters: 
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Magick markers (optional):
-#%# family=auto
-#%# capabilities=autoconf
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+vmstat - Plugin to monitor the number of processes in io-sleep and
+other wait states.
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 NOTES
+
+Uses the command "vmstat"
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 

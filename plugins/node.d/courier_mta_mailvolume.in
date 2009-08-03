@@ -1,26 +1,32 @@
 #!@@PERL@@ -w
-#
-# Plugin to monitor the volume og mails delivered by courier-mta.
-#
-# Author: Rune Nordbøe Skillingstad <runesk@linpro.no>
-#
-# Usage: copy or link into /etc/munin/node.d/
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Config variables:
-#
-# 	logdir       - Where to find logfiles
-#	logfile      - What file to read in logdir
-#
-# Magic markers (optional - used by munin-config and some installation
-# scripts):
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- perl -*-
+
+=head1 NAME
+
+courier_mta_mailvolume - Plugin to monitor the volume og mails
+delivered by courier-mta
+
+=head1 CONFIGURATION
+
+The following environent variables are used by this plugin:
+
+ logdir  - Where to find logfiles
+ logfile - What file to read in logdir
+
+=head1 AUTHOR
+
+Rune Nordbøe Skillingstad <runesk@linpro.no>
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 my $statefile = "@@PLUGSTATE@@/munin-plugin-courier_mta_mailvolume.state";
 my $pos       = undef;

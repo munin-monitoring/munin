@@ -1,4 +1,5 @@
 #!@@PERL@@
+# -*- perl -*-
 #
 
 $statefile = $ENV{statefile} || "@@PLUGSTATE@@/munin-spamstats.state";

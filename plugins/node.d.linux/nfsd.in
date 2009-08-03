@@ -1,11 +1,30 @@
 #!@@GOODSH@@
-#
-# Plugin created by Alexandre Dupouy, with the assistance of Mike Fedyk
-#
-# $Id$
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+nfsd - Plugin to monitor NFS server activity
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHORS
+
+Plugin created by Alexandre Dupouy, with the assistance of Mike Fedyk
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 NFSD=/proc/net/rpc/nfsd
 

@@ -1,39 +1,52 @@
 #!@@PERL@@
 # -*- perl -*-
-#
-# Plugin to monitor number of PostgreSQL database connections.
-#
-# Parameters:
-# 	
-# 	config
-# 	autoconf
-#
-# Configuration variables:
-#
-#	PGHOST		- Database server to use. Defaults to using ident
-#			  authentication with the local server.
-#	PGPORT		- Port to connect to. Defaults to '5432'.
-#	PGDATABASE	- Database to connect to. Defaults to 'template1'.
-#	PGUSER		- User to connect as, if necessary.
-#	PGPASSWORD	- Corresponding password to use, if necessary.
-#
-#	(See libpq documentation for more.)
-#	Note that PGDATABASE will default to 'template1' in this plugin, and
-#	without PGHOST it will try ident authentication with the local server,
-#	as the user that the plugin is running as.
-#
-# Configuration example:
-#
-#	# Use local server, ident authentication with the 'postgres' user.
-#	[postgres_*]
-#	user postgres
-#
-#	# Use local server, TCP authentication with a username and password.
-#	[postgres_*]
-#	env.PGHOST localhost
-#	env.PGUSER someuser
-#	env.PGPASSWORD somepassword
-#
+
+=head1 NAME
+
+postgres_connections - Plugin to monitor number of PostgreSQL database
+connections.
+
+=head1 CONFIGURATION
+
+The following environment variables are used
+
+
+ PGHOST     - Database server to use. Defaults to using ident
+              authentication with the local server.
+ PGPORT     - Port to connect to. Defaults to '5432'.
+ PGDATABASE - Database to connect to. Defaults to 'template1'.
+ PGUSER     - User to connect as, if necessary.
+ PGPASSWORD - Corresponding password to use, if necessary.
+
+(See libpq documentation for more.)
+
+Note that PGDATABASE will default to 'template1' in this plugin, and
+without PGHOST it will try ident authentication with the local server,
+as the user that the plugin is running as.
+
+=head2 CONFIGURATION EXAMPLES
+
+Use local server, ident authentication with the 'postgres' user.
+
+  [postgres_*]
+   user postgres
+
+Use local server, TCP authentication with a username and password.
+
+  [postgres_*]
+   env.PGHOST localhost
+   env.PGUSER someuser
+   env.PGPASSWORD somepassword
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=cut
 
 use strict;
 use warnings;

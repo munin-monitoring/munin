@@ -1,9 +1,24 @@
 #!@@PERL@@
-#
-# Plugin to measure uptime on solaris.
- 
-# Adam J. Baker (adam@unb.ca)
-# 
+# -*- perl -*-
+
+=head1 NAME
+
+uptime - Plugin to measure uptime on solaris
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Adam J. Baker (adam@unb.ca)
+
+=head1 LICENSE
+
+Unknown license
+
+=cut
+
 use strict;
 use Munin::Plugin;
 

@@ -1,16 +1,43 @@
-#!/bin/bash
+#!@@BASH@@
+# -*- sh -*-
 
-# 
-# ipmi_{temp|fans}: Munin plugin to check temperature and fans using ipmi
-#
-# WARNING: Munin has a 10 second timeout on plugins???.  On some hosts
-# ipmitool takes longer than that to probe all your hardware.  In this
-# case this plugin us unusable.
-#
-# Donated to the public domain by Nicolai Langfeldt (janl@linpro.no)
-#
-#%# family=auto
-#%# capabilities=autoconf suggest
+: << =cut
+
+=head1 NAME
+
+ipmi_ - Plugin to monitor temperature or fan speed using IPMI
+
+=head1 CONFIGURATION
+
+=head2 ENVIRONMENT VARIABLES
+
+This plugin does not use environment variables
+
+=head2 WILDCARD PLUGIN
+
+This plugin should be linked as ipmi_temp or ipmi_fans, and will show
+either temperatures or fan speeds based on its link name.
+
+=head1 NOTE
+
+WARNING: Munin has a 10 second default timeout on plugins.  On some
+hosts ipmitool takes longer than that to probe all your hardware.  In
+this case this plugin us unusable.
+
+=head1 AUTHOR
+
+Nicolai Langfeldt <janl@linpro.no>
+
+=head1 LICENSE
+
+Donated to the public domain by Nicolai Langfeldt (janl@linpro.no)
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
 
 #### Parse commandline to determine what the job is
 

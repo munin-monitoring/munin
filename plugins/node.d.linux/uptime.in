@@ -1,15 +1,30 @@
 #!@@GOODSH@@
-#
-# Plugin to measure uptime. Especially the average and max values on the
-# bigger graphs (yearly) can be interesting.
-#
-# Contributed by Nicolas Salles
-#
-# Magic markers - optional - used by installation scripts and
-# munin-config:
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+uptime - Plugin to measure uptime. 
+
+=head1 NOTES
+
+Especially the average and max values on the bigger graphs (yearly) can be interesting.
+
+=head1 AUTHOR
+
+Contributed by Nicolas Salles
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 

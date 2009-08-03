@@ -1,18 +1,28 @@
 #!@@PERL@@
-#
-# Plugin to monitor temperature inside Sun systems
-#
-# Usage: Place in /etc/munin/node.d/ (or link it there  using ln -s)
-#
-# Parameters understood:
-#
-#       config   (required)
-#       autoconf (optional - used by munin-config)
-#
-# Revision 1.1	2004/04/16 Richard van den Berg <richard@vdberg.org>
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- perl -*-
+
+=head1 NAME
+
+temperature - Plugin to monitor temperature inside Sun systems
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+2004/04/16 Richard van den Berg <richard@vdberg.org>
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 $arch=`uname -m`;
 chomp($arch);

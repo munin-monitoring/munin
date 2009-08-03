@@ -1,37 +1,50 @@
 #!@@PERL@@ -w
-#
-# Copyright 2008 Bjorn Ruberg
-# Based on and shamelessly copied from the other squid_ Munin plugins
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; version 2 dated June,
-# 1991.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-#
-# Configuration variables:
-#
-# 	squidhost    - host (default "localhost")
-# 	squidport    - port (default "3128")
-# 	squiduser    - username (default "")
-# 	squidpasswd  - password (default "")
-#
-# Parameters:
-#
-# 	config    (required)
-# 	autoconf  (optional - only used by munin-config)
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- perl -*-
+
+=head1 NAME
+
+squid_objectsize - Plugin to graph the mean size of stored objects in
+the squid cache
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+ squidhost   - host (default "localhost")
+ squidport   - port (default "3128")
+ squiduser   - username (default "")
+ squidpasswd - password (default "")
+
+=head1 AUTHOR
+
+Copyright 2008 Bjorn Ruberg
+
+=head1 NOTES
+
+Based on and shamelessly copied from the other squid_ Munin plugins
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 dated June, 1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301 USA.
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 my $ret = undef;
 

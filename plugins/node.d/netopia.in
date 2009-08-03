@@ -1,4 +1,5 @@
 #!@@GOODSH@@
+# -*- sh -*-
 
 
 hostname="$(hostname)"

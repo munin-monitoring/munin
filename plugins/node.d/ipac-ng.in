@@ -1,13 +1,34 @@
 #!@@GOODSH@@
-#
-# Skeleton-plugin to monitor ipac-ng rules. To monitor an
-# rule, copy ipac-ng and edit variables.
-#
-# Magic markers (optional - used by munin-config and some installation
-# scripts):
-#
-#%# family=contrib
-#%# capabilities=autoconf
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+ipac-ng - Skeleton-plugin to monitor ipac-ng rules. 
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 USAGE
+
+To monitor a rule, copy ipac-ng and edit variables.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
 
 # Visible name of graph
 TITLE="traffic"

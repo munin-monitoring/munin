@@ -1,11 +1,33 @@
 #!@@GOODSH@@
-#
-# $Log$
-# Revision 1.0  2007/10/28 21:30:00 Christian Kujau <lists@nerdbynature.de>
-# Plugin created, based on the nfsd plugin by Alexandre Dupouy
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+nfsd4 - Plugin to graph NFSv4 server activity
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+2007/10/28 21:30:00 Christian Kujau <lists@nerdbynature.de>
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 NOTES
+
+[...] based on the nfsd plugin by Alexandre Dupouy
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 NFSD=/proc/net/rpc/nfsd
 

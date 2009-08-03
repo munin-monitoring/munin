@@ -1,18 +1,74 @@
 #!@@PERL@@
 # -*- perl -*-
 
-# Plugin to monitor PostgreSQL query rate; returns the number of 
-# sequential scans initiated, rows returned by sequential reads,
-# index scans initiated, rows returned by index scans, inserts,
-# updates, and deletes.
-# 
-# Find out more at 
-#  http://www.postgresql.org/docs/8.2/interactive/monitoring-stats.html
-#  (should work with PostgreSQL 7.x and 8.x)
-#
-# BjØrn Ruberg <bjorn@linpro.no> is a mack-daddy.
-# Licenced under GPL v2.
-#
+=head1 NAME
+
+postgres_queries_ - Plugin to monitor PostgreSQL query rate.
+
+=head1 INTERPRETATION
+
+Returns the number of sequential scans initiated, rows returned by
+sequential reads,index scans initiated, rows returned by index scans,
+inserts, updates, and deletes.
+
+Find out more at
+http://www.postgresql.org/docs/8.2/interactive/monitoring-stats.html
+(should work with PostgreSQL 7.x and 8.x)
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+PGHOST		- Database server to use. Defaults to using ident
+		  authentication with the local server.
+PGPORT		- Port to connect to. Defaults to '5432'.
+PGDATABASE	- Database to connect to. Defaults to 'template1'.
+PGUSER		- User to connect as, if necessary.
+PGPASSWORD	- Corresponding password to use, if necessary.
+
+(See libpq documentation for more.)
+Note that PGDATABASE will default to 'template1' in this plugin, and
+without PGHOST it will try ident authentication with the local server,
+as the user that the plugin is running as.
+
+=head2 CONFIGURATION EXAMPLE
+
+Use local server, ident authentication with the 'postgres' user.
+
+ [postgres_*]
+  user postgres
+
+Use local server, TCP authentication with a username and password.
+
+ [postgres_*]
+  env.PGHOST localhost
+  env.PGUSER someuser
+  env.PGPASSWORD somepassword
+
+=head1 USAGE
+
+Symlink into /etc/munin/plugins/ and add the monitored
+database to the filename. e.g.:
+
+ln -s /usr/share/munin/plugins/postgres_block_read_ \
+  /etc/munin/plugins/postgres_block_read_SomeDatabase
+This should, however, be given through autoconf and suggest.
+
+If required, give username, password and/or PostgreSQL server
+host through environment variables.
+
+You must also activate PostgreSQL statistics. See
+http://www.postgresql.org/docs/8.2/interactive/monitoring-stats.html
+for how to enable this. Specifically, the following lines must
+exist in your postgresql.conf:
+
+ stats_start_collector = true
+ stats_block_level = true
+
+=head1 AUTHORS
+
+# Bjørn Ruberg <bjorn@linpro.no> is a mack-daddy.
+
 # Revision History:
 #  2005/03/10: v0.0001  Vajtsz (from openproject.hu)
 #    "this is my first munin plugin sorry for dummy code"
@@ -21,63 +77,17 @@
 #    to rework [this] over the pattern of postgres_block_read_ ..."
 #  2007/12/17 v1.0.1  Tim Retout <tim.retout@credativ.co.uk>
 #    Use libpq environment variables for configuration.
-#
-# Usage:
-#
-#       Symlink into /etc/munin/plugins/ and add the monitored
-#       database to the filename. e.g.:
-#
-#       ln -s /usr/share/munin/plugins/postgres_block_read_ \
-#         /etc/munin/plugins/postgres_block_read_SomeDatabase
-#       This should, however, be given through autoconf and suggest.
-#
-#       If required, give username, password and/or PostgreSQL server
-#       host through environment variables.
-#
-#       You must also activate PostgreSQL statistics. See
-#       http://www.postgresql.org/docs/8.2/interactive/monitoring-stats.html
-#       for how to enable this. Specifically, the following lines must
-#       exist in your postgresql.conf:
-#
-#           stats_start_collector = true
-#           stats_block_level = true
-#
-#
-# Parameters:
-#
-# 	config
-# 	autoconf
-#
-# Configuration variables:
-#
-#	PGHOST		- Database server to use. Defaults to using ident
-#			  authentication with the local server.
-#	PGPORT		- Port to connect to. Defaults to '5432'.
-#	PGDATABASE	- Database to connect to. Defaults to 'template1'.
-#	PGUSER		- User to connect as, if necessary.
-#	PGPASSWORD	- Corresponding password to use, if necessary.
-#
-#	(See libpq documentation for more.)
-#	Note that PGDATABASE will default to 'template1' in this plugin, and
-#	without PGHOST it will try ident authentication with the local server,
-#	as the user that the plugin is running as.
-#
-# Configuration example:
-#
-#	# Use local server, ident authentication with the 'postgres' user.
-#	[postgres_*]
-#	user postgres
-#
-#	# Use local server, TCP authentication with a username and password.
-#	[postgres_*]
-#	env.PGHOST localhost
-#	env.PGUSER someuser
-#	env.PGPASSWORD somepassword
-#
-#
-# Magic markers
-#%# family=auto
-#%# capabilities=autoconf suggest
+
+=head1 LICENSE
+
+Licenced under GPL v2.
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
 
 use strict;
 use DBI;

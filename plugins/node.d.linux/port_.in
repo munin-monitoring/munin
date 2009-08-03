@@ -1,5 +1,6 @@
 #!@@PERL@@
 # -*- perl -*-
+
 =head1 NAME
 
 port_ - Munin wildcard plugin to monitor netwok port usage.
@@ -9,8 +10,6 @@ port_ - Munin wildcard plugin to monitor netwok port usage.
 To monitor a port link port_<service> to this file. E.g.
   ln -s /usr/share/munin/plugins/port_ /etc/munin/plugins/port_ssh
 ..will monitor ssh connections. Services are those from /etc/services.
-
-=head1 INTERPRETATION
 
 =head1 MAGIC MARKERS
 

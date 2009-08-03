@@ -1,101 +1,108 @@
 #!@@PERL@@
 # -*- perl -*-
 
-# Plugin to monitor PostgreSQL commits/rollbacks.  
-# 
-# "Why should I care?"
-# - Too many commits can really bog down the database, as it checks all
-# the tables for consitency after each change.  
-# - Software is often set to 'AutoCommit = 1', meaning a commit is done
-# after each transaction.  This is a good idea with brittle code so that
-# you can get some work done if not all, but when you're inserting 10,000
-# rows this can really suck.
-# - If you see a spike in rollbacks, some db programmer is probably
-# abusing their session, or a stored proceudre has gone horribly wrong
-# and isn't leaving a trace.  Time for the rolled-up newspaper.
+=head1 NAME
 
-# Find out more at 
-#  http://www.postgresql.org/docs/8.2/interactive/monitoring-stats.html
-#  (where "8.2" can be the version of PostgreSQL you have installed)
-#
-# BjØrn Ruberg <bjorn@linpro.no> is large and in charge.
-# Licenced under GPL v2.
-#
-# Revision History:
-#  2005/03/10: v0.0001  Vajtsz (from openproject.hu)
-#    "this is my first munin plugin sorry for dummy code"
-#  2007/09/25: v1.0 Moses Moore <moc.iazom@sesom>
-#    Nicolai Langfeldt - "I wounder if one of you would be bothered
-#    to rework [this] over the pattern of postgres_block_read_ ..."
-#    Omitted tracking numbackends because it is an instantaneous
-#    measurement (GAUGE) instead of a cumulative (DERIVE) one.
-#  2007/12/12: v1.01  Tim Retout <tim.retout@credativ.co.uk>
-#    Use libpq environment variables for configuration.
-#
-# Usage:
-#
-#       Symlink into /etc/munin/plugins/ and add the monitored
-#       database to the filename. e.g.:
-#
-#       ln -s /usr/share/munin/plugins/postgres_commits_ \
-#         /etc/munin/plugins/postgres_commits_SomeDatabase
-#       This should, however, be given through autoconf and suggest.
-#
-#       There is an additional means of using this:
-#       if you make the special soft link postgres_commits_All, 
-#       it will plot the commits & rollbacks for all databases 
-#       on this server on one graph.  This isn't recommended, and
-#       will not be offered by 'suggest', but it's here if you want it.
-#
-#       If required, give username, password and/or PostgreSQL server
-#       host through environment variables... but for most sites you
-#       should be able to omit username and password.
-# 
-#       You must also activate PostgreSQL statistics. See
-#       http://www.postgresql.org/docs/8.2/interactive/monitoring-stats.html
-#       for how to enable this. Specifically, the following lines must
-#       exist in your postgresql.conf:
-#
-#           stats_start_collector = true
-#           stats_block_level = true
-#
-#
-# Parameters:
-# 	
-# 	config
-# 	autoconf
-#
-# Configuration variables:
-#
-#	PGHOST		- Database server to use. Defaults to using ident
-#			  authentication with the local server.
-#	PGPORT		- Port to connect to. Defaults to '5432'.
-#	PGDATABASE	- Database to connect to. Defaults to 'template1'.
-#			  Note that this can be different from the database to
-#			  monitor, which is defined via the symlink.
-#	PGUSER		- User to connect as, if necessary.
-#	PGPASSWORD	- Corresponding password to use, if necessary.
-#
-#	(See libpq documentation for more.)
-#	Note that PGDATABASE will default to 'template1' in this plugin, and
-#	without PGHOST it will try ident authentication with the local server,
-#	as the user that the plugin is running as.
-#
-# Configuration example:
-#
-#	# Use local server, ident authentication with the 'postgres' user.
-#	[postgres_*]
-#	user postgres
-#
-#	# Use local server, TCP authentication with a username and password.
-#	[postgres_*]
-#	env.PGHOST localhost
-#	env.PGUSER someuser
-#	env.PGPASSWORD somepassword
-#
-# Magic markers
-#%# family=auto
-#%# capabilities=autoconf suggest
+postres_commits_ - Plugin to monitor PostgreSQL commits/rollbacks.
+
+=head1 AUTHORS
+
+Vajtsz
+Moses Moore <moc.iazom@sesom>
+Tim Retout <tim.retout@credativ.co.uk>
+Bjørn Ruberg <bjorn@linpro.no> is large and in charge.
+
+=head1 LICENSE
+
+Licenced under GPL v2.
+
+=head1 CONFIGURATION
+
+The following environment variables are used
+
+ PGHOST     - Database server to use. Defaults to using ident
+              authentication with the local server.
+ PGPORT     - Port to connect to. Defaults to '5432'.
+ PGDATABASE - Database to connect to. Defaults to 'template1'.
+              Note that this can be different from the database to
+              monitor, which is defined via the symlink.
+ PGUSER     - User to connect as, if necessary.
+ PGPASSWORD - Corresponding password to use, if necessary.
+
+(See libpq documentation for more.)
+Note that PGDATABASE will default to 'template1' in this plugin, and
+without PGHOST it will try ident authentication with the local server,
+as the user that the plugin is running as.
+
+=head2 CONFIGURATION EXAMPLE
+
+Use local server, ident authentication with the 'postgres' user.
+
+ [postgres_*]
+  user postgres
+
+Use local server, TCP authentication with a username and password.
+
+ [postgres_*]
+  env.PGHOST localhost
+  env.PGUSER someuser
+  env.PGPASSWORD somepassword
+
+=head1 USAGE
+
+Symlink into /etc/munin/plugins/ and add the monitored database to the
+filename. e.g.:
+
+ln -s /usr/share/munin/plugins/postgres_commits_ \
+  /etc/munin/plugins/postgres_commits_SomeDatabase
+
+This should, however, be given through autoconf and suggest.
+
+There is an additional means of using this: if you make the special
+soft link postgres_commits_All, it will plot the commits & rollbacks
+for all databases on this server on one graph.  This isn't
+recommended, and will not be offered by 'suggest', but it's here if
+you want it.
+
+If required, give username, password and/or PostgreSQL server host
+through environment variables... but for most sites you should be able
+to omit username and password.
+
+You must also activate PostgreSQL statistics. See
+http://www.postgresql.org/docs/8.2/interactive/monitoring-stats.html
+for how to enable this. Specifically, the following lines must exist
+in your postgresql.conf:
+
+    stats_start_collector = true
+    stats_block_level = true
+
+=head1 NOTES
+
+"Why should I care?"
+
+- Too many commits can really bog down the database, as it checks all
+  the tables for consitency after each change.
+
+- Software is often set to 'AutoCommit = 1', meaning a commit is done
+  after each transaction.  This is a good idea with brittle code so
+  that you can get some work done if not all, but when you're
+  inserting 10,000 rows this can really suck.
+
+ - If you see a spike in rollbacks, some db programmer is probably
+   abusing their session, or a stored proceudre has gone horribly
+   wrongand isn't leaving a trace.  Time for the rolled-up newspaper.
+
+Find out more at
+
+http://www.postgresql.org/docs/8.2/interactive/monitoring-stats.html
+(where "8.2" can be the version of PostgreSQL you have installed)
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
 
 use strict;
 use warnings;

@@ -1,4 +1,5 @@
 #!@@GOODSH@@
+# -*- sh -*-
 #
 # Plugin to monitor the number of threads on a mysql-server. Faster than
 # ps_mysql.

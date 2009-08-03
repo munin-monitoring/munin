@@ -1,27 +1,51 @@
 #!@@PERL@@ -w
-#
-# Copyright (C) 2004 Dagfinn Ilmari Mannsaaker
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; version 2 dated June,
-# 1991.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-#
-# Plugin to fetch temperature data from the SNMP agent on the management
-# blade on Fujitsu Simens BX series blade servers
-#
-#%# family=snmpauto
-#%# capabilities=snmpconf
+# -*- perl -*-
+
+=head1 NAME
+
+snmp__sensors_fsc_bx_temp - Plugin to fetch temperature data from the
+SNMP agent on the management blade on Fujitsu Simens BX series blade
+servers
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+ host      - SNMP host (default taken from plugin link name)
+ port      - SNMP port (default 161)
+ community - SNMP community (default "private")
+ version   - SNMP version to use (default: Net::SNMP default)
+
+For acceptable and default SNMP versions, see the Net::SNMP
+documentation.  Per Net::SNMP version 5.2.0, the default is SNMP
+version 1.
+
+=head1 AUTHOR
+
+Copyright (C) 2004 Dagfinn Ilmari Mannsaaker
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 dated June, 1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301 USA.
+
+=head1 MAGIC MARKERS
+
+ #%# family=snmpauto
+ #%# capabilities=snmpconf
+
+=cut
 
 package Munin::Plugin::SNMP;
 

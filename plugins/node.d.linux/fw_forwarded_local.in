@@ -1,25 +1,35 @@
 #!@@GOODSH@@
-#
-# Plugin to monitor network connections.
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+fw_forwarded_local - Plugin to monitor network connections.
+
+=head1 CONFIGURATION
+
+This plugin must run with root privileges
+
+=head1 CONFIGURATION EXAMPLE
+
+@@CONFDIR@@/plugin-conf.d/global or other file in that dir must contain:
+
+ [fw*]
+  user root
+
+=head1 NOTES
+
 #  forward: number of connections forwarder
 #  local:   number of connections for the host itself
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - only used by munin-config)
-#
-#
-# Magic markers (optional - used by munin-config and some installation
-# scripts):
-#%# family=auto
-#%# capabilities=autoconf
-#
-# NOTE: MUST RUN AS ROOT.
-# @@CONFDIR@@/plugin-conf.d/global or other file in that dir must contain:
-# [fw*]
-#      user root
 
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+
+=cut
 
 if [ "$1" = "autoconf" ]; then
 	if ( cat /proc/net/ip_conntrack 2>/dev/null >/dev/null ); then

@@ -1,15 +1,28 @@
 #!@@PERL@@
 # -*- perl -*-
-#
-# $Id$
-#
-# Parameters:
-#
-#   config
-#   autoconf
-#
-#%# family=auto
-#%# capabilities=autoconf
+
+=head1 NAME
+
+netstat - Plugin to monitor network connections
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 use strict;
 use Munin::Plugin;

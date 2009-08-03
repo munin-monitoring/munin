@@ -1,10 +1,30 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Plugin to monitor NFS client traffic
-#
-#%# family=auto
-#%# capabilities=autoconf
+
+: << =cut
+
+=head1 NAME
+
+nfs_client - Plugin to monitor NFS client traffic
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 NFS=/proc/net/rpc/nfs
 

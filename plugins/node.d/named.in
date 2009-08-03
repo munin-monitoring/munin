@@ -1,4 +1,5 @@
 #!@@GOODSH@@
+# -*- sh -*-
 #
 # Munin plugin for named.  This is a bit experimental, we will have to see
 # which statistics prove to have any meaning to get a feel with what happens

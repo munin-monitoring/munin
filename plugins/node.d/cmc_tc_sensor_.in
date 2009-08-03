@@ -1,4 +1,5 @@
 #!@@PERL@@
+# -*- perl -*-
 
 use strict;
 use warnings;

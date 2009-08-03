@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# -*- perl
 #
 # Graphs busy channels on L(ivingston|ucent) Portmaster 3 Network Access
 # Servers (maybe PM2 and PM4, too. Dunno 'bout that)...

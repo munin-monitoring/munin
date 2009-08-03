@@ -1,16 +1,30 @@
 #!@@GOODSH@@
-#
-# Plugin to monitor the number of forks per second on the machine.
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Magick markers (optional - used by munin-config and som installation
-# scripts):
-#%# family=auto
-#%# capabilities=autoconf
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+forks -Plugin to monitor the number of forks per second on the machine
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGICK MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 

@@ -1,4 +1,5 @@
 #!@@GOODSH@@
+# -*- sh -*-
 #
 # Wildcard-script to monitor number of processes. To monitor a
 # program, link ps_<program> to this file. E.g.

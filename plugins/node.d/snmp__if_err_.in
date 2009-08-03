@@ -58,7 +58,7 @@ Earlier versions of this plugin only reported the ifInErrors and
 ifOutErrors numbers.  This does not encompas all errors on a interface
 therefore the change.
 
-=head AUTHOR
+=head1 AUTHOR
 
 Copyright (C) 2004-2009.  Original authors Jimmy Olsen, Dagfinn Ilmari
 Mannsaaker.  Porting to Munin::Plugin::SNMP, documentation, grooming

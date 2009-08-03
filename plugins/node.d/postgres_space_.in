@@ -16,7 +16,7 @@ configure the name of the database to connect in the configuration file.
 =head1 CONFIGURATION
 
 The plugin supports the following parameters:
-	
+
  config 	(required)
  autoconf	(optional - used by munin-node-configure)
 

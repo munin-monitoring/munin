@@ -1,19 +1,44 @@
 #!@@GOODSH@@
-#
-# Wildcard-plugin to monitor network interfaces. To monitor an
-# interface, link if_<interface> to this file. E.g.
-#
-#    ln -s /usr/share/munin/plugins-auto/if_errcoll_ /etc/munin/node.d/if_errcoll_eth0
-#
-# ...will monitor eth0.
-#
-# Any device found in /usr/bin/kstat can be monitored.
-#
-# Magic markers (optional - used by munin-config and some installation
-# scripts):
-#
-#%# family=auto
-#%# capabilities=autoconf suggest
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+if_errcoll_ - Wildcard plugin to monitor network interfaces
+
+=head1 CONFIGURATION
+
+=head2 ENVIRONMENT VARIABLES
+
+This plugin does not use environment variables
+
+=head2 WILDCARD PLUGIN
+
+This is a wildcard plugin. To monitor an interface, link
+if_<interface> to this file. E.g.
+
+  ln -s /usr/share/munin/plugins-auto/if_errcoll_ \
+        /etc/munin/node.d/if_errcoll_eth0
+
+...will monitor eth0.
+
+Any device found in /usr/bin/kstat can be monitored.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 

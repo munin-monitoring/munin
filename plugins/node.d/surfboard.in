@@ -1,17 +1,45 @@
 #!@@PERL@@
 # -*- perl -*-
-#
-# andrew ryder - atr@mrcoffee.org
-#
-# motorola surfboard cablemodems (4100 + 4200 from what I know - most
-# likely more since Motorola uses many of the same settings/chipsets
-# across cablemodems I know this will not work on Toshiba ones (since
-# they use a different url and page this is real simple - it goes to
-# your cable modems ip, generally 192.168.100.1 and grabs a html file
-# and parses it. I use this to see how good my cable connection. good
-# if you have choices in your area requires lwp::perl package.
-#
-#%# family=contrib
+
+=head1 NAME
+
+surfboard - Plugin to monitor surfboard cable modems
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 NOTES
+
+motorola surfboard cablemodems (4100 + 4200 from what I know - most
+likely more since Motorola uses many of the same settings/chipsets
+across cablemodems 
+
+I know this will not work on Toshiba ones (since they use a different
+url and page this is real simple - it goes to your cable modems ip,
+generally 192.168.100.1 and grabs a html file and parses it. 
+
+I use this to see how good my cable connection. good if you have
+choices in your area requires lwp::perl package.
+
+=head1 AUTHOR
+
+Andrew Ryder <atr@mrcoffee.org>
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 BUGS
+
+Needs work, some variables used in the plugin should be made into
+configuration environment variables.
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+
+=cut
 
 use LWP::Simple;
 use strict;

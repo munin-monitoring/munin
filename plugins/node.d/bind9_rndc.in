@@ -1,26 +1,44 @@
 #!@@PERL@@ -w
 # -*- perl -*-
-# Plugin to monitor usage of bind 9 servers using rndc stats
-#
-# Contributed by Laurent Facq 15/06/2004
-# Based on Nicolai Langfeldt bind9 plugin
-# Reworked by Dagfinn Ilmari Mannsåker
-#
-# To intall, put
-#
-#      statistics-file "/var/run/named.stats";
-# 
-# in the options part of your named.conf or set the querystats variable
-# (see below) to where your named puts the statistics file by default.
-#
-# You must also make sure the rndc.key file is readable by the plugin.
-#
-# Environment variables:
-#	rndc		location of the rndc command.
-#			set to empty if the stats are updated otherwise
-#	querystats	location of the statistics file
-#
-#%# family=contrib
+
+=head1 NAME
+
+bind9_rndc - Plugin to monitor usage of bind 9 servers using rndc stats
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin
+
+ rndc      - location of the rndc command.
+             set to empty if the stats are updated otherwise
+ querystats - location of the statistics file
+
+=head1 USAGE
+
+To intall, put
+
+ statistics-file "/var/run/named.stats";
+
+in the options part of your named.conf or set the querystats variable
+(see below) to where your named puts the statistics file by default.
+
+You must also make sure the rndc.key file is readable by the plugin.
+
+=head1 AUTHOR
+
+Contributed by Laurent Facq 15/06/2004
+Based on Nicolai Langfeldt bind9 plugin
+Reworked by Dagfinn Ilmari Mannsåker
+
+=head1 LICENSE
+
+License unknown
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+
+=cut
 
 use strict;
 

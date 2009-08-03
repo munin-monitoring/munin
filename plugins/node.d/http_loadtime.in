@@ -1,17 +1,32 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Plugin to graph httpresponse time of a specific page
-#
-# Parameters:
-#
-#       target      - overrides the default 'index.html' page
-#       PATH        - set a sensible path
-#
-# $Id: $
-#
-#%# family=auto
-#%# capabilities=autoconf
+
+: << =cut
+
+=head1 NAME
+
+http_loadtime - Plugin to graph HTTP response time of a specific page
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin
+
+ target - URL to fetch (default: "http://localhost/")
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 target=${target:-"http://localhost/"}
 time_bin=$(which time)

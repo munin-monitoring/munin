@@ -24,7 +24,7 @@ Run as nvidia_temp, nvidia_clock or nvidia_volt
 Any system with a nvclock command.  Currently this is available on
 Linux, FreeBSD and Windows.
 
-=CONFIGURATION
+=head1 CONFIGURATION
 
 Usually none is needed.  This shows the default configuration:
 

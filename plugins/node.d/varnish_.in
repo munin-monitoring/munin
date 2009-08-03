@@ -1,4 +1,5 @@
 #!@@PERL@@
+# -*- perl -*-
 #
 # varnish_ - Munin plugin to for Varnish
 # Copyright (C) 2009  Redpill Linpro AS

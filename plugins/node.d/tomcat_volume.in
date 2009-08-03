@@ -1,37 +1,72 @@
 #!@@PERL@@
-#
-# Plugin to monitor the volume of data sent from Tomcat servers. 
-#
-# Author: Rune Nordbøe Skillingstad <runesk@linpro.no>
-#
-# Requirements:
-# 	- Needs access to http://<user>:<password>@localhost:8080/manager/status?XML=true (or modify the
-# 	  address for another host). A munin-user in $CATALINA_HOME/conf/tomcat-users.xml
-#         should be set up for this to work.
-#
-# Tip: To see if it's already set up correctly, just run this plugin
-# with the parameter "autoconf". If you get a "yes", everything should
-# work like a charm already.
-#
-# tomcat-users.xml example:
-#     <user username="munin" password="<set this>" roles="standard,manager"/>
-#
-# Parameters supported:
-#
-# 	config
-# 	autoconf
-#
-# Configurable variables
-#
-#       timeout  - Connection timeout
-# 	url      - Override default status-url
-# 	ports    - HTTP port numbers
-#       user     - Manager username
-#       password - Manager password
-#
-# Magic markers:
-#%# family=auto
-#%# capabilities=autoconf
+# -*- perl -*-
+
+=head1 NAME
+
+tomcat_volume - Plugin to monitor the volume of data sent from Tomcat
+servers.
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin
+
+=over 4
+
+=item timeout
+
+Connection timeout
+
+=item url
+
+Override default status-url
+
+=item ports
+
+HTTP port numbers
+
+=item user
+
+Manager username
+
+=item password
+
+Manager password
+
+=back
+
+=head2 CONFIGURATION EXAMPLE
+
+ [tomcat_volume]
+  env.ports    8081
+  env.user     someuser
+  env.password somepassword
+
+=head1 AUTHOR
+
+Rune Nordbøe Skillingstad <runesk@linpro.no>
+
+=head1 USAGE
+
+Needs access to
+http://<user>:<password>@localhost:8080/manager/status?XML=true (or
+modify the address for another host). A munin-user in
+$CATALINA_HOME/conf/tomcat-users.xml should be set up for this to
+work.
+
+Tip: To see if it's already set up correctly, just run this plugin
+with the parameter "autoconf". If you get a "yes", everything should
+work like a charm already.
+
+tomcat-users.xml example:
+  <user username="munin" password="<set this>"
+        roles="standard,manager"/>
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 use strict;
 

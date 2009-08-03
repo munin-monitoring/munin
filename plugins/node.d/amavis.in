@@ -1,4 +1,5 @@
 #!@@GOODSH@@
+# -*- sh -*-
 
 : <<=cut
 
@@ -12,21 +13,36 @@ Hosts running amavis localy and logtail(8) installed.
 
 =head1 CONFIGURATION
 
+The configuration environment variables are available
+
+=over 4
+
+=item amavislog
+
+Path to logfile (Default: "/var/log/mail/mail.info")
+
+=item logtail
+
+Path to logtail command (Default: "logtail")
+
+=back
+
+On most systems the mail logs are not readable by nobody which the
+plugin usually runs at.  To enable log reading it needs to run as a
+group or user that has read access, as shown above.
+
+By default the logtail program is started without any explicit path,
+but if it is not found in the system $PATH then you'll need to specify
+the full path for the program.
+
+=head2 EXAMPLE CONFIGURATION
+
 The following shows a typical configuration:
 
   [amavis]
      env.amavislog     /var/log/mail/mail.info
      env.logtail       /usr/bin/logtail
      group adm
-
-The log path shown is also the default.  On most systems the mail logs
-are not readable by nobody which the plugin usually runs at.  To
-enable log reading it needs to run as a group or user that has read
-access, as shown above.
-
-By default the logtail program is started without any explicit path,
-but if it is not found in the system $PATH then you'll need to specify
-the full path for the program.
 
 =head1 INTERPRETATION
 

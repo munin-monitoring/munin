@@ -1,42 +1,77 @@
 #!@@GOODSH@@
-#
-# fw_conntrack: Plugin to monitor the number of tracked connections
-# through a Linux 2.4/2.6 firewall.
-#
-# License: GPL
-#
-# Parameters supported:
-#
-#    config
-#    autoconf
-#
-# NOTE: MUST RUN AS ROOT.
-# @@CONFDIR@@/plugin-conf.d/global or other file in that dir must contain:
-# [fw*]
-#      user root
-#
-# Bugs:
-#    The connections tables can run full, but where is the limits found?
-#    If we can find them then we can send warnings to nagios.
-#
-# 2004.05.05: Initial version by Nicolai Langfeldt, Linpro AS, Oslo, Norway
-# 2004.05.06: Enhanced to count NATed connections after input from Xavier
-#      on munin-users list
-#
-# ESTABLISED+FIN_WAIT+TIME_WAIT+SYN_SENT+UDP is the most interesting
-# connections. The total list also includes SYN_RECV, CLOSE,
-# CLOSE_WAIT, LAST_ACK and LISTEN, but these were not (often) observed
-# on my firewall.
-#
-# TOTAL is the total number of tracked connections.  
-# ASSURED and UNREPLIED connections are complimentary subsets of
-#   ESTABLISHED.  ASSURED is after ACK is seen after SYN_RECV.
-#   Therefore ASSURED is plotted but not UNREPLIED.
-# NATed will almost always be the same as the total
-#
-# Magic markers?
-#%# family=auto
-#%# capabilities=autoconf
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+fw_conntrack - Plugin to monitor the number of tracked connections
+through a Linux 2.4/2.6 firewall
+
+=head1 CONFIGURATION
+
+This plugin must run with root privileges
+
+=head2 CONFIGURATION EXAMPLE
+
+@@CONFDIR@@/plugin-conf.d/global or other file in that dir must contain:
+
+ [fw*]
+  user root
+
+=head1 NOTES
+
+ESTABLISHED+FIN_WAIT+TIME_WAIT+SYN_SENT+UDP is the most interesting
+connections.
+
+The total list also includes SYN_RECV, CLOSE, CLOSE_WAIT, LAST_ACK and
+LISTEN, but these were not (often) observed on my firewall.
+
+TOTAL is the total number of tracked connections.
+
+ASSURED and UNREPLIED connections are complimentary subsets of
+ESTABLISHED.
+
+ASSURED is after ACK is seen after SYN_RECV.  Therefore ASSURED is
+plotted but not UNREPLIED.
+
+NATed will almost always be the same as the total
+
+=head1 BUGS
+
+=over 4
+
+=item full connection table
+
+The connections tables can run full, but where is the limits found?
+If we can find them then we can send warnings to nagios.
+
+=back
+
+=head1 AUTHORS
+
+2004.05.05: Initial version by Nicolai Langfeldt, Linpro AS, Oslo, Norway
+
+=head2 CONTRIBUTORS
+
+=over 4
+
+=item Xavier
+
+2004.05.06: Enhanced to count NATed connections after input from Xavier on munin-users list
+
+=back
+
+=head1 LICENSE
+
+GPL
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 case $1 in
     config)

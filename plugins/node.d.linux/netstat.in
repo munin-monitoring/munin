@@ -1,22 +1,43 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Plugin to monitor network connections.
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - only used by munin-config)
-#
-# Bugs:
-#       At least one SuSE netstat appears to report
-#         "passive connections rejected because of time stamp"
-#        We have never seen that, patch requested.
-#
-# Magic markers (optional - used by munin-config and some installation
-# scripts):
-#%# family=auto
-#%# capabilities=autoconf
+
+: << =cut
+
+=head1 NAME
+
+netstat - Plugin to monitor network connections
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 BUGS
+
+=over 4
+
+=item SuSE: passive connections rejected
+
+At least one SuSE netstat appears to report "passive connections
+rejected because of time stamp"
+
+We have never seen that, patch requested.
+
+=back
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 

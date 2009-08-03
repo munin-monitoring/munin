@@ -1,22 +1,41 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Plugin to monitor NTP time offset.
-#  Loosely based on ntp_ plugin, but reworked to shell.
-#
-# Parameters understood:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-node-configure)
-#
-#       [ntp_*]
-#           env.nodelay 1       - Set to 1 to remove delay
-#
-# Magic markers - optional - used by installation scripts and
-# munin-node-configure:
-#
-#%# family=auto
-#%# capabilities=autoconf
+
+: << =cut
+
+=head1 NAME
+
+ntp_offset - Plugin to monitor NTP time offset
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+ nodelay - add "delay_graph no" to RRD graph configuration
+
+=head2 EXAMPLE CONFIGURATION
+
+[ntp_*]
+  env.nodelay 1       - Set to 1 to remove delay
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 NOTES
+
+Loosely based on ntp_ plugin, but reworked to shell.
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 do_autoconf () {
     ntpq -c help >/dev/null 2>&1 || { echo 'no (no ntpq program)'; exit 0; }

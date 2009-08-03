@@ -1,8 +1,28 @@
 #!@@PERL@@
+# -*- perl -*-
 
+=head1 NAME
 
+mailman - Plugin to monitor activity on mailman mailing list
+management systems
 
-#%# family=contrib
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Author unknown
+
+=head1 LICENSE
+
+License unknown
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+
+=cut
 
 $statefile = "@@PLUGSTATE@@/munin-mailman-log.state";
 $pos = undef;

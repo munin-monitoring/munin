@@ -1,14 +1,30 @@
 #!@@PERL@@ -w
-#
-# Copyright 2006 Dagfinn Ilmari Mannsåker <ilmari@lonres.com>
-#
-# Plugin for monitoring pending package upgrades with yum
-#
-# This plugin needs to be called with the 'update' argument
-# from cron to work as intended.
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- perl -*-
+
+=head1 NAME
+
+yum - Plugin for monitoring pending package upgrades with yum
+
+=head1 USAGE
+
+This plugin needs to be called with the 'update' argument
+from cron to work as intended.
+
+=head1 AUTHOR
+
+Copyright 2006 Dagfinn Ilmari Mannsåker <ilmari@lonres.com>
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
 use strict;
 
 my $statefile = '@@PLUGSTATE@@/yum.state';

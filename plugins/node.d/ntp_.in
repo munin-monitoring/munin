@@ -1,29 +1,38 @@
 #!@@PERL@@ -w
 # -*- perl -*-
-#
-# Plugin to monitor NTP statistics
-#
-# Parameters understood:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-node-configure)
-#       suggest  (optional - used by munin-node-configure)
-#
-# Config variables:
-#
-#   [ntp_*]
-#       env.lowercase       - lowercase hostnames after lookup
-#       env.nodelay 1       - Set to 1 to remove delay
-#
-# Magic markers - optional - used by installation scripts and
-# munin-node-configure:
-#
-# This plugin is now "manual" because it's not very useful, it
-# is imposible to determine which peer is used as "master". There
-# is a ntp_offset plugin that reports a more useful value.
-#
+
+=head1 NAME
+
+ntp_ - Plugin to monitor NTP statistics
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+ [ntp_*]
+  env.lowercase       - lowercase hostnames after lookup
+  env.nodelay 1       - Set to 1 to remove delay
+
+=head1 NOTES
+
+This plugin is now "manual" because it's not very useful, it is
+imposible to determine which peer is used as "master". There is a
+ntp_offset plugin that reports a more useful value.
+
+=head1 AUTHOR
+
+Author unknown
+
+=head1 LICENSE
+
+License unknown
+
+=head1 MAGIC MARKERS
+
 #%# family=manual
 #%# capabilities=autoconf suggest
+
+=cut
 
 use strict;
 use Net::hostent;

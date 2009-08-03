@@ -1,26 +1,33 @@
 #!@@PERL@@ -w
-#
-# Plugin to monitor the number of mails delivered and rejected by courier-mta.
-#
-# Author: Rune Nordbøe Skillingstad <runesk@linpro.no>
-#
-# Usage: copy or link into /etc/munin/node.d/
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Config variables:
-#
-# 	logdir       - Where to find logfiles
-#	logfile      - What file to read in logdir
-#
-# Magic markers (optional - used by munin-config and some installation
-# scripts):
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- perl -*-
+
+=head1 NAME
+
+courier_mta_mailstats - Plugin to monitor the number of mails
+delivered and rejected by courier-mta.
+
+=head1 CONFIGURATION
+
+The following environment variables are used:
+
+ logdir  - Where to find logfiles (default "/var/log")
+ logfile - What file to read in logdir (default "mail.log")
+ courier - Path to "courier" (default "/usr/sbin/courier")
+
+=head1 AUTHOR
+
+Rune Nordbøe Skillingstad <runesk@linpro.no>
+
+=head1 LICENSE
+
+Unknown
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 my $statefile = "@@PLUGSTATE@@/munin-plugin-courier_mta_mailstats.state";
 my $pos   = undef;

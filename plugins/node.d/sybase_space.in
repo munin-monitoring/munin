@@ -1,39 +1,47 @@
 #!@@PERL@@ -w
-#
-# Copyright (C) 2003-2004 Jimmy Olsen
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; version 2 dated June,
-# 1991.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-#
-# Plugin to monitor sybase database space usage
-#
-# Parameters:
-#
-# 	config
-#
-# You need to add the user to all the databases you want monitored.
-#
-# Configuration variables:
-#
-# 	SYBASE       - Sybase home
-# 	SYBASE_USER  - Username
-# 	SYBASE_PASS  - Password
-# 	SYBASE_HOST  - Host
-# 	
-#%# family=manual
-#%# capabilities=
+# -*- perl -*-
+
+=head1 NAME
+
+sybase_space - Plugin to monitor sybase database space usage
+
+=head1 CONFIGURATION
+
+You need to add the user to all the databases you want monitored.
+
+Configuration variables:
+
+ SYBASE      - Sybase home
+ SYBASE_USER - Username
+ SYBASE_PASS - Password
+ SYBASE_HOST - Host
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=
+
+=head1 AUTHOR
+
+Copyright (C) 2003-2004 Jimmy Olsen
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 dated June, 1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301 USA.
+
+=cut
 
 use strict;
 use DBD::Sybase;

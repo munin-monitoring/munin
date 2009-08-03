@@ -1,18 +1,33 @@
 #!@@GOODSH@@
-# 
-# Plugin to monitor the number of slow queries on a mysql-server
-#
-# Parameters:
-# 	
-# 	configure
-# 	autoconf
-#
-# Configuration variables
-#
-#	mysqlopts     - Options to pass to mysql
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+mysql_slowqueries - Plugin to monitor the number of slow queries on a
+mysql-server
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+ mysqlopts - Options to pass to mysql
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 MYSQLOPTS="$mysqlopts"
 MYSQLADMIN=${mysqladmin:-mysqladmin}

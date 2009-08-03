@@ -1,25 +1,33 @@
 #!@@PERL@@ -w
-#
-# Plugin to monitor number of pages pr printer printed by CUPS
-#
-# Usage: copy or link into /etc/munin/plugins
-#
-# Parameters:
-#
-#       config   (required)
-#       autoconf (optional - used by munin-config)
-#
-# Config variables:
-#
-#       logdir       - Which logfile to use
-#       logfile      - What file to read in logdir
-#       maxlabel     - Maximum printers to plot
-#
-# Magic markers (optinal - used by munin-config and some installation
-# scripts):
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- perl -*-
+
+=head1 NAME
+
+cupsys_pages - Plugin to monitor number of pages pr printer printed by
+CUPS
+
+=head1 CONFIGURATION
+
+The following environment variables are used
+
+ logdir   - Which logfile to use
+ logfile  - What file to read in logdir
+ maxlabel - Maximum printers to plot
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 use strict;
 use Munin::Plugin;

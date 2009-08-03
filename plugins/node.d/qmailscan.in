@@ -1,13 +1,25 @@
 #!@@GOODSH@@
-#
-#
-# Plugin to show the Types of Virii. Works with qmailscan and clamav
-#
-#
-# Contributed by David Obando (david@cryptix.de) - 03.12.2005
-#
-#
+# -*- sh -*-
 
+: << =cut
+
+=head1 NAME
+
+qmailscan - Plugin to graph output from qmailscan and clamav
+
+=head1 CONFIGURATION
+
+No configuration necessary.
+
+=head1 AUTHOR
+
+Contributed by David Obando (david@cryptix.de) - 03.12.2005
+
+=head1 LICENSE
+
+Unknown license
+
+=cut
 
 # define the logfiles. when you rotate them at any other time than 00:00 you have to define two logfiles:
 LOG0=/var/spool/qmailscan/quarantine.log

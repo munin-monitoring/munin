@@ -1,4 +1,5 @@
 #!@@GOODSH@@
+# -*- sh -*-
 #
 # Wildcard-script to monitor number of processes running as a given user.
 # To monitor a user, link psu_<program> to this file. E.g.

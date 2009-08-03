@@ -1,24 +1,38 @@
 #!@@GOODSH@@
-#
-# Plugin to monitor CPU speed
-#
-# Usage: Place in /etc/munin/node.d/ (or link it there  using ln -s)
-#
-# Parameters understood:
-#
-#   config   (required)
-#   autoconf (optional - used by munin-config)
-#
-# Environment variables:
-#
-#   scaleto100    show the frequency as a percentage
-#                 instead of absolute frequency
-#
-# Magic markers - optional - used by installation scripts and
-# munin-config:
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+cpuspeed - Plugin to monitor CPU speed
+
+=head1 CONFIGURATION
+
+The following environment variables are used by the plugin
+
+=over 4
+
+=item scaleto100
+
+Show the frequency as a percentage instead of absolute frequency
+
+=back
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 

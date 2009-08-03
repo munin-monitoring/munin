@@ -1,4 +1,5 @@
 #!@@GOODSH@@
+# -*- sh -*-
 #
 # Plugin to monitor harddrive temperatures through SMART.
 #

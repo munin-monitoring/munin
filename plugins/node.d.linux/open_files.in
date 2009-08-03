@@ -1,17 +1,30 @@
 #!@@GOODSH@@
-# 
-# Plugin to monitor the number of open files in the system.
-#
-# Parameters:
-# 	
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Magic markers (Used by munin-config and some installation scripts.
-# Optional):
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+open_files - Plugin to monitor the number of open files in the system
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 

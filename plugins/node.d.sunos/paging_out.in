@@ -1,19 +1,30 @@
 #!@@GOODSH@@
-#
-# Plugin to monitor CPU usage.
-#
-# Usage: Place in /etc/munin/node.d/ (or link it there  using ln -s)
-#
-# Parameters understood:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Magic markers - optional - used by installation scripts and
-# munin-config:
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+paging_out - Plugin to monitor CPU usage.
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 

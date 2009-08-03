@@ -1,19 +1,40 @@
 #!/usr/bin/perl
-#############################################################################
-#                                                                           #
-# This script was initially developed by Anstat Pty Ltd for internal use    #
-# and has kindly been made available to the Open Source community for       #
-# redistribution and further development under the terms of the             #
-# GNU General Public License: http://www.gnu.org/licenses/gpl.html          #
-#                                                                           #
-#############################################################################
-#                                                                           #
-# Readapted to munin by Nicolai Langfeldt for Oslo Airport                  #
-#                                                                           #
-#############################################################################
-#
-# #%# family=auto
-# #%# capabilities=autoconf
+# -*- perl -*-
+
+=head1 NAME
+
+lpstat - Plugin to graph the queue size for the list of printers
+available through the command "lpstat"
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHORS
+
+Anstat Pty Ltd
+Nikolai Langfeldt
+
+=head1 LICENSE
+
+Gnu GPL
+
+=head1 NOTES
+
+This script was initially developed by Anstat Pty Ltd for internal use
+and has kindly been made available to the Open Source community for
+redistribution and further development under the terms of the
+GNU General Public License: http://www.gnu.org/licenses/gpl.html
+
+Readapted to munin by Nikolai Langfeldt for Oslo Airport
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
 
 use strict;
 use Getopt::Std;

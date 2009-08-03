@@ -1,4 +1,5 @@
 #!@@PERL@@ -Tw
+# -*- perl -*-
 #
 #%# family=contrib
 #%# capabilities=autoconf suggest

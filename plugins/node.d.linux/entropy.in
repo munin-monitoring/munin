@@ -1,14 +1,30 @@
 #!@@GOODSH@@
-# 
-# Plugin to monitor available entropy
-#
-# Usage: Link or copy into /etc/munin/node.d/
-#
-# Magic markers (optional - only used by munin-config and some
-# installation scripts):
-#
-#%# family=auto
-#%# capabilities=autoconf
+#  -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+entropy - Plugin to monitor available entropy
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 

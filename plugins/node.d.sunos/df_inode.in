@@ -1,15 +1,44 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# $Id$
-#
-# Environment
-#   df       - path to df executable (GNU df makes life easier)
-#   warning  - warning percentage, default 92
-#   critical - critical percentage, default 98
-#
-#%# family=auto
-#%# capabilites=autoconf
+
+: << =cut
+
+=head1 NAME
+
+df_inode - Plugin to monitor inode usage
+
+=head1 CONFIGURATION
+
+=over 4
+
+=item df
+
+Path to df executable (GNU df makes life easier) (Default: "/usr/bin/df")
+
+=item warning
+
+Warning percentage (Default 92)
+
+=item critical
+
+Critical percentage (Default: 98)
+
+=back
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 DF=${df:-/usr/bin/df}
 TAIL=/usr/bin/tail
