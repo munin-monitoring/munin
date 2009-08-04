@@ -1,26 +1,41 @@
-#!/bin/sh
-#
-# Script to monitor load average.
-#
-#   DESCRIPTION
-#   ===========
-#     This will report back the 5-minute average load of the system.
-#     It uses /usr/bin/uptime, /usr/bin/printf, /usr/bin/sed, /usr/bin/awk.
-#     
-#   RESCTRICTIONS
-#   =============
-#     Unless you've restricted who can use /usr/bin/uptime then there are none.
-#
-# Parameters understood:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Magic markers (optional - used by munin-config and installation
-# scripts):
-#
-#%# family=contrib
-#%# capabilities=autoconf
+#!@@GOODSH@@
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+load - Script to monitor load average
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 NOTES
+
+=head2 DESCRIPTION
+
+This will report back the 5-minute average load of the system.
+It uses /usr/bin/uptime, /usr/bin/printf, /usr/bin/sed, /usr/bin/awk.
+
+=head2 RESCTRICTIONS
+
+None, unless you have restricted who can use /usr/bin/uptime.
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
 
 if [ "$1" = "autoconf" ]; then
 	echo yes

@@ -1,34 +1,54 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# $Id$
-#
-# Script to monitor disk usage.
-#
-#   DESCRIPTION
-#   ===========
-#     This will report back the sizes of the filesystems currently
-#     mounted.  All measurements are reported in percents, not in actual
-#     512KB pages.  It uses /usr/bin/df.
-#     
-#   RESCTRICTIONS
-#   =============
-#     Unless you've restricted who can use /usr/bin/df then there are none.
-#
-# Parameters understood:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Environment:
-#       warning  Warning percentage, default 92
-#       critical Critical percentage, default 98
-#
-# Magic markers (optional - used by munin-config and installation
-# scripts):
-#
-#%# family=contrib
-#%# capabilities=autoconf
+
+: << =cut
+
+=head1 NAME
+
+df - Script to monitor disk usage
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+=over 4
+
+=item warning
+
+Warning percentage (Default: 92)
+
+=item critical
+
+Critical percentage (Default: 98)
+
+=back
+
+=head1 NOTES
+
+=head2 DESCRIPTION
+
+This will report back the sizes of the filesystems currently mounted.
+All measurements are reported in percents, not in actual 512KB pages.
+It uses /usr/bin/df.
+
+=head2 RESCTRICTIONS
+
+None, unless you have restricted who can use /usr/bin/df.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
 
 if [ "$1" = "autoconf" ]; then
 	echo yes

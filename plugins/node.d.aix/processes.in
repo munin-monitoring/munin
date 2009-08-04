@@ -1,33 +1,47 @@
 #!@@PERL@@
-#
-# Plugin to monitor the number of processes on the machine. Using
-# "ps | wc -l".
-#
-#   DESCRIPTION
-#   ===========
-#      This will report back the number of processes currently running
-#      on a server.  By defualt it will report back the total number of
-#      processes running (global).  Optionally you can edit the script
-#      and add items to look for to the "lookFor" array.  These should
-#      be simple things that can be grep'd for.
-#      
-#   RESCTRICTIONS
-#   =============
-#      None known.  /usr/bin/ps should be executable by everyone by default.
-#
-# Optionally you can add items to the lookFor array, and those items will
-# be graphed as well.  This can be useful for watching how many processes
-# of a particular type are running.
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Magick markers (optional - used by munin-config and some installation
-# scripts):
-#%# family=contrib
-#%# capabilities=autoconf
+# -*- perl -*-
+
+=head1 NAME
+
+processes - Plugin to monitor the number of processes on the machine.
+Using "ps | wc -l".
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 NOTES
+
+=head2 DESCRIPTION
+
+This will report back the number of processes currently running on a
+server.  By defualt it will report back the total number of processes
+running (global).  Optionally you can edit the script and add items to
+look for to the "lookFor" array.  These should be simple things that
+can be grep'd for.
+
+=head2 RESCTRICTIONS
+
+None known.  /usr/bin/ps should be executable by everyone by default.
+
+Optionally you can add items to the lookFor array, and those items
+will be graphed as well.  This can be useful for watching how many
+processes of a particular type are running.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
 
 use strict;
 

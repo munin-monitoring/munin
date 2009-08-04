@@ -1,35 +1,42 @@
 #!@@PERL@@ -w
 # -*- perl -*-
-#
-# Plugin for watching io-bound traffic (in KiloBytes) on disks.
-#
-#   DESCRIPTION
-#   ===========
-#     Similar to the iostat script, but will only report usage on vpaths.
-#     
-#   RESTRICTIONS
-#   ============
-#     Same as the iostat script, see it's RESTRICTIONS.
-#
-# Note:  This gathers information on virtual paths ONLY, typical if you
-#        have fiber cards installed and are attached to an ESS (Shark) or
-#        large disk array, this will combine the I/O for all hdisks
-#        associated with a vpath so you get global statistics for a 
-#        vpath.  This is to avoid having a list of hdisks that spans
-#        multiple pages.
-#
-# Usage: Link or copy into /etc/munin/node.d/
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Magic markers (optional - used by munin-config and some installation
-# scripts):
-#
-#%# family=contrib
-#%# capabilities=autoconf
+
+=head1 NAME
+
+iostat.vp_only - Plugin for watching io-bound traffic (in KiloBytes) on disks
+
+=head1 NOTES
+
+=head2 DESCRIPTION
+
+Similar to the iostat script, but will only report usage on vpaths.
+
+=head2 RESTRICTIONS
+
+Same as the iostat script, see its RESTRICTIONS.
+
+This gathers information on virtual paths ONLY, typical if you have
+fiber cards installed and are attached to an ESS (Shark) or large disk
+array.
+
+This will combine the I/O for all hdisks associated with a vpath so
+you get global statistics for a vpath.  This is to avoid having a list
+of hdisks that spans multiple pages.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
 
 use strict;
 use POSIX;

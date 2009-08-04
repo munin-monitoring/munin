@@ -1,35 +1,45 @@
 #!@@PERL@@ -w
 # -*- perl -*-
-#
-# Plugin for watching io-bound traffic (in KiloBytes) on disks.
-#
-#   DESCRIPTION
-#   ===========
-#     Similar to the iostat script, but will only report usage on hdisks
-#     physically installed in the server.
-#    
-#   RESTRICTIONS
-#   ============
-#     Same as the iostat script, see it's RESTRICTIONS.
-#
-# Note:  If you have virtual paths, typical when gigabit fiber cards
-#        are installed and attached to an ESS (Shark) or some sort of
-#        large disk array, this will not include any information for
-#        them.  This only collects information for hdisks physically
-#        located in the machine, no virtual drives are included.
-#
-# Usage: Link or copy into /etc/munin/node.d/
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Magic markers (optional - used by munin-config and some installation
-# scripts):
-#
-#%# family=auto
-#%# capabilities=autoconf
+
+=head1 NAME
+
+iostat.hd_only - Plugin for watching io-bound traffic (in KiloBytes) on disks
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 NOTES
+
+=head2 DESCRIPTION
+
+Similar to the iostat script, but will only report usage on hdisks
+physically installed in the server.
+
+=head2 RESTRICTIONS
+
+Same as the iostat script, see its RESTRICTIONS.
+
+Note: If you have virtual paths, typical when gigabit fiber cards are
+installed and attached to an ESS (Shark) or some sort of large disk
+array, this will not include any information for them.  This only
+collects information for hdisks physically located in the machine, no
+virtual drives are included.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 use strict;
 use POSIX;

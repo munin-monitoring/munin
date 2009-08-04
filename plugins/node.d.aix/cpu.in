@@ -1,33 +1,41 @@
 #!@@PERL@@
-#
-# Developed 05/28/2003 by Mike Discenza
-# mike.discenza@dillards.com
-#
-# Plugin to monitor CPU usage on AIX (4.3.3 and 5.x).
-#
-#   DESCRIPTION
-#   ===========
-#     This will monitor the cpu usage on your server.  It measures the
-#     amout of time spent on user requests, system requests, in iowait,
-#     and finally in idle.  It uses /usr/bin/iostat, which is usually
-#     installed.
-#     
-#   RESTRICTIONS
-#   ============
-#     None known of.  Should be safe to run this under any user -- this is not restricted to root.
-#
-# Usage: Place in /etc/munin/node.d/ (or link it there  using ln -s)
-#
-# Parameters understood:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Magic markers - optional - used by installation scripts and
-# munin-config:
-#
-#%# family=contrib
-#%# capabilities=autoconf
+# -*- perl -*-
+
+=head1 NAME
+
+cpu - Plugin to monitor CPU usage on AIX (4.3.3 and 5.x)
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 NOTES
+
+=head2 DESCRIPTION
+
+This will monitor the cpu usage on your server.  It measures the amout
+of time spent on user requests, system requests, in iowait, and
+finally in idle.  It uses /usr/bin/iostat, which is usually installed.
+
+=head2 RESTRICTIONS
+
+None known of.  Should be safe to run this under any user -- this is
+not restricted to root.
+
+=head1 AUTHOR
+
+Developed 05/28/2003 by Mike Discenza <mike.discenza@dillards.com>
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
 
 use strict;
 use POSIX;

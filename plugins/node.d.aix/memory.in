@@ -1,41 +1,47 @@
 #!@@PERL@@
-#
-# Developed 05/28/2003 by Mike Discenza
-# mike.discenza@dillards.com
-#
-#Important Note:
-#       This script uses /usr/bin/svmon to monitor
-#       memory usage.  svmon can only be executed by
-#       root, so you must either setup an sudo, or run
-#       munin-node as root for this to work right.
-#
-#
-# Plugin to monitor memory usage on AIX.
-#
-#   DESCRIPTION
-#   ===========
-#      This will report back the amount of memory currently in use,
-#      pages pinned in memory, the amount of free memory, and the amount
-#      of swap space being used.  It uses /usr/bin/svmon,
-#      /usr/sbin/lsps, and /usr/sbin/lsattr.
-#      
-#   RESTRICTIONS
-#   ============
-#      /usr/bin/svmon can only be executed by root.  You will either
-#      have to run the munin-node as root, or set up an sudo for this
-#      script.  The other commands (lsps, lsattr) should be executable
-#      by everyone be defualt.
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - only used by munin-config)
-#
-# Magic markers (optional - only used by munin-config and some
-# installation scripts):
-#%# family=contrib
-#%# capabilities=autoconf
+# -*- perl -*-
 
+=head1 NAME
+
+memory - Plugin to monitor memory usage on AIX
+
+=head1 CONFIGURATION
+
+This script uses /usr/bin/svmon to monitor memory usage.  svmon can
+only be executed by root, so you need the following configuration for
+this plugin:
+
+ [memory]
+  user root
+
+=head1 AUTHOR
+
+Developed 05/28/2003 by Mike Discenza <mike.discenza@dillards.com>
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 NOTES
+
+=head2 DESCRIPTION
+
+This will report back the amount of memory currently in use, pages
+pinned in memory, the amount of free memory, and the amount of swap
+space being used.  It uses /usr/bin/svmon, /usr/sbin/lsps, and
+/usr/sbin/lsattr.
+
+=head2 RESTRICTIONS
+
+/usr/bin/svmon can only be executed by root.  The other commands
+(lsps, lsattr) should be executable by everyone be defualt.
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
 
 use strict;
 use POSIX;

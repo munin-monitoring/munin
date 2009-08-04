@@ -1,29 +1,41 @@
 #!@@PERL@@
 # -*- perl -*-
-#
-# Plugin to monitor network connections.
-#
-#   DESCRIPTION
-#   ===========
-#      This will measure the amount of network traffic coming into and
-#      out of the server.  It will report back the number of connections
-#      accepted, requested, established, and closed.  It uses
-#      /usr/bin/netstat to gather it's information.
-#      
-#   RESTRICTION
-#   ===========
-#      None known.  /usr/bin/netstat should be executable by everyone by
-#      default.
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - only used by munin-config)
-#
-# Magic markers (optional - used by munin-config and some installation
-# scripts):
-#%# family=auto
-#%# capabilities=autoconf
+
+=head1 NAME
+
+netstat - Plugin to monitor network connections
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 NOTES
+
+=head2 DESCRIPTION
+
+This will measure the amount of network traffic coming into and
+out of the server.  It will report back the number of connections
+accepted, requested, established, and closed.  It uses
+/usr/bin/netstat to gather it's information.
+
+=head2 RESTRICTIONS
+
+None known.  /usr/bin/netstat should be executable by everyone by default.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 use strict;
 
