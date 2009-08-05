@@ -1,18 +1,42 @@
 #!@@GOODSH@@
-# 
-# Plugin to monitor the load average on a system.
-#
-# Usage: Link or copy into @@CONFDIR@@/plugins/
-#
-# Parameters
-#     env.load_warn <warning load>
-#     env.load_crit <critical load>
-#
-# Magic markers (optional - only used by munin-config and some
-# installation scripts):
-#
-#%# family=auto
-#%# capabilities=autoconf
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+load - Plugin to monitor the load average on a system.
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin
+
+=over 4
+
+=item load_warn <load>
+
+Warning threshold for load (Default: 10)
+
+=item load_crit <load>
+
+Critical threshold for load (Default: 120)
+
+=back
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknownl LICENSE
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 # If run with the "autoconf"-parameter, give our opinion on wether we
 # should be run on this system or not. This is optinal, and only used by
