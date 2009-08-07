@@ -697,7 +697,7 @@ sub config_and_fetch_node
     logger("[DEBUG] Configuring node: $name") if $DEBUG;
     my @services;
     my $timed_out = !do_with_timeout(5, sub {
-        write_socket_single($socket, "list $fetchdomain\n");
+        write_socket_single($socket, "list $name\n");
         my $list = read_socket_single($socket);
         exit 1 unless defined $list;
         chomp $list;

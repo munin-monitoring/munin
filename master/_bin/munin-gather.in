@@ -702,7 +702,7 @@ sub config_and_fetch_node {
         local $SIG{ALRM} =
           sub { die "Could not run list on $name ($fetchdomain): $!\n" };
         alarm 5;    # Should be enough to check the list
-        write_socket_single( $socket, "list $fetchdomain\n" );
+        write_socket_single( $socket, "list $name\n" );
         my $list = read_socket_single($socket);
         exit 1 unless defined $list;
         chomp $list;
