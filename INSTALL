@@ -11,6 +11,7 @@ On all hosts:
 
 - GNU Make - do not atempt to use any other make.
 
+
 Server:
 
 - A web server.  Apache HTTPD should be suitable.
@@ -23,6 +24,7 @@ Server:
   MIME::Lite, Mail::Sender, Mail::Sendmail, MailTools,
   Params::Validate and TimeDate)
 
+
 Node:
 
 - Perl modules: Net::Server, Time::HiRes
@@ -31,6 +33,7 @@ Node:
 
 - Perl modules for plugins: Depends on the plugins you want to use,
   but not many.
+
 
 If you're missing some perl modules and they are not in your package
 system it's recommended to use the cpan shell (as root) to install the
@@ -41,6 +44,13 @@ needed ones:
 
 Installing
 ==========
+
+NOTE!!!! If you're using NFS please note that the "make install"
+process is slightly problematic in that it (Module::Build actually)
+writes files under $CWD.  Since "make install" is usually run by root
+and root usually cannot write files on a NFS volume this will fail.
+If you use NFS please unpack munin under /var/tmp, /tmp or some such
+to work around this.
 
 There are make targets for node, master, documentation and man files.
 Generally you want to install everything on the master, and just the

@@ -25,7 +25,9 @@ PODMAN5          := master/doc/munin.conf node/doc/munin-node.conf
         build build-common-prime build-common-pre build-doc \
         deb source_dist \
         test clean \
-        clean-% test-% build-% install-% 
+        clean-% test-% build-% install-%
+
+.SECONDARY: node/Build master/Build plugins/Build
 
 default: build
 
@@ -362,9 +364,15 @@ t/install:
 
 ######################################################################
 
+# This builds */Build from Build.PL
+%/Build: %/Build.PL
+	cd $* && $(PERL) Build.PL
+
 build-%: %/Build
 	cd $* && $(PERL) Build
 
+# BUG: the Build script writes files under PWD when it does "install"
+# can't seem to find a way to persuade it to write otherwhere.
 install-%: %/Build
 	cd $* && $(PERL) Build install			\
             --install_path lib=$(PERLLIB)		\
@@ -372,12 +380,8 @@ install-%: %/Build
             --install_path bindoc=$(MANDIR)/man1	\
             --install_path libdoc=$(MANDIR)/man3	\
 
-%/Build: %/Build.PL
-	cd $* && $(PERL) Build.PL
-
 test-%: %/Build
 	cd $* && $(PERL) Build test || true
 
 clean-%: %/Build
 	cd $* && $(PERL) Build realclean
-
