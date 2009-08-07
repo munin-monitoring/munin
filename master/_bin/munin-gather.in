@@ -684,9 +684,9 @@ sub config_and_fetch_node {
     $clientdomain =~ s/\#.*(?:lrrd|munin) (?:client|node) at //;
 
     # Decide what to ask for
-    if ( munin_get( $newconf, "use_node_name" ) ) {
+    if ( munin_get_bool( $newconf, "use_node_name" ) ) {
         $fetchdomain = $clientdomain;
-    } elsif ( munin_get( $newconf, "use_default_name" ) ) {
+    } elsif ( munin_get_bool( $newconf, "use_default_name" ) ) {
         $fetchdomain = $clientdomain;
     } else {
         $fetchdomain = $name;
@@ -702,6 +702,7 @@ sub config_and_fetch_node {
         local $SIG{ALRM} =
           sub { die "Could not run list on $name ($fetchdomain): $!\n" };
         alarm 5;    # Should be enough to check the list
+	# TODO: Code above indicates $fetchdomain is the right variable.  It has wrong values?
         write_socket_single( $socket, "list $name\n" );
         my $list = read_socket_single($socket);
         exit 1 unless defined $list;
