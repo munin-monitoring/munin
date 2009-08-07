@@ -31,6 +31,7 @@ use POSIX qw(strftime);
 use Digest::MD5;
 use Getopt::Long;
 use Time::HiRes;
+use Text::ParseWords;
 if ($RRDs::VERSION >= 1.3) { use Encode; }
 
 my $graph_time= Time::HiRes::time;
@@ -254,7 +255,7 @@ sub get_custom_graph_args
 
     my $args    = munin_get ($service, "graph_args");
     if (defined $args) {
-	push @$result, split /\s/,$args;
+	my $result = [ &quotewords('\s+', 0, $args) ] ;
 	return $result;
     } else {
 	return;
@@ -319,25 +320,13 @@ sub get_header {
     return $result;
 }
 
-sub get_sum_command
-{
+sub get_sum_command {
     my $field   = shift;
-
-    if (defined $field->{"special_sum"}) { # Deprecated
-	return $field->{"special_sum"};
-    }
-
     return munin_get ($field, "sum");
 }
 
-sub get_stack_command
-{
+sub get_stack_command {
     my $field   = shift;
-
-    if (defined $field->{"special_stack"}) { # Deprecated
-	return $field->{"special_stack"}; 
-    } 
-    
     return munin_get ($field, "stack");
 }
 
@@ -426,7 +415,7 @@ sub expand_specials
 	    if (@$order == 1 or (@$order == 2 and munin_get {$field, "negative", 0})) {
 		    $single = 1;
 	    }
-		
+
 	    foreach my $pre (split (/\s+/, $tmp_field)) {
 		(my $path = $pre) =~ s/.+=//;
 		my $name = "z".$fieldnum."_".scalar (@spc_stack);
