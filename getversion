@@ -1,5 +1,7 @@
 #!/bin/sh
-VERSION=$(cat RELEASE)
+# Be compatible here, use `` and such old stuff
+
+VERSION=`cat RELEASE`
 
 if ls -d .svn > /dev/null 2>&1; then
     INFO_CMD="svn info"
@@ -15,7 +17,7 @@ fi
 
 case $VERSION in
     svn-*)
-	R=$($INFO_CMD | awk '/^Revision: / { print $2; }') || {
+	R=`$INFO_CMD | awk '/^Revision: / { print $2; }'` || {
 	    echo Unable to get svn revision >&2
 	    exit 1
 	}
