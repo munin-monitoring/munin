@@ -60,16 +60,8 @@ GPLv2
 use strict;
 use Munin::Plugin;
 
-my %mounts;
-
-open (MOUNTS,"/proc/mounts") or die "Could not /proc/mounts for reading.";
-while (<MOUNTS>) {
-    # Does perl really not have any shorthand for this? I guess it has.
-    my(undef,$mountpt,$device,undef)=split(/\s+/,$_,4);
-    $mounts{$mountpt}=$device;
-}
-
-close MOUNTS;
+# For these filesystem types use the mount point, the device is useless
+my %usemntpt = ( tmpfs => 1 );
 
 my $exclude=$ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs';
 my $dfopts = "-P -l ".join(' -x ',('',split('\s+',$exclude)));
@@ -86,7 +78,8 @@ sub print_values() {
 	# Parse the output
 	my ($name,undef,$used,$avail,undef,$mountpt,undef)=split(/\s+/,$_,7);
 
-	my $fs=$mounts{$mountpt};
+	$name = $mountpt if defined($usemntpt{$name}) && $usemntpt{$name};
+
 	$name=clean_fieldname($name);
 
 	my $ps = 0;
@@ -126,12 +119,12 @@ if ( defined($ARGV[0]) and $ARGV[0] eq "config" ) {
 	# Parse the output
 	my ($name,undef,undef,undef,$ps,$mountpt,undef)=split(/\s+/,$_,7);
 
-	my $fs=$mounts{$mountpt};
-	my $dir=$mountpt;
+	$name = $mountpt if defined($usemntpt{$name}) && $usemntpt{$name};
+
 	$name=clean_fieldname($name);
 
 	# Create and print labels
-	print $name, ".label ", $dir, "\n";
+	print $name, ".label ", $mountpt, "\n";
 
 	print_thresholds($name);
     }
