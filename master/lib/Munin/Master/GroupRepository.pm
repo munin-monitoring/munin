@@ -83,7 +83,7 @@ sub _extract_group_name_from_host_name {
 
     return $dot_loc == -1
         ? $host_name
-        : substr $host_name, $dot_loc;
+        : substr $host_name, $dot_loc + 1 ;
 }
 
 

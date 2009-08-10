@@ -173,6 +173,8 @@ sub _get_rrd_file_name {
         $p;
     } ($group, $file);
 	
+    logger("[DEBUG] Made rrd filename: $group / $file\n") if $config->{debug};
+
     return File::Spec->catfile($config->{dbdir}, 
                                $group,
                                $file);
