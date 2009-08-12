@@ -3,7 +3,7 @@ package Munin::Node::SNMPConfig;
 use strict;
 use warnings;
 
-use Net::SNMP;
+use Net::SNMP qw/oid_base_match ENDOFMIBVIEW/;
 use Socket;
 
 use Data::Dumper;
@@ -148,9 +148,7 @@ sub _snmp_autoconf_plugin
 	my ($plugin, $session) = @_;
 
 	my $num = 1;  # Number of items to autoconf
-	my $indexes;  # Index base
-
-	$plugin->{default} = 'no';
+	my @indexes;
 
 	# First round of requirements
 	if ($plugin->{require_oid}) {
@@ -176,35 +174,42 @@ sub _snmp_autoconf_plugin
 				if $config->{DEBUG};
 			return;
 		}
+		print "# $num items to autoconf\n" if $config->{DEBUG};
 	}
-	print "# $num items to autoconf\n" if $config->{DEBUG};
 
 	# Then the index base
 	if ($plugin->{index}) {
-		$indexes = _snmp_get_index($session, $plugin->{index}, $num);
-		return unless $indexes or scalar keys %{$indexes};
+		@indexes = _snmp_walk_index($session, $plugin->{index});
+		return unless @indexes;
 	}
 	else {
-		$indexes->{0} = 1;
+		@indexes = (1);
 	}
-	print "# Got indexes: ", join (',', keys (%$indexes)), "\n" if $config->{DEBUG};
+
+	printf "# Got indexes: %s\n", join(', ', @indexes) if $config->{DEBUG};
+
+	my @valid_indexes;
 
 	# Second round of requirements (now that we have the indexes)
 	if (defined $plugin->{required_root}) {
 		print "# Checking requirements...\n" if $config->{DEBUG};
 		foreach my $req (@{$plugin->{required_root}}) {
-			foreach my $key (keys %$indexes) {
-				my $snmp_val = _snmp_get_single($session, $req->[0] . $key);
-				if (!defined $snmp_val or $snmp_val !~ /$req->[1]/) {
-					print "# No. Deleting $key from possible solutions.\n" if $config->{DEBUG};
-					delete $indexes->{$key}; # Disable
+			foreach my $index (@indexes) {
+				my $snmp_val = _snmp_get_single($session, $req->[0] . $index);
+
+				if (!defined $snmp_val
+				    or ($snmp_val && $snmp_val !~ /$req->[1]/))
+				{
+					print "# No. Removing $index from possible solutions.\n" if $config->{DEBUG};
+				}
+				else {
+					push @valid_indexes, $index;
 				}
 			}
 		}
 	}
 
-	my @tmparr = sort keys %$indexes;
-	return \@tmparr;
+	return \@valid_indexes;
 }
 
 
@@ -225,39 +230,52 @@ sub _snmp_get_single
 }
 
 
-# Walks the entries immediately under $oid_root
-sub _snmp_get_index
+# Walks the tree under $oid_base, and returns the values of the objects
+# rooted there.
+#
+# FIXME: would be nice to use session->get_table() here, but it craps out with
+# "Received tooBig(1) error-status at error-index 0" when using 2c (and
+# presumably 3).  fixing that will require messing with -maxrepetitions (but
+# then only when snmp version != 1)
+sub _snmp_walk_index
 {
-	my ($session, $oid_root, $num) = @_;
+	my ($session, $oid_base) = @_;
 
-	my $ret = $oid_root . "0";
-	
-	my %rhash;
-	my $response;
+	my @results;
+	my ($response, $value);
 
-	$num++; # Avaya switch b0rkenness...
+	print "# Walking from $oid_base\n" if $config->{DEBUG};
 
-	print "# Checking for $ret\n" if $config->{DEBUG};
-	$response = $session->get_request($ret);
+	(my $oid_root = $oid_base) =~ s/\.$//;
+	my $oid = $oid_base . '0';
 
-	foreach my $ii (0 .. $num) {
-		if ($ii or !defined $response or $session->error_status) {
-			print "# Checking for sibling of $ret\n" if $config->{DEBUG};
-			$response = $session->get_next_request($ret);
+	while ($response = $session->get_next_request($oid)) {
+		print "# Checking for sibling of $oid\n" if $config->{DEBUG};
+
+		if ($session->error_status == ENDOFMIBVIEW) {
+			print "# Reached the end of the MIB.\n"
+				if $config->{DEBUG};
+			last;
 		}
-		unless ($response) {
-			printf "# Error fetching $ret: %s\n", $session->error_status() if $config->{DEBUG};
+
+		# Any other errors invalidates the results
+		unless ($session->error_status == 0) {
+			printf "# Error fetching sibling of $oid: %s\n", $session->error
+				if $config->{DEBUG};
 			return;
 		}
-		my @keys = keys %$response;
-		$ret = $keys[0];
-		last unless ($ret =~ /^$oid_root\d+$/);
 
-		print "# Index $ii: ", join ('|', @keys), "\n" if $config->{DEBUG};
+		($oid, $value) = %$response;
+		if ($config->{DEBUG}) {
+			print "# Sibling is: $oid , value is: $value\n";
+		}
 
-		$rhash{$response->{$ret}} = 1;
+		last unless oid_base_match($oid_root, $oid);
+
+		push @results, $value;
 	}
-	return \%rhash;
+
+	return @results;
 }
 
 
