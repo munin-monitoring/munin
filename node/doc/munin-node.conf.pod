@@ -71,7 +71,7 @@ A pretty normal configuration file:
 	port 4949
 	pid_file /var/run/munin-node.pid
 	background 1
-	setseid 1
+	setsid 1
 
 	host *
 	user root

@@ -7,7 +7,7 @@ log_file @@LOGDIR@@/munin-node.log
 pid_file @@STATEDIR@@/munin-node.pid
 
 background 1
-setseid 1
+setsid 1
 
 user root
 group root

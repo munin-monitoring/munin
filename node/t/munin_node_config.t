@@ -153,7 +153,7 @@ isa_ok($conf, 'Munin::Node::Config');
             'background' => '1',
             'log_file' => '/var/log/munin/munin-node.log',
             'host' => '*',
-            'setseid' => '1',
+            'setsid' => '1',
             'pid_file' => '/var/run/munin/munin-node.pid',
             'group' => 'root',
             'log_level' => '4',
@@ -296,7 +296,7 @@ log_file /var/log/munin/munin-node.log
 pid_file /var/run/munin/munin-node.pid
 
 background 1
-setseid 1
+setsid 1
 
 user root
 group root
