@@ -60,7 +60,11 @@ To install both master and node:
 
 	- Review/edit Makefile.config to suite your needs.
 
-	- Create the user "munin".
+	- Create the user "munin" and the group "munin" if that is
+          not made automatically.  The user needs no shell and no
+	  priveliges.  On most Linux systems the munin users shell
+	  is /etc/nologin - but the user still needs to be able to
+          run cron-jobs.
 
 	- make
 
