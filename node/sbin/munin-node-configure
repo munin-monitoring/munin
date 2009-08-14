@@ -394,34 +394,30 @@ sub print_suggestion_row {
 
 # prints shell commands to get the system into the recommended
 # state by adding or removing symlinks
-sub manage_links
-{
-	my ($plugin) = @_;
+sub manage_links {
+  my ($plugin) = @_;
 
-	if ($plugin->{default} eq 'no') {
-		# Damnatio memoriae!
-		foreach my $link (@{ $plugin->{installed} }) {
-			link_remove($link);
-		}
-	}
-	elsif ($plugin->{wildcard}) {
-		# Yes, and wildcard.  Add and remove links to get them in sync
-		my ($same, $add, $remove) = diff_suggestions($plugin->{suggestions},
-		                                             $plugin->{installed});
+  if ($plugin->{default} eq 'no') {
+    # Damnatio memoriae!
+    foreach my $link (@{ $plugin->{installed} }) {
+      link_remove($link);
+    }
+  } elsif ($plugin->{wildcard}) {
+    # Yes, and wildcard.  Add and remove links to get them in sync
+    my ($same, $add, $remove) = diff_suggestions($plugin->{suggestions},
+						 $plugin->{installed});
 
-		foreach my $to_add (@$add) {
-			link_add($plugin->{name}, $to_add);
-		}
-		foreach my $to_remove (@$remove) {
-			link_remove($plugin->{name}, $to_remove);
-		}
-	}
-	else {
-		# Yes, but not wildcard: just add a straight link
-		link_add($plugin->{name});
-	}
-
-	return;
+    foreach my $to_add (@$add) {
+      link_add($plugin->{name}, $to_add);
+    }
+    foreach my $to_remove (@$remove) {
+      link_remove($plugin->{name}, $to_remove);
+    }
+  } else {
+    # Yes, but not wildcard: just add a straight link
+    link_add($plugin->{name});
+  }
+  return;
 }
 
 
