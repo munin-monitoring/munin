@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# -*- perl -*-
+# -*- cperl -*-
 #
 # Copyright (C) 2003-2006 Jimmy Olsen, Nicolai Langfeldt.
 #
@@ -354,7 +354,7 @@ sub show_suggestions
 		normal("------", "----", "-----------");
 	}
 
-	foreach my $plugin (sort keys %$plugins) {
+	foreach my $ plugin (sort keys %$plugins) {
 		my $plug_info = $plugins->{$plugin};
 
 		next unless $plug_info->{capabilities}{autoconf};
@@ -367,29 +367,28 @@ sub show_suggestions
 
 
 # prints out the tabular representation of the suggestion
-sub print_suggestion_row
-{
-	my ($plug_info) = @_;
+sub print_suggestion_row {
+  my ($plug_info) = @_;
 
-	my $msg = '';  # either [reason] or (+add/-remove)
-	my $now = $plug_info->{installed} ? 'yes' : 'no';
+  my $msg = '';  # either [reason] or (+add/-remove)
+  my $now = $plug_info->{installed} ? 'yes' : 'no';
 
-	if ($plug_info->{wildcard}) {
-		my ($same, $add, $remove) = diff_suggestions($plug_info->{installed},
-		                                             $plug_info->{suggestions});
-		my @suggestions = @$same;
-		push @suggestions, map { '+' . $_ } @$add;
-		push @suggestions, map { '-' . $_ } @$remove;
+  if ($plug_info->{wildcard}) {
+    my ($same, $add, $remove) = diff_suggestions($plug_info->{installed},
+						 $plug_info->{suggestions});
+    my @suggestions = @$same;
+    push @suggestions, map { '+' . $_ } @$add;
+    push @suggestions, map { '-' . $_ } @$remove;
 
-		$msg = '(' . join(' ', @suggestions) . ')' if @suggestions;
-	}
-	elsif ($plug_info->{defaultreason}) {
-		# Report why it's not being used
-		$msg = "[$plug_info->{defaultreason}]";
-	}
+    $msg = '(' . join(' ', @suggestions) . ')' if @suggestions;
+  }
+  elsif ($plug_info->{defaultreason}) {
+    # Report why it's not being used
+    $msg = "[$plug_info->{defaultreason}]";
+  }
 
-	normal($plug_info->{name}, $now, "$plug_info->{default} $msg");
-	return;
+  normal($plug_info->{name}, $now, "$plug_info->{default} $msg");
+  return;
 }
 
 
@@ -1174,6 +1173,7 @@ or not.
 	@@CONFDIR@@/munin-node.conf
 	@@CONFDIR@@/plugin-conf.d/*
 	@@CONFDIR@@/plugins/*
+        @@LIBDIR@@/plugins/plugins.history
 	@@LIBDIR@@/plugins/*
 
 =head1 VERSION
