@@ -354,7 +354,7 @@ sub show_suggestions
 		normal("------", "----", "-----------");
 	}
 
-	foreach my $ plugin (sort keys %$plugins) {
+	foreach my $plugin (sort keys %$plugins) {
 		my $plug_info = $plugins->{$plugin};
 
 		next unless $plug_info->{capabilities}{autoconf};
@@ -404,8 +404,8 @@ sub manage_links {
     }
   } elsif ($plugin->{wildcard}) {
     # Yes, and wildcard.  Add and remove links to get them in sync
-    my ($same, $add, $remove) = diff_suggestions($plugin->{suggestions},
-						 $plugin->{installed});
+    my ($same, $add, $remove) = diff_suggestions($plugin->{installed},
+						 $plugin->{suggestions});
 
     foreach my $to_add (@$add) {
       link_add($plugin->{name}, $to_add);
