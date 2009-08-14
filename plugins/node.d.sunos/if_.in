@@ -5,7 +5,7 @@
 
 =head1 NAME
 
-if_ - Wildcard plugin to monitor network interfaces
+if_ - Wildcard plugin to monitor traffic network interfaces
 
 =head1 CONFIGURATION
 
@@ -56,7 +56,7 @@ fi
 
 if [ "$1" = "suggest" ]; then
 	if [ -x /usr/bin/kstat ]; then
-		kstat -p -s '/^rbytes$/' | awk -F: '{ print $3 }'
+		kstat -p -s '/^rbytes$/' | awk -F: '/^link:/ { print $3 }'
 		exit 0
 	else
 		exit 1
