@@ -21,9 +21,9 @@ The following environment variables are available
 
 The following shows a typical configuration:
 
-[apc_envunit_*]
- env.units foo.example.org bar.example.org
- env.community 123secret
+ [apc_envunit_*]
+   env.units foo.example.org bar.example.org
+   env.community 123secret
 
 =head1 INTERPRETATION
 
@@ -33,11 +33,11 @@ environmental units.
 =head1 MAGIC MARKERS
 
  #%# family=auto
- #%# capabilities=autoconf
+ #%# capabilities=autoconf suggest
 
 =head1 BUGS
 
-None known
+None known. Should be snmp__apc_.
 
 =head1 AUTHOR
 
@@ -46,10 +46,6 @@ Xavier Redon
 =head1 LICENSE
 
 Unknown
-
-=head1 NOTES
-
-FIXME: candidate to be snmp__apc
 
 =cut
 
@@ -65,14 +61,12 @@ else
    NAME="humidity"
    LABEL="Humidity %"
    LETTER="h"
-  else 
-    exit 1
   fi
 fi
 
 UNITS=""
 COMMUNITY="public"
-SNMPGET=`which snmpget`
+SNMPGET=`which snmpget 2>/dev/null`
 
 if [ "$units" ]; then UNITS=$units ; fi
 if [ "$oid" ]; then TOID=$oid ; fi
@@ -80,14 +74,26 @@ if [ "$community" ]; then COMMUNITY=$community ; fi
 
 SNMPOPTS="-Ov -Oq -v1 -c ${COMMUNITY}"
 
+
+
 if [ "$1" = "autoconf" ]; then
-  if [ -z "${UNITS}" -o -z "${SNMPGET}" ] ; then echo "no" ; exit 0 ; fi
-  if [ ! -x "$SNMPGET" ] ; then echo "no (no snmpget executable)"; exit 0; fi
+  if [ -z "${UNITS}" ] ; then echo "no (no units to monitor)" ; exit 0 ; fi
+  if [ -z "$SNMPGET" -o ! -x "$SNMPGET" ] ; then 
+      echo "no (no snmpget executable)"
+      exit 0
+  fi
+
   for m in ${UNITS} ; do
-    if ping -c1 -q $m  >/dev/null 2>&1 ; then continue ; fi
-    echo "no" ; exit 0
+    if ping -c1 -q $m >/dev/null 2>&1 ; then continue ; fi
+    echo "no (can't reach $m)" ; exit 0
   done
   echo "yes" ; exit 0
+fi
+
+if [ "$1" = "suggest" ]; then
+    echo temperature
+    echo humidity
+    exit 0
 fi
 
 if [ "$1" = "config" ]; then
