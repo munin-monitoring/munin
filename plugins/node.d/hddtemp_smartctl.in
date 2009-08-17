@@ -92,7 +92,7 @@ my $smartctl = exists $ENV{smartctl} ? $ENV{smartctl} : undef;
 
 # If the envvar is not set, look for smartctl
 # first, try $PATH
-$smartctl = `which smartctl` unless $smartctl;
+$smartctl = `which smartctl 2>/dev/null` unless $smartctl;
 chomp $smartctl;
 $smartctl = undef unless -x $smartctl;
 

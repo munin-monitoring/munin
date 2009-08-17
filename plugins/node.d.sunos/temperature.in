@@ -37,8 +37,8 @@ if($ARGV[0] eq "config") {
 
 if($ARGV[0] eq "autoconf") {
 	if(! -x $prtdiag) {
-		print "no\n";
-		exit(1);
+		print "no (no $prtdiag)\n";
+		exit(0);
 	}
 	gettemps();
 	if($#tempnam>=0) {

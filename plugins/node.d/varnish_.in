@@ -669,7 +669,7 @@ sub usage
 # Otherwise exit with false and a human-readable reason.
 sub autoconf
 {
-	if (`which $varnishstatexec` eq '') {
+	if (`which $varnishstatexec 2>/dev/null` eq '') {
 		print "no (which $varnishstatexec returns blank)\n";
 		exit 1;
 	}

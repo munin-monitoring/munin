@@ -53,7 +53,7 @@ my $host = '127.0.0.1';
 $ENV{PATH}="/bin:/usr/bin";
 
 if ($ARGV[0] eq 'autoconf') {
-    if( ! open(LPSTAT_R, "lpstat $host -r|") ) {
+    if( ! open(LPSTAT_R, "lpstat $host -r 2>/dev/null |") ) {
         print "no (could not execute lpstat)\n";
         exit 0;
     }
