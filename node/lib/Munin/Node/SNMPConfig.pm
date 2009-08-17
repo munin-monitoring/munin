@@ -154,14 +154,9 @@ sub _snmp_autoconf_plugin
 	if ($plugin->{require_oid}) {
 		print "# Checking required OIDs...\n" if $config->{DEBUG};
 		foreach my $req (@{$plugin->{require_oid}}) {
-			my $response =  _snmp_get_single($session, $req->[0]);
-			if (! defined $response) {
-				print "# No response.\n" if $config->{DEBUG};
-				return;
-			}
-			elsif ($req->[1] and $response !~ /$req->[1]/) {
-				print "# Response didn't match.\n"
-					if $config->{DEBUG};
+			my ($oid, $filter) = @$req;
+			unless (_snmp_check_require($session, $oid, $filter)) {
+				print "# Response didn't match.\n" if $config->{DEBUG};
 				return;
 			}
 		}
@@ -194,22 +189,40 @@ sub _snmp_autoconf_plugin
 	if (defined $plugin->{required_root}) {
 		print "# Checking requirements...\n" if $config->{DEBUG};
 		foreach my $req (@{$plugin->{required_root}}) {
+			my ($oid, $filter) = @$req;
 			foreach my $index (@indexes) {
-				my $snmp_val = _snmp_get_single($session, $req->[0] . $index);
-
-				if (!defined $snmp_val
-				    or ($snmp_val && $snmp_val !~ /$req->[1]/))
-				{
-					print "# No. Removing $index from possible solutions.\n" if $config->{DEBUG};
+				if (_snmp_check_require($session, $oid . $index, $filter)) {
+					push @valid_indexes, $index;
 				}
 				else {
-					push @valid_indexes, $index;
+					print "# No. Removing $index from possible solutions.\n"
+						if $config->{DEBUG};
+					next;
 				}
 			}
 		}
 	}
 
 	return \@valid_indexes;
+}
+
+
+# Returns true if the SNMP device supports the 'require', false otherwise.
+sub _snmp_check_require
+{
+	my ($session, $oid, $filter) = @_;
+
+	my $value = _snmp_get_single($session, $oid);
+	if (! defined $value) {
+		print "# No response.\n" if $config->{DEBUG};
+		return 0;
+	}
+	elsif ($filter and $value !~ /$filter/) {
+		print "# Response didn't match.\n" if $config->{DEBUG};
+		return 0;
+	}
+
+	return 1;
 }
 
 
