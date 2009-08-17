@@ -19,13 +19,13 @@ The munin code is marked by years on the battle front. You will
 therefore find code that deviates from the guidelines defined
 here. However, all new code should be made to comply.
 
-These guidelines is a RFC for the time being and are of course
+These guidelines is an RFC for the time being and are of course
 negotiable.
 
 
 =head1 GETTING STARTED
 
-In the dev_script directory you will find scripts that are ment to be
+In the dev_script directory you will find scripts that are meant to be
 useful for developing. Most of them are tools for creating and using
 munin in a sandbox.
 
