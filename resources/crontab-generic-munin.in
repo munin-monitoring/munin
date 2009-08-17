@@ -1,0 +1,8 @@
+#
+# cron-jobs for munin.  Install by running something like
+# 
+#   cron -r @@USER@@ < crontab-generic-munin
+#
+
+0,5,10,15,20,25,30,35,40,45,50,55 * * * *     if [ -x @@BINDIR@@/munin-cron ]; then @@BINDIR@@/munin-cron; fi
+10 10 * * *     if [ -x @@LIBDIR@@/munin-limits ]; then @@LIBDIR@@/munin-limits --force --contact nagios --contact old-nagios; fi
