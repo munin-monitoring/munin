@@ -7,8 +7,9 @@ clean_fieldname () {
     #
     # usage: name="$(clean_fieldname "$item")"
     # 
-    echo "$@" | sed -e 's/^[^A-Za-z_]/_/' -e 's/[^A-Za-z0-9_]/_/g' -e 's/^.*\([A-Za-z0-9_]\{19\}\)$/\1/'
+    echo "$@" | sed -e 's/^[^A-Za-z_]/_/' -e 's/[^A-Za-z0-9_]/_/g' -e 's/^.*\([A-Za-z0-9_]\{19\}\)$/\1/' -e 's/\(...................\)$/\1/'
 }
+
 
 # Look up warning environment variables in the following order:
 # $1 = field name
@@ -16,11 +17,10 @@ clean_fieldname () {
 #
 # Hmm, this first looks for field_warning, then $2 then warning.  Not the
 # order one expects.
-#
+
 get_warning () {
     warn_env="${1}_warning"
     defwarn_env=${2:-warning}
-    # eval export spam=\$${field}_warning
     warntmp=$(eval "echo \$${warn_env}")
     warntmpd=$(eval "echo \$${defwarn_env}")
 
@@ -32,6 +32,10 @@ get_warning () {
 }
 
 
+# Usage: 
+#   warning=${warning:-92}
+#   print_warning "$name"
+
 print_warning () {
 	warnout=$(get_warning $1 $2)
 	if [ -n "${warnout}" ]; then
@@ -40,7 +44,7 @@ print_warning () {
 }
 
 # Ditto for critical values
-#
+
 get_critical () {
 	crit_env="${1}_critical"
 	defcrit_env=${2:-critical}
