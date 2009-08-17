@@ -286,7 +286,8 @@ __END__
 
 =head1 NAME
 
-Munin::Node::SNMPConfig - FIX
+Munin::Node::SNMPConfig - Subroutines providing munin-node-configure's SNMP
+scanning capabilities.
 
 
 =head1 SYNOPSIS
@@ -306,8 +307,7 @@ Munin::Node::SNMPConfig - FIX
 
   @expanded = expand_hosts(@list);
 
-Takes a list 
-and returns the IPs (in dotted-quad format).
+Takes a list of hosts, and returns the corresponding IPs in dotted-quad form.
 
 Items can be specified as a hostname or dotted-quad IP, either with or
 without a netmask, or as a comma-separated list of the above.
