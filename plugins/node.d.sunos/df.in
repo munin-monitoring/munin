@@ -1,27 +1,24 @@
-#!@@GOODSH@@
+#!@@BASH@@
 # -*- sh -*-
 
 : << =cut
 
 =head1 NAME
 
-cpu - Plugin to monitor CPU usage
+df - Plugin to monitor disk usage (measuring byte usage in percent)
 
 =head1 CONFIGURATION
 
-=over 4
+This shows the default configuration
 
-=item df
+  [df*]
+    env.df /usr/sbin/df
+    env.warning 92
+    env.critical 98
 
-Path to df executable (GNU df makes life easier) (Default: "/usr/bin/df")
-
-=item warning
-
-Warning percentage (Default 92)
-
-=item critical
-
-Critical percentage (Default: 98)
+A device specific warning/critical level is also supported.  Append
+the munin label (shown in the plugin display page) and append _warning
+or _critical respectively to get the (environment variable) name.
 
 =back
 
@@ -42,9 +39,10 @@ Unknown license
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 
-# Why does df_inode and df on solaris use different df versions?
 DF=${df:-/usr/sbin/df}
 TAIL=/usr/bin/tail
+warning=${warning:-92}
+critical=${critical:-98}
 
 if [ "$1" = 'autoconf' ]; then
     echo yes
@@ -53,26 +51,34 @@ fi
 
 if [ "$1" = "config" ]; then
 
-        echo 'graph_title Filesystem usage (in %)'
-        echo 'graph_args --upper-limit 100'
-	echo 'graph_category disk'
-	echo 'graph_scale no'
+    echo 'graph_title Filesystem usage (bytes in %)'
+    echo 'graph_args --upper-limit 100'
+    echo 'graph_category disk'
+    echo 'graph_scale no'
 
-	# Using the mount point as name is silly as / becomes '' after
-	# the needed substitutions.  So in this incarnation we use the
-	# device name.  Since the plugin already changed names this
-	# should be ok.
+    # Using the mount point as name is silly as / becomes '' after
+    # the needed substitutions.  So in this incarnation we use the
+    # device name.  Since the plugin already changed names this
+    # should be ok.
 
-        $DF -k -l | $TAIL +2 | while read dev size used avail pct mnt; do
-                name=$(clean_fieldname $dev)
-                echo "$name.label $mnt"
-		print_warning "$name"
-		print_critical "$name"
-        done
-        exit 0
+    $DF -k -l | $TAIL +2 | while read dev size used avail pct mnt; do
+	case $dev in
+	    /usr/lib*|ctfs|objfs|mnttab|sharefs) continue;;
+	    swap) name=$(clean_fieldname $mnt);;
+	    *)    name=$(clean_fieldname $dev);;
+	esac
+        echo "$name.label $mnt"
+	print_warning "$name"
+	print_critical "$name"
+    done
+    exit 0
 fi
 
 $DF -k -l | $TAIL +2 | while read dev size used avail pct mnt; do
-        name=$(clean_fieldname $dev)
+	case $dev in
+	    /usr/lib*|ctfs|objfs|mnttab|sharefs) continue;;
+	    swap) name=$(clean_fieldname $mnt);;
+	    *)    name=$(clean_fieldname $dev);;
+	esac
         echo "$name.value $pct" | cut -f1 -d% 
 done
