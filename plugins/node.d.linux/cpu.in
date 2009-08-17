@@ -77,11 +77,10 @@ fi
 if [ "$1" = "config" ]; then
 
 	NCPU=$(egrep '^cpu[0-9]+ ' /proc/stat | wc -l)
-	MAX=$(($NCPU * 100))
 	if [ "$scaleto100" = "yes" ]; then
 		graphlimit=100
 	else
-		graphlimit=$MAX
+		graphlimit=$(($NCPU * 100))
 	fi
 	echo 'graph_title CPU usage'
 	echo "graph_order system user nice idle" $extinfo
@@ -93,26 +92,22 @@ if [ "$1" = "config" ]; then
 	echo 'graph_period second'
 	echo 'system.label system'
 	echo 'system.draw AREA'
-	echo "system.max $MAX"
 	echo 'system.min 0'
 	echo 'system.type DERIVE'
 	echo "system.info CPU time spent by the kernel in system activities" 
 	echo 'user.label user'
 	echo 'user.draw STACK'
 	echo 'user.min 0'
-	echo "user.max $MAX"
 	echo 'user.type DERIVE'
 	echo 'user.info CPU time spent by normal programs and daemons'
 	echo 'nice.label nice'
 	echo 'nice.draw STACK'
 	echo 'nice.min 0'
-	echo "nice.max $MAX"
 	echo 'nice.type DERIVE'
 	echo 'nice.info CPU time spent by nice(1)d programs'
 	echo 'idle.label idle'
 	echo 'idle.draw STACK'
 	echo 'idle.min 0'
-	echo "idle.max $MAX"
 	echo 'idle.type DERIVE'
 	echo 'idle.info Idle CPU time'
 
@@ -132,19 +127,16 @@ if [ "$1" = "config" ]; then
 		echo 'iowait.label iowait'
 		echo 'iowait.draw STACK'
 		echo 'iowait.min 0'
-		echo "iowait.max $MAX"
 		echo 'iowait.type DERIVE'
 		echo 'iowait.info CPU time spent waiting for I/O operations to finish when there is nothing else to do.'
 		echo 'irq.label irq'
 		echo 'irq.draw STACK'
 		echo 'irq.min 0'
-		echo "irq.max $MAX"
 		echo 'irq.type DERIVE'
 		echo 'irq.info CPU time spent handling interrupts'
 		echo 'softirq.label softirq'
 		echo 'softirq.draw STACK'
 		echo 'softirq.min 0'
-		echo "softirq.max $MAX"
 		echo 'softirq.type DERIVE'
 		echo 'softirq.info CPU time spent handling "batched" interrupts'
 		if [ "$scaleto100" = "yes" ]; then
@@ -163,7 +155,6 @@ if [ "$1" = "config" ]; then
                 echo 'steal.label steal'
                 echo 'steal.draw STACK'
                 echo 'steal.min 0'
-                echo "steal.max $MAX"
                 echo 'steal.type DERIVE'
                 echo 'steal.info The time that a virtual CPU had runnable tasks, but the virtual CPU itself was not running'
                 if [ "$scaleto100" = "yes" ]; then
