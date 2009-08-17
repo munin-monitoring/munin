@@ -16,7 +16,8 @@ Server:
 
 - A web server.  Apache HTTPD should be suitable.
 
-- RRD with Perl support
+- RRD with Perl support - this means that RRDs.pm must be available and
+  "perl -MRRDs -e ':;'" must run without errors.
 
 - Perl modules for server: Time::HiRes, Storable, Digest::MD5,
   HTML::Template, Text::Balanced, Log::Log4perl (which depends on
