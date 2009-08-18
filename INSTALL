@@ -79,7 +79,7 @@ To install both master and node:
 	    users in normal Apache fashion. 
 
 	  * Munin page expiry to refresh contents. This requires
-	    mod_expiry to be enabled.
+	    mod_expires to be enabled.
 
 	  NOTE: Both these features require the relevant AllowOverride
 	  statement in Apache. AuthConfig and Indexes, respectively.
