@@ -818,8 +818,7 @@ sub process_service {
 	    push (@rrd, "CDEF:anegtotal=".
 		  join (",", @{$total_neg{'max'}}).
 		  (",$ADDNAN" x (@{$total_neg{'max'}}-1)));
-	    push (@rrd, "CDEF:dpostotal=ipostotal,UN,ipostotal,UNKN,IF");
-	    push (@rrd, "LINE1:dpostotal#000000:$graphtotal" . (" " x ($max_field_len - length ($graphtotal) + 1)));
+	    push (@rrd, "LINE1:gpostotal#000000:$graphtotal" . (" " x ($max_field_len - length ($graphtotal) + 1)));
 	    push (@rrd, "GPRINT:gnegtotal:LAST:$rrdformat" . $rrdscale . "/\\g");
 	    push (@rrd, "GPRINT:gpostotal:LAST:$rrdformat" . $rrdscale . "");
 	    push (@rrd, "GPRINT:inegtotal:MIN:$rrdformat" . $rrdscale . "/\\g");
@@ -840,8 +839,7 @@ sub process_service {
 	      join (",", @{$total_pos{'max'}}).
 	      (",$ADDNAN" x (@{$total_pos{'max'}}-1)));
 
-	push (@rrd, "CDEF:dpostotal=ipostotal,UN,ipostotal,UNKN,IF");
-	push (@rrd, "LINE1:dpostotal#000000:$graphtotal" . (" " x ($max_field_len - length ($graphtotal) + 1)));
+	push (@rrd, "LINE1:gpostotal#000000:$graphtotal" . (" " x ($max_field_len - length ($graphtotal) + 1)));
 	push (@rrd, "COMMENT: Cur$RRDkludge:") unless $global_headers;
 	push (@rrd, "GPRINT:gpostotal:LAST:$rrdformat" . $rrdscale . "");
 	push (@rrd, "COMMENT: Min$RRDkludge:") unless $global_headers;
