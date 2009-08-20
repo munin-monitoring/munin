@@ -54,11 +54,10 @@ if [ "$1" = "config" ]; then
     echo graph_category system
 
     if [ "$scaleto100" = "yes" ]; then
-        echo "graph_vlabel Hz"
-        echo "graph_scale yes"
-    else
         echo "graph_vlabel %"
         echo "graph_scale no"
+    else
+        echo "graph_vlabel Hz"
     fi
 
     for c in /sys/devices/system/cpu/cpu[0-9]*; do
