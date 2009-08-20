@@ -61,7 +61,7 @@ if [ "$1" = "config" ]; then
         echo "graph_scale no"
     fi
 
-    for c in /sys/devices/system/cpu/cpu*; do
+    for c in /sys/devices/system/cpu/cpu[0-9]*; do
         N=${c##*/cpu}
         MAXHZ=$(cat $c/cpufreq/cpuinfo_max_freq)
         MINHZ=$(cat $c/cpufreq/cpuinfo_min_freq)
@@ -83,7 +83,7 @@ if [ "$1" = "config" ]; then
     exit 0;
 fi
 
-for c in /sys/devices/system/cpu/cpu*; do
+for c in /sys/devices/system/cpu/cpu[0-9]*; do
     N=${c##*/cpu}
     awk -v cpu=$N '{ cycles += $1 * $2 } END { print "cpu" cpu ".value", cycles / 100 }' \
         $c/cpufreq/stats/time_in_state
