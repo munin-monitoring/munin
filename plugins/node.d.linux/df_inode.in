@@ -7,15 +7,12 @@ df_inode - Plugin to monitor inode-usage.
 
 =head1 CONFIGURATION
 
-The following environment variables are used by this plugin:
+This configuration snipplet is an example with the default configuration:
 
-=over 4
-
-=item exclude
-
-Space separated list if fs types to exclude. (Default: "iso9660")
-
-=back
+  [df]
+    env.exclude none unknown iso9660 squashfs udf romfs ramfs
+    env.warning 92
+    env.critical 98
 
 =head1 NOTES
 
@@ -23,11 +20,11 @@ Rewrite based on original shell-based version
 
 =head1 AUTHOR
 
-Unknown author
+Ingvar Hagelund
 
 =head1 LICENSE
 
-Unknown license
+GPLv2
 
 =head1 MAGIC MARKERS
 
@@ -39,18 +36,10 @@ Unknown license
 use strict;
 use Munin::Plugin;
 
-# Read /proc/mounts
-my %mounts;
-open (MOUNTS,"/proc/mounts") or die "Could not /proc/mounts for reading.";
-while (<MOUNTS>) {
-    # Does perl really not have any shorthand for this? I guess it has.
-    if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
-	$mounts{$2}=$3;
-    }
-}
-close MOUNTS;
+# For these filesystem types use the mount point, the device is useless
+my %usemntpt = ( tmpfs => 1 );
 
-my $exclude=$ENV{'exclude'} || 'iso9660';
+my $exclude=$ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs';
 my $dfopts = "-P -l -i ".join(' -x ',('',split('\s+',$exclude)));
 
 sub print_values() {
@@ -63,11 +52,11 @@ sub print_values() {
 	
 	# Parse the output
 	if ( /^(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)/ ) {
-	    my $fs=$mounts{$6};
-	    next if $fs eq "reiserfs";
-
 	    my $ps=$5;
-	    my $name=clean_fieldname($1);
+
+	    my $name = $1;
+	    $name = $6 if defined($usemntpt{$name}) && $usemntpt{$name};
+	    $name=clean_fieldname($name);
 
 	    $ps =~ s/\%//;
 
@@ -105,11 +94,11 @@ if ( $ARGV[0] eq "config" ) {
 	
 	# Parse the output
 	if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
-	    my $fs=$mounts{$6};
-	    next if $fs eq "reiserfs";
-
 	    my $dir=$6;
-	    my $name=clean_fieldname($1);
+
+	    my $name = $1;
+	    $name = $dir if defined($usemntpt{$name}) && $usemntpt{$name};
+	    $name=clean_fieldname($name);
 
 	    # Create and print labels
 	    print "$name.label $dir\n";

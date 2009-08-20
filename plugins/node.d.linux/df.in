@@ -41,7 +41,7 @@ Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
 
 =head1 BUGS
 
-Multiple mounted file systems like tmpfs or devices in bind mounts are only graphed once.
+None known.
 
 =head1 VERSION
 
@@ -49,7 +49,7 @@ $Id$
 
 =head1 AUTHOR
 
-Unknown
+Ingvar Hagelund
 
 =head1 LICENSE
 
