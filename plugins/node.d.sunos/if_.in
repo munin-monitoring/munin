@@ -56,7 +56,7 @@ fi
 
 if [ "$1" = "suggest" ]; then
 	if [ -x /usr/bin/kstat ]; then
-		kstat -p -s '/^rbytes$/' | awk -F: '/^link:/ { print $3 }'
+		kstat -m link -p -s '/^rbytes$/' | awk -F: '/^link:/ { print $3 }'
 		exit 0
 	else
 		exit 1
@@ -87,7 +87,7 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi;
 
-kstat -p -n $INTERFACE -s '/^[ro]bytes$/' | awk -F: '
+kstat -p -n $INTERFACE -m link -s '/^[ro]bytes$/' | awk -F: '
 {
 	split($4, four, "\t")
 	print four[1] ".value", four[2]
