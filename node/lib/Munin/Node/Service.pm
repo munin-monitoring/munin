@@ -89,6 +89,9 @@ sub change_real_and_effective_user_and_group
         # for setgroups(2).  See perlvar for the gory details.
         my $gs = "$dg $dg $g";
 
+	print STDERR "# Set rgid/ruid/egid/euid to $dg/$u/$gs/$u\n"
+	    if $config->{DEBUG};
+
         eval {
             if ($Munin::Common::Defaults::MUNIN_HASSETR) {
                 Munin::Node::OS->set_real_group_id($dg) 
