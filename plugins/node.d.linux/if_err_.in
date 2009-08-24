@@ -58,7 +58,7 @@ fi
 if [ "$1" = "suggest" ]; then
     if [ -r /proc/net/dev ]; then
 	awk '
-            /^ *(eth|tap|bond|wlan|ath|ra|sw)[0-9]+:/ {
+            /^ *(eth|tap|bond|wlan|ath|ra|sw|venet|veth)[0-9]+:/ {
                  split($0, a, /: */);
                  gsub(/^ +/,"",a[1]);
                  if (($2 > 0) || ($10 > 0)) print a[1]; }' /proc/net/dev
