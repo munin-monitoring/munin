@@ -104,8 +104,6 @@ until ($smartctl or @dirs == 0) {
   $smartctl = $path if -x $path;
 }
 
-$ENV{LANG} = 'C';
-$ENV{LC_ALL} = 'C';
 my @drives;
 
 # Try to get a default set of drives
@@ -135,7 +133,13 @@ if (defined $ARGV[0]) {
   if ($ARGV[0] eq 'autoconf') {
     if ($smartctl and -x $smartctl) {
       if (@drives) {
-        print "yes\n";
+        my $cmd = command_for_drive_device($drives[0],
+                                           device_for_drive($drives[0]));
+        if (`$cmd` =~ /Temperature/) {
+          print "yes\n";
+        } else {
+          print "no (first drive not supported, configure the plugin)\n";
+        }
         exit 0;
       } else {
         print "no (no drives known)\n";
@@ -156,30 +160,44 @@ if (defined $ARGV[0]) {
   }
 }
 
-foreach (@drives) {
-  my $dev;
-  $dev = $_ =~ /(.*)(?:_\d+)/ ? $1 : $_;
+sub device_for_drive {
+    my ($drive) = @_;
 
-  my $fulldev = '/dev/';
-  $fulldev .= 'rdsk/' if $^O eq 'solaris';
-  $fulldev .= exists $ENV{'dev_'.$_} ? $ENV{'dev_'.$_} : $dev;
+    my $dev = $drive =~ /(.*)(?:_\d+)/ ? $1 : $drive;
+
+    my $fulldev = '/dev/';
+    $fulldev .= 'rdsk/' if $^O eq 'solaris';
+    $fulldev .= exists $ENV{'dev_'.$drive} ? $ENV{'dev_'.$drive} : $dev;
+
+    return $fulldev;
+}
+
+sub command_for_drive_device {
+    my ($drive, $fulldev) = @_;
+
+    my $cmd = $smartctl.' -A ';
+    $cmd .= $ENV{'args_'.$drive}.' ' if exists $ENV{'args_'.$drive};
+    $cmd .= '-d '.$ENV{'type_'.$drive}.' ' if exists $ENV{'type_'.$drive};
+    $cmd .= $fulldev;
+
+}
+
+foreach my $drive (@drives) {
+  my $fulldev = device_for_drive($drive);
 
   # Avoid spinning up sleeping disks only for /dev/sd? or /dev/hd? devices.
   next if $fulldev =~ /\/dev\/[sh]d?/ && `hdparm -C $fulldev 2>/dev/null` =~ /standby/;
 
-  my $cmd = $smartctl.' -A ';
-  $cmd .= $ENV{'args_'.$_}.' ' if exists $ENV{'args_'.$_};
-  $cmd .= '-d '.$ENV{'type_'.$_}.' ' if exists $ENV{'type_'.$_};
-  $cmd .= $fulldev;
+  my $cmd = command_for_drive_device($drive, $fulldev);
 
   my $output = `$cmd`;
   if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
-    print "$_.value $1\n";
+    print "$drive.value $1\n";
   } elsif ($output =~ /^(194 Temperature_Celsius.*)/m) {
     my @F = split ' ', $1;
-    print "$_.value $F[9]\n";
+    print "$drive.value $F[9]\n";
   } elsif ($output =~ /^(231 Temperature_Celsius.*)/m) {
     my @F = split ' ', $1;
-    print "$_.value $F[9]\n";
+    print "$drive.value $F[9]\n";
   }
 }
