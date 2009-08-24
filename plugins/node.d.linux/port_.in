@@ -222,7 +222,7 @@ count_tcp_ports(ST_ESTABLISHED, \%ports) if (-r "/proc/net/tcp");
 count_tcp6_ports(ST_ESTABLISHED, \%ports) if (-r "/proc/net/tcp6");
 
 # If there aint any the right answer is 0 no blank or U
-$ports{$port} = 0 if $ports{$port} == '';
+$ports{$port} = 0 if (!exists $ports{$port}) or ($ports{$port} eq '');
 
 print "count.value ", $ports{$port}, "\n";
 # vim:syntax=perl
