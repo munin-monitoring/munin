@@ -53,8 +53,11 @@ if ($RRDs::VERSION >= 1.2 and $RRDs::VERSION < 1.3) {
     $LINEkluge=1;
 }
 
-my $ADDNAN = '+';
-$ADDNAN = 'ADDNAN' if $RRDs::VERSION >= 1.3;
+# RRD 1.3 has a "ADDNAN" operator which evaluates n + NaN = n instead of = NaN.
+my $AddNAN = '+';
+if ($RRDs::VERSION >= 1.3) {
+  $AddNAN = 'ADDNAN';
+}
 
 # Force drawing of "graph no".
 my $force_graphing = 0;
