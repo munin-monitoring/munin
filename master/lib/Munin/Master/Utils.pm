@@ -233,9 +233,10 @@ sub munin_overwrite {
     for my $key (keys %$overwrite) {
         next if $key =~ /^#%#/;
 	if (ref $overwrite->{$key}) {
-	    &munin_overwrite($overwrite->{$key},$configfile->{$key});
+	    &munin_overwrite($configfile->{$key},$overwrite->{$key});
+	} else {
+	    $configfile->{$key} = $overwrite->{$key};
 	}
-	$configfile->{$key} = $overwrite->{$key};
     }
     return ($configfile);
 }
