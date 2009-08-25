@@ -104,13 +104,12 @@ sub snmp_probe_host
 	print "# SNMP-probing $host\n" if $config->{DEBUG};
 
 	my ($session, $error) = Net::SNMP->session(
-			-hostname  => $host,
-			-community => $config->{snmp_community},
-			-port      => $config->{snmp_port},
-			-version   => $config->{snmp_version},
-			# Disable mungeing of responses into "human
-			# readable" form
-			-translate => 0,
+		-hostname  => $host,
+		-community => $config->{snmp_community},
+		-port      => $config->{snmp_port},
+		-version   => $config->{snmp_version},
+		# Disable munging of responses into "human readable" form
+		-translate => 0,
 	);
 
 	unless ($session) {
@@ -223,7 +222,7 @@ sub _snmp_get_single
 
 	my $response = $session->get_request($oid);
 
-	unless (defined $response) {
+	unless (defined $response and $session->error_status == 0) {
 		print "# Request failed for oid '$oid'\n" if $config->{DEBUG};
 		return;
 	}
