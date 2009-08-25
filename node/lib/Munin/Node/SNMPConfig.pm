@@ -153,7 +153,7 @@ sub _snmp_autoconf_plugin
 		foreach my $req (@{$plugin->{require_oid}}) {
 			my ($oid, $filter) = @$req;
 			unless (_snmp_check_require($session, $oid, $filter)) {
-				print "# Failed '$oid'.\n" if $config->{DEBUG};
+				print "# Missing requirement.\n" if $config->{DEBUG};
 				return;
 			}
 		}
@@ -166,8 +166,12 @@ sub _snmp_autoconf_plugin
 		@indexes = (1 .. $num);
 	}
 	elsif ($plugin->{index}) {
-		@indexes = _snmp_walk_index($session, $plugin->{index});
-		return unless @indexes;
+		my $result = $session->get_entries(-columns => [ $plugin->{index} ]);
+		unless ($result) {
+			print "# Failed to fetch index.\n" if $config->{DEBUG};
+			return;
+		}
+		@indexes = values %$result;
 	}
 	printf "# Got indexes: %s\n", join(', ', @indexes) if $config->{DEBUG};
 
@@ -227,57 +231,8 @@ sub _snmp_get_single
 		return;
 	}
 
-	print "# Fetched value '$response->{$oid}'\n" if $config->{DEBUG};
+	print "# Fetched $oid -> '$response->{$oid}'\n" if $config->{DEBUG};
 	return $response->{$oid};
-}
-
-
-# Walks the tree under $oid_base, and returns the values of the objects
-# rooted there.
-#
-# FIXME: would be nice to use session->get_table() here, but it craps out with
-# "Received tooBig(1) error-status at error-index 0" when using 2c (and
-# presumably 3).  fixing that will require messing with -maxrepetitions (but
-# then only when snmp version != 1)
-sub _snmp_walk_index
-{
-	my ($session, $oid_base) = @_;
-
-	my @results;
-	my ($response, $value);
-
-	print "# Walking from $oid_base\n" if $config->{DEBUG};
-
-	(my $oid_root = $oid_base) =~ s/\.$//;
-	my $oid = $oid_base . '0';
-
-	while ($response = $session->get_next_request($oid)) {
-		print "# Checking for sibling of $oid\n" if $config->{DEBUG};
-
-		if ($session->error_status == ENDOFMIBVIEW) {
-			print "# Reached the end of the MIB.\n"
-				if $config->{DEBUG};
-			last;
-		}
-
-		# Any other errors invalidates the results
-		unless ($session->error_status == 0) {
-			printf "# Error fetching sibling of $oid: %s\n", $session->error
-				if $config->{DEBUG};
-			return;
-		}
-
-		($oid, $value) = %$response;
-		if ($config->{DEBUG}) {
-			print "# Sibling is: $oid , value is: $value\n";
-		}
-
-		last unless oid_base_match($oid_root, $oid);
-
-		push @results, $value;
-	}
-
-	return @results;
 }
 
 
