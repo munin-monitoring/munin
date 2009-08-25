@@ -108,15 +108,15 @@ sub snmp_probe_host
 			-community => $config->{snmp_community},
 			-port      => $config->{snmp_port},
 			-version   => $config->{snmp_version},
+			# Disable mungeing of responses into "human
+			# readable" form
+			-translate => 0,
 	);
 
 	unless ($session) {
 		print "# Dropping host '$host': $error\n";
 		return 0;
 	}
-
-	# Disable ASN1 translation.  FIXME: is this required?  why?
-	$session->translate(0);
 
 	foreach my $plugin (values %$plugins) {
 		print "# Running autoconf on $plugin->{name} for $host...\n"
