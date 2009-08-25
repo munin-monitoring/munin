@@ -86,9 +86,9 @@ sub parse_args
 	my @families;
 
 	my @snmp;
-	my $snmpver    = '2c';
-	my $snmpcomm   = 'public';
-	my $snmpport   = 161;
+	my $snmpver  = '2c';
+	my $snmpcomm = 'public';
+	my $snmpport = 161;
 
 	print_usage_and_exit() unless GetOptions(
 		"help"            => \&print_usage_and_exit,
@@ -957,7 +957,6 @@ sub parse_snmpconf_response
 			my ($oid, $regex) = split /\s+/, $value, 2;
 
 			if ($oid =~ /$oid_root_pattern/) {
-				$plugin->{require_root} ||= [];
 				push @{ $plugin->{require_root} }, [$oid, $regex];
 				
 				if ($config->{DEBUG}) {
@@ -966,7 +965,6 @@ sub parse_snmpconf_response
 				}
 			}
 			elsif ($oid =~ /$oid_pattern/) {
-				$plugin->{require_oid} ||= [];
 				push @{ $plugin->{require_oid} }, [$oid, $regex];
 				
 				if ($config->{DEBUG}) {

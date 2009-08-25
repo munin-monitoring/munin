@@ -122,72 +122,60 @@ sub snmp_probe_host
 		print "# Running autoconf on $plugin->{name} for $host...\n"
 			if $config->{DEBUG};
 
-		my $auto = _snmp_autoconf_plugin($plugin, $session);
-
-		unless ($auto) {
+		if (my @suggestions = _snmp_autoconf_plugin($plugin, $session)) {
+			# do something useful with it...
+			push @{ $plugin->{suggestions} }, @suggestions;
+		}
+		else {
 			print "# Host '$host' doesn't support $plugin->{name}\n"
 				if $config->{DEBUG};
-			next;
 		}
-
-		$plugin->{suggestions} ||= [];
-		push @{ $plugin->{suggestions} }, $host;
 	}
 
 	print "# Finished probing $host\n" if $config->{DEBUG};
-
 	$session->close;
+
 	return 1;
 }
 
 
-# Sets the 'default' field and add to the suggestions for suggestion reporting
-# code in m-n-c to work
+# If the SNMP agent supports the plugin, returns a list of arrayrefs, each of
+# which represents a valid plugin instance.
 sub _snmp_autoconf_plugin
 {
 	my ($plugin, $session) = @_;
 
-	my $num = 1;  # Number of items to autoconf
-	my @indexes;
+	my (@indexes, @valid_indexes);
 
 	# First round of requirements
 	if ($plugin->{require_oid}) {
-		print "# Checking required OIDs...\n" if $config->{DEBUG};
+		print "# Checking required OIDs\n" if $config->{DEBUG};
+
 		foreach my $req (@{$plugin->{require_oid}}) {
 			my ($oid, $filter) = @$req;
 			unless (_snmp_check_require($session, $oid, $filter)) {
-				print "# Response didn't match.\n" if $config->{DEBUG};
+				print "# Failed '$oid'.\n" if $config->{DEBUG};
 				return;
 			}
 		}
 	}
 
-	# We need the number of "things" to autoconf
+	# Fetch the list of indices
 	if ($plugin->{number}) {
-		unless ($num = _snmp_get_single($session, $plugin->{number})) {
-			print "# Unable to resolve number of items\n"
-				if $config->{DEBUG};
-			return;
-		}
-		print "# $num items to autoconf\n" if $config->{DEBUG};
+		my $num = _snmp_get_single($session, $plugin->{number});
+		return unless $num;
+		@indexes = (1 .. $num);
 	}
-
-	# Then the index base
-	if ($plugin->{index}) {
+	elsif ($plugin->{index}) {
 		@indexes = _snmp_walk_index($session, $plugin->{index});
 		return unless @indexes;
 	}
-	else {
-		@indexes = (1);
-	}
-
 	printf "# Got indexes: %s\n", join(', ', @indexes) if $config->{DEBUG};
 
-	my @valid_indexes;
-
 	# Second round of requirements (now that we have the indexes)
-	if (defined $plugin->{required_root}) {
-		print "# Checking requirements...\n" if $config->{DEBUG};
+	if ($plugin->{required_root}) {
+		print "# Removing invalid indices\n" if $config->{DEBUG};
+
 		foreach my $req (@{$plugin->{required_root}}) {
 			my ($oid, $filter) = @$req;
 			foreach my $index (@indexes) {
@@ -197,32 +185,34 @@ sub _snmp_autoconf_plugin
 				else {
 					print "# No. Removing $index from possible solutions.\n"
 						if $config->{DEBUG};
-					next;
 				}
 			}
 		}
+
+		unless (scalar @valid_indexes) {
+			print "# No indices left.  Dropping plugin.";
+			return;
+		}
+	}
+	else {
+		# No further filters means they're all good by default
+		@valid_indexes = @indexes;
 	}
 
-	return \@valid_indexes;
+	# return list of arrayrefs, one for each good suggestion
+	my $hostname = $session->hostname;
+	return $plugin->{wildcard} ? map { [ $hostname, $_ ] } @valid_indexes
+	                           : [ $hostname ];
 }
 
 
-# Returns true if the SNMP device supports the 'require', false otherwise.
+# Returns true if the SNMP agent supports the 'require', false otherwise.
 sub _snmp_check_require
 {
 	my ($session, $oid, $filter) = @_;
 
 	my $value = _snmp_get_single($session, $oid);
-	if (! defined $value) {
-		print "# No response.\n" if $config->{DEBUG};
-		return 0;
-	}
-	elsif ($filter and $value !~ /$filter/) {
-		print "# Response didn't match.\n" if $config->{DEBUG};
-		return 0;
-	}
-
-	return 1;
+	return !(!defined $value or ($filter and $value !~ /$filter/));
 }
 
 
