@@ -25,7 +25,8 @@ PODMAN5          := master/doc/munin.conf node/doc/munin-node.conf
         build build-common-prime build-common-pre build-doc \
         deb source_dist \
         test clean \
-        clean-% test-% build-% install-%
+        clean-% test-% build-% install-% \
+	tags
 
 .SECONDARY: node/Build master/Build plugins/Build
 
@@ -39,6 +40,10 @@ uninstall:
 unconfig:
 	rm -f $(HTMLDIR)/.htaccess
 	rm -f $(CONFDIR)/munin.conf
+
+tags:
+	-rm -f TAGS
+	find master common node -type f | egrep -v '/(build|_build|blib|.svn|t)/' | xargs etags -l perl -a
 
 ######################################################################
 
