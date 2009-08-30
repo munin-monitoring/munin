@@ -82,7 +82,7 @@ elsif (-f "$logfile.01")
 }
 else
 {
-    $rotlogfile = $logfile . ".0";
+    $rotlogfile = "/dev/null";
 }
 
 if (-f "$statefile")
