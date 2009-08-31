@@ -1,0 +1,43 @@
+#!@@PERL@@
+# -*- perl -*-
+
+=head1 NAME
+
+postgres_size - Plugin to monitor size of PostgreSQL databases.
+
+=head1 CONFIGURATION
+
+For configuration information, see Munin::Plugins::PgSQL
+
+=head1 AUTHOR
+
+Magnus Hagander
+
+=head1 LICENSE
+
+GPL, put more text here :-)
+
+=cut
+
+use strict;
+use warnings;
+use DBI;
+
+use Munin::Plugin::Pgsql;
+
+my $pg = Munin::Plugin::Pgsql->new(
+        basename=>'postgres_size_',
+        title=>'PostgreSQL database size',
+        info=>'Size of database',
+        vlabel=>'Size',
+        basequery=>"SELECT datname,pg_database_size(oid) FROM pg_database %%FILTER%% ORDER BY 1",
+        wildcardfilter=>"WHERE datname=?",
+        configquery=>"SELECT datname,datname FROM pg_database ORDER BY 1",
+	graphdraw=>'AREA',
+	stack=>1,
+	base=>1024
+);
+
+$pg->Process();
+exit(0);
+

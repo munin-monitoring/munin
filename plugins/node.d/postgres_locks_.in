@@ -1,0 +1,50 @@
+#!@@PERL@@
+# -*- perl -*-
+
+=head1 NAME
+
+postgres_locks - Plugin to monitor size of PostgreSQL locks.
+
+=head1 CONFIGURATION
+
+For configuration information, see Munin::Plugins::PgSQL
+
+=head1 AUTHOR
+
+Magnus Hagander
+
+=head1 LICENSE
+
+GPL, put more text here :-)
+
+=cut
+
+use strict;
+use warnings;
+use DBI;
+
+use Munin::Plugin::Pgsql;
+
+my $pg = Munin::Plugin::Pgsql->new(
+        basename=>'postgres_locks_',
+        title=>'PostgreSQL locks',
+        info=>'PostgreSQL locks',
+        vlabel=>'Locks',
+        basequery=>"SELECT lower(mode),count(*) FROM pg_locks WHERE database IS NOT NULL %%FILTER%% GROUP BY lower(mode) ORDER BY 1",
+        wildcardfilter=>"AND database=(SELECT oid FROM pg_database WHERE datname=?)",
+        configquery=>"VALUES
+         ('accesssharelock','AccessShareLock','Used by read only queries'),
+         ('rowsharelock','RowShareLock','Used by SELECT FOR SHARE and SELECT FOR UPDATE queries'),
+         ('rowexclusivelock','RowExclusiveLock','Used by UPDATE, DELETE and INSERT queries'),
+         ('shareupdateexclusivelock','ShareUpdateExclusiveLock','Used by VACUUM, ANALYZE and CREATE INDEX CONCURRENTLY queries'),
+         ('sharelock','ShareLock','Used by CREATE INDEX queries'),
+         ('sharerowexclusivelock','ShareRowExclusiveLock','Only issued explicitly from applications'),
+         ('exclusivelock','ExclusiveLock','Infrequently issued on system tables, or by applications'),
+         ('accessexclusivelock','AccessExclusiveLock','Used by ALTER TABLE, DROP TABLE, TRUNCATE, REINDEX, CLUSTER and VACUUM FULL queries')",
+	graphdraw=>'AREA',
+	stack=>1,
+);
+
+$pg->Process();
+exit(0);
+

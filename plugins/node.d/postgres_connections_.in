@@ -1,0 +1,52 @@
+#!@@PERL@@
+# -*- perl -*-
+
+=head1 NAME
+
+postgres_connections - Plugin to monitor number of PostgreSQL database
+connections.
+
+=head1 CONFIGURATION
+
+For configuration information, see Munin::Plugins::PgSQL
+
+=head1 AUTHOR
+
+Magnus Hagander
+
+=head1 LICENSE
+
+GPL, put more text here :-)
+
+=cut
+
+use strict;
+use warnings;
+use DBI;
+
+use Munin::Plugin::Pgsql;
+
+my $pg = Munin::Plugin::Pgsql->new(
+	basename=>'postgres_connections_',
+        title=>'PostgreSQL connections',
+        info=>'Number of connections',
+        vlabel=>'Connections',
+	basequery=>"SELECT tmp.state,COALESCE(count,0) FROM
+                 (VALUES ('active'),('waiting'),('idle'),('idletransaction')) AS tmp(state)
+	        LEFT JOIN
+                 (SELECT CASE WHEN waiting THEN 'waiting' WHEN current_query='<IDLE>' THEN 'idle' WHEN current_query='<IDLE> in transaction' THEN 'idletransaction' ELSE 'active' END AS state,
+                 count(*) AS count
+                 FROM pg_stat_activity WHERE procpid != pg_backend_pid() %%FILTER%%
+                 GROUP BY CASE WHEN waiting THEN 'waiting' WHEN current_query='<IDLE>' THEN 'idle' WHEN current_query='<IDLE> in transaction' THEN 'idletransaction' ELSE 'active' END
+                 ) AS tmp2
+                ON tmp.state=tmp2.state
+                ORDER BY 1
+		",
+	wildcardfilter=>" AND datname=?",
+	configquery=>"VALUES ('active','Active'),('waiting','Waiting for lock'),('idle','Idle'),('idletransaction','Idle in transaction')",
+	suggestquery=>"SELECT datname FROM pg_database WHERE datallowconn UNION ALL SELECT 'all' ORDER BY 1",
+	stack=>1
+);
+
+$pg->Process();
+

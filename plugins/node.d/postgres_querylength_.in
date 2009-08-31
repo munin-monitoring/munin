@@ -1,0 +1,43 @@
+#!@@PERL@@
+# -*- perl -*-
+
+=head1 NAME
+
+postgres_queryage - Plugin to monitor length of PostgreSQL queries.
+
+=head1 CONFIGURATION
+
+For configuration information, see Munin::Plugins::PgSQL
+
+=head1 AUTHOR
+
+Magnus Hagander
+
+=head1 LICENSE
+
+GPL, put more text here :-)
+
+=cut
+
+use strict;
+use warnings;
+use DBI;
+
+use Munin::Plugin::Pgsql;
+
+my $pg = Munin::Plugin::Pgsql->new(
+	basename=>'postgres_querylength_',
+        title=>'PostgreSQL query length',
+        info=>'Most long-running queries and transactions',
+        vlabel=>'Length (seconds)',
+        basequery=>"SELECT 'query',COALESCE(max(extract(epoch FROM CURRENT_TIMESTAMP-query_start)),0) FROM pg_stat_activity %%FILTER%%
+                     UNION ALL
+                    SELECT 'transaction',COALESCE(max(extract(epoch FROM CURRENT_TIMESTAMP-xact_start)),0) FROM pg_stat_activity %%FILTER%%",
+	wildcardfilter=>" WHERE datname=?",
+	configquery=>"VALUES ('query','Oldest query'),('transaction','Oldest transaction')",
+	suggestquery=>"SELECT datname FROM pg_database WHERE datallowconn UNION ALL SELECT 'all' ORDER BY 1",
+	stack=>1
+);
+
+$pg->Process();
+

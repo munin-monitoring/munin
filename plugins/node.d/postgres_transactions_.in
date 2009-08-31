@@ -1,0 +1,44 @@
+#!@@PERL@@
+# -*- perl -*-
+
+=head1 NAME
+
+postgres_transactions - Plugin to monitor number of PostgreSQL transactions.
+
+=head1 CONFIGURATION
+
+For configuration information, see Munin::Plugins::PgSQL
+
+=head1 AUTHOR
+
+Magnus Hagander
+
+=head1 LICENSE
+
+GPL, put more text here :-)
+
+=cut
+
+use strict;
+use warnings;
+use DBI;
+
+use Munin::Plugin::Pgsql;
+
+my $pg = Munin::Plugin::Pgsql->new(
+        basename=>'postgres_transactions_',
+        title=>'PostgreSQL transactions',
+        info=>'Transactions per second',
+        vlabel=>'Trans / sec',
+        basequery=>"SELECT 'commit',sum(pg_stat_get_db_xact_commit(oid)) FROM pg_database %%FILTER%% 
+                     UNION ALL
+                    SELECT 'rollback',sum(pg_stat_get_db_xact_rollback(oid)) FROM pg_database %%FILTER%%",
+        wildcardfilter=>"WHERE datname=?",
+        configquery=>"VALUES ('commit','Committed transactions'),('rollback','Rolled back transactions')",
+	suggestquery=>"SELECT datname FROM pg_database WHERE datallowconn UNION ALL SELECT 'all' ORDER BY 1",
+	stack=>1,
+	graphtype=>'DERIVE'
+);
+
+$pg->Process();
+
