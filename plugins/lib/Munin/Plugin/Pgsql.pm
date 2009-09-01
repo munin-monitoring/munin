@@ -184,7 +184,6 @@ sub new {
     );
 
     my $self = {
-        debug          => 0,
         minversion     => $args{minversion},
         basename       => $args{basename},
         basequery      => $args{basequery},
@@ -325,9 +324,6 @@ sub Process {
     if (defined $ARGV[0] && $ARGV[0] ne '') {
         if ($ARGV[0] eq 'autoconf') {
             return $self->Autoconf();
-        }
-        elsif ($ARGV[0] eq 'debug') {
-            $self->debug = 1;
         }
         elsif ($ARGV[0] eq 'config') {
             return $self->Config();
