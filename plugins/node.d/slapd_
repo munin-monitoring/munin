@@ -43,7 +43,7 @@ my %ops =
      => {
          'search' => "cn=Bytes,cn=Statistics",
          'desc'   => "The number of bytes sent by the LDAP server.",
-         'vlabel' => "Bytes",
+         'vlabel' => "Bytes pr ${graph_period}",
          'title'  => "Number of bytes sent",
          'info'   => "The graph shows the number of bytes sent",
 	 'scope'  => "base"
@@ -52,7 +52,7 @@ my %ops =
      => {
          'search' => "cn=PDU,cn=Statistics",
          'desc'   => "The number of PDUs sent by the LDAP server.",
-         'vlabel' => "PDUs",
+         'vlabel' => "PDUs pr ${graph_period}",
          'title'  => "Number of PDUs sent",
          'info'   => "The graph shows the number of PDUs sent",
 	 'scope'  => "base"
@@ -63,7 +63,7 @@ my %ops =
          'search' => "cn=Referrals,cn=Statistics",
          'attrs'  => "Referrals",
          'desc'   => "The number of Referrals sent by the LDAP server.",
-         'vlabel' => "Referrals",
+         'vlabel' => "Referrals pr ${graph_period}",
          'title'  => "Number of LDAP Referrals",
          'info'   => "The graph shows the number of referrals sent",
 	 'scope'  => "base"
@@ -106,7 +106,7 @@ my %ops =
      => {
          'search' => "cn=Operations",
          'desc'   => "Operations",
-         'vlabel' => "Operations",
+         'vlabel' => "Operations pr ${graph_period}",
          'title'  => "Operations",
          'info'   => "Number of completed LDAP operations"
          },
@@ -114,7 +114,7 @@ my %ops =
      => {
          'search' => "cn=Operations",
          'desc'   => "Operations deviance",
-         'vlabel' => "Deviance",
+         'vlabel' => "Deviance (pr ${graph_period})",
          'title'  => "Operations deviance",
          'info'   => "Deviance between Initiated and Completed ops"
        }
