@@ -26,7 +26,7 @@ use Net::LDAP;
 use Data::Dumper;
 
 use vars qw ( $config $param $act $scope $descr $cn $vlabel
-	      $info $title );
+	      $info $title $label);
 
 # Change these to reflect your LDAP ACL. The given DN must have
 # read access to the Monitor branch.
@@ -44,6 +44,7 @@ my %ops =
          'search' => "cn=Bytes,cn=Statistics",
          'desc'   => "The number of bytes sent by the LDAP server.",
          'vlabel' => 'Bytes pr ${graph_period}',
+         'label'  => 'Bytes',
          'title'  => "Number of bytes sent",
          'info'   => "The graph shows the number of bytes sent",
 	 'scope'  => "base"
@@ -53,6 +54,7 @@ my %ops =
          'search' => "cn=PDU,cn=Statistics",
          'desc'   => "The number of PDUs sent by the LDAP server.",
          'vlabel' => 'PDUs pr ${graph_period}',
+         'label'  => 'PDUs',
          'title'  => "Number of PDUs sent",
          'info'   => "The graph shows the number of PDUs sent",
 	 'scope'  => "base"
@@ -63,6 +65,7 @@ my %ops =
          'search' => "cn=Referrals,cn=Statistics",
          'desc'   => "The number of Referrals sent by the LDAP server.",
          'vlabel' => 'Referrals pr ${graph_period}',
+         'label'  => 'Referrals',
          'title'  => "Number of LDAP Referrals",
          'info'   => "The graph shows the number of referrals sent",
 	 'scope'  => "base"
@@ -72,7 +75,8 @@ my %ops =
      => {
          'search' => "cn=Entries,cn=Statistics",
          'desc'   => "The number of Entries sent by the LDAP server.",
-         'vlabel' => "Entries",
+         'vlabel' => 'Entries pr ${graph_period}',
+         'label'  => 'Entries',
          'title'  => "Number of LDAP Entries",
          'info'   => "The graph shows the number of entries sent",
 	 'scope'  => "base"
@@ -82,6 +86,7 @@ my %ops =
      => {
          'search' => 'cn=Total,cn=Connections',
          'desc'   => 'The number of connections',
+         'label'  => 'Connections',
          'vlabel' => 'Connections pr ${graph_period}',
          'title'  => 'Number of Connections',
          'info'   => 'Number of connections to the LDAP server',
@@ -93,8 +98,8 @@ my %ops =
      => {
          'search' => 'cn=Waiters',
          'filter' => '(|(cn=Write)(cn=Read))',
-         'desc'   => "The number of Waiters|",
-         'label'  => {'write' => 'Write',
+         'desc'   => "The current number of Waiters",
+         'label2' => {'write' => 'Write',
                       'read'  => 'Read'},
          'vlabel' => "Waiters",
          'title'  => "Number of Waiters",
@@ -105,6 +110,7 @@ my %ops =
          'search' => "cn=Operations",
          'desc'   => "Operations",
          'vlabel' => 'Operations pr ${graph_period}',
+         'label'  => 'Operations',
          'title'  => "Operations",
          'info'   => "Number of completed LDAP operations"
          },
@@ -112,7 +118,8 @@ my %ops =
      => {
          'search' => "cn=Operations",
          'desc'   => "Operations deviance",
-         'vlabel' => 'Deviance (pr ${graph_period})',
+         'vlabel' => 'Deviance',
+         'label'  => 'Deviance',
          'title'  => "Operations deviance",
          'info'   => "Deviance between Initiated and Completed ops"
        }
@@ -122,14 +129,15 @@ my %ops =
 sub config {
     my $action = shift;
     print <<EOF;
-graph_args --base 1000 -l 0 --vertical-label $ops{$action}->{'vlabel'}
+graph_args --base 1000 -l 0
+graph_vlabel $ops{$action}->{'vlabel'}
 graph_title $ops{$action}->{'title'}
 graph_category OpenLDAP
 graph_info $ops{$action}->{'info'}
 EOF
     
-    if ($ops{$action}->{'label'}) {
-        while (my ($key, $val) = each (%{$ops{$action}->{'label'}})) {
+    if ($ops{$action}->{'label2'}) {
+        while (my ($key, $val) = each (%{$ops{$action}->{'label2'}})) {
           my $name = $action . "_" . $key;
           print "$name.label $val\n";
           print "$name.type GAUGE\n";
@@ -166,7 +174,7 @@ EOF
             }            
         }
     } else {
-        print "$action.label $ops{$action}->{'vlabel'}\n";
+        print "$action.label $ops{$action}->{'label'}\n";
         print "$action.type DERIVE\n";
         print "$action.min 0\n";
     }
