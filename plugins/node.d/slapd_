@@ -35,7 +35,7 @@ my $server = "localhost";
 my $userdn = ($ENV{'binddn'} || '');
 my $userpw = ($ENV{'bindpw'} || '');
 
-# Remember: bytes, pdu needs scope=base
+# Remember: connections, bytes, pdu needs scope=base
 
 # The possible measurements
 my %ops =
@@ -43,7 +43,7 @@ my %ops =
      => {
          'search' => "cn=Bytes,cn=Statistics",
          'desc'   => "The number of bytes sent by the LDAP server.",
-         'vlabel' => "Bytes pr ${graph_period}",
+         'vlabel' => 'Bytes pr ${graph_period}',
          'title'  => "Number of bytes sent",
          'info'   => "The graph shows the number of bytes sent",
 	 'scope'  => "base"
@@ -52,7 +52,7 @@ my %ops =
      => {
          'search' => "cn=PDU,cn=Statistics",
          'desc'   => "The number of PDUs sent by the LDAP server.",
-         'vlabel' => "PDUs pr ${graph_period}",
+         'vlabel' => 'PDUs pr ${graph_period}',
          'title'  => "Number of PDUs sent",
          'info'   => "The graph shows the number of PDUs sent",
 	 'scope'  => "base"
@@ -61,9 +61,8 @@ my %ops =
      'statistics_referrals' 
      => {
          'search' => "cn=Referrals,cn=Statistics",
-         'attrs'  => "Referrals",
          'desc'   => "The number of Referrals sent by the LDAP server.",
-         'vlabel' => "Referrals pr ${graph_period}",
+         'vlabel' => 'Referrals pr ${graph_period}',
          'title'  => "Number of LDAP Referrals",
          'info'   => "The graph shows the number of referrals sent",
 	 'scope'  => "base"
@@ -72,7 +71,6 @@ my %ops =
      'statistics_entries'
      => {
          'search' => "cn=Entries,cn=Statistics",
-         'attrs'  => "Entries",
          'desc'   => "The number of Entries sent by the LDAP server.",
          'vlabel' => "Entries",
          'title'  => "Number of LDAP Entries",
@@ -87,7 +85,7 @@ my %ops =
          'vlabel' => 'Connections pr ${graph_period}',
          'title'  => 'Number of Connections',
          'info'   => 'Number of connections to the LDAP server',
-         'scope'  => 'base'
+         'scope'  => "base"
          },
      # dn: cn=Write,cn=Waiters,cn=Monitor
      # dn: cn=Read,cn=Waiters,cn=Monitor
@@ -106,7 +104,7 @@ my %ops =
      => {
          'search' => "cn=Operations",
          'desc'   => "Operations",
-         'vlabel' => "Operations pr ${graph_period}",
+         'vlabel' => 'Operations pr ${graph_period}',
          'title'  => "Operations",
          'info'   => "Number of completed LDAP operations"
          },
@@ -114,7 +112,7 @@ my %ops =
      => {
          'search' => "cn=Operations",
          'desc'   => "Operations deviance",
-         'vlabel' => "Deviance (pr ${graph_period})",
+         'vlabel' => 'Deviance (pr ${graph_period})',
          'title'  => "Operations deviance",
          'info'   => "Deviance between Initiated and Completed ops"
        }
@@ -132,9 +130,9 @@ EOF
     
     if ($ops{$action}->{'label'}) {
         while (my ($key, $val) = each (%{$ops{$action}->{'label'}})) {
-            my $name = $action . "_" . $key;
-            print "$name.label $val\n";
-	    print "$name.type GAUGE\n";
+          my $name = $action . "_" . $key;
+          print "$name.label $val\n";
+          print "$name.type GAUGE\n";
         }
     } elsif ($action =~ /^operations(?:_diff)?$/) {
         my $ldap = Net::LDAP->new ($server) or die "$@";
@@ -233,7 +231,7 @@ if ($ops{$action}->{'filter'}) {
 }
 
 if ($ops{$action}->{'scope'}) {
-    $scope = $ops{$action}->{'scope'};
+  $scope = $ops{$action}->{'scope'};
 }
 
 my $mesg =
@@ -267,7 +265,7 @@ for (my $i = 0 ; $i < $max ; $i++) {
 	}
     } else {
 	# Hotfix, must do for now
-	if ($action =~ /_/) {
+	if ($action =~ /_/ || $action eq 'connections') {
 	    print lc ("${action}.value ");
 	} else {
 	    print lc ("${action}_${cn}.value ");
