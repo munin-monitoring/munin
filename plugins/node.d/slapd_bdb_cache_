@@ -1,0 +1,140 @@
+#!/usr/bin/perl -w
+
+# Plugin copyright Bjorn Ruberg <bjorn@ruberg.no> 20052006
+# 
+# Licensed under GPLv2. Be nice.
+#
+# Environment variables:
+#
+#   - dbstat   The full path to a db_stat binary able to
+#              communicate with the LDAP backend BDB
+#              database files.
+#   - dbdir    The full path to the directory where
+#              the LDAP backend BDB database files are.
+#   - title    (Optional) The plugin's title. Useful if you
+#              have more than one DIT installed.
+#   - warning  (Optional) A threshold integer value. Triggers
+#              plugin to send warnings if cache percentage 
+#              drops below the given value.
+#
+# Limitations:
+#
+# - The plugin only checks _one_ database directory. To work
+#   around that, i.e. if you have more than one DIT in your
+#   OpenLDAP, create symlinked files and corresponding entries
+#   in the Munin environment file(s).
+#
+# Magic markers
+#%# family=auto
+#%# capabilities=autoconf suggest
+
+
+use strict;
+use vars qw ( $measure $config $dbdir $dbstat $warning);
+my $arg = shift (@ARGV);
+
+# Finding dbN.N_stat should be done here
+$dbstat = ($ENV{'dbstat'} || "/usr/bin/db4.2_stat");
+die ("Can't execute db_stat file '$dbstat'") unless -x $dbstat;
+
+# Also the LDAP database files
+$dbdir = ($ENV{'dbdir'} || "/var/lib/ldap");
+die ("Can't open database directory '$dbdir'") unless (-d $dbdir && -r $dbdir);
+
+# And the graph title
+my $title = ($ENV{'title'} || '');
+
+# Die if no valid file ending, unless suggest/autoconf.
+if ($0 !~ /_(pages|percent)$/) {
+    unless ($arg && $arg =~ /^(suggest|autoconf)$/) {
+        die ("Plugin must be suffixed with 'percent' or 'pages'. Try running 'munin-node-configure suggest'");
+    }
+}
+
+# Check file name
+if ($0 =~ /_pages$/) {
+    $measure = "pages";
+} elsif ($0 =~ /_percent$/) {
+    $measure = "percent";
+}
+
+# Parse command line arguments
+if ($arg && $arg eq "config") {
+    $config = 1;
+} elsif ($arg && $arg eq "autoconf") {
+    print "yes\n";
+    exit 0;
+} elsif ($arg && $arg eq "suggest") {
+    print "pages\n";
+    print "percent\n";
+    exit 0;
+}
+         
+
+if ($config) {
+    print <<EOF;
+graph_title Requested pages found in cache $title
+graph_category OpenLDAP
+graph_info Pages found in cache (indexes)
+EOF
+    if ($measure eq "pages") {
+	print <<EOF;
+graph_args --base 1000 -l 0
+graph_vlabel Cache hits per \${graph_period}
+EOF
+    } else {
+	print <<EOF;
+graph_args --base 1000 --upper-limit 100 -l 0 --vertical-label %
+graph_vlabel Cache hits (percentage)
+EOF
+    }
+}
+
+my @output = `$dbstat -h $dbdir -m`;
+my $file = ""; # "Total";
+my $pages = undef;
+my $percent = undef;
+my $counter = 0;
+
+foreach my $line (@output) {
+    chomp $line;
+    if ($line =~ /^Pool File\: (.*)$/) {
+	$file = $1;
+    }
+    if ($file &&
+	$line =~ /^(\d+)\s+Requested pages found in the cache \((\d+)\%\)/) {
+	$pages = $1;
+	$percent = $2;
+    }
+    if ($file && defined ($pages) && defined ($percent)) {
+	$file =~ s/\.bdb$//;
+	my $val = "slapd_bdb_cache_${measure}_${file}";
+	if ($config) {
+	    print "$val.label $file\n";
+	    if ($measure eq "pages") {
+		print "$val.type DERIVE\n";
+		print "$val.min 0\n";
+                if ($counter == 0) {
+                    print "$val.draw AREA\n";
+                } else {
+                    print "$val.draw STACK\n";
+                }
+		print "$val.info Number of $file pages found in cache\n";
+	    } else {
+		print "$val.type GAUGE\n";
+		print "$val.info Percentage of $file pages found in cache\n";
+		print "$val.warning $warning:\n" if $ENV{'warning'};
+	    }
+	} else {
+	    if ($measure eq "pages") {
+                print "$val.value $pages\n";
+	    } else {
+		print "$val.value $percent\n";
+	    }
+	}
+	$file = "";
+	$pages = undef;
+	$percent = undef;
+	$counter++;
+    }
+}

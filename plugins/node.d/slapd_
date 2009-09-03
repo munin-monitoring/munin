@@ -1,0 +1,278 @@
+#!/usr/bin/perl -w
+
+# Copyright Bjorn Ruberg <bjorn@ruberg.no>
+# Licenced under GPL v2
+#
+# TODO:
+# - Check for OpenLDAP version
+
+# We use one script for all monitoring.
+# This script may be symlinked with several names, all
+# performing different functions:
+# slapd_statistics_bytes
+# slapd_statistics_pdu
+# slapd_statistics_other
+# slapd_connections
+# slapd_waiters
+# slapd_operations
+# slapd_operations_diff
+
+# Magic markers
+#%# family=auto
+#%# capabilities=autoconf suggest
+
+# use strict;
+use Net::LDAP;
+use Data::Dumper;
+
+use vars qw ( $config $param $act $scope $descr $cn $vlabel
+	      $info $title );
+
+# Change these to reflect your LDAP ACL. The given DN must have
+# read access to the Monitor branch.
+my $basedn = "cn=Monitor";
+my $server = "localhost";
+my $userdn = ($ENV{'binddn'} || '');
+my $userpw = ($ENV{'bindpw'} || '');
+
+# Remember: bytes, pdu needs scope=base
+
+# The possible measurements
+my %ops =
+    ('statistics_bytes'
+     => {
+         'search' => "cn=Bytes,cn=Statistics",
+         'desc'   => "The number of bytes sent by the LDAP server.",
+         'vlabel' => "Bytes",
+         'title'  => "Number of bytes sent",
+         'info'   => "The graph shows the number of bytes sent",
+	 'scope'  => "base"
+         },
+     'statistics_pdu'
+     => {
+         'search' => "cn=PDU,cn=Statistics",
+         'desc'   => "The number of PDUs sent by the LDAP server.",
+         'vlabel' => "PDUs",
+         'title'  => "Number of PDUs sent",
+         'info'   => "The graph shows the number of PDUs sent",
+	 'scope'  => "base"
+         },
+     # Referrals
+     'statistics_referrals' 
+     => {
+         'search' => "cn=Referrals,cn=Statistics",
+         'attrs'  => "Referrals",
+         'desc'   => "The number of Referrals sent by the LDAP server.",
+         'vlabel' => "Referrals",
+         'title'  => "Number of LDAP Referrals",
+         'info'   => "The graph shows the number of referrals sent",
+	 'scope'  => "base"
+         },
+     # Entries
+     'statistics_entries'
+     => {
+         'search' => "cn=Entries,cn=Statistics",
+         'attrs'  => "Entries",
+         'desc'   => "The number of Entries sent by the LDAP server.",
+         'vlabel' => "Entries",
+         'title'  => "Number of LDAP Entries",
+         'info'   => "The graph shows the number of entries sent",
+	 'scope'  => "base"
+         },
+     # Only read Total
+     'connections' 
+     => {
+         'search' => 'cn=Total,cn=Connections',
+         'desc'   => 'The number of connections',
+         'vlabel' => 'Connections pr ${graph_period}',
+         'title'  => 'Number of Connections',
+         'info'   => 'Number of connections to the LDAP server',
+         'scope'  => 'base'
+         },
+     # dn: cn=Write,cn=Waiters,cn=Monitor
+     # dn: cn=Read,cn=Waiters,cn=Monitor
+     'waiters' 
+     => {
+         'search' => 'cn=Waiters',
+         'filter' => '(|(cn=Write)(cn=Read))',
+         'desc'   => "The number of Waiters|",
+         'label'  => {'write' => 'Write',
+                      'read'  => 'Read'},
+         'vlabel' => "Waiters",
+         'title'  => "Number of Waiters",
+         'info'   => "The graph shows the number of Waiters"
+         },
+     'operations'
+     => {
+         'search' => "cn=Operations",
+         'desc'   => "Operations",
+         'vlabel' => "Operations",
+         'title'  => "Operations",
+         'info'   => "Number of completed LDAP operations"
+         },
+     'operations_diff'
+     => {
+         'search' => "cn=Operations",
+         'desc'   => "Operations deviance",
+         'vlabel' => "Deviance",
+         'title'  => "Operations deviance",
+         'info'   => "Deviance between Initiated and Completed ops"
+       }
+     );
+
+# Config subroutine
+sub config {
+    my $action = shift;
+    print <<EOF;
+graph_args --base 1000 -l 0 --vertical-label $ops{$action}->{'vlabel'}
+graph_title $ops{$action}->{'title'}
+graph_category OpenLDAP
+graph_info $ops{$action}->{'info'}
+EOF
+    
+    if ($ops{$action}->{'label'}) {
+        while (my ($key, $val) = each (%{$ops{$action}->{'label'}})) {
+            my $name = $action . "_" . $key;
+            print "$name.label $val\n";
+	    print "$name.type GAUGE\n";
+        }
+    } elsif ($action =~ /^operations(?:_diff)?$/) {
+        my $ldap = Net::LDAP->new ($server) or die "$@";
+        $ldap->bind ($userdn, password => $userpw) or die "$@";
+        my $searchdn = $ops{$action}->{'search'} . "," . $basedn;
+        my $mesg =
+            $ldap->search (
+                           base   => $searchdn,
+                           scope  => 'one',
+                           filter => '(objectclass=*)',
+                           attrs  => ['monitorOpInitiated',
+                                      'monitorOpCompleted',
+                                      'cn'],
+                           );
+        $mesg->code && die $mesg->error;
+        
+        my $max = $mesg->count;
+        for (my $i = 0 ; $i < $max ; $i++) {
+            my $entry = $mesg->entry ($i);
+            my $cn = $entry->get_value ('cn');
+            $name = $action . "_" . lc ($cn);
+            print "$name.label $cn\n";
+            print "$name.type DERIVE\n";
+            print "$name.min 0\n";
+            if ($action eq "operations") {
+                print "$name.info The number of $cn operations\n";
+            } else {
+                print "$name.info The difference between Initiated ";
+                print "and Completed operations (should be 0)\n";
+                print "$name.warning 1\n";
+            }            
+        }
+    } else {
+        print "$action.label $ops{$action}->{'vlabel'}\n";
+        print "$action.type DERIVE\n";
+        print "$action.min 0\n";
+    }
+}
+
+if ($ARGV[0]) {
+    if ($ARGV[0] eq 'autoconf') {
+        # Check for Net::LDAP
+        if (! eval "require Net::LDAP;") {
+            print "no (Net::LDAP not found)";
+            exit 1;
+        }
+        # Check for LDAP version 3
+        my $ldap = Net::LDAP->new ($server, version => 3)
+            or die "no (Needs LDAPv3)";
+        $ldap->bind ($userdn, password => $userpw)
+            or die ("no (Can't log in, check env file)");
+    } elsif ($ARGV[0] eq "config") {
+        if ($0 =~ /slapd_([\w\d_]+)$/) {
+            my $action = $1;
+            &config ($1);
+        } else {
+            die ("Can't run config without a symlinked name\n");
+        }
+    } elsif ($ARGV[0] eq "suggest") {
+        print join ("\n", keys (%ops)), "\n";
+    }
+    exit 0;
+}
+
+# We won't run this without parameters.
+die ("Can't run without a symlinked name\n") if $0 =~ /slapd_$/;
+
+# Default scope for LDAP searches. We'll change to other scopes if
+# necessary.
+$scope = "one";
+
+# The filename is teh key
+(my $action = $0) =~ s/^.*slapd_([\w\d_]+)$/$1/;
+
+# Net::LDAP variant
+my $ldap = Net::LDAP->new ($server, version => 3)
+    or die "$@";
+$ldap->bind ($userdn,password => $userpw)
+    or die "$@";
+
+my $searchdn = $ops{$action}->{'search'} . "," . $basedn;
+my $searchattrs;
+
+if ($action =~ /^operations(_diff)?$/) {
+    # We look for different parameters in Operations branch
+    $searchattrs = ['monitorOpInitiated', 'monitorOpCompleted', 'cn'];
+} else {
+    $searchattrs = ['monitorCounter', 'cn'];
+}
+
+my $filter;
+if ($ops{$action}->{'filter'}) {
+  $filter = "(&(objectclass=*)" . $ops{$action}->{'filter'} . ")";
+} else {
+  $filter = "(objectClass=*)";
+}
+
+if ($ops{$action}->{'scope'}) {
+    $scope = $ops{$action}->{'scope'};
+}
+
+my $mesg =
+    $ldap->search (
+                   base   => $searchdn,
+                   scope  => $scope,
+                   filter => $filter,
+                   attrs  => $searchattrs,
+                   );
+
+$mesg->code && die $mesg->error;
+
+my $max = $mesg->count;
+
+for (my $i = 0 ; $i < $max ; $i++) {
+    my $entry = $mesg->entry ($i);
+    my $cn = $entry->get_value('cn');
+    if ($action =~ /operations(_diff)?$/) {
+	if ($1) {
+	    my $opsInit =
+		$entry->get_value('monitorOpInitiated'); 
+	    my $opsComp =
+		$entry->get_value('monitorOpCompleted');
+	    print lc ("operations_diff_${cn}.value ");
+	    print ($opsInit - $opsComp);
+	    print "\n";
+	} else {
+	    print lc ("operations_${cn}.value ");
+	    print $entry->get_value('monitorOpCompleted'),
+	    "\n";
+	}
+    } else {
+	# Hotfix, must do for now
+	if ($action =~ /_/) {
+	    print lc ("${action}.value ");
+	} else {
+	    print lc ("${action}_${cn}.value ");
+	}
+	print $entry->get_value('monitorCounter'), "\n";
+    }
+}
+$ldap->unbind;
