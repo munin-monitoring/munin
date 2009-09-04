@@ -34,6 +34,11 @@ To monitor all databases, link to postgres_connections_ALL.
 
 L<Munin::Plugins::Pgsql>
 
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
 =head1 AUTHOR
 
 Magnus Hagander <magnus@hagander.net>, Redpill Linpro AB

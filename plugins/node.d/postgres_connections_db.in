@@ -32,6 +32,11 @@ PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugins::Pgsql>.
 
 L<Munin::Plugins::Pgsql>
 
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
 =head1 AUTHOR
 
 Magnus Hagander <magnus@hagander.net>, Redpill Linpro AB
