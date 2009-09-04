@@ -805,22 +805,22 @@ sub process_service {
 
 	    push (@rrd, "CDEF:ipostotal=".
 		  join (",", @{$total_pos{'min'}}).
-		  (",$ADDNAN" x (@{$total_pos{'min'}}-1)));
+		  (",$AddNAN" x (@{$total_pos{'min'}}-1)));
 	    push (@rrd, "CDEF:gpostotal=".
 		  join (",", @{$total_pos{'avg'}}).
-		  (",$ADDNAN" x (@{$total_pos{'avg'}}-1)));
+		  (",$AddNAN" x (@{$total_pos{'avg'}}-1)));
 	    push (@rrd, "CDEF:apostotal=".
 		  join (",", @{$total_pos{'max'}}).
-		  (",$ADDNAN" x (@{$total_pos{'max'}}-1)));
+		  (",$AddNAN" x (@{$total_pos{'max'}}-1)));
 	    push (@rrd, "CDEF:inegtotal=".
 		  join (",", @{$total_neg{'min'}}).
-		  (",$ADDNAN" x (@{$total_neg{'min'}}-1)));
+		  (",$AddNAN" x (@{$total_neg{'min'}}-1)));
 	    push (@rrd, "CDEF:gnegtotal=".
 		  join (",", @{$total_neg{'avg'}}).
-		  (",$ADDNAN" x (@{$total_neg{'avg'}}-1)));
+		  (",$AddNAN" x (@{$total_neg{'avg'}}-1)));
 	    push (@rrd, "CDEF:anegtotal=".
 		  join (",", @{$total_neg{'max'}}).
-		  (",$ADDNAN" x (@{$total_neg{'max'}}-1)));
+		  (",$AddNAN" x (@{$total_neg{'max'}}-1)));
 	    push (@rrd, "LINE1:gpostotal#000000:$graphtotal" . (" " x ($max_field_len - length ($graphtotal) + 1)));
 	    push (@rrd, "GPRINT:gnegtotal:LAST:$rrdformat" . $rrdscale . "/\\g");
 	    push (@rrd, "GPRINT:gpostotal:LAST:$rrdformat" . $rrdscale . "");
@@ -834,13 +834,13 @@ sub process_service {
     } elsif (defined $graphtotal and exists $total_pos{'min'} and @{$total_pos{'min'}}) {
 	push (@rrd, "CDEF:ipostotal=".
 	      join (",", @{$total_pos{'min'}}).
-	      (",$ADDNAN" x (@{$total_pos{'min'}}-1)));
+	      (",$AddNAN" x (@{$total_pos{'min'}}-1)));
 	push (@rrd, "CDEF:gpostotal=".
 	      join (",", @{$total_pos{'avg'}}).
-	      (",$ADDNAN" x (@{$total_pos{'avg'}}-1)));
+	      (",$AddNAN" x (@{$total_pos{'avg'}}-1)));
 	push (@rrd, "CDEF:apostotal=".
 	      join (",", @{$total_pos{'max'}}).
-	      (",$ADDNAN" x (@{$total_pos{'max'}}-1)));
+	      (",$AddNAN" x (@{$total_pos{'max'}}-1)));
 
 	push (@rrd, "LINE1:gpostotal#000000:$graphtotal" . (" " x ($max_field_len - length ($graphtotal) + 1)));
 	push (@rrd, "COMMENT: Cur$RRDkludge:") unless $global_headers;
