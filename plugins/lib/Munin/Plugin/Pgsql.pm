@@ -272,6 +272,10 @@ sub Autoconf {
 sub Suggest {
     my ($self) = @_;
 
+    if (!$self->connect(1)) {
+        return 0;
+    }
+
     $self->ensure_version();
     if ($self->{suggestquery}) {
         my $r = $self->runquery($self->{suggestquery});
@@ -352,7 +356,7 @@ sub connect() {
 }
 
 sub _connect() {
-    my ($self, $noexit) = @_;
+    my ($self) = @_;
 
     return 1 if ($self->{dbh});
 
@@ -369,10 +373,8 @@ sub _connect() {
         }
     }
     else {
-        if ($noexit) {
-            $self->{connecterror} = "DBD::Pg not found, and cannot do psql yet";
-            return 0;
-        }
+        $self->{connecterror} = "DBD::Pg not found, and cannot do psql yet";
+        return 0;
     }
     return 1;
 }
