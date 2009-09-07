@@ -381,6 +381,8 @@ build-%: %/Build
 install-%: %/Build
 	cd $* && $(PERL) Build install			\
             --install_path lib=$(PERLLIB)		\
+            --install_path bin=$(BINDIR)		\
+            --install_path script=$(BINDIR)		\
             --install_path sbin=$(SBINDIR)		\
             --install_path bindoc=$(MANDIR)/man1	\
             --install_path libdoc=$(MANDIR)/man3	\
