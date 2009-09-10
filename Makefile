@@ -43,7 +43,7 @@ unconfig:
 
 tags:
 	-rm -f TAGS
-	find master common node -type f | egrep -v '/(build|_build|blib|.svn|t)/' | xargs etags -l perl -a
+	find master common -type f | egrep -v '/(build|_build|blib|.svn|t)/' | xargs etags -l perl -a
 
 ######################################################################
 
