@@ -2,6 +2,58 @@ package Munin::Master::Logger;
 
 # $Id: $
 
+=head1 NAME
+
+Munin::Master::Logger 
+
+=head1 SYNOPSIS
+
+This module contains Munin master's old logging routines while we're
+switching to Log::Log4perl.  It also sets up Log4perl according to our
+needs.
+
+Do not use "logger" when writing new code, use the
+Log::Log4perl :easy API.  This module takes care of initializing
+Log::Log4perl at load time.
+
+=head1 SUBROUTINES
+
+=over
+
+=item B<logger_open>
+
+needs to be called once in the main program with one argument: The
+directory where the munin logs goes.  The running programs name ($0)
+will be used as the log name (e.g. munin-graph.log).
+
+=item B<logger>
+
+Do not use.
+
+=item B<logger_level>
+
+Use to set the programs log level to trace, debug, info, warn, error,
+or fatal.  This corresponds to the log levels used in syslog, but
+syslog is not used for logging.
+
+=item B<logger_debug>
+
+Set up DEBUG logging.  Both STDOUT and the log file will receive DEBUG
+level output.
+
+=back
+
+=head1 AUTHOR
+
+Munin master logging ported to Log4perl by Nicolai Langfeldt.  Split
+out into this module by Kjell Magne Øyerud.
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
 use base qw(Exporter);
 
 use strict;
@@ -13,10 +65,6 @@ use Log::Log4perl qw(:easy);
 
 our @EXPORT = qw(logger_open logger_debug logger_level logger);
 
-#
-# Switching to Log4perl over time.  Management and compatability goes here.
-#
-
 # Early open of the log.  Warning and more urgent messages will go to
 # screen.
 
@@ -25,7 +73,6 @@ Log::Log4perl->easy_init( $WARN );
 my $logdir = undef;
 my $logopened = 0;
 my $me = basename($PROGRAM_NAME);
-
 
 sub logger_open {
     # This is called when we have a directory and file name to log in.
@@ -101,25 +148,3 @@ sub logger {
 }
 
 1;
-
-__END__
-
-=head1 NAME
-
-FIX
-
-=head1 SYNOPSIS
-
-=head1 SUBROUTINES
-
-=over
-
-=item B<logger_open>
-
-=item B<logger>
-
-=item B<logger_level>
-
-=item B<logger_debug>
-
-=back
