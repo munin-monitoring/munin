@@ -1,5 +1,7 @@
 package Munin::Master::Node;
 
+# $Id: $
+
 use warnings;
 use strict;
 

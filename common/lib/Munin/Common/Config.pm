@@ -1,5 +1,7 @@
 package Munin::Common::Config;
 
+# $Id: $
+
 use warnings;
 use strict;
 

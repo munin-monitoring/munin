@@ -1,6 +1,8 @@
 package Munin::Master::Config;
 use base qw(Munin::Common::Config);
 
+# $Id: $
+
 use warnings;
 use strict;
 

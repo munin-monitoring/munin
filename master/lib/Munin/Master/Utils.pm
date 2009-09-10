@@ -1,5 +1,7 @@
 package Munin::Master::Utils;
 
+# $Id$
+
 use strict;
 use warnings;
 

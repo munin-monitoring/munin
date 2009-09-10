@@ -1,6 +1,8 @@
 use warnings;
 use strict;
 
+# $Id: $
+
 package Munin::Common::Timeout;
 use base qw(Exporter);
 

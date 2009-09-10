@@ -1,5 +1,7 @@
 package Munin::Node::Logger;
 
+# $Id: $
+
 use warnings;
 use strict;
 

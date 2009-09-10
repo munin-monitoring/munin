@@ -21,7 +21,7 @@
 # perlpod.
 
 
-# $Id$
+# $Id: $
 
 =head1 NAME
 

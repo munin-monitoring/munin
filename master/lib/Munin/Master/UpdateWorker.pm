@@ -1,6 +1,8 @@
 package Munin::Master::UpdateWorker;
 use base qw(Munin::Master::Worker);
 
+# $Id: $
+
 use warnings;
 use strict;
 

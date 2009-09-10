@@ -1,5 +1,7 @@
 package Munin::Master::Host;
 
+# $Id: $
+
 use warnings;
 use strict;
 

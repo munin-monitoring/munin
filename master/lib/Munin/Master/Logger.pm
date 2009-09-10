@@ -1,4 +1,7 @@
 package Munin::Master::Logger;
+
+# $Id: $
+
 use base qw(Exporter);
 
 use strict;

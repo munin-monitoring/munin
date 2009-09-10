@@ -1,5 +1,7 @@
 package Munin::Master::Group;
 
+# $Id: $
+
 use warnings;
 use strict;
 
