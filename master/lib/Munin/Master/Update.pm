@@ -15,7 +15,6 @@ use Munin::Master::ProcessManager;
 use Munin::Master::Utils;
 use Time::HiRes;
 
-
 my $config = Munin::Master::Config->instance();
 
 sub new {
@@ -155,6 +154,8 @@ sub _create_self_aware_worker_exception_handler {
 
     return sub {
         my ($worker_id, $reason) = @_;
+	# FIXME: $worker_id is not defined!
+	logger("Failed worker $worker_id");
         push @{$self->{failed_workers}}, $worker_id;
     };
 }
@@ -391,6 +392,7 @@ sub _copy_old_service_config_for_failed_workers {
     my ($self) = @_;
 
     for my $worker (@{$self->{failed_workers}}) {
+	next if !defined($worker);  # The empty set contains "undef" it seems
         $self->{service_configs}{$worker} = $self->{old_service_configs}{$worker};
     }
 }
