@@ -49,54 +49,62 @@ sub _final_char_is {
 }
 
 
-sub _process_group_section {
-    my ($self, $definition, $attributes) = @_;
+sub _process_group {
+    # Process group part of section
+    my ($self, $group_name, $attributes) = @_;
 
-    DEBUG "Processing group labeled [$definition]\n";
-    chop $definition if $self->_final_char_is(';', $definition);
+    DEBUG "Processing section in group $group_name\n";
 
-    croak "Invalid group section definition" unless length $definition;
+    croak "Invalid group section definition" unless length $group_name;
 
-    $self->{groups}{$definition} ||= Munin::Master::Group->new($definition);
-    $self->{groups}{$definition}->add_attributes($attributes);
-    return $self->{groups}{$definition};
+    $self->{groups}{$group_name} ||= Munin::Master::Group->new($group_name);
+    $self->{groups}{$group_name}->add_attributes($attributes);
+
+    return $self->{groups}{$group_name};
 }
 
 
 sub _process_section {
-    # definition is a munin configuration section label, a string such
-    # as "foo.example.com" or "bar;foo.example.com".
-
     my ($self, $definition, $attributes) = @_;
 
     DEBUG "Processing section labeled [$definition]\n";
 
-    my $group_definition = 
+    my $group_name = 
 	$self->_extract_group_name_from_definition($definition);
 
-    my $group = $self->_process_group_section($group_definition, {});
+    my $group = $self->_process_group($group_name, {});
     
-    my $host_name = substr $definition, rindex($definition, ';')+1;
-    my $host =  Munin::Master::Host->new($host_name, $group, $attributes);
-    $group->add_host($host);
+    my $host_name = substr($definition, rindex($definition, ';')+1 );
 
-    return $host;
+    my $host = Munin::Master::Host->new($host_name, $group, $attributes);
+
+    $group->add_host($host);
 }
 
 
 sub _extract_group_name_from_definition {
-    # This actually generates the group name for a a "unnamed" group
-    # from the host name (foo.com's group is com).  
-    # It does not locate the group name from a explicitly named group
-    # "bar;foo.com"
+    # Extract the group name from any munin.conf section name
+    #
+    # Cases:
+    # * foo.example.com      ->  example.com
+    # * bar;foo.example.com  ->  bar
+    # * foo                  ->  foo
+    # * bar;foo              ->  bar
 
-    my ($self, $host_name) = @_;
+    my ($self, $definition) = @_;
 
-    my $dot_loc = index($host_name, '.');
+    my $dot_loc = index($definition, '.');
+    my $sc_loc = index($definition, ';');
 
-    return $dot_loc == -1
-        ? $host_name
-        : substr $host_name, $dot_loc + 1 ;
+    # Return bare hostname
+    return $definition if $sc_loc == -1 and $dot_loc == -1;
+    
+    # Return explicit group name
+    return substr($definition, 0, $sc_loc)
+	if $sc_loc > -1 and ($dot_loc == -1 or $sc_loc < $dot_loc);
+
+    # Return domain name as group name
+    return substr($definition, $dot_loc + 1);
 }
 
 
