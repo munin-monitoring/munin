@@ -24,12 +24,9 @@ sub main {
     exit_if_run_by_super_user();
     configure();
 
-    if ($config->{debug}) {
-        logger_debug();
-    } 
-    else {
-        logger_open($config->{'logdir'});
-    }
+    logger_open($config->{'logdir'});
+
+    logger_debug() if $config->{debug};
 
     my $update = Munin::Master::Update->new();
     $update->run();
