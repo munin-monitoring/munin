@@ -146,11 +146,6 @@ characters they may use: The characters must be C<[a-zA-Z0-9_]>, while
 the first character must be C<[a-zA-Z_]>.  To satisfy these demands
 the function replaces illegal characters with a '_'.
 
-Additionally the field name is only allowed to be 19 characters long.
-This is also enforced, by S<front> trunkating the string, as the most
-interesting/significant bits of the strings will typically be at the
-end and not at the start.
-
 See also
 L<http://munin.projects.linpro.no/wiki/notes_on_datasource_names>
 
@@ -163,9 +158,6 @@ sub clean_fieldname ($) {
     $name =~ s/^[^A-Za-z_]+/_/;
     # Replace remaining illegals with _
     $name =~ s/[^A-Za-z0-9_]/_/g;
-
-    # And use only the last 19 chars
-    $name = substr($name,-19);
 
     return $name;
 }
