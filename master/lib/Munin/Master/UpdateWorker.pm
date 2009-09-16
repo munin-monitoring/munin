@@ -124,7 +124,7 @@ sub _update_rrd_files {
             = $self->_create_rrd_file_if_needed($service, $ds_name, 
                                                 $service_config->{data_source}{$ds_name});
 
-        if (%$service_data) {
+        if (%$service_data and defined($service_data->{$ds_name})) {
             $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name});
         }
         else {
@@ -227,6 +227,9 @@ sub _update_rrd_file {
     my ($self, $rrd_file, $ds_name, $ds_values) = @_;
 
     my $value = $ds_values->{value};
+
+    # Some kind of mismatch between fetch and config can cause this.
+    return if !defined($value);  
 
     if ($value =~ /\d[Ee]([+-]?\d+)$/) {
         # Looks like scientific format.  RRDtool does not
