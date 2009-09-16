@@ -32,7 +32,7 @@ sub _initialize {
 
         croak "Invalid section name [" . $gah . 
 	    "], check munin configuration file, failed"
-	    unless $gah =~ /^[\w;.]+$/;
+	    unless $gah =~ /^[-\w;.]+$/;
 
         $self->_process_section($gah, $groups_and_hosts->{$gah});
     }
