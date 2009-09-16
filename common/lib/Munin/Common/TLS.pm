@@ -1,6 +1,6 @@
 package Munin::Common::TLS;
 
-# $Id: $
+# $Id$
 
 use warnings;
 use strict;

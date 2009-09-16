@@ -1,6 +1,6 @@
 package Munin::Master::Worker;
 
-# $Id: $
+# $Id$
 
 use warnings;
 use strict;

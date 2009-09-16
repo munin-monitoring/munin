@@ -43,7 +43,7 @@ the output of the program.
 
 =head1 VERSION
 
-  $Id: $
+  $Id$
 
 Tested with nvclock version 0.8b3a on a nVidia Geforce 8600GT.
 

@@ -1,6 +1,6 @@
 package Munin::Master::Logger;
 
-# $Id: $
+# $Id$
 
 =head1 NAME
 

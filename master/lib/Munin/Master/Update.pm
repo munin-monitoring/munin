@@ -1,6 +1,6 @@
 package Munin::Master::Update;
 
-# $Id: $
+# $Id$
 
 use warnings;
 use strict;

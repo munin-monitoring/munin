@@ -36,7 +36,7 @@
 #	config		(required)
 #	autoconf	(optional - used by munin-config)
 #
-# $Id: $
+# $Id$
 #
 # Magick markers (optional - used by munin-config and som installation
 # scripts):

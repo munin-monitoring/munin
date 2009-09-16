@@ -1,6 +1,6 @@
 package Munin::Master::GroupRepository;
 
-# $Id: $
+# $Id$
 
 use warnings;
 use strict;

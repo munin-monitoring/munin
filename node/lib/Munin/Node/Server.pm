@@ -1,6 +1,6 @@
 package Munin::Node::Server;
 
-# $Id: $
+# $Id$
 
 use base qw(Net::Server::Fork);
 

@@ -38,7 +38,7 @@ compiled, and secondly it must be configured like this:
 
 =head1 VERSION
 
-  $Id: $
+  $Id$
 
 =head1 BUGS
 

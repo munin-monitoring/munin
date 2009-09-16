@@ -1,6 +1,6 @@
 package NodeBuilder;
 
-# $Id: $
+# $Id$
 
 use base qw(Module::Build);
 

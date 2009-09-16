@@ -1,6 +1,6 @@
 package Munin::Master::ProcessManager;
 
-# $Id: $
+# $Id$
 
 use warnings;
 use strict;

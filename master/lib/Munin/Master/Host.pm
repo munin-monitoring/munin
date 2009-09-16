@@ -1,6 +1,6 @@
 package Munin::Master::Host;
 
-# $Id: $
+# $Id$
 
 use warnings;
 use strict;

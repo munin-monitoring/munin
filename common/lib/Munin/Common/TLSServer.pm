@@ -1,7 +1,7 @@
 package Munin::Common::TLSServer;
 use base qw(Munin::Common::TLS);
 
-# $Id: $
+# $Id$
 
 use warnings;
 use strict;

@@ -19,7 +19,7 @@
 #
 # Script to gather data from the nods and put in temporary spool files.
 #
-# $Id: $
+# $Id$
 
 use strict;
 

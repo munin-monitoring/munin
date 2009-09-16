@@ -1,6 +1,6 @@
 package Munin::Node::Service;
 
-# $Id: $
+# $Id$
 
 use warnings;
 use strict;

@@ -1,6 +1,6 @@
 package PluginsBuilder;
 
-# $Id: $
+# $Id$
 
 use base qw(Module::Build);
 
