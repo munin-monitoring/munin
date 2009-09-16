@@ -10,6 +10,8 @@ use Munin::Master::Config;
 use Munin::Common::Timeout;
 use Munin::Common::TLSClient;
 use Munin::Master::Logger;
+use Data::Dumper;
+use Log::Log4perl qw( :easy );
 
 my $config = Munin::Master::Config->instance();
 
@@ -108,22 +110,26 @@ sub _do_close {
 
 sub negotiate_capabilities {
     my ($self) = @_;
+    # Please note: Sone of the capabilities are asymetrical.  Each
+    # side simply announces which capabilities they have, and then the
+    # other takes advantage of the capabilities it understands (or
+    # dumbs itself down to the counterparts level of sophistication).
+
+    DEBUG "[DEBUG] Negociating capabilities\n";
 
     $self->_node_write_single("cap $self->{master_capabilities}\n");
-    my @lines = $self->_node_read();
+    my $cap = $self->_node_read_single();
 
-    if (index($lines[0], '# Unknown command') == 0) {
+    if (index($cap, 'cap ') == -1) {
         return ('NA');
     }
 
-    my $node_capabilities = substr $lines[0], 2, index($lines[0], ')');
-    my $session_capabilities = $lines[1];
+    my @node_capabilities = split(/\s+/,$cap);
+    shift @node_capabilities ; # Get rid of leading "cap".
 
-    logger("[DEBUG] $node_capabilities") if $config->{debug};
-    logger("[DEBUG] Session capabilities: $session_capabilities") 
-        if $config->{debug};
+    DEBUG "[DEBUG] Node says /$cap/\n";
 
-    return split / /, $session_capabilities;
+    return @node_capabilities;
 }
 
 
