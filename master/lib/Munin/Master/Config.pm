@@ -56,26 +56,36 @@ my %booleans = map {$_ => 1} qw(
 sub parse_config {
     my ($self, $io) = @_;
         
-    my $section = $self;
+    my $section = undef;
 
     while (my $line = <$io>) {
         $self->_strip_comment($line);
         $self->_trim($line);
-        next unless length $line;
+        if ( !length($line) ) {
+	    next;
+	}
         
+	# Group/host/service configuration is saved for later persual.
+	# Everything else is saved at once.  Note that _trim removes
+	# leading whitespace so section changes can only happen if a new
+	# [foo] comes along.
+
         if ($line =~ m{\A \[ ([^]]+) \] \s* \z}xms) {
             $self->{groups_and_hosts}{$1} ||= {};
             $section = $self->{groups_and_hosts}{$1};
-        }
-        elsif ($line =~ m { \A \s* (\S+)\.(\S+) \s+ (.*) }xms) {
+        } elsif ($line =~ m { \A (\S+)\.(\S+) \s+ (.*) }xms) {
+	    croak "No section for line $INPUT_LINE_NUMBER in ".
+		$self->{config_file}."\n" if !defined($section);
             $section->{service_config} ||= {};
             $section->{service_config}{$1} ||= {};
             $section->{service_config}{$1}{$2} = $booleans{$2} ? $self->_parse_bool($3) : $3;
-        }
-        elsif ($line =~ m { \A \s* (\S+) \s+ (.*) }xms) {
-            $section->{$1} = $booleans{$1} ? $self->_parse_bool($2) : $2;
-        }
-        else {
+	} elsif ($line =~ m { \A (\S+) \s+ (.*) }xms) {
+	    if (defined($section)) {
+		$section->{$1} = $booleans{$1} ? $self->_parse_bool($2) : $2;
+	    } else {
+		$self->{$1} = $booleans{$1} ? $self->_parse_bool($2) : $2;
+	    }
+        } else {
             croak "Parse error: $line";
         }
     }
