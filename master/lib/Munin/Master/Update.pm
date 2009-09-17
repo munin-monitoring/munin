@@ -192,9 +192,17 @@ sub _parse_service_config_dump {
 
     while (my $line = <$io>) {
         chop $line;
-        my ($key, $value) = split / /, $line;
 
-        my @key_components = split /;/, $key;
+	# Format is group;...:host.service.field.attribute 
+        my ($key, $value) = split(/ /, $line);
+
+	my ($grouphost,$ss) = split(/:/, $key);
+
+	my ($service,@rest) = split(/\./, $ss);
+
+	my @key_components = split(/;/, $grouphost);
+
+	my $host = pop(@key_components);
 
         if (@key_components == 1 || @key_components == 3) {
             # Ignore. These are configuration variables from
@@ -203,27 +211,25 @@ sub _parse_service_config_dump {
             next;
         }
         
-        if (@key_components > 5 || @key_components < 4) {
-            croak "Failed to parse line from datafile: $line";
-        }
-        
-        my ($group, $host, $service, @rest) = @key_components;
+        my $group = join(';', @key_components);
+
         $host = "$group;$host";
 
         #use Data::Dumper; warn Dumper([$host, $value, \@attribute]);
-        
 
         $service_configs{$host} ||= {};
-        $service_configs{$host}{$service} ||= {global => [], data_source => {}};
 
-        if (@rest == 2) {
-            $service_configs{$host}{$service}{data_source}{$rest[0]} ||= {};
-            $service_configs{$host}{$service}{data_source}{$rest[0]}{$rest[1]}
-                = $value;
-        }
-        else {
-            push @{$service_configs{$host}{$service}{global}}, [@rest, $value];
-        }
+	if (defined($service)) {
+	    $service_configs{$host}{$service} ||= 
+	    {global => [], data_source => {}};
+
+	    if (@rest == 2) {
+		$service_configs{$host}{$service}{data_source}{$rest[0]} ||= {};
+		$service_configs{$host}{$service}{data_source}{$rest[0]}{$rest[1]} = $value;
+	    } else {
+		push @{$service_configs{$host}{$service}{global}}, [@rest, $value];
+	    }
+        } # Don't we need a else here?
     }
 
     return %service_configs;
@@ -376,11 +382,11 @@ sub _write_new_service_configs {
     for my $host (keys %{$self->{service_configs}}) {
         for my $service (keys %{$self->{service_configs}{$host}}) {
             for my $attr (@{$self->{service_configs}{$host}{$service}{global}}) {
-                print $io "$host;$service;$attr->[0] $attr->[1]\n";
+                print $io "$host:$service.$attr->[0] $attr->[1]\n";
             }
             for my $data_source (keys %{$self->{service_configs}{$host}{$service}{data_source}}) {
                 for my $attr (keys %{$self->{service_configs}{$host}{$service}{data_source}{$data_source}}) {
-                    print $io "$host;$service;$data_source;$attr $self->{service_configs}{$host}{$service}{data_source}{$data_source}{$attr}\n";
+                    print $io "$host:$service.$data_source.$attr $self->{service_configs}{$host}{$service}{data_source}{$data_source}{$attr}\n";
                 }
             }
         }
