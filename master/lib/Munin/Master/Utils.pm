@@ -71,31 +71,6 @@ my $config = undef;
 my $DEBUG=0;
 my $configfile="$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 
-my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
-	"dbdir", "logdir", "htmldir", "include", "domain_order", "node_order",
-	"graph_order", "graph_sources", "fork", "graph_title", "create_args",
-	"graph_args", "graph_vlabel", "graph_vtitle", "graph_total",
-	"graph_scale", "graph", "update", "host_name", "label", "cdef", "draw",
-	"graph", "max", "min", "negative", "skipdraw", "type", "warning",
-	"critical", "stack", "sum", "address",
-	"htaccess", "warn", "use_default_name", "use_node_name", "port",
-	"graph_noscale", "nsca", "nsca_server", "nsca_config", "extinfo",
-	"fetch_data", "filename", "max_processes", "nagios", "info",
-	"graph_info", "graph_category", "graph_strategy", "graph_width",
-	"graph_height", "graph_sums", "local_address", "compare",
-	"text", "command", "contact", "contacts",  "max_messages",
-	"always_send", "notify_alias", "line", "state", "graph_period",
-	"cgiurl_graph", "cgiurl", "tls", "service_order", "category_order",
-	"version", "tls_certificate", "tls_private_key", "tls_pem",
-	"tls_verify_certificate", "tls_verify_depth", "tls_ca_certificate",
-	"graph_data_size", "colour", "graph_printf", "ok", "unknown",
-	"palette", "realservname", "cdef_name", "graphable", "process",
-	"realname", "onlynullcdef", "group_order", "pipe", "pipe_command",
-	"unknown_limit", "notify_countdown",
-    );
-
-my %legal_expanded = map { $_ => 1 } @legal;
-
 # Fields to copy when "aliasing" a field
 my @COPY_FIELDS    = ("label", "draw", "type", "rrdfile", "fieldname", "info");
 

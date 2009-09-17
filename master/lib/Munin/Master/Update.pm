@@ -8,7 +8,6 @@ use strict;
 use Carp;
 use Munin::Common::Defaults;
 use Munin::Master::Config;
-use Munin::Master::GroupRepository;
 use Munin::Master::Logger;
 use Munin::Master::UpdateWorker;
 use Munin::Master::ProcessManager;

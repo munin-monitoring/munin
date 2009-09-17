@@ -1,5 +1,11 @@
 package Munin::Master::GroupRepository;
 
+# Stop using this class, moving needed functionality into Munin::*::Config
+
+0;
+
+__END__
+
 # $Id$
 
 use warnings;
