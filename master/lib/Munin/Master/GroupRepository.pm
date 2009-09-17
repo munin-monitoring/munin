@@ -42,13 +42,6 @@ sub _initialize {
 }
 
 
-sub _final_char_is {
-    my ($self, $char, $str) = @_;
-
-    return rindex($str, $char) == length($str);
-}
-
-
 sub _process_group {
     # Process group part of section
     my ($self, $group_name, $attributes) = @_;
