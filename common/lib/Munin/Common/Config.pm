@@ -55,17 +55,17 @@ sub _looks_like_a_bool {
 
     my %bools = map { $_ => 1} qw(yes no true false on off 1 0);
 
-    return $bools{$str};
+    return $bools{lc $str};
 }
 
 
 sub _parse_bool {
     my ($class, $str) = @_;
 
-    croak "Parse exception: '$str' is not a bool." 
+    croak "Parse exception: '$str' is not a boolean." 
         unless $class->_looks_like_a_bool($str);
 
-    return $str =~ m{\A no|false|off|0 \z}xms ? 0 : 1;
+    return $str =~ m{\A no|false|off|0 \z}xi ? 0 : 1;
 }
 
 
