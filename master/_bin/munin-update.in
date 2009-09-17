@@ -3,6 +3,8 @@
 use warnings;
 use strict;
 
+# $Id$
+
 use English qw(-no_match_vars);
 use Munin::Master::Update;
 use Munin::Master::Logger;
