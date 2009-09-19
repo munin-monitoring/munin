@@ -303,7 +303,7 @@ $config->reinitialize({
 			[ 'require 1.3.6.1.2.1.2.2.1.5.   [0-9]' ],
 			{ 
 				require_root => [
-					[ '1.3.6.1.2.1.2.2.1.5.', '[0-9]' ],
+					[ '1.3.6.1.2.1.2.2.1.5', '[0-9]' ],
 				],
 			},
 			'Require - OID root with regex'
@@ -312,7 +312,7 @@ $config->reinitialize({
 			[ 'require 1.3.6.1.2.1.2.2.1.5.', ],
 			{
 				require_root => [
-					[ '1.3.6.1.2.1.2.2.1.5.', undef ],
+					[ '1.3.6.1.2.1.2.2.1.5', undef ],
 				],
 			},
 			'Require - OID root without regex'
@@ -325,8 +325,8 @@ $config->reinitialize({
 			],
 			{ 
 				require_root => [
-					[ '1.3.6.1.2.1.2.2.1.5.', '[0-9]' ],
-				  	[ '1.3.6.1.2.1.2.2.1.10.', undef  ],
+					[ '1.3.6.1.2.1.2.2.1.5', '[0-9]' ],
+				  	[ '1.3.6.1.2.1.2.2.1.10', undef  ],
 				],
 				require_oid => [
 					[ '1.3.6.1.2.1.2.2.2.5', '2' ],
@@ -354,7 +354,7 @@ $config->reinitialize({
 		[
 			[ 'index   1.3.6.1.2.1.2.1.', ],
 			{
-				'index' => '1.3.6.1.2.1.2.1.',
+				'index' => '1.3.6.1.2.1.2.1',
 			},
 			'Index - OID root'
 		],
@@ -370,7 +370,7 @@ $config->reinitialize({
 					[ '1.3.6.1.2.1.2.2.2.5', undef ],
 				],
 				number => '1.3.6.1.2.1.2.1.0',
-				'index' => '1.3.6.1.2.1.2.2.0.',
+				'index' => '1.3.6.1.2.1.2.2.0',
 			},
 			'Putting it all together'
 		],
