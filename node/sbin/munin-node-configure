@@ -908,7 +908,7 @@ sub parse_snmpconf_response
 			if ($oid =~ /$oid_root_pattern/) {
 				$oid =~ s/\.$//;
 				push @{ $plugin->{require_root} }, [$oid, $regex];
-				
+
 				if ($config->{DEBUG}) {
 					print "#\tRegistered 'require': $oid\n";
 					print "#\t\tFiltering on /$regex/\n" if $regex;
@@ -916,7 +916,7 @@ sub parse_snmpconf_response
 			}
 			elsif ($oid =~ /$oid_pattern/) {
 				push @{ $plugin->{require_oid} }, [$oid, $regex];
-				
+
 				if ($config->{DEBUG}) {
 					print "#\tRegistered 'require': $oid\n";
 					print "#\t\tFiltering on /$regex/\n" if $regex;
@@ -930,6 +930,10 @@ sub parse_snmpconf_response
 		elsif ($key eq 'index') {
 			if ($plugin->{index}) {
 				log_error($plugin->{name}, 'index redefined');
+				next;
+			}
+			unless ($value =~ /$oid_root_pattern/) {
+				log_error($plugin->{name}, 'index must be an OID root');
 				next;
 			}
 
