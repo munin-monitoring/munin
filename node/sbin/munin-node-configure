@@ -739,6 +739,57 @@ sub prepare_plugin_environment
 }
 
 
+# Runs the plugin with argument $mode (eg. 'suggest', 'autoconf') and runs
+# tests on the results.  Assuming no errors were detected, returns a list
+# of the lines printed to STDOUT, with any debug output removed.
+sub run_plugin
+{
+	my ($name, $mode) = @_;
+
+	print "# Running '$mode' on $name\n" if $config->{DEBUG};
+	my $res = Munin::Node::Service->fork_service($config->{libdir},
+	                                             $name, $mode);
+
+	# No if it timed out
+	if ($res->{timed_out}) {
+		log_error($name, "Timed out during $mode");
+		return;
+	}
+	elsif ($res->{retval}) {
+		# Non-zero exit is an immediate fail
+		my $plugin_exit   = $res->{retval} >> 8;
+		my $plugin_signal = $res->{retval} & 127;
+
+		# Definitely a bad sign
+		if ($plugin_signal) {
+			log_error($name,
+			          "Died with signal $plugin_signal during $mode");
+			return;
+		}
+		elsif ($plugin_exit) {
+			log_error($name, "Non-zero exit during $mode ($plugin_exit)");
+
+			# Verboten according to the specification, but lots of plugins
+			# still do it during autoconf.  So making it a non-fatal error
+			# for the time being
+			return unless ($mode eq 'autoconf'
+			           and $plugin_exit == 1
+			           and $config->{exit_not_error});
+		}
+	}
+
+	# No if there is anything on stderr that's not debug
+	if (grep !/^#/, @{ $res->{stderr} }) {
+		log_error($name, "Junk printed to stderr");
+		# FIXME: log the other output
+		return;
+	}
+
+	# Get the list while ignoring debug output
+	return grep !/^#/, @{ $res->{stdout} };
+}
+
+
 # Runs the given plugin, and records whether it thinks it should be installed.
 # Sets the 'default' and 'defaultreason' fields
 sub fetch_plugin_autoconf
@@ -748,48 +799,7 @@ sub fetch_plugin_autoconf
 	# Default to the safe option
 	$plugin->{default} = 'no';
 
-	print "# Running autoconf on $plugin->{name}\n" if $config->{DEBUG};
-
-	my $res = Munin::Node::Service->fork_service($config->{libdir},
-	                                             $plugin->{name},
-	                                             'autoconf');
-
-	# No if it timed out
-	if ($res->{timed_out}) {
-		log_error($plugin->{name}, 'Timed out during autoconf');
-		return;
-	}
-
-	if ($res->{retval}) {
-		# Non-zero exit is an immediate fail
-		my $plugin_exit   = $res->{retval} >> 8;
-		my $plugin_signal = $res->{retval} & 127;
-
-		# Definitely a bad sign
-		if ($plugin_signal) {
-			log_error($plugin->{name},
-			          "Was killed with signal $plugin_signal during autoconf");
-			return;
-		}
-
-		# Verboten according to the specification, but lots of plugins
-		# still do it.  So making it a non-fatal error for the time being
-		if ($plugin_exit) {
-			log_error($plugin->{name},
-			          "Non-zero exit during autoconf ($plugin_exit)");
-			return unless ($plugin_exit == 1 and $config->{exit_not_error});
-		}
-	}
-
-	# No if there is anything on stderr that's not debug
-	if (grep !/^#/, @{ $res->{stderr} }) {
-		log_error($plugin->{name}, "Junk printed to stderr");
-		# FIXME: log the other output
-		return;
-	}
-
-	my @response = grep !/^#/, @{ $res->{stdout} };
-
+	my @response = run_plugin($plugin->{name}, 'autoconf');
 	return parse_autoconf_response($plugin, @response);
 }
 
@@ -837,38 +847,7 @@ sub fetch_plugin_suggestions
 	# suggestions if the plugin suffered a fatal error.
 	$plugin->{suggestions} = [];
 
-	print "# Running suggest on $plugin->{name}\n" if $config->{DEBUG};
-
-	my $res = Munin::Node::Service->fork_service($config->{libdir},
-	                                             $plugin->{name},
-	                                             'suggest');
-
-	# No if it timed out
-	if ($res->{timed_out}) {
-		log_error($plugin->{name}, 'Timed out during suggest');
-		return;
-	}
-
-	# Non-zero exit is an immediate fail
-	if ($res->{retval}) {
-		my $plugin_exit   = $res->{retval} >> 8;
-		my $plugin_signal = $res->{retval} & 127;
-
-		log_error($plugin->{name},
-		          "Died during suggest: $plugin_exit/$plugin_signal");
-		return;
-	}
-
-	# No if there is anything on stderr that's not debug
-	if (grep !/^#/, @{ $res->{stderr} }) {
-		log_error($plugin->{name}, "Junk printed to stderr");
-		# FIXME: log the other output
-		return;
-	}
-
-	# Get the list while ignoring debug output
-	my @suggested = grep !/^#/, @{ $res->{stdout} };
-
+	my @suggested = run_plugin($plugin->{name}, 'suggest');
 	return parse_suggest_response($plugin, @suggested);
 }
 
@@ -878,7 +857,7 @@ sub parse_suggest_response
 	my ($plugin, @suggested) = @_;
 
 	foreach my $line (@suggested) {
-		if ($line =~ /^[\w.]+$/) { # FIXME: too restrictive?
+		if ($line =~ /^[\w.]+$/) {
 			# This looks like it should be a suggestion.
 			print "# Good suggestion: $line\n" if $config->{DEBUG};
 			push @{ $plugin->{suggestions} }, $line;
@@ -902,37 +881,7 @@ sub fetch_plugin_snmpconf
 {
 	my ($plugin) = @_;
 
-	print "# Running snmpconf on $plugin->{name}\n" if $config->{DEBUG};
-
-	my $res = Munin::Node::Service->fork_service($config->{libdir},
-	                                             $plugin->{name},
-	                                             'snmpconf');
-
-	# No if it timed out
-	if ($res->{timed_out}) {
-		log_error($plugin->{name}, 'Timed out during snmpconf');
-		return;
-	}
-
-	# Non-zero exit is an immediate fail
-	if ($res->{retval}) {
-		my $plugin_exit   = $res->{retval} >> 8;
-		my $plugin_signal = $res->{retval} & 127;
-
-		log_error($plugin->{name},
-		          "Died during snmpconf: $plugin_exit/$plugin_signal");
-		return;
-	}
-
-	# No if there is anything on stderr that's not debug
-	if (grep !/^#/, @{ $res->{stderr} }) {
-		log_error($plugin->{name}, "Junk printed to stderr");
-		# FIXME: log the other output
-		return;
-	}
-
-	my @response = grep !/^#/, @{ $res->{stdout} };
-
+	my @response = run_plugin($plugin->{name}, 'snmpconf');
 	return parse_snmpconf_response($plugin, @response);
 }
 
@@ -1010,7 +959,6 @@ sub parse_snmpconf_response
 
 
 ### Plugin error reporting #####################################################
-{
 my %errors;
 
 # Logs an error, and prints it out if debugging is on
@@ -1044,9 +992,6 @@ sub list_errors
 		push @error_list, map { "\t$_" } @$errors;
 	}
 	return @error_list;
-}
-
-
 }
 
 
