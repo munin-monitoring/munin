@@ -1,9 +1,43 @@
 use warnings;
 use strict;
 
-use Test::More tests => 27;
+use Test::More tests => 36;
 
 use_ok('Munin::Plugin');
+
+### clean_fieldname
+my $valid = qr/^[A-Za-z_][A-Za-z0-9_]+$/;
+
+# good
+like(clean_fieldname('abcDEF123'), $valid);
+# start with bad characters
+like(clean_fieldname('1bcde'), $valid);
+like(clean_fieldname('!bcde'), $valid);
+# bad characters throughout
+like(clean_fieldname('/abc/def'), $valid);
+
+
+### _{encode,decode}_string
+my @strings = (
+	'abcde',
+	'abc123DEF',
+	"1234\n1234",
+	'12% of my dinner'
+);
+
+is(Munin::Plugin::_decode_string(Munin::Plugin::_encode_string($_)),
+	$_, 'string encode -> decode round-trip') foreach (@strings);
+
+
+### _{encode,decode}_state
+is_deeply(
+	[ Munin::Plugin::_decode_state(Munin::Plugin::_encode_state(@strings)) ],
+	\@strings,
+	'state encode -> decode round-trip'
+);
+
+
+### scaleNumber
 
 is(scaleNumber(1000000000000000000000000000000000,"bps","no "),     '1000000000.0Ybps');
 is(scaleNumber(1000000000000000000000000000000,"bps","no "),        '1000000.0Ybps');
@@ -31,3 +65,6 @@ is(scaleNumber(0.000000000000000000000000001,"bps","no "),          'no ');
 is(scaleNumber(0.000000000000000000000000000001,"bps","no "),       'no ');
 is(scaleNumber(0.000000000000000000000000000000001,"bps","no "),    'no ');
 is(scaleNumber(0.000000000000000000000000000000000001,"bps","no "), 'no ');
+
+
+
