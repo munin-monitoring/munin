@@ -1,7 +1,5 @@
 # -*- cperl -*-
 #
-# Utility functions for perl munin plugins.
-#
 # Copyright (C) 2007-2008 Nicolai Langfeldt
 #
 # This program is free software; you can redistribute it and/or
@@ -31,7 +29,7 @@ use strict;
 
 ## no critic Prototypes
 
-=head1 Munin::Plugin
+=head1 Munin::Plugin - Utility functions for Perl Munin plugins.
 
 =head2 Usage
 
@@ -46,7 +44,7 @@ If your Munin installation predates the MUNIN_* environment variables
       env.MUNIN_LIBDIR /usr/share/munin
 
 IF, indeed that is the munin plugin state directory.  The default
-install directory for Munin::Plugin is in a Perl supported directory,
+install directory for Munin::Plugin is in Perl's module search path,
 the "use lib" is there for the cases where this is not so, and the
 variable needs to be set to stop Perl from complaining.
 
@@ -57,9 +55,11 @@ set_state_name, save_state, restore_state, tail_open, tail_close.
 
 use Exporter;
 our @ISA = ('Exporter');
-our @EXPORT = qw(clean_fieldname set_state_name save_state restore_state
-	     get_thresholds print_thresholds tail_open tail_close
-	    scaleNumber);
+our @EXPORT = qw(
+        clean_fieldname set_state_name save_state restore_state
+        get_thresholds print_thresholds tail_open tail_close
+        scaleNumber
+);
 
 use vars qw($me $pluginstatedir $statefile $DEBUG);
 
@@ -67,7 +67,7 @@ use Munin::Common::Defaults;
 
 =head2 Variables
 
-The module instanciates a number of variables in the $Munin::Plugin
+The module instantiates a number of variables in the $Munin::Plugin
 scope.  None of these are exported, and they must be referenced by the
 full names shown here.
 
@@ -85,25 +85,25 @@ $me = pop(@dircomponents);
 
 =head3 $Munin::Plugin::pluginstatedir
 
-Identical to the environment variable MUNIN_PLUGSTATE (if available, is
-in Muinin 1.3.3) or the install time @Z<>@PLUGSTATE@Z<>@ 'constant'.
+Identical to the environment variable MUNIN_PLUGSTATE (available since
+Munin 1.3.3) or the install time @Z<>@PLUGSTATE@Z<>@ 'constant'.
 You can use this if you need to save several different state files.
 But there is also a function to change the state file name so the
 state file support functions can be used for several state files.
 
 If its value cannot be determined the plugin will be aborted at once
-with an explanatory message.  The most likely causes are
+with an explanatory message.  The most likely causes are:
 
 =over 8
 
 =item *
-that the plugin is run directly and not from munin-node or munin-run or
+You are running the plugin directly and not from munin-node or munin-run;
 
 =item *
-that your munin-node is too old or that
+Your munin-node is too old;
 
 =item *
-munin-node was installed incorrectly somehow.
+munin-node was installed incorrectly.
 
 =back
 
@@ -120,7 +120,7 @@ $pluginstatedir
 The automatically calculated name for the plugins state file.  This is
 simply a concatenation of the $statedir and the $me variables (with a
 slash between).  To change the value of this please use the
-C<set_state_name ($)> procedure (see below).
+C<set_state_name($)> procedure (see below).
 
 =cut
 
@@ -163,20 +163,18 @@ sub clean_fieldname ($) {
 }
 
 
-=head3 set_state_name ($statefile_name)
+=head3 set_state_name($statefile_name)
 
-Override the default statefile name.  This only overrides the filename
+Override the default statefile name.  This only modifies the filename
 part, not the directory name.
 
-Calling this function is not normaly needed and is not recommended.
+Calling this function is not normally needed and is not recommended.
 
 =cut
 
 sub set_state_name ($) {
-    # Set (override) the default statefile name.
     my ($filename) = @_;
-
-    $statefile = "$pluginstatedir/$filename";
+    return $statefile = "$pluginstatedir/$filename";
 };
 
 
@@ -202,9 +200,8 @@ sub _decode_string {
     # Internal function: URL decode a string
     my ($s) = @_;
 
-    # General URL decode, just in case.  "Be gracefull about what you
+    # General URL decode, just in case.  "Be graceful about what you
     # accept" you know.
-
     $s =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
 
     return $s;
@@ -235,22 +232,22 @@ sub _decode_state (@) {
 
 =head3 save_state(@state_vector)
 
-Save the passed state vector to the state file approproate for the
+Save the passed state vector to the state file appropriate for the
 plugin.  The state vector should contain only strings (or numbers),
-and absolutely no objects.  The strings may contain newlines without
-ill effect.
+and absolutely no objects or references.  The strings may contain
+newlines without ill effect.
 
 If the file cannot be opened for writing the plugin will abort the
-program in the interest of error-obviousness.
+program.
 
 The state file name is determined automatically based on the
-name of the process we're running as.  Se L<$Munin::Plugin::me>,
+name of the process we're running as.  See L<$Munin::Plugin::me>,
 L<$Munin::Plugin::statefile> and L<set_state_name> above about the
 file name.
 
 The file will contain a starting line with a magic number so that the
-library can se the difference between an actuall state file and a file
-containing rubish.  Currently this magic number is
+library can see the difference between an actual state file and a file
+containing rubbsh.  Currently this magic number is
 '%MUNIN-STATE1.0\n'. Files with this magic number will contain the
 vector verbatim with \r, \n and % URL encoded.
 
@@ -279,9 +276,9 @@ sub save_state (@) {
 Read state from the state file written by L<save_state(@)>. If
 everything is OK the state vector will be returned.
 
-If the file cannot be opened undef will be returned.  Likewise, if the
-file does not have a recognized magic number undef will be returned
-(and a warning printed, which will appear in the munin-node logs).
+undef will be returned if the file cannot be opened.  Likewise if it
+does not have a recognized magic number (in this case a warning will also 
+be printed, which will appear in the munin-node logs).
 
 =cut
 
@@ -303,7 +300,7 @@ sub restore_state {
     return _decode_state(@state);
 }
 
-=head3 ($warning, $critical) = get_thresholds($field, [$warning_env[, $critical_env]])
+=head3 ($warning, $critical) = get_thresholds($field, [$warning_env, [$critical_env]])
 
 Look up the thresholds for the specified field from the environment
 variables named after the field: "$field_warning" and
@@ -315,8 +312,7 @@ IFF the second and/or third arguments are specified then they will be
 used to specify the name of variables giving the the warning and
 critical levels.
 
-If no values are found for a threshold then Perls undefined value is
-returned.
+If no values are found for a threshold then undef is returned.
 
 =cut
 
@@ -343,11 +339,12 @@ sub get_thresholds {
     return ($warning, $critical);
 }
 
-=head3 print_thresholds($field, [$warning_env[, $critical_env]])
+=head3 print_thresholds($field, [$warning_env, [$critical_env]])
 
-Pass arguments to get_thresholds and use returned values to print the
-thresholds in the default fashion.  If no thresholds are found in the
-environment do not print anything.
+If $field has warning or critical thresholds set for it, prints them in the
+default fashion (eg. 'field.warning 42').
+
+See get_thresholds for an explanation of the arguments.
 
 =cut
 
@@ -359,9 +356,9 @@ sub print_thresholds {
 }
 
 
-=head3 ($file_handle,$rotated) = tail_open($file_name,$position)
+=head3 ($file_handle,$rotated) = tail_open($file_name, $position)
 
-Open the given file and seek to the given position.  If this position
+Open the file and seek to the given position.  If this position
 is beyond the end of the file the function assumes that the file has
 been rotated, and the file position will be at the start of the file.
 
@@ -371,7 +368,7 @@ the file has been rotated and 0 otherwise.  Also, if the file was
 rotated a warning is printed (this can be found in the munin-node log
 or seen in the terminal when using munin-run).
 
-At this point the plugin can read from the file with <$file_hanle> in
+At this point the plugin can read from the file with <$file_handle> in
 loop as usual until EOF is encountered.
 
 If the file cannot be stat'ed C<(undef,undef)> is returned.  If the
@@ -409,11 +406,10 @@ sub tail_open ($$) {
 =head3 $position = tail_close($file_handle)
 
 Close the the file and return the current position in the file.  This
-position should be put in a state vector and stored in a state file
-until the next time the plugin runs.
+position can be stored in a state file until the next time the plugin runs.
 
-If the C<close> system call fails print a warning (which can be found
-in the munin-node log or seen when using munin-run).
+If the C<close> system call fails, a warning will be printed (which can be
+found in the munin-node log or seen when using munin-run).
 
 =cut
 
@@ -429,9 +425,9 @@ sub tail_close ($) {
     return $position;
 }
 
-=head3 $string = scaleNumber($number,$unit,$ifZero,$format);
+=head3 $string = scaleNumber($number, $unit, $ifZero, $format);
 
-Return a string representation of the given number scaled in SI
+Returns a string representation of the given number scaled in SI
 prefixes such as G(iga), M(ega), and k(ilo), m(illi), u (for micro)
 and so on for magnitudes from 10^-24 to 10^24.
 
@@ -440,15 +436,15 @@ prefix.
 
 The contents of $ifZero is used if the number is 0 (smaller than
 10^-26), instead of any other string.  In some contexts "" (empty
-string) is most apropriate and sometimes "0" without any scale or
-prefix is more apropriate.
+string) is most appropriate and sometimes "0" without any scale or
+prefix is more appropriate.
 
-$format is C (actually perl) style printf format.  The default is
-"%.1f%s%s"
+$format can be any valid Perl printf format string.  The default is
+"%.1f%s%s".
 
 The $format may be specified as a whole string such as "The interface
 speed is %.1f%s%s.".  In that case, $ifZero could be set to "The
-interface is down" --- some equipment uses a interface speed of 0 for
+interface is down" -- some equipment uses an interface speed of 0 for
 a downed interface, and some don't.
 
 =cut
@@ -481,11 +477,10 @@ sub scaleNumber {
 
     # Get the absolute and exagerate it slightly since floating point
     # numbers don't compare very well.
-
     my $absnum = abs($number) * 1.0000001;
 
     if ($absnum < 1E-26) {
-	# So small it might as well be naught.  If compared against
+	# So small it might as well be zero.  If compared against
 	# 1E-27 we'll get "Illegal division by zero", so we're damn
 	# close to nothing.
 	if (defined($zero)) {
@@ -501,7 +496,7 @@ sub scaleNumber {
 	}
 	return sprintf $format, $number/$mag, $large{$mag}, $unit;
     } else {
-	# Less than 1 and more than naught
+	# Less than 1 but greater than zero
 	my $mag = 0;
 	for my $magnitude (sort { $a <=> $b } keys %small) {
 	    last if $magnitude >= $absnum;
