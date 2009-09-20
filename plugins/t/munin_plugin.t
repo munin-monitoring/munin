@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 36;
+use Test::More tests => 37;
 
 use_ok('Munin::Plugin');
 
@@ -22,7 +22,8 @@ my @strings = (
 	'abcde',
 	'abc123DEF',
 	"1234\n1234",
-	'12% of my dinner'
+	'12% of my dinner',
+	"\0\x{263a}",
 );
 
 is(Munin::Plugin::_decode_string(Munin::Plugin::_encode_string($_)),
