@@ -38,6 +38,8 @@ Manager password
 
 Needs access to http://<user>:<password>@localhost:8080/manager/status?XML=true (or modify the address for another host). 
 
+Tomcat 5.0 or higher.
+
 A munin-user in $CATALINA_HOME/conf/tomcat-users.xml should be set up for this to work.
 
 Tip: To see if it's already set up correctly, just run this plugin with the parameter "autoconf". If you get a "yes", everything should work like a charm already.

@@ -24,6 +24,8 @@ Needs access to
 http://<user>:<password>@localhost:8080/manager/status?XML=true (or
 modify the address for another host).
 
+Tomcat 5.0 or higher.
+
 A munin-user in $CATALINA_HOME/conf/tomcat-users.xml should be set up
 for this to work.
 
@@ -102,8 +104,8 @@ my $xs = new XML::Simple;
 my $response = $ua->request(HTTP::Request->new('GET',$url));
 my $xml = $xs->XMLin($response->content);
 
-if($xml->{'connector'}->{'http'.$PORT}->{'requestInfo'}->{'requestCount'}) {
-    print "accesses.value " . $xml->{'connector'}->{'http'.$PORT}->{'requestInfo'}->{'requestCount'} . "\n";
+if($xml->{'connector'}->{'http-'.$PORT}->{'requestInfo'}->{'requestCount'}) {
+    print "accesses.value " . $xml->{'connector'}->{'http-'.$PORT}->{'requestInfo'}->{'requestCount'} . "\n";
 } else {
     print "accesses.value U\n";
 }

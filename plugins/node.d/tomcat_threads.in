@@ -23,6 +23,8 @@ Requirements: Needs access to
 http://<user>:<password>@localhost:8080/manager/status?XML=true (or
 modify the address for another host). 
 
+Tomcat 5.0 or higher.
+
 A munin-user in $CATALINA_HOME/conf/tomcat-users.xml should be set up
 for this to work.
 
@@ -103,12 +105,12 @@ my $xs = new XML::Simple;
 my $response = $ua->request(HTTP::Request->new('GET',$url));
 my $xml = $xs->XMLin($response->content);
 
-if($xml->{'connector'}->{'http'.$PORT}->{'threadInfo'}->{'currentThreadsBusy'} &&
-    $xml->{'connector'}->{'http'.$PORT}->{'threadInfo'}->{'currentThreadCount'}) {
-    print "busy.value " . $xml->{'connector'}->{'http'.$PORT}->{'threadInfo'}->{'currentThreadsBusy'} . "\n";
+if($xml->{'connector'}->{'http-'.$PORT}->{'threadInfo'}->{'currentThreadsBusy'} &&
+    $xml->{'connector'}->{'http-'.$PORT}->{'threadInfo'}->{'currentThreadCount'}) {
+    print "busy.value " . $xml->{'connector'}->{'http-'.$PORT}->{'threadInfo'}->{'currentThreadsBusy'} . "\n";
     print "idle.value " .
-	  ($xml->{'connector'}->{'http'.$PORT}->{'threadInfo'}->{'currentThreadCount'} -
-	  $xml->{'connector'}->{'http'.$PORT}->{'threadInfo'}->{'currentThreadsBusy'}) . "\n";
+	  ($xml->{'connector'}->{'http-'.$PORT}->{'threadInfo'}->{'currentThreadCount'} -
+	  $xml->{'connector'}->{'http-'.$PORT}->{'threadInfo'}->{'currentThreadsBusy'}) . "\n";
 } else {
     print "busy.value U\n";
     print "idle.value U\n";

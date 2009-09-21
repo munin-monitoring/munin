@@ -49,9 +49,12 @@ Rune Nordbøe Skillingstad <runesk@linpro.no>
 
 Needs access to
 http://<user>:<password>@localhost:8080/manager/status?XML=true (or
-modify the address for another host). A munin-user in
-$CATALINA_HOME/conf/tomcat-users.xml should be set up for this to
-work.
+modify the address for another host).
+
+Tomcat 5.0 or higher.
+
+A munin-user in $CATALINA_HOME/conf/tomcat-users.xml should be set up
+for this to work.
 
 Tip: To see if it's already set up correctly, just run this plugin
 with the parameter "autoconf". If you get a "yes", everything should
@@ -121,8 +124,8 @@ my $xs = new XML::Simple;
 my $response = $ua->request(HTTP::Request->new('GET',$url));
 my $xml = $xs->XMLin($response->content);
 
-if($xml->{'connector'}->{'http'.$PORT}->{'requestInfo'}->{'bytesSent'}) {
-    print "volume.value " . $xml->{'connector'}->{'http'.$PORT}->{'requestInfo'}->{'bytesSent'} . "\n";
+if($xml->{'connector'}->{'http-'.$PORT}->{'requestInfo'}->{'bytesSent'}) {
+    print "volume.value " . $xml->{'connector'}->{'http-'.$PORT}->{'requestInfo'}->{'bytesSent'} . "\n";
 } else {
     print "volume.value U\n";
 }
