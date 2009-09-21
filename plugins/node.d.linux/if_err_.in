@@ -17,7 +17,7 @@ if_err_<interface> to this file.  E.g.
 
 ...will monitor eth0.
 
-This plugin does not use environment variables
+This plugin does not use environment variables.
 
 =head1 USAGE
 

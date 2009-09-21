@@ -20,7 +20,7 @@ if_<interface> to this file. E.g.
 
 ...will monitor eth0.
 
-Any device found in /proc/net/dev can be monitored. Examples include
+Most devices found in /proc/net/dev can be monitored. Examples include
 ipsec*, eth*, irda* and lo. Please note that aliases cannot be
 monitored with this plugin.
 
