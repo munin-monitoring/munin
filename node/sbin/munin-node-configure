@@ -249,7 +249,7 @@ with this software or refer to
 
 sub normal
 {
-	printf ("%-26s | %-4s | %-39s\n", @_);
+	printf "%-26s | %-4s | %-39s\n", @_;
 	return;
 }
 
@@ -558,7 +558,7 @@ sub load_plugin_history
 	my $reached_version = 0;
 	my $ver = "0.0.0";
 
-	DEBUG("Loading plugin history from '$hist_file'\n");
+	DEBUG("Loading plugin history from '$hist_file'");
 
 	open(my $HIST, '<', $hist_file)
 		or die "# ERROR: Could not open '$hist_file': $!\n";
@@ -643,7 +643,7 @@ sub load_available_plugins
 
 	load_plugin_history() if $config->{newer};
 
-	DEBUG("Searching '$config->{libdir}' for available plugins.\n");
+	DEBUG("Searching '$config->{libdir}' for available plugins.");
 
 	opendir (my $LIBDIR, $config->{libdir})
 		or die "Fatal: Could not open '$config->{libdir}' for reading: $!\n";
@@ -688,7 +688,7 @@ sub load_available_plugins
 	}
 	close ($LIBDIR);
 
-	DEBUG("%u plugins available.\n", scalar keys %found);
+	DEBUG(sprintf "%u plugins available.", scalar keys %found);
 	return \%found;
 }
 
@@ -726,7 +726,7 @@ sub run_plugin
 {
 	my ($name, $mode) = @_;
 
-	DEBUG("Running '$mode' on $name\n" );
+	DEBUG("Running '$mode' on $name" );
 	my $res = Munin::Node::Service->fork_service($config->{libdir},
 	                                             $name, $mode);
 
@@ -806,7 +806,7 @@ sub parse_autoconf_response
 	}
 
 	# Some recognized response
-	DEBUG("Got yes/no: $line");
+	DEBUG("\tGot yes/no: $line");
 
 	$plugin->{default} = $1;
 	$plugin->{defaultreason} = $2;
@@ -838,13 +838,13 @@ sub parse_suggest_response
 	my ($plugin, @suggested) = @_;
 
 	foreach my $line (@suggested) {
-		if ($line =~ /^[\w.]+$/) {
+		if ($line =~ /^[-\w.]+$/) {
 			# This looks like it should be a suggestion.
-			DEBUG("Added suggestion: $line");
+			DEBUG("\tAdded suggestion: $line");
 			push @{ $plugin->{suggestions} }, $line;
 		}
 		else {
-			log_error($plugin->{name}, "Bad suggestion: $line");
+			log_error($plugin->{name}, "\tBad suggestion: $line");
 		}
 	}
 
@@ -875,9 +875,7 @@ sub parse_snmpconf_response
 	my ($plugin, @response) = @_;
 
 	foreach my $line (@response) {
-		$line =~ s/^\s+//;
-		$line =~ s/\s+$//;
-		my ($key, $value) = split /\s+/, $line, 2;
+		my ($key, $value) = $line =~ /(\w+)\s+(.+\S)/;
 
 		next unless defined $key and defined $value;
 
@@ -922,6 +920,7 @@ sub parse_snmpconf_response
 				log_error($plugin->{name}, 'number redefined');
 				next;
 			}
+
 			unless ($value =~ /$oid_pattern/) {
 				log_error($plugin->{name}, 'number must be an OID');
 				next;
@@ -974,8 +973,7 @@ sub list_errors
 }
 
 
-sub DEBUG { print '# ', @_, "\n"; }
-
+sub DEBUG { print '# ', @_, "\n" if $config->{DEBUG}; }
 
 exit main() unless caller;
 
