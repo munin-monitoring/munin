@@ -126,7 +126,7 @@ check_autoconf() {
     # Check client
     if [ ! -x $MYSQL ]; then
 	echo "no ($MYSQL not executable)"
-	return 1
+	return 0
     fi
 
     # Check server
@@ -138,7 +138,7 @@ check_autoconf() {
 		    ;;
 		*)
 		    echo "no (Could not contact mysql server)"
-		    return 1
+		    return 0
 		    ;;
 	    esac
     done
@@ -151,11 +151,11 @@ check_autoconf() {
 		    ;;
 		ON)
 		    echo "no (innodb_file_per_table is ON, should be OFF)"
-		    return 1
+		    return 0
 		    ;;
 		*)
 		    echo "no (could not read innodb_file_per_table)"
-		    return 1
+		    return 0
 		    ;;
 	    esac
     done
@@ -164,7 +164,7 @@ check_autoconf() {
 	while read res; do
 	    if [ "$res" = "0" ]; then
 		echo "no (No visible tables use InnoDB)"
-		return 1
+		return 0
 	    fi
     done
 

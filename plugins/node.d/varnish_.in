@@ -671,7 +671,7 @@ sub autoconf
 {
 	if (`which $varnishstatexec 2>/dev/null` eq '') {
 		print "no (which $varnishstatexec returns blank)\n";
-		exit 1;
+		exit 0;
 	}
 	print "yes\n";
 	exit 0;
