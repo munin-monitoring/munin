@@ -1,25 +1,91 @@
 #!@@GOODSH@@
 # -*- sh -*-
-# 
-# Plugin to monitor postfix mail spools
-# 
-# Contributed by Nicolai Langfeldt
-# 
-#%# family=auto
-#%# capabilities=autoconf
+
+: << =cut
+
+=head1 NAME
+
+postfix_mailqueue - Plugin to monitor postfix mail spools
+
+=head1 ABOUT
+
+A guide to postfix mail queue manageent can be found at
+L<http://www.postfix.org/QSHAPE_README.html#queues>
+
+A summary:
+
+=over 4
+
+=item maildrop
+
+Messages that have been submitted via the Postfix sendmail(1) command, but not
+yet brought into the main Postfix queue by the pickup(8) service.
+
+=item hold
+
+Messages placed in the "hold" queue stay there until the administrator intervenes
+
+=item incoming
+
+Inbound mail from the network, or mail picked up by the local pickup(8) daemon
+from the maildrop directory.
+
+=item active
+
+Messages that the queue manager has opened for delivery. Only a limited number
+of messages is allowed to enter the active queue (leaky bucket strategy, for a
+fixed delivery rate).
+
+=item deferred
+
+Mail that could not be delivered upon the first attempt. The queue manager
+implements exponential backoff by doubling the time between delivery attempts.
+
+=item corrupt
+
+Unreadable or damaged queue files are moved here for inspection.
+
+=back
+
+=head1 CONFIGURATION
+
+Configuration parameters for /etc/munin/plugin-conf.d/postfix_mailqueue,
+if you need to override the defaults below:
+
+ [postfix_mailqueue]
+  env.spooldir - Path to the postfix mail spool
+
+=head2 DEFAULT CONFIGURATION
+
+ [postfix_mailqueue]
+  env.spooldir /var/spool/postfix
+
+=head1 AUTHOR
+
+Nicolai Langfeldt
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+=begin comment
+
+These magic markers are used by munin-node-configure when installing
+munin-node.
+
+=end comment
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 # Can be set via environment, but default is /var/spool/postfix
 SPOOLDIR=${spooldir:-/var/spool/postfix}
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
-
-# Postfix mqueue management: http://www.postfix.cs.uu.nl/queuing.html
-# maildrop: Localy posted mail
-# incoming: Processed local mail and received from network
-# active: Mails being delivered (should be small)
-# deferred: Stuck mails (that will be retried later)
-# corrupt: Messages found to not be in correct format (shold be 0)
-# hold: Recent addition, messages put on hold indefinitly - delete of free
 
 case $1 in
     autoconf|detect)

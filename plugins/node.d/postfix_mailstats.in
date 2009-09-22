@@ -1,25 +1,47 @@
 #!@@PERL@@ -w
 # -*- perl -*-
-#
-# Plugin to monitor the number of mails delivered and rejected by postfix.
-#
-# Usage: copy or link into /etc/munin/node.d/
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Config variables:
-#
-# 	logdir       - Which logfile to use
-#	logfile      - What file to read in logdir
-#
-# Magic markers (optional - used by munin-config and some installation
-# scripts):
-#
-#%# family=manual
-#%# capabilities=autoconf
+
+=head1 NAME
+
+postfix_mailstats - Plugin to monitor the number of mails delivered and
+rejected by postfix
+
+=head1 CONFIGURATION
+
+Configuration parameters for /etc/munin/plugin-conf.d/postfix_mailstats,
+if you need to override the defaults below:
+
+ [postfix_mailstats]
+  env.logdir  - Which logfile to use
+  env.logfile - What file to read in logdir
+
+=head2 DEFAULT CONFIGURATION
+
+ [postfix_mailstats]
+  env.logdir  /var/log
+  env.logfile mail.log
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+=begin comment
+
+These magic markers are used by munin-node-configure when installing
+munin-node.
+
+=end comment
+
+ #%# family=manual
+ #%# capabilities=autoconf
+
+=cut
 
 my $statefile = "@@PLUGSTATE@@/munin-plugin-postfix_mailstats.state";
 my $pos   = undef;
