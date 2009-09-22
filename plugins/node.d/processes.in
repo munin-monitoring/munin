@@ -1,48 +1,66 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Copyright (C) 2006 Lars Strand
-#
-# Munin-plugin to monitor processes on Linux
-# FreeBSD, OpenBSD, NetBSD, Solaris and OSX.
-#
-# Require munin-server version 1.2.5 or 1.3.3 (or higher).
-#
-# This plugin is backwards compatible with the old processes-plugins
-# found on SunOS, Linux and *BSD (i.e. the history is preserved).
-#
-# All fields have colours associated with them which reflect the type
-# of process (sleeping/idle = blue, running = green,
-# stopped/zombie/dead = red, etc.) 
-#
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; version 2 dated June,
-# 1991.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-#
-# Parameters understood:
-#
-#	config		(required)
-#	autoconf	(optional - used by munin-config)
-#
-# $Id$
-#
-# Magick markers (optional - used by munin-config and som installation
-# scripts):
-#
-#%# family=auto
-#%# capabilities=autoconf
+
+: << =cut
+
+=head1 NAME
+
+processes - Plugin to monitor processes on Linux FreeBSD, OpenBSD, NetBSD,
+Solaris and OSX.
+
+=head1 ABOUT
+
+This plugin requires munin-server version 1.2.5 or 1.3.3 (or higher).
+
+This plugin is backwards compatible with the old processes-plugins found on
+SunOS, Linux and *BSD (i.e. the history is preserved).
+
+All fields have colours associated with them which reflect the type of process
+(sleeping/idle = blue, running = green, stopped/zombie/dead = red, etc.) 
+
+=head1 CONFIGURATION
+
+No configuration for this plugin.
+
+=head1 AUTHOR
+
+Copyright (C) 2006 Lars Strand
+
+=head1 LICENSE
+
+GNU General Public License, version 2
+
+=begin comment
+
+This file is part of Munin.
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; version 2 dated June, 1991.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
+Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+=end comment
+
+=head1 MAGIC MARKERS
+
+=begin comment
+
+These magic markers are used by munin-node-configure when installing
+munin-node.
+
+=end comment
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 # Search for program in $PATH unless predefined.
 [ $awk ]     || awk="awk"
