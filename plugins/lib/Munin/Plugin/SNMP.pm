@@ -58,10 +58,10 @@ package Munin::Plugin::SNMP;
 ## no critic Prototypes
 
 use strict;
+
 use Net::SNMP;
 
 use vars qw(@ISA);
-
 @ISA = qw(Net::SNMP);
 
 # This is a internal function to "push" more elements onto a hash
@@ -82,46 +82,50 @@ sub config_session {
 
 =head2 config_session() - Decode environment to get the needed plugin configuration parameters
 
-  ($host,$port,$version,$tail) = Munin::Plugin::SNMP->config_session();
+  ($host, $port, $version, $tail) = Munin::Plugin::SNMP->config_session();
 
 This is a convenience function for the "config" part of the plugin -
 it decodes the environment/plugin name to retrieve the information
-needed in the configuration phase.  It returns a 4 tuple consisting of
-1) the host name 2) the udp port to use 3) the SNMP version to use,
-and 4) the tail of the plugin name: whatever is left of the plugin
+needed in the configuration phase.  It returns a 4 tuple consisting of:
+
+=over
+
+=item 1) the host name
+
+=item 2) the udp port to use
+
+=item 3) the SNMP version to use (3 for version 3, 2 for version 1 or 2c)
+
+=item 4) the tail of the plugin name: whatever is left of the plugin
 name after "snmp_<host>_".
+
+=back
 
 The tail can be interesting for the "fetch" part of the plugin as
 well.
 
 =cut
 
-    my $host    = undef;
-    my $version = $ENV{version} || '2';
-    my $port    = $ENV{port}    || 161;
-    my $tail    = undef;
+    my ($host, $port, $version, $tail);
 
     # Decode plugin/symlink name and extract meaning from it - if possible.
     if ($0 =~ /^(?:.*\/)?snmp(v3)?_([^_]+)_(.*)/) {
-        my $v3 = $1 || '0';
-	$version = 3 if $v3;
+	$version = '3' if $1;
 	$host = $2;
+	$tail = $3;
 	if ($host =~ /^([^:]+):(\d+)$/) {
-	    $host = $2;
-	    $port = $3;
+	    $host = $1;
+	    $port = $2;
 	}
-	$tail = $4;
     }
 
     # The environment overrides the symlink.  The other way around is
     # not useful.
-    $host = $ENV{host} || $host;
+    $host    = $ENV{host}    || $host    || die "Could not find hostname";
+    $version = $ENV{version} || $version || '2';
+    $port    = $ENV{port}    || $port    || 161;
 
-    if (!defined($host)) {
-	die 'Could not find hostname.';
-    }
-
-    return ($host,$port,$version,$tail);
+    return ($host, $port, $version, $tail);
 }
 
 
@@ -155,10 +159,10 @@ files.  E.g.:
      env.v3username snmpoperator
      env.v3authpassword s3cr1tpa55w0rd
 
-See below for how to configure for each diffetent case.  The first
-case above shows Munins default configuration.
+See below for how to configure for each different case.  The first
+case above shows Munin's default configuration.
 
-NOTE: munin_node_configure does not yet utilize the "v3" thing.
+NOTE: munin-node-configure does not yet utilize the "v3" thing.
 
 The following environment variables are consulted:
 
@@ -192,7 +196,7 @@ The port to connect to.  Default 161.
 The SNMP version to use for the connection. One of 1, 2, 3, snmpv1,
 snmpv2c or snmpv3.  SNMP v2 is better as it supports bulk operations.
 Therefore 2 is the default in Munin::Plugin::SNMP.  If your device
-supports v3 that may be even better as it supports propper security -
+supports v3 that may be even better as it supports proper security -
 but the encryption may slow things down.
 
 Security is handled differently for versions 1/2c and 3.  See below.
@@ -202,7 +206,7 @@ Security is handled differently for versions 1/2c and 3.  See below.
     my ($host,$port,$version,$tail) = config_session();
 
     if (!defined($host)) {
-	die 'Could not find hostname.';
+	die "Could not find hostname.\n";
     }
 
     # Common options.
