@@ -203,11 +203,7 @@ Security is handled differently for versions 1/2c and 3.  See below.
 
 =cut
 
-    my ($host,$port,$version,$tail) = config_session();
-
-    if (!defined($host)) {
-	die "Could not find hostname.\n";
-    }
+    my ($host, $port, $version, $tail) = config_session();
 
     # Common options.
     my @options = (-hostname    => $host,
@@ -230,6 +226,7 @@ needs a security checkup.
 
 =cut
 
+	# FIXME: die if $ENV{community} isn't set?
 	my $community = $ENV{community} || 'public';
 
 	push(@options,(-community => $community));
@@ -239,9 +236,9 @@ needs a security checkup.
 
 	print STDERR "Setting up a SNMPv$version session\n" if $::DEBUG;
 
-	($object,$error) = $class->SUPER::session(@options);
+	($object, $error) = $class->SUPER::session(@options);
 
-	if (!defined($object)) {
+	unless ($object) {
 	    die "Could not set up SNMP $version session to $host: $error\n";
 	}
 
@@ -280,7 +277,7 @@ SNMPv3 username.  There is no default. Empty username ('') is allowed.
 =item env.v3authpassword
 
 SNMPv3 authentication password.  Authentication requires a
-v3authprotocol, but this defaults do "md5" and may therefore be left
+v3authprotocol, but this defaults to "md5" and may therefore be left
 unspecified.
 
 The password is sent encrypted (one way hash) over the network.
@@ -312,7 +309,7 @@ weak 'des' encryption method is supported officially.  The default is
 'des'.
 
 The implementing perl module (Net::SNMP) also supports '3des'
-(CBC-3DES-EDE aka Tripple-DES, NIST FIPS 46-3) as specified in IETF
+(CBC-3DES-EDE aka Triple-DES, NIST FIPS 46-3) as specified in IETF
 draft-reeder-snmpv3-usm-3desede.  If this works or not with any
 particular device we do not know.
 
@@ -374,7 +371,7 @@ particular device we do not know.
 		     );
 
 This method transforms the -baseoid and -cols to a array of -columns
-and calls C<get_entries()> with all the other arguments.  It then then
+and calls C<get_entries()> with all the other arguments.  It then
 transforms the data into a hash of hashes in the following manner:
 
 The keys of the main hash are the last element(s) of the OIDs, after
@@ -387,7 +384,7 @@ of elements.  Also, don't try to specify a next-to-next-to-leaf-node
 baseoid, the principle it breaks both C<get_entries> and the logic in
 C<get_hash>.
 
-If (all) the OIDs are unavailable a defined but empty restult is
+If (all) the OIDs are unavailable a defined but empty hashref is
 returned.
 
 Example:
@@ -459,11 +456,13 @@ sub get_hash {
 If the call fails to get a value the above call sets $uptime to 'U'
 which Munin interprets as "Undefined" and handles accordingly.
 
-If you stop to think about it you should probably use get_hash (it
-gets too much, but is good for arrays) or get_entries - it gets
+If you stop to think about it you should probably use C<get_hash()> (it
+gets too much, but is good for arrays) or C<get_entries()> - it gets
 exactly what you want, so you mus
 
 =cut
+# FIXME: how was that last sentence meant to finish?
+
 
 sub get_single {
         my $handle = shift;
@@ -491,10 +490,10 @@ This example shows the usage for a netstat plugin.
 It gets all OIDs based at $tcpConnState and only returns the ones that
 contain a number in the value.
 
-(It might (or might not) be a good idea to rewrite this to use
-get_table and use perl's grep to filter).
-
 =cut
+
+# (It might (or might not) be a good idea to rewrite this to use
+# get_table and use perl's grep to filter).
 
 sub get_by_regex {
     my $handle = shift;
