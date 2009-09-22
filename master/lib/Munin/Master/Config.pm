@@ -1,7 +1,96 @@
 package Munin::Master::Config;
+
 use base qw(Munin::Common::Config);
 
 # $Id$
+
+# Notes about config data structure:
+# 
+# In munin all configuration and gathered data is stored in the same
+# config tree of hashes.  Since ~april 2009 we've made the tree object
+# oriented so the objects in three must be instanciated as the right
+# object type.  And so we can use the object type to determine
+# behaviour when we itterate over the objects in the tree.
+#
+# The Class Munin::Common::Config is the base of Munin::Master::Config.
+# The master programs (munin-update, munin-graph, munin-html) instanciates
+# a Munin::Master::Config object.
+#
+# The Class Munin::Master::GroupRepository is based on Munin::Master::Config
+# and contains a tree of Munin::Master::Group objects.
+#
+# The M::M::Group objects can be nested.  Under a M::M::Group object there
+# can be a (flat) collection of M::M::Host objects.  The M::M::Host class
+# is based in M::M::Group.
+#
+# A M::M::Host is a monitored host (not a node).  Munin gathers data
+# about a host by connecting to a munin-node and asking about the host.
+#
+# Since multigraph plugins are hierarchical each host can contain
+# data for nested plugin names/dataseries labels.
+#
+# The configuration file formats are everywhere identical in structure
+# but the resulting configuration tree differs a bit.  On the munin-master
+# the syntax is like this:
+#
+# Global setting:
+#
+#   attribute value
+#
+# Simple group/host/service tree:
+#
+#   Group;Host:service.attribute
+#   Group;Host:service.label.attribute
+#
+# Groups can be nested:
+#
+#   Group;Group;Group;Host:(...)
+#
+# (When multigraph is supported) services can be nested:
+#
+#   (...);Host:service:service.(...)
+#   (...);Host:service:service:service.(...)
+#
+# All attributes (attribute names) are known and appears in the @legal
+# array (and accompanying hash).
+# 
+# Structure:
+# - A group name is always postfixed by a ;
+# - The host name is the first word with a : after it
+# - After that there are services and attributes
+#
+# For ease of configuration munin supports a [section] shorthand:
+#
+#   [Group;]
+#   [Group;Group;]
+#   [Group;Host]
+#   [Group;Host:service]
+#
+# The section is prefixed to the subsequent settings in the appropriate
+# manner with the correct infixes (";", ":" or ".").  Usage can look like
+# this:
+#
+#   [Group;]
+#      Group;Host:service.attribute value
+#
+# is equivalent to
+#
+#   [Group;Group;]
+#      Host:service.attribute value
+#
+# is equivalent to
+#
+#   [Group;Group;Host]
+#      service.attribute value
+#
+# is equivalent to
+#
+#   [Group;Group;Host:service]
+#      attribute value
+#
+# When multigraph is realized I suppose we should support nested services
+# in the prefix as well.  FIXME!
+#
 
 use warnings;
 use strict;

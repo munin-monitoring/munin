@@ -1,5 +1,7 @@
 package Munin::Master::Host;
 
+use base qw(Munin::Common::Group);
+
 # $Id$
 
 use warnings;

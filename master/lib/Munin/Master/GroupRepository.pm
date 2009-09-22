@@ -1,10 +1,6 @@
 package Munin::Master::GroupRepository;
 
-# Stop using this class, moving needed functionality into Munin::*::Config
-
-0;
-
-__END__
+use base qw(Munin::Master::Config);
 
 # $Id$
 
@@ -72,12 +68,15 @@ sub _process_section {
 	$self->_extract_group_name_from_definition($definition);
 
     my $group = $self->_process_group($group_name, {});
-    
+
     my $host_name = substr($definition, rindex($definition, ';')+1 );
 
-    my $host = Munin::Master::Host->new($host_name, $group, $attributes);
+    if (length($host_name) > 0) {
+	my $host = Munin::Master::Host->new($host_name, $group, $attributes);
+	$group->add_host($host);
+    }
 
-    $group->add_host($host);
+    return $group;
 }
 
 
@@ -89,6 +88,7 @@ sub _extract_group_name_from_definition {
     # * bar;foo.example.com  ->  bar
     # * foo                  ->  foo
     # * bar;foo              ->  bar
+    # * bar;		     ->  bar
 
     my ($self, $definition) = @_;
 
