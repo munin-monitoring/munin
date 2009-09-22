@@ -1,34 +1,75 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Munin plugin for named.  This is a bit experimental, we will have to see
-# which statistics prove to have any meaning to get a feel with what happens
-# on the nameserver.
-#
-# Nicolai Langfeldt (janl@linpro.no) 27.8.2003
-# 
-# Enviroment variables:
-#
-#	logfile   - set which log file to use
-# 
-#%# family=contrib
 
-# REQUIREMENTS: in your named.conf you must have statistics-interval set:
-# options {
-#    ...
-#    statistics-interval 1;
-#    ...
-# };
-# The number is in minutes.  At each interval just 3 lines is dumped.
-# It can be desturbing if you usually read the logs yourself, but
-# a 1 minute interval ensures very updated information to munin.
-# 5 minutes is the maximum I'd say.
+: << =cut
 
-# The name of the file where syslog puts daemon output - ie the named
-# statistics output.  On solaris this is /var/adm/messages, on most
-# linuxes it is /var/log/messages.  But on Debian it is
-# /var/log/daemon which is read restricted so we have to run as a user
-# with read rights, or remove the restrictions.
+=head1 NAME
+
+named - Plugin to monitor named statistics
+
+=head1 ABOUT
+
+This is a bit experimental, we will have to see which statistics prove to have
+any meaning to get a feel with what happens on the nameserver.
+
+=head1 USAGE
+
+In your named.conf you must have statistics-interval set:
+
+ options {
+    ...
+    statistics-interval 1;
+    ...
+ };
+
+The number is in minutes.  At each interval just 3 lines is dumped.  It can be
+desturbing if you usually read the logs yourself, but a 1 minute interval
+ensures very updated information to munin.  5 minutes is the maximum I'd say.
+
+The name of the file where syslog puts daemon output - ie the named statistics
+output.  On solaris this is /var/adm/messages, on most linuxes it is
+/var/log/messages.  But on Debian it is /var/log/daemon.log which is read
+restricted so we have to run as a group or user with read rights, or remove the
+restrictions on the log file.
+
+=head1 CONFIGURATION
+
+Configuration parameters for /etc/munin/plugin-conf.d/named,
+if you need to override the defaults below:
+
+ [named]
+  env.logfile   - set which log file to use
+
+To ensure read access to the log files, you will need to add something like:
+
+ [named]
+  group adm
+
+=head2 DEFAULT CONFIGURATION
+
+[named]
+ env.logfile /var/adm/messages or /var/log/daemon.log
+
+=head1 AUTHOR
+
+Nicolai Langfeldt (janl@linpro.no) 27.8.2003
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+=begin comment
+
+These magic markers are used by munin-node-configure when installing
+munin-node.
+
+=end comment
+
+ #%# family=contrib
+
+=cut
 
 if [ -n "$logfile" ]; then
     SYSLOGFILE=$logfile

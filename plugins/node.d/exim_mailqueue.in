@@ -1,27 +1,52 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Plugin to monitor exim queue size
-#
-# Usage: Copy or link into /etc/munin/node.d/
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Config variables:
-#
-# 	spooldir     - Override what exim says
-# 	exim         - Where's exim?
-# 	queuewarn    - When to warn
-# 	queuecrit    - When to crit
-#
-# Magic markers (optional - used by installation scripts and
-# munin-config):
-#
-#%# family=auto
-#%# capabilities=autoconf
+
+: << =cut
+
+=head1 NAME
+
+exim_mailqueue - Plugin to monitor exim queue size
+
+=head1 CONFIGURATION
+
+Configuration parameters for /etc/munin/plugin-conf.d/exim_mailqueue,
+if you need to override the defaults below:
+
+[exim_mailqueue]
+ env.spooldir  - Override what exim says
+ env.exim      - Where's exim?
+ env.queuewarn - When to warn
+ env.queuecrit - When to crit
+
+=head2 DEFAULT CONFIGURATION
+
+[exim_mailqueue]
+ env.spooldir  <autodetected>
+ env.exim      <autodetected>
+ env.queuewarn 100
+ env.queuecrit 200
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+=begin comment
+
+These magic markers are used by munin-node-configure when installing
+munin-node.
+
+=end comment
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 DIRNAME=$(dirname $0)
 SPOOLDIR="unset"

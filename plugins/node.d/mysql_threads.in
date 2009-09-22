@@ -1,20 +1,46 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Plugin to monitor the number of threads on a mysql-server. Faster than
-# ps_mysql.
-#
-# Parameters:
-# 	
-# 	config
-# 	autoconf
-#
-# Configuration variables
-#
-#	mysqlopts    - Options to pass to mysql
-#
-#%# family=auto
-#%# capabilities=autoconf
+
+: << =cut
+
+=head1 NAME
+
+mysql_threads - Plugin to monitor the number of threads on a mysql-server.
+
+=head1 CONFIGURATION
+
+Configuration parameters for /etc/munin/plugin-conf.d/mysql_threads, if you
+need to override the defaults below:
+
+[mysql_threads]
+ env.mysqlopts    - Options to pass to mysql
+
+=head2 DEFAULT CONFIGURATION
+
+[mysql_threads]
+ env.mysqlopts
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+=begin comment
+
+These magic markers are used by munin-node-configure when installing
+munin-node.
+
+=end comment
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 MYSQLOPTS="$mysqlopts"
 MYSQLADMIN=${mysqladmin:-mysqladmin}

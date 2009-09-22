@@ -1,24 +1,52 @@
 #!@@PERL@@ -w
 # -*- perl -*-
-#
-# Plugin to monitor the percent of table space used on isam and myisam
-# tables on a mysql server.
-#
-# Parameters:
-#
-# 	config
-# 	autoconf
-# 	suggest
-#
-# Configuration variables
-#
-#   mysqlopts    - Options to pass to mysql
-#	statefile    - where to put the statefile
-#	ignore       - Tables to ignore. Regex.
-#	absolute     - use tables sizes, not percent of maximum
-#
-#%# family=auto
-#%# capabilities=suggest autoconf
+
+=head1 NAME
+
+mysql_isam_space_ - Wildcard plugin to monitor the percent of table space used
+on isam and myisam tables on a mysql server.
+
+=head1 CONFIGURATION
+
+Configuration parameters for /etc/munin/plugin-conf.d/PLUGIN,
+if you need to override the defaults below:
+
+[mysql_isam_space_*]
+ env.mysqlopts    - Options to pass to mysql
+ env.statefile    - where to put the statefile
+ env.ignore       - Tables to ignore. Regex.
+ env.absolute     - use tables sizes, not percent of maximum
+
+=head2 DEFAULT CONFIGURATION
+
+[mysql_isam_space_*]
+ env.mysqlopts
+ env.statefile @@PLUGSTATE@@/plugin-mysql_isam_space.state
+ env.ignore
+ env.absolute 0
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+=begin comment
+
+These magic markers are used by munin-node-configure when installing
+munin-node.
+
+=end comment
+
+ #%# family=auto
+ #%# capabilities=suggest autoconf
+
+=cut
+
 
 my $DB = `basename $0 | sed 's/^mysql_isam_space_//g' | tr '_' '-'` ;
 chomp $DB;
