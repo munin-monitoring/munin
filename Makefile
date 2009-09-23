@@ -180,6 +180,7 @@ build/%: %.in
              -e 's|@@PERL@@|$(PERL)|g'                          \
              -e 's|@@PERLLIB@@|$(PERLLIB)|g'                    \
              -e 's|@@PYTHON@@|$(PYTHON)|g'                      \
+             -e 's|@@RUBY@@|$(RUBY)|g'                          \
              -e 's|@@OSTYPE@@|$(OSTYPE)|g'                      \
              -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'                  \
              -e 's|@@MKTEMP@@|$(MKTEMP)|g'                      \
@@ -217,6 +218,7 @@ common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm
                   s{(PERL	\s+=\s).*}{\1q{$(PERL)};}x;        \
                   s{(PERLLIB	\s+=\s).*}{\1q{$(PERLLIB)};}x;     \
                   s{(PYTHON	\s+=\s).*}{\1q{$(PYTHON)};}x;      \
+                  s{(RUBY       \s+=\s).*}{\1q{$(RUBY)};}x;        \
                   s{(OSTYPE	\s+=\s).*}{\1q{$(OSTYPE)};}x;      \
                   s{(HOSTNAME	\s+=\s).*}{\1q{$(HOSTNAME)};}x;    \
                   s{(MKTEMP	\s+=\s).*}{\1q{$(MKTEMP)};}x;      \

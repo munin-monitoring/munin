@@ -37,6 +37,7 @@ our $MUNIN_PERLLIB    = '';
 our $MUNIN_GOODSH     = '';
 our $MUNIN_BASH       = '';
 our $MUNIN_PYTHON     = '';
+our $MUNIN_RUBY       = '';
 our $MUNIN_OSTYPE     = '';
 our $MUNIN_HOSTNAME   = '';
 our $MUNIN_MKTEMP     = '';
