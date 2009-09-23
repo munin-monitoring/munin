@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!@@PERL@@ -w
 
 # Copyright Bjorn Ruberg <bjorn@ruberg.no>
 # Licenced under GPL v2

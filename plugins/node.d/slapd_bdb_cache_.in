@@ -1,6 +1,6 @@
-#!/usr/bin/perl -w
+#!@@PERL@@ -w
 
-# Plugin copyright Bjorn Ruberg <bjorn@ruberg.no> 20052006
+# Plugin copyright Bjorn Ruberg <bjorn@ruberg.no> 2005-2009
 # 
 # Licensed under GPLv2. Be nice.
 #
@@ -8,7 +8,9 @@
 #
 #   - dbstat   The full path to a db_stat binary able to
 #              communicate with the LDAP backend BDB
-#              database files.
+#              database files. RHEL and friends use
+#              slapd_db_stat, while Debian and such use
+#              e.g. db4.6_stat.
 #   - dbdir    The full path to the directory where
 #              the LDAP backend BDB database files are.
 #   - title    (Optional) The plugin's title. Useful if you
@@ -22,7 +24,19 @@
 # - The plugin only checks _one_ database directory. To work
 #   around that, i.e. if you have more than one DIT in your
 #   OpenLDAP, create symlinked files and corresponding entries
-#   in the Munin environment file(s).
+#   in the Munin environment file(s). Note that this will
+#   break autoconf, i.e. autoconf will probably still suggest
+#   a default set of symlinks.
+#
+#   Sample config for multiple database directories:
+#   [slapd_bdb_cache_*]
+#   env.dbstat /usr/bin/db4.6_stat
+#
+#   [slapd_bdb_cache_database1_*]
+#   env.dbdir /var/lib/ldap/database1
+#
+#   [slapd_bdb_cache_database2_*]
+#   env.dbdir /var/lib/ldap/database2
 #
 # Magic markers
 #%# family=auto
@@ -33,8 +47,8 @@ use strict;
 use vars qw ( $measure $config $dbdir $dbstat $warning);
 my $arg = shift (@ARGV);
 
-# Finding dbN.N_stat should be done here
-$dbstat = ($ENV{'dbstat'} || "/usr/bin/db4.2_stat");
+# Finding db_stat should be done here
+$dbstat = ($ENV{'dbstat'} || "/usr/bin/db4.6_stat");
 die ("Can't execute db_stat file '$dbstat'") unless -x $dbstat;
 
 # Also the LDAP database files
