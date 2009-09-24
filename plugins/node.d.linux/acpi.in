@@ -45,6 +45,8 @@ esac
 
 exit $?
 
+: <<=cut 
+
 =head1 NAME
 
 acpi - Munin plugin to monitor the temperature in different ACPI Thermal zones.
