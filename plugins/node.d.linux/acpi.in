@@ -1,49 +1,5 @@
 #!@@GOODSH@@
-#
-# ACPI Thermal zone plugin for munin.
-#   - Nicolai Langfeldt (janl@linpro.no) 2006-11-13
-# License: GPL
-
-ATZ="$(echo /proc/acpi/thermal_zone/*/temperature)"
-
-do_ () { # Fetch
-    echo "$ATZ" | tr ' ' '\n' | awk -F'[ /\t]*' '{
-         ZONE=$5
-         getline < $0
-         print ZONE".value "$2
-    }'
-    exit 0
-}
-
-do_config () {
-    echo "graph_title ACPI Thermal zone temperatures"
-    echo "graph_vlabel Celcius"
-    echo "graph_category sensors"
-    echo "graph_info This graph shows the temperature in different ACPI Thermal zones.  If there is only one it will usually be the case temperature."
-    echo "$ATZ" |
-    awk -F'[ /]' '{
-         print $5".label "$5;
-    }'
-                  
-}
-
-do_autoconf () {
-    for f in $ATZ; do
-	test -r $f || {
-	    echo "no (cannot read $f)"
-	    exit 0
-	}
-    done
-    echo yes
-    exit 0
-}
-
-case $1 in
-    config|autoconf|'')
-	eval do_$1
-esac
-
-exit $?
+# -*- sh -*-
 
 : <<=cut 
 
@@ -89,4 +45,46 @@ Nicolai Langfeldt (janl@linpro.no) 2006-11-13
 GPLv2
 
 =cut
+
+
+ATZ="$(echo /proc/acpi/thermal_zone/*/temperature)"
+
+do_ () { # Fetch
+    echo "$ATZ" | tr ' ' '\n' | awk -F'[ /\t]*' '{
+         ZONE=$5
+         getline < $0
+         print ZONE".value "$2
+    }'
+    exit 0
+}
+
+do_config () {
+    echo "graph_title ACPI Thermal zone temperatures"
+    echo "graph_vlabel Celcius"
+    echo "graph_category sensors"
+    echo "graph_info This graph shows the temperature in different ACPI Thermal zones.  If there is only one it will usually be the case temperature."
+    echo "$ATZ" |
+    awk -F'[ /]' '{
+         print $5".label "$5;
+    }'
+                  
+}
+
+do_autoconf () {
+    for f in $ATZ; do
+	test -r $f || {
+	    echo "no (cannot read $f)"
+	    exit 0
+	}
+    done
+    echo yes
+    exit 0
+}
+
+case $1 in
+    config|autoconf|'')
+	eval do_$1
+esac
+
+exit $?
 
