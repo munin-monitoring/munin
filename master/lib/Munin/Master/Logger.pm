@@ -4,7 +4,7 @@ package Munin::Master::Logger;
 
 =head1 NAME
 
-Munin::Master::Logger 
+Munin::Master::Logger - Munin master's old logging routines
 
 =head1 SYNOPSIS
 
