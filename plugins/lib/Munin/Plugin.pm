@@ -29,7 +29,9 @@ use strict;
 
 ## no critic Prototypes
 
-=head1 Munin::Plugin - Utility functions for Perl Munin plugins.
+=head1 NAME 
+
+Munin::Plugin - Utility functions for Perl Munin plugins.
 
 =head2 Usage
 
