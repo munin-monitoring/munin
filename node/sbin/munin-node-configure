@@ -24,7 +24,7 @@ use warnings;
 
 use Getopt::Long;
 use POSIX ();
-use File::Basename;
+use File::Basename qw(fileparse);
 
 use Data::Dumper;
 use Carp;
@@ -125,7 +125,7 @@ sub parse_args
 	}
 
 	if (@families) {
-	    @families = split(/,/, $families[0]);
+	    @families = map { split /,/ } @families;
 	} else {
 	    if (@snmp) {
 		@families = ('snmpauto');
@@ -247,7 +247,7 @@ with this software or refer to
 }
 
 
-sub normal
+sub print_table_entry
 {
 	printf "%-26s | %-4s | %-39s\n", @_;
 	return;
@@ -263,8 +263,8 @@ sub print_status_list
 {
 	my ($plugins) = @_;
 
-	normal("Plugin", "Used", "Extra information");
-	normal("------", "----", "-----------------");
+	print_table_entry("Plugin", "Used", "Extra information");
+	print_table_entry("------", "----", "-----------------");
 
 	foreach my $plug (sort keys %$plugins) {
 		my $plugin = $plugins->{$plug};
@@ -276,7 +276,7 @@ sub print_status_list
 		if ($plugin->{wildcard} and @installed) {
 			$suggestions = join ' ', @installed;
 		}
-		normal($plug, $now, $suggestions);
+		print_table_entry($plug, $now, $suggestions);
 	}
 
 	return;
@@ -293,9 +293,6 @@ sub print_status_list
 sub diff_suggestions
 {
 	my ($installed, $suggested) = @_;
-
-	$installed ||= [];
-	$suggested ||= [];
 
 	my (%remove, %add, %same);
 	@remove{ @$installed } = ();
@@ -348,8 +345,8 @@ sub show_suggestions
 	my ($plugins) = @_;
 
 	unless ($config->{shell}) {
-		normal("Plugin", "Used", "Suggestions");
-		normal("------", "----", "-----------");
+		print_table_entry("Plugin", "Used", "Suggestions");
+		print_table_entry("------", "----", "-----------");
 	}
 
 	foreach my $plugin (sort keys %$plugins) {
@@ -387,7 +384,7 @@ sub print_suggestion_row {
     $msg = "[$plug_info->{defaultreason}]";
   }
 
-  normal($plug_info->{name}, $now, "$plug_info->{default} $msg");
+  print_table_entry($plug_info->{name}, $now, "$plug_info->{default} $msg");
   return;
 }
 
@@ -650,15 +647,6 @@ sub load_available_plugins
 
 	while (my $plug = readdir $LIBDIR) {
 		my $path = "$config->{libdir}/$plug";
-		my %plugin = (
-			name         => $plug,
-			default      => 'no',
-			installed    => [],
-			suggestions  => [],
-			family       => 'contrib',
-			capabilities => {},
-		);
-
 		unless (Munin::Node::Service->is_a_runnable_service($plug, $config->{libdir})) {
 			DEBUG("Ignoring '$path'.");
 			next;
@@ -670,10 +658,19 @@ sub load_available_plugins
 		# care unless we're going to try running it?
 		while (-l $path) {
 			$path = readlink($path);
-			$path = ($path =~ /^\//) ? $path
-			                         : "$config->{libdir}/$path";
+			$path = ($path =~ /^\//) ? $path : "$config->{libdir}/$path";
 		}
-		$plugin{path} = $path;  # the absolute path to the script
+
+		my %plugin = (
+			name         => $plug,
+			path         => $path,
+			default      => 'no',
+			installed    => [],
+			suggestions  => [],
+			family       => 'contrib',
+			capabilities => {},
+		);
+
 		$plugin{wildcard}++ if $path =~ /_$/;
 
 		read_magic_markers(\%plugin);
@@ -827,10 +824,6 @@ sub fetch_plugin_suggestions
 
 	# Only run if the autoconf gave the go-ahead
 	return unless ($plugin->{default} eq "yes");
-
-	# FIXME: is this required?  there shouldn't be any need to check
-	# suggestions if the plugin suffered a fatal error.
-	$plugin->{suggestions} = [];
 
 	my @suggested = run_plugin($plugin->{name}, 'suggest');
 	return parse_suggest_response($plugin, @suggested);
