@@ -268,16 +268,14 @@ sub print_status_list
 
 	foreach my $plug (sort keys %$plugins) {
 		my $plugin = $plugins->{$plug};
-		my $now = $plugin->{installed} ? "yes" : "no";
-		my $suggested = $plugin->{installed} || [];
+		
+		my @installed = @{$plugin->{installed}};
+		my $now = @installed ? "yes" : "no";
 
 		my $suggestions = '';
-
-		if ($plugin->{wildcard} and @$suggested) {
-			# It's a wildcard, and there are suggestions
-			$suggestions = join ' ', @$suggested;
+		if ($plugin->{wildcard} and @installed) {
+			$suggestions = join ' ', @installed;
 		}
-
 		normal($plug, $now, $suggestions);
 	}
 
@@ -357,7 +355,9 @@ sub show_suggestions
 	foreach my $plugin (sort keys %$plugins) {
 		my $plug_info = $plugins->{$plugin};
 
-		next unless $plug_info->{capabilities}{autoconf};
+		next unless $plug_info->{capabilities}{autoconf}
+		         or $plug_info->{capabilities}{snmpconf};
+
 		$config->{shell} ? manage_links($plug_info)
 		                 : print_suggestion_row($plug_info);
 	}
@@ -650,7 +650,14 @@ sub load_available_plugins
 
 	while (my $plug = readdir $LIBDIR) {
 		my $path = "$config->{libdir}/$plug";
-		my %plugin;
+		my %plugin = (
+			name         => $plug,
+			default      => 'no',
+			installed    => [],
+			suggestions  => [],
+			family       => 'contrib',
+			capabilities => {},
+		);
 
 		unless (Munin::Node::Service->is_a_runnable_service($plug, $config->{libdir})) {
 			DEBUG("Ignoring '$path'.");
@@ -666,11 +673,8 @@ sub load_available_plugins
 			$path = ($path =~ /^\//) ? $path
 			                         : "$config->{libdir}/$path";
 		}
-
-		$plugin{wildcard}++ if $path =~ /_$/;
-
-		$plugin{name} = $plug;  # the name of the plugin file
 		$plugin{path} = $path;  # the absolute path to the script
+		$plugin{wildcard}++ if $path =~ /_$/;
 
 		read_magic_markers(\%plugin);
 
