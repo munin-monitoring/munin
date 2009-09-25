@@ -4,8 +4,13 @@
 #
 # $Id$
 
-# Defaults/paths from this file
-include Makefile.config
+# Defaults/paths. Allows $(CONFIG) to be overrided by
+# make command line
+DEFAULTS = Makefile.config
+CONFIG = Makefile.config
+
+include $(DEFAULTS)
+include $(CONFIG)
 
 RELEASE          := $(shell cat RELEASE)
 INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
