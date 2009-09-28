@@ -62,7 +62,7 @@ if (defined $ENV{'SHOW_NUMBERED'}) {
 };
 
 if (system("grep -q '' /proc/diskstats > /dev/null 2>&1") == 0 ||
-    system("grep -q 'rio rmerge rsect ruse wio wmerge wsect wuse running use aveq' /proc/partitions") == 0) {
+    system("grep -q 'rio rmerge rsect ruse wio wmerge wsect wuse running use aveq' /proc/partitions > /dev/null 2>&1") == 0) {
     $detailed_present = 1;
 } elsif (system("grep -q '^disk_io: [^ ]' /proc/stat") == 0) {
     $stat_present = 1;
