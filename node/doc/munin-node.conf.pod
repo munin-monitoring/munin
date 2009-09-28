@@ -57,7 +57,7 @@ owned by root. Default on.
 
 =item B<< ignore_file <regex> >>
 
-Files matching &lt;regex&gt; in the node.d/ and node-conf.d/
+Files matching E<lt>regexE<gt> in the node.d/ and node-conf.d/
 directories will be overlooked.
 
 =back
