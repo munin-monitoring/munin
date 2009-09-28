@@ -39,7 +39,7 @@ Munin::Plugin - Utility functions for Perl Munin plugins.
   use Munin::Plugin;
 
 If your Munin installation predates the MUNIN_* environment variables
-(introduced in 1.3.3) you can put this in your plugin configutation:
+(introduced in 1.3.3) you can put this in your plugin configuration:
 
   [*]
       env.MUNIN_PLUGSTATE /lib/munin/plugin-state
