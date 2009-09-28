@@ -80,7 +80,7 @@ if ( $ARGV[0] eq "autoconf" ) {
 if ( $ARGV[0] eq "config" ) {
 
     # The headers
-    print "graph_title Inode usage (in %)\n";
+    print "graph_title Inode usage in percent\n";
     print "graph_args --upper-limit 100 -l 0\n";
     print "graph_vlabel %\n";
     print "graph_scale no\n";
