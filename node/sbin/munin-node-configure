@@ -268,7 +268,7 @@ sub print_status_list
 
 	foreach my $plug (sort keys %$plugins) {
 		my $plugin = $plugins->{$plug};
-		
+
 		my @installed = @{$plugin->{installed}};
 		my $now = @installed ? "yes" : "no";
 
@@ -368,11 +368,11 @@ sub print_suggestion_row {
   my ($plug_info) = @_;
 
   my $msg = '';  # either [reason] or (+add/-remove)
-  my $now = $plug_info->{installed} ? 'yes' : 'no';
+  my $now = @{$plug_info->{installed}} ? 'yes' : 'no';
 
   if ($plug_info->{wildcard}) {
     my ($same, $add, $remove) = diff_suggestions($plug_info->{installed},
-						 $plug_info->{suggestions});
+                                                 $plug_info->{suggestions});
     my @suggestions = @$same;
     push @suggestions, map { '+' . $_ } @$add;
     push @suggestions, map { '-' . $_ } @$remove;
@@ -401,8 +401,8 @@ sub manage_links {
     }
   } elsif ($plugin->{wildcard}) {
     # Yes, and wildcard.  Add and remove links to get them in sync
-    my ($same, $add, $remove) = diff_suggestions($plugin->{installed},
-						 $plugin->{suggestions});
+    my ($same, $add, $remove) = diff_suggestions($plugin->{installed_links},
+                                                 $plugin->{suggested_links});
     foreach my $to_add (@$add) {
       link_add($plugin->{name}, $to_add);
     }
@@ -434,11 +434,11 @@ sub link_remove
 
 sub link_add
 {
-	my $plug = shift;
-	my $wild = shift || '';
+	my ($plugin, $service) = @_;
+	$service ||= $plugin;
 
-	my $from = "$config->{libdir}/$plug";
-	my $to   = "$config->{servicedir}/$plug$wild";
+	my $from = "$config->{libdir}/$plugin";
+	my $to   = "$config->{servicedir}/$service";
 
 	print "ln -s '$from' '$to'\n";
 
@@ -533,8 +533,9 @@ sub load_installed_plugins
 			# FIXME: doesn't work with snmp__* plugins
 			(my $wild = $service) =~ s/^$realfile//;
 
-			DEBUG("\tAdding suggestion '$wild'");
+			DEBUG("\tAdding wildcard instance '$wild'");
 			push @{ $plugins->{$realfile}->{installed} }, $wild;
+			push @{ $plugins->{$realfile}->{installed_links} }, $service;
 		}
 
 		$service_count++;
@@ -667,6 +668,8 @@ sub load_available_plugins
 			default      => 'no',
 			installed    => [],
 			suggestions  => [],
+			installed_links => [],
+			suggested_links => [],
 			family       => 'contrib',
 			capabilities => {},
 		);
@@ -839,6 +842,7 @@ sub parse_suggest_response
 			# This looks like it should be a suggestion.
 			DEBUG("\tAdded suggestion: $line");
 			push @{ $plugin->{suggestions} }, $line;
+			push @{ $plugin->{suggested_links} }, $plugin->{name} . $line;
 		}
 		else {
 			log_error($plugin->{name}, "\tBad suggestion: $line");

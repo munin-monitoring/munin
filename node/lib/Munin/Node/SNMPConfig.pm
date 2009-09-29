@@ -125,7 +125,9 @@ sub snmp_probe_host
 
 		if (my @suggestions = _snmp_autoconf_plugin($plugin, $session)) {
 			# do something useful with it...
-			push @{ $plugin->{suggestions} }, @suggestions;
+			$plugin->{default} = 'yes';
+			push @{ $plugin->{suggestions} }, map { join '/', @$_ } @suggestions;
+			push @{ $plugin->{suggested_links} }, map { _expand_link_name($plugin, @$_) } @suggestions;
 		}
 		else {
 			print "# Host '$host' doesn't support $plugin->{name}\n"
@@ -208,6 +210,15 @@ sub _snmp_autoconf_plugin
 	my $hostname = $session->hostname;
 	return $plugin->{wildcard} ? map { [ $hostname, $_ ] } @valid_indexes
 	                           : [ $hostname ];
+}
+
+
+sub _expand_link_name
+{
+	my ($plugin, $hostname, $wild) = @_;
+	$wild ||= '';
+	(my $plugname = $plugin->{name}) =~ s/^snmp_//;
+	return 'snmp_' . $hostname . $plugname . $wild;
 }
 
 
