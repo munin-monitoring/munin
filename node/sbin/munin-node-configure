@@ -33,6 +33,8 @@ use Munin::Node::Config;
 use Munin::Node::Service;
 use Munin::Common::Defaults;
 
+use Munin::Node::Configure::Plugin;
+
 my $config = Munin::Node::Config->instance();
 
 my $timeout = 10;
@@ -273,7 +275,7 @@ sub print_status_list
 		my $now = @installed ? "yes" : "no";
 
 		my $suggestions = '';
-		if ($plugin->{wildcard} and @installed) {
+		if ($plugin->is_wildcard and @installed) {
 			$suggestions = join ' ', @installed;
 		}
 		print_table_entry($plug, $now, $suggestions);
@@ -331,7 +333,7 @@ sub gather_suggestions
 		fetch_plugin_autoconf($plug_info);
 
 		fetch_plugin_suggestions($plug_info)
-			if ($plug_info->{wildcard}
+			if ($plug_info->is_wildcard
 			and $plug_info->{capabilities}{suggest});
 	}
 
@@ -370,7 +372,7 @@ sub print_suggestion_row {
   my $msg = '';  # either [reason] or (+add/-remove)
   my $now = @{$plug_info->{installed}} ? 'yes' : 'no';
 
-  if ($plug_info->{wildcard}) {
+  if ($plug_info->is_wildcard) {
     my ($same, $add, $remove) = diff_suggestions($plug_info->{installed},
                                                  $plug_info->{suggestions});
     my @suggestions = @$same;
@@ -399,7 +401,7 @@ sub manage_links {
     foreach my $link (@{ $plugin->{installed} }) {
       link_remove($link);
     }
-  } elsif ($plugin->{wildcard}) {
+  } elsif ($plugin->is_wildcard) {
     # Yes, and wildcard.  Add and remove links to get them in sync
     my ($same, $add, $remove) = diff_suggestions($plugin->{installed_links},
                                                  $plugin->{suggested_links});
@@ -527,7 +529,7 @@ sub load_installed_plugins
 			next;
 		}
 
-		if ($plugins->{$realfile}->{wildcard}) {
+		if ($plugins->{$realfile}->is_wildcard) {
 			DEBUG("\tWildcard plugin '$service' resolves to '$realfile'");
 
 			# FIXME: doesn't work with snmp__* plugins
@@ -662,33 +664,24 @@ sub load_available_plugins
 			$path = ($path =~ /^\//) ? $path : "$config->{libdir}/$path";
 		}
 
-		my %plugin = (
-			name         => $plug,
-			path         => $path,
-			default      => 'no',
-			installed    => [],
-			suggestions  => [],
-			installed_links => [],
-			suggested_links => [],
-			family       => 'contrib',
-			capabilities => {},
+		my $plugin = Munin::Node::Configure::Plugin->new(
+					name => $plug,
+					path => $path,
 		);
 
-		$plugin{wildcard}++ if $path =~ /_$/;
+		read_magic_markers($plugin);
 
-		read_magic_markers(\%plugin);
-
-		unless (grep { $plugin{family} eq $_ } @{ $config->{families} }) {
-			DEBUG("\tFamily '$plugin{family}' is currently ignored.  Skipping.");
+		unless (grep { $plugin->{family} eq $_ } @{ $config->{families} }) {
+			DEBUG("\tFamily '$plugin->{family}' is currently ignored.  Skipping.");
 			next;
 		}
 
-		if (($plugin{family} eq "auto") and $config->{newer} and $plugin{version}) {
+		if (($plugin->{family} eq "auto") and $config->{newer} and $plugin->{version}) {
 			DEBUG("\tPlugin is older than $config->{newer}.  Skipping.");
 			next;
 		}
 
-		$found{$plug} = \%plugin;
+		$found{$plug} = $plugin;
 	}
 	close ($LIBDIR);
 
