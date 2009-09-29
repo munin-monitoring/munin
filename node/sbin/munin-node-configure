@@ -114,18 +114,6 @@ sub parse_args
 
 	$config->parse_config_from_file($conffile);
 
-	# Sanity-check arguments
-	if ($newer and $newer !~ /^\d+\.\d+\.\d+/) {
-		# FIXME: not a very good warning....
-		warn "# ERROR: $newer is not a valid argument to --newer.  Ignoring.\n";
-		undef $newer;
-	}
-
-	if ($newer and (!$shell or $removes)) {
-	    print STDERR "Fatal: --newer only supported along with --shell.\n";
-	    exit 2;
-	}
-
 	if (@families) {
 	    @families = map { split /,/ } @families;
 	} else {
@@ -542,7 +530,7 @@ sub load_installed_plugins
 
 		$service_count++;
 	}
-	close ($SERVICEDIR);
+	close($SERVICEDIR);
 
 	DEBUG("$service_count services currently installed.");
 	return;
@@ -551,7 +539,8 @@ sub load_installed_plugins
 
 sub load_plugin_history
 {
-	my ($plugins) = @_;
+	my ($newer) = @_;
+	my @valid_plugins;
 
 	my $hist_file = "$config->{libdir}/plugins.history";
 
@@ -577,7 +566,7 @@ sub load_plugin_history
 		if ($line =~ /^\[([^\]]+)\]$/) {
 		    $ver = $1;
 		    DEBUG("Setting version to '$ver'.");
-		    if ($ver eq $config->{newer}) {
+		    if ($ver eq $newer) {
 			$reached_version = 1;
 		    } elsif ($reached_version) {
 			$reached_version++;
@@ -588,18 +577,22 @@ sub load_plugin_history
 		}
 		elsif ($line =~ /^([^\/]+)\/(.+)$/) {
 		    if ($uname eq $1) {
-			$plugins->{$2}->{version} = $ver;
+			push @valid_plugins, $2;
 			DEBUG("- Adding plugin '$2' to version tree ($ver)");
 		    }
 		}
 		elsif ($line =~ /^(.+)$/) {
-		    $plugins->{$1}->{version} = $ver;
-		    DEBUG("- Adding plugin '$1' to version tree ($ver)");
+			push @valid_plugins, $1;
+			DEBUG("- Adding plugin '$1' to version tree ($ver)");
 		}
 	}
 	close $HIST;
 
-	return;
+	# FIXME: still not a good error message.  should this be non-fatal?
+	die "# FATAL: version '$newer' was not found in the plugin history file\n"
+		unless ($reached_version);
+
+	return map { $_ => 1 } @valid_plugins;
 }
 
 
@@ -641,7 +634,8 @@ sub load_available_plugins
 {
 	my %found;  # Plugins found
 
-	load_plugin_history() if $config->{newer};
+	my %valid_plugins = load_plugin_history($config->{newer})
+		if $config->{newer};
 
 	DEBUG("Searching '$config->{libdir}' for available plugins.");
 
@@ -676,7 +670,10 @@ sub load_available_plugins
 			next;
 		}
 
-		if (($plugin->{family} eq "auto") and $config->{newer} and $plugin->{version}) {
+		if (($plugin->{family} eq "auto")
+			and $config->{newer}
+			and not $valid_plugins{$plug})
+		{
 			DEBUG("\tPlugin is older than $config->{newer}.  Skipping.");
 			next;
 		}
