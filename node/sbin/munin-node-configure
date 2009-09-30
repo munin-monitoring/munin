@@ -499,17 +499,7 @@ sub load_installed_plugins
 			next;
 		}
 
-		if ($plugins->{$realfile}->is_wildcard) {
-			DEBUG("\tWildcard plugin '$service' resolves to '$realfile'");
-
-			# FIXME: doesn't work with snmp__* plugins
-			(my $wild = $service) =~ s/^$realfile//;
-
-			DEBUG("\tAdding wildcard instance '$wild'");
-			push @{ $plugins->{$realfile}->{installed} }, $wild;
-			push @{ $plugins->{$realfile}->{installed_links} }, $service;
-		}
-
+                $plugins->{$realfile}->add_instance($service);
 		$service_count++;
 	}
 	close($SERVICEDIR);

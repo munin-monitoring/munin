@@ -29,6 +29,8 @@ sub new
 }
 
 
+################################################################################
+
 sub is_wildcard { return ((shift)->{path} =~ /_$/); }
 
 sub is_installed { return @{(shift)->{installed}} ? 'yes' : 'no'; }
@@ -54,6 +56,25 @@ sub suggestion_string
     }
 
     return $self->{default} . ' ' . $msg;
+}
+
+
+sub add_instance
+{
+    my ($self, $instance) = @_;
+
+    if ($self->is_wildcard) {
+#       DEBUG("\tWildcard plugin '$service' resolves to '$realfile'");
+
+        # FIXME: doesn't work with snmp__* plugins
+        (my $wild = $instance) =~ s/^$self->{name}//;
+
+#       DEBUG("\tAdding wildcard instance '$wild'");
+        push @{ $self->{installed} },       $wild;
+        push @{ $self->{installed_links} }, $instance;
+    }
+
+    return;
 }
 
 
@@ -90,6 +111,8 @@ sub read_magic_markers
     return;
 }
 
+
+################################################################################
 
 sub parse_autoconf_response
 {
