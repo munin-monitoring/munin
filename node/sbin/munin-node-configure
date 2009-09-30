@@ -83,7 +83,7 @@ sub parse_args
 
 	my $debug;
 	my ($suggest, $shell, $removes, $newer);
-	my $exit_not_error  = 1;
+	my $exit_not_error = 1;
 
 	my @families;
 
@@ -355,27 +355,9 @@ sub show_suggestions
 
 # prints out the tabular representation of the suggestion
 sub print_suggestion_row {
-  my ($plug_info) = @_;
-
-  my $msg = '';  # either [reason] or (+add/-remove)
-  my $now = @{$plug_info->{installed}} ? 'yes' : 'no';
-
-  if ($plug_info->is_wildcard) {
-    my ($same, $add, $remove) = diff_suggestions($plug_info->{installed},
-                                                 $plug_info->{suggestions});
-    my @suggestions = @$same;
-    push @suggestions, map { '+' . $_ } @$add;
-    push @suggestions, map { '-' . $_ } @$remove;
-
-    $msg = '(' . join(' ', @suggestions) . ')' if @suggestions;
-  }
-  elsif ($plug_info->{defaultreason}) {
-    # Report why it's not being used
-    $msg = "[$plug_info->{defaultreason}]";
-  }
-
-  print_table_entry($plug_info->{name}, $now, "$plug_info->{default} $msg");
-  return;
+    my ($plugin) = @_;
+    print_table_entry($plugin->{name}, $plugin->is_installed, $plugin->suggestion_string);
+    return;
 }
 
 
@@ -596,40 +578,6 @@ sub load_plugin_history
 }
 
 
-# Extracts any magic-markers from the plugin
-sub read_magic_markers
-{
-	my ($info) = @_;
-	my $PLUGIN;
-
-	$info->{family} = 'contrib';
-	$info->{capabilities} = {};
-
-	DEBUG("\tReading magic markers.");
-
-	unless (open ($PLUGIN, '<', $info->{path})) {
-		DEBUG("Could not open plugin '$info->{path}' for reading: $!");
-		return;
-	}
-
-	while (<$PLUGIN>) {
-		if (/#%#\s+family\s*=\s*(\S+)\s*/) {
-			$info->{family} = $1;
-			DEBUG("\tSet family to '$1'." );
-		}
-		elsif (/#%#\s+capabilities\s*=\s*(.+)/) {
-			my @caps = split(/\s+/, $1);
-			foreach my $capability (@caps) {
-				$info->{capabilities}{$capability} = 1;
-			}
-			DEBUG("\tCapabilities are: ", join(', ', @caps));
-		}
-	}
-	close ($PLUGIN);
-	return;
-}
-
-
 sub load_available_plugins
 {
 	my %found;  # Plugins found
@@ -663,7 +611,7 @@ sub load_available_plugins
 					path => $path,
 		);
 
-		read_magic_markers($plugin);
+		$plugin->read_magic_markers();
 
 		unless (grep { $plugin->{family} eq $_ } @{ $config->{families} }) {
 			DEBUG("\tFamily '$plugin->{family}' is currently ignored.  Skipping.");
@@ -769,43 +717,8 @@ sub run_plugin
 sub fetch_plugin_autoconf
 {
 	my ($plugin) = @_;
-
-	# Default to the safe option
-	$plugin->{default} = 'no';
-
 	my @response = run_plugin($plugin->{name}, 'autoconf');
-	return parse_autoconf_response($plugin, @response);
-}
-
-
-sub parse_autoconf_response
-{
-	my ($plugin, @response) = @_;
-
-	# If there's anything else, it means more than one line was printed
-	unless (scalar(@response) == 1) {
-		# FIXME: not a good message
-		log_error($plugin->{name}, 'Wrong amount of autoconf');
-		return;
-	}
-
-	my $line = shift @response;
-
-	# The line it did print isn't in a valid format
-	unless ($line =~ /^(yes)$/
-	     or $line =~ /^(no)(?:\s+\((.*)\))?\s*$/)
-	{
-		log_error($plugin->{name}, "Junk printed to stdout");
-		return;
-	}
-
-	# Some recognized response
-	DEBUG("\tGot yes/no: $line");
-
-	$plugin->{default} = $1;
-	$plugin->{defaultreason} = $2;
-
-	return;
+	return $plugin->parse_autoconf_response(@response);
 }
 
 
@@ -1107,3 +1020,4 @@ This program is released under the GNU General Public License
 
 =cut
 
+# vim: sw=4 : expandtab
