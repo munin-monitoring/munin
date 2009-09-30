@@ -122,6 +122,101 @@ sub parse_autoconf_response
 }
 
 
+sub parse_suggest_response
+{
+    my ($plugin, @suggested) = @_;
+
+    foreach my $line (@suggested) {
+        if ($line =~ /^[-\w.]+$/) {
+            # This looks like it should be a suggestion.
+#           DEBUG("\tAdded suggestion: $line");
+            push @{ $plugin->{suggestions} }, $line;
+            push @{ $plugin->{suggested_links} }, $plugin->{name} . $line;
+        }
+        else {
+#           log_error($plugin->{name}, "\tBad suggestion: $line");
+        }
+    }
+
+    unless (@{ $plugin->{suggestions} }) {
+#       log_error($plugin->{name}, "No suggestions");
+        return;
+    }
+
+    return;
+}
+
+
+my $oid_pattern      = qr/^[0-9.]+[0-9]+$/;
+my $oid_root_pattern = qr/^[0-9.]+\.$/;
+
+sub parse_snmpconf_response
+{
+    my ($plugin, @response) = @_;
+
+    foreach my $line (@response) {
+        my ($key, $value) = $line =~ /(\w+)\s+(.+\S)/;
+
+        next unless defined $key and defined $value;
+
+#       DEBUG("\tAnalysing line: $line");
+
+        if ($key eq 'require') {
+            my ($oid, $regex) = split /\s+/, $value, 2;
+
+            if ($oid =~ /$oid_root_pattern/) {
+                $oid =~ s/\.$//;
+                push @{ $plugin->{require_root} }, [$oid, $regex];
+
+#               DEBUG("\tRegistered 'require': $oid");
+#               DEBUG("\t\tFiltering on /$regex/") if $regex;
+            }
+            elsif ($oid =~ /$oid_pattern/) {
+                push @{ $plugin->{require_oid} }, [$oid, $regex];
+
+#               DEBUG("\tRegistered 'require': $oid");
+#               DEBUG("\t\tFiltering on /$regex/") if $regex;
+            }
+            else {
+#               log_error($plugin->{name},
+#                   "Invalid format for 'require': $value");
+            }
+        }
+        elsif ($key eq 'index') {
+            if ($plugin->{index}) {
+#               log_error($plugin->{name}, 'index redefined');
+                next;
+            }
+            unless ($value =~ /$oid_root_pattern/) {
+#               log_error($plugin->{name}, 'index must be an OID root');
+                next;
+            }
+
+            ($plugin->{index} = $value) =~ s/\.$//;
+#           DEBUG("\tRegistered 'index'  : $value");
+        }
+        elsif ($key eq 'number') {
+            if ($plugin->{number}) {
+#               log_error($plugin->{name}, 'number redefined');
+                next;
+            }
+
+            unless ($value =~ /$oid_pattern/) {
+#               log_error($plugin->{name}, 'number must be an OID');
+                next;
+            }
+
+            $plugin->{number} = $value;
+#           DEBUG("\tRegistered 'number' : $value");
+        }
+        else {
+#           log_error($plugin->{name}, "Couldn't parse line: $line");
+        }
+    }
+
+    return;
+}
+
 
 1;
-# vim: sw=4 : expandtab
+# vim: sw=4 : ts=4 : expandtab
