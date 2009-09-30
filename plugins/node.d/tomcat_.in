@@ -139,7 +139,8 @@ def autoconf()
 end
 
 if ARGV[0] == "autoconf"
-    exit autoconf()
+    autoconf()
+    exit 0
 end
 
 if ARGV[0] == "suggest"
