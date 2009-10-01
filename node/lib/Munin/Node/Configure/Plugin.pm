@@ -3,6 +3,8 @@ package Munin::Node::Configure::Plugin;
 use strict;
 use warnings;
 
+use Data::Dumper;
+
 
 sub new
 {
@@ -36,14 +38,45 @@ sub is_wildcard { return ((shift)->{path} =~ /_$/); }
 sub is_installed { return @{(shift)->{installed}} ? 'yes' : 'no'; }
 
 
+# reports which wildcard plugin identities should be added, removed,
+# or left as they are.  in (sort of) mathematical terms:
+#   (remove) = (installed) \ (suggested)
+#   (add)    = (suggested) \ (installed)
+#   (same)   = (installed) ⋂ (suggested)
+sub diff_suggestions
+{
+    my ($installed, $suggested) = @_;
+
+    my (%remove, %add, %same);
+    @remove{ @$installed } = ();
+    @add{ @$suggested }    = ();
+    @same{ @$installed }   = (1) x scalar @$installed;
+
+    foreach my $to_remove (@$suggested) {
+        delete $remove{$to_remove};
+    }
+
+    foreach my $to_add (@$installed) {
+        delete $add{$to_add};
+    }
+
+    my @same = grep $same{$_}, @$suggested;
+
+    my @add    = sort keys %add;
+    my @remove = sort keys %remove;
+
+    return (\@same, \@add, \@remove);
+}
+
+
 sub suggestion_string
 {
     my ($self) = @_;
     my $msg = '';  # either [reason] or (+add/-remove)
 
     if ($self->is_wildcard) {
-        my ($same, $add, $remove) = main::diff_suggestions($self->{installed},
-                                                           $self->{suggestions});
+        my ($same, $add, $remove) = diff_suggestions($self->{installed},
+                                                     $self->{suggestions});
         my @suggestions = @$same;
         push @suggestions, map { '+' . $_ } @$add;
         push @suggestions, map { '-' . $_ } @$remove;
@@ -59,17 +92,70 @@ sub suggestion_string
 }
 
 
+sub installed_services_string
+{
+    my ($self) = @_;
+    my @installed = @{$self->{installed}};
+
+    my $suggestions = '';
+    if ($self->is_wildcard and @installed) {
+        $suggestions = join ' ', @installed;
+    }
+
+    return $suggestions;
+}
+
+
+# returns a list of service names that should be added for this plugin
+sub services_to_add
+{
+    my ($self) = @_;
+    my @to_add;
+
+    if ($self->is_wildcard) {
+        my ($same, $add, $remove) = diff_suggestions($self->{installed_links},
+                                                     $self->{suggested_links});
+        @to_add = @$add;
+    }
+    else {
+        @to_add = ($self->{name});
+    }
+
+    return @to_add;
+}
+
+
+# returns a list of service names that should be removed.
+sub services_to_remove
+{
+    my ($self) = @_;
+    my @to_remove;
+
+    if ($self->{default} eq 'no') {
+        # Damnatio memoriae!
+        @to_remove = @{ $self->{installed} };
+    }
+    elsif ($self->is_wildcard) {
+        my ($same, $add, $remove) = diff_suggestions($self->{installed_links},
+                                                     $self->{suggested_links});
+        @to_remove = @$remove;
+    }
+
+    return @to_remove;
+}
+
+
 sub add_instance
 {
     my ($self, $instance) = @_;
 
     if ($self->is_wildcard) {
-#       DEBUG("\tWildcard plugin '$service' resolves to '$realfile'");
+#        DEBUG("\tWildcard plugin '$service' resolves to '$realfile'");
 
         # FIXME: doesn't work with snmp__* plugins
         (my $wild = $instance) =~ s/^$self->{name}//;
 
-#       DEBUG("\tAdding wildcard instance '$wild'");
+#        DEBUG("\tAdding wildcard instance '$wild'");
         push @{ $self->{installed} },       $wild;
         push @{ $self->{installed_links} }, $instance;
     }

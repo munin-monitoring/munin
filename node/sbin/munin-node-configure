@@ -63,6 +63,7 @@ sub main
 		print_status_list($plugins);
 	}
 
+    # FIXME: surely exit 0 unless m-n-c itself has gone funny?
 	exit 0 unless list_errors();
 
 	print STDERR "# The following plugins caused errors:\n";
@@ -114,19 +115,10 @@ sub parse_args
 
 	$config->parse_config_from_file($conffile);
 
-	if (@families) {
-	    @families = map { split /,/ } @families;
-	} else {
-	    if (@snmp) {
-		@families = ('snmpauto');
-	    }
-	    elsif ($suggest or $shell) {
-		@families = @default_families;
-	    }
-	    else {
-		@families = @all_families;
-	    }
-	}
+    @families = (@families)          ? map { split /,/ } @families :
+                (@snmp)              ? ('snmpauto')                :
+                ($suggest or $shell) ? @default_families           :
+                                       @all_families               ;
 
 	$config->reinitialize({
 		timeout => $timeout,
@@ -258,15 +250,11 @@ sub print_status_list
 
 	foreach my $plug (sort keys %$plugins) {
 		my $plugin = $plugins->{$plug};
-
-		my @installed = @{$plugin->{installed}};
-		my $now = @installed ? "yes" : "no";
-
-		my $suggestions = '';
-		if ($plugin->is_wildcard and @installed) {
-			$suggestions = join ' ', @installed;
-		}
-		print_table_entry($plug, $now, $suggestions);
+        print_table_entry(
+            $plugin->{name},
+            $plugin->is_installed,
+            $plugin->installed_services_string
+        );
 	}
 
 	return;
@@ -274,37 +262,6 @@ sub print_status_list
 
 
 ### Reporting and managing suggestions #########################################
-
-# reports which wildcard plugin identities should be added, removed,
-# or left as they are.  in (sort of) mathematical terms:
-# 	(remove) = (installed) \ (suggested)
-# 	(add)    = (suggested) \ (installed)
-# 	(same)   = (installed) ⋂ (suggested)
-sub diff_suggestions
-{
-	my ($installed, $suggested) = @_;
-
-	my (%remove, %add, %same);
-	@remove{ @$installed } = ();
-	@add{ @$suggested }    = ();
-	@same{ @$installed }   = (1) x scalar @$installed;
-
-	foreach my $to_remove (@$suggested) {
-		delete $remove{$to_remove};
-	}
-
-	foreach my $to_add (@$installed) {
-		delete $add{$to_add};
-	}
-
-	my @same = grep $same{$_}, @$suggested;
-
-	my @add    = sort keys %add;
-	my @remove = sort keys %remove;
-
-	return (\@same, \@add, \@remove);
-}
-
 
 # Asks each available autoconf plugin whether or not it should be installed,
 # and (if it's a wildcard plugin) its suggested profiles.
@@ -354,38 +311,30 @@ sub show_suggestions
 
 
 # prints out the tabular representation of the suggestion
-sub print_suggestion_row {
+sub print_suggestion_row
+{
     my ($plugin) = @_;
-    print_table_entry($plugin->{name}, $plugin->is_installed, $plugin->suggestion_string);
+    print_table_entry(
+        $plugin->{name},
+        $plugin->is_installed,
+        $plugin->suggestion_string
+    );
     return;
 }
 
 
 # prints shell commands to get the system into the recommended
 # state by adding or removing symlinks
-sub manage_links {
-  my ($plugin) = @_;
+sub manage_links
+{
+    my ($plugin) = @_;
+    
+    link_add($plugin->{path}, $_) foreach $plugin->services_to_add();
+    if ($config->{remove_also}) {
+        link_remove($_) foreach $plugin->services_to_remove();
+    }
 
-  if ($plugin->{default} eq 'no') {
-    # Damnatio memoriae!
-    foreach my $link (@{ $plugin->{installed} }) {
-      link_remove($link);
-    }
-  } elsif ($plugin->is_wildcard) {
-    # Yes, and wildcard.  Add and remove links to get them in sync
-    my ($same, $add, $remove) = diff_suggestions($plugin->{installed_links},
-                                                 $plugin->{suggested_links});
-    foreach my $to_add (@$add) {
-      link_add($plugin->{name}, $to_add);
-    }
-    foreach my $to_remove (@$remove) {
-      link_remove($plugin->{name}, $to_remove);
-    }
-  } else {
-    # Yes, but not wildcard: just add a straight link
-    link_add($plugin->{name});
-  }
-  return;
+    return;
 }
 
 
@@ -393,12 +342,12 @@ sub manage_links {
 # symlink from the servicedir
 sub link_remove
 {
-	my $plug = shift;
+    my ($service) = shift;
 
 	return unless $config->{remove_also};
-	return unless (-l "$config->{servicedir}/$plug"); # Strange...
+    return unless (-l "$config->{servicedir}/$service"); # Strange...
 
-	print "rm -f '$config->{servicedir}/$plug'\n";
+    print "rm -f '$config->{servicedir}/$service'\n";
 
 	return;
 }
@@ -407,13 +356,7 @@ sub link_remove
 sub link_add
 {
 	my ($plugin, $service) = @_;
-	$service ||= $plugin;
-
-	my $from = "$config->{libdir}/$plugin";
-	my $to   = "$config->{servicedir}/$service";
-
-	print "ln -s '$from' '$to'\n";
-
+    print "ln -s '$plugin' '$config->{servicedir}/$service'\n";
 	return;
 }
 
@@ -499,7 +442,7 @@ sub load_installed_plugins
 			next;
 		}
 
-                $plugins->{$realfile}->add_instance($service);
+        $plugins->{$realfile}->add_instance($service);
 		$service_count++;
 	}
 	close($SERVICEDIR);
@@ -752,13 +695,6 @@ sub log_error
 }
 
 
-sub clear_errors
-{
-	%errors = ();
-	return;
-}
-
-
 sub list_errors
 {
 	my @error_list;
@@ -913,4 +849,4 @@ This program is released under the GNU General Public License
 
 =cut
 
-# vim: sw=4 : expandtab
+# vim: sw=4 : ts=4 : expandtab
