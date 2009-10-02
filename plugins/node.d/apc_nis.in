@@ -37,7 +37,7 @@ if($ARGV[0] and $ARGV[0] eq "config") {
 	print "battery_charge.max 200\n";
 	print "line_volt.label line (V)\n";
 	print "line_volt.type GAUGE\n";
-	print "line_volt.max 200\n";
+	print "line_volt.max 300\n";
 	print "load.label ups load (%)\n";
 	print "load.type GAUGE\n";
 	print "load.max 200\n";
