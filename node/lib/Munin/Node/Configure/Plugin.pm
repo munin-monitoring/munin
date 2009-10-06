@@ -10,8 +10,8 @@ sub new
 {
     my ($class, %opts) = @_;
 
-    my $name = delete $opts{name} or die;
-    my $path = delete $opts{path} or die;
+    my $name = delete $opts{name} or die "Must provide name\n";
+    my $path = delete $opts{path} or die "Must provide path\n";
 
     my %plugin = (
         name         => $name,
@@ -23,6 +23,7 @@ sub new
         suggested_links => [],
         family       => 'contrib',
         capabilities => {},
+        errors       => [],
 
         %opts,
     );
@@ -155,7 +156,7 @@ sub add_instance
         # FIXME: doesn't work with snmp__* plugins
         (my $wild = $instance) =~ s/^$self->{name}//;
 
-#        DEBUG("\tAdding wildcard instance '$wild'");
+        DEBUG("\tAdding wildcard instance '$wild'");
         push @{ $self->{installed} },       $wild;
         push @{ $self->{installed_links} }, $instance;
     }
@@ -170,27 +171,24 @@ sub read_magic_markers
     my ($self) = @_;
     my $PLUGIN;
 
-    $self->{family} = 'contrib';
-    $self->{capabilities} = {};
-
-#   DEBUG("\tReading magic markers.");
+    DEBUG("\tReading magic markers.");
 
     unless (open ($PLUGIN, '<', $self->{path})) {
-#       DEBUG("Could not open plugin '$self->{path}' for reading: $!");
+        DEBUG("Could not open plugin '$self->{path}' for reading: $!");
         return;
     }
 
     while (<$PLUGIN>) {
         if (/#%#\s+family\s*=\s*(\S+)\s*/) {
             $self->{family} = $1;
-#           DEBUG("\tSet family to '$1'." );
+            DEBUG("\tSet family to '$1'." );
         }
         elsif (/#%#\s+capabilities\s*=\s*(.+)/) {
             my @caps = split(/\s+/, $1);
             foreach my $capability (@caps) {
                 $self->{capabilities}{$capability} = 1;
             }
-#           DEBUG("\tCapabilities are: ", join(', ', @caps));
+            DEBUG("\tCapabilities are: ", join(', ', @caps));
         }
     }
     close ($PLUGIN);
@@ -198,16 +196,15 @@ sub read_magic_markers
 }
 
 
-################################################################################
+### Parsing plugin responses ###################################################
 
 sub parse_autoconf_response
 {
     my ($self, @response) = @_;
 
-    # If there's anything else, it means more than one line was printed
     unless (scalar(@response) == 1) {
         # FIXME: not a good message
-#       log_error($self->{name}, 'Wrong amount of autoconf');
+        $self->log_error('Wrong amount of autoconf');
         return;
     }
 
@@ -217,12 +214,11 @@ sub parse_autoconf_response
     unless ($line =~ /^(yes)$/
          or $line =~ /^(no)(?:\s+\((.*)\))?\s*$/)
     {
-#       log_error($self->{name}, "Junk printed to stdout");
+        $self->log_error("Junk printed to stdout");
         return;
     }
 
-    # Some recognized response
-#   DEBUG("\tGot yes/no: $line");
+    DEBUG("\tGot yes/no: $line");
 
     $self->{default} = $1;
     $self->{defaultreason} = $2;
@@ -233,22 +229,22 @@ sub parse_autoconf_response
 
 sub parse_suggest_response
 {
-    my ($plugin, @suggested) = @_;
+    my ($self, @suggested) = @_;
 
     foreach my $line (@suggested) {
         if ($line =~ /^[-\w.]+$/) {
             # This looks like it should be a suggestion.
-#           DEBUG("\tAdded suggestion: $line");
-            push @{ $plugin->{suggestions} }, $line;
-            push @{ $plugin->{suggested_links} }, $plugin->{name} . $line;
+            DEBUG("\tAdded suggestion: $line");
+            push @{ $self->{suggestions} }, $line;
+            push @{ $self->{suggested_links} }, $self->{name} . $line;
         }
         else {
-#           log_error($plugin->{name}, "\tBad suggestion: $line");
+            $self->log_error("\tBad suggestion: $line");
         }
     }
 
-    unless (@{ $plugin->{suggestions} }) {
-#       log_error($plugin->{name}, "No suggestions");
+    unless (@{ $self->{suggestions} }) {
+        $self->log_error("No suggestions");
         return;
     }
 
@@ -261,70 +257,88 @@ my $oid_root_pattern = qr/^[0-9.]+\.$/;
 
 sub parse_snmpconf_response
 {
-    my ($plugin, @response) = @_;
+    my ($self, @response) = @_;
 
     foreach my $line (@response) {
         my ($key, $value) = $line =~ /(\w+)\s+(.+\S)/;
 
-        next unless defined $key and defined $value;
+        next unless $key and defined $value;
 
-#       DEBUG("\tAnalysing line: $line");
+        DEBUG("\tAnalysing line: $line");
 
         if ($key eq 'require') {
             my ($oid, $regex) = split /\s+/, $value, 2;
 
             if ($oid =~ /$oid_root_pattern/) {
                 $oid =~ s/\.$//;
-                push @{ $plugin->{require_root} }, [$oid, $regex];
+                push @{ $self->{require_root} }, [$oid, $regex];
 
-#               DEBUG("\tRegistered 'require': $oid");
-#               DEBUG("\t\tFiltering on /$regex/") if $regex;
+                DEBUG("\tRegistered 'require': $oid");
+                DEBUG("\t\tFiltering on /$regex/") if $regex;
             }
             elsif ($oid =~ /$oid_pattern/) {
-                push @{ $plugin->{require_oid} }, [$oid, $regex];
+                push @{ $self->{require_oid} }, [$oid, $regex];
 
-#               DEBUG("\tRegistered 'require': $oid");
-#               DEBUG("\t\tFiltering on /$regex/") if $regex;
+                DEBUG("\tRegistered 'require': $oid");
+                DEBUG("\t\tFiltering on /$regex/") if $regex;
             }
             else {
-#               log_error($plugin->{name},
-#                   "Invalid format for 'require': $value");
+                $self->log_error("Invalid format for 'require': $value");
             }
         }
         elsif ($key eq 'index') {
-            if ($plugin->{index}) {
-#               log_error($plugin->{name}, 'index redefined');
+            if ($self->{index}) {
+                $self->log_error('index redefined');
                 next;
             }
             unless ($value =~ /$oid_root_pattern/) {
-#               log_error($plugin->{name}, 'index must be an OID root');
+                $self->log_error('index must be an OID root');
                 next;
             }
 
-            ($plugin->{index} = $value) =~ s/\.$//;
-#           DEBUG("\tRegistered 'index'  : $value");
+            ($self->{index} = $value) =~ s/\.$//;
+            DEBUG("\tRegistered 'index'  : $value");
         }
         elsif ($key eq 'number') {
-            if ($plugin->{number}) {
-#               log_error($plugin->{name}, 'number redefined');
+            if ($self->{number}) {
+                $self->log_error('number redefined');
                 next;
             }
 
             unless ($value =~ /$oid_pattern/) {
-#               log_error($plugin->{name}, 'number must be an OID');
+                $self->log_error('number must be an OID');
                 next;
             }
 
-            $plugin->{number} = $value;
-#           DEBUG("\tRegistered 'number' : $value");
+            $self->{number} = $value;
+            DEBUG("\tRegistered 'number' : $value");
         }
         else {
-#           log_error($plugin->{name}, "Couldn't parse line: $line");
+            $self->log_error("Couldn't parse line: $line");
         }
     }
+}
+ 
+
+### Debugging and error reporting ##############################################
+# Logs an error due to this plugin, and prints it out if debugging is on
+sub log_error
+{
+    my ($self, $msg) = @_;
+
+    chomp $msg;
+    push @{$self->{errors}}, $msg;
+    DEBUG($msg);
 
     return;
 }
+
+
+use Munin::Node::Config;
+my $config = Munin::Node::Config->instance;
+
+# Prints out a debugging message
+sub DEBUG { print '# ', @_, "\n" if $config->{DEBUG}; }
 
 
 1;

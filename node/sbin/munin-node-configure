@@ -64,14 +64,14 @@ sub main
 	}
 
     # FIXME: surely exit 0 unless m-n-c itself has gone funny?
-	exit 0 unless list_errors();
-
-	print STDERR "# The following plugins caused errors:\n";
-	foreach my $err (list_errors()) {
-		print STDERR "# $err\n";
-	}
-
-	exit 1;
+    if (my @errors = list_errors(values %$plugins)) {
+        print STDERR "# The following plugins caused errors:\n";
+        foreach my $err (@errors) {
+            print STDERR "# $err\n";
+        }
+        exit 1;
+    }
+    exit 0;
 }
 
 
@@ -328,7 +328,7 @@ sub print_suggestion_row
 sub manage_links
 {
     my ($plugin) = @_;
-    
+
     link_add($plugin->{path}, $_) foreach $plugin->services_to_add();
     if ($config->{remove_also}) {
         link_remove($_) foreach $plugin->services_to_remove();
@@ -392,7 +392,8 @@ sub probe_snmp_hosts
 {
 	my ($snmp_hostlist, $plugins) = @_;
 
-	# Allow the user to mix multiple invocations of --snmp with the comma-delimited form
+    # Allow the user to mix multiple invocations of --snmp with the
+    # comma-delimited form
 	my @host_specs = map { split /,/ } @$snmp_hostlist;
 
 	# FIXME: should preserve hostnames as much as possible.
@@ -599,7 +600,8 @@ sub prepare_plugin_environment
 # of the lines printed to STDOUT, with any debug output removed.
 sub run_plugin
 {
-	my ($name, $mode) = @_;
+    my ($plugin, $mode) = @_;
+    my $name = $plugin->{name};
 
 	DEBUG("Running '$mode' on $name" );
 	my $res = Munin::Node::Service->fork_service($config->{libdir},
@@ -607,7 +609,7 @@ sub run_plugin
 
 	# No if it timed out
 	if ($res->{timed_out}) {
-		log_error($name, "Timed out during $mode");
+        $plugin->log_error("Timed out during $mode");
 		return;
 	}
 	elsif ($res->{retval}) {
@@ -617,15 +619,14 @@ sub run_plugin
 
 		# Definitely a bad sign
 		if ($plugin_signal) {
-			log_error($name,
-			          "Died with signal $plugin_signal during $mode");
+            $plugin->log_error("Died with signal $plugin_signal during $mode");
 			return;
 		}
 		elsif ($plugin_exit) {
-			log_error($name, "Non-zero exit during $mode ($plugin_exit)");
+            $plugin->log_error("Non-zero exit during $mode ($plugin_exit)");
 
 			# Verboten according to the specification, but lots of plugins
-			# still do it during autoconf.  So making it a non-fatal error
+            # still exit(1) it during autoconf.  So making it a non-fatal error
 			# for the time being
 			return unless ($mode eq 'autoconf'
 			           and $plugin_exit == 1
@@ -635,12 +636,12 @@ sub run_plugin
 
 	# No if there is anything on stderr that's not debug
 	if (grep !/^#/, @{ $res->{stderr} }) {
-		log_error($name, "Junk printed to stderr");
+        $plugin->log_error("Junk printed to stderr");
 		# FIXME: log the other output
 		return;
 	}
 
-	# Get the list while ignoring debug output
+    # Ignore debug output
 	return grep !/^#/, @{ $res->{stdout} };
 }
 
@@ -650,7 +651,7 @@ sub run_plugin
 sub fetch_plugin_autoconf
 {
 	my ($plugin) = @_;
-	my @response = run_plugin($plugin->{name}, 'autoconf');
+    my @response = run_plugin($plugin, 'autoconf');
 	return $plugin->parse_autoconf_response(@response);
 }
 
@@ -664,7 +665,7 @@ sub fetch_plugin_suggestions
 	# Only run if the autoconf gave the go-ahead
 	return unless ($plugin->{default} eq "yes");
 
-	my @suggested = run_plugin($plugin->{name}, 'suggest');
+    my @suggested = run_plugin($plugin, 'suggest');
 	return $plugin->parse_suggest_response(@suggested);
 }
 
@@ -673,36 +674,22 @@ sub fetch_plugin_suggestions
 sub fetch_plugin_snmpconf
 {
 	my ($plugin) = @_;
-	my @response = run_plugin($plugin->{name}, 'snmpconf');
+    my @response = run_plugin($plugin, 'snmpconf');
 	return $plugin->parse_snmpconf_response(@response);
 }
 
 
 ### Debugging and error reporting ##############################################
-my %errors;
-
-# Logs an error against $plugin, and prints it out if debugging is on
-sub log_error
-{
-	my ($plugin, $msg) = @_;
-
-	chomp $msg;
-	push @{ $errors{$plugin} }, $msg;
-
-	DEBUG($msg);
-
-	return;
-}
-
-
 sub list_errors
 {
-	my @error_list;
-	while (my ($plugin, $errors) = each %errors) {
-		push @error_list, "$plugin:";
-		push @error_list, map { "\t$_" } @$errors;
-	}
-	return @error_list;
+    my @error_list;
+    foreach my $plugin (@_) {
+        if (my @errors = @{$plugin->{errors}}) {
+            push @error_list, "$plugin->{name}:";
+            push @error_list, map { "\t$_" } @errors;
+        }
+    }
+    return @error_list;
 }
 
 
