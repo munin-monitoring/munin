@@ -38,6 +38,12 @@ sub pre_loop_hook {
     $self->SUPER::pre_loop_hook();
 }
 
+sub request_denied_hook {
+    my $self = shift;
+    logger("Denying connection from: $self->{server}->{peeraddr}");
+    return;
+}
+
 
 sub _load_service_configurations {
     $config->process_plugin_configuration_files();
