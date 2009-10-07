@@ -135,6 +135,10 @@ sub _expand_wildcard
 }
 
 
+# Converts a wildcard into a human-readable form
+sub _flatten_wildcard { return ref($_[0]) ? join('/', @{$_[0]}) : $_[0]; }
+
+
 ################################################################################
 
 # return an arrayref of the installed and suggested service names (eg. 'memory'
@@ -146,18 +150,13 @@ sub suggested_links { return [ map { $_[0]->_expand_wildcard($_) } @{$_[0]->{sug
 # 'switch.example.com/1').  nothing is returned if the plugin contains no wildcards.
 # FIXME: behaviour of non-wildcard plugins?
 sub installed_wild { return [ map { $_[0]->_reduce_wildcard($_) } @{$_[0]->{installed}} ]; }
-sub suggested_wild { return (shift)->{suggestions}; }
+sub suggested_wild { return [ map { _flatten_wildcard($_) } @{(shift)->{suggestions}}]; }
 
 
 # returns a list of service names that should be added for this plugin
 sub services_to_add
 {
     my ($self) = @_;
-
-    if ($self->{default} eq 'yes') {
-        # FIXME: hack
-        push @{$self->{suggestions}}, '';
-    }
     return @{(_diff_suggestions($self->installed_links, $self->suggested_links))[1]};
 }
 
@@ -227,7 +226,6 @@ sub parse_autoconf_response
     }
 
     DEBUG("\tGot yes/no: $line");
-
     $self->{default} = $1;
     $self->{defaultreason} = $2;
 
