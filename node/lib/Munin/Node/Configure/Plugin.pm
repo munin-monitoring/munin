@@ -42,30 +42,9 @@ sub is_installed { return @{(shift)->{installed}} ? 'yes' : 'no'; }
 #   (remove) = (installed) \ (suggested)
 #   (add)    = (suggested) \ (installed)
 #   (same)   = (installed) ⋂ (suggested)
-sub _diff_suggestions
-{
-    my ($installed, $suggested) = @_;
-
-    my (%remove, %add, %same);
-    @remove{ @$installed } = ();
-    @add{ @$suggested }    = ();
-    @same{ @$installed }   = (1) x scalar @$installed;
-
-    foreach my $to_remove (@$suggested) {
-        delete $remove{$to_remove};
-    }
-
-    foreach my $to_add (@$installed) {
-        delete $add{$to_add};
-    }
-
-    my @same = grep $same{$_}, @$suggested;
-
-    my @add    = sort keys %add;
-    my @remove = sort keys %remove;
-
-    return (\@same, \@add, \@remove);
-}
+sub _remove { _set_difference(@_); }
+sub _add    { _set_difference(reverse @_); }
+sub _same   { _set_intersection(@_); }
 
 
 # returns a string of the form:
@@ -77,11 +56,11 @@ sub suggestion_string
     my $msg = '';
 
     if ($self->{default} eq 'yes') {
-        my ($same, $add, $remove) = _diff_suggestions($self->installed_wild,
-                                                      $self->suggested_wild);
-        my @suggestions = @$same;
-        push @suggestions, map { '+' . $_ } @$add;
-        push @suggestions, map { '-' . $_ } @$remove;
+        my @suggestions = _same($self->installed_wild, $self->suggested_wild);
+        push @suggestions,
+            map { "+$_" } _add($self->installed_wild, $self->suggested_wild);
+        push @suggestions,
+            map { "-$_" } _remove($self->installed_wild, $self->suggested_wild);
 
         $msg = ' (' . join(' ', @suggestions) . ')' if @suggestions;
     }
@@ -157,15 +136,14 @@ sub suggested_wild { return [ map { _flatten_wildcard($_) } @{(shift)->{suggesti
 sub services_to_add
 {
     my ($self) = @_;
-    return @{(_diff_suggestions($self->installed_links, $self->suggested_links))[1]};
+    return _add($self->installed_links, $self->suggested_links);
 }
-
 
 # returns a list of service names that should be removed.
 sub services_to_remove
 {
     my ($self) = @_;
-    return @{(_diff_suggestions($self->installed_links, $self->suggested_links))[2]};
+    return _remove($self->installed_links, $self->suggested_links);
 }
 
 
@@ -343,6 +321,31 @@ my $config = Munin::Node::Config->instance;
 
 # Prints out a debugging message
 sub DEBUG { print '# ', @_, "\n" if $config->{DEBUG}; }
+
+
+### Set operations #############################################################
+
+# returns the list of elements in arrayref $a that are not in arrayref $b
+# NOTE this is *not* a method.
+sub _set_difference
+{ 
+    my ($A, $B) = @_;
+    my %set;
+    @set{@$A} = ();
+    delete $set{$_} foreach @$B;
+    return sort keys %set;
+}
+
+
+# returns the list of elements common to arrayrefs $a and $b
+# NOTE this is *not* a method.
+sub _set_intersection
+{
+    my ($A, $B) = @_;
+    my %set;
+    @set{@$A} = (1) x @$A;
+    return sort grep $set{$_}, @$B;
+}
 
 
 1;
