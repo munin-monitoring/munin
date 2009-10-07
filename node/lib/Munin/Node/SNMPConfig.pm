@@ -5,7 +5,7 @@ package Munin::Node::SNMPConfig;
 use strict;
 use warnings;
 
-use Net::SNMP qw/oid_base_match ENDOFMIBVIEW/;
+use Net::SNMP;
 use Socket;
 
 use Data::Dumper;
@@ -14,8 +14,6 @@ use Exporter ();
 our @ISA = qw/Exporter/;
 our @EXPORT = qw/expand_hosts snmp_probe_host/;
 
-
-use Munin::Common::Defaults;
 use Munin::Node::Config;
 
 my $config = Munin::Node::Config->instance();
@@ -23,7 +21,7 @@ my $config = Munin::Node::Config->instance();
 
 ### Network address manipulation ###############################################
 
-# converts an IP address (char* in network byte order, as returned by 
+# converts an IP address (char* in network byte order, as returned by
 # gethostbyname, et al) and optional netmask into the corresponding
 # range of IPs.
 #
@@ -79,8 +77,7 @@ sub _resolve
 }
 
 
-# converts a list of hostnames, IPs or CIDR ranges to the 
-# corresponding IPs.
+# converts a list of hostnames, IPs or CIDR ranges to the corresponding IPs.
 sub expand_hosts
 {
 	my (@unexpanded) = @_;
@@ -103,8 +100,7 @@ sub snmp_probe_host
 {
 	my ($host, $plugins) = @_;
 
-	print "# SNMP-probing $host\n" if $config->{DEBUG};
-
+    DEBUG("SNMP-probing $host");
 	my ($session, $error) = Net::SNMP->session(
 		-hostname  => $host,
 		-community => $config->{snmp_community},
@@ -113,29 +109,24 @@ sub snmp_probe_host
 		# Disable munging of responses into "human readable" form
 		-translate => 0,
 	);
-
 	unless ($session) {
-		print "# Dropping host '$host': $error\n";
+        DEBUG("Dropping host '$host': $error");
 		return 0;
 	}
 
 	foreach my $plugin (values %$plugins) {
-		print "# Running autoconf on $plugin->{name} for $host...\n"
-			if $config->{DEBUG};
-
+        DEBUG("Running autoconf on $plugin->{name} for $host");
 		if (my @suggestions = _snmp_autoconf_plugin($plugin, $session)) {
 			# do something useful with it...
 			$plugin->{default} = 'yes';
-			push @{ $plugin->{suggestions} }, map { join '/', @$_ } @suggestions;
-			push @{ $plugin->{suggested_links} }, map { _expand_link_name($plugin, @$_) } @suggestions;
+			push @{ $plugin->{suggestions} }, @suggestions;
 		}
 		else {
-			print "# Host '$host' doesn't support $plugin->{name}\n"
-				if $config->{DEBUG};
+            DEBUG("Host '$host' doesn't support $plugin->{name}");
 		}
 	}
 
-	print "# Finished probing $host\n" if $config->{DEBUG};
+    DEBUG("Finished probing $host");
 	$session->close;
 
 	return 1;
@@ -152,12 +143,11 @@ sub _snmp_autoconf_plugin
 
 	# First round of requirements
 	if ($plugin->{require_oid}) {
-		print "# Checking required OIDs\n" if $config->{DEBUG};
-
+        DEBUG("Checking required OIDs");
 		foreach my $req (@{$plugin->{require_oid}}) {
 			my ($oid, $filter) = @$req;
 			unless (_snmp_check_require($session, $oid, $filter)) {
-				print "# Missing requirement.\n" if $config->{DEBUG};
+                DEBUG("Missing requirement.");
 				return;
 			}
 		}
@@ -172,17 +162,16 @@ sub _snmp_autoconf_plugin
 	elsif ($plugin->{index}) {
 		my $result = $session->get_entries(-columns => [ $plugin->{index} ]);
 		unless ($result) {
-			print "# Failed to fetch index.\n" if $config->{DEBUG};
+            DEBUG("Failed to fetch index.");
 			return;
 		}
 		@indexes = values %$result;
 	}
-	printf "# Got indexes: %s\n", join(', ', @indexes) if $config->{DEBUG};
+    DEBUG(sprintf "Got indexes: %s", join(', ', @indexes));
 
 	# Second round of requirements (now that we have the indexes)
 	if ($plugin->{required_root}) {
-		print "# Removing invalid indices\n" if $config->{DEBUG};
-
+        DEBUG("Removing invalid indices");
 		foreach my $req (@{$plugin->{required_root}}) {
 			my ($oid, $filter) = @$req;
 			foreach my $index (@indexes) {
@@ -190,14 +179,13 @@ sub _snmp_autoconf_plugin
 					push @valid_indexes, $index;
 				}
 				else {
-					print "# No. Removing $index from possible solutions.\n"
-						if $config->{DEBUG};
+                    DEBUG("No. Removing $index from possible solutions.");
 				}
 			}
 		}
 
 		unless (scalar @valid_indexes) {
-			print "# No indices left.  Dropping plugin.";
+            DEBUG("No indices left.  Dropping plugin.");
 			return;
 		}
 	}
@@ -208,17 +196,8 @@ sub _snmp_autoconf_plugin
 
 	# return list of arrayrefs, one for each good suggestion
 	my $hostname = $session->hostname;
-	return $plugin->{wildcard} ? map { [ $hostname, $_ ] } @valid_indexes
-	                           : [ $hostname ];
-}
-
-
-sub _expand_link_name
-{
-	my ($plugin, $hostname, $wild) = @_;
-	$wild ||= '';
-	(my $plugname = $plugin->{name}) =~ s/^snmp_//;
-	return 'snmp_' . $hostname . $plugname . $wild;
+	return $plugin->is_wildcard ? map { [ $hostname, $_ ] } @valid_indexes
+	                            : [ $hostname ];
 }
 
 
@@ -240,13 +219,17 @@ sub _snmp_get_single
 	my $response = $session->get_request($oid);
 
 	unless (defined $response and $session->error_status == 0) {
-		print "# Request failed for oid '$oid'\n" if $config->{DEBUG};
+        DEBUG("Request failed for oid '$oid'");
 		return;
 	}
 
-	print "# Fetched $oid -> '$response->{$oid}'\n" if $config->{DEBUG};
+    DEBUG("Fetched $oid -> '$response->{$oid}'");
 	return $response->{$oid};
 }
+
+
+# Prints out a debugging message
+sub DEBUG { print '# ', @_, "\n" if $config->{DEBUG}; }
 
 
 1;
@@ -296,4 +279,4 @@ the plugin are supported by the device.
 =back
 
 =cut
-
+# vim: ts=4 : sw=4 : expandtab
