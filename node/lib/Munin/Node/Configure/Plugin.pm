@@ -123,11 +123,20 @@ sub _flatten_wildcard { return ref($_[0]) ? join('/', @{$_[0]}) : $_[0]; }
 # return an arrayref of the installed and suggested service names (eg. 'memory'
 # or 'if_eth0')
 sub installed_links { return (shift)->{installed}; }
-sub suggested_links { return [ map { $_[0]->_expand_wildcard($_) } @{$_[0]->{suggestions}} ]; }
+
+sub suggested_links
+{
+    my ($self) = @_;
+    if ($self->{default} eq 'yes' and not $self->is_wildcard) {
+        return [ $self->{name} ];
+    }
+    else {
+        return [ map { $self->_expand_wildcard($_) } @{$self->{suggestions}} ];
+    }
+}
 
 # return an arrayref of the installed or suggested wildcards (eg. 'eth0' or
 # 'switch.example.com/1').  nothing is returned if the plugin contains no wildcards.
-# FIXME: behaviour of non-wildcard plugins?
 sub installed_wild { return [ map { $_[0]->_reduce_wildcard($_) } @{$_[0]->{installed}} ]; }
 sub suggested_wild { return [ map { _flatten_wildcard($_) } @{(shift)->{suggestions}}]; }
 
