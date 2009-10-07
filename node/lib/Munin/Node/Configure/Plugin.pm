@@ -14,16 +14,14 @@ sub new
     my $path = delete $opts{path} or die "Must provide path\n";
 
     my %plugin = (
-        name         => $name,
-        path         => $path,
-        default      => 'no',
-        installed    => [],
-        suggestions  => [],
-        installed_links => [],
-        suggested_links => [],
-        family       => 'contrib',
-        capabilities => {},
-        errors       => [],
+        name         => $name,      # the (base)name of the plugin
+        path         => $path,      # the full path to the plugin
+        default      => 'no',       # whether this plugin thinks it should be installed
+        installed    => [],         # list of installed services (as link names)
+        suggestions  => [],         # list of suggestions (as wildcards)
+        family       => 'contrib',  # the family it belongs to
+        capabilities => {},         # what capabilities it supports
+        errors       => [],         # list of errors reported against this plugin
 
         %opts,
     );
@@ -44,7 +42,7 @@ sub is_installed { return @{(shift)->{installed}} ? 'yes' : 'no'; }
 #   (remove) = (installed) \ (suggested)
 #   (add)    = (suggested) \ (installed)
 #   (same)   = (installed) ⋂ (suggested)
-sub diff_suggestions
+sub _diff_suggestions
 {
     my ($installed, $suggested) = @_;
 
@@ -70,59 +68,97 @@ sub diff_suggestions
 }
 
 
+# returns a string of the form:
+# 'no',  'no [reason why it's not used]',
+# 'yes', 'yes (unchanged +additions -removals)'
 sub suggestion_string
 {
     my ($self) = @_;
-    my $msg = '';  # either [reason] or (+add/-remove)
+    my $msg = '';
 
-    if ($self->is_wildcard) {
-        my ($same, $add, $remove) = diff_suggestions($self->{installed},
-                                                     $self->{suggestions});
+    if ($self->{default} eq 'yes') {
+        my ($same, $add, $remove) = _diff_suggestions($self->installed_wild,
+                                                      $self->suggested_wild);
         my @suggestions = @$same;
         push @suggestions, map { '+' . $_ } @$add;
         push @suggestions, map { '-' . $_ } @$remove;
 
-        $msg = '(' . join(' ', @suggestions) . ')' if @suggestions;
+        $msg = ' (' . join(' ', @suggestions) . ')' if @suggestions;
     }
     elsif ($self->{defaultreason}) {
         # Report why it's not being used
-        $msg = "[$self->{defaultreason}]";
+        $msg = " [$self->{defaultreason}]";
     }
 
-    return $self->{default} . ' ' . $msg;
+    return $self->{default} . $msg;
 }
 
 
-sub installed_services_string
+sub installed_services_string { return join ' ', @{(shift)->installed_wild}; }
+
+
+### Service name <-> wildcard conversion ###############################################
+# NOTE that these functions do not round-trip!
+
+# Extracts the wildcards from a service name and formats them in a user-friendly way.
+sub _reduce_wildcard
 {
-    my ($self) = @_;
-    my @installed = @{$self->{installed}};
+    my ($self, $link_name) = @_;
+    my $name = $self->{name};
+    my $wild;
 
-    my $suggestions = '';
-    if ($self->is_wildcard and @installed) {
-        $suggestions = join ' ', @installed;
+    if ($name =~ /^snmp_(_\w+)/) {
+        $link_name =~ /^snmp_(.+)$1(.*)/;
+        $wild = $1 . (length($2)? "/$2" : '');  # FIXME hack :-(
     }
-
-    return $suggestions;
+    else {
+        ($wild = $link_name) =~ s/^$name//;
+    }
+    DEBUG("\tFound wildcard instance '$wild'");
+    return length($wild)? $wild : ();  # FIXME more hack
 }
+
+
+# converts a wildcard to the appropriate service name
+sub _expand_wildcard
+{
+    my ($self, $suggestion) = @_;
+
+    if ($self->{name} =~ /^snmp__(\w+)/) {
+        my ($host, $wild) = @$suggestion;
+        $wild ||= '';
+        return 'snmp_' . $host . '_' . $1 . $wild;
+    }
+    else {
+        return $self->{name} . $suggestion;
+    }
+}
+
+
+################################################################################
+
+# return an arrayref of the installed and suggested service names (eg. 'memory'
+# or 'if_eth0')
+sub installed_links { return (shift)->{installed}; }
+sub suggested_links { return [ map { $_[0]->_expand_wildcard($_) } @{$_[0]->{suggestions}} ]; }
+
+# return an arrayref of the installed or suggested wildcards (eg. 'eth0' or
+# 'switch.example.com/1').  nothing is returned if the plugin contains no wildcards.
+# FIXME: behaviour of non-wildcard plugins?
+sub installed_wild { return [ map { $_[0]->_reduce_wildcard($_) } @{$_[0]->{installed}} ]; }
+sub suggested_wild { return (shift)->{suggestions}; }
 
 
 # returns a list of service names that should be added for this plugin
 sub services_to_add
 {
     my ($self) = @_;
-    my @to_add;
 
-    if ($self->is_wildcard) {
-        my ($same, $add, $remove) = diff_suggestions($self->{installed_links},
-                                                     $self->{suggested_links});
-        @to_add = @$add;
+    if ($self->{default} eq 'yes') {
+        # FIXME: hack
+        push @{$self->{suggestions}}, '';
     }
-    else {
-        @to_add = ($self->{name});
-    }
-
-    return @to_add;
+    return @{(_diff_suggestions($self->installed_links, $self->suggested_links))[1]};
 }
 
 
@@ -130,39 +166,12 @@ sub services_to_add
 sub services_to_remove
 {
     my ($self) = @_;
-    my @to_remove;
-
-    if ($self->{default} eq 'no') {
-        # Damnatio memoriae!
-        @to_remove = @{ $self->{installed} };
-    }
-    elsif ($self->is_wildcard) {
-        my ($same, $add, $remove) = diff_suggestions($self->{installed_links},
-                                                     $self->{suggested_links});
-        @to_remove = @$remove;
-    }
-
-    return @to_remove;
+    return @{(_diff_suggestions($self->installed_links, $self->suggested_links))[2]};
 }
 
 
-sub add_instance
-{
-    my ($self, $instance) = @_;
-
-    if ($self->is_wildcard) {
-#        DEBUG("\tWildcard plugin '$service' resolves to '$realfile'");
-
-        # FIXME: doesn't work with snmp__* plugins
-        (my $wild = $instance) =~ s/^$self->{name}//;
-
-        DEBUG("\tAdding wildcard instance '$wild'");
-        push @{ $self->{installed} },       $wild;
-        push @{ $self->{installed_links} }, $instance;
-    }
-
-    return;
-}
+# Associates a link name from the servicedir with this plugin
+sub add_instance { push @{(shift)->{installed}}, shift; }
 
 
 # Extracts any magic-markers from the plugin
@@ -210,7 +219,6 @@ sub parse_autoconf_response
 
     my $line = shift @response;
 
-    # The line it did print isn't in a valid format
     unless ($line =~ /^(yes)$/
          or $line =~ /^(no)(?:\s+\((.*)\))?\s*$/)
     {
@@ -233,10 +241,8 @@ sub parse_suggest_response
 
     foreach my $line (@suggested) {
         if ($line =~ /^[-\w.]+$/) {
-            # This looks like it should be a suggestion.
             DEBUG("\tAdded suggestion: $line");
-            push @{ $self->{suggestions} }, $line;
-            push @{ $self->{suggested_links} }, $self->{name} . $line;
+            push @{$self->{suggestions}}, $line;
         }
         else {
             $self->log_error("\tBad suggestion: $line");
@@ -318,7 +324,7 @@ sub parse_snmpconf_response
         }
     }
 }
- 
+
 
 ### Debugging and error reporting ##############################################
 # Logs an error due to this plugin, and prints it out if debugging is on
