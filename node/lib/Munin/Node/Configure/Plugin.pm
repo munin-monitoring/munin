@@ -37,8 +37,8 @@ sub is_wildcard { return ((shift)->{path} =~ /_$/); }
 sub is_installed { return @{(shift)->{installed}} ? 'yes' : 'no'; }
 
 
-# reports which wildcard plugin identities should be added, removed,
-# or left as they are.  in (sort of) mathematical terms:
+# report which services (link or wildcard) should be added, removed,
+# or left as they are.
 #   (remove) = (installed) \ (suggested)
 #   (add)    = (suggested) \ (installed)
 #   (same)   = (installed) ⋂ (suggested)
@@ -150,6 +150,9 @@ sub services_to_remove
 # Associates a link name from the servicedir with this plugin
 sub add_instance { push @{(shift)->{installed}}, shift; }
 
+# Adds a suggestion
+sub add_suggestions { push @{(shift)->{suggestions}}, @_; }
+
 
 # Extracts any magic-markers from the plugin
 sub read_magic_markers
@@ -218,7 +221,7 @@ sub parse_suggest_response
     foreach my $line (@suggested) {
         if ($line =~ /^[-\w.]+$/) {
             DEBUG("\tAdded suggestion: $line");
-            push @{$self->{suggestions}}, $line;
+            $self->add_suggestions($line);
         }
         else {
             $self->log_error("\tBad suggestion: $line");

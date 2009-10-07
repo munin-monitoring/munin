@@ -118,7 +118,7 @@ sub snmp_probe_host
         DEBUG("Running autoconf on $plugin->{name} for $host");
 		if (my @suggestions = _snmp_autoconf_plugin($plugin, $session)) {
 			$plugin->{default} = 'yes';
-			push @{ $plugin->{suggestions} }, @suggestions;
+            $plugin->add_suggestions(@suggestions);
 		}
 		else {
             DEBUG("Host '$host' doesn't support $plugin->{name}");
