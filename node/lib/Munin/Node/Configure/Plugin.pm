@@ -3,8 +3,6 @@ package Munin::Node::Configure::Plugin;
 use strict;
 use warnings;
 
-use Data::Dumper;
-
 
 sub new
 {
@@ -340,11 +338,11 @@ sub DEBUG { print '# ', @_, "\n" if $config->{DEBUG}; }
 # returns the list of elements in arrayref $a that are not in arrayref $b
 # NOTE this is *not* a method.
 sub _set_difference
-{ 
+{
     my ($A, $B) = @_;
     my %set;
     @set{@$A} = ();
-    delete $set{$_} foreach @$B;
+    delete @set{@$B};
     return sort keys %set;
 }
 

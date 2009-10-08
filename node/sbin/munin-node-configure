@@ -642,7 +642,10 @@ sub run_plugin
 	}
 
     # Ignore debug output
-	return grep !/^#/, @{ $res->{stdout} };
+	my @response = grep !/^#/, @{ $res->{stdout} };
+    $plugin->log_error('Nothing printed to stdout') unless (scalar @response);
+
+    return @response;
 }
 
 
@@ -651,7 +654,7 @@ sub run_plugin
 sub fetch_plugin_autoconf
 {
 	my ($plugin) = @_;
-    my @response = run_plugin($plugin, 'autoconf');
+    my @response = run_plugin($plugin, 'autoconf') or return;
 	return $plugin->parse_autoconf_response(@response);
 }
 

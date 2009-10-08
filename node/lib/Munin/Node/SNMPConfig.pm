@@ -70,8 +70,7 @@ sub _resolve
 		                   scalar(@addrs),
 		                   inet_ntoa($addrs[0]);
 	}
-	warn sprintf "# Resolved %s to %s\n", $host, inet_ntoa($addrs[0])
-		if $config->{DEBUG};
+    DEBUG(sprintf "Resolved %s to %s", $host, inet_ntoa($addrs[0]));
 
 	return $addrs[0];
 }
@@ -84,8 +83,7 @@ sub expand_hosts
 	my @hosts;
 
 	foreach my $item (@unexpanded) {
-		warn "Processing $item\n" if $config->{DEBUG};
-
+        DEBUG("Processing $item");
 		my ($host, $mask) = split '/', $item, 2;
 		$host = _resolve($host);
 		push @hosts, _hosts_in_net($host, $mask);
