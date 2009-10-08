@@ -431,7 +431,21 @@ EOF
 
 
 ### parse_suggest_response
+{
+    my @tests = (
+        [ [ qw/one two three/ ], [ qw/one two three/ ], 'Good suggestions' ],
+        [ [ ], [ ], 'No suggestions' ],
+        [ [ qw{one ~)(*&^%$£"!?/'/} ], [ qw/one/ ], 'Suggestion with illegal characters' ],
+    );
 
+    foreach (@tests) {
+        my ($in, $expected, $msg) = @$_;
+        my $p = gen_plugin('if_');
+
+        $p->parse_suggest_response(@$in);
+        is_deeply($p->{suggestions}, $expected, $msg);
+    }
+}
 
 ### parse_snmpconf_response
 
