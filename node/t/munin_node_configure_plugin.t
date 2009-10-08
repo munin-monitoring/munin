@@ -410,13 +410,13 @@ EOF
 ### parse_autoconf_response
 {
     my @tests = (
-    [ [ 'yes' ], [ 'yes' ], 'Autoconf replied yes' ],
-    [ [ 'no' ],  [ 'no' ], 'Autoconf replied no' ],
-    [ [ 'no (just a test plugin) ' ], [ 'no', 'just a test plugin' ], 'Autoconf replied no with reason' ],
-    [ [ 'oui' ], [ 'no' ], 'Autoconf doesnt contain a recognised response' ],
-    [ [ ], [ 'no' ], 'Autoconf response was empty' ],
-    [ [ 'yes', 'this is an error' ], [ 'no' ], 'Autoconf replied yes but with cruft' ],
-#   [ [ ], [ ], '' ],
+        [ [ 'yes' ], [ 'yes' ], 'Autoconf replied yes' ],
+        [ [ 'no' ],  [ 'no' ], 'Autoconf replied no' ],
+        [ [ 'no (just a test plugin) ' ], [ 'no', 'just a test plugin' ], 'Autoconf replied no with reason' ],
+        [ [ 'oui' ], [ 'no' ], 'Autoconf doesnt contain a recognised response' ],
+        [ [ ], [ 'no' ], 'Autoconf response was empty' ],
+        [ [ 'yes', 'this is an error' ], [ 'no' ], 'Autoconf replied yes but with cruft' ],
+#       [ [ ], [ ], '' ],
     );
 
     foreach (@tests) {
@@ -425,7 +425,7 @@ EOF
 
         $p->parse_autoconf_response(@$in);
         is($p->{default}, $expected->[0], "$msg - default");
-        is($p->{default}, $expected->[0], "$msg - reason");
+        is($p->{defaultreason}, $expected->[1], "$msg - reason");
     }
 }
 
