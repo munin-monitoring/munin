@@ -112,7 +112,7 @@ sub snmp_probe_host
 		return 0;
 	}
 
-	foreach my $plugin (values %$plugins) {
+	foreach my $plugin ($plugins->list) {
         DEBUG("Running autoconf on $plugin->{name} for $host");
 		if (my @suggestions = _snmp_autoconf_plugin($plugin, $session)) {
 			$plugin->{default} = 'yes';
