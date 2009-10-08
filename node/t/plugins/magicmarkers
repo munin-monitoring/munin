@@ -1,7 +1,0 @@
-# Munin test plugin:
-#
-# Does nothing, just contains magic markers
-#
-# #%# family=magic
-# #%# capabilities=autoconf suggest other
-
