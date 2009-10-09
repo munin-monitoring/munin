@@ -5,6 +5,8 @@ use warnings;
 
 use File::Basename qw(fileparse);
 
+use Data::Dumper;
+
 use Munin::Node::Service;
 use Munin::Node::Configure::Plugin;
 
@@ -16,12 +18,12 @@ sub new
 {
     my ($class, %opts) = @_;
 
-    my $directory  = delete $opts{libdir} or die "Must specify the directory\n";
+    my $libdir     = delete $opts{libdir} or die "Must specify the directory\n";
     my $servicedir = delete $opts{servicedir} or die "Must specify the service directory\n";
 
     my %plugin = (
-        directory    => $directory, 
-        servicedir   => $servicedir,
+        libdir     => $libdir,
+        servicedir => $servicedir,
 
         %opts,
     );
@@ -34,30 +36,24 @@ sub new
 
 sub load
 {
-    $_[0]->load_available();
-    $_[0]->load_installed();
+    $_[0]->_load_available();
+    $_[0]->_load_installed();
+    return;
 }
 
 
-sub load_available
+sub _load_available
 {
     my ($self) = @_;
+    my %found;
 
     my %valid_plugins = main::load_plugin_history($config->{newer}) if $config->{newer};
 
-    my %found;
+    DEBUG("Searching '$self->{libdir}' for available plugins.");
 
-    DEBUG("Searching '$config->{libdir}' for available plugins.");
-
-    opendir (my $LIBDIR, $config->{libdir})
-        or die "Fatal: Could not open '$config->{libdir}' for reading: $!\n";
-
-    while (my $plug = readdir $LIBDIR) {
-        my $path = "$config->{libdir}/$plug";
-        unless (Munin::Node::Service->is_a_runnable_service($plug, $config->{libdir})) {
-            DEBUG("Ignoring '$path'.");
-            next;
-        }
+    foreach my $item (_valid_files($self->{libdir})) {
+        my $path = $item->{path};
+        my $plug = $item->{name};
 
         DEBUG("Considering '$path'");
 
@@ -65,7 +61,7 @@ sub load_available
         # care unless we're going to try running it?
         while (-l $path) {
             $path = readlink($path);
-            $path = ($path =~ /^\//) ? $path : "$config->{libdir}/$path";
+            $path = ($path =~ /^\//) ? $path : "$self->{libdir}/$path";
         }
 
         my $plugin = Munin::Node::Configure::Plugin->new(
@@ -90,38 +86,31 @@ sub load_available
 
         $found{$plug} = $plugin;
     }
-    close ($LIBDIR);
 
-    DEBUG(sprintf "%u plugins available.", scalar keys %found);
     $self->{plugins} = \%found;
-
+    DEBUG(sprintf "%u plugins available.", scalar keys %found);
     return;
 }
 
 
-sub load_installed
+sub _load_installed
 {
-    my ($plugins) = @_;
-
+    my ($self) = @_;
     my $service_count = 0;  # the number of services currently installed.
 
     DEBUG("Searching '$config->{servicedir}' for installed plugins.");
 
-    opendir (my $SERVICEDIR, $config->{servicedir})
-        or die "ERROR: Could not open '$config->{servicedir}' for reading: $!\n";
+    foreach my $item (_valid_files($self->{servicedir})) {
+        my $path = $item->{path};
+        my $service = $item->{name};
 
-    while (my $service = readdir $SERVICEDIR) {
         my $realfile;
-        my $path = "$config->{servicedir}/$service";
-
-        next unless Munin::Node::Service->is_a_runnable_service($service);
-
         # Ignore non-symlinks, and symlinks that point anywhere other
         # than the plugin library
         next unless -l $path;
         unless ($realfile = readlink($path)) {
             # FIXME: should be a given, since it's tested by is_a_runnable_service()
-            DEBUG("Warning: symlink '$config->{servicedir}/$service' is broken.");
+            DEBUG("Warning: symlink '$path' is broken.");
             next;
         }
         next unless ($realfile =~ /^$config->{libdir}\//);
@@ -130,15 +119,14 @@ sub load_installed
 
         DEBUG("Found '$service'");
 
-        unless ($plugins->{plugins}{$realfile}) {
+        unless ($self->{plugins}{$realfile}) {
             DEBUG("\tCorresponds to an ignored plugin ($realfile).  Skipping.");
             next;
         }
 
-        $plugins->{plugins}{$realfile}->add_instance($service);
+        $self->{plugins}{$realfile}->add_instance($service);
         $service_count++;
     }
-    close($SERVICEDIR);
 
     DEBUG("$service_count services currently installed.");
     return;
@@ -154,6 +142,28 @@ sub list
         push @plugins, $self->{plugins}{$plug};
     }
     return @plugins;
+}
+
+
+
+sub _valid_files
+{
+    my ($directory) = @_;
+    my @items;
+
+    opendir (my $DIR, $directory)
+        or die "Fatal: Could not open '$directory' for reading: $!\n";
+
+    while (my $item = readdir $DIR) {
+        my $path = "$directory/$item";
+        unless (Munin::Node::Service->is_a_runnable_service($item, $directory)) {
+            DEBUG("Ignoring '$path'.");
+            next;
+        }
+        push @items, { path => $path, name => $item };
+    }
+    closedir $DIR;
+    return @items;
 }
 
 
