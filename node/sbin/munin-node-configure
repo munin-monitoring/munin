@@ -57,9 +57,13 @@ sub main
 		probe_snmp_hosts($config->{snmp}, $plugins);
 		show_suggestions($plugins);
 	}
-	elsif ($config->{suggest} or $config->{shell}) {
-		gather_suggestions($plugins);
-		show_suggestions($plugins);
+    elsif ($config->{suggest}) {
+        gather_suggestions($plugins);
+        show_suggestions($plugins);
+    }
+    elsif ($config->{shell}) {
+        gather_suggestions($plugins);
+        manage_links($plugins);
 	}
 	else {
         print_status_list($plugins);
@@ -292,17 +296,13 @@ sub show_suggestions
 {
 	my ($plugins) = @_;
 
-	unless ($config->{shell}) {
-		print_table_entry("Plugin", "Used", "Suggestions");
-		print_table_entry("------", "----", "-----------");
-	}
+    print_table_entry("Plugin", "Used", "Suggestions");
+    print_table_entry("------", "----", "-----------");
 
 	foreach my $plugin ($plugins->list) {
 		next unless $plugin->{capabilities}{autoconf}
 		         or $plugin->{capabilities}{snmpconf};
-
-		$config->{shell} ? manage_links($plugin)
-		                 : print_suggestion_row($plugin);
+        print_suggestion_row($plugin);
 	}
 
 	return;
@@ -322,9 +322,23 @@ sub print_suggestion_row
 }
 
 
+sub manage_links
+{
+    my ($plugins) = @_;
+
+    foreach my $plugin ($plugins->list) {
+        next unless $plugin->{capabilities}{autoconf}
+                 or $plugin->{capabilities}{snmpconf};
+        manage_plugin_links($plugin)
+    }
+
+    return;
+}
+
+
 # prints shell commands to get the system into the recommended
 # state by adding or removing symlinks
-sub manage_links
+sub manage_plugin_links
 {
     my ($plugin) = @_;
 
