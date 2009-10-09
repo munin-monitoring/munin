@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 52;
+use Test::More 'no_plan';
 
 use Data::Dumper;
 
@@ -17,20 +17,6 @@ $config->reinitialize({
 	libdir  => "$PWD/t/plugins",
 	timeout => 10,
 });
-
-
-### load_available_plugins
-{
-	my $plugins = load_available_plugins();
-	is_deeply($plugins, {}, 'Plugins in ignored families are not registered');
-
-	$config->{families} = [ qw/test/ ];
-	$plugins = load_available_plugins();
-
-	is($plugins->{'default_funcs.sh'}, undef, "Non-executable file is ignored");
-	is($plugins->{'.'}, undef, "'.' link is ignored");
-	is($plugins->{'..'}, undef, "'..' link is ignored");
-}
 
 
 ### fetch_plugin_autoconf
@@ -62,22 +48,6 @@ $config->reinitialize({
 			"Plugin timed out",
 		],
 	);
-
-	while (my $test = shift @tests) {
-		my ($name, $expected, $msg) = @$test;
-
-		my $plugin = { name => "autoconf-$name" };
-
-		clear_errors();
-
-		fetch_plugin_autoconf($plugin);
-
-		# check the two parameters the sub sets (default, defaultreason)
-		is($plugin->{default}, $expected->{default}, "$msg - result")
-			or diag(list_errors());
-		is($plugin->{defaultreason}, $expected->{defaultreason}, "$msg - reason")
-			or diag(list_errors());
-	}
 }
 
 
@@ -131,27 +101,6 @@ $config->reinitialize({
 #			"",
 #		],
 	);
-
-	while (my $test = shift @tests) {
-		my ($name, $expected, $msg) = @$test;
-
-		my $plugin = { name => "suggest-${name}_" };
-
-		clear_errors();
-
-		fetch_plugin_autoconf($plugin);
-		fetch_plugin_suggestions($plugin);
-
-		# we know the name is right, and this saves having to mess with 
-		# $expected
-		delete $plugin->{name};
-
-		# don't care about this
-		delete $plugin->{defaultreason};
-
-		is_deeply($plugin, $expected, $msg)
-			or diag(list_errors());
-	}
 }
 
 
@@ -268,18 +217,6 @@ $config->reinitialize({
 	#	],
 	);
 
-
-	while (my $test = shift @tests) {
-		my ($response, $expected, $msg) = @$test;
-
-		my $plugin = { name => 'test' };
-	
-		parse_snmpconf_response($plugin, @$response);
-
-		delete $plugin->{name};
-
-		is_deeply($plugin, $expected, $msg);
-	}
 }
 
 
