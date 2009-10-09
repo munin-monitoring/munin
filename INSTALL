@@ -19,12 +19,32 @@ Server:
 - RRD with Perl support - this means that RRDs.pm must be available
   and "perl -MRRDs -e ':;'" must run without errors.
 
-- Perl modules for server: Time::HiRes, Storable, Digest::MD5,
-  HTML::Template, Text::Balanced, Log::Log4perl (which depends on
-  IPC::Shareable, Log::Dispatch, Log::Dispatch::FileRotate,
-  MIME::Lite, Mail::Sender, Mail::Sendmail, MailTools,
-  Params::Validate and TimeDate)
+- Perl modules for server: 
+   - Time::HiRes
+   - Storable
+   - Digest::MD5,
+   - HTML::Template
+   - Text::Balanced
+   - Log::Log4perl (which depends on
+     - IPC::Shareable
+     - Log::Dispatch
+     - Log::Dispatch::FileRotate
+     - MIME::Lite
+     - Mail::Sender
+     - Mail::Sendmail
+     - MailTools
+   - Params::Validate
+   - TimeDate
+   - Net::SNMP for SNMP autoconfiguration and plugins
 
+   - Developers/packagers: For testing
+     - Test::MockModule
+     - Test::MockObject
+     - Test::Pod::Coverage
+     - Perl::Critic 1.096 or later
+   
+   - As well as all the modules needed on a node - most servers are also
+     nodes.
 
 Node:
 

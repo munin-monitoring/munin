@@ -346,7 +346,7 @@ endif
 
 ######################################################################
 
-test: test-node test-common test-master test-plugins
+test: test-common test-master test-node test-plugins
 
 ifeq ($(MAKELEVEL),0)
 # Re-exec make with the test config
