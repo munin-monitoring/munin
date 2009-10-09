@@ -89,7 +89,19 @@ use base qw(Munin::Common::Config);
 #      attribute value
 #
 # When multigraph is realized I suppose we should support nested services
-# in the prefix as well.  FIXME!
+# in the prefix as well.  I guess like this:
+#
+#   [Group;Group;Host]
+#      service.attribute value
+#      service:service.attribute value
+#
+#   [Group;Group;Host:service]
+#      attribute value             # Group;Group;Host:service.attribute
+#      :service.attribute value    # Group;Group;Host:service:service.attribute
+#
+#   [Group;Group;Host:service:service]
+#      attribute value             # Group;Group;Host:service:service.attribute
+#      :service.attribute value    # ...;Host:service:service:service.attribute
 #
 
 use warnings;
@@ -180,19 +192,19 @@ sub _create_and_set {
 		Munin::Master::Host->new($host,$groupref,{ $rest => $value });
 	} else {
 	    $groupref->{hosts}{$host}->add_attibutes_if_not_exists({ $rest => $value } );
-    }
+	}
     }
 }
 
 sub set_value {
-    # Set value in config hash, $value is full ;:. separated value.
+    # Set value in config hash, $key is full ;:. separated value.
     my ($self, $key, $value) = @_;
     
     my @words = split (/[;:.]/, $key);
     my $last_word = pop(@words);
 
     if (! $self->is_keyword($last_word)) {
-	croak "Parse error in ".$self->{config_file}." in section [$prefix]:\n".
+	croak "Parse error in ".$self->{config_file}." for $key:\n".
 	    " Unknown keyword at end of left hand side of line ($key $value)\n";
     }
 
@@ -208,13 +220,19 @@ sub set_value {
 	$host = '';
 	$rest = pop(@groups);
     }
-    $setting = $rest;
+    # $setting = $rest;
 
     $self->_create_and_set(\@groups,$host,$rest,$value);
 }
     
 
-sub _parse_config_line {
+sub _concat_config_line {
+    # Concatenate current prefix and and the config line we're parsing now
+    # in a correct manner.
+    #
+    # If the arrived at config line is not legal as far as we can tell then
+    # croak here.
+
     my ($self, $prefix, $key, $value) = @_;
 
     my $longkey;
@@ -226,24 +244,52 @@ sub _parse_config_line {
     # [group;host:service.field]
     # [group1;group2;host:service.field]
     #    keyword value
-    #    foo.bar value
+    #    field.keyword value (only if no service in prefix)
     #    group_order ....
     #
+    # And more recently this for nested services (multigraph).
+    # [group1;group2;host:service:service...]
+    #     :service.field.keyword value
+    #
 
-    # Note that keywords can comme directly after group names in the
+    # Note that keywords can come directly after group names in the
     # concatenated syntax: group;group_order ...
 
-    if ($self->_final_char(';',$prefix)) {
+    if (_final_char_is(';',$prefix)) {
 	# Prefix ended in the middle of a group.  The rest can be
 	# appended.
 	$longkey = $prefix.$key;
     } elsif (index($prefix,':') != -1) {
-	# Service name is part of the prefix.  Append with a "." betweeen
-	$longkey = $prefix.".".$key;
+	# Service name is part of the prefix. 
+	if (substr($key,0,1) eq ':') {
+	    # Key is a nested service name
+	    $longkey = $prefix.$key;
+	} elsif (index($key,".") != -1) {
+	    # Case:
+	    #   [group;group;host]
+	    #      service.attribute key
+	    #
+	    # => Key is a service name and needs : prefixed.
+	    $longkey = $prefix.":".$key;
+	} else {
+	    # Key should be a attribute and needs . prefixed.
+	    $longkey = $prefix.".".$key;
+	}
     } else {
-	# Prefix ends in host name, append with a ":" between
-	$longkey = $prefix.":".$key;
+	# Prefix ends in host name,  $key is either a service name or a
+	# keyword.
+	if (index($key,".") != -1 or index($key,":") != -1 ) {
+	    # Key has structure, it must be a service then.
+	    $longkey = $prefix.":".$key;
+	} elsif ($self->is_keyword($key)) {
+	    # It's a keyword, i.e. a attribute.
+	    $longkey = $prefix.".".$key;
+	} else {
+	    # Not a keyword, must be a service name then.
+	    $longkey = $prefix.":".$key;
+	}
     }
+       
     my @words = split (/[;:.]/, $longkey);
     my $last_word = pop(@words);
 
@@ -251,11 +297,17 @@ sub _parse_config_line {
 	croak "Parse error in ".$self->{config_file}." in section [$prefix]:\n".
 	    " Unknown keyword at end of left hand side of line ($key $value)\n";
     }
+    return $longkey;
+}
+
+sub _parse_config_line {
+    my ($self, $prefix, $key, $value) = @_;
+    
+    my $longkey = $self->_concat_config_line($prefix,$key,$value);
 
     $self->set_value($longkey,$value);
 	
 }
-
 
 sub parse_config {
     my ($self, $io) = @_;

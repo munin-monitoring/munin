@@ -13,6 +13,7 @@ use File::Path;
 use IO::Handle;
 use Munin::Common::Defaults;
 use Munin::Master::Logger;
+use Munin::Master::Config;
 use Log::Log4perl qw (:easy);
 use POSIX qw(strftime);
 use RRDs;
@@ -528,6 +529,10 @@ sub munin_set {
 
 sub munin_set_var_loc
 {
+    croak("munin_set_var_loc called, but not working");
+
+=comment
+
     my $hash = shift;
     my $loc  = shift;
     my $val  = shift;
@@ -546,11 +551,15 @@ sub munin_set_var_loc
 	}
         return munin_set_var_loc ($hash->{$tmpvar}, \@aloc, $val);
     } else {
-	logger ("Warning: munin_set_var_loc: Setting unknown option \"$tmpvar\".")
-	    unless defined $legal_expanded{$tmpvar};
+        logger ("Warning: munin_set_var_loc: Setting unknown option \"$tmpvar\".")
+	unless $hash->is_keyword($tmpvar);
+
+	# FIX
+
         $hash->{$tmpvar} = $val;
 	return $hash;
     }
+=cut
 }
 
 

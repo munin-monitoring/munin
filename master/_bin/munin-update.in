@@ -40,9 +40,10 @@ sub main {
 sub configure {
     my %args = parse_args();
 
-    $oldconfig = Munin::Master::Config->instance();
+    my $oldconfig = Munin::Master::Config->instance();
 
-    $config->parse_config_from_file($args{config_file});
+    my $config->parse_config_from_file($args{config_file});
+
     $config->set(\%args);
 }
 

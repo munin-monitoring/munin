@@ -1,6 +1,6 @@
 package Munin::Master::Host;
 
-use base qw(Munin::Common::Group);
+use base qw(Munin::Master::Group);
 
 # $Id$
 
@@ -8,7 +8,6 @@ use warnings;
 use strict;
 
 use Carp;
-
 
 sub new {
     my ($class, $host_name, $group, $attributes) = @_;
