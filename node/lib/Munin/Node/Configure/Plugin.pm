@@ -32,6 +32,10 @@ sub new
 
 sub is_wildcard { return ((shift)->{path} =~ /_$/); }
 
+
+# returns true if the plugin is in one of the families
+sub in_family { $_[0]->{family} eq $_  && return 1 foreach @_; return 0; }
+
 sub is_installed { return @{(shift)->{installed}} ? 'yes' : 'no'; }
 
 

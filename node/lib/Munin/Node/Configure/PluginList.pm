@@ -71,7 +71,7 @@ sub _load_available
 
         $plugin->read_magic_markers();
 
-        unless (grep { $plugin->{family} eq $_ } @{ $config->{families} }) {
+        unless ($plugin->in_family(@{$config->{families}})) {
             DEBUG("\tFamily '$plugin->{family}' is currently ignored.  Skipping.");
             next;
         }
