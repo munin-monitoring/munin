@@ -7,7 +7,7 @@ use base qw(Module::Build);
 use warnings;
 use strict;
 
-use lib '../common/lib';
+use lib '../common/blib/lib';
 
 use English qw(-no_match_vars);
 use File::Spec;

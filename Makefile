@@ -326,7 +326,7 @@ source_dist: clean
 ######################################################################
 
 ifeq ($(MAKELEVEL),0)
-clean: clean-common clean-node clean-master clean-plugins
+clean: clean-node clean-master clean-plugins clean-common
 	-rm -f debian
 	-ln -sf dists/debian
 	-fakeroot debian/rules clean
