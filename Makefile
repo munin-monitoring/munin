@@ -23,7 +23,7 @@ MANCENTER        := "Munin Documentation"
 MAN8		 := master/_bin/munin-graph master/_bin/munin-update \
 			master/_bin/munin-limits master/_bin/munin-html \
 			master/_bin/munin-gather
-PODMAN8          := master/doc/munin-cron master/doc/munin
+PODMAN8          := master/doc/munin-cron master/doc/munin master/doc/munin-check
 PODMAN5          := master/doc/munin.conf node/doc/munin-node.conf
 
 .PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-munindoc install-doc install-man \
@@ -150,6 +150,7 @@ install-man: build-man Makefile Makefile.config
 	$(INSTALL) -m 0644 build/doc/munin-limits.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-html.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-cron.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-check.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin.8 $(MANDIR)/man8/
 
 
