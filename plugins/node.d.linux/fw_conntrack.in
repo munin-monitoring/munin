@@ -106,7 +106,11 @@ total.type GAUGE
 total.graph no
 EOF
         if [ -f /proc/sys/net/ipv4/ip_conntrack_max ] ; then
-	    read MAX </proc/sys/net/ipv4/ip_conntrack_max
+            read MAX </proc/sys/net/ipv4/ip_conntrack_max
+        elif [ -f /proc/sys/net/ipv4/netfilter/ip_conntrack_max ]; then
+             read MAX < /proc/sys/net/ipv4/netfilter/ip_conntrack_max
+        fi
+        if [ -n "$MAX" ]; then
 	    echo total.warning `expr $MAX \* 8 / 10`
 	    echo total.critical `expr $MAX \* 9 / 10`
 	fi
