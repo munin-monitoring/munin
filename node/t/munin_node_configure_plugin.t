@@ -254,73 +254,73 @@ sub gen_plugin
 }
 
 
-### installed_links
-### suggested_links
-### installed_wild
-### suggested_wild
+### _installed_links
+### _suggested_links
+### _installed_wild
+### _suggested_wild
 {
     my $p = gen_plugin('memory');
 
-    is_deeply($p->installed_links, [], 'no links by default');
-    is_deeply($p->installed_wild , [], 'no wildcards by default');
-    is_deeply($p->suggested_links, [], 'no suggestions by default');
-    is_deeply($p->suggested_wild , [], 'no suggested wildcards by default');
+    is_deeply($p->_installed_links, [], 'no links by default');
+    is_deeply($p->_installed_wild , [], 'no wildcards by default');
+    is_deeply($p->_suggested_links, [], 'no suggestions by default');
+    is_deeply($p->_suggested_wild , [], 'no suggested wildcards by default');
 
     $p->add_instance('memory');
-    is_deeply($p->installed_links, ['memory'], 'one link installed');
-    is_deeply($p->installed_wild , [],         'no wildcards reported');
+    is_deeply($p->_installed_links, ['memory'], 'one link installed');
+    is_deeply($p->_installed_wild , [],         'no wildcards reported');
 }
 {
     my $wcp = gen_plugin('if_');
 
-    is_deeply($wcp->installed_links, [], 'no links by default');
-    is_deeply($wcp->installed_wild , [], 'no wildcards by default');
-    is_deeply($wcp->suggested_links, [], 'no suggestions by default');
-    is_deeply($wcp->suggested_wild , [], 'no suggested wildcards by default');
+    is_deeply($wcp->_installed_links, [], 'no links by default');
+    is_deeply($wcp->_installed_wild , [], 'no wildcards by default');
+    is_deeply($wcp->_suggested_links, [], 'no suggestions by default');
+    is_deeply($wcp->_suggested_wild , [], 'no suggested wildcards by default');
 
     $wcp->add_instance('if_eth0');
-    is_deeply($wcp->installed_links, ['if_eth0'], 'one link installed');
-    is_deeply($wcp->installed_wild , ['eth0'],    'one wildcard');
+    is_deeply($wcp->_installed_links, ['if_eth0'], 'one link installed');
+    is_deeply($wcp->_installed_wild , ['eth0'],    'one wildcard');
 
     $wcp->add_instance('if_eth1');
-    is_deeply($wcp->installed_links, [qw/if_eth0 if_eth1/], 'two links installed');
-    is_deeply($wcp->installed_wild , [qw/eth0 eth1/],       'two wildcards');
+    is_deeply($wcp->_installed_links, [qw/if_eth0 if_eth1/], 'two links installed');
+    is_deeply($wcp->_installed_wild , [qw/eth0 eth1/],       'two wildcards');
 
     $wcp->parse_suggest_response('eth2');
-    is_deeply($wcp->suggested_links, [ 'if_eth2' ], 'with a suggestion');
-    is_deeply($wcp->suggested_wild , [ 'eth2' ],    'with a suggested wildcard');
+    is_deeply($wcp->_suggested_links, [ 'if_eth2' ], 'with a suggestion');
+    is_deeply($wcp->_suggested_wild , [ 'eth2' ],    'with a suggested wildcard');
 }
 {    
     my $sp = gen_plugin('snmp__load');
     
     $sp->add_instance('snmp_switch.example.com_load');
-    is_deeply($sp->installed_links, ['snmp_switch.example.com_load'], 'one link installed');
-    is_deeply($sp->installed_wild , ['switch.example.com'],           'one wildcard');
+    is_deeply($sp->_installed_links, ['snmp_switch.example.com_load'], 'one link installed');
+    is_deeply($sp->_installed_wild , ['switch.example.com'],           'one wildcard');
     $sp->add_instance('snmp_switch2.example.com_load');
-    is_deeply($sp->installed_links,
+    is_deeply($sp->_installed_links,
                 [qw/snmp_switch.example.com_load snmp_switch2.example.com_load/],
                 'two links installed');
-    is_deeply($sp->installed_wild , [qw/switch.example.com switch2.example.com/], 'two wildcards');
+    is_deeply($sp->_installed_wild , [qw/switch.example.com switch2.example.com/], 'two wildcards');
 
     push @{$sp->{suggestions}}, [ 'switch.example.com' ];
-    is_deeply($sp->suggested_links, [ 'snmp_switch.example.com_load' ], 'with a suggestion');
-    is_deeply($sp->suggested_wild , [ 'switch.example.com' ],    'with a suggested wildcard');
+    is_deeply($sp->_suggested_links, [ 'snmp_switch.example.com_load' ], 'with a suggestion');
+    is_deeply($sp->_suggested_wild , [ 'switch.example.com' ],    'with a suggested wildcard');
 }
 {
     my $swcp = gen_plugin('snmp__if_');
 
     $swcp->add_instance('snmp_switch.example.com_if_1');
-    is_deeply($swcp->installed_links, ['snmp_switch.example.com_if_1'], 'one link installed');
-    is_deeply($swcp->installed_wild , ['switch.example.com/1'],         'one wildcard');
+    is_deeply($swcp->_installed_links, ['snmp_switch.example.com_if_1'], 'one link installed');
+    is_deeply($swcp->_installed_wild , ['switch.example.com/1'],         'one wildcard');
     $swcp->add_instance('snmp_switch.example.com_if_2');
-    is_deeply($swcp->installed_links,
+    is_deeply($swcp->_installed_links,
                 [qw/snmp_switch.example.com_if_1 snmp_switch.example.com_if_2/],
                 'two links installed');
-    is_deeply($swcp->installed_wild , [qw{switch.example.com/1 switch.example.com/2}], 'two wildcards');
+    is_deeply($swcp->_installed_wild , [qw{switch.example.com/1 switch.example.com/2}], 'two wildcards');
 
     push @{$swcp->{suggestions}}, [ 'switch.example.com', '1' ];
-    is_deeply($swcp->suggested_links, [ 'snmp_switch.example.com_if_1' ], 'with a suggestion');
-    is_deeply($swcp->suggested_wild , [ 'switch.example.com/1' ],    'with a suggested wildcard');
+    is_deeply($swcp->_suggested_links, [ 'snmp_switch.example.com_if_1' ], 'with a suggestion');
+    is_deeply($swcp->_suggested_wild , [ 'switch.example.com/1' ],    'with a suggested wildcard');
     undef $swcp;
 }
 
