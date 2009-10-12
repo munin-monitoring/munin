@@ -3,14 +3,15 @@ use warnings;
 
 use Test::More 'no_plan';
 
-use Directory::Scratch;
-use Data::Dumper;
-
 use_ok 'Munin::Node::Configure::PluginList';
+
+use constant FOUND_DIRECTORY_SCRATCH => eval { require Directory::Scratch };
 
 
 sub plugin_factory
 {
+    die 'Directory::Scratch not available' unless FOUND_DIRECTORY_SCRATCH;
+
     my $dir = Directory::Scratch->new();
     return sub {
 	my ($name, @contents) = @_;
@@ -30,12 +31,13 @@ sub plugin_factory
 	libdir     => '/usr/share/munin/plugins',
 	servicedir => '/etc/munin/plugins/',
     ]);
-
 }
 
 
 ### _valid_files
-{
+SKIP: {
+    skip 'Directory::Scratch not installed' unless FOUND_DIRECTORY_SCRATCH;
+
     my $libdir = Directory::Scratch->new();
     my $valid = $libdir->touch('memory');
     chmod(0755, $valid->stringify);
@@ -55,7 +57,9 @@ sub plugin_factory
 
 
 ### list
-{
+SKIP: {
+    skip 'Directory::Scratch not installed' unless FOUND_DIRECTORY_SCRATCH;
+
     my $plugins = Munin::Node::Configure::PluginList->new(
 	libdir     => '/usr/share/munin/plugins',
 	servicedir => '/etc/munin/plugins',

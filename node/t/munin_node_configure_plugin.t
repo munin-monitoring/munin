@@ -3,10 +3,9 @@ use warnings;
 
 use Test::More 'no_plan';
 
-use Directory::Scratch;
-#use Data::Dumper;
-
 use_ok 'Munin::Node::Configure::Plugin';
+
+use constant FOUND_DIRECTORY_SCRATCH => eval { require Directory::Scratch };
 
 
 # helper function.  returns a Plugin object
@@ -371,7 +370,9 @@ sub gen_plugin
 
 
 ### read_magic_markers
-{
+SKIP: {
+    skip 'Directory::Scratch not installed' unless FOUND_DIRECTORY_SCRATCH;
+
     my $file = Directory::Scratch->new->touch('foo/bar/baz', <<'EOF');
 # Munin test plugin.   Does nothing, just contains magic markers
 #
@@ -388,7 +389,9 @@ EOF
     is_deeply($p->{capabilities}, { suggest => 1, autoconf => 1, other => 1 },
         '"capabilities" magic marker is read');
 }
-{
+SKIP: {
+    skip 'Directory::Scratch not available' unless FOUND_DIRECTORY_SCRATCH;
+
     my $file = Directory::Scratch->new->touch('foo/bar/baz', <<'EOF');
 # Munin test plugin.   Does nothing, just contains magic markers
 #
