@@ -36,8 +36,7 @@ Matthias Schmitz
 
 =head1 COPYRIGHT
 
-Copyright (C) 2002-2008 Audun Ytterdal, Jimmy Olsen, Nicolai
-Langfeldt, Linpro AS and others.
+Copyright (C) 2002-2008 Matthias Schmitzs.
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
