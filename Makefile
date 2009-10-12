@@ -18,6 +18,7 @@ INSTALL          := ./install-sh
 DIR              := $(shell /bin/pwd | sed 's/^.*\///')
 INFILES          := $(shell find . -name '*.in' | sed 's/\.\/\(.*\)\.in$$/build\/\1/')
 INFILES_MASTER   := $(shell find master -name '*.in' | sed 's/\(.*\)\.in$$/build\/\1/')
+CLASSFILES       := $(shell find plugins/javalib/ -name '*.java' | sed 's/\(.*\)\.java$$/build\/\1.class/')
 PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/*)
 MANCENTER        := "Munin Documentation"
 MAN8		 := master/_bin/munin-graph master/_bin/munin-update \
@@ -34,6 +35,11 @@ PODMAN5          := master/doc/munin.conf node/doc/munin-node.conf
 	tags
 
 .SECONDARY: node/Build master/Build plugins/Build
+
+.SUFFIXES: .java .class
+
+.java.class:
+	cd plugins/javalib && $(JC) $(JFLAGS) $(subst plugins/javalib/,,$*.java)
 
 default: build
 
@@ -125,6 +131,7 @@ install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	    fi                                                         \
 	done
 	-mv $(LIBDIR)/plugins/*.adv $(LIBDIR)
+	$(INSTALL) -m 0644 build/plugins/javalib/munin-plugins.jar $(LIBDIR)
 	$(INSTALL) -m 0644 build/plugins/plugins.history $(LIBDIR)/plugins/
 	$(INSTALL) -m 0644 build/plugins/plugin.sh $(LIBDIR)/plugins/
 
@@ -260,6 +267,15 @@ build-man-stamp: build Makefile Makefile.config
 	for f in $(PODMAN5); do \
 	   pod2man --section=5 --release=$(RELEASE) --center=$(MANCENTER) "$$f".pod > build/doc/`basename $$f .pod`.5; \
 	done
+
+build-plugins: build/plugins/javalib/munin-plugins.jar
+
+build/plugins/javalib/munin-plugins.jar: $(CLASSFILES)
+	cd build/plugins/javalib && $(JAR) cf munin-plugins.jar org/
+
+build/%.class: %.class
+	mkdir -p build/`dirname $*.class`
+	cp $*.class build/$*.class
 
 ######################################################################
 # DIST RULES
