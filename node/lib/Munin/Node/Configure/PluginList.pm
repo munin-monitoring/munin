@@ -36,15 +36,16 @@ sub new
 
 sub load
 {
-    $_[0]->_load_available();
-    $_[0]->_load_installed();
+    my ($self, @families) = @_;
+    $self->_load_available(@families);
+    $self->_load_installed();
     return;
 }
 
 
 sub _load_available
 {
-    my ($self) = @_;
+    my ($self, @families) = @_;
     my %found;
 
     my %valid_plugins = main::load_plugin_history($config->{newer}) if $config->{newer};
@@ -71,7 +72,7 @@ sub _load_available
 
         $plugin->read_magic_markers();
 
-        unless ($plugin->in_family(@{$config->{families}})) {
+        unless ($plugin->in_family(@families)) {
             DEBUG("\tFamily '$plugin->{family}' is currently ignored.  Skipping.");
             next;
         }

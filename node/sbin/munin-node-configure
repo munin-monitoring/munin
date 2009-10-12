@@ -29,7 +29,6 @@ use Data::Dumper;
 use Carp;
 
 use Munin::Node::Config;
-#use Munin::Node::Service;
 use Munin::Common::Defaults;
 use Munin::Node::Configure::PluginList;
 
@@ -50,7 +49,7 @@ sub main
         servicedir => $config->{servicedir},
     );
 
-    $plugins->load();
+    $plugins->load(@{$config->{families}});
 
 	if (@{ $config->{snmp} }) {
 		init_snmp($plugins);
