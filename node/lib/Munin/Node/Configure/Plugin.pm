@@ -58,11 +58,11 @@ sub suggestion_string
     my $msg = '';
 
     if ($self->{default} eq 'yes') {
-        my @suggestions = _same($self->installed_wild, $self->suggested_wild);
+        my @suggestions = _same($self->_installed_wild, $self->_suggested_wild);
         push @suggestions,
-            map { "+$_" } _add($self->installed_wild, $self->suggested_wild);
+            map { "+$_" } _add($self->_installed_wild, $self->_suggested_wild);
         push @suggestions,
-            map { "-$_" } _remove($self->installed_wild, $self->suggested_wild);
+            map { "-$_" } _remove($self->_installed_wild, $self->_suggested_wild);
 
         $msg = ' (' . join(' ', @suggestions) . ')' if @suggestions;
     }
@@ -75,7 +75,7 @@ sub suggestion_string
 }
 
 
-sub installed_services_string { return join ' ', @{(shift)->installed_wild}; }
+sub installed_services_string { return join ' ', @{(shift)->_installed_wild}; }
 
 
 ### Service name <-> wildcard conversion ###############################################
@@ -124,9 +124,9 @@ sub _flatten_wildcard { return ref($_[0]) ? join('/', @{$_[0]}) : $_[0]; }
 
 # return an arrayref of the installed and suggested service names (eg. 'memory'
 # or 'if_eth0')
-sub installed_links { return (shift)->{installed}; }
+sub _installed_links { return (shift)->{installed}; }
 
-sub suggested_links
+sub _suggested_links
 {
     my ($self) = @_;
     if ($self->{default} eq 'yes' and not $self->is_wildcard) {
@@ -139,22 +139,22 @@ sub suggested_links
 
 # return an arrayref of the installed or suggested wildcards (eg. 'eth0' or
 # 'switch.example.com/1').  nothing is returned if the plugin contains no wildcards.
-sub installed_wild { return [ map { $_[0]->_reduce_wildcard($_) } @{$_[0]->{installed}} ]; }
-sub suggested_wild { return [ map { _flatten_wildcard($_) } @{(shift)->{suggestions}}]; }
+sub _installed_wild { return [ map { $_[0]->_reduce_wildcard($_) } @{$_[0]->{installed}} ]; }
+sub _suggested_wild { return [ map { _flatten_wildcard($_) } @{(shift)->{suggestions}}]; }
 
 
 # returns a list of service names that should be added for this plugin
 sub services_to_add
 {
     my ($self) = @_;
-    return _add($self->installed_links, $self->suggested_links);
+    return _add($self->_installed_links, $self->_suggested_links);
 }
 
 # returns a list of service names that should be removed.
 sub services_to_remove
 {
     my ($self) = @_;
-    return _remove($self->installed_links, $self->suggested_links);
+    return _remove($self->_installed_links, $self->_suggested_links);
 }
 
 
