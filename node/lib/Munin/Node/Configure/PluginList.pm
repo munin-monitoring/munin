@@ -5,8 +5,6 @@ use warnings;
 
 use File::Basename qw(fileparse);
 
-use Data::Dumper;
-
 use Munin::Node::Service;
 use Munin::Node::Configure::Plugin;
 
@@ -65,10 +63,7 @@ sub _load_available
             $path = ($path =~ /^\//) ? $path : "$self->{libdir}/$path";
         }
 
-        my $plugin = Munin::Node::Configure::Plugin->new(
-                    name => $plug,
-                    path => $path,
-        );
+        my $plugin = Munin::Node::Configure::Plugin->new(name => $plug, path => $path);
 
         $plugin->read_magic_markers();
 
@@ -99,10 +94,10 @@ sub _load_installed
     my ($self) = @_;
     my $service_count = 0;  # the number of services currently installed.
 
-    DEBUG("Searching '$config->{servicedir}' for installed plugins.");
+    DEBUG("Searching '$self->{servicedir}' for installed plugins.");
 
     foreach my $item (_valid_files($self->{servicedir})) {
-        my $path = $item->{path};
+        my $path    = $item->{path};
         my $service = $item->{name};
 
         my $realfile;
@@ -114,12 +109,11 @@ sub _load_installed
             DEBUG("Warning: symlink '$path' is broken.");
             next;
         }
-        next unless ($realfile =~ /^$config->{libdir}\//);
-
-        $realfile = fileparse($realfile);
+        next unless ($realfile =~ /^$self->{libdir}\//);
 
         DEBUG("Found '$service'");
 
+        $realfile = fileparse($realfile);
         unless ($self->{plugins}{$realfile}) {
             DEBUG("\tCorresponds to an ignored plugin ($realfile).  Skipping.");
             next;
@@ -166,7 +160,6 @@ sub _valid_files
     closedir $DIR;
     return @items;
 }
-
 
 
 sub DEBUG { print '# ', @_, "\n" if $config->{DEBUG}; }
