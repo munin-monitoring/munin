@@ -38,6 +38,7 @@ sub pre_loop_hook {
     $self->SUPER::pre_loop_hook();
 }
 
+
 sub request_denied_hook {
     my $self = shift;
     logger("Denying connection from: $self->{server}->{peeraddr}");
@@ -362,11 +363,15 @@ For arguments to run(), see L<Net::Server>.
 
 =item B<pre_loop_hook>
 
-Loads all the plugins (services)
+Loads all the plugins (services).
+
+=item B<request_denied_hook>
+
+Logs the source of rejected connections.
 
 =item B<process_request>
 
-Processes the request ...
+Processes the request.
 
 =cut
 vim: ts=4 : expandtab
