@@ -57,14 +57,16 @@ sub main
 		probe_snmp_hosts($config->{snmp}, $plugins);
 		show_suggestions($plugins);
 	}
+    elsif ($config->{shell}) {
+        # NOTE: need to test for --shell before --suggest, since it
+        # takes precedence.
+        gather_suggestions($plugins);
+        manage_links($plugins);
+	}
     elsif ($config->{suggest}) {
         gather_suggestions($plugins);
         show_suggestions($plugins);
     }
-    elsif ($config->{shell}) {
-        gather_suggestions($plugins);
-        manage_links($plugins);
-	}
 	else {
         print_status_list($plugins);
 	}
@@ -279,12 +281,8 @@ sub gather_suggestions
 
 	foreach my $plugin ($plugins->list) {
 		next unless $plugin->{capabilities}{autoconf};
-
 		fetch_plugin_autoconf($plugin);
-
-		fetch_plugin_suggestions($plugin)
-			if ($plugin->is_wildcard
-			and $plugin->{capabilities}{suggest});
+		fetch_plugin_suggestions($plugin);
 	}
 
 	return;
@@ -575,6 +573,7 @@ sub fetch_plugin_suggestions
 
 	# Only run if the autoconf gave the go-ahead
 	return unless ($plugin->{default} eq "yes");
+    return unless ($plugin->is_wildcard and $plugin->{capabilities}{suggest});
 
     my @suggested = run_plugin($plugin, 'suggest');
 	return $plugin->parse_suggest_response(@suggested);
