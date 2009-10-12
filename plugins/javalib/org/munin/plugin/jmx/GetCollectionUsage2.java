@@ -9,13 +9,13 @@ import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-class GetCollectionUsage {
+class GetCollectionUsage2 {
     private ArrayList<MemoryPoolMXBean> gcmbeans;
     private String[] GCresult = new String[4];
     private MBeanServerConnection connection;
     private int memtype;
 
-   public GetCollectionUsage(MBeanServerConnection connection, int memtype)
+   public GetCollectionUsage2(MBeanServerConnection connection, int memtype)
    {   this.memtype = memtype;
        this.connection = connection;
    }
