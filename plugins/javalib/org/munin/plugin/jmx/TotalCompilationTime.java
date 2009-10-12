@@ -1,3 +1,4 @@
+package org.munin.plugin.jmx;
 /**
  *
  * @author Diyar

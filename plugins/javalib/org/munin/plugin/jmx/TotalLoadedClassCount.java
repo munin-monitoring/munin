@@ -1,3 +1,4 @@
+package org.munin.plugin.jmx;
 import java.lang.management.ClassLoadingMXBean;
 import java.lang.management.ManagementFactory;
 import javax.management.MBeanServerConnection;

@@ -1,3 +1,4 @@
+package org.munin.plugin.jmx;
 import java.io.IOException;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
