@@ -31,6 +31,7 @@ use Carp;
 use Munin::Node::Config;
 use Munin::Common::Defaults;
 use Munin::Node::Configure::PluginList;
+use Munin::Node::Configure::HostEnumeration;
 
 my $config = Munin::Node::Config->instance();
 
@@ -406,8 +407,8 @@ sub probe_snmp_hosts
     # comma-delimited form
 	my @host_specs = map { split /,/ } @$snmp_hostlist;
 
-	# FIXME: should preserve hostnames as much as possible.
-	foreach my $host (expand_hosts(@host_specs)) {
+    # FIXME: should preserve hostnames as much as possible.
+    foreach my $host (expand_hosts(@host_specs)) {
 		snmp_probe_host($host, $plugins);
 	}
 

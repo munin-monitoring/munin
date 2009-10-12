@@ -12,84 +12,10 @@ use Data::Dumper;
 
 use Exporter ();
 our @ISA = qw/Exporter/;
-our @EXPORT = qw/expand_hosts snmp_probe_host/;
+our @EXPORT = qw/snmp_probe_host/;
 
 use Munin::Node::Config;
-
 my $config = Munin::Node::Config->instance();
-
-
-### Network address manipulation ###############################################
-
-# converts an IP address (char* in network byte order, as returned by
-# gethostbyname, et al) and optional netmask into the corresponding
-# range of IPs.
-#
-# If you haven't guessed, this is IPv4 only.
-sub _hosts_in_net
-{
-	my ($addr, $mask) = @_;
-
-	my @ret;
-
-	# This won't work with a netmask of 0.  then again, no-one wants to
-	# SNMP-scan the whole internet, even if they think they do.
-	$mask ||= 32;
-
-	die "Invalid netmask: $mask\n"
-		unless ($mask =~ /^\d+$/ and $mask <= 32);
-
-	my $net = unpack('N', $addr);  # ntohl()
-
-	# Evil maths courtesy of nmap's TargetGroup.cc
-	my $low  = $net & (0 - (1 << (32 - $mask)));
-	my $high = $net | ((1 << (32 - $mask)) - 1);
-
-	# turns out the .. operator can't handle unsigned integers
-	for (my $ip = $low; $ip <= $high; $ip++) {
-		push @ret, inet_ntoa(pack 'N', $ip);
-	}
-	return @ret;
-}
-
-
-# Resolves a hostname or IP, and returns the address as a bitstring in
-# network byte order.
-sub _resolve
-{
-	my ($host) = @_;
-
-	my ($name, $aliases, $addrtype, $length, @addrs)
-		= gethostbyname($host);
-
-	die "Unable to resolve $host\n" unless $name;
-
-	if (scalar @addrs > 1) {
-		warn sprintf "Hostname %s resolves to %u IPs.  Using %s\n",
-		                   $host,
-		                   scalar(@addrs),
-		                   inet_ntoa($addrs[0]);
-	}
-    DEBUG(sprintf "Resolved %s to %s", $host, inet_ntoa($addrs[0]));
-
-	return $addrs[0];
-}
-
-
-# converts a list of hostnames, IPs or CIDR ranges to the corresponding IPs.
-sub expand_hosts
-{
-	my (@unexpanded) = @_;
-	my @hosts;
-
-	foreach my $item (@unexpanded) {
-        DEBUG("Processing $item");
-		my ($host, $mask) = split '/', $item, 2;
-		$host = _resolve($host);
-		push @hosts, _hosts_in_net($host, $mask);
-	}
-	return @hosts;
-}
 
 
 ### SNMP Probing ###############################################################

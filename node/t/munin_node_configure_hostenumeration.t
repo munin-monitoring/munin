@@ -5,9 +5,9 @@ use Test::More tests => 15;
 
 use Socket;
 
-use_ok('Munin::Node::SNMPConfig');
+use_ok('Munin::Node::Configure::HostEnumeration');
 
-# use the 192.0.2.0/24 block, since that's what the 
+# use the 192.0.2.0/24 block
 my @slash_24 = map { "192.168.2.$_" } 0 .. 255;
 
 ### resolve
@@ -22,7 +22,7 @@ my @slash_24 = map { "192.168.2.$_" } 0 .. 255;
 	while (my $test = shift @tests) {
 		my ($from, $msg) = @$test;
 
-		my $ip = eval {	Munin::Node::SNMPConfig::_resolve($from) };
+		my $ip = eval {	Munin::Node::Configure::HostEnumeration::_resolve($from) };
 		ok(!$@, "$msg - no exception");
 		ok($ip, "$msg - got a value");
 	}
@@ -31,7 +31,7 @@ my @slash_24 = map { "192.168.2.$_" } 0 .. 255;
 
 ### hosts_in_net
 {
-	my $hosts_in_net = \&Munin::Node::SNMPConfig::_hosts_in_net;
+	my $hosts_in_net = \&Munin::Node::Configure::HostEnumeration::_hosts_in_net;
 	my (@ips, @expected);
 
 	my $_192_168_2_123 = inet_aton('192.168.2.123');
@@ -71,8 +71,9 @@ sub _resolve
 	die "Unable to resolve $name: invalid test value!";
 }
 
+
 no warnings;
-*Munin::Node::SNMPConfig::_resolve = \&_resolve;
+*Munin::Node::Configure::HostEnumeration::_resolve = \&_resolve;
 use warnings;
 
 ### expand_hosts
@@ -90,7 +91,7 @@ use warnings;
 	while (my $test = shift @tests) {
 		my ($hosts, $expected, $msg) = @$test;
 		
-		@$hosts = Munin::Node::SNMPConfig::expand_hosts(@$hosts);
+		@$hosts = Munin::Node::Configure::HostEnumeration::expand_hosts(@$hosts);
 		is_deeply($hosts, $expected, $msg);
 	}
 }
