@@ -28,10 +28,10 @@ use POSIX ();
 use Data::Dumper;
 use Carp;
 
-use Munin::Node::Config;
 use Munin::Common::Defaults;
 use Munin::Node::Configure::PluginList;
 
+use Munin::Node::Config;
 my $config = Munin::Node::Config->instance();
 
 my $timeout = 10;
@@ -51,25 +51,28 @@ sub main
 
     $plugins->load(@{$config->{families}});
 
-	if (@{ $config->{snmp} }) {
-		my $snmp = init_snmp($plugins);
-		$snmp->probe_hosts($plugins);
-		show_suggestions($plugins);
-	}
-    elsif ($config->{shell}) {
-        # NOTE: need to test for --shell before --suggest, since it
-        # takes precedence.
-        gather_suggestions($plugins);
-        manage_links($plugins);
-	}
+    # Gather information
+    if (@{ $config->{snmp} }) {
+        my $snmp = init_snmp($plugins);
+        $snmp->probe_hosts($plugins);
+    }
     elsif ($config->{suggest}) {
         gather_suggestions($plugins);
+    }
+    else {
+        print_status_list($plugins);
+        exit 0;
+    }
+
+    # Display results.
+    if ($config->{shell}) {
+        manage_links($plugins);
+    }
+    else {
         show_suggestions($plugins);
     }
-	else {
-        print_status_list($plugins);
-	}
 
+    # Report errors.
     # FIXME: surely exit 0 unless m-n-c itself has gone funny?
     if (my @errors = list_errors($plugins->list)) {
         print STDERR "# The following plugins caused errors:\n";
@@ -117,10 +120,13 @@ sub parse_args
 
 	$config->parse_config_from_file($conffile);
 
-    @families = (@families)          ? map { split /,/ } @families :
-                (@snmp_hosts)        ? ('snmpauto')                :
-                ($suggest or $shell) ? @default_families           :
-                                       @all_families               ;
+    # --shell implies --suggest unless --snmp was also used
+    $suggest = 1 if ($shell and not @snmp_hosts);
+
+    @families = (@families)    ? map { split /,/ } @families :
+                (@snmp_hosts)  ? ('snmpauto')                :
+                ($suggest)     ? @default_families           :
+                                 @all_families               ;
 
     # Allow the user to mix multiple invocations of --snmp with the
     # comma-delimited form
@@ -648,7 +654,7 @@ Show suggestions instead of status
 
 =item B<< --shell >>
 
-Show shell commands (implies --suggest)
+Show shell commands (implies --suggest unless --snmp was also provided)
 
 =item B<< --exitnoterror >>
 
