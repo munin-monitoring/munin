@@ -11,6 +11,8 @@ On all hosts:
 
 - GNU Make - do not attempt to use any other make.
 
+- Sun Java 5+ compiler (a basic JDK Standard Edition from
+  java.sun.com or your package system)
 
 Server:
 
