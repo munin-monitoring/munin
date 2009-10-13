@@ -2,8 +2,8 @@
 use warnings;
 use strict;
 
-# use Test::More tests => 2;
-use Test::More qw(no_plan);
+use Test::More tests => 24;
+# use Test::More qw(no_plan);
 
 use_ok('Munin::Master::Config');
 
@@ -77,16 +77,16 @@ is($c->_concat_config_line('Group;','Group2;Host:service:service2.port','4949'),
     'Group;Group2;Host:service:service2.port', $tc.'1' );
 
 is($c->_concat_config_line('Group;Group2;','Host:service:service2.port','4949'),
-     'Group;Group2;Host:service:service2.port', $tc.'1' );
-
-is($c->_concat_config_line('Group;Group2;Host','service:service2.port','4949'),
      'Group;Group2;Host:service:service2.port', $tc.'2' );
 
+is($c->_concat_config_line('Group;Group2;Host','service:service2.port','4949'),
+     'Group;Group2;Host:service:service2.port', $tc.'3' );
+
 is($c->_concat_config_line('Group;Group2;Host:service',':service2.port','4949'),
-    'Group;Group2;Host:service:service2.port', $tc.'3' );
+    'Group;Group2;Host:service:service2.port', $tc.'4' );
 
 is( $c->_concat_config_line('Group;Group2;Host:service:service2','port','4949'),
-     'Group;Group2;Host:service:service2.port', $tc.'4' );
+     'Group;Group2;Host:service:service2.port', $tc.'5' );
 
 
 
@@ -104,3 +104,5 @@ is ( $c->_concat_config_line('Group;Host:service','field.max','4949'),
 
 is ( $c->_concat_config_line('Group;Host:service.field','max','4949'),
      'Group;Host:service.field.max', $tc.'4' );
+
+# Alright, can anyone think of any more tests?
