@@ -1,0 +1,102 @@
+#!@@GOODSH@@
+# -*- sh -*-
+: << =cut
+
+=head1 NAME
+
+jmx_ - Plugin to monitor java application servers via JMX
+
+=head1 CONFIGURATION
+
+FIXME: Custom configuration, hardcoded to read /etc/munin/jmx.conf
+(see ConfReader.java)
+
+ SERVICE=Tomcat
+ ip=127.0.0.1
+ port=5400
+
+FIXME: No authentication or encryption supported in the JMX
+connection yet.
+
+Needed configuration on the Tomcat side: add
+ -Dcom.sun.management.jmxremote \
+ -Dcom.sun.management.jmxremote.port=5400 \
+ -Dcom.sun.management.jmxremote.ssl=false \
+ -Dcom.sun.management.jmxremote.authenticate=false
+
+to CATALINA_OPTS in your startup scripts.
+
+=head1 APPLICABLE SYSTEMS
+
+TBD. Tomcat 5.5 on Sun JVM 5/6, at least.
+
+=head1 AUTHOR
+
+=encoding UTF-8
+
+Mo Amini, Diyar Amin and Younes Hajji, Høgskolen i Oslo. Shell script
+wrapper and integration by Erik Inge Bolsø, Redpill Linpro AS.
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=suggest
+
+=cut
+
+if [ "x$1" = "xsuggest" ] ; then
+  # AvailableProcessors => rewrite to use ConfReader
+  # DeadlockedThreads => rewrite to use ConfReader
+  # GCmain => seems broken?
+  cat <<__EOF
+CollectionUsageEden
+CollectionUsagePermGen
+CollectionUsageSurvivor
+CollectionUsageTenuredGen
+CurrentThreadCpuTime2
+CurrentThreadUserTime2
+DaemonThreadCount2
+GCCount
+GCTime
+HeapMemoryUsage2
+LoadedClassCount
+MemoryPoolThresholdCount
+NonHeapMemoryUsage2
+ObjectsPending
+PeakThreadCount
+PeakUsageEden
+PeakUsagePermGen
+PeakUsageSurvivor
+PeakUsageTenuredGen
+ThreadCount
+TotalCompilationTime
+TotalLoadedClassCount
+TotalStartedThreadCount
+UnloadedClass
+Uptime
+UsageEden
+UsagePermGen
+UsageSurvivor
+UsageTenuredGen
+UsageThresholdCount
+__EOF
+  exit 0
+fi
+
+if [ "x$1" = "xautoconf" ] ; then
+  # temporary
+  echo "yes"
+  exit 0
+fi
+
+if [ "x$1" = "xconfig" ] ; then
+  param=config
+else
+  param=Tomcat
+fi
+
+scriptname=${0##*/}
+jmxfunc=${scriptname##*_}
+
+@@JAVARUN@@ -cp @@LIBDIR@@/munin-plugins.jar org.munin.plugin.jmx.$jmxfunc $param
+
