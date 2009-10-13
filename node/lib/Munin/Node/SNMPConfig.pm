@@ -6,30 +6,56 @@ use strict;
 use warnings;
 
 use Net::SNMP;
-use Socket;
-
-use Data::Dumper;
-
-use Exporter ();
-our @ISA = qw/Exporter/;
-our @EXPORT = qw/snmp_probe_host/;
-
-use Munin::Node::Config;
-my $config = Munin::Node::Config->instance();
+use Munin::Node::Configure::HostEnumeration;
 
 
 ### SNMP Probing ###############################################################
 
+# arguments: community port, version and hosts
+
+sub new
+{
+    my ($class, %opts) = @_;
+
+    my $snmpver  = delete $opts{version}   || '2c';
+    my $snmpcomm = delete $opts{community} || 'public';
+    my $snmpport = delete $opts{port}      || 161;
+
+    my %snmp = (
+        community => $snmpcomm,
+        port      => $snmpport,
+        version   => $snmpver,
+
+        %opts,
+    );
+
+    return bless \%snmp, $class;
+}
+
+
+sub probe_hosts
+{
+    my ($self, $plugins) = @_;
+
+    # FIXME: should preserve hostnames as much as possible.
+    foreach my $host (expand_hosts(@{$self->{hosts}})) {
+        $self->snmp_probe_host($host, $plugins);
+    }
+
+    return;
+}
+
+
 sub snmp_probe_host
 {
-	my ($host, $plugins) = @_;
+    my ($self, $host, $plugins) = @_;
 
     DEBUG("SNMP-probing $host");
 	my ($session, $error) = Net::SNMP->session(
 		-hostname  => $host,
-		-community => $config->{snmp_community},
-		-port      => $config->{snmp_port},
-		-version   => $config->{snmp_version},
+        -community => $self->{community},
+        -port      => $self->{port},
+        -version   => $self->{version},
 		# Disable munging of responses into "human readable" form
 		-translate => 0,
 	);
@@ -150,6 +176,9 @@ sub _snmp_get_single
 	return $response->{$oid};
 }
 
+
+use Munin::Node::Config;
+my $config = Munin::Node::Config->instance();
 
 # Prints out a debugging message
 sub DEBUG { print '# ', @_, "\n" if $config->{DEBUG}; }

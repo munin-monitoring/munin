@@ -31,7 +31,6 @@ use Carp;
 use Munin::Node::Config;
 use Munin::Common::Defaults;
 use Munin::Node::Configure::PluginList;
-use Munin::Node::Configure::HostEnumeration;
 
 my $config = Munin::Node::Config->instance();
 
@@ -53,8 +52,8 @@ sub main
     $plugins->load(@{$config->{families}});
 
 	if (@{ $config->{snmp} }) {
-		init_snmp($plugins);
-		probe_snmp_hosts($config->{snmp}, $plugins);
+		my $snmp = init_snmp($plugins);
+		$snmp->probe_hosts($plugins);
 		show_suggestions($plugins);
 	}
     elsif ($config->{shell}) {
@@ -93,13 +92,8 @@ sub parse_args
 	my $debug;
 	my ($suggest, $shell, $removes, $newer);
 	my $exit_not_error = 1;
-
 	my @families;
-
-	my @snmp;
-	my $snmpver  = '2c';
-	my $snmpcomm = 'public';
-	my $snmpport = 161;
+	my (@snmp_hosts, $snmpver, $snmpcomm, $snmpport);
 
 	print_usage_and_exit() unless GetOptions(
 		"help"            => \&print_usage_and_exit,
@@ -114,7 +108,7 @@ sub parse_args
 		"libdir=s"        => \$libdir,
 		"families=s"      => \@families,
 		"version!"        => \&print_version_and_exit,
-		"snmp=s"          => \@snmp,
+		"snmp=s"          => \@snmp_hosts,
 		"snmpversion=s"   => \$snmpver,
 		"snmpcommunity=s" => \$snmpcomm,
 		"snmpport=i"      => \$snmpport,
@@ -124,9 +118,13 @@ sub parse_args
 	$config->parse_config_from_file($conffile);
 
     @families = (@families)          ? map { split /,/ } @families :
-                (@snmp)              ? ('snmpauto')                :
+                (@snmp_hosts)        ? ('snmpauto')                :
                 ($suggest or $shell) ? @default_families           :
                                        @all_families               ;
+
+    # Allow the user to mix multiple invocations of --snmp with the
+    # comma-delimited form
+    @snmp_hosts = map { split /,/ } @snmp_hosts;
 
 	$config->reinitialize({
 		timeout => $timeout,
@@ -146,7 +144,7 @@ sub parse_args
 		sconfdir => $sconfdir,
 		libdir => $libdir,
 
-		snmp => \@snmp,
+		snmp => \@snmp_hosts,
 		snmp_version => $snmpver,
 		snmp_community => $snmpcomm,
 		snmp_port => $snmpport,
@@ -377,16 +375,12 @@ sub link_add
 # Prepares for SNMP probing
 sub init_snmp
 {
-	my $plugins = shift;
+    my ($plugins) = @_;
 
 	unless (eval { require Munin::Node::SNMPConfig; }) {
-		print STDERR "# ERROR: Cannot perform SNMP probing since "
-		           . "Munin::Node::SNMPConfig module is not installed.\n";
-		print $@;
-		exit 1;
+        die "# ERROR: Cannot perform SNMP probing since Munin::Node::SNMPConfig module is not available.\n",
+            $@;
 	}
-
-	Munin::Node::SNMPConfig->import();
 
 	prepare_plugin_environment();
 
@@ -395,26 +389,16 @@ sub init_snmp
 		fetch_plugin_snmpconf($plugin);
 	}
 
-	return;
+    return Munin::Node::SNMPConfig->new(
+        hosts      => $config->{snmp},
+        community  => $config->{snmp_community},
+        version    => $config->{snmp_version},
+        port       => $config->{snmp_port},
+    );
 }
 
 
-sub probe_snmp_hosts
-{
-	my ($snmp_hostlist, $plugins) = @_;
-
-    # Allow the user to mix multiple invocations of --snmp with the
-    # comma-delimited form
-	my @host_specs = map { split /,/ } @$snmp_hostlist;
-
-    # FIXME: should preserve hostnames as much as possible.
-    foreach my $host (expand_hosts(@host_specs)) {
-		snmp_probe_host($host, $plugins);
-	}
-
-	return;
-}
-
+################################################################################
 
 sub load_plugin_history
 {
