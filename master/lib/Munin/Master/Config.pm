@@ -158,7 +158,7 @@ sub _final_char_is {
     # Not a object method.
     my ($char, $str) = @_;
  	
-    return rindex($str, $char) == length($str);
+    return rindex($str, $char) == ( length($str) - 1 );
 }
 
 sub _create_and_set {
@@ -237,7 +237,10 @@ sub _concat_config_line {
 
     my $longkey;
 
-    # Allowed prefixes:
+    # Allowed constructs:
+    # [group;host]
+    #     port 4949
+    # 
     # [group;]
     # [group;host]
     # [group;host:service]
@@ -289,6 +292,20 @@ sub _concat_config_line {
 	    $longkey = $prefix.":".$key;
 	}
     }
+
+    return $longkey;
+}
+
+sub _concat_config_line_ok {
+    # Concatenate config line and do some extra syntaxy checks
+
+    my ($self, $prefix, $key, $value) = @_;
+
+    if (!defined($key) or !$key) {
+	croak "Somehow we're missing the keyword sometime after section [$prefix]";
+    }
+
+    my $longkey = $self->_concat_config_line($prefix,$key,$value);
        
     my @words = split (/[;:.]/, $longkey);
     my $last_word = pop(@words);
