@@ -267,16 +267,26 @@ sub _concat_config_line {
 	if (substr($key,0,1) eq ':') {
 	    # Key is a nested service name
 	    $longkey = $prefix.$key;
-	} elsif (index($key,".") != -1) {
+
+	} elsif (index($prefix,':') != -1) {
+	    # Case:
+	    #   [Group;Host:service]
+	    #      field.attribute value
+	    #
+	    # => We're already into services, a nested service requires a
+	    #    explicit : which we don't have (previous case) so here
+	    #    a "." is called for.
+	    $longkey = $prefix.'.'.$key;
+	} elsif (index($key,'.') != -1) {
 	    # Case:
 	    #   [group;group;host]
-	    #      service.attribute key
+	    #      service.attribute value
 	    #
 	    # => Key is a service name and needs : prefixed.
-	    $longkey = $prefix.":".$key;
+	    $longkey = $prefix.':'.$key;
 	} else {
 	    # Key should be a attribute and needs . prefixed.
-	    $longkey = $prefix.".".$key;
+	    $longkey = $prefix.'.'.$key;
 	}
     } else {
 	# Prefix ends in host name,  $key is either a service name or a
