@@ -36,7 +36,7 @@ my %legal_expanded = map { $_ => 1 } @legal;
 sub is_keyword {
     my ($self, $word) = @_;
 
-    return $legal_expanded{$word} == 1;
+    return defined $legal_expanded{$word};
 }
 
 
