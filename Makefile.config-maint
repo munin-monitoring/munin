@@ -58,6 +58,9 @@ PYTHON     := /usr/bin/env python
 # The ruby interpreter to use (used by some plugins)
 RUBY       := /usr/bin/env ruby
 
+# The java runtime to use (used by some plugins)
+JAVARUN    := /usr/bin/java
+
 # A modern shell.  We're not looking for arrays, but $() and other modern
 # stuff is expected.
 # Linux: /bin/bash

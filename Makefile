@@ -194,6 +194,7 @@ build/%: %.in
              -e 's|@@PERLLIB@@|$(PERLLIB)|g'                    \
              -e 's|@@PYTHON@@|$(PYTHON)|g'                      \
              -e 's|@@RUBY@@|$(RUBY)|g'                          \
+             -e 's|@@JAVARUN@@|$(JAVARUN)|g'                    \
              -e 's|@@OSTYPE@@|$(OSTYPE)|g'                      \
              -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'                  \
              -e 's|@@MKTEMP@@|$(MKTEMP)|g'                      \
