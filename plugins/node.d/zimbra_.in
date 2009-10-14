@@ -868,6 +868,7 @@ if ($ARGV[0]) {
 # We won't run this without parameters.
 die ("Can't run without a symlinked name\n") if $0 =~ /zimbra_$/;
 
+my @cached_csvfields = ();
 
 my $tmpfield = $ops{$op}->{'fields'};
 foreach my $field ( @$tmpfield )
@@ -891,17 +892,21 @@ foreach my $field ( @$tmpfield )
       if ($csvindex2 > $#csvfields) { $error = 1; goto FIELDERR; }
     }
 
-    # blindly use last line of the csv, for now
-    $status = $csv->parse($file[-1]);
-    @csvfields = $csv->fields();
+    unless ($#cached_csvfields > -1)
+    {
+      # blindly use last line of the csv, for now
+      $status = $csv->parse($file[-1]);
+
+      @cached_csvfields = $csv->fields();
+    }
     # empty csv field => undef
-    if ($csvfields[$csvindex] eq "") { $error = 1; goto FIELDERR; }
+    if ($cached_csvfields[$csvindex] eq "") { $error = 1; goto FIELDERR; }
 
     if (defined $csvindex2)
     {
-      print "$label.value " . ( $csvfields[$csvindex] + $csvfields[$csvindex2] ). "\n";
+      print "$label.value " . ( $cached_csvfields[$csvindex] + $cached_csvfields[$csvindex2] ). "\n";
     } else {
-      print "$label.value " . $csvfields[$csvindex] . "\n";
+      print "$label.value " . $cached_csvfields[$csvindex] . "\n";
     }
   } else { $error = 1; }
 
