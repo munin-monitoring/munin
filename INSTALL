@@ -27,6 +27,10 @@ Server:
    - Digest::MD5,
    - HTML::Template
    - Text::Balanced
+   - Params::Validate
+   - TimeDate
+   - Net::SNMP for SNMP autoconfiguration and plugins
+   - Net::SSLeay if you want to use SSL/TLS
    - Log::Log4perl (which depends on
      - IPC::Shareable
      - Log::Dispatch
@@ -35,15 +39,14 @@ Server:
      - Mail::Sender
      - Mail::Sendmail
      - MailTools
-   - Params::Validate
-   - TimeDate
-   - Net::SNMP for SNMP autoconfiguration and plugins
 
    - Developers/packagers: For testing
      - Test::MockModule
      - Test::MockObject
      - Test::Pod::Coverage
-     - Perl::Critic 1.096 or later
+     - Test::Perl::Critic 1.096 or later
+     - Test::Exception
+     - Directory::Scratch (err, wherefrom?)
    
    - As well as all the modules needed on a node - most servers are also
      nodes.
@@ -54,8 +57,12 @@ Node:
 
 - All SNMP plugins use Net::SNMP
 
+- Net::SSLeay if you want to use SSL/TLS
+
 - Perl modules for plugins: Depends on the plugins you want to use,
   but not many.
+
+- If you want to use Java JMX plugins to monitor a Java app: a Java compiler
 
 
 If you're missing some perl modules and they are not in your package
