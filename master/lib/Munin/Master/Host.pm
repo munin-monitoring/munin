@@ -25,7 +25,8 @@ sub new {
         %$attributes,
     };
 
-    croak "Attribute 'address' is required" unless $self->{address};
+    # "Address" is required but must be lazy about it.
+    # die "Attribute 'address' is required for $host_name, config line $.\n" unless $self->{address};
 
     return bless $self, $class;
 }

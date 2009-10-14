@@ -10,7 +10,6 @@ use strict;
 use Carp;
 use Munin::Master::Host;
 
-
 sub new {
     my ($class, $group_name, $parent) = @_;
 

@@ -33,6 +33,8 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 
 my %legal_expanded = map { $_ => 1 } @legal;
 
+my %bools = map { $_ => 1} qw(yes no true false on off 1 0);
+
 sub is_keyword {
     my ($self, $word) = @_;
 
@@ -62,6 +64,7 @@ sub parse_config_from_file {
 
 
 sub _trim {
+    # Trim leading and trailing whitespace.
     my $class = shift;
     
     chomp $_[0];
@@ -83,8 +86,6 @@ sub _strip_comment {
 
 sub _looks_like_a_bool {
     my ($class, $str) = @_;
-
-    my %bools = map { $_ => 1} qw(yes no true false on off 1 0);
 
     return $bools{lc $str};
 }

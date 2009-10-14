@@ -16,6 +16,9 @@ use base qw(Munin::Common::Config);
 # The master programs (munin-update, munin-graph, munin-html) instanciates
 # a Munin::Master::Config object.
 #
+# Please note that the munin-node configuration is also based on
+# Munin::Common::Config but is quite a lot simpler with regards to syntax
+#
 # The Class Munin::Master::GroupRepository is based on Munin::Master::Config
 # and contains a tree of Munin::Master::Group objects.
 #
@@ -88,8 +91,7 @@ use base qw(Munin::Common::Config);
 #   [Group;Group;Host:service]
 #      attribute value
 #
-# When multigraph is realized I suppose we should support nested services
-# in the prefix as well.  I guess like this:
+# As part of multigraph we're supporting nested services as well:
 #
 #   [Group;Group;Host]
 #      service.attribute value
@@ -110,6 +112,8 @@ use strict;
 use Carp;
 use English qw(-no_match_vars);
 use Munin::Common::Defaults;
+use Munin::Master::Group;
+use Munin::Master::Host;
 
 my $MAXINT = 2 ** 53;
 
@@ -148,6 +152,12 @@ my %booleans = map {$_ => 1} qw(
             tls_verify_depth       => 5,
             tmpldir                => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates",
         }, $class;
+
+	# This object will over time aquire "service_configs" and
+	# "old_service_configs"
+
+	# These are made with calls to
+	#  $self->parse_config_from_file (M::C::Config)
         
         return $instance;
     }
@@ -161,6 +171,7 @@ sub _final_char_is {
     return rindex($str, $char) == ( length($str) - 1 );
 }
 
+
 sub _create_and_set {
     my ($self,$groups,$host,$rest,$value) = @_;
     # Nested creation of group and host class objects, and then set
@@ -173,6 +184,11 @@ sub _create_and_set {
 
     if ($booleans{$last_word}) {
 	$value = $self->_parse_bool($value);
+    }
+
+    if ($#{$groups} == -1 and !$host) {
+	$self->{$rest} = $value;
+	return;
     }
 
     foreach my $group (@{$groups}) {
@@ -191,9 +207,14 @@ sub _create_and_set {
 	    $groupref->{hosts}{$host} =
 		Munin::Master::Host->new($host,$groupref,{ $rest => $value });
 	} else {
-	    $groupref->{hosts}{$host}->add_attibutes_if_not_exists({ $rest => $value } );
+	    $groupref->{hosts}{$host}->add_attributes_if_not_exists({ $rest => $value } );
 	}
+    } else {
+	# Implant key/value into group
+	$groupref->{$rest} = $value;
     }
+    
+    # 
 }
 
 sub set_value {
@@ -264,8 +285,8 @@ sub _concat_config_line {
     # Concatenate current prefix and and the config line we're parsing now
     # in a correct manner.
     #
-    # If the arrived at config line is not legal as far as we can tell then
-    # croak here.
+    # No sanity checking in this procedure.  Use _concat_config_line_ok to
+    # get sanity/syntax checking.
 
     my ($self, $prefix, $key, $value) = @_;
 
@@ -358,6 +379,9 @@ sub _concat_config_line {
 
 sub _concat_config_line_ok {
     # Concatenate config line and do some extra syntaxy checks
+    #
+    # If the arrived at config line is not legal as far as we can tell
+    # then croak here.
 
     my ($self, $prefix, $key, $value) = @_;
 
@@ -426,6 +450,80 @@ sub set {
     my ($self, $config) = @_;
     
     %$self = (%$self, %$config); 
+}
+
+
+sub _read_old_service_configs {
+    my ($self) = @_;
+
+    return {} unless -e $self->{config_dump_file};
+
+    open my $dump, '<', $self->{config_dump_file}
+        or croak "Fatal error: Could not open '$self->{config_dump_file}' for reading: $!";
+
+    my %service_configs = $self->_parse_service_config_dump($dump);
+
+    close $dump
+        or croak "Fatal error: Could not close '$self->{config_dump_file}': $!";
+
+    #use Data::Dumper; warn Dumper(\%service_configs);
+
+    return \%service_configs;
+    
+}
+
+
+sub _parse_service_config_dump {
+    my ($self, $io) = @_;
+
+    my %service_configs = ();
+
+    my $version = <$io>;
+    chop $version;
+    $self->{old_version} =  substr $version, length('version ');
+
+    while (my $line = <$io>) {
+        chop $line;
+
+        my ($key, $value) = split(/ /, $line);
+
+	my ($grouphost,$ss) = split(/:/, $key);
+
+	my ($service,@rest) = split(/\./, $ss);
+
+	my @key_components = split(/;/, $grouphost);
+
+	my $host = pop(@key_components);
+
+        if (@key_components == 1 || @key_components == 3) {
+            # Ignore. These are configuration variables from
+            # $CONF_DIR/munin.conf. We only care about service
+            # configuration.
+            next;
+        }
+        
+        my $group = join(';', @key_components);
+
+        $host = "$group;$host";
+
+        #use Data::Dumper; warn Dumper([$host, $value, \@attribute]);
+
+        $service_configs{$host} ||= {};
+
+	if (defined($service)) {
+	    $service_configs{$host}{$service} ||= 
+	    {global => [], data_source => {}};
+
+	    if (@rest == 2) {
+		$service_configs{$host}{$service}{data_source}{$rest[0]} ||= {};
+		$service_configs{$host}{$service}{data_source}{$rest[0]}{$rest[1]} = $value;
+	    } else {
+		push @{$service_configs{$host}{$service}{global}}, [@rest, $value];
+	    }
+        } # Don't we need a else here?
+    }
+
+    return %service_configs;
 }
 
 
