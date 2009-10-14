@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 24;
+use Test::More tests => 29;
 # use Test::More qw(no_plan);
 
 use_ok('Munin::Master::Config');
@@ -11,9 +11,31 @@ use_ok('Munin::Master::Config');
 my $c = bless { }, 'Munin::Master::Config';
 
 # Test class
+my $tc;
+
+		       $tc = "Simple basics ";
+
+is ( $c->_concat_config_line('','htmldir','/foo/bar'),
+     'htmldir', $tc.'1');
+
+is ( $c->_concat_config_line('grouphere;lookfar:if_eth0','graph_args','--l 0 -base'),
+     'grouphere;lookfar:if_eth0.graph_args', $tc.'2');
+
+is ( $c->_concat_config_line('grouphere;lookfar:if_eth0','up.label','Spazz'),
+     'grouphere;lookfar:if_eth0.up.label', $tc.'3');
 
 
-		  my $tc = "Prefix/keyword combos ";
+		    $tc = "Implicit group names ";
+
+is ( $c->_concat_config_line('foo.example.com','port','4949'),
+     'example.com;foo.example.com.port', $tc.'1');
+
+is ( $c->_concat_config_line('localhost','port','4949'),
+     'localhost;localhost.port', $tc.'2');
+
+
+
+		   $tc = "Prefix/keyword combos ";
 
 
 is ( $c->_concat_config_line('Group;','port','4949'),
@@ -106,3 +128,5 @@ is ( $c->_concat_config_line('Group;Host:service.field','max','4949'),
      'Group;Host:service.field.max', $tc.'4' );
 
 # Alright, can anyone think of any more tests?
+# Probably even more combinations of nesting in both ends to see if that
+# somehow trips up the code.

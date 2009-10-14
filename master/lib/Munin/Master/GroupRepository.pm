@@ -80,38 +80,7 @@ sub _process_section {
 }
 
 
-sub _extract_group_name_from_definition {
-    # Extract the group name from any munin.conf section name
-    #
-    # Cases:
-    # * foo.example.com      ->  example.com
-    # * bar;foo.example.com  ->  bar
-    # * foo                  ->  foo
-    # * bar;foo              ->  bar
-    # * bar;		     ->  bar
-    #
-    # More cases:
-    # * bar;foo.example.com:service
-
-    my ($self, $definition) = @_;
-
-    my $dot_loc = index($definition, '.');
-    my $sc_loc = index($definition, ';');
-
-    # Return bare hostname
-    return $definition if $sc_loc == -1 and $dot_loc == -1;
-    
-    # Return explicit group name
-    return substr($definition, 0, $sc_loc)
-	if $sc_loc > -1 and ($dot_loc == -1 or $sc_loc < $dot_loc);
-
-    # Return domain name as group name
-    return substr($definition, $dot_loc + 1);
-}
-
-sub _extract_host_ name_from_definition {
-    #
-
+sub _extract_host_name_from_definition {
     my ($self, $definition) = @_;
 
     my $dot_loc = index($definition, '.');

@@ -224,7 +224,41 @@ sub set_value {
 
     $self->_create_and_set(\@groups,$host,$rest,$value);
 }
+
+
+sub _extract_group_name_from_definition {
+    # Extract the group name from any munin.conf section name
+    #
+    # This a object method for the sake of finding it with the help of
+    # a object of the right kind.
+
+    # Cases:
+    # * foo.example.com      ->  example.com
+    # * bar;foo.example.com  ->  bar
+    # * foo                  ->  foo
+    # * bar;foo              ->  bar
+    # * bar;		     ->  bar
+    #
+    # More cases:
+    # * bar;foo.example.com:service
+
+    my ($self, $definition) = @_;
+
+    my $dot_loc = index($definition, '.');
+    my $sc_loc = index($definition, ';');
+
+    # Return bare hostname
+    return $definition if $sc_loc == -1 and $dot_loc == -1;
     
+    # Return explicit group name
+    return substr($definition, 0, $sc_loc)
+	if $sc_loc > -1 and ($dot_loc == -1 or $sc_loc < $dot_loc);
+
+    # Return domain name as group name
+    return substr($definition, $dot_loc + 1);
+}
+
+
 
 sub _concat_config_line {
     # Concatenate current prefix and and the config line we're parsing now
@@ -239,6 +273,10 @@ sub _concat_config_line {
 
     # Allowed constructs:
     # [group;host]
+    #     port 4949
+    #
+    # This is shorthand for [domain;host.domain]:
+    #   [host.domanin]
     #     port 4949
     # 
     # [group;]
@@ -257,6 +295,18 @@ sub _concat_config_line {
 
     # Note that keywords can come directly after group names in the
     # concatenated syntax: group;group_order ...
+
+    if ($prefix eq '') {
+	# If the prefix is empty then the key had better be well formed and
+	# complete.
+	return $key;
+    }
+
+    if (index($prefix,';') == -1) {
+	# Handle shorthand: Group name is given by host name
+	my $group = $self->_extract_group_name_from_definition($prefix);
+	$prefix = "$group;$prefix";
+    }
 
     if (_final_char_is(';',$prefix)) {
 	# Prefix ended in the middle of a group.  The rest can be
