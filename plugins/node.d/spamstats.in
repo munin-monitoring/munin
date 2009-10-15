@@ -1,6 +1,28 @@
 #!@@PERL@@
 # -*- perl -*-
-#
+
+=head1 NAME
+
+spamstats - Plugin to graph spamassassin throughput
+
+=head1 CONFIGURATION
+
+This plugin does not have any configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+
+=cut
+
 
 $statefile = $ENV{statefile} || "@@PLUGSTATE@@/munin-spamstats.state";
 $pos   = undef;
