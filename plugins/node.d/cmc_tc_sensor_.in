@@ -1,16 +1,42 @@
 #!@@PERL@@
 # -*- perl -*-
 
+=head1 NAME
+
+cmc_tc_sensor_ - Wildcard plugin for monitoring CMC temperature sensors via SNMP
+
+=head1 CONFIGURATION
+
+This is a wildcard plugin.  The plugin link name prefix (after the final "_")
+should be a hostname to contact via SNMP.
+
+This plugin does not use configuration environment variables.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 BUGS
+
+Possibly misnamed. Candidate to be snmp__cmctcsensor_
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=suggest
+
+=cut
+
 use strict;
 use warnings;
 use FindBin qw ($Bin $Script);
 use Net::SNMP;
 use Data::Dumper;
 use vars qw ($configure $suggest $sensor_unit $sensor_index %sensor);
-
-#
-# FIXME: Candidate to be snmp__cmctcsensor_
-#
 
 # Quit if run without specified sensors
 unless ($0 =~ /_\d+_\d+$/ || ($ARGV[0] && $ARGV[0] eq "suggest")) {
