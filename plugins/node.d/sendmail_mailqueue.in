@@ -1,22 +1,42 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Plugin to monitor sendmail queue size.
-#
-# Usage: Place in /etc/lrrd/client.d/ (or link it there  using ln -s)
-#
-# Parameters understood:
-#
-# 	config   (required)
-# 	autoconf (optional)
-#
-# Config variables:
-#
-#       mspqueue     - MSQ queue directory
-#       mtaqueue     - MTA queue directory
-#
-#%# family=auto
-#%# capabilities=autoconf
+
+: << =cut
+
+=head1 NAME
+
+sendmail_mailqueue - Plugin to graph the sendmail queue size
+
+=head1 CONFIGURATION
+
+This plugin uses the following configuration variables
+
+ [sendmail_mailqueue]
+  env.mspqueue - MSQ queue directory
+  env.mtaqueue - MTA queue directory
+
+=head2 DEFAULT CONFIGURATION
+
+The default configuration is
+
+ [sendmail_mailqueue]
+  env.mspqueue /var/spool/mqueue-client
+  env.mtaqueue /var/spool/mqueue
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 MSP_QUEUE=/var/spool/mqueue-client
 MTA_QUEUE=/var/spool/mqueue

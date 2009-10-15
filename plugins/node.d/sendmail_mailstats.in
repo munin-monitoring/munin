@@ -1,22 +1,37 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Plugin to monitor sendmail statistics.
-#
-# Usage: Place in /etc/munin/plugins/ (or link it there using ln -s)
-#
-# Config variables:
-#
-#	env.mailstats - path to mailstats command
-#
-# Parameters understood:
-#
-# 	config   (required)
-# 	autoconf (optional)
-#
-# Magic markers (used by munin-node-configure)
-#%# capabilities=autoconf
-#%# family=auto
+
+: << =cut
+
+=head1 NAME
+
+sendmail_mailstats - Plugin to monitor sendmail statistics
+
+=head1 CONFIGURATION
+
+This plugin uses the following configuration variables:
+
+ [sendmail_mailstats]
+  env.mailstats - Path to the "mailstats" command
+
+=head2 DEFAULT CONFIGURATION
+
+The default configuration for "mailstats" is to look for a binary called "mailstats" in PATH.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 if [ -n "$mailstats" ];
         then MAILSTATS=$mailstats;
