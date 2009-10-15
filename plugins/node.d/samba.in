@@ -1,24 +1,34 @@
 #!@@GOODSH@@ 
 # -*- sh -*-
-# 
-# Plugin to monitor the number of open files in the system.
-#
-# client-conf.d/-options:
-#       
-#       smbstatus       -- path to smbstatus executable
-#       ignoreipcshare  -- ignore IPC$ whan counting shares
-#                          any string will do
-#
-# Parameters:
-# 	
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Magic markers (Used by munin-config and some installation scripts.
-# Optional):
-#
-#%# family=contrib
-#%# capabilities=autoconf
+
+: << =cut
+
+=head1 NAME
+
+samba - Plugin to monitor number of files held open by the CIFS clients
+
+=head1 CONFIGURATION
+
+This plugin uses the following configuration variables
+
+ [samba]
+  env.smbstatus      - Path to "smbstatus" executable
+  env.ignoreipcshare - Set this variable to ignore IPC$ when counting shares.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
 
 SMBSTATUS=${smbstatus:-`which smbstatus`}
 SMBSTATUS=${SMBSTATUS:-/usr/bin/smbstatus}
