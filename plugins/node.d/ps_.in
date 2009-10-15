@@ -1,26 +1,48 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Wildcard-script to monitor number of processes. To monitor a
-# program, link ps_<program> to this file. E.g.
-#
-#    ln -s /usr/share/munin/node/plugins-auto/ps_ /etc/munin/node.d/ps_exim
-#
-# ...will monitor number of exim-processes.
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-# 	suggest  (optional - used by munin-config)
-#
-# Configuration variables
-#
-#   regex - regex to use for filtering pgrep/ps output
-#
-# Magic markers (optional):
-#%# family=auto
-#%# capabilities=autoconf suggest
+
+: << =cut
+
+=head1 NAME
+
+ps_ - Wildcard plugin to monitor number of processes
+
+=head1 CONFIGURATION
+
+This is a wildcard plugin.  The wildcard prefix link name should be the process
+name to monitor.
+
+This plugin uses the following configuration variables:
+
+ [ps_*]
+  env.regex - Regular expression used to filter output from pgrep / ps.
+
+Whatever matches this regular expression is included in the count.
+
+=head2 DEFAULT CONFIGURATION
+
+The default configuration is to set "env.regex" to the link name prefix.
+
+=head2 EXAMPLE WILDCARD USAGE
+
+C<ln -s /usr/share/munin/node/plugins-auto/ps_ /etc/munin/node.d/ps_exim>
+
+...will monitor number of exim-processes.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 
