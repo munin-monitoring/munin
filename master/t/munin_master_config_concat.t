@@ -78,13 +78,13 @@ is ( $c->_concat_config_line('foo.example.com','port','4949'),
      'example.com;foo.example.com:port', $tc.'1');
 
 is ( $c->_concat_config_line('foo.example.com','address','4949'),
-     'example.com;foo.example.com:address', $tc.'1');
+     'example.com;foo.example.com:address', $tc.'2');
 
 is ( $c->_concat_config_line('foo.example.com','if_eth0.up.label','4949'),
-     'example.com;foo.example.com:if_eth0.up.label', $tc.'1');
+     'example.com;foo.example.com:if_eth0.up.label', $tc.'3');
 
 is ( $c->_concat_config_line('localhost','port','4949'),
-     'localhost;localhost:port', $tc.'2');
+     'localhost;localhost:port', $tc.'4');
 
 
 		   $tc = "Prefix/keyword combos ";
