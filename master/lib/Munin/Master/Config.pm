@@ -52,7 +52,7 @@ use base qw(Munin::Common::Config);
 # (When multigraph is supported) services can be nested:
 #
 #   (...);Host:service:service.(...)
-#   (...);Host:service:service:service.(...)
+#   (...);Host:service:service.service.(...)
 #
 # All attributes (attribute names) are known and appears in the @legal
 # array (and accompanying hash).
@@ -95,15 +95,15 @@ use base qw(Munin::Common::Config);
 #
 #   [Group;Group;Host]
 #      service.attribute value
-#      service:service.attribute value
+#      service.service.attribute value
 #
 #   [Group;Group;Host:service]
 #      attribute value             # Group;Group;Host:service.attribute
-#      :service.attribute value    # Group;Group;Host:service:service.attribute
+#      :service.attribute value    # Group;Group;Host:service.service.attribute
 #
-#   [Group;Group;Host:service:service]
-#      attribute value             # Group;Group;Host:service:service.attribute
-#      :service.attribute value    # ...;Host:service:service:service.attribute
+#   [Group;Group;Host:service.service]
+#      attribute value             # Group;Group;Host:service.service.attribute
+#      service.attribute value    # ...;Host:service:service.service.attribute
 #
 
 use warnings;
@@ -219,31 +219,11 @@ sub _create_and_set {
 
 sub set_value {
     # Set value in config hash, $key is full ;:. separated value.
-    my ($self, $key, $value) = @_;
-    
-    my @words = split (/[;:.]/, $key);
-    my $last_word = pop(@words);
+    my ($self, $longkey, $value) = @_;
 
-    if (! $self->is_keyword($last_word)) {
-	croak "Parse error in ".$self->{config_file}." for $key:\n".
-	    " Unknown keyword at end of left hand side of line ($key $value)\n";
-    }
+    my ($groups,$host,$key) = $self->_split_config_line($longkey);
 
-    my ($groups,$rest) = split(/:/, $key);
-    my @groups = split(/;/, $groups);
-
-    my $host;
-
-    if (defined($rest)) {
-	$host = pop(@groups);
-    } else {
-	# If there is no rest then the last "group" is a keyword.
-	$host = '';
-	$rest = pop(@groups);
-    }
-    # $setting = $rest;
-
-    $self->_create_and_set(\@groups,$host,$rest,$value);
+    $self->_create_and_set($groups,$host,$key,$value);
 }
 
 
@@ -278,13 +258,12 @@ sub _extract_group_name_from_definition {
     # Return domain name as group name
     return substr($definition, $dot_loc + 1);
 }
-
-
-
 sub _concat_config_line {
-    # Concatenate current prefix and and the config line we're parsing now
-    # in a correct manner.
-    #
+    # Canonify and concatenate current prefix and and the config line
+    # we're parsing now in a correct manner.
+
+    # See also _split_config_line.
+
     # No sanity checking in this procedure.  Use _concat_config_line_ok to
     # get sanity/syntax checking.
 
@@ -313,13 +292,18 @@ sub _concat_config_line {
     # [group1;group2;host:service:service...]
     #     :service.field.keyword value
     #
+    # Rules:
+    # - Last ';' terminates group part
+    # - Last ':' terminates the host part
+    # - The rest is a collection of services and time series data
+    #   - which we collect under the host name in the data-structure.
 
     # Note that keywords can come directly after group names in the
     # concatenated syntax: group;group_order ...
 
     if ($prefix eq '') {
 	# If the prefix is empty then the key had better be well formed and
-	# complete.
+	# complete, because we'll use it without further checking.
 	return $key;
     }
 
@@ -334,48 +318,17 @@ sub _concat_config_line {
 	# appended.
 	$longkey = $prefix.$key;
     } elsif (index($prefix,':') != -1) {
-	# Service name is part of the prefix. 
-	if (substr($key,0,1) eq ':') {
-	    # Key is a nested service name
-	    $longkey = $prefix.$key;
-
-	} elsif (index($prefix,':') != -1) {
-	    # Case:
-	    #   [Group;Host:service]
-	    #      field.attribute value
-	    #
-	    # => We're already into services, a nested service requires a
-	    #    explicit : which we don't have (previous case) so here
-	    #    a "." is called for.
-	    $longkey = $prefix.'.'.$key;
-	} elsif (index($key,'.') != -1) {
-	    # Case:
-	    #   [group;group;host]
-	    #      service.attribute value
-	    #
-	    # => Key is a service name and needs : prefixed.
-	    $longkey = $prefix.':'.$key;
-	} else {
-	    # Key should be a attribute and needs . prefixed.
-	    $longkey = $prefix.'.'.$key;
-	}
+	# Host name ends explicitly in the prefix. Use "." everywhere after :
+	# Key is a nested service name
+	$longkey = $prefix.'.'.$key;
     } else {
-	# Prefix ends in host name,  $key is either a service name or a
-	# keyword.
-	if (index($key,".") != -1 or index($key,":") != -1 ) {
-	    # Key has structure, it must be a service then.
-	    $longkey = $prefix.":".$key;
-	} elsif ($self->is_keyword($key)) {
-	    # It's a keyword, i.e. a attribute.
-	    $longkey = $prefix.".".$key;
-	} else {
-	    # Not a keyword, must be a service name then.
-	    $longkey = $prefix.":".$key;
-	}
+	# Prefix ends in host name but ":" is missing.
+	$longkey = $prefix.':'.$key;
     }
 
     return $longkey;
 }
+
 
 sub _concat_config_line_ok {
     # Concatenate config line and do some extra syntaxy checks
@@ -401,13 +354,88 @@ sub _concat_config_line_ok {
     return $longkey;
 }
 
+
+sub _split_config_line {
+    # After going to all that trouble with putting a "longkey" together
+    # we now persue splitting the key in a nice and accurate manner.
+    #
+    # See also _concat_config_line
+
+    my ($self,$line) = @_;
+
+    my $groups;
+    my $host;
+    my $key;
+
+    # Cases to keep in mind
+    #   htmldir
+    #   Group;address
+    #   Group;Group;address
+    #   Group;Host:address
+    #   Group;Host:if_eth0.in.value
+    #   Group;Host:snmp_foo_if_input.snmp_foo_if_input_0.value
+
+    my $sc = index($line,';');
+
+    if ($sc == -1) {
+	$groups='';
+    } else {
+	# Note that .+ is greedy so $groups is the whole groups grouping
+	$line =~ /(.+);(.*)/;  
+	($groups, $line) = ($1, $2);
+    }
+
+    # Now left with (1:1 with cases above)
+    #   address
+    #   address
+    #   Host:address
+    #   Host:if_eth0.in.value
+    #   Host:snmp_foo_if_input.snmp_foo_if_input_0.value
+
+    my $cc = index($line,':');
+
+    if ($cc == -1) {
+	# No host delimiter: the rest is a setting
+	$host = '';
+	$key = $line;
+    } else {
+	# Can see host delimiter.  Copy it and the rest is a setting.
+	$host = substr($line,0,$cc);
+	substr($line,0,$cc+1) = '';
+	$key = $line;
+    }
+    
+    return ([split(';',$groups)],$host,$key);
+}
+
+
+sub _split_config_line_ok {
+    # Split config line and do some extra syntaxy checks
+    #
+    # If all is not well we'll corak here.
+
+    my ($self,$longkey,$value) = @_;
+
+    my ($groups,$host,$key) = $self->_split_config_line($longkey);
+
+    my @words = split (/[.]/, $key);
+    my $last_word = pop(@words);
+
+    if (! $self->is_keyword($last_word)) {
+	croak "Parse error in ".$self->{config_file}." for $key:\n".
+	    " Unknown keyword at end of left hand side of line ($key $value)\n";
+    }
+
+    retrun ($groups,$host,$key);
+}
+
+
 sub _parse_config_line {
     my ($self, $prefix, $key, $value) = @_;
     
     my $longkey = $self->_concat_config_line($prefix,$key,$value);
 
     $self->set_value($longkey,$value);
-	
 }
 
 sub parse_config {
