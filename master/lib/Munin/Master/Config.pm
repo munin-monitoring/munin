@@ -164,6 +164,7 @@ my %booleans = map {$_ => 1} qw(
 }
 
 
+
 sub _final_char_is {
     # Not a object method.
     my ($char, $str) = @_;
@@ -173,52 +174,57 @@ sub _final_char_is {
 
 
 sub _create_and_set {
-    my ($self,$groups,$host,$rest,$value) = @_;
+    my ($self,$groups,$host,$key,$value) = @_;
     # Nested creation of group and host class objects, and then set
     # attribute value.
 
-    my $groupref = $self;
+    my $setref = $self;  # Used as "itterator" as we traverse the hash.
 
-    my @rest = split(/\./, $rest);
-    my $last_word = pop @rest;
+    my @key = split(/\./, $key);
+    my $last_word = pop @key;
 
     if ($booleans{$last_word}) {
 	$value = $self->_parse_bool($value);
     }
 
-    if ($#{$groups} == -1 and !$host) {
-	$self->{$rest} = $value;
+    # If there is a host there is a group.  So need only check group to see
+    # how deep we go.
+    if ($#{$groups} == -1) {
+	$self->{$key} = $value;
 	return;
     }
 
     foreach my $group (@{$groups}) {
 	# Create nested group objects
-	$groupref->{groups}{$group} ||= Munin::Master::Group->new($group);
-	if ($groupref eq $self) {
-	    $groupref->{groups}{$group}{group}=undef;
+	$setref->{groups}{$group} ||= Munin::Master::Group->new($group);
+
+	if ($setref eq $self) {
+	    $setref->{groups}{$group}{group}=undef;
+	    confess("Why are we here again? FIX?");
 	} else {
-	    $groupref->{groups}{$group}{group}=$groupref;
+	    $setref->{groups}{$group}{group}=$setref;
 	}
-	$groupref = $groupref->{groups}{$group};
+
+	$setref = $setref->{groups}{$group};
     }
     
     if ($host) {
-	if (! defined ( $groupref->{hosts}{$host} ) ) {
-	    $groupref->{hosts}{$host} =
-		Munin::Master::Host->new($host,$groupref,{ $rest => $value });
+	if (! defined ( $setref->{hosts}{$host} ) ) {
+	    $setref->{hosts}{$host} =
+		Munin::Master::Host->new($host,$setref,{ $key => $value });
 	} else {
-	    $groupref->{hosts}{$host}->add_attributes_if_not_exists({ $rest => $value } );
+	    $setref->{hosts}{$host}->add_attributes_if_not_exists({ $key => $value } );
 	}
     } else {
 	# Implant key/value into group
-	$groupref->{$rest} = $value;
+	$setref->{$key} = $value;
     }
     
     # 
 }
 
 sub set_value {
-    # Set value in config hash, $key is full ;:. separated value.
+    # Set value in config hash, $longkey is full ;:. separated value.
     my ($self, $longkey, $value) = @_;
 
     my ($groups,$host,$key) = $self->_split_config_line($longkey);
@@ -431,6 +437,7 @@ sub _split_config_line_ok {
 
 
 sub _parse_config_line {
+    # Parse and save contents of random user configuration.
     my ($self, $prefix, $key, $value) = @_;
     
     my $longkey = $self->_concat_config_line($prefix,$key,$value);

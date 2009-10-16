@@ -8,21 +8,30 @@ use warnings;
 use strict;
 
 use Carp;
-use Munin::Master::Group;
-use Munin::Master::Host;
+# use Munin::Master::Group;
+# use Munin::Master::Host;
 use Log::Log4perl qw( :easy );
 
 sub new {
+    # This is now a container class used on some entries in the
+    # Munin::Master::Config::instance hash.  It used to be a
+    # self-contained, self-booting class instanciator.
+
     my ($class, $groups_and_hosts) = @_;
     my $self = bless {}, $class;
 
     $self->{groups} = {};
 
-    $self->_initialize($groups_and_hosts);
+    # $self->_initialize($groups_and_hosts);
 
     return $self;
 }
 
+
+=comment
+
+I do not think this is needed here anymore - all parsing happens in
+Munin::Master::Config (or it's super classes) - janl 16.10.2009
 
 sub _initialize {
     my ($self, $groups_and_hosts) = @_;
@@ -42,7 +51,6 @@ sub _initialize {
         $group->give_attributes_to_hosts();
     }
 }
-
 
 sub _process_group {
     # Process group part of section
@@ -90,6 +98,8 @@ sub _extract_host_name_from_definition {
     return $definition if $sc_loc == -1 and $dot_loc == -1;
 }
 
+
+=cut
 
 
 sub get_all_hosts {
