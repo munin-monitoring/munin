@@ -131,34 +131,39 @@ my %booleans = map {$_ => 1} qw(
 
     sub instance {
         my ($class) = @_;
-        
+
         $instance ||= bless {
-            config_file            => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf",
-            dbdir                  => $Munin::Common::Defaults::MUNIN_DBDIR,
-            debug                  => 0,
-            fork                   => 1,
-            graph_data_size        => 'normal',
-            groups_and_hosts       => {},
-            local_address          => 0,
-            logdir                 => $Munin::Common::Defaults::MUNIN_LOGDIR,
-            max_processes          => $MAXINT,
-            rundir                 => '/tmp',
-            timeout                => 180,
-            tls                    => 'disabled',
-            tls_ca_certificate     => "Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem",
-            tls_certificate        => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.pem",
-            tls_private_key        => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.pem",
-            tls_verify_certificate => 0,
-            tls_verify_depth       => 5,
-            tmpldir                => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates",
+
+	    # To be able to identify if we're the root instance or a nested one.
+	    root_instance => 1, 
+
+	    config      => bless ( {
+		config_file      => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf",
+		dbdir            => $Munin::Common::Defaults::MUNIN_DBDIR,
+		debug            => 0,
+		fork             => 1,
+		graph_data_size  => 'normal',
+		groups           => {},
+		local_address    => 0,
+		logdir           => $Munin::Common::Defaults::MUNIN_LOGDIR,
+		max_processes    => $MAXINT,
+		rundir           => '/tmp',
+		timeout          => 180,
+		tls              => 'disabled',
+		tls_ca_certificate => "$Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem",
+		tls_certificate  => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.pem",
+		tls_private_key  => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.pem",
+		tls_verify_certificate => 0,
+		tls_verify_depth => 5,
+		tmpldir          => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates",
+	    }, $class ),
+
+	    oldconfig => bless ( {
+		config_file      => "$Munin::Common::Defaults::MUNIN_DBDIR/datafile",
+	    }, $class ),
+
         }, $class;
 
-	# This object will over time aquire "service_configs" and
-	# "old_service_configs"
-
-	# These are made with calls to
-	#  $self->parse_config_from_file (M::C::Config)
-        
         return $instance;
     }
 }
@@ -200,7 +205,6 @@ sub _create_and_set {
 
 	if ($setref eq $self) {
 	    $setref->{groups}{$group}{group}=undef;
-	    confess("Why are we here again? FIX?");
 	} else {
 	    $setref->{groups}{$group}{group}=$setref;
 	}
@@ -445,6 +449,7 @@ sub _parse_config_line {
     $self->set_value($longkey,$value);
 }
 
+
 sub parse_config {
     my ($self, $io) = @_;
         
@@ -477,7 +482,7 @@ sub parse_config {
 sub get_groups_and_hosts {
     my ($self) = @_;
     
-    return %{$self->{groups_and_hosts}};
+    return %{$self->{groups}};
 }
 
 
