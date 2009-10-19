@@ -3,7 +3,6 @@ use warnings;
 use strict;
 
 use Test::More tests => 2;
-use Data::Dumper;
 
 use_ok('Munin::Master::Config');
 
@@ -11,8 +10,6 @@ my $config = Munin::Master::Config->instance();
 my $userconfig = $config->{config};
 
 $userconfig->parse_config(\*DATA);
-
-print Dumper $config;
 
 # Build the correct answer by hand.
 my $fasit = {
