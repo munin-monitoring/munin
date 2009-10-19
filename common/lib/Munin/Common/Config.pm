@@ -50,6 +50,7 @@ sub parse_config_from_file {
     open my $file, '<', $config_file
         or croak "Cannot open '$config_file': $OS_ERROR";
 
+    # Note, parse_config is provided by node or master specific config class
     eval {
         $self->parse_config($file);
     };
