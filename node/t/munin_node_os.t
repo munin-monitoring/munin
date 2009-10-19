@@ -83,7 +83,7 @@ SKIP: {
 
 	isnt($stdout{pid}, $PID, 'Function is run in its own process');
 	is($stdout{ppid}, $PID, 'Child is ours');
-	isnt($stdout{pgrp}, $PID, 'Child is not in our process group');
+	isnt($stdout{pgrp}, $PID, 'Child is in a different process group');
 	is($stdout{pgrp}, $stdout{pid}, 'Child is process group leader');
 
 

@@ -11,8 +11,6 @@ use Munin::Node::Configure::HostEnumeration;
 
 ### SNMP Probing ###############################################################
 
-# arguments: community port, version and hosts
-
 sub new
 {
     my ($class, %opts) = @_;
@@ -33,20 +31,20 @@ sub new
 }
 
 
-sub probe_hosts
+sub run_probes
 {
     my ($self, $plugins) = @_;
 
     # FIXME: should preserve hostnames as much as possible.
     foreach my $host (expand_hosts(@{$self->{hosts}})) {
-        $self->snmp_probe_host($host, $plugins);
+        $self->_probe_single_host($host, $plugins);
     }
 
     return;
 }
 
 
-sub snmp_probe_host
+sub _probe_single_host
 {
     my ($self, $host, $plugins) = @_;
 
@@ -197,36 +195,35 @@ scanning capabilities.
 
 =head1 SYNOPSIS
 
-  @hosts = ('switch1', 'host1/24,10.0.0.60/30');
-
-  foreach my $host (expand_hosts(@hosts)) {
-    snmp_probe_host($host, $plugins);
-  }
-
+  my $snmp = Munin::Node::SNMPConfig->new(
+        community => 'secret',
+        version   => 1,
+  );
+  $snmp->probe_hosts(\%plugins);
 
 =head1 SUBROUTINES
 
 =over
 
-=item B<expand_hosts>
+=item B<new>
 
-  @expanded = expand_hosts(@list);
+Constructor.
 
-Takes a list of hosts, and returns the corresponding IPs in dotted-quad form.
+Valid arguments are 'community', 'port', 'version' and 'hosts'.  All are
+optional, and default to 'public', 161, '2c' and an empty host-list (though
+obviously not providing any hosts is somewhat pointless).
 
-Items can be specified as a hostname or dotted-quad IP, either with or
-without a netmask, or as a comma-separated list of the above.
-
-Currently only IPv4 addresses are supported.
+The host list should be in a format understood by
+Munin::Node::Configure::HostEnumeration
 
 
-=item B<snmp_probe_host>
+=item B<run_probes($plugins)>
 
-  snmp_probe_host($host, $plugins);
+Connects to each host in turn, and checks which plugins it supports, based on
+the OIDs they reported during snmpconf.  If all the requirements are
+fulfilled, it will added to the corresponding plugin's suggestions list.
 
-Works out what plugins $host supports, based on whether the OIDs required by
-the plugin are supported by the device.
-
+$plugins should be a Munin::Node::Configure::PluginList object.
 
 =back
 

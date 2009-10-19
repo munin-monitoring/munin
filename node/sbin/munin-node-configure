@@ -54,7 +54,7 @@ sub main
     # Gather information
     if (@{ $config->{snmp} }) {
         my $snmp = init_snmp($plugins);
-        $snmp->probe_hosts($plugins);
+        $snmp->run_probes($plugins);
     }
     elsif ($config->{suggest}) {
         gather_suggestions($plugins);
