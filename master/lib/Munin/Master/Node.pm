@@ -13,8 +13,7 @@ use Munin::Master::Logger;
 use Data::Dumper;
 use Log::Log4perl qw( :easy );
 
-my $config = Munin::Master::Config->instance();
-
+my $config = Munin::Master::Config->instance()->{config};
 
 sub new {
     my ($class, $address, $port, $host) = @_;

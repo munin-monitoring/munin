@@ -14,21 +14,22 @@ use Munin::Master::ProcessManager;
 use Munin::Master::Utils;
 use Time::HiRes;
 
-my $config = Munin::Master::Config->instance();
+my $config = Munin::Master::Config->instance()->{config};
 
 sub new {
     my ($class) = @_;
 
-    my %gah = $config->get_groups_and_hosts();
+    # This steals the groups from the master instance of the config.
+    my $gah = $config->get_groups_and_hosts();
 
-    return bless {
+    my $self = bless {
         STATS               => undef,
         old_service_configs => {},
         old_version         => undef,
         service_configs     => {},
         workers             => [],
         failed_workers      => [],
-        group_repository    => Munin::Master::GroupRepository->new(\%gah),
+        group_repository    => Munin::Master::GroupRepository->new($gah),
         config_dump_file    => "$config->{dbdir}/datafile",
     }, $class;
 }
@@ -39,7 +40,7 @@ sub run {
     
     $self->_create_rundir_if_missing();
 
-    $self->_do_with_lock_and_timing(sub {
+    # $self->_do_with_lock_and_timing(sub {
         logger("Starting munin-update");
 
         $self->{workers} = $self->_create_workers();
@@ -47,7 +48,7 @@ sub run {
         $self->{old_service_configs} = $self->_read_old_service_configs();
         $self->_compare_and_act_on_config_changes();
         $self->_write_new_service_configs_locked();
-    });
+    #});
 }
 
 

@@ -17,12 +17,13 @@ sub new {
     # Munin::Master::Config::instance hash.  It used to be a
     # self-contained, self-booting class instanciator.
 
-    my ($class, $groups_and_hosts) = @_;
+    my ($class, $gah) = @_;
     my $self = bless {}, $class;
 
-    $self->{groups} = {};
+    # $gah is usually a pointer to
+    # Munin::Master::Config->instance()->{config}{groups};
 
-    # $self->_initialize($groups_and_hosts);
+    $self->{groups} = $gah;
 
     return $self;
 }

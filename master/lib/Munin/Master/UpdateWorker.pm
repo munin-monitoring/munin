@@ -19,7 +19,7 @@ use RRDs;
 use Time::HiRes;
 
 
-my $config = Munin::Master::Config->instance();
+my $config = Munin::Master::Config->instance()->{config};
 
 sub new {
     my ($class, $host) = @_;

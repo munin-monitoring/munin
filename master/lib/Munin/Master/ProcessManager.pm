@@ -18,7 +18,7 @@ use Storable qw(nstore_fd fd_retrieve);
 my $E_DIED      = 18;
 my $E_TIMED_OUT = 19;
 
-my $config = Munin::Master::Config->instance();
+my $config = Munin::Master::Config->instance()->{config};
 
 sub new {
     my ($class, $result_callback, $error_callback) = @_;

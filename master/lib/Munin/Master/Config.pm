@@ -482,13 +482,14 @@ sub parse_config {
 sub get_groups_and_hosts {
     my ($self) = @_;
     
-    return %{$self->{groups}};
+    return $self->{groups};
 }
 
 
 sub set {
     my ($self, $config) = @_;
-    
+
+    # Note: config overrides self.
     %$self = (%$self, %$config); 
 }
 
