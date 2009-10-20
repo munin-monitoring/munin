@@ -30,6 +30,7 @@ use Carp;
 
 use Munin::Common::Defaults;
 use Munin::Node::Configure::PluginList;
+use Munin::Node::Configure::Debug;
 
 use Munin::Node::Config;
 my $config = Munin::Node::Config->instance();
@@ -592,8 +593,6 @@ sub list_errors
     return @error_list;
 }
 
-
-sub DEBUG { print '# ', @_, "\n" if $config->{DEBUG}; }
 
 exit main() unless caller;
 

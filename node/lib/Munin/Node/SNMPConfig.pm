@@ -7,6 +7,7 @@ use warnings;
 
 use Net::SNMP;
 use Munin::Node::Configure::HostEnumeration;
+use Munin::Node::Configure::Debug;
 
 
 ### SNMP Probing ###############################################################
@@ -173,13 +174,6 @@ sub _snmp_get_single
     DEBUG("Fetched $oid -> '$response->{$oid}'");
 	return $response->{$oid};
 }
-
-
-use Munin::Node::Config;
-my $config = Munin::Node::Config->instance();
-
-# Prints out a debugging message
-sub DEBUG { print '# ', @_, "\n" if $config->{DEBUG}; }
 
 
 1;

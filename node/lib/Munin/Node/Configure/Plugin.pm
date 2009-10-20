@@ -3,6 +3,8 @@ package Munin::Node::Configure::Plugin;
 use strict;
 use warnings;
 
+use Munin::Node::Configure::Debug;
+
 
 sub new
 {
@@ -329,13 +331,6 @@ sub log_error
 
     return;
 }
-
-
-use Munin::Node::Config;
-my $config = Munin::Node::Config->instance;
-
-# Prints out a debugging message
-sub DEBUG { print '# ', @_, "\n" if $config->{DEBUG}; }
 
 
 ### Set operations #############################################################

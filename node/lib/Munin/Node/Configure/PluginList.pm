@@ -7,6 +7,7 @@ use File::Basename qw(fileparse);
 
 use Munin::Node::Service;
 use Munin::Node::Configure::Plugin;
+use Munin::Node::Configure::Debug;
 
 use Munin::Node::Config;
 my $config = Munin::Node::Config->instance();
@@ -160,9 +161,6 @@ sub _valid_files
     closedir $DIR;
     return @items;
 }
-
-
-sub DEBUG { print '# ', @_, "\n" if $config->{DEBUG}; }
 
 
 1;

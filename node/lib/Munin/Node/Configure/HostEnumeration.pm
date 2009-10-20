@@ -5,6 +5,8 @@ use warnings;
 
 use Socket;
 
+use Munin::Node::Configure::Debug;
+
 use Exporter ();
 our @ISA = qw/Exporter/;
 our @EXPORT = qw/expand_hosts/;
@@ -80,15 +82,7 @@ sub expand_hosts
 }
 
 
-# Prints out a debugging message
-use Munin::Node::Config;
-my $config = Munin::Node::Config->instance();
-
-sub DEBUG { print '# ', @_, "\n" if $config->{DEBUG}; }
-
-
 1;
-
 
 __END__
 
