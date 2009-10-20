@@ -132,17 +132,17 @@ sub count_tcp_ports
 
     cache_open("NETSTAT", "/proc/net/tcp") or exit 1;
 
+    # Skip header line, else hex($curstate) will complain
     my $header = <NETSTAT>;
-    $header =~ /^(.*\s)local_address\s/;
+
     # 32/4 + 1 corresponds to the IP address in hex + ":"
-    my $local_port_offset = length($1) + 32/4 + 1;
-    $header =~ /^(.*\s)st\s/;
-    my $state_offset = length($1);
+    my $local_port_offset = 32/4 + 1;
 
     while (<NETSTAT>)
     {
-	next unless (hex(substr($_, $state_offset, 2)) == $state);
-	++$ports->{hex(substr($_, $local_port_offset, 4))};
+	my ($linenr, $local, $remote, $curstate) = split;
+	next unless (hex($curstate) == $state);
+	++$ports->{hex(substr($local, $local_port_offset, 4))};
     }
     close NETSTAT;
 }
@@ -154,17 +154,17 @@ sub count_tcp6_ports
 
     cache_open("NETSTAT", "/proc/net/tcp6") or exit 1;
 
+    # Skip header line, else hex($curstate) will complain
     my $header = <NETSTAT>;
-    $header =~ /^(.*\s)local_address\s/;
-    # 128/4 + 1 corresponds to the IP address in hex + ":"
-    my $local_port_offset = length($1) + 128/4 + 1;
-    $header =~ /^(.*\s)st\s/;
-    my $state_offset = length($1);
 
+    # 128/4 + 1 corresponds to the IP address in hex + ":"
+    my $local_port_offset = 128/4 + 1;
+ 
     while (<NETSTAT>)
     {
-	next unless (hex(substr($_, $state_offset, 2)) == $state);
-	++$ports->{hex(substr($_, $local_port_offset, 4))};
+	my ($linenr, $local, $remote, $curstate) = split;
+	next unless (hex($curstate) == $state);
+	++$ports->{hex(substr($local, $local_port_offset, 4))};
     }
     close(NETSTAT);
 }
