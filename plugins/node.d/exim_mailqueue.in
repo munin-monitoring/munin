@@ -9,7 +9,7 @@ exim_mailqueue - Plugin to monitor exim queue size
 
 =head1 CONFIGURATION
 
-Configuration parameters for /etc/munin/plugin-conf.d/exim_mailqueue,
+Configuration parameters for a file in @@CONFDIR@@/plugin-conf.d/
 if you need to override the defaults below:
 
   [exim_mailqueue]
