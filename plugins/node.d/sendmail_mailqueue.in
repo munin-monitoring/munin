@@ -65,6 +65,6 @@ fi
 
 # Append /. to directory to force following symlinks at the start
 # point.
-mspmails=$(find ${MSP_QUEUE}/. -type f -name '[qQ]*' 2>/dev/null | wc -l)
-mtamails=$(find ${MTA_QUEUE}/. -type f -name '[qQ]*' 2>/dev/null | wc -l)
+mspmails=$(find ${MSP_QUEUE}/. -type f -name '[qQ]*' 2>/dev/null | fgrep -v '.hoststat' | wc -l)
+mtamails=$(find ${MTA_QUEUE}/. -type f -name '[qQ]*' 2>/dev/null | fgrep -v '.hoststat' | wc -l)
 echo "mails.value `expr ${mspmails} + ${mtamails}`"
