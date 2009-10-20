@@ -603,7 +603,7 @@ __END__
 
 =head1 NAME
 
-munin-node-configure - View and modify which plugins are enabled
+munin-node-configure - View and modify which plugins are enabled.
 
 =head1 SYNOPSIS
 
@@ -653,7 +653,8 @@ Show suggestions instead of status
 
 =item B<< --shell >>
 
-Show shell commands (implies --suggest unless --snmp was also provided)
+Show shell commands instead of a table (implies --suggest unless --snmp was
+also provided)
 
 =item B<< --exitnoterror >>
 
@@ -666,15 +667,14 @@ Also show rm-commands when doing --shell
 =item B<< --newer <version> >>
 
 Only show suggestions related to plugins included more recently than
-version <version>. Only supported along with --shell.
+version <version>.
 
 =item B<< --snmp <host|cidr,...> >>
 
-Do SNMP probing on the host or CIDR network
-(e.g. "192.168.1.0/24"). This may take some time, especially if the
-probe includes many hosts. This option can be specified multiple
-times, or once with a comma-separated list, to include more than one
-host/CIDR.  Only supported along with --shell.
+Do SNMP probing on the host or CIDR network (e.g. "192.168.1.0/24"). This may
+take some time, especially if the probe includes many hosts. This option can
+be specified multiple times, or as a comma-separated list, to include more
+than one host/CIDR.
 
 =item B<< --snmpversion <ver> >>
 
@@ -693,23 +693,16 @@ Set SNMP port. Default is "161".
 
 =head1 DESCRIPTION
 
-Munin's node is a daemon that Munin connects to fetch data. This data
-is stored in .rrd-files, and later graphed and htmlified. It's
-designed to let it be very easy to graph new datasources.
-
-Munin-node-configure is a script to show the current configuration of
-which plugins the host is running, as well as suggestions on what
-changes to make to this configuration. It does this by using
-munin-run(1) to ask the plugins themselves whether they should be run
-or not.
+munin-node-configure is a script to show which plugins are currently enabled
+on the current node.  It can also suggest changes to this list.
 
 =head1 FILES
 
-	@@CONFDIR@@/munin-node.conf
-	@@CONFDIR@@/plugin-conf.d/*
-	@@CONFDIR@@/plugins/*
-        @@LIBDIR@@/plugins/plugins.history
-	@@LIBDIR@@/plugins/*
+    @@CONFDIR@@/munin-node.conf
+    @@CONFDIR@@/plugin-conf.d/*
+    @@CONFDIR@@/plugins/*
+    @@LIBDIR@@/plugins/plugins.history
+    @@LIBDIR@@/plugins/*
 
 =head1 VERSION
 
