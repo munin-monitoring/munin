@@ -20,7 +20,7 @@ __END__
 
 =head1 NAME
 
-Munin::Node::Configure::Debug
+Munin::Node::Configure::Debug - Prints a debug message in the standard munin-node-configure format.
 
 
 =head1 SYNOPSIS
