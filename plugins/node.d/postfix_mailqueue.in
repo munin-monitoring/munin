@@ -49,24 +49,20 @@ Unreadable or damaged queue files are moved here for inspection.
 
 =head1 CONFIGURATION
 
-Configuration parameters for /etc/munin/plugin-conf.d/postfix_mailqueue,
-if you need to override the defaults below:
+By default "postconf -h queue_directory" is used to determine the
+spool directory.  This can be overridden by the "spooldir" environment
+variable like so:
 
  [postfix_mailqueue]
-  env.spooldir - Path to the postfix mail spool
-
-=head2 DEFAULT CONFIGURATION
-
- [postfix_mailqueue]
-  env.spooldir /var/spool/postfix
+    env.spooldir /var/spool/postfix
 
 =head1 AUTHOR
 
-Nicolai Langfeldt
+Unknown.
 
 =head1 LICENSE
 
-Unknown license
+Unknown.
 
 =head1 MAGIC MARKERS
 
@@ -83,7 +79,8 @@ munin-node.
 =cut
 
 # Can be set via environment, but default is /var/spool/postfix
-SPOOLDIR=${spooldir:-/var/spool/postfix}
+POSTCONFSPOOL=$(postconf -h queue_directory)
+SPOOLDIR=${spooldir:-$POSTCONFSPOOL}
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 
