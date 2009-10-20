@@ -22,7 +22,7 @@ Server:
 
 - Perl modules for server: 
    - Time::HiRes
-   - Storable (should not be on this list!)
+   - Storable (needed for ProcessManager.  Should we port datafile to storable too?)
    - Digest::MD5,
    - HTML::Template
    - Text::Balanced
