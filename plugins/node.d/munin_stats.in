@@ -20,8 +20,9 @@
 # $Id$
 #
 # BUGS:
-#  This plugin may fail when the logs are long.  A statefile and log-tail
-#  thing would be needed.  See also munin_graph and munin_update.
+# - This plugin may fail when the logs are long.  A statefile and log-tail
+#   thing would be needed.  See also munin_graph and munin_update.
+# - The needed functions are in Munin::Plugin - just port and enjoy
 #
 # Magic markers (optinal - used by munin-config and some installation
 # scripts):
