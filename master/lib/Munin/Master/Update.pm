@@ -57,7 +57,7 @@ sub _create_rundir_if_missing {
 
     unless (-d $config->{rundir}) {
 	mkdir $config->{rundir}, oct(700)
-            or croak "Failed to create rundir: $!";
+            or croak "Failed to create rundir (".$config->{rundir}."): $!";
         
     }
 }
