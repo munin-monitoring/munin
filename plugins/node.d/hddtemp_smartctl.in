@@ -81,8 +81,10 @@ number for monitoring purposes, like /dev/twe<n> or /dev/twa<n>. This
 can be put in the e.g. dev_sda environment variable, to allow the user
 to keep sda as the name of the disk.
 
-To avoid spinning up sleeping disks, you need the hdparm command in
-your PATH.
+To avoid spinning up sleeping disks smartctl will use the --nocheck
+parameter. If this parameter isn't supported by your version of
+smartctl then hdparm will be used.  Note that hdparm isn't available
+on all platforms.
 
 =cut
 
@@ -103,6 +105,15 @@ until ($smartctl or @dirs == 0) {
   my $path = $dir.'/smartctl';
   $smartctl = $path if -x $path;
 }
+
+# Check version of smartctl to determine --nocheck capabilities
+my $use_nocheck = 0;
+if (`$smartctl --version` =~ / version (\d+\.\d+) /i) {
+  $use_nocheck = $1 >= 5.37;
+}
+
+# hdparm is used as a fallback
+my $hdparm = `which hdparm`;
 
 my @drives;
 
@@ -173,9 +184,10 @@ sub device_for_drive {
 }
 
 sub command_for_drive_device {
-    my ($drive, $fulldev) = @_;
+    my ($drive, $fulldev, $use_nocheck) = @_;
 
     my $cmd = $smartctl.' -A ';
+    $cmd .= '--nocheck=standby ' if $use_nocheck;
     $cmd .= $ENV{'args_'.$drive}.' ' if exists $ENV{'args_'.$drive};
     $cmd .= '-d '.$ENV{'type_'.$drive}.' ' if exists $ENV{'type_'.$drive};
     $cmd .= $fulldev;
@@ -185,10 +197,13 @@ sub command_for_drive_device {
 foreach my $drive (@drives) {
   my $fulldev = device_for_drive($drive);
 
-  # Avoid spinning up sleeping disks only for /dev/sd? or /dev/hd? devices.
-  next if $fulldev =~ /\/dev\/[sh]d?/ && `hdparm -C $fulldev 2>/dev/null` =~ /standby/;
+  # Fall back to using hdparm for detecting disks in stand-by only if nocheck
+  # isn't supported (hdparm isn't available on all platforms).
+  if (!$use_nocheck && $hdparm && $fulldev =~ /\/dev\/[sh]d?/) {
+    next if `$hdparm -C $fulldev 2>/dev/null` =~ /standby/;
+  }
 
-  my $cmd = command_for_drive_device($drive, $fulldev);
+  my $cmd = command_for_drive_device($drive, $fulldev, $use_nocheck);
 
   my $output = `$cmd`;
   if ($output =~ /Current Drive Temperature:\s*(\d+)/) {

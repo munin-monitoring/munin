@@ -24,8 +24,8 @@ Unknown license
 
 =head1 MAGIC MARKERS
 
-#%# family=manual
-#%# capabilities=autoconf
+  #%# family=manual
+  #%# capabilities=autoconf
 
 =cut
 
