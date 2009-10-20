@@ -8,11 +8,12 @@ use strict;
 use Carp;
 use English qw(-no_match_vars);
 use IO::Socket;
+use POSIX qw(:sys_wait_h);
+use Storable qw(nstore_fd fd_retrieve);
+
 use Munin::Common::Timeout;
 use Munin::Master::Config;
 use Munin::Master::Logger;
-use POSIX qw(:sys_wait_h);
-use Storable qw(nstore_fd fd_retrieve);
 
 
 my $E_DIED      = 18;

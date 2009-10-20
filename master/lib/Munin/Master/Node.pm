@@ -35,26 +35,31 @@ sub new {
 sub do_in_session {
     my ($self, $block) = @_;
 
-    $self->_do_connect();
-    $self->_run_starttls_if_required();
-    $block->();
-    $self->_do_close();
+    if ($self->_do_connect()) {
+	$self->_run_starttls_if_required();
+	$block->();
+	$self->_do_close();
+    }
 }
 
 
 sub _do_connect {
+    # Connect to a munin node.  Return false if not, true otherwise.
     my ($self) = @_;
 
-    $self->{socket} = IO::Socket::INET->new(
-        PeerAddr  => $self->{address},
-        PeerPort  => $self->{port},
-        LocalAddr => $config->{local_address},
-        Proto     => 'tcp', 
-        Timeout   => $config->{timeout},
-    ) or croak "Failed to create socket: $!";
+    if (! ( $self->{socket} = IO::Socket::INET->new(
+		PeerAddr  => $self->{address},
+		PeerPort  => $self->{port},
+		LocalAddr => $config->{local_address},
+		Proto     => 'tcp', 
+		Timeout   => $config->{timeout}) ) ) {
+	ERROR "Failed to connect to node $self->{address}:$self->{port}/tcp : $!";
+	return 0;
+    }
 
     my $greeting = $self->_node_read_single();
     $self->{node_name} = $self->_extract_name_from_greeting($greeting);
+    return 1;
 }
 
 
@@ -73,7 +78,7 @@ sub _run_starttls_if_required {
     # TLS should only be attempted if explicitly enabled. The default
     # value is therefore "disabled" (and not "auto" as before).
     my $tls_requirement = $config->{tls};
-    logger("[DEBUG] TLS set to \"$tls_requirement\".") if $config->{debug};
+    INFO "TLS set to \"$tls_requirement\".";
     return if $tls_requirement eq 'disabled';
     $self->{tls} = Munin::Common::TLSClient->new({
         DEBUG        => $config->{debug},

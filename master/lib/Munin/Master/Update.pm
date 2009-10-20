@@ -5,14 +5,18 @@ package Munin::Master::Update;
 use warnings;
 use strict;
 
+use English qw(-no_match_vars);
 use Carp;
+
+use Time::HiRes;
+use Log::Log4perl qw( :easy );
+
 use Munin::Common::Defaults;
 use Munin::Master::Config;
 use Munin::Master::Logger;
 use Munin::Master::UpdateWorker;
 use Munin::Master::ProcessManager;
 use Munin::Master::Utils;
-use Time::HiRes;
 
 my $config = Munin::Master::Config->instance()->{config};
 
@@ -40,15 +44,48 @@ sub run {
     
     $self->_create_rundir_if_missing();
 
-    # $self->_do_with_lock_and_timing(sub {
+    $self->_do_with_lock_and_timing(sub {
         logger("Starting munin-update");
 
         $self->{workers} = $self->_create_workers();
         $self->_run_workers();
+
+	# I wonder if the following should really be done with timing. - janl
         $self->{old_service_configs} = $self->_read_old_service_configs();
         $self->_compare_and_act_on_config_changes();
         $self->_write_new_service_configs_locked();
-    #});
+    });
+}
+
+
+sub _read_old_service_configs {
+
+    # Read the datafile containing old configurations.  This should
+    # not fail in case of problems with the file.  In such a case the
+    # file should simply be ingored and a new one written.  Lets hope
+    # it does not repeat itself then.
+
+    my ($self) = @_;
+
+    # Get old service configuration from the config instance since the
+    # syntaxes are identical.
+    my $oldconfig = Munin::Master::Config->instance()->{oldconfig};
+    my $datafile = $oldconfig->{config_file};
+    my $file;
+    
+    if (-e $datafile ) {
+	if (! open( $file, '<', $datafile)) {
+	    WARN "[Warning] Cannot open datafile $datafile";
+	    return {};
+	}
+	eval {
+	    $oldconfig->parse_config($file);
+	};
+	if ($EVAL_ERROR) {
+	    WARN "[Warning] Could not parse datafile $datafile: $EVAL_ERROR";
+	}
+    }
+    return $oldconfig;
 }
 
 
@@ -143,7 +180,12 @@ sub _handle_worker_result {
     my ($worker_id, $time_used, $service_configs) 
         = ($res->[0], $res->[1]{time_used}, $res->[1]{service_configs});
 
-    printf { $self->{STATS} } "UD|%s|%.2f\n", $worker_id, $time_used;
+    if (! defined $self->{STATS} ) {
+	# This is may only be the case when we get connection refused
+	ERROR "[FIX?] Did not collect any stats for $worker_id";
+    } else {
+	printf { $self->{STATS} } "UD|%s|%.2f\n", $worker_id, $time_used;
+    }
 
     $self->{service_configs}{$worker_id} = $service_configs;
 }
@@ -164,10 +206,10 @@ sub _create_self_aware_worker_exception_handler {
 sub _compare_and_act_on_config_changes {
     my ($self) = @_;
 
-    # Why do we need to tune RRD files after upgrade? Shouldn't we
+    # Kjellm: Why do we need to tune RRD files after upgrade? Shouldn't we
     # create a upgrade script or something instead?
-
-    # Not sure? Code duplication?  Ease of use?  Lazyness?
+    # 
+    # janl: Not sure? Code duplication?  Ease of use?  Lazyness?
 
     my $just_upgraded = 0;
 
