@@ -12,19 +12,25 @@ exim_mailqueue - Plugin to monitor exim queue size
 Configuration parameters for /etc/munin/plugin-conf.d/exim_mailqueue,
 if you need to override the defaults below:
 
-[exim_mailqueue]
- env.spooldir  - Override what exim says
- env.exim      - Where's exim?
- env.queuewarn - When to warn
- env.queuecrit - When to crit
+  [exim_mailqueue]
+    env.spooldir   - Override what exim says
+    env.exim       - Where's exim?
+    env.graphtitle - Title of the graph
+    env.queuewarn  - When to warn (of undelivered mails)
+    env.queuecrit  - When to crit (of undelivered mails)
+    env.frozenwarn - When to warn (of frozen mails)
+    env.frozencrit - When to crit (of frozen mails)
 
 =head2 DEFAULT CONFIGURATION
 
-[exim_mailqueue]
- env.spooldir  <autodetected>
- env.exim      <autodetected>
- env.queuewarn 100
- env.queuecrit 200
+  [exim_mailqueue]
+    env.graphtitle Exim Mailqueue
+    env.spooldir  <autodetected>
+    env.exim      <autodetected>
+    env.queuewarn 100
+    env.queuecrit 200
+    env.frozenwarn 100
+    env.frozencrit 200
 
 =head1 AUTHOR
 
@@ -43,79 +49,62 @@ munin-node.
 
 =end comment
 
- #%# family=auto
- #%# capabilities=autoconf
+  #%# family=auto
+  #%# capabilities=autoconf
 
 =cut
+# ' end quote entered inside pod
 
-DIRNAME=$(dirname $0)
-SPOOLDIR="unset"
 # You cannot trust the exit status of which
-EXIM=$(which exim 2>/dev/null)
-case $EXIM:$? in
-    *:1|no*) EXIM=$(which exim4 2>/dev/null)
-esac
-case $EXIM:$? in
-    *:1|no*) EXIM=''
+EXIQGREP=$(which exiqgrep 2>/dev/null)
+case $EXIQGREP:$? in
+    *:1|no*) EXQGREP=''
 esac
 
 GRAPHTITLE='Exim Mailqueue'
 
-SPOOLDIR=${spooldir:-unset}
-EXIM=${exim:-unset}
-QUEUEWARN=${queuewarn:-100}
-QUEUECRIT=${queuecrit:-200}
+EXIQGREP=${exiqgrep:-$EXIQGREP}
 GRAPHTITLE=${graphtitle:-$GRAPHTITLE}
 
-if [ "$SPOOLDIR" = "unset" ]
-then
-	SPOOLDIR=$( ($EXIM -bP spool_directory | awk '{ print $3 "/input" }') 2>/dev/null)
-fi
+QUEUEWARN=${queuewarn:-100}
+QUEUECRIT=${queuecrit:-200}
+FROZENWARN=${frozenwarn:-100}
+FROZENCRIT=${frozencrit:-200}
 
 if [ "$1" = "autoconf" ]; then
-    if [ -z "$EXIM" ]; then
-	echo no
+    if [ -z "$EXIQGREP" ]; then
+	echo "no (no exiqgrep)"
 	exit 0
+    else
+        echo yes
+        exit 0
     fi
-	
-	if $EXIM -bV 2>/dev/null >/dev/null; then
-		if ( /usr/bin/find $SPOOLDIR -iname "*-H" -print 2>/dev/null >/dev/null ); then
-			echo yes
-			exit 0
-		else
-			if [ $? -eq 1 ]; then
-				echo "no (permission denied on spooldir)"
-				exit 0
-			else
-				echo "no"
-				exit 0
-			fi
-		fi
-	else
-		if [ $? -eq 127 ]
-		then
-			echo "no (exim not found)"
-			exit 0
-		else
-			echo no
-			exit 0
-		fi
-	fi
 fi
-
+	
 if [ "$1" = "config" ]; then
-        if [ ! -z $SPOOLDIR ];then
 	echo "graph_title $GRAPHTITLE"
 	echo 'graph_args --base 1000 -l 0'
 	echo 'graph_vlabel mails in queue'
 	echo 'graph_category exim'
-	echo 'mails.label mails'
-	echo 'mails.draw AREA'
+
+	echo 'mails.label queued mails'
+	# Use "AREASTACK" in munin 1.3.3 and later
+	echo 'mails.draw STACK'
 	echo "mails.warning $QUEUEWARN"
 	echo "mails.critical $QUEUECRIT"
-	fi;
+	echo 'mails.colour 00AA00'
+
+	echo 'frozen.label frozen mails'
+	# Use "AREASTACK" in munin 1.3.3 and later
+	echo 'frozen.draw AREA'
+	echo "frozen.warning $FROZENWARN"
+	echo "frozen.critical $FROZENCRIT"
+	echo 'frozen.colour 0022FF'
+
 	exit 0
 fi
 
-printf "mails.value "
-/usr/bin/find $SPOOLDIR -iname "*-H" -print 2>/dev/null |wc -l | sed 's/ *//'
+exiqgrep -cz | awk '
+  /[0-9]+ matches out of [0-9]+ messages/
+     { printf("frozen.value %u\nmails.value %u\n", $1, $5-$1); exit }
+  { printf("frozen.value U\nmails.value U\n") }'
