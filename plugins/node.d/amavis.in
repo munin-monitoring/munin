@@ -18,7 +18,6 @@ The configuration environment variables are available
 =over 4
 
 =item amavislog
-
 Path to logfile (Default: "/var/log/mail/mail.info")
 
 =item logtail
@@ -61,7 +60,9 @@ classify more spam as "surley spam" and so be able to elliminate it.
 
 =head1 BUGS
 
-None known
+Should use counters since the origin data is really counters.  If the
+node has multiple masters the data served will now be incorrect.
+Propper opperation may require porting to perl or some such.
 
 =head1 AUTHOR
 
