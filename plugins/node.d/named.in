@@ -47,8 +47,8 @@ To ensure read access to the log files, you will need to add something like:
 
 =head2 DEFAULT CONFIGURATION
 
-[named]
- env.logfile /var/adm/messages or /var/log/daemon.log
+ [named]
+  env.logfile /var/adm/messages or /var/log/daemon.log
 
 =head1 AUTHOR
 

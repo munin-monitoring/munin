@@ -12,13 +12,13 @@ mysql_threads - Plugin to monitor the number of threads on a mysql-server.
 Configuration parameters for @@CONFDIR@@/mysql_threads, if you
 need to override the defaults below:
 
-[mysql_threads]
- env.mysqlopts    - Options to pass to mysql
+ [mysql_threads]
+  env.mysqlopts    - Options to pass to mysql
 
 =head2 DEFAULT CONFIGURATION
 
-[mysql_threads]
- env.mysqlopts
+ [mysql_threads]
+  env.mysqlopts
 
 =head1 AUTHOR
 

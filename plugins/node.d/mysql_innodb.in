@@ -37,7 +37,7 @@ the default INNODB tablespace, do the following:
 Configuration parameters for @@CONFDIR@@/mysql_innodb,
 if you need to override the defaults below:
 
-[mysql_innodb]
+ [mysql_innodb]
   env.mysql     - Path to the mysql binary
   env.mysqlopts - Options to pass to mysql (host, username, password)
   env.warning   - Generate a warning if free space goes below this level
@@ -45,7 +45,7 @@ if you need to override the defaults below:
 
 =head2 DEFAULT CONFIGURATION
 
-[mysql_innodb]
+ [mysql_innodb]
   env.mysql /usr/bin/mysql
   env.mysqlopts --user=munin --password=munin --host=localhost
   env.warning 2147483648

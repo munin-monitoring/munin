@@ -26,10 +26,10 @@ variable to "imaplogin" and "courierpop3login", respectively.
 
 The default configuration is:
 
-[courier_*]
- env.logtail /usr/sbin/logtail
- env.logfile /var/log/mail.log
- env.service <Whatever follows "courier_" in the file name>
+ [courier_*]
+  env.logtail /usr/sbin/logtail
+  env.logfile /var/log/mail.log
+  env.service <Whatever follows "courier_" in the file name>
 
 =head1 MAGIC MARKERS
 

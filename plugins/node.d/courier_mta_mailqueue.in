@@ -15,8 +15,8 @@ Configuration variables:
 
 The default configuration is:
 
-[courier_mta_mailqueue]
- env.spooldir /var/lib/courier/msgq/
+ [courier_mta_mailqueue]
+  env.spooldir /var/lib/courier/msgq/
 
 =head1 MAGIC MARKERS
 

@@ -11,19 +11,19 @@ on isam and myisam tables on a mysql server.
 Configuration parameters for @@CONFDIR@@/PLUGIN,
 if you need to override the defaults below:
 
-[mysql_isam_space_*]
- env.mysqlopts    - Options to pass to mysql
- env.statefile    - where to put the statefile
- env.ignore       - Tables to ignore. Regex.
- env.absolute     - use tables sizes, not percent of maximum
+ [mysql_isam_space_*]
+  env.mysqlopts    - Options to pass to mysql
+  env.statefile    - where to put the statefile
+  env.ignore       - Tables to ignore. Regex.
+  env.absolute     - use tables sizes, not percent of maximum
 
 =head2 DEFAULT CONFIGURATION
 
-[mysql_isam_space_*]
- env.mysqlopts
- env.statefile @@PLUGSTATE@@/plugin-mysql_isam_space.state
- env.ignore
- env.absolute 0
+ [mysql_isam_space_*]
+  env.mysqlopts
+  env.statefile @@PLUGSTATE@@/plugin-mysql_isam_space.state
+  env.ignore
+  env.absolute 0
 
 =head1 AUTHOR
 

@@ -22,10 +22,10 @@ netcat(1) binary is anywhere else than /bin/nc please define it in the
 plugin's environment file (@@CONFDIR@@/squeezebox or
 similar). Sample follows:
 
-[squeezebox_*]
-env.squeezebox_host 192.168.100.10
-env.squeezebox_port 9095
-env.netcat /usr/local/bin/nc
+ [squeezebox_*]
+  env.squeezebox_host 192.168.100.10
+  env.squeezebox_port 9095
+  env.netcat /usr/local/bin/nc
 
 =head1 INTERPRETATION
 

@@ -15,7 +15,7 @@ The following environment variables are used by this plugin:
 
 =head2 EXAMPLE CONFIGURATION
 
-[ntp_*]
+ [ntp_*]
   env.nodelay 1       - Set to 1 to remove delay
 
 =head1 AUTHOR
