@@ -39,8 +39,8 @@ wrapper and integration by Erik Inge Bolsø, Redpill Linpro AS.
 
 =head1 MAGIC MARKERS
 
- #%# family=manual
- #%# capabilities=suggest
+ #%# family=auto
+ #%# capabilities=autoconf suggest
 
 =cut
 
@@ -84,9 +84,43 @@ __EOF
 fi
 
 if [ "x$1" = "xautoconf" ] ; then
-  # temporary
-  echo "yes"
-  exit 0
+  if [ ! -e /etc/munin/jmx.conf ] ; then
+    echo "no (/etc/munin/jmx.conf missing)"
+    exit 0
+  fi
+  . /etc/munin/jmx.conf
+  if [ "x$ip" != "x" ] && [ "x$port" != "x" ] ; then
+    NC=`which nc`
+    if [ "x$NC" = "x" ] ; then
+      echo "no (nc not found)"
+      exit 0
+    fi
+    nc -n -z $ip $port
+
+    @@JAVARUN@@ -? >/dev/null 2>&1
+    JAVA=$?
+    if [ $JAVA -ne 0 ] ; then
+      echo "no (java runtime not found)"
+      exit 0
+    fi
+
+    if [ ! -e @@LIBDIR@@/munin-jmx-plugins.jar ] ; then
+      echo "no (munin jmx classes not found)"
+      exit 0
+    fi
+
+    CONNECT=$?
+    if [ $CONNECT -eq 0 ] ; then
+      echo "yes"
+      exit 0
+    else
+      echo "no (connection failed)"
+      exit 0
+    fi
+  else
+    echo "no (/etc/munin/jmx.conf misconfigured)"
+    exit 0
+  fi
 fi
 
 if [ "x$1" = "xconfig" ] ; then
