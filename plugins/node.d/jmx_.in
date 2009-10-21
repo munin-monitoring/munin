@@ -96,6 +96,7 @@ if [ "x$1" = "xautoconf" ] ; then
       exit 0
     fi
     nc -n -z $ip $port
+    CONNECT=$?
 
     @@JAVARUN@@ -? >/dev/null 2>&1
     JAVA=$?
@@ -109,7 +110,6 @@ if [ "x$1" = "xautoconf" ] ; then
       exit 0
     fi
 
-    CONNECT=$?
     if [ $CONNECT -eq 0 ] ; then
       echo "yes"
       exit 0
