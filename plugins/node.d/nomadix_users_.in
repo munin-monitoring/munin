@@ -1,4 +1,8 @@
-#!/usr/bin/perl
+#!@@PERL@@
+
+=pod
+
+=encoding UTF-8
 
 =head1 NAME
 
@@ -31,7 +35,7 @@ Plugin::SNMP module.
 =head1 AUTHOR
 
 (C) Copyright 2006-2009.  Written by Espen Braastad, Linpro AS for OSL
-(2006) Further modified by Erik Inge Bolsoe, Linpro AS for OSL (2007)
+(2006) Further modified by Erik Inge Bolsø, Linpro AS for OSL (2007)
 
 =head1 LICENSE
 
