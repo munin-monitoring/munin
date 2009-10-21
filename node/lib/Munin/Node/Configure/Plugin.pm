@@ -233,7 +233,7 @@ sub parse_suggest_response
     my ($self, @suggested) = @_;
 
     foreach my $line (@suggested) {
-        if ($line =~ /^[-\w.]+$/) {
+        if ($line =~ /^[-\w.:]+$/) {
             DEBUG("\tAdded suggestion: $line");
             $self->add_suggestions($line);
         }

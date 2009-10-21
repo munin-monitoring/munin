@@ -166,7 +166,7 @@ sub parse_args
     print_usage_and_exit() unless $ARGV[0];
 
     # Detaint the plugin name
-    if ($ARGV[0] =~ m/^([-\w.]+)$/) {
+    if ($ARGV[0] =~ m/^([-\w.:]+)$/) {
         $plugin = $1;
     }
     else {
