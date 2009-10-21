@@ -28,7 +28,7 @@ to CATALINA_OPTS in your startup scripts.
 
 =head1 APPLICABLE SYSTEMS
 
-TBD. Tomcat 5.5 on Sun JVM 5/6, at least.
+TBD. Tomcat 4.1/5.0/5.5/6.0 on Sun JVM 5/6, at least.
 
 =head1 AUTHOR
 
