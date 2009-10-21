@@ -171,12 +171,12 @@ sub parse_service_config {
             $ds_name = $self->_sanitise_fieldname($ds_name);
             $data_source_config{$ds_name} ||= {};
             $data_source_config{$ds_name}{$ds_var} = $ds_val;
-            DEBUG "[CONFIG case 1] $service->$ds_name.$ds_var = $ds_val";
+            DEBUG "[CONFIG dataseries] $service->$ds_name.$ds_var = $ds_val";
             push @graph_order, $ds_name if ($ds_var eq 'label');
         } 
         elsif ($line =~ m{\A (\w+) \s+ (.+) }xms) {
             push @global_config, [$1, $2];
-            DEBUG "[CONFIG case 2] $service->$1 = $2";
+            DEBUG "[CONFIG graph global] $service->$1 = $2";
         }
         else {
             croak "Protocol exception: unrecognised line '$line'";
