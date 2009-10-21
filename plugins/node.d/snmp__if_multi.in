@@ -59,7 +59,22 @@ counters (see FEATURES below).
 
 =head1 BUGS
 
-None known.
+Should support indexing by
+
+  - ifIndex
+  - ifName
+  - ifDescr
+  - ifAlias
+  - mac-address
+
+(and anything else MRTG can index by) in addition to OID-index as now.
+
+Pulling in a user definable set of ifName/ifDescr/ifAlias for textual
+description and even graph_title would also be nice.
+
+IFF we get a patch to support the .oldname attribute then we may use
+that to let the operator change the indexing dynamicaly without data
+loss.
 
 =head1 FEATURES
 
@@ -82,15 +97,17 @@ around.
 =head1 AUTHOR
 
 Copyright (C) 2004-2009 Jimmy Olsen, Dagfinn Ilmari Mannsaaker,
-Nicolai Langfeldt and Linpro AS.
+Nicolai Langfeldt and Redpill Linpro AS.
 
 Original snmp__if_ plugin: Copyright (C) 2004-2009 Jimmy Olsen, Dagfinn
-Ilmari Mannsaaker.  Documentation, porting to Munin::Plugin::SNMP and
+Ilmari Mannsaaker.
+
+Initial SNMPv3 support by "Confusedhacker".
+
+Documentation, porting to Munin::Plugin::SNMP and
 further grooming by Nicolai Langfeldt.
 
 Reworked to snmp__if_multi by Nicolai Langfeldt
-
-Initial SNMPv3 support by "Confusedhacker".
 
 =head1 LICENSE
 
