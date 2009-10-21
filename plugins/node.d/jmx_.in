@@ -98,5 +98,10 @@ fi
 scriptname=${0##*/}
 jmxfunc=${scriptname##*_}
 
-@@JAVARUN@@ -cp @@LIBDIR@@/munin-plugins.jar org.munin.plugin.jmx.$jmxfunc $param
+if [ "x$jmxfunc" = "x" ] ; then
+  echo "error, plugin must be symlinked in order to run"
+  exit 1
+fi
+
+@@JAVARUN@@ -cp @@LIBDIR@@/munin-jmx-plugins.jar org.munin.plugin.jmx.$jmxfunc $param
 

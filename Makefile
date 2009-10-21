@@ -58,7 +58,8 @@ tags:
 
 ######################################################################
 
-install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-man install-munindoc
+# if you don't have a javac, remove install-plugins-java from the following line
+install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-plugins-java install-man install-munindoc
 
 install-pre: Makefile Makefile.config
 	@$(CHECKUSER)
@@ -131,9 +132,11 @@ install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	    fi                                                         \
 	done
 	-mv $(LIBDIR)/plugins/*.adv $(LIBDIR)
-	$(INSTALL) -m 0644 build/plugins/javalib/munin-plugins.jar $(LIBDIR)
 	$(INSTALL) -m 0644 build/plugins/plugins.history $(LIBDIR)/plugins/
 	$(INSTALL) -m 0644 build/plugins/plugin.sh $(LIBDIR)/plugins/
+
+install-plugins-java: install-plugins-prime build-plugins-java
+	$(INSTALL) -m 0644 build/plugins/javalib/munin-jmx-plugins.jar $(LIBDIR)
 
 #TODO:
 # configure plugins.  Or not. Better done under the direction of the installer
@@ -269,10 +272,10 @@ build-man-stamp: build Makefile Makefile.config
 	   pod2man --section=5 --release=$(RELEASE) --center=$(MANCENTER) "$$f".pod > build/doc/`basename $$f .pod`.5; \
 	done
 
-build-plugins: build/plugins/javalib/munin-plugins.jar
+build-plugins-java: build/plugins/javalib/munin-jmx-plugins.jar
 
-build/plugins/javalib/munin-plugins.jar: $(CLASSFILES)
-	cd build/plugins/javalib && $(JAR) cf munin-plugins.jar org/
+build/plugins/javalib/munin-jmx-plugins.jar: $(CLASSFILES)
+	cd build/plugins/javalib && $(JAR) cf munin-jmx-plugins.jar org/munin/plugin/jmx
 
 build/%.class: %.class
 	mkdir -p build/`dirname $*.class`
