@@ -79,7 +79,7 @@ if ($ARGV[0] and $ARGV[0] eq "suggest") {
 
 $0 =~ /ntp_(.+)*$/; 
 my $name = $1;
-exit 2 unless defined $name;
+die "No hostname provided" unless defined $name;
 
 if ($ARGV[0] and $ARGV[0] eq "config") {
 	my @lines = `ntpq -c "hostnames no" -c peers`;
