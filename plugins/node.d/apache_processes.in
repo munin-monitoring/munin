@@ -99,24 +99,31 @@ if ( defined $ARGV[0] and $ARGV[0] eq "autoconf" )
 		exit 0;
 	}
 	my $ua = LWP::UserAgent->new(timeout => 30);
-	my @badports;
 
         foreach my $port (@PORTS) {
                 my $url = sprintf $URL, $port;
                 my $response = $ua->request(HTTP::Request->new('GET',$url));
-                push @badports, $port unless $response->is_success and $response->content =~ /Idle(?:Servers|Workers)/im;
-        }
-
-	if (@badports)
-	{
-		print "no (no apache server-status on ports @badports)\n";
-		exit 0;
+                if ($response->is_success) {
+                        if ($response->content =~ /^Total Accesses:/im ){
+                                next;
+                        }
+                        else {
+                                print "no (ExtendedStatus option for apache" 
+				      . " mod_status is missing on port $port)\n";
+                                exit 0;
+                        }
+                }
+                elsif ($response->code == 404)  {
+                        print "no (apache server-status not found. check if mod_status is enabled)\n";
+                        exit 0;
+                }
+                else {
+                        print "no (Port $port: ". $response->message .")\n";
+                        exit 0;
+                }
 	}
-	else
-	{
-		print "yes\n";
-		exit 0;
-	}
+	print "yes\n";
+	exit 0;
 }
 
 if ( defined $ARGV[0] and $ARGV[0] eq "config" )
