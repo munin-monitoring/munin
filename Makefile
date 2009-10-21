@@ -177,7 +177,7 @@ install-munindoc: build
 
 ######################################################################
 
-build: $(INFILES) build-master build-common-prime build-node build-plugins build-man
+build: $(INFILES) build-master build-common-prime build-node build-plugins-java build-man
 
 build/%: %.in
 	@echo "$< -> $@"
