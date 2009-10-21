@@ -74,9 +74,9 @@ GPLv2
 
 =cut
 
-
 mktempfile () {
-    $MUNIN_MKTEMP
+    cmd=$(echo $MUNIN_MKTEMP | sed s/\\$1/$1/)
+    $cmd
 }
 
 AMAVIS_LOG=${amavislog:-/var/log/mail/mail.info}
