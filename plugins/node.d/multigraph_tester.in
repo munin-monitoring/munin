@@ -1,0 +1,117 @@
+#!/bin/bash
+
+#%# family=test
+#%# capabilities=autoconf
+
+# The two is_ functions should be put in plugin.sh and Munin::Plugin
+
+# Hardwire capabilities until node fully interacts with them.
+MUNIN_CAP_MULTIGRAPH=1
+# MUNIN_CAP_DIRTYCONFIG=1
+
+is_multigraph () {
+    # echo Testing $MUNIN_CAP_MULTIGRAPH:$1
+    case $MUNIN_CAP_MULTIGRAPH:$1 in
+	1:*) return;; # Yes! Rock and roll!
+
+	*:autoconf)
+	    echo 'no (no multigraph support)'
+	    exit 0
+	    ;;
+
+	*:config)
+	    echo 'graph_title This plugin needs multigraph support'
+	    echo 'multigraph.label No multigraph here'
+	    echo 'multigraph.info This plugin has been installed in a munin-node that is too old to know about multigraph plugins.  Even if your munin master understands multigraph plugins this is not enough, the node too needs to be new enough.  Version 1.4.0 or later should work.'
+	    exit 0
+	    ;;
+
+	*: ) echo 'multigraph.value 0'
+	    exit 0
+	    ;;
+    esac
+}
+
+is_dirtyconfig () {
+    # Detect if node/server supports dirty config
+    case $MUNIN_CAP_DIRTYCONFIG in
+	1) exit 1;;
+	*) exit 0;;
+    esac
+}
+
+# Plugin itself starts here
+
+do_ () {
+    # Do fetch stuff here (.value things!)
+
+    cat <<"EOF"
+one.value 1
+two.value 2
+three.value 3
+#
+multigraph multigraph_tester.en
+one.value 1
+#
+multigraph multigraph_tester.to
+two.value 2
+#
+multigraph multigraph_tester.tre
+three.value 3
+#
+multigraph multigraph_outofscope
+i.value 42
+EOF
+    exit 0
+
+}
+
+do_config () {
+    # Do config stuff here
+
+# Note that "#" in output is optional and is only used to make output more human readable
+    cat <<"EOF"
+graph_title Root graph of multigraph test
+graph_info The root graph is used to click into sub-graph page.  Eventually the root graph should be able to borrow data from the sub graphs in a fairly easy manner.  But not right now.
+one.label number 1
+two.label number 2
+three.label number 3
+#
+multigraph multigraph_tester.en
+graph_title The number 1 sub-graph
+graph_info This and the other . (dot) separated nested graphs are presented in a page linked to from the root graph
+one.label number 1
+#
+multigraph multigraph_tester.to
+graph_title The number 2 sub-graph
+two.label number 2
+#
+multigraph multigraph_tester.tre
+graph_title The number 3 sub-graph
+three.label number 3
+#
+multigraph multigraph_outofscope
+graph_title The out of namespace graph
+graph_info The "multigraph protocol keyword allows the plugin to place data anywhere in the host/node namespace.  The intended use is to be able to produce multiple root graphs and sub-graph spaces, but this is not enforced.
+i.label number i
+EOF
+
+    if is_dirtyconfig; then
+	do_
+    fi
+    exit 0
+}
+
+do_autoconf () {
+    echo yes
+    exit 0
+}
+
+is_multigraph "$@"
+
+# Main is here
+
+do_$1 2>/dev/null || {
+      echo "Do what now?" >&2
+      exit 1
+}
