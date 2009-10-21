@@ -134,7 +134,7 @@ def read_values(hard_drive):
         else :
             num_exit_status=0
     except :
-        verboselog('Cannot access S.M.A.R.T values! Check user rights or propper smartmontools installation/arguments.')
+        verboselog('Cannot access S.M.A.R.T values! Check user rights or proper smartmontools installation/arguments.')
         sys.exit(1)
     if smart_values=={} :
         verboselog('Can\'t find any S.M.A.R.T values in smartctl output!')

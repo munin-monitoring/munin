@@ -62,7 +62,7 @@ classify more spam as "surley spam" and so be able to elliminate it.
 
 Should use counters since the origin data is really counters.  If the
 node has multiple masters the data served will now be incorrect.
-Propper opperation may require porting to perl or some such.
+Proper operation may require porting to perl or such.
 
 =head1 AUTHOR
 
