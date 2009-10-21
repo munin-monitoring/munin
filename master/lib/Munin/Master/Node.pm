@@ -24,7 +24,7 @@ sub new {
         host    => $host,
         tls     => undef,
         socket  => undef,
-        master_capabilities => qw(foo),
+        master_capabilities => qw(multigraph),
         io_timeout => 5,
     };
 
@@ -152,16 +152,9 @@ sub list_services {
     return split / /, $list;
 }
 
+sub parse_service_config {
+    my ($self, $service, @lines) = @_;
 
-sub fetch_service_config {
-    my ($self, $service) = @_;
-
-    logger("[DEBUG] Fetching service configuration for '$service'")
-        if $config->{debug};
-    $self->_node_write_single("config $service\n");
-
-    my @lines = $self->_node_read();
-    
     my @global_config = ();
     my %data_source_config = ();
 
@@ -178,12 +171,12 @@ sub fetch_service_config {
             $ds_name = $self->_sanitise_fieldname($ds_name);
             $data_source_config{$ds_name} ||= {};
             $data_source_config{$ds_name}{$ds_var} = $ds_val;
-            logger("config: $service->$ds_name.$ds_var = $ds_val") if $config->{debug};
+            DEBUG "[CONFIG case 1] $service->$ds_name.$ds_var = $ds_val";
             push @graph_order, $ds_name if ($ds_var eq 'label');
         } 
         elsif ($line =~ m{\A (\w+) \s+ (.+) }xms) {
             push @global_config, [$1, $2];
-            logger ("Config: $service->$1 = $2") if $config->{debug};
+            DEBUG "[CONFIG case 2] $service->$1 = $2";
         }
         else {
             croak "Protocol exception: unrecognised line '$line'";
@@ -196,6 +189,19 @@ sub fetch_service_config {
         unless !@graph_order || grep { $_->[0] eq 'graph_order' } @global_config;
 
     return (global => \@global_config, data_source => \%data_source_config);
+}
+
+
+sub fetch_service_config {
+    my ($self, $service) = @_;
+
+    DEBUG "[DEBUG] Fetching service configuration for '$service'";
+    $self->_node_write_single("config $service\n");
+
+    # The whole config in one fell swoop.
+    my @lines = $self->_node_read();
+
+    return parse_service_config($service,@lines);
 }
 
 
@@ -247,7 +253,13 @@ sub _sanitise_fieldname {
     my ($self, $name) = @_;
 
     $name =~ s/[\W-]/_/g;
-    return substr($name, -18);
+
+    # This trunkation is based on a misunderstanding about fieldname
+    # lengths - most likely - janl 2009-10-21
+
+    # return substr($name, -18);
+
+    return $name;
 }
 
 
