@@ -44,6 +44,9 @@ sub configure {
     # Uses default file if config_file is not defined by arguments.
     $config->parse_config_from_file($args{config_file});
 
+    # Arguments overrides settings from config file.  Note that
+    # this only handles settings that are on the base level, not
+    # anything within groups or hosts.
     $config->set(\%args);
 }
 
