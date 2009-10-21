@@ -34,7 +34,7 @@ restrictions on the log file.
 
 =head1 CONFIGURATION
 
-Configuration parameters for /etc/munin/plugin-conf.d/named,
+Configuration parameters for @@CONFDIR@@/named,
 if you need to override the defaults below:
 
  [named]

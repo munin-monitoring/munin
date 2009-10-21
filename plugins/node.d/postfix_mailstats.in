@@ -8,7 +8,7 @@ rejected by postfix
 
 =head1 CONFIGURATION
 
-Configuration parameters for /etc/munin/plugin-conf.d/postfix_mailstats,
+Configuration parameters for @@CONFDIR@@/postfix_mailstats,
 if you need to override the defaults below:
 
  [postfix_mailstats]

@@ -19,7 +19,7 @@ SqueezeCenter. If the plugin is run from another unit or in a
 non-default configuration, please use the environment variables
 'squeezebox_host' and 'squeezebox_port' to connect. Also, if your
 netcat(1) binary is anywhere else than /bin/nc please define it in the
-plugin's environment file (/etc/munin/plugin-conf.d/squeezebox or
+plugin's environment file (@@CONFDIR@@/squeezebox or
 similar). Sample follows:
 
 [squeezebox_*]

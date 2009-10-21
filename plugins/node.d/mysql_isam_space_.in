@@ -8,7 +8,7 @@ on isam and myisam tables on a mysql server.
 
 =head1 CONFIGURATION
 
-Configuration parameters for /etc/munin/plugin-conf.d/PLUGIN,
+Configuration parameters for @@CONFDIR@@/PLUGIN,
 if you need to override the defaults below:
 
 [mysql_isam_space_*]
