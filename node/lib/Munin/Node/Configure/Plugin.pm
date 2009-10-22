@@ -188,18 +188,21 @@ sub read_magic_markers
         }
         elsif (/#%#\s+capabilities\s*=\s*(.+)/) {
             my @caps = split(/\s+/, $1);
-            foreach my $capability (@caps) {
-                $self->{capabilities}{$capability} = 1;
-            }
-            DEBUG("\tCapabilities are: ", join(', ', @caps));
+            @{$self->{capabilities}}{@caps} = (1) x scalar @caps;
+            DEBUG("\tCapabilities are: $1");
         }
     }
     close ($PLUGIN);
 
-    # FIXME: sanity-check magic marker combinations
-    #   family = auto -> capabilities ~~ autoconf
-    #   family = snmpauto -> capabilities ~~ snmpconf
-    #   capabilities ~~ suggest and not wildcard
+    # Some sanity-checks
+    $self->log_error(q{In family 'auto' but doesn't have 'autoconf' capability})
+        if ($self->{family} eq 'auto' and not $self->{capabilities}{autoconf});
+
+    $self->log_error(q{In family 'auto' but doesn't have 'autoconf' capability})
+        if ($self->{family} eq 'snmpauto' and not $self->{capabilities}{snmpconf});
+
+    $self->log_error(q{Has 'suggest' capability, but isn't a wildcard plugin})
+        if ($self->{capabilities}{suggest} and not $self->is_wildcard);
 
     return;
 }
