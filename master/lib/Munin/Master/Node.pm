@@ -106,7 +106,7 @@ sub _run_starttls_if_required {
 
 sub _do_close {
     my ($self) = @_;
-    
+
     close $self->{socket};
     $self->{socket} = undef;
 }
@@ -139,8 +139,8 @@ sub negotiate_capabilities {
 
 sub list_services {
     my ($self) = @_;
-    
-    my $host = $config->{groups_and_hosts}{$self->{host}}{use_node_name} 
+
+    my $host = $config->{groups_and_hosts}{$self->{host}}{use_node_name}
         ? $self->{node_name}
         : $self->{host};
 
@@ -148,9 +148,10 @@ sub list_services {
 
     $self->_node_write_single("list $host\n");
     my $list = $self->_node_read_single();
-    
+
     return split / /, $list;
 }
+
 
 sub parse_service_config {
     my ($self, $service, @lines) = @_;
@@ -165,7 +166,7 @@ sub parse_service_config {
             if $line =~ /\# timeout/;
         next unless $line;
         next if $line =~ /^\#/;
-        
+
         if ($line =~ m{\A (\w+)\.(\w+) \s+ (.+) }xms) {
             my ($ds_name, $ds_var, $ds_val) = ($1, $2, $3);
             $ds_name = $self->_sanitise_fieldname($ds_name);
@@ -173,7 +174,7 @@ sub parse_service_config {
             $data_source_config{$ds_name}{$ds_var} = $ds_val;
             DEBUG "[CONFIG dataseries] $service->$ds_name.$ds_var = $ds_val";
             push @graph_order, $ds_name if ($ds_var eq 'label');
-        } 
+        }
         elsif ($line =~ m{\A (\w+) \s+ (.+) }xms) {
             push @global_config, [$1, $2];
             DEBUG "[CONFIG graph global] $service->$1 = $2";
@@ -214,6 +215,7 @@ sub _validate_data_sources {
     }
 }
 
+
 sub fetch_service_data {
     my ($self, $service) = @_;
 
@@ -227,7 +229,7 @@ sub fetch_service_data {
             if $line =~ /\# timeout/;
         next unless $line;
         next if $line =~ /^\#/;
-        
+
         if ($line =~ m{ (\w+)\.value \s+ ([\S:]+) }xms) {
             my ($data_source, $value, $when) = ($1, $2, 'N');
 
@@ -267,7 +269,7 @@ sub _node_write_single {
     my ($self, $text) = @_;
 
     logger("[DEBUG] Writing to socket: \"$text\".") if $config->{debug};
-    my $timed_out = !do_with_timeout($self->{io_timeout}, sub { 
+    my $timed_out = !do_with_timeout($self->{io_timeout}, sub {
         if ($self->{tls} && $self->{tls}->session_started()) {
             $self->{tls}->write($text)
                 or exit 9;
@@ -283,11 +285,12 @@ sub _node_write_single {
     return 1;
 }
 
+
 sub _node_read_single {
     my ($self) = @_;
     my $res;
 
-    my $timed_out = !do_with_timeout($self->{io_timeout}, sub { 
+    my $timed_out = !do_with_timeout($self->{io_timeout}, sub {
       if ($self->{tls} && $self->{tls}->session_started()) {
           $res = $self->{tls}->read();
       }
@@ -309,7 +312,7 @@ sub _node_read {
     my ($self) = @_;
     my @array = (); 
 
-    my $timed_out = !do_with_timeout($self->{io_timeout}, sub { 
+    my $timed_out = !do_with_timeout($self->{io_timeout}, sub {
         while (1) {
             my $line = $self->{tls} && $self->{tls}->session_started()
                 ? $self->{tls}->read()
@@ -328,9 +331,7 @@ sub _node_read {
     return @array;
 }
 
-
 1;
-
 
 __END__
 
