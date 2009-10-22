@@ -4,36 +4,51 @@
 
 =head1 NAME
 
-jmx_ - Plugin to monitor java application servers via JMX
-
-=head1 CONFIGURATION
-
-[jmx_*]
- env.SERVICE=Tomcat
- env.ip=127.0.0.1
- env.port=5400
-
-FIXME: No authentication or encryption supported in the JMX
-connection yet.
-
-Needed configuration on the Tomcat side: add
- -Dcom.sun.management.jmxremote \
- -Dcom.sun.management.jmxremote.port=5400 \
- -Dcom.sun.management.jmxremote.ssl=false \
- -Dcom.sun.management.jmxremote.authenticate=false
-
-to CATALINA_OPTS in your startup scripts.
+jmx_ - Wildcard plugin to monitor Java application servers via JMX
 
 =head1 APPLICABLE SYSTEMS
 
-TBD. Tomcat 4.1/5.0/5.5/6.0 on Sun JVM 5/6, at least.
+Tested with Tomcat 4.1/5.0/5.5/6.0 on Sun JVM 5/6 and FreeJDK.
 
-=head1 AUTHOR
+Any JVM that supports JMX should in theory do.
+
+=head1 CONFIGURATION
+
+  [jmx_*]
+    env.SERVICE=Tomcat
+    env.ip=127.0.0.1
+    env.port=5400
+
+Needed configuration on the Tomcat side: add
+
+  -Dcom.sun.management.jmxremote \
+  -Dcom.sun.management.jmxremote.port=5400 \
+  -Dcom.sun.management.jmxremote.ssl=false \
+  -Dcom.sun.management.jmxremote.authenticate=false
+
+to CATALINA_OPTS in your startup scripts.
+
+=head1 BUGS
+
+No authentication or encryption supported in the JMX connection.
+
+The plugins available reflect the most interesting aspects of a
+Tomcat server.  This should be extended to cover things specific to JBoss,
+Glassfish and so on.  Patches welcome.
+
+=head1 AUTHORS
 
 =encoding UTF-8
 
-Mo Amini, Diyar Amin and Younes Hajji, Høgskolen i Oslo. Shell script
-wrapper and integration by Erik Inge Bolsø, Redpill Linpro AS.
+Mo Amini, Diyar Amin and Younes Hajji, Høgskolen i Oslo/Oslo
+University College.
+
+Shell script wrapper and integration by Erik Inge Bolsø, Redpill
+Linpro AS.
+
+=head LICENSE
+
+GPLv2
 
 =head1 MAGIC MARKERS
 
@@ -43,6 +58,13 @@ wrapper and integration by Erik Inge Bolsø, Redpill Linpro AS.
 =cut
 
 if [ "x$1" = "xsuggest" ] ; then
+  # Hmm.  Munin sorts plugins alphabetically.  If ALL plugins regarding
+  # "UsageEden" were to start with that and have "Peak", "Usage" and so on
+  # last in the name then all the UsageEden graphs would be in sequence.
+  # Likewise all Thread related plugins have "Thread" first in the name.
+  # And so on.
+  # I wonder if we can get that done prior to 1.4 release - janl 2009.10.22
+  #
   # AvailableProcessors => rewrite to use ConfReader
   # DeadlockedThreads => rewrite to use ConfReader
   # GCmain => seems broken?
