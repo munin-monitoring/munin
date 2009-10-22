@@ -308,16 +308,9 @@ Show version information.
 
 =head1 DESCRIPTION
 
-Munin-node is a daemon that Munin connects to fetch data.  This data
-is stored in RRD files on the central server, and later graphed and
-htmlified.
-
-munin-run is a Perl script to run Munin plugins from the command-line.
-It's useful when debugging plugins, as they are run the same way with
-the same user and same environment settings as within the munin-node.
-
-For more information, see the documentation section at
-L<http://munin.sf.net/>.
+munin-run is a script to run Munin plugins from the command-line.
+It's useful when debugging plugins, as they are run in the same conditions
+as they are under munin-node.
 
 =head1 FILES
 
@@ -337,7 +330,7 @@ Audun Ytterdal, Jimmy Olsen, Tore Anderson, Nicolai Langfeldt.
 
 =head1 BUGS
 
-Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
+Please see L<http://munin.projects.linpro.no/report/1>.
 
 =head1 COPYRIGHT
 
