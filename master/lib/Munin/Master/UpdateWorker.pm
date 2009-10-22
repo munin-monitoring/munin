@@ -51,20 +51,22 @@ sub do_work {
 
     $self->{node}->do_in_session(sub {
         $self->{node}->negotiate_capabilities();
-        my @services = $self->{node}->list_services();
-        
-        for my $service (@services) {
+	# Note: A multigraph plugin can present multiple services.
+	my @plugins =  $self->{node}->list_services();
+        # my @services =
+
+        for my $plugin (@plugins) {
             if (%{$config->{limit_services}}) {
-                next unless $config->{limit_services}{$service};
+                next unless $config->{limit_services}{$plugin};
             }
-            
-            my %service_config = $self->_fetch_service_config($service);
+
+            my %service_config = $self->uw_fetch_service_config($plugin);
             unless (%service_config) {
-                logger("[WARNING] Service $service returned no config");
+                logger("[WARNING] Service $plugin returned no config");
                 next;
             }
             my %service_data = eval {
-                $self->{node}->fetch_service_data($service);
+                $self->{node}->fetch_service_data($plugin);
             };
             if ($EVAL_ERROR) {
                 logger($EVAL_ERROR);
@@ -87,11 +89,13 @@ sub do_work {
 }
 
 
-sub _fetch_service_config {
-    my ($self, $service) = @_;
+sub uw_fetch_service_config {
+    # not sure why fetch_service_config needs eval and fetch_service_data
+    # does not. - janl 2009.10.22
+    my ($self, $plugin) = @_;
 
     my %service_config = eval {
-        $self->{node}->fetch_service_config($service);
+        $self->{node}->fetch_service_config($plugin);
     };
     if ($EVAL_ERROR) {
         # FIX Report failed service so that we can use the old service
@@ -100,9 +104,9 @@ sub _fetch_service_config {
         return;
     }
 
-    if ($self->{host}{service_config} && $self->{host}{service_config}{$service}) {
+    if ($self->{host}{service_config} && $self->{host}{service_config}{$plugin}) {
         %service_config
-            = (%service_config, %{$self->{host}{service_config}{$service}});
+            = (%service_config, %{$self->{host}{service_config}{$plugin}});
     }
 
     return %service_config;

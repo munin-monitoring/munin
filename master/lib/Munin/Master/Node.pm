@@ -2,6 +2,9 @@ package Munin::Master::Node;
 
 # $Id$
 
+# This module is used by UpdateWorker to keep in touch with a node and
+# parse some of the output.
+
 use warnings;
 use strict;
 
