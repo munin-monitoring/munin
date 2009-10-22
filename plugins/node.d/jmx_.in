@@ -8,12 +8,10 @@ jmx_ - Plugin to monitor java application servers via JMX
 
 =head1 CONFIGURATION
 
-FIXME: Custom configuration, hardcoded to read /etc/munin/jmx.conf
-(see ConfReader.java)
-
- SERVICE=Tomcat
- ip=127.0.0.1
- port=5400
+[jmx_*]
+ env.SERVICE=Tomcat
+ env.ip=127.0.0.1
+ env.port=5400
 
 FIXME: No authentication or encryption supported in the JMX
 connection yet.
