@@ -164,4 +164,51 @@ sub _valid_files
 
 
 1;
+
+__END__
+
+=head1 NAME
+
+Munin::Node::Configure::PluginList - Loading and listing a collection of plugins
+
+
+=head1 SYNOPSIS
+
+  my $plugins = Munin::Node::Configure::PluginList->new(
+        libdir     => '/usr/share/munin/plugins/',
+        servicedir => '/etc/munin/plugins/',
+  );
+  $plugins->load('auto');
+  foreach my $plugin ($plugins->list) {
+        # do something to each 'auto' plugin in turn
+  }
+
+
+=head1 SUBROUTINES
+
+=over
+
+=item B<new(%args)>
+
+Constructor.
+
+Required arguments are 'libdir' and 'servicedir', which are the plugin library
+and service directory, respectively.
+
+
+=item B<load(@families)>
+
+Finds all the plugins in 'libdir' that are in any of @families, and any
+instances of these plugins in 'servicedir'.
+
+
+=item B<list()>
+
+Returns a list of Munin::Node::Configure::Plugin objects currently loaded,
+sorted alphabetically by name.
+
+
+=back
+
+=cut
 # vim: sw=4 : ts=4 : expandtab
