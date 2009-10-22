@@ -195,6 +195,12 @@ sub read_magic_markers
         }
     }
     close ($PLUGIN);
+
+    # FIXME: sanity-check magic marker combinations
+    #   family = auto -> capabilities ~~ autoconf
+    #   family = snmpauto -> capabilities ~~ snmpconf
+    #   capabilities ~~ suggest and not wildcard
+
     return;
 }
 

@@ -285,9 +285,8 @@ sub gather_suggestions
 	prepare_plugin_environment();
 
 	foreach my $plugin ($plugins->list) {
-		next unless $plugin->{capabilities}{autoconf};
 		fetch_plugin_autoconf($plugin);
-		fetch_plugin_suggestions($plugin);
+        fetch_plugin_suggestions($plugin);
 	}
 
 	return;
@@ -302,11 +301,7 @@ sub show_suggestions
     print_table_entry("Plugin", "Used", "Suggestions");
     print_table_entry("------", "----", "-----------");
 
-	foreach my $plugin ($plugins->list) {
-		next unless $plugin->{capabilities}{autoconf}
-		         or $plugin->{capabilities}{snmpconf};
-        print_suggestion_row($plugin);
-	}
+    print_suggestion_row($_) foreach ($plugins->list);
 
 	return;
 }
@@ -328,13 +323,7 @@ sub print_suggestion_row
 sub manage_links
 {
     my ($plugins) = @_;
-
-    foreach my $plugin ($plugins->list) {
-        next unless $plugin->{capabilities}{autoconf}
-                 or $plugin->{capabilities}{snmpconf};
-        manage_plugin_links($plugin)
-    }
-
+    manage_plugin_links($_) foreach ($plugins->list);
     return;
 }
 
@@ -345,9 +334,9 @@ sub manage_plugin_links
 {
     my ($plugin) = @_;
 
-    link_add($plugin->{path}, $_) foreach $plugin->services_to_add();
+    link_add($plugin->{path}, $_) foreach $plugin->services_to_add;
     if ($config->{remove_also}) {
-        link_remove($_) foreach $plugin->services_to_remove();
+        link_remove($_) foreach $plugin->services_to_remove;
     }
 
     return;
@@ -358,7 +347,7 @@ sub manage_plugin_links
 # symlink from the servicedir
 sub link_remove
 {
-    my ($service) = shift;
+    my ($service) = @_;
 
 	return unless $config->{remove_also};
     return unless (-l "$config->{servicedir}/$service"); # Strange...
@@ -390,11 +379,7 @@ sub init_snmp
 	}
 
 	prepare_plugin_environment();
-
-	foreach my $plugin ($plugins->list) {
-		next unless $plugin->{capabilities}{snmpconf};
-		fetch_plugin_snmpconf($plugin);
-	}
+    fetch_plugin_snmpconf($_) foreach ($plugins->list);
 
     return Munin::Node::SNMPConfig->new(
         hosts      => $config->{snmp},
@@ -476,7 +461,7 @@ sub prepare_plugin_environment
 	$ENV{MUNIN_DEBUG} = $config->{PIDEBUG};
 	$ENV{FQDN} = $config->{fqdn} || Munin::Node::OS->get_fq_hostname();
 
-	# Some locales uses "," as decimal separator. This can mess up a lot
+    # Some locales use "," as decimal separator. This can mess up a lot
 	# of plugins.
 	$ENV{LC_ALL} = 'C';
 
@@ -551,6 +536,9 @@ sub run_plugin
 sub fetch_plugin_autoconf
 {
 	my ($plugin) = @_;
+
+    return unless ($plugin->{capabilities}{autoconf});
+
     my @response = run_plugin($plugin, 'autoconf') or return;
 	return $plugin->parse_autoconf_response(@response);
 }
@@ -564,7 +552,8 @@ sub fetch_plugin_suggestions
 
 	# Only run if the autoconf gave the go-ahead
 	return unless ($plugin->{default} eq "yes");
-    return unless ($plugin->is_wildcard and $plugin->{capabilities}{suggest});
+
+    return unless ($plugin->{capabilities}{suggest});
 
     my @suggested = run_plugin($plugin, 'suggest');
 	return $plugin->parse_suggest_response(@suggested);
@@ -575,12 +564,16 @@ sub fetch_plugin_suggestions
 sub fetch_plugin_snmpconf
 {
 	my ($plugin) = @_;
+
+    return unless ($plugin->{capabilities}{snmpconf});
+
     my @response = run_plugin($plugin, 'snmpconf');
 	return $plugin->parse_snmpconf_response(@response);
 }
 
 
 ### Debugging and error reporting ##############################################
+
 sub list_errors
 {
     my @error_list;
@@ -678,8 +671,7 @@ than one host/CIDR.
 
 =item B<< --snmpversion <ver> >>
 
-Set the SNMP version (1, 2c or 3) to use when probing. Default is
-"2c".
+Set the SNMP version (1, 2c or 3) to use when probing. Default is "2c".
 
 =item B<< --snmpcommunity <comm> >>
 
