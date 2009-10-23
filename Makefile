@@ -135,8 +135,9 @@ install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	$(INSTALL) -m 0644 build/plugins/plugins.history $(LIBDIR)/plugins/
 	$(INSTALL) -m 0644 build/plugins/plugin.sh $(LIBDIR)/plugins/
 
-install-plugins-java: install-plugins-prime build-plugins-java
-	$(INSTALL) -m 0644 build/plugins/javalib/munin-jmx-plugins.jar $(LIBDIR)
+install-plugins-java: build-plugins-java
+	mkdir -p $(LIBDIR)
+	$(INSTALL) -m 0644 build/plugins/javalib/munin-jmx-plugins.jar $(LIBDIR)/
 
 #TODO:
 # configure plugins.  Or not. Better done under the direction of the installer
