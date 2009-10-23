@@ -10,7 +10,9 @@ use Test::More tests => 2;
 
 use_ok('Munin::Master::Node');
 
-my $node = bless {}, "Munin::Master::Node";
+my $node = bless { address => "127.0.0.1",
+		   port => "4949",
+		   host => "localhost" }, "Munin::Master::Node";
 
 $INPUT_RECORD_SEPARATOR = '';
 my @input = split("\n",<DATA>);
