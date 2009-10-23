@@ -57,7 +57,7 @@ GPLv2
 
 =cut
 
-MUNIN_JAR="@@LIBDIR@@/munin-jmx-plugins.jar"
+MUNIN_JAR="@@JAVALIBDIR@@/munin-jmx-plugins.jar"
 
 if [ "x$1" = "xsuggest" ] ; then
   # Hmm.  Munin sorts plugins alphabetically.  If ALL plugins regarding

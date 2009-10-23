@@ -136,8 +136,8 @@ install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	$(INSTALL) -m 0644 build/plugins/plugin.sh $(LIBDIR)/plugins/
 
 install-plugins-java: build-plugins-java
-	mkdir -p $(LIBDIR)
-	$(INSTALL) -m 0644 build/plugins/javalib/munin-jmx-plugins.jar $(LIBDIR)/
+	mkdir -p $(JAVALIBDIR)
+	$(INSTALL) -m 0644 build/plugins/javalib/munin-jmx-plugins.jar $(JAVALIBDIR)/
 
 #TODO:
 # configure plugins.  Or not. Better done under the direction of the installer
@@ -199,6 +199,7 @@ build/%: %.in
              -e 's|@@PYTHON@@|$(PYTHON)|g'                      \
              -e 's|@@RUBY@@|$(RUBY)|g'                          \
              -e 's|@@JAVARUN@@|$(JAVARUN)|g'                    \
+             -e 's|@@JAVALIBDIR@@|$(JAVALIBDIR)|g'              \
              -e 's|@@OSTYPE@@|$(OSTYPE)|g'                      \
              -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'                  \
              -e 's|@@MKTEMP@@|$(MKTEMP)|g'                      \
