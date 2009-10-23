@@ -11,7 +11,9 @@ use Test::More qw(no_plan);
 
 use_ok('Munin::Master::Node');
 
-my $node = bless {}, "Munin::Master::Node";
+my $node = bless { address => "127.0.0.1",
+		   port => "4949",
+		   host => "localhost" }, "Munin::Master::Node";
 
 $INPUT_RECORD_SEPARATOR = '';
 my @input = split("\n",<DATA>);
@@ -19,6 +21,11 @@ my @input = split("\n",<DATA>);
 # print "Input: ",@input,"\n";
 
 my %answer = $node->parse_service_config("Test",@input);
+
+=comment
+
+# This is the old datastructure returned by parse_service_config.
+# Kept here as a reference until multigraph is fully working. -janl 2009-10-23
 
 my $fasit = {
           'data_source' => {
@@ -77,6 +84,73 @@ my $fasit = {
                         ]
                       ]
         };
+=cut
+
+my $fasit = {
+          'data_source' => {
+                             'Test' => {
+                                         'system' => {
+                                                       'info' => 'CPU time spent by the kernel in system activities',
+                                                       'draw' => 'AREA',
+                                                       'min' => '0',
+                                                       'max' => '200',
+                                                       'critical' => '100',
+                                                       'warning' => '60',
+                                                       'label' => 'system',
+                                                       'type' => 'DERIVE'
+                                                     },
+                                         'user' => {
+                                                     'info' => 'CPU time spent by normal programs and daemons',
+                                                     'draw' => 'STACK',
+                                                     'min' => '0',
+                                                     'warning' => '160',
+                                                     'max' => '200',
+                                                     'type' => 'DERIVE',
+                                                     'label' => 'user'
+                                                   }
+                                       }
+                           },
+          'global' => {
+                        'multigraph' => [
+                                          'Test'
+                                        ],
+                        'Test' => [
+                                    [
+                                      'graph_title',
+                                      'CPU usage'
+                                    ],
+                                    [
+                                      'graph_order',
+                                      'system user nice idle iowait irq softirq'
+                                    ],
+                                    [
+                                      'graph_args',
+                                      '--base 1000 -r --lower-limit 0 --upper-limit 200'
+                                    ],
+                                    [
+                                      'graph_vlabel',
+                                      '%'
+                                    ],
+                                    [
+                                      'graph_scale',
+                                      'no'
+                                    ],
+                                    [
+                                      'graph_info',
+                                      'This graph shows how CPU time is spent.'
+                                    ],
+                                    [
+                                      'graph_category',
+                                      'system'
+                                    ],
+                                    [
+                                      'graph_period',
+                                      'second'
+                                    ]
+                                  ]
+                      }
+        };
+
 
 is_deeply(\%answer,$fasit,"Plugin config output");
 
