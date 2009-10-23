@@ -282,7 +282,7 @@ sub gather_suggestions
 	my ($plugins) = @_;
 
 	# We're going to be running plugins
-	prepare_plugin_environment();
+	prepare_plugin_environment($plugins);
 
 	foreach my $plugin ($plugins->list) {
 		fetch_plugin_autoconf($plugin);
@@ -378,7 +378,7 @@ sub init_snmp
             $@;
 	}
 
-	prepare_plugin_environment();
+	prepare_plugin_environment($plugins);
     fetch_plugin_snmpconf($_) foreach ($plugins->list);
 
     return Munin::Node::SNMPConfig->new(
@@ -455,6 +455,8 @@ sub load_plugin_history
 
 sub prepare_plugin_environment
 {
+    my ($plugins) = @_;
+
 	Munin::Common::Defaults->export_to_environment();
 
 	# Export some variables plugins might be interested in
@@ -471,7 +473,7 @@ sub prepare_plugin_environment
 		unless defined $config->{defgroup};
 
 	$config->process_plugin_configuration_files();
-	$config->apply_wildcards();
+    $config->apply_wildcards(map { $_->{name} } $plugins->list);
 
 	return;
 }
