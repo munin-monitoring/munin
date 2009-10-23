@@ -124,7 +124,7 @@ if [ "x$1" = "xautoconf" ] ; then
     nc -n -z $ip $port
     CONNECT=$?
 
-    JAVA_BIN="/usr/bin/java"
+    JAVA_BIN="@@JAVARUN@@"
     $JAVA_BIN -? >/dev/null 2>&1
     JAVA=$?
     if [ $JAVA -ne 0 ] ; then
