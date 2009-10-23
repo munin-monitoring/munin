@@ -15,9 +15,9 @@ Any JVM that supports JMX should in theory do.
 =head1 CONFIGURATION
 
   [jmx_*]
-    env.SERVICE=Tomcat
-    env.ip=127.0.0.1
-    env.port=5400
+    env.SERVICE Tomcat
+    env.ip 127.0.0.1
+    env.port 5400
 
 Needed configuration on the Tomcat side: add
 
