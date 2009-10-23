@@ -302,16 +302,15 @@ sub _parse_plugin_line {
 
 
 sub apply_wildcards {
-    my ($self) = @_;
+    my ($self, @services) = @_;
 
     # Need to sort the keys in descending order so that more specific
     # wildcards take precedence.
     for my $wildservice (grep { /\*$/ } reverse sort keys %{$self->{sconf}}) {
         my $ws = substr $wildservice, 0, -1;
 
-        for my $service (grep { /[^*]$/ } keys %{$self->{sconf}}) {
+        for my $service (@services) {
             next unless $service =~ /^$ws/;
-            
             $self->_apply_wildcard_to_service($self->{sconf}{$wildservice},
                                               $service);
         }
@@ -324,14 +323,13 @@ sub apply_wildcards {
 sub _apply_wildcard_to_service {
     my ($self, $wildservice, $service) = @_;
 
-    my $sconf = $self->{sconf}{$service};
+    my $sconf = $self->{sconf}{$service} || {};
 
     # Environment
     if (exists $wildservice->{'env'}) {
         for my $key (keys %{$wildservice->{'env'}}) {
-            next if exists $sconf->{'env'} && exists $sconf->{'env'}{$key};
-
-            $sconf->{'env'} ||= {};
+            next if exists $sconf->{'env'}
+                 && exists $sconf->{'env'}{$key};
             $sconf->{'env'}{$key} = $wildservice->{'env'}{$key};
         }
     }
@@ -342,6 +340,9 @@ sub _apply_wildcard_to_service {
 
         $sconf->{$key} = $wildservice->{$key};
     }
+
+    $self->{sconf}{$service} = $sconf;
+    return;
 }
 
 

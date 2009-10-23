@@ -1,3 +1,5 @@
+# vim: ts=4 : et
+
 use warnings;
 use strict;
 
@@ -269,7 +271,7 @@ isa_ok($conf, 'Munin::Node::Config');
         },
     }, "Checking sconf");
 
-    $conf->apply_wildcards();
+    $conf->apply_wildcards(qw| Foo Fnord |);
     is_deeply($conf, {
         sconfdir => $sconfdir,
         sconf=>{
@@ -280,8 +282,13 @@ isa_ok($conf, 'Munin::Node::Config');
                     baz => 'zing', 
                     bar => 'zap',
                 }
-            }
-        }
+            },
+            Fnord => {
+                env => {
+                    bar => 'zoo',
+                },
+            },
+        },
     }, "Checking sconf wildcards");
 
 }

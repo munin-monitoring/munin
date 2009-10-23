@@ -96,7 +96,7 @@ sub main
         exit 1;
     }
 
-    load_service_configs();
+    load_service_configs($plugin);
 
     # no need for a timeout -- the user can kill this process any
     # time they want.
@@ -129,6 +129,8 @@ sub merge_node_config
 
 sub load_service_configs
 {
+    my ($plugin) = @_;
+
     if ($config->{sconffile}) {
         $config->parse_plugin_config_file($config->{sconffile});
     }
@@ -136,7 +138,8 @@ sub load_service_configs
         $config->process_plugin_configuration_files();
     }
 
-    $config->apply_wildcards();
+    $config->apply_wildcards($plugin);
+    return;
 }
 
 

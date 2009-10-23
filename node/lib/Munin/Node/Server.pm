@@ -33,8 +33,8 @@ my $config = Munin::Node::Config->instance();
 sub pre_loop_hook {
     my $self = shift;
     print STDERR "In pre_loop_hook.\n" if $config->{DEBUG};
-    _load_service_configurations();
     _load_services();
+    _load_service_configurations();
     $self->SUPER::pre_loop_hook();
 }
 
@@ -48,7 +48,7 @@ sub request_denied_hook {
 
 sub _load_service_configurations {
     $config->process_plugin_configuration_files();
-    $config->apply_wildcards();
+    $config->apply_wildcards(keys %services);
     return;
 }
 
