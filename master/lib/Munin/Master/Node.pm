@@ -152,6 +152,10 @@ sub list_services {
     $self->_node_write_single("list $host\n");
     my $list = $self->_node_read_single();
 
+    if (not $list) {
+        logger("[WARNING] Config node $self->{host} listed no services for $host");
+    }
+
     return split / /, $list;
 }
 
