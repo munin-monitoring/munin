@@ -187,7 +187,7 @@ sub parse_service_config {
             DEBUG "[CONFIG graph global] $service->$1 = $2";
         }
         else {
-            croak "Protocol exception: unrecognised line '$line'";
+            croak "Protocol exception: while configuring '$service': unrecognised line '$line'";
         }
     }
 
@@ -250,7 +250,7 @@ sub fetch_service_data {
             $values{$data_source} = { value => $value, when => $when };
         }
         else {
-            croak "Protocol exception: unrecogniced line '$line'";
+            croak "Protocol exception: while fetching '$service': unrecogniced line '$line'";
         }
     }
 
