@@ -1,13 +1,11 @@
 # munin commands completion
 #
 _munin_list_plugins() {
-	local PLUGIN_LIST
-	
 	COMPREPLY=()
-	cur=`_get_cword`
-	
+    cur=${COMP_WORDS[COMP_CWORD]}
+
+	local PLUGIN_LIST
 	PLUGIN_LIST=$(ls @@CONFDIR@@/plugins 2>&1)
-	
 	COMPREPLY=( $( compgen -W "$PLUGIN_LIST" -- "$cur" ) )
 }
 
