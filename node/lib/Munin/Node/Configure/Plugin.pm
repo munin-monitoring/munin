@@ -35,7 +35,6 @@ sub new
 sub is_wildcard { return ((shift)->{path} =~ /_$/); }
 
 
-# returns true if the plugin is in one of the families
 sub in_family { $_[0]->{family} eq $_  && return 1 foreach @_; return 0; }
 
 
@@ -52,9 +51,6 @@ sub _add    { _set_difference(reverse @_); }
 sub _same   { _set_intersection(@_); }
 
 
-# returns a string of the form:
-# 'no',  'no [reason why it's not used]',
-# 'yes', 'yes (unchanged +additions -removals)'
 sub suggestion_string
 {
     my ($self) = @_;
@@ -139,20 +135,20 @@ sub _suggested_links
     }
 }
 
+
 # return an arrayref of the installed or suggested wildcards (eg. 'eth0' or
 # 'switch.example.com/1').  nothing is returned if the plugin contains no wildcards.
 sub _installed_wild { return [ map { $_[0]->_reduce_wildcard($_) } @{$_[0]->{installed}} ]; }
 sub _suggested_wild { return [ map { _flatten_wildcard($_) } @{(shift)->{suggestions}}]; }
 
 
-# returns a list of service names that should be added for this plugin
 sub services_to_add
 {
     my ($self) = @_;
     return _add($self->_installed_links, $self->_suggested_links);
 }
 
-# returns a list of service names that should be removed.
+
 sub services_to_remove
 {
     my ($self) = @_;
@@ -160,15 +156,12 @@ sub services_to_remove
 }
 
 
-# Associates a link name from the servicedir with this plugin
 sub add_instance { push @{(shift)->{installed}}, shift; }
 
 
-# Adds a suggestion
 sub add_suggestions { push @{(shift)->{suggestions}}, @_; }
 
 
-# Extracts any magic-markers from the plugin
 sub read_magic_markers
 {
     my ($self) = @_;
@@ -252,7 +245,7 @@ sub parse_suggest_response
     }
 
     unless (@{ $self->{suggestions} }) {
-        $self->log_error("No suggestions");
+        $self->log_error("No valid suggestions");
         return;
     }
 
@@ -368,4 +361,121 @@ sub _set_intersection
 
 
 1;
+
+__END__
+
+
+=head1 NAME
+
+Munin::Node::Configure::Plugin - Class representing a plugin, along with its
+installed and suggested services.
+
+
+=head1 SYNOPSIS
+
+  my $plugin = Munin::Node::Configure::Plugin->new();
+
+
+=head1 METHODS
+
+=over
+
+=item B<new(%args)>
+
+Constructor.
+
+Required arguments are 'name' and 'path', which should be the
+basename and full path of the plugin, respectively.
+
+
+=item B<is_wildcard()>
+
+Returns true if the plugin is a wildcard.  In the case of SNMP plugins,
+only double-wild plugins will return true (ie. 'snmp__memory' would
+return false, but 'snmp__if_' would return true).
+
+
+=item B<in_family(@families)>
+
+Returns true if plugin's family is in @families, false otherwise.
+
+
+=item B<is_installed()>
+
+Returns 'yes' if one or more links to this plugin exist in the service
+directory, 'no' otherwise.
+
+
+=item B<suggestion_string()>
+
+Returns a string detailing whether or not autoconf considers that the plugin
+should be installed.  The string may also report the reason why the plugin 
+declined to be installed, or the list of suggestions it provided, if this
+information is available.
+
+
+=item B<installed_services_string()>
+
+Returns a string detailing which wildcards are installed for this plugin.
+
+
+=item B<services_to_add()>
+
+=item B<services_to_remove()>
+
+Return a list of service names that should be added or removed for this
+plugin.
+
+
+=item B<add_instance($name)>
+
+Associates a link from the service directory with this plugin.
+
+
+=item B<add_suggestions(@suggestions)>
+
+Adds @suggestions to the list of suggested wildcards for this plugin.  They
+are not validated.
+
+
+=item B<read_magic_markers()>
+
+Sets the family and capabilities from the magic markers embedded in the plugin's
+executable, as specified by
+http://munin.projects.linpro.no/wiki/ConcisePlugins#Magicmarkers
+
+
+=item B<parse_autoconf_response(@response)>
+
+Parses and validates the autoconf response from the plugin, in the format
+specified by http://munin.projects.linpro.no/wiki/ConcisePlugins#autoconf
+
+Invalid input will cause an error to be logged against the plugin.
+
+
+=item B<parse_suggest_response(@response)>
+
+Validates the suggestions from the plugin.
+
+Invalid suggestions will cause an error to be logged against the plugin.
+
+
+=item B<parse_snmpconf_response(@response)>
+
+Parses and validates the snmpconf response from the plugin, in the format
+specified by http://munin.projects.linpro.no/wiki/ConcisePlugins#suggest
+
+Invalid or inconsistent input will cause an error to be logged against the
+plugin.
+
+
+=item B<log_error($message)>
+
+Logs an error for later retrieval.  The error will also be displayed if
+debugging output is enabled.
+
+
+=back
+
+=cut
 # vim: sw=4 : ts=4 : expandtab
