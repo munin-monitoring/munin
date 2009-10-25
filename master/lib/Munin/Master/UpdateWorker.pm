@@ -73,8 +73,8 @@ sub do_work {
                 next;
             }
 
-            $self->_update_rrd_files($service, \%service_config, \%service_data);
-            $all_service_configs{$service} = \%service_config;
+            $self->_update_rrd_files($plugin, \%service_config, \%service_data);
+            $all_service_configs{$plugin} = \%service_config;
         }
 
         #use Data::Dumper; warn Dumper(\@services);
