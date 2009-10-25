@@ -39,6 +39,24 @@ sub add_attributes_if_not_exists {
 }
 
 
+sub get_canned_ds_config {
+    my ($self, $service, $data_source) = @_;
+
+    # XXX: Could this be done in some sane way?
+
+    my %ds_config;
+    my $svc_ds_prefix = "$service.$data_source.";
+
+    for my $svc_ds_prop (keys %$self) {
+        if (index($svc_ds_prop, $svc_ds_prefix) == 0) {
+            my $prop = substr($svc_ds_prop, length($svc_ds_prefix));
+            $ds_config{$prop} = $self->{$svc_ds_prop};
+        }
+    }
+
+    return \%ds_config;
+}
+
 1;
 
 

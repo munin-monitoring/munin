@@ -47,12 +47,12 @@ sub run {
     $self->_do_with_lock_and_timing(sub {
         logger("Starting munin-update");
 
+        $self->{old_service_configs} = $self->_read_old_service_configs();
+
         $self->{workers} = $self->_create_workers();
         $self->_run_workers();
 
 	# I wonder if the following should really be done with timing. - janl
-        $self->{old_service_configs} = $self->_read_old_service_configs();
-        $self->_compare_and_act_on_config_changes();
         $self->_write_new_service_configs_locked();
     });
 }
@@ -200,98 +200,6 @@ sub _create_self_aware_worker_exception_handler {
 	logger("Failed worker $worker_id");
         push @{$self->{failed_workers}}, $worker_id;
     };
-}
-
-
-sub _compare_and_act_on_config_changes {
-    my ($self) = @_;
-
-    # Kjellm: Why do we need to tune RRD files after upgrade? Shouldn't we
-    # create a upgrade script or something instead?
-    # 
-    # janl: Not sure? Code duplication?  Ease of use?  Lazyness?
-
-    my $just_upgraded = 0;
-
-    if (!defined $self->{old_version} 
-            || $self->{old_version} ne $Munin::Common::Defaults::MUNIN_VERSION) {
-        $just_upgraded = 1;
-    }
-
-    my %changers = (
-        'max'  => \&_change_max,
-        'min'  => \&_change_min,
-        'type' => \&_change_type,
-    );
-
-    for my $host (keys %{$self->{service_configs}}) {
-        for my $service (keys %{$self->{service_configs}{$host}}) {
-            for my $data_source (keys %{$self->{service_configs}{$host}{$service}{data_source}}) {
-                my $ds_config = $self->{service_configs}{$host}{$service}{data_source}{$data_source};
-                my $old_ds_config = $self->{old_service_configs}{$host} 
-                    && $self->{old_service_configs}{$host}{$service}
-                        && $self->{old_service_configs}{$host}{$service}{data_source}{$data_source};
-
-                next unless $old_ds_config || $just_upgraded;
-
-                $old_ds_config ||= {max => '', min => '', type => 'GAUGE'};
-                
-                my $rrd_file 
-                    = $self->_get_rrd_file_name($host, $service, $data_source, $ds_config->{type});
-
-                # type must come last because it renames the file
-                # referenced by min and max ($rrd_file)
-                for my $what (qw(min max type)) {
-                    if ($just_upgraded || $ds_config->{$what} ne $old_ds_config->{$what}) {
-                        logger("Notice: compare_configs: $host.$service.$data_source.$what changed from '" 
-                                   . (defined $old_ds_config->{$what} ? $old_ds_config->{$what} : "undefined") 
-                                       . "' to '$ds_config->{$what}'.");
-                        $changers{$what}->($self, $ds_config->{$what}, $rrd_file);
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-sub _change_type {
-    my ($self, $new, $file) = @_;
-
-    $new ||= 'GAUGE';
-
-    my $type_id = lc(substr($new, 0, 1));
-    my $new_file = $file;
-    $new_file =~ s/\w.rrd/$type_id.rrd/;
-
-    logger("[INFO]: Changing name of $file to $new_file");
-    unless (rename ($file, $new_file)) {
-        logger ("[ERROR]: Could not rename '$file': $!\n");
-    }
-    
-
-    logger("[INFO]: Changing type of $new_file to \"$new\",\n");
-    RRDs::tune($new_file, "-d", "42:$new");
-}
-
-
-sub _change_max {
-    my ($self, $new, $file) = @_;
-
-    $new ||= 'U';
-
-    logger("[INFO]: Changing max of \"$file\" to \"$new\".\n");
-    RRDs::tune($file, "-a", "42:$new");
-}
-
-
-sub _change_min {
-    my ($self, $new, $file) = @_;
-
-    $new ||= 'U';
-
-    logger("[INFO]: Changing min of \"$file\" to \"$new\".\n");
-    RRDs::tune($file, "-i", "42:$new");
 }
 
 
