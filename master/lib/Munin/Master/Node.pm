@@ -209,7 +209,7 @@ sub fetch_service_config {
     # The whole config in one fell swoop.
     my @lines = $self->_node_read();
 
-    return parse_service_config($service,@lines);
+    return $self->parse_service_config($service,@lines);
 }
 
 
