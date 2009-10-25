@@ -23,6 +23,7 @@ public class CollectionUsageEden {
                         "Max.label Max\n" +
                         "Max.info The maximum amount of memory (in bytes) that can be used for memory management.\n" +
                         "Max.draw AREA\n" +
+                        "Max.colour ccff00\n" +
 			"Init.label Init\n" +
                         "Init.info The initial amount of memory (in bytes) that the Java virtual machine requests from the operating system for memory management during startup.\n" +
 			"Used.label Used\n" +

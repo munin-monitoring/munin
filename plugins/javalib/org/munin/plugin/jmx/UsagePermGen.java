@@ -22,9 +22,10 @@ public class UsagePermGen {
                         "Max.label Max\n" +
                         "Max.info Test. \n" +
                         "Max.draw AREA\n" +
-			"Init.label Init\n" +
+                        "Max.colour ccff00\n" +
+                        "Init.label Init\n" +
                         "Init.info The initial amount of memory (in bytes) that the Java virtual machine requests from the operating system for memory management during startup.\n" +
-			"Used.label Used\n" +
+                        "Used.label Used\n" +
                         "Used.info The amount of memory currently used (in bytes).\n" +
                         "Threshold.label Threshold\n" +
                         "Threshold.info The usage threshold value of this memory pool in bytes.\n"

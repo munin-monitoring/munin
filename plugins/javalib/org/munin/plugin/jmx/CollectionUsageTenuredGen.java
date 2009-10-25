@@ -22,6 +22,7 @@ public class CollectionUsageTenuredGen {
 		        "Max.label Max\n" +
                         "Max.info The maximum amount of memory (in bytes) that can be used for memory management.\n" +
                         "Max.draw AREA\n" +
+                        "Max.colour ccff00\n" +
 			"Used.label Used\n" +
                         "Used.info The amount of memory currently used (in bytes).\n" +
 			"Init.label Init\n" +

@@ -21,13 +21,12 @@ public class HeapMemoryUsage2 {
                        "Max.info The maximum amount of memory (in bytes) that can be used for memory management.\n" +
                        "Max.label Max\n" +
                        "Max.draw AREA\n" +
+                       "Max.colour ccff00\n" +
                        "Init.info  The initial amount of memory (in bytes) that the Java virtual machine requests from the operating system for memory management during startup.\n" +
                        "Init.label Init\n" + 
                        "Used.info  represents the amount of memory currently used (in bytes).\n" +          
-                       "Used.label Used\n" +
-                       "Used.colour 000000\n" 
-
-);
+                       "Used.label Used\n"
+                );
             }
          else {
         String[] connectionInfo = ConfReader.GetConnectionInfo(args[0]);

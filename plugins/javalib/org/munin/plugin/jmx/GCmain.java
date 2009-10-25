@@ -47,7 +47,7 @@ public class GCmain {
 
                 System.out.println("CopyCount.value " + temp[0][0]);
                 System.out.println("CopyTime.value " + temp[0][1]);
-                 System.out.println("MarkSweepCompactCount.value " + temp[1][0]);
+                System.out.println("MarkSweepCompactCount.value " + temp[1][0]);
                 System.out.println("MarkSweepCompactTime.value " + temp[1][1]);
 
 
