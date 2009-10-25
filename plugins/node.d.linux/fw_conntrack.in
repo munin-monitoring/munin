@@ -80,6 +80,7 @@ case $1 in
 graph_title Connections through firewall
 graph_vlabel Connections
 graph_category network
+graph_args -l 0
 established.label Established
 established.type GAUGE
 established.draw AREA
