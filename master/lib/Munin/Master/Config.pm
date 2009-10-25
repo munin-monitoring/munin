@@ -217,7 +217,7 @@ sub _create_and_set {
 	    $setref->{hosts}{$host} =
 		Munin::Master::Host->new($host,$setref,{ $key => $value });
 	} else {
-	    $setref->{hosts}{$host}->add_attributes_if_not_exists({ $key => $value } );
+            $setref->{hosts}{$host}->{$key} = $value;
 	}
     } else {
 	# Implant key/value into group
