@@ -93,4 +93,47 @@ sub too_old
 
 
 1;
+
+__END__
+
+=head1 NAME
+
+Munin::Node::Configure::History - Filtering plugins based on the version of
+Munin they were first distributed with.
+
+
+=head1 SYNOPSIS
+
+  my $plugin = Munin::Node::Configure::History->new(
+      newer        => '1.3.3',
+      history_file => 'plugins/plugins.history',
+  );
+
+
+=head1 METHODS
+
+=over
+
+=item B<new(%args)>
+
+Constructor.
+
+The 'history_file' argument is required, and should be the path to the plugin
+history file.  The 'newer' argument is optional, and should be the version of
+the release before which plugins should be ignored.
+
+
+=item B<load()>
+
+Loads the plugin history from history_file.  Dies if 'newer' didn't match a
+valid release, or the file wasn't readable.
+
+
+=item B<too_old($plugin)>
+
+Takes a Munin::Node::Configure::Plugin object.  Returns false unless the
+plugin should be ignored, true otherwise (ie. if 'newer' wasn't set, the plugin
+is user-contributed, etc).
+
+=cut
 # vim: sw=4 : ts=4 : expandtab
