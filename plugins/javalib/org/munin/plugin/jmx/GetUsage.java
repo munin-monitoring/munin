@@ -50,7 +50,7 @@ class GetUsage {
 	    GCresult[i++] = gcmbeans.get(memtype).getUsage().getMax()+"";
 	    GCresult[i++] = gcmbeans.get(memtype).getUsage().getUsed()+"";
 //           System.out.println(gcmbeans.get(memtype).getName());// denne printer Tenured Gen
-           GCresult[i++]=gcmbeans.get(memtype).getCollectionUsageThreshold()+""; 
+           GCresult[i++]=gcmbeans.get(memtype).getUsageThreshold()+""; 
     return GCresult;
     }
 
