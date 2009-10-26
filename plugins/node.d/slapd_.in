@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# vim: ft=perl
 
 # Copyright Bjorn Ruberg <bjorn@ruberg.no>
 # Licenced under GPL v2
@@ -23,7 +24,7 @@
 
 # use strict;
 use Net::LDAP;
-use Data::Dumper;
+#use Data::Dumper;
 
 use vars qw ( $config $param $act $scope $descr $cn $vlabel
 	      $info $title $label);
@@ -185,13 +186,13 @@ if ($ARGV[0]) {
         # Check for Net::LDAP
         if (! eval "require Net::LDAP;") {
             print "no (Net::LDAP not found)";
-            exit 1;
+            exit 0;
         }
         # Check for LDAP version 3
         my $ldap = Net::LDAP->new ($server, version => 3)
-            or die "no (Needs LDAPv3)";
+            or do { print "no (Needs LDAPv3)\n"; exit };
         $ldap->bind ($userdn, password => $userpw)
-            or die ("no (Can't log in, check env file)");
+            or do { print "no (Can't log in, check env file)\n"; exit };
     } elsif ($ARGV[0] eq "config") {
         if ($0 =~ /slapd_([\w\d_]+)$/) {
             my $action = $1;
