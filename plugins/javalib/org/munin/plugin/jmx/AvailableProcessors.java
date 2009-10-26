@@ -16,7 +16,7 @@ public class AvailableProcessors  {
                 System.out.println("graph_title AvailableProcessors\n" +
 		"graph_vlabel Number of used processors\n" +
 		"graph_info Returns the number of processors available to the Java virtual machine. This value may change during a particular invocation of the virtual machine.\n" +
-		"graph_category Tomcat\n" +
+		"graph_category jvm\n" +
 		"AvailableProcessors.label AvailableProcessors");
             }
  }

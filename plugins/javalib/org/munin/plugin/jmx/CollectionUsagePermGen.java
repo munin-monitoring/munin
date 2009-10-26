@@ -15,7 +15,7 @@ public class CollectionUsagePermGen {
             if (args[0].equals("config")) {
                 System.out.println("graph_title CollectionUsagePermGen\n" +
                         "graph_vlabel Bytes\n" +
-                        "graph_category Tomcat\n" +
+                        "graph_category jvm\n" +
                         "graph_info Contains reflective data of the JVM itself, including class and memory objects\n" +
                         "Comitted.label Comitted\n" +
                         "Comitted.info The amount of memory (in bytes) that is guaranteed to be available for use by the Java virtual machine.\n" +

@@ -15,7 +15,7 @@ public class MemoryPoolThresholdCount {
             if (args[0].equals("config")) {
                 System.out.println("graph_title MemoryPoolThreshold\n" +
                         "graph_vlabel Bytes\n" +
-                        "graph_category Tomcat\n" +
+                        "graph_category jvm\n" +
                         "graph_info Returns the number of times that the Java virtual machine has detected that the memory usage has reached or exceeded the collection usage threshold.\n" +
                         "TenuredGen.label TenuredGen\n" +
                         "TenuredGen.info Thresholdcount for Tenured Gen \n" +

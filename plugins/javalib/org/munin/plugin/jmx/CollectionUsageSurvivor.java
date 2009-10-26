@@ -15,7 +15,7 @@ public class CollectionUsageSurvivor {
             if (args[0].equals("config")) {
                 System.out.println("graph_title CollectionUsageSurvivor\n" +
                         "graph_vlabel Bytes\n" +
-                        "graph_category Tomcat\n" +
+                        "graph_category jvm\n" +
                         "graph_info Pool containing objects that have survived Eden space garbage collection.\n" +
 			"Comitted.label Comitted\n" +
                         "Comitted.info The amount of memory (in bytes) that is guaranteed to be available for use by the Java virtual machine.\n" +

@@ -16,7 +16,7 @@ public class DeadlockedThreads  {
                 System.out.println("graph_title DeadlockedThreads\n" +
 		"graph_vlabel count\n" +
 		"graph_info Returns the number of deadlocked threads for the JVM.\n" +
-		"graph_category Tomcat\n" +
+		"graph_category jvm\n" +
 		"DeadlockedThreads.label DeadlockedThreads");
             }
  }

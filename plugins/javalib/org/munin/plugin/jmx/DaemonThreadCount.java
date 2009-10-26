@@ -28,7 +28,7 @@ public class DaemonThreadCount
                         "graph_title DaemonThreadCount\n" +
                         "graph_vlabel DaemonThreadCount\n" +
                         "graph_info Returns the current number of live daemon threads.\n" +  
-                        "graph_category Tomcat\n" + 
+                        "graph_category jvm\n" + 
                         "DaemonThreadCount.label DaemonThreadCount\n"
 );
             }

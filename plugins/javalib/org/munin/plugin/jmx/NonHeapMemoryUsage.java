@@ -16,7 +16,7 @@ public class NonHeapMemoryUsage {
                 System.out.println(
                        "graph_title NonHeapMemoryUsage\n" +
                        "graph_args --base 1024 -l 0 --vertical-label Bytes\n" +
-                       "graph_category Tomcat\n" +   
+                       "graph_category jvm\n" +   
                        "Committed.info The amount of memory (in bytes) that is guaranteed to be available for use by the Java virtual machine.\n" +  
                        "Committed.label Committed\n" +
                        "Max.info The maximum amount of memory (in bytes) that can be used for memory management.\n" +

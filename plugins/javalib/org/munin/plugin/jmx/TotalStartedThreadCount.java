@@ -16,7 +16,7 @@ public class TotalStartedThreadCount {
                   "graph_info Returns the total number of threads created and also started since the Java virtual machine started. \n" +
                   "graph_title TotalStartedThreadCount\n" +
                   "graph_vlabel TotalStartedThreadCount\n" +
-                  "graph_category Tomcat\n" +
+                  "graph_category jvm\n" +
                   "TotalStartedThreadCount.label TotalStartedThreadCount"
 
           

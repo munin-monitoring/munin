@@ -18,7 +18,7 @@ public class CurrentThreadCpuTime {
                         "graph_title CurrentThreadCpuTime\n" +
                         "graph_vlabel Nanoseconds\n" +
                         "graph_info Returns the total CPU time for the current thread in nanoseconds. The returned value is of nanoseconds precison but not necessarily nanoseconds accuracy. If the implementation distinguishes between user mode time and system mode time, the returned CPU time is the amount of time that the current thread has executed in user mode or system mode.\n" +
-                        "graph_category Tomcat\n" +
+                        "graph_category jvm\n" +
                         "CurrentThreadCpuTime.label CurrentThreadCpuTime\n");
             }
          else {

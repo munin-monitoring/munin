@@ -16,7 +16,7 @@ public class TotalLoadedClassCount {
                    "graph_info The total number of classes that have been loaded since the Java virtual machine has started execution. \n" +
                    "graph_title TotalLoadedClassCount\n" +
                    "graph_vlabel TotalLoadedClassCount\n" +
-                   "graph_category Tomcat\n" +    
+                   "graph_category jvm\n" +    
                    "TotalLoadedClassCount.label TotalLoadedClassCount\n" 
           
              

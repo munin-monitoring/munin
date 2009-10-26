@@ -16,7 +16,7 @@ public class Uptime {
 		"graph_title Uptime\n" +
 		"graph_vlabel Days\n" +
 		"graph_info Uptime of the Java virtual machine in days.\n" +
-		"graph_category Tomcat\n" +
+		"graph_category jvm\n" +
 		"Uptime.label Uptime");
             }
          else {

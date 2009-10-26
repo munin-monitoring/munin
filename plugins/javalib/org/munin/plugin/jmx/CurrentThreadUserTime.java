@@ -19,7 +19,7 @@ public class CurrentThreadUserTime {
                         "graph_title CurrentThreadUserTime\n" + 
                         "graph_vlabel Nanoseconds\n" + 
 			"graph_info Returns the CPU time that the current thread has executed in user mode in nanoseconds. The returned value is of nanoseconds precison but not necessarily nanoseconds accuracy.\n" +
-                        "graph_category Tomcat\n" +
+                        "graph_category jvm\n" +
                         "CurrentThreadUserTime.label CurrentThreadUserTime\n" 
 );
             }

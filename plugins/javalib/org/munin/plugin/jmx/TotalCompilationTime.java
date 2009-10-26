@@ -19,7 +19,7 @@ public class TotalCompilationTime {
                 System.out.println("graph_title TotalCompilationTime\n" +
 			           "graph_vlabel Time\n" +
 	       	                   "graph_info value does not indicate the level of performance of the Java virtual machine and is not intended for performance comparisons of different virtual machine implementations. The implementations may have different definitions and different measurements of the compilation time.\n" +
-                                   "graph_category Tomcat\n" +
+                                   "graph_category jvm\n" +
                                    "TotalCompilationTime.label TotalCompilationTime\n" +
                                    "TotalCompilationTime.info The approximate accumlated elapsed time (in milliseconds) spent in compilation. If multiple threads are used for compilation, this value is summation of the approximate time that each thread spent in compilation." ); 
             }

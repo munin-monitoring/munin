@@ -15,7 +15,7 @@ public class ObjectsPending {
                 System.out.println(
                        "graph_title ObjectsPending\n" +
                        "graph_vlabel Objects\n" +
-                       "graph_category Tomcat\n" +   
+                       "graph_category jvm\n" +   
                        "Objects.info  The approximate number of objects for which finalization is pending.\n" +  
                        "Objects.label Objects\n" 
 

@@ -16,7 +16,7 @@ public class PeakThreadCount {
                    "graph_title PeakThreadCount\n" + 
                    "graph_vlabel PeakThreadCount\n" +
                    "graph_info Returns the peak live thread count since the Java virtual machine started or peak was reset.\n" +
-                   "graph_category Tomcat\n" +
+                   "graph_category jvm\n" +
                    "PeakThreadCount.label PeakThreadCount" 
 
 

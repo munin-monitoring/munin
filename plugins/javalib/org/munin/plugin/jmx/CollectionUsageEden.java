@@ -16,7 +16,7 @@ public class CollectionUsageEden {
             if (args[0].equals("config")) {
                 System.out.println("graph_title CollectionUsageEden\n" +
                         "graph_vlabel Bytes\n" +
-                        "graph_category Tomcat\n" +
+                        "graph_category jvm\n" +
                         "graph_info  Pool from which memory is initially allocated for most objects.\n" +
 			"Comitted.label Comitted\n" +
                         "Comitted.info The amount of memory (in bytes) that is guaranteed to be available for use by the Java virtual machine.\n" +

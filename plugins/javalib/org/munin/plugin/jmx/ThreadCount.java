@@ -16,7 +16,7 @@ public class ThreadCount {
                   "graph_title ThreadCount\n" +
                   "graph_vlabel ThreadCount\n" +
                   "graph_info Returns the current number of live threads including both daemon and non-daemon threads.\n" +
-                  "graph_category Tomcat\n" +
+                  "graph_category jvm\n" +
                   "ThreadCount.label ThreadCount"
  
 

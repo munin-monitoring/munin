@@ -17,7 +17,7 @@ public class UnloadedClass {
                   "graph_info The total number of classes unloaded since the Java virtual machine has started execution.\n" +  
 		  "graph_title UnloadedClass\n" +
                   "graph_vlabel UnloadedClass\n" + 
-                  "graph_category Tomcat\n" +
+                  "graph_category jvm\n" +
                   "UnloadedClass.label UnloadedClass\n" 
 
           
