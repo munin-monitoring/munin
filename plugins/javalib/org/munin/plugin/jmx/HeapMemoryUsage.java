@@ -7,7 +7,7 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-public class HeapMemoryUsage2 {
+public class HeapMemoryUsage {
 
     public static void main(String args[]) throws FileNotFoundException,IOException {
         if (args.length == 1) {

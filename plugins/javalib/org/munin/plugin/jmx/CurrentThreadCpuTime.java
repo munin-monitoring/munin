@@ -1,5 +1,4 @@
 package org.munin.plugin.jmx;
-
 import java.lang.management.ClassLoadingMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
@@ -10,18 +9,17 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-public class CurrentThreadUserTime2 {
+public class CurrentThreadCpuTime {
 
     public static void main(String args[])throws FileNotFoundException,IOException {
         if (args.length == 1) {
             if (args[0].equals("config")) {
-                System.out.println(
-                        "graph_title CurrentThreadUserTime\n" + 
-                        "graph_vlabel Nanoseconds\n" + 
-			"graph_info Returns the CPU time that the current thread has executed in user mode in nanoseconds. The returned value is of nanoseconds precison but not necessarily nanoseconds accuracy.\n" +
+                System.out.println("" +
+                        "graph_title CurrentThreadCpuTime\n" +
+                        "graph_vlabel Nanoseconds\n" +
+                        "graph_info Returns the total CPU time for the current thread in nanoseconds. The returned value is of nanoseconds precison but not necessarily nanoseconds accuracy. If the implementation distinguishes between user mode time and system mode time, the returned CPU time is the amount of time that the current thread has executed in user mode or system mode.\n" +
                         "graph_category Tomcat\n" +
-                        "CurrentThreadUserTime.label CurrentThreadUserTime\n" 
-);
+                        "CurrentThreadCpuTime.label CurrentThreadCpuTime\n");
             }
          else {
 
@@ -33,7 +31,7 @@ public class CurrentThreadUserTime2 {
                 MBeanServerConnection connection = c.getMBeanServerConnection();
                 ThreadMXBean threadmxbean = ManagementFactory.newPlatformMXBeanProxy(connection, ManagementFactory.THREAD_MXBEAN_NAME, ThreadMXBean.class);
 
-                System.out.println("CurrentThreadUserTime.value " + threadmxbean.getCurrentThreadUserTime());
+                System.out.println("CurrentThreadCpuTime.value " + threadmxbean.getCurrentThreadCpuTime());
 
             } catch (Exception e) {
                 System.out.print(e);
@@ -42,6 +40,5 @@ public class CurrentThreadUserTime2 {
 
     }
 }
-
 
 }

@@ -18,7 +18,7 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-public class DaemonThreadCount2
+public class DaemonThreadCount
 {
     public static void main(String args[])throws FileNotFoundException,IOException
     {
