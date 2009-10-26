@@ -7,6 +7,7 @@ use File::Basename qw(fileparse);
 
 use Munin::Node::Service;
 use Munin::Node::Configure::Plugin;
+use Munin::Node::Configure::History;
 use Munin::Node::Configure::Debug;
 
 use Munin::Node::Config;
@@ -47,7 +48,11 @@ sub _load_available
     my ($self, @families) = @_;
     my %found;
 
-    my %valid_plugins = main::load_plugin_history($config->{newer}) if $config->{newer};
+    my $history = Munin::Node::Configure::History->new(
+        history_file => "$self->{libdir}/plugins.history",
+        newer        => $config->{newer},
+    );
+    $history->load;
 
     DEBUG("Searching '$self->{libdir}' for available plugins.");
 
@@ -73,10 +78,7 @@ sub _load_available
             next;
         }
 
-        if (($plugin->{family} eq "auto")
-            and $config->{newer}
-            and not $valid_plugins{$plug})
-        {
+        if ($history->too_old($plugin)) {
             DEBUG("\tPlugin is older than $config->{newer}.  Skipping.");
             next;
         }

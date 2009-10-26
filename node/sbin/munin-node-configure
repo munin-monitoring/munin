@@ -390,67 +390,6 @@ sub init_snmp
 }
 
 
-################################################################################
-
-sub load_plugin_history
-{
-	my ($newer) = @_;
-	my @valid_plugins;
-
-	my $hist_file = "$config->{libdir}/plugins.history";
-
-	my $reached_version = 0;
-	my $ver = "0.0.0";
-
-	DEBUG("Loading plugin history from '$hist_file'");
-
-	open(my $HIST, '<', $hist_file)
-		or die "# ERROR: Could not open '$hist_file': $!\n";
-
-	# $^O or $Config{osname} are based on the platform perl was built on,
-	# not where it's currently running.  This should always be correct
-	my $uname = lc((POSIX::uname())[0]);
-
-	while (my $line = <$HIST>) {
-		# FIXME: use Munin::Common::Config?
-		$line =~ s/#.*//g;
-		$line =~ s/^\s+//g;
-		$line =~ s/\s+$//g;
-		next unless $line =~ /\S/;
-
-		if ($line =~ /^\[([^\]]+)\]$/) {
-		    $ver = $1;
-		    DEBUG("Setting version to '$ver'.");
-		    if ($ver eq $newer) {
-			$reached_version = 1;
-		    } elsif ($reached_version) {
-			$reached_version++;
-		    }
-		}
-		elsif ($reached_version < 2) {
-		    next;
-		}
-		elsif ($line =~ /^([^\/]+)\/(.+)$/) {
-		    if ($uname eq $1) {
-			push @valid_plugins, $2;
-			DEBUG("- Adding plugin '$2' to version tree ($ver)");
-		    }
-		}
-		elsif ($line =~ /^(.+)$/) {
-			push @valid_plugins, $1;
-			DEBUG("- Adding plugin '$1' to version tree ($ver)");
-		}
-	}
-	close $HIST;
-
-	# FIXME: still not a good error message.  should this be non-fatal?
-	die "# FATAL: version '$newer' was not found in the plugin history file\n"
-		unless ($reached_version);
-
-	return map { $_ => 1 } @valid_plugins;
-}
-
-
 ### Running plugins and analysing responses ####################################
 
 sub prepare_plugin_environment
