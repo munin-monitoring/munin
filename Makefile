@@ -16,9 +16,7 @@ RELEASE          := $(shell cat RELEASE)
 INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
 INSTALL          := ./install-sh
 DIR              := $(shell /bin/pwd | sed 's/^.*\///')
-INFILES          := $(shell ( find . -maxdepth 1 -type f -name '*.in'; \
-			      find contrib dists master node plugins resources -type f -name '*.in' ) \
-			    | sed 's/\.\/\(.*\)\.in$$/build\/\1/')
+INFILES          := $(shell find . -name '*.in' | sed 's/\.\/\(.*\)\.in$$/build\/\1/')
 INFILES_MASTER   := $(shell find master -name '*.in' | sed 's/\(.*\)\.in$$/build\/\1/')
 CLASSFILES       := $(shell find plugins/javalib/ -name '*.java' | sed 's/\(.*\)\.java$$/build\/\1.class/')
 PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/*)
