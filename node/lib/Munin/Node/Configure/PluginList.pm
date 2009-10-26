@@ -131,7 +131,6 @@ sub _load_installed
 }
 
 
-# returns the list of plugins, sorted alphabetically by name
 sub list
 {
     my ($self) = @_;
@@ -142,6 +141,8 @@ sub list
     return @plugins;
 }
 
+
+sub names { return keys %{(shift)->{plugins}} }
 
 
 sub _valid_files
@@ -209,6 +210,10 @@ instances of these plugins in 'servicedir'.
 Returns a list of Munin::Node::Configure::Plugin objects currently loaded,
 sorted alphabetically by name.
 
+
+=item B<names()>
+
+Returns the names of the currently-loaded plugins.
 
 =back
 

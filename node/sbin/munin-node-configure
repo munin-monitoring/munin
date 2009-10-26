@@ -412,7 +412,7 @@ sub prepare_plugin_environment
 		unless defined $config->{defgroup};
 
 	$config->process_plugin_configuration_files();
-    $config->apply_wildcards(map { $_->{name} } $plugins->list);
+    $config->apply_wildcards($plugins->names);
 
 	return;
 }
