@@ -23,7 +23,7 @@ public class ObjectsPending {
             }
          else {
 
-        String[] connectionInfo = ConfReader.GetConnectionInfo(args[0]);
+        String[] connectionInfo = ConfReader.GetConnectionInfo();
           try {
 
 

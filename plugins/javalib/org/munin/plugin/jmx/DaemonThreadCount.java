@@ -1,9 +1,4 @@
 package org.munin.plugin.jmx;
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /**
  *
  * @author Diyar
@@ -33,7 +28,7 @@ public class DaemonThreadCount
 );
             }
          else {
-                    String[] connectionInfo= ConfReader.GetConnectionInfo(args[0]);
+                    String[] connectionInfo= ConfReader.GetConnectionInfo();
 
         try{
             JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" +connectionInfo[0] + ":" + connectionInfo[1] + "/jmxrmi");

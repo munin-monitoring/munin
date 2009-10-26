@@ -24,7 +24,7 @@ public class TotalCompilationTime {
                                    "TotalCompilationTime.info The approximate accumlated elapsed time (in milliseconds) spent in compilation. If multiple threads are used for compilation, this value is summation of the approximate time that each thread spent in compilation." ); 
             }
          else {
-                 String[] connectionInfo = ConfReader.GetConnectionInfo(args[0]);
+                 String[] connectionInfo = ConfReader.GetConnectionInfo();
             try {
                 JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + connectionInfo[0] + ":" + connectionInfo[1]+ "/jmxrmi");
                 JMXConnector c = JMXConnectorFactory.connect(u);

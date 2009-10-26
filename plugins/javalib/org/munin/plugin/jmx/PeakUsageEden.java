@@ -36,7 +36,7 @@ public class PeakUsageEden {
             }
          else {
 
-                     String[] connectionInfo = ConfReader.GetConnectionInfo(args[0]);
+                     String[] connectionInfo = ConfReader.GetConnectionInfo();
             try {
 
                 JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + connectionInfo[0] + ":" + connectionInfo[1]+ "/jmxrmi");

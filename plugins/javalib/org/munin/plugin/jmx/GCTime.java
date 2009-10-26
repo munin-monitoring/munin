@@ -34,7 +34,7 @@ public class GCTime {
             }
          else {
 
-        String[] connectionInfo = ConfReader.GetConnectionInfo(args[0]);
+        String[] connectionInfo = ConfReader.GetConnectionInfo();
 
             try {
 
