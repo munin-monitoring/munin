@@ -23,7 +23,7 @@ my @input = split("\n",<DATA>);
 
 # print "Input: ",@input,"\n";
 
-my $answer = $node->parse_service_data("multigraph_tester",@input);
+my %answer = $node->parse_service_data("multigraph_tester",@input);
 
 # Output captured from Data::Dumper
 my $fasit = {
@@ -67,9 +67,9 @@ my $fasit = {
                                      }
         };
 
-# print Dumper $answer;
+# print Dumper \%answer;
 
-is_deeply($answer,$fasit,"Multigraph plugin fetch output");
+is_deeply(\%answer,$fasit,"Multigraph plugin fetch output");
 
 __DATA__
 one.value 1
