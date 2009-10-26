@@ -293,7 +293,7 @@ sub gather_suggestions
 }
 
 
-# Displays the suggestions in an appropriate form (shell commands or a table)
+# Prints out the tabular representation of the suggestion
 sub show_suggestions
 {
 	my ($plugins) = @_;
@@ -301,63 +301,45 @@ sub show_suggestions
     print_table_entry("Plugin", "Used", "Suggestions");
     print_table_entry("------", "----", "-----------");
 
-    print_suggestion_row($_) foreach ($plugins->list);
-
+    foreach my $plugin ($plugins->list) {
+        print_table_entry(
+            $plugin->{name},
+            $plugin->is_installed,
+            $plugin->suggestion_string
+        );
+    }
 	return;
-}
-
-
-# prints out the tabular representation of the suggestion
-sub print_suggestion_row
-{
-    my ($plugin) = @_;
-    print_table_entry(
-        $plugin->{name},
-        $plugin->is_installed,
-        $plugin->suggestion_string
-    );
-    return;
-}
-
-
-sub manage_links
-{
-    my ($plugins) = @_;
-    manage_plugin_links($_) foreach ($plugins->list);
-    return;
 }
 
 
 # prints shell commands to get the system into the recommended
 # state by adding or removing symlinks
-sub manage_plugin_links
+sub manage_links
 {
-    my ($plugin) = @_;
+    my ($plugins) = @_;
 
-    link_add($plugin->{path}, $_) foreach $plugin->services_to_add;
-    if ($config->{remove_also}) {
-        link_remove($_) foreach $plugin->services_to_remove;
+    foreach my $plugin ($plugins->list) {
+        link_add($plugin->{path}, $_) foreach $plugin->services_to_add;
+        if ($config->{remove_also}) {
+            link_remove($_) foreach $plugin->services_to_remove;
+        }
     }
-
     return;
 }
 
 
-# If the user requested it, prints a shell-command to remove a given
-# symlink from the servicedir
+# Prints a shell-command to remove a given symlink from the servicedir
 sub link_remove
 {
     my ($service) = @_;
-
-	return unless $config->{remove_also};
     return unless (-l "$config->{servicedir}/$service"); # Strange...
-
     print "rm -f '$config->{servicedir}/$service'\n";
-
 	return;
 }
 
 
+# Prints a shell-command to add a symlink called $service pointing to
+# the plugin.
 sub link_add
 {
 	my ($plugin, $service) = @_;
