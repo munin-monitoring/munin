@@ -1,5 +1,7 @@
 package Munin::Node::Configure::Plugin;
 
+# $Id$
+
 use strict;
 use warnings;
 

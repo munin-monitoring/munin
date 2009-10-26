@@ -1,5 +1,7 @@
 package Munin::Node::Configure::History;
 
+# $Id$
+
 use strict;
 use warnings;
 
