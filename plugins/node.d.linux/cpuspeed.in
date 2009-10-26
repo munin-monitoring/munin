@@ -7,25 +7,48 @@
 
 cpuspeed - Plugin to monitor CPU speed
 
+=head1 APPLICABLE SYSTEMS
+
+Linux systems with a working CPU speed governor/stats kernel module
+that can be accessed through the /sys filesystem.
+
 =head1 CONFIGURATION
 
-The following environment variables are used by the plugin
+None needed by default.
 
-=over 4
+You can set one environment variable to modify the plugins behaviour:
 
-=item scaleto100
+  [cpuspeed]
+     env.scaleto100 1
 
-Show the frequency as a percentage instead of absolute frequency
+Show the frequency as a percentage instead of absolute frequency.  If
+set the plugin sets up a CDEF to change the speed in Hz to percent.
+
+If you set or unset this the whole time series will be shown in the
+same way, either as Hz or percent (as the graphs are updated).
 
 =back
 
+=head1 INTERPRETATION
+
+The plugin shows the average CPU speed in the measurement period as
+represented by /sys/devices/system/cpu/*/cpufreq/stats/time_in_state.
+
+This is a counter plugin and represents the average.  Many cpuspeed
+plugins reports the "instant" CPU speed at the time the plugin runs.
+This is not representative for this metric.
+
+=head1 BUGS
+
+Nah.
+
 =head1 AUTHOR
 
-Unknown author
+Nicolai Langfeldt
 
 =head1 LICENSE
 
-Unknown license
+GPLv2
 
 =head1 MAGIC MARKERS
 
@@ -37,11 +60,11 @@ Unknown license
 . $MUNIN_LIBDIR/plugins/plugin.sh
 
 if [ "$1" = "autoconf" ]; then
-    if [ -r /sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state ]; then
+    if [ -r /sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state ] ; then
         echo yes
         exit 0
     else
-        echo no
+        echo "no (missing /sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state)"
         exit 0
     fi
 fi
@@ -62,23 +85,31 @@ if [ "$1" = "config" ]; then
 
     for c in /sys/devices/system/cpu/cpu[0-9]*; do
         N=${c##*/cpu}
-        MAXHZ=$(cat $c/cpufreq/cpuinfo_max_freq)
-        MINHZ=$(cat $c/cpufreq/cpuinfo_min_freq)
 
         echo "cpu$N.label CPU $N"
         echo "cpu$N.type DERIVE"
-        echo "cpu$N.max $MAXHZ"
-        echo "cpu$N.min $MINHZ"
+
+	if [ -r $c/cpufreq/cpuinfo_max_freq ]; then
+
+            MAXHZ=$(cat $c/cpufreq/cpuinfo_max_freq)
+            echo "cpu$N.max $MAXHZ"
+
+            if [ "$scaleto100" = "yes" ]; then
+		echo "cpu$N.cdef cpu$N,1000,*,$MAXHZ,/"
+            else
+		echo "cpu$N.cdef cpu$N,1000,*"
+            fi
+	fi
+
+	if [ -r $c/cpufreq/cpuinfo_min_freq ]; then
+	    MINHZ=$(cat $c/cpufreq/cpuinfo_min_freq)
+            echo "cpu$N.min $MINHZ"
+	fi
 
 	print_warning "cpu$N"
 	print_critical "cpu$N"
 
-        if [ "$scaleto100" = "yes" ]; then
-            echo "cpu$N.cdef cpu$N,1000,*,$MAXHZ,/"
-        else
-            echo "cpu$N.cdef cpu$N,1000,*"
-        fi
-    done;
+    done
     exit 0;
 fi
 
