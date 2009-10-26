@@ -118,19 +118,16 @@ autoconf() {
             if ${client} ping >/dev/null
             then
                 echo "yes"
-                exit
             else
                 echo "no (fail2ban-server does not respond to ping)"
-                exit 1
             fi
         else
             echo "no (${client} is not executable)"
-            exit 1
         fi
     else
         echo "no (${client} not found)"
-        exit 1
     fi
+    exit
 }
 
 ##############################
