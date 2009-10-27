@@ -7,35 +7,29 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-public class UnloadedClass {
+public class ClassesLoadedTotal {
 
     public static void main(String args[]) throws FileNotFoundException, IOException {
+        String[] connectionInfo = ConfReader.GetConnectionInfo();
+
         if (args.length == 1) {
             if (args[0].equals("config")) {
                 System.out.println(
-                 
-                  "graph_info The total number of classes unloaded since the Java virtual machine has started execution.\n" +  
-		  "graph_title UnloadedClass\n" +
-                  "graph_vlabel UnloadedClass\n" + 
-                  "graph_category jvm\n" +
-                  "UnloadedClass.label UnloadedClass\n" 
-
-          
-             
+                   "graph_title JVM (port " + connectionInfo[1] + ") ClassesLoadedTotal\n" +
+                   "graph_vlabel classes\n" +
+		   "graph_category " + connectionInfo[2] + "\n" +
+                   "graph_info The total number of classes that have been loaded since the Java virtual machine has started execution. \n" +
+                   "ClassesLoadedTotal.label ClassesLoadedTotal\n" 
                     );
             }
          else {
-
-                   String[] connectionInfo = ConfReader.GetConnectionInfo();
-        try{
+          try{
             JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + connectionInfo[0] + ":" + connectionInfo[1]+ "/jmxrmi");
             JMXConnector c=JMXConnectorFactory.connect(u);
             MBeanServerConnection connection=c.getMBeanServerConnection();
             ClassLoadingMXBean classmxbean=ManagementFactory.newPlatformMXBeanProxy(connection, ManagementFactory.CLASS_LOADING_MXBEAN_NAME, ClassLoadingMXBean.class);
             
-            System.out.println("UnloadedClass.value "+classmxbean.getUnloadedClassCount());
-
-
+            System.out.println("ClassesLoadedTotal.value "+classmxbean.getTotalLoadedClassCount());
 
             } catch (Exception e) {
                 System.out.print(e);

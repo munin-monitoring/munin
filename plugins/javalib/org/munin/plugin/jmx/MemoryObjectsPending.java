@@ -7,25 +7,24 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-public class ObjectsPending {
+public class MemoryObjectsPending {
 
     public static void main(String args[])throws FileNotFoundException,IOException {
+        String[] connectionInfo = ConfReader.GetConnectionInfo();
+
         if (args.length == 1) {
             if (args[0].equals("config")) {
                 System.out.println(
-                       "graph_title ObjectsPending\n" +
-                       "graph_vlabel Objects\n" +
-                       "graph_category jvm\n" +   
+                       "graph_title JVM (port " + connectionInfo[1] + ") MemoryObjectsPending\n" +
+                       "graph_vlabel objects\n" +
+		       "graph_category " + connectionInfo[2] + "\n" +
                        "Objects.info  The approximate number of objects for which finalization is pending.\n" +  
                        "Objects.label Objects\n" 
-
 );
             }
          else {
 
-        String[] connectionInfo = ConfReader.GetConnectionInfo();
           try {
-
 
             JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + connectionInfo[0] + ":" + connectionInfo[1]+ "/jmxrmi");
             JMXConnector c = JMXConnectorFactory.connect(u);

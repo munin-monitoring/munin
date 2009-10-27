@@ -60,47 +60,40 @@ GPLv2
 MUNIN_JAR="@@JAVALIBDIR@@/munin-jmx-plugins.jar"
 
 if [ "x$1" = "xsuggest" ] ; then
-  # Hmm.  Munin sorts plugins alphabetically.  If ALL plugins regarding
-  # "UsageEden" were to start with that and have "Peak", "Usage" and so on
-  # last in the name then all the UsageEden graphs would be in sequence.
-  # Likewise all Thread related plugins have "Thread" first in the name.
-  # And so on.
-  # I wonder if we can get that done prior to 1.4 release - janl 2009.10.22
-  #
-  # AvailableProcessors => rewrite to use ConfReader
-  # DeadlockedThreads => rewrite to use ConfReader
   # GCmain => seems broken?
   cat <<__EOF
-CollectionUsageEden
-CollectionUsagePermGen
-CollectionUsageSurvivor
-CollectionUsageTenuredGen
-CurrentThreadCpuTime
-CurrentThreadUserTime
-DaemonThreadCount
+ClassesLoaded
+ClassesLoadedTotal
+ClassesUnloaded
+CompilationTimeTotal
 GCCount
 GCTime
-HeapMemoryUsage
-LoadedClassCount
-MemoryPoolThresholdCount
-NonHeapMemoryUsage
-ObjectsPending
-PeakThreadCount
-PeakUsageEden
-PeakUsagePermGen
-PeakUsageSurvivor
-PeakUsageTenuredGen
-ThreadCount
-TotalCompilationTime
-TotalLoadedClassCount
-TotalStartedThreadCount
-UnloadedClass
+CurrentThreadCpuTime
+CurrentThreadUserTime
+MemoryAllocatedHeap
+MemoryAllocatedNonHeap
+MemoryEdenPeak
+MemoryEdenUsage
+MemoryEdenUsagePostGC
+MemoryObjectsPending
+MemoryPermGenPeak
+MemoryPermGenUsage
+MemoryPermGenUsagePostGC
+MemorySurvivorPeak
+MemorySurvivorUsage
+MemorySurvivorUsagePostGC
+MemoryTenuredGenPeak
+MemoryTenuredGenUsage
+MemoryTenuredGenUsagePostGC
+MemorythresholdPostGCCount
+MemorythresholdUsageCount
+ProcessorsAvailable
+Threads
+ThreadsDaemon
+ThreadsDeadlocked
+ThreadsPeak
+ThreadsStartedTotal
 Uptime
-UsageEden
-UsagePermGen
-UsageSurvivor
-UsageTenuredGen
-UsageThresholdCount
 __EOF
   exit 0
 fi

@@ -13,19 +13,19 @@ import java.io.IOException;
 public class CurrentThreadUserTime {
 
     public static void main(String args[])throws FileNotFoundException,IOException {
+        String[] connectionInfo= ConfReader.GetConnectionInfo();
+
         if (args.length == 1) {
             if (args[0].equals("config")) {
                 System.out.println(
-                        "graph_title CurrentThreadUserTime\n" + 
-                        "graph_vlabel Nanoseconds\n" + 
+                        "graph_title JVM (port " + connectionInfo[1] + ") CurrentThreadUserTime\n" + 
+                        "graph_vlabel ns\n" + 
+			"graph_category " + connectionInfo[2] + "\n" +
 			"graph_info Returns the CPU time that the current thread has executed in user mode in nanoseconds. The returned value is of nanoseconds precison but not necessarily nanoseconds accuracy.\n" +
-                        "graph_category jvm\n" +
                         "CurrentThreadUserTime.label CurrentThreadUserTime\n" 
 );
             }
          else {
-
-                    String[] connectionInfo= ConfReader.GetConnectionInfo();
 
             try {
                 JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" +connectionInfo[0] + ":" + connectionInfo[1] + "/jmxrmi");

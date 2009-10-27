@@ -7,35 +7,40 @@ import javax.management.remote.JMXServiceURL;
 import java.lang.management.MemoryPoolMXBean;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-public class UsageThresholdCount {
+public class MemorythresholdPostGCCount {
 
-    public static void main(String args[])throws FileNotFoundException, IOException {
-
+    public static void main(String args[])throws FileNotFoundException,IOException {
         String[] connectionInfo= ConfReader.GetConnectionInfo();
 
         if (args.length == 1) {
             if (args[0].equals("config")) {
-                System.out.println("graph_title JVM (port " + connectionInfo[1] + ") UsageThresholdCount\n" +
-                        "graph_vlabel bytes\n" +
+                System.out.println("graph_title JVM (port " + connectionInfo[1] + ") MemorythresholdPostGCCount\n" +
+                        "graph_vlabel count\n" +
 			"graph_category " + connectionInfo[2] + "\n" +
-                        "graph_info Returns the number of times that the memory usage has crossed the usage threshold.\n" +
+                        "graph_info Returns the number of times that the Java virtual machine has detected that the memory usage has reached or exceeded the collection usage threshold.\n" +
                         "TenuredGen.label TenuredGen\n" +
-                        "TenuredGen.info UsageThresholdCount for Tenured Gen \n" +
+                        "TenuredGen.info Thresholdcount for Tenured Gen \n" +
                         "PermGen.label PermGen\n" +
-                        "PermGen.info UsageThresholdCount for Perm Gen\n" 
-                       );
+                        "PermGen.info ThresholdCount for Perm Gen\n" +
+			"Eden.label Eden\n" +
+                        "Eden.info Thresholdcount for Eden.\n" +
+                        "Survivor.label Survivor\n" +
+                        "Survivor.info ThresholdCount for Survivor." 
+                        );
             }
          else {
+
             try {
                 JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" +connectionInfo[0] + ":" + connectionInfo[1] + "/jmxrmi");
                 JMXConnector c = JMXConnectorFactory.connect(u);
                 MBeanServerConnection connection = c.getMBeanServerConnection();
-                GetUsageThresholdCount collector = new GetUsageThresholdCount(connection);
+                GetMemoryPoolThresholdCount collector = new GetMemoryPoolThresholdCount(connection);
                 String[] temp = collector.GC();
-
+                
+                System.out.println("Survivor.value "+temp[3]);
                 System.out.println("TenuredGen.value " + temp[0]);
                 System.out.println("PermGen.value " + temp[1]);
-
+                System.out.println("Eden.value "+temp[2]);
             } catch (Exception e) {
                 System.out.print(e);
             }

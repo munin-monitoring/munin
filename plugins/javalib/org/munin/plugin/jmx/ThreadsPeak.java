@@ -1,37 +1,36 @@
 package org.munin.plugin.jmx;
-import java.lang.management.ClassLoadingMXBean;
 import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-public class LoadedClassCount {
+public class ThreadsPeak {
 
     public static void main(String args[])throws FileNotFoundException,IOException {
+        String[] connectionInfo = ConfReader.GetConnectionInfo();
+
         if (args.length == 1) {
             if (args[0].equals("config")) {
                 System.out.println(
-                     "graph_info The number of classes that are currently loaded in the Java virtual machine.\n" +
-                     "graph_title LoadedClassCount\n" +
-                     "graph_vlabel LoadedClassCount\n" +
-                     "graph_category jvm\n" +
-                     "LoadedClassCount.label LoadedClassCount\n"
-
-);
+                   "graph_title JVM (port " + connectionInfo[1] + ") ThreadsPeak\n" +
+                   "graph_vlabel threads\n" +
+		   "graph_category " + connectionInfo[2] + "\n" +
+                   "graph_info Returns the peak live thread count since the Java virtual machine started or peak was reset.\n" +
+                   "ThreadsPeak.label ThreadsPeak" 
+		);
             }
          else {
 
-                  String[] connectionInfo = ConfReader.GetConnectionInfo();
-         try{
+           try{
             JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + connectionInfo[0] + ":" + connectionInfo[1]+ "/jmxrmi");
             JMXConnector c=JMXConnectorFactory.connect(u);
             MBeanServerConnection connection=c.getMBeanServerConnection();
-            ClassLoadingMXBean classmxbean=ManagementFactory.newPlatformMXBeanProxy(connection, ManagementFactory.CLASS_LOADING_MXBEAN_NAME, ClassLoadingMXBean.class);
-
-            System.out.println("LoadedClassCount.value "+classmxbean.getLoadedClassCount());
-
+            ThreadMXBean threadmxbean=ManagementFactory.newPlatformMXBeanProxy(connection, ManagementFactory.THREAD_MXBEAN_NAME, ThreadMXBean.class);
+            
+            System.out.println("ThreadsPeak.value "+threadmxbean.getPeakThreadCount());
 
             } catch (Exception e) {
                 System.out.print(e);
