@@ -1,18 +1,41 @@
 package Munin::Master::UpdateWorker;
 use base qw(Munin::Master::Worker);
 
-# $Id$
+=comment
+
+This file is part of Munin.
+
+  Copyright (C) 2002-2009  Jimmy Olsen, et al.
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; version 2 dated June, 1991.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+$Id$
+
+=cut
 
 use warnings;
 use strict;
 
 use Carp;
 use English qw(-no_match_vars);
+use Log::Log4perl qw( :easy );
+
 use File::Basename;
 use File::Path;
 use File::Spec;
 use Munin::Master::Config;
-use Munin::Master::Logger;
 use Munin::Master::Node;
 use Munin::Master::Utils;
 use RRDs;
@@ -39,21 +62,30 @@ sub do_work {
 
     my $update_time = Time::HiRes::time;
 
-    my $lock_file = sprintf '%s/munin-%s-%s.lock',
-        $config->{rundir},
-            $self->{host}{group}{group_name},
-                $self->{host}{host_name};
+    my $host = $self->{host}{host_name};
 
-    munin_getlock($lock_file)
-        or croak "Could not get lock for '$self->{host}{host_name}'. Skipping node.";
+    my $nodedesignation = $host."/".
+	$self->{host}{address}.":".$self->{host}{port};
 
-    my %all_service_configs = ();
+    my $lock_file = sprintf ('%s/munin-%s-%s.lock',
+			     $config->{rundir},
+			     $self->{host}{group}{group_name},
+			     $host);
+
+    if (!munin_getlock($lock_file)) {
+	WARN "Could not get lock $lock_file for $nodedesignation. Skipping node.";
+        die "Could not get lock $lock_file for $nodedesignation. Skipping node.\n";
+    }
+
+    my %all_service_configs = (
+	data_source => {},
+	global => {},
+	);
 
     $self->{node}->do_in_session(sub {
         $self->{node}->negotiate_capabilities();
 	# Note: A multigraph plugin can present multiple services.
-	my @plugins =  $self->{node}->list_services();
-        # my @services =
+	my @plugins =  $self->{node}->list_plugins();
 
         for my $plugin (@plugins) {
             if (%{$config->{limit_services}}) {
@@ -62,23 +94,42 @@ sub do_work {
 
             my %service_config = $self->uw_fetch_service_config($plugin);
             unless (%service_config) {
-                logger("[WARNING] Service $plugin returned no config");
+                WARN "[WARNING] Service $plugin on $nodedesignation returned no config";
                 next;
             }
-
-            $self->_compare_and_act_on_config_changes($plugin,
-                                                      \%service_config);
 
             my %service_data = eval {
                 $self->{node}->fetch_service_data($plugin);
             };
             if ($EVAL_ERROR) {
-                logger($EVAL_ERROR);
+                ERROR $EVAL_ERROR;
+		warn "$EVAL_ERROR\n";
                 next;
             }
 
-            $self->_update_rrd_files($plugin, \%service_config, \%service_data);
-            $all_service_configs{$plugin} = \%service_config;
+	    # Since different plugins can populate multiple positions in the
+	    # service namespace we'll check for collisions and warn of them.
+
+	    for my $service (keys %{$service_config{data_source}}) {
+		if (defined($all_service_configs{data_source}{$service})) {
+		    WARN "[WARNING] Service colision: plugin $plugin on $nodedesignation reports $service which already exists on that host.  Deleting new data.";
+		    delete($service_config{data_source}{$service});
+		    delete($service_data{$service})
+			if defined $service_data{$service};
+		}
+	    }
+
+	    $self->_compare_and_act_on_config_changes(\%service_config);
+
+	    %{$all_service_configs{data_source}} = (
+		%{$all_service_configs{data_source}},
+		%{$service_config{data_source}});
+
+	    %{$all_service_configs{global}} = (
+		%{$all_service_configs{global}},
+		%{$service_config{global}});
+
+            $self->_update_rrd_files(\%service_config, \%service_data);
         }
 
         #use Data::Dumper; warn Dumper(\@services);
@@ -95,7 +146,7 @@ sub do_work {
 
 sub uw_fetch_service_config {
     # not sure why fetch_service_config needs eval and fetch_service_data
-    # does not. - janl 2009.10.22
+    # does not. - janl 2009-10-22
     my ($self, $plugin) = @_;
 
     my %service_config = eval {
@@ -104,10 +155,12 @@ sub uw_fetch_service_config {
     if ($EVAL_ERROR) {
         # FIX Report failed service so that we can use the old service
         # config.
-        logger($EVAL_ERROR);
+        ERROR $EVAL_ERROR;
+	warn "$EVAL_ERROR\n";
         return;
     }
 
+    # FIX for nested services
     if ($self->{host}{service_config} && $self->{host}{service_config}{$plugin}) {
         %service_config
             = (%service_config, %{$self->{host}{service_config}{$plugin}});
@@ -118,12 +171,13 @@ sub uw_fetch_service_config {
 
 
 sub _compare_and_act_on_config_changes {
-    my ($self, $service, $service_config) = @_;
+    my ($self, $nested_service_config) = @_;
 
     # Kjellm: Why do we need to tune RRD files after upgrade?
     # Shouldn't we create a upgrade script or something instead?
     #
-    # janl: Not sure? Code duplication? Ease of use? Lazyness?
+    # janl: Upgrade script sucks.  This way it's inline in munin and
+    #  no need to remember anything or anything.
 
     my $just_upgraded = 0;
 
@@ -135,41 +189,52 @@ sub _compare_and_act_on_config_changes {
         $just_upgraded = 1;
     }
 
-    for my $data_source (keys %{$service_config->{data_source}}) {
-        my $old_data_source = $data_source;
-        my $ds_config = $service_config->{data_source}{$data_source};
-        $self->_set_rrd_data_source_defaults($ds_config);
+    for my $service (keys %{$nested_service_config->{data_source}}) {
 
-        my $group = $self->{host}{group}{group_name};
-        my $host = $self->{host}{host_name};
+        my $service_config = $nested_service_config->{data_source}{$service};
 
-        my $old_host_config =
-            $old_config->{groups}{$group}{hosts}{$host};
-        my $old_ds_config =
-            $old_host_config->get_canned_ds_config($service,
-                                                   $data_source);
+	for my $data_source (keys %{$service_config}) {
+	    my $old_data_source = $data_source;
+	    my $ds_config = $service_config->{$data_source};
+	    $self->_set_rrd_data_source_defaults($ds_config);
 
-        if (not %$old_ds_config
-            and defined($ds_config->{oldname})
-            and $ds_config->{oldname}) {
+	    my $group = $self->{host}{group}{group_name};
+	    my $host = $self->{host}{host_name};
 
-            $old_data_source = $ds_config->{oldname};
-            $old_ds_config =
-                $old_host_config->get_canned_ds_config($service,
-                                                       $old_data_source);
-        }
+	    my $old_host_config = $old_config->{groups}{$group}{hosts}{$host};
+	    my $old_ds_config = undef;
 
-        if (%$old_ds_config
-            and not $self->_ds_config_eq($old_ds_config, $ds_config)) {
-            $self->_ensure_filename($service,
-                                    $old_data_source, $data_source,
-                                    $old_ds_config, $ds_config)
-                and $self->_ensure_tuning($service, $data_source,
-                                          $ds_config);
-        } elsif ($just_upgraded) {
-            $self->_ensure_tuning($service, $data_source,
-                                  $ds_config);
-        }
+	    if ($old_host_config) {
+		$old_ds_config =
+		    $old_host_config->get_canned_ds_config($service,
+							   $data_source);
+	    }
+
+	    if (defined($old_ds_config)
+		and %$old_ds_config
+		and defined($ds_config->{oldname})
+		and $ds_config->{oldname}) {
+
+		$old_data_source = $ds_config->{oldname};
+		$old_ds_config =
+		    $old_host_config->get_canned_ds_config($service,
+							   $old_data_source);
+	    }
+
+	    if (defined($old_ds_config)
+		and %$old_ds_config
+		and not $self->_ds_config_eq($old_ds_config, $ds_config)) {
+		$self->_ensure_filename($service,
+					$old_data_source, $data_source,
+					$old_ds_config, $ds_config)
+		    and $self->_ensure_tuning($service, $data_source,
+					      $ds_config);
+		# _ensure_filename prints helpfull warnings in the log
+	    } elsif ($just_upgraded) {
+		$self->_ensure_tuning($service, $data_source,
+				      $ds_config);
+	    }
+	}
     }
 }
 
@@ -214,20 +279,23 @@ sub _ensure_filename {
     my $old_rrd_file = $self->_get_rrd_file_name($service, $old_data_source,
                                                  $old_ds_config);
 
+    my $hostspec = $self->{node}{hostname}.'/'.$self->{node}{address}.':'.
+	$self->{node}{port};
+
     if ($rrd_file ne $old_rrd_file) {
         if (-f $old_rrd_file and -f $rrd_file) {
             my $host = $self->{host}{host_name};
-            logger("[WARNING]: $host $service $data_source config change"
-                   . " suggests moving '$old_rrd_file' to '$rrd_file' but"
-                   . " both exist; manually merge the data or remove"
-                   . " whichever file you care less about.\n");
-            return '';
+            WARN "[WARNING]: $hostspec $service $data_source config change "
+		. "suggests moving '$old_rrd_file' to '$rrd_file' "
+		. "but both exist; manually merge the data "
+                . "or remove whichever file you care less about.\n";
+	    return '';
         } elsif (-f $old_rrd_file) {
-            logger("[INFO]: Config update, changing name of '$old_rrd_file'"
-                   . " to '$rrd_file'");
+            INFO "[INFO]: Config update, changing name of '$old_rrd_file'"
+                   . " to '$rrd_file' on $hostspec ";
             unless (rename ($old_rrd_file, $rrd_file)) {
-                logger ("[ERROR]: Could not rename '$old_rrd_file' to"
-                        . " '$rrd_file': $!\n");
+                ERROR "[ERROR]: Could not rename '$old_rrd_file' to"
+		    . " '$rrd_file' for $hostspec: $!\n";
                 return '';
             }
         }
@@ -250,13 +318,13 @@ sub _ensure_tuning {
                       min => '--minimum');
 
     for my $rrd_prop (qw(type max min)) {
-        logger("[INFO]: Config update, ensuring $rrd_prop of"
-               . " '$rrd_file' is '$ds_config->{$rrd_prop}'.\n");
+        INFO "[INFO]: Config update, ensuring $rrd_prop of"
+	    . " '$rrd_file' is '$ds_config->{$rrd_prop}'.\n";
         RRDs::tune($rrd_file, $tune_flags{$rrd_prop},
                    "42:$ds_config->{$rrd_prop}");
         if (my $tune_error = RRDs::error()) {
-            logger("[ERROR] Tuning $rrd_prop of '$rrd_file' to"
-                   . " '$ds_config->{$rrd_prop}' failed.\n");
+            ERROR "[ERROR] Tuning $rrd_prop of '$rrd_file' to"
+		. " '$ds_config->{$rrd_prop}' failed.\n";
             $success = '';
         }
     }
@@ -266,26 +334,35 @@ sub _ensure_tuning {
 
 
 sub _update_rrd_files {
-    my ($self, $service, $service_config, $service_data) = @_;
+    my ($self, $nested_service_config, $nested_service_data) = @_;
 
-    for my $ds_name (keys %{$service_config->{data_source}}) {
-        $self->_set_rrd_data_source_defaults($service_config->{data_source}{$ds_name});
+    my $nodedesignation = $self->{host}{host_name}."/".
+	$self->{host}{address}.":".$self->{host}{port};
 
-        unless ($service_config->{data_source}{$ds_name}{label}) {
-            logger("[ERROR] Unable to update $service -> $ds_name: Missing data source configuration attribute: label");
-            next;
-        }
+    for my $service (keys %{$nested_service_config->{data_source}}) {
 
-        my $rrd_file
-            = $self->_create_rrd_file_if_needed($service, $ds_name, 
-                                                $service_config->{data_source}{$ds_name});
+	my $service_config = $nested_service_config->{data_source}{$service};
+	my $service_data   = $nested_service_data->{$service};
 
-        if (%$service_data and defined($service_data->{$ds_name})) {
-            $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name});
-        }
-        else {
-            logger("[WARNING] Service $service returned no data");
-        }
+	for my $ds_name (keys %{$service_config}) {
+	    $self->_set_rrd_data_source_defaults($service_config->{$ds_name});
+
+	    unless ($service_config->{$ds_name}{label}) {
+		ERROR "[ERROR] Unable to update $service on $nodedesignation -> $ds_name: Missing data source configuration attribute: label";
+		next;
+	    }
+
+	    my $rrd_file 
+		= $self->_create_rrd_file_if_needed($service, $ds_name, 
+						    $service_config->{$ds_name});
+
+	    if (%$service_data and defined($service_data->{$ds_name})) {
+		$self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name});
+	    }
+	    else {
+		WARN "[WARNING] Service $service on $nodedesignation returned no data";
+	    }
+	}
     }
 }
 
@@ -333,7 +410,7 @@ sub _get_rrd_file_name {
         $p;
     } ($group, $file);
 	
-    logger("[DEBUG] Made rrd filename: $group / $file\n") if $config->{debug};
+    DEBUG "[DEBUG] Made rrd filename: $group / $file\n";
 
     return File::Spec->catfile($config->{dbdir}, 
                                $group,
@@ -344,7 +421,7 @@ sub _get_rrd_file_name {
 sub _create_rrd_file {
     my ($self, $rrd_file, $service, $ds_name, $ds_config) = @_;
 
-    logger("creating rrd-file for $service->$ds_name: '$rrd_file'");
+    INFO "[INFO] creating rrd-file for $service->$ds_name: '$rrd_file'";
     mkpath(dirname($rrd_file), {mode => oct(777)});
     my @args = (
         $rrd_file,
@@ -376,7 +453,7 @@ sub _create_rrd_file {
     }
     RRDs::create @args;
     if (my $ERROR = RRDs::error) {
-        logger("[ERROR] Unable to create '$rrd_file': $ERROR");
+        ERROR "[ERROR] Unable to create '$rrd_file': $ERROR";
     }
 }
 
@@ -402,10 +479,10 @@ sub _update_rrd_file {
         }
     }
 
-    logger("[DEBUG] Updating $rrd_file with $value") if $config->{debug};
+    DEBUG "[DEBUG] Updating $rrd_file with ".$ds_values->{when}.":$value";
     RRDs::update($rrd_file, "$ds_values->{when}:$value");
     if (my $ERROR = RRDs::error) {
-        logger ("[ERROR] In RRD: unable to update $rrd_file: $ERROR");
+        ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
     }
 }
 

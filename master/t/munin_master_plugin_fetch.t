@@ -23,6 +23,10 @@ my %answer = $node->parse_service_data("cpu",@input);
 
 # print Dumper \%answer;
 
+=comment
+
+Keep old correct answer for reference.
+
 my $fasit = {
           'irq' => {
                      'when' => '1256305015',
@@ -52,6 +56,41 @@ my $fasit = {
                       'when' => 'N',
                       'value' => '268'
                     }
+        };
+
+=cut
+
+my $fasit = {
+          'cpu' => {
+                     'irq' => {
+                                'when' => '1256305015',
+                                'value' => '2770'
+                              },
+                     'system' => {
+                                   'when' => 'N',
+                                   'value' => '66594'
+                                 },
+                     'softirq' => {
+                                    'when' => '1256305015',
+                                    'value' => '127'
+                                  },
+                     'user' => {
+                                 'when' => 'N',
+                                 'value' => '145923'
+                               },
+                     'iowait' => {
+                                   'when' => 'N',
+                                   'value' => '14375'
+                                 },
+                     'idle' => {
+                                 'when' => 'N',
+                                 'value' => '2245122'
+                               },
+                     'nice' => {
+                                 'when' => 'N',
+                                 'value' => '268'
+                               }
+                   }
         };
 
 is_deeply(\%answer,$fasit,"Plugin fetch output");

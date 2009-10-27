@@ -258,13 +258,13 @@ sub _write_new_service_configs {
 
     print $io "version $Munin::Common::Defaults::MUNIN_VERSION\n";
     for my $host (keys %{$self->{service_configs}}) {
-        for my $service (keys %{$self->{service_configs}{$host}}) {
-            for my $attr (@{$self->{service_configs}{$host}{$service}{global}}) {
+        for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
+            for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
                 print $io "$host:$service.$attr->[0] $attr->[1]\n";
             }
-            for my $data_source (keys %{$self->{service_configs}{$host}{$service}{data_source}}) {
-                for my $attr (keys %{$self->{service_configs}{$host}{$service}{data_source}{$data_source}}) {
-                    print $io "$host:$service.$data_source.$attr $self->{service_configs}{$host}{$service}{data_source}{$data_source}{$attr}\n";
+            for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
+                for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
+                    print $io "$host:$service.$data_source.$attr $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr}\n";
                 }
             }
         }

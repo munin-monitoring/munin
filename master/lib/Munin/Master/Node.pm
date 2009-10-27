@@ -12,7 +12,6 @@ use Carp;
 use Munin::Master::Config;
 use Munin::Common::Timeout;
 use Munin::Common::TLSClient;
-use Munin::Master::Logger;
 use Data::Dumper;
 use Log::Log4perl qw( :easy );
 
@@ -68,9 +67,12 @@ sub _do_connect {
 
 sub _extract_name_from_greeting {
     my ($self, $greeting) = @_;
-    croak "Got no reply from node" unless $greeting;
-    $greeting =~ /\#.*(?:lrrd|munin) (?:client|node) at (\S+)/
-        or croak "Got unknown reply from node";
+    if (!$greeting) {
+	die "[ERROR] Got no reply from node ".$self->{host}."\n";
+    }
+    if (! $greeting =~ /\#.*(?:lrrd|munin) (?:client|node) at (\S+)/) {
+	die "[ERROR] Got unknown reply from node ".$self->{host}."\n";
+    }
     return $1;
 }
 
@@ -101,7 +103,7 @@ sub _run_starttls_if_required {
     if (!$self->{tls}->start_tls()) {
         $self->{tls} = undef;
         if ($tls_requirement eq "paranoid" or $tls_requirement eq "enabled") {
-            croak("[ERROR] Could not establish TLS connection to '$self->{address}'. Skipping.");
+	    die "[ERROR] Could not establish TLS connection to '$self->{address}'. Skipping.\n";
         }
     }
 }
@@ -140,20 +142,22 @@ sub negotiate_capabilities {
 }
 
 
-sub list_services {
+sub list_plugins {
     my ($self) = @_;
 
     my $host = $config->{groups_and_hosts}{$self->{host}}{use_node_name}
         ? $self->{node_name}
         : $self->{host};
 
-    croak "Couldn't find out which host to list" unless $host;
+    if (not $host) {
+	die "[ERROR] Couldn't find out which host to list on $host.\n";
+    }
 
     $self->_node_write_single("list $host\n");
     my $list = $self->_node_read_single();
 
     if (not $list) {
-        logger("[WARNING] Config node $self->{host} listed no services for $host");
+        WARN "[WARNING] Config node $self->{host} listed no services for $host";
     }
 
     return split / /, $list;
@@ -163,40 +167,82 @@ sub list_services {
 sub parse_service_config {
     my ($self, $service, @lines) = @_;
 
-    my @global_config = ();
-    my %data_source_config = ();
+    my $plugin = $service;
 
-    my @graph_order = ();
+    my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
+
+    my $global_config = {
+	multigraph => [],
+    };
+    my $data_source_config = {};
+    my @graph_order = ( );
+
+    # Pascal style nested subroutine
+    local *new_service = sub {
+	push @{$global_config->{multigraph}}, $service;
+	$global_config->{$service} = [];
+	$data_source_config->{$service} = {};
+    };
+
+    local *push_graphorder = sub {
+	my ($oldservice) = @_;
+
+	push( @{$global_config->{$oldservice}}, 
+	      ['graph_order', join(' ', @graph_order)] )
+	    unless !@graph_order || 
+	           grep { $_->[0] eq 'graph_order' } @{$global_config->{$oldservice}};
+	@graph_order = ( );
+    };
+
+    DEBUG "[DEBUG] Now parsing config output from plugin $plugin on ".$self->{host};
+
+    new_service($service);
 
     for my $line (@lines) {
-        croak "Client reported timeout in configuration of '$service'"
-            if $line =~ /\# timeout/;
+
+	DEBUG "[CONFIG from $plugin] $line";
+
+	if ($line =~ /\# timeout/) {
+	    die "[ERROR] Timeout error ($nodedesignation). Please consult the log.\n";
+	}
+
         next unless $line;
         next if $line =~ /^\#/;
 
-        if ($line =~ m{\A (\w+)\.(\w+) \s+ (.+) }xms) {
+	if ($line =~ m{\A multigraph \s+ (.+) }xms) {
+	    push_graphorder($service);
+
+	    $service = $1;
+
+	    if ($service eq 'multigraph') {
+		ERROR "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+		croak("Illegal service name.  Please consult the log");
+	    }
+	    new_service($service);
+	    DEBUG "[CONFIG multigraph $plugin] Service is now $service";
+	}
+	elsif ($line =~ m{\A (\w+)\.(\w+) \s+ (.+) }xms) {
             my ($ds_name, $ds_var, $ds_val) = ($1, $2, $3);
             $ds_name = $self->_sanitise_fieldname($ds_name);
-            $data_source_config{$ds_name} ||= {};
-            $data_source_config{$ds_name}{$ds_var} = $ds_val;
-            DEBUG "[CONFIG dataseries] $service->$ds_name.$ds_var = $ds_val";
-            push @graph_order, $ds_name if ($ds_var eq 'label');
+            $data_source_config->{$service}{$ds_name} ||= {};
+            $data_source_config->{$service}{$ds_name}{$ds_var} = $ds_val;
+            DEBUG "[CONFIG dataseries $plugin] $service->$ds_name.$ds_var = $ds_val";
+            push ( @graph_order, $ds_name ) if $ds_var eq 'label';
         }
-        elsif ($line =~ m{\A (\w+) \s+ (.+) }xms) {
-            push @global_config, [$1, $2];
-            DEBUG "[CONFIG graph global] $service->$1 = $2";
+	elsif ($line =~ m{\A (\w+) \s+ (.+) }xms) {
+            push @{$global_config->{$service}}, [$1, $2];
+            DEBUG "[CONFIG graph global $plugin] $service->$1 = $2";
         }
-        else {
-            croak "Protocol exception: while configuring '$service': unrecognised line '$line'";
+	else {
+	    die "[ERROR] Protocol exception: unrecognized line '$line' from $plugin on $nodedesignation.\n";
         }
     }
 
-    $self->_validate_data_sources(\%data_source_config);
+    $self->_validate_data_sources($data_source_config);
 
-    push @global_config, ['graph_order', join(' ', @graph_order)]
-        unless !@graph_order || grep { $_->[0] eq 'graph_order' } @global_config;
+    push_graphorder($service);
 
-    return (global => \@global_config, data_source => \%data_source_config);
+    return (global => $global_config, data_source => $data_source_config);
 }
 
 
@@ -214,30 +260,57 @@ sub fetch_service_config {
 
 
 sub _validate_data_sources {
-    my ($self, $data_source_config) = @_;
+    my ($self, $all_data_source_config) = @_;
 
-    for my $ds (keys %$data_source_config) {
-        croak "Missing required attribute 'label' for data source '$ds'"
-            unless defined $data_source_config->{$ds}{label};
+    for my $service (keys %$all_data_source_config) {
+	my $data_source_config = $all_data_source_config->{$service};
+
+	for my $ds (keys %$data_source_config) {
+	    croak "Missing required attribute 'label' for data source '$ds'"
+		unless defined $data_source_config->{$ds}{label};
+	}
     }
 }
 
 
-sub fetch_service_data {
-    my ($self, $service) = @_;
+sub parse_service_data {
+    my ($self, $service, @lines) = @_;
 
-    $self->_node_write_single("fetch $service\n");
-    my @lines = $self->_node_read();
+    my $plugin = $service;
 
-    my %values = ();
+    my $nodedesignation = $self->{host}."/".$self->{address}.":".$self->{port};
+
+    my %values = (
+	$service => {},
+    );
+
+    DEBUG "[DEBUG] Now parsing fetch output from plugin $plugin on ".
+	$nodedesignation;
 
     for my $line (@lines) {
-        croak "Client reported timeout in configuration of '$service'"
-            if $line =~ /\# timeout/;
+
+	DEBUG "[FETCH from $plugin] $line";
+
+	if ($line =~ /\# timeout/) {
+	    WARN "[WARNING] Timeout in fetch from '$plugin' on ".
+		$nodedesignation;
+	    croak("Timeout error.  Please consult the log.");
+	}
+
         next unless $line;
         next if $line =~ /^\#/;
 
-        if ($line =~ m{ (\w+)\.value \s+ ([\S:]+) }xms) {
+	if ($line =~ m{\A multigraph \s+ (.+) }xms) {
+	    $service = $1;
+	    $values{$service} = {};
+
+	    if ($service eq 'multigraph') {
+		ERROR "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".
+		    $nodedesignation;
+		croak("Plugin error.  Please consult the log.");
+	    }
+	}
+	elsif ($line =~ m{ (\w+)\.value \s+ ([\S:]+) }xms) {
             my ($data_source, $value, $when) = ($1, $2, 'N');
 
             $data_source = $self->_sanitise_fieldname($data_source);
@@ -247,14 +320,25 @@ sub fetch_service_data {
 		$value = $2;
 	    }
 
-            $values{$data_source} = { value => $value, when => $when };
+            $values{$service}{$data_source} = 
+	        { value => $value, when => $when };
         }
         else {
-            croak "Protocol exception: while fetching '$service': unrecogniced line '$line'";
+            die "[ERROR] Protocol exception while fetching '$service' from $nodedesignation: unrecogniced line '$line'"
         }
     }
 
     return %values;
+}
+
+
+sub fetch_service_data {
+    my ($self, $plugin) = @_;
+
+    $self->_node_write_single("fetch $plugin\n");
+    my @lines = $self->_node_read();
+
+    return $self->parse_service_data($plugin,@lines);
 }
 
 
@@ -275,7 +359,7 @@ sub _sanitise_fieldname {
 sub _node_write_single {
     my ($self, $text) = @_;
 
-    logger("[DEBUG] Writing to socket: \"$text\".") if $config->{debug};
+    DEBUG "[DEBUG] Writing to socket: \"$text\".";
     my $timed_out = !do_with_timeout($self->{io_timeout}, sub {
         if ($self->{tls} && $self->{tls}->session_started()) {
             $self->{tls}->write($text)
@@ -286,7 +370,7 @@ sub _node_write_single {
         }
     });
     if ($timed_out) {
-        logger("[WARNING] Socket write timed out\n");
+        WARN "[WARNING] Socket write timed out to ".$self->{host}."\n";
         return;
     }
     return 1;
@@ -307,10 +391,10 @@ sub _node_read_single {
       chomp $res if defined $res;
     });
     if ($timed_out) {
-        logger("[WARNING] Socket read timed out\n");
+        WARN "[WARNING] Socket read timed out to ".$self->{host}."\n";
         return;
     }
-    logger("[DEBUG] Reading from socket: \"$res\".") if $config->{debug};
+    DEBUG "[DEBUG] Reading from socket to ".$self->{host}.": \"$res\".";
     return $res;
 }
 
@@ -331,10 +415,10 @@ sub _node_read {
         }
     });
     if ($timed_out) {
-        logger ("[WARNING] Socket read timed out: $@\n");
+        WARN "[WARNING] Socket read timed out to ".$self->{host}.": $@\n";
         return;
     }
-    logger ("[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".") if $config->{debug};
+    DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".";
     return @array;
 }
 
