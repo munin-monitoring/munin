@@ -62,6 +62,8 @@ our (@ISA, @EXPORT);
 	   'munin_get_parent',
 	   'munin_get_children',
 	   'munin_get_node_partialpath',
+	   'print_version_and_exit',
+	   'exit_if_run_by_super_user',
 	   );
 
 my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
@@ -529,10 +531,6 @@ sub munin_set {
 
 sub munin_set_var_loc
 {
-    croak("munin_set_var_loc called, but not working");
-
-=comment
-
     my $hash = shift;
     my $loc  = shift;
     my $val  = shift;
@@ -559,7 +557,6 @@ sub munin_set_var_loc
         $hash->{$tmpvar} = $val;
 	return $hash;
     }
-=cut
 }
 
 
@@ -1201,6 +1198,31 @@ sub munin_mkdir_p {
     };
     return if $EVAL_ERROR;
     return 1;
+}
+
+sub exit_if_run_by_super_user {
+    if ($EFFECTIVE_USER_ID == 0) {
+        print qq{This program will easily break if you run it as root as you are
+trying now.  Please run it as user '$Munin::Common::Defaults::MUNIN_USER'.  The correct 'su' command
+on many systems is 'su - munin --shell=/bin/bash'
+Aborting.
+};
+        exit 1;
+    }
+}
+
+sub print_version_and_exit {
+    print qq{munin version $Munin::Common::Defaults::MUNIN_VERSION.
+
+Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal, Tore Andersson, Kjell-Magne Øierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
+
+This is free software released under the GNU General Public
+License. There is NO warranty; not even for MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. For details, please refer to the file
+COPYING that is included with this software or refer to
+http://www.fsf.org/licensing/licenses/gpl.txt
+};
+    exit 0;
 }
 
 

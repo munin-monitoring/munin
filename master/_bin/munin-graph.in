@@ -1,23 +1,28 @@
 #!@@PERL@@ -w
 # -*- cperl -*-
-#
-# Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal, Nicolai Langfeldt
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; version 2 dated June,
-# 1991.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-# $Id$
+
+=comment
+
+Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal, Kjell Magne Øierud,
+Nicolai Langfeldt, Linpro AS, Redpill Linpro AS
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 dated June,
+1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+$Id$
+
+=cut
 
 use strict;
 
@@ -94,8 +99,7 @@ GetOptions ( "force!"       => \$force_graphing,
 	     "cron!"        => \$cron,
 	     "help"         => \$do_usage );
 
-if ($do_usage)
-{
+if ($do_usage) {
     print "Usage: $0 [options]
 
 Options:
@@ -125,31 +129,12 @@ Options:
     exit 0;
 }
 
-if ($do_version)
-{
-print <<"EOT";
-munin-graph version $VERSION.
-Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
-
-Copyright (C) 2002-2009
-
-This is free software released under the GNU General Public License. There
-is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
-PURPOSE. For details, please refer to the file COPYING that is included
-with this software or refer to
-  http://www.fsf.org/licensing/licenses/gpl.txt
-EOT
+if ($do_version) {
+    print_version_and_exit();
     exit 0;
 }
 
-if ($> == 0)
-{
-    print "This program will easily break if you run it as root as you are
-trying now.  Please run it as user '@@USER@@'.  The correct 'su' command
-on many systems is 'su - munin --shell=/bin/bash'
-Aborting.\n\n";
-    exit (1);
-}
+exit_if_run_by_super_user();
 
 my $config= &munin_config ($conffile);
 logger_open($config->{'logdir'});
@@ -181,7 +166,7 @@ my @COLOUR;  # Array of actuall colours to use
 	  #800080 #688e23 #408080 #808000 #000000 #00FF00
 	  #0080FF #FF8000 #800000 #FB31FB
 	 )];
-	
+
     $PALETTE{'default'} = [ # New default palette.Better contrast,more colours
        #Greens Blues   Oranges Dk yel  Dk blu  Purple  lime    Reds    Gray
      qw(#00CC00 #0066B3 #FF8000 #FFCC00 #330099 #990099 #CCFF00 #FF0000 #808080
@@ -378,7 +363,7 @@ sub expand_specials
 		    munin_set_var_loc ($service, [$fname, "cdef"], $tmpcdef);
 		}
 	    }
-	    
+
 	    if (!defined $service->{$fname}->{"label"}) {
 		munin_set_var_loc ($service, [$fname, "label"], $fname);
 	    }
