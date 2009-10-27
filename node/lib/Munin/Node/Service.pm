@@ -32,7 +32,7 @@ sub is_a_runnable_service {
     # service directory? Shouldn't we complain if there is junk in the
     # service directory?
     return if $file =~ m/^\./;               # Hidden files
-    return if $file =~ m/.conf$/;            # Config files
+    return if $file =~ m/\.conf$/;            # Config files
 
     return if $file !~ m/^([-\w.:]+)$/;      # Skip if any weird chars
 
