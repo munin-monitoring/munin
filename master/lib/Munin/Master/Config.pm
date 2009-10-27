@@ -114,6 +114,7 @@ use English qw(-no_match_vars);
 use Munin::Common::Defaults;
 use Munin::Master::Group;
 use Munin::Master::Host;
+use Log::Log4perl qw( :easy );
 
 my $MAXINT = 2 ** 53;
 
@@ -268,6 +269,8 @@ sub _extract_group_name_from_definition {
     # Return domain name as group name
     return substr($definition, $dot_loc + 1);
 }
+
+
 sub _concat_config_line {
     # Canonify and concatenate current prefix and and the config line
     # we're parsing now in a correct manner.
@@ -349,18 +352,24 @@ sub _concat_config_line_ok {
     my ($self, $prefix, $key, $value) = @_;
 
     if (!defined($key) or !$key) {
-	croak "Somehow we're missing the keyword sometime after section [$prefix]";
+	ERROR "[ERROR] Somehow we're missing a keyword sometime after section [$prefix]";
+	die "[ERROR] Somehow we're missing a keyword sometime after section [$prefix]";
     }
 
     my $longkey = $self->_concat_config_line($prefix,$key,$value);
-       
-    my @words = split (/[;:.]/, $longkey);
-    my $last_word = pop(@words);
 
-    if (! $self->is_keyword($last_word)) {
-	croak "Parse error in ".$self->{config_file}." in section [$prefix]:\n".
-	    " Unknown keyword at end of left hand side of line ($key $value)\n";
+    # _split_config_line_ok has the best starting point for checks on the
+    # syntax/contents and so we call that to get the checks performed.
+    #
+    eval {
+	$self->_split_config_line_ok($longkey);
+    };
+    if ($EVAL_ERROR) {
+	# _split_config_line_ok already logged the problem.
+	ERROR "[ERROR] Error occured in under [$prefix] in the configuration.";
+	die "[ERROR] Error occured in under [$prefix] in the configuration.  Please refer to the log if details are missing here.\n";
     }
+
     return $longkey;
 }
 
@@ -436,7 +445,13 @@ sub _split_config_line_ok {
 	    " Unknown keyword at end of left hand side of line ($key $value)\n";
     }
 
-    retrun ($groups,$host,$key);
+    if ($host =~ /[^-A-Za-z0-9]/) {
+	# Since we're not quite sure what context we're called in we'll report the error message more times rather than fewer.
+	ERROR "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.";
+	croak "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.\n";
+    }
+
+    return ($groups,$host,$key);
 }
 
 
@@ -444,7 +459,7 @@ sub _parse_config_line {
     # Parse and save contents of random user configuration.
     my ($self, $prefix, $key, $value) = @_;
     
-    my $longkey = $self->_concat_config_line($prefix,$key,$value);
+    my $longkey = $self->_concat_config_line_ok($prefix,$key,$value);
 
     $self->set_value($longkey,$value);
 }

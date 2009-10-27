@@ -55,11 +55,11 @@ sub parse_config_from_file {
         $self->parse_config($file);
     };
     if ($EVAL_ERROR) {
-        croak "Failed to parse config file '$config_file': $EVAL_ERROR";
+        die "Failed to parse config file '$config_file': $EVAL_ERROR";
     }
     
     close $file
-        or croak "Cannot close '$config_file': $OS_ERROR";;
+        or die "Cannot close '$config_file': $OS_ERROR";;
 
 }
 
