@@ -85,7 +85,7 @@ sub parse_args {
 sub print_version_and_exit {
     print qq{munin-update version $Munin::Common::Defaults::MUNIN_VERSION.
 
-Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal, Tore Andersson, Kjell-Magne Øierud, Linpro AS, Redpill Linpro AS
+Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal, Tore Andersson, Kjell-Magne Øierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS
 
 This is free software released under the GNU General Public
 License. There is NO warranty; not even for MERCHANTABILITY or FITNESS
