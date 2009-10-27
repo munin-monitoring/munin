@@ -29,7 +29,7 @@ PODMAN5          := master/doc/munin.conf node/doc/munin-node.conf
 
 .PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-munindoc install-doc install-man \
         build build-common-prime build-common-pre build-doc \
-        deb source_dist \
+        source_dist \
         test clean \
         clean-% test-% build-% install-% \
 	tags
@@ -286,12 +286,6 @@ build/%.class: %.class
 ######################################################################
 # DIST RULES
 
-deb:
-	(! grep MAINTAINER Makefile.config)
-	-rm debian
-	-ln -s dists/debian
-	fakeroot debian/rules binary
-
 tar-pre:
 	(! grep MAINTAINER Makefile.config)
 	find . -name '*~' -exec rm -fv {} \;
@@ -350,10 +344,6 @@ source_dist: clean
 
 ifeq ($(MAKELEVEL),0)
 clean: clean-node clean-master clean-plugins clean-common
-	-rm -f debian
-	-ln -sf dists/debian
-	-fakeroot debian/rules clean
-	-rm -f debian
 else
 clean:
 endif
