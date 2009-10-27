@@ -60,7 +60,6 @@ GPLv2
 MUNIN_JAR="@@JAVALIBDIR@@/munin-jmx-plugins.jar"
 
 if [ "x$1" = "xsuggest" ] ; then
-  # GCmain => seems broken?
   cat <<__EOF
 ClassesLoaded
 ClassesLoadedTotal
