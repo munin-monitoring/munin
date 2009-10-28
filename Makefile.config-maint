@@ -112,3 +112,6 @@ JC         := javac
 JFLAGS     := -g
 JAR        := jar
 
+# Check if the java compiler works
+JCVALID    := $(shell $(JC) -version >/dev/null 2>/dev/null && echo "yes")
+

@@ -58,8 +58,11 @@ tags:
 
 ######################################################################
 
-# if you don't have a javac, remove install-plugins-java from the following line
+ifeq ($(JCVALID),yes)
 install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-plugins-java install-man install-munindoc
+else
+install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-man install-munindoc
+endif
 
 install-pre: Makefile Makefile.config
 	@$(CHECKUSER)
@@ -179,7 +182,11 @@ install-munindoc: build
 
 ######################################################################
 
+ifeq ($(JCVALID),yes)
 build: $(INFILES) build-master build-common-prime build-node build-plugins-java build-man
+else
+build: $(INFILES) build-master build-common-prime build-node build-man
+endif
 
 build/%: %.in
 	@echo "$< -> $@"
