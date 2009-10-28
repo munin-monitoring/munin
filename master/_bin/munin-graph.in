@@ -4,7 +4,7 @@
 =comment
 
 Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal, Kjell Magne Øierud,
-Nicolai Langfeldt, Linpro AS, Redpill Linpro AS
+Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -18,7 +18,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 $Id$
 
@@ -78,7 +78,7 @@ my $conffile = "@@CONFDIR@@/munin.conf";
 my %draw = ("day" => 1, "week" => 1, "month" => 1, "year" => 1, "sumyear" => 1, "sumweek" => 1);
 
 # Get options
-$do_usage=1  unless 
+$do_usage=1  unless
 GetOptions ( "force!"       => \$force_graphing,
 	     "lazy!"        => \$force_lazy,
 	     "host=s"       => \@limit_hosts,
@@ -902,7 +902,13 @@ sub process_service {
 	RRDs::graph (@complete);
 	if (my $ERROR = RRDs::error) {
 	    logger ("Unable to graph ". munin_get_picture_filename ($service, $time) . ": $ERROR");
-	} elsif ($list_images) {
+	} else {
+	  # Set time of png file to the time of the last update of the rrd file.
+	  # This makes http's If-Modified-Since more reliable, esp. in combination with
+	  # munin-*cgi-graph.
+
+	  utime $lastupdate, $lastupdate, munin_get_picture_filename($service, $time);
+	  if ($list_images) {
 	    # Command-line option to list images created
 	    print munin_get_picture_filename ($service, $time),"\n";
 	}

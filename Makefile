@@ -100,6 +100,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	$(INSTALL) -m 0755 build/master/_bin/munin-limits $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-gather $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/
+	$(INSTALL) -m 0755 build/master/_bin/munin-fastcgi-graph $(CGIDIR)/
 
 
 # ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE
