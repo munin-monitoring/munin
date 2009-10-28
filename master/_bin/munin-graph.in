@@ -35,6 +35,7 @@ $|=1;
 # can see.
 
 &graph_startup(\@ARGV);
+exit 0 unless &graph_check_cron;
 &graph_main;
 
 # ### The End
@@ -52,6 +53,16 @@ munin-graph [--options]
 =head1 OPTIONS
 
 =over 5
+
+=item B<< --[no]fork >>
+
+If set munin-graph will fork several processes to do rrdgraph in
+parallell.  [--fork]
+
+=item B<< -n <n> >>
+
+Sets the default number of processes.  See also max_graph_jobs in the
+configuration file.  A setting of 0 implies --nofork.  [--n 6]
 
 =item B<< --[no]force >>
 

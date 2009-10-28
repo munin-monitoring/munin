@@ -17,6 +17,7 @@ use Munin::Master::Config;
 use Munin::Common::Config;
 use Log::Log4perl qw (:easy);
 use POSIX qw(strftime);
+use POSIX ":sys_wait_h";
 use RRDs;
 use Symbol 'gensym';
 
@@ -65,6 +66,8 @@ our (@ISA, @EXPORT);
 	   'munin_get_node_partialpath',
 	   'print_version_and_exit',
 	   'exit_if_run_by_super_user',
+	   'look_for_child',
+	   'wait_for_remaining_children',
 	   );
 
 my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
@@ -1224,6 +1227,44 @@ COPYING that is included with this software or refer to
 http://www.fsf.org/licensing/licenses/gpl.txt
 };
     exit 0;
+}
+
+
+sub look_for_child {
+    # wait for child process in blocking or non-blocking mode.
+    my ($block) = @_;
+
+    my $pid;
+
+    if ($block) {
+    	$pid = waitpid(-1, 0);
+    } else {
+        $pid = waitpid(-1, WNOHANG);
+        if ($pid == 0) {
+            return 0;
+        }
+    }
+
+    if ($pid < 0) {
+        ERROR "[ERROR] Unexpectedly ran out of children: $!";
+	croak "[ERROR] Ran out of children: $!\n";
+    }
+
+    if ($? != 0) {
+        WARN "[WARNING] Child $pid failed: " . ($? << 8) . 
+	    "(signal " . ($? & 0xff) . ")";
+    }
+    return 1;
+}
+
+
+sub wait_for_remaining_children {
+    my ($running) = @_;
+    while ($running > 0) {
+	look_for_child("block");
+	--$running;
+    }
+    return $running;
 }
 
 

@@ -38,19 +38,24 @@ use Exporter;
 
 our (@ISA, @EXPORT);
 @ISA = qw(Exporter);
-@EXPORT = qw(graph_startup graph_main);
+@EXPORT = qw(graph_startup graph_check_cron graph_main);
 
 use IO::Socket;
+use IO::Handle;
 use RRDs;
-use Munin::Master::Logger;
-use Munin::Master::Utils;
-use Munin::Common::Defaults;
 use POSIX qw(strftime);
 use Digest::MD5;
 use Getopt::Long qw(GetOptionsFromArray);
 use Time::HiRes;
 use Text::ParseWords;
+
 if ($RRDs::VERSION >= 1.3) { use Encode; }
+
+use Munin::Master::Logger;
+use Munin::Master::Utils;
+use Munin::Common::Defaults;
+
+use Log::Log4perl qw( :easy );
 
 # RRDtool 1.2 requires \\: in comments
 my $RRDkludge = $RRDs::VERSION < 1.2 ? '' : '\\';
@@ -130,7 +135,11 @@ my @limit_services = ();
 
 my $watermark; 
 
-# Configuration hash
+my $running = 0;
+my $max_running = 6;
+my $do_fork = 1;
+
+# "global" Configuration hash
 my $config;
 
 # stats file handle
@@ -169,6 +178,8 @@ sub graph_startup {
 	    "debug!"       => \$DEBUG,
 	    "version!"     => \$do_version,
 	    "cron!"        => \$cron,
+	    "fork!"        => \$do_fork,
+	    "n=n"	   => \$max_running,
 	    "help"         => \$do_usage );
 
     if ($do_version) {
@@ -181,10 +192,32 @@ sub graph_startup {
     $config= &munin_config ($conffile);
     logger_open($config->{'logdir'});
 
-    if (&munin_get ($config, "graph_strategy", "cron") ne "cron" and $cron)
-    { # We're run from cron, but munin.conf says we use dynamic graph generation
-	exit 0;
+    my $palette = &munin_get ($config, "palette", "default");
+
+    $max_running = &munin_get($config, "max_graph_jobs", $max_running);
+
+    if ($max_running == 0) {
+	$do_fork=0;
     }
+
+    if (defined($PALETTE{$palette})) {
+	@COLOUR=@{$PALETTE{$palette}};
+    } else {
+	die "Unknown palette named by 'palette' keyword: $palette\n";
+    }
+
+}
+
+
+sub graph_check_cron {
+    # Are we running from cron and do we have matching graph_strategy
+    if (&munin_get ($config, "graph_strategy", "cron") ne "cron" and $cron) {
+	# Strategy mismatch: We're run from cron, but munin.conf says
+        # we use dynamic graph generation
+	return 0;
+    }
+    # Strategy match:
+    return 1;
 }
 
 
@@ -196,17 +229,10 @@ sub graph_main {
     unless ($skip_stats) {
 	open ($STATS, '>', "$config->{dbdir}/munin-graph.stats.tmp") or
 	    logger("Unable to open $config->{dbdir}/munin-graph.stats.tmp");
+	autoflush $STATS 1; 
     }
 
     logger("Starting munin-graph");
-
-    my $palette = &munin_get ($config, "palette", "default");
-
-    if (defined($PALETTE{$palette})) {
-	@COLOUR=@{$PALETTE{$palette}};
-    } else {
-	die "Unknown palette named by 'palette' keyword: $palette\n";
-    }
 
     process_work(@limit_hosts);
 
@@ -217,6 +243,8 @@ sub graph_main {
     close $STATS unless $skip_stats;
 
     munin_removelock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
+
+    $running = wait_for_remaining_children($running);
 }
 
 
@@ -455,6 +483,7 @@ sub single_value
     return ($graphable == 1);
 }
 
+
 sub get_field_name
 {
     my $name = shift;
@@ -464,6 +493,7 @@ sub get_field_name
 
     return $name;
 }
+
 
 sub process_work {
     my (@limit_hosts) = @_;
@@ -477,9 +507,13 @@ sub process_work {
 	push @$work_array, @{munin_find_field($config, "graph_title")};
     }
 
-
     for my $service (@$work_array) {
-	process_service ($service);
+
+	# Want to avoid forking for that
+	next if (skip_service ($service));
+
+	# Fork (or not) and run the anonymous sub afterwards.
+	fork_and_work(sub { process_service ($service); } );
     }
 }
 
@@ -487,6 +521,50 @@ sub process_work {
 sub process_field {
     my $field   = shift;
     return munin_get_bool ($field, "process", 1);
+}
+
+
+sub fork_and_work {
+    my ($work) = @_;
+
+    if (! $do_fork) {
+	# We're not forking.  Do work and return.
+	DEBUG "[DEBUG] Doing work synchrnonously";
+	&$work;
+	return;
+    }
+
+    # Make sure we don't fork too much
+    while ($running >= $max_running) {
+	DEBUG "[DEBUG] Too many forks ($running/$max_running), wait for something to get done";
+	look_for_child("block");
+	--$running;
+    }
+
+    my $pid = fork();
+
+    if (!defined $pid) {
+	ERROR "[ERROR] fork failed: $!";
+	die "fork failed: $!";
+    }
+
+    if ($pid == 0) {
+	# This block does the real work.  Since we're forking exit
+	# afterwards.
+
+	&$work;
+
+	# See?!
+
+	exit 0;
+
+    } else {
+	++$running;
+	DEBUG "[DEBUG] Forked: $pid. Now running $running/$max_running";
+	while ($running and look_for_child()) {
+	    --$running;
+	}
+    }
 }
 
 
@@ -1038,6 +1116,7 @@ sub orig_to_cdef {
     return $fieldname;
 }
 
+
 sub skip_service {
     my $service = shift;
     my $sname   = munin_get_node_name ($service);
@@ -1125,6 +1204,10 @@ sub print_usage_and_exit {
     print "Usage: $0 [options]
 
 Options:
+    --[no]fork	        Do not fork.  By default munin-graph forks sub
+                        processes for drawing graphs to utilize available
+                        cores and I/O bandwidth. [--fork]
+    --n n               Max number of concurrent processes [$max_running]
     --[no]force		Force drawing of graphs that are not usually
 			drawn due to options in the config file. [--noforce]
     --[no]lazy		Only redraw graphs when needed. [--lazy]
