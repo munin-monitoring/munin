@@ -1,7 +1,14 @@
-#!@@PERL@@ -w
+package Munin::Master::GraphOld;
 # -*- cperl -*-
 
 =comment
+
+This is Munin::Master::GraphOld, a package shell to make munin-graph
+modular (so it can loaded persistently in munin-fastcgi-graph for
+example) without making it object oriented yet.  The non "old" module
+will feature propper object orientation like munin-update and will
+have to wait until later.
+
 
 Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal, Kjell Magne Øierud,
 Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
@@ -25,8 +32,13 @@ $Id$
 =cut
 
 use strict;
+use warning;
 
-$|=1;
+use Exporter;
+
+our (@ISA, @EXPORT);
+@ISA = qw(Exporter);
+@EXPORT = qw(graph_startup graph_main);
 
 use IO::Socket;
 use RRDs;
@@ -38,14 +50,6 @@ use Getopt::Long;
 use Time::HiRes;
 use Text::ParseWords;
 if ($RRDs::VERSION >= 1.3) { use Encode; }
-
-my $graph_time= Time::HiRes::time;
-my $DEBUG = 0;
-my $VERSION = '@@VERSION@@';
-
-# Limit graphing to certain hosts and/or services
-my @limit_hosts = ();
-my @limit_services = ();
 
 # RRDtool 1.2 requires \\: in comments
 my $RRDkludge = $RRDs::VERSION < 1.2 ? '' : '\\';
@@ -77,84 +81,6 @@ my $stdout = 0;
 my $conffile = "@@CONFDIR@@/munin.conf";
 my %draw = ("day" => 1, "week" => 1, "month" => 1, "year" => 1, "sumyear" => 1, "sumweek" => 1);
 
-# Get options
-$do_usage=1  unless
-GetOptions ( "force!"       => \$force_graphing,
-	     "lazy!"        => \$force_lazy,
-	     "host=s"       => \@limit_hosts,
-	     "service=s"    => \@limit_services,
-	     "config=s"     => \$conffile,
-	     "stdout!"      => \$stdout,
-	     "day!"         => \$draw{'day'},
-	     "week!"        => \$draw{'week'},
-	     "month!"       => \$draw{'month'},
-	     "year!"        => \$draw{'year'},
-	     "sumweek!"     => \$draw{'sumweek'},
-	     "sumyear!"     => \$draw{'sumyear'},
-	     "list-images!" => \$list_images,
-	     "skip-locking!"=> \$skip_locking,
-	     "skip-stats!"  => \$skip_stats,
-	     "debug!"       => \$DEBUG,
-	     "version!"     => \$do_version,
-	     "cron!"        => \$cron,
-	     "help"         => \$do_usage );
-
-if ($do_usage) {
-    print "Usage: $0 [options]
-
-Options:
-    --[no]force		Force drawing of graphs that are not usually
-			drawn due to options in the config file. [--noforce]
-    --[no]lazy		Only redraw graphs when needed. [--lazy]
-    --help		View this message.
-    --version		View version information.
-    --debug		View debug messages.
-    --[no]cron		Behave as expected when run from cron. (Used internally 
-			in Munin.)
-    --service <service>	Limit graphed services to <service>. Multiple --service
-			options may be supplied.
-    --host <host>	Limit graphed hosts to <host>. Multiple --host options
-    			may be supplied.
-    --config <file>	Use <file> as configuration file. [@@CONFDIR@@/munin.conf]
-    --[no]list-images	List the filenames of the images created. 
-    			[--nolist-images]
-    --[no]day		Create day-graphs.   [--day]
-    --[no]week		Create week-graphs.  [--week]
-    --[no]month		Create month-graphs. [--month]
-    --[no]year		Create year-graphs.  [--year]
-    --[no]sumweek	Create summarised week-graphs.  [--summweek]
-    --[no]sumyear	Create summarised year-graphs.  [--sumyear]
-
-";
-    exit 0;
-}
-
-if ($do_version) {
-    print_version_and_exit();
-    exit 0;
-}
-
-exit_if_run_by_super_user();
-
-my $config= &munin_config ($conffile);
-logger_open($config->{'logdir'});
-
-if (&munin_get ($config, "graph_strategy", "cron") ne "cron" and $cron)
-{ # We're run from cron, but munin.conf says we use dynamic graph generation
-    exit 0;
-}
-
-munin_runlock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
-
-my $STATS;
-
-unless ($skip_stats) {
-    open ($STATS, '>', "$config->{dbdir}/munin-graph.stats.tmp") or
-      logger("Unable to open $config->{dbdir}/munin-graph.stats.tmp");
-}
-
-logger("Starting munin-graph");
-
 my %PALETTE; # Hash of available palettes
 my @COLOUR;  # Array of actuall colours to use
 
@@ -174,15 +100,6 @@ my @COLOUR;  # Array of actuall colours to use
         #80FF80 #80C9FF #FFC080 #FFE680 #AA80FF #EE00CC #FF8080
         #666600 #FFBFFF #00FFCC #CC6699 #999900
        )]; # Line variations: Pure, earthy, dark pastel, misc colours
-}
-
-
-my $palette = &munin_get ($config, "palette", "default");
-
-if (defined($PALETTE{$palette})) {
-    @COLOUR=@{$PALETTE{$palette}};
-} else {
-    die "Unknown palette named by 'palette' keyword: $palette\n";
 }
 
 my $range_colour = "#22ff22";
@@ -205,32 +122,91 @@ my %sumtimes = ( # time => [ label, seconds-in-period ]
 	    "year"   => ["day", 288]
 	);
 
-my $watermark = "Munin $VERSION";
+# Limit graphing to certain hosts and/or services
+my @limit_hosts = ();
+my @limit_services = ();
 
-# Make array of what is probably needed to graph
-my $work_array = [];
-if (@limit_hosts) { # Limit what to update if needed
-    foreach my $nodename (@limit_hosts) {
-        push @$work_array, map { @{munin_find_field ($_->{$nodename}, "graph_title")} } @{munin_find_field($config, $nodename)};
+my $watermark = "Munin ".$MAIN::VERSION;
+
+sub graph_startup {
+    # Do once pr. run, pr possebly once pr. graph in the case of
+    # munin-cgi-graph
+
+    # Get options
+    &print_usage_and_exit unless
+	GetOptions ( "force!"       => \$force_graphing,
+		     "lazy!"        => \$force_lazy,
+		     "host=s"       => \@limit_hosts,
+		     "service=s"    => \@limit_services,
+		     "config=s"     => \$conffile,
+		     "stdout!"      => \$stdout,
+		     "day!"         => \$draw{'day'},
+		     "week!"        => \$draw{'week'},
+		     "month!"       => \$draw{'month'},
+		     "year!"        => \$draw{'year'},
+		     "sumweek!"     => \$draw{'sumweek'},
+		     "sumyear!"     => \$draw{'sumyear'},
+		     "list-images!" => \$list_images,
+		     "skip-locking!"=> \$skip_locking,
+		     "skip-stats!"  => \$skip_stats,
+		     "debug!"       => \$MAIN::DEBUG,
+		     "version!"     => \$do_version,
+		     "cron!"        => \$cron,
+		     "help"         => \$do_usage );
     }
-} else { # ...else just search for all adresses to update
-    push @$work_array, @{munin_find_field($config, "graph_title")};
+
+    if ($do_version) {
+	print_version_and_exit();
+	exit 0;
+    }
+
+    exit_if_run_by_super_user();
+
+    my $config= &munin_config ($conffile);
+    logger_open($config->{'logdir'});
+
+    if (&munin_get ($config, "graph_strategy", "cron") ne "cron" and $cron)
+    { # We're run from cron, but munin.conf says we use dynamic graph generation
+	exit 0;
+    }
 }
 
 
-for my $service (@$work_array) {
-    process_service ($service);
+sub graph_main {
+    my $graph_time= Time::HiRes::time;
+
+    munin_runlock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
+
+    my $STATS;
+
+    unless ($skip_stats) {
+	open ($STATS, '>', "$config->{dbdir}/munin-graph.stats.tmp") or
+	    logger("Unable to open $config->{dbdir}/munin-graph.stats.tmp");
+    }
+
+    logger("Starting munin-graph");
+
+    my $palette = &munin_get ($config, "palette", "default");
+
+    if (defined($PALETTE{$palette})) {
+	@COLOUR=@{$PALETTE{$palette}};
+    } else {
+	die "Unknown palette named by 'palette' keyword: $palette\n";
+    }
+
+    process_work(@limit_hosts);
+
+    $graph_time = sprintf ("%.2f",(Time::HiRes::time - $graph_time));
+    logger("Munin-graph finished ($graph_time sec)");
+    print $STATS "GT|total|$graph_time\n" unless $skip_stats;
+    rename ("$config->{dbdir}/munin-graph.stats.tmp", "$config->{dbdir}/munin-graph.stats");
+    close $STATS unless $skip_stats;
+
+    munin_removelock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
 }
 
-$graph_time = sprintf ("%.2f",(Time::HiRes::time - $graph_time));
-logger("Munin-graph finished ($graph_time sec)");
-print $STATS "GT|total|$graph_time\n" unless $skip_stats;
-rename ("$config->{dbdir}/munin-graph.stats.tmp", "$config->{dbdir}/munin-graph.stats");
-close $STATS unless $skip_stats;
 
-munin_removelock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
-
-# ### The End
+# --------------------------------------------------------------------------
 
 sub get_title {
     my $service = shift;
@@ -475,10 +451,30 @@ sub get_field_name
     return $name;
 }
 
+sub process_work {
+    my (@limit_hosts) = @_;
+    # Make array of what is probably needed to graph
+    my $work_array = [];
+    if (@limit_hosts) { # Limit what to update if needed
+	foreach my $nodename (@limit_hosts) {
+	    push @$work_array, map { @{munin_find_field ($_->{$nodename}, "graph_title")} } @{munin_find_field($config, $nodename)};
+	}
+    } else { # ...else just search for all adresses to update
+	push @$work_array, @{munin_find_field($config, "graph_title")};
+    }
+
+
+    for my $service (@$work_array) {
+	process_service ($service);
+    }
+}
+
+
 sub process_field {
     my $field   = shift;
     return munin_get_bool ($field, "process", 1);
 }
+
 
 sub process_service {
     my ($service) = @_;
@@ -1107,119 +1103,33 @@ sub RRDescape
     return $RRDs::VERSION < 1.2 ? $text : escape($text);
 }
 
-1;
 
-=head1 NAME
+sub print_usage_and_exit {
+    print "Usage: $0 [options]
 
-munin-graph - A program to create graphs from data contained in rrd-files.
+Options:
+    --[no]force		Force drawing of graphs that are not usually
+			drawn due to options in the config file. [--noforce]
+    --[no]lazy		Only redraw graphs when needed. [--lazy]
+    --help		View this message.
+    --version		View version information.
+    --debug		View debug messages.
+    --[no]cron		Behave as expected when run from cron. (Used internally 
+			in Munin.)
+    --service <service>	Limit graphed services to <service>. Multiple --service
+			options may be supplied.
+    --host <host>	Limit graphed hosts to <host>. Multiple --host options
+    			may be supplied.
+    --config <file>	Use <file> as configuration file. [@@CONFDIR@@/munin.conf]
+    --[no]list-images	List the filenames of the images created. 
+    			[--nolist-images]
+    --[no]day		Create day-graphs.   [--day]
+    --[no]week		Create week-graphs.  [--week]
+    --[no]month		Create month-graphs. [--month]
+    --[no]year		Create year-graphs.  [--year]
+    --[no]sumweek	Create summarised week-graphs.  [--summweek]
+    --[no]sumyear	Create summarised year-graphs.  [--sumyear]
 
-=head1 SYNOPSIS
-
-munin-graph [--options]
-
-=head1 OPTIONS
-
-=over 5
-
-=item B<< --[no]force >>
-
-If set, force drawing of graphs that are not usually drawn due to options in the config file. [--noforce]
-
-=item B<< --[no]lazy >>
-
-If set, only redraw graphs when it would look different from the existing one. [--lazy]
-
-=item B<< --help >>
-
-View help.
-
-=item B<< --[no]debug >>
-
-If set, view debug messages. [--nodebug]
-
-=item B<< --service <service> >>
-
-Limit graphed services to E<lt>serviceE<gt>. Multiple --service options may be supplied. [unset]
-
-=item B<< --host <host> >>
-
-Limit graphed hosts to E<lt>hostE<gt>. Multiple --host options may be supplied. [unset]
-
-=item B<< --config <file> >>
-
-Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin.conf]
-
-=item B<< --[no]list-images >>
-
-If set, list the filenames of the images created. [--nolist-images]
-
-=item B<< --[no]day >>
-
-If set, create day-based graphs. [--day]
-
-=item B<< --[no]week >>
-
-If set, create week-based graphs. [--week]
-
-=item B<< --[no]month >>
-
-If set, create month-based graphs. [--month]
-
-=item B<< --[no]year >>
-
-If set, create year-based graphs. [--year]
-
-=back
-
-=head1 DESCRIPTION
-
-Munin-graph is a part of the package Munin, which is used in combination
-with Munin's node.  Munin is a group of programs to gather data from
-Munin's nodes, graph them, create html-pages, and optionally warn Nagios
-about any off-limit values.
-
-munin-graph does the graphing. It is usually only used from within
-munin-cron.  If munin.conf sets "graph_strategy cgi" then munin-graph
-does no work, instead munin-html generates references to the graphing
-CGI.  Please see http://munin.projects.linpro.no/wiki/CgiHowto for
-more information about CGI grpahing.
-
-It checks the rrd-files for updated values, and redraws the graphs if
-needed. To force redrawing of graphs (after setup-changes et alia), use
-'--nolazy'.
-
-=head1 FILES
-
-	@@CONFDIR@@/munin.conf
-	@@DBDIR@@/*
-	@@LOGDIR@@/munin-graph
-	@@STATEDIR@@/*
-
-=head1 AUTHORS
-
-Audun Ytterdal, Jimmy Olsen, Tore Anderson, Nicolai Langfeldt.
-
-=head1 BUGS
-
-munin-graph does, as of now, not check the syntax of the configuration file.
-
-Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
-
-=head1 COPYRIGHT
-
-Copyright (C) 2002-2009 Audun Ytterdal, Jimmy Olsen, Tore Anderson, and Nicolai Langfeldt
-
-This is free software; see the source for copying conditions. There is
-NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
-PURPOSE.
-
-This program is released under the GNU General Public License
-
-=head1 SEE ALSO
-
-For information on configuration options, please refer to the man page for
-F<munin.conf>.
-
-=cut
-
-# vim: syntax=perl ts=8
+";
+	exit 0;
+}
