@@ -228,20 +228,10 @@ sub Config {
     print "$self->{extraconfig}\n"              if ($self->{extraconfig});
 
     my $firstrow = 1;
-    my $q = $self->get_versioned_query($self->{configquery});
-    my @p = ();
-    my $w = $self->wildcard_parameter();
-    if ($w) {
-        while ($q =~ s/%%FILTER%%/$self->{wildcardfilter}/) {
-            push @p, $self->wildcard_parameter();
-        }
-    }
-    else {
-        # Not called as a wildcard, or called with "all" - remove filter spec
-        $q =~ s/%%FILTER%%//g;
-    }
-    foreach my $row (
-        @{$self->runquery($q, \@p)}) {
+    my ($q, @p)
+        = $self->replace_wildcard_parameters(
+        $self->get_versioned_query($self->{configquery}));
+    foreach my $row (@{$self->runquery($q, \@p)}) {
         my $l = $row->[0];
         print "$l.label $row->[1]\n";
         print "$l.info $row->[2]\n" if (defined $row->[2]);
@@ -303,19 +293,9 @@ sub GetData {
     my ($self) = @_;
     $self->ensure_version();
     if ($self->{basequery}) {
-        my $q = $self->get_versioned_query($self->{basequery});
-        my $w = $self->wildcard_parameter();
-        my @p = ();
-        if ($w) {
-            while ($q =~ s/%%FILTER%%/$self->{wildcardfilter}/) {
-                push @p, $self->wildcard_parameter();
-            }
-        }
-        else {
-
-            # Not called as a wildcard, or called with "all" - remove filter spec
-            $q =~ s/%%FILTER%%//g;
-        }
+        my ($q, @p)
+            = $self->replace_wildcard_parameters(
+            $self->get_versioned_query($self->{basequery}));
         my $r = $self->runquery($q, \@p, $self->{pivotquery});
         foreach my $row (@$r) {
             my $l = $row->[0];
@@ -475,14 +455,55 @@ sub ensure_version {
     }
 }
 
+sub replace_wildcard_parameters {
+    my ($self, $q) = @_;
+    my @p = ();
+
+    my $w = $self->wildcard_parameter();
+    if ($w) {
+        while ($q =~ s/%%FILTER%%/$self->{wildcardfilter}/) {
+            push @p, $self->wildcard_parameter();
+        }
+    }
+    else {
+
+        # Not called as a wildcard, or called with "all" - remove filter spec
+        $q =~ s/%%FILTER%%//g;
+    }
+
+    # PARAM replacements are done without placeholders, so they can modify
+    # the query itself.
+    my @pieces = split /:/, $self->wildcard_parameter(-1);
+    for (my $i = 0; $i <= $#pieces; $i++) {
+        while ($q =~ s/%%PARAM$i%%/$pieces[$i]/) {
+        }
+    }
+
+    return ($q, @p);
+}
+
 sub wildcard_parameter {
-    my ($self) = @_;
+    my ($self, $paramnum) = @_;
 
     return undef unless (defined $self->{basename});
 
+    $paramnum = 0 unless (defined $paramnum);
     if ($0 =~ /$self->{basename}(.*)$/) {
-        return undef if ($1 eq "ALL");
-        return $1;
+
+        # If asking for first parameter, and there's no filter on it,
+        # return undef.
+        return undef if ($1 eq "ALL" && $paramnum == 0);
+
+        # If asking for unsplit, return that (internal use only, really)
+        return $1 if ($paramnum == -1);
+
+        # Otherwise, split the string again on colon, and return the
+        # selected piece.
+        my @pieces = split /:/, $1;
+        if (scalar(@pieces) < $paramnum + 1) {
+            die "Piece $paramnum not found in wildcard parameter.\n";
+        }
+        return $pieces[$paramnum];
     }
     die "Wildcard base not found in called filename!\n";
 }
