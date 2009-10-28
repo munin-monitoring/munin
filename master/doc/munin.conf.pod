@@ -123,6 +123,20 @@ This directive specifies the maximum number of processes to be used
 for gathering information from nodes.  If left blank, munin will use
 as many processes as necessary.  Affects: munin-update.
 
+=item B<max_graph_jobs> <value>
+
+This directive specifies the maximum number of concurrent rrdgraph
+proesses started by munin-graph.  The default is 6.  A setting of 0
+disables concurrent processing.  Affects: munin-graph
+
+=item B<max_cgi_graph_jobs> <value>
+
+This directiuve specifies the maximum number of concurrent
+munin-cgi-graph jobs.  The web server can start a high number of
+munin-cgi-graph jobs which we can't stop, but munin-cgi-graph will
+throttle down how many rrdgraph calls will be running at the same time
+to this number.  Affects: munin-cgi-graph and munin-fastcgi-graph.
+
 =item B<tls> <value>
 
 Can have four values. C<paranoid>, C<enabled>, C<auto>, and
