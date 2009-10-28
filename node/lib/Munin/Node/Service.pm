@@ -85,15 +85,15 @@ sub change_real_and_effective_user_and_group
 
         if ( defined($gid = $config->{sconf}{$service}{group}) ) {
             $g = Munin::Node::OS->get_gid($gid);
-            croak "Group '$gid' is nonexistent." unless $g ne '';
+            croak "Group '$gid' is nonexistent." if $g eq '';
         }
 
         # Specify the default group twice: once for setegid(2), and once
         # for setgroups(2).  See perlvar for the gory details.
         my $gs = "$dg $dg $g";
 
-	print STDERR "# Set rgid/ruid/egid/euid to $dg/$u/$gs/$u\n"
-	    if $config->{DEBUG};
+        print STDERR "# Set rgid/ruid/egid/euid to $dg/$u/$gs/$u\n"
+            if $config->{DEBUG};
 
         eval {
             if ($Munin::Common::Defaults::MUNIN_HASSETR) {
