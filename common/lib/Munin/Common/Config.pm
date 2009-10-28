@@ -35,6 +35,14 @@ my %legal_expanded = map { $_ => 1 } @legal;
 
 my %bools = map { $_ => 1} qw(yes no true false on off 1 0);
 
+sub cl_is_keyword {
+    # Class-less version of is_keyword for legacy code.
+    my ($word) = @_;
+    
+    return defined $legal_expanded{$word};
+}
+
+
 sub is_keyword {
     my ($self, $word) = @_;
 

@@ -14,6 +14,7 @@ use IO::Handle;
 use Munin::Common::Defaults;
 use Munin::Master::Logger;
 use Munin::Master::Config;
+use Munin::Common::Config;
 use Log::Log4perl qw (:easy);
 use POSIX qw(strftime);
 use RRDs;
@@ -550,7 +551,7 @@ sub munin_set_var_loc
         return munin_set_var_loc ($hash->{$tmpvar}, \@aloc, $val);
     } else {
         logger ("Warning: munin_set_var_loc: Setting unknown option \"$tmpvar\".")
-	unless $hash->is_keyword($tmpvar);
+	unless Munin::Common::Config::cl_is_keyword($tmpvar);
 
 	# FIX
 
