@@ -46,7 +46,8 @@ variables that libpq does. The most common ones used are:
  PGUSER      username to connect as
  PGPASSWORD  password to connect with, if a password is required
 
-The plugins will always connect to the 'template1' database.
+The plugins will always connect to the 'template1' database, except for
+wildcard per-database plugins.
 
 =head2 Example
 
@@ -150,6 +151,8 @@ use warnings;
                 the string %%FILTER%% will be replaced with this string, and
                 for each occurance a parameter with the value of the filtering
                 condition will be added to the DBI statement.
+ paramdatabase  Makes the plugin connect to the database in the first parameter
+                (wildcard plugins only) instead of 'postgres'.
  extraconfig    This string is copied directly into the configuration output
                 when the plugin is run in config mode, allowing low-level
                 customization.
@@ -201,6 +204,7 @@ sub new {
         wildcardfilter => $args{wildcardfilter},
         suggestquery   => $args{suggestquery},
         pivotquery     => $args{pivotquery},
+        paramdatabase  => $args{paramdatabase},
         extraconfig    => $args{extraconfig},
     };
 
@@ -355,10 +359,13 @@ sub _connect() {
     if (eval "require DBI; require DBD::Pg;") {
 
         # Always connect to database template1, because it exists on both old
-        # and new versions of PostgreSQL.
+        # and new versions of PostgreSQL, unless the database should be controlled
+        # by the first parameter.
         # All other connection parameters are controlled by the libpq environment
         # variables.
-        $self->{dbh} = DBI->connect('DBI:Pg:dbname=template1');
+        my $dbname = "template1";
+        $dbname = $self->wildcard_parameter(0) if ($self->{paramdatabase});
+        $self->{dbh} = DBI->connect("DBI:Pg:dbname=$dbname");
         unless ($self->{dbh}) {
             $self->{connecterror} = "$DBI::errstr";
             return 0;
