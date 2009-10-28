@@ -228,8 +228,20 @@ sub Config {
     print "$self->{extraconfig}\n"              if ($self->{extraconfig});
 
     my $firstrow = 1;
+    my $q = $self->get_versioned_query($self->{configquery});
+    my @p = ();
+    my $w = $self->wildcard_parameter();
+    if ($w) {
+        while ($q =~ s/%%FILTER%%/$self->{wildcardfilter}/) {
+            push @p, $self->wildcard_parameter();
+        }
+    }
+    else {
+        # Not called as a wildcard, or called with "all" - remove filter spec
+        $q =~ s/%%FILTER%%//g;
+    }
     foreach my $row (
-        @{$self->runquery($self->get_versioned_query($self->{configquery}))}) {
+        @{$self->runquery($q, \@p)}) {
         my $l = $row->[0];
         print "$l.label $row->[1]\n";
         print "$l.info $row->[2]\n" if (defined $row->[2]);
