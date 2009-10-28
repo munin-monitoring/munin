@@ -169,45 +169,6 @@ close $FILE;
 
 munin_removelock("$config->{rundir}/munin-html.lock");
 
-sub calculate_png_size
-{
-    	my $config = shift;
-	my $domain = shift;
-	my $node   = shift;
-	my $serv   = shift;
-
-        # base size of graph rectangle + space outside graph rectangle
-	my $height = munin_get ($config, "graph_height", 100, $domain, $node, $serv) + 156;
-	my $width  = munin_get ($config, "graph_width" , 400, $domain, $node, $serv) + 93;
-
-	# In addition, the height increases by 15 pixels for each label underneath
-	foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$serv}})
-	{
-	    if ($field =~ /^([^\.]+)\.label/)
-	    {
-		if (munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $serv, $1))
-		{
-		    $height += 15;
-		    my $tmpline = munin_get ($config, "line", undef, $domain, $node, $serv, $1);
-		    if ($tmpline)
-		    {
-			my @tmparr = ($tmpline =~ /:/g);
-			if (scalar (@tmparr) > 2)
-			{ # We've got line definitions with labels...
-			    $height += 15;
-			}
-		    }
-		}
-	    }
-	}
-	# ...and +15 if there's a graph total
-	$height += 15 if (munin_get ($config, "graph_total", undef, $domain, $node, $serv));
-	# ...and +15 if there's min/max-headers above the labels
-	$height += 15 if (munin_graph_column_headers ($config, $domain, $node, $serv));
-
-	return ($width, $height);
-}
-
 sub get_png_size
 {
 	my $filename = shift;
@@ -585,22 +546,22 @@ sub generate_service_templates {
 	$srv{'cimgweek'} ="$bp/$parent/$srv{node}-week.png";
 	$srv{'cimgmonth'}="$bp/$parent/$srv{node}-month.png";
 	$srv{'cimgyear'} ="$bp/$parent/$srv{node}-year.png";
+    }
 
-	for my $scale (@times) {
-	    if (my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale))) {
-		$srv{"img".$scale."width"} = $w;
-		$srv{"img".$scale."height"} = $h;
-	    }
+    for my $scale (@times) {
+	if (my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale))) {
+	    $srv{"img".$scale."width"} = $w;
+	    $srv{"img".$scale."height"} = $h;
 	}
+    }
 
-	if (munin_get_bool ($service, "graph_sums", 0)) {
-	    $srv{imgweeksum} = "$srv{node}-week-sum.png";
-	    $srv{imgyearsum} = "$srv{node}-year-sum.png";
-	    for my $scale (["week", "year"]) {
-		if (my ($w, $h) = get_png_size (munin_get_picture_filename($service, $scale, 1))) {
-		    $srv{"img".$scale."sumwidth"} = $w;
-		    $srv{"img".$scale."sumheight"} = $h;
-		}
+    if (munin_get_bool ($service, "graph_sums", 0)) {
+	$srv{imgweeksum} = "$srv{node}-week-sum.png";
+	$srv{imgyearsum} = "$srv{node}-year-sum.png";
+	for my $scale (["week", "year"]) {
+	    if (my ($w, $h) = get_png_size (munin_get_picture_filename($service, $scale, 1))) {
+		$srv{"img".$scale."sumwidth"} = $w;
+		$srv{"img".$scale."sumheight"} = $h;
 	    }
 	}
     }
