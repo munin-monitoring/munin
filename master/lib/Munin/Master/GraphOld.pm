@@ -31,8 +31,8 @@ $Id$
 
 =cut
 
+use warnings;
 use strict;
-use warning;
 
 use Exporter;
 
@@ -44,9 +44,10 @@ use IO::Socket;
 use RRDs;
 use Munin::Master::Logger;
 use Munin::Master::Utils;
+use Munin::Common::Defaults;
 use POSIX qw(strftime);
 use Digest::MD5;
-use Getopt::Long;
+use Getopt::Long qw(GetOptionsFromArray);
 use Time::HiRes;
 use Text::ParseWords;
 if ($RRDs::VERSION >= 1.3) { use Encode; }
@@ -78,7 +79,8 @@ my $list_images = 0;
 my $skip_locking = 0;
 my $skip_stats = 0;
 my $stdout = 0;
-my $conffile = "@@CONFDIR@@/munin.conf";
+my $conffile = $Munin::Common::Defaults::MUNIN_CONFDIR."/munin.conf";
+my $libdir = $Munin::Common::Defaults::MUNIN_LIBDIR;
 my %draw = ("day" => 1, "week" => 1, "month" => 1, "year" => 1, "sumyear" => 1, "sumweek" => 1);
 
 my %PALETTE; # Hash of available palettes
@@ -126,34 +128,48 @@ my %sumtimes = ( # time => [ label, seconds-in-period ]
 my @limit_hosts = ();
 my @limit_services = ();
 
-my $watermark = "Munin ".$MAIN::VERSION;
+my $watermark; 
+
+# Configuration hash
+my $config;
+
+# stats file handle
+my $STATS;
+my $DEBUG;
 
 sub graph_startup {
+    # Parse options and set up.  Stuff that is usually only needed once.
+    #
     # Do once pr. run, pr possebly once pr. graph in the case of
     # munin-cgi-graph
+    
+    my ($ARGV) = @_;
+
+    $watermark = "Munin ".$Munin::Common::Defaults::MUNIN_VERSION;
 
     # Get options
     &print_usage_and_exit unless
-	GetOptions ( "force!"       => \$force_graphing,
-		     "lazy!"        => \$force_lazy,
-		     "host=s"       => \@limit_hosts,
-		     "service=s"    => \@limit_services,
-		     "config=s"     => \$conffile,
-		     "stdout!"      => \$stdout,
-		     "day!"         => \$draw{'day'},
-		     "week!"        => \$draw{'week'},
-		     "month!"       => \$draw{'month'},
-		     "year!"        => \$draw{'year'},
-		     "sumweek!"     => \$draw{'sumweek'},
-		     "sumyear!"     => \$draw{'sumyear'},
-		     "list-images!" => \$list_images,
-		     "skip-locking!"=> \$skip_locking,
-		     "skip-stats!"  => \$skip_stats,
-		     "debug!"       => \$MAIN::DEBUG,
-		     "version!"     => \$do_version,
-		     "cron!"        => \$cron,
-		     "help"         => \$do_usage );
-    }
+	GetOptionsFromArray (
+	    $ARGV,
+	    "force!"       => \$force_graphing,
+	    "lazy!"        => \$force_lazy,
+	    "host=s"       => \@limit_hosts,
+	    "service=s"    => \@limit_services,
+	    "config=s"     => \$conffile,
+	    "stdout!"      => \$stdout,
+	    "day!"         => \$draw{'day'},
+	    "week!"        => \$draw{'week'},
+	    "month!"       => \$draw{'month'},
+	    "year!"        => \$draw{'year'},
+	    "sumweek!"     => \$draw{'sumweek'},
+	    "sumyear!"     => \$draw{'sumyear'},
+	    "list-images!" => \$list_images,
+	    "skip-locking!"=> \$skip_locking,
+	    "skip-stats!"  => \$skip_stats,
+	    "debug!"       => \$DEBUG,
+	    "version!"     => \$do_version,
+	    "cron!"        => \$cron,
+	    "help"         => \$do_usage );
 
     if ($do_version) {
 	print_version_and_exit();
@@ -162,7 +178,7 @@ sub graph_startup {
 
     exit_if_run_by_super_user();
 
-    my $config= &munin_config ($conffile);
+    $config= &munin_config ($conffile);
     logger_open($config->{'logdir'});
 
     if (&munin_get ($config, "graph_strategy", "cron") ne "cron" and $cron)
@@ -176,8 +192,6 @@ sub graph_main {
     my $graph_time= Time::HiRes::time;
 
     munin_runlock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
-
-    my $STATS;
 
     unless ($skip_stats) {
 	open ($STATS, '>', "$config->{dbdir}/munin-graph.stats.tmp") or
@@ -848,12 +862,12 @@ sub process_service {
   		      '--font' ,'LEGEND:7:monospace');
 	    } else {
 		push (@complete,
-  		      '--font' ,'LEGEND:7:@@LIBDIR@@/VeraMono.ttf');
+  		      '--font' ,'LEGEND:7:$libdir/VeraMono.ttf');
 	    }
 
 	    push (@complete,
-		  '--font' ,'UNIT:7:@@LIBDIR@@/VeraMono.ttf',
-		  '--font' ,'AXIS:7:@@LIBDIR@@/VeraMono.ttf');
+		  '--font' ,'UNIT:7:$libdir/VeraMono.ttf',
+		  '--font' ,'AXIS:7:$libdir/VeraMono.ttf');
 	}
 	push(@complete,'-W', $watermark) if $RRDs::VERSION >= 1.2;
 
@@ -878,7 +892,7 @@ sub process_service {
 	      (int($lastupdate/$resolutions{$time}))*$resolutions{$time};
 	}
 	print( "\n\nrrdtool \"graph\" \"",
-	  join ("\"\n\t\"",@complete), "\"\n") if $DEBUG;
+	       join ("\"\n\t\"",@complete), "\"\n") if $DEBUG;
 
 	# Make sure directory exists
 	munin_mkdir_p ($picdirname, oct(777));
@@ -899,14 +913,15 @@ sub process_service {
 	if (my $ERROR = RRDs::error) {
 	    logger ("Unable to graph ". munin_get_picture_filename ($service, $time) . ": $ERROR");
 	} else {
-	  # Set time of png file to the time of the last update of the rrd file.
-	  # This makes http's If-Modified-Since more reliable, esp. in combination with
-	  # munin-*cgi-graph.
+	    # Set time of png file to the time of the last update of
+	    # the rrd file.  This makes http's If-Modified-Since more
+	    # reliable, esp. in combination with munin-*cgi-graph.
 
-	  utime $lastupdate, $lastupdate, munin_get_picture_filename($service, $time);
-	  if ($list_images) {
-	    # Command-line option to list images created
-	    print munin_get_picture_filename ($service, $time),"\n";
+	    utime $lastupdate, $lastupdate, munin_get_picture_filename($service, $time);
+	    if ($list_images) {
+		# Command-line option to list images created
+		print munin_get_picture_filename ($service, $time),"\n";
+	    }
 	}
     }
 
@@ -971,7 +986,8 @@ sub process_service {
 		    $rrd_sum[$index] = $rrd_sum[$index] * 300 * $sumtimes{$time}->[1];
 		}
 	    }
-
+	    
+	    
 	    unless ($labelled) {
 		my $label = munin_get ($service, "graph_vlabel_sum_$time", $sumtimes{$time}->[0]);
 		unshift @rrd_sum, "--vertical-label", $label;
@@ -1002,6 +1018,7 @@ sub process_service {
     }
     @added = ();
 }
+
 
 sub graph_by_minute {
     my $service = shift;
@@ -1120,7 +1137,7 @@ Options:
 			options may be supplied.
     --host <host>	Limit graphed hosts to <host>. Multiple --host options
     			may be supplied.
-    --config <file>	Use <file> as configuration file. [@@CONFDIR@@/munin.conf]
+    --config <file>	Use <file> as configuration file. [$conffile]
     --[no]list-images	List the filenames of the images created. 
     			[--nolist-images]
     --[no]day		Create day-graphs.   [--day]
@@ -1133,3 +1150,5 @@ Options:
 ";
 	exit 0;
 }
+
+1;
