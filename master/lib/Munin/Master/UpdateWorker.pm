@@ -372,9 +372,9 @@ sub _set_rrd_data_source_defaults {
 
     # Test for definedness, anything defined should not be overridden
     # by defaults:
-    $data_source->{type} //= 'GAUGE';
-    $data_source->{min}  //= 'U';
-    $data_source->{max}  //= 'U';
+    $data_source->{type} = 'GAUGE' unless defined($data_source->{type});
+    $data_source->{min}  = 'U'     unless defined($data_source->{min});
+    $data_source->{max}  = 'U'     unless defined($data_source->{max});
 }
 
 
