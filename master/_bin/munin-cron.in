@@ -1,9 +1,17 @@
 #!@@GOODSH@@
-[ -x @@LIBDIR@@/munin-update ] && @@LIBDIR@@/munin-update $@;
 
-[ -x @@LIBDIR@@/munin-limits ] && @@LIBDIR@@/munin-limits $@;
-[ -x @@LIBDIR@@/munin-graph  ] && 
-	nice @@LIBDIR@@/munin-graph --cron $@ 2>&1 | 
+# This used to test if the executables were installed.  But that is
+# perfectly redundant and supresses errors that the admin should see.
+
+@@LIBDIR@@/munin-update $@ || exit 1
+
+# The result of munin-limits is needed by munin-html but not by
+# munin-graph.  So run it in the background now, it will be done
+# before munin-graph.
+
+@@LIBDIR@@/munin-limits $@ &
+
+nice @@LIBDIR@@/munin-graph --cron $@ 2>&1 | 
 	fgrep -v "*** attempt to put segment in horiz list twice"
 
-[ -x @@LIBDIR@@/munin-html   ] && nice @@LIBDIR@@/munin-html $@;
+nice @@LIBDIR@@/munin-html $@ || exit 1
