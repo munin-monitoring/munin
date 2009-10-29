@@ -838,7 +838,10 @@ sub munin_get_filename {
         $l =~ s/^\./_/g;
         $l;
     } @$loc;
-	
+
+    # In the case of multigraphs with nested services the names of
+    # these variables are wrong.  The $node becomes the plugin name
+    # for example.
     my $field  = pop @$loc or return;
     my $plugin = pop @$loc or return;
     my $node   = pop @$loc or return;

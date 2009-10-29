@@ -133,7 +133,7 @@ my %sumtimes = ( # time => [ label, seconds-in-period ]
 my @limit_hosts = ();
 my @limit_services = ();
 
-my $watermark; 
+my $watermark = "Munin ".$Munin::Common::Defaults::MUNIN_VERSION;
 
 my $running = 0;
 my $max_running = 6;
@@ -153,8 +153,6 @@ sub graph_startup {
     # munin-cgi-graph
     
     my ($ARGV) = @_;
-
-    $watermark = "Munin ".$Munin::Common::Defaults::MUNIN_VERSION;
 
     # Get options
     &print_usage_and_exit unless
@@ -189,7 +187,7 @@ sub graph_startup {
 
     exit_if_run_by_super_user();
 
-    $config= &munin_config ($conffile);
+    $config = &munin_config ($conffile);
     logger_open($config->{'logdir'});
 
     my $palette = &munin_get ($config, "palette", "default");
@@ -467,6 +465,7 @@ sub expand_specials
     return $result;
 }
 
+
 sub single_value
 {
     my $service = shift;
@@ -507,6 +506,7 @@ sub process_work {
 	push @$work_array, @{munin_find_field($config, "graph_title")};
     }
 
+    # @$work_array contains copy of (or pointer to) each service to be graphed.
     for my $service (@$work_array) {
 
 	# Want to avoid forking for that
@@ -571,17 +571,19 @@ sub fork_and_work {
 sub process_service {
     my ($service) = @_;
 
+    # See if we should skip the service
+    return if (skip_service ($service));
+
     # Make my graphs
     my $sname = munin_get_node_name ($service);
     my $service_time= Time::HiRes::time;
     my $lastupdate = 0;
-    my $now  = time;
+    my $now = time;
     my $fnum = 0;
     my @rrd;
     my @added = ();
 
-    # See if we should skip the service
-    return if (skip_service ($service));
+    DEBUG "[DEBUG] Node name: $sname\n";
 
     my $field_count = 0;
     my $max_field_len = 0;
@@ -593,12 +595,16 @@ sub process_service {
 
     # Array to keep 'preprocess'ed fields.
     my @rrd_preprocess = ();
-    logger ("DEBUG: Expanding specials for $sname: \"" . join("\",\"", @field_order) . "\".") if $DEBUG;
+    DEBUG "[DEBUG] Expanding specials for $sname: \"".join("\",\"", @field_order)."\".";
 
-    @added = @{&expand_specials ($service, \@rrd_preprocess, \@field_order, \$force_single_value)};
+    @added = @{&expand_specials ($service,
+				 \@rrd_preprocess,
+				 \@field_order,
+				 \$force_single_value)};
 
     @field_order = (@rrd_preprocess, @field_order);
-    logger ("DEBUG: Checking field lengths for $sname: \"" . join("\",\"", @rrd_preprocess) . "\".") if $DEBUG;
+    DEBUG "[DEBUG] Checking field lengths for $sname: \"" .
+	join("\",\"", @rrd_preprocess) . "\".";
 
     # Get max label length
     $max_field_len = munin_get_max_label_length ($service, \@field_order);
@@ -633,7 +639,7 @@ sub process_service {
     my %total_neg;
     my $autostacking=0;
 
-    logger ("DEBUG: Treating fields \"" . join ("\",\"", @field_order) . "\".") if $DEBUG;
+    DEBUG "[DEBUG] Treating fields \"" . join ("\",\"", @field_order) . "\".";
     for my $fname (@field_order) {
 	my $path     = undef;
 	my $field    = undef;
@@ -644,14 +650,15 @@ sub process_service {
 	$field = munin_get_node ($service, [$fname]);
 
 	next if (!defined $field or !$field or !process_field ($field));
-	logger ("DEBUG: Processing field \"$fname\" [".munin_get_node_name($field)."].") if $DEBUG;
+	DEBUG "[DEBUG] Processing field \"$fname\" [".munin_get_node_name($field)."].";
 
 	my $fielddraw = munin_get ($field, "draw", "LINE2");
 
 	if ($field_count == 0 and $fielddraw eq 'STACK') {
 	    # Illegal -- first field is a STACK
-	    logger ("ERROR: First field (\"$fname\") of graph " . join (' :: ', munin_get_node_loc ($service)) .
-		    " is STACK. STACK can only be drawn after a LINEx or AREA.");
+	    DEBUG "ERROR: First field (\"$fname\") of graph " .
+		join (' :: ', munin_get_node_loc ($service)) .
+		" is STACK. STACK can only be drawn after a LINEx or AREA.");
 	    $fielddraw = "LINE2";
 	}
 
@@ -691,6 +698,9 @@ sub process_service {
 
 	# Trim the fieldname to make room for other field names.
 	$rrdname = &get_field_name ($fname);
+
+	DEBUG "[DEBUG] RRD name / filename: $rrdname / $filename\n";
+
 	if ($rrdname ne $fname) {
 	    # A change was made
 	    munin_set ($field, "cdef_name", $rrdname);
@@ -705,23 +715,25 @@ sub process_service {
 		 $filename . ":" . $rrdfield . ":MAX");
 
 	if (munin_get_bool ($field, "onlynullcdef", 0)) { 
-	    push (@rrd, "CDEF:c$rrdname=g$rrdname" . (($now-$update)>900 ? ",POP,UNKN" : ""));
+	    push (@rrd, "CDEF:c$rrdname=g$rrdname" .
+		  (($now-$update)>900 ? ",POP,UNKN" : ""));
 	}
 
-	if (munin_get ($field, "type", "GAUGE") ne "GAUGE" and graph_by_minute ($service)) {
-		push (@rrd, expand_cdef($service, \$rrdname, "$fname,60,*"));
+	if (munin_get ($field, "type", "GAUGE") ne "GAUGE" and
+	    graph_by_minute ($service)) {
+	    push (@rrd, expand_cdef($service, \$rrdname, "$fname,60,*"));
 	}
 
 	if (my $tmpcdef = munin_get ($field, "cdef")) {
 	    push (@rrd,expand_cdef($service, \$rrdname, $tmpcdef));
 	    push (@rrd, "CDEF:c$rrdname=g$rrdname");
-	    logger ("DEBUG: Field name after cdef set to $rrdname") if $DEBUG;
+	    DEBUG "[DEBUG] Field name after cdef set to $rrdname";
 	} elsif (!munin_get_bool ($field, "onlynullcdef", 0)) {
 	    push (@rrd, "CDEF:c$rrdname=g$rrdname" . (($now-$update)>900 ? ",POP,UNKN" : ""));
 	}
 
 	next if !munin_draw_field ($field);
-	logger ("DEBUG: Drawing field \"$fname\".") if $DEBUG;
+	DEBUG "[DEBUG] Drawing field \"$fname\".";
 
 	if ($single_value) {
 	    # Only one field. Do min/max range.
@@ -931,6 +943,8 @@ sub process_service {
 	my $picfilename = munin_get_picture_filename ($service, $time);
 	(my $picdirname = $picfilename) =~ s/\/[^\/]+$//;
 
+	DEBUG "[DEBUG] Picture filename: $picfilename";
+
 	my @complete = ();
 	if ($RRDkludge) {
 	    # since rrdtool 1.3 with libpango the LEGEND column alignment
@@ -947,6 +961,7 @@ sub process_service {
 		  '--font' ,'UNIT:7:$libdir/VeraMono.ttf',
 		  '--font' ,'AXIS:7:$libdir/VeraMono.ttf');
 	}
+
 	push(@complete,'-W', $watermark) if $RRDs::VERSION >= 1.2;
 
 	# Do the header (title, vtitle, size, etc...)
@@ -969,8 +984,8 @@ sub process_service {
 	    push @complete, "--end",
 	      (int($lastupdate/$resolutions{$time}))*$resolutions{$time};
 	}
-	print( "\n\nrrdtool \"graph\" \"",
-	       join ("\"\n\t\"",@complete), "\"\n") if $DEBUG;
+	DEBUG "\n\nrrdtool \"graph\" \"".
+	    join ("\"\n\t\"",@complete). "\"\n";
 
 	# Make sure directory exists
 	munin_mkdir_p ($picdirname, oct(777));
@@ -989,7 +1004,7 @@ sub process_service {
 
 	RRDs::graph (@complete);
 	if (my $ERROR = RRDs::error) {
-	    logger ("Unable to graph ". munin_get_picture_filename ($service, $time) . ": $ERROR");
+	    ERROR "[ERROR] Unable to graph $picfilename : $ERROR";
 	} else {
 	    # Set time of png file to the time of the last update of
 	    # the rrd file.  This makes http's If-Modified-Since more
@@ -1071,7 +1086,7 @@ sub process_service {
 		unshift @rrd_sum, "--vertical-label", $label;
 	    }
 
-	    print ("\n\nrrdtool \"graph\" \"", join ("\"\n\t\"",@rrd_sum), "\"\n") if $DEBUG;
+	    DEBUG "\n\nrrdtool \"graph\" \"".join ("\"\n\t\"",@rrd_sum)."\"\n";
 
 	    # Make sure directory exists
 	    munin_mkdir_p ($picdirname, oct(777));
@@ -1079,7 +1094,9 @@ sub process_service {
 	    RRDs::graph (@rrd_sum);
 
 	    if (my $ERROR = RRDs::error) {
-		logger ("Unable to graph ". munin_get_picture_filename ($service, $time) . ": $ERROR");
+		ERROR "Unable to graph ". 
+		    munin_get_picture_filename ($service, $time) .
+		    ": $ERROR");
 	    } elsif ($list_images) {
 		# Command-line option to list images created
 		print munin_get_picture_filename ($service, $time, 1),"\n";
@@ -1088,7 +1105,7 @@ sub process_service {
     }
 
     $service_time = sprintf ("%.2f",(Time::HiRes::time - $service_time));
-    logger ("Graphed service : $sname ($service_time sec * 4)");
+    INFO "Graphed service : $sname ($service_time sec * 4)";
     print $STATS "GS|$service_time\n" unless $skip_stats;
 
     foreach (@added) {
