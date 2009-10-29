@@ -157,7 +157,11 @@ if [ "$CMD" = "years" ]; then
 		echo "graph_order y0"
 		for i in `seq 0 $no_of_years`; do
 			year=$(echo ${arr1[$i]})
-			echo y${year}.label $year
+			if [ $year = 0 ]; then
+				echo y0.label No year
+			else
+				echo y${year}.label $year
+			fi
 			if [ $i = 0 ]; then
 				echo y${year}.draw AREA
 			else
