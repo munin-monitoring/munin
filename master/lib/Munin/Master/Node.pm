@@ -157,7 +157,7 @@ sub list_plugins {
     my $list = $self->_node_read_single();
 
     if (not $list) {
-        WARN "[WARNING] Config node $self->{host} listed no services for $host";
+        WARN "[WARNING] Config node $self->{host} listed no services for $host.  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.";
     }
 
     return split / /, $list;
@@ -255,6 +255,8 @@ sub fetch_service_config {
     # The whole config in one fell swoop.
     my @lines = $self->_node_read();
 
+    $service = $self->_sanitise_plugin_name($service);
+
     return $self->parse_service_config($service,@lines);
 }
 
@@ -336,21 +338,30 @@ sub fetch_service_data {
     my ($self, $plugin) = @_;
 
     $self->_node_write_single("fetch $plugin\n");
+
     my @lines = $self->_node_read();
+
+    $plugin = $self->_sanitise_plugin_name($plugin);
 
     return $self->parse_service_data($plugin,@lines);
 }
 
 
-sub _sanitise_fieldname {
+sub _sanitise_plugin_name {
     my ($self, $name) = @_;
 
-    $name =~ s/[\W-]/_/g;
+    $name =~ s/[^_A-Za-z0-9]/_/g;
+    
+    return $name;
+}
 
-    # This trunkation is based on a misunderstanding about fieldname
-    # lengths - most likely - janl 2009-10-21
 
-    # return substr($name, -18);
+sub _sanitise_fieldname {
+    # http://munin.projects.linpro.no/wiki/notes_on_datasource_names
+    my ($self, $name) = @_;
+
+    $name =~ s/^[^A-Za-z_]/_/;
+    $name =~ s/[^A-Za-z0-9_]/_/g;
 
     return $name;
 }
