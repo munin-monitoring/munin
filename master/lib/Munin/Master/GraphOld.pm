@@ -45,7 +45,7 @@ use IO::Handle;
 use RRDs;
 use POSIX qw(strftime);
 use Digest::MD5;
-use Getopt::Long qw(GetOptionsFromArray);
+use Getopt::Long 2.37 qw(GetOptionsFromArray);
 use Time::HiRes;
 use Text::ParseWords;
 
