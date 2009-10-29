@@ -326,7 +326,7 @@ sub parse_service_data {
 	        { value => $value, when => $when };
         }
         else {
-            die "[ERROR] Protocol exception while fetching '$service' from $nodedesignation: unrecogniced line '$line'"
+            die "[ERROR] Protocol exception while fetching '$service' from $nodedesignation: unrecognized line '$line'"
         }
     }
 
