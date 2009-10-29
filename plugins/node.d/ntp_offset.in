@@ -96,9 +96,9 @@ do_ () {
     # peer=$1
     # Times in ms, therefore cdefs to divide to obtain seconds
     shift # Avoid having to use $10
-    delay=$7
-    offset=$8
-    jitter=$9
+    delay=${7:-U}
+    offset=${8:-U}
+    jitter=${9:-U}
     cat <<EOF
 delay.value $delay
 offset.value $offset
