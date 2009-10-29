@@ -230,7 +230,7 @@ build-common-pre: common/Build
 	cd common && $(PERL) Build code
 	rm -f common/blib/lib/Munin/Common/Defaults.pm
 
-common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm
+common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm build-common-pre
 	$(PERL) -pe 's{(PREFIX     \s+=\s).*}{\1q{$(PREFIX)};}x;   \
                   s{(CONFDIR    \s+=\s).*}{\1q{$(CONFDIR)};}x;     \
                   s{(BINDIR     \s+=\s).*}{\1q{$(BINDIR)};}x;      \
@@ -418,5 +418,5 @@ install-%: %/Build
 test-%: %/Build
 	cd $* && $(PERL) Build test || true
 
-clean-%: %/Build
+clean-%: %/Build common/blib/lib/Munin/Common/Defaults.pm
 	cd $* && $(PERL) Build realclean
