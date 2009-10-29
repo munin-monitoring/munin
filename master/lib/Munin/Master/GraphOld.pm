@@ -182,7 +182,6 @@ sub graph_startup {
 
     if ($do_version) {
 	print_version_and_exit();
-	exit 0;
     }
 
     exit_if_run_by_super_user();
@@ -658,7 +657,7 @@ sub process_service {
 	    # Illegal -- first field is a STACK
 	    DEBUG "ERROR: First field (\"$fname\") of graph " .
 		join (' :: ', munin_get_node_loc ($service)) .
-		" is STACK. STACK can only be drawn after a LINEx or AREA.");
+		" is STACK. STACK can only be drawn after a LINEx or AREA.";
 	    $fielddraw = "LINE2";
 	}
 
@@ -1096,7 +1095,7 @@ sub process_service {
 	    if (my $ERROR = RRDs::error) {
 		ERROR "Unable to graph ". 
 		    munin_get_picture_filename ($service, $time) .
-		    ": $ERROR");
+		    ": $ERROR";
 	    } elsif ($list_images) {
 		# Command-line option to list images created
 		print munin_get_picture_filename ($service, $time, 1),"\n";
