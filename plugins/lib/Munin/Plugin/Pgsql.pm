@@ -318,6 +318,7 @@ sub GetData {
  for commands given by Munin.
 
 =cut
+
 sub Process {
     my ($self) = @_;
 
@@ -480,12 +481,13 @@ sub replace_wildcard_parameters {
 
     # PARAM replacements are done without placeholders, so they can modify
     # the query itself.
-    my @pieces = split /:/, $self->wildcard_parameter(-1);
-    for (my $i = 0; $i <= $#pieces; $i++) {
-        while ($q =~ s/%%PARAM$i%%/$pieces[$i]/) {
+    if ($self->wildcard_parameter(-1)) {
+        my @pieces = split /:/, $self->wildcard_parameter(-1);
+        for (my $i = 0; $i <= $#pieces; $i++) {
+            while ($q =~ s/%%PARAM$i%%/$pieces[$i]/) {
+            }
         }
     }
-
     return ($q, @p);
 }
 
