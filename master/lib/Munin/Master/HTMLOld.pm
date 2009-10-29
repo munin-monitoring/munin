@@ -6,8 +6,9 @@ package Munin::Master::HTMLOld;
 This is Munin::Master::HTMLOld, a minimal package shell to make
 munin-html modular (so it can loaded persistently in
 munin-fastcgi-graph for example) without making it object oriented
-yet.  The non "old" module will feature propper object orientation
+yet.  The non-"old" module will feature propper object orientation
 like munin-update and will have to wait until later.
+
 
 Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal, Kjell Magne
 Øierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
@@ -24,8 +25,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301 USA.
 
 $Id$
 
@@ -53,9 +54,6 @@ use Log::Log4perl qw( :easy );
 
 my @times = ( "day", "week", "month", "year" );
 
-my @limit_hosts = ();
-my @limit_services = ();
-
 my $DEBUG=0;
 my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 my $do_usage = 0;
@@ -72,54 +70,38 @@ sub html_startup {
     &print_usage_and_exit unless
 	GetOptionsFromArray (
 	    $ARGV,
-	    "host=s"       => \@limit_hosts,
-	    "service=s"    => \@limit_services,
+	    "host=s"       => [],
+	    "service=s"    => [],
 	    "config=s"     => \$conffile,
 	    "debug!"       => \$DEBUG,
 	    "stdout!"      => \$stdout,
 	    "help"         => \$do_usage, 
 	    "version!"     => \$do_version );
 
-    if ($do_version) {
-	print_version_and_exit();
-    }
+    print_version_and_exit() if $do_version;
 
     exit_if_run_by_super_user();
 
-    $config = &munin_config ($conffile, $config);
+    $config = munin_config ($conffile, $config);
+    $limits = munin_readconfig ($config->{dbdir}."/limits", 1, 1);
 
-    %comparisontemplates = (
-	day => HTML::Template->new(
-	    filename => "$config->{tmpldir}/munin-comparison-day.tmpl",
-	    die_on_bad_params => 0,
-	    loop_context_vars => 1),
-	week => HTML::Template->new(
-	    filename => "$config->{tmpldir}/munin-comparison-week.tmpl",
-	    die_on_bad_params => 0,
-	    loop_context_vars => 1),
-	month => HTML::Template->new(
-	    filename => "$config->{tmpldir}/munin-comparison-month.tmpl",
-	    die_on_bad_params => 0, loop_context_vars => 1),
-	year => HTML::Template->new(
-	    filename => "$config->{tmpldir}/munin-comparison-year.tmpl",
-	    die_on_bad_params => 0,
-	    loop_context_vars => 1)
-	);
+    logger_open($config->{'logdir'});
+    logger_debug() if $DEBUG;
 
-        #Make sure the logo and the stylesheet file is in the html dir
-    my @files = ("style.css", "logo.png", "definitions.html");
-    foreach my $file( (@files) ) {
-	if ((! -e "$config->{htmldir}/$file") or
-	    (-e "$config->{tmpldir}/$file") and 
-	    ((stat ("$config->{tmpldir}/$file"))[9] > (stat("$config->{htmldir}/$file"))[9])) {
-	    unless (system("cp", "$config->{tmpldir}/$file", "$config->{htmldir}/")){
-		logger("copied $file into htmldir");
-	    } else {
-		logger("could not copy $file into htmldir");
-	    }
+    my $templdir = $config->{tmpldir};
+    my $htmldir  = $config->{htmldir};
+
+    %comparisontemplates = instanciate_templates($templdir);
+
+    copy_web_resources($templdir, $htmldir);
+
+    if (!defined $config->{'cgiurl_graph'}) {
+	if (defined $config->{'cgiurl'}) {
+	    $config->{'cgiurl_graph'} = $config->{'cgiurl'}."/munin-cgi-graph";
+	} else {
+	    $config->{'cgiurl_graph'} = "/cgi-bin/munin-cgi-graph";
 	}
     }
-
 }    
 
 
@@ -127,23 +109,7 @@ sub html_main {
 
     my $update_time = Time::HiRes::time;
 
-    logger_open($config->{'logdir'});
-    logger_debug() if $DEBUG;
-
     INFO "Starting munin-html, checking lock";
-
-    $limits = &munin_readconfig ($config->{dbdir}."/limits", 1, 1);
-    if (!defined $config->{'cgiurl_graph'})
-    {
-	if (defined $config->{'cgiurl'})
-	{
-	    $config->{'cgiurl_graph'} = $config->{'cgiurl'} . "/munin-cgi-graph";
-	}
-	else
-	{
-	    $config->{'cgiurl_graph'} = "/cgi-bin/munin-cgi-graph";
-	}
-    }
 
     munin_runlock("$config->{rundir}/munin-html.lock");
 
@@ -157,14 +123,16 @@ sub html_main {
     }
 
     # Draw main index
-    my $template = HTML::Template->new(filename => "$config->{tmpldir}/munin-overview.tmpl",
-				       die_on_bad_params => 0,
-				       loop_context_vars => 1);
+    my $template = HTML::Template->new(
+	filename => "$config->{tmpldir}/munin-overview.tmpl",
+	die_on_bad_params => 0,
+	loop_context_vars => 1);
 
     generate_group_templates ($groups);
 
     $template->param(GROUPS    => $groups,
 		     TIMESTAMP => $timestamp);
+
     my $filename = munin_get_html_filename ($config);
     open (my $FILE, '>', $filename) or
 	die "Cannot open $filename for writing: $!";
@@ -175,7 +143,50 @@ sub html_main {
 
     $update_time = sprintf("%.2f",(Time::HiRes::time - $update_time));
 
-    logger("munin-html finished ($update_time sec)");
+    INFO "munin-html finished ($update_time sec)";
+}
+
+
+sub copy_web_resources {
+    my ($tmpldir, $htmldir) = @_;
+
+    #Make sure the logo and the stylesheet file is in the html dir
+    my @files = ("style.css", "logo.png", "definitions.html");
+
+    foreach my $file( (@files) ) {
+	if ((! -e "$htmldir/$file") or
+	    (-e "$tmpldir/$file") and 
+	    ((stat ("$tmpldir/$file"))[9] > (stat("$htmldir/$file"))[9])) {
+	    unless (system("cp", "$tmpldir/$file", "$htmldir/")){
+		INFO "copied $file into ".$htmldir;
+	    } else {
+		ERROR "[ERROR] Could not copy $file from $tmpldir to $htmldir";
+		die "[ERROR] Could not copy $file from $tmpldir to $htmldir\n";
+	    }
+	}
+    }
+}
+
+sub instanciate_templates {
+    my ($tmpldir) = @_;
+
+    return (
+	day => HTML::Template->new(
+	    filename => "$tmpldir/munin-comparison-day.tmpl",
+	    die_on_bad_params => 0,
+	    loop_context_vars => 1),
+	week => HTML::Template->new(
+	    filename => "$tmpldir/munin-comparison-week.tmpl",
+	    die_on_bad_params => 0,
+	    loop_context_vars => 1),
+	month => HTML::Template->new(
+	    filename => "$tmpldir/munin-comparison-month.tmpl",
+	    die_on_bad_params => 0, loop_context_vars => 1),
+	year => HTML::Template->new(
+	    filename => "$config->{tmpldir}/munin-comparison-year.tmpl",
+	    die_on_bad_params => 0,
+	    loop_context_vars => 1)
+	);
 }
 
 
@@ -527,7 +538,7 @@ sub generate_service_templates {
     my $bp = borrowed_path ($service) || ".";
 
     $srv{'node'}     = munin_get_node_name ($service);
-    logger("processing service: $srv{node}");
+    DEBUG "[DEBUG] processing service: $srv{node}";
     $srv{'service'}  = $service;
     $srv{'label'}    = munin_get ($service, "graph_title");
     $srv{'category'} = lc( munin_get ($service, "graph_category", "other") );
@@ -706,11 +717,11 @@ munin-html [options]
 
 =item B<< --service <service> >>
 
-Limit services to those of E<lt>serviceE<gt>. Multiple --service options may be supplied. [unset]
+Compatability. No effect.
 
 =item B<< --host <host> >>
 
-Limit hosts to those of E<lt>host<gt>. Multiple --host options may be supplied. [unset]
+Compatability. No effect.
 
 =item B<< --config <file> >>
 
