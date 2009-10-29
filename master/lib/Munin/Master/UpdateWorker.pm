@@ -395,26 +395,38 @@ sub _get_rrd_file_name {
     
     my $type_id = lc(substr(($ds_config->{type}), 0, 1));
     my $group = $self->{host}{group}{group_name};
+
+    # The following is rigged to match the corresponding function in
+    # munin-graph/munin-html where it's less clear what are groups and
+    # what are hosts and what are services, and they simply pop
+    # elements off the end and so on.
+
+    my @lastpart = ($self->{host}{host_name}, split (/\./, "$service.$ds_name"));
+    my $last = pop(@lastpart);
+    my $nexttolast = pop(@lastpart);
+
     my $file = sprintf("%s-%s-%s-%s.rrd",
-                       $self->{host}{host_name},
-                       $service,
-                       $ds_name,
+                       join("/",@lastpart),
+                       $nexttolast,
+                       $last,
                        $type_id);
 
     # Not really a danger (we're not doing this stuff via the shell),
     # so more to avoid confusion with silly filenames.
-    ($group, $file) = map { 
+    ($group) = map { 
         my $p = $_;
         $p =~ tr/\//_/; 
         $p =~ s/^\./_/g;
         $p;
-    } ($group, $file);
-	
-    DEBUG "[DEBUG] Made rrd filename: $group / $file\n";
+    } ($group);
 
-    return File::Spec->catfile($config->{dbdir}, 
-                               $group,
-                               $file);
+    $file = File::Spec->catfile($config->{dbdir}, 
+				$group,
+				$file);
+	
+    DEBUG "[DEBUG] Made rrd filename: $file\n";
+
+    return $file;
 }
 
 
