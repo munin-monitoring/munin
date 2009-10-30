@@ -17,6 +17,7 @@ my $build = MasterBuilder->new(
         'Storable'                  => 0,
         'Text::Balanced'            => 0,
         'Time::HiRes'               => 0,
+        'Getopt::Long'              => '2.37',
         #'Munin::Common' => 0,
     },
     build_requires => {},
