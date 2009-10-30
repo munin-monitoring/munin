@@ -64,7 +64,7 @@ sub check_perms {
     return 1 unless $config->{paranoia};
 
     unless (-e "$target")    {
-	warn "Failed to check permissions on nonexistant target: '$target'";
+	warn "Failed to check permissions on nonexistent target: '$target'";
 	return;
     }
 

@@ -273,7 +273,7 @@ sub _parse_plugin_line {
                 unless defined $gid || $is_optional;
 
             if (!defined $gid && $is_optional) {
-                carp "DEBUG: Skipping optional nonexistant group '$group'"
+                carp "DEBUG: Skipping optional nonexistent group '$group'"
                     if $self->{DEBUG};
                 next;
             }

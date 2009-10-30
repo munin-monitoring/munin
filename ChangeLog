@@ -156,7 +156,7 @@ munin (1.3.4, r1277:1560, 8/3/2008)
  * Rename munin_set_var -> munin_set for consistency purposes.
  * Fetch services directly after config, to make use of OS caches.
  * Bugfix: .graph was ignored in some cases in munin-html, ending in
-   trying to show nonexistant graphs.
+   trying to show nonexistent graphs.
  * postfix_mailvolume: multiple fixes for problems found in sibling
    exim_mailstats plugin:
   - Use english to communicate errors (not exit statuses)
@@ -474,7 +474,7 @@ munin (1.3.2)
   * Docs: Added man page for munin-node-configure-snmp.
   * Docs: Brushed up the comments in the default munin.conf a bit (Deb#294060).
   * Docs: Fixed erronous cgiurl docs (SF#1159722).
-  * Installation: Create CIGdir if nonexistant.
+  * Installation: Create CIGdir if nonexistent.
 
 munin (1.3.1)
 
