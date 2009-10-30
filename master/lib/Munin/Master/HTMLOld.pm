@@ -64,7 +64,7 @@ my $config;
 my $limits;
 my $timestamp;
 my %comparisontemplates;
-my $templdir;
+my $tmpldir;
 my $htmldir;
 
 sub html_startup {
@@ -92,12 +92,12 @@ sub html_startup {
     logger_open($config->{'logdir'});
     logger_debug() if $DEBUG;
 
-    $templdir = $config->{tmpldir};
+    $tmpldir = $config->{tmpldir};
     $htmldir  = $config->{htmldir};
 
-    %comparisontemplates = instanciate_templates($templdir);
+    %comparisontemplates = instanciate_comparison_templates($tmpldir);
 
-    copy_web_resources($templdir, $htmldir);
+    copy_web_resources($tmpldir, $htmldir);
 
     if (!defined $config->{'cgiurl_graph'}) {
         if (defined $config->{'cgiurl'}) {
@@ -128,14 +128,156 @@ sub html_main {
         $groups = $groups->{"groups"};    # root->groups
     }
 
-    # Draw main index
-    my $template = HTML::Template->new(
-        filename          => "$templdir/munin-overview.tmpl",
+    # use Data::Dumper;
+    # print Dumper $groups;
+    
+    generate_group_templates($groups);
+
+    emit_main_index($groups,$timestamp);
+
+    munin_removelock("$config->{rundir}/munin-html.lock");
+
+    $update_time = sprintf("%.2f", (Time::HiRes::time - $update_time));
+
+    INFO "munin-html finished ($update_time sec)";
+}
+
+
+sub emit_comparison_template {
+    my ($key,$t) = @_;
+
+    ( my $file = $key->{'filename'}) =~ s/index.html$//;
+
+    $file .= "comparison-$t.html";
+
+    $comparisontemplates{$t}->param(
+	NAME        => $key->{'name'},
+	GROUPS      => $key->{'comparegroups'},
+	PATH        => $key->{'path'},
+	CSSPATH     => $key->{'csspath'},
+	PEERS       => $key->{'peers'},
+	PARENT      => $key->{'path'}->[-2]->{'name'},
+	CATEGORIES  => $key->{'comparecategories'},
+	NCATEGORIES => $key->{'ncomparecategories'},
+	TIMESTAMP   => $timestamp,
+    );
+
+    open(my $FILE, '>', $file)
+        or die "Cannot open $file for writing: $!";
+    print $FILE $comparisontemplates{$t}->output;
+    close $FILE;
+}
+
+sub emit_graph_template {
+    my ($key) = @_;
+
+    my $graphtemplate = HTML::Template->new(
+	filename => "$tmpldir/munin-nodeview.tmpl",
+	die_on_bad_params => 0,
+	loop_context_vars => 1,
+	filter            => sub {
+	    my $ref = shift;
+	    $$ref =~ s/URLX/URL$key->{'depth'}/g;
+	});
+
+    $graphtemplate->param(
+	GROUPS      => $key->{'groups'},
+	PATH        => $key->{'path'},
+	CSSPATH     => $key->{'csspath'},
+	PEERS       => $key->{'peers'},
+	PARENT      => $key->{'path'}->[-2]->{'name'},
+	NAME        => $key->{'name'},
+	CATEGORIES  => $key->{'categories'},
+	NCATEGORIES => $key->{'ncategories'},
+	TIMESTAMP   => $timestamp,
+	);
+
+    my $filename = $key->{'filename'};
+    open(my $FILE, '>', $filename)
+	or die "Cannot open $filename for writing: $!";
+    print $FILE $graphtemplate->output;
+    close $FILE;
+}
+
+
+sub emit_group_template {
+    my ($key) = @_;
+
+    my $grouptemplate = HTML::Template->new(
+	filename => "$tmpldir/munin-domainview.tmpl",
+	die_on_bad_params => 0,
+	loop_context_vars => 1,
+	filter            => sub {
+	    my $ref = shift;
+	    $$ref =~ s/URLX/URL$key->{'depth'}/g;
+	});
+
+    $grouptemplate->param(
+	GROUPS    => $key->{'groups'},
+	PATH      => $key->{'path'},
+	CSSPATH   => $key->{'csspath'},
+	PEERS     => $key->{'peers'},
+	PARENT    => $key->{'path'}->[-2]->{'name'} || "Overview",
+	COMPARE   => $key->{'compare'},
+	TIMESTAMP => $timestamp,
+	);
+
+    my $filename = $key->{'filename'};
+    open(my $FILE, '>', $filename)
+	or die "Cannot open $filename for writing: $!";
+    print $FILE $grouptemplate->output;
+    close $FILE or die "Cannot close $filename after writing: $!";
+}
+
+
+sub emit_service_template {
+    my ($srv, $pathnodes, $peers, $csspath, $service) = @_;
+
+    my $servicetemplate = HTML::Template->new(
+        filename          => "$tmpldir/munin-serviceview.tmpl",
         die_on_bad_params => 0,
         loop_context_vars => 1
     );
 
-    generate_group_templates($groups);
+    $servicetemplate->param(
+        SERVICES  => [$srv],
+        PATH      => $pathnodes,
+        PEERS     => $peers,
+        CSS       => $csspath,
+        CSSPATH   => $csspath,
+        CATEGORY  => ucfirst $srv->{'category'},
+        TIMESTAMP => $timestamp
+    );
+
+    my $filename = munin_get_html_filename($service);
+    my $dirname  = $filename;
+    $dirname =~ s/\/[^\/]*$//;
+
+    munin_mkdir_p($dirname, oct(755));
+
+    open(my $FILE, '>', $filename)
+        or die "Cannot open '$filename' for writing: $!";
+    print $FILE $servicetemplate->output;
+    close $FILE or die "Cannot close '$filename' after writing: $!";
+}
+
+
+sub emit_main_index {
+    # Draw main index
+
+    my ($groups, $timestamp) = @_;
+
+    my $template = HTML::Template->new(
+        filename          => "$tmpldir/munin-overview.tmpl",
+        die_on_bad_params => 0,
+        loop_context_vars => 1
+    );
+
+    # FIX: this sometimes bugs:
+
+    # HTML::Template::param() : attempt to set parameter 'groups' with
+    # a scalar - parameter is not a TMPL_VAR! at
+    # /usr/local/share/perl/5.10.0/Munin/Master/HTMLOld.pm line 140
 
     $template->param(
         GROUPS    => $groups,
@@ -147,57 +289,51 @@ sub html_main {
         or die "Cannot open $filename for writing: $!";
     print $FILE $template->output;
     close $FILE;
-
-    munin_removelock("$config->{rundir}/munin-html.lock");
-
-    $update_time = sprintf("%.2f", (Time::HiRes::time - $update_time));
-
-    INFO "munin-html finished ($update_time sec)";
 }
 
 
 sub copy_web_resources {
-    my ($templdir, $htmldir) = @_;
+    my ($tmpldir, $htmldir) = @_;
 
     #Make sure the logo and the stylesheet file is in the html dir
     my @files = ("style.css", "logo.png", "definitions.html");
 
     foreach my $file ((@files)) {
         if (   (!-e "$htmldir/$file")
-            or (-e "$templdir/$file")
-            and ((stat("$templdir/$file"))[9] > (stat("$htmldir/$file"))[9])) {
-            unless (system("cp", "$templdir/$file", "$htmldir/")) {
+            or (-e "$tmpldir/$file")
+            and ((stat("$tmpldir/$file"))[9] > (stat("$htmldir/$file"))[9])) {
+            unless (system("cp", "$tmpldir/$file", "$htmldir/")) {
                 INFO "copied $file into " . $htmldir;
             }
             else {
-                ERROR "[ERROR] Could not copy $file from $templdir to $htmldir";
-                die "[ERROR] Could not copy $file from $templdir to $htmldir\n";
+                ERROR "[ERROR] Could not copy $file from $tmpldir to $htmldir";
+                die "[ERROR] Could not copy $file from $tmpldir to $htmldir\n";
             }
         }
     }
 }
 
-sub instanciate_templates {
-    my ($templdir) = @_;
+sub instanciate_comparison_templates {
+    my ($tmpldir) = @_;
 
     return (
         day => HTML::Template->new(
-            filename          => "$templdir/munin-comparison-day.tmpl",
+            filename          => "$tmpldir/munin-comparison-day.tmpl",
             die_on_bad_params => 0,
             loop_context_vars => 1
         ),
         week => HTML::Template->new(
-            filename          => "$templdir/munin-comparison-week.tmpl",
+            filename          => "$tmpldir/munin-comparison-week.tmpl",
             die_on_bad_params => 0,
             loop_context_vars => 1
         ),
         month => HTML::Template->new(
-            filename          => "$templdir/munin-comparison-month.tmpl",
+            filename          => "$tmpldir/munin-comparison-month.tmpl",
             die_on_bad_params => 0,
             loop_context_vars => 1
         ),
         year => HTML::Template->new(
-            filename          => "$templdir/munin-comparison-year.tmpl",
+            filename          => "$tmpldir/munin-comparison-year.tmpl",
             die_on_bad_params => 0,
             loop_context_vars => 1
         ));
@@ -490,87 +626,23 @@ sub generate_group_templates {
     foreach my $key (@$arr) {
         if (defined $key and ref($key) eq "HASH") {
             $key->{'peers'} = get_peer_nodes($key->{'hashnode'});
-            delete $key->{
-                'hashnode'};    # This was only kept there for getting the peers
+            delete $key->{'hashnode'};    # This was only kept there for getting the peers
+
             if (defined $key->{'ngroups'} and $key->{'ngroups'}) {
-                $key->{'groups'} = $key->{'groups'};
+                # WTF: $key->{'groups'} = $key->{'groups'};
                 generate_group_templates($key->{'groups'});
 
-                my $grouptemplate = HTML::Template->new(
-                    filename => munin_get($config, "tmpldir", "")
-                        . "/munin-domainview.tmpl",
-                    die_on_bad_params => 0,
-                    loop_context_vars => 1,
-                    filter            => sub {
-                        my $ref = shift;
-                        $$ref =~ s/URLX/URL$key->{'depth'}/g;
-                    });
-
-                $grouptemplate->param(
-                    GROUPS    => $key->{'groups'},
-                    PATH      => $key->{'path'},
-                    CSSPATH   => $key->{'csspath'},
-                    PEERS     => $key->{'peers'},
-                    PARENT    => $key->{'path'}->[-2]->{'name'} || "Overview",
-                    COMPARE   => $key->{'compare'},
-                    TIMESTAMP => $timestamp,
-                );
-                my $filename = $key->{'filename'};
-                open(my $FILE, '>', $filename)
-                    or die "Cannot open $filename for writing: $!";
-                print $FILE $grouptemplate->output;
-                close $FILE;
+		emit_group_template($key);
 
                 if ($key->{'compare'}) {   # Create comparison templates as well
                     foreach my $t (@times) {
-                        (my $file = $key->{'filename'}) =~ s/index.html$//;
-                        $file .= "comparison-$t.html";
-                        $comparisontemplates{$t}->param(
-                            NAME        => $key->{'name'},
-                            GROUPS      => $key->{'comparegroups'},
-                            PATH        => $key->{'path'},
-                            CSSPATH     => $key->{'csspath'},
-                            PEERS       => $key->{'peers'},
-                            PARENT      => $key->{'path'}->[-2]->{'name'},
-                            CATEGORIES  => $key->{'comparecategories'},
-                            NCATEGORIES => $key->{'ncomparecategories'},
-                            TIMESTAMP   => $timestamp,
-                        );
-                        open(my $FILE, '>', $file)
-                            or die "Cannot open $file for writing: $!";
-                        print $FILE $comparisontemplates{$t}->output;
-                        close $FILE;
+			emit_comparison_template($key,$t);
                     }
                 }
             }
 
             if (defined $key->{'ngraphs'} and $key->{'ngraphs'}) {
-                my $graphtemplate = HTML::Template->new(
-                    filename => munin_get($config, "tmpldir", "")
-                        . "/munin-nodeview.tmpl",
-                    die_on_bad_params => 0,
-                    loop_context_vars => 1,
-                    filter            => sub {
-                        my $ref = shift;
-                        $$ref =~ s/URLX/URL$key->{'depth'}/g;
-                    });
-
-                $graphtemplate->param(
-                    GROUPS      => $key->{'groups'},
-                    PATH        => $key->{'path'},
-                    CSSPATH     => $key->{'csspath'},
-                    PEERS       => $key->{'peers'},
-                    PARENT      => $key->{'path'}->[-2]->{'name'},
-                    NAME        => $key->{'name'},
-                    CATEGORIES  => $key->{'categories'},
-                    NCATEGORIES => $key->{'ncategories'},
-                    TIMESTAMP   => $timestamp,
-                );
-                my $filename = $key->{'filename'};
-                open(my $FILE, '>', $filename)
-                    or die "Cannot open $filename for writing: $!";
-                print $FILE $graphtemplate->output;
-                close $FILE;
+		emit_graph_template($key);
             }
         }
     }
@@ -746,28 +818,7 @@ sub generate_service_templates {
         $srv{'state_unknown'}  = 1 if $state eq "unknown";
     }
 
-    my $servicetemplate = HTML::Template->new(
-        filename          => "$templdir/munin-serviceview.tmpl",
-        die_on_bad_params => 0,
-        loop_context_vars => 1
-    );
-    $servicetemplate->param(
-        SERVICES  => [\%srv],
-        PATH      => $pathnodes,
-        PEERS     => $peers,
-        CSS       => $csspath,
-        CSSPATH   => $csspath,
-        CATEGORY  => ucfirst $srv{'category'},
-        TIMESTAMP => $timestamp
-    );
-    my $filename = munin_get_html_filename($service);
-    my $dirname  = $filename;
-    $dirname =~ s/\/[^\/]*$//;
-    munin_mkdir_p($dirname, oct(755));
-    open(my $FILE, '>', $filename)
-        or die "Cannot open '$filename' for writing: $!";
-    print $FILE $servicetemplate->output;
-    close $FILE;
+    emit_service_template(\%srv, $pathnodes, $peers, $csspath, $service);
 
     return \%srv;
 }
