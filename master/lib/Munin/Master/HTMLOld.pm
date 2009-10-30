@@ -130,7 +130,7 @@ sub html_main {
 
     # Draw main index
     my $template = HTML::Template->new(
-        filename          => "$tmpldir/munin-overview.tmpl",
+        filename          => "$templdir/munin-overview.tmpl",
         die_on_bad_params => 0,
         loop_context_vars => 1
     );
@@ -157,47 +157,47 @@ sub html_main {
 
 
 sub copy_web_resources {
-    my ($tmpldir, $htmldir) = @_;
+    my ($templdir, $htmldir) = @_;
 
     #Make sure the logo and the stylesheet file is in the html dir
     my @files = ("style.css", "logo.png", "definitions.html");
 
     foreach my $file ((@files)) {
         if (   (!-e "$htmldir/$file")
-            or (-e "$tmpldir/$file")
-            and ((stat("$tmpldir/$file"))[9] > (stat("$htmldir/$file"))[9])) {
-            unless (system("cp", "$tmpldir/$file", "$htmldir/")) {
+            or (-e "$templdir/$file")
+            and ((stat("$templdir/$file"))[9] > (stat("$htmldir/$file"))[9])) {
+            unless (system("cp", "$templdir/$file", "$htmldir/")) {
                 INFO "copied $file into " . $htmldir;
             }
             else {
-                ERROR "[ERROR] Could not copy $file from $tmpldir to $htmldir";
-                die "[ERROR] Could not copy $file from $tmpldir to $htmldir\n";
+                ERROR "[ERROR] Could not copy $file from $templdir to $htmldir";
+                die "[ERROR] Could not copy $file from $templdir to $htmldir\n";
             }
         }
     }
 }
 
 sub instanciate_templates {
-    my ($tmpldir) = @_;
+    my ($templdir) = @_;
 
     return (
         day => HTML::Template->new(
-            filename          => "$tmpldir/munin-comparison-day.tmpl",
+            filename          => "$templdir/munin-comparison-day.tmpl",
             die_on_bad_params => 0,
             loop_context_vars => 1
         ),
         week => HTML::Template->new(
-            filename          => "$tmpldir/munin-comparison-week.tmpl",
+            filename          => "$templdir/munin-comparison-week.tmpl",
             die_on_bad_params => 0,
             loop_context_vars => 1
         ),
         month => HTML::Template->new(
-            filename          => "$tmpldir/munin-comparison-month.tmpl",
+            filename          => "$templdir/munin-comparison-month.tmpl",
             die_on_bad_params => 0,
             loop_context_vars => 1
         ),
         year => HTML::Template->new(
-            filename          => "$tmpldir/munin-comparison-year.tmpl",
+            filename          => "$templdir/munin-comparison-year.tmpl",
             die_on_bad_params => 0,
             loop_context_vars => 1
         ));
@@ -747,7 +747,7 @@ sub generate_service_templates {
     }
 
     my $servicetemplate = HTML::Template->new(
-        filename          => "$tmpldir/munin-serviceview.tmpl",
+        filename          => "$templdir/munin-serviceview.tmpl",
         die_on_bad_params => 0,
         loop_context_vars => 1
     );
