@@ -1,7 +1,7 @@
 #!@@PERL@@
 # -*- cperl -*-
 
-=comment
+=begin comment
 
 Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal, Kjell Magne
 Øierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 $Id$
 
+=end comment
 =cut
 
 use warnings;
