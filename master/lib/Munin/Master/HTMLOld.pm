@@ -2,7 +2,7 @@ package Munin::Master::HTMLOld;
 
 # -*- perl -*-
 
-=comment
+=begin comment
 
 This is Munin::Master::HTMLOld, a minimal package shell to make
 munin-html modular (so it can loaded persistently in
@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 $Id$
 
+=end comment
 =cut
 
 use warnings;
@@ -67,11 +68,13 @@ my %comparisontemplates;
 my $tmpldir;
 my $htmldir;
 
+my $do_dump = 0;
+
 sub html_startup {
     my ($ARGV) = @_;
 
-    &print_usage_and_exit
-        unless GetOptionsFromArray(
+    print_usage_and_exit()
+	unless GetOptionsFromArray(
                 $ARGV,
                 "host=s"    => [],
                 "service=s" => [],
@@ -79,7 +82,8 @@ sub html_startup {
                 "debug!"    => \$DEBUG,
                 "stdout!"   => \$stdout,
                 "help"      => \$do_usage,
-                "version!"  => \$do_version
+                "version!"  => \$do_version,
+	        "dump!"     => \$do_dump,
         );
 
     print_version_and_exit() if $do_version;
@@ -107,6 +111,7 @@ sub html_startup {
         else {
             $config->{'cgiurl_graph'} = "/cgi-bin/munin-cgi-graph";
         }
+	INFO "[INFO] Determined that cgiurl_graph is ".$config->{'cgiurl_graph'};
     }
 }
 
@@ -115,7 +120,7 @@ sub html_main {
 
     my $update_time = Time::HiRes::time;
 
-    INFO "Starting munin-html, checking lock";
+    INFO "[INFO] Starting munin-html, checking lock";
 
     munin_runlock("$config->{rundir}/munin-html.lock");
 
@@ -128,9 +133,12 @@ sub html_main {
         $groups = $groups->{"groups"};    # root->groups
     }
 
-    # use Data::Dumper;
-    # print Dumper $groups;
-    
+    if ($do_dump) {
+	use Data::Dumper;
+	print Dumper $groups;
+	exit 0;
+    }
+
     generate_group_templates($groups);
 
     emit_main_index($groups,$timestamp);
@@ -139,7 +147,7 @@ sub html_main {
 
     $update_time = sprintf("%.2f", (Time::HiRes::time - $update_time));
 
-    INFO "munin-html finished ($update_time sec)";
+    INFO "[INFO] munin-html finished ($update_time sec)";
 }
 
 
@@ -149,6 +157,8 @@ sub emit_comparison_template {
     ( my $file = $key->{'filename'}) =~ s/index.html$//;
 
     $file .= "comparison-$t.html";
+
+    DEBUG "[DEBUG] Creating comparison page $file";
 
     $comparisontemplates{$t}->param(
 	NAME        => $key->{'name'},
@@ -168,6 +178,7 @@ sub emit_comparison_template {
     close $FILE;
 }
 
+
 sub emit_graph_template {
     my ($key) = @_;
 
@@ -179,6 +190,8 @@ sub emit_graph_template {
 	    my $ref = shift;
 	    $$ref =~ s/URLX/URL$key->{'depth'}/g;
 	});
+
+    DEBUG "[DEBUG] Creating graph page ".$key->{filename};
 
     $graphtemplate->param(
 	GROUPS      => $key->{'groups'},
@@ -211,6 +224,8 @@ sub emit_group_template {
 	    my $ref = shift;
 	    $$ref =~ s/URLX/URL$key->{'depth'}/g;
 	});
+
+    DEBUG "[DEBUG] Creating group page ".$key->{filename};
 
     $grouptemplate->param(
 	GROUPS    => $key->{'groups'},
@@ -251,6 +266,9 @@ sub emit_service_template {
 
     my $filename = munin_get_html_filename($service);
     my $dirname  = $filename;
+
+    DEBUG "[DEBUG] Creating service page $filename";
+
     $dirname =~ s/\/[^\/]*$//;
 
     munin_mkdir_p($dirname, oct(755));
@@ -285,6 +303,9 @@ sub emit_main_index {
     );
 
     my $filename = munin_get_html_filename($config);
+
+    DEBUG "[DEBUG] Creating main index $filename";
+
     open(my $FILE, '>', $filename)
         or die "Cannot open $filename for writing: $!";
     print $FILE $template->output;
@@ -303,7 +324,7 @@ sub copy_web_resources {
             or (-e "$tmpldir/$file")
             and ((stat("$tmpldir/$file"))[9] > (stat("$htmldir/$file"))[9])) {
             unless (system("cp", "$tmpldir/$file", "$htmldir/")) {
-                INFO "copied $file into " . $htmldir;
+                INFO "[INFO] copied $file into " . $htmldir;
             }
             else {
                 ERROR "[ERROR] Could not copy $file from $tmpldir to $htmldir";
@@ -413,13 +434,13 @@ sub get_peer_nodes {
 sub get_group_tree {
     my $hash    = shift;
     my $base    = shift || "";
-    my $graphs  = [];
-    my $groups  = [];
-    my $cattrav = {};
-    my $cats    = [];
-    my $path    = [];
+
+    my $graphs  = [];     # Pushy array of graphs, [ { name => 'cpu'}, ...]
+    my $groups  = [];     # Slices of the $config hash
+    my $cattrav = {};     # Categories, array of strings
+    my $cats    = [];     # Array of graph information ('categories')
+    my $path    = [];     # (temporary) array of paths relevant to . (here)
     my $rpath   = undef;
-    my $ret     = {};
     my $visible = 0;
     my $csspath;
 
@@ -427,29 +448,44 @@ sub get_group_tree {
 
     foreach my $child (@$children) {
         next unless defined $child and ref($child) eq "HASH" and keys %$child;
+
         if (defined $child->{"graph_title"}
             and munin_get_bool($child, "graph", 1)) {
+
             my $childname = munin_get_node_name($child);
             my $childnode = generate_service_templates($child);
+
             $visible = 1;
             push @$graphs, {"name" => $childname};
             $childnode->{'name'} = $child->{"graph_title"};
             $childnode->{'url'}  = $base . $childname . ".html";
-            for (
-                my $shrinkpath = $childnode->{'url'}, my $counter = 0;
-                $shrinkpath;
-                $shrinkpath =~ s/^[^\/]+\/?//, $counter++
-                ) {
+
+            for (my $shrinkpath = $childnode->{'url'}, my $counter = 0;
+		 $shrinkpath;
+		 $shrinkpath =~ s/^[^\/]+\/?//, $counter++)
+	    {
                 $childnode->{'url' . $counter} = $shrinkpath;
             }
+
             push @{$cattrav->{lc munin_get($child, "graph_category", "other")}},
                 $childnode;
-        }
+
+	    push( @$groups,
+		  grep {defined $_}
+		       get_group_tree($child,
+				      $base.munin_get_node_name($child)."/"));
+
+	    if (scalar @$groups) {
+		$visible = 1;
+	    }
+	}
         elsif (ref($child) eq "HASH" and !defined $child->{"graph_title"}) {
-            push @$groups,
-                grep {defined $_}
-                get_group_tree($child,
-                $base . munin_get_node_name($child) . "/");
+
+            push( @$groups,
+		  grep {defined $_}
+		       get_group_tree($child,
+				      $base.munin_get_node_name($child) . "/"));
+
             if (scalar @$groups) {
                 $visible = 1;
             }
@@ -549,7 +585,7 @@ sub get_group_tree {
     }
 
 
-    $ret = {
+    my $ret = {
         "name"     => munin_get_node_name($hash),
         "hashnode" => $hash,
         "url"      => $base . "index.html",
@@ -570,6 +606,7 @@ sub get_group_tree {
         "comparecategories"  => $comparecats,
         "ncomparecategories" => scalar(@$comparecats),
     };
+
     if ($ret->{'url'} ne "/index.html") {
         for (
             my $shrinkpath = $ret->{'url'}, my $counter = 0;
@@ -586,6 +623,7 @@ sub get_group_tree {
 
 sub munin_get_sorted_children {
     my $hash        = shift || return;
+
     my $children    = munin_get_children($hash);
     my $group_order = $hash->{'group_order'} || "";
     my $ret         = [];
@@ -626,7 +664,9 @@ sub generate_group_templates {
     foreach my $key (@$arr) {
         if (defined $key and ref($key) eq "HASH") {
             $key->{'peers'} = get_peer_nodes($key->{'hashnode'});
-            delete $key->{'hashnode'};    # This was only kept there for getting the peers
+
+	    # This was only kept there for getting the peers
+            delete $key->{'hashnode'}; 
 
             if (defined $key->{'ngroups'} and $key->{'ngroups'}) {
                 # WTF: $key->{'groups'} = $key->{'groups'};
@@ -634,7 +674,7 @@ sub generate_group_templates {
 
 		emit_group_template($key);
 
-                if ($key->{'compare'}) {   # Create comparison templates as well
+                if ($key->{'compare'}) { # Create comparison templates as well 
                     foreach my $t (@times) {
 			emit_comparison_template($key,$t);
                     }

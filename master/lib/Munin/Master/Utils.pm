@@ -129,7 +129,7 @@ sub munin_nscasend {
     else
     {
 	print $nsca "$name\t$service\t$level\t$comment\n";
-	DEBUG "To $nsca: $name;$service;$level;$comment\n";
+	DEBUG "[DEBUG] To $nsca: $name;$service;$level;$comment\n";
     }
 }
 
@@ -138,7 +138,7 @@ sub munin_createlock {
     # Create lock file, fail and die if not possible.
     my ($lockname) = @_;
     if (sysopen (LOCK,$lockname,O_WRONLY | O_CREAT | O_EXCL)) {
-	DEBUG "Creating lock : $lockname succeded\n";
+	DEBUG "[DEBUG] Creating lock : $lockname succeded\n";
 	print LOCK $$; # we want the pid inside for later use
 	close LOCK;
 	return 1;
@@ -153,14 +153,14 @@ sub munin_removelock {
     my ($lockname) = @_;
 
     unlink $lockname or
-      LOGCROAK("Error deleting lock $lockname: $!\n");
+      LOGCROAK("[FATAL ERROR] Error deleting lock $lockname: $!\n");
 }
 
 
 sub munin_runlock {
     my ($lockname) = @_;
-    unless (&munin_getlock($lockname)) {
-	LOGCROAK("Lock already exists: $lockname. Dying.\n");
+    unless (munin_getlock($lockname)) {
+	LOGCROAK("[FATAL ERROR] Lock already exists: $lockname. Dying.\n");
     }
     return 1;
 }
@@ -187,9 +187,9 @@ sub munin_getlock {
 	        return 0;
 	    }
 	}
-	&munin_removelock($lockname);
+	munin_removelock($lockname);
     }
-    &munin_createlock($lockname);
+    munin_createlock($lockname);
     return 1;
 }
 
@@ -218,7 +218,7 @@ sub munin_overwrite {
     for my $key (keys %$overwrite) {
         next if $key =~ /^#%#/;
 	if (ref $overwrite->{$key}) {
-	    &munin_overwrite($configfile->{$key},$overwrite->{$key});
+	    munin_overwrite($configfile->{$key},$overwrite->{$key});
 	} else {
 	    $configfile->{$key} = $overwrite->{$key};
 	}
@@ -240,7 +240,7 @@ sub munin_readconfig {
     if (open (my $CFG, '<', $conf)) {
 	@contents = <$CFG>;
 	close ($CFG);
-        $config = &munin_parse_config (\@contents);
+        $config = munin_parse_config (\@contents);
     }
 
     # Some important defaults before we return...
@@ -288,7 +288,7 @@ sub munin_parse_config
 
 	if ($line =~ /^\.(\S+)\s+(.+)\s*$/) {
 	    my ($var, $val) = ($1, $2);
-	    $hash = &munin_set_var_path ($hash, $var, $val);
+	    $hash = munin_set_var_path ($hash, $var, $val);
 	} elsif ($line =~ /^\s*\[([^\]]*)]\s*$/) {
 	    $prefix = $1;
 	    if ($prefix =~ /^([^:]+);([^:;]+)$/) {
@@ -306,7 +306,7 @@ sub munin_parse_config
 	    }
 	} elsif ($line =~ /^\s*(\S+)\s+(.+)\s*$/) {
 	    my ($var, $val) = ($1, $2);
-	    $hash = &munin_set_var_path ($hash, "$prefix$var", $val);
+	    $hash = munin_set_var_path ($hash, "$prefix$var", $val);
 	} else {
 	    warn "Malformed configuration line \"$line\".";
 	}
@@ -701,7 +701,7 @@ sub munin_writeconfig {
     # Write version
     print $fh "version $VERSION\n";
     # Write datafile
-    &munin_writeconfig_loop ($data, $fh);
+    munin_writeconfig_loop ($data, $fh);
 
     if (defined $fh)
     {
@@ -713,18 +713,22 @@ sub munin_writeconfig {
 
 sub munin_config {
     my $conffile = shift;
-    $config = shift;
-    $conffile ||= $configfile;
-    $config = &munin_readconfig ($conffile);
-    my $data = &munin_readconfig("$config->{dbdir}/datafile", 1, 1);
+    my $config   = shift;
 
-    $data = &munin_overwrite($data,$config);
+    $conffile ||= $configfile;
+    $config     = munin_readconfig ($conffile);
+    my $data    = munin_readconfig("$config->{dbdir}/datafile", 1, 1);
+
+    $data = munin_overwrite($data,$config);
     return ($data);
 }
 
 
 sub munin_get_html_filename {
+    # Actually only used in M::M::HTMLOld
+
     my $hash    = shift;
+
     my $loc     = munin_get_node_loc ($hash);
     my $ret     = munin_get ($hash, 'htmldir');
     my $plugin  = "index";
@@ -755,6 +759,7 @@ sub munin_get_picture_filename {
     my $hash    = shift;
     my $scale   = shift;
     my $sum     = shift;
+
     my $loc     = munin_get_picture_loc ($hash);
     my $ret     = munin_get ($hash, 'htmldir');
 
@@ -861,7 +866,7 @@ sub munin_get_bool
     my $field  = shift;
     my $default = shift;
 
-    my $ans = &munin_get ($hash, $field, $default);
+    my $ans = munin_get ($hash, $field, $default);
     return if not defined $ans;
 
     if ($ans =~ /^yes$/i or
@@ -999,7 +1004,7 @@ sub munin_node_status
 
     foreach my $service (keys %{$snode})
     {
-	my $fres  = &munin_service_status ($config, $limits, $domain, $node, $service, $check_draw);
+	my $fres  = munin_service_status ($config, $limits, $domain, $node, $service, $check_draw);
 	if (defined $fres)
 	{
 	    if ($fres eq "critical")
