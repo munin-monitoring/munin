@@ -1,24 +1,52 @@
+html {
+}
+
+
 body, h1, h2, h3, p, span, div { 
-  font-family: verdana, helvetica, arial, sans-serif;
-  font-size: small;
+  font-family: "trebuchet ms", verdana, helvetica, arial, sans-serif;
+  color: #333333;
  }
+
+h1{
+  margin: 0.4em;
+}
 
 body { 
-  background-color: #ffffff;
-  color: #000000;
-  
+  background-color: #fdfdfd;
+  width: 100%;
+  margin: 0em auto 1em auto;
+  padding: 0.0em 0.1em 1em 0.1em;
+
  }
 
+h2 {
+  margin: 0em;
+  padding: 0px;
+  font-size: 110%;
+  font-weight: bold;
+}
+
+ul{
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 h3.nobottom {
-    margin-top: 20px;
+    margin-top: 0px;
     margin-bottom: 0px;
+    font-size: 120%;
+    letter-spacing: 0.05em;
+    margin-left: 5px;
+    padding-left: 10px;
 }
 
 div.logo { 
-  background-image: url(logo.png);
+  background-image: url(logo-h.png);
   background-repeat: no-repeat;  
-  width: 41px;
-  height: 59px;
+  width: 115px;
+  height: 30px;
+  padding-right: 10px;
 } 
 
 div.lighttext { 
@@ -38,7 +66,7 @@ div.lighttext {
  }
 
 .service { 
-  font-size: x-small;
+  font-size: small;
   font-weight: bold;
  }
 
@@ -48,7 +76,7 @@ div.lighttext {
 
 .small { 
   font-size: smaller;
- }
+}
 
 .noborder { 
   border-width: 0px;
@@ -56,75 +84,93 @@ div.lighttext {
  }
 
 table.largeinvisiblebox {
-        border-width: thin;
-        border-top: 0px;
-        border-bottom: 0px;
-        border-left: 0px;
-        border-right: 0px;
-        border-color: #999;
-        border-style: solid;
-        padding: 0px 0px 0px 0px;
-	margin: 0px 0px 0px 0px;
-	white-space: nowrap;
-	max-width: 90%;
-        width: 80%;
+  border-width: thin;
+  border-top: 0px;
+  border-bottom: 0px;
+  border-left: 0px;
+  border-right: 0px;
+  border-color: #999;
+  border-style: solid;
+  padding: 0px 0px 0px 0px;
+  margin: 0px auto 0px auto;
+  white-space: nowrap;
+  max-width: 97%;
+  width: 90%;
+  min-width: 50%;
+
+}
+
+#header-table{
+  width: 90%;
+  margin: 0 auto 0em auto;
+  background-color: #fbfbfb;
+  border-bottom: 1px solid #d1d1d1;
+  border-left: 1px solid #d1d1d1;
+  border-right: 1px solid #d1d1d1;
+  overflow: auto;
+
+}
+
+#header-table td{
+  padding-bottom: 2px;
+}
+
+#header-table tr{
+  margin: 1em auto 0em auto;
+  padding: 2px;
+}
+
+#header-table td.overview{
+  margin: 0.5em auto 0.5em auto;
+  text-align: left;
+}
+
+#header-table td.overview h1{
+  margin-top: 0.15em;
+  margin-bottom: 0.15em;
+  margin-left: 0.1em;
+  padding-top: 1px;
+}
+
+#header-table td.logo{
+  width: 115px;
+  margin: 0.2em auto 0.5em auto;
 }
 
 table.invisiblebox {
-        border-width: thin;
-        border-top: 0px;
-        border-bottom: 0px;
-        border-left: 0px;
-        border-right: 0px;
-        border-color: #999;
-        border-style: solid;
-        padding: 0px 0px 0px 0px;
-	margin: 0px 0px 0px 0px;
-	white-space: nowrap;
-	width: 1%;
+  border: 0px solid #999999;
+  width: 90%;
+  padding: 0px 0px 0px 0px;
+  margin-top: 10px;
+  margin-left: auto;
+  margin-bottom: 0px;
+  margin-right: auto;
+  white-space: nowrap;
 }
 
+table.invisiblebox tr{
+  margin-bottom: 15px;
+}
+
+
 td.graphbox {
-        border-width: thin;
-        border-top: 1px;
-        border-bottom: 1px;
-        border-left: 1px;
-        border-right: 1px;
-        border-color: #999;
-        border-style: solid;
-        padding: 4px 4px 4px 4px;
-	margin: 0px 0px 0px 0px;
-	white-space: nowrap;
-	width: 100%;
+  border-left: 1px dashed #aaaaaa;
+  padding: 5px;
+  white-space: nowrap;
 }
 
 .box {
-        border-width: thin;
-        border-top: 1px;
-        border-bottom: 1px;
-        border-left: 1px;
-        border-right: 1px;
-        border-color: #999;
-        border-style: solid;
-        padding: 4px 4px 4px 4px;
-        margin: 2px 2px 2px 2px;
-        text-align: left;
-        width: 80%;
-        max-width: 90%
+  padding: 4px;
+  margin: 10px auto 0px auto;
+  text-align: left;
 }
 
 td.legendbox {
-        border-width: thin;
-        border-top: 1px;
-        border-bottom: 1px;
-        border-left: 1px;
-        border-right: 1px;
-        border-color: #999;
-        border-style: solid;
-        padding: 8px 4px 2px 2px;
-        margin: 2px 2px 2px 2px;
-        text-align: left;
-	width: 100%;
+  border: 1px solid #999999;
+  padding: 8px 4px 2px 2px;
+  margin: 2px;
+  text-align: left;
+  width: 90%;
 }
 
 td.wrap {
@@ -133,17 +179,26 @@ td.wrap {
 }
 
 td.linkbox {
-        border-width: thin;
-        border-top: 1px;
-        border-bottom: 1px;
-        border-left: 1px;
-        border-right: 1px;
-        border-color: #999;
-        border-style: solid;
-        padding: 4px 4px 4px 4px;
-        margin: 2px 2px 2px 2px;
-	width: 100%;
-	white-space: normal;
+  padding: 4px 4px 4px 4px;
+  margin: 10px auto 0px auto;
+  max-width: 97%;
+  width: 90%;
+  min-width: 50%;
+  white-space: normal;
+}
+
+#generated-table {
+  width: 90%;
+  margin: 0.6em auto -0.5em auto;
+  padding-right: 0.5em;
+  background-color: #fbfbfb;
+  border: 1px solid #d1d1d1;
+}
+
+#generated-table tbody td {
+  text-align: right;
+  margin: 0px;
+  padding: 0px;
 }
 
 .warntext {
@@ -188,6 +243,17 @@ a.meek:hover {
   font-size: small;
  }
 
+li li {
+  margin-left: -1.2em;
+}
+
+ul li {
+  margin-left: -1.2em;
+}
+
+a img {
+  border-width: 0px;
+}
 
 a.warn:link    { color: #cc9900; }
 a.warn:visited { color: #cc9900; }
