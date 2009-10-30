@@ -35,11 +35,7 @@ munin in a sandbox.
 
 =item B<install>
 
-Before trying to use the install script from a source tree you need to
-
- make build
-
-To make a clean (re)build of the sandbox
+To make a clean rebuild of the sandbox
 
  ./dev_scripts/install 1
 
