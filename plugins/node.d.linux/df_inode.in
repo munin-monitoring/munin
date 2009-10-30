@@ -37,7 +37,7 @@ use strict;
 use Munin::Plugin;
 
 # For these filesystem types use the mount point, the device is useless
-my %usemntpt = ( tmpfs => 1 );
+my %usemntpt = ( tmpfs => 1, none => 1 );
 
 my $exclude=$ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs';
 my $dfopts = "-P -l -i ".join(' -x ',('',split('\s+',$exclude)));
