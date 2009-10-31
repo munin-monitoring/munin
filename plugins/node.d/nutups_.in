@@ -29,7 +29,7 @@ if [ "$1" = "suggest" ]; then
 		done
 fi
 
-function voltages() {
+voltages() {
 	if [ "$1" = "config" ]; then
 
 		echo "graph_title $UPS voltages"
@@ -51,7 +51,7 @@ function voltages() {
 	fi
 }
 
-function charge() {
+charge() {
 	if [ "$1" = "config" ]; then
 
 		echo "graph_title $UPS charge"
@@ -76,7 +76,7 @@ function charge() {
 	fi
 }
 
-function frequency() {
+frequency() {
 	if [ "$1" = "config" ]; then
 
 		echo "graph_title $UPS input AC frequency"
@@ -91,7 +91,7 @@ function frequency() {
 	fi
 }
 
-function current() {
+current() {
 	if [ "$1" = "config" ]; then
 
 		echo "graph_title $UPS output current"
