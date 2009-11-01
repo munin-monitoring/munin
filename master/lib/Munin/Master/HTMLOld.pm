@@ -1,8 +1,6 @@
 package Munin::Master::HTMLOld;
-
-# -*- perl -*-
-
 =begin comment
+-*- perl -*-
 
 This is Munin::Master::HTMLOld, a minimal package shell to make
 munin-html modular (so it can loaded persistently in
@@ -75,15 +73,15 @@ sub html_startup {
 
     print_usage_and_exit()
 	unless GetOptionsFromArray(
-                $ARGV,
-                "host=s"    => [],
-                "service=s" => [],
-                "config=s"  => \$conffile,
-                "debug!"    => \$DEBUG,
-                "stdout!"   => \$stdout,
-                "help"      => \$do_usage,
-                "version!"  => \$do_version,
-	        "dump!"     => \$do_dump,
+	    $ARGV,
+	    "host=s"    => [],
+	    "service=s" => [],
+	    "config=s"  => \$conffile,
+	    "debug!"    => \$DEBUG,
+	    "stdout!"   => \$stdout,
+	    "help"      => \$do_usage,
+	    "version!"  => \$do_version,
+	    "dump!"     => \$do_dump,
         );
 
     print_version_and_exit() if $do_version;
@@ -120,9 +118,11 @@ sub html_main {
 
     my $update_time = Time::HiRes::time;
 
-    INFO "[INFO] Starting munin-html, checking lock";
+    my $lockfile = "$config->{rundir}/munin-html.lock";
 
-    munin_runlock("$config->{rundir}/munin-html.lock");
+    INFO "[INFO] Starting munin-html, getting lock $lockfile";
+
+    munin_runlock($lockfile);
 
     # For timestamping graphs
     my $timestamp = strftime("%Y-%m-%d T %T", localtime);
@@ -143,7 +143,9 @@ sub html_main {
 
     emit_main_index($groups,$timestamp);
 
-    munin_removelock("$config->{rundir}/munin-html.lock");
+    INFO "[INFO] Releasing lock file $lockfile";
+
+    munin_removelock("$lockfile");
 
     $update_time = sprintf("%.2f", (Time::HiRes::time - $update_time));
 
@@ -258,19 +260,18 @@ sub emit_service_template {
         SERVICES  => [$srv],
         PATH      => $pathnodes,
         PEERS     => $peers,
-        CSS       => $csspath,
         CSSPATH   => $csspath,
         CATEGORY  => ucfirst $srv->{'category'},
         TIMESTAMP => $timestamp
     );
 
+    # No stored filename for this kind of html node.
     my $filename = munin_get_html_filename($service);
+
     my $dirname  = $filename;
-
-    DEBUG "[DEBUG] Creating service page $filename";
-
     $dirname =~ s/\/[^\/]*$//;
 
+    DEBUG "[DEBUG] Creating service page $filename";
     munin_mkdir_p($dirname, oct(755));
 
     open(my $FILE, '>', $filename)
@@ -317,7 +318,7 @@ sub copy_web_resources {
     my ($tmpldir, $htmldir) = @_;
 
     #Make sure the logo and the stylesheet file is in the html dir
-    my @files = ("style.css", "logo.png", "definitions.html");
+    my @files = ("style.css", "logo.png", "logo-h.png", "definitions.html");
 
     foreach my $file ((@files)) {
         if (   (!-e "$htmldir/$file")
@@ -455,7 +456,6 @@ sub get_group_tree {
             my $childname = munin_get_node_name($child);
             my $childnode = generate_service_templates($child);
 
-            $visible = 1;
             push @$graphs, {"name" => $childname};
             $childnode->{'name'} = $child->{"graph_title"};
             $childnode->{'url'}  = $base . $childname . ".html";
@@ -470,14 +470,13 @@ sub get_group_tree {
             push @{$cattrav->{lc munin_get($child, "graph_category", "other")}},
                 $childnode;
 
+	    # IFF this is a multigraph plugin there may be sub-graphs.
 	    push( @$groups,
 		  grep {defined $_}
 		       get_group_tree($child,
 				      $base.munin_get_node_name($child)."/"));
 
-	    if (scalar @$groups) {
-		$visible = 1;
-	    }
+            $visible = 1;
 	}
         elsif (ref($child) eq "HASH" and !defined $child->{"graph_title"}) {
 
@@ -486,13 +485,14 @@ sub get_group_tree {
 		       get_group_tree($child,
 				      $base.munin_get_node_name($child) . "/"));
 
-            if (scalar @$groups) {
-                $visible = 1;
-            }
-        }
+	    if (scalar @$groups) {
+		$visible = 1;
+	    }
+	}
     }
 
     return unless $visible;
+
     $hash->{'#%#visible'} = 1;
 
     # We need the categories in another format.
@@ -530,6 +530,7 @@ sub get_group_tree {
     my $comparecats     = [];
     my $comparecatshash = {};
     my $comparegroups   = [];
+
     if ($compare) {
         foreach my $tmpgroup (@$groups) {
 
