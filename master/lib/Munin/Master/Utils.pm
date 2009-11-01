@@ -169,6 +169,7 @@ sub munin_runlock {
 sub munin_getlock {
     my ($lockname) = @_;
     if (-f $lockname) {
+	DEBUG "[DEBUG] Lock $lockname already exists, checking process";
 	# Is the lockpid alive?
 
 	# To check this is inteligent and so on.  It also makes for a
@@ -179,16 +180,25 @@ sub munin_getlock {
 	open my $LOCK, '<', $lockname or
 	  LOGCROAK("Could not open $lockname for reading: $!\n");
 	my $pid = <$LOCK>;
+	$pid = '' if !defined($pid);
 	close($LOCK) or LOGCROAK("Could not close $lockname: $!\n");
+	
+	DEBUG "[DEBUG] Lock contained pid '$pid'";
+	
         # Make sure it's a proper pid
 	if (defined($pid) and $pid =~ /^(\d+)$/ and $1 != 1) {
 	    $pid = $1;
 	    if (kill(0, $pid)) {
+		DEBUG "[DEBUG] kill -0 $pid worked - it is still alive. Locking failed.";
 	        return 0;
 	    }
+	    INFO "[INFO] Process $pid is dead, stealing lock, removing file";
+	} else {
+	    INFO "[INFO] PID in lock file is bogus.  Removing lock file";
 	}
 	munin_removelock($lockname);
     }
+    DEBUG "[DEBUG] Creating new lock file $lockname";
     munin_createlock($lockname);
     return 1;
 }
