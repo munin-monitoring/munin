@@ -2,8 +2,9 @@ html {
 }
 
 
+
 body, h1, h2, h3, p, span, div { 
-  font-family: "trebuchet ms", verdana, helvetica, arial, sans-serif;
+  font-family: helvetica, verdana, arial, sans-serif;
   color: #333333;
  }
 
@@ -24,9 +25,6 @@ h2 {
   padding: 0px;
   font-size: 110%;
   font-weight: bold;
-}
-
-ul{
   width: 90%;
   margin-left: auto;
   margin-right: auto;
@@ -37,9 +35,12 @@ h3.nobottom {
     margin-bottom: 0px;
     font-size: 120%;
     letter-spacing: 0.05em;
-    margin-left: 5px;
+    margin-left: 0px;
     padding-left: 10px;
+    padding-bottom: 0px;
+    padding-top: 0px;
 }
+
 
 div.logo { 
   background-image: url(logo-h.png);
@@ -47,6 +48,8 @@ div.logo {
   width: 115px;
   height: 30px;
   padding-right: 10px;
+  margin-top: 7px;
+  padding-bottom: 6px;
 } 
 
 div.lighttext { 
@@ -117,24 +120,25 @@ table.largeinvisiblebox {
 
 #header-table tr{
   margin: 1em auto 0em auto;
-  padding: 2px;
+  padding: 0px;
 }
 
 #header-table td.overview{
-  margin: 0.5em auto 0.5em auto;
+  margin: 0.2em auto 0.2em auto;
   text-align: left;
 }
 
 #header-table td.overview h1{
-  margin-top: 0.15em;
-  margin-bottom: 0.15em;
+  margin-top: 0em;
+  margin-bottom: 0em;
   margin-left: 0.1em;
   padding-top: 1px;
 }
 
+
 #header-table td.logo{
   width: 115px;
-  margin: 0.2em auto 0.5em auto;
+  margin: 0em auto 0em auto;
 }
 
 table.invisiblebox {
@@ -149,15 +153,22 @@ table.invisiblebox {
 }
 
 table.invisiblebox tr{
-  margin-bottom: 15px;
+  padding-bottom: 15px;
 }
 
 
 td.graphbox {
-  border-left: 1px dashed #aaaaaa;
   padding: 5px;
   white-space: nowrap;
 }
+
+td.graphbox table{
+  border-left: 1px dashed #aaaaaa;
+  padding-left: 10px;
+  margin-bottom: 1em;
+  white-space: nowrap;
+}
+
 
 .box {
   padding: 4px;
@@ -168,7 +179,7 @@ td.graphbox {
 td.legendbox {
   border: 1px solid #999999;
   padding: 8px 4px 2px 2px;
-  margin: 2px;
+  margin: 8px 2px 2px p2x;
   text-align: left;
   width: 90%;
 }
@@ -189,7 +200,7 @@ td.linkbox {
 
 #generated-table {
   width: 90%;
-  margin: 0.6em auto -0.5em auto;
+  margin: 1em auto -0.5em auto;
   padding-right: 0.5em;
   background-color: #fbfbfb;
   border: 1px solid #d1d1d1;
