@@ -34,17 +34,15 @@ use Munin::Node::Config;
 use Munin::Node::OS;
 use Munin::Node::Service;
 
-my %services;
-my %nodes;
-
-my $FQDN       = "";
+my $FQDN = "";
 
 my $defuser    = getpwnam($Munin::Common::Defaults::MUNIN_PLUGINUSER);
 my $defgroup   = getgrnam($Munin::Common::Defaults::MUNIN_GROUP);
 
-my $paranoia   = 0;
+my $paranoia = 0;
 
 my $config = Munin::Node::Config->instance();
+
 
 sub main
 {
@@ -59,21 +57,22 @@ sub main
     $0 =~ /^(.*)$/;
     $0 = $1;
 
-    # Make build time configuration settings available at runtime.
-    Munin::Common::Defaults->export_to_environment();
-
     my ($plugin, $arg) = parse_args();
 
-    merge_node_config();
+    # Loads the settings from munin-node.conf.
+    # Ensures that, where options can be set both in the config and in
+    # @ARGV, the latter takes precedence.
+    $paranoia = $config->{paranoia};
+
+    die "Fatal error. Bailing out.\n"
+        unless Munin::Node::OS->check_perms($config->{conffile});
+    $config->parse_config_from_file($config->{conffile});
 
     die "Fatal error. Bailing out.\n"
         unless (Munin::Node::OS->check_perms($config->{servicedir}));
 
     $defuser  = $config->{defuser}  if defined $config->{defuser};
     $defgroup = $config->{defgroup} if defined $config->{defgroup};
-
-    # Override the hostname if everything else fails
-    $config->{fqdn} ||= Munin::Node::OS->get_fq_hostname();
 
     $config->reinitialize({
         %$config,
@@ -83,20 +82,12 @@ sub main
         paranoia   => $paranoia,
     });
 
-    # Some locales uses "," as decimal separator. This can mess up a lot
-    # of plugins.
-    $ENV{LC_ALL} = 'C';
-
-    # Export some variables plugins might be interested in
-    $ENV{MUNIN_DEBUG} = $config->{PIDEBUG};
-    $ENV{FQDN} = $config->{fqdn};
-
     unless (Munin::Node::Service->is_a_runnable_service($plugin)) {
         print STDERR "# Unknown service '$plugin'\n";
         exit 1;
     }
 
-    load_service_configs($plugin);
+    Munin::Node::Service->prepare_plugin_environment($plugin);
 
     # no need for a timeout -- the user can kill this process any
     # time they want.
@@ -105,41 +96,6 @@ sub main
     # Never reached, but just in case...
     print STDERR "# FATAL: Failed to exec.";
     exit 42;
-}
-
-
-# Loads the settings from munin-node.conf.
-# Ensures that, where options can be set both in the config and in
-# @ARGV, the former takes precedence.
-sub merge_node_config
-{
-    # Cache them here, and restore them after parsing the config.
-    $paranoia = $config->{paranoia};
-
-    die "Fatal error. Bailing out.\n"
-        unless Munin::Node::OS->check_perms($config->{conffile});
-    $config->parse_config_from_file($config->{conffile});
-
-    # Restore them
-    $config->{paranoia} = $paranoia if defined $paranoia;
-
-    return;
-}
-
-
-sub load_service_configs
-{
-    my ($plugin) = @_;
-
-    if ($config->{sconffile}) {
-        $config->parse_plugin_config_file($config->{sconffile});
-    }
-    else {
-        $config->process_plugin_configuration_files();
-    }
-
-    $config->apply_wildcards($plugin);
-    return;
 }
 
 

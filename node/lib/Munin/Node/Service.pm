@@ -46,6 +46,40 @@ sub is_a_runnable_service {
 }
 
 
+sub prepare_plugin_environment
+{
+    my (@plugins) = @_;
+
+    Munin::Common::Defaults->export_to_environment();
+
+    $config->{fqdn} ||= Munin::Node::OS->get_fq_hostname();
+
+    # Export some variables plugins might be interested in
+    $ENV{MUNIN_DEBUG} = $config->{PIDEBUG};
+    $ENV{FQDN}        = $config->{fqdn};
+
+    # Some locales use "," as decimal separator. This can mess up a lot
+    # of plugins.
+    $ENV{LC_ALL} = 'C';
+
+    $config->{defuser} = getpwnam($Munin::Common::Defaults::MUNIN_PLUGINUSER)
+        unless defined $config->{defuser};
+    $config->{defgroup} = getgrnam($Munin::Common::Defaults::MUNIN_GROUP)
+        unless defined $config->{defgroup};
+
+    if ($config->{sconffile}) {
+        # used only by munin-run
+        $config->parse_plugin_config_file($config->{sconffile});
+    }
+    else {
+        $config->process_plugin_configuration_files();
+    }
+    $config->apply_wildcards(@plugins);
+    
+    return;
+}
+
+
 sub export_service_environment {
     my ($class, $service) = @_;
     print STDERR "# Setting up environment\n" if $config->{DEBUG};

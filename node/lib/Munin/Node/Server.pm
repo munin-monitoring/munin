@@ -34,21 +34,15 @@ sub pre_loop_hook {
     my $self = shift;
     print STDERR "In pre_loop_hook.\n" if $config->{DEBUG};
     _load_services();
-    _load_service_configurations();
-    $self->SUPER::pre_loop_hook();
+    Munin::Node::Service->prepare_plugin_environment(keys %services);
+    _add_services_to_nodes(keys %services);
+    return $self->SUPER::pre_loop_hook();
 }
 
 
 sub request_denied_hook {
     my $self = shift;
     logger("Denying connection from: $self->{server}->{peeraddr}");
-    return;
-}
-
-
-sub _load_service_configurations {
-    $config->process_plugin_configuration_files();
-    $config->apply_wildcards(keys %services);
     return;
 }
 
@@ -60,10 +54,24 @@ sub _load_services {
     for my $file (readdir($DIR)) {
         next unless Munin::Node::Service->is_a_runnable_service($file);
         print STDERR "file: '$file'\n" if $config->{DEBUG};
-        _add_to_services_and_nodes($file);
+        $services{$file} = 1;
     }
 
     closedir $DIR;
+    return;
+}
+
+
+sub _add_services_to_nodes
+{
+    my (@services) = @_;
+
+    # FIXME: may need to query the plugin to get host_name.  eg. in the case of
+    # SNMP plugins.
+    for my $service (keys %services) {
+        my $node = $config->{sconf}{$service}{host_name} || $config->{fqdn};
+        $nodes{$node}{$service} = 1;
+    }
     return;
 }
 
@@ -240,17 +248,6 @@ sub _show_nodes {
         _net_write($session, "$node\n");
     }
     _net_write($session, ".\n");
-}
-
-
-sub _add_to_services_and_nodes {
-    my ($service) = @_;
-
-    $services{$service} = 1;
-    # FIXME: may need to query the plugin to get host_name.  eg. in the case of
-    # SNMP plugins.
-    my $node = $config->{sconf}{$service}{host_name} || $config->{fqdn};
-    $nodes{$node}{$service} = 1;
 }
 
 

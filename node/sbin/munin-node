@@ -60,40 +60,26 @@ sub main {
     $0 =~ /^(.*)$/;
     $0 = $1;
 
-    # Make build time configuration settings available at runtime.
-    Munin::Common::Defaults->export_to_environment();
-
     parse_args();
 
-    # Export debug setting to plugins.
-    $ENV{'MUNIN_DEBUG'} = $PIDEBUG ;
-    
     # Check permissions of configuration
-    
     unless (Munin::Node::OS->check_perms($servicedir, $paranoia) 
-            && Munin::Node::OS->check_perms($conffile, $paranoia)) {
+         && Munin::Node::OS->check_perms($conffile, $paranoia))
+    {
         die "Fatal error. Bailing out.";
     }
 
     my $config = Munin::Node::Config->instance();
     $config->parse_config_from_file($conffile);
-    $FQDN     = $config->{fqdn}     if defined $config->{fqdn};
+
+	$FQDN     = $config->{fqdn}     if defined $config->{fqdn};
     $defuser  = $config->{defuser}  if defined $config->{defuser};
     $defgroup = $config->{defgroup} if defined $config->{defgroup};
     $paranoia = $config->{paranoia} if defined $config->{paranoia};
 
     push @ignores, @{$config->{ignores}} if defined $config->{ignores};
 
-    # A hack to override the hostname if everything else fails
-    $FQDN ||= Munin::Node::OS->get_fq_hostname();
-
-    $ENV{FQDN}=$FQDN;
-
-    # Some locales uses "," as decimal separator. This can mess up a lot
-    # of plugins.
-    $ENV{'LC_ALL'}='C';
-
-    $config->reinitialize({
+	$config->reinitialize({
         timeout    => $timeout,
 
         %$config,
@@ -265,4 +251,4 @@ L<http://munin.projects.linpro.no/wiki/network-protocol>
 
 =cut
 
-# vim:syntax=perl ts=4
+# vim:syntax=perl ts=4 : expandtab

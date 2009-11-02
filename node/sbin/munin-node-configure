@@ -282,7 +282,7 @@ sub gather_suggestions
 	my ($plugins) = @_;
 
 	# We're going to be running plugins
-	prepare_plugin_environment($plugins);
+    Munin::Node::Service->prepare_plugin_environment($plugins->names);
 
 	foreach my $plugin ($plugins->list) {
 		fetch_plugin_autoconf($plugin);
@@ -360,7 +360,8 @@ sub init_snmp
             $@;
 	}
 
-	prepare_plugin_environment($plugins);
+    Munin::Node::Service->prepare_plugin_environment($plugins->names);
+
     fetch_plugin_snmpconf($_) foreach ($plugins->list);
 
     return Munin::Node::SNMPConfig->new(
@@ -373,32 +374,6 @@ sub init_snmp
 
 
 ### Running plugins and analysing responses ####################################
-
-sub prepare_plugin_environment
-{
-    my ($plugins) = @_;
-
-	Munin::Common::Defaults->export_to_environment();
-
-	# Export some variables plugins might be interested in
-	$ENV{MUNIN_DEBUG} = $config->{PIDEBUG};
-	$ENV{FQDN} = $config->{fqdn} || Munin::Node::OS->get_fq_hostname();
-
-    # Some locales use "," as decimal separator. This can mess up a lot
-	# of plugins.
-	$ENV{LC_ALL} = 'C';
-
-	$config->{defuser} = getpwnam($Munin::Common::Defaults::MUNIN_PLUGINUSER)
-		unless defined $config->{defuser};
-	$config->{defgroup} = getgrnam($Munin::Common::Defaults::MUNIN_GROUP)
-		unless defined $config->{defgroup};
-
-	$config->process_plugin_configuration_files();
-    $config->apply_wildcards($plugins->names);
-
-	return;
-}
-
 
 # Runs the plugin with argument $mode (eg. 'suggest', 'autoconf') and runs
 # tests on the results.  Assuming no errors were detected, returns a list
