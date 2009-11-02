@@ -47,7 +47,7 @@ uninstall:
 	echo "Uninstall is not implemented yet"
 
 # This removes the installed config so that the next install-pass installs
-# a new config.  Target suitable for maintainers
+# a new config.  Target _only_ suitable for maintainers.
 unconfig:
 	rm -f $(HTMLDIR)/.htaccess
 	rm -f $(CONFDIR)/munin.conf
@@ -83,13 +83,9 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 
 	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR)
 
-	for p in build/master/www/*.tmpl; do   		         \
+	for p in master/www/*.tmpl master/www/*.png master/www/*.css; do \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
 	done
-	$(INSTALL) -m 0644 master/www/logo.png $(CONFDIR)/templates/
-	$(INSTALL) -m 0644 master/www/logo-h.png $(CONFDIR)/templates/
-	$(INSTALL) -m 0644 master/www/style.css $(CONFDIR)/templates/
-	$(INSTALL) -m 0644 master/www/style-1.2.css $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 master/www/definitions.html $(CONFDIR)/templates/
 	$(INSTALL) -m 0755 master/VeraMono.ttf $(LIBDIR)/
 	$(INSTALL) -m 0644 resources/favicon.ico $(HTMLDIR)/
@@ -103,10 +99,11 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	$(INSTALL) -m 0755 build/master/_bin/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-html $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-limits $(LIBDIR)/
-	$(INSTALL) -m 0755 build/master/_bin/munin-gather $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-fastcgi-graph $(CGIDIR)/
 
+# Not ready to be installed yet	
+# $(INSTALL) -m 0755 build/master/_bin/munin-gather $(LIBDIR)/
 
 # ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE
 # GENERIC ONES
