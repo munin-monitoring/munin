@@ -138,7 +138,7 @@ sub munin_createlock {
     # Create lock file, fail and die if not possible.
     my ($lockname) = @_;
     if (sysopen (LOCK,$lockname,O_WRONLY | O_CREAT | O_EXCL)) {
-	DEBUG "[DEBUG] Creating lock : $lockname succeded\n";
+	DEBUG "[DEBUG] Creating lock : $lockname succeeded\n";
 	print LOCK $$; # we want the pid inside for later use
 	close LOCK;
 	return 1;

@@ -124,7 +124,7 @@ sub negotiate_capabilities {
     # other takes advantage of the capabilities it understands (or
     # dumbs itself down to the counterparts level of sophistication).
 
-    DEBUG "[DEBUG] Negociating capabilities\n";
+    DEBUG "[DEBUG] Negotiating capabilities\n";
 
     $self->_node_write_single("cap $self->{master_capabilities}\n");
     my $cap = $self->_node_read_single();
