@@ -21,21 +21,25 @@ tmpldir	@@CONFDIR@@/templates
 #
 #graph_strategy cgi
 
-# munin-graph runs in parallel, the number of concurrent processes is
-# 6.  If you want munin-graph to not be parallel set to 0.  If set too high
-# it will slow down munin-graph.  Some experiments are needed to determine
-# how many are optimal on your system.
-# 
-#max_graph_jobs 6
-
 # munin-cgi-graph is invoked by the web server up to very many times at the
 # same time.  This is not optimal since it results in high CPU and memory
 # consumption to the degree that the system can thrash.  Again the default is
 # 6.  Most likely the optimal number for max_cgi_graph_jobs is the same as
 # max_graph_jobs.
-
+#
 #munin_cgi_graph_jobs 6
 
+# If the automatic CGI url is wrong for your system override it here:
+#
+#cgiurl_graph /cgi-bin/munin-cgi-graph
+
+# munin-graph runs in parallel, the number of concurrent processes is
+# 6.  If you want munin-graph to not be parallel set to 0.  If set too
+# high it will slow down munin-graph.  Some experiments are needed to
+# determine how many are optimal on your system.  On a multi-core
+# system with good SCSI disks the number can probably be quite high.
+# 
+#max_graph_jobs 6
 
 # Drop somejuser@fnord.comm and anotheruser@blibb.comm an email everytime 
 # something changes (OK -> WARNING, CRITICAL -> OK, etc)
