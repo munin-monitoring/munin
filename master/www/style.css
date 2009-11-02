@@ -14,7 +14,7 @@ h1{
 
 body { 
   background-color: #fdfdfd;
-  width: 100%;
+  width: 99%;
   margin: 0em auto 1em auto;
   padding: 0.0em 0.1em 1em 0.1em;
 
@@ -232,6 +232,14 @@ td.linkbox {
   background-color: #999999;
   border: 0px;
   height: 2px;
+}
+
+a:link,a:visited,a:active {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 a.meek:link { 
