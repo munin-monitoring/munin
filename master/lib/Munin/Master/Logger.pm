@@ -46,7 +46,7 @@ level output.
 =head1 AUTHOR
 
 Munin master logging ported to Log4perl by Nicolai Langfeldt.  Split
-out into this module by Kjell Magne Øyerud.
+out into this module by Kjell Magne Øierud.
 
 =head1 LICENSE
 
@@ -92,7 +92,7 @@ sub logger_open {
 	$logopened = 1;
     }
 
-    get_logger('')->info("Opened log file!");
+    get_logger('')->info("Opened log file");
 }
 
 sub logger_debug {
