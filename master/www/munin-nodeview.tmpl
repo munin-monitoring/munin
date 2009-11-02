@@ -14,7 +14,7 @@
   <tr>
     <td class="logo" rowspan="2"><div class="logo">&nbsp;</div></td>
     <td valign="top">
-	 <h2><TMPL_LOOP NAME="PATH"><TMPL_IF NAME="NAME"> :: <TMPL_IF NAME="PATH"><A HREF="<TMPL_VAR NAME="PATH">"></TMPL_IF><TMPL_VAR NAME="NAME"><TMPL_IF NAME="PATH"></A></TMPL_IF><TMPL_ELSE><TMPL_IF NAME="PATH"><A HREF="<TMPL_VAR NAME="PATH">"></TMPL_IF>Overview<TMPL_IF NAME="PATH"></A></TMPL_IF></TMPL_IF></TMPL_LOOP></h2>
+	 <h2><TMPL_LOOP NAME="PATH"><TMPL_IF NAME="NAME"> :: <TMPL_IF NAME="PATH"><a href="<TMPL_VAR NAME="PATH">"></TMPL_IF><TMPL_VAR NAME="NAME"><TMPL_IF NAME="PATH"></a></TMPL_IF><TMPL_ELSE><TMPL_IF NAME="PATH"><a href="<TMPL_VAR NAME="PATH">"></TMPL_IF>Overview<TMPL_IF NAME="PATH"></a></TMPL_IF></TMPL_IF></TMPL_LOOP></h2>
     </td>    
   </tr>
   <tr>
@@ -45,7 +45,7 @@
 
   </TMPL_LOOP>
   <tr><td class="linkbox">
-     <TMPL_VAR NAME="PARENT"> :<TMPL_LOOP NAME="PEERS">: <TMPL_IF NAME="LINK"><a href="<TMPL_VAR NAME="LINK">"></TMPL_IF><TMPL_VAR NAME="NAME"><TMPL_IF NAME="LINK"></a></TMPL_IF></a> </TMPL_LOOP>
+     <TMPL_VAR NAME="PARENT"> :<TMPL_LOOP NAME="PEERS">: <TMPL_IF NAME="LINK"><a href="<TMPL_VAR NAME="LINK">"></TMPL_IF><TMPL_VAR NAME="NAME"><TMPL_IF NAME="LINK"></a></TMPL_IF> </TMPL_LOOP>
  </td></tr>
 </table>
 
