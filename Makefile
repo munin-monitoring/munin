@@ -87,7 +87,9 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
 	done
 	$(INSTALL) -m 0644 master/www/logo.png $(CONFDIR)/templates/
+	$(INSTALL) -m 0644 master/www/logo-h.png $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 master/www/style.css $(CONFDIR)/templates/
+	$(INSTALL) -m 0644 master/www/style-1.2.css $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 master/www/definitions.html $(CONFDIR)/templates/
 	$(INSTALL) -m 0755 master/VeraMono.ttf $(LIBDIR)/
 	$(INSTALL) -m 0644 resources/favicon.ico $(HTMLDIR)/
