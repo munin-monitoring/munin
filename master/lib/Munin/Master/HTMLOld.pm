@@ -93,7 +93,7 @@ my $do_dump = 0;
 sub html_startup {
     my ($ARGV) = @_;
 
-    print_usage_and_exit()
+    $do_usage = 1
 	unless GetOptionsFromArray(
 	    $ARGV,
 	    "host=s"    => [],
@@ -106,6 +106,7 @@ sub html_startup {
 	    "dump!"     => \$do_dump,
         );
 
+    print_usage_and_exit() if $do_usage;
     print_version_and_exit() if $do_version;
 
     exit_if_run_by_super_user();
