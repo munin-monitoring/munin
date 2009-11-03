@@ -208,7 +208,7 @@ sub _handle_worker_error {
 sub _do_work {
     my ($self, $worker) = @_;
 
-    DEBUG "Starting $worker";
+    DEBUG "[DEBUG] Starting $worker";
 
     my $retval = 0;
 
