@@ -45,7 +45,7 @@ sub run {
     $self->_create_rundir_if_missing();
 
     $self->_do_with_lock_and_timing(sub {
-        logger("Starting munin-update");
+        INFO "[INFO] Starting munin-update";
 
         $self->{old_service_configs} = $self->_read_old_service_configs();
 
@@ -107,7 +107,6 @@ sub _create_workers {
     # logger("Skipping '$name' (update disabled by config)");
     # logger("Queuing '$name' for update.");
 
-
     my @hosts = $self->{group_repository}->get_all_hosts();
 
     if (%{$config->{limit_hosts}}) {
@@ -128,7 +127,7 @@ sub _do_with_lock_and_timing {
 
     my $update_time = Time::HiRes::time;
     if (!open ($self->{STATS}, '>', "$config->{dbdir}/munin-update.stats.tmp")) {
-        logger("[WARNING] Unable to open $config->{dbdir}/munin-update.stats");
+        WARN "[WARNING] Unable to open $config->{dbdir}/munin-update.stats";
         # Use /dev/null instead - if the admin won't fix he won't care
         open($self->{STATS}, '>', "/dev/null") or die "Could not open STATS to /dev/null: $?";
     }
@@ -140,7 +139,7 @@ sub _do_with_lock_and_timing {
     close ($self->{STATS});
     $self->{STATS} = undef;
     rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
-    logger("Munin-update finished ($update_time sec)");
+    INFO "[INFO] Munin-update finished ($update_time sec)";
 
     munin_removelock($lock);
 
@@ -196,8 +195,7 @@ sub _create_self_aware_worker_exception_handler {
 
     return sub {
         my ($worker_id, $reason) = @_;
-	# FIXME: $worker_id is not defined!
-	logger("Failed worker $worker_id");
+	WARN "[WARNING] Failed worker $worker_id";
         push @{$self->{failed_workers}}, $worker_id;
     };
 }
@@ -209,6 +207,7 @@ sub _get_rrd_file_name {
     
     my $type_id = lc(substr(($ds_type), 0, 1));
     my ($g, $h) = split /;/, $host;
+    # // ... perl mode
     my $file = sprintf("%s-%s-%s-%s.rrd",
                        $h,
                        $service,
