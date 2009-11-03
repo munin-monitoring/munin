@@ -32,6 +32,26 @@ sub new {
 }
 
 
+sub get_full_path {
+    # Find the full nested named path of the current host object
+    # might one for M::M::Group too and make it recursive instead of
+    # "just" itterative but not now.
+
+    my ($self) = @_;
+
+    my $group;
+    my @groups = ( $self->{host_name} );
+
+    $group=$self->{group};
+    while (defined($group)) {
+	unshift(@groups,$group->{group_name});
+	$group=$group->{group};
+    }
+
+    return join(";",@groups);
+}
+
+
 sub add_attributes_if_not_exists {
     my ($self, $attributes) = @_;
 

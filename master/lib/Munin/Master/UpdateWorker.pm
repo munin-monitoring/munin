@@ -25,7 +25,7 @@ my $config = Munin::Master::Config->instance()->{config};
 sub new {
     my ($class, $host) = @_;
 
-    my $self = $class->SUPER::new("$host->{group}{group_name};$host->{host_name}");
+    my $self = $class->SUPER::new($host->get_full_path);
     $self->{host} = $host;
     $self->{node} = Munin::Master::Node->new($host->{address},
                                              $host->{port},
@@ -41,14 +41,15 @@ sub do_work {
     my $update_time = Time::HiRes::time;
 
     my $host = $self->{host}{host_name};
+    my $path = $self->{host}->get_full_path;
+    $path =~ s{[:;]}{-}g;
 
     my $nodedesignation = $host."/".
 	$self->{host}{address}.":".$self->{host}{port};
 
-    my $lock_file = sprintf ('%s/munin-%s-%s.lock',
+    my $lock_file = sprintf ('%s/munin-%s.lock',
 			     $config->{rundir},
-			     $self->{host}{group}{group_name},
-			     $host);
+			     $path);
 
     if (!munin_getlock($lock_file)) {
 	WARN "Could not get lock $lock_file for $nodedesignation. Skipping node.";
@@ -386,34 +387,25 @@ sub _get_rrd_file_name {
     my ($self, $service, $ds_name, $ds_config) = @_;
     
     my $type_id = lc(substr(($ds_config->{type}), 0, 1));
-    my $group = $self->{host}{group}{group_name};
+
+    my $path = $self->{host}->get_full_path;
+    $path =~ s{[;:]}{/}g;
 
     # The following is rigged to match the corresponding function in
     # munin-graph/munin-html where it's less clear what are groups and
     # what are hosts and what are services, and they simply pop
     # elements off the end and so on.
 
-    my @lastpart = ($self->{host}{host_name}, split (/\./, "$service.$ds_name"));
-    my $last = pop(@lastpart);
-    my $nexttolast = pop(@lastpart);
-
     my $file = sprintf("%s-%s-%s-%s.rrd",
-                       join("/",@lastpart),
-                       $nexttolast,
-                       $last,
+                       $path,
+                       $service,
+                       $ds_name,
                        $type_id);
 
     # Not really a danger (we're not doing this stuff via the shell),
     # so more to avoid confusion with silly filenames.
-    ($group) = map { 
-        my $p = $_;
-        $p =~ tr/\//_/; 
-        $p =~ s/^\./_/g;
-        $p;
-    } ($group);
 
     $file = File::Spec->catfile($config->{dbdir}, 
-				$group,
 				$file);
 	
     DEBUG "[DEBUG] Made rrd filename: $file\n";

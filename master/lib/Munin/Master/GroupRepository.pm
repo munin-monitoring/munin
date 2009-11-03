@@ -28,20 +28,7 @@ sub new {
     return $self;
 }
 
-
-sub get_all_hosts {
-    my ($self) = @_;
-    
-    my @hosts = ();
-    for my $group (values %{$self->{groups}}) {
-        push @hosts, $group->get_all_hosts();
-    }
-                   
-    return @hosts;
-}
-
 1;
-
 
 __END__
 

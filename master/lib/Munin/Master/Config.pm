@@ -501,6 +501,20 @@ sub get_groups_and_hosts {
 }
 
 
+sub get_all_hosts {
+    # Note! This method is implemented in multiple classes to make the
+    # recursion complete.
+    my ($self) = @_;
+    
+    my @hosts = ();
+    for my $group (values %{$self->{groups}}) {
+        push @hosts, $group->get_all_hosts;
+    }
+    return @hosts;
+}
+
+
+
 sub set {
     my ($self, $config) = @_;
 

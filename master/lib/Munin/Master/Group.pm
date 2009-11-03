@@ -55,8 +55,16 @@ sub give_attributes_to_hosts {
 
 sub get_all_hosts {
     my ($self) = @_;
+
+    my @hosts = ();
+
+    for my $group (values %{$self->{groups}}) {
+        push @hosts, $group->get_all_hosts;
+    }
+
+    push @hosts, values %{$self->{hosts}};
     
-    return values %{$self->{hosts}};
+    return @hosts;
 }
 
 1;
