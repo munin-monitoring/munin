@@ -103,6 +103,7 @@
  <tr><td></td></tr>
  <tr>
    <td class="linkbox">
+   <!-- Footer: Name of parent node :: list-of-peers at this level in this branch -->
    <TMPL_VAR NAME="PARENT"> :<TMPL_LOOP NAME="PEERS">: <TMPL_IF NAME="LINK"><a href="<TMPL_VAR NAME="LINK">"></TMPL_IF><TMPL_VAR NAME="NAME"><TMPL_IF NAME="LINK"></a></TMPL_IF> </TMPL_LOOP>
  </td>
  </tr>
