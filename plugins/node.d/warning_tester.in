@@ -1,0 +1,30 @@
+#!@@BASH@@
+# -*- sh -*-
+
+#%# family=test
+
+do_ () {
+    cat <<EOF
+one.value 6
+two.value 10
+three.value 24
+EOF
+}
+
+do_config () {
+    cat <<'EOF'
+graph_title Made to send warnings
+graph_info Warnings and just warnings
+one.label Warning #1
+one.warn 5
+two.label Warning #2
+two.warning 7
+three.label No warning here
+three.warning 42
+EOF
+}
+
+do_$1 2>/dev/null || {
+    echo "Do what now?">&2
+    exit 1
+}
