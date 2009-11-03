@@ -15,6 +15,7 @@ use Munin::Common::Timeout;
 use Munin::Master::Config;
 use Munin::Master::Logger;
 
+use Log::Log4perl qw( :easy );
 
 my $E_DIED      = 18;
 my $E_TIMED_OUT = 19;
@@ -63,7 +64,7 @@ sub add_workers {
 sub start_work {
     my ($self) = @_;
     
-    logger("Starting work") if $config->{debug};
+    DEBUG "[DEBUG] Starting work";
     
     my $sock = $self->_prepare_unix_socket();
 
@@ -74,7 +75,7 @@ sub start_work {
     }) or croak "Work timed out before all workers finished";
 
     $self->{workers} = [];
-    logger("Work done") if $config->{debug};
+    DEBUG "[DEBUG] Work done";
 
     $self->_free_socket($sock);
 }
@@ -102,7 +103,7 @@ sub _start_waiting_workers {
     my ($self) = @_;
 
     while (@{$self->{workers}}) {
-        logger(sprintf "Active: " . scalar %{$self->{active_workers}});
+        DEBUG sprintf "[DEBUG] Active workers: " . scalar %{$self->{active_workers}};
         last if scalar keys %{$self->{active_workers}} == $self->{max_concurrent};
         $self->_start_next_worker();
     }
@@ -138,7 +139,7 @@ sub _collect_results {
             accept $worker_sock, $sock;
         });
         if ($timed_out) {
-            logger("[WARNING] Call to accept timed out: " . join keys %{$self->{result_queue}});
+            WARN "[WARNING] Call to accept timed out: " . join keys %{$self->{result_queue}};
             next;
         }
         next unless fileno $worker_sock;
@@ -183,7 +184,7 @@ sub _vet_finished_workers {
         my $child_exit   = $CHILD_ERROR >> 8;
 	my $child_signal = $CHILD_ERROR & 127; 
 
-	logger("Reaping $self->{active_workers}{$worker_pid} $child_exit/$child_signal");
+	INFO "Reaping $self->{active_workers}{$worker_pid} $child_exit/$child_signal";
         delete $self->{active_workers}{$worker_pid};
     }
 }
@@ -207,7 +208,7 @@ sub _handle_worker_error {
 sub _do_work {
     my ($self, $worker) = @_;
 
-    logger("Starting $worker") if $config->{debug};
+    DEBUG "Starting $worker";
 
     my $retval = 0;
 
@@ -217,13 +218,13 @@ sub _do_work {
             $res = $worker->do_work();
         });
         if ($timed_out) {
-            logger("[ERROR] $worker timed out");
+            ERROR "[ERROR] $worker timed out";
             $res = undef;
             $retval = $E_TIMED_OUT;
         }
     };
     if ($EVAL_ERROR) {
-        logger("[ERROR] $worker died with '$EVAL_ERROR'");
+        ERROR "[ERROR] $worker died with '$EVAL_ERROR'";
         $res = undef;
         $retval = $E_DIED;
     }
@@ -231,11 +232,11 @@ sub _do_work {
     
     my $sock;
     unless (socket $sock, PF_UNIX, SOCK_STREAM, 0) {
-        logger("[ERROR] Unable to create socket: $!");
+        ERROR "[ERROR] Unable to create socket: $!";
         return $E_DIED;
     }
     unless (connect $sock, sockaddr_un($self->{socket_file})) {
-        logger("[ERROR] Unable to connect to socket: $!");
+        ERROR "[ERROR] Unable to connect to socket: $!";
         return $E_DIED;
     }
     
