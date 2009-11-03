@@ -32,8 +32,23 @@ $Id$
 
 
 This is the hierarchy of templates
-Overview: munin-overview.tmpl - all groups and hosts shown
-  
+
+  * munin-overview.tmpl - Overview with all groups and hosts shown (2 levels down)
+    
+    * munin-domianview.tmpl - all members of one domain, showing links down to each single service
+      and/or sub-group
+
+      * munin-nodeview.tmpl - two (=day, week) graphs from all plugins on the node
+
+	* munin-serviceview.tmpl - deepest level of view, shows all 4 graphs from one timeseries
+
+        OR
+
+    	* munin-nodeview.tmpl - multigraph sub-level.  When multigraph sublevels end ends
+           the next is a munin-serviceview.
+
+ * Comparison pages (x4) are at the service level.  Not sure how to work multigraph into them so
+   avoid it all-together.
 
 =end comment
 
@@ -102,7 +117,7 @@ sub html_startup {
     logger_debug() if $DEBUG;
 
     $tmpldir = $config->{tmpldir};
-    $htmldir  = $config->{htmldir};
+    $htmldir = $config->{htmldir};
 
     %comparisontemplates = instanciate_comparison_templates($tmpldir);
 
@@ -116,7 +131,8 @@ sub html_startup {
         else {
             $config->{'cgiurl_graph'} = "/cgi-bin/munin-cgi-graph";
         }
-	INFO "[INFO] Determined that cgiurl_graph is ".$config->{'cgiurl_graph'};
+	INFO "[INFO] Determined that cgiurl_graph is ".$config->{'cgiurl_graph'} if
+	    munin_get($config,"graph_strategy","cron") eq 'cgi';
     }
 }
 
@@ -148,6 +164,7 @@ sub html_main {
 
     if ($do_dump) {
 	use Data::Dumper;
+	
 	print Dumper $groups;
 	exit 0;
     }
@@ -206,7 +223,7 @@ sub emit_graph_template {
 	    $$ref =~ s/URLX/URL$key->{'depth'}/g;
 	});
 
-    DEBUG "[DEBUG] Creating graph page ".$key->{filename};
+    DEBUG "[DEBUG] Creating graph(nodeview) page ".$key->{filename};
 
     $graphtemplate->param(
 	GROUPS      => $key->{'groups'},
@@ -330,7 +347,9 @@ sub emit_main_index {
 sub copy_web_resources {
     my ($tmpldir, $htmldir) = @_;
 
-    #Make sure the logo and the stylesheet file is in the html dir
+    # Make sure the logo and the stylesheet file is in the html dir
+    # NOTE: The templates have hardcoded path to definitions.html, and it is not right, esp. when
+    # we have nested groups and nested services.
     my @files = ("style.css", "logo.png", "logo-h.png", "definitions.html", "favicon.ico");
 
     foreach my $file ((@files)) {
@@ -463,8 +482,12 @@ sub get_group_tree {
     foreach my $child (@$children) {
         next unless defined $child and ref($child) eq "HASH" and keys %$child;
 
+	$child->{"#%#ParentsNameAsString"} = munin_get_node_name($hash);
+
         if (defined $child->{"graph_title"}
             and munin_get_bool($child, "graph", 1)) {
+
+	    $child->{'#%#is_service'} = 1;
 
             my $childname = munin_get_node_name($child);
             my $childnode = generate_service_templates($child);
@@ -704,6 +727,10 @@ sub generate_group_templates {
 
 
 sub borrowed_path {
+    # I wish I knew what this function does.  It appears to make
+    # .. path elements to climb up the directory hierarchy.  To
+    # "borrow" something from a different directory level.
+
     my $hash     = shift;
     my $prepath  = shift || "";
     my $postpath = shift || "";
@@ -712,7 +739,7 @@ sub borrowed_path {
 
     if (defined $hash->{'#%#origin'}) {
         return
-              $prepath . "../"
+	    $prepath . "../"
             . munin_get_node_name($hash->{'#%#origin'}) . "/"
             . $postpath;
     }
@@ -740,6 +767,7 @@ sub borrowed_path {
 sub generate_service_templates {
 
     my $service = shift || return;
+
     return unless munin_get_bool($service, "graph", 1);
 
     my %srv;
