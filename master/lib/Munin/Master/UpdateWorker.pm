@@ -18,7 +18,7 @@ use Munin::Master::Node;
 use Munin::Master::Utils;
 use RRDs;
 use Time::HiRes;
-
+use Data::Dumper;
 
 my $config = Munin::Master::Config->instance()->{config};
 
@@ -97,6 +97,19 @@ sub do_work {
 		}
 	    }
 
+
+	    # .extinfo fields come from "fetch" but must be saved like "config".
+	    for my $service (keys %service_data) {
+		for my $ds (keys %{$service_data{$service}}) {
+		    my $extinfo = $service_data{$service}{$ds}{extinfo};
+		    if (defined $extinfo) {
+			$service_config{data_source}{$service}{$ds}{extinfo} =
+			    $extinfo;
+			DEBUG "[DEBUG] Copied extinfo $extinfo into service_config for $service / $ds on $nodedesignation";
+		    }
+		}
+	    }
+
 	    $self->_compare_and_act_on_config_changes(\%service_config);
 
 	    %{$all_service_configs{data_source}} = (
@@ -111,7 +124,8 @@ sub do_work {
         }
 
         #use Data::Dumper; warn Dumper(\@services);
-    });
+
+    }); # do_in_session
 
     munin_removelock($lock_file);
 
@@ -257,7 +271,7 @@ sub _ensure_filename {
     my $old_rrd_file = $self->_get_rrd_file_name($service, $old_data_source,
                                                  $old_ds_config);
 
-    my $hostspec = $self->{node}{hostname}.'/'.$self->{node}{address}.':'.
+    my $hostspec = $self->{node}{host}.'/'.$self->{node}{address}.':'.
 	$self->{node}{port};
 
     if ($rrd_file ne $old_rrd_file) {

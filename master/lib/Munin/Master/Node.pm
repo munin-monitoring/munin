@@ -322,9 +322,22 @@ sub parse_service_data {
 		$value = $2;
 	    }
 
-            $values{$service}{$data_source} = 
-	        { value => $value, when => $when };
+	    $values{$service}{$data_source} ||= {};
+
+            $values{$service}{$data_source}{value} = $value;
+            $values{$service}{$data_source}{when}  = $when;
         }
+	elsif ($line =~ m{ (\w+)\.extinfo \s+ (.+) }xms) {
+	    # Extinfo is used in munin-limits
+            my ($data_source, $value) = ($1, $2);
+
+            $data_source = $self->_sanitise_fieldname($data_source);
+
+	    $values{$service}{$data_source} ||= {};
+
+	    $values{$service}{$data_source}{extinfo} = $value;
+
+	}
         else {
             die "[ERROR] Protocol exception while fetching '$service' from $nodedesignation: unrecognized line '$line'"
         }
