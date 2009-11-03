@@ -74,6 +74,13 @@ my $logdir = undef;
 my $logopened = 0;
 my $me = basename($PROGRAM_NAME);
 
+# Get perl warnings into the log files
+$SIG{__WARN__} = \&_warn_catcher;
+
+sub _warn_catcher {
+    WARN "[PERL WARNING] ".join(" ",@_);
+}
+
 sub logger_open {
     # This is called when we have a directory and file name to log in.
 
