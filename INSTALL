@@ -30,6 +30,7 @@ Server:
    - TimeDate
    - Net::SNMP for SNMP autoconfiguration and plugins
    - Net::SSLeay if you want to use SSL/TLS
+   - Getopt::Long 2.37 or later
    - Log::Log4perl (which depends on
      - IPC::Shareable
      - Log::Dispatch
@@ -37,7 +38,7 @@ Server:
      - MIME::Lite
      - Mail::Sender
      - Mail::Sendmail
-     - MailTools
+     - MailTools)
 
    - Developers/packagers: For testing
      - Test::MockModule
