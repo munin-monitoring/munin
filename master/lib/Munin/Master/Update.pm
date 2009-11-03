@@ -201,7 +201,7 @@ sub _create_self_aware_worker_exception_handler {
 }
 
 
-# FIX merge with Update::Worker::_get_rrd_file_name
+# FIX merge with UpdateWorker::_get_rrd_file_name
 sub _get_rrd_file_name {
     my ($self, $host, $service, $ds_name, $ds_type) = @_;
     
