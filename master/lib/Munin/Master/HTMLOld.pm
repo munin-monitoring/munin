@@ -165,7 +165,8 @@ sub html_main {
 
     if ($do_dump) {
 	use Data::Dumper;
-	
+
+	$Data::Dumper::Sortkeys = sub { my $a=shift; my @b = grep (!/#%#parent/, keys %$a); \@b; };
 	print Dumper $groups;
 	exit 0;
     }
