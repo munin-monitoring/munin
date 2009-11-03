@@ -9,7 +9,7 @@ body, h1, h2, h3, p, span, div {
  }
 
 h1{
-  margin: 0.4em;
+  margin: 0.5em;
 }
 
 body { 
@@ -17,6 +17,7 @@ body {
   width: 99%;
   margin: 0em auto 1em auto;
   padding: 0.0em 0.1em 1em 0.1em;
+  font-size: 90%;
 
  }
 
@@ -25,7 +26,6 @@ h2 {
   padding: 0px;
   font-size: 110%;
   font-weight: bold;
-  width: 90%;
   margin-left: auto;
   margin-right: auto;
 }
@@ -111,20 +111,20 @@ table.largeinvisiblebox {
   border-left: 1px solid #d1d1d1;
   border-right: 1px solid #d1d1d1;
   overflow: auto;
-
 }
 
 #header-table td{
-  padding-bottom: 2px;
+  padding-bottom: 0px;
+  margin: 0em auto 0em auto;
 }
 
 #header-table tr{
-  margin: 1em auto 0em auto;
+  margin: 0em auto 0em auto;
   padding: 0px;
 }
 
 #header-table td.overview{
-  margin: 0.2em auto 0.2em auto;
+  margin: 0em auto 0em auto;
   text-align: left;
 }
 
@@ -138,6 +138,7 @@ table.largeinvisiblebox {
 
 #header-table td.logo{
   width: 115px;
+  height: 48px;
   margin: 0em auto 0em auto;
 }
 
@@ -162,7 +163,7 @@ td.graphbox {
   white-space: nowrap;
 }
 
-td.graphbox table{
+td.graphbox > table {
   border-left: 1px dashed #aaaaaa;
   padding-left: 10px;
   margin-bottom: 1em;
