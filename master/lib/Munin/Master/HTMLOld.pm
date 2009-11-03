@@ -331,7 +331,7 @@ sub copy_web_resources {
     my ($tmpldir, $htmldir) = @_;
 
     #Make sure the logo and the stylesheet file is in the html dir
-    my @files = ("style.css", "logo.png", "logo-h.png", "definitions.html");
+    my @files = ("style.css", "logo.png", "logo-h.png", "definitions.html", "favicon.ico");
 
     foreach my $file ((@files)) {
         if (   (!-e "$htmldir/$file")

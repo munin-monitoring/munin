@@ -83,12 +83,11 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 
 	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR)
 
-	for p in master/www/*.tmpl master/www/*.png master/www/*.css; do \
+	for p in master/www/*.tmpl master/www/*.png master/www/*.css resources/favicon.ico; do \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
 	done
 	$(INSTALL) -m 0644 master/www/definitions.html $(CONFDIR)/templates/
 	$(INSTALL) -m 0755 master/VeraMono.ttf $(LIBDIR)/
-	$(INSTALL) -m 0644 resources/favicon.ico $(HTMLDIR)/
 
 	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/master/www/munin-htaccess $(HTMLDIR)/.htaccess
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/master/munin.conf $(CONFDIR)/
