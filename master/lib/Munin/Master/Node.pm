@@ -312,10 +312,12 @@ sub parse_service_data {
 		croak("Plugin error.  Please consult the log.");
 	    }
 	}
-	elsif ($line =~ m{ (\w+)\.value \s+ ([\S:]+) }xms) {
+	elsif ($line =~ m{\A ([^\.]+)\.value \s+ ([\S:]+) }xms) {
             my ($data_source, $value, $when) = ($1, $2, 'N');
 
             $data_source = $self->_sanitise_fieldname($data_source);
+
+	    DEBUG "[FETCH from $plugin] Storing $value in $data_source";
 
 	    if ($value =~ /^(\d+):(.+)$/) {
 		$when = $1;
@@ -327,7 +329,7 @@ sub parse_service_data {
             $values{$service}{$data_source}{value} = $value;
             $values{$service}{$data_source}{when}  = $when;
         }
-	elsif ($line =~ m{ (\w+)\.extinfo \s+ (.+) }xms) {
+	elsif ($line =~ m{\A ([^\.]+)\.extinfo \s+ (.+) }xms) {
 	    # Extinfo is used in munin-limits
             my ($data_source, $value) = ($1, $2);
 

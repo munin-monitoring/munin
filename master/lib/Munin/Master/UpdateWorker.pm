@@ -353,7 +353,7 @@ sub _update_rrd_files {
 		$self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name});
 	    }
 	    else {
-		WARN "[WARNING] Service $service on $nodedesignation returned no data";
+		WARN "[WARNING] Service $service on $nodedesignation returned no data for $ds_name";
 	    }
 	}
     }
