@@ -75,7 +75,6 @@ my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
 my $nsca = new IO::Handle;
 my $config = undef;
 
-my $DEBUG=0;
 my $configfile="$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 
 # Fields to copy when "aliasing" a field
@@ -96,7 +95,7 @@ sub munin_fetch {
     my ($start,$step,$names,$data) = RRDs::fetch $file,$type || "AVERAGE";
     unless (defined $data)
     {
-        logger ("Could not fetch data from $file(".($type||"AVERAGE")."): ". RRDs::error);
+        WARN ("[WARNING] Could not fetch data from $file(".($type||"AVERAGE")."): ". RRDs::error);
         return;
     }
     my @array = map { @$_[0] } splice(@$data, $#$data - ($last || 1));
@@ -208,13 +207,13 @@ sub munin_delete {
     my ($config,$data) = @_;
     for my $domain (keys %{$data->{domain}}) {
 	unless ($config->{domain}->{$domain}) {
-	    logger("Removing domain: $domain");
+	    DEBUG "[DEBUG] Removing domain: $domain";
 	    delete ($data->{domain}->{$domain});
 	    next;
 	}
 	for my $node (keys %{$data->{domain}->{$domain}->{node}}) {
 	    unless ($config->{domain}->{$domain}->{node}->{$node}) {
-		logger("Removing node from $domain: $node");
+		DEBUG "[DEBUG] Removing node from $domain: $node";
 		delete ($data->{domain}->{$domain}->{node}->{$node});
 	    }
 	}
@@ -523,7 +522,7 @@ sub munin_get_node
 
     foreach my $tmpvar (@$loc) {
 	if ($tmpvar !~ /\S/) {
-	    logger ("Error: munin_get_node: Cannot work on hash node \"$tmpvar\"");
+	    ERROR "[ERROR] munin_get_node: Cannot work on hash node \"$tmpvar\"";
 	    return;
 	}
 	# This used to be "return undef" which seems a bit hash and also has
@@ -553,7 +552,7 @@ sub munin_set_var_loc
     my $tmpvar = shift @aloc;
     $tmpvar = shift @aloc while (defined $tmpvar and $tmpvar =~ /^#%#/);
     if ($tmpvar !~ /\S/) {
-	logger ("Error: munin_set_var_loc: Cannot work on hash node \"$tmpvar\"");
+	ERROR "[ERROR] munin_set_var_loc: Cannot work on hash node \"$tmpvar\"";
 	return;
     }
     if (@aloc > 0) {
@@ -563,8 +562,8 @@ sub munin_set_var_loc
 	}
         return munin_set_var_loc ($hash->{$tmpvar}, \@aloc, $val);
     } else {
-        logger ("Warning: munin_set_var_loc: Setting unknown option \"$tmpvar\".")
-	unless Munin::Common::Config::cl_is_keyword($tmpvar);
+        WARN "[WARNING] munin_set_var_loc: Setting unknown option \"$tmpvar\"."
+	    unless Munin::Common::Config::cl_is_keyword($tmpvar);
 
 	# FIX
 
@@ -604,7 +603,7 @@ sub munin_get_node_partialpath
 	my @leftarr = split (/;/, $1);
 	push @$varloc, @leftarr;
     } else {
-	logger ("Error: munin_get_node_partialpath: Malformatted variable path \"$var\".");
+	ERROR "[ERROR] munin_get_node_partialpath: Malformed variable path \"$var\".";
     }
 
     # We've got both parts of the loc (varloc and hashloc) -- let's figure out 
@@ -625,8 +624,8 @@ sub munin_set_var_path
 
     my $result = undef;
 
-    logger ("Debug: munin_set_var_path: Setting var \"$var\" = \"$val\"")
-      if $DEBUG;
+    DEBUG "[DEBUG] munin_set_var_path: Setting var \"$var\" = \"$val\"";
+
     if ($var =~ /^\s*([^:]+):(\S+)\s*$/) {
 	my ($leftstring, $rightstring) = ($1, $2);
 
@@ -648,11 +647,11 @@ sub munin_set_var_path
 	my @leftarr = split (/;/, $1);
 	$result = munin_set_var_loc ($hash, [@leftarr], $val);
     } else {
-	logger ("Error: munin_set_var_path: Malformatted variable path \"$var\".");
+	ERROR "Error: munin_set_var_path: Malformatted variable path \"$var\".";
     }
 
     if (!defined $result) {
-	logger ("Error: munin_set_var_path: Failed setting \"$var\" = \"$val\".");
+	ERROR "Error: munin_set_var_path: Failed setting \"$var\" = \"$val\".";
     }
 
     return $hash;
@@ -673,8 +672,7 @@ sub munin_get_root_node
 }
 
 
-sub munin_writeconfig_loop 
-{
+sub munin_writeconfig_loop {
     my ($hash,$fh,$pre) = @_;
 
     foreach my $key (keys %$hash) {
@@ -686,7 +684,7 @@ sub munin_writeconfig_loop
 	    next if !defined $pre and $key eq "version"; # Handled separately
 	    next if !defined $hash->{$key} or !length $hash->{$key};
             (my $outstring = $hash->{$key}) =~ s/([^\\])#/$1\\#/g;
-	    DEBUG "Writing: $path $outstring\n";
+	    DEBUG "[DEBUG] Writing: $path $outstring\n";
 	    if ($outstring =~ /\\$/)
 	    { # Backslash as last char has special meaning. Avoid it.
 		print $fh "$path $outstring\\\n"; 
@@ -701,6 +699,8 @@ sub munin_writeconfig_loop
 sub munin_writeconfig {
     my ($datafilename,$data,$fh) = @_;
 
+    DEBUG "[DEBUG] Writing state to $datafilename";
+
     if (!defined $fh) {
 	$fh = gensym();
 	unless (open ($fh, ">", $datafilename)) {
@@ -713,11 +713,8 @@ sub munin_writeconfig {
     # Write datafile
     munin_writeconfig_loop ($data, $fh);
 
-    if (defined $fh)
-    {
-	DEBUG "Closing filehandle \"$datafilename\"...\n";
-	close ($fh);
-    }
+    DEBUG "[DEBUG] Closing filehandle \"$datafilename\"...\n";
+    close ($fh);
 }
 
 
@@ -825,11 +822,11 @@ sub munin_path_to_loc
 	my @leftarr = split (/;/, $1);
 	$result = [@leftarr];
     } else {
-	logger ("Error: munin_path_to_loc: Malformatted variable path \"$path\".");
+	ERROR "[ERROR] munin_path_to_loc: Malformatted variable path \"$path\".";
     }
 
     if (!defined $result) {
-	logger ("Error: munin_path_to_loc: Failed converting \"$path\".");
+	ERROR "[ERROR] munin_path_to_loc: Failed converting \"$path\".";
     }
 
     return $result;
