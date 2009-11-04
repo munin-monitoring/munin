@@ -452,14 +452,33 @@ sub get_peer_nodes {
             unshift @$ret, {"name" => $peername, "link" => undef};
         }
         else {
-            if (defined $peer->{'graph_title'} and !defined $peer->{'#%#has_subservices'}) {
-                unshift @$ret,
-                    {"name" => $peername, "link" => "$peername.html"};
-            }
-            else {
-                unshift @$ret,
-                    {"name" => $peername, "link" => "../$peername/index.html"};
-            }
+            # Handle different directory levels between subgraphs and regular graphs
+	    if (munin_has_subservices ($hash)) {
+		if (munin_has_subservices ($peer)) {
+		    # I've got subgraphs, peer's got subgraphs
+		    unshift @$ret,
+			{"name" => $peername, "link" => "../$peername/index.html"};
+		} else { 
+		    # I've got subgraphs, peer's a regular graph
+		    unshift @$ret,
+			{"name" => $peername, "link" => "../$peername.html"};
+		} 
+	    } elsif (munin_has_subservices ($peer)) {
+		# I'm a regular graph, peer's got subgraphs
+		unshift @$ret,
+		    {"name" => $peername, "link" => "$peername/index.html"};
+	    } else {
+		if (defined $peer->{'graph_title'}) {
+		    # Both me and peer are regular graphs
+		    unshift @$ret,
+			{"name" => $peername, "link" => "$peername.html"};
+		}
+		else {
+		    # We're not on the graph level -- handle group peering
+		    unshift @$ret,
+			{"name" => $peername, "link" => "../$peername/index.html"};
+		}
+	    }
         }
     }
     return $ret;
@@ -491,11 +510,6 @@ sub get_group_tree {
 
 	    $child->{'#%#is_service'} = 1;
 
-	    # Mark this child as having subservices if it's got children with graph_title set
-	    if (scalar (grep $_, map { ref($child->{$_}) eq "HASH" and $_ ne '#%#parent' and defined $child->{$_}->{'graph_title'} ? 1 : undef } keys %$child)) {
-		$child->{'#%#has_subservices'} = 1;
-	    }
-
             my $childname = munin_get_node_name($child);
             my $childnode = generate_service_templates($child);
 
@@ -503,7 +517,7 @@ sub get_group_tree {
             $childnode->{'name'} = $child->{"graph_title"};
 
 	    # Make sure the link gets right even if the service has subservices
-	    if ($child->{'#%#has_subservices'}) {
+	    if (munin_has_subservices ($child)) {
 		$childnode->{'url'}  = $base . $childname . "/index.html";
 	    } else {
 		$childnode->{'url'}  = $base . $childname . ".html";
@@ -646,7 +660,7 @@ sub get_group_tree {
         "csspath"            => $csspath,
         "groups"             => $groups,
         "graphs"             => $graphs,
-        "multigraph"         => $hash->{'#%#has_subservices'},
+        "multigraph"         => munin_has_subservices ($hash),
         "categories"         => $cats,
         "ngroups"            => scalar(@$groups),
         "ngraphs"            => scalar(@$graphs),

@@ -65,6 +65,7 @@ our (@ISA, @EXPORT);
 	   'munin_get_parent',
 	   'munin_get_children',
 	   'munin_get_node_partialpath',
+	   'munin_has_subservices',
 	   'print_version_and_exit',
 	   'exit_if_run_by_super_user',
 	   'look_for_child',
@@ -778,7 +779,7 @@ sub munin_get_html_filename {
         $l;
     } @$loc;
 	
-    if (defined $hash->{'graph_title'} and !defined $hash->{'#%#has_subservices'}) {
+    if (defined $hash->{'graph_title'} and !munin_has_subservices ($hash)) {
 	$plugin = pop @$loc or return;
     }
 
@@ -1311,6 +1312,18 @@ sub wait_for_remaining_children {
     return $running;
 }
 
+sub munin_has_subservices {
+    my ($hash) = @_;
+    return 0 unless defined $hash;
+
+    # Only services (which again require graph_title) can have subservices
+    return 0 unless defined $hash->{'graph_title'};
+
+    if (!defined $hash->{'#%#has_subservices'}) {
+	$hash->{'#%#has_subservices'} = scalar (grep $_, map { ref($hash->{$_}) eq "HASH" and $_ ne '#%#parent' and defined $hash->{$_}->{'graph_title'} ? 1 : undef } keys %$hash);
+    }
+    return $hash->{'#%#has_subservices'};
+}
 
 1;
 
@@ -1668,6 +1681,20 @@ Returns:
 
 =item B<munin_graph_column_headers>
 
+
+=item B<munin_has_subservices>
+
+  munin_has_subservices($hash);
+
+Checks whether the service represented by $hash has subservices (multigraph),
+and returns the result.
+
+Parameters:
+ - $hash: Hash reference pointing to a service
+
+Returns:
+ - true: if the hash is indeed a service, and said service has got subservices
+ - false: otherwise
 
 
 =item B<munin_mkdir_p>
