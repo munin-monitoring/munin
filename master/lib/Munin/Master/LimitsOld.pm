@@ -43,6 +43,7 @@ use Time::HiRes;
 use Text::Balanced qw (extract_multiple extract_delimited
     extract_quotelike extract_bracketed);
 use Log::Log4perl qw (:easy);
+use Carp;
 
 my $DEBUG          = 0;
 my $conffile       = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
@@ -129,11 +130,11 @@ sub process_limits {
     my %work_hash_tmp;
     my $work_array = [];
     foreach my $workfield (
-        @{munin_find_field($config, qr/^(critical|warning)/)}) {
+        @{munin_find_field_for_limits($config, qr/^(critical|warning)/)}) {
         my $parent = munin_get_parent($workfield);
         if (!defined $work_hash_tmp{$parent}) {
-            $work_hash_tmp{$parent} = 1;
-            push @$work_array, $parent;
+	    $work_hash_tmp{$parent} = 1;
+	    push @$work_array, $parent;
         }
     }
 
@@ -207,6 +208,10 @@ sub process_service {
     my $gparent    = munin_get_node_name($gparentobj);
     my $children   = munin_get_children($hash);
 
+    if (!ref $hash) {
+	confess("I was passed a non-hash!");
+    }
+
     return if (@limit_services and !grep (/^$service$/, @limit_services));
 
     DEBUG "[DEBUG] processing service: $service";
@@ -252,7 +257,7 @@ sub process_service {
         $field->{'wrange'} = (defined $warn->[0] ? $warn->[0] : "") . ":"
             . (defined $warn->[1] ? $warn->[1] : "");
         DEBUG("[DEBUG] value: "
-	      . join('::', @{munin_get_node_loc($hash)})
+	      . join('::', @$fpath)
 	      . ": $value (crit: "
 	      . $field->{'crange'}
 	      . ") (warn: "
@@ -385,8 +390,8 @@ sub get_limits {
 
     # The merge of the unknown_limit implementation was somewhat botched.  Not tested. - janl
     if ($unknown_limit =~ /^\s*(\d+)\s*$/) {
-        $unknown_limit = $1 if defined $1;
-        DEBUG "[DEBUG] processing unknown_limit: $name -> $unknown_limit";
+	$unknown_limit = $1 if defined $1;
+	DEBUG "[DEBUG] processing unknown_limit: $name -> $unknown_limit";
     }
 
     return (\@warning, \@critical, $unknown_limit);
@@ -402,6 +407,7 @@ sub generate_service_message {
         'unknown'  => [],
         'foks'     => [],
         'ok'       => []);
+
     my $contacts = munin_get_children(munin_get_node($config, ["contact"]));
 
     DEBUG "[DEBUG] generating service message: "
@@ -433,6 +439,7 @@ sub generate_service_message {
     DEBUG("[DEBUG] Contact list for "
 	  . join('::', @{munin_get_node_loc($hash)})
 	  . ": $contactlist");
+
     foreach my $c (split(/\s+/, $contactlist)) {
         next if $c eq "none";
         my $contactobj = munin_get_node($config, ["contact", $c]);

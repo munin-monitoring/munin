@@ -61,6 +61,7 @@ our (@ISA, @EXPORT);
 	   'munin_get_separated_node',
 	   'munin_mkdir_p',
 	   'munin_find_field',
+	   'munin_find_field_for_limits',
 	   'munin_get_parent',
 	   'munin_get_children',
 	   'munin_get_node_partialpath',
@@ -406,6 +407,32 @@ sub munin_find_field {
 }
 
 
+sub munin_find_field_for_limits {
+    my $hash  = shift;
+    my $field = shift;
+    my $avoid = shift;
+    my $res = [];
+
+    if (ref ($field) ne "Regexp") {
+	$field = qr/^$field$/;
+    }
+
+    if (ref ($hash) eq "HASH") {
+	foreach my $key (keys %{$hash}) {
+	    next if $key =~ /^#%#/;
+	    last if defined $avoid and $key eq $avoid;
+	    if (ref ($hash->{$key}) eq "HASH") {
+		push @$res, @{munin_find_field_for_limits ($hash->{$key}, $field, $avoid)};
+	    } elsif ($key =~ $field) {
+		push @$res, $hash;
+	    }
+	}
+    }
+
+    return $res;
+}
+
+
 sub munin_get_children {
     my $hash  = shift;
     my $res = [];
@@ -684,7 +711,8 @@ sub munin_writeconfig_loop {
 	    next if !defined $pre and $key eq "version"; # Handled separately
 	    next if !defined $hash->{$key} or !length $hash->{$key};
             (my $outstring = $hash->{$key}) =~ s/([^\\])#/$1\\#/g;
-	    DEBUG "[DEBUG] Writing: $path $outstring\n";
+	    # Too much.  Can be seen in the file itself.
+	    # DEBUG "[DEBUG] Writing: $path $outstring\n";
 	    if ($outstring =~ /\\$/)
 	    { # Backslash as last char has special meaning. Avoid it.
 		print $fh "$path $outstring\\\n"; 
@@ -835,6 +863,7 @@ sub munin_path_to_loc
 
 sub munin_get_filename {
     my $hash = shift;
+
     my $loc  = munin_get_node_loc ($hash);
     my $ret  = munin_get ($hash, "dbdir");
     
@@ -1384,7 +1413,7 @@ Returns:
 
 =item B<munin_find_field>
 
-Search a hash to find nodes with $field defined.
+Search a hash to find hash nodes with $field defined.
 
 Parameters: 
  - $hash: A hash ref to search
