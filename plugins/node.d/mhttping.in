@@ -125,7 +125,7 @@ for $file (@results) {
 	next if ($file =~ /^\./) ;
 	print "$file.label $file\n" ;
 	print "$file.type GAUGE\n" ;
-	print "$file.warn $timeout\n" ;
+	print "$file.warning $timeout\n" ;
 
 } # end for $file
 
