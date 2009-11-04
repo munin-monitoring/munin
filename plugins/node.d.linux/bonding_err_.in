@@ -35,6 +35,9 @@ if [ "$1" = "config" ]; then
     echo "graph_args --base 1000 -l 0"
     grep "^Slave Interface:" ${PROCDIR}/${BONDINGIF} | while read a b if; do
       echo "if_${if}.label ${if}"
+      echo "if_${if}.type DERIVE"
+      echo "if_${if}.min 0"
+      echo "if_${if}.warning 0"
     done
   fi
   exit 0
