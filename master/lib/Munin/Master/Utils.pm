@@ -778,7 +778,7 @@ sub munin_get_html_filename {
         $l;
     } @$loc;
 	
-    if (defined $hash->{'graph_title'}) {
+    if (defined $hash->{'graph_title'} and !defined $hash->{'#%#has_subservices'}) {
 	$plugin = pop @$loc or return;
     }
 

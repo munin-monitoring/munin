@@ -452,7 +452,7 @@ sub get_peer_nodes {
             unshift @$ret, {"name" => $peername, "link" => undef};
         }
         else {
-            if (defined $peer->{'graph_title'}) {
+            if (defined $peer->{'graph_title'} and !defined $peer->{'#%#has_subservices'}) {
                 unshift @$ret,
                     {"name" => $peername, "link" => "$peername.html"};
             }
@@ -491,12 +491,23 @@ sub get_group_tree {
 
 	    $child->{'#%#is_service'} = 1;
 
+	    # Mark this child as having subservices if it's got children with graph_title set
+	    if (scalar (grep $_, map { ref($child->{$_}) eq "HASH" and $_ ne '#%#parent' and defined $child->{$_}->{'graph_title'} ? 1 : undef } keys %$child)) {
+		$child->{'#%#has_subservices'} = 1;
+	    }
+
             my $childname = munin_get_node_name($child);
             my $childnode = generate_service_templates($child);
 
             push @$graphs, {"name" => $childname};
             $childnode->{'name'} = $child->{"graph_title"};
-            $childnode->{'url'}  = $base . $childname . ".html";
+
+	    # Make sure the link gets right even if the service has subservices
+	    if ($child->{'#%#has_subservices'}) {
+		$childnode->{'url'}  = $base . $childname . "/index.html";
+	    } else {
+		$childnode->{'url'}  = $base . $childname . ".html";
+	    }
 
             for (my $shrinkpath = $childnode->{'url'}, my $counter = 0;
 		 $shrinkpath;
@@ -635,6 +646,7 @@ sub get_group_tree {
         "csspath"            => $csspath,
         "groups"             => $groups,
         "graphs"             => $graphs,
+        "multigraph"         => $hash->{'#%#has_subservices'},
         "categories"         => $cats,
         "ngroups"            => scalar(@$groups),
         "ngraphs"            => scalar(@$graphs),
@@ -702,7 +714,7 @@ sub generate_group_templates {
 
     foreach my $key (@$arr) {
         if (defined $key and ref($key) eq "HASH") {
-            $key->{'peers'} = get_peer_nodes($key->{'hashnode'});
+            $key->{'peers'} = get_peer_nodes($key->{'hashnode'}, lc munin_get($key->{'hashnode'}, "graph_category", "other"));
 
 	    # This was only kept there for getting the peers
             delete $key->{'hashnode'}; 

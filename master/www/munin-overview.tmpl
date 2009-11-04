@@ -23,31 +23,36 @@
  <TMPL_LOOP NAME="GROUPS">
  <ul>
   <li><TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span><TMPL_IF NAME="COMPARE"> :: [ <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> ]</TMPL_IF>  <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</TMPL_IF>
-<TMPL_IF NAME="NGROUPS"><TMPL_LOOP NAME="GROUPS"><ul>
+<TMPL_IF NAME="NGROUPS"><TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH"><ul>
    	    <li><TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span><TMPL_IF NAME="COMPARE"> :: [ <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> ]</TMPL_IF> <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</TMPL_IF>
-<TMPL_IF NAME="NGROUPS"><TMPL_LOOP NAME="GROUPS"><ul>
+<TMPL_IF NAME="NGROUPS"><TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH"><ul>
       <li><TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span><TMPL_IF NAME="COMPARE"> :: [ <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> ]</TMPL_IF> <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</TMPL_IF>
-<TMPL_IF NAME="NGROUPS"><TMPL_LOOP NAME="GROUPS"><ul>
+<TMPL_IF NAME="NGROUPS"><TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH"><ul>
 		    <li><TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span><TMPL_IF NAME="COMPARE"> :: [ <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> ]</TMPL_IF> <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</TMPL_IF>
-<TMPL_IF NAME="NGROUPS"><TMPL_LOOP NAME="GROUPS"><ul>
+<TMPL_IF NAME="NGROUPS"><TMPL_LOOP NAME="GROUPS"> <TMPL_UNLESS NAME="MULTIGRAPH"><ul>
 		    <li><TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span><TMPL_IF NAME="COMPARE"> :: [ <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> ]</TMPL_IF> <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</TMPL_IF>
-<TMPL_IF NAME="NGROUPS"><TMPL_LOOP NAME="GROUPS"><ul>
+<TMPL_IF NAME="NGROUPS"><TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH"><ul>
 		    <li><TMPL_IF NAME="NCATEGORIES"><span class="host"><TMPL_ELSE><span class="domain"></TMPL_IF><a href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span><TMPL_IF NAME="COMPARE"> :: [ <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> ]</TMPL_IF> <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</TMPL_IF>
 		    </li>
 	          </ul>
+		</TMPL_UNLESS>
 	        </TMPL_LOOP></TMPL_IF>
 		    </li>
 	          </ul>
+		</TMPL_UNLESS>
 	        </TMPL_LOOP></TMPL_IF>
 		    </li>
 	          </ul>
+		</TMPL_UNLESS>
 	        </TMPL_LOOP></TMPL_IF>
 		    </li>
 	          </ul>
+		</TMPL_UNLESS>
 	        </TMPL_LOOP>
 	      </TMPL_IF>
             </li>
           </ul>
+	</TMPL_UNLESS>
 	</TMPL_LOOP>
       </TMPL_IF>
    </li>
