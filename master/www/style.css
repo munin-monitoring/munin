@@ -1,10 +1,8 @@
 html {
 }
 
-
-
 body, h1, h2, h3, p, span, div { 
-  font-family: helvetica, verdana, arial, sans-serif;
+  font-family: "vera sans", "dejavu sans", helvetica, verdana, arial, sans-serif;
   color: #333333;
  }
 
@@ -275,17 +273,26 @@ a img {
   border-width: 0px;
 }
 
-a.warn:link    { color: #cc9900; }
-a.warn:visited { color: #cc9900; }
-a.warn:active  { color: #cc9900; }
-a.warn:hover   { color: #cc9900; }
+a.unkn:link    { color: #ffaa00; } 
+a.unkn:visited { color: #ffaa00; } 
+a.unkn:active  { color: #ffaa00; } 
+a.unkn:hover   { color: #ffaa00; } 
 
-a.crit:link    { color: #cc0000; } 
-a.crit:visited { color: #cc0000; } 
-a.crit:active  { color: #cc0000; } 
-a.crit:hover   { color: #cc0000; } 
+a.warn:link    { color: #ffd300; }
+a.warn:visited { color: #ffd300; }
+a.warn:active  { color: #ffd300; }
+a.warn:hover   { color: #ffd300; }
+
+a.crit:link    { color: #ff0000; } 
+a.crit:visited { color: #ff0000; } 
+a.crit:active  { color: #ff0000; } 
+a.crit:hover   { color: #ff0000; } 
 
 a:link    { color: #486aaf; } 
 a:visited { color: #486aaf; } 
 a:active  { color: #486aaf; } 
 a:hover   { color: #486aaf; } 
+
+img.warn  { border-width: 2px; border-color: #ffd300; }
+img.crit  { border-width: 2px; border-color: #ff0000; }
+img.unkn  { border-width: 2px; border-color: #ffaa00; }
