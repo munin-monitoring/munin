@@ -5,6 +5,7 @@ package Munin::Node::Configure::Plugin;
 use strict;
 use warnings;
 
+use Munin::Node::Utils qw(set_intersection set_difference);
 use Munin::Node::Configure::Debug;
 
 
@@ -48,9 +49,9 @@ sub is_installed { return @{(shift)->{installed}} ? 'yes' : 'no'; }
 #   (remove) = (installed) \ (suggested)
 #   (add)    = (suggested) \ (installed)
 #   (same)   = (installed) ⋂ (suggested)
-sub _remove { _set_difference(@_); }
-sub _add    { _set_difference(reverse @_); }
-sub _same   { _set_intersection(@_); }
+sub _remove { set_difference(@_); }
+sub _add    { set_difference(reverse @_); }
+sub _same   { set_intersection(@_); }
 
 
 sub suggestion_string
@@ -334,31 +335,6 @@ sub log_error
     DEBUG($msg);
 
     return;
-}
-
-
-### Set operations #############################################################
-
-# returns the list of elements in arrayref $a that are not in arrayref $b
-# NOTE this is *not* a method.
-sub _set_difference
-{
-    my ($A, $B) = @_;
-    my %set;
-    @set{@$A} = ();
-    delete @set{@$B};
-    return sort keys %set;
-}
-
-
-# returns the list of elements common to arrayrefs $a and $b
-# NOTE this is *not* a method.
-sub _set_intersection
-{
-    my ($A, $B) = @_;
-    my %set;
-    @set{@$A} = (1) x @$A;
-    return sort grep $set{$_}, @$B;
 }
 
 

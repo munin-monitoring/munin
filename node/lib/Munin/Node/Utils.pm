@@ -2,6 +2,13 @@ package Munin::Node::Utils;
 
 # Various utility functions
 
+use Exporter ();
+our @ISA = qw/Exporter/;
+our @EXPORT_OK = qw/
+	set_difference
+	set_intersection
+/;
+
 
 ### Set operations #############################################################
 
