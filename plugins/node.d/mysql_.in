@@ -94,7 +94,9 @@ USA.
 
 =head1 VERSION
 
-git-master
+git-master + a few munin modifications
+
+This plugin was downloaded from L<http://github.com/kjellm/munin-mysql/>
 
 =head1 MAGICK MARKERS
 
