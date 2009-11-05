@@ -218,7 +218,7 @@ sub _process_starttls_command {
     my $tls_verify = $config->{tls_verify_certificate}
                   || 'no';
 
-    my $depth = $config->{tls_verify_depth}
+    my $depth = $config->{tls_verify_depth};
     $depth = 5 unless defined $depth;
 
     $session->{tls} = Munin::Common::TLSServer->new({
