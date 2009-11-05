@@ -229,7 +229,11 @@ sub munin_overwrite {
     for my $key (keys %$overwrite) {
         next if $key =~ /^#%#/;
 	if (ref $overwrite->{$key}) {
-	    munin_overwrite($configfile->{$key},$overwrite->{$key});
+	    if (!defined $configfile->{$key}) {
+		$configfile->{$key} = $overwrite->{$key};
+	    } else {
+		munin_overwrite($configfile->{$key},$overwrite->{$key});
+	    }
 	} else {
 	    $configfile->{$key} = $overwrite->{$key};
 	}
