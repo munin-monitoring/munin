@@ -199,7 +199,14 @@ innodb_free_old() {
 innodb_free() {
     ver=$(mysql_version)
     if [ "$ver" ">" "5.0" ]; then
-	innodb_free_new
+		case $ver in
+			5.0.*|5.1.?|5.1.1?|5.1.2[0123])
+				innodb_free_old
+				;;
+			*)
+				innodb_free_new
+				;;
+		esac
     else
 	innodb_free_old
     fi
