@@ -269,7 +269,7 @@ ul li {
   margin-left: -1.2em;
 }
 
-a img {
+a {
   border-width: 0px;
 }
 
@@ -293,6 +293,7 @@ a:visited { color: #486aaf; }
 a:active  { color: #486aaf; } 
 a:hover   { color: #486aaf; } 
 
+img       { border-width: 2px; border-color: transparent; }
 img.warn  { border-width: 2px; border-color: #ffd300; }
 img.crit  { border-width: 2px; border-color: #ff0000; }
 img.unkn  { border-width: 2px; border-color: #ffaa00; }
