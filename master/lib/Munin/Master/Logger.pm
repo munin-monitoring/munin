@@ -74,11 +74,12 @@ my $logdir = undef;
 my $logopened = 0;
 my $me = basename($PROGRAM_NAME);
 
-# Get perl warnings into the log files
-$SIG{__WARN__} = \&_warn_catcher;
-
 sub _warn_catcher {
-    WARN "[PERL WARNING] ".join(" ",@_);
+    if ($logopened) {
+	WARN "[PERL WARNING] ".join(" ",@_);
+    } else {
+	print STDERR join(" ",@_);
+    }
 }
 
 sub logger_open {
@@ -100,6 +101,9 @@ sub logger_open {
     }
 
     get_logger('')->info("Opened log file");
+
+    # Get perl warnings into the log files
+    $SIG{__WARN__} = \&_warn_catcher;
 }
 
 sub logger_debug {
