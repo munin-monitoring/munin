@@ -22,7 +22,7 @@ use Munin::Node::Utils;
 # A set of all services that this node can run.
 my %services;
 
-# all multigraph plugins on this node.
+# Services that require the server to support multigraph plugins.
 my @multigraph_services;
 
 # Which hosts this node's services applies to. Typically this is the
@@ -52,7 +52,7 @@ sub request_denied_hook {
 
 
 sub _load_services {
-    opendir (my $DIR, $config->{servicedir}) 
+    opendir (my $DIR, $config->{servicedir})
         || die "Cannot open plugindir: $config->{servicedir} $!";
 
     for my $file (readdir($DIR)) {
@@ -91,6 +91,7 @@ sub _add_services_to_nodes
 
         $nodes{$node}{$service} = 1;
 
+        # Note any plugins that require particular server capabilities.
         if (grep /^multigraph\s+/, @{$res->{stdout}}) {
            push @multigraph_services, $service;
         }
@@ -118,7 +119,7 @@ sub process_request {
     my $timed_out = !do_with_timeout($config->{'timeout'}, sub {
         while (defined (my $line = _net_read($session))) {
             chomp $line;
-            _process_command_line($session, $line) 
+            _process_command_line($session, $line)
                 or last;
         }
     });
@@ -153,15 +154,15 @@ sub _process_command_line {
     }
     elsif (/^quit/i || /^\./) {
         exit 1;
-    } 
+    }
     elsif (/^version/i) {
         _show_version($session);
-    } 
+    }
     elsif (/^nodes/i) {
         _show_nodes($session);
     }
     elsif (/^fetch\s?(\S*)/i) {
-        _print_service($session, _run_service($session, $1)) 
+        _print_service($session, _run_service($session, $1))
     }
     elsif (/^config\s?(\S*)/i) {
         _print_service($session, _run_service($session, $1, "config"));
@@ -186,8 +187,8 @@ sub _process_command_line {
 
 sub _expect_starttls {
     my ($session) = @_;
-    
-    return !$session->{tls_started} 
+
+    return !$session->{tls_started}
         && ($session->{tls_mode} eq 'paranoid' || $session->{tls_mode} eq 'enabled');
 }
 
@@ -195,7 +196,7 @@ sub _expect_starttls {
 sub _negotiate_session_capabilities {
     my ($session, $server_capabilities) = @_;
 
-    my @node_cap   = qw( multigraph );
+    my @node_cap = qw( multigraph );
     $session->{server_capabilities}
         = { map { $_ => 1 } split(/ /, $server_capabilities) };
 
@@ -208,29 +209,17 @@ sub _process_starttls_command {
 
     my $mode = $session->{tls_mode};
 
-    my $key;
-    my $cert;
-    my $depth;
-    my $ca_cert;
-    my $tls_verify;
+    my $key        = $config->{tls_private_key}
+                  || "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.pem";
+    my $cert       = $config->{tls_certificate}
+                  || "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.pem";
+    my $ca_cert    = $config->{tls_ca_certificate}
+                  || "$Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem";
+    my $tls_verify = $config->{tls_verify_certificate}
+                  || 'no';
 
-    $key = $config->{tls_private_key};
-    $key = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.pem" 
-        unless defined $key;
-
-    $cert = $config->{tls_certificate};
-    $cert = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.pem" 
-        unless defined $cert;
-
-    $ca_cert = $config->{tls_ca_certificate};
-    $ca_cert = "$Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem" 
-        unless defined $ca_cert;
-
-    $depth = $config->{tls_verify_depth};
+    my $depth = $config->{tls_verify_depth}
     $depth = 5 unless defined $depth;
-
-    $tls_verify = $config->{tls_verify_certificate};
-    $tls_verify = "no" unless defined $tls_verify;
 
     $session->{tls} = Munin::Common::TLSServer->new({
         DEBUG        => $config->{DEBUG},
@@ -239,7 +228,7 @@ sub _process_starttls_command {
         read_func    => sub { die "Shouln't need to read!?" },
         tls_ca_cert  => $ca_cert,
         tls_cert     => $cert,
-        tls_paranoia => $mode, 
+        tls_paranoia => $mode,
         tls_priv     => $key,
         tls_vdepth   => $depth,
         tls_verify   => $tls_verify,
@@ -267,7 +256,7 @@ sub _show_version {
 
 sub _show_nodes {
     my ($session) = @_;
-    
+
     for my $node (keys %nodes) {
         _net_write($session, "$node\n");
     }
@@ -381,7 +370,7 @@ the munin node.
 
  use Munin::Node::Server;
  Munin::Node::Server->run(...);
- 
+
 For arguments to run(), see L<Net::Server>.
 
 =head1 METHODS
