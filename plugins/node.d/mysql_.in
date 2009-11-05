@@ -1,6 +1,8 @@
 #!@@PERL@@
 -*- perl -*-
 
+=encoding utf8
+
 =head1 NAME
 
 mysql_ - Munin plugin to display misc MySQL server status
@@ -22,17 +24,16 @@ To get a list of symlinks that can be created, run:
 In addition you might need to specify connection parameters in the
 plugin configuration to override the defaults. These are the defaults:
 
-  [mysql*]
+  [mysql_*]
     env.mysqlconnection DBI:mysql:mysql
     env.mysqluser root
 
 Non-default example:
 
-  [mysql*]
+  [mysql_*]
     env.mysqlconnection DBI:mysql:mysql;host=127.0.0.1;port=3306
     env.mysqluser root
     env.mysqlpassword geheim
-
 
 =head1 DEPENDENCIES
 
