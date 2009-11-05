@@ -52,7 +52,9 @@ obj_sendfile_vs_write, losthdr, esi, hcb, shm, shm_writes, overflow,
 session, session_herd
 
 You can link them yourself with something like this:
-ln -s /foo/varnish_ /etc/munin/plugins/varnish_data_structures
+
+  ln -s @@LIBDIR@@/plugins/varnish_ \
+    @@CONFDIR@@/plugins/varnish_data_structures
 
 =head1 INTERPERTATION
 
