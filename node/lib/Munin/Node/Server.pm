@@ -72,7 +72,7 @@ sub _add_services_to_nodes
     my (@services) = @_;
 
     for my $service (keys %services) {
-        print STDERR "Configuring $service\n";
+        print STDERR "Configuring $service\n" if $config->{DEBUG};
 
         my $res = eval {
             local $SIG{CHLD}; # stop Net::Server from reaping the dead service too fast
@@ -96,7 +96,7 @@ sub _add_services_to_nodes
            push @multigraph_services, $service;
         }
     }
-    print STDERR "Finished configuring services\n";
+    print STDERR "Finished configuring services\n" if $config->{DEBUG};
 
     return;
 }
@@ -197,8 +197,9 @@ sub _negotiate_session_capabilities {
     my ($session, $server_capabilities) = @_;
 
     my @node_cap = qw( multigraph );
-    $session->{server_capabilities}
-        = { map { $_ => 1 } split(/ /, $server_capabilities) };
+    $session->{server_capabilities} = {
+            map { $_ => 1 } split(/ /, $server_capabilities)
+    };
 
     _net_write($session, sprintf("cap %s\n",join(" ", @node_cap)));
 }
