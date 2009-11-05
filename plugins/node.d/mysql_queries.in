@@ -1,7 +1,7 @@
 #!@@PERL@@
 # -*- perl -*-
 #
-#%# family=auto
+#%# family=contrib
 #%# capabilities=autoconf
 
 =head1 NAME
