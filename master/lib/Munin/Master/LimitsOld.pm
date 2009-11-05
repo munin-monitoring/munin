@@ -199,13 +199,64 @@ Options:
 }
 
 
+# Get the host of the service in question
+sub get_host_node {
+    my $service = shift || return undef;
+    my $parent  = munin_get_parent($service) || return undef;
+
+    if (munin_has_subservices($parent)) {
+	return get_host_node($parent);
+    } else {
+	return $parent;
+    }
+}
+
+sub get_notify_name {
+    my $hash = shift || return;
+
+    if (defined $hash->{'notify_alias'}) {
+	return $hash->{'notify_alias'};
+    } elsif (defined $hash->{'graph_title'}) {
+	return $hash->{'graph_title'};
+    } else {
+	return munin_get_node_name($hash);
+    }
+}
+
+# Joined "sub-path" under host level
+sub get_full_service_name {
+    my $service    = shift || return undef;
+    my $parent     = munin_get_parent($service);
+    my $name       = get_notify_name($service);
+
+    if (defined $parent and munin_has_subservices($parent)) {
+	return (get_full_service_name($parent) . " :: " . $name);
+    } else {
+	return $name;
+    }
+
+}
+
+# Joined group path above host level
+sub get_full_group_path {
+    my $group      = shift || return undef;
+    my $parent     = munin_get_parent($group);
+    my $name       = get_notify_name($group);
+
+    if (defined $parent and munin_get_node_name($parent) ne "root") {
+	return (get_full_group_path($parent) . " :: " . $name);
+    } else {
+	return $name;
+    }
+}
+
 sub process_service {
     my $hash       = shift || return;
-    my $parentobj  = munin_get_parent($hash);
-    my $gparentobj = munin_get_parent(munin_get_parent($hash));
+    my $hobj       = get_host_node($hash);
     my $service    = munin_get_node_name($hash);
-    my $parent     = munin_get_node_name($parentobj);
-    my $gparent    = munin_get_node_name($gparentobj);
+    my $hparentobj = munin_get_parent($hobj);
+    my $parent     = munin_get_node_name($hobj);
+    my $gparent    = munin_get_node_name($hparentobj);
     my $children   = munin_get_children($hash);
 
     if (!ref $hash) {
@@ -219,10 +270,9 @@ sub process_service {
     # Some fields that are nice to have in the plugin output
     $hash->{'fields'} = join(' ', map {munin_get_node_name($_)} @$children);
     $hash->{'plugin'} = $service;
-    $hash->{'graph_title'} = $hash->{'notify_alias'}
-        if defined $hash->{'notify_alias'};
-    $hash->{'host'}  = munin_get($parentobj,  "notify_alias", $parent);
-    $hash->{'group'} = munin_get($gparentobj, "notify_alias", $gparent);
+    $hash->{'graph_title'} = get_full_service_name($hash);
+    $hash->{'host'}  = get_notify_name($hobj);
+    $hash->{'group'} = get_full_group_path($hparentobj);
     $hash->{'worst'} = "ok";
     $hash->{'worstid'} = 0 unless defined $hash->{'worstid'};
 
