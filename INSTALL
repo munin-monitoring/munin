@@ -98,7 +98,7 @@ To install both master and node:
 	  is /etc/nologin - but the user still needs to be able to
           run cron jobs.
 
-	- make
+	- make (do _NOT_ do "make install" directly, there is a bug somewhere that will result in a very defective Munin::Common::Defaults to be installed).
 
 	- make install
 

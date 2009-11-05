@@ -123,15 +123,10 @@ install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	$(CHMOD) 0755 $(CONFDIR)/plugin-conf.d
 
 	for p in build/plugins/node.d/* build/plugins/node.d.$(OSTYPE)/* ; do \
-	    if test -f "$$p" ; then                                    \
-		family=`sed -n 's/^[[:space:]]*#%# family=\(.*\)$$/\1/p' $$p`;\
-		test "$$family" || family=contrib;                     \
-		if echo $(INSTALL_PLUGINS) |                           \
-		   grep $$family >/dev/null; then 	               \
-			echo Installing $$p;                           \
-			$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;     \
-		fi;                                                    \
-	    fi                                                         \
+	    if test -f "$$p" ; then                            \
+		echo Installing $$p;                           \
+		$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;     \
+	    fi                                                 \
 	done
 	-mv $(LIBDIR)/plugins/*.adv $(LIBDIR)
 	$(INSTALL) -m 0644 build/plugins/plugins.history $(LIBDIR)/plugins/
@@ -181,9 +176,9 @@ install-munindoc: build
 ######################################################################
 
 ifeq ($(JCVALID),yes)
-build: $(INFILES) build-master build-common-prime build-node build-plugins-java build-man
+build: $(INFILES) build-master build-common-prime build-node build-plugins build-plugins-java build-man
 else
-build: $(INFILES) build-master build-common-prime build-node build-man
+build: $(INFILES) build-master build-common-prime build-node build-plugins build-man
 endif
 
 build/%: %.in
@@ -401,6 +396,10 @@ t/install:
 
 build-%: %/Build
 	cd $* && $(PERL) Build
+
+build-common: common/Build
+	cd common && $(PERL) Build && rm -f common/blib/lib/Munin/Common/Defaults.pm && true
+
 
 # BUG: the Build script writes files under PWD when it does "install"
 # can't seem to find a way to persuade it to write otherwhere.
