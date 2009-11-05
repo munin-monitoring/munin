@@ -6,7 +6,6 @@
 # The two is_ functions should be put in plugin.sh and Munin::Plugin
 
 # Hardwire capabilities until node fully interacts with them.
-MUNIN_CAP_MULTIGRAPH=1
 # MUNIN_CAP_DIRTYCONFIG=1
 
 is_multigraph () {
