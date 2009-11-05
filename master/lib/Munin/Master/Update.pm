@@ -127,9 +127,9 @@ sub _do_with_lock_and_timing {
 
     my $update_time = Time::HiRes::time;
     if (!open ($self->{STATS}, '>', "$config->{dbdir}/munin-update.stats.tmp")) {
-        WARN "[WARNING] Unable to open $config->{dbdir}/munin-update.stats";
+        WARN "[WARNING] Could not open STATS to $config->{dbdir}/munin-update.stats.tmp: $!";
         # Use /dev/null instead - if the admin won't fix he won't care
-        open($self->{STATS}, '>', "/dev/null") or die "Could not open STATS to /dev/null: $?";
+        open($self->{STATS}, '>', "/dev/null") or LOGCROAK "[FATAL] Could not open STATS to /dev/null (fallback for not being able to open $config->{dbdir}/munin-update.stats.tmp): $!";
     }
 
     my $retval = $block->();

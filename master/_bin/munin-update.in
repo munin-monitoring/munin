@@ -6,12 +6,15 @@ use strict;
 # $Id$
 
 use English qw(-no_match_vars);
+use Getopt::Long;
+use Pod::Usage;
+use Log::Log4perl qw(:easy);
+
 use Munin::Master::Update;
 use Munin::Master::Logger;
 use Munin::Master::Config;
 use Munin::Master::Utils;
-use Getopt::Long;
-use Pod::Usage;
+
 
 # TODO
 #
@@ -29,7 +32,6 @@ sub main {
     configure();
 
     logger_open($config->{'logdir'});
-
     logger_debug() if $config->{debug};
 
     my $update = Munin::Master::Update->new();
@@ -44,6 +46,25 @@ sub configure {
 
     # Uses default file if config_file is not defined by arguments.
     $config->parse_config_from_file($args{config_file});
+
+    if (defined $config->{'includedir'}) {
+	my $dirname = $config->{'includedir'};
+	warn "Includedir statement to include files in $dirname";
+
+	my $DIR;
+	opendir($DIR, $dirname) or
+	    LOGCROAK "Could not open includedir directory $dirname: $!\n";
+	my @files = grep { ! /^\./ } readdir($DIR) or
+	    LOGCROAK "Error reading includedir directory $dirname: $!\n";
+	closedir($DIR);
+
+	@files = map { $_ = $dirname.'/'.$_; } (sort @files);
+
+	foreach my $f (@files) {
+	    warn "Reading additional config from $f";
+	    $config->parse_config_from_file($f);
+	}
+    }
 
     # Arguments overrides settings from config file.  Note that
     # this only handles settings that are on the base level, not

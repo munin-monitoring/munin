@@ -8,8 +8,11 @@ use strict;
 use Carp;
 use English qw(-no_match_vars);
 
+# Functions here are unable to log as they don't know if they're used
+# by the node or the master which use divergent logging facilities.
+
 my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
-	"dbdir", "logdir", "htmldir", "include", "domain_order", "node_order",
+	"dbdir", "logdir", "htmldir", "includedir", "domain_order", "node_order",
 	"graph_order", "graph_sources", "fork", "graph_title", "create_args",
 	"graph_args", "graph_vlabel", "graph_vtitle", "graph_total",
 	"graph_scale", "graph", "update", "host_name", "label", "cdef", "draw",
@@ -56,19 +59,18 @@ sub parse_config_from_file {
     $config_file ||= $self->{config_file};
 
     open my $file, '<', $config_file
-        or croak "Cannot open '$config_file': $OS_ERROR";
+        or croak "ERROR: Cannot open '$config_file': $OS_ERROR";
 
     # Note, parse_config is provided by node or master specific config class
     eval {
         $self->parse_config($file);
     };
     if ($EVAL_ERROR) {
-        die "Failed to parse config file '$config_file': $EVAL_ERROR";
+        croak "ERROR: Failed to parse config file '$config_file': $EVAL_ERROR";
     }
     
     close $file
-        or die "Cannot close '$config_file': $OS_ERROR";;
-
+        or croak "Cannot close '$config_file': $OS_ERROR";
 }
 
 
