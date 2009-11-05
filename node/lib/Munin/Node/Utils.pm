@@ -1,7 +1,5 @@
 package Munin::Node::Utils;
 
-# Various utility functions
-
 use Exporter ();
 our @ISA = qw/Exporter/;
 our @EXPORT_OK = qw/
@@ -12,8 +10,6 @@ our @EXPORT_OK = qw/
 
 ### Set operations #############################################################
 
-# returns the list of elements in arrayref $a that are not in arrayref $b
-# NOTE this is *not* a method.
 sub set_difference
 {
     my ($A, $B) = @_;
@@ -24,8 +20,6 @@ sub set_difference
 }
 
 
-# returns the list of elements common to arrayrefs $a and $b
-# NOTE this is *not* a method.
 sub set_intersection
 {
     my ($A, $B) = @_;
@@ -36,3 +30,33 @@ sub set_intersection
 
 
 1;
+
+__END__
+
+
+=head1 NAME
+
+Munin::Node::Utils - Various utility functions
+
+
+=head1 SYNOPSIS
+
+  use Munin::Node::Utils qw( ... );
+
+
+=head1 SUBROUTINES
+
+=over
+
+=item B<set_difference(\@a, \@b)>
+
+Returns the list of elements in arrayref \@a that are not in arrayref \@b.
+
+
+=item B<set_intersection(\@a, \@b)>
+
+Returns the list of elements common to arrayrefs \@a and \@b.
+
+
+=cut
+# vim: ts=4 : et

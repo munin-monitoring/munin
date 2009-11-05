@@ -254,6 +254,11 @@ intended to verify that $file_name is a runnable service.
 
 If not specified, $dir defaults to $config->{servicedir}
 
+=item B<prepare_plugin_environment(@services)>
+
+Carries out various tasks that plugins require before being run, such as
+loading service configurations and exporting common environment variables.
+
 =item B<export_service_environment>
 
  Munin::Node::Service->export_service_enviromnent($service);
