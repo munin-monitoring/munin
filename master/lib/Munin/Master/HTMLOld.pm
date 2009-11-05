@@ -910,6 +910,7 @@ sub generate_service_templates {
         $field_info{'warn'}  = munin_get($fieldobj, "warning");
         $field_info{'crit'}  = munin_get($fieldobj, "critical");
         $field_info{'info'}  = munin_get($fieldobj, "info");
+	$field_info{'extinfo'} = munin_get($fieldobj, "extinfo");
 
         my $state = munin_field_status($fieldobj, $limits, 1);
 
@@ -922,6 +923,7 @@ sub generate_service_templates {
     }
 
     my $state = munin_service_status($service, $limits, 1);
+
     if (defined $state) {
         $srv{'state_warning'}  = 1 if $state eq "warning";
         $srv{'state_critical'} = 1 if $state eq "critical";
