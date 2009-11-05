@@ -17,9 +17,13 @@ use Munin::Common::TLSServer;
 use Munin::Node::Logger;
 use Munin::Node::Service;
 use Munin::Node::Session;
+use Munin::Node::Utils;
 
 # A set of all services that this node can run.
 my %services;
+
+# all multigraph plugins on this node.
+my @multigraph_services;
 
 # Which hosts this node's services applies to. Typically this is the
 # same as the host the node is running on, but some services query
@@ -62,16 +66,37 @@ sub _load_services {
 }
 
 
+# Runs config on each plugin, and add them to the right nodes and plugin groups.
 sub _add_services_to_nodes
 {
     my (@services) = @_;
 
-    # FIXME: may need to query the plugin to get host_name.  eg. in the case of
-    # SNMP plugins.
     for my $service (keys %services) {
-        my $node = $config->{sconf}{$service}{host_name} || $config->{fqdn};
+        print STDERR "Configuring $service\n";
+
+        my $res = eval {
+            local $SIG{CHLD}; # stop Net::Server from reaping the dead service too fast
+            Munin::Node::Service->fork_service($config->{servicedir},
+                                               $service,
+                                               'config');
+        };
+
+        # FIXME: report errors, and remove any plugins that failed from %services;
+        next if ($EVAL_ERROR or $res->{timed_out} or $res->{retval});
+
+        my ($host_name) = grep /^host_name /, @{$res->{stdout}};
+        my $node = $config->{sconf}{$service}{host_name}
+                || (split /\s+/, ($host_name || ''))[1]
+                || $config->{fqdn};
+
         $nodes{$node}{$service} = 1;
+
+        if (grep /^multigraph\s+/, @{$res->{stdout}}) {
+           push @multigraph_services, $service;
+        }
     }
+    print STDERR "Finished configuring services\n";
+
     return;
 }
 
@@ -170,12 +195,11 @@ sub _expect_starttls {
 sub _negotiate_session_capabilities {
     my ($session, $server_capabilities) = @_;
 
-    my %node_cap   = map { $_ => 1 } qw(null);
-    my %server_cap = map { $_ => 1 } split(/ /, $server_capabilities);
+    my @node_cap   = qw( multigraph );
+    $session->{server_capabilities}
+        = { map { $_ => 1 } split(/ /, $server_capabilities) };
 
-    $session->{capabilities} = \%server_cap;
-
-    _net_write($session, sprintf("cap %s\n",join(" ",keys %node_cap)) );
+    _net_write($session, sprintf("cap %s\n",join(" ", @node_cap)));
 }
 
 
@@ -262,9 +286,17 @@ sub _print_service {
 
 sub _list_services {
     my ($session, $node) = @_;
+
     $node ||= $config->{fqdn};
-    _net_write($session, join(" ", keys %{$nodes{$node}}))
-        if exists $nodes{$node};
+
+    if (exists $nodes{$node}) {
+        # remove any plugins that require capabilities the server doesn't provide
+        my @services = keys %{$nodes{$node}};
+        @services = Munin::Node::Utils::set_difference(\@services, \@multigraph_services)
+            unless $session->{server_capabilities}{multigraph};
+
+        _net_write($session, join(" ", @services));
+    }
     _net_write($session, "\n");
 }
 

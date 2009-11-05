@@ -58,6 +58,9 @@ sub prepare_plugin_environment
     $ENV{MUNIN_DEBUG} = $config->{PIDEBUG};
     $ENV{FQDN}        = $config->{fqdn};
 
+    # Tell plugins about supported capabilities
+    $ENV{MUNIN_CAP_MULTIGRAPH} = 1;
+
     # Some locales use "," as decimal separator. This can mess up a lot
     # of plugins.
     $ENV{LC_ALL} = 'C';
