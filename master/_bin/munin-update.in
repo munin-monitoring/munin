@@ -49,7 +49,6 @@ sub configure {
 
     if (defined $config->{'includedir'}) {
 	my $dirname = $config->{'includedir'};
-	warn "Includedir statement to include files in $dirname";
 
 	my $DIR;
 	opendir($DIR, $dirname) or
@@ -61,7 +60,6 @@ sub configure {
 	@files = map { $_ = $dirname.'/'.$_; } (sort @files);
 
 	foreach my $f (@files) {
-	    warn "Reading additional config from $f";
 	    $config->parse_config_from_file($f);
 	}
     }
