@@ -32,7 +32,7 @@ sub is_a_runnable_service {
     # service directory? Shouldn't we complain if there is junk in the
     # service directory?
     return if $file =~ m/^\./;               # Hidden files
-    return if $file =~ m/\.conf$/;            # Config files
+    return if $file =~ m/\.conf$/;           # Config files
 
     return if $file !~ m/^([-\w.:]+)$/;      # Skip if any weird chars
 
@@ -68,7 +68,7 @@ sub prepare_plugin_environment
         unless defined $config->{defgroup};
 
     if ($config->{sconffile}) {
-        # used only by munin-run
+        # only used by munin-run
         $config->parse_plugin_config_file($config->{sconffile});
     }
     else {
@@ -84,9 +84,8 @@ sub export_service_environment {
     my ($class, $service) = @_;
     print STDERR "# Setting up environment\n" if $config->{DEBUG};
 
-    my $env = $config->{sconf}{$service}{env};
+    my $env = $config->{sconf}{$service}{env} or return;
 
-    return unless defined $env;
     while (my ($k, $v) = each %$env) {
         print STDERR "# Environment $k = $v\n" if $config->{DEBUG};
         $ENV{$k} = $v;
@@ -144,7 +143,7 @@ sub change_real_and_effective_user_and_group
         };
 
         if ($EVAL_ERROR) {
-            logger("Plugin \"$service\" Can't drop privileges: $EVAL_ERROR. "
+            logger("Plugin '$service' Can't drop privileges: $EVAL_ERROR. "
                        . "Bailing out.\n");
             exit 1;
         }
@@ -209,7 +208,7 @@ sub fork_service
     my ($class, $dir, $service, $arg) = @_;
 
     my $timeout = $config->{sconf}{$service}{timeout} 
-                  || $config->{timeout};
+               || $config->{timeout};
 
     my $run_service = sub {
         $class->exec_service($dir, $service, $arg);
