@@ -202,6 +202,7 @@ sub _create_self_aware_worker_exception_handler {
 
 
 # FIX merge with UpdateWorker::_get_rrd_file_name
+# FIX seems like dead code?  Or only used in ensure_?
 sub _get_rrd_file_name {
     my ($self, $host, $service, $ds_name, $ds_type) = @_;
     

@@ -391,6 +391,9 @@ sub _get_rrd_file_name {
     my $path = $self->{host}->get_full_path;
     $path =~ s{[;:]}{/}g;
 
+    # Multigraph/nested services will have . in the service name in this function.
+    $service =~ s{\.}{-}g;
+
     # The following is rigged to match the corresponding function in
     # munin-graph/munin-html where it's less clear what are groups and
     # what are hosts and what are services, and they simply pop
@@ -402,13 +405,10 @@ sub _get_rrd_file_name {
                        $ds_name,
                        $type_id);
 
-    # Not really a danger (we're not doing this stuff via the shell),
-    # so more to avoid confusion with silly filenames.
-
     $file = File::Spec->catfile($config->{dbdir}, 
 				$file);
 	
-    DEBUG "[DEBUG] Made rrd filename: $file\n";
+    TRACE "[TRACE] Made rrd filename: $file\n";
 
     return $file;
 }

@@ -862,38 +862,54 @@ sub munin_path_to_loc
 }
 
 
+sub munin_get_keypath {
+    my $hash = shift;
+    my $asfile = shift || '';
+
+    my @group = ();
+    my $host = 0;
+    my @service = ();
+
+    my $i = $hash;
+
+    while (ref ($i) eq "HASH") {
+	my $name = $i->{'#%#name'};
+	last if $name eq 'root';
+	if ($host) {
+	    # Into group land now
+	    unshift(@group,$name);
+	} else {
+	    # In service land, working towards host.
+	    # If i or my parent has a graph_title we're still working with services
+	    if (defined $i->{'#%#parent'}{graph_title} or defined $i->{graph_title}) {
+		unshift(@service,$name);
+	    } else {
+		$host = 1;
+		unshift(@group,$name);
+	    }
+	}
+	$i=$i->{'#%#parent'};
+    }
+
+    if ($asfile) {
+	return join('/',@group).'-'.join('-',@service);
+    } else {
+	return join(';',@group).':'.join('.',@service);
+    }
+}
+
+
 sub munin_get_filename {
     my $hash = shift;
 
-    my $loc  = munin_get_node_loc ($hash);
+    my $loc  = munin_get_keypath ($hash,1);
     my $ret  = munin_get ($hash, "dbdir");
     
     if (!defined $loc or !defined $ret) {
         return;
     }
     
-    # Not really a danger (we're not doing this stuff via the
-    # shell), so more to avoid confusion with silly filenames
-    @$loc = map { 
-        my $l = $_;
-        $l =~ s/\//_/g; 
-        $l =~ s/^\./_/g;
-        $l;
-    } @$loc;
-
-    # In the case of multigraphs with nested services the names of
-    # these variables are wrong.  The $node becomes the plugin name
-    # for example.
-    my $field  = pop @$loc or return;
-    my $plugin = pop @$loc or return;
-    my $node   = pop @$loc or return;
-
-    if (@$loc) { # The rest is used as directory names...
-        $ret .= "/" . join ('/', @$loc);
-    }
-
-    return ($ret . "/$node-$plugin-$field-" . lc substr (munin_get($hash, "type", "GAUGE"), 0,1). ".rrd");
-
+    return ($ret . "/$loc-" . lc substr (munin_get($hash, "type", "GAUGE"), 0,1). ".rrd");
 }
 
 
@@ -1211,6 +1227,7 @@ sub munin_get_field_order
 sub munin_get_rrd_filename {
     my $field   = shift;
     my $path    = shift;
+
     my $result  = undef;
     my $name    = munin_get_node_name ($field);
 

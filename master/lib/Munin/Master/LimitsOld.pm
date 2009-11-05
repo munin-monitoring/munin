@@ -232,6 +232,10 @@ sub process_service {
         my $fpath   = munin_get_node_loc($field);
         my $onfield = munin_get_node($oldnotes, $fpath);
 
+	# Test directly here as get_limits is in truth recursive and
+	# that fools us when processing multigraphs.
+	next if (!defined($field->{warning}) and !defined($field->{critical}));
+
         my ($warn, $crit, $unknown_limit) = get_limits($field);
 
         # Skip fields without warning/critical definitions
@@ -241,6 +245,8 @@ sub process_service {
 
         my $filename = munin_get_rrd_filename($field);
         my $value    = munin_fetch("$filename");
+
+	DEBUG "[DEBUG] rrd filename is: $filename";
 
         # De-taint.
         if (!defined $value) {

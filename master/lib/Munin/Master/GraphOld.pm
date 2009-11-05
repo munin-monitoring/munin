@@ -199,7 +199,9 @@ sub graph_startup {
     exit_if_run_by_super_user();
 
     $config = &munin_config($conffile);
+
     logger_open($config->{'logdir'});
+    logger_debug() if $DEBUG;
 
     my $palette = &munin_get($config, "palette", "default");
 
@@ -241,17 +243,20 @@ sub graph_main {
 
     unless ($skip_stats) {
         open($STATS, '>', "$config->{dbdir}/munin-graph.stats.tmp")
-            or logger("Unable to open $config->{dbdir}/munin-graph.stats.tmp");
+            or WARN "[WARNING] Unable to open $config->{dbdir}/munin-graph.stats.tmp";
         autoflush $STATS 1;
     }
 
-    logger("Starting munin-graph");
+    INFO "Starting munin-graph";
 
     process_work(@limit_hosts);
 
     $graph_time = sprintf("%.2f", (Time::HiRes::time - $graph_time));
-    logger("Munin-graph finished ($graph_time sec)");
+
+    INFO "Munin-graph finished ($graph_time sec)";
+
     print $STATS "GT|total|$graph_time\n" unless $skip_stats;
+
     rename(
         "$config->{dbdir}/munin-graph.stats.tmp",
         "$config->{dbdir}/munin-graph.stats"
@@ -378,7 +383,7 @@ sub expand_specials {
             my $sname = munin_get_node_name($src);
 
             next unless defined $src;
-            logger("DEBUG: Copying settings from $sname to $fname.") if $DEBUG;
+            DEBUG "[DEBUG] Copying settings from $sname to $fname.";
 
             foreach my $foption ("draw", "type", "rrdfile", "fieldname", "info")
             {
@@ -409,8 +414,8 @@ sub expand_specials {
 
         }
         elsif (defined($tmp_field = get_stack_command($service->{$field}))) {
-            logger("DEBUG: expand_specials ($tmp_field): Doing stack...")
-                if $DEBUG;
+            DEBUG "DEBUG: expand_specials ($tmp_field): Doing stack...";
+
             my @spc_stack = ();
             foreach my $pre (split(/\s+/, $tmp_field)) {
                 (my $name = $pre) =~ s/=.+//;
@@ -435,13 +440,13 @@ sub expand_specials {
                     "$name,UN,0,$name,IF");
                 if (munin_get($service->{$field}, "cdef")
                     and !munin_get_bool($service->{$name}, "onlynullcdef", 0)) {
-                    logger("DEBUG: NotOnlynullcdef ($field)...") if $DEBUG;
+                    DEBUG "DEBUG: NotOnlynullcdef ($field)...";
                     $service->{$name}->{"cdef"}
                         .= "," . $service->{$field}->{"cdef"};
                     $service->{$name}->{"cdef"} =~ s/\b$field\b/$name/g;
                 }
                 else {
-                    logger("DEBUG: Onlynullcdef ($field)...") if $DEBUG;
+                    DEBUG "DEBUG: Onlynullcdef ($field)...";
                     munin_set_var_loc($service, [$name, "onlynullcdef"], 1);
                     push @$result, "$name.onlynullcdef";
                 }
@@ -450,8 +455,7 @@ sub expand_specials {
         elsif (defined($tmp_field = get_sum_command($service->{$field}))) {
             my @spc_stack = ();
             my $last_name = "";
-            logger("DEBUG: expand_specials ($tmp_field): Doing sum...")
-                if $DEBUG;
+            DEBUG "DEBUG: expand_specials ($tmp_field): Doing sum...";
 
             if (@$order == 1
                 or (@$order == 2 and munin_get {$field, "negative", 0})) {
@@ -479,7 +483,7 @@ sub expand_specials {
 
             if (my $tc = munin_get($service->{$field}, "cdef", 0))
             {    # Oh bugger...
-                logger("DEBUG: Oh bugger...($field)...\n") if $DEBUG;
+                DEBUG "DEBUG: Oh bugger...($field)...\n";
                 $tc =~ s/\b$field\b/$service->{$last_name}->{"cdef"}/;
                 $service->{$last_name}->{"cdef"} = $tc;
             }
@@ -521,15 +525,14 @@ sub single_value {
     my $graphable = munin_get($service, "graphable", 0);
     if (!$graphable) {
         foreach my $field (@{munin_get_field_order($service)}) {
-            logger("DEBUG: single_value: Checking field \"$field\".") if $DEBUG;
+            DEBUG "DEBUG: single_value: Checking field \"$field\".";
             $graphable++ if munin_draw_field($service->{$field});
         }
         munin_set_var_loc($service, ["graphable"], $graphable);
     }
-    logger(   "DEBUG: service "
-            . join(' :: ', @{munin_get_node_loc($service)})
-            . " has $graphable elements.")
-        if $DEBUG;
+    DEBUG ("[DEBUG] service "
+	   . join(' :: ', @{munin_get_node_loc($service)})
+	   . " has $graphable elements.");
     return ($graphable == 1);
 }
 
@@ -1083,7 +1086,7 @@ sub process_service {
         my $picfilename = munin_get_picture_filename($service, $time);
         (my $picdirname = $picfilename) =~ s/\/[^\/]+$//;
 
-        DEBUG "[DEBUG] Picture filename: $picfilename";
+        # DEBUG "[DEBUG] Picture filename: $picfilename";
 
         my @complete = ();
         if ($RRDkludge) {
@@ -1127,7 +1130,7 @@ sub process_service {
             push @complete, "--end",
                 (int($lastupdate / $resolutions{$time})) * $resolutions{$time};
         }
-        DEBUG "\n\nrrdtool \"graph\" \"" . join("\"\n\t\"", @complete) . "\"\n";
+        TRACE "\n\nrrdtool \"graph\" \"" . join("\"\n\t\"", @complete) . "\"\n";
 
         # Make sure directory exists
         munin_mkdir_p($picdirname, oct(777));
