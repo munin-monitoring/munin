@@ -179,21 +179,26 @@ if [ "$CMD" = "years" ]; then
 	done
 elif [ "$CMD" = "signalstrength" -o "$CMD" = "mixer volume" ]; then
         if [ "$1" = "config" ]; then
-                echo "graph_title $TITLE"
-                echo "graph_category Squeezebox"
-                printf "%b" "$CMD ?\nexit\n"| $NC $HOST $PORT | sed "s/$CMD//" | while read node value; do
-                        node2=$(echo $node | sed 's/%3A//g')
-			node2print=$(echo $node2 | tr '.' '_')
-                        echo "${node2print}.label ${node2}"
-                done
-                exit 0
+            echo "graph_title $TITLE"
+            echo "graph_category Squeezebox"
+            COUNT=$(printf "%b" "player count ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 3)
+            (( COUNT-- ))
+            for ID in $(seq 0 $COUNT); do
+                MAC=$(printf "%b" "player id $ID ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 4 | sed 's/%3A/:/g')
+		NAME=$(printf "%b" "player name $MAC ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 4 | sed 's/%20/ /g')
+                MAC2=$(echo $MAC| sed 's/://g')
+	        echo "$MAC2.value $NAME"
+            done
+            exit 0
         fi
-        printf "%b" "$CMD ?\nexit\n"| $NC $HOST $PORT | sed "s/$CMD//" | while read node value; do
-                node2=$(echo $node | sed 's/%3A//g')
-		node2print=$(echo $node2 | tr '.' '_')
-                echo "${node2print}.value ${value}"
-        done
-
+        COUNT=$(printf "%b" "player count ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 3)
+        (( COUNT-- ))
+        for ID in $(seq 0 $COUNT); do
+            MAC=$(printf "%b" "player id $ID ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 4 | sed 's/%3A/:/g')
+            VAL=$(printf "%b" "$MAC $CMD ?\nexit\n"| $NC $HOST $PORT | cut -d " " -f 2- | sed "s/$CMD //")
+            MAC2=$(echo $MAC| sed 's/://g')
+            echo "$MAC2.value $VAL"
+	done
 else
 	if [ "$1" = "config" ]; then
 		echo "graph_title Number of $ATTR"
