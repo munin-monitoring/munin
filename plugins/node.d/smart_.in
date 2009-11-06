@@ -375,7 +375,7 @@ if len(sys.argv)>1 :
             sys.exit(0)
         else : 
             print('no (smartmontools not found)')
-            sys.exit(1)
+            sys.exit(0)
     elif sys.argv[1]=="suggest" :
         for drive in find_smart_drives() :
             print(drive)
