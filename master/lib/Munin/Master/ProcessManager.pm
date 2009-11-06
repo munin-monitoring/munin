@@ -184,7 +184,7 @@ sub _vet_finished_workers {
         my $child_exit   = $CHILD_ERROR >> 8;
 	my $child_signal = $CHILD_ERROR & 127; 
 
-	INFO "[INFO] Reaping $self->{active_workers}{$worker_pid} $child_exit/$child_signal";
+	INFO "[INFO]: Reaping $self->{active_workers}{$worker_pid} $child_exit/$child_signal";
         delete $self->{active_workers}{$worker_pid};
     }
 }
