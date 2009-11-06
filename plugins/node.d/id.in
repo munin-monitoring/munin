@@ -1,6 +1,8 @@
 #!@@GOODSH@@
 # -*- sh -*-
 
+: << =cut
+
 =head1 NAME
 
 id - Plugin for testing user and group statements in the plugin config.
