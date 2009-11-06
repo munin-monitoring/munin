@@ -688,12 +688,21 @@ sub get_group_tree {
 }
 
 
+# This is called both at group level, service level, and subservice level
 sub munin_get_sorted_children {
     my $hash        = shift || return;
 
     my $children    = munin_get_children($hash);
-    my $group_order = $hash->{'group_order'} || "";
+    my $group_order;
     my $ret         = [];
+
+    if (defined $hash->{'group_order'}) {
+	$group_order = $hash->{'group_order'};
+    } elsif (defined $hash->{'node_order'}) {
+	$group_order = $hash->{'node_order'};
+    } else {
+    	$group_order = "";
+    } 
 
     my %children = map {munin_get_node_name($_) => $_} @$children;
 
