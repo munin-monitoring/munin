@@ -196,6 +196,10 @@ sub graph_startup {
         print_version_and_exit();
     }
 
+    if ($do_usage) {
+      print_usage_and_exit();
+    }
+
     exit_if_run_by_super_user();
 
     $config = &munin_config($conffile);
