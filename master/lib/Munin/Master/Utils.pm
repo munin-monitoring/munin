@@ -225,6 +225,8 @@ sub munin_delete {
 
 
 sub munin_overwrite {
+    # copy from $overwrite OVER $config.
+
     my ($configfile,$overwrite) = @_;
     for my $key (keys %$overwrite) {
         next if $key =~ /^#%#/;
@@ -244,7 +246,8 @@ sub munin_overwrite {
 
 sub munin_readconfig {
     my ($conf, $missingok, $corruptok) = @_;
-    my $config   = undef;
+
+    my $config = undef;
     my @contents = undef;
 
     $conf ||= $configfile;
@@ -259,7 +262,7 @@ sub munin_readconfig {
     }
 
     # Some important defaults before we return...
-    $config->{'rundir'}   ||= "/var/lock";
+    $config->{'rundir'}   ||= $Munin::Common::Defaults::MUNIN_STATEDIR;
     $config->{'dbdir'}    ||= $Munin::Common::Defaults::MUNIN_DBDIR;
     $config->{'logdir'}   ||= $Munin::Common::Defaults::MUNIN_LOGDIR;
     $config->{'tmpldir'}  ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/";
@@ -757,6 +760,28 @@ sub munin_config {
 
     $conffile ||= $configfile;
     $config     = munin_readconfig ($conffile);
+
+    if (defined $config->{'includedir'}) {
+	my $dirname = $config->{'includedir'};
+	DEBUG "Includedir statement to include files in $dirname";
+
+	my $DIR;
+	opendir($DIR, $dirname) or
+	    LOGCROAK "Could not open includedir directory $dirname: $!\n";
+	my @files = grep { ! /^\.|~$/ } readdir($DIR) or
+	    LOGCROAK "Error reading includedir directory $dirname: $!\n";
+	closedir($DIR);
+
+	@files = map { $_ = $dirname.'/'.$_; } (sort @files);
+
+	foreach my $f (@files) {
+	    INFO "Reading additional config from $f";
+
+	    my $extra = munin_readconfig ($f);
+	    $config = munin_overwrite($extra,$config);
+	}
+    }
+
     my $data    = munin_readconfig("$config->{dbdir}/datafile", 1, 1);
 
     $data = munin_overwrite($data,$config);

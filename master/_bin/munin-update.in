@@ -53,7 +53,7 @@ sub configure {
 	my $DIR;
 	opendir($DIR, $dirname) or
 	    LOGCROAK "Could not open includedir directory $dirname: $!\n";
-	my @files = grep { ! /^\./ } readdir($DIR) or
+	my @files = grep { ! /^\.|~$/ } readdir($DIR) or
 	    LOGCROAK "Error reading includedir directory $dirname: $!\n";
 	closedir($DIR);
 
