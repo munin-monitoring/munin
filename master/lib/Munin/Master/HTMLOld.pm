@@ -433,7 +433,7 @@ sub get_peer_nodes {
     my $me        = munin_get_node_name($hash);
     my $pchildren = munin_get_children($parent);
 
-    foreach my $peer (sort {munin_get_node_name($a) cmp munin_get_node_name($b)}
+    foreach my $peer (sort {munin_get_node_name($b) cmp munin_get_node_name($a)}
         @$pchildren) {
         next unless defined $peer and ref($peer) eq "HASH";
         next
