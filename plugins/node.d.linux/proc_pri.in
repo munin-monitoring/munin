@@ -40,7 +40,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_category processes'
     echo 'graph_info This graph shows nuber of processes at each priority'
     echo 'graph_args --base 1000 -l 0'
-    echo 'graph_vlabel Number of processes"
+    echo 'graph_vlabel Number of processes'
     echo 'high.label high priority'
     echo 'high.draw STACK'
     echo 'high.info The number of high-priority processes (tasks)'
