@@ -3,41 +3,10 @@
 #%# family=test
 #%# capabilities=autoconf
 
-# The two is_ functions should be put in plugin.sh and Munin::Plugin
+. $MUNIN_LIBDIR/plugins/plugin.sh
 
-# Hardwire capabilities until node fully interacts with them.
-# MUNIN_CAP_DIRTYCONFIG=1
-
-is_multigraph () {
-    # echo Testing $MUNIN_CAP_MULTIGRAPH:$1
-    case $MUNIN_CAP_MULTIGRAPH:$1 in
-	1:*) return;; # Yes! Rock and roll!
-
-	*:autoconf)
-	    echo 'no (no multigraph support)'
-	    exit 0
-	    ;;
-
-	*:config)
-	    echo 'graph_title This plugin needs multigraph support'
-	    echo 'multigraph.label No multigraph here'
-	    echo 'multigraph.info This plugin has been installed in a munin-node that is too old to know about multigraph plugins.  Even if your munin master understands multigraph plugins this is not enough, the node too needs to be new enough.  Version 1.4.0 or later should work.'
-	    exit 0
-	    ;;
-
-	*: ) echo 'multigraph.value 0'
-	    exit 0
-	    ;;
-    esac
-}
-
-is_dirtyconfig () {
-    # Detect if node/server supports dirty config
-    case $MUNIN_CAP_DIRTYCONFIG in
-	1) exit 1;;
-	*) exit 0;;
-    esac
-}
+# Handle the case where the munin node does not understand multigraph.
+is_multigraph "$@"
 
 # Plugin itself starts here
 
@@ -95,9 +64,6 @@ graph_info The "multigraph protocol keyword allows the plugin to place data anyw
 i.label number i
 EOF
 
-    if is_dirtyconfig; then
-	do_
-    fi
     exit 0
 }
 
@@ -105,8 +71,6 @@ do_autoconf () {
     echo yes
     exit 0
 }
-
-is_multigraph "$@"
 
 # Main is here
 

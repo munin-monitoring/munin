@@ -4,6 +4,9 @@
 
 clean_fieldname () {
     # Clean up field name so it complies with munin requirements.
+    # Even though most versions of munin sanitises field names
+    # this at least avoids getting .s in field names which will
+    # very much still break munin.
     #
     # usage: name="$(clean_fieldname "$item")"
     # 
@@ -64,6 +67,47 @@ print_critical () {
 		echo "${1}.critical ${critout}"
 	fi
 }
+
+
+is_multigraph () {
+    # Multigraph feature is available in Munin 1.4.0 and later.
+    # But it also needs support on the node to stay perfectly
+    # compatible with old munin-masters.
+    #
+    # Using this procedure at the start of a multigraph plugin makes
+    # sure it does not interact with old node installations at all
+    # and thus does not break anything.
+    #
+    case $MUNIN_CAP_MULTIGRAPH:$1 in
+	1:*) return;; # Yes! Rock and roll!
+	*:autoconf)
+	    echo 'no (no multigraph support)'
+	    exit 0
+	    ;;
+
+	*:config)
+	    echo 'graph_title This plugin needs multigraph support'
+	    echo 'multigraph.label No multigraph here'
+	    echo 'multigraph.info This plugin has been installed in a munin-node that is too old to know about multigraph plugins.  Even if your munin master understands multigraph plugins this is not enough, the node too needs to be new enough.  Version 1.4.0 or later should work.'
+	    exit 0
+	    ;;
+
+	*: ) echo 'multigraph.value 0'
+	    exit 0
+	    ;;
+    esac
+}
+
+
+is_dirtyconfig () {
+    # Detect if node/server supports dirty config (feature not yet supported)
+    case $MUNIN_CAP_DIRTYCONFIG in
+	1) exit 1;;
+	*) exit 0;;
+    esac
+}
+
+
 
 # janl_: can I in a shell script save STDOUT so I can restore it after
 #        a "exec >>somefile"?
