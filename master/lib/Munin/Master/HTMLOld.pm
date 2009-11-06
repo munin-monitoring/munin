@@ -89,6 +89,7 @@ my $tmpldir;
 my $htmldir;
 
 my $do_dump = 0;
+my $do_fork = 0; # No effect in this program.
 
 sub html_startup {
     my ($ARGV) = @_;
@@ -104,6 +105,7 @@ sub html_startup {
 	    "help"      => \$do_usage,
 	    "version!"  => \$do_version,
 	    "dump!"     => \$do_dump,
+	    "fork!"     => \$do_fork,
         );
 
     print_usage_and_exit() if $do_usage;
@@ -959,6 +961,7 @@ Options:
     --help		View this message.
     --debug		View debug messages.
     --version		View version information.
+    --nofork            Compatability. No effect.
     --service <service>	Compatability. No effect.
     --host <host>	Compatability. No effect.
     --config <file>	Use <file> as configuration file. 
@@ -988,6 +991,10 @@ munin-html [options]
 Compatability. No effect.
 
 =item B<< --host <host> >>
+
+Compatability. No effect.
+
+=item B<< --nofork >>
 
 Compatability. No effect.
 
