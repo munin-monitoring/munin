@@ -187,7 +187,7 @@ elif [ "$CMD" = "signalstrength" -o "$CMD" = "mixer volume" ]; then
                 MAC=$(printf "%b" "player id $ID ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 4 | sed 's/%3A/:/g')
 		NAME=$(printf "%b" "player name $MAC ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 4 | sed 's/%20/ /g')
                 MAC2=$(echo $MAC| sed 's/://g')
-	        echo "$MAC2.value $NAME"
+	        echo "$MAC2.label $NAME"
             done
             exit 0
         fi
