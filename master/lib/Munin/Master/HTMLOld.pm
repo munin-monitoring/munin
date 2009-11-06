@@ -698,6 +698,8 @@ sub munin_get_sorted_children {
 
     if (defined $hash->{'group_order'}) {
 	$group_order = $hash->{'group_order'};
+    } elsif (defined $hash->{'domain_order'}) {
+	$group_order = $hash->{'domain_order'};
     } elsif (defined $hash->{'node_order'}) {
 	$group_order = $hash->{'node_order'};
     } else {
