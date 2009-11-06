@@ -83,7 +83,7 @@ sub do_work {
             };
             if ($EVAL_ERROR) {
                 ERROR $EVAL_ERROR;
-		warn "$EVAL_ERROR\n";
+		print STDERR "$EVAL_ERROR\n";
                 next;
             }
 
@@ -150,7 +150,7 @@ sub uw_fetch_service_config {
         # FIX Report failed service so that we can use the old service
         # config.
         ERROR $EVAL_ERROR;
-	warn "$EVAL_ERROR\n";
+	print STDERR "$EVAL_ERROR\n";
         return;
     }
 
@@ -354,7 +354,7 @@ sub _update_rrd_files {
 		$self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name});
 	    }
 	    else {
-		WARN "[WARNING] Service $service on $nodedesignation returned no data for $ds_name";
+		WARN "[WARNING] Service $service on $nodedesignation returned no data for label $ds_name";
 	    }
 	}
     }

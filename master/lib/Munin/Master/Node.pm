@@ -210,7 +210,7 @@ sub parse_service_config {
 	DEBUG "[CONFIG from $plugin] $line";
 
 	if ($line =~ /\# timeout/) {
-	    die "[ERROR] Timeout error on $nodedesignation. Please consult the log.\n";
+	    die "[ERROR] Timeout error on $nodedesignation during fetch of $plugin. \n";
 	}
 
         next unless $line;
@@ -224,8 +224,7 @@ sub parse_service_config {
 	    $service = $1;
 
 	    if ($service eq 'multigraph') {
-		ERROR "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
-		croak("Illegal service name.  Please consult the log");
+		die "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
 	    }
 	    new_service($service);
 	    DEBUG "[CONFIG multigraph $plugin] Service is now $service";
@@ -314,9 +313,8 @@ sub parse_service_data {
 	DEBUG "[FETCH from $plugin] $line";
 
 	if ($line =~ /\# timeout/) {
-	    WARN "[WARNING] Timeout in fetch from '$plugin' on ".
+	    die "[WARNING] Timeout in fetch from '$plugin' on ".
 		$nodedesignation;
-	    croak("Timeout error.  Please consult the log.");
 	}
 
         next unless $line;
