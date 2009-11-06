@@ -70,7 +70,7 @@ sub _extract_name_from_greeting {
     if (!$greeting) {
 	die "[ERROR] Got no reply from node ".$self->{host}."\n";
     }
-    if (! $greeting =~ /\#.*(?:lrrd|munin) (?:client|node) at (\S+)/) {
+    if ($greeting !~ /\#.*(?:lrrd|munin) (?:client|node) at (\S+)/) {
 	die "[ERROR] Got unknown reply from node ".$self->{host}."\n";
     }
     return $1;
