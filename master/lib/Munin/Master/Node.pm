@@ -18,7 +18,7 @@ use Log::Log4perl qw( :easy );
 my $config = Munin::Master::Config->instance()->{config};
 
 sub new {
-    my ($class, $address, $port, $host) = @_;
+    my ($class, $address, $port, $host, $configref) = @_;
 
     my $self = {
         address => $address,
@@ -28,6 +28,7 @@ sub new {
         socket  => undef,
         master_capabilities => qw(multigraph),
         io_timeout => 5,
+	configref => $configref,
     };
 
     return bless $self, $class;
@@ -145,7 +146,7 @@ sub negotiate_capabilities {
 sub list_plugins {
     my ($self) = @_;
 
-    my $host = $config->{groups_and_hosts}{$self->{host}}{use_node_name}
+    my $host = $self->{configref}{use_node_name}
         ? $self->{node_name}
         : $self->{host};
 

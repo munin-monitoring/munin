@@ -29,7 +29,8 @@ sub new {
     $self->{host} = $host;
     $self->{node} = Munin::Master::Node->new($host->{address},
                                              $host->{port},
-                                             $host->{host_name});
+                                             $host->{host_name},
+					     $host);
 
     return $self;
 }
