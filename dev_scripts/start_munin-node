@@ -12,4 +12,4 @@ if [ -f $DESTDIR/var/run/munin/munin-node.pid ]; then
 else
     env PERL5LIB=$DESTDIR/$PERLSITELIB $DESTDIR/opt/munin/sbin/munin-node "$@"
 fi
-tail -f $DESTDIR/var/log/munin/munin-node.log
+tail -f $DESTDIR/opt/munin/log/munin/munin-node.log
