@@ -18,3 +18,5 @@ pending.warning 0:0
 hold.label hold
 EOF
 }
+
+do_$1
