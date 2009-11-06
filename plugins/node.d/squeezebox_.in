@@ -65,13 +65,13 @@ NC=${netcat:-/bin/nc}
 if [ "$1" = "autoconf" ]; then
         if [ ! "which $NC 1>/dev/null 2>&1" ]; then
 		echo "no (no netcat/nc binary found)"
-		exit 1
+		exit 0
 	fi
 	echo exit | $NC $HOST $PORT 1>/dev/null 2>&1
 	RET=$?
 	if [ "$RET" != "0" ]; then
 		echo "no (no connection on $HOST port $PORT)"
-		exit 1
+		exit 0
 	fi
 	VERSION=$(printf "%b" "version ?\nexit\n" | $NC $HOST $PORT 2>/dev/null)
 	if [ "$VERSION" != "" ]; then
@@ -79,7 +79,7 @@ if [ "$1" = "autoconf" ]; then
 		exit 0
 	else
 		echo "no (socket responding but version not found: something is weird)"
-		exit 1
+		exit 0
 	fi
 fi
 
