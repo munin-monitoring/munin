@@ -35,7 +35,7 @@ my $fasit = {
 		 {
 		  use_node_name => 1,
 		  address => '127.0.0.1',
-		  port => '4949',
+		  port => '4948',
 		  'load1.graph_title' => 'Loads side by side',
 		  'load1.graph_order' => 'fii=fii.foo.com:load.load fay=fay.foo.com:load.load',
 		  host_name => 'marvin',

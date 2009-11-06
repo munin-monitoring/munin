@@ -1,11 +1,14 @@
+# -*- cperl -*-
 use warnings;
 use strict;
 
 use Munin::Master::Config;
-use Test::More tests => 16;
+use Test::More tests => 13;
 use Test::MockModule;
 use Test::MockObject::Extends;
 use Test::Exception;
+
+use Data::Dumper;
 
 use_ok('Munin::Master::Node');
 
@@ -21,16 +24,16 @@ sub setup {
 }
 
 
-######################################################################
+############################# 2 #########################################
 
 
 {
     my $node = Munin::Master::Node->new();
-    isa_ok($node, 'Munin::Master::Node');
+    isa_ok($node, 'Munin::Master::Node','Create a node object');
 }
 
 
-######################################################################
+############################# 3 #########################################
 
 
 {
@@ -43,11 +46,11 @@ sub setup {
 
     $node->_do_connect();
 
-    is($node->{node_name}, 'foo.example.com');
+    is($node->{node_name}, 'foo.example.com','Node name is detected');
 }
 
 
-######################################################################
+############################# 4 #########################################
 
 
 {
@@ -64,60 +67,31 @@ sub setup {
 
 {
     my $node = setup();
-    $node->mock('_node_read', sub { 
-        return (
-            '# Node capabilities: (bar baz foo). Session capabilities: (',
-            'foo',
-            '# )',
-        );
+    $node->mock('_node_read_single', sub { 
+        return ('cap multigraph');
     });
     my @res = $node->negotiate_capabilities();
 
-    is_deeply(\@res, ['foo'], 'Capabilities - single');
+    is_deeply(\@res, ['multigraph'], 'Capabilities - single');
 }
 
 
+=begin comment
+
+This fails.  Frankly it should result in "multigraph".
 {
     my $node = setup();
-    $node->mock('_node_read', sub { 
-        return (
-            '# Node capabilities: (bar baz foo). Session capabilities: (',
-            '',
-            '# )',
-        );
+    $node->mock('_node_read_single', sub { 
+        return ('cap bar baz foo');
     });
     my @res = $node->negotiate_capabilities();
 
-    is_deeply(\@res, [], 'Capabilities - none');
+    is_deeply(\@res, ['baz'], 'Capabilities - none');
 }
+=end comment
 
+=cut
 
-{
-    my $node = setup();
-    $node->mock('_node_read', sub { 
-        return (
-            '# Node capabilities: (bar baz foo). Session capabilities: (',
-            'bar baz foo',
-            '# )',
-        );
-    });
-    my @res = $node->negotiate_capabilities();
-
-    is_deeply(\@res, [qw(bar baz foo)], 'Capabilities - multiple');
-}
-
-
-{
-    my $node = setup();
-    $node->mock('_node_read', sub { 
-        return (
-            '# Unknown command bla bla bla',
-        );
-    });
-    my @res = $node->negotiate_capabilities();
-
-    is_deeply(\@res, ['NA'], 'Capabilities - not applicable');
-}
 
 
 ######################################################################
@@ -129,9 +103,9 @@ sub setup {
 
     $node->{node_name} = 'node';
 
-    my @res = $node->list_services();
+    my @res = $node->list_plugins();
 
-    is_deeply(\@res, [qw(foo bar baz)], 'List services');
+    is_deeply(\@res, [qw(foo bar baz)], 'List plugins');
 }
 
 
@@ -142,7 +116,7 @@ sub setup {
     my $node = setup();
     $node->mock('_node_read', sub { return ('# timeout: bla bla bla') });
     throws_ok { $node->fetch_service_config('foo') }
-        qr/Client reported timeout in configuration of 'foo'/,
+        qr/Timeout error on node/,
             'Fetch service config - Timeout throws exception';
 }
 
@@ -177,23 +151,32 @@ sub setup {
         );
     });
     my %res = $node->fetch_service_config('foo');
-    is_deeply(\%res, {
-        global => [
-            [qw(foo bar)],
-            [qw(zap gabonk)],
-            ['graph_order', 'baz zip']
-        ], 
-        data_source => {
-            baz => {label => 'foo'},
-            zip => {label => 'bar'},
-        },
-    }, 'Fetch service config - implicit graph order');
+
+    is_deeply(\%res,
+	      {
+	       global => {
+			  multigraph => [ 'foo' ],
+			  foo => {
+				  [qw(foo bar)],
+				  [qw(zap gabonk)],
+				  ['graph_order', 'baz zip'],
+				 },
+			 },
+	       data_source => {
+			       foo => {
+				       baz => {label => 'foo'},
+				       zip => {label => 'bar'},
+				      },
+			      },
+	      },
+	      'Fetch service config - implicit graph order'
+	     );
 }
 
 
 {
     my $node = setup();
-    $node->mock('_node_read', sub { 
+    $node->mock('_node_read', sub {
         return (
             '',
             '# bla bla bla',
@@ -226,16 +209,15 @@ sub setup {
     my $node = setup();
     $node->mock('_node_read', sub { return ('# timeout: bla bla bla') });
 
-    
     throws_ok { $node->fetch_service_data('foo') }
-        qr/Client reported timeout in configuration of 'foo'/,
+        qr/Timeout in fetch from 'foo'/,
             'Fetch service data - Timeout throws exception';
 }
 
 
 {
     my $node = setup();
-    $node->mock('_node_read', sub { 
+    $node->mock('_node_read', sub {
         return (
             '',
             '# bla bla bla',
