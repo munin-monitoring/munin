@@ -168,6 +168,9 @@ sub list_plugins {
 sub parse_service_config {
     my ($self, $service, @lines) = @_;
 
+    my $errors;
+    my $correct;
+
     my $plugin = $service;
 
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
@@ -185,6 +188,7 @@ sub parse_service_config {
 	$data_source_config->{$service} = {};
     };
 
+
     local *push_graphorder = sub {
 	my ($oldservice) = @_;
 
@@ -195,7 +199,9 @@ sub parse_service_config {
 	@graph_order = ( );
     };
 
-    DEBUG "[DEBUG] Now parsing config output from plugin $plugin on ".$self->{host};
+
+    DEBUG "[DEBUG] Now parsing config output from plugin $plugin on "
+	.$self->{host};
 
     new_service($service);
 
@@ -204,13 +210,15 @@ sub parse_service_config {
 	DEBUG "[CONFIG from $plugin] $line";
 
 	if ($line =~ /\# timeout/) {
-	    die "[ERROR] Timeout error ($nodedesignation). Please consult the log.\n";
+	    die "[ERROR] Timeout error on $nodedesignation. Please consult the log.\n";
 	}
 
         next unless $line;
         next if $line =~ /^\#/;
 
 	if ($line =~ m{\A multigraph \s+ (.+) }xms) {
+	    $correct++;
+
 	    push_graphorder($service);
 
 	    $service = $1;
@@ -223,6 +231,8 @@ sub parse_service_config {
 	    DEBUG "[CONFIG multigraph $plugin] Service is now $service";
 	}
 	elsif ($line =~ m{\A (\w+)\.(\w+) \s+ (.+) }xms) {
+	    $correct++;
+	    
             my ($ds_name, $ds_var, $ds_val) = ($1, $2, $3);
             $ds_name = $self->_sanitise_fieldname($ds_name);
             $data_source_config->{$service}{$ds_name} ||= {};
@@ -231,12 +241,19 @@ sub parse_service_config {
             push ( @graph_order, $ds_name ) if $ds_var eq 'label';
         }
 	elsif ($line =~ m{\A (\w+) \s+ (.+) }xms) {
+	    $correct++;
+
             push @{$global_config->{$service}}, [$1, $2];
             DEBUG "[CONFIG graph global $plugin] $service->$1 = $2";
         }
 	else {
-	    die "[ERROR] Protocol exception: unrecognized line '$line' from $plugin on $nodedesignation.\n";
+	    $errors++;
+	    DEBUG "[DEBUG] Protocol exception: unrecognized line '$line' from $plugin on $nodedesignation.\n";
         }
+    }
+
+    if ($errors) {
+	WARN "[WARNING] There were errors in $errors lines and $correct correct lines in data from 'config $plugin' on $nodedesignation";
     }
 
     $self->_validate_data_sources($data_source_config);
@@ -280,6 +297,8 @@ sub parse_service_data {
     my ($self, $service, @lines) = @_;
 
     my $plugin = $service;
+    my $errors = 0;
+    my $correct = 0;
 
     my $nodedesignation = $self->{host}."/".$self->{address}.":".$self->{port};
 
@@ -304,6 +323,8 @@ sub parse_service_data {
         next if $line =~ /^\#/;
 
 	if ($line =~ m{\A multigraph \s+ (.+) }xms) {
+	    $correct++;
+
 	    $service = $1;
 	    $values{$service} = {};
 
@@ -315,6 +336,8 @@ sub parse_service_data {
 	}
 	elsif ($line =~ m{\A ([^\.]+)\.value \s+ ([\S:]+) }xms) {
             my ($data_source, $value, $when) = ($1, $2, 'N');
+
+	    $correct++;
 
             $data_source = $self->_sanitise_fieldname($data_source);
 
@@ -333,6 +356,8 @@ sub parse_service_data {
 	elsif ($line =~ m{\A ([^\.]+)\.extinfo \s+ (.+) }xms) {
 	    # Extinfo is used in munin-limits
             my ($data_source, $value) = ($1, $2);
+	    
+	    $correct++;
 
             $data_source = $self->_sanitise_fieldname($data_source);
 
@@ -342,8 +367,13 @@ sub parse_service_data {
 
 	}
         else {
-            die "[ERROR] Protocol exception while fetching '$service' from $nodedesignation: unrecognized line '$line'"
+	    $errors++;
+            DEBUG "[DEBUG] Protocol exception while fetching '$service' from $plugin on $nodedesignation: unrecognized line '$line'";
+	    next;
         }
+    }
+    if ($errors) {
+	WARN "[WARNING] There were errors in $errors lines and $correct correct lines in data from 'fetch $plugin' on $nodedesignation";
     }
 
     return %values;
