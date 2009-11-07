@@ -15,6 +15,8 @@ use File::Basename qw(dirname);
 my $COMPONENT_ROOT = dirname(__FILE__) . '/../../..';
 
 
+our $DROPDOWNLIMIT     = 5;
+
 our $MUNIN_PREFIX     = '';
 our $MUNIN_CONFDIR    = "$COMPONENT_ROOT/t/config/";
 our $MUNIN_BINDIR     = '';

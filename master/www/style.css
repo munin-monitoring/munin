@@ -19,6 +19,11 @@ body {
 
  }
 
+
+select {
+  border: 1px solid #d1d1d1;
+}
+
 h2 {
   margin: 0em;
   padding: 0px;

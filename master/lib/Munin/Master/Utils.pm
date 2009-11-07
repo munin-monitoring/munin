@@ -262,14 +262,15 @@ sub munin_readconfig {
     }
 
     # Some important defaults before we return...
-    $config->{'rundir'}   ||= $Munin::Common::Defaults::MUNIN_STATEDIR;
-    $config->{'dbdir'}    ||= $Munin::Common::Defaults::MUNIN_DBDIR;
-    $config->{'logdir'}   ||= $Munin::Common::Defaults::MUNIN_LOGDIR;
-    $config->{'tmpldir'}  ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/";
-    $config->{'htmldir'}  ||= $Munin::Common::Defaults::MUNIN_HTMLDIR;
-    $config->{'spooldir'} ||= $Munin::Common::Defaults::MUNIN_SSPOOLDIR;
-    $config->{'#%#parent'}  = undef;
-    $config->{'#%#name'}    = "root";
+    $config->{'dropdownlimit'} ||= $Munin::Common::Defaults::DROPDOWNLIMIT;
+    $config->{'rundir'}        ||= $Munin::Common::Defaults::MUNIN_STATEDIR;
+    $config->{'dbdir'}         ||= $Munin::Common::Defaults::MUNIN_DBDIR;
+    $config->{'logdir'}        ||= $Munin::Common::Defaults::MUNIN_LOGDIR;
+    $config->{'tmpldir'}       ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/";
+    $config->{'htmldir'}       ||= $Munin::Common::Defaults::MUNIN_HTMLDIR;
+    $config->{'spooldir'}      ||= $Munin::Common::Defaults::MUNIN_SSPOOLDIR;
+    $config->{'#%#parent'}     = undef;
+    $config->{'#%#name'}       = "root";
 
     return ($config);
 }

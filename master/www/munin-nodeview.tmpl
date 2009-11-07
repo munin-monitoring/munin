@@ -61,10 +61,33 @@
 <!--
     Start of end matter: A line of "pages at the same nesting level ("peers")
 -->
-  <tr><td class="linkbox">
-     <TMPL_VAR NAME="PARENT"> :<TMPL_LOOP NAME="PEERS">: <TMPL_IF NAME="LINK"><a href="<TMPL_VAR NAME="LINK">"></TMPL_IF><TMPL_VAR NAME="NAME"><TMPL_IF NAME="LINK"></a></TMPL_IF> </TMPL_LOOP>
- </td></tr>
+  <tr>
+
+    <TMPL_IF NAME="LARGESET">
+      <td class="linkbox">
+     <TMPL_VAR NAME="PARENT"> ::
+       <select class="peers" onchange="window.open(this.options[this.selectedIndex].value,'_top')">
+         <option value="">Nodes on this level</option>
+         <TMPL_LOOP NAME="PEERS">
+           <option 
+              <TMPL_IF NAME="LINK">
+                value="<TMPL_VAR NAME="LINK">">
+             <TMPL_ELSE>
+               value="">
+             </TMPL_IF>
+             <TMPL_VAR NAME="NAME"></option>
+             
+          </TMPL_LOOP>
+         </select>
+       </td>
+       <TMPL_ELSE>
+         <td class="linkbox">
+           <TMPL_VAR NAME="PARENT"> :<TMPL_LOOP NAME="PEERS">: <TMPL_IF NAME="LINK"><a href="<TMPL_VAR NAME="LINK">"></TMPL_IF><TMPL_VAR NAME="NAME"><TMPL_IF NAME="LINK"></a></TMPL_IF> </TMPL_LOOP>
+             </td>
+           </TMPL_IF>
+      </tr>   
 </table>
+
 <!--
     End of end: A line containing the munin signature
 -->
