@@ -3,9 +3,12 @@ Munin installation requirements
 
 On all hosts:
 
-- A reasonable Perl5
+- A reasonable Perl 5
 
-- GNU Make - do not attempt to use any other make.
+- GNU Make - do not attempt to use any other make (build time only)
+
+- Module::Build - this is part of perl 5.10, for earlier Perls it must
+  be installed (build time only)
 
 - The perl module Time::HiRes
 
@@ -53,7 +56,7 @@ Server:
 
 Node:
 
-- Perl modules: Net::Server, Time::HiRes
+- Perl modules: Net::Server, Net::Server::Fork, Time::HiRes
 
 - All SNMP plugins use Net::SNMP
 
@@ -67,11 +70,15 @@ Node:
   package system).
 
 
-If you're missing some perl modules and they are not in your package
+If you're missing some Perl modules and they are not in your package
 system it's recommended to use the cpan shell (as root) to install the
-needed ones:
+needed ones.  There is a short cpan shell section at the bottom of
+this file if you do not know how to use it.
 
-  perl -MCPAN -e shell
+Please note that BSD and Linux OSes such as Red Hat Enterprise Linux
+(and Cent OS), Fedora, Debuan, Ubuntu, SuSE and others will have quite
+a few of these packages available to install with their standard
+install tools.
 
 
 Installing
@@ -95,10 +102,13 @@ To install both master and node:
 	- Create the user "munin" and the group "munin" if these are
           not made automatically.  The user needs no shell and no
 	  privileges.  On most Linux systems the munin user's shell
-	  is /etc/nologin - but the user still needs to be able to
+	  is the nologin shell (it has different paths on different
+          systems - but the user still needs to be able to
           run cron jobs.
 
-	- make (do _NOT_ do "make install" directly, there is a bug somewhere that will result in a very defective Munin::Common::Defaults to be installed).
+	- make (do _NOT_ do "make install" directly, there is a bug
+             somewhere that will result in a very defective
+             Munin::Common::Defaults to be installed).
 
 	- make install
 
@@ -126,8 +136,8 @@ To install both master and node:
 	  generation.
 
 	- Create a cron-entry to run "munin-cron" as the user "munin"
-	  every 5 minutes.  See build/dists or build/resources for
-	  distribution-specific scripts.
+	  every 5 minutes.  See build/resources for generic or
+          build/dists for distribution-specific scripts.
 
 	- If you want to use the dynamic graphs: Configure the CGI
 	  directory, you will find a Apache config example in
@@ -135,6 +145,7 @@ To install both master and node:
 	  
 	  NOTE: Dynamic graphs are not exactly perfect. Se also
           http://munin.projects.linpro.no/wiki/CgiHowto
+
 
 To install a node:
 
@@ -159,10 +170,9 @@ To install a node:
 	- Start the node agent (as root) SBINDIR/munin-node.
 
 	  You probably want to use an init-script instead and you
-          might find a good one under dists/ or in the resources/
-          directory (maybe you need to edit the init script, check the
-          given paths in the script you might use).
-
+          might find a good one under build/dists or in the
+          build/resources/ directory (maybe you need to edit the init
+          script, check the given paths in the script you might use).
 
 For further build alternatives, see Makefile.
 
@@ -195,3 +205,54 @@ A lot of OSes still have none.  If you create plugins for an OS/system
 which is not already in the package, please send us a copy of them, so
 we can add them for others to use.  We'd also be happy if you sent us
 any new plugins on systems already in the package.
+
+
+Using CPAN shell
+================
+
+If your OS does not provide all the needed perl packages they can be
+intalled by a perl installation tool called CPAN-Shell.  There is
+ample documentation about it on the web, but here is a brief tour.
+
+As root execute:
+
+  # perl -MCPAN -e shell
+
+The first time you run this you are interviewed about various things.
+Answer the questions, you can probably answer blank on any you do not
+understand.
+
+You will then be presented with a CPAN prompt (cpan>) . From this
+prompt you type:
+
+  cpan> install Time::HiRes
+
+You could also do it one at a time like this: 
+
+  # perl -MCPAN -e 'install Time::HiRes'
+
+Do the same for all modules needed.  E.g.,
+
+  install Time:HiRes
+  install Storable
+  install Digest::MD5
+  install Text::Balanced
+
+and so on.
+
+If you need to install Munin on a host with no Internet access you can
+use CPAN shell on a host _with_ Internet access and use the "get"
+command to retrive the needed modules.  One problem: The dependencies
+of modules will change over time so the list above may not be correct
+6 months after it was last updated.  SO: If you want to make sure you
+get all the needed modules you can do a full install of munin on a
+Internet connected system and then transfer all the modules to the
+non-connected system after.  All the modules that the CPAN shell
+retrived can be found like this:
+
+  # cd ~/.cpan/sources
+  # find . -name '*.tar.gz
+  ./authors/id/G/GA/GAAS/Digest-MD5-2.39.tar.gz
+  ...
+
+Now just make sure the sources directory is empty before you begin.
