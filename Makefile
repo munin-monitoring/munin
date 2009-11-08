@@ -22,12 +22,11 @@ CLASSFILES       := $(shell find plugins/javalib/ -name '*.java' | sed 's/\(.*\)
 PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/*)
 MANCENTER        := "Munin Documentation"
 MAN8		 := master/_bin/munin-graph master/_bin/munin-update \
-			master/_bin/munin-limits master/_bin/munin-html \
-			master/_bin/munin-gather
+			master/_bin/munin-limits master/_bin/munin-html
 PODMAN8          := master/doc/munin-cron master/doc/munin master/doc/munin-check
 PODMAN5          := master/doc/munin.conf node/doc/munin-node.conf
 
-.PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-munindoc install-doc install-man \
+.PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
         build build-common-prime build-common-pre build-doc \
         source_dist \
         test clean \
@@ -59,9 +58,9 @@ tags:
 ######################################################################
 
 ifeq ($(JCVALID),yes)
-install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-plugins-java install-man install-munindoc
+install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-plugins-java install-man
 else
-install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-man install-munindoc
+install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-man
 endif
 
 install-pre: Makefile Makefile.config
@@ -167,11 +166,6 @@ install-doc: build-doc
 	$(INSTALL) -m 0644 README $(DOCDIR)/
 	$(INSTALL) -m 0644 COPYING $(DOCDIR)/
 	$(INSTALL) -m 0644 build/resources/* $(DOCDIR)/resources
-
-install-munindoc: build
-	mkdir -p $(BINDIR)
-	$(INSTALL) -m 0755 build/node/bin/munindoc $(BINDIR)/
-
 
 ######################################################################
 
