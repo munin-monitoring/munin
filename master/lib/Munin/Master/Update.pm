@@ -70,7 +70,9 @@ sub _read_old_service_configs {
     # Get old service configuration from the config instance since the
     # syntaxes are identical.
     my $oldconfig = Munin::Master::Config->instance()->{oldconfig};
-    my $datafile = $oldconfig->{config_file};
+
+    my $datafile = $oldconfig->{config_file} = $config->{dbdir}.'/datafile';
+
     my $file;
     
     if (-e $datafile ) {
