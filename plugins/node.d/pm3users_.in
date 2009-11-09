@@ -78,19 +78,19 @@ if ($cmd eq 'config') {
 	print("pstn.max $maxpstn\n");
 	print("pstn.type GAUGE\n");
 	print("pstn.draw AREA\n");
+	print("pstn.colour 50f0ff\n");
 	print("isdn.label ISDN\n");
 	print("isdn.max $maxisdn\n");
 	print("isdn.type GAUGE\n");
 	print("isdn.draw STACK\n");
+	print("isdn.colour 9598dd\n");
 	print("total.label Total\n");
 	print("total.max $maxtotal\n");
 	print("total.type GAUGE\n");
 	print("total.draw LINE1\n");
+	print("total.colour 000000\n");
 
 # These options are unsupported in the current version:
-#	print("pstn.colour 50f0ff\n");
-#	print("isdn.colour 9598dd\n");
-#	print("total.colour 000000\n");
 #	print("hrules $maxpstn:ff8800:Max PSTN users,$maxisdn:ff0000:Max ISDN users\n");
 
 	exit(0);
