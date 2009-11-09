@@ -14,4 +14,6 @@
 nice @@LIBDIR@@/munin-graph --cron $@ 2>&1 | 
 	fgrep -v "*** attempt to put segment in horiz list twice"
 
+wait
+
 nice @@LIBDIR@@/munin-html $@ || exit 1

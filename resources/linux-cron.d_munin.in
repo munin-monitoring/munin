@@ -1,8 +1,7 @@
 #
-# cron-jobs for munin
+# cron-jobs for munin, drop in /etc/cron.d on a Linux machine.
 #
 
 MAILTO=root
 
 */5 * * * *     munin if [ -x @@BINDIR@@/munin-cron ]; then @@BINDIR@@/munin-cron; fi
-10 10 * * *     munin if [ -x @@LIBDIR@@/munin-limits ]; then @@LIBDIR@@/munin-limits --force --contact nagios --contact old-nagios; fi
