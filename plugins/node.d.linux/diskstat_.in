@@ -4,13 +4,24 @@
 
 =head1 NAME
 
-diskstat_ - Munin plugin to monitor various values provided
+diskstat_ - Munin wildcard plugin to monitor various values provided
 via C</proc/diskstats>
 
 =head1 APPLICABLE SYSTEMS
 
 Linux 2.6 systems with extended block device statistics enabled.
 
+
+=head1 CONFIGURATION
+
+None needed.
+
+This plugin displays nicer device-mapper device names if it is run as
+root, but it functions as needed without root privilege.  To configure
+for running as root enter this in a plugin configuration file:
+
+  [diskstat_*]
+    user root
 
 =head1 INTERPRETATION
 
@@ -630,6 +641,8 @@ sub translate_devicemapper_name {
 
             my $pretty_name = translate_lvm_name($entry);
 
+	    $entry =~ s|/dev/||;
+
             return defined $pretty_name ? $pretty_name : $entry;
 
         }
@@ -659,6 +672,7 @@ sub translate_lvm_name {
         $device_name = "$vg/$lv";
 
         # Sanity check - does the constructed device name exist?
+        # Breaks unless we are root.
         if ( stat("/dev/$device_name") ) {
             return "$device_name";
         }
