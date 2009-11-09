@@ -193,7 +193,7 @@ $graphs{bin_relay_log} = {
     config => {
 	global_attrs => {
 	    title  => 'Binary/Relay Logs',
-	    vlabel => '#',
+	    vlabel => 'Log activity',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE1',
@@ -213,7 +213,7 @@ $graphs{commands} = {
     config => {
 	global_attrs => {
 	    title  => 'Command Counters',
-	    vlabel => 'commands / ${graph_period}',
+	    vlabel => 'Commands per ${graph_period}',
 	    total  => 'Questions',
 	},
 	data_source_attrs => {},
@@ -237,7 +237,7 @@ $graphs{connections} = {
     config => {
 	global_attrs => {
 	    title  => 'Connections',
-	    vlabel => 'connections / ${graph_period}',
+	    vlabel => 'Connections per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE1',
@@ -266,7 +266,7 @@ $graphs{files_tables} = {
     config => {
 	global_attrs => {
 	    title  => 'Files and tables',
-	    vlabel => 'tables',
+	    vlabel => 'Tables',
 	},
 	data_source_attrs => {
 	    type  => 'GAUGE',
@@ -290,7 +290,7 @@ $graphs{innodb_bpool} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Buffer Pool',
-	    vlabel => 'pages',
+	    vlabel => 'Pages',
 	    base   => '1024',
 	},
 	data_source_attrs => {
@@ -316,7 +316,7 @@ $graphs{innodb_bpool_act} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Buffer Pool Activity',
-	    vlabel => 'actions / ${graph_period}',
+	    vlabel => 'Activity per ${graph_period}',
 	    total  => 'Total',
 	},
 	data_source_attrs => {
@@ -336,7 +336,7 @@ $graphs{innodb_insert_buf} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Insert Buffer',
-	    vlabel => '#',
+	    vlabel => 'Activity per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw => 'LINE1',
@@ -355,7 +355,7 @@ $graphs{innodb_io} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB IO',
-	    vlabel => '# IO operations',
+	    vlabel => 'IO operations per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw => 'LINE1',
@@ -375,7 +375,7 @@ $graphs{innodb_io_pend} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB IO Pending',
-	    vlabel => '#',
+	    vlabel => 'Pending operations',
 	},
 	data_source_attrs => {
 	    draw => 'LINE1',
@@ -398,7 +398,7 @@ $graphs{innodb_log} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Log',
-	    vlabel => '#',
+	    vlabel => 'Log activity per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw => 'LINE1',
@@ -420,7 +420,7 @@ $graphs{innodb_rows} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Row Operations',
-	    vlabel => 'operations / ${graph_period}',
+	    vlabel => 'Operations per ${graph_period}',
 	    total  => 'Total',
 	},
 	data_source_attrs => {},
@@ -439,7 +439,7 @@ $graphs{innodb_semaphores} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Semaphores',
-	    vlabel => '#',
+	    vlabel => 'Semaphores per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE1',
@@ -458,7 +458,7 @@ $graphs{innodb_tnx} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Transactions',
-	    vlabel => '# transactions',
+	    vlabel => 'Transactions per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE1',
@@ -496,7 +496,7 @@ $graphs{network_traffic} = {
 	global_attrs => {
 	    title  => 'Network Traffic',
 	    args   => '--base 1024',
-	    vlabel => 'bytes received (-) / sent (+) per ${graph_period}',
+	    vlabel => 'Bytes received (-) / sent (+) per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE2',
@@ -516,7 +516,7 @@ $graphs{qcache} = {
     config => {
 	global_attrs => {
 	    title  => 'Query Cache',
-	    vlabel => 'commands / second',
+	    vlabel => 'Commands per ${graph_period}',
 	},
 	data_source_attrs => {
 	     draw => 'LINE1',
@@ -537,7 +537,7 @@ $graphs{qcache_mem} = {
     config => {
 	global_attrs => {
 	    title  => 'Query Cache Memory',
-	    vlabel => 'bytes',
+	    vlabel => 'Bytes',
 	    args   => '--base 1024 --lower-limit 0',
 	},
 	data_source_attrs => {
@@ -557,7 +557,7 @@ $graphs{replication} = {
     config => {
 	global_attrs => {
 	    title  => 'Replication',
-	    vlabel => '#',
+	    vlabel => 'Activity',
 	},
 	data_source_attrs => {
 	    draw => 'LINE1',
@@ -583,7 +583,7 @@ $graphs{select_types} = {
     config => {
 	global_attrs => {
 	    title  => 'Select types',
-	    vlabel => 'commands / ${graph_period}',
+	    vlabel => 'Commands per ${graph_period}',
 	    total  => 'Total',
 	},
 	data_source_attrs => {},
@@ -603,7 +603,7 @@ $graphs{slow} = {
     config => {
 	global_attrs => {
 	    title  => 'Slow Queries',
-	    vlabel => 'slow queries / ${graph_period}',
+	    vlabel => 'Slow queries per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE2',
@@ -620,7 +620,7 @@ $graphs{sorts} = {
     config => {
 	global_attrs => {
 	    title  => 'Sorts',
-	    vlabel => 'sorts / ${graph_period}',
+	    vlabel => 'Sorts / ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE2',
@@ -640,7 +640,7 @@ $graphs{table_locks} = {
     config => {
 	global_attrs => {
 	    title  => 'Table locks',
-	    vlabel => 'locks / ${graph_period}',
+	    vlabel => 'locks per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE2',
@@ -658,7 +658,7 @@ $graphs{tmp_tables} = {
     config => {
 	global_attrs => {
 	    title  => 'Temporary objects',
-	    vlabel => 'objects / ${graph_period}',
+	    vlabel => 'Objects per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE2',
