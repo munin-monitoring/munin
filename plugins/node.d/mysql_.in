@@ -9,7 +9,7 @@ mysql_ - Munin plugin to display misc MySQL server status
 
 =head1 APPLICABLE SYSTEMS
 
-Any MySQL platform, tested on MySQL 5.1.29 and 5.0.51
+Any MySQL platform, tested by the author on MySQL 5.1.29 and 5.0.51
 
 =head1 CONFIGURATION
 
@@ -34,6 +34,7 @@ Non-default example:
     env.mysqlconnection DBI:mysql:mysql;host=127.0.0.1;port=3306
     env.mysqluser root
     env.mysqlpassword geheim
+
 
 =head1 DEPENDENCIES
 
@@ -192,7 +193,7 @@ $graphs{bin_relay_log} = {
     config => {
 	global_attrs => {
 	    title  => 'Binary/Relay Logs',
-	    vlabel => 'FIX',
+	    vlabel => '#',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE1',
@@ -335,7 +336,7 @@ $graphs{innodb_insert_buf} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Insert Buffer',
-	    vlabel => 'FIX',
+	    vlabel => '#',
 	},
 	data_source_attrs => {
 	    draw => 'LINE1',
@@ -354,7 +355,7 @@ $graphs{innodb_io} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB IO',
-	    vlabel => 'FIX',
+	    vlabel => '# IO operations',
 	},
 	data_source_attrs => {
 	    draw => 'LINE1',
@@ -374,7 +375,7 @@ $graphs{innodb_io_pend} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB IO Pending',
-	    vlabel => 'FIX',
+	    vlabel => '#',
 	},
 	data_source_attrs => {
 	    draw => 'LINE1',
@@ -397,7 +398,7 @@ $graphs{innodb_log} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Log',
-	    vlabel => 'FIX',
+	    vlabel => '#',
 	},
 	data_source_attrs => {
 	    draw => 'LINE1',
@@ -438,7 +439,7 @@ $graphs{innodb_semaphores} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Semaphores',
-	    vlabel => 'FIX',
+	    vlabel => '#',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE1',
@@ -457,7 +458,7 @@ $graphs{innodb_tnx} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Transactions',
-	    vlabel => 'FIX',
+	    vlabel => '# transactions',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE1',
@@ -556,7 +557,7 @@ $graphs{replication} = {
     config => {
 	global_attrs => {
 	    title  => 'Replication',
-	    vlabel => 'FIX',
+	    vlabel => '#',
 	},
 	data_source_attrs => {
 	    draw => 'LINE1',
@@ -753,7 +754,7 @@ sub suggest {
     #   SHOW SLAVE STATUS
 
     local $_;
-    print "$_\n" for (sort keys(%graphs));
+    print "mysql_$_\n" for (sort keys(%graphs));
 
     return 0;
 }
@@ -1263,14 +1264,17 @@ sub parse_buffer_pool_and_memory {
 
 
 sub handle_incomplete_innodb_status {
-    warn "Output from SHOW ENGINE INNDOB STATUS was truncated";
-    # FIX more user friendly warning
 
-    # Is it possible to find some of the missing values from SHOW
+    warn "Output from SHOW ENGINE INNDOB STATUS was truncated. "
+	. "This happens if the output of SEIS exceeds 64KB. "
+	. "Several of the InnoDB graphs might be affected by this.";
+
+    # FIX Is it possible to find some of the missing values from SHOW
     # STATUS?
 }
 
 
 exit main() unless caller;
+
 
 1;
