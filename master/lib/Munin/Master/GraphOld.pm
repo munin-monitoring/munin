@@ -1164,10 +1164,15 @@ sub process_service {
             # the rrd file.  This makes http's If-Modified-Since more
             # reliable, esp. in combination with munin-*cgi-graph.
 
-            utime $lastupdate, $lastupdate,
-                munin_get_picture_filename($service, $time);
-            if ($list_images) {
+	    # Since this disrupts rrd's --lazy option we're disableing
+	    # it until we can do it in a less distructive way, we need
+	    # to do it only on files that were updated _just_ now.
+	    # Should probably also only be done in cgi mode.
 
+            # utime $lastupdate, $lastupdate,
+	    # munin_get_picture_filename($service, $time);
+
+            if ($list_images) {
                 # Command-line option to list images created
                 print munin_get_picture_filename ($service, $time), "\n";
             }
