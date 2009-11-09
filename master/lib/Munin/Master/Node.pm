@@ -287,8 +287,11 @@ sub _validate_data_sources {
 	my $data_source_config = $all_data_source_config->{$service};
 
 	for my $ds (keys %$data_source_config) {
-	    croak "Missing required attribute 'label' for data source '$ds' in service $service on $nodedesignation"
-		unless defined $data_source_config->{$ds}{label};
+	    if (!defined $data_source_config->{$ds}{label}) {
+		ERROR "Missing required attribute 'label' for data source '$ds' in service $service on $nodedesignation";
+		$data_source_config->{$ds}{label} = 'No .label provided';
+		$data_source_config->{$ds}{extinfo} = "NOTE: The plugin did not provide any label for the data source $ds.  It is in need of fixing.";
+	    }
 	}
     }
 }
