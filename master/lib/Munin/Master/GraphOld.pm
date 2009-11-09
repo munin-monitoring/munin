@@ -2,7 +2,7 @@ package Munin::Master::GraphOld;
 
 # -*- cperl -*-
 
-=comment
+=begin comment
 
 This is Munin::Master::GraphOld, a package shell to make munin-graph
 modular (so it can loaded persistently in munin-fastcgi-graph for
@@ -30,6 +30,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 $Id$
 
+=end comment
+
 =cut
 
 use warnings;
@@ -50,7 +52,8 @@ use Getopt::Long 2.37 qw(GetOptionsFromArray);
 use Time::HiRes;
 use Text::ParseWords;
 
-if ($RRDs::VERSION >= 1.3) {use Encode;}
+# For UTF-8 handling (plugins are assumed to use Latin 1)
+if ($RRDs::VERSION >= 1.3) { use Encode; }
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
