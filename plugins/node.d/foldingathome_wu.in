@@ -1,17 +1,37 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Folding@Home WU submited
-#
-# Parameters:
-#
-#   config   (required)
-#   autoconf (optional - only used by munin-config)
-#
-# Magic markers (optional - used by munin-config and some installation
-# scripts):
-#%# family=contrib
-#%# capabilities=autoconf
+
+: <<EOF
+
+=head1 NAME
+
+foldingathome_wu - Plugin to graph the number of working units
+submitted to folding@home
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHORS
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 BUGS
+
+Plugin has capabilities "autoconf", but "autoconf" seems broken.
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
+
+EOF
 
 statefile=$MUNIN_PLUGSTATE/plugin-fah_wu.state
 

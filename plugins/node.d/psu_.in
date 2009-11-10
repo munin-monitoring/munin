@@ -1,22 +1,45 @@
 #!@@GOODSH@@
 # -*- sh -*-
-#
-# Wildcard-script to monitor number of processes running as a given user.
-# To monitor a user, link psu_<program> to this file. E.g.
-#
-#    ln -s /usr/share/munin/node/plugins-auto/psu_ /etc/munin/node.d/psu_munin
-#
-# ...will monitor number of processes owned by 'munin'.
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-# 	suggest  (optional - used by munin-config)
-#
-# Magic markers (optional):
-#%# family=manual
-#%# capabilities=autoconf suggest
+
+: <<EOF
+
+=head1 NAME
+
+psu_ - Wildcard plugin to graph the number of processes by a given
+user.
+
+=head1 CONFIGURATION
+
+This is a wildcard plugin.  The link name extension is the user name
+we wish to graph.
+
+Example:
+
+ ln -s @@LIBDIR@@/plugins/psu_ @@CONFDIR@@/plugins/psu_foo
+
+...will monitor the user "foo"
+
+=head1 AUTHORS
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 BUGS
+
+Plugin is "autoconf suggest", but "suggest" will always return no
+suggestions.
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=autoconf suggest
+
+=cut
+
+EOF
 
 name=`basename $0 | sed 's/^psu_//g'`
 

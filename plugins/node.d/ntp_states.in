@@ -1,23 +1,42 @@
 #!@@PERL@@ -w
 # -*- perl -*-
-#
-# Plugin to monitor NTP states
-#
-# Parameters understood:
-#
-# 	config   (required)
-# 	autoconf (optional - used by lrrd-config)
-#
-# Config variables:
-#
-#       lowercase	- lowercase hostnames after lookup
-#
-# Magic markers - optional - used by installation scripts and
-# lrrd-config:
-#
-#%# family=manual
-#%# capabilities=autoconf
-#
+
+=head1 NAME
+
+ntp_states - Plugin to monitor NTP states
+
+=head1 CONFIGURATION
+
+No configuration
+
+This plugin must run as the user "root"
+
+The following configuration parameters are used by this plugin
+
+ [ntp_states]
+  env.lowercase - Lowercase hostnames after lookup
+
+Set the variable env.lowercase to anything lowercase hostnames.
+
+=head2 DEFAULT CONFIGURATION
+
+ [ntp_states]
+  env.lowercase <undefined>
+
+=head1 AUTHORS
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=autoconf
+
+=cut
 
 use strict;
 use Net::hostent;
