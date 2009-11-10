@@ -220,6 +220,7 @@ sub emit_comparison_template {
     DEBUG "[DEBUG] Creating comparison page $file";
 
     $comparisontemplates{$t}->param(
+                                    INFO_OPTION => 'Groups on this level',
                                     NAME        => $key->{'name'},
                                     GROUPS      => $key->{'comparegroups'},
                                     PATH        => $key->{'path'},
@@ -255,6 +256,7 @@ sub emit_graph_template {
     DEBUG "[DEBUG] Creating graph(nodeview) page ".$key->{filename};
 
     $graphtemplate->param(
+                          INFO_OPTION => 'Nodes on this level',
                           GROUPS      => $key->{'groups'},
                           PATH        => $key->{'path'},
                           CSSPATH     => $key->{'csspath'},
@@ -290,6 +292,7 @@ sub emit_group_template {
     DEBUG "[DEBUG] Creating group page ".$key->{filename};
 
     $grouptemplate->param(
+                          INFO_OPTION => 'Groups on this level',
                           GROUPS    => $key->{'groups'},
                           PATH      => $key->{'path'},
                           CSSPATH   => $key->{'csspath'},
@@ -322,6 +325,7 @@ sub emit_service_template {
     }
 
     $servicetemplate->param(
+                            INFO_OPTION => 'Graphs in same category',
                             SERVICES  => [$srv],
                             PATH      => $pathnodes,
                             PEERS     => $peers,

@@ -15,7 +15,7 @@
      :: <TMPL_VAR NAME="CATEGORY">
      </TMPL_IF>
      <TMPL_IF NAME="LARGESET">:: <select class="peers" onchange="window.open(this.options[this.selectedIndex].value,'_top')">
-      <option value="">Graphs in same category</option>
+      <option value=""><TMPL_VAR NAME="INFO_OPTION"></option>
        <TMPL_LOOP NAME="PEERS">
         <option 
           <TMPL_IF NAME="LINK">
