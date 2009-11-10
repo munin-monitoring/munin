@@ -45,7 +45,7 @@ sub run {
     $self->_create_rundir_if_missing();
 
     $self->_do_with_lock_and_timing(sub {
-        INFO "[INFO] Starting munin-update";
+        INFO "[INFO]: Starting munin-update";
 
         $self->{old_service_configs} = $self->_read_old_service_configs();
 
@@ -142,7 +142,7 @@ sub _do_with_lock_and_timing {
     close ($self->{STATS});
     $self->{STATS} = undef;
     rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
-    INFO "[INFO] Munin-update finished ($update_time sec)";
+    INFO "[INFO]: Munin-update finished ($update_time sec)";
 
     munin_removelock($lock);
 
