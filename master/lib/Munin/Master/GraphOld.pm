@@ -488,8 +488,9 @@ sub expand_specials {
                 push(@spc_stack, $name);
                 push(@$preproc,  "$name=$pre");
             }
-            $service->{$last_name}->{"cdef"}
-                .= "," . join(',+,', @spc_stack[0 .. @spc_stack - 2]) . ',+';
+            $service->{$last_name}->{"cdef"} .=
+		"," . join(",$AddNAN,", @spc_stack[0 .. @spc_stack - 2]) .
+		",$AddNAN";
 
             if (my $tc = munin_get($service->{$field}, "cdef", 0))
             {    # Oh bugger...
