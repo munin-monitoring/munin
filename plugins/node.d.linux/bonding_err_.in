@@ -1,10 +1,51 @@
 #!@@GOODSH@@
+# -*- sh -*-
 
-# Copyright Bjørn Ruberg 2009
-# Licensed under GPL v2
+: <<EOF
 
-#%# family=auto
-#%# capabilities=autoconf suggest
+=head1 NAME
+
+bonding_err_ - Wildcard plugin to graph bonding interface errors
+
+=head1 CONFIGURATION
+
+This is a wildcard plugin.  The link name extension is the bonding
+interface to monitor.
+
+=head1 AUTHORS
+
+Copyright Bjørn Ruberg 2009
+
+=head1 LICENSE
+
+Gnu GPLv2
+
+=begin comment
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 dated June, 1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+USA.
+
+=end comment
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
+
+EOF
 
 PROCDIR="/proc/net/bonding"
 MYSELF=$(basename $0)
