@@ -559,11 +559,9 @@ sub munin_get_node
     foreach my $tmpvar (@$loc) {
 	if ($tmpvar !~ /\S/) {
 	    ERROR "[ERROR] munin_get_node: Cannot work on hash node \"$tmpvar\"";
-	    return;
+	    return undef;
 	}
-	# This used to be "return undef" which seems a bit hash and also has
-	# been reported to be harmful. - janl
-	next if !exists $hash->{$tmpvar};
+	return undef if !exists $hash->{$tmpvar};
 	$hash = $hash->{$tmpvar};
     }
     return $hash;
