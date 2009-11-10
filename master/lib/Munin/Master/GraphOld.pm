@@ -371,9 +371,11 @@ sub expand_specials {
     my $preproc = shift;
     my $order   = shift;
     my $single  = shift;
+
     my $result  = [];
 
     my $fieldnum = 0;
+
     for my $field (@$order) {    # Search for 'specials'...
         my $tmp_field;
 
@@ -421,6 +423,7 @@ sub expand_specials {
 
         }
         elsif (defined($tmp_field = get_stack_command($service->{$field}))) {
+	    # Aliased with .stack
             DEBUG "DEBUG: expand_specials ($tmp_field): Doing stack...";
 
             my @spc_stack = ();
@@ -458,7 +461,7 @@ sub expand_specials {
                     push @$result, "$name.onlynullcdef";
                 }
             }
-        }
+        } # if get_stack_command
         elsif (defined($tmp_field = get_sum_command($service->{$field}))) {
             my @spc_stack = ();
             my $last_name = "";
@@ -521,7 +524,7 @@ sub expand_specials {
                 munin_set_var_loc($service, [$nf, "graph"], "no");
             }
         }
-    }
+    } # for (@$order)
     return $result;
 }
 
@@ -770,6 +773,7 @@ sub process_service {
         my $has_negative = munin_get($field, "negative");
 
         # Trim the fieldname to make room for other field names.
+	
         $rrdname = &get_field_name($fname);
 
         DEBUG "[DEBUG] RRD name / filename: $rrdname / $filename\n";
@@ -1137,7 +1141,8 @@ sub process_service {
             push @complete, "--end",
                 (int($lastupdate / $resolutions{$time})) * $resolutions{$time};
         }
-        TRACE "\n\nrrdtool \"graph\" \"" . join("\"\n\t\"", @complete) . "\"\n";
+
+	DEBUG "\n\nrrdtool 'graph' '" . join("'\n\t'", @complete) . "'\n";
 
         # Make sure directory exists
         munin_mkdir_p($picdirname, oct(777));
@@ -1271,8 +1276,7 @@ sub process_service {
                 unshift @rrd_sum, "--vertical-label", $label;
             }
 
-            DEBUG "\n\nrrdtool \"graph\" \""
-                . join("\"\n\t\"", @rrd_sum) . "\"\n";
+	    DEBUG "\n\nrrdtool 'graph' '" . join("'\n\t'", @rrd_sum) . "'\n";
 
             # Make sure directory exists
             munin_mkdir_p($picdirname, oct(777));
@@ -1285,12 +1289,11 @@ sub process_service {
                     . ": $ERROR";
             }
             elsif ($list_images) {
-
                 # Command-line option to list images created
                 print munin_get_picture_filename ($service, $time, 1), "\n";
             }
-        }
-    }
+        } # foreach (keys %sumtimes)
+    } # if graph_sums
 
     $service_time = sprintf("%.2f", (Time::HiRes::time - $service_time));
     INFO "Graphed service : $sname ($service_time sec * 4)";

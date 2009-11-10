@@ -397,6 +397,12 @@ sub munin_get_var_path
 
  
 sub munin_find_field {
+    # Starting at the (presumably the root) $hash make recursive calls
+    # until for example graph_title or value is found, and then
+    # continue recursing and itterating to all are found.
+    #
+    # Then we return a array of pointers into the $hash
+
     my $hash  = shift;
     my $field = shift;
     my $avoid = shift;
@@ -557,8 +563,11 @@ sub munin_get_parent {
 }
 
 
-sub munin_get_node
-{
+sub munin_get_node {
+    # From the given point in the hash itterate deeper into the
+    # has along the path given by the array in $loc.
+    # 
+    # If any part of the path in $loc is undefined we bail.
     my $hash = shift;
     my $loc  = shift;
 
@@ -1269,7 +1278,9 @@ sub munin_get_rrd_filename {
     return if !defined $field or ref ($field) ne "HASH";
 
     # If the field has a .filename setting, use it
-    return $result if $result = munin_get ($field, "filename");
+    if ($result = munin_get ($field, "filename")) {
+	return $result;
+    }
 
     # Handle custom paths (used in .sum, .stack, graph_order, et al)
     if (defined $path and length $path) {
