@@ -232,7 +232,13 @@ sub munin_overwrite {
         next if $key =~ /^#%#/;
 	if (ref $overwrite->{$key}) {
 	    if (!defined $configfile->{$key}) {
-		$configfile->{$key} = $overwrite->{$key};
+		if (ref $overwrite->{$key} eq "HASH") {
+		    $configfile->{$key}->{'#%#parent'} = $configfile;
+		    $configfile->{$key}->{'#%#name'}   = $key;
+		    munin_overwrite($configfile->{$key},$overwrite->{$key});
+		} else {
+		    $configfile->{$key} = $overwrite->{$key};
+		}
 	    } else {
 		munin_overwrite($configfile->{$key},$overwrite->{$key});
 	    }
