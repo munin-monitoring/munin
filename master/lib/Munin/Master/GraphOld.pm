@@ -1139,8 +1139,13 @@ sub process_service {
                 . "\\r");
 
         if (time - 300 < $lastupdate) {
-            push @complete, "--end",
-                (int($lastupdate / $resolutions{$time})) * $resolutions{$time};
+	    if (@added) { # stop one period earlier if it's a .sum or .stack
+		push @complete, "--end",
+		    (int(($lastupdate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
+	    } else {
+		push @complete, "--end",
+		    (int($lastupdate / $resolutions{$time})) * $resolutions{$time};
+	    }
         }
 
 	DEBUG "\n\nrrdtool 'graph' '" . join("'\n\t'", @complete) . "'\n";
@@ -1194,9 +1199,13 @@ sub process_service {
             push @rrd_sum, @{get_header($service, $time, 1)};
 
             if (time - 300 < $lastupdate) {
-                push @rrd_sum, "--end",
-                    (int($lastupdate / $resolutions{$time}))
-                    * $resolutions{$time};
+		if (@added) { # stop 5 minutes earlier if it's a .sum or .stack
+		    push @rrd_sum, "--end",
+			(int(($lastupdate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
+		} else {
+		    push @rrd_sum, "--end",
+			(int($lastupdate / $resolutions{$time})) * $resolutions{$time};
+		}
             }
             push @rrd_sum, @rrd;
             push(@rrd_sum,
