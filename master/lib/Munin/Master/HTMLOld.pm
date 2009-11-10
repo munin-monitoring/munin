@@ -186,9 +186,32 @@ sub html_main {
     INFO "[INFO] munin-html finished ($update_time sec)";
 }
 
+sub find_complinks{
+    my($type) = @_;
+    
+    my @links = ();
+    
+    foreach my $current (qw(day week month year)) {
+        my $data = {};
+
+        if ($type eq $current) {
+            $data->{'LINK'} = undef;
+        } 
+        else {
+            $data->{'LINK'} = "comparison-$current.html";            
+        }
+
+        $data->{'NAME'} = $current;
+        push(@links, $data);
+    }
+
+    return \@links;
+
+}
+
 
 sub emit_comparison_template {
-    my ($key,$t) = @_;
+    my ($key, $t) = @_;
 
     ( my $file = $key->{'filename'}) =~ s/index.html$//;
 
@@ -201,6 +224,7 @@ sub emit_comparison_template {
                                     GROUPS      => $key->{'comparegroups'},
                                     PATH        => $key->{'path'},
                                     CSSPATH     => $key->{'csspath'},
+                                    COMPLINKS   => find_complinks($t),
                                     LARGESET    => decide_largeset($key->{'peers'}), 
                                     PEERS       => $key->{'peers'},
                                     PARENT      => $key->{'path'}->[-2]->{'name'},
@@ -297,7 +321,6 @@ sub emit_service_template {
         $peers = [ map { $_->{'name'} =~ s/_/ /g; $_;} @$peers ];
     }
 
-    
     $servicetemplate->param(
                             SERVICES  => [$srv],
                             PATH      => $pathnodes,
@@ -835,7 +858,7 @@ sub generate_service_templates {
     my $peers     = get_peer_nodes($service,
         lc munin_get($service, "graph_category", "other"));
     my $parent = munin_get_parent_name($service);
-    (my $csspath = $pathnodes->[0]->{'link'}) =~ s/index.html$/style.css/;
+    (my $csspath = $pathnodes->[0]->{'path'}) =~ s/index.html$/style.css/;
     my $bp = borrowed_path($service) || ".";
 
     $srv{'node'} = munin_get_node_name($service);
@@ -969,9 +992,9 @@ sub get_path_nodes {
     my $ret  = [];
     my $link = "index.html";
 
-    unshift @$ret, {"name" => munin_get_node_name($hash), "link" => undef};
+    unshift @$ret, {"name" => munin_get_node_name($hash), "path" => undef};
     while ($hash = munin_get_parent($hash)) {
-        unshift @$ret, {"name" => munin_get_node_name($hash), "link" => $link};
+        unshift @$ret, {"name" => munin_get_node_name($hash), "path" => $link};
         $link = "../" . $link;
     }
     $ret->[0]->{'name'} = undef;

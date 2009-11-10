@@ -180,6 +180,41 @@ td.graphbox > table {
   text-align: left;
 }
 
+#legend {
+  margin: 2px;
+}
+
+#legend tr, #legend td{
+  padding: 3px 2px 3px 2px;
+  margin: 1px;
+}
+
+#legend th{
+  border-bottom: 1px solid #999999;
+}
+
+#legend .oddrow{
+  background-color: #f8f8f8;
+}
+
+#legend .oddrow td{
+  border-bottom: 1px solid #d8d8d8;
+}
+
+#legend .evenrow{
+  background-color: #fdfdfd;
+}
+
+#legend .evenrow td{
+  border-bottom: 1px solid #d8d8d8;
+}
+
+#legend .lastrow td{
+  border-bottom: 0px solid transparent !important;
+}
+
+
+
 td.legendbox {
   border: 1px solid #999999;
   padding: 8px 4px 2px 2px;
@@ -190,7 +225,7 @@ td.legendbox {
 
 td.wrap {
 	white-space: normal;
-	max-width: 1%;
+    width: 20%;
 }
 
 td.linkbox {
@@ -219,11 +254,17 @@ td.linkbox {
 .warntext {
   font-weight: bold;
   background-color: #cccc00;
+  padding: 0px;
+  margin: -1px;
+  border: 1px solid #b9b900;
 }
 
 .crittext {
   font-weight: bold;
   background-color: #ff6f22;
+  padding: 0px;
+  margin: -1px;
+  border: 1px solid #f16722;
 }
 
 .ruler {

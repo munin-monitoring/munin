@@ -72,6 +72,7 @@ install-pre: Makefile Makefile.config
 
 install-master-prime: $(INFILES_MASTER) install-pre install-master
 	mkdir -p $(CONFDIR)/templates
+	mkdir -p $(CONFDIR)/templates/partial
 	mkdir -p $(LIBDIR)
 	mkdir -p $(BINDIR)
 	mkdir -p $(PERLLIB)
@@ -85,6 +86,11 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	for p in master/www/*.tmpl master/www/*.png master/www/*.css resources/favicon.ico; do \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
 	done
+
+	for p in master/www/partial/*.tmpl; do \
+		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/partial/ ; \
+	done
+
 	$(INSTALL) -m 0644 master/www/definitions.html $(CONFDIR)/templates/
 	$(INSTALL) -m 0755 master/VeraMono.ttf $(LIBDIR)/
 
