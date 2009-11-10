@@ -320,9 +320,12 @@ sub emit_service_template {
         loop_context_vars => 1
     );
 
+    #remove underscores from peers and title (last path element)
     if ($peers){
         $peers = [ map { $_->{'name'} =~ s/_/ /g; $_;} @$peers ];
     }
+    
+    $pathnodes->[scalar(@$pathnodes) - 1]->{'name'} =~ s/_/ /g;
 
     $servicetemplate->param(
                             INFO_OPTION => 'Graphs in same category',
@@ -630,6 +633,7 @@ sub get_group_tree {
                 ? ($rpath .= "../") . "index.html"
                 : ($rpath = ""))}
     } reverse(undef, split('\/', $base));
+
     ($csspath = $path->[0]->{'path'}) =~ s/index.html$/style.css/;
 
     # We need a bit more info for the comparison templates
@@ -1001,6 +1005,7 @@ sub get_path_nodes {
         unshift @$ret, {"name" => munin_get_node_name($hash), "path" => $link};
         $link = "../" . $link;
     }
+
     $ret->[0]->{'name'} = undef;
     return $ret;
 }
