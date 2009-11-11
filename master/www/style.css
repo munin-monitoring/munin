@@ -110,9 +110,9 @@ table.largeinvisiblebox {
   width: 90%;
   margin: 0 auto 0em auto;
   background-color: #fbfbfb;
-  border-bottom: 1px solid #d1d1d1;
-  border-left: 1px solid #d1d1d1;
-  border-right: 1px solid #d1d1d1;
+  border-bottom: 1px solid #cfd6f8;
+  border-left: 1px solid #cfd6f8;
+  border-right: 1px solid #cfd6f8;
   overflow: auto;
 }
 
@@ -242,7 +242,7 @@ td.linkbox {
   margin: 1em auto -0.5em auto;
   padding-right: 0.5em;
   background-color: #fbfbfb;
-  border: 1px solid #d1d1d1;
+  border: 1px solid #bbc3ea;
 }
 
 #generated-table tbody td {
@@ -317,6 +317,10 @@ ul li {
 
 a {
   border-width: 0px;
+}
+
+.heading {
+  font-weight: bold;
 }
 
 a.unkn:link    { color: #ffaa00; } 
