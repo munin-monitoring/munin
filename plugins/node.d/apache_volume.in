@@ -74,6 +74,8 @@ GPLv2
 
 =cut
 
+use strict;
+use warnings;
 use Munin::Plugin;
 
 my $ret = undef;
