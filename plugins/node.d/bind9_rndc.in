@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!/usr/bin/perl -w
 # -*- perl -*-
 
 =head1 NAME
@@ -46,34 +46,26 @@ my $rndc = defined($ENV{rndc}) ? $ENV{rndc} : '/usr/sbin/rndc';
 my $querystats = $ENV{querystats} || '/var/run/named.stats';
 my %IN;
 
-system("$rndc stats") if $rndc;
-    
+# open the log file, and get its size
 open(my $stats, '<', $querystats) or die "$querystats: $!\n";
-seek($stats , -400, 2);		# go nearly to the end of the file
-				# to avoid reading it all
+my $size = (stat $stats)[7];
+# call rdnc and go directly to the correct offset
+system("$rndc stats") if $rndc;
+seek($stats , $size, 0);
+
+# We want the last block like this in the file
+#+++ Statistics Dump +++ (1087277501)
+#success 106183673
+#referral 2103636
+#nxrrset 43534220
+#nxdomain 47050478
+#recursion 37303997
+#failure 17522313
+#--- Statistics Dump --- (1087277501)
 
 while (my $line = <$stats>) {
-    chomp $line;
-
-    # We want the last block like this in the file
-    #+++ Statistics Dump +++ (1087277501)
-    #success 106183673
-    #referral 2103636
-    #nxrrset 43534220
-    #nxdomain 47050478
-    #recursion 37303997
-    #failure 17522313
-    #--- Statistics Dump --- (1087277501)
-	
-    if ($line =~ m/\+\+\+ Statistics Dump \+\+\+/) {
-	# reset
-	undef %IN;
-    } else {
-	my ($what, $nb)= split('\s+', $line);
-	if ($what && ($what ne '---')) {
-	    $IN{$what} = $nb;
-	}
-    }
+    next unless $line =~ /^(\w+) (\d+)$/;
+    $IN{$1} = $2;
 }
 close($stats);
 
