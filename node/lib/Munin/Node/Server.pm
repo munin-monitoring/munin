@@ -44,7 +44,8 @@ sub pre_loop_hook {
 }
 
 
-sub request_denied_hook {
+sub request_denied_hook
+{
     my $self = shift;
     logger("Denying connection from: $self->{server}->{peeraddr}");
     return;
@@ -81,8 +82,12 @@ sub _add_services_to_nodes
                                                'config');
         };
 
-        # FIXME: report errors, and remove any plugins that failed from %services;
-        next if ($EVAL_ERROR or $res->{timed_out} or $res->{retval});
+        # FIXME: report errors properly
+        if ($EVAL_ERROR or $res->{timed_out} or $res->{retval}) {
+            print STDERR "Error running $service.  Dropping it.\n"
+                if $config->{DEBUG};
+            delete $services{$service};
+        }
 
         my ($host_name) = grep /^host_name /, @{$res->{stdout}};
         my $node = $config->{sconf}{$service}{host_name}
@@ -102,7 +107,8 @@ sub _add_services_to_nodes
 }
 
 
-sub process_request {
+sub process_request
+{
     my $self = shift;
 
     my $session = Munin::Node::Session->new();
