@@ -31,7 +31,6 @@ Server:
    - Text::Balanced
    - Params::Validate
    - TimeDate
-   - Net::SNMP for SNMP autoconfiguration and plugins
    - Net::SSLeay if you want to use SSL/TLS
    - Getopt::Long 2.37 or later
    - Log::Log4perl (which depends on
@@ -58,7 +57,9 @@ Node:
 
 - Perl modules: Net::Server, Net::Server::Fork, Time::HiRes
 
-- All SNMP plugins use Net::SNMP
+- Perl module Net::SNMP for SNMP autoconfiguration and plugins
+
+- For SNMPv3: Perl modules Crypt::DES, Digest::SHA1, Digest::HMAC
 
 - Net::SSLeay if you want to use SSL/TLS
 
