@@ -94,11 +94,14 @@ sub _add_services_to_nodes
                 || (split /\s+/, ($host_name || ''))[1]
                 || $config->{fqdn};
 
+        print STDERR "\tAdding to node $node\n" if $config->{DEBUG};
         $nodes{$node}{$service} = 1;
 
         # Note any plugins that require particular server capabilities.
         if (grep /^multigraph\s+/, @{$res->{stdout}}) {
-           push @multigraph_services, $service;
+            print STDERR "\tAdding to multigraph plugins\n"
+                if $config->{DEBUG};
+            push @multigraph_services, $service;
         }
     }
     print STDERR "Finished configuring services\n" if $config->{DEBUG};
