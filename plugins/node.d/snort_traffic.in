@@ -1,0 +1,17 @@
+#!@@GOODSH@@
+
+# Proof of concept snort plugin written by Edward Bjarte Fjellskål.
+
+if [ "$1" = "config" ]; then
+        echo 'graph_title Snort Traffic'
+        echo 'graph_args --base 1000 -l 0'
+        echo 'graph_vlabel Mbits / second'
+        echo 'graph_scale no'
+        echo 'traffic.label Mbits/second'
+        echo 'graph_category Snort'
+
+        exit 0
+fi
+
+echo -n "traffic.value "
+echo $( tail -n1 /your/path/to/snort.stats| awk -F, '{ print $3 }')
