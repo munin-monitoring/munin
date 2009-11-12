@@ -130,11 +130,15 @@ sub _installed_links { return (shift)->{installed}; }
 sub _suggested_links
 {
     my ($self) = @_;
-    if ($self->{default} eq 'yes' and not $self->is_wildcard) {
-        return [ $self->{name} ];
+
+    # no suggestions if there isn't any 
+    return [] if $self->{default} ne 'yes';
+
+    if ($self->is_wildcard or $self->{name} =~ /^snmp__/) {
+        return [ map { $self->_expand_wildcard($_) } @{$self->{suggestions}} ];
     }
     else {
-        return [ map { $self->_expand_wildcard($_) } @{$self->{suggestions}} ];
+        return [ $self->{name} ];
     }
 }
 
