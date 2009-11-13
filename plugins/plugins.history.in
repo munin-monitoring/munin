@@ -205,6 +205,7 @@ snmp__memory
 snmp__netstat
 snmp__swap
 squid_objectsize
+
 [1.4.0]
 mysql_
 extinfo_tester
@@ -302,3 +303,9 @@ haproxy_
 freebsd/systat
 freebsd/iostat
 qmailqstat
+snort_alerts
+snort_bytes_pkt
+snort_drop_rate
+snort_pattern_match
+snort_pkts
+snort_traffic
