@@ -861,7 +861,7 @@ sub generate_service_templates {
     my $fieldnum = 0;
     my @graph_info;
     my @field_info;
-    my @loc       = munin_get_node_loc($service);
+    my @loc       = @{munin_get_node_loc($service)};
     my $pathnodes = get_path_nodes($service);
     my $peers     = get_peer_nodes($service,
         lc munin_get($service, "graph_category", "other"));

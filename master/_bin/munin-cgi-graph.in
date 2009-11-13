@@ -177,7 +177,7 @@ sub get_picture_filename {
     my $service = shift;
     my $scale   = shift;
 
-    return "$config->{'htmldir'}/$domain/$name-$service-$scale.png";
+    return "$config->{'htmldir'}/$domain/$name/$service-$scale.png";
 }
 
 
@@ -293,7 +293,7 @@ sub draw_graph {
 
     my @params = ($GRAPHER);
     push @params, @$scale;
-    push @params, "--skip-locking", "--skip-stats", "--nolazy";
+    push @params, "--skip-locking", "--skip-stats", "--nolazy", "--list-images";
     push @params, "--host", $host, "--service", $serv;
     push @params, "STDERR>&STDOUT";
 
@@ -306,6 +306,7 @@ sub draw_graph {
 	exec @params;
     }
     $file = join (' ', <$IN>);
+    chomp($file);
 
     close ($IN);
     sem_release();
