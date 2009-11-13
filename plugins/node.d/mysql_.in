@@ -145,9 +145,12 @@ my %cache_options = (
     'default_expires_in' => 60,
 );
 
-my $shared_memory_cache = Cache::SharedMemoryCache->new(\%cache_options)
+my $shared_memory_cache ;
+if ($has_cache)
+{
+  $shared_memory_cache = Cache::SharedMemoryCache->new(\%cache_options)
     or die("Couldn't instantiate SharedMemoryCache");
-
+}
 
 #---------------------------------------------------------------------
 #  G R A P H   D E F I N I T I O N S
