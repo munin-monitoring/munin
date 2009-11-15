@@ -118,7 +118,7 @@ EOF
         exit 0
 	;;
     autoconf)
-        if [ -f /proc/net/ip_conntrack ] ; then
+        if [ -f /proc/net/ip_conntrack -o -f /proc/net/nf_conntrack ] ; then
 	    echo yes
 	    exit 0
 	else
@@ -129,14 +129,17 @@ esac
 
 # Do the work, perform the deed
 
-# INPUT:
+# INPUT /proc/net/ip_conntrack:
 # tcp      6 225790 ESTABLISHED src=10.0.0.4 dst=198.144.194.12 sport=48580 dport=6667 src=198.144.194.12 dst=80.111.68.163 sport=6667 dport=48580 [ASSURED] use=1
 # tcp      6 431918 ESTABLISHED src=10.0.0.2 dst=209.58.150.153 sport=33018 dport=6667 src=209.58.150.153 dst=80.111.68.163 sport=6667 dport=33018 [ASSURED] use=1
 # tcp      6 123109 ESTABLISHED src=10.0.0.5 dst=198.144.194.12 sport=33846 dport=6667 [UNREPLIED] src=198.144.194.12 dst=80.111.68.163 sport=6667 dport=33846 use=1
 # udp      17 53 src=80.111.68.163 dst=62.179.100.29 sport=34153 dport=53 src=62.179.100.29 dst=80.111.68.163 sport=53 dport=34153 [ASSURED] use=1
 #
+# INPUT /proc/net/nf_conntrack:
+# ipv4     2 tcp      6 424416 ESTABLISHED src=192.168.1.53 dst=196.203.198.11 sport=1584 dport=22146 packets=13659 bytes=5426603 src=196.203.198.11 dst=83.24.222.252 sport=22146 dport=1584 packets=14757 bytes=15342572 [ASSURED] mark=0 use=1
 
-cat /proc/net/ip_conntrack | awk '
+if [ -f /proc/net/ip_conntrack ]; then
+  cat /proc/net/ip_conntrack | awk '
   BEGIN  { STATE["ESTABLISHED"]=STATE["FIN_WAIT"]=STATE["TIME_WAIT"]=0;
 	   ASSURED=NOREPLY=NATED=STATE["SYN_SENT"]=STATE["UDP"]=0; }
   /^tcp/ { STATE[$4]++; }
@@ -157,6 +160,29 @@ cat /proc/net/ip_conntrack | awk '
 	   print "nated.value " NATED;
 	   print "total.value " TOTAL;
 	 }'
+else
+  cat /proc/net/nf_conntrack | awk '
+  BEGIN  { STATE["ESTABLISHED"]=STATE["FIN_WAIT"]=STATE["TIME_WAIT"]=0;
+	   ASSURED=NOREPLY=NATED=STATE["SYN_SENT"]=STATE["UDP"]=0; }
+  / tcp / { STATE[$6]++; }
+  / udp / { STATE["UDP"]++; }
+  /ASSURED/ { ASSURED++; }
+  {
+      TOTAL++;
+      src1 = substr($7, 5); src2 = substr($14, 5);
+      dst1 = substr($8, 5); dst2 = substr($15, 5);
+      if (src1 != dst2 || dst1 != src2) NATED++;
+  }
+  END    { print "established.value " STATE["ESTABLISHED"];
+           print "fin_wait.value " STATE["FIN_WAIT"];
+	   print "time_wait.value " STATE["TIME_WAIT"];
+	   print "syn_sent.value " STATE["SYN_SENT"];
+	   print "udp.value " STATE["UDP"];
+	   print "assured.value " ASSURED;
+	   print "nated.value " NATED;
+	   print "total.value " TOTAL;
+	 }'
+fi
 
 # Hum, the total.value should be possible to do as a cdef.
 
