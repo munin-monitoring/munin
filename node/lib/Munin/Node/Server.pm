@@ -95,7 +95,7 @@ sub _add_services_to_nodes
                 || $config->{fqdn};
 
         print STDERR "\tAdding to node $node\n" if $config->{DEBUG};
-        $nodes{$node}{$service} = 1;
+        push @{$nodes{$node}}, $service;
 
         # Note any plugins that require particular server capabilities.
         if (grep /^multigraph\s+/, @{$res->{stdout}}) {
@@ -290,7 +290,7 @@ sub _list_services {
 
     if (exists $nodes{$node}) {
         # remove any plugins that require capabilities the server doesn't provide
-        my @services = keys %{$nodes{$node}};
+        my @services = @{$nodes{$node}};
         @services = Munin::Node::Utils::set_difference(\@services, \@multigraph_services)
             unless $session->{server_capabilities}{multigraph};
 
