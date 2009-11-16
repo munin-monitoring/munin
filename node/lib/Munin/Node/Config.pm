@@ -50,11 +50,9 @@ sub parse_config {
         my @var = $self->_parse_line($line);
         next unless @var;
         if ($var[0] eq 'ignore_file') {
-            $self->{ignores} ||= [];
             push @{$self->{ignores}}, $var[1];
         } 
         elsif ($var[0] eq 'unhandled') {
-            $self->{sconf} ||= {};
             next if defined $self->{sconf}{$var[1]};
             $self->{sconf}{$var[1]} = $var[2];
         }
@@ -76,13 +74,6 @@ sub _parse_line {
         or croak "Line is not well formed ($line)";
 
     my ($var_name, $var_value) = ($1, $2);
-
-    my %handled_by_net_server_fork = map { $_ => 1 } qw(
-         allow
-         deny
-         cidr_allow
-         cidr_deny
-    );
 
     return if $self->_handled_by_net_server($var_name);
 
@@ -231,7 +222,6 @@ sub parse_plugin_config {
             my @var = $self->_parse_plugin_line($line);
             next unless @var;
             if ($var[0] eq 'env') {
-                $sconf->{$service}{'env'} ||= {};
                 my ($key, $value) = %{$var[1]};
                 $sconf->{$service}{$var[0]}{$key} = $value;
             }
