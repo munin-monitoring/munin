@@ -72,24 +72,19 @@ sub _add_services_to_nodes
 {
     my (@services) = @_;
 
-    for my $service (keys %services) {
+    for my $service (@services) {
         print STDERR "Configuring $service\n" if $config->{DEBUG};
 
-        my $res = eval {
-            local $SIG{CHLD}; # stop Net::Server from reaping the dead service too fast
-            Munin::Node::Service->fork_service($config->{servicedir},
-                                               $service,
-                                               'config');
-        };
+        my @response = _run_service($service, 'config');
 
-        # FIXME: report errors properly
-        if ($EVAL_ERROR or $res->{timed_out} or $res->{retval}) {
+        unless (@response) {
             print STDERR "Error running $service.  Dropping it.\n"
                 if $config->{DEBUG};
             delete $services{$service};
+            next;
         }
 
-        my ($host_name) = grep /^host_name /, @{$res->{stdout}};
+        my ($host_name) = grep /^host_name /, @response;
         my $node = $config->{sconf}{$service}{host_name}
                 || (split /\s+/, ($host_name || ''))[1]
                 || $config->{fqdn};
@@ -98,7 +93,7 @@ sub _add_services_to_nodes
         push @{$nodes{$node}}, $service;
 
         # Note any plugins that require particular server capabilities.
-        if (grep /^multigraph\s+/, @{$res->{stdout}}) {
+        if (grep /^multigraph\s+/, @response) {
             print STDERR "\tAdding to multigraph plugins\n"
                 if $config->{DEBUG};
             push @multigraph_services, $service;
@@ -114,6 +109,7 @@ sub process_request
 {
     my $self = shift;
 
+    my $timed_out;
     my $session = Munin::Node::Session->new();
 
     $session->{tls}          = undef;
@@ -125,17 +121,25 @@ sub process_request
 
     _net_write($session, "# munin node at $config->{fqdn}\n");
 
-    my $timed_out = !do_with_timeout($config->{'timeout'}, sub {
-        while (defined (my $line = _net_read($session))) {
-            chomp $line;
-            _process_command_line($session, $line)
-                or last;
-        }
-    });
+    # catch and report any system errors in a clean way.
+    eval {
+        $timed_out = !do_with_timeout($config->{'timeout'}, sub {
+            while (defined (my $line = _net_read($session))) {
+                chomp $line;
+                _process_command_line($session, $line) or last;
+            }
+        });
+    };
+
+    if ($EVAL_ERROR) {
+        logger($EVAL_ERROR);
+    }
 
     if ($timed_out) {
         logger("Connection timed out");
     }
+
+    return;
 }
 
 
@@ -171,10 +175,10 @@ sub _process_command_line {
         _show_nodes($session);
     }
     elsif (/^fetch\s?(\S*)/i) {
-        _print_service($session, _run_service($session, $1))
+        _print_service($session, _run_service($1))
     }
     elsif (/^config\s?(\S*)/i) {
-        _print_service($session, _run_service($session, $1, "config"));
+        _print_service($session, _run_service($1, "config"));
     }
     elsif (/^starttls\s*$/i) {
         eval {
@@ -300,30 +304,20 @@ sub _list_services {
 }
 
 
-sub _run_service {
-    # FIXME: $autoreap is never set?
-    my ($session, $service, $command, $autoreap) = @_;
+sub _run_service
+{
+    my ($service, $command) = @_;
 
-    unless ($services{$service}) {
-        _net_write($session, "# Unknown service");
-        return;
-    }
+    return '# Unknown service' unless $services{$service};
 
-    my $res = eval { Munin::Node::Service->fork_service($config->{servicedir},
-                                                        $service,
-                                                        $command);
-    };
-
-    if ($EVAL_ERROR) {
-        # Error forking, building pipes, etc
-        logger("System error: $EVAL_ERROR");
-        return;
-    }
+    # temporarily ignore SIGCHLD.  this stops Net::Server from reaping the
+    # dead service before we get the chance to check the return value.
+    local $SIG{CHLD};
+    my $res = Munin::Node::Service->fork_service($config->{servicedir},
+                                                 $service, $command);
 
     if ($res->{timed_out}) {
-        my $msg = "timeout: $service $command.";
-        _net_write($session, "# $msg\n");
-        logger("Plugin $msg");
+        logger("Service '$service' timed out.");
         return;
     }
 
@@ -331,11 +325,12 @@ sub _run_service {
         my $plugin_exit   = $res->{retval} >> 8;
         my $plugin_signal = $res->{retval} & 127;
 
-#       logger(qq{Plugin '$service' exited with status $CHILD_ERROR. --@lines--});
+        logger(qq{Service '$service' exited with status $plugin_exit/$plugin_signal.  Error output follows, if any.});
+        logger("stderr: $_") foreach @{$res->{stderr}};
         return;
     }
 
-    return (@{ $res->{stdout} });
+    return (@{$res->{stdout}});
 }
 
 
