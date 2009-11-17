@@ -43,9 +43,9 @@ like($EVAL_ERROR, qr/^Test/, "Exception gets propagated");
             for (;;) {}
         });
     });
-    
-    ok(!$stat1, "Outer timed out during evaluation of inner");
+
     ok(!$stat2, "Inner timed out");
+    ok($stat1,  "Outer didn't time out during evaluation of inner");
 }
 
 
