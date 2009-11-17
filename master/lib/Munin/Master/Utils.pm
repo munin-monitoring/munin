@@ -611,10 +611,11 @@ sub munin_set_var_loc
 	}
         return munin_set_var_loc ($hash->{$tmpvar}, \@aloc, $val);
     } else {
-        WARN "[WARNING] munin_set_var_loc: Setting unknown option \"$tmpvar\"."
+        WARN "[WARNING] munin_set_var_loc: Setting unknown option '$tmpvar' at "
+	    . munin_get_keypath($hash)
 	    unless Munin::Common::Config::cl_is_keyword($tmpvar);
 
-	# FIX
+	# FIX - or not.
 
         $hash->{$tmpvar} = $val;
 	return $hash;
@@ -916,7 +917,8 @@ sub munin_get_keypath {
     my $i = $hash;
 
     while (ref ($i) eq "HASH") {
-	my $name = $i->{'#%#name'};
+	# Not sure when a #%#name node can go missing
+	my $name = $i->{'#%#name'} || '*BUG*';
 	last if $name eq 'root';
 	if ($host) {
 	    # Into group land now
