@@ -145,7 +145,7 @@ sub process_plugin_configuration_files {
 FILE:
     for my $file (grep { -f "$self->{sconfdir}/$_" } readdir ($DIR)) {
         # Untaint file
-        return if $file !~ m/^([-\w.:]+)$/; # Skip if any weird chars
+        next if $file !~ m/^([-\w.:]+)$/; # Skip if any weird chars
         $file = $1;
         
         for my $regex (@ignores) {
