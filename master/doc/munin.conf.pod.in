@@ -22,12 +22,6 @@ at L<http://munin.projects.linpro.no/wiki/munin.conf>
 The format of the file is simple. A minimal configuration looks
 something like:
 
-	dbdir           /var/lib/munin
-	logdir          /var/log/munin
-	htmldir         /var/www/munin
-	rundir		/var/run/munin
-	tmpldir         /etc/munin/templates/
-
 	[machine1.your.dom]
 		address localhost
 
@@ -58,23 +52,23 @@ group definitions.
 
 =over
 
-=item B<dbdir> I<path>
+=item B<dbdir> I<path>   (Default: F<@@DBDIR@@>)
 
 Directory for generated database files.  Required.
 
-=item B<logdir> I<path>
+=item B<logdir> I<path>  (Default: F<@@LOGDIR@@>)
 
 Directory for log files.  Required.
 
-=item B<htmldir> I<path>
+=item B<htmldir> I<path> (Default: F<@@HTMLDIR@@>)
 
 Directory for HTML pages and graphs.  Required.
 
-=item B<rundir> I<path>
+=item B<rundir> I<path>  (Default: F<@@STATEDIR@@>)
 
 Directory for files tracking munin's current running state.  Required.
 
-=item B<tmpldir> I<path>
+=item B<tmpldir> I<path> (Default: F<@@CONFDIR@@/templates>)
 
 Directory for templates used to generate HTML pages.  Required.
 
