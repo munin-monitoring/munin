@@ -318,16 +318,20 @@ sub _run_service
 
     if ($res->{timed_out}) {
         logger("Service '$service' timed out.");
-        return;
+        return '# Timed out';
+    }
+
+    if (@{$res->{stderr}}) {
+        logger(qq{Error output from $service:});
+        logger("\t$_") foreach @{$res->{stderr}};
     }
 
     if ($res->{retval}) {
         my $plugin_exit   = $res->{retval} >> 8;
         my $plugin_signal = $res->{retval} & 127;
 
-        logger(qq{Service '$service' exited with status $plugin_exit/$plugin_signal.  Error output follows, if any.});
-        logger("stderr: $_") foreach @{$res->{stderr}};
-        return;
+        logger(qq{Service '$service' exited with status $plugin_exit/$plugin_signal.});
+        return '# Bad exit';
     }
 
     return (@{$res->{stdout}});
