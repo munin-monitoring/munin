@@ -110,6 +110,14 @@ writeup about the pdflush daemon.
   #%# family=auto
   #%# capabilities=autoconf suggest
 
+=head1 BUGS
+
+Does not work correctly with multiple Munin masters as it calculates
+averages between each time it is run.  In such a case it can be run
+twice in the same second, this causes "division by zero" errors.  If
+it is run two seconds apart the average it reports is over 2 seconds,
+not 5 minutes.
+
 =head1 AUTHOR
 
 Michael Renner <michael.renner@amd.co.at>
