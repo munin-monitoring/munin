@@ -80,7 +80,7 @@ sub get_exim_logfile
 {
     my ($spec, $type, $time) = @_;
     chomp($spec);
-    $time = time() unless $time;
+    $time ||= time();
     my $logfile = $spec;
     $logfile =~ s/^log_file_path = //;
     $logfile =~ s/\%s/$type/;
@@ -94,15 +94,11 @@ sub get_exim_logfile
     foreach (@lfiles) {
         return $_ unless /^syslog/;
     }
-    return undef;
+    return;
 }
 
 
-my $pos;
-my $received  = 0;
-my $completed = 0;
-my $rejected  = 0;
-my $dirname;
+my ($pos, $received, $completed, $rejected);
 
 sub parseEximfile
 {
@@ -115,26 +111,22 @@ sub parseEximfile
         $pos = $received = $completed = $rejected = 0;
     }
 
-    my $line;
+    while (<$LOGFILE>) {
+        chomp;
 
-    while ($line = <$LOGFILE>) {
-        chomp($line);
-
-        if (substr($line, 37, 2) eq '<=') {
+        if (/ <= /) {
             $received++;
         }
-        elsif (substr($line, 37, 9) eq 'Completed') {
+        elsif (/ Completed /) {
             $completed++;
         }
-        elsif ($line =~ /rejected/) {
+        elsif (/ rejected /) {
             $rejected++;
         }
     }
     return tail_close($LOGFILE);
 }
 
-
-($dirname = $0) =~ s/[^\/]+$//;
 
 my $EXIM = "/usr/sbin/exim";
 
@@ -147,8 +139,6 @@ my $LOGNAME = $ENV{'logname'} || '';
 my $logfile;
 
 if ($ARGV[0] and $ARGV[0] eq "autoconf") {
-    my $logfile;
-
     if (defined($LOGDIR)) {
         if (! -d $LOGDIR) {
             print "no (logdir does not exist)\n";
@@ -159,14 +149,14 @@ if ($ARGV[0] and $ARGV[0] eq "autoconf") {
     else {
         my $logfilespec = `$EXIM -bP log_file_path 2>/dev/null`;
 
-        if (!$?) {
+        if ($? == 0) {
             $logfile = get_exim_logfile($logfilespec, 'main');
             if (!defined($logfile)) {
                 print "no (not able to parse output of '$EXIM -bP log_file_path' = '$logfilespec')\n";
                 exit 0;
             }
         }
-        elsif ($? eq "127") {
+        elsif ($? == 127) {
             print "no (exim not found)\n";
             exit 0;
         }
@@ -179,7 +169,6 @@ if ($ARGV[0] and $ARGV[0] eq "autoconf") {
     if ($logfile) {
         if (-r "$logfile") {
             print "yes\n";
-            exit 0;
         }
         else {
             print "no (logfile '$logfile' not readable)\n";
@@ -197,11 +186,11 @@ if (defined($LOGDIR)) {
     $logfile = $LOGDIR . '/' . ($LOGNAME || 'mainlog');
 }
 else {
-    $logfilespec = `$EXIM -bP log_file_path`;
+    $logfilespec = `$EXIM -bP log_file_path 2>/dev/null`;
     $logfile = get_exim_logfile($logfilespec, 'main');
 }
 
-exit 1 unless -r $logfile;
+die "Logfile '$logfile' is not readable\n" unless -r $logfile;
 
 if ($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title Exim mail throughput\n";
@@ -222,23 +211,14 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     exit 0;
 }
 
-if (!-f $logfile) {
-    print "completed.value U\n";
-    print "received.value U\n";
-    print "rejected.value U\n";
-    exit 0;
-}
-
 ($pos, $received, $completed, $rejected) = restore_state();
 
-if (!defined($rejected)) {
+if (! defined $pos) {
     # No state file present.  Avoid startup spike: Do not read log
     # file up to now, but remember how large it is now, and next
     # time read from there.
-
-    $pos = (stat $logfile)[7];    # File size
-
-    $received = $completed = $rejected = 0;
+    $pos = (stat $logfile)[7];  # File size
+    $received = $completed = $rejected = 'U';
 }
 else {
     $pos = parseEximfile($logfile, $pos);
