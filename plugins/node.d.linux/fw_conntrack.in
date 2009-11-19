@@ -141,7 +141,7 @@ esac
 if [ -f /proc/net/ip_conntrack ]; then
   cat /proc/net/ip_conntrack | awk '
   BEGIN  { STATE["ESTABLISHED"]=STATE["FIN_WAIT"]=STATE["TIME_WAIT"]=0;
-	   ASSURED=NOREPLY=NATED=STATE["SYN_SENT"]=STATE["UDP"]=0; }
+	   TOTAL=ASSURED=NOREPLY=NATED=STATE["SYN_SENT"]=STATE["UDP"]=0; }
   /^tcp/ { STATE[$4]++; }
   /^udp/ { STATE["UDP"]++; }
   /ASSURED/ { ASSURED++; }
@@ -163,7 +163,7 @@ if [ -f /proc/net/ip_conntrack ]; then
 else
   cat /proc/net/nf_conntrack | awk '
   BEGIN  { STATE["ESTABLISHED"]=STATE["FIN_WAIT"]=STATE["TIME_WAIT"]=0;
-	   ASSURED=NOREPLY=NATED=STATE["SYN_SENT"]=STATE["UDP"]=0; }
+	   TOTAL=ASSURED=NOREPLY=NATED=STATE["SYN_SENT"]=STATE["UDP"]=0; }
   / tcp / { STATE[$6]++; }
   / udp / { STATE["UDP"]++; }
   /ASSURED/ { ASSURED++; }
@@ -185,6 +185,7 @@ else
 fi
 
 # Hum, the total.value should be possible to do as a cdef.
+# Or to use the builtin "total" support.
 
 #  LocalWords:  expr
 
