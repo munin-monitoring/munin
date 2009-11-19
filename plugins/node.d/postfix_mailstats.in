@@ -43,24 +43,23 @@ munin-node.
 
 =cut
 
-my $statefile = "@@PLUGSTATE@@/munin-plugin-postfix_mailstats.state";
-my $pos   = undef;
+my $statefile = '@@PLUGSTATE@@/munin-plugin-postfix_mailstats.state';
+my $pos;
 my $delivered = 0;
 my $rejects = {};
 my $LOGDIR  = $ENV{'logdir'}  || '/var/log';
 my $LOGFILE = $ENV{'logfile'} || 'mail.log';
 
+my $logfile = "$LOGDIR/$LOGFILE";
 
 if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
     my $logfile;
     if (-d $LOGDIR)
     {
-	$logfile = "$LOGDIR/$LOGFILE";
-
 	if (-f $logfile)
 	{
-            if (-r "$logfile")
+            if (-r $logfile)
             {
                 print "yes\n";
                 exit 0;
@@ -83,33 +82,10 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
     exit 0;
 }
 
-my $logfile = "$LOGDIR/$LOGFILE";
-my $prevdate = get_prev_date();
 
-if (-f "$logfile.$prevdate")
+if ( -f $statefile)
 {
-    $rotlogfile = "$logfile.$prevdate";
-}
-elsif (-f "$logfile.0")
-{
-    $rotlogfile = $logfile . ".0";
-}
-elsif (-f "$logfile.1")
-{
-    $rotlogfile = $logfile . ".1";
-}
-elsif (-f "$logfile.01")
-{
-    $rotlogfile = $logfile . ".01";
-}
-else
-{
-    $rotlogfile = "/dev/null";
-}
-
-if (-f "$statefile")
-{
-    open (IN, "$statefile") or exit 4;
+    open (IN, '<', $statefile) or die "Unable to open state-file: $!\n";
     if (<IN> =~ /^(\d+):(\d+)/)
     {
 	($pos, $delivered) = ($1, $2);
@@ -124,7 +100,7 @@ if (-f "$statefile")
     close IN;
 }
 
-if (! -f $logfile and ! -f $rotlogfile)
+if (! -f $logfile)
 {
     print "delivered.value U\n";
     foreach my $i (sort keys %{$rejects})
@@ -143,14 +119,7 @@ if (!defined $pos)
     $pos = $startsize;
 }
 
-if ($startsize < $pos)
-{
-    # Log rotated
-    parseLogfile ($rotlogfile, $pos, (stat $rotlogfile)[7]);
-    $pos = 0;
-}
-
-parseLogfile ($logfile, $pos, $startsize);
+parseLogfile($logfile, $pos, $startsize);
 $pos = $startsize;
 
 if ( $ARGV[0] and $ARGV[0] eq "config" )
@@ -184,7 +153,7 @@ foreach my $i (sort keys %{$rejects})
 if(-l $statefile) {
 	die("$statefile is a symbolic link, refusing to touch it.");
 }				
-open (OUT, ">$statefile") or exit 4;
+open (OUT, '>', $statefile) or die "Unable to open statefile: $!\n";
 print OUT "$pos:$delivered\n";
 foreach my $i (sort keys %{$rejects})
 {
@@ -195,12 +164,14 @@ close OUT;
 sub parseLogfile 
 {    
     my ($fname, $start, $stop) = @_;
-    open (LOGFILE, $fname) or exit 3;
-    seek (LOGFILE, $start, 0) or exit 2;
+    open (LOGFILE, $fname)
+    	or die "Unable to open logfile $fname for reading: $!\n";
+    seek (LOGFILE, $start, 0)
+    	or die "Unable to seek to $start in $fname: $!\n";
 
     while (tell (LOGFILE) < $stop) 
     {
-	my $line =<LOGFILE>;
+	my $line = <LOGFILE>;
 	chomp ($line);
 
 	if ($line =~ /qmgr.*from=.*size=[0-9]*/) 
@@ -210,17 +181,10 @@ sub parseLogfile
 	elsif ($line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/ ||
 	       $line =~ /postfix\/cleanup.* reject: (\S+)/)
 	{
-	    $rejects->{$1} ++;
+	    $rejects->{$1}++;
 	}
     }
-    close(LOGFILE);    
-}
-
-sub get_prev_date
-{
-	my @date = localtime (time - 86400);
-	my $prevdate = $date[5]+1900 . $date[4]+1 . $date[3];
-	return $prevdate;
+    close(LOGFILE) or warn "Error closing $fname: $!\n";    
 }
 
 # vim:syntax=perl
