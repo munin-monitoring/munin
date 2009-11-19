@@ -1139,7 +1139,7 @@ sub process_service {
 	    }
         }
 
-	DEBUG "\n\nrrdtool 'graph' '" . join("'\n\t'", @complete) . "'\n";
+	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n";
 
         # Make sure directory exists
         munin_mkdir_p($picdirname, oct(777));
@@ -1277,7 +1277,7 @@ sub process_service {
                 unshift @rrd_sum, "--vertical-label", $label;
             }
 
-	    DEBUG "\n\nrrdtool 'graph' '" . join("'\n\t'", @rrd_sum) . "'\n";
+	    DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @rrd_sum) . "'\n";
 
             # Make sure directory exists
             munin_mkdir_p($picdirname, oct(777));
