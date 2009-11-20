@@ -53,7 +53,7 @@ unconfig:
 
 tags:
 	-rm -f TAGS
-	find master common -type f | egrep -v '/(build|_build|blib|.svn|\.t$$)/' | fgrep -v '~' | xargs etags -l perl -a
+	find master common -type f | egrep -v '/(build/|_build/|blib/|\.svn/)' | grep -v '\.t$$' | fgrep -v '~' | xargs etags -l perl -a
 
 ######################################################################
 
