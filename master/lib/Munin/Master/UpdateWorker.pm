@@ -339,7 +339,7 @@ sub _update_rrd_files {
 	for my $ds_name (keys %{$service_config}) {
 	    $self->_set_rrd_data_source_defaults($service_config->{$ds_name});
 
-	    unless ($service_config->{$ds_name}{label}) {
+	    unless (defined($service_config->{$ds_name}{label})) {
 		ERROR "[ERROR] Unable to update $service on $nodedesignation -> $ds_name: Missing data source configuration attribute: label";
 		next;
 	    }
