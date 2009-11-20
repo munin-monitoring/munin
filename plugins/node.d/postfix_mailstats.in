@@ -23,7 +23,10 @@ if you need to override the defaults below:
 
 =head1 AUTHOR
 
-Unknown author
+Records show that the plugin was contributed by Nicolai Langfeldt in
+2003.  Nicolai can't find anything in his email about this and expects
+the plugin is based on the corresponding exim plugin - to which it now
+bears no resemblence.
 
 =head1 LICENSE
 
@@ -41,9 +44,14 @@ munin-node.
  #%# family=manual
  #%# capabilities=autoconf
 
+=head1 RANDOM COMMENTS
+
+Would be cool if someone ported this to Munin::Plugin for both state
+file and log tailing.
+
 =cut
 
-my $statefile = '@@PLUGSTATE@@/munin-plugin-postfix_mailstats.state';
+my $statefile = "$MUNIN_PLUGSTATE/munin-plugin-postfix_mailstats.state";
 my $pos;
 my $delivered = 0;
 my $rejects = {};
