@@ -1,11 +1,94 @@
 -*- text -*-
 
 Some stats on 1.4.0:
-* Over 1430 changesets
+* Over 1500 changesets
 * More than 100 new plugins
 * Commits from 13 different people (**FIXME** Check again at release)
 * Way too much time since the last major stable release
 
+munin (1.4.0-beta, r2982:3032, 2009-11-21)
+
+* ejabberd_: Fix some documentation and other problems, move to
+  generic plugin directory (not Linux specific software)
+* No .t files in the TAGS file!
+* munin-update: Make rrd files even if the DS label evaluates to false
+  in perl (e.g., foo.label 0)
+* bind9: Parse query logs with view information.  Closes #661
+* linux/ip_: Avoid matching x.x.x.2 with x.x.x.24.  Fix is "obviously"
+  correct and has only been syntax checked
+* linux/ip_: Document that we won't support rule matching on the "any"
+  firewall framework
+* linux/cps_ (LVS) plugin fixed by incurporating patch in #636.  Not
+  tested beyond a syntax/autoconf test
+* bind9_rndc: Parse BIND 9.6 stats output.
+* exim_mailqueue: Add documentation about user required to run plugin and
+  modidy AWK script as the default action is to print the whole line, which
+  was done...
+* Various fixees to various plugins
+* sunos/iostat: New plugin showhing I/O thruput on Solaris
+* exim_mailstats: count the number of received, rejected and completed
+  emails using regexes rather than substr().  fix for ticket #698.
+  also suppress stderr when fetching the log_file_path, remove some
+  unnecessary code, improve error when the logfile is unreadable, and
+  tidy up here and there.
+* dev_scripts/install: add install-plugins-prime to the targets run
+  during a standard install.  makes working on plugins rather easier,
+  since a full, slow, salted-earth reinstall isn't required.
+* postfix_mailstats: remove processing of rotated logfiles, as decided
+  in ticket #631.  also includes a bit of tidying, and descriptive
+  error messages when bailing rather than relying exclusively on exit
+  status.  i don't have a postfix server to hand, so this is not
+  exactly well tested...
+* Plugin execution: remove undefined elements from the plugin command
+  passed to exec.  this fixes the underlying problem the yum plugin
+  was encountering earlier.
+* linux/yum: change yum plugin so it ignores defined-but-empty
+  arguments.  makes fetch work again.
+* munin-graph: Re-introduce line continuation in the rrdtool graph
+  command debug output
+* Make munin_graph immune to redundance in graph_order field
+* M::M::Config: Enhance a error message to include input line number
+* linux/fw_conntrack: Let there be a total.value even if the input is empty
+* linux/diskstat_: Document problem with multiple masters
+* overview template: Remove COMPARE links as we will not be able to make them
+  correct in any reasonable timeframe.  The datastructure we have now does
+  not support that O:-)
+* munin.conf.pod: Removed the list of example required parameters
+  configurations from munin.conf man page, as they are not required
+  anymore, instead moved them to the explanation section for each
+  parameter, showing the default
+* linux/iostat: Changed to manual, as they are replaced by the new
+  diskstat_ plugin by Michael Renner
+* linux/threads: make a little less racy (and a tiny bit more
+  efficient to boot).  it's still not perfect, because even now
+  there's a gap between the shell expanding the glob and grep getting
+  round to reading the files, but at least it complains less.
+* log anything that plugins print to stderr.  also sends a brief
+  message back to the server explaining what went wrong.  fix for
+  ticket #582.
+* munin-graph: Stop trying to copy cdef when aliasing fields in
+  graph_order -- 1.2 doesn't do that.
+* Changing munin.conf.pod, munin-cron.pod to munin.conf.pod.in
+  munin-cron.pod.in. Adjusting Makefile accordingly. Closes #753
+* munin-node: Do "next" on weird filenames not "return" so that we
+  read all plugin config files
+* favicon for all templates. Refactored the finding of the root path
+  and css name in the process. Added tests for get_root_path
+* modify how nested timeouts are handled, as discussed with janl.
+  this fixes the bug whereby a connection to munin-node would be
+  unexpectedly terminated if a plugin took more than 10 seconds to
+  run, regardless of whether this was allowed by the plugin
+  configuration.
+* Catch problems if someone forgot a "address <IP>" or "update no" -
+  and make it plain in the error message.
+* Use_node_name should default to "no". Closes #757
+* Clearify munin_set_var_loc error message so we know what value is
+  set illegaly
+* munin-node: Improve error reporting during startup by sort of
+  merging it with _run_service().  move the eval to the very top of
+  the event loop so as to avoid interfering with the session timeout.
+* linux/fw_conntrack: Now works in 2.6, closes #532, thanks :-)
+* Added ejabberd contrib plugin, moved from debian patches
 
 munin (1.4.0-alpha2, r2899:2981, 2009-11-13)
 
@@ -203,7 +286,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
   in the filesystem instead.  This will cause a propagation delay -
   image sizes _may_ be wrong, until munin-html runs again.
 * munin-graph: set m/a time of png to last modification time of the
-  corresponding rrd file
+  corresponding rrd file (since reverted)
 * Adapt patch in #3 to current munin-cgi-graph for non-fastcgi. Closes #3.
   Thanks to blueyed
 * Adapt patch in #3 to current munin-cgi-graph to obtain munin-fastcgi-graph
@@ -236,12 +319,13 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
   across all three applications.
 * Report errors against plugins with inconsistent/unexpected magic markers.
 * Java plugins written by FIX.  Adapted for inclusion in munin by Erik
-  Bolsø, Tom Feiner nad Ilya Kikoin.  THANKS!
+  Bolsø, Tom Feiner and Ilya Kikoin.  THANKS!
 * Applied patch by Katriel Traum for snmp__memory that converts the plugin
   to use Munin::Plugin::SNMP, and does some clean-ups
 * New plugin: nomadix_users_.  Monitors a kind of enterprise wifi
   infrastructure.
-* snmp__if_multi: Updated with some known bugs/enhancement needs as well as better author/copyright info
+* snmp__if_multi: Updated with some known bugs/enhancement needs as well
+  as better author/copyright info
 * linux/ip_: Better support for IPv6.  Patch by Rune Skillingstad, thanks!
   Closes #563.
 * linux/if_* plugins: Even more virtual lan support. Patch by Rune
@@ -535,7 +619,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 * Clearify the purpose of DESTDIR
 * plugin qmail-qstat now uses a single pipe to generate all output
 * new plugin: qmailqstat contributed by Nils Breunese
-Add an eval to $DF to expand the string to arguments.
+* Add an eval to $DF to expand the string to arguments.
 * And a changelog for 1.3.4 too
 * Update RELEASE and plugins.history for 1.3.4
 
