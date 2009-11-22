@@ -41,7 +41,7 @@ my %bools = map { $_ => 1} qw(yes no true false on off 1 0);
 sub cl_is_keyword {
     # Class-less version of is_keyword for legacy code.
     my ($word) = @_;
-    
+
     return defined $legal_expanded{$word};
 }
 
@@ -68,7 +68,7 @@ sub parse_config_from_file {
     if ($EVAL_ERROR) {
         croak "ERROR: Failed to parse config file '$config_file': $EVAL_ERROR";
     }
-    
+
     close $file
         or croak "Cannot close '$config_file': $OS_ERROR";
 }
@@ -77,7 +77,7 @@ sub parse_config_from_file {
 sub _trim {
     # Trim leading and trailing whitespace.
     my $class = shift;
-    
+
     chomp $_[0];
     $_[0] =~ s/^\s+//;
     $_[0] =~ s/\s+$//;
@@ -88,9 +88,9 @@ sub _trim {
 
 sub _strip_comment {
     my $class = shift;
-    
+
     $_[0] =~ s/#.*//;
-    
+
     return;
 }
 
@@ -105,7 +105,7 @@ sub _looks_like_a_bool {
 sub _parse_bool {
     my ($class, $str) = @_;
 
-    croak "Parse exception: '$str' is not a boolean." 
+    croak "Parse exception: '$str' is not a boolean."
         unless $class->_looks_like_a_bool($str);
 
     return $str =~ m{\A no|false|off|0 \z}xi ? 0 : 1;
