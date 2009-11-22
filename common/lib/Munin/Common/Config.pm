@@ -11,7 +11,8 @@ use English qw(-no_match_vars);
 # Functions here are unable to log as they don't know if they're used
 # by the node or the master which use divergent logging facilities.
 
-my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
+my %legal = map { $_ => 1 } (
+        "tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"dbdir", "logdir", "htmldir", "includedir", "domain_order", "node_order",
 	"graph_order", "graph_sources", "fork", "graph_title", "create_args",
 	"graph_args", "graph_vlabel", "graph_vtitle", "graph_total",
@@ -32,9 +33,7 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"palette", "realservname", "cdef_name", "graphable", "process",
 	"realname", "onlynullcdef", "group_order", "pipe", "pipe_command",
 	"unknown_limit", "notify_countdown", "dropdownlimit",
-    );
-
-my %legal_expanded = map { $_ => 1 } @legal;
+);
 
 my %bools = map { $_ => 1} qw(yes no true false on off 1 0);
 
@@ -42,14 +41,14 @@ sub cl_is_keyword {
     # Class-less version of is_keyword for legacy code.
     my ($word) = @_;
 
-    return defined $legal_expanded{$word};
+    return defined $legal{$word};
 }
 
 
 sub is_keyword {
     my ($self, $word) = @_;
 
-    return defined $legal_expanded{$word};
+    return defined $legal{$word};
 }
 
 
