@@ -149,6 +149,7 @@ if($ARGV[0] and $ARGV[0] eq "config") {
     print "kbytes_out.min 0\n";
     print "kbytes_out.max 500000\n";
     print "hit_kbytes_out.label from cache\n";	
+    print "hit_kbytes_out.cdef hit_kbytes_out,8096,*\n";
     print "hit_kbytes_out.type DERIVE\n";	
     print "hit_kbytes_out.min 0\n";	
     print "hit_kbytes_out.max 500000\n";
