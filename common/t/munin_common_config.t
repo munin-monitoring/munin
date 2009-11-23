@@ -23,9 +23,41 @@ use_ok('Munin::Common::Config');
 
 
 # _trim
+{
+	# input parameter has to be a variable, as it gets modified directly by _trim
+	my $s;
+
+	Munin::Common::Config->_trim($s = '');
+	is($s, '', 'empty line');
+
+	Munin::Common::Config->_trim($s = '   ');
+	is($s, '', 'only whitespace');
+
+	Munin::Common::Config->_trim($s = ' leading whitespace');
+	is($s, 'leading whitespace');
+
+	Munin::Common::Config->_trim($s = 'trailing whitespace   ');
+	is($s, 'trailing whitespace');
+
+	Munin::Common::Config->_trim($s = '  both leading and trailing whitespace   ');
+	is($s, 'both leading and trailing whitespace');
+}
 
 
 # _strip_comment
+{
+	# input parameter has to be a variable, as it gets modified directly by _strip_comment
+	my $s;
+
+	Munin::Common::Config->_strip_comment($s = '');
+	is($s, '', 'empty line');
+
+	Munin::Common::Config->_strip_comment($s = 'line without comment');
+	is($s, 'line without comment');
+
+	Munin::Common::Config->_strip_comment($s = 'line with a simple comment   ## here is the comment!');
+	is($s, 'line with a simple comment   ');
+}
 
 
 # _looks_like_a_bool
