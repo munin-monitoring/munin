@@ -118,7 +118,7 @@ EOF
         exit 0
 	;;
     autoconf)
-        if [ -f /proc/net/ip_conntrack -o -f /proc/net/nf_conntrack ] ; then
+        if [ -r /proc/net/ip_conntrack -o -r /proc/net/nf_conntrack ] ; then
 	    echo yes
 	    exit 0
 	else
