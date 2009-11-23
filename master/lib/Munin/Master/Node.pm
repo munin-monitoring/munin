@@ -42,7 +42,9 @@ sub do_in_session {
 	$self->_run_starttls_if_required();
 	$block->();
 	$self->_do_close();
+	return 1; # If we're still here
     }
+    return 0;  # _do_connect failed.
 }
 
 
