@@ -139,7 +139,7 @@ sub _collect_results {
             accept $worker_sock, $sock;
         });
         if ($timed_out) {
-            WARN "[WARNING] Call to accept timed out (this could be due to a firewalled munin-node): " . join keys %{$self->{result_queue}};
+            WARN "[WARNING] Call to accept timed out (this could be due to a firewalled munin-node): " . join(',', keys %{$self->{result_queue}} );
             next;
         }
         next unless fileno $worker_sock;
