@@ -107,7 +107,7 @@ writeup about the pdflush daemon.
 
 =head1 MAGIC MARKERS
 
-  #%# family=auto
+  #%# family=manual
   #%# capabilities=autoconf suggest
 
 =head1 BUGS
