@@ -58,9 +58,12 @@ set_state_name, save_state, restore_state, tail_open, tail_close.
 use Exporter;
 our @ISA = ('Exporter');
 our @EXPORT = qw(
-        clean_fieldname set_state_name save_state restore_state
-        get_thresholds print_thresholds tail_open tail_close
+        clean_fieldname
+	set_state_name save_state restore_state
+        get_thresholds print_thresholds
+	tail_open tail_close
         scaleNumber
+	need_multigraph
 );
 
 use vars qw($me $pluginstatedir $statefile $DEBUG);
@@ -509,6 +512,39 @@ sub scaleNumber {
 }
 
 
+=head3 need_multigraph()
+
+Should be called at the top of all multigraph plugins.
+
+Checks the current environment, and exits with appropriate output
+if it doesn't support multigraph plugins.
+
+=cut
+
+sub need_multigraph
+{
+	return if $ENV{MUNIN_CAP_MULTIGRAPH};
+
+    if (! $ARGV[0]) {
+        print "multigraph.value 0\n";
+    }
+    elsif ($ARGV[0] eq 'autoconf') {
+        print "no (no multigraph support)\n";
+    }
+    elsif ($ARGV[0] eq 'config') {
+        print "graph_title This plugin needs multigraph support\n";
+        print "multigraph.label No multigraph here\n";
+        print "multigraph.info This plugin has been installed in a munin-node "
+            . "that is too old to know about multigraph plugins.  Even if your "
+            . "munin master understands multigraph plugins this is not enough, "
+            . "the node too needs to be new enough.  Version 1.4.0 or later "
+            . "should work.\n"
+    }
+
+    exit 0;
+}
+
+
 =head3 Testing
 
 There is some test stuff in this module.
@@ -544,3 +580,4 @@ There is some test stuff in this module.
 # _test();
 
 1;
+# vim: ts=4 : sw=4 : et
