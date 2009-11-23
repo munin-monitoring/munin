@@ -70,7 +70,7 @@ if [ "$1" = "config" ]; then
     case $0 in
 	sensors_temp)
             echo 'graph_title Fans'
-	    echo 'graph_vtitle RPM'
+	    echo 'graph_vlabel RPM'
 	    echo 'graph_args --base 1000 -l 0'
 	    /usr/sbin/envstat -r | awk '
 BEGIN { p=0 }
@@ -91,7 +91,7 @@ END {
 	    ;;
 	sensors_fans)
             echo 'graph_title Temperatures'
-	    echo 'graph_vtitle deg Celcius'
+	    echo 'graph_vlabel deg Celcius'
 	    echo 'graph_args --base 1000 -l 0'
 	    /usr/sbin/envstat -r | awk '
 BEGIN { p=0 }
@@ -112,7 +112,7 @@ END {
 	    ;;
 	sensors_volt)
             echo 'graph_title Voltages'
-	    echo 'graph_vtitle Volt'
+	    echo 'graph_vlabel Volt'
 	    echo 'graph_args --base 1000 --logarithmic'
 	    /usr/sbin/envstat -r | awk '
 BEGIN { p=0 }
