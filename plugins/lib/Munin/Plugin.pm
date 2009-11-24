@@ -126,7 +126,7 @@ C<set_state_name($)> procedure (see below).
 
 =cut
 
-our $statefile = "$pluginstatedir/$me";
+our $statefile = $ENV{'MUNIN_STATEFILE'};
 
 =head3 $Munin::Plugin::DEBUG
 
@@ -176,7 +176,7 @@ Calling this function is not normally needed and is not recommended.
 
 sub set_state_name ($) {
     my ($filename) = @_;
-    return $statefile = "$pluginstatedir/$filename";
+    return $statefile = "$pluginstatedir/$filename-$ENV{MUNIN_MASTER_IP}";
 };
 
 

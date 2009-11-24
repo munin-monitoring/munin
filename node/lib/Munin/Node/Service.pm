@@ -57,6 +57,9 @@ sub prepare_plugin_environment
     # Export some variables plugins might be interested in
     $ENV{MUNIN_DEBUG} = $config->{PIDEBUG};
     $ENV{FQDN}        = $config->{fqdn};
+    
+    # munin-node will override this with the IP of the connecting master
+    $ENV{MUNIN_MASTER_IP} = '';
 
     # Tell plugins about supported capabilities
     $ENV{MUNIN_CAP_MULTIGRAPH} = 1;
@@ -86,6 +89,9 @@ sub prepare_plugin_environment
 sub export_service_environment {
     my ($class, $service) = @_;
     print STDERR "# Setting up environment\n" if $config->{DEBUG};
+
+    # Provide a consistent default state-file.
+    $ENV{MUNIN_STATEFILE} = "$Munin::Common::Defaults::MUNIN_PLUGSTATE/$service-$ENV{MUNIN_MASTER_IP}";
 
     my $env = $config->{sconf}{$service}{env} or return;
 
