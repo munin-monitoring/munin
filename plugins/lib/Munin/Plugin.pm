@@ -59,14 +59,12 @@ use Exporter;
 our @ISA = ('Exporter');
 our @EXPORT = qw(
         clean_fieldname
-	set_state_name save_state restore_state
+        set_state_name save_state restore_state
         get_thresholds print_thresholds
-	tail_open tail_close
+        tail_open tail_close
         scaleNumber
-	need_multigraph
+        need_multigraph
 );
-
-use vars qw($me $pluginstatedir $statefile $DEBUG);
 
 use Munin::Common::Defaults;
 
@@ -85,8 +83,7 @@ what plugin the error message comes from.
 
 =cut
 
-my @dircomponents = split('/',$0);
-$me = pop(@dircomponents);
+our $me = (split '/', $0)[-1];
 
 =head3 $Munin::Plugin::pluginstatedir
 
@@ -117,8 +114,8 @@ shown at the beginning of this document.
 
 =cut
 
-$pluginstatedir 
-    = $ENV{'MUNIN_PLUGSTATE'} || $Munin::Common::Defaults::MUNIN_PLUGSTATE;
+our $pluginstatedir = $ENV{'MUNIN_PLUGSTATE'}
+                      || $Munin::Common::Defaults::MUNIN_PLUGSTATE;
 
 =head3 $Munin::Plugin::statefile
 
@@ -129,7 +126,7 @@ C<set_state_name($)> procedure (see below).
 
 =cut
 
-$statefile = "$pluginstatedir/$me";
+our $statefile = "$pluginstatedir/$me";
 
 =head3 $Munin::Plugin::DEBUG
 
@@ -140,7 +137,7 @@ Defaults to false (0).
 
 =cut
 
-my $DEBUG = $ENV{'MUNIN_DEBUG'} || 0;
+our $DEBUG = $ENV{'MUNIN_DEBUG'} || 0;
 
 =head2 Functions
 
