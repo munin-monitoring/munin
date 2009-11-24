@@ -9,26 +9,26 @@ From Munin 1.2 in general
 Based on comparisons of a few (very few) Munin installations on Linux
 we see identical rrd file names, and rrd files are created and
 structured the same way as before.  This ensures that your data
-history is preserved.  Upgrading to 1.4 should the>refore prove to be
-stright forward and cause no data loss.
+history is preserved.  Upgrading to 1.4 should therefore prove to be
+straightforward and cause no data loss.
 
 From Munin 1.2.6
 ----------------
 
 There is one exception: If you have munin-nodes running 1.2.6 then
-some of the plugins use short (trunkated) field names.  Especially the
-Linux df plugin will be using trunkated fieldnames for some disk
+some of the plugins use short (truncated) field names.  Especially the
+Linux df plugin will be using truncated fieldnames for some disk
 devices.  This is due to a basing a bug fix on obsolete documentation.
 The device names were limited to 19 characters, only the 19 last
-characters of the device name was used.  This trunkation is done by
+characters of the device name was used.  This truncation is done by
 the plugin on the node.  When the plugin/node is upgraded the
-trunkation stops.
+truncation stops.
 
 There is no really reliable way to fix this or migrate automatically.
 What you can do is install 1.4.0 on one node at a time, and for each
 upgrade examine your rrd file names.  You should be able to identify
 rrd files for the upgraded node that have nearly identical names.
-Personaly I would use a graphical file browser for this.  If you find
+Personally I would use a graphical file browser for this.  If you find
 two files that should be one then the one with the longest filename
 should be newest, and the one with the short file name should not have
 been updated since the node upgrade.  Rename the file with the short
@@ -40,3 +40,4 @@ Solaris
 On Solaris the if_errcoll_ plugin is now called if_err_ to get the
 name aligned with the other platforms.  You can simply rename the rrd
 files.
+
