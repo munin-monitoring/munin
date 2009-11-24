@@ -476,17 +476,22 @@ sub generate_service_message {
     DEBUG "[DEBUG] generating service message: "
 	. join('::', @{munin_get_node_loc($hash)});
 
-    foreach my $field (
-        @{munin_get_children(
-                munin_get_node(\%notes, munin_get_node_loc($hash)))}
-        ) {
-        if (defined $field->{"state"}) {
-            push @{$stats{$field->{"state"}}}, munin_get_node_name($field);
-            if ($field->{"state"} eq "ok") {
-                push @{$stats{"foks"}}, munin_get_node_name($field);
-            }
-        }
+    my $children = 
+	munin_get_children(
+	    munin_get_node(\%notes, 
+			   munin_get_node_loc($hash)));
+
+    if ( defined($children) ) {
+	foreach my $field (@$children) {
+	    if (defined $field->{"state"}) {
+		push @{$stats{$field->{"state"}}}, munin_get_node_name($field);
+		if ($field->{"state"} eq "ok") {
+		    push @{$stats{"foks"}}, munin_get_node_name($field);
+		}
+	    }
+	}
     }
+
     $hash->{'cfields'}  = join " ", @{$stats{'critical'}};
     $hash->{'wfields'}  = join " ", @{$stats{'warning'}};
     $hash->{'ufields'}  = join " ", @{$stats{'unknown'}};
