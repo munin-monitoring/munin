@@ -52,9 +52,9 @@ wildcard per-database plugins.
 =head2 Example
 
  [postgres_*]
- user=postgres
- env.PGUSER=postgres
- env.PGPORT=5433
+    user postgres
+    env.PGUSER postgres
+    env.PGPORT 5433
 
 =head1 WILDCARD MATCHING
 
