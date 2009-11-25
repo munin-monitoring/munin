@@ -25,13 +25,13 @@ postgres_scans_ - Plugin to monitor PostgreSQL scan types.
 =head1 CONFIGURATION
 
 Configuration is done through libpq environment variables, for example
-PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugins::Pgsql>.
+PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugin::Pgsql>.
 
 To monitor a specific database, link to postgres_scans_<databasename>.
 
 =head1 SEE ALSO
 
-L<Munin::Plugins::Pgsql>
+L<Munin::Plugin::Pgsql>
 
 =head1 MAGIC MARKERS
 
