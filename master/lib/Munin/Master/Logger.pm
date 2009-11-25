@@ -134,7 +134,6 @@ sub logger_level {
 
     $loglevel = lc $loglevel;
     my %level_map = (
-        trace => $TRACE,
         debug => $DEBUG,
         info  => $INFO,
         warn  => $WARN,

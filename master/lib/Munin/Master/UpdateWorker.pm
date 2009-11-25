@@ -409,7 +409,7 @@ sub _get_rrd_file_name {
     $file = File::Spec->catfile($config->{dbdir}, 
 				$file);
 	
-    TRACE "[TRACE] Made rrd filename: $file\n";
+    DEBUG "[DEBUG] Made rrd filename: $file\n";
 
     return $file;
 }
