@@ -77,7 +77,8 @@ my %default_text = (
 sub limits_startup {
 
     # Get options
-    local $ARGV = $_;
+    my ($args) = @_;
+    local @ARGV = @{$args};
     $do_usage = 1
         unless GetOptions(
         "host=s"    => \@limit_hosts,

@@ -167,7 +167,8 @@ sub graph_startup {
     # munin-cgi-graph
 
     # Get options
-    local $ARGV = $_;
+    my ($args) = @_;
+    local @ARGV = @{$args};
     &print_usage_and_exit
         unless GetOptions (
                 "force!"        => \$force_graphing,
