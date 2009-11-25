@@ -257,7 +257,7 @@ sub parse_service_config {
     }
 
     if ($errors) {
-	WARN "[WARNING] There were errors in $errors lines and $correct correct lines in data from 'config $plugin' on $nodedesignation";
+	WARN "[WARNING] $errors lines had errors while $correct lines were correct in data from 'config $plugin' on $nodedesignation";
     }
 
     $self->_validate_data_sources($data_source_config);
@@ -381,7 +381,7 @@ sub parse_service_data {
         }
     }
     if ($errors) {
-	WARN "[WARNING] There were errors in $errors lines and $correct correct lines in data from 'fetch $plugin' on $nodedesignation";
+	WARN "[WARNING] $errors lines had errors while $correct lines were correct in data from 'fetch $plugin' on $nodedesignation";
     }
 
     return %values;
