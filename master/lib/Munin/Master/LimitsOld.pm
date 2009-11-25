@@ -42,7 +42,7 @@ our (@ISA, @EXPORT);
 @EXPORT = qw ( limits_startup limits_main );
 
 use POSIX qw ( strftime );
-use Getopt::Long 2.37 qw ( GetOptionsFromArray );
+use Getopt::Long;
 use Time::HiRes;
 use Text::Balanced qw ( extract_multiple extract_delimited
     extract_quotelike extract_bracketed );
@@ -75,12 +75,10 @@ my %default_text = (
 );
 
 sub limits_startup {
-    my ($ARGV) = @_;
 
     # Get options
     $do_usage = 1
-        unless GetOptionsFromArray(
-        $ARGV,
+        unless GetOptions(
         "host=s"    => \@limit_hosts,
         "service=s" => \@limit_services,
         "contact=s" => \@limit_contacts,

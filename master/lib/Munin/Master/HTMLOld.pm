@@ -65,7 +65,7 @@ our (@ISA, @EXPORT);
 
 use HTML::Template;
 use POSIX qw(strftime);
-use Getopt::Long 2.37 qw(GetOptionsFromArray);
+use Getopt::Long;
 use Time::HiRes;
 
 use Munin::Master::Logger;
@@ -92,11 +92,9 @@ my $do_dump = 0;
 my $do_fork = 0; # No effect in this program.
 
 sub html_startup {
-    my ($ARGV) = @_;
 
     $do_usage = 1
-	unless GetOptionsFromArray(
-	    $ARGV,
+	unless GetOptions (
 	    "host=s"    => [],
 	    "service=s" => [],
 	    "config=s"  => \$conffile,

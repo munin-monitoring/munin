@@ -48,7 +48,7 @@ use IO::Handle;
 use RRDs;
 use POSIX qw(strftime);
 use Digest::MD5;
-use Getopt::Long 2.37 qw(GetOptionsFromArray);
+use Getopt::Long;
 use Time::HiRes;
 use Text::ParseWords;
 
@@ -166,12 +166,9 @@ sub graph_startup {
     # Do once pr. run, pr possebly once pr. graph in the case of
     # munin-cgi-graph
 
-    my ($ARGV) = @_;
-
     # Get options
     &print_usage_and_exit
-        unless GetOptionsFromArray(
-                $ARGV,
+        unless GetOptions (
                 "force!"        => \$force_graphing,
                 "lazy!"         => \$force_lazy,
                 "host=s"        => \@limit_hosts,

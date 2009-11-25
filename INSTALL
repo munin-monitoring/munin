@@ -32,7 +32,7 @@ Server:
    - Params::Validate
    - TimeDate
    - Net::SSLeay if you want to use SSL/TLS
-   - Getopt::Long 2.37 or later
+   - Getopt::Long
    - Log::Log4perl (which depends on
      - IPC::Shareable
      - Log::Dispatch

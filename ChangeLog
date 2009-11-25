@@ -268,7 +268,6 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
   and and clearify the ordering
 * Minimal modularization of munin-html, munin-graph and munin-limits - now 
   half suited to include in munin-fastcgi-graph if we want to
-* And a rather new Getopt::Long is needed for GetOptionsFromArray
 * Turns out that the // (and //=) operator is new to perl so remove all use
 * Add plugin for PostgreSQL tuple access count
 * Add plugin for Slony (PostgreSQL replication) node lag time
