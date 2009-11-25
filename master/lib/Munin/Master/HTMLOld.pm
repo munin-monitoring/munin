@@ -93,6 +93,7 @@ my $do_fork = 0; # No effect in this program.
 
 sub html_startup {
 
+    local $ARGV = $_;
     $do_usage = 1
 	unless GetOptions (
 	    "host=s"    => [],
