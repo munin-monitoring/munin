@@ -12,6 +12,8 @@ Tested with Tomcat 4.1/5.0/5.5/6.0 on Sun JVM 5/6 and OpenJDK.
 
 Any JVM that supports JMX should in theory do.
 
+Needs nc in path for autoconf.
+
 =head1 CONFIGURATION
 
   [jmx_*]
@@ -108,12 +110,12 @@ if [ "x$1" = "xautoconf" ] ; then
         exit 0
     fi
 
-    NC=`which nc`
+    NC=`which nc 2>/dev/null`
     if [ "x$NC" = "x" ] ; then
       echo "no (nc not found)"
       exit 0
     fi
-    nc -n -z $ip $port
+    $NC -n -z $ip $port >/dev/null 2>&1
     CONNECT=$?
 
     JAVA_BIN="@@JAVARUN@@"
