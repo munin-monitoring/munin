@@ -32,7 +32,7 @@ Do not use.
 
 =item B<logger_level>
 
-Use to set the programs log level to trace, debug, info, warn, error,
+Use to set the programs log level to debug, info, warn, error,
 or fatal.  This corresponds to the log levels used in syslog, but
 syslog is not used for logging.
 
