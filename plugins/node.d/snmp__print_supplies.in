@@ -19,9 +19,14 @@ As a rule SNMP plugins need site specific configuration.  The default
 configuration (shown here) will only work on insecure sites/devices:
 
    [snmp_*]
+        env.warning 10
+	env.critical 5
         env.version 2
         env.community public
-		   
+
+Warning and critical limits are in percentages, and default values are
+10% for warnings and 5% for critical.
+
 In general SNMP is not very secure at all unless you use SNMP version
 3 which supports authentication and privacy (encryption).  But in any
 case the community string for your devices should not be "public".
@@ -36,7 +41,7 @@ information.
     
 =head1 VERSION
     
- $Id: snmp__if_.in 2835 2009-11-04 12:52:33Z janl $
+ $Id: $
       
 =head1 BUGS
       
@@ -44,7 +49,7 @@ None known.
 
 =head1 AUTHOR
 
-Copyright (C) 2009 Rune Nordboe Skillingstad, Sveinung Marvik.
+Copyright (C) 2006-2009 Rune Nordbøe Skillingstad, Sveinung Marvik.
 
 =head1 LICENSE
 
