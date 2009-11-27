@@ -37,7 +37,7 @@ The most important features:
   - Some HP-UX plugins have been contributed
   - Good bunch of NetBSD plugins have been contributed
   - Still support for FreeBSD :-)
-  - And many many others
+  - And many many other fixes
 * Ever better documentation everywhere, not least our web/wiki pages
   at http://munin-monitoring.org.
 * More bugfixes, both in the core code and plugins, than you can shake
@@ -52,9 +52,10 @@ Other things you may want to know:
 * CGI graphing remains "in BETA" but we now have a FASTCGI script too.
 
 Availability:
-* You can find Munin 1.4.0 as source tar ball at sourceforge (
+* You can find Munin 1.4.0 as source tar ball at sourceforge
+  (https://sourceforge.net/projects/munin/files/)
 * Available in Mandriva Linux Cooker
-* In Debian Experimental shortly, expected to appear in Debian Unstable 
+* Debian Experimental, expected to appear in Debian Unstable later.
 * Expected in EPEL (Extra Packages for (Red Hat) Enterprise Linux) within
   not too long.
 * Will also appear in Ubuntu later.
@@ -63,5 +64,4 @@ If you are a packager please contact us and we'll list your
 support/repository/whatever on our Wiki.
 
 Full details in
-http://munin-monitoring/browser/tags/1.4.0/ChangeLog (once we
-have released 1.4.0 FIX)
+http://munin-monitoring/browser/tags/1.4.0/ChangeLog

@@ -1,10 +1,101 @@
 -*- text -*-
 
-Some stats on 1.4.0:
-* Over 1500 changesets
-* More than 100 new plugins
-* Commits from 13 different people (**FIXME** Check again at release)
-* Way too much time since the last major stable release
+Some stats on 1.4.0 (relative to 1.3.4)
+* Over 1500 changesets since we started preparing for 1.4.0-alpha this
+  spring.
+* More than 100 new plugins since the 1.2 series
+* Commits from 23 different people, and contributions from far more!
+  Open source is great!
+* Way too much time since the last major stable release. 1.2.0 was
+  uploaded to sourceforge in february 2005.
+
+munin (1.4.0, r3033:3115, 2009-11-27)
+
+* Mention Aleksey Studnev in jmx_ doc
+* Merge patch from debian bug http://bugs.debian.org/507069 where
+  netstat plugin counts \"active connections rejected because of time
+  stamp\" as active connections, because of a lax regex
+* amavis plugin: Minor pod fix
+* Add snmp__print_(pages|supplies) printer plugins
+* jmx_: nitpicks
+* Fix #739: Perl error message only appears when there are no plugins
+  on any nodes, so check that and LOGCROAK in a helpful way
+* munin-update: Change LOGCROAK to WARN for munin includedir missing
+  or empty
+* Munin-node-configure --snmp: modify host enumeration code so
+  hostnames that are passed in aren't indiscriminately converted to
+  IPs.  only works with plain hostnames, not CIDR.
+* Remove Log::Log4perl TRACE level use since that requires a too new
+  Log::Log4perl
+* Munin::Plugin::SNMP: Added support for env.timeout for SNMP sessions
+* Add and extend the UPGRADING doc
+* Remove reliance on the very newest Getopt::Long version, update docs
+  accordingly.
+* linux/files_: fix slightly odd usage of awk.  the warning and
+  critical thresholds are static, so they can just be echoed along
+  with the rest of the config.
+* Postgres plugins: Correct pod from Munin::Plugins::Pgsql =>
+  Munin::Plugin::Pgsql (singular plugin, instead of plural)
+* Munin::Plugin::Pgsql: Correct Pgsql.pm plugin configuration
+  documentation section
+* Correct the generic crontab install command
+* Typo fixes in docs
+
+* Munin-node: Provide a different statefile for each master.  Helps
+  prevent plugins that rely on their state-file from reporting
+  incorrect data when used on a plugin that is polled by multiple
+  masters.  It uses the master's IP address, so it won't work if they
+  are both behind the same NAT gateway, for example.
+
+  set_state_name() in Munin::Plugin is also modified to behave in a
+  similar manner.
+
+  Additionally exports $MUNIN_STATEFILE into each plugin' environment,
+  so that all plugins can partake thereof.  Should be useful to
+  plugins written in languages other than Perl.
+
+* Update 1.4 documentation
+* Munin::Plugin: fix $Munin::Plugin::DEBUG. it wasn't being set
+  (lexical variable $DEBUG was being set in its place). change from
+  "use vars" to "our" for all the externally-accessible variables, to
+  make it clearer what is going on.  + fix indentation
+* munin-limits: Check if $children is undef before using it as a array
+  reference.  Fixes #762
+* snmp__if_multi: Call "need_multigraph" function to avoid working
+  under the wrong circumstances
+* dhcpd3 plugin: Critical and warning limits added. Some cleanup and
+  minor fixes.
+* Munin::Plugin: straight port of the multigraph assertion sub from Plugin.sh.
+* netbsd/sensors_: according to
+  <http://munin.projects.linpro.no/wiki/protocol-config>, graph_vtitle
+  has been superseded by graph_vlabel.
+* a few more tests for Munin::Common::Config.
+* linux/fw_(packets|conntrack): check for readability not existence
+  bail properly if /proc/net/snmp cannot be opened.
+* Fix #758: Enhance and fix error propagation, fix exception handling,
+  fix sub-process waiting/reaping, and finaly print old config data
+  for failed nodes in a working way (probably worked before, but I
+  broke it when I retooled how old_service_configs is read)
+* Munin::Master::ProcessManager: Correct the join command, which
+  resulted in not printing the firewalled host - now it does :)
+* Returning iostst* to family auto, and moving diskstat_ to manual,
+  until we have multigraph support added to diskstat leaving diskstat
+  in auto without multigraph creates 3 graphs per disk, and on multi
+  disk machines this makes the main html quite heavy
+* Uncomment includedir /etc/munin/munin-conf.d in munin.conf.in, and
+  make sure Makefile creates the directory at install time
+* add some tests for Munin::Common::Config.
+* Munin::Common::Config: populate the valid keyword hash directly,
+  rather than through an intermediate array.
+* linux/diskstat_: Remove fake_munin_plugin, as we know we include
+  Munin::Plugin , no need to fake it :)
+* munin-node.conf: only specify setsid once in the config file
+* squid_traffic: hit_kbytes_out needs to be converted to bits, as with
+  the other data series.  fixes Munin ticket #761 and Debian bug
+  557385 <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=557385>.
+  thanks to Samuel Leon <leon36@gmail.com> for the patch.
+* Prepare announcement of 1.4.0
+
 
 munin (1.4.0-beta, r2982:3032, 2009-11-21)
 
