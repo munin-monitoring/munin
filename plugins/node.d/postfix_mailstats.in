@@ -51,7 +51,7 @@ file and log tailing.
 
 =cut
 
-my $statefile = "$MUNIN_PLUGSTATE/munin-plugin-postfix_mailstats.state";
+my $statefile = "$ENV{MUNIN_PLUGSTATE}/munin-plugin-postfix_mailstats.state";
 my $pos;
 my $delivered = 0;
 my $rejects = {};
