@@ -10,7 +10,24 @@ interfaces.
 
 =head1 CONFIGURATION
 
-This plugin does not use environment variables.
+This plugin does not normaly require configuration.  
+
+The plugin may need to run as root to determine the maximum speed of
+the network interface.  This is configured like this:
+
+  [if_*]
+      user root
+
+To set warning and critical levels do like this:
+
+  [if_*]
+      env.warning 10000000
+
+or
+
+  [if_*]
+      env.if_0_warning 10000000
+
 
 This is a wildcard plugin. To monitor an interface, link
 if_<interface> to this file. E.g.
@@ -160,7 +177,7 @@ case $1 in
 	echo 'graph_args --base 1000'
 	echo 'graph_vlabel bits in (-) / out (+) per ${graph_period}'
 	echo 'graph_category network'
-	echo "graph_info This graph shows the traffic of the $INTERFACE network interface. Please note that the traffic is shown in bits per second, not bytes. IMPORTANT: On 32 bit systems the data source for this plugin uses 32bit counters, which makes the plugin unreliable and unsuitable for most 100Mb (or faster) interfaces, where bursts are expected to exceed 50Mbps.  This means that this plugin is unsuitable for most 32 bit production environments. To avoid this problem, use the ip_ plugin instead.  There should be no problems on 64 bit systems running 64 bit kernels."
+	echo "graph_info This graph shows the traffic of the $INTERFACE network interface. Please note that the traffic is shown in bits per second, not bytes. IMPORTANT: On 32 bit systems the data source for this plugin uses 32bit counters, which makes the plugin unreliable and unsuitable for most 100Mb (or faster) interfaces, where traffic is expected to exceed 50Mbps over a 5 minute period.  This means that this plugin is unsuitable for most 32 bit production environments. To avoid this problem, use the ip_ plugin instead.  There should be no problems on 64 bit systems running 64 bit kernels."
 	echo 'down.label received'
         echo 'down.type COUNTER'
         echo 'down.graph no'

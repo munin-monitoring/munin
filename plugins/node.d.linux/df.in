@@ -30,6 +30,11 @@ This configuration snipplet is an example with the defaults:
 
 Put it in a file in @@CONFDIR@@/plugin-conf.d/ and restart the munin-node.
 
+You may specify filesystem specific warning and critical levels:
+
+    env._dev_sda2_warning 98
+    env._dev_sda2_critical 99
+
 =head1 USAGE 
 
 Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
@@ -41,7 +46,8 @@ Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
 
 =head1 BUGS
 
-None known.
+Uses device names instead of mount points to identify mounted
+filesystems.
 
 =head1 VERSION
 
@@ -109,7 +115,7 @@ if ( defined($ARGV[0]) and $ARGV[0] eq "config" ) {
     print "graph_vlabel %\n";
     print "graph_scale no\n";
     print "graph_category disk\n";
-
+    
     # Read from df
     open (DF,"df $dfopts |") or die "Unable to open pipe from df: $!";
     <DF>; # Skip the header
@@ -126,7 +132,7 @@ if ( defined($ARGV[0]) and $ARGV[0] eq "config" ) {
 	# Create and print labels
 	print $name, ".label ", $mountpt, "\n";
 
-	print_thresholds($name);
+	print_thresholds($name,undef,undef,92,98);
     }
     close DF;
     die "Error executing df. Exit code $?\n" if $?;

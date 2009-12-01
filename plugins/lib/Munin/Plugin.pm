@@ -319,7 +319,8 @@ If no values are found for a threshold then undef is returned.
 =cut
 
 sub get_thresholds {
-    my ($field, $warning_env, $critical_env) = @_;
+    my ($field, $warning_env, $critical_env,
+	$warning_default, $critical_default) = @_;
     my ($warning, $critical);
 
     # First look for explicitly specified warning environment variables
@@ -333,10 +334,10 @@ sub get_thresholds {
     # Then look for more and more generic ones
 
     $warning  = $warning || $ENV{$field."_warning"}  ||
-	$ENV{"warning"}  || undef;
+	$ENV{"warning"}  || $warning_default;
 
     $critical = $critical || $ENV{$field."_critical"} ||
-	$ENV{"critical"} || undef;
+	$ENV{"critical"} || $critical_default;
 
     return ($warning, $critical);
 }
