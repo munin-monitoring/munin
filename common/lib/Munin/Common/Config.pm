@@ -32,7 +32,7 @@ my %legal = map { $_ => 1 } (
 	"graph_data_size", "colour", "graph_printf", "ok", "unknown",
 	"palette", "realservname", "cdef_name", "graphable", "process",
 	"realname", "onlynullcdef", "group_order", "pipe", "pipe_command",
-	"unknown_limit", "notify_countdown", "dropdownlimit",
+	"unknown_limit", "notify_countdown", "dropdownlimit", "max_graph_jobs",
 );
 
 my %bools = map { $_ => 1} qw(yes no true false on off 1 0);
@@ -135,4 +135,3 @@ Don't use it directly. See L<Munin::Master::Config> and L<Munin::Node::Config>.
 Parses the configuration in $file_name.
 
 =back
-
