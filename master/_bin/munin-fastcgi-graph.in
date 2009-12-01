@@ -296,8 +296,9 @@ sub draw_graph {
     my $serv  = shift;
     my $scale = shift;
 
-    $serv =~ s/[^\w_\/"'\[\]\(\)+=-]/_/; $serv =~ /^(.+)$/; $serv = $1; #"
-    $host =~ s/[^\w_\/"'\[\]\(\)+=-]/_/; $host =~ /^(.+)$/; $host = $1; #"
+    $serv =~ s{[^\w_\/"'\[\]\(\)+=-]}{_}; $serv =~ /^(.+)$/; $serv = $1; #"
+    # . needs to be legal in host names
+    $host =~ s{[^\w_\/"'\[\]\(\)\.+=-]}{_}; $host =~ /^(.+)$/; $host = $1; #"
 
     my @params = ($GRAPHER);
     push @params, @$scale;
