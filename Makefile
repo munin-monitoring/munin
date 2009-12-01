@@ -297,7 +297,7 @@ tar-pre:
 	(cd ..; ln -s $(PWD) munin-$(VERSION))
 
 tar: tar-pre
-	GZIP=-9 tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
+	GZIP=-9 tar -C .. --dereference --exclude .svn -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 
 rpm-pre:
 	(! grep MAINTAINER Makefile.config)
