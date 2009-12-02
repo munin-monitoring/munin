@@ -898,7 +898,7 @@ sub process_service {
             my $linedef = munin_get($negfield, "line");
             if ($linedef) {
                 my ($number, $ldcolour, $label) = split(/:/, $linedef, 3);
-                push(@rrd_negatives,
+                unshift(@rrd_negatives,
                     "HRULE:" . $number . ($ldcolour ? "#$ldcolour" : $colour));
             }
             elsif (my $tmpwarn = munin_get($negfield, "warning",2)) {
@@ -906,7 +906,7 @@ sub process_service {
                 my ($warn_min, $warn_max) = split(':', $tmpwarn);
 
                 if (defined($warn_min) and $warn_min ne '') {
-                    push(
+                    unshift(
                         @rrd,
                         "HRULE:" 
                             . $warn_min
@@ -916,7 +916,7 @@ sub process_service {
                             : $COLOUR[($field_count - 1) % @COLOUR]));
                 }
                 if (defined($warn_max) and $warn_max ne '') {
-                    push(
+                    unshift(
                         @rrd,
                         "HRULE:" 
                             . $warn_max
@@ -967,7 +967,7 @@ sub process_service {
         if ($linedef) {
             my ($number, $ldcolour, $label) = split(/:/, $linedef, 3);
             $label =~ s/:/\\:/g if defined $label;
-            push(
+            unshift(
                 @rrd,
                 "HRULE:" 
                     . $number
@@ -984,7 +984,7 @@ sub process_service {
             my ($warn_min, $warn_max) = split(':', $tmpwarn,2);
 
             if (defined($warn_min) and $warn_min ne '') {
-                push(
+                unshift(
                     @rrd,
                     "HRULE:" 
                         . $warn_min
@@ -994,7 +994,7 @@ sub process_service {
                         : $COLOUR[($field_count - 1) % @COLOUR]));
             }
             if (defined($warn_max) and $warn_min ne '') {
-                push(
+                unshift(
                     @rrd,
                     "HRULE:" 
                         . $warn_max
@@ -1157,7 +1157,7 @@ sub process_service {
 
         RRDs::graph(@complete);
         if (my $ERROR = RRDs::error) {
-            ERROR "[ERROR] Unable to graph $picfilename : $ERROR";
+            ERROR "[RRD ERROR] Unable to graph $picfilename : $ERROR";
         }
         else {
 
@@ -1276,7 +1276,7 @@ sub process_service {
                 unshift @rrd_sum, "--vertical-label", $label;
             }
 
-	    DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @rrd_sum) . "'\n";
+	    DEBUG "[DEBUG] \n\nrrdtool graph '" . join("' \\\n\t'", @rrd_sum) . "'\n";
 
             # Make sure directory exists
             munin_mkdir_p($picdirname, oct(777));
@@ -1284,7 +1284,7 @@ sub process_service {
             RRDs::graph(@rrd_sum);
 
             if (my $ERROR = RRDs::error) {
-                ERROR "Unable to graph "
+                ERROR "[RRD ERROR(sum)] Unable to graph "
                     . munin_get_picture_filename($service, $time)
                     . ": $ERROR";
             }
