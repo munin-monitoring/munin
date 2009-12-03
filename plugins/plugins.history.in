@@ -309,7 +309,9 @@ snort_drop_rate
 snort_pattern_match
 snort_pkts
 snort_traffic
-solaris/iostat
 ejabberd_
 snmp__print_supplies
 snmp__print_pages
+
+[1.4.1]
+sunos/iostat
