@@ -62,10 +62,11 @@ if [ "$1" = "config" ]; then
     # should be ok.
 
     $DF -k -l | $TAIL +2 | while read dev size used avail pct mnt; do
-	case $dev in
-	    /usr/lib*|ctfs|objfs|mnttab|sharefs) continue;;
-	    swap) name=$(clean_fieldname $mnt);;
-	    *)    name=$(clean_fieldname $dev);;
+
+	case $dev:$mnt in
+	    /usr/lib*|ctfs:*|objfs:*|mnttab:*|sharefs:*|*:/cdrom/*|*:/media/*) continue;;
+	    swap:*) name=$(clean_fieldname $mnt);;
+	    *:*)    name=$(clean_fieldname $dev);;
 	esac
         echo "$name.label $mnt"
 	print_warning "$name"
@@ -75,10 +76,10 @@ if [ "$1" = "config" ]; then
 fi
 
 $DF -k -l | $TAIL +2 | while read dev size used avail pct mnt; do
-	case $dev in
-	    /usr/lib*|ctfs|objfs|mnttab|sharefs) continue;;
-	    swap) name=$(clean_fieldname $mnt);;
-	    *)    name=$(clean_fieldname $dev);;
+	case $dev:$mnt in
+	    /usr/lib*|ctfs:*|objfs:*|mnttab:*|sharefs:*|*:/cdrom/*|*:/media/*) continue;;
+	    swap:*) name=$(clean_fieldname $mnt);;
+	    *:*)    name=$(clean_fieldname $dev);;
 	esac
         echo "$name.value $pct" | cut -f1 -d% 
 done
