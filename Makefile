@@ -299,24 +299,6 @@ tar-pre:
 tar: tar-pre
 	GZIP=-9 tar -C .. --dereference --exclude .svn -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 
-rpm-pre:
-	(! grep MAINTAINER Makefile.config)
-	@for file in `find dists/redhat/ -type f -name '*.in'`; do			\
-		destname=`echo $$file | sed 's/.in$$//'`;		\
-		echo Generating $$destname..;				\
-		sed -e 's|@@VERSION@@|$(VERSION)|g'			\
-		    $$file > $$destname;				\
-	done
-	-cp dists/tarball/plugins.conf .
-#	(cd ..; ln -s munin munin-$(VERSION))
-
-rpm: rpm-pre
-	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
-	(cd ..; rpmbuild -tb munin_$(RELEASE).tar.gz)
-
-rpm-src: rpm-pre
-	tar -C .. --dereference --exclude .svn -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
-	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
 
 suse-pre:
 	(! grep MAINTAINER Makefile.config)
