@@ -98,7 +98,8 @@ sub bitsof {
 
 sub read_from_child {
     # Read stuff from the file handles connected to the pluginds
-    # stdout and stderr.
+    # stdout and stderr and return two array references: one array of
+    # output and one array of errors.
 
     my ($self, $stdout, $stderr) = @_;
 
@@ -117,11 +118,12 @@ sub read_from_child {
 
     while (1) {
 	# print STDERR "In read loop for plugin: read ",bitsof($rin),
-	# " - write ",bitsof($win)," - exceptions ",bitsof($ein),"\n";
+	# " - write ",bitsof($win)," - exceptions ",bitsof($ein),"\n"
 
  	my $nfound = select($rout=$rin, $wout=$win, $eout=$ein, undef);
+
 	# print STDERR "Found: $nfound read ",bitsof($rout),
-	# " - write ",bitsof($wout)," - exceptions ",bitsof($eout),"\n";
+	# " - write ",bitsof($wout)," - exceptions ",bitsof($eout),"\n"
 	
 	if ($nfound == -1) {
 	    # !  Print error somewhere?
@@ -132,16 +134,17 @@ sub read_from_child {
 	    last;
 	}
 
+	# Should be something to read
 	if (vec($rout,fileno($stdout),1)) {
 	    # print STDERR "Atempting to read from plugins stdout\n";
 	    my $res = sysread($stdout,$output,4096,length($output));
-	    print STDERR "Read $res bytes from plugin stdout\n";
+	    # print STDERR "Read $res bytes from plugin stdout\n";
 	    next if $res;
 	}
 	if (vec($rout,fileno($stderr),1)) {
 	    # print STDERR "Atempting to read from plugins stderr\n";
 	    my $res = sysread($stderr,$errput,4096,length($errput));
-	    print STDERR "Read $res bytes from plugin stderr\n";
+	    # print STDERR "Read $res bytes from plugin stderr\n";
 	    next if $res;
 	}
 
@@ -158,18 +161,7 @@ sub read_from_child {
 }
 
 
-# NOTE:
-#
-# Since each pipe is only read from once, the child will block 
-# (and eventually time out) if it tries to print more data to 
-# either filehandle than the corresponding pipe's capacity.
-#
-# POSIX requires PIPE_BUF to be >=512 bytes, which should be
-# sufficient for even the most verbose plugins.  In any case,
-# most recent Unices seem to provide at least a whole page
-# (usually 4kB).
-sub run_as_child
-{
+sub run_as_child {
     my ($self, $timeout, $code, @args) = @_;
 
     pipe my ($out_read, $out_write)
