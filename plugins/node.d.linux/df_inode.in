@@ -9,7 +9,7 @@ df_inode - Plugin to monitor inode-usage.
 
 This configuration snipplet is an example with the default configuration:
 
-  [df]
+  [df_inode]
     env.exclude none unknown iso9660 squashfs udf romfs ramfs debugfs
     env.warning 92
     env.critical 98
