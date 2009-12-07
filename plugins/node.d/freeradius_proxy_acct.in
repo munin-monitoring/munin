@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to count the daily amount of freeradius authentication packets.
 #
@@ -22,7 +22,6 @@
 # munin-config:
 #
 #%# family=manual
-#%# capabilities=autoconf
 
 RADMIN=radmin
 SOCKETFILE=/var/run/radiusd/radiusd.sock
