@@ -23,8 +23,9 @@
 #
 #%# family=manual
 
-RADMIN=radmin
-SOCKETFILE=/var/run/radiusd/radiusd.sock
+RADMIN=${radmin:-`which radmin 2>/dev/null`}
+RADMIN=${RADMIN:-/usr/sbin/radmin}
+SOCKETFILE=${socketfile:-/var/run/radiusd/radiusd.sock}
 
 if [ "$1" = "autoconf" ]; then
     #
