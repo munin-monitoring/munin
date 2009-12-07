@@ -85,4 +85,4 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-$RADMIN -f $SOCKETFILE -e "stats client acct" | awk '{print $1".value " $2}'
+$RADMIN -f $SOCKETFILE -e "stats home_server acct" | awk '{print $1".value " $2}'
