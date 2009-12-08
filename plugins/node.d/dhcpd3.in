@@ -89,7 +89,7 @@ my $WARNING    = $ENV{warning}    || 0.9;
 if($ARGV[0] and $ARGV[0] eq "autoconf" ) {
     if($ret) {
 	print "no ($ret)\n";
-	exit 1;
+	exit 0;
     }
     if(-f $LEASEFILE) {
 	if(-r $LEASEFILE) {
@@ -109,7 +109,7 @@ if($ARGV[0] and $ARGV[0] eq "autoconf" ) {
     } else {
 	print "no (leasefile not found)\n";
     }
-    exit 1;
+    exit 0;
 }
 
 print "# DEBUG: CONFIGFILE == $CONFIGFILE\n# DEBUG: LEASEFILE == $LEASEFILE\n" if $DEBUG;
