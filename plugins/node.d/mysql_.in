@@ -718,7 +718,7 @@ sub main {
 sub autoconf {
     unless ($has_cache) {
 	print "no (Missing dependency Cache::Cache)\n";
-	return 1;
+	return 0;
     }
 
     eval {
@@ -728,7 +728,7 @@ sub autoconf {
 	my $err = $@;
 	$err =~ s{\s at \s \S+ \s line .*}{}xms;
 	print "no ($err)\n";
-	return 1;
+	return 0;
     }
     print "yes\n";
     return 0;
