@@ -305,10 +305,10 @@ $graphs{innodb_bpool} = {
 	{name => 'ib_bpool_size',     label  => 'Buffer pool size',
 				      draw   => 'AREA',
 				      colour => 'ffd660'},
-	{name => 'ib_bpool_free',     label => 'Free pages'},
 	{name => 'ib_bpool_dbpages',  label  => 'Database pages',
 				      draw   => 'AREA',
 				      colour => 'cdcfc4'},
+	{name => 'ib_bpool_free',     label => 'Free pages'},
 	{name => 'ib_bpool_modpages', label => 'Modified pages'},
     ],
 };
