@@ -1092,19 +1092,10 @@ sub process_service {
 
         my @complete = ();
         if ($RRDkludge) {
-
-            # since rrdtool 1.3 with libpango the LEGEND column alignment
-            # only works with monospace fonts
-            if ($RRDs::VERSION >= 1.3) {
-                push(@complete, '--font', 'LEGEND:7:monospace');
-            }
-            else {
-                push(@complete, '--font', 'LEGEND:7:$libdir/VeraMono.ttf');
-            }
-
             push(@complete,
-                '--font', 'UNIT:7:$libdir/VeraMono.ttf',
-                '--font', 'AXIS:7:$libdir/VeraMono.ttf');
+                '--font', "LEGEND:7:$libdir/DejaVuSansMono.ttf",
+                '--font', "UNIT:7:$libdir/DejaVuSans.ttf",
+                '--font', "AXIS:7:$libdir/DejaVuSans.ttf");
         }
 
         push(@complete, '-W', $watermark) if $RRDs::VERSION >= 1.2;

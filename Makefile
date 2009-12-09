@@ -94,7 +94,8 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	done
 
 	$(INSTALL) -m 0644 master/www/definitions.html $(CONFDIR)/templates/
-	$(INSTALL) -m 0755 master/VeraMono.ttf $(LIBDIR)/
+	$(INSTALL) -m 0755 master/DejaVuSansMono.ttf $(LIBDIR)/
+	$(INSTALL) -m 0755 master/DejaVuSans.ttf $(LIBDIR)/
 
 	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/master/www/munin-htaccess $(HTMLDIR)/.htaccess
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/master/munin.conf $(CONFDIR)/
