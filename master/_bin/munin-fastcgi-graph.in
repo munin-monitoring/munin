@@ -115,10 +115,10 @@ while (new CGI::Fast) {
 
   draw:  
     @stats           = stat ($filename) unless @stats;
-    $last_modified //= strftime ("%a, %d %b %Y %H:%M:%S %Z", localtime ($stats[9]));
+    $last_modified   = strftime ("%a, %d %b %Y %H:%M:%S %Z", localtime ($stats[9])) unless defined($last_modified);
     # "Expires" has to use last modified time as base:
-    $expires       //= strftime ("%a, %d %b %Y %H:%M:%S GMT", 
-				 gmtime($stats[9]+($period{$scale}-($stats[9]%$period{$scale}))));
+    $expires         = strftime ("%a, %d %b %Y %H:%M:%S GMT", 
+				 gmtime($stats[9]+($period{$scale}-($stats[9]%$period{$scale})))) unless defined ($expires);
     
     print "Content-Type: image/png\n";
     print "Expires: ", $expires, "\n";
@@ -182,7 +182,7 @@ sub get_picture_filename {
     my $service = shift;
     my $scale   = shift;
 
-    return "$config->{'htmldir'}/$domain/$name-$service-$scale.png";
+    return "$config->{'htmldir'}/$domain/$name/$service-$scale.png";
 }
 
 
@@ -303,6 +303,7 @@ sub draw_graph {
     my @params = ($GRAPHER);
     push @params, @$scale;
     push @params, "--skip-locking", "--skip-stats", "--nolazy";
+    push @params, "--list-images";
     push @params, "--host", $host, "--service", $serv;
     push @params, "STDERR>&STDOUT";
 
@@ -315,6 +316,7 @@ sub draw_graph {
 	exec @params;
     }
     $file = join (' ', <$IN>);
+    $file =~ s/\n$//;
 
     close ($IN);
     sem_release();
