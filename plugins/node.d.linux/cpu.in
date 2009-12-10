@@ -17,14 +17,53 @@ The following is default configuration
   [cpu]
     env.HZ	100
 
-Some combinations of hardware and Linux (probably only
-2.4 kernels) use 1000 units/second in /proc/stat
-corresponding to the systems HZ. (see /usr/src/linux/include/asm/param.h). But Almost all systems use 100 units/second and this is our default. Even if Documentation/proc.txt in the kernel source says
-otherwise. - Finding and fix by dz@426.ch
+See "BUGS" for a explanation of this setting.
+
+=head2 EXAMPLE WARNING AND CRITICAL SETTINGS
+
+You can also set warning and critical levels for each of the data
+series the plugin reports.  The following environment variables are
+used as default for all fields:
+
+  env.warning
+  env.critical
+
+But each field can be controlled separately:
+
+  env.system_warning
+  env.system_critical
+
+  env.user_warning
+  env.user_critical
+
+  env.nice_warning
+  env.nice_critical
+
+  env.idle_warning
+  env.idle_critical
+
+For some kernels there is also the following settings:
+
+  env.iowait_warning
+  env.iowait_critical
+  env.irq_warning
+  env.irq_critical
+  env.softirq_warning
+  env.softirq_critical
+  env.steal_warning
+  env.steal_critical
+
 
 =head1 INTERPRETATION
 
-The plugin shows cpu usage in percent. In case of more than one core it displays 100% for each core.
+The plugin shows cpu usage in percent. In case of more than one core
+it displays 100% for each core.
+
+If a core is 100% busy there will be no "iowait" showing, that only
+shows if the CPU has nothing else to do while it waits on IO.
+Therefore a 100% busy core can hide a lot of iowait.  Please refer to
+the IO latency and other disk related graphs for further information
+about IO performance.
 
 =head1 MAGIC MARKERS
 
@@ -38,7 +77,14 @@ The plugin shows cpu usage in percent. In case of more than one core it displays
 
 =head1 BUGS
 
-None known
+Some combinations of hardware and Linux (probably only 2.4 kernels)
+use 1000 units/second in /proc/stat corresponding to the systems
+HZ. (see /usr/src/linux/include/asm/param.h). But Almost all systems
+use 100 units/second and this is our default. Even if
+Documentation/proc.txt in the kernel source says otherwise. - Finding
+and fix by dz@426.ch
+
+Otherwise none known
 
 =head1 AUTHOR
 
