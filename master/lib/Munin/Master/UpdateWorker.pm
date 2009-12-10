@@ -63,67 +63,79 @@ sub do_work {
 	);
 
     my $done = $self->{node}->do_in_session(sub {
-        $self->{node}->negotiate_capabilities();
-	# Note: A multigraph plugin can present multiple services.
-	my @plugins =  $self->{node}->list_plugins();
 
-        for my $plugin (@plugins) {
-            if (%{$config->{limit_services}}) {
-                next unless $config->{limit_services}{$plugin};
-            }
+	eval {
+	    # A I/O timeout results in a violent exit.  Catch and handle.
 
-            my %service_config = $self->uw_fetch_service_config($plugin);
-            unless (%service_config) {
-                WARN "[WARNING] Service $plugin on $nodedesignation returned no config";
-                next;
-            }
+	    $self->{node}->negotiate_capabilities();
+	    # Note: A multigraph plugin can present multiple services.
+	    my @plugins =  $self->{node}->list_plugins();
 
-            my %service_data = eval {
-                $self->{node}->fetch_service_data($plugin);
-            };
-            if ($EVAL_ERROR) {
-                ERROR $EVAL_ERROR;
-		print STDERR "$EVAL_ERROR\n";
-                next;
-            }
+	    for my $plugin (@plugins) {
+		if (%{$config->{limit_services}}) {
+		    next unless $config->{limit_services}{$plugin};
+		}
 
-	    # Since different plugins can populate multiple positions in the
-	    # service namespace we'll check for collisions and warn of them.
-	    for my $service (keys %{$service_config{data_source}}) {
-		if (defined($all_service_configs{data_source}{$service})) {
-		    WARN "[WARNING] Service collision: plugin $plugin on $nodedesignation reports $service which already exists on that host.  Deleting new data.";
-		    delete($service_config{data_source}{$service});
+		my %service_config = $self->uw_fetch_service_config($plugin);
+		unless (%service_config) {
+		    WARN "[WARNING] Service $plugin on $nodedesignation ".
+			"returned no config";
+		    next;
+		}
+
+		my %service_data = $self->{node}->fetch_service_data($plugin);
+
+		# Since different plugins can populate multiple
+		# positions in the service namespace we'll check for
+		# collisions and warn of them.
+
+		for my $service (keys %{$service_config{data_source}}) {
+		    if (defined($all_service_configs{data_source}{$service})) {
+			WARN "[WARNING] Service collision: plugin $plugin on "
+			    ."$nodedesignation reports $service which already "
+			    ."exists on that host.  Deleting new data.";
+			delete($service_config{data_source}{$service});
 		    delete($service_data{$service})
 			if defined $service_data{$service};
-		}
-	    }
-
-	    # .extinfo fields come from "fetch" but must be saved like "config".
-	    for my $service (keys %service_data) {
-		for my $ds (keys %{$service_data{$service}}) {
-		    my $extinfo = $service_data{$service}{$ds}{extinfo};
-		    if (defined $extinfo) {
-			$service_config{data_source}{$service}{$ds}{extinfo} =
-			    $extinfo;
-			DEBUG "[DEBUG] Copied extinfo $extinfo into service_config for $service / $ds on $nodedesignation";
 		    }
 		}
-	    }
 
-	    $self->_compare_and_act_on_config_changes(\%service_config);
+		# .extinfo fields come from "fetch" but must be saved
+		# like "config".
 
-	    %{$all_service_configs{data_source}} = (
-		%{$all_service_configs{data_source}},
-		%{$service_config{data_source}});
+		for my $service (keys %service_data) {
+		    for my $ds (keys %{$service_data{$service}}) {
+			my $extinfo = $service_data{$service}{$ds}{extinfo};
+			if (defined $extinfo) {
+			    $service_config{data_source}{$service}{$ds}{extinfo} =
+				$extinfo;
+			    DEBUG "[DEBUG] Copied extinfo $extinfo into "
+				."service_config for $service / $ds on "
+				.$nodedesignation;
+			}
+		    }
+		}
 
-	    %{$all_service_configs{global}} = (
-		%{$all_service_configs{global}},
-		%{$service_config{global}});
+		$self->_compare_and_act_on_config_changes(\%service_config);
 
-            $self->_update_rrd_files(\%service_config, \%service_data);
-        }
+		%{$all_service_configs{data_source}} = (
+		    %{$all_service_configs{data_source}},
+		    %{$service_config{data_source}});
 
-        #use Data::Dumper; warn Dumper(\@services);
+		%{$all_service_configs{global}} = (
+		    %{$all_service_configs{global}},
+		    %{$service_config{global}});
+
+		$self->_update_rrd_files(\%service_config, \%service_data);
+
+	    } # for @plugins
+	}; # eval
+
+	if ($EVAL_ERROR) {
+	    ERROR "[ERROR] Error in node communication with $nodedesignation: "
+		.$EVAL_ERROR;
+	}
+
     }); # do_in_session
 
     munin_removelock($lock_file);
@@ -139,25 +151,17 @@ sub do_work {
 
 
 sub uw_fetch_service_config {
-    # not sure why fetch_service_config needs eval and fetch_service_data
-    # does not. - janl 2009-10-22
     my ($self, $plugin) = @_;
 
-    my %service_config = eval {
-        $self->{node}->fetch_service_config($plugin);
-    };
-    if ($EVAL_ERROR) {
-        # FIX Report failed service so that we can use the old service
-        # config.
-        ERROR $EVAL_ERROR;
-	print STDERR "$EVAL_ERROR\n";
-        return;
-    }
+    # Note, this can die for several reasons.  Caller must eval us.
+    my %service_config = $self->{node}->fetch_service_config($plugin);
 
-    # FIX for nested services
-    if ($self->{host}{service_config} && $self->{host}{service_config}{$plugin}) {
+    if ($self->{host}{service_config} && 
+	$self->{host}{service_config}{$plugin}) {
+
         %service_config
             = (%service_config, %{$self->{host}{service_config}{$plugin}});
+
     }
 
     return %service_config;

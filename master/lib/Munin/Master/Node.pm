@@ -17,6 +17,9 @@ use Log::Log4perl qw( :easy );
 
 my $config = Munin::Master::Config->instance()->{config};
 
+# Note: This timeout governs both small commands and waiting for the total
+# output of a plugin.  It is reset for each read.
+
 sub new {
     my ($class, $address, $port, $host, $configref) = @_;
 
@@ -27,7 +30,7 @@ sub new {
         tls     => undef,
         socket  => undef,
         master_capabilities => qw(multigraph),
-        io_timeout => 5,
+        io_timeout => 120,
 	configref => $configref,
     };
 
@@ -435,8 +438,8 @@ sub _node_write_single {
         }
     });
     if ($timed_out) {
-        WARN "[WARNING] Socket write timed out to ".$self->{host}."\n";
-        return;
+        LOGCROAK "[FATAL] Socket write timed out to ".$self->{host}.
+	    ".  Terminating process.";
     }
     return 1;
 }
@@ -456,8 +459,8 @@ sub _node_read_single {
       chomp $res if defined $res;
     });
     if ($timed_out) {
-        WARN "[WARNING] Socket read timed out to ".$self->{host}."\n";
-        return;
+        LOGCROAK "[FATAL] Socket read timed out to ".$self->{host}.
+	    ".  Terminating process.";
     }
     DEBUG "[DEBUG] Reading from socket to ".$self->{host}.": \"$res\".";
     return $res;
@@ -480,8 +483,7 @@ sub _node_read {
         }
     });
     if ($timed_out) {
-        WARN "[WARNING] Socket read timed out to ".$self->{host}.": $@\n";
-        return;
+        LOGCROAK "[FATAL] Socket read timed out to ".$self->{host}.": $@\n";
     }
     DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".";
     return @array;
