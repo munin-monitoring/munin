@@ -65,11 +65,11 @@ sub main
     $paranoia = $config->{paranoia};
 
     die "Fatal error. Bailing out.\n"
-        unless Munin::Node::OS->check_perms($config->{conffile});
+        unless Munin::Node::OS->check_perms_if_paranoid($config->{conffile});
     $config->parse_config_from_file($config->{conffile});
 
     die "Fatal error. Bailing out.\n"
-        unless (Munin::Node::OS->check_perms($config->{servicedir}));
+        unless (Munin::Node::OS->check_perms_if_paranoid($config->{servicedir}));
 
     $defuser  = $config->{defuser}  if defined $config->{defuser};
     $defgroup = $config->{defgroup} if defined $config->{defgroup};
@@ -242,7 +242,7 @@ Use E<lt>fileE<gt> as plugin configuration. Overrides sconfdir.  [undefined]
 
 =item B<--paranoia >
 
-Only run plugins owned by root. Check permissions.  [disabled]
+Only run plugins owned by root and check permissions.  [disabled]
 
 =item B<--help >
 

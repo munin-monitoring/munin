@@ -110,31 +110,57 @@ sub change_real_and_effective_user_and_group
     my $root_gid = 0;
 
     if ($REAL_USER_ID == $root_uid) {
-        # Need to test for defined here since a user might be
+	# Need to test for defined here since a user might be
         # specified with UID = 0
         my $uid = defined $config->{sconf}{$service}{user} 
                     ? $config->{sconf}{$service}{user}
                     : $config->{defuser};
         
-        # Resolve unresolved UID now - as it is may not have been resolved
-        # when the config was read.
+        # Resolve unresolved UID now - as it is not resolved when the
+        # config was read.
+
         my $u = Munin::Node::OS->get_uid($uid);
-        croak "User '$uid' is nonexistent." unless defined $u;
+        croak "User '$uid' required for $service does not exist."
+	    unless defined $u;
+
+	# Ditto for groups
+	my $g = '';
+
+	if ( defined $config->{sconf}{$service}{group} ) {
+	    # Support running with more than one group in effect. See
+	    # documentation on $EFFECTIVE_GROUP_ID in the perlvar(1)
+	    # manual page.
+
+	    my @groups = ();
+	    my $groups = $config->{sconf}{$service}{group};
+	
+	    for my $group (split /\s*,\s*/, $groups) {
+		my $is_optional = $group =~ m{\A \( ([^)]+) \) \z}xms;
+		$group          = $1 if $is_optional;
+
+		my $gid = Munin::Node::OS->get_gid($group);
+		croak "Group '$group' required for $service does not exist"
+		    unless defined $gid || $is_optional;
+
+		if (!defined $gid && $is_optional) {
+		    carp "DEBUG: Skipping OPTIONAL nonexisting group '$group'"
+			if $config->{DEBUG};
+		    next;
+		}
+		push @groups, $gid;
+	    } # for $groups
+	    $g = join(' ',@groups);
+        } # if defined group
+
         my $dg  = $config->{defgroup};
 
-        my $g = '';
         my $gid;
-
-        if ( defined($gid = $config->{sconf}{$service}{group}) ) {
-            $g = Munin::Node::OS->get_gid($gid);
-            croak "Group '$gid' is nonexistent." if $g eq '';
-        }
 
         # Specify the default group twice: once for setegid(2), and once
         # for setgroups(2).  See perlvar for the gory details.
         my $gs = "$dg $dg $g";
 
-        print STDERR "# Set rgid/ruid/egid/euid to $dg/$u/$gs/$u\n"
+        print STDERR "# Set /rgid/ruid/egid/euid/ to /$dg/$u/$gs/$u/\n"
             if $config->{DEBUG};
 
         eval {
