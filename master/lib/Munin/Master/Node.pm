@@ -237,7 +237,15 @@ sub parse_service_config {
 	    new_service($service);
 	    DEBUG "[CONFIG multigraph $plugin] Service is now $service";
 	}
-	elsif ($line =~ m{\A (\w+)\.(\w+) \s+ (.+) }xms) {
+	elsif ($line =~ m{\A ([^\s\.]+) \s+ (.+) }xms) {
+	    $correct++;
+
+	    my $label = $self->_sanitise_fieldname($1);
+
+            push @{$global_config->{$service}}, [$label, $2];
+            DEBUG "[CONFIG graph global $plugin] $service->$label = $2";
+        }
+	elsif ($line =~ m{\A ([^\.]+)\.([^\s]+) \s+ (.+) }xms) {
 	    $correct++;
 	    
             my ($ds_name, $ds_var, $ds_val) = ($1, $2, $3);
@@ -246,12 +254,6 @@ sub parse_service_config {
             $data_source_config->{$service}{$ds_name}{$ds_var} = $ds_val;
             DEBUG "[CONFIG dataseries $plugin] $service->$ds_name.$ds_var = $ds_val";
             push ( @graph_order, $ds_name ) if $ds_var eq 'label';
-        }
-	elsif ($line =~ m{\A (\w+) \s+ (.+) }xms) {
-	    $correct++;
-
-            push @{$global_config->{$service}}, [$1, $2];
-            DEBUG "[CONFIG graph global $plugin] $service->$1 = $2";
         }
 	else {
 	    $errors++;
