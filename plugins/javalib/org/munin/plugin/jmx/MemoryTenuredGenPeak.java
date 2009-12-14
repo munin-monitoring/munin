@@ -15,21 +15,24 @@ public class MemoryTenuredGenPeak {
             if (args[0].equals("config")) {
                 System.out.println("graph_title JVM (port " + connectionInfo[1] + ") MemoryTenuredGenPeak\n" +
                         "graph_vlabel bytes\n" +
-			"graph_category " + connectionInfo[2] + "\n" +
+                        "graph_category " + connectionInfo[2] + "\n" +
                         "graph_info The peak memory usage of this memory pool since the Java virtual machine was started or since the peak was reset.\n" +
-                        "Committed.label Committed\n" +
-                        "Committed.info The amount of memory (in bytes) that is guaranteed to be available for use by the Java virtual machine.\n" +
-                        "Committed.draw AREA\n" +
                         "Max.label Max\n" +
                         "Max.info The maximum amount of memory (in bytes) that can be used for memory management.\n" +
                         "Max.draw AREA\n" +
                         "Max.colour ccff00\n" +
-			"Used.label Used\n" +
+                        "Committed.label Committed\n" +
+                        "Committed.info The amount of memory (in bytes) that is guaranteed to be available for use by the Java virtual machine.\n" +
+                        "Committed.draw LINE2\n" +
+                        "Committed.colour 0033ff\n" +
+                        "Used.label Used\n" +
                         "Used.info The amount of memory currently used (in bytes).\n"+
+                        "Used.draw LINE3\n" +
+                        "Used.colour 33cc00\n" +
                         "Init.label Init\n" +
                         "Init.info The initial amount of memory (in bytes) that the Java virtual machine requests from the operating system for memory management during startup.\n" +
                         "Init.draw AREA\n"+
-			"Threshold.label Threshold\n" +
+                        "Threshold.label Threshold\n" +
                         "Threshold.info  The usage threshold value of this memory pool in bytes.\n" 
                         );
             }
