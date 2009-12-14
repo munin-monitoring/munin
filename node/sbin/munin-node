@@ -63,8 +63,8 @@ sub main {
     parse_args();
 
     # Check permissions of configuration
-    unless (Munin::Node::OS->check_perms($servicedir, $paranoia) 
-         && Munin::Node::OS->check_perms($conffile, $paranoia))
+    unless (Munin::Node::OS->check_perms_if_paranoid($servicedir)
+         && Munin::Node::OS->check_perms_if_paranoid($conffile))
     {
         die "Fatal error. Bailing out.";
     }
@@ -115,7 +115,7 @@ sub parse_args {
         "version"      => \&print_version_and_exit,
         "help"         => \&print_usage_and_exit,
     );
-    
+
     # Reset ARGV (for HUPing)
     @ARGV = @ORIG_ARGV;
 }

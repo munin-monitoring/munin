@@ -173,15 +173,19 @@ sub exec_service {
 
     $class->change_real_and_effective_user_and_group($service);
 
-    unless (Munin::Node::OS->check_perms("$dir/$service")) {
+    unless (Munin::Node::OS->check_perms_if_paranoid("$dir/$service")) {
         logger ("Error: unsafe permissions on $service. Bailing out.");
         exit 2;
     }
 
     $class->export_service_environment($service);
 
+    Munin::Node::OS::set_plugin_umask();
+
     my @command = grep defined, _service_command($dir, $service, $arg);
-    print STDERR "# About to run '", join (' ', @command), "'\n" if $config->{DEBUG};
+    print STDERR "# About to run '", join (' ', @command), "'\n" 
+	if $config->{DEBUG};
+
     exec @command;
 }
 

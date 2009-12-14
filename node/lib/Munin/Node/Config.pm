@@ -167,7 +167,7 @@ sub parse_plugin_config_file {
     my ($self, $file) = @_;
 
     # check perms on a file also checks the directory permissions
-    if (!Munin::Node::OS->check_perms($file)) {
+    if (!Munin::Node::OS->check_perms_if_paranoid($file)) {
 	print STDERR "Plugin configuration $file has unsafe permissions, skipping\n";
 	return;
     }
