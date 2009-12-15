@@ -1,9 +1,6 @@
 package org.munin.plugin.jmx;
 import java.lang.management.ManagementFactory.*;
 import javax.management.MBeanServerConnection;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 public class MemoryEdenPeak {
@@ -38,10 +35,7 @@ public class MemoryEdenPeak {
          else {
 
             try {
-
-                JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + connectionInfo[0] + ":" + connectionInfo[1]+ "/jmxrmi");
-                JMXConnector c = JMXConnectorFactory.connect(u);
-                MBeanServerConnection connection = c.getMBeanServerConnection();
+                MBeanServerConnection connection = BasicMBeanConnection.get();
 
                 GetPeakUsage collector = new GetPeakUsage(connection, 3);
                 String[] temp = collector.GC();

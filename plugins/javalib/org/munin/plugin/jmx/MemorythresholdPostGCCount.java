@@ -1,9 +1,6 @@
 package org.munin.plugin.jmx;
 import java.lang.management.ManagementFactory.*;
 import javax.management.MBeanServerConnection;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
 import java.lang.management.MemoryPoolMXBean;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -31,9 +28,7 @@ public class MemorythresholdPostGCCount {
          else {
 
             try {
-                JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" +connectionInfo[0] + ":" + connectionInfo[1] + "/jmxrmi");
-                JMXConnector c = JMXConnectorFactory.connect(u);
-                MBeanServerConnection connection = c.getMBeanServerConnection();
+                MBeanServerConnection connection = BasicMBeanConnection.get();
                 GetMemoryPoolThresholdCount collector = new GetMemoryPoolThresholdCount(connection);
                 String[] temp = collector.GC();
                 
