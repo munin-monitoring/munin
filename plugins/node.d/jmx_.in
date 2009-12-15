@@ -63,6 +63,9 @@ GPLv2
 
 MUNIN_JAR="@@JAVALIBDIR@@/munin-jmx-plugins.jar"
 
+ip=${ip:-127.0.0.1}
+port=${port:-5400}
+
 if [ "x$1" = "xsuggest" ] ; then
   cat <<__EOF
 ClassesLoaded
@@ -102,16 +105,6 @@ __EOF
 fi
 
 if [ "x$1" = "xautoconf" ] ; then
-    if [ "x$ip" = "x" ]; then
-        echo "no (ip not configured)"
-        exit 0
-    fi
-      
-    if [ "x$port" = "x" ] ; then
-        echo "no (port not configured)"
-        exit 0
-    fi
-
     NC=`which nc 2>/dev/null`
     if [ "x$NC" = "x" ] ; then
       echo "no (nc not found)"
@@ -156,4 +149,4 @@ if [ "x$jmxfunc" = "x" ] ; then
   exit 1
 fi
 
-@@JAVARUN@@ -cp $MUNIN_JAR org.munin.plugin.jmx.$jmxfunc $param
+ip=$ip port=$port @@JAVARUN@@ -cp $MUNIN_JAR org.munin.plugin.jmx.$jmxfunc $param
