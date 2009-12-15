@@ -25,8 +25,6 @@ class GetUsageThresholdCount{
 
         gcName = new ObjectName(ManagementFactory.MEMORY_POOL_MXBEAN_DOMAIN_TYPE+",*");//GARBAGE_COLLECTOR_MXBEAN_DOMAIN_TYPE + ",*");
 
-
-
         Set mbeans = connection.queryNames(gcName, null);
         if (mbeans != null) {
             gcmbeans = new ArrayList<MemoryPoolMXBean>();
@@ -39,13 +37,19 @@ class GetUsageThresholdCount{
             }
         }
 
+        try {
+            GCresult[0] = gcmbeans.get(0).getUsageThresholdCount()+ "";
+        }
+        catch (UnsupportedOperationException u) {
+            GCresult[0] = "U";
+        }
 
-
-
-
-        int i = 0;
-            GCresult[i++] =gcmbeans.get(0).getUsageThresholdCount()+ "";
-            GCresult[i++] = gcmbeans.get(1).getUsageThresholdCount()+ "";	
+        try {
+            GCresult[1] = gcmbeans.get(1).getUsageThresholdCount()+ "";
+        }
+        catch (UnsupportedOperationException u) {
+            GCresult[1] = "U";
+        }
 
     return GCresult;
     }
