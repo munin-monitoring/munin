@@ -20,6 +20,8 @@ Needs nc in path for autoconf.
     env.ip 127.0.0.1
     env.port 5400
     env.category jvm
+    env.username monitorRole
+    env.password SomethingSecret
 
 Needed configuration on the Tomcat side: add
 
@@ -30,9 +32,22 @@ Needed configuration on the Tomcat side: add
 
 to CATALINA_OPTS in your startup scripts.
 
+Replace authenticate=false with 
+  -Dcom.sun.management.jmxremote.password.file=/etc/tomcat/jmxremote.password \
+  -Dcom.sun.management.jmxremote.access.file=/etc/tomcat/jmxremote.access
+ ...if you want authentication.
+
+jmxremote.password:
+ monitorRole SomethingSecret
+
+jmxremote.access:
+ monitorRole readonly
+
+You may need higher access levels for some counters, notably ThreadsDeadlocked.
+
 =head1 BUGS
 
-No authentication or encryption supported in the JMX connection.
+No encryption supported in the JMX connection.
 
 The plugins available reflect the most interesting aspects of a
 JVM runtime.  This should be extended to cover things specific to
@@ -48,7 +63,8 @@ University College.
 Shell script wrapper and integration by Erik Inge Bolsø, Redpill
 Linpro AS.
 
-Previous work on JMX plugin by Aleksey Studnev.
+Previous work on JMX plugin by Aleksey Studnev. Support for
+authentication added by Ingvar Hagelund, Redpill Linpro AS.
 
 =head1 LICENSE
 

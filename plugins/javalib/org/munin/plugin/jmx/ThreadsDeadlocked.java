@@ -13,7 +13,7 @@ public class ThreadsDeadlocked  {
                 System.out.println("graph_title JVM (port " + connectionInfo[1] + ") ThreadsDeadlocked\n" +
 		"graph_vlabel threads\n" +
 		"graph_category " + connectionInfo[2] + "\n" +
-		"graph_info Returns the number of deadlocked threads for the JVM.\n" +
+		"graph_info Returns the number of deadlocked threads for the JVM. Usually not available at readonly access level.\n" +
 		"ThreadsDeadlocked.label ThreadsDeadlocked");
             }
         else {

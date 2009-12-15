@@ -3,6 +3,7 @@ import javax.management.remote.JMXServiceURL;
 import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
+import java.util.Map;
 import java.io.IOException;
 import java.net.MalformedURLException;
 
@@ -15,7 +16,8 @@ public class BasicMBeanConnection {
         String[] connectionInfo = ConfReader.GetConnectionInfo();
 
         JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + connectionInfo[0] + ":" + connectionInfo[1]+ "/jmxrmi");
-        JMXConnector c=JMXConnectorFactory.connect(u);
+        Map<String, Object> credentials = ConfReader.GetConnectionCredentials();
+        JMXConnector c=JMXConnectorFactory.connect(u,credentials);
         MBeanServerConnection connection=c.getMBeanServerConnection();
         return (connection);
     }
