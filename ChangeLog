@@ -10,8 +10,20 @@ Some stats on 1.4.0 (relative to 1.3.4)
   uploaded to sourceforge in february 2005.
 
 
-munin (1.4.2, r3167:..., 2009-12-14)
+munin (1.4.2, r3167:3231, 2009-12-16)
 
+* Munin::Plugin::Pgslq: Clean the fieldnames before returning them, so
+  we don't generate invalid data with for example a dash in the
+  database name.
+* jmx_: Add authentication support, fix exceptions in various memory
+  related parts, refactor connection negotiation to one central
+  connection class, add default connection info for jmx_, so we
+  actually are a bit autoconfy
+* munin_update: Update to work correctly with 1.4, document and enhance a bit
+* munin_stats: Provide better graph_info and set some warning and
+  critical levels at 4 minutes and 4m45s
+* Improove colors contrast in jmx plugins which have Max area, to make
+  them more readable + fix some indentation
 * ntp_offset: make info into graph_info
 * Munin-(node|run): Make group name resolution lazy, enhance error
   messages and reinstate the group foo,(bar) syntax
@@ -32,6 +44,11 @@ munin (1.4.2, r3167:..., 2009-12-14)
 * postgres_querylength_: Fix query that can never have worked...
 * Switch fonts to DejaVuSans og DejaVuSansMono.  Vera is now obsoleted
   by DejaVu in most contexts.
+
+  INSTALLERS: On platforms with RRD 1.3 the fonts need not be removed
+  and no paths need to be installed as long as the DejaVuSans font
+  family is installed.
+
 * Reorder somewhat to get lines on top of areas
 * Patch from blueyed to make munin-*cgi-graph work
 * snmp__if_multi: Only set .max if the interface speed has been obtained
