@@ -993,7 +993,7 @@ sub process_service {
                         ? "#ff0000"
                         : $COLOUR[($field_count - 1) % @COLOUR]));
             }
-            if (defined($warn_max) and $warn_min ne '') {
+            if (defined($warn_max) and $warn_max ne '') {
                 unshift(
                     @rrd,
                     "HRULE:" 
