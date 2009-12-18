@@ -113,6 +113,7 @@ if ($smartctl and `$smartctl --version` =~ / version (\d+\.\d+) /i) {
 
 # hdparm is used as a fallback
 my $hdparm = `which hdparm 2>/dev/null`;
+chomp $hdparm;
 
 my @drives;
 
