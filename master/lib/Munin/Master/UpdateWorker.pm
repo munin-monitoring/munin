@@ -354,7 +354,7 @@ sub _update_rrd_files {
 		= $self->_create_rrd_file_if_needed($service, $ds_name, 
 						    $service_config->{$ds_name});
 
-	    if (%$service_data and defined($service_data->{$ds_name})) {
+	    if (defined($service_data) and defined($service_data->{$ds_name})) {
 		$self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name});
 	    }
 	    else {
