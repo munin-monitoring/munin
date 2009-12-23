@@ -119,10 +119,17 @@ our $pluginstatedir = $ENV{'MUNIN_PLUGSTATE'}
 
 =head3 $Munin::Plugin::statefile
 
-The automatically calculated name for the plugins state file.  This is
-simply a concatenation of the $statedir and the $me variables (with a
-slash between).  To change the value of this please use the
-C<set_state_name($)> procedure (see below).
+The automatically calculated name for the plugins state file.  The
+name is supplied by munin-node or munin-run (in the MUNIN_STATEFILE
+environment variable).  The file name contains the plugin name and the
+ip-number of the munin-master the node is talking to (munin-run leaves
+the master part blank) to enable stateful plugins that calculate
+gauguges and assumes a 5 minute run interval to work in munin-setups
+with multiple munin-masters (this is not a uncommon way to set up
+Munin).
+
+To change the value of this please use the C<set_state_name($)>
+procedure (see below).
 
 =cut
 
@@ -168,7 +175,9 @@ sub clean_fieldname ($) {
 =head3 set_state_name($statefile_name)
 
 Override the default statefile name.  This only modifies the filename
-part, not the directory name.
+part, not the directory name. The function unconditionally appends
+"-$MUNIN_MASTER_IP" to the file name to support multiple masters as
+described in the documentation for the statefile variable (above).
 
 Calling this function is not normally needed and is not recommended.
 
@@ -239,8 +248,7 @@ plugin.  The state vector should contain only strings (or numbers),
 and absolutely no objects or references.  The strings may contain
 newlines without ill effect.
 
-If the file cannot be opened for writing the plugin will abort the
-program.
+If the file cannot be opened for writing the plugin will be aborted.
 
 The state file name is determined automatically based on the
 name of the process we're running as.  See L<$Munin::Plugin::me>,
@@ -252,6 +260,10 @@ library can see the difference between an actual state file and a file
 containing rubbsh.  Currently this magic number is
 '%MUNIN-STATE1.0\n'. Files with this magic number will contain the
 vector verbatim with \r, \n and % URL encoded.
+
+The function takes security precautions, like protesting fataly if the
+state file is a symbolic link (symbolic link overwriting can have
+unfortunate security ramifications).
 
 =cut
 
@@ -279,8 +291,8 @@ Read state from the state file written by L<save_state(@)>. If
 everything is OK the state vector will be returned.
 
 undef will be returned if the file cannot be opened.  Likewise if it
-does not have a recognized magic number (in this case a warning will also 
-be printed, which will appear in the munin-node logs).
+does not have a recognized magic number (in this case a warning will
+also be printed, which will appear in the munin-node logs).
 
 =cut
 
@@ -519,9 +531,33 @@ if it doesn't support multigraph plugins.
 
 =cut
 
-sub need_multigraph
-{
-	return if $ENV{MUNIN_CAP_MULTIGRAPH};
+sub need_multigraph {
+    return if $ENV{MUNIN_CAP_MULTIGRAPH};
+
+    if (-t and (!$ARGV[0] or ($ARGV[0] eq 'config'))) {
+
+	# Catch people running the plugin on the command line.  Note
+	# that munin-node-configure may also be detected as "command
+	# line" so be very conditional and careful about it.
+
+	# Observation: Munin-node-configure will first try "autoconf"
+	# which will fail so all other modes of running in combination
+	# with a tty on STDIN means that it's a human running us.
+
+	print "
+Please use at least munin-run 1.4.0 to run this plugin at the command
+line.  You are probably looking for the command
+
+   munin-run --servicedir \$PWD $me
+
+This should by preference be run as root, but other users can also be
+used as long as the plugin doesn not use a state file and does not
+need to be run as a special user or need special priveliges.
+
+";
+
+	exit 1;
+    }
 
     if (! $ARGV[0]) {
         print "multigraph.value 0\n";
