@@ -143,8 +143,7 @@ sub sem_setup {
 	my $max_cgi_graph_jobs = &munin_get ($config, "max_cgi_graph_jobs" , 6, $dom);
 
 	# And initialize to max_cgi_graph_jobs
-	# 0x1000 is SEM_UNDO
-	my $opstring = pack("s!s!s!",0, $max_cgi_graph_jobs,0x1000);
+	my $opstring = pack("s!s!s!",0, $max_cgi_graph_jobs,0);
 	semop($semid,$opstring) || die "$!";
     }
 }
