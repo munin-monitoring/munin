@@ -25,14 +25,15 @@
 
 use RRDs;
 use Munin::Master::Utils;
+use Munin::Common::Defaults;
 use strict;
 use IO::Handle;
 use Date::Manip;
 use POSIX qw(strftime);
 use IPC::SysV qw(IPC_CREAT);
 
-my $GRAPHER = "@@LIBDIR@@/munin-graph";
-my $conffile = "@@CONFDIR@@/munin.conf";
+my $GRAPHER = "$Munin::Common::Defaults::MUNIN_LIBDIR/munin-graph";
+my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 
 my %TIMES   = ( "day"   => ["--noweek", "--nomonth", "--noyear", "--nosumweek", "--nosumyear"], 
 		"week"  => ["--noday", "--nomonth", "--noyear", "--nosumweek", "--nosumyear"], 
@@ -140,7 +141,8 @@ sub sem_setup {
 	my $max_cgi_graph_jobs = &munin_get ($config, "max_cgi_graph_jobs" , 6, $dom);
 
 	# And initialize to max_cgi_graph_jobs
-	my $opstring = pack("s!s!s!",0, $max_cgi_graph_jobs,0);
+	# 0x1000 = SEM_UNDO
+	my $opstring = pack("s!s!s!",0, $max_cgi_graph_jobs,0x1000);
 	semop($semid,$opstring) || die "$!";
     }
 }
@@ -305,6 +307,7 @@ sub draw_graph {
     my $IN;
     sem_get();
 
+    # Note: This open is an implicit fork
     if (! open ($IN, "-|")) { 
 	%ENV=();
 	exec @params;
