@@ -1,7 +1,7 @@
 #!@@BASH@@
 # -*- sh -*-
 
-: <<EOF
+: <<'=cut'
 
 =head1 NAME
 
@@ -10,12 +10,12 @@ vserver_cpu_ - Wildcard plugin to graph CPU usage types per vserver
 =head1 CONFIGURATION
 
  [vserver_cpu_*]
-  env.vservers - List of vservers to include in the graph, or "all"
+   env.vservers - List of vservers to include in the graph, or "all"
 
 =head2 DEFAULT CONFIGURATION
 
  [vserver_cpu_*]
-  env.vservers all
+   env.vservers all
 
 =head1 USAGE
 
@@ -64,6 +64,11 @@ USA.
 
 =over 4
 
+=item Less shell subprocesses
+
+The plugin uses lots and lots of shell subprocesses.  Maybe factor
+common vserver plugin code into Munin::Plugin::Linux::Vserver?
+
 =item Comments
 
 Comment the code or go mad
@@ -80,18 +85,39 @@ to split them?
 =item Less use of /proc
 
 use /proc less often (100 times more overhead than talking to the
-kernel directly) i.e. use something like pagesize=`perl -MPOSIX -e
-'print POSIX::sysconf(_SC_PAGESIZE), "\n";'`
+kernel directly) i.e. use something like pagesize=\`perl -MPOSIX -e
+'print POSIX::sysconf(_SC_PAGESIZE), "\n";'\`
+
+(Accoding to many using /proc is a feature not a bug - Nicoali
+Langfeldt 2009-12-23)
 
 =back
 
 =head1 MAGIC MARKERS
 
- #%# family=contrib
+  #%# family=auto
+  #%# capabilities=autoconf suggest
 
 =cut
 
-EOF
+if [ "$1" = "autoconf" ]; then
+	if [ -r /proc/virtual/info ]; then
+		echo yes
+		exit 0
+	else
+		echo "no (/proc/virtual/info not found)"
+		exit 1
+	fi
+fi
+
+if [ "$1" = "suggest" ]; then
+	if [ ! -r /proc/virtual/info ]; then
+		exit 1
+	fi
+	#
+	# 'else' clause is after XIDS definition
+	#
+fi
 
 VSERVERS="$vservers"
 
@@ -122,6 +148,16 @@ else
 	    done
 	fi
     done
+fi
+
+if [ "$1" = "suggest" ]; then
+	if [ -r /proc/virtual/info ]; then
+	        for i in $XIDS ; do
+			LABEL=`cat /proc/virtual/$i/$NAMELOC |grep NodeName |cut -f2`
+			echo $LABEL
+		done
+		exit 0
+	fi
 fi
 
 BASEPARAM=`basename $0 | sed 's/^vserver_//'`

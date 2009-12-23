@@ -1,7 +1,7 @@
 #!@@BASH@@
 # -*- sh -*-
 
-: <<EOF
+: <<'=cut'
 
 =head1 NAME
 
@@ -53,26 +53,28 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 =head1 BUGS
 
-Autoconf always answers yes.
+None known.
 
 =head1 MAGIC MARKERS
 
- #%# family=contrib
+  #%# family=auto
+  #%# capabilities=autoconf
 
 =cut
 
-EOF
-
 # If run with the "autoconf"-parameter, give our opinion on whether we
 # should be run on this system or not. This is optional, and only used by
-# munin-config. In the case of this plugin, we should most probably
-# always be included whwn there is a vserver kernel.
+# munin-node-config.
 
 if [ "$1" = "autoconf" ]; then
-        echo yes
-        exit 0
+	if [ -r /proc/virtual/info ]; then
+		echo yes
+		exit 0
+	else
+		echo "no (/proc/virtual/info not found)"
+		exit 1
+	fi
 fi
-
 
 # if vservers are specified, use them; the default is to use all.
 VSERVERS="$vservers"

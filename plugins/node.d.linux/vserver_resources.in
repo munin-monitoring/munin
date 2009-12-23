@@ -1,7 +1,7 @@
 #!@@BASH@@
 # -*- sh -*-
 
-: <<EOF
+: <<'=cut'
 
 =head1 NAME
 
@@ -137,6 +137,11 @@ USA.
 
 =over 4
 
+=item Less shell subprocesses
+
+The plugin uses lots and lots of shell subprocesses.  Maybe factor
+common vserver plugin code into Munin::Plugin::Linux::Vserver?
+
 =item Multigraph
 
 make it so you can specify more than one resource to be graphed?
@@ -151,8 +156,8 @@ set a default for the resource if it is unset?
 =item Use /proc less often
 
 use /proc less often (100 times more overhead than talking to the
-kernel directly) i.e. use something like pagesize=`perl -MPOSIX -e
-'print POSIX::sysconf(_SC_PAGESIZE), "\n";'`
+kernel directly) i.e. use something like pagesize=\`perl -MPOSIX -e
+'print POSIX::sysconf(_SC_PAGESIZE), "\n";'\`
 
 =back
 
@@ -162,11 +167,20 @@ The "ALL" resource is broken
 
 =head1 MAGIC MARKERS
 
- #%# family=contrib
+  #%# family=auto
+  #%# capabilities=autoconf
 
 =cut
 
-EOF
+if [ "$1" = "autoconf" ]; then
+	if [ -r /proc/virtual/info ]; then
+		echo yes
+		exit 0
+	else
+		echo "no (/proc/virtual/info not found)"
+		exit 1
+	fi
+fi
 
 VSERVERS="$vservers"
 LIMITS="$limits"
