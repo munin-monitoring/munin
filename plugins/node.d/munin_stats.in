@@ -36,7 +36,7 @@ if ($ARGV[0] and $ARGV[0] eq 'autoconf') {
                 "$Munin::Common::Defaults::MUNIN_LIBDIR/munin-update";
 
     if (! -e $munin_update_location) {
-        print "no (munin-update was not found at $munin_update_location).\n";
+        print "no (munin-update was not found at $munin_update_location)\n";
         exit 0;
    }
 
