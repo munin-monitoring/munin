@@ -84,6 +84,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	mkdir -p $(CGIDIR)
 
 	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR) 
+	$(CHMOD) 0755 $(DBDIR)
 
 	for p in master/www/*.tmpl master/www/*.png master/www/*.css resources/favicon.ico; do \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
