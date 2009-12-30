@@ -10,7 +10,56 @@ Some stats on 1.4.0 (relative to 1.3.4)
   uploaded to sourceforge in february 2005.
 
 
-munin (1.4.2, r3167:3231, 2009-12-16)
+munin 1.4.3, r3232:3274, 2009-12-30
+
+* linux/diskstats: New multigraph plugin to replace diskstat_ - more
+  tidy and more efficient.  Thanks to Michael Renner for the
+  deveopment of this and porting to multigraph
+* linux/cpuspeed: Specify "average" for the speed, switch to printf to
+  get numbers printed in full, E notation looses significant digits
+  and there are whispers of a bug in the E notation handling in
+  munin-update
+* Make munin-update --nofork not die when nodes are unavailable.  Closes #800.
+* hddtemp_smartctl: Multiple enhancements: 
+  - document how to set type_ for sata drives
+  - document need to run as a user with device access
+  - Support some debugging
+  - detect if smartctl fails
+  - detect if no recognized temperature output is present
+* lpstat: Warn if the predefined $lpstat executable is not executable,
+  Make lpstat path configurable and search for it in likely places if
+  it's not set. Patch from Lupe - thanks! Closes #826.
+* dhcpd3: Only emit .max if the .max is valid.  Document a bug from
+  the trac - adresses but doe not close #829.  Patches for a complete
+  fix welcome.
+* More specific test for watermark feature (1.2.13 required)
+* Make 0755 default permissions for $DBDIR and make consistent in
+  Makefile and munin-check
+* Fix issue where far too many mails would be sent by munin-limits
+  (fixes #795)
+* munin_stats: Fix a typo in the "no"-message that made
+  munin-node-configure reject it.
+* linux/yum: Enhance statefile error message.  Update to use M::C::Defaults
+* linux/vserver_*: Add autoconfiguration (patch from #811 submitted by
+  proppy, closes ticket).
+* munin-update: Make true check into defined check to avoid dereferencing undefs
+* Munin::Plugin:
+  - Better documentation of new default state file name.
+  - In need_multigraph, if run from a tty with "config" or no arguments
+    advice to use munin-run and exit.
+* mailman: User contributed patch to make plugin work better the first
+  time. Also replaced "exit $n" with "die" with good error messages.
+  Untested but perl says syntax ok.
+* hddtemp_smartctl: Added chomp, as it won't work with a newline at
+  the end. Thanks to Ingvar Hagelund for pointing this out
+
+* munin-update: Suppress warning "Error reading includedir directory"
+  in case the includedir is empty (which is the case in new
+  installations. This caused cron to send these messages all the time
+* Munin::Master::GraphOld: warn_min/warn_max typo fix
+
+
+munin 1.4.2, r3167:3231, 2009-12-16
 
 * Munin::Plugin::Pgslq: Clean the fieldnames before returning them, so
   we don't generate invalid data with for example a dash in the
