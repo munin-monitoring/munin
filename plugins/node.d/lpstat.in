@@ -63,9 +63,10 @@ if (!$lpstat) {
         my $path = $dir.'/lpstat';
         $lpstat = $path if -x $path;
     }
-} else {
+} elsif (! -x $lpstat) {
     # If it is set, verify it
-    undef $lpstat unless -x $lpstat;
+    warn "Predefined lpstat ($lpstat) is not a executable\n";
+    undef $lpstat;
 }
 
 if ($ARGV[0] eq 'autoconf') {
