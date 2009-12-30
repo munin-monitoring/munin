@@ -449,7 +449,7 @@ sub _node_write_single {
 
 sub _node_read_single {
     my ($self) = @_;
-    my $res;
+    my $res = undef;
 
     my $timed_out = !do_with_timeout($self->{io_timeout}, sub {
       if ($self->{tls} && $self->{tls}->session_started()) {
@@ -463,6 +463,11 @@ sub _node_read_single {
     if ($timed_out) {
         LOGCROAK "[FATAL] Socket read timed out to ".$self->{host}.
 	    ".  Terminating process.";
+    }
+    if (!defined($res)) {
+	# Probable socket not open.  Why are we here again then?
+	# aren't we supposed to be in "do in session"?
+	LOGCROAK "[FATAL] Socket read from ".$self->{host}." failed.  Terminating process.";
     }
     DEBUG "[DEBUG] Reading from socket to ".$self->{host}.": \"$res\".";
     return $res;
