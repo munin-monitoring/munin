@@ -73,7 +73,7 @@ fi
 if [ "$1" = "config" ]; then
     echo graph_title CPU frequency scaling
     echo graph_args --base 1000
-    echo graph_info This graph shows the speeds at which the CPUs are running
+    echo graph_info This graph shows the average speeds at which the CPUs are running
     echo graph_category system
 
     if [ "$scaleto100" = "yes" ]; then
