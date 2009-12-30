@@ -8,11 +8,15 @@ SMART
 
 =head1 CONFIGURATION
 
+This plugin needs to run as root or some other user that has access to
+the harddrive devices.
+
 The following environment variables are used
 
  smartctl  - path to smartctl executable
  drives	   - List drives to monitor. E.g. "env.drives hda hdc".
  type_$dev - device type for one drive, e.g. "env.type_sda 3ware,0"
+             or more typically "env.type_sda ata" if sda is a SATA disk.
  args_$dev - additional arguments to smartctl for one drive,
              e.g. "env.args_hda -v 194,10xCelsius".  Use this to make
              the plugin use the --all or -a option if your disk will
@@ -20,10 +24,9 @@ The following environment variables are used
              used.
  dev_$dev  - monitoring device for one drive, e.g. twe0
 
-If the "smartctl" enviroment variable is not set, or points to a
-non-existing file, the plugin will search /usr/bin, /usr/sbin,
-/usr/local/bin and /usr/local/sbin for a file called "smartctl", and
-use that.
+If the "smartctl" enviroment variable is not set the plugin will
+search your $PATH, /usr/bin, /usr/sbin, /usr/local/bin and
+/usr/local/sbin for a file called "smartctl", and use that.
 
 If the "drives" environment variable is not set, the plugin will
 attempt to search for drives to probe.
@@ -90,6 +93,8 @@ on all platforms.
 
 use strict;
 
+my $DEBUG = $ENV{'MUNIN_DEBUG'} || 0;
+
 my $smartctl = exists $ENV{smartctl} ? $ENV{smartctl} : '';
 
 # If the envvar is not set, look for smartctl
@@ -103,12 +108,17 @@ if (!$smartctl) {
 	my $path = $dir.'/smartctl';
 	$smartctl = $path if -x $path;
     }
+} elsif (! -x $smartctl) {
+    # If it is set, verify it
+    warn "Predefined smartctl ($smartctl) is not a executable\n";
+    undef $smartctl;
 }
 
 # Check version of smartctl to determine --nocheck capabilities
 my $use_nocheck = 0;
 if ($smartctl and `$smartctl --version` =~ / version (\d+\.\d+) /i) {
     $use_nocheck = $1 >= 5.37;
+    warn "[DEBUG] Smartctl supports --nocheck\n" if $DEBUG;
 }
 
 # hdparm is used as a fallback
@@ -139,6 +149,8 @@ if ($^O eq 'linux') {
 
 # Sort list of drives
 @drives = sort @drives;
+
+warn "[DEBUG] Drives: ",join(', ',@drives),"\n" if $DEBUG;
 
 if (defined $ARGV[0]) {
   if ($ARGV[0] eq 'autoconf') {
@@ -171,6 +183,45 @@ if (defined $ARGV[0]) {
   }
 }
 
+foreach my $drive (@drives) {
+  warn "[DEBUG] Processing $drive\n" if $DEBUG;
+  my $fulldev = device_for_drive($drive);
+
+  # Fall back to using hdparm for detecting disks in stand-by only if nocheck
+  # isn't supported (hdparm isn't available on all platforms).
+  if (!$use_nocheck && $hdparm && $fulldev =~ /\/dev\/[sh]d?/) {
+    if (`$hdparm -C $fulldev 2>/dev/null` =~ /standby/) {
+	warn "[DEBUG] Drive $fulldev is in standby mode, not checking\n"
+	    if $DEBUG;
+	next;
+    }
+  }
+
+  my $cmd = command_for_drive_device($drive, $fulldev, $use_nocheck);
+  warn "[DEBUG] Command for $drive is % $cmd %\n" if $DEBUG;
+
+  my $output = `$cmd`;
+  if ($? ne 0) {
+      print "$drive.value U\n";
+      print "$drive.extinfo Command $cmd on drive $drive failed: $?.  The plugin needs to have read permission on all monitored devices.\n";
+      warn "[ERROR] Command $cmd on drive $drive failed: $?.  The plugin needs to have read permission on all monitored devices.\n";
+      next;
+  }
+  if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
+    print "$drive.value $1\n";
+  } elsif ($output =~ /^(194 Temperature_Celsius.*)/m) {
+    my @F = split /\s+/, $1;
+    print "$drive.value $F[9]\n";
+  } elsif ($output =~ /^(231 Temperature_Celsius.*)/m) {
+    my @F = split ' ', $1;
+    print "$drive.value $F[9]\n";
+  } else {
+      print "$drive.value U\n";
+      print "$drive.extinfo Temperature not detected in smartctl output\n";
+  }
+}
+
+
 sub device_for_drive {
     my ($drive) = @_;
 
@@ -194,25 +245,3 @@ sub command_for_drive_device {
 
 }
 
-foreach my $drive (@drives) {
-  my $fulldev = device_for_drive($drive);
-
-  # Fall back to using hdparm for detecting disks in stand-by only if nocheck
-  # isn't supported (hdparm isn't available on all platforms).
-  if (!$use_nocheck && $hdparm && $fulldev =~ /\/dev\/[sh]d?/) {
-    next if `$hdparm -C $fulldev 2>/dev/null` =~ /standby/;
-  }
-
-  my $cmd = command_for_drive_device($drive, $fulldev, $use_nocheck);
-
-  my $output = `$cmd`;
-  if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
-    print "$drive.value $1\n";
-  } elsif ($output =~ /^(194 Temperature_Celsius.*)/m) {
-    my @F = split ' ', $1;
-    print "$drive.value $F[9]\n";
-  } elsif ($output =~ /^(231 Temperature_Celsius.*)/m) {
-    my @F = split ' ', $1;
-    print "$drive.value $F[9]\n";
-  }
-}
