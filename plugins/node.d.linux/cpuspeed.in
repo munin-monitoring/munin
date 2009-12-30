@@ -115,6 +115,7 @@ fi
 
 for c in /sys/devices/system/cpu/cpu[0-9]*; do
     N=${c##*/cpu}
-    awk -v cpu=$N '{ cycles += $1 * $2 } END { print "cpu" cpu ".value", cycles / 100 }' \
+    awk -v cpu=$N '{ cycles += $1 * $2 } 
+               END { printf "cpu%d.value %.0f\n", cpu, cycles / 100; }' \
         $c/cpufreq/stats/time_in_state
 done
