@@ -46,7 +46,10 @@ The plugin shows the number of used leases by subnet.
 
 =head1 BUGS
 
-None known
+If a DHCP config file contains multiple subnets but none of them has a
+dynamic range, the dhcp3 plugin only detects this situation for the
+last subnet.  Need to to improve the parser to properly detect the end
+of a subnet definition (Munin trac ticket #829)
 
 =head1 AUTHOR
 
@@ -136,7 +139,8 @@ if($ARGV[0] and $ARGV[0] eq "config") {
 	$name =~ s/($FILTER)//;
 	print "$network.label $name\n";
 	print "$network.min 0\n";
-	print "$network.max " . $limits{$network} ."\n";
+	print "$network.max " . $limits{$network} ."\n"
+	  if ($limits{$network} > 0);
 	my $warn = int($limits{$network} * 0.9);
 	my $crit = int($limits{$network} * 0.95);
 	print "$network.warning $warn\n" if $warn;
