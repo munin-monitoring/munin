@@ -495,6 +495,10 @@ sub expand_specials {
                 munin_get($service->{$field}, "draw"));
             munin_set_var_loc(
                 $service,
+                [$last_name, "colour"],
+                munin_get($service->{$field}, "colour"));
+            munin_set_var_loc(
+                $service,
                 [$last_name, "label"],
                 munin_get($service->{$field}, "label"));
             munin_set_var_loc(
