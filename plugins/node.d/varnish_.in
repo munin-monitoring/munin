@@ -184,8 +184,9 @@ my %ASPECTS = (
 				'min' => '0'
 			},
 			'backend_unhealthy' => {
-				'colour' => 'FF55FF',
-				'type' => 'GAUGE'
+				'type' => 'DERIVE',
+				'min' => '0',
+				'colour' => 'FF55FF'
 			},
 			's_pipe' => {
 				'type' => 'DERIVE',
@@ -240,7 +241,7 @@ my %ASPECTS = (
 				'min' => '0'
 			},
 			'backend_unhealthy' => {
-				'type' => 'GAUGE',
+				'type' => 'DERIVE',
 				'min' => '0',
 				'warning' => ':1'
 			},
@@ -695,7 +696,7 @@ sub suggest
 # Returns false if non-existant.
 #
 # Output is formatted for plugins if arg4 is blank, otherwise arg4 is used
-# as the title/name of the field (ie: arg4=graph_titel).
+# as the title/name of the field (ie: arg4=graph_title).
 sub print_if_exist
 {
 	my %values = %{$_[0]};
