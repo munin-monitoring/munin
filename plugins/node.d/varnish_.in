@@ -56,7 +56,7 @@ You can link them yourself with something like this:
   ln -s @@LIBDIR@@/plugins/varnish_ \
     @@CONFDIR@@/plugins/varnish_data_structures
 
-=head1 INTERPERTATION
+=head1 INTERPRETATION
 
 Each graph uses data from varnishstat.
 
@@ -74,6 +74,13 @@ Each graph uses data from varnishstat.
 The hit_rate graph requires munin r2040 or newer to display
 correctly.
 
+=head1 PATCHES-TO
+
+The varnish-tools repository is the canonical upstream for this plugin.
+Please send patches to Kristian Lyngstol <kristian@redpill-linpro.com>
+and/or varnish-misc@projects.linpro.no for inclusion before adding to
+munin trunk.
+
 =head1 AUTHOR
 
 Kristian Lyngstol <kristian@redpill-linpro.com>
@@ -83,8 +90,6 @@ Kristian Lyngstol <kristian@redpill-linpro.com>
 GPLv2
 
 =cut 
-
-# FIXME: License?
 
 
 use strict;
