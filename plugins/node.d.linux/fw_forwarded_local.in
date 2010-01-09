@@ -32,7 +32,7 @@ This plugin must run with root privileges
 =cut
 
 if [ "$1" = "autoconf" ]; then
-	if [ -r /proc/net/ip_conntrack ]
+	if [ -r /proc/net/ip_conntrack -o -r /proc/net/nf_conntrack ]
 	then
 		echo yes
 	else
@@ -53,6 +53,13 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
+if [ -r /proc/net/ip_conntrack ]; then
+	_conntrack_file=/proc/net/ip_conntrack
+else
+	_conntrack_file=/proc/net/nf_conntrack
+fi
+
+
 perl -ne '
     BEGIN { $forward=0; $local=0; }
 
@@ -65,5 +72,5 @@ perl -ne '
        }
     }
     END { print "forward.value $forward\nlocal.value $local\n" }
-' </proc/net/ip_conntrack
+' <_conntrack_file
 
