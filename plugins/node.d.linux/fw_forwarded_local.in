@@ -72,5 +72,5 @@ perl -ne '
        }
     }
     END { print "forward.value $forward\nlocal.value $local\n" }
-' <_conntrack_file
+' < $_conntrack_file
 
