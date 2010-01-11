@@ -143,7 +143,7 @@ sub process_plugin_configuration_files {
     push @ignores, '^\.'; # Hidden files
 
 FILE:
-    for my $file (grep { -f "$self->{sconfdir}/$_" } readdir ($DIR)) {
+    for my $file ( grep { -f "$self->{sconfdir}/$_" } sort( readdir($DIR) ) ) {
         # Untaint file
         next if $file !~ m/^([-\w.:]+)$/; # Skip if any weird chars
         $file = $1;
