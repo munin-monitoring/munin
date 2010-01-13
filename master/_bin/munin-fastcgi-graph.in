@@ -132,9 +132,9 @@ while (new CGI::Fast) {
 # END FAST-CGI LOOP
 
 sub sem_setup {
-    if(!defined($semid)) {
-	semget($IPC_KEY, 0, 0 );
+    $semid = semget($IPC_KEY, 0, 0 );
 
+    if(!defined($semid)) {
 	# Or create it if needed
 	$semid = semget($IPC_KEY, 1 , oct(666) | IPC_CREAT );
 

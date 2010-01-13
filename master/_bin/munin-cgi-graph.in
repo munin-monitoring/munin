@@ -130,9 +130,9 @@ sub sem_setup {
     # Fox kindly submitted a patch to convert to SysV IPC semaphores.
     # Lovely! (ticket #499).
 
-    if(!defined($semid)) {
-	semget($IPC_KEY, 0, 0 );
+    $semid = semget($IPC_KEY, 0, 0 );
 
+    if(!defined($semid)) {
 	# Or create it if needed
 	$semid = semget($IPC_KEY, 1 , oct(666) | IPC_CREAT );
 
