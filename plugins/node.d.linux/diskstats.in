@@ -17,6 +17,12 @@ use Storable qw(freeze thaw);
 # Hardcoded pollinterval of 300 seconds
 my $poll_interval = 300;
 
+# Graph width defaults to 400 in Munin 1.4
+my $graph_width = $ENV{'graph_width'} ? $ENV{'graph_width'} : 400;
+
+# Should lables be trimmed to fit graph width?
+my $trim_labels = $ENV{'trim_labels'};
+
 my $plugin_name = $Munin::Plugin::me;
 
 # Check for multigraph capabilities
@@ -179,8 +185,9 @@ sub calculate_values {
 
     # Average wait time for an I/O from start to finish
     # (includes queue times et al)
-    my $average_wait_in_sec = $total_ios ? ( $rd_ticks + $wr_ticks ) / $total_ios / 1000 : 0;
-    my $average_rd_wait_in_sec = $read_ios  ? $rd_ticks / $read_ios  / 1000 : 0;
+    my $average_wait_in_sec =
+      $total_ios ? ( $rd_ticks + $wr_ticks ) / $total_ios / 1000 : 0;
+    my $average_rd_wait_in_sec = $read_ios  ? $rd_ticks / $read_ios / 1000  : 0;
     my $average_wr_wait_in_sec = $write_ios ? $wr_ticks / $write_ios / 1000 : 0;
 
     my $average_rd_rq_size_in_kb =
@@ -221,9 +228,9 @@ sub print_values_root {
     for my $device ( keys %{$result} ) {
 
         next unless ( $cur_diskstats{$device}->{'does_latency'} );
-        my $clean_device = $cur_diskstats{$device}->{'clean_device_name'};
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
 
-        print "${clean_device}_avgwait.value "
+        print "${graph_id}_avgwait.value "
           . $result->{$device}->{'average_wait'} . "\n";
     }
 
@@ -232,29 +239,29 @@ sub print_values_root {
     for my $device ( keys %{$result} ) {
 
         next unless ( $cur_diskstats{$device}->{'does_latency'} );
-        my $clean_device = $cur_diskstats{$device}->{'clean_device_name'};
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
 
-        print "${clean_device}_util.value "
+        print "${graph_id}_util.value "
           . $result->{$device}->{'utilization'} . "\n";
     }
 
     print "\nmultigraph ${plugin_name}_throughput\n";
 
     for my $device ( keys %{$result} ) {
-        my $clean_device = $cur_diskstats{$device}->{'clean_device_name'};
-        print "${clean_device}_rdbytes.value "
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
+        print "${graph_id}_rdbytes.value "
           . $result->{$device}->{'read_bytes_per_sec'} . "\n";
-        print "${clean_device}_wrbytes.value "
+        print "${graph_id}_wrbytes.value "
           . $result->{$device}->{'write_bytes_per_sec'} . "\n";
     }
 
     print "\nmultigraph ${plugin_name}_iops\n";
 
     for my $device ( keys %{$result} ) {
-        my $clean_device = $cur_diskstats{$device}->{'clean_device_name'};
-        print "${clean_device}_rdio.value "
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
+        print "${graph_id}_rdio.value "
           . $result->{$device}->{'read_io_per_sec'} . "\n";
-        print "${clean_device}_wrio.value "
+        print "${graph_id}_wrio.value "
           . $result->{$device}->{'write_io_per_sec'} . "\n";
     }
     return;
@@ -267,11 +274,12 @@ sub print_values_root {
 sub print_values_device {
 
     my ( $device, $result ) = @_;
+    my $graph_id = $cur_diskstats{$device}->{'graph_id'};
 
     if ( $cur_diskstats{$device}->{'does_latency'} ) {
         print <<"EOF";
 
-multigraph ${plugin_name}_latency.$device
+multigraph ${plugin_name}_latency.$graph_id
 svctm.value $result->{'servicetime'}
 avgwait.value $result->{'average_wait'}
 avgrdwait.value $result->{'average_rd_wait'}
@@ -280,7 +288,7 @@ EOF
 
         print <<"EOF";
 
-multigraph ${plugin_name}_utilization.$device
+multigraph ${plugin_name}_utilization.$graph_id
 util.value $result->{'utilization'}
 EOF
 
@@ -288,14 +296,14 @@ EOF
 
     print <<"EOF";
 
-multigraph ${plugin_name}_throughput.$device
+multigraph ${plugin_name}_throughput.$graph_id
 rdbytes.value $result->{'read_bytes_per_sec'}
 wrbytes.value $result->{'write_bytes_per_sec'}
 EOF
 
     print <<"EOF";
 
-multigraph ${plugin_name}_iops.$device
+multigraph ${plugin_name}_iops.$graph_id
 rdio.value $result->{'read_io_per_sec'}
 wrio.value $result->{'write_io_per_sec'}
 avgrdrqsz.value $result->{'average_rd_rq_size_in_kb'}
@@ -428,9 +436,28 @@ sub parse_diskstats {
         $pretty_device ||= $device;
 
         $devstat{'pretty_device_name'} = $pretty_device;
+
+        # Short device name only containing the stuff after the last '/'
+        # for graph labels et al.
+
         ( $devstat{'short_pretty_device_name'} ) =
           $pretty_device =~ m#/?([^/]+)$#;
-        $devstat{'clean_device_name'} = clean_fieldname($device);
+
+        if ($trim_labels) {
+
+            $devstat{'pretty_device_name'} =
+              trim_label( 'pos', $devstat{'pretty_device_name'} );
+            $devstat{'short_pretty_device_name'} =
+              trim_label( 'posneg', $devstat{'short_pretty_device_name'} );
+        }
+
+        # The graph identifier needs to be cleaned up because munin will
+        # complain about strange characters in the name otherwise
+        #
+        # The LVM <-> device mapper id mapping isn't stable across reboots,
+        # use the LVM volume name instead
+
+        $devstat{'graph_id'} = clean_fieldname($pretty_device);
 
         # Does the device provide latency information?
         $devstat{'does_latency'} =
@@ -451,9 +478,14 @@ sub fetch_device_counters {
 
     my %diskstats = parse_diskstats();
 
-    my @seen_devices;
+    my @valid_devices;
   DEVICE:
-    for my $devname ( keys %diskstats ) {
+
+# We need to see the devices before the partitions to make the partition filter work
+#
+# Sorting by the length of the device name gives us this certainty
+
+    for my $devname ( sort { length($a) <=> length($b) } keys %diskstats ) {
 
         # Remove devices without traffic
         if (   $diskstats{$devname}->{'rd_ios'} == 0
@@ -463,18 +495,39 @@ sub fetch_device_counters {
             next DEVICE;
         }
 
-        for my $existing_device (@seen_devices) {
+# Filter out partitions, since we only want to track the data of the parent devices
+#
+# We skip:
+# - sda1 -> sda
+# - c0d0p1 -> c0d0
+# - md1p1 -> md1
+# - etherd/e1.1p1 -> etherd/e1.1
+#
+# But we don't want to filter:
+# - dm-100 -> dm-1
+# - etherd/e1.10 -> etherd/e1.1
+#
+# To achieve this we skip a device if
+# - it looks like a device we use with a "p\d" suffix
+# - it looks like a device we use with a "\d" suffix, and the device didn't
+#   have a numeric suffix in the first place
 
-            # Filter out devices (partitions) which are matched by existing ones
-            # e.g. sda1 -> sda, c0d0p1 -> c0d0
-            if ( $devname =~ m/$existing_device/ ) {
+        for my $valid_device (@valid_devices) {
+
+            if (
+                $devname =~ m/^${valid_device}p\d+$/
+                || (   $valid_device !~ /\d$/
+                    && $devname =~ m/^$valid_device\d+$/ )
+              )
+            {
                 delete $diskstats{$devname};
                 next DEVICE;
             }
         }
 
-        push @seen_devices, $devname;
+        push @valid_devices, $devname;
     }
+
     return %diskstats;
 }
 
@@ -608,7 +661,30 @@ sub do_config {
 
 sub do_config_root {
 
+    my $config_graph_width = $graph_width;
+
     my @sorted_devices = sort_by_dm_last( keys %cur_diskstats );
+
+    # If we don't trim labels, we have to find the correct graph width to
+    # accomodate all labels
+    unless ($trim_labels) {
+
+        my @short_labels =
+          map { $cur_diskstats{$_}->{'short_pretty_device_name'} }
+          keys %cur_diskstats;
+        my @long_labels =
+          map { $cur_diskstats{$_}->{'pretty_device_name'} }
+          keys %cur_diskstats;
+
+        my $graph_width_short =
+          find_required_graph_width( 'posneg', @short_labels );
+        my $graph_width_long = find_required_graph_width( 'pos', @long_labels );
+
+        $config_graph_width =
+            $graph_width_short > $graph_width_long
+          ? $graph_width_short
+          : $graph_width_long;
+    }
 
     # Print config for latency
 
@@ -618,20 +694,20 @@ graph_title Disk latency per device
 graph_args --base 1000
 graph_vlabel Average IO Wait (seconds)
 graph_category disk
-graph_width 450
+graph_width $config_graph_width
 
 EOF
 
     for my $device (@sorted_devices) {
         next unless $cur_diskstats{$device}->{'does_latency'};
-        my $clean_device = $cur_diskstats{$device}->{'clean_device_name'};
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
 
         print <<"EOF";
-${clean_device}_avgwait.label $cur_diskstats{$device}->{'pretty_device_name'}
-${clean_device}_avgwait.type GAUGE
-${clean_device}_avgwait.info Average wait time for an I/O request
-${clean_device}_avgwait.min 0
-${clean_device}_avgwait.draw LINE1
+${graph_id}_avgwait.label $cur_diskstats{$device}->{'pretty_device_name'}
+${graph_id}_avgwait.type GAUGE
+${graph_id}_avgwait.info Average wait time for an I/O request
+${graph_id}_avgwait.min 0
+${graph_id}_avgwait.draw LINE1
 EOF
     }
 
@@ -644,20 +720,20 @@ graph_title Disk utilization per device
 graph_args --base 1000 --lower-limit 0 --upper-limit 100 --rigid
 graph_vlabel Percent
 graph_category disk
-graph_width 450
+graph_width $config_graph_width
 
 EOF
 
     for my $device (@sorted_devices) {
         next unless $cur_diskstats{$device}->{'does_latency'};
-        my $clean_device = $cur_diskstats{$device}->{'clean_device_name'};
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
 
         print <<"EOF";
-${clean_device}_util.label $cur_diskstats{$device}->{'pretty_device_name'}
-${clean_device}_util.type GAUGE
-${clean_device}_util.info Utilization of the device
-${clean_device}_util.min 0
-${clean_device}_util.draw LINE1
+${graph_id}_util.label $cur_diskstats{$device}->{'pretty_device_name'}
+${graph_id}_util.type GAUGE
+${graph_id}_util.info Utilization of the device
+${graph_id}_util.min 0
+${graph_id}_util.draw LINE1
 EOF
     }
 
@@ -670,24 +746,24 @@ graph_title Disk throughput per device
 graph_args --base 1024
 graph_vlabel Bytes/\${graph_period} read (-) / write (+)
 graph_category disk
-graph_width 450
+graph_width $config_graph_width
 
 EOF
 
     for my $device (@sorted_devices) {
-        my $clean_device = $cur_diskstats{$device}->{'clean_device_name'};
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
 
         print <<"EOF";
-${clean_device}_rdbytes.label $cur_diskstats{$device}->{'short_pretty_device_name'}
-${clean_device}_rdbytes.type GAUGE
-${clean_device}_rdbytes.min 0
-${clean_device}_rdbytes.draw LINE1
-${clean_device}_rdbytes.graph no
-${clean_device}_wrbytes.label $cur_diskstats{$device}->{'short_pretty_device_name'}
-${clean_device}_wrbytes.type GAUGE
-${clean_device}_wrbytes.min 0
-${clean_device}_wrbytes.draw LINE1
-${clean_device}_wrbytes.negative ${clean_device}_rdbytes
+${graph_id}_rdbytes.label $cur_diskstats{$device}->{'short_pretty_device_name'}
+${graph_id}_rdbytes.type GAUGE
+${graph_id}_rdbytes.min 0
+${graph_id}_rdbytes.draw LINE1
+${graph_id}_rdbytes.graph no
+${graph_id}_wrbytes.label $cur_diskstats{$device}->{'short_pretty_device_name'}
+${graph_id}_wrbytes.type GAUGE
+${graph_id}_wrbytes.min 0
+${graph_id}_wrbytes.draw LINE1
+${graph_id}_wrbytes.negative ${graph_id}_rdbytes
 EOF
     }
 
@@ -700,24 +776,24 @@ graph_title Disk IOs per device
 graph_args --base 1000
 graph_vlabel IOs/\${graph_period} read (-) / write (+) 
 graph_category disk
-graph_width 450
+graph_width $config_graph_width
 
 EOF
 
     for my $device (@sorted_devices) {
-        my $clean_device = $cur_diskstats{$device}->{'clean_device_name'};
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
 
         print <<"EOF";
-${clean_device}_rdio.label $cur_diskstats{$device}->{'short_pretty_device_name'}
-${clean_device}_rdio.type GAUGE
-${clean_device}_rdio.min 0
-${clean_device}_rdio.draw LINE1
-${clean_device}_rdio.graph no
-${clean_device}_wrio.label $cur_diskstats{$device}->{'short_pretty_device_name'}
-${clean_device}_wrio.type GAUGE
-${clean_device}_wrio.min 0
-${clean_device}_wrio.draw LINE1
-${clean_device}_wrio.negative ${clean_device}_rdio
+${graph_id}_rdio.label $cur_diskstats{$device}->{'short_pretty_device_name'}
+${graph_id}_rdio.type GAUGE
+${graph_id}_rdio.min 0
+${graph_id}_rdio.draw LINE1
+${graph_id}_rdio.graph no
+${graph_id}_wrio.label $cur_diskstats{$device}->{'short_pretty_device_name'}
+${graph_id}_wrio.type GAUGE
+${graph_id}_wrio.min 0
+${graph_id}_wrio.draw LINE1
+${graph_id}_wrio.negative ${graph_id}_rdio
 EOF
     }
     print "\n";
@@ -734,11 +810,12 @@ sub do_config_device {
 
         # Nice name for graph
         my $pretty_device = $cur_diskstats{$device}->{'pretty_device_name'};
+        my $graph_id      = $cur_diskstats{$device}->{'graph_id'};
 
         if ( $cur_diskstats{$device}->{'does_latency'} ) {
 
             print <<"EOF";
-multigraph ${plugin_name}_latency.$device
+multigraph ${plugin_name}_latency.$graph_id
 graph_title Disk latency for /dev/$pretty_device
 graph_args --base 1000
 graph_vlabel seconds
@@ -768,7 +845,7 @@ avgwrwait.draw LINE1
 EOF
 
             print <<"EOF";
-multigraph ${plugin_name}_utilization.$device
+multigraph ${plugin_name}_utilization.$graph_id
 graph_title Disk utilization for /dev/$pretty_device
 graph_args --base 1000 --lower-limit 0 --upper-limit 100 --rigid
 graph_vlabel Percent
@@ -785,7 +862,7 @@ EOF
         }
 
         print <<"EOF";
-multigraph ${plugin_name}_throughput.$device
+multigraph ${plugin_name}_throughput.$graph_id
 graph_title Disk throughput for /dev/$pretty_device
 graph_args --base 1024
 graph_vlabel Bytes/\${graph_period} read (-) / write (+)
@@ -805,7 +882,7 @@ wrbytes.negative rdbytes
 EOF
 
         print <<"EOF";
-multigraph ${plugin_name}_iops.$device
+multigraph ${plugin_name}_iops.$graph_id
 graph_title Disk IOs for /dev/$pretty_device
 graph_args --base 1000
 graph_vlabel Units read (-) / write (+)
@@ -888,7 +965,7 @@ sub filter_device_list {
 
 # Check if one of the user-provided names matches the current device-name or "pretty" LVM name
         my $match = map {
-            $device =~ m!\Q$_\E!
+                 $device =~ m!\Q$_\E!
               || $devices->{$device}->{'pretty_device_name'} =~ m!\Q$_\E!;
         } @filter_list;
 
@@ -896,6 +973,107 @@ sub filter_device_list {
         delete $devices->{$device} unless ( $match xor $mode );
     }
     return;
+}
+
+# calculate_pixels
+#
+# Calculates either
+# the amount of available label-characters for $graph_width
+# or
+# the necessary $graph_width for a given label length
+#
+# type refers to the graph being positive only or positive/negative
+
+sub calculate_pixels {
+
+    my ( $mode, $type, $data ) = @_;
+
+    # These values are probably wrong, but a good approximation
+    # $graph_width + $graph_border_width == real image width
+    my $graph_border_width = 97;
+
+    # ($data_characters + $max_label_length + $padding_characters)
+    # * $pixels_per_character == real image width
+    my $padding_characters   = 10;
+    my $pixels_per_character = 6;
+
+    my $data_characters;
+
+    if ( $type eq 'posneg' ) {
+
+        # nnn.nnU/nnn.nnU_ times 4
+        $data_characters = 64;
+    }
+    elsif ( $type eq 'pos' ) {
+
+        # nnn.nnU_ times 4
+        $data_characters = 32;
+    }
+    else {
+        croak "Wrong $type in calculate_pixels";
+    }
+
+    my $return_data;
+
+    if ( $mode eq 'required_width' ) {
+        $return_data =
+          $pixels_per_character *
+          ( $padding_characters + $data_characters + $data ) -
+          $graph_border_width;
+    }
+    elsif ( $mode eq 'available_characters' ) {
+        $return_data =
+          abs( ( $graph_width + $graph_border_width ) / $pixels_per_character )
+          - $padding_characters - $data_characters;
+
+    }
+    else {
+        croak "Wrong $mode in calculate_pixels";
+    }
+    return $return_data;
+}
+
+# find_required_graph_width
+#
+# Returns the necessary graph width for a list of labels and a type of graph
+
+sub find_required_graph_width {
+
+    my ( $type, @labels ) = @_;
+
+    my $longest_label_length = 0;
+
+    for my $label (@labels) {
+        if ( length $label > $longest_label_length ) {
+            $longest_label_length = length $label;
+        }
+    }
+
+    my $required_graph_width =
+      calculate_pixels( 'required_width', $type, $longest_label_length );
+    return $graph_width if ( $required_graph_width <= $graph_width );
+
+    # Return sufficient graph_width in 50 pixel increments
+    return $graph_width +
+      ( ceil( ( $required_graph_width - $graph_width ) / 50 ) * 50 );
+}
+
+# trim_label
+#
+# Trims a given label to it's non-wrapping size
+
+sub trim_label {
+
+    my ( $type, $label ) = @_;
+
+    my $available_characters =
+      calculate_pixels( 'available_characters', $type );
+
+    if ( $available_characters < length $label ) {
+        $label = '..' . substr $label, ( $available_characters - 2 ) * -1;
+    }
+
+    return $label;
 }
 
 __END__
@@ -940,6 +1118,19 @@ or
 LVM volumes can be filtered either by their canonical names or their
 internal device-mapper based names (e.g. 'dm-3', see dmsetup(8) for
 further information).
+
+=head2 Graph width and labels
+
+This plugin will increase the graph_width dynamically to accomodate
+longer-than-normal device names. You can disable this behavior by
+setting the B<trim_labels> environment variable. Additionally, you can
+specify a fixed graph_width for the graphs.
+
+  [diskstats]
+    # Set graph_width to 450, device names which are longer get trimmed
+    env.trim_labels yes
+    env.graph_width 450
+
 
 =head1 INTERPRETATION
 
