@@ -171,15 +171,8 @@ fi;
 
 
 # Escape .'s so they don't match _everything_?
-# IP="$( echo $IP | sed 's~\.~\\.~g' )"
+IP="$( echo $IP | sed 's~\.~\\.~g' )"
 
-# Also this should be right:
+iptables -L ${INPUT} -v -n -x   | awk "/$IP"'[ /]/ { print "in.value " $2; exit 0; }'
 
-# iptables -L ${INPUT} -v -n -x | awk "/$IP"'[ /]/ { print "in.value " $2; exit 0; }'
-
-
-iptables -L ${INPUT} -v -n -x | grep -m1 "$IP[ /]" | 
-	awk "{ print \"in.value \" \$2 }"
-
-iptables -L ${OUTPUT} -v -n -x | grep -m1 "$IP[ /]" |
-	awk "{ print \"out.value \" \$2 }"
+iptables -L ${OUTPUT} -v -n -x  | awk "/$IP"'[ /]/ { print "out.value " $2; exit 0; }'
