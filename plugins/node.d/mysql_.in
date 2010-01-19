@@ -294,7 +294,7 @@ $graphs{innodb_bpool} = {
 	global_attrs => {
 	    title  => 'InnoDB Buffer Pool',
 	    vlabel => 'Pages',
-	    base   => '1024',
+	    args   => '--base 1024',
 	},
 	data_source_attrs => {
 	    draw => 'LINE2',
