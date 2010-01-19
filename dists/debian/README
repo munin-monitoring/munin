@@ -4,3 +4,11 @@ A branch for svn-buildpackage has been created at branches/debian,
 with subdirectories for each release codename:
 
 svn ls svn://munin.projects.linpro.no/munin/branches/debian
+
+For munin SVN trunk, the easiest way is to checkout squeeze/trunk in the munin src dir as debian.  
+
+$ svn co http://munin.projects.linpro.no/svn/munin/trunk/ munin-trunk
+$ cd munin-trunk
+$ svn co http://munin.projects.linpro.no/svn/munin/branches/debian/squeeze/trunk/debian/ debian
+
+Now the usual dpkg-buildpackage should work flawlessly.
