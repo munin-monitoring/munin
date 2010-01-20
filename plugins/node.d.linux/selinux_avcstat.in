@@ -19,11 +19,10 @@ AVCSTATS="/selinux/avc/cache_stats"
 if [ "$1" = "autoconf" ]; then
         if [ -r $AVCSTATS ]; then
                 echo yes
-                exit 0
         else
                 echo "no (missing $AVCSTATS file)"
-                exit 1
         fi
+        exit 0
 fi
 
 if [ "$1" = "config" ]; then
