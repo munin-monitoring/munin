@@ -56,7 +56,7 @@ fi
 
 exclude=${exclude:-iso9660}
 
-exclude=$(echo $exclude | sed -e 's/ +/ -x /g' -e 's/^/-x /')
+exclude=$(echo $exclude | sed -r -e 's/ +/ -x /g' -e 's/^/-x /')
 
 if [ "$1" = "config" ]; then
 
