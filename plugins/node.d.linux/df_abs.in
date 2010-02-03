@@ -15,6 +15,7 @@ The following configuration parameters are used by this plugin
   env.exclude  - space separated list of file system types to exclude
   env.warning  - Warning percentage
   env.critical - Critical percentage
+  env.total    - Enable/Disable graph total [on|off]
 
 =head2 DEFAULT CONFIGURATION
 
@@ -22,6 +23,7 @@ The following configuration parameters are used by this plugin
   env.exclude  iso9660
   env.warning  92
   env.critical 98
+  env.total    on
 
 =head1 AUTHORS
 
@@ -54,9 +56,10 @@ if [ "$1" = "autoconf" ]; then
 	exit 0
 fi
 
-exclude=${exclude:-iso9660}
+total=${total:-on}
 
-exclude=$(echo $exclude | sed -r -e 's/ +/ -x /g' -e 's/^/-x /')
+exclude=${exclude:-iso9660}
+exclude=$(echo $exclude | sed -r -e 's/ +/ -x /g' -e 's/^/-x /') 
 
 if [ "$1" = "config" ]; then
 
@@ -64,7 +67,9 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1024 --lower-limit 0'
 	echo 'graph_vlabel bytes'
 	echo 'graph_category disk'
-	echo 'graph_total Total'
+	if [ "$total" = "on" ]; then
+		echo 'graph_total Total'
+	fi
 	df -P -l $exclude | sed 1d | grep -v "//" | 
 	while read dev size used avail cap mnt; do
 		name="$(clean_fieldname $dev)"
