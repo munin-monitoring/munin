@@ -756,8 +756,9 @@ sub suggest {
     #
     #   SHOW SLAVE STATUS
 
-    local $_;
-    print "mysql_$_\n" for (sort keys(%graphs));
+    foreach my $graph (sort keys(%graphs)) {
+        print "$graph\n";
+    }
 
     return 0;
 }
