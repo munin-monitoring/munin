@@ -45,7 +45,7 @@ Non-default example:
 The plugin uses shared memory to cache the statistics gathered from
 MySQL. This ensures minimal inpact on the MySQL server.
 
-=item DBD::Mysql
+=item DBD::mysql
 
 =back
 
