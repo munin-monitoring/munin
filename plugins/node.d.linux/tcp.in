@@ -34,8 +34,8 @@ USA.
 
 =head1 MAGIC MARKERS
 
- #%# family=auto
- #%# capabilities=autoconf suggest
+ #%# family=manual
+ #%# capabilities=autoconf
 
 =cut
 
