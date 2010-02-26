@@ -10,6 +10,67 @@ Some stats on 1.4.0 (relative to 1.3.4)
   uploaded to sourceforge in february 2005.
 
 
+munin 1.4.4, r3276,3379, 2010-2-26
+
+* Localization problem in 1.4.1 (closes #781)
+* Sort plugin configuration file order. This ensures some predictability 
+  regarding where a configuration setting comes from when multiple files
+  specify the same configuration variables.
+  For details, see debian bug http://bugs.debian.org/564098
+* munin-cgi-graph*: cgi semaphore fix, hopefully cures #834
+* Munin/Master/GraphOld.pm sum+colour fix (closes #731)
+  plugin to connect to a separate munin-node (or other daemon speaking the
+  munin-node protocol) and fetch values from there.
+* munin-update: Fix config line continuation hadling
+* Add patch from munin ticket #828, to suppress "occasional" unknown states 
+  to avoid alerts. Thanks to Steve Wilson for the patch!
+* proxy_plugin: New proxy plugin, that makes it possible for a single Munin
+* jmx/Uptime: decimal days, not integer - closes #815
+* nvidia_: fix suggest
+* linux/vserver*: fix autoconf exit codes
+* linux/ip_: RE fix to be able to match IPv6 addresses
+* linux/selinux_avcstat: New plugin from Lars Strand showing selinux stats 
+  Taken from Muninexchange.  Thanks to Lars! 
+* linux/lpar_cpu: A plugin to measure IBM PPC hardware virtualization logical
+  partition CPU usage (made for the platform once called OpenPower)
+* varnish_: backend_unhealthy is a DERIVE value, note that canonical upstream 
+  is the varnish project
+* Add simfs" to linux df* plugins ignore list
+* linux/buddyinfo multigraph plugin by Gábor Gombás 
+* Remediate patches from Gentoo that never came upstream.  
+  Prevents possible output on stderr in plugin linux/iostat_ios and corrects 
+  linux/fw_forwarded_local to handle a missing /proc/net/ip_conntrack
+  linux/fw_forwarded_local: need to dereference the _conntrack_file variable
+* linux/diskstats: Upstream update, closes #838 #835 #837
+* linux/ip_: Better matching of IPv6 addresses.  Use a single awk command 
+  instead of a mix of awk and grep.
+* mysql_: fix graph_base error (Closes #840) Patch from Gábor Gombás
+* mysql_: plugin suggests wrong values (closes #857)
+* linux/selinux_avcstat - exit 0 on autoconf
+* linux/tcp: Add contributed plugin from Tim Small
+* linux/df_abs: multiple filesystem excludes do not work in df_abs
+  Thanks to Daniel Reichelt for the patch!
+* snort*: Add documentation and minor updates
+* multips_memory: correct printing out raw fieldname, 
+  instead of clean_fieldname, documentation updates
+* linux/df_abs: Added configuration option to df_abs to Enable/Disable the 
+  graph total (The default is on). Thanks to Daniel Reichelt for the patch, 
+  submitted at http://bugs.debian.org/567895 - adapted, tested  
+  and documented by Tom Feiner
+* snmp__if_multi: Add env.ifTypeOnly filtering, fix multiple buglets
+* mailman: Corrected incorrect use of $MUNIN_PLUGSTATE in mailman plugin
+* amavis: Change amavis mktempfile function to run with backticks instead of 
+  $(command) as it doesnt work correctly piping to sed
+* exim_mailstats: exim_mailstats doesnt count Completed properly. 
+  Thanks to Wakko Warner for noticing this in http://bugs.debian.org/569621
+* Deprecated tomcat plugins: Fix in to work properly when only one connector
+  is availabe http://bugs.debian.org/543523
+* postfix_mailstats: Fix shell->perl syntax in perl plugin
+* apt: update description with a pointer to apt_all
+* jmx/GCCount - fix negative counts on jvm restart (closes #852)
+* ping_: fix obvious typo (closes #854)
+
+
 munin 1.4.3, r3232:3274, 2009-12-30
 
 * linux/diskstats: New multigraph plugin to replace diskstat_ - more
