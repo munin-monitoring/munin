@@ -330,23 +330,74 @@ sub process_service {
         if ($value eq "unknown") {
             $crit->[0] ||= "";
             $crit->[1] ||= "";
-            $hash->{'worst'} = "UNKNOWN" if $hash->{"worst"} eq "OK";
-            $hash->{'worstid'} = 3 if $hash->{"worstid"} == 0;
-            munin_set_var_loc(\%notes, [@$fpath, "state"], "unknown");
-            munin_set_var_loc(
-                \%notes,
-                [@$fpath, "unknown"], (
-                    defined $field->{"extinfo"}
+
+            my $state = "unknown";
+            my $extinfo = defined $field->{"extinfo"}
                     ? "unknown: " . $field->{"extinfo"}
-                    : "Value is unknown."
-                ));
+                    : "Value is unknown.";
+            my $num_unknowns;
 
             if (   !defined $onfield
                 or !defined $onfield->{"state"}
                 or $onfield->{"state"} ne "unknown") {
                 $hash->{'state_changed'} = 1;
             }
+            else {
+                $hash->{'state_changed'} = 0;
+            }
+
+            # First we'll need to check whether the user wants to ignore
+            # a few UNKNOWN values before actually changing the state to
+            # UNKNOWN.
+            if ($unknown_limit > 1) {
+                if (defined $onfield and defined $onfield->{"state"}) {
+                    if ($onfield->{"state"} ne "unknown") {
+                        if (defined $onfield->{"num_unknowns"}) {
+                            if ($onfield->{"num_unknowns"} < $unknown_limit) {
+                                # Don't change the state to UNKNOWN yet.
+                                $hash->{'state_changed'} = 0;
+                                $state = $onfield->{"state"};
+                                $extinfo = $onfield->{$state};
+
+                                # Increment the number of UNKNOWN values seen.
+                                $num_unknowns = $onfield->{"num_unknowns"} + 1;
+                            }
+                        }
+                        else {
+                            # Don't change the state to UNKNOWN yet.
+                            $hash->{'state_changed'} = 0;
+                            $state = $onfield->{"state"};
+                            $extinfo = $onfield->{$state};
+                            
+                            # Start counting the number of consecutive UNKNOWN
+                            # values seen.
+                            $num_unknowns = 1;
+                        }
+                    }
+                }
+            }
+
+            if ($state eq "unknown") {
+                $hash->{'worst'} = "UNKNOWN" if $hash->{"worst"} eq "OK";
+                $hash->{'worstid'} = 3 if $hash->{"worstid"} == 0;
+            }
+            elsif ($state eq "critical") {
+                $hash->{'worst'} = "CRITICAL";
+                $hash->{'worstid'} = 2;
+            }
+            elsif ($state eq "warning") {
+                $hash->{'worst'} = "WARNING" if $hash->{"worst"} ne "CRITICAL";
+                $hash->{'worstid'} = 1 if $hash->{"worstid"} != 2;
+            }
+
+            munin_set_var_loc(\%notes, [@$fpath, "state"], $state);
+            munin_set_var_loc(\%notes, [@$fpath, $state], $extinfo);
+            if (defined $num_unknowns) {
+                munin_set_var_loc(\%notes, [@$fpath, "num_unknowns"],
+                        $num_unknowns);
+            }
         }
+
         elsif ((defined($crit->[0]) and $value < $crit->[0])
             or (defined($crit->[1]) and $value > $crit->[1])) {
             $crit->[0] ||= "";
@@ -422,7 +473,7 @@ sub get_limits {
     my @warning  = (undef, undef);
     my $crit          = munin_get($hash, "critical",      undef);
     my $warn          = munin_get($hash, "warning",       undef);
-    my $unknown_limit = munin_get($hash, "unknown_limit", 1);
+    my $unknown_limit = munin_get($hash, "unknown_limit", 3);
 
     my $name = munin_get_node_name($hash);
 
@@ -454,10 +505,15 @@ sub get_limits {
         DEBUG "[DEBUG] processing warning: $name -> $warning[0] : $warning[1]";
     }
 
-    # The merge of the unknown_limit implementation was somewhat botched.  Not tested. - janl
     if ($unknown_limit =~ /^\s*(\d+)\s*$/) {
-	$unknown_limit = $1 if defined $1;
-	DEBUG "[DEBUG] processing unknown_limit: $name -> $unknown_limit";
+        $unknown_limit = $1 if defined $1;
+        if (defined $unknown_limit) {
+            if ($unknown_limit < 1) {
+                # Zero and negative numbers are not valid.  
+                $unknown_limit = 1;
+            }
+        }
+        DEBUG "[DEBUG] processing unknown_limit: $name -> $unknown_limit";
     }
 
     return (\@warning, \@critical, $unknown_limit);
