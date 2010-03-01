@@ -107,7 +107,7 @@ Default is C<cron>.  Affects: munin-graph and munin-html.
 =item B<local_address> I<value>
 
 The local address to connect any node from in case the master has
-several IP interfaces.  This can be overriden by a group or global
+several IP interfaces.  This can be overridden by a group or global
 directive.  Without this directive Munins traffic will originate from
 the master server according to the IP routing table.
 
