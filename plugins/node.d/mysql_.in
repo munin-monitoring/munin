@@ -711,7 +711,7 @@ sub main {
 #  C O M M A N D   H A N D L E R S
 #---------------------------------------------------------------------
 
-# Each command handler should return an apropriate exit code
+# Each command handler should return an appropriate exit code
 
 
 # http://munin.projects.linpro.no/wiki/ConcisePlugins#autoconf
