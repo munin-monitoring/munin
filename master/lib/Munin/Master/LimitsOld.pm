@@ -695,7 +695,6 @@ sub generate_service_message {
                     # NOTREACHED
                 }
             }
-            INFO "Baz?";
             munin_set_var_loc($contactobj, ["pipe_command"], $cmd);
             munin_set_var_loc($contactobj, ["pipe"],         $pipe);
         }
