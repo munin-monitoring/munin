@@ -32,7 +32,8 @@ PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
         source_dist \
         test clean \
         clean-% test-% build-% install-% \
-	tags
+	tags \
+	infiles
 
 .SECONDARY: node/Build master/Build plugins/Build
 
@@ -86,7 +87,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR) 
 	$(CHMOD) 0755 $(DBDIR)
 
-	for p in master/www/*.tmpl master/www/*.png master/www/*.css resources/favicon.ico; do \
+	for p in master/www/*.tmpl master/www/*.png master/www/*.css master/www/*.js resources/favicon.ico; do \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
 	done
 
@@ -95,6 +96,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	done
 
 	$(INSTALL) -m 0644 master/www/definitions.html $(CONFDIR)/templates/
+	$(INSTALL) -m 0644 master/www/dynazoom.html $(CONFDIR)/templates/
 	$(INSTALL) -m 0755 master/DejaVuSansMono.ttf $(LIBDIR)/
 	$(INSTALL) -m 0755 master/DejaVuSans.ttf $(LIBDIR)/
 
@@ -107,8 +109,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	$(INSTALL) -m 0755 build/master/_bin/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-html $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-limits $(LIBDIR)/
-	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/
-	$(INSTALL) -m 0755 build/master/_bin/munin-fastcgi-graph $(CGIDIR)/
+	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/munin-cgi-graph
 
 # Not ready to be installed yet	
 # $(INSTALL) -m 0755 build/master/_bin/munin-gather $(LIBDIR)/
@@ -179,10 +180,13 @@ install-doc: build-doc
 
 ######################################################################
 
+# Dummy rule to enable parallel building
+infiles: $(INFILES)
+
 ifeq ($(JCVALID),yes)
-build: $(INFILES) build-master build-common-prime build-node build-plugins build-plugins-java build-man
+build: infiles build-master build-common-prime build-node build-plugins build-plugins-java build-man
 else
-build: $(INFILES) build-master build-common-prime build-node build-plugins build-man
+build: infiles build-master build-common-prime build-node build-plugins build-man
 endif
 
 build/%: %.in
@@ -225,9 +229,9 @@ build-common-prime: build-common-pre common/blib/lib/Munin/Common/Defaults.pm bu
 
 build-common-pre: common/Build
 	cd common && $(PERL) Build code
-	rm -f common/blib/lib/Munin/Common/Defaults.pm
 
 common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm build-common-pre
+	rm -f common/blib/lib/Munin/Common/Defaults.pm
 	$(PERL) -pe 's{(PREFIX     \s+=\s).*}{\1q{$(PREFIX)};}x;   \
                   s{(CONFDIR    \s+=\s).*}{\1q{$(CONFDIR)};}x;     \
                   s{(BINDIR     \s+=\s).*}{\1q{$(BINDIR)};}x;      \

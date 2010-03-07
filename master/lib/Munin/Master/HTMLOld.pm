@@ -414,7 +414,10 @@ sub copy_web_resources {
     # Make sure the logo and the stylesheet file is in the html dir
     # NOTE: The templates have hardcoded path to definitions.html, and it is not right, esp. when
     # we have nested groups and nested services.
-    my @files = ("style.css", "logo.png", "logo-h.png", "definitions.html", "favicon.ico");
+    my @files = (
+	    "style.css", "logo.png", "logo-h.png", "definitions.html", "favicon.ico",
+	    "dynazoom.html", "formatdate.js", "querystring.js",
+    );
 
     foreach my $file ((@files)) {
         if (   (!-e "$htmldir/$file")
@@ -932,6 +935,11 @@ sub generate_service_templates {
         $srv{'imgmonth'} = $config->{'cgiurl_graph'} . "/$path-month.png";
         $srv{'imgyear'}  = $config->{'cgiurl_graph'} . "/$path-year.png";
 
+        $srv{'cimgday'}   = $config->{'cgiurl_graph'} . "/$path-day.png";
+        $srv{'cimgweek'}  = $config->{'cgiurl_graph'} . "/$path-week.png";
+        $srv{'cimgmonth'} = $config->{'cgiurl_graph'} . "/$path-month.png";
+        $srv{'cimgyear'}  = $config->{'cgiurl_graph'} . "/$path-year.png";
+
         if (munin_get_bool($service, "graph_sums", 0)) {
             $srv{'imgweeksum'}
                 = $config->{'cgiurl_graph'} . "/$path-week-sum.png";
@@ -956,7 +964,27 @@ sub generate_service_templates {
         $srv{'cimgyear'}  = "$bp/$parent/$srv{node}-year.png";
     }
 
+    # Compute the ZOOM urls
+    {
+        my $epoch_now = time;
+	# The intervals are a bit larger, just like the munin-graph
+	my $start_day = $epoch_now - (3600 * 30);
+	my $start_week = $epoch_now - (3600 * 24 * 8);
+	my $start_month = $epoch_now - (3600 * 24 * 33);
+	my $start_year = $epoch_now - (3600 * 24 * 400);
+	my $size_x = 800;
+	my $size_y = 400;
+	my $common_url = "$root_path/dynazoom.html?plugin_name=$path&size_x=$size_x&size_y=$size_y";
+	$srv{zoomday} = "$common_url&start_epoch=$start_day&stop_epoch=$epoch_now";
+	$srv{zoomweek} = "$common_url&start_epoch=$start_week&stop_epoch=$epoch_now";
+	$srv{zoommonth} = "$common_url&start_epoch=$start_month&stop_epoch=$epoch_now";
+	$srv{zoomyear} = "$common_url&start_epoch=$start_year&stop_epoch=$epoch_now";
+    }
+
     for my $scale (@times) {
+        # Don't try to find the size if cgi is enabled, 
+        # otherwise old data might pollute  
+        next if ($method eq "cgi");
         if (my ($w, $h)
             = get_png_size(munin_get_picture_filename($service, $scale))) {
             $srv{"img" . $scale . "width"}  = $w;
@@ -968,6 +996,7 @@ sub generate_service_templates {
         $srv{imgweeksum} = "$srv{node}-week-sum.png";
         $srv{imgyearsum} = "$srv{node}-year-sum.png";
         for my $scale (["week", "year"]) {
+            next if ($method eq "cgi");
             if (my ($w, $h)
                 = get_png_size(munin_get_picture_filename($service, $scale, 1)))
             {

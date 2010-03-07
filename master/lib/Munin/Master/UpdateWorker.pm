@@ -83,7 +83,37 @@ sub do_work {
 		    next;
 		}
 
-		my %service_data = $self->{node}->fetch_service_data($plugin);
+		# Check if this plugin has already sent its data via a dirtyconfig
+		my %service_data = $self->handle_dirty_config(\%service_config);
+
+		# Check if this plugin has to be updated
+		my $update_rate = get_global_service_value(\%service_config, $plugin, "update_rate", 0); 
+		my ($update_rate_in_seconds, $is_update_aligned) = parse_update_rate($update_rate);
+		# default is 0 sec : always update when asked
+		DEBUG "[DEBUG] update_rate $update_rate_in_seconds for $plugin on $nodedesignation";
+		if ($update_rate_in_seconds 
+			&& is_fresh_enough($nodedesignation, $plugin, $update_rate_in_seconds)) {
+		    # It's fresh enough, skip this $service
+		    DEBUG "[DEBUG] $plugin is fresh enough, not updating it";
+		    next;
+		}
+
+		if (! %service_data) {
+			%service_data = $self->{node}->fetch_service_data($plugin);
+		}
+
+		# If update_rate is aligned, round the "when" for alignement
+		if ($is_update_aligned) {
+			foreach my $service (keys %service_data) {
+				my $current_service_data = $service_data{$service};
+				foreach my $field (keys %$current_service_data) {
+					my $when = $current_service_data->{$field}->{when};
+					my $rounded_when = round_to_granularity($when, $update_rate_in_seconds);
+					$current_service_data->{$field}->{when} = $rounded_when;
+				}
+			}
+		}
+
 
 		# Since different plugins can populate multiple
 		# positions in the service namespace we'll check for
@@ -147,6 +177,100 @@ sub do_work {
         time_used => Time::HiRes::time - $update_time,
         service_configs => \%all_service_configs,
     }
+}
+
+sub get_global_service_value {
+	my ($service_config, $service, $conf_field_name, $default) = @_;
+	foreach my $array (@{$service_config->{global}{$service}}) {
+		my ($field_name, $field_value) = @$array;
+		if ($field_name eq $conf_field_name) {
+			return $field_value;
+		}
+	}
+
+	return $default;
+}
+
+sub is_fresh_enough {
+	my ($nodedesignation, $service, $update_rate_in_seconds) = @_;
+
+	my $key = "$nodedesignation/$service";
+	DEBUG "is_fresh_enough asked for $key with a rate of $update_rate_in_seconds";
+
+	my %last_updated;
+	# XXX - ugly hack. Should be refactored to use a a common state provider
+
+	use Fcntl;   # For O_RDWR, O_CREAT, etc.
+   	use NDBM_File;
+   	tie(%last_updated, 'NDBM_File', '/tmp/munin_plugins_last_updated', O_RDWR|O_CREAT, 0666) or ERROR "$!";
+	DEBUG "last_updated{$key}: " . $last_updated{$key};
+	my @last = split(/ /, $last_updated{$key});
+   
+	use Time::HiRes qw(gettimeofday tv_interval);	
+	my $now = [ gettimeofday ];
+
+	my $age = tv_interval(\@last, $now); 	
+	DEBUG "last: " . Dumper(\@last) . ", now: " . Dumper($now) . ", age: $age";
+	my $is_fresh_enough = ($age < $update_rate_in_seconds);
+	DEBUG "is_fresh_enough  $is_fresh_enough";
+
+	if (! $is_fresh_enough) {
+		DEBUG "new value: " . join(" ", @$now);
+		$last_updated{$key} = join(" ", @$now);
+	}
+
+   	untie(%last_updated);
+
+	return $is_fresh_enough;
+}
+
+sub parse_update_rate {
+	my ($update_rate_config) = @_;
+
+	my ($is_update_aligned, $update_rate_in_sec);
+	if ($update_rate_config =~ m/(\d+[a-z]?) (aligned)?/) {
+		$update_rate_in_sec = to_sec($1);
+		$is_update_aligned = $2;
+	} else {
+		return (0, 0);
+	}
+
+	return ($update_rate_in_sec, $is_update_aligned);
+}
+
+sub round_to_granularity {
+	my ($when, $granularity_in_sec) = @_;
+	$when = time if ($when eq "N"); # N means "now"
+
+	my $rounded_when = $when - ($when % $granularity_in_sec);
+	return $rounded_when;
+}
+
+sub handle_dirty_config {
+	my ($self, $service_config) = @_;
+	
+	my %service_data;
+
+	my $services = $service_config->{global}{multigraph};
+	foreach my $service (@$services) {
+		my $service_data_source = $service_config->{"data_source"}->{$service};
+		foreach my $field (keys %$service_data_source) {
+			my $field_value = $service_data_source->{$field}->{"value"};
+			# If not present, ignore
+			next if (! defined $field_value);
+
+			DEBUG "[DEBUG] handle_dirty_config:$service, $field, $field_value";
+			# Moves the "value" to the service_data
+			$service_data{$service}->{$field} = {
+				"value" => $field_value,
+				"when" => "N",
+			};
+
+			delete($service_data_source->{$field}{value});
+		}
+	}
+
+	return %service_data;
 }
 
 
@@ -344,15 +468,24 @@ sub _update_rrd_files {
 
 	for my $ds_name (keys %{$service_config}) {
 	    $self->_set_rrd_data_source_defaults($service_config->{$ds_name});
+	    my $ds_config = $service_config->{$ds_name};
 
-	    unless (defined($service_config->{$ds_name}{label})) {
+	    unless (defined($ds_config->{label})) {
 		ERROR "[ERROR] Unable to update $service on $nodedesignation -> $ds_name: Missing data source configuration attribute: label";
 		next;
 	    }
+	    
+	    # Sets the DS resolution, searching in that order : 
+	    # - per field 
+	    # - per plugin
+	    # - globally
+            my $configref = $self->{node}{configref};
+	    $ds_config->{graph_data_size} ||= $configref->{"$service.$ds_name.graph_data_size"};
+	    $ds_config->{graph_data_size} ||= $configref->{"$service.graph_data_size"};
+	    $ds_config->{graph_data_size} ||= $config->{graph_data_size};
 
-	    my $rrd_file 
-		= $self->_create_rrd_file_if_needed($service, $ds_name, 
-						    $service_config->{$ds_name});
+	    DEBUG "[DEBUG] asking for a rrd of size : " . $ds_config->{graph_data_size};
+	    my $rrd_file = $self->_create_rrd_file_if_needed($service, $ds_name, $ds_config);
 
 	    if (defined($service_data) and defined($service_data->{$ds_name})) {
 		$self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name});
@@ -413,7 +546,7 @@ sub _get_rrd_file_name {
     $file = File::Spec->catfile($config->{dbdir}, 
 				$file);
 	
-    DEBUG "[DEBUG] Made rrd filename: $file\n";
+    DEBUG "[DEBUG] rrd filename: $file\n";
 
     return $file;
 }
@@ -429,8 +562,9 @@ sub _create_rrd_file {
         sprintf('DS:42:%s:600:%s:%s', 
                 $ds_config->{type}, $ds_config->{min}, $ds_config->{max}),
     );
-            
-    my $resolution = $config->{graph_data_size};
+
+    my $resolution = $ds_config->{graph_data_size};
+    my $update_rate = $ds_config->{update_rate} || 300; # 5 min per default 
     if ($resolution eq 'normal') {
         push (@args,
               "RRA:AVERAGE:0.5:1:576",   # resolution 5 minutes
@@ -451,13 +585,99 @@ sub _create_rrd_file {
               "RRA:AVERAGE:0.5:1:115200",  # resolution 5 minutes, for 400 days
               "RRA:MIN:0.5:1:115200",
               "RRA:MAX:0.5:1:115200"); 
+    } elsif ($resolution =~ /^custom (.+)/) {
+        # Parsing resolution to achieve computer format as defined on the RFC :
+        # FULL_NB, MULTIPLIER_1 MULTIPLIER_1_NB, ... MULTIPLIER_NMULTIPLIER_N_NB 
+        my @resolutions_computer = parse_custom_resolution($1, $update_rate);
+        foreach my $resolution_computer(@resolutions_computer) {
+            my ($multiplier, $multiplier_nb) = @{$resolution_computer};
+	    # Always add 10% to the RRA size, as specified in 
+	    # http://munin.projects.linpro.no/wiki/format-graph_data_size
+	    $multiplier_nb += int ($multiplier_nb / 10) || 1;
+            push (@args, 
+                "RRA:AVERAGE:0.5:$multiplier:$multiplier_nb",
+                "RRA:MIN:0.5:$multiplier:$multiplier_nb",
+                "RRA:MAX:0.5:$multiplier:$multiplier_nb"
+            ); 
+        }
     }
+    DEBUG "[DEBUG] RRDs::create @args";
     RRDs::create @args;
     if (my $ERROR = RRDs::error) {
         ERROR "[ERROR] Unable to create '$rrd_file': $ERROR";
     }
 }
 
+sub parse_custom_resolution {
+	my @elems = split(',\s*', shift);
+	my $update_rate = shift;
+
+	DEBUG "[DEBUG] update_rate: $update_rate";
+
+        my @computer_format;
+        foreach my $elem (@elems) {
+                if ($elem =~ m/(\d+) (\d+)/) {
+                        # nothing to do, already in computer format
+                        push @computer_format, [$1, $2];
+                } elsif ($elem =~ m/(\w+) for (\w+)/) {
+                        my $nb_sec = to_sec($1);
+                        my $for_sec = to_sec($2);
+                        
+			my $multiplier = int ($nb_sec / $update_rate);
+                        my $multiplier_nb = int ($for_sec / $nb_sec);
+
+			DEBUG "[DEBUG] $elem"
+				. " -> nb_sec:$nb_sec, for_sec:$for_sec"
+				. " -> multiplier:$multiplier, multiplier_nb:$multiplier_nb"
+			;
+                        push @computer_format, [$multiplier, $multiplier_nb];
+                }
+	}
+
+        return @computer_format;
+}
+
+# return the number of seconds 
+# for the human readable format
+# s : second,  m : minute, h : hour
+# d : day, w : week, t : month, y : year
+sub to_sec {
+	my $secs_table = {
+		"s" => 1,
+		"m" => 60,
+		"h" => 60 * 60,
+		"d" => 60 * 60 * 24,
+		"w" => 60 * 60 * 24 * 7,
+		"t" => 60 * 60 * 24 * 31, # a month always has 31 days
+		"y" => 60 * 60 * 24 * 365, # a year always has 365 days 
+	};
+
+	my ($target) = @_;
+	if ($target =~ m/(\d+)([smhdwty])/i) {
+		return $1 * $secs_table->{$2};	
+	} else {
+		# no recognised unit, return the int value as seconds
+		return int $target;
+	}
+}
+
+sub to_mul {
+	my ($base, $target) = @_;
+	my $target_sec = to_sec($target);
+	if ($target %% $base != 0) {
+		return 0;
+	}
+
+	return round($target / $base); 
+}
+
+sub to_mul_nb {
+	my ($base, $target) = @_;
+	my $target_sec = to_sec($target);
+	if ($target %% $base != 0) {
+		return 0;
+	}
+}
 
 sub _update_rrd_file {
     my ($self, $rrd_file, $ds_name, $ds_values) = @_;

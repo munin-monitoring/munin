@@ -72,7 +72,7 @@ Log::Log4perl->easy_init( $WARN );
 
 my $logdir = undef;
 my $logopened = 0;
-my $me = basename($PROGRAM_NAME);
+my $me = $1 if basename($PROGRAM_NAME) =~ m/(.*)/; # Fast untaint $PROGRAM_NAME
 
 sub _warn_catcher {
     if ($logopened) {
@@ -92,10 +92,12 @@ sub logger_open {
 	confess("In logger_open, directory for log files undefined");
     }
 
+    my $log_filename = shift || "$dirname/$me.log";
+
     if (!$logopened) {
 	# I'm a bit uncertain about the :utf8 bit.
 	Log::Log4perl->easy_init( { level    => $INFO,
-				    file     => ":utf8>>$dirname/$me.log" } );
+				    file     => ":utf8>>$log_filename" } );
 	# warn "Logging to $dirname/$me.log";
 	$logopened = 1;
     }

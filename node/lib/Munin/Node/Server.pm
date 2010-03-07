@@ -88,6 +88,10 @@ sub _add_services_to_nodes
         my $node = $config->{sconf}{$service}{host_name}
                 || (split /\s+/, ($host_name || ''))[1]
                 || $config->{fqdn};
+	
+	# hostname checks are case in-sensitive, 
+	# so store everything in lowercase
+	$node = lc($node);
 
         print STDERR "\tAdding to node $node\n" if $config->{DEBUG};
         push @{$nodes{$node}}, $service;
@@ -163,7 +167,7 @@ sub _process_command_line {
 
     logger ("DEBUG: Running command \"$_\".") if $config->{DEBUG};
     if (/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
-        _list_services($session, $1);
+        _list_services($session, lc($1));
     }
     elsif (/^cap\s?(.*)/i) {
         _negotiate_session_capabilities($session, $1);

@@ -28,8 +28,9 @@ sub new {
         port    => $port,
         host    => $host,
         tls     => undef,
-        socket  => undef,
-        master_capabilities => qw(multigraph),
+        reader  => undef,
+        writer  => undef,
+        master_capabilities => "multigraph dirtyconfig",
         io_timeout => 120,
 	configref => $configref,
     };
@@ -58,14 +59,42 @@ sub _do_connect {
     LOGCROAK("[FATAL] No address!  Did you forget to set 'update no' or to set 'address <IP>' ?")
 	if !defined($self->{address});
 
-    if (! ( $self->{socket} = IO::Socket::INET->new(
-		PeerAddr  => $self->{address},
-		PeerPort  => $self->{port},
+    # Check if it's an URI or a plain host
+    use URI;
+
+    my $uri = new URI($self->{address});
+
+    # If the scheme is not defined, it's a plain host. 
+    # Prefix it with munin:// to be able to parse it like others
+    $uri = new URI("munin://" . $self->{address}) unless $uri->scheme;
+    LOGCROAK("[FATAL] '$self->{address}' is not a valid address!") unless $uri->scheme;
+
+    if ($uri->scheme eq "munin") {
+        $self->{reader} = $self->{writer} = IO::Socket::INET->new(
+		PeerAddr  => $uri->host,
+		PeerPort  => ($uri->port || $self->{port}),
 		LocalAddr => $config->{local_address},
 		Proto     => 'tcp', 
-		Timeout   => $config->{timeout}) ) ) {
-	ERROR "Failed to connect to node $self->{address}:$self->{port}/tcp : $!";
-	return 0;
+		Timeout   => $config->{timeout}
+	);
+	if (! $self->{reader} ) {
+		ERROR "Failed to connect to node $self->{address}:$self->{port}/tcp : $!";
+		return 0;
+	}
+    } elsif ($uri->scheme eq "ssh") {
+	    my $user_part = ($uri->user) ? ($uri->user . "@") : "";
+	    my $remote_connection_cmd = "/usr/bin/ssh $user_part" . $uri->host ." " . $uri->path;
+	    # Open a double pipe
+   	    use IPC::Open2;
+
+	    $self->{reader} = new IO::Handle();
+	    $self->{writer} = new IO::Handle();
+
+	    my $pid = open2($self->{reader}, $self->{writer}, $remote_connection_cmd);
+            ERROR "Failed to connect to node $self->{address} : $!" unless $pid;
+    } else {
+	    ERROR "Unknown scheme : " . $uri->scheme;
+	    return 0;
     }
 
     my $greeting = $self->_node_read_single();
@@ -97,7 +126,7 @@ sub _run_starttls_if_required {
     $self->{tls} = Munin::Common::TLSClient->new({
         DEBUG        => $config->{debug},
         logger       => \&logger,
-        read_fd      => fileno($self->{socket}),
+        read_fd      => fileno($self->{reader}),
         read_func    => sub { _node_read_single($self) },
         tls_ca_cert  => $config->{tls_ca_certificate},
         tls_cert     => $config->{tls_certificate},
@@ -105,7 +134,7 @@ sub _run_starttls_if_required {
         tls_priv     => $config->{tls_private_key},
         tls_vdepth   => $config->{tls_verify_depth},
         tls_verify   => $config->{tls_verify_certificate},
-        write_fd     => fileno($self->{socket}),
+        write_fd     => fileno($self->{writer}),
         write_func   => sub { _write_socket_single($self, @_) },
     });
 
@@ -121,8 +150,10 @@ sub _run_starttls_if_required {
 sub _do_close {
     my ($self) = @_;
 
-    close $self->{socket};
-    $self->{socket} = undef;
+    close $self->{reader};
+    close $self->{writer};
+    $self->{reader} = undef;
+    $self->{writer} = undef;
 }
 
 
@@ -436,7 +467,7 @@ sub _node_write_single {
                 or exit 9;
         }
         else {
-            print { $self->{socket} } $text;
+            print { $self->{writer} } $text;
         }
     });
     if ($timed_out) {
@@ -456,7 +487,7 @@ sub _node_read_single {
           $res = $self->{tls}->read();
       }
       else {
-          $res = readline $self->{socket};
+          $res = readline $self->{reader};
       }
       chomp $res if defined $res;
     });
@@ -482,7 +513,7 @@ sub _node_read {
         while (1) {
             my $line = $self->{tls} && $self->{tls}->session_started()
                 ? $self->{tls}->read()
-                : readline $self->{socket};
+                : readline $self->{reader};
             last unless defined $line;
             last if $line =~ /^\.\n$/;
             chomp $line;
@@ -495,6 +526,17 @@ sub _node_read {
     DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".";
     return @array;
 }
+
+# Defines the URL::scheme for munin
+package URI::munin;
+
+# We are like telnet
+require URI::telnet;
+@URI::munin::ISA=qw(URI::telnet);
+
+# munin://HOST[:PORT]
+
+sub default_port { 4949 }
 
 1;
 

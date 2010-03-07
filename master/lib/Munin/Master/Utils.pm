@@ -54,6 +54,7 @@ our (@ISA, @EXPORT);
 	   'munin_get_rrd_filename',
 	   'munin_get_node_name',
 	   'munin_get_parent_name',
+	   'munin_get_node_fqn',
 	   'munin_get_node_loc',
 	   'munin_get_node',
 	   'munin_set_var_loc',
@@ -517,6 +518,24 @@ sub munin_get_node_name
     }
 }
 
+sub munin_get_node_fqn
+{
+    my $hash = shift;
+
+    if (ref ($hash) eq "HASH") {
+	my $fqn = "";
+	if (defined $hash->{'#%#name'}) {
+		$fqn = $hash->{'#%#name'}; 
+	}
+ 	if (defined $hash->{'#%#parent'}) {
+		# Recursively prepend the parent, concatenation with /
+		$fqn = munin_get_node_fqn ($hash->{'#%#parent'}) . "/" . $fqn;
+	}
+	return $fqn;
+    } else { 
+	return;
+    }
+}
 
 sub munin_get_picture_loc {
     my $hash = shift;
