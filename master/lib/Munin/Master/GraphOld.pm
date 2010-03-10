@@ -184,6 +184,24 @@ sub graph_startup {
     @limit_hosts = @init_limit_hosts;
     @limit_services = @init_limit_services;
 
+    $force_graphing = 0;
+    $force_lazy     = 1;
+    $do_usage       = 0;
+    $do_version     = 0;
+    $cron           = 0;
+    $list_images    = 0;
+    $output_file    = undef;
+    $log_file       = undef;
+    $skip_locking   = 0;
+    $skip_stats     = 0;
+    $stdout         = 0;
+
+    $only_fqn 	    = undef;
+    $size_x 	    = undef;
+    $size_y         = undef;
+    $lower_limit    = undef;
+    $upper_limit    = undef;
+
     # Get options
     my ($args) = @_;
     local @ARGV = @{$args};
