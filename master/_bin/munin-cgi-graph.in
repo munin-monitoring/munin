@@ -290,8 +290,10 @@ sub draw_graph {
     my $filename = shift;
     my $logfile = shift;
 
-    # remove old file
-    unlink($filename) or die("cannot remove old graph file: $!");
+    # remove old file if present
+    if (-f $filename) {
+        unlink($filename) or die("cannot remove old graph file: $!");
+    }
 
     $serv =~ s{[^\w_\/"'\[\]\(\)+=-]}{_}g; $serv =~ /^(.+)$/; $serv = $1; #"
     # . needs to be legal in host names
