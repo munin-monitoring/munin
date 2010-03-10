@@ -87,7 +87,6 @@ while (new CGI::Fast) {
   
     # If a "Cache-Control: no-cache" header gets send, we regenerate the image in every case:
     my $no_cache = $pinpoint || defined($ENV{HTTP_CACHE_CONTROL}) && $ENV{HTTP_CACHE_CONTROL} =~ /no-cache/i;
-    print STDERR "no_cache:$no_cache\n";
 
     # Compute the cache values
     my $graph_ttl = $pinpoint ? 1 : $period{$scale};
@@ -101,8 +100,14 @@ while (new CGI::Fast) {
 		! rfctime_newer_than($ENV{HTTP_IF_MODIFIED_SINCE}, $graph_epoch)) {
 		print "Status: 304\n";
 		print "Content-Type: image/png\n";
-		print "\n";
+		print "Content-Length: 0\n";
+		my $headers = get_headers_for_file($filename, $graph_ttl);
 		
+		# Conditionaly add timing informations
+		print "Expires: $headers->{Expires}\n";
+		print "Last-Modified: " . $headers->{"Last-Modified"} . "\n";
+
+		print "\n";
 		# We replied, continue with the next request 
 		next;
 	}
@@ -117,24 +122,16 @@ while (new CGI::Fast) {
 	next unless draw_graph_or_complain($dom, $host, $serv, $scale_options, $filename, "$config->{logdir}/munin-cgi-graph.log");
     }
 
-    # At this time the file exists and should be served
-    my @stats       = stat ($filename);
-    my $mtime_epoch = $stats[9];
-    my $last_modified = get_w3c_date_from_epoch($mtime_epoch);
-
-    # "Expires" has to use last modified time as base:
-    my $graph_next_expires = $mtime_epoch - ($mtime_epoch % $graph_ttl) + $graph_ttl;
-    my $expires       = get_w3c_date_from_epoch($graph_next_expires);
     
 
     # Sending headers
     print "Status: 200\n";
     print "Content-Type: image/png\n";
-    print "Content-Length: $stats[7]\n";
+    my $headers = get_headers_for_file($filename, $graph_ttl);
+    foreach my $header_name (keys %$headers) {
+	    print "$header_name: $headers->{$header_name}\n";
+    }
 
-    # Conditionaly add timing informations
-    print "Expires: $expires\n" if $expires;
-    print "Last-Modified: $last_modified\n" if $last_modified;
     print "\n";
 
     # Sending graph data
@@ -142,9 +139,29 @@ while (new CGI::Fast) {
 }
 # END FAST-CGI LOOP
 
+sub get_headers_for_file {
+	my $filename = shift;
+	my $graph_ttl = shift;
+    
+	# At this time the file exists and should be served
+	my @stats       = stat ($filename);
+       	my $mtime_epoch = $stats[9];
+       	my $last_modified = get_w3c_date_from_epoch($mtime_epoch);
+
+	# "Expires" has to use last modified time as base:
+	my $graph_next_expires = $mtime_epoch - ($mtime_epoch % $graph_ttl) + $graph_ttl;
+       	my $expires       = get_w3c_date_from_epoch($graph_next_expires);
+
+	return {
+		"Expires" => $expires,
+		"Last-Modified" => $last_modified,
+		"Content-Length" => $stats[7],
+	};
+    
+}
+
 sub get_w3c_date_from_epoch {
 	my $epoch = shift;
-	print STDERR "get_w3c_date_from_epoch($epoch)\n";
 	return strftime("%a, %d %b %Y %H:%M:%S GMT", gmtime($epoch));
 }
 
@@ -272,6 +289,9 @@ sub draw_graph {
 
     my $filename = shift;
     my $logfile = shift;
+
+    # remove old file
+    unlink($filename) or die("cannot remove old graph file: $!");
 
     $serv =~ s{[^\w_\/"'\[\]\(\)+=-]}{_}g; $serv =~ /^(.+)$/; $serv = $1; #"
     # . needs to be legal in host names
