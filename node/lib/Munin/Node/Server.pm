@@ -23,7 +23,7 @@ use Munin::Node::Utils;
 my %services;
 
 # Services that require the server to support multigraph plugins.
-my @multigraph_services;
+my (@multigraph_services, @dirtyconfig_services);
 
 # Which hosts this node's services applies to. Typically this is the
 # same as the host the node is running on, but some services query
@@ -89,14 +89,22 @@ sub _add_services_to_nodes
                 || (split /\s+/, ($host_name || ''))[1]
                 || $config->{fqdn};
 
+        # hostname checks are case insensitive, so store everything in lowercase
+        $node = lc($node);
+
         print STDERR "\tAdding to node $node\n" if $config->{DEBUG};
         push @{$nodes{$node}}, $service;
 
         # Note any plugins that require particular server capabilities.
         if (grep /^multigraph\s+/, @response) {
-            print STDERR "\tAdding to multigraph plugins\n"
-                if $config->{DEBUG};
+            print STDERR "\tAdding to multigraph plugins\n" if $config->{DEBUG};
             push @multigraph_services, $service;
+        }
+        if (grep /^[A-Za-z0-9_]+\.value /, @response) {
+            # very dirty plugins -- they do a dirtyconfig even when
+            # "not allowed" by their environment.
+            print STDERR "\tAdding to dirty plugins\n" if $config->{DEBUG};
+            push @dirtyconfig_services, $service;
         }
     }
     print STDERR "Finished configuring services\n" if $config->{DEBUG};
@@ -212,10 +220,16 @@ sub _expect_starttls {
 sub _negotiate_session_capabilities {
     my ($session, $server_capabilities) = @_;
 
-    my @node_cap = qw( multigraph );
+    my @node_cap = qw/
+        multigraph
+        dirtyconfig
+    /;
+    
     $session->{server_capabilities} = {
             map { $_ => 1 } split(/ /, $server_capabilities)
     };
+
+    $ENV{MUNIN_CAP_DIRTYCONFIG} = 1 if ($session->{server_capabilities}{dirtyconfig});
 
     _net_write($session, sprintf("cap %s\n",join(" ", @node_cap)));
 }
@@ -296,10 +310,13 @@ sub _list_services {
     $node ||= $config->{fqdn};
 
     if (exists $nodes{$node}) {
-        # remove any plugins that require capabilities the server doesn't provide
         my @services = @{$nodes{$node}};
+
+        # remove any plugins that require capabilities the master doesn't support
         @services = Munin::Node::Utils::set_difference(\@services, \@multigraph_services)
             unless $session->{server_capabilities}{multigraph};
+        @services = Munin::Node::Utils::set_difference(\@services, \@dirtyconfig_services)
+            unless $session->{server_capabilities}{dirtyconfig};
 
         _net_write($session, join(" ", @services));
     }
