@@ -201,10 +201,11 @@ sub is_fresh_enough {
 	# XXX - ugly hack. Should be refactored to use a a common state provider
 
 	use Fcntl;   # For O_RDWR, O_CREAT, etc.
-   	use NDBM_File;
-   	tie(%last_updated, 'NDBM_File', '/tmp/munin_plugins_last_updated', O_RDWR|O_CREAT, 0666) or ERROR "$!";
-	DEBUG "last_updated{$key}: " . $last_updated{$key};
-	my @last = split(/ /, $last_updated{$key});
+   	use DB_File;
+   	tie(%last_updated, 'DB_File', '/tmp/munin_plugins_last_updated', O_RDWR|O_CREAT, 0666) or ERROR "$!";
+	my $last_updated_key = $last_updated{$key} || "";
+	DEBUG "last_updated{$key}: " . $last_updated_key;
+	my @last = split(/ /, $last_updated_key);
    
 	use Time::HiRes qw(gettimeofday tv_interval);	
 	my $now = [ gettimeofday ];
@@ -228,7 +229,7 @@ sub parse_update_rate {
 	my ($update_rate_config) = @_;
 
 	my ($is_update_aligned, $update_rate_in_sec);
-	if ($update_rate_config =~ m/(\d+[a-z]?) (aligned)?/) {
+	if ($update_rate_config =~ m/(\d+[a-z]?)( aligned)?/) {
 		$update_rate_in_sec = to_sec($1);
 		$is_update_aligned = $2;
 	} else {
