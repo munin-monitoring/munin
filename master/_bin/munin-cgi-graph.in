@@ -53,6 +53,7 @@ my %period  = ( "day"   => 300,
 	    );
 
 my $log = new IO::Handle;
+my $logfile;
 my $scale = "day";
 my $host  = "";
 my $serv  = "";
@@ -67,6 +68,8 @@ my $config = &munin_readconfig ($conffile);
 while (new CGI::Fast) {
     my $path = $ENV{PATH_INFO} || "";
     ($dom, $host, $serv, $scale) = $path =~ m#^/(.*)/([^/]+)/(\w+)-([\w=,]+)\.png#; ## avoid bug in vim
+
+    ::logger("asked for ($dom, $host, $serv, $scale)");
 
     my $pinpoint;
     if ($scale =~ /pinpoint=(\d+),(\d+)/) {
@@ -119,7 +122,7 @@ while (new CGI::Fast) {
 	} else {
 		$scale_options = $TIMES{$scale};
 	}
-	next unless draw_graph_or_complain($dom, $host, $serv, $scale_options, $filename, "$config->{logdir}/munin-cgi-graph.log");
+	next unless draw_graph_or_complain($dom, $host, $serv, $scale_options, $filename);
     }
 
     
@@ -198,9 +201,10 @@ sub logger {
   }
   else
   {
-          if (defined $config->{logdir})
+          if (defined $config->{logdir} && ! $logfile)
           {
-                  if (open ($log, '>>', "$config->{logdir}/munin-cgi-graph.log"))
+		  $logfile = $config->{logdir}. "/munin-cgi-graph.log";
+                  if (open ($log, '>>', $logfile))
                   {
                           print $log "$now - $comment\n";
                       }
@@ -209,6 +213,7 @@ sub logger {
                           print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-cgi-graph.log\" for wr
 iting: $!";
                           print STDERR "$now - $comment\n";
+			  $logfile = "-:2"; # Set the logfile to STDERR
                   }
           }
           else
@@ -288,7 +293,6 @@ sub draw_graph {
     my $scale = shift;
 
     my $filename = shift;
-    my $logfile = shift;
 
     # remove old file if present
     if (-f $filename) {

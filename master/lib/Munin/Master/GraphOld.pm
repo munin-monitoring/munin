@@ -253,7 +253,12 @@ sub graph_startup {
     # untaint the $log_file variable
     $log_file = $1 if ($log_file && $log_file =~ m/(.*)/);
 
-    logger_open($config->{'logdir'}, $log_file);
+    if($log_file && $log_file eq "-:2") {
+	    # Logging to STDERR
+	    logger_open_stderr();
+    } else {
+	    logger_open($config->{'logdir'}, $log_file);
+    }
     logger_debug() if $DEBUG;
     
     # XXX - Special hack^h^h^h^h treatment for --pinpoint

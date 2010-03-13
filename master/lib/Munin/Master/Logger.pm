@@ -63,7 +63,7 @@ use English qw(-no_match_vars);
 use File::Basename qw(basename);
 use Log::Log4perl qw(:easy);
 
-our @EXPORT = qw(logger_open logger_debug logger_level logger);
+our @EXPORT = qw(logger_open logger_open_stderr logger_debug logger_level logger);
 
 # Early open of the log.  Warning and more urgent messages will go to
 # screen.
@@ -80,6 +80,21 @@ sub _warn_catcher {
     } else {
 	print STDERR join(" ",@_);
     }
+}
+
+sub logger_open_stderr {
+    if (!$logopened) {
+	# I'm a bit uncertain about the :utf8 bit.
+	Log::Log4perl->easy_init( { level    => $INFO,
+				    file     => ":utf8>&STDERR" } );
+	$logopened = 1;
+    }
+
+    get_logger('')->info("Opened log file");
+
+    # Get perl warnings into the log files
+    $SIG{__WARN__} = \&_warn_catcher;
+
 }
 
 sub logger_open {
