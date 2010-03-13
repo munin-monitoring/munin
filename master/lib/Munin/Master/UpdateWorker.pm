@@ -191,19 +191,26 @@ sub get_global_service_value {
 	return $default;
 }
 
+# Uses the standard Berkeley DB API available on the Perl install
+# It might be better to use the standard munin datafile, but it may not 
+# scale to multiple parallel, and the access pattern is quite random.
+# So DB_File fits the bill here. So better have many small specialized files 
+# in a KISS-oriented design.
 sub is_fresh_enough {
 	my ($nodedesignation, $service, $update_rate_in_seconds) = @_;
 
 	my $key = "$nodedesignation/$service";
 	DEBUG "is_fresh_enough asked for $key with a rate of $update_rate_in_seconds";
 
+	my $db_file = $config->{dbdir} . "/last_updated.db";
+
 	my %last_updated;
-	# XXX - ugly hack. Should be refactored to use a a common state provider
 
 	use Fcntl;   # For O_RDWR, O_CREAT, etc.
    	use DB_File;
-   	tie(%last_updated, 'DB_File', '/tmp/munin_plugins_last_updated', O_RDWR|O_CREAT, 0666) or ERROR "$!";
-	my $last_updated_key = $last_updated{$key} || "";
+   	tie(%last_updated, 'DB_File', $db_file, O_RDWR|O_CREAT, 0666) or ERROR "$!";
+
+	my $last_updated_key = $last_updated{$key} || "0 0";
 	DEBUG "last_updated{$key}: " . $last_updated_key;
 	my @last = split(/ /, $last_updated_key);
    
@@ -212,7 +219,7 @@ sub is_fresh_enough {
 
 	my $age = tv_interval(\@last, $now); 	
 	DEBUG "last: " . Dumper(\@last) . ", now: " . Dumper($now) . ", age: $age";
-	my $is_fresh_enough = ($age < $update_rate_in_seconds);
+	my $is_fresh_enough = ($age < $update_rate_in_seconds) ? 1 : 0;
 	DEBUG "is_fresh_enough  $is_fresh_enough";
 
 	if (! $is_fresh_enough) {
