@@ -1163,7 +1163,7 @@ sub process_service {
         my $picfilename = get_picture_filename($service, $time);
         (my $picdirname = $picfilename) =~ s/\/[^\/]+$//;
 
-        # DEBUG "[DEBUG] Picture filename: $picfilename";
+        DEBUG "[DEBUG] Picture filename: $picfilename";
 
         my @complete = get_fonts();
 
@@ -1251,16 +1251,17 @@ sub process_service {
             # reliable, esp. in combination with munin-*cgi-graph.
 
 	    # Since this disrupts rrd's --lazy option we're disableing
-	    # it until we can do it in a less distructive way, we need
-	    # to do it only on files that were updated _just_ now.
-	    # Should probably also only be done in cgi mode.
-
-            # utime $lastupdate, $lastupdate,
-	    # et_picture_filename($service, $time);
+	    # it unless we were specially asked --nolazy.
+	    # This way --lazy continues to work as expected, and since
+	    # CGI uses --nolazy, http IMS are working also as expected.
+            if (! $force_lazy) {
+                DEBUG "[DEBUG] setting time on $picfilename";
+                utime $lastupdate, $lastupdate, $picfilename;
+            }
 
             if ($list_images) {
                 # Command-line option to list images created
-                print get_picture_filename ($service, $time), "\n";
+                print $picfilename. "\n";
             }
         }
     }
