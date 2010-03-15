@@ -161,7 +161,12 @@ my %config = (
 
     volt => {
         regex => qr/
-            ^ # String must start with:
+            ^           # String must start with:
+            (\s?\S[^:]*)# Match any non-whitespace char, except ':'
+                        # but allow an optional whitespace at the begining.
+                        # This is needed as voltages are sometimes printed with
+                        # one space in front of them.
+                        # (match the label as \$1)
             (\S[^:]*)   # Match any non-whitespace char, except ':' 
                         # (match the label as \$1)
 
