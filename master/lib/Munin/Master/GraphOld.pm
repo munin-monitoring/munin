@@ -248,7 +248,9 @@ sub graph_startup {
 
     exit_if_run_by_super_user();
 
-    $config = &munin_config($conffile);
+    # Only read $config once (thx Jani M.)
+    # TODO - should maybe stat() the conf file to dyna reload the conf
+    $config = &munin_config($conffile) if ! $config;
 
     # untaint the $log_file variable
     $log_file = $1 if ($log_file && $log_file =~ m/(.*)/);
