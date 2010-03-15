@@ -167,8 +167,6 @@ my %config = (
                         # This is needed as voltages are sometimes printed with
                         # one space in front of them.
                         # (match the label as \$1)
-            (\S[^:]*)   # Match any non-whitespace char, except ':' 
-                        # (match the label as \$1)
 
             \s*:\s*     # Zero or more spaces followed by ':' char and 
                         # the zero or more spaces followed by
