@@ -52,11 +52,13 @@ fan5:          0 RPM  (min = 1054 RPM, div = 128)  ALARM
 
 --------------------------------
 
-Temorature output example from sensors:
+Temperature output example from sensors:
+* Note that the iso-8859-1 degree character is not printed, as we are running
+  with LC_ALL=C & LANG=C.
 ---------------------------------------
-Sys Temp:    +41.0°C  (high = -128.0°C, hyst = +24.0°C)  ALARM  sensor = thermistor
-CPU Temp:    +40.5°C  (high = +80.0°C, hyst = +75.0°C)  sensor = thermistor
-AUX Temp:    +39.0°C  (high = +80.0°C, hyst = +75.0°C)  sensor = thermistor
+Sys Temp:    +41.0 C  (high = -128.0 C, hyst = +24.0 C)  ALARM  sensor = thermistor
+CPU Temp:    +40.5 C  (high = +80.0 C, hyst = +75.0 C)  sensor = thermistor
+AUX Temp:    +39.0 C  (high = +80.0 C, hyst = +75.0 C)  sensor = thermistor
 
 ^^^^^^^^      ^^               ^^              ^^
   $1          $2               $3              $4
