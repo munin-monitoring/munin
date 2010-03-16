@@ -1,82 +1,91 @@
 #!@@PERL@@ -w
 # -*- perl -*-
-# Wildcard plugin to monitor sensors.
-#
-# Requirements:
-# 	- i2c and lm_sensors modules installed and loaded
-# 	- sensors program installed and in path
-#
-# Note:
-# 	- Sensor names are read from the output of the sensors program.
-# 	  Change them in /etc/sensors.conf if you don't like them.
-#
-# Parameters supported:
-#
-# 	config
-# 	autoconf
-# 	suggest
-#
-# Configurable variables
-#
-# 	sensors           - Override default program
-# 	ignore_temp<n>    - Temperature <n> will not be plotted
-# 	ignore_fan<n>     - Fan <n> will not be plotted
-# 	ignore_volt<n>    - Voltage <n> will not be plotted
-# 	fan_warn_percent  - Percentage over mininum for warning
-# 	volt_warn_percent - Percentage over mininum/under maximum for warning
-# 	                    Narrow the voltage bracket by this.
-#
-# Magic markers:
-#%# family=manual
-#%# capabilities=autoconf suggest
+=head1 NAME
 
+sensors_ - Wildcard-plugin to monitor information from temperature, voltage,
+	   and fan speed sensors.
+
+=head1 CONFIGURATION
+
+The plugins needs the following components configured: 
+
+	- i2c and lm_sensors modules installed and loaded.
+	- sensors program installed and in path.
+ Note:
+ 	- Sensor names are read from the output of the sensors program.
+ 	  Change them in /etc/sensors.conf if you don't like them.
+
+  [sensors_*]
+      env.sensors 	    - Override default sensors program path
+      env.ignore_temp<n>    - Temperature <n> will not be plotted
+      env.ignore_fan<n>     - Fan <n> will not be plotted
+      env.ignore_volt<n>    - Voltage <n> will not be plotted
+      env.fan_warn_percent  - Percentage over mininum for warning
+      env.volt_warn_percent - Percentage over mininum/under maximum for warning
+
+=head1 VERSION
+
+$Id$
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=autoconf suggest
+
+=cut
 use strict;
 
 $ENV{'LANG'} = "C"; # Force parseable output from sensors.
 $ENV{'LC_ALL'} = "C"; # Force parseable output from sensors.
 my $SENSORS = $ENV{'sensors'} || 'sensors';
 
-=text
-Example outputs from sensors & matching regex parts:
+# Example outputs from sensors & matching regex parts:
 
-Fan output example from sensors: 
---------------------------------
-Case Fan:   1268 RPM  (min = 3750 RPM, div = 8)  ALARM
-CPU Fan:       0 RPM  (min = 1171 RPM, div = 128)  ALARM
-Aux Fan:       0 RPM  (min =  753 RPM, div = 128)  ALARM
-fan4:       3375 RPM  (min =  774 RPM, div = 8)
-fan5:          0 RPM  (min = 1054 RPM, div = 128)  ALARM
-
-^^^^        ^^^^             ^^^^      
- $1          $2               $3
-
---------------------------------
-
-Temperature output example from sensors:
-* Note that the iso-8859-1 degree character is not printed, as we are running
-  with LC_ALL=C & LANG=C.
----------------------------------------
-Sys Temp:    +41.0 C  (high = -128.0 C, hyst = +24.0 C)  ALARM  sensor = thermistor
-CPU Temp:    +40.5 C  (high = +80.0 C, hyst = +75.0 C)  sensor = thermistor
-AUX Temp:    +39.0 C  (high = +80.0 C, hyst = +75.0 C)  sensor = thermistor
-
-^^^^^^^^      ^^               ^^              ^^
-  $1          $2               $3              $4
-
----------------------------------------
-
-Voltage output example from sensors:
-------------------------------------
-
-VCore:       +1.09 V  (min =  +0.00 V, max =  +1.74 V)
-in1:        +12.14 V  (min = +10.51 V, max =  +2.38 V)   ALARM
-
-^^^         ^^^              ^^^              ^^
-$1          $2               $3               $4
-
-
-------------------------------------
-=cut
+# Fan output example from sensors: 
+# --------------------------------
+# Case Fan:   1268 RPM  (min = 3750 RPM, div = 8)  ALARM
+# CPU Fan:       0 RPM  (min = 1171 RPM, div = 128)  ALARM
+# Aux Fan:       0 RPM  (min =  753 RPM, div = 128)  ALARM
+# fan4:       3375 RPM  (min =  774 RPM, div = 8)
+# fan5:          0 RPM  (min = 1054 RPM, div = 128)  ALARM
+# 
+# ^^^^        ^^^^             ^^^^      
+#  $1          $2               $3
+# 
+# --------------------------------
+# 
+# Temperature output example from sensors:
+# * Note that the iso-8859-1 degree character is not printed, as we are running
+#   with LC_ALL=C & LANG=C.
+# ---------------------------------------
+# Sys Temp:    +41.0 C  (high = -128.0 C, hyst = +24.0 C)  ALARM  sensor = thermistor
+# CPU Temp:    +40.5 C  (high = +80.0 C, hyst = +75.0 C)  sensor = thermistor
+# AUX Temp:    +39.0 C  (high = +80.0 C, hyst = +75.0 C)  sensor = thermistor
+# 
+# ^^^^^^^^      ^^               ^^              ^^
+#   $1          $2               $3              $4
+# 
+# ---------------------------------------
+# 
+# Voltage output example from sensors:
+# ------------------------------------
+# 
+# VCore:       +1.09 V  (min =  +0.00 V, max =  +1.74 V)
+# in1:        +12.14 V  (min = +10.51 V, max =  +2.38 V)   ALARM
+# 
+# ^^^         ^^^              ^^^              ^^
+# $1          $2               $3               $4
+# 
+# 
+# ------------------------------------
 
 
 my %config = (
