@@ -43,6 +43,8 @@ our (@ISA, @EXPORT);
 @ISA    = qw(Exporter);
 @EXPORT = qw(graph_startup graph_check_cron graph_main);
 
+use Clone qw(clone);
+
 use IO::Socket;
 use IO::Handle;
 use RRDs;
@@ -162,6 +164,7 @@ my $do_fork     = 1;
 
 # "global" Configuration hash
 my $config;
+my $config_bak;
 
 # stats file handle
 my $STATS;
@@ -250,7 +253,13 @@ sub graph_startup {
 
     # Only read $config once (thx Jani M.)
     # TODO - should maybe stat() the conf file to dyna reload the conf
-    $config = &munin_config($conffile) if ! $config;
+    if (! $config) {
+        $config = &munin_config($conffile);
+        $config_bak = clone($config);
+    } else {
+        undef_references($config);
+        $config = clone($config_bak);
+    }
 
     # untaint the $log_file variable
     $log_file = $1 if ($log_file && $log_file =~ m/(.*)/);
@@ -286,6 +295,13 @@ sub graph_startup {
 
 }
 
+sub undef_references {
+    my ($c) = @_;
+    foreach my $k (keys %$c) {
+        undef_references($c->{$k}) if (ref($c->{$k}) eq "HASH" && $k ne "#%#parent");
+        $c->{$k} = undef;
+    }
+}
 
 sub graph_check_cron {
 
