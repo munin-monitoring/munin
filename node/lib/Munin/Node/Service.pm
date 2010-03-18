@@ -210,7 +210,7 @@ sub exec_service {
 
     my @command = grep defined, _service_command($dir, $service, $arg);
     print STDERR "# About to run '", join (' ', @command), "'\n" 
-	if $config->{DEBUG};
+        if $config->{DEBUG};
 
     exec @command;
 }
