@@ -185,6 +185,8 @@ sub graph_startup {
     @limit_hosts = @init_limit_hosts;
     @limit_services = @init_limit_services;
 
+    $DEBUG	    = 0;
+
     $force_graphing = 0;
     $force_lazy     = 1;
     $do_usage       = 0;
