@@ -43,8 +43,6 @@ our (@ISA, @EXPORT);
 @ISA    = qw(Exporter);
 @EXPORT = qw(graph_startup graph_check_cron graph_main);
 
-use Clone qw(clone);
-
 use IO::Socket;
 use IO::Handle;
 use RRDs;
@@ -253,12 +251,13 @@ sub graph_startup {
 
     # Only read $config once (thx Jani M.)
     # TODO - should maybe stat() the conf file to dyna reload the conf
+    use Storable;
     if (! $config) {
         $config = &munin_config($conffile);
-        $config_bak = clone($config);
+        $config_bak = Storable::dclone($config);
     } else {
         undef_references($config);
-        $config = clone($config_bak);
+        $config = Storable::dclone($config_bak);
     }
 
     # untaint the $log_file variable
