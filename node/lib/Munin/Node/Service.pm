@@ -55,7 +55,7 @@ sub prepare_plugin_environment
     $config->{fqdn} ||= Munin::Node::OS->get_fq_hostname();
 
     # Export some variables plugins might be interested in
-    $ENV{MUNIN_DEBUG} = $config->{PIDEBUG};
+    $ENV{MUNIN_DEBUG} = $config->{PIDEBUG} if $config->{PIDEBUG};
     $ENV{FQDN}        = $config->{fqdn};
     
     # munin-node will override this with the IP of the connecting master
