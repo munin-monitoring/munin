@@ -503,43 +503,31 @@ contain a number in the value.
 
 =cut
 
-# (It might (or might not) be a good idea to rewrite this to use
-# get_table and use perl's grep to filter).
+sub get_by_regex
+{
+    my ($self, $baseoid, $regex) = @_;
+    my %result;
 
-sub get_by_regex {
-    my $handle = shift;
-    my $oid    = shift;
-    my $regex  = shift;
-    my $result = {};
-    my $num    = 0;
-    my $ret    = $oid . "0";
-    my $response;
+    print "# Starting browse of $baseoid...\n" if $::DEBUG;
 
-    print "# Starting browse of $oid...\n" if $::DEBUG;
+    $baseoid =~ s/\.$//;  # no trailing dots
+    my $response = $self->get_table(-baseoid => $baseoid);
+    unless ($response) {
+        print "# Failed to get table at $baseoid\n" if $::DEBUG;
+        return;
+    }
 
-    while (1) {
-	if ($num == 0) {
-	    print "# Checking for $ret...\n" if $::DEBUG;
-	    $response = $handle->get_request ($ret);
-	}
-	if ($num or !defined $response) {
-	    print "# Checking for sibling of $ret...\n" if $::DEBUG;
-	    $response = $handle->get_next_request ($ret);
-	}
-	if (!$response) {
-	    return;
-	}
-	my @keys = keys %$response;
-	$ret = $keys[0];
-	print "# Analyzing $ret (compared to $oid)...\n" if $::DEBUG;
-	last unless ($ret =~ /^$oid/);
-	$num++;
-	next unless ($response->{$ret} =~ /$regex/);
-	@keys = split (/\./, $ret);
-	$result->{$keys[-1]} = $response->{$ret};;
-	print "# Index $num: ", $keys[-1], " (", $response->{$ret}, ")\n" if $::DEBUG;
-    };
-    return $result;
+    while (my ($oid, $value) = each %$response) {
+        unless ($value =~ /$regex/i) {
+            print "# '$value' doesn't match /$regex/.  Ignoring\n" if $::DEBUG;
+            next;
+        }
+        my ($index) = ($oid =~ m{^\Q$baseoid.\E(.*)}) or die "waah?";
+        $result{$index} = $value;
+        print "# Index '$index', value $value\n" if $::DEBUG;
+    }
+
+    return \%result;
 }
 
 1;
