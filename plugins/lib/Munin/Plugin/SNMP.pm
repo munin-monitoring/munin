@@ -54,11 +54,6 @@ passing the C<--pidebug> option to C<munin-run>, for instance).
 
 package Munin::Plugin::SNMP;
 
-# This file uses subroutine prototypes. This is concidered a bad
-# practice according to PBP (see page 194).
-
-## no critic Prototypes
-
 use strict;
 
 use Net::SNMP;
@@ -72,15 +67,6 @@ our (@ISA, $DEBUG);
 # plugins don't need to import the latter module to get debug output.
 *DEBUG = \$Munin::Plugin::DEBUG;
 
-
-# This is a internal function to "push" more elements onto a hash
-sub _pushhash ($$) {
-    my ($pushtarget,$pushees) = @_;
-
-    while (my ($key,$value) = each %{$pushees}) {
-	$pushtarget->{$key}=$value;
-    }
-}
 
 =head1 METHODS
 
