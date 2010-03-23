@@ -148,7 +148,6 @@ use Munin::Plugin::SNMP;
 
 need_multigraph();
 
-my $DEBUG = $ENV{'MUNIN_DEBUG'};
 
 my $response;
 my $iface;

@@ -61,7 +61,6 @@ use strict;
 use Munin::Plugin;
 use Munin::Plugin::SNMP;
 
-my $DEBUG = $ENV{'MUNIN_DEBUG'};
 my $MAXLABEL  = 24;
 
 my $warning   = $ENV{warning}   || 10;
@@ -129,7 +128,7 @@ sub get_multiple {
     my $oid     = shift;
     my $type    = shift;
     
-    print "# Getting table $oid...\n" if $DEBUG;
+    print "# Getting table $oid...\n" if $Munin::Plugin::SNMP::DEBUG;
     
     my $response = $session->get_table($oid);
 
@@ -138,7 +137,7 @@ sub get_multiple {
     } else {
 	foreach my $key (keys(%{$response})) {
 	    $supplies{&keyname($key)}{$type} = $response->{$key};
-	    print "$key -> ".$response->{$key}."\n" if $DEBUG;
+	    print "$key -> ".$response->{$key}."\n" if $Munin::Plugin::SNMP::DEBUG;
 	}
     }
 }
@@ -155,7 +154,7 @@ sub wash_data {
     foreach my $supply (keys (%supplies)) {
 	if ($supplies{$supply}{level} < 0) {
 	    delete $supplies{$supply};
-	    print "# Deleting entry $supply: supply level unknown.\n" if $DEBUG;
+	    print "# Deleting entry $supply: supply level unknown.\n" if $Munin::Plugin::SNMP::DEBUG;
 	}
     }
 }

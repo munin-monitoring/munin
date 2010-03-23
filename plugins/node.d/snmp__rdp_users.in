@@ -26,7 +26,6 @@
 use strict;
 use Net::SNMP;
 
-my $DEBUG = 0;
 
 my $host      = $ENV{host}      || undef;
 my $port      = $ENV{port}      || 161;
@@ -45,7 +44,7 @@ if($0 =~ /^(?:|.*\/)snmp_([^_]+)_rdp_users$/) {
 	$port = $2;
     }
 } elsif(!defined($host)) {
-    print "# Debug: $0 -- $1\n" if $DEBUG;
+    print "# Debug: $0 -- $1\n" if $Munin::Plugin::SNMP::DEBUG;
     die "# Error: couldn't understand what I'm supposed to monitor.";
 }
 
@@ -81,7 +80,7 @@ sub get_users {
     my $handle = shift;
     my $oid    = "1.3.6.1.2.1.25.4.2.1.2";
     
-    print "# Getting single $oid...\n" if $DEBUG;
+    print "# Getting single $oid...\n" if $Munin::Plugin::SNMP::DEBUG;
     
     my $response = $handle->get_table($oid);
     my $count = 0;

@@ -107,7 +107,6 @@ if (defined $ARGV[0] and $ARGV[0] eq 'snmpconf') {
     exit 0;
 }
 
-my $DEBUG = 0;
 
 my ($session, $error) = Munin::Plugin::SNMP->session();
 

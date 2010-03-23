@@ -64,10 +64,8 @@ GPLv2 or (at your option) any later version.
 
 use strict;
 use warnings;
-use Munin::Plugin::SNMP;
-use vars qw($DEBUG);
 
-$DEBUG = $ENV{'MUNIN_DEBUG'};
+use Munin::Plugin::SNMP;
 
 my %oids = (
     dfInodesUsed => '1.3.6.1.4.1.789.1.5.4.1.7.',

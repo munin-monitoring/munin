@@ -74,7 +74,6 @@ use strict;
 use Munin::Plugin;
 use Munin::Plugin::SNMP;
 
-my $DEBUG = $ENV{MUNIN_DEBUG};
 
 my $response;
 

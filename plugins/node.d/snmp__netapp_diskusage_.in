@@ -69,9 +69,6 @@ GPLv2 or (at your option) any later version.
 use strict;
 use warnings;
 use Munin::Plugin::SNMP;
-use vars qw($DEBUG);
-
-$DEBUG = $ENV{'MUNIN_DEBUG'};
 
 my %oids = (
 

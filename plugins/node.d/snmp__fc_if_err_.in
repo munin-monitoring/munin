@@ -22,9 +22,10 @@
 #%# capabilities=snmpconf
 
 use strict;
-use Net::SNMP;
 
-my $DEBUG = 0;
+use Net::SNMP;
+use Munin::Plugin::SNMP;
+
 
 my $host      = $ENV{host}      || undef;
 my $port      = $ENV{port}      || 161;
@@ -54,7 +55,7 @@ if ($0 =~ /^(?:|.*\/)snmp_([^_]+)_fc_if_err_(.+)$/)
 }
 elsif (!defined($host))
 {
-	print "# Debug: $0 -- $1 -- $2\n" if $DEBUG;
+	print "# Debug: $0 -- $1 -- $2\n" if $Munin::Plugin::SNMP::DEBUG;
 	die "# Error: couldn't understand what I'm supposed to monitor.";
 }
 
