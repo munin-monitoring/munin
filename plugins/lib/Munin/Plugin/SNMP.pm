@@ -32,7 +32,7 @@ Munin::Plugin::SNMP - Net::SNMP subclass for Munin plugins
 
 =head1 SYNOPSIS
 
-The Munin::Plugin::SNMP module extends Net::SNMP with methods useful for
+The Munin::Plugin::SNMP module extends L<Net::SNMP> with methods useful for
 Munin plugins.
 
 =head1 SNMP CONFIGURATION
@@ -45,8 +45,10 @@ ensure that it is up to date and matches the code.
 
 =head1 DEBUGGING
 
-This module fetches the global symbol $DEBUG ($::DEBUG) from the
-calling program and prints debugging messages based on this.
+Additional debugging messages can be enabled by setting
+C<$Munin::Plugin::SNMP::DEBUG>, C<$Munin::Plugin::DEBUG>, or by exporting
+the C<MUNIN_DEBUG> environment variable before running the plugin (by
+passing the C<--pidebug> option to C<munin-run>, for instance).
 
 =cut
 
@@ -60,12 +62,18 @@ package Munin::Plugin::SNMP;
 use strict;
 
 use Net::SNMP;
+use Munin::Plugin;
 
-use vars qw(@ISA);
+our (@ISA, $DEBUG);
+
 @ISA = qw(Net::SNMP);
+  
+# Alias $Munin::Plugin::SNMP::DEBUG to $Munin::Plugin::DEBUG, so SNMP
+# plugins don't need to import the latter module to get debug output.
+*DEBUG = \$Munin::Plugin::DEBUG;
+
 
 # This is a internal function to "push" more elements onto a hash
-
 sub _pushhash ($$) {
     my ($pushtarget,$pushees) = @_;
 
@@ -508,7 +516,7 @@ sub get_by_regex
     my ($self, $baseoid, $regex) = @_;
     my %result;
 
-    print "# Starting browse of $baseoid...\n" if $::DEBUG;
+    print "# Starting browse of table at $baseoid\n" if $::DEBUG;
 
     $baseoid =~ s/\.$//;  # no trailing dots
     my $response = $self->get_table(-baseoid => $baseoid);
@@ -522,7 +530,9 @@ sub get_by_regex
             print "# '$value' doesn't match /$regex/.  Ignoring\n" if $::DEBUG;
             next;
         }
-        my ($index) = ($oid =~ m{^\Q$baseoid.\E(.*)}) or die "waah?";
+        my ($index) = ($oid =~ m{^\Q$baseoid.\E(.*)})
+            or die "$oid doesn't appear to be a descendent of $baseoid";
+
         $result{$index} = $value;
         print "# Index '$index', value $value\n" if $::DEBUG;
     }
