@@ -115,7 +115,7 @@ sub _snmp_autoconf_plugin
 		}
 		@indexes = values %$result;
 	}
-    DEBUG(sprintf "Got indexes: %s", join(', ', @indexes));
+    DEBUG("Got indexes: " . join(', ', @indexes));
 
 	# Second round of requirements (now that we have the indexes)
 	if ($plugin->{required_root}) {
@@ -208,7 +208,7 @@ optional, and default to 'public', 161, '2c' and an empty host-list (though
 obviously not providing any hosts is somewhat pointless).
 
 The host list should be in a format understood by
-Munin::Node::Configure::HostEnumeration
+L<Munin::Node::Configure::HostEnumeration>
 
 
 =item B<run_probes($plugins)>
