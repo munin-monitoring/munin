@@ -518,7 +518,7 @@ sub get_by_regex
     }
 
     while (my ($oid, $value) = each %$response) {
-        unless ($value =~ /$regex/i) {
+        unless ($value =~ /$regex/) {
             print "# '$value' doesn't match /$regex/.  Ignoring\n" if $::DEBUG;
             next;
         }
