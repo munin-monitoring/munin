@@ -239,7 +239,7 @@ needs a security checkup.
 	my $object;
 	my $error;
 
-	print STDERR "Setting up a SNMPv$version session\n" if $::DEBUG;
+	print STDERR "Setting up a SNMPv$version session\n" if $DEBUG;
 
 	($object, $error) = $class->SUPER::session(@options);
 
@@ -473,13 +473,13 @@ sub get_single {
         my $handle = shift;
         my $oid    = shift;
 
-        print STDERR "# Getting single $oid...\n" if $::DEBUG;
+        print STDERR "# Getting single $oid...\n" if $DEBUG;
 
         my $response = $handle->get_request($oid);
 
         if (!defined $response->{$oid} or $handle->error_status) {
             print STDERR "# Error getting $oid: ",$handle->error(),"\n"
-                if $::DEBUG;
+                if $DEBUG;
             return;
         }
 	return $response->{$oid};
@@ -502,25 +502,25 @@ sub get_by_regex
     my ($self, $baseoid, $regex) = @_;
     my %result;
 
-    print "# Starting browse of table at $baseoid\n" if $::DEBUG;
+    print "# Starting browse of table at $baseoid\n" if $DEBUG;
 
     $baseoid =~ s/\.$//;  # no trailing dots
     my $response = $self->get_table(-baseoid => $baseoid);
     unless ($response) {
-        print "# Failed to get table at $baseoid\n" if $::DEBUG;
+        print "# Failed to get table at $baseoid\n" if $DEBUG;
         return;
     }
 
     while (my ($oid, $value) = each %$response) {
         unless ($value =~ /$regex/) {
-            print "# '$value' doesn't match /$regex/.  Ignoring\n" if $::DEBUG;
+            print "# '$value' doesn't match /$regex/.  Ignoring\n" if $DEBUG;
             next;
         }
         my ($index) = ($oid =~ m{^\Q$baseoid.\E(.*)})
             or die "$oid doesn't appear to be a descendent of $baseoid";
 
         $result{$index} = $value;
-        print "# Index '$index', value $value\n" if $::DEBUG;
+        print "# Index '$index', value $value\n" if $DEBUG;
     }
 
     return \%result;
