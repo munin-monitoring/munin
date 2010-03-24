@@ -258,8 +258,8 @@ sub graph_startup {
         $config = &munin_config($conffile);
         $config_bak = Storable::dclone($config);
     } else {
-        undef_references($config);
-        $config = Storable::dclone($config_bak);
+	    undef_references($config);
+	    $config = Storable::dclone($config_bak);
     }
 
     # untaint the $log_file variable
@@ -552,7 +552,7 @@ sub expand_specials {
             DEBUG "DEBUG: expand_specials ($tmp_field): Doing sum...";
 
             if (@$order == 1
-                or (@$order == 2 and munin_get {$field, "negative", 0})) {
+                or (@$order == 2 and munin_get($field, "negative", 0))) {
                 $single = 1;
             }
 
@@ -1194,8 +1194,9 @@ sub process_service {
 	# Watermarks introduced in RRD 1.2.13.
         push(@complete, '-W', $watermark) if $RRDs::VERSION >= 1.2013;
 
-        # Do the header (title, vtitle, size, etc...)
-        push @complete, @{get_header($service, $time)};
+        # Do the header (title, vtitle, size, etc...), but IN THE BEGINNING
+        unshift @complete, @{get_header($service, $time)};
+
         if ($LINEkluge) {
             @rrd = map {
                 my $line = $_;
@@ -1223,7 +1224,6 @@ sub process_service {
 	    }
         }
 
-	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n";
 
         # Make sure directory exists
         munin_mkdir_p($picdirname, oct(777));
@@ -1263,6 +1263,7 @@ sub process_service {
 		push @complete, "--lower-limit", $lower_limit;
 	}
 
+	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n";
 	$nb_graphs_drawn ++;
         RRDs::graph(@complete);
         if (my $ERROR = RRDs::error) {
