@@ -279,7 +279,7 @@ sub parse_snmpconf_response
 
             if ($oid =~ /$oid_root_pattern/) {
                 $oid =~ s/\.$//;
-                push @{ $self->{require_root} }, [$oid, $regex];
+                push @{ $self->{table} }, [$oid, $regex];
 
                 DEBUG("\tRegistered 'require': $oid");
                 DEBUG("\t\tFiltering on /$regex/") if $regex;
@@ -296,35 +296,41 @@ sub parse_snmpconf_response
         }
         elsif ($key eq 'index') {
             if ($self->{index}) {
-                $self->log_error('index redefined');
+                $self->log_error(q{'index' is already defined});
                 next;
             }
             unless ($value =~ /$oid_root_pattern/) {
-                $self->log_error('index must be an OID root');
+                $self->log_error(q{'index' must be an OID root});
                 next;
             }
+            unless ($self->is_wildcard) {
+                $self->log_error(q{'index' only applies to double-wildcard SNMP plugins (ie. with a trailing '_').  Use 'require' instead.});
+                # it's valid, just suggest the author does s/index/require/
+            }
 
-            ($self->{index} = $value) =~ s/\.$//;
+            $value =~ s/\.$//;
+
+            # two copies.  one for checking requirements, the other for
+            # retrieving the indices
+            push @{ $self->{table} }, [ $value ];
+            $self->{index} = $value;
+
             DEBUG("\tRegistered 'index'  : $value");
         }
         elsif ($key eq 'number') {
-            if ($self->{number}) {
-                $self->log_error('number redefined');
-                next;
-            }
-
-            unless ($value =~ /$oid_pattern/) {
-                $self->log_error('number must be an OID');
-                next;
-            }
-
-            $self->{number} = $value;
-            DEBUG("\tRegistered 'number' : $value");
+            $self->log_error(q{'number' is no longer used.});
         }
         else {
             $self->log_error("Couldn't parse line: $line");
         }
     }
+
+    if ($self->is_wildcard and !$self->{index}) {
+        $self->log_error(q{SNMP plugins with a trailing '_' need an index});
+        # FIXME: this should be fatal!
+    }
+
+    return;
 }
 
 

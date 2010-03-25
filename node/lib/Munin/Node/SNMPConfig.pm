@@ -71,6 +71,8 @@ sub _probe_single_host
 		}
 		else {
             DEBUG("Host '$host' doesn't support $plugin->{name}");
+            # FIXME: check whether there was a timeout?  that would
+            # indicate a bad community string, or no SNMP support
 		}
 	}
 
@@ -85,67 +87,97 @@ sub _probe_single_host
 # which represents a valid plugin instance.
 sub _snmp_autoconf_plugin
 {
-	my ($plugin, $session) = @_;
+    my ($plugin, $session) = @_;
 
-	my (@indexes, @valid_indexes);
+    my $hostname = $session->hostname;
+    my @valid_indexes;
 
-	# First round of requirements
-	if ($plugin->{require_oid}) {
+    # First round of requirements -- check for specific OIDs.
+    if ($plugin->{require_oid}) {
         DEBUG("Checking required OIDs");
-		foreach my $req (@{$plugin->{require_oid}}) {
-			my ($oid, $filter) = @$req;
-			unless (_snmp_check_require($session, $oid, $filter)) {
+        foreach my $req (@{$plugin->{require_oid}}) {
+            my ($oid, $filter) = @$req;
+            unless (_snmp_check_require($session, $oid, $filter)) {
                 DEBUG("Missing requirement.");
-				return;
-			}
-		}
-	}
+                return;
+            }
+        }
+    }
 
-	# Fetch the list of indices
-	if ($plugin->{number}) {
-		my $num = _snmp_get_single($session, $plugin->{number});
-		return unless $num;
-		@indexes = (1 .. $num);
-	}
-	elsif ($plugin->{index}) {
-		my $result = $session->get_entries(-columns => [ $plugin->{index} ]);
-		unless ($result) {
-            DEBUG("Failed to fetch index.");
-			return;
-		}
-		@indexes = values %$result;
-	}
-    DEBUG("Got indexes: " . join(', ', @indexes));
+    # Second round of requirements -- check for valid rows in a table.
+    if ($plugin->{table}) {
+        my @columns = map { $_->[0] } @{$plugin->{table}};
 
-	# Second round of requirements (now that we have the indexes)
-	if ($plugin->{required_root}) {
-        DEBUG("Removing invalid indices");
-		foreach my $req (@{$plugin->{required_root}}) {
-			my ($oid, $filter) = @$req;
-			foreach my $index (@indexes) {
-				if (_snmp_check_require($session, $oid . $index, $filter)) {
-					push @valid_indexes, $index;
-				}
-				else {
-                    DEBUG("No. Removing $index from possible solutions.");
-				}
-			}
-		}
+        DEBUG('Fetching columns: ' . join ', ', @columns);
+        my $result = $session->get_entries(-columns => \@columns);
+        unless ($result) {
+            DEBUG('Failed to get required columns');
+            return;
+        }
 
-		unless (scalar @valid_indexes) {
-            DEBUG("No indices left.  Dropping plugin.");
-			return;
-		}
-	}
-	else {
-		# No further filters means they're all good by default
-		@valid_indexes = @indexes;
-	}
+        # sort into rows
+        my $subtabs = join '|', map { quotemeta } @columns;
+        my $re = qr/^($subtabs)\.(.*)/;
+        my %table;
 
-	# return list of arrayrefs, one for each good suggestion
-	my $hostname = $session->hostname;
-	return $plugin->is_wildcard ? map { [ $hostname, $_ ] } @valid_indexes
-	                            : [ $hostname ];
+        while (my ($oid, $value) = each %$result) {
+            my ($column, $index) = $oid =~ /$re/;
+            DEBUG("Row '$index', column '$column', value '$value'");
+            $table{$index}->{$column} = $value;
+        }
+
+        DEBUG('Checking for valid rows');
+
+        # work out what rows are invalid
+        # can shortcut unless it's a double-wildcard plugin
+        while (my ($index, $row) = each %table) {
+            if (_snmp_check_row($index, $row, @{$plugin->{table}})) {
+                if ($plugin->is_wildcard) {
+                    DEBUG(qq{Adding row '$index' to the list of valid indexes});
+                    push @valid_indexes, $row->{$plugin->{index}};
+                }
+                else {
+                    DEBUG('Table contains at least one valid row.');
+                    return [ $hostname ];
+                }
+            }
+        }
+
+        # if we got here, there were no matching rows.
+        unless ($plugin->is_wildcard and @valid_indexes) {
+            DEBUG('No valid rows found');
+            return;
+        }
+    }
+
+    # return list of arrayrefs, one for each good suggestion
+    return $plugin->is_wildcard ? map { [ $hostname, $_ ] } @valid_indexes
+                                : [ $hostname ];
+}
+
+
+# returns true if the row in a table fulfils all the requirements, false
+# otherwise.
+sub _snmp_check_row
+{
+    my ($index, $row, @requirements) = @_;
+
+    foreach my $req (@requirements) {
+        my ($oid, $regex) = @$req;
+
+        unless (defined $row->{$oid}) {
+            DEBUG(qq{Row '$index' doesn't have an entry for column '$oid'});
+            return 0;
+        }
+
+        if ($regex and $row->{$oid} !~ /$regex/) {
+            DEBUG(qq{Row '$index', column '$oid'.  Value '$row->{$oid}' doesn't match '$regex'});
+            return 0;
+        }
+    }
+
+    DEBUG(qq{Row '$index' is valid});
+    return 1;
 }
 
 
