@@ -32,7 +32,7 @@ Munin::Plugin::SNMP - Net::SNMP subclass for Munin plugins
 
 =head1 SYNOPSIS
 
-The Munin::Plugin::SNMP module extends Net::SNMP with methods useful for
+The Munin::Plugin::SNMP module extends L<Net::SNMP> with methods useful for
 Munin plugins.
 
 =head1 SNMP CONFIGURATION
@@ -45,34 +45,28 @@ ensure that it is up to date and matches the code.
 
 =head1 DEBUGGING
 
-This module fetches the global symbol $DEBUG ($::DEBUG) from the
-calling program and prints debugging messages based on this.
+Additional debugging messages can be enabled by setting
+C<$Munin::Plugin::SNMP::DEBUG>, C<$Munin::Plugin::DEBUG>, or by exporting
+the C<MUNIN_DEBUG> environment variable before running the plugin (by
+passing the C<--pidebug> option to C<munin-run>, for instance).
 
 =cut
 
 package Munin::Plugin::SNMP;
 
-# This file uses subroutine prototypes. This is concidered a bad
-# practice according to PBP (see page 194).
-
-## no critic Prototypes
-
 use strict;
 
 use Net::SNMP;
+use Munin::Plugin;
 
-use vars qw(@ISA);
+our (@ISA, $DEBUG);
+
 @ISA = qw(Net::SNMP);
+  
+# Alias $Munin::Plugin::SNMP::DEBUG to $Munin::Plugin::DEBUG, so SNMP
+# plugins don't need to import the latter module to get debug output.
+*DEBUG = \$Munin::Plugin::DEBUG;
 
-# This is a internal function to "push" more elements onto a hash
-
-sub _pushhash ($$) {
-    my ($pushtarget,$pushees) = @_;
-
-    while (my ($key,$value) = each %{$pushees}) {
-	$pushtarget->{$key}=$value;
-    }
-}
 
 =head1 METHODS
 
@@ -245,7 +239,7 @@ needs a security checkup.
 	my $object;
 	my $error;
 
-	print STDERR "Setting up a SNMPv$version session\n" if $::DEBUG;
+	print STDERR "Setting up a SNMPv$version session\n" if $DEBUG;
 
 	($object, $error) = $class->SUPER::session(@options);
 
@@ -479,13 +473,13 @@ sub get_single {
         my $handle = shift;
         my $oid    = shift;
 
-        print STDERR "# Getting single $oid...\n" if $::DEBUG;
+        print STDERR "# Getting single $oid...\n" if $DEBUG;
 
         my $response = $handle->get_request($oid);
 
         if (!defined $response->{$oid} or $handle->error_status) {
             print STDERR "# Error getting $oid: ",$handle->error(),"\n"
-                if $::DEBUG;
+                if $DEBUG;
             return;
         }
 	return $response->{$oid};
@@ -503,43 +497,33 @@ contain a number in the value.
 
 =cut
 
-# (It might (or might not) be a good idea to rewrite this to use
-# get_table and use perl's grep to filter).
+sub get_by_regex
+{
+    my ($self, $baseoid, $regex) = @_;
+    my %result;
 
-sub get_by_regex {
-    my $handle = shift;
-    my $oid    = shift;
-    my $regex  = shift;
-    my $result = {};
-    my $num    = 0;
-    my $ret    = $oid . "0";
-    my $response;
+    print "# Starting browse of table at $baseoid\n" if $DEBUG;
 
-    print "# Starting browse of $oid...\n" if $::DEBUG;
+    $baseoid =~ s/\.$//;  # no trailing dots
+    my $response = $self->get_table(-baseoid => $baseoid);
+    unless ($response) {
+        print "# Failed to get table at $baseoid\n" if $DEBUG;
+        return;
+    }
 
-    while (1) {
-	if ($num == 0) {
-	    print "# Checking for $ret...\n" if $::DEBUG;
-	    $response = $handle->get_request ($ret);
-	}
-	if ($num or !defined $response) {
-	    print "# Checking for sibling of $ret...\n" if $::DEBUG;
-	    $response = $handle->get_next_request ($ret);
-	}
-	if (!$response) {
-	    return;
-	}
-	my @keys = keys %$response;
-	$ret = $keys[0];
-	print "# Analyzing $ret (compared to $oid)...\n" if $::DEBUG;
-	last unless ($ret =~ /^$oid/);
-	$num++;
-	next unless ($response->{$ret} =~ /$regex/);
-	@keys = split (/\./, $ret);
-	$result->{$keys[-1]} = $response->{$ret};;
-	print "# Index $num: ", $keys[-1], " (", $response->{$ret}, ")\n" if $::DEBUG;
-    };
-    return $result;
+    while (my ($oid, $value) = each %$response) {
+        unless ($value =~ /$regex/) {
+            print "# '$value' doesn't match /$regex/.  Ignoring\n" if $DEBUG;
+            next;
+        }
+        my ($index) = ($oid =~ m{^\Q$baseoid.\E(.*)})
+            or die "$oid doesn't appear to be a descendent of $baseoid";
+
+        $result{$index} = $value;
+        print "# Index '$index', value $value\n" if $DEBUG;
+    }
+
+    return \%result;
 }
 
 1;
