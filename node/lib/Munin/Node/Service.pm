@@ -55,7 +55,7 @@ sub prepare_plugin_environment
     $config->{fqdn} ||= Munin::Node::OS->get_fq_hostname();
 
     # Export some variables plugins might be interested in
-    $ENV{MUNIN_DEBUG} = $config->{PIDEBUG};
+    $ENV{MUNIN_DEBUG} = $config->{PIDEBUG} if $config->{PIDEBUG};
     $ENV{FQDN}        = $config->{fqdn};
     
     # munin-node will override this with the IP of the connecting master
@@ -210,7 +210,7 @@ sub exec_service {
 
     my @command = grep defined, _service_command($dir, $service, $arg);
     print STDERR "# About to run '", join (' ', @command), "'\n" 
-	if $config->{DEBUG};
+        if $config->{DEBUG};
 
     exec @command;
 }
