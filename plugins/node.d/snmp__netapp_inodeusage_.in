@@ -73,7 +73,6 @@ my %oids = (
 );
 
 if (defined $ARGV[0] and $ARGV[0] eq 'snmpconf') {
-    print "number 1.3.6.1.4.1.789.1.5.6.0\n";
     print "index 1.3.6.1.4.1.789.1.5.4.1.1.\n";
     foreach (keys %oids) {
         print "require $oids{$_} [0-9]\n";

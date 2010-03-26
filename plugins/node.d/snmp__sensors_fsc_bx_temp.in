@@ -71,7 +71,7 @@ my $tempSensorDisabled = 2;
 my $tempSensorUnavailable = 99;
 
 if (defined $ARGV[0] and $ARGV[0] eq 'snmpconf') {
-    print "index   $tempBase.\n";
+    print "require $tempBase.\n";
     # Require known, enabled and available sensors
     print "require $tempBase.$tempSensorStatus. ^[3-9]|[1-8][0-9]|9[0-8]\$\n";
 
