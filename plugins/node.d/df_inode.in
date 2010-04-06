@@ -11,7 +11,7 @@ df_inode - Plugin to monitor inode-usage.
 
 This plugin is meant to be generic unix but there will be specific
 kinks on each platform that may justify custom versions.  It does not
-work on SunOS/Solaris.
+work on SunOS/Solaris/Cygwin.
 
 =head1 CONFIGURATION
 
@@ -39,11 +39,10 @@ print_values() {
 if [ "$1" = "autoconf" ]; then
     if [ -z "$(print_values)" ] ; then
 	echo no
-	exit 0
     else
 	echo yes
-	exit 0
     fi
+    exit 0
 fi
 
 if [ "$1" = "config" ]; then
@@ -51,6 +50,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_args --upper-limit 100 -l 0'
     echo 'graph_vlabel %'
     echo 'graph_scale no'
+    echo 'graph_category disk'
     df -P -l -i  | sed -e '1d' -e '/\/\//d' -e 's/%//' | sort |
     while read dev avail used free pct fs; do
 	name=$(clean_fieldname $dev)
