@@ -90,7 +90,8 @@ sub parse_args
 	my $sconfdir   = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
 	my $libdir     = "$Munin::Common::Defaults::MUNIN_LIBDIR/plugins";
 
-	my $debug;
+	my $debug = 0;
+	my $pidebug = 0;
 	my ($suggest, $shell, $removes, $newer);
 	my $exit_not_error = 1;
 	my @families;
@@ -101,6 +102,7 @@ sub parse_args
 		"shell!"          => \$shell,
 		"exitnoterror!"   => \$exit_not_error,
 		"debug!"          => \$debug,
+		"pidebug!"        => \$pidebug,
 		"suggest!"        => \$suggest,
 		"config=s"        => \$conffile,
 		"servicedir=s"    => \$servicedir,
@@ -154,6 +156,7 @@ sub parse_args
 		snmp_port => $snmpport,
 
 		DEBUG => $debug,
+		PIDEBUG => $pidebug,
 	});
 
 	return;
@@ -175,6 +178,10 @@ Options:
                             debugging output is printed on STDOUT but each
                             line is prefixed with '#'.  Only errors are
                             printed on STDERR.
+
+    --pidebug               Plugin debug.  Sets the environment variable
+                            MUNIN_DEBUG to 1 so that plugins may enable
+                            debugging.
 
     --config <file>         Override configuration file
                                 [$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf]
@@ -514,6 +521,11 @@ Show version information
 Print debug information (very verbose).  All debugging output is
 printed on STDOUT but each line is prefixed with '#'.  Only errors are
 printed on STDERR.
+
+=item B<< --pidebug >>
+
+Plugin debug.  Sets the environment variable MUNIN_DEBUG to 1 so that plugins
+may enable debugging.
 
 =item B<< --config <file> >>
 
