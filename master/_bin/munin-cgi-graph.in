@@ -90,6 +90,10 @@ while (new CGI::Fast) {
   
     # If a "Cache-Control: no-cache" header gets send, we regenerate the image in every case:
     my $no_cache = $pinpoint || defined($ENV{HTTP_CACHE_CONTROL}) && $ENV{HTTP_CACHE_CONTROL} =~ /no-cache/i;
+    # Be able to deactivate the cache with the url
+    if (CGI::param("no_cache") && CGI::param("no_cache") eq "yes") {
+	    $no_cache = 1;
+    }
 
     # Compute the cache values
     my $graph_ttl = $pinpoint ? 1 : $period{$scale};
@@ -139,6 +143,11 @@ while (new CGI::Fast) {
 
     # Sending graph data
     send_graph_data($filename);
+} continue {
+	# Be able to restart the fast cgi service from URL
+	if (CGI::param("cgi_exit") && CGI::param("cgi_exit") eq "yes") {
+		exit;
+	}
 }
 # END FAST-CGI LOOP
 
