@@ -186,6 +186,7 @@ sub graph_startup {
     @limit_services = @init_limit_services;
 
     $DEBUG	    = 0;
+    $pinpoint       = undef;
 
     $force_graphing = 0;
     $force_lazy     = 1;
