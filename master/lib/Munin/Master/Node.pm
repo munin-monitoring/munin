@@ -394,8 +394,8 @@ sub parse_service_data {
 
 	    $values{$service}{$data_source} ||= {};
 
-            $values{$service}{$data_source}{value} = $value;
-            $values{$service}{$data_source}{when}  = $when;
+	    push @{$values{$service}{$data_source}{when}}, $when;
+	    push @{$values{$service}{$data_source}{value}}, $value;
         }
 	elsif ($line =~ m{\A ([^\.]+)\.extinfo \s+ (.+) }xms) {
 	    # Extinfo is used in munin-limits

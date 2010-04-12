@@ -690,30 +690,46 @@ sub to_mul_nb {
 sub _update_rrd_file {
     my ($self, $rrd_file, $ds_name, $ds_values) = @_;
 
-    my $value = $ds_values->{value};
+    my $values = $ds_values->{value};
 
     # Some kind of mismatch between fetch and config can cause this.
-    return if !defined($value);  
+    return if !defined($values);  
 
-    if ($value =~ /\d[Ee]([+-]?\d+)$/) {
-        # Looks like scientific format.  RRDtool does not
-        # like it so we convert it.
-        my $magnitude = $1;
-        if ($magnitude < 0) {
-            # Preserve at least 4 significant digits
-            $magnitude = abs($magnitude) + 4;
-            $value = sprintf("%.*f", $magnitude, $value);
-        } else {
-            $value = sprintf("%.4f", $value);
+    for (my $i = 0; $i < scalar @$values; $i++) { 
+        my $value = $values->[$i];
+        my $when = $ds_values->{when}[$i];
+
+        if ($value =~ /\d[Ee]([+-]?\d+)$/) {
+            # Looks like scientific format.  RRDtool does not
+            # like it so we convert it.
+            my $magnitude = $1;
+            if ($magnitude < 0) {
+                # Preserve at least 4 significant digits
+                $magnitude = abs($magnitude) + 4;
+                $value = sprintf("%.*f", $magnitude, $value);
+            } else {
+                $value = sprintf("%.4f", $value);
+            }
+        }
+
+        DEBUG "[DEBUG] Updating $rrd_file with $when:$value";
+        RRDs::update($rrd_file, "$when:$value");
+        if (my $ERROR = RRDs::error) {
+            #confess Dumper @_;
+            ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
         }
     }
+}
 
-    DEBUG "[DEBUG] Updating $rrd_file with ".$ds_values->{when}.":$value";
-    RRDs::update($rrd_file, "$ds_values->{when}:$value");
-    if (my $ERROR = RRDs::error) {
-	#confess Dumper @_;
-        ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
-    }
+sub dump_to_file
+{
+	my ($filename, $obj) = @_;
+	open(DUMPFILE, ">> $filename");
+
+	use Data::Dumper;
+	print DUMPFILE Dumper($obj);
+
+	close(DUMPFILE);
 }
 
 1;
