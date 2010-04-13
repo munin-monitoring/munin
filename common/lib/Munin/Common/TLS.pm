@@ -32,6 +32,7 @@ sub new {
         tls_priv           => $args->{tls_priv} || '',
         tls_vdepth         => $args->{tls_vdepth} || 0,
         tls_verify         => $args->{tls_verify} || 0,
+        tls_match          => $args->{tls_match} || '',
     };
 
     for my $args_key (keys %$args) {
@@ -209,14 +210,14 @@ sub _set_peer_requirements {
     Net::SSLeay::CTX_set_verify_depth ($self->{tls_context}, $self->{tls_vdepth});
     my $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
-	$self->{logger}("[WARNING] in set_verify_depth: $err");
+        $self->{logger}("[WARNING] in set_verify_depth: $err");
     }
     Net::SSLeay::CTX_set_verify ($self->{tls_context}, 
                                  &Net::SSLeay::VERIFY_PEER, 
                                  $self->_tls_verify_callback($tls_verified));
     $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
-	$self->{logger}("[WARNING] in set_verify: $err");
+        $self->{logger}("[WARNING] in set_verify: $err");
     }
     
     return 1;
@@ -229,7 +230,6 @@ sub _tls_verify_callback {
     return sub {
         my ($ok, $subj_cert, $issuer_cert, $depth, 
 	    $errorcode, $arg, $chain) = @_;
-        #    $self->{logger}("ok is ${ok}");
 
         $tls_verified->{"level"}++;
 
@@ -270,7 +270,7 @@ sub _log_cipher_list {
         $p=Net::SSLeay::get_cipher_list($self->{tls_session},$i);
     } while $p;
     $cipher_list .= '\n';
-    $self->{logger}("[TLS] Available cipher list: $cipher_list.");
+    $self->{logger}("[TLS] Available cipher list: $cipher_list.") if $self->{DEBUG};
 }
 
 
@@ -280,12 +280,12 @@ sub _set_ssleay_file_descriptors {
     Net::SSLeay::set_rfd($self->{tls_session}, $self->{read_fd});
     my $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
-        $self->{logger}("TLS Warning in set_rfd: $err");
+        $self->{logger}("[TLS] Warning in set_rfd: $err");
     }
     Net::SSLeay::set_wfd($self->{tls_session}, $self->{write_fd});
     $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
-        $self->{logger}("TLS Warning in set_wfd: $err");
+        $self->{logger}("[TLS] Warning in set_wfd: $err");
     }
 }
 
@@ -293,7 +293,7 @@ sub _set_ssleay_file_descriptors {
 sub _accept_or_connect {
     my ($self, $tls_verified) = @_;
 
-    $self->{logger}("Accept/Connect: $self->{private_key_loaded}, " . $self->_use_key_if_present()) if $self->{DEBUG};
+    $self->{logger}("[TLS] Accept/Connect: $self->{private_key_loaded}, " . $self->_use_key_if_present()) if $self->{DEBUG};
     my $res;
     if ($self->_use_key_if_present()) {
         $res = Net::SSLeay::accept($self->{tls_session});
@@ -301,7 +301,7 @@ sub _accept_or_connect {
     else {
         $res = Net::SSLeay::connect($self->{tls_session});
     }
-    $self->{logger}("Done Accept/Connect") if $self->{DEBUG};
+    $self->{logger}("[TLS] Done Accept/Connect") if $self->{DEBUG};
 
     my $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err)
@@ -319,11 +319,21 @@ sub _accept_or_connect {
 	Net::SSLeay::CTX_free ($self->{tls_context});
 	$self->{tls_session} = undef;
     }
+    elsif ($self->{"tls_match"} and
+    	Net::SSLeay::dump_peer_certificate($self->{tls_session}) !~ /$self->{tls_match}/)
+    { 
+	$self->{logger}("[ERROR] Could not match pattern \"" . $self->{tls_match} .
+		"\" in dump of certificate.");
+	$self->_on_unmatched_cert();
+	Net::SSLeay::free ($self->{tls_session});
+	Net::SSLeay::CTX_free ($self->{tls_context});
+	$self->{tls_session} = undef;
+    }
     else
     {
-	$self->{logger}("[TLS] TLS enabled.");
-	$self->{logger}("[TLS] Cipher `" . Net::SSLeay::get_cipher($self->{tls_session}) . "'.");
-	$self->{logger}("[TLS] client cert: " . Net::SSLeay::dump_peer_certificate($self->{tls_session}));
+	$self->{logger}("[TLS] TLS enabled.") if $self->{DEBUG};
+	$self->{logger}("[TLS] Cipher `" . Net::SSLeay::get_cipher($self->{tls_session}) . "'.") if $self->{DEBUG};
+	$self->{logger}("[TLS] client cert: " . Net::SSLeay::dump_peer_certificate($self->{tls_session})) if $self->{DEBUG};
     }
 }
 
@@ -349,6 +359,8 @@ sub _use_key_if_present {
 # Redefine in sub class if needed
 sub _on_unverified_cert {}
 
+# Redefine in sub class if needed
+sub _on_unmatched_cert {}
 
 sub read {
     my ($self) = @_;
@@ -361,12 +373,13 @@ sub read {
     eval { $_ = Net::SSLeay::read($self->{tls_session}); };
     my $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
-        $self->{logger}("TLS Warning in read: $err");
+        $self->{logger}("[TLS] Warning in read: $err");
         return;
     }
+    $self->{logger}("DEBUG: < $_") if $self->{DEBUG};
+
     if($_ eq '') { undef $_; } #returning '' signals EOF
 
-    $self->{logger}("DEBUG: < $_") if $self->{DEBUG};
 
     return $_;
 }
@@ -383,7 +396,7 @@ sub write {
     eval { Net::SSLeay::write($self->{tls_session}, $text); };
     my $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
-        $self->{logger}("TLS Warning in write: $err");
+        $self->{logger}("[TLS] Warning in write: $err");
         return 0;
     }
     

@@ -60,6 +60,69 @@ owned by root. Default on.
 Files matching E<lt>regexE<gt> in the node.d/ and node-conf.d/
 directories will be overlooked.
 
+=item B<tls> <value>
+
+Can have four values. C<paranoid>, C<enabled>, C<auto>, and
+C<disabled>.  C<Paranoid> and C<enabled> require a TLS connection,
+while C<disabled> will not attempt one at all.
+
+The current default is C<disabled> because C<auto> is broken.  C<Auto>
+causes bad interaction between munin-update and munin-node if the node
+is unprepared to go to TLS.
+
+If you see data dropouts (gaps in graphs) please try to disable TLS.
+
+=item B<tls_verify_certificate> <value>
+
+This directive can be C<yes> or C<no>.  It determines if the remote
+certificate needs to be signed by a CA that is known locally.  Default
+is C<no>.
+
+=item B<tls_private_key> <value>
+
+This directive sets the location of the private key to be used for
+TLS.  Default is @@CONFDIR@@/munin-node.pem.  The private key and
+certificate can be stored in the same file.
+
+=item B<tls_certificate> <value>
+
+This directive sets the location of the TLS certificate to be used for
+TLS.  Default is @@CONFDIR@@/munin-node.pem.  The private key and
+certificate can be stored in the same file.
+
+=item B<tls_ca_certificate> <value>
+
+This directive sets the CA certificate to be used to verify the node's
+certificate, if tls_verify_certificate is set to C<yes>.  Default is
+@@CONFDIR@@/cacert.pem.
+
+=item B<tls_verify_depth> <value>
+
+This directive sets how many signings up a chain of signatures TLS is
+willing to go to reach a known, trusted CA when verifying a
+certificate.  Default is C<5>.
+
+=item B<tls_match> <value>
+
+This directive, if defined, searches a dump of the certificate provided by the
+remote host for the given regex.  The dump of the certificate is two lines of
+the form:
+
+	Subject Name: /C=c/ST=st/L=l/O=o/OU=ou/CN=cn/emailAddress=email
+	Issuer  Name: /C=c/ST=st/O=o/OU=ou/CN=cn/emailAddress=email
+
+So, for example, one could match the subject distinguished name by the directive:
+
+	tls_match Subject Name: /C=c/ST=st/L=l/O=o/OU=ou/CN=cn/emailAddress=email
+
+Note that the fields are dumped in the order they appear in the certificate.
+It's best to view the dump of the certificate by running munin-update in debug
+mode and reviewing the logs.
+
+Unfortunately, due to the limited functionality of the SSL module in use, it is
+not possible to provide finer-grained filtering.  By default this value is not
+defined.
+
 =back
 
 =head1 EXAMPLE

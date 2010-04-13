@@ -87,6 +87,7 @@ sub _parse_line {
         tls_private_key
         tls_verify_certificate
         tls_verify_depth
+        tls_match
     );
 
     if ($config_variables{$var_name}) {

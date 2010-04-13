@@ -121,11 +121,12 @@ sub _run_starttls_if_required {
     # TLS should only be attempted if explicitly enabled. The default
     # value is therefore "disabled" (and not "auto" as before).
     my $tls_requirement = $config->{tls};
-    INFO "TLS set to \"$tls_requirement\".";
+    DEBUG "TLS set to \"$tls_requirement\".";
     return if $tls_requirement eq 'disabled';
+    my $logger = Log::Log4perl->get_logger("Munin::Master");
     $self->{tls} = Munin::Common::TLSClient->new({
         DEBUG        => $config->{debug},
-        logger       => \&logger,
+        logger       => sub { $logger->warn(@_) },
         read_fd      => fileno($self->{reader}),
         read_func    => sub { _node_read_single($self) },
         tls_ca_cert  => $config->{tls_ca_certificate},
@@ -134,8 +135,9 @@ sub _run_starttls_if_required {
         tls_priv     => $config->{tls_private_key},
         tls_vdepth   => $config->{tls_verify_depth},
         tls_verify   => $config->{tls_verify_certificate},
+        tls_match    => $config->{tls_match},
         write_fd     => fileno($self->{writer}),
-        write_func   => sub { _write_socket_single($self, @_) },
+        write_func   => sub { _node_write_single($self, @_) },
     });
 
     if (!$self->{tls}->start_tls()) {

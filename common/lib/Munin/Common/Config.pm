@@ -31,7 +31,7 @@ my %legal = map { $_ => 1 } (
 	"graph_period", "cgiurl_graph", "cgiurl", "tls",
 	"service_order", "category_order", "version",
 	"tls_certificate", "tls_private_key", "tls_pem",
-	"tls_verify_certificate", "tls_verify_depth",
+	"tls_verify_certificate", "tls_verify_depth", "tls_match",
 	"tls_ca_certificate", "graph_data_size", "colour",
 	"graph_printf", "ok", "unknown", "palette", "realservname",
 	"cdef_name", "graphable", "process", "realname",
