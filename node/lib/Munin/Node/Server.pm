@@ -248,6 +248,7 @@ sub _process_starttls_command {
                   || "$Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem";
     my $tls_verify = $config->{tls_verify_certificate}
                   || 'no';
+    my $tls_match  = $config->{tls_match};
 
     my $depth = $config->{tls_verify_depth};
     $depth = 5 unless defined $depth;
@@ -263,6 +264,7 @@ sub _process_starttls_command {
         tls_priv     => $key,
         tls_vdepth   => $depth,
         tls_verify   => $tls_verify,
+        tls_match    => $tls_match,
         write_fd     => fileno(STDOUT),
         write_func   => sub { print @_ },
     });

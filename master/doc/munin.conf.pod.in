@@ -174,6 +174,27 @@ This directive sets how many signings up a chain of signatures TLS is
 willing to go to reach a known, trusted CA when verifying a
 certificate.  Default is C<5>.  Affects: munin-update.
 
+=item B<tls_match> <value>
+
+This directive, if defined, searches a dump of the certificate provided by the
+remote host for the given regex.  The dump of the certificate is two lines of
+the form:
+
+	Subject Name: /C=c/ST=st/L=l/O=o/OU=ou/CN=cn/emailAddress=email
+	Issuer  Name: /C=c/ST=st/O=o/OU=ou/CN=cn/emailAddress=email
+
+So, for example, one could match the subject distinguished name by the directive:
+
+	tls_match Subject Name: /C=c/ST=st/L=l/O=o/OU=ou/CN=cn/emailAddress=email
+
+Note that the fields are dumped in the order they appear in the certificate.
+It's best to view the dump of the certificate by running munin-update in debug
+mode and reviewing the logs.
+
+Unfortunately, due to the limited functionality of the SSL module in use, it is
+not possible to provide finer-grained filtering.  By default this value is not
+defined.  Affects: munin-update.
+
 =item FIXME: This section MAY be complete, it may be missing a directive or two.
 
 =back
