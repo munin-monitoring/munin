@@ -161,6 +161,10 @@ use Munin::Plugin;
  extraconfig    This string is copied directly into the configuration output
                 when the plugin is run in config mode, allowing low-level
                 customization.
+ postprocess    A function that's called with the result of the base query,
+                and can post-process the result and return a new resultset.
+ postconfig     A function that's called with the result of the config query,
+                and can post-process the result and return a new resultset.
 
 =head3 Specifying queries
 
@@ -212,6 +216,8 @@ sub new {
         paramdatabase  => $args{paramdatabase},
         defaultdb      => $args{defaultdb},
         extraconfig    => $args{extraconfig},
+        postprocess    => $args{postprocess},
+        postconfig     => $args{postconfig},
     };
 
     foreach my $k (keys %defaults) {
@@ -241,7 +247,12 @@ sub Config {
     my ($q, @p)
         = $self->replace_wildcard_parameters(
         $self->get_versioned_query($self->{configquery}));
-    foreach my $row (@{$self->runquery($q, \@p)}) {
+    my $r = $self->runquery($q, \@p);
+    if ($self->{postconfig}) {
+        $r = $self->{postconfig}->($r);
+    }
+
+    foreach my $row (@$r) {
         my $l = Munin::Plugin::clean_fieldname($row->[0]);
         print "$l.label $row->[1]\n";
         print "$l.info $row->[2]\n" if (defined $row->[2]);
@@ -307,6 +318,9 @@ sub GetData {
             = $self->replace_wildcard_parameters(
             $self->get_versioned_query($self->{basequery}));
         my $r = $self->runquery($q, \@p, $self->{pivotquery});
+        if ($self->{postprocess}) {
+            $r = $self->{postprocess}->($r);
+        }
         foreach my $row (@$r) {
             my $l = Munin::Plugin::clean_fieldname($row->[0]);
             print $l . ".value " . $row->[1] . "\n";
