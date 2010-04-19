@@ -216,6 +216,10 @@ sub _negotiate_session_capabilities {
 
     my $node_cap = "multigraph dirtyconfig";
 
+    # telnet uses a full CRLF line ending.  chomp just removes the \n, so need
+    # to strip \r manually.  see ticket #902
+    $server_capabilities =~ s/\r$//;
+
     $session->{server_capabilities} = {
             map { $_ => 1 } split(/ /, $server_capabilities)
     };
