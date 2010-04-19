@@ -8,7 +8,6 @@ use strict;
 use warnings;
 
 use English qw(-no_match_vars);
-use Carp;
 
 use Munin::Node::Config;
 use Munin::Common::Defaults;
@@ -22,7 +21,7 @@ use Munin::Node::Utils;
 # A set of all services that this node can run.
 my %services;
 
-# Services that require the server to support multigraph plugins.
+# Services that require the server to support certain capabilities
 my (@multigraph_services, @dirtyconfig_services);
 
 # Which hosts this node's services applies to. Typically this is the
@@ -423,4 +422,4 @@ Logs the source of rejected connections.
 Processes the request.
 
 =cut
-vim: ts=4 : expandtab
+vim: ts=4 : et : sw=4
