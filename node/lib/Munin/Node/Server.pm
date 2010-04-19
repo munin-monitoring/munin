@@ -141,13 +141,8 @@ sub process_request
         });
     };
 
-    if ($EVAL_ERROR) {
-        logger($EVAL_ERROR);
-    }
-
-    if ($timed_out) {
-        logger("Connection timed out");
-    }
+    logger($EVAL_ERROR)            if ($EVAL_ERROR);
+    logger("Connection timed out") if ($timed_out);
 
     return;
 }
@@ -219,18 +214,15 @@ sub _expect_starttls {
 sub _negotiate_session_capabilities {
     my ($session, $server_capabilities) = @_;
 
-    my @node_cap = qw/
-        multigraph
-        dirtyconfig
-    /;
-    
+    my $node_cap = "multigraph dirtyconfig";
+
     $session->{server_capabilities} = {
             map { $_ => 1 } split(/ /, $server_capabilities)
     };
 
     $ENV{MUNIN_CAP_DIRTYCONFIG} = 1 if ($session->{server_capabilities}{dirtyconfig});
 
-    _net_write($session, sprintf("cap %s\n",join(" ", @node_cap)));
+    _net_write($session, "cap $node_cap\n");
 }
 
 
