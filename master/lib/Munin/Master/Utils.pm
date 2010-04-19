@@ -1284,7 +1284,7 @@ sub munin_get_field_order
     for my $fieldnode (@{munin_find_field ($hash, "label")}) {
         my $fieldname = munin_get_node_name ($fieldnode);
 	push @$result,$fieldname
-	    if !grep m[^\Q$fieldname\E(?:=|$)], @$result;;
+	    if !grep m[^\Q$fieldname\E(?:=|$)], @$result;
     }
 
     for my $fieldnode (@{munin_find_field ($hash, "stack")}) {
