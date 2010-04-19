@@ -46,8 +46,9 @@ variables that libpq does. The most common ones used are:
  PGUSER      username to connect as
  PGPASSWORD  password to connect with, if a password is required
 
-The plugins will always connect to the 'template1' database, except for
-wildcard per-database plugins.
+The plugins will by default connect to the 'template1' database, except for
+wildcard per-database plugins. This can be overridden using the PGDATABASE
+variable, but this is usually a bad idea.
 
 =head2 Example
 
@@ -154,7 +155,9 @@ use Munin::Plugin;
                 for each occurance a parameter with the value of the filtering
                 condition will be added to the DBI statement.
  paramdatabase  Makes the plugin connect to the database in the first parameter
-                (wildcard plugins only) instead of 'postgres'.
+                (wildcard plugins only) instead of 'template1'.
+ defaultdb      Makes the plugin connect to the database specified in this
+                parameter instead of 'template1'.
  extraconfig    This string is copied directly into the configuration output
                 when the plugin is run in config mode, allowing low-level
                 customization.
@@ -207,6 +210,7 @@ sub new {
         suggestquery   => $args{suggestquery},
         pivotquery     => $args{pivotquery},
         paramdatabase  => $args{paramdatabase},
+        defaultdb      => $args{defaultdb},
         extraconfig    => $args{extraconfig},
     };
 
@@ -361,13 +365,18 @@ sub _connect() {
 
     if (eval "require DBI; require DBD::Pg;") {
 
-        # Always connect to database template1, because it exists on both old
+        # By default, connect to database template1, because it exists on both old
         # and new versions of PostgreSQL, unless the database should be controlled
-        # by the first parameter.
+        # by the first parameter. Using the defaultdb parameter will override
+        # this. Finally, specifying the database name in the environment will
+        # override everything.
+        #
         # All other connection parameters are controlled by the libpq environment
         # variables.
         my $dbname = "template1";
+        $dbname = $self->{defaultdb}           if ($self->{defaultdb});
         $dbname = $self->wildcard_parameter(0) if ($self->{paramdatabase});
+        $dbname = $ENV{"PGDATABASE"}           if ($ENV{"PGDATABASE"});
         $self->{dbh} = DBI->connect("DBI:Pg:dbname=$dbname");
         unless ($self->{dbh}) {
             $self->{connecterror} = "$DBI::errstr";
