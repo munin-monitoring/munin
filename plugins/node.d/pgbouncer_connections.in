@@ -1,0 +1,101 @@
+#!@@PERL@@
+# -*- cperl -*-
+#
+# Copyright (C) 2010 Magnus Hagander, Redpill Linpro AB
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+=head1 NAME
+
+pgbouncer_connections - Plugin to monitor pgbouncer connections.
+
+=head1 CONFIGURATION
+
+Configuration is done through libpq environment variables, for example
+PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugin::Pgsql>.
+
+=head1 SEE ALSO
+
+L<Munin::Plugin::Pgsql>
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=head1 AUTHOR
+
+Magnus Hagander <magnus@hagander.net>, Redpill Linpro AB
+
+=head1 COPYRIGHT/License.
+
+Copyright (c) 2010 Magnus Hagander, Redpill Linpro AB
+
+All rights reserved. This program is free software; you can
+redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+=cut
+
+use strict;
+use warnings;
+
+use Munin::Plugin::Pgsql;
+
+my $pg = Munin::Plugin::Pgsql->new(
+    title       => 'PgBouncer connections',
+    info        => 'Number of connections',
+    vlabel      => 'Connections',
+    defaultdb   => 'pgbouncer',
+    basequery   => "SHOW POOLS",
+    postprocess => \&PgBouncerPoolCounter,
+    configquery => "SHOW POOLS",
+    postconfig  => \&PgBouncerPoolConfig,
+);
+
+$pg->Process();
+
+sub PgBouncerPoolConfig {
+    my $pgresult = shift;
+
+    return [
+        ["cl_active",  "Active clients"],
+        ["cl_waiting", "Waiting clients"],
+        ["sv_active",  "Active servers"],
+        ["sv_idle",    "Idle servers"],
+    ];
+}
+
+sub PgBouncerPoolCounter {
+    my $pgresult = shift;
+
+    my ($cl_active, $cl_waiting, $sv_active, $sv_idle) = (0, 0, 0, 0);
+
+    foreach my $row (@$pgresult) {
+        $cl_active  += $row->[2];
+        $cl_waiting += $row->[3];
+        $sv_active  += $row->[4];
+        $sv_idle    += $row->[5];
+    }
+
+    return [
+        ['cl_active',  $cl_active - 1],    # Subtract our own session
+        ['cl_waiting', $cl_waiting],
+        ['sv_active',  $sv_active],
+        ['sv_idle',    $sv_idle],
+    ];
+}
