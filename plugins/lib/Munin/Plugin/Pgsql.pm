@@ -425,9 +425,9 @@ sub get_version {
 
 sub get_versioned_query {
     my ($self, $query) = @_;
-    $self->get_version();
     if (ref($query) eq "ARRAY") {
         my $rq = undef;
+        $self->get_version();
         foreach my $entry (@$query) {
             if (!defined($rq)) {
 
