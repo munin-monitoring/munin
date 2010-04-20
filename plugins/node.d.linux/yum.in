@@ -1,6 +1,6 @@
 #!@@PERL@@ -w
 # -*- perl -*-
-# vim: ft=perl
+# vim: ft=perl : sw=4 : ts=4 : et
 
 =head1 NAME
 
@@ -33,23 +33,23 @@ my $statefile = "$Munin::Common::Defaults::MUNIN_PLUGSTATE/yum.state";
 
 sub update {
     if (-l $statefile) {
-	die "$statefile is a symlink, not touching.\n";
+    die "$statefile is a symlink, not touching.\n";
     }
 
     open my $state, '>', $statefile
-	or die "Can't open $statefile for writing: $!\n";
+    or die "Can't open $statefile for writing: $!\n";
 
     open my $yum, '-|', 'yum list updates'
-	or die "Can't run 'yum list updates': $!";
+    or die "Can't run 'yum list updates': $!";
 
     # Skip header crap
     while (<$yum>) {
-	last if /^Updated/;
+    last if /^Updated/;
     }
 
     while (<$yum>) {
-	next unless /^(\S+)\.\S+\s+\S+\s+\S+/;
-	print $state "$1\n";
+    next unless /^(\S+)\.\S+\s+\S+\s+\S+/;
+    print $state "$1\n";
     }
 
     close $yum or die "Error running 'yum list updates': $!\n";
@@ -57,15 +57,16 @@ sub update {
 }
 
 sub autoconf {
-    my $ret = system('yum --version >/dev/null 2>/dev/null');
-    if ($ret == 0) {
-	print "yes\n";
-	exit 0;
+    if (system('yum --version >/dev/null 2>/dev/null') != 0) {
+        print "no (Could not run yum)\n";
+    }
+    elsif (! -r $statefile) {
+        print "no (Could not find statefile.  Please read 'munindoc yum')\n";
     }
     else {
-	print "no\n";
-	exit 0;
+        print "yes\n";
     }
+    exit 0;
 }
 
 sub config {
@@ -79,7 +80,7 @@ sub report {
     my @packages;
 
     open my $state, '<', $statefile
-	or die "Can't open $statefile for reading: $!
+    or die "Can't open $statefile for reading: $!
 Please read 'munindoc yum' to understand why if the file does not exist.\n";
 
     chomp(@packages = <$state>);
@@ -87,7 +88,7 @@ Please read 'munindoc yum' to understand why if the file does not exist.\n";
 
     print 'pending.value ', scalar(@packages), "\n";
     print 'pending.extinfo ', join(' ', @packages), "\n"
-	if @packages;
+    if @packages;
 }
 
 if ($ARGV[0]) {
@@ -99,9 +100,9 @@ if ($ARGV[0]) {
     );
 
     if (exists $funcs{$arg}) {
-	$funcs{$arg}->();
+    $funcs{$arg}->();
     } else {
-	die "Unknown argument '$arg'\n";
+    die "Unknown argument '$arg'\n";
     }
 } else {
     report();
