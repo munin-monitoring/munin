@@ -140,6 +140,10 @@ use Munin::Plugin;
  suggestquery   SQL query to run to generate the list of suggestions for a
                 wildcard plugin. Don't forget to include ALL if the plugin
                 supports aggregate statistics.
+ autoconfquery  SQL query to run as the last step of "autoconf", to determine
+                if the plugin should be run on this machine. Must return a single
+                row, two columns columns. The first one is a boolean field
+                representing yes or no, the second one a reason for "no".
  graphdraw      The draw parameter for the graph. The default is LINE1.
  graphtype      The type parameter for the graph. The default is GAUGE.
  graphperiod    The period for the graph. Copied directly to the config output.
@@ -209,6 +213,7 @@ sub new {
         graphmax       => $args{graphmax},
         stack          => $args{stack},
         configquery    => $args{configquery},
+        autoconfquery  => $args{autoconfquery},
         base           => $args{base},
         wildcardfilter => $args{wildcardfilter},
         suggestquery   => $args{suggestquery},
@@ -287,7 +292,16 @@ sub Autoconf {
         }
     }
 
-    # More magic needed?
+    # If the module has defined a query, run it and check the results. If it's
+    # not defined, assume we will now work.
+    if ($self->{autoconfquery}) {
+        my $r = $self->runquery($self->{autoconfquery});
+        if (!$r->[0]->[0]) {
+            print "no (" . $r->[0]->[1] . ")\n";
+            return 1;
+        }
+    }
+
     print "yes\n";
     return 0;
 }
