@@ -1,6 +1,6 @@
 package Munin::Node::Session;
 
-# $Id: #
+# $Id$ #
 
 use warnings;
 use strict;
