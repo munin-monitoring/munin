@@ -45,6 +45,8 @@ sub run_probes
 }
 
 
+# Checks each plugin in turn against the host, and make a note of
+# those that are supported.
 sub _probe_single_host
 {
     my ($self, $host, $plugins) = @_;
@@ -71,8 +73,11 @@ sub _probe_single_host
 		}
 		else {
             DEBUG("Host '$host' doesn't support $plugin->{name}");
-            # FIXME: check whether there was a timeout?  that would
-            # indicate a bad community string, or no SNMP support
+            # TODO: Check whether there was a timeout?  that would indicate a
+            # bad community string, or no SNMP support (either no daemon, or
+            # unsupported protocol version) -- any downsides?  are there
+            # devices that timeout rather than return noSuchObject?  compromise
+            # would be to have a --ignore-snmp-timeouts cmdline flag.
 		}
 	}
 
