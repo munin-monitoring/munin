@@ -93,7 +93,7 @@ sub read_plugin_dir
 {
 	my $cdir = shift;
 	my $ret  = {};
-	
+
     # Open and read the names of the files in the plugin directory
 	if (-d $cdir)
 	{
@@ -144,7 +144,7 @@ sub run_file
 {
 	my $file = shift;
 	my $arg  = shift;
-	
+
 	if (!defined $file or ! -e $file)
 	{
 		return "# Plugin does not exist.\n.\n";

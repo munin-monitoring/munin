@@ -301,7 +301,7 @@ sub exec_slowboat {
 	# if ($plugin_is_veryslow($plugin)) {
 	#    execute_plugin(pop(slowboat),'fast');
 	# } else {
-	
+
 	execute_plugin(pop(@slowboat),'slow');
 	# }
     }
@@ -324,7 +324,7 @@ sub munin_run ($) {
 	push(@slowboat,$thejob);
     }
 }
-	
+
 
 sub find_interval_plugins ($) {
     # Execute all plugins with the given execution interval

@@ -75,7 +75,7 @@ SKIP: {
 
     is_deeply([ map { $_->{name} } $plugins->list ], [ sort @plugins ],
 	      'List is sorted');
-    
+
     is_deeply([ sort $plugins->names ], [ sort @plugins ], 'All plugin names are returned');
 }
 

@@ -47,7 +47,7 @@ my $config = Munin::Node::Config->instance();
 	@ARGV = qw(plugin);
 	($plugin, $argument) = parse_args();
 	is($argument, undef, 'No argument was given');
-	
+
 	@ARGV = qw(plugin bad_argument);
 	($plugin, $argument) = parse_args();
 	is($argument, undef, 'Invalid argument is ignored');
