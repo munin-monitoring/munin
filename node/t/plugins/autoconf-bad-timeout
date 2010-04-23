@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Munin test plugin: 
+# Munin test plugin:
 #
 # autoconf says yes, but it times out
 #
@@ -15,5 +15,5 @@ do_autoconf()
 }
 
 
-do_$1 
+do_$1
 

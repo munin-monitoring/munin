@@ -14,5 +14,5 @@ do_autoconf()
 }
 
 
-do_$1 
+do_$1
 

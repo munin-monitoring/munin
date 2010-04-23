@@ -51,7 +51,7 @@ isa_ok($conf, 'Munin::Node::Config');
 
     my @res = $conf->_parse_line("default_client_user $uname");
     is_deeply(\@res, [defuser => $UID], 'Parsing default user name');
-    
+
     @res = $conf->_parse_line("default_client_user $UID");
     is_deeply(\@res, [defuser => $UID], 'Parsing default user ID');
 }
@@ -65,7 +65,7 @@ isa_ok($conf, 'Munin::Node::Config');
 
     my @res = $conf->_parse_line("default_client_group $gname");
     is_deeply(\@res, [defgroup => $gid], 'Parsing default group');
-    
+
     eval {
         $conf->_parse_line("default_client_group xxxyyyzzz");
     };
@@ -77,7 +77,7 @@ isa_ok($conf, 'Munin::Node::Config');
 
 {
     my @res = $conf->_parse_line("paranoia off");
-    is_deeply(\@res, [paranoia => 0], 'Parsing paranoia');  
+    is_deeply(\@res, [paranoia => 0], 'Parsing paranoia');
 }
 
 
@@ -85,12 +85,12 @@ isa_ok($conf, 'Munin::Node::Config');
 
 {
     my @res = $conf->_parse_line('allow 127\.0\.0\.1');
-    is_deeply(\@res, [], 'Parsing: allow is ignored');  
+    is_deeply(\@res, [], 'Parsing: allow is ignored');
 }
 
 {
     my @res = $conf->_parse_line('deny 127\.0\.0\.1');
-    is_deeply(\@res, [], 'Parsing: deny is ignored');  
+    is_deeply(\@res, [], 'Parsing: deny is ignored');
 }
 
 
@@ -98,7 +98,7 @@ isa_ok($conf, 'Munin::Node::Config');
 
 {
     my @res = $conf->_parse_line('tls paranoid');
-    is_deeply(\@res, [tls => 'paranoid'], 'Parsing tls');  
+    is_deeply(\@res, [tls => 'paranoid'], 'Parsing tls');
 
 }
 
@@ -133,7 +133,7 @@ isa_ok($conf, 'Munin::Node::Config');
     is_deeply($conf, $expected, "Reinitialize with new values");
 
     my $oldconf = $conf;
-    
+
     $conf->reinitialize();
     is_deeply($conf, {}, "Reinitialize to empty state");
 
@@ -233,7 +233,7 @@ isa_ok($conf, 'Munin::Node::Config');
 
 
 ###############################################################################
-#     P R O C E S S _ P L U G I N _ C O N F I G U R A T I O N _ F I L E S                    
+#     P R O C E S S _ P L U G I N _ C O N F I G U R A T I O N _ F I L E S
 
 {
     # Capture STDERR in a string
@@ -276,10 +276,10 @@ isa_ok($conf, 'Munin::Node::Config');
         sconfdir => $sconfdir,
         sconf=>{
             Foo => {
-                user => 'root', 
-                group => 0, 
+                user => 'root',
+                group => 0,
                 env => {
-                    baz => 'zing', 
+                    baz => 'zing',
                     bar => 'zap',
                 }
             },

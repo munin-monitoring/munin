@@ -224,7 +224,7 @@ sub _negotiate_session_capabilities {
         multigraph
         dirtyconfig
     /;
-    
+
     $session->{server_capabilities} = {
             map { $_ => 1 } split(/ /, $server_capabilities)
     };

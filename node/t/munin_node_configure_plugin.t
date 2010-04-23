@@ -162,7 +162,7 @@ sub gen_plugin
     is($p->suggestion_string, 'yes', 'Suggestion string - yes');
 
     $p = gen_plugin('if_');
-    
+
     $p->parse_autoconf_response('no');
     is($p->suggestion_string, 'no', 'Suggestion string - no');
 
@@ -246,7 +246,7 @@ sub gen_plugin
     is_deeply($wcp->_suggested_links, [ 'if_eth2' ], 'with a suggestion');
     is_deeply($wcp->_suggested_wild , [ 'eth2' ],    'with a suggested wildcard');
 }
-{    
+{
     my $sp = gen_plugin('snmp__load');
 
     $sp->{default} = 'yes';  # it's ok to run it now

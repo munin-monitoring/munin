@@ -27,7 +27,7 @@ sub fixes {
   #
   # Check comments
   #
-  open my $F, '<', $file 
+  open my $F, '<', $file
       or warn "Couldn't open $file: $!" && return;
   while (<$F>) {
       if (m{#\s*FIX}) {

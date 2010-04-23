@@ -131,7 +131,7 @@ sub _suggested_links
 {
     my ($self) = @_;
 
-    # no suggestions if there isn't any 
+    # no suggestions if there isn't any
     return [] if $self->{default} ne 'yes';
 
     if ($self->is_wildcard or $self->{name} =~ /^snmp__/) {
@@ -391,7 +391,7 @@ directory, 'no' otherwise.
 =item B<suggestion_string()>
 
 Returns a string detailing whether or not autoconf considers that the plugin
-should be installed.  The string may also report the reason why the plugin 
+should be installed.  The string may also report the reason why the plugin
 declined to be installed, or the list of suggestions it provided, if this
 information is available.
 

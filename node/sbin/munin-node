@@ -109,7 +109,7 @@ sub main {
 sub parse_args {
     my @ORIG_ARGV  = @ARGV;
 
-    print_usage_and_exit() unless GetOptions ( 
+    print_usage_and_exit() unless GetOptions (
         "config=s"     => \$conffile,
         "debug!"       => \$DEBUG,
         "plugindebug!" => \$PIDEBUG,

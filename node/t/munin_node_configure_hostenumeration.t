@@ -87,10 +87,10 @@ use warnings;
 		[ [ 'test.example.com/24'            ], [ @slash_24,               ], 'FQDN-based CIDR range',     ],
 		[ [ 'test.example.com/24', 'gateway' ], [ @slash_24, '192.168.2.1' ], 'Multiple specifications',   ],
 	);
-	
+
 	while (my $test = shift @tests) {
 		my ($hosts, $expected, $msg) = @$test;
-		
+
 		@$hosts = Munin::Node::Configure::HostEnumeration::expand_hosts(@$hosts);
 		is_deeply($hosts, $expected, $msg);
 	}

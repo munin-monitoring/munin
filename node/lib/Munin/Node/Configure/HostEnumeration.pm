@@ -36,7 +36,7 @@ sub _hosts_in_net
     }
 
     my $addr = _resolve($host);
-    
+
     die "Invalid netmask: $mask\n"
         unless ($mask =~ /^\d+$/ and $mask <= 32);
 
