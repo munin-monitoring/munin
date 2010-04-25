@@ -491,6 +491,11 @@ sub _update_rrd_files {
 	    $ds_config->{graph_data_size} ||= $configref->{"$service.$ds_name.graph_data_size"};
 	    $ds_config->{graph_data_size} ||= $configref->{"$service.graph_data_size"};
 	    $ds_config->{graph_data_size} ||= $config->{graph_data_size};
+            
+	    $ds_config->{update_rate} ||= $configref->{"$service.$ds_name.update_rate"};
+	    $ds_config->{update_rate} ||= $configref->{"$service.update_rate"};
+	    $ds_config->{update_rate} ||= $config->{update_rate};
+	    $ds_config->{update_rate} ||= 300; # default is 5 min
 
 	    DEBUG "[DEBUG] asking for a rrd of size : " . $ds_config->{graph_data_size};
 	    my $rrd_file = $self->_create_rrd_file_if_needed($service, $ds_name, $ds_config);
@@ -572,7 +577,7 @@ sub _create_rrd_file {
     );
 
     my $resolution = $ds_config->{graph_data_size};
-    my $update_rate = $ds_config->{update_rate} || 300; # 5 min per default 
+    my $update_rate = $ds_config->{update_rate};
     if ($resolution eq 'normal') {
         push (@args,
               "RRA:AVERAGE:0.5:1:576",   # resolution 5 minutes
@@ -623,6 +628,11 @@ sub parse_custom_resolution {
 	DEBUG "[DEBUG] update_rate: $update_rate";
 
         my @computer_format;
+
+	# First element is always the full resoltion, converting to computer format
+	my $full_res = shift @elems; 
+	unshift @elems "$update_rate for $full_res";
+
         foreach my $elem (@elems) {
                 if ($elem =~ m/(\d+) (\d+)/) {
                         # nothing to do, already in computer format
