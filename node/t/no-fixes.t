@@ -1,3 +1,4 @@
+# vim: ts=4 : sw=4 : et
 use warnings;
 use strict;
 
@@ -18,11 +19,17 @@ my $count = 0;
 find(\&fixes, "$FindBin::Bin/../lib");
 is($count, 0, "Should not find any FIX comments");
 
-sub fixes {
+sub fixes
+{
+    my $file = $File::Find::name;
 
-  my $file = $File::Find::name;
+    # skip SVN stuff
+    if ( -d and m{\.svn}) {
+        $File::Find::prune = 1;
+        return;
+    }
 
-  return unless -f $file;
+    return unless -f $file;
 
   #
   # Check comments
