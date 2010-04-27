@@ -3,14 +3,10 @@
 use strict;
 use warnings;
 
-use 5.10.0;
-
 use Test::More 'no_plan';
 
 use IO::Scalar;
 use File::Find;
-
-use Data::Dumper;
 
 plan skip_all => 'set TEST_POD to enable this test'
     unless $ENV{TEST_POD};
@@ -54,7 +50,17 @@ sub check_munindoc
 
     # FIXME: check for POD errors?
 
-    my @headings = map  { $_->[2] } grep { 'ARRAY' eq ref $_ && $_->[0] eq 'head1' && $_->[2] ~~ @sections } @$root;
+    my @headings;
+    
+    foreach my $section (@$root) {
+        # ignore any inapplicable headings
+        next unless 'ARRAY' eq ref $section;
+        next unless $section->[0] eq 'head1';
+        next unless grep { $_ eq $section->[2] } @sections;
+        
+        push @headings, $section->[2];
+    }
+
     eq_or_diff(\@headings, \@sections, "$plugin - All POD sections exist");
 
     # additional tests?
