@@ -107,9 +107,12 @@ sub do_work {
 			foreach my $service (keys %service_data) {
 				my $current_service_data = $service_data{$service};
 				foreach my $field (keys %$current_service_data) {
-					my $when = $current_service_data->{$field}->{when};
-					my $rounded_when = round_to_granularity($when, $update_rate_in_seconds);
-					$current_service_data->{$field}->{when} = $rounded_when;
+					$whens = $current_service_data->{$field}->{when};
+					for (my $i = 0; $i < scalar @$whens; $i ++) {
+						my $when = $whens->[$i];
+						my $rounded_when = round_to_granularity($when, $update_rate_in_seconds);
+						$whens->[$i] = $rounded_when;
+					}
 				}
 			}
 		}
@@ -269,10 +272,10 @@ sub handle_dirty_config {
 
 			DEBUG "[DEBUG] handle_dirty_config:$service, $field, $field_value";
 			# Moves the "value" to the service_data
-			$service_data{$service}->{$field} = {
-				"value" => $field_value,
-				"when" => "N",
-			};
+			$service_data{$service}->{$field} ||= { when => [], value => [], };
+
+			push @{$service_data{$service}{$field}{when}}, 'N';
+	                push @{$service_data{$service}{$field}{value}}, $field_value;
 
 			delete($service_data_source->{$field}{value});
 		}

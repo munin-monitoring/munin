@@ -394,7 +394,7 @@ sub parse_service_data {
 		$value = $2;
 	    }
 
-	    $values{$service}{$data_source} ||= {};
+	    $values{$service}{$data_source} ||= { when => [], value => [], };
 
 	    push @{$values{$service}{$data_source}{when}}, $when;
 	    push @{$values{$service}{$data_source}{value}}, $value;
