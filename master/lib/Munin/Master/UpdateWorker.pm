@@ -107,7 +107,7 @@ sub do_work {
 			foreach my $service (keys %service_data) {
 				my $current_service_data = $service_data{$service};
 				foreach my $field (keys %$current_service_data) {
-					$whens = $current_service_data->{$field}->{when};
+					my $whens = $current_service_data->{$field}->{when};
 					for (my $i = 0; $i < scalar @$whens; $i ++) {
 						my $when = $whens->[$i];
 						my $rounded_when = round_to_granularity($when, $update_rate_in_seconds);
