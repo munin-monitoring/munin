@@ -335,7 +335,7 @@ particular device we do not know.
 
 	if ($privpw) {
 	    # Privacy is a stronger demand and should be checked first.
-	    push( @options, ( -privpassword => $privpw
+	    push( @options, ( -privpassword => $privpw,
 			      -privprotocol => $privproto,
 			      -authpassword => $privpw,
 			      -authprotocol => $authproto ));
