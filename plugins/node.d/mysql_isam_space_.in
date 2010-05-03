@@ -226,6 +226,11 @@ sub fetch_state_from_mysql
 			}
                         else
 			{
+				# mysqlshow says many fun things sometimes, sanity-check
+				next if $fields[$index{Data_length}] eq "";
+				next if ($fields[$index{Max_data_length}] eq "") && ( ! $ABSOLUTE );
+				next if ($fields[$index{Max_data_length}] == 0) && ( ! $ABSOLUTE );
+
 				my $value =
 					$ABSOLUTE ? $fields[$index{Data_length}]
 					: (100*$fields[$index{Data_length}]/$fields[$index{Max_data_length}]);
