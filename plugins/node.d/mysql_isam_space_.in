@@ -61,7 +61,7 @@ if (exists $ENV{'mysqlopts'})
 }
 
 my $tables = undef;
-my $databses = undef;
+my $databases = undef;
 
 &print_autoconf () if ($ARGV[0] and $ARGV[0] eq "autoconf");
 
