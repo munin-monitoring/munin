@@ -51,9 +51,11 @@ munin-node.
 my $DB = `basename $0 | sed 's/^mysql_isam_space_//g' | tr '_' '-'` ;
 chomp $DB;
 my $STATEFILE = $ENV{'statefile'} || "@@PLUGSTATE@@/plugin-mysql_isam_space.state";
-my $MYSQLSHOW = $ENV{'mysqlshow'} || 'mysqlshow';
+my $MYSQLSHOW = $ENV{'mysqlshow'} || `which mysqlshow`;
 my $ABSOLUTE  = $ENV{'absolute'} || 0;
 my @mysql_opts = ();
+
+chomp $MYSQLSHOW;
 
 if (exists $ENV{'mysqlopts'})
 {
