@@ -219,7 +219,7 @@ sub fetch_state_from_mysql
 		while (<IN>)
 		{
 			my @fields = split (/\s*\|\s*/);
-                        next if @fields > 2; # Separator line
+                        next if @fields < 2; # Separator line
 			if (! $headerseen and $fields[1] eq "Name")
                         { # Header line, grab field names
                         	%index = map {($fields[$_], $_)} 0..$#fields;
