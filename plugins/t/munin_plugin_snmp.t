@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 16;
+use Test::More tests => 20;
 
 use_ok('Munin::Plugin::SNMP');
 
@@ -119,8 +119,8 @@ use_ok('Munin::Plugin::SNMP');
 			\%NET_SNMP_ARGUMENTS,
 			{
 				-hostname  => 'localhost',
-				-port      => 161,
-				-version   => 1,
+				-port      => '161',
+				-version   => '1',
 				-community => 'public',
 			},
 			'version 1 session (no community string)',
@@ -134,8 +134,8 @@ use_ok('Munin::Plugin::SNMP');
 			\%NET_SNMP_ARGUMENTS,
 			{
 				-hostname  => 'localhost',
-				-port      => 161,
-				-version   => 1,
+				-port      => '161',
+				-version   => '1',
 				-community => 's33kr1t',
 			},
 			'version 1 session (with community string)',
@@ -149,8 +149,8 @@ use_ok('Munin::Plugin::SNMP');
 			\%NET_SNMP_ARGUMENTS,
 			{
 				-hostname  => 'localhost',
-				-port      => 161,
-				-version   => 2,
+				-port      => '161',
+				-version   => '2',
 				-community => 'public',
 			},
 			'version 2 session (no community string)',
@@ -163,8 +163,8 @@ use_ok('Munin::Plugin::SNMP');
 			\%NET_SNMP_ARGUMENTS,
 			{
 				-hostname  => 'localhost',
-				-port      => 161,
-				-version   => 2,
+				-port      => '161',
+				-version   => '2',
 				-community => 's33kr1t',
 			},
 			'version 2 session (with community string)',
@@ -180,8 +180,52 @@ use_ok('Munin::Plugin::SNMP');
 	# version 3 (authPriv, different auth and priv keys)
 
 	# user-defined options
+	{
+		Munin::Plugin::SNMP->session(-retries => 10);
+		is_deeply(
+			\%NET_SNMP_ARGUMENTS,
+			{
+				-hostname  => 'localhost',
+				-port      => '161',
+				-version   => '2',
+				-community => 'public',
+				-retries   => '10'
+			},
+			'Arguments to session() are propagated to Net::SNMP',
+		);
+	}
 
 	# timeout
+	{
+		local $ENV{timeout} = 30;
+		Munin::Plugin::SNMP->session();
+		is_deeply(
+			\%NET_SNMP_ARGUMENTS,
+			{
+				-hostname  => 'localhost',
+				-port      => '161',
+				-version   => '2',
+				-community => 'public',
+				-timeout   => '30'
+			},
+			'Arguments to session() are propagated to Net::SNMP',
+		);
+	}
 
+	# unknown SNMP version
+	{
+		local $DEFAULT_CONFIG[2] = 17;
+		eval { Munin::Plugin::SNMP->session(); };
+		like($@, qr/./, 'Unknown SNMP version causes an exception.');
+	}
+	
+	# Unable to create session
+	{
+		no warnings;
+		local *Net::SNMP::session = sub { return (undef, 'fake error') };
+		use warnings;
+		eval { Munin::Plugin::SNMP->session(); };
+		like($@, qr/fake error/, 'Error creating SNMP session causes an exception.');
+	}
 }
 
