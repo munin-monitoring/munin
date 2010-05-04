@@ -123,7 +123,7 @@ use_ok('Munin::Plugin::SNMP');
 				-version   => '1',
 				-community => 'public',
 			},
-			'version 1 session (no community string)',
+			'version 1 session (no community string in environment)',
 		);
 	}
 	{
@@ -138,7 +138,7 @@ use_ok('Munin::Plugin::SNMP');
 				-version   => '1',
 				-community => 's33kr1t',
 			},
-			'version 1 session (with community string)',
+			'version 1 session (with community string in environment)',
 		);
 	}
 
@@ -153,7 +153,7 @@ use_ok('Munin::Plugin::SNMP');
 				-version   => '2',
 				-community => 'public',
 			},
-			'version 2 session (no community string)',
+			'version 2 session (no community string in environment)',
 		);
 	}
 	{
@@ -167,7 +167,7 @@ use_ok('Munin::Plugin::SNMP');
 				-version   => '2',
 				-community => 's33kr1t',
 			},
-			'version 2 session (with community string)',
+			'version 2 session (with community string in environment)',
 		);
 	}
 
