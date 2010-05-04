@@ -55,6 +55,7 @@ passing the C<--pidebug> option to C<munin-run>, for instance).
 package Munin::Plugin::SNMP;
 
 use strict;
+use warnings;
 
 use Net::SNMP;
 use Munin::Plugin;
@@ -352,13 +353,13 @@ particular device we do not know.
 	my ($object, $error) = $class->SUPER::session(@options);
 
 	if (!defined($object)) {
-	    die "Could not set up SNMPv3 seesion to $host: $error\n";
+	    die "Could not set up SNMPv3 session to $host: $error\n";
 	}
 
 	return $object;
-	
+
     } else {
-	die "Unknown SNMP version: '$version'. Do not know how to set up a session object for this.";
+	die "Unknown SNMP version: '$version'.";
     }
 }
 
