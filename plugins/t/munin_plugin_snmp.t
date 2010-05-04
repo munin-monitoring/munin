@@ -64,8 +64,8 @@ use_ok('Munin::Plugin::SNMP');
 			[ Munin::Plugin::SNMP->config_session() ],
 			[ 'araucaria', 161, 2, 'graham' ],
 			'port set in environment'
-		);	
-	}	
+		);
+	}
 	{
 		local $ENV{port} = '162';
 		local $0 = 'snmp_john_graham',
@@ -73,8 +73,8 @@ use_ok('Munin::Plugin::SNMP');
 			[ Munin::Plugin::SNMP->config_session() ],
 			[ 'john', 162, 2, 'graham' ],
 			'port set in environment'
-		);	
-	}	
+		);
+	}
 	{
 		local $ENV{version} = '3';
 		local $0 = 'snmp_john_graham',
@@ -82,8 +82,8 @@ use_ok('Munin::Plugin::SNMP');
 			[ Munin::Plugin::SNMP->config_session() ],
 			[ 'john', 161, 3, 'graham' ],
 			'version set in v2 plugin environment'
-		);	
-	}	
+		);
+	}
 	{
 		local $ENV{version} = '2';
 		local $0 = 'snmpv3_john_graham',
@@ -91,8 +91,8 @@ use_ok('Munin::Plugin::SNMP');
 			[ Munin::Plugin::SNMP->config_session() ],
 			[ 'john', 161, 2, 'graham' ],
 			'version 2 set in v3 plugin environment'
-		);	
-	}	
+		);
+	}
 
 }
 
