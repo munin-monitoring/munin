@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use IO::Scalar;
 use File::Find;
@@ -11,13 +11,12 @@ use File::Find;
 plan skip_all => 'set TEST_POD to enable this test'
     unless $ENV{TEST_POD};
 
-
 # both are in standard distribution, but just in case...
 eval {
     require Pod::Simple::SimpleTree;
     require Test::Differences;
 };
-plan skip_all => 'Pod::Select and Pod::Simple::SimpleTree required to run these tests'
+plan skip_all => 'Pod::Simple::SimpleTree and Test::Differences required to run these tests'
     if $@;
 
 Test::Differences->import();
