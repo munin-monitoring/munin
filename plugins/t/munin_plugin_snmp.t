@@ -63,7 +63,7 @@ use_ok('Munin::Plugin::SNMP');
 		is_deeply(
 			[ Munin::Plugin::SNMP->config_session() ],
 			[ 'araucaria', 161, 2, 'graham' ],
-			'port set in environment'
+			'host set in environment'
 		);
 	}
 	{
@@ -93,6 +93,5 @@ use_ok('Munin::Plugin::SNMP');
 			'version 2 set in v3 plugin environment'
 		);
 	}
-
 }
 
