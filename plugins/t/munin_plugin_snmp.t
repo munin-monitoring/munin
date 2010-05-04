@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 12;
+use Test::More tests => 13;
 
 use_ok('Munin::Plugin::SNMP');
 
@@ -93,5 +93,48 @@ use_ok('Munin::Plugin::SNMP');
 			'version 2 set in v3 plugin environment'
 		);
 	}
+}
+
+
+### session
+{
+	# defaults for config_session to return (hostname, port, version, tail)
+	my @DEFAULT_CONFIG = qw( localhost 161 2 if_1 );
+
+	# catch the arguments passed to Net::SNMP->session
+	our %NET_SNMP_ARGUMENTS;
+
+	no warnings;
+	local *Munin::Plugin::SNMP::config_session = sub { return @DEFAULT_CONFIG };
+	local *Net::SNMP::session = sub { shift; %NET_SNMP_ARGUMENTS = @_ };
+	use warnings;
+
+	### start the tests proper
+
+	# v1
+	# no community string provided
+	{
+		local $DEFAULT_CONFIG[2] = 1;
+		Munin::Plugin::SNMP->session();
+		is_deeply(
+			\%NET_SNMP_ARGUMENTS,
+			{
+				-hostname  => 'localhost',
+				-port      => 161,
+				-version   => 1,
+				-community => 'public',
+			},
+			'version 1 session',
+		);
+	}
+
+	# v2
+	# v3 noAuthNoPriv
+	# v3 authNoPriv
+	# v3 authPriv
+	# no user-defined options
+	# user-defined options
+	# timeout
+
 }
 
