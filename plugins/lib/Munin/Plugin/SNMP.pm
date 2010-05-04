@@ -282,9 +282,10 @@ SNMPv3 username.  There is no default. Empty username ('') is allowed.
 
 =item env.v3authpassword
 
-SNMPv3 authentication password.  Authentication requires a
-v3authprotocol, but this defaults to "md5" and may therefore be left
-unspecified.
+SNMPv3 authentication password.  Optional when encryption is also
+enabled, in which case defaults to the privacy password.
+Authentication requires a v3authprotocol, but this defaults to "md5"
+and may therefore be left unspecified.
 
 The password is sent encrypted (one way hash) over the network.
 
@@ -296,16 +297,13 @@ default is 'md5'.
 
 =item env.v3privpassword
 
-SNMPv3 privacy password to enable encryption.  A empty ('') password
+SNMPv3 privacy password to enable encryption.  An empty ('') password
 is considered as no password and will not enable encryption.
 
-Privacy requires a v3privprotocol as well as a v3authprotocol but both
-are defaulted (to 'des' and 'md5' respectively) and may therefore be
-left unspecified.
-
-(Note: the v3privpassword will be used for both authentication and
-privacy, if you know any context where this is wrong please contact
-us).
+Privacy requires a v3privprotocol as well as a v3authprotocol and a
+v3authpassword, but all of these are defaulted (to 'des', 'md5', and
+the v3privpassword value, respectively) and may therefore be left
+unspecified.
 
 =item env.v3privprotocol
 
@@ -316,8 +314,8 @@ weak 'des' encryption method is supported officially.  The default is
 
 The implementing perl module (Net::SNMP) also supports '3des'
 (CBC-3DES-EDE aka Triple-DES, NIST FIPS 46-3) as specified in IETF
-draft-reeder-snmpv3-usm-3desede.  If this works or not with any
-particular device we do not know.
+draft-reeder-snmpv3-usm-3desede.  Whether or not this works with any
+particular device, we do not know.
 
 =back
 
@@ -331,6 +329,7 @@ particular device we do not know.
 	my $username  = $ENV{'v3username'};
 
 	if (defined($username)) {
+            # FIXME: isn't it an error if no username was specified?
 	    push( @options, (-username => $username));
 	}
 
@@ -338,7 +337,7 @@ particular device we do not know.
 	    # Privacy is a stronger demand and should be checked first.
 	    push( @options, ( -privpassword => $privpw,
 			      -privprotocol => $privproto,
-			      -authpassword => $privpw,
+			      -authpassword => ($authpw || $privpw),
 			      -authprotocol => $authproto ));
 
 	    # Note how Net::SNMP demands authentication options when
