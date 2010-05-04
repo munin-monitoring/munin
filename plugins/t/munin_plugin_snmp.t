@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 20;
+use Test::More tests => 25;
 
 use_ok('Munin::Plugin::SNMP');
 
@@ -172,12 +172,113 @@ use_ok('Munin::Plugin::SNMP');
 	}
 
 	# version 3 (noAuthNoPriv)
+	{
+		local $DEFAULT_CONFIG[2] = 3;
+		local $ENV{v3username} = 'jeff';
+		Munin::Plugin::SNMP->session();
+		is_deeply(
+			\%NET_SNMP_ARGUMENTS,
+			{
+				-hostname  => 'localhost',
+				-port      => '161',
+				-version   => '3',
+				-username  => 'jeff',
+			},
+			'version 3 session, noAuthNoPriv',
+		);
+	}
 
 	# version 3 (authNoPriv)
+	{
+		local $DEFAULT_CONFIG[2] = 3;
+
+		local $ENV{v3username}     = 'jeff';
+		local $ENV{v3authpassword} = 'swordfish';
+
+		Munin::Plugin::SNMP->session();
+		is_deeply(
+			\%NET_SNMP_ARGUMENTS,
+			{
+				-hostname  => 'localhost',
+				-port      => '161',
+				-version   => '3',
+				-username  => 'jeff',
+				-authpassword => 'swordfish',
+				-authprotocol => 'md5',
+			},
+			'version 3 session, authNoPriv, protocol defaults to MD5',
+		);
+	}
+	{
+		local $DEFAULT_CONFIG[2] = 3;
+
+		local $ENV{v3username}     = 'jeff';
+		local $ENV{v3authpassword} = 'swordfish';
+		local $ENV{v3authprotocol} = 'sha';
+
+		Munin::Plugin::SNMP->session();
+		is_deeply(
+			\%NET_SNMP_ARGUMENTS,
+			{
+				-hostname  => 'localhost',
+				-port      => '161',
+				-version   => '3',
+				-username  => 'jeff',
+				-authpassword => 'swordfish',
+				-authprotocol => 'sha',
+			},
+			'version 3 session, authNoPriv, set protocol to SHA1',
+		);
+	}
 
 	# version 3 (authPriv, same auth and priv keys)
+	{
+		local $DEFAULT_CONFIG[2] = 3;
+
+		local $ENV{v3username}     = 'jeff';
+		local $ENV{v3privpassword} = 'hedgerows';
+
+		Munin::Plugin::SNMP->session();
+		is_deeply(
+			\%NET_SNMP_ARGUMENTS,
+			{
+				-hostname  => 'localhost',
+				-port      => '161',
+				-version   => '3',
+				-username  => 'jeff',
+				-authpassword => 'hedgerows',
+				-authprotocol => 'md5',
+				-privpassword => 'hedgerows',
+				-privprotocol => 'des',
+			},
+			'version 3 (authPriv, same auth and priv keys)',
+		);
+	}
 
 	# version 3 (authPriv, different auth and priv keys)
+	{
+		local $DEFAULT_CONFIG[2] = 3;
+
+		local $ENV{v3username}     = 'jeff';
+		local $ENV{v3authpassword} = 'swordfish';
+		local $ENV{v3privpassword} = 'hedgerows';
+
+		Munin::Plugin::SNMP->session();
+		is_deeply(
+			\%NET_SNMP_ARGUMENTS,
+			{
+				-hostname  => 'localhost',
+				-port      => '161',
+				-version   => '3',
+				-username  => 'jeff',
+				-authpassword => 'swordfish',
+				-authprotocol => 'md5',
+				-privpassword => 'hedgerows',
+				-privprotocol => 'des',
+			},
+			'version 3 (authPriv, different auth and priv keys)',
+		);
+	}
 
 	# user-defined options
 	{
