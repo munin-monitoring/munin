@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 13;
+use Test::More tests => 16;
 
 use_ok('Munin::Plugin::SNMP');
 
@@ -111,8 +111,7 @@ use_ok('Munin::Plugin::SNMP');
 
 	### start the tests proper
 
-	# v1
-	# no community string provided
+	# version 1
 	{
 		local $DEFAULT_CONFIG[2] = 1;
 		Munin::Plugin::SNMP->session();
@@ -124,16 +123,64 @@ use_ok('Munin::Plugin::SNMP');
 				-version   => 1,
 				-community => 'public',
 			},
-			'version 1 session',
+			'version 1 session (no community string)',
+		);
+	}
+	{
+		local $DEFAULT_CONFIG[2] = 1;
+		local $ENV{community} = 's33kr1t';
+		Munin::Plugin::SNMP->session();
+		is_deeply(
+			\%NET_SNMP_ARGUMENTS,
+			{
+				-hostname  => 'localhost',
+				-port      => 161,
+				-version   => 1,
+				-community => 's33kr1t',
+			},
+			'version 1 session (with community string)',
 		);
 	}
 
-	# v2
-	# v3 noAuthNoPriv
-	# v3 authNoPriv
-	# v3 authPriv
-	# no user-defined options
+	# version 2
+	{
+		Munin::Plugin::SNMP->session();
+		is_deeply(
+			\%NET_SNMP_ARGUMENTS,
+			{
+				-hostname  => 'localhost',
+				-port      => 161,
+				-version   => 2,
+				-community => 'public',
+			},
+			'version 2 session (no community string)',
+		);
+	}
+	{
+		local $ENV{community} = 's33kr1t';
+		Munin::Plugin::SNMP->session();
+		is_deeply(
+			\%NET_SNMP_ARGUMENTS,
+			{
+				-hostname  => 'localhost',
+				-port      => 161,
+				-version   => 2,
+				-community => 's33kr1t',
+			},
+			'version 2 session (with community string)',
+		);
+	}
+
+	# version 3 (noAuthNoPriv)
+
+	# version 3 (authNoPriv)
+
+	# version 3 (authPriv, same auth and priv keys)
+
+	# version 3 (authPriv, different auth and priv keys)
+
 	# user-defined options
+
 	# timeout
 
 }
