@@ -1,40 +1,22 @@
 package org.munin.plugin.jmx;
 
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
-import javax.management.MBeanServerConnection;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-public class CurrentThreadUserTime {
 
-    public static void main(String args[])throws FileNotFoundException,IOException {
-        String[] connectionInfo= ConfReader.GetConnectionInfo();
+import org.munin.plugin.jmx.AbstractAnnotationGraphsProvider.Graph;
 
-        if (args.length == 1) {
-            if (args[0].equals("config")) {
-                System.out.println(
-                        "graph_title JVM (port " + connectionInfo[1] + ") CurrentThreadUserTime\n" + 
-                        "graph_vlabel ns\n" + 
-			"graph_category " + connectionInfo[2] + "\n" +
-			"graph_info Returns the CPU time that the current thread has executed in user mode in nanoseconds. The returned value is of nanoseconds precison but not necessarily nanoseconds accuracy.\n" +
-                        "CurrentThreadUserTime.label CurrentThreadUserTime\n" 
-);
-            }
-         else {
+@Graph(title = "CurrentThreadUserTime", vlabel = "ns", info = "Returns the CPU time that the current thread has executed in user mode in nanoseconds. The returned value is of nanoseconds precison but not necessarily nanoseconds accuracy.")
+public class CurrentThreadUserTime extends AbstractAnnotationGraphsProvider {
+	@Field
+	public long currentThreadUserTime() throws IOException {
+		ThreadMXBean threadmxbean = ManagementFactory.newPlatformMXBeanProxy(
+				connection, ManagementFactory.THREAD_MXBEAN_NAME,
+				ThreadMXBean.class);
+		return threadmxbean.getCurrentThreadUserTime();
+	}
 
-            try {
-                MBeanServerConnection connection = BasicMBeanConnection.get();
-                ThreadMXBean threadmxbean = ManagementFactory.newPlatformMXBeanProxy(connection, ManagementFactory.THREAD_MXBEAN_NAME, ThreadMXBean.class);
-
-                System.out.println("CurrentThreadUserTime.value " + threadmxbean.getCurrentThreadUserTime());
-
-            } catch (Exception e) {
-                System.out.print(e);
-            }
-        }
-
-    }
-}
-
-
+	public static void main(String args[]) {
+		runGraph(new CurrentThreadUserTime(), args);
+	}
 }

@@ -1,38 +1,29 @@
 package org.munin.plugin.jmx;
+
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
-import javax.management.MBeanServerConnection;
 
-public class ThreadsDeadlocked  {
+import org.munin.plugin.jmx.AbstractAnnotationGraphsProvider.Graph;
 
-    public static void main(String args[]) {
-        String[] connectionInfo= ConfReader.GetConnectionInfo();
+@Graph(title = "ThreadsDeadlocked", vlabel = "threads", info = "Returns the number of deadlocked threads for the JVM. Usually not available at readonly access level.")
+public class ThreadsDeadlocked extends AbstractAnnotationGraphsProvider {
 
-        if (args.length == 1) {
-            if (args[0].equals("config")) {
-                System.out.println("graph_title JVM (port " + connectionInfo[1] + ") ThreadsDeadlocked\n" +
-		"graph_vlabel threads\n" +
-		"graph_category " + connectionInfo[2] + "\n" +
-		"graph_info Returns the number of deadlocked threads for the JVM. Usually not available at readonly access level.\n" +
-		"ThreadsDeadlocked.label ThreadsDeadlocked");
-            }
-        else {
-            try {
-                MBeanServerConnection connection = BasicMBeanConnection.get();
-                ThreadMXBean mxbean=ManagementFactory.newPlatformMXBeanProxy(connection, ManagementFactory.THREAD_MXBEAN_NAME, ThreadMXBean.class);
+	@Field
+	public int threadsDeadlocked() throws IOException {
+		ThreadMXBean mxbean = ManagementFactory.newPlatformMXBeanProxy(
+				connection, ManagementFactory.THREAD_MXBEAN_NAME,
+				ThreadMXBean.class);
 
-                System.out.print("ThreadsDeadlocked.value ");
-		
-		if(mxbean.findMonitorDeadlockedThreads() == null)
-			System.out.println("0");
-		else
-			System.out.println(mxbean.findMonitorDeadlockedThreads().length + "");
+		long[] deadlockedThreads = mxbean.findMonitorDeadlockedThreads();
+		if (deadlockedThreads == null) {
+			return 0;
+		} else {
+			return deadlockedThreads.length;
+		}
+	}
 
-            } catch (Exception e) {
-                System.out.print(e);
-            }
-    }
+	public static void main(String args[]) {
+		runGraph(new ThreadsDeadlocked(), args);
+	}
 }
-}
-}
-
