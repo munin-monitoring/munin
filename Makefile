@@ -290,7 +290,7 @@ build/plugins/javalib/munin-jmx-plugins.jar: $(CLASSFILES)
 
 build/%.class: %.class
 	mkdir -p build/`dirname $*.class`
-	cp $*.class build/$*.class
+	cp $**.class build/`dirname $*.class`
 
 ######################################################################
 # DIST RULES
