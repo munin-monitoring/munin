@@ -1,4 +1,5 @@
 # -*- cperl -*-
+# vim: ts=4 : sw=4 : et
 #
 # Copyright (C) 2004-2009 Dagfinn Ilmari Mannsaaker, Nicolai Langfeldt,
 # Linpro AS
@@ -320,45 +321,51 @@ particular device, we do not know.
 =back
 
 =cut
-	
-	my $privpw    = $ENV{'v3privpassword'} || '';
-	my $privproto = $ENV{'v3privprotocol'} || 'des';
 
-	my $authpw    = $ENV{'v3authpassword'} || '';
-	my $authproto = $ENV{'v3authprotocol'} || 'md5';
-	my $username  = $ENV{'v3username'};
+        # This would be much tidier if Perl had switch statements with
+        # fall-through :-)
 
-	if (defined($username)) {
+        # Privacy
+        my $privpw    = $ENV{'v3privpassword'};
+        my $privproto = $ENV{'v3privprotocol'} || 'des';
+
+        if ($privpw) {
+            push @options, (
+                -privpassword => $privpw,
+                -privprotocol => $privproto,
+            );
+            print STDERR "Enabled SNMPv3 privacy.\n" if $DEBUG;
+        }
+
+        # Authentication.  Password defaults to env.v3privpassword
+        my $authpw    = $ENV{'v3authpassword'} || $privpw;
+        my $authproto = $ENV{'v3authprotocol'} || 'md5';
+
+        if ($authpw) {
+            push @options, (
+                -authpassword => $authpw,
+                -authprotocol => $authproto,
+            );
+            print STDERR "Enabled SNMPv3 authentication.\n" if $DEBUG;
+        }
+
+        # Username
+        my $username  = $ENV{'v3username'};
+
+        if (defined $username) {  # Username can be ''
             # FIXME: isn't it an error if no username was specified?
-	    push( @options, (-username => $username));
-	}
+            push @options, (
+                -username => $username
+            );
+        }
 
-	if ($privpw) {
-	    # Privacy is a stronger demand and should be checked first.
-	    push( @options, ( -privpassword => $privpw,
-			      -privprotocol => $privproto,
-			      -authpassword => ($authpw || $privpw),
-			      -authprotocol => $authproto ));
+        my ($object, $error) = $class->SUPER::session(@options);
+        die "Could not set up SNMPv3 session to $host: $error\n" unless $object;
 
-	    # Note how Net::SNMP demands authentication options when
-	    # privacy is invoked.
-	} elsif ($authpw) {
-	    # Authenticated only.
-	    push( @options,
-		  ( -authpassword => $authpw,
-		    -authprotocol => $authproto ));
-	}
-
-	my ($object, $error) = $class->SUPER::session(@options);
-
-	if (!defined($object)) {
-	    die "Could not set up SNMPv3 session to $host: $error\n";
-	}
-
-	return $object;
-
-    } else {
-	die "Unknown SNMP version: '$version'.";
+        return $object;
+    }
+    else {
+        die "Unknown SNMP version: '$version'.";
     }
 }
 
