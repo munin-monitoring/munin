@@ -64,7 +64,7 @@ use Munin::Plugin;
 our (@ISA, $DEBUG);
 
 @ISA = qw(Net::SNMP);
-  
+
 # Alias $Munin::Plugin::SNMP::DEBUG to $Munin::Plugin::DEBUG, so SNMP
 # plugins don't need to import the latter module to get debug output.
 *DEBUG = \$Munin::Plugin::DEBUG;
@@ -206,24 +206,21 @@ Security is handled differently for versions 1/2c and 3.  See below.
     my ($host, $port, $version, $tail) = config_session();
 
     # Common options.
-    my @options = (-hostname    => $host,
-	           -port	=> $port,
-                   -version     => $version,
+    my @options = (
+        -hostname => $host,
+        -port     => $port,
+        -version  => $version,
     );
 
-    
     # User defined options
-    if (defined($userargs[0])) {
-	push(@options,@userargs);
-    }
-    
-    # Timeout 
-    if (defined($ENV{timeout})) {
-	push(@options, (-timeout => $ENV{timeout}));
-    }
-    
-    if ($version eq '1' or $version eq 'snmpv1' or
-	$version eq '2' or $version eq 'snmpv2c') {
+    push @options, @userargs;
+
+    # Timeout
+    push @options, (-timeout => $ENV{timeout}) if $ENV{timeout};
+
+    if ($version eq '1' or $version eq 'snmpv1'
+     or $version eq '2' or $version eq 'snmpv2c')
+    {
 
 =item env.community
 
@@ -233,23 +230,20 @@ needs a security checkup.
 
 =cut
 
-	# FIXME: die if $ENV{community} isn't set?
-	my $community = $ENV{community} || 'public';
+        # FIXME: die if $ENV{community} isn't set?
+        my $community = $ENV{community} || 'public';
 
-	push(@options,(-community => $community));
+        push @options, (
+            -community => $community
+        );
 
-	my $object;
-	my $error;
+        print STDERR "Setting up a SNMPv$version session\n" if $DEBUG;
 
-	print STDERR "Setting up a SNMPv$version session\n" if $DEBUG;
+        my ($object, $error) = $class->SUPER::session(@options);
 
-	($object, $error) = $class->SUPER::session(@options);
+        die "Could not set up SNMP $version session to $host: $error\n" unless $object;
 
-	unless ($object) {
-	    die "Could not set up SNMP $version session to $host: $error\n";
-	}
-
-	return $object;
+        return $object;
 
     } elsif ($version eq '3' or $version eq 'snmpv3') {
 
