@@ -16,16 +16,46 @@ sub new
 {
     my ($class, %opts) = @_;
 
-    my $snmpver  = delete $opts{version}   || '2c';
-    my $snmpcomm = delete $opts{community} || 'public';
-    my $snmpport = delete $opts{port}      || 161;
+    my %sec_args;
+
+    my $hosts    = $opts{hosts} or die;
+
+    my $version  = $opts{version} || '2c';
+    my $port     = $opts{port}    || 161;
+
+    if ($version eq '3') {
+        # Privacy
+        my $privpw    = $opts{privpassword};
+        my $privproto = $opts{privprotocol} || 'des';
+
+        if ($privpw) {
+            $sec_args{-privpassword} = $privpw;
+            $sec_args{-privprotocol} = $privproto;
+        }
+
+        # Authentication
+        my $authpw    = $opts{authpassword} || $privpw;
+        my $authproto = $opts{authprotocol} || 'md5';
+
+        if ($authpw) {
+            $sec_args{-authpassword} = $authpw;
+            $sec_args{-authprotocol} = $authproto;
+        }
+
+        # Username
+        $sec_args{-username} = $opts{username};
+    }
+    else {
+        # version 1 or 2c
+        $sec_args{-community} = $opts{community} || 'public';
+    }
+
 
     my %snmp = (
-        community => $snmpcomm,
-        port      => $snmpport,
-        version   => $snmpver,
-
-        %opts,
+        hosts     => $hosts,
+        port      => $port,
+        version   => $version,
+        sec_args  => \%sec_args,
     );
 
     return bless \%snmp, $class;
@@ -54,9 +84,11 @@ sub _probe_single_host
     DEBUG("SNMP-probing $host");
 	my ($session, $error) = Net::SNMP->session(
 		-hostname  => $host,
-        -community => $self->{community},
         -port      => $self->{port},
         -version   => $self->{version},
+
+        %{$self->{sec_args}},
+
 		# Disable munging of responses into "human readable" form
 		-translate => 0,
 	);
