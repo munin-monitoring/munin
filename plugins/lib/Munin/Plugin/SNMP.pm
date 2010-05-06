@@ -164,7 +164,7 @@ The following environment variables are consulted:
 
 =over
 
-=item env.host
+=item C<env.host>
 
 If the plugin name (symlink) does not contain the host name this is
 used as the host name to connect to.
@@ -183,19 +183,19 @@ hosts file) it is possible to do this:
   [snmp_switch2.langfeldt.net]
      env.host 192.168.2.46
 
-=item env.port
+=item C<env.port>
 
 The port to connect to.  Default 161.
 
-=item env.timeout
+=item C<env.timeout>
 
 The timeout in seconds to use. Default 5.
 
-=item env.version
+=item C<env.version>
 
 The SNMP version to use for the connection. One of 1, 2, 3, snmpv1,
 snmpv2c or snmpv3.  SNMP v2 is better as it supports bulk operations.
-Therefore 2 is the default in Munin::Plugin::SNMP.  If your device
+Therefore 2 is the default in C<Munin::Plugin::SNMP>.  If your device
 supports v3 that may be even better as it supports proper security -
 but the encryption may slow things down.
 
@@ -222,7 +222,9 @@ Security is handled differently for versions 1/2c and 3.  See below.
      or $version eq '2' or $version eq 'snmpv2c')
     {
 
-=item env.community
+=item SNMP 1/2c authentication
+
+=item C<env.community>
 
 The community name for version 1 and 2c agents. The default is
 'public'.  If this works your device is probably very insecure and
@@ -240,7 +242,6 @@ needs a security checkup.
         print STDERR "Setting up a SNMPv$version session\n" if $DEBUG;
 
         my ($object, $error) = $class->SUPER::session(@options);
-
         die "Could not set up SNMP $version session to $host: $error\n" unless $object;
 
         return $object;
@@ -249,65 +250,62 @@ needs a security checkup.
 
 =item SNMP 3 authentication
 
-SNMP v3 has three security levels: "noAuthNoPriv".  If a username
-and password is given it goes up to "authNoPriv".
+SNMP v3 has three security levels. Lowest is C<noAuthNoPriv>, which
+provides neither authentication nor encryption.  If a username and
+C<authpassword> are given it goes up to C<authNoPriv>, and the
+connection is authenticated.  If C<privpassword> is given the security
+level becomes C<authPriv> - the connection is authenticated and
+encrypted.
 
-If privpassword is given the security level becomes "authPriv" - the
-connection is authenticated and encrypted.
-
-Note: Encryption can slow down slow or heavily loaded network devices.
-For most uses authNoPriv will be secure enough --- in SNMP v3 the
+B<Note>: Encryption can slow down slow or heavily loaded network
+devices.  For most uses C<authNoPriv> will be secure enough -- the
 password is sent over the network encrypted in any case.
 
-Munin::Plugin::SNMP does not support ContextEngineIDs and such for
+C<Munin::Plugin::SNMP> does not support ContextEngineIDs and such for
 authentication/privacy.  If you see the need and know how it should be
 done please send patches!
 
 For further reading on SNMP v3 security models please consult RFC3414
-and the documentation for Net::SNMP.
+and the documentation for L<Net::SNMP>.
 
-If version is set to 3 or snmpv3 these variables are used to define
-authentication:
+If version is set to 3 or snmpv3 the following variables are used to
+define authentication:
 
 =over
 
-=item env.v3username
+=item C<env.v3username>
 
-SNMPv3 username.  There is no default. Empty username ('') is allowed.
+Username.  There is no default. Empty username ('') is allowed.
 
-=item env.v3authpassword
+=item C<env.v3authpassword>
 
-SNMPv3 authentication password.  Optional when encryption is also
-enabled, in which case defaults to the privacy password.
-Authentication requires a v3authprotocol, but this defaults to "md5"
-and may therefore be left unspecified.
-
+Authentication password.  Optional when encryption is also enabled, in
+which case defaults to the privacy password (C<env.v3privpassword>).
 The password is sent encrypted (one way hash) over the network.
 
-=item env.v3authprotocol
+=item C<env.v3authprotocol>
 
-SNMPv3 authentication protocol.  One of 'md5' or 'sha' (HMAC-MD5-96,
-RFC1321 and SHA-1/HMAC-SHA-96, NIST FIPS PIB 180, RFC2264).  The
-default is 'md5'.
+Authentication protocol.  One of 'md5' or 'sha' (HMAC-MD5-96, RFC1321
+and SHA-1/HMAC-SHA-96, NIST FIPS PIB 180, RFC2264).  The default is
+'md5'.
 
-=item env.v3privpassword
+=item C<env.v3privpassword>
 
-SNMPv3 privacy password to enable encryption.  An empty ('') password
-is considered as no password and will not enable encryption.
+Privacy password to enable encryption.  An empty ('') password is
+considered as no password and will not enable encryption.
 
 Privacy requires a v3privprotocol as well as a v3authprotocol and a
-v3authpassword, but all of these are defaulted (to 'des', 'md5', and
-the v3privpassword value, respectively) and may therefore be left
+v3authpassword, but all of these are defaulted (to 'des', 'md5', and the
+v3privpassword value, respectively) and may therefore be left
 unspecified.
 
-=item env.v3privprotocol
+=item C<env.v3privprotocol>
 
 If the v3privpassword is set this setting controls what kind of
-encryption is used to achive privacy in the session.  Only the very
-weak 'des' encryption method is supported officially.  The default is
-'des'.
+encryption is used to achive privacy in the session.  Only the very weak
+'des' encryption method is supported officially.  The default is 'des'.
 
-The implementing perl module (Net::SNMP) also supports '3des'
+The implementing perl module (L<Net::SNMP>) also supports '3des'
 (CBC-3DES-EDE aka Triple-DES, NIST FIPS 46-3) as specified in IETF
 draft-reeder-snmpv3-usm-3desede.  Whether or not this works with any
 particular device, we do not know.
