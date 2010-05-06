@@ -15,121 +15,105 @@ use_ok 'Munin::Node::SNMPConfig';
 	);
 
 	# defaults
-	{
-		my $new = Munin::Node::SNMPConfig->new(
+	is_deeply(
+		Munin::Node::SNMPConfig->new(
 			hosts      => \@hosts,
-		);
-		is_deeply(
-			$new,
-			{
-				hosts     => \@hosts,
-				port      => '161',
-				version   => '2c',
-				sec_args  => {
-					-community => 'public',
-				},
+		),
+		{
+			hosts     => \@hosts,
+			port      => '161',
+			version   => '2c',
+			sec_args  => {
+				-community => 'public',
 			},
-			'Defaults are correct',
-		);
-	}
-
+		},
+		'Defaults are correct',
+	);
 
 	# version 1
-	{
-		my $new = Munin::Node::SNMPConfig->new(
+	is_deeply(
+		Munin::Node::SNMPConfig->new(
 			hosts      => \@hosts,
 			version    => '1',
 			port       => '162',
 
 			community  => 'fnord',
-		);
-		is_deeply(
-			$new,
-			{
-				hosts     => \@hosts,
-				port      => '162',
-				version   => '1',
-				sec_args  => {
-					-community => 'fnord',
-				},
+		),
+		{
+			hosts     => \@hosts,
+			port      => '162',
+			version   => '1',
+			sec_args  => {
+				-community => 'fnord',
 			},
-			'SNMP v1',
-		);
-	}
+		},
+		'SNMP v1',
+	);
 
 	# version 2
-	{
-		my $new = Munin::Node::SNMPConfig->new(
+	is_deeply(
+		Munin::Node::SNMPConfig->new(
 			hosts      => \@hosts,
 			version    => '2c',
 			port       => '161',
 
 			community  => 'fnord',
-		);
-		is_deeply(
-			$new,
-			{
-				hosts     => \@hosts,
-				port      => '161',
-				version   => '2c',
-				sec_args  => {
-					-community => 'fnord',
-				},
+		),
+		{
+			hosts     => \@hosts,
+			port      => '161',
+			version   => '2c',
+			sec_args  => {
+				-community => 'fnord',
 			},
-			'SNMP v2',
-		);
-	}
+		},
+		'SNMP v2',
+	);
 
 	# version 3 (noAuthNoPriv)
-	{
-		my $new = Munin::Node::SNMPConfig->new(
+	is_deeply(
+		Munin::Node::SNMPConfig->new(
 			hosts      => \@hosts,
 			version    => '3',
 			port       => '162',
 
 			username   => 'jeff',
-		);
-		is_deeply(
-			$new,
-			{
-				hosts     => \@hosts,
-				port      => '162',
-				version   => '3',
-				sec_args  => {
-					-username => 'jeff',
-				},
+		),
+		{
+			hosts     => \@hosts,
+			port      => '162',
+			version   => '3',
+			sec_args  => {
+				-username => 'jeff',
 			},
-			'SNMP v3, noAuthNoPriv',
-		);
-	}
+		},
+		'SNMP v3, noAuthNoPriv',
+	);
 
 	# version 3 (authNoPriv)
-	{
-		my $new = Munin::Node::SNMPConfig->new(
+	is_deeply(
+		Munin::Node::SNMPConfig->new(
 			hosts      => \@hosts,
 			version    => '3',
 			port       => '162',
 
 			username   => 'jeff',
 			authpassword => 'swordfish',
-		);
-		is_deeply(
-			$new,
-			{
-				hosts     => \@hosts,
-				port      => '162',
-				version   => '3',
-				sec_args  => {
-					-username => 'jeff',
-					-authpassword => 'swordfish',
-					-authprotocol => 'md5',
-				},
+		),
+		{
+			hosts     => \@hosts,
+			port      => '162',
+			version   => '3',
+			sec_args  => {
+				-username => 'jeff',
+				-authpassword => 'swordfish',
+				-authprotocol => 'md5',
 			},
-			'SNMP v3, authNoPriv, protocol defaults to MD5',
-		);
-	}
-	{
-		my $new = Munin::Node::SNMPConfig->new(
+		},
+		'SNMP v3, authNoPriv, protocol defaults to MD5',
+	);
+	is_deeply(
+		Munin::Node::SNMPConfig->new(
 			hosts      => \@hosts,
 			version    => '3',
 			port       => '162',
@@ -137,53 +121,47 @@ use_ok 'Munin::Node::SNMPConfig';
 			username   => 'jeff',
 			authpassword => 'swordfish',
 			authprotocol => 'sha',
-		);
-		is_deeply(
-			$new,
-			{
-				hosts     => \@hosts,
-				port      => '162',
-				version   => '3',
-				sec_args  => {
-					-username => 'jeff',
-					-authpassword => 'swordfish',
-					-authprotocol => 'sha',
-				},
+		),
+		{
+			hosts     => \@hosts,
+			port      => '162',
+			version   => '3',
+			sec_args  => {
+				-username => 'jeff',
+				-authpassword => 'swordfish',
+				-authprotocol => 'sha',
 			},
-			'SNMP v3, authNoPriv, set protocol to SHA1',
-		);
-	}
+		},
+		'SNMP v3, authNoPriv, set protocol to SHA1',
+	);
 
 	# version 3 (authPriv, same auth and priv keys)
-	{
-		my $new = Munin::Node::SNMPConfig->new(
+	is_deeply(
+		Munin::Node::SNMPConfig->new(
 			hosts      => \@hosts,
 			version    => '3',
 			port       => '162',
 			username   => 'jeff',
 			privpassword => 'swordfish',
-		);
-		is_deeply(
-			$new,
-			{
-				hosts     => \@hosts,
-				port      => '162',
-				version   => '3',
-				sec_args  => {
-					-username => 'jeff',
-					-authpassword => 'swordfish',
-					-authprotocol => 'md5',
-					-privpassword => 'swordfish',
-					-privprotocol => 'des',
-				},
+		),
+		{
+			hosts     => \@hosts,
+			port      => '162',
+			version   => '3',
+			sec_args  => {
+				-username => 'jeff',
+				-authpassword => 'swordfish',
+				-authprotocol => 'md5',
+				-privpassword => 'swordfish',
+				-privprotocol => 'des',
 			},
-			'version 3 (authPriv, same auth and priv keys)',
-		);
-	}
+		},
+		'version 3 (authPriv, same auth and priv keys)',
+	);
 
 	# version 3 (authPriv, different auth and priv keys)
-	{
-		my $new = Munin::Node::SNMPConfig->new(
+	is_deeply(
+		Munin::Node::SNMPConfig->new(
 			hosts      => \@hosts,
 			version    => '3',
 			port       => '162',
@@ -191,24 +169,21 @@ use_ok 'Munin::Node::SNMPConfig';
 			authpassword => 'swordfish',
 			privpassword => 'hedgerows',
 			privprotocol => 'aes',
-		);
-		is_deeply(
-			$new,
-			{
-				hosts     => \@hosts,
-				port      => '162',
-				version   => '3',
-				sec_args  => {
-					-username => 'jeff',
-					-authpassword => 'swordfish',
-					-authprotocol => 'md5',
-					-privpassword => 'hedgerows',
-					-privprotocol => 'aes',
-				},
+		),
+		{
+			hosts     => \@hosts,
+			port      => '162',
+			version   => '3',
+			sec_args  => {
+				-username => 'jeff',
+				-authpassword => 'swordfish',
+				-authprotocol => 'md5',
+				-privpassword => 'hedgerows',
+				-privprotocol => 'aes',
 			},
-			'version 3 (authPriv, different auth and priv keys)',
-		);
-	}
+		},
+		'version 3 (authPriv, different auth and priv keys)',
+	);
 }
 
 
