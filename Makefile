@@ -60,9 +60,9 @@ tags:
 ######################################################################
 
 ifeq ($(JCVALID),yes)
-install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-plugins-java install-man
+install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-plugins-java install-man install-async-prime
 else
-install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-man
+install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-man install-async-prime
 endif
 
 install-pre: Makefile Makefile.config
@@ -149,6 +149,11 @@ install-plugins-java: build-plugins-java
 #TODO:
 # configure plugins.  Or not. Better done under the direction of the installer
 # or the packager.
+
+install-async-prime:
+	mkdir -p $(LIBDIR)
+	$(INSTALL) -m 0755 build/node/_bin/munin-async-client $(LIBDIR)/
+	$(INSTALL) -m 0755 build/node/_bin/munin-async-server $(LIBDIR)/
 
 install-node-prime: install-node-pre install-node
 
