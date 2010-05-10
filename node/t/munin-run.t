@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 8;
+use Test::More tests => 6;
 
 require_ok('sbin/munin-run');
 
@@ -51,25 +51,6 @@ my $config = Munin::Node::Config->instance();
 	@ARGV = qw(plugin bad_argument);
 	($plugin, $argument) = parse_args();
 	is($argument, undef, 'Invalid argument is ignored');
-}
-
-
-### merge_node_config
-{
-	$config->reinitialize({
-		paranoia => 0,
-		conffile => 't/config/munin-node.conf',
-	});
-
-	merge_node_config();
-
-	is($config->{paranoia}, 0, 'Paranoia in arguments takes precedence over configuration file');
-
-	delete $config->{paranoia};
-
-	merge_node_config();
-
-	is($config->{paranoia}, 1, 'Paranoia in configuration file takes precedence when --paranoia not set');
 }
 
 
