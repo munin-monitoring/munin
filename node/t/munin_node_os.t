@@ -90,7 +90,7 @@ SKIP: {
 	my $verbose_child = sub { print STDERR 'x' x 1_000_000 };
 	$res = $os->run_as_child(5, $verbose_child);
 
-	ok($res->{timed_out}, 'Child blocking on I/O times out');
+	ok(! $res->{timed_out}, q{Child blocking on I/O doesn't time out});
 
 }
 
