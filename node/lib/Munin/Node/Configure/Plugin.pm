@@ -60,6 +60,7 @@ sub _same   { set_intersection(@_); }
 sub suggestion_string
 {
     my ($self) = @_;
+
     my $msg = '';
 
     if ($self->{default} eq 'yes') {
@@ -93,8 +94,8 @@ sub _reduce_wildcard
     my $name = $self->{name};
     my $wild;
 
-    if ($name =~ /^snmp_(_\w+)/) {
-        $link_name =~ /^snmp_(.+)$1(.*)/;
+    if ($name =~ /^snmp(?:v3)?_(_\w+)/) {
+        $link_name =~ /^snmp(?:v3)?_(.+)$1(.*)/;
         $wild = $1 . (length($2)? "/$2" : '');  # FIXME hack :-(
     }
     else {
@@ -134,7 +135,7 @@ sub _suggested_links
 {
     my ($self) = @_;
 
-    # no suggestions if there isn't any 
+    # no suggestions if the plugin shouldn't be installed 
     return [] if $self->{default} ne 'yes';
 
     if ($self->is_wildcard or $self->is_snmp) {
@@ -149,7 +150,7 @@ sub _suggested_links
 # return an arrayref of the installed or suggested wildcards (eg. 'eth0' or
 # 'switch.example.com/1').  nothing is returned if the plugin contains no wildcards.
 sub _installed_wild { return [ map { $_[0]->_reduce_wildcard($_) } @{$_[0]->{installed}} ]; }
-sub _suggested_wild { return [ map { _flatten_wildcard($_) } @{(shift)->{suggestions}}]; }
+sub _suggested_wild { return [ map { _flatten_wildcard($_) } @{(shift)->{suggestions}}   ]; }
 
 
 sub services_to_add

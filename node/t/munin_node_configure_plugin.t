@@ -90,34 +90,48 @@ exit;
 ### _expand_wildcard
 {
     my $p = gen_plugin('memory');
+
     is($p->_reduce_wildcard('memory'), (), 'Simple plugin - reduce');
     # FIXME: what is the sane behaviour?  can this ever happen normally?
     #is($p->_expand_wildcard(''), '', 'Simple plugin');
-
-    my $wcp = gen_plugin('if_');
-    is($wcp->_reduce_wildcard('if_eth0'), 'eth0', 'Wildcard plugin - reduce');
-    is($wcp->_expand_wildcard('eth0'), 'if_eth0', 'Wildcard plugin - expand');
-
-    my $sp = gen_plugin('snmp__load');
+}
+{
+    my $p = gen_plugin('if_');
+    is($p->_reduce_wildcard('if_eth0'), 'eth0', 'Wildcard plugin - reduce');
+    is($p->_expand_wildcard('eth0'), 'if_eth0', 'Wildcard plugin - expand');
+}
+{
+    my $p = gen_plugin('snmp__load');
     is(
-        $sp->_reduce_wildcard('snmp_switch.example.com_load'),
+        $p->_reduce_wildcard('snmp_switch.example.com_load'),
         'switch.example.com',
         'SNMP plugin - reduce'
     );
     is(
-        $sp->_expand_wildcard([ 'switch.example.com' ]),
-        'snmp_switch.example.com_load',
-        'SNMP plugin - expand'
+        $p->_reduce_wildcard('snmpv3_switch.example.com_load'),
+        'switch.example.com',
+        'SNMP plugin - reduce'
     );
-
-    my $swcp = gen_plugin('snmp__if_');
     is(
-        $swcp->_reduce_wildcard('snmp_switch.example.com_if_1'),
+        $p->_expand_wildcard([ 'switch.example.com' ]),
+        'snmp_switch.example.com_load',
+        'Version 3 SNMP plugin - expand'
+    );
+}
+{
+    my $p = gen_plugin('snmp__if_');
+    is(
+        $p->_reduce_wildcard('snmp_switch.example.com_if_1'),
         'switch.example.com/1',
         'SNMP plugin with wildcard - reduce'
     );
     is(
-        $swcp->_expand_wildcard([ 'switch.example.com', 1 ]),
+        $p->_reduce_wildcard('snmpv3_switch.example.com_if_1'),
+        'switch.example.com/1',
+        'Version 3 SNMP plugin with wildcard - reduce'
+    );
+    is(
+        $p->_expand_wildcard([ 'switch.example.com', 1 ]),
         'snmp_switch.example.com_if_1',
         'SNMP plugin with wildcard - expand'
     );
