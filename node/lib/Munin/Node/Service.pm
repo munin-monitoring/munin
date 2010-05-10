@@ -206,7 +206,7 @@ sub exec_service {
 
     $class->export_service_environment($service);
 
-    Munin::Node::OS::set_plugin_umask();
+    Munin::Node::OS::set_umask();
 
     my @command = grep defined, _service_command($dir, $service, $arg);
     print STDERR "# About to run '", join (' ', @command), "'\n"
