@@ -19,8 +19,12 @@ $config->reinitialize({
 	}
 });
 
-### export_service_environment
 
+# FIXME: required to avoid errors when calling export_service_environment().
+# would normally be exported by prepare_plugin_environment
+$ENV{MUNIN_MASTER_IP} = '';
+
+### export_service_environment
 {
 	Munin::Node::Service->export_service_environment('test');
 	is($ENV{test_environment_variable}, 'fnord', 'Service-specific environment is exported');
