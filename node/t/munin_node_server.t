@@ -1,7 +1,8 @@
+# vim: sw=4 : et : ts=4
 use warnings;
 use strict;
 
-use Test::More tests => 7;
+use Test::More tests => 9;
 
 use_ok('Munin::Node::Server');
 
@@ -22,7 +23,6 @@ use warnings;
             multigraph => 1,
         },
     },
-
     "Negotiate a single capability");
 }
 {
@@ -33,7 +33,6 @@ use warnings;
         server_capabilities => {
         },
     },
-
     "No capabilities offered");
 }
 {
@@ -46,7 +45,6 @@ use warnings;
             multigraph  => 1,
         },
     },
-
     "Ignore trailing CR on capabiltities string.");
 }
 
@@ -66,5 +64,29 @@ use warnings;
     my $session = {};
     Munin::Node::Server::_negotiate_session_capabilities($session, 'dirtyconfig multigraph');
     ok($ENV{MUNIN_CAP_DIRTYCONFIG}. 'Dirtyconfig allowed when server claims it as a capability');
+}
+
+
+{
+    no warnings;
+    local *Munin::Node::Server::_net_write = sub { return $_[1] };
+    use warnings;
+
+    my $session = {};
+
+    is(
+        Munin::Node::Server::_negotiate_session_capabilities($session, 'dirtyconfig multigraph'),
+        "cap multigraph dirtyconfig\n",
+        'Node sends capabilities back to the server'
+    );
+
+    $session = {};
+
+    is(
+        Munin::Node::Server::_negotiate_session_capabilities($session, ''),
+        "cap multigraph dirtyconfig\n",
+        q{Node sends capabilities back to the server, even when the server provided none}
+    );
+
 }
 
