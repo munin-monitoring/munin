@@ -38,6 +38,9 @@ sub new
 sub is_wildcard { return ((shift)->{path} =~ /_$/); }
 
 
+sub is_snmp     { return ((shift)->{name} =~ /^snmp(?:v3)?__/); }
+
+
 sub in_family { $_[0]->{family} eq $_  && return 1 foreach @_; return 0; }
 
 
@@ -134,7 +137,7 @@ sub _suggested_links
     # no suggestions if there isn't any 
     return [] if $self->{default} ne 'yes';
 
-    if ($self->is_wildcard or $self->{name} =~ /^snmp__/) {
+    if ($self->is_wildcard or $self->is_snmp) {
         return [ map { $self->_expand_wildcard($_) } @{$self->{suggestions}} ];
     }
     else {
@@ -383,6 +386,11 @@ only double-wild plugins will return true (ie. 'snmp__memory' would
 return false, but 'snmp__if_' would return true).
 
 
+=item B<is_snmp()>
+
+Returns true if the plugin is an SNMP plugin.
+
+
 =item B<in_family(@families)>
 
 Returns true if plugin's family is in @families, false otherwise.
@@ -430,13 +438,13 @@ are not validated.
 
 Sets the family and capabilities from the magic markers embedded in the plugin's
 executable, as specified by
-http://munin.projects.linpro.no/wiki/ConcisePlugins#Magicmarkers
+L<http://munin.projects.linpro.no/wiki/ConcisePlugins#Magicmarkers>
 
 
 =item B<parse_autoconf_response(@response)>
 
 Parses and validates the autoconf response from the plugin, in the format
-specified by http://munin.projects.linpro.no/wiki/ConcisePlugins#autoconf
+specified by L<http://munin.projects.linpro.no/wiki/ConcisePlugins#autoconf>
 
 Invalid input will cause an error to be logged against the plugin.
 
@@ -451,7 +459,7 @@ Invalid suggestions will cause an error to be logged against the plugin.
 =item B<parse_snmpconf_response(@response)>
 
 Parses and validates the snmpconf response from the plugin, in the format
-specified by http://munin.projects.linpro.no/wiki/ConcisePlugins#suggest
+specified by L<http://munin.projects.linpro.no/wiki/ConcisePlugins#suggest>
 
 Invalid or inconsistent input will cause an error to be logged against the
 plugin.

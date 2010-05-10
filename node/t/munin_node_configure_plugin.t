@@ -3,7 +3,7 @@ use warnings;
 
 use Test::More 'no_plan';
 
-use_ok 'Munin::Node::Configure::Plugin';
+use Munin::Node::Configure::Plugin;
 
 use constant FOUND_DIRECTORY_SCRATCH => eval { require Directory::Scratch };
 
@@ -41,6 +41,34 @@ sub gen_plugin
     ok($wcp->is_wildcard, 'Wildcard plugin is identfied as such');
 }
 
+
+### is_snmp
+{
+    my $p = gen_plugin('memory');
+    ok(! $p->is_snmp, 'Non-wildcard plugin is not SNMP');
+}
+{
+    my $p = gen_plugin('if_');
+    ok(! $p->is_snmp, 'Wildcard plugin is not SNMP');
+}
+{
+    my $p = gen_plugin('snmp__memory');
+    ok($p->is_snmp, 'SNMP plugin is SNMP');
+}
+{
+    my $p = gen_plugin('snmp__if_err_');
+    ok($p->is_snmp, 'Wildcard SNMP plugin is SNMP');
+}
+{
+    my $p = gen_plugin('snmpv3__memory');
+    ok($p->is_snmp, 'Version 3 SNMP plugin is SNMP');
+}
+{
+    my $p = gen_plugin('snmpv3__if_err_');
+    ok($p->is_snmp, 'Wildcard version 3 SNMP plugin is SNMP');
+}
+
+exit;
 
 ### is_installed
 {
