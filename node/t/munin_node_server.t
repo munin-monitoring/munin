@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 4;
+use Test::More tests => 7;
 
 use_ok('Munin::Node::Server');
 
@@ -25,7 +25,6 @@ use warnings;
 
     "Negotiate a single capability");
 }
-
 {
     my $session = {};
     Munin::Node::Server::_negotiate_session_capabilities($session, '');
@@ -37,7 +36,6 @@ use warnings;
 
     "No capabilities offered");
 }
-
 {
     my $session = {};
     Munin::Node::Server::_negotiate_session_capabilities($session, "dirtyconfig multigraph\r");
@@ -52,4 +50,21 @@ use warnings;
     "Ignore trailing CR on capabiltities string.");
 }
 
+
+### capabilities are reported to the plugins.
+{
+    my $session = {};
+    Munin::Node::Server::_negotiate_session_capabilities($session, '');
+    ok(! $ENV{MUNIN_CAP_DIRTYCONFIG}. 'No dirtyconfig allowed');
+}
+{
+    my $session = {};
+    Munin::Node::Server::_negotiate_session_capabilities($session, 'multigraph');
+    ok(! $ENV{MUNIN_CAP_DIRTYCONFIG}. 'Still no dirtyconfig allowed');
+}
+{
+    my $session = {};
+    Munin::Node::Server::_negotiate_session_capabilities($session, 'dirtyconfig multigraph');
+    ok($ENV{MUNIN_CAP_DIRTYCONFIG}. 'Dirtyconfig allowed when server claims it as a capability');
+}
 
