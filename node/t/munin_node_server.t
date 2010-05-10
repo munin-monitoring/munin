@@ -15,11 +15,11 @@ use warnings;
 
 {
     my $session = {};
-    Munin::Node::Server::_negotiate_session_capabilities($session, 'foo');
+    Munin::Node::Server::_negotiate_session_capabilities($session, 'multigraph');
 
     is_deeply($session, {
         server_capabilities => {
-            foo => 1,
+            multigraph => 1,
         },
     },
 
@@ -40,15 +40,16 @@ use warnings;
 
 {
     my $session = {};
-    Munin::Node::Server::_negotiate_session_capabilities($session, 'foo baziiing');
+    Munin::Node::Server::_negotiate_session_capabilities($session, "dirtyconfig multigraph\r");
 
     is_deeply($session, {
         server_capabilities => {
-            foo => 1,
+            dirtyconfig => 1,
+            multigraph  => 1,
         },
     },
 
-    "Ignore unknown capability");
+    "Ignore trailing CR on capabiltities string.");
 }
 
 
