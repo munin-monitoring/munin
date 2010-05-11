@@ -96,6 +96,7 @@ sub parse_args
 	my $exit_not_error = 1;
 	my @families;
 	my (@snmp_hosts, $snmpver, $snmpcomm, $snmpport);
+    my ($snmp3username, $snmp3authpass, $snmp3authproto, $snmp3privpass, $snmp3privproto);
 
 	print_usage_and_exit() unless GetOptions(
 		"help"            => \&print_usage_and_exit,
@@ -111,10 +112,20 @@ sub parse_args
 		"libdir=s"        => \$libdir,
 		"families=s"      => \@families,
 		"version!"        => \&print_version_and_exit,
+
 		"snmp=s"          => \@snmp_hosts,
 		"snmpversion=s"   => \$snmpver,
-		"snmpcommunity=s" => \$snmpcomm,
 		"snmpport=i"      => \$snmpport,
+
+        # SNMPv1/2c
+        'snmpcommunity=s' => \$snmpcomm,
+        # SNMPv3
+        'snmpusername=s'  => \$snmp3username,
+        'snmpauthpass=s'  => \$snmp3authpass,
+        'snmpauthproto=s' => \$snmp3authproto,
+        'snmpprivpass=s'  => \$snmp3privpass,
+        'snmpprivproto=s' => \$snmp3privproto,
+
 		"newer=s"         => \$newer
 	);
 
@@ -133,33 +144,38 @@ sub parse_args
     @snmp_hosts = map { split /,/ } @snmp_hosts;
 
 	$config->reinitialize({
-		timeout => $timeout,
+        timeout => $timeout,
 
-		%$config,
+        %$config,
 
-		newer => $newer,
-		shell => $shell,
-		exit_not_error => $exit_not_error,
-		suggest => $suggest,
-		remove_also => $removes,
+        newer          => $newer,
+        shell          => $shell,
+        exit_not_error => $exit_not_error,
+        suggest        => $suggest,
+        remove_also    => $removes,
 
-		families => \@families,
+        families => \@families,
 
-		conffile => $conffile,
-		servicedir => $servicedir,
-		sconfdir => $sconfdir,
-		libdir => $libdir,
+        conffile   => $conffile,
+        servicedir => $servicedir,
+        sconfdir   => $sconfdir,
+        libdir     => $libdir,
 
-		snmp => \@snmp_hosts,
-		snmp_version => $snmpver,
-		snmp_community => $snmpcomm,
-		snmp_port => $snmpport,
+        snmp             => \@snmp_hosts,
+        snmp_version     => $snmpver,
+        snmp_port        => $snmpport,
+        snmp_community   => $snmpcomm,
+        snmpv3_username  => $snmp3username,
+        snmpv3_authpass  => $snmp3authpass,
+        snmpv3_authproto => $snmp3authproto,
+        snmpv3_privpass  => $snmp3privpass,
+        snmpv3_privproto => $snmp3privproto,
 
-		DEBUG => $debug,
-		PIDEBUG => $pidebug,
-	});
+        DEBUG   => $debug,
+        PIDEBUG => $pidebug,
+    });
 
-	return;
+    return;
 }
 
 
@@ -360,7 +376,7 @@ sub init_snmp
     my ($plugins) = @_;
 
 	unless (eval { require Munin::Node::SNMPConfig; }) {
-        die "# ERROR: Cannot perform SNMP probing since Munin::Node::SNMPConfig module is not available.\n",
+        die "# ERROR: Cannot perform SNMP probing as Munin::Node::SNMPConfig module is not available.\n",
             $@;
 	}
 
@@ -369,10 +385,17 @@ sub init_snmp
     fetch_plugin_snmpconf($_) foreach ($plugins->list);
 
     return Munin::Node::SNMPConfig->new(
-        hosts      => $config->{snmp},
-        community  => $config->{snmp_community},
-        version    => $config->{snmp_version},
-        port       => $config->{snmp_port},
+        hosts        => $config->{snmp},
+        version      => $config->{snmp_version},
+        port         => $config->{snmp_port},
+
+        community    => $config->{snmp_community},
+
+        username     => $config->{snmpv3_username},
+        authpassword => $config->{snmpv3_authpass},
+        authprotocol => $config->{snmpv3_authproto},
+        privpassword => $config->{snmpv3_privpass},
+        privprotocol => $config->{snmpv3_privproto},
     );
 }
 
