@@ -18,7 +18,8 @@ sub new
 
     my %sec_args;
 
-    my $hosts    = $opts{hosts} or die;
+    my $hosts    = $opts{hosts};
+    die "No host list specified\n" unless scalar @$hosts;
 
     my $version  = $opts{version} || '2c';
     my $port     = $opts{port}    || 161;
@@ -112,6 +113,8 @@ sub _probe_single_host
             # unsupported protocol version) -- any downsides?  are there
             # devices that timeout rather than return noSuchObject?  compromise
             # would be to have a --ignore-snmp-timeouts cmdline flag.
+            #
+            # TODO, redux: capture and handle SNMPv3 errors.
 		}
 	}
 
@@ -270,17 +273,44 @@ scanning capabilities.
 
 =over
 
-=item B<new>
+=item B<new(%arguments)>
 
-Constructor.
+Constructor.  Valid arguments are:
 
-Valid arguments are 'community', 'port', 'version' and 'hosts'.  All are
-optional, and default to 'public', 161, '2c' and an empty host-list (though
-obviously not providing any hosts is somewhat pointless).
+=over4
 
-The host list should be in a format understood by
-L<Munin::Node::Configure::HostEnumeration>
+=item hosts
 
+The list of hosts to scan, in a format understood by
+L<Munin::Node::Configure::HostEnumeration>.  Required.
+
+=item port
+
+Port to connect to.  Default is 161.
+
+=item version
+
+The SNMP version to use.  Default is '2c'.
+
+=item community
+
+The community string to use for SNMP version 1 or 2c.  Default is 'public'.
+
+=item username
+
+The username to use when 
+
+=item authpassword
+
+=item authprotocol
+
+=item privpassword
+
+=item privprotocol
+
+
+
+=back
 
 =item B<run_probes($plugins)>
 
