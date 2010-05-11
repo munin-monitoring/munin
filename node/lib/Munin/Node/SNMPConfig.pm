@@ -31,6 +31,7 @@ sub new
         if ($privpw) {
             $sec_args{-privpassword} = $privpw;
             $sec_args{-privprotocol} = $privproto;
+            DEBUG('Enabled SNMPv3 privacy');
         }
 
         # Authentication
@@ -40,6 +41,7 @@ sub new
         if ($authpw) {
             $sec_args{-authpassword} = $authpw;
             $sec_args{-authprotocol} = $authproto;
+            DEBUG('Enabled SNMPv3 authentication');
         }
 
         # Username
