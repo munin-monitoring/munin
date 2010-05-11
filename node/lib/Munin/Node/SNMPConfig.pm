@@ -277,7 +277,7 @@ scanning capabilities.
 
 Constructor.  Valid arguments are:
 
-=over4
+=over 4
 
 =item hosts
 
