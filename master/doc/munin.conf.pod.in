@@ -125,7 +125,7 @@ disables concurrent processing.  Affects: munin-graph
 
 =item B<max_cgi_graph_jobs> <value>
 
-This directiuve specifies the maximum number of concurrent
+This directive specifies the maximum number of concurrent
 munin-cgi-graph jobs.  The web server can start a high number of
 munin-cgi-graph jobs which we can't stop, but munin-cgi-graph will
 throttle down how many rrdgraph calls will be running at the same time
