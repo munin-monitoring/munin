@@ -37,7 +37,7 @@ my %legal = map { $_ => 1 } (
 	"cdef_name", "graphable", "process", "realname",
 	"onlynullcdef", "group_order", "pipe", "pipe_command",
 	"unknown_limit", "num_unknowns", "dropdownlimit",
-	"max_graph_jobs", "munin_cgi_graph_jobs",
+	"max_graph_jobs", "max_cgi_graph_jobs", "munin_cgi_graph_jobs",
 	"cgitmpdir", "update_rate",
 	);
 
