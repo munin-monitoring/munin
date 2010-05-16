@@ -14,6 +14,12 @@ use Time::HiRes qw(sleep);
 # Should not buffer anything since we are "real-time"
 $| = 1;
 
+# Give the blocksize as first arg
+my $nb_blocks = shift;
+if (! $nb_blocks) {
+	die "Should give the number of blocks as first arg";
+}
+
 my $win = Curses::new();
 # Hide cursor
 Curses::curs_set(0);
@@ -65,7 +71,6 @@ sub draw
 	my ($columns, $rows) = Term::Size::chars *STDOUT{IO};
 	$rows --; # last row is status row
 
-	my $nb_blocks = 150821760; # XXX - Should find a way to modify this automatically
 	my $nb_chars = $columns * $rows;
 	my $blocks_per_char = int ($nb_blocks / $nb_chars) + 1;
 	
