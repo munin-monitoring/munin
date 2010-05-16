@@ -1277,9 +1277,9 @@ sub process_service {
             # reliable, esp. in combination with munin-*cgi-graph.
 
 	    # Since this disrupts rrd's --lazy option we're disableing
-	    # it unless we were specially asked --nolazy.
+	    # it unless we (munin-graph) were specially asked --lazy.
 	    # This way --lazy continues to work as expected, and since
-	    # CGI uses --nolazy, http IMS are working also as expected.
+	    # CGI uses --nolazy, http IMS are also working as expected.
             if (! $force_lazy) {
                 DEBUG "[DEBUG] setting time on $picfilename";
                 utime $lastupdate, $lastupdate, $picfilename;
