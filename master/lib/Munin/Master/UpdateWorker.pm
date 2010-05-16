@@ -67,7 +67,13 @@ sub do_work {
 	eval {
 	    # A I/O timeout results in a violent exit.  Catch and handle.
 
-	    $self->{node}->negotiate_capabilities();
+	    my @node_capabilities = $self->{node}->negotiate_capabilities();
+
+            # Handle spoolfetch, one call to retrieve everything
+	    if (grep /spoolfetch/, @node_capabilities) {
+		    DEBUG "[DEBUG] [$nodedesignation] spoolfetch is not implemented yet, continuing normally";
+	    }
+
 	    # Note: A multigraph plugin can present multiple services.
 	    my @plugins =  $self->{node}->list_plugins();
 
