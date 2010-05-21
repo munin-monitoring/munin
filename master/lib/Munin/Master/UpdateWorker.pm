@@ -714,6 +714,7 @@ sub _update_rrd_file {
     # Some kind of mismatch between fetch and config can cause this.
     return if !defined($values);  
 
+    my @update_rrd_data;
     for (my $i = 0; $i < scalar @$values; $i++) { 
         my $value = $values->[$i];
         my $when = $ds_values->{when}[$i];
@@ -730,13 +731,16 @@ sub _update_rrd_file {
                 $value = sprintf("%.4f", $value);
             }
         }
+        
+        # Schedule for addition
+        push @update_rrd_data, "$when:$value";
+    }
 
-        DEBUG "[DEBUG] Updating $rrd_file with $when:$value";
-        RRDs::update($rrd_file, "$when:$value");
-        if (my $ERROR = RRDs::error) {
-            #confess Dumper @_;
-            ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
-        }
+    DEBUG "[DEBUG] Updating $rrd_file with @update_rrd_data";
+    RRDs::update($rrd_file, @update_rrd_data);
+    if (my $ERROR = RRDs::error) {
+        #confess Dumper @_;
+        ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
     }
 }
 
