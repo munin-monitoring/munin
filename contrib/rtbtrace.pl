@@ -15,9 +15,9 @@ use Time::HiRes qw(sleep);
 $| = 1;
 
 # Give the blocksize as first arg
-my $nb_blocks = shift;
-if (! $nb_blocks) {
-	die "Should give the number of blocks as first arg";
+my $nb_blocks_1k = shift;
+if (! $nb_blocks_1k) {
+	die "Should give the number of 1k blocks as first arg";
 }
 
 my $win = Curses::new();
@@ -72,7 +72,7 @@ sub draw
 	$rows --; # last row is status row
 
 	my $nb_chars = $columns * $rows;
-	my $blocks_per_char = int ($nb_blocks / $nb_chars) + 1;
+	my $blocks_per_char = int ($nb_blocks_1k * 2 / $nb_chars) + 1;
 	
 	# Each frame we redraw everything 
 	$win->clear();
