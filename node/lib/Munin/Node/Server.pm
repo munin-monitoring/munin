@@ -242,7 +242,7 @@ sub _process_starttls_command {
     my $ca_cert    = $config->{tls_ca_certificate}
                   || "$Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem";
     my $tls_verify = $config->{tls_verify_certificate}
-                  || 'no';
+                  || 0;
     my $tls_match  = $config->{tls_match};
 
     my $depth = $config->{tls_verify_depth};

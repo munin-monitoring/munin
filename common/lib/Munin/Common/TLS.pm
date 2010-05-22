@@ -213,7 +213,8 @@ sub _set_peer_requirements {
         $self->{logger}("[WARNING] in set_verify_depth: $err");
     }
     Net::SSLeay::CTX_set_verify ($self->{tls_context}, 
-                                 &Net::SSLeay::VERIFY_PEER, 
+                                 $self->{tls_verify}  ? &Net::SSLeay::VERIFY_PEER :
+                                                        &Net::SSLeay::VERIFY_NONE,
                                  $self->_tls_verify_callback($tls_verified));
     $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
