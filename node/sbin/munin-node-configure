@@ -442,10 +442,10 @@ sub run_plugin
 	}
 
 	# No if there is anything on stderr that's not debug
-	if (grep !/^#/, @{ $res->{stderr} }) {
-        $plugin->log_error("Junk printed to stderr");
-		# FIXME: log the other output
-		return;
+	if (my @junk = grep !/^#/, @{ $res->{stderr} }) {
+	       $plugin->log_error("Junk printed to stderr");
+	       DEBUG("Junk printed to stderr: @junk");
+	       return;
 	}
 
     # Ignore debug output
