@@ -74,7 +74,7 @@ sub do_work {
 	    my @plugins;
 	    if (grep /spoolfetch/, @node_capabilities) {
 		    # XXX - use 5min, should keep a real spoolfetch timestamping
-		    my $timestamp = time - 300;
+		    my $timestamp = update_spoolfetch_timestamp($nodedesignation, "__spoolfetch__");
 		    %whole_config = $self->uw_spoolfetch($timestamp);
 
 		    DEBUG "[DEBUG] whole_config:" . Dumper(\%whole_config);
@@ -256,6 +256,26 @@ sub is_fresh_enough {
    	untie(%last_updated);
 
 	return $is_fresh_enough;
+}
+
+# XXX - Should factorise some code with the previous function
+sub update_spoolfetch_timestamp {
+	my ($nodedesignation, $service) = @_;
+
+	my $key = "$nodedesignation/$service";
+	my $db_file = $config->{dbdir} . "/last_updated.dic.txt";
+
+	my %last_updated;
+
+   	use Munin::Common::SyncDictFile;
+   	tie(%last_updated, 'Munin::Common::SyncDictFile', $db_file) or ERROR "$!";
+
+	my $last_updated_key = $last_updated{$key} || "0";
+	$last_updated{$key} = time;
+
+   	untie(%last_updated);
+
+	return $last_updated_key;
 }
 
 sub parse_update_rate {
