@@ -142,7 +142,10 @@ sub service
 			print $client ".\n";
 		} elsif ($line =~ m/^spoolfetch (\d+)/) {
 			my $timestamp = $1;
-			for (my $epoch = ($timestamp - $timestamp % $update_rate);
+
+			# One hour histo if asked from THE BEGINNING
+			$timestamp = (time - 3600) if ($timestamp == 0);
+			for (my $epoch = $timestamp;
 				$epoch < time; $epoch += $update_rate) { 
 			for (my $plugin_number = 0; $plugin_number < $nb_plugins; $plugin_number ++) {
 				my $plugin_name = "debug_plugin_$plugin_number";
