@@ -70,19 +70,35 @@ sub do_work {
 	    my @node_capabilities = $self->{node}->negotiate_capabilities();
 
             # Handle spoolfetch, one call to retrieve everything
+	    my %whole_config;
+	    my @plugins;
 	    if (grep /spoolfetch/, @node_capabilities) {
-		    DEBUG "[DEBUG] [$nodedesignation] spoolfetch is not implemented yet, continuing normally";
+		    # XXX - use 5min, should keep a real spoolfetch timestamping
+		    my $timestamp = time - 300;
+		    %whole_config = $self->uw_spoolfetch($timestamp);
+
+		    DEBUG "[DEBUG] whole_config:" . Dumper(\%whole_config);
+
+		    # Gets the plugins from spoolfetch
+		    # Only keep the first one, the others will be multigraph-fetched
+		    @plugins = ( $whole_config{global}{multigraph}[0] ) ;
 	    }
 
 	    # Note: A multigraph plugin can present multiple services.
-	    my @plugins =  $self->{node}->list_plugins();
+	    @plugins = $self->{node}->list_plugins() unless @plugins;
 
 	    for my $plugin (@plugins) {
 		if (%{$config->{limit_services}}) {
 		    next unless $config->{limit_services}{$plugin};
 		}
+		DEBUG "[DEBUG] for my $plugin (@plugins)";
 
-		my %service_config = $self->uw_fetch_service_config($plugin);
+		# Ask for config only if spoolfetch didn't already send it
+		my %service_config = %whole_config;
+	        unless (%service_config) {
+		       %service_config = $self->uw_fetch_service_config($plugin);
+		}
+
 		unless (%service_config) {
 		    WARN "[WARNING] Service $plugin on $nodedesignation ".
 			"returned no config";
@@ -90,6 +106,7 @@ sub do_work {
 		}
 
 		# Check if this plugin has already sent its data via a dirtyconfig
+		# Note that spoolfetch also uses dirtyconfig
 		my %service_data = $self->handle_dirty_config(\%service_config);
 
 		# Check if this plugin has to be updated
@@ -105,6 +122,7 @@ sub do_work {
 		}
 
 		if (! %service_data) {
+			DEBUG "[DEBUG] No service data for $plugin, fetching it";
 			%service_data = $self->{node}->fetch_service_data($plugin);
 		}
 
@@ -270,20 +288,22 @@ sub handle_dirty_config {
 
 	my $services = $service_config->{global}{multigraph};
 	foreach my $service (@$services) {
-		my $service_data_source = $service_config->{"data_source"}->{$service};
+		my $service_data_source = $service_config->{data_source}->{$service};
 		foreach my $field (keys %$service_data_source) {
-			my $field_value = $service_data_source->{$field}->{"value"};
-			# If not present, ignore
+			my $field_value = $service_data_source->{$field}->{value};
+			my $field_when = $service_data_source->{$field}->{when};
+
+			# If value not present, this field is not dirty fetched
 			next if (! defined $field_value);
 
-			DEBUG "[DEBUG] handle_dirty_config:$service, $field, $field_value";
+			DEBUG "[DEBUG] handle_dirty_config:$service, $field, @$field_when";
 			# Moves the "value" to the service_data
 			$service_data{$service}->{$field} ||= { when => [], value => [], };
-
-			push @{$service_data{$service}{$field}{when}}, 'N';
-	                push @{$service_data{$service}{$field}{value}}, $field_value;
+	                push @{$service_data{$service}{$field}{value}}, @$field_value;
+			push @{$service_data{$service}{$field}{when}}, @$field_when;
 
 			delete($service_data_source->{$field}{value});
+			delete($service_data_source->{$field}{when});
 		}
 	}
 
@@ -291,21 +311,41 @@ sub handle_dirty_config {
 }
 
 
+sub uw_spoolfetch {
+    my ($self, $timestamp) = @_;
+
+    my %whole_config = $self->{node}->spoolfetch($timestamp);
+
+    # munin.conf might override stuff
+    foreach my $plugin (keys %whole_config) {
+	    my $merged_config = $self->uw_override_with_conf($plugin, $whole_config{$plugin});
+	    $whole_config{$plugin} = $merged_config;
+    }
+
+    return %whole_config;
+}
+
 sub uw_fetch_service_config {
     my ($self, $plugin) = @_;
 
     # Note, this can die for several reasons.  Caller must eval us.
     my %service_config = $self->{node}->fetch_service_config($plugin);
+    my $merged_config = $self->uw_override_with_conf($plugin, \%service_config);
+
+    return %$merged_config;
+}
+
+sub uw_override_with_conf {
+    my ($self, $plugin, $service_config) = @_;
 
     if ($self->{host}{service_config} && 
 	$self->{host}{service_config}{$plugin}) {
 
-        %service_config
-            = (%service_config, %{$self->{host}{service_config}{$plugin}});
-
+        my %merged_config = (%$service_config, %{$self->{host}{service_config}{$plugin}});
+	$service_config = \%merged_config;
     }
 
-    return %service_config;
+    return $service_config;
 }
 
 

@@ -267,7 +267,7 @@ sub parse_service_config {
 	    if ($service eq 'multigraph') {
 		die "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
 	    }
-	    new_service($service);
+	    new_service($service) unless $global_config->{$service};
 	    DEBUG "[CONFIG multigraph $plugin] Service is now $service";
 	}
 	elsif ($line =~ m{\A ([^\s\.]+) \s+ (.+) }xms) {
@@ -275,8 +275,30 @@ sub parse_service_config {
 
 	    my $label = $self->_sanitise_fieldname($1);
 
-            push @{$global_config->{$service}}, [$label, $2];
+	    # add to config if not already here
+	    push @{$global_config->{$service}}, [$label, $2]
+	    	unless grep { $_->[0] eq $label }  @{$global_config->{$service}};
             DEBUG "[CONFIG graph global $plugin] $service->$label = $2";
+        } elsif ($line =~ m{\A ([^\.]+)\.value \s+ (.+) }xms) {
+	    $correct++;
+	    # Special case for dirtyconfig
+            my ($ds_name, $value, $when) = ($1, $2, 'N');
+            
+	    $ds_name = $self->_sanitise_fieldname($ds_name);
+	    if ($value =~ /^(\d+):(.+)$/) {
+		$when = $1;
+		$value = $2;
+	    }
+            DEBUG "[CONFIG dirtyconfig $plugin] Storing $value from $when in $ds_name";
+
+	    # Creating the datastructure if not created already
+            $data_source_config->{$service}{$ds_name} ||= {};
+            $data_source_config->{$service}{$ds_name}{when} ||= [];
+            $data_source_config->{$service}{$ds_name}{value} ||= [];
+	
+	    # Saving the timed value in the datastructure
+	    push @{$data_source_config->{$service}{$ds_name}{when}}, $when;
+	    push @{$data_source_config->{$service}{$ds_name}{value}}, $value;
         }
 	elsif ($line =~ m{\A ([^\.]+)\.([^\s]+) \s+ (.+) }xms) {
 	    $correct++;
@@ -320,6 +342,19 @@ sub fetch_service_config {
     return $self->parse_service_config($service,@lines);
 }
 
+sub spoolfetch {
+    my ($self, $timestamp) = @_;
+
+    DEBUG "[DEBUG] Fetching spooled services since $timestamp (" . localtime($timestamp) . ")";
+    $self->_node_write_single("spoolfetch $timestamp\n");
+
+    # The whole stuff in one fell swoop.
+    my @lines = $self->_node_read();
+
+    # using the multigraph parsing. 
+    # Using "__root__" as a special plugin name. 
+    return $self->parse_service_config("__root__", @lines);
+}
 
 sub _validate_data_sources {
     my ($self, $all_data_source_config) = @_;

@@ -13,13 +13,18 @@ use IO::Socket;
 use IO::Select;
 use Getopt::Long;
 
+# No buffering
+$| = 1;
+
 my $nb_servers = 3;
 my $nb_plugins = 30;
 my $fields_per_plugin = 5;
 my $starting_port = 24949;
+my $spoolfetch;
 my $dump_config;
 my $is_debug;
 my $help;
+my $update_rate = 10;
 
 my $arg_ret = GetOptions(
 	"nb-plugins|n=i" => \$nb_plugins,
@@ -28,6 +33,8 @@ my $arg_ret = GetOptions(
 
 	"startint-port|p=i" => \$starting_port,
 	
+	"spoolfetch" => \$spoolfetch,
+
 	"dump|d" => \$dump_config,
 	"help|h" => \$help,
 	"debug" => \$is_debug,
@@ -75,7 +82,7 @@ for (my $i = 0; $i < $nb_servers; $i ++) {
 		"Listen" => 5,
 		"ReuseAddr" => 1,
 		"Proto" => "tcp",
-	) or croak($!);
+	) or die($!);
 
 	push @servers, $server;
 }
@@ -108,17 +115,19 @@ sub service
 	while (my $line = <$client>) {
 		chomp($line);
 		debug("[$$] client of $hostname asked : $line");
-		if ($line =~ m/^list/) {
+		if ($line =~ m/^list /) {
 			for (my $i = 0; $i < $nb_plugins; $i ++) {
 				print $client "debug_plugin_$i ";
 			}
 			print $client "\n";
-			print $client ".\n";
 		} elsif ($line =~ m/^cap (\w+)/) {
-			print $client "cap multigraph spoolfetch\n";
+			my @caps = "multigraph";
+			push @caps, "spoolfetch" if $spoolfetch;
+			print $client "cap @caps\n";
 		} elsif ($line =~ m/^config (\w+)/) {
 			my $plugin_number = get_plugin_number($1);
 			print $client "graph_title Debug plugin $plugin_number\n";
+			print $client "update_rate $update_rate\n";
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
 				print $client "field_". $plugin_number . "_$i.label field $i of plugin $1 on $hostname\n";
 				print $client "field_". $plugin_number . "_$i.type GAUGE\n";
@@ -129,17 +138,17 @@ sub service
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
 				my $value = sin( (time / 3600) * $plugin_number + $i);
 				print $client "field_$1_$i.value $value\n";
-				print $client "field_$1_$i.type GAUGE\n";
 			}
 			print $client ".\n";
 		} elsif ($line =~ m/^spoolfetch (\d+)/) {
 			my $timestamp = $1;
-			for (my $epoch = ($timestamp - $timestamp % 10); 
-				$epoch < time; $epoch += 10) { 
+			for (my $epoch = ($timestamp - $timestamp % $update_rate);
+				$epoch < time; $epoch += $update_rate) { 
 			for (my $plugin_number = 0; $plugin_number < $nb_plugins; $plugin_number ++) {
 				my $plugin_name = "debug_plugin_$plugin_number";
 				print $client "multigraph $plugin_name\n";
 				print $client "graph_title Debug plugin $plugin_number\n";
+				print $client "update_rate $update_rate\n";
 				for (my $i = 0; $i < $fields_per_plugin; $i ++) {
 					print $client "field_". $plugin_number . "_$i.label field $i of plugin $plugin_name on $hostname\n";
 					print $client "field_".$plugin_number."_$i.type GAUGE\n";
