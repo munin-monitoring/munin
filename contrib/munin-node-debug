@@ -28,7 +28,7 @@ my $arg_ret = GetOptions(
 
 	"startint-port|p=i" => \$starting_port,
 	
-	"dump-conf|d" => \$dump_config,
+	"dump|d" => \$dump_config,
 	"help|h" => \$help,
 	"debug" => \$is_debug,
 );
@@ -114,6 +114,8 @@ sub service
 			}
 			print $client "\n";
 			print $client ".\n";
+		} elsif ($line =~ m/^cap (\w+)/) {
+			print $client "cap multigraph spoolfetch\n";
 		} elsif ($line =~ m/^config (\w+)/) {
 			my $plugin_number = get_plugin_number($1);
 			print $client "graph_title Debug plugin $plugin_number\n";
@@ -129,6 +131,24 @@ sub service
 				print $client "field_$1_$i.value $value\n";
 				print $client "field_$1_$i.type GAUGE\n";
 			}
+			print $client ".\n";
+		} elsif ($line =~ m/^spoolfetch (\d+)/) {
+			my $timestamp = $1;
+			for (my $epoch = ($timestamp - $timestamp % 10); 
+				$epoch < time; $epoch += 10) { 
+			for (my $plugin_number = 0; $plugin_number < $nb_plugins; $plugin_number ++) {
+				my $plugin_name = "debug_plugin_$plugin_number";
+				print $client "multigraph $plugin_name\n";
+				print $client "graph_title Debug plugin $plugin_number\n";
+				for (my $i = 0; $i < $fields_per_plugin; $i ++) {
+					print $client "field_". $plugin_number . "_$i.label field $i of plugin $plugin_name on $hostname\n";
+					print $client "field_".$plugin_number."_$i.type GAUGE\n";
+
+					my $value = sin( ($epoch / 3600) * $plugin_number + $i);
+					print $client "field_".$plugin_number."_$i.value $epoch:$value\n";
+				}
+			}
+		}
 			print $client ".\n";
 		} elsif ($line =~ m/^quit/) {
 			return;
