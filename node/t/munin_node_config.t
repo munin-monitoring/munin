@@ -230,6 +230,11 @@ isa_ok($conf, 'Munin::Node::Config');
     my @res = $conf->_parse_plugin_line("env.foo fnord");
     is_deeply(\@res, [ env => { foo => 'fnord' } ], 'Parsing environment variable');
 }
+{
+    eval { $conf->_parse_plugin_line("env foo = fnord") };
+    like($@, qr{Deprecated.*'env\.foo fnord'},
+         "Nonexistent group throws exception");
+}
 
 
 ###############################################################################
