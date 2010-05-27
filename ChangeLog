@@ -10,6 +10,50 @@ Some stats on 1.4.0 (relative to 1.3.4)
   uploaded to sourceforge in february 2005.
 
 
+munin 1.4.5, r3379,3611, 2010-5-27
+
+* Apply TLS improvements from r3483 to 1.4-stable branch
+* Fixes for TLS with unverifiable certificates
+* Apply r3451 from trunk: ligne: use the local $DEBUG to toggle debug output, 
+  rather than the one in 'main' package. 
+* Backport r3444: ligne: fix warnings when running under certain versions of
+* Typo in SNMPv3 code fixes ticket #911
+* Backport r3546 to r3554 from trunk (fix for #912, and more extensive test 
+* Fix ticket #928. Adding missing max_cgi_graph_jobs directive to the 
+  %legal hash 
+  coverage for Munin::Plugin::SNMP). 
+* Remove trailing whitespace from 1.4-stable/node directory, as in trunk. 
+* Ignore the sandbox and Module::Build-generated content, as in trunk
+  perl, caused by exporting an undefined variable to the environment. 
+  Thanks to Aleksandar Lazic (al4711) for the patch. 
+* Backport r3439: ligne: and add a newline to the error message when there was
+  a plugin exec failure. 
+* Backport r3434: ligne: set Net::Server's syslog_ident parameter, so log 
+  lines have 'munin-node' as the process name, rather than the significantly
+  less useful 'net_server'. fixes ticket #789. 
+* snort_*:  clean up autoconf 
+* if_: cosmetic fix  
+* mysql_: comment typo 
+* jmx_: respect JRE_HOME, if configured 
+* merge r3406 (multigraph support for munin-node) into 1.4 maintenance branch. 
+* sensors_*: podify, document regexes, various bugfixes
+* amavis: prevent a spike in the graph after Amavis is restarted. 
+  Thanks to claudius for the patch. fixes ticket #889
+* snmp_netstat: tidy and document
+* snmp_netstat: Fix bug where snmp_netstat undercounts the number
+   of connections
+* uptime: graph should not scale, as it makes it hard to read after 1000
+  days of uptime 
+* postgres_users: Usernames fetched from pg_stat_activity need to be
+  distinctified
+* mysql_isam_space: undeprecate,  sanity-check mysqlshow output, fix autoconf 
+  fix various typos
+* munin_update: Fix bashism
+
+
+
+
+
 munin 1.4.4, r3276,3379, 2010-2-26
 
 * Localization problem in 1.4.1 (closes #781)
