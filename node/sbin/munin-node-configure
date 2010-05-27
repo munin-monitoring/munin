@@ -18,12 +18,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Program to suggest what plugins to use and not
+#
 
 use strict;
 use warnings;
 
 use Getopt::Long;
-use POSIX ();
 
 use Munin::Common::Defaults;
 use Munin::Node::Configure::PluginList;

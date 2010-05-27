@@ -4,6 +4,7 @@ use strict;
 
 use Test::More 'no_plan';
 
+use POSIX ();
 use Data::Dumper;
 
 require_ok('sbin/munin-node-configure');
