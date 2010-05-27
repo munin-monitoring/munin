@@ -175,11 +175,9 @@ isa_ok($conf, 'Munin::Node::Config');
 
 
 ###############################################################################
-#                    _ P A R S E _ P L U G I N _ L I N E
-
+# _parse_plugin_line
 
 ### user
-
 {
     my $uname = getpwuid $UID;
 
@@ -188,20 +186,16 @@ isa_ok($conf, 'Munin::Node::Config');
 
     @res = $conf->_parse_plugin_line("user $UID");
     is_deeply(\@res, [user => $UID], 'Parsing plugin user ID');
-
 }
 
 ### group
-
 {
     my $gid   = (split / /, $GID)[0];
     my $gname = getgrgid $gid;
 
     my @res = $conf->_parse_plugin_line("group $gname");
-    is_deeply(\@res, [group => $gid], 'Parsing plugin group');
+    is_deeply(\@res, [group => $gname], 'Parsing plugin group');
 }
-
-
 {
     my $gids = $GID;
     $gids =~ tr/ /,/;
@@ -213,14 +207,9 @@ isa_ok($conf, 'Munin::Node::Config');
     @res = $conf->_parse_plugin_line("group $gids_with_optional");
     is_deeply(\@res, [group => $GID], 'Parsing plugin group (many with optional nonexistent)');
 }
-
-
 {
-    eval {
-        $conf->_parse_plugin_line("group xxxyyyzzz");
-    };
-    like($@, qr{Group 'xxxyyyzzz' does not exist},
-         "Nonexistent group throws exception");
+    my @res = $conf->_parse_plugin_line("group xxxyyyzzz");
+    is_deeply(\@res, [group => 'xxxyyyzzz'], 'Parsing unknown group');
 }
 
 
