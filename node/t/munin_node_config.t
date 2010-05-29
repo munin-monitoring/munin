@@ -197,12 +197,10 @@ isa_ok($conf, 'Munin::Node::Config');
     is_deeply(\@res, [group => $gname], 'Parsing plugin group');
 }
 {
-    my $gids = $GID;
-
-    my @res = $conf->_parse_plugin_line("group $gids");
+    my @res = $conf->_parse_plugin_line("group $GID");
     is_deeply(\@res, [group => $GID], 'Parsing plugin group (many)');
 
-    my $gids_with_optional = "$gids,(999999999)";
+    my $gids_with_optional = "$GID,(999999999)";
     @res = $conf->_parse_plugin_line("group $gids_with_optional");
     is_deeply(\@res, [group => $gids_with_optional], 
         'Parsing plugin group (many with optional nonexistent)');
