@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 33;
+use Test::More tests => 34;
 
 use FindBin;
 use English qw(-no_match_vars);
@@ -198,14 +198,14 @@ isa_ok($conf, 'Munin::Node::Config');
 }
 {
     my $gids = $GID;
-    $gids =~ tr/ /,/;
 
     my @res = $conf->_parse_plugin_line("group $gids");
     is_deeply(\@res, [group => $GID], 'Parsing plugin group (many)');
 
     my $gids_with_optional = "$gids,(999999999)";
     @res = $conf->_parse_plugin_line("group $gids_with_optional");
-    is_deeply(\@res, [group => $GID], 'Parsing plugin group (many with optional nonexistent)');
+    is_deeply(\@res, [group => $gids_with_optional], 
+        'Parsing plugin group (many with optional nonexistent)');
 }
 {
     my @res = $conf->_parse_plugin_line("group xxxyyyzzz");
@@ -249,18 +249,14 @@ isa_ok($conf, 'Munin::Node::Config');
     close STDERR;
     open STDERR, '>&', $olderr;
 
-    #print '-'x70, "\n", $stderr, '-'x70, "\n", $@, '-'x70, "\n";
-
     is($@, '', "No exceptions");
     like($stderr, qr{Clutter before section start}, "Clutter file is skipped");
-
-    #use Data::Dumper; warn Dumper($conf);
 
     is_deeply($conf, {
         sconfdir => $sconfdir,
         sconf=>{
             Foo    => {user => 'root', env => {baz => 'zing'}},
-            'Foo*' => {group => 0, env => {bar => 'zap'}},
+            'Foo*' => {group => 'root', env => {bar => 'zap'}},
             'F*'   => {env => {bar => 'zoo'}},
         },
     }, "Checking sconf");
@@ -271,7 +267,7 @@ isa_ok($conf, 'Munin::Node::Config');
         sconf=>{
             Foo => {
                 user => 'root',
-                group => 0,
+                group => 'root',
                 env => {
                     baz => 'zing',
                     bar => 'zap',
