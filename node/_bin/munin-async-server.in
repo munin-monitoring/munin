@@ -23,22 +23,33 @@ use strict;
 use warnings;
 
 use IO::Socket;
+use File::Path qw(make_path);
+use Getopt::Long;
+use Pod::Usage;
 
-# Use munin-node, to avoid reimplementation. 
-# TODO - might be directly inserted in munin-node
 my $host = "localhost:4949";
-
-use Munin::Common::Defaults;
-my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
-my $config = &munin_readconfig ($conffile);
-my $SPOOLDIR = $config->{asyncspooldir} || "/tmp/munin-async-spool";
-
-
-# Q&D spooldir creation
-`mkdir -p $SPOOLDIR`;
-
+my $SPOOLDIR = "/tmp/munin-async-spool";
 my $verbose;
 my $debug;
+my $help;
+
+GetOptions(
+	"host=s" => \$host,
+	"spooldir|s=s" => \$SPOOLDIR,
+
+	"help|h" => \$help,
+	"verbose|v" => \$verbose,
+	"debug" => \$debug,
+) or pod2usage(1);
+if ($help) {
+	pod2usage(1);
+}
+
+unless (-d $SPOOLDIR) {
+	make_path($SPOOLDIR, { verbose => $verbose, } ) 
+		or die ("Cannot create '$SPOOLDIR': $!");
+}
+
 
 # Read whole configuration
 my @plugins;
@@ -146,3 +157,20 @@ sub fetch_data
 		close (OUTFILE);
 	}
 }
+
+__END__
+
+=head1 NAME
+
+munin-async-server - A program to spool munin-node calls
+
+=head1 SYNOPSIS
+
+munin-async-server [options]
+
+ Options:
+     --host <hostname:port>     Connect to this munin-node [localhost:4949]
+     -s --spool <spooldir>      Store the spooled data in this dir [/tmp/munin-async-spool]
+
+     -v --verbose               Be verbose
+     -h --help                  View this message	

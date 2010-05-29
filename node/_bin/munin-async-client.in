@@ -23,15 +23,33 @@ use strict;
 use warnings;
 
 use Sys::Hostname;
-
-use Munin::Common::Defaults;
+use Data::Dumper;
+use Getopt::Long;
+use Pod::Usage;
 
 # Disable buffering
 $| = 1;
 
-my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
-my $config = &munin_readconfig ($conffile);
-my $SPOOLDIR = $config->{asyncspooldir} || "/tmp/munin-async-spool";
+my $SPOOLDIR = "/tmp/munin-async-spool";
+my $hostname = hostname();
+chomp($hostname);
+my $verbose;
+my $debug;
+my $help;
+
+GetOptions(
+        "spooldir|s=s" => \$SPOOLDIR,
+        "hostname|h=s" => \$hostname,
+
+        "help|h" => \$help,
+        "verbose|v" => \$verbose,
+        "debug" => \$debug,
+) or pod2usage(1);
+if ($help) {
+        pod2usage(1);
+}
+
+
 
 # Use STDIN/STDOUT, in order to be : 
 # 1. secure over internet (SSH), munin-node needs only 
@@ -40,8 +58,6 @@ my $SPOOLDIR = $config->{asyncspooldir} || "/tmp/munin-async-spool";
 
 die "spooldir [$SPOOLDIR] not found" unless -d $SPOOLDIR;
 
-my $hostname = hostname;
-chomp($hostname);
 print "# munin node at $hostname\n";
 
 while (my $line = <>) {
@@ -124,3 +140,19 @@ sub get_spooled_plugins {
 
 	return @plugins;
 }
+
+__END__
+
+=head1 NAME
+
+munin-async-client - A program to replay spooled munin-node calls
+
+=head1 SYNOPSIS
+
+munin-async-client [options]
+
+ Options:
+     -s --spool <spooldir>      Store the spooled data in this dir [/tmp/munin-async-spool]
+
+     -v --verbose               Be verbose
+     -h --help                  View this message	
