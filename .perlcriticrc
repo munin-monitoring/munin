@@ -8,6 +8,8 @@ profile-strictness = quiet
 
 [-Modules::RequireVersionVar]
 [-ErrorHandling::RequireUseOfExceptions]
+[-BuiltinFunctions::RequireBlockGrep]
+[-BuiltinFunctions::RequireBlockMap]
 
 
 ### Configure policies #########################################################
@@ -22,4 +24,7 @@ keywords = Id
 
 [CodeLayout::RequireTidyCode]
 perltidyrc = perltidyrc
+
+[CodeLayout::ProhibitTrailingWhitespace]
+severity = 5
 
