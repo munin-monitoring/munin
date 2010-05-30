@@ -42,7 +42,7 @@ my $PIDEBUG    = 0;
 my $defuser    = getpwnam ($Munin::Common::Defaults::MUNIN_PLUGINUSER);
 my $defgroup   = getgrnam ($Munin::Common::Defaults::MUNIN_GROUP);
 my $paranoia   = 0;
-my @ignores    = ();
+my @ignores;
 my $timeout    = 10;
 
 sub main {

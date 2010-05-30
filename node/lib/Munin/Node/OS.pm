@@ -56,7 +56,6 @@ sub get_fq_hostname {
 
 sub check_perms_if_paranoid {
     my ($class, $target) = @_;
-    my @stat;
 
     my $config = Munin::Node::Config->instance();
 

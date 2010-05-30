@@ -131,7 +131,7 @@ sub change_real_and_effective_user_and_group
 	    # documentation on $EFFECTIVE_GROUP_ID in the perlvar(1)
 	    # manual page.
 
-	    my @groups = ();
+	    my @groups;
 	    my $groups = $config->{sconf}{$service}{group};
 
 	    for my $group (split /\s*,\s*/, $groups) {
@@ -220,7 +220,7 @@ sub _service_command
 {
     my ($dir, $service, $argument) = @_;
 
-    my @run = ();
+    my @run;
     my $sconf = $config->{sconf};
 
     if ($sconf->{$service}{command}) {
