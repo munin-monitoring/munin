@@ -126,17 +126,17 @@ sub cat_multigraph_file {
 }
 
 sub get_spooled_plugins {
-	print STDERR "get_spooled_plugins\n";
+	print STDERR "get_spooled_plugins\n" if $verbose;
 	my @plugins;
 	opendir(SPOOLDIR, $SPOOLDIR) or die "can't opendir $SPOOLDIR: $!";
 	while(my $filename = readdir(SPOOLDIR)) {
-		print STDERR $filename;
+		print STDERR $filename if $verbose;
 		next unless $filename =~ m/^munin-daemon\.(\w+)\.data$/;
 		push @plugins, $1;	
 	}
 	closedir(SPOOLDIR);
 
-	print STDERR "plugins:@plugins\n";
+	print STDERR "plugins:@plugins\n" if $verbose;
 
 	return @plugins;
 }
