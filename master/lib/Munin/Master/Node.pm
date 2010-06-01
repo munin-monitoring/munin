@@ -62,17 +62,22 @@ sub _do_connect {
     # Check if it's an URI or a plain host
     use URI;
 
-    my $uri = new URI($self->{address});
+    my $url = $self->{address};
+    if ($self->{port}) {
+	    # A port is defined, use it !
+	    $url .= ":" . $self->{port};
+    }
+    my $uri = new URI($url);
 
     # If the scheme is not defined, it's a plain host. 
     # Prefix it with munin:// to be able to parse it like others
-    $uri = new URI("munin://" . $self->{address}) unless $uri->scheme;
-    LOGCROAK("[FATAL] '$self->{address}' is not a valid address!") unless $uri->scheme;
+    $uri = new URI("munin://" . $url) unless $uri->scheme;
+    LOGCROAK("[FATAL] '$url' is not a valid address!") unless $uri->scheme;
 
     if ($uri->scheme eq "munin") {
         $self->{reader} = $self->{writer} = IO::Socket::INET->new(
 		PeerAddr  => $uri->host,
-		PeerPort  => ($uri->port || $self->{port}),
+		PeerPort  => $uri->port,
 		LocalAddr => $config->{local_address},
 		Proto     => 'tcp', 
 		Timeout   => $config->{timeout}
@@ -567,13 +572,13 @@ sub _node_read {
 # Defines the URL::scheme for munin
 package URI::munin;
 
-# We are like telnet
-require URI::telnet;
-@URI::munin::ISA=qw(URI::telnet);
+# We are like a generic server
+require URI::_server;
+@URI::munin::ISA=qw(URI::_server);
 
 # munin://HOST[:PORT]
 
-sub default_port { 4949 }
+sub default_port { return 4949; }
 
 1;
 
