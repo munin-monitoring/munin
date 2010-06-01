@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 223;
+use Test::More tests => 234;
 
 use Munin::Node::Configure::Plugin;
 
@@ -114,12 +114,13 @@ sub gen_plugin
     is(
         $p->_reduce_wildcard('snmpv3_switch.example.com_load'),
         'switch.example.com',
-        'SNMP plugin - reduce'
+        'Version 3 SNMP plugin - reduce'
     );
+
     is(
         $p->_expand_wildcard([ 'switch.example.com' ]),
         'snmp_switch.example.com_load',
-        'Version 3 SNMP plugin - expand'
+        'SNMP plugin - expand'
     );
 }
 {
@@ -237,21 +238,79 @@ sub gen_plugin
 ### installed_services_string
 {
     my $p = gen_plugin('memory');
+
     is($p->installed_services_string, '', 'No services installed');
+
     $p->add_instance('memory');
     is($p->installed_services_string, '', 'One service installed');
+}
+{
+    my $p = gen_plugin('if_');
 
-    my $wcp = gen_plugin('if_');
-    is($wcp->installed_services_string, '', 'No wildcard services installed');
-    $wcp->add_instance('if_eth0');
-    is($wcp->installed_services_string, 'eth0', 'One wildcard service installed');
-    $wcp->add_instance('if_eth1');
-    is($wcp->installed_services_string, 'eth0 eth1', 'Several wildcard service installed');
+    is($p->installed_services_string, '', 'No wildcard services installed');
 
-    # FIXME: snmp plugins
-    my $sp = gen_plugin('snmp__load');
-    my $swcp = gen_plugin('snmp__if_');
+    $p->add_instance('if_eth0');
+    is($p->installed_services_string, 'eth0', 'One wildcard service installed');
 
+    $p->add_instance('if_eth1');
+    is($p->installed_services_string, 'eth0 eth1', 'Several wildcard services installed');
+}
+{
+    my $p = gen_plugin('snmp__load');
+
+    is($p->installed_services_string, '', 'No SNMP services installed');
+    
+    $p->add_instance('snmp_switch.example.com_load');
+    is($p->installed_services_string, 'switch.example.com', 'One SNMP host installed');
+
+    $p->add_instance('snmp_10.0.0.12_load');
+    is($p->installed_services_string, 'switch.example.com 10.0.0.12', 'Several SNMP hosts installed');
+
+    $p->add_instance('snmpv3_server.example.com_load');
+    is($p->installed_services_string, 'switch.example.com 10.0.0.12 server.example.com', 'One SNMP host installed');
+
+    $p->add_instance('snmpv3_10.0.0.14_load');
+    is($p->installed_services_string, 'switch.example.com 10.0.0.12 server.example.com 10.0.0.14', 'Several wildcard service installed');
+}
+{
+    my $p = gen_plugin('snmp__if_');
+
+    is($p->installed_services_string, '', 'No wildcard SNMP services installed');
+
+    $p->add_instance('snmp_switch.example.com_if_1');
+    is(
+        $p->installed_services_string,
+        'switch.example.com/1',
+        'One SNMP host installed'
+    );
+
+    $p->add_instance('snmp_switch.example.com_if_2');
+    is(
+        $p->installed_services_string,
+        'switch.example.com/1 switch.example.com/2',
+        'Added another instance on the same host'
+    );
+
+    $p->add_instance('snmp_10.0.0.12_if_1');
+    is(
+        $p->installed_services_string,
+        'switch.example.com/1 switch.example.com/2 10.0.0.12/1',
+        'Added another instance on a second host'
+    );
+
+    $p->add_instance('snmpv3_server.example.com_if_123');
+    is(
+        $p->installed_services_string,
+        'switch.example.com/1 switch.example.com/2 10.0.0.12/1 server.example.com/123',
+        'Added an instance on a v3 host'
+    );
+
+    $p->add_instance('snmpv3_10.0.0.14_if_45');
+    is(
+        $p->installed_services_string,
+        'switch.example.com/1 switch.example.com/2 10.0.0.12/1 server.example.com/123 10.0.0.14/45',
+        'Added an instance on a v3 host'
+    );
 }
 
 
@@ -363,6 +422,7 @@ sub gen_plugin
     is_deeply([ $p->services_to_remove ], ['memory']);
 
 
+    # TODO
     my $wcp = gen_plugin('if_');
 
     # suggestions to be removed
@@ -461,7 +521,7 @@ EOF
 sub run_snmpconf_tests
 {
     my ($plugin_name, $test, $expected_error_count_key) = @_;
-    
+
     my ($in, $expected, $errors, $msg) = @$test;
 
     my $p =       gen_plugin($plugin_name);
