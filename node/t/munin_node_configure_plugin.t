@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 242;
+use Test::More tests => 262;
 
 use Munin::Node::Configure::Plugin;
 
@@ -79,16 +79,51 @@ sub gen_plugin
 ### is_installed
 {
     my $p = gen_plugin('memory');
-    my $wcp = gen_plugin('if_');
 
     is($p->is_installed,   'no', 'Not installed by default');
-    is($wcp->is_installed, 'no', 'Not installed by default (wildcard)');
 
     $p->add_instance('memory');
     is($p->is_installed, 'yes', 'Installed after instance is added');
+}
+{
+    my $p = gen_plugin('if_');
 
-    $wcp->add_instance('if_eth0');
-    is($wcp->is_installed, 'yes', 'Installed after instance is added (wc)');
+    is($p->is_installed,   'no', 'Not installed by default (wildcard)');
+
+    $p->add_instance('if_eth0');
+    is($p->is_installed, 'yes', 'Installed after instance is added (wc)');
+}
+{
+    my $p = gen_plugin('snmp__memory');
+
+    is($p->is_installed,   'no', 'Not installed by default (snmp)');
+
+    $p->add_instance('snmp_switch.example.com_memory');
+    is($p->is_installed, 'yes', 'Installed after instance is added (snmp)');
+}
+{
+    my $p = gen_plugin('snmp__memory');
+
+    is($p->is_installed,   'no', 'Not installed by default (snmp v3)');
+
+    $p->add_instance('snmpv3_switch.example.com_memory');
+    is($p->is_installed, 'yes', 'Installed after instance is added (snmp v3)');
+}
+{
+    my $p = gen_plugin('snmp__if_');
+
+    is($p->is_installed,   'no', 'Not installed by default (wc snmp)');
+
+    $p->add_instance('snmp_switch.example.com_if_2');
+    is($p->is_installed, 'yes', 'Installed after instance is added (wc snmp)');
+}
+{
+    my $p = gen_plugin('snmp__if_');
+
+    is($p->is_installed,   'no', 'Not installed by default (wc snmp v3)');
+
+    $p->add_instance('snmpv3_switch.example.com_if_1');
+    is($p->is_installed, 'yes', 'Installed after instance is added (wc snmp v3)');
 }
 
 
