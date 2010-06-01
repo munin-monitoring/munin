@@ -63,7 +63,8 @@ if ($dump_config) {
 	for (my $i = 0; $i < $nb_servers; $i++) {
 		my $port = $starting_port + $i;
 		print "[host$port.debug]\n";
-		print "     address 127.0.0.1:$port\n";
+		print "     address 127.0.0.1\n";
+		print "     port $port\n";
 		print "\n";
 	}
 	
@@ -122,7 +123,7 @@ sub service
 			print $client "\n";
 		} elsif ($line =~ m/^cap (\w+)/) {
 			my @caps = "multigraph";
-			push @caps, "spoolfetch" if $spoolfetch;
+			push @caps, "spool" if $spoolfetch;
 			print $client "cap @caps\n";
 		} elsif ($line =~ m/^config (\w+)/) {
 			my $plugin_number = get_plugin_number($1);
@@ -145,7 +146,9 @@ sub service
 
 			# One hour histo if asked from THE BEGINNING
 			$timestamp = (time - 3600) if ($timestamp == 0);
-			for (my $epoch = $timestamp;
+
+			# Sends spools strictly > LastSpooled
+			for (my $epoch = ($timestamp - $timestamp % $update_rate + $update_rate);
 				$epoch < time; $epoch += $update_rate) { 
 			for (my $plugin_number = 0; $plugin_number < $nb_plugins; $plugin_number ++) {
 				my $plugin_name = "debug_plugin_$plugin_number";

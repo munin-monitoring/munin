@@ -19,6 +19,7 @@ use Munin::Master::Utils;
 use RRDs;
 use Time::HiRes;
 use Data::Dumper;
+use List::Util qw(max);
 
 my $config = Munin::Master::Config->instance()->{config};
 
@@ -72,10 +73,10 @@ sub do_work {
             # Handle spoolfetch, one call to retrieve everything
 	    my %whole_config;
 	    my @plugins;
-	    if (grep /spoolfetch/, @node_capabilities) {
+	    if (grep /^spool$/, @node_capabilities) {
 		    # XXX - use 5min, should keep a real spoolfetch timestamping
-		    my $timestamp = update_spoolfetch_timestamp($nodedesignation, "__spoolfetch__");
-		    %whole_config = $self->uw_spoolfetch($timestamp);
+		    my $spoolfetch_last_timestamp = get_spoolfetch_timestamp($nodedesignation);
+		    %whole_config = $self->uw_spoolfetch($spoolfetch_last_timestamp);
 
 		    DEBUG "[DEBUG] whole_config:" . Dumper(\%whole_config);
 
@@ -91,6 +92,7 @@ sub do_work {
 		if (%{$config->{limit_services}}) {
 		    next unless $config->{limit_services}{$plugin};
 		}
+
 		DEBUG "[DEBUG] for my $plugin (@plugins)";
 
 		# Ask for config only if spoolfetch didn't already send it
@@ -108,20 +110,26 @@ sub do_work {
 		# Check if this plugin has already sent its data via a dirtyconfig
 		# Note that spoolfetch also uses dirtyconfig
 		my %service_data = $self->handle_dirty_config(\%service_config);
-
-		# Check if this plugin has to be updated
+			
+		# default is 0 sec : always update when asked
 		my $update_rate = get_global_service_value(\%service_config, $plugin, "update_rate", 0); 
 		my ($update_rate_in_seconds, $is_update_aligned) = parse_update_rate($update_rate);
-		# default is 0 sec : always update when asked
 		DEBUG "[DEBUG] update_rate $update_rate_in_seconds for $plugin on $nodedesignation";
-		if ($update_rate_in_seconds 
-			&& is_fresh_enough($nodedesignation, $plugin, $update_rate_in_seconds)) {
-		    # It's fresh enough, skip this $service
-		    DEBUG "[DEBUG] $plugin is fresh enough, not updating it";
-		    next;
-		}
 
 		if (! %service_data) {
+			# Check if this plugin has to be updated
+			if ($update_rate_in_seconds 
+				&& is_fresh_enough($nodedesignation, $plugin, $update_rate_in_seconds)) {
+			    # It's fresh enough, skip this $service
+			    DEBUG "[DEBUG] $plugin is fresh enough, not updating it";
+			    next;
+			}
+
+			# __root__ is only a placeholder plugin for 
+			# an empty spoolfetch so we should ignore it 
+			# if asked to fetch it
+			next if ($plugin eq "__root__");
+			
 			DEBUG "[DEBUG] No service data for $plugin, fetching it";
 			%service_data = $self->{node}->fetch_service_data($plugin);
 		}
@@ -183,8 +191,8 @@ sub do_work {
 		    %{$all_service_configs{global}},
 		    %{$service_config{global}});
 
-		$self->_update_rrd_files(\%service_config, \%service_data);
-
+		my $last_updated_timestamp = $self->_update_rrd_files(\%service_config, \%service_data);
+          	set_spoolfetch_timestamp($nodedesignation, $last_updated_timestamp);
 	    } # for @plugins
 	}; # eval
 
@@ -218,11 +226,6 @@ sub get_global_service_value {
 	return $default;
 }
 
-# Uses the standard Berkeley DB API available on the Perl install
-# It might be better to use the standard munin datafile, but it may not 
-# scale to multiple parallel, and the access pattern is quite random.
-# So DB_File fits the bill here. So better have many small specialized files 
-# in a KISS-oriented design.
 sub is_fresh_enough {
 	my ($nodedesignation, $service, $update_rate_in_seconds) = @_;
 
@@ -258,11 +261,10 @@ sub is_fresh_enough {
 	return $is_fresh_enough;
 }
 
-# XXX - Should factorise some code with the previous function
-sub update_spoolfetch_timestamp {
-	my ($nodedesignation, $service) = @_;
+sub get_spoolfetch_timestamp {
+	my ($nodedesignation) = @_;
 
-	my $key = "$nodedesignation/$service";
+	my $key = "$nodedesignation/__spoolfetch__";
 	my $db_file = $config->{dbdir} . "/last_updated.dic.txt";
 
 	my %last_updated;
@@ -270,12 +272,27 @@ sub update_spoolfetch_timestamp {
    	use Munin::Common::SyncDictFile;
    	tie(%last_updated, 'Munin::Common::SyncDictFile', $db_file) or ERROR "$!";
 
-	my $last_updated_key = $last_updated{$key} || "0";
-	$last_updated{$key} = time;
+	my $last_updated_value = $last_updated{$key} || "0";
 
    	untie(%last_updated);
 
-	return $last_updated_key;
+	return $last_updated_value;
+}
+
+sub set_spoolfetch_timestamp {
+	my ($nodedesignation, $timestamp) = @_;
+
+	my $key = "$nodedesignation/__spoolfetch__";
+	my $db_file = $config->{dbdir} . "/last_updated.dic.txt";
+
+	my %last_updated;
+
+   	use Munin::Common::SyncDictFile;
+   	tie(%last_updated, 'Munin::Common::SyncDictFile', $db_file) or ERROR "$!";
+
+	$last_updated{$key} = time;
+
+   	untie(%last_updated);
 }
 
 sub parse_update_rate {
@@ -537,6 +554,8 @@ sub _update_rrd_files {
     my $nodedesignation = $self->{host}{host_name}."/".
 	$self->{host}{address}.":".$self->{host}{port};
 
+    my $last_timestamp = 0;
+
     for my $service (keys %{$nested_service_config->{data_source}}) {
 
 	my $service_config = $nested_service_config->{data_source}{$service};
@@ -569,13 +588,15 @@ sub _update_rrd_files {
 	    my $rrd_file = $self->_create_rrd_file_if_needed($service, $ds_name, $ds_config);
 
 	    if (defined($service_data) and defined($service_data->{$ds_name})) {
-		$self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name});
+		$last_timestamp = max($last_timestamp, $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name}));
 	    }
 	    else {
 		WARN "[WARNING] Service $service on $nodedesignation returned no data for label $ds_name";
 	    }
 	}
     }
+
+    return $last_timestamp;
 }
 
 
@@ -773,6 +794,7 @@ sub _update_rrd_file {
     # Some kind of mismatch between fetch and config can cause this.
     return if !defined($values);  
 
+    my $last_updated_timestamp = 0;
     my @update_rrd_data;
     for (my $i = 0; $i < scalar @$values; $i++) { 
         my $value = $values->[$i];
@@ -793,6 +815,8 @@ sub _update_rrd_file {
         
         # Schedule for addition
         push @update_rrd_data, "$when:$value";
+
+	$last_updated_timestamp = max($last_updated_timestamp, $when);
     }
 
     DEBUG "[DEBUG] Updating $rrd_file with @update_rrd_data";
@@ -801,6 +825,8 @@ sub _update_rrd_file {
         #confess Dumper @_;
         ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
     }
+
+    return $last_updated_timestamp;
 }
 
 sub dump_to_file
