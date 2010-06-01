@@ -33,13 +33,18 @@ $| = 1;
 my $SPOOLDIR = "/tmp/munin-async-spool";
 my $hostname = hostname();
 chomp($hostname);
+
+my $spoolfetch;
+
 my $verbose;
 my $debug;
 my $help;
 
 GetOptions(
         "spooldir|s=s" => \$SPOOLDIR,
-        "hostname|h=s" => \$hostname,
+        "hostname=s" => \$hostname,
+
+        "spoolfetch" => \$spoolfetch,
 
         "help|h" => \$help,
         "verbose|v" => \$verbose,
@@ -79,7 +84,7 @@ while (my $line = <>) {
 			cat_multigraph_file($plugin);
 		}
 		print ".\n";
-	} elsif ($line =~ m/^cap/) {
+	} elsif ($spoolfetch && $line =~ m/^cap/) {
 		print "cap spool\n";
 	} elsif ($line =~ m/^quit/) {
 		exit;
@@ -151,7 +156,9 @@ munin-async-client - A program to replay spooled munin-node calls
 munin-async-client [options]
 
  Options:
-     -s --spool <spooldir>      Store the spooled data in this dir [/tmp/munin-async-spool]
+     -s --spooldir <spooldir>   Directory for spooled data [/tmp/munin-async-spool]
+     --hostname <hostname>      Overrides the hostname [`hostname`]
+     --spoolfetch               Enables the "spool" capability [no]
 
      -v --verbose               Be verbose
      -h --help                  View this message	
