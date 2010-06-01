@@ -64,14 +64,6 @@ sub gen_plugin
     my $p = gen_plugin('snmp__if_err_');
     ok($p->is_snmp, 'Wildcard SNMP plugin is SNMP');
 }
-{
-    my $p = gen_plugin('snmpv3__memory');
-    ok($p->is_snmp, 'Version 3 SNMP plugin is SNMP');
-}
-{
-    my $p = gen_plugin('snmpv3__if_err_');
-    ok($p->is_snmp, 'Wildcard version 3 SNMP plugin is SNMP');
-}
 
 
 ### in_family
