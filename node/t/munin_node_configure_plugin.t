@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 234;
+use Test::More tests => 242;
 
 use Munin::Node::Configure::Plugin;
 
@@ -259,7 +259,7 @@ sub gen_plugin
     my $p = gen_plugin('snmp__load');
 
     is($p->installed_services_string, '', 'No SNMP services installed');
-    
+
     $p->add_instance('snmp_switch.example.com_load');
     is($p->installed_services_string, 'switch.example.com', 'One SNMP host installed');
 
@@ -332,106 +332,152 @@ sub gen_plugin
     is_deeply($p->_installed_wild , [],         'no wildcards reported');
 }
 {
-    my $wcp = gen_plugin('if_');
+    my $p = gen_plugin('if_');
 
-    is_deeply($wcp->_installed_links, [], 'no links by default');
-    is_deeply($wcp->_installed_wild , [], 'no wildcards by default');
-    is_deeply($wcp->_suggested_links, [], 'no suggestions by default');
-    is_deeply($wcp->_suggested_wild , [], 'no suggested wildcards by default');
+    is_deeply($p->_installed_links, [], 'no links by default');
+    is_deeply($p->_installed_wild , [], 'no wildcards by default');
+    is_deeply($p->_suggested_links, [], 'no suggestions by default');
+    is_deeply($p->_suggested_wild , [], 'no suggested wildcards by default');
 
-    $wcp->{default} = 'yes';  # it's ok to run it now
-    $wcp->add_instance('if_eth0');
-    is_deeply($wcp->_installed_links, ['if_eth0'], 'one link installed');
-    is_deeply($wcp->_installed_wild , ['eth0'],    'one wildcard');
+    $p->{default} = 'yes';  # it's ok to run it now
 
-    $wcp->add_instance('if_eth1');
-    is_deeply($wcp->_installed_links, [qw/if_eth0 if_eth1/], 'two links installed');
-    is_deeply($wcp->_installed_wild , [qw/eth0 eth1/],       'two wildcards');
+    $p->add_instance('if_eth0');
+    is_deeply($p->_installed_links, ['if_eth0'], 'one link installed');
+    is_deeply($p->_installed_wild , ['eth0'],    'one wildcard');
 
-    $wcp->parse_suggest_response('eth2');
-    is_deeply($wcp->_suggested_links, [ 'if_eth2' ], 'with a suggestion');
-    is_deeply($wcp->_suggested_wild , [ 'eth2' ],    'with a suggested wildcard');
+    $p->add_instance('if_eth1');
+    is_deeply($p->_installed_links, [qw/if_eth0 if_eth1/], 'two links installed');
+    is_deeply($p->_installed_wild , [qw/eth0 eth1/],       'two wildcards');
+
+    $p->parse_suggest_response('eth2');
+    is_deeply($p->_suggested_links, [ 'if_eth2' ], 'with a suggestion');
+    is_deeply($p->_suggested_wild , [ 'eth2' ],    'with a suggested wildcard');
 }
 {
-    my $sp = gen_plugin('snmp__load');
+    my $p = gen_plugin('snmp__load');
 
-    $sp->{default} = 'yes';  # it's ok to run it now
-    $sp->add_instance('snmp_switch.example.com_load');
-    is_deeply($sp->_installed_links, ['snmp_switch.example.com_load'], 'one link installed');
-    is_deeply($sp->_installed_wild , ['switch.example.com'],           'one wildcard');
-    $sp->add_instance('snmp_switch2.example.com_load');
-    is_deeply($sp->_installed_links,
+    $p->{default} = 'yes';  # it's ok to run it now
+
+    $p->add_instance('snmp_switch.example.com_load');
+    is_deeply($p->_installed_links, ['snmp_switch.example.com_load'], 'one link installed');
+    is_deeply($p->_installed_wild , ['switch.example.com'],           'one wildcard');
+
+    $p->add_instance('snmp_switch2.example.com_load');
+    is_deeply($p->_installed_links,
                 [qw/snmp_switch.example.com_load snmp_switch2.example.com_load/],
                 'two links installed');
-    is_deeply($sp->_installed_wild , [qw/switch.example.com switch2.example.com/], 'two wildcards');
+    is_deeply($p->_installed_wild , [qw/switch.example.com switch2.example.com/], 'two wildcards');
 
-    push @{$sp->{suggestions}}, [ 'switch.example.com' ];
-    is_deeply($sp->_suggested_links, [ 'snmp_switch.example.com_load' ], 'with a suggestion');
-    is_deeply($sp->_suggested_wild , [ 'switch.example.com' ],    'with a suggested wildcard');
+    $p->add_suggestions([ 'switch.example.com' ]);
+    is_deeply($p->_suggested_links, [ 'snmp_switch.example.com_load' ], 'with a suggestion');
+    is_deeply($p->_suggested_wild , [ 'switch.example.com' ],    'with a suggested wildcard');
 }
 {
-    my $swcp = gen_plugin('snmp__if_');
+    my $p = gen_plugin('snmp__if_');
 
-    $swcp->{default} = 'yes';  # it's ok to run it now
-    $swcp->add_instance('snmp_switch.example.com_if_1');
-    is_deeply($swcp->_installed_links, ['snmp_switch.example.com_if_1'], 'one link installed');
-    is_deeply($swcp->_installed_wild , ['switch.example.com/1'],         'one wildcard');
-    $swcp->add_instance('snmp_switch.example.com_if_2');
-    is_deeply($swcp->_installed_links,
+    $p->{default} = 'yes';  # it's ok to run it now
+
+    $p->add_instance('snmp_switch.example.com_if_1');
+    is_deeply($p->_installed_links, ['snmp_switch.example.com_if_1'], 'one link installed');
+    is_deeply($p->_installed_wild , ['switch.example.com/1'],         'one wildcard');
+
+    $p->add_instance('snmp_switch.example.com_if_2');
+    is_deeply($p->_installed_links,
                 [qw/snmp_switch.example.com_if_1 snmp_switch.example.com_if_2/],
                 'two links installed');
-    is_deeply($swcp->_installed_wild , [qw{switch.example.com/1 switch.example.com/2}], 'two wildcards');
+    is_deeply($p->_installed_wild , [qw{switch.example.com/1 switch.example.com/2}], 'two wildcards');
 
-    push @{$swcp->{suggestions}}, [ 'switch.example.com', '1' ];
-    is_deeply($swcp->_suggested_links, [ 'snmp_switch.example.com_if_1' ], 'with a suggestion');
-    is_deeply($swcp->_suggested_wild , [ 'switch.example.com/1' ],    'with a suggested wildcard');
-    undef $swcp;
+    $p->add_suggestions([ 'switch.example.com', '1' ]);
+    is_deeply($p->_suggested_links, [ 'snmp_switch.example.com_if_1' ], 'with a suggestion');
+    is_deeply($p->_suggested_wild , [ 'switch.example.com/1' ],    'with a suggested wildcard');
+    undef $p;
 }
 
 
-### services_to_add
-### services_to_remove
+### services_to_add, services_to_remove
+
+## Simple plugin
 {
     # not installed and shouldn't be
     my $p = gen_plugin('memory');
 
     is_deeply([ $p->services_to_add    ], []);
     is_deeply([ $p->services_to_remove ], []);
-
+}
+{
     # not installed and should be
-    $p = gen_plugin('memory');
+    my $p = gen_plugin('memory');
     $p->parse_autoconf_response('yes');
 
     is_deeply([ $p->services_to_add    ], ['memory']);
     is_deeply([ $p->services_to_remove ], []);
-
+}
+{
     # installed and should be
-    $p = gen_plugin('memory');
+    my $p = gen_plugin('memory');
     $p->parse_autoconf_response('yes');
     $p->add_instance('memory');
 
     is_deeply([ $p->services_to_add    ], []);
     is_deeply([ $p->services_to_remove ], []);
-
+}
+{
     # installed and shouldn't be
-    $p = gen_plugin('memory');
+    my $p = gen_plugin('memory');
     $p->parse_autoconf_response('no');
     $p->add_instance('memory');
 
     is_deeply([ $p->services_to_add    ], []);
     is_deeply([ $p->services_to_remove ], ['memory']);
-
-
-    # TODO
-    my $wcp = gen_plugin('if_');
-
-    # suggestions to be removed
-
-    # suggestions to be added
-
-    # suggestions are already correct
-
 }
+
+## Wildcard plugin
+{
+    # not installed and shouldn't be
+    my $p = gen_plugin('if_');
+
+    is_deeply([ $p->services_to_add    ], []);
+    is_deeply([ $p->services_to_remove ], []);
+}
+{
+    # not installed and should be
+    my $p = gen_plugin('if_');
+
+    $p->parse_autoconf_response('yes');
+
+    $p->add_suggestions('eth0');
+
+    is_deeply([ $p->services_to_add    ], ['if_eth0']);
+    is_deeply([ $p->services_to_remove ], []);
+}
+{
+    # installed and should be
+    my $p = gen_plugin('if_');
+
+    $p->parse_autoconf_response('yes');
+
+    $p->add_instance('if_eth0');
+    $p->add_suggestions('eth0');
+
+    is_deeply([ $p->services_to_add    ], []);
+    is_deeply([ $p->services_to_remove ], []);
+}
+{
+    # installed and shouldn't be
+    my $p = gen_plugin('if_');
+
+    $p->parse_autoconf_response('no');
+
+    $p->add_instance('if_eth0');
+
+    is_deeply([ $p->services_to_add    ], []);
+    is_deeply([ $p->services_to_remove ], ['if_eth0']);
+}
+
+## TODO: snmp, snmp wildcard
+
+
+
 
 
 ### read_magic_markers
