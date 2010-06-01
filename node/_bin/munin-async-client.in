@@ -63,7 +63,6 @@ print "# munin node at $hostname\n";
 while (my $line = <>) {
 	if ($line =~ m/^list/) {
 		cat_file("$SPOOLDIR/munin-daemon.list");
-		print ".\n";
 	} elsif ($line =~ m/^config (\w+)/) {
 		cat_file("$SPOOLDIR/munin-daemon.$1.config");
 		print ".\n";
