@@ -661,6 +661,7 @@ sub _create_rrd_file {
     mkpath(dirname($rrd_file), {mode => oct(777)});
     my @args = (
         $rrd_file,
+        "--start", "-10y", # Always start RRD 10 years ago (should be enough), to be able to spoolfetch in it
         sprintf('DS:42:%s:600:%s:%s', 
                 $ds_config->{type}, $ds_config->{min}, $ds_config->{max}),
     );
