@@ -2,6 +2,8 @@ package Munin::Common::SyncDictFile;
 require Tie::Hash;
 our @ISA = qw(Tie::Hash);
 
+our $DEBUG_ENABLED;
+
 use IO::File;
 
 # The method invoked by the command tie %hash, classname. 
@@ -15,6 +17,8 @@ sub TIEHASH {
 	my $self = {
 		filename => $filename,
 	};
+
+	new IO::File($filename, O_CREATE) unless (-f $filename);
 
 	return bless($self, $classname);
 }
@@ -179,7 +183,7 @@ sub _lock_write {
 }
 
 sub DEBUG {
-	print STDOUT "[DEBUG] @_" . "\n"; 
+	print STDOUT "[DEBUG] @_" . "\n" if $DEBUG_ENABLED; 
 }
 
 # XXX - collision if there is a ____
