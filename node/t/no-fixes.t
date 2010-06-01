@@ -15,7 +15,7 @@ use Test::More;
 use Pod::Simple::TextContent;
 
 if ($ENV{TEST_POD}) {
-    plan tests => 5;
+    plan tests => 1;
 }
 else {
     plan skip_all => 'set TEST_POD to enable this test'

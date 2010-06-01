@@ -11,8 +11,15 @@ use strict;
 use English qw(-no_match_vars);
 use File::Find;
 use FindBin;
-use Test::More tests => 1;
+use Test::More;
 use Pod::Simple::TextContent;
+
+if ($ENV{TEST_POD}) {
+    plan tests => 1;
+}
+else {
+    plan skip_all => 'set TEST_POD to enable this test'
+}
 
 my $count = 0;
 
