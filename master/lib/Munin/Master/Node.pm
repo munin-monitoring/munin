@@ -251,6 +251,9 @@ sub parse_service_config {
 
     new_service($service);
 
+    # every 'N' has the same value. Should not take parsing time into the equation
+    my $now = time;
+
     for my $line (@lines) {
 
 	DEBUG "[CONFIG from $plugin] $line";
@@ -287,7 +290,7 @@ sub parse_service_config {
         } elsif ($line =~ m{\A ([^\.]+)\.value \s+ (.+) }xms) {
 	    $correct++;
 	    # Special case for dirtyconfig
-            my ($ds_name, $value, $when) = ($1, $2, 'N');
+            my ($ds_name, $value, $when) = ($1, $2, $now);
             
 	    $ds_name = $self->_sanitise_fieldname($ds_name);
 	    if ($value =~ /^(\d+):(.+)$/) {
@@ -396,6 +399,9 @@ sub parse_service_data {
     DEBUG "[DEBUG] Now parsing fetch output from plugin $plugin on ".
 	$nodedesignation;
 
+    # every 'N' has the same value. Should not take parsing time into the equation
+    my $now = time;
+
     for my $line (@lines) {
 
 	DEBUG "[FETCH from $plugin] $line";
@@ -421,7 +427,7 @@ sub parse_service_data {
 	    }
 	}
 	elsif ($line =~ m{\A ([^\.]+)\.value \s+ ([\S:]+) }xms) {
-            my ($data_source, $value, $when) = ($1, $2, 'N');
+            my ($data_source, $value, $when) = ($1, $2, $now);
 
 	    $correct++;
 
