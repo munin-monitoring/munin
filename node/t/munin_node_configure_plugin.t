@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More tests => 10;
 
 use Munin::Node::Configure::Plugin;
 
@@ -18,6 +18,8 @@ sub gen_plugin
     );
 }
 
+
+### START TESTS ###############################################################################
 
 ### new
 {
@@ -451,11 +453,22 @@ EOF
     }
 }
 
+
 ### parse_snmpconf_response
 
 
 ### log_error
+{
+    my $p = gen_plugin('memory');
+ 
+    is_deeply(@{$p->{errors}}, [], 'Plugins have no errors by default');
 
+    $p->log_error('Faking it');
+    is_deeply(@{$p->{errors}}, [ 'Faking it' ], 'Added an error');
+
+    $p->log_error("Doing it wrong\n");
+    is_deeply(@{$p->{errors}}, [ 'Faking it', 'Doing it wrong' ], 'Added an error with a trailing newline');
+}
 
 
 # vim: sw=4 : ts=4 : expandtab

@@ -33,9 +33,9 @@ $ENV{MUNIN_MASTER_IP} = '';
 
 ### is_a_runnable_service
 
-### export_service_environment
 
 ### change_real_and_effective_user_and_group
+
 
 ### exec_service
 
@@ -67,6 +67,7 @@ $ENV{MUNIN_MASTER_IP} = '';
 		'Custom service command with substitution.'
 	);
 }
+
 
 ### fork_service
 {
