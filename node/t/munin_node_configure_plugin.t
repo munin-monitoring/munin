@@ -175,8 +175,8 @@ exit;
         ],
     );
 
-    my $same = \&Munin::Node::Configure::Plugin::_same;
-    my $add = \&Munin::Node::Configure::Plugin::_add;
+    my $same   = \&Munin::Node::Configure::Plugin::_same;
+    my $add    = \&Munin::Node::Configure::Plugin::_add;
     my $remove = \&Munin::Node::Configure::Plugin::_remove;
 
     foreach (@tests) {
@@ -202,8 +202,9 @@ exit;
 
     $p->parse_autoconf_response('yes');
     is($p->suggestion_string, 'yes', 'Suggestion string - yes');
-
-    $p = gen_plugin('if_');
+}
+{
+    my $p = gen_plugin('if_');
 
     $p->parse_autoconf_response('no');
     is($p->suggestion_string, 'no', 'Suggestion string - no');
