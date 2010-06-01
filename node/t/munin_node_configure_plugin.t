@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 262;
+use Test::More tests => 263;
 
 use Munin::Node::Configure::Plugin;
 
@@ -236,39 +236,115 @@ sub gen_plugin
     my $p = gen_plugin('memory');
 
     $p->parse_autoconf_response('no');
-    is($p->suggestion_string, 'no', 'Suggestion string - no');
+    is(
+        $p->suggestion_string,
+        'no',
+        'Suggestion string - no'
+    );
+}
+{
+    my $p = gen_plugin('memory');
 
     $p->parse_autoconf_response('no (not a good idea)');
-    is($p->suggestion_string, 'no [not a good idea]',
-       'Suggestion string - no with reason');
+    is(
+        $p->suggestion_string,
+        'no [not a good idea]',
+        'Suggestion string - no with reason'
+    );
+}
+{
+    my $p = gen_plugin('memory');
 
     $p->parse_autoconf_response('yes');
-    is($p->suggestion_string, 'yes', 'Suggestion string - yes');
+    is(
+        $p->suggestion_string,
+        'yes',
+        'Suggestion string - yes'
+    );
 }
 {
     my $p = gen_plugin('if_');
 
     $p->parse_autoconf_response('no');
-    is($p->suggestion_string, 'no', 'Suggestion string - no');
+    is(
+        $p->suggestion_string,
+        'no',
+        'Suggestion string - no'
+    );
+}
+{
+    my $p = gen_plugin('if_');
 
     $p->parse_autoconf_response('no (not a good idea)');
-    is($p->suggestion_string, 'no [not a good idea]',
-       'Suggestion string - no with reason');
+    is(
+        $p->suggestion_string,
+        'no [not a good idea]',
+        'Suggestion string - no with reason'
+    );
+}
+{
+    my $p = gen_plugin('if_');
 
     $p->parse_autoconf_response('yes');
-    is($p->suggestion_string, 'yes', 'Suggestion string - yes');
+
+    is(
+        $p->suggestion_string,
+        'yes',                                  # FIXME: should this ever happen with a wc plugin?
+        'Suggestion string - yes'
+    );
+}
+{
+    my $p = gen_plugin('if_');
+
+    $p->parse_autoconf_response('yes');
 
     $p->parse_suggest_response(qw/alpha bravo charlie/);
-    is($p->suggestion_string, 'yes (+alpha +bravo +charlie)',
-       'Suggestion string - yes with plugins to add');
+    is(
+        $p->suggestion_string,
+        'yes (+alpha +bravo +charlie)',
+        'Suggestion string - yes with plugins to add'
+    );
+}
+{
+    my $p = gen_plugin('if_');
 
+    $p->parse_autoconf_response('yes');
+
+    $p->parse_suggest_response(qw/alpha bravo charlie/);
     $p->add_instance('alpha');
-    is($p->suggestion_string, 'yes (alpha +bravo +charlie)',
-       'Suggestion string - yes with plugins to add and unchanged');
+    is(
+        $p->suggestion_string,
+        'yes (alpha +bravo +charlie)',
+        'Suggestion string - yes with plugins to add and unchanged'
+    );
+}
+{
+    my $p = gen_plugin('if_');
 
+    $p->parse_autoconf_response('yes');
+
+    $p->parse_suggest_response(qw/alpha bravo charlie/);
+    $p->add_instance('alpha');
     $p->add_instance('delta');
-    is($p->suggestion_string, 'yes (alpha +bravo +charlie -delta)',
-       'Suggestion string - yes with plugins to add, remove and unchanged');
+    is(
+        $p->suggestion_string,
+        'yes (alpha +bravo +charlie -delta)',
+        'Suggestion string - yes with plugins to remove and unchanged'
+    );
+}
+{
+    my $p = gen_plugin('if_');
+
+    $p->parse_autoconf_response('yes');
+
+    $p->parse_suggest_response(qw/alpha bravo charlie/);
+    $p->add_instance('alpha');
+    $p->add_instance('delta');
+    is(
+        $p->suggestion_string,
+        'yes (alpha +bravo +charlie -delta)',
+        'Suggestion string - yes with plugins to add, remove and unchanged'
+    );
 }
 
 
