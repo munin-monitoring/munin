@@ -48,7 +48,6 @@ sub STORE {
 
 	# overwrite atomically
 	# XXX - any locked process will have an old version
-	sleep(3);
 	rename $self->{filename} . ".tmp", $self->{filename};
 }
 
