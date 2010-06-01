@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 10;
+use Test::More tests => 223;
 
 use Munin::Node::Configure::Plugin;
 
@@ -27,6 +27,8 @@ sub gen_plugin
         path => '/usr/share/munin/plugins/memory',
         name => 'memory'
     ], 'Simple plugin');
+}
+{
     my $wcplugin = new_ok('Munin::Node::Configure::Plugin' => [
         path => '/usr/share/munin/plugins/if_',
         name => 'if_'
@@ -38,7 +40,8 @@ sub gen_plugin
 {
     my $p = gen_plugin('memory');
     ok(! $p->is_wildcard, 'Non-wildcard plugin is identfied as such');
-
+}
+{
     my $wcp = gen_plugin('if_');
     ok($wcp->is_wildcard, 'Wildcard plugin is identfied as such');
 }
@@ -70,7 +73,6 @@ sub gen_plugin
     ok($p->is_snmp, 'Wildcard version 3 SNMP plugin is SNMP');
 }
 
-exit;
 
 ### is_installed
 {
@@ -416,13 +418,12 @@ EOF
 ### parse_autoconf_response
 {
     my @tests = (
-        [ [ 'yes' ], [ 'yes' ], 'Autoconf replied yes' ],
-        [ [ 'no' ],  [ 'no' ], 'Autoconf replied no' ],
-        [ [ 'no (just a test plugin) ' ], [ 'no', 'just a test plugin' ], 'Autoconf replied no with reason' ],
-        [ [ 'oui' ], [ 'no' ], 'Autoconf doesnt contain a recognised response' ],
-        [ [ ], [ 'no' ], 'Autoconf response was empty' ],
-        [ [ 'yes', 'this is an error' ], [ 'no' ], 'Autoconf replied yes but with cruft' ],
-#       [ [ ], [ ], '' ],
+        [ [ 'yes' ],                      [ 'yes' ],                      'Autoconf replied yes'                          ],
+        [ [ 'no' ],                       [ 'no' ],                       'Autoconf replied no'                           ],
+        [ [ 'no (just a test plugin) ' ], [ 'no', 'just a test plugin' ], 'Autoconf replied no with reason'               ],
+        [ [ 'oui' ],                      [ 'no' ],                       'Autoconf doesnt contain a recognised response' ],
+        [ [ ],                            [ 'no' ],                       'Autoconf response was empty'                   ],
+        [ [ 'yes', 'this is an error' ],  [ 'no' ],                       'Autoconf replied yes but with cruft'           ],
     );
 
     foreach (@tests) {
@@ -439,9 +440,9 @@ EOF
 ### parse_suggest_response
 {
     my @tests = (
-        [ [ qw/one two three/ ], [ qw/one two three/ ], 'Good suggestions' ],
-        [ [ ], [ ], 'No suggestions' ],
-        [ [ qw{one ~)(*&^%$£"!?/'/} ], [ qw/one/ ], 'Suggestion with illegal characters' ],
+        [ [qw/one two three/],       [qw/one two three/], 'Good suggestions'                   ],
+        [ [],                        [],                  'No suggestions'                     ],
+        [ [qw{one ~)(*&^%$£"!?/'/}], [qw/one/],           'Suggestion with illegal characters' ],
     );
 
     foreach (@tests) {
@@ -456,18 +457,158 @@ EOF
 
 ### parse_snmpconf_response
 
+# helper function
+sub run_snmpconf_tests
+{
+    my ($plugin_name, $test, $expected_error_count_key) = @_;
+    
+    my ($in, $expected, $errors, $msg) = @$test;
+
+    my $p =       gen_plugin($plugin_name);
+    my $p_clean = gen_plugin($plugin_name);
+
+    $p->parse_snmpconf_response(@$in);
+
+    is_deeply(delete $p->{table},       $expected->{table},       "$msg - table");
+    is_deeply(delete $p->{require_oid}, $expected->{require_oid}, "$msg - required_oid");
+    is_deeply(delete $p->{index},       $expected->{index},       "$msg - index");
+
+    is(
+        scalar(@{$p->{errors}}),
+        $errors->{$expected_error_count_key},
+        "$msg - expected number of errors - $expected_error_count_key"
+    ) or diag("errors were: '@{$p->{errors}}'");
+
+    # reset the errors
+    $p->{errors} = [];
+
+    is_deeply($p, $p_clean, 'plugin is otherwise unchanged');
+
+    return;
+}
+
+
+{
+    my @tests = (
+        [
+            [ 'require 1.3.6.1.2.1.25.2.2.0'   ],
+            { require_oid => [ [ '1.3.6.1.2.1.25.2.2.0', undef ] ] },
+            { single_errors => 0, double_errors => 1, },
+            'Require - OID'
+        ],
+        [
+            [ 'require .1.3.6.1.2.1.25.2.2.0' ],
+            {require_oid => [['.1.3.6.1.2.1.25.2.2.0', undef],],},
+            { single_errors => 0, double_errors => 1, },
+            'Require - OID with leading dot'
+        ],
+        [
+            [ 'require 1.3.6.1.2.1.25.2.2.0  [0-9]' ],
+            {require_oid => [['1.3.6.1.2.1.25.2.2.0', '[0-9]'],],},
+            { single_errors => 0, double_errors => 1, },
+            'Require - OID with regex'
+        ],
+        [
+            [ 'require 1.3.6.1.2.1.2.2.1.5.   [0-9]' ],
+            {table => [['1.3.6.1.2.1.2.2.1.5', '[0-9]'],],},
+            { single_errors => 0, double_errors => 1, },
+            'Require - OID root with regex'
+        ],
+        [
+            [ 'require 1.3.6.1.2.1.2.2.1.5.', ],
+            {table => [['1.3.6.1.2.1.2.2.1.5', undef],],},
+            { single_errors => 0, double_errors => 1, },
+            'Require - OID root without regex'
+        ],
+        [
+            [
+                'require 1.3.6.1.2.1.2.2.1.5.  [0-9]',
+                'require 1.3.6.1.2.1.2.2.1.10.  ',
+                'require 1.3.6.1.2.1.2.2.2.5   2',
+            ],
+            {
+                table => [
+                    [ '1.3.6.1.2.1.2.2.1.5', '[0-9]' ],
+                    [ '1.3.6.1.2.1.2.2.1.10', undef  ],
+                ],
+                require_oid => [
+                    [ '1.3.6.1.2.1.2.2.2.5', '2' ],
+                ],
+            },
+            { single_errors => 0, double_errors => 1, },
+            'Require - Multiple require statements'
+        ],
+        [
+            [ 'number  1.3.6.1.2.1.2.1.0', ],
+            {},
+            { single_errors => 1, double_errors => 2, },
+            'Number - OID'
+        ],
+        [
+            [ 'number  1.3.6.1.2.1.2.1.', ],
+            {},
+            { single_errors => 1, double_errors => 2, },
+            'Number - OID root is an error'
+        ],
+        [
+            [ 'index 1.3.6.1.2.1.2.1.0', ],
+            {},
+            { single_errors => 1, double_errors => 2, },
+            'Index - OID is an error'
+        ],
+        [
+            [ 'index   1.3.6.1.2.1.2.1.', ],
+            {
+                index => '1.3.6.1.2.1.2.1',
+                table => [
+                    [ '1.3.6.1.2.1.2.1' ]
+                ],
+            },
+            { single_errors => 1, double_errors => 0, },
+            'Index - OID root'
+        ],
+        [
+            [
+                'index  1.3.6.1.2.1.2.2.0.',
+                'number 1.3.6.1.2.1.2.1.0  ',
+                '', # blank line
+                'require 1.3.6.1.2.1.2.2.2.5',
+            ],
+            {
+                require_oid => [
+                    ['1.3.6.1.2.1.2.2.2.5', undef ],
+                ],
+                index => '1.3.6.1.2.1.2.2.0',
+                table => [
+                    [ '1.3.6.1.2.1.2.2.0' ]
+                ],
+            },
+            { single_errors => 2, double_errors => 1, },
+            'Putting it all together'
+        ],
+
+        # TODO: badly formatted input
+    );
+
+    foreach (@tests) {
+        # single-wildcard plugin
+        run_snmpconf_tests('snmp__memory', $_, 'single_errors');
+        # double-wildcard plugin
+        run_snmpconf_tests('snmp__if_', $_, 'double_errors');
+    }
+}
 
 ### log_error
 {
     my $p = gen_plugin('memory');
- 
-    is_deeply(@{$p->{errors}}, [], 'Plugins have no errors by default');
+
+    is_deeply([ @{$p->{errors}} ], [], 'Plugins have no errors by default');
 
     $p->log_error('Faking it');
-    is_deeply(@{$p->{errors}}, [ 'Faking it' ], 'Added an error');
+    is_deeply([ @{$p->{errors}} ], [ 'Faking it' ], 'Added an error');
 
     $p->log_error("Doing it wrong\n");
-    is_deeply(@{$p->{errors}}, [ 'Faking it', 'Doing it wrong' ], 'Added an error with a trailing newline');
+    is_deeply([ @{$p->{errors}} ], [ 'Faking it', 'Doing it wrong' ], 'Added an error with a trailing newline');
 }
 
 
