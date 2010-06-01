@@ -401,7 +401,7 @@ sub gen_plugin
     # not installed and shouldn't be
     my $p = gen_plugin('memory');
 
-    is_deeply([ $p->services_to_add    ], []);
+    is_deeply([ $p->services_to_add    ], [], 'Add');
     is_deeply([ $p->services_to_remove ], []);
 }
 {
@@ -409,7 +409,7 @@ sub gen_plugin
     my $p = gen_plugin('memory');
     $p->parse_autoconf_response('yes');
 
-    is_deeply([ $p->services_to_add    ], ['memory']);
+    is_deeply([ $p->services_to_add    ], ['memory'], 'Add');
     is_deeply([ $p->services_to_remove ], []);
 }
 {
@@ -418,7 +418,7 @@ sub gen_plugin
     $p->parse_autoconf_response('yes');
     $p->add_instance('memory');
 
-    is_deeply([ $p->services_to_add    ], []);
+    is_deeply([ $p->services_to_add    ], [], 'Add');
     is_deeply([ $p->services_to_remove ], []);
 }
 {
@@ -427,7 +427,7 @@ sub gen_plugin
     $p->parse_autoconf_response('no');
     $p->add_instance('memory');
 
-    is_deeply([ $p->services_to_add    ], []);
+    is_deeply([ $p->services_to_add    ], [], 'Add');
     is_deeply([ $p->services_to_remove ], ['memory']);
 }
 
@@ -436,7 +436,7 @@ sub gen_plugin
     # not installed and shouldn't be
     my $p = gen_plugin('if_');
 
-    is_deeply([ $p->services_to_add    ], []);
+    is_deeply([ $p->services_to_add    ], [], 'Add');
     is_deeply([ $p->services_to_remove ], []);
 }
 {
@@ -447,7 +447,7 @@ sub gen_plugin
 
     $p->add_suggestions('eth0');
 
-    is_deeply([ $p->services_to_add    ], ['if_eth0']);
+    is_deeply([ $p->services_to_add    ], ['if_eth0'], 'Add');
     is_deeply([ $p->services_to_remove ], []);
 }
 {
@@ -459,7 +459,7 @@ sub gen_plugin
     $p->add_instance('if_eth0');
     $p->add_suggestions('eth0');
 
-    is_deeply([ $p->services_to_add    ], []);
+    is_deeply([ $p->services_to_add    ], [], 'Add');
     is_deeply([ $p->services_to_remove ], []);
 }
 {
@@ -470,12 +470,115 @@ sub gen_plugin
 
     $p->add_instance('if_eth0');
 
-    is_deeply([ $p->services_to_add    ], []);
+    is_deeply([ $p->services_to_add    ], [], 'Add');
     is_deeply([ $p->services_to_remove ], ['if_eth0']);
 }
 
-## TODO: snmp, snmp wildcard
+## SNMP plugin
+{
+    # not installed and shouldn't be
+    my $p = gen_plugin('snmp__memory');
 
+    is_deeply([ $p->services_to_add    ], [], 'Add');
+    is_deeply([ $p->services_to_remove ], []);
+}
+{
+    # not installed and should be
+    my $p = gen_plugin('snmp__memory');
+
+    $p->parse_autoconf_response('yes');
+
+    $p->add_suggestions([ 'switch.example.com' ]);
+    $p->add_suggestions([ '10.0.0.19' ]);
+
+    is_deeply(
+        [ $p->services_to_add ],
+        [ sort 'snmp_switch.example.com_memory', 'snmp_10.0.0.19_memory'], 'Add');
+    is_deeply([ $p->services_to_remove ], []);
+}
+{
+    # installed and should be
+    my $p = gen_plugin('snmp__memory');
+
+    $p->parse_autoconf_response('yes');
+
+    $p->add_instance('snmp_switch.example.com_memory');
+    $p->add_instance('snmp_10.0.0.19_memory');
+
+    $p->add_suggestions([ 'switch.example.com' ]);
+    $p->add_suggestions([ '10.0.0.19' ]);
+
+    is_deeply([ $p->services_to_add    ], [], 'Add');
+    is_deeply([ $p->services_to_remove ], []);
+}
+#{
+#    # v3 installed and should be
+#    my $p = gen_plugin('snmp__memory');
+#
+#    $p->parse_autoconf_response('yes');
+#
+#    $p->add_instance('snmpv3_switch.example.com_memory');
+#    $p->add_instance('snmpv3_10.0.0.19_memory');
+#
+#    $p->add_suggestions([ 'switch.example.com' ]);
+#    $p->add_suggestions([ '10.0.0.19' ]);
+#
+#    is_deeply([ $p->services_to_add    ], []);
+#    is_deeply([ $p->services_to_remove ], []);
+#}
+{
+    # some installed and should be
+    my $p = gen_plugin('snmp__memory');
+
+    $p->parse_autoconf_response('yes');
+
+    $p->add_instance('snmp_switch.example.com_memory');
+
+    $p->add_suggestions([ 'switch.example.com' ]);
+    $p->add_suggestions([ '10.0.0.19' ]);
+
+    is_deeply([ $p->services_to_add    ], [ 'snmp_10.0.0.19_memory' ], 'Add');
+    is_deeply([ $p->services_to_remove ], []);
+}
+#{
+#    # v3 some installed and should be
+#    my $p = gen_plugin('snmp__memory');
+#
+#    $p->parse_autoconf_response('yes');
+#
+#    $p->add_instance('snmpv3_switch.example.com_memory');
+#
+#    $p->add_suggestions([ 'switch.example.com' ]);
+#    $p->add_suggestions([ '10.0.0.19' ]);
+#
+#    is_deeply([ $p->services_to_add    ], [ 'snmp_10.0.0.19_memory' ], 'Add');
+#    is_deeply([ $p->services_to_remove ], []);
+#}
+{
+    # installed and shouldn't be
+    my $p = gen_plugin('snmp__memory');
+
+    $p->parse_autoconf_response('no');
+
+    $p->add_instance('snmp_switch.example.com_memory');
+
+    is_deeply([ $p->services_to_add    ], []);
+    is_deeply([ $p->services_to_remove ], ['snmp_switch.example.com_memory']);
+}
+{
+    # v3 installed and shouldn't be
+    my $p = gen_plugin('snmp__memory');
+
+    $p->parse_autoconf_response('no');
+
+    $p->add_instance('snmpv3_switch.example.com_memory');
+
+    is_deeply([ $p->services_to_add    ], []);
+    is_deeply([ $p->services_to_remove ], ['snmpv3_switch.example.com_memory']);
+}
+
+
+## TODO: snmp wildcard
 
 
 
