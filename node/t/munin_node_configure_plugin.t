@@ -74,6 +74,16 @@ sub gen_plugin
 }
 
 
+### in_family
+{
+    my $p = gen_plugin('memory');
+    $p->{family} = 'auto';
+
+    ok( $p->in_family(qw( auto manual contrib ), 'is in list of families'));
+    ok(!$p->in_family(qw( snmpauto            ), 'is not in other list of families'));
+}
+
+
 ### is_installed
 {
     my $p = gen_plugin('memory');
