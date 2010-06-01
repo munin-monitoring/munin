@@ -62,11 +62,8 @@ sub _do_connect {
     # Check if it's an URI or a plain host
     use URI;
 
-    my $url = $self->{address};
-    if ($self->{port}) {
-	    # A port is defined, use it !
-	    $url .= ":" . $self->{port};
-    }
+    # Parameters are space-separated from the main address
+    my ($url, $params) = split(/ +/, $self->{address}, 2);
     my $uri = new URI($url);
 
     # If the scheme is not defined, it's a plain host. 
@@ -77,7 +74,7 @@ sub _do_connect {
     if ($uri->scheme eq "munin") {
         $self->{reader} = $self->{writer} = IO::Socket::INET->new(
 		PeerAddr  => $uri->host,
-		PeerPort  => $uri->port,
+		PeerPort  => $self->{port} || 4949,
 		LocalAddr => $config->{local_address},
 		Proto     => 'tcp', 
 		Timeout   => $config->{timeout}
@@ -88,7 +85,11 @@ sub _do_connect {
 	}
     } elsif ($uri->scheme eq "ssh") {
 	    my $user_part = ($uri->user) ? ($uri->user . "@") : "";
-	    my $remote_connection_cmd = "/usr/bin/ssh $user_part" . $uri->host ." " . $uri->path;
+	    my $remote_cmd = $uri->path;
+
+	    # Add any parameter to the cmd
+	    my $remote_connection_cmd = "/usr/bin/ssh $user_part" . $uri->host . " $remote_cmd $params";
+
 	    # Open a double pipe
    	    use IPC::Open2;
 
