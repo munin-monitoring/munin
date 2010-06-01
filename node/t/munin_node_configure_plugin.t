@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 263;
+use Test::More tests => 264;
 
 use Munin::Node::Configure::Plugin;
 
@@ -270,6 +270,16 @@ sub gen_plugin
         $p->suggestion_string,
         'no',
         'Suggestion string - no'
+    );
+}
+{
+    my $p = gen_plugin('if_');
+
+    $p->parse_autoconf_response('no (not a good idea)');
+    is(
+        $p->suggestion_string,
+        'no [not a good idea]',
+        'Suggestion string - no with reason'
     );
 }
 {
