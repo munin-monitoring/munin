@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 26;
+use Test::More tests => 29;
 use Test::LongString;
 use Config;  # for signal numbers and names
 
@@ -125,8 +125,13 @@ my $os = 'Munin::Node::OS';
 }
 
 ### reap_child_group
-### possible_to_signal_process
 
+### possible_to_signal_process
+{
+	ok(  $os->possible_to_signal_process($$),     'can send a signal to ourselves');
+	ok(! $os->possible_to_signal_process(1),      'cannot signal to init');
+	ok(! $os->possible_to_signal_process(999999), 'cannot signal non-existant process');
+}
 
 ### set_effective_user_id
 ### set_real_user_id
