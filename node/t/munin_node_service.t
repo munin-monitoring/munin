@@ -1,9 +1,11 @@
 use warnings;
 use strict;
 
-use Test::More tests => 6;
+use Test::More tests => 11;
 
-use_ok('Munin::Node::Service');
+use Munin::Node::Service;
+
+use English qw(-no_match_vars);
 
 my $config = Munin::Node::Config->instance();
 
@@ -32,6 +34,25 @@ $ENV{MUNIN_MASTER_IP} = '';
 
 
 ### is_a_runnable_service
+
+
+### _resolve_uid
+{
+    my $uname = getpwuid $UID;
+
+    is(Munin::Node::Service::_resolve_uid(undef, $uname, 'fnord'), $UID, 'Lookup by service-specific username');
+    is(Munin::Node::Service::_resolve_uid(undef, $UID,   'fnord'), $UID, 'Lookup by service-specific username');
+
+    is(Munin::Node::Service::_resolve_uid($UID, 0, 'fnord'), 0, 'Default user is ignored if specific user is set');
+
+    is(Munin::Node::Service::_resolve_uid(0, undef, 'fnord'), 0, 'Default user is used if specific user is not provided');
+
+    eval { Munin::Node::Service::_resolve_uid(undef, '%%SSKK¤¤', 'fnord') };
+    like($@, qr/'%%SSKK¤¤'/, 'Exception thrown when resolving non-existant username');
+
+    eval { Munin::Node::Service::_resolve_uid(undef, 999999999, 'fnord') };
+    like($@, qr/'999999999'/, 'Exception thrown when resolving non-existant uid');
+}
 
 
 ### change_real_and_effective_user_and_group
@@ -76,3 +97,4 @@ $ENV{MUNIN_MASTER_IP} = '';
 }
 
 
+# vim: sw=4 : ts=4 : et

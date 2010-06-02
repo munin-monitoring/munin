@@ -102,6 +102,25 @@ sub export_service_environment {
 }
 
 
+
+# Resolves the uid the service should be run as.  Either of the arguments can
+# be undefined.  If $service_user cannot be resolved, an exception will be
+# thrown.
+sub _resolve_uid
+{
+    my ($defuser, $user, $service_name) = @_;
+
+    # Need to test for defined, since a user might be specified with UID = 0
+    my $service_user = defined $user ? $user : $defuser;
+
+    my $u = Munin::Node::OS->get_uid($service_user);
+    croak "User '$service_user' required for '$service_name' does not exist."
+        unless defined $u;
+
+    return $u;
+}
+
+
 sub change_real_and_effective_user_and_group
 {
     my ($class, $service) = @_;
@@ -110,71 +129,59 @@ sub change_real_and_effective_user_and_group
     my $root_gid = 0;
 
     if ($REAL_USER_ID == $root_uid) {
-	# Need to test for defined here since a user might be
-        # specified with UID = 0
-        my $uid = defined $config->{sconf}{$service}{user}
-                    ? $config->{sconf}{$service}{user}
-                    : $config->{defuser};
+        # Resolve UIDs now, as they are not resolved when the config was read.
+        my $uid = _resolve_uid($config->{defuser}, $config->{sconf}{$service}{user}, $service);
 
-        # Resolve unresolved UID now - as it is not resolved when the
-        # config was read.
+        # Ditto for groups
+        my $g = '';
 
-        my $u = Munin::Node::OS->get_uid($uid);
-        croak "User '$uid' required for $service does not exist."
-	    unless defined $u;
+        if (defined $config->{sconf}{$service}{group}) {
+            # Support running with more than one group in effect. See
+            # documentation on $EFFECTIVE_GROUP_ID in the perlvar(1)
+            # manual page.
 
-	# Ditto for groups
-	my $g = '';
+            my @groups;
+            my $groups = $config->{sconf}{$service}{group};
 
-	if ( defined $config->{sconf}{$service}{group} ) {
-	    # Support running with more than one group in effect. See
-	    # documentation on $EFFECTIVE_GROUP_ID in the perlvar(1)
-	    # manual page.
+            for my $group (split /\s*,\s*/, $groups) {
+                my $is_optional = $group =~ m{\A \( ([^)]+) \) \z}xms;
+                $group          = $1 if $is_optional;
 
-	    my @groups;
-	    my $groups = $config->{sconf}{$service}{group};
+                my $gid = Munin::Node::OS->get_gid($group);
+                croak "Group '$group' required for $service does not exist"
+                    unless defined $gid || $is_optional;
 
-	    for my $group (split /\s*,\s*/, $groups) {
-		my $is_optional = $group =~ m{\A \( ([^)]+) \) \z}xms;
-		$group          = $1 if $is_optional;
-
-		my $gid = Munin::Node::OS->get_gid($group);
-		croak "Group '$group' required for $service does not exist"
-		    unless defined $gid || $is_optional;
-
-		if (!defined $gid && $is_optional) {
-		    carp "DEBUG: Skipping OPTIONAL nonexisting group '$group'"
-			if $config->{DEBUG};
-		    next;
-		}
-		push @groups, $gid;
-	    } # for $groups
-	    $g = join(' ',@groups);
+                if (!defined $gid && $is_optional) {
+                    carp "DEBUG: Skipping OPTIONAL nonexisting group '$group'"
+                        if $config->{DEBUG};
+                    next;
+                }
+                push @groups, $gid;
+            } # for $groups
+            $g = join(' ',@groups);
         } # if defined group
 
         my $dg  = $config->{defgroup};
-
-        my $gid;
 
         # Specify the default group twice: once for setegid(2), and once
         # for setgroups(2).  See perlvar for the gory details.
         my $gs = "$dg $dg $g";
 
-        print STDERR "# Set /rgid/ruid/egid/euid/ to /$dg/$u/$gs/$u/\n"
+        print STDERR "# Set /rgid/ruid/egid/euid/ to /$dg/$uid/$gs/$uid/\n"
             if $config->{DEBUG};
 
         eval {
             if ($Munin::Common::Defaults::MUNIN_HASSETR) {
                 Munin::Node::OS->set_real_group_id($dg)
                       unless $dg == $root_gid;
-                Munin::Node::OS->set_real_user_id($u)
-                      unless $u == $root_uid;
+                Munin::Node::OS->set_real_user_id($uid)
+                      unless $uid == $root_uid;
             }
 
             Munin::Node::OS->set_effective_group_id($gs)
                   unless $dg == $root_gid;
-            Munin::Node::OS->set_effective_user_id($u)
-                  unless $u == $root_uid;
+            Munin::Node::OS->set_effective_user_id($uid)
+                  unless $uid == $root_uid;
         };
 
         if ($EVAL_ERROR) {
