@@ -123,21 +123,17 @@ sub _resolve_uid
 
 # resolves the GIDs the service should be run as.  arguments are:
 # + the name of the service, for error message purposes
-# + the default group plugins are run as (eg. 'munin')
-# + the service-specific group string.
-
-        # Support running with more than one group in effect. See documentation on
-        # $EFFECTIVE_GROUP_ID in the perlvar(1) manual page.
+# + the default gid plugins are run as (eg. value of getgrnam('munin'))
+# + the service-specific group string, of the form described in
+#   http://munin-monitoring.org/wiki/plugin-conf.d
 sub _resolve_gids
 {
-    my ($service_name, $default_group, $group_string) = @_;
-
-    my $default_gid = Munin::Node::OS->get_gid($default_group);
-    croak "Cannot resolve default group '$default_group'"
-        unless defined $default_gid;
+    my ($service_name, $default_gid, $group_string) = @_;
 
     my @groups;
 
+    # Support running with more than one group in effect. See documentation on
+    # $EFFECTIVE_GROUP_ID in the perlvar(1) manual page.
     if (defined $group_string) {
         foreach my $group (split /[\s,]+/, $group_string) {
             my $is_optional = ($group =~ m{\A \( ([^)]+) \) \z}xms);
@@ -181,15 +177,16 @@ sub change_real_and_effective_user_and_group
         # Ditto for groups
         my ($rgid, $egids) = _resolve_gids($config->{defgroup}, $sconf->{group});
 
-        print STDERR "# Set /rgid/ruid/egid/euid/ to /$rgid/$uid/$egids/$uid/\n"
-            if $config->{DEBUG};
-
         eval {
             if ($Munin::Common::Defaults::MUNIN_HASSETR) {
+                print STDERR "# Setting /rgid/ruid/ to /$rgid/$uid/\n"
+                    if $config->{DEBUG};
                 Munin::Node::OS->set_real_group_id($rgid) unless $rgid == $root_gid;
                 Munin::Node::OS->set_real_user_id($uid)   unless $uid  == $root_uid;
             }
 
+            print STDERR "# Setting /egid/euid/ to /$egids/$uid/\n"
+                if $config->{DEBUG};
             Munin::Node::OS->set_effective_group_id($egids) unless $rgid == $root_gid;
             Munin::Node::OS->set_effective_user_id($uid)    unless $uid  == $root_uid;
         };

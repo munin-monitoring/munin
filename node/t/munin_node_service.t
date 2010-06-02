@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 24;
+use Test::More tests => 22;
 use Test::Differences;
 
 use Munin::Node::Service;
@@ -61,16 +61,10 @@ $ENV{MUNIN_MASTER_IP} = '';
     my $gid   = (split / /, $GID)[0];
     my $gname = getgrgid $gid;
 
-    # FIXME: can default group ever be a name, not a gid?
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gname) ], [ $gid, "$gid $gid" ], 'default group by name');
     eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid)   ], [ $gid, "$gid $gid" ], 'default group by gid');
     
-    eval { Munin::Node::Service::_resolve_gids('fnord', 999999999) };
-    like($@, qr/'999999999'/, 'Exception thrown if the default group could not be resolved');
-
-
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gname, 0)      ], [ $gid, "$gid $gid 0" ], 'extra group by gid');
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gname, 'root') ], [ $gid, "$gid $gid 0" ], 'extra group by name'); 
+    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, 0)      ], [ $gid, "$gid $gid 0" ], 'extra group by gid');
+    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, 'root') ], [ $gid, "$gid $gid 0" ], 'extra group by name'); 
 
     eval { Munin::Node::Service::_resolve_gids('fnord', $gid, 999999999) };
     like($@, qr/'999999999'/, 'Exception thrown if an additional group could not be resolved');
