@@ -121,6 +121,50 @@ sub _resolve_uid
 }
 
 
+# resolves the GIDs the service should be run as.  arguments are:
+# + the name of the service, for error message purposes
+# + the default group plugins are run as (eg. 'munin')
+# + the service-specific group string.
+
+        # Support running with more than one group in effect. See documentation on
+        # $EFFECTIVE_GROUP_ID in the perlvar(1) manual page.
+sub _resolve_gids
+{
+    my ($service_name, $default_group, $group_string) = @_;
+
+    my $default_gid = Munin::Node::OS->get_gid($default_group);
+    croak "Cannot resolve default group '$default_group'"
+        unless defined $default_gid;
+
+    my @groups;
+
+    if (defined $group_string) {
+        foreach my $group (split /[\s,]+/, $group_string) {
+            my $is_optional = ($group =~ m{\A \( ([^)]+) \) \z}xms);
+            $group = $1 if $is_optional;
+
+            my $gid = Munin::Node::OS->get_gid($group);
+
+            croak "Group '$group' required for '$service_name' does not exist"
+                unless defined $gid || $is_optional;
+
+            if (!defined $gid && $is_optional) {
+                carp "DEBUG: Skipping OPTIONAL nonexisting group '$group'"
+                    if $config->{DEBUG};
+                next;
+            }
+            push @groups, $gid;
+        }
+    }
+
+    # Specify the default group twice: once for setegid(2), and once
+    # for setgroups(2).  See $EGID in perlvar for the gory details.
+    my $gs = join ' ', ($default_gid) x 2, @groups;
+
+    return ($default_gid, $gs);
+}
+
+
 sub change_real_and_effective_user_and_group
 {
     my ($class, $service) = @_;
@@ -128,72 +172,35 @@ sub change_real_and_effective_user_and_group
     my $root_uid = 0;
     my $root_gid = 0;
 
+    my $sconf = $config->{sconf}{$service};
+
     if ($REAL_USER_ID == $root_uid) {
         # Resolve UIDs now, as they are not resolved when the config was read.
-        my $uid = _resolve_uid($config->{defuser}, $config->{sconf}{$service}{user}, $service);
+        my $uid = _resolve_uid($config->{defuser}, $sconf->{user}, $service);
 
         # Ditto for groups
-        my $g = '';
+        my ($rgid, $egids) = _resolve_gids($config->{defgroup}, $sconf->{group});
 
-        if (defined $config->{sconf}{$service}{group}) {
-            # Support running with more than one group in effect. See
-            # documentation on $EFFECTIVE_GROUP_ID in the perlvar(1)
-            # manual page.
-
-            my @groups;
-            my $groups = $config->{sconf}{$service}{group};
-
-            for my $group (split /\s*,\s*/, $groups) {
-                my $is_optional = $group =~ m{\A \( ([^)]+) \) \z}xms;
-                $group          = $1 if $is_optional;
-
-                my $gid = Munin::Node::OS->get_gid($group);
-                croak "Group '$group' required for $service does not exist"
-                    unless defined $gid || $is_optional;
-
-                if (!defined $gid && $is_optional) {
-                    carp "DEBUG: Skipping OPTIONAL nonexisting group '$group'"
-                        if $config->{DEBUG};
-                    next;
-                }
-                push @groups, $gid;
-            } # for $groups
-            $g = join(' ',@groups);
-        } # if defined group
-
-        my $dg  = $config->{defgroup};
-
-        # Specify the default group twice: once for setegid(2), and once
-        # for setgroups(2).  See perlvar for the gory details.
-        my $gs = "$dg $dg $g";
-
-        print STDERR "# Set /rgid/ruid/egid/euid/ to /$dg/$uid/$gs/$uid/\n"
+        print STDERR "# Set /rgid/ruid/egid/euid/ to /$rgid/$uid/$egids/$uid/\n"
             if $config->{DEBUG};
 
         eval {
             if ($Munin::Common::Defaults::MUNIN_HASSETR) {
-                Munin::Node::OS->set_real_group_id($dg)
-                      unless $dg == $root_gid;
-                Munin::Node::OS->set_real_user_id($uid)
-                      unless $uid == $root_uid;
+                Munin::Node::OS->set_real_group_id($rgid) unless $rgid == $root_gid;
+                Munin::Node::OS->set_real_user_id($uid)   unless $uid  == $root_uid;
             }
 
-            Munin::Node::OS->set_effective_group_id($gs)
-                  unless $dg == $root_gid;
-            Munin::Node::OS->set_effective_user_id($uid)
-                  unless $uid == $root_uid;
+            Munin::Node::OS->set_effective_group_id($egids) unless $rgid == $root_gid;
+            Munin::Node::OS->set_effective_user_id($uid)    unless $uid  == $root_uid;
         };
 
         if ($EVAL_ERROR) {
-            logger("Plugin '$service' Can't drop privileges: $EVAL_ERROR. "
-                       . "Bailing out.\n");
+            logger("# FATAL: Plugin '$service' Can't drop privileges: $EVAL_ERROR.");
             exit 1;
         }
     }
     else {
-        if (defined $config->{sconf}{$service}{user}
-         or defined $config->{sconf}{$service}{group})
-        {
+        if (defined $sconf->{user} or defined $sconf->{group}) {
             print "# Warning: Root privileges are required to change user/group.  "
                 . "The plugin may not behave as expected.\n";
         }
@@ -340,4 +347,4 @@ L<Munin::Node::Service> for a comprehensive description.)
 
 =cut
 
-# vim:syntax=perl : ts=4 : expandtab
+# vim: sw=4 : ts=4 : expandtab
