@@ -1,0 +1,69 @@
+<?xml version='1.0'?>
+<!DOCTYPE service_bundle SYSTEM '/usr/share/lib/xml/dtd/service_bundle.dtd.1'>
+
+<!--
+
+   Solaris SMF method for site/munin-node
+
+   2010-06-02 Stig Sandbeck Mathisen <ssm@fnord.no>
+   
+   Usage
+   =====
+   
+   Copy the munin-node script to /lib/svc/method/, and
+   make it executale
+   
+   Copy the munin-node.xml manifest to /var/svc/manifest/site/, and
+   then run:
+   
+   # svccfg import /var/svc/manifest/site/munin-node.xml
+
+   Check
+   =====
+
+   Check the status of your running munin-node with:
+
+   # svcs site/munin-node
+     
+  -->
+
+<service_bundle type='manifest' name='export'>
+  <service name='site/munin-node' type='service' version='0'>
+
+    <create_default_instance enabled='true'/>
+    <single_instance/>
+
+    <dependency name='fs' grouping='require_all' restart_on='refresh' type='service'>
+      <service_fmri value='svc:/system/filesystem/local'/>
+    </dependency>
+
+    <dependency name='net' grouping='require_all' restart_on='refresh' type='service'>
+      <service_fmri value='svc:/milestone/network'/>
+    </dependency>
+
+    <dependency name='config' grouping='require_all' restart_on='none' type='path'>
+      <service_fmri value='file://localhost@@CONFDIR@@/munin-node.conf'/>
+    </dependency>
+
+    <exec_method name='start' type='method' exec='/lib/svc/method/munin-node start' timeout_seconds='30'>
+      <method_context>
+        <method_credential user='root' group='root'/>
+      </method_context>
+    </exec_method>
+
+    <exec_method name='stop' type='method' exec=':kill' timeout_seconds='30'/>
+
+    <stability value='Unstable'/>
+
+    <template>
+      <common_name>
+        <loctext xml:lang='C'>munin-node</loctext>
+      </common_name>
+      <documentation>
+        <manpage title='munin-node' section='1' manpath='@@MANDIR@@'/>
+        <doc_link name='Munin Documentation' uri='http://munin-monitoring.org/wiki/Documentation'/>
+      </documentation>
+    </template>
+
+  </service>
+</service_bundle>
