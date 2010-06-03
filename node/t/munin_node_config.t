@@ -18,7 +18,6 @@ isa_ok($conf, 'Munin::Node::Config');
 #                       _ P A R S E _ L I N E
 
 ### Corner cases
-
 {
     is($conf->_parse_line(""), undef, "Empty line is undef");
 
@@ -32,7 +31,6 @@ isa_ok($conf, 'Munin::Node::Config');
 
 
 ### Hostname
-
 {
     my @res = $conf->_parse_line("hostname foo");
     is_deeply(\@res, [fqdn => 'foo'], 'Parsing host name');
@@ -45,7 +43,6 @@ isa_ok($conf, 'Munin::Node::Config');
 
 
 ### Default user
-
 {
     my $uname = getpwuid $UID;
 
@@ -58,7 +55,6 @@ isa_ok($conf, 'Munin::Node::Config');
 
 
 ### Default group
-
 {
     my $gid   = (split / /, $GID)[0];
     my $gname = getgrgid $gid;
@@ -66,15 +62,12 @@ isa_ok($conf, 'Munin::Node::Config');
     my @res = $conf->_parse_line("default_client_group $gname");
     is_deeply(\@res, [defgroup => $gid], 'Parsing default group');
 
-    eval {
-        $conf->_parse_line("default_client_group xxxyyyzzz");
-    };
+    eval { $conf->_parse_line("default_client_group xxxyyyzzz") };
     like($@, qr{Default group does not exist}, "Default group exists");
 }
 
 
 ### Paranoia
-
 {
     my @res = $conf->_parse_line("paranoia off");
     is_deeply(\@res, [paranoia => 0], 'Parsing paranoia');
@@ -82,7 +75,6 @@ isa_ok($conf, 'Munin::Node::Config');
 
 
 ### allow_deny
-
 {
     my @res = $conf->_parse_line('allow 127\.0\.0\.1');
     is_deeply(\@res, [], 'Parsing: allow is ignored');
@@ -95,7 +87,6 @@ isa_ok($conf, 'Munin::Node::Config');
 
 
 ### tls
-
 {
     my @res = $conf->_parse_line('tls paranoid');
     is_deeply(\@res, [tls => 'paranoid'], 'Parsing tls');
@@ -103,8 +94,7 @@ isa_ok($conf, 'Munin::Node::Config');
 }
 
 ###############################################################################
-#                       _ S T R I P _ C O M M E N T
-
+#  _strip_comment
 {
     my $str = "#Foo" ;
     $conf->_strip_comment($str);
@@ -125,8 +115,7 @@ isa_ok($conf, 'Munin::Node::Config');
 
 
 ###############################################################################
-#                         R E I N I T I A L I Z E
-
+#  reinitialize
 {
     my $expected = {foo => 'bar'};
     $conf->reinitialize($expected);
@@ -142,8 +131,7 @@ isa_ok($conf, 'Munin::Node::Config');
 
 
 ###############################################################################
-#                         P A R S E _ C O N F I G
-
+#  parse_config
 {
     $conf->reinitialize();
     $conf->parse_config(*DATA);
@@ -189,25 +177,28 @@ isa_ok($conf, 'Munin::Node::Config');
 }
 
 ### group
-{
-    my $gid   = (split / /, $GID)[0];
-    my $gname = getgrgid $gid;
+my @gids = split / /, $GID;
+my $gid  = $gids[0];
 
+(my $gid_list = $GID) =~ tr/ /,/;
+my $gname = getgrgid $gid;
+
+{
     my @res = $conf->_parse_plugin_line("group $gname");
-    is_deeply(\@res, [group => $gname], 'Parsing plugin group');
+    is_deeply(\@res, [group => [ $gname ] ], 'Parsing plugin group');
 }
 {
-    my @res = $conf->_parse_plugin_line("group $GID");
-    is_deeply(\@res, [group => $GID], 'Parsing plugin group (many)');
-
-    my $gids_with_optional = "$GID,(999999999)";
-    @res = $conf->_parse_plugin_line("group $gids_with_optional");
-    is_deeply(\@res, [group => $gids_with_optional], 
+    my @res = $conf->_parse_plugin_line("group $gid_list");
+    is_deeply(\@res, [group => [ @gids ] ], 'Parsing plugin group (many)');
+}
+{
+    my @res = $conf->_parse_plugin_line("group $gid_list, (999999999)");
+    is_deeply(\@res, [group => [ @gids, '(999999999)' ] ], 
         'Parsing plugin group (many with optional nonexistent)');
 }
 {
     my @res = $conf->_parse_plugin_line("group xxxyyyzzz");
-    is_deeply(\@res, [group => 'xxxyyyzzz'], 'Parsing unknown group');
+    is_deeply(\@res, [group => [ 'xxxyyyzzz' ]], 'Parsing unknown group');
 }
 
 
@@ -254,7 +245,7 @@ isa_ok($conf, 'Munin::Node::Config');
         sconfdir => $sconfdir,
         sconf=>{
             Foo    => {user => 'root', env => {baz => 'zing'}},
-            'Foo*' => {group => 'root', env => {bar => 'zap'}},
+            'Foo*' => {group => [ 'root' ], env => {bar => 'zap'}},
             'F*'   => {env => {bar => 'zoo'}},
         },
     }, "Checking sconf");
@@ -265,7 +256,7 @@ isa_ok($conf, 'Munin::Node::Config');
         sconf=>{
             Foo => {
                 user => 'root',
-                group => 'root',
+                group => [ 'root' ],
                 env => {
                     baz => 'zing',
                     bar => 'zap',

@@ -128,29 +128,27 @@ sub _resolve_uid
 #   http://munin-monitoring.org/wiki/plugin-conf.d
 sub _resolve_gids
 {
-    my ($service_name, $default_gid, $group_string) = @_;
+    my ($service_name, $default_gid, $group_list) = @_;
 
     my @groups;
 
     # Support running with more than one group in effect. See documentation on
     # $EFFECTIVE_GROUP_ID in the perlvar(1) manual page.
-    if (defined $group_string) {
-        foreach my $group (split /[\s,]+/, $group_string) {
-            my $is_optional = ($group =~ m{\A \( ([^)]+) \) \z}xms);
-            $group = $1 if $is_optional;
+    foreach my $group (@{$group_list||[]}) {
+        my $is_optional = ($group =~ m{\A \( ([^)]+) \) \z}xms);
+        $group = $1 if $is_optional;
 
-            my $gid = Munin::Node::OS->get_gid($group);
+        my $gid = Munin::Node::OS->get_gid($group);
 
-            croak "Group '$group' required for '$service_name' does not exist"
-                unless defined $gid || $is_optional;
+        croak "Group '$group' required for '$service_name' does not exist"
+            unless defined $gid || $is_optional;
 
-            if (!defined $gid && $is_optional) {
-                carp "DEBUG: Skipping OPTIONAL nonexisting group '$group'"
-                    if $config->{DEBUG};
-                next;
-            }
-            push @groups, $gid;
+        if (!defined $gid && $is_optional) {
+            carp "DEBUG: Skipping OPTIONAL nonexisting group '$group'"
+                if $config->{DEBUG};
+            next;
         }
+        push @groups, $gid;
     }
 
     # Specify the default group twice: once for setegid(2), and once

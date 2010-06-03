@@ -250,8 +250,8 @@ sub _parse_plugin_line {
         return (user => $var_value);
     }
     elsif ($var_name eq 'group') {
-	# Evaluation of group name is lazy too.
-	return (group => $var_value );
+	# Evaluation of group names is lazy too.
+	return (group => [split /[\s,]+/, $var_value]);
     }
     elsif ($var_name eq 'command') {
         return (command => [split /\s+/, $var_value]);

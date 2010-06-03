@@ -63,33 +63,33 @@ $ENV{MUNIN_MASTER_IP} = '';
 
     eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid)   ], [ $gid, "$gid $gid" ], 'default group by gid');
     
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, 0)      ], [ $gid, "$gid $gid 0" ], 'extra group by gid');
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, 'root') ], [ $gid, "$gid $gid 0" ], 'extra group by name'); 
+    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, [0])      ], [ $gid, "$gid $gid 0" ], 'extra group by gid');
+    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, ['root']) ], [ $gid, "$gid $gid 0" ], 'extra group by name'); 
 
-    eval { Munin::Node::Service::_resolve_gids('fnord', $gid, 999999999) };
+    eval { Munin::Node::Service::_resolve_gids('fnord', $gid, [999999999]) };
     like($@, qr/'999999999'/, 'Exception thrown if an additional group could not be resolved');
 
 
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, '(root)')     ], [ $gid, "$gid $gid 0" ], 'extra optional group by name');
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, '(%%SSKK¤¤)') ], [ $gid, "$gid $gid" ],   'unresolvable extra groups are ignored');
+    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, ['(root)'])     ], [ $gid, "$gid $gid 0" ], 'extra optional group by name');
+    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, ['(%%SSKK¤¤)']) ], [ $gid, "$gid $gid" ],   'unresolvable extra groups are ignored');
 
 
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, '(0)')         ], [ $gid, "$gid $gid 0" ], 'extra optional group by gid');
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, '(999999999)') ], [ $gid, "$gid $gid" ],   'unresolvable extra gids are ignored');
+    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, ['(0)'])         ], [ $gid, "$gid $gid 0" ], 'extra optional group by gid');
+    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, ['(999999999)']) ], [ $gid, "$gid $gid" ],   'unresolvable extra gids are ignored');
 
 
     eq_or_diff(
-        [Munin::Node::Service::_resolve_gids('fnord', $gid, "0, ($gname)")],
+        [Munin::Node::Service::_resolve_gids('fnord', $gid, [0, "($gname)"])],
         [$gid, "$gid $gid 0 $gid"],
         'several extra groups'
     );
     eq_or_diff(
-        [Munin::Node::Service::_resolve_gids('fnord', $gid, "0,$gname")],
+        [Munin::Node::Service::_resolve_gids('fnord', $gid, [0, $gname])],
         [$gid, "$gid $gid 0 $gid"],
         'several groups, less whitespace'
     );
     eq_or_diff(
-        [Munin::Node::Service::_resolve_gids('fnord', $gid, '(%%SSKK¤¤), 0')],
+        [Munin::Node::Service::_resolve_gids('fnord', $gid, ['(%%SSKK¤¤)', 0])],
         [$gid, "$gid $gid 0"],
         'resolvable and unresolvable extra groups'
     );
