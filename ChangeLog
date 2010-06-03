@@ -17,15 +17,15 @@ munin 1.4.5, r3379,3611, 2010-5-27
 * Apply r3451 from trunk: ligne: use the local $DEBUG to toggle debug output, 
   rather than the one in 'main' package. 
 * Backport r3444: ligne: fix warnings when running under certain versions of
-* Typo in SNMPv3 code fixes ticket #911
-* Backport r3546 to r3554 from trunk (fix for #912, and more extensive test 
-* Fix ticket #928. Adding missing max_cgi_graph_jobs directive to the 
-  %legal hash 
-  coverage for Munin::Plugin::SNMP). 
-* Remove trailing whitespace from 1.4-stable/node directory, as in trunk. 
-* Ignore the sandbox and Module::Build-generated content, as in trunk
   perl, caused by exporting an undefined variable to the environment. 
   Thanks to Aleksandar Lazic (al4711) for the patch. 
+* Typo in SNMPv3 code fixes ticket #911
+* Backport r3546 to r3554 from trunk (fix for #912, and more extensive test 
+  coverage for Munin::Plugin::SNMP). 
+* Fix ticket #928. Adding missing max_cgi_graph_jobs directive to the 
+  %legal hash 
+* Remove trailing whitespace from 1.4-stable/node directory, as in trunk 
+* Ignore the sandbox and Module::Build-generated content, as in trunk
 * Backport r3439: ligne: and add a newline to the error message when there was
   a plugin exec failure. 
 * Backport r3434: ligne: set Net::Server's syslog_ident parameter, so log 
@@ -41,7 +41,7 @@ munin 1.4.5, r3379,3611, 2010-5-27
   Thanks to claudius for the patch. fixes ticket #889
 * snmp_netstat: tidy and document
 * snmp_netstat: Fix bug where snmp_netstat undercounts the number
-   of connections
+  of connections
 * uptime: graph should not scale, as it makes it hard to read after 1000
   days of uptime 
 * postgres_users: Usernames fetched from pg_stat_activity need to be
