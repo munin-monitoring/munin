@@ -17,6 +17,17 @@ use Munin::Common::Defaults;
 my $config = Munin::Node::Config->instance();
 
 
+sub new
+{
+    my ($class, %args) = @_;
+
+    die 'Need to specify a value for servicedir'
+        unless $args{servicedir};
+
+    return bless \%args, $class;
+}
+
+
 sub is_a_runnable_service {
     my ($class, $file, $dir) = @_;
 

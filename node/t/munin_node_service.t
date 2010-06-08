@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 22;
+use Test::More tests => 24;
 use Test::Differences;
 
 use Munin::Node::Service;
@@ -21,6 +21,15 @@ $config->reinitialize({
 		}
 	}
 });
+
+
+### new
+{
+    new_ok('Munin::Node::Service' => [ servicedir => '/service/directory' ]);
+
+    eval { Munin::Node::Service->new(some_arg => 'fnord') };
+    like($@, qr/servicedir/, 'servicedir must be specified when calling new');
+}
 
 
 # FIXME: required to avoid errors when calling export_service_environment().
