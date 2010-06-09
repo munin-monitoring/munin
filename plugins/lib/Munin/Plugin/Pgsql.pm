@@ -238,7 +238,13 @@ sub Config {
 
     $self->ensure_version();
 
-    print "graph_title $self->{title}\n";
+    my $w = $self->wildcard_parameter();
+    if ($w) {
+      print "graph_title $self->{title} ($w)\n";
+    }
+    else {
+      print "graph_title $self->{title}\n";
+    }
     print "graph_vlabel $self->{vlabel}\n";
     print "graph_category PostgreSQL\n";
     print "graph_info $self->{info}\n";
