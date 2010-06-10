@@ -8,17 +8,42 @@ use Munin::Node::Service;
 
 use English qw(-no_match_vars);
 
+my $uname = getpwuid $UID;
+my $gid   = (split / /, $GID)[0];
+my $gname = getgrgid $gid;
+
+
 my $config = Munin::Node::Config->instance();
 
 $config->reinitialize({
 	timeout => 10,
 	servicedir => '/service/directory',
 	sconf => {
-		test => {
-			env => {
-				test_environment_variable => 'fnord'
-			}
-		}
+        # testing environment
+		test => { env => { test_environment_variable => 'fnord' } },
+
+        # testing user resolution
+        uname => { user => $uname },
+        uid   => { user => $UID   },
+        bad_uname => { user => '%%SSKK¤¤' },
+        bad_uid   => { user => 999999999  },
+
+        # testing group resolution
+        gid   => { groups => [ 0      ] },
+        gname => { groups => [ 'root' ] },
+        bad_gname => { groups => [ '%%SSKK¤¤' ] },
+        bad_gid   => { groups => [ 999999999  ] },
+
+        # testing optional group resolution
+        opt_gid       => { groups => [ '(0)'         ] },
+        opt_gname     => { groups => [ '(root)'      ] },
+        opt_bad_gname => { groups => [ '(%%SSKK¤¤)'  ] },
+        opt_bad_gid   => { groups => [ '(999999999)' ] },
+
+        several_groups => { groups => [ 0, "($gname)" ] },
+        several_groups_required => { groups => [ 0, $gname ] },
+        several_groups_mixture => { groups => [ '(%%SSKK¤¤)', 0 ] },
+
 	}
 });
 
@@ -48,57 +73,55 @@ $ENV{MUNIN_MASTER_IP} = '';
 
 ### _resolve_uid
 {
-    my $uname = getpwuid $UID;
+    my $services = Munin::Node::Service->new(defuser => $UID);
 
-    is(Munin::Node::Service::_resolve_uid(undef, $uname, 'fnord'), $UID, 'Lookup by service-specific username');
-    is(Munin::Node::Service::_resolve_uid(undef, $UID,   'fnord'), $UID, 'Lookup by service-specific username');
+    is($services->_resolve_uid('uname'), $UID, 'Lookup by service-specific username');
+    is($services->_resolve_uid('uid'),   $UID, 'Lookup by service-specific username');
 
-    is(Munin::Node::Service::_resolve_uid($UID, 0, 'fnord'), 0, 'Default user is ignored if specific user is set');
+    $services->{defuser} = 0;
 
-    is(Munin::Node::Service::_resolve_uid(0, undef, 'fnord'), 0, 'Default user is used if specific user is not provided');
+    is($services->_resolve_uid('no_user'), 0, 'Default user is used if specific user is not provided');
 
-    eval { Munin::Node::Service::_resolve_uid(undef, '%%SSKK¤¤', 'fnord') };
+    eval { $services->_resolve_uid('bad_uname') };
     like($@, qr/'%%SSKK¤¤'/, 'Exception thrown when resolving non-existant username');
 
-    eval { Munin::Node::Service::_resolve_uid(undef, 999999999, 'fnord') };
+    eval { $services->_resolve_uid('bad_uid') };
     like($@, qr/'999999999'/, 'Exception thrown when resolving non-existant uid');
 }
 
-
 ### _resolve_gids
 {
-    my $gid   = (split / /, $GID)[0];
-    my $gname = getgrgid $gid;
-
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid)   ], [ $gid, "$gid $gid" ], 'default group by gid');
+    my $services = Munin::Node::Service->new(defgroup => $gid);
     
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, [0])      ], [ $gid, "$gid $gid 0" ], 'extra group by gid');
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, ['root']) ], [ $gid, "$gid $gid 0" ], 'extra group by name'); 
+    eq_or_diff([ $services->_resolve_gids('no_groups')   ], [ $gid, "$gid $gid" ], 'default group by gid');
+    
+    eq_or_diff([ $services->_resolve_gids('gid')   ], [ $gid, "$gid $gid 0" ], 'extra group by gid');
+    eq_or_diff([ $services->_resolve_gids('gname') ], [ $gid, "$gid $gid 0" ], 'extra group by name'); 
 
-    eval { Munin::Node::Service::_resolve_gids('fnord', $gid, [999999999]) };
+    eval { $services->_resolve_gids('bad_gid') };
     like($@, qr/'999999999'/, 'Exception thrown if an additional group could not be resolved');
 
+    eval { $services->_resolve_gids('bad_gname') };
+    like($@, qr/'%%SSKK¤¤'/, 'Exception thrown if an additional group could not be resolved');
 
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, ['(root)'])     ], [ $gid, "$gid $gid 0" ], 'extra optional group by name');
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, ['(%%SSKK¤¤)']) ], [ $gid, "$gid $gid" ],   'unresolvable extra groups are ignored');
+    eq_or_diff([ $services->_resolve_gids('opt_gname')     ], [ $gid, "$gid $gid 0" ], 'extra optional group by name');
+    eq_or_diff([ $services->_resolve_gids('opt_bad_gname') ], [ $gid, "$gid $gid" ],   'unresolvable extra groups are ignored');
 
-
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, ['(0)'])         ], [ $gid, "$gid $gid 0" ], 'extra optional group by gid');
-    eq_or_diff([ Munin::Node::Service::_resolve_gids('fnord', $gid, ['(999999999)']) ], [ $gid, "$gid $gid" ],   'unresolvable extra gids are ignored');
-
+    eq_or_diff([ $services->_resolve_gids('opt_gid')         ], [ $gid, "$gid $gid 0" ], 'extra optional group by gid');
+    eq_or_diff([ $services->_resolve_gids('opt_bad_gid') ], [ $gid, "$gid $gid" ],   'unresolvable extra gids are ignored');
 
     eq_or_diff(
-        [Munin::Node::Service::_resolve_gids('fnord', $gid, [0, "($gname)"])],
+        [$services->_resolve_gids('several_groups') ],
         [$gid, "$gid $gid 0 $gid"],
         'several extra groups'
     );
     eq_or_diff(
-        [Munin::Node::Service::_resolve_gids('fnord', $gid, [0, $gname])],
+        [$services->_resolve_gids('several_groups_required')],
         [$gid, "$gid $gid 0 $gid"],
         'several groups, less whitespace'
     );
     eq_or_diff(
-        [Munin::Node::Service::_resolve_gids('fnord', $gid, ['(%%SSKK¤¤)', 0])],
+        [$services->_resolve_gids('several_groups_mixture')],
         [$gid, "$gid $gid 0"],
         'resolvable and unresolvable extra groups'
     );
@@ -143,7 +166,8 @@ $ENV{MUNIN_MASTER_IP} = '';
 
 ### fork_service
 {
-	my $ret = Munin::Node::Service->fork_service('/fnord', 'foo');
+    my $services = Munin::Node::Service->new(servicedir => '/fnord');
+	my $ret = $services->fork_service('foo');
 	is($ret->{retval} >> 8, 42, 'Attempted to run non-existant service');
 }
 
