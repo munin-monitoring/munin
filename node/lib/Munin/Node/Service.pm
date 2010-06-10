@@ -116,13 +116,15 @@ sub export_service_environment {
 # thrown.
 sub _resolve_uid
 {
-    my ($defuser, $user, $service_name) = @_;
+    my ($self, $service) = @_;
+
+    my $user = $config->{sconf}{$service}{user};
 
     # Need to test for defined, since a user might be specified with UID = 0
-    my $service_user = defined $user ? $user : $defuser;
+    my $service_user = defined $user ? $user : $self->{defuser};
 
     my $u = Munin::Node::OS->get_uid($service_user);
-    croak "User '$service_user' required for '$service_name' does not exist."
+    croak "User '$service_user' required for '$service' does not exist."
         unless defined $u;
 
     return $u;
@@ -136,7 +138,11 @@ sub _resolve_uid
 #   http://munin-monitoring.org/wiki/plugin-conf.d
 sub _resolve_gids
 {
-    my ($service_name, $default_gid, $group_list) = @_;
+    my ($self, $service) = @_;
+
+    my $group_list = $config->{sconf}{$service}{groups};
+
+    my $default_gid = $self->{defgroup};
 
     my @groups;
 
@@ -148,7 +154,7 @@ sub _resolve_gids
 
         my $gid = Munin::Node::OS->get_gid($group);
 
-        croak "Group '$group' required for '$service_name' does not exist"
+        croak "Group '$group' required for '$service' does not exist"
             unless defined $gid || $is_optional;
 
         if (!defined $gid && $is_optional) {
@@ -178,10 +184,10 @@ sub change_real_and_effective_user_and_group
 
     if ($REAL_USER_ID == $root_uid) {
         # Resolve UIDs now, as they are not resolved when the config was read.
-        my $uid = _resolve_uid($self->{defuser}, $sconf->{user}, $service);
+        my $uid = $self->_resolve_uid($sconf->{user}, $service);
 
         # Ditto for groups
-        my ($rgid, $egids) = _resolve_gids($self->{defgroup}, $sconf->{group});
+        my ($rgid, $egids) = $self->_resolve_gids($sconf->{group});
 
         eval {
             if ($Munin::Common::Defaults::MUNIN_HASSETR) {
