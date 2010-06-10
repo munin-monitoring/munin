@@ -14,9 +14,12 @@ use Munin::Common::Defaults;
 use Munin::Common::Timeout;
 use Munin::Common::TLSServer;
 use Munin::Node::Logger;
-use Munin::Node::Service;
 use Munin::Node::Session;
 use Munin::Node::Utils;
+
+
+# the Munin::Node::Service object, used to run plugins, etc
+my $services;
 
 # A set of all services that this node can run.
 my %services;
@@ -36,8 +39,9 @@ my $config = Munin::Node::Config->instance();
 sub pre_loop_hook {
     my $self = shift;
     print STDERR "In pre_loop_hook.\n" if $config->{DEBUG};
+    $services = $config->{services} or die 'no services list';
     _load_services();
-    Munin::Node::Service->prepare_plugin_environment(keys %services);
+    $services->prepare_plugin_environment(keys %services);
     _add_services_to_nodes(keys %services);
     return $self->SUPER::pre_loop_hook();
 }
@@ -52,11 +56,11 @@ sub request_denied_hook
 
 
 sub _load_services {
-    opendir (my $DIR, $config->{servicedir})
-        || die "Cannot open plugindir: $config->{servicedir} $!";
+    opendir (my $DIR, $services->{servicedir})
+        || die "Cannot open plugindir: $services->{servicedir} $!";
 
     for my $file (readdir($DIR)) {
-        next unless Munin::Node::Service->is_a_runnable_service($file);
+        next unless $services->is_a_runnable_service($file);
         print STDERR "file: '$file'\n" if $config->{DEBUG};
         $services{$file} = 1;
     }
@@ -330,8 +334,7 @@ sub _run_service
     # temporarily ignore SIGCHLD.  this stops Net::Server from reaping the
     # dead service before we get the chance to check the return value.
     local $SIG{CHLD};
-    my $res = Munin::Node::Service->fork_service($config->{servicedir},
-                                                 $service, $command);
+    my $res = $services->fork_service($service, $command);
 
     if ($res->{timed_out}) {
         logger("Service '$service' timed out.");
