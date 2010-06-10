@@ -39,8 +39,6 @@ sub is_a_runnable_service
 {
     my ($self, $file) = @_;
 
-    Carp::confess "not to be called as a static method" unless ref $self;
-
     return unless -f "$self->{servicedir}/$file" && -x _;
 
     # FIX isn't it enough to check that the file is executable and not
