@@ -1,4 +1,4 @@
-#!/usr/bin/perl -wT
+#!/usr/bin/perl -T
 # -*- perl -*-
 
 # Copyright (C) 2004-2009
@@ -35,8 +35,6 @@ use Munin::Node::OS;
 use Munin::Node::Service;
 
 my $services;
-
-my $FQDN = "";
 
 my $defuser    = getpwnam($Munin::Common::Defaults::MUNIN_PLUGINUSER);
 my $defgroup   = getgrnam($Munin::Common::Defaults::MUNIN_GROUP);
