@@ -24,6 +24,9 @@ sub new
     # Set defaults
     $args{servicedir} ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
 
+    $args{defuser}  ||= getpwnam $Munin::Common::Defaults::MUNIN_PLUGINUSER;
+    $args{defgroup} ||= getgrnam $Munin::Common::Defaults::MUNIN_GROUP;
+
 
     die "Fatal error. Bailing out.\n"
         unless (Munin::Node::OS->check_perms_if_paranoid($args{servicedir}));
@@ -79,11 +82,6 @@ sub prepare_plugin_environment
     # Some locales use "," as decimal separator. This can mess up a lot
     # of plugins.
     $ENV{LC_ALL} = 'C';
-
-    $config->{defuser} = getpwnam($Munin::Common::Defaults::MUNIN_PLUGINUSER)
-        unless defined $config->{defuser};
-    $config->{defgroup} = getgrnam($Munin::Common::Defaults::MUNIN_GROUP)
-        unless defined $config->{defgroup};
 
     if ($config->{sconffile}) {
         # only used by munin-run
@@ -173,7 +171,7 @@ sub _resolve_gids
 
 sub change_real_and_effective_user_and_group
 {
-    my ($class, $service) = @_;
+    my ($self, $service) = @_;
 
     my $root_uid = 0;
     my $root_gid = 0;
@@ -182,10 +180,10 @@ sub change_real_and_effective_user_and_group
 
     if ($REAL_USER_ID == $root_uid) {
         # Resolve UIDs now, as they are not resolved when the config was read.
-        my $uid = _resolve_uid($config->{defuser}, $sconf->{user}, $service);
+        my $uid = _resolve_uid($self->{defuser}, $sconf->{user}, $service);
 
         # Ditto for groups
-        my ($rgid, $egids) = _resolve_gids($config->{defgroup}, $sconf->{group});
+        my ($rgid, $egids) = _resolve_gids($self->{defgroup}, $sconf->{group});
 
         eval {
             if ($Munin::Common::Defaults::MUNIN_HASSETR) {

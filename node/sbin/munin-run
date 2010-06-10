@@ -36,9 +36,6 @@ use Munin::Node::Service;
 
 my $services;
 
-my $defuser    = getpwnam($Munin::Common::Defaults::MUNIN_PLUGINUSER);
-my $defgroup   = getgrnam($Munin::Common::Defaults::MUNIN_GROUP);
-
 my $paranoia = 0;
 
 my $config = Munin::Node::Config->instance();
@@ -68,14 +65,8 @@ sub main
         unless Munin::Node::OS->check_perms_if_paranoid($config->{conffile});
     $config->parse_config_from_file($config->{conffile});
 
-    $defuser  = $config->{defuser}  if defined $config->{defuser};
-    $defgroup = $config->{defgroup} if defined $config->{defgroup};
-
     $config->reinitialize({
         %$config,
-
-        defuser    => $defuser,
-        defgroup   => $defgroup,
         paranoia   => $paranoia,
     });
 
@@ -145,6 +136,8 @@ sub parse_args
 
     $services = Munin::Node::Service->new(
         servicedir => $servicedir,
+        defuser    => $config->{defuser},
+        defgroup   => $config->{defgroup},
     );
 
     # Update the config
