@@ -21,8 +21,12 @@ sub new
 {
     my ($class, %args) = @_;
 
-    die 'Need to specify a value for servicedir'
-        unless $args{servicedir};
+    # Set defaults
+    $args{servicedir} ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
+
+
+    die "Fatal error. Bailing out.\n"
+        unless (Munin::Node::OS->check_perms_if_paranoid($args{servicedir}));
 
     return bless \%args, $class;
 }

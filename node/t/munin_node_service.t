@@ -27,8 +27,8 @@ $config->reinitialize({
 {
     new_ok('Munin::Node::Service' => [ servicedir => '/service/directory' ]);
 
-    eval { Munin::Node::Service->new(some_arg => 'fnord') };
-    like($@, qr/servicedir/, 'servicedir must be specified when calling new');
+    my $services = Munin::Node::Service->new();
+    ok(exists $services->{servicedir}, 'servicedir key gets a default');
 }
 
 
