@@ -38,21 +38,17 @@ sub is_a_runnable_service
 
     Carp::confess "not to be called as a static method" unless ref $self;
 
-    my $path = "$self->{servicedir}/$file";
-
-    return unless -f $path && -x _;
+    return unless -f "$self->{servicedir}/$file" && -x _;
 
     # FIX isn't it enough to check that the file is executable and not
     # in 'ignores'? Can hidden files and config files be
     # unintentionally executable? What does config files do in the
     # service directory? Shouldn't we complain if there is junk in the
     # service directory?
-    return if $file =~ m/^\./;               # Hidden files
-    return if $file =~ m/\.conf$/;           # Config files
+    return if $file =~ m/^\./;      # Hidden files
+    return if $file =~ m/\.conf$/;  # Config files
 
-    return if $file !~ m/^([-\w.:]+)$/;      # Skip if any weird chars
-
-    $file = $1;                              # Not tainted anymore.
+    return if $file !~ m/^[-\w.:]+$/;  # Skip if any weird chars
 
     foreach my $regex (@{$config->{ignores}}) {
         return if $file =~ /$regex/;
@@ -64,7 +60,7 @@ sub is_a_runnable_service
 
 sub prepare_plugin_environment
 {
-    my (@plugins) = @_;
+    my ($self, @plugins) = @_;
 
     Munin::Common::Defaults->export_to_environment();
 
