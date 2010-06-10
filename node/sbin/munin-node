@@ -37,13 +37,11 @@ use Munin::Node::Server;
 my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
 my $sconfdir   = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
 my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
-my $FQDN       = "";
 my $DEBUG      = 0;
 my $PIDEBUG    = 0;
 my $defuser    = getpwnam ($Munin::Common::Defaults::MUNIN_PLUGINUSER);
 my $defgroup   = getgrnam ($Munin::Common::Defaults::MUNIN_GROUP);
 my $paranoia   = 0;
-my @ignores;
 my $timeout    = 10;
 
 sub main {
@@ -71,12 +69,9 @@ sub main {
     my $config = Munin::Node::Config->instance();
     $config->parse_config_from_file($conffile);
 
-    $FQDN     = $config->{fqdn}     if defined $config->{fqdn};
     $defuser  = $config->{defuser}  if defined $config->{defuser};
     $defgroup = $config->{defgroup} if defined $config->{defgroup};
     $paranoia = $config->{paranoia} if defined $config->{paranoia};
-
-    push @ignores, @{$config->{ignores}} if defined $config->{ignores};
 
     my $services = Munin::Node::Service->new(
         servicedir => $servicedir,
@@ -90,13 +85,14 @@ sub main {
         services => $services,
         sconfdir => $sconfdir,
         conffile => $conffile,
-        fqdn     => $FQDN,
+
         DEBUG    => $DEBUG,
         PIDEBUG  => $PIDEBUG,
+
         defuser  => $defuser,
         defgroup => $defgroup,
+
         paranoia => $paranoia,
-        ignores  => \@ignores,
     });
 
     Munin::Node::Server->run(
