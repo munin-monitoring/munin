@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 require_ok('sbin/munin-run');
 
@@ -20,10 +20,10 @@ my $config = Munin::Node::Config->instance();
 		--sconfdir   service_config_directory
 		--sconffile  service_config_file
 		--debug
+		--paranoia
 		--pidebug
 		plugin config
 	);
-		#--paranoia
 
 	my ($plugin, $argument) = parse_args();
 
@@ -31,7 +31,6 @@ my $config = Munin::Node::Config->instance();
 		$config,
 		{
 			conffile   => 'config_file',
-			servicedir => 'service_directory',
 			sconfdir   => 'service_config_directory',
 			sconffile  => 'service_config_file',
 			paranoia   => 1,
@@ -43,17 +42,20 @@ my $config = Munin::Node::Config->instance();
 
 	is($plugin, 'plugin', 'Plugin name is read from @ARGV');
 	is($argument, 'config', 'Argument is read from @ARGV');
-
-	@ARGV = qw(plugin);
-	($plugin, $argument) = parse_args();
+}
+{
+	local @ARGV = qw(plugin);
+	my ($plugin, $argument) = parse_args();
 	is($argument, undef, 'No argument was given');
-
-	@ARGV = qw(plugin bad#argument);
-	($plugin, $argument) = parse_args();
-	is($argument, undef, 'Invalid argument is ignored');
-
-	@ARGV = qw(plugin update);
-	($plugin, $argument) = parse_args();
+}
+{
+	local @ARGV = ('plugin', 'bad#argument');
+	eval { parse_args() };
+	like($@, qr/bad#argument/, 'Invalid argument causes a fatal error');
+}
+{
+	local @ARGV = qw(plugin update);
+	my ($plugin, $argument) = parse_args();
 	is($argument, 'update', 'Unknown argument is ok');
 }
 
