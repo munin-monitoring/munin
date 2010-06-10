@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 34;
+use Test::More tests => 35;
 
 use FindBin;
 use English qw(-no_match_vars);
@@ -51,6 +51,9 @@ isa_ok($conf, 'Munin::Node::Config');
 
     @res = $conf->_parse_line("default_client_user $UID");
     is_deeply(\@res, [defuser => $UID], 'Parsing default user ID');
+    
+    eval { $conf->_parse_line("default_client_user xxxyyyzzz") };
+    like($@, qr{Default user does not exist}, "Default user exists");
 }
 
 
