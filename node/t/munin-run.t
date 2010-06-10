@@ -19,11 +19,11 @@ my $config = Munin::Node::Config->instance();
 		--servicedir service_directory
 		--sconfdir   service_config_directory
 		--sconffile  service_config_file
-		--paranoia
 		--debug
 		--pidebug
 		plugin config
 	);
+		#--paranoia
 
 	my ($plugin, $argument) = parse_args();
 
@@ -48,9 +48,13 @@ my $config = Munin::Node::Config->instance();
 	($plugin, $argument) = parse_args();
 	is($argument, undef, 'No argument was given');
 
-	@ARGV = qw(plugin bad_argument);
+	@ARGV = qw(plugin bad#argument);
 	($plugin, $argument) = parse_args();
 	is($argument, undef, 'Invalid argument is ignored');
+
+	@ARGV = qw(plugin update);
+	($plugin, $argument) = parse_args();
+	is($argument, 'update', 'Unknown argument is ok');
 }
 
 

@@ -113,19 +113,10 @@ sub parse_args
     print_usage_and_exit() unless $ARGV[0];
 
     # Detaint the plugin name
-    if ($ARGV[0] =~ m/^([-\w.:]+)$/) {
-        $plugin = $1;
-    }
-    else {
-        die "# ERROR: Invalid plugin name.\n";
-    }
-
+    ($plugin) = ($ARGV[0] =~ m/^([-\w.:]+)$/) or die "# ERROR: Invalid plugin name.\n";
     if ($ARGV[1]) {
-        # Ensure the plugin's argument (if any) is one of the known ones.
-        # Incidentally also makes it taint-safe.
-        ($arg) = grep { $_ eq $ARGV[1] } qw/config autoconf snmpconf suggest/;
-        warn "# Warning: Unrecognised argument '$ARGV[1]' passed to plugin.\n"
-            unless $arg;
+        ($arg) = ($ARGV[1] =~ m/^(\w+)$/)
+            or die "# ERROR: Invalid characters in argument '$ARGV[1]'.\n"
     }
 
     # Detaint service directory.  FIXME: do more strict detainting?
