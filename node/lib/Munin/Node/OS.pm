@@ -12,6 +12,7 @@ use Munin::Node::Config;
 use Munin::Common::Timeout;
 
 use POSIX ();
+use Sys::Hostname;
 
 sub get_uid {
     my ($class, $user) = @_;
@@ -37,21 +38,7 @@ sub _get_xid {
 }
 
 
-sub get_fq_hostname {
-    my ($class) = @_;
-
-    my $hostname = eval {
-        require Sys::Hostname;
-        return (gethostbyname(Sys::Hostname::hostname()))[0];
-    };
-    return $hostname if $hostname;
-
-    $hostname = `hostname`;
-    chomp($hostname);
-    $hostname =~ s/\s//g;
-    return $hostname;
-}
-
+sub get_fq_hostname { return (gethostbyname Sys::Hostname::hostname)[0]; }
 
 
 sub check_perms_if_paranoid {
