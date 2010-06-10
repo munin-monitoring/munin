@@ -90,7 +90,7 @@ sub main
 
     # no need for a timeout -- the user can kill this process any
     # time they want.
-    $services->exec_service($config->{servicedir}, $plugin, $arg);
+    $services->exec_service($plugin, $arg);
 
     # Never reached, but just in case...
     print STDERR "# FATAL: Failed to exec.\n";
@@ -101,7 +101,7 @@ sub main
 sub parse_args
 {
     # Default configuration values
-    my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
+    my $servicedir;
     my $sconfdir   = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
     my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
     my $sconffile;
@@ -139,9 +139,11 @@ sub parse_args
             unless $arg;
     }
 
-    # Detaint service dir.  FIXME: do more strict detainting?
-    $servicedir =~ /(.*)/;
-    $servicedir = $1;
+    # Detaint service directory.  FIXME: do more strict detainting?
+    if ($servicedir) {
+        $servicedir =~ /(.*)/;
+        $servicedir = $1;
+    }
 
     $services = Munin::Node::Service->new(
         servicedir => $servicedir,
@@ -151,7 +153,6 @@ sub parse_args
     $config->reinitialize({
         %$config,
 
-        servicedir => $servicedir,
         sconfdir   => $sconfdir,
         conffile   => $conffile,
         sconffile  => $sconffile,
