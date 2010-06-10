@@ -32,12 +32,13 @@ sub new
 }
 
 
-sub is_a_runnable_service {
-    my ($class, $file, $dir) = @_;
+sub is_a_runnable_service
+{
+    my ($self, $file) = @_;
 
-    $dir ||= $config->{servicedir};
+    Carp::confess "not to be called as a static method" unless ref $self;
 
-    my $path = "$dir/$file";
+    my $path = "$self->{servicedir}/$file";
 
     return unless -f $path && -x _;
 
@@ -218,12 +219,13 @@ sub change_real_and_effective_user_and_group
 }
 
 
-sub exec_service {
-    my ($class, $dir, $service, $arg) = @_;
+sub exec_service
+{
+    my ($class, $service, $arg) = @_;
 
     $class->change_real_and_effective_user_and_group($service);
 
-    unless (Munin::Node::OS->check_perms_if_paranoid("$dir/$service")) {
+    unless (Munin::Node::OS->check_perms_if_paranoid("$class->{servicedir}/$service")) {
         logger ("Error: unsafe permissions on $service. Bailing out.");
         exit 2;
     }
@@ -232,7 +234,7 @@ sub exec_service {
 
     Munin::Node::OS::set_umask();
 
-    my @command = grep defined, _service_command($dir, $service, $arg);
+    my @command = grep defined, _service_command($class->{servicedir}, $service, $arg);
     print STDERR "# About to run '", join (' ', @command), "'\n"
         if $config->{DEBUG};
 
@@ -266,13 +268,13 @@ sub _service_command
 
 sub fork_service
 {
-    my ($class, $dir, $service, $arg) = @_;
+    my ($self, $service, $arg) = @_;
 
     my $timeout = $config->{sconf}{$service}{timeout}
                || $config->{timeout};
 
     my $run_service = sub {
-        $class->exec_service($dir, $service, $arg);
+        $self->exec_service($service, $arg);
         # shouldn't be reached
         print STDERR "# ERROR: Failed to exec.\n";
         exit 42;
