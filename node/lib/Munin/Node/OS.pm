@@ -159,7 +159,7 @@ sub run_as_child {
         return {
             stdout => $out,
             stderr => $err,
-            retval => $?,
+            retval => $CHILD_ERROR,
             timed_out => $timed_out,
         };
     }
