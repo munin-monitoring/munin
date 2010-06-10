@@ -31,6 +31,7 @@ use Getopt::Long;
 use Munin::Node::Config;
 use Munin::Common::Defaults;
 use Munin::Node::OS;
+use Munin::Node::Service;
 use Munin::Node::Server;
 
 my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
@@ -63,9 +64,7 @@ sub main {
     parse_args();
 
     # Check permissions of configuration
-    unless (Munin::Node::OS->check_perms_if_paranoid($servicedir)
-         && Munin::Node::OS->check_perms_if_paranoid($conffile))
-    {
+    unless (Munin::Node::OS->check_perms_if_paranoid($conffile)) {
         die "Fatal error. Bailing out.";
     }
 
@@ -79,21 +78,25 @@ sub main {
 
     push @ignores, @{$config->{ignores}} if defined $config->{ignores};
 
+    my $services = Munin::Node::Service->new(
+        servicedir => $servicedir,
+    );
+
     $config->reinitialize({
         timeout    => $timeout,
 
         %$config,
 
-        servicedir => $servicedir,
-        sconfdir   => $sconfdir,
-        conffile   => $conffile,
-        fqdn       => $FQDN,
-        DEBUG      => $DEBUG,
-        PIDEBUG    => $PIDEBUG,
-        defuser    => $defuser,
-        defgroup   => $defgroup,
-        paranoia   => $paranoia,
-        ignores    => \@ignores,
+        services => $services,
+        sconfdir => $sconfdir,
+        conffile => $conffile,
+        fqdn     => $FQDN,
+        DEBUG    => $DEBUG,
+        PIDEBUG  => $PIDEBUG,
+        defuser  => $defuser,
+        defgroup => $defgroup,
+        paranoia => $paranoia,
+        ignores  => \@ignores,
     });
 
     Munin::Node::Server->run(
