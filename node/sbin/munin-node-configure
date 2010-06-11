@@ -32,8 +32,6 @@ use Munin::Node::Configure::Debug;
 use Munin::Node::Config;
 my $config = Munin::Node::Config->instance();
 
-my $timeout = 10;
-
 my @all_families     = qw/auto manual contrib/;
 my @default_families = qw/auto/;
 
@@ -144,8 +142,6 @@ sub parse_args
     @snmp_hosts = map { split /,/ } @snmp_hosts;
 
 	$config->reinitialize({
-        timeout => $timeout,
-
         %$config,
 
         newer          => $newer,

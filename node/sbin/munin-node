@@ -40,7 +40,6 @@ my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
 my $DEBUG      = 0;
 my $PIDEBUG    = 0;
 my $paranoia   = 0;
-my $timeout    = 10;
 
 sub main {
     chdir ("/");
@@ -76,8 +75,6 @@ sub main {
     );
 
     $config->reinitialize({
-        timeout    => $timeout,
-
         %$config,
 
         services => $services,
