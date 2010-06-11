@@ -119,7 +119,7 @@ sub parse_args
     print_usage_and_exit() unless $ARGV[0];
 
     # Detaint the plugin name
-    ($plugin) = ($ARGV[0] =~ m/^([-\w.:]+)$/) or die "# ERROR: Invalid plugin name.\n";
+    ($plugin) = ($ARGV[0] =~ m/^([-\w.:]+)$/) or die "# ERROR: Invalid plugin name '$ARGV[0].\n";
     if ($ARGV[1]) {
         ($arg) = ($ARGV[1] =~ m/^(\w+)$/)
             or die "# ERROR: Invalid characters in argument '$ARGV[1]'.\n"
@@ -290,4 +290,4 @@ This program is released under the GNU General Public License
 
 =cut
 
-# vim:syntax=perl : ts=4 : expandtab
+# vim: sw=4 : ts=4 : expandtab
