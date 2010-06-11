@@ -184,10 +184,10 @@ sub change_real_and_effective_user_and_group
 
     if ($REAL_USER_ID == $root_uid) {
         # Resolve UIDs now, as they are not resolved when the config was read.
-        my $uid = $self->_resolve_uid($sconf->{user}, $service);
+        my $uid = $self->_resolve_uid($service);
 
         # Ditto for groups
-        my ($rgid, $egids) = $self->_resolve_gids($sconf->{group});
+        my ($rgid, $egids) = $self->_resolve_gids($service);
 
         eval {
             if ($Munin::Common::Defaults::MUNIN_HASSETR) {
