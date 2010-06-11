@@ -27,6 +27,7 @@ sub new
     $args{defuser}  ||= getpwnam $Munin::Common::Defaults::MUNIN_PLUGINUSER;
     $args{defgroup} ||= getgrnam $Munin::Common::Defaults::MUNIN_GROUP;
 
+    $args{timeout}  ||= 10;
 
     die "Fatal error. Bailing out.\n"
         unless (Munin::Node::OS->check_perms_if_paranoid($args{servicedir}));
@@ -269,7 +270,7 @@ sub fork_service
     my ($self, $service, $arg) = @_;
 
     my $timeout = $config->{sconf}{$service}{timeout}
-               || $config->{timeout};
+               || $self->{timeout};
 
     my $run_service = sub {
         $self->exec_service($service, $arg);
