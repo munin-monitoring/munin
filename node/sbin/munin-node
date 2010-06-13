@@ -198,6 +198,8 @@ and returning the output they produce.
 
 This is munin-node v@@VERSION@@
 
+$Id$
+
 =head1 AUTHORS
 
 Audun Ytterdal, Jimmy Olsen, and Tore Anderson.
