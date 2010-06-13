@@ -300,10 +300,10 @@ sub gather_suggestions
 	# We're going to be running plugins
     Munin::Node::Service->prepare_plugin_environment($plugins->names);
 
-	foreach my $plugin ($plugins->list) {
-		fetch_plugin_autoconf($plugin);
-        fetch_plugin_suggestions($plugin);
-	}
+    foreach my $plugin ($plugins->list) {
+        fetch_plugin_autoconf($plugins, $plugin);
+        fetch_plugin_suggestions($plugins, $plugin);
+    }
 
 	return;
 }
@@ -378,7 +378,7 @@ sub init_snmp
 
     Munin::Node::Service->prepare_plugin_environment($plugins->names);
 
-    fetch_plugin_snmpconf($_) foreach ($plugins->list);
+    fetch_plugin_snmpconf($plugins, $_) foreach ($plugins->list);
 
     return Munin::Node::SNMPConfig->new(
         hosts        => $config->{snmp},
@@ -403,12 +403,11 @@ sub init_snmp
 # of the lines printed to STDOUT, with any debug output removed.
 sub run_plugin
 {
-    my ($plugin, $mode) = @_;
+    my ($plugins, $plugin, $mode) = @_;
     my $name = $plugin->{name};
 
 	DEBUG("Running '$mode' on $name" );
-	my $res = Munin::Node::Service->fork_service($config->{libdir},
-	                                             $name, $mode);
+    my $res = $plugins->{library}->fork_service($name, $mode);
 
 	# No if it timed out
 	if ($res->{timed_out}) {
@@ -456,11 +455,11 @@ sub run_plugin
 # Sets the 'default' and 'defaultreason' fields
 sub fetch_plugin_autoconf
 {
-	my ($plugin) = @_;
+    my ($plugins, $plugin) = @_;
 
     return unless ($plugin->{capabilities}{autoconf});
 
-    my @response = run_plugin($plugin, 'autoconf') or return;
+    my @response = run_plugin($plugins, $plugin, 'autoconf') or return;
 	return $plugin->parse_autoconf_response(@response);
 }
 
@@ -469,14 +468,14 @@ sub fetch_plugin_autoconf
 # in the 'suggestions' field
 sub fetch_plugin_suggestions
 {
-	my ($plugin) = @_;
+    my ($plugins, $plugin) = @_;
 
 	# Only run if the autoconf gave the go-ahead
 	return unless ($plugin->{default} eq "yes");
 
     return unless ($plugin->{capabilities}{suggest});
 
-    my @suggested = run_plugin($plugin, 'suggest');
+    my @suggested = run_plugin($plugins, $plugin, 'suggest');
 	return $plugin->parse_suggest_response(@suggested);
 }
 
@@ -484,11 +483,11 @@ sub fetch_plugin_suggestions
 # Runs a given snmpconf-capable plugin, and notes the parameters it returns
 sub fetch_plugin_snmpconf
 {
-	my ($plugin) = @_;
+    my ($plugins, $plugin) = @_;
 
     return unless ($plugin->{capabilities}{snmpconf});
 
-    my @response = run_plugin($plugin, 'snmpconf');
+    my @response = run_plugin($plugins, $plugin, 'snmpconf');
 	return $plugin->parse_snmpconf_response(@response);
 }
 
