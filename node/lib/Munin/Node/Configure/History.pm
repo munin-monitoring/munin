@@ -5,6 +5,8 @@ package Munin::Node::Configure::History;
 use strict;
 use warnings;
 
+use base 'Munin::Common::Config';
+
 use POSIX ();
 use Munin::Node::Configure::Debug;
 
@@ -14,7 +16,7 @@ sub new
     my ($class, %opts) = @_;
 
     my $newer        = delete $opts{newer};
-    my $history_file = delete $opts{history_file} or die;
+    my $history_file = delete $opts{history_file} or die "A history file must be specified\n";
 
     my %history = (
         newer        => $newer,
@@ -41,14 +43,11 @@ sub load
 
     # $^O or $Config{osname} are based on the platform perl was built on,
     # not where it's currently running.  This should always be correct
-    my $uname = lc((POSIX::uname())[0]);
-
+    my $uname = lc((POSIX::uname)[0]);
     while (my $line = <$HIST>) {
-        # FIXME: use Munin::Common::Config
-        $line =~ s/#.*//g;
-        $line =~ s/^\s+//g;
-        $line =~ s/\s+$//g;
-        next unless $line =~ /\S/;
+        $self->_strip_comment($line);
+        $self->_trim($line);
+        next unless length $line;
 
         if ($line =~ /^\[([^\]]+)\]$/) {
             $ver = $1;
@@ -62,10 +61,13 @@ sub load
         elsif ($reached_version < 2) {
             next;
         }
-        elsif ($line =~ /^([^\/]+)\/(.+)$/) {
+        elsif ($line =~ m{^([^/]+)/(.+)$}) {
             if ($uname eq $1) {
                 $self->{valid_plugins}{$2} = 1;
                 DEBUG("\tAdding plugin '$2' to version tree ($ver)");
+            }
+            else {
+                DEBUG("\tPlugin '$2' applies to another architecture ($uname)");
             }
         }
         elsif ($line =~ /^(.+)$/) {
