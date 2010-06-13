@@ -97,25 +97,31 @@ sub parse_args
 	my (@snmp_hosts, $snmpver, $snmpcomm, $snmpport);
     my ($snmp3username, $snmp3authpass, $snmp3authproto, $snmp3privpass, $snmp3privproto);
 
-	print_usage_and_exit() unless GetOptions(
-		"help"            => \&print_usage_and_exit,
-		"shell!"          => \$shell,
-		"exitnoterror!"   => \$exit_not_error,
-		"debug!"          => \$debug,
-		"pidebug!"        => \$pidebug,
-		"suggest!"        => \$suggest,
-		"config=s"        => \$conffile,
-		"servicedir=s"    => \$servicedir,
-		"sconfdir=s"      => \$sconfdir,
-		"remove-also!"    => \$removes,
-		"libdir=s"        => \$libdir,
-		"families=s"      => \@families,
-		"version!"        => \&print_version_and_exit,
+    print_usage_and_exit() unless GetOptions(
+        'help'            => \&print_usage_and_exit,
+        'version!'        => \&print_version_and_exit,
 
-		"snmp=s"          => \@snmp_hosts,
-		"snmpversion=s"   => \$snmpver,
-		"snmpport=i"      => \$snmpport,
+        'suggest!'        => \$suggest,
+        'exitnoterror!'   => \$exit_not_error,
+        'newer=s'         => \$newer
 
+        'shell!'          => \$shell,
+        'remove-also!'    => \$removes,
+
+        'debug!'          => \$debug,
+        'pidebug!'        => \$pidebug,
+
+        # paths
+        'config=s'        => \$conffile,
+        'servicedir=s'    => \$servicedir,
+        'sconfdir=s'      => \$sconfdir,
+        'libdir=s'        => \$libdir,
+        'families=s'      => \@families,
+
+        # SNMP
+        'snmp=s'          => \@snmp_hosts,
+        'snmpversion=s'   => \$snmpver,
+        'snmpport=i'      => \$snmpport,
         # SNMPv1/2c
         'snmpcommunity=s' => \$snmpcomm,
         # SNMPv3
@@ -124,9 +130,7 @@ sub parse_args
         'snmpauthproto=s' => \$snmp3authproto,
         'snmpprivpass=s'  => \$snmp3privpass,
         'snmpprivproto=s' => \$snmp3privproto,
-
-		"newer=s"         => \$newer
-	);
+    );
 
 	$config->parse_config_from_file($conffile);
 
