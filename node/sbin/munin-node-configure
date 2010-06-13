@@ -103,7 +103,7 @@ sub parse_args
 
         'suggest!'        => \$suggest,
         'exitnoterror!'   => \$exit_not_error,
-        'newer=s'         => \$newer
+        'newer=s'         => \$newer,
 
         'shell!'          => \$shell,
         'remove-also!'    => \$removes,
