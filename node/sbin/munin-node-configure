@@ -75,10 +75,7 @@ sub main
     # Report errors.
     # FIXME: surely exit 0 unless m-n-c itself has gone funny?
     if (my @errors = list_errors($plugins->list)) {
-        print STDERR "# The following plugins caused errors:\n";
-        foreach my $err (@errors) {
-            print STDERR "# $err\n";
-        }
+        print STDERR "# The following plugins caused errors:\n", @errors;
         exit 1;
     }
     exit 0;
@@ -441,8 +438,8 @@ sub list_errors
     my @error_list;
     foreach my $plugin (@_) {
         if (my @errors = @{$plugin->{errors}}) {
-            push @error_list, "$plugin->{name}:";
-            push @error_list, map { "\t$_" } @errors;
+            push @error_list, "# $plugin->{name}:\n";
+            push @error_list, map { "# \t$_\n" } @errors;
         }
     }
     return @error_list;
