@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 35;
+use Test::More tests => 42;
 
 use FindBin;
 use English qw(-no_match_vars);
@@ -21,9 +21,7 @@ isa_ok($conf, 'Munin::Node::Config');
 {
     is($conf->_parse_line(""), undef, "Empty line is undef");
 
-    eval {
-        $conf->_parse_line("foo");
-    };
+    eval { $conf->_parse_line("foo") };
     like($@, qr{Line is not well formed}, "Need a name and a value");
 
     is($conf->_parse_line("#foo"), undef, "Comment is undef");
@@ -168,6 +166,21 @@ isa_ok($conf, 'Munin::Node::Config');
 ###############################################################################
 # _parse_plugin_line
 
+### malformed line
+{
+    eval { $conf->_parse_plugin_line("") };
+    like($@, qr{Line is not well formed}, "Empty line is an error");
+}
+{
+    eval { $conf->_parse_plugin_line("blah") };
+    like($@, qr{Line is not well formed}, "line without a value is an error");
+}
+{
+    eval { $conf->_parse_plugin_line("blah blah blah") };
+    like($@, qr{Failed to parse line}, "Unknown variable name is an error");
+}
+
+
 ### user
 {
     my $uname = getpwuid $UID;
@@ -196,7 +209,7 @@ my $gname = getgrgid $gid;
 }
 {
     my @res = $conf->_parse_plugin_line("group $gid_list, (999999999)");
-    is_deeply(\@res, [group => [ @gids, '(999999999)' ] ], 
+    is_deeply(\@res, [group => [ @gids, '(999999999)' ] ],
         'Parsing plugin group (many with optional nonexistent)');
 }
 {
@@ -204,9 +217,36 @@ my $gname = getgrgid $gid;
     is_deeply(\@res, [group => [ 'xxxyyyzzz' ]], 'Parsing unknown group');
 }
 
+### command
+{
+    my @res = $conf->_parse_plugin_line('command shutdown -h now');
+    is_deeply(\@res, [command => [ 'shutdown', '-h', 'now' ] ], 'command line');
+}
+{
+    my @res = $conf->_parse_plugin_line('command sudo -u root %c');
+    is_deeply(\@res, [command => [ 'sudo', '-u', 'root', '%c' ] ],
+        'command line with %c expansion'
+    );
+}
+
+### host_name
+{
+    my @res = $conf->_parse_plugin_line('host_name server.example.com');
+    is_deeply(\@res, [host_name => 'server.example.com'], 'parsing host_name');
+}
+
+### timeout
+{
+    my @res = $conf->_parse_plugin_line('timeout 20');
+    is_deeply(\@res, [timeout => 20], 'parsing timeout');
+}
+{
+    my @res = $conf->_parse_plugin_line('timeout aeons');
+    is_deeply(\@res, [timeout => 'aeons'], 'non-numeric timeout is valid');
+}
+
 
 ### environment
-
 {
     my @res = $conf->_parse_plugin_line("env.foo fnord");
     is_deeply(\@res, [ env => { foo => 'fnord' } ], 'Parsing environment variable');
