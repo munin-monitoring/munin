@@ -35,8 +35,9 @@ use Munin::Node::Service;
 
 my $services;
 my $servicedir;
-my $DEBUG   = 0;
-my $PIDEBUG = 0;
+my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
+my $DEBUG    = 0;
+my $PIDEBUG  = 0;
 my $paranoia = 0;
 
 my $config = Munin::Node::Config->instance();
@@ -62,9 +63,13 @@ sub main
     # @ARGV, the latter takes precedence.
     $paranoia = $config->{paranoia};
 
-    die "Fatal error. Bailing out.\n"
-        unless Munin::Node::OS->check_perms_if_paranoid($config->{conffile});
-    $config->parse_config_from_file($config->{conffile});
+    # Check permissions of configuration
+    unless (Munin::Node::OS->check_perms_if_paranoid($conffile)) {
+        die "Fatal error. Bailing out.";
+    }
+
+    my $config = Munin::Node::Config->instance();
+    $config->parse_config_from_file($conffile);
 
     $services = Munin::Node::Service->new(
         servicedir => $servicedir,
@@ -99,21 +104,20 @@ sub parse_args
 {
     # Default configuration values
     my $sconfdir   = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
-    my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
     my $sconffile;
 
     my ($plugin, $arg);
 
-    print_usage_and_exit() unless GetOptions (
+    print_usage_and_exit() unless GetOptions(
             "config=s"     => \$conffile,
             "debug!"       => \$DEBUG,
             "pidebug!"     => \$PIDEBUG,
-            "version!"     => \&print_version_and_exit,
             "servicedir=s" => \$servicedir,
             "sconfdir=s"   => \$sconfdir,
             "sconffile=s"  => \$sconffile,
             "paranoia!"    => \$paranoia,
-            "help"         => \&print_usage_and_exit
+            "version"      => \&print_version_and_exit,
+            "help"         => \&print_usage_and_exit,
     );
 
     print_usage_and_exit() unless $ARGV[0];
@@ -122,7 +126,7 @@ sub parse_args
     ($plugin) = ($ARGV[0] =~ m/^([-\w.:]+)$/) or die "# ERROR: Invalid plugin name '$ARGV[0].\n";
     if ($ARGV[1]) {
         ($arg) = ($ARGV[1] =~ m/^(\w+)$/)
-            or die "# ERROR: Invalid characters in argument '$ARGV[1]'.\n"
+            or die "# ERROR: Invalid characters in argument '$ARGV[1]'.\n";
     }
 
     # Detaint service directory.  FIXME: do more strict detainting?

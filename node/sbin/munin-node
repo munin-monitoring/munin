@@ -29,27 +29,26 @@ use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
 
 use Getopt::Long;
 
-use Munin::Node::Config;
 use Munin::Common::Defaults;
+use Munin::Node::Config;
 use Munin::Node::OS;
 use Munin::Node::Service;
 use Munin::Node::Server;
 
 my $servicedir;
-my $sconfdir   = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
-my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
-my $DEBUG      = 0;
-my $PIDEBUG    = 0;
-my $paranoia   = 0;
+my $sconfdir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
+my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
+my $DEBUG    = 0;
+my $PIDEBUG  = 0;
+my $paranoia = 0;
 
 sub main
 {
     chdir ("/");
 
-    # "Clean" environment to disable taint-checking on the
-    # environment. We _know_ that the environment is insecure, but we
-    # want to let admins shoot themselves in the foot with it, if they
-    # want to.
+    # "Clean" environment to disable taint-checking on the environment. We _know_
+    # that the environment is insecure, but we want to let admins shoot themselves
+    # in the foot with it, if they want to.
     foreach my $key (keys %ENV) {
         $ENV{$key} =~ /^(.*)$/;
         $ENV{$key} = $1;
@@ -98,10 +97,12 @@ sub main
     return 0;
 }
 
-sub parse_args {
+
+sub parse_args
+{
     my @ORIG_ARGV  = @ARGV;
 
-    print_usage_and_exit() unless GetOptions (
+    print_usage_and_exit() unless GetOptions(
         "config=s"     => \$conffile,
         "debug!"       => \$DEBUG,
         "pidebug!"     => \$PIDEBUG,
@@ -112,6 +113,8 @@ sub parse_args {
 
     # Reset ARGV (for HUPing)
     @ARGV = @ORIG_ARGV;
+
+    return;
 }
 
 
@@ -233,4 +236,4 @@ L<http://munin.projects.linpro.no/wiki/network-protocol>
 
 =cut
 
-# vim:syntax=perl ts=4 : expandtab
+# vim: sw=4 : ts=4 : expandtab
