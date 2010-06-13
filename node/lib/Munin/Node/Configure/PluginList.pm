@@ -20,12 +20,18 @@ sub new
 {
     my ($class, %opts) = @_;
 
-    my $libdir     = delete $opts{libdir} or die "Must specify the directory\n";
+    my $libdir     = delete $opts{libdir}     or die "Must specify the directory\n";
     my $servicedir = delete $opts{servicedir} or die "Must specify the service directory\n";
+
+    my $library  = Munin::Node::Service->new(servicedir => $libdir);
+    my $services = Munin::Node::Service->new(servicedir => $servicedir);
 
     my %plugin = (
         libdir     => $libdir,
+        library    => $library,
+
         servicedir => $servicedir,
+        services   => $services,
 
         %opts,
     );
@@ -58,7 +64,7 @@ sub _load_available
 
     DEBUG("Searching '$self->{libdir}' for available plugins.");
 
-    foreach my $item (_valid_files($self->{libdir})) {
+    foreach my $item (_valid_files($self->{library})) {
         my $path = $item->{path};
         my $plug = $item->{name};
 
@@ -101,7 +107,7 @@ sub _load_installed
 
     DEBUG("Searching '$self->{servicedir}' for installed plugins.");
 
-    foreach my $item (_valid_files($self->{servicedir})) {
+    foreach my $item (_valid_files($self->{services})) {
         my $path    = $item->{path};
         my $service = $item->{name};
 
@@ -149,21 +155,24 @@ sub names { return keys %{(shift)->{plugins}} }
 
 sub _valid_files
 {
-    my ($directory) = @_;
+    my ($dir) = @_;
     my @items;
+
+    my $directory = $dir->{servicedir};
 
     opendir (my $DIR, $directory)
         or die "Fatal: Could not open '$directory' for reading: $!\n";
 
     while (my $item = readdir $DIR) {
         my $path = "$directory/$item";
-        unless (Munin::Node::Service->is_a_runnable_service($item, $directory)) {
+        unless ($dir->is_a_runnable_service($item)) {
             DEBUG("Ignoring '$path'.");
             next;
         }
         push @items, { path => $path, name => $item };
     }
     closedir $DIR;
+
     return @items;
 }
 
