@@ -104,7 +104,7 @@ sub parse_args {
     print_usage_and_exit() unless GetOptions (
         "config=s"     => \$conffile,
         "debug!"       => \$DEBUG,
-        "plugindebug!" => \$PIDEBUG,
+        "pidebug!"     => \$PIDEBUG,
         "paranoia!"    => \$paranoia,
         "version"      => \&print_version_and_exit,
         "help"         => \&print_usage_and_exit,
