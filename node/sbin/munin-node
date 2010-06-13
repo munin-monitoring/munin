@@ -28,6 +28,7 @@ use warnings;
 use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
 
 use Getopt::Long;
+
 use Munin::Node::Config;
 use Munin::Common::Defaults;
 use Munin::Node::OS;
@@ -113,7 +114,16 @@ sub parse_args {
     @ARGV = @ORIG_ARGV;
 }
 
-sub print_version_and_exit {
+
+sub print_usage_and_exit
+{
+    require Pod::Usage;
+    Pod::Usage::pod2usage(-verbose => 1);
+}
+
+
+sub print_version_and_exit
+{
     print qq{munin-node (munin-node) version $Munin::Common::Defaults::MUNIN_VERSION.
 Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
 
@@ -130,33 +140,12 @@ with this software or refer to
 }
 
 
-sub print_usage_and_exit {
-    print qq{Usage: $0 [options]
-
-Options:
-    --help              View this message.
-    --config <file>     Use <file> as configuration file.
-                        [$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf]
-    --[no]paranoia      Only run plugins owned by root. Check permissions.
-                        [--noparanoia]
-    --debug             View debug messages
-    --pidebug           Plugin debug.  Sets the environment variable
-                        MUNIN_DEBUG to 1 so that plugins may enable debugging.
-    --version           View version information.
-
-};
-
-    exit 0;
-}
-
-
 exit main() unless caller;
 
 
 1;
 
 __END__
-
 
 =head1 NAME
 
@@ -186,6 +175,12 @@ View this help message.
 =item B< --debug >
 
 View debug messages.  This can be very verbose.
+
+=item B< --pidebug >
+
+Plugin debug.  Sets the environment variable MUNIN_DEBUG to 1 so that plugins
+may enable debugging.
+
 
 =back
 

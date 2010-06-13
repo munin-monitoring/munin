@@ -26,7 +26,6 @@ use warnings;
 # Trust PERL5LIB from environment
 use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
 
-use Carp;
 use Getopt::Long;
 
 use Munin::Common::Defaults;
@@ -147,6 +146,13 @@ sub parse_args
 }
 
 
+sub print_usage_and_exit
+{
+    require Pod::Usage;
+    Pod::Usage::pod2usage(-verbose => 1);
+}
+
+
 sub print_version_and_exit
 {
     print qq{munin-run (munin-node) version $Munin::Common::Defaults::MUNIN_VERSION.
@@ -159,32 +165,6 @@ is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
 PURPOSE. For details, please refer to the file COPYING that is included
 with this software or refer to
   http://www.fsf.org/licensing/licenses/gpl.txt
-};
-
-    exit 0;
-}
-
-
-sub print_usage_and_exit
-{
-    print qq{Usage: $0 [options] <plugin> [ config | autoconf | snmpconf | suggest ]
-
-Options:
-    --help              View this message.
-    --config <file>     Use <file> as configuration file.
-                        [$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf]
-    --servicedir <dir>  Dir where plugins are found.
-                        [$Munin::Common::Defaults::MUNIN_CONFDIR/plugins]
-    --sconfdir <dir>    Dir where plugin configurations are found.
-                        [$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d]
-    --sconffile <file>  Use <file> as plugin configuration. Overrides sconfdir.
-                        [undefined]
-    --[no]paranoia      Only run plugins owned by root. Check permissions.
-                        [--noparanoia]
-    --debug             View debug messages
-    --pidebug           Plugin debug.  Sets the environment variable
-                        MUNIN_DEBUG to 1 so that plugins may enable debugging.
-    --version           View version information.
 };
 
     exit 0;

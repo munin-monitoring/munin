@@ -178,66 +178,8 @@ sub parse_args
 
 sub print_usage_and_exit
 {
-	my $all_families     = join(', ', @all_families);
-	my $default_families = join(', ', @default_families);
-
-	print qq{Usage: $0 [options]
-
-Options:
-    --help                  View this help page
-    --version               Show version information
-
-    --debug                 View debug information (very verbose).  All
-                            debugging output is printed on STDOUT but each
-                            line is prefixed with '#'.  Only errors are
-                            printed on STDERR.
-
-    --pidebug               Plugin debug.  Sets the environment variable
-                            MUNIN_DEBUG to 1 so that plugins may enable
-                            debugging.
-
-    --config <file>         Override configuration file
-                                [$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf]
-    --servicedir <dir>      Override plugin directory
-                                [$Munin::Common::Defaults::MUNIN_CONFDIR/plugins/]
-    --sconfdir <dir>        Override plugin configuration directory
-                                [$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d]
-    --libdir <dir>          Override plugin lib
-                                [$Munin::Common::Defaults::MUNIN_LIBDIR/plugins/]
-
-    --families <family,...> Override families ($all_families) [$default_families]
-    --suggest               Show suggestions instead of status
-    --shell                 Show shell commands (implies --suggest)
-    --exitnoterror          Do not consider non-zero exit-value as error
-    --remove-also           Also show rm-commands when doing --shell
-
-    --newer <version>       Only show suggestions related to plugins
-                            included more recently than version <version>.
-                            Only supported along with --shell.
-
-    --snmp <host|cidr>      Do SNMP probing on the host or CIDR network
-                            (e.g. "192.168.1.0/24"). This may take some
-                            time, especially if the probe includes many
-                            hosts. This option can be specified multiple
-                            times, or once with a comma-separated list, to
-                            include more than one host/CIDR.
-
-    --snmpversion <ver>     Set SNMP version (1, 2c or 3) [2c]
-    --snmpcommunity <comm>  Set SNMP community string [public]
-    --snmpport <port>       Set SNMP port [161]
-
-By default this program shows which plugins are activated on the system.
-
-If you specify --suggest, it will present a table of plugins that will
-probably work (according to the plugins' autoconf command).
-
-If you specify --shell, shell commands to install those same plugins
-will be printed. These can be reviewed or piped directly into a shell to
-install the plugins.
-
-};
-
-	exit 0;
+    require Pod::Usage;
+    Pod::Usage::pod2usage(-verbose => 1);
 }
 
 
@@ -613,6 +555,15 @@ Set SNMP port. Default is "161".
 
 munin-node-configure is a script to show which plugins are currently enabled
 on the current node.  It can also suggest changes to this list.
+
+By default this program shows which plugins are activated on the system.
+
+If you specify --suggest, it will present a table of plugins that will
+probably work (according to the plugins' autoconf command).
+
+If you specify --shell, shell commands to install those same plugins
+will be printed. These can be reviewed or piped directly into a shell to
+install the plugins.
 
 =head1 FILES
 
