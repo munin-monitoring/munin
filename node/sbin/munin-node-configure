@@ -298,7 +298,7 @@ sub gather_suggestions
 	my ($plugins) = @_;
 
 	# We're going to be running plugins
-    Munin::Node::Service->prepare_plugin_environment($plugins->names);
+    $plugins->{library}->prepare_plugin_environment($plugins->names);
 
     foreach my $plugin ($plugins->list) {
         fetch_plugin_autoconf($plugins, $plugin);
@@ -376,7 +376,7 @@ sub init_snmp
             $@;
 	}
 
-    Munin::Node::Service->prepare_plugin_environment($plugins->names);
+    $plugins->{library}->prepare_plugin_environment($plugins->names);
 
     fetch_plugin_snmpconf($plugins, $_) foreach ($plugins->list);
 
