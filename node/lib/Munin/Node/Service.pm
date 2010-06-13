@@ -96,7 +96,7 @@ sub prepare_plugin_environment
 
 
 sub export_service_environment {
-    my ($class, $service) = @_;
+    my ($self, $service) = @_;
     print STDERR "# Setting up environment\n" if $config->{DEBUG};
 
     # Provide a consistent default state-file.
@@ -111,10 +111,8 @@ sub export_service_environment {
 }
 
 
-
-# Resolves the uid the service should be run as.  Either of the arguments can
-# be undefined.  If $service_user cannot be resolved, an exception will be
-# thrown.
+# Resolves the uid the service should be run as.  If it cannot be resolved, an
+# exception will be thrown.
 sub _resolve_uid
 {
     my ($self, $service) = @_;
@@ -132,11 +130,8 @@ sub _resolve_uid
 }
 
 
-# resolves the GIDs the service should be run as.  arguments are:
-# + the name of the service, for error message purposes
-# + the default gid plugins are run as (eg. value of getgrnam('munin'))
-# + the service-specific group string, of the form described in
-#   http://munin-monitoring.org/wiki/plugin-conf.d
+# resolves the GIDs (real and effective) the service should be run as.
+# http://munin-monitoring.org/wiki/plugin-conf.d
 sub _resolve_gids
 {
     my ($self, $service) = @_;
@@ -147,8 +142,6 @@ sub _resolve_gids
 
     my @groups;
 
-    # Support running with more than one group in effect. See documentation on
-    # $EFFECTIVE_GROUP_ID in the perlvar(1) manual page.
     foreach my $group (@{$group_list||[]}) {
         my $is_optional = ($group =~ m{\A \( ([^)]+) \) \z}xms);
         $group = $1 if $is_optional;
@@ -166,11 +159,12 @@ sub _resolve_gids
         push @groups, $gid;
     }
 
-    # Specify the default group twice: once for setegid(2), and once
-    # for setgroups(2).  See $EGID in perlvar for the gory details.
-    my $gs = join ' ', ($default_gid) x 2, @groups;
+    # Support running with more than one group in effect. See documentation on
+    # $EFFECTIVE_GROUP_ID in the perlvar(1) manual page.  Need to specify the
+    # default group twice: once for setegid(2), and once for setgroups(2).
+    my $egids = join ' ', ($default_gid) x 2, @groups;
 
-    return ($default_gid, $gs);
+    return ($default_gid, $egids);
 }
 
 
@@ -209,31 +203,31 @@ sub change_real_and_effective_user_and_group
             exit 1;
         }
     }
-    else {
-        if (defined $sconf->{user} or defined $sconf->{group}) {
-            print "# Warning: Root privileges are required to change user/group.  "
-                . "The plugin may not behave as expected.\n";
-        }
+    elsif (defined $sconf->{user} or defined $sconf->{groups}) {
+        print "# Warning: Root privileges are required to change user/group.  "
+            . "The plugin may not behave as expected.\n";
     }
+
+    return;
 }
 
 
 sub exec_service
 {
-    my ($class, $service, $arg) = @_;
+    my ($self, $service, $arg) = @_;
 
-    $class->change_real_and_effective_user_and_group($service);
+    $self->change_real_and_effective_user_and_group($service);
 
-    unless (Munin::Node::OS->check_perms_if_paranoid("$class->{servicedir}/$service")) {
+    unless (Munin::Node::OS->check_perms_if_paranoid("$self->{servicedir}/$service")) {
         logger ("Error: unsafe permissions on $service. Bailing out.");
         exit 2;
     }
 
-    $class->export_service_environment($service);
+    $self->export_service_environment($service);
 
     Munin::Node::OS::set_umask();
 
-    my @command = grep defined, _service_command($class->{servicedir}, $service, $arg);
+    my @command = grep defined, _service_command($self->{servicedir}, $service, $arg);
     print STDERR "# About to run '", join (' ', @command), "'\n"
         if $config->{DEBUG};
 
