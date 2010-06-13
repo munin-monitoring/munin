@@ -28,6 +28,7 @@ sub new
     $args{defgroup} ||= getgrnam $Munin::Common::Defaults::MUNIN_GROUP;
 
     $args{timeout}  ||= 10;
+    $args{pidebug}  ||= 0;
 
     die "Fatal error. Bailing out.\n"
         unless (Munin::Node::OS->check_perms_if_paranoid($args{servicedir}));
@@ -69,7 +70,7 @@ sub prepare_plugin_environment
     $config->{fqdn} ||= Munin::Node::OS->get_fq_hostname();
 
     # Export some variables plugins might be interested in
-    $ENV{MUNIN_DEBUG} = $config->{PIDEBUG} if $config->{PIDEBUG};
+    $ENV{MUNIN_DEBUG} = $self->{pidebug};
     $ENV{FQDN}        = $config->{fqdn};
 
     # munin-node will override this with the IP of the connecting master
