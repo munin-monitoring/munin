@@ -43,10 +43,13 @@ sub main
     my $plugins = Munin::Node::Configure::PluginList->new(
         libdir     => $config->{libdir},
         servicedir => $config->{servicedir},
-        pidebug    => $config->{pidebug},
-    );
 
-    $plugins->load(@{$config->{families}});
+        pidebug    => $config->{pidebug},
+
+        families => $config->{families},
+        newer    => $config->{newer},
+    );
+    $plugins->load();
 
     # Gather information
     if (@{ $config->{snmp} }) {
@@ -99,7 +102,7 @@ sub parse_args
 
     print_usage_and_exit() unless GetOptions(
         'help'            => \&print_usage_and_exit,
-        'version!'        => \&print_version_and_exit,
+        'version'         => \&print_version_and_exit,
 
         'suggest!'        => \$suggest,
         'exitnoterror!'   => \$exit_not_error,
