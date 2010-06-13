@@ -44,6 +44,7 @@ sub load
     # $^O or $Config{osname} are based on the platform perl was built on,
     # not where it's currently running.  This should always be correct
     my $uname = lc((POSIX::uname)[0]);
+
     while (my $line = <$HIST>) {
         $self->_strip_comment($line);
         $self->_trim($line);
@@ -64,15 +65,15 @@ sub load
         elsif ($line =~ m{^([^/]+)/(.+)$}) {
             if ($uname eq $1) {
                 $self->{valid_plugins}{$2} = 1;
-                DEBUG("\tAdding plugin '$2' to version tree ($ver)");
+                DEBUG("\tAdding plugin '$2' to version tree.");
             }
             else {
-                DEBUG("\tPlugin '$2' applies to another architecture ($uname)");
+                DEBUG("\tPlugin '$2' applies to another architecture ($1).");
             }
         }
         elsif ($line =~ /^(.+)$/) {
             $self->{valid_plugins}{$1} = 1;
-            DEBUG("\tAdding plugin '$1' to version tree ($ver)");
+            DEBUG("\tAdding plugin '$1' to version tree.");
         }
     }
     close $HIST;

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More tests => 7;
 
 use File::Temp qw( tempfile );
 use Munin::Node::Configure::Plugin;
@@ -33,7 +33,7 @@ tomcat_volume
 [1.3.3]
 users
 [1.3.4]
-colour_tester
+  colour_tester
 squid_objectsize
 
 EOH
