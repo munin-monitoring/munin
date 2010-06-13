@@ -155,19 +155,11 @@ sub print_usage_and_exit
 
 sub print_version_and_exit
 {
-    print qq{munin-run (munin-node) version $Munin::Common::Defaults::MUNIN_VERSION.
-Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
-
-Copyright (C) 2002-2009
-
-This is free software released under the GNU General Public License. There
-is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
-PURPOSE. For details, please refer to the file COPYING that is included
-with this software or refer to
-  http://www.fsf.org/licensing/licenses/gpl.txt
-};
-
-    exit 0;
+    require Pod::Usage;
+    Pod::Usage::pod2usage(
+        -verbose => 99,
+        -sections => 'VERSION|COPYRIGHT',
+    );
 }
 
 
@@ -247,7 +239,7 @@ as they are under munin-node.
 
 =head1 VERSION
 
-This is munin-node v@@VERSION@@
+This is munin-run (munin-node) v@@VERSION@@
 
 =head1 AUTHORS
 

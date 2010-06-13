@@ -185,19 +185,11 @@ sub print_usage_and_exit
 
 sub print_version_and_exit
 {
-	print qq{munin-node-configure (munin-node) version $Munin::Common::Defaults::MUNIN_VERSION.
-Written by Jimmy Olsen
-
-Copyright (C) 2003-2006 Jimmy Olsen
-
-This is free software released under the GNU General Public License. There
-is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
-PURPOSE. For details, please refer to the file COPYING that is included
-with this software or refer to
-  http://www.fsf.org/licensing/licenses/gpl.txt
-};
-
-	exit 0;
+    require Pod::Usage;
+    Pod::Usage::pod2usage(
+        -verbose => 99,
+        -sections => 'VERSION|COPYRIGHT',
+    );
 }
 
 
@@ -575,7 +567,7 @@ install the plugins.
 
 =head1 VERSION
 
-This is munin-node-configure v@@VERSION@@.
+This is munin-node-configure (munin-node) v@@VERSION@@.
 
 $Id$
 
