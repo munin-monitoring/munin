@@ -92,11 +92,11 @@ $ENV{MUNIN_MASTER_IP} = '';
 ### _resolve_gids
 {
     my $services = Munin::Node::Service->new(defgroup => $gid);
-    
+
     eq_or_diff([ $services->_resolve_gids('no_groups')   ], [ $gid, "$gid $gid" ], 'default group by gid');
-    
+
     eq_or_diff([ $services->_resolve_gids('gid')   ], [ $gid, "$gid $gid 0" ], 'extra group by gid');
-    eq_or_diff([ $services->_resolve_gids('gname') ], [ $gid, "$gid $gid 0" ], 'extra group by name'); 
+    eq_or_diff([ $services->_resolve_gids('gname') ], [ $gid, "$gid $gid 0" ], 'extra group by name');
 
     eval { $services->_resolve_gids('bad_gid') };
     like($@, qr/'999999999'/, 'Exception thrown if an additional group could not be resolved');
@@ -159,7 +159,7 @@ $ENV{MUNIN_MASTER_IP} = '';
 	is_deeply(
 		[ Munin::Node::Service::_service_command($dir, $plugin, $argument) ],
 		[ 'a', 'b', "/service/directory/$plugin", $argument, 'd' ],
-		'Custom service command with substitution.'
+		'Custom service command with substitution (service with argument).'
 	);
 }
 
