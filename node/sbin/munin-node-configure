@@ -43,6 +43,7 @@ sub main
     my $plugins = Munin::Node::Configure::PluginList->new(
         libdir     => $config->{libdir},
         servicedir => $config->{servicedir},
+        pidebug    => $config->{pidebug},
     );
 
     $plugins->load(@{$config->{families}});

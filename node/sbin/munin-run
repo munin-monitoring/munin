@@ -36,7 +36,8 @@ use Munin::Node::Service;
 
 my $services;
 my $servicedir;
-
+my $DEBUG   = 0;
+my $PIDEBUG = 0;
 my $paranoia = 0;
 
 my $config = Munin::Node::Config->instance();
@@ -70,6 +71,7 @@ sub main
         servicedir => $servicedir,
         defuser    => $config->{defuser},
         defgroup   => $config->{defgroup},
+        pidebug    => $PIDEBUG,
     );
 
     $config->reinitialize({
@@ -101,7 +103,6 @@ sub parse_args
     my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
     my $sconffile;
 
-    my ($DEBUG, $PIDEBUG) = (0, 0);
     my ($plugin, $arg);
 
     print_usage_and_exit() unless GetOptions (
@@ -139,7 +140,6 @@ sub parse_args
         conffile   => $conffile,
         sconffile  => $sconffile,
         DEBUG      => $DEBUG,
-        PIDEBUG    => $PIDEBUG,
         paranoia   => $paranoia,
     });
 

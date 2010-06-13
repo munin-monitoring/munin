@@ -34,14 +34,15 @@ use Munin::Node::OS;
 use Munin::Node::Service;
 use Munin::Node::Server;
 
-my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
+my $servicedir;
 my $sconfdir   = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
 my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
 my $DEBUG      = 0;
 my $PIDEBUG    = 0;
 my $paranoia   = 0;
 
-sub main {
+sub main
+{
     chdir ("/");
 
     # "Clean" environment to disable taint-checking on the
@@ -72,6 +73,7 @@ sub main {
         servicedir => $servicedir,
         defuser    => $config->{defuser},
         defgroup   => $config->{defgroup},
+        pidebug    => $PIDEBUG,
     );
 
     $config->reinitialize({
@@ -82,7 +84,6 @@ sub main {
         conffile => $conffile,
 
         DEBUG    => $DEBUG,
-        PIDEBUG  => $PIDEBUG,
 
         paranoia => $paranoia,
     });
