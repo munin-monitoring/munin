@@ -43,6 +43,20 @@ sub reinitialize {
 }
 
 
+sub parse_config_from_file
+{
+    my $self = shift;
+    my ($file) = @_;
+
+    # Check permissions of configuration
+    unless (Munin::Node::OS->check_perms_if_paranoid($file)) {
+        die "Fatal error. Bailing out.";
+    }
+
+    return $self->SUPER::parse_config_from_file(@_);
+}
+
+
 sub parse_config {
     my ($self, $IO_HANDLE) = @_;
 
@@ -354,11 +368,18 @@ Deletes all configuration variables
 Deletes all configuration variables and reinitalizes the object with
 values from \%variables.
 
+=item B<parse_config_from_file>
+
+  $config->parse_config_from_file($filename);
+
+Parses the munin node configuration from a file.  Dies if the file fails the
+paranoia checks.
+
 =item B<parse_config>
 
  $config->parse_config($io_handle);
 
-Parses the munin node configuration from a L<IO::Handle>.
+Parses the munin node configuration from a filehandle.
 
 =item B<process_plugin_configuration_files>
 
@@ -388,3 +409,4 @@ to matching plugins.
 See L<http://munin.projects.linpro.no/wiki/Priority_and_inheritance>
 
 =cut
+# vim: sw=4 : ts=4 : et
