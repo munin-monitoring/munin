@@ -50,9 +50,8 @@ sub parse_config_from_file
 
     # Check permissions of configuration
     unless (Munin::Node::OS->check_perms_if_paranoid($file)) {
-        die "Fatal error. Bailing out.";
+        croak "Fatal error. Bailing out.";
     }
-
     return $self->SUPER::parse_config_from_file(@_);
 }
 
