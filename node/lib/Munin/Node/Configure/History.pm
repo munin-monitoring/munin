@@ -50,7 +50,7 @@ sub load
         $self->_trim($line);
         next unless length $line;
 
-        if ($line =~ /^\[([^\]]+)\]$/) {
+        if ($line =~ /^ \[ ([^\]]+) \] $/x) {
             $ver = $1;
             DEBUG("Setting version to '$ver'.");
             if ($ver eq $self->{newer}) {
@@ -62,7 +62,7 @@ sub load
         elsif ($reached_version < 2) {
             next;
         }
-        elsif ($line =~ m{^([^/]+)/(.+)$}) {
+        elsif ($line =~ m{^ ([^/]+) / (.+) }x) {
             if ($uname eq $1) {
                 $self->{valid_plugins}{$2} = 1;
                 DEBUG("\tAdding plugin '$2' to version tree.");
@@ -71,9 +71,9 @@ sub load
                 DEBUG("\tPlugin '$2' applies to another architecture ($1).");
             }
         }
-        elsif ($line =~ /^(.+)$/) {
-            $self->{valid_plugins}{$1} = 1;
-            DEBUG("\tAdding plugin '$1' to version tree.");
+        else {
+            $self->{valid_plugins}{$line} = 1;
+            DEBUG("\tAdding plugin '$line' to version tree.");
         }
     }
     close $HIST;
