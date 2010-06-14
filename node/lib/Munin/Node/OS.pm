@@ -41,32 +41,35 @@ sub _get_xid {
 sub get_fq_hostname { return (gethostbyname Sys::Hostname::hostname)[0]; }
 
 
-sub check_perms_if_paranoid {
+sub check_perms_if_paranoid
+{
     my ($class, $target) = @_;
 
     my $config = Munin::Node::Config->instance();
 
-    return unless defined $target;
+    return 0 unless defined $target;
     return 1 unless $config->{paranoia};
 
-    unless (-e "$target")    {
-	warn "Failed to check permissions on nonexistent target: '$target'";
-	return;
+    unless (-e $target) {
+        warn "Failed to check permissions on nonexistent target: '$target'";
+        return;
     }
 
     my ($mode, $uid, $gid) = (stat $target)[2,4,5];
-    if ($uid != 0 || ($gid != 0 && ($mode & oct(20))) || ($mode & oct(2))) {
-	warn sprintf(
-            "Warning: '$target' has dangerous permissions (%04o)",
-            $mode & oct(7777),
-        );
-	return;
+
+    if ($uid != 0
+     or $gid != 0 && ($mode & oct(20))
+     or               $mode & oct( 2) )
+    {
+        warn sprintf "Warning: '$target' has dangerous permissions (%04o)",
+                ($mode & oct(7777));
+        return 0;
     }
 
     # Check dir as well
-    if (-f "$target") {
-	(my $dirname = $target) =~ s/[^\/]+$//;
-	return $class->check_perms($dirname);
+    if (-f $target) {
+        (my $dirname = $target) =~ s{[^/]+$}{};
+        return $class->check_perms($dirname);
     }
 
     return 1;
