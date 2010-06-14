@@ -91,10 +91,13 @@ sub _trim {
 }
 
 
+# allows # characters to get through as long as they're escaped
+# with a backslash
 sub _strip_comment {
     my $class = shift;
 
-    $_[0] =~ s/#.*//;
+    $_[0] =~ s/(?<!\\)#.*//;
+    $_[0] =~ s/\\#/#/g;
 
     return;
 }

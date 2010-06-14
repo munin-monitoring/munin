@@ -57,6 +57,15 @@ use_ok('Munin::Common::Config');
 
 	Munin::Common::Config->_strip_comment($s = 'line with a simple comment   ## here is the comment!');
 	is($s, 'line with a simple comment   ');
+
+	Munin::Common::Config->_strip_comment($s = 'line with an escaped \#  ');
+	is($s, 'line with an escaped #  ');
+
+	Munin::Common::Config->_strip_comment($s = 'line with a comment including an escaped hash # escaped \#  ');
+	is($s, 'line with a comment including an escaped hash ');
+
+	Munin::Common::Config->_strip_comment($s = 'line with a comment including two \# \## escaped \#  ');
+	is($s, 'line with a comment including two # #');
 }
 
 
