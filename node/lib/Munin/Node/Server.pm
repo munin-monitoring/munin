@@ -137,7 +137,7 @@ sub process_request
 
     # catch and report any system errors in a clean way.
     eval {
-        $timed_out = !do_with_timeout($config->{'timeout'}, sub {
+        $timed_out = !do_with_timeout($services->{timeout}, sub {
             while (defined (my $line = _net_read($session))) {
                 chomp $line;
                 _process_command_line($session, $line) or last;
