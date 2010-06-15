@@ -167,7 +167,7 @@ sub _process_command_line {
         }
     }
 
-    logger ("DEBUG: Running command \"$_\".") if $config->{DEBUG};
+    logger ("DEBUG: Running command '$_'.") if $config->{DEBUG};
     if (/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
         _list_services($session, lc($1));
     }
@@ -187,7 +187,7 @@ sub _process_command_line {
         _print_service($session, _run_service($1))
     }
     elsif (/^config\s?(\S*)/i) {
-        _print_service($session, _run_service($1, "config"));
+        _print_service($session, _run_service($1, 'config'));
     }
     elsif (/^starttls\s*$/i) {
         eval {
@@ -197,7 +197,7 @@ sub _process_command_line {
             logger($EVAL_ERROR);
             return 0;
         }
-        logger ("DEBUG: Returned from starttls.") if $config->{DEBUG};
+        logger ('DEBUG: Returned from starttls.') if $config->{DEBUG};
     }
     else {
         _net_write($session, "# Unknown command. Try cap, list, nodes, config, fetch, version or quit\n");
@@ -341,9 +341,9 @@ sub _run_service
         return '# Timed out';
     }
 
-    if (@{$res->{stderr}}) {
+    if (my @errors = grep !/^# /, @{$res->{stderr}}) {
         logger(qq{Error output from $service:});
-        logger("\t$_") foreach @{$res->{stderr}};
+        logger("\t$_") foreach @errors;
     }
 
     if ($res->{retval}) {
