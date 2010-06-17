@@ -69,8 +69,9 @@ install-pre: Makefile Makefile.config
 	@$(CHECKUSER)
 	mkdir -p $(LOGDIR)
 	mkdir -p $(STATEDIR)
+	mkdir -p $(SPOOLDIR)
 	mkdir -p $(CONFDIR)
-	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR)
+	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR) $(SPOOLDIR)
 
 install-master-prime: $(INFILES_MASTER) install-pre install-master
 	mkdir -p $(CONFDIR)/templates
@@ -208,6 +209,7 @@ build/%: %.in
              -e 's|@@HTMLDIR@@|$(HTMLDIR)|g'                    \
              -e 's|@@DBDIR@@|$(DBDIR)|g'                        \
              -e 's|@@STATEDIR@@|$(STATEDIR)|g'                  \
+	     -e 's|@@SPOOLDIR@@|$(SPOOLDIR)|g'                  \
              -e 's|@@PERL@@|$(PERL)|g'                          \
              -e 's|@@PERLLIB@@|$(PERLLIB)|g'                    \
              -e 's|@@PYTHON@@|$(PYTHON)|g'                      \
@@ -248,6 +250,7 @@ common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm bu
                   s{(HTMLDIR	\s+=\s).*}{\1q{$(HTMLDIR)};}x;     \
                   s{(DBDIR	\s+=\s).*}{\1q{$(DBDIR)};}x;       \
                   s{(STATEDIR	\s+=\s).*}{\1q{$(STATEDIR)};}x;    \
+		  s{(SPOOLDIR	\s+=\s).*}{\1q{$(SPOOLDIR)};}x;    \
                   s{(PERL	\s+=\s).*}{\1q{$(PERL)};}x;        \
                   s{(PERLLIB	\s+=\s).*}{\1q{$(PERLLIB)};}x;     \
                   s{(PYTHON	\s+=\s).*}{\1q{$(PYTHON)};}x;      \

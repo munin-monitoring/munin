@@ -28,6 +28,7 @@ our $MUNIN_CGIDIR     = '';
 our $MUNIN_CGITMPDIR     = '';
 our $MUNIN_DBDIR      = '';
 our $MUNIN_PLUGSTATE  = ''; 
+our $MUNIN_SPOOLDIR   = '';
 our $MUNIN_MANDIR     = '';
 our $MUNIN_LOGDIR     = "$COMPONENT_ROOT/log/";
 our $MUNIN_STATEDIR   = ''; 
