@@ -5,6 +5,8 @@ package Munin::Node::SpoolWriter;
 use strict;
 use warnings;
 
+use Carp;
+
 use Munin::Common::Defaults;
 use Munin::Node::Logger;
 
@@ -13,10 +15,10 @@ sub new
 {
     my ($class, %args) = @_;
 
-    $args{spooldir} or die "no spooldir provided";
+    $args{spooldir} or croak "no spooldir provided";
 
     opendir my $spooldirhandle, $args{spooldir}
-        or die "Could not open spooldir '$args{spooldir}': $!";
+        or croak "Could not open spooldir '$args{spooldir}': $!";
 
     $args{spooldirhandle} = $spooldirhandle;
 
