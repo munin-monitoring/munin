@@ -21,6 +21,8 @@ use Munin::Node::Utils;
 # the Munin::Node::Service object, used to run plugins, etc
 my $services;
 
+my $spool;
+
 # A set of all services that this node can run.
 my %services;
 
@@ -39,7 +41,10 @@ my $config = Munin::Node::Config->instance();
 sub pre_loop_hook {
     my $self = shift;
     print STDERR "In pre_loop_hook.\n" if $config->{DEBUG};
+
     $services = $config->{services} or die 'no services list';
+    $spool    = $config->{spool};
+
     _load_services();
     $services->prepare_plugin_environment(keys %services);
     _add_services_to_nodes(keys %services);
@@ -189,6 +194,10 @@ sub _process_command_line {
     elsif (/^config\s?(\S*)/i) {
         _print_service($session, _run_service($1, 'config'));
     }
+    elsif (/^spoolfetch (\d+)/ and $spool) {
+        _net_write($session, $spool->fetch($1));
+        _net_write($session, ".\n");
+    }
     elsif (/^starttls\s*$/i) {
         eval {
             $session->{tls_started} = _process_starttls_command($session);
@@ -215,10 +224,11 @@ sub _expect_starttls {
 }
 
 
-sub _negotiate_session_capabilities {
+sub _negotiate_session_capabilities
+{
     my ($session, $server_capabilities) = @_;
 
-    my $node_cap = "multigraph dirtyconfig";
+    my $node_cap = 'multigraph dirtyconfig spool';
 
     # telnet uses a full CRLF line ending.  chomp just removes the \n, so need
     # to strip \r manually.  see ticket #902
