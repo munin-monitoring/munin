@@ -25,9 +25,6 @@ sub new
     # TODO: paranoia check?  except dir doesn't (currently) have to be
     # root-owned.
 
-    # TODO: should get the host and port from munin-node.conf
-    @args{qw( host port )} = ('localhost', 4949);
-
     # TODO: set umask
 
     return bless \%args, $class;
