@@ -14,34 +14,41 @@ use Munin::Node::Logger;
 use Munin::Node::SpoolWriter;
 
 
-sub run
+sub new
 {
-    my ($self, %args) = @_;
+    my ($class, %args) = @_;
 
-    # check arguments before forking, so it's easier to see what's gone wrong
-    my $spoolwriter = Munin::Node::SpoolWriter->new(spooldir => $args{spooldir});
+    $args{spool} = Munin::Node::SpoolWriter->new(spooldir => $args{spooldir});
 
     # don't want to run as root unless absolutely necessary.  but only root
     # can change user
     #
     # FIXME: these will need changing to root/root as and when it starts
     # running plugins
-    my $user  = $< || $Munin::Common::Defaults::MUNIN_PLUGINUSER;
-    my $group = $( || $Munin::Common::Defaults::MUNIN_GROUP;
+    $args{user}  = $< || $Munin::Common::Defaults::MUNIN_PLUGINUSER;
+    $args{group} = $( || $Munin::Common::Defaults::MUNIN_GROUP;
 
-    my $pidfile = "$Munin::Common::Defaults::MUNIN_STATEDIR/munin-sched.pid";
+    # FIXME: should get the host and port from munin-node.conf
+    @args{qw( host port )} = ('localhost', '4949');
 
-    logger("Running spooler as uid = $user, gid = $group");
+    return bless \%args, $class;
+}
 
-    # Child daemonzises, and runs for cover.
-    daemonize($user, $group, $pidfile);
+
+sub run
+{
+    my ($class, %args) = @_;
+
+    my $self = __PACKAGE__->new(%args);
+
+    # Daemonzises, and runs for cover.
+    daemonize($self->{user}, $self->{group}, $self->{pidfile});
 
     open STDERR, '>>', "$Munin::Common::Defaults::MUNIN_LOGDIR/munin-sched.log";
     STDERR->autoflush(1);
     # FIXME: reopen logfile on SIGHUP
 
-    # FIXME: should get the host and port from munin-node.conf
-    @args{qw( host port )} = ('localhost', '4949');
+    logger('Spooler ready');
 
     # ready to actually do stuff!
 
