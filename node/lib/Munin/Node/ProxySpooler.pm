@@ -6,6 +6,7 @@ use strict;
 use warnings;
 
 use Net::Server::Daemonize qw( daemonize );
+use IO::Socket;
 use Carp;
 
 use Munin::Common::Defaults;
@@ -36,7 +37,7 @@ sub run
     daemonize($user, $group, $pidfile);
 
     open STDERR, '>>', "$Munin::Common::Defaults::MUNIN_LOGDIR/munin-sched.log";
-    # FIXME: STDERR should autoflush
+    STDERR->autoflush(1);
     # FIXME: reopen logfile on SIGHUP
 
     # FIXME: should get the host and port from munin-node.conf
