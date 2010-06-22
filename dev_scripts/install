@@ -6,6 +6,7 @@ FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
 cd $BASEDIR
 
 if [ $1 ]; then
+    ./dev_scripts/stop_munin-node
     rm -rf sandbox
     mkdir sandbox
     make clean || exit
