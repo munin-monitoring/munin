@@ -21,6 +21,8 @@ use Munin::Node::Utils;
 # the Munin::Node::Service object, used to run plugins, etc
 my $services;
 
+# may reference a Munin::Node::SpoolReader object, which is used to
+# to provide spooling functionality.
 my $spool;
 
 # A set of all services that this node can run.
@@ -228,7 +230,8 @@ sub _negotiate_session_capabilities
 {
     my ($session, $server_capabilities) = @_;
 
-    my $node_cap = 'multigraph dirtyconfig spool';
+    my $node_cap = 'multigraph dirtyconfig';
+    $node_cap .= ' spool' if $spool;
 
     # telnet uses a full CRLF line ending.  chomp just removes the \n, so need
     # to strip \r manually.  see ticket #902
