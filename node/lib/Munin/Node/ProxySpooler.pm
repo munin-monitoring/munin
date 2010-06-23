@@ -18,6 +18,8 @@ sub new
 {
     my ($class, %args) = @_;
 
+    $args{spooldir} ||= $Munin::Common::Defaults::MUNIN_SPOOLDIR;
+
     $args{spool} = Munin::Node::SpoolWriter->new(spooldir => $args{spooldir});
 
     # don't want to run as root unless absolutely necessary.  but only root
@@ -29,7 +31,8 @@ sub new
     $args{group} = $( || $Munin::Common::Defaults::MUNIN_GROUP;
 
     # FIXME: should get the host and port from munin-node.conf
-    @args{qw( host port )} = ('localhost', '4949');
+    $args{host} ||= 'localhost';
+    $args{port} ||= '4949';
 
     return bless \%args, $class;
 }
@@ -48,10 +51,12 @@ sub run
     STDERR->autoflush(1);
     # FIXME: reopen logfile on SIGHUP
 
-    logger('Spooler ready');
-
     # ready to actually do stuff!
+#    my $intervals = $self->_get_intervals();
+#    $self->_launch_pollers($intervals);
 
+    logger('Spooler going to sleep');
+    # FIXME: may need to respawn pollers if they fall over
     sleep;
 
     logger('Spooler shutting down');
