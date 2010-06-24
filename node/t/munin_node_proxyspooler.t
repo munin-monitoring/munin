@@ -41,32 +41,6 @@ my ($host, $port) = @ENV{qw( MUNIN_HOST MUNIN_PORT )};
 }
 
 
-### SETUP ######################################################################
-
-### _service_interval
-{
-    my @config = (
-        'graph_title CPU usage',
-        'graph_order system user nice idle iowait irq softirq',
-        'graph_args --base 1000 -r --lower-limit 0 --upper-limit 200',
-        'system.label system',
-    );
-    is(Munin::Node::ProxySpooler::_service_interval(@config), 300, 'Default interval is 5 minutes');
-}
-{
-    my @config = (
-        'graph_title CPU usage',
-        'graph_order system user nice idle iowait irq softirq',
-        'graph_args --base 1000 -r --lower-limit 0 --upper-limit 200',
-
-        'update_rate 86400',
-
-        'system.label system',
-    );
-    is(Munin::Node::ProxySpooler::_service_interval(@config), 86400, 'Can override the default interval');
-}
-
-
 ### NODE INTERACTION ###########################################################
 
 ### _open_node_connection
@@ -167,6 +141,30 @@ EOT
 
 
 ### SETUP ######################################################################
+
+### _service_interval
+{
+    my @config = (
+        'graph_title CPU usage',
+        'graph_order system user nice idle iowait irq softirq',
+        'graph_args --base 1000 -r --lower-limit 0 --upper-limit 200',
+        'system.label system',
+    );
+    is(Munin::Node::ProxySpooler::_service_interval(@config), 300, 'Default interval is 5 minutes');
+}
+{
+    my @config = (
+        'graph_title CPU usage',
+        'graph_order system user nice idle iowait irq softirq',
+        'graph_args --base 1000 -r --lower-limit 0 --upper-limit 200',
+
+        'update_rate 86400',
+
+        'system.label system',
+    );
+    is(Munin::Node::ProxySpooler::_service_interval(@config), 86400, 'Can override the default interval');
+}
+
 
 ### _get_node_list
 SKIP: {
