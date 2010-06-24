@@ -69,7 +69,24 @@ sub run
 # queries the node for a list of services, and works out how often each one
 # should be checked
 sub _get_intervals
-{}
+{
+    my ($self) = @_;
+
+    my %intervals;
+    
+    my @nodes    = $self->_get_node_list            or die "No nodes\n";
+    my @services = $self->_get_service_list(@nodes) or die "No services\n";
+
+    foreach my $service (@services) {
+        logger("Fetching interval for service '$service'");
+        $intervals{$service} = $self->_service_interval(
+            $self->_talk_to_node("config $service", 'multiline')
+        );
+        logger("Interval is $intervals{$service} seconds");
+    }
+
+    return \%intervals;
+}
 
 
 # gets a list of all the nodes served by that node

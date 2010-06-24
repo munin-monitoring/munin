@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 19;
+use Test::More tests => 21;
 use Test::Differences;
 use Test::Deep;
 
@@ -207,4 +207,22 @@ SKIP: {
     is(scalar(@services), 0, 'No services for an unknown node') or next;
 }
 
+
+### _get_intervals
+SKIP: {
+    skip 'Set MUNIN_HOST and MUNIN_PORT environment variables to the hostname and port of a node to test against', 2
+        unless $host and $port;
+
+    my $spooler = Munin::Node::ProxySpooler->new(
+        host => $host,
+        port => $port,
+    ) or next;
+
+    $spooler->_open_node_connection;
+
+    my $intervals = $spooler->_get_intervals or next;
+
+    cmp_deeply([ keys   %$intervals ], array_each(re('^[-\w.:]+$')), 'all the keys look like services');
+    cmp_deeply([ values %$intervals ], array_each(re('^\d+$')),      'all the values look like times');
+}
 
