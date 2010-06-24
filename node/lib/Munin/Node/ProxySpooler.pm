@@ -53,6 +53,8 @@ sub run
     open STDERR, '>>', "$Munin::Common::Defaults::MUNIN_LOGDIR/munin-sched.log";
     STDERR->autoflush(1);
     # FIXME: reopen logfile on SIGHUP
+    
+    logger('Spooler starting up');
 
     # ready to actually do stuff!
     $self->_open_node_connection;
