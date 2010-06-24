@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 15;
+use Test::More tests => 19;
 use Test::Differences;
 use Test::Deep;
 
@@ -164,4 +164,51 @@ EOT
         'read a multiline response from the socket, but not the . that marks the end'
     );
 }
+
+
+### SETUP ######################################################################
+
+### _get_node_list
+SKIP: {
+    skip 'Set MUNIN_HOST and MUNIN_PORT environment variables to the hostname and port of a node to test against', 1
+        unless $host and $port;
+
+    my $spooler = Munin::Node::ProxySpooler->new(
+        host => $host,
+        port => $port,
+    ) or next;
+
+    $spooler->_open_node_connection;
+
+    cmp_deeply([ $spooler->_get_node_list ], array_each(re('^[-\w.:]+$')), 'all the node names look reasonable');
+}
+
+
+### _get_service_list
+SKIP: {
+    skip 'Set MUNIN_HOST and MUNIN_PORT environment variables to the hostname and port of a node to test against', 3
+        unless $host and $port;
+
+    my $spooler = Munin::Node::ProxySpooler->new(
+        host => $host,
+        port => $port,
+    ) or next;
+
+    $spooler->_open_node_connection;
+
+    my @nodes = $spooler->_get_node_list;
+
+    my $service_list = $spooler->_get_service_list($nodes[0]);
+    ok($service_list, 'Got a list of services from the node') or next;
+
+    my @services = split / /, $service_list;
+
+    cmp_deeply(\@services, array_each(re('^[-\w.:]+$')), 'all the services look reasonable');
+
+    ###############
+
+    $service_list = $spooler->_get_service_list('fnord.example.com');
+    ok(!$service_list, 'No services for an unknown node') or next;
+}
+
 

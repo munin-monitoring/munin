@@ -66,6 +66,39 @@ sub run
 
 ### SETUP ######################################################################
 
+# queries the node for a list of services, and works out how often each one
+# should be checked
+sub _get_intervals
+{}
+
+
+# gets a list of all the nodes served by that node
+sub _get_node_list { return (shift)->_talk_to_node('nodes', 'multiline'); }
+
+
+# gets a list of every service on every node
+sub _get_service_list
+{
+    my ($self, @nodes) = @_; 
+    my @services;
+
+    foreach my $node (@nodes) {
+        logger("fetching services for node $node");
+        my $service_list = $self->_talk_to_node("list $node");
+
+        if ($service_list) {
+            logger("got services $service_list");
+            push @services, split / /, $service_list;
+        }   
+        else {
+            logger("No services for $node");
+        }   
+    }   
+
+    return @services;
+}
+
+
 # takes the config response for the service, and returns the correct interval
 sub _service_interval { /^update_rate (\d+)/ && return $1 foreach @_; return 300; }
 
