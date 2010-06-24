@@ -74,7 +74,7 @@ SKIP: {
 
     $spooler->_open_node_connection;
 
-    eval { my $scalar = $spooler->_talk_to_node('fnord', 'multiline') };
+    eval { my $scalar = $spooler->_talk_to_node('nodes') };
     like($@, qr{scalar}, 'error if expecting a multiline response, but called in a scalar context');
 }
 SKIP: {

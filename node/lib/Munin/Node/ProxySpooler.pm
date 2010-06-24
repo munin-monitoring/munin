@@ -73,14 +73,14 @@ sub _get_intervals
     my ($self) = @_;
 
     my %intervals;
-    
+
     my @nodes    = $self->_get_node_list            or die "No nodes\n";
     my @services = $self->_get_service_list(@nodes) or die "No services\n";
 
     foreach my $service (@services) {
         logger("Fetching interval for service '$service'");
         $intervals{$service} = $self->_service_interval(
-            $self->_talk_to_node("config $service", 'multiline')
+            $self->_talk_to_node("config $service")
         );
         logger("Interval is $intervals{$service} seconds");
     }
@@ -90,13 +90,13 @@ sub _get_intervals
 
 
 # gets a list of all the nodes served by that node
-sub _get_node_list { return (shift)->_talk_to_node('nodes', 'multiline'); }
+sub _get_node_list { return (shift)->_talk_to_node('nodes'); }
 
 
 # gets a list of every service on every node
 sub _get_service_list
 {
-    my ($self, @nodes) = @_; 
+    my ($self, @nodes) = @_;
     my @services;
 
     foreach my $node (@nodes) {
@@ -106,11 +106,11 @@ sub _get_service_list
         if ($service_list) {
             logger("got services $service_list");
             push @services, split / /, $service_list;
-        }   
+        }
         else {
             logger("No services for $node");
-        }   
-    }   
+        }
+    }
 
     return @services;
 }
@@ -155,14 +155,12 @@ sub _open_node_connection
 }
 
 
-# print $command to the node on $socket, and return the response.  if
-# $multiline is true, handle multiline responses
-#
-# FIXME:  work out whether it should be multiline based based on the value of
-# $command
+# prints $command to the node on $socket, and returns the response.
 sub _talk_to_node
 {
-    my ($self, $command, $multiline) = @_;
+    my ($self, $command) = @_;
+
+    my $multiline = ($command =~ m{^(?:node|config|fetch)});
 
     croak "multiline means scalar context" if $multiline and not wantarray;
 
