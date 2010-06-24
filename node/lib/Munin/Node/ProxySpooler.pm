@@ -52,8 +52,10 @@ sub run
     # FIXME: reopen logfile on SIGHUP
 
     # ready to actually do stuff!
-#    my $intervals = $self->_get_intervals();
-#    $self->_launch_pollers($intervals);
+    $self->_open_node_connection;
+
+    my $intervals = $self->_get_intervals();
+    $self->_launch_pollers($intervals);
 
     logger('Spooler going to sleep');
     # FIXME: may need to respawn pollers if they fall over
@@ -118,6 +120,18 @@ sub _get_service_list
 
 # takes the config response for the service, and returns the correct interval
 sub _service_interval { /^update_rate (\d+)/ && return $1 foreach @_; return 300; }
+
+
+#### GATHER DATA ###############################################################
+
+# forks off a child for each process on the node, and sets them to work.
+sub _launch_pollers
+{}
+
+
+# connect to the node, fetch data, write it out to the spooldir.
+sub _fetch_service
+{}
 
 
 ### NODE INTERACTION ###########################################################
