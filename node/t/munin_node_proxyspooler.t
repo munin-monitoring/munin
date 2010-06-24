@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 12;
+use Test::More tests => 15;
 use Test::Differences;
 use Test::Deep;
 
@@ -16,6 +16,10 @@ use Munin::Node::ProxySpooler;
 no warnings;
 local *Munin::Node::ProxySpooler::logger = sub {};
 use warnings;
+
+
+# the hostname and port of a node to test against.
+my ($host, $port) = @ENV{qw( MUNIN_HOST MUNIN_PORT )};
 
 
 ### new
@@ -37,7 +41,7 @@ use warnings;
 }
 
 
-################################################################################
+### SETUP ######################################################################
 
 ### _service_interval
 {
@@ -63,7 +67,58 @@ use warnings;
 }
 
 
-################################################################################
+### NODE INTERACTION ###########################################################
+
+### _open_node_connection
+SKIP: {
+    skip 'Set MUNIN_HOST and MUNIN_PORT environment variables to the hostname and port of a node to test against', 1
+        unless $host and $port;
+
+    my $spooler = Munin::Node::ProxySpooler->new(
+        host => $host,
+        port => $port,
+    ) or next;
+
+    $spooler->_open_node_connection;
+
+    my $socket = $spooler->{socket};
+
+    print $socket "version\n";
+    like(scalar(<$socket>), qr{version}, 'was able to read the version string');
+}
+
+
+### _talk_to_node
+SKIP: {
+    skip 'Set MUNIN_HOST and MUNIN_PORT environment variables to the hostname and port of a node to test against', 1
+        unless $host and $port;
+
+    my $spooler = Munin::Node::ProxySpooler->new(
+        host => $host,
+        port => $port,
+    ) or next;
+
+    $spooler->_open_node_connection;
+
+    eval { my $scalar = $spooler->_talk_to_node('fnord', 'multiline') };
+    like($@, qr{scalar}, 'error if expecting a multiline response, but called in a scalar context');
+}
+SKIP: {
+    skip 'Set MUNIN_HOST and MUNIN_PORT environment variables to the hostname and port of a node to test against', 1
+        unless $host and $port;
+
+    my $spooler = Munin::Node::ProxySpooler->new(
+        host => $host,
+        port => $port,
+    ) or next;
+
+    $spooler->_open_node_connection;
+
+    my $socket = $spooler->{socket};
+
+    like($spooler->_talk_to_node('version'), qr{version}, 'was able to read the version string');
+}
+
 
 ### _write_line
 {
