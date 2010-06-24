@@ -196,17 +196,15 @@ SKIP: {
 
     my @nodes = $spooler->_get_node_list;
 
-    my $service_list = $spooler->_get_service_list($nodes[0]);
-    ok($service_list, 'Got a list of services from the node') or next;
-
-    my @services = split / /, $service_list;
+    my @services = $spooler->_get_service_list($nodes[0]);
+    ok(\@services, 'Got a list of services from the node') or next;
 
     cmp_deeply(\@services, array_each(re('^[-\w.:]+$')), 'all the services look reasonable');
 
     ###############
 
-    $service_list = $spooler->_get_service_list('fnord.example.com');
-    ok(!$service_list, 'No services for an unknown node') or next;
+    @services = $spooler->_get_service_list('fnord.example.com');
+    is(scalar(@services), 0, 'No services for an unknown node') or next;
 }
 
 
