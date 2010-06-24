@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 10;
+use Test::More tests => 12;
 use Test::Differences;
 use Test::Deep;
 
@@ -36,6 +36,34 @@ use warnings;
     is($spooler->{spool}->{spooldir}, $spooldir, 'SpoolWriter object is using the spooldir');
 }
 
+
+################################################################################
+
+### _service_interval
+{
+    my @config = (
+        'graph_title CPU usage',
+        'graph_order system user nice idle iowait irq softirq',
+        'graph_args --base 1000 -r --lower-limit 0 --upper-limit 200',
+        'system.label system',
+    );
+    is(Munin::Node::ProxySpooler::_service_interval(@config), 300, 'Default interval is 5 minutes');
+}
+{
+    my @config = (
+        'graph_title CPU usage',
+        'graph_order system user nice idle iowait irq softirq',
+        'graph_args --base 1000 -r --lower-limit 0 --upper-limit 200',
+
+        'update_rate 86400',
+
+        'system.label system',
+    );
+    is(Munin::Node::ProxySpooler::_service_interval(@config), 86400, 'Can override the default interval');
+}
+
+
+################################################################################
 
 ### _write_line
 {

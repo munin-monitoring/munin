@@ -64,6 +64,12 @@ sub run
 }
 
 
+### SETUP ######################################################################
+
+# takes the config response for the service, and returns the correct interval
+sub _service_interval { /^update_rate (\d+)/ && return $1 foreach @_; return 300; }
+
+
 ### NODE INTERACTION ###########################################################
 
 # write a single line to the node
