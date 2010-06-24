@@ -33,11 +33,12 @@ use Munin::Common::Defaults;
 use Munin::Node::Config;
 use Munin::Node::ProxySpooler;
 
-
 my $servicedir;
 my $sconfdir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
 my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
 my $spooldir = $Munin::Common::Defaults::MUNIN_SPOOLDIR;
+
+my ($host, $port);
 
 my $DEBUG    = 0;
 my $paranoia = 0;
@@ -66,18 +67,15 @@ sub main
     $paranoia = $config->{paranoia} if defined $config->{paranoia};
 
     $config->reinitialize({
-        %$config,
-
-        sconfdir => $sconfdir,
-        conffile => $conffile,
-
         DEBUG    => $DEBUG,
-
         paranoia => $paranoia,
     });
 
     Munin::Node::ProxySpooler->run(
         spooldir     => $spooldir,
+        host         => $host,
+        port         => $port,
+
         syslog_ident => 'munin-sched',
         conf_file    => $conffile,
         pid_file     => "$Munin::Common::Defaults::MUNIN_STATEDIR/munin-sched.pid"
@@ -92,12 +90,20 @@ sub parse_args
     my @ORIG_ARGV  = @ARGV;
 
     print_usage_and_exit() unless GetOptions(
+        'host=s'       => \$host,
+        'port=i'       => \$port,
+
         "config=s"     => \$conffile,
+
         "debug!"       => \$DEBUG,
         "paranoia!"    => \$paranoia,
+
         "version"      => \&print_version_and_exit,
         "help"         => \&print_usage_and_exit,
     );
+
+    ($host) = ($host =~ m{([-\w.]+)});
+    ($port) = ($port =~ m{(\d+)});
 
     # Reset ARGV (for HUPing)
     @ARGV = @ORIG_ARGV;
