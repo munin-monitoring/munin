@@ -13,6 +13,9 @@ use Munin::Common::Defaults;
 use Munin::Node::Logger;
 use Munin::Node::SpoolWriter;
 
+use Munin::Node::Config;
+my $config = Munin::Node::Config->instance;
+
 
 sub new
 {
@@ -80,11 +83,11 @@ sub _get_intervals
     my @services = $self->_get_service_list(@nodes) or die "No services\n";
 
     foreach my $service (@services) {
-        logger("Fetching interval for service '$service'");
+        logger("Fetching interval for service '$service'") if $config->{DEBUG};
         $intervals{$service} = $self->_service_interval(
             $self->_talk_to_node("config $service")
         );
-        logger("Interval is $intervals{$service} seconds");
+        logger("Interval is $intervals{$service} seconds") if $config->{DEBUG};
     }
 
     return \%intervals;
@@ -102,15 +105,15 @@ sub _get_service_list
     my @services;
 
     foreach my $node (@nodes) {
-        logger("fetching services for node $node");
+        logger("fetching services for node $node") if $config->{DEBUG};
         my $service_list = $self->_talk_to_node("list $node");
 
         if ($service_list) {
-            logger("got services $service_list");
+            logger("got services $service_list") if $config->{DEBUG};
             push @services, split / /, $service_list;
         }
         else {
-            logger("No services for $node");
+            logger("No services for $node") if $config->{DEBUG};
         }
     }
 
@@ -141,7 +144,8 @@ sub _open_node_connection
 {
     my ($self) = @_;
 
-    logger("Opening connection to $self->{host}:$self->{port}");
+    logger("Opening connection to $self->{host}:$self->{port}")
+        if $config->{DEBUG};
 
     my $socket = IO::Socket::INET->new(
         PeerAddress => $self->{host},
@@ -192,7 +196,7 @@ sub _write_line
 {
     my ($self, $command) = @_;
 
-    logger("DEBUG: > $command");
+    logger("DEBUG: > $command") if $config->{DEBUG};
     $self->{socket}->print($command, "\n") or die "Write error to socket: $!\n";
 
     return;
@@ -207,7 +211,7 @@ sub _read_line
     my $line = $self->{socket}->getline;
     defined($line) or die "Read error from socket: $!\n";
     chomp $line;
-    logger("DEBUG: < $line");
+    logger("DEBUG: < $line") if $config->{DEBUG};
 
     return $line;
 }

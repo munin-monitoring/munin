@@ -12,12 +12,6 @@ use POSIX ();
 use Munin::Node::ProxySpooler;
 
 
-# till i fix up the debug output
-no warnings;
-local *Munin::Node::ProxySpooler::logger = sub {};
-use warnings;
-
-
 # the hostname and port of a node to test against.
 my ($host, $port) = @ENV{qw( MUNIN_HOST MUNIN_PORT )};
 
