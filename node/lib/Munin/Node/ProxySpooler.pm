@@ -64,6 +64,47 @@ sub run
 }
 
 
+### NODE INTERACTION ###########################################################
+
+# write a single line to the node
+sub _write_line
+{
+    my ($self, $command) = @_;
+
+    logger("DEBUG: > $command");
+    $self->{socket}->print($command, "\n") or die "Write error to socket: $!\n";
+
+    return;
+}
+
+
+# read a single line from the node
+sub _read_line
+{
+    my ($self) = @_;
+
+    my $line = $self->{socket}->getline;
+    defined($line) or die "Read error from socket: $!\n";
+    chomp $line;
+    logger("DEBUG: < $line");
+
+    return $line;
+}
+
+
+# read a multiline response from the node  (ie. up to but not including the
+# '.' line at the end.
+sub _read_multiline
+{
+    my ($self) = @_;
+    my ($line, @response);
+
+    push @response, $line until ($line = $self->_read_line) eq '.';
+
+    return @response;
+}
+
+
 1;
 
 __END__
