@@ -102,8 +102,8 @@ sub parse_args
         "help"         => \&print_usage_and_exit,
     );
 
-    ($host) = ($host =~ m{([-\w.]+)});
-    ($port) = ($port =~ m{(\d+)});
+    ($host) = ($host =~ m{([-\w.]+)}) if $host;
+    ($port) = ($port =~ m{(\d+)})     if $port;
 
     # Reset ARGV (for HUPing)
     @ARGV = @ORIG_ARGV;
