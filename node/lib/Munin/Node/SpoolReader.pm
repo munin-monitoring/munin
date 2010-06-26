@@ -7,6 +7,8 @@ use warnings;
 
 use Carp;
 
+use IO::File;
+
 use Munin::Common::Defaults;
 use Munin::Node::Logger;
 
@@ -33,9 +35,70 @@ sub new
 sub fetch
 {
     my ($self, $timestamp) = @_;
-    return;
+
+    my $return_str = "";
+
+    my @plugins = $self->_get_spooled_plugins();
+    foreach my $plugin (@plugins) {
+        $return_str .= $self->_cat_multigraph_file($plugin, $timestamp);
+    }
+
+    return $return_str;
 }
 
+sub _cat_multigraph_file
+{
+    my ($self, $plugin, $timestamp) = @_;
+
+    my $return_str = "";
+
+    my $fh_data = IO::File->new($self->{spooldir} . "/munin-daemon.$plugin.data");
+
+    my ($last_epoch, $epoch) = (0, 0);
+    while(my $line = <$fh_data>) {
+        # Ignore blank lines
+        next if ($line =~ m/^\s+$/);
+
+        # Parse the line for the current epoch
+        if ($line =~ m/\w+ (\d+):/) {
+            $epoch = $1;
+        }
+
+        # Only continue if the line epoch is later than the asked one
+        next unless ($epoch > $timestamp);
+
+        # emit multigraph line on epoch changes
+        if ($epoch != $last_epoch) {
+            $last_epoch = $epoch;
+
+            # Emit multigraph header ...
+            $return_str .= "multigraph $plugin\n";
+            # ... and its config
+            $return_str .= cat_file($self->{spooldir} . "/munin-daemon.$plugin.config");
+        }
+
+        # Sending value
+        $return_str .= $line;
+    }
+
+    return $return_str;
+}
+
+sub _get_spooled_plugins
+{
+    my ($self) = @_;
+
+    my @plugins;
+    opendir(SPOOLDIR, $self->{spooldir}) or die "can't opendir $self->{spooldir}: $!";
+    while(my $filename = readdir(SPOOLDIR)) {
+        print STDERR $filename if $self->{verbose};
+            next unless $filename =~ m/^munin-daemon\.(\w+)\.data$/;
+            push @plugins, $1;
+    }
+    closedir(SPOOLDIR);
+
+    return @plugins;
+}
 
 1;
 

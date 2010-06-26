@@ -36,17 +36,36 @@ sub new
 sub write
 {
     my ($self, $timestamp, $service, $data) = @_;
+
+    # open lazily
+    my ($fh_config, $fh_data);
+
+    foreach my $line (@$data) {
+	# Ignore blank lines and "."-ones.
+	next if (! defined($line) || $line eq "" || $line eq ".");
+
+	my $fh;
+        # Check it is a data line
+	if ($line !~ m/(\w+)\.value ([0-9]+:)?([0-9.]+)/) {
+		# It's a config line, opening the config file
+		$fh = $fh_config ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.config", "w"); 
+	} else {
+		$fh = $fh_data ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.data", "a");
+	}
+
+	print $fh $line;
+    }
+
     return;
 }
 
-
 # removes content from the spooldir older than $timestamp
+# TODO - For now, SpoolReader just parses the old thing. No need to garbage.
 sub cleanup
 {
     my ($self, $timestamp) = @_;
     return;
 }
-
 
 1;
 
