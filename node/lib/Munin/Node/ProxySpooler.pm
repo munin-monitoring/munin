@@ -184,7 +184,7 @@ sub _talk_to_node
 {
     my ($self, $command) = @_;
 
-    my $multiline = ($command =~ m{^(?:node|config|fetch)});
+    my $multiline = ($command =~ m{^(?:nodes|config|fetch)});
 
     croak "multiline means scalar context" if $multiline and not wantarray;
 
