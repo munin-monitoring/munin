@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 22;
+use Test::More tests => 24;
 use Test::Differences;
 use Test::Deep;
 
@@ -223,4 +223,46 @@ SKIP: {
     cmp_deeply([ keys   %$intervals ], array_each(re('^[-\w.:]+$')), 'all the keys look like services');
     cmp_deeply([ values %$intervals ], array_each(re('^\d+$')),      'all the values look like times');
 }
+
+
+### GATHER DATA ################################################################
+
+### _fetch_service
+{
+    my @config = (
+        'graph_title Load average',
+        'graph_category system',
+        'load.label load',
+    );
+    my @fetch = (
+        'load.value 0.25',
+    );
+
+    no warnings;
+    local *Munin::Node::ProxySpooler::_open_node_connection = sub {};
+    local *Munin::Node::ProxySpooler::_close_node_connection = sub {};
+
+    local *Munin::Node::ProxySpooler::_talk_to_node = sub {
+        return $_[1] eq 'config normal' ? @config
+             : $_[1] eq 'fetch normal'  ? @fetch
+             : $_[1] eq 'config dirty'  ? (@config, @fetch)
+             : $_[1] eq 'fetch dirty'   ? ('no need to fetch a dirty plugin')
+             : die "unknown command $_[1]\n";
+    };
+    use warnings;
+
+    {
+        my $spooler = Munin::Node::ProxySpooler->new() or next;
+
+        my @response = $spooler->_fetch_service('normal');
+        eq_or_diff(\@response, [ @config, @fetch ], 'fetching normal service');
+    }
+    {
+        my $spooler = Munin::Node::ProxySpooler->new() or next;
+
+        my @response = $spooler->_fetch_service('dirty');
+        eq_or_diff(\@response, [ @config, @fetch ], 'fetching dirty service');
+    }
+}
+
 

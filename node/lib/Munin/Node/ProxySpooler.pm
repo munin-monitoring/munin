@@ -7,6 +7,7 @@ use warnings;
 
 use Net::Server::Daemonize qw( daemonize );
 use IO::Socket;
+use List::MoreUtils qw( any );
 use Carp;
 
 use Munin::Common::Defaults;
@@ -136,7 +137,19 @@ sub _launch_pollers
 
 # connect to the node, fetch data, write it out to the spooldir.
 sub _fetch_service
-{}
+{
+    my ($self, $service) = @_;
+
+    $self->_open_node_connection;
+
+    my @config = $self->_talk_to_node("config $service");
+    push @config, $self->_talk_to_node("fetch $service")
+        unless any {/\.value /} @config;
+
+    $self->_close_node_connection;
+
+    return @config;
+}
 
 
 ### NODE INTERACTION ###########################################################
