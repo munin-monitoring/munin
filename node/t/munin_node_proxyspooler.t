@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 21;
+use Test::More tests => 22;
 use Test::Differences;
 use Test::Deep;
 
@@ -38,6 +38,7 @@ my ($host, $port) = @ENV{qw( MUNIN_HOST MUNIN_PORT )};
 ### NODE INTERACTION ###########################################################
 
 ### _open_node_connection
+### _close_node_connection
 SKIP: {
     skip 'Set MUNIN_HOST and MUNIN_PORT environment variables to the hostname and port of a node to test against', 1
         unless $host and $port;
@@ -53,6 +54,9 @@ SKIP: {
 
     print $socket "version\n";
     like(scalar(<$socket>), qr{version}, 'was able to read the version string');
+
+    $spooler->_close_node_connection;
+    ok(! exists($spooler->{socket}), 'Socket was deleted');
 }
 
 

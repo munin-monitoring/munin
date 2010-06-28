@@ -53,7 +53,7 @@ sub run
     open STDERR, '>>', "$Munin::Common::Defaults::MUNIN_LOGDIR/munin-sched.log";
     STDERR->autoflush(1);
     # FIXME: reopen logfile on SIGHUP
-    
+
     logger('Spooler starting up');
 
     # ready to actually do stuff!
@@ -173,6 +173,10 @@ sub _open_node_connection
 
     return;
 }
+
+
+# closes the socket, and deletes it from the instance hash.
+sub _close_node_connection { (delete $_[0]->{socket})->close; }
 
 
 # prints $command to the node on $socket, and returns the response.
