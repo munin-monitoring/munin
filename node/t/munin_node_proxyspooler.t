@@ -40,7 +40,7 @@ my ($host, $port) = @ENV{qw( MUNIN_HOST MUNIN_PORT )};
 ### _open_node_connection
 ### _close_node_connection
 SKIP: {
-    skip 'Set MUNIN_HOST and MUNIN_PORT environment variables to the hostname and port of a node to test against', 1
+    skip 'Set MUNIN_HOST and MUNIN_PORT environment variables to the hostname and port of a node to test against', 2
         unless $host and $port;
 
     my $spooler = Munin::Node::ProxySpooler->new(
