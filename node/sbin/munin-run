@@ -1,6 +1,6 @@
 #!/usr/bin/perl -T
 # -*- perl -*-
-
+#
 # Copyright (C) 2004-2009
 #
 # This program is free software; you can redistribute it and/or
@@ -177,6 +177,12 @@ munin-run - A program to run Munin plugins from the command line
 
 munin-run [options] <plugin> [ config | autoconf | snmpconf | suggest ]
 
+=head1 DESCRIPTION
+
+munin-run is a script to run Munin plugins from the command-line.
+It's useful when debugging plugins, as they are run in the same conditions
+as they are under munin-node.
+
 =head1 OPTIONS
 
 =over 5
@@ -221,12 +227,6 @@ that plugins may enable debugging.  [disabled]
 Show version information.
 
 =back
-
-=head1 DESCRIPTION
-
-munin-run is a script to run Munin plugins from the command-line.
-It's useful when debugging plugins, as they are run in the same conditions
-as they are under munin-node.
 
 =head1 FILES
 

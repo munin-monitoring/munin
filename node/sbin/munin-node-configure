@@ -17,8 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Program to suggest what plugins to use and not
-#
 
 use strict;
 use warnings;
@@ -461,6 +459,20 @@ munin-node-configure - View and modify which plugins are enabled.
 
 munin-node-configure [options]
 
+=head1 DESCRIPTION
+
+munin-node-configure is a script to show which plugins are currently enabled
+on the current node.  It can also suggest changes to this list.
+
+By default this program shows which plugins are activated on the system.
+
+If you specify C<--suggest>, it will present a table of plugins that will
+probably work (according to the plugins' autoconf command).
+
+If you specify C<--shell>, shell commands to install those same plugins
+will be printed. These can be reviewed or piped directly into a shell to
+install the plugins.
+
 =head1 OPTIONS
 
 =over 5
@@ -546,20 +558,6 @@ Set SNMP community string to use when probing. Default is "public".
 Set SNMP port. Default is "161".
 
 =back
-
-=head1 DESCRIPTION
-
-munin-node-configure is a script to show which plugins are currently enabled
-on the current node.  It can also suggest changes to this list.
-
-By default this program shows which plugins are activated on the system.
-
-If you specify --suggest, it will present a table of plugins that will
-probably work (according to the plugins' autoconf command).
-
-If you specify --shell, shell commands to install those same plugins
-will be printed. These can be reviewed or piped directly into a shell to
-install the plugins.
 
 =head1 FILES
 
