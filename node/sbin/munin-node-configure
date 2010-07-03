@@ -461,25 +461,29 @@ munin-node-configure [options]
 
 =head1 DESCRIPTION
 
-munin-node-configure is a script to show which plugins are currently enabled
-on the current node.  It can also suggest changes to this list.
+B<munin-node-configure> is reports which plugins are enabled on the current
+node, and suggest changes to this list.
 
 By default this program shows which plugins are activated on the system.
 
 If you specify C<--suggest>, it will present a table of plugins that will
 probably work (according to the plugins' autoconf command).
 
-If you specify C<--shell>, shell commands to install those same plugins
-will be printed. These can be reviewed or piped directly into a shell to
-install the plugins.
+If you specify C<--snmp>, followed by a list of hosts, it will present a table
+of SNMP plugins that they support.
+
+If you additionally specify C<--shell>, shell commands to install those same
+plugins will be printed. These can be reviewed or piped directly into a shell
+to install the plugins.
+
 
 =head1 OPTIONS
 
-=over 5
+=over 4
 
 =item B<< --help >>
 
-View this help page
+Show this help page
 
 =item B<< --version >>
 
@@ -487,9 +491,8 @@ Show version information
 
 =item B<< --debug >>
 
-Print debug information (very verbose).  All debugging output is
-printed on STDOUT but each line is prefixed with '#'.  Only errors are
-printed on STDERR.
+Print debug information (very verbose).  All debugging output is printed on
+STDOUT but each line is prefixed with '#'.  Only errors are printed on STDERR.
 
 =item B<< --pidebug >>
 
