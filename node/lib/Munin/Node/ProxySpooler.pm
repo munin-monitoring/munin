@@ -61,13 +61,26 @@ sub run
     $self->_open_node_connection;
 
     my $intervals = $self->_get_intervals();
-    $self->_launch_pollers($intervals);
+    my $pollers   = $self->_launch_pollers($intervals);
 
     $self->_close_node_connection;
 
     logger('Spooler going to sleep');
-    # FIXME: may need to respawn pollers if they fall over
-    sleep;
+
+    # Reap any dead pollers
+    while (my $deceased = wait) {
+        if ($deceased < 0) {
+            logger("wait() error: $!");
+            last if $!{ECHILD};  # all the children are dead!
+        }
+
+        my $service = delete $pollers->{$deceased};
+
+        my $exit   = ($? >> 8);
+        my $signal = ($? & 127);
+        logger("Poller $deceased ($service) exited with $exit/$signal");
+        # FIXME: probably want to respawn pollers if they fall over
+    }
 
     logger('Spooler shutting down');
     exit 0;
