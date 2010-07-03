@@ -491,13 +491,13 @@ Show version information
 
 =item B<< --debug >>
 
-Print debug information (very verbose).  All debugging output is printed on
-STDOUT but each line is prefixed with '#'.  Only errors are printed on STDERR.
+Print debug information on the operations of munin-node-configure (very
+verbose).  All debugging output is sent to STDOUT, prefixed with '#'.  Only
+errors go to STDERR.
 
 =item B<< --pidebug >>
 
-Plugin debug.  Sets the environment variable MUNIN_DEBUG to 1 so that plugins
-may enable debugging.
+Informs plugins that they should enable debugging.
 
 =item B<< --config <file> >>
 
@@ -517,7 +517,9 @@ Override plugin lib [@@LIBDIR@@/plugins/]
 
 =item B<< --families <family,...> >>
 
-Override families (auto, manual, contrib) [auto]
+Override families (auto, manual, contrib, snmpauto).  When listing installed
+plugins, the default families are auto, manual and contrib.  Only auto plugins
+are checked for plugins.  SNMP probing is only performed on snmpauto plugins.
 
 =item B<< --suggest >>
 
