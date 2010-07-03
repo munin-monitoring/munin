@@ -5,9 +5,10 @@ package Munin::Node::ProxySpooler;
 use strict;
 use warnings;
 
-use Net::Server::Daemonize qw( daemonize );
+use Net::Server::Daemonize qw( daemonize safe_fork );
 use IO::Socket;
 use List::MoreUtils qw( any );
+use Time::HiRes qw( usleep );
 use Carp;
 
 use Munin::Common::Defaults;
@@ -147,7 +148,43 @@ sub _service_interval { /^update_rate (\d+)/ && return $1 foreach @_; return 300
 
 # forks off a child for each process on the node, and sets them to work.
 sub _launch_pollers
-{}
+{
+    my ($self, $intervals) = @_;
+
+    my %pollers;
+
+    while (my ($service, $interval) = each %$intervals) {
+        logger("Launching poller for '$service' with an interval of ${interval}s")
+            if $config->{DEBUG};
+
+        my $poller_pid = $self->_launch_single_poller($service, $interval);
+        $pollers{$poller_pid} = $service;
+
+        logger("Poller running as pid $poller_pid") if $config->{DEBUG};
+    }
+
+    return \%pollers;
+}
+
+
+sub _launch_single_poller
+{
+    my ($self, $service, $interval) = @_;
+
+    if (my $poller_pid = safe_fork()) {
+        # report back to parent
+        return $poller_pid;
+    }
+
+    # do childlike things, and never stop.
+    $0 .= " [$service]";
+
+    # just pretend to do work for the time being.
+    usleep(rand(20e6));
+
+    exit 0;
+}
+
 
 
 # connect to the node, fetch data, write it out to the spooldir.
