@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 24;
+use Test::More tests => 29;
 use Test::Differences;
 use Test::Deep;
 
@@ -237,6 +237,15 @@ SKIP: {
     my @fetch = (
         'load.value 0.25',
     );
+    my @timeout = (
+        '# Timed out',
+    );
+    my @unknown = (
+        '# Unknown service',
+    );
+    my @badexit = (
+        '# Bad exit',
+    );
 
     no warnings;
     local *Munin::Node::ProxySpooler::_open_node_connection = sub {};
@@ -245,8 +254,25 @@ SKIP: {
     local *Munin::Node::ProxySpooler::_talk_to_node = sub {
         return $_[1] eq 'config normal' ? @config
              : $_[1] eq 'fetch normal'  ? @fetch
+
              : $_[1] eq 'config dirty'  ? (@config, @fetch)
              : $_[1] eq 'fetch dirty'   ? ('no need to fetch a dirty plugin')
+
+             : $_[1] eq 'config timeout' ? @timeout
+             : $_[1] eq 'fetch timeout'  ? ('should not fetch a plugin that timed out')
+
+             : $_[1] eq 'config timeout2' ? @config
+             : $_[1] eq 'fetch timeout2'  ? @timeout
+
+             : $_[1] eq 'config unknown' ? @unknown
+             : $_[1] eq 'fetch unknown'  ? ('should not fetch a plugin that does not exist')
+
+             : $_[1] eq 'config badexit' ? @badexit
+             : $_[1] eq 'fetch badexit'  ? ('should not fetch a plugin that fell over during config')
+
+             : $_[1] eq 'config badexit2' ? @config
+             : $_[1] eq 'fetch badexit2'  ? @badexit
+
              : die "unknown command $_[1]\n";
     };
     use warnings;
@@ -262,6 +288,36 @@ SKIP: {
 
         my @response = $spooler->_fetch_service('dirty');
         eq_or_diff(\@response, [ @config, @fetch ], 'fetching dirty service');
+    }
+    {
+        my $spooler = Munin::Node::ProxySpooler->new() or next;
+
+        my @response = $spooler->_fetch_service('timeout');
+        eq_or_diff(\@response, [ ], 'service timed out during config');
+    }
+    {
+        my $spooler = Munin::Node::ProxySpooler->new() or next;
+
+        my @response = $spooler->_fetch_service('timeout2');
+        eq_or_diff(\@response, [ ], 'service timed out during fetch');
+    }
+    {
+        my $spooler = Munin::Node::ProxySpooler->new() or next;
+
+        my @response = $spooler->_fetch_service('unknown');
+        eq_or_diff(\@response, [ ], 'unknown service');
+    }
+    {
+        my $spooler = Munin::Node::ProxySpooler->new() or next;
+
+        my @response = $spooler->_fetch_service('badexit');
+        eq_or_diff(\@response, [ ], 'bad exit from service during config');
+    }
+    {
+        my $spooler = Munin::Node::ProxySpooler->new() or next;
+
+        my @response = $spooler->_fetch_service('unknown');
+        eq_or_diff(\@response, [ ], 'bad exit from service during fetch');
     }
 }
 

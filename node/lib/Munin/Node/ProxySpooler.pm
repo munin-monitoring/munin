@@ -148,6 +148,10 @@ sub _fetch_service
 
     $self->_close_node_connection;
 
+    if (any { m{# (?:Timed out|Unknown service|Bad exit)} } @config) {
+        return ();
+    }
+
     return @config;
 }
 
