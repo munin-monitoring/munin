@@ -64,6 +64,16 @@ sub run
     my $intervals = $self->_get_intervals();
     my $pollers   = $self->_launch_pollers($intervals);
 
+    # Indiscriminately kill every process in the group with SIGTERM when asked
+    # to quit.  this is just the list the Perl Cookbook suggests trapping.
+    #
+    # FIXME: might be better if this was implemented with sigtrap pragma.
+    #
+    # FIXME: bit of a race condition here, but the pollers shouldn't have nasty
+    # things lying about in their %SIG.
+    $SIG{INT} = $SIG{TERM} = $SIG{HUP} = sub { kill -15, $$ };
+
+
     $self->_close_node_connection;
 
     logger('Spooler going to sleep');
