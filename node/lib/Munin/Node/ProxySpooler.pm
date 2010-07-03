@@ -59,8 +59,6 @@ sub run
     logger('Spooler starting up');
 
     # ready to actually do stuff!
-    $self->_open_node_connection;
-
     my $intervals = $self->_get_intervals();
     my $pollers   = $self->_launch_pollers($intervals);
 
@@ -72,9 +70,6 @@ sub run
     # FIXME: bit of a race condition here, but the pollers shouldn't have nasty
     # things lying about in their %SIG.
     $SIG{INT} = $SIG{TERM} = $SIG{HUP} = sub { kill -15, $$ };
-
-
-    $self->_close_node_connection;
 
     logger('Spooler going to sleep');
 
@@ -108,6 +103,8 @@ sub _get_intervals
 
     my %intervals;
 
+    $self->_open_node_connection;
+
     my @nodes    = $self->_get_node_list            or die "No nodes\n";
     my @services = $self->_get_service_list(@nodes) or die "No services\n";
 
@@ -118,6 +115,8 @@ sub _get_intervals
         );
         logger("Interval is $intervals{$service} seconds") if $config->{DEBUG};
     }
+
+    $self->_close_node_connection;
 
     return \%intervals;
 }
