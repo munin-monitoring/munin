@@ -515,11 +515,15 @@ Override plugin configuration directory [@@CONFDIR@@/plugin-conf.d/]
 
 Override plugin lib [@@LIBDIR@@/plugins/]
 
-=item B<< --families <family,...> >>
+=item B<< --families <family, ...> >>
 
-Override families (auto, manual, contrib, snmpauto).  When listing installed
-plugins, the default families are auto, manual and contrib.  Only auto plugins
-are checked for plugins.  SNMP probing is only performed on snmpauto plugins.
+Override families (auto, manual, contrib, snmpauto).  Multiple families can be
+specified as a comma-separated list, by repeating the C<--families> option, or
+as a combination of the two.
+
+When listing installed plugins, the default families are auto, manual and
+contrib.  Only auto plugins are checked for plugins.  SNMP probing is only
+performed on snmpauto plugins.
 
 =item B<< --suggest >>
 
