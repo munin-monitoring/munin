@@ -63,6 +63,8 @@ sub run
     my $intervals = $self->_get_intervals();
     $self->_launch_pollers($intervals);
 
+    $self->_close_node_connection;
+
     logger('Spooler going to sleep');
     # FIXME: may need to respawn pollers if they fall over
     sleep;
