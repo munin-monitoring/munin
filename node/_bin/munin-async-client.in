@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-#
+# $Id$
 
 use strict;
 use warnings;
@@ -26,6 +26,8 @@ use Sys::Hostname;
 use Data::Dumper;
 use Getopt::Long;
 use Pod::Usage;
+
+use Munin::Node::SpoolReader;
 
 # Disable buffering
 $| = 1;
@@ -61,6 +63,10 @@ if ($help) {
 #    to listen on localhost:4949
 # 2. very simple to launch
 
+my $spoolreader = Munin::Node::SpoolReader->new(
+	spooldir => $SPOOLDIR,
+);
+
 die "spooldir [$SPOOLDIR] not found" unless -d $SPOOLDIR;
 
 print "# munin node at $hostname\n";
@@ -79,10 +85,7 @@ while (my $line = <>) {
 		unlink("$SPOOLDIR/munin-daemon.$1.data"); 
 	} elsif ($line =~ m/^spoolfetch (\d+)/) {
 		my $last_epoch = $1; # XXX - We don't care about the last_epoch for now
-		my @plugins = get_spooled_plugins();
-		foreach my $plugin (@plugins) {
-			cat_multigraph_file($plugin);
-		}
+		my $response_str = $spoolreader->fetch($last_epoch);
 		print ".\n";
 	} elsif ($spoolfetch && $line =~ m/^cap/) {
 		print "cap spool\n";

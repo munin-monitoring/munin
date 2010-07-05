@@ -17,15 +17,18 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-#
+# $Id$
 
 use strict;
 use warnings;
 
 use IO::Socket;
+use IO::File;
 use File::Path qw(make_path);
 use Getopt::Long;
 use Pod::Usage;
+
+use Munin::Node::SpoolWriter;
 
 my $host = "localhost:4949";
 my $SPOOLDIR = "/tmp/munin-async-spool";
@@ -50,6 +53,10 @@ unless (-d $SPOOLDIR) {
 		or die ("Cannot create '$SPOOLDIR': $!");
 }
 
+my $spoolwriter = Munin::Node::SpoolWriter->new(
+	spooldir => $SPOOLDIR,
+);
+
 
 # Read whole configuration
 my @plugins;
@@ -64,13 +71,21 @@ my %plugins_rate;
 	print $sock "list\n";
 	<$sock>; # Read the first header comment line
 	my $plugins_line = <$sock>;
-	open(OUTFILE, "> $SPOOLDIR/munin-daemon.list");
-	print OUTFILE $plugins_line;
-	close(OUTFILE);
 	chomp($plugins_line);
+
+	{
+		my $fh_list = IO::File->new(
+			"$SPOOLDIR/munin-daemon.list",
+			"w",
+		);
+	
+		print $fh_list $plugins_line;
+		print $fh_list "\n";
+	}
+
 	@plugins = split(/ /, $plugins_line);
 
-	# search update_rate for each plugin
+	# Ask for config & search update_rate for each plugins
 	foreach my $plugin (@plugins) {
 		print STDERR "Asking config for $plugin\n" if $verbose;
 		$plugins_rate{$plugin} = 300; # default : 5 min
@@ -92,39 +107,50 @@ my %plugins_rate;
 	}
 }
 
+# Q&D child collection
+$SIG{CHLD} = sub { wait; };
+
 # now, update regularly...
 # ... but each plugin in its own process to avoid delay-leaking
-foreach my $plugin (@plugins) {
-	fetch_data($plugin, $plugins_rate{$plugin});
+my %last_updated;
+MAIN: while(1) { 
+	my $when = time;
+	PLUGIN: foreach my $plugin (@plugins) {
+		# See if this plugin should be updated
+		my $plugin_rate = $plugins_rate{$plugin} || 300;
+		if ($when < ($last_updated{$plugin} || 0) + $plugin_rate) {
+			# not yet, next plugin
+			next;
+		}
+
+		# Should update it
+		$last_updated{$plugin} = $when;
+		if (fork()) {
+			# parent, return directly	
+			next PLUGIN;
+		}
+		
+		print STDERR "[$$][$plugin] asking for data\n" if $debug;
+
+		# Setting the command name for a useful top information
+		$0 = "munin-async-server [$plugin]";
+
+		fetch_data($plugin, $when);
+
+		# We end here
+		last MAIN;
+	}
+
+	# Sleep for 1s.
+	sleep 1; 
 }
 
-# wait... forever
-while(1) { sleep 100000; }
+print STDERR "[$$] Exiting\n" if $debug;
 
 sub fetch_data
 {
 	my $plugin = shift;
-	my $plugin_rate = shift;
-
-	# spawn a child
-	if (fork()) {
-		# parent, return directly	
-		return;
-	}
-
-	# Setting the command name for a useful top information
-	$0 .= " [$plugin]";
-
-	my $last_updated = 0;
-	while(1) {
-		my $when = time;
-		print STDERR "[$$][$plugin] checking\n" if $debug;
-		if ($when < $last_updated + $plugin_rate) {
-			# not yet, sleep for 1s until next step
-			sleep 1;
-			next;
-		}
-		$last_updated = $when;
+	my $when = shift;
 
 		my $sock = new IO::Socket::INET( 
 			PeerAddr	=> "$host", 
@@ -134,7 +160,7 @@ sub fetch_data
 
 		print $sock "fetch $plugin\n";
 		
-		open (OUTFILE, ">> $SPOOLDIR/munin-daemon.$plugin.data");
+		my $fh_data = IO::File->new("$SPOOLDIR/munin-daemon.$plugin.data", "a+");
 		while(my $line = <$sock>) {
 			print STDERR "[sock] $line" if $debug;
 			if ($line =~ m/^\./) {
@@ -145,17 +171,15 @@ sub fetch_data
 			if ($line =~ m/^(\w+)\.value (\d+):(-?\d+\.?\d*)/) {
 				# the plugin already outputed a time
 				# keeping it
-				print OUTFILE "$1.value $2:$3\n";
+				print $fh_data "$1.value $2:$3\n";
 				print STDERR "[$plugin] $1.value $2:$3\n" if $debug;
 			} elsif ($line =~ m/^(\w+)\.value (-?\d+\.?\d*)/) {
 				# the plugin doesn't ouput a time, 
 				# using now()
-				print OUTFILE "$1.value $when:$2\n";
+				print $fh_data "$1.value $when:$2\n";
 				print STDERR "[$plugin] $1.value $when:$2\n" if $debug;
 			}
 		}
-		close (OUTFILE);
-	}
 }
 
 __END__

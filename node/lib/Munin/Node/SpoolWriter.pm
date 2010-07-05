@@ -50,7 +50,10 @@ sub write
 		# It's a config line, opening the config file
 		$fh = $fh_config ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.config", "w"); 
 	} else {
-		$fh = $fh_data ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.data", "a");
+		$fh = $fh_data ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.data", "a+");
+		# If the value line isn't timestamped
+		# we hae to add the timestamp on the line
+		$line =~ s/(\w+)\.value ([0-9.]+)/$1.value $timestamp:$2/;
 	}
 
 	print $fh $line;

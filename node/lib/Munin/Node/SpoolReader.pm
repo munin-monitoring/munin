@@ -12,6 +12,7 @@ use IO::File;
 use Munin::Common::Defaults;
 use Munin::Node::Logger;
 
+our $debug = 0;
 
 sub new
 {
@@ -39,6 +40,7 @@ sub fetch
     my $return_str = "";
 
     my @plugins = $self->_get_spooled_plugins();
+    print STDERR "timestamp:$timestamp, plugins:@plugins\n" if $debug;
     foreach my $plugin (@plugins) {
         $return_str .= $self->_cat_multigraph_file($plugin, $timestamp);
     }
@@ -49,6 +51,8 @@ sub fetch
 sub _cat_multigraph_file
 {
     my ($self, $plugin, $timestamp) = @_;
+	
+    print STDERR "_cat_multigraph_file($plugin, $timestamp)\n" if $debug;
 
     my $return_str = "";
 
@@ -56,6 +60,8 @@ sub _cat_multigraph_file
 
     my ($last_epoch, $epoch) = (0, 0);
     while(my $line = <$fh_data>) {
+	chomp($line);
+    	print STDERR "_cat_multigraph_file:line:$line\n" if $debug;
         # Ignore blank lines
         next if ($line =~ m/^\s+$/);
 
@@ -74,11 +80,11 @@ sub _cat_multigraph_file
             # Emit multigraph header ...
             $return_str .= "multigraph $plugin\n";
             # ... and its config
-            $return_str .= cat_file($self->{spooldir} . "/munin-daemon.$plugin.config");
+            $return_str .= _cat_file($self->{spooldir} . "/munin-daemon.$plugin.config");
         }
 
         # Sending value
-        $return_str .= $line;
+        $return_str .= $line . "\n";
     }
 
     return $return_str;
@@ -98,6 +104,24 @@ sub _get_spooled_plugins
     closedir(SPOOLDIR);
 
     return @plugins;
+}
+
+sub _cat_file
+{
+	my $filename = shift;
+	print STDERR "_cat_file($filename)\n" if $debug;
+
+	my $fh = IO::File->new($filename);
+	
+	my $return_str = "";
+	while (my $line = <$fh>) {
+		chomp($line);
+		# Remove any "." or empty line
+		next if ($line eq "" || $line eq ".");
+		$return_str .= $line . "\n";
+	}
+
+	return $return_str;
 }
 
 1;
