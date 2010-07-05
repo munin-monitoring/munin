@@ -37,6 +37,7 @@ my $hostname = hostname();
 chomp($hostname);
 
 my $spoolfetch;
+my $vectorfetch;
 
 my $verbose;
 my $debug;
@@ -47,6 +48,7 @@ GetOptions(
         "hostname=s" => \$hostname,
 
         "spoolfetch" => \$spoolfetch,
+        "vectorfetch" => \$vectorfetch,
 
         "help|h" => \$help,
         "verbose|v" => \$verbose,
@@ -73,19 +75,19 @@ print "# munin node at $hostname\n";
 
 while (my $line = <>) {
 	if ($line =~ m/^list/) {
-		cat_file("$SPOOLDIR/munin-daemon.list");
+		print $spoolreader->list();
 	} elsif ($line =~ m/^config (\w+)/) {
 		cat_file("$SPOOLDIR/munin-daemon.$1.config");
 		print ".\n";
-	} elsif ($line =~ m/^fetch (\w+)/) {
+	} elsif ($vectorfetch && $line =~ m/^fetch (\w+)/) {
 		# Fetching all values since last time
 		cat_file("$SPOOLDIR/munin-daemon.$1.data");
 		print ".\n";
 		# XXX - there is a race condition here
 		unlink("$SPOOLDIR/munin-daemon.$1.data"); 
 	} elsif ($line =~ m/^spoolfetch (\d+)/) {
-		my $last_epoch = $1; # XXX - We don't care about the last_epoch for now
-		my $response_str = $spoolreader->fetch($last_epoch);
+		my $last_epoch = $1;
+		print $spoolreader->fetch($last_epoch);
 		print ".\n";
 	} elsif ($spoolfetch && $line =~ m/^cap/) {
 		print "cap spool\n";
@@ -109,45 +111,6 @@ sub cat_file {
 	close(FILE);
 }
 
-sub cat_multigraph_file {
-	my $plugin = shift;
-
-	open(DATAFILE, "$SPOOLDIR/munin-daemon.$plugin.data");
-	my ($last_epoch, $epoch) = (0, 0);
-	while(my $line = <DATAFILE>) {
-		if ($line =~ m/\w+ (\d+):/) {
-			$epoch = $1;
-		}
-
-		# emit multigraph line only when epoch changes
-		if ($epoch != $last_epoch) {
-			$last_epoch = $epoch;
-			print "multigraph $plugin\n";
-			# Sending config
-			cat_file("$SPOOLDIR/munin-daemon.$plugin.config");
-		} 
-		# Sending value
-		print $line;
-	}
-	close(DATAFILE);
-}
-
-sub get_spooled_plugins {
-	print STDERR "get_spooled_plugins\n" if $verbose;
-	my @plugins;
-	opendir(SPOOLDIR, $SPOOLDIR) or die "can't opendir $SPOOLDIR: $!";
-	while(my $filename = readdir(SPOOLDIR)) {
-		print STDERR $filename if $verbose;
-		next unless $filename =~ m/^munin-daemon\.(\w+)\.data$/;
-		push @plugins, $1;	
-	}
-	closedir(SPOOLDIR);
-
-	print STDERR "plugins:@plugins\n" if $verbose;
-
-	return @plugins;
-}
-
 __END__
 
 =head1 NAME
@@ -161,7 +124,11 @@ munin-async-client [options]
  Options:
      -s --spooldir <spooldir>   Directory for spooled data [/tmp/munin-async-spool]
      --hostname <hostname>      Overrides the hostname [`hostname`]
+
      --spoolfetch               Enables the "spool" capability [no]
+     --vectorfetch              Enables the "vectorized" fetching capability [no]
+                                  Note that without this flag, the "fetch" 
+				  command is disabled.
 
      -v --verbose               Be verbose
      -h --help                  View this message	

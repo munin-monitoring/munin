@@ -48,6 +48,14 @@ sub fetch
     return $return_str;
 }
 
+sub list
+{
+	my ($self) = @_;
+
+	my @plugins = $self->_get_spooled_plugins();
+	return join(" ", sort @plugins) . "\n";
+}
+
 sub _cat_multigraph_file
 {
     my ($self, $plugin, $timestamp) = @_;
@@ -69,6 +77,7 @@ sub _cat_multigraph_file
         if ($line =~ m/\w+ (\d+):/) {
             $epoch = $1;
         }
+    	print STDERR "_cat_multigraph_file:epoch:$epoch,timestamp:$timestamp\n" if $debug;
 
         # Only continue if the line epoch is later than the asked one
         next unless ($epoch > $timestamp);
@@ -150,6 +159,11 @@ writing to.
 =head2 B<fetch($timestamp)>
 
 Fetches all the plugin results that have been recorded since C<$timestamp>,
+in a form suitable to be sent straight over the wire.
+
+=head2 B<list()>
+
+Lists  all the plugin that have been recorded in the spool,
 in a form suitable to be sent straight over the wire.
 
 =back
