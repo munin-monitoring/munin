@@ -152,7 +152,7 @@ my %sumtimes = (    # time => [ label, seconds-in-period ]
 # Limit graphing to certain hosts and/or services
 my @limit_hosts    = ();
 my @limit_services = ();
-my $only_fqn;
+my $only_fqn = 0;
 
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
 
@@ -200,7 +200,7 @@ sub graph_startup {
     $skip_stats     = 0;
     $stdout         = 0;
 
-    $only_fqn 	    = undef;
+    $only_fqn 	    = 0;
     $size_x 	    = undef;
     $size_y         = undef;
     $lower_limit    = undef;
