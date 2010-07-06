@@ -2,12 +2,14 @@
 use warnings;
 use strict;
 
-use Test::More tests => 29;
+use Test::More tests => 32;
 use Test::Differences;
 use Test::Deep;
 
 use IO::Scalar;
 use POSIX ();
+use Data::Dumper;
+use Time::HiRes qw( tv_interval gettimeofday );
 
 use Munin::Node::ProxySpooler;
 
@@ -226,6 +228,71 @@ SKIP: {
 
 
 ### GATHER DATA ################################################################
+
+
+### _poller_loop
+{
+    my $ii = 10;
+    my @times;
+    my $poller = sub {
+        die if $ii-- < 0;
+        push @times, [gettimeofday];
+    };
+
+    eval { Munin::Node::ProxySpooler::_poller_loop($poller, 0.01) };
+
+    my $last = shift @times;
+    my @intervals = map { my $interval = tv_interval($last, $_), $last = $_; $interval } @times;
+
+    cmp_deeply(\@intervals, array_each(num(0.01, 0.005)), 'Callback takes less long than the interval');
+}
+{
+    my $ii = 10;
+    my @times;
+
+    my $poller = sub {
+        die if $ii-- < 0;
+        push @times, [gettimeofday];
+        select(undef, undef, undef, 0.5);  # sleep without sleep()ing.
+    };
+
+    eval { Munin::Node::ProxySpooler::_poller_loop($poller, 0.3) };
+
+    my $last = shift @times;
+    my @intervals = map { my $interval = tv_interval($last, $_), $last = $_; $interval } @times;
+
+    cmp_deeply(\@intervals, array_each(
+        any(
+            num(0.5,       0.005),
+            num(0.5 + 0.3, 0.005),
+        )
+    ), 'Callback takes longer than the interval');
+}
+{
+    my $ii = 10;
+    my @times;
+
+    my $poller = sub {
+        die if $ii-- < 0;
+        push @times, [gettimeofday];
+        select(undef, undef, undef, 0.1);  # sleep without sleep()ing.
+    };
+
+    eval { Munin::Node::ProxySpooler::_poller_loop($poller, 0.1) };
+
+    my $last = shift @times;
+    my @intervals = map { my $interval = tv_interval($last, $_), $last = $_; $interval } @times;
+
+    cmp_deeply(\@intervals, array_each(
+        any(
+            num(0.1,       0.005),
+            num(0.1 + 0.1, 0.005),
+        )
+    ), 'Callback takes about the same time as interval');
+}
+
+# FIXME: might finish with a pending SIGALRM (wait 14)
+
 
 ### _fetch_service
 {

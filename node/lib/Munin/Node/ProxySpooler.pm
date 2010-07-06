@@ -8,7 +8,7 @@ use warnings;
 use Net::Server::Daemonize qw( daemonize safe_fork );
 use IO::Socket;
 use List::MoreUtils qw( any );
-use Time::HiRes qw( usleep );
+use Time::HiRes qw( usleep ualarm );
 use Carp;
 
 use Munin::Common::Defaults;
@@ -194,6 +194,28 @@ sub _launch_single_poller
     exit 0;
 }
 
+
+# calls coderef $code every $interval seconds.
+sub _poller_loop
+{
+    my ($code, $interval) = @_;
+
+    $interval *= 1e6;  # it uses microseconds.
+
+    # sleep a random amount.  should help spread the load up a bit.
+    # then run $code every $interval seconds.
+    #
+    # FIXME: this will interact really really badly with any code that uses
+    # sleep().
+    $SIG{ALRM} = $code;
+    ualarm(rand($interval), $interval);
+
+    while (1) { sleep; }
+
+    ualarm(0);
+
+    return;
+}
 
 
 # connect to the node, fetch data, write it out to the spooldir.
