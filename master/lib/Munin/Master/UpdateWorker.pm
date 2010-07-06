@@ -232,12 +232,13 @@ sub is_fresh_enough {
 	my $key = "$nodedesignation/$service";
 	DEBUG "is_fresh_enough asked for $key with a rate of $update_rate_in_seconds";
 
-	my $db_file = $config->{dbdir} . "/last_updated.dic.txt";
+	my $db_file = $config->{dbdir} . "/last_updated.db";
 
 	my %last_updated;
 
-   	use Munin::Common::SyncDictFile;
-   	tie(%last_updated, 'Munin::Common::SyncDictFile', $db_file) or ERROR "$!";
+	use Fcntl;   # For O_RDWR, O_CREAT, etc.
+   	use DB_File;
+   	tie(%last_updated, 'DB_File', $db_file, O_RDWR|O_CREAT, 0666) or ERROR "$!";
 
 	my $last_updated_key = $last_updated{$key} || "0 0";
 	DEBUG "last_updated{$key}: " . $last_updated_key;
