@@ -47,6 +47,7 @@ sub fetch
     return $return_str;
 }
 
+
 sub list
 {
 	my ($self) = @_;
@@ -55,10 +56,11 @@ sub list
 	return join(" ", sort @plugins) . "\n";
 }
 
+
 sub _cat_multigraph_file
 {
     my ($self, $plugin, $timestamp) = @_;
-	
+
     print STDERR "_cat_multigraph_file($plugin, $timestamp)\n" if $debug;
 
     my $return_str = "";
@@ -98,6 +100,7 @@ sub _cat_multigraph_file
     return $return_str;
 }
 
+
 sub _get_spooled_plugins
 {
     my ($self) = @_;
@@ -114,13 +117,14 @@ sub _get_spooled_plugins
     return @plugins;
 }
 
+
 sub _cat_file
 {
 	my $filename = shift;
 	print STDERR "_cat_file($filename)\n" if $debug;
 
 	my $fh = IO::File->new($filename);
-	
+
 	my $return_str = "";
 	while (my $line = <$fh>) {
 		chomp($line);
@@ -131,6 +135,7 @@ sub _cat_file
 
 	return $return_str;
 }
+
 
 1;
 
@@ -154,7 +159,6 @@ Munin::Node::SpoolReader - Reading side of the spool functionality
 Constructor.  'spooldir' should be the directory L<Munin::Node::SpoolWriter> is
 writing to.
 
-
 =item B<fetch($timestamp)>
 
 Fetches all the plugin results that have been recorded since C<$timestamp>,
@@ -162,8 +166,8 @@ in a form suitable to be sent straight over the wire.
 
 =item B<list()>
 
-Lists  all the plugin that have been recorded in the spool,
-in a form suitable to be sent straight over the wire.
+Lists all the plugin that have been recorded in the spool, in a form suitable
+to be sent straight over the wire.
 
 =back
 

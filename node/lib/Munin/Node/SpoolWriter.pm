@@ -49,11 +49,11 @@ sub write
         # Check it is a data line
 	if ($line !~ m/(\w+)\.value ([0-9]+:)?([0-9.]+)/) {
 		# It's a config line, opening the config file
-		$fh = $fh_config ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.config", "w"); 
+		$fh = $fh_config ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.config", "w");
 	} else {
 		$fh = $fh_data ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.data", "a+");
 		# If the value line isn't timestamped
-		# we hae to add the timestamp on the line
+		# we have to add the timestamp on the line
 		$line =~ s/(\w+)\.value ([0-9.]+)/$1.value $timestamp:$2/;
 	}
 
@@ -63,13 +63,13 @@ sub write
     return;
 }
 
+
 # removes content from the spooldir older than $timestamp
-# TODO - For now, SpoolReader just parses the old thing. No need to garbage.
+# TODO - For now, SpoolReader just parses the old thing. No need to
+# garbage-collect.
 sub cleanup
-{
-    my ($self, $timestamp) = @_;
-    return;
-}
+{}
+
 
 1;
 
@@ -93,17 +93,14 @@ Munin::Node::SpoolWriter - Writing side of the spool functionality
 Constructor.  'spooldir' key should be the directory
 L<Munin::Node::SpoolReader> is reading from.
 
-
 =item B<write($timestamp, $service, \@results)>
 
 Takes a timestamp, service name, and the results of running config and fetch on
 it.  Writes it to the spool directory for L<Munin::Node::SpoolReader> to read.
 
-
 =item B<cleanup($timestamp)>
 
 Removes any items in the spool directory older than $timestamp.
-
 
 =back
 
