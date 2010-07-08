@@ -235,7 +235,10 @@ SKIP: {
     my $ii = 10;
     my @times;
     my $poller = sub {
-        die if $ii-- < 0;
+        if ($ii-- < 0) {
+            ualarm(0);
+            die;
+        }
         push @times, [gettimeofday];
     };
 
@@ -251,7 +254,10 @@ SKIP: {
     my @times;
 
     my $poller = sub {
-        die if $ii-- < 0;
+        if ($ii-- < 0) {
+            ualarm(0);
+            die;
+        }
         push @times, [gettimeofday];
         select(undef, undef, undef, 0.5);  # sleep without sleep()ing.
     };
@@ -273,7 +279,10 @@ SKIP: {
     my @times;
 
     my $poller = sub {
-        die if $ii-- < 0;
+        if ($ii-- < 0) {
+            ualarm(0);
+            die;
+        }
         push @times, [gettimeofday];
         select(undef, undef, undef, 0.1);  # sleep without sleep()ing.
     };
@@ -290,8 +299,6 @@ SKIP: {
         )
     ), 'Callback takes about the same time as interval');
 }
-
-# FIXME: might finish with a pending SIGALRM (wait 14)
 
 
 ### _fetch_service
