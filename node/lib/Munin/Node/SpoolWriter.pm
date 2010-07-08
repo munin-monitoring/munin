@@ -88,19 +88,19 @@ Munin::Node::SpoolWriter - Writing side of the spool functionality
 
 =over 4
 
-=head2 B<new(%args)>
+=item B<new(%args)>
 
 Constructor.  'spooldir' key should be the directory
 L<Munin::Node::SpoolReader> is reading from.
 
 
-=head2 B<write($timestamp, $service, \@results)>
+=item B<write($timestamp, $service, \@results)>
 
 Takes a timestamp, service name, and the results of running config and fetch on
 it.  Writes it to the spool directory for L<Munin::Node::SpoolReader> to read.
 
 
-=head2 B<cleanup($timestamp)>
+=item B<cleanup($timestamp)>
 
 Removes any items in the spool directory older than $timestamp.
 

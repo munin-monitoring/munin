@@ -149,18 +149,18 @@ Munin::Node::SpoolReader - Reading side of the spool functionality
 
 =over 4
 
-=head2 B<new($args)>
+=item B<new($args)>
 
 Constructor.  'spooldir' should be the directory L<Munin::Node::SpoolWriter> is
 writing to.
 
 
-=head2 B<fetch($timestamp)>
+=item B<fetch($timestamp)>
 
 Fetches all the plugin results that have been recorded since C<$timestamp>,
 in a form suitable to be sent straight over the wire.
 
-=head2 B<list()>
+=item B<list()>
 
 Lists  all the plugin that have been recorded in the spool,
 in a form suitable to be sent straight over the wire.

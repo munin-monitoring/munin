@@ -361,7 +361,7 @@ munin-node instance.
 
 =over 4
 
-=head2 B<run(%args)>
+=item B<run(%args)>
 
 Forks off a spooler daemon, and returns control to the caller.  'spooldir' key
 should be the directory to write to.
