@@ -42,20 +42,23 @@ sub write
     my ($fh_config, $fh_data);
 
     foreach my $line (@$data) {
+	my $fh;
+
 	# Ignore blank lines and "."-ones.
 	next if (! defined($line) || $line eq "" || $line eq ".");
 
-	my $fh;
-        # Check it is a data line
-	if ($line !~ m/(\w+)\.value ([0-9]+:)?([0-9.]+)/) {
-		# It's a config line, opening the config file
-		$fh = $fh_config ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.config", "w");
-	} else {
-		$fh = $fh_data ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.data", "a+");
-		# If the value line isn't timestamped
-		# we have to add the timestamp on the line
-		$line =~ s/(\w+)\.value ([0-9.]+)/$1.value $timestamp:$2/;
-	}
+        # work out where to store the line
+        if ($line =~ m/(?:\w+)\.value (?:[0-9]+:)?(?:[0-9.]+)/) {
+                # It's a data line
+                $fh = $fh_data ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.data", "a+");
+
+                # If the value line isn't timestamped
+                # we have to add the timestamp on the line
+                $line =~ s/(\w+)\.value ([0-9.]+)/$1.value $timestamp:$2/;
+        } else {
+                # It's a config line
+                $fh = $fh_config ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.config", "w");
+        }
 
 	print $fh $line;
     }
