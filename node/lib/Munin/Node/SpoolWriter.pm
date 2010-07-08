@@ -60,7 +60,7 @@ sub write
                 $fh = $fh_config ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.config", "w");
         }
 
-	print $fh $line;
+	print {$fh} $line, "\n";
     }
 
     return;
