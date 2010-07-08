@@ -242,7 +242,7 @@ SKIP: {
         push @times, [gettimeofday];
     };
 
-    eval { Munin::Node::ProxySpooler::_poller_loop($poller, 0.01) };
+    eval { Munin::Node::ProxySpooler::_poller_loop(0.01, $poller) };
 
     my $last = shift @times;
     my @intervals = map { my $interval = tv_interval($last, $_), $last = $_; $interval } @times;
@@ -262,7 +262,7 @@ SKIP: {
         select(undef, undef, undef, 0.5);  # sleep without sleep()ing.
     };
 
-    eval { Munin::Node::ProxySpooler::_poller_loop($poller, 0.3) };
+    eval { Munin::Node::ProxySpooler::_poller_loop(0.3, $poller) };
 
     my $last = shift @times;
     my @intervals = map { my $interval = tv_interval($last, $_), $last = $_; $interval } @times;
@@ -287,7 +287,7 @@ SKIP: {
         select(undef, undef, undef, 0.1);  # sleep without sleep()ing.
     };
 
-    eval { Munin::Node::ProxySpooler::_poller_loop($poller, 0.1) };
+    eval { Munin::Node::ProxySpooler::_poller_loop(0.1, $poller) };
 
     my $last = shift @times;
     my @intervals = map { my $interval = tv_interval($last, $_), $last = $_; $interval } @times;

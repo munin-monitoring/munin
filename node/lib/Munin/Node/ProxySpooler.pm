@@ -188,14 +188,14 @@ sub _launch_single_poller
     $0 .= " [$service]";
 
     # Fetch data
-    _poller_loop(sub {
+    _poller_loop($interval, sub {
         logger(sprintf "%s: %d %d", $service, gettimeofday);  # FIXME: for testing timing accuracy
 
         my @result = $self->_fetch_service($service);
         logger("Read " . scalar @result . " lines from $service");
 
         # TODO: write results to spoolfile.
-    }, $interval);
+    });
 
     exit 0;
 }
@@ -204,7 +204,7 @@ sub _launch_single_poller
 # calls coderef $code every $interval seconds.
 sub _poller_loop
 {
-    my ($code, $interval) = @_;
+    my ($interval, $code) = @_;
 
     $interval *= 1e6;  # it uses microseconds.
 
