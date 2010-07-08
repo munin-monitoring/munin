@@ -191,10 +191,12 @@ sub _launch_single_poller
     _poller_loop($interval, sub {
         logger(sprintf "%s: %d %d", $service, gettimeofday);  # FIXME: for testing timing accuracy
 
+        my $time = time();
+
         my @result = $self->_fetch_service($service);
         logger("Read " . scalar @result . " lines from $service");
 
-        # TODO: write results to spoolfile.
+        $self->{spool}->write($time, $service, \@result);
     });
 
     exit 0;
