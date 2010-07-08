@@ -9,7 +9,7 @@ use Test::Deep;
 use IO::Scalar;
 use POSIX ();
 use Data::Dumper;
-use Time::HiRes qw( tv_interval gettimeofday );
+use Time::HiRes qw( tv_interval gettimeofday ualarm );
 
 use Munin::Node::ProxySpooler;
 
