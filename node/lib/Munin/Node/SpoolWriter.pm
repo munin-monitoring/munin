@@ -6,6 +6,7 @@ use strict;
 use warnings;
 
 use Carp;
+use IO::File;
 
 use Munin::Common::Defaults;
 use Munin::Node::Logger;
