@@ -8,7 +8,7 @@ use warnings;
 use Net::Server::Daemonize qw( daemonize safe_fork );
 use IO::Socket;
 use List::MoreUtils qw( any );
-use Time::HiRes qw( usleep ualarm );
+use Time::HiRes qw( usleep ualarm gettimeofday );
 use Carp;
 
 use Munin::Common::Defaults;
@@ -185,11 +185,17 @@ sub _launch_single_poller
         return $poller_pid;
     }
 
-    # do childlike things, and never stop.
     $0 .= " [$service]";
 
-    # just pretend to do work for the time being.
-    usleep(rand(20e6));
+    # Fetch data
+    _poller_loop(sub {
+        logger(sprintf "%s: %d %d", $service, gettimeofday);  # FIXME: for testing timing accuracy
+
+        my @result = $self->_fetch_service($service);
+        logger("Read " . scalar @result . " lines from $service");
+
+        # TODO: write results to spoolfile.
+    }, $interval);
 
     exit 0;
 }
