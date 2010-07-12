@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 15;
+use Test::More tests => 20;
 use Test::LongString;
 
 use POSIX ();
@@ -92,14 +92,24 @@ EOC
 
 }
 ### writing different types of value.
+### values can also include a timestamp: http://munin-monitoring.org/wiki/protocol-multifetch
 {
     my @tests = (
-        #  timestamp,    value,             expected
-        [ 1234567890, '999999',   '1234567890:999999',   'Integer without timestamp'  ],
-        [ 1234567890, 'U',        '1234567890:U',        'Unknown without timestamp'  ],
-        [ 1234567890, '-2',       '1234567890:-2',       'Negative without timestamp' ],
-        [ 1234567890, '3.141',    '1234567890:3.141',    'Float without timestamp'    ],
-        [ 1234567890, '1.05e-34', '1234567890:1.05e-34', 'E-notation without timestamp'    ],
+        #  timestamp,               value,              expected
+        [ 1234567890,            '999999',   '1234567890:999999', 'Integer without timestamp'  ],
+        [ 1234567890, '2134567890:999999',   '2134567890:999999', 'Integer with timestamp'     ],
+
+        [ 1234567890,            'U',        '1234567890:U',      'Unknown without timestamp'  ],
+        [ 1234567890, '2134567890:U',        '2134567890:U',      'Unknown with timestamp'     ],
+
+        [ 1234567890,            '-2',       '1234567890:-2',     'Negative without timestamp' ],
+        [ 1234567890, '2134567890:-2',       '2134567890:-2',     'Negative with timestamp'    ],
+
+        [ 1234567890,            '3.141',    '1234567890:3.141',  'Float without timestamp'    ],
+        [ 1234567890, '2134567890:3.141',    '2134567890:3.141',  'Float with timestamp'       ],
+
+        [ 1234567890,            '1.05e-34', '1234567890:1.05e-34', 'E-notation without timestamp'   ],
+        [ 1234567890, '2134567890:1.05e-34', '2134567890:1.05e-34', 'E-notation with timestamp'      ],
     );
 
     foreach (@tests) {
@@ -115,7 +125,7 @@ EOC
         ]);
 
         my $data_file = "$dir/munin-daemon.fnord.data";
-        unless ( -r $data_file) {
+        unless (-r $data_file) {
             fail("$msg: File not created");
             next
         }
