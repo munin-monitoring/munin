@@ -179,6 +179,10 @@ EOS
             'system.value -4',
         ]);
 
+        open my $cruft, '>', "$dir/cruft" or die "Unable to create cruft file: $!";
+        print $cruft "rubbish\n";
+        close $cruft;
+
         is_deeply([ sort $reader->_get_spooled_plugins ], [ sort qw( fnord floop blort ) ], 'Retrieved list of spooled plugins');
         is($reader->list, "blort floop fnord\n", 'Retrieved stringified list of spooled plugins');
 }
