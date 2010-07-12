@@ -105,16 +105,11 @@ sub _get_spooled_plugins
 {
     my ($self) = @_;
 
-    my @plugins;
-    opendir(SPOOLDIR, $self->{spooldir}) or die "can't opendir $self->{spooldir}: $!";
-    while (my $filename = readdir(SPOOLDIR)) {
-        logger($filename) if $self->{verbose};
-        next unless $filename =~ m/^munin-daemon\.(\w+)\.data$/;
-        push @plugins, $1;
-    }
-    closedir(SPOOLDIR);
+    rewinddir $self->{spooldirhandle}
+        or die "Unable to reset the spool directory handle: $!";
 
-    return @plugins;
+    return map { m/^munin-daemon\.(\w+)\.data$/ ? $1 : () }
+        readdir $self->{spooldirhandle};
 }
 
 
