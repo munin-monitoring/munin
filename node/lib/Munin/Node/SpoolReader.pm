@@ -70,8 +70,8 @@ sub _cat_multigraph_file
     my $fh_data = IO::File->new($self->{spooldir} . "/munin-daemon.$plugin.data");
 
     my ($last_epoch, $epoch) = (0, 0);
-    while(my $line = <$fh_data>) {
-        chomp($line);
+    while (my $line = <$fh_data>) {
+        chomp $line;
         logger("_cat_multigraph_file:line:$line") if $config->{DEBUG};
         # Ignore blank lines
         next if ($line =~ m/^\s+$/);
@@ -109,7 +109,7 @@ sub _get_spooled_plugins
 
     my @plugins;
     opendir(SPOOLDIR, $self->{spooldir}) or die "can't opendir $self->{spooldir}: $!";
-    while(my $filename = readdir(SPOOLDIR)) {
+    while (my $filename = readdir(SPOOLDIR)) {
         logger($filename) if $self->{verbose};
         next unless $filename =~ m/^munin-daemon\.(\w+)\.data$/;
         push @plugins, $1;
