@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 13;
+use Test::More tests => 15;
 use Test::LongString;
 
 use POSIX ();
@@ -89,7 +89,7 @@ system.label system
 system.value 1234567910:3
 EOS
 
-        is_string($reader->fetch(1234567911), '', 'Timestamp postdates the last result: empty string');
+        is_string($reader->fetch(1234567999), '', 'Timestamp postdates the last result: empty string');
 }
 {
         my $dir = tempdir( CLEANUP => 1 );
@@ -110,6 +110,43 @@ multigraph fnord
 graph_title CPU usage
 system.label system
 system.value 1234567890:1
+EOS
+
+}
+{
+        my $dir = tempdir( CLEANUP => 1 );
+        my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
+        my $reader = Munin::Node::SpoolReader->new(spooldir => $dir);
+
+        # write results for two different plugins
+        $writer->write(1234567890, 'fnord', [
+            'graph_title CPU usage',
+            'system.label system',
+            'system.value 3',
+        ]);
+
+        $writer->write(1234567910, 'blort', [
+            'graph_title Memory usage',
+            'slab.label slab',
+            'slab.value 123',
+        ]);
+
+        is($reader->fetch(1234567800), <<EOS, 'Several plugins to fetch');
+multigraph blort
+graph_title Memory usage
+slab.label slab
+slab.value 1234567910:123
+multigraph fnord
+graph_title CPU usage
+system.label system
+system.value 1234567890:3
+EOS
+
+        is($reader->fetch(1234567900), <<EOS, 'Several plugins to fetch, but only one is recent enough');
+multigraph blort
+graph_title Memory usage
+slab.label slab
+slab.value 1234567910:123
 EOS
 
 }
