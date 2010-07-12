@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 10;
+use Test::More tests => 15;
 use Test::LongString;
 
 use POSIX ();
@@ -90,5 +90,38 @@ system.value 1234567890:999999
 system.value 1234567891:999998
 EOC
 
+}
+### writing different types of value.
+{
+    my @tests = (
+        #  timestamp,    value,             expected
+        [ 1234567890, '999999',   '1234567890:999999',   'Integer without timestamp'  ],
+        [ 1234567890, 'U',        '1234567890:U',        'Unknown without timestamp'  ],
+        [ 1234567890, '-2',       '1234567890:-2',       'Negative without timestamp' ],
+        [ 1234567890, '3.141',    '1234567890:3.141',    'Float without timestamp'    ],
+        [ 1234567890, '1.05e-34', '1234567890:1.05e-34', 'E-notation without timestamp'    ],
+    );
+
+    foreach (@tests) {
+        my ($timestamp, $value, $expected, $msg) = @$_;
+
+        my $dir = tempdir( CLEANUP => 1 );
+        my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
+
+        $writer->write($timestamp, 'fnord', [
+            'graph_title CPU usage',
+            'system.label system',
+            "system.value $value",
+        ]);
+
+        my $data_file = "$dir/munin-daemon.fnord.data";
+        unless ( -r $data_file) {
+            fail("$msg: File not created");
+            next
+        }
+
+        my $data = read_file($data_file);
+        is_string($data, "system.value $expected\n", $msg);
+    }
 }
 
