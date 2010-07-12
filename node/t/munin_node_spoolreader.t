@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 17;
+use Test::More tests => 18;
 use Test::LongString;
 
 use POSIX ();
@@ -147,6 +147,36 @@ multigraph blort
 graph_title Memory usage
 slab.label slab
 slab.value 1234567910:123
+EOS
+
+}
+{
+    my $dir = tempdir(CLEANUP => 1);
+    my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
+    my $reader = Munin::Node::SpoolReader->new(spooldir => $dir);
+
+    # write two sets of results, with a slightly different config
+    $writer->write(1234567890, 'fnord', [
+        'graph_title CPU usage',
+        'system.label system',
+        'system.value 3',
+    ]);
+
+    $writer->write(1234567990, 'fnord', [
+        'graph_title CPU usage!',  # this line has changed
+        'system.label system',
+        'system.value 4',
+    ]);
+
+    is($reader->fetch(1234567800), <<EOS, 'Several plugins to fetch');
+multigraph fnord
+graph_title CPU usage!
+system.label system
+system.value 1234567890:3
+multigraph fnord
+graph_title CPU usage!
+system.label system
+system.value 1234567990:4
 EOS
 
 }
