@@ -38,10 +38,10 @@ sub fetch
 {
     my ($self, $timestamp) = @_;
 
-    my $return_str = "";
+    my $return_str = '';
 
     my @plugins = $self->_get_spooled_plugins();
-    print STDERR "timestamp:$timestamp, plugins:@plugins\n" if $config->{DEBUG};
+    logger("timestamp:$timestamp, plugins:@plugins") if $config->{DEBUG};
     foreach my $plugin (@plugins) {
         $return_str .= $self->_cat_multigraph_file($plugin, $timestamp);
     }
@@ -63,16 +63,16 @@ sub _cat_multigraph_file
 {
     my ($self, $plugin, $timestamp) = @_;
 
-    print STDERR "_cat_multigraph_file($plugin, $timestamp)\n" if $config->{DEBUG};
+    logger("_cat_multigraph_file($plugin, $timestamp)") if $config->{DEBUG};
 
-    my $return_str = "";
+    my $return_str = '';
 
     my $fh_data = IO::File->new($self->{spooldir} . "/munin-daemon.$plugin.data");
 
     my ($last_epoch, $epoch) = (0, 0);
     while(my $line = <$fh_data>) {
         chomp($line);
-        print STDERR "_cat_multigraph_file:line:$line\n" if $config->{DEBUG};
+        logger("_cat_multigraph_file:line:$line") if $config->{DEBUG};
         # Ignore blank lines
         next if ($line =~ m/^\s+$/);
 
@@ -80,7 +80,7 @@ sub _cat_multigraph_file
         if ($line =~ m/\w+ (\d+):/) {
             $epoch = $1;
         }
-        print STDERR "_cat_multigraph_file:epoch:$epoch,timestamp:$timestamp\n" if $config->{DEBUG};
+        logger("_cat_multigraph_file:epoch:$epoch,timestamp:$timestamp") if $config->{DEBUG};
 
         # Only continue if the line epoch is later than the asked one
         next unless ($epoch > $timestamp);
@@ -110,9 +110,9 @@ sub _get_spooled_plugins
     my @plugins;
     opendir(SPOOLDIR, $self->{spooldir}) or die "can't opendir $self->{spooldir}: $!";
     while(my $filename = readdir(SPOOLDIR)) {
-        print STDERR $filename if $self->{verbose};
-            next unless $filename =~ m/^munin-daemon\.(\w+)\.data$/;
-            push @plugins, $1;
+        logger($filename) if $self->{verbose};
+        next unless $filename =~ m/^munin-daemon\.(\w+)\.data$/;
+        push @plugins, $1;
     }
     closedir(SPOOLDIR);
 
@@ -123,15 +123,15 @@ sub _get_spooled_plugins
 sub _cat_file
 {
 	my $filename = shift;
-    print STDERR "_cat_file($filename)\n" if $config->{DEBUG};
+    logger("_cat_file($filename)") if $config->{DEBUG};
 
 	my $fh = IO::File->new($filename);
 
-	my $return_str = "";
+	my $return_str = '';
 	while (my $line = <$fh>) {
 		chomp($line);
 		# Remove any "." or empty line
-		next if ($line eq "" || $line eq ".");
+		next if ($line eq '' || $line eq '.');
 		$return_str .= $line . "\n";
 	}
 
