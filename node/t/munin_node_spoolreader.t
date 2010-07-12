@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 8;
+use Test::More tests => 13;
 use Test::LongString;
 
 use POSIX ();
@@ -90,5 +90,59 @@ system.value 1234567910:3
 EOS
 
         is_string($reader->fetch(1234567911), '', 'Timestamp postdates the last result: empty string');
+}
+{
+        my $dir = tempdir( CLEANUP => 1 );
+        my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
+        my $reader = Munin::Node::SpoolReader->new(spooldir => $dir);
+
+        # write some data
+        $writer->write(1234567890, 'fnord', [
+            'graph_title CPU usage',
+            'system.label system',
+            '',
+            'system.value 1',
+            '',
+        ]);
+
+        is_string($reader->fetch(1), <<EOS, 'Blank lines are ignored');
+multigraph fnord
+graph_title CPU usage
+system.label system
+system.value 1234567890:1
+EOS
+
+}
+
+
+### _get_spooled_plugins
+### list
+{
+        my $dir = tempdir( CLEANUP => 1 );
+        my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
+        my $reader = Munin::Node::SpoolReader->new(spooldir => $dir);
+
+        is_deeply([ sort $reader->_get_spooled_plugins ], [], 'No spooled plugins to list');
+        is($reader->list, "\n", 'No spooled plugins to list');
+
+        # write "results" for several plugins
+        $writer->write(1234567890, 'fnord', [
+            'graph_title CPU usage',
+            'system.label system',
+            'system.value 1',
+        ]);
+        $writer->write(1234567890, 'floop', [
+            'graph_title Memory usage',
+            'system.label system',
+            'system.value 3.14',
+        ]);
+        $writer->write(1234567890, 'blort', [
+            'graph_title Flux capacitance',
+            'system.label system',
+            'system.value -4',
+        ]);
+
+        is_deeply([ sort $reader->_get_spooled_plugins ], [ sort qw( fnord floop blort ) ], 'Retrieved list of spooled plugins');
+        is($reader->list, "blort floop fnord\n", 'Retrieved stringified list of spooled plugins');
 }
 
