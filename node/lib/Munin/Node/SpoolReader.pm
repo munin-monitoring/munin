@@ -115,10 +115,9 @@ sub _get_spooled_plugins
 
 sub _cat_file
 {
-	my $filename = shift;
-    logger("_cat_file($filename)") if $config->{DEBUG};
+    my ($filename) = @_;
 
-	my $fh = IO::File->new($filename);
+    my $fh = IO::File->new($filename, '<') or return;
 
 	my $return_str = '';
 	while (my $line = <$fh>) {
