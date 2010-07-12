@@ -18,10 +18,8 @@ sub new
 
     $args{spooldir} or croak "no spooldir provided";
 
-    opendir my $spooldirhandle, $args{spooldir}
+    opendir $args{spooldirhandle}, $args{spooldir}
         or croak "Could not open spooldir '$args{spooldir}': $!";
-
-    $args{spooldirhandle} = $spooldirhandle;
 
     # TODO: paranoia check?  except dir doesn't (currently) have to be
     # root-owned.
