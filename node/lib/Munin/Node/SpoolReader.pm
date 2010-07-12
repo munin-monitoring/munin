@@ -11,7 +11,9 @@ use IO::File;
 use Munin::Common::Defaults;
 use Munin::Node::Logger;
 
-our $debug = 0;
+use Munin::Node::Config;
+my $config = Munin::Node::Config->instance;
+
 
 sub new
 {
@@ -39,7 +41,7 @@ sub fetch
     my $return_str = "";
 
     my @plugins = $self->_get_spooled_plugins();
-    print STDERR "timestamp:$timestamp, plugins:@plugins\n" if $debug;
+    print STDERR "timestamp:$timestamp, plugins:@plugins\n" if $config->{DEBUG};
     foreach my $plugin (@plugins) {
         $return_str .= $self->_cat_multigraph_file($plugin, $timestamp);
     }
@@ -61,7 +63,7 @@ sub _cat_multigraph_file
 {
     my ($self, $plugin, $timestamp) = @_;
 
-    print STDERR "_cat_multigraph_file($plugin, $timestamp)\n" if $debug;
+    print STDERR "_cat_multigraph_file($plugin, $timestamp)\n" if $config->{DEBUG};
 
     my $return_str = "";
 
@@ -69,8 +71,8 @@ sub _cat_multigraph_file
 
     my ($last_epoch, $epoch) = (0, 0);
     while(my $line = <$fh_data>) {
-	chomp($line);
-    	print STDERR "_cat_multigraph_file:line:$line\n" if $debug;
+        chomp($line);
+        print STDERR "_cat_multigraph_file:line:$line\n" if $config->{DEBUG};
         # Ignore blank lines
         next if ($line =~ m/^\s+$/);
 
@@ -78,7 +80,7 @@ sub _cat_multigraph_file
         if ($line =~ m/\w+ (\d+):/) {
             $epoch = $1;
         }
-    	print STDERR "_cat_multigraph_file:epoch:$epoch,timestamp:$timestamp\n" if $debug;
+        print STDERR "_cat_multigraph_file:epoch:$epoch,timestamp:$timestamp\n" if $config->{DEBUG};
 
         # Only continue if the line epoch is later than the asked one
         next unless ($epoch > $timestamp);
@@ -121,7 +123,7 @@ sub _get_spooled_plugins
 sub _cat_file
 {
 	my $filename = shift;
-	print STDERR "_cat_file($filename)\n" if $debug;
+    print STDERR "_cat_file($filename)\n" if $config->{DEBUG};
 
 	my $fh = IO::File->new($filename);
 
