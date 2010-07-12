@@ -42,25 +42,25 @@ sub write
     my ($fh_config, $fh_data);
 
     foreach my $line (@$data) {
-	my $fh;
+        my $fh;
 
-	# Ignore blank lines and "."-ones.
-	next if (! defined($line) || $line eq "" || $line eq ".");
+        # Ignore blank lines and "."-ones.
+        next if (!defined($line) || $line eq "" || $line eq ".");
 
         # work out where to store the line
-        if ($line =~ m/(?:\w+)\.value (?:[0-9]+:)?(?:[0-9.]+)/) {
+        if ($line =~ m/(?:\w+)\.value (?:[0-9]+:)?(?:-?[0-9.]+|U)/) {
                 # It's a data line
                 $fh = $fh_data ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.data", "a+");
 
                 # If the value line isn't timestamped
                 # we have to add the timestamp on the line
-                $line =~ s/(\w+)\.value ([0-9.]+)/$1.value $timestamp:$2/;
+                $line =~ s/(\w+)\.value (?!\d+:)(-?[0-9.]+|U)/$1.value $timestamp:$2/;
         } else {
                 # It's a config line
                 $fh = $fh_config ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.config", "w");
         }
 
-	print {$fh} $line, "\n";
+        print {$fh} $line, "\n";
     }
 
     return;
