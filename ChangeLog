@@ -1,14 +1,87 @@
 -*- text -*-
 
-Some stats on 1.4.0 (relative to 1.3.4)
-* Over 1500 changesets since we started preparing for 1.4.0-alpha this
-  spring.
-* More than 100 new plugins since the 1.2 series
-* Commits from 23 different people, and contributions from far more!
-  Open source is great!
-* Way too much time since the last major stable release. 1.2.0 was
-  uploaded to sourceforge in february 2005.
+munin 2.0-alpha1, 2010-7-14
 
+Commits by bldewolf, feiner.tom, janl, knan, ligne, mha, ssm, steve.schnepp
+
+* Enhanced CGI (CGI::Fast, direct call to GraphOld.pm, cgitmpdir)
+* fixed comparison pages in CGI mode as (closes #831)
+* hostname checks are case in-sensitive now : every hostname is converted to
+  lowercase before use (closes #450)
+* Implementation of dirtyconfig (fixes #836), upgraded df plugin as an example.
+* custom format, per field/plugin, for graph_data_size
+* Add update_rate with optional "aligned" suboption to align RRD updates 
+  to granularity (avoids fractional for integer gauges)
+* SSH native transport (closes #842)
+* handle the last line of multiline options (fixes #855)
+* modify how varnish_ autoconf checks for the varnishstat executable. (closes
+  #873)
+* use STDERR if cgi cannot open logfile (closes #874)
+* Add comments to the extremely long regexes in the sensors plugin. 
+  Many thanks to Noga Gazit for the patch adding the comments! (attached in 
+  debian bug http://bugs.debian.org/573613
+* Fix sensors plugin parsing of Voltage, which needs to allow for whitespace 
+  at the begnining of the line. Debian bug: http://bugs.debian.org/573613. 
+  Thanks to Arthur Liu for the patch!
+* load $config once when using FastCGI, use Storable::dclone to deepclone the
+  $config, in order to make .sum work again (see #894) (thx Jani M.)
+* Remove iso-8859-1 degree character from the example output from sensors, 
+  as it is ran with LC_ALL=C
+* prevent a spike in the graph after Amavis is restarted.  Thanks to claudius 
+  for the patch. (closes #889)
+* set Net::Server's syslog_ident parameter, so log lines have 'munin-node' as 
+  the process name, rather than the significantly less useful 'net_server'. 
+  closes #789
+* fix warnings when running under certain versions of perl, caused by
+  exporting an undefined variable to the environment.  thanks to Aleksandar
+  Lazic (al4711) for the patch. (closes #896)
+* fix bug where snmp__netstat plugin can massively undercount the number of 
+  connections. 
+* add a $Munin::Plugin::SNMP::DEBUG variable, which is an alias for
+  $Munin::Plugin::DEBUG, so that SNMP plugins can automatically have debugging
+  turned on when MUNIN_DEBUG environment variable is enabled.
+* update snmp__rdp_users plugin to use M::P::SNMP, and document it.
+* node.d/df* minor spring cleaning
+* processes plugin - implement autoconf
+* Add --pidebug to munin-node-configure.  If PIDEBUG isn't defined,
+  Node/Service.pm complains about uninitialized values.
+* Fix TLS, resolving several bugs.
+* Uptime should not scale, as it makes it hard to read after 1000 days of
+  uptime. Thanks to Wakko Warner for noticing this (http://bugs.debian.org/575180)
+* strip the carriage return on the end of the capabilities list, if it exists.
+  needed when debugging using telnet.  closes #902.
+* Add plugins to monitor prepared transactions in PostgreSQL
+* Add a authors file for the buggers that use svn-git
+* add an experimental test script, that checks the POD sections embedded in plugins (as used by munindoc).
+* remove dependency on perl-5.10. (munin tries to be 5.8 only)
+* fixes on mysql_isam_space_
+* extend M::N::SNMPConfig to support SNMPv3 scanning.
+* munin-async-[client|server]. A proxy for async polling of the localhost's munin-node
+* defer JCVALID evaluation to runtime, since $(JC) can be redefined later in a
+  specific Makefile.config. The core Makefile.config serving as a
+  Makefile.default in this case.  
+* delete some obsolete tests.
+* Remove Bashism - Thanks to Raphael Geissert for pointing this out (bugs.debian.org/581126)
+* Adding a pure debugging munin-node
+* enable vectorized multiple-time updates
+* upgraded README to new website
+* get rid of unused variables, and needless initialisations.
+* first draft of a perlcritic policy.
+* Always start RRD 10 years ago to be able to spoolfetch in them. Otherwise we can only rewrite 10s of history.
+* more tests for m-n-c internals.
+* start to turn Munin::Node::Service into a "proper" class, rather than a bunch of static methods.
+* Include the name of the database in the graph title for PostgreSQL
+  wildcard graphs.
+* start to migrate munin-run to instance-based M::N::Service
+* update munin-node to use a M::N::Service instance.
+* add $Id$ keywords where missing.
+* allow # characters to be included in config files, as long as they're preceded by a backslash
+* avoid spamming the logfile with debug messages.
+* create a directory for storing spool files.
+* spoolfetch support for M::N::Server.
+* postfix_mailstats.in: $logfile was being redefined, causing problems during autoconf.  
+  thanks to Lupe Christoph for the patch.  fixes #930.
+* Addition of munin-sched
 
 munin 1.4.4, r3276,3379, 2010-2-26
 
