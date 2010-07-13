@@ -76,8 +76,8 @@ sub run
     # Reap any dead pollers
     while (my $deceased = wait) {
         if ($deceased < 0) {
-            logger("wait() error: $!");
             last if $!{ECHILD};  # all the children are dead!
+            logger("wait() error: $!");
         }
 
         my $service = delete $pollers->{$deceased};
