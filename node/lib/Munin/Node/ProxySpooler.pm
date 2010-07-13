@@ -69,7 +69,7 @@ sub run
     #
     # FIXME: bit of a race condition here, but the pollers shouldn't have nasty
     # things lying about in their %SIG.
-    $SIG{INT} = $SIG{TERM} = $SIG{HUP} = sub { kill -15, $$ };
+    $SIG{INT} = $SIG{TERM} = $SIG{HUP} = sub { kill -15, $$; exit; };
 
     logger('Spooler going to sleep');
 
@@ -85,7 +85,11 @@ sub run
         my $exit   = ($? >> 8);
         my $signal = ($? & 127);
         logger("Poller $deceased ($service) exited with $exit/$signal");
-        # FIXME: probably want to respawn pollers if they fall over
+
+        # Respawn the poller
+        logger("Respawning poller for '$service'");
+        my $new_pid = $self->_launch_single_poller($service, $intervals->{$service});
+        $pollers->{$new_pid} = $service;
     }
 
     logger('Spooler shutting down');
@@ -163,13 +167,8 @@ sub _launch_pollers
     my %pollers;
 
     while (my ($service, $interval) = each %$intervals) {
-        logger("Launching poller for '$service' with an interval of ${interval}s")
-            if $config->{DEBUG};
-
         my $poller_pid = $self->_launch_single_poller($service, $interval);
         $pollers{$poller_pid} = $service;
-
-        logger("Poller running as pid $poller_pid") if $config->{DEBUG};
     }
 
     return \%pollers;
@@ -180,8 +179,13 @@ sub _launch_single_poller
 {
     my ($self, $service, $interval) = @_;
 
+    logger("Launching poller for '$service' with an interval of ${interval}s")
+        if $config->{DEBUG};
+
     if (my $poller_pid = safe_fork()) {
         # report back to parent
+        logger("Poller for '$service' running with pid $poller_pid")
+            if $config->{DEBUG};
         return $poller_pid;
     }
 
