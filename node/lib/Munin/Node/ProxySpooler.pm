@@ -194,7 +194,8 @@ sub _launch_single_poller
         my $time = time();
 
         my @result = $self->_fetch_service($service);
-        logger("Read " . scalar @result . " lines from $service");
+        logger("Read " . scalar @result . " lines from $service")
+            if $config->{DEBUG};
 
         $self->{spool}->write($time, $service, \@result);
     });
