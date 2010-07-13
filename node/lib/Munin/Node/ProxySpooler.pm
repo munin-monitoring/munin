@@ -69,7 +69,11 @@ sub run
     #
     # FIXME: bit of a race condition here, but the pollers shouldn't have nasty
     # things lying about in their %SIG.
-    $SIG{INT} = $SIG{TERM} = $SIG{HUP} = sub { kill -15, $$; exit; };
+    $SIG{INT} = $SIG{TERM} = $SIG{HUP} = sub {
+        logger("Spooler caught SIG$_[0].  Shutting down");
+        kill -15, $$;
+        exit 0;
+    };
 
     logger('Spooler going to sleep');
 
