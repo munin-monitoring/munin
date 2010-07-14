@@ -50,7 +50,7 @@ sub run
     my $self = __PACKAGE__->new(%args);
 
     # Daemonzises, and runs for cover.
-    daemonize($self->{user}, $self->{group}, $self->{pidfile});
+    daemonize($self->{user}, $self->{group}, $self->{pid_file});
 
     open STDERR, '>>', "$Munin::Common::Defaults::MUNIN_LOGDIR/munin-sched.log";
     STDERR->autoflush(1);
