@@ -66,6 +66,9 @@ sub main
 
     $paranoia = $config->{paranoia} if defined $config->{paranoia};
 
+    $host ||= $config->{sconf}{host} unless ($config->{sconf}{host} eq '*');
+    $port ||= $config->{sconf}{port} if $config->{sconf}{port};
+
     $config->reinitialize({
         DEBUG    => $DEBUG,
         paranoia => $paranoia,
