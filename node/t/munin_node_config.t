@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 42;
+use Test::More tests => 43;
 
 use FindBin;
 use English qw(-no_match_vars);
@@ -13,6 +13,7 @@ use_ok('Munin::Node::Config');
 
 my $conf = Munin::Node::Config->instance();
 isa_ok($conf, 'Munin::Node::Config');
+
 
 ###############################################################################
 #                       _ P A R S E _ L I N E
@@ -287,7 +288,7 @@ my $gname = getgrgid $gid;
     is_deeply($conf, {
         sconfdir => $sconfdir,
         sconf=>{
-            Foo    => {user => 'root', env => {baz => 'zing'}},
+            Foo    => {user => 'root', env => {baz => 'zing'}, update_rate => 86400 },
             'Foo*' => {group => [ 'root' ], env => {bar => 'zap'}},
             'F*'   => {env => {bar => 'zoo'}},
         },
@@ -303,7 +304,8 @@ my $gname = getgrgid $gid;
                 env => {
                     baz => 'zing',
                     bar => 'zap',
-                }
+                },
+                update_rate => 86400,
             },
             Fnord => {
                 env => {
@@ -312,7 +314,6 @@ my $gname = getgrgid $gid;
             },
         },
     }, "Checking sconf wildcards");
-
 }
 
 __DATA__

@@ -117,10 +117,19 @@ sub _get_intervals
     my @services = $self->_get_service_list(@nodes) or die "No services\n";
 
     foreach my $service (@services) {
-        logger("Fetching interval for service '$service'") if $config->{DEBUG};
-        $intervals{$service} = $self->_service_interval(
-            $self->_talk_to_node("config $service")
-        );
+        if (my $interval = $config->{sconf}{$service}{update_rate}) {
+            logger("Setting interval for service '$service' from config")
+                if $config->{DEBUG};
+            $intervals{$service} = $interval;
+            next;
+        }
+        else {
+            logger("Fetching interval for service '$service' from node")
+                if $config->{DEBUG};
+            $intervals{$service} = $self->_service_interval(
+                $self->_talk_to_node("config $service")
+            );
+        }
         logger("Interval is $intervals{$service} seconds") if $config->{DEBUG};
     }
 
@@ -141,11 +150,11 @@ sub _get_service_list
     my @services;
 
     foreach my $node (@nodes) {
-        logger("fetching services for node $node") if $config->{DEBUG};
+        logger("Fetching services for node $node") if $config->{DEBUG};
         my $service_list = $self->_talk_to_node("list $node");
 
         if ($service_list) {
-            logger("got services $service_list") if $config->{DEBUG};
+            logger("Got services $service_list") if $config->{DEBUG};
             push @services, split / /, $service_list;
         }
         else {

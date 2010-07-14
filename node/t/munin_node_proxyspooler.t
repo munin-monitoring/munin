@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 32;
+use Test::More tests => 33;
 use Test::Differences;
 use Test::Deep;
 
@@ -218,12 +218,26 @@ SKIP: {
         port => $port,
     ) or next;
 
-    $spooler->_open_node_connection;
-
     my $intervals = $spooler->_get_intervals or next;
 
     cmp_deeply([ keys   %$intervals ], array_each(re('^[-\w.:]+$')), 'all the keys look like services');
     cmp_deeply([ values %$intervals ], array_each(re('^\d+$')),      'all the values look like times');
+}
+{
+    my $spooler = Munin::Node::ProxySpooler->new();
+
+    my $config = Munin::Node::Config->instance();
+    $config->reinitialize({ sconf => { fnord => { update_rate => 100 } } });
+
+    no warnings;
+    local *Munin::Node::ProxySpooler::_open_node_connection = sub {};
+    local *Munin::Node::ProxySpooler::_close_node_connection = sub {};
+
+    local *Munin::Node::ProxySpooler::_get_node_list = sub { 'test.example.com' };
+    local *Munin::Node::ProxySpooler::_get_service_list = sub { 'fnord' };
+    use warnings;
+
+    is_deeply($spooler->_get_intervals, { fnord => 100 }, 'Can override the interval through the config'); 
 }
 
 
