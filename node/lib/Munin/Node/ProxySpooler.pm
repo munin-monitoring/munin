@@ -274,13 +274,11 @@ sub _open_node_connection
     logger("Opening connection to $self->{host}:$self->{port}")
         if $config->{DEBUG};
 
-    my $socket = IO::Socket::INET->new(
+    $self->{socket} = IO::Socket::INET->new(
         PeerAddr => $self->{host},
         PeerPort => $self->{port},
         Proto    => 'tcp',
     ) or die "Failed to connect to node: $!\n";
-
-    $self->{socket} = $socket;
 
     my $line = $self->_read_line or die "Failed to read banner\n";
 
