@@ -35,7 +35,6 @@ sub new
     $args{user}  = $< || $Munin::Common::Defaults::MUNIN_PLUGINUSER;
     $args{group} = $( || $Munin::Common::Defaults::MUNIN_GROUP;
 
-    # FIXME: should get the host and port from munin-node.conf
     $args{host} ||= 'localhost';
     $args{port} ||= '4949';
 
@@ -276,15 +275,10 @@ sub _open_node_connection
         if $config->{DEBUG};
 
     my $socket = IO::Socket::INET->new(
-        PeerAddress => $self->{host},
-        PeerPort    => $self->{port},
-        Proto       => 'tcp',
+        PeerAddr => $self->{host},
+        PeerPort => $self->{port},
+        Proto    => 'tcp',
     ) or die "Failed to connect to node: $!\n";
-
-    # FIXME: this REALLY shouldn't be required, but for some reason the socket
-    # isn't being connect()ed
-    $socket->connect($self->{port}, inet_aton($self->{host}))
-        or die "Failed to connect to node: $!\n";
 
     $self->{socket} = $socket;
 
