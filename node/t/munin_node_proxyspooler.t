@@ -365,47 +365,29 @@ SKIP: {
     };
     use warnings;
 
-    {
-        my $spooler = Munin::Node::ProxySpooler->new() or next;
+    my @tests = (
+        # name, expected, message
+        [ 'normal',    [ @config, @fetch ], 'normal service' ],
 
-        my @response = $spooler->_fetch_service('normal');
-        eq_or_diff(\@response, [ @config, @fetch ], 'fetching normal service');
-    }
-    {
-        my $spooler = Munin::Node::ProxySpooler->new() or next;
+        [ 'dirty',     [ @config, @fetch ], 'dirty service'  ],
 
-        my @response = $spooler->_fetch_service('dirty');
-        eq_or_diff(\@response, [ @config, @fetch ], 'fetching dirty service');
-    }
-    {
-        my $spooler = Munin::Node::ProxySpooler->new() or next;
+        [ 'timeout',   [],                  'timed out during config' ],
+        [ 'timeout2',  [],                  'timed out during fetch' ],
 
-        my @response = $spooler->_fetch_service('timeout');
-        eq_or_diff(\@response, [ ], 'service timed out during config');
-    }
-    {
-        my $spooler = Munin::Node::ProxySpooler->new() or next;
+        [ 'unknown',   [],                  'unknown service' ],
 
-        my @response = $spooler->_fetch_service('timeout2');
-        eq_or_diff(\@response, [ ], 'service timed out during fetch');
-    }
-    {
-        my $spooler = Munin::Node::ProxySpooler->new() or next;
+        [ 'badexit',   [],                  'bad exit from service during config' ],
+        [ 'badexit2',  [],                  'bad exit during fetch' ],
+    );
 
-        my @response = $spooler->_fetch_service('unknown');
-        eq_or_diff(\@response, [ ], 'unknown service');
-    }
-    {
-        my $spooler = Munin::Node::ProxySpooler->new() or next;
+    foreach my $test (@tests) {
+        my ($name, $expected, $msg) = @$test;
 
-        my @response = $spooler->_fetch_service('badexit');
-        eq_or_diff(\@response, [ ], 'bad exit from service during config');
-    }
-    {
-        my $spooler = Munin::Node::ProxySpooler->new() or next;
+        my $spooler = Munin::Node::ProxySpooler->new()
+            or fail('Could not create a new ProxySpooler');
 
-        my @response = $spooler->_fetch_service('unknown');
-        eq_or_diff(\@response, [ ], 'bad exit from service during fetch');
+        my @response = $spooler->_fetch_service($name);
+        eq_or_diff(\@response, $expected, $msg);
     }
 }
 
