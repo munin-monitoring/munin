@@ -36,33 +36,16 @@ sub write
 {
     my ($self, $timestamp, $service, $data) = @_;
 
-    # open lazily
-    my ($fh_config, $fh_data);
+    open my $fh , '>>', "$self->{spooldir}/munin-daemon.$service"
+        or die "Unable to open spool file: $!";
 
     foreach my $line (@$data) {
-        my $fh;
-
         # Ignore blank lines and "."-ones.
         next if (!defined($line) || $line eq '' || $line eq '.');
 
-        # work out where to store the line
-        if ($line =~ m/(?:\w+)\.value (?:[0-9]+:)?(?:-?[0-9.]+|U)/) {
-            # If the value line isn't timestamped
-            # we have to add the timestamp on the line
-            $line =~ s/(\w+)\.value (?!\d+:)(-?[0-9.]+|U)/$1.value $timestamp:$2/;
-
-            # It's a data line
-            $fh = $fh_data ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.data", "a+");
-        }
-        else {
-            # It's a config line
-            $fh = $fh_config ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.config", "w");
-        }
-
-        unless ($fh) {
-            logger("Unable to open spool file: $!");
-            return;
-        }
+        # If the value line isn't timestamped
+        # we have to add the timestamp on the line
+        $line =~ s/(\w+)\.value (?!\d+:)(-?[0-9.]+|U)/$1.value $timestamp:$2/;
 
         print {$fh} $line, "\n" or logger("Error writing results: $!");
     }

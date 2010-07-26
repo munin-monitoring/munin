@@ -44,28 +44,21 @@ use Munin::Node::SpoolWriter;
         'system.value 999999'
     ]);
 
-    my $config_file = "$dir/munin-daemon.fnord.config";
-    ok( -r $config_file, 'config spool file is readable');
+    my $data_file = "$dir/munin-daemon.fnord";
+    ok( -r $data_file, 'spool file is readable') or last;
 
-    my $config = read_file($config_file);
-    is_string($config, <<EOC, 'Config was written correctly');
+    my $data = read_file($data_file);
+    is_string($data, <<EOC, 'Data was written correctly');
 graph_title CPU usage
 graph_order system user nice idle iowait irq softirq
 graph_args --base 1000 -r --lower-limit 0 --upper-limit 200
 update_rate 86400
 system.label system
-EOC
-
-    my $data_file = "$dir/munin-daemon.fnord.data";
-    ok( -r $data_file, 'data spool file is readable');
-
-    my $data = read_file($data_file);
-    is_string($data, <<EOC, 'Data was written correctly');
 system.value 1234567890:999999
 EOC
 
 
-### Now a different set of data
+### Now a different set of results
     $writer->write(1234567891, 'fnord', [
         'graph_title CPU usage!',  # this line is different
         'graph_order system user nice idle iowait irq softirq',
@@ -75,18 +68,19 @@ EOC
         'system.value 999998'
     ]);
 
-    $config = read_file($config_file);
-    is_string($config, <<EOC, 'Config was replaced');
+    $data = read_file($data_file);
+    is_string($data, <<EOC, 'Spool file was appended to');
+graph_title CPU usage
+graph_order system user nice idle iowait irq softirq
+graph_args --base 1000 -r --lower-limit 0 --upper-limit 200
+update_rate 86400
+system.label system
+system.value 1234567890:999999
 graph_title CPU usage!
 graph_order system user nice idle iowait irq softirq
 graph_args --base 1000 -r --lower-limit 0 --upper-limit 200
 update_rate 86400
 system.label system
-EOC
-
-    $data = read_file($data_file);
-    is_string($data, <<EOC, 'Data was appended to');
-system.value 1234567890:999999
 system.value 1234567891:999998
 EOC
 
@@ -119,13 +113,11 @@ EOC
         my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
 
         $writer->write($timestamp, 'fnord', [
-            'graph_title CPU usage',
-            'system.label system',
             "system.value $value",
         ]);
 
-        my $data_file = "$dir/munin-daemon.fnord.data";
-        unless (-r $data_file) {
+        my $data_file = "$dir/munin-daemon.fnord";
+        unless ( -r $data_file) {
             fail("$msg: File not created");
             next
         }
