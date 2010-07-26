@@ -35,7 +35,6 @@ my $config = Munin::Node::Config->instance();
 			sconffile  => 'service_config_file',
 			paranoia   => 1,
 			DEBUG      => 1,
-			PIDEBUG    => 1,
 		},
 		'Command-line arguments set the correct configuration items'
 	);

@@ -30,6 +30,7 @@ sub plugin_factory
     my $pluginlist = new_ok('Munin::Node::Configure::PluginList' => [
         libdir     => '/usr/share/munin/plugins',
         servicedir => '/etc/munin/plugins/',
+        families   => [ 'auto' ],
     ]) or next;
 
     is($pluginlist->{libdir},     '/usr/share/munin/plugins', 'libdir key exists');
