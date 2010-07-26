@@ -47,18 +47,24 @@ sub write
 
         # work out where to store the line
         if ($line =~ m/(?:\w+)\.value (?:[0-9]+:)?(?:-?[0-9.]+|U)/) {
-            # It's a data line
-            $fh = $fh_data ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.data", "a+");
-
             # If the value line isn't timestamped
             # we have to add the timestamp on the line
             $line =~ s/(\w+)\.value (?!\d+:)(-?[0-9.]+|U)/$1.value $timestamp:$2/;
-        } else {
+
+            # It's a data line
+            $fh = $fh_data ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.data", "a+");
+        }
+        else {
             # It's a config line
             $fh = $fh_config ||= IO::File->new($self->{spooldir} . "/munin-daemon.$service.config", "w");
         }
 
-        print {$fh} $line, "\n";
+        unless ($fh) {
+            logger("Unable to open spool file: $!");
+            return;
+        }
+
+        print {$fh} $line, "\n" or logger("Error writing results: $!");
     }
 
     return;
