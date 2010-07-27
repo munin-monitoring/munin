@@ -84,9 +84,9 @@ sub _cat_multigraph_file
         return '';
     }
 
-    # FIXME: slurp the rest of the file
     # FIXME: shouldn't need to add the epoch line back in manually
-    return join '', "timestamp $epoch\n", <$fh>;
+    local $/;  # slurp the rest of the file
+    return "timestamp $epoch\n" . <$fh>;
 }
 
 
