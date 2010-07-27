@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 20;
+use Test::More tests => 17;
 use Test::LongString;
 
 use POSIX ();
@@ -49,12 +49,13 @@ use Munin::Node::SpoolWriter;
 
     my $data = read_file($data_file);
     is_string($data, <<EOC, 'Data was written correctly');
+timestamp 1234567890
 graph_title CPU usage
 graph_order system user nice idle iowait irq softirq
 graph_args --base 1000 -r --lower-limit 0 --upper-limit 200
 update_rate 86400
 system.label system
-system.value 1234567890:999999
+system.value 999999
 EOC
 
 
@@ -70,18 +71,20 @@ EOC
 
     $data = read_file($data_file);
     is_string($data, <<EOC, 'Spool file was appended to');
+timestamp 1234567890
 graph_title CPU usage
 graph_order system user nice idle iowait irq softirq
 graph_args --base 1000 -r --lower-limit 0 --upper-limit 200
 update_rate 86400
 system.label system
-system.value 1234567890:999999
+system.value 999999
+timestamp 1234567891
 graph_title CPU usage!
 graph_order system user nice idle iowait irq softirq
 graph_args --base 1000 -r --lower-limit 0 --upper-limit 200
 update_rate 86400
 system.label system
-system.value 1234567891:999998
+system.value 999998
 EOC
 
 }
@@ -90,19 +93,19 @@ EOC
 {
     my @tests = (
         #  timestamp,               value,              expected
-        [ 1234567890,            '999999',   '1234567890:999999', 'Integer without timestamp'  ],
+        [ 1234567890,            '999999',              '999999', 'Integer without timestamp'  ],
         [ 1234567890, '2134567890:999999',   '2134567890:999999', 'Integer with timestamp'     ],
 
-        [ 1234567890,            'U',        '1234567890:U',      'Unknown without timestamp'  ],
+        [ 1234567890,            'U',                   'U',      'Unknown without timestamp'  ],
         [ 1234567890, '2134567890:U',        '2134567890:U',      'Unknown with timestamp'     ],
 
-        [ 1234567890,            '-2',       '1234567890:-2',     'Negative without timestamp' ],
+        [ 1234567890,            '-2',                  '-2',     'Negative without timestamp' ],
         [ 1234567890, '2134567890:-2',       '2134567890:-2',     'Negative with timestamp'    ],
 
-        [ 1234567890,            '3.141',    '1234567890:3.141',  'Float without timestamp'    ],
+        [ 1234567890,            '3.141',               '3.141',  'Float without timestamp'    ],
         [ 1234567890, '2134567890:3.141',    '2134567890:3.141',  'Float with timestamp'       ],
 
-        [ 1234567890,            '1.05e-34', '1234567890:1.05e-34', 'E-notation without timestamp'   ],
+        [ 1234567890,            '1.05e-34',            '1.05e-34', 'E-notation without timestamp'   ],
         [ 1234567890, '2134567890:1.05e-34', '2134567890:1.05e-34', 'E-notation with timestamp'      ],
     );
 
@@ -123,7 +126,7 @@ EOC
         }
 
         my $data = read_file($data_file);
-        is_string($data, "system.value $expected\n", $msg);
+        like($data, qr(^system\.value $expected\n$)m, $msg);
     }
 }
 

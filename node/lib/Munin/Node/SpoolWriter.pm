@@ -39,13 +39,11 @@ sub write
     open my $fh , '>>', "$self->{spooldir}/munin-daemon.$service"
         or die "Unable to open spool file: $!";
 
+    print {$fh} "timestamp $timestamp\n";
+
     foreach my $line (@$data) {
         # Ignore blank lines and "."-ones.
         next if (!defined($line) || $line eq '' || $line eq '.');
-
-        # If the value line isn't timestamped
-        # we have to add the timestamp on the line
-        $line =~ s/(\w+)\.value (?!\d+:)(-?[0-9.]+|U)/$1.value $timestamp:$2/;
 
         print {$fh} $line, "\n" or logger("Error writing results: $!");
     }
