@@ -61,43 +61,32 @@ sub _cat_multigraph_file
 {
     my ($self, $service, $timestamp) = @_;
 
-    logger("_cat_multigraph_file($service, $timestamp)") if $config->{DEBUG};
+    # FIXME: shortcut by checking mtime of file?
 
-    my $return_str = '';
+    open my $fh, '<', "$self->{spooldir}/munin-daemon.$service"
+        or die "Unable to open spool file: $!";
 
-    my $fh_data = IO::File->new($self->{spooldir} . "/munin-daemon.$service.data");
+    my $epoch;
 
-    my ($last_epoch, $epoch) = (0, 0);
-    while (my $line = <$fh_data>) {
-        chomp $line;
-        logger("_cat_multigraph_file:line:$line") if $config->{DEBUG};
-        # Ignore blank lines
-        next if ($line =~ m/^\s+$/);
-
+    while (<$fh>) {
         # Parse the line for the current epoch
-        if ($line =~ m/\w+ (\d+):/) {
-            $epoch = $1;
-        }
-        logger("_cat_multigraph_file:epoch:$epoch,timestamp:$timestamp") if $config->{DEBUG};
+        ($epoch) = m/^timestamp (\d+)/ or next;
+
+        logger("Timestamp: $epoch") if $config->{DEBUG};
 
         # Only continue if the line epoch is later than the asked one
-        next unless ($epoch > $timestamp);
-
-        # emit multigraph line on epoch changes
-        if ($epoch != $last_epoch) {
-            $last_epoch = $epoch;
-
-            # Emit multigraph header ...
-            $return_str .= "multigraph $service\n";
-            # ... and its config
-            $return_str .= _cat_file($self->{spooldir} . "/munin-daemon.$service.config");
-        }
-
-        # Sending value
-        $return_str .= $line . "\n";
+        last if ($epoch > $timestamp);
     }
 
-    return $return_str;
+    if (eof $fh) {
+        logger("Epoch $timestamp not found in spool file for '$service'")
+            if $config->{DEBUG};
+        return '';
+    }
+
+    # FIXME: slurp the rest of the file
+    # FIXME: shouldn't need to add the epoch line back in manually
+    return join '', "timestamp $epoch\n", <$fh>;
 }
 
 
