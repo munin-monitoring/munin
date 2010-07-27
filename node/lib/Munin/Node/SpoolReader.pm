@@ -68,13 +68,10 @@ sub _cat_multigraph_file
 
     my $epoch;
 
+    # wind through to the start of the first results after $timestamp
     while (<$fh>) {
-        # Parse the line for the current epoch
         ($epoch) = m/^timestamp (\d+)/ or next;
-
         logger("Timestamp: $epoch") if $config->{DEBUG};
-
-        # Only continue if the line epoch is later than the asked one
         last if ($epoch > $timestamp);
     }
 
