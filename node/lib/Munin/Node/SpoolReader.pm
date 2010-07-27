@@ -63,7 +63,7 @@ sub _cat_multigraph_file
 
     # FIXME: shortcut by checking mtime of file?
 
-    open my $fh, '<', "$self->{spooldir}/munin-daemon.$service"
+    open my $fh, '<', "$self->{spooldir}/munin-daemon.$service.0"
         or die "Unable to open spool file: $!";
 
     my $epoch;
@@ -94,7 +94,7 @@ sub _get_spooled_plugins
     rewinddir $self->{spooldirhandle}
         or die "Unable to reset the spool directory handle: $!";
 
-    return map { m/^munin-daemon\.(\w+)$/ ? $1 : () }
+    return map { m/^munin-daemon\.(\w+).0$/ ? $1 : () }
         readdir $self->{spooldirhandle};
 }
 

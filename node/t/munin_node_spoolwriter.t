@@ -44,7 +44,7 @@ use Munin::Node::SpoolWriter;
         'system.value 999999'
     ]);
 
-    my $data_file = "$dir/munin-daemon.fnord";
+    my $data_file = "$dir/munin-daemon.fnord.0";
     ok( -r $data_file, 'spool file is readable') or last;
 
     my $data = read_file($data_file);
@@ -123,7 +123,7 @@ EOC
             "system.value $value",
         ]);
 
-        my $data_file = "$dir/munin-daemon.fnord";
+        my $data_file = "$dir/munin-daemon.fnord.0";
         unless ( -r $data_file) {
             fail("$msg: File not created");
             next
@@ -150,7 +150,7 @@ EOC
         'subsystem.value 123',
     ]);
 
-    my $data_file = "$dir/munin-daemon.fnord";
+    my $data_file = "$dir/munin-daemon.fnord.0";
     ok( -r $data_file, 'spool file is readable') or last;
 
     my $data = read_file($data_file);

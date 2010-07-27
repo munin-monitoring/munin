@@ -36,7 +36,7 @@ sub write
 {
     my ($self, $timestamp, $service, $data) = @_;
 
-    open my $fh , '>>', "$self->{spooldir}/munin-daemon.$service"
+    open my $fh , '>>', "$self->{spooldir}/munin-daemon.$service.0"
         or die "Unable to open spool file: $!";
 
     print {$fh} "timestamp $timestamp\n";
