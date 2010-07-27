@@ -40,6 +40,7 @@ sub write
         or die "Unable to open spool file: $!";
 
     print {$fh} "timestamp $timestamp\n";
+    print {$fh} "multigraph $service\n" unless $data->[0] =~ m{^multigraph};
 
     foreach my $line (@$data) {
         # Ignore blank lines and "."-ones.

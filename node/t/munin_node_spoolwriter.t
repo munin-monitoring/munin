@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 17;
+use Test::More tests => 19;
 use Test::LongString;
 
 use POSIX ();
@@ -50,6 +50,7 @@ use Munin::Node::SpoolWriter;
     my $data = read_file($data_file);
     is_string($data, <<EOC, 'Data was written correctly');
 timestamp 1234567890
+multigraph fnord
 graph_title CPU usage
 graph_order system user nice idle iowait irq softirq
 graph_args --base 1000 -r --lower-limit 0 --upper-limit 200
@@ -72,6 +73,7 @@ EOC
     $data = read_file($data_file);
     is_string($data, <<EOC, 'Spool file was appended to');
 timestamp 1234567890
+multigraph fnord
 graph_title CPU usage
 graph_order system user nice idle iowait irq softirq
 graph_args --base 1000 -r --lower-limit 0 --upper-limit 200
@@ -79,6 +81,7 @@ update_rate 86400
 system.label system
 system.value 999999
 timestamp 1234567891
+multigraph fnord
 graph_title CPU usage!
 graph_order system user nice idle iowait irq softirq
 graph_args --base 1000 -r --lower-limit 0 --upper-limit 200
@@ -88,8 +91,9 @@ system.value 999998
 EOC
 
 }
-### writing different types of value.
-### values can also include a timestamp: http://munin-monitoring.org/wiki/protocol-multifetch
+
+# writing different types of value.
+# values can also include a timestamp: http://munin-monitoring.org/wiki/protocol-multifetch
 {
     my @tests = (
         #  timestamp,               value,              expected
@@ -128,5 +132,39 @@ EOC
         my $data = read_file($data_file);
         like($data, qr(^system\.value $expected\n$)m, $msg);
     }
+}
+
+# writing multigraph results
+{
+    my $dir = tempdir( CLEANUP => 1 );
+    my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
+
+    $writer->write(1234567890, 'fnord', [
+        'multigraph fnord',
+        'graph_title CPU usage',
+        'system.label system',
+        'system.value 999999',
+        'multigraph fnord.one',
+        'graph_title subfnord',
+        'subsystem.label subsystem',
+        'subsystem.value 123',
+    ]);
+
+    my $data_file = "$dir/munin-daemon.fnord";
+    ok( -r $data_file, 'spool file is readable') or last;
+
+    my $data = read_file($data_file);
+    is_string($data, <<EOC, 'Data was written correctly');
+timestamp 1234567890
+multigraph fnord
+graph_title CPU usage
+system.label system
+system.value 999999
+multigraph fnord.one
+graph_title subfnord
+subsystem.label subsystem
+subsystem.value 123
+EOC
+
 }
 
