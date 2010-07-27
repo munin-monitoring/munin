@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 20;
+use Test::More tests => 18;
 use Test::LongString;
 
 use POSIX ();
@@ -237,20 +237,5 @@ EOT
 
     is_deeply([ sort $reader->_get_spooled_plugins ], [ sort qw( fnord floop blort ) ], 'Retrieved list of spooled plugins');
     is($reader->list, "blort floop fnord\n", 'Retrieved stringified list of spooled plugins');
-}
-
-
-### _cat_file
-{
-    my $dir = tempdir(CLEANUP => 1);
-    my $reader = Munin::Node::SpoolReader->new(spooldir => $dir);
-
-    open my $blah, '>', "$dir/blah" or die "Unable to create blah file: $!";
-    print $blah "rubbish\n.\n";
-    close $blah;
-
-    is(Munin::Node::SpoolReader::_cat_file("$dir/blah"), "rubbish\n", 'Read contents of file');
-
-    is(Munin::Node::SpoolReader::_cat_file("$dir/absent"), undef, 'Missing file just returns undef');
 }
 

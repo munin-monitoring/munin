@@ -102,24 +102,6 @@ sub _get_spooled_plugins
 }
 
 
-sub _cat_file
-{
-    my ($filename) = @_;
-
-    my $fh = IO::File->new($filename, '<') or return;
-
-	my $return_str = '';
-	while (my $line = <$fh>) {
-		chomp($line);
-		# Remove any "." or empty line
-		next if ($line eq '' || $line eq '.');
-		$return_str .= $line . "\n";
-	}
-
-	return $return_str;
-}
-
-
 1;
 
 __END__
