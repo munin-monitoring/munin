@@ -59,13 +59,13 @@ sub list
 
 sub _cat_multigraph_file
 {
-    my ($self, $plugin, $timestamp) = @_;
+    my ($self, $service, $timestamp) = @_;
 
-    logger("_cat_multigraph_file($plugin, $timestamp)") if $config->{DEBUG};
+    logger("_cat_multigraph_file($service, $timestamp)") if $config->{DEBUG};
 
     my $return_str = '';
 
-    my $fh_data = IO::File->new($self->{spooldir} . "/munin-daemon.$plugin.data");
+    my $fh_data = IO::File->new($self->{spooldir} . "/munin-daemon.$service.data");
 
     my ($last_epoch, $epoch) = (0, 0);
     while (my $line = <$fh_data>) {
@@ -88,9 +88,9 @@ sub _cat_multigraph_file
             $last_epoch = $epoch;
 
             # Emit multigraph header ...
-            $return_str .= "multigraph $plugin\n";
+            $return_str .= "multigraph $service\n";
             # ... and its config
-            $return_str .= _cat_file($self->{spooldir} . "/munin-daemon.$plugin.config");
+            $return_str .= _cat_file($self->{spooldir} . "/munin-daemon.$service.config");
         }
 
         # Sending value
