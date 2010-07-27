@@ -108,7 +108,7 @@ sub _get_spooled_plugins
     rewinddir $self->{spooldirhandle}
         or die "Unable to reset the spool directory handle: $!";
 
-    return map { m/^munin-daemon\.(\w+)\.data$/ ? $1 : () }
+    return map { m/^munin-daemon\.(\w+)$/ ? $1 : () }
         readdir $self->{spooldirhandle};
 }
 
