@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 18;
+use Test::More tests => 20;
 use Test::LongString;
 
 use POSIX ();
@@ -138,18 +138,24 @@ EOS
         'slab.value 123',
     ]);
 
-    is($reader->fetch(1234567800), <<EOS, 'Several plugins to fetch');
-timestamp 1234567910
-multigraph blort
-graph_title Memory usage
-slab.label slab
-slab.value 123
+    ok(my $fetched = $reader->fetch(1234567800), 'Several services to fetch');
+
+    my $f1 = <<EOT;
 timestamp 1234567890
 multigraph fnord
 graph_title CPU usage
 system.label system
 system.value 3
-EOS
+EOT
+    my $f2 = <<EOT;
+timestamp 1234567910
+multigraph blort
+graph_title Memory usage
+slab.label slab
+slab.value 123
+EOT
+    like($fetched, qr(\A$f1$f2|$f2$f1\Z)m, 'Got results for both services, in either order, and nothing else');
+
 
     is($reader->fetch(1234567900), <<EOS, 'Several plugins to fetch, but only one is recent enough');
 timestamp 1234567910
@@ -178,19 +184,23 @@ EOS
         'system.value 4',
     ]);
 
-    is($reader->fetch(1234567800), <<EOS, 'Several plugins to fetch');
-timestamp 1234567990
-multigraph fnord
-graph_title CPU usage!
-system.label system
-system.value 4
+    ok(my $fetched = $reader->fetch(1234567800), 'Several sets of results to fetch');
+
+    my $f1 = <<EOT;
 timestamp 1234567890
 multigraph fnord
 graph_title CPU usage
 system.label system
 system.value 3
-EOS
-
+EOT
+    my $f2 = <<EOT;
+timestamp 1234567990
+multigraph fnord
+graph_title CPU usage!
+system.label system
+system.value 4
+EOT
+    like($fetched, qr(\A$f1$f2|$f2$f1\Z)m, 'Got results for both services, in either order, and nothing else');
 }
 
 
