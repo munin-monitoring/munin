@@ -48,8 +48,6 @@ sub run
 
     my $self = __PACKAGE__->new(%args);
 
-    my %poller_restarted;  # when each service's poller was last restarted
-
     croak "No pidfile specified" unless $args{pid_file};
 
     # Daemonzises, and runs for cover.
@@ -89,28 +87,7 @@ sub run
 
     # Reap any dead pollers
     while (my $deceased = wait) {
-        if ($deceased < 0) {
-            last if $!{ECHILD};  # all the children are dead!
-            logger("wait() error: $!");
-        }
-
-        my $service = delete $self->{pollers}->{$deceased};
-
-        my $exit   = ($? >> 8);
-        my $signal = ($? & 127);
-        logger("Poller $deceased ($service) exited with $exit/$signal");
-
-        # avoid restarting the poller if it was last restarted too recently.
-        if (time - ($poller_restarted{$service} || 0) < 10) {
-            logger("Poller for '$service' last restarted at $poller_restarted{$service}.  Giving up.");
-            next;
-        }
-
-        # Respawn the poller
-        logger("Respawning poller for '$service'");
-        my $new_pid = $self->_launch_single_poller($service, $self->{intervals}->{$service});
-        $self->{pollers}{$new_pid} = $service;
-        $poller_restarted{$service} = time;
+        $self->_restart_poller($deceased);
     }
 
     logger('Spooler shutting down');
@@ -203,10 +180,7 @@ sub _launch_pollers
 
     while (my ($service, $interval) = each %$intervals) {
         my $poller_pid = $self->_launch_single_poller($service, $interval);
-        $pollers{$poller_pid} = $service;
     }
-
-    $self->{pollers} = \%pollers;
 
     return;
 }
@@ -220,10 +194,12 @@ sub _launch_single_poller
         if $config->{DEBUG};
 
     if (my $poller_pid = safe_fork()) {
-        # report back to parent
         logger("Poller for '$service' running with pid $poller_pid")
             if $config->{DEBUG};
-        return $poller_pid;
+
+        $self->{pollers}{$poller_pid} = $service;
+
+        return;
     }
 
     $0 .= " [$service]";
@@ -286,6 +262,35 @@ sub _fetch_service
     return @config;
 }
 
+
+sub _restart_poller
+{
+    my ($self, $deceased) = @_;
+
+    if ($deceased < 0) {
+        last if $!{ECHILD};  # all the children are dead!
+        logger("wait() error: $!");
+    }
+
+    my $service = delete $self->{pollers}->{$deceased};
+
+    my $exit   = ($? >> 8);
+    my $signal = ($? & 127);
+    logger("Poller $deceased ($service) exited with $exit/$signal");
+
+    # avoid restarting the poller if it was last restarted too recently.
+    if (time - ($self->{poller_restarted}{$service} || 0) < 10) {
+        logger("Poller for '$service' last restarted at $self->{poller_restarted}{$service}.  Giving up.");
+        return;
+    }
+
+    # Respawn the poller
+    logger("Respawning poller for '$service'");
+    $self->_launch_single_poller($service, $self->{intervals}{$service});
+    $self->{poller_restarted}{$service} = time;
+
+    return;
+}
 
 ### NODE INTERACTION ###########################################################
 
