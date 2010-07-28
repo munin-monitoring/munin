@@ -5,7 +5,7 @@ package Munin::Node::ProxySpooler;
 use strict;
 use warnings;
 
-use Net::Server::Daemonize qw( daemonize safe_fork );
+use Net::Server::Daemonize qw( daemonize safe_fork unlink_pid_file );
 use IO::Socket;
 use List::MoreUtils qw( any );
 use Time::HiRes qw( usleep ualarm gettimeofday );
@@ -26,6 +26,8 @@ sub new
     $args{spooldir} ||= $Munin::Common::Defaults::MUNIN_SPOOLDIR;
 
     $args{spool} = Munin::Node::SpoolWriter->new(spooldir => $args{spooldir});
+
+    croak "No pidfile specified" unless $args{pid_file};
 
     # don't want to run as root unless absolutely necessary.  but only root
     # can change user
@@ -50,6 +52,7 @@ sub run
 
     # Daemonzises, and runs for cover.
     daemonize($self->{user}, $self->{group}, $self->{pid_file});
+    $self->{have_pid_file}++;
 
     open STDERR, '>>', "$Munin::Common::Defaults::MUNIN_LOGDIR/munin-sched.log";
     STDERR->autoflush(1);
@@ -97,6 +100,20 @@ sub run
 
     logger('Spooler shutting down');
     exit 0;
+}
+
+
+# tidy up on exit
+sub DESTROY
+{
+    my ($self) = @_;
+
+    if ($self->{have_pid_file}) {
+        logger('Removing pidfile');
+        unlink_pid_file($self->{pid_file});
+    }
+
+    return;
 }
 
 
