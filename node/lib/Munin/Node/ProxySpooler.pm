@@ -76,6 +76,12 @@ sub run
     $SIG{INT} = $SIG{TERM} = $SIG{HUP} = sub {
         logger("Spooler caught SIG$_[0].  Shutting down");
         kill -15, $$;
+
+        if ($self->{have_pid_file}) {
+            logger('Removing pidfile') if $config->{DEBUG};
+            unlink_pid_file($self->{pid_file});
+        }
+
         exit 0;
     };
 
@@ -109,20 +115,6 @@ sub run
 
     logger('Spooler shutting down');
     exit 0;
-}
-
-
-# tidy up on exit
-sub DESTROY
-{
-    my ($self) = @_;
-
-    if ($self->{have_pid_file}) {
-        logger('Removing pidfile');
-        unlink_pid_file($self->{pid_file});
-    }
-
-    return;
 }
 
 
