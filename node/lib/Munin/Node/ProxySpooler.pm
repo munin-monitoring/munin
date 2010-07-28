@@ -63,8 +63,8 @@ sub run
     logger('Spooler starting up');
 
     # ready to actually do stuff!
-    my $intervals = $self->_get_intervals();
-    $self->_launch_pollers($intervals);
+    $self->_get_intervals();
+    $self->_launch_pollers();
 
     # Indiscriminately kill every process in the group with SIGTERM when asked
     # to quit.  this is just the list the Perl Cookbook suggests trapping.
@@ -108,7 +108,7 @@ sub run
 
         # Respawn the poller
         logger("Respawning poller for '$service'");
-        my $new_pid = $self->_launch_single_poller($service, $intervals->{$service});
+        my $new_pid = $self->_launch_single_poller($service, $self->{intervals}->{$service});
         $self->{pollers}{$new_pid} = $service;
         $poller_restarted{$service} = time;
     }
@@ -152,7 +152,9 @@ sub _get_intervals
 
     $self->_close_node_connection;
 
-    return \%intervals;
+    $self->{intervals} = \%intervals;
+
+    return;
 }
 
 
@@ -192,11 +194,11 @@ sub _service_interval { /^update_rate (\d+)/ && return $1 foreach @_; return 300
 # forks off a child for each process on the node, and sets them to work.
 sub _launch_pollers
 {
-    my ($self, $intervals) = @_;
+    my ($self) = @_;
 
     my %pollers;
 
-    while (my ($service, $interval) = each %$intervals) {
+    while (my ($service, $interval) = each %{$self->{intervals}}) {
         my $poller_pid = $self->_launch_single_poller($service, $interval);
         $pollers{$poller_pid} = $service;
     }
