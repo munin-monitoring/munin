@@ -63,7 +63,7 @@ sub run
     logger('Spooler starting up');
 
     # ready to actually do stuff!
-    $self->_get_intervals();
+
     $self->_launch_pollers();
 
     # Indiscriminately kill every process in the group with SIGTERM when asked
@@ -130,8 +130,7 @@ sub _get_intervals
 
     $self->_open_node_connection;
 
-    my @nodes    = $self->_get_node_list            or die "No nodes\n";
-    my @services = $self->_get_service_list(@nodes) or die "No services\n";
+    my @services = $self->_get_service_list() or die "No services\n";
 
     foreach my $service (@services) {
         if (my $interval = $config->{sconf}{$service}{update_rate}) {
@@ -154,7 +153,7 @@ sub _get_intervals
 
     $self->{intervals} = \%intervals;
 
-    return;
+    return \%intervals;
 }
 
 
@@ -165,8 +164,10 @@ sub _get_node_list { return (shift)->_talk_to_node('nodes'); }
 # gets a list of every service on every node
 sub _get_service_list
 {
-    my ($self, @nodes) = @_;
+    my ($self) = @_;
     my @services;
+
+    my @nodes = $self->_get_node_list() or die "No nodes\n";
 
     foreach my $node (@nodes) {
         logger("Fetching services for node $node") if $config->{DEBUG};
@@ -198,7 +199,9 @@ sub _launch_pollers
 
     my %pollers;
 
-    while (my ($service, $interval) = each %{$self->{intervals}}) {
+    my $intervals = $self->_get_intervals();
+
+    while (my ($service, $interval) = each %$intervals) {
         my $poller_pid = $self->_launch_single_poller($service, $interval);
         $pollers{$poller_pid} = $service;
     }
