@@ -27,8 +27,6 @@ sub new
 
     $args{spool} = Munin::Node::SpoolWriter->new(spooldir => $args{spooldir});
 
-    croak "No pidfile specified" unless $args{pid_file};
-
     # don't want to run as root unless absolutely necessary.  but only root
     # can change user
     #
@@ -51,6 +49,8 @@ sub run
     my $self = __PACKAGE__->new(%args);
 
     my %poller_restarted;  # when each service's poller was last restarted
+
+    croak "No pidfile specified" unless $args{pid_file};
 
     # Daemonzises, and runs for cover.
     daemonize($self->{user}, $self->{group}, $self->{pid_file});
