@@ -50,6 +50,8 @@ sub run
 
     my $self = __PACKAGE__->new(%args);
 
+    my %poller_restarted;  # when each service's poller was last restarted
+
     # Daemonzises, and runs for cover.
     daemonize($self->{user}, $self->{group}, $self->{pid_file});
     $self->{have_pid_file}++;
@@ -92,10 +94,17 @@ sub run
         my $signal = ($? & 127);
         logger("Poller $deceased ($service) exited with $exit/$signal");
 
+        # avoid restarting the poller if it was last restarted too recently.
+        if (time - ($poller_restarted{$service} || 0) < 10) {
+            logger("Poller for '$service' last restarted at $poller_restarted{$service}.  Giving up.");
+            next;
+        }
+
         # Respawn the poller
         logger("Respawning poller for '$service'");
         my $new_pid = $self->_launch_single_poller($service, $intervals->{$service});
         $pollers->{$new_pid} = $service;
+        $poller_restarted{$service} = time;
     }
 
     logger('Spooler shutting down');
