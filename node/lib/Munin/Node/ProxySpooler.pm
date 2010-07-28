@@ -64,7 +64,7 @@ sub run
 
     # ready to actually do stuff!
     my $intervals = $self->_get_intervals();
-    my $pollers   = $self->_launch_pollers($intervals);
+    $self->_launch_pollers($intervals);
 
     # Indiscriminately kill every process in the group with SIGTERM when asked
     # to quit.  this is just the list the Perl Cookbook suggests trapping.
@@ -94,7 +94,7 @@ sub run
             logger("wait() error: $!");
         }
 
-        my $service = delete $pollers->{$deceased};
+        my $service = delete $self->{pollers}->{$deceased};
 
         my $exit   = ($? >> 8);
         my $signal = ($? & 127);
@@ -109,7 +109,7 @@ sub run
         # Respawn the poller
         logger("Respawning poller for '$service'");
         my $new_pid = $self->_launch_single_poller($service, $intervals->{$service});
-        $pollers->{$new_pid} = $service;
+        $self->{pollers}{$new_pid} = $service;
         $poller_restarted{$service} = time;
     }
 
@@ -201,7 +201,9 @@ sub _launch_pollers
         $pollers{$poller_pid} = $service;
     }
 
-    return \%pollers;
+    $self->{pollers} = \%pollers;
+
+    return;
 }
 
 
