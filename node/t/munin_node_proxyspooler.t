@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 33;
+use Test::More tests => 32;
 use Test::Differences;
 use Test::Deep;
 
@@ -184,7 +184,7 @@ SKIP: {
 
 ### _get_service_list
 SKIP: {
-    skip 'Set MUNIN_HOST and MUNIN_PORT environment variables to the hostname and port of a node to test against', 3
+    skip 'Set MUNIN_HOST and MUNIN_PORT environment variables to the hostname and port of a node to test against', 2
         unless $host and $port;
 
     my $spooler = Munin::Node::ProxySpooler->new(
@@ -194,17 +194,10 @@ SKIP: {
 
     $spooler->_open_node_connection;
 
-    my @nodes = $spooler->_get_node_list;
-
-    my @services = $spooler->_get_service_list($nodes[0]);
+    my @services = $spooler->_get_service_list();
     ok(\@services, 'Got a list of services from the node') or next;
 
     cmp_deeply(\@services, array_each(re('^[-\w.:]+$')), 'all the services look reasonable');
-
-    ###############
-
-    @services = $spooler->_get_service_list('fnord.example.com');
-    is(scalar(@services), 0, 'No services for an unknown node') or next;
 }
 
 
@@ -218,7 +211,7 @@ SKIP: {
         port => $port,
     ) or next;
 
-    my $intervals = $spooler->_get_intervals or next;
+    my $intervals = $spooler->_get_intervals() or next;
 
     cmp_deeply([ keys   %$intervals ], array_each(re('^[-\w.:]+$')), 'all the keys look like services');
     cmp_deeply([ values %$intervals ], array_each(re('^\d+$')),      'all the values look like times');
@@ -233,7 +226,6 @@ SKIP: {
     local *Munin::Node::ProxySpooler::_open_node_connection = sub {};
     local *Munin::Node::ProxySpooler::_close_node_connection = sub {};
 
-    local *Munin::Node::ProxySpooler::_get_node_list = sub { 'test.example.com' };
     local *Munin::Node::ProxySpooler::_get_service_list = sub { 'fnord' };
     use warnings;
 
