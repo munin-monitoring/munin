@@ -87,6 +87,13 @@ sub run
 
     # Reap any dead pollers
     while (my $deceased = wait) {
+        if ($deceased < 0) {
+            last if $!{ECHILD};  # all the children are dead!
+
+            logger("wait() error: $!");
+            next;
+        }
+
         $self->_restart_poller($deceased);
     }
 
@@ -263,20 +270,16 @@ sub _fetch_service
 }
 
 
+# takes the PID of a dead poller, and respawns it.
 sub _restart_poller
 {
-    my ($self, $deceased) = @_;
+    my ($self, $pid) = @_;
 
-    if ($deceased < 0) {
-        last if $!{ECHILD};  # all the children are dead!
-        logger("wait() error: $!");
-    }
-
-    my $service = delete $self->{pollers}->{$deceased};
+    my $service = delete $self->{pollers}{$pid};
 
     my $exit   = ($? >> 8);
     my $signal = ($? & 127);
-    logger("Poller $deceased ($service) exited with $exit/$signal");
+    logger("Poller $pid ($service) exited with $exit/$signal");
 
     # avoid restarting the poller if it was last restarted too recently.
     if (time - ($self->{poller_restarted}{$service} || 0) < 10) {
