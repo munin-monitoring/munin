@@ -24,7 +24,7 @@ use warnings;
 
 use IO::Socket;
 use IO::File;
-use File::Path qw(make_path);
+use File::Path qw(mkpath);
 use Getopt::Long;
 use Pod::Usage;
 
@@ -49,7 +49,7 @@ if ($help) {
 }
 
 unless (-d $SPOOLDIR) {
-	make_path($SPOOLDIR, { verbose => $verbose, } ) 
+	mkpath($SPOOLDIR, { verbose => $verbose, } ) 
 		or die ("Cannot create '$SPOOLDIR': $!");
 }
 
