@@ -81,9 +81,26 @@ sub _cat_multigraph_file
         return '';
     }
 
-    # FIXME: shouldn't need to add the epoch line back in manually
-    local $/;  # slurp the rest of the file
-    return "timestamp $epoch\n" . <$fh>;
+    # The timestamp isn't part of the multigraph protocol, 
+    # just part of spoolfetch, so we have to filter it out, 
+    # and replace each value line with its current value
+    my $data = "";
+    while(<$fh>) {
+	chomp;
+        if (m/^timestamp (\d+)/) {
+		# epoch is updated
+		$epoch = $1;
+		next;
+	}
+
+        if (m/^(\w+)\.value (?:N:)?([0-9.]+)$/) {
+		$_ = "$1.value $epoch:$2";
+	}
+
+	$data .= $_ . "\n";
+    }
+
+    return $data;
 }
 
 
