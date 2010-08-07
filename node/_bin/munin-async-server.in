@@ -57,12 +57,13 @@ my $spoolwriter = Munin::Node::SpoolWriter->new(
 	spooldir => $SPOOLDIR,
 );
 
+my $process_name = "main";
 
-# Read whole configuration
+my $plugin_rate_filename = "$SPOOLDIR/plugin_rates";
+
 my @plugins;
-my %plugins_rate;
 {
-	print STDERR "Reading config from $host\n" if $verbose;
+	print STDERR "[$$][$process_name] Reading config from $host\n" if $verbose;
 	my $sock = new IO::Socket::INET( 
 		PeerAddr	=> "$host", 
 		Proto	=> 'tcp'
@@ -78,33 +79,12 @@ my %plugins_rate;
 			"$SPOOLDIR/munin-daemon.list",
 			"w",
 		);
-	
+
 		print $fh_list $plugins_line;
 		print $fh_list "\n";
 	}
 
 	@plugins = split(/ /, $plugins_line);
-
-	# Ask for config & search update_rate for each plugins
-	foreach my $plugin (@plugins) {
-		print STDERR "Asking config for $plugin\n" if $verbose;
-		$plugins_rate{$plugin} = 300; # default : 5 min
-		print $sock "config $plugin\n";
-		open (OUTFILE, "> $SPOOLDIR/munin-daemon.$plugin.config");
-		while(my $line = <$sock>) {
-			print OUTFILE $line;
-			if ($line =~ m/^update_rate (\d+)/) {
-				# The plugin has a special update_rate: overriding it
-				# XXX - Doesn't take into account a per field update_rate
-				$plugins_rate{$plugin} = $1;
-			}
-			if ($line =~ m/^\./) {
-				# Starting with . => end
-				last;
-			}
-		}
-		close (OUTFILE);
-	}
 }
 
 # Q&D child collection
@@ -117,7 +97,7 @@ MAIN: while(1) {
 	my $when = time;
 	PLUGIN: foreach my $plugin (@plugins) {
 		# See if this plugin should be updated
-		my $plugin_rate = $plugins_rate{$plugin} || 300;
+		my $plugin_rate = get_hash($plugin, $plugin_rate_filename) || 300;
 		if ($when < ($last_updated{$plugin} || 0) + $plugin_rate) {
 			# not yet, next plugin
 			next;
@@ -126,15 +106,13 @@ MAIN: while(1) {
 		# Should update it
 		$last_updated{$plugin} = $when;
 		if (fork()) {
-			# parent, return directly	
+			# parent, return directly
 			next PLUGIN;
 		}
-		
-		print STDERR "[$$][$plugin] asking for data\n" if $debug;
-
 		# Setting the command name for a useful top information
-		$0 = "munin-async-server [$plugin]";
-
+		$process_name = "plugin:$plugin";
+		$0 = "munin-async-server [$process_name]";
+		
 		fetch_data($plugin, $when);
 
 		# We end here
@@ -144,8 +122,8 @@ MAIN: while(1) {
 	# Sleep for 1s.
 	sleep 1; 
 }
-
-print STDERR "[$$] Exiting\n" if $debug;
+		
+print STDERR "[$$][$process_name] Exiting\n" if $verbose;
 
 sub fetch_data
 {
@@ -158,29 +136,80 @@ sub fetch_data
 		) || die "Error creating socket: $!"; 
 		<$sock>; # skip header
 
-		print $sock "fetch $plugin\n";
-		
-		my $fh_data = IO::File->new("$SPOOLDIR/munin-daemon.$plugin.data", "a+");
+		print STDERR "[$$][$process_name] asking for config\n" if $verbose;
+
+		print $sock "config $plugin\n";
+
+		my $output_rows = [];
+
 		while(my $line = <$sock>) {
 			print STDERR "[sock] $line" if $debug;
+			chomp($line);
+
 			if ($line =~ m/^\./) {
 				# Starting with . => end
 				last;
 			}
 
-			if ($line =~ m/^(\w+)\.value (\d+):(-?\d+\.?\d*)/) {
-				# the plugin already outputed a time
-				# keeping it
-				print $fh_data "$1.value $2:$3\n";
-				print STDERR "[$plugin] $1.value $2:$3\n" if $debug;
-			} elsif ($line =~ m/^(\w+)\.value (-?\d+\.?\d*)/) {
-				# the plugin doesn't ouput a time, 
-				# using now()
-				print $fh_data "$1.value $when:$2\n";
-				print STDERR "[$plugin] $1.value $when:$2\n" if $debug;
+			push @$output_rows, $line;
+			if ($line =~ m/^update_rate (\d+)/) {
+				# The plugin has a special update_rate: overriding it
+				# XXX - Doesn't take into account a per field update_rate
+
+				# This has to be sent back to the master
+				set_hash($plugin, $1, $plugin_rate_filename);
 			}
 		}
+
+		print STDERR "[$$][$process_name] asking for data\n" if $verbose;
+		print $sock "fetch $plugin\n";
+		
+		while(my $line = <$sock>) {
+			print STDERR "[sock] $line" if $debug;
+			chomp($line);
+			
+			if ($line =~ m/^\./) {
+				# Starting with . => end
+				last;
+			}
+
+			# Save the line
+			push @$output_rows, $line;
+		}
+
+		# Write the whole load into the spool
+		$spoolwriter->write($when, $plugin, $output_rows);
 }
+
+sub get_hash
+{
+	my ($key, $filename) = @_;
+	my %hash;
+
+	use Fcntl;   # For O_RDWR, O_CREAT, etc.
+	use DB_File;
+	tie (%hash, 'DB_File', $filename, O_RDWR|O_CREAT, 0666) 
+		or die "$!";
+	my $value = $hash{$key};
+	untie(%hash);
+
+	return $value;
+}
+
+sub set_hash
+{
+	my ($key, $value, $filename) = @_;
+	my %hash;
+
+	use Fcntl;   # For O_RDWR, O_CREAT, etc.
+	use DB_File;
+	tie (%hash, 'DB_File', $filename, O_RDWR|O_CREAT, 0666) 
+		or die "$!";
+	$hash{$key} = $value;
+	untie(%hash);
+}
+
+
 
 __END__
 
