@@ -77,14 +77,13 @@ while (my $line = <>) {
 	if ($line =~ m/^list/) {
 		print $spoolreader->list();
 	} elsif ($line =~ m/^config (\w+)/) {
-		cat_file("$SPOOLDIR/munin-daemon.$1.config");
+		# XXX - Vector-fetching is disabled for now
 		print ".\n";
 	} elsif ($vectorfetch && $line =~ m/^fetch (\w+)/) {
 		# Fetching all values since last time
-		cat_file("$SPOOLDIR/munin-daemon.$1.data");
+
+		# XXX - Vector-fetching is disabled for now
 		print ".\n";
-		# XXX - there is a race condition here
-		unlink("$SPOOLDIR/munin-daemon.$1.data"); 
 	} elsif ($line =~ m/^spoolfetch (\d+)/) {
 		my $last_epoch = $1;
 		print $spoolreader->fetch($last_epoch);
