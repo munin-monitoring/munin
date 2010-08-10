@@ -37,7 +37,7 @@ __END__
 
 =head1 NAME
 
-Manin::Master::Worker - Abstract base class for workers.
+Munin::Master::Worker - Abstract base class for workers.
 
 =head1 SYNOPSIS
 
