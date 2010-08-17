@@ -328,3 +328,11 @@ linux/buddyinfo
 linux/tcp
 proxy_plugin
 
+[2.0]
+cygwin/df
+cygwin/netstat
+pgbouncer_connections
+pgbouncer_requests
+postgres_oldest_prepared_xact_
+postgres_prepared_xacts_
+
