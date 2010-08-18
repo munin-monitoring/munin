@@ -142,18 +142,30 @@ sub process_request
 
     _net_write($session, "# munin node at $config->{fqdn}\n");
 
+    my $line = '<no command received yet>';
+
     # catch and report any system errors in a clean way.
     eval {
+	# BUG: It appears that the plugin timeout is still in place
+	# when _net_read is executing.  Meaning that if the previous
+	# plugin takes close to $timeout time then there is very very
+	# short time for munin-update to issue a new command.
+	# 
+
         $timed_out = !do_with_timeout($services->{timeout}, sub {
-            while (defined (my $line = _net_read($session))) {
+            while (defined ($line = _net_read($session))) {
                 chomp $line;
-                _process_command_line($session, $line) or last;
+		if (! _process_command_line($session, $line)) {
+		    $line = "<finished '$line', ending input loop>";
+		    last;
+		}
+		$line = "<waiting for input from master, previous was '$line'>";
             }
         });
     };
 
-    logger($EVAL_ERROR)            if ($EVAL_ERROR);
-    logger("Connection timed out") if ($timed_out);
+    logger($EVAL_ERROR)                                   if ($EVAL_ERROR);
+    logger("Node side timeout while processing: '$line'") if ($timed_out);
 
     return;
 }
