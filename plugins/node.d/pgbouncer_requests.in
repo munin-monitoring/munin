@@ -58,8 +58,8 @@ use Munin::Plugin::Pgsql;
 
 my $pg = Munin::Plugin::Pgsql->new(
     title       => 'PgBouncer queries',
-    info        => 'Number of queries',
-    vlabel      => 'Queries',
+    info        => 'Number of queries per second',
+    vlabel      => 'Queries / sec',
     defaultdb   => 'pgbouncer',
     basequery   => "SHOW STATS",
     postprocess => \&PgBouncerStatsCounter,
