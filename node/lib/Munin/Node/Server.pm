@@ -136,11 +136,6 @@ sub process_request
 
     # catch and report any system errors in a clean way.
     eval {
-	# BUG: It appears that the plugin timeout is still in place
-	# when _net_read is executing.  Meaning that if the previous
-	# plugin takes close to $timeout time then there is very very
-	# short time for munin-update to issue a new command.
-	# 
         $timed_out = !do_with_timeout($config->{'timeout'}, sub {
             while (defined ($line = _net_read($session))) {
                 chomp $line;
@@ -149,6 +144,9 @@ sub process_request
 		    last;
 		}
 		$line = "<waiting for input from master, previous was '$line'>";
+		# Reset timeout to wait a reasonable time for input from the master
+		# Misfeature: Plugin timeout and input timeout becomes identical.
+		reset_timeout();
             }
         });
     };
