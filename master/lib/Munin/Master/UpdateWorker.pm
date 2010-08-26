@@ -270,8 +270,9 @@ sub get_spoolfetch_timestamp {
 
 	my %last_updated;
 
-   	use Munin::Common::SyncDictFile;
-   	tie(%last_updated, 'Munin::Common::SyncDictFile', $db_file) or ERROR "$!";
+	use Fcntl;   # For O_RDWR, O_CREAT, etc.
+   	use DB_File;
+   	tie(%last_updated, 'DB_File', $db_file, O_RDWR|O_CREAT, 0666) or ERROR "$!";
 
 	my $last_updated_value = $last_updated{$key} || "0";
 
@@ -288,8 +289,9 @@ sub set_spoolfetch_timestamp {
 
 	my %last_updated;
 
-   	use Munin::Common::SyncDictFile;
-   	tie(%last_updated, 'Munin::Common::SyncDictFile', $db_file) or ERROR "$!";
+	use Fcntl;   # For O_RDWR, O_CREAT, etc.
+   	use DB_File;
+   	tie(%last_updated, 'DB_File', $db_file, O_RDWR|O_CREAT, 0666) or ERROR "$!";
 
 	$last_updated{$key} = time;
 
