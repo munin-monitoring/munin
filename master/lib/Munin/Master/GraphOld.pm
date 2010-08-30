@@ -368,7 +368,13 @@ sub get_title {
         $scale_text = "by " . $scale;
     }
 
-    return (munin_get($service, "graph_title", $service) . " - $scale_text");
+    my $title = munin_get($service, "graph_title", $service);
+
+    # Substitute ${graph_period} in title
+    my $period = munin_get($service, "graph_period", "second");
+    $title =~ s/\$\{graph_period\}/$period/g;
+
+    return ("$title - $scale_text");
 }
 
 sub get_custom_graph_args {
@@ -955,6 +961,10 @@ sub process_service {
         $field_count++;
 
         my $tmplabel = munin_get($field, "label", $fname);
+
+	# Substitute ${graph_period}
+	my $period  = munin_get($service, "graph_period", "second");
+	$tmplabel =~ s/\$\{graph_period\}/$period/g;
 
         push(@rrd,
                   $fielddraw
