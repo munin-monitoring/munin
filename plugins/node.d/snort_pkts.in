@@ -79,11 +79,11 @@ if [ "$1" = "config" ]; then
         echo 'graph_vlabel Packets / second'
         echo 'graph_scale no'
         echo 'pktsec.label Packets/second'
-	if [ -n $warning ]; then
-		echo 'pktsec.warning $warning'
+	if [ -n "$warning" ]; then
+		echo "pktsec.warning $warning"
 	fi
-	if [ -n $critical ]; then
-		echo 'pktsec.critical $critical'
+	if [ -n "$critical" ]; then
+		echo "pktsec.critical $critical"
 	fi
         echo 'pktsec.info The number of packets per second'
         echo 'graph_category Snort'
