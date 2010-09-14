@@ -27,6 +27,17 @@ written like this:
 
       allow ^127\.0\.0\.1$
 
+=item B<< cidr_allow NETWORK/MASK >>
+
+An alternative to C<allow RE>.  This allows the access list to be specified in
+CIDR format.  For instance, C<cidr_allow 192.0.2.0/24> would allow connections
+from any IP from 192.0.2.1 to 192.0.2.254.
+
+And C<cidr_allow 127.0.0.1/32> is the equivalent to the example above.  Note
+that the netmask B<must> be provided, even though it's just C</32>.
+
+This option requires that the C<Net::CIDR> perl module be installed.
+
 =item B<< host IP >>
 
 The IP number of the interface munin-node should listen on.  By
