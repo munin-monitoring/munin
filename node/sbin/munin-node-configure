@@ -461,8 +461,8 @@ munin-node-configure [options]
 
 =head1 DESCRIPTION
 
-B<munin-node-configure> is reports which plugins are enabled on the current
-node, and suggest changes to this list.
+B<munin-node-configure> reports which plugins are enabled on the current node,
+and suggest changes to this list.
 
 By default this program shows which plugins are activated on the system.
 
@@ -491,13 +491,16 @@ Show version information.
 
 =item B<< --debug >>
 
-Print debug information on the operations of munin-node-configure (very
-verbose).  All debugging output is sent to STDOUT, prefixed with '#'.  Only
-errors go to STDERR.
+Print debug information on the operations of C<munin-node-configure>.  This can
+be very verbose.
+
+All debugging output is printed to STDOUT but each line is prefixed with '#'.
+Only errors are printed on STDERR.
 
 =item B<< --pidebug >>
 
-Informs plugins that they should enable debugging.
+Plugin debug.  Sets the environment variable MUNIN_DEBUG to 1 so that plugins
+may enable debugging.
 
 =item B<< --config <file> >>
 
@@ -515,7 +518,7 @@ Override plugin configuration directory [@@CONFDIR@@/plugin-conf.d/]
 
 Override plugin library [@@LIBDIR@@/plugins/]
 
-=item B<< --families <family, ...> >>
+=item B<< --families <family,...> >>
 
 Override families (auto, manual, contrib, snmpauto).  Multiple families can be
 specified as a comma-separated list, by repeating the C<--families> option, or
@@ -527,17 +530,17 @@ performed on snmpauto plugins.
 
 =item B<< --suggest >>
 
-Show plugins that might be added or removed, instead of those that are
+Suggest plugins that might be added or removed, instead of those that are
 currently enabled.
 
 =item B<< --shell >>
 
-Show shell commands instead of a table.  Implies C<--suggest> unless C<--snmp> was
-also enabled.
+Show shell commands instead of a table.  Implies C<--suggest>, unless C<--snmp>
+was also enabled.
 
 =item B<< --exitnoterror >>
 
-Do not consider non-zero exit-value as error.
+Do not consider plugins that exit non-zero exit-value as error.
 
 =item B<< --remove-also >>
 
@@ -546,26 +549,29 @@ service directory.
 
 =item B<< --newer <version> >>
 
-Ignore plugins included prior to version <version> of munin-node.
+Only show suggestions related to 'auto' plugins included more recently than
+version <version>.
 
 =item B<< --snmp <host|cidr,...> >>
 
 Do SNMP probing on the host or CIDR network (e.g. "192.168.1.0/24"). This may
-take some time, especially if the probe includes many hosts. This option can be
-specified multiple times, or as a comma-separated list, to include more than
-one host/CIDR.
+take some time, especially if the many hosts are specified.
+
+This option can be specified multiple times, or as a comma-separated list, to
+include more than one host/CIDR.
 
 =item B<< --snmpversion <ver> >>
 
-Set the SNMP version (1, 2c or 3) to use when probing. Default is "2c".
+The SNMP version (1, 2c or 3) to use. ['2c']
 
 =item B<< --snmpcommunity <comm> >>
 
-Set SNMP community string to use when probing. Default is "public".
+The community string for version 1 and 2c agents.  ['public'] (If this works
+your device is probably very insecure and needs a security checkup).
 
 =item B<< --snmpport <port> >>
 
-Set SNMP port. Default is "161".
+The SNMP port to use [161]
 
 =back
 
