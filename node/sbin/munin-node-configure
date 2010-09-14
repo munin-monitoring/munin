@@ -483,11 +483,11 @@ to install the plugins.
 
 =item B<< --help >>
 
-Show this help page
+Show this help page.
 
 =item B<< --version >>
 
-Show version information
+Show version information.
 
 =item B<< --debug >>
 
@@ -505,7 +505,7 @@ Override configuration file [@@CONFDIR@@/munin-node.conf]
 
 =item B<< --servicedir <dir> >>
 
-Override plugin dir [@@CONFDIR@@/plugins/]
+Override plugin directory [@@CONFDIR@@/plugins/]
 
 =item B<< --sconfdir <dir> >>
 
@@ -513,7 +513,7 @@ Override plugin configuration directory [@@CONFDIR@@/plugin-conf.d/]
 
 =item B<< --libdir <dir> >>
 
-Override plugin lib [@@LIBDIR@@/plugins/]
+Override plugin library [@@LIBDIR@@/plugins/]
 
 =item B<< --families <family, ...> >>
 
@@ -527,32 +527,33 @@ performed on snmpauto plugins.
 
 =item B<< --suggest >>
 
-Show suggestions instead of status
+Show plugins that might be added or removed, instead of those that are
+currently enabled.
 
 =item B<< --shell >>
 
-Show shell commands instead of a table (implies --suggest unless --snmp was
-also provided)
+Show shell commands instead of a table.  Implies C<--suggest> unless C<--snmp> was
+also enabled.
 
 =item B<< --exitnoterror >>
 
-Do not consider non-zero exit-value as error
+Do not consider non-zero exit-value as error.
 
 =item B<< --remove-also >>
 
-Also show rm-commands when doing --shell
+When C<--shell> is enabled, also provide commands to delete plugins from the
+service directory.
 
 =item B<< --newer <version> >>
 
-Only show suggestions related to plugins included more recently than
-version <version>.
+Ignore plugins included prior to version <version> of munin-node.
 
 =item B<< --snmp <host|cidr,...> >>
 
 Do SNMP probing on the host or CIDR network (e.g. "192.168.1.0/24"). This may
-take some time, especially if the probe includes many hosts. This option can
-be specified multiple times, or as a comma-separated list, to include more
-than one host/CIDR.
+take some time, especially if the probe includes many hosts. This option can be
+specified multiple times, or as a comma-separated list, to include more than
+one host/CIDR.
 
 =item B<< --snmpversion <ver> >>
 
