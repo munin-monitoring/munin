@@ -87,7 +87,7 @@ sub print_values() {
     open (DF,"df $dfopts |") or die "Could not open pipe from df: $!";
     <DF>; # Skip the header
     while (<DF>) {
-	next if /\/\//;
+        next if m{//};
 	
 	# Parse the output
 	if ( /^(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)/ ) {
@@ -131,7 +131,7 @@ if ( $ARGV[0] eq "config" ) {
     open (DF,"df $dfopts |") or die "Unable to open pipe from df: $!";
     <DF>; # Skip the header
     while (<DF>) {
-	next if /\/\//;
+        next if m{//};
 	
 	# Parse the output
 	if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
@@ -155,3 +155,5 @@ if ( $ARGV[0] eq "config" ) {
 }
 
 print_values();
+
+# vim: ft=perl : sw=4 : ts=8 : et
