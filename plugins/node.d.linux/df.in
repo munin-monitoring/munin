@@ -12,7 +12,7 @@ Every Linux system with df installed.
 =head1 CONFIGURATION
 
 The plugin excludes per default the following special, read-only or
-dynamically allocating file systems from graphing: 
+dynamically allocating file systems from graphing:
 
   none unknown iso9660 squashfs udf romfs ramfs
 
@@ -42,7 +42,7 @@ You may also specify partitions to exclude.  In the aforementioned
 
 Note: These are the device paths, not the mount points.
 
-=head1 USAGE 
+=head1 USAGE
 
 Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
 
@@ -78,11 +78,11 @@ use Munin::Plugin;
 # For these devices use the mount point, the device is useless
 my %usemntpt = ( tmpfs => 1, none => 1, udev => 1 );
 
-my $exclude=$ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs debugfs simfs';
-my $dfopts = "-P -l ".join(' -x ',('',split('\s+',$exclude)));
+my $exclude = $ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs debugfs simfs';
+my $dfopts  = "-P -l ".join(' -x ',('',split('\s+',$exclude)));
 
 if (defined($ENV{'partition_exclude'})) {
-    my @excludepart = split('\s+',$ENV{'partition_exclude'});
+    my @excludepart = split('\s+', $ENV{'partition_exclude'});
 } else {
     my @excludepart = ();
 }
@@ -98,17 +98,17 @@ sub print_values() {
         next if m{//}; # Ignore lines containing //? Samba?
 
 	# Parse the output
-	my ($name,undef,$used,$avail,undef,$mountpt,undef)=split(/\s+/,$_,7);
+        my ($name, undef, $used, $avail, undef, $mountpt, undef) = split(/\s+/, $_, 7);
 
 	next if (grep $_ eq $name, @excludepart);
 
 	$name = $mountpt if defined($usemntpt{$name}) && $usemntpt{$name};
 
-	$name=clean_fieldname($name);
+        $name = clean_fieldname($name);
 
 	my $ps = 0;
 
-	$ps = ( $used / ($used+$avail) ) * 100 if $used;
+	$ps = ($used / ($used+$avail)) * 100 if $used;
 
 	print $name, ".value ", $ps, "\n";
     }
@@ -132,7 +132,7 @@ if ( defined($ARGV[0]) and $ARGV[0] eq "config" ) {
     print "graph_vlabel %\n";
     print "graph_scale no\n";
     print "graph_category disk\n";
-    
+
     # Read from df
     open (DF,"df $dfopts |") or die "Unable to open pipe from df: $!";
     <DF>; # Skip the header
@@ -140,13 +140,13 @@ if ( defined($ARGV[0]) and $ARGV[0] eq "config" ) {
         next if m{//};
 
 	# Parse the output
-	my ($name,undef,undef,undef,$ps,$mountpt,undef)=split(/\s+/,$_,7);
+        my ($name,undef,undef,undef,$ps,$mountpt,undef) = split(/\s+/,$_,7);
 
 	next if (grep $_ eq $name, @excludepart);
 
 	$name = $mountpt if defined($usemntpt{$name}) && $usemntpt{$name};
 
-	$name=clean_fieldname($name);
+        $name = clean_fieldname($name);
 
 	# Create and print labels
 	print $name, ".label ", $mountpt, "\n";
