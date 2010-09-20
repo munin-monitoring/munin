@@ -81,11 +81,8 @@ my %usemntpt = ( tmpfs => 1, none => 1, udev => 1 );
 my $exclude = $ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs debugfs simfs';
 my $dfopts  = "-P -l ".join(' -x ',('',split('\s+',$exclude)));
 
-if (defined($ENV{'partition_exclude'})) {
-    my @excludepart = split('\s+', $ENV{'partition_exclude'});
-} else {
-    my @excludepart = ();
-}
+my @excludepart;
+@excludepart = split m{\s+}, $ENV{partition_exclude} if $ENV{partition_exclude};
 
 
 sub print_values() {
