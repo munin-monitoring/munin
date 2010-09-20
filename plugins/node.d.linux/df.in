@@ -35,6 +35,13 @@ You may specify filesystem specific warning and critical levels:
     env._dev_sda2_warning 98
     env._dev_sda2_critical 99
 
+You may also specify partitions to exclude.  In the aforementioned
+[df] section add this:
+
+    env.partition_exclude /path/to/ignore1 /path/to/ignore2
+
+Note: These are the device paths, not the mount points.
+
 =head1 USAGE 
 
 Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
@@ -51,11 +58,13 @@ filesystems.
 
 =head1 VERSION
 
-$Id$
+  $Id$
 
 =head1 AUTHOR
 
 Ingvar Hagelund
+
+Partition exclusion code added by Joshua Kugler
 
 =head1 LICENSE
 
@@ -72,6 +81,13 @@ my %usemntpt = ( tmpfs => 1, none => 1, udev => 1 );
 my $exclude=$ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs debugfs simfs';
 my $dfopts = "-P -l ".join(' -x ',('',split('\s+',$exclude)));
 
+if (defined($ENV{'partition_exclude'})) {
+    my @excludepart = split('\s+',$ENV{'partition_exclude'});
+} else {
+    my @excludepart = ();
+}
+
+
 sub print_values() {
 
     # Read from df
@@ -80,9 +96,11 @@ sub print_values() {
     while (<DF>) {
 	chomp;
 	next if /\/\//; # Ignore lines containing //? Samba?
-	
+
 	# Parse the output
 	my ($name,undef,$used,$avail,undef,$mountpt,undef)=split(/\s+/,$_,7);
+
+	next if (grep $_ eq $name, @excludepart);
 
 	$name = $mountpt if defined($usemntpt{$name}) && $usemntpt{$name};
 
@@ -100,12 +118,11 @@ sub print_values() {
 
 if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" ) {
     if (`@@PERL@@ $0` eq "" ) {
-	print "no\n";
-	exit 0;
+	print "no (no devices to monitor)\n";
     } else {
 	print "yes\n";
-	exit 0;
     }
+    exit 0;
 }
 
 if ( defined($ARGV[0]) and $ARGV[0] eq "config" ) {
@@ -124,6 +141,8 @@ if ( defined($ARGV[0]) and $ARGV[0] eq "config" ) {
 	
 	# Parse the output
 	my ($name,undef,undef,undef,$ps,$mountpt,undef)=split(/\s+/,$_,7);
+
+	next if (grep $_ eq $name, @excludepart);
 
 	$name = $mountpt if defined($usemntpt{$name}) && $usemntpt{$name};
 
