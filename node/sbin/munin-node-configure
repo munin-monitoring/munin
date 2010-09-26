@@ -457,7 +457,7 @@ munin-node-configure - View and modify which plugins are enabled.
 
 =head1 SYNOPSIS
 
-munin-node-configure [options]
+  munin-node-configure [options]
 
 =head1 DESCRIPTION
 
@@ -477,7 +477,7 @@ plugins will be printed. These can be reviewed or piped directly into a shell
 to install the plugins.
 
 
-=head1 OPTIONS
+=head1 GENERAL OPTIONS
 
 =over 4
 
@@ -494,8 +494,8 @@ Show version information.
 Print debug information on the operations of C<munin-node-configure>.  This can
 be very verbose.
 
-All debugging output is printed to STDOUT but each line is prefixed with '#'.
-Only errors are printed on STDERR.
+All debugging output is printed to STDOUT, and each line is prefixed with '#'.
+Only errors are printed to STDERR.
 
 =item B<< --pidebug >>
 
@@ -518,39 +518,60 @@ Override plugin configuration directory [@@CONFDIR@@/plugin-conf.d/]
 
 Override plugin library [@@LIBDIR@@/plugins/]
 
-=item B<< --families <family,...> >>
+=item B<< --exitnoterror >>
 
-Override families (auto, manual, contrib, snmpauto).  Multiple families can be
-specified as a comma-separated list, by repeating the C<--families> option, or
-as a combination of the two.
-
-When listing installed plugins, the default families are auto, manual and
-contrib.  Only auto plugins are checked for plugins.  SNMP probing is only
-performed on snmpauto plugins.
+Do not consider plugins that exit non-zero exit-value as error.
 
 =item B<< --suggest >>
 
 Suggest plugins that might be added or removed, instead of those that are
 currently enabled.
 
+=back
+
+
+=head2 OUTPUT OPTIONS
+
+By default, C<munin-node-configure> will print out a table summarising the
+results.
+
+=over 4
+
 =item B<< --shell >>
 
-Show shell commands instead of a table.  Implies C<--suggest>, unless C<--snmp>
-was also enabled.
+Instead of a table, print shell commands to install the new plugin suggestions.
 
-=item B<< --exitnoterror >>
-
-Do not consider plugins that exit non-zero exit-value as error.
+This implies C<--suggest>, unless C<--snmp> was also enabled.  By default, it
+will not attempt to remove any plugins.
 
 =item B<< --remove-also >>
 
-When C<--shell> is enabled, also provide commands to delete plugins from the
-service directory.
+When C<--shell> is enabled, also provide commands to remove plugins that are no
+longer applicable from the service directory.
+
+=back
+
+
+=head2 PLUGIN SELECTION OPTIONS
+
+=over 4
+
+=item B<< --families <family,...> >>
+
+Override the list of families that will be used (auto, manual, contrib,
+snmpauto).  Multiple families can be specified as a comma-separated list, by
+repeating the C<--families> option, or as a combination of the two.
+
+When listing installed plugins, the default families are 'auto', 'manual' and
+'contrib'.  Only 'auto' plugins are checked for suggestions.  SNMP probing is only
+performed on 'snmpauto' plugins.
 
 =item B<< --newer <version> >>
 
-Only show suggestions related to 'auto' plugins included more recently than
-version <version>.
+Only consider plugins added to the Munin core since <version>.  This option is
+useful when upgrading, since it can prevent plugins that have been manually
+removed from being resinstalled.  This only applies to plugins in the 'auto'
+family.
 
 
 =head2 SNMP Options
