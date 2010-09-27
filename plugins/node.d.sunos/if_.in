@@ -56,7 +56,7 @@ fi
 
 if [ "$1" = "suggest" ]; then
 	if [ -x /usr/bin/kstat ]; then
-		kstat -m link -p -s '/^rbytes$/' | awk -F: '{ print $3 }'
+		kstat -p -m '/^(?!unix)/' -n '/^(?!mac$)/' -s rbytes64 | awk -F: '{ print $3 }'
 		exit 0
 	else
 		exit 1
@@ -71,24 +71,19 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel bits per ${graph_period} in (-) / out (+)'
 	echo 'graph_category network'
 	echo 'rbytes.label received'
-        echo 'rbytes.type COUNTER'
-        echo 'rbytes.max 2000000000'
-        echo 'rbytes.graph no'
-        echo 'rbytes.cdef rbytes,8,*'
+	echo 'rbytes.type COUNTER'
+	echo 'rbytes.graph no'
+	echo 'rbytes.cdef rbytes,8,*'
 	print_warning rbytes
 	print_critical rbytes
-        echo 'obytes.label bps'
+	echo 'obytes.label bps'
 	echo 'obytes.type COUNTER'
 	echo 'obytes.negative rbytes'
 	echo 'obytes.cdef obytes,8,*'
-        echo 'obytes.max 2000000000'
 	print_warning obytes
 	print_critical obytes
 	exit 0
 fi;
 
-kstat -p -n $INTERFACE -m link -s '/^[ro]bytes$/' | awk -F: '
-{
-	split($4, four, "\t")
-	print four[1] ".value", four[2]
-}'
+kstat -p -m '/^(?!unix)/' -n $INTERFACE -s '*bytes64' | sed \
+	's/.*\(.bytes\)64./\1.value /'
