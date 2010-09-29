@@ -5,6 +5,7 @@ This is a pre-release checklist for the maintainer.
  * Is .htaccess installed?
  * rm -f /etc/munin/plugins/* 
       Does munin-node-configure -d show any autoconf errors?
+      Does munin-node-configure --debug run nicely or do we get perl errors?
 
  * Update plugins/plugins.history.in:
 
