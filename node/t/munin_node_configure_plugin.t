@@ -708,7 +708,8 @@ sub gen_plugin
 
 ### read_magic_markers
 SKIP: {
-    skip 'Directory::Scratch not installed' unless FOUND_DIRECTORY_SCRATCH;
+    skip 'Directory::Scratch not installed', 2
+        unless FOUND_DIRECTORY_SCRATCH;
 
     my $file = Directory::Scratch->new->touch('foo/bar/baz', <<'EOF');
 # Munin test plugin.   Does nothing, just contains magic markers
@@ -727,7 +728,8 @@ EOF
         '"capabilities" magic marker is read');
 }
 SKIP: {
-    skip 'Directory::Scratch not available' unless FOUND_DIRECTORY_SCRATCH;
+    skip 'Directory::Scratch not available', 2
+        unless FOUND_DIRECTORY_SCRATCH;
 
     my $file = Directory::Scratch->new->touch('foo/bar/baz', <<'EOF');
 # Munin test plugin.   Does nothing, just contains magic markers
