@@ -573,6 +573,7 @@ useful when upgrading, since it can prevent plugins that have been manually
 removed from being resinstalled.  This only applies to plugins in the 'auto'
 family.
 
+=back
 
 =head2 SNMP Options
 
