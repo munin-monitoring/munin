@@ -27,11 +27,8 @@ sub new
 
     $args{spool} = Munin::Node::SpoolWriter->new(spooldir => $args{spooldir});
 
-    # don't want to run as root unless absolutely necessary.  but only root
-    # can change user
-    #
-    # FIXME: these will need changing to root/root as and when it starts
-    # running plugins
+    # don't want to run as root unless absolutely necessary.  but only root can
+    # change user
     $args{user}  = $< || $Munin::Common::Defaults::MUNIN_PLUGINUSER;
     $args{group} = $( || $Munin::Common::Defaults::MUNIN_GROUP;
 
@@ -60,12 +57,11 @@ sub run
 
     logger('Spooler starting up');
 
-    # ready to actually do stuff!
-
     $self->_launch_pollers();
 
     # Indiscriminately kill every process in the group with SIGTERM when asked
-    # to quit.  this is just the list the Perl Cookbook suggests trapping.
+    # to quit.  this is just the list of signals the Perl Cookbook suggests
+    # trapping.
     #
     # FIXME: might be better if this was implemented with sigtrap pragma.
     #
@@ -396,16 +392,52 @@ munin-node instance.
 
 =head1 SYNOPSIS
 
-  Munin::Node::ProxySpooler->run(%args);
+  Munin::Node::ProxySpooler->run(spooldir => '/var/spool/munin');
+  # never returns.
+
+  # meanwhile, in another process
+  my $spoolreader = Munin::Node::Spoolreader->new(
+      spooldir => '/var/spool/munin',
+  );
+  print $spoolreader->fetch(123456789);
 
 =head1 METHODS
 
 =over 4
 
-=item B<run(%args)>
+=item B<new>
 
-Forks off a spooler daemon, and returns control to the caller.  'spooldir' key
-should be the directory to write to.
+  Munin::Node::ProxySpooler->new(%args);
+
+Constructor.  It is called automatically by the C<run> method, so probably
+isn't of much use otherwise.
+
+=item B<run>
+
+  Munin::Node::ProxySpooler->run(%args);
+
+Daemonises the current process, and starts fetching data from a Munin node.
+
+Never returns.  The process will clean up and exit(0) upon receipt of SIGINT,
+SIGTERM or SIGHUP.
+
+=over 8
+
+=item C<spooldir>
+
+The directory to write results to.  Optional.
+
+=item C<host>, C<port>
+
+The host and port the spooler will gather results from.  Defaults to
+C<localhost> and C<4949> respectively, which should be acceptable for most
+purposes.
+
+=item C<pid_file>
+
+The pidfile to use.  Required.
+
+=back
 
 =back
 
