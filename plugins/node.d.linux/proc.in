@@ -643,9 +643,7 @@ sub rpn
 need_multigraph();
 set_run;
 #set_aspect;
-print "check_args\n";
 check_args;
-print "populate_stats\n";
 populate_stats;
 
 # We only get here if we're supposed to.
