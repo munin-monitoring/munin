@@ -57,19 +57,17 @@ sub run
 
     logger('Spooler starting up');
 
-    $self->_launch_pollers();
-
     # Indiscriminately kill every process in the group with SIGTERM when asked
     # to quit.  this is just the list of signals the Perl Cookbook suggests
     # trapping.
     #
     # FIXME: might be better if this was implemented with sigtrap pragma.
     #
-    # FIXME: bit of a race condition here, but the pollers shouldn't have nasty
-    # things lying about in their %SIG.
+    # !!!NOTE!!! this should always be the same list as the one down there in
+    # _launch_single_poller()
     $SIG{INT} = $SIG{TERM} = $SIG{HUP} = sub {
         logger("Spooler caught SIG$_[0].  Shutting down");
-        kill -15, $$;
+        kill -15 => $$;
 
         if ($self->{have_pid_file}) {
             logger('Removing pidfile') if $config->{DEBUG};
@@ -78,6 +76,8 @@ sub run
 
         exit 0;
     };
+
+    $self->_launch_pollers();
 
     logger('Spooler going to sleep');
 
@@ -204,6 +204,11 @@ sub _launch_single_poller
 
         return;
     }
+
+    # don't want the pollers to have the kill-all-the-process-group handler
+    # installed.  !!!NOTE!!! this should always be the same list as the one up
+    # there in run()
+    delete $SIG{qw( INT TERM HUP )};
 
     $0 .= " [$service]";
 
