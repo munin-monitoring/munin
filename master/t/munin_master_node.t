@@ -3,10 +3,12 @@ use warnings;
 use strict;
 
 use Munin::Master::Config;
-use Test::More tests => 13;
+use Test::More tests => 14;
 use Test::MockModule;
 use Test::MockObject::Extends;
 use Test::Exception;
+
+use Test::Differences;
 
 use Data::Dumper;
 
@@ -24,18 +26,14 @@ sub setup {
 }
 
 
-############################# 2 #########################################
-
-
+### new
 {
     my $node = Munin::Master::Node->new();
     isa_ok($node, 'Munin::Master::Node','Create a node object');
 }
 
 
-############################# 3 #########################################
-
-
+### _do_connect
 {
     my $node = setup();
     $node->mock('_node_read_single', sub { 
@@ -50,9 +48,7 @@ sub setup {
 }
 
 
-############################# 4 #########################################
-
-
+### _extract_name_from_greeting
 {
     my $node = Munin::Master::Node->new();
     is($node->_extract_name_from_greeting('# munin node at foo.example.com'),
@@ -62,9 +58,7 @@ sub setup {
 }
 
 
-######################################################################
-
-
+### negotiate_capabilities
 {
     my $node = setup();
     $node->mock('_node_read_single', sub { 
@@ -73,6 +67,15 @@ sub setup {
     my @res = $node->negotiate_capabilities();
 
     is_deeply(\@res, ['multigraph'], 'Capabilities - single');
+}
+{
+    my $node = setup();
+    $node->mock('_node_read_single', sub { 
+        return ('# Unknown command. Try list, nodes, config, fetch, version or quit');
+    });
+    my @res = $node->negotiate_capabilities();
+
+    is_deeply(\@res, ['NA'], 'Capabilities - single');
 }
 
 
@@ -93,10 +96,7 @@ This fails.  Frankly it should result in "multigraph".
 =cut
 
 
-
-######################################################################
-
-
+### list_plugins
 {
     my $node = setup();
     $node->mock('_node_read_single', sub { return 'foo bar baz'; });
@@ -109,9 +109,7 @@ This fails.  Frankly it should result in "multigraph".
 }
 
 
-######################################################################
-
-
+### fetch_service_config
 {
     my $node = setup();
     $node->mock('_node_read', sub { return ('# timeout: bla bla bla') });
@@ -119,8 +117,6 @@ This fails.  Frankly it should result in "multigraph".
         qr/Timeout error on node/,
             'Fetch service config - Timeout throws exception';
 }
-
-
 {
     my $node = setup();
     $node->mock('_node_read', sub { 
@@ -132,12 +128,30 @@ This fails.  Frankly it should result in "multigraph".
             'baz.bar foo',
         );
     });
-    throws_ok { $node->fetch_service_config('foo') }
-        qr/Missing required attribute 'label' for data source 'baz'/,
-            'Fetch service config - Missing "label" throws exception';
+
+#die Dumper { $node->fetch_service_config('fun') };
+
+    my %res = $node->fetch_service_config('fun');
+    eq_or_diff(\%res, {
+            global => {
+                multigraph => [ 'fun' ],
+                fun        => [
+                    [ 'foo', 'bar' ],
+                    [ 'zap', 'gabonk' ],
+                ],
+            },
+            data_source => {
+                fun => {
+                    baz => {
+                        bar => 'foo',
+                        extinfo => 'NOTE: The plugin did not provide any label for the data source baz.  It is in need of fixing.',
+                        label => 'No .label provided',
+                    },
+                },
+            },
+        }, 'Fetch service config - missing label',
+    );
 }
-
-
 {
     my $node = setup();
     $node->mock('_node_read', sub { 
@@ -150,30 +164,27 @@ This fails.  Frankly it should result in "multigraph".
             'zip.label bar',
         );
     });
-    my %res = $node->fetch_service_config('foo');
+    my %res = $node->fetch_service_config('fun');
 
-    is_deeply(\%res,
-	      {
-	       global => {
-			  multigraph => [ 'foo' ],
-			  foo => {
-				  [qw(foo bar)],
-				  [qw(zap gabonk)],
-				  ['graph_order', 'baz zip'],
-				 },
-			 },
-	       data_source => {
-			       foo => {
-				       baz => {label => 'foo'},
-				       zip => {label => 'bar'},
-				      },
-			      },
-	      },
-	      'Fetch service config - implicit graph order'
-	     );
+    is_deeply(\%res, {
+            global => {
+                multigraph => ['fun'],
+                fun        => [
+                    [qw(foo bar)],
+                    [qw(zap gabonk)],
+                    ['graph_order', 'baz zip'],
+                ],
+            },
+            data_source => {
+                fun => {
+                    baz => {label => 'foo'},
+                    zip => {label => 'bar'},
+                },
+            },
+        },
+        'Fetch service config - implicit graph order'
+    );
 }
-
-
 {
     my $node = setup();
     $node->mock('_node_read', sub {
@@ -187,24 +198,33 @@ This fails.  Frankly it should result in "multigraph".
             'graph_order zip baz',
         );
     });
-    my %res = $node->fetch_service_config('foo');
+    my %res = $node->fetch_service_config('fun');
     is_deeply(\%res, {
-        global => [
-            [qw(foo bar)],
-            [qw(zap gabonk)],
-            ['graph_order', 'zip baz']
-        ], 
-        data_source => {
-            baz => {label => 'foo'},
-            zip => {label => 'bar'},
+            global => {
+                multigraph => [qw( fun )],
+                fun        => [
+                    [qw( foo bar    )],
+                    [qw( zap gabonk )],
+                    [ 'graph_order', 'zip baz' ],
+                ],
+            },
+            data_source => {
+                fun => {
+                    baz => {
+                        label => 'foo',
+                    },
+                    zip => {
+                        label => 'bar',
+                    },
+                }
+            },
         },
-    }, 'Fetch service config - explicit graph_order');
+        'Fetch service config - explicit graph_order'
+    );
 }
 
 
-######################################################################
-
-
+### fetch_service_data
 {
     my $node = setup();
     $node->mock('_node_read', sub { return ('# timeout: bla bla bla') });
@@ -213,25 +233,39 @@ This fails.  Frankly it should result in "multigraph".
         qr/Timeout in fetch from 'foo'/,
             'Fetch service data - Timeout throws exception';
 }
-
-
 {
     my $node = setup();
     $node->mock('_node_read', sub {
         return (
             '',
             '# bla bla bla',
-            'foo.value bar',
+            'fun.value bar',
             'zap.value gabonk',
             'baz.value foo',
         );
     });
 
+    my $time = time;  # this will work, except when the clock ticks at the wrong time
     my %res = $node->fetch_service_data('foo');
 
     is_deeply(\%res, {
-        foo => {value => 'bar', when => 'N'}, 
-        zap => {value => 'gabonk', when => 'N'},
-        baz => {value => 'foo', when => 'N'},
-    }, 'Fetch service data');
+            foo => {
+                fun => {
+                    value => ['bar'],
+                    when  => [$time],
+                },
+                zap => {
+                    value => ['gabonk'],
+                    when  => [$time],
+                },
+                baz => {
+                    value => ['foo'],
+                    when  => [$time],
+                },
+            },
+        },
+        'Fetch service data'
+    );
 }
+
+# vim: sw=8 : ts=4 : et
