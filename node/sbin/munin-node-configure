@@ -147,15 +147,17 @@ sub parse_args
     @snmp_hosts = map { split /,/ } @snmp_hosts;
 
     my $snmp = init_snmp(
-        hosts     => \@snmp_hosts,
-        version   => $snmpver,
-        port      => $snmpport,
-        community => $snmpcomm,
-        username  => $snmp3username,
-        authpass  => $snmp3authpass,
-        authproto => $snmp3authproto,
-        privpass  => $snmp3privpass,
-        privproto => $snmp3privproto,
+        hosts        => \@snmp_hosts,
+        version      => $snmpver,
+        port         => $snmpport,
+
+        community    => $snmpcomm,
+
+        username     => $snmp3username,
+        authpassword => $snmp3authpass,
+        authprotocol => $snmp3authproto,
+        privpassword => $snmp3privpass,
+        privprotocol => $snmp3privproto,
     ) if @snmp_hosts;
 
     $config->reinitialize({
