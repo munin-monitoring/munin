@@ -50,9 +50,11 @@ sub main
     $plugins->load();
 
     # Gather information
-    if (@{ $config->{snmp} }) {
-        my $snmp = init_snmp($plugins);
-        $snmp->run_probes($plugins);
+    if ($config->{snmp}) {
+        $plugins->{library}->prepare_plugin_environment($plugins->names);
+        fetch_plugin_snmpconf($plugins, $_) foreach ($plugins->list);
+
+        $config->{snmp}->run_probes($plugins);
     }
     elsif ($config->{suggest}) {
         gather_suggestions($plugins);
@@ -144,7 +146,19 @@ sub parse_args
     # comma-delimited form
     @snmp_hosts = map { split /,/ } @snmp_hosts;
 
-	$config->reinitialize({
+    my $snmp = init_snmp(
+        hosts     => \@snmp_hosts,
+        version   => $snmpver,
+        port      => $snmpport,
+        community => $snmpcomm,
+        username  => $snmp3username,
+        authpass  => $snmp3authpass,
+        authproto => $snmp3authproto,
+        privpass  => $snmp3privpass,
+        privproto => $snmp3privproto,
+    ) if @snmp_hosts;
+
+    $config->reinitialize({
         %$config,
 
         newer          => $newer,
@@ -155,20 +169,12 @@ sub parse_args
 
         families => \@families,
 
+        snmp => $snmp,
+
         conffile   => $conffile,
         servicedir => $servicedir,
         sconfdir   => $sconfdir,
         libdir     => $libdir,
-
-        snmp             => \@snmp_hosts,
-        snmp_version     => $snmpver,
-        snmp_port        => $snmpport,
-        snmp_community   => $snmpcomm,
-        snmpv3_username  => $snmp3username,
-        snmpv3_authpass  => $snmp3authpass,
-        snmpv3_authproto => $snmp3authproto,
-        snmpv3_privpass  => $snmp3privpass,
-        snmpv3_privproto => $snmp3privproto,
 
         DEBUG   => $debug,
         PIDEBUG => $pidebug,
@@ -303,33 +309,13 @@ sub link_add
 
 ### SNMP probing ###############################################################
 
-# Prepares for SNMP probing
 sub init_snmp
 {
-    my ($plugins) = @_;
-
-	unless (eval { require Munin::Node::SNMPConfig; }) {
+    unless (eval { require Munin::Node::SNMPConfig; }) {
         die "# ERROR: Cannot perform SNMP probing as Munin::Node::SNMPConfig module is not available.\n",
             $@;
-	}
-
-    $plugins->{library}->prepare_plugin_environment($plugins->names);
-
-    fetch_plugin_snmpconf($plugins, $_) foreach ($plugins->list);
-
-    return Munin::Node::SNMPConfig->new(
-        hosts        => $config->{snmp},
-        version      => $config->{snmp_version},
-        port         => $config->{snmp_port},
-
-        community    => $config->{snmp_community},
-
-        username     => $config->{snmpv3_username},
-        authpassword => $config->{snmpv3_authpass},
-        authprotocol => $config->{snmpv3_authproto},
-        privpassword => $config->{snmpv3_privpass},
-        privprotocol => $config->{snmpv3_privproto},
-    );
+    }
+    return Munin::Node::SNMPConfig->new(@_);
 }
 
 
