@@ -38,15 +38,7 @@ sub main
 {
 	parse_args();
 
-    my $plugins = Munin::Node::Configure::PluginList->new(
-        libdir     => $config->{libdir},
-        servicedir => $config->{servicedir},
-
-        pidebug    => $config->{pidebug},
-
-        families => $config->{families},
-        newer    => $config->{newer},
-    );
+    my $plugins = $config->{plugins};
     $plugins->load();
 
     # Gather information
@@ -160,26 +152,34 @@ sub parse_args
         privprotocol => $snmp3privproto,
     ) if @snmp_hosts;
 
+    my $plugins = Munin::Node::Configure::PluginList->new(
+        libdir     => $libdir,
+        servicedir => $servicedir,
+
+        pidebug    => $pidebug,
+
+        families   => \@families,
+        newer      => $newer,
+    );
+
     $config->reinitialize({
         %$config,
 
-        newer          => $newer,
-        shell          => $shell,
         exit_not_error => $exit_not_error,
         suggest        => $suggest,
-        remove_also    => $removes,
 
-        families => \@families,
+        shell          => $shell,
+        remove_also    => $removes,
 
         snmp => $snmp,
 
+	plugins => $plugins,
+
         conffile   => $conffile,
-        servicedir => $servicedir,
+        servicedir => $servicedir,  # needed for creating/removing links
         sconfdir   => $sconfdir,
-        libdir     => $libdir,
 
         DEBUG   => $debug,
-        PIDEBUG => $pidebug,
     });
 
     return;
