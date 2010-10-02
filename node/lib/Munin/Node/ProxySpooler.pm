@@ -208,7 +208,7 @@ sub _launch_single_poller
     # don't want the pollers to have the kill-all-the-process-group handler
     # installed.  !!!NOTE!!! this should always be the same list as the one up
     # there in run()
-    delete $SIG{qw( INT TERM HUP )};
+    delete @SIG{qw( INT TERM HUP )};
 
     $0 .= " [$service]";
 
