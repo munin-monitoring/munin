@@ -375,7 +375,7 @@ sub usage
 sub autoconf
 {
     print "no (Needs manual configuration, check documentation)\n";
-    exit 1;
+    exit 0;
 }
 
 # Print the value of a two-dimensional hash if it exist.
