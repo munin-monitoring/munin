@@ -1,8 +1,9 @@
 # -*- cperl -*-
+# vim: ts=4 : sw=4 : et
 use warnings;
 use strict;
 
-use Test::More tests => 2;
+use Test::More tests => 5;
 
 use_ok('Munin::Master::Config');
 
@@ -65,6 +66,13 @@ $fasit->{config}{groups}{marvin}{hosts}{marvin}{group}
     = $fasit->{config}{groups}{marvin};
 
 is_deeply($config, $fasit, 'Config hash contents');
+
+
+### _final_char_is
+ok(  Munin::Master::Config::_final_char_is('h', 'blah'), 'it was the last character');
+ok(! Munin::Master::Config::_final_char_is('a', 'blah'), 'it was not the last character');
+ok(! Munin::Master::Config::_final_char_is('z', 'blah'), 'it not in the string at all');
+
 
 __DATA__
 
