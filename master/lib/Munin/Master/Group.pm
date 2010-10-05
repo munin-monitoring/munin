@@ -11,7 +11,7 @@ use Carp;
 use Munin::Master::Host;
 
 sub new {
-    my ($class, $group_name, $parent) = @_;
+    my ($class, $group_name) = @_;
 
     my $self = {
         group_name => $group_name,
@@ -63,7 +63,7 @@ sub get_all_hosts {
     }
 
     push @hosts, values %{$self->{hosts}};
-    
+
     return @hosts;
 }
 
@@ -76,32 +76,66 @@ __END__
 
 Munin::Master::Group - Holds information on host groups.
 
-=head1 SYNOPSIS
-
-FIX
+Groups can be nested.
 
 =head1 METHODS
 
-=over 
+=over
 
 =item B<new>
 
-FIX
+  my $group = Munin::Master::Group->new($name, $parent);
+
+Constructor.  $name is the name of the group.
 
 =item B<add_attributes>
 
-FIX
+  $group->add_attributes(\%attrs);
+
+Sets attributes %attrs for the group.  Valid attributes are:
+
+=over 4
+
+=item node_order
+
+Override the order of the hosts within the group.
+
+=item local_address
+
+The local address the update process should bind to when contacting the nodes
+in this group.
+
+=item contacts
+
+The contacts for this group.  See L<http://munin-monitoring.org/wiki/HowToContact>.
+
+=back
+
+An exception will be thrown if invalid attributes are provided.
+
+(Full details here: L<http://munin-monitoring.org/wiki/munin.conf#Groupleveldirectives>.)
 
 =item B<add_host>
 
-FIX
+  $group->add_host($host);
+
+Adds host $host to the group.
 
 =item B<give_attributes_to_hosts>
 
-FIX
+  $group->give_attributes_to_hosts();
+
+Propagates the attributes of $group to all hosts in the group.  (This does
+B<not> apply to hosts belonging to sub-groups.)
 
 =item B<get_all_hosts>
 
-FIX
+  my @hosts = $group->get_all_hosts();
+
+Returns the list of all hosts associated with this group, including those
+belonging to any sub-groups.
 
 =back
+
+=cut
+# vim: ts=4 : sw=4 : et
