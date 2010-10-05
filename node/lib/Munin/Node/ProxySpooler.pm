@@ -8,7 +8,7 @@ use warnings;
 use Net::Server::Daemonize qw( daemonize safe_fork unlink_pid_file );
 use IO::Socket;
 use List::MoreUtils qw( any );
-use Time::HiRes qw( usleep ualarm gettimeofday );
+use Time::HiRes qw( ualarm gettimeofday );
 use Carp;
 
 use Munin::Common::Defaults;

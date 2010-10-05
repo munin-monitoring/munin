@@ -69,7 +69,6 @@ sub run_probes
 {
     my ($self, $plugins) = @_;
 
-    # FIXME: should preserve hostnames as much as possible.
     foreach my $host (expand_hosts(@{$self->{hosts}})) {
         $self->_probe_single_host($host, $plugins);
     }
