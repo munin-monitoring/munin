@@ -1,0 +1,33 @@
+<TMPL_LOOP NAME="PATH">
+  <TMPL_UNLESS NAME="__last__">
+    <TMPL_IF NAME="name"> ::
+    <TMPL_IF NAME="path"><a href="<TMPL_VAR NAME="path">"></TMPL_IF>
+    <TMPL_VAR NAME="name">
+	     <TMPL_IF NAME="path"></a></TMPL_IF>
+         <TMPL_ELSE>
+           <TMPL_IF NAME="path"><a href="<TMPL_VAR NAME="path">"></TMPL_IF>
+           Overview
+           <TMPL_IF NAME="path"></a></TMPL_IF>
+         </TMPL_IF>
+       </TMPL_UNLESS>
+     </TMPL_LOOP>
+     <TMPL_IF NAME="CATEGORY">
+     :: <TMPL_VAR NAME="CATEGORY">
+     </TMPL_IF>
+     <TMPL_IF NAME="LARGESET">:: <select class="peers" onchange="window.open(this.options[this.selectedIndex].value,'_top')">
+      <option value=""><TMPL_VAR NAME="INFO_OPTION"></option>
+       <TMPL_LOOP NAME="PEERS">
+        <option 
+          <TMPL_IF NAME="LINK">
+            value="<TMPL_VAR NAME="LINK">">
+          <TMPL_ELSE>
+            value="">
+          </TMPL_IF>
+        <TMPL_VAR NAME="NAME"></option>
+                 
+      </TMPL_LOOP>
+      </select>
+      <TMPL_ELSE>
+        :<TMPL_LOOP NAME="PEERS">: <TMPL_IF NAME="LINK"><a href="<TMPL_VAR NAME="LINK">"></TMPL_IF><TMPL_VAR NAME="NAME"><TMPL_IF NAME="LINK"></a></TMPL_IF> </TMPL_LOOP>
+  </TMPL_IF>
+             

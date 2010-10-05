@@ -1,0 +1,186 @@
+#!/usr/bin/perl -wT
+#
+# Copyright (C) 2004 Jimmy Olsen, Audun Ytterdal
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+# Simple munin-node. Should be run from inetd or similar.
+#
+# This should be as small and elegant as possible, to make for easier
+# reviewing by sysadmins that want to do simple munin-stuff in high
+# security environments.
+#
+
+use strict;
+
+$| = 1;
+
+my $clientdir = "@@CONFDIR@@/node.d";
+my $conffile  = "@@CONFDIR@@/node-simple.conf";
+my $version   = "@@VERSION@@";
+
+# Empty environment
+%ENV = ();
+$ENV{PATH}  = "/bin:/usr/bin";
+# We emptied the environment. There will be no locale issues.
+
+my $config  = &read_config($conffile);
+my $plugins = &read_plugin_dir($clientdir);
+
+my $hostname;
+if (defined $config->{hostname})
+{
+	$hostname = $config->{hostname};
+}
+elsif (defined $config->{host_name})
+{
+	$hostname = $config->{host_name};
+}
+else
+{
+	$hostname = `hostname`;
+	chomp $hostname;
+}
+
+print "# munin node at $hostname\n";
+
+while (<>)
+{
+	if (/^\s*list(?:\s+\S+|)\s*$/i)
+	{ # Print plugin list
+		print (join (' ', keys (%{$plugins})), "\n");
+	}
+	elsif (/^\s*version\s*/i)
+	{ # Print version number
+		print "# munin node simple on $hostname version: $version\n";
+	}
+	elsif (/^\s*quit\s*/i or /^\s*\.\s*$/)
+	{ # Drop out
+		exit (0);
+	}
+	elsif (/^\s*config\s+([A-Za-z0-9_]+)\s*$/i)
+	{
+		print &run_file ($plugins->{$1}, "config");
+		print ".\n";
+	}
+	elsif (/^\s*fetch\s+([A-Za-z0-9_]+)\s*$/i)
+	{
+		print &run_file ($plugins->{$1});
+		print ".\n";
+	}
+	else
+	{
+		print "# Unknown command. Try list, config, fetch, version or quit\n";
+	}
+}
+
+exit (0);
+
+sub read_plugin_dir
+{
+	my $cdir = shift;
+	my $ret  = {};
+
+    # Open and read the names of the files in the plugin directory
+	if (-d $cdir)
+	{
+		opendir (DIR, $clientdir) or die "Could not open dir \"$cdir\" for reading: $!";
+		my @files = grep {!/[^A-Za-z0-9_]/} readdir (DIR); # No funky chars
+		closedir (DIR);
+
+		foreach my $file (@files)
+		{
+			$ret->{$file} = "$cdir/$file";
+		}
+	}
+
+	return $ret;
+}
+
+sub read_config
+{
+	my $file = shift;
+	my $ret  = {};
+
+	if (-f $file)
+	{
+		if (open (CONF, $file))
+		{
+			while (<CONF>)
+			{
+				chomp;
+				s/#.*//; # Skip comments
+				next unless /\S/; # Skip empty lines
+
+				if (/^\s*([a-zA-Z0-9_]+)\s+(\S+)$/)
+				{
+					$ret->{$1} = $2;
+				}
+				else
+				{
+					warn "Warning: unreadable configuration line in \"$file\": \"$_\".";
+				}
+			}
+			close (CONF);
+		}
+	}
+	return $ret;
+}
+
+sub run_file
+{
+	my $file = shift;
+	my $arg  = shift;
+
+	if (!defined $file or ! -e $file)
+	{
+		return "# Plugin does not exist.\n.\n";
+	}
+
+	my $pid = open (CHILD, "-|");
+
+	if (!defined $pid) # Something went wrong
+	{
+		return "# Fork error: $!\n.\n";
+	}
+	elsif ($pid) # Parent
+	{
+		my $tmp = join ('', <CHILD>);
+		close (CHILD);
+		if ($?)
+		{
+			return "# Error, plugin exited with status $?.\n";
+		}
+		else
+		{
+			return $tmp;
+		}
+	}
+	else # Child
+	{
+		if (defined $arg)
+		{
+			# print "# Executing: \"$file\" \"$arg\".\n";
+			exec $file $file, $arg;
+		}
+		else
+		{
+			# print "# Executing: \"$file\".\n";
+			exec $file $file;
+		}
+	}
+	# notreached
+}

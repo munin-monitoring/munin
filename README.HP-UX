@@ -1,0 +1,13 @@
+There is a somewhat ragged set of contributed HP-UX specific plugins
+requiering various licenses.  We hope for further contributions to
+make the HP-UX support more complete.
+
+Please note that Makefile.config needs editing almost at the very end
+to work, the sections are commented.
+
+You will also need GNU Make which you can find here:
+
+Europe: http://hpux.asknet.de/hppd/hpux/Gnu/make-3.81/
+US and other places: http://hpux.cs.utah.edu/hppd/hpux/Gnu/make-3.81/
+
+Many thanks to Ralph Grothe for the contributions towards HP-UX support.

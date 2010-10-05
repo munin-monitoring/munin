@@ -1,0 +1,256 @@
+#!/usr/bin/perl -wT
+# -*- cperl -*-
+#
+# Copyright (C) 2002-2009 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
+#    Nicolai Langfeldt
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# $Id: munin-node 3516 2010-04-23 17:17:34Z ligne $
+#
+
+use strict;
+use warnings;
+
+# Trust PERL5LIB from environment
+use lib map { /(.*)/ } split(/:/, ($ENV{PERL5LIB} || ''));
+
+use Getopt::Long;
+use Munin::Node::Config;
+use Munin::Common::Defaults;
+use Munin::Node::OS;
+use Munin::Node::Server;
+
+my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
+my $sconfdir   = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
+my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
+my $FQDN       = "";
+my $DEBUG      = 0;
+my $PIDEBUG    = 0;
+my $defuser    = getpwnam ($Munin::Common::Defaults::MUNIN_PLUGINUSER);
+my $defgroup   = getgrnam ($Munin::Common::Defaults::MUNIN_GROUP);
+my $paranoia   = 0;
+my @ignores    = ();
+my $timeout    = 10;
+
+sub main {
+    chdir ("/");
+
+    # "Clean" environment to disable taint-checking on the
+    # environment. We _know_ that the environment is insecure, but we
+    # want to let admins shoot themselves in the foot with it, if they
+    # want to.
+    foreach my $key (keys %ENV) {
+        $ENV{$key} =~ /^(.*)$/;
+        $ENV{$key} = $1;
+    }
+
+    $0 =~ /^(.*)$/;
+    $0 = $1;
+
+    parse_args();
+
+    # Check permissions of configuration
+    unless (Munin::Node::OS->check_perms_if_paranoid($servicedir)
+         && Munin::Node::OS->check_perms_if_paranoid($conffile))
+    {
+        die "Fatal error. Bailing out.";
+    }
+
+    my $config = Munin::Node::Config->instance();
+    $config->parse_config_from_file($conffile);
+
+    $FQDN     = $config->{fqdn}     if defined $config->{fqdn};
+    $defuser  = $config->{defuser}  if defined $config->{defuser};
+    $defgroup = $config->{defgroup} if defined $config->{defgroup};
+    $paranoia = $config->{paranoia} if defined $config->{paranoia};
+
+    push @ignores, @{$config->{ignores}} if defined $config->{ignores};
+
+    $config->reinitialize({
+        timeout    => $timeout,
+
+        %$config,
+
+        servicedir => $servicedir,
+        sconfdir   => $sconfdir,
+        conffile   => $conffile,
+        fqdn       => $FQDN,
+        DEBUG      => $DEBUG,
+        PIDEBUG    => $PIDEBUG,
+        defuser    => $defuser,
+        defgroup   => $defgroup,
+        paranoia   => $paranoia,
+        ignores    => \@ignores,
+    });
+
+    Munin::Node::Server->run(
+       syslog_ident => 'munin-node',
+       conf_file    => $conffile,
+       pid_file     => "$Munin::Common::Defaults::MUNIN_STATEDIR/munin-node.pid"
+    );
+
+    return 0;
+}
+
+
+sub parse_args {
+    my @ORIG_ARGV  = @ARGV;
+
+    print_usage_and_exit() unless GetOptions (
+        "config=s"     => \$conffile,
+        "debug!"       => \$DEBUG,
+        "plugindebug!" => \$PIDEBUG,
+        "paranoia!"    => \$paranoia,
+        "version"      => \&print_version_and_exit,
+        "help"         => \&print_usage_and_exit,
+    );
+
+    # Reset ARGV (for HUPing)
+    @ARGV = @ORIG_ARGV;
+}
+
+sub print_version_and_exit {
+    print qq{munin-node (munin-node) version $Munin::Common::Defaults::MUNIN_VERSION.
+Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
+
+Copyright (C) 2002-2009
+
+This is free software released under the GNU General Public License. There
+is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. For details, please refer to the file COPYING that is included
+with this software or refer to
+  http://www.fsf.org/licensing/licenses/gpl.txt
+};
+
+    exit 0;
+}
+
+
+sub print_usage_and_exit {
+    print qq{Usage: $0 [options]
+
+Options:
+    --help              View this message.
+    --config <file>     Use <file> as configuration file.
+                        [$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf]
+    --[no]paranoia      Only run plugins owned by root. Check permissions.
+                        [--noparanoia]
+    --debug             View debug messages
+    --pidebug           Plugin debug.  Sets the environment variable
+                        MUNIN_DEBUG to 1 so that plugins may enable debugging.
+    --version           View version information.
+
+};
+
+    exit 0;
+}
+
+
+exit main() unless caller;
+
+
+1;
+
+__END__
+
+
+=head1 NAME
+
+munin-node - A daemon to gather information in cooperation with the main
+Munin program
+
+=head1 SYNOPSIS
+
+munin-node [--options]
+
+=head1 OPTIONS
+
+=over 5
+
+=item B<< --config <configfile> >>
+
+Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin-node.conf]
+
+=item B< --[no]paranoia >
+
+Only run plugins owned by root. Check permissions as well. [--noparanoia]
+
+=item B< --help >
+
+View this help message.
+
+=item B< --debug >
+
+View debug messages.  This can be very verbose.
+
+=back
+
+=head1 DESCRIPTION
+
+munin-node is a daemon for reporting statistics on system performance.
+
+It doesn't produce these itself, but instead relies on a number of plugins
+which are responsible for gathering the data they require, and
+describing how this should be graphed.  In fact, it does little more than
+fielding requests from the Munin master, running the appropriate plugins,
+and returning the output they produce.
+
+=head1 FILES
+
+    @@CONFDIR@@/munin-node.conf
+    @@CONFDIR@@/plugins/*
+    @@CONFDIR@@/plugin-conf.d/*
+    @@STATEDIR@@/munin-node.pid
+    @@LOGDIR@@/munin-node.log
+
+=head1 VERSION
+
+This is munin-node v@@VERSION@@
+
+=head1 AUTHORS
+
+Audun Ytterdal, Jimmy Olsen, and Tore Anderson.
+
+=head1 BUGS
+
+Please see L<http://munin.projects.linpro.no/report/1>.
+
+=head1 COPYRIGHT
+
+Copyright (C) 2002-2006 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
+
+This is free software; see the source for copying conditions. There is
+NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+
+This program is released under the GNU General Public License
+
+=head1 SEE ALSO
+
+For information on configuration options, please refer to the man page for
+F<munin-node.conf>.
+
+Many plugins can report whether or not they can reasonably be used on the
+node.  C<munin-node-configure> can use this information to help manage
+installed plugins.
+
+The network protocol is documented at
+L<http://munin.projects.linpro.no/wiki/network-protocol>
+
+
+=cut
+
+# vim:syntax=perl ts=4 : expandtab

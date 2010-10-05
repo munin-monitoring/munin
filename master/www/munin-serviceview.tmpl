@@ -1,0 +1,91 @@
+<TMPL_INCLUDE NAME="partial/head.tmpl">
+<!--
+	Body material.
+	First comes a heading frame with logo and the breadcrumbs with links to each level above
+-->
+<body>
+<TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
+ <!-- Loop over the services at this level.  Mostly only to access the
+      nested variables describing the _one_ service that should be
+      available here. -->
+ <TMPL_LOOP NAME="SERVICES">
+
+  <table class="invisiblebox">
+    <tr>
+      <!-- Table row: Day image -->
+      <!-- Note, the class of the img does not work to set border width and color.  Could be something to do with the table? -->
+      <td><img src="<TMPL_VAR NAME="IMGDAY">" alt="daily graph" <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/></td>
+      <!-- cont'd: Week image -->
+      <td><img src="<TMPL_VAR NAME="IMGWEEK">" alt="weekly graph" <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>/></td>
+    </tr>
+    <tr>
+      <!-- New table row: Month image -->
+      <td><img src="<TMPL_VAR NAME="IMGMONTH">" alt="monthly graph" <TMPL_IF NAME="IMGMONTHWIDTH">width="<TMPL_VAR NAME="IMGMONTHWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGMONTHHEIGHT">height="<TMPL_VAR NAME="IMGMONTHHEIGHT">"</TMPL_IF>/></td>
+      <!-- cont'd: Year image -->
+      <td><img src="<TMPL_VAR NAME="IMGYEAR">" alt="yearly graph" <TMPL_IF NAME="IMGYEARWIDTH">width="<TMPL_VAR NAME="IMGYEARWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGYEARHEIGHT">height="<TMPL_VAR NAME="IMGYEARHEIGHT">"</TMPL_IF>/></td>
+    </tr>
+    <!-- .sum graphs.  One of the least used features of munin? -->
+<TMPL_IF NAME="IMGWEEKSUM">
+    <tr>
+      <!-- Week sum -->
+      <td><img src="<TMPL_VAR NAME="IMGWEEKSUM">" alt="summed weekly graph" <TMPL_IF NAME="IMGWEEKSUMWIDTH">width="<TMPL_VAR NAME="IMGWEEKSUMWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGWEEKSUMHEIGHT">height="<TMPL_VAR NAME="IMGWEEKSUMHEIGHT">"</TMPL_IF>/></td>
+      <!-- Month sum?  BUG?: See mixture of "month" and "year" in the text and tags -->
+      <td><img src="<TMPL_VAR NAME="IMGYEARSUM">" alt="summed monthly graph" <TMPL_IF NAME="IMGYEARSUMWIDTH">width="<TMPL_VAR NAME="IMGYEARSUMWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGYEARSUMHEIGHT">height="<TMPL_VAR NAME="IMGYEARSUMHEIGHT">"</TMPL_IF>/></td>
+    </tr>
+</TMPL_IF><!-- IMGWEEKSUM -->
+
+<!-- Here follows meta information for the graphs -->
+
+	<tr>
+	  <td colspan="2" class="legendbox">
+	    <table width='100%' id="legend" cellpadding="0" cellspacing="0">
+		  <TMPL_LOOP NAME="GRAPHINFO"><!-- Do we actually allow mutiple graph_info, or is this just to access the nested data? -->
+		    <tr>
+		      <td class='wrap' colspan="6" align='left' valign='top'><TMPL_VAR NAME="INFO"></td>
+		    </tr>
+		  </TMPL_LOOP><!-- GRAPHINFO -->
+
+		    <TMPL_IF NAME="STATE_WARNING"><tr><td class='wrap' colspan="6" align='left' valign='top'><b>NOTE!</b> This service is in WARNING state because one of the values reported is outside the allowed range.  Please see further down for information about the ranges and the graph for the values.</td></tr></TMPL_IF>
+		    <TMPL_IF NAME="STATE_CRITICAL"><tr><td class='wrap' colspan="6" align='left' valign='top'><b>NOTE!</b> This service is in CRITICAL state because one of the values reported is outside the allowed range.  Please see further down for information about the ranges and the graph for the values.</td></tr></TMPL_IF>
+		    <TMPL_IF NAME="STATE_UNKNOWN"><tr><td class='wrap' colspan="6" align='left' valign='top'><b>NOTE!</b> This service is in UNKNOWN state, because something bad happened.  Please check your network, the munin-node, and the plugin.</td></tr></TMPL_IF>
+
+		    <tr>
+			  <th align='left' valign='top'>Field</th>
+			  <th align='left' valign='top'><span title="For use in munin.conf">Internal name</span></th>                         <!-- BUG: The definitions.html reference is not correct, it is only available at the root, there are not enough ..s in the URL -->
+			  <th align='center' valign='top'><a href="../../definitions.html#data_types">Type</a></th>
+			  <th align='center' valign='top'>Warn</th>
+			  <th align='center' valign='top'>Crit</th>
+			  <th>Info</th>
+		    </tr>
+		  <TMPL_LOOP NAME="FIELDINFO">
+		    <tr class="<TMPL_IF NAME="__odd__">oddrow<TMPL_ELSE>evenrow</TMPL_IF><TMPL_IF NAME="__last__"> lastrow</TMPL_IF>">
+		      <td align='left' valign='top'><TMPL_VAR ESCAPE="HTML" NAME="LABEL"></td>
+		      <td align='left' valign='top'><span title="For use in munin.conf"><TMPL_VAR ESCAPE="HTML" NAME="FIELD"></span></td>
+		      <td align='center' valign='top'><TMPL_VAR NAME="TYPE"></td>
+		      <td align='center' valign='top'><TMPL_IF NAME="STATE_WARNING"><div class='warntext'></TMPL_IF><TMPL_VAR NAME="WARN"><TMPL_IF NAME="STATE_WARNING"></div><TMPL_ELSE>&nbsp;</TMPL_IF></td>
+		      <td align='center' valign='top'><TMPL_IF NAME="STATE_CRITICAL"><div class='crittext'></TMPL_IF><TMPL_VAR NAME="CRIT"><TMPL_IF NAME="STATE_CRITICAL"></div><TMPL_ELSE>&nbsp;</TMPL_IF></td>
+		      <td class='wrap' align='left' valign='top'><TMPL_IF NAME="INFO"><TMPL_VAR ESCAPE="HTML" NAME="INFO"><TMPL_ELSE>&nbsp;</TMPL_IF></td>
+		    </tr>
+
+		    <TMPL_IF NAME="EXTINFO">
+		      <tr class="<TMPL_IF NAME="__odd__">oddrow<TMPL_ELSE>evenrow</TMPL_IF>"><td class='wrap' colspan="6" align='left' valign='top'>This field has the following extra information: <TMPL_VAR ESCAPE="HTML" NAME="EXTINFO"></td></tr>
+		    </TMPL_IF>
+		  </TMPL_LOOP><!-- FIELDINFO -->
+	    </table>
+	  </td>
+	</tr>
+  </TMPL_LOOP><!-- What ends here?  Probably SERVICES -->
+  <tr>
+    <td>
+    </td>
+  </tr>
+  <tr>
+   <td colspan="2" class="linkbox">
+     <TMPL_INCLUDE NAME="partial/bottom_navigation.tmpl">
+   </td>
+  </tr>
+</table>
+  <TMPL_INCLUDE NAME="partial/generated_by.tmpl">
+</body>
+</html>
+  

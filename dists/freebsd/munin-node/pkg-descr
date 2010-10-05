@@ -1,0 +1,13 @@
+Munin network-wide graphing framework (node)
+
+Munin is a tool for graphing all sorts of information about one or more
+servers and displaying it in a web interface. It uses the excellent
+RRDTool (written by Tobi Oetiker) and is written in Perl. Munin has a
+master/node architecture. The master connects to all the nodes at regular
+intervals, and asks them for data. It then stores the data in RRD-files,
+and (if needed) updates the graphs. One of the main goals have been ease
+of creating own "plugins" (graphs).
+
+This is the node part. It is used on all machines Munin shall watch.
+
+WWW: http://www.linpro.no/projects/munin/

@@ -1,0 +1,76 @@
+#!@@GOODSH@@
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+fw_forwarded_local - Plugin to monitor network connections.
+
+=head1 CONFIGURATION
+
+This plugin must run with root privileges
+
+=head1 CONFIGURATION EXAMPLE
+
+@@CONFDIR@@/plugin-conf.d/global or other file in that dir must contain:
+
+ [fw*]
+  user root
+
+=head1 NOTES
+
+#  forward: number of connections forwarded
+#  local:   number of connections for the host itself
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+
+=cut
+
+if [ "$1" = "autoconf" ]; then
+	if [ -r /proc/net/ip_conntrack -o -r /proc/net/nf_conntrack ]
+	then
+		echo yes
+	else
+		echo "no (/proc/net/ip_conntrack missing or not readable)"
+	fi
+	exit 0
+fi
+
+if [ "$1" = "config" ]; then
+	echo 'graph_title ipconntrack'
+	echo 'graph_args -l 0 --base 1000'
+	echo 'graph_vlabel established connections'
+	echo 'graph_category network'
+	echo 'forward.label forward'
+	echo 'forward.type GAUGE'
+	echo 'local.label local'
+	echo 'local.type GAUGE'
+	exit 0
+fi
+
+if [ -r /proc/net/ip_conntrack ]; then
+	_conntrack_file=/proc/net/ip_conntrack
+else
+	_conntrack_file=/proc/net/nf_conntrack
+fi
+
+
+perl -ne '
+    BEGIN { $forward=0; $local=0; }
+
+    if ( ($src, $dst, $isrc, $idst) =
+     /.*ESTABLISHED src=(.*) .*dst=(.*) sport.*src=(.*) .*dst=(.*) sport.*/ ) {
+        if( $src eq $idst) {
+	    $local++;
+	} else {
+            $forward++;
+       }
+    }
+    END { print "forward.value $forward\nlocal.value $local\n" }
+' < $_conntrack_file
+

@@ -1,0 +1,76 @@
+#!/usr/bin/perl
+# -*- cperl -*-
+#
+# Copyright (C) 2009 Magnus Hagander, Redpill Linpro AB
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+=head1 NAME
+
+slony_lag_ - Plugin to monitor slony replication lag.
+
+=head1 CONFIGURATION
+
+Configuration is done through libpq environment variables, for example
+PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugin::Pgsql>.
+
+To monitor a specific database, link to slony_lag_<databasename>:<clustername>.
+
+=head1 SEE ALSO
+
+L<Munin::Plugin::Pgsql>
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=head1 AUTHOR
+
+Magnus Hagander <magnus@hagander.net>, Redpill Linpro AB
+
+=head1 COPYRIGHT/License.
+
+Copyright (c) 2009 Magnus Hagander, Redpill Linpro AB
+
+All rights reserved. This program is free software; you can
+redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+=cut
+
+use strict;
+use warnings;
+
+use Munin::Plugin::Pgsql;
+
+my $pg = Munin::Plugin::Pgsql->new(
+    basename => 'slony_lag_',
+    title    => 'Slony lag',
+    info     => 'Slony replication lag',
+    vlabel   => 'Lag',
+    basequery =>
+        "SELECT st_received, extract(epoch FROM st_lag_time) FROM _%%PARAM1%%.sl_status ORDER BY 1",
+    paramdatabase => 1,
+    configquery =>
+        "SELECT st_received, 'Node ' || st_received FROM _%%PARAM1%%.sl_status ORDER BY 1",
+    graphdraw => 'LINE',
+);
+
+$pg->Process();
+exit(0);
+

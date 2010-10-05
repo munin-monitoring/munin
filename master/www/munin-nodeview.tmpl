@@ -1,0 +1,49 @@
+<TMPL_INCLUDE NAME="partial/head.tmpl">
+<!--
+    		BODY PART.  Start with a horizontal table thing with logo and "headline" material.
+-->
+<body>
+<TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
+<table class="invisiblebox">
+<!--
+      Outer loop, going down on the page, the categories of plugins
+      (they are grouped by category)
+-->
+  <TMPL_LOOP NAME="CATEGORIES">
+  <tr><td class="graphbox" id="<TMPL_VAR ESCAPE="HTML" NAME="NAME">">
+  <table>
+      <!-- <a id="<TMPL_VAR ESCAPE="HTML" NAME="NAME">">&nbsp;</a> -->
+        <tr><td colspan="2"><h3 class="nobottom"> <TMPL_VAR ESCAPE="HTML" NAME="NAME"></h3></td></tr>
+<!-- 
+     Next loop, one service pr "line" going down.  Each line has to images: day and week graphs
+     and some header matter
+-->
+        <TMPL_LOOP NAME="SERVICES">
+		  <tr><td><div class="lighttext">:: <a <TMPL_IF NAME="STATE_WARNING">class="warn heading"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit heading"</TMPL_IF> href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></div></td></tr>
+          <tr>
+            <td><a href="<TMPL_VAR NAME="URLX">"><img <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> src="<TMPL_VAR NAME="IMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">" <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/></a></td>
+            <td><a href="<TMPL_VAR NAME="URLX">"><img <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> src="<TMPL_VAR NAME="IMGWEEK">" alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">" <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>/></a></td>
+          </tr>
+        </TMPL_LOOP><!-- End of SERVICES loop -->
+	</table>
+  </td></tr>
+
+  <tr><td></td></tr>
+
+  </TMPL_LOOP><!-- End of CATEGORIES loop -->
+<!--
+    Start of end matter: A line of "pages at the same nesting level ("peers")
+-->
+  <tr>
+      <td class="linkbox">
+     <TMPL_INCLUDE NAME="partial/bottom_navigation.tmpl">
+      </td>
+   </tr>   
+</table>
+
+<!--
+    End of end: A line containing the munin signature
+-->
+  <TMPL_INCLUDE NAME="partial/generated_by.tmpl">
+</body>
+</html>

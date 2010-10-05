@@ -1,0 +1,83 @@
+<TMPL_INCLUDE NAME="partial/head.tmpl">
+<!--
+	BODY matter.  Starts off with a table with the logo on the left, and various headlines on the right.
+-->
+<body> 
+
+<TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
+
+ <table class="largeinvisiblebox">
+ <tr>
+   <td class="linkbox">
+ <ul>	
+<!--
+    Outer body loop, going down, the groups (at this (current) level.  Listing level 1!
+-->
+  <TMPL_LOOP NAME="GROUPS">
+      <li><span class="domain"><a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+      <ul>
+	<!-- In each group there are N categories -->
+	  <TMPL_IF NAME="NCATEGORIES"><TMPL_LOOP NAME="CATEGORIES">
+              <li><span class="host"><a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+              <ul>
+		<!-- And in each categroy there are M services -->
+	          <TMPL_LOOP NAME="SERVICES">
+		      <li><span class="service"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span></li>
+		  </TMPL_LOOP><!-- SERVICES -->
+	      </ul>
+	      </li>
+	  </TMPL_LOOP><!--CATEGORIES --></TMPL_IF><!-- NCATEGORIES -->
+      <TMPL_IF NAME="NGROUPS">
+<!-- GROUPS Listing level 2 -->
+  <TMPL_LOOP NAME="GROUPS">
+      <li><span class="domain"><a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+      <ul>
+	  <TMPL_IF NAME="NCATEGORIES"><TMPL_LOOP NAME="CATEGORIES">
+              <li><span class="host"><a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+              <ul>
+	          <TMPL_LOOP NAME="SERVICES">
+		      <li><span class="service"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span></li>
+		  </TMPL_LOOP> 
+	      </ul>
+	      </li>
+	  </TMPL_LOOP></TMPL_IF>
+      <TMPL_IF NAME="NGROUPS"><!-- NGROUPS level 3 -->
+  <TMPL_LOOP NAME="GROUPS"><!-- GROUPS Listing level 3 -->
+      <li><span class="domain"><a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+      <ul>
+	<!-- In each group N categories and so on -->
+	  <TMPL_IF NAME="NCATEGORIES"><TMPL_LOOP NAME="CATEGORIES">
+              <li><span class="host"><a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
+              <ul>
+		<!-- And in each catrgory there are services -->
+	          <TMPL_LOOP NAME="SERVICES">
+		      <li><span class="service"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span></li>
+		  </TMPL_LOOP><!-- END SERVICES -->
+	      </ul>
+	      </li>
+	  </TMPL_LOOP><!-- END CATEGORIES --></TMPL_IF>
+      <TMPL_IF NAME="NGROUPS">
+      </TMPL_IF>
+      </ul>
+      </li>
+  </TMPL_LOOP><!-- END GROUPS Listing level 3 -->
+      </TMPL_IF><!-- END NGROUPS level 3 -->
+      </ul>
+      </li>
+  </TMPL_LOOP><!-- END GROUPS Listing level 2 -->
+      </TMPL_IF><!-- END NGROUPS level 2 -->
+      </ul>
+      </li>
+  </TMPL_LOOP><!--END GROUPS Listing level 1 -->
+ </ul>
+ </td></tr>
+ <tr><td></td></tr>
+ <tr>
+    <td class="linkbox">
+      <TMPL_INCLUDE NAME="partial/bottom_navigation.tmpl">
+    </td>
+ </tr>
+ </table>
+  <TMPL_INCLUDE NAME="partial/generated_by.tmpl">
+</body>
+</html>

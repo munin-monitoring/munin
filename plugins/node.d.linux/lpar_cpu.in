@@ -1,0 +1,95 @@
+#!@@PERL@@ -w
+#
+# Plugin to monitor physical cpu usage in an IBM POWER P5 / OpenPower LPAR
+#
+# Usage: Place in /etc/munin/plugins (or make a symlink to it there)
+#
+# Parameters understood:
+#
+#       config
+#       autoconf
+#
+# This should be run as root, so drop a file with something like this in
+# /etc/munin/plugin-conf.d/lpar_cpu:
+#       [lpar_cpu]
+#       user root
+#
+# Great thanks to Nigel Griffith of IBM for the magic to get these values
+#
+# Author: Ingvar Hagelund <ingvar(at)linpro.no>
+#
+# Licence: GNU General Public Licence v2.0,
+# see http://www.gnu.org/copyleft/gpl.html
+
+use strict;
+
+my $stats="/proc/ppc64/lparcfg";
+my $cpuinfo="/proc/cpuinfo";
+my $seconds=2;
+my $counter="";
+my $after="";
+my $timebase="";
+
+sub readstats {
+	my $stats=shift;
+	my $purr;
+
+	open (STATS,"$stats") or die "Unable to read $stats, $!";
+	while (<STATS>) {
+		if ( /^purr\=(\d+)$/ ) { $purr = $1; }
+	}
+	close STATS;
+	return $purr;
+}
+
+sub error {
+    print "something horrible happened\n";
+    exit 2;
+}
+
+
+################
+#
+# Main
+#
+#
+
+if ( defined $ARGV[0] ) {
+
+    if ( $ARGV[0] eq 'autoconf' ) {
+	if ( -x $stats && -e $cpuinfo ) {
+	    print "yes\n";
+	    exit 0;
+	}
+	else {
+	    print "no (I need $stats and $cpuinfo)\n";
+	    exit 0;
+	}
+    }
+    elsif ( $ARGV[0] eq 'config' ) {
+	print "graph_title LPAR physical CPU usage\n";
+	print "graph_vlabel percent\n";
+	print "graph_category system\n";
+	print "cpu.label cpu\n";
+	print "cpu.type DERIVE\n";
+	print "cpu.min 0\n";
+	exit 0;
+    }
+}
+
+$counter=readstats($stats);
+
+open (CPUINFO,$cpuinfo) or die "Unable to read $cpuinfo, $!";
+while (<CPUINFO>) {
+    if (/^timebase\s+\:\s+(\d+)/) { $timebase=$1; }
+}
+close CPUINFO;
+
+error() if $cpuinfo eq "";
+error() if $counter eq "";
+error() if $timebase eq "";
+
+my $val=100*$counter/$timebase;
+$val =~ s/(\d+)\..+/$1/;
+print "cpu.value " . $val . "\n";
+exit 0;

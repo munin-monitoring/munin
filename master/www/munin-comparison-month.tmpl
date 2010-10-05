@@ -1,0 +1,40 @@
+<TMPL_INCLUDE NAME="partial/head.tmpl">
+<body>
+
+<TMPL_INCLUDE NAME="partial/logo_navigation_comparison.tmpl">
+
+<table class="invisiblebox">
+  <TMPL_LOOP NAME="CATEGORIES">
+  <tr><td class="graphbox" id="<TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME">">
+  <table>
+        <tr><td colspan="<TMPL_VAR NAME="NGROUPS">"><h3 class="nobottom"> <TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME"></h3></td></tr>
+        <TMPL_LOOP NAME="SERVICES">
+          <tr>
+		    <TMPL_LOOP NAME="NODES">
+            <td valign="top">
+			<table class="invisiblebox">
+			  <tr><td colspan="2"></td></tr>
+			  <tr><td colspan="2"><div class="lighttext"><a href="<TMPL_VAR ESCAPE="URL" NAME="NODENAME">/index.html"><TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> :: <TMPL_IF NAME="URL1"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL1">"></TMPL_IF><TMPL_VAR ESCAPE="HTML" NAME="LABEL"><TMPL_IF NAME="URL1"></a></TMPL_IF></div></td></tr>
+			  <tr><td>
+			<a title="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">"/><TMPL_IF NAME="CIMGMONTH"><a href="<TMPL_VAR NAME="URL1">"><img src="<TMPL_VAR NAME="CIMGMONTH">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" <TMPL_IF NAME="IMGMONTHWIDTH">width="<TMPL_VAR NAME="IMGMONTHWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGMONTHHEIGHT">height="<TMPL_VAR NAME="IMGMONTHHEIGHT">"</TMPL_IF>/></a></TMPL_IF>
+			</td></tr>
+			</table>
+			</td>
+			</TMPL_LOOP>
+          </tr>
+        </TMPL_LOOP>
+	</table>
+  </td></tr>
+
+  <tr><td></td></tr>
+
+  </TMPL_LOOP>
+  <tr>
+     <td class="linkbox">
+     <TMPL_INCLUDE NAME="partial/bottom_navigation.tmpl">
+     </td>
+</tr>
+</table>
+  <TMPL_INCLUDE NAME="partial/generated_by.tmpl">
+</body>
+</html>

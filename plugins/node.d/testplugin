@@ -1,0 +1,147 @@
+#!/usr/bin/perl
+
+# 21:59 < janll> 1. good config, no fetch
+# 22:00 < janll> 2. no config, good fetch
+# 22:00 < janll> 3. no config, no fetch
+# 22:00 < janll> 4. broken config, good fetch
+# 22:00 < janll> 5. good config, broken fetch
+# 22:00 < janll> 6. broken everything
+# 
+# 22:03 < janll> modes of breakage: mistyped keywords, missing keywords, missing 
+#                values, illegal values
+
+# Plugin filename = testplugin
+#
+# env.config {good,bad}
+# - good: working output
+# - bad: non-working output
+#
+# env.fetch {good,bad}
+# - good: working output
+# - bad: non-working output
+#
+# env.aspect {minimal,normal,broken,weird}
+# - minimal: barebone requirements
+# - normal: a regular run
+# - broken: regular identifiers, broken values
+# - weird: broken identifiers, regular output
+#
+# env.other {sleep,die,disturb}
+# - sleep: waits 30 seconds before giving any output
+# - die: exits right away, weird exit code.
+# - disturb: swaps config and regular run
+#
+# Plugin basename = testplugin_
+
+# use strict;
+use Data::Dumper;
+use vars qw ($configure_mode %aspects %config %fetch);
+
+my $config = ($ENV{'config'} || 'good');
+my $fetch  = ($ENV{'fetch'}  || 'good');
+my $aspect = ($ENV{'aspect'} || 'normal');
+my $other  = ($ENV{'other'}  || '');
+
+my $arg = $ARGV[0];
+if ($arg eq "config") {
+  $configure_mode = 1;
+}
+
+%config = (
+    good => {
+	minimal => {
+	    'graph_title' => 'Test plugin',
+	    'test.label' => 'Test',
+	},
+	normal => {
+	    'graph_title' => 'Test plugin',
+	    'graph_args' => '--base 1000 -l 0',
+	    'graph_category' => 'Test',
+	    'test.label' => 'Test',
+	},
+	broken => {
+	    'graph_title' => 'Uærk*^~',
+	    'graph_category' => 'Test',
+	    'test.label' => '',
+	},
+	weird => {
+	    'gräph_ärgs' => '--base 768',
+	    'test.label' => 'gnørk',
+	},
+    },
+    bad => {
+	minimal => {
+	    'graph_title' => '',
+	    'test.label' => 'Test',
+	},
+	normal => {
+	    'graph_title' => '',
+	    'graph_args' => '--base 1000 -l 0',
+	    'graph_category' => 'Test',
+	    'test.label' => 'Test',
+	},
+	broken => {
+	    'graph_categöry' => 'Uærk*^~',
+	    'test.label' => '',
+	},
+	weird => {
+	    'graph_args' => '--base -14',
+	    'test.label' => 'gnørk',
+	},
+    },
+    );
+%fetch = (
+    good => {
+        minimal => {
+            'test.value' => 42,
+	},
+	normal => {
+	    'test.value' => 42,
+	},
+	broken => {
+	    'test.value' => '42,34',
+	},
+	weird => {
+	    'test.value' => 'ø',
+	}
+    },
+    bad => {
+        minimal => {
+            'test.value' => '',
+        },
+	normal => {
+	    'test.value' => '',
+	},
+	broken => {
+	    'test.valüe' => '',
+	},
+        weird => {
+            'test.value' => 'ø',
+        },
+    },
+    );
+
+my $line;
+
+if ($other eq 'sleep') {
+    sleep 30;
+} elsif ($other eq 'die') {
+    exit 17;
+}
+
+if ($other eq 'disturb') {
+    $configure_mode -= 1;
+}
+	
+
+if ($configure_mode) {
+    foreach $line (keys %{$config{$config}->{$aspect}}) {
+	print $line, " ", $config{$config}->{$aspect}->{$line}, "\n";
+    }
+} else {
+    foreach $line (keys %{$fetch{$fetch}->{$aspect}}) {
+        print $line, " ", $fetch{$fetch}->{$aspect}->{$line}, "\n";
+    }
+}
+
+

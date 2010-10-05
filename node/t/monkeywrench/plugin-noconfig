@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# To test munin-gather/update: This plugin is to emit no configuration
+# when run with "config".  We don't care what "fetch" does.
+
+exit 0

@@ -1,0 +1,82 @@
+#!@@PERL@@
+# -*- perl -*-
+#
+# this is public domain copy and share at will
+# quick n dirty hack to read specific performance data on HP-UX thru
+# measureware (perfview)
+#
+# Sigurd Mytting:
+# I wrote some quick and dirty plugins a few years ago who use Measureware
+# to gather data, known to work on 11.23, 11.11 and 11, both pa/risc and
+# itanium (A-class, N-class, rxwhatever, even the now thrown out superdome
+# upgraded from pa/risc to itanium with 64 cores/128GB memory).
+#
+# Bugs:
+# - This plugin lacks "autoconf".  If someone cleans it up to enable use
+#   of environment variables for binaries and state files and makes a
+#   "autoconf" command it will be suitable for family=auto and autoconf.
+#
+#%# family=contrib
+
+use strict;
+
+my $reptdata = "format DATAFILE
+headings=on
+separator=\",\"
+DATA TYPE GLOBAL
+  record_type
+  date
+  time
+  interval
+  gbl_proc_sample
+
+GBL_MEM_USER_UTIL
+GBL_MEM_SYS_UTIL
+GBL_MEM_SYS_AND_CACHE_UTIL
+";
+
+my $extract = "/opt/perf/bin/extract";
+my $datafile = "/var/tmp/munin.mwa.rep";
+my $reptfile = "/var/tmp/munin.rept-basic";
+
+if ($ARGV[0] eq "config") {
+    print "graph_title Memory Utilization\n";
+    print "graph_vlabel %\n";
+    print "graph_scale no\n";
+    print "graph_args --upper-limit 100 -l 0\n";
+    print "GBL_MEM_SYS_UTIL.label System\n";
+    print "GBL_MEM_SYS_UTIL.draw AREA\n";
+    print "GBL_MEM_CACHE_UTIL.label Cache\n";
+    print "GBL_MEM_CACHE_UTIL.draw STACK\n";
+    print "GBL_MEM_USER_UTIL.label User\n";
+    print "GBL_MEM_USER_UTIL.draw STACK\n";
+    exit 0;
+}
+
+open OUT, ">$reptfile";
+print OUT $reptdata;
+close OUT;
+
+# get data:
+system "$extract -xp D -f $datafile,purge -g -r $reptfile  -l /var/opt/perf/datafiles/logglob > /dev/null 2>&1";
+unlink $reptfile;
+my $last;
+if (-f $datafile) {
+    $last=`tail -1 $datafile`;
+}
+unlink $datafile;
+
+#print $last ;
+
+# "Rec ","        ","     "," Sec  "," Proc ","Memory","      ","      "," Peak ",
+# "Type","  Date  ","Time ","/Intvl","Sample","  %   ","Swap %","CPU % ","Disk %",
+# "GLOB","02/01/05","16:55",   299,        5 ,   27.77,   14.00,    1.83,  1.63,
+my (undef, undef, undef, undef, $d, $USER, $SYS, $SYSCACHE) = split /\,/,$last;
+my $CACHE = $SYSCACHE - $SYS;
+
+print "GBL_MEM_SYS_UTIL.value $SYS\n";
+print "GBL_MEM_CACHE_UTIL.value $CACHE\n";
+print "GBL_MEM_USER_UTIL.value $USER\n";
+
+
+

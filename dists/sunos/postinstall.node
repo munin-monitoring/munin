@@ -1,0 +1,3 @@
+#!/bin/sh
+
+/opt/munin/sbin/munin-node-configure --shell | /bin/sh

@@ -1,0 +1,38 @@
+       SETTING UP A TESTBED FOR IMPLEMENTING TLS USING OPENSSL
+
+http://www.debian-administration.org/articles/284
+
+* Configuration
+
+See openssl.cnf
+             
+
+* Establish a CA (Self signe root certificate)
+
+** Create database
+
+  mkdir CA
+  cd CA
+  mkdir newcerts private 
+  echo '01' > serial
+  touch index.txt
+
+** Create key and certificate. 
+
+Don't need to encrypt the key since this is just for testing.
+
+  openssl req -new -nodes -x509 -extensions v3_ca -keyout CA/private/ca_key.pem -out CA/ca_cert.pem -days 3650 -config ./openssl.cnf
+
+
+* Create and signe sertificates for each peer
+
+** Create keys and certificate requests
+
+  openssl req -new -nodes -keyout node_key.pem -out node_req.pem -config ./openssl.cnf
+  openssl req -new -nodes -keyout master_key.pem -out master_req.pem -config ./openssl.cnf
+
+
+** Sign
+
+  openssl ca -out node_cert.pem -in node_req.pem -config ./openssl.cnf -days 3650
+  openssl ca -out master_cert.pem -in master_req.pem -config ./openssl.cnf -days 3650

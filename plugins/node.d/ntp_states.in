@@ -1,0 +1,117 @@
+#!@@PERL@@ -w
+# -*- perl -*-
+
+=head1 NAME
+
+ntp_states - Plugin to monitor NTP states
+
+=head1 CONFIGURATION
+
+No configuration
+
+This plugin must run as the user "root"
+
+The following configuration parameters are used by this plugin
+
+ [ntp_states]
+  env.lowercase - Lowercase hostnames after lookup
+
+Set the variable env.lowercase to anything lowercase hostnames.
+
+=head2 DEFAULT CONFIGURATION
+
+ [ntp_states]
+  env.lowercase <undefined>
+
+=head1 AUTHORS
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+use Net::hostent;
+use Socket;
+
+my %stateval = (
+                 ' ' =>  1, # reject
+		 'x' =>  2, # falsetick
+		 '.' =>  3, # excess
+		 '-' =>  4, # outlyer
+		 '+' =>  5, # candidate
+		 '#' =>  6, # selected
+		 '*' =>  7, # sys.peer
+		 'o' =>  8, # pps.peer
+               );
+
+if ($ARGV[0] and $ARGV[0] eq "autoconf") {
+	`ntpq -c help >/dev/null 2>/dev/null`;
+	if ($? eq "0") {
+		if (`ntpq -c "hostnames no" -c peers | wc -l` > 0) {
+			print "yes\n";
+			exit 0;
+		} else {
+			print "no (could not read peer list)\n";
+			exit 0;
+		}
+	} else {
+		print "no (ntpq not found)\n";
+		exit 0;
+	}
+}
+
+if ($ARGV[0] and $ARGV[0] eq "config") {
+        print "graph_title NTP states\n";
+	print "graph_args --base 1000 --vertical-label msec --lower-limit 0\n";
+	print "graph_category time\n";
+	foreach (`ntpq -c "hostnames no" -c peers`) {
+		next unless /^.(\d+\.\d+\.\d+\.\d+)/;
+		next if /^.224\.0\.1\.1/;
+		my $addr = $1;
+		my $host;
+		if( my $lcid= /^.127\.127\.1\.(\d+)/) {
+			$lcid = $lcid - 1;
+			$host = "LOCAL($lcid)";
+		} else {
+			$host = gethostbyaddr(inet_aton($addr));
+			$host = defined $host ? $host->name : $addr;
+		}
+		my $name = $host;
+		$host = lc $host if exists $ENV{"lowercase"};
+		$host =~ s/[\.\-()]/_/g;
+		print "$host.label $name\n";
+		print "$host.draw LINE2\n";
+	}
+        exit 0;
+}
+
+foreach (`ntpq -c "hostnames no" -c peers`) {
+	next unless /^(.)(\d+\.\d+\.\d+\.\d+)/;
+	next if /^.224\.0\.1\.1/;
+	my $state = $1;
+	my $addr = $2;
+	my $host;
+	if( my $lcid= /^.127\.127\.1\.(\d+)/) {
+		$lcid = $lcid - 1;
+		$host = "LOCAL($lcid)"
+	} else {
+		$host = gethostbyaddr(inet_aton($addr));
+		$host = defined $host ? $host->name : $addr;
+	}
+	$host = lc $host if exists $ENV{"lowercase"};
+	$host =~ s/[\.\-()]/_/g;
+	print "$host.value ", exists $stateval{$state} ? $stateval{$state} : 0, "\n";
+}
+
+exit 0;
+
+# vim:syntax=perl

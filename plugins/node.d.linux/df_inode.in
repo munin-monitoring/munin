@@ -1,0 +1,113 @@
+#!@@PERL@@
+# -*- perl -*-
+
+=head1 NAME
+
+df_inode - Plugin to monitor inode-usage. 
+
+=head1 CONFIGURATION
+
+This configuration snipplet is an example with the default configuration:
+
+  [df_inode]
+    env.exclude none unknown iso9660 squashfs udf romfs ramfs debugfs
+    env.warning 92
+    env.critical 98
+
+=head1 NOTES
+
+Rewrite based on original shell-based version
+
+=head1 AUTHOR
+
+Ingvar Hagelund
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+use Munin::Plugin;
+
+# For these devices use the mount point, the device is useless
+my %usemntpt = ( tmpfs => 1, none => 1, udev => 1 );
+
+my $exclude=$ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs vfat debugfs simfs';
+my $dfopts = "-P -l -i ".join(' -x ',('',split('\s+',$exclude)));
+
+sub print_values() {
+
+    # Read from df
+    open (DF,"df $dfopts |") or die "Could not open pipe from df: $!";
+    <DF>; # Skip the header
+    while (<DF>) {
+	next if /\/\//;
+	
+	# Parse the output
+	if ( /^(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)/ ) {
+	    my $ps=$5;
+
+	    my $name = $1;
+	    $name = $6 if defined($usemntpt{$name}) && $usemntpt{$name};
+	    $name=clean_fieldname($name);
+
+	    $ps =~ s/\%//;
+
+	    print $name .  ".value  " . $ps . "\n";
+	}
+    }
+    close DF;
+    die "Error executing df. Exit code $?\n" if $?;
+}
+
+if ( $ARGV[0] eq "autoconf" ) {
+  if (`@@PERL@@ $0` eq "" ) {
+    print "no\n";
+    exit 0;
+  } else {
+    print "yes\n";
+    exit 0;
+  }
+}
+
+if ( $ARGV[0] eq "config" ) {
+
+    # The headers
+    print "graph_title Inode usage in percent\n";
+    print "graph_args --upper-limit 100 -l 0\n";
+    print "graph_vlabel %\n";
+    print "graph_scale no\n";
+    print "graph_category disk\n";
+
+    # Read from df
+    open (DF,"df $dfopts |") or die "Unable to open pipe from df: $!";
+    <DF>; # Skip the header
+    while (<DF>) {
+	next if /\/\//;
+	
+	# Parse the output
+	if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
+	    my $dir=$6;
+
+	    my $name = $1;
+	    $name = $dir if defined($usemntpt{$name}) && $usemntpt{$name};
+	    $name=clean_fieldname($name);
+
+	    # Create and print labels
+	    print "$name.label $dir\n";
+	    print_thresholds($name,undef,undef,92,98);
+	}
+    }
+    close DF;
+    die "Error executing df. Exit code $?\n" if $?;
+    exit 0;
+}
+
+print_values();
