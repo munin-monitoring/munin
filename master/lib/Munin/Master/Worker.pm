@@ -26,7 +26,7 @@ sub new {
 sub to_string {
     my ($self) = @_;
 
-    return sprintf("%s<%s>", ref $self, $self->{ID}); 
+    return sprintf("%s<%s>", ref $self, $self->{ID});
 }
 
 
@@ -49,8 +49,23 @@ See L<Munin::Master::ProcessManager>.
 
 =item B<new>
 
-FIX
+  Munin::Master::Worker->new($identity);
+
+Constructor.  This is an abstract class, so this shouldn't be called directly.
+
+The optional $identity argument should be a unique identifier for the process.
 
 =item B<to_string>
 
-FIX
+  print $worker->string;
+
+  # Stringifies too
+  print "Worker $worker just died";
+
+Returns a unique string representation of the worker.
+
+=back
+
+=cut
+
+# vim: ts=4 : sw=4 : et
