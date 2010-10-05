@@ -1,0 +1,32 @@
+Description: Debian specific patch, to explicitly configure
+ rrd 1.2 to use the debian provided DejaVuSans*.ttf fonts, as 
+ we removed the ones provided by munin in order to avoid 
+ duplication.
+
+ This is a rewrite of a similar patch, which was removed at
+ http://munin-monitoring.org/changeset/3215 & 
+ http://munin-monitoring.org/changeset/3238.
+
+Origin: other
+Bug-Debian: http://bugs.debian.org/578782
+Forwarded: no
+Author: Tom Feiner <feiner.tom@gmail.com>
+Last-Update: 2010-04-22
+Index: munin-1.4.4/master/lib/Munin/Master/GraphOld.pm
+===================================================================
+--- munin-1.4.4.orig/master/lib/Munin/Master/GraphOld.pm	(revision 3505)
++++ munin-1.4.4/master/lib/Munin/Master/GraphOld.pm	(working copy)
+@@ -1304,9 +1304,10 @@
+ 	# The RRD 1.2 documentation says you can identify font family
+ 	# names but I never got that to work, but full font path worked
+ 	return (
+-		'--font', "LEGEND:7:$libdir/DejaVuSansMono.ttf",
+-		'--font', "UNIT:7:$libdir/DejaVuSans.ttf",
+-		'--font', "AXIS:7:$libdir/DejaVuSans.ttf",
++		'--font', "LEGEND:7:/usr/share/fonts/truetype/ttf-dejavu/DejaVuSansMono.ttf",
++		'--font', "UNIT:7:/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf",
++		'--font', "AXIS:7:/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf",
++
+ 	       );
+     } elsif ($RRDs::VERSION >= 1.3) {
+ 	# RRD 1.3 and up

@@ -1,0 +1,88 @@
+#! /usr/bin/make -f
+
+export DH_VERBOSE=
+
+MAKEOPTS = CONFIG=debian/Makefile.config INSTALL_PLUGINS="auto manual snmpauto contrib"
+
+include /usr/share/quilt/quilt.make
+
+buildpackages=munin-common munin munin-node munin-plugins-extra munin-java-plugins
+
+# generate -pfoo commandline for debhelper
+dhbuildpackages=$(addprefix -p,$(buildpackages))
+
+build: build-stamp
+build-stamp: $(QUILT_STAMPFN) 
+	dh_testdir
+	dh_installdirs
+	
+	$(MAKE) build     $(MAKEOPTS)
+	
+	$(MAKE) install-common-prime $(MAKEOPTS) \
+		DESTDIR=`pwd`/debian/munin-common
+
+	$(MAKE) install-master-prime $(MAKEOPTS) \
+		DESTDIR=`pwd`/debian/munin
+
+	install -D -m0644 debian/munin.apache.conf \
+		$(CURDIR)/debian/munin/etc/munin/apache.conf
+
+	# Remove default .htaccess file from installation, as we include it
+	# in the default apache2/conf.d/munin configuration
+	rm $(CURDIR)/debian/munin/var/cache/munin/www/.htaccess
+
+	# Remove bundled VeraMono.ttf, debian gets this font from 
+	# the ttf-dejavu package. http://bugs.debian.org/548508
+	rm `pwd`/debian/munin/usr/share/munin/DejaVuSans*.ttf
+	
+	$(MAKE) install-node-prime install-plugins-prime $(MAKEOPTS) \
+		DESTDIR=`pwd`/debian/munin-node
+	
+	$(MAKE) install-plugins-java $(MAKEOPTS) \
+		DESTDIR=`pwd`/debian/munin-java-plugins
+
+	install -D -m0644 debian/plugins.conf \
+		$(CURDIR)/debian/munin-node/etc/munin/plugin-conf.d/munin-node
+
+	mkdir -p $(CURDIR)/debian/munin-plugins-extra/usr/share/munin/plugins
+	for file in `find debian/munin-node/usr/share/munin/plugins -type f`; do \
+		if ! grep -q "#%# family=\(auto\|manual\|snmpauto\)" $$file \
+		   && [ "`basename $$file`" != "plugins.history" ] && [ "`basename $$file`" != "plugin.sh" ]; then \
+			mv $$file $(CURDIR)/debian/munin-plugins-extra/usr/share/munin/plugins; \
+		fi; \
+	done
+
+	rmdir $(CURDIR)/debian/munin/var/run/munin
+	rmdir $(CURDIR)/debian/munin-node/var/run/munin
+
+	touch build-stamp
+
+clean: unpatch
+	dh_testdir
+	dh_clean
+	$(MAKE) clean
+
+binary: binary-indep
+
+binary-arch:
+
+binary-indep: build-stamp
+	dh_testdir $(dhbuildpackages)
+	dh_testroot $(dhbuildpackages)
+	dh_installdocs $(dhbuildpackages)
+	dh_installchangelogs $(dhbuildpackages) ChangeLog
+	dh_installman $(dhbuildpackages)
+	dh_installinit --error-handler=true $(dhbuildpackages) -- "defaults 98 20"
+	dh_installcron $(dhbuildpackages)
+	dh_installlogrotate $(dhbuildpackages)
+	dh_installdebconf $(dhbuildpackages)
+	dh_link $(dhbuildpackages)
+	dh_fixperms $(dhbuildpackages)
+	dh_compress $(dhbuildpackages)
+	dh_perl $(dhbuildpackages)
+	dh_installdeb $(dhbuildpackages)
+	dh_gencontrol $(dhbuildpackages)
+	dh_md5sums $(dhbuildpackages)
+	dh_builddeb $(dhbuildpackages)
+
+.PHONY: build clean binary binary-arch binary-indep

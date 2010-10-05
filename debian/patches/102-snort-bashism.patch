@@ -1,0 +1,128 @@
+Description: snort_* scripts fail to 'config' due to bashism
+ This patch can be removed for munin 1.4.6/2.0.0 and up.
+Origin: http://bugs.debian.org/595899
+Bug-Debian: http://bugs.debian.org/595899
+Forwarded: yes (included in branch-1.4: r3884 , trunk: r3885)
+Author: Gerald Turner <gturner@unzane.com>
+Last-Update: 2010-09-09
+Index: munin-1.4.5/plugins/node.d/snort_traffic.in
+===================================================================
+--- munin-1.4.5.orig/plugins/node.d/snort_traffic.in	(revision 3884)
++++ munin-1.4.5/plugins/node.d/snort_traffic.in	(working copy)
+@@ -78,11 +78,11 @@
+         echo 'graph_vlabel Mbits / second'
+         echo 'graph_scale no'
+         echo 'traffic.label Mbits/second'
+-	if [ -n $warning ]; then
+-		echo 'traffic.warning $warning'
++	if [ -n "$warning" ]; then
++		echo "traffic.warning $warning"
+ 	fi
+-	if [ -n $critical ]; then
+-		echo 'traffic.critical $critical'
++	if [ -n "$critical" ]; then
++		echo "traffic.critical $critical"
+ 	fi
+         echo 'traffic.info Traffic in Mbites per second'
+         echo 'graph_category Snort'
+Index: munin-1.4.5/plugins/node.d/snort_bytes_pkt.in
+===================================================================
+--- munin-1.4.5.orig/plugins/node.d/snort_bytes_pkt.in	(revision 3884)
++++ munin-1.4.5/plugins/node.d/snort_bytes_pkt.in	(working copy)
+@@ -78,11 +78,11 @@
+         echo 'graph_vlabel KBytes / pkt'
+         echo 'graph_scale no'
+         echo 'bytes_pkt.label KBytes/pkt'
+-	if [ -n $warning ]; then
+-		echo 'bytes_pkt.warning $warning'
++	if [ -n "$warning" ]; then
++		echo "bytes_pkt.warning $warning"
+ 	fi
+-	if [ -n $critical ]; then
+-		echo 'bytes_pkt.critical $critical'
++	if [ -n "$critical" ]; then
++		echo "bytes_pkt.critical $critical"
+ 	fi
+         echo 'bytes_pkt.info Average size per packet'
+         echo 'graph_category Snort'
+Index: munin-1.4.5/plugins/node.d/snort_alerts.in
+===================================================================
+--- munin-1.4.5.orig/plugins/node.d/snort_alerts.in	(revision 3884)
++++ munin-1.4.5/plugins/node.d/snort_alerts.in	(working copy)
+@@ -78,11 +78,11 @@
+         echo 'graph_vlabel Alerts / second'
+         echo 'graph_scale no'
+         echo 'alerts.label Alerts/second'
+-	if [ -n $warning ]; then
+-		echo 'alerts.warning $warning'
++	if [ -n "$warning" ]; then
++		echo "alerts.warning $warning"
+ 	fi
+-	if [ -n $critical ]; then
+-		echo 'alerts.critical $critical'
++	if [ -n "$critical" ]; then
++		echo "alerts.critical $critical"
+ 	fi
+         echo 'alerts.info The number of alerts per second'
+         echo 'graph_category Snort'
+Index: munin-1.4.5/plugins/node.d/snort_pattern_match.in
+===================================================================
+--- munin-1.4.5.orig/plugins/node.d/snort_pattern_match.in	(revision 3884)
++++ munin-1.4.5/plugins/node.d/snort_pattern_match.in	(working copy)
+@@ -79,11 +79,11 @@
+         echo 'graph_vlabel % percent'
+         echo 'graph_scale no'
+         echo 'pattmatch.label % percent'
+-	if [ -n $warning ]; then
+-		echo 'pattmatch.warning $warning'
++	if [ -n "$warning" ]; then
++		echo "pattmatch.warning $warning"
+ 	fi
+-	if [ -n $critical ]; then
+-		echo 'pattmatch.critical $critical'
++	if [ -n "$critical" ]; then
++		echo "pattmatch.critical $critical"
+ 	fi
+         echo 'pattmatch.info The percent of data received that Snort processes in pattern matching'
+         echo 'graph_category Snort'
+Index: munin-1.4.5/plugins/node.d/snort_pkts.in
+===================================================================
+--- munin-1.4.5.orig/plugins/node.d/snort_pkts.in	(revision 3884)
++++ munin-1.4.5/plugins/node.d/snort_pkts.in	(working copy)
+@@ -79,11 +79,11 @@
+         echo 'graph_vlabel Packets / second'
+         echo 'graph_scale no'
+         echo 'pktsec.label Packets/second'
+-	if [ -n $warning ]; then
+-		echo 'pktsec.warning $warning'
++	if [ -n "$warning" ]; then
++		echo "pktsec.warning $warning"
+ 	fi
+-	if [ -n $critical ]; then
+-		echo 'pktsec.critical $critical'
++	if [ -n "$critical" ]; then
++		echo "pktsec.critical $critical"
+ 	fi
+         echo 'pktsec.info The number of packets per second'
+         echo 'graph_category Snort'
+Index: munin-1.4.5/plugins/node.d/snort_drop_rate.in
+===================================================================
+--- munin-1.4.5.orig/plugins/node.d/snort_drop_rate.in	(revision 3884)
++++ munin-1.4.5/plugins/node.d/snort_drop_rate.in	(working copy)
+@@ -78,11 +78,11 @@
+         echo 'graph_vlabel % percent'
+         echo 'graph_scale no'
+         echo 'droprate.label % percent'
+-	if [ -n $warning ]; then
+-		echo 'droprate.warning $warning'
++	if [ -n "$warning" ]; then
++		echo "droprate.warning $warning"
+ 	fi
+-	if [ -n $critical ]; then
+-		echo 'droprate.critical $critical'
++	if [ -n "$critical" ]; then
++		echo "droprate.critical $critical"
+ 	fi
+         echo 'droprate.info Packet drop rate in %'
+         echo 'graph_category Snort'
+

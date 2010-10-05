@@ -1,0 +1,5 @@
+100-DejaVu-Fonts-Path.patch
+101-dash-bash-fw_conntrack.patch
+102-snort-bashism.patch
+103-ejabberd-cli.patch
+237-hddtemp_smartctl-sata-detect.patch
