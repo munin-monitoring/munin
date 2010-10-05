@@ -99,7 +99,6 @@ sub main {
     Munin::Node::Server->run(
        syslog_ident => 'munin-node',
        conf_file    => $conffile,
-       pid_file     => "$Munin::Common::Defaults::MUNIN_STATEDIR/munin-node.pid"
     );
 
     return 0;
