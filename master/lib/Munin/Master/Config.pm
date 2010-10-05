@@ -6,14 +6,14 @@ use base qw(Munin::Common::Config);
 
 # Notes about config data structure:
 # 
-# In munin all configuration and gathered data is stored in the same
+# In Munin all configuration and gathered data is stored in the same
 # config tree of hashes.  Since ~april 2009 we've made the tree object
-# oriented so the objects in three must be instanciated as the right
+# oriented so the objects in there must be instantiated as the right
 # object type.  And so we can use the object type to determine
 # behaviour when we itterate over the objects in the tree.
 #
 # The Class Munin::Common::Config is the base of Munin::Master::Config.
-# The master programs (munin-update, munin-graph, munin-html) instanciates
+# The master programs (munin-update, munin-graph, munin-html) instantiate
 # a Munin::Master::Config object.
 #
 # Please note that the munin-node configuration is also based on
@@ -170,11 +170,11 @@ my %booleans = map {$_ => 1} qw(
 }
 
 
-
+# Returns true if $char is the last character of $str.
 sub _final_char_is {
     # Not a object method.
     my ($char, $str) = @_;
- 	
+
     return rindex($str, $char) == ( length($str) - 1 );
 }
 
@@ -184,7 +184,7 @@ sub _create_and_set {
     # Nested creation of group and host class objects, and then set
     # attribute value.
 
-    my $setref = $self;  # Used as "itterator" as we traverse the hash.
+    my $setref = $self;  # Used as "iterator" as we traverse the hash.
 
     my @key = split(/\./, $key);
     my $last_word = pop @key;
@@ -228,8 +228,8 @@ sub _create_and_set {
     # 
 }
 
+
 sub set_value {
-    # Set value in config hash, $longkey is full ;:. separated value.
     my ($self, $longkey, $value) = @_;
 
     my ($groups,$host,$key) = $self->_split_config_line($longkey);
@@ -512,15 +512,8 @@ sub parse_config {
 
 
 sub look_up {
-    # Look up a group/host by a key such as "localdomain;localhost" etc.
-    # if the path does not exist create it with correct class and so on.
-    #
-    # The path through the hash works out to
-    # 
-    # $self->{groups}{localdomain}[...]{hosts}{localhost}
-    #
-    # Lookup ends at host name.  If something is missing along the way
-    # undef is returned.
+	# The path through the hash works out to:
+	# $self->{groups}{localdomain}[...]{hosts}{localhost}
 
     my ($self,$key) = @_;
 
@@ -590,28 +583,59 @@ __END__
 
 Munin::Master::Config - Holds the master configuration.
 
-=head1 SYNOPSIS
-
-FIX
-
 =head1 METHODS
 
 =over
 
 =item B<instance>
 
-FIX
+  my $config = Munin::Master::Config->instance;
+
+Returns the (possibly newly created) singleton configuration instance.
+
+=item B<set_value>
+
+  $config->set_value($longkey, $value);
+
+Set a value in the config, where $longkey is the full ;:. separated value.
 
 =item B<parse_config>
 
-FIX
+  $config->parse_config($io);
 
-=item B<set>
+Populates the fields of $config from the configuration file referred to by
+filehandle $io.
 
-FIX
+=item B<look_up>
+
+  my $value = $config->look_up($key);
+
+Look up a group/host by a key such as "localdomain;localhost" etc.
+If the path does not exist create it with correct class and so on.
+
+Lookup ends at host name.  If something is missing along the way
+undef is returned.
 
 =item B<get_groups_and_hosts>
 
-FIX
+  my $gah = $config->get_groups_and_hosts();
+
+Returns all the groups and hosts defined in the configuration.
+
+=item B<get_all_hosts>
+
+  my $hosts = $config->get_all_hosts();
+
+Returns a list of all the hosts defined in the configuration.
+
+=item B<set>
+
+  $config->set(\%attrs);
+
+Sets the keys and values in $config to those in %attrs.
 
 =back
+
+=cut
+
+# vim: ts=8 : sw=4 : et
