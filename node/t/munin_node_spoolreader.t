@@ -23,7 +23,7 @@ use Munin::Node::SpoolWriter;
     ], 'spooldir provided to constructor');
 
     is($writer->{spooldir}, $dir, 'spooldir key is set');
-    ok( -d $writer->{spooldirhandle}, 'spooldirhandle refers to a directory');
+    isa_ok($writer->{spooldirhandle}, 'GLOB', 'spooldirhandle is a glob');
 }
 {
     eval { Munin::Node::SpoolReader->new(fnord => 'blort') };
