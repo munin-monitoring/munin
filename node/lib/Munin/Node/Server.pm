@@ -47,7 +47,9 @@ sub pre_loop_hook {
     $services = $config->{services} or die 'no services list';
     $spool    = $config->{spool};
 
-    _load_services();
+    my @services = $services->list;
+    @services{@services} = (1) x @services;
+
     $services->prepare_plugin_environment(keys %services);
     _add_services_to_nodes(keys %services);
     return $self->SUPER::pre_loop_hook();
@@ -58,21 +60,6 @@ sub request_denied_hook
 {
     my $self = shift;
     logger("Denying connection from: $self->{server}->{peeraddr}");
-    return;
-}
-
-
-sub _load_services {
-    opendir (my $DIR, $services->{servicedir})
-        || die "Cannot open plugindir: $services->{servicedir} $!";
-
-    for my $file (readdir($DIR)) {
-        next unless $services->is_a_runnable_service($file);
-        print STDERR "file: '$file'\n" if $config->{DEBUG};
-        $services{$file} = 1;
-    }
-
-    closedir $DIR;
     return;
 }
 
