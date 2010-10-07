@@ -161,24 +161,7 @@ sub names { return keys %{(shift)->{plugins}} }
 sub _valid_files
 {
     my ($dir) = @_;
-    my @items;
-
-    my $directory = $dir->{servicedir};
-
-    opendir (my $DIR, $directory)
-        or die "Fatal: Could not open '$directory' for reading: $!\n";
-
-    while (my $item = readdir $DIR) {
-        my $path = "$directory/$item";
-        unless ($dir->is_a_runnable_service($item)) {
-            DEBUG("Ignoring '$path'.");
-            next;
-        }
-        push @items, { path => $path, name => $item };
-    }
-    closedir $DIR;
-
-    return @items;
+    return map { { path => "$dir->{servicedir}/$_", name => $_ } } $dir->list;
 }
 
 
