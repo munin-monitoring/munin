@@ -335,7 +335,7 @@ sub populate_stats
                 }
             }
 
-            if ($line =~ /^(\d+) \((.*)\) (.) \-?\d+ \-?\d+ \-?\d+ \-?\d+ \-?\d+ \d+ \d+ \d+ \d+ \d+ (\d+) (\d+) \d+ \d+ \d+ \d+ (\d+) \-?\d+ \d+ (\d+) (\d+)/) {
+            if ($line =~ /^(\d+) \((.*)\) (.) \-?\d+ \-?\d+ \-?\d+ \-?\d+ \-?\d+ \d+ \d+ \d+ \d+ \d+ (\d+) (\d+) \d+ \d+ \-?\d+ \d+ (\d+) \-?\d+ \d+ (\d+) (\d+)/) {
                 $procstats{$procuniq[$i]}{"utime"} += $4;
                 $procstats{$procuniq[$i]}{"stime"} += $5;
                 $procstats{$procuniq[$i]}{"threads"} += $6;
