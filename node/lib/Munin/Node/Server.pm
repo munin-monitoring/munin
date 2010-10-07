@@ -42,7 +42,7 @@ my $config = Munin::Node::Config->instance();
 
 sub pre_loop_hook {
     my $self = shift;
-    print STDERR "In pre_loop_hook.\n" if $config->{DEBUG};
+    logger("In pre_loop_hook.") if $config->{DEBUG};
 
     $services = $config->{services} or die 'no services list';
     $spool    = $config->{spool};
@@ -70,13 +70,12 @@ sub _add_services_to_nodes
     my (@services) = @_;
 
     for my $service (@services) {
-        print STDERR "Configuring $service\n" if $config->{DEBUG};
+        logger("Configuring $service\n") if $config->{DEBUG};
 
         my @response = _run_service($service, 'config');
 
         if (!@response or grep(/# Timed out/, @response)) {
-            print STDERR "Error running $service.  Dropping it.\n"
-                if $config->{DEBUG};
+            logger("Error running $service.  Dropping it.") if $config->{DEBUG};
             delete $services{$service};
             next;
         }
@@ -89,22 +88,22 @@ sub _add_services_to_nodes
         # hostname checks are case insensitive, so store everything in lowercase
         $node = lc($node);
 
-        print STDERR "\tAdding to node $node\n" if $config->{DEBUG};
+        logger("\tAdding to node $node") if $config->{DEBUG};
         push @{$nodes{$node}}, $service;
 
         # Note any plugins that require particular server capabilities.
         if (grep /^multigraph\s+/, @response) {
-            print STDERR "\tAdding to multigraph plugins\n" if $config->{DEBUG};
+            logger("\tAdding to multigraph plugins") if $config->{DEBUG};
             push @multigraph_services, $service;
         }
         if (grep /^[A-Za-z0-9_]+\.value /, @response) {
             # very dirty plugins -- they do a dirtyconfig even when
             # "not allowed" by their environment.
-            print STDERR "\tAdding to dirty plugins\n" if $config->{DEBUG};
+            logger("\tAdding to dirty plugins") if $config->{DEBUG};
             push @dirtyconfig_services, $service;
         }
     }
-    print STDERR "Finished configuring services\n" if $config->{DEBUG};
+    logger("Finished configuring services") if $config->{DEBUG};
 
     return;
 }
