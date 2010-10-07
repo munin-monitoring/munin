@@ -61,6 +61,15 @@ sub is_a_runnable_service
 }
 
 
+sub list
+{
+    my ($self) = @_;
+    opendir my $dir, $self->{servicedir}
+        or die "Unable to open $self->{servicedir}: $!";
+    return grep { $self->is_a_runnable_service($_) } readdir $dir;
+}
+
+
 # FIXME: unexpected things are likely to happen if this isn't called before
 # running plugins.  it should be done automatically the first time a service is
 # run.
@@ -338,6 +347,12 @@ files) will override this value.
 
 Runs miscellaneous tests on $file_name in the service directory, to try and
 establish whether it is a runnable service.
+
+=item B<list>
+  
+  my @services = $services->list;
+
+Returns a list of all the runnable services in the directory.
 
 =item B<prepare_plugin_environment>
 
