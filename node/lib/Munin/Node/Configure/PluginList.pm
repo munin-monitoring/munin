@@ -76,13 +76,6 @@ sub _load_available
 
         DEBUG("Considering '$path'");
 
-        # FIXME: should there ever be symlinks in here?  do we even need
-        # care unless we're going to try running it?
-        while (-l $path) {
-            $path = readlink($path);
-            $path = ($path =~ /^\//) ? $path : "$self->{libdir}/$path";
-        }
-
         my $plugin = Munin::Node::Configure::Plugin->new(name => $plug, path => $path);
 
         $plugin->read_magic_markers();
