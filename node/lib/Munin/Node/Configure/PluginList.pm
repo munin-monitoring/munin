@@ -60,6 +60,7 @@ sub _load_available
 
     my @families = @{$self->{families}};
     my %found;
+    my $plugin_count = 0;
 
     my $history = Munin::Node::Configure::History->new(
         history_file => "$self->{libdir}/plugins.history",
@@ -97,10 +98,12 @@ sub _load_available
         }
 
         $found{$plug} = $plugin;
+        $plugin_count++;
     }
 
     $self->{plugins} = \%found;
-    DEBUG(sprintf "%u plugins available.", scalar keys %found);
+    DEBUG("$plugin_count plugins available.");
+
     return;
 }
 
