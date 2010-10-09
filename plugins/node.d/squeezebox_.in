@@ -55,9 +55,6 @@ GPLv2
 
 =cut
 
-#%# family=auto
-#%# capabilities=autoconf suggest
-
 HOST=${squeezecenter_host:-localhost}
 PORT=${squeezecenter_port:-9090}
 NC=${netcat:-/bin/nc}
