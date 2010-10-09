@@ -113,7 +113,7 @@ sub _load_installed
     my ($self) = @_;
     my $service_count = 0;  # the number of services currently installed.
 
-    DEBUG("Searching '$self->{servicedir}' for installed plugins.");
+    DEBUG("Searching '$self->{servicedir}' for installed services.");
 
     foreach my $item (_valid_files($self->{services})) {
         my $path    = $item->{path};
