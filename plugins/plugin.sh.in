@@ -68,6 +68,25 @@ print_critical () {
 	fi
 }
 
+# adjust_threshold() takes a threshold string and a base value in, and returns
+# the threshold string adjusted for percentages if percent sizes are present.
+# If not, the threshold is left unchanged.
+# Usage:
+# 	adjust_threshold("50%:50%", 200)
+# Returns:
+#	100:100
+#
+adjust_threshold () {
+
+	if [ -n "$1" -a -n "$2" ]; then
+		echo "$1" | awk "BEGIN { FS=\":\"; OFS=\":\" }
+		\$1 ~ /.*%/ {\$1 = $2 * substr(\$1, 0, length(\$1) - 1) / 100}
+		\$2 ~ /.*%/ {\$2 = $2 * substr(\$2, 0, length(\$2) - 1) / 100}
+	
+		{ print }"
+	fi
+
+}
 
 is_multigraph () {
     # Multigraph feature is available in Munin 1.4.0 and later.
