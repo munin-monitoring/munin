@@ -188,13 +188,12 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     }
     for my $field qw(apps buffers swap cached free slab swap_cache page_tables vmalloc_used committed mapped active active_anon active_cache inactive inact_dirty inact_laundry inact_clean) {
     	my ($warning, $critical) = get_thresholds($field);
-	if($field eq "swap") {
-		$warning =~ s!(\d+\.?\d*)%!$1*$mems{SwapTotal}/100!eg if defined $warning;
-		$critical =~ s!(\d+\.?\d*)%!$1*$mems{SwapTotal}/100!eg if defined $critical;
-	} else {
-		$warning =~ s!(\d+\.?\d*)%!$1*$mems{MemTotal}/100!eg if defined $warning;
-		$critical =~ s!(\d+\.?\d*)%!$1*$mems{MemTotal}/100!eg if defined $critical;
-	}
+	my $total = $mems{MemTotal};
+	$total = $mems{SwapTotal} if($field eq "swap");
+
+	$warning = adjust_threshold($warning, $total);
+	$critical = adjust_threshold($critical, $total);
+
 	print "$field.warning $warning\n" if defined $warning;
 	print "$field.critical $critical\n" if defined $critical;
     }
