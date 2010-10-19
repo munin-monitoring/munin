@@ -29,9 +29,9 @@ You may specify filesystem specific warning and critical levels:
     env._dev_sda2_critical 99
 
 You may also specify partitions to exclude.  In the aforementioned
-[df] section add this:
+[df] section add this to exclude /dev/sda2 and /dev/md7
 
-    env.partition_exclude /path/to/ignore1 /path/to/ignore2
+    env.partition_exclude /dev/sda2 /dev/md7
 
 Note: These are the device paths, not the mount points.
 
