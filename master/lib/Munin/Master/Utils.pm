@@ -644,7 +644,7 @@ sub munin_set_var_loc
 
     my $tmpvar = shift @aloc;
     $tmpvar = shift @aloc while (defined $tmpvar and
-				 substr($tmpvar,0,3) =~ '#%#');
+				 substr($tmpvar,0,3) eq '#%#');
 
     if ($tmpvar !~ /\S/) {
 	ERROR "[ERROR] munin_set_var_loc: Cannot work on hash node \"$tmpvar\"";
