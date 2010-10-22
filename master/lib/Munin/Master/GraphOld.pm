@@ -5,14 +5,13 @@ package Munin::Master::GraphOld;
 =begin comment
 
 This is Munin::Master::GraphOld, a package shell to make munin-graph
-modular (so it can loaded persistently in munin-fastcgi-graph for
-example) without making it object oriented yet.  The non "old" module
-will feature propper object orientation like munin-update and will
-have to wait until later.
+modular (so it can loaded persistently in munin-cgi-graph for example)
+without making it object oriented yet.  The non "old" module will
+feature propper object orientation like munin-update and will have to
+wait until later.
 
-
-Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal, Kjell Magne Ã˜ierud,
-Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
+Copyright (C) 2002-2010 Jimmy Olsen, Audun Ytterdal, Kjell Magne
+Øierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -25,8 +24,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 $Id$
 
@@ -41,7 +39,7 @@ use Exporter;
 
 our (@ISA, @EXPORT);
 @ISA    = qw(Exporter);
-@EXPORT = qw(graph_startup graph_check_cron graph_main);
+@EXPORT = qw(graph_startup graph_check_cron graph_main graph_config);
 
 use IO::Socket;
 use IO::Handle;
@@ -93,15 +91,20 @@ my $skip_stats     = 0;
 my $stdout         = 0;
 my $conffile       = $Munin::Common::Defaults::MUNIN_CONFDIR . "/munin.conf";
 my $libdir         = $Munin::Common::Defaults::MUNIN_LIBDIR;
+# Note: Nothing by default is more convenient and elliminates code while
+# for cgi graphing - but it breaks how munin-graph expected stuff to work.
+# I think.
 my %draw           = (
-    "day"     => 1,
-    "week"    => 1,
-    "month"   => 1,
-    "year"    => 1,
-    "sumyear" => 1,
-    "sumweek" => 1
+    'day'      => 0,
+    'week'     => 0,
+    'month'    => 0,
+    'year'     => 0,
+    'sumyear'  => 0,
+    'sumweek'  => 0,
+    'pinpoint' => 0,
 );
-$draw{"pinpoint"} = 0; # XXX - Add a dummy pinpoint value
+my %init_draw = %draw;
+my $pinpoint = {};
 
 my ($size_x, $size_y);
 my ($lower_limit, $upper_limit);
@@ -152,7 +155,7 @@ my %sumtimes = (    # time => [ label, seconds-in-period ]
 # Limit graphing to certain hosts and/or services
 my @limit_hosts    = ();
 my @limit_services = ();
-my $only_fqn = 0;
+my $only_fqn = '';
 
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
 
@@ -161,17 +164,43 @@ my $max_running = 6;
 my $do_fork     = 1;
 
 # "global" Configuration hash
-my $config;
-my $config_bak;
+my $config = undef;
 
 # stats file handle
 my $STATS;
-my $DEBUG = 0;
-my $pinpoint = undef;
 
-my %init_draw = %draw;
 my @init_limit_hosts = @limit_hosts;
 my @init_limit_services = @limit_services;
+
+sub process_pinpoint {
+    my ($pinpoint, $arg) = @_;
+    # XXX - Special hack^h^h^h^h treatment for --pinpoint
+    if ($draw{'pinpoint'} && $draw{'pinpoint'} =~ m/^(\d+),(\d+)$/ ) {
+	# "pinpoint" replaces all the other timing options
+	$draw{'day'}=0;
+	$draw{'week'}=0;
+	$draw{'month'}=0;
+	$draw{'year'}=0;
+	$draw{'sumweek'}=0;
+	$draw{'sumyear'}=0;
+	$draw{'pinpoint'}=1;
+	$pinpoint->{'start'} = $1; # preparsed values
+	$pinpoint->{'end'} = $2;
+    }
+}
+
+
+sub process_fqn {
+    my ($fqn, $arg) = @_;
+
+    # Reset what to draw whenever we specify a new fqn
+
+    $draw{'day'} = $draw{'week'} = $draw{'month'} = $draw{'year'} =
+      $draw{'sumweek'} = $draw{'sumyear'} = $draw{'pinpoint'} = 0;
+
+    return $arg;
+}
+
 
 sub graph_startup {
 
@@ -179,14 +208,14 @@ sub graph_startup {
     #
     # Do once pr. run, pr possebly once pr. graph in the case of
     # munin-cgi-graph
-    
+
     # Localise the stuff, overwise it will be stacked up with CGI
     %draw = %init_draw;
     @limit_hosts = @init_limit_hosts;
     @limit_services = @init_limit_services;
 
-    $DEBUG	    = 0;
     $pinpoint       = undef;
+    my $pinpointopt    = undef;
 
     $force_graphing = 0;
     $force_lazy     = 1;
@@ -200,7 +229,6 @@ sub graph_startup {
     $skip_stats     = 0;
     $stdout         = 0;
 
-    $only_fqn 	    = 0;
     $size_x 	    = undef;
     $size_y         = undef;
     $lower_limit    = undef;
@@ -209,20 +237,24 @@ sub graph_startup {
     # Get options
     my ($args) = @_;
     local @ARGV = @{$args};
+
+    # NOTE!  Some of these options are available in graph_main too
+    # if you make changes here, make them there too.
+
     &print_usage_and_exit
         unless GetOptions (
                 "force!"        => \$force_graphing,
                 "lazy!"         => \$force_lazy,
                 "host=s"        => \@limit_hosts,
                 "service=s"     => \@limit_services,
-                "only-fqn=s"     => \$only_fqn,
+                "only-fqn=s"    => sub{ $only_fqn = process_fqn(@_); },
                 "config=s"      => \$conffile,
                 "stdout!"       => \$stdout,
                 "day!"          => \$draw{'day'},
                 "week!"         => \$draw{'week'},
                 "month!"        => \$draw{'month'},
                 "year!"         => \$draw{'year'},
-                "pinpoint=s"    => \$draw{'pinpoint'},
+                "pinpoint=s"    => sub{ process_pinpoint(\$pinpoint,@_); },
                 "sumweek!"      => \$draw{'sumweek'},
                 "sumyear!"      => \$draw{'sumyear'},
 		"size_x=i"      => \$size_x,
@@ -234,7 +266,6 @@ sub graph_startup {
                 "l|log-file=s"  => \$log_file,
                 "skip-locking!" => \$skip_locking,
                 "skip-stats!"   => \$skip_stats,
-                "debug!"        => \$DEBUG,
                 "version!"      => \$do_version,
                 "cron!"         => \$cron,
                 "fork!"         => \$do_fork,
@@ -253,31 +284,12 @@ sub graph_startup {
     exit_if_run_by_super_user();
 
     # Only read $config once (thx Jani M.)
-    # TODO - should maybe stat() the conf file to dyna reload the conf
-    use Storable;
-    if (! $config) {
-        $config = &munin_config($conffile);
-        $config_bak = Storable::dclone($config);
-    } else {
-	    undef_references($config);
-	    $config = Storable::dclone($config_bak);
-    }
-
-    # untaint the $log_file variable
-    $log_file = $1 if ($log_file && $log_file =~ m/(.*)/);
-
-    if($log_file && $log_file eq "-:2") {
-	    # Logging to STDERR
-	    logger_open_stderr();
-    } else {
-	    logger_open($config->{'logdir'}, $log_file);
-    }
-    logger_debug() if $DEBUG;
-    
-    # XXX - Special hack^h^h^h^h treatment for --pinpoint
-    if ($draw{'pinpoint'} && $draw{'pinpoint'} =~ m/^(\d+),(\d+)$/ ) {
-    	    %draw = ( "pinpoint" => $draw{'pinpoint'} ); # "pinpoint" replaces all the other timing options
-    	    $pinpoint = { "start" => $1, "end" => $2, }; # preparsed values
+    #
+    # FIXME - the loaded $config is stale within 5 minutes.
+    # we either need to die or restart ourselves when this
+    # happens.
+    if (!defined($config)) {
+	$config = &munin_config($conffile);
     }
 
     my $palette = &munin_get($config, "palette", "default");
@@ -295,6 +307,7 @@ sub graph_startup {
         die "Unknown palette named by 'palette' keyword: $palette\n";
     }
 
+    return $config;
 }
 
 sub undef_references {
@@ -321,6 +334,23 @@ sub graph_check_cron {
 
 
 sub graph_main {
+
+    my ($args) = @_;
+    local @ARGV = @{$args};
+
+    GetOptions (
+                "host=s"        => \@limit_hosts,
+                "only-fqn=s"    => sub { $only_fqn = process_fqn(@_); },
+                "day!"          => \$draw{'day'},
+                "week!"         => \$draw{'week'},
+                "month!"        => \$draw{'month'},
+                "year!"         => \$draw{'year'},
+                "pinpoint=s"    => sub{ process_pinpoint(\$pinpoint,@_); },
+                "sumweek!"      => \$draw{'sumweek'},
+                "sumyear!"      => \$draw{'sumyear'},
+                "o|output-file=s"  => \$output_file,
+	    );
+
     my $graph_time = Time::HiRes::time;
 
     munin_runlock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
@@ -515,7 +545,7 @@ sub expand_specials {
         }
         elsif (defined($tmp_field = get_stack_command($service->{$field}))) {
 	    # Aliased with .stack
-            DEBUG "DEBUG: expand_specials ($tmp_field): Doing stack...";
+            DEBUG "[DEBUG] expand_specials ($tmp_field): Doing stack...";
 
             my @spc_stack = ();
             foreach my $pre (split(/\s+/, $tmp_field)) {
@@ -541,13 +571,13 @@ sub expand_specials {
                     "$name,UN,0,$name,IF");
                 if (munin_get($service->{$field}, "cdef")
                     and !munin_get_bool($service->{$name}, "onlynullcdef", 0)) {
-                    DEBUG "DEBUG: NotOnlynullcdef ($field)...";
+                    DEBUG "[DEBUG] NotOnlynullcdef ($field)...";
                     $service->{$name}->{"cdef"}
                         .= "," . $service->{$field}->{"cdef"};
                     $service->{$name}->{"cdef"} =~ s/\b$field\b/$name/g;
                 }
                 else {
-                    DEBUG "DEBUG: Onlynullcdef ($field)...";
+                    DEBUG "[DEBUG] Onlynullcdef ($field)...";
                     munin_set_var_loc($service, [$name, "onlynullcdef"], 1);
                     push @$result, "$name.onlynullcdef";
                 }
@@ -556,7 +586,7 @@ sub expand_specials {
         elsif (defined($tmp_field = get_sum_command($service->{$field}))) {
             my @spc_stack = ();
             my $last_name = "";
-            DEBUG "DEBUG: expand_specials ($tmp_field): Doing sum...";
+            DEBUG "[DEBUG] expand_specials ($tmp_field): Doing sum...";
 
             if (@$order == 1
                 or (@$order == 2 and munin_get($field, "negative", 0))) {
@@ -585,7 +615,7 @@ sub expand_specials {
 
             if (my $tc = munin_get($service->{$field}, "cdef", 0))
             {    # Oh bugger...
-                DEBUG "DEBUG: Oh bugger...($field)...\n";
+                DEBUG "[DEBUG] Oh bugger...($field)...\n";
                 $tc =~ s/\b$field\b/$service->{$last_name}->{"cdef"}/;
                 $service->{$last_name}->{"cdef"} = $tc;
             }
@@ -631,14 +661,14 @@ sub single_value {
     my $graphable = munin_get($service, "graphable", 0);
     if (!$graphable) {
         foreach my $field (@{munin_get_field_order($service)}) {
-            DEBUG "DEBUG: single_value: Checking field \"$field\".";
+            DEBUG "[DEBUG] single_value: Checking field \"$field\".";
             $graphable++ if munin_draw_field($service->{$field});
         }
         munin_set_var_loc($service, ["graphable"], $graphable);
     }
-    DEBUG ("[DEBUG] service "
-	   . join(' :: ', @{munin_get_node_loc($service)})
-	   . " has $graphable elements.");
+    DEBUG "[DEBUG] service "
+      . join(' :: ', @{munin_get_node_loc($service)})
+	. " has $graphable elements.";
     return ($graphable == 1);
 }
 
@@ -654,19 +684,22 @@ sub get_field_name {
 
 
 sub process_work {
-    my (@limit_hosts) = @_;
+    my (@hosts) = @_;
 
     # Make array of what is probably needed to graph
+
     my $work_array = [];
-    if (@limit_hosts) {    # Limit what to update if needed
-        foreach my $nodename (@limit_hosts) {
+
+    if ($only_fqn) {
+	push @$work_array, munin_find_node_by_fqn($config,$only_fqn);
+    } elsif (@hosts) {
+        foreach my $nodename (@hosts) {
             push @$work_array,
                 map {@{munin_find_field($_->{$nodename}, "graph_title")}}
                 @{munin_find_field($config, $nodename)};
         }
-    }
-    else {                 # ...else just search for all adresses to update
-        push @$work_array, @{munin_find_field($config, "graph_title")};
+    } else {
+	FATAL "[FATAL] In process_work, no fqn and no hosts!";
     }
 
     # @$work_array contains copy of (or pointer to) each service to be graphed.
@@ -1196,6 +1229,7 @@ sub process_service {
     for my $time (keys %times) {
         next unless ($draw{$time});
         my $picfilename = get_picture_filename($service, $time);
+	INFO "[INFO] Looking into drawing $picfilename";
         (my $picdirname = $picfilename) =~ s/\/[^\/]+$//;
 
         DEBUG "[DEBUG] Picture filename: $picfilename";
@@ -1305,6 +1339,7 @@ sub process_service {
     if (munin_get_bool($service, "graph_sums", 0)) {
         foreach my $time (keys %sumtimes) {
             my $picfilename = get_picture_filename($service, $time, 1);
+	    INFO "Looking into drawing $picfilename";
             (my $picdirname = $picfilename) =~ s/\/[^\/]+$//;
             next unless ($draw{"sum" . $time});
             my @rrd_sum;
@@ -1402,7 +1437,7 @@ sub process_service {
 
             # Make sure directory exists
             munin_mkdir_p($picdirname, oct(777));
-    
+
 	    $nb_graphs_drawn ++;
             RRDs::graph(@rrd_sum);
 
@@ -1448,7 +1483,7 @@ sub get_fonts {
 		'--font', "LEGEND:7:DejaVuSansMono",
 	       );
     }
-    
+
     # Prior to RRD 1.2 we use no font options.
     return;
 };
@@ -1473,11 +1508,10 @@ sub orig_to_cdef {
 }
 
 sub ends_with {
-	my ($src, $searched) = @_;
-	DEBUG "[DEBUG] ends_with($src, $searched)\n";
+    my ($src, $searched) = @_;
 
-	my $is_ending = (substr($src, - length($searched)) eq $searched);
-	return $is_ending; 
+    my $is_ending = (substr($src, - length($searched)) eq $searched);
+    return $is_ending;
 }
 
 
@@ -1490,7 +1524,10 @@ sub skip_service {
     DEBUG "[DEBUG] $fqn is in ($only_fqn)\n";
 
     # Skip if we've limited services with cli options
-    return 1 if (@limit_services and ! (grep { ends_with($fqn, $_) } @limit_services));
+    return 1
+      if (@limit_services and
+	  ! (grep { ends_with($fqn, $_) } @limit_services));
+
     DEBUG "[DEBUG] $fqn is in (" . join(",", @limit_services) . ")\n";
 
     # Always graph if --force is present
@@ -1504,6 +1541,7 @@ sub skip_service {
     # Don't skip
     return 0;
 }
+
 
 sub expand_cdef {
     my $service    = shift;
@@ -1554,9 +1592,14 @@ sub parse_path {
 
 # Wrapper for munin_get_picture_filename to handle pinpoint
 sub get_picture_filename {
-	if (defined $output_file) { return $output_file; }
-	# delegate if not overriden
-	return munin_get_picture_filename(@_);
+    my $of;
+    if (defined $output_file) { $of=$output_file; goto exit_label; }
+
+    $of = munin_get_picture_filename(@_);
+
+  exit_label:
+
+    return $of;
 }
 
 sub escape {
@@ -1596,14 +1639,16 @@ Options:
     --help		View this message.
     --version		View version information.
     --debug		View debug messages.
-    --[no]cron		Behave as expected when run from cron. (Used internally 
+    --[no]cron		Behave as expected when run from cron. (Used internally
 			in Munin.)
-    --service <service>	Limit graphed services to <service>. Multiple --service
-			options may be supplied.
-    --host <host>	Limit graphed hosts to <host>. Multiple --host options
-    			may be supplied.
+    --host <host>       Limit graphed hosts to <host>. Multiple --host options
+                        may be supplied.
+    --only-fqn <FQN>    For internal use with CGI graphing.  Graph only a
+                        single fully qualified named graph, e.g. --only-fqn
+                          root/Backend/dafnes.example.com/diskstats_iops
+                        Always use with the correct --host option.
     --config <file>	Use <file> as configuration file. [$conffile]
-    --[no]list-images	List the filenames of the images created. 
+    --[no]list-images	List the filenames of the images created.
     			[--nolist-images]
     --output-file  -o	Output graph file. (used for CGI graphing)
     --log-file     -l	Output log file. (used for CGI graphing)
@@ -1613,12 +1658,15 @@ Options:
     --[no]year		Create year-graphs.  [--year]
     --[no]sumweek	Create summarised week-graphs.  [--summweek]
     --[no]sumyear	Create summarised year-graphs.  [--sumyear]
-
     --pinpoint <start,stop> Create custom-graphs. <start,stop> is the standard unix Epoch. [not active]
     --size_x <pixels>   Sets the X size of the graph in pixels [175]
     --size_y <pixels>   Sets the Y size of the graph in pixels [400]
     --lower_limit <lim> Sets the lower limit of the graph
     --upper_limit <lim> Sets the upper limit of the graph
+
+NOTE! --pinpoint and --only-fqn must not be combined with
+--[no]<day|week|month|year> options.  The result of doing that is
+undefined.
 
 ";
     exit 0;

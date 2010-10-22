@@ -16,11 +16,12 @@ use Munin::Common::Defaults;
 use Munin::Master::Logger;
 use Munin::Master::Config;
 use Munin::Common::Config;
-use Log::Log4perl qw (:easy);
+use Log::Log4perl qw(:easy);
 use POSIX qw(strftime);
-use POSIX ":sys_wait_h";
+use POSIX qw(:sys_wait_h);
 use RRDs;
-use Symbol 'gensym';
+use Symbol qw(gensym);
+use Data::Dumper;
 
 our (@ISA, @EXPORT);
 
@@ -36,6 +37,7 @@ our (@ISA, @EXPORT);
 	   'munin_writeconfig',
 	   'munin_delete',
 	   'munin_overwrite',
+	   'munin_dumpconfig',
 	   'munin_config',
 	   'munin_draw_field',
 	   'munin_get_bool',
@@ -55,6 +57,7 @@ our (@ISA, @EXPORT);
 	   'munin_get_node_name',
 	   'munin_get_parent_name',
 	   'munin_get_node_fqn',
+	   'munin_find_node_by_fqn',
 	   'munin_get_node_loc',
 	   'munin_get_node',
 	   'munin_set_var_loc',
@@ -231,7 +234,7 @@ sub munin_overwrite {
 
     my ($configfile,$overwrite) = @_;
     for my $key (keys %$overwrite) {
-        next if $key =~ /^#%#/;
+	next if substr($key,0,3) eq '#%#';
 	if (ref $overwrite->{$key}) {
 	    if (!defined $configfile->{$key}) {
 		if (ref $overwrite->{$key} eq "HASH") {
@@ -397,28 +400,28 @@ sub munin_get_var_path
     return;
 }
 
- 
+
 sub munin_find_field {
     # Starting at the (presumably the root) $hash make recursive calls
     # until for example graph_title or value is found, and then
-    # continue recursing and itterating to all are found.
+    # continue recursing and itterating until all are found.
     #
     # Then we return a array of pointers into the $hash
+    #
+    # This function will not use REs as they are inordinately
+    # expensive.  There is a munin_find_field_for_limits that will
+    # match REs instead of whole strings.
 
-    my $hash  = shift;
-    my $field = shift;
-    my $avoid = shift;
+    my ($hash, $field, $avoid) = @_;
+
     my $res = [];
-
-    if (ref ($field) ne "Regexp") {
-	$field = qr/^$field$/;
-    }
 
     if (ref ($hash) eq "HASH") {
 	foreach my $key (keys %{$hash}) {
-	    next if $key =~ /^#%#/;
+	    next if substr($key,0,3) eq '#%#';
 	    last if defined $avoid and $key eq $avoid;
-	    if ($key =~ $field) {
+	    # Always check $key eq $field first here, or we break
+	    if ($key eq $field) {
 		push @$res, $hash;
 	    } elsif (ref ($hash->{$key}) eq "HASH") {
 		push @$res, @{munin_find_field ($hash->{$key}, $field, $avoid)};
@@ -431,9 +434,8 @@ sub munin_find_field {
 
 
 sub munin_find_field_for_limits {
-    my $hash  = shift;
-    my $field = shift;
-    my $avoid = shift;
+    my ($hash, $field, $avoid) = @_;
+
     my $res = [];
 
     if (ref ($field) ne "Regexp") {
@@ -442,7 +444,7 @@ sub munin_find_field_for_limits {
 
     if (ref ($hash) eq "HASH") {
 	foreach my $key (keys %{$hash}) {
-	    next if $key =~ /^#%#/;
+	    next if substr($key,0,3) eq '#%#';
 	    last if defined $avoid and $key eq $avoid;
 	    if (ref ($hash->{$key}) eq "HASH") {
 		push @$res, @{munin_find_field_for_limits ($hash->{$key}, $field, $avoid)};
@@ -463,7 +465,7 @@ sub munin_get_children {
     return if (ref ($hash) ne "HASH");
 
     foreach my $key (keys %{$hash}) {
-	next if $key =~ /^#%#/;
+	next if substr($key,0,3) eq '#%#';
 	if (defined $hash->{$key} and ref ($hash->{$key}) eq "HASH") {
 	    push @$res, $hash->{$key};
 	}
@@ -480,7 +482,7 @@ sub munin_get_separated_node
 
     if (ref ($hash) eq "HASH") {
 	foreach my $key (keys %$hash) {
-	    next if $key =~ /^#%#/;
+	    next if substr($key,0,3) eq '#%#';
 	    if (ref ($hash->{$key}) eq "HASH") {
 		$ret->{$key} = munin_get_separated_node ($hash->{$key});
 	    } else {
@@ -518,6 +520,7 @@ sub munin_get_node_name
     }
 }
 
+
 sub munin_get_node_fqn
 {
     my $hash = shift;
@@ -525,17 +528,38 @@ sub munin_get_node_fqn
     if (ref ($hash) eq "HASH") {
 	my $fqn = "";
 	if (defined $hash->{'#%#name'}) {
-		$fqn = $hash->{'#%#name'}; 
+		$fqn = $hash->{'#%#name'};
 	}
  	if (defined $hash->{'#%#parent'}) {
 		# Recursively prepend the parent, concatenation with /
 		$fqn = munin_get_node_fqn ($hash->{'#%#parent'}) . "/" . $fqn;
 	}
 	return $fqn;
-    } else { 
+    } else {
 	return;
     }
 }
+
+
+sub munin_find_node_by_fqn {
+    # The FQN should be relative to the point in the hash we're handed.
+    my($hash,$fqn) = @_;
+
+    my $here = $hash;
+
+    my @path = split('/',$fqn);
+
+    foreach my $pc (@path) {
+	next if $pc eq 'root';
+	if (exists $here->{$pc}) {
+	    $here = $here->{$pc};
+	} else {
+	    confess "Could not find FQN $fqn!";
+	}
+    }
+    return $here ;
+}
+
 
 sub munin_get_picture_loc {
     my $hash = shift;
@@ -619,7 +643,9 @@ sub munin_set_var_loc
     my @aloc = @$loc;
 
     my $tmpvar = shift @aloc;
-    $tmpvar = shift @aloc while (defined $tmpvar and $tmpvar =~ /^#%#/);
+    $tmpvar = shift @aloc while (defined $tmpvar and
+				 substr($tmpvar,0,3) =~ '#%#');
+
     if ($tmpvar !~ /\S/) {
 	ERROR "[ERROR] munin_set_var_loc: Cannot work on hash node \"$tmpvar\"";
 	return;
@@ -746,7 +772,7 @@ sub munin_writeconfig_loop {
     my ($hash,$fh,$pre) = @_;
 
     foreach my $key (keys %$hash) {
-	next if $key =~ /#%#/;
+	next if substr($key,0,3) eq '#%#';
 	my $path = (defined $pre ? join(';', ($pre, $key)) : $key);
 	if (ref ($hash->{$key}) eq "HASH") {
 	    munin_writeconfig_loop ($hash->{$key}, $fh, $path);
@@ -786,6 +812,25 @@ sub munin_writeconfig {
 
     DEBUG "[DEBUG] Closing filehandle \"$datafilename\"...\n";
     close ($fh);
+}
+
+
+sub munin_dumpconfig {
+    my ($config) = @_;
+    my $indent = $Data::Dumper::Indent;
+    my $sorter = $Data::Dumper::Sortkeys;
+
+    $Data::Dumper::Sortkeys =
+      sub { [ sort grep {!/^#%#parent$/} keys %{$_[0]} ]; };
+    $Data::Dumper::Indent = 1;
+
+    print "##\n";
+    print "## NOTE: #%#parent is hidden to make the print readable!\n";
+    print "##\n";
+    print Dumper $config;
+
+    $Data::Dumper::Sortkeys = $sorter;
+    $Data::Dumper::Indent = $indent;
 }
 
 
@@ -1078,7 +1123,7 @@ sub munin_copy_node_toloc
 
     if (ref ($from) eq "HASH") {
 	foreach my $key (keys %$from) {
-	    next if $key =~ /^#%#/;
+	    next if substr($key,0,3) eq '#%#';
 	    if (ref ($from->{$key}) eq "HASH") {
 		munin_copy_node_toloc ($from->{$key}, $to, [@$loc, $key]);
 	    } else {
@@ -1728,7 +1773,7 @@ Returns:
 =item B<munin_get_picture_loc>
 
 Get location array for hash node for picture purposes. Differs from
-munin_get_node_loc in that it honors #%#origin metadata 
+munin_get_node_loc in that it honors #%#origin metadata
 
 Parameters: 
  - $hash: A ref to the node 
