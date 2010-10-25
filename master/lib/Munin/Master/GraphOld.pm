@@ -173,9 +173,9 @@ my @init_limit_hosts = @limit_hosts;
 my @init_limit_services = @limit_services;
 
 sub process_pinpoint {
-    my ($pinpoint, $arg) = @_;
+    my ($pinpoint, $arg_name, $arg_value) = @_;     
     # XXX - Special hack^h^h^h^h treatment for --pinpoint
-    if ($draw{'pinpoint'} && $draw{'pinpoint'} =~ m/^(\d+),(\d+)$/ ) {
+    if ($arg_value && $arg_value =~ m/^(\d+),(\d+)$/ ) {
 	# "pinpoint" replaces all the other timing options
 	$draw{'day'}=0;
 	$draw{'week'}=0;
@@ -184,8 +184,8 @@ sub process_pinpoint {
 	$draw{'sumweek'}=0;
 	$draw{'sumyear'}=0;
 	$draw{'pinpoint'}=1;
-	$pinpoint->{'start'} = $1; # preparsed values
-	$pinpoint->{'end'} = $2;
+	$$pinpoint->{'start'} = $1; # preparsed values
+	$$pinpoint->{'end'} = $2;
     }
 }
 

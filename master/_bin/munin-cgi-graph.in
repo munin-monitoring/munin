@@ -183,8 +183,7 @@ while (new CGI::Fast) {
         # Should generate it
 	my $scale_options;
 	if ($pinpoint) {
-	    $scale_options =
-	      [ "--pinpoint=" . $pinpoint->[0] . "," . $pinpoint->[1] ];
+	    $scale_options = "--pinpoint=" . $pinpoint->[0] . "," . $pinpoint->[1];
 	} else {
 	    $scale_options = "--$scale";
 	}
