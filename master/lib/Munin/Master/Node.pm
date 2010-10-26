@@ -98,6 +98,19 @@ sub _do_connect {
 
 	    my $pid = open2($self->{reader}, $self->{writer}, $remote_connection_cmd);
             ERROR "Failed to connect to node $self->{address} : $!" unless $pid;
+    } elsif ($uri->scheme eq "local") {
+        # local commands should ignore the username, url and host
+        my $local_cmd = $uri->path;
+        my $local_pipe_cmd = "$local_cmd $params";
+
+	    # Open a double pipe
+   	    use IPC::Open2;
+
+	    $self->{reader} = new IO::Handle();
+	    $self->{writer} = new IO::Handle();
+
+	    my $pid = open2($self->{reader}, $self->{writer}, $local_pipe_cmd);
+            ERROR "Failed to execute local command: $!" unless $pid;
     } else {
 	    ERROR "Unknown scheme : " . $uri->scheme;
 	    return 0;
