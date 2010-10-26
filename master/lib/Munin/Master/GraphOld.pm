@@ -337,6 +337,12 @@ sub graph_main {
 
     my ($args) = @_;
     local @ARGV = @{$args};
+   
+    # Reset an eventual custom size
+    $size_x 	    = undef;
+    $size_y         = undef;
+    $lower_limit    = undef;
+    $upper_limit    = undef;
 
     GetOptions (
                 "host=s"        => \@limit_hosts,
@@ -349,6 +355,11 @@ sub graph_main {
                 "sumweek!"      => \$draw{'sumweek'},
                 "sumyear!"      => \$draw{'sumyear'},
                 "o|output-file=s"  => \$output_file,
+
+		"size_x=i"      => \$size_x,
+		"size_y=i"      => \$size_y,
+		"upper_limit=s" => \$upper_limit,
+		"lower_limit=s" => \$lower_limit,
 	    );
 
     my $graph_time = Time::HiRes::time;
