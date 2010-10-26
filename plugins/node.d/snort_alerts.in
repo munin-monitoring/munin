@@ -90,5 +90,5 @@ if [ "$1" = "config" ]; then
         exit 0
 fi
 
-echo -n "alerts.value "
+printf "alerts.value "
 echo $(tail -n1 $_target| awk -F, '{ print $4 }')

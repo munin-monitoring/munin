@@ -91,5 +91,5 @@ if [ "$1" = "config" ]; then
         exit 0
 fi
 
-echo -n "pattmatch.value "
+printf "pattmatch.value "
 echo $(tail -n1 $_target| awk -F, '{ print $7 }')

@@ -45,11 +45,11 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-echo -n "uid.value "
+printf "uid.value "
 id -u
-echo -n "uid.extinfo "
+printf "uid.extinfo "
 id -nu
-echo -n "gid.value "
+printf "gid.value "
 id -g
-echo -n "gid.extinfo "
+printf "gid.extinfo "
 id -Gn

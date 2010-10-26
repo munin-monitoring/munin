@@ -50,5 +50,5 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-echo -n 'ntp_err.value '
+printf 'ntp_err.value '
 ntpdc -c kern | awk '/^estimated error:/ { print $3 }'

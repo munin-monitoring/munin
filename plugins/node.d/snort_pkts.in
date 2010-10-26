@@ -91,5 +91,5 @@ if [ "$1" = "config" ]; then
         exit 0
 fi
 
-echo -n "pktsec.value "
+printf "pktsec.value "
 echo $( tail -n1 $_target| awk -F, '{ print $5 }') \* 1000|bc -l

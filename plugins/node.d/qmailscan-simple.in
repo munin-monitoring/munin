@@ -26,4 +26,5 @@ if [ "$1" = "config" ]; then
         exit 0
 fi
 
-echo -n "virus.value " && grep "$(date "+%d %b %Y")" $LOG0 $LOG1 | wc -l
+printf "virus.value "
+grep "$(date "+%d %b %Y")" $LOG0 $LOG1 | wc -l
