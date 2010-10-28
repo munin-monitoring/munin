@@ -1324,6 +1324,9 @@ sub process_service {
         RRDs::graph(@complete);
         if (my $ERROR = RRDs::error) {
             ERROR "[RRD ERROR] Unable to graph $picfilename : $ERROR";
+            # ALWAYS dumps the cmd used when an error occurs.
+            # Otherwise, it will be difficult to debug post-mortem
+            ERROR "[RRD ERROR] rrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n"";
         }
         else {
 
