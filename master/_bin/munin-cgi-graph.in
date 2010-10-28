@@ -365,7 +365,6 @@ sub draw_graph_or_complain {
 	  "Content-Type: text/plain\r\n",
 	  "\r\n",
 	  "Could not draw graph \"$filename\"\r\n";
-	exit 0;
         return 0;
     } else {
     	# print "X-Graph-Duration: $graph_duration\r\n";
