@@ -121,6 +121,7 @@ while (new CGI::Fast) {
     if (! &verify_parameters ($dom, $host, $serv, $scale)) {
 	print "Status: 500\r\n",
 	  "Content-Type: text/html\r\n",
+	  "X-Munin-Pid: $$\r\n",
 	  "\r\n",
 	  "Invalid parameters!\r\n";
 	next;
@@ -161,6 +162,7 @@ while (new CGI::Fast) {
 
 	    print "Status: 304\r\n",
 	      "Content-Type: image/png\r\n",
+	      "X-Munin-Pid: $$\r\n",
 	      "Content-Length: 0\r\n",
 	      "Expires: $headers->{Expires}\r\n",
 	      "Last-Modified: ", $headers->{"Last-Modified"}, "\r\n".
@@ -184,6 +186,7 @@ while (new CGI::Fast) {
     # Now send it: headers
     print "Status: 200\r\n",
       "Content-Type: image/png\r\n";
+    print "X-Munin-Pid: $$\r\n";
 
     my $headers = get_headers_for_file($filename, $graph_ttl);
     foreach my $header_name (keys %$headers) {
