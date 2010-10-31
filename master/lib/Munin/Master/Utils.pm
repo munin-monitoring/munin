@@ -640,22 +640,23 @@ sub munin_set_var_loc
     my $hash = shift;
     my $loc  = shift;
     my $val  = shift;
-    my @aloc = @$loc;
+    my $iloc = (shift || 0);
 
-    my $tmpvar = shift @aloc;
-    $tmpvar = shift @aloc while (defined $tmpvar and
+    my $tmpvar = $loc->[$iloc++];
+    $tmpvar = $loc->[$iloc++] while (defined $tmpvar and
 				 substr($tmpvar,0,3) eq '#%#');
 
-    if ($tmpvar !~ /\S/) {
+    if (index($tmpvar, " ") != -1) {
 	ERROR "[ERROR] munin_set_var_loc: Cannot work on hash node \"$tmpvar\"";
 	return;
     }
-    if (@aloc > 0) {
-	if (!defined $hash->{$tmpvar} or !defined $hash->{$tmpvar}->{"#%#name"}) { # Init the new node
+    if (scalar @$loc > $iloc) {
+	if (!defined $hash->{$tmpvar} or !defined $hash->{$tmpvar}->{"#%#name"}) { 
+            # Init the new node
 	    $hash->{$tmpvar}->{"#%#parent"} = $hash;
 	    $hash->{$tmpvar}->{"#%#name"} = $tmpvar;
 	}
-        return munin_set_var_loc ($hash->{$tmpvar}, \@aloc, $val);
+        return munin_set_var_loc ($hash->{$tmpvar}, $loc, $val, $iloc);
     } else {
         WARN "[WARNING] munin_set_var_loc: Setting unknown option '$tmpvar' at "
 	    . munin_get_keypath($hash)
