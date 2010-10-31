@@ -640,8 +640,14 @@ sub munin_set_var_loc
     my $hash = shift;
     my $loc  = shift;
     my $val  = shift;
-    my $iloc = (shift || 0);
 
+    my $iloc = 0;
+
+    # XXX -  Dirty breaking recursive function 
+    # --> Using goto is BAD, but enough for now
+START:
+
+    # Find the next normal value (that doesn't begin with #%#)
     my $tmpvar = $loc->[$iloc++];
     $tmpvar = $loc->[$iloc++] while (defined $tmpvar and
 				 substr($tmpvar,0,3) eq '#%#');
@@ -656,7 +662,9 @@ sub munin_set_var_loc
 	    $hash->{$tmpvar}->{"#%#parent"} = $hash;
 	    $hash->{$tmpvar}->{"#%#name"} = $tmpvar;
 	}
-        return munin_set_var_loc ($hash->{$tmpvar}, $loc, $val, $iloc);
+	# Recurse
+        $hash = $hash->{$tmpvar};
+	goto START;
     } else {
         WARN "[WARNING] munin_set_var_loc: Setting unknown option '$tmpvar' at "
 	    . munin_get_keypath($hash)
