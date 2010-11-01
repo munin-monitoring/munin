@@ -31,7 +31,7 @@ use Pod::Usage;
 use Munin::Node::SpoolWriter;
 
 my $host = "localhost:4949";
-my $SPOOLDIR = "/tmp/munin-async-spool";
+my $SPOOLDIR = "/var/lib/munin/spool";
 my $verbose;
 my $debug;
 my $help;
@@ -223,7 +223,7 @@ munin-async-server [options]
 
  Options:
      --host <hostname:port>     Connect to this munin-node [localhost:4949]
-     -s --spool <spooldir>      Store the spooled data in this dir [/tmp/munin-async-spool]
+     -s --spool <spooldir>      Store the spooled data in this dir [/var/lib/munin/spool]
 
      -v --verbose               Be verbose
      -h --help                  View this message	
