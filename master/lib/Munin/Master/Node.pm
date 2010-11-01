@@ -98,7 +98,7 @@ sub _do_connect {
 
 	    my $pid = open2($self->{reader}, $self->{writer}, $remote_connection_cmd);
             ERROR "Failed to connect to node $self->{address} : $!" unless $pid;
-    } elsif ($uri->scheme eq "local") {
+    } elsif ($uri->scheme eq "cmd") {
         # local commands should ignore the username, url and host
         my $local_cmd = $uri->path;
         my $local_pipe_cmd = "$local_cmd $params";
