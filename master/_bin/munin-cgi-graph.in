@@ -65,7 +65,8 @@ logger_open($config->{'logdir'});
 logger_debug() if $config->{debug} or defined($ENV{CGI_DEBUG});
 
 # BEGIN FAST-CGI LOOP:
-
+my $nb_request = 0;
+my $nb_request_max = 10;
 while (new CGI::Fast) {
     my $pinpoint = undef;
     my $path = $ENV{PATH_INFO} || "";
@@ -122,6 +123,7 @@ while (new CGI::Fast) {
 	print "Status: 500\r\n",
 	  "Content-Type: text/html\r\n",
 	  "X-Munin-Pid: $$\r\n",
+	  "X-Munin-Request: $nb_request/$nb_request_max\r\n",
 	  "\r\n",
 	  "Invalid parameters!\r\n";
 	next;
@@ -163,6 +165,7 @@ while (new CGI::Fast) {
 	    print "Status: 304\r\n",
 	      "Content-Type: image/png\r\n",
 	      "X-Munin-Pid: $$\r\n",
+	      "X-Munin-Request: $nb_request/$nb_request_max\r\n",
 	      "Content-Length: 0\r\n",
 	      "Expires: $headers->{Expires}\r\n",
 	      "Last-Modified: ", $headers->{"Last-Modified"}, "\r\n".
@@ -185,8 +188,10 @@ while (new CGI::Fast) {
 
     # Now send it: headers
     print "Status: 200\r\n",
-      "Content-Type: image/png\r\n";
-    print "X-Munin-Pid: $$\r\n";
+      "Content-Type: image/png\r\n",
+      "X-Munin-Pid: $$\r\n",
+      "X-Munin-Request: $nb_request/$nb_request_max\r\n",
+    "";
 
     my $headers = get_headers_for_file($filename, $graph_ttl);
     foreach my $header_name (keys %$headers) {
@@ -197,6 +202,12 @@ while (new CGI::Fast) {
 
     # ... and graph data
     send_graph_data($filename);
+} continue {
+	$nb_request++;
+	if ($nb_request > $nb_request_max) {
+		# Cycle
+		last;
+	}
 }
 # END FAST-CGI LOOP - Time to die.  Nicely.
 
@@ -370,7 +381,7 @@ sub draw_graph_or_complain {
 	  "Could not draw graph \"$filename\"\r\n";
         return 0;
     } else {
-    	# print "X-Graph-Duration: $graph_duration\r\n";
+    	print "X-Graph-Duration: $graph_duration\r\n";
 	return $ret;
     }
 }
