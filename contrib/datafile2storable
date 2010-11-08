@@ -10,5 +10,5 @@ use Munin::Master::Utils;
 
 while (my $file = shift) {
 	my $config = munin_readconfig($file);
-	Storable::store_fd($config, \*STDOUT);
+	Storable::nstore_fd($config, \*STDOUT);
 }
