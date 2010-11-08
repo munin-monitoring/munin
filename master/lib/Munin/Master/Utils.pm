@@ -48,6 +48,7 @@ our (@ISA, @EXPORT);
 	   'munin_get_picture_filename',
 	   'munin_get_html_filename',
 	   'munin_get_filename',
+	   'munin_get_keypath',
 	   'munin_graph_column_headers',
 	   'munin_get_max_label_length',
 	   'munin_get_field_order',
