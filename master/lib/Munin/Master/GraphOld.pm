@@ -484,6 +484,8 @@ sub get_header {
         push @$result, ("--vertical-label", $tmp_field);
     }
 
+    push @$result, '--slope-mode' if $RRDs::VERSION >= 1.2;
+
     push @$result, "--height", ($size_y || munin_get($service, "graph_height", "175"));
     push @$result, "--width",  ($size_x || munin_get($service, "graph_width",  "400"));
 
@@ -565,7 +567,7 @@ sub expand_specials {
                     munin_set_var_loc(
                         $service,
                         [$name, "draw"],
-                        munin_get($service->{$field}, "draw", "LINE2"));
+                        munin_get($service->{$field}, "draw", "LINE1"));
                     munin_set_var_loc($service, [$field, "process"], "no");
                 }
                 else {
@@ -865,7 +867,7 @@ sub process_service {
         DEBUG "[DEBUG] Processing field \"$fname\" ["
             . munin_get_node_name($field) . "].";
 
-        my $fielddraw = munin_get($field, "draw", "LINE2");
+        my $fielddraw = munin_get($field, "draw", "LINE1");
 
         if ($field_count == 0 and $fielddraw eq 'STACK') {
 
@@ -873,7 +875,7 @@ sub process_service {
             DEBUG "ERROR: First field (\"$fname\") of graph "
                 . join(' :: ', munin_get_node_loc($service))
                 . " is STACK. STACK can only be drawn after a LINEx or AREA.";
-            $fielddraw = "LINE2";
+            $fielddraw = "LINE1";
         }
 
         if ($fielddraw eq 'AREASTACK') {
@@ -964,7 +966,7 @@ sub process_service {
 
             push(@rrd, "AREA:i$rrdname#ffffff");
             push(@rrd, "STACK:min_max_diff$range_colour");
-            push(@rrd, "LINE2:re_zero#000000")
+            push(@rrd, "LINE1:re_zero#000000")
                 if !munin_get($field, "negative");
         }
 
@@ -1162,7 +1164,7 @@ sub process_service {
     my $graphtotal = munin_get($service, "graph_total");
     if (@rrd_negatives) {
         push(@rrd, @rrd_negatives);
-        push(@rrd, "LINE2:re_zero#000000");    # Redraw zero.
+        push(@rrd, "LINE1:re_zero#000000");    # Redraw zero.
         if (    defined $graphtotal
             and exists $total_pos{'min'}
             and exists $total_neg{'min'}
