@@ -9,16 +9,20 @@ import org.munin.plugin.jmx.AbstractAnnotationGraphsProvider.Graph;
 @Graph(title = "ThreadsStartedTotal", vlabel = "threads", info = "Returns the total number of threads created and also started since the Java virtual machine started.")
 public class ThreadsStartedTotal extends AbstractAnnotationGraphsProvider {
 
+	public ThreadsStartedTotal(Config config) {
+		super(config);
+	}
+
 	@Field
 	public long threadsStartedTotal() throws IOException {
 		ThreadMXBean threadmxbean = ManagementFactory.newPlatformMXBeanProxy(
-				connection, ManagementFactory.THREAD_MXBEAN_NAME,
+				getConnection(), ManagementFactory.THREAD_MXBEAN_NAME,
 				ThreadMXBean.class);
 
 		return threadmxbean.getTotalStartedThreadCount();
 	}
 
 	public static void main(String args[]) {
-		runGraph(new ThreadsStartedTotal(), args);
+		runGraph(args);
 	}
 }

@@ -6,12 +6,16 @@ import org.munin.plugin.jmx.AbstractAnnotationGraphsProvider.Graph;
 public class MemorythresholdPostGCCount extends
 		AbstractAnnotationGraphsProvider {
 
+	public MemorythresholdPostGCCount(Config config) {
+		super(config);
+	}
+
 	private long[] gcValues;
 
 	@Override
-	public void prepareValues() throws Exception {
+	protected void prepareValues() throws Exception {
 		GetMemoryPoolThresholdCount collector = new GetMemoryPoolThresholdCount(
-				connection);
+				getConnection());
 		gcValues = collector.GC();
 	}
 
@@ -36,6 +40,6 @@ public class MemorythresholdPostGCCount extends
 	}
 
 	public static void main(String args[]) {
-		runGraph(new MemorythresholdPostGCCount(), args);
+		runGraph(args);
 	}
 }

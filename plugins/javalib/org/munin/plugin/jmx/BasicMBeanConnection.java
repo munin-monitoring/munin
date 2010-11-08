@@ -12,11 +12,10 @@ import javax.management.remote.JMXServiceURL;
 
 public class BasicMBeanConnection {
 
-    public static MBeanServerConnection get() throws IOException, MalformedURLException
+    public static MBeanServerConnection get(Config config) throws IOException, MalformedURLException
     {
-        Config config = Config.INSTANCE;
 		JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + config.getIp() + ":" + config.getPort()+ "/jmxrmi");
-        Map<String, Object> credentials = config.GetConnectionCredentials();
+        Map<String, Object> credentials = config.getConnectionCredentials();
         JMXConnector c=JMXConnectorFactory.connect(u,credentials);
         MBeanServerConnection connection=c.getMBeanServerConnection();
         return (connection);

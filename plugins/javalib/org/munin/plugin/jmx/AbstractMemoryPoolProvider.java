@@ -1,10 +1,10 @@
 package org.munin.plugin.jmx;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.reflect.AccessibleObject;
 import java.util.Set;
 
 import javax.management.MalformedObjectNameException;
@@ -15,40 +15,70 @@ public abstract class AbstractMemoryPoolProvider extends
 
 	protected String threshold;
 
+	private final LegacyPool pool;
+	private final UsageType usage;
+
+	protected AbstractMemoryPoolProvider(Config config, final LegacyPool pool,
+			final UsageType usage) {
+		super(config);
+
+		this.usage = usage;
+		this.pool = pool;
+	}
+
 	@Field(info = "The usage threshold value of this memory pool in bytes. The default value is zero.")
 	public String threshold() {
 		return threshold;
 	}
 
+	@Override
+	protected void printGraphConfig(PrintWriter out, String title,
+			String vlabel, String info, String args, boolean update,
+			boolean graph) {
+		String poolName;
+		try {
+			poolName = getMemoryPoolMXBean(pool).getName();
+		} catch (Exception e) {
+			poolName = "<unknown pool>";
+		}
+		super.printGraphConfig(out, title, vlabel, info + " (" + poolName
+				+ ").", args, update, graph);
+	}
+
+	@Override
+	protected void printFieldValue(PrintWriter out, AccessibleObject accessible) {
+		super.printFieldValue(out, accessible);
+	}
+
 	/**
-	 * <b>WARNING:</b> using a simple integer index to select the memory pool to
-	 * query here assumes a lot about the target VM and the JMX implementation
-	 * and can result in effectively random results (and errors) when those
-	 * assumptions are not held. In the interest of bug-for-bug compatibility
-	 * with previous versions this code does <b>not</b> fix this issue.
+	 * <b>WARNING:</b> This method tries to fix the broken index-based access of
+	 * 1.4 JMX plugins by finding the desired pool by the pool name instead.
+	 * While that's an improvement it's still fundamentally broken, as pool
+	 * names and even their existence is undefined and implementation- as well
+	 * as configuration-dependent.
+	 * 
+	 * A fully correct solution would dynamically create graphs for each pool
+	 * encountered and not make any assumption. {@link MultigraphMemory} is such
+	 * a fully dynamic implementation and should be preferred.
 	 */
-	protected void preparePoolValues(int memtype, UsageType usageType)
-			throws MalformedObjectNameException, IOException {
-		MemoryPoolMXBean poolMXBean = getMemoryPoolMXBean(memtype);
+	protected void prepareValues() throws Exception {
+		MemoryPoolMXBean poolMXBean = getMemoryPoolMXBean(pool);
+		prepareMemoryUsage(poolMXBean, usage);
 		long thresholdValue;
 		try {
-			switch (usageType) {
+			switch (usage) {
 			case USAGE:
-				memoryUsage = poolMXBean.getUsage();
 				thresholdValue = poolMXBean.getUsageThreshold();
 				break;
-			case POST_GC:
-				memoryUsage = poolMXBean.getCollectionUsage();
-				thresholdValue = poolMXBean.getCollectionUsageThreshold();
-				break;
+			// XXX does it make sense to return this threshold value for
+			// peak usage graphs?
 			case PEAK:
-				memoryUsage = poolMXBean.getPeakUsage();
-				// XXX does it make sense to return this threshold value for
-				// peak usage graphs?
+			case POST_GC:
 				thresholdValue = poolMXBean.getCollectionUsageThreshold();
 				break;
 			default:
-				throw new IllegalArgumentException("Unknown UsageType: " + usageType);
+				throw new IllegalArgumentException("Unknown UsageType: "
+						+ usage);
 			}
 			threshold = String.valueOf(thresholdValue);
 		} catch (UnsupportedOperationException e) {
@@ -56,26 +86,21 @@ public abstract class AbstractMemoryPoolProvider extends
 		}
 	}
 
-	/**
-	 * The warning on {@link #prepareValues()} applies here as well.
-	 */
-	protected MemoryPoolMXBean getMemoryPoolMXBean(int memtype)
+	protected MemoryPoolMXBean getMemoryPoolMXBean(LegacyPool pool)
 			throws MalformedObjectNameException, IOException {
 		ObjectName gcName = new ObjectName(
 				ManagementFactory.MEMORY_POOL_MXBEAN_DOMAIN_TYPE + ",*");
 
-		Set<ObjectName> mbeans = connection.queryNames(gcName, null);
-		List<MemoryPoolMXBean> gcmbeans = new ArrayList<MemoryPoolMXBean>();
+		Set<ObjectName> mbeans = getConnection().queryNames(gcName, null);
 		for (ObjectName objName : mbeans) {
 			MemoryPoolMXBean gc = ManagementFactory.newPlatformMXBeanProxy(
-					connection, objName.getCanonicalName(),
+					getConnection(), objName.getCanonicalName(),
 					MemoryPoolMXBean.class);
-			gcmbeans.add(gc);
+			LegacyPool gcPool = LegacyPool.getLegacyPool(gc.getName());
+			if (gcPool == pool) {
+				return gc;
+			}
 		}
-		return gcmbeans.get(memtype);
-	}
-
-	public enum UsageType {
-		USAGE, POST_GC, PEAK,
+		return null;
 	}
 }

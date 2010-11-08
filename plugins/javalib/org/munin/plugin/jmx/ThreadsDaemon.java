@@ -12,15 +12,25 @@ import org.munin.plugin.jmx.AbstractAnnotationGraphsProvider.Graph;
 @Graph(title = "ThreadsDaemon", vlabel = "threads", info = "Returns the current number of live daemon threads.")
 public class ThreadsDaemon extends AbstractAnnotationGraphsProvider {
 
+	private ThreadMXBean threadMXBean;
+	
+	public ThreadsDaemon(Config config) {
+		super(config);
+	}
+
+	@Override
+	protected void prepareValues() throws Exception {
+		threadMXBean = ManagementFactory.newPlatformMXBeanProxy(
+				getConnection(), ManagementFactory.THREAD_MXBEAN_NAME,
+				ThreadMXBean.class);
+	}
+
 	@Field
 	public int threadsDaemon() throws IOException {
-		ThreadMXBean threadmxbean = ManagementFactory.newPlatformMXBeanProxy(
-				connection, ManagementFactory.THREAD_MXBEAN_NAME,
-				ThreadMXBean.class);
-		return threadmxbean.getDaemonThreadCount();
+		return threadMXBean.getDaemonThreadCount();
 	}
 
 	public static void main(String args[]) {
-		runGraph(new ThreadsDaemon(), args);
+		runGraph(args);
 	}
 }

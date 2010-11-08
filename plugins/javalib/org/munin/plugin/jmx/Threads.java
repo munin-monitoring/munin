@@ -6,18 +6,33 @@ import java.lang.management.ThreadMXBean;
 
 import org.munin.plugin.jmx.AbstractAnnotationGraphsProvider.Graph;
 
-@Graph(title = "Threads", vlabel = "threads", info = "Returns the current number of live threads including both daemon and non-daemon threads.")
+@Graph(title = "Threads", vlabel = "threads", info = "Shows the number of live threads including both daemon and non-daemon threads.")
 public class Threads extends AbstractAnnotationGraphsProvider {
 
-	@Field
-	public int threads() throws IOException {
-		ThreadMXBean threadmxbean = ManagementFactory.newPlatformMXBeanProxy(
-				connection, ManagementFactory.THREAD_MXBEAN_NAME,
+	private ThreadMXBean threadMXBean;
+	
+	public Threads(Config config) {
+		super(config);
+	}
+
+	@Override
+	protected void prepareValues() throws Exception {
+		threadMXBean = ManagementFactory.newPlatformMXBeanProxy(
+				getConnection(), ManagementFactory.THREAD_MXBEAN_NAME,
 				ThreadMXBean.class);
-		return threadmxbean.getThreadCount();
+	}
+
+	@Field(info="number of live threads in total", draw = "AREA", position=1)
+	public int threads() throws IOException {
+		return threadMXBean.getThreadCount();
+	}
+
+	@Field(info="number of live daemon threads", position = 2)
+	public int threadsDaemon() throws IOException {
+		return threadMXBean.getDaemonThreadCount();
 	}
 
 	public static void main(String args[]) {
-		runGraph(new Threads(), args);
+		runGraph(args);
 	}
 }
