@@ -515,7 +515,14 @@ sub expand_specials {
     my $order   = shift;
     my $single  = shift;
 
-    my $result  = [];
+    # Test if already expanded
+    {
+        my $cached_result  = $service->{"#%#expand_special_result"};
+        return $cached_result if (defined $cached_result);
+    }
+
+    # we have to compute the result;
+    my $result = [];
 
     my $fieldnum = 0;
 
@@ -664,6 +671,9 @@ sub expand_specials {
             }
         }
     } # for (@$order)
+
+    # Save it for future
+    $service->{"#%#expand_special_result"} = $result;
     return $result;
 }
 
