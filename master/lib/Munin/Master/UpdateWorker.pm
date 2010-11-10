@@ -460,11 +460,6 @@ sub _compare_and_act_on_config_changes {
 sub _ds_config_eq {
     my ($self, $old_ds_config, $ds_config) = @_;
 
-    if (%$old_ds_config ne %$ds_config) {
-        # Config keys differ:
-        return '';
-    }
-
     for my $key (%$old_ds_config) {
         if ((not defined($old_ds_config->{$key}))
             and not defined($ds_config->{$key})) {
@@ -611,6 +606,8 @@ sub _set_rrd_data_source_defaults {
     $data_source->{type} = 'GAUGE' unless defined($data_source->{type});
     $data_source->{min}  = 'U'     unless defined($data_source->{min});
     $data_source->{max}  = 'U'     unless defined($data_source->{max});
+    $data_source->{update_rate} = 300 unless defined($data_source->{update_rate});
+    $data_source->{graph_data_size} = "normal" unless defined($data_source->{graph_data_size});
 }
 
 
