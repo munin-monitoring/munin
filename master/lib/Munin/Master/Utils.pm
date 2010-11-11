@@ -22,6 +22,7 @@ use POSIX qw(:sys_wait_h);
 use RRDs;
 use Symbol qw(gensym);
 use Data::Dumper;
+use Storable;
 
 our (@ISA, @EXPORT);
 
@@ -35,6 +36,7 @@ our (@ISA, @EXPORT);
 	   'munin_getlock',
 	   'munin_readconfig',
 	   'munin_writeconfig',
+	   'munin_writeconfig_storable',
 	   'munin_delete',
 	   'munin_overwrite',
 	   'munin_dumpconfig',
@@ -62,6 +64,7 @@ our (@ISA, @EXPORT);
 	   'munin_get_node_loc',
 	   'munin_get_node',
 	   'munin_set_var_loc',
+	   'munin_set_var_path',
 	   'munin_set',
 	   'munin_copy_node_toloc',
 	   'munin_get_separated_node',
@@ -260,17 +263,24 @@ sub munin_readconfig {
     my ($conf, $missingok, $corruptok) = @_;
 
     my $config = undef;
-    my @contents = undef;
 
     $conf ||= $configfile;
-    if (! -r $conf and ! $missingok) {
-	WARN "munin_readconfig: cannot open '$conf'";
-	return;
-    }
-    if (open (my $CFG, '<', $conf)) {
-	@contents = <$CFG>;
-	close ($CFG);
-        $config = munin_parse_config (\@contents);
+
+    # try first to read storable version
+    if ( (-r "$conf.storable") && open (my $CFG_STORABLE, '<', "$conf.storable")) { 
+	DEBUG "[DEBUG] munin_readconfig: found Storable version of $conf, using it";
+        $config = Storable::fd_retrieve($CFG_STORABLE); 
+        close ($CFG_STORABLE); 
+    } else {
+        if (! -r $conf and ! $missingok) {
+            WARN "munin_readconfig: cannot open '$conf'";
+            return;
+	}
+        if (open (my $CFG, '<', $conf)) {
+            my @contents = <$CFG>;
+            close ($CFG);
+            $config = munin_parse_config (\@contents);
+        }
     }
 
     # Some important defaults before we return...
@@ -802,26 +812,50 @@ sub munin_writeconfig_loop {
     }
 }
 
-
-sub munin_writeconfig {
+sub munin_writeconfig_storable {
     my ($datafilename,$data,$fh) = @_;
 
     DEBUG "[DEBUG] Writing state to $datafilename";
 
-    if (!defined $fh) {
+    my $is_fh_already_managed = defined $fh;
+    if (! $is_fh_already_managed) {
 	$fh = gensym();
 	unless (open ($fh, ">", $datafilename)) {
 	    LOGCROAK "Fatal error: Could not open \"$datafilename\" for writing: $!";
 	}
     }
 
+    # Write datafile.storable, in network order to be architecture indep
+    Storable::nstore_fd($data, $fh);
+
+    if (! $is_fh_already_managed) {
+        DEBUG "[DEBUG] Closing filehandle \"$datafilename\"...\n";
+        close ($fh);
+    }
+}
+
+sub munin_writeconfig {
+    my ($datafilename,$data,$fh) = @_;
+
+    DEBUG "[DEBUG] Writing state to $datafilename";
+
+    my $is_fh_already_managed = defined $fh;
+    if (! $is_fh_already_managed) {
+	$fh = gensym();
+	unless (open ($fh, ">", $datafilename)) {
+	    LOGCROAK "Fatal error: Could not open \"$datafilename\" for writing: $!";
+	}
+    }
+    
     # Write version
     print $fh "version $VERSION\n";
     # Write datafile
     munin_writeconfig_loop ($data, $fh);
-
-    DEBUG "[DEBUG] Closing filehandle \"$datafilename\"...\n";
-    close ($fh);
+    
+    if (! $is_fh_already_managed) {
+        DEBUG "[DEBUG] Closing filehandle \"$datafilename\"...\n";
+        close ($fh);
+    }
 }
 
 

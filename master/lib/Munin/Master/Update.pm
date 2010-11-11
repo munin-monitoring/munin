@@ -280,28 +280,35 @@ sub _write_new_service_configs_locked {
 
 sub _write_new_service_configs {
     my ($self, $io) = @_;
+    my $datafile_hash = {};
 
     print $io "version $Munin::Common::Defaults::MUNIN_VERSION\n";
+    $datafile_hash->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
 
-    $self->_print_old_service_configs_for_failed_workers($io);
+    $self->_print_old_service_configs_for_failed_workers($io, $datafile_hash);
 
     for my $host (keys %{$self->{service_configs}}) {
         for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
             for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
                 print $io "$host:$service.$attr->[0] $attr->[1]\n";
+                munin_set_var_path($datafile_hash, "$host:$service.$attr->[0]", $attr->[1]);
             }
             for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
                 for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
                     print $io "$host:$service.$data_source.$attr $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr}\n";
+                    munin_set_var_path($datafile_hash, "$host:$service.$data_source.$attr", $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr});
                 }
             }
         }
     }
+
+    # Also write the binary (Storable) version
+    munin_writeconfig_storable($config->{dbdir}.'/datafile.storable', $datafile_hash);
 }
 
 
 sub _print_old_service_configs_for_failed_workers {
-    my ($self, $handle) = @_;
+    my ($self, $handle, $datafile_hash) = @_;
 
     for my $worker (@{$self->{failed_workers}}) {
 	# The empty set contains "undef" it seems
@@ -321,6 +328,7 @@ sub _print_old_service_configs_for_failed_workers {
 		or ($datum eq 'host_name');
 
 	    printf $handle "%s:%s %s\n", $worker, $datum, $workerdata->{$datum};
+	    munin_set_var_path($datafile_hash, $worker . ":". $datum, $workerdata->{$datum});
 	}
 	
     }
