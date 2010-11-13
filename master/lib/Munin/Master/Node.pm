@@ -478,22 +478,14 @@ sub _node_read_single {
 
 sub _node_read {
     my ($self) = @_;
-    my @array = (); 
+    my @array = ();
 
-    my $timed_out = !do_with_timeout($self->{io_timeout}, sub {
-        while (1) {
-            my $line = $self->{tls} && $self->{tls}->session_started()
-                ? $self->{tls}->read()
-                : readline $self->{socket};
-            last unless defined $line;
-            last if $line =~ /^\.\n$/;
-            chomp $line;
-            push @array, $line;
-        }
-    });
-    if ($timed_out) {
-        LOGCROAK "[FATAL] Socket read timed out to ".$self->{host}.": $@\n";
+    my $line = $self->_node_read_single();
+    while($line ne ".") {
+        push @array, $line;
+        $line = $self->_node_read_single();
     }
+
     DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".";
     return @array;
 }
