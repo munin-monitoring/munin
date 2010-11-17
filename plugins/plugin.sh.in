@@ -72,7 +72,7 @@ print_critical () {
 # the threshold string adjusted for percentages if percent sizes are present.
 # If not, the threshold is left unchanged.
 # Usage:
-# 	adjust_threshold("50%:50%", 200)
+# 	adjust_threshold "50%:50%" 200 
 # Returns:
 #	100:100
 #
@@ -87,6 +87,52 @@ adjust_threshold () {
 	fi
 
 }
+
+# print_thresholds() takes three arguments. The first is the field name, the
+# second is the default environment variable for warnings (see the second
+# argument to get_warning), and the third is the default environment variable
+# for criticals (see the second argument to get_critical).
+#
+# This is a convenience function for plugins that don't need to do anything
+# special for warnings vs criticals.
+#
+# Usage:
+#	warning='20' critical='40' print_thresholds user
+# Returns:
+#	user.warning 20
+#	user.critical 40
+
+print_thresholds() {
+	print_warning $1 $2
+	print_critical $1 $3
+}
+
+# print_adjusted_thresholds() takes four arguments.  The first is the field
+# name, the second is the base value (see the second argument to
+# adjust_threshold), the third is the default environment variable for
+# warnings (see the second argument to get_warning), and the fourth is the
+# default environment variable for criticals (see the second argument to
+# get_critical).
+#
+# Usage:
+#	warning=20% critical=40% print_adjusted_thresholds "user" 800
+# Returns:
+#	user.warning 160
+#	user.critical 320
+#	
+print_adjusted_thresholds () {
+	tempthresh=$(get_warning $1 $3)
+	if [ -n "$tempthresh" ]; then
+		echo "$1.warning $(adjust_threshold "$tempthresh" "$2")"
+	fi
+	tempthresh=$(get_critical $1 $4)
+	if [ -n "$tempthresh" ]; then
+		echo "$1.critical $(adjust_threshold "$tempthresh" "$2")"
+	fi
+	unset tempthresh
+}
+
+
 
 is_multigraph () {
     # Multigraph feature is available in Munin 1.4.0 and later.
