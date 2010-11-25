@@ -337,6 +337,10 @@ sub graph_main {
 
     my ($args) = @_;
     local @ARGV = @{$args};
+
+    # The loaded $config is stale within 5 minutes.
+    # So, we need to reread it when this happens.
+    $config = munin_refreshconfig($config);
    
     # Reset an eventual custom size
     $size_x 	    = undef;

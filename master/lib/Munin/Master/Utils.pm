@@ -41,6 +41,7 @@ our (@ISA, @EXPORT);
 	   'munin_overwrite',
 	   'munin_dumpconfig',
 	   'munin_config',
+	   'munin_refreshconfig',
 	   'munin_draw_field',
 	   'munin_get_bool',
 	   'munin_get_bool_val',
@@ -877,6 +878,16 @@ sub munin_dumpconfig {
     $Data::Dumper::Indent = $indent;
 }
 
+sub munin_refreshconfig {
+    my $config   = shift;
+    my @stat = stat("$config->{dbdir}/datafile");
+    if ($config->{'#%#datafile_mtime'} && $stat[9] > $config->{'#%#datafile_mtime'}) {
+	$config = munin_readconfig("$config->{dbdir}/datafile");
+    }
+
+    $config->{'#%#datafile_mtime'} = $stat[9];
+    return $config;
+}
 
 sub munin_config {
     my $conffile = shift;
