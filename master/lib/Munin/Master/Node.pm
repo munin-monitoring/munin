@@ -96,12 +96,13 @@ sub _do_connect {
 	    $self->{reader} = new IO::Handle();
 	    $self->{writer} = new IO::Handle();
 
+	    DEBUG "[DEBUG] open2($remote_connection_cmd)";
 	    my $pid = open2($self->{reader}, $self->{writer}, $remote_connection_cmd);
             ERROR "Failed to connect to node $self->{address} : $!" unless $pid;
     } elsif ($uri->scheme eq "cmd") {
         # local commands should ignore the username, url and host
         my $local_cmd = $uri->path;
-        my $local_pipe_cmd = "$local_cmd $params";
+        my $local_pipe_cmd = $local_cmd . (defined $params ? " $params" : "");
 
 	    # Open a double pipe
    	    use IPC::Open2;
@@ -109,6 +110,7 @@ sub _do_connect {
 	    $self->{reader} = new IO::Handle();
 	    $self->{writer} = new IO::Handle();
 
+	    DEBUG "[DEBUG] open2($local_pipe_cmd)";
 	    my $pid = open2($self->{reader}, $self->{writer}, $local_pipe_cmd);
             ERROR "Failed to execute local command: $!" unless $pid;
     } else {
