@@ -63,6 +63,7 @@ sub do_work {
 	global => {},
 	);
 
+    INFO "[INFO] starting work for $nodedesignation.\n";
     my $done = $self->{node}->do_in_session(sub {
 
 	eval {
@@ -78,7 +79,8 @@ sub do_work {
 		    my $spoolfetch_last_timestamp = get_spoolfetch_timestamp($nodedesignation);
 		    %whole_config = $self->uw_spoolfetch($spoolfetch_last_timestamp);
 
-		    DEBUG "[DEBUG] whole_config:" . Dumper(\%whole_config);
+		    # XXX - Commented, should be protect by a "if logger.isDebugEnabled()"
+		    #DEBUG "[DEBUG] whole_config:" . Dumper(\%whole_config);
 
 		    # Gets the plugins from spoolfetch
 		    # Only keep the first one, the others will be multigraph-fetched
@@ -266,7 +268,7 @@ sub get_spoolfetch_timestamp {
 	my ($nodedesignation) = @_;
 
 	my $key = "$nodedesignation/__spoolfetch__";
-	my $db_file = $config->{dbdir} . "/last_updated.dic.txt";
+	my $db_file = $config->{dbdir} . "/spoolfetch.db";
 
 	my %last_updated;
 
@@ -285,7 +287,7 @@ sub set_spoolfetch_timestamp {
 	my ($nodedesignation, $timestamp) = @_;
 
 	my $key = "$nodedesignation/__spoolfetch__";
-	my $db_file = $config->{dbdir} . "/last_updated.dic.txt";
+	my $db_file = $config->{dbdir} . "/spoolfetch.db";
 
 	my %last_updated;
 
@@ -293,7 +295,9 @@ sub set_spoolfetch_timestamp {
    	use DB_File;
    	tie(%last_updated, 'DB_File', $db_file, O_RDWR|O_CREAT, 0666) or ERROR "$!";
 
-	$last_updated{$key} = time;
+	# Using the last timestamp sended by the server :
+	# -> It can be be different than "now" to be able to process the backlock slowly
+	$last_updated{$key} = $timestamp;
 
    	untie(%last_updated);
 }
