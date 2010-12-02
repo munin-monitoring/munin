@@ -29,6 +29,7 @@ sub new {
         host    => $host,
         tls     => undef,
         reader  => undef,
+        pid     => undef,
         writer  => undef,
         master_capabilities => "multigraph dirtyconfig",
         io_timeout => 120,
@@ -97,8 +98,8 @@ sub _do_connect {
 	    $self->{writer} = new IO::Handle();
 
 	    DEBUG "[DEBUG] open2($remote_connection_cmd)";
-	    my $pid = open2($self->{reader}, $self->{writer}, $remote_connection_cmd);
-            ERROR "Failed to connect to node $self->{address} : $!" unless $pid;
+	    $self->{pid} = open2($self->{reader}, $self->{writer}, $remote_connection_cmd);
+            ERROR "Failed to connect to node $self->{address} : $!" unless $self->{pid};
     } elsif ($uri->scheme eq "cmd") {
         # local commands should ignore the username, url and host
         my $local_cmd = $uri->path;
@@ -111,8 +112,8 @@ sub _do_connect {
 	    $self->{writer} = new IO::Handle();
 
 	    DEBUG "[DEBUG] open2($local_pipe_cmd)";
-	    my $pid = open2($self->{reader}, $self->{writer}, $local_pipe_cmd);
-            ERROR "Failed to execute local command: $!" unless $pid;
+	    $self->{pid} = open2($self->{reader}, $self->{writer}, $local_pipe_cmd);
+            ERROR "Failed to execute local command: $!" unless $self->{pid};
     } else {
 	    ERROR "Unknown scheme : " . $uri->scheme;
 	    return 0;
@@ -177,6 +178,9 @@ sub _do_close {
     close $self->{writer};
     $self->{reader} = undef;
     $self->{writer} = undef;
+
+    # Reap the underlying process
+    waitpid($self->{pid}, 0) if (defined $self->{pid});
 }
 
 
