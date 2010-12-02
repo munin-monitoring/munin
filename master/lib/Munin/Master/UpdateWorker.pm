@@ -129,11 +129,12 @@ sub do_work {
 
 			# __root__ is only a placeholder plugin for 
 			# an empty spoolfetch so we should ignore it 
-			# if asked to fetch it
-			next if ($plugin eq "__root__");
-			
-			DEBUG "[DEBUG] No service data for $plugin, fetching it";
-			%service_data = $self->{node}->fetch_service_data($plugin);
+			# if asked to fetch it. 
+			# But we should still do everything after than.
+			if ($plugin ne "__root__") {
+				DEBUG "[DEBUG] No service data for $plugin, fetching it";
+				%service_data = $self->{node}->fetch_service_data($plugin);
+			}
 		}
 
 		# If update_rate is aligned, round the "when" for alignement
@@ -285,6 +286,7 @@ sub get_spoolfetch_timestamp {
 
 sub set_spoolfetch_timestamp {
 	my ($nodedesignation, $timestamp) = @_;
+	DEBUG "[DEBUG] set_spoolfetch_timestamp($nodedesignation, $timestamp)";
 
 	my $key = "$nodedesignation/__spoolfetch__";
 	my $db_file = $config->{dbdir} . "/spoolfetch.db";
