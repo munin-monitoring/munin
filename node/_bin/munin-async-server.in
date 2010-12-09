@@ -69,8 +69,10 @@ my @plugins;
 		Proto	=> 'tcp'
 	) || die "Error creating socket: $!"; 
 
+	print $sock "cap multigraph\n";
 	print $sock "list\n";
 	<$sock>; # Read the first header comment line
+	<$sock>; # Read the multigraph response line
 	my $plugins_line = <$sock>;
 	chomp($plugins_line);
 
