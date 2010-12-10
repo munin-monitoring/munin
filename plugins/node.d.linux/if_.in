@@ -133,17 +133,17 @@ findspeed () {
 	    ;;
     esac
 
-    case $SPEED in
-	U) echo "up.info Traffic of the $INTERFACE interface. Unable to determine interface speed.  Please install ethtool, wireless-tools (or mii-tool), whatever is appropriate for the interface."
-	   return;;
-    esac
-
     # sysfs can report the speed if the driver supports it
     SYSFS="$(cat /sys/class/net/$INTERFACE/speed 2>/dev/null)"
     # If it can't, it fails on I/O, so we check cat's return value
     if [ $? -eq 0 -a "$SPEED" = "U" -a -n "$SYSFS" ]; then
         SPEED="$SYSFS"
     fi
+
+    case $SPEED in
+	U) echo "up.info Traffic of the $INTERFACE interface. Unable to determine interface speed.  Please install ethtool, wireless-tools (or mii-tool), whatever is appropriate for the interface."
+	   return;;
+    esac
 
     BPS=$(( $SPEED * 1000 * 1000 ))
 
