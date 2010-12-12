@@ -90,15 +90,15 @@ Munin-html creates the html pages.
 
 =head1 FILES
 
-	@@CONFDIR@@/munin.conf
-	@@DBDIR@@/datafile
-	@@LOGDIR@@/munin-html
-	@@HTMLDIR@@/*
-	@@STATEDIR@@/*
+	/etc/munin/munin.conf
+	/var/lib/munin/datafile
+	/var/log/munin/munin-html
+	/var/cache/munin/www/*
+	/var/run/munin/*
 
 =head1 VERSION
 
-This is munin-html version @@VERSION@@
+This is munin-html version svn-trunk-r4007
 
 =head1 AUTHORS
 

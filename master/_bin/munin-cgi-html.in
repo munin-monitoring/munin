@@ -1,0 +1,135 @@
+#!@@PERL@@ -T
+# -*- cperl -*-
+
+=begin comment
+
+Copyright (C) 2004-2010 Jimmy Olsen, Steve Schnepp
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 dated June,
+1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+=end comment
+
+=cut
+
+use strict;
+use warnings;
+
+use POSIX qw(strftime);
+
+use CGI::Fast qw(:cgi);
+use CGI::Carp qw(fatalsToBrowser);
+use Time::HiRes qw(time);
+
+use Munin::Master::HTMLConfig;
+use Munin::Master::HTMLOld;
+use Munin::Master::Utils;
+
+use Munin::Master::Logger;
+use Log::Log4perl qw( :easy );
+
+use Data::Dumper;
+
+my @times = ("day", "week", "month", "year");
+my $config;
+
+
+# grab config
+html_startup([]);
+while(new CGI::Fast){
+	print header("text/html");
+	$config = get_config();
+	show_page();
+}
+
+sub show_page {
+  my @path = split(/\//, $ENV{PATH_INFO});
+  emit_page(\@path);
+}
+
+sub get_next_part {
+  my $path = shift;
+  my $part;
+  do {
+   	$part = shift(@$path);
+  } while(defined $part && $part eq "");
+  return $part;
+}
+
+sub emit_page {
+  my $path = shift;
+  my $group = $config;
+
+  #process groups
+  $group = traverse_groups($path, $group);
+ 
+  if(!defined $group->{"depth"} || $group->{"depth"} == 0){ #root url
+	emit_main_index($group->{"groups"},0,1);	
+  } elsif(!$group->{"ncategories"}) { # group
+	my $cmp_time = get_comparison_group($path, $group);
+	if(defined $cmp_time){ # comparison template
+		emit_comparison_template($group, $cmp_time, 1);
+	} else { #group page
+		emit_group_template($group, 1);
+	}
+  } else { #node
+	my $service = get_node_service($path, $group);
+	if(defined $service){
+		emit_service_template($service, 1);
+	} else {
+		emit_graph_template($group, 1);
+	}
+  } 
+}
+
+sub traverse_groups {
+  my ($path, $group) = @_;
+  my $part = get_next_part($path);
+  while(defined $part && (defined $group->{"groups_hash"}->{$part})) {
+	$group = $group->{"groups_hash"}->{$part};
+	$part = get_next_part($path);
+  }
+  if(defined $part){
+	  unshift(@$path,$part); # put the unprocessed part back on
+  }
+  return $group;
+}
+
+sub get_comparison_group {
+  my ($path, $group) = @_;
+  if(!$group->{"compare"}){	return undef; } # group is not a comparison group
+  my $part = get_next_part($path);
+  if(defined $part && $part =~ m/^comparison-([a-z]+)\.html/i){
+    if(grep /^$1$/, @times){ return lc $1; }
+  }
+  if(defined $part){
+	unshift(@$path, $part); #put the unprocessed part back on
+  }
+  return undef;
+}
+
+sub get_node_service {
+	my ($path, $group) = @_;
+	my $part = get_next_part($path);
+	if(!defined $part){
+		return undef;
+	}
+	foreach my $category (@{$group->{"categories"}}) {
+		foreach my $service (@{$category->{"services"}}) {
+			if($part eq $service->{"node"}.".html"){
+				return $service;
+			}
+		}
+	}
+	return undef;
+}

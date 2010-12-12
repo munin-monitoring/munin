@@ -87,16 +87,18 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR) 
 	$(CHMOD) 0755 $(DBDIR)
 
-	for p in master/www/*.tmpl master/www/*.png master/www/*.css master/www/*.js resources/favicon.ico; do \
+	for p in master/www/*.tmpl ;  do \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
+	done
+
+	for p in master/static/* ; do \
+		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/static/ ; \
 	done
 
 	for p in master/www/partial/*.tmpl; do \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/partial/ ; \
 	done
 
-	$(INSTALL) -m 0644 master/www/definitions.html $(CONFDIR)/templates/
-	$(INSTALL) -m 0644 master/www/dynazoom.html $(CONFDIR)/templates/
 	$(INSTALL) -m 0755 master/DejaVuSansMono.ttf $(LIBDIR)/
 	$(INSTALL) -m 0755 master/DejaVuSans.ttf $(LIBDIR)/
 
@@ -111,6 +113,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	$(INSTALL) -m 0755 build/master/_bin/munin-datafile2storable $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-storable2datafile $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/munin-cgi-graph
+	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-html $(CGIDIR)/munin-cgi-html
 
 # Not ready to be installed yet	
 # $(INSTALL) -m 0755 build/master/_bin/munin-gather $(LIBDIR)/

@@ -157,6 +157,7 @@ my %booleans = map {$_ => 1} qw(
 		tls_verify_certificate => 0,
 		tls_verify_depth => 5,
 		tmpldir          => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates",
+	        staticdir        => "$Munin::Common::Defaults::MUNIN_CONFDIR/static",
 	    }, $class ),
 
 	    oldconfig => bless ( {

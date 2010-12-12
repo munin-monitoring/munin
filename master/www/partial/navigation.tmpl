@@ -1,0 +1,10 @@
+<div id="nav">
+	<p class="navigationjump"><a href="#content">Skip navigation</a></p>
+	<h2>Groups</h2>
+	<ul>
+	<TMPL_LOOP NAME="ROOTGROUPS">
+		<li><a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URL">"><TMPL_VAR NAME="NAME"></a></li>
+	</TMPL_LOOP>
+	</ul>
+</div>
+ 
