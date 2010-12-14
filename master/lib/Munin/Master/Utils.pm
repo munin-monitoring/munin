@@ -35,6 +35,7 @@ our (@ISA, @EXPORT);
 	   'munin_runlock',
 	   'munin_getlock',
 	   'munin_readconfig',
+	   'munin_readconfig_storable',
 	   'munin_writeconfig',
 	   'munin_writeconfig_storable',
 	   'munin_delete',
@@ -259,6 +260,21 @@ sub munin_overwrite {
     return ($configfile);
 }
 
+sub munin_readconfig_storable {
+	my ($conf) = @_;
+	
+	my $config = undef;
+	$conf ||= $configfile;
+
+    # try to read storable version
+    if ( (-r "$conf.storable") && open (my $CFG_STORABLE, '<', "$conf.storable")) { 
+		DEBUG "[DEBUG] munin_readconfig: found Storable version of $conf, using it";
+        $config = Storable::fd_retrieve($CFG_STORABLE); 
+        close ($CFG_STORABLE); 
+	}
+
+	return $config; 
+}
 
 sub munin_readconfig {
     my ($conf, $missingok, $corruptok) = @_;
@@ -268,15 +284,12 @@ sub munin_readconfig {
     $conf ||= $configfile;
 
     # try first to read storable version
-    if ( (-r "$conf.storable") && open (my $CFG_STORABLE, '<', "$conf.storable")) { 
-	DEBUG "[DEBUG] munin_readconfig: found Storable version of $conf, using it";
-        $config = Storable::fd_retrieve($CFG_STORABLE); 
-        close ($CFG_STORABLE); 
-    } else {
+	$config = munin_readconfig_storable($conf);
+	if(!defined $config){
         if (! -r $conf and ! $missingok) {
             WARN "munin_readconfig: cannot open '$conf'";
             return;
-	}
+		}
         if (open (my $CFG, '<', $conf)) {
             my @contents = <$CFG>;
             close ($CFG);

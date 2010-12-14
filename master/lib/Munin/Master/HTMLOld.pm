@@ -80,6 +80,7 @@ my @times = ("day", "week", "month", "year");
 
 my $DEBUG      = 0;
 my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
+my $htmlconfcache = "$Munin::Common::Defaults::MUNIN_DBDIR/htmlconf.storable";
 my $do_usage   = 0;
 my $do_version = 0;
 my $stdout     = 0;
@@ -117,7 +118,7 @@ sub html_startup {
 
     exit_if_run_by_super_user();
 
-    $config = munin_config($conffile, $config); #TODO: candidate for caching
+    $config = munin_config($conffile, $config);
     
 	logger_open($config->{'logdir'});
     logger_debug() if $DEBUG;
@@ -126,7 +127,7 @@ sub html_startup {
     $htmldir = $config->{htmldir};
 
     $max_running = &munin_get($config, "max_html_jobs", $max_running);
-	$htmlconfig = get_config();
+	$htmlconfig = get_config(1);
 
     # For timestamping graphs
     $timestamp = strftime("%Y-%m-%d %T%z (%Z)", localtime);
@@ -142,7 +143,15 @@ sub html_startup {
 }
 
 sub get_config {
-	return generate_config($config);
+	my $cache = shift;
+	my $myconfig = undef;
+	if($cache){
+		$myconfig = munin_readconfig_storable($htmlconfcache);
+	}
+	if(!defined $myconfig){
+		$myconfig = generate_config($config);
+	}
+	return $myconfig;
 }
 
 sub html_main {
@@ -163,7 +172,10 @@ sub html_main {
    # Preparing the group tree...
 
 	my $configtime = Time::HiRes::time;
-    my $groups = $htmlconfig;
+    $htmlconfig = get_config(0);
+	my $fh;
+	munin_writeconfig_storable($htmlconfcache, $htmlconfig, $fh);
+	my $groups = $htmlconfig;
 	$configtime = sprintf("%.2f", (Time::HiRes::time - $configtime));
 	INFO "[INFO] config generated ($configtime sec)";
 
