@@ -283,7 +283,7 @@ sub Config {
 sub Autoconf {
     my ($self) = @_;
 
-    if (!$self->connect(1)) {
+    if (!$self->connect(1, 1)) {
         print "no ($self->{connecterror})\n";
         return 1;
     }
@@ -315,7 +315,7 @@ sub Autoconf {
 sub Suggest {
     my ($self) = @_;
 
-    if (!$self->connect(1)) {
+    if (!$self->connect(1, 1)) {
         return 0;
     }
 
@@ -383,9 +383,9 @@ sub Process {
 
 # Internal useful functions
 sub connect() {
-    my ($self, $noexit) = @_;
+    my ($self, $noexit, $nowildcard) = @_;
 
-    my $r = $self->_connect();
+    my $r = $self->_connect($nowildcard);
     return 1 if ($r);         # connect successful
     return 0 if ($noexit);    # indicate failure but don't exit
     print "Failed to connect to database: $self->{connecterror}\n";
@@ -393,7 +393,7 @@ sub connect() {
 }
 
 sub _connect() {
-    my ($self) = @_;
+    my ($self, $nowildcard) = @_;
 
     return 1 if ($self->{dbh});
 
@@ -409,7 +409,7 @@ sub _connect() {
         # variables.
         my $dbname = "template1";
         $dbname = $self->{defaultdb}           if ($self->{defaultdb});
-        $dbname = $self->wildcard_parameter(0) if ($self->{paramdatabase});
+        $dbname = $self->wildcard_parameter(0) if ($self->{paramdatabase} && !defined($nowildcard));
         $dbname = $ENV{"PGDATABASE"}           if ($ENV{"PGDATABASE"});
         $self->{dbh} = DBI->connect("DBI:Pg:dbname=$dbname");
         unless ($self->{dbh}) {
