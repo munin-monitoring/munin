@@ -46,14 +46,12 @@ my $lastchanged = 0;
 my $htmlconfcache = "$Munin::Common::Defaults::MUNIN_DBDIR/htmlconf.storable";
 
 # grab config
-print header("text/html");
-print "start!";
 html_startup([]);
 while(new CGI::Fast){
 	print header("text/html");
 	my $change = (stat($htmlconfcache))[8];
 	if($change > $lastchanged){
-		$config = get_config();
+		$config = get_config(1);
 		$lastchanged = $change;
 	}
 	show_page();
@@ -81,7 +79,12 @@ sub emit_page {
   $group = traverse_groups($path, $group);
  
   if(!defined $group->{"depth"} || $group->{"depth"} == 0){ #root url
-	emit_main_index($group->{"groups"},0,1);	
+	my $category = get_global_category($path, $group);
+	if(defined $category){
+		emit_category_template($category, 1);
+	} else {
+		emit_main_index($group->{"groups"},0,1);
+	}
   } elsif(!$group->{"ncategories"}) { # group
 	my $cmp_time = get_comparison_group($path, $group);
 	if(defined $cmp_time){ # comparison template
@@ -123,6 +126,20 @@ sub get_comparison_group {
 	unshift(@$path, $part); #put the unprocessed part back on
   }
   return undef;
+}
+
+sub get_global_category {
+	my ($path, $group) = @_;
+	my $part = get_next_part($path);
+	if(!defined $part){
+		return undef;
+	}
+	foreach my $category (@{$group->{"globalcats"}}) {
+		if($category->{"url"} eq $part){
+			return $category;
+		}
+	}
+	return undef;
 }
 
 sub get_node_service {

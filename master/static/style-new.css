@@ -220,6 +220,7 @@ td {
   background-color: #fbfbfb;
   border: 1px solid #cfd6f8;
   padding: 3px;
+  clear: both;
 }
 
 #footer p.navigation {
@@ -232,4 +233,6 @@ td {
   text-align: left;
 }
 
-
+.categoryview .node {
+	display: inline-block;
+}

@@ -25,8 +25,11 @@ my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 my $config;
 my $limits;
 
+my $categories;
+
 sub generate_config {
 	$config = shift;
+	$categories = {};
 	$limits = munin_readconfig($config->{dbdir} . "/limits",1,1); #TODO: candidate for caching
 
 	initiate_cgiurl_graph();
@@ -45,6 +48,19 @@ sub initiate_cgiurl_graph {
 		DEBUG "[DEBUG] Determined that cgiurl_graph is ".$config->{'cgiurl_graph'} if
 		    munin_get($config,"graph_strategy","cron") eq 'cgi';
     }
+}
+
+sub add_graph_to_categories {
+	my $srv = shift;
+	my $category = $srv->{"category"};
+	my $srvname = $srv->{"label"};
+	if(!defined ($categories->{$category})){
+		$categories->{$category} = {};
+	}
+	if(!defined ($categories->{$category}->{$srvname})){
+		$categories->{$category}->{$srvname} = [];
+	}
+	push @{$categories->{$category}->{$srvname}}, $srv;
 }
 
 sub get_group_tree {
@@ -73,6 +89,7 @@ sub get_group_tree {
 			my $childnode = generate_service_templates($child);
 			push @$graphs, {"name" => $childname};
 			$childnode->{'name'} = $child->{"graph_title"};
+			add_graph_to_categories($childnode);
 
 		    # Make sure the link gets right even if the service has subservices
 	    	if (munin_has_subservices ($child)) {
@@ -177,7 +194,33 @@ sub get_group_tree {
     };
 
 	if($ret->{'depth'} > 0){ #root node does not have peer nodes
-		$ret->{'peers'} = get_peer_nodes($hash, lc munin_get($hash, "graph_category", "other")), 
+		$ret->{'peers'} = get_peer_nodes($hash, lc munin_get($hash, "graph_category", "other"));
+	} else {
+		# add categories
+		my $catarray = [];
+		foreach (sort keys %{$categories}) {
+			my $currentcat = $categories->{$_};
+			my $srvarray = [];
+			foreach (sort keys %{$currentcat}) {
+				my $srv = {
+					"graphs", $currentcat->{$_},
+					"name", $_,
+				};
+				push @$srvarray, $srv
+			}
+			my $filename = munin_get_html_filename($hash);
+			$filename =~ s/index.html$/$_.html/;
+			my $cat = {
+				"name" => $_,
+				"url" => "$_.html",
+				"path" => $path,
+				"graphs" => $srvarray,
+				"filename" => $filename,
+			};
+			push @$catarray, $cat;
+		}
+		$ret->{"globalcats"} = $catarray;
+		$ret->{"nglobalcats"} = scalar(@$catarray);
 	}
 
     #TODO: shrinkpath reference #3

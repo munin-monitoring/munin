@@ -61,7 +61,7 @@ use Exporter;
 
 our (@ISA, @EXPORT);
 @ISA    = qw(Exporter);
-@EXPORT = qw(html_startup html_main get_config emit_main_index emit_comparison_template emit_group_template emit_graph_template emit_service_template);
+@EXPORT = qw(html_startup html_main get_config emit_main_index emit_comparison_template emit_group_template emit_graph_template emit_service_template emit_category_template);
 
 use HTML::Template;
 use POSIX qw(strftime);
@@ -196,7 +196,7 @@ sub html_main {
     }
 	
     generate_group_templates($groups);
-
+	generate_category_templates($htmlconfig->{"globalcats"});
     emit_main_index($groups,$timestamp,0);
 
     INFO "[INFO] Releasing lock file $lockfile";
@@ -257,6 +257,8 @@ sub emit_comparison_template {
 									ROOTGROUPS	=> $htmlconfig->{"groups"},
 									MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
 									TIMESTAMP	=> $timestamp,
+									NGLOBALCATS => $htmlconfig->{"nglobalcats"},
+									GLOBALCATS => $htmlconfig->{"globalcats"},
     );
     if($emit_to_stdout){
 		print $comparisontemplates{$t}->output;
@@ -301,6 +303,50 @@ sub emit_graph_template {
 						  ROOTGROUPS  => $htmlconfig->{"groups"},
 						  MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
 						  TIMESTAMP	=> $timestamp,
+						  NGLOBALCATS => $htmlconfig->{"nglobalcats"},
+						  GLOBALCATS => $htmlconfig->{"globalcats"},
+                         );
+
+    if($emit_to_stdout){
+		print $graphtemplate->output;
+	} else {
+	    my $filename = $key->{'filename'};
+		ensure_dir_exists($filename);
+	    open(my $FILE, '>', $filename)
+			or die "Cannot open $filename for writing: $!";
+    	print $FILE $graphtemplate->output;
+	    close $FILE;
+	}
+}
+
+sub emit_category_template {
+    my ($key, $emit_to_stdout) = @_;
+
+    my $graphtemplate = HTML::Template->new(
+	filename => "$tmpldir/munin-categoryview.tmpl",
+	die_on_bad_params => 0,
+	global_vars       => 1,
+	loop_context_vars => 1,
+	filter            => sub {
+	    my $ref = shift;
+	    $$ref =~ s/URLX/URL$key->{'depth'}/g;
+	});
+
+    DEBUG "[DEBUG] Creating global category page ".$key->{filename};
+
+    $graphtemplate->param(
+                          PATH        => $key->{'path'},
+                          CSS_NAME    => get_css_name(),
+                          R_PATH   => ".",
+                          NAME        => $key->{'name'},
+                          TAGLINE     => $htmltagline,
+						  ROOTGROUPS  => $htmlconfig->{"groups"},
+						  MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
+						  TIMESTAMP	=> $timestamp,
+						  NGLOBALCATS => $htmlconfig->{"nglobalcats"},
+						  GLOBALCATS => $htmlconfig->{"globalcats"},
+						  CATEGORY => $key->{"name"},
+						  SERVICES => $key->{"graphs"},
                          );
 
     if($emit_to_stdout){
@@ -352,6 +398,8 @@ sub emit_group_template {
 						  ROOTGROUPS => $htmlconfig->{"groups"},
 						  MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
 						  TIMESTAMP	=> $timestamp,
+					NGLOBALCATS => $htmlconfig->{"nglobalcats"},
+					GLOBALCATS => $htmlconfig->{"globalcats"},
 	);
     if($emit_to_stdout){
 		print $grouptemplate->output;
@@ -397,6 +445,8 @@ sub emit_service_template {
 						    ROOTGROUPS => $htmlconfig->{"groups"},
 						  MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
 						  TIMESTAMP	=> $timestamp,
+					NGLOBALCATS => $htmlconfig->{"nglobalcats"},
+					GLOBALCATS => $htmlconfig->{"globalcats"},
         	                   );
 
     # No stored filename for this kind of html node.
@@ -444,13 +494,16 @@ sub emit_main_index {
     # /usr/local/share/perl/5.10.0/Munin/Master/HTMLOld.pm line 140
 
     $template->param(
-                     TAGLINE   => $htmltagline,
-                     GROUPS    => $groups,
-                     CSS_NAME  => get_css_name(),
-					 R_PATH => ".",
-				     ROOTGROUPS => $htmlconfig->{"groups"},
-			  	     MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
-					  TIMESTAMP	=> $timestamp,
+                    TAGLINE   => $htmltagline,
+                    GROUPS    => $groups,
+                    CSS_NAME  => get_css_name(),
+					R_PATH => ".",
+				    ROOTGROUPS => $htmlconfig->{"groups"},
+			  	    MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
+					TIMESTAMP	=> $timestamp,
+					NGLOBALCATS => $htmlconfig->{"nglobalcats"},
+					GLOBALCATS => $htmlconfig->{"globalcats"},
+					
     );
 	if($emit_to_stdout){
 		print $template->output;
@@ -561,6 +614,13 @@ sub fork_and_work {
     }
 }
 
+sub generate_category_templates {
+	my $arr = shift || return;
+	
+	foreach my $key (@$arr) {
+		emit_category_template($key,0);
+	}
+}
 
 sub generate_group_templates {
     my $arr = shift || return;

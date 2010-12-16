@@ -1,0 +1,36 @@
+<TMPL_INCLUDE NAME="partial/head.tmpl">
+<body>
+<TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
+<div id="main" class="categoryview">
+<TMPL_INCLUDE NAME="partial/navigation.tmpl">
+<div id="content">
+<h2>Category: <TMPL_VAR ESCAPE="HTML" NAME="CATEGORY"></h2>
+<TMPL_LOOP NAME="SERVICES">
+<div class="service">
+	<h3><a name="<TMPL_VAR ESCAPE="HTML" NAME="name">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></h3>
+	<TMPL_LOOP NAME="GRAPHS">
+		<div class="node">
+		<span class="nodetitle"><a href="<TMPL_VAR ESCAPE="URL" NAME="NODENAME">/index.html">
+			<TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> :: <TMPL_IF NAME="URLX">
+				<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF>
+				 <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URLX">">
+				</TMPL_IF>
+				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
+				<TMPL_IF NAME="URLX"></a></TMPL_IF>
+		</span><br />
+		<TMPL_IF NAME="CIMGDAY">
+			<a href="<TMPL_VAR NAME="URLX">">
+				<img src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" 
+				 <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> 
+				 <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/>
+			</a>
+		</TMPL_IF>
+		</div>
+	</TMPL_LOOP>
+</div>
+</TMPL_LOOP>
+</div>
+</div>
+<TMPL_INCLUDE NAME="partial/footer.tmpl">
+</body>
+</html>
