@@ -127,7 +127,6 @@ sub html_startup {
     $htmldir = $config->{htmldir};
 
     $max_running = &munin_get($config, "max_html_jobs", $max_running);
-	$htmlconfig = get_config(1);
 
     # For timestamping graphs
     $timestamp = strftime("%Y-%m-%d %T%z (%Z)", localtime);
@@ -144,19 +143,28 @@ sub html_startup {
 
 sub get_config {
 	my $cache = shift;
-	my $myconfig = undef;
+	$htmlconfig = undef;
 	if($cache){
-		$myconfig = munin_readconfig_storable($htmlconfcache);
+		$htmlconfig = munin_readconfig_storable($htmlconfcache);
 	}
-	if(!defined $myconfig){
-		$myconfig = generate_config($config);
+	if(!defined $htmlconfig){
+		$htmlconfig = generate_config($config);
 	}
-	return $myconfig;
+	return $htmlconfig;
 }
 
 sub html_main {
     my $staticdir = $config->{staticdir};
     copy_web_resources($staticdir, $htmldir);
+
+	my $configtime = Time::HiRes::time;
+    get_config(0);
+	my $fh;
+	munin_writeconfig_storable("$htmlconfcache", $htmlconfig, $fh);
+	my $groups = $htmlconfig;
+	$configtime = sprintf("%.2f", (Time::HiRes::time - $configtime));
+	INFO "[INFO] config generated ($configtime sec)";
+
     if (munin_get($config,"html_strategy","cron") eq "cgi"){
 		INFO "[INFO] html_strategy is cgi. Skipping template generation";
 		return;
@@ -170,14 +178,6 @@ sub html_main {
     munin_runlock($lockfile);
 
    # Preparing the group tree...
-
-	my $configtime = Time::HiRes::time;
-    $htmlconfig = get_config(0);
-	my $fh;
-	munin_writeconfig_storable($htmlconfcache, $htmlconfig, $fh);
-	my $groups = $htmlconfig;
-	$configtime = sprintf("%.2f", (Time::HiRes::time - $configtime));
-	INFO "[INFO] config generated ($configtime sec)";
 
     if (!defined($groups) or scalar(%{$groups} eq '0')) {
 	LOGCROAK "[FATAL] There is nothing to do here, since there are no nodes with any plugins.  Please refer to http://munin-monitoring.org/wiki/FAQ_no_graphs";

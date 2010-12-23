@@ -267,7 +267,7 @@ sub munin_readconfig_storable {
 	$conf ||= $configfile;
 
     # try to read storable version
-    if ( (-r "$conf.storable") && open (my $CFG_STORABLE, '<', "$conf.storable")) { 
+    if ( (-r $conf) && open (my $CFG_STORABLE, '<', $conf)) { 
 		DEBUG "[DEBUG] munin_readconfig: found Storable version of $conf, using it";
         $config = Storable::fd_retrieve($CFG_STORABLE); 
         close ($CFG_STORABLE); 
@@ -284,7 +284,7 @@ sub munin_readconfig {
     $conf ||= $configfile;
 
     # try first to read storable version
-	$config = munin_readconfig_storable($conf);
+	$config = munin_readconfig_storable("$conf.storable");
 	if(!defined $config){
         if (! -r $conf and ! $missingok) {
             WARN "munin_readconfig: cannot open '$conf'";

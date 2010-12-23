@@ -49,7 +49,7 @@ my $htmlconfcache = "$Munin::Common::Defaults::MUNIN_DBDIR/htmlconf.storable";
 html_startup([]);
 while(new CGI::Fast){
 	print header("text/html");
-	my $change = (stat($htmlconfcache))[8];
+	my $change = (stat($htmlconfcache))[9];
 	if($change > $lastchanged){
 		$config = get_config(1);
 		$lastchanged = $change;
