@@ -348,6 +348,9 @@ sub graph_main {
     $lower_limit    = undef;
     $upper_limit    = undef;
 
+    # XXX [DEBUG]
+    my $debug = undef;
+
     GetOptions (
                 "host=s"        => \@limit_hosts,
                 "only-fqn=s"    => sub { $only_fqn = process_fqn(@_); },
@@ -360,11 +363,17 @@ sub graph_main {
                 "sumyear!"      => \$draw{'sumyear'},
                 "o|output-file=s"  => \$output_file,
 
+                # XXX [DEBUG]
+                "debug!"  => \$debug,
+
 		"size_x=i"      => \$size_x,
 		"size_y=i"      => \$size_y,
 		"upper_limit=s" => \$upper_limit,
 		"lower_limit=s" => \$lower_limit,
 	    );
+
+    # XXX [DEBUG]
+    logger_debug() if $debug;
 
     my $graph_time = Time::HiRes::time;
 

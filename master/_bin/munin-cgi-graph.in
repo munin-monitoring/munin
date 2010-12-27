@@ -358,6 +358,10 @@ sub draw_graph {
     push @params, "--lower_limit", CGI::param("lower_limit")
       if (CGI::param("lower_limit"));
 
+    # XXX - the debug param is sticky. It really should be per request.
+    push @params, "--debug"
+      if (CGI::param("debug"));
+
     graph_main(\@params);
 
     return $filename;
