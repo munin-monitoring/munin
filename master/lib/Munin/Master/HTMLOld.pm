@@ -240,6 +240,13 @@ sub emit_comparison_template {
 	$file .= "comparison-$t.html";
    	DEBUG "[DEBUG] Creating comparison page $file";
 
+	# Rewrite peer urls to point to comparison-$t
+	my $comparepeers = [];
+	for my $peer (@{$key->{'peers'}}){
+		(my $comparelink = $peer->{"link"}) =~ s/index.html$/comparison-$t.html/;
+		push((@$comparepeers), {"name" => $peer->{"name"}, "link" => $comparelink});
+	}
+
     $comparisontemplates{$t}->param(
                                     INFO_OPTION => 'Groups on this level',
                                     NAME        => $key->{'name'},
@@ -248,12 +255,13 @@ sub emit_comparison_template {
                                     CSS_NAME    => get_css_name(),
                                     R_PATH   => $key->{'root_path'},
                                     COMPLINKS   => find_complinks($t),
-                                    LARGESET    => decide_largeset($key->{'peers'}), 
-                                    PEERS       => $key->{'peers'},
+                                    LARGESET    => decide_largeset($comparepeers), 
+                                    PEERS       => $comparepeers,
                                     PARENT      => $key->{'path'}->[-2]->{'name'},
                                     CATEGORIES  => $key->{'comparecategories'},
                                     NCATEGORIES => $key->{'ncomparecategories'},
                                     TAGLINE     => $htmltagline,
+									"COMPARISON-$t"  => 1,
 									ROOTGROUPS	=> $htmlconfig->{"groups"},
 									MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
 									TIMESTAMP	=> $timestamp,

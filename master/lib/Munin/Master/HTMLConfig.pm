@@ -121,6 +121,10 @@ sub get_group_tree {
 		}
     }
 
+	foreach my $group (@$groups) {
+		$group->{'peers'} = get_peer_nodes($group->{"#%#hash"}, lc munin_get($group->{"#%#hash"}, "graph_category", "other"));
+	}
+
     return unless $visible;
 
     $hash->{'#%#visible'} = 1; # TODO: is this value used anywhere?
@@ -172,6 +176,7 @@ sub get_group_tree {
         "name"     => munin_get_node_name($hash),
         "url"      => $base . "index.html",
         "path"     => $path,
+		"#%#hash"     => $hash,
         "depth" => scalar(my @splitted_base = split("/", $base . "index.html"))
             - 1,
         "filename"           => munin_get_html_filename($hash),
@@ -192,9 +197,8 @@ sub get_group_tree {
         "ncomparecategories" => scalar(@$comparecats),
     };
 
-	if($ret->{'depth'} > 0){ #root node does not have peer nodes
-		$ret->{'peers'} = get_peer_nodes($hash, lc munin_get($hash, "graph_category", "other"));
-	} else {
+
+	if($ret->{'depth'} == 0){ #root node does not have peer nodes
 		# add categories
 		my $catarray = [];
 		foreach (sort keys %{$categories}) {
@@ -344,7 +348,7 @@ sub generate_service_templates {
     my @loc       = @{munin_get_node_loc($service)};
     my $pathnodes = get_path_nodes($service);
     my $peers     = get_peer_nodes($service,
-        lc munin_get($service, "graph_category", "other"));
+    lc munin_get($service, "graph_category", "other"));
     my $parent = munin_get_parent_name($service);
     my $filename = munin_get_html_filename($service);
 
