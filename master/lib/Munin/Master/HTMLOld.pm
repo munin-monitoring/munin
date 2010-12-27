@@ -720,10 +720,6 @@ with Munin's node.  Munin is a group of programs to gather data from
 Munin's nodes, graph them, create html-pages, and optionally warn Nagios
 about any off-limit values.
 
-If munin.conf sets "graph_strategy cgi" then munin-html generates URLs
-referencing the graph CGI instead of referencing pre-generated
-graphs (made by munin-graph).
-
 Munin-html creates the html pages.
 
 =head1 FILES

@@ -45,8 +45,7 @@ sub initiate_cgiurl_graph {
         else {
             $config->{'cgiurl_graph'} = "/cgi-bin/munin-cgi-graph";
         }
-		DEBUG "[DEBUG] Determined that cgiurl_graph is ".$config->{'cgiurl_graph'} if
-		    munin_get($config,"graph_strategy","cron") eq 'cgi';
+		DEBUG "[DEBUG] Determined that cgiurl_graph is ".$config->{'cgiurl_graph'};
     }
 }
 
@@ -363,7 +362,7 @@ sub generate_service_templates {
     $srv{'root_path'} = $root_path;
 	$srv{'filename'}  = $filename;
 
-    my $method = munin_get($service, "graph_strategy", "cron");
+    my $method = "cgi"; # Method can no longer be either cron or cgi, it's always cgi
 
     $srv{'url'} = "$srv{node}.html";
 
