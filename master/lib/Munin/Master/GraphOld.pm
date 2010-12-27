@@ -437,7 +437,7 @@ sub get_custom_graph_args {
 
     my $args = munin_get($service, "graph_args");
     if (defined $args) {
-        my $result = [&quotewords('\s+', 0, $args)];
+        my $result = [ grep /\S/, &quotewords('\s+', 0, $args) ];
         return $result;
     }
     else {
