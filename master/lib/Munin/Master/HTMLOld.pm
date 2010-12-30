@@ -335,12 +335,11 @@ sub emit_category_template {
 	die_on_bad_params => 0,
 	global_vars       => 1,
 	loop_context_vars => 1,
-	filter            => sub {
-	    my $ref = shift;
-	    $$ref =~ s/URLX/URL$key->{'depth'}/g;
-	});
+	);
 
-    DEBUG "[DEBUG] Creating global category page ".$key->{filename};
+	my $filename = $key->{'filename-' . $time};
+
+    DEBUG "[DEBUG] Creating global category page ".$filename;
 
     $graphtemplate->param(
                           PATH        => $key->{'path'},
@@ -361,7 +360,6 @@ sub emit_category_template {
     if($emit_to_stdout){
 		print $graphtemplate->output;
 	} else {
-	    my $filename = $key->{'filename-' . $time};
 		ensure_dir_exists($filename);
 	    open(my $FILE, '>', $filename)
 			or die "Cannot open $filename for writing: $!";
@@ -627,7 +625,9 @@ sub generate_category_templates {
 	my $arr = shift || return;
 	
 	foreach my $key (@$arr) {
-		emit_category_template($key,0);
+		foreach my $time (@times) {
+			emit_category_template($key, $time, 0);
+		}
 	}
 }
 
