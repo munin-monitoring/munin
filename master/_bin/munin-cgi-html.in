@@ -79,9 +79,9 @@ sub emit_page {
   $group = traverse_groups($path, $group);
  
   if(!defined $group->{"depth"} || $group->{"depth"} == 0){ #root url
-	my $category = get_global_category($path, $group);
+	(my $category, my $time) = get_global_category($path, $group);
 	if(defined $category){
-		emit_category_template($category, 1);
+		emit_category_template($category, $time, 1);
 	} else {
 		emit_main_index($group->{"groups"},0,1);
 	}
@@ -135,8 +135,10 @@ sub get_global_category {
 		return undef;
 	}
 	foreach my $category (@{$group->{"globalcats"}}) {
-		if($category->{"url"} eq $part){
-			return $category;
+		foreach my $time (@times) {
+			if($category->{"url" . $time} eq $part){
+				return ($category, $time);
+			}
 		}
 	}
 	return undef;

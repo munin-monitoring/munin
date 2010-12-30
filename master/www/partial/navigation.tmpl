@@ -9,7 +9,15 @@
 	<h2>Categories</h2>
 	<ul>
 	<TMPL_LOOP NAME="GLOBALCATS">
-		<li><a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URL">"><TMPL_VAR NAME="NAME"></a></li>
+		<li>
+		<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URLDAY">"><TMPL_VAR NAME="NAME"></a>
+		[
+			<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URLDAY">">d</a>
+			<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URLWEEK">">w</a>
+			<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URLMONTH">">m</a>
+			<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URLYEAR">">y</a>
+		]
+		</li>
 	</TMPL_LOOP>
 	</ul>
 </div>

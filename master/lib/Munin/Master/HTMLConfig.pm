@@ -205,20 +205,29 @@ sub get_group_tree {
 			my $currentcat = $categories->{$_};
 			my $srvarray = [];
 			foreach (sort keys %{$currentcat}) {
+				my $srv_nodename = $_;
+				$srv_nodename =~ s/ /_/g;
 				my $srv = {
-					"graphs", $currentcat->{$_},
-					"name", $_,
+					"graphs" => $currentcat->{$_},
+					"name" => $_,
+					"service" => $srv_nodename,
 				};
 				push @$srvarray, $srv
 			}
 			my $filename = munin_get_html_filename($hash);
-			$filename =~ s/index.html$/$_.html/;
+			$filename =~ s/index.html$/$_/;
 			my $cat = {
 				"name" => $_,
-				"url" => "$_.html",
+				"urlday" => "$_-day.html",
+				"urlweek" => "$_-week.html",
+				"urlmonth" => "$_-month.html",
+				"urlyear" => "$_-year.html",
 				"path" => $path,
 				"graphs" => $srvarray,
-				"filename" => $filename,
+				"filename-day" => $filename . "-day.html",
+				"filename-week" => $filename . "-week.html",
+				"filename-month" => $filename . "-month.html",
+				"filename-year" => $filename . "-year.html",
 			};
 			push @$catarray, $cat;
 		}

@@ -328,7 +328,7 @@ sub emit_graph_template {
 }
 
 sub emit_category_template {
-    my ($key, $emit_to_stdout) = @_;
+    my ($key, $time, $emit_to_stdout) = @_;
 
     my $graphtemplate = HTML::Template->new(
 	filename => "$tmpldir/munin-categoryview.tmpl",
@@ -345,7 +345,8 @@ sub emit_category_template {
     $graphtemplate->param(
                           PATH        => $key->{'path'},
                           CSS_NAME    => get_css_name(),
-                          R_PATH   => ".",
+                          R_PATH      => ".",
+						  "TIME".$time => 1,
                           NAME        => $key->{'name'},
                           TAGLINE     => $htmltagline,
 						  ROOTGROUPS  => $htmlconfig->{"groups"},
@@ -360,7 +361,7 @@ sub emit_category_template {
     if($emit_to_stdout){
 		print $graphtemplate->output;
 	} else {
-	    my $filename = $key->{'filename'};
+	    my $filename = $key->{'filename-' . $time};
 		ensure_dir_exists($filename);
 	    open(my $FILE, '>', $filename)
 			or die "Cannot open $filename for writing: $!";
