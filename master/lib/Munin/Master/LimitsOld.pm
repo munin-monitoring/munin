@@ -706,6 +706,8 @@ sub generate_service_message {
         }
         DEBUG "[DEBUG] sending message: \"$txt\"";
         print $pipe $txt, "\n" if (defined $pipe);
+        DEBUG "[DEBUG] explicitely closing pipe as suggested by schamane on #732";
+        close $pipe if (defined $pipe);
         $contactobj->{"num_messages"}
             = 1 + munin_get($contactobj, "num_messages", 0);   # $num_messages++
     }
