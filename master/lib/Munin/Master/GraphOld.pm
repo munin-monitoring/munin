@@ -347,6 +347,7 @@ sub graph_main {
     $size_y         = undef;
     $lower_limit    = undef;
     $upper_limit    = undef;
+    $pinpoint       = undef;
 
     # XXX [DEBUG]
     my $debug = undef;
