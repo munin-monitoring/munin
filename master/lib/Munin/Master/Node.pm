@@ -298,7 +298,7 @@ sub parse_service_config {
 	    new_service($service) unless $global_config->{$service};
 	    DEBUG "[CONFIG multigraph $plugin] Service is now $service";
 	}
-	elsif ($line =~ m{\A ([^\s\.]+) \s+ (.+) }xms) {
+	elsif ($line =~ m{\A ([^\s\.]+) \s+ (.+?) \s* $}xms) {
 	    $correct++;
 
 	    my $label = $self->_sanitise_fieldname($1);
@@ -307,7 +307,7 @@ sub parse_service_config {
 	    push @{$global_config->{$service}}, [$label, $2]
 	    	unless grep { $_->[0] eq $label }  @{$global_config->{$service}};
             DEBUG "[CONFIG graph global $plugin] $service->$label = $2";
-        } elsif ($line =~ m{\A ([^\.]+)\.value \s+ (.+) }xms) {
+        } elsif ($line =~ m{\A ([^\.]+)\.value \s+ (.+?) \s* $}xms) {
 	    $correct++;
 	    # Special case for dirtyconfig
             my ($ds_name, $value, $when) = ($1, $2, $now);
@@ -328,7 +328,7 @@ sub parse_service_config {
 	    push @{$data_source_config->{$service}{$ds_name}{when}}, $when;
 	    push @{$data_source_config->{$service}{$ds_name}{value}}, $value;
         }
-	elsif ($line =~ m{\A ([^\.]+)\.([^\s]+) \s+ (.+) }xms) {
+	elsif ($line =~ m{\A ([^\.]+)\.([^\s]+) \s+ (.+?) \s* $}xms) {
 	    $correct++;
 	    
             my ($ds_name, $ds_var, $ds_val) = ($1, $2, $3);
@@ -465,7 +465,7 @@ sub parse_service_data {
 	    push @{$values{$service}{$data_source}{when}}, $when;
 	    push @{$values{$service}{$data_source}{value}}, $value;
         }
-	elsif ($line =~ m{\A ([^\.]+)\.extinfo \s+ (.+) }xms) {
+	elsif ($line =~ m{\A ([^\.]+)\.extinfo \s+ (.+?) \s* $}xms) {
 	    # Extinfo is used in munin-limits
             my ($data_source, $value) = ($1, $2);
 	    
