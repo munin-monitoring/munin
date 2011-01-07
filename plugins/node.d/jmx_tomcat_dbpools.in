@@ -3,22 +3,19 @@
 
 =head1 NAME
 
-jmx_ - Wildcard plugin to monitor Java application servers via JMX
+jmx_tomcat_dbpools - Plugin to monitor the database connection pools of a Tomcat application server via JMX
 
 =head1 APPLICABLE SYSTEMS
 
-Tested with Tomcat 4.1/5.0/5.5/6.0 on Sun JVM 5/6 and OpenJDK.
+Tested with Tomcat 5.5/6.0 on Sun JVM 6. Please use this plugin as a template for other application-server specific monitoring.
 
 Any JVM that supports JMX should in theory do.
 
-Needs nc in path for autoconf.
-
 =head1 CONFIGURATION
 
-  [jmx_*]
+  [jmx_tomcat_dbpools*]
     env.ip 127.0.0.1
     env.port 5400
-    env.category jvm
     env.username monitorRole
     env.password SomethingSecret
     # The critical and warning levels are in % of the pool size
@@ -47,15 +44,9 @@ jmxremote.password:
 jmxremote.access:
  monitorRole readonly
 
-You may need higher access levels for some counters, notably ThreadsDeadlocked.
-
 =head1 BUGS
 
 No encryption supported in the JMX connection.
-
-The plugins available reflect the most interesting aspects of a
-JVM runtime.  This should be extended to cover things specific to
-Tomcat, JBoss, Glassfish and so on.  Patches welcome.
 
 =head1 AUTHORS
 
@@ -83,7 +74,7 @@ use strict;
 my $beans="Catalina:type=DataSource,class=javax.sql.DataSource,name=*";
 my $munin_jar='@@JAVALIBDIR@@/munin-jmx-plugins.jar';
 my $java='@@JAVARUN@@';
-my $ip=$ENV{'ip'} || "127.0.0.";
+my $ip=$ENV{'ip'} || "127.0.0.1";
 my $port=$ENV{'port'} || "5400";
 
 if($ENV{'JRE_HOME'}) {
