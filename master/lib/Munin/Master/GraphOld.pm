@@ -943,12 +943,11 @@ sub process_service {
 	
         $rrdname = &get_field_name($fname);
 
-        DEBUG "[DEBUG] RRD name / filename: $rrdname / $filename\n";
-
+		reset_cdef($service, $rrdname);
         if ($rrdname ne $fname) {
 
             # A change was made
-            munin_set($field, "cdef_name", $rrdname);
+        	munin_set($field, "cdef_name", $rrdname);
         }
 
         # Push will place the DEF too far down for some CDEFs to work
@@ -1546,6 +1545,16 @@ sub orig_to_cdef {
         return orig_to_cdef($service, $service->{$fieldname}->{"cdef_name"});
     }
     return $fieldname;
+}
+
+sub reset_cdef {
+	my $service = shift;
+	my $fieldname = shift;
+    return unless ref($service) eq "HASH";
+	if (defined $service->{$fieldname}->{"cdef_name"}) {
+		reset_cdef($service, $service->{$fieldname}->{"cdef_name"});
+		delete $service->{$fieldname}->{"cdef_name"};
+	}
 }
 
 sub ends_with {
