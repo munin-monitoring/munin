@@ -57,6 +57,14 @@ includedir @@CONFDIR@@/munin-conf.d
 #
 #html_strategy cgi
 
+# RRD updates are performed directly on the rrd files. Setting this 
+# value to "on" will change this behavior, making Munin use the 
+# rrdcached daemon to perform the updates.
+#rrdcached on
+
+# The location of the socket that RRDCached will use
+#rrdcached_socket /var/run/rrdcached.sock
+
 # Drop somejuser@fnord.comm and anotheruser@blibb.comm an email everytime 
 # something changes (OK -> WARNING, CRITICAL -> OK, etc)
 #contact.someuser.command mail -s "Munin notification" somejuser@fnord.comm
