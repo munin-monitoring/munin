@@ -577,12 +577,13 @@ sub do_config_root {
     print "multigraph if_errors\n";
     print "graph_title $host interface errors\n";
     print "graph_order recv send\n";
+    print "graph_scale no\n";
     print "graph_args --base 1000\n";
     print "graph_vlabel errors in (-) / out (+) per \${graph_period}\n";
     print "graph_category network\n";
     print "graph_info This graph shows the total errors for $host\n";
 
-    print "send.info Errors in outgoing/incomming traffic on $host\n";
+    print "send.info Errors in outgoing/incoming traffic on $host\n";
     print "recv.label recv\n";
     print "recv.type DERIVE\n";
     print "recv.graph no\n";
@@ -681,16 +682,17 @@ sub do_config_if {
     print "graph_title Interface $alias errors\n";
     print "graph_order recv send\n";
     print "graph_args --base 1000\n";
+    print "graph_scale no\n";
     print "graph_vlabel errors in (-) / out (+) per \${graph_period}\n";
     print "graph_category network\n";
     print "graph_info This graph shows errors for the \"$alias\" network interface.$extrainfo\n";
-    print "send.info Errors in outgoing/incomming traffic on this interface.\n";
+    print "send.info Errors in outgoing/incoming traffic on this interface.\n";
     print "recv.label recv\n";
     print "recv.type DERIVE\n";
     print "recv.graph no\n";
     print "recv.min 0\n";
     print "recv.warning 1\n";
-    print "send.label bps\n";
+    print "send.label errors\n";
     print "send.type DERIVE\n";
     print "send.negative recv\n";
     print "send.min 0\n";
