@@ -46,6 +46,9 @@ my @jobs;
 my $n_jobs;
 my @exclude;  # Should take this from environment.
 
+# Force US_en output from lpstat
+$ENV{'LC_MESSAGES'} = "EN_us";
+
 # This is a dumb-down.  Should take hostname(s) from environment or
 # as wildcard plugin.
 my $host = '127.0.0.1';
