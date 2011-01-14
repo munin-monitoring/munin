@@ -38,7 +38,11 @@ my $OTHER=0;
 my %IN;
 
 sub get_state {
-    open(Q,"< $STATEFILE") or die;
+    if (! -f $STATEFILE) {
+        open(Q, ">", $STATEFILE);
+        close(Q);
+    }
+    open(Q,"< $STATEFILE") or die ("Cannot open state file");
     while (<Q>) {
         chomp;
         my ($q,$n) = split(/\s+/,$_,2);
