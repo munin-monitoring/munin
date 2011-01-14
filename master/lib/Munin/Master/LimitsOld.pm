@@ -775,8 +775,8 @@ sub message_expand {
             my $t     = $3;
             my $res   = "";
             my $field = munin_get($hash, $f, 0);
-            my $check = ($field ne "0" and length($field));
-            $check = (!length($field) or $field eq "0") if $n;
+            my $check = (defined $field and $field ne "0" and length($field));
+            $check = (!$check) if $n;
 
             if ($check) {
                 $res .= message_expand($hash, $t);
