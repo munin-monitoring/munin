@@ -501,9 +501,9 @@ sub generate_service_templates {
         my $state = munin_field_status($fieldobj, $limits, 1);
 
         if (defined $state) {
-            $field_info{'state_warning'}  = 1 if $state eq "warning";
-            $field_info{'state_critical'} = 1 if $state eq "critical";
-            $field_info{'state_unknown'}  = 1 if $state eq "unknown";
+            $field_info{'state_warning'}  = $state eq "warning" ? 1 : 0;
+            $field_info{'state_critical'} = $state eq "critical" ? 1 : 0;
+            $field_info{'state_unknown'}  = $state eq "unknown" ? 1 : 0;
         }
         push @{$srv{'fieldinfo'}}, \%field_info;
     }
@@ -511,9 +511,9 @@ sub generate_service_templates {
     my $state = munin_service_status($service, $limits, 1);
 
     if (defined $state) {
-        $srv{'state_warning'}  = 1 if $state eq "warning";
-        $srv{'state_critical'} = 1 if $state eq "critical";
-        $srv{'state_unknown'}  = 1 if $state eq "unknown";
+        $srv{'state_warning'}  = $state eq "warning" ? 1 : 0;
+        $srv{'state_critical'} = $state eq "critical" ? 1 : 0;
+        $srv{'state_unknown'}  = $state eq "unknown" ? 1 : 0;
     }
 
     return \%srv;
