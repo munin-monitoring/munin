@@ -715,10 +715,10 @@ sub do_fetch_root {
 	# interfaces with a "fishy" status.  That is a possible bug.
 	# Or a feature.  We'll see.
 
-	$in += $response = $snmpinfo->{$if}->{ifHCInOctets} ||
+	$in += $snmpinfoX->{$if}->{ifHCInOctets} ||
 	  $snmpinfo->{$if}->{ifInOctets};
 
-	$out += $snmpinfo->{$if}->{ifHCOutOctets} ||
+	$out += $snmpinfoX->{$if}->{ifHCOutOctets} ||
 	  $snmpinfo->{$if}->{ifOutOctets};
 
 	$inerr += ( $snmpinfo->{$if}->{ifInErrors} || 0 ) +
@@ -760,7 +760,7 @@ sub do_fetch_if {
 	goto if_errors;
     }
 
-    if (defined ($response = $snmpinfo->{$if}->{ifHCInOctets} ||
+    if (defined ($response = $snmpinfoX->{$if}->{ifHCInOctets} ||
 		 $snmpinfo->{$if}->{ifInOctets})) {
 	print "recv.value ", $response, "\n";
     } else {
@@ -768,7 +768,7 @@ sub do_fetch_if {
 	print "recv.value U\n";
    }
 
-    if (defined ($response = $snmpinfo->{$if}->{ifHCOutOctets} ||
+    if (defined ($response = $snmpinfoX->{$if}->{ifHCOutOctets} ||
 		 $snmpinfo->{$if}->{ifOutOctets})) {
 	print "send.value ", $response, "\n";
     } else {
