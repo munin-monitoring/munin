@@ -93,5 +93,5 @@ fi
 # real work - i.e. display the data. Almost always this will be
 # "value" subfield for every data field.
 
-echo -n "load.value "
+printf "load.value "
 uptime  | sed -e 's/^.*load averages: [^ ]* //' -e 's/ [^ ]*$//'
