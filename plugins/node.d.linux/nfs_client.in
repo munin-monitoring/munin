@@ -31,7 +31,7 @@ NFS=/proc/net/rpc/nfs
 proc="getattr setattr lookup access readlink read write create mkdir symlink mknod remove rmdir rename link readdir readdirplus fsstat fsinfo pathconf commit"
 
 if [ "$1" = "autoconf" ]; then
-	if [ -x "$NFS" ]; then
+	if [ -f "$NFS" ]; then
 		echo yes
 		exit 0
 	else
