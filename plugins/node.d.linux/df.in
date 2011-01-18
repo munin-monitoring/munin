@@ -123,7 +123,7 @@ sub skip {
 sub print_values() {
 
     # Read from df
-    open (DF,"df $dfopts |") or die "Could not open pipe from df, $!";
+    open (DF,"df $dfopts 2>/dev/null |") or die "Could not open pipe from df, $!";
     <DF>; # Skip the header
     while (<DF>) {
 	chomp;
@@ -145,7 +145,6 @@ sub print_values() {
 	print $name, ".value ", $ps, "\n";
     }
     close DF;
-    die "Error executing df. Exit code $?\n" if $?;
 }
 
 if ($ARGV[0] and $ARGV[0] eq 'autoconf' ) {
@@ -166,7 +165,7 @@ if ($ARGV[0] and $ARGV[0] eq 'config' ) {
     print "graph_category disk\n";
 
     # Read from df
-    open (DF,"df $dfopts |") or die "Unable to open pipe from df: $!";
+    open (DF,"df $dfopts 2>/dev/null |") or die "Unable to open pipe from df: $!";
     <DF>; # Skip the header
     while (<DF>) {
         next if m{//};
@@ -186,7 +185,6 @@ if ($ARGV[0] and $ARGV[0] eq 'config' ) {
 	print_thresholds($name,undef,undef,92,98);
     }
     close DF;
-    die "Error executing df. Exit code $?\n" if $?;
     exit 0;
 }
 
