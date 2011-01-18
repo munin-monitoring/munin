@@ -1061,6 +1061,7 @@ sub munin_get_keypath {
 	    # In service land, working towards host.
 	    # If i or my parent has a graph_title we're still working with services
 	    if (defined $i->{'#%#parent'}{graph_title} or defined $i->{graph_title}) {
+		$name =~ s/-/_/g; # can't handle dashes in service or below
 		unshift(@service,$name);
 	    } else {
 		$host = 1;
