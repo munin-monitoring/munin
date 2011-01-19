@@ -26,10 +26,12 @@ my $config;
 my $limits;
 
 my $categories;
+my $problems;
 
 sub generate_config {
 	$config = shift;
 	$categories = {};
+	$problems = {"criticals" => [], "warnings" => [], "unknowns" => []};
 	$limits = munin_readconfig($config->{dbdir} . "/limits",1,1); #TODO: candidate for caching
 
 	initiate_cgiurl_graph();
@@ -231,6 +233,7 @@ sub get_group_tree {
 			};
 			push @$catarray, $cat;
 		}
+		$ret->{"problems"} = $problems;
 		$ret->{"globalcats"} = $catarray;
 		$ret->{"nglobalcats"} = scalar(@$catarray);
 	}
@@ -514,6 +517,9 @@ sub generate_service_templates {
         $srv{'state_warning'}  = $state eq "warning" ? 1 : 0;
         $srv{'state_critical'} = $state eq "critical" ? 1 : 0;
         $srv{'state_unknown'}  = $state eq "unknown" ? 1 : 0;
+		push @{$problems->{"warnings"}}, \%srv if $state eq "warning";
+		push @{$problems->{"criticals"}}, \%srv if $state eq "critical";
+		push @{$problems->{"unknowns"}}, \%srv if $state eq "unknown";
     }
 
     return \%srv;

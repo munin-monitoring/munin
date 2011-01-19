@@ -61,7 +61,7 @@ use Exporter;
 
 our (@ISA, @EXPORT);
 @ISA    = qw(Exporter);
-@EXPORT = qw(html_startup html_main get_config emit_main_index emit_comparison_template emit_group_template emit_graph_template emit_service_template emit_category_template);
+@EXPORT = qw(html_startup html_main get_config emit_main_index emit_comparison_template emit_group_template emit_graph_template emit_service_template emit_category_template emit_problem_template);
 
 use HTML::Template;
 use POSIX qw(strftime);
@@ -119,7 +119,8 @@ sub html_startup {
     exit_if_run_by_super_user();
 
     $config = munin_config($conffile, $config);
-    
+	$htmlconfcache = $config->{"dbdir"} . "/htmlconf.storable";
+ 
 	logger_open($config->{'logdir'});
     logger_debug() if $DEBUG;
 
@@ -198,6 +199,7 @@ sub html_main {
     generate_group_templates($groups);
 	generate_category_templates($htmlconfig->{"globalcats"});
     emit_main_index($groups,$timestamp,0);
+	emit_problem_template(0);
 
     INFO "[INFO] Releasing lock file $lockfile";
 
@@ -267,6 +269,9 @@ sub emit_comparison_template {
 									TIMESTAMP	=> $timestamp,
 									NGLOBALCATS => $htmlconfig->{"nglobalcats"},
 									GLOBALCATS => $htmlconfig->{"globalcats"},
+									NCRITICAL => scalar(@{$htmlconfig->{"problems"}->{"criticals"}}),
+									NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
+									NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
     );
     if($emit_to_stdout){
 		print $comparisontemplates{$t}->output;
@@ -313,6 +318,9 @@ sub emit_graph_template {
 						  TIMESTAMP	=> $timestamp,
 						  NGLOBALCATS => $htmlconfig->{"nglobalcats"},
 						  GLOBALCATS => $htmlconfig->{"globalcats"},
+									NCRITICAL => scalar(@{$htmlconfig->{"problems"}->{"criticals"}}),
+									NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
+									NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
                          );
 
     if($emit_to_stdout){
@@ -355,6 +363,9 @@ sub emit_category_template {
 						  GLOBALCATS => $htmlconfig->{"globalcats"},
 						  CATEGORY => $key->{"name"},
 						  SERVICES => $key->{"graphs"},
+						  NCRITICAL => scalar(@{$htmlconfig->{"problems"}->{"criticals"}}),
+						  NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
+						  NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
                          );
 
     if($emit_to_stdout){
@@ -373,6 +384,50 @@ sub ensure_dir_exists {
     $dirname =~ s/\/[^\/]*$//;
 
     munin_mkdir_p($dirname, oct(755));
+}
+
+sub emit_problem_template {
+    my ($emit_to_stdout) = @_;
+
+    my $graphtemplate = HTML::Template->new(
+	filename => "$tmpldir/munin-problemview.tmpl",
+	die_on_bad_params => 0,
+	global_vars       => 1,
+	loop_context_vars => 1,
+	);
+
+	my $filename = munin_get_html_filename($config);
+	$filename =~ s/index.html$/problems.html/g;
+
+    INFO "[INFO] Creating problem page ".$filename;
+
+    $graphtemplate->param(
+                          CSS_NAME    => get_css_name(),
+                          R_PATH      => ".",
+                          NAME        => "Problem overview",
+                          TAGLINE     => $htmltagline,
+						  ROOTGROUPS  => $htmlconfig->{"groups"},
+						  MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
+						  TIMESTAMP	=> $timestamp,
+						  NGLOBALCATS => $htmlconfig->{"nglobalcats"},
+						  GLOBALCATS => $htmlconfig->{"globalcats"},
+						  CRITICAL => $htmlconfig->{"problems"}->{"criticals"},
+						  WARNING => $htmlconfig->{"problems"}->{"warnings"},
+						  UNKNOWN => $htmlconfig->{"problems"}->{"unknowns"},
+						  NCRITICAL => scalar(@{$htmlconfig->{"problems"}->{"criticals"}}),
+						  NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
+						  NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
+                         );
+
+    if($emit_to_stdout){
+		print $graphtemplate->output;
+	} else {
+		ensure_dir_exists($filename);
+	    open(my $FILE, '>', $filename)
+			or die "Cannot open $filename for writing: $!";
+    	print $FILE $graphtemplate->output;
+	    close $FILE;
+	}
 }
 
 
@@ -405,8 +460,11 @@ sub emit_group_template {
 						  ROOTGROUPS => $htmlconfig->{"groups"},
 						  MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
 						  TIMESTAMP	=> $timestamp,
-					NGLOBALCATS => $htmlconfig->{"nglobalcats"},
-					GLOBALCATS => $htmlconfig->{"globalcats"},
+						  NGLOBALCATS => $htmlconfig->{"nglobalcats"},
+						  GLOBALCATS => $htmlconfig->{"globalcats"},
+						  NCRITICAL => scalar(@{$htmlconfig->{"problems"}->{"criticals"}}),
+						  NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
+						  NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
 	);
     if($emit_to_stdout){
 		print $grouptemplate->output;
@@ -454,6 +512,9 @@ sub emit_service_template {
 						  TIMESTAMP	=> $timestamp,
 					NGLOBALCATS => $htmlconfig->{"nglobalcats"},
 					GLOBALCATS => $htmlconfig->{"globalcats"},
+						  NCRITICAL => scalar(@{$htmlconfig->{"problems"}->{"criticals"}}),
+						  NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
+						  NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
         	                   );
 
     # No stored filename for this kind of html node.
@@ -510,6 +571,9 @@ sub emit_main_index {
 					TIMESTAMP	=> $timestamp,
 					NGLOBALCATS => $htmlconfig->{"nglobalcats"},
 					GLOBALCATS => $htmlconfig->{"globalcats"},
+					  NCRITICAL => scalar(@{$htmlconfig->{"problems"}->{"criticals"}}),
+					  NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
+					  NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
 					
     );
 	if($emit_to_stdout){

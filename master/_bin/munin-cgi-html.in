@@ -79,11 +79,17 @@ sub emit_page {
   $group = traverse_groups($path, $group);
  
   if(!defined $group->{"depth"} || $group->{"depth"} == 0){ #root url
-	(my $category, my $time) = get_global_category($path, $group);
-	if(defined $category){
-		emit_category_template($category, $time, 1);
+	my $problems = get_next_part($path);
+	if($problems eq "problems.html"){
+		emit_problem_template(1);
 	} else {
-		emit_main_index($group->{"groups"},0,1);
+		unshift(@$path, $problems);
+		(my $category, my $time) = get_global_category($path, $group);
+		if(defined $category){
+			emit_category_template($category, $time, 1);
+		} else {
+			emit_main_index($group->{"groups"},0,1);
+		}
 	}
   } elsif(!$group->{"ncategories"}) { # group
 	my $cmp_time = get_comparison_group($path, $group);
