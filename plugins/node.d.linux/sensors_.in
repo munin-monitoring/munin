@@ -92,7 +92,7 @@ my %config = (
     fan => {
         regex => qr/
             ^ # String must start with:
-            (\S[^:]*)  # Match any non-whitespace char, except ':' 
+            ([^:\n]*)  # Match any non-whitespace char, except ':' and new line
                        # (Match label as \$1)
             \s*        # Zero or more spaces followed by 
             :          # : characheter
@@ -118,7 +118,7 @@ my %config = (
     temp => {
         regex => qr/
             ^ # String must start with:
-            (\S[^:]*)  # Match any non-whitespace char, except ':' 
+            ([^:\n]*)  # Match any non-whitespace char, except ':' and new line 
                        # (Match label as \$1)
             \s*        # Zero or more spaces followed by 
             :          # ':' characheter
@@ -173,9 +173,7 @@ my %config = (
     volt => {
         regex => qr/
             ^           # String must start with:
-            (\s?\S[^:]*)# Match any non-whitespace char, except ':'
-                        # but allow an optional whitespace at the begining.
-                        # This is needed as voltages are sometimes printed with
+            ([^:\n]*)   # Match any non-whitespace char, except ':' and new line
                         # one space in front of them.
                         # (match the label as \$1)
 
