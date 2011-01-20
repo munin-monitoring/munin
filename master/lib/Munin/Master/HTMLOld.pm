@@ -171,7 +171,7 @@ sub html_main {
 	LOGCROAK "[FATAL] There is nothing to do here, since there are no nodes with any plugins.  Please refer to http://munin-monitoring.org/wiki/FAQ_no_graphs";
     };
 	
-    if (defined $groups->{"name"} and $groups->{"name"} eq "root") {
+    if (defined $groups->{"name"} and $groups->{"name"} eq "#%#root") {
         $groups = $groups->{"groups"};    # root->groups
     }
 
@@ -509,7 +509,7 @@ sub get_peer_nodes {
         my $peername = munin_get_node_name($peer);
         next
             if $peername eq "contact"
-                and munin_get_node_name($parent) eq "root";
+                and munin_get_node_name($parent) eq "#%#root";
         if ($peername eq $me) {
             unshift @$ret, {"name" => $peername, "link" => undef};
         }
