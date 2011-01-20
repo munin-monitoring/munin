@@ -30,6 +30,11 @@ in the options part of your named.conf or set the querystats variable
 You must also make sure the rndc.key file is readable by the user that
 runs the plugin.
 
+If using AppArmor, make sure the stats file is allowed 
+(On Ubuntu: add this line to /etc/apparmor.d/usr.sbin.named)
+
+  /var/run/named/named.stats rw
+
 =head1 FEATURES AND BUGS
 
 Previous versions of this plugin allowed a empty "rndc" environment
@@ -106,6 +111,7 @@ seek($stats , $size, 0);
 #                    9 queries resulted in authoritative answer
 #                    4 queries resulted in non authoritative answer
 #                    4 queries caused recursion
+#                    2 requested transfers completed
 # ++ Zone Maintenance Statistics ++
 #                    6 IPv4 notifies sent
 # --- Statistics Dump ---
@@ -155,6 +161,8 @@ if ( $version96 ) {
  	
 		} elsif (lc $msg eq 'duplicate queries received') {
 		    $IN{duplicates} = $n;
+		} elsif (lc $msg eq 'requested transfers completed') {
+		    $IN{transfers} = $n;
 		}
 	    }
 	    
