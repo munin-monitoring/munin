@@ -240,12 +240,13 @@ sub is_fresh_enough {
 	my %last_updated;
 
 	use Fcntl;   # For O_RDWR, O_CREAT, etc.
-   	use DB_File;
-   	tie(%last_updated, 'DB_File', $db_file, O_RDWR|O_CREAT, 0666) or ERROR "$!";
+   	use DB_File::Lock;
+   	tie(%last_updated, 'DB_File::Lock', $db_file, O_RDONLY, 0666, $DB_HASH, "read") or ERROR "$!";
 
 	my $last_updated_key = $last_updated{$key} || "0 0";
 	DEBUG "last_updated{$key}: " . $last_updated_key;
 	my @last = split(/ /, $last_updated_key);
+   	untie(%last_updated);
    
 	use Time::HiRes qw(gettimeofday tv_interval);	
 	my $now = [ gettimeofday ];
@@ -257,10 +258,11 @@ sub is_fresh_enough {
 
 	if (! $is_fresh_enough) {
 		DEBUG "new value: " . join(" ", @$now);
+   		tie(%last_updated, 'DB_File::Lock', $db_file, O_RDONLY, 0666, $DB_HASH, "read") or ERROR "$!";
 		$last_updated{$key} = join(" ", @$now);
+		untie(%last_updated);
 	}
 
-   	untie(%last_updated);
 
 	return $is_fresh_enough;
 }
@@ -274,8 +276,8 @@ sub get_spoolfetch_timestamp {
 	my %last_updated;
 
 	use Fcntl;   # For O_RDWR, O_CREAT, etc.
-   	use DB_File;
-   	tie(%last_updated, 'DB_File', $db_file, O_RDWR|O_CREAT, 0666) or ERROR "$!";
+   	use DB_File::Lock;
+   	tie(%last_updated, 'DB_File::Lock', $db_file, O_RDONLY, 0666, $DB_HASH, "read") or ERROR "$!";
 
 	my $last_updated_value = $last_updated{$key} || "0";
 
@@ -294,8 +296,8 @@ sub set_spoolfetch_timestamp {
 	my %last_updated;
 
 	use Fcntl;   # For O_RDWR, O_CREAT, etc.
-   	use DB_File;
-   	tie(%last_updated, 'DB_File', $db_file, O_RDWR|O_CREAT, 0666) or ERROR "$!";
+   	use DB_File::Lock;
+   	tie(%last_updated, 'DB_File::Lock', $db_file, O_RDWR|O_CREAT, 0666, $DB_HASH, "write") or ERROR "$!";
 
 	# Using the last timestamp sended by the server :
 	# -> It can be be different than "now" to be able to process the backlock slowly
