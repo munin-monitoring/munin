@@ -567,7 +567,7 @@ sub get_peer_nodes {
         my $peername = munin_get_node_name($peer);
         next
             if $peername eq "contact"
-                and munin_get_node_name($parent) eq "#%#root";
+                and munin_get_node_name($parent) eq "root";
         if ($peername eq $me) {
             unshift @$ret, {"name" => $peername, "link" => undef};
         }

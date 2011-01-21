@@ -307,7 +307,7 @@ sub munin_readconfig {
     $config->{'htmldir'}       ||= $Munin::Common::Defaults::MUNIN_HTMLDIR;
     $config->{'spooldir'}      ||= $Munin::Common::Defaults::MUNIN_SSPOOLDIR;
     $config->{'#%#parent'}     = undef;
-    $config->{'#%#name'}       = "#%#root";
+    $config->{'#%#name'}       = "root";
 
     return ($config);
 }
@@ -576,7 +576,7 @@ sub munin_find_node_by_fqn {
     my @path = split('/',$fqn);
 
     foreach my $pc (@path) {
-	next if $pc eq '#%#root';
+	next if $pc eq 'root';
 	if (exists $here->{$pc}) {
 	    $here = $here->{$pc};
 	} else {
@@ -1053,7 +1053,7 @@ sub munin_get_keypath {
 	# Not sure when a #%#name node can go missing
 	my $name = $i->{'#%#name'} || '*BUG*';
 	goto gotoparent if $name eq '*BUG*';
-	last if $name eq '#%#root';
+	last if $name eq 'root';
 	if ($host) {
 	    # Into group land now
 	    unshift(@group,$name);

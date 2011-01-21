@@ -184,7 +184,7 @@ sub html_main {
 	LOGCROAK "[FATAL] There is nothing to do here, since there are no nodes with any plugins.  Please refer to http://munin-monitoring.org/wiki/FAQ_no_graphs";
     };
 	
-    if (defined $groups->{"name"} and $groups->{"name"} eq "#%#root") {
+    if (defined $groups->{"name"} and $groups->{"name"} eq "root") {
         $groups = $groups->{"groups"};    # root->groups
     }
 
