@@ -149,7 +149,7 @@ sub _resolve_gids
 {
     my ($self, $service) = @_;
 
-    my $group_list = $config->{sconf}{$service}{groups};
+    my $group_list = $config->{sconf}{$service}{group};
 
     my $default_gid = $self->{defgroup};
 

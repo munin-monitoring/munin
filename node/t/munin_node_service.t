@@ -44,20 +44,20 @@ $config->reinitialize({
         bad_uid   => { user => 999999999  },
 
         # testing group resolution
-        gid   => { groups => [ 0      ] },
-        gname => { groups => [ 'root' ] },
-        bad_gname => { groups => [ '%%SSKK¤¤' ] },
-        bad_gid   => { groups => [ 999999999  ] },
+        gid   => { group => [ 0      ] },
+        gname => { group => [ 'root' ] },
+        bad_gname => { group => [ '%%SSKK¤¤' ] },
+        bad_gid   => { group => [ 999999999  ] },
 
         # testing optional group resolution
-        opt_gid       => { groups => [ '(0)'         ] },
-        opt_gname     => { groups => [ '(root)'      ] },
-        opt_bad_gname => { groups => [ '(%%SSKK¤¤)'  ] },
-        opt_bad_gid   => { groups => [ '(999999999)' ] },
+        opt_gid       => { group => [ '(0)'         ] },
+        opt_gname     => { group => [ '(root)'      ] },
+        opt_bad_gname => { group => [ '(%%SSKK¤¤)'  ] },
+        opt_bad_gid   => { group => [ '(999999999)' ] },
 
-        several_groups => { groups => [ 0, "($gname)" ] },
-        several_groups_required => { groups => [ 0, $gname ] },
-        several_groups_mixture => { groups => [ '(%%SSKK¤¤)', 0 ] },
+        several_groups => { group => [ 0, "($gname)" ] },
+        several_groups_required => { group => [ 0, $gname ] },
+        several_groups_mixture => { group => [ '(%%SSKK¤¤)', 0 ] },
     },
     ignores => [
         '\.bak$',
