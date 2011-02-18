@@ -108,8 +108,8 @@ my $master_num    = CalculateNumericalOffset($masterdata->[0]->[0]);
 my $receive_delay = ($master_num - CalculateNumericalOffset($slavedata->[0]->[0]));
 my $replay_delay  = ($master_num - CalculateNumericalOffset($slavedata->[0]->[1]));
 
-print "receive.val $receive_delay\n";
-print "apply.val $replay_delay\n";
+print "receive.value $receive_delay\n";
+print "apply.value $replay_delay\n";
 
 exit(0);
 
