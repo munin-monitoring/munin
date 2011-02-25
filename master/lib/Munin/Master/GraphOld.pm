@@ -446,6 +446,22 @@ sub get_custom_graph_args {
     }
 }
 
+# insert these arguments after all others
+# needed for your own VDEF/CDEF/DEF combinations
+sub get_custom_graph_args_after {
+    my $service = shift;
+    my $result  = [];
+
+    my $args = munin_get($service, "graph_args_after");
+    if (defined $args) {
+        my $result = [&quotewords('\s+', 0, $args)];
+        return $result;
+    }
+    else {
+        return;
+    }
+}
+
 sub get_vlabel {
     my $service = shift;
     my $scale   = munin_get($service, "graph_period", "second");
@@ -1261,6 +1277,13 @@ sub process_service {
         push(@rrd, "COMMENT: Max$RRDkludge:") unless $global_headers;
         push(@rrd, "GPRINT:apostotal:MAX:$rrdformat" . $rrdscale . "\\j");
     }
+		
+    # insert these graph args in the end
+    if (defined(my $tmp_field = get_custom_graph_args_after($service))) {
+        push(@rrd, @{$tmp_field});
+    }
+
+
 
     my $nb_graphs_drawn = 0;
     for my $time (keys %times) {

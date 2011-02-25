@@ -40,7 +40,7 @@ my %legal = map { $_ => 1 } (
 	"max_graph_jobs", "max_cgi_graph_jobs", "munin_cgi_graph_jobs",
 	"max_html_jobs", "cgitmpdir", "update_rate",
 	"staticdir", "html_strategy", "rrdcached",
-	"rrdcached_socket"
+	"rrdcached_socket", "graph_args_after",
 	);
 
 my %bools = map { $_ => 1} qw(yes no true false on off 1 0);
