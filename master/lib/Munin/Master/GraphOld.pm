@@ -779,7 +779,7 @@ sub fork_and_work {
     if (!$do_fork) {
 
         # We're not forking.  Do work and return.
-        DEBUG "[DEBUG] Doing work synchrnonously";
+        DEBUG "[DEBUG] Doing work synchronously";
         &$work;
         return;
     }
