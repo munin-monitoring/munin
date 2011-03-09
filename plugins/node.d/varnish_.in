@@ -673,13 +673,18 @@ sub usage
 	exit 1;
 }
 
-# Print 'yes' and exit true if it's reasonable to use this plugin.
-# Otherwise exit with false and a human-readable reason.
+# Print 'yes' if it's reasonable to use this plugin, or 'no' with a
+# human-readable error message. Always exit true, even if the response
+# is 'no'.
 sub autoconf
 {
-	(`which $varnishstatexec 2>/dev/null` =~ m{^/})
-		? print "yes\n"
-		: print "no ($varnishstatexec could not be found)\n";
+	# XXX: Solaris outputs errors to stderr and always returns true.
+	# XXX: See #873
+	if (`which $varnishstatexec 2>/dev/null` =~ m{^/}) {
+		print "yes\n";
+	} else {
+		print "no ($varnishstatexec could not be found)\n";
+	}
 	exit 0;
 }
 
