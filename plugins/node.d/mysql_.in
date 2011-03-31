@@ -295,7 +295,8 @@ $graphs{files_tables} = {
 	{name => 'Open_files',       label => 'Open files'},
 	{name => 'Open_tables',      label => 'Open tables'},
 	{name => 'Opened_tables',    label => 'Opened tables',
-				     type  => 'GAUGE'},
+				     type  => 'DERIVE',
+	                             min   => 0},
     ],
 };
 
