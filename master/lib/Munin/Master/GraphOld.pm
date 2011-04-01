@@ -462,6 +462,15 @@ sub get_custom_graph_args_after {
     }
 }
 
+# set a graph end point in the future
+# needed for CDEF TREND and PREDICT
+sub get_end_offset {
+    my $service = shift;
+
+    # get number of seconds in future
+    return munin_get($service, "graph_future", 0);
+}
+
 sub get_vlabel {
     my $service = shift;
     my $scale   = munin_get($service, "graph_period", "second");
@@ -1043,7 +1052,8 @@ sub process_service {
         else {
             $colour = $COLOUR[$field_count % @COLOUR];
         }
-
+        # colour needed for transparent predictions and trends
+        munin_set($field, "colour", $colour);
         $field_count++;
 
         my $tmplabel = munin_get($field, "label", $fname);
@@ -1314,21 +1324,8 @@ sub process_service {
         }
         push @complete, @rrd;
 
-        push(@complete,
-                  "COMMENT:Last update$RRDkludge: "
-                . RRDescape(scalar localtime($lastupdate))
-                . "\\r");
-
-        if (time - 300 < $lastupdate && ! $pinpoint) {
-	    if (@added) { # stop one period earlier if it's a .sum or .stack
-		push @complete, "--end",
-		    (int(($lastupdate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
-	    } else {
-		push @complete, "--end",
-		    (int($lastupdate / $resolutions{$time})) * $resolutions{$time};
-	    }
-        }
-
+        # graph end in future
+        push (@complete, handle_trends($time, $lastupdate, $pinpoint, $service, $RRDkludge, @added));
 
         # Make sure directory exists
         munin_mkdir_p($picdirname, oct(777));
@@ -1408,20 +1405,10 @@ sub process_service {
             my @rrd_sum;
             push @rrd_sum, @{get_header($service, $time, 1)};
 
-            if (time - 300 < $lastupdate && ! $pinpoint) {
-		if (@added) { # stop 5 minutes earlier if it's a .sum or .stack
-		    push @rrd_sum, "--end",
-			(int(($lastupdate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
-		} else {
-		    push @rrd_sum, "--end",
-			(int($lastupdate / $resolutions{$time})) * $resolutions{$time};
-		}
-            }
+            # graph end in future
+            push (@rrd_sum, handle_trends($time, $lastupdate, $pinpoint, $service, $RRDkludge, @added));
+
             push @rrd_sum, @rrd;
-            push(@rrd_sum,
-                      "COMMENT:Last update$RRDkludge: "
-                    . RRDescape(scalar localtime($lastupdate))
-                    . "\\r");
 
             my $labelled = 0;
             my @defined  = ();
@@ -1526,6 +1513,81 @@ sub process_service {
     @added = ();
 }
 
+# sets enddate --end and draws a vertical ruler if enddate is in the future
+# future trends are also added to the graph here
+sub handle_trends {
+    my $time = shift;
+    my $lastupdate = shift;
+    my $pinpoint = shift;
+    my $service = shift;
+    my $RRDkludge = shift;
+    my @added = @_;
+    my @complete;
+    my $colour = "#aaaaff";
+
+    # enddate possibly in future
+    my $futuretime = $resolutions{$time} * get_end_offset($service);
+    my $enddate = $lastupdate + ($futuretime);
+    DEBUG "[DEBUG] lastupdate: $lastupdate, enddate: $enddate\n";
+
+    # future begins at this horizontal ruler
+    if ($enddate > $lastupdate) {
+        push(@complete, "VRULE:$lastupdate#999999");
+    }
+
+    # create trends/predictions
+    foreach my $field (@{munin_find_field($service, "label")}) {
+        my $fieldname = munin_get_node_name($field);
+
+        if (defined $service->{$fieldname}{'colour'}) {
+            $colour = "$service->{$fieldname}{'colour'}66";
+        }                                                                                                                                                    
+                                                                                                                                                             
+        my $cdef = "";
+        if (defined $service->{$fieldname}{'cdef'}) {
+            $cdef = "cdef";
+        }
+
+        #trends
+        if (defined $service->{$fieldname}{'trend'} and $service->{$fieldname}{'trend'} eq 'yes') {
+            push (@complete, "CDEF:t$fieldname=c$cdef$fieldname,$futuretime,TRENDNAN");
+            push (@complete, "LINE1:t$fieldname$colour:$fieldname trend\\l");
+            DEBUG "[DEBUG] set trend for $fieldname\n";
+        }
+
+        #predictions
+        if (defined $service->{$fieldname}{'predict'}) {
+            #arguments: pattern length (e.g. 1 day), smoothing (multiplied with timeresolution)
+            my @predict = split(",", $service->{$fieldname}{'predict'});
+            my $predictiontime = int ($futuretime / $predict[0]) + 2; #2 needed for 1 day
+            my $smooth = $predict[1]*$resolutions{$time};
+            push (@complete, "CDEF:p$fieldname=$predict[0],-$predictiontime,$smooth,c$cdef$fieldname,PREDICT");
+            push (@complete, "LINE1:p$fieldname$colour:$fieldname prediction\\l");
+            DEBUG "[DEBUG] set prediction for $fieldname\n";
+        }
+    }
+
+
+    push(@complete,
+        "COMMENT:Last update$RRDkludge: "
+        . RRDescape(scalar localtime($lastupdate))                                                                                                   
+        . "\\r");
+
+    # If pinpointing, --end should *NOT* be changed
+    if (! $pinpoint) {
+        if (time - 300 < $lastupdate) {
+            if (@added) { # stop one period earlier if it's a .sum or .stack
+                push @complete, "--end",
+                    (int(($enddate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
+            } else {
+                push @complete, "--end",
+                    (int($enddate / $resolutions{$time})) * $resolutions{$time};
+            }
+        }
+    }
+
+    return @complete;
+}
 
 sub get_fonts {
     # Set up rrdtool graph font options according to RRD version.
