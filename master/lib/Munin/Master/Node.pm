@@ -89,7 +89,7 @@ sub _do_connect {
 	    my $remote_cmd = $uri->path;
 
 	    # Add any parameter to the cmd
-	    my $remote_connection_cmd = "/usr/bin/ssh $user_part" . $uri->host . " $remote_cmd $params";
+	    my $remote_connection_cmd = "/usr/bin/ssh -p" . $uri->port . " $user_part" . $uri->host . " $remote_cmd $params";
 
 	    # Open a double pipe
    	    use IPC::Open2;
