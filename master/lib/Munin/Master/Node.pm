@@ -142,7 +142,8 @@ sub _run_starttls_if_required {
 
     # TLS should only be attempted if explicitly enabled. The default
     # value is therefore "disabled" (and not "auto" as before).
-    my $tls_requirement = $config->{tls};
+    my $tls_requirement = exists $self->{configref}->{tls} ?
+                                   $self->{configref}->{tls} : $config->{tls};
     DEBUG "TLS set to \"$tls_requirement\".";
     return if $tls_requirement eq 'disabled';
     my $logger = Log::Log4perl->get_logger("Munin::Master");
