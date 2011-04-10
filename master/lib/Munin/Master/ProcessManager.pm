@@ -168,7 +168,7 @@ sub _collect_results {
 		    . " failed.  This could be due to network problems/firewalled munin-node. Remaining workers: "
 		    . join(", ", keys %{$self->{result_queue}});
 	    } else {
-		WARN "[WARNING] Call to accept timed out.  Remaining workers: " . join(", ", keys %{$self->{result_queue}});
+		INFO "[INFO] Remaining workers: " . join(", ", keys %{$self->{result_queue}});
 	    }
 	    next;
         } # if timed_out
