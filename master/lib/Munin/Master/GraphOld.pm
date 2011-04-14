@@ -115,23 +115,23 @@ my @COLOUR;     # Array of actuall colours to use
 {
     no warnings;
     $PALETTE{'old'} = [    # This is the old munin palette.  It lacks contrast.
-        qw(#22ff22 #0022ff #ff0000 #00aaaa #ff00ff
-            #ffa500 #cc0000 #0000cc #0080C0 #8080C0 #FF0080
-            #800080 #688e23 #408080 #808000 #000000 #00FF00
-            #0080FF #FF8000 #800000 #FB31FB
+        qw(22ff22 0022ff ff0000 00aaaa ff00ff
+            ffa500 cc0000 0000cc 0080C0 8080C0 FF0080
+            800080 688e23 408080 808000 000000 00FF00
+            0080FF FF8000 800000 FB31FB
             )];
 
     $PALETTE{'default'} = [   # New default palette.Better contrast,more colours
             #Greens Blues   Oranges Dk yel  Dk blu  Purple  lime    Reds    Gray
-        qw(#00CC00 #0066B3 #FF8000 #FFCC00 #330099 #990099 #CCFF00 #FF0000 #808080
-            #008F00 #00487D #B35A00 #B38F00         #6B006B #8FB300 #B30000 #BEBEBE
-            #80FF80 #80C9FF #FFC080 #FFE680 #AA80FF #EE00CC #FF8080
-            #666600 #FFBFFF #00FFCC #CC6699 #999900
+        qw(00CC00 0066B3 FF8000 FFCC00 330099 990099 CCFF00 FF0000 808080
+            008F00 00487D B35A00 B38F00         6B006B 8FB300 B30000 BEBEBE
+            80FF80 80C9FF FFC080 FFE680 AA80FF EE00CC FF8080
+            666600 FFBFFF 00FFCC CC6699 999900
             )];      # Line variations: Pure, earthy, dark pastel, misc colours
 }
 
-my $range_colour  = "#22ff22";
-my $single_colour = "#00aa00";
+my $range_colour  = "22ff22";
+my $single_colour = "00aa00";
 
 my %times = (
     "day"   => "-30h",
@@ -1014,7 +1014,7 @@ sub process_service {
                 if !munin_get($field, "negative");
 
             push(@rrd, "AREA:i$rrdname#ffffff");
-            push(@rrd, "STACK:min_max_diff$range_colour");
+            push(@rrd, "STACK:min_max_diff#$range_colour");
             push(@rrd, "LINE1:re_zero#000000")
                 if !munin_get($field, "negative");
         }
@@ -1041,17 +1041,11 @@ sub process_service {
             $global_headers = 2;    # Avoid further headers/labels
         }
 
-        my $colour;
+        my $colour = munin_get($field, "colour");
+	
+	# Select a default colour if no explict one
+	$colour ||= ($single_value) ? $single_colour : $COLOUR[$field_count % @COLOUR];
 
-        if (my $tmpcol = munin_get($field, "colour")) {
-            $colour = "#" . $tmpcol;
-        }
-        elsif ($single_value) {
-            $colour = $single_colour;
-        }
-        else {
-            $colour = $COLOUR[$field_count % @COLOUR];
-        }
         # colour needed for transparent predictions and trends
         munin_set($field, "colour", $colour);
         $field_count++;
@@ -1065,7 +1059,7 @@ sub process_service {
         push(@rrd,
                   $fielddraw
                 . ":g$rrdname"
-                . $colour . ":"
+                . "#$colour" . ":"
                 . escape($tmplabel)
                 . (" " x ($max_field_len + 1 - length $tmplabel)));
 
@@ -1094,17 +1088,17 @@ sub process_service {
                     "CDEF:neg_min_max_diff=i$negfieldname,a$negfieldname,-");
                 push(@rrd, "CDEF:ni$negfieldname=i$negfieldname,-1,*");
                 push(@rrd, "AREA:ni$negfieldname#ffffff");
-                push(@rrd, "STACK:neg_min_max_diff$range_colour");
+                push(@rrd, "STACK:neg_min_max_diff#$range_colour");
             }
 
-            push(@rrd_negatives, $fielddraw . ":ng$negfieldname" . $colour);
+            push(@rrd_negatives, $fielddraw . ":ng$negfieldname#$colour");
 
             # Draw HRULEs
             my $linedef = munin_get($negfield, "line");
             if ($linedef) {
                 my ($number, $ldcolour, $label) = split(/:/, $linedef, 3);
                 unshift(@rrd_negatives,
-                    "HRULE:" . $number . ($ldcolour ? "#$ldcolour" : $colour));
+                    "HRULE:" . $number . ($ldcolour ? "#$ldcolour" : "#$colour"));
             }
             elsif (my $tmpwarn = munin_get($negfield, "warning",2)) {
 
@@ -1115,9 +1109,9 @@ sub process_service {
                         @rrd,
                         "HRULE:" 
                             . $warn_min
-                            . (
+                            . "#" . (
                             $single_value
-                            ? "#ff0000"
+                            ? "ff0000"
                             : $COLOUR[($field_count - 1) % @COLOUR]));
                 }
                 if (defined($warn_max) and $warn_max ne '') {
@@ -1125,9 +1119,9 @@ sub process_service {
                         @rrd,
                         "HRULE:" 
                             . $warn_max
-                            . (
+                            . "#" . (
                             $single_value
-                            ? "#ff0000"
+                            ? "ff0000"
                             : $COLOUR[($field_count - 1) % @COLOUR]));
                 }
             }
@@ -1179,7 +1173,7 @@ sub process_service {
                     . (
                     $ldcolour ? "#$ldcolour"
                     : ((defined $single_value and $single_value) ? "#ff0000"
-                        : $colour))
+                        : "#$colour"))
                     . ((defined $label and length($label)) ? ":$label" : ""),
                 "COMMENT: \\j"
             );
@@ -1193,9 +1187,9 @@ sub process_service {
                     @rrd,
                     "HRULE:" 
                         . $warn_min
-                        . (
+                        . "#" . (
                         $single_value
-                        ? "#ff0000"
+                        ? "ff0000"
                         : $COLOUR[($field_count - 1) % @COLOUR]));
             }
             if (defined($warn_max) and $warn_max ne '') {
@@ -1203,9 +1197,9 @@ sub process_service {
                     @rrd,
                     "HRULE:" 
                         . $warn_max
-                        . (
+                        . "#" . (
                         $single_value
-                        ? "#ff0000"
+                        ? "ff0000"
                         : $COLOUR[($field_count - 1) % @COLOUR]));
             }
         }
@@ -1523,7 +1517,6 @@ sub handle_trends {
     my $RRDkludge = shift;
     my @added = @_;
     my @complete;
-    my $colour = "#aaaaff";
 
     # enddate possibly in future
     my $futuretime = $resolutions{$time} * get_end_offset($service);
@@ -1538,6 +1531,7 @@ sub handle_trends {
     # create trends/predictions
     foreach my $field (@{munin_find_field($service, "label")}) {
         my $fieldname = munin_get_node_name($field);
+	my $colour = $single_colour;
 
         if (defined $service->{$fieldname}{'colour'}) {
             $colour = "$service->{$fieldname}{'colour'}66";
@@ -1551,7 +1545,7 @@ sub handle_trends {
         #trends
         if (defined $service->{$fieldname}{'trend'} and $service->{$fieldname}{'trend'} eq 'yes') {
             push (@complete, "CDEF:t$fieldname=c$cdef$fieldname,$futuretime,TRENDNAN");
-            push (@complete, "LINE1:t$fieldname$colour:$fieldname trend\\l");
+            push (@complete, "LINE1:t$fieldname#$colour:$fieldname trend\\l");
             DEBUG "[DEBUG] set trend for $fieldname\n";
         }
 
@@ -1562,7 +1556,7 @@ sub handle_trends {
             my $predictiontime = int ($futuretime / $predict[0]) + 2; #2 needed for 1 day
             my $smooth = $predict[1]*$resolutions{$time};
             push (@complete, "CDEF:p$fieldname=$predict[0],-$predictiontime,$smooth,c$cdef$fieldname,PREDICT");
-            push (@complete, "LINE1:p$fieldname$colour:$fieldname prediction\\l");
+            push (@complete, "LINE1:p$fieldname#$colour:$fieldname prediction\\l");
             DEBUG "[DEBUG] set prediction for $fieldname\n";
         }
     }
