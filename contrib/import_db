@@ -10,7 +10,7 @@ use DB_File;
 
 my $db_file = shift;
 unless ($db_file) {
-	print STDERR "usage $0 db_file\n"; 
+	print STDERR "usage: $0 db_file [ textfile1 ... textfileN ]\n"; 
 	exit 1;
 };
 
