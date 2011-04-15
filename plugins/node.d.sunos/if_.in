@@ -71,15 +71,17 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel bits per ${graph_period} in (-) / out (+)'
 	echo 'graph_category network'
 	echo 'rbytes.label received'
-	echo 'rbytes.type COUNTER'
+	echo 'rbytes.type DERIVE'
 	echo 'rbytes.graph no'
 	echo 'rbytes.cdef rbytes,8,*'
+	echo 'rbytes.min 0'
 	print_warning rbytes
 	print_critical rbytes
 	echo 'obytes.label bps'
-	echo 'obytes.type COUNTER'
+	echo 'obytes.type DERIVE'
 	echo 'obytes.negative rbytes'
 	echo 'obytes.cdef obytes,8,*'
+	echo 'obytes.min 0'
 	print_warning obytes
 	print_critical obytes
 	exit 0
