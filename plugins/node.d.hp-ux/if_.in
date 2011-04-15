@@ -59,15 +59,15 @@ if [[ $1 = config ]]; then
     echo 'graph_vlabel bits per ${graph_period} in (-) / out (+)'
     echo 'graph_category network'
     echo 'inbound.label received'
-    echo 'inbound.type COUNTER'
-    echo 'inbound.max 2000000000'
+    echo 'inbound.type DERIVE'
     echo 'inbound.graph no'
     echo 'inbound.cdef inbound,8,*'
+    echo 'inbound.min 0'
     echo 'outbound.label bps'
-    echo 'outbound.type COUNTER'
+    echo 'outbound.type DERIVE'
     echo 'outbound.negative inbound'
     echo 'outbound.cdef outbound,8,*'
-    echo 'outbound.max 2000000000'
+    echo 'outbound.min 0'
     exit 0
 fi
 
