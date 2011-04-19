@@ -1333,7 +1333,7 @@ sub munin_mkdir_p {
     my ($dirname, $umask) = @_;
 
     eval {
-        mkpath($dirname, {mode => $umask});
+        mkpath($dirname, 0, $umask);
     };
     return if $EVAL_ERROR;
     return 1;
