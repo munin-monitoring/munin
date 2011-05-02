@@ -250,6 +250,9 @@ sub send_graph_data {
 	die "[FATAL] Could not open image file \"$filename\" for reading: $!\n";
     }
 
+    # No buffering wanted when sending the file
+    local $| = 1;
+
     while (sysread(GRAPH_PNG_FILE,$buffer,40960)) {
 	print $buffer;
     }
