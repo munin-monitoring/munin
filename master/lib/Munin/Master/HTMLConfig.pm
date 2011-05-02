@@ -14,6 +14,7 @@ use Time::HiRes;
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
+use Data::Dumper;
 
 use Log::Log4perl qw( :easy );
 
@@ -35,8 +36,53 @@ sub generate_config {
 	$limits = munin_readconfig($config->{dbdir} . "/limits",1,1); #TODO: candidate for caching
 
 	initiate_cgiurl_graph();
+	# convert config for html generation: reorder nodes to their rightful group
+	node_reorder($config);
+	return get_group_tree($config);
+}
 
-	return get_group_tree($config);	
+sub node_reorder {
+	my $totalconfig = shift;
+	my $group = shift || $config;
+	my $children = munin_get_sorted_children($group);
+	# traverse group
+	foreach my $child (@$children) {
+		# if this is a node
+		if(defined $child->{'address'}){
+			# if renaming is active
+			if(defined $child->{"html_rename"}){
+				(my $groups, my $name) = munin_get_host_path_from_string($child->{"html_rename"});
+				
+				# add the node at its new place
+				my $currentgroup = $totalconfig;
+				foreach my $local_group (@$groups){
+					if(!defined $currentgroup->{$local_group}){
+						$currentgroup->{$local_group} = {'#%#name' => $local_group, '#%#parent' => $currentgroup};
+					}
+					$currentgroup = $currentgroup->{$local_group};
+				}
+
+				if(defined $currentgroup->{$name}){
+					ERROR $child->{"html_rename"} . " already exists. Renaming not possible.";
+				} else {
+					# remove node from structure
+					undef $group->{$child->{"#%#name"}};
+					
+					# change name into new name
+					$child->{"#%#origname"} = $child->{"#%#name"};
+					$child->{"#%#name"} = $name;
+					
+					# add to new group
+					$child->{"#%#origparent"} = $group;
+					$currentgroup->{$name} = $child;
+					$child->{"#%#parent"} = $currentgroup;
+				}
+			}
+		} else {
+			# reorder group
+			node_reorder($totalconfig, $child);
+		}
+	}
 }
 
 sub initiate_cgiurl_graph {
@@ -357,7 +403,7 @@ sub generate_service_templates {
     my $fieldnum = 0;
     my @graph_info;
     my @field_info;
-    my @loc       = @{munin_get_node_loc($service)};
+    my @loc       = @{munin_get_picture_loc($service)};
     my $pathnodes = get_path_nodes($service);
     my $peers     = get_peer_nodes($service,
     lc munin_get($service, "graph_category", "other"));
@@ -404,19 +450,7 @@ sub generate_service_templates {
     }
     else {
 
-        # graph strategy cron
-
-        # Image locations for regular pages
-        $srv{'imgday'}   = "$bp/$srv{node}-day.png";
-        $srv{'imgweek'}  = "$bp/$srv{node}-week.png";
-        $srv{'imgmonth'} = "$bp/$srv{node}-month.png";
-        $srv{'imgyear'}  = "$bp/$srv{node}-year.png";
-
-        # Image locations for comparison pages
-        $srv{'cimgday'}   = "$bp/$parent/$srv{node}-day.png";
-        $srv{'cimgweek'}  = "$bp/$parent/$srv{node}-week.png";
-        $srv{'cimgmonth'} = "$bp/$parent/$srv{node}-month.png";
-        $srv{'cimgyear'}  = "$bp/$parent/$srv{node}-year.png";
+        # graph strategy cron is disabled
     }
 
     # Compute the ZOOM urls

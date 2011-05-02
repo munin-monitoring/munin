@@ -53,6 +53,7 @@ our (@ISA, @EXPORT);
 	   'munin_node_status',
 	   'munin_category_status',
 	   'munin_get_picture_filename',
+	   'munin_get_picture_loc',
 	   'munin_get_html_filename',
 	   'munin_get_filename',
 	   'munin_get_keypath',
@@ -61,6 +62,7 @@ our (@ISA, @EXPORT);
 	   'munin_get_field_order',
 	   'munin_get_rrd_filename',
 	   'munin_get_node_name',
+	   'munin_get_orig_node_name',
 	   'munin_get_parent_name',
 	   'munin_get_node_fqn',
 	   'munin_find_node_by_fqn',
@@ -78,6 +80,7 @@ our (@ISA, @EXPORT);
 	   'munin_get_children',
 	   'munin_get_node_partialpath',
 	   'munin_has_subservices',
+	   'munin_get_host_path_from_string',
 	   'print_version_and_exit',
 	   'exit_if_run_by_super_user',
 	   'look_for_child',
@@ -591,13 +594,22 @@ sub munin_get_parent_name
     }
 }
 
+sub munin_get_orig_node_name {
+    my $hash = shift;
+
+    if (ref ($hash) eq "HASH" and defined $hash->{'#%#name'}) {
+		return (defined $hash->{'#%#origname'}) ? $hash->{'#%#origname'} : $hash->{'#%#name'};
+    } else { 
+	return;
+    }
+}
 
 sub munin_get_node_name
 {
     my $hash = shift;
 
     if (ref ($hash) eq "HASH" and defined $hash->{'#%#name'}) {
-	return $hash->{'#%#name'};
+		return $hash->{'#%#name'};
     } else { 
 	return;
     }
@@ -653,9 +665,12 @@ sub munin_get_picture_loc {
     }
     if (defined $hash->{'#%#origin'}) {
 	$res = munin_get_picture_loc ($hash->{'#%#origin'});
+    } elsif (defined $hash->{'#%#origparent'}){
+        $res = munin_get_picture_loc ($hash->{'#%#origparent'});
+        push @$res, munin_get_orig_node_name ($hash) if defined $res;
     } elsif (defined $hash->{'#%#parent'}) {
-	$res = munin_get_picture_loc ($hash->{'#%#parent'});
-	push @$res, munin_get_node_name ($hash) if defined $res;
+	    $res = munin_get_picture_loc ($hash->{'#%#parent'});
+	    push @$res, munin_get_orig_node_name ($hash) if defined $res;
     }
     return $res;
 }
@@ -1605,6 +1620,22 @@ sub munin_has_subservices {
     }
     return $hash->{'#%#has_subservices'};
 }
+
+sub munin_get_host_path_from_string {
+	# splits a host definition, as used in the config, into a group array and a host name
+	my $key = shift;
+	my (@groups) = split(';', $key);
+	my $host = pop(@groups);
+	if(scalar @groups > 0){
+	} else {
+		my @groups = split('.', $key);
+		if(scalar @groups > 1){
+			@groups = ($groups[0]);
+		}
+	}
+	return (\@groups, $host);
+}
+
 1;
 
 __END__
