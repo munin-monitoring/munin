@@ -129,7 +129,7 @@ while (new CGI::Fast) {
 	next;
     }
 
-    my $filename = get_picture_filename ($config, $dom, $host, $serv, $scale);
+    my $filename = get_picture_filename ($config, $dom, $host, $serv, $scale, $ENV{QUERY_STRING});
 
     my $time = time;
 
@@ -267,10 +267,12 @@ sub get_picture_filename {
     my $name    = shift;
     my $service = shift;
     my $scale   = shift;
+    my $params  = shift;
 
     my $cgi_tmp_dir = $config->{cgitmpdir} || "/tmp/munin-cgi-tmp";
 
-    return "$cgi_tmp_dir/$domain/$name/$service-$scale.png";
+    my $params = "?" . $params if $params;
+    return "$cgi_tmp_dir/$domain/$name/$service-$scale.png" . $params;
 }
 
 
