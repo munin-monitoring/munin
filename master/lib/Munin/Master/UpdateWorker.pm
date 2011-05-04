@@ -252,7 +252,7 @@ sub is_fresh_enough {
 	my $now = [ gettimeofday ];
 
 	my $age = tv_interval(\@last, $now); 	
-	DEBUG "last: " . Dumper(\@last) . ", now: " . Dumper($now) . ", age: $age";
+	DEBUG "last: [" . join(",", @last) . "], now: [" . join(", ", @$now) . "], age: $age";
 	my $is_fresh_enough = ($age < $update_rate_in_seconds) ? 1 : 0;
 	DEBUG "is_fresh_enough  $is_fresh_enough";
 
@@ -581,12 +581,10 @@ sub _update_rrd_files {
 	    # - per plugin
 	    # - globally
             my $configref = $self->{node}{configref};
-	    $ds_config->{graph_data_size} ||= $configref->{"$service.$ds_name.graph_data_size"};
-	    $ds_config->{graph_data_size} ||= $configref->{"$service.graph_data_size"};
+	    $ds_config->{graph_data_size} ||= get_config_for_service($nested_service_config->{global}{$service}, "graph_data_size");
 	    $ds_config->{graph_data_size} ||= $config->{graph_data_size};
             
-	    $ds_config->{update_rate} ||= $configref->{"$service.$ds_name.update_rate"};
-	    $ds_config->{update_rate} ||= $configref->{"$service.update_rate"};
+	    $ds_config->{update_rate} ||= get_config_for_service($nested_service_config->{global}{$service}, "update_rate");
 	    $ds_config->{update_rate} ||= $config->{update_rate};
 	    $ds_config->{update_rate} ||= 300; # default is 5 min
 
@@ -605,6 +603,18 @@ sub _update_rrd_files {
     return $last_timestamp;
 }
 
+sub get_config_for_service {
+	my ($array, $key) = @_;
+	
+	for my $elem (@$array) {
+		next unless $elem->[0] && $elem->[0] eq $key;
+		return $elem->[1];
+	}
+
+	# Not found
+	return undef;
+}
+
 
 sub _set_rrd_data_source_defaults {
     my ($self, $data_source) = @_;
@@ -614,8 +624,6 @@ sub _set_rrd_data_source_defaults {
     $data_source->{type} = 'GAUGE' unless defined($data_source->{type});
     $data_source->{min}  = 'U'     unless defined($data_source->{min});
     $data_source->{max}  = 'U'     unless defined($data_source->{max});
-    $data_source->{update_rate} = 300 unless defined($data_source->{update_rate});
-    $data_source->{graph_data_size} = "normal" unless defined($data_source->{graph_data_size});
 }
 
 
@@ -666,17 +674,15 @@ sub _create_rrd_file {
     my ($self, $rrd_file, $service, $ds_name, $ds_config) = @_;
 
     INFO "[INFO] creating rrd-file for $service->$ds_name: '$rrd_file'";
+
     munin_mkdir_p(dirname($rrd_file), oct(777));
-    my @args = (
-        $rrd_file,
-        "--start", "-10y", # Always start RRD 10 years ago (should be enough), to be able to spoolfetch in it
-        sprintf('DS:42:%s:600:%s:%s', 
-                $ds_config->{type}, $ds_config->{min}, $ds_config->{max}),
-    );
+
+    my @args;
 
     my $resolution = $ds_config->{graph_data_size};
     my $update_rate = $ds_config->{update_rate};
     if ($resolution eq 'normal') {
+	$update_rate = 300; # 'normal' means hard coded RRD $update_rate
         push (@args,
               "RRA:AVERAGE:0.5:1:576",   # resolution 5 minutes
               "RRA:MIN:0.5:1:576",
@@ -692,6 +698,7 @@ sub _create_rrd_file {
               "RRA:MAX:0.5:288:450");
     } 
     elsif ($resolution eq 'huge') {
+	$update_rate = 300; # 'huge' means hard coded RRD $update_rate
         push (@args, 
               "RRA:AVERAGE:0.5:1:115200",  # resolution 5 minutes, for 400 days
               "RRA:MIN:0.5:1:115200",
@@ -712,6 +719,17 @@ sub _create_rrd_file {
             ); 
         }
     }
+
+    # Add the RRD::create prefix (filename & RRD params) 
+    my $heartbeat = $update_rate * 2;
+    unshift (@args,
+        $rrd_file,
+        "--start", "-10y", # Always start RRD 10 years ago (should be enough), to be able to spoolfetch in it
+	"-s", $update_rate,
+        sprintf('DS:42:%s:%s:%s:%s', 
+                $ds_config->{type}, $heartbeat, $ds_config->{min}, $ds_config->{max}),
+    );
+
     DEBUG "[DEBUG] RRDs::create @args";
     RRDs::create @args;
     if (my $ERROR = RRDs::error) {
