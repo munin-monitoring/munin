@@ -286,7 +286,7 @@ my %ASPECTS = (
 				'type' => 'GAUGE',
 				'label' => 'Number of object heads',
 				'info' => 'Each object head can have one '
-					. 'or more ojbect attached, '
+					. 'or more object attached, '
 					. 'typically based on the Vary: header'
 			}
 		}
