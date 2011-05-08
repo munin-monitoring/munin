@@ -550,14 +550,19 @@ sub get_stack_command {
 
 sub expand_specials {
     my $service = shift;
-    my $preproc = shift;
     my $order   = shift;
-    my $single  = shift;
+
+    my $preproc = [];
+    my $single  ;
 
     # Test if already expanded
     {
-        my $cached_result  = $service->{"#%#expand_special_result"};
-        return $cached_result if (defined $cached_result);
+        my $cached = $service->{"#%#expand_specials"};
+	if (defined $cached) { 
+		DEBUG "[DEBUG] expand_specials(): already processed " . munin_dumpconfig_as_str($cached);
+        	return $cached;
+	}
+	DEBUG "[DEBUG] expand_specials(): not processed, proceeding for " . munin_dumpconfig_as_str($service);
     }
 
     # we have to compute the result;
@@ -711,9 +716,13 @@ sub expand_specials {
         }
     } # for (@$order)
 
-    # Save it for future
-    $service->{"#%#expand_special_result"} = $result;
-    return $result;
+    # Return & save it for future use
+    $service->{"#%#expand_specials"} = {
+	"added" => $result,
+	"preprocess" => $preproc,
+	"single" => $single,
+    };
+    return $service->{"#%#expand_specials"};
 }
 
 
@@ -844,7 +853,6 @@ sub process_service {
     my $now          = time;
     my $fnum         = 0;
     my @rrd;
-    my @added = ();
 
     DEBUG "[DEBUG] Node name: $sname\n";
 
@@ -852,24 +860,22 @@ sub process_service {
     my $max_field_len = 0;
     my @field_order   = ();
     my $rrdname;
-    my $force_single_value;
 
     @field_order = @{munin_get_field_order($service)};
 
     # Array to keep 'preprocess'ed fields.
-    my @rrd_preprocess = ();
     DEBUG "[DEBUG] Expanding specials for $sname: \""
         . join("\",\"", @field_order) . "\".";
 
-    @added = @{
-        &expand_specials($service, \@rrd_preprocess, \@field_order,
-            \$force_single_value)};
+    my $expanded_result = expand_specials($service, \@field_order);
+    my $force_single_value = $expanded_result->{single};
+    my @added =  @{ $expanded_result->{added} };
 
-    @field_order = (@rrd_preprocess, @field_order);
-    DEBUG "[DEBUG] Checking field lengths for $sname: \""
-        . join("\",\"", @rrd_preprocess) . "\".";
+    # put preprocessed fields in front
+    unshift @field_order, @{ $expanded_result->{preprocess} };
 
     # Get max label length
+    DEBUG "[DEBUG] Checking field lengths for $sname: \"" . join('","', @field_order) . '".';
     $max_field_len = munin_get_max_label_length($service, \@field_order);
 
     # Global headers makes the value tables easier to read no matter how
