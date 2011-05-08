@@ -366,7 +366,7 @@ sub munin_readconfig {
     $config->{'tmpldir'}       ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/";
     $config->{'staticdir'}       ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/static/";
     $config->{'htmldir'}       ||= $Munin::Common::Defaults::MUNIN_HTMLDIR;
-    $config->{'spooldir'}      ||= $Munin::Common::Defaults::MUNIN_SSPOOLDIR;
+    $config->{'spooldir'}      ||= $Munin::Common::Defaults::MUNIN_SPOOLDIR;
     $config->{'#%#parent'}     = undef;
     $config->{'#%#name'}       = "root";
 
