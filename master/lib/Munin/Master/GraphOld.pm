@@ -1519,7 +1519,7 @@ sub handle_trends {
     my @complete;
 
     # enddate possibly in future
-    my $futuretime = $resolutions{$time} * get_end_offset($service);
+    my $futuretime = $pinpoint ? 0 : $resolutions{$time} * get_end_offset($service);
     my $enddate = $lastupdate + ($futuretime);
     DEBUG "[DEBUG] lastupdate: $lastupdate, enddate: $enddate\n";
 
