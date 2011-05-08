@@ -271,7 +271,7 @@ sub get_picture_filename {
 
     my $cgi_tmp_dir = $config->{cgitmpdir} || "/tmp/munin-cgi-tmp";
 
-    my $params = "?" . $params if $params;
+    $params = "?" . $params if $params;
     return "$cgi_tmp_dir/$domain/$name/$service-$scale.png" . $params;
 }
 
