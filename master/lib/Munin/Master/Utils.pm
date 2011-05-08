@@ -42,6 +42,7 @@ our (@ISA, @EXPORT);
 	   'munin_delete',
 	   'munin_overwrite',
 	   'munin_dumpconfig',
+	   'munin_dumpconfig_as_str',
 	   'munin_config',
 	   'munin_refreshconfig',
 	   'munin_draw_field',
@@ -945,6 +946,15 @@ sub munin_writeconfig {
         DEBUG "[DEBUG] Closing filehandle \"$datafilename\"...\n";
         close ($fh);
     }
+}
+
+sub munin_dumpconfig_as_str {
+    my ($config) = @_;
+
+    local $Data::Dumper::Sortkeys = sub { [ sort grep {!/^#%#parent$/} keys %{$_[0]} ]; };
+    local $Data::Dumper::Indent = 1;
+
+    return Dumper $config;
 }
 
 
