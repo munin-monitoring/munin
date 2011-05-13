@@ -682,15 +682,18 @@ sub munin_get_node_loc {
     my $res = [];
 
     if (ref ($hash) ne "HASH") { # Not a has node
-    	return;
+        return;
     }
     if (defined $hash->{'#%#parent'}) {
-	$res = munin_get_node_loc ($hash->{'#%#parent'});
-	push @$res, munin_get_node_name ($hash) if defined $res;
+        if(defined $hash->{'#%#origparent'}){
+            $res = munin_get_node_loc ($hash->{'#%#origparent'});
+        } else {
+            $res = munin_get_node_loc ($hash->{'#%#parent'});
+        }
+        push @$res, munin_get_orig_node_name ($hash) if defined $res;
     }
     return $res;
 }
-
 
 sub munin_get_parent {
     my $hash = shift;
