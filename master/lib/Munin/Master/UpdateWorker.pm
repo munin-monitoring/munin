@@ -422,7 +422,6 @@ sub _compare_and_act_on_config_changes {
 	for my $data_source (keys %{$service_config}) {
 	    my $old_data_source = $data_source;
 	    my $ds_config = $service_config->{$data_source};
-	    $self->_set_rrd_data_source_defaults($ds_config);
 
 	    my $group = $self->{host}{group}{group_name};
 	    my $host = $self->{host}{host_name};
@@ -468,25 +467,24 @@ sub _compare_and_act_on_config_changes {
 sub _ds_config_eq {
     my ($self, $old_ds_config, $ds_config) = @_;
 
+    $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
     for my $key (%$old_ds_config) {
-        if ((not defined($old_ds_config->{$key}))
-            and not defined($ds_config->{$key})) {
-            # Both keys undefined, look further:
-            next;
-        }
+	my $old_value = $old_ds_config->{$key};
+	my $value = $ds_config->{$key};
 
-        if ((not defined($old_ds_config->{$key}))
-            or not defined($ds_config->{$key})) {
-            # One key undefined, but not both:
-            return '';
-        }
+        # if both keys undefined, look no further
+        next unless (defined($old_value) || defined($value));
 
-        if ($old_ds_config->{$key} ne $ds_config->{$key}) {
-            # Config content differs:
-            return '';
-        }
+	# so, at least one of the 2 is defined
+
+	# False if the $old_value is not defined
+	return 0 unless (defined($old_value));
+
+	# if something isn't the same, return false
+        return 0 if (! defined $value || $old_value ne $value);
     }
 
+    # Nothing different found, it has to be equal.
     return 1;
 }
 
@@ -538,6 +536,7 @@ sub _ensure_tuning {
                       max => '--maximum',
                       min => '--minimum');
 
+    $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
     for my $rrd_prop (qw(type max min)) {
         INFO "[INFO]: Config update, ensuring $rrd_prop of"
 	    . " '$rrd_file' is '$ds_config->{$rrd_prop}'.\n";
@@ -568,7 +567,6 @@ sub _update_rrd_files {
 	my $service_data   = $nested_service_data->{$service};
 
 	for my $ds_name (keys %{$service_config}) {
-	    $self->_set_rrd_data_source_defaults($service_config->{$ds_name});
 	    my $ds_config = $service_config->{$ds_name};
 
 	    unless (defined($ds_config->{label})) {
@@ -616,16 +614,24 @@ sub get_config_for_service {
 }
 
 
-sub _set_rrd_data_source_defaults {
+sub _get_rrd_data_source_with_defaults {
     my ($self, $data_source) = @_;
 
-    # Test for definedness, anything defined should not be overridden
-    # by defaults:
-    $data_source->{type} = 'GAUGE' unless defined($data_source->{type});
-    $data_source->{min}  = 'U'     unless defined($data_source->{min});
-    $data_source->{max}  = 'U'     unless defined($data_source->{max});
-    $data_source->{update_rate}  = '300'     unless defined($data_source->{update_rate});
-    $data_source->{graph_data_size}  = 'normal'     unless defined($data_source->{graph_data_size});
+    # Copy it into a new hash, we don't want to alter the $data_source
+    # and anything already defined should not be overridden by defaults
+    my $ds_with_defaults = {
+	    type => 'GAUGE',
+	    min => 'U',
+	    max => 'U',
+
+	    update_rate => 300,
+	    graph_data_size => 'normal',
+    };
+    for my $key (keys %$data_source) {
+	    $ds_with_defaults->{$key} = $data_source->{$key};
+    }
+
+    return $ds_with_defaults;
 }
 
 
@@ -644,6 +650,7 @@ sub _create_rrd_file_if_needed {
 sub _get_rrd_file_name {
     my ($self, $service, $ds_name, $ds_config) = @_;
     
+    $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
     my $type_id = lc(substr(($ds_config->{type}), 0, 1));
 
     my $path = $self->{host}->get_full_path;
@@ -681,6 +688,7 @@ sub _create_rrd_file {
 
     my @args;
 
+    $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
     my $resolution = $ds_config->{graph_data_size};
     my $update_rate = $ds_config->{update_rate};
     if ($resolution eq 'normal') {
