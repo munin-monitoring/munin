@@ -66,7 +66,7 @@ logger_debug() if $config->{debug} or defined($ENV{CGI_DEBUG});
 
 # BEGIN FAST-CGI LOOP:
 my $nb_request = 0;
-my $nb_request_max = 10;
+my $nb_request_max = 0;
 while (new CGI::Fast) {
     my $pinpoint = undef;
     my $path = $ENV{PATH_INFO} || "";
@@ -204,7 +204,7 @@ while (new CGI::Fast) {
     send_graph_data($filename);
 } continue {
 	$nb_request++;
-	if ($nb_request > $nb_request_max) {
+	if ($nb_request_max && $nb_request > $nb_request_max) {
 		# Cycle
 		last;
 	}
