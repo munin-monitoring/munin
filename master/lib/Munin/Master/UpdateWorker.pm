@@ -831,7 +831,7 @@ sub _update_rrd_file {
     # Some kind of mismatch between fetch and config can cause this.
     return if !defined($values);  
 
-    my $last_updated_timestamp = 0;
+    my $last_updated_timestamp = RRDs::last($rrd_file);
     my @update_rrd_data;
 	if ($config->{"rrdcached"} eq "on") {
 		if($RRDs::VERSION >= 1.3){
@@ -845,6 +845,10 @@ sub _update_rrd_file {
     for (my $i = 0; $i < scalar @$values; $i++) { 
         my $value = $values->[$i];
         my $when = $ds_values->{when}[$i];
+
+	# Ignore values that are too old for the RRD.
+	# Otherwise it will reject the whole update
+	next if ($when <= $last_updated_timestamp);
 
         if ($value =~ /\d[Ee]([+-]?\d+)$/) {
             # Looks like scientific format.  RRDtool does not
@@ -862,7 +866,7 @@ sub _update_rrd_file {
         # Schedule for addition
         push @update_rrd_data, "$when:$value";
 
-	$last_updated_timestamp = max($last_updated_timestamp, $when);
+	$last_updated_timestamp = $when;
     }
 
     DEBUG "[DEBUG] Updating $rrd_file with @update_rrd_data";
