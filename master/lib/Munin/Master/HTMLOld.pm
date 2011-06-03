@@ -245,7 +245,10 @@ sub emit_comparison_template {
 	# Rewrite peer urls to point to comparison-$t
 	my $comparepeers = [];
 	for my $peer (@{$key->{'peers'}}){
-		(my $comparelink = $peer->{"link"}) =~ s/index.html$/comparison-$t.html/;
+		my $comparelink = $peer->{"link"};
+		next unless $comparelink; # avoid dead links
+
+		$comparelink =~ s/index.html$/comparison-$t.html/;
 		push((@$comparepeers), {"name" => $peer->{"name"}, "link" => $comparelink});
 	}
 
