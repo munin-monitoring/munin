@@ -1539,6 +1539,13 @@ sub handle_trends {
         my $fieldname = munin_get_node_name($field);
 	my $colour = $single_colour;
 
+	# Skip virtual fieldnames, otherwise beware of $hash->{foo}{bar}. 
+	#
+	# On a sidenote, what's the output of the following code ?
+	# perl -e '$a = {}; if ($a->{foo}{bar}) { print "Found Foo/Bar\n"; } \
+	#        if ($a->{foo}) { print "Found Foo\n"; }'
+	next if ! defined $service->{$fieldname};
+
         if (defined $service->{$fieldname}{'colour'}) {
             $colour = "$service->{$fieldname}{'colour'}66";
         }                                                                                                                                                    
