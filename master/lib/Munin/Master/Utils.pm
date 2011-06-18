@@ -1519,7 +1519,6 @@ sub munin_get_rrd_filename {
     my $path    = shift;
 
     my $result  = undef;
-    my $name    = munin_get_node_name ($field);
 
     # Bail out on bad input data
     return if !defined $field or ref ($field) ne "HASH";
