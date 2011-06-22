@@ -1,0 +1,224 @@
+#! /bin/bash
+# Plugin to test complex multigraph thingies
+
+
+test "$1" = "config" && cat <<EOF
+multigraph multigraph_complex
+graph_title Testing multigraph
+graph_args --base 1000
+graph_vlabel widgets per second
+graph_category testing
+graph_order fake1_out=multigraph_complex-fake1-out.fake1_out fake1_in=multigraph_complex-fake1-in.fake1_in fake2_out=multigraph_complex-fake2-out.fake2_out fake2_in=multigraph_complex-fake2-in.fake2_in fake3_out=multigraph_complex-fake3-out.fake3_out fake3_in=multigraph_complex-fake3-in.fake3_in
+
+fake2_out.label fake2
+fake2_out.type GAUGE
+fake2_out.draw LINE2
+fake2_out.min 0
+fake2_out.info bits out by fake2
+fake2_out.update no
+fake2_out.cdef fake2_out,8,*
+fake2_in.label fake2
+fake2_in.type GAUGE
+fake2_in.draw LINE2
+fake2_in.min 0
+fake2_in.info bits in by fake2
+fake2_in.update no
+fake2_in.cdef fake2_in,8,*
+fake3_out.label fake3
+fake3_out.type GAUGE
+fake3_out.draw LINE2
+fake3_out.min 0
+fake3_out.info bits out by fake3
+fake3_out.update no
+fake3_out.cdef fake3_out,8,*
+fake3_in.label fake3
+fake3_in.type GAUGE
+fake3_in.draw LINE2
+fake3_in.min 0
+fake3_in.info bits in by fake3
+fake3_in.update no
+fake3_in.cdef fake3_in,8,*
+fake1_out.label fake1
+fake1_out.type GAUGE
+fake1_out.draw LINE2
+fake1_out.min 0
+fake1_out.info bits out by fake1
+fake1_out.update no
+fake1_out.cdef fake1_out,8,*
+fake1_in.label fake1
+fake1_in.type GAUGE
+fake1_in.draw LINE2
+fake1_in.min 0
+fake1_in.info bits in by fake1
+fake1_in.update no
+fake1_in.cdef fake1_in,8,*
+
+multigraph multigraph_complex.multigraph_complex-fake2
+graph_title fake2 bits per second
+graph_args --base 1000
+graph_vlabel bits per second
+graph_category network
+graph_order fake2_out=multigraph_complex-fake2-out.fake2_out fake2_in=multigraph_complex-fake2-in.fake2_in
+
+fake2_out.label fake2
+fake2_out.type GAUGE
+fake2_out.draw LINE2
+fake2_out.min 0
+fake2_out.update no
+fake2_out.cdef fake2_out,8,*
+fake2_in.label fake2
+fake2_in.type GAUGE
+fake2_in.draw LINE2
+fake2_in.min 0
+fake2_in.update no
+fake2_in.cdef fake2_in,8,*
+
+multigraph multigraph_complex.multigraph_complex-fake3
+graph_title fake3 bits per second
+graph_args --base 1000
+graph_vlabel bits per second
+graph_category network
+graph_order fake3_out=multigraph_complex-fake3-out.fake3_out fake3_in=multigraph_complex-fake3-in.fake3_in
+
+fake3_out.label fake3
+fake3_out.type GAUGE
+fake3_out.draw LINE2
+fake3_out.min 0
+fake3_out.update no
+fake3_out.cdef fake3_out,8,*
+fake3_in.label fake3
+fake3_in.type GAUGE
+fake3_in.draw LINE2
+fake3_in.min 0
+fake3_in.update no
+fake3_in.cdef fake3_in,8,*
+
+multigraph multigraph_complex.multigraph_complex-fake1
+graph_title fake1 bits per second
+graph_args --base 1000
+graph_vlabel bits per second
+graph_category network
+graph_order fake1_out=multigraph_complex-fake1-out.fake1_out fake1_in=multigraph_complex-fake1-in.fake1_in
+
+fake1_out.label fake1
+fake1_out.type GAUGE
+fake1_out.draw LINE2
+fake1_out.min 0
+fake1_out.update no
+fake1_out.cdef fake1_out,8,*
+fake1_in.label fake1
+fake1_in.type GAUGE
+fake1_in.draw LINE2
+fake1_in.min 0
+fake1_in.update no
+fake1_in.cdef fake1_in,8,*
+
+multigraph multigraph_complex.multigraph_complex-fake2.multigraph_complex-fake2-out
+graph_title fake2 bits out per second
+graph_args --base 1000
+graph_vlabel bits per second
+graph_category network
+fake2_out.label fake2
+fake2_out.type GAUGE
+fake2_out.min 0
+fake2_out.draw AREA
+fake2_out.cdef fake2_out,8,*
+
+multigraph multigraph_complex.multigraph_complex-fake2.multigraph_complex-fake2-in
+graph_title fake2 bits in per second
+graph_args --base 1000
+graph_vlabel bits per second
+graph_category network
+fake2_in.label fake2
+fake2_in.type GAUGE
+fake2_in.min 0
+fake2_in.draw AREA
+fake2_in.cdef fake2_in,8,*
+
+multigraph multigraph_complex.multigraph_complex-fake3.multigraph_complex-fake3-out
+graph_title fake3 bits out per second
+graph_args --base 1000
+graph_vlabel bits per second
+graph_category network
+fake3_out.label fake3
+fake3_out.type GAUGE
+fake3_out.min 0
+fake3_out.draw AREA
+fake3_out.cdef fake3_out,8,*
+
+multigraph multigraph_complex.multigraph_complex-fake3.multigraph_complex-fake3-in
+graph_title fake3 bits in per second
+graph_args --base 1000
+graph_vlabel bits per second
+graph_category network
+fake3_in.label fake3
+fake3_in.type GAUGE
+fake3_in.min 0
+fake3_in.draw AREA
+fake3_in.cdef fake3_in,8,*
+
+multigraph multigraph_complex.multigraph_complex-fake1.multigraph_complex-fake1-out
+graph_title fake1 bits out per second
+graph_args --base 1000
+graph_vlabel bits per second
+graph_category network
+fake1_out.label fake1
+fake1_out.type GAUGE
+fake1_out.min 0
+fake1_out.draw AREA
+fake1_out.cdef fake1_out,8,*
+
+multigraph multigraph_complex.multigraph_complex-fake1.multigraph_complex-fake1-in
+graph_title fake1 bits in per second
+graph_args --base 1000
+graph_vlabel bits per second
+graph_category network
+fake1_in.label fake1
+fake1_in.type GAUGE
+fake1_in.min 0
+fake1_in.draw AREA
+fake1_in.cdef fake1_in,8,*
+EOF
+
+test "$1" = "" && cat <<EOF
+multigraph multigraph_complex
+fake2_out.value 728
+fake2_in.value 1188
+fake3_out.value 549
+fake3_in.value 414
+fake1_out.value 1659
+fake1_in.value 5076
+
+multigraph multigraph_complex.multigraph_complex-fake2
+fake2_out.value 728
+fake2_in.value 1188
+
+multigraph multigraph_complex.multigraph_complex-fake3
+fake3_out.value 549
+fake3_in.value 414
+
+multigraph multigraph_complex.multigraph_complex-fake1
+fake1_out.value 1659
+fake1_in.value 5076
+
+multigraph multigraph_complex.multigraph_complex-fake2.multigraph_complex-fake2-out
+fake2_out.value 728
+
+multigraph multigraph_complex.multigraph_complex-fake2.multigraph_complex-fake2-in
+fake2_in.value 1188
+
+multigraph multigraph_complex.multigraph_complex-fake3.multigraph_complex-fake3-out
+fake3_out.value 549
+
+multigraph multigraph_complex.multigraph_complex-fake3.multigraph_complex-fake3-in
+fake3_in.value 414
+
+multigraph multigraph_complex.multigraph_complex-fake1.multigraph_complex-fake1-out
+fake1_out.value 1659
+
+multigraph multigraph_complex.multigraph_complex-fake1.multigraph_complex-fake1-in
+fake1_in.value 5076
+EOF
+
+exit 0
+
