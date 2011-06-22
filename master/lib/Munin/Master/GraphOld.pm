@@ -159,6 +159,9 @@ my $only_fqn = '';
 
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
 
+# RRD param for --daemon
+my @rrdcached_params;
+
 my $running     = 0;
 my $max_running = 6;
 my $do_fork     = 1;
@@ -295,6 +298,16 @@ sub graph_startup {
     my $palette = &munin_get($config, "palette", "default");
 
     $max_running = &munin_get($config, "max_graph_jobs", $max_running);
+
+    if ($config->{"rrdcached_socket"}) { 
+	    if ($RRDs::VERSION >= 1.3){
+		    push @rrdcached_params, "--daemon";
+		    push @rrdcached_params, $config->{"rrdcached_socket"}; 
+	    } else { 
+		    ERROR "[ERROR] RRDCached feature ignored: RRD version must be at least 1.3. Version found: " . $RRDs::VERSION; 
+	    }
+    }
+
 
     if ($max_running == 0) {
         $do_fork = 0;
@@ -957,7 +970,7 @@ sub process_service {
         # Getting name of rrd file
         $filename = munin_get_rrd_filename($field, $path);
 
-        my $update = RRDs::last($filename);
+        my $update = RRDs::last(@rrdcached_params, $filename);
         $update = 0 if !defined $update;
         if ($update > $lastupdate) {
             $lastupdate = $update;
@@ -1367,7 +1380,7 @@ sub process_service {
 
 	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n";
 	$nb_graphs_drawn ++;
-        RRDs::graph(@complete);
+        RRDs::graph(@rrdcached_params, @complete);
         if (my $ERROR = RRDs::error) {
             ERROR "[RRD ERROR] Unable to graph $picfilename : $ERROR";
             # ALWAYS dumps the cmd used when an error occurs.
@@ -1489,7 +1502,7 @@ sub process_service {
             munin_mkdir_p($picdirname, oct(777));
 
 	    $nb_graphs_drawn ++;
-            RRDs::graph(@rrd_sum);
+            RRDs::graph(@rrdcached_params, @rrd_sum);
 
             if (my $ERROR = RRDs::error) {
                 ERROR "[RRD ERROR(sum)] Unable to graph "

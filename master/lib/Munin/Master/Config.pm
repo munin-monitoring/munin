@@ -143,8 +143,7 @@ my %booleans = map {$_ => 1} qw(
 		dbdir            => $Munin::Common::Defaults::MUNIN_DBDIR,
 		debug            => 0,
 		fork             => 1,
-		rrdcached		 => 0,
-		rrdcached_socket => "/var/run/rrdcached.sock",
+		rrdcached_socket => "", # default is unused
 		graph_data_size  => 'normal',
 		groups           => {},
 		local_address    => 0,

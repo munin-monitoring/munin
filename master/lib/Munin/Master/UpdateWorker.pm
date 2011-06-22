@@ -833,13 +833,12 @@ sub _update_rrd_file {
 
     my $last_updated_timestamp = RRDs::last($rrd_file);
     my @update_rrd_data;
-	if ($config->{"rrdcached"} eq "on") {
+	if ($config->{"rrdcached_socket"}) {
 		if($RRDs::VERSION >= 1.3){
 			push @update_rrd_data, "--daemon";
 			push @update_rrd_data, $config->{"rrdcached_socket"};
 		} else {
-			ERROR "[ERROR] RRDCached feature disabled: RRD version must be at least 1.3. Version found: " . $RRDs::VERSION;
-			$config->{"rrdcached"} = "off";
+			ERROR "[ERROR] RRDCached feature ignored: RRD version must be at least 1.3. Version found: " . $RRDs::VERSION;
 		}
 	} 
     for (my $i = 0; $i < scalar @$values; $i++) { 
