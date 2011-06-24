@@ -23,6 +23,13 @@ use List::Util qw(max);
 
 my $config = Munin::Master::Config->instance()->{config};
 
+# Flags that have RRD autotuning enabled.
+my $rrd_tune_flags = {
+	type => '--data-source-type', 
+	max => '--maximum', 
+	min => '--minimum',
+};
+
 sub new {
     my ($class, $host) = @_;
 
@@ -468,7 +475,10 @@ sub _ds_config_eq {
     my ($self, $old_ds_config, $ds_config) = @_;
 
     $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
-    for my $key (%$old_ds_config) {
+
+    # We only compare keys that are autotuned to avoid needless RRD tuning,
+    # since RRD tuning is bad for perf (flush rrdcached)
+    for my $key (keys %$rrd_tune_flags) {
 	my $old_value = $old_ds_config->{$key};
 	my $value = $ds_config->{$key};
 
@@ -532,15 +542,11 @@ sub _ensure_tuning {
         $self->_get_rrd_file_name($service, $data_source,
                                   $ds_config);
 
-    my %tune_flags = (type => '--data-source-type',
-                      max => '--maximum',
-                      min => '--minimum');
-
     $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
-    for my $rrd_prop (qw(type max min)) {
+    for my $rrd_prop (keys %$rrd_tune_flags) {
         INFO "[INFO]: Config update, ensuring $rrd_prop of"
 	    . " '$rrd_file' is '$ds_config->{$rrd_prop}'.\n";
-        RRDs::tune($rrd_file, $tune_flags{$rrd_prop},
+        RRDs::tune($rrd_file, $rrd_tune_flags->{$rrd_prop},
                    "42:$ds_config->{$rrd_prop}");
         if (my $tune_error = RRDs::error()) {
             ERROR "[ERROR] Tuning $rrd_prop of '$rrd_file' to"
