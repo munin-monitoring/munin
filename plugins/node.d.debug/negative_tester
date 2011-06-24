@@ -11,14 +11,14 @@ graph_args --base 1000
 graph_vlabel widgets per second
 graph_category testing
 
-out.label negative_test
-out.type GAUGE
-out.min 0
-out.negative negative_test_in
 negative_test_in.label negative_test
 negative_test_in.type GAUGE
 negative_test_in.min 0
 negative_test_in.graph no
+out.label negative_test
+out.type GAUGE
+out.min 0
+out.negative negative_test_in
 EOF
 
 test "$1" = "" && cat <<EOF
