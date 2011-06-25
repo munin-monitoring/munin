@@ -840,11 +840,13 @@ sub _update_rrd_file {
     my $last_updated_timestamp = RRDs::last($rrd_file);
     my @update_rrd_data;
 	if ($config->{"rrdcached_socket"}) {
-		if($RRDs::VERSION >= 1.3){
+		if (! -e $config->{"rrdcached_socket"} || ! -w $config->{"rrdcached_socket"}) {
+			WARN "[WARN] RRDCached feature ignored: rrdcached socket not writable";
+		} elsif($RRDs::VERSION < 1.3){
+			WARN "[WARN] RRDCached feature ignored: perl RRDs lib version must be at least 1.3. Version found: " . $RRDs::VERSION;
+		} else {
 			push @update_rrd_data, "--daemon";
 			push @update_rrd_data, $config->{"rrdcached_socket"};
-		} else {
-			ERROR "[ERROR] RRDCached feature ignored: RRD version must be at least 1.3. Version found: " . $RRDs::VERSION;
 		}
 	} 
     for (my $i = 0; $i < scalar @$values; $i++) { 
