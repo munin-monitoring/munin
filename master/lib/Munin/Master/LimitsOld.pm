@@ -299,14 +299,23 @@ sub process_service {
         next if (!defined $warn and !defined $crit);
 
         DEBUG "[DEBUG] processing field: " . join('::', @$fpath);
+	my $value;
+    	{
+		my %state;
+		my $state_file = sprintf ('%s/state-%s-%s.db', $config->{dbdir}, $hash->{group}, $hash->{host}); 
+		DEBUG "[DEBUG] state_file: $state_file";
 
-        my $filename = munin_get_rrd_filename($field);
-        my $value    = munin_fetch("$filename");
+		use DB_File;
+		tie(%state, 'DB_File', $state_file, O_RDONLY, 0666, $DB_HASH) or ERROR "$!";
+		my $rrd_filename = munin_get_rrd_filename($field);
+		my ($last_updated_timestamp, $last_updated_value) = split(/:/, $state{"value/$rrd_filename:42"});
+		untie(%state);
 
-	DEBUG "[DEBUG] rrd filename is: $filename";
+		$value = $last_updated_value;
+	}
 
         # De-taint.
-        if (!defined $value) {
+        if (!defined $value || $value eq "U") {
             $value = "unknown";
         }
         else {

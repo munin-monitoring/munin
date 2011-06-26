@@ -28,8 +28,7 @@ use Scalar::Util qw(isweak weaken);
 our (@ISA, @EXPORT);
 
 @ISA = ('Exporter');
-@EXPORT = ('munin_trend',
-	   'munin_fetch',
+@EXPORT = (
 	   'munin_nscasend',
 	   'munin_createlock',
 	   'munin_removelock',
@@ -155,28 +154,6 @@ sub auto_weaken {
 	# print "items: $items, weakened: $weakened\n";
 	return @_;
 }
-
-
-
-sub munin_trend {
-    my (@array) = @_;
-    return ($array[$#array] - $array[0]);
-}
-
-
-sub munin_fetch {
-    my ($file,$last,$type) = @_;
-    my ($start,$step,$names,$data) = RRDs::fetch $file,$type || "AVERAGE";
-    unless (defined $data)
-    {
-        WARN ("[WARNING] Could not fetch data from $file(".($type||"AVERAGE")."): ". RRDs::error);
-        return;
-    }
-    my @array = map { @$_[0] } splice(@$data, $#$data - ($last || 1));
-    return $array[0] if (!$last);
-    return @array;
-}
-
 
 sub munin_draw_field {
     my $hash   = shift;
@@ -1729,9 +1706,6 @@ Returns:
  - Success: Boolean; true if field will be graphed, false if not
  - Failure: undef
 
-=item B<munin_fetch>
-
-
 
 =item B<munin_field_status>
 
@@ -2123,10 +2097,6 @@ Parameters:
 Returns:
  - Success: The $hash we were handed
  - Failure: The $hash we were handed
-
-
-=item B<munin_trend>
-
 
 
 =item B<munin_writeconfig>

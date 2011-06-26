@@ -19,6 +19,9 @@ use Munin::Master::Utils;
 use RRDs;
 use Time::HiRes;
 use Data::Dumper;
+    
+use Fcntl;   # For O_RDWR, O_CREAT, etc.
+use DB_File::Lock;
 use List::Util qw(max);
 
 my $config = Munin::Master::Config->instance()->{config};
@@ -39,7 +42,7 @@ sub new {
                                              $host->{port},
                                              $host->{host_name},
 					     $host);
-
+    $self->{state} = {};
     return $self;
 }
 
@@ -65,6 +68,11 @@ sub do_work {
         die "Could not get lock $lock_file for $nodedesignation. Skipping node.\n";
     }
 
+    # Tying state db, no need to lock it, since it's per node and we already
+    # have a lock on this.
+    my $state_file = sprintf ('%s/state-%s.db', $config->{dbdir}, $path); 
+    tie(%{ $self->{state} }, 'DB_File', $state_file, O_RDWR|O_CREAT, 0666, $DB_HASH) or ERROR "$!";
+
     my %all_service_configs = (
 	data_source => {},
 	global => {},
@@ -82,11 +90,11 @@ sub do_work {
 	    my %whole_config;
 	    my @plugins;
 	    if (grep /^spool$/, @node_capabilities) {
-		    # XXX - use 5min, should keep a real spoolfetch timestamping
-		    my $spoolfetch_last_timestamp = get_spoolfetch_timestamp($nodedesignation);
+		    my $spoolfetch_last_timestamp = $self->get_spoolfetch_timestamp();
 		    %whole_config = $self->uw_spoolfetch($spoolfetch_last_timestamp);
 
-		    # XXX - Commented, should be protect by a "if logger.isDebugEnabled()"
+		    # XXX - Commented out, should be protect by a "if logger.isDebugEnabled()"
+		    #       since it is quite expensive
 		    #DEBUG "[DEBUG] whole_config:" . Dumper(\%whole_config);
 
 		    # Gets the plugins from spoolfetch
@@ -128,7 +136,7 @@ sub do_work {
 		if (! %service_data) {
 			# Check if this plugin has to be updated
 			if ($update_rate_in_seconds 
-				&& is_fresh_enough($nodedesignation, $plugin, $update_rate_in_seconds)) {
+				&& $self->is_fresh_enough($nodedesignation, $plugin, $update_rate_in_seconds)) {
 			    # It's fresh enough, skip this $service
 			    DEBUG "[DEBUG] $plugin is fresh enough, not updating it";
 			    next;
@@ -202,7 +210,7 @@ sub do_work {
 		    %{$service_config{global}});
 
 		my $last_updated_timestamp = $self->_update_rrd_files(\%service_config, \%service_data);
-          	set_spoolfetch_timestamp($nodedesignation, $last_updated_timestamp);
+          	$self->set_spoolfetch_timestamp($last_updated_timestamp);
 	    } # for @plugins
 	}; # eval
 
@@ -214,6 +222,10 @@ sub do_work {
     }); # do_in_session
 
     munin_removelock($lock_file);
+
+    # untie the state db and close it
+    untie(%{ $self->{state} });
+    $self->{state} = undef;
 
     # This handles failure in do_in_session,
     return undef if !$done;
@@ -237,23 +249,14 @@ sub get_global_service_value {
 }
 
 sub is_fresh_enough {
-	my ($nodedesignation, $service, $update_rate_in_seconds) = @_;
+	my ($self, $nodedesignation, $service, $update_rate_in_seconds) = @_;
 
-	my $key = "$nodedesignation/$service";
+	my $key = "last_updated/$service";
 	DEBUG "is_fresh_enough asked for $key with a rate of $update_rate_in_seconds";
 
-	my $db_file = $config->{dbdir} . "/last_updated.db";
-
-	my %last_updated;
-
-	use Fcntl;   # For O_RDWR, O_CREAT, etc.
-   	use DB_File::Lock;
-   	tie(%last_updated, 'DB_File::Lock', $db_file, O_RDONLY, 0666, $DB_HASH, "read") or ERROR "$!";
-
-	my $last_updated_key = $last_updated{$key} || "0 0";
-	DEBUG "last_updated{$key}: " . $last_updated_key;
-	my @last = split(/ /, $last_updated_key);
-   	untie(%last_updated);
+	my $last_updated = $self->{state}{$key} || "0 0";
+	DEBUG "last_updated{$key}: " . $last_updated;
+	my @last = split(/ /, $last_updated);
    
 	use Time::HiRes qw(gettimeofday tv_interval);	
 	my $now = [ gettimeofday ];
@@ -265,52 +268,26 @@ sub is_fresh_enough {
 
 	if (! $is_fresh_enough) {
 		DEBUG "new value: " . join(" ", @$now);
-   		tie(%last_updated, 'DB_File::Lock', $db_file, O_RDONLY, 0666, $DB_HASH, "read") or ERROR "$!";
-		$last_updated{$key} = join(" ", @$now);
-		untie(%last_updated);
+		$self->{state}{$key} = join(" ", @$now);
 	}
-
 
 	return $is_fresh_enough;
 }
 
 sub get_spoolfetch_timestamp {
-	my ($nodedesignation) = @_;
+	my ($self) = @_;
 
-	my $key = "$nodedesignation/__spoolfetch__";
-	my $db_file = $config->{dbdir} . "/spoolfetch.db";
-
-	my %last_updated;
-
-	use Fcntl;   # For O_RDWR, O_CREAT, etc.
-   	use DB_File::Lock;
-   	tie(%last_updated, 'DB_File::Lock', $db_file, O_RDONLY, 0666, $DB_HASH, "read") or ERROR "$!";
-
-	my $last_updated_value = $last_updated{$key} || "0";
-
-   	untie(%last_updated);
-
+	my $last_updated_value = $self->{state}{"spoolfetch/"} || "0";
 	return $last_updated_value;
 }
 
 sub set_spoolfetch_timestamp {
-	my ($nodedesignation, $timestamp) = @_;
-	DEBUG "[DEBUG] set_spoolfetch_timestamp($nodedesignation, $timestamp)";
-
-	my $key = "$nodedesignation/__spoolfetch__";
-	my $db_file = $config->{dbdir} . "/spoolfetch.db";
-
-	my %last_updated;
-
-	use Fcntl;   # For O_RDWR, O_CREAT, etc.
-   	use DB_File::Lock;
-   	tie(%last_updated, 'DB_File::Lock', $db_file, O_RDWR|O_CREAT, 0666, $DB_HASH, "write") or ERROR "$!";
+	my ($self, $timestamp) = @_;
+	DEBUG "[DEBUG] set_spoolfetch_timestamp($timestamp)";
 
 	# Using the last timestamp sended by the server :
 	# -> It can be be different than "now" to be able to process the backlock slowly
-	$last_updated{$key} = $timestamp;
-
-   	untie(%last_updated);
+	$self->{state}{"spoolfetch/"} = $timestamp;
 }
 
 sub parse_update_rate {
@@ -837,7 +814,7 @@ sub _update_rrd_file {
     # Some kind of mismatch between fetch and config can cause this.
     return if !defined($values);  
 
-    my $last_updated_timestamp = RRDs::last($rrd_file);
+    my ($last_updated_timestamp, $last_updated_value) = split(/:/, $self->{state}{"value/$rrd_file:42"});
     my @update_rrd_data;
 	if ($config->{"rrdcached_socket"}) {
 		if (! -e $config->{"rrdcached_socket"} || ! -w $config->{"rrdcached_socket"}) {
@@ -874,6 +851,7 @@ sub _update_rrd_file {
         push @update_rrd_data, "$when:$value";
 
 	$last_updated_timestamp = $when;
+	$last_updated_value = $value;
     }
 
     DEBUG "[DEBUG] Updating $rrd_file with @update_rrd_data";
@@ -882,6 +860,9 @@ sub _update_rrd_file {
         #confess Dumper @_;
         ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
     }
+
+    # Stores the last value in the state db to avoid having to do an RRD lookup
+    $self->{state}{"value/$rrd_file:42"} = "$last_updated_timestamp:$last_updated_value"; 
 
     return $last_updated_timestamp;
 }
