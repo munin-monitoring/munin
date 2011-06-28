@@ -831,7 +831,7 @@ sub _update_rrd_file {
 
 	# Ignore values that are too old for the RRD.
 	# Otherwise it will reject the whole update
-	next if ($when <= $last_updated_timestamp);
+	next if ($last_updated_value && $when <= $last_updated_timestamp);
 
         if ($value =~ /\d[Ee]([+-]?\d+)$/) {
             # Looks like scientific format.  RRDtool does not
