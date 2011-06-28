@@ -20,8 +20,6 @@ use RRDs;
 use Time::HiRes;
 use Data::Dumper;
     
-use Fcntl;   # For O_RDWR, O_CREAT, etc.
-use DB_File::Lock;
 use List::Util qw(max);
 
 my $config = Munin::Master::Config->instance()->{config};
@@ -68,10 +66,11 @@ sub do_work {
         die "Could not get lock $lock_file for $nodedesignation. Skipping node.\n";
     }
 
-    # Tying state db, no need to lock it, since it's per node and we already
-    # have a lock on this.
-    my $state_file = sprintf ('%s/state-%s.db', $config->{dbdir}, $path); 
-    tie(%{ $self->{state} }, 'DB_File', $state_file, O_RDWR|O_CREAT, 0666, $DB_HASH) or ERROR "$!";
+    # Reading the state file, no need to lock it, since it's per node and we
+    # already have a lock on this.
+    my $state_file = sprintf ('%s/state-%s.storable', $config->{dbdir}, $path); 
+    DEBUG "[DEBUG] Reading state for $path in $state_file";
+    $self->{state} = ( -e $state_file ) ? Storable::retrieve($state_file) : { };
 
     my %all_service_configs = (
 	data_source => {},
@@ -223,9 +222,10 @@ sub do_work {
 
     munin_removelock($lock_file);
 
-    # untie the state db and close it
-    untie(%{ $self->{state} });
-    $self->{state} = undef;
+    # Update the state file 
+    DEBUG "[DEBUG] Writing state for $path in $state_file";
+    Storable::nstore($self->{state}, $state_file . ".tmp.$$");
+    rename($state_file . ".tmp.$$", $state_file);
 
     # This handles failure in do_in_session,
     return undef if !$done;
@@ -251,11 +251,10 @@ sub get_global_service_value {
 sub is_fresh_enough {
 	my ($self, $nodedesignation, $service, $update_rate_in_seconds) = @_;
 
-	my $key = "last_updated/$service";
-	DEBUG "is_fresh_enough asked for $key with a rate of $update_rate_in_seconds";
+	DEBUG "is_fresh_enough asked for $service with a rate of $update_rate_in_seconds";
 
-	my $last_updated = $self->{state}{$key} || "0 0";
-	DEBUG "last_updated{$key}: " . $last_updated;
+	my $last_updated = $self->{state}{last_updated}{$service} || "0 0";
+	DEBUG "last_updated{$service}: " . $last_updated;
 	my @last = split(/ /, $last_updated);
    
 	use Time::HiRes qw(gettimeofday tv_interval);	
@@ -268,7 +267,7 @@ sub is_fresh_enough {
 
 	if (! $is_fresh_enough) {
 		DEBUG "new value: " . join(" ", @$now);
-		$self->{state}{$key} = join(" ", @$now);
+		$self->{state}{last_updated}{$service} = join(" ", @$now);
 	}
 
 	return $is_fresh_enough;
@@ -277,7 +276,7 @@ sub is_fresh_enough {
 sub get_spoolfetch_timestamp {
 	my ($self) = @_;
 
-	my $last_updated_value = $self->{state}{"spoolfetch/"} || "0";
+	my $last_updated_value = $self->{state}{spoolfetch} || "0";
 	return $last_updated_value;
 }
 
@@ -287,7 +286,7 @@ sub set_spoolfetch_timestamp {
 
 	# Using the last timestamp sended by the server :
 	# -> It can be be different than "now" to be able to process the backlock slowly
-	$self->{state}{"spoolfetch/"} = $timestamp;
+	$self->{state}{spoolfetch} = $timestamp;
 }
 
 sub parse_update_rate {
@@ -814,7 +813,7 @@ sub _update_rrd_file {
     # Some kind of mismatch between fetch and config can cause this.
     return if !defined($values);  
 
-    my ($last_updated_timestamp, $last_updated_value) = split(/:/, $self->{state}{"value/$rrd_file:42"});
+    my ($last_updated_timestamp, $last_updated_value) = split(/:/, $self->{state}{value}{"$rrd_file:42"});
     my @update_rrd_data;
 	if ($config->{"rrdcached_socket"}) {
 		if (! -e $config->{"rrdcached_socket"} || ! -w $config->{"rrdcached_socket"}) {
@@ -862,7 +861,7 @@ sub _update_rrd_file {
     }
 
     # Stores the last value in the state db to avoid having to do an RRD lookup
-    $self->{state}{"value/$rrd_file:42"} = "$last_updated_timestamp:$last_updated_value"; 
+    $self->{state}{value}{"$rrd_file:42"} = "$last_updated_timestamp:$last_updated_value"; 
 
     return $last_updated_timestamp;
 }

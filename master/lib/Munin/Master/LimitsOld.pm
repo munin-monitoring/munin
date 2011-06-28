@@ -283,6 +283,10 @@ sub process_service {
     $hash->{'worst'} = "ok";
     $hash->{'worstid'} = 0 unless defined $hash->{'worstid'};
 
+    my $state_file = sprintf ('%s/state-%s-%s.storable', $config->{dbdir}, $hash->{group}, $hash->{host}); 
+    DEBUG "[DEBUG] state_file: $state_file";
+    my $state = Storable::retrieve($state_file);
+
     foreach my $field (@$children) {
         next if (!defined $field or ref($field) ne "HASH");
         my $fname   = munin_get_node_name($field);
@@ -301,15 +305,8 @@ sub process_service {
         DEBUG "[DEBUG] processing field: " . join('::', @$fpath);
 	my $value;
     	{
-		my %state;
-		my $state_file = sprintf ('%s/state-%s-%s.db', $config->{dbdir}, $hash->{group}, $hash->{host}); 
-		DEBUG "[DEBUG] state_file: $state_file";
-
-		use DB_File;
-		tie(%state, 'DB_File', $state_file, O_RDONLY, 0666, $DB_HASH) or ERROR "$!";
 		my $rrd_filename = munin_get_rrd_filename($field);
-		my ($last_updated_timestamp, $last_updated_value) = split(/:/, $state{"value/$rrd_filename:42"});
-		untie(%state);
+		my ($last_updated_timestamp, $last_updated_value) = split(/:/, $state->{value}{"$rrd_filename:42"});
 
 		$value = $last_updated_value;
 	}
