@@ -970,6 +970,8 @@ sub process_service {
         # Getting name of rrd file
         $filename = munin_get_rrd_filename($field, $path);
 
+	# Here it is OK to flush the rrdcached, since we'll flush it anyway
+	# with graph
         my $update = RRDs::last(@rrdcached_params, $filename);
         $update = 0 if !defined $update;
         if ($update > $lastupdate) {
@@ -1378,14 +1380,14 @@ sub process_service {
 		push @complete, "--lower-limit", $lower_limit;
 	}
 
-	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n";
+	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
 	$nb_graphs_drawn ++;
         RRDs::graph(@rrdcached_params, @complete);
         if (my $ERROR = RRDs::error) {
             ERROR "[RRD ERROR] Unable to graph $picfilename : $ERROR";
             # ALWAYS dumps the cmd used when an error occurs.
             # Otherwise, it will be difficult to debug post-mortem
-            ERROR "[RRD ERROR] rrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n";
+            ERROR "[RRD ERROR] rrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
         }
         else {
 
