@@ -25,7 +25,13 @@ graph_title Testing multigraph
 graph_args --base 1000
 graph_vlabel widgets per second
 graph_category testing
-graph_order fake1_out=multigraph_complex_fake1_out.fake1_out fake1_in=multigraph_complex_fake1_in.fake1_in fake2_out=multigraph_complex_fake2_out.fake2_out fake2_in=multigraph_complex_fake2_in.fake2_in fake3_out=multigraph_complex_fake3_out.fake3_out fake3_in=multigraph_complex_fake3_in.fake3_in
+graph_order \
+	fake1_out=multigraph_complex_fake1_out.fake1_out \
+	fake1_in=multigraph_complex_fake1_in.fake1_in \
+	fake2_out=multigraph_complex_fake2_out.fake2_out \
+	fake2_in=multigraph_complex_fake2_in.fake2_in \
+	fake3_out=multigraph_complex_fake3_out.fake3_out \
+	fake3_in=multigraph_complex_fake3_in.fake3_in
 
 fake2_out.label fake2
 fake2_out.type GAUGE
