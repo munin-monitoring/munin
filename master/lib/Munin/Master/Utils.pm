@@ -695,11 +695,13 @@ sub munin_get_node {
     my $loc  = shift;
 
     foreach my $tmpvar (@$loc) {
-	if ($tmpvar !~ /\S/) {
-	    ERROR "[ERROR] munin_get_node: Cannot work on hash node \"$tmpvar\"";
+	if (! exists $hash->{$tmpvar} ) {
+	    # Only complain on a blank key if is no key like that. Usually it
+	    # shouln't, so it avoids a needless regexp in this highly used
+	    # function
+	    ERROR "[ERROR] munin_get_node: Cannot work on hash node '$tmpvar'" if ($tmpvar !~ /\S/);
 	    return undef;
-	}
-	return undef if !exists $hash->{$tmpvar};
+        }	
 	$hash = $hash->{$tmpvar};
     }
     return $hash;
@@ -775,9 +777,9 @@ sub munin_get_node_partialpath
 	my @leftarr = split (/;/, $leftstring);
 	my @rightarr = split (/\./, $rightstring);
 	push @$varloc, @leftarr, @rightarr
-    } elsif ($var =~ /^\s*([^;:\.]+)\s*$/) {
+    } elsif ($var =~ /^\s*([^;:.]+)\s*$/) {
 	push @$varloc, $var;
-    } elsif ($var =~ /^\s*(.+)\.([^\.:;]+)$/) {
+    } elsif ($var =~ /^\s*([^.]+)\.([^:;]+)$/) {
 	my ($leftstring, $rightstring) = ($1, $2);
 
 	my @leftarr = split (/;/, $leftstring);
