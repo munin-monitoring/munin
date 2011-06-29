@@ -451,6 +451,7 @@ sub _ds_config_eq {
     my ($self, $old_ds_config, $ds_config) = @_;
 
     $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
+    $old_ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
 
     # We only compare keys that are autotuned to avoid needless RRD tuning,
     # since RRD tuning is bad for perf (flush rrdcached)
