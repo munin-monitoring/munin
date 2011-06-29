@@ -598,7 +598,10 @@ sub expand_specials {
             my $src   = munin_get_node_partialpath($service, $spath);
             my $sname = munin_get_node_name($src);
 
-            next unless defined $src;
+            if(!defined $src) {
+	    	ERROR "[ERROR] Failed to find $fname source at $spath, skipping field";
+		next;
+	    }
             DEBUG "[DEBUG] Copying settings from $sname to $fname.";
 
             foreach my $foption ("draw", "type", "rrdfile", "fieldname", "info")
@@ -917,7 +920,7 @@ sub process_service {
     # Array to keep negative data until we're finished with positive.
     my @rrd_negatives = ();
 
-    my $filename = "unknown";
+    my $filename;
     my %total_pos;
     my %total_neg;
     my $autostacking = 0;
@@ -970,6 +973,10 @@ sub process_service {
         # Getting name of rrd file
         $filename = munin_get_rrd_filename($field, $path);
 
+	if(!defined $filename) {
+		ERROR "[ERROR] Failed getting filename for $path, skipping field";
+		next;
+	}
 	# Here it is OK to flush the rrdcached, since we'll flush it anyway
 	# with graph
         my $update = RRDs::last(@rrdcached_params, $filename);
