@@ -814,7 +814,7 @@ sub _update_rrd_file {
     # Some kind of mismatch between fetch and config can cause this.
     return if !defined($values);  
 
-    my ($last_updated_timestamp, $last_updated_value) = split(/:/, $self->{state}{value}{"$rrd_file:42"});
+    my ($previous_updated_timestamp, $previous_updated_value) = @{ $self->{state}{value}{"$rrd_file:42"}{current} || [ ] };
     my @update_rrd_data;
 	if ($config->{"rrdcached_socket"}) {
 		if (! -e $config->{"rrdcached_socket"} || ! -w $config->{"rrdcached_socket"}) {
@@ -826,13 +826,15 @@ sub _update_rrd_file {
 			push @update_rrd_data, $config->{"rrdcached_socket"};
 		}
 	} 
+    
+    my ($current_updated_timestamp, $current_updated_value) = ($previous_updated_timestamp, $previous_updated_value);
     for (my $i = 0; $i < scalar @$values; $i++) { 
         my $value = $values->[$i];
         my $when = $ds_values->{when}[$i];
 
-	# Ignore values that are too old for the RRD.
+	# Ignore values that is not in monotonic increasing timestamp for the RRD.
 	# Otherwise it will reject the whole update
-	next if ($last_updated_value && $when <= $last_updated_timestamp);
+	next if ($current_updated_timestamp && $when <= $current_updated_timestamp);
 
         if ($value =~ /\d[Ee]([+-]?\d+)$/) {
             # Looks like scientific format.  RRDtool does not
@@ -850,8 +852,8 @@ sub _update_rrd_file {
         # Schedule for addition
         push @update_rrd_data, "$when:$value";
 
-	$last_updated_timestamp = $when;
-	$last_updated_value = $value;
+	$current_updated_timestamp = $when;
+	$current_updated_value = $value;
     }
 
     DEBUG "[DEBUG] Updating $rrd_file with @update_rrd_data";
@@ -861,10 +863,11 @@ sub _update_rrd_file {
         ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
     }
 
-    # Stores the last value in the state db to avoid having to do an RRD lookup
-    $self->{state}{value}{"$rrd_file:42"} = "$last_updated_timestamp:$last_updated_value"; 
+    # Stores the previous and the current value in the state db to avoid having to do an RRD lookup if needed
+    $self->{state}{value}{"$rrd_file:42"}{current} = [ $current_updated_timestamp, $current_updated_value ]; 
+    $self->{state}{value}{"$rrd_file:42"}{previous} = [ $previous_updated_timestamp, $previous_updated_value ]; 
 
-    return $last_updated_timestamp;
+    return $current_updated_value;
 }
 
 sub dump_to_file

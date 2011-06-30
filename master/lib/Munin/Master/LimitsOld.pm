@@ -303,12 +303,24 @@ sub process_service {
         next if (!defined $warn and !defined $crit);
 
         DEBUG "[DEBUG] processing field: " . join('::', @$fpath);
+        DEBUG "[DEBUG] field: " . munin_dumpconfig_as_str($field);
 	my $value;
     	{
 		my $rrd_filename = munin_get_rrd_filename($field);
-		my ($last_updated_timestamp, $last_updated_value) = split(/:/, $state->{value}{"$rrd_filename:42"});
+		my ($current_updated_timestamp, $current_updated_value) = @{ $state->{value}{"$rrd_filename:42"}{current} };
+		my ($previous_updated_timestamp, $previous_updated_value) = @{ $state->{value}{"$rrd_filename:42"}{previous} };
 
-		$value = $last_updated_value;
+		if (! $field->{type} || $field->{type} eq "GAUGE" || $field->{type} eq "ABSOLUTE") {
+			$value = $current_updated_value;
+		} elsif (! defined $current_updated_value || ! defined $previous_updated_value || $current_updated_value eq $previous_updated_value) {
+			# No derive computing possible. Report unknown.
+			$value = "U";
+		} elsif ($field->{type} eq "COUNTER" && $current_updated_value < $previous_updated_value) {
+			# COUNTER never decrease. Report unknown.
+			$value = "U";
+		} else {
+			$value = ($current_updated_value - $previous_updated_value) / ($current_updated_value - $previous_updated_value);
+		}
 	}
 
         # De-taint.
