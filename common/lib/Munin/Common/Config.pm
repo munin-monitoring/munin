@@ -42,7 +42,8 @@ my %legal = map { $_ => 1 } (
 	"staticdir", "html_strategy",
 	"rrdcached_socket", "graph_args_after",
     "graph_future", "trend", "predict",
-	"html_rename"
+	"html_rename",
+	"worker_start_delay",
 	);
 
 my %bools = map { $_ => 1} qw(yes no true false on off 1 0);

@@ -114,8 +114,7 @@ sub _start_waiting_workers {
         $self->_start_next_worker();
     } continue {
 	    # Sleep for a random time, to avoid too much process creation all at once
-	    # 0..100ms per max_concurrent.
-	    sleep ( 0.1 * rand($self->{max_concurrent}) );
+	    sleep ( rand ($config->{worker_start_delay}) ) if $config->{worker_start_delay};
     }
 }
 
