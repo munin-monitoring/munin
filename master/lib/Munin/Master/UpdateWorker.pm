@@ -867,7 +867,7 @@ sub _update_rrd_file {
     $self->{state}{value}{"$rrd_file:42"}{current} = [ $current_updated_timestamp, $current_updated_value ]; 
     $self->{state}{value}{"$rrd_file:42"}{previous} = [ $previous_updated_timestamp, $previous_updated_value ]; 
 
-    return $current_updated_value;
+    return $current_updated_timestamp;
 }
 
 sub dump_to_file
