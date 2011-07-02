@@ -105,6 +105,7 @@ munin 2.0-alpha1, r3400:3856, 2010-7-14
 Commits by bldewolf, feiner.tom, janl, knan, ligne, mha, ssm, steve.schnepp
 
 * Enhanced CGI (CGI::Fast, direct call to GraphOld.pm, cgitmpdir)
+* Ability to zoom in or out graphs
 * fixed comparison pages in CGI mode as (closes #831)
 * hostname checks are case in-sensitive now : every hostname is converted to
   lowercase before use (closes #450)
