@@ -284,9 +284,6 @@ svctm.value $result->{'servicetime'}
 avgwait.value $result->{'average_wait'}
 avgrdwait.value $result->{'average_rd_wait'}
 avgwrwait.value $result->{'average_wr_wait'}
-EOF
-
-        print <<"EOF";
 
 multigraph ${plugin_name}_utilization.$graph_id
 util.value $result->{'utilization'}
@@ -299,9 +296,6 @@ EOF
 multigraph ${plugin_name}_throughput.$graph_id
 rdbytes.value $result->{'read_bytes_per_sec'}
 wrbytes.value $result->{'write_bytes_per_sec'}
-EOF
-
-    print <<"EOF";
 
 multigraph ${plugin_name}_iops.$graph_id
 rdio.value $result->{'read_io_per_sec'}
@@ -742,11 +736,12 @@ EOF
     print <<"EOF";
 
 multigraph ${plugin_name}_throughput
-graph_title Disk throughput per device
+graph_title Throughput per device
 graph_args --base 1024
 graph_vlabel Bytes/\${graph_period} read (-) / write (+)
 graph_category disk
 graph_width $config_graph_width
+graph_info This graph shows averaged throughput for the given disk in bytes.  Higher throughput is usualy linked with higher service time/latency (separate graph).
 
 EOF
 
@@ -816,30 +811,33 @@ sub do_config_device {
 
             print <<"EOF";
 multigraph ${plugin_name}_latency.$graph_id
-graph_title Disk latency for /dev/$pretty_device
-graph_args --base 1000
+graph_title Average latency for /dev/$pretty_device
+graph_args --base 1000 --logarithmic
 graph_vlabel seconds
 graph_category disk
+graph_info This graph shows average waiting time/latency for different categories of disk operations.   The times that include the queue times indicate how busy your system is.  If the waiting time hits 1 second then your I/O system is 100% busy.
 
-svctm.label Average device IO time
+svctm.label Device IO time
 svctm.type GAUGE
-svctm.info Average time an I/O takes on the block device
+svctm.info Average time an I/O takes on the block device not including any queue times, just the round trip time for the disk request.
 svctm.min 0
 svctm.draw LINE1
-avgwait.label Average IO Wait time
+avgwait.label IO Wait time
 avgwait.type GAUGE
 avgwait.info Average wait time for an I/O from request start to finish (includes queue times et al)
 avgwait.min 0
 avgwait.draw LINE1
-avgrdwait.label Average Read IO Wait time
+avgrdwait.label Read IO Wait time
 avgrdwait.type GAUGE
 avgrdwait.info Average wait time for a read I/O from request start to finish (includes queue times et al)
 avgrdwait.min 0
+avgrdwait.warning 0:1
 avgrdwait.draw LINE1
-avgwrwait.label Average Write IO Wait time
+avgwrwait.label Write IO Wait time
 avgwrwait.type GAUGE
 avgwrwait.info Average wait time for a write I/O from request start to finish (includes queue times et al)
 avgwrwait.min 0
+avgwrwait.warning 0:1
 avgwrwait.draw LINE1
 
 EOF
@@ -865,15 +863,15 @@ EOF
 multigraph ${plugin_name}_throughput.$graph_id
 graph_title Disk throughput for /dev/$pretty_device
 graph_args --base 1024
-graph_vlabel Bytes/\${graph_period} read (-) / write (+)
+graph_vlabel Pr \${graph_period} read (-) / write (+)
 graph_category disk
 
-rdbytes.label Read Bytes
+rdbytes.label invisible
 rdbytes.type GAUGE
 rdbytes.min 0
 rdbytes.draw LINE1
 rdbytes.graph no
-wrbytes.label Write Bytes
+wrbytes.label Bytes
 wrbytes.type GAUGE
 wrbytes.min 0
 wrbytes.draw LINE1
@@ -883,10 +881,11 @@ EOF
 
         print <<"EOF";
 multigraph ${plugin_name}_iops.$graph_id
-graph_title Disk IOs for /dev/$pretty_device
+graph_title IOs for /dev/$pretty_device
 graph_args --base 1000
 graph_vlabel Units read (-) / write (+)
 graph_category disk
+graph_info This graph shows the number of IO operations pr second and the average size of these requests.  Lots of small requests should result in in lower throughput (separate graph) and higher service time (separate graph).
 
 rdio.label dummy
 rdio.type GAUGE
@@ -904,7 +903,7 @@ avgrdrqsz.min 0
 avgrdrqsz.draw LINE1
 avgrdrqsz.graph no
 avgwrrqsz.label Avg Req Size (KiB)
-avgwrrqsz.info Average Request Size in Kibibyte
+avgwrrqsz.info Average Request Size in Kibibytes
 avgwrrqsz.type GAUGE
 avgwrrqsz.min 0
 avgwrrqsz.draw LINE1

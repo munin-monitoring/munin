@@ -32,7 +32,7 @@ To be written...
 
 =head1 MAGIC MARKERS
 
- #%# family=auto
+ #%# family=legacy
  #%# capabilities=autoconf
 
 =head1 VERSION
