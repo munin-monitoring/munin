@@ -710,11 +710,12 @@ EOF
     print <<"EOF";
 
 multigraph ${plugin_name}_utilization
-graph_title Disk utilization per device
+graph_title Utilization per device
 graph_args --base 1000 --lower-limit 0 --upper-limit 100 --rigid
-graph_vlabel Percent
+graph_vlabel % busy
 graph_category disk
 graph_width $config_graph_width
+graph_scale no
 
 EOF
 
@@ -846,12 +847,13 @@ EOF
 multigraph ${plugin_name}_utilization.$graph_id
 graph_title Disk utilization for /dev/$pretty_device
 graph_args --base 1000 --lower-limit 0 --upper-limit 100 --rigid
-graph_vlabel Percent
+graph_vlabel % busy
 graph_category disk
+graph_scale no
 
-util.label Device utilization
+util.label Utilization
 util.type GAUGE
-util.info Utilization of the device. If the time spent for I/O is close to 1000msec for a given second, the device is nearly 100% saturated.
+util.info Utilization of the device in percent. If the time spent for I/O is close to 1000msec for a given second, the device is nearly 100% saturated.
 util.min 0
 util.draw LINE1
 
