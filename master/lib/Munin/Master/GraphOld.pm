@@ -1633,8 +1633,8 @@ sub get_fonts {
     } elsif ($RRDs::VERSION >= 1.3) {
 	# RRD 1.3 and up
 	return (
-		'--font', "DEFAULT:0:DejaVuSans",
-		'--font', "LEGEND:7:DejaVuSansMono",
+		'--font', "DEFAULT:0:DejaVuSans,DejaVu Sans,DejaVu LGC Sans,Bitstream Vera Sans",
+		'--font', "LEGEND:7:DejaVuSansMono,DejaVu Sans Mono,DejaVu LGC Sans Mono,Bitstream Vera Sans Mono,monospace",
 	       );
     }
 
