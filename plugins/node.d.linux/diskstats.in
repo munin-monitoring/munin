@@ -191,10 +191,10 @@ sub calculate_values {
     my $average_wr_wait_in_sec = $write_ios ? $wr_ticks / $write_ios / 1000 : 0;
 
     my $average_rd_rq_size_in_kb =
-      $read_ios ? $rd_sectors * $bytes_per_sector / 1024 / $read_ios : 0;
+      $read_ios ? $rd_sectors * $bytes_per_sector / 1000 / $read_ios : 0;
     my $average_wr_rq_size_in_kb =
         $write_ios
-      ? $wr_sectors * $bytes_per_sector / 1024 / $write_ios
+      ? $wr_sectors * $bytes_per_sector / 1000 / $write_ios
       : 0;
 
     my $util_print = $utilization / 10;
@@ -742,7 +742,7 @@ graph_args --base 1024
 graph_vlabel Bytes/\${graph_period} read (-) / write (+)
 graph_category disk
 graph_width $config_graph_width
-graph_info This graph shows averaged throughput for the given disk in bytes.  Higher throughput is usualy linked with higher service time/latency (separate graph).
+graph_info This graph shows averaged throughput for the given disk in bytes.  Higher throughput is usualy linked with higher service time/latency (separate graph).  The graph base is 1024 yeilding Kibi- and Mebi-bytes.
 
 EOF
 
@@ -867,6 +867,7 @@ graph_title Disk throughput for /dev/$pretty_device
 graph_args --base 1024
 graph_vlabel Pr \${graph_period} read (-) / write (+)
 graph_category disk
+graph_info This graph shows disk throughput in bytes pr \${graph_period}.  The graph base is 1024 so KB is for Kibi bytes and so on.
 
 rdbytes.label invisible
 rdbytes.type GAUGE
@@ -881,13 +882,26 @@ wrbytes.negative rdbytes
 
 EOF
 
+# Problem with the following graph: the avgwrrqsz used to be labeled
+# "KiB" for KibiByte = 1024 bytes.  However the graph is 1000 based
+# and is mixing units, AND it does not have "graph_scale no" set
+# therefore the average request size can become milli (1000 based)
+# Kibi (1024 based) bytes which is such a horrible mess to contemplate
+# that we just can't allow it.
+
+# The reason we need to keep the Kilo/Kibi part of the unit is that
+# otherwise the scale of the numbers in the graph become so different
+# that the graph becomes unusable.  Therefore we're keeping the K unit
+# but we're making it 1000 based so that at least the K and the m are
+# use the same divisor.
+
         print <<"EOF";
 multigraph ${plugin_name}_iops.$graph_id
 graph_title IOs for /dev/$pretty_device
 graph_args --base 1000
 graph_vlabel Units read (-) / write (+)
 graph_category disk
-graph_info This graph shows the number of IO operations pr second and the average size of these requests.  Lots of small requests should result in in lower throughput (separate graph) and higher service time (separate graph).
+graph_info This graph shows the number of IO operations pr second and the average size of these requests.  Lots of small requests should result in in lower throughput (separate graph) and higher service time (separate graph).  Please note that starting with munin-node 2.0 the divisor for K is 1000 instead of 1024 which it was prior to 2.0 beta 3.  This is because the base for this graph is 1000 not 1024.
 
 rdio.label dummy
 rdio.type GAUGE
@@ -904,8 +918,8 @@ avgrdrqsz.type GAUGE
 avgrdrqsz.min 0
 avgrdrqsz.draw LINE1
 avgrdrqsz.graph no
-avgwrrqsz.label Avg Req Size (KiB)
-avgwrrqsz.info Average Request Size in Kibibytes
+avgwrrqsz.label Req Size (KB)
+avgwrrqsz.info Average Request Size in kilobytes (1000 based)
 avgwrrqsz.type GAUGE
 avgwrrqsz.min 0
 avgwrrqsz.draw LINE1
