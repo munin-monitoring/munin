@@ -17,15 +17,17 @@ On all hosts:
 
 Server:
 
-- A web server.  Apache HTTPD should be suitable.  Any web server supporting
-  simple file service and perhaps CGIs will work.
+- A web server.  Any web server supporting simple file service and
+  Fast CGI should work. Apache HTTPD should be suitable.  Also
+  reported to be working is nginx and lighttpd, please contribute your
+  configs.
 
 - RRD with Perl support - this means that RRDs.pm must be available
   and "perl -MRRDs -e ':;'" must run without errors.
 
 - Perl modules for server: 
    - Time::HiRes
-   - Storable (needed for ProcessManager.  Should we port datafile to storable too?)
+   - Storable
    - Digest::MD5,
    - HTML::Template
    - Text::Balanced
@@ -33,6 +35,7 @@ Server:
    - TimeDate
    - Net::SSLeay if you want to use SSL/TLS
    - Getopt::Long
+   - File::Copy::Recursive
    - Log::Log4perl (which depends on
      - IPC::Shareable
      - Log::Dispatch
@@ -70,7 +73,6 @@ Node:
   5+ compiler (a basic JDK Standard Edition from java.sun.com or your
   package system).
 
-
 If you're missing some Perl modules and they are not in your package
 system it's recommended to use the cpan shell (as root) to install the
 needed ones.  There is a short cpan shell section at the bottom of
@@ -79,7 +81,8 @@ this file if you do not know how to use it.
 Please note that BSD and Linux OSes such as Red Hat Enterprise Linux
 (and CentOS), Fedora, Debian, Ubuntu, SuSE and others will have quite
 a few of these packages available to install with their standard
-install tools.
+install tools so there is no need to install from the source
+distribution unless you want a Munin release that is not packaged.
 
 
 Installing
@@ -94,7 +97,7 @@ to work around this.
 
 There are make targets for node, master, documentation and man files.
 Generally you want to install everything on the master, and just the
-node and plugiuns on ... the nodes.
+node and plugiuns on the nodes.
 
 To install both master and node:
 
@@ -113,8 +116,14 @@ To install both master and node:
 
 	- make install
 
-        - In your HTMLDIR you will now find a .htaccess file with two
-          main features:
+        - If you want to use CGI graphing **** This is mandatory in
+          2.0 beta as of now **** review http://munin-monitoring.org/wiki/CgiHowto
+          With 2.0 you want to use FastCGI graphing unless you have a quite
+	  small munin and a quite fast web server.
+
+	  In your HTMLDIR you will now find a .htaccess file with two
+          main features: *** This should be folded into a unified
+          munin-apache.conf to be dropped into apaches conf.d directory ***
 
 	  * Password protection. Users/passwords are kept in
 	    CONFDIR/munin-httpasswd. Use htpasswd to create/modify
@@ -138,21 +147,15 @@ To install both master and node:
 
 	- Create a cron-entry to run "munin-cron" as the user "munin"
 	  every 5 minutes.  See build/resources for generic or
-          build/dists for distribution-specific scripts.
-
-	- If you want to use the dynamic graphs: Configure the CGI
-	  directory, you will find a Apache config example in
-	  build/resources.  See also
-          http://munin.projects.linpro.no/wiki/CgiHowto
-	  
-	  NOTE: Dynamic graphs are not exactly perfect.
+          build/dists for some OS/distribution-specific scripts.
 
 
 To install a node:
 
 	- Edit Makefile.config to suit your needs.
 
-	- Create the group "munin".
+	- Create the user and group "munin".  The use can have a
+          nologin shell.
 
 	- make
 
@@ -168,22 +171,20 @@ To install a node:
 	- Review CONFDIR/munin-node.conf. Ensure that your
 	  munin-master can access it.
 
-	- Start the node agent (as root) SBINDIR/munin-node.
+	- Start the node agent (as root) SBINDIR/munin-node.  Restart it
+	  it it was already started.  The node only discovers new plugins
+	  when it is restarted.
 
 	  You probably want to use an init-script instead and you
           might find a good one under build/dists or in the
           build/resources directory (maybe you need to edit the init
           script, check the given paths in the script you might use).
 
+If you want to use SSH to contact the node from the master (rather
+than over tcp port 4949) please refer to
+http://munin-monitoring.org/wiki/Native_ssh
+
 For further build alternatives, see Makefile.
-
-
-Munin-gather
-============
-
-Munin-gather is an incomplete work in progress for the server side.
-Please ignore it, and if you're a packager certainly don't package
-it.
 
 
 Notes about node plugins
@@ -193,13 +194,24 @@ Notes about node plugins
 Makefile.config). Put the ones you want to use (or better yet, create
 softlinks) in CONFDIR/plugins/ . An easy way to do this, is the
 program "munin-node-configure", using the parameter "--shell". It will
-then suggest commands to do this.
+then suggest commands to do this.  Example to show plugins it would
+enable:
 
-Some of the plugins require some configuration to get running.  Some
-example configuration files (plugins.conf) is found under the
-build/dists directory.
+  munin-node-configure --suggest
 
-Whenever the plugin list changes, the node needs to be restarted. 
+To enable those:
+
+  munin-node-configure --shell | sh -x
+
+You can also just run munin-node-configure --shell and paste the
+commands you want into a shell.
+
+Some of the plugins (mysql, postgresql, snmp, ...) require some
+configuration to get running.  Some example configuration files
+(plugins.conf) is found under the build/dists directory.
+
+Whenever the installed plugins changes, the node needs to be
+restarted. Also restart the node when you change it's configuration.
 
 Many OSes and releases thereof have different ways of gathering data.
 A lot of OSes still have none.  If you create plugins for an OS/system
