@@ -1633,8 +1633,15 @@ sub get_fonts {
     } elsif ($RRDs::VERSION >= 1.3) {
 	# RRD 1.3 and up
 	return (
-		'--font', "DEFAULT:0:DejaVuSans,DejaVu Sans,DejaVu LGC Sans,Bitstream Vera Sans",
-		'--font', "LEGEND:7:DejaVuSansMono,DejaVu Sans Mono,DejaVu LGC Sans Mono,Bitstream Vera Sans Mono,monospace",
+		'--font', 'DEFAULT:0:DejaVuSans,DejaVu Sans,DejaVu LGC Sans,Bitstream Vera Sans',
+		'--font', 'LEGEND:7:DejaVuSansMono,DejaVu Sans Mono,DejaVu LGC Sans Mono,Bitstream Vera Sans Mono,monospace',
+		# Colors coordinated with CSS.
+		'--color',  'BACK#FDFDFD',   # Area around the graph
+		'--color',  'CANVAS#FFFFFF', # Graph background, max contrast
+		'--color',  'FRAME#FDFDFD',  # Line around legend spot
+		'--color',  'FONT#666666',   # Some kind of gray
+		'--color',  'AXIS#CFD6F8',   # And axis like html boxes
+		'--color',  'ARROW#CFD6F8',  # And arrow, ditto.
 	       );
     }
 
