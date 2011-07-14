@@ -1636,12 +1636,13 @@ sub get_fonts {
 		'--font', 'DEFAULT:0:DejaVuSans,DejaVu Sans,DejaVu LGC Sans,Bitstream Vera Sans',
 		'--font', 'LEGEND:7:DejaVuSansMono,DejaVu Sans Mono,DejaVu LGC Sans Mono,Bitstream Vera Sans Mono,monospace',
 		# Colors coordinated with CSS.
-		'--color',  'BACK#FDFDFD',   # Area around the graph
+		'--color',  'BACK#F0F0F0',   # Area around the graph
+		'--color',  'FRAME#F0F0F0',  # Line around legend spot
 		'--color',  'CANVAS#FFFFFF', # Graph background, max contrast
-		'--color',  'FRAME#FDFDFD',  # Line around legend spot
 		'--color',  'FONT#666666',   # Some kind of gray
 		'--color',  'AXIS#CFD6F8',   # And axis like html boxes
 		'--color',  'ARROW#CFD6F8',  # And arrow, ditto.
+		'--border', '0',
 	       );
     }
 
