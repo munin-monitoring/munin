@@ -62,10 +62,11 @@ a.crit:visited { color: #ff0000; }
 a.crit:active  { color: #ff0000; } 
 a.crit:hover   { color: #ff0000; } 
 
-img       { border-width: 2px; border-color: #a0a0a0; }
-img.warn  { border-width: 2px; border-color: #ffd300; }
-img.crit  { border-width: 2px; border-color: #ff0000; }
-img.unkn  { border-width: 2px; border-color: #ffaa00; }
+img        { border: 0px; }
+img.i      { border: 1px solid #a0a0a0; }
+img.iwarn  { border: 1px solid #ffd300; }
+img.icrit  { border: 1px solid #ff0000; }
+img.iunkn  { border: 1px solid #ffaa00; }
 
 /* Header */
 #header {

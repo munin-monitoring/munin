@@ -1,4 +1,4 @@
-<TMPL_INCLUDE NAME="partial/head.tmpl">
+<TMPL_INCLUDE NAME="partial/head.tmpl"><!-- -*- HTML -*- -->
 <body>
 <TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
 <div id="main">
@@ -11,16 +11,14 @@
 	<TMPL_LOOP NAME="SERVICES">
 		<tr><td>
 		<a href="<TMPL_VAR NAME="URLX">">
-		<img <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF>
-		 <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> 
-		 src="<TMPL_VAR NAME="IMGDAY">" 
+		<img class=i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>
+		 src="<TMPL_VAR NAME="IMGDAY">"
 		 alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">" 
          <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> 
 		 <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/>
 		</a></td>
         <td><a href="<TMPL_VAR NAME="URLX">">
-		<img <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> 
-		 <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> 
+		<img class=i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>
 		 src="<TMPL_VAR NAME="IMGWEEK">" 
 		 alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">" 
 		 <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF> 
