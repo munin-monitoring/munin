@@ -1,4 +1,4 @@
-<TMPL_INCLUDE NAME="partial/head.tmpl">
+<TMPL_INCLUDE NAME="partial/head.tmpl"><!-- -*- HTML -*- -->
 <body>
  <div id="header">
 	<h1><span class="logo"></span> <span class="currentpage">Overview</span></h1>
@@ -15,11 +15,9 @@
           <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> 
           <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> 
           <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> 
-          <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> 
-        ]</TMPL_IF>
+          <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a>&nbsp;]</TMPL_IF>
         <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES">
-          <a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> 
-        </TMPL_LOOP>]</TMPL_IF>
+          <a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></TMPL_LOOP>&nbsp]</TMPL_IF>
 		<ul>
 		<TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH">
 			<li <TMPL_IF NAME="__LAST__">class="last"</TMPL_IF>>
@@ -28,11 +26,9 @@
 	          <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> 
         	  <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> 
     	      <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> 
-	          <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> 
-        	]</TMPL_IF>
+	          <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a>&nbsp;]</TMPL_IF>
     	    <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES">
-	          <a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> 
-        	</TMPL_LOOP>]</TMPL_IF>
+	          <a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>&nbsp;</TMPL_LOOP>]</TMPL_IF>
 			<ul>
 			<TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH">
 				<li <TMPL_IF NAME="__LAST__">class="last"</TMPL_IF>>
@@ -41,11 +37,9 @@
 		          <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> 
        			  <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> 
 	    	      <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> 
-       			  <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> 
-		        ]</TMPL_IF>
+       			  <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a>&nbsp;]</TMPL_IF>
 	        	<TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES">
-  	        	  <a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> 
-    		    </TMPL_LOOP>]</TMPL_IF>
+  	        	  <a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a>&nbsp;</TMPL_LOOP>]</TMPL_IF>
 				<ul>
 				<TMPL_LOOP NAME="GROUPS"><TMPL_UNLESS NAME="MULTIGRAPH">
 					<li <TMPL_IF NAME="__LAST__">class="last"</TMPL_IF>>
@@ -54,15 +48,11 @@
 			          <a href="<TMPL_VAR NAME="NAME">/comparison-day.html">day</a> 
 			          <a href="<TMPL_VAR NAME="NAME">/comparison-week.html">week</a> 
 			          <a href="<TMPL_VAR NAME="NAME">/comparison-month.html">month</a> 
-			          <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a> 
-			        ]</TMPL_IF>
+			          <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a>&nbsp;]</TMPL_IF>
 			        <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES">
-			          <a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> 
-			        </TMPL_LOOP>]</TMPL_IF>
+			          <a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></TMPL_LOOP>&nbsp;]</TMPL_IF>
 			        </li>
 				</TMPL_UNLESS></TMPL_LOOP>
-				</ul>			
-				</li>
 			</TMPL_UNLESS></TMPL_LOOP>
 			</ul>	
 			</li>	
