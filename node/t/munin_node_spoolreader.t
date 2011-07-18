@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 18;
+use Test::More tests => 22;
 use Test::LongString;
 
 use POSIX ();
@@ -57,42 +57,36 @@ use Munin::Node::SpoolWriter;
     ]);
 
     is_string($reader->fetch(1234567899), <<EOS, 'Fetched data since the write');
-timestamp 1234567900
 multigraph fnord
 graph_title CPU usage
 system.label system
-system.value 2
-timestamp 1234567910
+system.value 1234567900:2
 multigraph fnord
 graph_title CPU usage
 system.label system
-system.value 3
+system.value 1234567910:3
 EOS
 
     is_string($reader->fetch(1234567900), <<EOS, 'Start timestamp is not inclusive');
-timestamp 1234567910
 multigraph fnord
 graph_title CPU usage
 system.label system
-system.value 3
+system.value 1234567910:3
 EOS
 
     is_string($reader->fetch(1), <<EOS, 'Timestamp predates all result: all results are returned');
-timestamp 1234567890
 multigraph fnord
 graph_title CPU usage
 system.label system
-system.value 1
-timestamp 1234567900
+system.value 1234567890:1
 multigraph fnord
 graph_title CPU usage
 system.label system
-system.value 2
-timestamp 1234567910
+system.value 1234567900:2
 multigraph fnord
 graph_title CPU usage
 system.label system
-system.value 3
+system.value 1234567910:3
 EOS
 
     is_string($reader->fetch(1234567999), '', 'Timestamp postdates the last result: empty string');
@@ -112,11 +106,10 @@ EOS
     ]);
 
     is_string($reader->fetch(1), <<EOS, 'Blank lines are ignored');
-timestamp 1234567890
 multigraph fnord
 graph_title CPU usage
 system.label system
-system.value 1
+system.value 1234567890:1
 EOS
 
 }
@@ -141,28 +134,25 @@ EOS
     ok(my $fetched = $reader->fetch(1234567800), 'Several services to fetch');
 
     my $f1 = <<EOT;
-timestamp 1234567890
 multigraph fnord
 graph_title CPU usage
 system.label system
-system.value 3
+system.value 1234567890:3
 EOT
     my $f2 = <<EOT;
-timestamp 1234567910
 multigraph blort
 graph_title Memory usage
 slab.label slab
-slab.value 123
+slab.value 1234567910:123
 EOT
     like($fetched, qr(\A$f1$f2|$f2$f1\Z)m, 'Got results for both services, in either order, and nothing else');
 
 
     is($reader->fetch(1234567900), <<EOS, 'Several plugins to fetch, but only one is recent enough');
-timestamp 1234567910
 multigraph blort
 graph_title Memory usage
 slab.label slab
-slab.value 123
+slab.value 1234567910:123
 EOS
 
 }
@@ -187,18 +177,16 @@ EOS
     ok(my $fetched = $reader->fetch(1234567800), 'Several sets of results to fetch');
 
     my $f1 = <<EOT;
-timestamp 1234567890
 multigraph fnord
 graph_title CPU usage
 system.label system
-system.value 3
+system.value 1234567890:3
 EOT
     my $f2 = <<EOT;
-timestamp 1234567990
 multigraph fnord
 graph_title CPU usage!
 system.label system
-system.value 4
+system.value 1234567990:4
 EOT
     like($fetched, qr(\A$f1$f2|$f2$f1\Z)m, 'Got results for both services, in either order, and nothing else');
 }
