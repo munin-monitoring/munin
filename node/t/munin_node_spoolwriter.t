@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 19;
+use Test::More tests => 25;
 use Test::LongString;
 
 use POSIX ();
@@ -11,6 +11,10 @@ use Data::Dumper;
 use File::Slurp;
 
 use Munin::Node::SpoolWriter;
+
+
+# like touch(1).
+sub touch { open my $fh, '>>', (shift) or die $!; close $fh }
 
 
 ### new
@@ -44,7 +48,7 @@ use Munin::Node::SpoolWriter;
         'system.value 999999'
     ]);
 
-    my $data_file = "$dir/munin-daemon.fnord.0";
+    my $data_file = "$dir/munin-daemon.fnord.1234483200";
     ok( -r $data_file, 'spool file is readable') or last;
 
     my $data = read_file($data_file);
@@ -123,7 +127,7 @@ EOC
             "system.value $value",
         ]);
 
-        my $data_file = "$dir/munin-daemon.fnord.0";
+        my $data_file = "$dir/munin-daemon.fnord.1234483200";
         unless ( -r $data_file) {
             fail("$msg: File not created");
             next
@@ -133,6 +137,7 @@ EOC
         like($data, qr(^system\.value $expected\n$)m, $msg);
     }
 }
+
 
 # writing multigraph results
 {
@@ -150,7 +155,7 @@ EOC
         'subsystem.value 123',
     ]);
 
-    my $data_file = "$dir/munin-daemon.fnord.0";
+    my $data_file = "$dir/munin-daemon.fnord.1234483200";
     ok( -r $data_file, 'spool file is readable') or last;
 
     my $data = read_file($data_file);
@@ -166,5 +171,30 @@ subsystem.label subsystem
 subsystem.value 123
 EOC
 
+}
+
+
+### cleanup
+{
+    my $dir = tempdir( CLEANUP => 1 );
+    my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
+
+    # one timestamp before the cutoff, one after.
+    my $stale  = time - Munin::Node::SpoolWriter::MAXIMUM_AGE - 100;
+    my $fresh = time - Munin::Node::SpoolWriter::MAXIMUM_AGE + 100;
+
+    touch("$dir/munin-daemon.stale.$stale");
+    touch("$dir/munin-daemon.fresh.$fresh");
+    touch("$dir/cruft");
+
+    ok( -r "$dir/munin-daemon.stale.$stale",   'created a stale file');
+    ok( -r "$dir/munin-daemon.fresh.$fresh", 'created a fresh file');
+    ok( -r "$dir/cruft",                       'created a cruft file');
+
+    $writer->cleanup;
+
+    ok(! -r "$dir/munin-daemon.stale.$stale",   'stale file is gone');
+    ok(  -r "$dir/munin-daemon.fresh.$fresh", 'fresh file is still there');
+    ok(  -r "$dir/cruft",                       'cruft file is still there');
 }
 
