@@ -218,6 +218,11 @@ EOT
         'system.label system',
         'system.value -4',
     ]);
+    $writer->write(1334567890, 'blort', [
+        'graph_title Flux capacitance',
+        'system.label system',
+        'system.value -4',
+    ]);
 
     open my $cruft, '>', "$dir/cruft" or die "Unable to create cruft file: $!";
     print $cruft "rubbish\n";
