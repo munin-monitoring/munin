@@ -1,6 +1,9 @@
 Munin installation requirements
 ===============================
 
+If you require IPv6 please see notes on the bottom.
+
+
 On all hosts:
 
 - A reasonable Perl 5
@@ -269,3 +272,33 @@ retrived can be found like this:
   ...
 
 Now just make sure the sources directory is empty before you begin.
+
+IPv6
+====
+
+The basic problem with munin and ipv6 is that we use Net::Server and
+there has been no releases of Net::Server supporting IPv6
+(pr. 2011-07-22).  So we've found out that Debian has patches for IPv6
+support and they're even claiming to be complete - and our testing
+agrees.  I (janl) will presently commence submitting a new version of
+Net::Server to CPAN based on this. 
+
+If you use Debian (or derivates) with Net::Server 0.99-2 or later or
+if you find Net::Server 0.99.6.1 or more recent in your CPAN or
+Distribution repository is probably supports IPv6 out of the box.
+
+In the mean time look in the contrib directory for our
+Net::Server.patch.  You can apply this directly to your installed
+Net::Server perl modules - this is a bit dirty, and you may have to
+jigger the directory paths a bit, but it will work.  If you use CPAN
+anyway then get Net::Server and apply the patch provided.
+
+If your Net::Server understands IPv6 and you have "host *" in your
+munin-node.conf file your munin will be listening on a dual ipv4/ipv6
+socket and you can connect to it with "telnet ::1 4949" to test.  You
+probably need to correct your allow list like so:
+
+  allow \:\:1$
+
+to actually allow this.  If you keep an eye on munin-node.log then the
+cause of any problems should be obvious.
