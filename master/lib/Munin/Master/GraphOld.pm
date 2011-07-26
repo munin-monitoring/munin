@@ -1620,19 +1620,22 @@ sub handle_trends {
 
 sub get_fonts {
     # Set up rrdtool graph font options according to RRD version.
+    my @options;
 
-    if ($RRDs::VERSION >= 1.2 and $RRDs::VERSION < 1.3) {
+    if ($RRDs::VERSION < 1.2) {
+	# RRD before 1.2, no font options
+    } elsif ($RRDs::VERSION < 1.3) {
 	# RRD 1.2
 	# The RRD 1.2 documentation says you can identify font family
 	# names but I never got that to work, but full font path worked
-	return (
+	@options = (
 		'--font', "LEGEND:7:$libdir/DejaVuSansMono.ttf",
 		'--font', "UNIT:7:$libdir/DejaVuSans.ttf",
 		'--font', "AXIS:7:$libdir/DejaVuSans.ttf",
 	       );
-    } elsif ($RRDs::VERSION >= 1.3) {
-	# RRD 1.3 and up
-	return (
+    } else {
+	# At least 1.3
+	@options = (
 		'--font', 'DEFAULT:0:DejaVuSans,DejaVu Sans,DejaVu LGC Sans,Bitstream Vera Sans',
 		'--font', 'LEGEND:7:DejaVuSansMono,DejaVu Sans Mono,DejaVu LGC Sans Mono,Bitstream Vera Sans Mono,monospace',
 		# Colors coordinated with CSS.
@@ -1642,12 +1645,17 @@ sub get_fonts {
 		'--color',  'FONT#666666',   # Some kind of gray
 		'--color',  'AXIS#CFD6F8',   # And axis like html boxes
 		'--color',  'ARROW#CFD6F8',  # And arrow, ditto.
-		'--border', '0',
 	       );
     }
 
-    # Prior to RRD 1.2 we use no font options.
-    return;
+    if ($RRDs::VERSION >= 1.4) {
+	# RRD 1.4 has border, adding it
+	push @options, (
+		'--border',  '0',
+	       );
+    }
+
+    return @options;
 };
 
 
