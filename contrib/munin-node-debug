@@ -138,7 +138,7 @@ sub service
 			my $plugin_number = get_plugin_number($1);
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
 				my $value = sin( (time / 3600) * $plugin_number + $i);
-				print $client "field_$1_$i.value $value\n";
+				print $client "field_". $plugin_number . "_$i.value $value\n";
 			}
 			print $client ".\n";
 		} elsif ($line =~ m/^spoolfetch (\d+)/) {
