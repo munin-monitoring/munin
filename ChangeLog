@@ -1,5 +1,13 @@
 -*- text -*-
-munin 2.0-beta2, r4256:4298, 2011-8-1
+munin 2.0-beta4, r4306, 2011-8-2
+
+Commit by steve.schnepp
+
+Summary : 
+
+* fix issue with cgi html
+
+munin 2.0-beta3, r4256:4298, 2011-8-1
 
 Commits by janl, ligne, steve.schnepp
 
