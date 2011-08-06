@@ -972,6 +972,11 @@ sub process_service {
 
         # Getting name of rrd file
         $filename = munin_get_rrd_filename($field, $path);
+	if (! $filename) {
+		ERROR "[ERROR] filename is empty for " . munin_dumpconfig_as_str($field) . ", $path";
+		# Ignore this field
+		next;
+	}
 
 	if(!defined $filename) {
 		ERROR "[ERROR] Failed getting filename for $path, skipping field";
