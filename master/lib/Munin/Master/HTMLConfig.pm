@@ -430,28 +430,34 @@ sub generate_service_templates {
 
     my $path = join('/', @loc);
 
+    my %imgs;
+    $imgs{'imgday'}   = "$path-day.png";
+    $imgs{'imgweek'}  = "$path-week.png";
+    $imgs{'imgmonth'} = "$path-month.png";
+    $imgs{'imgyear'}  = "$path-year.png";
+    
+    $imgs{'cimgday'}   = "$path-day.png";
+    $imgs{'cimgweek'}  = "$path-week.png";
+    $imgs{'cimgmonth'} = "$path-month.png";
+    $imgs{'cimgyear'}  = "$path-year.png";
+    
+    if (munin_get_bool($service, "graph_sums", 0)) {
+        $imgs{'imgweeksum'} = "$path-week-sum.png";
+        $imgs{'imgyearsum'} = "$path-year-sum.png";
+    }
+
+    # dump all the png filename to a file
+    my $fh = $config->{"#%#graphs_fh"};
+    foreach my $img (keys %imgs) {
+	print $fh $imgs{$img} . "\n";
+    }
+
     if ($method eq "cgi") {
-        $srv{'imgday'}   = $config->{'cgiurl_graph'} . "/$path-day.png";
-        $srv{'imgweek'}  = $config->{'cgiurl_graph'} . "/$path-week.png";
-        $srv{'imgmonth'} = $config->{'cgiurl_graph'} . "/$path-month.png";
-        $srv{'imgyear'}  = $config->{'cgiurl_graph'} . "/$path-year.png";
-
-        $srv{'cimgday'}   = $config->{'cgiurl_graph'} . "/$path-day.png";
-        $srv{'cimgweek'}  = $config->{'cgiurl_graph'} . "/$path-week.png";
-        $srv{'cimgmonth'} = $config->{'cgiurl_graph'} . "/$path-month.png";
-        $srv{'cimgyear'}  = $config->{'cgiurl_graph'} . "/$path-year.png";
-
-        if (munin_get_bool($service, "graph_sums", 0)) {
-            $srv{'imgweeksum'}
-                = $config->{'cgiurl_graph'} . "/$path-week-sum.png";
-            $srv{'imgyearsum'}
-                = $config->{'cgiurl_graph'} . "/$path-year-sum.png";
-        }
+	map { $srv{$_} = $config->{'cgiurl_graph'} . "/" . $imgs{$_} } keys %imgs;
+    } else {
+	map { $srv{$_} = $root_path . "/" . $imgs{$_} } keys %imgs;
     }
-    else {
 
-        # graph strategy cron is disabled
-    }
 
     # Compute the ZOOM urls
     {

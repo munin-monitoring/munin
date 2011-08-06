@@ -149,7 +149,14 @@ sub get_config {
 		$htmlconfig = munin_readconfig_storable($htmlconfcache);
 	}
 	if(!defined $htmlconfig){
+		my $graphs_filename = $config->{dbdir} . "/graphs";
+		my $graphs_filename_tmp = "." . $graphs_filename . ".tmp." . $$;
+    		$config->{"#%#graphs_fh"} = new IO::File("> $graphs_filename_tmp");
 		$htmlconfig = generate_config($config);
+    		$config->{"#%#graphs_fh"} = undef;
+
+		# Atomic move
+		rename($graphs_filename_tmp, $graphs_filename);
 	}
 	return $htmlconfig;
 }
@@ -177,6 +184,7 @@ sub html_main {
     INFO "[INFO] Starting munin-html, getting lock $lockfile";
 
     munin_runlock($lockfile);
+
 
    # Preparing the group tree...
 
