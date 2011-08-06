@@ -150,7 +150,7 @@ sub get_config {
 	}
 	if(!defined $htmlconfig){
 		my $graphs_filename = $config->{dbdir} . "/graphs";
-		my $graphs_filename_tmp = "." . $graphs_filename . ".tmp." . $$;
+		my $graphs_filename_tmp = $graphs_filename . ".tmp." . $$;
     		$config->{"#%#graphs_fh"} = new IO::File("> $graphs_filename_tmp");
 		$htmlconfig = generate_config($config);
     		$config->{"#%#graphs_fh"} = undef;
