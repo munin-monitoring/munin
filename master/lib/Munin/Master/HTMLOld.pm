@@ -35,10 +35,12 @@ This is the hierarchy of templates
 
   * munin-overview.tmpl - Overview with all groups and hosts shown (2 levels down)
     
-    * munin-domianview.tmpl - all members of one domain, showing links down to each single service
+    * munin-domainview.tmpl - all members of one domain, showing links down to each single service
       and/or sub-group
 
       * munin-nodeview.tmpl - two (=day, week) graphs from all plugins on the node
+
+        * Zoom view - zoomable graph based on one of the other four graphs
 
 	* munin-serviceview.tmpl - deepest level of view, shows all 4 graphs from one timeseries
 
