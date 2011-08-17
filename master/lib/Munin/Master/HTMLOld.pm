@@ -70,6 +70,7 @@ use POSIX qw(strftime);
 use Getopt::Long;
 use Time::HiRes;
 use File::Copy::Recursive qw(dircopy);
+use IO::File;
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
