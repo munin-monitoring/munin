@@ -21,7 +21,7 @@ INFILES_MASTER   := $(shell find master -name '*.in' | sed 's/\(.*\)\.in$$/build
 CLASSFILES       := $(shell find plugins/javalib/ -name '*.java' | sed 's/\(.*\)\.java$$/build\/\1.class/')
 PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/*)
 MANCENTER        := "Munin Documentation"
-MAN8		 := master/_bin/munin-update master/_bin/munin-limits master/_bin/munin-html
+MAN8		 := master/_bin/munin-update master/_bin/munin-limits master/_bin/munin-html master/_bin/munin-graph
 PODMAN8          := build/master/doc/munin-cron master/doc/munin master/doc/munin-check
 PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
 
@@ -109,6 +109,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	$(INSTALL) -m 0755 build/master/_bin/munin-check $(BINDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-update $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-html $(LIBDIR)/
+	$(INSTALL) -m 0755 build/master/_bin/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-limits $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-datafile2storable $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-storable2datafile $(LIBDIR)/
@@ -174,6 +175,7 @@ install-man: build-man Makefile Makefile.config
 	$(INSTALL) -m 0644 build/doc/munin.conf.5 $(MANDIR)/man5/
 	$(INSTALL) -m 0644 build/doc/munin-update.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-limits.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-graph.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-html.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-cron.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-check.8 $(MANDIR)/man8/
