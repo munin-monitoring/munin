@@ -96,7 +96,8 @@ if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
 	print "no ($ret)\n";
 	exit 0;
     }
-    my $au = LWP::UserAgent->new(timeout => $TIMEOUT);
+    my $au = LWP::UserAgent->new(timeout => $TIMEOUT,
+			agent => sprintf("munin/%s (libwww-perl/%s)", $Munin::Common::Defaults::MUNIN_VERSION, $LWP::VERSION));
     my $repsonse = $au->request(HTTP::Request->new('GET',$url));
     if($repsonse->is_success and $repsonse->content =~ /<status>.*<\/status>/im) {
 	print "yes\n";
@@ -119,7 +120,8 @@ if(exists $ARGV[0] and $ARGV[0] eq "config") {
     exit 0;
 }
 
-my $ua = LWP::UserAgent->new(timeout => $TIMEOUT);
+my $ua = LWP::UserAgent->new(timeout => $TIMEOUT,
+		agent => sprintf("munin/%s (libwww-perl/%s)", $Munin::Common::Defaults::MUNIN_VERSION, $LWP::VERSION));
 my $xs = new XML::Simple;
 my $response = $ua->request(HTTP::Request->new('GET',$url));
 my %options = ( KeyAttr => { connector => 'name' }, ForceArray => 1 );

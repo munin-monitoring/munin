@@ -60,7 +60,8 @@ if (! eval "require LWP::UserAgent;")
 
 my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://localhost/haproxy-status;csv;norefresh";
 
-my $ua = LWP::UserAgent->new(timeout => 30);
+my $ua = LWP::UserAgent->new(timeout => 30,
+		agent => sprintf("munin/%s (libwww-perl/%s)", $Munin::Common::Defaults::MUNIN_VERSION, $LWP::VERSION));
 
 my $url = $URL;
 my $response = $ua->request(HTTP::Request->new('GET',$url));
