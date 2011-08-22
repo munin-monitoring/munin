@@ -227,6 +227,16 @@ if (exists $mems{'VmallocUsed'}) {
     $mems{'VmallocUsed'} = 0;
 }
 
+# Having default values for mandatory fields, even when they are not on the system
+$mems{'MemFree'} ||= 0;
+$mems{'Buffers'} ||= 0;
+$mems{'Cached'} ||= 0;
+$mems{'Slab'} ||= 0;
+$mems{'PageTables'} ||= 0;
+$mems{'SwapCached'} ||= 0;
+$mems{'SwapFree'} ||= 0;
+$mems{'SwapTotal'} ||= 0;
+
 print "apps.value ", $mems{'MemTotal'}
 	-$mems{'MemFree'}
 	-$mems{'Buffers'}
