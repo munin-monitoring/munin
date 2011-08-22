@@ -109,7 +109,7 @@ $pop->print("");
 
 ## Request status of messages.
 $pop->print("Action: command");
-$pop->print("Command: show voicemail users");
+$pop->print("Command: voicemail show users");
 $pop->print("");
 
 #Context    Mbox  User                      Zone       NewMsg
@@ -132,6 +132,9 @@ while (($line = $pop->getline)  and ($line !~ /--END/o))
 # Logoff
 $pop->print("Action: logoff");
 $pop->print("");
+
+## Exhaust buffer before closing (to avoid polluting Asterisk's logs)
+while ($line = $pop->getline) {}
 
 print "messages.value $results\n";
 # vim:syntax=perl

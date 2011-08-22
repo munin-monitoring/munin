@@ -152,6 +152,9 @@ while (($line = $pop->getline) and ($line !~ /END COMMAND/o))
 $pop->print("Action: logoff");
 $pop->print("");
 
+## Exhaust buffer before closing (to avoid polluting Asterisk's logs)
+while ($line = $pop->getline) {}
+
 #print "peers.value $peers\n";
 print "mon.value $monitor_online\n";
 print "moff.value $monitor_offline\n";

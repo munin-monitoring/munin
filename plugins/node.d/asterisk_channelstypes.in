@@ -120,7 +120,7 @@ $pop->print("");
 
 ## Request status of messages.
 $pop->print("Action: command");
-$pop->print("Command: show channels");
+$pop->print("Command: core show channels");
 $pop->print("");
 
 #Response: Follows
@@ -156,6 +156,9 @@ while (($line = $pop->getline) and ($line !~ /active channels/o))
 # Logoff
 $pop->print("Action: logoff");
 $pop->print("");
+
+## Exhaust buffer before closing (to avoid polluting Asterisk's logs)
+while ($line = $pop->getline) {}
 
 $i = 0;
 foreach my $channel (@CHANNELS) {
