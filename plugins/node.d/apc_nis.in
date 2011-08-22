@@ -44,6 +44,9 @@ if($ARGV[0] and $ARGV[0] eq "config") {
 	print "time_left.label time left (min)\n";
 	print "time_left.type GAUGE\n";
 	print "time_left.max 200\n";
+        print "temperature.label internal temperature (celsius)\n";
+        print "temperature.type GAUGE\n";
+        print "temperature.max 100\n";
     exit 0;
 }
 
@@ -81,6 +84,9 @@ do {
 	} elsif($line =~ /\WTIMELEFT /) {
 		$line =~ s/.* (\d+.\d+).*/$1/;
 		print "time_left.value $line\n";
+	} elsif($line =~ /\WITEMP /) {
+		$line =~ s/.* (\d+.\d+).*/$1/;
+		print "temperature.value $line\n";
 	}
 } while(!($line =~ /END APC/));
 
