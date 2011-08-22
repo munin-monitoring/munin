@@ -181,7 +181,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Connected users'
 	echo 'graph_vlabel users'
 	for host in $vhosts; do
-	    formathost=$(echo $host | tr '.' '_')
+	    formathost=$(echo $host | tr '.' '_' | tr '-' '_')
 	    echo "connected_users_$formathost.label $host connected users";
 	    echo "connected_unique_users_$formathost.label $host unique connected users";
 	done;
@@ -189,7 +189,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Number of registered users'
 	echo 'graph_vlabel users'
 	for host in $vhosts; do
-	    formathost=$(echo $host | tr '.' '_')
+	    formathost=$(echo $host | tr '.' '_' | tr '-' '_')
 	    echo "registered_$formathost.label $host registered users";
 	    echo "registered_$formathost.info Registered users for vhost $host"
 	done;
@@ -198,7 +198,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel users'
 	for host in $vhosts; do
 		for status in $statuses; do
-			formathost=$(echo $host | tr '.' '_')
+			formathost=$(echo $host | tr '.' '_' | tr '-' '_')
 		   echo "status_${formathost}_${status}.label $status on $host"; 
 	  	 	echo "status_${formathost}_${status}.info Number of users with status $status on $host [available, away, xa=not available, dnd=(do not disturb) or (busy), chat=free for chat]";
 		done;
@@ -213,7 +213,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel users'
 	for host in $vhosts; do
 		for num in $days; do
-			formathost=$(echo $host | tr '.' '_')
+			formathost=$(echo $host | tr '.' '_' | tr '-' '_')
 			echo "usersindays_${formathost}_${num}.label active users on $host in last $num days";
 			echo "usersindays_${formathost}_${num}.info Number of users active on $host in last $num days";
 		done;
@@ -236,7 +236,7 @@ fi
 
 if [ "$MODE" = "users" ]; then
     for host in $vhosts; do
-	formathost=$(echo $host | tr '.' '_')
+	formathost=$(echo $host | tr '.' '_' | tr '-' '_')
 	echo "connected_users_$formathost.value $($EJCTL vhost $host stats onlineusers)"; 
 	echo "connected_unique_users_$formathost.value $($EJCTL connected-users | awk -v var=$host -F/ '{users[$1]} END {for (user in users) {if (index(user,var)) {count++}} print count}')"; 
     done
@@ -245,7 +245,7 @@ fi
 
 if [ "$MODE" = "registrations" ]; then
     for host in $vhosts; do
-	formathost=$(echo $host | tr '.' '_')
+	formathost=$(echo $host | tr '.' '_' | tr '-' '_')
 	num=$($EJCTL vhost $host stats registeredusers)
         if [ "$?" != 0 ]; then
             num="U"
@@ -257,7 +257,7 @@ fi
 
 if [ "$MODE" = "statuses" ]; then
    for host in $vhosts; do
-	formathost=$(echo $host | tr '.' '_')
+	formathost=$(echo $host | tr '.' '_' | tr '-' '_')
 		for status in $statuses; do
 			num=$($EJCTL vhost $host status-num $status)
 			if [ "$?" != 0 ]; then
@@ -283,7 +283,7 @@ fi
 if [ "$MODE" = "usersindays" ]; then
         for host in $vhosts; do
                 for num in $days; do
-                        formathost=$(echo $host | tr '.' '_')
+                        formathost=$(echo $host | tr '.' '_' | tr '-' '_')
                         echo "usersindays_${formathost}_${num}.value $($EJCTL vhost $host num-active-users $num)";
                 done;
         done;
