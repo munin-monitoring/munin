@@ -42,7 +42,7 @@ if($ARGV[0] and $ARGV[0] eq "config") {
 	print "graph_vlabel A bit of all (Volt, time, %)\n";
 	print "battery_volt.label batt volt (V)\n";
 	print "battery_volt.type GAUGE\n";
-	print "battery_volt.max 140\n";
+	print "battery_volt.max 300\n";
 	print "battery_charge.label batt charge (%)\n";
 	print "battery_charge.type GAUGE\n";
 	print "battery_charge.max 200\n";
