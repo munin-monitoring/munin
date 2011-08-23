@@ -148,7 +148,7 @@ my %booleans = map {$_ => 1} qw(
 		groups           => {},
 		local_address    => 0,
 		logdir           => $Munin::Common::Defaults::MUNIN_LOGDIR,
-		max_processes    => $MAXINT,
+		max_processes    => 16,
 		rundir           => $Munin::Common::Defaults::MUNIN_STATEDIR,
 		timeout          => 180,
 		tls              => 'disabled',
