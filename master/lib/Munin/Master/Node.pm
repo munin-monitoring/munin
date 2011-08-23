@@ -520,6 +520,18 @@ sub fetch_service_data {
     return $self->parse_service_data($plugin,@lines);
 }
 
+sub quit {
+    my ($self, $plugin) = @_;
+
+    my $t0 = [gettimeofday];
+    $self->_node_write_single("quit \n");
+    my $elapsed = tv_interval($t0);
+    my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
+    DEBUG "[DEBUG] quit: $elapsed sec for '$plugin' on $nodedesignation";
+
+    return 1;
+}
+
 
 sub _sanitise_plugin_name {
     my ($self, $name) = @_;

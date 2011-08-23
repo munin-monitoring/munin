@@ -211,12 +211,19 @@ sub do_work {
 		my $last_updated_timestamp = $self->_update_rrd_files(\%service_config, \%service_data);
           	$self->set_spoolfetch_timestamp($last_updated_timestamp);
 	    } # for @plugins
+
+	    # Send "quit" to node
+	    $self->{node}->quit();
+	   
 	}; # eval
 
 	if ($EVAL_ERROR) {
 	    ERROR "[ERROR] Error in node communication with $nodedesignation: "
 		.$EVAL_ERROR;
+	    # Eventually kill the remaining process
+	    kill $self->{node}->{pid} if $self->{node}->{pid};
 	}
+
 
     }); # do_in_session
 
