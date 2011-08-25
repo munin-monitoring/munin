@@ -220,8 +220,12 @@ sub do_work {
 	if ($EVAL_ERROR) {
 	    ERROR "[ERROR] Error in node communication with $nodedesignation: "
 		.$EVAL_ERROR;
-	    # Eventually kill the remaining process
-	    kill $self->{node}->{pid} if $self->{node}->{pid};
+	}
+	    
+	# kill the remaining process if needed
+	if ($self->{node}->{pid}) {
+		INFO "[INFO] Killing subprocess $self->{node}->{pid}";
+		kill $self->{node}->{pid};
 	}
 
 
