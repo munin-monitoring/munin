@@ -29,9 +29,8 @@ use warnings;
 use IO::Handle;
 use Date::Manip;
 use POSIX qw(strftime);
-use CGI::Fast qw(:cgi);
-use CGI::Carp qw(fatalsToBrowser);
 use Time::HiRes qw(gettimeofday tv_interval);
+use IO::File;
 
 use Munin::Master::GraphOld;
 use Munin::Master::Utils;
@@ -67,7 +66,7 @@ logger_debug() if $config->{debug} or defined($ENV{CGI_DEBUG});
 # BEGIN FAST-CGI LOOP:
 my $nb_request = 0;
 my $nb_request_max = 0;
-my $graph_fh = new IO::File("/var/lib/munin/graphs");
+my $graph_fh = new IO::File($config->{libdir} . "/graphs");
 while (my $path = <$graph_fh>) {
     my $pinpoint = undef;
     print "Request path is $path";
@@ -127,14 +126,8 @@ while (my $path = <$graph_fh>) {
 
     my $time = time;
 
-    # If a "Cache-Control: no-cache" header gets send, we regenerate the image in every case:
-    # Removed $pinpoint from the $no_cache expression - janl 2010-09-29
-
     my $no_cache = 0;
     # Compute the cache values
-    # FIXME: Take the plugins update_rate into account here, at least for
-    # the day graph.  update_rate should be in $config
-    # my $graph_ttl = $pinpoint ? 1 : $period{$scale};
     my $graph_ttl = $period{$scale} || 1;
     my $graph_last_expires = $time - ($time % $graph_ttl);
 
@@ -155,13 +148,11 @@ while (my $path = <$graph_fh>) {
 
     my $headers = get_headers_for_file($filename, $graph_ttl);
     foreach my $header_name (keys %$headers) {
-	print "$header_name: $headers->{$header_name}\r\n";
+        INFO "$header_name: $headers->{$header_name}";
     }
 
-    print "\r\n";
-
     # ... and graph data
-    # send_graph_data($filename);
+    # send_graph_data($filename);
 } continue {
 	$nb_request++;
 	if ($nb_request_max && $nb_request > $nb_request_max) {
@@ -314,20 +305,6 @@ sub draw_graph {
 		   '--only-fqn', "root/$dom/$host/$serv",
 		   $scale,
 		   '--output-file', $filename );
-
-    # Sets the correct size on a by_graph basis
-    push @params, "--size_x", CGI::param("size_x")
-      if (defined(CGI::param("size_x")));
-    push @params, "--size_y", CGI::param("size_y")
-      if (defined(CGI::param("size_y")));
-    push @params, "--upper_limit", CGI::param("upper_limit")
-      if (CGI::param("upper_limit"));
-    push @params, "--lower_limit", CGI::param("lower_limit")
-      if (CGI::param("lower_limit"));
-
-    # XXX - the debug param is sticky. It really should be per request.
-    push @params, "--debug"
-      if (CGI::param("debug"));
 
     graph_main(\@params);
 
