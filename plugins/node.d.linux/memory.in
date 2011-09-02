@@ -186,7 +186,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	print "inact_clean.draw LINE1\n";
 	print "inact_clean.info Memory not currently used.\n";
     }
-    for my $field qw(apps buffers swap cached free slab swap_cache page_tables vmalloc_used committed mapped active active_anon active_cache inactive inact_dirty inact_laundry inact_clean) {
+    for my $field (qw(apps buffers swap cached free slab swap_cache page_tables vmalloc_used committed mapped active active_anon active_cache inactive inact_dirty inact_laundry inact_clean)) {
     	my ($warning, $critical) = get_thresholds($field);
 	my $total = $mems{MemTotal};
 	$total = $mems{SwapTotal} if($field eq "swap");
