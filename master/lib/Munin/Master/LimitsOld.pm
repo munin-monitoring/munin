@@ -594,8 +594,10 @@ sub generate_service_message {
     foreach my $c (split(/\s+/, $contactlist)) {
         next if $c eq "none";
         my $contactobj = munin_get_node($config, ["contact", $c]);
-        next unless defined $contactobj;
-        next unless defined munin_get($contactobj, "command", undef);
+        if(!defined $contactobj) {
+            WARN("[WARNING] Missing configuration options for contact $c; skipping");
+            next;
+        }
         if (@limit_contacts and !grep (/^$c$/, @limit_contacts)) {
             next;
         }
@@ -607,8 +609,12 @@ sub generate_service_message {
         if (!$hash->{'state_changed'} and !$obsess) {
             next;    # No need to send notification
         }
-        DEBUG "state has changed, notifying $c";
-        my $precmd = munin_get($contactobj, "command");
+        DEBUG "[DEBUG] state has changed, notifying $c";
+        my $precmd = munin_get($contactobj, "command", undef);
+        if(!defined $precmd) {
+            WARN("[WARNING] Missing command option for contact $c; skipping");
+            next;
+        }
         my $pretxt = munin_get(
             $contactobj,
             "text",
