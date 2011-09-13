@@ -35,6 +35,7 @@ use Munin::Common::Defaults;
 
 my $QUERYLOG = $ENV{logfile} || '/var/log/bind9/query.log';
 my $STATEFILE= $Munin::Common::Defaults::MUNIN_PLUGSTATE.'/bind9.state';
+
 my $OTHER=0;
 my %IN;
 
