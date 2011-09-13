@@ -59,7 +59,7 @@ sub do_stats {
     open(Q,"< $QUERYLOG") or die "$!";
     while (<Q>) {
 	chomp;
-	if (/client \d+\.\d+.\d+.\d+\#\d+: (view \S+\: |)query\: \S+ (\w+) (\w+)/) {
+	if (/: (view \S+\: |)query\: \S+ (\w+) (\w+)/) {
 	    if ($2 eq 'IN' and $3 !~ /^TYPE/) {
                 $IN{$3}++;
 	    } else {
