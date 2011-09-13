@@ -1,5 +1,5 @@
 #!@@PYTHON@@
-# -*- encoding: iso-8859-1 -*-
+# -*- python -*-
 #
 # Wildcard-plugin to monitor S.M.A.R.T attribute values through smartctl,
 # which is part of smartmontools package:
