@@ -31,7 +31,7 @@ GPLv2
 =cut
 
 use strict;
-use Munin::Common::Defaults; 
+use Munin::Common::Defaults;
 
 my $QUERYLOG = $ENV{logfile} || '/var/log/bind9/query.log';
 my $STATEFILE= $Munin::Common::Defaults::MUNIN_PLUGSTATE.'/bind9.state';
@@ -54,18 +54,18 @@ sub get_state {
 
 
 sub do_stats {
-    my $k; 
+    my $k;
 
     open(Q,"< $QUERYLOG") or die "$!";
     while (<Q>) {
-	chomp;
-	if (/: (view \S+\: |)query\: \S+ (\w+) (\w+)/) {
-	    if ($2 eq 'IN' and $3 !~ /^TYPE/) {
+        chomp;
+        if (/: (view \S+\: |)query\: \S+ (\w+) (\w+)/) {
+            if ($2 eq 'IN' and $3 !~ /^TYPE/) {
                 $IN{$3}++;
-	    } else {
-		$OTHER++;
-	    }
-	}
+            } else {
+                $OTHER++;
+            }
+        }
     }
     close(Q);
 
@@ -73,8 +73,8 @@ sub do_stats {
 
     open(Q,"> $STATEFILE") or die;
     foreach $k (keys %IN) {
-	print "query_$k.value ",$IN{$k},"\n";
-	print Q "$k ",$IN{$k},"\n";
+        print "query_$k.value ",$IN{$k},"\n";
+        print Q "$k ",$IN{$k},"\n";
     }
     close(Q);
 
@@ -96,7 +96,7 @@ query_other.draw AREA
     get_state;
 
     foreach $k (keys %IN) {
-	print "query_$k.label $k
+        print "query_$k.label $k
 query_$k.type DERIVE
 query_$k.min 0
 query_$k.draw STACK
