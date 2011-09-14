@@ -43,7 +43,9 @@ monitored with this plugin.
 
 =head1 AUTHOR
 
-Unknown author
+Original author unknown
+
+Copyright (C) 2011 Diego Elio Petteno' <flameeyes@flameeyes.eu>
 
 =head1 LICENSE
 
@@ -64,86 +66,63 @@ Unknown license
 
 INTERFACE=${0##*if_}
 
-findspeed () {
+# Who whould have thought it's so much work to determine the
+# maximum speed of a network interface.  Buckle up!
+findspeed_mbps() {
+    # sysfs can report the speed if the driver supports it
+    if [ -r /sys/class/net/$INTERFACE/speed ]; then
+	    SPEED="$(cat /sys/class/net/$INTERFACE/speed 2>/dev/null)"
+	    if [ -n "$SPEED" ]; then
+		echo $SPEED
+		return
+	    fi
+    fi 
 
-    # Who whould have thought it's so much work to determine the
-    # maximum speed of a network interface.  Buckle up!
-
-    IWLIST="$(type -p iwlist)"
-
-    WIRELESS=0
     # Do not use interface name to guess technology.  Many many
     # wifi drivers use "eth*" names.
-    case $IWLIST in
+    IWLIST="$(type -p iwlist)"
+    if [ -x "$IWLIST" ]; then
+	SPEED=$($IWLIST $INTERFACE rate 2>&1 |
+	    awk 'BEGIN { RATE=U }
+                       { if ($2 == "Mb/s") RATE=$1; }
+                 END   { print RATE; }')
 
-	'')
-            # Used to use iwconfig to look for "no wireless
-            # extentions" message - but this seemed un-needed.  If we
-            # don't have iwlist we can't find out if # the interface
-            # is wireless
-            :;;
-	*)  IWO="$($IWLIST $INTERFACE rate 2>&1)"
-            case $IWO in
-                *no*) :;;
-	        *) WIRELESS=1;;
-	    esac
-	    ;;
-    esac
-
-    SPEED=U
-    # Find speed in Mbps. - or not
-    case $WIRELESS:$IWLIST in
-	0:*)
-	    ETHTOOL="$(type -p ethtool)"
-	    if [ -x "$ETHTOOL" ]; then
-		SPEED="$($ETHTOOL $INTERFACE 2>&1 |
-                         awk '/Speed:/ { gsub(/[^0-9]*/,"",$2); print $2; }')"
-		case $SPEED in
-		    [0-9]*) :;; # OK
-		    *)      SPEED=U;; # Could be "unknown"
-		esac
-	    else
-		INSTALL="ethtool"
-	    fi
-	    ;;
-	1:/*)
-	    # Current bit rate is not very interesting, it varies too often
-	    SPEED=$(echo "$IWO" |
-		    awk 'BEGIN { RATE=U }
-                               { if ($2 == "Mb/s") RATE=$1; } 
-                         END   { print RATE; }')
-
-	    ;;
-	*)
-	    # Wireless interface, cannot find iwlist
-	    INSTALL="wireless-tools"
-	    ;;
-    esac
-
-    MIITOOL="$(type -p mii-tool)"
-    case $SPEED:$MIITOOL in
-	U:/*)
-	    SPEED="$($MIITOOL $INTERFACE 2>&1)"
-	    case $SPEED in
-		*1000base*) SPEED=1000;; # as if...
-		*100base*)  SPEED=100;;
-		*10base*)   SPEED=10;;
-		*)          SPEED=U;;
-	    esac
-	    ;;
-    esac
-
-    # sysfs can report the speed if the driver supports it
-    SYSFS="$(cat /sys/class/net/$INTERFACE/speed 2>/dev/null)"
-    # If it can't, it fails on I/O, so we check cat's return value
-    if [ $? -eq 0 -a "$SPEED" = "U" -a -n "$SYSFS" ]; then
-        SPEED="$SYSFS"
+        if [ "$SPEED" != "U" ]; then
+            echo $SPEED
+            return
+        fi
     fi
 
-    case $SPEED in
-	U) echo "up.info Traffic of the $INTERFACE interface. Unable to determine interface speed.  Please install ethtool, wireless-tools (or mii-tool), whatever is appropriate for the interface."
-	   return;;
-    esac
+    ETHTOOL="$(type -p ethtool)"
+    if [ -x "$ETHTOOL" ]; then
+	SPEED="$($ETHTOOL $INTERFACE 2>&1 |
+                 awk '/Speed:/ { gsub(/[^0-9]*/,"",$2); print $2; }')"
+
+        if [ $SPEED = [0-9]* ]; then
+	    echo $SPEED
+            return
+	fi
+    fi
+
+    MIITOOL="$(type -p mii-tool)"
+    if [ -x $MIITOOL ]; then
+	case $($MIITOOL $INTERFACE 2>&1) in
+	    *1000base*) echo 1000; return ;;
+	    *100base*)  echo 100; return ;;
+	    *10base*)   echo 10; return ;;
+	esac
+    fi
+
+    echo U
+}
+
+findspeed() {
+    SPEED=$(findspeed_mbps)
+
+    if [ -z $SPEED ]; then
+        echo "up.info Traffic of the $INTERFACE interface. Unable to determine interface speed.  Please install ethtool, wireless-tools, mii-tool or whatever is appropriate for the interface."
+        return
+    fi
 
     BPS=$(( $SPEED * 1000 * 1000 ))
 
