@@ -522,13 +522,13 @@ sub emit_service_template {
                             CATEGORY  => ucfirst $srv->{'category'},
                             TAGLINE   => $htmltagline,
 						    ROOTGROUPS => $htmlconfig->{"groups"},
-						  MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
-						  TIMESTAMP	=> $timestamp,
-					NGLOBALCATS => $htmlconfig->{"nglobalcats"},
-					GLOBALCATS => $htmlconfig->{"globalcats"},
-						  NCRITICAL => scalar(@{$htmlconfig->{"problems"}->{"criticals"}}),
-						  NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
-						  NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
+                            MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
+                            TIMESTAMP	=> $timestamp,
+                            NGLOBALCATS => $htmlconfig->{"nglobalcats"},
+                            GLOBALCATS => $htmlconfig->{"globalcats"},
+                            NCRITICAL => scalar(@{$htmlconfig->{"problems"}->{"criticals"}}),
+                            NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
+                            NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
         	                   );
 
     # No stored filename for this kind of html node.
