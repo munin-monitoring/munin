@@ -319,7 +319,7 @@ sub process_service {
 			# COUNTER never decrease. Report unknown.
 			$value = "U";
 		} else {
-			$value = ($current_updated_value - $previous_updated_value) / ($current_updated_value - $previous_updated_value);
+			$value = ($current_updated_value - $previous_updated_value) / ($current_updated_timestamp - $previous_updated_timestamp);
 		}
 	}
 
