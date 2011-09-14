@@ -207,11 +207,15 @@ case $1 in
 esac
 
 # Escape dots in the interface name (eg. vlans) before using it as a regex
-awk -v interface="$INTERFACE" \
-    'BEGIN { gsub(/\./, "\\.", interface) } \
-    $1 ~ "^" interface ":" {
-        split($0, a, /: */); $0 = a[2]; \
-        print "down.value " $1 "\nup.value " $9 \
-    }' \
-    /proc/net/dev
-
+if [ -r /sys/class/net/$INTERFACE/statistics/rx_bytes ]; then
+    echo "down.value $(cat /sys/class/net/$INTERFACE/statistics/rx_bytes)"
+    echo "up.value $(cat /sys/class/net/$INTERFACE/statistics/tx_bytes)"
+else
+    awk -v interface="$INTERFACE" \
+        'BEGIN { gsub(/\./, "\\.", interface) } \
+        $1 ~ "^" interface ":" {
+            split($0, a, /: */); $0 = a[2]; \
+            print "down.value " $1 "\nup.value " $9 \
+        }' \
+        /proc/net/dev
+fi
