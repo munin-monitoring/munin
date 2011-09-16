@@ -37,9 +37,11 @@ sub _get_xid {
     }
 }
 
+sub get_fq_hostname { 
+    my $short = Sys::Hostname::hostname();
 
-sub get_fq_hostname { return (gethostbyname Sys::Hostname::hostname)[0]; }
-
+    return (gethostbyname $short)[0] || $short || "unknown";
+}
 
 sub check_perms_if_paranoid
 {
