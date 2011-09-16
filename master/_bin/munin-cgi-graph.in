@@ -62,7 +62,7 @@ push @params, "--log-file", $logfile;
 my $config = graph_startup(\@params);
 
 logger_open($config->{'logdir'});
-logger_debug() if $config->{debug} or defined($ENV{CGI_DEBUG});
+logger_debug() if defined($ENV{CGI_DEBUG});
 
 # BEGIN FAST-CGI LOOP:
 my $nb_request = 0;
