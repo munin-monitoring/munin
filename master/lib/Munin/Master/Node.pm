@@ -157,7 +157,11 @@ sub negotiate_capabilities {
 sub list_plugins {
     my ($self) = @_;
 
-    my $host = $self->{configref}{use_node_name}
+    # Check for one on this node- if not, use the global one
+    my $use_node_name = defined($self->{configref}{use_node_name})
+        ? $self->{configref}{use_node_name}
+        : $config->{use_node_name};
+    my $host = $use_node_name
         ? $self->{node_name}
         : $self->{host};
 
