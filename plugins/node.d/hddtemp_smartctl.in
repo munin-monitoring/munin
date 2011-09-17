@@ -229,7 +229,7 @@ foreach my $drive (@drives) {
 sub device_for_drive {
     my ($drive) = @_;
 
-    my $dev = $drive =~ /(.*)(?:_\d+)/ ? $1 : $drive;
+    my $dev = $drive =~ /(.*)(?:_\d+)$/ ? $1 : $drive;
 
     my $fulldev = '/dev/';
     $fulldev .= 'rdsk/' if $^O eq 'solaris';
