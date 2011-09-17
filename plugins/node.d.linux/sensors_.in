@@ -167,7 +167,7 @@ my %config = (
             )?         # >>>>end of statement
         /xms,
     title => 'Temperatures',
-    vtitle => 'Celsius',
+    vtitle => 'degrees Celsius',
     print_threshold => \&temp_threshold,
     graph_args => '--base 1000 -l 0'
     },
