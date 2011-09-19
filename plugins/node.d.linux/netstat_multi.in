@@ -6,17 +6,17 @@
 #
 # Author: Trygve Vea <tv@redpill-linpro.com>
 # Author: Ørjan Ommundsen <orjan@redpill-linpro.com>
-# 
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
@@ -80,7 +80,7 @@ my %aspects = (
     'TCPSynCookies' => {
         'title' => 'TCP Syncookies',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'packets in (-) / out (+) per second',
         'min' => 0,
         'values' => {
             'TcpExt_SyncookiesSent' => {
@@ -108,7 +108,7 @@ my %aspects = (
     'TCPSockets' => {
         'title' => 'TCP Sockets',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'events per second',
         'width' => 600,
         'values' => {
             'Tcp_ActiveOpens' => {
@@ -145,21 +145,21 @@ my %aspects = (
     'TCPSegments' => {
         'title' => 'TCP Segments',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'segments in (-) / out (+) per second',
         'width' => 600,
-        'values' => { 
+        'values' => {
             'Tcp_InSegs' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
-                'label' => 'Segments received     ',
+                'label' => 'Segments received',
                 'info' => '',
                 'graph' => 'no',
             },
             'Tcp_OutSegs' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
-                'label' => 'Segments transmitted  ',
+                'label' => 'Segments',
                 'min' => 0,
                 'negative' => 'Tcp_InSegs'
             },
@@ -180,9 +180,9 @@ my %aspects = (
     'TCPCurrConn' => {
         'title' => 'TCP Open Connections',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'number of connections',
         'width' => 600,
-        'values' => { 
+        'values' => {
             'Tcp_CurrEstab' => {
                 'type' => 'GAUGE',
                 'draw' => 'LINE1',
@@ -195,7 +195,7 @@ my %aspects = (
     'TCPTimeouts' => {
         'title' => 'TCP other timeouts',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'timeouts per second',
         'width' => 600,
         'values' => {
             'TcpExt_TCPTimeouts' => {
@@ -210,7 +210,7 @@ my %aspects = (
     'TCPDatalossEvents' => {
         'title' => 'TCP data loss events',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'events per second',
         'width' => 600,
         'values' => {
             'TcpExt_TCPLoss' => {
@@ -232,7 +232,7 @@ my %aspects = (
     'SOCKBUFERR' => {
         'title' => 'TCP socket buffer errors',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'errors per second',
         'width' => 600,
         'values' => {
             'TcpExt_TCPRcvCollapsed' => {
@@ -282,7 +282,7 @@ my %aspects = (
     'TCPReorder' => {
         'title' => 'TCP SACK/FACK reorders',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'reorders per second',
         'width' => 600,
         'values' => {
             'TcpExt_TCPFACKReorder' => {
@@ -318,7 +318,7 @@ my %aspects = (
     'TCPSACKFACK' => {
         'title' => 'TCP Selective ACK / Forward ACK',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'packets per second',
         'width' => 600,
         'values' => {
             'TcpExt_TCPSackRecovery' => {
@@ -354,7 +354,7 @@ my %aspects = (
     'TCPDSACK' => {
         'title' => 'TCP Duplicate Selective ACKs',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'packets per second',
         'width' => 600,
         'values' => {
             'TcpExt_TCPDSACKOldSent' => {
@@ -397,7 +397,7 @@ my %aspects = (
     'TCPAborted' => {
         'title' => 'TCP aborted connections',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'connections per second',
         'width' => 600,
         'values' => {
             'TcpExt_TCPAbortOnSyn' => {
@@ -461,7 +461,7 @@ my %aspects = (
     'TCPDelayedACK' => {
         'title' => 'TCP delayed ACKs',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'packets per second',
         'width' => 600,
         'values' => {
             'TcpExt_DelayedACKs' => {
@@ -490,7 +490,7 @@ my %aspects = (
     'TCPRetrans' => {
         'title' => 'TCP retransmissions',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'events per second',
         'width' => 600,
         'values' => {
             'TcpExt_TCPFastRetrans' => {
@@ -526,7 +526,7 @@ my %aspects = (
     'TCPPAWS' => {
         'title' => 'PAWS (Protect against wrapped sequence numbers)',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'packets per second',
         'width' => 600,
         'values' => {
             'TcpExt_PAWSPassive' => {
@@ -555,14 +555,14 @@ my %aspects = (
     'IPReassembly' => {
         'title' => 'IP packet reassembly',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'packets per second',
         'width' => 600,
         'values' => {
             'Ip_ReasmTimeout' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
-                'label' => 'Reassembly timeouts  ',
+                'label' => 'Reassembly timeouts',
                 'info' => 'IP packet fragments dropped after timeout',
             },
             'Ip_ReasmReqds' => {
@@ -576,36 +576,36 @@ my %aspects = (
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
-                'label' => 'Reassembly successes ',
+                'label' => 'Reassembly successes',
                 'info' => 'IP packet reassemblies succeeded',
             },
             'Ip_ReasmFails' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
-                'label' => 'Reassembly failures  ',
+                'label' => 'Reassembly failures',
                 'info' => 'IP packet reassemblies failed',
             },
             'Ip_FragFails' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
-                'label' => 'Fragments failed     ',
+                'label' => 'Fragments failed',
                 'info' => 'IP packet fragments failed',
             }
         }
     },
     'TCPTimeWait' => {
-        'title' => 'TCP Time/Wait',
+        'title' => 'TCP Time-Wait',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'connections per second',
         'width' => 600,
         'values' => {
             'TcpExt_TW' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
-                'label' => 'TimeWait         ',
+                'label' => 'TimeWait',
                 'info' => '',
             },
             'TcpExt_TWRecycled' => {
@@ -619,7 +619,7 @@ my %aspects = (
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
-                'label' => 'TimeWait killed  ',
+                'label' => 'TimeWait killed',
                 'info' => '',
             }
         }
@@ -627,14 +627,14 @@ my %aspects = (
     'UDPDatagrams' => {
         'title' => 'UDP datagrams',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'datagrams per second',
         'width' => 600,
         'values' => {
             'Udp_InDatagrams' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
-                'label' => 'Incoming datagrams             ',
+                'label' => 'Incoming datagrams',
                 'info' => 'UDP packets received',
             },
             'Udp_NoPorts' => {
@@ -649,13 +649,13 @@ my %aspects = (
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Incoming errors',
-                'info' => 'UDP incoming packet errors      ',
+                'info' => 'UDP incoming packet errors',
             },
             'Udp_OutDatagrams' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
-                'label' => 'Outgoing datagrams             ',
+                'label' => 'Outgoing datagrams',
                 'info' => 'UDP packets sent',
             }
         }
@@ -663,7 +663,7 @@ my %aspects = (
     'TCPQueueing' => {
         'title' => 'TCP Queueing',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'packets per second',
         'width' => 600,
         'values' => {
             'TcpExt_TCPPrequeued' => {
@@ -699,7 +699,7 @@ my %aspects = (
     'TCPHP' => {
         'title' => 'TCP Packet headers predicted',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'packets per second',
         'width' => 600,
         'values' => {
             'TcpExt_TCPHPHits' => {
@@ -735,7 +735,7 @@ my %aspects = (
     'IPEXT' => {
         'title' => 'IP packet types',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'packets in (-) / out (+) per second',
         'width' => 600,
         'values' => {
             'IpExt_InNoRoutes' => {
@@ -782,7 +782,7 @@ my %aspects = (
     'TCPReno' => {
         'title' => 'TCP Congestion avoidance algorithm (Reno)',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'events per second',
         'width' => 600,
         'values' => {
             'TcpExt_TCPRenoReorder' => {
@@ -839,7 +839,7 @@ my %aspects = (
     'ICMP' => {
         'title' => 'ICMP',
         'category' => 'Network',
-        'vlabel' => 'per second',
+        'vlabel' => 'packets in (-) / out (+) per second',
         'width' => 600,
         'values' => {
             'Icmp_InDestUnreachs' => {
