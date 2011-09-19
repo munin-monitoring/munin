@@ -57,38 +57,37 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 . $MUNIN_LIBDIR/plugins/plugin.sh
 
 case $0 in
-    *ping6_*) 
-	PING=ping6
-	file_host=${0##*/ping6_}
-	V=IPv6
-	;;
+    *ping6_*)
+        PING=ping6
+        file_host=${0##*/ping6_}
+        V=IPv6
+        ;;
     *ping_*)
-	PING=ping
-	file_host=${0##*/ping_}
-	V=IPv4
-	;;
+        PING=ping
+        file_host=${0##*/ping_}
+        V=IPv4
+        ;;
 esac
 
 host=${host:-${file_host:-www.google.com}}
 
 if [ "$1" = "config" ]; then
-	echo graph_title $V ping times to $host
-	echo 'graph_args --base 1000 -l 0'
-	echo 'graph_vlabel seconds'
-	echo 'graph_category network'
-	echo 'graph_info This graph shows ping RTT statistics.'
-	echo "ping.label $host"
-	echo "ping.info Ping RTT statistics for $host."
-	echo 'ping.draw LINE2'
-	echo 'packetloss.label packet loss'
-	echo 'packetloss.graph no'
-	print_warning ping
-	print_warning packetloss
-	print_critical ping
-	print_critical packetloss
-	exit 0
+        echo graph_title $V ping times to $host
+        echo 'graph_args --base 1000 -l 0'
+        echo 'graph_vlabel roundtrip time (seconds)'
+        echo 'graph_category network'
+        echo 'graph_info This graph shows ping RTT statistics.'
+        echo "ping.label $host"
+        echo "ping.info Ping RTT statistics for $host."
+        echo 'ping.draw LINE2'
+        echo 'packetloss.label packet loss'
+        echo 'packetloss.graph no'
+        print_warning ping
+        print_warning packetloss
+        print_critical ping
+        print_critical packetloss
+        exit 0
 fi
 
 
 ${PING:-ping} ${ping_args:-'-c 2'} ${host} ${ping_args2} | perl -n -e 'print "ping.value ", $1 / 1000, "\n" if m@min/avg/max.*\s\d+(?:\.\d+)?/(\d+(?:\.\d+)?)/\d+(?:\.\d+)?@; print "packetloss.value $1\n" if /(\d+)% packet loss/;'
-
