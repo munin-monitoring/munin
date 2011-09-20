@@ -595,50 +595,50 @@ sub get_peer_nodes {
         @$pchildren) {
         next unless defined $peer and ref($peer) eq "HASH";
         next
-            if defined $category
+          if defined $category
                 and lc(munin_get($peer, "graph_category", "other")) ne
-                $category;
+                  $category;
         next
-            if (!defined $peer->{'graph_title'}
-            and (!defined $peer->{'#%#visible'} or !$peer->{'#%#visible'}));
+          if (!defined $peer->{'graph_title'}
+              and (!defined $peer->{'#%#visible'} or !$peer->{'#%#visible'}));
         next
-            if (defined $peer->{'graph_title'}
+          if (defined $peer->{'graph_title'}
             and !munin_get_bool($peer, "graph", 1));
         my $peername = munin_get_node_name($peer);
         next
-            if $peername eq "contact"
-                and munin_get_node_name($parent) eq "root";
+          if $peername eq "contact"
+            and munin_get_node_name($parent) eq "root";
         if ($peername eq $me) {
             unshift @$ret, {"name" => $peername, "link" => undef};
         }
         else {
             # Handle different directory levels between subgraphs and regular graphs
-	    if (munin_has_subservices ($hash)) {
-		if (munin_has_subservices ($peer)) {
-		    # I've got subgraphs, peer's got subgraphs
-		    unshift @$ret,
-			{"name" => $peername, "link" => "../$peername/index.html"};
-		} else { 
-		    # I've got subgraphs, peer's a regular graph
-		    unshift @$ret,
-			{"name" => $peername, "link" => "../$peername.html"};
-		} 
-	    } elsif (munin_has_subservices ($peer)) {
-		# I'm a regular graph, peer's got subgraphs
-		unshift @$ret,
-		    {"name" => $peername, "link" => "$peername/index.html"};
-	    } else {
-		if (defined $peer->{'graph_title'}) {
-		    # Both me and peer are regular graphs
-		    unshift @$ret,
-			{"name" => $peername, "link" => "$peername.html"};
-		}
-		else {
-		    # We're not on the graph level -- handle group peering
-		    unshift @$ret,
-			{"name" => $peername, "link" => "../$peername/index.html"};
-		}
-	    }
+            if (munin_has_subservices ($hash)) {
+                if (munin_has_subservices ($peer)) {
+                    # I've got subgraphs, peer's got subgraphs
+                    unshift @$ret,
+                      {"name" => $peername, "link" => "../$peername/index.html"};
+                } else { 
+                    # I've got subgraphs, peer's a regular graph
+                    unshift @$ret,
+                      {"name" => $peername, "link" => "../$peername.html"};
+                } 
+            } elsif (munin_has_subservices ($peer)) {
+                # I'm a regular graph, peer's got subgraphs
+                unshift @$ret,
+                  {"name" => $peername, "link" => "$peername/index.html"};
+            } else {
+                if (defined $peer->{'graph_title'}) {
+                    # Both me and peer are regular graphs
+                    unshift @$ret,
+                      {"name" => $peername, "link" => "$peername.html"};
+                }
+                else {
+                    # We're not on the graph level -- handle group peering
+                    unshift @$ret,
+                      {"name" => $peername, "link" => "../$peername/index.html"};
+                }
+            }
         }
     }
     return $ret;
