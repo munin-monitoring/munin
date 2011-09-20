@@ -110,7 +110,7 @@ my %config = (
               \s       # Exactly one space followed by
             )?         # end of optional group
             RPM        # RPM string
-                /xms,
+                /xm,
             title => 'Fans',
             vtitle => 'RPM',
             print_threshold => \&fan_threshold,
@@ -165,7 +165,7 @@ my %config = (
             [°\s]C     # Match degree char or space char, and then 'C' char
             \)         # ')' char
             )?         # >>>>end of statement
-        /xms,
+        /xm,
     title => 'Temperatures',
     vtitle => 'degrees Celsius',
     print_threshold => \&temp_threshold,
@@ -218,7 +218,7 @@ my %config = (
             \)          # ')' char
             )           # >>>>end of statement
 
-        /xms,
+        /xm,
 
     title => 'Voltages',
     vtitle => 'Volt',
