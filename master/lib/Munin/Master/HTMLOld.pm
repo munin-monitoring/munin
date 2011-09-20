@@ -81,7 +81,7 @@ use Log::Log4perl qw( :easy );
 
 my @times = ("day", "week", "month", "year");
 
-my $DEBUG      = 0;
+my $DEBUG      = 1;
 my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 my $htmlconfcache = "$Munin::Common::Defaults::MUNIN_DBDIR/htmlconf.storable";
 my $do_usage   = 0;
@@ -366,6 +366,7 @@ sub emit_category_template {
     $graphtemplate->param(
                           PATH        => $key->{'path'},
                           CSS_NAME    => get_css_name(),
+                          HOST_URL    => $key->{'host_url'},
                           R_PATH      => ".",
 						  "TIME".$time => 1,
                           NAME        => $key->{'name'},

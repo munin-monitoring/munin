@@ -21,6 +21,7 @@ use Log::Log4perl qw( :easy );
 my @times = ("day", "week", "month", "year");
 
 my $DEBUG = 0;
+my $INDEX_FILENAME = "index.html";
 my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 
 my $config;
@@ -140,10 +141,12 @@ sub get_group_tree {
 
 		    # Make sure the link gets right even if the service has subservices
 	    	if (munin_has_subservices ($child)) {
-				$childnode->{'url'}  = $base . $childname . "/index.html"; #TODO: html generation should generate urls
+				$childnode->{'url'}  = $base . $childname . "/$INDEX_FILENAME"; #TODO: html generation should generate urls
 		    } else {
 				$childnode->{'url'}  = $base . $childname . ".html"; #TODO: html generation should generate urls
 	    	}
+
+            $childnode->{'host_url'}  = $base . $INDEX_FILENAME;
 
             #TODO: Think of a nicer way to generate relative urls (reference #1)
 			for (my $shrinkpath = $childnode->{'url'}, my $counter = 0;
@@ -181,7 +184,7 @@ sub get_group_tree {
     foreach my $cat (sort keys %$cattrav) {
         my $obj = {};
         $obj->{'name'}     = $cat;
-        $obj->{'url'}      = $base . "index.html#" . $cat;
+        $obj->{'url'}      = $base . "${INDEX_FILENAME}#" . $cat;
         $obj->{'services'} = [sort {lc($a->{'name'}) cmp lc($b->{'name'})}
                 @{$cattrav->{$cat}}];
         $obj->{'state_' . lc munin_category_status($hash, $limits, $cat, 1)}
@@ -204,7 +207,7 @@ sub get_group_tree {
             "pathname" => $_,
             "path" => (
                 defined $rpath
-                ? ($rpath .= "../") . "index.html"
+                ? ($rpath .= "../") . $INDEX_FILENAME
                 : ($rpath = ""))}
     } reverse(undef, split('\/', $base));
 	
@@ -222,10 +225,10 @@ sub get_group_tree {
  
 	my $ret = {
         "name"     => munin_get_node_name($hash),
-        "url"      => $base . "index.html",
+        "url"      => $base . $INDEX_FILENAME,
         "path"     => $path,
 		"#%#hash"     => $hash,
-        "depth" => scalar(my @splitted_base = split("/", $base . "index.html"))
+        "depth" => scalar(my @splitted_base = split("/", $base . $INDEX_FILENAME))
             - 1,
         "filename"           => munin_get_html_filename($hash),
         "css_name"           => $css_name,
@@ -569,7 +572,7 @@ sub generate_service_templates {
 sub get_path_nodes {
     my $hash = shift || return;
     my $ret  = [];
-    my $link = "index.html";
+    my $link = $INDEX_FILENAME;
 
     unshift @$ret, {"pathname" => munin_get_node_name($hash), "path" => ""};
     while ($hash = munin_get_parent($hash)) {
@@ -586,7 +589,6 @@ sub get_peer_nodes {
     my $hash      = shift || return;
     my $category  = shift;
     my $ret       = [];
-    my $link      = "index.html";
     my $parent    = munin_get_parent($hash) || return;
     my $me        = munin_get_node_name($hash);
     my $pchildren = munin_get_children($parent);
