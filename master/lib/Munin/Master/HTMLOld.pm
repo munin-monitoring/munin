@@ -81,7 +81,7 @@ use Log::Log4perl qw( :easy );
 
 my @times = ("day", "week", "month", "year");
 
-my $DEBUG      = 1;
+my $DEBUG      = 0;
 my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 my $htmlconfcache = "$Munin::Common::Defaults::MUNIN_DBDIR/htmlconf.storable";
 my $do_usage   = 0;
