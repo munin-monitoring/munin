@@ -13,7 +13,8 @@
 # performing different functions:
 # slapd_statistics_bytes
 # slapd_statistics_pdu
-# slapd_statistics_other
+# slapd_statistics_referrals
+# slapd_statistics_entries
 # slapd_connections
 # slapd_waiters
 # slapd_operations
@@ -199,6 +200,9 @@ EOF
     }
 }
 
+# Determine action based on filename first
+(my $action = $0) =~ s/^.*slapd_([\w\d_]+)$/$1/;
+
 if ($ARGV[0]) {
     if ($ARGV[0] eq 'autoconf') {
         # Check for Net::LDAP
@@ -238,27 +242,24 @@ if ($ARGV[0]) {
         print "yes\n";
         exit 0;
     } elsif ($ARGV[0] eq "config") {
-        if ($0 =~ /slapd_([\w\d_]+)$/) {
-            my $action = $1;
-            &config ($1);
-        } else {
-            die ("Can't run config without a symlinked name\n");
+        if(!exists $ops{$action}) {
+            die "Unknown action specified: $action";
         }
+        &config ($action);
     } elsif ($ARGV[0] eq "suggest") {
         print join ("\n", keys (%ops)), "\n";
     }
     exit 0;
 }
 
-# We won't run this without parameters.
-die ("Can't run without a symlinked name\n") if $0 =~ /slapd_$/;
+# If $action isn't in %ops, we quit
+if(!exists $ops{$action}) {
+    die "Unknown action specified: $action";
+}
 
 # Default scope for LDAP searches. We'll change to other scopes if
 # necessary.
 $scope = "one";
-
-# The filename is teh key
-(my $action = $0) =~ s/^.*slapd_([\w\d_]+)$/$1/;
 
 # Net::LDAP variant
 my $ldap = Net::LDAP->new ($server, version => 3)
