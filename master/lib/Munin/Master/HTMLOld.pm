@@ -656,7 +656,7 @@ sub get_css_name{
 sub fork_and_work {
     my ($work) = @_;
 
-    if (!$do_fork) {
+    if (!$do_fork || !$max_running) {
 
         # We're not forking.  Do work and return.
         DEBUG "[DEBUG] Doing work synchrnonously";
