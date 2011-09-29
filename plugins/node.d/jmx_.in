@@ -24,6 +24,7 @@ Needs nc in path for autoconf.
     env.password SomethingSecret
 
     env.JRE_HOME /usr/lib/jvm/java-6-sun/jre
+    env.JAVA_OPTS -Xmx128m
 
 Needed configuration on the Tomcat side: add
 
@@ -140,4 +141,4 @@ if [ "x$jmxfunc" = "x" ] ; then
   exit 1
 fi
 
-ip=$ip port=$port $JAVA_BIN -cp $MUNIN_JAR org.munin.plugin.jmx.$jmxfunc $param $prefix
+ip=$ip port=$port $JAVA_BIN -cp $MUNIN_JAR $JAVA_OPTS org.munin.plugin.jmx.$jmxfunc $param $prefix
