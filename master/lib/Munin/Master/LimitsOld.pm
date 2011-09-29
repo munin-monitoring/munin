@@ -44,8 +44,7 @@ our (@ISA, @EXPORT);
 use POSIX qw ( strftime );
 use Getopt::Long;
 use Time::HiRes;
-use Text::Balanced qw ( extract_multiple extract_delimited
-    extract_quotelike extract_bracketed );
+use Text::Balanced qw ( extract_bracketed );
 use Log::Log4perl qw ( :easy );
 
 use Munin::Master::Logger;
@@ -105,6 +104,9 @@ sub limits_startup {
 
 
 sub limits_main {
+    # We're liable to receive SIGPIPEs if the given commands don't work
+    $SIG{PIPE} = 'IGNORE';
+
     my $update_time = Time::HiRes::time;
 
     my $lockfile = "$config->{rundir}/munin-limits.lock";
@@ -121,6 +123,8 @@ sub limits_main {
 
     process_limits();
 
+    close_pipes();
+
     &munin_writeconfig("$config->{dbdir}/limits", \%notes);
 
     $update_time = sprintf("%.2f", (Time::HiRes::time - $update_time));
@@ -130,6 +134,16 @@ sub limits_main {
     INFO "[INFO] munin-limits finished ($update_time sec)";
 }
 
+sub close_pipes {
+    foreach my $cont (@{munin_get_children($config->{"contact"})}) {
+        if($cont->{pipe}) {
+            my $c = munin_get_node_name($cont);
+
+            DEBUG "[DEBUG] Closing pipe for contact $c";
+            close $cont->{pipe} or WARN "[WARNING] Failed to close pipe for contact $c: $!";
+        }
+    }
+}
 
 sub process_limits {
 
@@ -609,113 +623,59 @@ sub generate_service_message {
         $txt =~ s/\\n/\n/g;
         $txt =~ s/\\t/\t/g;
 
-        # In some cases we want to reopen the command
+        if($cmd =~ /^\s*([|><]+)/) {
+            WARN "[WARNING] Found \"$1\" at beginning of command.  This should no longer be necessary and will be removed from the command before execution";
+            $cmd =~ s/^\s*[|><]+//;
+        }
+
         my $maxmess = munin_get($contactobj, "max_messages", 0);
         my $curmess = munin_get($contactobj, "num_messages", 0);
         my $curcmd  = munin_get($contactobj, "pipe_command", undef);
         my $pipe    = munin_get($contactobj, "pipe",         undef);
         if ($maxmess and $curmess >= $maxmess) {
-            close($pipe);
+            DEBUG "[DEBUG] Resetting pipe for $c because max messages was reached";
+            close($pipe) or WARN "[WARNING] Failed to close pipe for $c: $!";
             $pipe = undef;
-            munin_set_var_loc($contactobj, ["pipe"], undef);
-            DEBUG "[DEBUG] Closing \"$c\" -> command (max number of messages reached).";
+            munin_set($contactobj, "pipe", undef);
         }
         elsif ($curcmd and $curcmd ne $cmd) {
-            close($pipe);
+            DEBUG "[DEBUG] Resetting pipe for $c because the command has changed";
+            close($pipe) or WARN "[WARNING] Failed to close pipe for $c: $!";
             $pipe = undef;
-            munin_set_var_loc($contactobj, ["pipe"], undef);
-            DEBUG "[DEBUG] Closing \"$c\" -> command (command has changed).";
+            munin_set($contactobj, "pipe", undef);
         }
 
         if (!defined $pipe) {
-            my @cmd = extract_multiple(
-                message_expand($hash, $cmd),
-                [sub {extract_delimited($_[0], q{"'})}, qr/\S+/],
-                undef, 1
-            );
-            @cmd = map {
-                my $c = $_;
-                $c =~ s/['"]$//;
-                $c =~ s/^['"]//;
-                $c;
-            } @cmd;
-            $contactobj->{"num_messages"} = 0;
-            if ($cmd[0] eq "|") {
-                $cmd[0] = "|-";
-            }
-            elsif ($cmd[0] !~ /^[|>]/) {
-                unshift(@cmd, "|-");
-            }
-            DEBUG("[DEBUG] opening \"$c\" for writing: \""
-		  . join('" "', @cmd)
-		  . "\".");
-            if ($cmd[0] eq ">") {
-                ## no critic
-                if (!open($pipe, join(' ', @cmd))) {
-                    FATAL("[FATAL] Could not open "
-			  . join(' ', @cmd[1 .. $#cmd])
-			  . " for writing: $!");
-                    exit 3;
-                }
-                ## critic
-            }
-            else {
-                my $pid = open($pipe, "|-");
-                if (!defined $pid) {
-                    FATAL "Fatal: Unable to  fork: $!";
-                    exit 3;
-                }
-                if (!$pid) {    # Child
-                                # Fork of stdout-to-log filter
-                    my $logstdout;
-                    my $logstderr;
-                    my $logpid = open($logstdout, "|-");
-                    if (!defined $logpid) {
-                        FATAL "Fatal: Unable to  fork: $!";
-                        exit 3;
-                    }
-                    if (!$logpid) {    # Child
-                        while (<STDIN>) {
-                            chomp;
-                            INFO "Command \"$c\" stdout: $_";
-                        }
-                        exit 0;
-                    }
-                    close(STDOUT);
-                    *STDOUT = \$logstdout;
-                    $logpid = open($logstderr, "|-");
-                    if (!defined $logpid) {
-                        FATAL "Fatal: Unable to  fork: $!";
-                        exit 3;
-                    }
-                    if (!$logpid) {    # Child
-                        while (<STDIN>) {
-                            chomp;
-                            FATAL "Command \"$c\" stderr: $_";
-                        }
-                        exit 0;
-                    }
-                    open(STDOUT, ">&", $logstdout);
-                    open(STDERR, ">&", $logstderr);
+            DEBUG "[DEBUG] Opening pipe for $c";
+            pipe(my $r, my $w) or WARN "[WARNING] Failed to open pipe for $c: $!";
+            my $pid = fork();
+            defined($pid) or WARN "[WARNING] Failed fork for pipe for $c: $!";
+            if($pid) { # parent
+                DEBUG "[DEBUG] Opened pipe for $c as pid $pid";
 
-                    exec(@cmd[1 .. $#cmd])
-                        or WARN("[WARNING] Could not run command \""
-                            . join(' ', @cmd[1 .. $#cmd])
-                            . "\": $!");
-                    exit 5;
-
-                    # NOTREACHED
-                }
+                close $r;
+                $pipe = $w;
+                munin_set($contactobj, "pipe_command", $cmd);
+                munin_set($contactobj, "pipe",         $pipe);
+                munin_set($contactobj, "num_messages", 0);
+                $curmess = 0;
+            } else { # child
+                close $w;
+                open(STDIN, "<&", $r);
+                exec($cmd) or WARN "[WARNING] Failed to exec for contact $c in pid $$";
+                exit;
             }
-            munin_set_var_loc($contactobj, ["pipe_command"], $cmd);
-            munin_set_var_loc($contactobj, ["pipe"],         $pipe);
         }
-        DEBUG "[DEBUG] sending message: \"$txt\"";
-        print $pipe $txt, "\n" if (defined $pipe);
-        DEBUG "[DEBUG] explicitely closing pipe as suggested by schamane on #732";
-        close $pipe if (defined $pipe);
-        $contactobj->{"num_messages"}
-            = 1 + munin_get($contactobj, "num_messages", 0);   # $num_messages++
+
+        DEBUG "[DEBUG] sending message to $c: \"$txt\"";
+        if(defined $pipe and !print $pipe $txt, "\n") {
+            WARN "[WARNING] Writing to pipe for $c failed: $!";
+            close($pipe) or WARN "[WARNING] Failed to close pipe for $c: $!";
+            $pipe = undef;
+            munin_set($contactobj, "pipe", undef);
+        }
+
+        munin_set($contactobj, "num_messages", $curmess + 1);
     }
 }
 
