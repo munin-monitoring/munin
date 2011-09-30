@@ -69,15 +69,6 @@ INTERFACE=${0##*if_}
 # Who whould have thought it's so much work to determine the
 # maximum speed of a network interface.  Buckle up!
 findspeed_mbps() {
-    # sysfs can report the speed if the driver supports it
-    if [ -r /sys/class/net/$INTERFACE/speed ]; then
-	    SPEED="$(cat /sys/class/net/$INTERFACE/speed 2>/dev/null)"
-	    if [ -n "$SPEED" ]; then
-		echo $SPEED
-		return
-	    fi
-    fi 
-
     # Do not use interface name to guess technology.  Many many
     # wifi drivers use "eth*" names.
     IWLIST="$(type -p iwlist)"
@@ -91,6 +82,17 @@ findspeed_mbps() {
             echo $SPEED
             return
         fi
+    fi
+
+    # sysfs can report the speed if the driver supports it (but it
+    # doesn't work as well for wireless cards, thus why we check for
+    # iwlist first)
+    if [ -r /sys/class/net/$INTERFACE/speed ]; then
+	    SPEED="$(cat /sys/class/net/$INTERFACE/speed 2>/dev/null)"
+	    if [ -n "$SPEED" ]; then
+		echo $SPEED
+		return
+	    fi
     fi
 
     ETHTOOL="$(type -p ethtool)"
