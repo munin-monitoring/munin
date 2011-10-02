@@ -1,0 +1,82 @@
+<!-- -*- HTML -*- -->
+<TMPL_INCLUDE NAME="partial/head.tmpl">
+<body>
+<TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
+<div id="main">
+<TMPL_INCLUDE NAME="partial/navigation.tmpl">
+<div id="content">
+<h2>Graph zoom</h2>
+
+<div style="position:relative;">
+	<img id="image" />
+<div id="overlayDiv" />
+
+</div>
+<table>
+<tr>
+<td>
+
+</td>
+<td>
+	Zooming is easy, it's done in 3 clicks (regular clicks, no drag&amp;drop):
+	<ol>
+		<li> First click to define the start of zoom.
+		<li> Second click to define the ending of zoom.
+		<li> Third click inside the defined zone to zoom, outside to cancel the zone.
+	</ol>
+<td>
+</tr>
+</table>
+
+<form name="myNewForm" id="myNewForm">
+<table>
+	<!-- Plugin Name : "domain/hostname" -->
+	<tr>
+		<td>Plugin Name <em>(domain/hostname/plugin_name)</em> :</td>
+		<td><input type="text" name="plugin_name" size="64" ></td>
+	</tr>
+
+	<!-- Start and stop -->
+	<tr>
+		<td>Start/Stop of the graph <br/>(format:2005-08-15T15:52:01+0000) <br /><em>(epoch)</em> :</td>
+		<td>
+			<input type="text" name="start_iso8601" size='24'> / <input type="text" name="stop_iso8601" size="24"> <input name="btnMaj" type=button value="update" /> <br />
+
+			(<input type="text" name="start_epoch" size="10"> / <input type="text" name="stop_epoch" size="10">)
+		</td>
+	</tr>
+
+	<!-- Limit high & low -->
+	<tr>
+		<td>Limit low/high :</td>
+		<td>
+
+			<input type="text" name="lower_limit" size="10"> /  <input type="text" name="upper_limit" size="10">
+		</td>
+	</tr>
+
+
+	<!-- Image size -->
+	<tr>
+		<td>Graph size (w/o legend) <em>(pixels)</em>:</td>
+
+		<td>
+			<input type="text" name="size_x" size="5"> / <input type="text" name="size_y" size="5" >
+		</td>
+	</tr>
+</table>
+	<input type="submit" />
+	<input type="button" name="btnZoomOut" value="Zoom Out x2" />
+</form>
+
+</body>
+
+<script>
+
+
+</script>
+
+</div>
+<TMPL_INCLUDE NAME="partial/footer.tmpl">
+</body>
+</html>
