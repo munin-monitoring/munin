@@ -1023,13 +1023,13 @@ sub munin_get_html_filename {
     } @$loc;
 	
     if (defined $hash->{'graph_title'} and !munin_has_subservices ($hash)) {
-	$plugin = pop @$loc or return;
+        $plugin = pop @$loc or return;
     }
-
+    
     if (@$loc) { # The rest is used as directory names...
-	$ret .= "/" . join ('/', @$loc);
+        $ret .= "/" . join ('/', @$loc);
     }
-
+    
     return "$ret/$plugin.html";
 }
 
