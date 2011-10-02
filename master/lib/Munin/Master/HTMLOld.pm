@@ -200,11 +200,11 @@ sub html_main {
     }
 
     if ($do_dump) {
-	use Data::Dumper;
+        use Data::Dumper;
 
-	$Data::Dumper::Sortkeys = sub { my $a=shift; my @b = grep (!/#%#parent/, keys %$a); \@b; };
-	print Dumper $groups;
-	exit 0;
+        $Data::Dumper::Sortkeys = sub { my $a=shift; my @b = grep (!/#%#parent/, keys %$a); \@b; };
+        print Dumper $groups;
+        exit 0;
     }
 	
     generate_group_templates($groups);
