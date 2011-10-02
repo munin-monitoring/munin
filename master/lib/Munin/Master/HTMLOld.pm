@@ -40,13 +40,13 @@ This is the hierarchy of templates
 
       * munin-nodeview.tmpl - two (=day, week) graphs from all plugins on the node
 
-        * Zoom view - zoomable graph based on one of the other four graphs
-
 	* munin-serviceview.tmpl - deepest level of view, shows all 4 graphs from one timeseries
 
-        OR
+      * Zoom view - zoomable graph based on one of the other four graphs
 
-    	* munin-nodeview.tmpl - multigraph sub-level.  When multigraph sublevels end ends
+    OR
+
+      * munin-nodeview.tmpl - multigraph sub-level.  When multigraph sublevels end ends
            the next is a munin-serviceview.
 
  * Comparison pages (x4) are at the service level.  Not sure how to work multigraph into them so
@@ -74,7 +74,6 @@ use IO::File;
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
-use Munin::Master::HTMLOld;
 use Munin::Master::HTMLConfig;
 
 use Log::Log4perl qw( :easy );
@@ -493,6 +492,61 @@ sub emit_group_template {
 	}
 }
 
+sub emit_zoom_template {
+    my($srv, $emit_to_stdout) = @_;
+    my $servicetemplate = HTML::Template->new(
+                                              filename          => "$tmpldir/munin-dynazoom.tmpl",
+                                              die_on_bad_params => 0,
+                                              global_vars       => 1,
+                                              loop_context_vars => 1
+                                             );
+	my $pathnodes = $srv->{'path'};
+	my $peers = $srv->{'peers'};
+
+    #remove underscores from peers and title (last path element)
+    if ($peers){
+        $peers = [ map { $_->{'name'} =~ s/_/ /g; $_;} @$peers ];
+    }
+    
+    $pathnodes->[scalar(@$pathnodes) - 1]->{'pathname'} =~ s/_/ /g;
+    $servicetemplate->param(
+                            INFO_OPTION => 'Graphs in same category',
+                            SERVICES  => [$srv],
+                            PATH      => $pathnodes, 
+                            PEERS     => $peers,
+                            LARGESET  => decide_largeset($peers), 
+                            R_PATH => $srv->{'root_path'},
+                            CSS_NAME  => get_css_name(),
+                            CATEGORY  => ucfirst $srv->{'category'},
+                            TAGLINE   => $htmltagline,
+						    ROOTGROUPS => $htmlconfig->{"groups"},
+                            MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
+                            TIMESTAMP	=> $timestamp,
+                            NGLOBALCATS => $htmlconfig->{"nglobalcats"},
+                            GLOBALCATS => $htmlconfig->{"globalcats"},
+                            NCRITICAL => scalar(@{$htmlconfig->{"problems"}->{"criticals"}}),
+                            NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
+                            NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
+                            SHOW_ZOOM_JS => 1,
+                           );
+
+    if($emit_to_stdout){
+		print $servicetemplate->output;
+	} else {
+		my $filename = $srv->{'filename'};
+		ensure_dir_exists($filename);
+        
+	    DEBUG "[DEBUG] Creating service page $filename";
+    	open(my $FILE, '>', $filename)
+          or die "Cannot open '$filename' for writing: $!";
+	    print $FILE $servicetemplate->output;
+    	close $FILE or die "Cannot close '$filename' after writing: $!";
+	}
+
+
+
+}
+
 sub emit_service_template {
 	my ($srv, $emit_to_stdout) = @_;
 
@@ -530,7 +584,7 @@ sub emit_service_template {
                             NCRITICAL => scalar(@{$htmlconfig->{"problems"}->{"criticals"}}),
                             NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
                             NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
-        	                   );
+                           );
 
     # No stored filename for this kind of html node.
     
@@ -728,11 +782,12 @@ sub generate_group_templates {
                 }
             }
             if (defined $key->{'ngraphs'} and $key->{'ngraphs'}) {
-                emit_graph_template($key,0);
+                emit_graph_template($key, 0);
 				foreach my $category (@{$key->{"categories"}}) {
 					foreach my $serv (@{$category->{"services"}}) {
 						unless($serv->{"multigraph"}){
 							emit_service_template($serv);
+							#emit_zoom_template($serv);
 						}
 					}
 				}
