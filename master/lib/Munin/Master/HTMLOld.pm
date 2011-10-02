@@ -303,14 +303,14 @@ sub emit_graph_template {
     my ($key, $emit_to_stdout) = @_;
 
     my $graphtemplate = HTML::Template->new(
-	filename => "$tmpldir/munin-nodeview.tmpl",
-	die_on_bad_params => 0,
-	global_vars       => 1,
-	loop_context_vars => 1,
-	filter            => sub {
-	    my $ref = shift;
-	    $$ref =~ s/URLX/URL$key->{'depth'}/g;
-	});
+                                            filename => "$tmpldir/munin-nodeview.tmpl",
+                                            die_on_bad_params => 0,
+                                            global_vars       => 1,
+                                            loop_context_vars => 1,
+                                            filter            => sub {
+                                                my $ref = shift;
+                                                $$ref =~ s/URLX/URL$key->{'depth'}/g;
+                                            });
 
     DEBUG "[DEBUG] Creating graph(nodeview) page ".$key->{filename};
 
@@ -353,11 +353,11 @@ sub emit_category_template {
     my ($key, $time, $emit_to_stdout) = @_;
 
     my $graphtemplate = HTML::Template->new(
-	filename => "$tmpldir/munin-categoryview.tmpl",
-	die_on_bad_params => 0,
-	global_vars       => 1,
-	loop_context_vars => 1,
-	);
+                                            filename => "$tmpldir/munin-categoryview.tmpl",
+                                            die_on_bad_params => 0,
+                                            global_vars       => 1,
+                                            loop_context_vars => 1,
+                                           );
 
 	my $filename = $key->{'filename-' . $time};
 
@@ -497,11 +497,11 @@ sub emit_service_template {
 	my ($srv, $emit_to_stdout) = @_;
 
     my $servicetemplate = HTML::Template->new(
-        filename          => "$tmpldir/munin-serviceview.tmpl",
-        die_on_bad_params => 0,
-		global_vars=>1,
-        loop_context_vars => 1
-    );
+                                              filename          => "$tmpldir/munin-serviceview.tmpl",
+                                              die_on_bad_params => 0,
+                                              global_vars       => 1,
+                                              loop_context_vars => 1
+                                             );
 
 	my $pathnodes = $srv->{'path'};
 	my $peers = $srv->{'peers'};
