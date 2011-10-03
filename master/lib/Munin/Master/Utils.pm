@@ -37,6 +37,8 @@ our (@ISA, @EXPORT);
 	   'munin_readconfig_storable',
 	   'munin_writeconfig',
 	   'munin_writeconfig_storable',
+	   'munin_read_storable',
+	   'munin_write_storable',
 	   'munin_delete',
 	   'munin_overwrite',
 	   'munin_dumpconfig',
@@ -881,28 +883,36 @@ sub munin_writeconfig_loop {
     }
 }
 
-sub munin_writeconfig_storable {
-    my ($datafilename,$data,$fh) = @_;
+sub munin_read_storable {
+	my ($storable_filename, $default) = @_;
 
-    DEBUG "[DEBUG] Writing state to $datafilename";
-
-    my $is_fh_already_managed = defined $fh;
-    if (! $is_fh_already_managed) {
-	$fh = gensym();
+	return Storable::retrieve($storable_filename) if (-e $storable_filename);
 	
-	unless (open ($fh, ">", $datafilename)) {
-	    LOGCROAK "Fatal error: Could not open \"$datafilename\" for writing: $!";
-	}
-    }
+	# Default
+	return $default;
+}
 
-    # Write datafile.storable, in network order to be architecture indep
-	auto_weaken $data;
-    Storable::nstore_fd($data, $fh);
+sub munin_write_storable {
+	my ($storable_filename, $data) = @_;
 
-    if (! $is_fh_already_managed) {
-        DEBUG "[DEBUG] Closing filehandle \"$datafilename\"...\n";
-        close ($fh);
-    }
+	my $storable_filename_tmp = $storable_filename . ".tmp.$$";
+
+	# Write datafile.storable, in network order to be architecture indep
+        Storable::nstore($data, $storable_filename_tmp);
+
+	# Atomic commit
+	rename ($storable_filename_tmp, $storable_filename);
+}
+
+sub munin_writeconfig_storable {
+	my ($datafilename,$data) = @_;
+
+	DEBUG "[DEBUG] Writing state to $datafilename";
+
+	# XXX - Refs should be weakened on construction
+	auto_weaken($data);
+
+	munin_write_storable($datafilename, $data);
 }
 
 sub munin_writeconfig {

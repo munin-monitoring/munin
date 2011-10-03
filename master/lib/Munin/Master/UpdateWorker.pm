@@ -70,7 +70,7 @@ sub do_work {
     # already have a lock on this.
     my $state_file = sprintf ('%s/state-%s.storable', $config->{dbdir}, $path); 
     DEBUG "[DEBUG] Reading state for $path in $state_file";
-    $self->{state} = ( -e $state_file ) ? Storable::retrieve($state_file) : { };
+    $self->{state} = munin_read_storable($state_file) || {};
 
     my %all_service_configs = (
 	data_source => {},
@@ -235,8 +235,7 @@ sub do_work {
 
     # Update the state file 
     DEBUG "[DEBUG] Writing state for $path in $state_file";
-    Storable::nstore($self->{state}, $state_file . ".tmp.$$");
-    rename($state_file . ".tmp.$$", $state_file);
+    munin_write_storable_safe($self->{state}, $state_file);
 
     # This handles failure in do_in_session,
     return undef if !$done;

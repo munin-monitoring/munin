@@ -169,8 +169,7 @@ sub html_main {
 
 	my $configtime = Time::HiRes::time;
     get_config(0);
-	my $fh;
-	munin_writeconfig_storable("$htmlconfcache", $htmlconfig, $fh);
+	munin_writeconfig_storable("$htmlconfcache", $htmlconfig);
 	my $groups = $htmlconfig;
 	$configtime = sprintf("%.2f", (Time::HiRes::time - $configtime));
 	INFO "[INFO] config generated ($configtime sec)";

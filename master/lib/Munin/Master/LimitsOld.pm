@@ -299,7 +299,7 @@ sub process_service {
 
     my $state_file = sprintf ('%s/state-%s-%s.storable', $config->{dbdir}, $hash->{group}, $hash->{host}); 
     DEBUG "[DEBUG] state_file: $state_file";
-    my $state = Storable::retrieve($state_file);
+    my $state = munin_read_storable($state_file) || {};
 
     foreach my $field (@$children) {
         next if (!defined $field or ref($field) ne "HASH");
