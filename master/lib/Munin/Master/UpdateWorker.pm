@@ -235,7 +235,7 @@ sub do_work {
 
     # Update the state file 
     DEBUG "[DEBUG] Writing state for $path in $state_file";
-    munin_write_storable_safe($self->{state}, $state_file);
+    munin_write_storable($state_file, $self->{state});
 
     # This handles failure in do_in_session,
     return undef if !$done;
