@@ -1237,14 +1237,20 @@ sub munin_get_bool_val
 
 sub munin_get
 {
-    my $hash   = shift;
-    my $field  = shift;
-    my $default = shift;
+    my ($hash, $field, $default) = @_;
 
-    return $default if (ref ($hash) ne "HASH");
-    return $hash->{$field} if defined $hash->{$field} and ref($hash->{$field}) ne "HASH";
-    return $default if not defined $hash->{'#%#parent'};
-    return munin_get ($hash->{'#%#parent'}, $field, $default);
+    # Iterate to top if needed
+    do {
+        return $default if (ref ($hash) ne "HASH");
+
+        my $hash_field = $hash->{$field};
+        return $hash_field if (defined $hash_field && ref($hash_field) ne "HASH");
+
+        # Go up
+        $hash = $hash->{'#%#parent'};
+    } while (defined $hash);
+
+    return $default;
 }
 
 
