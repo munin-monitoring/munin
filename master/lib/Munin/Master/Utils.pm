@@ -19,7 +19,6 @@ use Munin::Common::Config;
 use Log::Log4perl qw(:easy);
 use POSIX qw(strftime);
 use POSIX qw(:sys_wait_h);
-use RRDs;
 use Symbol qw(gensym);
 use Data::Dumper;
 use Storable;
