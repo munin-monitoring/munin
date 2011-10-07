@@ -525,13 +525,13 @@ sub fetch_service_data {
 }
 
 sub quit {
-    my ($self, $plugin) = @_;
+    my ($self) = @_;
 
     my $t0 = [gettimeofday];
     $self->_node_write_single("quit \n");
     my $elapsed = tv_interval($t0);
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
-    DEBUG "[DEBUG] quit: $elapsed sec for '$plugin' on $nodedesignation";
+    DEBUG "[DEBUG] quit: $elapsed sec on $nodedesignation";
 
     return 1;
 }
