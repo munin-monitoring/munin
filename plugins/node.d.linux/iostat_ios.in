@@ -41,7 +41,7 @@ iowait reporting works to fully understand that number.
 
 =head1 BUGS
 
-Should show more usefull device names/lables for device-mapper devices
+Should show more useful device names/labels for device-mapper devices,
 such as those used by LVM and so on.
 
 =head1 AUTHOR
@@ -56,19 +56,22 @@ GPLv2
 =cut
 
 use strict;
+use warnings;
+
 use IO::File;
 use Storable qw(store retrieve);
 use Munin::Plugin;
 
 use constant STATEFILE => '@@PLUGSTATE@@/iostat-ios.state';
 
+
 if (defined($ARGV[0]) and $ARGV[0] eq 'autoconf') {
     if (-r "/proc/diskstats" or -r "/proc/partitions") {
-	print "yes\n";
-	exit 0;
+        print "yes\n";
+        exit 0;
     } else {
-	print "no (no /proc/diskstats or /proc/partitions)\n";
-	exit 0;
+        print "no (no /proc/diskstats or /proc/partitions)\n";
+        exit 0;
     }
 }
 
@@ -131,28 +134,25 @@ sub get_ios {
     }
 
     while (<$parts>) {
-         my ($maj, $min, $name, $rio, $rtime, $wio, $wtime);
-
-         ($maj, $min, $name, 
-          $rio, $rtime, $wio, $wtime) = 
+         my ($maj, $min, $name, $rio, $rtime, $wio, $wtime) = 
            (split(/\s+/, $_ ))[1,2,3,4,7,8,11];
 
-         next unless( defined($min) && defined($maj));
+         next unless (defined($min) && defined($maj));
          next unless ($wio and $rio and $rtime and $wtime);
 
-         next if ( filter($maj, $min, $name) == 0);
+         next if (filter($maj, $min, $name) == 0);
 
-         $R{$maj}{$min}{rio}   =  $rio;
-         $R{$maj}{$min}{rtime} =  $rtime;
+         $R{$maj}{$min}{rio}   = $rio;
+         $R{$maj}{$min}{rtime} = $rtime;
 
-         $R{$maj}{$min}{wio}   =  $wio;
-         $R{$maj}{$min}{wtime} =  $wtime;
+         $R{$maj}{$min}{wio}   = $wio;
+         $R{$maj}{$min}{wtime} = $wtime;
 
-	 my $label = "dev${maj}_${min}";
+         my $label = "dev${maj}_${min}";
 
          push(@dev, $label);
 
-	 $name{$label}         =  $name;
+        $name{$label} =  $name;
     }
     $parts->close();
 
@@ -163,23 +163,23 @@ sub get_ios {
     }
 }
 
-sub print_config {
 
+sub print_config {
     print("graph_title IO Service time\n",
           "graph_args --base 1000 --logarithmic\n",
           "graph_category disk\n",
           "graph_vlabel seconds\n",
-	  "graph_info For each applicable disk device this plugin shows the latency (or delay) for I/O operations on that disk device.  The delay is in part made up of waiting for the disk to flush the data, and if data arrives at the disk faster than it can read or write it then the delay time will include the time needed for waiting in the queue.\n");
+          "graph_info For each applicable disk device this plugin shows the latency (or delay) for I/O operations on that disk device.  The delay is in part made up of waiting for the disk to flush the data, and if data arrives at the disk faster than it can read or write it then the delay time will include the time needed for waiting in the queue.\n");
 
     for my $d ( @{ get_ios(1) } ) {
-        print("${d}_rtime.label ",$name{$d}," read\n",
+        print "${d}_rtime.label ",$name{$d}," read\n",
               "${d}_rtime.type GAUGE\n",
               "${d}_rtime.draw LINE2\n",
               "${d}_rtime.cdef ${d}_rtime,1000,/\n",
               "${d}_wtime.label ",$name{$d}," write\n",
               "${d}_wtime.type GAUGE\n",
               "${d}_wtime.draw LINE2\n",
-              "${d}_wtime.cdef ${d}_wtime,1000,/\n");
+              "${d}_wtime.cdef ${d}_wtime,1000,/\n";
         print_thresholds($d);
     }
 }
@@ -187,30 +187,30 @@ sub print_config {
 
 sub cmp_io {
     my ($old_io, $new_io) = @_;
-    my %KEYS;
 
     for my $maj (sort keys %{$new_io} ) {
         for my $min (sort keys %{ $new_io->{$maj} } ) {
-            my $rio_diff   = $$new_io{$maj}{$min}{rio}  - $$old_io{$maj}{$min}{rio};
-            my $rtime_diff   = $$new_io{$maj}{$min}{rtime}  - $$old_io{$maj}{$min}{rtime};
+            my $rio_diff   = $$new_io{$maj}{$min}{rio}   - $$old_io{$maj}{$min}{rio};
+            my $rtime_diff = $$new_io{$maj}{$min}{rtime} - $$old_io{$maj}{$min}{rtime};
             
-            my $wio_diff   = $$new_io{$maj}{$min}{wio}  - $$old_io{$maj}{$min}{wio};
-            my $wtime_diff   = $$new_io{$maj}{$min}{wtime}  - $$old_io{$maj}{$min}{wtime};
+            my $wio_diff   = $$new_io{$maj}{$min}{wio}   - $$old_io{$maj}{$min}{wio};
+            my $wtime_diff = $$new_io{$maj}{$min}{wtime} - $$old_io{$maj}{$min}{wtime};
             
             my $dev = "dev${maj}_${min}";
 
-            print("${dev}_rtime.value ", ($rtime_diff != 0) ? ($rio_diff / $rtime_diff) : 0, "\n",
-                  "${dev}_wtime.value ", ($wtime_diff != 0) ? ($wio_diff / $wtime_diff) : 0, "\n",
-                  );
+            print "${dev}_rtime.value ", ($rtime_diff != 0) ? ($rio_diff / $rtime_diff) : 0, "\n",
+                  "${dev}_wtime.value ", ($wtime_diff != 0) ? ($wio_diff / $wtime_diff) : 0, "\n";
         }
     }
 
 }
 
+
 sub store_state {
     my ($R) = @_;
     store($R, STATEFILE);
 }
+
 
 sub get_state {
     my ($R);
@@ -218,3 +218,6 @@ sub get_state {
     $R = retrieve( STATEFILE );
     return($R);
 }
+
+
+# vim: ft=perl : ts=4 : sw=4 : et
