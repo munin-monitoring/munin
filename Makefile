@@ -74,6 +74,7 @@ install-pre: Makefile Makefile.config
 
 install-master-prime: $(INFILES_MASTER) install-pre install-master
 	mkdir -p $(CONFDIR)/templates
+	mkdir -p $(CONFDIR)/static
 	mkdir -p $(CONFDIR)/templates/partial
 	mkdir -p $(CONFDIR)/munin-conf.d
 	mkdir -p $(LIBDIR)
