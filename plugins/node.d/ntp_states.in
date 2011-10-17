@@ -39,6 +39,7 @@ use English qw( -no_match_vars );
 use Munin::Plugin;
 use strict;
 use warnings;
+use File::Spec;
 
 my $ret = undef;
 
@@ -49,6 +50,11 @@ if (!eval "require Net::DNS;")
                 die $ret;
         }
 }
+
+# Include /usr/local/sbin in the path to use the ntpq installed by
+# ports on FreeBSD instead of the base system, which is probably
+# older.
+$ENV{'PATH'} = File::Spec->catdir(File::Spec->rootdir(), 'usr', 'local', 'sbin') . ":" . $ENV{'PATH'};
 
 my %stateval = (
                  "reject"    => 0,
@@ -76,8 +82,20 @@ sub make_hash {
         foreach my $line (`ntpq -c associations`) {
                 if ($line =~ m/^\s*\d+/) {
                         my (undef, undef, $assid, undef, undef, undef, undef, $condition_str, undef, undef) = split(/\s+/, $line);
-                        chomp(my $peer_addr = `ntpq -n -c "readvar $assid srcadr"`);
-                        $peer_addr =~ s/^srcadr=//;
+                        chomp(my $peerinfo = `ntpq -n -c "readvar $assid srcadr"`);
+                        $peerinfo =~ s/\R//g;
+                        my ($peer_addr) = ($peerinfo =~ m/srcadr=(.*)/);
+
+                        # some states get the last letter cut off in
+                        # ntp version 4.2.4p8 (and probably others) in
+                        # the associations output
+                        if ($condition_str eq "candidat") {
+                                $condition_str = "candidate";
+                        }
+                        if ($condition_str eq "falsetic") {
+                                $condition_str = "falsetick";
+                        }
+
                         $peers_condition{$peer_addr} = $stateval{$condition_str};
                 }
         }
