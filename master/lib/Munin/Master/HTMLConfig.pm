@@ -11,6 +11,7 @@ our (@ISA, @EXPORT);
 use POSIX qw(strftime);
 use Getopt::Long;
 use Time::HiRes;
+use Scalar::Util qw( weaken );
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
@@ -59,6 +60,7 @@ sub node_reorder {
 				foreach my $local_group (@$groups){
 					if(!defined $currentgroup->{$local_group}){
 						$currentgroup->{$local_group} = {'#%#name' => $local_group, '#%#parent' => $currentgroup};
+						weaken($currentgroup->{$local_group}{'#%#parent'});
 					}
 					$currentgroup = $currentgroup->{$local_group};
 				}
@@ -77,6 +79,7 @@ sub node_reorder {
 					$child->{"#%#origparent"} = $group;
 					$currentgroup->{$name} = $child;
 					$child->{"#%#parent"} = $currentgroup;
+					weaken($child->{"#%#parent"});
 				}
 			}
 		} else {

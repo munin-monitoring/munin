@@ -283,7 +283,7 @@ sub munin_overwrite {
 	if (ref $overwrite->{$key}) {
 	    if (!defined $configfile->{$key}) {
 		if (ref $overwrite->{$key} eq "HASH") {
-		    $configfile->{$key}->{'#%#parent'} = $configfile;
+		    $configfile->{$key}->{'#%#parent'} = $configfile; weaken($configfile->{$key}->{'#%#parent'});
 		    $configfile->{$key}->{'#%#name'}   = $key;
 		    munin_overwrite($configfile->{$key},$overwrite->{$key});
 		} else {
@@ -741,7 +741,7 @@ START:
     if (scalar @$loc > $iloc) {
 	if (!defined $hash->{$tmpvar} or !defined $hash->{$tmpvar}->{"#%#name"}) { 
             # Init the new node
-	    $hash->{$tmpvar}->{"#%#parent"} = $hash;
+	    $hash->{$tmpvar}->{"#%#parent"} = $hash; weaken($hash->{$tmpvar}->{"#%#parent"});
 	    $hash->{$tmpvar}->{"#%#name"} = $tmpvar;
 	}
 	# Recurse
