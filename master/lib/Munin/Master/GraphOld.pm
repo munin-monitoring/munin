@@ -323,14 +323,6 @@ sub graph_startup {
     return $config;
 }
 
-sub undef_references {
-    my ($c) = @_;
-    foreach my $k (keys %$c) {
-        undef_references($c->{$k}) if (ref($c->{$k}) eq "HASH" && $k ne "#%#parent");
-        $c->{$k} = undef;
-    }
-}
-
 sub graph_check_cron {
 
     # Are we running from cron and do we have matching graph_strategy
