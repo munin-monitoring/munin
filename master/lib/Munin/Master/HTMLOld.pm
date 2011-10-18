@@ -198,10 +198,7 @@ sub html_main {
     }
 
     if ($do_dump) {
-        use Data::Dumper;
-
-        $Data::Dumper::Sortkeys = sub { my $a=shift; my @b = grep (!/#%#parent/, keys %$a); \@b; };
-        print Dumper $groups;
+	print munin_dumpconfig_as_str($groups);
         exit 0;
     }
 	
