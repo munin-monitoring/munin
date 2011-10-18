@@ -2,6 +2,8 @@ use warnings;
 use strict;
 use English '-no_match_vars';
 
+use Scalar::Util "weaken";
+
 use Test::More tests => 11;
 
 use_ok('Munin::Master::Utils');
@@ -58,10 +60,10 @@ use_ok('Munin::Master::Utils');
 			},
 		},
 	};
-	$h->{a}{aa}{'#%#parent'} = $h->{a};
-	$h->{a}{ab}{'#%#parent'} = $h->{a};
-	$h->{a}{ac}{'#%#parent'} = $h->{a};
-	$h->{b}{ba}{'#%#parent'} = $h->{b};
+	$h->{a}{aa}{'#%#parent'} = $h->{a}; weaken($h->{a}{aa}{'#%#parent'});
+	$h->{a}{ab}{'#%#parent'} = $h->{a}; weaken($h->{a}{ab}{'#%#parent'});
+	$h->{a}{ac}{'#%#parent'} = $h->{a}; weaken($h->{a}{ac}{'#%#parent'});
+	$h->{b}{ba}{'#%#parent'} = $h->{b}; weaken($h->{b}{ba}{'#%#parent'});
         is(munin_get($h, "a", $sentinel), $sentinel, "munin_get returns default on hash field");
         is(munin_get($h->{a}->{aa}, "field1", $sentinel), $h->{a}->{aa}->{field1}, "munin_get recovers field value");
         is(munin_get($h->{a}->{aa}, "upper2", $sentinel), $h->{a}->{upper2}, "munin_get recovers field value, from above");
