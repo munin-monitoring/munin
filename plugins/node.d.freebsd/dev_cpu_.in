@@ -34,13 +34,15 @@
 
 # Munin plugin for CPU temperature and frequency on FreeBSD
 
+sysctl=${sysctl:-/sbin/sysctl}
+
 die() {
         echo "$@" 1>&2
         exit 1
 }
 
 cpus() {
-        sysctl -N dev.cpu | awk -F. '$4 == "'"$func"'" { print $3 }'
+        $sysctl -N dev.cpu | awk -F. '$4 == "'"$func"'" { print $3 }'
 }
 
 reqcpus() {
@@ -110,7 +112,7 @@ get() {
         reqcpus
         for cpu in $cpus ; do
                 echo -n "CPU$cpu.value "
-                sysctl -n "dev.cpu.$cpu.$func"
+                $sysctl -n "dev.cpu.$cpu.$func" | tr -d 'C'
         done
 }
 
