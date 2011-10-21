@@ -232,7 +232,7 @@ exit 0
 %{_bindir}/munindoc
 %{_bindir}/munin-check
 %dir %{_datadir}/munin
-#%{_datadir}/munin/munin-graph
+%{_datadir}/munin/munin-graph
 %{_datadir}/munin/munin-html
 %{_datadir}/munin/munin-limits
 %{_datadir}/munin/munin-update
@@ -300,6 +300,3 @@ exit 0
 %endif
 
 %changelog
-* Fri Jul 29 2011  - 2.0-1
-- new package for 2.0
-
