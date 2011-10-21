@@ -1,0 +1,161 @@
+* Fri Oct 21 2011  - 1.999.4445
+  - Somewhat daily build from trunk
+  - Using a 1.999.SVN naming scheme to enable rpm package building using alien
+  - SVN Log :
+     r4426 | steve.schnepp | 2011-10-07 11:03:18 -0400 (Fri, 07 Oct 2011) | 2 lines
+     - remove a warning about undef $plugin
+     r4435 | ligne | 2011-10-09 13:13:37 -0400 (Sun, 09 Oct 2011) | 2 lines
+     little twiddles and cleanups to iostat_ios, before i take a look at #1085.
+     r4436 | steve.schnepp | 2011-10-11 07:50:50 -0400 (Tue, 11 Oct 2011) | 2 lines
+     - definitions.html is not copied to static/
+     r4437 | kenyon | 2011-10-16 20:59:08 -0400 (Sun, 16 Oct 2011) | 4 lines
+     support older versions of ntp
+     Also prefer ntp in /usr/local/sbin, which will probably be newer for
+     BSD people than the version in the base system.
+     r4438 | kenyon | 2011-10-18 02:30:26 -0400 (Tue, 18 Oct 2011) | 1 line
+     whitespace cleanups, spelling corrections, use GOODSH template
+     r4439 | kenyon | 2011-10-18 02:53:19 -0400 (Tue, 18 Oct 2011) | 3 lines
+     mark coretemp legacy and clean up whitespace on dev_cpu_
+     Need to fix autoconf and suggest of dev_cpu_.
+     r4440 | kenyon | 2011-10-18 03:12:58 -0400 (Tue, 18 Oct 2011) | 3 lines
+     strip trailing units, and use absolute path to sysctl by default
+     fixes #890
+     r4441 | steve.schnepp | 2011-10-18 03:49:25 -0400 (Tue, 18 Oct 2011) | 2 lines
+     - use weak reference for upper nodes
+     r4442 | kenyon | 2011-10-18 03:56:20 -0400 (Tue, 18 Oct 2011) | 1 line
+     just export the PATH, which should find the commands most of the time
+     r4443 | steve.schnepp | 2011-10-18 04:03:47 -0400 (Tue, 18 Oct 2011) | 2 lines
+     - remove unused sub undef_references()
+     r4444 | steve.schnepp | 2011-10-18 04:06:53 -0400 (Tue, 18 Oct 2011) | 2 lines
+     - reuse munin_dump_as_str from M::M::Utils
+     r4445 | steve.schnepp | 2011-10-18 04:07:12 -0400 (Tue, 18 Oct 2011) | 2 lines
+     - weaken upper references
+
+* Tue Oct 04 2011  - 1.999.4419
+  - Somewhat daily build from trunk
+  - Using a 1.999.SVN naming scheme to enable rpm package building using alien
+  - SVN Log :
+     r4400 | bldewolf | 2011-09-28 20:45:15 -0400 (Wed, 28 Sep 2011) | 14 lines
+     Re-work the IPC bits in LimitsOld to fix #732 for everyone:
+     - Add num_messages as a valid token
+     - Clean up functions pulled from Text::Balanced
+     - Add a function for closing the output pipes before exiting
+     - Replace all the command-parsing and hacking with an idiomatic pipe/fork/exec
+       (see man perlipc) and make the surrounding bits more cognizant of errors.
+     Note that, since we don't do anywhere near as much hacking to the command by
+     parsing quotes and stuff, it's possible that command strings that used to work
+     will no longer.  This is an unfortunate but necessary casualty in making the
+     operations of munin-limits simpler and more robust.
+     r4401 | steve.schnepp | 2011-09-29 02:15:22 -0400 (Thu, 29 Sep 2011) | 2 lines
+     - if max_html_jobs is 0, do not fork
+     r4402 | steve.schnepp | 2011-09-29 06:23:30 -0400 (Thu, 29 Sep 2011) | 2 lines
+     - Add support for env.JAVA_OPTS (thx cj999)
+     r4403 | steve.schnepp | 2011-09-30 09:11:19 -0400 (Fri, 30 Sep 2011) | 3 lines
+     - check iwlist first as sysfs doesn't work as well for wireless cards (thx flameeyes)
+     r4404 | kenyon | 2011-09-30 14:17:54 -0400 (Fri, 30 Sep 2011) | 3 lines
+     initialize connected users count to 0
+     fixes #1146
+     r4405 | knuthaug | 2011-10-02 09:51:50 -0400 (Sun, 02 Oct 2011) | 1 line
+     Fixed french button to read update
+     r4406 | knuthaug | 2011-10-02 12:25:04 -0400 (Sun, 02 Oct 2011) | 1 line
+     moved html mode magic marker first in file
+     r4407 | knuthaug | 2011-10-02 12:39:01 -0400 (Sun, 02 Oct 2011) | 1 line
+     code cleanup
+     r4408 | knuthaug | 2011-10-02 13:06:00 -0400 (Sun, 02 Oct 2011) | 1 line
+     code cleanup (noe change)
+     r4409 | knuthaug | 2011-10-02 14:34:23 -0400 (Sun, 02 Oct 2011) | 1 line
+     code cleanup
+     r4410 | knuthaug | 2011-10-02 15:00:39 -0400 (Sun, 02 Oct 2011) | 1 line
+     refactored inline javascript into file for dynazoom and started a dynazoom template. Unfinished, but not in use as of yet
+     r4411 | knuthaug | 2011-10-02 15:01:23 -0400 (Sun, 02 Oct 2011) | 1 line
+     removed html marker comment for emacs modes. Configure you editor if you need it
+     r4412 | knuthaug | 2011-10-02 15:01:44 -0400 (Sun, 02 Oct 2011) | 1 line
+     added conditional for zoom javascripts in head
+     r4413 | knuthaug | 2011-10-02 15:02:15 -0400 (Sun, 02 Oct 2011) | 1 line
+     added method for emitting dynazoom templates, but uncalled before finishing the template
+     r4414 | steve.schnepp | 2011-10-03 04:35:25 -0400 (Mon, 03 Oct 2011) | 2 lines
+     - RRDs isn't used anymore
+     r4415 | steve.schnepp | 2011-10-03 06:54:22 -0400 (Mon, 03 Oct 2011) | 2 lines
+     - Add some tests for recursive munin_get()
+     r4416 | steve.schnepp | 2011-10-03 07:04:48 -0400 (Mon, 03 Oct 2011) | 2 lines
+     - use a iterative munin_get()
+     r4417 | steve.schnepp | 2011-10-03 12:11:15 -0400 (Mon, 03 Oct 2011) | 2 lines
+     -  unify Storable::(store|retrieve) and avoid race conditions
+     r4418 | steve.schnepp | 2011-10-03 14:10:19 -0400 (Mon, 03 Oct 2011) | 2 lines
+     - typo in the function name
+     r4419 | janl | 2011-10-04 05:38:41 -0400 (Tue, 04 Oct 2011) | 2 lines
+     * VeraMono is obsolete, dejavu is the new new
+
+* Sat Sep 24 2011  - 1.999.4397
+  - Somewhat daily build from trunk
+  - Using a 1.999.SVN naming scheme to enable rpm package building using alien
+  - SVN Log :
+     r4397 | bldewolf | 2011-09-23 15:35:38 -0400 (Fri, 23 Sep 2011) | 1 line
+     Update the slapd_ comments and change plugin behavior to die if an invalid action is specified (for the paths that require an action).
+
+
+* Fri Sep 23 2011  - 1.999.4396
+  - Somewhat daily build from trunk
+  - Using a 1.999.SVN naming scheme to enable rpm package building using alien
+  - SVN Log :
+     r4363 | kenyon | 2011-09-13 01:37:24 -0400 (Tue, 13 Sep 2011) | 1 line
+     fix typo: closing bracket
+     r4364 | kenyon | 2011-09-13 01:45:30 -0400 (Tue, 13 Sep 2011) | 1 line
+     authors: add myself and correct ay
+     r4365 | kenyon | 2011-09-13 02:21:25 -0400 (Tue, 13 Sep 2011) | 3 lines
+     fix #1108: syntax error in python exit calls
+     Also run whitespace-cleanup.
+     r4367 | kenyon | 2011-09-13 02:48:10 -0400 (Tue, 13 Sep 2011) | 1 line
+     language cleanups
+     r4368 | kenyon | 2011-09-13 02:57:27 -0400 (Tue, 13 Sep 2011) | 1 line
+     fix #1135 and whitespace-cleanup
+     r4372 | kenyon | 2011-09-13 11:14:28 -0400 (Tue, 13 Sep 2011) | 1 line
+     remove "dangerous" (and seems to be useless) file variable; replace with file's mode
+     r4376 | knuthaug | 2011-09-13 14:50:26 -0400 (Tue, 13 Sep 2011) | 1 line
+     corrected typo on info string, visible in the legend
+     r4377 | steve.schnepp | 2011-09-14 00:25:17 -0400 (Wed, 14 Sep 2011) | 2 lines
+     - computes the correct value for limits when type is DERIVE (fixes #1138, thx raylu)
+     r4378 | steve.schnepp | 2011-09-14 00:37:00 -0400 (Wed, 14 Sep 2011) | 2 lines
+     - remove the circular dep in the makefile
+     r4379 | steve.schnepp | 2011-09-14 07:20:52 -0400 (Wed, 14 Sep 2011) | 2 lines
+     - use /sys to avoid Grsecurity privilege issue. (fixes #1139, thx flameeyes)
+     r4380 | steve.schnepp | 2011-09-14 12:01:53 -0400 (Wed, 14 Sep 2011) | 2 lines
+     - rewrite and simplify interface speed detection (fixes #1140, thx flameeyes)
+     r4381 | knuthaug | 2011-09-14 13:24:01 -0400 (Wed, 14 Sep 2011) | 1 line
+     some minor code cleanups
+     r4382 | steve.schnepp | 2011-09-16 08:55:45 -0400 (Fri, 16 Sep 2011) | 2 lines
+     - postfix_mailvolume does not handle missing syslog correctly (fixes #1142, thx blueyed)
+     r4383 | steve.schnepp | 2011-09-16 15:01:08 -0400 (Fri, 16 Sep 2011) | 2 lines
+     - avoid set debug mode if there is a "debug" group 
+     r4384 | bldewolf | 2011-09-16 16:06:55 -0400 (Fri, 16 Sep 2011) | 1 line
+     Push r3679 from trunk to 1.4-stable and revise get_fq_hostname in both: this sub is expected to return a value, so instead of returning gethostbyname's results (which can be undef), fall back to alternatives such as the node name and then 'unknown' if we're really desperate.
+     r4385 | bldewolf | 2011-09-16 19:30:47 -0400 (Fri, 16 Sep 2011) | 1 line
+     Allow use_node_name to be defined at the global level that can still be overridden on a per-node basis.
+     r4386 | kenyon | 2011-09-17 17:26:30 -0400 (Sat, 17 Sep 2011) | 3 lines
+     cleanup before I fix #775
+     Whitespace cleanup, correct state comments, improve POD slightly.
+     r4387 | kenyon | 2011-09-17 17:26:37 -0400 (Sat, 17 Sep 2011) | 5 lines
+     basically a rewrite of the ntp_states plugin
+     Fixes #775. Fixes it so that IPv6 peers are graphed too. Fixes slow
+     DNS lookups which can cause the plugin to time out. Fixes the y-axis
+     label. Fixes and improves documentation.
+     r4388 | kenyon | 2011-09-17 17:52:28 -0400 (Sat, 17 Sep 2011) | 1 line
+     use correct units on the y-axis
+     r4389 | kenyon | 2011-09-17 18:32:37 -0400 (Sat, 17 Sep 2011) | 1 line
+     fix #1134 to allow for listing disks by-id
+     r4390 | kenyon | 2011-09-19 00:56:54 -0400 (Mon, 19 Sep 2011) | 1 line
+     fix graph vlabel
+     r4391 | kenyon | 2011-09-19 00:56:58 -0400 (Mon, 19 Sep 2011) | 1 line
+     fix graph vlabel
+     r4392 | kenyon | 2011-09-19 00:57:02 -0400 (Mon, 19 Sep 2011) | 4 lines
+     update vlabels
+     Hopefully these are accurate labels. Also remove some excess
+     whitespace.
+     r4393 | steve.schnepp | 2011-09-20 05:34:53 -0400 (Tue, 20 Sep 2011) | 2 lines
+     - regex should not be multiline (thx blueyed)
+     r4394 | knuthaug | 2011-09-20 14:43:15 -0400 (Tue, 20 Sep 2011) | 1 line
+     fixed horrible indentation on get_peer_nodes
+     r4395 | knuthaug | 2011-09-20 14:54:13 -0400 (Tue, 20 Sep 2011) | 1 line
+     fixed buggy link on host name from category-view pages. Also cleanup HTMLconfig a bit and use a constant for the index page file name
+     r4396 | steve.schnepp | 2011-09-22 06:13:01 -0400 (Thu, 22 Sep 2011) | 2 lines
+     - Debug should not be enabled by default
