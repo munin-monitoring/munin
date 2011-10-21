@@ -1,0 +1,69 @@
+#! /bin/sh
+# Autobuilding script : SVN -> RPM packages
+# (c) GPL - Steve Schnepp <steve.schnepp@pwkf.org>
+
+# Stopping on error
+set -e
+
+# We don't want localized mesgs
+LANG=C
+
+# Always gets the last building tools
+( cd redhat && svn -q up )
+
+[ -d trunk ] || exit 2;
+
+OLDREVISION=$(cd trunk && svn st -v -N . | tr -s ' ' | cut -d' ' -f3 | head -n 1)
+[ -z "$NO_UPDATE" ] && (cd trunk && svn -q up)
+REVISION=$(cd trunk && svn st -v -N . | tr -s ' ' | cut -d' ' -f3 | head -n 1)
+
+TMP_SPEC_FILE=$(mktemp)
+
+if [ -z "$NO_UPDATE" -a $OLDREVISION == $REVISION ]
+then
+	exit 1
+fi
+
+# Something has changed, building the changelog...
+(
+	cd trunk
+
+	NOW=$(date +"%a %b %d %Y")
+	printf "* $NOW  - 1.999.$REVISION\n"
+	printf "  - Somewhat daily build from trunk\n"
+	printf "  - Using a 1.999.SVN naming scheme to enable rpm package building using alien\n"
+	printf "  - SVN Log :\n"
+	[ -z "$NO_UPDATE" ] && svn log -r$(($OLDREVISION + 1)):$REVISION | perl -lne 'next if m/^---+$/ || m/^$/; s/^/     /; print;'
+	printf "\n"
+) >> redhat/munin.spec.changelog.$$
+
+# ... and insert it in the beggining of the changex log
+cat redhat/munin.spec.changelog >> redhat/munin.spec.changelog.$$
+mv redhat/munin.spec.changelog.$$ redhat/munin.spec.changelog
+
+# Update the new version ...
+sed -e "s/^Version: .*/Version: 1.999.$REVISION/" < redhat/munin.spec > $TMP_SPEC_FILE
+
+# ... and append the new changelog on the current spec file
+cat redhat/munin.spec.changelog >> $TMP_SPEC_FILE
+
+# Create a .tar.gz
+(
+	cd trunk
+	echo "1.999.$REVISION" > RELEASE
+	make tar
+	cd ..
+	rm munin-1.999.$REVISION
+	mv munin-1.999.$REVISION.tar.gz rpmbuild/SOURCES
+)
+
+
+# Building....
+mkdir -p logs
+( 
+	echo $(date) " - START - Building package 1.999.$REVISION"
+	cd redhat && rpmbuild -v -ba $TMP_SPEC_FILE "$@"
+	echo $(date) " - STOP - Building package 1.999.$REVISION - retcode : $!"
+) >> logs/rpm-buildpackage-1.999.$REVISION.log 
+
+rm $TMP_SPEC_FILE
