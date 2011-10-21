@@ -121,8 +121,14 @@ findspeed_mbps() {
 findspeed() {
     SPEED=$(findspeed_mbps)
 
-    if [ -z $SPEED ]; then
-        echo "up.info Traffic of the $INTERFACE interface. Unable to determine interface speed.  Please install ethtool, wireless-tools, mii-tool or whatever is appropriate for the interface."
+    if [ -z $SPEED -o $SPEED == "U" ]; then
+        printf "up.info Traffic of the %s interface. Unable to determine interface speed." $INTERFACE
+        if [ $EUID -ne 0 ]; then
+                echo " Please run the plugin as root."
+        else
+                echo " Please install ethtool, wireless-tools, mii-tool or whatever is appropriate for the interface."
+        fi
+
         return
     fi
 
