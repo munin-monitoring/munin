@@ -96,6 +96,12 @@ sub do_work {
 		    #       since it is quite expensive
 		    #DEBUG "[DEBUG] whole_config:" . Dumper(\%whole_config);
 
+		    # spoolfetching reported no data, skipping it.
+		    if (! $whole_config{global}{multigraph}[1]) {
+			    INFO "[INFO] $nodedesignation didn't send any data for spoolfetch. Ignoring it.";
+			   return;
+		    }
+
 		    # Gets the plugins from spoolfetch
 		    # Only keep the first one, the others will be multigraph-fetched
 		    @plugins = ( $whole_config{global}{multigraph}[0] ) ;
