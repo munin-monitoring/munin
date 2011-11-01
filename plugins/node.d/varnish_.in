@@ -47,7 +47,7 @@ server.
 A few aspects are not linked by default. They are marked as 
 'DEBUG' => 'yes' (or any other value). They are:
 
-data_structures, vcl_and_purges, lru, objects_per_objhead,
+data_structures, vcl_and_bans, lru, objects_per_objhead,
 obj_sendfile_vs_write, losthdr, esi, hcb, shm, shm_writes, overflow,
 session, session_herd
 
@@ -281,6 +281,10 @@ my %ASPECTS = (
 			'n_object' => {
 				'type' => 'GAUGE',
 				'label' => 'Number of objects'
+			},
+			'n_objcore' => {
+				'type' => 'GAUGE',
+				'label' => 'Number of object cores'
 			},
 			'n_objecthead' => {
 				'type' => 'GAUGE',
@@ -538,8 +542,8 @@ my %ASPECTS = (
 			}
 		}
 	},
-	'vcl_and_purges' => {
-		'title' => 'VCL and purges',
+	'vcl_and_bans' => {
+		'title' => 'VCL and bans',
 		'DEBUG' => 'yes',
 		'values' => {
 			'n_backend' => {
@@ -557,26 +561,26 @@ my %ASPECTS = (
 				'type' => 'DERIVE',
 				'min' => '0'
 			},
-			'n_purge' => {
+			'n_ban' => {
 				'type' => 'GAUGE'
 			},
-			'n_purge_add' => {
+			'n_ban_add' => {
 				'type' => 'DERIVE',
 				'min' => '0'
 			},
-			'n_purge_retire' => {
+			'n_ban_retire' => {
 				'type' => 'DERIVE',
 				'min' => '0'
 			},
-			'n_purge_obj_test' => {
+			'n_ban_obj_test' => {
 				'type' => 'DERIVE',
 				'min' => '0'
 			},
-			'n_purge_re_test' => {
+			'n_ban_re_test' => {
 				'type' => 'DERIVE',
 				'min' => '0'
 			},
-			'n_purge_dups' => {
+			'n_ban_dups' => {
 				'type' => 'DERIVE',
 				'min' => '0'
 			}
@@ -606,6 +610,53 @@ my %ASPECTS = (
 			'n_lru_moved' => {
 				'type' => 'DERIVE',
 				'min' => '0'
+			}
+		}
+	},
+	'bad' => {
+		'title' => 'Misbehavior',
+		'values' => {
+			'client_drop' => {
+				'type' => 'DERIVE'
+			},
+			'backend_unhealthy' => {
+				'type' => 'DERIVE'
+			},
+			'fetch_failed' => {
+				'type' => 'DERIVE'
+			},
+			'backend_busy' => {
+				'type' => 'DERIVE'
+			},
+			'n_wrk_failed' => {
+				'type' => 'DERIVE'
+			},
+			'n_wrk_max' => {
+				'type' => 'DERIVE'
+			},
+			'n_wrk_drop' => {
+				'type' => 'DERIVE'
+			},
+			'n_wrk_lqueue' => {
+				'type' => 'GAUGE'
+			},
+			'losthdr' => {
+				'type' => 'DERIVE'
+			},
+			'n_objoverflow' => {
+				'type' => 'DERIVE'
+			},
+			'esi_errors' => {
+				'type' => 'DERIVE'
+			},
+			'esi_warnings' => {
+				'type' => 'DERIVE'
+			},
+			'client_drop_late' => {
+				'type' => 'DERIVE'
+			},
+			'accept_fail' => {
+				'type' => 'DERIVE'
 			}
 		}
 	},
