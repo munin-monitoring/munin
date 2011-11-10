@@ -62,7 +62,7 @@ Options:
 if ($dump_config) {
 	for (my $i = 0; $i < $nb_servers; $i++) {
 		my $port = $starting_port + $i;
-		print "[host$port.debug]\n";
+		print "[host$port.debug.lan]\n";
 		print "     address 127.0.0.1\n";
 		print "     port $port\n";
 		print "\n";
@@ -109,7 +109,7 @@ while (my @ready = $select->can_read()) {
 sub service
 {
 	my $client = shift;
-	my $hostname = "host".$client->sockport().".debug";
+	my $hostname = "host".$client->sockport().".debug.lan";
 
 	print $client "# munin node at $hostname\n";
 
