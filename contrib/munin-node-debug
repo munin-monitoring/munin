@@ -25,6 +25,7 @@ my $dump_config;
 my $is_debug;
 my $help;
 my $update_rate = 10;
+my $listen = "localhost";
 
 my $arg_ret = GetOptions(
 	"nb-plugins|n=i" => \$nb_plugins,
@@ -32,6 +33,8 @@ my $arg_ret = GetOptions(
 	"nb-servers|s=i" => \$nb_servers,
 
 	"startint-port|p=i" => \$starting_port,
+
+	"listen=s" => \$listen,
 	
 	"spoolfetch" => \$spoolfetch,
 
@@ -51,6 +54,8 @@ Options:
     -s --nb-servers <int>     Number of servers [3]
 
     -p --start-port <int>     Starting TCP listening port [24949]
+       --listen    <host>     Which IP to bind [localhost]. 
+                              Use '' or '*' to bind to every interface.
 
     -d --dump                 Only dump a generated munin.conf part [no]
        --debug                Print debug informations [no] 
@@ -62,7 +67,7 @@ Options:
 if ($dump_config) {
 	for (my $i = 0; $i < $nb_servers; $i++) {
 		my $port = $starting_port + $i;
-		print "[host$port.debug.lan]\n";
+		print "[host$port.debug]\n";
 		print "     address 127.0.0.1\n";
 		print "     port $port\n";
 		print "\n";
@@ -76,10 +81,12 @@ if ($dump_config) {
 my @servers;
 for (my $i = 0; $i < $nb_servers; $i ++) {
 	my $port = $starting_port + $i;
-	debug("starting server on port $port");
+	# LocalAddr == * doesn't work, it has to be empty
+	my $localaddr = ($listen eq '*') ? '' : $listen;
+	debug("starting server on port $listen:$port");
 	my $server = IO::Socket::INET->new(
 		"LocalPort" => $port,
-		"LocalAddr" => "localhost",
+		"LocalAddr" => $localaddr,
 		"Listen" => 5,
 		"ReuseAddr" => 1,
 		"Proto" => "tcp",
