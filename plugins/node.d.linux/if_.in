@@ -121,7 +121,7 @@ findspeed_mbps() {
 findspeed() {
     SPEED=$(findspeed_mbps)
 
-    if [ -z $SPEED -o $SPEED == "U" ]; then
+    if [ -z $SPEED -o $SPEED = "U" ]; then
         printf "up.info Traffic of the %s interface. Unable to determine interface speed." $INTERFACE
         if [ $EUID -ne 0 ]; then
                 echo " Please run the plugin as root."
