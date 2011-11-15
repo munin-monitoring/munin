@@ -121,8 +121,8 @@ MAIN: while(1) {
 		
 		fetch_data($plugin, $when);
 
-		# We end here
-		last MAIN;
+		# We end here if we forked
+		last MAIN if $do_fork;
 	}
 
 	# Sleep for 1s.
