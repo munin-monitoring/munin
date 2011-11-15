@@ -19,6 +19,7 @@ use Munin::Master::Utils;
 use RRDs;
 use Time::HiRes;
 use Data::Dumper;
+use Scalar::Util qw(weaken);
     
 use List::Util qw(max);
 
@@ -32,7 +33,7 @@ my $rrd_tune_flags = {
 };
 
 sub new {
-    my ($class, $host) = @_;
+    my ($class, $host, $worker) = @_;
 
     my $self = $class->SUPER::new($host->get_full_path);
     $self->{host} = $host;
@@ -41,6 +42,9 @@ sub new {
                                              $host->{host_name},
 					     $host);
     $self->{state} = {};
+    $self->{worker} = $worker;
+    weaken($self->{worker});
+
     return $self;
 }
 
@@ -99,6 +103,8 @@ sub do_work {
 		    # spoolfetching reported no data, skipping it.
 		    if (! $whole_config{global}{multigraph}[1]) {
 			    INFO "[INFO] $nodedesignation didn't send any data for spoolfetch. Ignoring it.";
+			    # adding ourself to failed_workers, so we use 
+			    push @{ $self->{worker}->{failed_workers} },  $self->{ID};
 			   return;
 		    }
 
