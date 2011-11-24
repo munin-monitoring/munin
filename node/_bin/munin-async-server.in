@@ -117,7 +117,7 @@ MAIN: while(1) {
 		}
 		# Setting the command name for a useful top information
 		$process_name = "plugin:$plugin";
-		$0 = "munin-async-server [$process_name]";
+		local $0 = "munin-async-server [$process_name]";
 		
 		fetch_data($plugin, $when);
 
