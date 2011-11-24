@@ -242,6 +242,7 @@ sub do_work {
 	}
 
 	# Everything went smoothly.
+	DEBUG "[DEBUG] Everything went smoothly.";
 	return 1;
 
     }); # do_in_session
@@ -253,7 +254,7 @@ sub do_work {
     munin_write_storable($state_file, $self->{state});
 
     # This handles failure in do_in_session,
-    return undef if ! $done || $done->{exit_value};
+    return undef if ! $done || ! $done->{exit_value};
 
     return {
         time_used => Time::HiRes::time - $update_time,
