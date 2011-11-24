@@ -105,7 +105,7 @@ sub do_work {
 			    INFO "[INFO] $nodedesignation didn't send any data for spoolfetch. Ignoring it.";
 			    # adding ourself to failed_workers, so we use 
 			    push @{ $self->{worker}->{failed_workers} },  $self->{ID};
-			   return;
+			   die "NO_SPOOLFETCH_DATA";
 		    }
 
 		    # Gets the plugins from spoolfetch
@@ -235,7 +235,10 @@ sub do_work {
 		kill $self->{node}->{pid};
 	}
 
-	if ($EVAL_ERROR) {
+	if ($EVAL_ERROR =~ m/^NO_SPOOLFETCH_DATA /) {
+	    INFO "[INFO] No spoofetch data for $nodedesignation";
+	    return;
+	} elsif ($EVAL_ERROR) {
 	    ERROR "[ERROR] Error in node communication with $nodedesignation: "
 		.$EVAL_ERROR;
 	    return;
