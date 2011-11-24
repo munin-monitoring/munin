@@ -47,9 +47,9 @@ sub do_in_session {
 
     if ($self->_do_connect()) {
 	$self->_run_starttls_if_required();
-	$block->();
+	my $exit_value = $block->();
 	$self->_do_close();
-	return 1; # If we're still here
+	return { exit_value => $exit_value }; # If we're still here
     }
     return 0;  # _do_connect failed.
 }

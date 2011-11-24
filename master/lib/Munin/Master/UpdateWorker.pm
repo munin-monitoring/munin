@@ -229,17 +229,20 @@ sub do_work {
 	   
 	}; # eval
 
-	if ($EVAL_ERROR) {
-	    ERROR "[ERROR] Error in node communication with $nodedesignation: "
-		.$EVAL_ERROR;
-	}
-	    
 	# kill the remaining process if needed
 	if ($self->{node}->{pid}) {
 		INFO "[INFO] Killing subprocess $self->{node}->{pid}";
 		kill $self->{node}->{pid};
 	}
 
+	if ($EVAL_ERROR) {
+	    ERROR "[ERROR] Error in node communication with $nodedesignation: "
+		.$EVAL_ERROR;
+	    return;
+	}
+
+	# Everything went smoothly.
+	return 1;
 
     }); # do_in_session
 
@@ -250,7 +253,7 @@ sub do_work {
     munin_write_storable($state_file, $self->{state});
 
     # This handles failure in do_in_session,
-    return undef if !$done;
+    return undef if ! $done || $done->{exit_value};
 
     return {
         time_used => Time::HiRes::time - $update_time,
