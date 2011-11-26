@@ -36,7 +36,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_title Memory usage'
     echo 'graph_category system'
     echo 'graph_info This graph shows what the machine uses its memory for.'
-    echo 'graph_order active inactive wired buffers cached free'
+    echo 'graph_order active inactive wired buffers cached free swap'
     echo 'active.label active'
     echo 'active.info pages recently statistically used'
     echo 'active.draw AREA'
@@ -55,18 +55,23 @@ if [ "$1" = "config" ]; then
     echo 'free.label free'
     echo 'free.info pages without data content'
     echo 'free.draw STACK'
+    echo 'swap.label swap'
+    echo 'swap.info Swap space used'
+    echo 'swap.draw STACK'
     exit 0
 fi
 
 ACTIVE_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_active_count)
 INACTIVE_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_inactive_count)
-FREE_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_free_count)
-CACHE_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_cache_count)
-BUFFERS_COUNT=$(/sbin/sysctl -n vfs.bufspace)
 WIRED_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_wire_count)
+BUFFERS_COUNT=$(/sbin/sysctl -n vfs.bufspace)
+CACHE_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_cache_count)
+FREE_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_free_count)
+
 echo active.value $(($ACTIVE_COUNT*$PAGESIZE))
 echo inactive.value $(($INACTIVE_COUNT*$PAGESIZE))
-echo cached.value $(($CACHE_COUNT*$PAGESIZE))
-echo free.value $(($FREE_COUNT*$PAGESIZE))
 echo wired.value $(($WIRED_COUNT*$PAGESIZE))
 echo buffers.value $(($BUFFERS_COUNT))
+echo cached.value $(($CACHE_COUNT*$PAGESIZE))
+echo free.value $(($FREE_COUNT*$PAGESIZE))
+echo swap.value $(swapinfo -k | awk '{sum += $3}; END {print sum * 1024}')
