@@ -28,7 +28,6 @@ or
   [if_*]
       env.if_0_warning 10000000
 
-
 This is a wildcard plugin. To monitor an interface, link
 if_<interface> to this file. For example,
 
@@ -100,7 +99,7 @@ findspeed_mbps() {
         SPEED=$($ETHTOOL $INTERFACE 2>&1 |
                  awk '/Speed:/ { gsub(/[^0-9]*/,"",$2); print $2; }')
 
-        if [[ $SPEED = [0-9]* ]]; then
+        if [[ $SPEED == [0-9]* ]]; then
             echo $SPEED
             return
         fi
@@ -121,7 +120,7 @@ findspeed_mbps() {
 findspeed() {
     SPEED=$(findspeed_mbps)
 
-    if [[ -z "$SPEED" ]] || [[ "$SPEED" = "U" ]]; then
+    if [[ -z "$SPEED" ]] || [[ "$SPEED" == "U" ]]; then
         printf "up.info Traffic of the %s interface. Unable to determine interface speed." $INTERFACE
         if [[ $EUID -ne 0 ]]; then
                 echo " Please run the plugin as root."
@@ -136,7 +135,7 @@ findspeed() {
 
     cat <<EOF
 up.max $BPS
-up.info Traffic of the $INTERFACE interface. Maximum speed is $SPEED Mbps.
+up.info Traffic of the $INTERFACE interface. Maximum speed is $SPEED Mb/s.
 down.max $BPS
 EOF
 
