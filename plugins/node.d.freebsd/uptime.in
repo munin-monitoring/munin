@@ -1,4 +1,5 @@
 #!@@PERL@@
+# -*- mode: cperl; cperl-indent-level: 8; -*-
 #
 # Plugin to monitor uptime in FreeBSD hosts.
 #
@@ -7,24 +8,27 @@
 #       config
 #       autoconf
 #
-#%# family=manual
+#%# family=auto
 #%# capabilities=autoconf
 
 use strict;
+use warnings;
 
 my $arg = shift();
 
-if ($arg eq 'config') {
-    print("graph_title Uptime
+if (defined($arg) && $arg eq 'config') {
+        print("graph_title Uptime
 graph_args --base 1000 -l 0
 graph_vlabel uptime in days
+graph_scale no
+graph_category system
 uptime.label uptime
 uptime.draw AREA
 ");
-    exit;
-} elsif ($arg eq 'autoconf') {
-    print "yes\n";
-    exit;
+        exit;
+} elsif (defined($arg) && $arg eq 'autoconf') {
+        print "yes\n";
+        exit;
 }
 
 my $boottime = `/sbin/sysctl kern.boottime`;
