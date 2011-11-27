@@ -13,8 +13,28 @@ shows the default settings:
  [bind9]
     env.logfile   /var/log/bind9/query.log
 
-You must also configure query logging in your named.conf.  Please
-contribute your documentation about how to do that.  Thanks.
+You must also configure query logging in your named.conf. Use a stanza
+such as this:
+
+ logging {
+     channel query {
+         file "query.log" versions 2 size 1m;
+         print-time yes;
+         severity info;
+     };
+
+     category queries { query; };
+ };
+
+=head1 SEE ALSO
+
+=over
+
+=item * L<http://blog.larsstrand.org/2008/02/how-to-monitor-bind-with-munin.html>
+
+=item * BIND Administrator Reference Manual
+
+=back
 
 =head1 AUTHOR
 
