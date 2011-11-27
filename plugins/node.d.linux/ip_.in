@@ -127,7 +127,7 @@ case $IP in
         # This is a fun hack to make the plugin ip6 compatible.
         # Suggested in ticket #439 by "jodal".
         eval 'iptables() {
-            /sbin/ip6tables "$@"
+                ip6tables "$@"
         }'
         ;;
 esac
