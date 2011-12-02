@@ -83,21 +83,22 @@ if(!eval "require XML::Simple;") {
     $ret .= "XML::Simple not found";
 } 
 
-my $URL      = exists $ENV{'url'}      ? $ENV{'url'}      : "http://%s:%s\@127.0.0.1:%d/manager/status?XML=true";
-my $PORT     = exists $ENV{'ports'}    ? $ENV{'ports'}    : 8080;
+my $URL      = exists $ENV{'url'}      ? $ENV{'url'}      : "http://%s:%s\@%s:%d/manager/status?XML=true";
+my $PORT     = exists $ENV{'port'}    ? $ENV{'port'}    : 8080;
+my $HOST     = exists $ENV{'host'}    ? $ENV{'host'}    : "127.0.0.1";
 my $USER     = exists $ENV{'user'}     ? $ENV{'user'}     : "munin";
 my $PASSWORD = exists $ENV{'password'} ? $ENV{'password'} : "munin";
 my $TIMEOUT  = exists $ENV{'timeout'}  ? $ENV{'timeout'}  : 30;
+my $CONNECTOR= exists $ENV{'connector'}  ? $ENV{'connector'}  : "http-".$PORT;
 
-my $url = sprintf $URL, $USER, $PASSWORD, $PORT;
+my $url = sprintf $URL, $USER, $PASSWORD, $HOST, $PORT;
 
 if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
     if($ret) {
 	print "no ($ret)\n";
 	exit 0;
     }
-    my $au = LWP::UserAgent->new(timeout => $TIMEOUT,
-			agent => sprintf("munin/%s (libwww-perl/%s)", $Munin::Common::Defaults::MUNIN_VERSION, $LWP::VERSION));
+    my $au = LWP::UserAgent->new(timeout => $TIMEOUT);
     my $repsonse = $au->request(HTTP::Request->new('GET',$url));
     if($repsonse->is_success and $repsonse->content =~ /<status>.*<\/status>/im) {
 	print "yes\n";
@@ -120,16 +121,15 @@ if(exists $ARGV[0] and $ARGV[0] eq "config") {
     exit 0;
 }
 
-my $ua = LWP::UserAgent->new(timeout => $TIMEOUT,
-		agent => sprintf("munin/%s (libwww-perl/%s)", $Munin::Common::Defaults::MUNIN_VERSION, $LWP::VERSION));
+my $ua = LWP::UserAgent->new(timeout => $TIMEOUT);
 my $xs = new XML::Simple;
 my $response = $ua->request(HTTP::Request->new('GET',$url));
 my %options = ( KeyAttr => { connector => 'name' }, ForceArray => 1 );
 my $xml = $xs->XMLin($response->content, %options);
 
 
-if($xml->{'connector'}->{'http-'.$PORT}->{'requestInfo'}->[0]->{'bytesSent'}) {
-    print "volume.value " . $xml->{'connector'}->{'http-'.$PORT}->{'requestInfo'}->[0]->{'bytesSent'} . "\n";
+if($xml->{'connector'}->{$CONNECTOR}->{'requestInfo'}->[0]->{'bytesSent'}) {
+    print "volume.value " . $xml->{'connector'}->{$CONNECTOR}->{'requestInfo'}->[0]->{'bytesSent'} . "\n";
 } else {
     print "volume.value U\n";
 }
