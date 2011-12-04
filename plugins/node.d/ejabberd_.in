@@ -220,7 +220,7 @@ if [ "$1" = "config" ]; then
 	done;
     elif [ "$MODE" = "uptime" ]; then
 	echo 'graph_title Uptime of ejabberd server'
-	echo 'uptime in days'
+	echo 'graph_vlabel uptime in days'
 	echo "uptime.label uptime"
 	echo 'uptime.draw AREA'
     fi
@@ -237,7 +237,7 @@ fi
 if [ "$MODE" = "users" ]; then
     for host in $vhosts; do
 	formathost=$(echo $host | tr '.' '_')
-	echo "connected_users_$formathost.value $($EJCTL vhost $host stats onlineusers)"; 
+	echo "connected_users_$formathost.value $($EJCTL stats-host onlineusers $host)"; 
 	echo "connected_unique_users_$formathost.value $($EJCTL connected-users | awk -v var=$host -F/ '{users[$1]} END {for (user in users) {if (index(user,var)) {count++}} print count}')"; 
     done
     exit 0
@@ -246,7 +246,7 @@ fi
 if [ "$MODE" = "registrations" ]; then
     for host in $vhosts; do
 	formathost=$(echo $host | tr '.' '_')
-	num=$($EJCTL vhost $host stats registeredusers)
+	num=$($EJCTL stats-host registeredusers $host)
         if [ "$?" != 0 ]; then
             num="U"
         fi
@@ -259,7 +259,7 @@ if [ "$MODE" = "statuses" ]; then
    for host in $vhosts; do
 	formathost=$(echo $host | tr '.' '_')
 		for status in $statuses; do
-			num=$($EJCTL vhost $host status-num $status)
+			num=$($EJCTL status-num-host $status $host)
 			if [ "$?" != 0 ]; then
 				num="U"
 			fi
@@ -284,12 +284,12 @@ if [ "$MODE" = "usersindays" ]; then
         for host in $vhosts; do
                 for num in $days; do
                         formathost=$(echo $host | tr '.' '_')
-                        echo "usersindays_${formathost}_${num}.value $($EJCTL vhost $host num-active-users $num)";
+                        echo "usersindays_${formathost}_${num}.value $($EJCTL num-active-users $host $num)";
                 done;
         done;
 	exit 0
 fi
 
 if [ "$MODE" = "uptime" ]; then
-	echo "uptime.value $($EJCTL stats uptime-seconds | awk '{printf "%.2f", $1/86400}')"
+	echo "uptime.value $($EJCTL stats uptimeseconds | awk '{printf "%.2f", $1/86400}')"
 fi
