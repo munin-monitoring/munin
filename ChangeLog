@@ -1,4 +1,19 @@
 -*- text -*-
+
+munin 2.0-beta5, r4508, 2011-12-7
+
+Commits by knuthaug, ssm, bldewolf, tv, kenyon, janl, ligne, kristian, holger, steve.schnepp
+
+Summary :
+
+* Resurrecting munin-graph in a quite raw form
+* Set max_process default to 16
+* Small performance improvements
+* Memory leak fixes (use weak reference for upper nodes)
+* Spoolfetch enabled nodes may send nothing.
+* Various code cleanups
+* Various bugfixes since 2.0b3
+
 munin 2.0-beta4, r4306, 2011-8-2
 
 Commit by steve.schnepp
