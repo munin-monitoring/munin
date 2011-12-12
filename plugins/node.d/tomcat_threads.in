@@ -13,7 +13,7 @@ Configurable variables
 
  timeout  - Connection timeout
  url      - Override default status-url
- port     - HTTP port numbers
+ port     - HTTP port number
  user     - Manager username
  password - Manager password
 
