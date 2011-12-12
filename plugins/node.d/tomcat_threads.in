@@ -13,7 +13,7 @@ Configurable variables
 
  timeout  - Connection timeout
  url      - Override default status-url
- ports    - HTTP port numbers
+ port     - HTTP port numbers
  user     - Manager username
  password - Manager password
 
@@ -21,7 +21,7 @@ Configurable variables
 
 Requirements: Needs access to
 http://<user>:<password>@localhost:8080/manager/status?XML=true (or
-modify the address for another host). 
+modify the address for another host).
 
 Tomcat 5.0 or higher.
 
@@ -60,15 +60,15 @@ if(!eval "require LWP::UserAgent;") {
 
 if(!eval "require XML::Simple;") {
     $ret .= "XML::Simple not found";
-} 
+}
 
 my $URL      = exists $ENV{'url'}      ? $ENV{'url'}      : "http://%s:%s\@%s:%d/manager/status?XML=true";
-my $PORT     = exists $ENV{'port'}    ? $ENV{'port'}    : 8080;
-my $HOST     = exists $ENV{'host'}    ? $ENV{'host'}    : "127.0.0.1";
+my $PORT     = exists $ENV{'port'}     ? $ENV{'port'}     : exists $ENV{'ports'} ? $ENV{'ports'} : 8080;
+my $HOST     = exists $ENV{'host'}     ? $ENV{'host'}     : "127.0.0.1";
 my $USER     = exists $ENV{'user'}     ? $ENV{'user'}     : "munin";
 my $PASSWORD = exists $ENV{'password'} ? $ENV{'password'} : "munin";
 my $TIMEOUT  = exists $ENV{'timeout'}  ? $ENV{'timeout'}  : 30;
-my $CONNECTOR= exists $ENV{'connector'}  ? $ENV{'connector'}  : "http-".$PORT;
+my $CONNECTOR= exists $ENV{'connector'}? $ENV{'connector'}: "http-".$PORT;
 
 my $url = sprintf $URL, $USER, $PASSWORD, $HOST, $PORT;
 
