@@ -119,6 +119,8 @@ use Munin::Plugin;
  minversion     Minimum PostgreSQL version required, formatted like 8.2. If the
                 database is an older version than this, the plugin will exit
                 with an error.
+ category       The category for this plugin. Copied directly to the config
+                output. Default 'PostgreSQL'.
  title          The title for this plugin. Copied directly to the config output.
  info           The info for this plugin. Copied directly to the config output.
  vlabel         The vertical label for the graph. Copied directly to the config
@@ -195,6 +197,7 @@ sub new {
 
     my %defaults = (
         base      => 1000,
+        category  => 'PostgreSQL',
         graphdraw => 'LINE1',
         graphtype => 'GAUGE'
     );
@@ -203,6 +206,7 @@ sub new {
         minversion     => $args{minversion},
         basename       => $args{basename},
         basequery      => $args{basequery},
+        category       => $args{category},
         title          => $args{title},
         info           => $args{info},
         vlabel         => $args{vlabel},
@@ -246,7 +250,7 @@ sub Config {
       print "graph_title $self->{title}\n";
     }
     print "graph_vlabel $self->{vlabel}\n";
-    print "graph_category PostgreSQL\n";
+    print "graph_category $self->{category}\n";
     print "graph_info $self->{info}\n";
     print "graph_args --base $self->{base}";
     print " -l $self->{graphmin}" if (defined $self->{graphmin});
