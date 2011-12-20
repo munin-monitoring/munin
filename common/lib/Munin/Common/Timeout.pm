@@ -69,6 +69,9 @@ sub do_with_timeout {
        }
 
        alarm ($timeleft);
+    } else {
+       # Remove the alarm
+       alarm (0);
     }
 
     # And handle the return code
