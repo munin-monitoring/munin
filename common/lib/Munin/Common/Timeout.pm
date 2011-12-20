@@ -13,14 +13,17 @@ use English qw(-no_match_vars);
 BEGIN {
     our @EXPORT = qw(
         &do_with_timeout
-        &reset_timeout
     );
 }
 
+# This represents the current ALRM signal setting
+my $current_timeout_epoch;
 
-my $current_timeout;
-
-
+# This sub always uses absolute epoch time reference.
+# This is in order to cope with eventual stealed time... 
+# ... and to avoid complex timing computations
+#
+# $timeout is relative seconds, $timeout_epoch is absolute.
 sub do_with_timeout {
     my ($timeout, $block) = @_;
 
@@ -29,70 +32,73 @@ sub do_with_timeout {
     croak 'Argument exception: $block' 
         unless ref $block eq 'CODE';
 
-    my $old_alarm           = alarm 0;
-    my $old_handler         = $SIG{ALRM};
-    my $old_current_timeout = $current_timeout;
+    my $new_timeout_epoch = time + $timeout;
 
-    $current_timeout = $timeout;
+    # Nested timeouts cannot extend the global timeout, 
+    # and we always leave 5s for outer loop to finish itself
+    if ($current_timeout_epoch && $new_timeout_epoch > $current_timeout_epoch - 5) {
+	    $new_timeout_epoch = $current_timeout_epoch - 5;
+    }
 
+    if ($new_timeout_epoch <= time) {
+    	# Yey ! Time's up already, don't do anything, just : "farewell !"
+        return undef;
+    }
+
+    # Ok, going under new timeout setting
+    my $old_current_timeout_epoch = $current_timeout_epoch;
+    $current_timeout_epoch = $new_timeout_epoch;
+
+    my $ret_value;
     eval {
-        local $SIG{ALRM} = sub { die "alarm\n" };
-        alarm $timeout;
-        $block->();
+        local $SIG{ALRM} = sub { die "alarm\n" }; # NB: \n required 
+        alarm ($new_timeout_epoch - time);
+        $ret_value = $block->();
     };
     my $err = $EVAL_ERROR;
 
-    my $remaining_alarm = alarm 0;
+    # Restore the old $current_timeout_epoch...
+    $current_timeout_epoch = $old_current_timeout_epoch;
 
-    $SIG{ALRM} = $old_handler || 'DEFAULT';
+    # ... and restart the old alarm if needed
+    if ($current_timeout_epoch) {
+       my $timeleft = $current_timeout_epoch - time;
+       if ($timeleft <= 0) {
+	       # no timeleft : directly raise alarm
+	       die "alarm\n";
+       }
 
-    $current_timeout = $old_current_timeout;
-
-    if ($old_alarm) {
-        my $old_alarm = $old_alarm - $timeout + $remaining_alarm;
-
-        # HACK: give the outer loop a couple of seconds to finish up before
-        # timing out.  a compromise between the requirements of munin-node
-        # (which shouldn't have the inner plugin timeout trigger the outer
-        # session timeout) and munin-update (which has a hard-and-fast limit
-        # on the time the outer timeout can run for).
-        $old_alarm = 10 unless ($old_alarm > 0);
-
-        alarm($old_alarm);
+       alarm ($timeleft);
     }
 
+    # And handle the return code
     if ($err) {
-        return 0 if $err eq "alarm\n";
-        die;  # Propagate any other exceptions
+        return undef if $err eq "alarm\n";
+        die $err; # Propagate any other exceptions
     }
 
-    return 1;
+    return $ret_value;
 }
-
-
-sub reset_timeout {
-    alarm $current_timeout;
-}
-
 
 1;
-
-
 __END__
 
 
 =head1 NAME
 
-Munin::Common::Timeout - Run code with a timeout.
+Munin::Common::Timeout - Run code with a timeout. May nest.
 
 
 =head1 SYNOPSIS
 
  use Munin::Common::Timeout;
 
- do_with_timeout(5, sub {
+ do_with_timeout(50, sub {
      # ...
-     reset_timout(); # If needed
+ 	do_with_timeout(5, sub {
+		# ...
+		# ...
+	});
      # ...
  });
 
@@ -107,22 +113,18 @@ See also L<Time::Out>, L<Sys::AlarmCall>
 
 =item B<do_with_timeout>
 
- my $finished_with_no_timeout = do_with_timeout($seconds, $block)
+ my $finished_with_no_timeout = do_with_timeout($seconds, $code_ref)
      or die "Timed out!";
 
-Executes $block with a timeout of $seconds.  Returns true if it 
-completed within the timeout.  If the timeout is reached and the 
-code is still running, it halts it and returns false.
+Executes $block with a timeout of $seconds.  Returns the return value of the $block 
+if it completed within the timeout.  If the timeout is reached and the code is still
+running, it halts it and returns undef.
+
+NB: every $code_ref should return something defined, otherwise the caller doesn't know
+if a timeout occured. 
 
 Calls to do_with_timeout() can be nested.  Any exceptions raised 
 by $block are propagated.
-
-=item B<reset_timeout>
-
- reset_timeout();
-
-When called from within $block, resets its timeout to its original
-value.
 
 =back
 

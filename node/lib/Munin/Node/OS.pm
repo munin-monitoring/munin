@@ -152,6 +152,7 @@ sub run_as_child {
         my $read_it_and_reap = sub {
 	    ($out,$err) = $self->_read_from_child($out_read,$err_read);
 	    waitpid($pid, 0);
+	    return 1;
 	};
 
         my $timed_out = !do_with_timeout($timeout, $read_it_and_reap);

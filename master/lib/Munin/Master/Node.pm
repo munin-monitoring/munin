@@ -563,12 +563,11 @@ sub _node_write_single {
     DEBUG "[DEBUG] Writing to socket: \"$text\".";
     my $timed_out = !do_with_timeout($self->{io_timeout}, sub {
         if ($self->{tls} && $self->{tls}->session_started()) {
-            $self->{tls}->write($text)
-                or exit 9;
-        }
-        else {
+            $self->{tls}->write($text) or exit 9;
+        } else {
             print { $self->{writer} } $text;
         }
+	return 1;
     });
     if ($timed_out) {
         LOGCROAK "[FATAL] Socket write timed out to ".$self->{host}.
@@ -590,6 +589,7 @@ sub _node_read_single {
           $res = readline $self->{reader};
       }
       chomp $res if defined $res;
+      return 1;
     });
     if ($timed_out) {
         LOGCROAK "[FATAL] Socket read timed out to ".$self->{host}.

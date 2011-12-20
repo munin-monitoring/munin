@@ -74,6 +74,7 @@ sub start_work {
     
     do_with_timeout($self->{timeout}, sub {
         $self->_collect_results($sock);
+	return 1;
     }) or croak "Work timed out before all workers finished";
 
     $self->{workers} = [];
@@ -161,6 +162,7 @@ sub _collect_results {
 
         my $timed_out = !do_with_timeout($self->{accept_timeout}, sub {
             accept $worker_sock, $sock;
+	    return 1;
         });
         if ($timed_out) {
 	    if (defined($self->{host})) {
@@ -249,6 +251,7 @@ sub _do_work {
     eval {
         my $timed_out = !do_with_timeout($self->{worker_timeout}, sub {
             $res = $worker->do_work();
+	    return 1;
         });
 	if (!defined($res)) {
 	    ERROR "[ERROR] $worker failed to connect to node";
