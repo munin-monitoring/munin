@@ -27,8 +27,6 @@ set the plugin sets up a CDEF to change the speed in Hz to percent.
 If you set or unset this the whole time series will be shown in the
 same way, either as Hz or percent (as the graphs are updated).
 
-=back
-
 =head1 INTERPRETATION
 
 The plugin shows the average CPU speed in the measurement period as
