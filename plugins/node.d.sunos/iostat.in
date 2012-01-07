@@ -1,7 +1,7 @@
 #!@@PERL@@ -w
 # -*- perl -*-
 
-=head NAME
+=head1 NAME
 
 iostat - Plugin for watching output from iostat on SunOS/Solaris.
 This plugin is based on io counters rather than calculated averages.
