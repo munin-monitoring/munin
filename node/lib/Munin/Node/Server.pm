@@ -261,7 +261,7 @@ sub _process_starttls_command {
         DEBUG        => $config->{DEBUG},
         logger       => \&logger,
         read_fd      => fileno(STDIN),
-        read_func    => sub { die "Shouln't need to read!?" },
+        read_func    => sub { die "Shouldn't need to read!?" },
         tls_ca_cert  => $ca_cert,
         tls_cert     => $cert,
         tls_paranoia => $mode,
