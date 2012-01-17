@@ -352,6 +352,10 @@ sub emit_category_template {
                                             die_on_bad_params => 0,
                                             global_vars       => 1,
                                             loop_context_vars => 1,
+                                            filter            => sub {
+                                                my $ref = shift;
+                                                $$ref =~ s/URLX/URL/g;
+                                            },
                                            );
 
 	my $filename = $key->{'filename-' . $time};
