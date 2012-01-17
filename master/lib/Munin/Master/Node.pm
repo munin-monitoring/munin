@@ -610,12 +610,18 @@ sub _node_read_single {
 sub _node_read_fast {
 	my ($self) = @_;
 
+	# Disable Buffering here, to be able to use sysread()
+	local $| = 1;
+
 	my $io_src = $self->{reader};
         my $buf;
     	my $offset = 0;
-        while (my $read_len = read($io_src, $buf, 4096, $offset)) {
+        while (my $read_len = sysread($io_src, $buf, 4096, $offset)) {
 		$offset += $read_len;
-		last if $buf =~ m/\n\.\n$/;
+
+		# Stop when we read a \n.\n
+		# ... No need to have a full regex : simple index()
+		last unless index($buf, "\n.\n", $offset - $read_len) < 0;
         }
 
 	return [ split(/\n/, $buf) ];
