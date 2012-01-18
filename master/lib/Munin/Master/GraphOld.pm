@@ -1635,9 +1635,9 @@ sub get_fonts {
 	# The RRD 1.2 documentation says you can identify font family
 	# names but I never got that to work, but full font path worked
 	@options = (
-		'--font', "LEGEND:7:/usr/share/fonts/truetype/ttf-dejavu/DejaVuSansMono.ttf",
-		'--font', "UNIT:7:/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf",
-		'--font', "AXIS:7:/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf",
+		'--font', "LEGEND:7:$libdir/DejaVuSansMono.ttf",
+		'--font', "UNIT:7:$libdir/DejaVuSans.ttf",
+		'--font', "AXIS:7:$libdir/DejaVuSans.ttf",
 	       );
     } else {
 	# At least 1.3
