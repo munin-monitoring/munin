@@ -133,10 +133,11 @@ my @COLOUR;     # Array of actuall colours to use
 my $range_colour  = "22ff22";
 my $single_colour = "00aa00";
 
+# Use 400 x RRA step, in order to have 1px per RRA sample.
 my %times = (
-    "day"   => "-30h",
-    "week"  => "-8d",
-    "month" => "-33d",
+    "day"   => "-2000m",  # (i.e. -33h20m)
+    "week"  => "-12000m", # (i.e. -8d13h20m)
+    "month" => "-48000m", # (i.e. -33d8h)
     "year"  => "-400d",
     "pinpoint"  => "dummy",
 );
@@ -1634,9 +1635,9 @@ sub get_fonts {
 	# The RRD 1.2 documentation says you can identify font family
 	# names but I never got that to work, but full font path worked
 	@options = (
-		'--font', "LEGEND:7:$libdir/DejaVuSansMono.ttf",
-		'--font', "UNIT:7:$libdir/DejaVuSans.ttf",
-		'--font', "AXIS:7:$libdir/DejaVuSans.ttf",
+		'--font', "LEGEND:7:/usr/share/fonts/truetype/ttf-dejavu/DejaVuSansMono.ttf",
+		'--font', "UNIT:7:/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf",
+		'--font', "AXIS:7:/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf",
 	       );
     } else {
 	# At least 1.3
