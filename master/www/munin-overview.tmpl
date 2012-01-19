@@ -51,8 +51,8 @@
 			          <a href="<TMPL_VAR NAME="NAME">/comparison-year.html">year</a>&nbsp;]</TMPL_IF>
 			        <TMPL_IF NAME="NCATEGORIES">[ <TMPL_LOOP NAME="CATEGORIES">
 			          <a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></TMPL_LOOP>&nbsp;]</TMPL_IF>
-			        </li>
 				</TMPL_UNLESS></TMPL_LOOP>
+			        </ul>
 			</TMPL_UNLESS></TMPL_LOOP>
 			</ul>	
 			</li>	
