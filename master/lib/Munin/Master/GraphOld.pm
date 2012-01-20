@@ -996,6 +996,9 @@ sub process_service {
         my $rrdfield = munin_get($field, "rrdfield", "42");
 
         my $single_value = $force_single_value || single_value($service);
+	
+	# XXX - single_value is wrong for some multigraph, disabling it for now
+	$single_value = 0;
 
         my $has_negative = munin_get($field, "negative");
 
