@@ -114,14 +114,14 @@ if [ "$1" = "config" ]; then
 
 	echo 'mails.label queued mails'
 	# Use "AREASTACK" in munin 1.3.3 and later
-	echo 'mails.draw STACK'
+	echo 'mails.draw AREA'
 	echo "mails.warning 0:$QUEUEWARN"
 	echo "mails.critical 0:$QUEUECRIT"
 	echo 'mails.colour 00AA00'
 
 	echo 'frozen.label frozen mails'
 	# Use "AREASTACK" in munin 1.3.3 and later
-	echo 'frozen.draw AREA'
+	echo 'frozen.draw STACK'
 	echo "frozen.warning 0:$FROZENWARN"
 	echo "frozen.critical 0:$FROZENCRIT"
 	echo 'frozen.colour 0022FF'
