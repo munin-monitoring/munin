@@ -134,7 +134,7 @@ sub get_ios {
     }
 
     while (<$parts>) {
-         my ($maj, $min, $name, $rio, $rtime, $wio, $wtime) = 
+         my ($maj, $min, $name, $rio, $rtime, $wio, $wtime) =
            (split(/\s+/, $_ ))[1,2,3,4,7,8,11];
 
          next unless (defined($min) && defined($maj));
@@ -192,10 +192,10 @@ sub cmp_io {
         for my $min (sort keys %{ $new_io->{$maj} } ) {
             my $rio_diff   = $$new_io{$maj}{$min}{rio}   - $$old_io{$maj}{$min}{rio};
             my $rtime_diff = $$new_io{$maj}{$min}{rtime} - $$old_io{$maj}{$min}{rtime};
-            
+
             my $wio_diff   = $$new_io{$maj}{$min}{wio}   - $$old_io{$maj}{$min}{wio};
             my $wtime_diff = $$new_io{$maj}{$min}{wtime} - $$old_io{$maj}{$min}{wtime};
-            
+
             my $dev = "dev${maj}_${min}";
 
             print "${dev}_rtime.value ", ($rio_diff > 0 and $rtime_diff > 0) ? ($rtime_diff / $rio_diff) : 'U', "\n",
