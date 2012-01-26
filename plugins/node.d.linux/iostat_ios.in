@@ -198,8 +198,8 @@ sub cmp_io {
             
             my $dev = "dev${maj}_${min}";
 
-            print "${dev}_rtime.value ", ($rtime_diff != 0) ? ($rio_diff / $rtime_diff) : 0, "\n",
-                  "${dev}_wtime.value ", ($wtime_diff != 0) ? ($wio_diff / $wtime_diff) : 0, "\n";
+            print "${dev}_rtime.value ", ($rio_diff > 0 and $rtime_diff > 0) ? ($rtime_diff / $rio_diff) : 'U', "\n",
+                  "${dev}_wtime.value ", ($wio_diff > 0 and $wtime_diff > 0) ? ($wtime_diff / $wio_diff) : 'U', "\n";
         }
     }
 
