@@ -1,7 +1,4 @@
-#!@@GOODSH@@
-# -*- sh -*-
-
-: << =cut
+#!@@PERL@@ -w
 
 =head1 NAME
 
@@ -16,12 +13,12 @@ This plugin must run with root privileges
 
 @@CONFDIR@@/plugin-conf.d/global or other file in that dir must contain:
 
- [fw*]
+ [fw_*]
   user root
 
 =head1 NOTES
 
-ESTABLISHED+FIN_WAIT+TIME_WAIT+SYN_SENT+UDP is the most interesting
+ESTABLISHED+FIN_WAIT+TIME_WAIT+SYN_SENT+UDP are the most interesting
 connections.
 
 The total list also includes SYN_RECV, CLOSE, CLOSE_WAIT, LAST_ACK and
@@ -35,30 +32,15 @@ ESTABLISHED.
 ASSURED is after ACK is seen after SYN_RECV.  Therefore ASSURED is
 plotted but not UNREPLIED.
 
-NATed will almost always be the same as the total
-
-=head1 BUGS
-
-=over 4
-
-=item full connection table
-
-The connections tables can run full, but where is the limits found?
-If we can find them then we can send warnings to nagios.
-
-=back
-
 =head1 AUTHORS
 
-2004.05.05: Initial version by Nicolai Langfeldt, Linpro AS, Oslo, Norway
+=over
 
-=head2 CONTRIBUTORS
+=item 2004.05.05: Initial version by Nicolai Langfeldt, Linpro AS, Oslo, Norway
 
-=over 4
+=item 2004.05.06: Enhanced to count NATed connections after input from Xavier on munin-users list
 
-=item Xavier
-
-2004.05.06: Enhanced to count NATed connections after input from Xavier on munin-users list
+=item 2011.09.23: Perl version by Alex Tomlins
 
 =back
 
@@ -73,10 +55,30 @@ GPL
 
 =cut
 
-case $1 in
-    config)
+use strict;
+use Munin::Plugin;
 
-        cat <<EOF
+my $conntrack = '/usr/sbin/conntrack';
+my $nf_conntrack_file = '/proc/net/nf_conntrack';
+my $ip_conntrack_file = '/proc/net/ip_conntrack';
+my @conntrack_max_files = qw(
+        /proc/sys/net/nf_conntrack_max
+        /proc/sys/net/netfilter/nf_conntrack_max
+        /proc/sys/net/ipv4/ip_conntrack_max
+        /proc/sys/net/ipv4/netfilter/ip_conntrack_max
+);
+
+if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" ) {
+    if ( -x $conntrack or -r $nf_conntrack_file or -r $ip_conntrack_file) {
+        print "yes\n";
+    } else {
+        print "no\n";
+    }
+    exit 0;
+}
+
+if ( defined($ARGV[0]) and $ARGV[0] eq "config" ) {
+    print <<EOF;
 graph_title Connections through firewall
 graph_vlabel Connections
 graph_category network
@@ -106,86 +108,58 @@ total.label Total
 total.type GAUGE
 total.graph no
 EOF
-        if [ -f /proc/sys/net/ipv4/ip_conntrack_max ] ; then
-            MAX=$(cat /proc/sys/net/ipv4/ip_conntrack_max)
-        elif [ -f /proc/sys/net/ipv4/netfilter/ip_conntrack_max ]; then
-            MAX=$(cat /proc/sys/net/ipv4/netfilter/ip_conntrack_max)
-        fi
-        if [ -n "$MAX" ]; then
-	    echo total.warning `expr $MAX \* 8 / 10`
-	    echo total.critical `expr $MAX \* 9 / 10`
-	fi
-        exit 0
-	;;
-    autoconf)
-        if [ -r /proc/net/ip_conntrack -o -r /proc/net/nf_conntrack ] ; then
-	    echo yes
-	    exit 0
-	else
-	    echo no
-	    exit 0
-	fi
-esac
+    my $max;
+    foreach (@conntrack_max_files) {
+        if ( -r $_) {
+            chomp($max = `cat $_`);
+            last;
+        }
+    }
+    if ($max) {
+        print "total.warning ", $max * 8 / 10, "\n";
+        print "total.critical ", $max * 9 / 10, "\n";
+    }
+    exit 0;
+}
 
-# Do the work, perform the deed
+my $command;
+if ( -x $conntrack) {
+    $command = "$conntrack -L -o extended 2>/dev/null";
+} elsif ( -r $nf_conntrack_file ) {
+    $command = "cat $nf_conntrack_file";
+} else {
+    $command = "cat $ip_conntrack_file";
+}
 
-# INPUT /proc/net/ip_conntrack:
-# tcp      6 225790 ESTABLISHED src=10.0.0.4 dst=198.144.194.12 sport=48580 dport=6667 src=198.144.194.12 dst=80.111.68.163 sport=6667 dport=48580 [ASSURED] use=1
-# tcp      6 431918 ESTABLISHED src=10.0.0.2 dst=209.58.150.153 sport=33018 dport=6667 src=209.58.150.153 dst=80.111.68.163 sport=6667 dport=33018 [ASSURED] use=1
-# tcp      6 123109 ESTABLISHED src=10.0.0.5 dst=198.144.194.12 sport=33846 dport=6667 [UNREPLIED] src=198.144.194.12 dst=80.111.68.163 sport=6667 dport=33846 use=1
-# udp      17 53 src=80.111.68.163 dst=62.179.100.29 sport=34153 dport=53 src=62.179.100.29 dst=80.111.68.163 sport=53 dport=34153 [ASSURED] use=1
-#
-# INPUT /proc/net/nf_conntrack:
-# ipv4     2 tcp      6 424416 ESTABLISHED src=192.168.1.53 dst=196.203.198.11 sport=1584 dport=22146 packets=13659 bytes=5426603 src=196.203.198.11 dst=83.24.222.252 sport=22146 dport=1584 packets=14757 bytes=15342572 [ASSURED] mark=0 use=1
+my %state = (
+    'ESTABLISHED' => 0,
+    'FIN_WAIT' => 0,
+    'TIME_WAIT' => 0,
+    'SYN_SENT' => 0,
+    'UDP' => 0,
+    'ASSURED' => 0,
+    'NATTED' => 0,
+    'TOTAL' => 0
+);
+open CMD, "$command|";
+while (<CMD>) {
+    $state{'TOTAL'} ++;
+    $state{'UDP'} ++ if /udp /;
+    $state{'ASSURED'} ++ if /ASSURED/;
+    if (/tcp \s*\d+\s+\d+\s+(\S+)/) {
+         $state{$1} ++;
+    }
+    if (/src=(\S+)\s+dst=(\S+)\s+sport.*src=(\S+)\s+dst=(\S+)/) {
+        $state{'NATTED'} ++ if $1 ne $4 or $2 ne $3;
+    }
+}
+close CMD;
 
-if [ -f /proc/net/ip_conntrack ]; then
-  cat /proc/net/ip_conntrack | awk '
-  BEGIN  { STATE["ESTABLISHED"]=STATE["FIN_WAIT"]=STATE["TIME_WAIT"]=0;
-	   TOTAL=ASSURED=NOREPLY=NATED=STATE["SYN_SENT"]=STATE["UDP"]=0; }
-  /^tcp/ { STATE[$4]++; }
-  /^udp/ { STATE["UDP"]++; }
-  /ASSURED/ { ASSURED++; }
-  {
-      TOTAL++;
-      src1 = substr($5, 5); src2 = substr($9, 5);
-      dst1 = substr($6, 5); dst2 = substr($10, 5);
-      if (src1 != dst2 || dst1 != src2) NATED++;
-  }
-  END    { print "established.value " STATE["ESTABLISHED"];
-           print "fin_wait.value " STATE["FIN_WAIT"];
-	   print "time_wait.value " STATE["TIME_WAIT"];
-	   print "syn_sent.value " STATE["SYN_SENT"];
-	   print "udp.value " STATE["UDP"];
-	   print "assured.value " ASSURED;
-	   print "nated.value " NATED;
-	   print "total.value " TOTAL;
-	 }'
-else
-  cat /proc/net/nf_conntrack | awk '
-  BEGIN  { STATE["ESTABLISHED"]=STATE["FIN_WAIT"]=STATE["TIME_WAIT"]=0;
-	   TOTAL=ASSURED=NOREPLY=NATED=STATE["SYN_SENT"]=STATE["UDP"]=0; }
-  / tcp / { STATE[$6]++; }
-  / udp / { STATE["UDP"]++; }
-  /ASSURED/ { ASSURED++; }
-  {
-      TOTAL++;
-      src1 = substr($7, 5); src2 = substr($14, 5);
-      dst1 = substr($8, 5); dst2 = substr($15, 5);
-      if (src1 != dst2 || dst1 != src2) NATED++;
-  }
-  END    { print "established.value " STATE["ESTABLISHED"];
-           print "fin_wait.value " STATE["FIN_WAIT"];
-	   print "time_wait.value " STATE["TIME_WAIT"];
-	   print "syn_sent.value " STATE["SYN_SENT"];
-	   print "udp.value " STATE["UDP"];
-	   print "assured.value " ASSURED;
-	   print "nated.value " NATED;
-	   print "total.value " TOTAL;
-	 }'
-fi
-
-# Hum, the total.value should be possible to do as a cdef.
-# Or to use the builtin "total" support.
-
-#  LocalWords:  expr
-
+print "established.value $state{'ESTABLISHED'}\n";
+print "fin_wait.value $state{'FIN_WAIT'}\n";
+print "time_wait.value $state{'TIME_WAIT'}\n";
+print "syn_sent.value $state{'SYN_SENT'}\n";
+print "udp.value $state{'UDP'}\n";
+print "assured.value $state{'ASSURED'}\n";
+print "nated.value $state{'NATTED'}\n";
+print "total.value $state{'TOTAL'}\n";
