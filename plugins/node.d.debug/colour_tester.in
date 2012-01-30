@@ -1,6 +1,8 @@
 #!@@BASH@@
 # -*- sh -*-
 
+#%# family=test
+
 # Requires munin master version 1.2.5 or 1.3.3 or higher.
 # Just draw coloured lines to show off palette.
 
