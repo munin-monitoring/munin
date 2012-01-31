@@ -1079,6 +1079,10 @@ sub process_service {
         }
 
         my $colour = munin_get($field, "colour");
+
+	if ($colour && $colour =~ /^COLOUR(\d+)$/) {
+		$colour = $COLOUR[$1 % @COLOUR];
+	}
 	
 	# Select a default colour if no explict one
 	$colour ||= ($single_value) ? $single_colour : $COLOUR[$field_count % @COLOUR];
