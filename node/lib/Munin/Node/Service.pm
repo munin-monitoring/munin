@@ -95,6 +95,9 @@ sub prepare_plugin_environment
     # of plugins.
     $ENV{LC_ALL} = 'C';
 
+    # LC_ALL should be enough, but some plugins don't follow specs (#1014)
+    $ENV{LANG} = 'C';
+
     if ($config->{sconffile}) {
         # only used by munin-run
         $config->parse_plugin_config_file($config->{sconffile});
