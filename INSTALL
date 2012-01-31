@@ -39,7 +39,7 @@ Server:
    - Net::SSLeay if you want to use SSL/TLS
    - Getopt::Long
    - File::Copy::Recursive
-   - Log::Log4perl (which depends on
+   - Log::Log4perl 1.18 or later (which depends on
      - IPC::Shareable
      - Log::Dispatch
      - Log::Dispatch::FileRotate
