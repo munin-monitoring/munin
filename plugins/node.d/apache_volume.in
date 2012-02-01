@@ -151,7 +151,7 @@ foreach my $port (@PORTS) {
 	my $url = sprintf $URL, $port;
 	my $response = $ua->request(HTTP::Request->new('GET',$url));
 	if ($response->content =~ /^Total kBytes:\s+(.+)$/im) {
-		print "volume$port.value ", ($1*1024), "\n";
+		print "volume$port.value ", int($1*1024), "\n";
 	} else {
 		print "volume$port.value U\n";
 	}
