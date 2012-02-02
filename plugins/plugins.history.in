@@ -1,5 +1,5 @@
 #
-# This file contains plugin history. 
+# This file contains plugin history.
 # The history started as of 0.9.8.
 #
 [0.0.0]
@@ -262,7 +262,7 @@ bind9_rndc
 cmc_tc_sensor_
 courier_
 courier_mta_mailqueue
-courier_mta_mailstats 
+courier_mta_mailstats
 courier_mta_mailvolume
 cupsys_pages
 dhcpd3
@@ -331,8 +331,9 @@ proxy_plugin
 [2.0]
 cygwin/df
 cygwin/netstat
+haproxy_ng
+netstat_multi
 pgbouncer_connections
 pgbouncer_requests
 postgres_oldest_prepared_xact_
 postgres_prepared_xacts_
-
