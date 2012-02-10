@@ -22,13 +22,14 @@ The following configuration parameters are used by this plugin
 =head1 MAGIC MARKERS
 
  #%# family=contrib
+ #%# capabilities=autoconf
 
 =cut
 
 use IO::Socket;
 use strict;
 
-if($ARGV[0] and $ARGV[0] eq "autoconfig") {
+if($ARGV[0] and $ARGV[0] eq "autoconf") {
 	print "yes\n";
 	exit 0;
 }
