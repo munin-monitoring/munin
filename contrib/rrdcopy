@@ -23,6 +23,9 @@
 # XXX - It depends on RRDs.pm ...
 # ... as I'm waiting for a patch to use the plain rrdtool cli :-)
 #
+# It was known as the rrdmove tool from the pmptools project. 
+# - I changed its name (as data is copied, not moved)
+# - I changed its hosting (way more useful for munin than for pmptools)
 
 use strict;
 use warnings;
