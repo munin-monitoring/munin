@@ -63,6 +63,7 @@ GPLv2
 
 
 use strict;
+use warnings;
 use Munin::Plugin;
 
 need_multigraph();
@@ -986,7 +987,7 @@ foreach (@statfiles) {
 foreach $key (sort keys %aspects) {
     my $val;
     print "multigraph $key\n";
-    if ( $ARGV[0] eq 'config' ) {
+    if ( defined($ARGV[0]) and $ARGV[0] eq 'config' ) {
         foreach (@graph_parameters) {
             if (!defined($aspects{$key}{$_})) {
                 next;
@@ -1012,12 +1013,12 @@ foreach $key (sort keys %aspects) {
         }
         print "\n";
     }
-    elsif ( $ARGV[0] eq 'debug' ) {
+    elsif ( defined($ARGV[0]) and $ARGV[0] eq 'debug' ) {
         foreach $key (sort keys %datas) {
             print "$key = $datas{$key}\n";
         }
     }
-    elsif ( $ARGV[0] eq 'autoconf' ) {
+    elsif ( defined($ARGV[0]) and $ARGV[0] eq 'autoconf' ) {
         print "no (defaults to no, because it generates 22 graphs - which may be a bit too verbose)\n";
         exit 0;
     }
