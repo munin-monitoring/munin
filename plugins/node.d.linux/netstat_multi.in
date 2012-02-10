@@ -116,28 +116,24 @@ my %aspects = (
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Active connection openings',
-                'info' => '',
             },
             'Tcp_PassiveOpens' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Passive connection openings',
-                'info' => '',
             },
             'Tcp_EstabResets' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Connection resets received',
-                'info' => '',
             },
             'Tcp_AttemptFails' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Failed connection attempts',
-                'info' => '',
             }
         }
     },
@@ -153,7 +149,6 @@ my %aspects = (
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Segments received',
-                'info' => '',
                 'graph' => 'no',
             },
             'Tcp_OutSegs' => {
@@ -390,7 +385,6 @@ my %aspects = (
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'DSACK undos',
-                'info' => '',
             }
         }
     },
@@ -405,7 +399,6 @@ my %aspects = (
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Abort on SYN',
-                'info' => '',
             },
             'TcpExt_TCPAbortOnData' => {
                 'type' => 'DERIVE',
@@ -426,7 +419,6 @@ my %aspects = (
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Abort on memory',
-                'info' => '',
             },
             'TcpExt_TCPAbortOnTimeout' => {
                 'type' => 'DERIVE',
@@ -440,21 +432,18 @@ my %aspects = (
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Abort on linger',
-                'info' => '',
             },
             'TcpExt_TCPAbortFailed' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Abort failure',
-                'info' => '',
             },
             'TcpExt_TCPMemoryPressures' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Memory pressures',
-                'info' => '',
             }
         }
     },
@@ -483,7 +472,6 @@ my %aspects = (
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Delayed ACKs lost',
-                'info' => '',
             }
         }
     },
@@ -498,28 +486,24 @@ my %aspects = (
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Fast retransmissions',
-                'info' => '',
             },
             'TcpExt_TCPForwardRetrans' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Forward retransmissions',
-                'info' => '',
             },
             'TcpExt_TCPSlowStartRetrans' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Slow Start retransmissions',
-                'info' => '',
             },
             'TcpExt_TCPLossFailures' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Timeouts in loss state',
-                'info' => '',
             }
         }
     },
@@ -534,21 +518,18 @@ my %aspects = (
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Active',
-                'info' => '',
             },
             'TcpExt_PAWSActive' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Passive',
-                'info' => '',
             },
             'TcpExt_PAWSEstab' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Established',
-                'info' => '',
             }
         }
     },
@@ -606,21 +587,18 @@ my %aspects = (
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'TimeWait',
-                'info' => '',
             },
             'TcpExt_TWRecycled' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'TimeWait Recycled',
-                'info' => '',
             },
             'TcpExt_TWKilled' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'TimeWait killed',
-                'info' => '',
             }
         }
     },
@@ -743,14 +721,12 @@ my %aspects = (
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'No route',
-                'info' => '',
             },
             'IpExt_InTruncatedPkts' => {
                 'type' => 'DERIVE',
                 'draw' => 'LINE1',
                 'min' => 0,
                 'label' => 'Incoming truncated packets',
-                'info' => '',
             },
             'IpExt_InMcastPkts' => {
                 'type' => 'DERIVE',
