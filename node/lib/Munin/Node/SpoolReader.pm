@@ -9,15 +9,11 @@ use Carp;
 use IO::File;
 
 use Munin::Common::Defaults;
+use Munin::Common::SyncDictFile;
 use Munin::Node::Logger;
 
 use Munin::Node::Config;
 my $config = Munin::Node::Config->instance;
-
-
-use constant TIME => 86_400;  # put 1 day of results into a spool file
-
-sub _snap_to_epoch_boundary { return $_[0] - ($_[0] % TIME) }
 
 
 sub new
@@ -29,11 +25,49 @@ sub new
     opendir $args{spooldirhandle}, $args{spooldir}
         or croak "Could not open spooldir '$args{spooldir}': $!";
 
+    $args{metadata} = _init_metadata($args{spooldir});
+
     # TODO: paranoia check?  except dir doesn't (currently) have to be
     # root-owned.
 
     return bless \%args, $class;
 }
+
+
+#prepare tied hash for metadata persisted to $spooldir/SPOOL-META
+#should we pull these methods into a base class or create a spool manager class?
+sub _init_metadata
+{
+
+	my $spooldir = shift;
+	my %metadata;
+
+	tie %metadata, 'Munin::Common::SyncDictFile', $spooldir . "/SPOOL-META";
+
+	return \%metadata;
+
+}
+
+
+#retrieve metadata value for key
+sub get_metadata
+{
+	my ($self, $key) = @_;
+
+	return ${ $self->{metadata} }{$key};
+
+}
+
+
+#set metadata key:value and persist
+sub set_metadata
+{
+	my ($self, $key, $value) = @_;
+
+	${ $self->{metadata} }{$key} = $value;
+
+}
+
 
 
 # returns all output for all services since $timestamp.
@@ -66,16 +100,14 @@ sub _cat_multigraph_file
 {
     my ($self, $service, $timestamp) = @_;
 
-    my $fmtTimestamp = _snap_to_epoch_boundary($timestamp);
-
     my $data = "";
 
     rewinddir $self->{spooldirhandle}
         or die "Unable to reset the spool directory handle: $!";
 
     foreach my $file (readdir $self->{spooldirhandle}) {
-        next unless $file =~ m/^munin-daemon\.$service.(\d+)$/;
-        next unless $1 >= $fmtTimestamp;
+        next unless $file =~ m/^munin-daemon\.$service\.(\d+)\.(\d+)$/;
+        next unless $1+$2 >= $timestamp;
 
         open my $fh, '<', "$self->{spooldir}/$file"
             or die "Unable to open spool file: $!";
@@ -126,7 +158,7 @@ sub _get_spooled_plugins
         or die "Unable to reset the spool directory handle: $!";
 
     my %seen;
-    return map { m/^munin-daemon\.(\w+)\.\d+$/ && ! $seen{$1}++ ? $1 : () }
+    return map { m/^munin-daemon\.(\w+)\.\d+\.\d+$/ && ! $seen{$1}++ ? $1 : () }
         readdir $self->{spooldirhandle};
 }
 

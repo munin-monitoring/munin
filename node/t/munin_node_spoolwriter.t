@@ -48,7 +48,7 @@ sub touch { open my $fh, '>>', (shift) or die $!; close $fh }
         'system.value 999999'
     ]);
 
-    my $data_file = "$dir/munin-daemon.fnord.1234483200";
+    my $data_file = "$dir/munin-daemon.fnord.1234483200" . "." . Munin::Node::SpoolWriter::DEFAULT_TIME;
     ok( -r $data_file, 'spool file is readable') or last;
 
     my $data = read_file($data_file);
@@ -127,7 +127,7 @@ EOC
             "system.value $value",
         ]);
 
-        my $data_file = "$dir/munin-daemon.fnord.1234483200";
+        my $data_file = "$dir/munin-daemon.fnord.1234483200" . "." . Munin::Node::SpoolWriter::DEFAULT_TIME;
         unless ( -r $data_file) {
             fail("$msg: File not created");
             next
@@ -155,7 +155,7 @@ EOC
         'subsystem.value 123',
     ]);
 
-    my $data_file = "$dir/munin-daemon.fnord.1234483200";
+    my $data_file = "$dir/munin-daemon.fnord.1234483200" . "." . Munin::Node::SpoolWriter::DEFAULT_TIME;
     ok( -r $data_file, 'spool file is readable') or last;
 
     my $data = read_file($data_file);
@@ -180,21 +180,24 @@ EOC
     my $writer = Munin::Node::SpoolWriter->new(spooldir => $dir);
 
     # one timestamp before the cutoff, one after.
-    my $stale  = time - Munin::Node::SpoolWriter::MAXIMUM_AGE - 100;
-    my $fresh = time - Munin::Node::SpoolWriter::MAXIMUM_AGE + 100;
+    my $stale  = time - (Munin::Node::SpoolWriter::MAXIMUM_AGE * Munin::Node::SpoolWriter::DEFAULT_TIME) - 100;
+    my $fresh = time - (Munin::Node::SpoolWriter::MAXIMUM_AGE * Munin::Node::SpoolWriter::DEFAULT_TIME) + 100; 
+    my $interval = Munin::Node::SpoolWriter::DEFAULT_TIME;
 
-    touch("$dir/munin-daemon.stale.$stale");
-    touch("$dir/munin-daemon.fresh.$fresh");
+    touch("$dir/munin-daemon.stale.$stale.$interval");
+    utime time, $stale, "$dir/munin-daemon.stale.$stale.$interval";
+    touch("$dir/munin-daemon.fresh.$fresh.$interval");
+    utime time, $fresh, "$dir/munin-daemon.stale.$fresh.$interval";
     touch("$dir/cruft");
 
-    ok( -r "$dir/munin-daemon.stale.$stale",   'created a stale file');
-    ok( -r "$dir/munin-daemon.fresh.$fresh", 'created a fresh file');
-    ok( -r "$dir/cruft",                       'created a cruft file');
+    ok( -r "$dir/munin-daemon.stale.$stale.$interval", 'created a stale file');
+    ok( -r "$dir/munin-daemon.fresh.$fresh.$interval", 'created a fresh file');
+    ok( -r "$dir/cruft",                               'created a cruft file');
 
     $writer->cleanup;
 
-    ok(! -r "$dir/munin-daemon.stale.$stale",   'stale file is gone');
-    ok(  -r "$dir/munin-daemon.fresh.$fresh", 'fresh file is still there');
-    ok(  -r "$dir/cruft",                       'cruft file is still there');
+    ok(! -r "$dir/munin-daemon.stale.$stale.$interval", 'stale file is gone');
+    ok(  -r "$dir/munin-daemon.fresh.$fresh.$interval", 'fresh file is still there');
+    ok(  -r "$dir/cruft",                               'cruft file is still there');
 }
 

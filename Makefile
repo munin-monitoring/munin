@@ -162,8 +162,8 @@ install-plugins-java: build-plugins-java
 
 install-async-prime:
 	mkdir -p $(LIBDIR)
-	$(INSTALL) -m 0755 build/node/_bin/munin-async-client $(LIBDIR)/
-	$(INSTALL) -m 0755 build/node/_bin/munin-async-server $(LIBDIR)/
+	$(INSTALL) -m 0755 build/node/_bin/munin-async $(LIBDIR)/
+	$(INSTALL) -m 0755 build/node/_bin/munin-asyncd $(LIBDIR)/
 
 install-node-prime: install-node-pre install-node
 
