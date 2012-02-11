@@ -1,0 +1,76 @@
+#!@@GOODSH@@
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+http_loadtime - Plugin to graph HTTP response time of a specific page
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin
+
+ target - URL to fetch (default: "http://localhost/")
+
+=head1 BUGS
+
+This plugin used to be marked for auto-configuraiton.  Unfortunately
+it does not test if the $target is reachable or not, and the plugin
+has been made a contrib plugin pending fixing.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+
+=cut
+
+target=${target:-"http://localhost/"}
+time_bin=$(which time)
+wget_bin=$(which wget)
+
+if [ "$1" = "autoconf" ]; then
+    # Need to actually test that the url is reachable, it makes
+    # no sense to install the plugin if there is no webserver on localhost.
+    echo "no (autoconfiguration not working correctly)"
+    exit 0
+
+    result="yes"
+    [ "x$time_bin" = "x" ] && result=1
+    [ "x$wget_bin" = "x" ] && result=2
+    if [ "$result" != "yes" ]; then
+	echo "no (need time and wget programs)"
+	exit 0
+    fi
+    echo yes
+    exit 0
+fi
+
+if [ "$1" = "config" ]; then
+    echo "graph_title HTTP loadtime of a page"
+    echo "graph_args --base 1000 -l 0"
+    echo "graph_vlabel Load time in seconds"
+    echo "graph_category network"
+    echo "graph_info This graph shows load time in seconds of $target"
+    echo "loadtime.label loadtime"
+    echo "loadtime.info Load time"
+    exit 0
+fi
+
+TMPDIR=`mktemp -d` || exit 1
+
+trap "rm -rf $TMPDIR" EXIT
+
+cd $TMPDIR || exit 1
+loadtime=$($time_bin -p $wget_bin -p --no-cache --delete-after $target -q 2>&1 | awk '/^real / { print $2 }')
+cd ..
+
+echo "loadtime.value $loadtime"

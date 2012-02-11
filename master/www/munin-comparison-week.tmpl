@@ -1,0 +1,44 @@
+<TMPL_INCLUDE NAME="partial/head.tmpl">
+<body>
+<TMPL_INCLUDE NAME="partial/logo_navigation_comparison.tmpl">
+<div id="main" class="comparison">
+<div id="content">
+<h2>Comparison: week</h2>
+<TMPL_LOOP NAME="CATEGORIES">
+<h3><a name="<TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME">"><TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME"></a></h3>
+<table>
+	<TMPL_LOOP NAME="SERVICES">
+	<tr>
+		<TMPL_LOOP NAME="NODES">
+		<td>
+		<div class="node">
+		<span class="nodetitle"><a href="<TMPL_VAR ESCAPE="URL" NAME="NODENAME">/index.html">
+			<TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> :: <TMPL_IF NAME="URL1">
+				<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF>
+				 <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL1">">
+				</TMPL_IF>
+				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
+				<TMPL_IF NAME="URL1"></a></TMPL_IF>
+		</span><br />
+		<TMPL_IF NAME="CIMGWEEK">
+			<a href="<TMPL_VAR NAME="URL1">">
+				<img src="<TMPL_VAR NAME="CIMGWEEK">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" 
+				class=i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>
+
+				 <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF> 
+				 <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>/>
+			</a>
+		</TMPL_IF>
+		</div>
+		</td>
+		</TMPL_LOOP>
+	</tr>
+	</TMPL_LOOP>
+</table>
+</TMPL_LOOP>
+</div>
+</div>
+<TMPL_INCLUDE NAME="partial/footer.tmpl">
+</body>
+</html><TMPL_INCLUDE NAME="partial/head.tmpl">
+

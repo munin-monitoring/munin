@@ -1,0 +1,20 @@
+#! /usr/bin/perl
+# Dump a binary dictionary to clear text hash
+# (c) GPL - Steve Schnepp <steve.schnepp@pwkf.org>
+
+use strict;
+use warnings;
+
+use Fcntl;   # For O_RDWR, O_CREAT, etc.
+use DB_File;
+
+while (my $db_file = shift) {
+	my %hash;
+	tie(%hash, 'DB_File', $db_file, O_RDONLY) or die "$!";
+
+	for my $key (sort keys %hash) {
+		my $value = $hash{$key};
+		print "$key\t$value\n";
+	}
+	untie(%hash);
+}

@@ -1,0 +1,233 @@
+#! /bin/bash
+# Plugin to test complex multigraph thingies
+
+# This plugin, ideally, creates a multigraph tree that is 3 levels deep.  The
+# top level should have 6 fields (fake{1,2,3}_{in,out}), the second level
+# should have three graphs (fake{1,2,3}) with two fields each (in, out).  The
+# third level should have in and out in their own graph for each of
+# fake{1,2,3}.
+#
+# While a three layer multigraph is cool, the real magic intended in this test
+# graph is data borrowing within multigraph.  Specifically, the first and
+# second tier graphs should be borrowing all of their data (through the use of
+# graph_order) from the third tier graphs, so that we don't unnecessarily
+# create RRDs for each level.
+#
+# Currently, the second tier borrows and renders fine, but the first tier
+# breaks mysteriously with Perl warnings, implying that we don't handle missing
+# borrowed data very well and that we can't seem to find this data even though
+# the second tier is able to.  XXX: Edit this paragraph when we fix it. :)
+
+
+test "$1" = "config" && cat <<EOF
+multigraph multigraph_complex
+graph_title Testing multigraph
+graph_args --base 1000
+graph_vlabel widgets per second
+graph_category testing
+graph_order \
+	fake1_out=multigraph_complex.multigraph_complex_fake1.multigraph_complex_fake1_out.fake1_out \
+	fake1_in=multigraph_complex.multigraph_complex_fake1.multigraph_complex_fake1_in.fake1_in \
+	fake2_out=multigraph_complex.multigraph_complex_fake2.multigraph_complex_fake2_out.fake2_out \
+	fake2_in=multigraph_complex.multigraph_complex_fake1.multigraph_complex_fake2_in.fake2_in \
+	fake3_out=multigraph_complex.multigraph_complex_fake3.multigraph_complex_fake3_out.fake3_out \
+	fake3_in=multigraph_complex.multigraph_complex_fake3.multigraph_complex_fake3_in.fake3_in
+
+fake2_out.label fake2
+fake2_out.type GAUGE
+fake2_out.draw LINE2
+fake2_out.min 0
+fake2_out.info widgets out by fake2
+fake2_out.update no
+fake2_out.cdef fake2_out,8,*
+fake2_in.label fake2
+fake2_in.type GAUGE
+fake2_in.draw LINE2
+fake2_in.min 0
+fake2_in.info widgets in by fake2
+fake2_in.update no
+fake2_in.cdef fake2_in,8,*
+fake3_out.label fake3
+fake3_out.type GAUGE
+fake3_out.draw LINE2
+fake3_out.min 0
+fake3_out.info widgets out by fake3
+fake3_out.update no
+fake3_out.cdef fake3_out,8,*
+fake3_in.label fake3
+fake3_in.type GAUGE
+fake3_in.draw LINE2
+fake3_in.min 0
+fake3_in.info widgets in by fake3
+fake3_in.update no
+fake3_in.cdef fake3_in,8,*
+fake1_out.label fake1
+fake1_out.type GAUGE
+fake1_out.draw LINE2
+fake1_out.min 0
+fake1_out.info widgets out by fake1
+fake1_out.update no
+fake1_out.cdef fake1_out,8,*
+fake1_in.label fake1
+fake1_in.type GAUGE
+fake1_in.draw LINE2
+fake1_in.min 0
+fake1_in.info widgets in by fake1
+fake1_in.update no
+fake1_in.cdef fake1_in,8,*
+
+multigraph multigraph_complex.multigraph_complex_fake2
+graph_title fake2 widgets per second
+graph_args --base 1000
+graph_vlabel widgets per second
+graph_category testing
+graph_order \
+	fake2_out=multigraph_complex.multigraph_complex_fake2.multigraph_complex_fake2_out.fake2_out \
+	fake2_in=multigraph_complex.multigraph_complex_fake2.multigraph_complex_fake2_in.fake2_in
+
+fake2_out.label fake2
+fake2_out.type GAUGE
+fake2_out.draw LINE2
+fake2_out.min 0
+fake2_out.update no
+fake2_out.cdef fake2_out,8,*
+fake2_in.label fake2
+fake2_in.type GAUGE
+fake2_in.draw LINE2
+fake2_in.min 0
+fake2_in.update no
+fake2_in.cdef fake2_in,8,*
+
+multigraph multigraph_complex.multigraph_complex_fake3
+graph_title fake3 widgets per second
+graph_args --base 1000
+graph_vlabel widgets per second
+graph_category testing
+graph_order \
+	fake3_out=multigraph_complex.multigraph_complex_fake3.multigraph_complex_fake3_out.fake3_out \
+	fake3_in=multigraph_complex.multigraph_complex_fake3.multigraph_complex_fake3_in.fake3_in
+
+fake3_out.label fake3
+fake3_out.type GAUGE
+fake3_out.draw LINE2
+fake3_out.min 0
+fake3_out.update no
+fake3_out.cdef fake3_out,8,*
+fake3_in.label fake3
+fake3_in.type GAUGE
+fake3_in.draw LINE2
+fake3_in.min 0
+fake3_in.update no
+fake3_in.cdef fake3_in,8,*
+
+multigraph multigraph_complex.multigraph_complex_fake1
+graph_title fake1 widgets per second
+graph_args --base 1000
+graph_vlabel widgets per second
+graph_category testing
+graph_order \
+	fake1_out=multigraph_complex.multigraph_complex_fake1.multigraph_complex_fake1_out.fake1_out \
+	fake1_in=multigraph_complex.multigraph_complex_fake1.multigraph_complex_fake1_in.fake1_in
+
+fake1_out.label fake1
+fake1_out.type GAUGE
+fake1_out.draw LINE2
+fake1_out.min 0
+fake1_out.update no
+fake1_out.cdef fake1_out,8,*
+fake1_in.label fake1
+fake1_in.type GAUGE
+fake1_in.draw LINE2
+fake1_in.min 0
+fake1_in.update no
+fake1_in.cdef fake1_in,8,*
+
+multigraph multigraph_complex.multigraph_complex_fake2.multigraph_complex_fake2_out
+graph_title fake2 widgets out per second
+graph_args --base 1000
+graph_vlabel widgets per second
+graph_category testing
+fake2_out.label fake2
+fake2_out.type GAUGE
+fake2_out.min 0
+fake2_out.draw AREA
+fake2_out.cdef fake2_out,8,*
+
+multigraph multigraph_complex.multigraph_complex_fake2.multigraph_complex_fake2_in
+graph_title fake2 widgets in per second
+graph_args --base 1000
+graph_vlabel widgets per second
+graph_category testing
+fake2_in.label fake2
+fake2_in.type GAUGE
+fake2_in.min 0
+fake2_in.draw AREA
+fake2_in.cdef fake2_in,8,*
+
+multigraph multigraph_complex.multigraph_complex_fake3.multigraph_complex_fake3_out
+graph_title fake3 widgets out per second
+graph_args --base 1000
+graph_vlabel widgets per second
+graph_category testing
+fake3_out.label fake3
+fake3_out.type GAUGE
+fake3_out.min 0
+fake3_out.draw AREA
+fake3_out.cdef fake3_out,8,*
+
+multigraph multigraph_complex.multigraph_complex_fake3.multigraph_complex_fake3_in
+graph_title fake3 widgets in per second
+graph_args --base 1000
+graph_vlabel widgets per second
+graph_category testing
+fake3_in.label fake3
+fake3_in.type GAUGE
+fake3_in.min 0
+fake3_in.draw AREA
+fake3_in.cdef fake3_in,8,*
+
+multigraph multigraph_complex.multigraph_complex_fake1.multigraph_complex_fake1_out
+graph_title fake1 widgets out per second
+graph_args --base 1000
+graph_vlabel widgets per second
+graph_category testing
+fake1_out.label fake1
+fake1_out.type GAUGE
+fake1_out.min 0
+fake1_out.draw AREA
+fake1_out.cdef fake1_out,8,*
+
+multigraph multigraph_complex.multigraph_complex_fake1.multigraph_complex_fake1_in
+graph_title fake1 widgets in per second
+graph_args --base 1000
+graph_vlabel widgets per second
+graph_category testing
+fake1_in.label fake1
+fake1_in.type GAUGE
+fake1_in.min 0
+fake1_in.draw AREA
+fake1_in.cdef fake1_in,8,*
+EOF
+
+test "$1" = "" && cat <<EOF
+multigraph multigraph_complex.multigraph_complex_fake2.multigraph_complex_fake2_out
+fake2_out.value 728
+
+multigraph multigraph_complex.multigraph_complex_fake2.multigraph_complex_fake2_in
+fake2_in.value 1188
+
+multigraph multigraph_complex.multigraph_complex_fake3.multigraph_complex_fake3_out
+fake3_out.value 549
+
+multigraph multigraph_complex.multigraph_complex_fake3.multigraph_complex_fake3_in
+fake3_in.value 414
+
+multigraph multigraph_complex.multigraph_complex_fake1.multigraph_complex_fake1_out
+fake1_out.value 1659
+
+multigraph multigraph_complex.multigraph_complex_fake1.multigraph_complex_fake1_in
+fake1_in.value 5076
+EOF
+
+exit 0
+

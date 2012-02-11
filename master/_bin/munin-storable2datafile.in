@@ -1,0 +1,13 @@
+#!@@PERL@@
+# $Id$
+
+use strict;
+use warnings;
+use Storable;
+
+use Munin::Master::Utils;
+
+while (my $file = shift) {
+	my $config = Storable::retrieve($file);
+	munin_writeconfig("stdout", $config, \*STDOUT);
+}

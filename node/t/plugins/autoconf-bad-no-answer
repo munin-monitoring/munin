@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Munin test plugin: autoconf prints no response
+#
+# #%# family=test
+# #%# capabilities=autoconf
+
+do_autoconf()
+{
+	exit 0
+}
+
+
+do_$1 
+

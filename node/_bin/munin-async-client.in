@@ -1,0 +1,133 @@
+#! @@PERL@@
+# -*- cperl -*-
+#
+# Copyright (C) 2010 Steve Schnepp
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# $Id$
+
+use strict;
+use warnings;
+
+use Sys::Hostname;
+use Data::Dumper;
+use Getopt::Long;
+use Pod::Usage;
+
+use Munin::Node::SpoolReader;
+
+# Disable buffering
+$| = 1;
+
+my $SPOOLDIR = "@@SPOOLDIR@@";
+my $hostname = hostname();
+chomp($hostname);
+
+my $spoolfetch;
+my $vectorfetch;
+
+my $verbose;
+my $debug;
+my $help;
+
+GetOptions(
+        "spooldir|s=s" => \$SPOOLDIR,
+        "hostname=s" => \$hostname,
+
+        "spoolfetch" => \$spoolfetch,
+        "vectorfetch" => \$vectorfetch,
+
+        "help|h" => \$help,
+        "verbose|v" => \$verbose,
+        "debug" => \$debug,
+) or pod2usage(1);
+if ($help) {
+        pod2usage(1);
+}
+
+
+
+# Use STDIN/STDOUT, in order to be : 
+# 1. secure over internet (SSH), munin-node needs only 
+#    to listen on localhost:4949
+# 2. very simple to launch
+
+my $spoolreader = Munin::Node::SpoolReader->new(
+	spooldir => $SPOOLDIR,
+);
+
+die "spooldir [$SPOOLDIR] not found" unless -d $SPOOLDIR;
+
+print "# munin node at $hostname\n";
+
+while (my $line = <>) {
+	if ($line =~ m/^list/) {
+		print $spoolreader->list();
+	} elsif ($line =~ m/^config (\w+)/) {
+		# XXX - Vector-fetching is disabled for now
+		print ".\n";
+	} elsif ($vectorfetch && $line =~ m/^fetch (\w+)/) {
+		# Fetching all values since last time
+
+		# XXX - Vector-fetching is disabled for now
+		print ".\n";
+	} elsif ($line =~ m/^spoolfetch (\d+)/) {
+		my $last_epoch = $1;
+		print $spoolreader->fetch($last_epoch);
+		print ".\n";
+	} elsif ($spoolfetch && $line =~ m/^cap/) {
+		print "cap spool\n";
+	} elsif ($line =~ m/^quit/) {
+		exit;
+	} else {
+		print "# Unknown command.\n";
+	}
+}
+
+sub cat_file {
+	my $filename = shift;
+	return if ! -r $filename;
+	
+	open(FILE, "$filename");
+	while(<FILE>) { 
+		# remove line starting with .
+		next if m/^\./;
+		print $_; 
+	}
+	close(FILE);
+}
+
+__END__
+
+=head1 NAME
+
+munin-async-client - A program to replay spooled munin-node calls
+
+=head1 SYNOPSIS
+
+munin-async-client [options]
+
+ Options:
+     -s --spooldir <spooldir>   Directory for spooled data [@@SPOOLDIR@@]
+     --hostname <hostname>      Overrides the hostname [`hostname`]
+
+     --spoolfetch               Enables the "spool" capability [no]
+     --vectorfetch              Enables the "vectorized" fetching capability [no]
+                                  Note that without this flag, the "fetch" 
+				  command is disabled.
+
+     -v --verbose               Be verbose
+     -h --help                  View this message	

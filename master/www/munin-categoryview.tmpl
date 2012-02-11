@@ -1,0 +1,55 @@
+<TMPL_INCLUDE NAME="partial/head.tmpl">
+<body>
+<TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
+<div id="main" class="categoryview">
+<TMPL_INCLUDE NAME="partial/navigation.tmpl">
+<div id="content">
+<h2>Category: <TMPL_VAR ESCAPE="HTML" NAME="CATEGORY"></h2>
+<TMPL_LOOP NAME="SERVICES">
+<div class="service">
+	<h3><a name="<TMPL_VAR ESCAPE="HTML" NAME="name">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></h3>
+	<TMPL_LOOP NAME="GRAPHS">
+		<div class="node">
+		<span class="nodetitle"><a href="<TMPL_VAR NAME="HOST_URL">">
+			<TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> :: <TMPL_IF NAME="URLX">
+				<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF>
+				 <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URLX">">
+				</TMPL_IF>
+				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
+				<TMPL_IF NAME="URLX"></a></TMPL_IF>
+		</span><br />
+        <a href="<TMPL_VAR NAME="URLX">">
+            <TMPL_IF NAME="TIMEDAY">
+              <img src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">"
+		class=i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>
+
+               <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF>
+               <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/>
+            </TMPL_IF>
+            <TMPL_IF NAME="TIMEWEEK">
+              <img src="<TMPL_VAR NAME="CIMGWEEK">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">"
+		class=i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>
+               <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF>
+               <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>/>
+            </TMPL_IF>
+            <TMPL_IF NAME="TIMEMONTH">
+              <img src="<TMPL_VAR NAME="CIMGMONTH">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">"
+		class=i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>
+               <TMPL_IF NAME="IMGMONTHWIDTH">width="<TMPL_VAR NAME="IMGMONTHWIDTH">" </TMPL_IF>
+               <TMPL_IF NAME="IMGMONTHHEIGHT">height="<TMPL_VAR NAME="IMGMONTHHEIGHT">"</TMPL_IF>/>
+            </TMPL_IF>
+            <TMPL_IF NAME="TIMEYEAR">
+              <img src="<TMPL_VAR NAME="CIMGYEAR">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">"
+		class=i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>               <TMPL_IF NAME="IMGYEARWIDTH">width="<TMPL_VAR NAME="IMGYEARWIDTH">" </TMPL_IF>
+               <TMPL_IF NAME="IMGYEARHEIGHT">height="<TMPL_VAR NAME="IMGYEARHEIGHT">"</TMPL_IF>/>
+            </TMPL_IF>
+        </a>
+		</div>
+	</TMPL_LOOP>
+</div>
+</TMPL_LOOP>
+</div>
+</div>
+<TMPL_INCLUDE NAME="partial/footer.tmpl">
+</body>
+</html>

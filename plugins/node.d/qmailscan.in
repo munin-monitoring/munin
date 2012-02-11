@@ -1,0 +1,64 @@
+#!@@GOODSH@@
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+qmailscan - Plugin to graph output from qmailscan and clamav
+
+=head1 CONFIGURATION
+
+No configuration necessary.
+
+=head1 AUTHOR
+
+Contributed by David Obando (david@cryptix.de) - 03.12.2005
+
+=head1 LICENSE
+
+Unknown license
+
+=cut
+
+# define the logfiles. when you rotate them at any other time than 00:00 you have to define two logfiles:
+LOG0=/var/spool/qmailscan/quarantine.log
+LOG1=/var/spool/qmailscan/quarantine.log.1
+
+
+if [ "$1" = "autoconf" ]; then
+        echo yes
+        exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+        echo 'graph_title Virus types'
+        echo 'graph_args --base 1000 -l 0 '
+        echo 'graph_vlabel Daily Virus Types'
+        echo 'graph_category Mail'
+        grep "`date +%d\ %b\ %Y`" $LOG0 $LOG1 > /tmp/q$$
+        egrep -v 'Disallowed  characters found in MIME headers|Disallowed breakage found in header name - potential virus|Disallowed MIME comment found in header name - potential virus' /tmp/q$$ > /tmp/q2$$
+        sed 's/clamdscan.*$//' /tmp/q2$$ | sed 's/[ \t]*$//' > /tmp/q$$
+        cut -f 5 /tmp/q$$ | sort | uniq -c | sort -r | sed 's/\.\|-/_/g' | while read i; do
+                name=`echo $i | awk '{print $2}'`;
+                echo "$name.label $name" ;
+                echo "'$name.draw LINE2";
+        done
+        rm /tmp/q$$ /tmp/q2$$
+
+        exit 0
+fi
+
+grep "`date +%d\ %b\ %Y`" $LOG0 $LOG1 > /tmp/q$$
+egrep -v 'Disallowed  characters found in MIME headers|Disallowed breakage found in header name - potential virus|Disallowed MIME comment found in header name - potential virus' /tmp/q$$ > /tmp/q2$$
+sed 's/clamdscan.*$//' /tmp/q2$$ | sed 's/[ \t]*$//' > /tmp/q$$
+
+#awk '{ print $NF }' /tmp/q$$ | sort | uniq -c | sed 's/\./_/g' | while read i; do
+cut -f 5 /tmp/q$$ | sort | uniq -c | sort -r | sed 's/\.\|-/_/g' | while read i; do
+        name=`echo $i | awk '{print $2}'`;
+        printf "%s.value " $name;
+        echo $i | awk '{print $1}'
+done
+
+rm /tmp/q$$ /tmp/q2$$

@@ -1,0 +1,60 @@
+#!@@PERL@@
+#
+# Plugin to monitor quota on a specified device. Needs repquota and root privs
+#
+# Usage: place in /etc/munin/node.d/quota-usage_<dev> (or link it there using
+# ln -s), for example quota-usage_hda3. Use underscores instead of slashes, for
+# example to monitor /dev/mapper/vol-foo, name this quota-usage_mapper_vol-foo
+#
+# Parameters understood:
+#
+# 	config   (required)
+#
+#%# family=manual
+
+use strict;
+use warnings;
+use Munin::Plugin;
+
+# We do some magic to allow device strings with underscore to mean a /
+# So to monitor /dev/mapper/vol-foo use quota-usage_mapper_vol-foo
+my @tmp = split(/_/, $0);
+shift @tmp;
+my $dev = join("/", @tmp);
+my %users;
+
+open (REP, "/usr/sbin/repquota /dev/$dev |") or exit 22;
+while (<REP>) {
+	chomp;
+	if (/^-+$/../^$/) {
+		my @data = split(/ +/);
+		$users{$data[0]} = $data[2] if (@data > 2 && $data[2] > 0);
+	}
+}
+close REP;
+
+my @users_by_usage = sort { $users{$b} <=> $users{$a} } keys(%users);
+
+if ($ARGV[0] and $ARGV[0] eq "config") {
+	print "graph_title Filesystem usage by user on $dev\n";
+	print "graph_args --base 1024 --lower-limit 0\n";
+	print "graph_vlabel bytes\n";
+	print "graph_category disk\n";
+	for my $user (@users_by_usage) {
+		my ($uid, $name) = (getpwnam($user))[2,6];
+		$name = $user if (length($name) < length($user));
+		$user = clean_fieldname($user);
+		$name = (split(/,/, $name))[0];
+		printf "%s.label %s\n", $user, $name;
+		printf "%s.cdef %s,1024,*\n", $user, $user;
+		printf "%s.graph no\n", $user if ($uid < 1000);
+	}
+} else {
+	for my $user (@users_by_usage) {
+		my $esc = $user;
+		$esc = clean_fieldname($esc);
+		printf "%s.value %s\n", $esc, $users{$user};
+	}
+}
+
+# vim: set ts=4 sw=4:

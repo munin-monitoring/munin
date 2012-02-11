@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Munin test plugin: autoconf says yes, but prints
+# errors to stdout
+#
+# #%# family=test
+# #%# capabilities=autoconf
+
+do_autoconf()
+{
+	echo yes
+	echo this is an error >&2
+	exit 0
+}
+
+
+do_$1 
+

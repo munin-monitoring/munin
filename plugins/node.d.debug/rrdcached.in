@@ -1,0 +1,44 @@
+#!@@PERL@@
+# -*- cperl -*-
+
+use strict;
+use warnings;
+
+use IO::Socket::UNIX;
+
+$| = 1;
+
+my $arg = shift;
+if ($arg && $arg eq "config") {
+	print "graph_title rrdcached stats\n";
+	print "QueueLength.label Queue length\n";
+	print "UpdatesReceived.label UpdatesReceived\n";
+	print "UpdatesReceived.type DERIVE\n";
+	print "FlushesReceived.label FlushesReceived\n";
+	print "FlushesReceived.type DERIVE\n";
+	print "UpdatesWritten.label UpdatesWritten\n";
+	print "UpdatesWritten.type DERIVE\n";
+	print "DataSetsWritten.label DataSetsWritten\n";
+	print "DataSetsWritten.type DERIVE\n";
+	print "TreeNodesNumber.label TreeNodesNumber\n";
+	print "TreeDepth.label TreeDepth\n";
+	print "JournalBytes.label JournalBytes\n";
+	print "JournalBytes.type DERIVE\n";
+	print "JournalRotate.label JournalRotate\n";
+	print "JournalRotate.type DERIVE\n";
+	exit 0;
+}
+
+my $sock = new IO::Socket::UNIX(
+	Type => SOCK_STREAM,
+	Peer => "/tmp/rrdcached.munin.sock",
+) or die "Cannot open socket : $!";
+
+print $sock "STATS\n";
+print $sock "QUIT\n";
+
+# skip first line
+<$sock>;
+print map { s/: /.value /; $_; } <$sock>;
+
+exit 0;

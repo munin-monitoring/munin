@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# Munin test plugin: 
+#
+# autoconf says yes, but it times out
+#
+# #%# family=test
+# #%# capabilities=autoconf
+
+do_autoconf()
+{
+	echo yes
+	sleep 100
+	exit 0
+}
+
+
+do_$1 
+

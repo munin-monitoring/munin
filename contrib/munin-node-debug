@@ -1,0 +1,220 @@
+#! /usr/bin/perl
+# Munin node that presents as many virtual hosts, plugins & fields 
+# as needed to be able to : 
+# - emulate a HUGE network to stress the munin-master server
+# - serve as a basis for protocol debugging 
+#
+# Copyright (C) 2010 Steve Schnepp under the GPLv2
+
+use strict;
+use warnings;
+
+use IO::Socket;
+use IO::Select;
+use Getopt::Long;
+
+# No buffering
+$| = 1;
+
+my $nb_servers = 3;
+my $nb_plugins = 30;
+my $fields_per_plugin = 5;
+my $starting_port = 24949;
+my $spoolfetch;
+my $starting_epoch = -3600; # 1 hour from now
+my $dump_config;
+my $is_debug;
+my $help;
+my $update_rate = 10;
+my $spoolfetch_rate = 5;
+my $listen = "localhost";
+
+my $arg_ret = GetOptions(
+	"nb-plugins|n=i" => \$nb_plugins,
+	"nb-fields|f=i" => \$fields_per_plugin,
+	"nb-servers|s=i" => \$nb_servers,
+	"update-rate=i" => \$update_rate,
+
+	"startint-port|p=i" => \$starting_port,
+
+	"listen=s" => \$listen,
+	
+	"update-rate=i" => \$update_rate,
+	"spoolfetch" => \$spoolfetch,
+	"spoolfetch-rate=i" => \$spoolfetch_rate,
+	"starting-epoch=i" => \$starting_epoch,
+
+	"dump|d" => \$dump_config,
+	"help|h" => \$help,
+	"debug" => \$is_debug,
+);
+
+if ($help) {
+	print qq{Usage: $0 [options]
+
+Options:
+    --help                   View this message.
+
+    -s --nb-servers <int>     Number of servers [3]
+    -p --start-port <int>     Starting TCP listening port [24949]
+
+    -n --nb-plugins <int>     Number of plugins per server [30] 
+    -f --nb-fields  <int>     Number of fields per plugins [5]
+    --update-rate <int>       Update rate of plugins (in seconds) [10]
+
+       --listen    <host>     Which IP to bind [localhost]. 
+                              Use '' or '*' to bind to every interface.
+
+    --spoolfetch              Be spoolfetch capable
+    --starting-epoch          Starting epoch: no data will available before.
+                               Can be relative to now if negative [-3600] 
+
+    -d --dump                 Only dump a generated munin.conf part [no]
+       --debug                Print debug informations [no] 
+
+};
+	exit 0;
+}
+
+# Convert relatives starting_epoch to absolute
+$starting_epoch = time + $starting_epoch if ($starting_epoch < 0);
+
+if ($dump_config) {
+	for (my $i = 0; $i < $nb_servers; $i++) {
+		my $port = $starting_port + $i;
+		print "[host$port.debug.lan]\n";
+		print "     address 127.0.0.1\n";
+		print "     port $port\n";
+		print "\n";
+	}
+	
+	# Only dump config
+	exit;
+}
+
+# start the servers
+my @servers;
+for (my $i = 0; $i < $nb_servers; $i ++) {
+	my $port = $starting_port + $i;
+	# LocalAddr == * doesn't work, it has to be empty
+	my $localaddr = ($listen eq '*') ? '' : $listen;
+	debug("starting server on port $listen:$port");
+	my $server = IO::Socket::INET->new(
+		"LocalPort" => $port,
+		"LocalAddr" => $localaddr,
+		"Listen" => 5,
+		"ReuseAddr" => 1,
+		"Proto" => "tcp",
+	) or die($!);
+
+	push @servers, $server;
+}
+
+# Ignoring SIG_CHILD
+debug("Ignoring SIG_CHILD");
+$SIG{CHLD} = 'IGNORE';
+
+my $select = IO::Select->new(@servers);
+while (my @ready = $select->can_read()) {
+	foreach my $ready_fh (@ready) {
+		my $client = $ready_fh->accept();
+		if (! fork()) {
+			debug("[$$] Serving new client");
+			service($client);
+			# Exit the child
+			debug("[$$] Finished");
+			exit;
+		}
+	}
+}
+
+sub service
+{
+	my $client = shift;
+	my $hostname = "host".$client->sockport().".debug.lan";
+
+	print $client "# munin node at $hostname\n";
+
+	while (my $line = <$client>) {
+		chomp($line);
+		debug("[$$] client of $hostname asked : $line");
+		if ($line =~ m/^list /) {
+			for (my $i = 0; $i < $nb_plugins; $i ++) {
+				print $client "debug_plugin_$i ";
+			}
+			print $client "\n";
+		} elsif ($line =~ m/^cap (\w+)/) {
+			my @caps = "multigraph";
+			push @caps, "spool" if $spoolfetch;
+			print $client "cap @caps\n";
+		} elsif ($line =~ m/^config (\w+)/) {
+			my $plugin_number = get_plugin_number($1);
+			my $plugin_name = "debug_plugin_$plugin_number";
+			print $client "graph_title Debug plugin $plugin_number\n";
+			print $client "update_rate $update_rate\n";
+			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
+				print $client "field_". $plugin_number . "_$i.label field $i of plugin $plugin_name on $hostname\n";
+				print $client "field_". $plugin_number . "_$i.type GAUGE\n";
+			}
+			print $client ".\n";
+		} elsif ($line =~ m/^fetch (\w+)/) {
+			my $plugin_number = get_plugin_number($1);
+			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
+				my $value = sin( (time / 3600) * $plugin_number + $i);
+				print $client "field_". $plugin_number . "_$i.value $value\n";
+			}
+			print $client ".\n";
+		} elsif ($line =~ m/^spoolfetch (\d+)/) {
+			my $timestamp = $1;
+
+			# Cannot start before $starting_epoch
+			print "asked $timestamp, " if $is_debug;
+			$timestamp = ($timestamp < $starting_epoch) ? $starting_epoch : $timestamp;
+			print "starting at $starting_epoch, using $timestamp, \n" if $is_debug;
+
+			# Only send something every $spoolfetch_rate * $update_rate
+			if ( $timestamp > time - $spoolfetch_rate * $update_rate) {
+				print $client ".\n";
+				return;
+			}
+
+			# Sends spools strictly > LastSpooled
+			for (my $epoch = ($timestamp - $timestamp % $update_rate + $update_rate);
+				$epoch < time; $epoch += $update_rate) { 
+			for (my $plugin_number = 0; $plugin_number < $nb_plugins; $plugin_number ++) {
+				my $plugin_name = "debug_plugin_$plugin_number";
+				print $client "multigraph $plugin_name\n";
+				print $client "graph_title Debug plugin $plugin_number\n";
+				print $client "update_rate $update_rate\n";
+				for (my $i = 0; $i < $fields_per_plugin; $i ++) {
+					print $client "field_". $plugin_number . "_$i.label field $i of plugin $plugin_name on $hostname\n";
+					print $client "field_".$plugin_number."_$i.type GAUGE\n";
+
+					my $value = sin( ($epoch / 3600) * $plugin_number + $i);
+					print $client "field_".$plugin_number."_$i.value $epoch:$value\n";
+				}
+			}
+		}
+			print $client ".\n";
+		} elsif ($line =~ m/^quit/) {
+			return;
+		} else {
+			print $client "# Command not found\n";
+		}
+	}
+}
+
+sub get_plugin_number 
+{
+	my $plugin_name = shift;
+	my $plugin_number = $1 if ($plugin_name =~ m/(\d+)/);
+	return $plugin_number;
+}
+
+sub debug 
+{
+	print join(" ", @_) . "\n" if $is_debug; 
+}
+
+__END__
+

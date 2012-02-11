@@ -1,0 +1,141 @@
+<TMPL_INCLUDE NAME="partial/head.tmpl">
+<body>
+<TMPL_INCLUDE NAME="partial/logo_navigation_problem.tmpl">
+<div id="main" class="categoryview">
+<TMPL_INCLUDE NAME="partial/navigation.tmpl">
+<div id="content">
+<h2>Problem Overview</h2>
+<div class="problem" id="critical">
+<h3><a name="critical">Critical</a></h3>
+<table>
+<TMPL_LOOP NAME="CRITICAL">
+	<tr>
+		<td>
+		<div class="node">
+		<span class="nodetitle">
+			<a href="<TMPL_VAR ESCAPE="URL" NAME="NODENAME">/index.html">
+			<TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> 
+			:: <TMPL_IF NAME="URL"><a href="<TMPL_VAR NAME="URL">"></TMPL_IF>
+				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
+				<TMPL_IF NAME="URL"></a></TMPL_IF>
+			</span><br />
+			</a>
+			<a href="<TMPL_VAR NAME="URL">">
+				  <img src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class=i
+				   <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> 
+			   	   <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/>
+			</a>
+		</div>
+		</td>
+		<td>
+		<div class="node">
+		<span class="nodetitle">
+			<a href="<TMPL_VAR ESCAPE="URL" NAME="NODENAME">/index.html">
+			<TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> 
+			:: <TMPL_IF NAME="URL"><a href="<TMPL_VAR NAME="URLX">"></TMPL_IF>
+				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
+				<TMPL_IF NAME="URL"></a></TMPL_IF>
+			</span><br />
+			</a>
+			<a href="<TMPL_VAR NAME="URL">">
+				  <img src="<TMPL_VAR NAME="CIMGWEEK">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class=i
+				   <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF> 
+			   	   <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>/>
+			</a>
+		</div>
+		</td>
+	</tr>
+</TMPL_LOOP>
+</table>
+</div>
+<div class="problem" id="warning">
+<h3><a name="warning">Warning</a></h3>
+<table>
+<TMPL_LOOP NAME="WARNING">
+	<tr>
+		<td>
+		<div class="node">
+		<span class="nodetitle">
+			<a href="<TMPL_VAR ESCAPE="URL" NAME="NODENAME">/index.html">
+			<TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> 
+			:: <TMPL_IF NAME="URL"><a href="<TMPL_VAR NAME="URL">"></TMPL_IF>
+				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
+				<TMPL_IF NAME="URL"></a></TMPL_IF>
+			</span><br />
+			</a>
+			<a href="<TMPL_VAR NAME="URL">">
+				  <img src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class=i
+				   <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> 
+			   	   <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/>
+			</a>
+		</div>
+		</td>
+		<td>
+		<div class="node">
+		<span class="nodetitle">
+			<a href="<TMPL_VAR ESCAPE="URL" NAME="NODENAME">/index.html">
+			<TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> 
+			:: <TMPL_IF NAME="URL"><a href="<TMPL_VAR NAME="URLX">"></TMPL_IF>
+				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
+				<TMPL_IF NAME="URL"></a></TMPL_IF>
+			</span><br />
+			</a>
+			<a href="<TMPL_VAR NAME="URL">">
+				  <img src="<TMPL_VAR NAME="CIMGWEEK">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class=i
+				   <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF> 
+			   	   <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>/>
+			</a>
+		</div>
+		</td>
+	</tr>
+</TMPL_LOOP>
+</table>
+</div>
+<div class="problem" id="unknown">
+<h3><a name="unknown">Unknown</a></h3>
+<table>
+<TMPL_LOOP NAME="UNKNOWN">
+	<tr>
+		<td>
+		<div class="node">
+		<span class="nodetitle">
+			<a href="<TMPL_VAR ESCAPE="URL" NAME="NODENAME">/index.html">
+			<TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> 
+			:: <TMPL_IF NAME="URL"><a href="<TMPL_VAR NAME="URL">"></TMPL_IF>
+				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
+				<TMPL_IF NAME="URL"></a></TMPL_IF>
+			</span><br />
+			</a>
+			<a href="<TMPL_VAR NAME="URL">">
+				  <img src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class=i
+				   <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> 
+			   	   <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/>
+			</a>
+		</div>
+		</td>
+		<td>
+		<div class="node">
+		<span class="nodetitle">
+			<a href="<TMPL_VAR ESCAPE="URL" NAME="NODENAME">/index.html">
+			<TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> 
+			:: <TMPL_IF NAME="URL"><a href="<TMPL_VAR NAME="URLX">"></TMPL_IF>
+				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
+				<TMPL_IF NAME="URL"></a></TMPL_IF>
+			</span><br />
+			</a>
+			<a href="<TMPL_VAR NAME="URL">">
+				  <img src="<TMPL_VAR NAME="CIMGWEEK">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" class=i
+				   <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF> 
+			   	   <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>/>
+			</a>
+		</div>
+		</td>
+	</tr>
+</TMPL_LOOP>
+</table>
+</div>
+</div>
+</div>
+<TMPL_INCLUDE NAME="partial/footer.tmpl">
+</body>
+</html>

@@ -1,0 +1,30 @@
+#!@@GOODSH@@
+# -*- sh -*-
+#
+# Plugin to count the daily amount of Virii (qmailscan)
+#
+# Contributed by David Obando (david@cryptix.de) - 03.12.2005
+#
+
+# define the logfiles. when you rotate them at any other time than 00:00 you have to define two logfiles:
+LOG0=/var/spool/qmailscan/quarantine.log
+LOG1=/var/spool/qmailscan/quarantine.log.1
+
+if [ "$1" = "autoconf" ]; then
+        echo yes
+        exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+        echo 'graph_title Virus amount'
+        echo 'graph_args --base 1000 -l 0 '
+        echo 'graph_vlabel Daily Virus Amount'
+        echo 'graph_category Mail'
+        echo 'virus.label Virus'
+        echo 'virus.draw AREA'
+        exit 0
+fi
+
+printf "virus.value "
+grep "$(date "+%d %b %Y")" $LOG0 $LOG1 | wc -l

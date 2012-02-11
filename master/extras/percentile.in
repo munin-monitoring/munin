@@ -1,0 +1,99 @@
+#!@@PERL@@ -w
+
+=head1 NAME
+
+percentile - Munin support script to calculate the running n'th
+percentile of a data-set.
+
+=head1 USAGE
+
+To calculate the 95th percentile of the dataset "in" from a graph for
+all the different time periods:
+
+  in95thday.calculate percentile %{in}f 1day 95
+  in95thweek.calculate percentile %{in}f 1week 95
+  in95thmonth.calculate percentile %{in}f 1month 95
+  in95thyear.calculate percentile %{in}f 1year 95
+
+In the above the 95th perceintile for the different period lengths are
+stored in different time series and they will all be graphed on all
+the graphs.  If you need only the monthly 95th percentile you can just
+calculate that instead.
+
+Remember to supply config for these data series in the usual way.
+
+=over 2
+
+=item %{in}f is replaced with the name of the rrd file containing the in dataset.
+
+=item The second argument is the period to compute for, the values shown above are supported by rrd.
+
+=item 95 is the percentile to compute
+
+=back  
+
+The returned value is stuffed in in95th(day|week|month|year).value and
+the value is graphed as usual.
+
+=head1 BUGS
+
+None!
+
+=head1 AUTHOR
+
+Unatributed, attached to tocket #443 by the anarcat in the Munin trac.
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+use strict;
+use RRDs;
+
+## no critic Prototypes
+
+my $me=$0;
+
+sub percentile($;$$) {
+    my ($rrdfile,$duration,$n_th) = @_;
+    # duration should be 1day, 1week, 1month or 1year.
+    $duration ||= "1week";
+    $n_th ||= 95; # can't have 0th percentile
+    my ($start,$step,$names,$data) = 
+	RRDs::fetch($rrdfile,"MAX","-s","-$duration");
+    my @sums = ();
+    my $timestamp = $start;
+    ROWLOOP: foreach my $row (@$data) {
+	my $sum = 0;
+	$timestamp += $step;
+	foreach my $field (@$row) {
+	    next ROWLOOP if (! defined $field); # skip rows that have NaN
+	    $sum += $field;
+	}
+	push(@sums,$sum);
+    }
+    my $which = int(scalar(@sums)*($n_th)/100);
+    @sums = sort{$a<=>$b}(@sums); 
+    return $sums[$which];
+}
+
+# -- main()
+
+sub usage {
+    if (defined($_[0])) {
+	print STDERR "$me: $_[0]\n\n";
+    }
+    print STDERR "$me <rrdfile> <1day|1week|1month|1year> <percentile>\n";
+    exit 1;
+}
+
+my $rrdfile = shift(@ARGV) or usage "No rrdfile name given.";
+
+my $period = shift(@ARGV) or usage "No period given.";
+
+my $nth = shift(@ARGV) or usage "No percentile given.";
+
+
+print ".value ",&percentile($rrdfile,$period,$nth) ,"\n";

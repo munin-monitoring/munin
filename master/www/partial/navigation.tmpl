@@ -1,0 +1,30 @@
+<div id="nav">
+	<p class="navigationjump"><a href="#content">Skip navigation</a></p>
+	<h2>Problems</h2>
+	<ul>
+		<li><a href="<TMPL_VAR NAME="R_PATH">/problems.html#critical">Critical</a> (<TMPL_VAR NAME="NCRITICAL">)</li>
+		<li><a href="<TMPL_VAR NAME="R_PATH">/problems.html#warnings">Warning</a> (<TMPL_VAR NAME="NWARNING">)</li>
+		<li><a href="<TMPL_VAR NAME="R_PATH">/problems.html#unknowns">Unknown</a> (<TMPL_VAR NAME="NUNKNOWN">)</li>
+	</ul>
+	<h2>Groups</h2>
+	<ul>
+	<TMPL_LOOP NAME="ROOTGROUPS">
+		<li><a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URL">"><TMPL_VAR NAME="NAME"></a></li>
+	</TMPL_LOOP>
+	</ul>
+	<h2>Categories</h2>
+	<ul>
+	<TMPL_LOOP NAME="GLOBALCATS">
+		<li>
+		<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URLDAY">"><TMPL_VAR NAME="NAME"></a>
+		[
+			<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URLDAY">">d</a>
+			<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URLWEEK">">w</a>
+			<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URLMONTH">">m</a>
+			<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URLYEAR">">y</a>
+		]
+		</li>
+	</TMPL_LOOP>
+	</ul>
+</div>
+ 

@@ -1,0 +1,33 @@
+<div id="header">
+	<h1><a href="<TMPL_VAR NAME="R_PATH">"><span class="logo"></span></a><span class="currentpage">
+	<TMPL_LOOP NAME="PATH">
+		<TMPL_IF NAME="NAME"> :: 
+			<TMPL_IF NAME="PATH"><a href="<TMPL_VAR NAME="PATH">"></TMPL_IF>
+				<TMPL_VAR NAME="NAME">
+			<TMPL_IF NAME="PATH"></a></TMPL_IF>
+		<TMPL_ELSE>
+			<TMPL_IF NAME="PATH"><a href="<TMPL_VAR NAME="PATH">"></TMPL_IF>
+				Overview
+			<TMPL_IF NAME="PATH"></a></TMPL_IF>
+		</TMPL_IF>
+	</TMPL_LOOP>
+	</span>
+    <span class="comparison">[ 
+			<a href="comparison-day.html">day</a> 
+			<a href="comparison-week.html">week</a> 
+			<a href="comparison-month.html">month</a> 
+			<a href="comparison-year.html">year</a> 
+	]</span>
+	</h1>
+	<p>
+      <span class="categories"><TMPL_VAR NAME="NAME"> :: [ 
+		<TMPL_LOOP NAME="CATEGORIES">
+			<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> 
+			 <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> 
+			 href="#<TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME">">
+				<TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME">
+			</a> 
+		  </TMPL_LOOP>]
+	  </span>
+	</p>
+</div>

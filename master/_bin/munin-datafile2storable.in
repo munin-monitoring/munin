@@ -1,0 +1,14 @@
+#!@@PERL@@
+# $Id$
+
+use strict;
+use warnings;
+use Data::Dumper;
+use Storable;
+
+use Munin::Master::Utils;
+
+while (my $file = shift) {
+	my $config = munin_readconfig($file);
+	Storable::nstore_fd($config, \*STDOUT);
+}

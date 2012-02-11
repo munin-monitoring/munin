@@ -1,0 +1,42 @@
+# This perltidy run control file contains what is to be considered an
+# approximation of the code formatting conventions used by the Munin
+# project.
+#
+# The munin source code is a mix of several different coding
+# styles. So an important use of this file is to tidy up old cruft.
+#
+# It is not mandated that code must be run through perltidy with these
+# settings before every commit, as I believe the best formatting is
+# done by humans, but the formatting should be close to what a
+# perltidy run would yield.
+#
+# The content is negotiable.
+#
+# Use: perltidy --profile=./perltidyrc [FILE]...
+
+--backup-and-modify-in-place
+--output-line-ending=unix
+--continuation-indentation=4   # Don't really like these, but setting
+                               # it to 0 is not good either ...
+--nooutdent-long-lines
+--paren-tightness=2
+--square-bracket-tightness=1
+--brace-tightness=2
+--block-brace-tightness=0
+--nospace-for-semicolon
+--nooutdent-long-comments
+# Default: --nocuddled-else
+# Default: --noopeningbrace-on-new-line
+--opening-brace-always-on-right
+--opening-token-right
+--stack-opening-tokens
+--stack-closing-tokens
+--break-before-all-operators
+--maximum-consecutive-blank-lines=2
+--opening-hash-brace-right
+--maximum-line-length=0
+--indent-columns=4
+--opening-sub-brace-on-new-line
+--keep-old-blank-lines=1
+--minimum-space-to-comment=2
+

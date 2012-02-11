@@ -1,0 +1,257 @@
+/* Overall layout */
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	background: #fdfdfd;
+	font-size: 90%;
+}
+
+select {
+  border: 1px solid #d1d1d1;
+}
+
+body, h1, h2, h3, p, span, div {
+    font-family: "vera sans","dejavu sans",helvetica,verdana,arial,sans-serif;
+	color: #666666;
+}
+
+h3 {
+    margin-top: 1em;
+    margin-bottom: 0px;
+    font-size: 110%;
+    letter-spacing: 0.05em;
+    margin-left: 0px;
+    padding-left: 10px;
+    padding-bottom: 0px;
+    padding-top: 0px;
+	text-decoration: underline;
+}
+
+a:link, a:visited, a:link:active, a:link:hover    { color: #486aaf; text-decoration: none; } 
+a:link:hover { text-decoration: underline;}
+
+.warntext {
+  font-weight: bold;
+  background-color: #cccc00;
+  padding: 0px;
+  margin: -1px;
+  border: 1px solid #b9b900;
+}
+
+.crittext {
+  font-weight: bold;
+  background-color: #ff6f22;
+  padding: 0px;
+  margin: -1px;
+  border: 1px solid #f16722;
+}
+
+a.unkn:link    { color: #ffaa00; } 
+a.unkn:visited { color: #ffaa00; } 
+a.unkn:active  { color: #ffaa00; } 
+a.unkn:hover   { color: #ffaa00; } 
+
+a.warn:link    { color: #ffd300; }
+a.warn:visited { color: #ffd300; }
+a.warn:active  { color: #ffd300; }
+a.warn:hover   { color: #ffd300; }
+
+a.crit:link    { color: #ff0000; } 
+a.crit:visited { color: #ff0000; } 
+a.crit:active  { color: #ff0000; } 
+a.crit:hover   { color: #ff0000; } 
+
+img        { border: 0px; }
+img.i      { border: 1px solid #a0a0a0; }
+img.iwarn  { border: 1px solid #ffd300; }
+img.icrit  { border: 1px solid #ff0000; }
+img.iunkn  { border: 1px solid #ffaa00; }
+
+/* Header */
+#header {
+  width: 90%;
+  margin: 0 auto;
+  background-color: #fbfbfb;
+  border: 1px solid #cfd6f8;
+  border-bottom-left-radius: 4px;
+  -moz-border-radius-bottomleft: 4px;
+  -webkit-border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  -moz-border-radius-bottomright: 4px;
+  -webkit-border-bottom-right-radius: 4px;
+  border-top: 0;
+  padding: 3px;
+  height: 40px;
+}
+
+#header p {
+  margin: 0;
+}
+
+h1, h2 {
+  margin: 0;
+  padding: 0;
+  font-size: 110%;
+  font-weight: bold;
+  margin-left: auto;
+  margin-right: auto;
+}	
+
+#nav h2 { 
+     margin-top: 0.4em;
+ }
+
+h1 .logo {
+  display: block;
+  float: left;
+  background-image: url(logo-h.png);
+  background-repeat: no-repeat;  
+  width: 115px;
+  height: 30px;
+  padding-right: 10px;
+  margin-top: 7px;
+  padding-bottom: 6px;
+}
+
+/* Main */
+#main {
+  width: 90%;
+  margin: 0 auto;
+}
+
+.contentpusher {
+  clear: both;
+}
+
+/* Navigation */
+#nav {
+	float: left;
+	width: 200px;
+}
+
+#nav ul li {
+	list-style-type: none;
+	margin: 0 0 0 3px;
+	padding: 2px;
+}
+
+#nav ul {
+	margin: 0.2em 0 0.8em 0;
+	padding: 0;
+}
+
+.navigationjump {
+	display: none;
+}
+
+/* Content */
+#content {
+    border-left: 1px solid #cfd6f8;
+	margin-left: 220px;
+	padding: 1em;
+}
+
+#content li { 
+    margin-left: -20px;
+ }
+
+#content > ul:first-of-type { 
+    margin-left: 2em;
+ } 
+
+.comparison #content {
+	margin-left: 0;
+}
+
+#content h2 {
+	display: none;
+}
+
+ul.groupview li.last {
+	margin-bottom: 1em;
+}
+
+/* Content: comparison */
+td { 
+	vertical-align: top;
+}
+.node {
+	width: 500px;
+}
+
+/* Content: service view */
+#legend {
+  margin: 2px;
+  border-collapse: collapse;
+}
+
+#legend tr, #legend td{
+  padding: 3px 2px 3px 2px;
+  margin: 1px;
+}
+
+#legend th{
+  border-bottom: 1px solid #999999;
+}
+
+#legend .oddrow{
+  background-color: #f8f8f8;
+}
+
+#legend .oddrow td{
+  border-bottom: 1px solid #d8d8d8;
+}
+
+#legend .evenrow{
+  background-color: #fdfdfd;
+}
+
+#legend .evenrow td{
+  border-bottom: 1px solid #d8d8d8;
+}
+
+#legend .lastrow td{
+  border-bottom: 0px solid transparent !important;
+}
+
+#legend .field, #legend .internal {
+	width: 20em;
+	text-align: left;
+}
+
+#legend .type {
+	width: 7em;
+	text-align: center;
+}
+
+#legend .warn, #legend .crit {
+	width: 5em;
+	text-align: center;
+}
+
+
+
+/* Footer */
+#footer {
+  width: 90%;
+  margin: 0 auto;
+  background-color: #fbfbfb;
+  border: 1px solid #cfd6f8;
+  padding: 5px;
+  clear: both;
+}
+
+#footer p.navigation {
+	margin: 0;
+}
+
+#footer p.tagline {
+  margin: 0;
+  font-size: 80%;
+  text-align: left;
+}
+
+.categoryview .node {
+	display: inline-block;
+}

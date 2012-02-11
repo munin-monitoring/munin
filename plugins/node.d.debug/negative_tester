@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# A small plugin for testing .negative.  Currently exposes issues with
+# .negative and field names longer than 15 characters.  This also fails if a
+# CDEF is included, but it's hard to tell if fixing negative to handle
+# shortened field names properly would also happen to fix the CDEF brokenness.
+
+test "$1" = "config" && cat <<EOF
+graph_title negative_test widgets per second
+graph_args --base 1000
+graph_vlabel widgets per second
+graph_category testing
+
+negative_test_in.label negative_test
+negative_test_in.type GAUGE
+negative_test_in.min 0
+negative_test_in.graph no
+out.label negative_test
+out.type GAUGE
+out.min 0
+out.negative negative_test_in
+EOF
+
+test "$1" = "" && cat <<EOF
+out.value $RANDOM
+negative_test_in.value $RANDOM
+EOF
+
+exit 0
