@@ -130,7 +130,7 @@ EOF
 
 case $1 in
     autoconf)
-	if ( type -p netstat >/dev/null ); then
+	if type -p netstat >/dev/null; then
 	    echo yes
 	    exit 0
 	else
@@ -139,8 +139,8 @@ case $1 in
 	fi
 	;;
     suggest)
-	if ( type -p netstat >/dev/null ); then
-	    netstat -ib | awk '$3 ~ /Link/ && $1 !~ /(Name|lo|gif|stf)/ && $5 != "0" && $7 != "0" { print $1 }'
+	if type -p netstat >/dev/null; then
+	    netstat -nib | awk '$3 ~ /Link/ && $1 !~ /(Name|lo|gif|stf)/ && $5 != "0" && $7 != "0" { print $1 }'
 	fi
 	exit 0
 	;;
@@ -170,6 +170,4 @@ esac
 # Escape dots in the interface name (eg. vlans) before using it as a regex
 # Name  Mtu   Network       Address            Ipkts Ierrs     Ibytes    Opkts Oerrs     Obytes  Coll
 # en1   1500  <Link#5>    00:17:f2:e8:f8:3c 11548082 38116  702690133 22938005   170 16013565627     0
-netstat -ib -I "$INTERFACE" | awk -v interface="$INTERFACE" \
-    '$3 ~ /Link/ { print "down.value " $6 "\nup.value " $9 }'
-
+netstat -nib -I "$INTERFACE" | awk '$3 ~ /Link/ { print "down.value " $6 "\nup.value " $9 }'
