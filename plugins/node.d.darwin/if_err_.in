@@ -59,12 +59,12 @@ case $1 in
         exit 0
         ;;
     config)
-        echo "graph_order down up"
-        echo "graph_title $INTERFACE errors"
+        echo "graph_order down up collisions"
+        echo "graph_title $INTERFACE errors and collisions"
         echo 'graph_args --base 1000'
         echo 'graph_vlabel packets in (-) / out (+) per ${graph_period}'
         echo 'graph_category network'
-        echo "graph_info This graph shows the amount of errors on the $INTERFACE network interface."
+        echo "graph_info This graph shows the amount of errors and collisions on the $INTERFACE network interface."
         echo 'down.label packets'
         echo 'down.type COUNTER'
         echo 'down.graph no'
@@ -73,11 +73,13 @@ case $1 in
         echo 'up.type COUNTER'
         echo 'up.negative down'
         echo 'up.warning 1'
-        echo "up.info Traffic of the $INTERFACE interface."
+        echo "up.info Errors of the $INTERFACE interface."
+        echo 'collisions.label Collisions'
+	echo 'collisions.type COUNTER'
         exit 0
         ;;
 esac
 
 # Name  Mtu   Network       Address            Ipkts Ierrs     Ibytes    Opkts Oerrs     Obytes  Coll
 # en1   1500  <Link#5>    00:17:f2:e8:f8:3c 11548082 38116  702690133 22938005   170 16013565627     0
-netstat -nib -I "$INTERFACE" | awk '$3 ~ /Link/ { print "down.value " $6 "\nup.value " $9 }'
+netstat -nib -I "$INTERFACE" | awk '$3 ~ /Link/ { print "down.value " $6 "\nup.value " $9 "\ncollisions.value " $11 }'
