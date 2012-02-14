@@ -44,6 +44,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_title Filesystem usage (in %)'
     echo 'graph_args --upper-limit 100 -l 0'
     echo 'graph_vlabel %'
+    echo 'graph_category disk'
     echo 'graph_scale no'
     echo 'graph_category disk'
     df -P -l  | sed -e 1d -e '/\/\//d' -e 's/%//' | sort |
