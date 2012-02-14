@@ -18,7 +18,7 @@ INSTALL          := ./install-sh
 DIR              := $(shell /bin/pwd | sed 's/^.*\///')
 INFILES          := $(shell find . -name '*.in' | sed 's/\.\/\(.*\)\.in$$/build\/\1/')
 INFILES_MASTER   := $(shell find master -name '*.in' | sed 's/\(.*\)\.in$$/build\/\1/')
-CLASSFILES       := $(shell find plugins/javalib/ -name '*.java' | sed 's/\(.*\)\.java$$/build\/\1.class/')
+CLASSFILES       := $(shell find plugins/javalib -name '*.java' | sed 's/\(.*\)\.java$$/build\/\1.class/')
 PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/*)
 MANCENTER        := "Munin Documentation"
 MAN8		 := master/_bin/munin-update master/_bin/munin-limits master/_bin/munin-html master/_bin/munin-graph
@@ -43,7 +43,7 @@ PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
 
 default: build
 
-uninstall: 
+uninstall:
 	echo "Uninstall is not implemented yet"
 
 # This removes the installed config so that the next install-pass installs
@@ -85,7 +85,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	mkdir -p $(DBDIR)
 	mkdir -p $(CGIDIR)
 
-	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR) 
+	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR)
 	$(CHMOD) 0755 $(DBDIR)
 
 	for p in master/www/*.tmpl ;  do \
@@ -117,7 +117,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/munin-cgi-graph
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-html $(CGIDIR)/munin-cgi-html
 
-# Not ready to be installed yet	
+# Not ready to be installed yet
 # $(INSTALL) -m 0755 build/master/_bin/munin-gather $(LIBDIR)/
 
 # ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE
@@ -387,7 +387,7 @@ node-monkeywrench: install-node
 	$(SBINDIR)/munin-node-configure --suggest
 	echo 'Done?'
 
-t/install: 
+t/install:
 	$(MAKE) clean install-node-prime install-node-plugins CONFIG=t/Makefile.config INSTALL_PLUGINS=test
 
 
