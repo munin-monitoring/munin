@@ -30,7 +30,7 @@ munin (2.0~rc1-1) UNRELEASED; urgency=low
       trunk.
     * Full details in http://munin-monitoring.org/browser/tags/2.0/ChangeLog
       or in /usr/share/doc/munin/changelog.gz on this system. (Closes: #610528, 
-      Closes: #644960, Closes: #576009, Closes: #565565)
+      Closes: #644960, Closes: #576009)
     * This release has been prepared through six uploads to experimental and
       several users running it on their installations.
 
@@ -93,6 +93,9 @@ munin (2.0~rc1-1) UNRELEASED; urgency=low
   * Add munin-async.postrm to delete the munin-async user on purge. 
   * munin-async.postinst: set homedirectory to /var/lib/munin-async. 
   * Move munin-doc to section doc. 
+  * Drop debian/patches/101-dash-bash-fw_conntrack.patch as this was fixed
+    upstream properly to also fix network lag problems on big firewalls with 
+    the plugins fw_conntrack and fw_forwarded_local. (Closes: #565565)
 
   [ Marc Haber ]
   * Clean up build leftovers in debian/rules clean clean to allow
