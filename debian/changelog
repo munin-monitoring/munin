@@ -1,23 +1,13 @@
 munin (2.0~rc1-1) UNRELEASED; urgency=low
 
-  [ TODO before uploading to unstable ]
-  * resort entries in debian/changelog
-     munin (1.999.4603-2) UNRELEASED; urgency=low
-     munin (1.999.4603-1) experimental; urgency=low
-     munin (1.999.4548-5) experimental; urgency=low
-     munin (1.999.4548-4) experimental; urgency=low
-     munin (1.999.4548-3) experimental; urgency=low
-     munin (1.999.4548-2) experimental; urgency=low
-     munin (1.999.4548-1) experimental; urgency=low
   * debian/News entry?
-  * go through the BTS and forward all bugs which need forwarding to the
-    upstream trac tracker. See #655889 if you want to help.
 
   * This is not yet munin 2.0, but almost! Install at your own risk and have 
     fun! Also, please give feedback to munin-users@lists.sourceforge.net.
 
     * Introducing Munin 2.0! The most important features:
     * Even better scalability through:
+      - Large performance improvements on almost all munin's components:
       - Full CGI integration.  It is for graphing as  well for html, if needed.
         It is also completely compatible with FastCGI, that only compiles once 
         per run.
@@ -27,7 +17,8 @@ munin (2.0~rc1-1) UNRELEASED; urgency=low
       - Complete integration with rrdcached.  Starting with RRD 1.4, there is 
         an update daemon. It enables batched updates, and therefore reduce the
         IO down. Even with 1000+ files to update every 5 min.
-      - Large performance improvements on almost all munin's components
+      - Spoolfetch uses _node_read_fast() now : 3MiB is now read in 2 s instead 
+        of 7 min.
     * Complete IPv6 integration: (Closes: #592214, Closes: #558800, Closes:
       #567551)
       - The master only require a new perl module (IO::Socket::INET6)
@@ -39,20 +30,9 @@ munin (2.0~rc1-1) UNRELEASED; urgency=low
       trunk.
     * Full details in http://munin-monitoring.org/browser/tags/2.0/ChangeLog
       or in /usr/share/doc/munin/changelog.gz on this system. (Closes: #610528, 
-      Closes: #644960, Closes: #576009)
-
-  * Update to munin 2.0beta7, quoting the upstream ChangeLog:
-    - Spoolfetch uses _node_read_fast() now : 3MiB is now read in 2 s instead 
-      of 7 min.
-    - Fix for the images when browsing in 'categories' view to be clickable.
-    - Fixing the png generation, in order to have 1px per RRA sample. 
-      (closes trac#1184)
-    - Fix for nested nodes
-    - single_value is wrong for some multigraph, disabling it for now
-    - new plugin : (haproxy_ng multigraph plugin for haproxy)
-
-  * r4619 fixes plugins fw_conntrack and fw_forwarded_local which 
-    (Closes: #565565)
+      Closes: #644960, Closes: #576009, Closes: #565565)
+    * This release has been prepared through six uploads to experimental and
+      several users running it on their installations.
 
   [ Steve Schnepp ]
   * Maintained a branch since munin 1.5 all the way up to 1.999 to prepare
@@ -89,6 +69,8 @@ munin (2.0~rc1-1) UNRELEASED; urgency=low
   [ Holger Levsen ]
   * Merge changes from 1.4.4-1 until 1.4.6-2 into this branch and merge 
     debian/changelog in preparation for uploading to experimental.
+  * Move packaging to 
+    svn://munin.projects.linpro.no/munin/branches/debian/wheezy
   * Include large parts of upstreams Announce-2.0 in debian/changelog.
   * Update to munin 2.0beta6, which has a rewrite of the timeout handling 
     code. The default node timeout is now 1 min. Also various bugfixes were
