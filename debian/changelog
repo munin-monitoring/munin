@@ -10,8 +10,6 @@ munin (2.0~rc1-1) UNRELEASED; urgency=low
      munin (1.999.4548-2) experimental; urgency=low
      munin (1.999.4548-1) experimental; urgency=low
   * debian/News entry?
-  * correct Vcs-svn: in debian/control to point to the right path for
-    unstable.
   * go through the BTS and forward all bugs which need forwarding to the
     upstream trac tracker. See #655889 if you want to help.
 
