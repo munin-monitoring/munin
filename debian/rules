@@ -1,6 +1,6 @@
 #! /usr/bin/make -f
 
-export DH_VERBOSE=
+export DH_VERBOSE=1
 
 MAKEOPTS = CONFIG=debian/Makefile.config INSTALL_PLUGINS="auto manual snmpauto contrib"
 
@@ -24,16 +24,16 @@ build-stamp: $(QUILT_STAMPFN)
 	$(MAKE) build     $(MAKEOPTS)
 	
 	$(MAKE) install-common-prime $(MAKEOPTS) \
-		MANDIR=`pwd`/debian/munin-doc/usr/share/man \
-		DESTDIR=`pwd`/debian/munin-common
+		MANDIR=$(CURDIR)/debian/munin-doc/usr/share/man \
+		DESTDIR=$(CURDIR)/debian/munin-common
 	
 	$(MAKE) install-async-prime $(MAKEOPTS) \
-		MANDIR=`pwd`/debian/munin-doc/usr/share/man \
-		DESTDIR=`pwd`/debian/munin-async
+		MANDIR=$(CURDIR)/debian/munin-doc/usr/share/man \
+		DESTDIR=$(CURDIR)/debian/munin-async
 
 	$(MAKE) install-master-prime $(MAKEOPTS) \
-		MANDIR=`pwd`/debian/munin-doc/usr/share/man \
-		DESTDIR=`pwd`/debian/munin
+		MANDIR=$(CURDIR)/debian/munin-doc/usr/share/man \
+		DESTDIR=$(CURDIR)/debian/munin
 
 	install -D -m0644 debian/munin.apache.conf \
 		$(CURDIR)/debian/munin/etc/munin/apache.conf
@@ -58,7 +58,7 @@ build-stamp: $(QUILT_STAMPFN)
 	# They are used for munin-plugins-* and we don't want a whole 
 	# dedicated new package (munin-plugins-common) for that. yet.
 	for file in usr/share/perl5/Munin/Plugin.pm usr/share/munin/plugins/plugin.sh; do \
-		mkdir -p $$(dirname $(CURDIR)/debian/munin-common/$$file); \
+		mkdir -p $(CURDIR)/debian/munin-common/$$file); \
 		mv $(CURDIR)/debian/munin-plugins-core/$$file \
 			$(CURDIR)/debian/munin-common/$$file; \
 	done
