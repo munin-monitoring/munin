@@ -1,0 +1,41 @@
+Description: patching excluded fs for df on Debian/kFreeBSD
+ This patch takes into account that the df from Debian isn't the same as the
+ stock FreeBSD df. 
+ .
+ This patch will be removed once df for Debian/kFreeBSD is compatible with the 
+ FreeBSD's one. Or when upstream handles this difference in the plugin.
+Forwarded: no
+Author: Steve Schnepp <steve.schnepp@gmail.com>
+Last-Update: 2010-10-30
+Index: munin-2.0/plugins/node.d.freebsd/df.in
+===================================================================
+--- munin-2.0/plugins/node.d.freebsd/df.in	(revision 3970)
++++ munin-2.0/plugins/node.d.freebsd/df.in	(working copy)
+@@ -24,6 +24,9 @@
+ 	exit 0
+ fi
+ 
++EXCLUDEDFS="noprocfs,devfs,fdescfs,linprocfs,linsysfs,nfs,nullfs"
++EXCLUDEDFS=`echo ${EXCLUDEDFS} | sed -s 's/,/ -x /g'`
++
+ if [ "$1" = "config" ]; then
+ 
+ 	echo 'graph_title Filesystem usage (in %)'
+@@ -33,7 +36,7 @@
+ 	echo 'graph_scale no'
+ 	echo 'graph_info This graph shows disk usage on the machine.'
+ 	mfs=0
+-	/bin/df -P -t noprocfs,devfs,fdescfs,linprocfs,nfs,nullfs | tail +2 | grep -v "//" | while read i; do
++	/bin/df -P -x ${EXCLUDEDFS} | tail -n +2 | grep -v '^/sys' | grep -v "//" | while read i; do
+ 		case $i in
+ 		mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
+ 		*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
+@@ -47,7 +50,7 @@
+ fi
+ 
+ mfs=0
+-/bin/df -P -t noprocfs,devfs,fdescfs,linprocfs,nfs,nullfs | tail +2 | grep -v "//" | while read i; do
++/bin/df -P -x ${EXCLUDEDFS} | tail -n +2 | grep -v '^/sys' | grep -v "//" | while read i; do
+ 	case $i in
+ 	mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
+ 	*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;

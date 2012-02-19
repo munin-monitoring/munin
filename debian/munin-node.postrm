@@ -1,0 +1,43 @@
+#! /bin/sh
+
+set -e
+
+# workaround for bug #198522
+delete_dir_if_empty() {
+	if [ ! -d "$1" ]; then
+		return 0;
+	fi
+	rmdir --ignore-fail-on-non-empty $1;
+}
+
+if [ "$1" = "purge" ]; then
+	# delete dangling symlinks
+	test -d /etc/munin/plugins/ && for plugin in $(find /etc/munin/plugins/ -type l); do
+		if [ ! -e $(readlink $plugin) ]; then
+			rm $plugin
+		fi
+	done
+
+	rm -f /var/lib/munin/plugin-state/*.state
+	rm -f /var/log/munin/munin-node.log*
+	rm -f /var/log/munin/munin-node-configure.log*
+
+	dpkg-statoverride --remove /var/lib/munin/plugin-state
+
+	# These are shared with munin, so only remove them if munin
+	# isn't installed (or already purged).
+	status=$(dpkg --get-selections munin)
+	if [ -z "$status" ] || [ "${status%purge}" != "$status" ]; then
+		dpkg-statoverride --remove /var/log/munin
+		dpkg-statoverride --remove /var/lib/munin
+	fi
+	
+	delete_dir_if_empty /var/lib/munin/plugin-state
+	delete_dir_if_empty /var/lib/munin
+	delete_dir_if_empty /var/log/munin
+	delete_dir_if_empty /etc/munin/plugin-conf.d
+	delete_dir_if_empty /etc/munin/plugins
+	delete_dir_if_empty /etc/munin
+fi
+
+#DEBHELPER#

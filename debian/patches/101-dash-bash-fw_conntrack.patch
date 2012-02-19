@@ -1,0 +1,22 @@
+Description: Debian specific patch. dash has a bug
+ (http://bugs.debian.org/595063), where read() builtin doesn't work with /proc
+ files containing an integer value.
+
+ Using bash instead of dash solves the problem for this plugin.
+
+ Once dash fixes this issue, this patch can be removed.
+Origin: other
+Bug-Debian: http://bugs.debian.org/594695
+Forwarded: no
+Author: Tom Feiner <feiner.tom@gmail.com>
+Last-Update: 2010-09-01
+Index: munin-1.4.5/plugins/node.d.linux/fw_conntrack.in
+===================================================================
+--- munin-1.4.5.orig/plugins/node.d.linux/fw_conntrack.in	(revision 3824)
++++ munin-1.4.5/plugins/node.d.linux/fw_conntrack.in	(working copy)
+@@ -1,4 +1,4 @@
+-#!@@GOODSH@@
++#!@@BASH@@
+ # -*- sh -*-
+ 
+ : << =cut

@@ -1,0 +1,31 @@
+#! /bin/sh
+
+set -e
+
+prevver="$2"
+
+add_munin_async_user() {
+	if ! getent passwd munin-async >/dev/null; then
+		adduser --group --system --home /var/lib/munin-async --shell /bin/bash munin-async
+	fi
+	# workaround bug (#531021) in xen-tools
+	if ! getent group munin-async >/dev/null; then
+		addgroup --system munin-async
+		adduser --shell /bin/bash munin-async
+	fi
+}
+
+case "$1" in
+	configure)
+		add_munin_async_user
+		;;
+	abort-upgrade|abort-deconfigure|abort-remove)
+		:
+		;;
+	*)
+		echo "Called with unknown argument $1, bailing out."
+		exit 1
+		;;
+esac
+
+#DEBHELPER#

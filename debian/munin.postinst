@@ -1,0 +1,72 @@
+#! /bin/sh
+
+set -e
+
+prevver="$2"
+
+add_munin_system_user() {
+	if ! getent passwd munin >/dev/null; then
+		adduser --group --system --no-create-home \
+			--home /var/lib/munin munin;
+	fi	
+	# workaround bug (#531021) in xen-tools
+	if ! getent group munin >/dev/null; then
+	        addgroup --system munin
+	        adduser munin munin
+	fi
+}
+
+fixperms() {
+	dpkg-statoverride --list /var/log/munin >/dev/null || \
+		dpkg-statoverride --update --add munin adm 0751 /var/log/munin
+	# create munin-cgi-html.log since www-data cannot create it itself
+	touch /var/log/munin/munin-cgi-html.log
+	dpkg-statoverride --list /var/log/munin/munin-cgi-html.log >/dev/null || \
+		dpkg-statoverride --update --add www-data adm 0750 /var/log/munin/munin-cgi-html.log
+	# create munin-cgi-graph.log since www-data cannot create it itself
+	touch /var/log/munin/munin-cgi-graph.log
+	dpkg-statoverride --list /var/log/munin/munin-cgi-graph.log >/dev/null || \
+		dpkg-statoverride --update --add www-data adm 0750 /var/log/munin/munin-cgi-graph.log
+	dpkg-statoverride --list /var/cache/munin/www >/dev/null || \
+		dpkg-statoverride --update --add munin munin 0755 /var/cache/munin/www
+	dpkg-statoverride --list /var/lib/munin >/dev/null || \
+		dpkg-statoverride --update --add munin munin 0755 /var/lib/munin
+}
+
+apache_install() {
+	# if you add more webservers here, dont forget to also remove them in postrm
+        webserver=apache2
+        webserver_init_script="/etc/init.d/$webserver"
+        if [ -d /etc/$webserver/conf.d ] && [ ! -e /etc/$webserver/conf.d/munin ]; then
+		if [ -z "$prevver" ] ; then
+			# only create link on new installs
+	                ln -s ../../munin/apache.conf /etc/$webserver/conf.d/munin
+		fi
+		if [ -f $webserver_init_script ];then
+			if [ -x $webserver_init_script ]; then
+				invoke-rc.d $webserver reload 3>/dev/null || true
+			else 
+				echo "munin: $webserver_init_script is not executable."\
+				     "Could not reload $webserver"
+			fi
+		fi
+        fi
+}
+
+
+case "$1" in
+	configure)
+		add_munin_system_user
+		fixperms
+		apache_install
+		;;
+	abort-upgrade|abort-deconfigure|abort-remove)
+		:
+		;;
+	*)
+		echo "Called with unknown argument $1, bailing out."
+		exit 1
+		;;
+esac
+
+#DEBHELPER#

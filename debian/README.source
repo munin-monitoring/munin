@@ -1,0 +1,53 @@
+#
+# getting the upstream sources (and putting them in svn):
+#
+
+New upstream tarballs are located here http://sourceforge.net/projects/munin/ 
+old tarballs are available at munin.projects.linpro.no/munin/branches/debian/lenny/tarballs 
+too.
+Please put them in svn with signed md5- and sha1sum-files.
+
+#
+# Debian specific patches
+#
+Debian specific patches reside in debian/patches/ and are applied with quilt.
+
+#
+# using svn-buildpackage
+#
+cd trunk/
+svn-buildpackage
+
+#
+# using svn-buildpackage with pbuilder and cowbuilder
+#
+
+svn-pdebuild is an alias for: 
+"svn-buildpackage --svn-builder=pdebuild --pbuilder cowbuilder"
+
+Here a small readme in order to use this svn properly:
+
+I'm used to this aliases to ease my life:
+      pclean='sudo rm -rf /var/cache/pbuilder/result/*'
+      pdebuild='pdebuild --pbuilder cowbuilder'
+      pdebuild-etch='pdebuild --pbuilder cowbuilder --  --basepath /var/cache/pbuilder/etch.cow/ --debian-etch-workaround'
+      pdebuild-lenny='pdebuild --pbuilder cowbuilder -- --basepath /var/cache/pbuilder/base-lenny.cow/'
+      plinda='linda /var/cache/pbuilder/result/*.changes'
+      plintian='lintian /var/cache/pbuilder/result/*.changes'
+      plogin='sudo cowbuilder --login'
+      pupdate='sudo cowbuilder --update'
+      pupdate-etch='sudo cowbuilder --update --basepath /var/cache/pbuilder/etch.cow/ --debian-etch-workaround'
+      pupdate-lenny='sudo cowbuilder --update --basepath /var/cache/pbuilder/base-lenny.cow/'
+      svn-debuild='svn-buildpackage -rfakeroot -us -uc'
+      svn-pdebuild='svn-buildpackage --svn-builder=pdebuild --pbuilder cowbuilder'
+      svn-pdebuild-etch='svn-buildpackage --svn-builder=pdebuild --pbuilder cowbuilder -- --basepath /var/cache/pbuilder/etch.cow --debian-etch-workaround'
+
+So for building this package go to trunk/ and call there e.g.:
+    svn-debuild (Build on the host system)
+or   
+    svn-pdebuild (Build in a chroot using cowdancer)
+
+In the first case the resulting files are found in ../build-area, in the
+second case the resulting files are found in /var/cache/pbuilder/result/
+
+I hope this helps to get this package build from svn :)
