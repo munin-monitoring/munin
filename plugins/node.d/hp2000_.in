@@ -28,33 +28,24 @@
 #
 #     env.host     - http-host
 #     env.secret   - username_password
-#     env.aspect   - vdisk-statistics, controller-statistics or disk-statistics
+#     env.aspect   - vdisk-statistics, controller-statistics or disk-statistics, 
+#                    volume-statistics.  If not specified, the plugin will attempt
+#                    to detect the aspect from the symlink-name using regex -
+#                    (/vdisk/, /controller/, /volume/ and /disk/)
 #
 # Suggested config:
 #
-#   [hp2000_san1_vdisk]
+#   [hp2000_san1_*]
 #   hostname san1
 #   env.host 10.0.0.1
 #   env.secret username_password
-#   env.aspect vdisk-statistics
-#
-#   [hp2000_san1_disk]
-#   hostname san1
-#   env.host 10.0.0.1
-#   env.secret username_password
-#   env.aspect disk-statistics
-#
-#   [hp2000_san1_controller]
-#   hostname san1
-#   env.host 10.0.0.1
-#   env.secret username_password
-#   env.aspect controller-statistics
 #
 # Then create the following symlinks, pointing to the plugin:
 #
 #  hp2000_san1_vdisk
 #  hp2000_san1_disk
 #  hp2000_san1_controller
+#  hp2000_san1_volume
 #
 # And direct your munin.conf to the node configured with this plugin, using
 # node 'san1'.
@@ -77,15 +68,165 @@ use Munin::Plugin;
 
 need_multigraph();
 
-my $cmd = exists $ENV{'aspect'} ? $ENV{'aspect'} : 'vdisk-statistics';
+my $cmd = 'vdisk-statistics'; # Default.
+
+if ( $0 =~ /vdisk/ ) { $cmd = 'vdisk-statistics'; }
+elsif ( $0 =~ /controller/ ) { $cmd = 'controller-statistics'; }
+elsif ( $0 =~ /volume/ ) { $cmd = 'volume-statistics'; }
+elsif ( $0 =~ /disk/ ) { $cmd = 'disk-statistics'; }
+
+if ( exists $ENV{'aspect'} ) { $cmd = $ENV{'aspect'}; }
 my $host = $ENV{'host'};
 my $secret = $ENV{'secret'};
 
-my @plugins = ('vdisk-statistics', 'controller-statistics', 'disk-statistics');
+my @plugins = ('vdisk-statistics', 'controller-statistics', 'disk-statistics', 'volume-statistics');
 my @graph_parameters = ('title','total','order','scale','vlabel','args', 'category');
 my @field_parameters = ('graph', 'min', 'max', 'draw', 'cdef', 'warning', 'colour', 'info', 'type');
 
 my %aspects = (
+    'volume-statistics' => {
+        'volume_bandwidth' => {
+            'title' => 'Bandwidth',
+            'category' => 'volume',
+            'vlabel' => '(- reads / + writes) bytes per second',
+            'min' => 0,
+            'values' => {
+                'data-read-numeric' => {
+                    'short' => 'br',
+                    'type' => 'DERIVE',
+                    'draw' => 'LINE1',
+                    'label' => 'read bps',
+                    'min' => 0,
+                    'graph' => 'no',
+                },
+                'data-written-numeric' => {
+                    'short' => 'bw',
+                    'type' => 'DERIVE',
+                    'draw' => 'LINE1',
+                    'label' => 'bps',
+                    'min' => 0,
+                    'negative' => 'br',
+                }
+            }
+        },
+        'volume_iops' => {
+            'title' => 'I/O Operations',
+            'category' => 'volume',
+            'vlabel' => '(- reads / + writes) ops per second',
+            'min' => 0,
+            'values' => {
+                'number-of-reads' => {
+                    'short' => 'ior',
+                    'type' => 'DERIVE',
+                    'draw' => 'LINE1',
+                    'label' => 'reads',
+                    'min' => 0,
+                    'graph' => 'no'
+                },
+                'number-of-writes' => {
+                    'short' => 'iow',
+                    'type' => 'DERIVE',
+                    'draw' => 'LINE1',
+                    'label' => 'iops',
+                    'min' => 0,
+                    'negative' => 'ior'
+                }
+            }
+        },
+        'volume_cache_hits' => {
+            'title' => 'Cache hits',
+            'category' => 'volume',
+            'vlabel' => '(- reads / + writes) hits per second',
+            'min' => 0,
+            'values' => {
+                'read-cache-hits' => {
+                    'short' => 'rch',
+                    'type' => 'DERIVE',
+                    'draw' => 'LINE1',
+                    'label' => 'reads',
+                    'min' => 0,
+                    'graph' => 'no'
+                },
+                'write-cache-hits' => {
+                    'short' => 'wch',
+                    'type' => 'DERIVE',
+                    'draw' => 'LINE1',
+                    'label' => 'cache hits',
+                    'min' => 0,
+                    'negative' => 'rch'
+                }
+            }
+        },
+        'volume_cache_misses' => {
+            'title' => 'Cache misses',
+            'category' => 'volume',
+            'vlabel' => '(- reads / + writes) misses per second',
+            'min' => 0,
+            'values' => {
+                'read-cache-misses' => {
+                    'short' => 'rcm',
+                    'type' => 'DERIVE',
+                    'draw' => 'LINE1',
+                    'label' => 'reads',
+                    'min' => 0,
+                    'graph' => 'no'
+                },
+                'write-cache-misses' => {
+                    'short' => 'wcm',
+                    'type' => 'DERIVE',
+                    'draw' => 'LINE1',
+                    'label' => 'cache misses',
+                    'min' => 0,
+                    'negative' => 'rcm'
+                }
+            }
+        },
+        'volume_small_destages' => {
+            'title' => 'Small Destages',
+            'category' => 'volume',
+            'vlabel' => 'destages per second',
+            'min' => 0,
+            'values' => {
+                'small-destages' => {
+                    'short' => 'destages',
+                    'type' => 'DERIVE',
+                    'draw' => 'LINE1',
+                    'label' => 'destages',
+                    'min' => 0,
+                }
+            }
+        },
+        'volume_stripe_destages' => {
+            'title' => 'Full Stripe Write Destages',
+            'category' => 'volume',
+            'vlabel' => 'destages per second',
+            'min' => 0,
+            'values' => {
+                'full-stripe-write-destages' => {
+                    'short' => 'destages',
+                    'type' => 'DERIVE',
+                    'draw' => 'LINE1',
+                    'label' => 'destages',
+                    'min' => 0,
+                }
+            }
+        },
+        'volume_readahead' => {
+            'title' => 'Read-Ahead Operations',
+            'category' => 'volume',
+            'vlabel' => 'ops per second',
+            'min' => 0,
+            'values' => {
+                'read-ahead-operations' => {
+                    'short' => 'ops',
+                    'type' => 'DERIVE',
+                    'draw' => 'LINE1',
+                    'label' => 'ops',
+                    'min' => 0,
+                }
+            }
+        },
+    },
     'vdisk-statistics' => {
         'vdisk_bandwidth' => {
             'title' => 'Bandwidth',
@@ -368,8 +509,12 @@ foreach my $obj ( @objects ) {
     foreach my $prop ( @props ) {
         my $attr = $prop->getAttribute('name');
 
-        if ( $attr eq 'name' or $attr eq 'durable-id' or $attr eq 'sensor-name' ){
+        if ( $attr eq 'name' or $attr eq 'durable-id' or $attr eq 'sensor-name' or $attr eq 'volume-name' ){
             $name = $prop->textContent();
+            $name =~ s/-/_/g;
+            if ( length($name) > 12 ) {
+                $name = "v".substr($name, length($name) - 11, 11);
+            }
 
             @splitname = split(/\./, $name);
 
