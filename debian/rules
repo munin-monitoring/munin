@@ -44,7 +44,7 @@ build-stamp: $(QUILT_STAMPFN)
 
 	# Remove bundled VeraMono.ttf, debian gets this font from 
 	# the ttf-dejavu package. http://bugs.debian.org/548508
-	rm `pwd`/debian/munin/usr/share/munin/DejaVuSans*.ttf
+	rm $(CURDIR)/debian/munin/usr/share/munin/DejaVuSans*.ttf
 	
 	$(MAKE) install-node-prime $(MAKEOPTS) \
 		MANDIR=`pwd`/debian/munin-doc/usr/share/man \
