@@ -47,8 +47,8 @@ munin (2.0~rc1-1) UNRELEASED; urgency=low
     - ability to keep more data (for zooming resolution mainly) 
     - ability to run (some) plugins more and/or less often than every 
       5 minutes
-    - preliminary support of async polling, so munin-update can run less often
-      than the usual 5 min. Useful if you have too much nodes and it takes
+    - support of async polling, so munin-update can run less often than 
+      the usual 5 min. Useful if you have too much nodes and it takes
       more than 5 min to gather all the data.
     - Closes: #464880
   * Add new binary package: munin-plugins, containing the plugins previously
