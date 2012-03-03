@@ -58,7 +58,7 @@ build-stamp: $(QUILT_STAMPFN)
 	# They are used for munin-plugins-* and we don't want a whole 
 	# dedicated new package (munin-plugins-common) for that. yet.
 	for file in usr/share/perl5/Munin/Plugin.pm usr/share/munin/plugins/plugin.sh; do \
-		mkdir -p $(CURDIR)/debian/munin-common/$$file); \
+		mkdir -p $(CURDIR)/debian/munin-common/$$file; \
 		mv $(CURDIR)/debian/munin-plugins-core/$$file \
 			$(CURDIR)/debian/munin-common/$$file; \
 	done
