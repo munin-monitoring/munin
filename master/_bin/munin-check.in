@@ -22,11 +22,11 @@
 # prints usage
 function usage() {
 echo "Usage: munin-check [options]
-Options: 
+Options:
    -h|--help		Show this help.
    -f|--fix-permissions Fix the permissions of the munin dirs and files.
    			Needs superuser rights.
-			
+
 Please don't use this script if you are using 'graph_strategy cgi'!
 It doesn't care about the right permissions for www-data yet...
 "
@@ -55,7 +55,7 @@ done
 
 
 ####
-# sets owner to "@@USER@@" 
+# sets owner to "@@USER@@"
 function fix_owner() {
     fix_object=$1; shift
     fix_owner=$1; shift
@@ -65,7 +65,7 @@ function fix_owner() {
 	# recursing then fix_owner will be called again.  OK, that's
 	# slower, but still more correct.
 	chown $fix_owner $fix_object;
-    else 
+    else
 	echo "Fixing the permissions needs superuser rights. You should run \"munin-check -f\" as root."
 	exit 0;
     fi
@@ -138,7 +138,7 @@ function perm_ok(){
 ####
 # main
 
-echo "Check @@HTMLDIR@@"
+echo "check @@HTMLDIR@@"
 owner_ok @@HTMLDIR@@ @@USER@@
 
 for dir in @@DBDIR@@/*; do
@@ -151,7 +151,7 @@ for dir in @@DBDIR@@/*; do
     owner_ok $dir @@USER@@
 done
 
-echo "Check miscelaneous"
+echo "check miscellaneous"
 norec=yes owner_ok @@LOGDIR@@ @@USER@@
 
 norec=yes owner_ok @@DBDIR@@ @@USER@@
@@ -171,5 +171,5 @@ norec=yes perm_ok @@CONFDIR@@/plugin-conf.d 755
 echo "Check done.  Please note that this script only checks most things,"
 echo "not all things."
 echo
-echo "Please also note that this script is very new and may be buggy."
+echo "Please also note that this script may be buggy."
 echo
