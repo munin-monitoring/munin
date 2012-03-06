@@ -25,8 +25,6 @@ PREFIX     = $(DESTDIR)/usr
 CONFDIR    = $(DESTDIR)/etc/munin
 DOCDIR     = $(PREFIX)/share/doc/munin
 MANDIR     = $(PREFIX)/share/man
-SSPOOLDIR  = /tmp/muninspool
-
 
 # Where to put internal binaries and plugin repository
 LIBDIR     = $(PREFIX)/share/munin

@@ -233,7 +233,6 @@ build/%: %.in
              -e 's|@@GOODSH@@|$(GOODSH)|g'                      \
              -e 's|@@BASH@@|$(BASH)|g'                          \
              -e 's|@@HASSETR@@|$(HASSETR)|g'                    \
-             -e 's|@@SSPOOLDIR@@|$(SSPOOLDIR)|g'                \
              $< > $@;
 
 
@@ -271,8 +270,7 @@ common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm bu
                   s{(PLUGINUSER	\s+=\s).*}{\1q{$(PLUGINUSER)};}x;  \
                   s{(GOODSH	\s+=\s).*}{\1q{$(GOODSH)};}x;      \
                   s{(BASH	\s+=\s).*}{\1q{$(BASH)};}x;        \
-                  s{(HASSETR	\s+=\s).*}{\1q{$(HASSETR)};}x;     \
-	          s{(SSPOOLDIR	\s+=\s).*}{\1q{$(SSPOOLDIR)};}x;'  \
+                  s{(HASSETR	\s+=\s).*}{\1q{$(HASSETR)};}x;'    \
                   $< > $@
 
 build-doc: build-doc-stamp Makefile Makefile.config
