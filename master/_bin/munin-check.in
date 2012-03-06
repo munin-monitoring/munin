@@ -76,7 +76,7 @@ function owner_ok() {
     object=$1; shift || exit 1
     correctowner=$1; shift || exit 1
 
-    owner=$(stat -c%U $object)
+    owner=$(ls -ld $object | awk '{print $3}')
     if [[ "$owner" != "$correctowner" ]]; then
 	echo "# $object : Wrong owner ($owner != $correctowner)";
 	if [[ "$PLEASE_FIXME" == "true" ]]; then
@@ -106,7 +106,7 @@ function perm_ok(){
     object=$1; shift || exit 1
     correctperm=$1; shift || exit 1
 
-    perm=$(stat -c%a $object)
+    perm=$(perl -e 'printf "%o\n", 07777 & (stat $ARGV[0])[2]' $object)
     if [[ $perm -ne $correctperm ]]; then
 	echo "# $object : Wrong permissions ($perm != $correctperm)";
 	if [[ "$PLEASE_FIXME" == "true" ]]; then
