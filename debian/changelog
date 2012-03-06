@@ -101,6 +101,9 @@ munin (2.0~rc1-1) UNRELEASED; urgency=low
   * Clean up build leftovers in debian/rules clean clean to allow
     building twice in a row.
 
+  [ Kenyon Ralph ]
+  * Drop df_gnu patch which was integrated into the upstream plugin.
+
  -- Holger Levsen <holger@debian.org>  Sat, 11 Feb 2012 14:21:29 +0100
 
 munin (1.4.6-3) unstable; urgency=low
