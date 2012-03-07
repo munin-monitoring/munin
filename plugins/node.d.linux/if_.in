@@ -73,7 +73,7 @@ findspeed_mbps() {
     IWLIST=$(type -p iwlist)
     if [[ -x "$IWLIST" ]]; then
         SPEED=$($IWLIST $INTERFACE rate 2>&1 |
-            awk 'BEGIN { RATE=U }
+            awk 'BEGIN { RATE="U" }
                        { if ($2 == "Mb/s") RATE=$1; }
                  END   { print RATE; }')
 
