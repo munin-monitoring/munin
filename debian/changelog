@@ -57,6 +57,7 @@ munin (2.0~rc1-1) UNRELEASED; urgency=low
     - be able to build a make-dh-perl like package building system 
       for 3rd party plugins.
   * Move POD files to package munin-doc. 
+    - fixed duplicates (Closes: #661265)
   * Move Munin::Plugins and plugins.sh into munin-common to be able to 
     install munin-plugins-extra without munin-plugins-core.
   * debian/control changes:
