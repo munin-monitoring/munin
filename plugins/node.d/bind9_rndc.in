@@ -30,23 +30,23 @@ in the options part of your named.conf or set the querystats variable
 You must also make sure the rndc.key file is readable by the user that
 runs the plugin.
 
-If using AppArmor, make sure the stats file is allowed 
+If using AppArmor, make sure the stats file is allowed
 (On Ubuntu: add this line to /etc/apparmor.d/usr.sbin.named)
 
   /var/run/named/named.stats rw
 
 =head1 FEATURES AND BUGS
 
-Previous versions of this plugin allowed a empty "rndc" environment
-setting to not do a explicit dump of stats to the stats file.  This
-version requires running rndc itself.  This makes the method of
-finding the correct stats in the file more reliable than before.
+Previous versions of this plugin allowed an empty "rndc" environment
+setting to not do a explicit dump of stats to the stats file. This
+version requires running rndc itself. This makes the method of finding
+the correct stats in the file more reliable than before.
 
 =head1 AUTHOR
 
-Contributed by Laurent Facq 15/06/2004.  Based on Nicolai Langfeldts
-bind9 plugin.  Reworked by Dagfinn Ilmari Mannsåker.  BIND 9.6 patch
-from "Vrivellino".
+Contributed by Laurent Facq 15/06/2004. Based on Nicolai Langfeldt's
+bind9 plugin. Reworked by Dagfinn Ilmari Mannsåker. BIND 9.6 patch
+from "Vrivellino". Reworked by guillomovitch and Kenyon Ralph.
 
 =head1 LICENSE
 
@@ -63,16 +63,6 @@ use strict;
 my $rndc = defined($ENV{rndc}) ? $ENV{rndc} : '/usr/sbin/rndc';
 my $querystats = $ENV{querystats} || '/var/run/named.stats';
 my %IN;
-my $version96 = 0;
-
-# check to see if we're running bind 9.6
-if ( open VERSION, "$rndc 2>&1 |" ) {
-    while ( my $line = <VERSION> ) {
-	if ( $line =~ m/^Version:\s+9\.(\d+)\D/o ) {
-	    $version96 = 1 if $1 >= 6;
-	}
-    }
-}
 
 # open the log file, and get its size
 open(my $stats, '<', $querystats) or die "$0: $querystats: $!\n";
@@ -92,8 +82,8 @@ seek($stats , $size, 0);
 #failure 17522313
 #--- Statistics Dump --- (1087277501)
 
-# From BIND 9.5 or newer this is the format:
-# 
+# From BIND 9.5 or newer, this is the format:
+#
 # +++ Statistics Dump +++ (1222740363)
 # ++ Incoming Requests ++
 #                   13 QUERY
@@ -116,88 +106,82 @@ seek($stats , $size, 0);
 #                    6 IPv4 notifies sent
 # --- Statistics Dump ---
 
-if ( $version96 ) {
-    my $found_stats = 0;
-    while ( my $line = <$stats> ) {
-	chomp $line;
- 	
-	if ( $found_stats ) {   
-	    if ( $line =~ m/^\+\+/o ) {
-		$found_stats = 0;
-		next;
-	    }
- 	
-	    if ( $line =~ m/^\s+(\d+) (.*)$/o ) {
-		my $n = $1;
-		my $msg = $2;
-		
-		if ($msg =~ m/requests received$/io) {
-		    $IN{requests} = 0 unless $IN{requests};
-		    $IN{requests} += $n;
- 	
-		} elsif ($msg =~ m/responses sent$/io ) {
-		    $IN{responses} = 0 unless $IN{requests};
-		    $IN{responses} += $n;
- 	
-		} elsif (lc $msg eq 'queries resulted in successful answer') {
-		    $IN{success} = $n;
-		    
-		} elsif (lc $msg eq 
-			  'queries resulted in authoritative answer') {
-		    $IN{auth_answer} = $n;
-		} elsif (lc $msg eq 
-			  'queries resulted in non authoritative answer') {
-		    $IN{nonauth_answer} = $n;
-		} elsif (lc $msg eq 'queries resulted in nxrrset') {
-		    $IN{nxrrset} = $n;
-		} elsif (lc $msg eq 'queries resulted in servfail') {
-		    $IN{failure} = $n;
-		    
-		} elsif (lc $msg eq 'queries resulted in nxdomain') {
-		    $IN{nxdomain} = $n;
- 	
-		} elsif (lc $msg eq 'queries caused recursion') {
-		    $IN{recursion} = $n;
- 	
-		} elsif (lc $msg eq 'duplicate queries received') {
-		    $IN{duplicates} = $n;
-		} elsif (lc $msg eq 'requested transfers completed') {
-		    $IN{transfers} = $n;
-		}
-	    }
-	    
-	} elsif ( $line =~ m/^\+\+ Name Server Statistics \+\+$/o ) {
-	    $found_stats = 1;
-	    %IN = ( requests => 0,
-		    responses => 0,
-		    success => 0,
-		    auth_answer => 0,
-		    nonauth_answer => 0,
-		    nxrrset => 0,
-		    failure => 0,
-		    nxdomain => 0,
-		    recursion => 0,
-		    duplicates => 0,
-		);
-	}
+my $line;
+
+# first line has expected content
+$line = <$stats>;
+die "unexpected content found"
+  unless $line =~ m/^\+\+\+ Statistics Dump \+\+\+/;
+
+# second line allows to guess format
+$line = <$stats>;
+chomp $line;
+if ($line eq '++ Incoming Requests ++') {
+    # new format
+
+    %IN = (
+           requests => 0,
+           responses => 0,
+           success => 0,
+           auth_answer => 0,
+           nonauth_answer => 0,
+           nxrrset => 0,
+           failure => 0,
+           nxdomain => 0,
+           recursion => 0,
+           duplicates => 0,
+           transfers => 0,
+           rejections => 0,
+          );
+
+    # jump to server stats section
+    while ($line ne '++ Name Server Statistics ++') {
+        $line = <$stats>;
+        chomp $line;
     }
-} else { # not version 9.6
+
+    while ($line = <$stats>) {
+        chomp $line;
+        last if $line =~ /^\+\+/;
+        next unless $line =~ /^\s+(\d+) (.*)$/;
+        my $n = $1;
+        my $msg = lc($2);
+
+        if ($msg =~ m/requests.*received$/io) {
+                $IN{requests} += $n;
+        } elsif ($msg =~ m/responses.*sent$/io ) {
+                $IN{responses} += $n;
+        } elsif ($msg eq 'queries resulted in successful answer') {
+                $IN{success} = $n;
+        } elsif ($msg eq 'queries resulted in authoritative answer') {
+                $IN{auth_answer} = $n;
+        } elsif ($msg eq 'queries resulted in non authoritative answer') {
+                $IN{nonauth_answer} = $n;
+        } elsif ($msg eq 'queries resulted in nxrrset') {
+                $IN{nxrrset} = $n;
+        } elsif ($msg eq 'queries resulted in servfail') {
+                $IN{failure} += $n;
+        } elsif ($msg eq 'other query failures') {
+                $IN{failure} += $n;
+        } elsif ($msg eq 'queries resulted in nxdomain') {
+                $IN{nxdomain} = $n;
+        } elsif ($msg eq 'queries caused recursion') {
+                $IN{recursion} = $n;
+        } elsif ($msg eq 'duplicate queries received') {
+                $IN{duplicates} = $n;
+        } elsif ($msg eq 'recursive queries rejected') {
+                $IN{rejections} = $n;
+        }
+}
+} else {
+        # old format
+        $line =~ /^(\w+) (\d+)$/;
+        $IN{$1} = $2;
 
     while (my $line = <$stats>) {
-	chomp $line;
-
-	if ($line =~ m/\+\+\+ Statistics Dump \+\+\+/) {
-	    # reset
-	    undef %IN;
-	} else {
-	    my ($what, $nb)= split('\s+', $line);
-	    if ($what && ($what ne '---')) {
-		$IN{$what} = $nb;
-	    }
-	}
-
-	next unless $line =~ /^(\w+) (\d+)$/;
-	$IN{$1} = $2;
+        chomp $line;
+        next unless $line =~ /^(\w+) (\d+)$/;
+        $IN{$1} = $2;
     }
 }
 
@@ -209,9 +193,9 @@ if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
     print "graph_category BIND\n";
 
     for my $key (keys %IN) {
-	print "query_$key.label $key\n";
-	print "query_$key.type DERIVE\n";
-	print "query_$key.min 0\n";
+        print "query_$key.label $key\n";
+        print "query_$key.type DERIVE\n";
+        print "query_$key.min 0\n";
     }
 } else {
     print "query_$_.value $IN{$_}\n" for keys %IN;
