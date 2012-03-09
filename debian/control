@@ -5,7 +5,7 @@ Maintainer: Munin Debian Maintainers <packaging@munin-monitoring.org>
 Uploaders: Holger Levsen <holger@debian.org>, 
  Stig Sandbeck Mathisen <ssm@debian.org>, 
  Tom Feiner <feiner.tom@gmail.com>,
- Steve Schnepp <steve.schnepp@gmail.com>
+ Steve Schnepp <steve.schnepp@pwkf.org>
 Build-Depends-Indep: perl, htmldoc, html2text, default-jdk
 Build-Depends: debhelper (>=5.0.42), quilt
 Standards-Version: 3.9.2
