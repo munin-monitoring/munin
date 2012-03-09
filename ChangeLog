@@ -1,5 +1,15 @@
 -*- text -*-
 
+munin 2.0-rc2, r4709, 2012-03-09
+
+Commits by kenyon, steve.schnepp
+
+Summary :
+
+* Import rrdmove into contrib/ as rrdcopy
+* Revert the Munin::Common fix as it disturbs the deb build
+* Various plugins fixes by kenyon
+
 munin 2.0-rc1, r4638, 2012-02-07
 
 Commits by kenyon, steve.schnepp
