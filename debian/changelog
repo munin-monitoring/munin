@@ -1,6 +1,9 @@
-munin (2.0~rc1-1) UNRELEASED; urgency=low
+munin (2.0~rc2-1) UNRELEASED; urgency=low
 
+  * TODO before sid:
   * debian/News entry?
+  * test upgrades 
+  * check bts
 
   * This is not yet munin 2.0, but almost! Install at your own risk and have 
     fun! Also, please give feedback to munin-users@lists.sourceforge.net.
