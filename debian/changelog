@@ -1,6 +1,6 @@
 munin (2.0~rc2-1) UNRELEASED; urgency=low
 
-  * TODO before sid:
+  * TODO before upload to sid, to happen til 2012-03-11:
   * debian/News entry?
   * test upgrades 
   * check bts
@@ -108,7 +108,7 @@ munin (2.0~rc2-1) UNRELEASED; urgency=low
   [ Kenyon Ralph ]
   * Drop df_gnu patch which was integrated into the upstream plugin.
 
- -- Holger Levsen <holger@debian.org>  Sat, 11 Feb 2012 14:21:29 +0100
+ -- Holger Levsen <holger@debian.org>  Fri, 09 Mar 2012 13:34:12 +0100
 
 munin (1.4.6-3) unstable; urgency=low
 
