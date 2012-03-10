@@ -110,7 +110,7 @@ munin (2.0~rc2-1~1) UNRELEASED; urgency=low
 
   [ Stig Sandbeck Mathisen ]
   * Convert debian/rules to modern debhelper version (compat level 9)
-  * Add soft depdendency on ruby for plugins in that language
+  * Suggest ruby for plugins in that language
   * Bump standards version (no changes)
 
  -- Stig Sandbeck Mathisen <ssm@debian.org>  Sat, 10 Mar 2012 23:32:53 +0100
