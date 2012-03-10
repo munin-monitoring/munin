@@ -1,8 +1,7 @@
-munin (2.0~rc2-1) UNRELEASED; urgency=low
+munin (2.0~rc2-1~1) UNRELEASED; urgency=low
 
   * TODO before upload to sid, to happen til 2012-03-11:
   * debian/News entry?
-  * test upgrades 
   * check bts
 
   * This is not yet munin 2.0, but almost! Install at your own risk and have 
@@ -31,7 +30,7 @@ munin (2.0~rc2-1) UNRELEASED; urgency=low
     * New look on HTML pages, new graph colours with better contrast
     * IRC ( #munin @ OFTC ) has become a real support channel, mostly aimed at
       trunk.
-    * Full details in http://munin-monitoring.org/browser/tags/2.0/ChangeLog
+    * Full details in http://munin-monitoring.org/browser/tags/2.0-rc2/ChangeLog
       or in /usr/share/doc/munin/changelog.gz on this system. (Closes: #610528, 
       Closes: #644960, Closes: #576009)
     * This release has been prepared through six uploads to experimental and
