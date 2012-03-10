@@ -108,7 +108,12 @@ munin (2.0~rc2-1~1) UNRELEASED; urgency=low
   [ Kenyon Ralph ]
   * Drop df_gnu patch which was integrated into the upstream plugin.
 
- -- Holger Levsen <holger@debian.org>  Fri, 09 Mar 2012 13:34:12 +0100
+  [ Stig Sandbeck Mathisen ]
+  * Convert debian/rules to modern debhelper version (compat level 9)
+  * Add soft depdendency on ruby for plugins in that language
+  * Bump standards version (no changes)
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Sat, 10 Mar 2012 23:32:53 +0100
 
 munin (1.4.6-3) unstable; urgency=low
 
