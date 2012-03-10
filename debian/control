@@ -8,7 +8,7 @@ Uploaders: Holger Levsen <holger@debian.org>,
  Steve Schnepp <steve.schnepp@pwkf.org>
 Build-Depends-Indep: perl, htmldoc, html2text, default-jdk
 Build-Depends: debhelper (>=9)
-Standards-Version: 3.9.2
+Standards-Version: 3.9.3
 Homepage: http://munin-monitoring.org
 Vcs-svn:  svn://munin-monitoring.org/munin/branches/debian/wheezy
 Vcs-Browser: http://munin-monitoring.org/browser/
