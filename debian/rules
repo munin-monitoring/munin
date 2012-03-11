@@ -1,6 +1,6 @@
 #! /usr/bin/make -f
 
-DH_VERBOSE=1
+export DH_VERBOSE=1
 
 MAKEOPTS = CONFIG=debian/Makefile.config INSTALL_PLUGINS="auto manual snmpauto contrib"
 
