@@ -56,10 +56,9 @@ EOF
 			listen closing
 		do
 			echo ${i}.label $i
-			echo ${i}.draw LINE2
 			echo ${i}.info Sockets in state $i
 		done
-		
+
         exit 0
 		;;
     autoconf)

@@ -174,11 +174,9 @@ sub print_config {
     for my $d ( @{ get_ios(1) } ) {
         print "${d}_rtime.label ",$name{$d}," read\n",
               "${d}_rtime.type GAUGE\n",
-              "${d}_rtime.draw LINE2\n",
               "${d}_rtime.cdef ${d}_rtime,1000,/\n",
               "${d}_wtime.label ",$name{$d}," write\n",
               "${d}_wtime.type GAUGE\n",
-              "${d}_wtime.draw LINE2\n",
               "${d}_wtime.cdef ${d}_wtime,1000,/\n";
         print_thresholds($d);
     }

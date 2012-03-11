@@ -201,10 +201,8 @@ def print_config(hard_drive) :
     for key in attributes :
         if key in ['smartctl_exit_status','model'] : continue
         print(key+'.label '+key)
-        print(key+'.draw LINE2')
         if report_warnings: print(key+'.critical '+smart_values_state[key]["threshold"]+':')
     print('smartctl_exit_status.label smartctl_exit_status')
-    print('smartctl_exit_status.draw LINE2')
     if report_warnings: print('smartctl_exit_status.warning '+smart_values_state['smartctl_exit_status']["threshold"])
 
 def print_unknown_from_statefile(hard_drive,smart_values) :

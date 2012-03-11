@@ -112,7 +112,6 @@ sub do_config {
 		print "order$i.label Order $i\n";
 		print "order$i.info Number of order $i (" . ($pagesize * 2 ** $i) . " KiB) pages\n";
 		print "order$i.type GAUGE\n";
-		print "order$i.draw LINE2\n";
 		print "order$i.min 0\n";
 	}
 	for my $zone (sort keys %$zones) {
@@ -137,7 +136,6 @@ sub do_config {
 			print "order$i.info Number of order $i (" .
 				($pagesize * 2 ** $i) . " KiB) pages\n";
 			print "order$i.type GAUGE\n";
-			print "order$i.draw LINE2\n";
 			print "order$i.min 0\n";
 		}
 	}
