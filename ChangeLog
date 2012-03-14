@@ -9,6 +9,54 @@ Some stats on 1.4.0 (relative to 1.3.4)
 * Way too much time since the last major stable release. 1.2.0 was
   uploaded to sourceforge in february 2005.
 
+munin 1.4.7, r4260:4540, 2012-3-14
+
+     r4358 | bldewolf | 2011-09-02 02:11:33 +0200 (Fri, 02 Sep 2011) | 1 line
+     Silence Perl 5.14 warnings by adding parenthesis around a use of qw(...) in trunk and 1.4-stable.
+     r4359 | bldewolf | 2011-09-03 01:37:19 +0200 (Sat, 03 Sep 2011) | 1 line
+     Instead of silently skipping a contact that is listed but misconfigured, emit warnings and skip.
+     r4366 | kenyon | 2011-09-13 08:25:37 +0200 (Tue, 13 Sep 2011) | 3 lines
+     fix #1108: syntax error in python exit calls
+     Also run whitespace-cleanup.
+     r4369 | kenyon | 2011-09-13 09:04:45 +0200 (Tue, 13 Sep 2011) | 1 line
+     fix #1135: count IPv6 client queries
+     r4370 | kenyon | 2011-09-13 09:04:50 +0200 (Tue, 13 Sep 2011) | 1 line
+     whitespace-cleanup
+     r4371 | kenyon | 2011-09-13 09:57:05 +0200 (Tue, 13 Sep 2011) | 1 line
+     trivial whitespace change to sync with trunk as of [4368]
+     r4384 | bldewolf | 2011-09-16 22:06:55 +0200 (Fri, 16 Sep 2011) | 1 line
+     Push r3679 from trunk to 1.4-stable and revise get_fq_hostname in both:
+     this sub is expected to return a value, so instead of returning gethostbyname's
+     results (which can be undef), fall back to alternatives such as the node name
+     and then 'unknown' if we're really desperate.
+     r4385 | bldewolf | 2011-09-17 01:30:47 +0200 (Sat, 17 Sep 2011) | 1 line
+     Allow use_node_name to be defined at the global level that can still be
+     overridden on a per-node basis.
+     r4397 | bldewolf | 2011-09-23 21:35:38 +0200 (Fri, 23 Sep 2011) | 1 line
+     Update the slapd_ comments and change plugin behavior to die if an invalid
+     action is specified (for the paths that require an action).
+     r4400 | bldewolf | 2011-09-29 02:45:15 +0200 (Thu, 29 Sep 2011) | 14 lines
+     Re-work the IPC bits in LimitsOld to fix #732 for everyone:
+     - Add num_messages as a valid token
+     - Clean up functions pulled from Text::Balanced
+     - Add a function for closing the output pipes before exiting
+     - Replace all the command-parsing and hacking with an idiomatic pipe/fork/exec
+       (see man perlipc) and make the surrounding bits more cognizant of errors.
+     Note that, since we don't do anywhere near as much hacking to the command by
+     parsing quotes and stuff, it's possible that command strings that used to work
+     will no longer.  This is an unfortunate but necessary casualty in making the
+     operations of munin-limits simpler and more robust.
+     r4507 | holger | 2011-12-04 18:05:53 +0100 (Sun, 04 Dec 2011) | 8 lines
+     Description: Ejabberd in squeeze (version 2.1.5) uses a new CLI
+      This patch changes the plugin to use the new CLI.
+      In addition it fixes a small bug in the vlabel for "uptime in days"
+     Origin: http://bugs.debian.org/597599
+     Author: Gerald Turner <gturner@unzane.com>
+     closes Ticket #867
+     r4538 | kenyon | 2012-01-07 02:52:21 +0100 (Sat, 07 Jan 2012) | 1 line
+     - fix qw for perl 5.14+ (closes #1161)
+     r4540 | kenyon | 2012-01-09 09:02:43 +0100 (Mon, 09 Jan 2012) | 1 line
+     merge r4539 from trunk (fix spelling mistakes, closes Debian bug #610528)
 
 munin 1.4.6, r3625:4259, 2011-7-7
 
