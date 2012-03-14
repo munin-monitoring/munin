@@ -3,7 +3,8 @@
 
 =head1 NAME
 
-nginx_request - Munin plugin to show number of requests pr. second to nginx.
+nginx_request - Munin plugin to show the request rate of an nginx
+server
 
 =head1 APPLICABLE SYSTEMS
 
@@ -61,9 +62,7 @@ if (! eval "require LWP::UserAgent;"){
 	$ret = "LWP::UserAgent not found";
 }
 
-chomp(my $fqdn=`hostname -f 2>/dev/null | hostname`);
-
-my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://$fqdn/nginx_status";
+my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://localhost/nginx_status";
 my $port = exists $ENV{'port'} ? $ENV{'port'} : "80";
 
 if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" )
