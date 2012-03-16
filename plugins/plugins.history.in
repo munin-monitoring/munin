@@ -328,6 +328,10 @@ linux/buddyinfo
 linux/tcp
 proxy_plugin
 
+[1.4.5]
+[1.4.6]
+[1.4.7]
+
 [2.0]
 cygwin/df
 cygwin/netstat
