@@ -7,7 +7,7 @@
 <h2>Category: <TMPL_VAR ESCAPE="HTML" NAME="CATEGORY"></h2>
 <TMPL_LOOP NAME="SERVICES">
 <div class="service">
-	<h3><a name="<TMPL_VAR ESCAPE="HTML" NAME="name">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></h3>
+	<h3 id="<TMPL_VAR ESCAPE="HTML" NAME="name">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></h3>
 	<TMPL_LOOP NAME="GRAPHS">
 		<div class="node">
 		<span class="nodetitle"><a href="<TMPL_VAR NAME="HOST_URL">">
