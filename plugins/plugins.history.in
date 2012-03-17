@@ -335,8 +335,11 @@ proxy_plugin
 [2.0]
 cygwin/df
 cygwin/netstat
+darwin/df_inode
+darwin/uptime
 haproxy_ng
-netstat_multi
+hp2000_
+linux/netstat_multi
 pgbouncer_connections
 pgbouncer_requests
 postgres_oldest_prepared_xact_
