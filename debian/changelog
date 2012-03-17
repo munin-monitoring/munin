@@ -33,7 +33,7 @@ munin (2.0~rc2-1~1) UNRELEASED; urgency=low
       trunk.
     * Full details in http://munin-monitoring.org/browser/tags/2.0-rc2/ChangeLog
       or in /usr/share/doc/munin/changelog.gz on this system. (Closes: #610528, 
-      Closes: #644960, Closes: #576009)
+      Closes: #644960, Closes: #576009, Closes: #474193)
     * This release has been prepared through six uploads to experimental and
       several users running it on their installations.
 
