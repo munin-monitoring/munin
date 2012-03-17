@@ -71,7 +71,7 @@ munin (2.0~rc2-1~1) UNRELEASED; urgency=low
       It enables decoupling munin, munin-node & munin-plugin-* versions.
 
   [ Holger Levsen ]
-  * Merge changes from 1.4.4-1 until 1.4.6-2 into this branch and merge 
+  * Merge changes from 1.4.4-1 until 1.4.7-1 into this branch and merge 
     debian/changelog in preparation for uploading to experimental.
   * Move packaging to 
     svn://munin.projects.linpro.no/munin/branches/debian/wheezy
@@ -114,6 +114,12 @@ munin (2.0~rc2-1~1) UNRELEASED; urgency=low
   * Bump standards version (no changes)
 
  -- Stig Sandbeck Mathisen <ssm@debian.org>  Sat, 10 Mar 2012 23:32:53 +0100
+
+munin (1.4.7-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Thu, 15 Mar 2012 15:38:04 +0100
 
 munin (1.4.6-3) unstable; urgency=low
 
