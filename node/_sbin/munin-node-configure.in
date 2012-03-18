@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!@@PERL@@ -w
 # -*- cperl -*-
 #
 # Copyright (C) 2003-2006 Jimmy Olsen, Nicolai Langfeldt.

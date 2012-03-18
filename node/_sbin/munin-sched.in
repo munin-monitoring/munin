@@ -1,8 +1,8 @@
-#!/usr/bin/perl -wT
+#!@@PERL@@ -wT
 # -*- cperl -*-
 #
-# Copyright (C) 2002-2009 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
-#    Nicolai Langfeldt
+# Copyright (C) 2002-2010 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
+#    Nicolai Langfeldt, Matthew Boyle
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -31,16 +31,18 @@ use Getopt::Long;
 
 use Munin::Common::Defaults;
 use Munin::Node::Config;
-use Munin::Node::OS;
-use Munin::Node::Service;
-use Munin::Node::Server;
+use Munin::Node::ProxySpooler;
 
 my $servicedir;
 my $sconfdir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
 my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
+my $spooldir = $Munin::Common::Defaults::MUNIN_SPOOLDIR;
+
+my ($host, $port);
+
 my $DEBUG    = 0;
-my $PIDEBUG  = 0;
 my $paranoia = 0;
+
 
 sub main
 {
@@ -64,28 +66,22 @@ sub main
 
     $paranoia = $config->{paranoia} if defined $config->{paranoia};
 
-    my $services = Munin::Node::Service->new(
-        servicedir => $servicedir,
-        defuser    => $config->{defuser},
-        defgroup   => $config->{defgroup},
-        pidebug    => $PIDEBUG,
-    );
+    $host ||= $config->{sconf}{host} unless ($config->{sconf}{host} eq '*');
+    $port ||= $config->{sconf}{port} if $config->{sconf}{port};
 
     $config->reinitialize({
-        %$config,
-
-        services => $services,
-        sconfdir => $sconfdir,
-        conffile => $conffile,
-
         DEBUG    => $DEBUG,
-
         paranoia => $paranoia,
     });
 
-    Munin::Node::Server->run(
-        syslog_ident => 'munin-node',
+    Munin::Node::ProxySpooler->run(
+        spooldir     => $spooldir,
+        host         => $host,
+        port         => $port,
+
+        syslog_ident => 'munin-sched',
         conf_file    => $conffile,
+        pid_file     => "$Munin::Common::Defaults::MUNIN_STATEDIR/munin-sched.pid"
     );
 
     return 0;
@@ -97,13 +93,20 @@ sub parse_args
     my @ORIG_ARGV  = @ARGV;
 
     print_usage_and_exit() unless GetOptions(
+        'host=s'       => \$host,
+        'port=i'       => \$port,
+
         "config=s"     => \$conffile,
+
         "debug!"       => \$DEBUG,
-        "pidebug!"     => \$PIDEBUG,
         "paranoia!"    => \$paranoia,
+
         "version"      => \&print_version_and_exit,
         "help"         => \&print_usage_and_exit,
     );
+
+    ($host) = ($host =~ m{([-\w.]+)}) if $host;
+    ($port) = ($port =~ m{(\d+)})     if $port;
 
     # Reset ARGV (for HUPing)
     @ARGV = @ORIG_ARGV;
@@ -138,16 +141,16 @@ __END__
 
 =head1 NAME
 
-munin-node - A daemon to gather information in cooperation with the main
+munin-sched - A daemon to gather information in cooperation with the main
 Munin program
 
 =head1 SYNOPSIS
 
-munin-node [--options]
+munin-sched [--options]
 
 =head1 DESCRIPTION
 
-munin-node is a daemon for reporting statistics on system performance.
+munin-sched is a daemon for reporting statistics on system performance.
 
 It doesn't produce these itself, but instead relies on a number of plugins
 which are responsible for gathering the data they require, and
@@ -175,11 +178,6 @@ View this help message.
 
 View debug messages.  This can be very verbose.
 
-=item B< --pidebug >
-
-Plugin debug.  Sets the environment variable MUNIN_DEBUG to 1 so that plugins
-may enable debugging.
-
 =back
 
 =head1 FILES
@@ -187,12 +185,12 @@ may enable debugging.
     @@CONFDIR@@/munin-node.conf
     @@CONFDIR@@/plugins/*
     @@CONFDIR@@/plugin-conf.d/*
-    @@STATEDIR@@/munin-node.pid
-    @@LOGDIR@@/munin-node.log
+    @@STATEDIR@@/munin-sched.pid
+    @@LOGDIR@@/munin-sched.log
 
 =head1 VERSION
 
-This is munin-node v@@VERSION@@
+This is munin-sched v@@VERSION@@
 
 $Id$
 
