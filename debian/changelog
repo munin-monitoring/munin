@@ -1,4 +1,4 @@
-munin (2.0~rc2-1~1) unstable; urgency=low
+munin (2.0~rc2-1) unstable; urgency=low
 
   * This is not yet munin 2.0, but almost! Install at your own risk and have 
     fun! Also, please give feedback to munin-users@lists.sourceforge.net or
