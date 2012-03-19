@@ -97,6 +97,8 @@ munin (2.0~rc2-1) unstable; urgency=low
   * Drop debian/patches/101-dash-bash-fw_conntrack.patch as this was fixed
     upstream properly to also fix network lag problems on big firewalls with 
     the plugins fw_conntrack and fw_forwarded_local. (Closes: #565565)
+  * Provide lintian-overrides for munin and munin-doc as the manpages for
+    their binaries have been moved to the munin-doc package.
 
   [ Marc Haber ]
   * Clean up build leftovers in debian/rules clean clean to allow
