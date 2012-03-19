@@ -112,7 +112,7 @@ munin (2.0~rc2-1) unstable; urgency=low
   * Suggest ruby for plugins in that language
   * Bump standards version (no changes)
 
- -- Holger Levsen <holger@debian.org>  Mon, 19 Mar 2012 14:49:41 +0100
+ -- Holger Levsen <holger@debian.org>  Mon, 19 Mar 2012 15:17:42 +0000
 
 munin (1.4.7-1) unstable; urgency=low
 

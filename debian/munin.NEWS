@@ -16,7 +16,7 @@ munin (2.0~rc2-1) unstable; urgency=low
     in 2.0
     The documentation for munin has been moved to the new "munin-doc" package.
 
- -- Holger Levsen <holger@debian.org>  Mon, 19 Mar 2012 14:49:24 +0100
+ -- Holger Levsen <holger@debian.org>  Mon, 19 Mar 2012 15:17:24 +0100
 
 munin (1.4.0-1) unstable; urgency=low
 
