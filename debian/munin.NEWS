@@ -1,3 +1,15 @@
+munin (2.0~rc2-1) unstable; urgency=low
+
+    Some news here: 2.0, switching to fast-cgi is recommended, 
+    new installs use it per default.
+
+    /var/log has been chmodded, only preconfigured 
+    for apache, apologies + patches welcome.
+
+    new binary packages: plugins, java-plugins, async, common, doc
+
+ -- Holger Levsen <holger@debian.org>  Mon, 19 Mar 2012 07:43:09 +0000
+
 munin (1.4.0-1) unstable; urgency=low
 
     Move htmldir to /var/cache/munin/www. Note that we currently don't
