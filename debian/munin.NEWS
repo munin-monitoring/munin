@@ -13,7 +13,8 @@ munin (2.0~rc2-1) unstable; urgency=low
 
     The munin-node package now only provides the actual node, plugins are 
     provided in seperate munin-plugins* packages. munin-async is a new feature 
-    in 2.0 and munin-doc has been split out.
+    in 2.0
+    The documentation for munin has been moved to the new "munin-doc" package.
 
  -- Holger Levsen <holger@debian.org>  Mon, 19 Mar 2012 07:43:09 +0000
 
