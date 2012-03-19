@@ -1,4 +1,4 @@
-munin (2.0~rc2-1~1) UNRELEASED; urgency=low
+munin (2.0~rc2-1~1) unstable; urgency=low
 
   * This is not yet munin 2.0, but almost! Install at your own risk and have 
     fun! Also, please give feedback to munin-users@lists.sourceforge.net or
@@ -109,7 +109,7 @@ munin (2.0~rc2-1~1) UNRELEASED; urgency=low
   * Suggest ruby for plugins in that language
   * Bump standards version (no changes)
 
- -- Stig Sandbeck Mathisen <ssm@debian.org>  Sat, 10 Mar 2012 23:32:53 +0100
+ -- Holger Levsen <holger@debian.org>  Mon, 19 Mar 2012 14:49:41 +0100
 
 munin (1.4.7-1) unstable; urgency=low
 
