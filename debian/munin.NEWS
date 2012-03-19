@@ -12,7 +12,7 @@ munin (2.0~rc2-1) unstable; urgency=low
     See http://munin-monitoring.org/wiki/CgiHowto2 for more information.
 
     The munin-node package now only provides the actual node, plugins are 
-    provided in seperate munin-plugins* packages. munin-async is a new feature 
+    provided in separate munin-plugins* packages. munin-async is a new feature 
     in 2.0
     The documentation for munin has been moved to the new "munin-doc" package.
 
