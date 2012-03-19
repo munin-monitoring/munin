@@ -1,8 +1,6 @@
 munin (2.0~rc2-1~1) UNRELEASED; urgency=low
 
   * TODO before upload to sid, to happen til 2012-03-20:
-  * munin.postinst:
-        chgrp www-data /var/log/munin
   * debian/News entry:
         enable cgi in munin.conf
 
