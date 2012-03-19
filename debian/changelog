@@ -1,12 +1,9 @@
 munin (2.0~rc2-1~1) UNRELEASED; urgency=low
 
-  * TODO before upload to sid, to happen til 2012-03-20:
-  * debian/News entry:
-        enable cgi in munin.conf
-
   * This is not yet munin 2.0, but almost! Install at your own risk and have 
-    fun! Also, please give feedback to munin-users@lists.sourceforge.net.
-
+    fun! Also, please give feedback to munin-users@lists.sourceforge.net or
+    if you prefer IRC, go to #munin on OFTC.
+  * Quoting from /usr/share/doc/munin/Announce-2.0:
     * Introducing Munin 2.0! The most important features:
     * Even better scalability through:
       - Large performance improvements on almost all munin's components:
