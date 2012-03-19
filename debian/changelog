@@ -88,6 +88,7 @@ munin (2.0~rc2-1) unstable; urgency=low
       break munin-java-plugins (<<1.999.4548-3~).
     - Vcs-svn: provide path to Debian branch to avoid checking out the whole
       repo when using debcheckout.
+    - Add quilt to build-depends.
   * debian/rules: support changes in debian/control.
   * munin.postrm: remove /var/log/munin/munin-cgi-html.log* on purge. 
   * Add munin-async.postrm to delete the munin-async user on purge. 
