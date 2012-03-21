@@ -102,7 +102,7 @@ close FH
 
 # Print data
 #
-foreach my $type qw(bytes packets errors) {
+foreach my $type (qw(bytes packets errors)) {
     my ($unit);
     if($type eq "bytes") {
         $unit = "bits";
@@ -120,7 +120,7 @@ graph_vlabel $unit in (-) / out (+) per second
 graph_category network
 EOF
         print "graph_order";
-        foreach my $dir qw(in out) {
+        foreach my $dir (qw(in out)) {
             foreach my $nic (keys %nics) {
                 print " $type\_$nic\_$dir=if_$type.if_$type\_$nic.if_$type\_$nic\_$dir.$type\_$nic\_$dir";
             }
@@ -129,7 +129,7 @@ EOF
     }
     # Print overview graphs
     foreach my $nic (keys %nics) {
-        foreach my $dir qw(in out) {
+        foreach my $dir (qw(in out)) {
             my $fname = "$type\_$nic\_$dir";
             if($mode eq 'config') {
                 print <<EOF;
@@ -164,13 +164,13 @@ graph_vlabel $unit per second
 graph_category network
 EOF
             print "graph_order";
-            foreach my $dir qw(in out) {
+            foreach my $dir (qw(in out)) {
                 print " $type\_$nic\_$dir=if_$type\_$nic\_$dir.$type\_$nic\_$dir";
             }
             print "\n\n";
         }
 
-        foreach my $dir qw(in out) {
+        foreach my $dir (qw(in out)) {
             my $fname = "$type\_$nic\_$dir";
             if($mode eq 'config') {
                 print <<EOF;
@@ -192,7 +192,7 @@ EOF
     }
     # Per-interface-direction graphs
     foreach my $nic (keys %nics) {
-        foreach my $dir qw(in out) {
+        foreach my $dir (qw(in out)) {
             print "\nmultigraph if_$type.if_$type\_$nic.if_$type\_$nic\_$dir\n";
             if($mode eq 'config') {
                 print <<EOF;

@@ -102,7 +102,7 @@ if($mode eq 'autoconf') {
 }
 
 # Print overview graphs
-foreach my $type qw(bps pps dps ops rps) {
+foreach my $type (qw(bps pps dps ops rps)) {
     print "\nmultigraph tc_$type\n";
     my ($unit, $stat);
     if($type eq "bps") {
