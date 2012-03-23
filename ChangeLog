@@ -1,5 +1,16 @@
 -*- text -*-
 
+munin 2.0-rc3, r4760, 2012-03-23
+
+Commits by kenyon, steve.schnepp
+
+Summary :
+
+* Fix issue that CGI HTML doesn't refresh itself
+* Fixed plugins to use the default draw style
+* Also remove \r when reading config/fetch output. (works around bad behavior from munin-node-win32)
+* Various plugins fixes (closes #798, #663965, #595697, #648891)
+
 munin 2.0-rc2, r4709, 2012-03-09
 
 Commits by kenyon, steve.schnepp
