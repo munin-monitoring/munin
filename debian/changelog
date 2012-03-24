@@ -1,4 +1,4 @@
-munin (2.0~rc3-1) unstable; urgency=low
+munin (2.0~rc4-1) unstable; urgency=low
 
   * quoting upstream ChangeLog:
     - Fix issue that CGI HTML doesn't refresh itself
@@ -7,7 +7,7 @@ munin (2.0~rc3-1) unstable; urgency=low
   * also from upstream: munin-node: Removed the 5s per-line timeout. 
     (Closes: #663970)
 
- -- Holger Levsen <holger@debian.org>  Sat, 24 Mar 2012 11:29:24 +0000
+ -- Holger Levsen <holger@debian.org>  Sat, 24 Mar 2012 14:03:28 +0100
 
 munin (2.0~rc2-1) unstable; urgency=low
 
