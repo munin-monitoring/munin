@@ -1,3 +1,14 @@
+munin (2.0~rc3-1) unstable; urgency=low
+
+  * quoting upstream ChangeLog:
+    - Fix issue that CGI HTML doesn't refresh itself
+    - Fixed plugins to use the default draw style
+    - Various plugins fixes (Closes: #663965, #595697, #648891)
+  * also from upstream: munin-node: Removed the 5s per-line timeout. 
+    (Closes: #663970)
+
+ -- Holger Levsen <holger@debian.org>  Sat, 24 Mar 2012 11:29:24 +0000
+
 munin (2.0~rc2-1) unstable; urgency=low
 
   * This is not yet munin 2.0, but almost! Install at your own risk and have 
@@ -29,7 +40,8 @@ munin (2.0~rc2-1) unstable; urgency=low
       trunk.
     * Full details in http://munin-monitoring.org/browser/tags/2.0-rc2/ChangeLog
       or in /usr/share/doc/munin/changelog.gz on this system. (Closes: #610528, 
-      Closes: #644960, Closes: #576009, Closes: #474193)
+      Closes: #644960, Closes: #576009, Closes: #474193, #660224, #609900, 
+      Closes: #582786, #591455)
     * This release has been prepared through six uploads to experimental and
       several users running it on their installations.
 
