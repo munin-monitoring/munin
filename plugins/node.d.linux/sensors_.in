@@ -216,8 +216,7 @@ my %config = (
                         # '?:' means passive group (does not match)
             \sV         # one space, 'V' char
             \)          # ')' char
-            )           # >>>>end of statement
-
+            )?          # >>>>end of statement
         /xm,
 
     title => 'Voltages',
