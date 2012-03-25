@@ -1,3 +1,9 @@
+munin (2.0~rc4-2) UNRELEASED; urgency=low
+
+  * plugin.conf: run fail2ban plugin as root. (Closes: #610825) 
+
+ -- Holger Levsen <holger@debian.org>  Sun, 25 Mar 2012 18:46:36 +0200
+
 munin (2.0~rc4-1) unstable; urgency=low
 
   * quoting upstream ChangeLog:
