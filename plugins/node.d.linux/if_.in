@@ -18,6 +18,13 @@ the network interface.  This is configured like this:
   [if_*]
       user root
 
+If the interface speed cannot be determined automatically by this
+plugin, you may manually configure the speed using the "speed"
+environment variable, in megabits per second, like this:
+
+  [if_*]
+      env.speed 1000
+
 To set warning and critical levels do like this:
 
   [if_*]
@@ -54,10 +61,6 @@ Unknown license
 
  #%# family=auto
  #%# capabilities=autoconf suggest
-
-=head1 VERSION
-
-  $Id$
 
 =cut
 
@@ -118,7 +121,11 @@ findspeed_mbps() {
 }
 
 findspeed() {
-    SPEED=$(findspeed_mbps)
+    if [[ "$speed" ]]; then
+        SPEED=$speed
+    else
+        SPEED=$(findspeed_mbps)
+    fi
 
     if [[ -z "$SPEED" ]] || [[ "$SPEED" == "U" ]]; then
         printf "up.info Traffic of the %s interface. Unable to determine interface speed." $INTERFACE
