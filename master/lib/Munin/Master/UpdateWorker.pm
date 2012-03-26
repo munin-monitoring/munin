@@ -94,6 +94,7 @@ sub do_work {
 	    my @plugins;
 	    if (grep /^spool$/, @node_capabilities) {
 		    my $spoolfetch_last_timestamp = $self->get_spoolfetch_timestamp();
+		    local $0 = "$0 -- spoolfetch($spoolfetch_last_timestamp)";
 		    %whole_config = $self->uw_spoolfetch($spoolfetch_last_timestamp);
 
 		    # XXX - Commented out, should be protect by a "if logger.isDebugEnabled()"
@@ -126,6 +127,7 @@ sub do_work {
 		# Ask for config only if spoolfetch didn't already send it
 		my %service_config = %whole_config;
 	        unless (%service_config) {
+		       local $0 = "$0 -- config($plugin)";
 		       %service_config = $self->uw_fetch_service_config($plugin);
 		}
 
@@ -159,6 +161,7 @@ sub do_work {
 			# But we should still do everything after than.
 			if ($plugin ne "__root__") {
 				DEBUG "[DEBUG] No service data for $plugin, fetching it";
+				local $0 = "$0 -- fetch($plugin)";
 				%service_data = $self->{node}->fetch_service_data($plugin);
 			}
 		}
