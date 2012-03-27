@@ -106,7 +106,7 @@ my %draw           = (
 my %init_draw = %draw;
 my $pinpoint = {};
 
-my ($size_x, $size_y);
+my ($size_x, $size_y, $full_size_mode);
 my ($lower_limit, $upper_limit);
 
 my %PALETTE;    # Hash of available palettes
@@ -235,6 +235,7 @@ sub graph_startup {
 
     $size_x 	    = undef;
     $size_y         = undef;
+    $full_size_mode = undef;
     $lower_limit    = undef;
     $upper_limit    = undef;
 
@@ -263,6 +264,7 @@ sub graph_startup {
                 "sumyear!"      => \$draw{'sumyear'},
 		"size_x=i"      => \$size_x,
 		"size_y=i"      => \$size_y,
+		"full_size_mode!"=> \$full_size_mode,
 		"upper_limit=s" => \$upper_limit,
 		"lower_limit=s" => \$lower_limit,
                 "list-images!"  => \$list_images,
@@ -351,6 +353,7 @@ sub graph_main {
     # Reset an eventual custom size
     $size_x 	    = undef;
     $size_y         = undef;
+    $full_size_mode = undef;
     $lower_limit    = undef;
     $upper_limit    = undef;
     $pinpoint       = undef;
@@ -375,6 +378,7 @@ sub graph_main {
 
 		"size_x=i"      => \$size_x,
 		"size_y=i"      => \$size_y,
+		"full_size_mode!"=> \$full_size_mode,
 		"upper_limit=s" => \$upper_limit,
 		"lower_limit=s" => \$lower_limit,
 	    );
@@ -533,6 +537,8 @@ sub get_header {
 
     push @$result, "--height", ($size_y || munin_get($service, "graph_height", "175"));
     push @$result, "--width",  ($size_x || munin_get($service, "graph_width",  "400"));
+
+    push @$result, "--full-size-mode" if ($full_size_mode);
 
     push @$result,"--rigid" if (defined $lower_limit || defined $upper_limit);
 
