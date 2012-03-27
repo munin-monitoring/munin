@@ -369,6 +369,10 @@ sub draw_graph {
     # Sometimes we want to set the IMG size, and not the canvas.
     push @params, "--full_size_mode"
       if (CGI::param("full_size_mode"));
+    
+    # Sometimes we want only the graph. Nothing else.
+    push @params, "--only_graph"
+      if (CGI::param("only_graph"));
 
     # XXX - the debug param is sticky. It really should be per request.
     push @params, "--debug"
