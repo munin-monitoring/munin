@@ -602,7 +602,10 @@ sub _update_rrd_files {
 	    $ds_config->{update_rate} ||= 300; # default is 5 min
 
 	    DEBUG "[DEBUG] asking for a rrd of size : " . $ds_config->{graph_data_size};
-	    my $rrd_file = $self->_create_rrd_file_if_needed($service, $ds_name, $ds_config);
+
+	    # Avoid autovivification (for multigraphs)
+	    my $first_epoch = (defined($service_data) and defined($service_data->{$ds_name})) ? ($service_data->{$ds_name}->{when}->[0]) : 0;
+	    my $rrd_file = $self->_create_rrd_file_if_needed($service, $ds_name, $ds_config, $first_epoch);
 
 	    if (defined($service_data) and defined($service_data->{$ds_name})) {
 		$last_timestamp = max($last_timestamp, $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name}));
@@ -651,11 +654,11 @@ sub _get_rrd_data_source_with_defaults {
 
 
 sub _create_rrd_file_if_needed {
-    my ($self, $service, $ds_name, $ds_config) = @_;
+    my ($self, $service, $ds_name, $ds_config, $first_epoch) = @_;
 
     my $rrd_file = $self->_get_rrd_file_name($service, $ds_name, $ds_config);
     unless (-f $rrd_file) {
-        $self->_create_rrd_file($rrd_file, $service, $ds_name, $ds_config);
+        $self->_create_rrd_file($rrd_file, $service, $ds_name, $ds_config, $first_epoch);
     }
 
     return $rrd_file;
@@ -695,7 +698,7 @@ sub _get_rrd_file_name {
 
 
 sub _create_rrd_file {
-    my ($self, $rrd_file, $service, $ds_name, $ds_config) = @_;
+    my ($self, $rrd_file, $service, $ds_name, $ds_config, $first_epoch) = @_;
 
     INFO "[INFO] creating rrd-file for $service->$ds_name: '$rrd_file'";
 
@@ -749,7 +752,7 @@ sub _create_rrd_file {
     my $heartbeat = $update_rate * 2;
     unshift (@args,
         $rrd_file,
-        "--start", "-10y", # Always start RRD 10 years ago (should be enough), to be able to spoolfetch in it
+        "--start", ($first_epoch - $update_rate),
 	"-s", $update_rate,
         sprintf('DS:42:%s:%s:%s:%s', 
                 $ds_config->{type}, $heartbeat, $ds_config->{min}, $ds_config->{max}),
