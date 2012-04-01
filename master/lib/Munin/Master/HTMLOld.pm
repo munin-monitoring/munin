@@ -86,6 +86,7 @@ my $htmlconfcache = "$Munin::Common::Defaults::MUNIN_DBDIR/htmlconf.storable";
 my $do_usage   = 0;
 my $do_version = 0;
 my $stdout     = 0;
+my $force_run_as_root = 0;
 my $config;
 my $limits;
 my $htmltagline;
@@ -109,6 +110,7 @@ sub html_startup {
 	    "config=s"  => \$conffile,
 	    "debug!"    => \$DEBUG,
 	    "stdout!"   => \$stdout,
+	    "force-run-as-root!" => \$force_run_as_root,
 	    "help"      => \$do_usage,
 	    "version!"  => \$do_version,
 	    "dump!"     => \$do_dump,
@@ -118,7 +120,7 @@ sub html_startup {
     print_usage_and_exit() if $do_usage;
     print_version_and_exit() if $do_version;
 
-    exit_if_run_by_super_user();
+    exit_if_run_by_super_user() unless $force_run_as_root;
 
     $config = munin_config($conffile, $config);
 	$htmlconfcache = $config->{"dbdir"} . "/htmlconf.storable";
@@ -151,9 +153,13 @@ sub get_config {
 		$htmlconfig = munin_readconfig_storable($htmlconfcache);
 	}
 	if(!defined $htmlconfig){
-		my $graphs_filename = $config->{dbdir} . "/graphs";
-		my $graphs_filename_tmp = $graphs_filename . ".tmp." . $$;
-    		$config->{"#%#graphs_fh"} = new IO::File("> $graphs_filename_tmp");
+		# If we are in a CGI html context, no graphing file dump !
+		unless ($ENV{SCRIPT_NAME}) {
+			my $graphs_filename = $config->{dbdir} . "/graphs";
+			my $graphs_filename_tmp = $graphs_filename . ".tmp." . $$;
+		 	$config->{"#%#graphs_fh"} = new IO::File("> $graphs_filename_tmp");
+		}
+
 		$htmlconfig = generate_config($config);
     		$config->{"#%#graphs_fh"} = undef;
 

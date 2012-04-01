@@ -89,6 +89,7 @@ my $log_file       = undef;
 my $skip_locking   = 0;
 my $skip_stats     = 0;
 my $stdout         = 0;
+my $force_run_as_root = 0;
 my $conffile       = $Munin::Common::Defaults::MUNIN_CONFDIR . "/munin.conf";
 my $libdir         = $Munin::Common::Defaults::MUNIN_LIBDIR;
 # Note: Nothing by default is more convenient and elliminates code while
@@ -256,6 +257,7 @@ sub graph_startup {
                 "only-fqn=s"    => sub{ $only_fqn = process_fqn(@_); },
                 "config=s"      => \$conffile,
                 "stdout!"       => \$stdout,
+                "force-run-as-root!" => \$force_run_as_root,
                 "day!"          => \$draw{'day'},
                 "week!"         => \$draw{'week'},
                 "month!"        => \$draw{'month'},
@@ -289,7 +291,7 @@ sub graph_startup {
       print_usage_and_exit();
     }
 
-    exit_if_run_by_super_user();
+    exit_if_run_by_super_user() unless $force_run_as_root;
 
     # Only read $config once (thx Jani M.)
     #

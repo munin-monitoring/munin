@@ -59,6 +59,7 @@ my @limit_hosts    = ();
 my @limit_services = ();
 my @limit_contacts = ();
 my $stdout         = 0;
+my $force_run_as_root = 0;
 my %notes          = ();
 my $force          = 0;
 my $config;
@@ -87,6 +88,7 @@ sub limits_startup {
         "debug!"    => \$DEBUG,
         "stdout!"   => \$stdout,
         "force!"    => \$force,
+        "force-run-as-root!" => \$force_run_as_root,
         "version!"  => \$do_version,
         "help"      => \$do_usage
         );
@@ -94,7 +96,7 @@ sub limits_startup {
     print_usage_and_exit()   if $do_usage;
     print_version_and_exit() if $do_version;
 
-    exit_if_run_by_super_user();
+    exit_if_run_by_super_user() unless $force_run_as_root;
 
     $config = &munin_config($conffile);
 
