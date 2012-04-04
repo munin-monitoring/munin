@@ -26,9 +26,10 @@ This configuration section shows the defaults of the plugin:
   [apache_*]
      env.url   http://127.0.0.1:%d/server-status?auto
      env.ports 80
+     env.showfree 1
 
 The %d in the url will be replaced with the port.  The default port is
-80 as shown.
+80 as shown. 'showfree' enables the disaplay of the "free slots" graph.
 
 The port list is a space separated list of ports.  NOTE that one
 single Apache can have several open ports, and the plugin needs only
@@ -95,6 +96,7 @@ if (! eval "require LWP::UserAgent;")
 
 my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://127.0.0.1:%d/server-status?auto";
 my @PORTS = exists $ENV{'ports'} ? split(' ', $ENV{'ports'}) : (80);
+my $SHOWFREE = !exists $ENV{'showfree'} || $ENV{'showfree'};
 
 if ( defined $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
@@ -157,9 +159,11 @@ if ( defined $ARGV[0] and $ARGV[0] eq "config" )
 	    print "idle$port.label idle servers $port\n";
 	    print "idle$port.draw STACK\n";
 	    print "idle$port.colour 0033ff\n";
-	    print "free$port.label free slots $port\n";
-	    print "free$port.draw STACK\n";
-	    print "free$port.colour ccff00\n";
+	    if ($SHOWFREE) {
+		print "free$port.label free slots $port\n";
+		print "free$port.draw STACK\n";
+		print "free$port.colour ccff00\n";
+	    }
 	}
 	foreach my $port (@PORTS) {
 		foreach my $type (qw(busy idle)) {
@@ -185,11 +189,13 @@ foreach my $port (@PORTS)
     } else {
 	    print "idle$port.value U\n";
     }
-    if ($response->content =~ /^(Scoreboard: .*)$/m) {
-	    my $count = () = $1 =~ /\./g;
-	    print "free$port.value $count\n";
-    } else {
-	    print "free$port.value U\n";
+    if ($SHOWFREE) {
+	    if ($response->content =~ /^(Scoreboard: .*)$/m) {
+		my $count = () = $1 =~ /\./g;
+		print "free$port.value $count\n";
+	    } else {
+		print "free$port.value U\n";
+	    }
     }
 }
 
