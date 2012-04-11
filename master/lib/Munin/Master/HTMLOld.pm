@@ -153,18 +153,23 @@ sub get_config {
 		$htmlconfig = munin_readconfig_storable($htmlconfcache);
 	}
 	if(!defined $htmlconfig){
+		my $graphs_filename = $config->{dbdir} . "/graphs";
+		my $graphs_filename_tmp = $graphs_filename . ".tmp." . $$;
+
 		# If we are in a CGI html context, no graphing file dump !
 		unless ($ENV{SCRIPT_NAME}) {
-			my $graphs_filename = $config->{dbdir} . "/graphs";
-			my $graphs_filename_tmp = $graphs_filename . ".tmp." . $$;
 		 	$config->{"#%#graphs_fh"} = new IO::File("> $graphs_filename_tmp");
 		}
 
 		$htmlconfig = generate_config($config);
-    		$config->{"#%#graphs_fh"} = undef;
 
-		# Atomic move
-		rename($graphs_filename_tmp, $graphs_filename);
+		unless ($ENV{SCRIPT_NAME}) {
+			# Closing the file
+    			$config->{"#%#graphs_fh"} = undef;
+
+			# Atomic move
+			rename($graphs_filename_tmp, $graphs_filename);
+		}
 	}
 	return $htmlconfig;
 }
