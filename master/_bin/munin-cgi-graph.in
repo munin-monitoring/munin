@@ -183,8 +183,28 @@ while (new CGI::Fast) {
 	} else {
 	    $scale_options = "--$scale";
 	}
-	next unless
-	  draw_graph_or_complain($dom, $host, $serv, $scale_options, $filename);
+
+	# Try to generate the graph
+	eval {
+ 		draw_graph_or_complain($dom, $host, $serv, $scale_options, $filename);
+	};
+	
+	# handle exceptions
+	if ($@) {
+		if ($@ =~ m/^Could not find FQN/) {
+			# Unknown graph asked
+			print "Status: 404 Not Found\r\n",
+			      "Content-Type: image/png\r\n",
+			      "X-Munin-Pid: $$\r\n",
+			      "X-Munin-Request: $nb_request/$nb_request_max\r\n",
+			    "\r\n";
+			# Next item
+			next;
+		}
+		
+		# Generic error
+		die $@;
+	}
     }
 
     # Now send it: headers
