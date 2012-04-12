@@ -121,12 +121,12 @@ while (new CGI::Fast) {
     }
 
     if (! &verify_parameters ($dom, $host, $serv, $scale)) {
-	print "Status: 500\r\n",
-	  "Content-Type: text/html\r\n",
+	# If parameters are not valid, just say we didn't find anything.
+	print "Status: 404 Not Found\r\n",
+	  "Content-Type: text/png\r\n",
 	  "X-Munin-Pid: $$\r\n",
 	  "X-Munin-Request: $nb_request/$nb_request_max\r\n",
-	  "\r\n",
-	  "Invalid parameters!\r\n";
+	  "\r\n";
 	next;
     }
 
