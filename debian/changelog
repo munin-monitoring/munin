@@ -18,6 +18,7 @@ munin (2.0~rc5-1) UNRELEASED; urgency=low
      - Remove warning when asking "list" w/o a hostname (LP: #907952)
      - Many bug fixes (trac: Closes #967, #1210) (Closes: #583189, #568511,
        Closes: #475078)
+  * Create /var/log/munin in /etc/init.d/munin-node (Closes: #626570)
 
  -- Holger Levsen <holger@debian.org>  Sun, 25 Mar 2012 18:46:36 +0200
 
