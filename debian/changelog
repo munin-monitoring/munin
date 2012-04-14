@@ -1,7 +1,23 @@
-munin (2.0~rc4-2) UNRELEASED; urgency=low
+munin (2.0~rc5-1) UNRELEASED; urgency=low
 
+  [ Steve Schnepp ]
   * plugin.conf: run fail2ban plugin as root. (Closes: #610825) 
   * move jmx_ to munin-plugins-java (Closes: #667493)
+
+  [ Holger Levsen ]
+  * New upstream release candidate, quoting the upstream Changelog:
+     - Adding the current action to the command line. Useful for debugging.
+     - Adding a new URL param full_size_mode to enable predictible IMG sizes
+     - Enable sparklines with the url param "only_graph"
+     - Start RRD just before first update. To avoid a very costly 1st update.
+     - Emit the hosts in a sorted order, instead of somewhat random.
+     - Do not emit png list if file handle is not defined. (Closes: #666759)
+     - Add old option of --force-root, but with a new name. more explicit 
+       (Closes:  #601371)
+     - We dont generate the png list when using cgi html.
+     - Remove warning when asking "list" w/o a hostname (LP: #907952)
+     - Many bug fixes (trac: Closes #967, #1210) (Closes: #583189, #568511,
+       Closes: #475078)
 
  -- Holger Levsen <holger@debian.org>  Sun, 25 Mar 2012 18:46:36 +0200
 
