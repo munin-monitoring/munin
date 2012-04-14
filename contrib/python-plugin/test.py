@@ -3,7 +3,7 @@
 """
 Makes it easy to create munin plugins...
 
-    http://munin.projects.linpro.no/wiki/protocol-config
+    http://munin-monitoring.org/wiki/protocol-config
 
 Morten Siebuhr
 sbhr@sbhr.dk

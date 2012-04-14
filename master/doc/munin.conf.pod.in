@@ -17,7 +17,7 @@ monitored by Munin.
 F<munin.conf> is the configuration file for the Munin master server.
 The programs using it are munin-update, munin-graph, munin-limits and
 munin-html.  There is also quite extensive documentation of this file
-at L<http://munin.projects.linpro.no/wiki/munin.conf>
+at L<http://munin-monitoring.org/wiki/munin.conf>
 
 The format of the file is simple. A minimal configuration looks
 something like:

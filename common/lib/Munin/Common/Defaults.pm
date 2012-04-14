@@ -92,7 +92,7 @@ scripts.
 
 =head1 PACKAGE VARIABLES
 
-See L<http://munin.projects.linpro.no/wiki/MuninInstallProcedure> for
+See L<http://munin-monitoring.org/wiki/MuninInstallProcedure> for
 more information on the variables provided by this package.
 
 

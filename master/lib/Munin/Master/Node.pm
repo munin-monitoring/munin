@@ -550,7 +550,7 @@ sub _sanitise_plugin_name {
 
 
 sub _sanitise_fieldname {
-    # http://munin.projects.linpro.no/wiki/notes_on_datasource_names
+    # http://munin-monitoring.org/wiki/notes_on_datasource_names
     my ($self, $name) = @_;
 
     $name =~ s/^[^A-Za-z_]/_/;

@@ -23,8 +23,8 @@ This is a pre-release checklist for the maintainer.
 
  * Update ChangeLog
 
- * cd ..; svn cp svn://janl@munin.projects.linpro.no/munin/trunk \
-	svn://janl@munin.projects.linpro.no/munin/tags/1.3.4
+ * cd ..; svn cp svn://janl@munin-monitoring.org/munin/trunk \
+	svn://janl@munin-monitoring.org/munin/tags/1.3.4
 
  * Update RELEASE in the tag
 

@@ -15,7 +15,7 @@ use IPC::Open3;
 # munin-node-sched
 #
 # Prototype munin node scheduler as proposed in
-# http://munin.projects.linpro.no/wiki/protocol-spool
+# http://munin-monitoring.org/wiki/protocol-spool
 #
 # Goal:
 #  Run munin plugins and collect the results.  Run intervals could be

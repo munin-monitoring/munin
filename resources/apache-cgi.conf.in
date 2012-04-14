@@ -4,7 +4,7 @@
 # In addition, the Munin log files and html area should be writable
 # to the web server.
 #
-# Documentation for this is in http://munin.projects.linpro.no/wiki/CgiHowto
+# Documentation for this is in http://munin-monitoring.org/wiki/CgiHowto2
 #
 ScriptAlias /munin/dyn/ @@CGIDIR@@/
 

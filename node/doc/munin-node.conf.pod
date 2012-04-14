@@ -159,7 +159,7 @@ A pretty normal configuration file:
 	ignore_file \.rpm(save|new)$
 
 See the documentation or Munin homepage
-L<http://munin.projects.linpro.no/> for more info.
+L<http://munin-monitoring.org/> for more info.
 
 =head1 AUTHORS
 

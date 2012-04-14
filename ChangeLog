@@ -583,7 +583,7 @@ munin (1.4.0, r3033:3115, 2009-11-27)
   minor fixes.
 * Munin::Plugin: straight port of the multigraph assertion sub from Plugin.sh.
 * netbsd/sensors_: according to
-  <http://munin.projects.linpro.no/wiki/protocol-config>, graph_vtitle
+  <http://munin-monitoring.org/wiki/protocol-config>, graph_vtitle
   has been superseded by graph_vlabel.
 * a few more tests for Munin::Common::Config.
 * linux/fw_(packets|conntrack): check for readability not existence

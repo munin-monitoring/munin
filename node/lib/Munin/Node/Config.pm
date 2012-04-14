@@ -406,7 +406,7 @@ Parses the plugin configuration from an L<IO::Handle>.
 Applies the contents of any wildcard plugin configuration sections
 to matching plugins.
 
-See L<http://munin.projects.linpro.no/wiki/Priority_and_inheritance>
+See L<http://munin-monitoring.org/wiki/Priority_and_inheritance>
 
 =cut
 # vim: sw=4 : ts=4 : et
