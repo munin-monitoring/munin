@@ -15,15 +15,25 @@ add_munin_system_user() {
 	fi
 }
 
-fixperms() {
-        dpkg-statoverride --list /var/log/munin >/dev/null || \
-		dpkg-statoverride --update --add munin adm 0750 /var/log/munin
-        dpkg-statoverride --list /var/lib/munin >/dev/null || \
-		dpkg-statoverride --update --add munin munin 0755 /var/lib/munin
-        dpkg-statoverride --list /var/lib/munin/plugin-state >/dev/null || \
-		dpkg-statoverride --update --add munin munin 0775 /var/lib/munin/plugin-state
-	dpkg-statoverride --list /etc/munin/plugin-conf.d >/dev/null || \
-		dpkg-statoverride --update --add root munin 0750 /etc/munin/plugin-conf.d
+initperms() {
+	chown munin:www-data /var/log/munin
+	chmod 751 /var/log/munin
+	
+	chown munin:munin /var/lib/munin
+	chmod 755 /var/lib/munin
+
+	chown munin:munin /var/lib/munin/plugin-state
+	chmod 755 /var/lib/munin/plugin-state
+
+	chown root:munin /etc/munin/plugin-conf.d
+	chmod 750 /etc/munin/plugin-conf.d
+}
+
+fixoverrides() {
+        dpkg-statoverride --list /var/log/munin >/dev/null && dpkg-statoverride --remove /var/log/munin
+        dpkg-statoverride --list /var/lib/munin >/dev/null && dpkg-statoverride --remove /var/lib/munin
+        dpkg-statoverride --list /var/lib/munin/plugin-state >/dev/null && dpkg-statoverride --remove /var/lib/munin/plugin-state
+	dpkg-statoverride --list /etc/munin/plugin-conf.d >/dev/null && dpkg-statoverride --remove /etc/munin/plugin-conf.d
 }
 
 init_plugins() {
@@ -64,7 +74,14 @@ init_plugins() {
 case "$1" in
 	configure)
 		add_munin_system_user
-		fixperms
+		# this can go away after wheezy
+		if dpkg --compare-versions "$2" le "2.0~rc4-1"; then
+			fixoverrides
+		fi
+		# do this on upgrades (from old versions) and on new installs
+		if dpkg --compare-versions "$2" le "2.0~rc4-1" || [ "$2" = 0 ] ; then
+			initperms
+		fi
 		init_plugins
 		;;
         triggered)

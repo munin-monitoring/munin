@@ -16,21 +16,34 @@ add_munin_system_user() {
 	fi
 }
 
-fixperms() {
-	dpkg-statoverride --list /var/log/munin >/dev/null || \
-		dpkg-statoverride --update --add munin adm 0751 /var/log/munin
+initperms() {
+	chown munin:www-data /var/log/munin
+	chmod 751 /var/log/munin
+	
+	chown munin:munin /var/lib/munin
+	chmod 755 /var/lib/munin
+
 	# create munin-cgi-html.log since www-data cannot create it itself
 	touch /var/log/munin/munin-cgi-html.log
-	dpkg-statoverride --list /var/log/munin/munin-cgi-html.log >/dev/null || \
-		dpkg-statoverride --update --add www-data adm 0750 /var/log/munin/munin-cgi-html.log
+	chown www-data:adm /var/log/munin/munin-cgi-html.log
+	chmod 750 /var/log/munin/munin-cgi-html.log
+
 	# create munin-cgi-graph.log since www-data cannot create it itself
 	touch /var/log/munin/munin-cgi-graph.log
-	dpkg-statoverride --list /var/log/munin/munin-cgi-graph.log >/dev/null || \
-		dpkg-statoverride --update --add www-data adm 0750 /var/log/munin/munin-cgi-graph.log
-	dpkg-statoverride --list /var/cache/munin/www >/dev/null || \
-		dpkg-statoverride --update --add munin munin 0755 /var/cache/munin/www
-	dpkg-statoverride --list /var/lib/munin >/dev/null || \
-		dpkg-statoverride --update --add munin munin 0755 /var/lib/munin
+ 	chown www-data:adm /var/log/munin/munin-cgi-graph.log
+	chmod 750 /var/log/munin/munin-cgi-graph.log
+
+	chown munin:munin /var/cache/munin/www
+	chmod 755 /var/cache/munin/www
+}
+
+fixoverrides() {
+        dpkg-statoverride --list /var/log/munin >/dev/null && dpkg-statoverride --remove /var/log/munin
+        dpkg-statoverride --list /var/lib/munin >/dev/null && dpkg-statoverride --remove /var/lib/munin
+	dpkg-statoverride --list /var/log/munin/munin-cgi-html.log >/dev/null && dpkg-statoverride --remove /var/log/munin/munin-cgi-html.log
+	dpkg-statoverride --list /var/log/munin/munin-cgi-graph.log >/dev/null && dpkg-statoverride --remove /var/log/munin/munin-cgi-graph.log
+	dpkg-statoverride --list /var/cache/munin/www >/dev/null && dpkg-statoverride --remove /var/cache/munin/www
+	dpkg-statoverride --list /var/lib/munin >/dev/null && dpkg-statoverride --remove /var/lib/munin
 }
 
 apache_install() {
@@ -57,7 +70,13 @@ apache_install() {
 case "$1" in
 	configure)
 		add_munin_system_user
-		fixperms
+		# this can go away after wheezy
+		if dpkg --compare-versions "$2" le "2.0~rc4-1" ; then
+			fixoverrides
+		fi
+		if dpkg --compare-versions "$2" le "2.0~rc4-1" || [ "$2" = 0 ] ; then
+			initperms
+		fi
 		apache_install
 		;;
 	abort-upgrade|abort-deconfigure|abort-remove)

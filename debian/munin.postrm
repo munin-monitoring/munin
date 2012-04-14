@@ -27,16 +27,6 @@ if [ "$1" = "purge" ]; then
 	rm -f /var/log/munin/munin-cgi-graph.log*
 	rm -f /var/log/munin/munin-cgi-html.log*
 
-	dpkg-statoverride --remove /var/cache/munin/www
-
-	# These are shared with munin-node, so only remove them if munin-node
-	# isn't installed (or already purged).
-	status=$(dpkg --get-selections munin-node)
-	if [ -z "$status" ] || [ "${status%purge}" != "$status" ]; then
-		dpkg-statoverride --remove /var/log/munin
-		dpkg-statoverride --remove /var/lib/munin
-	fi
-	
 	delete_dir_if_empty /var/cache/munin/www
 	delete_dir_if_empty /var/lib/munin
 	delete_dir_if_empty /var/log/munin
