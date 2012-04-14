@@ -16,7 +16,7 @@ add_munin_system_user() {
 }
 
 initperms() {
-	chown munin:www-data /var/log/munin
+	chown munin:adm /var/log/munin
 	chmod 751 /var/log/munin
 	
 	chown munin:munin /var/lib/munin

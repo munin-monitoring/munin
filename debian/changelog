@@ -1,4 +1,4 @@
-munin (2.0~rc5-1) UNRELEASED; urgency=low
+munin (2.0~rc5-1) unstable; urgency=low
 
   [ Holger Levsen ]
   * New upstream release candidate, quoting the upstream Changelog:
@@ -19,6 +19,8 @@ munin (2.0~rc5-1) UNRELEASED; urgency=low
     statoverrides in munin's and munin-nodes' postinst and just running chown and
     chmod on those files and directories. Also remove statoverride handling
     from postrm scripts. (Closes: #666907)
+    As far as I understand, the usage of dpkg-statoverride was plainly wrong
+    for all these years. If I'm wrong here, I'd be glad to be corrected.
 
   [ Steve Schnepp ]
   * plugin.conf: run fail2ban plugin as root. (Closes: #610825) 
