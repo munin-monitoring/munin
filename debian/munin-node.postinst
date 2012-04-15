@@ -84,11 +84,11 @@ case "$1" in
 	configure)
 		add_munin_system_user
 		# this can go away after wheezy
-		if dpkg --compare-versions "$2" le "2.0~rc4-1"; then
+		if dpkg --compare-versions "$2" le "2.0~rc5-1"; then
 			fixoverrides
 		fi
 		# do this on upgrades (from old versions) and on new installs
-		if dpkg --compare-versions "$2" le "2.0~rc4-1" || [ "$2" = 0 ] ; then
+		if dpkg --compare-versions "$2" le "2.0~rc5-1" || [ "$2" = 0 ] ; then
 			initperms
 		fi
 		init_plugins
