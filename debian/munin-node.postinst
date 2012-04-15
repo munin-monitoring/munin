@@ -30,19 +30,19 @@ initperms() {
 }
 
 fixoverrides() {
-    
-    overrides="
+
+        overrides="
 /etc/munin/plugin-conf.d
 /var/lib/munin
 /var/lib/munin/plugin-state
 /var/log/munin
 "
 
-    for override in $overrides; do
-        if dpkg-statoverride --list $override >/dev/null; then
-            dpkg-statoverride --remove $override
-        fi
-    done
+        for override in $overrides; do
+                if dpkg-statoverride --list $override >/dev/null; then
+                        dpkg-statoverride --remove $override
+                fi
+        done
 }
 
 init_plugins() {

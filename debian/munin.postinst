@@ -39,7 +39,7 @@ initperms() {
 
 fixoverrides() {
 
-    overrides="
+        overrides="
 /var/cache/munin/www
 /var/lib/munin
 /var/log/munin
@@ -47,11 +47,11 @@ fixoverrides() {
 /var/log/munin/munin-cgi-html.log
 "
 
-    for override in $overrides; do
-        if dpkg-statoverride --list $override >/dev/null; then
-            dpkg-statoverride --remove $override
-        fi
-    done
+        for override in $overrides; do
+                if dpkg-statoverride --list $override >/dev/null; then
+                        dpkg-statoverride --remove $override
+                fi
+        done
 }
 
 apache_install() {
