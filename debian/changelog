@@ -1,3 +1,11 @@
+munin (2.0~rc5-2) unstable; urgency=low
+
+  [ Stig Sandbeck Mathisen ]
+  * Handle removal of old statoverrides in a more robust fashion.
+    (Closes: #668859)
+
+ -- Holger Levsen <holger@debian.org>  Sun, 15 Apr 2012 12:59:50 +0200
+
 munin (2.0~rc5-1) unstable; urgency=low
 
   [ Holger Levsen ]
