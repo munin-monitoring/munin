@@ -38,12 +38,20 @@ initperms() {
 }
 
 fixoverrides() {
-        dpkg-statoverride --list /var/log/munin >/dev/null && dpkg-statoverride --remove /var/log/munin
-        dpkg-statoverride --list /var/lib/munin >/dev/null && dpkg-statoverride --remove /var/lib/munin
-	dpkg-statoverride --list /var/log/munin/munin-cgi-html.log >/dev/null && dpkg-statoverride --remove /var/log/munin/munin-cgi-html.log
-	dpkg-statoverride --list /var/log/munin/munin-cgi-graph.log >/dev/null && dpkg-statoverride --remove /var/log/munin/munin-cgi-graph.log
-	dpkg-statoverride --list /var/cache/munin/www >/dev/null && dpkg-statoverride --remove /var/cache/munin/www
-	dpkg-statoverride --list /var/lib/munin >/dev/null && dpkg-statoverride --remove /var/lib/munin
+
+    overrides="
+/var/cache/munin/www
+/var/lib/munin
+/var/log/munin
+/var/log/munin/munin-cgi-graph.log
+/var/log/munin/munin-cgi-html.log
+"
+
+    for override in $overrides; do
+        if dpkg-statoverride --list $override >/dev/null; then
+            dpkg-statoverride --remove $override
+        fi
+    done
 }
 
 apache_install() {
