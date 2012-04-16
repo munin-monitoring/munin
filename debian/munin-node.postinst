@@ -16,6 +16,8 @@ add_munin_system_user() {
 }
 
 initperms() {
+	mkdir -p /var/lib/munin/plugin-state 
+
 	chown munin:adm /var/log/munin
 	chmod 751 /var/log/munin
 	
