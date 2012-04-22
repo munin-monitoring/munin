@@ -290,7 +290,7 @@ sub get_picture_filename {
     my $scale   = shift;
     my $params  = shift;
 
-    my $cgi_tmp_dir = $config->{cgitmpdir} || "/tmp/munin-cgi-tmp";
+    my $cgi_tmp_dir = $config->{cgitmpdir} . "/munin-cgi-graph";
 
     $params = $params ? "?$params" : "";
     $params =~ tr/\//_/; # / are forbidden in a filename
