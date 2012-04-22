@@ -1,3 +1,9 @@
+munin (2.0~rc5-4) UNRELEASED; urgency=low
+
+  * munin-node.postinst: chmod 755 /var/log/munin (Closes: #669230)
+
+ -- Holger Levsen <holger@debian.org>  Sun, 22 Apr 2012 14:49:58 +0200
+
 munin (2.0~rc5-3) unstable; urgency=low
 
   * Create /var/lib/munin/plugin-state in munin-node.postinst if it doesnt

@@ -18,7 +18,7 @@ add_munin_system_user() {
 
 initperms() {
 	chown munin:adm /var/log/munin
-	chmod 751 /var/log/munin
+	chmod 755 /var/log/munin
 	
 	chown munin:munin /var/lib/munin
 	chmod 755 /var/lib/munin
@@ -82,7 +82,7 @@ case "$1" in
 		if dpkg --compare-versions "$2" le "2.0~rc5-1" ; then
 			fixoverrides
 		fi
-		if dpkg --compare-versions "$2" le "2.0~rc5-1" || [ "$2" = 0 ] ; then
+		if dpkg --compare-versions "$2" le "2.0~rc5-2" || [ "$2" = 0 ] ; then
 			initperms
 		fi
 		apache_install
