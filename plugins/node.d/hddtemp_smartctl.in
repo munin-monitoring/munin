@@ -98,12 +98,25 @@ use Munin::Plugin;
 
 my $DEBUG = $ENV{'MUNIN_DEBUG'} || 0;
 
-my $smartctl = exists $ENV{smartctl} ? $ENV{smartctl} : '';
+my $smartctl;
 
-# If the envvar is not set, look for smartctl
-if (!$smartctl) {
-   # Still not found? Check obvious places
-    my @dirs = split(':',$ENV{PATH});
+if (exists $ENV{smartctl}) {
+   $smartctl = $ENV{smartctl};
+   if (defined $ARGV[0] and $ARGV[0] eq 'autoconf') {
+      if (! -e $smartctl) {
+	 print "no (Predefined smartctl ($smartctl) does not exist)\n";
+	 exit 0;
+      } elsif (! -x $smartctl) {
+	 print "no (Predefined smartctl ($smartctl) is not executable)\n";
+	 exit 0;
+      }
+   } else {
+      die "$smartctl does not exist\n" unless (-e $smartctl);
+      die "$smartctl is not executable\n" unless (-x $smartctl);
+   }
+} else {
+   # Not defined in %ENV? Check obvious places
+    my @dirs = split(':', $ENV{PATH});
     push (@dirs, qw(/usr/bin /usr/sbin /usr/local/bin /usr/local/sbin) );
     
     until ($smartctl or @dirs == 0) {
@@ -111,10 +124,6 @@ if (!$smartctl) {
 	my $path = $dir.'/smartctl';
 	$smartctl = $path if -x $path;
     }
-} elsif (! -x $smartctl) {
-    # If it is set, verify it
-    warn "Predefined smartctl ($smartctl) is not a executable\n";
-    undef $smartctl;
 }
 
 # Check version of smartctl to determine --nocheck capabilities
@@ -157,22 +166,17 @@ warn "[DEBUG] Drives: ",join(', ',@drives),"\n" if $DEBUG;
 
 if (defined $ARGV[0]) {
   if ($ARGV[0] eq 'autoconf') {
-    if ($smartctl and -x $smartctl) {
-      if (@drives) {
-        my $cmd = command_for_drive_device($drives[0],
-                                           device_for_drive($drives[0]));
-        if (`$cmd` =~ /Temperature/) {
-          print "yes\n";
-        } else {
-          print "no (first drive not supported, configure the plugin)\n";
-        }
-        exit 0;
+    if (@drives) {
+      my $cmd = command_for_drive_device($drives[0],
+					 device_for_drive($drives[0]));
+      if (`$cmd` =~ /Temperature/) {
+	print "yes\n";
       } else {
-        print "no (no drives known)\n";
-        exit 0;
+	print "no (first drive not supported, configure the plugin)\n";
       }
+      exit 0;
     } else {
-      print "no (smartctl not found)\n";
+      print "no (no drives known)\n";
       exit 0;
     }
   } elsif ($ARGV[0] eq 'config') {
