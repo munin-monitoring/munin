@@ -23,7 +23,7 @@ Based on node.d.linux/netstat, by unknown author.
 
 =head1 LICENSE
 
-Unknown license, but consider changes from node.d.linux/netstat to be GPLv2 or later.
+GPLv2
 
 =head1 MAGIC MARKERS
 
