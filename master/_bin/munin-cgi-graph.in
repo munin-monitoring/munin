@@ -144,6 +144,11 @@ while (new CGI::Fast) {
       $no_cache = 1;
     }
 
+    # Having some QUERY_STRING disables the cache.
+    if (defined($ENV{QUERY_STRING})) {
+      $no_cache = 1;
+    }
+
     # Compute the cache values
     # FIXME: Take the plugins update_rate into account here, at least for
     # the day graph.  update_rate should be in $config
@@ -223,6 +228,11 @@ while (new CGI::Fast) {
 
     # ... and graph data
     send_graph_data($filename);
+
+    # If $no_cache, remove the file. No need to keep it anyway.
+    # And it handles http://bugs.debian.org/668667
+    unlink($filename) if $no_cache;
+
 } continue {
 	$nb_request++;
 	if ($nb_request_max && $nb_request > $nb_request_max) {
