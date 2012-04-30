@@ -355,6 +355,23 @@ sub verify_parameters {
 	    return 0;
 	}
     }
+
+    # Checks the image size requested.
+    if (( CGI::param("size_x") || "") =~ m/^(\d+)/) {
+	my $max_size_x = ( $config->{max_size_x} || 4000);
+	if ($1 > $max_size_x) {
+		WARN "[WARNING] Asked image size x too large : $1 > $max_size_x. Bailing out.";
+		return 0;
+	}
+    }
+    if (( CGI::param("size_y") || "") =~ m/^(\d+)/) {
+	my $max_size_y = ($config->{max_size_y} || 4000);
+	if ($1 > $max_size_y) {
+		WARN "[WARNING] Asked image size y too large : $1 > $max_size_y. Bailing out.";
+		return 0;
+	}
+    }
+
     return 1;
 }
 

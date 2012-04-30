@@ -39,6 +39,7 @@ my %legal = map { $_ => 1 } (
 	"unknown_limit", "num_unknowns", "dropdownlimit",
 	"max_graph_jobs", "max_cgi_graph_jobs", "munin_cgi_graph_jobs",
 	"max_html_jobs", "cgitmpdir", "update_rate",
+	"max_size_x", "max_size_y", 
 	"staticdir", "html_strategy",
 	"rrdcached_socket", "graph_args_after",
     "graph_future", "trend", "predict",
