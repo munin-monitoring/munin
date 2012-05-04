@@ -20,7 +20,7 @@ Requires: logtail
 
 =head1 AUTHOR
 
-Copyright  Anderson <micah@riseup.net>
+Copyright Micah Anderson <micah@riseup.net>
 Jan 23, 2005
 
 =head1 LICENSE
@@ -60,13 +60,13 @@ LOGTAIL=${logtail:-/usr/sbin/logtail}
 
 case $1 in
     autoconf|detect)
-    if [ -f ${PERDITION_LOG} -a -x ${LOGTAIL} ] 
+    if [ -f ${PERDITION_LOG} -a -x ${LOGTAIL} ]
     then
-	echo yes
-	exit 0
+        echo yes
+        exit 0
     else
-	echo "no (either $PERDITION_LOG was not found, or logtail was not in your path)"
-	exit 0
+        echo "no (either $PERDITION_LOG was not found, or logtail was not in your path)"
+        exit 0
     fi
     ;;
     config)
