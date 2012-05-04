@@ -1,12 +1,12 @@
 #!@@GOODSH@@
 #
-# Plugin to monitor SELinux' Access Vector Cache (AVC).
+# Plugin to monitor SELinux Access Vector Cache (AVC).
 #
 #       config   (required)
 #       autoconf (optional - used by munin-config)
 #
 # GNU GPL, Lars Strand
-# 
+#
 #
 # Magic markers (used by munin-config and some installation scripts (i.e.
 # optional)):
@@ -27,7 +27,7 @@ fi
 
 if [ "$1" = "config" ]; then
 
-        echo "graph_title SELinux' Access Vector Cache"
+        echo "graph_title SELinux Access Vector Cache"
         echo 'graph_args -l 0 --base 1000'
         echo 'graph_vlabel AVC operations'
         echo 'graph_category system'
@@ -64,7 +64,7 @@ if [ "$1" = "config" ]; then
         echo 'allocations.draw STACK'
         echo 'allocations.colour ffa500' # Orange
         echo 'allocations.info Number of AVC entries allocated.'
-        
+
         echo 'reclaims.label reclaims'
         echo 'reclaims.type DERIVE'
         echo 'reclaims.min 0'
