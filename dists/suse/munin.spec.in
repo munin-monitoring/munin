@@ -45,7 +45,7 @@ pages, suitable for viewing with your graphical web browser of choice.
 
 Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
 RRDtool. To see a real example of Munin in action, take a peek at
-<http://www.linpro.no/projects/munin/example/>.
+<http://demo.munin-monitoring.org>.
 
 %package node
 Group:		System Environment/Daemons

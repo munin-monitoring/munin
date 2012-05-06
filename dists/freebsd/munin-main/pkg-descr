@@ -11,4 +11,4 @@ of creating own "plugins" (graphs).
 This is the collector. It is installed on the machine that shall collect
 and display performance data.
 
-WWW: http://www.linpro.no/projects/munin/
+WWW: http://munin-monitoring.org
