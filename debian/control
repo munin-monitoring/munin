@@ -10,7 +10,7 @@ Build-Depends-Indep: perl, htmldoc, html2text, default-jdk
 Build-Depends: debhelper (>=9), quilt
 Standards-Version: 3.9.3
 Homepage: http://munin-monitoring.org
-Vcs-svn:  svn://munin-monitoring.org/munin/branches/debian/wheezy
+Vcs-svn: svn://munin-monitoring.org/munin/branches/debian/wheezy
 Vcs-Browser: http://munin-monitoring.org/browser/
 
 Package: munin-node
@@ -137,7 +137,7 @@ Package: munin-async
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends}, perl-modules, adduser, munin-common (>= ${binary:Version})
 Recommends: munin-node
-Description: network-wide graphing framework (common)
+Description: network-wide graphing framework (async master/client)
  Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still
  maintaining a rattling ease of installation and configuration.
