@@ -346,6 +346,6 @@ This program is released under the GNU General Public License
 =head1 SEE ALSO
 
 For more information, see the man pages of the individual munin-*
-programs or the Munin homepage L<http://munin.sf.net/>.
+programs or the Munin homepage L<http://munin-monitoring.org/>.
 
 =cut
