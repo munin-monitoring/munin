@@ -638,7 +638,7 @@ sub _node_read {
         $line = $self->_node_read_single();
     }
 
-    DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",\@array))."\".";
+    DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".";
     return \@array;
 }
 
