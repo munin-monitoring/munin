@@ -367,7 +367,7 @@ See documentation for set_effective_user_id()
 
 =item B<set_umask>
 
-Set umask so that files created by plugins are group writeable
+Set umask so that files created by plugins are group writable
 Only call right before exec-ing a plugin.
 
 
