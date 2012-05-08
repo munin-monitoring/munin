@@ -276,6 +276,7 @@ sub get_full_group_path {
 sub process_service {
     my $hash       = shift || return;
     my $hobj       = get_host_node($hash);
+    my $host       = get_notify_name($hobj);
     my $service    = munin_get_node_name($hash);
     my $hparentobj = munin_get_parent($hobj);
     my $parent     = munin_get_node_name($hobj);
@@ -285,7 +286,7 @@ sub process_service {
     if (!ref $hash) {
 	LOGCROAK("I was passed a non-hash!");
     }
-
+    return if (@limit_hosts and !grep (/^$host$/, @limit_hosts));
     return if (@limit_services and !grep (/^$service$/, @limit_services));
 
     DEBUG "[DEBUG] processing service: $service";
@@ -294,7 +295,7 @@ sub process_service {
     $hash->{'fields'} = join(' ', map {munin_get_node_name($_)} @$children);
     $hash->{'plugin'} = $service;
     $hash->{'graph_title'} = get_full_service_name($hash);
-    $hash->{'host'}  = get_notify_name($hobj);
+    $hash->{'host'}  = $host;
     $hash->{'group'} = get_full_group_path($hparentobj);
     $hash->{'worst'} = "ok";
     $hash->{'worstid'} = 0 unless defined $hash->{'worstid'};
