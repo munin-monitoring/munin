@@ -72,6 +72,20 @@ apache_install() {
 			fi
 		fi
         fi
+
+	# installing configuration for Apache 2.4
+	# link config to conf-available
+	if [ -d /etc/$webserver/conf-available ] && [ ! -e /etc/$webserver/conf-available/munin ]; then
+		ln -s ../../munin/apache.conf /etc/$webserver/conf-available/munin.conf
+		
+		# activate configuration on new install with apache2-mainscript-helper
+		# TODO: Migration from installed Munin with apache2.2 to apache 2.4
+		if [ -z "$prevver" ]; then 
+			if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
+				/usr/share/apache2/apache2-maintscript-helper apache2_invoke enconf munin.conf 
+			fi
+		fi
+	fi
 }
 
 
