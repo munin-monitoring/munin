@@ -75,7 +75,7 @@ apache_install() {
 
 	# installing configuration for Apache 2.4
 	# link config to conf-available
-	if [ -d /etc/$webserver/conf-available ] && [ ! -e /etc/$webserver/conf-available/munin ]; then
+	if [ -d /etc/$webserver/conf-available ] && [ ! -e /etc/$webserver/conf-available/munin.conf ]; then
 		ln -s ../../munin/apache.conf /etc/$webserver/conf-available/munin.conf
 		
 		# activate configuration on new install with apache2-mainscript-helper
