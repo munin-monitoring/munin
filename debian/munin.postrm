@@ -42,7 +42,8 @@ if [ "$1" = "purge" ]; then
 	
 	# Disable configuration with Apache 2.4
 	if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
-		/usr/share/apache2/apache2-maintscript-helper apache2_invoke disconf munin.conf 
+		. /usr/share/apache2/apache2-maintscript-helper 
+		apache2_invoke disconf munin.conf 
 	fi 
 	
 	# Remove configuration from Apache 2.4 conf dir
@@ -56,7 +57,8 @@ fi
 if [ "$1" = "remove" ]; then
 	# Disable configuration with Apache 2.4
 	if [ -e /usr/share/apache2/apache2-maintscript-helper ] ; then
-		/usr/share/apache2/apache2-maintscript-helper apache2_invoke disconf munin.conf 
+		. /usr/share/apache2/apache2-maintscript-helper 
+		apache2_invoke disconf munin.conf 
 	fi
 fi
 
