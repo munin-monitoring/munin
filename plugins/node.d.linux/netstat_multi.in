@@ -974,8 +974,7 @@ foreach (@statfiles) {
             @columns = @line;
             next;
         }
-        foreach(@line) {
-            $i++;
+        for (my $i = 1; $i < @line; $i++) {
             if ( length($columns[$i]) > 0 ) {
                 $datas{"$columns[0]_$columns[$i]"} = $line[$i];
             }
