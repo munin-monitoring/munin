@@ -135,7 +135,7 @@ my %config = (
 
             (?:\.\d+)?)# Zero or one match of '.' char followd by one or more
                        # digits. '?:' means it doesn't spit out the field.
-            [°\s]      # Match degree char or space char
+            [Â°\s]      # Match degree char or space char
             C          # Match 'C' char
 
             (?:        # >>>>Match the following statement zero or one time.
@@ -152,7 +152,7 @@ my %config = (
 
             (?:\.\d+)?)# Zero or one match of '.' char followd by one or more
                        # digits. '?:' means it doesn't spit out the field.
-            [°\s]      # Match degree char or space char
+            [Â°\s]      # Match degree char or space char
             C,\s*      # 'C,' string followd by zero or more spaces
             hyst       # 'hyst' string followed by
             (?:eresis)?# zero or one 'eresis' string.
@@ -164,7 +164,7 @@ my %config = (
                        # (Match hyst value as \$4) followed by
             (?:\.\d+)?)# Zero or one match of '.' char followd by one or more
                        # digits. '?:' means it doesn't spit out the field.
-            [°\s]C     # Match degree char or space char, and then 'C' char
+            [Â°\s]C     # Match degree char or space char, and then 'C' char
             \)         # ')' char
             )?         # >>>>end of statement
         /xm,
@@ -240,7 +240,7 @@ if ( defined $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
     exit 0;
   }
 
-  unless ($text =~ /[° ]C/) {
+  unless ($text =~ /[Â° ]C/) {
     print "no (no temperature readings)\n";
     exit 0;
   }
