@@ -965,7 +965,6 @@ foreach (@statfiles) {
     open F, $_;
     while(<F>)
     {
-        my $i = 0;
         chomp($_);
         my @line = split(/ /,$_);
         $line[0] =~ s/\://;
