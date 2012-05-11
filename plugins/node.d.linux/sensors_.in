@@ -7,6 +7,10 @@ voltage, and fan speed sensors.
 
 =head1 CONFIGURATION
 
+The possible wildcard values are the follwing: fan, temp, volt. So you
+would create symlinks to this plugin called sensors_fan, sensors_temp,
+and sensors_volt.
+
 The plugins needs the following components configured:
 
 =over
