@@ -146,8 +146,8 @@ my %config = (
                        # '?:' means it is not a numbered capture group.
             \s+        # One or more space followed by
             \(         # '(' char
-            (?:high|limit) # 'high' or 'limit' string.
-                           # '?:' means it doesn't spit out the field.
+            (?:high|limit|crit) # 'high' or 'limit' or 'crit' string.
+                       # '?:' means it is not a numbered capture group.
             \s*=\s*    # Match zero or more spaces and then '=' char and then
                        # zero or more spaces, followed by
             \+?        # Zero or one '+' char
@@ -157,10 +157,10 @@ my %config = (
             (?:\.\d+)?)# Zero or one match of '.' char followed by one or more
                        # digits. '?:' means it is not a numbered capture group.
             [°\s]      # Match degree char or space char
-            C,\s*      # 'C,' string followd by zero or more spaces
-            hyst       # 'hyst' string followed by
-            (?:eresis)?# zero or one 'eresis' string.
-                       # '?:' means it doesn't spit out the field.
+            C,?\s*     # 'C' followed by optional comma and zero or more spaces
+            (?:        # >>>Match the following non-capture group zero or more times
+            (?:crit|hyst(?:eresis)?) # 'crit' or 'hyst' string followed by optional 'eresis' string.
+                       # '?:' means it is not a numbered capture group.
             \s*=\s*    # Match zero or more spaces and then '=' char and then
                        # zero or more spaces, followed by
             \+?        # Zero or one '+' char
@@ -169,6 +169,7 @@ my %config = (
             (?:\.\d+)?)# Zero or one match of '.' char followed by one or more
                        # digits. '?:' means it is not a numbered capture group.
             [°\s]C     # Match degree char or space char, and then 'C' char
+            )?         # >>>end of group
             \)         # ')' char
             )?         # >>>>end of group
         /xm,           # Use extended regular expressions and treat string as multiple lines.
@@ -305,6 +306,10 @@ sub temp_threshold {
   my $name = shift;
   my $max = shift;
   my $min = shift;
+
+  if (defined($min) and defined($max) and $min > $max) {
+      ($min, $max) = ($max, $min);
+  }
 
   printf "$name.warning $min\n" if $min;
   printf "$name.critical $max\n" if $max;
