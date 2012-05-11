@@ -92,15 +92,15 @@ while (new CGI::Fast) {
     # http://localhost:8080/cgi-bin/munin-cgi-graph/client/\
     #    Backend/dafnes.client.example.com/diskstats_iops-week.png
     # $path should be
-    #   client/Backend/dafnes.client.example.com/diskstats_iops-week.png
+    #   /client/Backend/dafnes.client.example.com/diskstats_iops-week.png
     #
     # Interesting bits about that url: Nested groups!
     #
     # Case 2:
     # http://localhost:8080/cgi-bin/munin-cgi-graph/client/\
     #    Backend/dafnes.client.example.com/diskstats_iops/sda-week.png
-    # path should be
-    #    client/Backend/dafnes.client.example.com/diskstats_iops/\
+    # $path should be
+    #    /client/Backend/dafnes.client.example.com/diskstats_iops/\
     #    sda-week.png
     #
     # Interesting bit that url: Nested groups at the start and multigraph
@@ -109,8 +109,8 @@ while (new CGI::Fast) {
     # Case 3:
     # http://localhost:8080/cgi-bin/munin-cgi-graph/client/\
     #   dafnes.client.example.com/if_err_bond0-day.png
-    # path:
-    #   client/dafnes.client.example.com/if_err_bond0-day.png
+    # $path:
+    #   /client/dafnes.client.example.com/if_err_bond0-day.png
     #
     # Simplest (old munin 1.2): No nesting at any end, fixed number of /es
     #
@@ -123,9 +123,10 @@ while (new CGI::Fast) {
     # Scale will in any case work out since - is only used before the
     # day/week/month/year/pinpoint part, and the next part is always .png.
     #
+    # Note: $serv *may* have some "-" inside (See #1218)
 
     my ($dom, $host, $serv, $scale) =
-      $path =~ m#^/(.*)/([^/]+)/(\w+)-([\w=,]+)\.png#; ## avoid bug in vim
+      $path =~ m#^/(.*)/([^/]+)/([\w-]+)-([\w=,]+)\.png#; ## avoid bug in vim
 
     INFO "asked for ($dom, $host, $serv, $scale)";
 
