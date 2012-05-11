@@ -49,8 +49,8 @@ GPLv2
 
 use strict;
 
-$ENV{'LANG'} = "C"; # Force parseable output from sensors.
-$ENV{'LC_ALL'} = "C"; # Force parseable output from sensors.
+$ENV{'LANG'} = "C"; # Force parsable output from sensors.
+$ENV{'LC_ALL'} = "C"; # Force parsable output from sensors.
 my $SENSORS = $ENV{'sensors'} || 'sensors';
 
 # Example outputs from sensors & matching regex parts:
@@ -69,8 +69,8 @@ my $SENSORS = $ENV{'sensors'} || 'sensors';
 # --------------------------------
 #
 # Temperature output example from sensors:
-# * Note that the iso-8859-1 degree character is not printed, as we are running
-#   with LC_ALL=C & LANG=C.
+# * Note that the degree character is replaced by a space, as we are running
+#   with LC_ALL=C and LANG=C.
 # ---------------------------------------
 # Sys Temp:    +41.0 C  (high = -128.0 C, hyst = +24.0 C)  ALARM  sensor = thermistor
 # CPU Temp:    +40.5 C  (high = +80.0 C, hyst = +75.0 C)  sensor = thermistor
@@ -101,7 +101,7 @@ my %config = (
             ([^:\n]*)  # Match any non-whitespace char, except ':' and new line
                        # (Match label as \$1)
             \s*        # Zero or more spaces followed by
-            :          # : characheter
+            :          # : character
             \s*        # Zero or more spaces followed by
             \+?        # Zero or one '+' char. Note: This might not be needed
                        # as FAN speeds don't have + signs in front of them.
@@ -116,7 +116,7 @@ my %config = (
               \s       # Exactly one space followed by
             )?         # end of optional group
             RPM        # RPM string
-                /xm,
+                /xm,   # Use extended regular expressions and treat string as multiple lines.
             title => 'Fans',
             vtitle => 'RPM',
             print_threshold => \&fan_threshold,
@@ -125,11 +125,11 @@ my %config = (
 
     temp => {
         regex => qr/
-            ^ # String must start with:
+            ^          # String must start with:
             ([^:\n]*)  # Match any non-whitespace char, except ':' and new line
                        # (Match label as \$1)
             \s*        # Zero or more spaces followed by
-            :          # ':' characheter
+            :          # ':' character
             \s*        # Zero or more spaces followed by
             \+?        # Zero or one '+' char followed by
 
@@ -137,13 +137,13 @@ my %config = (
             \d+        # Match one or more digits
                        # (Match current value as \$2) followed by
 
-            (?:\.\d+)?)# Zero or one match of '.' char followd by one or more
-                       # digits. '?:' means it doesn't spit out the field.
+            (?:\.\d+)?)# Zero or one match of '.' char followed by one or more
+                       # digits. '?:' means it is not a numbered capture group.
             [°\s]      # Match degree char or space char
             C          # Match 'C' char
 
             (?:        # >>>>Match the following statement zero or one time.
-                       # '?:' means it doesn't spit out the field.
+                       # '?:' means it is not a numbered capture group.
             \s+        # One or more space followed by
             \(         # '(' char
             (?:high|limit) # 'high' or 'limit' string.
@@ -154,8 +154,8 @@ my %config = (
             (\d+       # Match one or more digits
                        # (Match high value as \$3) followed by
 
-            (?:\.\d+)?)# Zero or one match of '.' char followd by one or more
-                       # digits. '?:' means it doesn't spit out the field.
+            (?:\.\d+)?)# Zero or one match of '.' char followed by one or more
+                       # digits. '?:' means it is not a numbered capture group.
             [°\s]      # Match degree char or space char
             C,\s*      # 'C,' string followd by zero or more spaces
             hyst       # 'hyst' string followed by
@@ -166,12 +166,12 @@ my %config = (
             \+?        # Zero or one '+' char
             (\d+       # Match one or more digits
                        # (Match hyst value as \$4) followed by
-            (?:\.\d+)?)# Zero or one match of '.' char followd by one or more
-                       # digits. '?:' means it doesn't spit out the field.
+            (?:\.\d+)?)# Zero or one match of '.' char followed by one or more
+                       # digits. '?:' means it is not a numbered capture group.
             [°\s]C     # Match degree char or space char, and then 'C' char
             \)         # ')' char
-            )?         # >>>>end of statement
-        /xm,
+            )?         # >>>>end of group
+        /xm,           # Use extended regular expressions and treat string as multiple lines.
     title => 'Temperatures',
     vtitle => 'degrees Celsius',
     print_threshold => \&temp_threshold,
@@ -191,12 +191,12 @@ my %config = (
             (-?         # Match zero or one '-' char
             \d+         # Match one or more digits
                         # (match the current voltage as \$2) followed by
-            (?:\.\d+)?) # Zero or one match of '.' char followd by one or more digits.
-                        # '?:' means it doesn't spit out the field.
+            (?:\.\d+)?) # Zero or one match of '.' char followed by one or more digits.
+                        # '?:' means it is not a numbered capture group.
             \sV         # one space, 'V' char
 
             (?:         # >>>>Match the following statement.
-                        # '?:' means it doesn't spit out the field.
+                        # '?:' means it is not a numbered capture group.
             \s+         # One or more space followed by
             \(          # '(' char
             min         # Match min string
@@ -206,9 +206,9 @@ my %config = (
             (-?         # Match zero or one '-' char
             \d+         # Match one or more digits
                         # (Match the minimum value as \$3) followed by
-            (?:\.\d+)?) # Zero or one match of '.' char followd by one or more
-                        # digits. '?:' means it doesn't spit out the field.
-            \sV,\s*     # One space char, 'V,' string followd by zero or
+            (?:\.\d+)?) # Zero or one match of '.' char followed by one or more
+                        # digits. '?:' means it is not a numbered capture group.
+            \sV,\s*     # One space char, 'V,' string followed by zero or
                         # more spaces
 
             max         # Match 'max' string
@@ -218,12 +218,12 @@ my %config = (
             (-?         # Match zero or one '-' char
             \d+         # Match one or more digits
                         # (Match the max value as \$4) followed by
-            (?:\.\d+)?) # Zero or one match of '.' char followd by one or more digits.
+            (?:\.\d+)?) # Zero or one match of '.' char followed by one or more digits.
                         # '?:' means passive group (does not match)
             \sV         # one space, 'V' char
             \)          # ')' char
             )?          # >>>>end of statement
-        /xm,
+        /xm,            # Use extended regular expressions and treat string as multiple lines.
 
     title => 'Voltages',
     vtitle => 'Volt',
