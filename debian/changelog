@@ -1,6 +1,18 @@
-munin (2.0~rc5-4) UNRELEASED; urgency=low
+munin (2.0~rc6-1) UNRELEASED; urgency=low
 
   [ Holger Levsen ]
+  * New upstream release candidate, quoting the upstream Changelog:
+    - Add explicit license for all plugins. (Closes: #670428)
+    - Many bugfixes in munin-cgi-graph : 
+      - if url parameters are not valid, send HTTP 404 instead of 500
+      - remove the use of tempfiles. (Closes: #668778)
+      - move the generation of png via cgi under /var/lib/munin/cgi-tmp/ 
+        (Closes:  #668536)
+      - don't cache URL with parameters anymore, and don't keep uncached URLs 
+        (Closes: #668667)
+      - validate url characters (Closes: #668666)
+      - add a max setting for cgi image size. (Closes: #670811)
+    - hddtemp_smartctl: just use the device name as the labels
   * munin-node.postinst: chmod 755 /var/log/munin (Closes: #669230)
 
   [ Matthias Schmitz ]
