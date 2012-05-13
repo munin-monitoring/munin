@@ -1,4 +1,4 @@
-munin (2.0~rc6-1) UNRELEASED; urgency=low
+munin (2.0~rc6-1) unstable; urgency=low
 
   [ Holger Levsen ]
   * New upstream release candidate, quoting the upstream Changelog:
@@ -19,7 +19,7 @@ munin (2.0~rc6-1) UNRELEASED; urgency=low
   * Add installation of apache configuration to /etc/apache2/conf-availble as
     needed by Apache 2.4. (Closes: #669816)
 
- -- Matthias Schmitz <matthias@sigxcpu.org>  Wed, 09 May 2012 21:45:14 +0200
+ -- Holger Levsen <holger@debian.org>  Sun, 13 May 2012 16:12:42 +0200
 
 munin (2.0~rc5-3) unstable; urgency=low
 
