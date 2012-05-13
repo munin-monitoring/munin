@@ -28,6 +28,7 @@ if [ "$1" = "purge" ]; then
 	rm -f /var/log/munin/munin-cgi-html.log*
 
 	delete_dir_if_empty /var/cache/munin/www
+	delete_dir_if_empty /var/lib/munin/cgi-tmp
 	delete_dir_if_empty /var/lib/munin
 	delete_dir_if_empty /var/log/munin
 	delete_dir_if_empty /etc/munin/templates
