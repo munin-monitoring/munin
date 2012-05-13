@@ -2,24 +2,25 @@ munin (2.0~rc6-1) unstable; urgency=low
 
   [ Holger Levsen ]
   * New upstream release candidate, quoting the upstream Changelog:
-    - Add explicit license for all plugins. (Closes: #670428)
-    - Many bugfixes in munin-cgi-graph : 
+    - Many bugfixes in munin-cgi-graph:
       - if url parameters are not valid, send HTTP 404 instead of 500
-      - remove the use of tempfiles. (Closes: #668778)
       - move the generation of png via cgi under /var/lib/munin/cgi-tmp/ 
         (Closes:  #668536)
       - don't cache URL with parameters anymore, and don't keep uncached URLs 
         (Closes: #668667)
       - validate url characters (Closes: #668666)
       - add a max setting for cgi image size. (Closes: #670811)
-    - hddtemp_smartctl: just use the device name as the labels
+    - Plugin fixes:
+      - add explicit license for all plugins. (Closes: #670428)
+      - hddtemp_smartctl: just use the device name as the labels
+      - qmailscan: remove the use of tempfiles. (Closes: #668778)
   * munin-node.postinst: chmod 755 /var/log/munin (Closes: #669230)
 
   [ Matthias Schmitz ]
   * Add installation of apache configuration to /etc/apache2/conf-availble as
     needed by Apache 2.4. (Closes: #669816)
 
- -- Holger Levsen <holger@debian.org>  Sun, 13 May 2012 16:12:42 +0200
+ -- Holger Levsen <holger@debian.org>  Sun, 13 May 2012 14:21:35 +0000
 
 munin (2.0~rc5-3) unstable; urgency=low
 
