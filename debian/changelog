@@ -1,8 +1,8 @@
-munin (2.0~rc6-2) UNRELEASED; urgency=low
+munin (2.0~rc6-2) unstable; urgency=low
 
   * munin.postinst: Fix typo breaking the chgrp of $cgitempdir. 
 
- -- Holger Levsen <holger@debian.org>  Mon, 14 May 2012 09:18:16 +0200
+ -- Holger Levsen <holger@debian.org>  Mon, 14 May 2012 10:02:22 +0200
 
 munin (2.0~rc6-1) unstable; urgency=low
 
