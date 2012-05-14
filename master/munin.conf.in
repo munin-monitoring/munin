@@ -16,7 +16,7 @@
 # Where to look for the static www files
 # staticdir @@CONFDIR@@/static
 # 
-# temporary cgi files are here. note that it has to be writabe by the cgi user (usually nobody or httpd).
+# temporary cgi files are here. note that it has to be writable by the cgi user (usually nobody or httpd).
 # cgitmpdir @@DBDIR@@/cgi-tmp
 
 # (Exactly one) directory to include all files from.
