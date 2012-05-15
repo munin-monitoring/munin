@@ -329,7 +329,7 @@ sub process_service {
 
 		if (! $field->{type} || $field->{type} eq "GAUGE" || $field->{type} eq "ABSOLUTE") {
 			$value = $current_updated_value;
-		} elsif (! defined $current_updated_value || ! defined $previous_updated_value || $current_updated_value eq $previous_updated_value) {
+		} elsif (! defined $current_updated_value || ! defined $previous_updated_value || $current_updated_timestamp == $previous_updated_timestamp) {
 			# No derive computing possible. Report unknown.
 			$value = "U";
 		} elsif ($field->{type} eq "COUNTER" && $current_updated_value < $previous_updated_value) {
