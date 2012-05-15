@@ -98,6 +98,10 @@ sub prepare_plugin_environment
     # LC_ALL should be enough, but some plugins don't follow specs (#1014)
     $ENV{LANG} = 'C';
 
+    # PATH should be *very* sane by default. Can be overrided via 
+    # config file if needed (Closes #863 and #1128).
+    $ENV{PATH} = '/usr/sbin:/usr/bin:/sbin:/bin';
+
     if ($config->{sconffile}) {
         # only used by munin-run
         $config->parse_plugin_config_file($config->{sconffile});
