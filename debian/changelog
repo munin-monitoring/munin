@@ -1,11 +1,11 @@
-munin (2.0~rc6-3) UNRELEASED; urgency=low
+munin (2.0~rc6-3) unstable; urgency=low
 
   * Make munin-node depend on munin-plugins-core | munin-plugins. 
     (Closes: #673124) 
   * munin-node.logroate: create munin-node.log owned by root. 
     (Closes: #606216) 
 
- -- Holger Levsen <holger@debian.org>  Thu, 17 May 2012 10:44:38 +0200
+ -- Holger Levsen <holger@debian.org>  Thu, 17 May 2012 13:23:57 +0200
 
 munin (2.0~rc6-2) unstable; urgency=low
 
