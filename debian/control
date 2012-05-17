@@ -15,7 +15,7 @@ Vcs-Browser: http://munin-monitoring.org/browser/
 
 Package: munin-node
 Architecture: all
-Depends: ${perl:Depends}, ${misc:Depends}, libnet-server-perl, procps, adduser, lsb-base (>= 3.2-4), gawk, munin-common (>= ${binary:Version}), munin-plugins 
+Depends: ${perl:Depends}, ${misc:Depends}, libnet-server-perl, procps, adduser, lsb-base (>= 3.2-4), gawk, munin-common (>= ${binary:Version}), munin-plugins-core | munin-plugins 
 Recommends: libnet-snmp-perl, munin-plugins-core
 Suggests: munin, munin-plugins-extra, munin-java-plugins, libwww-perl, liblwp-useragent-determined-perl, libnet-irc-perl, mysql-client, smartmontools (>= 5.37-6~bpo40+1), acpi | lm-sensors, python, ruby, ethtool, libdbd-pg-perl, libdbd-mysql-perl, libcache-cache-perl, net-tools, hdparm, libcrypt-ssleay-perl, libtext-csv-xs-perl, libxml-simple-perl, logtail
 Description: network-wide graphing framework (node)
