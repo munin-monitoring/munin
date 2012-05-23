@@ -267,7 +267,7 @@ sub get_full_group_path {
     my $name       = get_notify_name($group);
 
     if (defined $parent and munin_get_node_name($parent) ne "root") {
-	return (get_full_group_path($parent) . " :: " . $name);
+	return (get_full_group_path($parent) . "-" . $name);
     } else {
 	return $name;
     }
