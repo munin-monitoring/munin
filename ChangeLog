@@ -1,8 +1,23 @@
 -*- text -*-
 
+munin 2.0-rc7, r4882, 2012-05-23
+
+Commits by kenyon, steve.schnepp, ssm
+
+Summary :
+
+* Fix regex when $serv has some "-" in it (like dm-2). Closes #1218
+* munin-node: sets $PATH to a secure value. (Closes #863 and #1128)
+* munin-cgi-graph: Add & to the list of "good" chars, since it is used in $ENV{QUERY_STRING} (D: Closes #674148)
+* munin-limits: fix for UNKNOWN on DERIVE (Closes #1203, #1221)
+* munin-limits: fix --host option
+* munin-limits: fix on hosts with multiple levels of domains
+
 munin 2.0-rc6, r4839, 2012-05-07
 
 Commits by kenyon, knan, matthias, runesk, steve.schnepp, ssm
+
+Summary :
 
 * hddtemp_smartctl: just use the device name as the labels
 * Update our website address in various files
