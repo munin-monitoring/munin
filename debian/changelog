@@ -1,3 +1,9 @@
+munin (2.0~rc7-1) UNRELEASED; urgency=low
+
+  * /etc/init/munin-node: chmod 755 /var/log/munin (Closes: #674747)
+
+ -- Holger Levsen <holger@debian.org>  Sun, 27 May 2012 16:16:19 +0200
+
 munin (2.0~rc6-3) unstable; urgency=low
 
   * Make munin-node depend on munin-plugins-core | munin-plugins. 
