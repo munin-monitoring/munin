@@ -5,10 +5,14 @@ Upgrading from the Munin 1.4 series to 2.0 should be quite easy.
 But there are some things to take note of if you want a very smooth
 transition.
 
-The most important change is that CGI is now mandatory as munin-graph 
-isn't really supported anymore. It was removed and a simple wrapper
-was rewritten, mostly to ease debugging. To be complete, munin-html 
-has also its CGI counterpart, but it isn't mandatory yet in 2.0.
+The most important change is the CGI requirement.
+
+ * Munin graphs are now generated on-demand by the web server, and the
+   "munin-graph" execution has been removed from the munin-cron script.
+   Its use is now mostly for debugging purposes.
+
+ * Munin html pages may be generated on-demand by the web server. The
+   default is still to run "munin-html" from cron after every update.
 
 If you install from SVN or tar ball please make sure you read the
 INSTALL file VERY carefuly. 
