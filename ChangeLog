@@ -1,5 +1,23 @@
 -*- text -*-
 
+munin-2.0, r?, 2012-05-29
+
+It is 2.0-rc7, code wise. Only edited the mandatory doc files 
+(Changelog, UPGRADING, ...)
+
+Here is a very short summary :
+
+* CGI graphing is the way to go as munin-graph is no more
+* Native SSH transport
+* Native IPv6 transport
+* Full rrdcached support
+* Graph zooming 
+* Arbitrary precision down to 1 sec (needs 2.0 plugins)
+* Asynchronous polling support (still experimental)
+
+Full summary is in Announce-2.0 and the detailed changelog is below,
+scattered in the various pre-2.0 versions.
+
 munin 2.0-rc7, r4882, 2012-05-23
 
 Commits by kenyon, steve.schnepp, ssm
