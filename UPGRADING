@@ -5,9 +5,10 @@ Upgrading from the Munin 1.4 series to 2.0 should be quite easy.
 But there are some things to take note of if you want a very smooth
 transition.
 
-The most important change is that CGI is now mandatory as munin-html 
+The most important change is that CGI is now mandatory as munin-graph 
 isn't really supported anymore. It was removed and a simple wrapper
-was rewritten, mostly to ease debugging.
+was rewritten, mostly to ease debugging. To be complete, munin-html 
+has also its CGI counterpart, but it isn't mandatory yet in 2.0.
 
 If you install from SVN or tar ball please make sure you read the
 INSTALL file VERY carefuly. 
