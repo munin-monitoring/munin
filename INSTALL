@@ -1,12 +1,12 @@
 Munin installation requirements
 ===============================
 
-If you require IPv6 please see notes on the bottom.
-
+2.0 now requires IPv6 *libraries*, but IPv6 doesn't need to be configured.
+If you plan to really *use* IPv6, please read the note at the end.
 
 On all hosts:
 
-- A reasonable Perl 5
+- A reasonable Perl 5 (ie: at least 5.8)
 
 - GNU Make - do not attempt to use any other make (build time only)
 
@@ -21,7 +21,7 @@ On all hosts:
 Server:
 
 - A web server.  Any web server supporting simple file service and
-  Fast CGI should work. Apache HTTPD should be suitable.  Also
+  CGI or Fast CGI should work. Apache HTTPD should be suitable.  Also
   reported to be working is nginx and lighttpd, please contribute your
   configs.
 
@@ -39,6 +39,8 @@ Server:
    - Net::SSLeay if you want to use SSL/TLS
    - Getopt::Long
    - File::Copy::Recursive
+   - CGI::Fast
+   - IO::Socket::INET6
    - Log::Log4perl 1.18 or later (which depends on
      - IPC::Shareable
      - Log::Dispatch
@@ -119,14 +121,13 @@ To install both master and node:
 
 	- make install
 
-        - If you want to use CGI graphing **** This is mandatory in
-          2.0 beta as of now **** review http://munin-monitoring.org/wiki/CgiHowto
-          With 2.0 you want to use FastCGI graphing unless you have a quite
-	  small munin and a quite fast web server.
+	- For graphing you have to use CGI now. You usually want to use FastCGI
+	  graphing unless you have a quite small munin and a quite fast 
+	  server. More information is available at 
+	  http://munin-monitoring.org/wiki/CgiHowto2
 
 	  In your HTMLDIR you will now find a .htaccess file with two
-          main features: *** This should be folded into a unified
-          munin-apache.conf to be dropped into apaches conf.d directory ***
+          main features: 
 
 	  * Password protection. Users/passwords are kept in
 	    CONFDIR/munin-httpasswd. Use htpasswd to create/modify
@@ -280,8 +281,8 @@ The basic problem with munin and ipv6 is that we use Net::Server and
 there has been no releases of Net::Server supporting IPv6
 (pr. 2011-07-22).  So we've found out that Debian has patches for IPv6
 support and they're even claiming to be complete - and our testing
-agrees.  I (janl) will presently commence submitting a new version of
-Net::Server to CPAN based on this. 
+agrees. We (janl) have submitted a new version of Net::Server to CPAN 
+based on this.
 
 If you use Debian (or derivates) with Net::Server 0.99-2 or later or
 if you find Net::Server 0.99.6.1 or more recent in your CPAN or
