@@ -1,6 +1,7 @@
 munin (2.0~rc7-1) UNRELEASED; urgency=low
 
   * /etc/init/munin-node: chmod 755 /var/log/munin (Closes: #674747)
+  * Make munin-node suggest munin-plugins-java and not munin-java-plugins.
 
  -- Holger Levsen <holger@debian.org>  Sun, 27 May 2012 16:16:19 +0200
 
