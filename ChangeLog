@@ -1,6 +1,6 @@
 -*- text -*-
 
-munin-2.0, r?, 2012-05-29
+munin-2.0, r4900, 2012-05-30
 
 It is 2.0-rc7, code wise. Only edited the mandatory doc files 
 (Changelog, UPGRADING, ...)
