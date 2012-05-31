@@ -76,7 +76,7 @@ GPLv2
 =cut
 
 mktempfile () {
-    cmd=$(echo $MUNIN_MKTEMP | sed s/\\$1/$1/)
+    cmd=`echo $MUNIN_MKTEMP | sed s/\\$1/$1/`
     $cmd
 }
 

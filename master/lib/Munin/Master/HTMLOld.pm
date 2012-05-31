@@ -1064,9 +1064,9 @@ Options:
     --help		View this message.
     --debug		View debug messages.
     --version		View version information.
-    --nofork            Compatability. No effect.
-    --service <service>	Compatability. No effect.
-    --host <host>	Compatability. No effect.
+    --nofork            Compatibility. No effect.
+    --service <service>	Compatibility. No effect.
+    --host <host>	Compatibility. No effect.
     --config <file>	Use <file> as configuration file. 
 			[/etc/munin/munin.conf]
 
@@ -1091,15 +1091,15 @@ munin-html [options]
 
 =item B<< --service <service> >>
 
-Compatability. No effect.
+Compatibility. No effect.
 
 =item B<< --host <host> >>
 
-Compatability. No effect.
+Compatibility. No effect.
 
 =item B<< --nofork >>
 
-Compatability. No effect.
+Compatibility. No effect.
 
 =item B<< --config <file> >>
 

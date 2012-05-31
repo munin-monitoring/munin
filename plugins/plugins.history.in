@@ -320,3 +320,11 @@ munin_update
 
 [1.4.3]
 linux/diskstats
+
+[1.4.4]
+linux/selinux_avcstat.in
+linux/lpar_cpu.in
+linux/buddyinfo.in
+linux/tcp.in
+node.d/proxy_plugin.in
+

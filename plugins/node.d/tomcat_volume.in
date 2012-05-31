@@ -122,10 +122,12 @@ if(exists $ARGV[0] and $ARGV[0] eq "config") {
 my $ua = LWP::UserAgent->new(timeout => $TIMEOUT);
 my $xs = new XML::Simple;
 my $response = $ua->request(HTTP::Request->new('GET',$url));
-my $xml = $xs->XMLin($response->content);
+my %options = ( KeyAttr => { connector => 'name' }, ForceArray => 1 );
+my $xml = $xs->XMLin($response->content, %options);
 
-if($xml->{'connector'}->{'http-'.$PORT}->{'requestInfo'}->{'bytesSent'}) {
-    print "volume.value " . $xml->{'connector'}->{'http-'.$PORT}->{'requestInfo'}->{'bytesSent'} . "\n";
+
+if($xml->{'connector'}->{'http-'.$PORT}->{'requestInfo'}->[0]->{'bytesSent'}) {
+    print "volume.value " . $xml->{'connector'}->{'http-'.$PORT}->{'requestInfo'}->[0]->{'bytesSent'} . "\n";
 } else {
     print "volume.value U\n";
 }

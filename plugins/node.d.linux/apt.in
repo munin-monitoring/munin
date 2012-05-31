@@ -40,6 +40,12 @@ Remember to randomize when these cronjobs are run on your servers
 
 Link this plugin in @@CONFDIR@@/plugins/ and restart the munin-node.
 
+=head1 NOTES
+
+This plugin does not actually draw graphs; it is rather designed to
+generated warnings.  To get a graph showing the number of available
+packages, please see the "apt_all" plugin.
+
 =head1 MAGIC MARKERS
 
  #%# family=manual

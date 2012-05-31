@@ -69,7 +69,7 @@ use Munin::Plugin;
 # For these devices use the mount point, the device is useless
 my %usemntpt = ( tmpfs => 1, none => 1, udev => 1 );
 
-my $exclude=$ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs debugfs';
+my $exclude=$ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs debugfs simfs';
 my $dfopts = "-P -l ".join(' -x ',('',split('\s+',$exclude)));
 
 sub print_values() {

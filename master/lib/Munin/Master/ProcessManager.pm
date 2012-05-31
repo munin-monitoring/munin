@@ -85,8 +85,11 @@ sub start_work {
 sub _prepare_unix_socket {
     my ($self) = @_;
 
-    unlink $self->{socket_file}
-        or $! ne 'No such file or directory' && croak "unlink failed: $!";
+    if ( -e $self->{socket_file} ) {
+	    unlink $self->{socket_file}
+        	or croak "unlink failed: $!";
+    }
+
     socket my $sock, PF_UNIX, SOCK_STREAM, 0
         or croak "socket failed: $!";
     bind $sock, sockaddr_un($self->{socket_file})

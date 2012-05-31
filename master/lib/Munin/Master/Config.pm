@@ -483,19 +483,19 @@ sub parse_config {
         $self->_strip_comment($line);
         $self->_trim($line);
 
-        if ( !length($line) ) {
-	    next;
-	}
-
 	# Handle continuation lines (ending in \)
 	if ($line =~ s|\\$||) {
 	    $continuation .= $line;
 	    next;
 	} elsif ($continuation) {
-	    $line = $continuation;
+	    $line = $continuation . $line;
 	    $continuation = '';
 	}
-        
+
+        # This must be handled after continuation hadling otherwise
+	# empty lines will be ignored in continuation context.
+        next if !length($line);
+
 	# Group/host/service configuration is saved for later persual.
 	# Everything else is saved at once.  Note that _trim removes
 	# leading whitespace so section changes can only happen if a new

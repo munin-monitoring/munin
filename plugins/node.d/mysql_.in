@@ -45,7 +45,7 @@ Non-default example:
 The plugin uses shared memory to cache the statistics gathered from
 MySQL. This ensures minimal inpact on the MySQL server.
 
-=item DBD::Mysql
+=item DBD::mysql
 
 =back
 
@@ -294,7 +294,7 @@ $graphs{innodb_bpool} = {
 	global_attrs => {
 	    title  => 'InnoDB Buffer Pool',
 	    vlabel => 'Pages',
-	    base   => '1024',
+	    args   => '--base 1024',
 	},
 	data_source_attrs => {
 	    draw => 'LINE2',
@@ -756,8 +756,9 @@ sub suggest {
     #
     #   SHOW SLAVE STATUS
 
-    local $_;
-    print "mysql_$_\n" for (sort keys(%graphs));
+    foreach my $graph (sort keys(%graphs)) {
+        print "$graph\n";
+    }
 
     return 0;
 }

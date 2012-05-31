@@ -175,11 +175,10 @@ The "ALL" resource is broken
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/virtual/info ]; then
 		echo yes
-		exit 0
 	else
 		echo "no (/proc/virtual/info not found)"
-		exit 1
 	fi
+	exit 0
 fi
 
 VSERVERS="$vservers"

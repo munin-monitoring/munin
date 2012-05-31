@@ -94,12 +94,16 @@ store_state( $r );
 
 sub filter {
     my ($major, $minor, $tmpnam) = @_;
-    return 0 if ($major ==   1); # RAM devices
-    return 0 if ($major ==   9); # MD devices
-    return 0 if ($major ==  58); # LVM devices
-    return 0 if ($major == 254); # LVM2 devices
-    return 0 if ($tmpnam =~ /part\d+$/);
-    return 0 if ($tmpnam =~ /^\s*(?:sd|hd)[a-z]\d+\s*$/);
+    if(defined($major)) {
+        return 0 if ($major ==   1); # RAM devices
+        return 0 if ($major ==   9); # MD devices
+        return 0 if ($major ==  58); # LVM devices
+        return 0 if ($major == 254); # LVM2 devices
+    }
+    if(defined($tmpnam)) {
+        return 0 if ($tmpnam =~ /part\d+$/);
+        return 0 if ($tmpnam =~ /^\s*(?:sd|hd)[a-z]\d+\s*$/);
+    }
 
     return 1;
 }

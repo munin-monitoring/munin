@@ -5,7 +5,7 @@
 
 =head1 NAME
 
-multimemory - Munin plugin to monitor memory usage of processes. Which
+multips_memory - Munin plugin to monitor memory usage of processes. Which
 processes are configured in a file in plugin-conf.d.
 
 =head1 APPLICABLE SYSTEMS
@@ -18,7 +18,7 @@ Any system with a compatible SysV style ps command that understands
 
 You must specify what process names to monitor:
 
-  [multimemory]
+  [multips_memory]
      env.names apache2 mysqld php-cgi
 
 The names are are matched with awk.  Any regular expression meta
@@ -28,27 +28,27 @@ regular expression.
 
 The by default RSS is monitored, but other sizes provided by your ps
 is directly usable (the plugin assumes all sizes reported by ps is in
-KB).  Candidates on Linux are rss, size, resident, share, vsize.  Se
+KB).  Candidates on Linux are rss, size, resident, share, vsize.  See
 your ps man page for more information especially with regards to
 interpretation of the values.  You can change what is monitored by
 
-  [multimemory]
+  [multips_memory]
       env.monitor vsize
 
-You cannot specify multiple sizes the plugin handles only one.
+You cannot specify multiple sizes. The plugin handles only one.
 
-If for some reason you want separate graphs you can make separately
+If for some reason you want separate graphs, you can make separately
 named symlinks in the plugins directory on the node (most often either
-/etc/munin/plugins or /etc/opt/munin/plugins), eg. multimemory_rss and
-multimemory_vsize as symlinks to multimemory and configure them thus:
+/etc/munin/plugins or /etc/opt/munin/plugins), eg. multips_memory_rss and
+multips_memory_vsize as symlinks to multips_memory and configure them thus:
 
-  [multimemory*]
+  [multips_memory*]
       env.names apache2 mysqld php-cgi
 
-  [multimemory_rss]
+  [multips_memory_rss]
       env.monitor rss
 
-  [multimemory_vsize]
+  [multips_memory_vsize]
       env.monitor vsize
 
 They can of course also have different process names as well.  Eg. one
@@ -79,13 +79,15 @@ be a full string match to the executable base name, not substring,
 unless you enter a name such as ".*apache" since RE meta characters in
 the names are active.
 
-You cannot specify multiple sizes the plugin handles only one.
+You cannot specify multiple sizes. The plugin handles only one.
 
 =head1 AUTHOR
 
 Originally: Unknown.
 
-Made into multimemory by: github.com/dominics github.com/yhager
+Made into multimemory by: github.com/dominics github.com/yhager.
+
+Renamed to multips_memory when included in official munin trunk.
 
 Thanks to: wix
 
@@ -110,7 +112,7 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 if [ -z "$names" ]; then
-    echo "Configuration required)"
+    echo "(Configuration required)"
     exit 1
 fi
 
@@ -139,5 +141,5 @@ for name in $names; do
 BEGIN              { total = "U"; } # U = Unknown. 
 /grep/             { next; }
 $2 ~ /^'"$name"'$/ { total = total + ($1*1024); }
-END                { print "'"$name"'.value", total; }'
+END                { print "'"$fieldname"'.value", total; }'
 done
