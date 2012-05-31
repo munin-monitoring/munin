@@ -1,3 +1,13 @@
+munin (1.0.4)
+
+  * Adapt linux/apt plugin to work properly with Debian testing/unstable
+    (patch from Rune N. Skillingstad).
+  * Applied the munin-limits fix to munin-nagios, which is actually used.
+  * Fixed typo in generic/sendmail_mailstats (patch by Lupe Christoph,
+    SF#1058128).
+  * Fixed linux/if_(err_) braindamage affecting hosts with vlans or
+    multi-digit interface numbers.
+
 munin (1.0.3)
 
   * Fixed bug in munin-limits when using ranges with only one number

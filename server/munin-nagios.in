@@ -4,6 +4,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.4.2.3  2004/11/05 12:34:30  ilmari
+# Applied the munin-limits fix to munin-nagios, which is actually used.
+#
 # Revision 1.4.2.2  2004/06/08 15:26:04  jimmyo
 # The server programs now open the log file at an earlier point.
 #
@@ -217,8 +220,8 @@ sub process_service {
 	if (defined $client->{"$key.critical"} and 
 	    $client->{"$key.critical"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
 	{
-		$critical[0] = $1 if defined $1;
-		$critical[1] = $2 if defined $2;
+		$critical[0] = $1 if length $1;
+		$critical[1] = $2 if length $2;
 	}
 	elsif (defined $client->{"$key.critical"} and
 	    $client->{"$key.critical"} =~ /^\s*([-\d]+)\s*$/)
@@ -232,8 +235,8 @@ sub process_service {
 	if (defined $client->{"$key.warning"} and 
 	    $client->{"$key.warning"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
 	{
-		$warning[0] = $1 if defined $1;
-		$warning[1] = $2 if defined $2;
+		$warning[0] = $1 if length $1;
+		$warning[1] = $2 if length $2;
 	}
 	elsif (defined $client->{"$key.warning"} and
 	    $client->{"$key.warning"} =~ /^\s*([-\d]+)\s*$/)

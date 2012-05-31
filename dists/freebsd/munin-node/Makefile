@@ -2,11 +2,11 @@
 # Date created:				25 Januar 2004
 # Whom:					Lupe Christoph <lupe@lupe-christoph.de>
 #
-# $FreeBSD: ports/sysutils/munin-node/Makefile,v 1.5 2004/06/03 22:46:59 pav Exp $
+# $FreeBSD: ports/sysutils/munin-node/Makefile,v 1.9 2004/10/13 01:46:15 leeym Exp $
 #
 
 PORTNAME=	munin
-PORTVERSION=	1.0.2
+PORTVERSION=	1.0.3
 CATEGORIES=	sysutils perl5
 MASTER_SITES=	${MASTER_SITE_SOURCEFORGE}
 MASTER_SITE_SUBDIR=	munin
@@ -16,8 +16,8 @@ DISTNAME=	${PORTNAME}_${PORTVERSION:S/.p/pre/}
 MAINTAINER=	lupe@lupe-christoph.de
 COMMENT=	Node-specific part of Munin
 
-BUILD_DEPENDS=	${RUN_DEPENDS}
-RUN_DEPENDS=	${SITE_PERL}/Net/Server/Fork.pm:${PORTSDIR}/net/p5-Net-Server
+RUN_DEPENDS=	${BUILD_DEPENDS}
+BUILD_DEPENDS=	${SITE_PERL}/Net/Server/Fork.pm:${PORTSDIR}/net/p5-Net-Server
 
 .include <bsd.port.pre.mk>
 
@@ -37,7 +37,7 @@ MAN5=		munin-node.conf.5
 MAN8=		munin-node-configure.8 munin-node.8 munin-run.8
 
 pre-install:
-	@${SED} 's@%%PREFIX%%@${LOCALBASE}@g' ${FILESDIR}/pkg-message > ${PKGMESSAGE}
+	@${SED} 's@%%PREFIX%%@${PREFIX}@g' ${FILESDIR}/pkg-message > ${PKGMESSAGE}
 	@PKG_PREFIX=${PREFIX} ${SH} pkg-install ${PKGNAME} PRE-INSTALL
 
 post-install:

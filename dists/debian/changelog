@@ -1,6 +1,29 @@
-munin (1.0.1-1) unstable; urgency=medium
+munin (1.0.3-1) unstable; urgency=low
 
-  * Urgency medium to make the Sarge freeze.
+  * New upstream release:
+      - Fixes typo in linux/fw_forwarded_local, closes: #275535.
+      - Fixes typo in linux/fw_packets, closes: #275537.
+      - Plugin generic/acpi now autodetects correctly even if the acpi version
+        does not contain the acpi_available program, closes: #275538.
+
+  * debian/plugins.conf:
+      - Run the spamstats plugin with the group adm, closes: #278765.
+      - Sorted the entries alphabetically.
+
+ -- Tore Anderson <tore@debian.org>  Mon,  1 Nov 2004 21:56:41 +0100
+
+munin (1.0.2-1) unstable; urgency=low
+
+  * New upstream release, fixing the follwing:
+    - munin-graph spews uninitialized value in concatenation [precedence
+      error], thanks to Don Armstrong (Closes: #267185).
+  * Run the hddtemp plugins as root, write access to the device isn't
+    enough.
+
+ -- Dagfinn Ilmari Mannsaker <ilmari@ilmari.org>  Wed,  1 Sep 2004 09:32:42 +0200
+
+munin (1.0.1-1) unstable; urgency=low
+
   * New upstream release, fixing the following:
     - [munin-graph/1.0] multiple .negative options is broken,
       thanks to Andre TOmt (Closes: #250982).
