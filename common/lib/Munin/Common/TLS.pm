@@ -369,20 +369,16 @@ sub read {
     croak "Tried to do an encrypted read, but a TLS session is not started" 
         unless $self->session_started();
 
-    local $_;
-
-    eval { $_ = Net::SSLeay::read($self->{tls_session}); };
+    my $read = Net::SSLeay::read($self->{tls_session});
     my $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
         $self->{logger}("[TLS] Warning in read: $err");
-        return;
+        return undef;
     }
-    $self->{logger}("DEBUG: < $_") if $self->{DEBUG};
+    undef $read if($read eq ''); # returning '' signals EOF
 
-    if($_ eq '') { undef $_; } #returning '' signals EOF
-
-
-    return $_;
+    $self->{logger}("DEBUG: < $read") if $self->{DEBUG} && defined $read;
+    return $read;
 }
 
 
@@ -394,7 +390,7 @@ sub write {
 
     $self->{logger}("DEBUG: > $text") if $self->{DEBUG};
 
-    eval { Net::SSLeay::write($self->{tls_session}, $text); };
+    Net::SSLeay::write($self->{tls_session}, $text);
     my $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
         $self->{logger}("[TLS] Warning in write: $err");

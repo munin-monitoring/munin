@@ -642,6 +642,7 @@ sub process_service {
 
     # Make my graphs
     my $sname        = munin_get_node_name($service);
+    my $skeypath     = munin_get_keypath($service);
     my $service_time = Time::HiRes::time;
     my $lastupdate   = 0;
     my $now          = time;
@@ -1286,7 +1287,7 @@ sub process_service {
     } # if graph_sums
 
     $service_time = sprintf("%.2f", (Time::HiRes::time - $service_time));
-    INFO "Graphed service : $sname ($service_time sec * 4)";
+    INFO "[INFO] Graphed service $skeypath ($service_time sec)";
     print $STATS "GS|$service_time\n" unless $skip_stats;
 
     foreach (@added) {

@@ -132,12 +132,21 @@ sub process_request
 
     _net_write($session, "# munin node at $config->{fqdn}\n");
 
+    my $line = '<no command received yet>';
+
     # catch and report any system errors in a clean way.
     eval {
         $timed_out = !do_with_timeout($config->{'timeout'}, sub {
-            while (defined (my $line = _net_read($session))) {
+            while (defined ($line = _net_read($session))) {
                 chomp $line;
-                _process_command_line($session, $line) or last;
+                if (! _process_command_line($session, $line)) {
+		    $line = "<finished '$line', ending input loop>";
+		    last;
+		}
+		$line = "<waiting for input from master, previous was '$line'>";
+		# Reset timeout to wait a reasonable time for input from the master
+		# Misfeature: Plugin timeout and input timeout becomes identical.
+		reset_timeout();
             }
         });
     };
@@ -147,7 +156,7 @@ sub process_request
     }
 
     if ($timed_out) {
-        logger("Connection timed out");
+        logger("Node side timeout while processing: '$line'");
     }
 
     return;
@@ -171,7 +180,7 @@ sub _process_command_line {
 
     logger ("DEBUG: Running command \"$_\".") if $config->{DEBUG};
     if (/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
-        _list_services($session, $1);
+        _list_services($session, lc($1));
     }
     elsif (/^cap\s?(.*)/i) {
         _negotiate_session_capabilities($session, $1);

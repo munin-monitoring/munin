@@ -35,6 +35,15 @@ Non-default example:
     env.mysqluser root
     env.mysqlpassword geheim
 
+Warning and critical values can be set via the environment in the usual way.
+For example:
+
+  [mysql_replication]
+    env.slave_io_running_warning 0.5
+    env.slave_sql_running_warning 0.5
+    env.seconds_behind_master_warning 300
+    env.seconds_behind_master_critical 600
+
 
 =head1 DEPENDENCIES
 
@@ -69,9 +78,10 @@ resources for each graph
 
 =item mysql_replication
 
-slave_running and slave_stopped creates an alterning color under the
-seconds_behind_master line. It will have the color of slave_running
-when the SQL thread runs and the color of slave_stopped otherwise.
+slave_io_running and slave_sql_running both translate the "Yes" values to 0 and
+anything else to 1 for their respective fields in the "SHOW SLAVE STATUS" output.
+This can be used to warn on slave failure if the warning and critical values
+are set as seen in a previous section.
 
 =back
 
@@ -116,6 +126,8 @@ use Math::BigInt; # Used to append "=> lib 'GMP'" here, but GMP caused
 		  # segfault on some occasions. Removed as I don't
 		  # think the tiny performance boost is worth the
 		  # debugging effort.
+
+use Munin::Plugin;
 
 my $has_cache;
 
@@ -283,7 +295,8 @@ $graphs{files_tables} = {
 	{name => 'Open_files',       label => 'Open files'},
 	{name => 'Open_tables',      label => 'Open tables'},
 	{name => 'Opened_tables',    label => 'Opened tables',
-				     type  => 'GAUGE'},
+				     type  => 'DERIVE',
+	                             min   => 0},
     ],
 };
 
@@ -567,10 +580,10 @@ $graphs{replication} = {
 	},
     },
     data_sources => [
-	{name => 'slave_running',              label => 'Slave Running',
+	{name => 'slave_io_running',           label => 'Slave IO Running',
 					       type  => 'GAUGE',
 					       draw  => 'AREA'},
-	{name => 'slave_stopped',              label => 'Slave Stopped',
+	{name => 'slave_sql_running',          label => 'Slave SQL Running',
 					       type  => 'GAUGE',
 					       draw  => 'AREA'},
 	{name => 'Slave_retried_transactions', label => 'Retried Transactions'},
@@ -837,6 +850,7 @@ sub config {
 	    }
 	    $i++;
 	}
+	print_thresholds(clean_fieldname($ds->{name}));
     }
 
     return 0;
@@ -996,12 +1010,12 @@ sub update_slave {
     # this problem.)
     $data->{seconds_behind_master} ||= 0;
 
-    # Scale slave_running and slave_stopped relative to the slave lag.
-    $data->{slave_running} = ($data->{slave_sql_running} eq 'Yes')
-	    ? $data->{seconds_behind_master} : 0;
-    $data->{slave_stopped} = ($data->{slave_sql_running} eq 'Yes')
-	    ? 0 : $data->{seconds_behind_master};
-
+    # Track these two fields so we can trigger warnings if the slave stops
+    # running
+    $data->{slave_sql_running} = ($data->{slave_sql_running} eq 'Yes')
+	    ? 0 : 1;
+    $data->{slave_io_running} = ($data->{slave_io_running} eq 'Yes')
+	    ? 0 : 1;
 
 }
 
@@ -1020,25 +1034,6 @@ sub innodb_bigint {
 	? Math::BigInt->new($x)->blsft(32) + $y
 	: Math::BigInt->new("0x$x");
 }
-
-#
-# Can't use variable names longer than 19 characters:
-# http://munin.projects.linpro.no/wiki/notes_on_datasource_names
-#
-sub clean_fieldname {
-    my $name = shift;
-
-    # Replace a sequence of illegal leading chars with a single _
-    $name =~ s/^[^A-Za-z_]+/_/;
-    # Replace remaining illegals with _
-    $name =~ s/[^A-Za-z0-9_]/_/g;
-
-    # And use only the last 19 chars
-    $name = substr($name,-19);
-
-    return $name;
-}
-
 
 #---------------------------------------------------------------------
 #  P A R S E   'SHOW ENGINE INNODB STATUS'   O U T P U T
@@ -1103,7 +1098,7 @@ sub parse_innodb_status {
 my $innodb_bigint_rx = qr{([[a-fA-F\d]+)(?: (\d+))?};
 
 
-sub match_dashes { return m/\G-+\n/gc; }
+sub match_dashes { return m/\G-+\n(?!-)/gc;}
 
 
 sub skip_line    { return m/\G.*\n/gc; }

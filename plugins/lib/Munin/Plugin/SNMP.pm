@@ -477,7 +477,7 @@ sub get_single {
 
         my $response = $handle->get_request($oid);
 
-        if (!defined $response->{$oid} or $handle->error_status) {
+        if (!defined $response->{$oid} or $handle->error_status or $response->{$oid} eq 'noSuchObject') {
             print STDERR "# Error getting $oid: ",$handle->error(),"\n"
                 if $DEBUG;
             return;

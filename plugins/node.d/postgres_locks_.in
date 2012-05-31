@@ -60,15 +60,36 @@ use warnings;
 use Munin::Plugin::Pgsql;
 
 my $pg = Munin::Plugin::Pgsql->new(
-    basename => 'postgres_locks_',
-    title    => 'PostgreSQL locks',
-    info     => 'PostgreSQL locks',
-    vlabel   => 'Locks',
-    basequery =>
-        "SELECT lower(mode),count(*) FROM pg_locks WHERE database IS NOT NULL %%FILTER%% GROUP BY lower(mode) ORDER BY 1",
-    wildcardfilter =>
-        "AND database=(SELECT oid FROM pg_database WHERE datname=?)",
-    configquery => [
+    basename  => 'postgres_locks_',
+    title     => 'PostgreSQL locks',
+    info      => 'PostgreSQL locks',
+    vlabel    => 'Locks',
+    basequery => [
+        "SELECT tmp.mode,COALESCE(count,0) FROM
+          (VALUES ('accesssharelock'),('rowsharelock'),('rowexclusivelock'),('shareupdateexclusivelock'),('sharelock'),('sharerowexclusivelock'),('exclusivelock'),('accessexclusivelock')) AS tmp(mode)
+         LEFT JOIN
+          (SELECT lower(mode) AS mode,count(*) AS count
+           FROM pg_locks WHERE database IS NOT NULL %%FILTER%%
+           GROUP BY lower(mode)
+          ) AS tmp2
+         ON tmp.mode=tmp2.mode ORDER BY 1", [
+            8.1,
+            "SELECT tmp.mode,COALESCE(count,0) FROM
+             (SELECT 'accesssharelock' AS mode UNION ALL SELECT 'rowsharelock'
+              UNION ALL SELECT 'rowexclusivelock' UNION ALL SELECT 'shareupdateexclusivelock'
+              UNION ALL SELECT 'sharelock' UNION ALL SELECT 'sharerowexclusivelock'
+              UNION ALL SELECT 'exclusivelock' UNION ALL SELECT 'accessexclusivelock'
+            ) AS tmp
+            LEFT JOIN
+             (SELECT lower(mode) AS mode,count(*) AS count
+              FROM pg_locks WHERE database IS NOT NULL %%FILTER%%
+              GROUP BY lower(mode)
+             ) AS tmp2
+           ON tmp.mode=tmp2.mode ORDER BY 1"
+        ],
+    ],
+    wildcardfilter => "AND database=(SELECT oid FROM pg_database WHERE datname=?)",
+    configquery    => [
         "VALUES
          ('accesssharelock','AccessShareLock','Used by read only queries'),
          ('rowsharelock','RowShareLock','Used by SELECT FOR SHARE and SELECT FOR UPDATE queries'),
@@ -77,8 +98,7 @@ my $pg = Munin::Plugin::Pgsql->new(
          ('sharelock','ShareLock','Used by CREATE INDEX queries'),
          ('sharerowexclusivelock','ShareRowExclusiveLock','Only issued explicitly from applications'),
          ('exclusivelock','ExclusiveLock','Infrequently issued on system tables, or by applications'),
-         ('accessexclusivelock','AccessExclusiveLock','Used by ALTER TABLE, DROP TABLE, TRUNCATE, REINDEX, CLUSTER and VACUUM FULL queries')",
-        [
+         ('accessexclusivelock','AccessExclusiveLock','Used by ALTER TABLE, DROP TABLE, TRUNCATE, REINDEX, CLUSTER and VACUUM FULL queries')", [
             8.1,
             "SELECT 'accesssharelock','AccessShareLock','Used by read only queries' UNION ALL
             SELECT 'rowsharelock','RowShareLock','Used by SELECT FOR SHARE and SELECT FOR UPDATE queries' UNION ALL
@@ -90,10 +110,9 @@ my $pg = Munin::Plugin::Pgsql->new(
             SELECT 'accessexclusivelock','AccessExclusiveLock','Used by ALTER TABLE, DROP TABLE, TRUNCATE, REINDEX, CLUSTER and VACUUM FULL queries'"
         ]
     ],
-    suggestquery =>
-        "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate AND NOT datname='postgres' UNION ALL SELECT 'ALL' ORDER BY 1 LIMIT 10",
-    graphdraw => 'AREA',
-    stack     => 1,
+    suggestquery => "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate AND NOT datname='postgres' UNION ALL SELECT 'ALL' ORDER BY 1 LIMIT 10",
+    graphdraw    => 'AREA',
+    stack        => 1,
 );
 
 $pg->Process();

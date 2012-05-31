@@ -423,7 +423,7 @@ sub _create_rrd_file {
     my ($self, $rrd_file, $service, $ds_name, $ds_config) = @_;
 
     INFO "[INFO] creating rrd-file for $service->$ds_name: '$rrd_file'";
-    mkpath(dirname($rrd_file), {mode => oct(777)});
+    munin_mkdir_p(dirname($rrd_file), oct(777));
     my @args = (
         $rrd_file,
         sprintf('DS:42:%s:600:%s:%s', 

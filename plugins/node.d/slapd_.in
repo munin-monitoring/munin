@@ -37,7 +37,7 @@ use vars qw ( $config $param $act $scope $descr $cn $vlabel
 # Change these to reflect your LDAP ACL. The given DN must have
 # read access to the Monitor branch.
 my $basedn = "cn=Monitor";
-my $server = "localhost";
+my $server = ($ENV{'server'} || 'localhost');
 my $userdn = ($ENV{'binddn'} || '');
 my $userpw = ($ENV{'bindpw'} || '');
 
@@ -149,10 +149,21 @@ EOF
           print "$name.type GAUGE\n";
         }
     } elsif ($action =~ /^operations(?:_diff)?$/) {
-        my $ldap = Net::LDAP->new ($server) or die "$@";
-        $ldap->bind ($userdn, password => $userpw) or die "$@";
+        my $ldap = Net::LDAP->new ($server)
+            or die "Failed to connect to server $server: $@";
+        my $mesg;
+        if ($userdn ne '') {
+          $mesg = $ldap->bind ($userdn, password => $userpw)
+              or die "Failed to bind with $userdn: $@";
+        } else {
+          $mesg = $ldap->bind
+              or die "Failed to bind anonymously: $@";
+        }
+        if ($mesg->code) {
+          die "Failed to bind: " . $mesg->error;
+        }
         my $searchdn = $ops{$action}->{'search'} . "," . $basedn;
-        my $mesg =
+        $mesg =
             $ldap->search (
                            base   => $searchdn,
                            scope  => 'one',
@@ -179,6 +190,8 @@ EOF
                 print "$name.warning 1\n";
             }            
         }
+
+        $ldap->unbind;
     } else {
         print "$action.label $ops{$action}->{'label'}\n";
         print "$action.type DERIVE\n";
@@ -196,10 +209,34 @@ if ($ARGV[0]) {
 
         # Check for LDAP version 3
         my $ldap = Net::LDAP->new ($server, version => 3)
-            or do { print "no (Needs LDAPv3)\n"; exit 0; };
-        $ldap->bind ($userdn, password => $userpw)
-            or do { print "no (Can't log in, check env file)\n"; exit 0; };
+            or do { print "no ($@)\n"; exit 0; };
 
+        my $mesg;
+        if ($userdn ne '') {
+          $mesg = $ldap->bind ($userdn, password => $userpw)
+            or do { print "no ($@)\n"; exit 0; };
+        } else {
+          $mesg = $ldap->bind
+            or do { print "no ($@)\n"; exit 0; };
+        }
+        if ($mesg->code) {
+          print "no (" . $mesg->error . ")\n";
+          exit 0;
+        }
+
+        $mesg =
+            $ldap->search (
+                           base   => $basedn,
+                           scope  => 'one',
+                           filter => '(objectClass=monitorServer)',
+                           attrs  => 'cn',
+                           );
+        if ($mesg->code) {
+          print "no (" . $mesg->error . ")\n";
+          exit 0;
+        }
+        print "yes\n";
+        exit 0;
     } elsif ($ARGV[0] eq "config") {
         if ($0 =~ /slapd_([\w\d_]+)$/) {
             my $action = $1;
@@ -225,9 +262,18 @@ $scope = "one";
 
 # Net::LDAP variant
 my $ldap = Net::LDAP->new ($server, version => 3)
-    or die "$@";
-$ldap->bind ($userdn,password => $userpw)
-    or die "$@";
+    or die "Failed to connect to server $server: $@";
+my $mesg;
+if ($userdn ne '') {
+  $mesg = $ldap->bind ($userdn, password => $userpw)
+      or die "Failed to bind with $userdn: $@";
+} else {
+  $mesg = $ldap->bind
+      or die "Failed to bind anonymously: $@";
+}
+if ($mesg->code) {
+  die "Failed to bind: " . $mesg->error;
+}
 
 my $searchdn = $ops{$action}->{'search'} . "," . $basedn;
 my $searchattrs;
@@ -250,7 +296,7 @@ if ($ops{$action}->{'scope'}) {
   $scope = $ops{$action}->{'scope'};
 }
 
-my $mesg =
+$mesg =
     $ldap->search (
                    base   => $searchdn,
                    scope  => $scope,

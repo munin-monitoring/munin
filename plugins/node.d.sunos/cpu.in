@@ -58,29 +58,25 @@ if [ "$1" = "config" ]; then
 	echo 'system.type DERIVE'
 	echo 'system.min 0'
 	echo "system.max $cpumax"
-	print_warning system
-	print_critical system
+	print_adjusted_thresholds system "$graphlimit"
 	echo 'user.label user'
 	echo 'user.draw STACK'
 	echo 'user.type DERIVE'
 	echo 'user.min 0'
 	echo "user.max $cpumax"
-	print_warning user
-	print_critical user
+	print_adjusted_thresholds user "$graphlimit"
 	echo "waitio.max $cpumax"
 	echo 'waitio.label waitio'
 	echo 'waitio.draw STACK'
 	echo 'waitio.type DERIVE'
 	echo 'waitio.min 0'
-	print_warning waitio
-	print_critical waitio
+	print_adjusted_thresholds waitio "$graphlimit"
 	echo 'idle.label idle'
 	echo 'idle.draw STACK'
 	echo 'idle.type DERIVE'
 	echo 'idle.min 0'
 	echo "idle.max $cpumax"
-	print_warning idle
-	print_critical idle
+	print_adjusted_thresholds idle "$graphlimit"
 	if [ "$scaleto100" = "yes" ]; then
 		echo "system.cdef system,$ncpu,/"
 		echo "user.cdef user,$ncpu,/"

@@ -91,7 +91,8 @@ sub _run_starttls_if_required {
 
     # TLS should only be attempted if explicitly enabled. The default
     # value is therefore "disabled" (and not "auto" as before).
-    my $tls_requirement = $config->{tls};
+    my $tls_requirement = exists $self->{configref}->{tls} ?
+                                   $self->{configref}->{tls} : $config->{tls};
     DEBUG "TLS set to \"$tls_requirement\".";
     return if $tls_requirement eq 'disabled';
     my $logger = Log::Log4perl->get_logger("Munin::Master");
@@ -478,22 +479,14 @@ sub _node_read_single {
 
 sub _node_read {
     my ($self) = @_;
-    my @array = (); 
+    my @array = ();
 
-    my $timed_out = !do_with_timeout($self->{io_timeout}, sub {
-        while (1) {
-            my $line = $self->{tls} && $self->{tls}->session_started()
-                ? $self->{tls}->read()
-                : readline $self->{socket};
-            last unless defined $line;
-            last if $line =~ /^\.\n$/;
-            chomp $line;
-            push @array, $line;
-        }
-    });
-    if ($timed_out) {
-        LOGCROAK "[FATAL] Socket read timed out to ".$self->{host}.": $@\n";
+    my $line = $self->_node_read_single();
+    while($line ne ".") {
+        push @array, $line;
+        $line = $self->_node_read_single();
     }
+
     DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".";
     return @array;
 }

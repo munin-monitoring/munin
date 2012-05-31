@@ -88,7 +88,7 @@ if ($no_cache or (! &graph_usable($filename,$time) )) {
 # At this time the file exists.  But may be old.  Or not.
 
 my @stats         = stat ($filename);
-my $last_modified = strftime ("%a, %d %b %Y %H:%M:%S %Z", localtime ($stats[9]));
+my $last_modified = strftime ("%a, %d %b %Y %H:%M:%S GMT", gmtime ($stats[9]));
 # "Expires" has to use last modified time as base:
 my $expires       = strftime ("%a, %d %b %Y %H:%M:%S GMT", 
 			      gmtime($stats[9]+($period{$scale}-($stats[9]%$period{$scale}))));
@@ -108,7 +108,7 @@ draw:
 
     @stats = stat ($filename) unless @stats;
 
-$last_modified = strftime ("%a, %d %b %Y %H:%M:%S %Z", localtime ($stats[9]))
+$last_modified = strftime ("%a, %d %b %Y %H:%M:%S GMT", gmtime ($stats[9]))
     unless defined($last_modified); 
 
 $expires       = strftime ("%a, %d %b %Y %H:%M:%S GMT", 

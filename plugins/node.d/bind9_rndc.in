@@ -63,7 +63,7 @@ my $version96 = 0;
 # check to see if we're running bind 9.6
 if ( open VERSION, "$rndc 2>&1 |" ) {
     while ( my $line = <VERSION> ) {
-	if ( $line =~ m/^Version:\s+9\.(\d+)\./o ) {
+	if ( $line =~ m/^Version:\s+9\.(\d+)\D/o ) {
 	    $version96 = 1 if $1 >= 6;
 	}
     }

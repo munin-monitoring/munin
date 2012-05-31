@@ -31,14 +31,19 @@ GPLv2
 =cut
 
 use strict;
+use Munin::Common::Defaults; 
 
 my $QUERYLOG = $ENV{logfile} || '/var/log/bind9/query.log';
-my $STATEFILE= $ENV{MUNIN_PLUGSTATE}.'/bind9.state';
+my $STATEFILE= $Munin::Common::Defaults::MUNIN_PLUGSTATE.'/bind9.state';
 my $OTHER=0;
 my %IN;
 
 sub get_state {
-    open(Q,"< $STATEFILE") or die;
+    if (! -f $STATEFILE) {
+        open(Q, ">", $STATEFILE);
+        close(Q);
+    }
+    open(Q,"< $STATEFILE") or die ("Cannot open state file");
     while (<Q>) {
         chomp;
         my ($q,$n) = split(/\s+/,$_,2);

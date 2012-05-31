@@ -60,7 +60,7 @@ our @ISA = ('Exporter');
 our @EXPORT = qw(
         clean_fieldname
         set_state_name save_state restore_state
-        get_thresholds print_thresholds
+        get_thresholds print_thresholds adjust_threshold
         tail_open tail_close
         scaleNumber
         need_multigraph
@@ -370,6 +370,22 @@ sub print_thresholds {
     print "$field.critical $critical\n" if defined($critical);
 }
 
+=head3 adjust_threshold($threshold, $base)
+
+If $threshold contains % signs, return a new threshold with adjusted values for
+these percentages against $base.
+
+=cut
+
+sub adjust_threshold {
+    my ($threshold, $base) = @_;
+
+    return undef if(!defined $threshold or !defined $base);
+
+    $threshold =~ s!(\d+\.?\d*)%!$1*$base/100!eg;
+
+    return $threshold;
+}
 
 =head3 ($file_handle,$rotated) = tail_open($file_name, $position)
 

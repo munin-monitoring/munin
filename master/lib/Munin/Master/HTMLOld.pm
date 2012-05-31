@@ -89,7 +89,10 @@ my $tmpldir;
 my $htmldir;
 
 my $do_dump = 0;
-my $do_fork = 0; # No effect in this program.
+my $do_fork = 1;
+my $max_running=6;
+my $running=0;
+
 
 sub html_startup {
 
@@ -121,6 +124,8 @@ sub html_startup {
 
     $tmpldir = $config->{tmpldir};
     $htmldir = $config->{htmldir};
+
+    $max_running = &munin_get($config, "max_html_jobs", $max_running);
 
     %comparisontemplates = instanciate_comparison_templates($tmpldir);
 
@@ -162,14 +167,11 @@ sub html_main {
     # Preparing the group tree...
     my $groups = get_group_tree($config);
 
-    
-
     if (!defined($groups) or scalar(%{$groups} eq '0')) {
 	LOGCROAK "[FATAL] There is nothing to do here, since there are no nodes with any plugins.  Please refer to http://munin-monitoring.org/wiki/FAQ_no_graphs";
     };
 	
-
-    if (defined $groups->{"name"} and $groups->{"name"} eq "root") {
+    if (defined $groups->{"name"} and $groups->{"name"} eq "#%#root") {
         $groups = $groups->{"groups"};    # root->groups
     }
 
@@ -180,8 +182,6 @@ sub html_main {
 	print Dumper $groups;
 	exit 0;
     }
-
-    
 
     generate_group_templates($groups);
 
@@ -509,7 +509,7 @@ sub get_peer_nodes {
         my $peername = munin_get_node_name($peer);
         next
             if $peername eq "contact"
-                and munin_get_node_name($parent) eq "root";
+                and munin_get_node_name($parent) eq "#%#root";
         if ($peername eq $me) {
             unshift @$ret, {"name" => $peername, "link" => undef};
         }
@@ -823,6 +823,54 @@ sub munin_get_sorted_children {
 }
 
 
+sub fork_and_work {
+    my ($work) = @_;
+
+    if (!$do_fork) {
+
+        # We're not forking.  Do work and return.
+        DEBUG "[DEBUG] Doing work synchrnonously";
+        &$work;
+        return;
+    }
+
+    # Make sure we don't fork too much
+    while ($running >= $max_running) {
+        DEBUG
+            "[DEBUG] Too many forks ($running/$max_running), wait for something to get done";
+        look_for_child("block");
+        --$running;
+    }
+
+    my $pid = fork();
+
+    if (!defined $pid) {
+        ERROR "[ERROR] fork failed: $!";
+        die "fork failed: $!";
+    }
+
+    if ($pid == 0) {
+
+        # This block does the real work.  Since we're forking exit
+        # afterwards.
+
+        &$work;
+
+        # See?!
+
+        exit 0;
+
+    }
+    else {
+        ++$running;
+        DEBUG "[DEBUG] Forked: $pid. Now running $running/$max_running";
+        while ($running and look_for_child()) {
+            --$running;
+        }
+    }
+}
+
+
 sub generate_group_templates {
     my $arr = shift || return;
     return unless ref($arr) eq "ARRAY";
@@ -836,7 +884,7 @@ sub generate_group_templates {
             
             if (defined $key->{'ngroups'} and $key->{'ngroups'}) {
                 # WTF: $key->{'groups'} = $key->{'groups'};
-                generate_group_templates($key->{'groups'});
+                fork_and_work(sub {generate_group_templates($key->{'groups'})});
 
                 emit_group_template($key);
                 

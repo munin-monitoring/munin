@@ -107,7 +107,7 @@ sub _start_waiting_workers {
     my ($self) = @_;
 
     while (@{$self->{workers}}) {
-        DEBUG "[DEBUG] Active workers: " . scalar %{$self->{active_workers}};
+        DEBUG "[DEBUG] Active workers: " . (scalar keys %{$self->{active_workers}}) . "/" . $self->{max_concurrent};
         last if scalar keys %{$self->{active_workers}} == $self->{max_concurrent};
 	# Here we just start'em, check results in _collect_results
         $self->_start_next_worker();
@@ -140,7 +140,7 @@ sub _start_next_worker {
 sub _collect_results {
     my ($self, $sock) = @_;
 
-    while (%{$self->{result_queue}}) {
+    while (%{$self->{result_queue}} || @{$self->{workers}}) {
 
         do {
             $self->_vet_finished_workers();
@@ -148,7 +148,7 @@ sub _collect_results {
         } while (!%{$self->{result_queue}} && @{$self->{workers}});
 
         my $worker_sock;
-	DEBUG "[DEBUG] Active workers: " . scalar %{$self->{active_workers}};
+	DEBUG "[DEBUG] Active workers: " . (scalar keys %{$self->{active_workers}}) . "/" . $self->{max_concurrent};
 
 	if (not %{$self->{active_workers}}) {
 	    # Nothing left do do
@@ -168,7 +168,7 @@ sub _collect_results {
 		    . " failed.  This could be due to network problems/firewalled munin-node. Remaining workers: "
 		    . join(", ", keys %{$self->{result_queue}});
 	    } else {
-		WARN "[WARNING] Call to accept timed out.  Remaining workers: " . join(", ", keys %{$self->{result_queue}});
+		INFO "[INFO] Remaining workers: " . join(", ", keys %{$self->{result_queue}});
 	    }
 	    next;
         } # if timed_out

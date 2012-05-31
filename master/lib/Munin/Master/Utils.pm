@@ -48,6 +48,7 @@ our (@ISA, @EXPORT);
 	   'munin_get_picture_filename',
 	   'munin_get_html_filename',
 	   'munin_get_filename',
+	   'munin_get_keypath',
 	   'munin_graph_column_headers',
 	   'munin_get_max_label_length',
 	   'munin_get_field_order',
@@ -277,7 +278,7 @@ sub munin_readconfig {
     $config->{'htmldir'}       ||= $Munin::Common::Defaults::MUNIN_HTMLDIR;
     $config->{'spooldir'}      ||= $Munin::Common::Defaults::MUNIN_SSPOOLDIR;
     $config->{'#%#parent'}     = undef;
-    $config->{'#%#name'}       = "root";
+    $config->{'#%#name'}       = "#%#root";
 
     return ($config);
 }
@@ -920,7 +921,7 @@ sub munin_get_keypath {
 	# Not sure when a #%#name node can go missing
 	my $name = $i->{'#%#name'} || '*BUG*';
 	goto gotoparent if $name eq '*BUG*';
-	last if $name eq 'root';
+	last if $name eq '#%#root';
 	if ($host) {
 	    # Into group land now
 	    unshift(@group,$name);
@@ -928,6 +929,7 @@ sub munin_get_keypath {
 	    # In service land, working towards host.
 	    # If i or my parent has a graph_title we're still working with services
 	    if (defined $i->{'#%#parent'}{graph_title} or defined $i->{graph_title}) {
+		$name =~ s/-/_/g; # can't handle dashes in service or below
 		unshift(@service,$name);
 	    } else {
 		$host = 1;
@@ -1331,7 +1333,7 @@ sub munin_mkdir_p {
     my ($dirname, $umask) = @_;
 
     eval {
-        mkpath($dirname, {mode => $umask});
+        mkpath($dirname, 0, $umask);
     };
     return if $EVAL_ERROR;
     return 1;

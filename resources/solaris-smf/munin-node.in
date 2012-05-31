@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Setup
+install -d -u munin -g munin @@STATEDIR@@
+
+# Main
+exec @@SBINDIR@@/munin-node
