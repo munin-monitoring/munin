@@ -1,4 +1,31 @@
-munin (work)
+munin (1.1.3)
+
+  * Applied patch from Jacques Caruso to make HTML output standards
+    compliant.
+  * Munin-graph: fixed bug when combining graph_order aliases with
+    "normal" fields, as reported by Jacques Caruso.
+  * Plugin bugfixes from Jacques Caruso, in linux/iostat_ios and
+    generic/ipacng.
+  * Munin-nagios: Only state number of OKs when something is in warning or
+    critical state.
+  * Munin-graph: Added 'graph_sources' option. This is (in effect) the same as
+    graph_order, but with a default of 'graph no'.
+  * Applied patch from Matthieu Lochegnies to munin-graph, and fixed the
+    same problem elsewhere in the code (Deb#250982, SF#924561).
+  * Force LANG/LC_ALL=C in generic/hddtemp2, to remove problems in parsing of
+    hddtemp output (Deb#253497).
+  * Force LANG/LC_ALL=C in linux/sensors_, to remove problems in parsing of
+    sensors output (SF#972749, SF#972748, Deb#255312).
+  * linux/sensors_temp now understand temp lines without hyst or max settings
+    (Deb#256380).
+  * Made linux/sensors_volt work with negative voltages (Deb#256734).
+  * Made generic/hddtemp2 understand environment variables with quotes
+    (Deb#265022).
+  * Added plugin generic/uptime contributed by Nicolas Salles (SF#998665).
+  * Added plugin generic/hddtempd contributed by Stein Magnus Jodal
+    (SF#958762).
+
+munin (1.1.2)
 
   * The server programs now open the log file at an earlier point.
   * Munin-limits added to distro.

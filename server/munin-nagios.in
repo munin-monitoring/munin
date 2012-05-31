@@ -4,6 +4,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.6  2004/06/28 13:30:33  jimmyo
+# Munin-nagios: Only state number of OKs when something is in warning or critical state.
+#
 # Revision 1.5  2004/05/20 20:47:20  jimmyo
 # The server programs now open the log file at an earlier point.
 #
@@ -289,7 +292,7 @@ sub process_service {
 	scalar (@crits) . " CRITICALs: ". join (',', @crits[0 .. (@crits>20?20:@crits)]) .
 	(@warns    ? "; " . scalar (@warns)    . " WARNINGs: " . join (', ', @warns[0 .. (@warns>20?20:@warns-1)]) : "") .
 	(@unknowns ? "; " . scalar (@unknowns) . " UNKNOWNs: " . join (', ', @unknowns[0 .. (@unknowns>20?20:@unknowns-1)]) : "") .
-	(@oks      ? "; " . scalar (@oks)      . " OKs: "      . join (', ', @oks[0 .. (@oks>20?20:@oks-1)]) : "") .
+	(@oks      ? "; " . scalar (@oks)      . " OKs" : "") .
 	".");
   }
   elsif (@warns)
@@ -297,14 +300,14 @@ sub process_service {
     munin_nscasend ($name, $clientname, "", 1, 
 	scalar (@warns) . " WARNINGs: " . join (',', @warns[0 .. (@warns>20?20:@warns)]) .
 	(@unknowns ? "; " . scalar (@unknowns) . " UNKNOWNs: "  . join (', ', @unknowns[0 .. (@unknowns>20?20:@unknowns-1)]) : "") .
-	(@oks      ? "; " . scalar (@oks)      . " OKs: "       . join (', ', @oks[0 .. (@oks>20?20:@oks-1)]) : "") .
+	(@oks      ? "; " . scalar (@oks)      . " OKs" : "") .
 	".");
   }
   elsif (@unknowns)
   {
     munin_nscasend ($name, $clientname, "", 3, 
 	scalar (@unknowns) . " UNKNOWNs: " . join (',', @unknowns[0 .. (@unknowns>20?20:@unknowns-1)]) .
-	(@oks      ? "; " . scalar (@oks)      . " OKs: "       . join (', ', @oks[0 .. (@oks>20?20:@oks-1)]) : "") .
+	(@oks      ? "; " . scalar (@oks)      . " OKs" : "") .
 	".");
   }
   elsif (@oks and $update)

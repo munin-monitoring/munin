@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="style.css" type="text/css" /> 
   <meta http-equiv="refresh" content="300" />
   <title>Munin :: definitions</title>
-  <meta http-equiv="content-type" content="text/html;charset=iso-8859-1" />
+  <meta http-equiv="content-type" content="application/xhtml+xml; charset=iso-8859-1" />
   <meta name="author" content="Jimmy Olsen" />
 </head>
 <body> 
@@ -19,36 +19,36 @@
  <div class="box">
  <table cellpadding="2" cellspacing="4" border="0">
    <tr>
-     <td valign="top" align="left"><a name="data_types">Data&nbsp;types:</a></td>
+     <td valign="top" align="left"><a id="data_types">Data&nbsp;types:</a></td>
    </tr>
    <tr>
-     <td colspan=2><hr size="1" noshade /></td>
+     <td colspan="2"><hr class="ruler" /></td>
    </tr>
    <tr>
-     <td valign="top" align="left">&ndash;&nbsp;<a name="gauge">Gauge</a></td>
+     <td valign="top" align="left">&ndash;&nbsp;<a id="gauge">Gauge</a></td>
 	 <td valign="top" align="left">A data source of type gauge shows the state of the data source at the
 	 exact moment that Munin is run (every 5 minutes). Any peaks in-between data gatherings, will not be in
 	 the graph.</td>
    </tr>
    <tr>
-     <td valign="top" align="left">&ndash;&nbsp;<a name="gauge">Counte</a>r</td>
+     <td valign="top" align="left">&ndash;&nbsp;<a id="counter">Counter</a></td>
 	 <td valign="top" align="left">A data source of type counter shows the state of the data source as an
 	 average between two plots (i.e. 5 minutes). Short peaks will therefore be hard to spot, but long peaks
 	 will be spottable, even though it occurs between plots.</td>
    </tr>
    <tr>
-     <td valign="top" align="left">&ndash;&nbsp;<a name="gauge">Derive</a></td>
+     <td valign="top" align="left">&ndash;&nbsp;<a id="derive">Derive</a></td>
 	 <td valign="top" align="left">For the purposes of viewing data, the derive type works the same way as a
 	 counter</td>
    </tr>
    <tr>
-     <td valign="top" align="left">&ndash;&nbsp;<a name="gauge">Absolute</a></td>
+     <td valign="top" align="left">&ndash;&nbsp;<a id="absolute">Absolute</a></td>
 	 <td valign="top" align="left">Absolute works much as a counter, with the exception that it is assumed
 	 that the counter value is set to 0 upon each read of it. It's not a good idea to run these plugins by
 	 hand in-between Munin runs, since Munin won't receive all the data it expects.</td>
    </tr>
    <tr>
-     <td colspan=2><hr size="2" noshade /></td>
+     <td colspan="2"><hr class="ruler2" /></td>
    </tr>
    <tr>
      <td valign="top" align="left"></td>

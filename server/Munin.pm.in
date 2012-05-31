@@ -4,6 +4,10 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.13  2004/07/02 14:19:06  jimmyo
+#   * Munin-graph: Added 'graph_sources' option. This is (in effect) the same as
+#     graph_order, but with a default of 'graph no'.
+#
 # Revision 1.12  2004/06/24 14:32:17  jimmyo
 # More work on output_graphs (renamed to graph_strategy, amongst others).
 #
@@ -144,14 +148,14 @@ my $configfile="@@CONFDIR@@/munin.conf";
 
 my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"dbdir", "logdir", "htmldir", "include", "domain_order", "node_order", 
-	"graph_order", "fork", "graph_title", "create_args", "graph_args",
-	"graph_vlabel", "graph_vtitle", "graph_total", "graph_scale", "graph",
-	"update", "host_name", "label", "cdef", "draw", "graph", "max", "min",
-	"negative", "skipdraw", "type", "warning", "critical", "special_stack",
-	"special_sum", "stack", "sum", "address", "htaccess", "warn",
-	"use_default_name", "use_node_name", "port", "graph_noscale",
-	"nsca", "nsca_server", "nsca_config", "extinfo", "fetch_data",
-	"filename", "max_processes", "nagios", "info", "graph_info", 
+	"graph_order", "graph_sources", "fork", "graph_title", "create_args", 
+	"graph_args", "graph_vlabel", "graph_vtitle", "graph_total", 
+	"graph_scale", "graph", "update", "host_name", "label", "cdef", "draw", 
+	"graph", "max", "min", "negative", "skipdraw", "type", "warning", 
+	"critical", "special_stack", "special_sum", "stack", "sum", "address", 
+	"htaccess", "warn", "use_default_name", "use_node_name", "port", 
+	"graph_noscale", "nsca", "nsca_server", "nsca_config", "extinfo", 
+	"fetch_data", "filename", "max_processes", "nagios", "info", "graph_info",
 	"graph_category", "graph_strategy",
     );
 

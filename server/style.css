@@ -30,7 +30,7 @@ div.logo {
 }
 
 .small { 
-  text-size: smaller;
+  font-size: smaller;
  }
 
 .noborder { 
@@ -114,6 +114,18 @@ html>body .graphbox {
 .crittext {
   font-weight: bold;
   background-color: #ff6f22;
+}
+
+.ruler {
+  background-color: #999999;
+  border: 0px;
+  height: 1px;
+}
+
+.ruler2 {
+  background-color: #999999;
+  border: 0px;
+  height: 2px;
 }
 
 a:link { 

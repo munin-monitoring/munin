@@ -27,6 +27,15 @@
 # 	                    Narrow the voltage bracket by this.
 #
 # $Log$
+# Revision 1.7  2004/08/18 17:27:21  jimmyo
+# Made linux/sensors_volt work with negative voltages (Deb#256734).
+#
+# Revision 1.6  2004/08/18 17:20:58  jimmyo
+# linux/sensors_temp now understand temp lines without hyst or max settings (Deb#256380).
+#
+# Revision 1.5  2004/08/18 17:01:37  jimmyo
+# Force LANG/LC_ALL=C in linux/sensors_ and generic/hddtemp2, to remove problems in parsing of sensors output (SF#972749, SF#972748, Deb#255312)
+#
 # Revision 1.4  2004/05/20 19:02:37  jimmyo
 # Set categories on a bunch of plugins
 #
@@ -47,6 +56,8 @@
 
 use strict;
 
+$ENV{'LANG'} = "C"; # Force parseable output from sensors.
+$ENV{'LC_ALL'} = "C"; # Force parseable output from sensors.
 my $SENSORS = $ENV{'sensors'} || 'sensors';
 my %config = (
 	       fan => {
@@ -57,14 +68,14 @@ my %config = (
 			 graph_args => '--base 1000 -l 0'
 	               },
 	       temp => {
-			 regex => qr/^([^:]*)\s*:\s+\+?(\d+(?:\.\d+)?)[° ]C.*?(\d+(?:\.\d+)?)[° ]C.*?(\d+(?:\.\d+)?)[° ]C/m,
+			 regex => qr/^([^:]*)\s*:\s+\+?(\d+(?:\.\d+)?)[° ]C/m,
 			 title => 'Temperatures',
 			 vtitle => 'Celsius',
 			 print_threshold => \&temp_threshold,
 			 graph_args => '--base 1000 -l 0'
 	               },
 	       volt => {
-			 regex => qr/^([^:]*)\s*:\s+\+?(\d+(?:\.\d+)?) V.*?(\d+(?:\.\d+)?) V.*?(\d+(?:\.\d+)?) V/m,
+			 regex => qr/^([^:]*)\s*:\s+\+?(-?\d+(?:\.\d+)?) V/m,
 			 title => 'Voltages',
 			 vtitle => 'Volt',
 			 print_threshold => \&volt_threshold,
@@ -84,7 +95,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
     exit 1;
   }
 
-  unless ($text =~ /°C/) {
+  unless ($text =~ /[° ]C/) {
     print "no (no temperature readings)\n";
     exit 1;
   }
