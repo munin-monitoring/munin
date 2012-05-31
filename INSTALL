@@ -1,46 +1,65 @@
 Munin consists of the main programs, and a node. The node runs on each of
 the machines you want to collect data from. The main programs does the
-collecting, draws the graphs, and creates the HTML pages. 
+collecting, draws the graphs, and creates the HTML pages.
 
 To install the main programs:
 
 	- edit Makefile.config
 	- create the user "munin"
 	- make install-main
-	- create a cron-entry to run "munin-cron" as the user "munin" every 5
-	  minutes
-	- if you want to use the dynamic graphs, configure the cgi directory
-	  (an example for apache can be found in README-apache-cgi).
+
+        - In your HTMLDIR/munin you will now find a .htaccess file
+          looking for passwords in CONFDIR/munin-htpasswd.  Install
+          the users you need in munin-htpasswd with the htpasswd
+	  command.  Check that authentication is required, if it's not 
+	  please refer to build/resources/apache-passwd.conf.
+
+	  If you prefer that munin be openly available remove the
+	  .htaccess file.
+
+          If you already have a .htaccess file it will not be
+          overwritten.
+
+	- create a cron-entry to run "munin-cron" as the user "munin"
+	  every 5 minutes.  You might find cron files for your system
+	  under the build/dists subdirectory, or perhaps in the
+          build/resources directory.
+
+	- if you want to use the dynamic graphs: Configure the cgi
+	  directory, you will find a apache config example in
+	  build/resources.  NOTE: Dynamic graphs are not exactly
+          perfect. Se also http://munin.projects.linpro.no/wiki/CgiHowto
 
 To install the documentation:
 
 	- edit Makefile.config
 	- make install-doc install-man
 
-To install the client:
+To install a node:
 
 	- edit Makefile.config
 	- create the group "munin"
 	- make install-node install-node-plugins
-	- decide which plugins to use (quick auto-solution: 
-	  "munin-node-configure --shell | sh")
-	- start the client (you probably want an init-script for this)
+	- decide which plugins to use (quick auto-plug-and-play
+          solution: "munin-node-configure --shell | sh")
+	- start the node agent. You probably want an init-script for
+          this and you might find a good one under build/dists
 
 Notes about node plugins
---------------------------
+------------------------
 
 "make install-node-plugins" installs the plugins in LIBDIR (defined in
 Makefile.config). Put the ones you want to use (or better yet, create
-softlinks) in CONFDIR/client.d/ . An easy way to do this, is the program
-"munin-node-configure", using the parameter "--shell". It will then
-suggest commands to do this.
+softlinks) in CONFDIR/plugins/ . An easy way to do this, is the
+program "munin-node-configure", using the parameter "--shell". It will
+then suggest commands to do this.
 
-Some of the plugins require some configuration to get running. An
-example configuration file is found in the file "plugins.conf";
+Some of the plugins require some configuration to get running.  Some
+example configuration files (plugins.conf) is found under the
+build/dists directory.
 
-Many OSes and releases thereof have different ways of gathering data. A
-lot of OSes still have none. If you create plugins for a system which is
-not already in the package, please send us a copy of them, so we can add
-them for others to use. We'd also be happy if you sent us any new plugins
-on systems already in the package.
-
+Many OSes and releases thereof have different ways of gathering data.
+A lot of OSes still have none.  If you create plugins for an OS/system
+which is not already in the package, please send us a copy of them, so
+we can add them for others to use.  We'd also be happy if you sent us
+any new plugins on systems already in the package.

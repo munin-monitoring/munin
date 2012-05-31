@@ -15,6 +15,7 @@ if [ "$1" = "purge" ]; then
 	echo "The generated web site or accumulated data won't be removed."
 
 	rm -f /var/lib/munin/datafile
+	rm -f /var/lib/munin/limits
 	rm -f /var/lib/munin/*.stats
 	rm -f /var/lib/munin/*/*.ok
 	rm -f /var/run/munin/*.lock
@@ -22,7 +23,18 @@ if [ "$1" = "purge" ]; then
 	rm -f /var/log/munin/munin-update.log*
 	rm -f /var/log/munin/munin-graph.log*
 	rm -f /var/log/munin/munin-html.log*
-	rm -f /var/log/munin/munin-nagios.log*
+	rm -f /var/log/munin/munin-limits.log*
+
+	dpkg-statoverride --remove /var/www/munin
+
+	# These are shared with munin-node, so only remove them if munin-node
+	# isn't installed (or already purged).
+	status=$(dpkg --get-selections munin-node)
+	if [ -z "$status" ] || [ "${status%purge}" != "$status" ]; then
+		dpkg-statoverride --remove /var/log/munin
+		dpkg-statoverride --remove /var/run/munin
+		dpkg-statoverride --remove /var/lib/munin
+	fi
 	
 	delete_dir_if_empty /var/www/munin
 	delete_dir_if_empty /var/lib/munin

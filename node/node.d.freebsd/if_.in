@@ -7,6 +7,9 @@
 #
 # ...will monitor eth0.
 #
+# To aggregate all network interfaces on the system (except lo0), 
+# link if_aggregated to this file.
+#
 # Any device found in /usr/bin/netstat can be monitored.
 #
 # Magic markers (optional - used by munin-config and some installation
@@ -55,10 +58,32 @@ if [ "$1" = "config" ]; then
 	echo 'obytes.cdef obytes,8,*'
 	echo "obytes.info Traffic sent (+) and received (-) on the $INTERFACE network interface."
 	exit 0
-fi;
+fi
 
-/usr/bin/netstat -i -b -I $INTERFACE | awk '
+if [ "$INTERFACE" = "aggregated" ]; then
+	/usr/bin/netstat -i -b | grep -v '^lo' | awk '
+BEGIN { rsum = 0; osum = 0; }
 /<Link#[0-9]*>/ {
-	print "rbytes.value", $7;
-	print "obytes.value", $10;
+	if (NF == 10) { 
+		rsum += $6; osum += $9;
+	} else {
+		rsum += $7; osum += $10;
+	}
+}
+END {
+	printf "rbytes.value %i\n", rsum;
+	printf "obytes.value %i\n", osum;
 }'
+  
+else
+	/usr/bin/netstat -i -b -I $INTERFACE | awk '
+/<Link#[0-9]*>/ {
+	if (NF == 10) { 
+		print "rbytes.value", $6;
+		print "obytes.value", $9;
+	} else {
+		print "rbytes.value", $7;
+		print "obytes.value", $10;
+	}
+}'
+fi

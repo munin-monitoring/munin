@@ -1,6 +1,6 @@
 #!@@PERL@@ -w
 #
-# Copyright (C) 2004 Jimmy Olsen
+# Copyright (C) 2004-2006 Jimmy Olsen
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-#
 #
 
 use strict;
@@ -62,7 +61,7 @@ $do_error = 1 unless GetOptions (
     "version!"      => \$do_version,
     "snmpversion=s" => \$snmpver,
     "community=s"   => \$community,
-    "newer=s"      => \$newer
+    "newer=s"       => \$newer   # Seems unused
 );
 
 if (! @plugins)
@@ -86,7 +85,8 @@ Options:
 	                    [$config]
 	--servicedir <dir>  Override plugin dir [$servicedir]
 	--libdir <dir>      Override plugin lib [$libdir]
-
+	--snmpversion <ver> Override SNMP version [$snmpver]
+	--community <str>   Override SNMP community [$community]
 
 ";
 
@@ -95,12 +95,18 @@ Options:
 
 if ($do_version)
 {
-	print "munin-node-configure-snmp (munin-node) version $version.\n";
-	print "Written by Jimmy Olsen\n";
-	print "\n";
-	print "Copyright (C) 2004 Jimmy Olsen\n";
-	print "This is free software released under the GNU Public License. There is NO\n";
-	print "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n";
+	print <<"EOT";
+munin-node-configure-snmp (munin-node) version $version.
+Written by Jimmy Olsen
+
+Copyright (C) 2004-2006 Jimmy Olsen
+
+This is free software released under the GNU General Public License. There
+is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. For details, please refer to the file COPYING that is included
+with this software or refer to
+  http://www.fsf.org/licensing/licenses/gpl.txt
+EOT
 	exit 0;
 }
 

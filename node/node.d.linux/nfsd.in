@@ -2,6 +2,38 @@
 #
 # Plugin created by Alexandre Dupouy, with the assistance of Mike Fedyk
 #
+# $Log$
+# Revision 1.9.2.1  2005/03/16 13:45:45  ilmari
+# Fix autoconf for linux/{nfsd,nfs_client}.
+#
+# Revision 1.9  2004/12/10 10:47:49  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
+# Revision 1.8  2004/12/09 22:12:56  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
+# Revision 1.7  2004/11/21 00:17:12  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
+# Revision 1.6  2004/10/01 12:32:09  ilmari
+# complete "rpc" removal
+#
+# Revision 1.5  2004/10/01 08:40:50  ilmari
+# Remove useless 'rpc' field, add total field
+#
+# Revision 1.4  2004/05/20 19:02:37  jimmyo
+# Set categories on a bunch of plugins
+#
+# Revision 1.3  2004/05/15 21:33:29  jimmyo
+# "Upped" som plugins from contrib/manual to manual or auto.
+#
+# Revision 1.2  2004/05/06 21:55:18  jimmyo
+# Added patch to contrib-plugin linux/nfsd, to graph rpc count (Alexandre Dupouy).
+#
+# Revision 1.1  2004/02/18 18:41:54  jimmyo
+# Plugin created by Alexandre Dupouy, with the assistance of Mike Fedyk
+#
+#
 #%# family=auto
 #%# capabilities=autoconf
 
@@ -10,11 +42,11 @@ NFSD=/proc/net/rpc/nfsd
 proc="getattr setattr lookup access readlink read write create mkdir symlink mknod remove rmdir rename link readdir readdirplus fsstat fsinfo pathconf commit"
 
 if [ "$1" = "autoconf" ]; then
-	if [ -x "$NFSD" ]; then
+	if [ -f "$NFSD" ]; then
 		echo yes
 		exit 0
 	else
-		echo no
+		echo "no (no $NFSD)"
 		exit 1
 	fi
 fi
@@ -30,12 +62,9 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-i=4;
-
-for a in $proc; do
-	echo -n "$a.value "
-	grep proc3 $NFSD \
-		| cut -f $i -d ' ' \
-		| awk '{print $1}'
-	i=$(expr $i + 1)
-done
+awk '/proc3/ {
+    split("'"$proc"'", names)
+    split($0,values)
+    for (e in names)
+        printf("%s.value %d\n", names[++i], values[i+3]);
+  }' $NFSD

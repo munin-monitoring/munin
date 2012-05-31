@@ -143,6 +143,7 @@ if($ARGV[0] and $ARGV[0] eq "config") {
     print "errors.min 0\n";
     print "errors.max 500000\n";
     print "requests.label misses\n";
+    print "requests.cdef requests,hits,-,errors,-\n";
     print "requests.type DERIVE\n";
     print "requests.draw STACK\n";
     print "requests.min 0\n";

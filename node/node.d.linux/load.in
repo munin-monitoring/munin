@@ -10,7 +10,8 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-
+[ "$load_warn" ] && LOAD_WARN=$load_warn || LOAD_WARN=10
+[ "$load_crit" ] && LOAD_CRIT=$load_crit || LOAD_CRIT=120
 
 # If run with the "autoconf"-parameter, give our opinion on wether we
 # should be run on this system or not. This is optinal, and only used by
@@ -47,8 +48,8 @@ if [ "$1" = "config" ]; then
 	# These two are optional. They are only used if you have
 	# configured your munin to tell a Nagios-server about any
 	# problems
-	echo 'load.warning 10'
-	echo 'load.critical 120'
+	echo 'load.warning $LOAD_WARN'
+	echo 'load.critical $LOAD_CRIT'
 	# This one is purely to add an explanation to the web page. The first
 	# one is for the graph itself, while the second one is for the field
 	# "load".

@@ -14,7 +14,18 @@
 #
 #%# family=auto
 #%# capabilities=autoconf
-
+#
+# Environment variables:
+#
+#      HZ      Some combinations of hardware and Linux (probably only
+#              2.4 kernels) use 1000 units/second in /proc/stat
+#              corresponding to the systems HZ. (see
+#              /usr/src/linux/include/asm/param.h). But Almost all
+#              systems use 100 units/second and this is our default.
+#              Even if Documentation/proc.txt in the kernel source says
+#              otherwise. - Finding and fix by dz@426.ch
+#
+# $Id$
 
 
 if [ "$1" = "autoconf" ]; then
@@ -27,25 +38,27 @@ if [ "$1" = "autoconf" ]; then
 	fi
 fi
 
+HZ=${HZ:-100}
+
 extinfo=""
 
-if (`egrep '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat 2>/dev/null >/dev/null`)
-then
+if egrep -q '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat; then
 	extinfo="iowait irq softirq"
 fi
 
 if [ "$1" = "config" ]; then
 
-	NCPU=`expr \`grep '^cpu. ' /proc/stat | wc -l\` - 1`
-	PERCENT=`expr $NCPU '*' 100`
+	NCPU=$(egrep '^cpu[0-9]+ ' /proc/stat | wc -l)
+	PERCENT=$(($NCPU * 100))
+	MAX=$(($NCPU * 100))
 	if [ "$scaleto100" = "yes" ]; then
 		graphlimit=100
 	else
 		graphlimit=$PERCENT
 	fi
-	SYSWARNING=`expr $PERCENT '*' 30 / 100`
-	SYSCRITICAL=`expr $PERCENT '*' 50 / 100`
-	USRWARNING=`expr $PERCENT '*' 80 / 100`
+	SYSWARNING=$(($PERCENT * 30 / 100))
+	SYSCRITICAL=$(($PERCENT * 50 / 100))
+	USRWARNING=$(($PERCENT * 80 / 100))
 	echo 'graph_title CPU usage'
 	echo "graph_order system user nice idle" $extinfo
 	echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit $graphlimit"
@@ -56,7 +69,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_period second'
 	echo 'system.label system'
 	echo 'system.draw AREA'
-	echo 'system.max 5000'
+	echo "system.max $MAX"
 	echo 'system.min 0'
 	echo 'system.type DERIVE'
 	echo "system.warning $SYSWARNING" 
@@ -65,20 +78,20 @@ if [ "$1" = "config" ]; then
 	echo 'user.label user'
 	echo 'user.draw STACK'
 	echo 'user.min 0'
-	echo 'user.max 5000'
+	echo "user.max $MAX"
 	echo "user.warning $USRWARNING"
 	echo 'user.type DERIVE'
 	echo 'user.info CPU time spent by normal programs and daemons'
 	echo 'nice.label nice'
 	echo 'nice.draw STACK'
 	echo 'nice.min 0'
-	echo 'nice.max 5000'
+	echo "nice.max $MAX"
 	echo 'nice.type DERIVE'
 	echo 'nice.info CPU time spent by nice(1)d programs'
 	echo 'idle.label idle'
 	echo 'idle.draw STACK'
 	echo 'idle.min 0'
-	echo 'idle.max 5000'
+	echo "idle.max $MAX"
 	echo 'idle.type DERIVE'
 	echo 'idle.info Idle CPU time'
 	if [ "$scaleto100" = "yes" ]; then
@@ -92,19 +105,19 @@ if [ "$1" = "config" ]; then
 		echo 'iowait.label iowait'
 		echo 'iowait.draw STACK'
 		echo 'iowait.min 0'
-		echo 'iowait.max 5000'
+		echo "iowait.max $MAX"
 		echo 'iowait.type DERIVE'
-		echo 'iowait.info CPU time spent waiting for I/O operations to finish'
+		echo 'iowait.info CPU time spent waiting for I/O operations to finish when there is nothing else to do.'
 		echo 'irq.label irq'
 		echo 'irq.draw STACK'
 		echo 'irq.min 0'
-		echo 'irq.max 5000'
+		echo "irq.max $MAX"
 		echo 'irq.type DERIVE'
 		echo 'irq.info CPU time spent handling interrupts'
 		echo 'softirq.label softirq'
 		echo 'softirq.draw STACK'
 		echo 'softirq.min 0'
-		echo 'softirq.max 5000'
+		echo "softirq.max $MAX"
 		echo 'softirq.type DERIVE'
 		echo 'softirq.info CPU time spent handling "batched" interrupts'
 		if [ "$scaleto100" = "yes" ]; then
@@ -116,10 +129,11 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
+# Note: Counters/derive need to report integer values.  Also we need
+# to avoid 10e+09 and the like %.0f should do this.
 
-if [ ! -z "$extinfo" ]
-then
-	awk '/^cpu / { print "user.value " $2 "\nnice.value " $3 "\nsystem.value " $4 "\nidle.value " $5 "\niowait.value " $6 "\nirq.value " $7 "\nsoftirq.value " $8 }' < /proc/stat
+if [ ! -z "$extinfo" ]; then
+	awk -v hz=$HZ '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz }' < /proc/stat
 else
-	awk '/^cpu / { print "user.value " $2 "\nnice.value " $3 "\nsystem.value " $4 "\nidle.value " $5 }' < /proc/stat
+	awk -v hz=$HZ '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz }' < /proc/stat
 fi

@@ -32,6 +32,7 @@ fi
 if [ "$1" = "config" ]; then
 
 	echo graph_title Number of selected processes
+	echo 'graph_category processes'
 	echo 'graph_args --base 1000 --vertical-label processes -l 0'
 	for name in $names; do
 		echo "$name.label $name"

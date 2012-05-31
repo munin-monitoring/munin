@@ -30,7 +30,8 @@ my $LOGFILE = $ENV{'logfile'} || 'syslog';
 if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
     my $logfile;
-    if (-d $LOGDIR)
+    `which postconf >/dev/null 2>/dev/null`;
+    if (!$?)
     {
 	$logfile = "$LOGDIR/$LOGFILE";
 
@@ -53,7 +54,7 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
     }
     else
     {
-        print "no (could not find logdir)\n";
+	    print "no (postfix not found)\n";
     }
 
     exit 1;

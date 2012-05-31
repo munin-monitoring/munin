@@ -31,7 +31,7 @@ my %IN;
 system("$rndc stats") if $rndc;
     
 open(my $stats, '<', $querystats) or die "$querystats: $!\n";
-seek($stats , 400, -1);		# go nearly to the end of the file
+seek($stats , -400, 2);		# go nearly to the end of the file
 				# to avoid reading it all
 
 while (my $line = <$stats>) {

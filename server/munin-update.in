@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# -*- cperl -*-
 #
 # Copyright (C) 2002-2004 Jimmy Olsen, Audun Ytterdal
 #
@@ -92,12 +93,18 @@ Options:
 
 if ($do_version)
 {
-    print "munin-update version $VERSION.\n";
-    print "Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS\n";
-    print "\n";
-    print "Copyright (C) 2002-2004\n";
-    print "This is free software released under the GNU Public License. There is NO\n";
-    print "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n";
+    print <<"EOT";
+munin-update version $VERSION.
+Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
+
+Copyright (C) 2002-2005
+
+This is free software released under the GNU General Public License. There
+is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. For details, please refer to the file COPYING that is included
+with this software or refer to
+  http://www.fsf.org/licensing/licenses/gpl.txt
+EOT
     exit 0;
 }
 
@@ -141,7 +148,11 @@ if (! -d $config->{rundir})
 }
 munin_runlock("$config->{rundir}/munin-update.lock");
 
-open (STATS,">$config->{dbdir}/munin-update.stats.tmp") or logger("Unable to open $config->{datadir}/munin-update.stats");
+if (!open (STATS,">$config->{dbdir}/munin-update.stats.tmp")) {
+    logger("Unable to open $config->{dbdir}/munin-update.stats");
+    # Use /dev/null instead - if the admin won't fix he won't care
+    open(STATS,">/dev/null") or die "Could not open STATS to /dev/null: $?";
+}
 
 my %children = ();
 my @queue = ();
@@ -159,7 +170,6 @@ if ($do_fork)
 }
 
 logger("Starting munin-update"); 
-
 
 for my $key (keys %{$config->{domain}}) {
   my $domain_time = Time::HiRes::time;
@@ -474,6 +484,10 @@ sub process_node {
   my ($domain,$name,$node,$oldnode) = @_;
   return if (exists ($node->{fetch_data}) and !$node->{fetch_data});
   return if (exists ($node->{update}) and $node->{update} ne "yes");
+  unless ($node->{address}) {
+      logger("No address defined for node: $name");
+      return;
+  }
 
   # Then we fork...
   if ($do_fork)
@@ -987,7 +1001,7 @@ sub config_node {
     next if (exists ($node->{client}->{$servname}->{fetch_data}) and
 	     $node->{client}->{$servname}->{fetch_data} == 0);
     next if (exists ($node->{client}->{$servname}->{update}) and 
-	     !$node->{client}->{$servname}->{update} eq "yes");
+	     $node->{client}->{$servname}->{update} ne "yes");
     next if (@limit_services and !grep (/^$servname$/, @limit_services));
     my @graph_order = (exists $node->{client}->{$servname}->{graph_order} ? 
 		       split (/\s+/, $node->{client}->{$servname}->{graph_order}) : ());
@@ -1044,11 +1058,15 @@ sub config_node {
 	if (! -f "$fname") {
 	  logger ("creating rrd-file for $servname->$subservice");
 	  mkdir "$config->{dbdir}/$domain/",0777;
-	  RRDs::create ("$fname",
+	  my @args = ("$fname",
 			"DS:42:".($node->{client}->{$servname}->{"$client.type"} || "GAUGE").":600:".
 			(defined $node->{client}->{$servname}->{"$client.min"} ? 
 			 $node->{client}->{$servname}->{"$client.min"} :
-			 "U") . ":" . ($node->{client}->{$servname}->{"$client.max"} || "U"),
+			 "U") . ":" . ($node->{client}->{$servname}->{"$client.max"} || "U"));
+	  my $resolution = &munin_get ($config, "graph_data_size", "normal", $domain, $node, $servname);
+	  if ($resolution eq "normal")
+	  {
+	  	push (@args,
 			"RRA:AVERAGE:0.5:1:576", # resolution 5 minutes
 			"RRA:MIN:0.5:1:576",
 			"RRA:MAX:0.5:1:576",
@@ -1061,6 +1079,14 @@ sub config_node {
 			"RRA:AVERAGE:0.5:288:450", # 450 days, resolution 1 day
 			"RRA:MIN:0.5:288:450",
 			"RRA:MAX:0.5:288:450");
+	  }
+	  elsif ($resolution eq "huge")
+	  {
+	  	push (@args, "RRA:AVERAGE:0.5:1:115200"); # resolution 5 minutes, for 400 days
+	  	push (@args, "RRA:MIN:0.5:1:115200"); # Three times? ARGH!
+	  	push (@args, "RRA:MAX:0.5:1:115200"); # Three times? ARGH!
+	  }
+	  RRDs::create @args;
 	  if (my $ERROR = RRDs::error) {
 	    logger ("Unable to create \"$fname\": $ERROR");
 	  }
@@ -1089,7 +1115,7 @@ sub fetch_node {
     next if (exists ($node->{client}->{$service}->{fetch_data}) and 
 	     $node->{client}->{$service}->{fetch_data} == 0);
     next if (exists ($node->{client}->{$service}->{update}) and 
-	     !$node->{client}->{$service}->{update} eq "yes");
+	     $node->{client}->{$service}->{update} ne "yes");
     next if (@limit_services and !grep (/^$service$/, @limit_services));
     my $realservname = $node->{client}->{$service}->{realservname} || $service;
     delete $node->{client}->{$service}->{realservname}
@@ -1152,9 +1178,9 @@ sub logger_open {
 
     if (!$log->opened)
     {
-	  unless (open ($log, ">>$dirname/munin-html.log"))
+	  unless (open ($log, ">>$dirname/munin-update.log"))
 	  {
-		  print STDERR "Warning: Could not open log file \"$dirname/munin-html.log\" for writing: $!";
+		  print STDERR "Warning: Could not open log file \"$dirname/munin-update.log\" for writing: $!";
 	  }
     }
 }
@@ -1179,6 +1205,8 @@ sub logger {
 		  {
 			  print $log "$now - $comment\n";
 			  $log->flush;
+			  close (STDERR);
+			  open (STDERR, ">&", $log);
 		  }
 		  else
 		  {
@@ -1287,7 +1315,7 @@ This is munin-update version @@VERSION@@
 
 =head1 AUTHORS
 
-Audun Ytterdal and Jimmy Olsen.
+Audun Ytterdal, Jimmy Olsen, and Tore Anderson.
 
 =head1 BUGS
 
@@ -1297,7 +1325,7 @@ Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
 =head1 COPYRIGHT
 
-Copyright © 2002-2004 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
+Copyright © 2002-2006 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

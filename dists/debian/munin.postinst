@@ -2,6 +2,8 @@
 
 set -e
 
+prevver="$2"
+
 add_munin_system_user() {
 	if ! getent passwd munin >/dev/null; then
 		adduser --group --system --no-create-home \
@@ -10,31 +12,14 @@ add_munin_system_user() {
 }
 
 fixperms() {
-	chown munin:adm /var/log/munin
-	chmod 0750 /var/log/munin
-
-	chown munin:root /var/run/munin
-	chmod 0755 /var/run/munin
-
-	chown munin:munin /var/www/munin
-	chmod 0755 /var/www/munin
-
-	chown munin:munin /var/lib/munin
-	chmod 0755 /var/lib/munin
-
-	# Upgrading from LRRD, yes?
-	# This'll generate a lot of chmod/grp's on
-	# the dirs, but what the hell..
-	if getent passwd lrrd >/dev/null; then
-		for f in $(find /var/lib/munin -user lrrd); do
-			chown munin $f ${f%/*}
-		done
-	fi
-	if getent group lrrd >/dev/null; then
-		for f in $(find /var/lib/munin -group lrrd); do
-			chgrp munin $f ${f%/*}
-		done
-	fi
+	dpkg-statoverride --list /var/log/munin >/dev/null || \
+		dpkg-statoverride --update --add munin adm 0750 /var/log/munin
+	dpkg-statoverride --list /var/run/munin >/dev/null || \
+		dpkg-statoverride --update --add munin root 0755 /var/run/munin
+	dpkg-statoverride --list /var/www/munin >/dev/null || \
+		dpkg-statoverride --update --add munin munin 0755 /var/www/munin
+	dpkg-statoverride --list /var/lib/munin >/dev/null || \
+		dpkg-statoverride --update --add munin munin 0755 /var/lib/munin
 }
 
 case "$1" in

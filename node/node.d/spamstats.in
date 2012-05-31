@@ -72,7 +72,9 @@ if (!defined $pos)
 if ($startsize < $pos)
 {
     # Log rotated
-    parselogfile ($rotlogfile, $pos, (stat $rotlogfile)[7]);
+    if (-f $rotlogfile) {
+        parselogfile ($rotlogfile, $pos, (stat $rotlogfile)[7]);
+    }
     $pos = 0;
 }
 

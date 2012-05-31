@@ -1,3 +1,57 @@
+munin (repository)
+
+  * Server: Display the time period in the title of the comparison pages.
+  * Node: Make it possible to run plugins with group root.
+  * Merge changes from 1.2.3->1.2.4. Some of the following entries may not
+  apply.
+  * Plugins: "exists $ARGV[0]" does not work with perl < 5.6.0. use
+    "defined $ARGV[0]".
+  * Dists: Brought dists.freebsd in line with the FreeBSD ports.
+  * Dists: Merged changes from Debian Etch package. See
+    dists/debian/changelog.
+  * Main: Correct munin-limits pod documentation.
+  * Server: filter a trivial error message from RRDtool (Deb#326061)
+  * Server: A patch from trunk that makes munin-limits eat stdout/err from the
+    contact.foo.command option in munin.conf. (Deb#301196)
+  * Server: make munin-graph deal with RRDtool 1.0.x and 1.2.x.
+  * Server: Fix thinko in category_order in munin-html.in.
+  * Server: Fix handling of 'update no' on services. 
+  * Server: Log warning about nodes without addresses.
+  * Node: Prevent list command from polluting the node list.
+  * Plugins: Fix tempfile creation by using the best method available on a given
+    platform. (amavis, courier_, perdition)
+  * Plugins: Fix to support the Linux cciss driver in the iostat plugin.
+  * Plugins: squid_requests: Put the CDEF back that computes misses.
+  * Plugins: postfix_mailvolume: Fix bad exit code test for `which postconf`.
+  * Plugins: hddtemp_smartctl: Fix bugs on Solaris.  Revert back to using -A
+  (attributes) rather than -a (all).  That can be specified through the
+  args_$dev mechanism.  THIS CAN BREAK EXISTING SETUPS!
+  * Plugins: samba: Make location of smbstatus program configurable.
+  Streamline computation of foo.value. Correct typos and a thinko. Add
+  configurable "ignoreipcshare". Make awk program a lot more complicated to
+  deal with variations of smbstatus output. Quote error message with
+  parentheseis.
+  * Plugins: smart_: Allow to query several drives on the same 3ware card.
+  Correct a bug when '-i' was not listed in smartargs.  Don't fail if
+  no value was obtained for hard drive model. Minor enhancements and
+  minor bug fixes from Nicolas STRANSKY <Nico@neo-lan.net>. smartctl exit
+  code is a value composed of bits. Allow more than one to be turned on
+  simultaneously by using the exit code itself rather than the log2 of it.
+  * Plugins: perdition: Add missing backquote on mktempfile line. Support
+  IMAPS and POP3S protocols.
+  * Plugins (FreeBSD): if_, if_errcoll_: Shift field numbers in awk for
+  interfaces that have no MAC address.
+  * Plugins (Solaris): fs_df, fs_inodes: Allow '-' in mountpoints.
+  * Plugins (Solaris): processes: Replaced numerous calls to various programs
+  with a single awk program.
+  * Plugins (Solaris): netstat: "exists $ARGV[0]" does not work with perl <
+  5.6.0. use "defined $ARGV[0]".
+  * Plugins (Solaris): memory: Rewrite the value computation as a single nawk
+  program. Support scale factor "K" (gives values < 1).
+  * Plugins (Linux): port_: Correct offset error in TCP6 code.
+  * Plugins (Linux): if_: Simplify awk program greatly, suggested by
+    Nicolai Langfeldt <janl@linpro.no>
+
 munin (1.3.2)
 
   * Main/node: Implemented TLS support.

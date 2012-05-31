@@ -20,7 +20,7 @@
 MSP_QUEUE=/var/spool/mqueue-client
 MTA_QUEUE=/var/spool/mqueue
 if [ "$mspqueue"  ]; then MSP_QUEUE=$mspqueue ; fi
-if [ "$mtaqueue"  ]; then MTA_QUEUE=$mspqueue ; fi
+if [ "$mtaqueue"  ]; then MTA_QUEUE=$mtaqueue ; fi
 
 if [ "$1" = "autoconf" ]; then
 	if [ -d ${MSP_QUEUE} -a -d ${MTA_QUEUE} ] ; then
@@ -42,6 +42,8 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-mspmails=`find ${MSP_QUEUE} -type f -name '[qQ]*' 2>/dev/null | wc -l`
-mtamails=`find ${MTA_QUEUE} -type f -name '[qQ]*' 2>/dev/null | wc -l`
+# Append /. to directory to force following symlinks at the start
+# point.
+mspmails=$(find ${MSP_QUEUE}/. -type f -name '[qQ]*' 2>/dev/null | wc -l)
+mtamails=$(find ${MTA_QUEUE}/. -type f -name '[qQ]*' 2>/dev/null | wc -l)
 echo "mails.value `expr ${mspmails} + ${mtamails}`"

@@ -1,3 +1,4 @@
+#
 #!@@PERL@@ -w
 #
 # Graphs statistics for e-mails passing through a MailScanner filter
@@ -62,30 +63,29 @@ if ($cmd eq 'config') {
 }
 
 my @lines = split(/\n/, qx($logtail -f $logfile -o $offsetfile));
+
+# sometimes the logtail syntax is:
+#my @lines = split(/\n/, qx($logtail $logfile $offsetfile));
+
 foreach (@lines) {
-	SWITCH: {
-		if (/New Batch: S/) {
-			s/.*New Batch: Scanning ([0-9]+) messages.*/$1/;
-			$total += $_;
-			last SWITCH;
-		}
-		if (/Virus Scanning: F/) {
-			s/.*Virus Scanning: Found ([0-9]+) viruses.*/$1/g;
-			$viruses += $_;
-			last SWITCH;
-		}
-		if (/Spam Checks: F/) {
-			s/.*Spam Checks: Found ([0-9]+) spam.*/$1/g;
-			$spams += $_;
-			last SWITCH;
-		}
-		if (/Other Checks: F/) {
-			s/.*Other Checks: Found ([0-9]+) problems.*/$1/g;
-			$others += $_;
-			last SWITCH;
-		}
-	}
+    if (s/.*New Batch: Scanning ([0-9]+) messages.*/$1/) {
+	$total += $_;
+	next;
+    }
+    if (s/.*Virus Scanning: Found ([0-9]+) viruses.*/$1/g) {
+	$viruses += $_;
+	next;
+    }
+    if (s/.*Spam Checks: Found ([0-9]+) spam.*/$1/g) {
+	$spams += $_;
+	next;
+    }
+    if (s/.*Other Checks: Found ([0-9]+) problems.*/$1/g) {
+	$others += $_;
+	next;
+    }
 }
+
 $clean = $total - ($viruses + $spams + $others);
 
 print("clean.value $clean\n");

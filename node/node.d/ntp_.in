@@ -8,6 +8,10 @@
 # 	autoconf (optional - used by munin-node-configure)
 #       suggest  (optional - used by munin-node-configure)
 #
+# Config variables:
+#
+#       lowercase       - lowercase hostnames after lookup
+#
 # Magic markers - optional - used by installation scripts and
 # munin-node-configure:
 #
@@ -44,6 +48,7 @@ if ($ARGV[0] and $ARGV[0] eq "suggest") {
 		my $addr = $1;
 		my $name = gethostbyaddr(inet_aton($addr));
 		$name = defined $name ? $name->name : $addr;
+		$name = lc $name if exists $ENV{"lowercase"};
 		$name =~ s/[\.-]/_/g;
 		print $name, "\n";
 	}
@@ -63,18 +68,22 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 		my $addr = $1;
 		my $host = gethostbyaddr(inet_aton($addr));
 		$host = defined $host ? $host->name : $addr;
+		$host = lc $host if exists $ENV{"lowercase"};
 		my $host_ = $host;
 		$host_ =~ s/[\.-]/_/g;
 		next unless $host_ eq $name;
 		print "graph_title NTP statistics for peer $host\n";
 	}
-	print "graph_args --base 1000 --vertical-label msec --lower-limit 0\n";
+	print "graph_args --base 1000 --vertical-label seconds --lower-limit 0\n";
         print "delay.label Delay\n";
         print "delay.draw LINE2\n";
+	print "delay.cdef delay,1000,/\n";
         print "offset.label Offset\n";
         print "offset.draw LINE2\n";
+	print "offset.cdef offset,1000,/\n";
         print "jitter.label Jitter\n";
         print "jitter.draw LINE2\n";
+	print "jitter.cdef offset,1000,/\n";
         exit 0;
 }
 
@@ -85,6 +94,7 @@ foreach (@lines) {
 	my $addr = $1;
 	my $host = gethostbyaddr(inet_aton($addr));
 	$host = defined $host ? $host->name : $addr;
+	$host = lc $host if exists $ENV{"lowercase"};
 	$host =~ s/[\.-]/_/g;
 	next unless $host eq $name;
 	my @F = split;

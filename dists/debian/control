@@ -1,32 +1,33 @@
 Source: munin
 Section: net
 Priority: optional
-Maintainer: Tore Anderson <tore@debian.org>
+Maintainer: Munin Debian Maintainers <munin-deb-maint@linpro.no>
+Uploaders: Tore Anderson <tore@debian.org>, Dagfinn Ilmari Mannsaker <ilmari@ilmari.org>
 Build-Depends-Indep: debhelper (>> 4.0.0), perl, htmldoc, html2text
-Standards-Version: 3.6.1.0
+Standards-Version: 3.6.2.1
 
 Package: munin-node
 Architecture: all
-Depends: ${perl:Depends}, libnet-server-perl, procps
-Suggests: munin
-Conflicts: lrrd-client (<= 0.9.9r5-1)
-Description: Network-wide graphing framework (node)
+Depends: ${perl:Depends}, libnet-server-perl, procps, adduser, lsb-base
+Recommends: libnet-snmp-perl
+Suggests: munin, libwww-perl, libnet-irc-perl, mysql-client, smartmontools, acpi | lm-sensors, python (>= 2.2), ethtool
+Description: network-wide graphing framework (node)
  Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still
  maintaining a rattling ease of installation and configuration.
  .
- This package contains node software. You should install it on all the nodes
- in your network. It will know how to extract all sorts of data from the
- node it runs on, and will wait for the gatherer to request this data for
- further processing.
+ This package contains the daemon for the nodes being monitored.  You should
+ install it on all the nodes in your network. It will know how to extract all
+ sorts of data from the node it runs on, and will wait for the gatherer to
+ request this data for further processing.
  .
- It includes a range of plugins capable of extracting common values such as
- cpu usage, network usage, load average, and so on. Creating your own plugins
- which are capable of extracting other system-specific values is very easy,
- and is often done in a matter of minutes. You can also create plugins which
- relay information from other devices in your network that can't run Munin,
- such as a switch or a server running another operating system, by using
- SNMP or similar technology.
+ It includes a range of plugins capable of extracting common values such as cpu
+ usage, network usage, load average, and so on. Creating your own plugins which
+ are capable of extracting other system-specific values is very easy, and is
+ often done in a matter of minutes. You can also create plugins which relay
+ information from other devices in your network that can't run Munin, such as a
+ switch or a server running another operating system, by using SNMP or similar
+ technology.
  .
  Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
  RRDtool. To see a real example of Munin in action, take a peek at
@@ -34,11 +35,10 @@ Description: Network-wide graphing framework (node)
 
 Package: munin
 Architecture: all
-Depends: ${perl:Depends}, librrds-perl, libhtml-template-perl, libdigest-md5-perl, libtime-hires-perl, libstorable-perl
-Recommends: munin-node
-Suggests: rrdtool, www-browser, httpd
-Conflicts: lrrd-server (<= 0.9.9r5-1)
-Description: Network-wide graphing framework (grapher/gatherer)
+Depends: ${perl:Depends}, perl-modules (>= 5.8.0) | libparse-recdescent-perl, librrds-perl, libhtml-template-perl, libdigest-md5-perl, libtime-hires-perl, libstorable-perl, rrdtool, adduser
+Recommends: munin-node, libdate-manip-perl
+Suggests: www-browser, httpd
+Description: network-wide graphing framework (grapher/gatherer)
  Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still
  maintaining a rattling ease of installation and configuration.
@@ -50,8 +50,8 @@ Description: Network-wide graphing framework (grapher/gatherer)
  .
  It is also able to alert you if any value is outside of a preset boundary,
  useful if you want to be alerted if a filesystem is about to grow full, for
- instance. Currently you can only do this by letting Munin send messages to
- a Nagios server.
+ instance.  You can do this by making Munin run an arbitrary command when you
+ need to be alert it, or make use of the intrinsic Nagios support.
  .
  Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
  RRDtool. To see a real example of Munin in action, take a peek at

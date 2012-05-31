@@ -70,12 +70,18 @@ Options:
 
 if ($do_version)
 {
-    print "munin-html version $VERSION.\n";
-    print "Written by Knut Haugen, Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS\n";
-    print "\n";
-    print "Copyright (C) 2002-2004\n";
-    print "This is free software released under the GNU Public License. There is NO\n";
-    print "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n";
+    print <<"EOT";
+munin-html version $VERSION.
+Written by Knut Haugen, Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
+
+Copyright (C) 2002-2005
+
+This is free software released under the GNU General Public License. There
+is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. For details, please refer to the file COPYING that is included
+with this software or refer to
+  http://www.fsf.org/licensing/licenses/gpl.txt
+EOT
     exit 0;
 }
 
@@ -267,7 +273,7 @@ for my $domain (@domainorder) {
 	    $service{url}="$node-$service.html";
 	    $service{domain}="$domain";
 	    $service{node}=$node;
-	    $service{category}= $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_category} || "other";
+	    $service{category}= lc $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_category} || "other";
 
         # Do "help" section
 		if (defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_info})
@@ -382,7 +388,7 @@ for my $domain (@domainorder) {
 	    foreach my $cat (sort keys %categories)
 	    {
 		push @categories, $categories{$cat}
-			unless (grep /^$cat$/, @categories);
+			unless (grep { $_->{name} eq $cat } @categories);
 	    }
 	} else {
 	    @categories = map { $categories{$_} } sort keys %categories;
@@ -510,6 +516,9 @@ sub logger {
 		  if (open ($log, ">>$config->{logdir}/munin-html.log"))
 		  {
 			  print $log "$now - $comment\n";
+			  $log->flush;
+			  close (STDERR);
+			  open (STDERR, ">&", $log);
 		  }
 		  else
 		  {

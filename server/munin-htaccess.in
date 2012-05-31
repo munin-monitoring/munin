@@ -1,4 +1,4 @@
-AuthUserFile /etc/munin/munin-htpasswd
+AuthUserFile @@CONFDIR@@/munin-htpasswd
 AuthName "Munin"
 AuthType Basic
 require valid-user

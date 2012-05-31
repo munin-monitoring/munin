@@ -127,13 +127,18 @@ else
 
 if ($do_version)
 {
-	print "munin-run (munin-node) version $VERSION.
+	print <<"EOT";
+munin-run (munin-node) version $VERSION.
 Written by Jimmy Olsen / Linpro AS
 
-Copyright (C) 2002-2004
-This is free software released under the GNU Public License. There is NO
-warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-";
+Copyright (C) 2002-2005
+
+This is free software released under the GNU General Public License. There
+is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. For details, please refer to the file COPYING that is included
+with this software or refer to
+  http://www.fsf.org/licensing/licenses/gpl.txt
+EOT
 	exit 0;
 }
 
@@ -198,14 +203,15 @@ while (<FILE>) {
 
 $FQDN ||= &get_fq_hostname;
 
-$ENV{FQDN}=$FQDN;
+$ENV{'FQDN'}=$FQDN;
+
+# Some locales uses "," as decimal separator. This can mess up a lot
+# of plugins.
+$ENV{'LC_ALL'}='C';
 
 &load_services;
 
 exit;
-
-
-
 
 ### over-ridden subs below
 
@@ -316,7 +322,8 @@ sub run_service {
 			$defuser);
 		my $g  = $defgroup;
 		my $gs = "$g $g" .
-		($sconf{$service}{'group'}?" $sconf{$service}{group}":"");
+		  (defined($sconf{$service}{'group'}) ? 
+		   " $sconf{$service}{group}" : "");
 
 		print "# Want to run as euid/egid $u/$g\n" if $DEBUG;
 
@@ -371,7 +378,7 @@ sub run_service {
     }
     else
     {
-	print STDERR "DEBUG: About to exec \"$servicedir/$service\"." if $DEBUG;
+	print STDERR "DEBUG: About to exec \"$servicedir/$service\"\n" if $DEBUG;
 	if (!exec ("$servicedir/$service", $command))
 	{
 	    print "no (could not execute plugin)\n"; exit 1;

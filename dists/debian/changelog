@@ -1,3 +1,319 @@
+munin (1.2.3-3) unstable; urgency=medium
+
+  * debian/munin.preinst (removed), debian/munin.postinst, debian/munin.postrm,
+    debian/munin-node.preinst (removed), debian/munin-node.postinst:
+      - Remove all code that handled upgrades from versions earlier than
+        1.2.3-1.  In a way this closes: #308008.
+
+  * debian/munin.postrm, debian/munin-node.postrm:
+      - Replace "test -o" bashism with "||".
+
+  * debian/munin-node.cron.d:
+      - Update APT's package index files periodically if the apt_all plugin
+        enabled, too.  Patch by Tommi Virtanen, thanks!  Closes: #317278.
+
+  * debian/control:
+      - Remove conflict declarations on the old LRRD packages.
+      - Make munin-node suggest ethtool, closes: #311603.
+      - Make Munin depend on rrdtool instead of merely suggesting it.  This is
+        a workaround for bug #323975 and its duplicates.
+      - Add a dependency on adduser for both packages.
+      - Increment standards-version to 3.6.2.1, no changes required.
+
+  * debian/munin-node.init, debian/control:
+      - Reimplemented Munin-Node's init script using LSB functions.
+        Closes: #326912, #326913.
+      - Add a dependency on lsb-base for Munin-Node.
+
+  * server/munin-graph.in, debian/control:
+      - Replaced the patch from 1.2.3-2 with the upstream one from SVN revision
+        954.  This re-enables support for RRDtool 1.0, so the versioned
+        dependency on librrds-perl is dropped.
+
+  * server/munin-cron.in:
+      - Swallow bogus output from RRDtool, closes: #326061.  This is a
+        (hopefully temporary) workaround for bug #325353.
+
+ -- Tore Anderson <tore@debian.org>  Sat, 10 Sep 2005 10:58:08 +0200
+
+munin (1.2.3-2) unstable; urgency=low
+
+  * server/munin-graph.in:
+      - Gave up waiting for the new upstream release, and applied Robert
+        Loomans' patch to make Munin support RRDtool 1.2, closes: #324605,
+        closes: #325280.  Thanks, Robert!  Note that this breaks compability
+        with RRDtool 1.0.  Sarge users should wait for the new upstream release
+        which will support both RRDtool 1.0 and 1.2.
+
+  * debian/control:
+      - Made the munin package depend on librrds-perl in versions 1.2 or above.
+
+ -- Tore Anderson <tore@debian.org>  Wed, 31 Aug 2005 09:11:47 +0200
+ 
+munin (1.2.3-1) unstable; urgency=medium
+
+  * New upstream release, targeted at Sarge.
+      - Plugin linux/sensors_ now handles yet another form of output from the
+        sensors(1) utility, closes: #300690.
+      - Plugin generic/postfix_mailstats now shouldn't include rejects from
+        the cleanup daemon in the total count, closes: #302220.
+      - Munin-update no longer emits Perl warnings to stdout, closes: #302502.
+
+  * server/munin-limits.in, debian/NEWS:
+      - Apply patch from trunk which redirects all stdout and stderr from the
+        program being run to the log, closes: #301196.  The references to this
+        functionality has been corrected in the NEWS file, and also in the
+        example config file.
+
+  * debian/control:
+      - Increment standards-version to 3.6.1.1, no changes required.
+
+  * debian/munin.docs:
+      - Include README-apache-cgi.
+
+ -- Tore Anderson <tore@debian.org>  Sun, 03 Apr 2005 02:33:26 +0200
+
+munin (1.2.2-3) unstable; urgency=high
+
+  * node/munin-node.in:
+      - Fix mis-merge of the optional user patch, restoring per-plugin
+        group setting. Thanks to Andras Korn for reporting and
+        Robert Loomans for patch (Closes: #299589).
+  
+  * node/munin-node.in, node/munin-run.in:
+      - Allow root for the per-plugin group directive.
+  
+  * Fix autoconf for the linux/nfs* plugins.
+
+ -- Dagfinn Ilmari Mannsaker <ilmari@ilmari.org>  Wed, 16 Mar 2005 20:45:15 +0100
+
+munin (1.2.2-2) unstable; urgency=low
+
+  * node/munin-node.in, node/munin-run.in:
+      - Allow plugins to specify users to run as if present, while falling
+        gracefully back on the default user if the specified user doesn't
+        exists.  Patch grabbed from upstream CVS.
+
+  * debian/plugins.conf:
+      - Run the postfix_mailqueue plugin as the postfix user only if it exists.
+
+ -- Tore Anderson <tore@debian.org>  Sun, 13 Mar 2005 13:55:36 +0100
+
+munin (1.2.2-1) unstable; urgency=low
+
+  * New upstream release.
+      - Plugin linux/irqstats now handles blank lines in /proc/interrupts,
+        closes: #296452.
+      - Plugins generic/apache_* could in some cases cause spurious spikes,
+        this has now been fixed.  Closes: #296454, #296645.
+      - Plugin linux/df_inode now handles devices with hyphens in their names
+        correctly, closes: #298442.
+      - Plugin generic/exim_mailstats now graphs rejects, closes: #295799.
+      - Earlier versions of munin-update could in some cases complain about
+        "nested quantifiers in regex", now fixed.  Closes: #296575.
+      - Fixes some broken HTML in the templates, closes: #296676.
+      - Updates over very slow connections are now handled more gracefully,
+        closes: #298108.
+
+  * debian/rules, debian/plugins.conf, debian/NEWS:
+      - Do not include contrib plugins in the munin-node package anymore.
+        Sort-of closes: #296533, #297451, #297628, #297904, #298895.
+
+  * debian/rules, debian/munin-node.postinst:
+      - Delay startup of the node significantly, as it may require other
+        monitored services (e.g. ntpd) to be already running.  Also change the
+        startup time if the package is being upgraded, if the current init
+        configuration is the old package's defaults.  Closes: #298793, thanks
+        to Stephen Gran for noticing.
+
+  * debian/plugins.conf:
+      - Run the Courier-MTA and Postfix plugins with necessary additional
+        privileges so they work out of the box, closes: #297654, #296985.
+        Thanks to Charles Fry and Juraj Bednar for pointing this out.
+      - The smart_ plugin is now run as root (which is necessary).
+
+  * debian/control:
+      - Suggest acpi over lm-sensors, and not the other way around as it was
+        earlier.  Both the acpi and sensors_ plugins achieve the same thing,
+        but the former is auto while the latter is manual.
+      - Remove the hddtemp suggestion and replace it with smartmontools,
+        closes: #296361. The hddtemp* plugins was replaced with
+        hddtemp_smartctl in 1.2.0.
+      - Suggest python (>= 2.2), used by the smart_ plugin.
+      - A few minor rewrites in the descriptions.
+
+  * debian/munin-node.manpages:
+      - Include munin-node-configure-snmp(8).
+
+  * server/munin-limits.in:
+      - Reverted to upstream version, as the patched required in 1.2.0-1 have
+        been merged.
+
+ -- Tore Anderson <tore@debian.org>  Sun, 13 Mar 2005 00:28:49 +0100
+
+munin (1.2.0-1) unstable; urgency=low
+
+  * New upstream release, closes: #264878, #293499, #290099:
+      - Many plugins have changed type from COUNTER to DERIVE, to avoid
+        spurious spikes when the counters are mistakenly assumed to have
+        wrapped.  This change may cause empty graphs to occur, take care to
+        read NEWS.Debian before upgrading the "munin-node" package!
+        Closes: #225623, #233762.
+      - Munin-update no longer truncates long field names, closes: #256370.
+        This may in some cases cause empty graphs, please read NEWS.Debian for
+        more information before upgrading the "munin" package.
+      - Replaces the old Nagios-specific integration with a much more generic
+        framework for sending alerts to wherever you want.  As a side effect,
+        this closes: #291168.
+      - Corrects an erroneous commented example in munin.conf, closes: #294060.
+      - The munin-node.conf setting default_plugin_user now actually works as
+        advertised, closes: #295366, #295367.
+      - Plugin generic/bind9 now source its configuration from %ENV,
+        closes: #268142, #272049.
+      - Plugin generic/amavis now autodetects how to correctly invoke logtail,
+        closes: #284638, #288395.
+      - Plugin generic/squid_cache now correctly calculates cache size when
+        using multiple cache directories, closes: #288579.
+      - Plugin generic/postfix_mailstats now defaults to reading from a more
+        correct log file, closes: #291720.
+      - Plugin generic/postfix_mailstats now correctly identifies the reject
+        code as newer Postfix versions logs them, closes: #292110.
+      - Plugin generic/postfix_mailvolume now has a improved graph_title (that
+        is not the same as the title of generic/postfix_mailstats).
+        Closes: #292083.
+      - Plugin generic/named now defaults to reading from a more correct log
+        file, closes: #291849.
+      - Plugin linux/fw_forwarded_local now correctly reports 0 instead of
+        NaN in some situations, closes: #284673.
+      - Plugin linux/iostat now ingores devices that have had no I/O operations
+        whatsoever and thus are assumed to be unused, closes: #267195.
+      - New plugin: linux/forks. Closes: #225638.
+      - New plugin: linux/uptime. Closes: #283622.
+      - New plugin: linux/irqstats. Closes: #224990.
+      - New plugin: generic/courier_. Closes: #291854.
+      - New plugin: generic/perdition. Closes: #291855.
+
+  * debian/NEWS:
+      - Document the changes that may lead to data loss when upgrading from
+        Munin 1.0.x, and also write a bit about the new munin-limits framework.
+
+  * debian/control:
+      - Add dependency on perl-modules (>= 5.8.0) | libparse-recdescent-perl
+        for the main munin package, as munin-limits requires Text::Balanced.
+      - Add libdate-manip-perl as a recommended package for the munin package,
+        as the new CGI functionality depends on it.
+      - Change libnet-snmp-perl to be a recommended package for munin-node
+        instead of only suggested, as the new munin-node-configure-snmp
+        requires it.
+
+  * debian/Makefile.config:
+      - Install the new CGI in /usr/lib/cgi-bin/, as mandated by the Debian
+        Policy Manual.
+
+  * debian/munin.cron.d, debian/munin.manpages, debian/munin.logrotate,
+    debian/munin.postrm:
+      - The new upstream release includes "munin-limits", which supersede
+        "munin-nagios".  Update the installed manual pages, cron jobs,
+        logrotate configuration, and purge script accordingly.
+
+  * debian/plugins.conf:
+      - Plugin linux/fw_conntrack is now run as root as this file recently has
+        changed to not be world readable, closes: #291226.
+      - Plugin linux/if_ is now run as root in order to probe the speed of the
+        network interface.
+
+  * debian/munin.postinst, debian/munin-node.postinst, debian/munin.postrm,
+    debian/munin-node.postrm:
+      - Use dpkg-statoverride to handle the permissions on the data and log
+        directories.
+
+  * server/munin-limits.in:
+      - Change lock file directory to match that of munin-update, munin-graph,
+        and munin-html (grabbed from upstream CVS).
+      - Fix a string comparsions where the "==" operator was used instead of
+        "eq" (grabbed from upstream CVS).
+
+  * debian/munin.postinst:
+      - Only change user and group ownership on the data files from "lrrd" to
+        "munin" when the package is first installed, not on every upgrade.
+
+ -- Tore Anderson <tore@debian.org>  Mon, 21 Feb 2005 00:16:25 +0100
+
+munin (1.0.5-1) unstable; urgency=low
+
+  * New upstream release:
+      - Expands @@ macros in man pages, closes: #286399.
+      - Fixes bug in munin-run %ENV untainting, closes: #285173.
+      - Fixes template variable escaping and other XHTML errors, closes: #287435
+        (based on patch by Tommi Virtanen <tv@debian.org>).
+      - hddtemp plugin calls hddtemp -n to avoid having to parse its output,
+        closes: #282021.
+  * Add Suggests: for programs and perl modules needed by plugins but not
+    the services they monitor, closes: #272148, #270090.
+
+ -- Dagfinn Ilmari Mannsaker <ilmari@ilmari.org>  Wed,  5 Jan 2005 23:47:16 +0100
+
+munin (1.0.4-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Tore Anderson <tore@debian.org>  Sun,  5 Dec 2004 16:54:19 +0100
+
+munin (1.0.3-1) unstable; urgency=low
+
+  * New upstream release:
+      - Fixes typo in linux/fw_forwarded_local, closes: #275535.
+      - Fixes typo in linux/fw_packets, closes: #275537.
+      - Plugin generic/acpi now autodetects correctly even if the acpi version
+        does not contain the acpi_available program, closes: #275538.
+
+  * debian/plugins.conf:
+      - Run the spamstats plugin with the group adm, closes: #278765.
+      - Sorted the entries alphabetically.
+
+ -- Tore Anderson <tore@debian.org>  Mon,  1 Nov 2004 21:56:41 +0100
+
+munin (1.0.2-1) unstable; urgency=low
+
+  * New upstream release, fixing the follwing:
+    - munin-graph spews uninitialized value in concatenation [precedence
+      error], thanks to Don Armstrong (Closes: #267185).
+  * Run the hddtemp plugins as root, write access to the device isn't
+    enough.
+
+ -- Dagfinn Ilmari Mannsaker <ilmari@ilmari.org>  Wed,  1 Sep 2004 09:32:42 +0200
+
+munin (1.0.1-1) unstable; urgency=low
+
+  * New upstream release, fixing the following:
+    - [munin-graph/1.0] multiple .negative options is broken,
+      thanks to Andre TOmt (Closes: #250982).
+    - [plugin:hddtemp2/1.0] Must run under "C" locale (Closes: #253497).
+    - munin-node: LANG-dependant behaviour changes (Closes: #255312).
+    - [plugin:sensors_temp/1.0] Omits temperature values without
+      max and/or hysteresis value(s), thanks to Elmar Hoffmann
+      (Closes: #256380).
+    - [plugin:sensors_volt/1.0] Omits negative voltages, thanks to Elmar
+      Hoffmann (Closes: #256734).
+    - [plugin:ipac_ng/1.0] Syntax error, thanks to Stefani
+      Banerian (Closes: #264714).
+    - [plugin:hddtemp2/1.0] Ignores env.ignore (it's not supposed
+      to, really! :), thanks to Michel Meyers (Closes: #265022).
+    - munin-node: plugin iostat_ios has improper magic file
+      marker, thanks to Micah Anderson (Closes: #262708).
+  * Set Maintainer: to the Munin team address.
+  * Add Tore Anderson and myself to Uploaders:
+  * Make the hddtemp plugins run as group "disk" to ensure access to the
+    disks.
+
+ -- Dagfinn Ilmari Mannsaker <ilmari@ilmari.org>  Wed, 18 Aug 2004 20:55:27 +0200
+
+munin (1.0.0-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Tore Anderson <tore@debian.org>  Sun, 18 Jul 2004 13:19:31 +0200
+
 munin (0+1.0.0pre5-1) unstable; urgency=low
 
   * New upstream release:

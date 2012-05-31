@@ -1,0 +1,59 @@
+#!/bin/sh
+#
+# Plugin to monitor CPU speed
+#
+# Usage: Place in /etc/munin/node.d/ (or link it there  using ln -s)
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#
+# Magic markers - optional - used by installation scripts and
+# munin-config:
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+if [ "$1" = "autoconf" ]; then
+	if [ -r /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 1
+	fi
+fi
+
+
+if [ "$1" = "config" ]; then
+    cat <<EOF
+graph_title CPU frequency scaling'
+graph_args --base 1000 -r --lower-limit 0
+graph_vlabel Hz
+graph_scale yes
+This graph shows at what speeds the CPUs are running
+graph_category system
+EOF
+
+for c in /sys/devices/system/cpu/cpu*; do
+    N=${c##*/cpu}
+    MAXHZ=$(<$c/cpufreq/cpuinfo_max_freq)
+    cat <<EOF
+cpu$N.label CPU $N
+cpu$N.max $MAXHZ
+cpu$N.min $(<$c/cpufreq/cpuinfo_min_freq)
+cpu$N.type GAUGE
+EOF
+    if [ "$scaleto100" = "yes" ]; then
+	echo "cpu$N.cdef $cpu$N,$MAXHZ,/"
+    fi
+done
+
+	exit 0
+fi
+
+for c in /sys/devices/system/cpu/cpu*; do
+    N=${c##*/cpu}
+    echo "cpu$N.value $(<$c/cpufreq/scaling_cur_freq)"
+done

@@ -35,17 +35,13 @@ Munin-cron batches all the above tasks by running their respective
 programs. All parameters are passed directly to the underlying programs,
 so only use parameters that are understood by all the other programs.
 
-=head1 VERSION
-
-This is munin-cron version 0.9.2-3
-
 =head1 AUTHORS
 
 Audun Ytterdal and Jimmy Olsen.
 
 =head1 COPYRIGHT
 
-Copyright © 2002-2004 Audun Ytterdal and Jimmy Olsen / Linpro AS.
+Copyright © 2002-2006 Audun Ytterdal and Jimmy Olsen / Linpro AS.
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

@@ -20,17 +20,25 @@ fi
 #
 # Memory: 320M real, 142M free, 129M swap in use, 1095M swap free
 
-MEMLINE=`$TOP -n -u | /bin/grep "^Memory"`
+$TOP -n -u | nawk '
+function scale(value) {
+  if (value ~ /G$/) { sub("G", "", value); value *= 1024 }
+  else if (value ~ /M$/) sub("M", "", value)
+  else if (value ~ /K$/) { sub("K", "", value); value /= 1024 }
+  else value /= 1024 * 1024;
+  return value;
+}
+/^Memory/ {
+  real  = scale($2);
+  free  = scale($4);
+  swapu = scale($6);
+  swapf = scale($10);
 
-REAL=`echo $MEMLINE | nawk '$2~/G$/ {sub("G","",$2);$2=$2 * 1024} $2~/M$/ {printf "%d\n", $2}'`
-FREE=`echo $MEMLINE | nawk '$4~/G$/ {sub("G","",$4);$4=$4 * 1024} $2~/M$/ {printf "%d\n", $4}'`
-SWAPU=`echo $MEMLINE | nawk '$6~/G$/ {sub("G","",$6);$6=$6 * 1024} $2~/M$/ {printf "%d\n", $6}'`
-SWAPF=`echo $MEMLINE | nawk '$10~/G$/ {sub("G","",$10);$10=$10 * 1024} $2~/M$/ {printf "%d\n", $10}'`
+  memused = real - free
+  swaptot = swapu + swapf
 
-MEMUSED=`expr $REAL - $FREE`
-SWAPTOT=`expr $SWAPU + $SWAPF`
-
-echo "real.value $REAL"
-echo "used.value $MEMUSED"
-echo "swapt.value $SWAPTOT"
-echo "swapu.value $SWAPU"
+  print "real.value", real
+  print "used.value", memused
+  print "swapt.value", swaptot
+  print "swapu.value", swapu
+}'

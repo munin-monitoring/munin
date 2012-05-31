@@ -30,12 +30,11 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-i=4;
+awk '/proc3/ {
+    split("'"$proc"'", names)
+    split($0,values)
+    for (e in names) {
+        printf("%s.value %d\n", names[++i], values[i+3]);
+    }
+}' $NFS
 
-for a in $proc; do
-	echo -n "$a.value "
-	grep proc3 $NFS \
-		| cut -f $i -d ' ' \
-		| awk '{print $1}'
-	i=$(expr $i + 1)
-done

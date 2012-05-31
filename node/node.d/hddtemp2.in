@@ -49,7 +49,7 @@ if (exists $ENV{ignore}) {
 
 $HDDTEMP .= ' -q '.join(' ', @disks).' 2>/dev/null';
 
-if ( exists $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
+if ( defined $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
   # Now see if "hddtemp" can run
   my $text = `$HDDTEMP`;
   if ($?) {
@@ -70,7 +70,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
   exit 0;
 }
 
-if ( exists $ARGV[0] and $ARGV[0] eq 'config' ) {
+if ( defined $ARGV[0] and $ARGV[0] eq 'config' ) {
   print "graph_title $config{title}\n";
   print "graph_vtitle $config{vtitle}\n";
   print "graph_args --base 1000\n";
