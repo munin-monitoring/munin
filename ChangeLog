@@ -1,5 +1,14 @@
 -*- text -*-
 
+munin 2.0-beta6, r4544, 2012-01-14
+
+Commits by kenyon, mha, holger, steve.schnepp
+
+Summary :
+
+* Rewrote the timeout handling code. The default node timeout is now 1 min.
+* Various bugfixes since 2.0b5
+
 munin 2.0-beta5, r4508, 2011-12-7
 
 Commits by knuthaug, ssm, bldewolf, tv, kenyon, janl, ligne, kristian, holger, steve.schnepp

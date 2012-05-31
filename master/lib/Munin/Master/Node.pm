@@ -19,6 +19,9 @@ use IO::Socket::INET6;
 
 my $config = Munin::Master::Config->instance()->{config};
 
+# Quick version, to enable "DEBUG ... if $debug" constructs
+my $debug = $config->{debug};
+
 # Note: This timeout governs both small commands and waiting for the total
 # output of a plugin.  It is reset for each read.
 
@@ -239,7 +242,7 @@ sub list_plugins {
 
 
 sub parse_service_config {
-    my ($self, $service, @lines) = @_;
+    my ($self, $service, $lines) = @_;
 
     my $errors;
     my $correct;
@@ -281,9 +284,9 @@ sub parse_service_config {
     # every 'N' has the same value. Should not take parsing time into the equation
     my $now = time;
 
-    for my $line (@lines) {
+    for my $line (@$lines) {
 
-	DEBUG "[CONFIG from $plugin] $line";
+	DEBUG "[CONFIG from $plugin] $line" if $debug;
 
 	if ($line =~ /\# timeout/) {
 	    die "[ERROR] Timeout error on $nodedesignation during fetch of $plugin. \n";
@@ -313,7 +316,7 @@ sub parse_service_config {
 	    # add to config if not already here
 	    push @{$global_config->{$service}}, [$label, $2]
 	    	unless grep { $_->[0] eq $label }  @{$global_config->{$service}};
-            DEBUG "[CONFIG graph global $plugin] $service->$label = $2";
+            DEBUG "[CONFIG graph global $plugin] $service->$label = $2" if $debug;
         } elsif ($line =~ m{\A ([^\.]+)\.value \s+ (.+?) \s* $}xms) {
 	    $correct++;
 	    # Special case for dirtyconfig
@@ -342,7 +345,7 @@ sub parse_service_config {
             $ds_name = $self->_sanitise_fieldname($ds_name);
             $data_source_config->{$service}{$ds_name} ||= {};
             $data_source_config->{$service}{$ds_name}{$ds_var} = $ds_val;
-            DEBUG "[CONFIG dataseries $plugin] $service->$ds_name.$ds_var = $ds_val";
+            DEBUG "[CONFIG dataseries $plugin] $service->$ds_name.$ds_var = $ds_val" if $debug;
             push ( @graph_order, $ds_name ) if $ds_var eq 'label';
         }
 	else {
@@ -372,7 +375,7 @@ sub fetch_service_config {
     $self->_node_write_single("config $service\n");
 
     # The whole config in one fell swoop.
-    my @lines = $self->_node_read();
+    my $lines = $self->_node_read();
 
     my $elapsed = tv_interval($t0);
 
@@ -381,7 +384,7 @@ sub fetch_service_config {
 
     $service = $self->_sanitise_plugin_name($service);
 
-    return $self->parse_service_config($service,@lines);
+    return $self->parse_service_config($service, $lines);
 }
 
 sub spoolfetch {
@@ -391,11 +394,11 @@ sub spoolfetch {
     $self->_node_write_single("spoolfetch $timestamp\n");
 
     # The whole stuff in one fell swoop.
-    my @lines = $self->_node_read();
+    my $lines = $self->_node_read();
 
     # using the multigraph parsing. 
     # Using "__root__" as a special plugin name. 
-    return $self->parse_service_config("__root__", @lines);
+    return $self->parse_service_config("__root__", $lines);
 }
 
 sub _validate_data_sources {
@@ -418,7 +421,7 @@ sub _validate_data_sources {
 
 
 sub parse_service_data {
-    my ($self, $service, @lines) = @_;
+    my ($self, $service, $lines) = @_;
 
     my $plugin = $service;
     my $errors = 0;
@@ -436,7 +439,7 @@ sub parse_service_data {
     # every 'N' has the same value. Should not take parsing time into the equation
     my $now = time;
 
-    for my $line (@lines) {
+    for my $line (@$lines) {
 
 	DEBUG "[FETCH from $plugin] $line";
 
@@ -513,7 +516,7 @@ sub fetch_service_data {
 
     $self->_node_write_single("fetch $plugin\n");
 
-    my @lines = $self->_node_read();
+    my $lines = $self->_node_read();
     
     my $elapsed = tv_interval($t0);
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
@@ -521,7 +524,7 @@ sub fetch_service_data {
 
     $plugin = $self->_sanitise_plugin_name($plugin);
 
-    return $self->parse_service_data($plugin,@lines);
+    return $self->parse_service_data($plugin, $lines);
 }
 
 sub quit {
@@ -563,12 +566,11 @@ sub _node_write_single {
     DEBUG "[DEBUG] Writing to socket: \"$text\".";
     my $timed_out = !do_with_timeout($self->{io_timeout}, sub {
         if ($self->{tls} && $self->{tls}->session_started()) {
-            $self->{tls}->write($text)
-                or exit 9;
-        }
-        else {
+            $self->{tls}->write($text) or exit 9;
+        } else {
             print { $self->{writer} } $text;
         }
+	return 1;
     });
     if ($timed_out) {
         LOGCROAK "[FATAL] Socket write timed out to ".$self->{host}.
@@ -590,6 +592,7 @@ sub _node_read_single {
           $res = readline $self->{reader};
       }
       chomp $res if defined $res;
+      return 1;
     });
     if ($timed_out) {
         LOGCROAK "[FATAL] Socket read timed out to ".$self->{host}.
@@ -600,10 +603,23 @@ sub _node_read_single {
 	# aren't we supposed to be in "do in session"?
 	LOGCROAK "[FATAL] Socket read from ".$self->{host}." failed.  Terminating process.";
     }
-    DEBUG "[DEBUG] Reading from socket to ".$self->{host}.": \"$res\".";
+    DEBUG "[DEBUG] Reading from socket to ".$self->{host}.": \"$res\"." if $debug;
     return $res;
 }
 
+sub _node_read_fast {
+	my ($self) = @_;
+
+	my $io_src = $self->{reader};
+        my $buf;
+    	my $offset = 0;
+        while (my $read_len = read($io_src, $buf, 4096, $offset)) {
+		$offset += $read_len;
+		last if $buf =~ m/\n\.\n$/;
+        }
+
+	return [ split(/\n/, $buf) ];
+}
 
 sub _node_read {
     my ($self) = @_;
@@ -615,8 +631,8 @@ sub _node_read {
         $line = $self->_node_read_single();
     }
 
-    DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".";
-    return @array;
+    DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",\@array))."\".";
+    return \@array;
 }
 
 # Defines the URL::scheme for munin
@@ -675,3 +691,4 @@ FIX
 FIX
 
 =back
+

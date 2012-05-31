@@ -101,6 +101,7 @@ $SIG{CHLD} = 'IGNORE';
 my %last_updated;
 MAIN: while(1) { 
 	my $when = time;
+	my $when_next = $when + 3600; # wake up at least every hour
 	PLUGIN: foreach my $plugin (@plugins) {
 		# See if this plugin should be updated
 		my $plugin_rate = get_hash($plugin, $plugin_rate_filename) || 300;
@@ -111,6 +112,10 @@ MAIN: while(1) {
 
 		# Should update it
 		$last_updated{$plugin} = $when;
+		if ($when + $plugin_rate < $when_next) {
+			$when_next = $when + $plugin_rate;
+		} 
+
 		if ($do_fork && fork()) {
 			# parent, return directly
 			next PLUGIN;
@@ -120,13 +125,14 @@ MAIN: while(1) {
 		local $0 = "munin-async-server [$process_name]";
 		
 		fetch_data($plugin, $when);
+	
 
 		# We end here if we forked
 		last MAIN if $do_fork;
 	}
 
-	# Sleep for 1s.
-	sleep 1; 
+	# Sleep until next plugin exec.
+	sleep $when_next - time; 
 }
 		
 print STDERR "[$$][$process_name] Exiting\n" if $verbose;

@@ -28,7 +28,7 @@ use strict;
 use warnings;
 use IO::Handle;
 use Date::Manip;
-use POSIX qw(strftime);
+use POSIX qw(strftime locale_h);
 use CGI::Fast qw(:cgi);
 use CGI::Carp qw(fatalsToBrowser);
 use Time::HiRes qw(gettimeofday tv_interval);
@@ -65,6 +65,7 @@ logger_open($config->{'logdir'});
 logger_debug() if defined($ENV{CGI_DEBUG});
 
 # BEGIN FAST-CGI LOOP:
+setlocale (LC_TIME, 'C');
 my $nb_request = 0;
 my $nb_request_max = 0;
 while (new CGI::Fast) {

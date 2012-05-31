@@ -12,7 +12,7 @@ The following environment variables are used by this plugin
 
  timeout  - Connection timeout
  url      - Override default status-url
- ports    - HTTP port numbers
+ port     - HTTP port number
  user     - Manager username
  password - Manager password
 
@@ -61,15 +61,15 @@ if(!eval "require LWP::UserAgent;") {
 
 if(!eval "require XML::Simple;") {
     $ret .= "XML::Simple not found";
-} 
+}
 
 my $URL      = exists $ENV{'url'}      ? $ENV{'url'}      : "http://%s:%s\@%s:%d/manager/status?XML=true";
-my $PORT     = exists $ENV{'port'}    ? $ENV{'port'}    : 8080;
-my $HOST     = exists $ENV{'host'}    ? $ENV{'host'}    : "127.0.0.1";
+my $PORT     = exists $ENV{'port'}     ? $ENV{'port'}     : exists $ENV{'ports'} ? $ENV{'ports'} : 8080;
+my $HOST     = exists $ENV{'host'}     ? $ENV{'host'}     : "127.0.0.1";
 my $USER     = exists $ENV{'user'}     ? $ENV{'user'}     : "munin";
 my $PASSWORD = exists $ENV{'password'} ? $ENV{'password'} : "munin";
 my $TIMEOUT  = exists $ENV{'timeout'}  ? $ENV{'timeout'}  : 30;
-my $CONNECTOR= exists $ENV{'connector'}  ? $ENV{'connector'}  : "http-".$PORT;
+my $CONNECTOR= exists $ENV{'connector'}? $ENV{'connector'}: "http-".$PORT;
 
 my $url = sprintf $URL, $USER, $PASSWORD, $HOST, $PORT;
 

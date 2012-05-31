@@ -74,10 +74,10 @@ if ( defined($ARGV[0])) {
 	print "pts.colour 00FFFF\n";
 	print "X.label X displays\n";
 	print "X.draw AREASTACK\n";
-	print "X.info Users logged in on a X display\n";
+	print "X.info Users logged in on an X display\n";
 	print "X.colour 000000\n";
 	print "other.label Other users\n";
-	print "other.info Users loged in by indeterminate method\n";
+	print "other.info Users logged in by indeterminate method\n";
 	print "other.colour FF0000\n";
 	foreach my $field (qw(tty pty pts X other)) {
 		print_thresholds($field);

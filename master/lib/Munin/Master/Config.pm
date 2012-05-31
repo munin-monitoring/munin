@@ -291,7 +291,7 @@ sub _concat_config_line {
     #     port 4949
     #
     # This is shorthand for [domain;host.domain]:
-    #   [host.domanin]
+    #   [host.domain]
     #     port 4949
     # 
     # [group;]

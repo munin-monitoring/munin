@@ -133,18 +133,16 @@ sub process_request
     # catch and report any system errors in a clean way.
     eval {
         $timed_out = !do_with_timeout($services->{timeout}, sub {
-            while (defined ($line = _net_read($session))) {
+	    my $per_line_timeout = 5;
+            while (defined ($line = do_with_timeout($per_line_timeout, sub { return _net_read($session); }))) {
                 chomp $line;
 		if (! _process_command_line($session, $line)) {
 		    $line = "<finished '$line', ending input loop>";
 		    last;
 		}
-		# Reset timeout to wait a reasonable time for input
-		# from the master.
-	        # Misfeature: Plugin timeout and input timeout are identical
-		reset_timeout();
 		$line = "<waiting for input from master, previous was '$line'>";
             }
+	    return 1;
         });
     };
 
@@ -157,8 +155,6 @@ sub process_request
 
 sub _process_command_line {
     my ($session, $cmd_line) = @_;
-
-    reset_timeout();
 
     local $_ = $cmd_line;
 

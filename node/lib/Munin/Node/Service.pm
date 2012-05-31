@@ -27,7 +27,7 @@ sub new
     $args{defuser}  ||= getpwnam $Munin::Common::Defaults::MUNIN_PLUGINUSER;
     $args{defgroup} ||= getgrnam $Munin::Common::Defaults::MUNIN_GROUP;
 
-    $args{timeout}  ||= 10;
+    $args{timeout}  ||= 60; # Default transaction timeout : 1 min
     $args{pidebug}  ||= 0;
 
     die "Fatal error. Bailing out.\n"

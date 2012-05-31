@@ -21,6 +21,7 @@ my $nb_plugins = 30;
 my $fields_per_plugin = 5;
 my $starting_port = 24949;
 my $spoolfetch;
+my $starting_epoch = -3600; # 1 hour from now
 my $dump_config;
 my $is_debug;
 my $help;
@@ -32,6 +33,7 @@ my $arg_ret = GetOptions(
 	"nb-plugins|n=i" => \$nb_plugins,
 	"nb-fields|f=i" => \$fields_per_plugin,
 	"nb-servers|s=i" => \$nb_servers,
+	"update-rate=i" => \$update_rate,
 
 	"startint-port|p=i" => \$starting_port,
 
@@ -40,6 +42,7 @@ my $arg_ret = GetOptions(
 	"update-rate=i" => \$update_rate,
 	"spoolfetch" => \$spoolfetch,
 	"spoolfetch-rate=i" => \$spoolfetch_rate,
+	"starting-epoch=i" => \$starting_epoch,
 
 	"dump|d" => \$dump_config,
 	"help|h" => \$help,
@@ -52,13 +55,19 @@ if ($help) {
 Options:
     --help                   View this message.
 
+    -s --nb-servers <int>     Number of servers [3]
+    -p --start-port <int>     Starting TCP listening port [24949]
+
     -n --nb-plugins <int>     Number of plugins per server [30] 
     -f --nb-fields  <int>     Number of fields per plugins [5]
-    -s --nb-servers <int>     Number of servers [3]
+    --update-rate <int>       Update rate of plugins (in seconds) [10]
 
-    -p --start-port <int>     Starting TCP listening port [24949]
        --listen    <host>     Which IP to bind [localhost]. 
                               Use '' or '*' to bind to every interface.
+
+    --spoolfetch              Be spoolfetch capable
+    --starting-epoch          Starting epoch: no data will available before.
+                               Can be relative to now if negative [-3600] 
 
     -d --dump                 Only dump a generated munin.conf part [no]
        --debug                Print debug informations [no] 
@@ -67,10 +76,13 @@ Options:
 	exit 0;
 }
 
+# Convert relatives starting_epoch to absolute
+$starting_epoch = time + $starting_epoch if ($starting_epoch < 0);
+
 if ($dump_config) {
 	for (my $i = 0; $i < $nb_servers; $i++) {
 		my $port = $starting_port + $i;
-		print "[host$port.debug]\n";
+		print "[host$port.debug.lan]\n";
 		print "     address 127.0.0.1\n";
 		print "     port $port\n";
 		print "\n";
@@ -137,10 +149,11 @@ sub service
 			print $client "cap @caps\n";
 		} elsif ($line =~ m/^config (\w+)/) {
 			my $plugin_number = get_plugin_number($1);
+			my $plugin_name = "debug_plugin_$plugin_number";
 			print $client "graph_title Debug plugin $plugin_number\n";
 			print $client "update_rate $update_rate\n";
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
-				print $client "field_". $plugin_number . "_$i.label field $i of plugin $1 on $hostname\n";
+				print $client "field_". $plugin_number . "_$i.label field $i of plugin $plugin_name on $hostname\n";
 				print $client "field_". $plugin_number . "_$i.type GAUGE\n";
 			}
 			print $client ".\n";
@@ -154,8 +167,10 @@ sub service
 		} elsif ($line =~ m/^spoolfetch (\d+)/) {
 			my $timestamp = $1;
 
-			# One hour histo if asked from THE BEGINNING
-			$timestamp = (time - 3600) if ($timestamp == 0);
+			# Cannot start before $starting_epoch
+			print "asked $timestamp, " if $is_debug;
+			$timestamp = ($timestamp < $starting_epoch) ? $starting_epoch : $timestamp;
+			print "starting at $starting_epoch, using $timestamp, \n" if $is_debug;
 
 			# Only send something every $spoolfetch_rate * $update_rate
 			if ( $timestamp > time - $spoolfetch_rate * $update_rate) {
