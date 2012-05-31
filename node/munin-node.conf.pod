@@ -1,6 +1,6 @@
 =head1 NAME
 
-node.conf - Munin-node configuration file
+munin-node.conf - Munin-node configuration file
 
 =head1 DESCRIPTION
 
@@ -8,7 +8,7 @@ Munin-node is the node that Munin fetches data from, graphs, htmlifies
 and optionaly warns nagios about data it gathers. It's designed to let it
 be very easy to graph new datasources.
 
-"node.conf" is the configuration file for munin-node.
+"munin-node.conf" is the configuration file for munin-node.
 
 The format of the file is dictated by the use of Net::Server. A look at
 "perldoc Net::Server" will give a list of options that the file supports

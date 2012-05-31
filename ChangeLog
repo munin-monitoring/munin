@@ -1,3 +1,32 @@
+munin (1.2.6rc1)
+	* [r1584] server/Munin.pm.in: fix locking bug, lock was not created
+	  (same like r1437)
+
+	* [r1582] node/munin-node.conf.pod: chnage "node.conf" to
+	  "munin-node.conf"
+
+	* [r1581] Makefile: change owner of $(PLUGSTATE) to
+	  $(PLUGINUSER):$(GROUP) instead of root:$(GROUP)
+
+	* [r1580] README-apache-cgi.in: added missing "/" to @@CGIDIR@@,
+	  also added url to the CgiHowto (Trac #99 / Debian #307962)
+
+	* [r1574] node/Plugin.pm.in: merged r1528: (Security fix, do not
+	  open symlinks for writing)
+
+	* [r1573] node/node.d/postfix_mailvolume.in: merged:
+	  r1524: multiple fixes for problems found in sibling
+	  exim_mailstats plugin:
+	    - Use english to communicate errors (not exit statuses)
+	    - Discontinue use of rotated log files to elliminate associated
+	      bugs
+	    - Give reasons for not autoconfiguring plugin
+	  r1529: Fix bug introducet in previous cleanup to stop startup
+	    spike.
+
+	* [r1572] node/node.d/exim_mailstats.in: merged r1458 / r1521 (lots
+	  of exim_mailstats fixing)
+
 munin (1.2.6rc0)
 
   * Server: Applied r1448, closes Debian #307966 

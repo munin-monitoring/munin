@@ -71,7 +71,7 @@ install-node-non-snmp: build
 	mkdir -p $(STATEDIR)
 	mkdir -p $(PLUGSTATE)
 
-	$(CHGRP) $(GROUP) $(PLUGSTATE)
+	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
 	$(CHMOD) 775 $(PLUGSTATE)
 	$(CHMOD) 755 $(CONFDIR)/plugin-conf.d
 
