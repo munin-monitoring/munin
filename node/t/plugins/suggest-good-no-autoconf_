@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# Munin test plugin: 
+# 
+# Suggest should never be run, because autoconf said it shouldn't
+# be installed
+#
+# #%# family=test
+# #%# capabilities=autoconf suggest
+
+. t/plugins/default_funcs.sh
+
+do_autoconf ()
+{
+	echo no
+	exit 0
+}
+
+do_suggest ()
+{
+	echo one
+	echo two
+	echo three
+	
+	exit 0
+}
+
+
+do_$1
+

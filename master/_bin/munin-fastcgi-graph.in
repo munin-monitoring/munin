@@ -1,0 +1,353 @@
+#!@@PERL@@ -Tw
+# -*- perl -*-
+#
+# Copyright (C) 2004-2009 Jimmy Olsen, 
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# $Id$
+#
+
+#
+
+use RRDs;
+use Munin::Master::Utils;
+use strict;
+use IO::Handle;
+use Date::Manip;
+use POSIX qw(strftime);
+use IPC::SysV qw(IPC_CREAT);
+use CGI::Fast;
+
+my $GRAPHER = "@@LIBDIR@@/munin-graph";
+my $conffile = "@@CONFDIR@@/munin.conf";
+
+my %TIMES   = ( "day"   => ["--noweek", "--nomonth", "--noyear", "--nosumweek", "--nosumyear"], 
+		"week"  => ["--noday", "--nomonth", "--noyear", "--nosumweek", "--nosumyear"], 
+		"month" => ["--noday", "--noweek", "--noyear", "--nosumweek", "--nosumyear"], 
+		"year"  => ["--noday", "--noweek", "--nomonth", "--nosumweek", "--nosumyear"],
+		"week-sum"  => ["--noday", "--nomonth", "--noyear", "--noweek", "--nosumyear"], 
+		"year-sum"  => ["--noday", "--noweek", "--nomonth", "--nosumweek", "--noyear"]
+	    );
+
+my %period  = ( "day"   => 300,
+		"week"  => 1800,
+		"month" => 7200,
+		"year"  => 86400,
+		"week-sum" => 1800,
+		"year-sum" => 86400
+	    );
+
+my $log = new IO::Handle;
+my $scale = "day";
+my $host  = "";
+my $serv  = "";
+my $dom   = "";
+my $lock  = "";
+my $IPC_KEY = 9340;
+
+# NOTE: You need to restart apache if the config file changes!
+my $config = &munin_readconfig ($conffile);
+
+# Get semaphore handle - Before graphing as recommended by snide.
+my $semid = undef;
+
+sem_setup();
+
+# BEGIN FAST-CGI LOOP:
+while (new CGI::Fast) {
+    my $path = $ENV{PATH_INFO} || "";
+    $path =~ s/^\///;
+    ($dom, $host, $serv) = split /\//, $path;
+    ($serv, $scale) = split /-/, $serv, 2;
+    $scale =~ s/\.png$//;
+  
+    if (! &verify_parameters ($dom, $host, $serv, $scale)) {
+	print "Status: 500\n";
+	print "Content-Type: text/html\n";
+	print "\n";
+	print "Invalid parameters!";
+	next;
+    }
+  
+    my $filename = get_picture_filename ($config, $dom, $host, $serv, $scale);
+  
+    my $time = time;
+  
+    # If a "Cache-Control: no-cache" header gets send, we regenerate the image in every case:
+    my $no_cache = defined($ENV{HTTP_CACHE_CONTROL}) && $ENV{HTTP_CACHE_CONTROL} =~ /no-cache/i;
+ 
+    if ($no_cache or (! &graph_usable ($filename, $time) )) {
+	next unless draw_graph_or_complain($host, $serv, $TIMES{$scale});
+	goto draw;
+    }
+
+    # At this time the file exists.  But may be old.  Or not.
+
+    my @stats         = stat ($filename);
+    my $last_modified = strftime ("%a, %d %b %Y %H:%M:%S %Z", localtime ($stats[9]));
+    # "Expires" has to use last modified time as base:
+    my $expires       = strftime ("%a, %d %b %Y %H:%M:%S GMT", 
+				  gmtime($stats[9]+($period{$scale}-($stats[9]%$period{$scale}))));
+    
+    # Check for If-Modified-Since and send 304 if not changed:
+    if (defined $ENV{HTTP_IF_MODIFIED_SINCE} and
+	!&modified ($ENV{HTTP_IF_MODIFIED_SINCE}, $stats[9]-1)) {
+	print "Status: 304\n";
+	print "Content-Type: image/png\n";
+	print "Expires: ", $expires, "\n";
+	print "Last-Modified: $last_modified\n";
+	print "\n";
+	next;
+    }
+
+  draw:  
+    @stats           = stat ($filename) unless @stats;
+    $last_modified //= strftime ("%a, %d %b %Y %H:%M:%S %Z", localtime ($stats[9]));
+    # "Expires" has to use last modified time as base:
+    $expires       //= strftime ("%a, %d %b %Y %H:%M:%S GMT", 
+				 gmtime($stats[9]+($period{$scale}-($stats[9]%$period{$scale}))));
+    
+    print "Content-Type: image/png\n";
+    print "Expires: ", $expires, "\n";
+    print "Last-Modified: $last_modified\n";
+    print "\n";
+    
+    &graph ($filename);
+}
+
+# END FAST-CGI LOOP
+
+sub sem_setup {
+    if(!defined($semid)) {
+	semget($IPC_KEY, 0, 0 );
+
+	# Or create it if needed
+	$semid = semget($IPC_KEY, 1 , oct(666) | IPC_CREAT );
+
+	die "Creating semaphore: $!" unless defined($semid);
+
+	my $max_cgi_graph_jobs = &munin_get ($config, "max_cgi_graph_jobs" , 6, $dom);
+
+	# And initialize to max_cgi_graph_jobs
+	my $opstring = pack("s!s!s!",0, $max_cgi_graph_jobs,0);
+	semop($semid,$opstring) || die "$!";
+    }
+}
+
+
+sub sem_get {
+    # Call this before doing heavy work.
+    # Decrement, or lock/hang/yield if already 0
+    my $opstring = pack("s!s!s!",0, -1, 0);
+    semop($semid,$opstring);
+}
+
+
+sub sem_release {
+    # Call this after doing heavy work.
+    # Increment (and release waiting processes).
+    my $opstring = pack("s!s!s!",0, 1, 0);
+    semop($semid,$opstring);
+}
+
+
+sub graph {
+    # Serve the graph contents.  This is not heavy, no semaphore.
+    my $filename = shift;
+
+    open (my $GRAPH, '<', $filename) 
+        or die "Warning: Could not open picture file \"$filename\" for reading: $!\n";
+    print while (<$GRAPH>);
+    close ($GRAPH);
+}
+
+
+sub get_picture_filename {
+    my $config  = shift;
+    my $domain  = shift;
+    my $name    = shift;
+    my $service = shift;
+    my $scale   = shift;
+
+    return "$config->{'htmldir'}/$domain/$name-$service-$scale.png";
+}
+
+
+sub logger_open {
+    my $dirname = shift;
+
+    if (!$log->opened)
+    {
+	unless (open ($log, '>>', "$dirname/munin-cgi-graph.log"))
+	{
+	    print STDERR "Warning: Could not open log file \"$dirname/munin-cgi-graph.log\" for writing: $!";
+	}
+    }
+}
+
+
+sub logger {
+  my ($comment) = @_;
+  my $now = strftime ("%b %d %H:%M:%S", localtime);
+
+  if ($log->opened)
+  {
+          print $log "$now - $comment\n";
+  }
+  else
+  {
+          if (defined $config->{logdir})
+          {
+                  if (open ($log, '>>', "$config->{logdir}/munin-cgi-graph.log"))
+                  {
+                          print $log "$now - $comment\n";
+                      }
+                  else
+                  {
+                          print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-cgi-graph.log\" for wr
+iting: $!";
+                          print STDERR "$now - $comment\n";
+                  }
+          }
+          else
+          {
+                  print STDERR "$now - $comment\n";
+          }
+    }
+}
+
+
+sub verify_parameters
+{
+	my $dom   = shift;
+	my $host  = shift;
+	my $serv  = shift;
+	my $scale = shift;
+
+	if (!$dom)
+	{
+		print STDERR "Warning: Request for graph without specifying domain. Bailing out.\n";
+		return 0;
+	}
+	if (!$host)
+	{
+		print STDERR "Warning: Request for graph without specifying host. Bailing out.\n";
+		return 0;
+	}
+	if (!$serv)
+	{
+		print STDERR "Warning: Request for graph without specifying service. Bailing out.\n";
+		return 0;
+	}
+
+	if (!$scale)
+	{
+		print STDERR "Warning: Request for graph without specifying scale. Bailing out.\n";
+		return 0;
+	}
+	else
+	{
+		if (!defined $TIMES{$scale})
+		{
+			print STDERR "Warning: Weird scale setting \"$scale\". Bailing out.\n";
+			return 0;
+		}
+	}
+	return 1;
+}
+
+
+sub graph_usable {
+    my $filename = shift;
+    my $time     = shift;
+
+    if (-f $filename) {
+	my @stats = stat (_);
+	# $stats[9] holds the "last update" time and this needs to be in the last update period:
+	if ($stats[9] > ($time - $time%$period{$scale})) {
+#print STDERR "Skipping munin-graph-run for \"$filename\".\n";
+#print STDERR ("Graph unexpired for $scale. ($stats[9] , $time, ". ($time%$period{$scale}). ", ". ($time - $time%$period{$scale}). ").\n");
+	    return 1;
+	} else {
+#print STDERR ("Graph expired for $scale. ($stats[9] , $time, ". ($time%$period{$scale}). ", ". ($time - $time%$period{$scale}). ").\n");
+	    return 0;
+	}
+    }
+    return 0;
+}
+
+
+sub draw_graph {
+    # Draw a new graph - use semaphore to avoid too many concurrent munin-graph calls.
+    my $host  = shift;
+    my $serv  = shift;
+    my $scale = shift;
+
+    $serv =~ s/[^\w_\/"'\[\]\(\)+=-]/_/; $serv =~ /^(.+)$/; $serv = $1; #"
+    $host =~ s/[^\w_\/"'\[\]\(\)+=-]/_/; $host =~ /^(.+)$/; $host = $1; #"
+
+    my @params = ($GRAPHER);
+    push @params, @$scale;
+    push @params, "--skip-locking", "--skip-stats", "--nolazy";
+    push @params, "--host", $host, "--service", $serv;
+    push @params, "STDERR>&STDOUT";
+
+    my $file = "/dev/null";
+    my $IN;
+    sem_get();
+
+    if (! open ($IN, "-|")) { 
+	%ENV=(); 
+	exec @params;
+    }
+    $file = join (' ', <$IN>);
+
+    close ($IN);
+    sem_release();
+
+    return $file;
+}
+
+
+sub draw_graph_or_complain {
+    my $ret = draw_graph(@_);
+
+    if (! -f $ret) {
+	::logger ("Warning: Could not draw graph \"$host-$serv-$scale.png\": $ret");
+	print "Status: 500\n";
+	print "Content-Type: image/png\n";
+	print "\n";
+        return 0;
+    } else {
+	return $ret;
+    }
+}
+
+
+sub modified {
+    # See if the file has been modified since "the last time".
+
+    # Format of since_string If-Modified-Since: Wed, 23 Jun 2004 16:11:06 GMT
+
+    my $since_string = shift;
+    my $created      = shift;
+    my $ifmodsec = &UnixDate (&ParseDateString ($since_string), "%s");
+
+    return 1 if ($ifmodsec < $created);
+    return 0;
+}
+
+# vim: syntax=perl ts=8

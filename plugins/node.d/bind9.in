@@ -1,0 +1,107 @@
+#!@@PERL@@ -w
+# -*- perl -*-
+
+=head1 NAME
+
+bind9 - Plugin to monitor usage of bind 9 servers
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+ logfile   - Location of the query log
+             (default: "/var/log/bind9/query.log")
+ statefile - Location of the temporary state file
+             (default: "@@PLUGSTATE@@/bind9.state")
+
+=head1 AUTHOR
+
+Contributed by Nicolai Langfeldt
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+
+=cut
+
+use strict;
+
+my $QUERYLOG=$ENV{logfile} || '/var/log/bind9/query.log';
+my $STATEFILE=$ENV{statefile} || '@@PLUGSTATE@@/bind9.state';
+my $OTHER=0;
+my %IN;
+
+sub get_state {
+    open(Q,"< $STATEFILE") or die;
+    while (<Q>) {
+        chomp;
+        my ($q,$n) = split(/\s+/,$_,2);
+        $IN{$q}=$n unless defined($IN{$q});
+    }
+    close(Q);
+}
+
+
+sub do_stats {
+    my $k; 
+
+    open(Q,"< $QUERYLOG") or die "$!";
+    while (<Q>) {
+	chomp;
+	if (/client \d+\.\d+.\d+.\d+\#\d+: query\: \S+ (\w+) (\w+)/) {
+	    if ($1 eq 'IN' and $2 !~ /^TYPE/) {
+		$IN{$2}++;
+	    } else {
+		$OTHER++;
+	    }
+	}
+    }
+    close(Q);
+
+    get_state;
+
+    open(Q,"> $STATEFILE") or die;
+    foreach $k (keys %IN) {
+	print "query_$k.value ",$IN{$k},"\n";
+	print Q "$k ",$IN{$k},"\n";
+    }
+    close(Q);
+
+    print "query_other.value ",$OTHER,"\n";
+}
+
+
+sub do_config {
+    my $k;
+
+    print "graph_title DNS Queries by type
+graph_vlabel Queries / \${graph_period}
+query_other.label Other
+query_other.type DERIVE
+query_other.min 0
+query_other.draw AREA
+";
+    get_state;
+
+    foreach $k (keys %IN) {
+	print "query_$k.label $k
+query_$k.type DERIVE
+query_$k.min 0
+query_$k.draw STACK
+";
+    }
+};
+
+if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
+    do_config;
+    exit(0);
+}
+
+do_stats;
+
+
+# vim:syntax=perl

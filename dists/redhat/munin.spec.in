@@ -104,21 +104,18 @@ The RHEL package is based on the package from Fedora Extras
 #%patch0 -p1
 
 %build
-
+rm -rf %{buildroot}
 # htmldoc and html2text are not available for Red Hat. Quick hack with perl:
 # Skip the PDFs.
 perl -pi -e 's,htmldoc munin,cat munin, or s,html(2text|doc),# $&,' Makefile
 perl -pi -e 's,\$\(INSTALL.+\.(pdf|txt) \$\(DOCDIR,# $&,' Makefile
-make 	CONFIG=dists/redhat/Makefile.config build
+cp dists/redhat/Makefile.config Makefile.config
+%{__make} build
 
 %install
 
 ## Node
-make 	CONFIG=dists/redhat/Makefile.config \
-	DOCDIR=%{buildroot}%{_docdir}/%{name}-%{version} \
-	MANDIR=%{buildroot}%{_mandir} \
-	DESTDIR=%{buildroot} \
-    	install-main install-node-non-snmp install-node-plugins install-doc install-man
+%{__make} DESTDIR=%{buildroot} install-main install-node-non-snmp install-node-plugins install-doc install-man
 
 mkdir -p %{buildroot}/etc/rc.d/init.d
 mkdir -p %{buildroot}/etc/munin/plugins
@@ -199,18 +196,21 @@ test "$1" != 0 || %{groupdel} munin &>/dev/null || :
  
 %files
 %defattr(-, root, root)
-%doc %{_docdir}/%{name}-%{version}/README.api
-%doc %{_docdir}/%{name}-%{version}/README.plugins
-%doc %{_docdir}/%{name}-%{version}/COPYING
-%doc %{_docdir}/%{name}-%{version}/ChangeLog
-%doc %{_docdir}/%{name}-%{version}/README-apache-cgi
+#%doc %{_docdir}/%{name}-%{version}/README.api
+#%doc %{_docdir}/%{name}-%{version}/README.plugins
+%doc COPYING ChangeLog
+#%doc %{_docdir}/%{name}-%{version}/README-apache-cgi
 %{_bindir}/munin-cron
+%{_bindir}/munin-check
 %{_datadir}/munin/munin-graph
 %{_datadir}/munin/munin-html
 %{_datadir}/munin/munin-limits
 %{_datadir}/munin/munin-update
+%{_datadir}/munin/VeraMono.ttf
 %{perl_vendorlib}/Munin.pm
 /var/www/html/munin/cgi/munin-cgi-graph
+/var/www/html/munin/.htaccess
+/var/www/html/munin/favicon.ico
 %dir /etc/munin/templates
 %dir /etc/munin
 %config(noreplace) /etc/munin/templates/*
@@ -242,6 +242,7 @@ test "$1" != 0 || %{groupdel} munin &>/dev/null || :
 %{_sbindir}/munin-run
 %{_sbindir}/munin-node
 %{_sbindir}/munin-node-configure
+%{perl_vendorlib}/Munin/Plugin.pm
 %attr(-, munin, munin) %dir /var/log/munin
 %dir %{_datadir}/munin
 %dir /etc/munin/plugins
@@ -249,14 +250,18 @@ test "$1" != 0 || %{groupdel} munin &>/dev/null || :
 %attr(-, munin, munin) %dir /var/lib/munin
 %dir %attr(-, munin, munin) /var/lib/munin/plugin-state
 %{_datadir}/munin/plugins/*
-%doc %{_docdir}/%{name}-%{version}/COPYING
-%doc %{_docdir}/%{name}-%{version}/munin-doc.html
-%doc %{_docdir}/%{name}-%{version}/munin-faq.html
+%doc COPYING README
+#%doc %{_docdir}/%{name}-%{version}/munin-doc.html
+#%doc %{_docdir}/%{name}-%{version}/munin-faq.html
 %doc %{_mandir}/man8/munin-run*
 %doc %{_mandir}/man8/munin-node*
 %doc %{_mandir}/man5/munin-node*
 
 %changelog
+* Wed May 27 2009 Ingvar Hagelund <ingvar@redpill-linpro.com> - 1.3.4
+- Synced the specfile to upstream unstable. Added missing files
+- Probably needs more sanitizing, and sync against Fedora
+
 * Mon Jun 12 2006 Ingvar Hagelund <ingvar@linpro.no> - 1.3-unstable
 - Synced most changes from Fedora package into unstable tree
 - Added a sendmail config file that is RedHat specific

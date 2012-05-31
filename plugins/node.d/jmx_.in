@@ -1,0 +1,155 @@
+#!@@GOODSH@@
+# -*- sh -*-
+: << =cut
+
+=head1 NAME
+
+jmx_ - Wildcard plugin to monitor Java application servers via JMX
+
+=head1 APPLICABLE SYSTEMS
+
+Tested with Tomcat 4.1/5.0/5.5/6.0 on Sun JVM 5/6 and OpenJDK.
+
+Any JVM that supports JMX should in theory do.
+
+=head1 CONFIGURATION
+
+  [jmx_*]
+    env.ip 127.0.0.1
+    env.port 5400
+    env.category jvm
+
+Needed configuration on the Tomcat side: add
+
+  -Dcom.sun.management.jmxremote \
+  -Dcom.sun.management.jmxremote.port=5400 \
+  -Dcom.sun.management.jmxremote.ssl=false \
+  -Dcom.sun.management.jmxremote.authenticate=false
+
+to CATALINA_OPTS in your startup scripts.
+
+=head1 BUGS
+
+No authentication or encryption supported in the JMX connection.
+
+The plugins available reflect the most interesting aspects of a
+JVM runtime.  This should be extended to cover things specific to
+Tomcat, JBoss, Glassfish and so on.  Patches welcome.
+
+=head1 AUTHORS
+
+=encoding UTF-8
+
+Mo Amini, Diyar Amin and Younes Hajji, Høgskolen i Oslo/Oslo
+University College.
+
+Shell script wrapper and integration by Erik Inge Bolsø, Redpill
+Linpro AS.
+
+=head LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
+
+MUNIN_JAR="@@JAVALIBDIR@@/munin-jmx-plugins.jar"
+
+if [ "x$1" = "xsuggest" ] ; then
+  cat <<__EOF
+ClassesLoaded
+ClassesLoadedTotal
+ClassesUnloaded
+CompilationTimeTotal
+GCCount
+GCTime
+CurrentThreadCpuTime
+CurrentThreadUserTime
+MemoryAllocatedHeap
+MemoryAllocatedNonHeap
+MemoryEdenPeak
+MemoryEdenUsage
+MemoryEdenUsagePostGC
+MemoryObjectsPending
+MemoryPermGenPeak
+MemoryPermGenUsage
+MemoryPermGenUsagePostGC
+MemorySurvivorPeak
+MemorySurvivorUsage
+MemorySurvivorUsagePostGC
+MemoryTenuredGenPeak
+MemoryTenuredGenUsage
+MemoryTenuredGenUsagePostGC
+MemorythresholdPostGCCount
+MemorythresholdUsageCount
+ProcessorsAvailable
+Threads
+ThreadsDaemon
+ThreadsDeadlocked
+ThreadsPeak
+ThreadsStartedTotal
+Uptime
+__EOF
+  exit 0
+fi
+
+if [ "x$1" = "xautoconf" ] ; then
+    if [ "x$ip" = "x" ]; then
+        echo "no (ip not configured)"
+        exit 0
+    fi
+      
+    if [ "x$port" = "x" ] ; then
+        echo "no (port not configured)"
+        exit 0
+    fi
+
+    NC=`which nc`
+    if [ "x$NC" = "x" ] ; then
+      echo "no (nc not found)"
+      exit 0
+    fi
+    nc -n -z $ip $port
+    CONNECT=$?
+
+    JAVA_BIN="@@JAVARUN@@"
+    $JAVA_BIN -? >/dev/null 2>&1
+    JAVA=$?
+    if [ $JAVA -ne 0 ] ; then
+      echo "no (java runtime not found at $JAVA_BIN)"
+      exit 0
+    fi
+
+    if [ ! -e $MUNIN_JAR ] ; then
+      echo "no (munin jmx classes not found at $MUNIN_JAR)"
+      exit 0
+    fi
+
+    if [ $CONNECT -eq 0 ] ; then
+      echo "yes"
+      exit 0
+    else
+      echo "no (connection to $ip:$port failed)"
+      exit 0
+    fi
+fi
+
+if [ "x$1" = "xconfig" ] ; then
+  param=config
+else
+  param=Tomcat
+fi
+
+scriptname=${0##*/}
+jmxfunc=${scriptname##*_}
+
+if [ "x$jmxfunc" = "x" ] ; then
+  echo "error, plugin must be symlinked in order to run"
+  exit 1
+fi
+
+@@JAVARUN@@ -cp $MUNIN_JAR org.munin.plugin.jmx.$jmxfunc $param

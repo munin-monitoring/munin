@@ -1,0 +1,6 @@
+For Debian packaging and init scripts, trunk/dists/debian is deprecated.
+
+A branch for svn-buildpackage has been created at branches/debian,
+with subdirectories for each release codename:
+
+svn ls svn://munin.projects.linpro.no/munin/branches/debian

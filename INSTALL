@@ -1,109 +1,179 @@
-Requirements
-============
+Munin installation requirements
+===============================
 
-- A reasonable Perl5, both on the server and nodes
-- RRD with perl support on the server
-- Perl modules for server:  Time::HiRes, Storable, Digest::MD5,
-     HTML::Template, Text::Balanced
-- Perl modules for node: Net::Server
+On all hosts:
+
+- A reasonable Perl5
+
+- GNU Make - do not attempt to use any other make.
+
+- The perl module Time::HiRes
+
+- For TLS(SSL) to work you'll need Net::SSLeay everywhere
+
+
+Server:
+
+- A web server.  Apache HTTPD should be suitable.  Any web server supporting
+  simple file service and perhaps CGIs will work.
+
+- RRD with Perl support - this means that RRDs.pm must be available
+  and "perl -MRRDs -e ':;'" must run without errors.
+
+- Perl modules for server: 
+   - Time::HiRes
+   - Storable (needed for ProcessManager.  Should we port datafile to storable too?)
+   - Digest::MD5,
+   - HTML::Template
+   - Text::Balanced
+   - Params::Validate
+   - TimeDate
+   - Net::SNMP for SNMP autoconfiguration and plugins
+   - Net::SSLeay if you want to use SSL/TLS
+   - Getopt::Long 2.37 or later
+   - Log::Log4perl (which depends on
+     - IPC::Shareable
+     - Log::Dispatch
+     - Log::Dispatch::FileRotate
+     - MIME::Lite
+     - Mail::Sender
+     - Mail::Sendmail
+     - MailTools)
+
+   - Developers/packagers: For testing
+     - Test::MockModule
+     - Test::MockObject
+     - Test::Pod::Coverage
+     - Test::Perl::Critic 1.096 or later
+     - Test::Exception
+     - Directory::Scratch (err, wherefrom?)
+   
+   - As well as all the modules needed on a node - most servers are also
+     nodes.
+
+Node:
+
+- Perl modules: Net::Server, Time::HiRes
+
+- All SNMP plugins use Net::SNMP
+
+- Net::SSLeay if you want to use SSL/TLS
+
 - Perl modules for plugins: Depends on the plugins you want to use,
-     but not much
-- GNU Make
-- A web server.  Apache HTTPD should be suitable.
+  but not many.
 
-Munin is quite often used on Linux, *BSD, Solaris and AIX and recently
-OS X (Darwin).  The server and node should be easy to get working on
-any Unix platform, and plugins should either be easy to adopt from a
-related OS or make new ones based on what you find here.  If you make
-a plugin set for a new OS please email us at
-munin-users@lists.sourceforge.net or enter a ticket in the trac ticket
-base at http://munin.sourceforge.net.
+- If you want to use Java JMX plugins to monitor a Java app: Sun Java
+  5+ compiler (a basic JDK Standard Edition from java.sun.com or your
+  package system).
+
+
+If you're missing some perl modules and they are not in your package
+system it's recommended to use the cpan shell (as root) to install the
+needed ones:
+
+  perl -MCPAN -e shell
 
 
 Installing
 ==========
 
-IF you're working on a SVN checkout:
+NOTE!!!! If you're using NFS please note that the "make install"
+process is slightly problematic in that it (Module::Build actually)
+writes files under $CWD.  Since "make install" is usually run by root
+and root usually cannot write files on a NFS volume, this will fail.
+If you use NFS please unpack munin under /var/tmp, /tmp or some such
+to work around this.
 
-	- cp Makefile.config-dist Makefile.config
+There are make targets for node, master, documentation and man files.
+Generally you want to install everything on the master, and just the
+node on ... the nodes.
 
-	  This overwrites the maintainers copy of Makefile.config.
+To install both master and node:
 
-Munin consists of the main (central server) programs, and the node
-program and the associated plugins.  The node runs on each of the
-machines you want to collect data from.  The main programs does the
-collecting, draws the graphs, and creates the HTML pages.
+   	- Review/edit Makefile.config to suite your needs.
 
-To install the main programs (you might want to install a node first,
-that way there is data to collect):
+	- Create the user "munin" and the group "munin" if these are
+          not made automatically.  The user needs no shell and no
+	  privileges.  On most Linux systems the munin user's shell
+	  is /etc/nologin - but the user still needs to be able to
+          run cron jobs.
 
-	- Review/edit Makefile.config
-	- create the user "munin"
-	- make install-main
+	- make (do _NOT_ do "make install" directly, there is a bug somewhere that will result in a very defective Munin::Common::Defaults to be installed).
 
-        - In your HTMLDIR/munin you will now find a .htaccess file
-          with two main features:
+	- make install
 
-	  * Password protection
+        - In your HTMLDIR you will now find a .htaccess file with two
+          main features:
 
-          It looks for passwords in CONFDIR/munin-htpasswd.  Install
-          the users you need in munin-htpasswd with the htpasswd
-	  command.  Check that authentication is required, if it's not 
-	  please refer to build/resources/apache-passwd.conf.
+	  * Password protection. Users/passwords are kept in
+	    CONFDIR/munin-httpasswd. Use htpasswd to create/modify
+	    users in normal Apache fashion. 
 
-	  * Munin page expiery to refresh contents
+	  * Munin page expiry to refresh contents. This requires
+	    mod_expires to be enabled.
 
-	  This sets the cache expiry of everything in the munin HTML
-	  directory hierarcy to it's creation time +5 minutes 10 seconds.
-	  This helps all different caches understand that a new version
-	  ought to be fetched when the graph is old.
-
-	  This requires mod_expiery to be enabled.
-
-	  NOTE:
-
-	  As noted within the file it will not work unless you have the
-	  right AllowOverride in the central Apache configuration.  See
-	  the file for more information.
+	  NOTE: Both these features require the relevant AllowOverride
+	  statement in Apache. AuthConfig and Indexes, respectively.
 
           If you already have a .htaccess file in HTMLDIR it will not
           be overwritten.
 
 	  If you prefer that munin be openly available make the
-	  .htaccess file empty ( : >.htaccess ) - that way it will
-	  not be overwritten later.
+	  .htaccess file empty to avoid overwriting it later.
 
-	- create a cron-entry to run "munin-cron" as the user "munin"
-	  every 5 minutes.  You might find cron files for your system
-	  under the build/dists subdirectory, or perhaps in the
-          build/resources directory.
+	- Review CONFDIR/munin.conf to set up some nodes. At least one
+	  node needs to have at least one functional plugin for HTML
+	  generation.
 
-	- if you want to use the dynamic graphs: Configure the cgi
-	  directory, you will find a apache config example in
-	  build/resources.  NOTE: Dynamic graphs are not exactly
-          perfect. Se also http://munin.projects.linpro.no/wiki/CgiHowto
+	- Create a cron-entry to run "munin-cron" as the user "munin"
+	  every 5 minutes.  See build/dists or build/resources for
+	  distribution-specific scripts.
 
-
-To install the documentation:
-
-	- edit Makefile.config
-	- make install-doc install-man
-
+	- If you want to use the dynamic graphs: Configure the CGI
+	  directory, you will find a Apache config example in
+	  build/resources.  
+	  
+	  NOTE: Dynamic graphs are not exactly perfect. Se also
+          http://munin.projects.linpro.no/wiki/CgiHowto
 
 To install a node:
 
-	- edit Makefile.config
-	- create the group "munin"
-	- make install-node install-node-plugins (NOTE: This installs
-	  all plugins in the distribution, no matter what you already
-	  have, if you want to save some plugins you've installed yourself
-	  or have customized please make a backup copy).
-	- decide which plugins to use.  The quick auto-plug-and-play
-          solution: 
-            munin-node-configure --shell --families=contrib,auto | sh -x
+	- Edit Makefile.config to suite your needs.
 
-	- start the node agent. You probably want an init-script for
-          this and you might find a good one under build/dists
+	- Create the group "munin".
+
+	- make
+
+	- make install-common-prime install-node-prime \
+          install-plugins-prime
+
+	  NOTE: This overwrites any existing plugins.
+
+	- Decide which plugins to use.  The quick auto-plug-and-play
+          solution: 
+          munin-node-configure --shell --families=contrib,auto | sh -x
+
+	- Review CONFDIR/munin-node.conf. Ensure that your
+	  munin-master can access it.
+
+	- Start the node agent (as root) SBINDIR/munin-node.
+
+	  You probably want to use an init-script instead and you
+          might find a good one under dists/ or in the resources/
+          directory (maybe you need to edit the init script, check the
+          given paths in the script you might use).
+
+
+For further build alternatives, see Makefile.
+
+
+Munin-gather
+============
+
+Munin-gather is an incomplete work in progress for the server side.
+Please ignore it, and if you're a packager certainly don't package
+it.
+
 
 Notes about node plugins
 ========================
@@ -117,6 +187,8 @@ then suggest commands to do this.
 Some of the plugins require some configuration to get running.  Some
 example configuration files (plugins.conf) is found under the
 build/dists directory.
+
+Whenever the plugin list changes, the node needs to be restarted. 
 
 Many OSes and releases thereof have different ways of gathering data.
 A lot of OSes still have none.  If you create plugins for an OS/system

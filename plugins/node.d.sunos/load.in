@@ -1,0 +1,52 @@
+#!@@GOODSH@@
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+load - Plugin to monitor system load
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+if [ "$1" = "autoconf" ]; then
+        echo 'yes'
+        exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+        echo 'graph_title Load average'
+		echo 'graph_category system'
+        echo 'load.label load'
+	print_warning load
+	print_critical load
+        exit 0
+fi
+
+# Hmm. Antall elementer endrer seg. (15 - 18)
+# 4:30pm  up 81 day(s), 10 min(s),  4 users,  load average: 0.89, 0.55, 0.51
+#
+
+printf "load.value "
+/bin/uptime | sed -e 's/.*, \([\.0-9]*\),.*/\1/g'
+

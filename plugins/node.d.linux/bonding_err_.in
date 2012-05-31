@@ -1,0 +1,57 @@
+#!@@GOODSH@@
+
+# Copyright Bjørn Ruberg 2009
+# Licensed under GPL v2
+
+#%# family=auto
+#%# capabilities=autoconf suggest
+
+PROCDIR="/proc/net/bonding"
+MYSELF=$(basename $0)
+FILENAME="bonding_err_"
+
+if [ "$1" = "autoconf" ]; then
+  if [ -d "${PROCDIR}" ]; then
+    echo "yes"
+  else
+    echo "no (No ${PROCDIR})"
+  fi
+  exit 0
+fi
+
+if [ "$1" = "suggest" ]; then
+  ls -1 ${PROCDIR}
+  exit 0
+fi
+
+if [ "$1" = "config" ]; then
+  if [ "$MYSELF" = "$FILENAME" ]; then
+    echo "Can't run config on un-symlinked plugin. Please run the plugin with 'suggest' before attempting this."
+    exit 0
+  else 
+    BONDINGIF=$(echo $MYSELF | sed "s/^$FILENAME//")
+    echo "graph_title Bonding interface errors for $BONDINGIF"
+    echo "graph_category Network"
+    echo "graph_args --base 1000 -l 0"
+    grep "^Slave Interface:" ${PROCDIR}/${BONDINGIF} | while read a b if; do
+      echo "if_${if}.label ${if}"
+      echo "if_${if}.type DERIVE"
+      echo "if_${if}.min 0"
+      echo "if_${if}.warning 0"
+    done
+  fi
+  exit 0
+fi
+
+if [ "$MYSELF" = "$FILENAME" ]; then
+  echo "Can't run an un-symlinked plugin. Please run the plugin with 'suggest' before attempting this."
+  exit 0
+fi
+
+BONDINGIF=$(echo $MYSELF | sed "s/^$FILENAME//")
+grep "^Slave Interface:" ${PROCDIR}/${BONDINGIF} | while read a b if; do
+  # echo "if_${if}.label ${if}"
+  echo -n "if_${if}.value "
+  grep -A 2 "^Slave Interface: ${if}" ${PROCDIR}/${BONDINGIF} | grep "Link Failure Count:" | cut -d " " -f 4
+done
+

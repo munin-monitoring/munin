@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Munin test plugin:
+#
+# autoconf says yes, but plugin dies with a fatal signal
+# (by killing itself)
+#
+# #%# family=test
+# #%# capabilities=autoconf
+
+do_autoconf()
+{
+	echo yes
+	
+	kill -PIPE $$ 
+	exit 0
+}
+
+
+do_$1 
+

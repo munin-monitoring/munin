@@ -1,14 +1,18 @@
+# -*- makefile -*-
+#
 # MAINTAINER VERSION OF Makefile.config
-# -*- Makefile -*-
 #
-# This file is rigged to overwrite the a debian munin-package as that
-# is what janl uses.
+# This file is used by the maintainer for testing and only necessarily
+# works on the maintainers machines.  Please see Makefile.config-dist
+# for the user directed Makefile.config as directed in the INSTALL doc.
 #
-# $Id: Makefile.config 1164 2006-10-19 19:45:50Z janl $
+# $Id: Makefile.config 1551 2008-03-06 20:16:51Z janl $
 
 # This file specifies where Munin will look for things after you've
 # run 'make' in the source directory.  Modify it to suit your needs.
 
+# DESTDIR is meant only for use when making Munin packages.  Unless
+# you're doing packaging do NOT set it. 
 # DESTDIR is empty during building, and optionally set to point to
 # a shadow tree during make install.
 
@@ -21,12 +25,14 @@ PREFIX     = $(DESTDIR)/usr
 CONFDIR    = $(DESTDIR)/etc/munin
 DOCDIR     = $(PREFIX)/share/doc/munin
 MANDIR     = $(PREFIX)/share/man
+SSPOOLDIR  = /tmp/muninspool
+
 
 # Where to put internal binaries and plugin repository
 LIBDIR     = $(PREFIX)/share/munin
 
 # Server only - Output directory
-HTMLDIR    = /var/www/munin
+HTMLDIR    = $(DESTDIR)/var/www/munin
 CGIDIR     = $(HTMLDIR)/../cgi
 
 # Client only - Where to put RRD files and other intenal data
@@ -44,55 +50,68 @@ LOGDIR     = $(DESTDIR)/var/log/munin
 STATEDIR   = $(DESTDIR)/var/run/munin
 
 # The perl interpreter to use
-PERL       = $(shell which perl)
+PERL       := $(shell which perl)
 
 # The python interpreter to use (used by some plugins)
-PYTHON     = /usr/bin/env python
+PYTHON     := /usr/bin/env python
+
+# The ruby interpreter to use (used by some plugins)
+RUBY       := /usr/bin/env ruby
+
+# The java runtime to use (used by some plugins)
+JAVARUN    := /usr/bin/java
 
 # A modern shell.  We're not looking for arrays, but $() and other modern
-# stuff is expected.  The expression below will work on posix systems.
-# This includes Linux, FreeBSD, Solaris, AIX and others.
-#
-# On linux /bin/sh.  SunOS/Solaris: /usr/xpg4/bin/sh
+# stuff is expected.
+# Linux: /bin/bash
+# SunOS/Solaris: /usr/xpg4/bin/sh or /bin/ksh
 # In general: bash or ksh will work
-GOODSH     = $(shell PATH=`getconf PATH` sh -c 'type sh | sed "s/.* //"')
+GOODSH     := /bin/bash
 
 # Path of bash for bash specific plugins
-BASH       = /bin/bash
+BASH       := /bin/bash
 
 # Server only - Where to install the perl libraries
-PERLLIB    = $(DESTDIR)$(shell $(PERL) -V:sitelib | cut -d"'" -f2)
+PERLSITELIB := $(shell $(PERL) -V:sitelib | cut -d"'" -f2)
+PERLLIB    = $(DESTDIR)$(PERLSITELIB)
 
 # Client only - Install plugins for this architecture
-OSTYPE     = $(shell uname | tr '[A-Z]' '[a-z]')
+OSTYPE     := $(shell uname | tr '[A-Z]' '[a-z]')
 
 # How to figure out the hostname. (Only used in default configuration
 # files)
-HOSTNAME   = $(shell hostname)
+HOSTNAME   := $(shell hostname)
 
 # What is the safest way to create a tempfile.
 # Default is to figure it out by testing various methods.
 # Replace this with a known platform-specific method
-MKTEMP     = $(shell ./test-mktemp)
+MKTEMP     := $(shell ./test-mktemp)
 
 # Munin version number.
-VERSION    = $(shell cat RELEASE)
+VERSION    := $(shell ./getversion)
 
 # User to run munin as
-USER       = munin
-GROUP      = munin
+USER       := munin
+GROUP      := munin
 
 # Default user to run the plugins as
-PLUGINUSER = nobody
+PLUGINUSER := nobody
 
 # Which command to use to check if the USER and GROUP to run Munin as, exists.
-GETENT = $(shell which getent || which true 2>/dev/null)
-CHECKUSER  = $(shell $(GETENT) passwd $(USER) >/dev/null 2>/dev/null || (echo "echo User $(USER) nonexistant. Create the user and retry; exit 2"))
-CHECKGROUP = $(shell $(GETENT) group $(GROUP) >/dev/null 2>/dev/null || (echo "echo Group $(GROUP) nonexistant. Create the group and retry; exit 2"))
 
-CHOWN      = chown
-CHMOD      = chmod
-CHGRP      = chgrp
+GETENT     := $(shell which getent || which true 2>/dev/null)
+CHECKUSER  := $(shell $(GETENT) passwd $(USER) >/dev/null 2>/dev/null || (echo "echo User $(USER) nonexistent. Create the user and retry; exit 2"))
+CHECKGROUP := $(shell $(GETENT) group $(GROUP) >/dev/null 2>/dev/null || (echo "echo Group $(GROUP) nonexistent. Create the group and retry; exit 2"))
 
-# Check whether setruid functionality can be used
-HASSETR = $(shell perl -e 'use Config; my @vars=("d_setruid", "d_setreuid", "d_setresuid"); foreach my $$var (@vars) { if ($$Config{$$var} eq "define") { print "1\n"; exit 0; } } print "0\n"; exit 0;' )
+CHOWN      := chown
+CHMOD      := chmod
+CHGRP      := chgrp
+
+# Java compiler stuff - only needed on the buildhost
+JC         := javac
+JFLAGS     := -g
+JAR        := jar
+
+# Check if the java compiler works
+JCVALID    := $(shell $(JC) -version >/dev/null 2>/dev/null && echo "yes")
+

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
+. $FINDBIN/common.sh
+
+cd $BASEDIR
+
+perl -pi -e "s/^tls .*/tls paranoid/" $DESTDIR/etc/opt/munin/munin-node.conf
+perl -pi -e "s/^tls .*/tls paranoid/" $DESTDIR/etc/opt/munin/munin.conf

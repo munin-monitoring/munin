@@ -1,0 +1,164 @@
+#!@@GOODSH@@
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+fw_conntrack - Plugin to monitor the number of tracked connections
+through a Linux 2.4/2.6 firewall
+
+=head1 CONFIGURATION
+
+This plugin must run with root privileges
+
+=head2 CONFIGURATION EXAMPLE
+
+@@CONFDIR@@/plugin-conf.d/global or other file in that dir must contain:
+
+ [fw*]
+  user root
+
+=head1 NOTES
+
+ESTABLISHED+FIN_WAIT+TIME_WAIT+SYN_SENT+UDP is the most interesting
+connections.
+
+The total list also includes SYN_RECV, CLOSE, CLOSE_WAIT, LAST_ACK and
+LISTEN, but these were not (often) observed on my firewall.
+
+TOTAL is the total number of tracked connections.
+
+ASSURED and UNREPLIED connections are complimentary subsets of
+ESTABLISHED.
+
+ASSURED is after ACK is seen after SYN_RECV.  Therefore ASSURED is
+plotted but not UNREPLIED.
+
+NATed will almost always be the same as the total
+
+=head1 BUGS
+
+=over 4
+
+=item full connection table
+
+The connections tables can run full, but where is the limits found?
+If we can find them then we can send warnings to nagios.
+
+=back
+
+=head1 AUTHORS
+
+2004.05.05: Initial version by Nicolai Langfeldt, Linpro AS, Oslo, Norway
+
+=head2 CONTRIBUTORS
+
+=over 4
+
+=item Xavier
+
+2004.05.06: Enhanced to count NATed connections after input from Xavier on munin-users list
+
+=back
+
+=head1 LICENSE
+
+GPL
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+case $1 in
+    config)
+
+        cat <<EOF
+graph_title Connections through firewall
+graph_vlabel Connections
+graph_category network
+graph_args -l 0
+established.label Established
+established.type GAUGE
+established.draw AREA
+fin_wait.label FIN_WAIT
+fin_wait.type GAUGE
+fin_wait.draw STACK
+time_wait.label TIME_WAIT
+time_wait.type GAUGE
+time_wait.draw STACK
+syn_sent.label SYN_SENT
+syn_sent.type GAUGE
+syn_sent.draw STACK
+udp.label UDP connections
+udp.type GAUGE
+udp.draw STACK
+assured.label Assured
+assured.type GAUGE
+assured.draw LINE2
+nated.label NATed
+nated.type GAUGE
+nated.draw LINE1
+total.label Total
+total.type GAUGE
+total.graph no
+EOF
+        if [ -f /proc/sys/net/ipv4/ip_conntrack_max ] ; then
+            read MAX </proc/sys/net/ipv4/ip_conntrack_max
+        elif [ -f /proc/sys/net/ipv4/netfilter/ip_conntrack_max ]; then
+             read MAX < /proc/sys/net/ipv4/netfilter/ip_conntrack_max
+        fi
+        if [ -n "$MAX" ]; then
+	    echo total.warning `expr $MAX \* 8 / 10`
+	    echo total.critical `expr $MAX \* 9 / 10`
+	fi
+        exit 0
+	;;
+    autoconf)
+        if [ -f /proc/net/ip_conntrack ] ; then
+	    echo yes
+	    exit 0
+	else
+	    echo no
+	    exit 0
+	fi
+esac
+
+# Do the work, perform the deed
+
+# INPUT:
+# tcp      6 225790 ESTABLISHED src=10.0.0.4 dst=198.144.194.12 sport=48580 dport=6667 src=198.144.194.12 dst=80.111.68.163 sport=6667 dport=48580 [ASSURED] use=1
+# tcp      6 431918 ESTABLISHED src=10.0.0.2 dst=209.58.150.153 sport=33018 dport=6667 src=209.58.150.153 dst=80.111.68.163 sport=6667 dport=33018 [ASSURED] use=1
+# tcp      6 123109 ESTABLISHED src=10.0.0.5 dst=198.144.194.12 sport=33846 dport=6667 [UNREPLIED] src=198.144.194.12 dst=80.111.68.163 sport=6667 dport=33846 use=1
+# udp      17 53 src=80.111.68.163 dst=62.179.100.29 sport=34153 dport=53 src=62.179.100.29 dst=80.111.68.163 sport=53 dport=34153 [ASSURED] use=1
+#
+
+cat /proc/net/ip_conntrack | awk '
+  BEGIN  { STATE["ESTABLISHED"]=STATE["FIN_WAIT"]=STATE["TIME_WAIT"]=0;
+	   ASSURED=NOREPLY=NATED=STATE["SYN_SENT"]=STATE["UDP"]=0; }
+  /^tcp/ { STATE[$4]++; }
+  /^udp/ { STATE["UDP"]++; }
+  /ASSURED/ { ASSURED++; }
+  {
+      TOTAL++;
+      src1 = substr($5, 5); src2 = substr($9, 5);
+      dst1 = substr($6, 5); dst2 = substr($10, 5);
+      if (src1 != dst2 || dst1 != src2) NATED++;
+  }
+  END    { print "established.value " STATE["ESTABLISHED"];
+           print "fin_wait.value " STATE["FIN_WAIT"];
+	   print "time_wait.value " STATE["TIME_WAIT"];
+	   print "syn_sent.value " STATE["SYN_SENT"];
+	   print "udp.value " STATE["UDP"];
+	   print "assured.value " ASSURED;
+	   print "nated.value " NATED;
+	   print "total.value " TOTAL;
+	 }'
+
+# Hum, the total.value should be possible to do as a cdef.
+
+#  LocalWords:  expr
+
