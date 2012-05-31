@@ -1,5 +1,13 @@
 -*- text -*-
 
+munin 2.0-rc4, r4770, 2012-03-24
+
+Commits by holger
+
+Summary :
+
+* Fix important typo
+
 munin 2.0-rc3, r4760, 2012-03-23
 
 Commits by kenyon, steve.schnepp
