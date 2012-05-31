@@ -90,7 +90,7 @@ if (!$dbh)
 
 my $databases = &list_dbs ($dbh);
 
-if (exists $ARGV[0] and $ARGV[0] =~ /^config$/)
+if (defined $ARGV[0] and $ARGV[0] =~ /^config$/)
 {
 	print "host_name sybase-i.fileflow.com\n";
 	print "graph_title Sybase database space usage\n";

@@ -14,8 +14,12 @@
 #   mysqlopts    - Options to pass to mysql
 #	statefile    - where to put the statefile
 #	ignore       - Tables to ignore. Regex.
+#	absolute     - use tables sizes, not percent of maximum
 #
-# $Log$
+# $Log: mysql_isam_space_.in,v $
+# Revision 1.1  2005/11/06 13:18:28  lupe
+# Initial revision
+#
 # Revision 1.2  2004/05/20 13:57:12  jimmyo
 # Set categories to some of the plugins.
 #
@@ -148,7 +152,7 @@ sub fetch_state_from_mysql
 	}
 	elsif ($pid == 0)
 	{ # Child
-		exec ($MYSQLSHOW, "--status", "-v", @mysql_opts);
+		exec ($MYSQLSHOW, @mysql_opts, "--status", "-v");
 	}
 
 	my @mysql_status = <IN>;
@@ -200,18 +204,24 @@ sub fetch_state_from_mysql
 			# Notreached.
 		}
 
+		my %index;
+                my $headerseen;
+
 		while (<IN>)
 		{
 			my @fields = split (/\s*\|\s*/);
-			if (defined $fields[1] and $fields[1] ne "Name" and 
-					defined $fields[2] and 
-					($fields[2] eq "MyISAM" or $fields[2] eq "ISAM")) # Not a separator line
+                        next if @fields > 2; # Separator line
+			if (! $headerseen and $fields[1] eq "Name")
+                        { # Header line, grab field names
+                        	%index = map {($field[$_], $_)} 0..$#fields;
+			}
+                        else
 			{
-				printf OUT ("%s.%s %f\n", $db, $fields[1], (100*$fields[6]/$fields[7]));
-				if ($DB eq $db)
-				{
-					$tables->{$fields[1]} = (100*$fields[6]/$fields[7]);
-				}
+				my $value =
+					$ABSOLUTE ? $fields[$index{Data_length}]
+					: (100*$fields[$index{Data_length}]/$fields[$index{Max_data_length}]);
+				printf OUT ("%s.%s %f\n", $db, $fields[1], $value);
+				$tables->{$fields[1]} = $value if $DB eq $db;
 			}
 		}
 		close (IN);

@@ -32,7 +32,7 @@ my %graph =  (
 			 }
 );
 
-if ( exists $ARGV[0] and $ARGV[0] eq 'config' ) {
+if ( defined $ARGV[0] and $ARGV[0] eq 'config' ) {
 	print "graph_title UPS Voltages - $config{upsname}\n";
 	print "graph_args -l 115\n";
 	print "graph_vlabel Volts\n";

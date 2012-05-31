@@ -263,14 +263,15 @@ while (<FILE>) {
 
 $FQDN ||= &get_fq_hostname;
 
-$ENV{FQDN}=$FQDN;
+$ENV{'FQDN'}=$FQDN;
+
+# Some locales uses "," as decimal separator. This can mess up a lot
+# of plugins.
+$ENV{'LC_ALL'}='C';
 
 &load_services;
 
 exit;
-
-
-
 
 ### over-ridden subs below
 
@@ -452,8 +453,8 @@ sub run_service {
 sub get_fq_hostname {
     my $hostname;
     eval {
-        require Net::Domain;
-        $hostname = Net::Domain::hostfqdn();
+        require Sys::Hostname;
+        $hostname = (gethostbyname(Sys::Hostname::hostname()))[0];
     };
     return $hostname if $hostname;
 
@@ -534,7 +535,7 @@ sub load_auth_file
 	    }
 	    elsif (!defined $u and $optional)
 	    {
-		net_write ("DEBUG: Skipping \"$user\" (optional).\n") if $DEBUG;
+		print ("DEBUG: Skipping \"$user\" (optional).\n") if $DEBUG;
 		next;
 	    }
 	    else

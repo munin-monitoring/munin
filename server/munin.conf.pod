@@ -66,7 +66,7 @@ Summarize the 'load'-graphs of the two  servers in one.dom, in a 'total load'-gr
 	[one.dom;Totals]
 		update no
 		load.graph_title Total load
-		load.sum_load.title load
+		load.sum_load.label load
 		load.sum_load.special_stack machine1=machine1.one.dom:load.load machine2=machine2.one.dom:load.load
 	
 See the documentation or Munin homepage L<http://munin.sf.net/> for more info.
