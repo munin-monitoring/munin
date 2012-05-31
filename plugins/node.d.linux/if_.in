@@ -73,7 +73,7 @@ findspeed_mbps() {
     IWLIST=$(type -p iwlist)
     if [[ -x "$IWLIST" ]]; then
         SPEED=$($IWLIST $INTERFACE rate 2>&1 |
-            awk 'BEGIN { RATE=U }
+            awk 'BEGIN { RATE="U" }
                        { if ($2 == "Mb/s") RATE=$1; }
                  END   { print RATE; }')
 
@@ -155,11 +155,7 @@ case $1 in
         ;;
     suggest)
         if [[ -r /proc/net/dev ]]; then
-            awk '
-                /^ *(eth|tap|bond|wlan|ath|ra|sw|vlan|venet|veth|msh)[0-9]+(\.[0-9]+)?:/ {
-                   split($0, a, /: */);
-                   gsub(/^ +/,"",a[1]);
-                   if (($2 > 0) || ($10 > 0)) print a[1]; }' /proc/net/dev
+            sed -rne '/^[[:space:]]*(lo|sit[[:digit:]]+):/d;s,^[[:space:]]*([^:]+):.*,\1,p' /proc/net/dev
         fi
         exit 0
         ;;

@@ -1,4 +1,5 @@
-#!/bin/sh
+#!@@GOODSH@@
+# -*- sh -*-
 #
 # Wildcard-plugin to monitor network interfaces. To monitor an
 # interface, link if_<interface> to this file. E.g.
@@ -18,8 +19,7 @@
 #%# family=auto
 #%# capabilities=autoconf suggest
 
-
-INTERFACE=`basename $0 | sed 's/^if_//g'`
+INTERFACE=${0##*if_}
 
 if [ "$1" = "autoconf" ]; then
 	if [ -x /usr/bin/netstat ]; then

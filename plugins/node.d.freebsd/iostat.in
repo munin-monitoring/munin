@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 # -*- sh -*-
 #
 # Original script (NetBSD) by he

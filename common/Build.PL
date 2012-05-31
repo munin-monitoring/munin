@@ -1,7 +1,6 @@
 use Module::Build;
 
 my $build = Module::Build->new(
-    module_name    => 'Munin::Common',
     dist_name      => 'Munin::Common',
     dist_version   => '0.0.0',
     dist_author    => 'The Munin Team <fix@example.com>',

@@ -1,4 +1,5 @@
-#!/bin/sh
+#!@@GOODSH@@
+# -*- sh -*-
 # 
 # Plugin to monitor the number of open files in the system.
 #
@@ -37,7 +38,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000 -l 0'
 	echo 'graph_vlabel number of open files'
 	echo 'graph_category system'
-	echo 'graph_info This graph monitors the Linux open files table.'
+	echo 'graph_info This graph monitors the number of open files.'
 	echo 'used.label open files'
 	echo 'used.info The number of currently open files.'
 	echo 'max.label max open files'

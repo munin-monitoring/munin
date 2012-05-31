@@ -1,0 +1,121 @@
+#! /usr/bin/perl
+# Copy data from one RRD to another
+# (c) LGPL - 2009-2011 - Steve Schnepp <steve.schnepp@pwkf.org>
+# 
+# Usage : rrdcopy <src.rrd> <dst.rrd>
+# 
+# Both RRD have to exist and have the same DS (DataSource). 
+# The tool copies all the datasources from the sources into the destination
+# like you mean it: 
+#  - start is the oldest value from src 
+#     (but cannot be younger as the youngest from dst)
+#  - stop is the youngest value from src
+#  - asks src for the AVERAGED value on each step time.
+# 
+# It doesn't do any MIN/MAX replication since this information 
+# is usually not accurate at all when resampling.
+#
+# The environmment variable DEBUG is used like : 
+# 0/absent - no debug
+# 1        - emit to stdout all the updates to dst
+# 2        - emit also the data that try
+#
+# XXX - It depends on RRDs.pm ...
+# ... as I'm waiting for a patch to use the plain rrdtool cli :-)
+#
+# It was known as the rrdmove tool from the pmptools project. 
+# - I changed its name (as data is copied, not moved)
+# - I changed its hosting (way more useful for munin than for pmptools)
+
+use strict;
+use warnings;
+use Carp;
+use Data::Dumper;
+
+use RRDs;
+
+my ($src_rrd, $dst_rrd) = @ARGV;
+
+my $infos_src = RRDs::info($src_rrd);
+my $infos_dst = RRDs::info($dst_rrd);
+
+#get ds_names
+my @ds_names;
+foreach my $key (keys %$infos_src) {
+	if ($key =~ /^ds\[(\w+)\]\.type$/) {
+		push @ds_names, $1;
+	}
+}
+
+my ($start, $stop, $step);
+$step = $infos_dst->{'step'};
+$stop = $infos_src->{'last_update'};
+
+my @rra_names;
+foreach my $key (keys %$infos_dst) {
+	if ($key =~ /^rra\[(\w+)\]\.cf$/) { 
+		push @rra_names, $1;
+	}
+}
+
+foreach my $rra_name (sort {$a <=> $b} @rra_names) {
+	my $rows = $infos_dst->{"rra[$rra_name].rows"};
+	my $pdp_per_row = $infos_dst->{"rra[$rra_name].pdp_per_row"};
+
+	my $rra_start = $stop - $rows * $pdp_per_row * $step;
+	if ( (! defined $start) || $start > $rra_start) {
+		$start = $rra_start;
+	}
+
+	print "rra[$rra_name]:$rra_start("
+		. (scalar localtime($rra_start)) 
+		. "):$start("
+		. (scalar localtime($start))
+		.")\n" if $ENV{DEBUG} && $ENV{DEBUG} >= 2;
+}
+
+#$start = 1240020352;
+	
+# Converting
+my ($step_sample) = $step * 128;
+for (my $epoch = $start; $epoch <= $stop; $epoch += $step_sample) {
+	my @rrd_updates;
+
+	# Resampling by taking the average value for the period
+	my ($fetched_epoch, $fetched_step, $names, $data) = RRDs::fetch(
+		$src_rrd,
+		"AVERAGE",
+		"--start", $epoch,
+		"--end", $epoch + $step_sample,
+	);
+
+
+	for my $line ( @$data ) {
+
+		my %current_data;
+		for ( my $ds_idx = 0; $ds_idx < scalar @$line; $ds_idx ++) {
+			my $name = $names->[$ds_idx];
+			my $value = $line->[$ds_idx];
+			$current_data{$name} = $value;	
+		}
+
+		# Create the template
+		my @values = map { defined $current_data{$_} ? $current_data{$_} : "U" } @ds_names;
+
+		# Ignore lines with all values set to "U"
+		next unless grep { $_ ne "U" } @values;
+		
+		push @rrd_updates, "$fetched_epoch:" . join(':', @values);
+
+		$fetched_epoch += $step;
+	}
+
+	next unless @rrd_updates; 
+	print "RRDs::update($dst_rrd, --template, " . join(':', @ds_names) . ", " . join(", ", @rrd_updates) . "\n" if $ENV{DEBUG};
+	RRDs::update(
+		$dst_rrd,
+		"--template", join(':', @ds_names), 
+		@rrd_updates,
+	) or die "RRDs::update: $!";
+}
+

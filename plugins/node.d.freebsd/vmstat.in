@@ -1,15 +1,19 @@
-#!/bin/sh
+#!@@GOODSH@@
+# -*- sh -*-
 #
 # Plugin to monitor the number of procs in io-sleep and other wait
 # states. Uses `vmstat`.
 #
-# Parameters: 
+# This plugin is now "legacy" because the generic processes plugin
+# shows substantially the same information.
+#
+# Parameters:
 #
 # 	config   (required)
 # 	autoconf (optional - used by munin-config)
 #
 # Magick markers (optional):
-#%# family=auto
+#%# family=legacy
 #%# capabilities=autoconf
 
 
@@ -77,5 +81,5 @@ if [ "$OSV" -ge "5" ]; then
 	print "sleep.value", $11+0;
 }'
 else
-	/usr/bin/vmstat 1 2 | /usr/bin/awk 'END { print "wait.value " $1 "\nsleep.value " $2 }' 
+	/usr/bin/vmstat 1 2 | /usr/bin/awk 'END { print "wait.value " $1 "\nsleep.value " $2 }'
 fi

@@ -103,7 +103,7 @@ sub suggest {
 
     foreach my $vip (sort keys %{$ipvs}) {
 	foreach my $port (sort keys %{$ipvs->{$vip}}) {
-	    print "cps_${vip}_$port\n";
+	    print "${vip}_$port\n";
 	}
     }
     exit 0;
