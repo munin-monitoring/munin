@@ -6,12 +6,12 @@
 #
 
 PORTNAME=	munin
-PORTVERSION=	1.0.0.p1
+PORTVERSION=	1.0.0.p2
 CATEGORIES=	sysutils perl5
 MASTER_SITES=	${MASTER_SITE_SOURCEFORGE}
 MASTER_SITE_SUBDIR=	munin
 PKGNAMESUFFIX=	-main
-DISTNAME=	munin_1.0.0pre1
+DISTNAME=	munin_1.0.0pre2
 
 MAINTAINER=	lupe@lupe-christoph.de
 COMMENT=	Collector part of Munin
@@ -34,7 +34,7 @@ BUILD_DEPENDS=	${RUN_DEPENDS}
 
 USE_GMAKE=	yes
 PATCH_STRIP=	-p1
-WRKSRC=		${WRKDIR}/munin-1.0.0pre1
+WRKSRC=		${WRKDIR}/munin-1.0.0pre2
 ALL_TARGET=	build build-man
 INSTALL_TARGET=	install-main
 

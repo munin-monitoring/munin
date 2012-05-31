@@ -3,6 +3,18 @@
 # $Id$
 #
 # $Log$
+# Revision 1.11  2004/02/05 18:05:59  jimmyo
+# Improved timeout-handling in node (Deb#224480).
+#
+# Revision 1.10  2004/02/05 17:35:41  jimmyo
+# Made client timeouts configurable (not per plugin).
+#
+# Revision 1.9  2004/02/01 21:34:59  jimmyo
+# Remove dependency on pgrep (use process groups instead). (SF#881049)
+#
+# Revision 1.8  2004/02/01 20:46:29  jimmyo
+# Added better logging of plugin failures in the node. (SF#881045)
+#
 # Revision 1.7  2004/01/29 19:39:00  jimmyo
 # Generic plugins now use printf instead of echo -n, as this is more portable (SF#885564)
 #
@@ -89,7 +101,8 @@ my $defuser = getpwnam ("nobody");
 my $defgroup= getgrnam ("munin");
 my $paranoia= 0;
 my @ignores = ();
-my %sconf  = ();
+my %sconf   = ();
+my $timeout = 10;
 
 $do_usage=1  unless 
 GetOptions ( "config=s"     => \$conffile,
@@ -187,6 +200,10 @@ while (<FILE>) {
   elsif (($1 eq "ignore_file") and defined $2)
   {
       push @ignores, $2;
+  }
+  elsif (($1 eq "timeout") and defined $2)
+  {
+      $timeout = $2;
   }
 }
 
@@ -294,17 +311,25 @@ sub list_services {
     print "\n";
 }
 
+sub logger {
+    my $text  = shift;
+    my @date  = localtime (time);
+
+    printf STDERR ("%d/%02d/%02d-%02d:%02d:%02d %s\n", $date[5]+1900, $date[4]+1, 
+	    $date[3], $date[2], $date[1], $date[0], $text);
+}
 
 sub reap_children {
-  my ($child) = @_;
+  my $child = shift;
+  my $text = shift;
   return unless $child;
-  my @children = (split ('\n', `/usr/bin/pgrep -P $child`), $child); 
-  if (@children) 
+  if (kill (0, $child)) 
     { 
-      print ("# timeout pid ", join (' ', @children), "\n"); 
-      close CHILD; 
-      kill (1, @children); sleep 2; 
-      kill (9, @children);
+      print ("# timeout pid $child - killing..."); 
+      logger ("Plugin timeout ($timeout seconds): $text (pid $child)");
+      kill (-1, $child); sleep 2; 
+      kill (-9, $child);
+      print ("done\n");
     } 
 }
 
@@ -315,23 +340,29 @@ sub run_service {
   my $timed_out = 0;
   if ($services{$service}) {
     my $child = 0;
-    local $SIG{ALRM} = sub { 
-      $timed_out = 1; 
-    };
 
     if ($child = open (CHILD, "-|")) {
-      alarm(10);
-      while(<CHILD>) {
-	push @lines,$_;
-	if( $timed_out ) {
-	  reap_children($child);
-	  return ();
-	}
+      eval {
+	  local $SIG{ALRM} = sub { $timed_out=1; die "$!\n"};
+	  alarm($timeout);
+	  while(<CHILD>) {
+	    push @lines,$_;
+	  }
+      };
+      if( $timed_out ) {
+	  reap_children($child, "$service $command: $@");
+	  close (CHILD);
+          return ();
       }
-      close CHILD;
+      unless (close CHILD)
+      {
+	  logger ("Plugin \"$service\" exited with status $?.");
+      }
     }
     else {
       if ($child == 0) {
+	# New process group...
+	POSIX::setsid();
         # Setting environment
 	$sconf{$service}{user}    = &get_var (\%sconf, $service, 'user');
 	$sconf{$service}{group}   = &get_var (\%sconf, $service, 'group');
@@ -358,8 +389,14 @@ sub run_service {
 		if ($> != $u or $g != (split (' ', $)))[0])
 		{
 			print "# Can't drop privileges. Bailing out. (wanted uid=",
-			($sconf{$service}{'user'} || $defuser), " gid=\"",
-			$gs, "\"($g), got uid=$> gid=\"$)\"(", (split (' ', $)))[0], ").\n";
+			    ($sconf{$service}{'user'} || $defuser), " gid=\"",
+			    $gs, "\"($g), got uid=$> gid=\"$)\"(", 
+			    (split (' ', $)))[0], ").\n";
+			logger ("Plugin \"$service\" Can't drop privileges. ".
+			    "Bailing out. (wanted uid=".
+			    ($sconf{$service}{'user'} || $defuser). " gid=\"".
+			    $gs. "\"($g), got uid=$> gid=\"$)\"(". 
+			    (split (' ', $)))[0]. ").\n");
 			exit 1;
 		}
 	}
@@ -367,6 +404,7 @@ sub run_service {
 	if (!&check_perms ("$servicedir/$service"))
 	{
 	    print "# Error: unsafe permissions. Bailing out.";
+	    logger ("Error: unsafe permissions. Bailing out.");
 	    exit 1;
 	}
 
@@ -376,7 +414,7 @@ sub run_service {
 	{
 	    foreach my $key (keys %{$sconf{$service}{'env'}})
 	    {
-		print "Setting environment $key=$sconf{$service}{env}{$key}\n" if $DEBUG;
+		print "# Setting environment $key=$sconf{$service}{env}{$key}\n" if $DEBUG;
 		$ENV{"$key"} = $sconf{$service}{'env'}{$key};
 	    }
 	}
@@ -406,7 +444,7 @@ sub run_service {
       }
       else {
 	print "# Unable to fork.\n";
-	print STDERR "Unable to fork.\n";
+	logger ("Unable to fork.");
       }
     }
     wait;
@@ -422,10 +460,10 @@ sub run_service {
 sub process_request {
   my $self = shift;
   print "# munin node at $FQDN\n";
-  local $SIG{ALRM} = sub { die "timeout" };
-  alarm(10);
+  local $SIG{ALRM} = sub { logger ("Connection timed out."); die "timeout" };
+  alarm($timeout);
   while( <STDIN> ){
-    alarm(30);
+    alarm($timeout);
     chomp;
     if (m/^list\s*([0-9a-zA-Z\.\-]+)?/) {
       &list_services($1);

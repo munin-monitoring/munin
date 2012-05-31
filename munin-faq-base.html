@@ -1,18 +1,13 @@
 <html>
 <head>
-	<title>LRRD FAQ</title>
+	<title>Munin FAQ</title>
 </head>
 <body bgcolor=white text=black>
 <h2>1. Installation</h2>
 
-<h3>Q: Why only Debian packages? Why not Redhat?</h3>
-<p>
-We're using Debian on our machines and servers. We're working on
-RPM-packages for RedHat 9, though.
-</p>
 <h3>Q: What architectures are supported? What operating systems?</h3>
 <p>
-LRRD is programmed in Perl, which can be installed on most operating
+Munin is programmed in Perl, which can be installed on most operating
 systems. In addition, it needs some perl modules, which you can fetch
 from <a href="http://www.cpan.org/">CPAN</a>.
 </p>
@@ -37,10 +32,10 @@ project.
 <h3>Q: What should a minimal configuration look like?</h3>
 <p>
 <pre>
-	dbdir     /var/lib/lrrd
-	htmldir   /var/www/lrrd
-	logdir    /var/log/lrrd
-	rundir    /var/run/lrrd
+	dbdir     /var/lib/munin
+	htmldir   /var/www/munin
+	logdir    /var/log/munin
+	rundir    /var/run/munin
 
 	[bing.foo.bar]
 		address 10.232.33.259

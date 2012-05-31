@@ -1,3 +1,24 @@
+munin (1.0.0pre3)
+
+  * Munin-graph had a perl 5.005_03 compatabilty problem, which slipped
+    through to version pre2.
+  * Added mkdir to install-man target. (SF#888545)
+  * Added better logging of plugin failures in the node. (SF#881045)
+  * Make install: Fix problems with systems that do not have getent.
+    (SF#881046)
+  * Remove dependency on pgrep (use process groups instead). (SF#881049)
+  * Documentation updates.
+  * Make the iostat plugin work properly.
+  * Munin-graph now escapes ':' in labels properly.
+  * Fixed bug in munin-graph where it caused a flood of cron-mail.
+  * Linux/iostat now shows only disks also on machines without devfs.
+  * Generic/apache-plugins have been modified to properly to report the
+    correct autoconf value. Also, bugfixes in _processes and _volume.
+  * Added new wildcard plugin linux/sensors_ that replaces the i2c plugins
+    (SF#890952).
+  * Made client timeouts configurable (not per plugin).
+  * Improved timeout-handling in node (Deb#224480).
+
 munin (1.0.0pre2)
 
   * Plugin mysql_queries bugfix from Dagfinn I. Mannsåker (SF#876443,

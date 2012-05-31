@@ -1,6 +1,11 @@
 #!/bin/sh
-
+#
+# NOTE: This plugins is outdated. Use the sensors_ wildcard plugin instead.
+#
 # $Log$
+# Revision 1.2  2004/02/05 16:47:02  jimmyo
+# Added new wildcard plugin linux/sensors_ that replaces the i2c plugins (SF#890952).
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #

@@ -1,0 +1,61 @@
+#! /bin/sh
+#
+# $Log$
+# Revision 1.1  2004/02/01 18:32:33  lupe
+# Stop process before deinstall, offer to remove group "munin" after deinstall.
+#
+#
+
+ask() {
+    local question default answer
+
+    question=$1
+    default=$2
+    if [ -z "${PACKAGE_BUILDING}" ]; then
+	read -p "${question} [${default}]? " answer
+    fi
+    if [ x${answer} = x ]; then
+	answer=${default}
+    fi
+    echo ${answer}
+}
+
+yesno() {
+    local dflt question answer
+
+    question=$1
+    dflt=$2
+    while :; do
+	answer=$(ask "${question}" "${dflt}")
+	case "${answer}" in
+	[Yy]*)		return 0;;
+	[Nn]*)		return 1;;
+	esac
+	echo "Please answer yes or no."
+    done
+}
+
+stop_process() {
+    if [ -x /usr/local/etc/rc.d/munin-node.sh ]; then
+	/usr/local/etc/rc.d/munin-node.sh stop
+    fi
+}
+
+delete_group() {
+    local g
+
+    g=$1
+    if yesno "Do you want me to remove group \"${g}\"" y; then
+	pw groupdel -n ${g}
+	echo "Done."
+    fi
+}
+
+case $2 in
+    DEINSTALL)
+	stop_process
+	;;
+    POST-DEINSTALL)
+	delete_group munin
+	;;
+esac

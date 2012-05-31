@@ -52,7 +52,23 @@ convert_from_lrrd() {
 		's,^(\s*tmpldir\s*)/etc/lrrd/templates$,$1/etc/munin/templates,'
 	
 	for f in /etc/lrrd/templates/*; do
-		migrate $f /etc/munin/templates${f#/etc/lrrd/templates}
+		case "$f" in
+			/etc/lrrd/templates/lrrd-domainview.tmpl)
+				migrate $f /etc/munin/templates/munin-domainview.tmpl
+				;;
+			/etc/lrrd/templates/lrrd-nodeview.tmpl)
+				migrate $f /etc/munin/templates/munin-nodeview.tmpl
+				;;
+			/etc/lrrd/templates/lrrd-overview.tmpl)
+				migrate $f /etc/munin/templates/munin-overview.tmpl
+				;;
+			/etc/lrrd/templates/lrrd-serviceview.tmpl)
+				migrate $f /etc/munin/templates/munin-serviceview.tmpl
+				;;
+			*)
+				migrate $f /etc/munin/templates${f#/etc/lrrd/templates}
+				;;
+		esac
 	done
 
 	migrate /var/lib/lrrd/lrrd-update.stats /var/lib/munin/munin-update.stats

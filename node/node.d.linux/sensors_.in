@@ -1,0 +1,153 @@
+#!/usr/bin/perl
+#
+# Wildcard plugin to monitor sensors.
+#
+# Requirements:
+# 	- i2c and lm_sensors modules installed and loaded
+# 	- sensors program installed and in path
+#
+# Note:
+# 	- Sensor names are read from the output of the sensors program.
+# 	  Change them in /etc/sensors.conf if you don't like them.
+#
+# Parameters supported:
+#
+# 	config
+# 	autoconf
+# 	suggest
+#
+# Configurable variables
+#
+# 	sensors           - Override default program
+# 	ignore_temp<n>    - Temperature <n> will not be plotted
+# 	ignore_fan<n>     - Fan <n> will not be plotted
+# 	ignore_volt<n>    - Voltage <n> will not be plotted
+# 	fan_warn_percent  - Percentage over mininum for warning
+# 	volt_warn_percent - Percentage over mininum/under maximum for warning
+# 	                    Narrow the voltage bracket by this.
+#
+# $Log$
+# Revision 1.1  2004/02/05 16:47:02  jimmyo
+# Added new wildcard plugin linux/sensors_ that replaces the i2c plugins (SF#890952).
+#
+#
+#
+# Magic markers:
+#%# family=manual
+#%# capabilities=autoconf suggest
+
+use strict;
+
+my $SENSORS = $ENV{'sensors'} || 'sensors';
+my %config = (
+	       fan => {
+		         #regex => qr/^([^:]*)\s*:\s+\+?(\d+) RPM.*?(\d+) RPM.*?(\d+)/m,
+		         regex => qr/^([^:]*)\s*:\s+\+?(\d+) RPM.*?(\d+) RPM/m,
+			 title => 'Fans',
+			 vtitle => 'RPM',
+			 print_threshold => \&fan_threshold,
+			 graph_args => '--base 1000 -l 0'
+	               },
+	       temp => {
+		         regex => qr/^([^:]*)\s*:\s+\+?(\d+\.\d+)°C.*?(\d+)°C.*?(\d+)°C/m,
+			 title => 'Temperatures',
+			 vtitle => 'Celsius',
+			 print_threshold => \&temp_threshold,
+			 graph_args => '--base 1000 -l 0'
+	               },
+	       volt => {
+		         regex => qr/^([^:]*)\s*:\s+\+?(\d+\.\d+) V.*?(\d+\.\d+) V.*?(\d+\.\d+) V/m,
+			 title => 'Voltages',
+			 vtitle => 'Volt',
+			 print_threshold => \&volt_threshold,
+			 graph_args => '--base 1000 --logarithmic'
+	               },
+             );
+
+if ( exists $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
+  # Now see if "sensors" can run
+  my $text = `$SENSORS`;
+  if ($?) {
+    if ($? == -1) {
+      print "no (program $SENSORS not found)\n";
+    } else {
+      print "no (program $SENSORS died)\n";
+    }
+    exit 1;
+  }
+
+  unless ($text =~ /°C/) {
+    print "no (no temperature readings)\n";
+    exit 1;
+  }
+
+  print "yes\n";
+  exit 0;
+}
+
+if ($ARGV[0] and $ARGV[0] eq 'suggest') {
+  my $text = `$SENSORS`;
+  foreach my $func (keys %config) {
+    print $func, "\n" if $text =~ $config{$func}->{regex};
+  }
+  exit;
+}
+
+$0 =~ /sensors_(.+)*$/;
+my $func = $1;
+exit 2 unless defined $func;
+
+if ( exists $ARGV[0] and $ARGV[0] eq 'config' ) {
+  print "graph_title $config{$func}->{title}\n";
+  print "graph_vtitle $config{$func}->{vtitle}\n";
+  print "graph_args $config{$func}->{graph_args}\n";
+  my $text = `$SENSORS`;
+  my $sensor = 1;
+  while ($text =~ /$config{$func}->{regex}/g) {
+    my ($label, undef, $max, $min) = ($1, $2, $3, $4);
+    print "$func$sensor.label $label\n";
+    $config{$func}->{print_threshold}->($func.$sensor, $3, $4);
+    print "$func$sensor.graph no\n" if exists $ENV{"ignore_$func$sensor"};
+    $sensor++;
+  }
+  exit 0;
+}
+
+my $text = `$SENSORS`;
+my $sensor = 1;
+while ($text =~ /$config{$func}->{regex}/g) {
+  print "$func$sensor.value $2\n";
+  $sensor++;
+}
+
+sub fan_threshold {
+  my $name = shift;
+  my $min = shift;
+  my $warn_percent = exists $ENV{fan_warn_percent} ? $ENV{fan_warn_percent} : 5;
+
+  printf "$name.warning %d:\n", $min * (100 + $warn_percent) / 100;
+  printf "$name.critical %d:\n", $min;
+}
+
+sub temp_threshold {
+  my $name = shift;
+  my $max = shift;
+  my $min = shift;
+
+  printf "$name.warning $min\n";
+  printf "$name.critical $max\n";
+}
+
+sub volt_threshold {
+  my $name = shift;
+  my $min = shift;
+  my $max = shift;
+  my $warn_percent = exists $ENV{volt_warn_percent} ? $ENV{volt_warn_percent} : 20;
+
+  my $diff = $max - $min;
+  my $dist = $diff * $warn_percent / 100;
+  printf "$name.warning %.2f:%.2f\n", $min + $dist, $max - $dist;
+  printf "$name.critical $min:$max\n";
+}
+
+# vim:syntax=perl
