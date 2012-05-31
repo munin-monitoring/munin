@@ -27,6 +27,9 @@
 # 	                    Narrow the voltage bracket by this.
 #
 # $Log$
+# Revision 1.10  2004/12/15 15:40:12  jimmyo
+# Fixed typo in graph_category.
+#
 # Revision 1.9  2004/11/23 17:08:25  ilmari
 # Fixed linux/sensors_ plugin to report warning and critical values for temperatures and voltages if sensors reports them.
 #
@@ -120,7 +123,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq 'config' ) {
   print "graph_title $config{$func}->{title}\n";
   print "graph_vtitle $config{$func}->{vtitle}\n";
   print "graph_args $config{$func}->{graph_args}\n";
-  print "graph_coategory sensors\n";
+  print "graph_category sensors\n";
   my $text = `$SENSORS`;
   my $sensor = 1;
   while ($text =~ /$config{$func}->{regex}/g) {

@@ -1,3 +1,23 @@
+munin (1.1.9)
+
+  * Main: Optimised munin-cgi-graph a bit.
+  * Main: Internal name (for use in munin.conf) added to the table in
+    service view.
+  * Main: Added option cgiurl_graph.
+  * Main: Bugfix when using long labels and CGI graphing.
+  * Node: Fix bug when encountering strange environment (Deb#285173).
+  * Node: Remove hardcoding of default user/group to run the plugin as
+    (SF#1083251).
+  * Packaging: Expand man-page macros properly on man-page generation 
+    (Deb#286399).
+  * Plugin: Added plugin generic/dhcpd3, created by Rune N. Skillingstad.
+  * Plugin: Patch generic/bind9 to report "unnamed" as "other" (Nicolas 
+    Stransky).
+  * Plugin: linux/apt* has been forced to LANG=C, to get predictable output.
+  * Plugin: Removed hardcoded host_name in linux/cps_.
+  * Plugin: Added plugin linux/users, created by Michael Kaiser.
+  * Plugin: Cleaned up generic/samba a bit (SF#1087961).
+
 munin (1.1.8)
 
   * Munin-limits: Log less noise.

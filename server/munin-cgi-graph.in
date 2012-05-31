@@ -1,4 +1,4 @@
-#!@@PERL@@ -Tw
+#!@@PERL@@  -Tw
 #
 #
 # Copyright (C) 2004 Jimmy Olsen
@@ -21,6 +21,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.5  2004/12/22 20:01:15  jimmyo
+# Optimised munin-cgi-graph a bit.
+#
 # Revision 1.4  2004/11/16 20:00:44  jimmyo
 # License cleanups.
 #
@@ -55,7 +58,7 @@ my $host  = "";
 my $serv  = "";
 my $dom   = "";
 
-my $config= &munin_config ($conffile);
+my $config = &munin_readconfig ($conffile);
 
 my $path = $ENV{PATH_INFO} || "";
 $path =~ s/^\///;
@@ -244,11 +247,10 @@ sub draw_graph
 
     my @params = ($GRAPHER);
     push @params, @$scale;
-    push @params, "--skip-locking", "--skip-stats", "--nolazy";
+    push @params, "--skip-locking", "--skip-stats";
     push @params, "--host", $host, "--service", $serv;
     push @params, "STDERR>&STDOUT";
 
-#print STDERR "Running: ", join (' ', @params), "\n";
     my $file = "/dev/null";
     unless (open (IN, "-|")) 
     { 

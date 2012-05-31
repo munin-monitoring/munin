@@ -1,6 +1,9 @@
 #!@@PERL@@ -w
 #
 # $Log$
+# Revision 1.4  2004/12/10 18:51:43  jimmyo
+# linux/apt* has been forced to LANG=C, to get predictable output.
+#
 # Revision 1.3  2004/12/10 10:47:49  jimmyo
 # Change name from ${scale} to ${graph_period}, to be more consistent.
 #
@@ -77,7 +80,7 @@ if($arg && $arg eq "config")
   {
     print "graph_title IOstat\n";
     print "graph_args --base 1024 -l 0\n";
-    print "graph_vlabel KB / ${graph_period}\n";
+    print "graph_vlabel KB / \${graph_period}\n";
     my(@info) = getDiskIO("disk only");
     my($line);
     foreach $line (@info)

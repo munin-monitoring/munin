@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.46  2004/12/22 20:01:16  jimmyo
+# Optimised munin-cgi-graph a bit.
+#
 # Revision 1.45  2004/12/10 10:47:50  jimmyo
 # Change name from ${scale} to ${graph_period}, to be more consistent.
 #
@@ -366,7 +369,7 @@ rename ("$config->{dbdir}/munin-graph.stats.tmp", "$config->{dbdir}/munin-graph.
 close STATS unless $skip_stats;
 close $log;
 
-    sub process_domain {
+sub process_domain {
     my ($domain) = @_;
     for my $key ( keys %{$config->{domain}->{$domain}->{node}}) {
 	my $node_time= Time::HiRes::time;

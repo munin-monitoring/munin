@@ -20,6 +20,15 @@
 # $Id$
 #
 # $Log$
+# Revision 1.39  2004/12/22 20:53:50  jimmyo
+# Correct name of config variable.
+#
+# Revision 1.38  2004/12/22 20:52:29  jimmyo
+# Corrected filename of munin-cgi-graph.
+#
+# Revision 1.37  2004/12/22 20:13:31  jimmyo
+# Added option cgiurl_graph.
+#
 # Revision 1.36  2004/11/26 13:24:20  jimmyo
 # Added --stdout-option to all programs.
 #
@@ -222,9 +231,16 @@ my $config;
 my $limits;
 $config = &munin_config ($conffile, $config);
 $limits = &munin_readconfig ($config->{dbdir}."/limits", 1, 1);
-if (!defined $config->{'cgiurl'})
+if (!defined $config->{'cgiurl_graph'})
 {
-    $config->{'cgiurl'} = "/munin/dyn/";
+    if (defined $config->{'cgiurl'})
+    {
+	$config->{'cgiurl_graph'} = $config->{'cgiurl'} . "/munin-cgi-graph";
+    }
+    else
+    {
+	$config->{'cgiurl_graph'} = "/cgi-bin/munin-cgi-graph";
+    }
 }
 
 logger("Starting munin-html, checking lock");
@@ -329,15 +345,15 @@ for my $domain (@domainorder) {
 	    my $method = &munin_get ($config, "graph_strategy", "cron");
 	    if ($method eq "cgi")
 	    {
-		$service{imgday}=$config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-day.png";
-		$service{imgweek}=$config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-week.png";
-		$service{imgmonth}=$config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-month.png";
-		$service{imgyear}=$config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-year.png";
+		$service{imgday}=$config->{'cgiurl_graph'}."/$domain/$node-$service-day.png";
+		$service{imgweek}=$config->{'cgiurl_graph'}."/$domain/$node-$service-week.png";
+		$service{imgmonth}=$config->{'cgiurl_graph'}."/$domain/$node-$service-month.png";
+		$service{imgyear}=$config->{'cgiurl_graph'}."/$domain/$node-$service-year.png";
 
 		if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
 		{
-		    $service{imgweeksum} = $config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-week-sum.png";
-		    $service{imgyearsum} = $config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-year-sum.png";
+		    $service{imgweeksum} = $config->{'cgiurl_graph'}."/$domain/$node-$service-week-sum.png";
+		    $service{imgyearsum} = $config->{'cgiurl_graph'}."/$domain/$node-$service-year-sum.png";
 		}
 	
 		if (my ($w, $h) = &calculate_png_size ($config, $domain, $node, $service))
