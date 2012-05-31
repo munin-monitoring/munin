@@ -1,4 +1,19 @@
 #! /bin/sh
+#
+# $Log$
+# Revision 1.5  2004/11/28 12:50:41  lupe
+# Update to 1.1.7.
+# Put distributed config in *.sample.
+# Remove unchanged configs on deinstall.
+# Add FreeBSD-specific plugins.conf.
+# Move munin-main logfiles to /var/log/munin-main.
+# Update /etc/newsyslog.conf to automatically rotate logfiles.
+# Pass system-wide Perl path to Munin Makefile.
+# Patch default path for Python.
+# Patch ping_ to get it to work on FreeBSD.
+# Patch sendmail_mailtraffic to get it to autoconfigure.
+#
+#
 
 ask() {
     local question default answer
@@ -77,7 +92,7 @@ delete_crontab_entries() {
 	echo "These are the remaining lines:"
 	crontab -u munin -l
     else
-	echo y | crontab -u munin -r
+	crontab -u munin -r
 	echo "crontab for user munin removed"
     fi
     rm $TMPFILE
@@ -85,14 +100,14 @@ delete_crontab_entries() {
 
 delnewsyslog() {
     tmp="/etc/#munin-node$$"
-    sed -e '/^\/var\/log\/munin-main\/\*\.log[ 	]/d' /etc/newsyslog.conf >${tmp}
+    sed -e '/^\/var\/log\/munin-main\/\*[       ]/d' /etc/newsyslog.conf >${tmp}
     cat ${tmp} > /etc/newsyslog.conf
     rm ${tmp}
 }
 
 newsyslog() {
     ENTRY=`fgrep '/var/log/munin-main/*' /etc/newsyslog.conf`
-    DEFAULT='/var/log/munin-main/*.log munin:munin	644  7	   *	@T00  GNWZ'
+    DEFAULT='/var/log/munin-main/*	munin:munin	644  7	   *	@T00  GNWZ'
     if [ -z "$ENTRY" ]; then
         exit 0
     elif [ "$ENTRY" = "$DEFAULT" ]; then
@@ -107,7 +122,7 @@ Do you want me to delete it?" y; then
 
 case $2 in
     DEINSTALL)
-	delete_crontab_entries '#BEGIN_MUNIN_MAIN' '#END_MUNIN_MAIN'
+	delete_crontab_entries '#BEGIN_MUNIN' '#END_MUNIN'
 	newsyslog
 	;;
     POST-DEINSTALL)

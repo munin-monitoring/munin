@@ -2,17 +2,11 @@
 #
 # Plugin to monitor harddrive temperatures through SMART.
 #
-# This plugin is an alternative to hddtemp_smartctl, which is
-# the preferred one.
-#
 # client-conf.d/-options:
 # 	
 # 	drives		-- List drives to monitor. E.g. "hda hdc".
 #
 # $Log$
-# Revision 1.4.2.1  2005/01/25 21:00:01  jimmyo
-# Added plugin generic/hddtemp_smartctl, made by Lupe Christoph. Made it the default hddtemp plugin.
-#
 # Revision 1.4  2004/11/10 16:00:39  jimmyo
 # Applied patch from Nicolas Stransky to generic/hddtemp, to fetch temp more elegantly (SF#1052845).
 #

@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!@@USERS@@
 #
 # (c) 2004 Michael Kaiser
 # tools (at) micha (dot) de
@@ -21,9 +21,6 @@
 # $Id$
 #
 # $Log$
-# Revision 1.1.2.1  2005/01/11 13:48:33  ilmari
-# Fix linux/users #! line.
-#
 # Revision 1.1  2004/12/20 13:43:36  jimmyo
 # Added plugin linux/users, created by Michael Kaiser.
 #

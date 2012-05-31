@@ -9,6 +9,27 @@
 #
 # Any device found in /usr/bin/netstat can be monitored.
 #
+# $Log$
+# Revision 1.4  2004/12/10 10:47:49  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
+# Revision 1.3  2004/12/09 22:12:55  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
+# Revision 1.2  2004/05/20 19:02:36  jimmyo
+# Set categories on a bunch of plugins
+#
+# Revision 1.1  2004/01/02 18:50:00  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.2  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
 #
@@ -30,7 +51,7 @@ fi
 
 if [ "$1" = "suggest" ]; then
 	if [ -x /usr/bin/netstat ]; then
-		netstat -i -b -n | sed -n -e '/^faith/d' -e '/^lo[0-9]/d' -e '/^pflog/d' -e '/<Link#[0-9]*>/s/\** .*//p'
+		netstat -i -b | sed -n -e '/^faith/d' -e '/^lo0/d' -e '/<Link#[0-9]*>/s/\** .*//p'
 		exit 0
 	else
 		exit 1
@@ -43,7 +64,6 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000'
 	echo 'graph_vlabel events / ${graph_period}'
 	echo 'graph_category network'
-	echo "graph_info This graph shows the amount of errors and collisions on the $INTERFACE network interface."
 	echo 'ierrors.label Input Errors'
         echo 'ierrors.type COUNTER'
         echo 'oerrors.label Output Errors'
@@ -53,15 +73,9 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi;
 
-/usr/bin/netstat -i -b -n -I $INTERFACE | awk '
+/usr/bin/netstat -i -b -I $INTERFACE | awk '
 /<Link#[0-9]*>/ {
-	if (NF == 10) {
-		print "ierrors.value", $5;
-		print "oerrors.value", $8;
-		print "collisions.value", $10;
-	} else {
-		print "ierrors.value", $6;
-		print "oerrors.value", $9;
-		print "collisions.value", $11;
-	}
+	print "ierrors.value", $6;
+	print "oerrors.value", $9;
+	print "collisions.value", $11;
 }'

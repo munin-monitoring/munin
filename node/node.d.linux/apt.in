@@ -184,7 +184,8 @@ while (<APT>)
 			}
 		}
 	}
-	if (/^\d+\supgraded,\s\d+\snewly installed, \d+ to remove and (\d+) not upgraded/) {
+	if (/^\d+\s(?:packages )?upgraded,\s\d+\snewly installed, \d+ to remove and (\d+)\s+not upgraded/)
+	{
 		$hold = $1;
 	}
 }

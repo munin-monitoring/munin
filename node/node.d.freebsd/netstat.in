@@ -8,12 +8,6 @@
 # 	autoconf (optional - only used by munin-config)
 #
 # $Log$
-# Revision 1.5.2.1  2005/01/28 14:51:22  lupe
-# Add graph_info and some filed.info
-#
-# Revision 1.6  2005/01/28 14:47:31  lupe
-# Add graph_info and some filed.info
-#
 # Revision 1.5  2004/12/10 10:47:49  jimmyo
 # Change name from ${scale} to ${graph_period}, to be more consistent.
 #
@@ -45,7 +39,7 @@
 
 
 if [ "$1" = "autoconf" ]; then
-	if ( /bin/netstat -s 2>/dev/null >/dev/null ); then
+	if ( netstat -s 2>/dev/null >/dev/null ); then
 		echo yes
 		exit 0
 	else
@@ -66,35 +60,24 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args -l 0 --base 1000'
 	echo 'graph_vlabel active connections per ${graph_period}'
 	echo 'graph_category network'
-	echo 'graph_period second'
-	echo 'graph_info This graph shows the TCP activity of all the network interfaces combined.'
 	echo 'active.label active'
 	echo 'active.type DERIVE'
 	echo 'active.min 0'
-	echo 'active.max 50000'
-	echo 'active.info The number of active TCP openings per second.'
-	echo 'passive.label passive'
-	echo 'passive.type DERIVE'
-	echo 'passive.min 0'
-	echo 'passive.max 50000'
-	echo 'passive.info The number of passive TCP openings per second.'
+	echo 'active.max 50000'''
 	echo 'failed.label failed'
 	echo 'failed.type DERIVE'
 	echo 'failed.min 0'
-	echo 'failed.max 50000'
-	echo 'failed.info The number of failed TCP connection attempts per second.'
+	echo 'failed.max 50000'''
 	echo 'resets.label resets'
 	echo 'resets.type DERIVE'
 	echo 'resets.min 0'
-	echo 'resets.max 50000'
-	echo 'resets.info The number of TCP connection resets.'
+	echo 'resets.max 50000'''
 	echo 'established.label established'
 	echo 'established.type DERIVE'
 	echo 'established.min 0'
-	echo 'established.max 50000'
-	echo 'established.info The number of currently open connections.'
+	echo 'established.max 50000'''
 	exit 0
 fi
 
-/bin/netstat -s | awk '/connection requests/ { print "active.value " $1 } /connection accepts/ { print "passive.value " $1 } /bad connection/ { print "failed.value " $1 } /reset/ { print "resets.value " $1 } /connections established/ { print "established.value " $1 }'
+netstat -s | awk '/connection accepts/ { print "active.value " $1 } /bad connection/ { print "failed.value " $1 } /reset/ { print "resets.value " $1 } /connections established/ { print "established.value " $1 }'
 

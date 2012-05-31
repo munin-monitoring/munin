@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!/usr/bin/perl -w
 #
 # Plugin to monitor APC UPS via the nis port of apcupsd.
 #

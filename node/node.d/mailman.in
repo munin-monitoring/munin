@@ -1,9 +1,6 @@
 #!@@PERL@@
 
 # $Log$
-# Revision 1.3.2.1  2005/03/07 19:52:31  jimmyo
-# generic/mailman now handles regular mailman (Deb#297904).
-#
 # Revision 1.3  2004/12/09 22:12:55  jimmyo
 # Added "graph_period" option, to make "graph_sums" usable.
 #
@@ -128,14 +125,9 @@ sub parseMailmanLists {
 }
 
 sub mailmanDomains {
-    my @domains;
-    if (-e "$libdir/data") {
-	@domains = (".");
-    } else {
-	opendir(DOMAINS, $libdir) or exit 3;
-	@domains = grep { !/^\@/ && !/^\./ && -d "$libdir/$_" } readdir(DOMAINS);
-	closedir(DOMAINS);
-    }
+    opendir(DOMAINS, $libdir) or exit 3;
+    my @domains = grep { !/^\@/ && !/^\./ && -d "$libdir/$_" } readdir(DOMAINS);
+    closedir(DOMAINS);
     return @domains;
 }
 

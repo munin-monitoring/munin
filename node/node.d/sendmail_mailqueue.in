@@ -15,9 +15,6 @@
 #       mtaqueue     - MTA queue directory
 #
 # $Log$
-# Revision 1.5.2.1  2005/02/16 19:05:40  jimmyo
-# generic/sendmail_mailqueue handles bigger queues (fix by Mickey Everts).
-#
 # Revision 1.5  2004/11/20 19:31:59  jimmyo
 # Fixed bug in generic/sendmail_mailqueue, when queue is empty.
 #
@@ -58,6 +55,6 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-mspmails=`find ${MSP_QUEUE} -type f -name '[qQ]*' 2>/dev/null | wc -l`
-mtamails=`find ${MTA_QUEUE} -type f -name '[qQ]*' 2>/dev/null | wc -l`
+mspmails=`ls ${MSP_QUEUE}/[qQ]* 2>/dev/null | wc -l`
+mtamails=`ls ${MTA_QUEUE}/[qQ]* 2>/dev/null | wc -l`
 echo "mails.value `expr ${mspmails} + ${mtamails}`"

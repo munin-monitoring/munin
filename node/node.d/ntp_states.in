@@ -1,5 +1,4 @@
 #!@@PERL@@ -w
-# -*- perl -*-
 #
 # Plugin to monitor NTP states
 #
@@ -8,9 +7,21 @@
 # 	config   (required)
 # 	autoconf (optional - used by lrrd-config)
 #
-# Config variables:
+# $Log$
+# Revision 1.2  2004/11/21 20:23:36  jimmyo
+# Better autoconf handling.
 #
-#       lowercase	- lowercase hostnames after lookup
+# Revision 1.1  2004/11/21 19:35:23  jimmyo
+# Corrected file name.
+#
+# Revision 1.2  2004/09/08 15:25:33  ilmari
+# Use @@PERL@@ in all perl shebang lines.
+#
+# Revision 1.1  2004/01/30 15:07:38  jimmyo
+# Added generic plugins ntp_ and ntp_states to manual family (SF#887000).
+#
+#
+#
 #
 # Magic markers - optional - used by installation scripts and
 # lrrd-config:
@@ -53,22 +64,14 @@ if ($ARGV[0] and $ARGV[0] eq "autoconf") {
 if ($ARGV[0] and $ARGV[0] eq "config") {
         print "graph_title NTP states\n";
 	print "graph_args --base 1000 --vertical-label msec --lower-limit 0\n";
-	print "graph_category time\n";
 	foreach (`ntpq -c "hostnames no" -c peers`) {
 		next unless /^.(\d+\.\d+\.\d+\.\d+)/;
 		next if /^.224\.0\.1\.1/;
 		my $addr = $1;
-		my $host;
-		if( my $lcid= /^.127\.127\.1\.(\d+)/) {
-			$lcid = $lcid - 1;
-			$host = "LOCAL($lcid)";
-		} else {
-			$host = gethostbyaddr(inet_aton($addr));
-			$host = defined $host ? $host->name : $addr;
-		}
+		my $host = gethostbyaddr(inet_aton($addr));
+		$host = defined $host ? $host->name : $addr;
 		my $name = $host;
-		$host = lc $host if exists $ENV{"lowercase"};
-		$host =~ s/[\.\-()]/_/g;
+		$host =~ s/[\.-]/_/g;
 		print "$host.label $name\n";
 		print "$host.draw LINE2\n";
 	}
@@ -80,16 +83,9 @@ foreach (`ntpq -c "hostnames no" -c peers`) {
 	next if /^.224\.0\.1\.1/;
 	my $state = $1;
 	my $addr = $2;
-	my $host;
-	if( my $lcid= /^.127\.127\.1\.(\d+)/) {
-		$lcid = $lcid - 1;
-		$host = "LOCAL($lcid)"
-	} else {
-		$host = gethostbyaddr(inet_aton($addr));
-		$host = defined $host ? $host->name : $addr;
-	}
-	$host = lc $host if exists $ENV{"lowercase"};
-	$host =~ s/[\.\-()]/_/g;
+	my $host = gethostbyaddr(inet_aton($addr));
+	$host = defined $host ? $host->name : $addr;
+	$host =~ s/[\.-]/_/g;
 	print "$host.value ", exists $stateval{$state} ? $stateval{$state} : 0, "\n";
 }
 

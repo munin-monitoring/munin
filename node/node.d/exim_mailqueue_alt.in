@@ -1,5 +1,4 @@
-#!@@GOODSH@@
-# -*- sh -*-
+#!/bin/bash
 #
 # Plugin to monitor Exim's mail queue
 #
@@ -19,38 +18,35 @@
 #	queuewarn	- warning limit
 #	queuecrit	- critical limit
 #
+# $Log$
+# Revision 1.1  2004/12/09 20:03:26  jimmyo
+# Added two new plugins contributed by Jacques Caruso, generic/exim_mailqueue_alt and generic/mailscanner.
+#
+#
 # Magic markers:
 #%# family=contrib
 #%# capabilities=
 
 PATH='/bin:/sbin:/usr/bin:/usr/sbin'
-# You cannot trust the exit status of which
-EXIM=$(which exim 2>/dev/null)
-case $EXIM:$? in
-    *:1|no*) EXIM=$(which exim4 2>/dev/null)
-esac
-case $EXIM:$? in
-    *:1|no*) EXIM=''
-esac
-
+EXIM=`which exim 2>/dev/null || which exim4 2>/dev/null`
+QUEUEWARN=100
 QUEUECRIT=200
 
-EXIM=${exim:-$EXIM}
-QUEUEWARN=${queuewarn:-100}
-QUEUECRIT=${queuecrit:-200}
+[ "$exim" ] && EXIM=$exim
+[ "$queuewarn" ] && QUEUEWARN=$queuewarn
+[ "$queuecrit" ] && QUEUECRIT=$queuecrit
 
 if [ "$1" == "config" ]; then
 	echo 'graph_title Exim mailqueue'
 	echo 'graph_args --base 1000 -l 0'
 	echo 'graph_vlabel mails in queue'
-	echo 'graph_order frozen active bounces total'
 	echo 'graph_category exim'
 	echo 'active.label active'
-	echo 'active.draw STACK'
-	echo 'bounces.label bounces'
-	echo 'bounces.draw LINE2'
+	echo 'active.draw LINE2'
+	echo 'bounced.label bounced'
+	echo 'bounced.draw LINE2'
 	echo 'frozen.label frozen'
-	echo 'frozen.draw AREA'
+	echo 'frozen.draw LINE2'
 	echo 'total.label total'
 	echo 'total.draw LINE2'
 	echo "total.warning $QUEUEWARN"
@@ -58,13 +54,12 @@ if [ "$1" == "config" ]; then
 	exit 0
 fi
 
-$EXIM -bpr | awk 'BEGIN { bounces = 0; frozen = 0; total = 0 }
-                  $4 == "<>" { bounces++; }
-                  $6 == "frozen" { frozen++ }
-                  /<[^>]*>/ { total++ }
-                  END {
-                      print "frozen.value " frozen;
-                      print "bounces.value " bounces;
-                      print "total.value " total;
-                      print "active.value " total - frozen;
-                  }'
+ACTIVE=`$EXIM -bpr | grep -Ev '(^\ \ |^$|<>|frozen)' | wc -l`
+BOUNCED=`$EXIM -bpr | awk '{print $4}' | grep '<>' | wc -l`
+FROZEN=`$EXIM -bpr | awk '{print $6}' | grep frozen | wc -l`
+TOTAL=`$EXIM -bpc`
+
+echo "active.value $ACTIVE"
+echo "bounced.value $BOUNCED"
+echo "frozen.value $FROZEN"
+echo "total.value $TOTAL"

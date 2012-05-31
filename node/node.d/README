@@ -43,8 +43,7 @@ A munin script must fullfill the following requirements:
 	  If set, overrides which host_name the plugin belongs to. Rather
 	  ugly - use the override in the node configuration instead.
 
-   Then you list the tings you want to meassure (all fields have a name
-   consisting of [a-zA-Z0-9_], where the first character is [a-zA-Z_]:
+   Then you list the tings you want to meassure:
 
      Needed:
 

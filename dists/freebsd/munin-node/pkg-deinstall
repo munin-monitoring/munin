@@ -30,8 +30,6 @@ yesno() {
 }
 
 stop_process() {
-    STARTSTOP=${PKG_PREFIX}/etc/rc.d/munin-node.sh
-
     if [ -x $STARTSTOP ]; then
 	$STARTSTOP stop
     fi
@@ -44,18 +42,6 @@ delete_group() {
     if yesno "Do you want me to remove group \"${g}\"" y; then
 	pw groupdel -n ${g}
 	echo "Done."
-    fi
-}
-
-delete_crontab_entries() {
-    local prog
-    prog=$1
-
-    if grep -q "^[^#]*$prog" /etc/crontab; then
-	TMPFILE=`mktemp -t munin` || exit 1
-	grep -v $prog /etc/crontab > $TMPFILE
-	cat $TMPFILE > /etc/crontab
-	rm $/etc/crontab
     fi
 }
 
@@ -81,9 +67,15 @@ Do you want me to delete it?" y; then
 }
 
 
+OSVERSION=`/sbin/sysctl -n kern.osreldate`
+if [ $OSVERSION -lt 500000 ]; then
+    STARTSTOP=${PKG_PREFIX}/etc/rc.d/munin-node.sh
+else
+    STARTSTOP=/etc/rc.d/munin_node
+fi
+
 case $2 in
     DEINSTALL)
-	delete_crontab_entries ${PKG_PREFIX}/bin/munin-node-revive
 	stop_process
 	newsyslog
 	;;

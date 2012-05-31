@@ -1,7 +1,6 @@
 #!@@PERL@@ -wT
-# -*- perl -*-
-
-# Copyright (C) 2004-2006
+#
+# Copyright (C) 2004 Jimmy Olsen
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,57 +16,87 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
+#
 # $Id$
+#
+# $Log$
+# Revision 1.12  2004/12/22 21:33:48  jimmyo
+# Remove hardcoding of default user/group to run the plugin (SF#1083251).
+#
+# Revision 1.11  2004/12/22 20:48:23  jimmyo
+# Fix bug when encountering strange environment.
+#
+# Revision 1.10  2004/12/09 17:13:36  jimmyo
+# Munin-run: Now behaves properly when running invalid plugins (SF#1074242).
+#
+# Revision 1.9  2004/11/20 23:34:35  jimmyo
+# Updated munin-run with extra options already checked into munin-node.
+#
+# Revision 1.8  2004/11/20 00:07:19  jimmyo
+# Handle execution problems better.
+#
+# Revision 1.7  2004/11/16 20:00:42  jimmyo
+# License cleanups.
+#
+# Revision 1.6  2004/04/30 13:14:53  jimmyo
+# Added support for snmpconf option in plugins.
+#
+# Revision 1.5  2004/01/29 19:39:00  jimmyo
+# Generic plugins now use printf instead of echo -n, as this is more portable (SF#885564)
+#
+# Revision 1.4  2004/01/29 17:36:19  jimmyo
+# Updated copyright information
+#
+# Revision 1.3  2004/01/29 16:56:54  jimmyo
+# Fixed "group" bug. Added support for multiple and optional groups
+#
+# Revision 1.2  2004/01/15 15:20:01  jimmyo
+# Making things workable after name change. Upping for test verwion.
+#
+# Revision 1.1  2004/01/02 18:50:00  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.16  2003/12/18 18:51:37  jimmyo
+# added configuration option "ignore_file", which takes regex for files to ignore (e.g. rpmnew/save) (Deb#224265).
+#
+# Revision 1.15  2003/12/18 17:58:18  jimmyo
+# Do a fake clean of the environment because of the taint checking.
+#
+# Revision 1.14  2003/12/17 21:29:26  jimmyo
+# Don\'t try to change uid/gid if not running as root. (Deb#224300)
+#
+# Revision 1.13  2003/12/10 15:30:02  jimmyo
+# Set path before trying to get hostname
+#
+# Revision 1.12  2003/12/10 15:11:40  jimmyo
+# A couple of bugfixes.
+#
+# Revision 1.11  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
 #
 
 use strict;
 use vars qw(@ISA);
 use Getopt::Long;
 
-# Variable is set at build, with values detected by the makefiles
-my $HAS_SETR = @@HASSETR@@;
-
 # "Clean" environment to disable taint-checking on the environment. We _know_
 # that the environment is insecure, but we want to let admins shoot themselves
 # in the foot with it, if they want to.
 foreach my $key (keys %ENV)
 {
-	if ($ENV{$key} =~ /^(.*)$/) {
+	if ($ENV{$key} =~ /^(.*)$/)
+	{
 	    $ENV{$key} = $1;
-	} else {
+	}
+	else 
+	{
 	    delete $ENV{$key};
 	}
 }
-
-$0 =~ /^(.*)$/; # for some strange reason won't "$0 = $0;" work.
-$0 = $1;
-
-# Make configuration settings available at runtime.
-$ENV{'MUNIN_PREFIX'}     = '@@PREFIX@@';
-$ENV{'MUNIN_CONFDIR'}    = '@@CONFDIR@@';   # /etc/munin,/etc/opt/munin or such
-$ENV{'MUNIN_BINDIR'}     = '@@BINDIR@@';
-$ENV{'MUNIN_SBINDIR'}    = '@@SBINDIR@@';
-$ENV{'MUNIN_DOCDIR'}     = '@@DOCDIR@@';
-$ENV{'MUNIN_LIBDIR'}     = '@@LIBDIR@@';    # LIBDIR/plugins contains plugin.sh
-$ENV{'MUNIN_HTMLDIR'}    = '@@HTMLDIR@@';
-$ENV{'MUNIN_CGIDIR'}     = '@@CGIDIR@@';
-$ENV{'MUNIN_DBDIR'}      = '@@DBDIR@@';
-$ENV{'MUNIN_PLUGSTATE'}  = '@@PLUGSTATE@@'; # Put plugin state files here!
-$ENV{'MUNIN_MANDIR'}     = '@@MANDIR@@';
-$ENV{'MUNIN_LOGDIR'}     = '@@LOGDIR@@';
-$ENV{'MUNIN_STATEDIR'}   = '@@STATEDIR@@';  # This is for .pid files
-$ENV{'MUNIN_USER'}       = '@@USER@@';      # User munin runs as (mostly)
-$ENV{'MUNIN_GROUP'}      = '@@GROUP@@';     # Group ditto
-$ENV{'MUNIN_PLUGINUSER'} = '@@PLUGINUSER@@';# Default user for plugin running
-$ENV{'MUNIN_VERSION'}    = '@@VERSION@@';
-$ENV{'MUNIN_PERL'}       = '@@PERL@@';
-$ENV{'MUNIN_PERLLIB'}    = '@@PERLLIB@@';
-$ENV{'MUNIN_GOODSH'}     = '@@GOODSH@@';
-$ENV{'MUNIN_BASH'}       = '@@BASH@@';
-$ENV{'MUNIN_PYTHON'}     = '@@PYTHON@@';
-$ENV{'MUNIN_OSTYPE'}     = '@@OSTYPE@@';
-$ENV{'MUNIN_HOSTNAME'}   = '@@HOSTNAME@@';
-$ENV{'MUNIN_MKTEMP'}     = '@@MKTEMP@@';
 
 my %services;
 my %nodes;
@@ -79,7 +108,7 @@ my $FQDN="";
 my $do_usage = 0;
 my $DEBUG = 0;
 my $do_version = 0;
-my $VERSION='@@VERSION@@';
+my $VERSION="@@VERSION@@";
 my $defuser = getpwnam ("@@PLUGINUSER@@");
 my $defgroup= getgrnam ("@@GROUP@@");
 my $paranoia = 0;
@@ -87,7 +116,7 @@ my @ignores = ();
 
 my %sconf  = ();
 
-$do_usage=1  unless
+$do_usage=1  unless 
 GetOptions ( "config=s"     => \$conffile,
              "debug!"       => \$DEBUG,
              "version!"     => \$do_version,
@@ -157,18 +186,13 @@ else
 
 if ($do_version)
 {
-	print <<"EOT";
-munin-run (munin-node) version $VERSION.
+	print "munin-run (munin-node) version $VERSION.
 Written by Jimmy Olsen / Linpro AS
 
-Copyright (C) 2002-2005
-
-This is free software released under the GNU General Public License. There
-is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
-PURPOSE. For details, please refer to the file COPYING that is included
-with this software or refer to
-  http://www.fsf.org/licensing/licenses/gpl.txt
-EOT
+Copyright (C) 2002-2004
+This is free software released under the GNU Public License. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+";
 	exit 0;
 }
 
@@ -233,15 +257,14 @@ while (<FILE>) {
 
 $FQDN ||= &get_fq_hostname;
 
-$ENV{'FQDN'}=$FQDN;
-
-# Some locales uses "," as decimal separator. This can mess up a lot
-# of plugins.
-$ENV{'LC_ALL'}='C';
+$ENV{FQDN}=$FQDN;
 
 &load_services;
 
 exit;
+
+
+
 
 ### over-ridden subs below
 
@@ -314,9 +337,9 @@ FILES:
 	my @rows = run_service($file, $arg);
 	my $node = $FQDN;
 	for my $row (@rows) {
-	  print "# row: $row\n" if $DEBUG;
+	  print "row: $row\n" if $DEBUG;
 	  if ($row =~ m/^host_name (.+)$/) {
-	    print "# Found host_name, using it\n" if $DEBUG;
+	    print "Found host_name, using it\n" if $DEBUG;
 	    $node = $1;
 	  }
 	}
@@ -352,16 +375,13 @@ sub run_service {
 			$defuser);
 		my $g  = $defgroup;
 		my $gs = "$g $g" .
-		(defined $sconf{$service}{'group'}?" $sconf{$service}{group}":"");
+		($sconf{$service}{'group'}?" $sconf{$service}{group}":"");
 
 		print "# Want to run as euid/egid $u/$g\n" if $DEBUG;
 
-		if ($HAS_SETR)
-		{
-			$( = $g    unless $g == 0;
-			$< = $u    unless $u == 0;
-		}
+		$( = $g    unless $g == 0;
 		$) = $gs   unless $g == 0;
+		$< = $u    unless $u == 0;
 		$> = $u    unless $u == 0;
 
 		if ($> != $u or $g != (split (' ', $)))[0])
@@ -385,8 +405,7 @@ sub run_service {
     {
 	foreach my $key (keys %{$sconf{$service}{'env'}})
 	{
-	    print "# Setting environment $key=$sconf{$service}{env}{$key}\n"
-	      if $DEBUG;
+	    print "Setting environment $key=$sconf{$service}{env}{$key}\n" if $DEBUG;
 	    $ENV{$key} = $sconf{$service}{env}{$key};
 	}
     }
@@ -405,14 +424,13 @@ sub run_service {
 		push (@run, $t);
 	    }
 	}
-	print "# About to run \"", join (' ', @run), "\"\n" if $DEBUG;
+	print STDERR "About to run \"", join (' ', @run), "\"\n" if $DEBUG;
+	print "About to run \"", join (' ', @run), "\"\n" if $DEBUG;
 	exec (@run) if @run;
     }
     else
     {
-	print "# DEBUG: About to exec \"$servicedir/$service\"\n"
-	  if $DEBUG;
-
+	print STDERR "DEBUG: About to exec \"$servicedir/$service\"." if $DEBUG;
 	if (!exec ("$servicedir/$service", $command))
 	{
 	    print "no (could not execute plugin)\n"; exit 1;
@@ -428,8 +446,8 @@ sub run_service {
 sub get_fq_hostname {
     my $hostname;
     eval {
-        require Sys::Hostname;
-        $hostname = (gethostbyname(Sys::Hostname::hostname()))[0];
+        require Net::Domain;
+        $hostname = Net::Domain::hostfqdn();
     };
     return $hostname if $hostname;
 
@@ -493,29 +511,12 @@ sub load_auth_file
 	}
 	elsif (/^\s*user\s+(\S+)\s*$/)
 	{
-	    my $optional = 0;
-		my $user = $1;
-
-	    if ($user =~ /^\(([^)]+)\)$/)
+	    my $tmpid = $1;
+	    $sconf->{$service}{'user'} = &get_uid ($tmpid);
+	    if (!defined $sconf->{$service}{'user'})
 	    {
-		$optional = 1;
-		$user = $1;
-	    }
-
-	    my $u = &get_uid ($user);
-	    if (!defined $u and !$optional)
-	    {
-		warn "User \"$user\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
+		warn "User \"$tmpid\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
 		return undef;
-	    }
-	    elsif (!defined $u and $optional)
-	    {
-		print ("# DEBUG: Skipping \"$user\" (optional).\n") if $DEBUG;
-		next;
-	    }
-	    else
-	    {
-		$sconf->{$service}{'user'} = $u;
 	    }
 	}
 	elsif (/^\s*group\s+(.+)\s*$/)
@@ -539,8 +540,7 @@ sub load_auth_file
 		}
 		elsif (!defined $g and $optional)
 		{
-		    print "# DEBUG: Skipping \"$group\" (optional).\n"
-		      if $DEBUG;
+		    print "DEBUG: Skipping \"$group\" (optional).\n" if $DEBUG;
 		    next;
 		}
 		
@@ -565,29 +565,29 @@ sub load_auth_file
         elsif (/^\s*timeout\s+(\d+)\s*$/)
         {
             $sconf->{$service}{'timeout'} = $1;
-            print "# DEBUG: $service: setting timeout to $1\n"
+            print STDERR "DEBUG: $service: setting timeout to $1\n"
                 if $DEBUG;
         }
         elsif (/^\s*(allow)\s+(.+)\s*$/ or /^\s*(deny)\s+(.+)\s*$/)
         {
             push (@{$sconf->{$service}{'allow_deny'}}, [$1, $2]);
-                print "# DEBUG: Pushing allow_deny: $1, $2\n" if $DEBUG;
+                print STDERR "DEBUG: Pushing allow_deny: $1, $2\n" if $DEBUG;
         }
         elsif (/^\s*env\s+([^=\s]+)\s*=\s*(.+)$/)
         {
             $sconf->{$service}{'env'}{$1} = $2;
-            print "# Saving $service->env->$1 = $2...\n" if $DEBUG;
+            print "Saving $service->env->$1 = $2...\n" if $DEBUG;
 			warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"env $1=$2\" should be rewritten to \"env.$1 $2\").";
         } 
         elsif (/^\s*env\.(\S+)\s+(.+)$/)
         {
             $sconf->{$service}{'env'}{$1} = $2;
-            print "# Saving $service->env->$1 = $2...\n" if $DEBUG;
+            print "Saving $service->env->$1 = $2...\n" if $DEBUG;
         }
         elsif (/^\s*(\w+)\s+(.+)$/)
         {
             $sconf->{$service}{'env'}{"lrrd_$1"} = $2;
-            print "# Saving $service->env->lrrd_$1 = $2...\n" if $DEBUG;
+            print "Saving $service->env->lrrd_$1 = $2...\n" if $DEBUG; 
 	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"$1 $2\" should be rewritten to \"env lrrd_$1=$2\").";
         } 
         elsif (/\S/)
@@ -652,7 +652,7 @@ sub get_var
     {
         (my $tmpservice = $wildservice) =~ s/\*$//;
         next unless ($name =~ /^$tmpservice/);
-        print "# Checking $wildservice...\n" if $DEBUG;
+        print "Checking $wildservice...\n" if $DEBUG;
 
         if ($var eq 'env')
         {
@@ -663,7 +663,7 @@ sub get_var
                     if (! exists $sconf->{$name}{'env'}{$key})
                     {
                         $sconf->{$name}{'env'}{$key} = $sconf->{$wildservice}{'env'}{$key};
-                        print "# Saving $wildservice->$key\n" if $DEBUG;
+                        print "Saving $wildservice->$key\n" if $DEBUG;
                     }
                 }
             }
@@ -718,9 +718,7 @@ View this help message.
 
 =item B< --debug >
 
-Print debug messages.  Debug messages are sent to both STDOUT and are
-prefixed with "#" (this makes it easier for other parts of munin to
-use munin-run and still have --debug on).  Only errors go to STDERR.
+View debug messages.
 
 =item B< --version >
 
@@ -730,17 +728,14 @@ Show version information.
 
 =head1 DESCRIPTION
 
-Munin-node is a daemon that Munin connects to fetch data.  This data
-is stored in .rrd-files on the central server , and later graphed and
-htmlified.
+Munin's node is a daemon that Munin connects to fetch data. This data is
+stored in .rrd-files, and later graphed and htmlified. It's designed to
+let it be very easy to graph new datasources.
 
-munin-run is a perlscript to run the plugins used by the munin-node
-daemon from the command line.  It's helpful to debug plugins as they
-are run the same way with the same user and same environment settings
-as within the munin-node.
+munin-run is a small perlscript to run the plugins used by the munin-node
+daemon from the command line.
 
-For more information, see the documentation section at
-L<http://munin.sf.net/>.
+For more information, see the documentation section at L<http://munin.sf.net/>.
 
 =head1 FILES
 
@@ -756,7 +751,7 @@ This is munin-node v@@VERSION@@
 
 =head1 AUTHORS
 
-Audun Ytterdal, Jimmy Olsen, Tore Anderson, Nicolai Langfeldt.
+Audun Ytterdal, Jimmy Olsen, and Tore Anderson.
 
 =head1 BUGS
 
@@ -766,8 +761,7 @@ Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
 =head1 COPYRIGHT
 
-Copyright (C) 2002-2006 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
-Nicolai Langfeldt / Linpro AS.
+Copyright © 2002 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

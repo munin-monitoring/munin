@@ -44,7 +44,7 @@ if [ "$1" = "config" ]; then
         echo 'graph_args --upper-limit 100'
 		echo 'graph_category disk'
         eval $DF | $TAIL +2 | while read i; do
-                name=`echo $i | sed 's/[\/.-]/_/g' | awk '{ print $1 }'`
+                name=`echo $i | sed 's/[\/.]/_/g' | awk '{ print $1 }'`
 		# Ignore tmpfs.
 		if [ "$name" != "swap" ]; then
 			printf "$name.label "
@@ -57,7 +57,7 @@ if [ "$1" = "config" ]; then
 fi
 
 eval $DF | $TAIL +2 | while read i; do
-        name=`echo $i | sed 's/[\/.-]/_/g' | awk '{ print $1 }'`
+        name=`echo $i | sed 's/[\/.]/_/g' | awk '{ print $1 }'`
 	# Ignore tmpfs.
 	if [ "$name" != "swap" ]; then
 		printf "$name.value "

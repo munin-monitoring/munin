@@ -9,6 +9,39 @@
 # 	config   (required)
 # 	autoconf (optional - used by munin-config)
 #
+# $Log$
+# Revision 1.8  2004/12/09 22:12:56  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
+# Revision 1.7  2004/11/21 00:17:12  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
+# Revision 1.6  2004/05/20 13:57:12  jimmyo
+# Set categories to some of the plugins.
+#
+# Revision 1.5  2004/05/16 12:34:26  jimmyo
+# Added "info"-fields to linux/cpu and linux/load plugins, to demonstrate how it works.
+#
+# Revision 1.4  2004/05/06 21:39:54  jimmyo
+# Added plugin acpi, contributed by Alexandre Dupouy.
+#
+# Revision 1.3  2004/02/18 16:39:36  jimmyo
+# Turned off scaling of values for cpu-graphs (no more nano-percentages).
+#
+# Revision 1.2  2004/01/31 19:56:37  jimmyo
+# Linux/cpu now graphs all values on a 2.6 kernel (Deb#227946).
+#
+# Revision 1.1  2004/01/02 18:50:01  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.2  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
 # Magic markers - optional - used by installation scripts and
 # munin-config:
 #
@@ -36,9 +69,8 @@ fi
 
 if [ "$1" = "config" ]; then
 
-	NCPU=$(egrep '^cpu[0-9]+ ' /proc/stat | wc -l)
-	PERCENT=$(($NCPU * 100))
-	MAX=$(($NCPU * 100))
+	NCPU=`expr \`grep '^cpu. ' /proc/stat | wc -l\` - 1`
+	PERCENT=`expr $NCPU '*' 100`
 	if [ "$scaleto100" = "yes" ]; then
 		graphlimit=100
 	else
@@ -57,7 +89,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_period second'
 	echo 'system.label system'
 	echo 'system.draw AREA'
-	echo "system.max $MAX"
+	echo 'system.max 5000'
 	echo 'system.min 0'
 	echo 'system.type DERIVE'
 	echo "system.warning $SYSWARNING" 
@@ -66,20 +98,20 @@ if [ "$1" = "config" ]; then
 	echo 'user.label user'
 	echo 'user.draw STACK'
 	echo 'user.min 0'
-	echo "user.max $MAX"
+	echo 'user.max 5000'
 	echo "user.warning $USRWARNING"
 	echo 'user.type DERIVE'
 	echo 'user.info CPU time spent by normal programs and daemons'
 	echo 'nice.label nice'
 	echo 'nice.draw STACK'
 	echo 'nice.min 0'
-	echo "nice.max $MAX"
+	echo 'nice.max 5000'
 	echo 'nice.type DERIVE'
 	echo 'nice.info CPU time spent by nice(1)d programs'
 	echo 'idle.label idle'
 	echo 'idle.draw STACK'
 	echo 'idle.min 0'
-	echo "idle.max $MAX"
+	echo 'idle.max 5000'
 	echo 'idle.type DERIVE'
 	echo 'idle.info Idle CPU time'
 	if [ "$scaleto100" = "yes" ]; then
@@ -93,19 +125,19 @@ if [ "$1" = "config" ]; then
 		echo 'iowait.label iowait'
 		echo 'iowait.draw STACK'
 		echo 'iowait.min 0'
-		echo "iowait.max $MAX"
+		echo 'iowait.max 5000'
 		echo 'iowait.type DERIVE'
 		echo 'iowait.info CPU time spent waiting for I/O operations to finish'
 		echo 'irq.label irq'
 		echo 'irq.draw STACK'
 		echo 'irq.min 0'
-		echo "irq.max $MAX"
+		echo 'irq.max 5000'
 		echo 'irq.type DERIVE'
 		echo 'irq.info CPU time spent handling interrupts'
 		echo 'softirq.label softirq'
 		echo 'softirq.draw STACK'
 		echo 'softirq.min 0'
-		echo "softirq.max $MAX"
+		echo 'softirq.max 5000'
 		echo 'softirq.type DERIVE'
 		echo 'softirq.info CPU time spent handling "batched" interrupts'
 		if [ "$scaleto100" = "yes" ]; then

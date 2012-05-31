@@ -1,5 +1,4 @@
-#!@@GOODSH@@
-# -*- sh -*-
+#!/bin/sh
 #
 # Plugin to monitor network connections.
 #
@@ -8,10 +7,32 @@
 # 	config   (required)
 # 	autoconf (optional - only used by munin-config)
 #
-# Bugs:
-#       At least one SuSE netstat appears to report
-#         "passive connections rejected because of time stamp"
-#        We have never seen that, patch requested.
+# $Log$
+# Revision 1.5  2004/12/09 22:12:56  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
+# Revision 1.4  2004/11/21 00:17:12  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
+# Revision 1.3  2004/09/25 22:29:16  jimmyo
+# Added info fields to a bunch of plugins.
+#
+# Revision 1.2  2004/05/20 13:57:12  jimmyo
+# Set categories to some of the plugins.
+#
+# Revision 1.1  2004/01/29 19:21:20  jimmyo
+# Moved generic netstat to linux-dir, as it is too spesific. Added Solaris version of the plugin as well. (SF#882354)
+#
+# Revision 1.1  2004/01/02 18:50:00  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.2  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
 #
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
@@ -71,5 +92,5 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-netstat -s | awk '/active connections/ { print "active.value " $1 } /passive connection ope/ { print "passive.value " $1 } /failed connection/ { print "failed.value " $1 } /connection resets/ { print "resets.value " $1 } /connections established/ { print "established.value " $1 }'
+netstat -s | awk '/active connections/ { print "active.value " $1 } /passive connection/ { print "passive.value " $1 } /failed connection/ { print "failed.value " $1 } /connection resets/ { print "resets.value " $1 } /connections established/ { print "established.value " $1 }'
 

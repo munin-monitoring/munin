@@ -31,7 +31,7 @@ if [ "$1" = "config" ]; then
         echo 'graph_args --upper-limit 100'
 		echo 'graph_category disk'
         $DF -k -l | $TAIL +2 | while read i; do
-                name=`echo $i | sed 's/[\/.-]/_/g' | awk '{ print $6 }' | $TAIL -15c`
+                name=`echo $i | sed 's/[\/.]/_/g' | awk '{ print $6 }' | $TAIL -15c`
                 printf "$name.label "
                 echo $i | awk '{ print $6 }'
                 printf "$name.warn "
@@ -41,7 +41,7 @@ if [ "$1" = "config" ]; then
 fi
 
 $DF -k -l | $TAIL +2 | while read i; do
-        name=`echo $i | sed 's/[\/.-]/_/g' | awk '{ print $6 }' | $TAIL -15c`
+        name=`echo $i | sed 's/[\/.]/_/g' | awk '{ print $6 }' | $TAIL -15c`
         printf "$name.value "
         echo $i | awk '{ print $5 }' | cut -f1 -d% 
 done

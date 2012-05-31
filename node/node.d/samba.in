@@ -3,9 +3,6 @@
 # Plugin to monitor the number of open files in the system.
 #
 # $Log$
-# Revision 1.7.2.1  2005/01/29 20:13:59  jimmyo
-# Made generic/samba more portable (fixes by Nicolas Stransky).
-#
 # Revision 1.7  2005/01/05 15:18:13  jimmyo
 # Made generic/samba more portable (fixes by Nicolas Stransky).
 #
@@ -34,12 +31,6 @@
 # New plugin by Finn-Arne Johansen
 #
 #
-# client-conf.d/-options:
-#       
-#       smbstatus       -- path to smbstatus executable
-#       ignoreipcshare  -- ignore IPC$ whan counting shares
-#                          any string will do
-#
 # Parameters:
 # 	
 # 	config   (required)
@@ -51,15 +42,14 @@
 #%# family=contrib
 #%# capabilities=autoconf
 
-SMBSTATUS=${smbstatus:-`which smbstatus`}
-SMBSTATUS=${SMBSTATUS:-/usr/bin/smbstatus}
+
 
 if [ "$1" = "autoconf" ]; then
-	if [ -x $SMBSTATUS ]; then
+	if [ -x /usr/bin/smbstatus ]; then
 		echo yes
 		exit 0
 	else
-		echo no '(smbstatus not found)'
+		echo no
 		exit 1
 	fi
 fi
@@ -78,17 +68,9 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-$SMBSTATUS -p 2>/dev/null | awk 'BEGIN {lines=0} $1 ~ /^[0-9]+/ {lines++} END {print "proc.value " lines}'
-$SMBSTATUS -L 2>/dev/null | awk 'BEGIN {lines=0} $1 ~ /^[0-9]+/ {lines++} END {print "lock.value " lines}'
-if [ -n "$ignoreipcshare" ]; then
-	IGNORE='$1=="IPC$" {next}'
-fi
-$SMBSTATUS -S 2>/dev/null | awk '
-BEGIN {lines=0;state=0}
-$1=="Service"&&state==0 {state=1;next}
-/^--*$/&&state==1 {state=2;next}
-state<2 {next}
-/^$/ {next}           
-'"$IGNORE"'
-{lines++}
-END {print "share.value " lines}'
+printf "proc.value "
+smbstatus -p | awk '$2 ~ /[0123456789]+/ && $1 !~ /^IPC\$/ ' | wc -l
+printf "lock.value "
+smbstatus -L | awk '$2 ~ /[0123456789]+/ && $1 !~ /^IPC\$/ ' | wc -l
+printf "share.value "
+smbstatus -S | awk '$2 ~ /[0123456789]+/ && $1 !~ /^IPC\$/ ' | wc -l

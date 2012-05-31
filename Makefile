@@ -9,7 +9,6 @@ include $(CONFIG)
 RELEASE          = $(shell cat RELEASE)
 INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
 INSTALL          = ./install-sh
-DIR              = $(shell /bin/pwd | sed 's/^.*\///')
 
 default: build
 
@@ -26,7 +25,6 @@ install-main: build
 	mkdir -p $(STATEDIR)
 	mkdir -p $(HTMLDIR)
 	mkdir -p $(DBDIR)
-	mkdir -p $(CGIDIR)
 
 	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR) $(RUNDIR) $(HTMLDIR) $(DBDIR)
 
@@ -36,7 +34,6 @@ install-main: build
 	$(INSTALL) -m 0644 server/logo.png $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/style.css $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/definitions.html $(CONFDIR)/templates/
-	$(INSTALL) -m 0644 server/VeraMono.ttf $(LIBDIR)/
 
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/server/munin.conf $(CONFDIR)/
 
@@ -50,16 +47,12 @@ install-main: build
 
 	$(INSTALL) -m 0644 build/server/Munin.pm $(PERLLIB)/
 
-install-node: build install-node-non-snmp install-node-snmp install-munindoc
+install-node: build install-node-non-snmp install-node-snmp
 	echo Done.
 
 install-node-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(SBINDIR)/
 
-install-munindoc: build 
-	mkdir -p $(BINDIR)
-	$(INSTALL) -m 0755 build/node/munindoc $(BINDIR)/ 
-	
 install-node-non-snmp: build
 	$(CHECKGROUP)
 	mkdir -p $(CONFDIR)/plugins
@@ -72,7 +65,7 @@ install-node-non-snmp: build
 	mkdir -p $(STATEDIR)
 	mkdir -p $(PLUGSTATE)
 
-	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
+	$(CHGRP) $(GROUP) $(PLUGSTATE)
 	$(CHMOD) 775 $(PLUGSTATE)
 	$(CHMOD) 755 $(CONFDIR)/plugin-conf.d
 
@@ -80,23 +73,19 @@ install-node-non-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure $(SBINDIR)/
 	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
-
-# ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE 
-# GENERIC ONES 
+	
 install-node-plugins: build
-	for p in build/node/node.d/* build/node/node.d.$(OSTYPE)/*; do    		\
+	for p in build/node/node.d.$(OSTYPE)/* build/node/node.d/*; do    		\
 		if test -f "$$p" ; then                                     		\
 			family=`sed -n 's/^#%# family=\(.*\)$$/\1/p' $$p`;  		\
 			test "$$family" || family=contrib;                  		\
 			if echo $(INSTALL_PLUGINS) | grep $$family >/dev/null; then 	\
-				$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;    		\
+				test -f "$(LIBDIR)/plugins/`basename $$p`"		\
+				|| $(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;    		\
 			fi;                                                 		\
 		fi                                                          		\
 	done
 	$(INSTALL) -m 0644 build/node/plugins.history $(LIBDIR)/plugins/
-	$(INSTALL) -m 0644 build/node/plugin.sh $(LIBDIR)/plugins/
-	mkdir -p $(PERLLIB)/Munin
-	$(INSTALL) -m 0644 build/node/Plugin.pm $(PERLLIB)/Munin/
 
 	#TODO:
 	#configure plugins.
@@ -106,8 +95,6 @@ install-man: build-man
 	$(INSTALL) -m 0644 build/doc/munin-node.conf.5 $(MANDIR)/man5/
 	$(INSTALL) -m 0644 build/doc/munin.conf.5 $(MANDIR)/man5/
 	$(INSTALL) -m 0644 build/doc/munin-node.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-node-configure.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-node-configure-snmp.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-run.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-graph.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-update.8 $(MANDIR)/man8/
@@ -125,7 +112,6 @@ install-doc: build-doc
 	$(INSTALL) -m 0644 build/doc/munin-faq.txt $(DOCDIR)/
 	$(INSTALL) -m 0644 README.* $(DOCDIR)/
 	$(INSTALL) -m 0644 COPYING $(DOCDIR)/
-	$(INSTALL) -m 0644 build/README-apache-cgi $(DOCDIR)/
 	$(INSTALL) -m 0644 node/node.d/README $(DOCDIR)/README.plugins
 
 build: build-stamp
@@ -151,16 +137,12 @@ build-stamp:
 		    -e 's|@@PYTHON@@|$(PYTHON)|g'				\
 		    -e 's|@@OSTYPE@@|$(OSTYPE)|g'				\
 		    -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'			\
-		    -e 's|@@MKTEMP@@|$(MKTEMP)|g'			\
 		    -e 's|@@VERSION@@|$(VERSION)|g'			\
 		    -e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g'			\
 		    -e 's|@@CGIDIR@@|$(CGIDIR)|g'			\
 		    -e 's|@@USER@@|$(USER)|g'				\
 		    -e 's|@@GROUP@@|$(GROUP)|g'				\
 		    -e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g'		\
-		    -e 's|@@GOODSH@@|$(GOODSH)|g'			\
-		    -e 's|@@BASH@@|$(BASH)|g'				\
-		    -e 's|@@HASSETR@@|$(HASSETR)|g'			\
 		    $$file > build/$$destname;				\
 	done
 	touch build-stamp
@@ -187,8 +169,6 @@ build-man-stamp: build
 		build/node/munin-node > build/doc/munin-node.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		build/node/munin-run > build/doc/munin-run.8
-	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/node/munin-node-configure-snmp > build/doc/munin-node-configure-snmp.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		build/node/munin-node-configure > build/doc/munin-node-configure.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
@@ -224,11 +204,11 @@ rpm-pre:
 #	(cd ..; ln -s munin munin-$(VERSION))
 
 rpm: rpm-pre
-	tar -C .. --dereference --exclude .svn -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
+	tar -C .. --dereference --exclude CVS  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -tb munin-$(RELEASE).tar.gz)
 	
 rpm-src: rpm-pre
-	tar -C .. --dereference --exclude .svn -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
+	tar -C .. --dereference --exclude CVS  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
 
 +suse-pre:
@@ -242,11 +222,11 @@ rpm-src: rpm-pre
 #	(cd ..; ln -s munin munin-$(VERSION))
 
 suse: suse-pre
-	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
+	tar -C .. --dereference --exclude CVS  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -tb munin-$(RELEASE).tar.gz)
 
 suse-src: suse-pre
-	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
+	tar -C .. --dereference --exclude CVS  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
 
 clean:
@@ -261,19 +241,8 @@ endif
 	-rm -f build-doc-stamp
 	-rm -f build-man-stamp
 
-	-rm -f dists/redhat/munin.spec
-
 source_dist: clean
-	(cd ..; ln -s $(DIR) munin-$(VERSION))
-	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
-
-node-monkeywrench: install-node
-	rm -rf $(CONFDIR)/plugins
-	rm -rf $(LIBDIR)/plugins
-	mkdir -p $(LIBDIR)/plugins
-	mkdir -p $(CONFDIR)/plugins
-	cp monkeywrench/plugin-break*_ $(LIBDIR)/plugins/
-	$(SBINDIR)/munin-node-configure --suggest
-	echo 'Done?'
+	(cd ..; ln -s munin munin-$(VERSION))
+	tar -C .. --dereference --exclude CVS -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
 
 .PHONY: install install-main install-node install-doc install-man build build-doc deb clean source_dist

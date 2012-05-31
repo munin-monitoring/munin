@@ -57,6 +57,8 @@ init_plugins() {
 	prevver=$(cat ${PKG_PREFIX}/etc/munin/VERSION.node)
     fi
 
+    mkdir -p ${PKG_PREFIX}/etc/munin/plugins ${PKG_PREFIX}/var/munin/plugin-state
+
     if [ -n "$prevver" ]; then
 	echo -n "Initializing new plugins.."
 	${PKG_PREFIX}/sbin/munin-node-configure --shell --newer "${prevver%-*}" | sh -x
@@ -67,40 +69,13 @@ init_plugins() {
     echo "done."
 }
 
-create_crontab_entries() {
-    local sched prog
-    sched=$1
-    prog=$2
-
-    if grep -q "^[^#]*$prog" /etc/crontab; then
-	echo "It looks like your crontab is already set up, so I'll use that."
-    else
-	echo "It looks like your perl suffers from unsafe signals."
-	if yesno "Would you like me to set up your root crontab to restart munin-node" y; then
-	    cat <<EOT >>/etc/crontab
-$sched	root	$prog
-EOT
-	else
-	    echo "You may suffer from munin-node crashing after log rotation."
-	    echo "If you still want to restart munin-node, use $prog."
-	fi
-    fi
-}
-
 newsyslog() {
-    if yesno "Would you like me to set up log rotation" y; then
-	if grep -q /var/log/munin-node.log /etc/newsyslog.conf; then
-	    :
-	else
-	    cat >> /etc/newsyslog.conf <<EOT
+    if grep -q /var/log/munin-node.log /etc/newsyslog.conf; then
+	:
+    else
+	cat >> /etc/newsyslog.conf <<EOT
 /var/log/munin-node.log			644  7	   *	@T00  Z	/var/run/munin/munin-node.pid
 EOT
-	fi
-	if [ -f ${PKG_PREFIX}/bin/munin-node-revive ]; then
-	    create_crontab_entries '4	*	*	*	*' ${PKG_PREFIX}/bin/munin-node-revive
-	fi
-    else
-	echo "/var/log/munin-node.log will grow without bounds."
     fi
 }
 
@@ -113,7 +88,6 @@ case $2 in
 	;;      
     POST-INSTALL)
 	init_plugins
-	${PKG_PREFIX}/etc/rc.d/munin-node.sh start
 	newsyslog
 	;;      
 esac

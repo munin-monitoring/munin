@@ -1,0 +1,43 @@
+#!/bin/sh
+#
+# Plugin to monitor harddrive temperatures through SMART.
+#
+# $Log$
+# Revision 1.1  2004/11/10 16:11:27  jimmyo
+# Added new plugin linux/hddtemp_smartctl, made by Peter Gervai (SF#1032727).
+#
+# Revision 1.0  2004/09/22 
+# New plugin: Peter Gervai <grin(*)grin.hu>
+#
+#
+#%# family=contrib
+#%# capabilities=auto
+
+SMARTCTL=/usr/sbin/smartctl
+LANG=C
+
+drives=`ls -d /proc/ide/hd?/smart_values|sed -e 's/.*ide\/\(.\+\)\/smart_.*/\1/'`
+
+if [ "$1" = "autoconf" ]; then
+        if [ -x "$SMARTCTL" -a "$drives" != "" ]; then
+                echo yes
+                exit 0
+        else
+                echo no
+                exit 1
+        fi
+fi
+
+if [ "$1" = "config" ]; then
+
+        echo 'graph_title HDD temperature'
+        echo 'graph_args --base 1000 -l 0'
+        echo 'graph_vlabel temp in °C'
+        for a in $drives ; do echo $a.label $a ; done
+        exit 0
+fi
+
+for a in $drives ; do 
+  printf "$a.value " 
+  $SMARTCTL -A /dev/$a|grep "^194 "|rev|cut -d' ' -f1|rev
+done

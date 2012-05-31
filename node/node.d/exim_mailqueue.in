@@ -1,5 +1,4 @@
-#!@@GOODSH@@
-# -*- sh -*-
+#!/bin/sh
 #
 # Plugin to monitor exim queue size
 #
@@ -17,43 +16,53 @@
 # 	queuewarn    - When to warn
 # 	queuecrit    - When to crit
 #
+# $Log$
+# Revision 1.4  2004/11/10 15:47:10  jimmyo
+# Made graph_title a parameter for generic/exim_mailqueue (patch by Torstein T. Svendsen, SF#1060834).
+#
+# Revision 1.3  2004/05/20 13:57:12  jimmyo
+# Set categories to some of the plugins.
+#
+# Revision 1.2  2004/01/29 19:39:00  jimmyo
+# Generic plugins now use printf instead of echo -n, as this is more portable (SF#885564)
+#
+# Revision 1.1  2004/01/02 18:50:00  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.5  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
 # Magic markers (optional - used by installation scripts and
 # munin-config):
 #
 #%# family=auto
 #%# capabilities=autoconf
 
-DIRNAME=$(dirname $0)
+DIRNAME=`dirname $0`
 SPOOLDIR="unset"
-# You cannot trust the exit status of which
-EXIM=$(which exim 2>/dev/null)
-case $EXIM:$? in
-    *:1|no*) EXIM=$(which exim4 2>/dev/null)
-esac
-case $EXIM:$? in
-    *:1|no*) EXIM=''
-esac
-
+EXIM=`which exim 2>/dev/null || which exim4 2>/dev/null`
+QUEUEWARN=100
+QUEUECRIT=200
 GRAPHTITLE='Exim Mailqueue'
 
-SPOOLDIR=${spooldir:-unset}
-EXIM=${exim:-unset}
-QUEUEWARN=${queuewarn:-100}
-QUEUECRIT=${queuecrit:-200}
-GRAPHTITLE=${graphtitle:-$GRAPHTITLE}
+if [ "$spooldir"  ]; then  SPOOLDIR=$spooldir ; fi
+if [ "$exim"      ]; then      EXIM=$exim     ; fi
+if [ "$queuewarn" ]; then QUEUEWARN=$queuewarn; fi
+if [ "$queuecrit" ]; then QUEUECRIT=$queuecrit; fi
+if [ "$graphtitle" ]; then GRAPHTITLE=$graphtitle; fi
 
 if [ "$SPOOLDIR" = "unset" ]
 then
-	SPOOLDIR=$( ($EXIM -bP spool_directory | awk '{ print $3 "/input" }') 2>/dev/null)
+	SPOOLDIR=`($EXIM -bP spool_directory | awk '{ print $3 "/input" }') 2>/dev/null`
 fi
 
 if [ "$1" = "autoconf" ]; then
-    if [ -z "$EXIM" ]; then
-	echo no
-	exit 1
-    fi
-	
-	if $EXIM -bV 2>/dev/null >/dev/null; then
+	if ( $EXIM -bV 2>/dev/null >/dev/null ); then
 		if ( /usr/bin/find $SPOOLDIR -iname "*-H" -print 2>/dev/null >/dev/null ); then
 			echo yes
 			exit 0

@@ -18,9 +18,6 @@
 #
 #
 # $Log$
-# Revision 1.8.2.1  2005/02/16 20:13:10  jimmyo
-# Added man page for munin-node-configure-snmp.
-#
 # Revision 1.8  2004/11/16 20:00:42  jimmyo
 # License cleanups.
 #
@@ -83,7 +80,7 @@ print "# DEBUG: Checking plugins: ", join (',', @plugins), "\n" if $debug;
 
 if ($do_error or $do_usage or !@ARGV)
 {
-	print "Usage: $0 [options] <host/cidr> [host/cidr] [...]
+	print "Usage: $0 [options] <netmask> [...]
 
 Options:
 	--help              View this help page
@@ -166,7 +163,6 @@ sub do_host
 			-version   => $ver,
 		);
 	$session->translate (0);
-	die $error if $error;
 
 	if (!defined ($session))
 	{
@@ -556,54 +552,4 @@ sub get_plugins
 	}
 	return @plugins;
 }
-
-1;
-
-=head1 NAME
-
-munin-node-configure-snmp - A sub-program used by munin-node-configure to
-do the actual SNMP probing.
-
-=head1 SYNOPSIS
-
-munin-node-configure-snmp [options] <host/cidr> [host/cidr] [...]
-
-=head1 DESCRIPTION
-
-Munin's node is a daemon that Munin connects to fetch data. This data is
-stored in .rrd-files, and later graphed and htmlified. It's designed to
-let it be very easy to graph new datasources.
-
-Munin-node-configure-snmp is a program that is used by another program in
-the Munin package, munin-node-configure, to do SNMP probing of hosts or
-networks.
-
-This program is only meant to be run by other programs in the Munin
-package, not by hand.
-
-=head1 VERSION
-
-This is munin-node v@@VERSION@@
-
-=head1 AUTHORS
-
-Jimmy Olsen.
-
-=head1 BUGS
-
-munin-node-configure-snmp does not have any known bugs.
-
-Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
-
-=head1 COPYRIGHT
-
-Copyright © 2004 Jimmy Olsen.
-
-This is free software; see the source for copying conditions. There is
-NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
-PURPOSE.
-
-This program is released under the GNU General Public License
-
-=cut
 

@@ -1,41 +1,27 @@
 Name:      munin
 Version:   @@VERSION@@
-Release:   4
-Summary:   Network-wide graphing framework (grapher/gatherer)
+Release:   2
 Copyright: GPL
-Group:     System Environment/Daemons
-URL:       http://www.linpro.no/
-Packager:  Ingvar Hagelund <ingvar@linpro.no>
-Vendor:    Linpro AS
-Distribution: Linpro AS RHEL Software Archives
-
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
+URL:       http://www.linpro.no/
 Source:    %{name}-%{version}.tar.gz
+Group:     System Environment/Daemons
+Summary:   Munin is the Linpro RRD data agent
 BuildArchitectures: noarch
 Provides: perl(RRDs)
 Requires: perl-HTML-Template
 Requires: perl-Net-Server
 Requires: rrdtool
-Requires: logrotate
 Obsoletes: lrrd-server
 
 %description
-Munin is a highly flexible and powerful solution used to create graphs of
-virtually everything imaginable throughout your network, while still
-maintaining a rattling ease of installation and configuration.
-
-This package contains the grapher/gatherer. You will only need one instance of
-it in your network. It will periodically poll all the nodes in your network
-it's aware of for data, which it in turn will use to create graphs and HTML
-pages, suitable for viewing with your graphical web browser of choice.
-
-Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
-RRDtool. To see a real example of Munin in action, take a peek at
-<http://www.linpro.no/projects/munin/example/>.
+Munin, formerly known as The Linpro RRD server, queries a number of
+nodes, and processes the data using RRDtool and presents it on web
+pages.
 
 %package node
 Group: System Environment/Daemons
-Summary: Network-wide graphing framework (node)
+Summary: Linpro RRD data agent
 BuildArchitectures: noarch
 Requires: perl-Net-Server
 #Requires: perl-Config-General
@@ -44,31 +30,11 @@ Requires: sysstat
 Obsoletes: lrrd-client
 
 %description node
-Munin is a highly flexible and powerful solution used to create graphs of
-virtually everything imaginable throughout your network, while still
-maintaining a rattling ease of installation and configuration.
-
-This package contains node software. You should install it on all the nodes
-in your network. It will know how to extract all sorts of data from the
-node it runs on, and will wait for the gatherer to request this data for
-further processing.
-
-It includes a range of plugins capable of extracting common values such as
-cpu usage, network usage, load average, and so on. Creating your own plugins
-which are capable of extracting other system-specific values is very easy,
-and is often done in a matter of minutes. You can also create plugins which
-relay information from other devices in your network that can't run Munin,
-such as a switch or a server running another operating system, by using
-SNMP or similar technology.
-
-Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
-RRDtool. To see a real example of Munin in action, take a peek at
-<http://www.linpro.no/projects/munin/example/>.
-
+The Munin node package returns statistical data on the request of a
+Munin server.
 
 %prep
 %setup -q
-rm -rf %{buildroot}
 mkdir -p %{buildroot}
 
 %build
@@ -88,33 +54,27 @@ make 	CONFIG=dists/redhat/Makefile.config \
 	DOCDIR=%{buildroot}%{_docdir}/munin \
 	MANDIR=%{buildroot}%{_mandir} \
 	DESTDIR=%{buildroot} \
-    	install-main install-node install-node-plugins install-doc install-man
+    	install-node install-node-plugins install-doc install-man
 
-mkdir -p %{buildroot}/etc/rc.d/init.d
+mkdir -p %{buildroot}/etc/init.d
 mkdir -p %{buildroot}/etc/munin/plugins
 mkdir -p %{buildroot}/etc/munin/plugin-conf.d
-mkdir -p %{buildroot}/etc/logrotate.d
 mkdir -p %{buildroot}/var/lib/munin
 mkdir -p %{buildroot}/var/log/munin
 
-install -m0755 dists/redhat/munin-node.rc %{buildroot}/etc/rc.d/init.d/munin-node
-install -m0644 dists/tarball/plugins.conf %{buildroot}/etc/munin/
+#install -m 0755 node/redhat/munin-node %{buildroot}/etc/init.d/
+install -m0755 dists/redhat/munin-node.rc %{buildroot}/etc/init.d/munin-node
+install -m 0644 dists/tarball/plugins.conf %{buildroot}/etc/munin/
 install -m0644 dists/tarball/plugins.conf %{buildroot}/etc/munin/plugin-conf.d/munin-node
-install -m0644 dists/debian/munin.logrotate %{buildroot}/etc/logrotate.d/munin
-install -m0644 dists/debian/munin-node.logrotate %{buildroot}/etc/logrotate.d/munin-node
 
-# Prevent rpmbuild from adding a lot of perl dependencies
-chmod -x %{buildroot}%{_datadir}/munin/plugins/*
-chmod -x %{buildroot}%{_sbindir}/munin-node-configure-snmp
-chmod -x %{buildroot}%{_sbindir}/munin-node-configure
-chmod -x %{buildroot}%{_sbindir}/munin-run
-
+chmod -x %{buildroot}%{_datadir}/munin/plugins/sybase_space
 ## Server
+
 make 	CONFIG=dists/redhat/Makefile.config \
 	DESTDIR=%{buildroot} \
 	install-main
 
-# cf=%{buildroot}/etc/munin/munin.conf; sed 's,/var/www/munin,/var/www/html/munin,g' < $cf > $cf.patched && mv $cf.patched $cf
+# cf=%{buildroot}/etc/munin/munin.conf; sed 's,/var/www/munin,/var/www/html/munin,g' < $cf > $cf.patch && mv $cf.patch $cf
 
 mkdir -p %{buildroot}/var/www/html/munin
 mkdir -p %{buildroot}/var/log/munin
@@ -125,7 +85,9 @@ mkdir -p %{buildroot}/usr/lib/debug
 install -m 0755 dists/redhat/munin.cron.d %{buildroot}/etc/cron.d/munin
 install -m 0644 server/munin-htaccess %{buildroot}/var/www/html/munin/.htaccess
 install -m 0755 server/style.css %{buildroot}/var/www/html/munin
+
 install -m 0644 ChangeLog %{buildroot}%{_docdir}/munin/ChangeLog
+
 
 %clean
 [ -n "%{buildroot}" -a "%{buildroot}" != / ] && rm -rf %{buildroot}
@@ -136,9 +98,6 @@ getent passwd munin > /dev/null || useradd -r -d /var/lib/munin -g munin munin
 
 %post node
 chmod -R g+w /var/lib/munin/
-chmod +x %{_datadir}/munin/plugins/*
-chmod +x %{_sbindir}/munin*
-
 if [ $1 = 1 ]
 then
 	/sbin/chkconfig --add munin-node
@@ -159,8 +118,6 @@ getent group munin >/dev/null || groupadd -r munin
 getent passwd munin > /dev/null || useradd -r -d /var/lib/munin -g munin munin
 
 %post
-mkdir -p /var/run/munin
-chown -R munin /var/run/munin
 chown -R munin /var/www/html/munin
 chown -R munin /var/log/munin
 chown -R munin /var/lib/munin
@@ -178,25 +135,21 @@ fi
 %doc %{_docdir}/munin/README.plugins
 %doc %{_docdir}/munin/COPYING
 %doc %{_docdir}/munin/ChangeLog
-%doc %{_docdir}/munin/README-apache-cgi
 %{_bindir}/munin-cron
 %{_datadir}/munin/munin-graph
 %{_datadir}/munin/munin-html
 %{_datadir}/munin/munin-limits
 %{_datadir}/munin/munin-update
 %{_libdir}/perl5/*perl/5.*/Munin.pm
-/var/www/html/munin/cgi/munin-cgi-graph
 %dir /etc/munin/templates
 %dir /etc/munin
 /etc/munin/templates/*
 /etc/cron.d/munin
 %config(noreplace) /etc/munin/munin.conf
-%config(noreplace) /etc/logrotate.d/munin
-
 %attr(-, munin, root) %dir /var/lib/munin
 %attr(-, munin, root) %dir /var/log/munin
 %attr(-, munin, root) %dir /var/www/html/munin
-%attr(-, munin, root) %dir /var/www/html/munin/cgi
+%attr(-, munin, root) %dir /var/www/html/munin/cgi/cgi
 %attr(-, munin, root) /var/www/html/munin/style.css
 %config /var/www/html/munin/.htaccess
 %doc %{_mandir}/man8/munin-graph*
@@ -210,8 +163,7 @@ fi
 %defattr(-, root, root)
 %config(noreplace) /etc/munin/munin-node.conf
 %config(noreplace) /etc/munin/plugin-conf.d/munin-node
-%config(noreplace) /etc/logrotate.d/munin-node
-%config /etc/rc.d/init.d/munin-node
+%config /etc/init.d/munin-node
 %config(noreplace) /etc/munin/plugins.conf
 %{_sbindir}/munin-run
 %{_sbindir}/munin-node
@@ -230,22 +182,9 @@ fi
 %doc %{_mandir}/man8/munin-run*
 %doc %{_mandir}/man8/munin-node*
 %doc %{_mandir}/man5/munin-node*
+#%doc %{_mandir}/man5/node.conf*
 
 %changelog
-* Thu Apr 21 2005 Ingvar Hagelund <ingvar@linpro.no> 1.2.3-4
-- Fixed a bug in the iostat plugin
-* Wed Apr 20 2005 Ingvar Hagelund <ingvar@linpro.no> 1.2.3-3
-- Added the missing /var/run/munin
-* Tue Apr 19 2005 Ingvar Hagelund <ingvar@linpro.no> 1.2.3-2
-- Removed a lot of unecessary perl dependencies
-* Mon Apr 18 2005 Ingvar Hagelund <ingvar@linpro.no> 1.2.3-1
-- Sync with svn
-* Tue Mar 22 2005 Ingvar Hagelund <ingvar@linpro.no> 1.2.2-5
-- Sync with release of 1.2.2
-- Add some nice text from the suse specfile
-- Minimal changes in the header
-- Some cosmetic changes
-- Added logrotate scripts (stolen from debian package)
 * Sun Feb 01 2004 Ingvar Hagelund <ingvar@linpro.no>
 - Sync with CVS. Version 1.0.0pre2
 * Sun Jan 18 2004 Ingvar Hagelund <ingvar@linpro.no>
@@ -267,3 +206,5 @@ fi
 - Small bugfixes in the rpm package
 * Tue Jun 18 2002 Kjetil Torgrim Homme <kjetilho@linpro.no>
 - new package
+
+

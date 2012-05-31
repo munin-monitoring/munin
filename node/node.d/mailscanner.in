@@ -23,10 +23,6 @@
 # 	None known
 #
 # $Log$
-# Revision 1.1.2.1  2005/02/16 19:52:32  toreanderson
-# Use @@PLUGSTATE@@ as location for the state file, instead of the insecure
-# /tmp.
-#
 # Revision 1.1  2004/12/09 20:03:26  jimmyo
 # Added two new plugins contributed by Jacques Caruso, generic/exim_mailqueue_alt and generic/mailscanner.
 #
@@ -39,7 +35,7 @@ use strict;
 
 my $logfile = '/var/log/mail.log';
 my $logtail = '/usr/sbin/logtail';
-my $offsetfile = '@@PLUGSTATE@@/munin-mailscanner.offset';
+my $offsetfile = '/tmp/lrrd-mailscanner.offset';
 my ($clean, $viruses, $spams, $others, $total) = (0, 0, 0, 0, 0);
 my $cmd = (defined($ARGV[0])) ? $ARGV[0] : '';
 

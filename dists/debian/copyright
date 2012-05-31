@@ -1,0 +1,18 @@
+Munin is maintained for Debian by Tore Anderson <tore@debian.org>.
+
+The upstream source is available from <http://www.linpro.no/projects/munin/>.
+
+Lead developers include:
+
+  Audun Ytterdal  <ay@linpro.no>
+  Jimmy Olsen     <jo@linpro.no>
+  Tore Anderson   <tore@linpro.no>
+  Knut Haugen     <knuthaug@linpro.no>
+  Ingvar Hagelund <ingvar@linpro.no>
+
+Munin is licensed under the terms of the GNU General Public License.
+A verbatim copy of this license is found in the file
+
+ `/usr/share/common-licenses/GPL'
+
+on every Debian GNU/Linux system.

@@ -14,9 +14,6 @@
 # 	autoconf (optional)
 #
 # $Log$
-# Revision 1.6.2.1  2005/01/11 13:47:02  ilmari
-# Fix sendmail_mail{stats,traffic} autoconf handling.
-#
 # Revision 1.6  2005/01/03 14:17:30  jimmyo
 # Plugins generic/sendmail_mail{stats,traffic} updated.
 #
@@ -28,7 +25,7 @@
 if [ -n "$mailstats" ]; then MAILSTATS=$mailstats; else MAILSTATS=`which mailstats`; fi
 
 if [ "$1" = "autoconf" ]; then
-	if [ -n "$MAILSTATS" ] && [ -x "$MAILSTATS" ]; then
+	if [ -x $MAILSTATS ]; then
 		echo yes
 		exit 0
 	else
