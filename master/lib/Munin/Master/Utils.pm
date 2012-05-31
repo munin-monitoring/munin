@@ -783,9 +783,9 @@ sub munin_config {
 
 	my $DIR;
 	opendir($DIR, $dirname) or
-	    LOGCROAK "Could not open includedir directory $dirname: $!\n";
+	    WARN "[Warning] Could not open includedir directory $dirname: $OS_ERROR\n";
 	my @files = grep { ! /^\.|~$/ } readdir($DIR) or
-	    LOGCROAK "Error reading includedir directory $dirname: $!\n";
+	    WARN "[Warning] Error reading includedir directory $dirname: $OS_ERROR\n";
 	closedir($DIR);
 
 	@files = map { $_ = $dirname.'/'.$_; } (sort @files);

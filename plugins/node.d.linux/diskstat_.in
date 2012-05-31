@@ -107,7 +107,7 @@ writeup about the pdflush daemon.
 
 =head1 MAGIC MARKERS
 
-  #%# family=auto
+  #%# family=manual
   #%# capabilities=autoconf suggest
 
 =head1 BUGS
@@ -140,7 +140,7 @@ use POSIX;
 eval { require Munin::Plugin; Munin::Plugin->import; };
 
 if ($@) {
-    fake_munin_plugin();
+    die "Munin::Plugin is required for this plugin to run";
 }
 
 # Sanity check to ensure that the script is called the correct name.
@@ -593,39 +593,6 @@ sub translate_device_name {
     }
 
     return $device;
-}
-
-sub fake_munin_plugin {
-    my $eval_code = <<'EOF';
-
-use Storable;
-my $storable_filename = basename($0);
-$storable_filename = "/tmp/munin-state-$storable_filename";
-
-sub save_state {
-    my @state = @_;
-
-    if ( not -e $storable_filename or -f $storable_filename ) {
-	store \@state, $storable_filename or croak "Failed to persist state to '$storable_filename': $!\n";
-    }
-    else {
-	croak "$storable_filename is probably not a regular file. Please delete it.\n";
-    }
-}
-
-sub restore_state {
-
-    if (-f $storable_filename) {
-	my $state = retrieve($storable_filename);
-	return @{$state};
-    }
-    else {
-	return undef;
-    }
-}
-EOF
-
-    eval($eval_code);
 }
 
 sub translate_devicemapper_name {

@@ -62,7 +62,7 @@ sub do_work {
 	global => {},
 	);
 
-    $self->{node}->do_in_session(sub {
+    my $done = $self->{node}->do_in_session(sub {
         $self->{node}->negotiate_capabilities();
 	# Note: A multigraph plugin can present multiple services.
 	my @plugins =  $self->{node}->list_plugins();
@@ -124,10 +124,12 @@ sub do_work {
         }
 
         #use Data::Dumper; warn Dumper(\@services);
-
     }); # do_in_session
 
     munin_removelock($lock_file);
+
+    # This handles failure in do_in_session,
+    return undef if !$done;
 
     return {
         time_used => Time::HiRes::time - $update_time,
@@ -407,7 +409,7 @@ sub _get_rrd_file_name {
     $file = File::Spec->catfile($config->{dbdir}, 
 				$file);
 	
-    TRACE "[TRACE] Made rrd filename: $file\n";
+    DEBUG "[DEBUG] Made rrd filename: $file\n";
 
     return $file;
 }

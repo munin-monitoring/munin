@@ -163,7 +163,15 @@ sub _run_workers {
     else {
         for my $worker (@{$self->{workers}}) {
             my $res = $worker->do_work();
-            $self->_handle_worker_result([$worker->{ID}, $res]);
+	    my $worker_id = $worker->{ID};
+	    if (defined($res)) {
+		$self->_handle_worker_result([$worker_id, $res]);
+	    } else {
+		# Need to handle connection failure same as other
+		# failures.  do_connect fails softly.
+		WARN "[WARNING] Failed worker ".$worker_id."\n";
+		push @{$self->{failed_workers}}, $worker_id;
+	    }
         }
     }
 }
@@ -179,12 +187,17 @@ sub _create_self_aware_worker_result_handler {
 sub _handle_worker_result {
     my ($self, $res) = @_;
 
+    if (!defined($res)) {
+	# no result? problem
+	LOGCROAK("[FATAL] Handle_worker_result got handed a failed worker result");
+    }
+
     my ($worker_id, $time_used, $service_configs) 
         = ($res->[0], $res->[1]{time_used}, $res->[1]{service_configs});
 
     if (! defined $self->{STATS} ) {
 	# This is may only be the case when we get connection refused
-	ERROR "[FIX?] Did not collect any stats for $worker_id";
+	ERROR "[BUG!] Did not collect any stats for $worker_id.  If this message appears in your logs a lot please email munin-users.  Thanks.";
     } else {
 	printf { $self->{STATS} } "UD|%s|%.2f\n", $worker_id, $time_used;
     }
@@ -197,8 +210,9 @@ sub _create_self_aware_worker_exception_handler {
     my ($self) = @_;
 
     return sub {
-        my ($worker_id, $reason) = @_;
-	WARN "[WARNING] Failed worker $worker_id";
+        my ($worker, $reason) = @_;
+	my $worker_id = $worker->{ID};
+	DEBUG "[DEBUG] In exception handler for failed worker $worker_id";
         push @{$self->{failed_workers}}, $worker_id;
     };
 }
@@ -257,9 +271,10 @@ sub _write_new_service_configs_locked {
 sub _write_new_service_configs {
     my ($self, $io) = @_;
 
-    $self->_copy_old_service_config_for_failed_workers();
-
     print $io "version $Munin::Common::Defaults::MUNIN_VERSION\n";
+
+    $self->_print_old_service_configs_for_failed_workers($io);
+
     for my $host (keys %{$self->{service_configs}}) {
         for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
             for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
@@ -275,12 +290,29 @@ sub _write_new_service_configs {
 }
 
 
-sub _copy_old_service_config_for_failed_workers {
-    my ($self) = @_;
+sub _print_old_service_configs_for_failed_workers {
+    my ($self, $handle) = @_;
 
     for my $worker (@{$self->{failed_workers}}) {
-	next if !defined($worker);  # The empty set contains "undef" it seems
-        $self->{service_configs}{$worker} = $self->{old_service_configs}{$worker};
+	# The empty set contains "undef" it seems
+	next if !defined($worker);  
+
+	my $workerdata = $self->{old_service_configs}->look_up($worker);
+
+	# No data available on the failed worker
+	if (!defined($workerdata)) {
+	    INFO "[INFO] No old data available for failed worker $worker.  This node will disappear from the html web page hierarchy\n";
+	    next;
+	}
+	
+	for my $datum (keys %$workerdata) {
+	    # Skip some book-keeping
+	    next if ($datum eq 'group')
+		or ($datum eq 'host_name');
+
+	    printf $handle "%s:%s %s\n", $worker, $datum, $workerdata->{$datum};
+	}
+	
     }
 }
 

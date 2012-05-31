@@ -25,11 +25,11 @@ postgres_users - Plugin to monitor connected PostgreSQL users.
 =head1 CONFIGURATION
 
 Configuration is done through libpq environment variables, for example
-PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugins::Pgsql>.
+PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugin::Pgsql>.
 
 =head1 SEE ALSO
 
-L<Munin::Plugins::Pgsql>
+L<Munin::Plugin::Pgsql>
 
 =head1 MAGIC MARKERS
 

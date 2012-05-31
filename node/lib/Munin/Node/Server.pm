@@ -119,6 +119,9 @@ sub process_request
 
     $PROGRAM_NAME .= " [$session->{peer_address}]";
 
+    # Used to provide per-master state-files
+    $ENV{MUNIN_MASTER_IP} = $session->{peer_address};
+
     _net_write($session, "# munin node at $config->{fqdn}\n");
 
     # catch and report any system errors in a clean way.

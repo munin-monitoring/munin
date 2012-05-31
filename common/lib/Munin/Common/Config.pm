@@ -11,7 +11,8 @@ use English qw(-no_match_vars);
 # Functions here are unable to log as they don't know if they're used
 # by the node or the master which use divergent logging facilities.
 
-my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
+my %legal = map { $_ => 1 } (
+        "tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"dbdir", "logdir", "htmldir", "includedir", "domain_order", "node_order",
 	"graph_order", "graph_sources", "fork", "graph_title", "create_args",
 	"graph_args", "graph_vlabel", "graph_vtitle", "graph_total",
@@ -32,24 +33,22 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"palette", "realservname", "cdef_name", "graphable", "process",
 	"realname", "onlynullcdef", "group_order", "pipe", "pipe_command",
 	"unknown_limit", "notify_countdown", "dropdownlimit",
-    );
-
-my %legal_expanded = map { $_ => 1 } @legal;
+);
 
 my %bools = map { $_ => 1} qw(yes no true false on off 1 0);
 
 sub cl_is_keyword {
     # Class-less version of is_keyword for legacy code.
     my ($word) = @_;
-    
-    return defined $legal_expanded{$word};
+
+    return defined $legal{$word};
 }
 
 
 sub is_keyword {
     my ($self, $word) = @_;
 
-    return defined $legal_expanded{$word};
+    return defined $legal{$word};
 }
 
 
@@ -68,7 +67,7 @@ sub parse_config_from_file {
     if ($EVAL_ERROR) {
         croak "ERROR: Failed to parse config file '$config_file': $EVAL_ERROR";
     }
-    
+
     close $file
         or croak "Cannot close '$config_file': $OS_ERROR";
 }
@@ -77,7 +76,7 @@ sub parse_config_from_file {
 sub _trim {
     # Trim leading and trailing whitespace.
     my $class = shift;
-    
+
     chomp $_[0];
     $_[0] =~ s/^\s+//;
     $_[0] =~ s/\s+$//;
@@ -88,9 +87,9 @@ sub _trim {
 
 sub _strip_comment {
     my $class = shift;
-    
+
     $_[0] =~ s/#.*//;
-    
+
     return;
 }
 
@@ -105,7 +104,7 @@ sub _looks_like_a_bool {
 sub _parse_bool {
     my ($class, $str) = @_;
 
-    croak "Parse exception: '$str' is not a boolean." 
+    croak "Parse exception: '$str' is not a boolean."
         unless $class->_looks_like_a_bool($str);
 
     return $str =~ m{\A no|false|off|0 \z}xi ? 0 : 1;

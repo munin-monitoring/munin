@@ -20,8 +20,16 @@ The following environment settings are the default configuration.  The
 
   [dhcpd3]
      user root
-     env.leasefile /var/lib/dhcp/dhcpd.leases
-     env.configfile /etc/dhcpd.conf
+     env.leasefile /var/lib/dhcp3/dhcpd.leases
+     env.configfile /etc/dhcp3/dhcpd.conf
+     env.filter  ^10\.140\.
+     env.critical 0.95
+     env.warning 0.9
+
+The optional filter setting is used to strip parts of ranges for the 
+network labels (example will show 10.140.80.0 as 80.0). Both critical
+and warning are optional settings, default for warning is 0.9 (90%) 
+and 0.95 for critical (95%).
 
 =head1 INTERPRETATION
 
@@ -42,7 +50,7 @@ None known
 
 =head1 AUTHOR
 
-Rune N. Skillingstad.
+Rune Nordbøe Skillingstad.
 
 =head1 LICENSE
 
@@ -59,21 +67,29 @@ if(! eval "require Net::Netmask") {
 if(! eval "require HTTP::Date") {
     $ret = "HTTP::Date not found";
 }
+if(! eval "require Net::IP") {
+    $ret = "Net::IP not found";
+}	  
+
 
 use strict;
 
-my %leases   = ();
-my %networks = ();
-my %ips      = ();
-my $DEBUG    = 0;
+my %leases     = ();
+my %limits     = ();
+my %networks   = ();
+my %ips        = ();
+my $DEBUG      = $ENV{DEBUG}      || 0;
 
-my $LEASEFILE  = $ENV{leasefile}  || "/var/lib/dhcp/dhcpd.leases";
-my $CONFIGFILE = $ENV{configfile} || "/etc/dhcpd.conf";
+my $LEASEFILE  = $ENV{leasefile}  || "/var/lib/dhcp3/dhcpd.leases";
+my $CONFIGFILE = $ENV{configfile} || "/etc/dhcp3/dhcpd.conf";
+my $FILTER     = $ENV{filter}     || "";
+my $CRITICAL   = $ENV{critical}   || 0.95;
+my $WARNING    = $ENV{warning}    || 0.9;
 
 if($ARGV[0] and $ARGV[0] eq "autoconf" ) {
     if($ret) {
 	print "no ($ret)\n";
-	exit 0;
+	exit 1;
     }
     if(-f $LEASEFILE) {
 	if(-r $LEASEFILE) {
@@ -85,7 +101,7 @@ if($ARGV[0] and $ARGV[0] eq "autoconf" ) {
 		    print "no (config file not readable)\n";
 		}
 	    } else {
-		print "no (config gile not found)\n";
+		print "no (config file not found)\n";
 	    }
 	} else {
 	    print "no (leasefile not readable)\n";
@@ -93,20 +109,18 @@ if($ARGV[0] and $ARGV[0] eq "autoconf" ) {
     } else {
 	print "no (leasefile not found)\n";
     }
-    exit 0;
+    exit 1;
 }
 
-if (! -f $LEASEFILE and ! -f $CONFIGFILE) {
-    print "net.value U\n";
-    exit 0;
-}
-
-if($DEBUG) {
-    print "CONFIGFILE == $CONFIGFILE\nLEASEFILE == $LEASEFILE\n";
-}
+print "# DEBUG: CONFIGFILE == $CONFIGFILE\n# DEBUG: LEASEFILE == $LEASEFILE\n" if $DEBUG;
 
 Net::Netmask->import();
 HTTP::Date->import();
+
+if(! -f $LEASEFILE and ! -f $CONFIGFILE and !$ARGV[0]) {
+    print "net.value U\n";
+    exit 0;
+}
 
 parseconfig($CONFIGFILE);
 
@@ -115,13 +129,22 @@ if($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_args --base 1000 -v leases -l 0\n";
     print "graph_order ".join(" ",sort(keys(%leases)))."\n";
     foreach my $network (sort(keys %leases)) {
-        my $name = $network;
+	my $name = $network;
 	$name =~ s/_/\./g;
 	$name =~ s/\.\./\//g;
+	print "$network.info $name\n";
+	$name =~ s/($FILTER)//;
 	print "$network.label $name\n";
+	print "$network.min 0\n";
+	print "$network.max " . $limits{$network} ."\n";
+	my $warn = int($limits{$network} * 0.9);
+	my $crit = int($limits{$network} * 0.95);
+	print "$network.warning $warn\n" if $warn;
+	print "$network.critical $crit\n" if $crit;
     }
     exit 0;
 }
+
 
 parseleases();
 
@@ -130,48 +153,81 @@ foreach my $network (sort(keys %leases)) {
 }
 
 sub parseconfig {
-    my($configfile)=@_;
-
+    my($configfile) = @_;
+    
     local(*IN);
-
     open(IN, "<$configfile") or exit 4;
-    while (<IN>) {
-	if(/include\s+\"([^"]+)\"/ && ! /^\s*#/){
-	    print "Found included file $1\n" if $DEBUG;
-            parseconfig($1);
-	    next;
-        }
-	if(/subnet\s+(\d+\.\d+\.\d+\.\d+)\s+netmask\s+(\d+\.\d+\.\d+\.\d+)/ &&
-	   ! /^\s*#/) {
-	    initnet($1,$2);
+    
+    my $name = undef;
+    LINE: while(<IN>) {
+	if(/subnet\s+((?:\d+\.){3}\d+)\s+netmask\s+((?:\d+\.){3}\d+)/ && ! /^\s*#/) {
+	    $name = &initnet($1,$2);
+	    print "# DEBUG: Found a subnet: $name\n" if $DEBUG;
+	}
+	if($name && /^\}$/) {
+	    print "# DEBUG: End of subnet... NO RANGE?\n" if $DEBUG;
+	    delete($leases{$name});
+	    $name = "";
+	}
+	if($name && /range\s+((?:\d+\.){3}\d+)\s+((?:\d+\.){3}\d+)/) {
+	    print "# DEBUG: range $1 -> $2\n" if $DEBUG;
+	    $limits{$name} += &rangecount($1, $2);
+	    print "# DEBUG: limit for $name is " . $limits{$name} . "\n" if $DEBUG;
+	    $name = "";
+	}
+	if(/^include \"([^\"]+)\";/) {
+	    my $includefile = $1;
+	    print "# DEBUG: found included file: $includefile\n" if $DEBUG;
+	    if(!-f $includefile) {
+		$includefile = dirname($CONFIGFILE) . "/" . $includefile;
+		if(!-f $includefile) {
+		    next LINE;
+		}
+	    }
+	    parseconfig($includefile);
 	}
     }
     close(IN);
 }
 
+sub rangecount {
+    my ($from, $to) = @_;
+
+    $from = ((new Net::IP($from))->intip())->numify();
+    $to   = ((new Net::IP($to))->intip())->numify();
+    
+    if($from < $to) {
+	return ($to - $from) + 1;
+    } else {
+	return ($from - $to) + 1;
+    }
+}
+
+
 sub parseleases {
     my $ip = 0;
     my $abandon = 0;
     my $time    = time(); 
+
     open(IN, "<$LEASEFILE") or exit 4;
     while(<IN>) {
 	if(/lease\s+(\d+\.\d+\.\d+\.\d+)\s+\{/) {
-	    print "in $1\n" if $DEBUG;
+	    print "# DEBUG: in $1\n" if $DEBUG;
 	    $ip = $1;
 	}
 	if($ip && /ends\s+\d+\s+([^;]+);/) {
-#	    2037/12/31 23:59:59 is max date on perl <= 5.6
-	    print "end $1\n" if $DEBUG;
+            # 2037/12/31 23:59:59 is max date on perl <= 5.6
+	    print "# DEBUG: end $1\n" if $DEBUG;
 	    my $end = HTTP::Date::str2time($1, "GMT");
 	    # we asume that missing $end is valid due to 
 	    # restrictions in Time::Local on perl <= 5.6
 	    if($end && $end < $time) { 
-		print "old $end $time:(\n" if $DEBUG;
+		print "# DEBUG: old $end $time:(\n" if $DEBUG;
 		$abandon = 1;
 	    }
 	}
 	if($ip && /^\s*abandoned;$/) {
-	    print "abandoned\n" if $DEBUG;
+	    print "# DEBUG: abandoned\n" if $DEBUG;
 	    $abandon = 1;
 	}
 	if($ip && /^\s*\}\s*$/) {
@@ -183,7 +239,7 @@ sub parseleases {
 	    }
 	    $abandon = 0;
 	    $ip      = 0;
-	    print "out\n\n" if $DEBUG;
+	    print "# DEBUG: out\n" if $DEBUG;
 	}
     }
     close(IN);
@@ -196,17 +252,19 @@ sub initnet {
     my $name = $block->desc();
     $name =~ s/\//__/g;
     $name =~ s/\./_/g;
-    $leases{$name}   = 0;
+    $leases{$name} = 0;
+    $limits{$name} = 0;
+    return $name;
 }
 
 sub checkip {
     my ($ip) = @_;
     foreach my $block (keys %networks) {
 	if($networks{$block}->match($ip)) {
-		my $name = $block;
-		$name =~ s/\//__/g;
-		$name =~ s/\./_/g;
- 		return $name;
+	    my $name = $block;
+	    $name =~ s/\//__/g;
+	    $name =~ s/\./_/g;
+	    return $name;
 	}
     }
     return 0;
@@ -215,11 +273,11 @@ sub checkip {
 sub counted {
     my ($ip) = @_;
     if($ips{$ip}) {
-	print "$ip already counted\n" if $DEBUG;
+	print "# DEBUG: $ip already counted\n" if $DEBUG;
 	return 1;
     }
     $ips{$ip} = $ip;
-    print "Counted $ip once!\n" if $DEBUG;
+    print "# DEBUG: Counted $ip once!\n" if $DEBUG;
     return 0;
 }
 

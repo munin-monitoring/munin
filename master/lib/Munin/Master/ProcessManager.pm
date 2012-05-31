@@ -19,6 +19,7 @@ use Log::Log4perl qw( :easy );
 
 my $E_DIED      = 18;
 my $E_TIMED_OUT = 19;
+my $E_CONNECT   = 20;
 
 my $config = Munin::Master::Config->instance()->{config};
 
@@ -103,8 +104,9 @@ sub _start_waiting_workers {
     my ($self) = @_;
 
     while (@{$self->{workers}}) {
-        DEBUG sprintf "[DEBUG] Active workers: " . scalar %{$self->{active_workers}};
+        DEBUG "[DEBUG] Active workers: " . scalar %{$self->{active_workers}};
         last if scalar keys %{$self->{active_workers}} == $self->{max_concurrent};
+	# Here we just start'em, check results in _collect_results
         $self->_start_next_worker();
     }
 }
@@ -116,7 +118,7 @@ sub _start_next_worker {
 
     my $pid = fork;
     if (!defined $pid) {
-        croak "$!";
+        LOGCROAK "Forking worker failed: $!";
     }
     elsif ($pid) {
         $self->{active_workers}{$pid} = $worker;
@@ -124,7 +126,9 @@ sub _start_next_worker {
     }
     else {
         $0 .= " [$worker]";
-        exit $self->_do_work($worker);
+	my $res = $self->_do_work($worker);
+	DEBUG "[DEBUG] Exit status $res for worker $worker";
+        exit $res;
     } 
 }
 
@@ -134,14 +138,38 @@ sub _collect_results {
     my ($self, $sock) = @_;
 
     while (%{$self->{result_queue}}) {
+
+        do {
+            $self->_vet_finished_workers();
+            $self->_start_waiting_workers();
+        } while (!%{$self->{result_queue}} && @{$self->{workers}});
+
         my $worker_sock;
+	DEBUG "[DEBUG] Active workers: " . scalar %{$self->{active_workers}};
+
+	if (not %{$self->{active_workers}}) {
+	    # Nothing left do do
+	    last;
+	}
+
         my $timed_out = !do_with_timeout($self->{accept_timeout}, sub {
             accept $worker_sock, $sock;
         });
         if ($timed_out) {
-            WARN "[WARNING] Call to accept timed out (this could be due to a firewalled munin-node): " . join keys %{$self->{result_queue}};
-            next;
-        }
+	    if (defined($self->{host})) {
+		my $nodedesignation = $self->{host}."/".
+		    $self->{host}{address}.":".$self->{host}{port};
+
+		WARN "[WARNING] Calling accept to collect results from "
+		    . $nodedesignation
+		    . " failed.  This could be due to network problems/firewalled munin-node. Remaining workers: "
+		    . join(", ", keys %{$self->{result_queue}});
+	    } else {
+		WARN "[WARNING] Call to accept timed out.  Remaining workers: " . join(", ", keys %{$self->{result_queue}});
+	    }
+	    next;
+        } # if timed_out
+
         next unless fileno $worker_sock;
 
         my $res = fd_retrieve($worker_sock);
@@ -151,10 +179,6 @@ sub _collect_results {
 
         $self->{result_callback}($res) if defined $real_res;
 
-        do {
-            $self->_vet_finished_workers();
-            $self->_start_waiting_workers();
-        } while (!%{$self->{result_queue}} && @{$self->{workers}});
     }
 
     while (%{$self->{active_workers}}) {
@@ -179,12 +203,13 @@ sub _vet_finished_workers {
 
     while ((my $worker_pid = waitpid(-1, WNOHANG)) > 0) {
         if ($CHILD_ERROR) {
+	    DEBUG "[DEBUG] Got error from $worker_pid: $CHILD_ERROR.  Handling error";
             $self->_handle_worker_error($worker_pid);
         }
         my $child_exit   = $CHILD_ERROR >> 8;
 	my $child_signal = $CHILD_ERROR & 127; 
 
-	INFO "[INFO]: Reaping $self->{active_workers}{$worker_pid}.  Exited $child_exit/$child_signal";
+	INFO "[INFO] Reaping $self->{active_workers}{$worker_pid}.  Exit value/signal: $child_exit/$child_signal";
         delete $self->{active_workers}{$worker_pid};
     }
 }
@@ -192,14 +217,15 @@ sub _vet_finished_workers {
 
 sub _handle_worker_error {
     my ($self, $worker_pid) = @_;
-    
+
     my %code2msg = (
         $E_TIMED_OUT => 'Timed out',
         $E_DIED      => 'Died',
+	$E_CONNECT   => 'Connection failed',
     );
     my $worker_id = $self->{active_workers}{$worker_pid}{ID};
     my $exit_code = $CHILD_ERROR >> 8;
-    $self->{error_callback}($self->{worker_pids}{$worker_pid},
+    $self->{error_callback}($self->{active_workers}{$worker_pid},
                             $code2msg{$exit_code} || $exit_code);
 
 }
@@ -217,7 +243,10 @@ sub _do_work {
         my $timed_out = !do_with_timeout($self->{worker_timeout}, sub {
             $res = $worker->do_work();
         });
-        if ($timed_out) {
+	if (!defined($res)) {
+	    ERROR "[ERROR] $worker failed to connect to node";
+	    $retval = $E_CONNECT;
+	} elsif ($timed_out) {
             ERROR "[ERROR] $worker timed out";
             $res = undef;
             $retval = $E_TIMED_OUT;
@@ -229,20 +258,23 @@ sub _do_work {
         $retval = $E_DIED;
     }
 
-    
+    # Stop trying if we already erred.
+    return $retval if $retval;
+
     my $sock;
     unless (socket $sock, PF_UNIX, SOCK_STREAM, 0) {
-        ERROR "[ERROR] Unable to create socket: $!";
-        return $E_DIED;
+	ERROR "[ERROR] Unable to create socket: $!";
+	return $E_DIED;
     }
     unless (connect $sock, sockaddr_un($self->{socket_file})) {
-        ERROR "[ERROR] Unable to connect to socket: $!";
-        return $E_DIED;
+	ERROR "[ERROR] Unable to connect to socket: $!";
+	return $E_DIED;
     }
     
     nstore_fd([ $worker->{ID},  $res], $sock);
 
     close $sock;
+
     return $retval;
 }
 

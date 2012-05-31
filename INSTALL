@@ -32,7 +32,7 @@ Server:
    - Params::Validate
    - TimeDate
    - Net::SSLeay if you want to use SSL/TLS
-   - Getopt::Long 2.37 or later
+   - Getopt::Long
    - Log::Log4perl (which depends on
      - IPC::Shareable
      - Log::Dispatch
@@ -77,7 +77,7 @@ needed ones.  There is a short cpan shell section at the bottom of
 this file if you do not know how to use it.
 
 Please note that BSD and Linux OSes such as Red Hat Enterprise Linux
-(and Cent OS), Fedora, Debian, Ubuntu, SuSE and others will have quite
+(and CentOS), Fedora, Debian, Ubuntu, SuSE and others will have quite
 a few of these packages available to install with their standard
 install tools.
 
@@ -89,16 +89,16 @@ NOTE!!!! If you're using NFS please note that the "make install"
 process is slightly problematic in that it (Module::Build actually)
 writes files under $CWD.  Since "make install" is usually run by root
 and root usually cannot write files on a NFS volume, this will fail.
-If you use NFS please unpack munin under /var/tmp, /tmp or some such
+If you use NFS please install munin from /var/tmp, /tmp or some such
 to work around this.
 
 There are make targets for node, master, documentation and man files.
 Generally you want to install everything on the master, and just the
-node on ... the nodes.
+node and plugiuns on ... the nodes.
 
 To install both master and node:
 
-   	- Review/edit Makefile.config to suite your needs.
+   	- Review/edit Makefile.config to suit your needs.
 
 	- Create the user "munin" and the group "munin" if these are
           not made automatically.  The user needs no shell and no
@@ -132,9 +132,9 @@ To install both master and node:
 	  If you prefer that munin be openly available make the
 	  .htaccess file empty to avoid overwriting it later.
 
-	- Review CONFDIR/munin.conf to set up some nodes. At least one
-	  node needs to have at least one functional plugin for HTML
-	  generation.
+	- Review CONFDIR/munin.conf to set up some nodes.  At least
+	  one node needs to have at least one functional plugin for
+	  HTML generation.
 
 	- Create a cron-entry to run "munin-cron" as the user "munin"
 	  every 5 minutes.  See build/resources for generic or
@@ -142,15 +142,15 @@ To install both master and node:
 
 	- If you want to use the dynamic graphs: Configure the CGI
 	  directory, you will find a Apache config example in
-	  build/resources.  
-	  
-	  NOTE: Dynamic graphs are not exactly perfect. Se also
+	  build/resources.  See also
           http://munin.projects.linpro.no/wiki/CgiHowto
+	  
+	  NOTE: Dynamic graphs are not exactly perfect.
 
 
 To install a node:
 
-	- Edit Makefile.config to suite your needs.
+	- Edit Makefile.config to suit your needs.
 
 	- Create the group "munin".
 
@@ -172,7 +172,7 @@ To install a node:
 
 	  You probably want to use an init-script instead and you
           might find a good one under build/dists or in the
-          build/resources/ directory (maybe you need to edit the init
+          build/resources directory (maybe you need to edit the init
           script, check the given paths in the script you might use).
 
 For further build alternatives, see Makefile.

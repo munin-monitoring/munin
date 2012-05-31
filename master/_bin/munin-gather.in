@@ -85,7 +85,7 @@ Options:
     			may be supplied.
     --config <file>	Use <file> as configuration file.
     			[@@CONFDIR@@/munin.conf]
-    --log <level>       Set log level: TRACE|DEBUG|INFO|WARN|ERROR|FATAL.
+    --log <level>       Set log level: DEBUG|INFO|WARN|ERROR|FATAL.
                         These levels work the same way as in syslog.
     --[no]debug		Send debug messages both to the log and to the screen
     --[no]fork		Don't fork one instance for each host. [--fork]

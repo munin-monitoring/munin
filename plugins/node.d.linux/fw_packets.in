@@ -34,7 +34,7 @@ Unknown license
 if ( $ARGV[0] ) {
 
     if ( $ARGV[0] eq 'autoconf' ) {
-	if (-f '/proc/net/snmp') {
+	if ( -r '/proc/net/snmp') {
 	    print "yes\n";
 	    exit 0;
 	}
@@ -65,7 +65,7 @@ EOM
     }
 }
 
-open(F, "/proc/net/snmp");
+open(F, "/proc/net/snmp") or die "Cannot read /proc/net/snmp: $!\n";
 
 while (<F>) {
     if (/^Ip: \d/) {

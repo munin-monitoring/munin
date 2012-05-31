@@ -13,10 +13,9 @@
 # Where to look for the HTML templates
 # tmpldir	@@CONFDIR@@/templates
 
-# (Exactly one) directory to include all files from.  There is no
-# default.
+# (Exactly one) directory to include all files from.
 #
-# includedir @@CONFDIR@@/munin-conf.d
+includedir @@CONFDIR@@/munin-conf.d
 
 # Make graphs show values per minute instead of per second
 #graph_period minute

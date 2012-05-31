@@ -16,21 +16,27 @@ our @EXPORT = qw/expand_hosts/;
 
 ### Network address manipulation ###############################################
 
-# converts an IP address (char* in network byte order, as returned by 
-# gethostbyname, et al) and optional netmask into the corresponding
-# range of IPs.
+# converts a hostname or IP and an optional netmask into a list of the
+# hostnames and/or IPs in that network.
 #
 # If you haven't guessed, this is IPv4 only.
 sub _hosts_in_net
 {
-    my ($addr, $mask) = @_;
-
+    my ($host, $mask) = @_;
     my @ret;
 
-    # This won't work with a netmask of 0.  then again, no-one wants to
-    # SNMP-scan the whole internet, even if they think they do.
-    $mask ||= 32;
+    # avoid losing the hostname that was provided.  makes for more appropriate
+    # links in the servicedir.
+    #
+    # FIXME: this is very limited.  make it work in the case when a netmask is
+    # provided (substitute the hostname for the corresponding IP in the list
+    # that is returned.
+    unless (defined $mask) {
+        return $host;
+    }
 
+    my $addr = _resolve($host);
+    
     die "Invalid netmask: $mask\n"
         unless ($mask =~ /^\d+$/ and $mask <= 32);
 
@@ -77,7 +83,6 @@ sub expand_hosts
     foreach my $item (@unexpanded) {
         DEBUG("Processing $item");
         my ($host, $mask) = split '/', $item, 2;
-        $host = _resolve($host);
         push @hosts, _hosts_in_net($host, $mask);
     }
     return @hosts;

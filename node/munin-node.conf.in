@@ -11,7 +11,6 @@ setsid 1
 
 user root
 group root
-setsid yes
 
 # Regexps for files to ignore
 

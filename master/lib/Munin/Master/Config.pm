@@ -511,6 +511,47 @@ sub parse_config {
 }
 
 
+sub look_up {
+    # Look up a group/host by a key such as "localdomain;localhost" etc.
+    # if the path does not exist create it with correct class and so on.
+    #
+    # The path through the hash works out to
+    # 
+    # $self->{groups}{localdomain}[...]{hosts}{localhost}
+    #
+    # Lookup ends at host name.  If something is missing along the way
+    # undef is returned.
+
+    my ($self,$key) = @_;
+
+    my (@groups) = split(';',$key);
+    my $host = pop(@groups);
+
+    my $value = $self;
+
+    for my $group (@groups) {
+	if (defined $value and
+	    defined $value->{groups} and
+	    defined $value->{groups}{$group}) {
+
+	    $value = $value->{groups}{$group};
+
+	} else {
+	    return undef;
+	}
+    }
+
+    if (defined $value and
+	defined $value->{hosts} and
+	defined $value->{hosts}{$host}) {
+	
+	return $value->{hosts}{$host};
+    };
+
+    return undef;
+}
+
+
 sub get_groups_and_hosts {
     my ($self) = @_;
     

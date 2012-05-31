@@ -311,3 +311,5 @@ snort_pkts
 snort_traffic
 solaris/iostat
 ejabberd_
+snmp__print_supplies
+snmp__print_pages

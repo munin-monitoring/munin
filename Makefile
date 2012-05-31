@@ -26,6 +26,7 @@ MAN8		 := master/_bin/munin-graph master/_bin/munin-update \
 PODMAN8          := build/master/doc/munin-cron master/doc/munin master/doc/munin-check
 PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
 
+
 .PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
         build build-common-prime build-common-pre build-doc \
         source_dist \
@@ -73,6 +74,7 @@ install-pre: Makefile Makefile.config
 install-master-prime: $(INFILES_MASTER) install-pre install-master
 	mkdir -p $(CONFDIR)/templates
 	mkdir -p $(CONFDIR)/templates/partial
+	mkdir -p $(CONFDIR)/munin-conf.d
 	mkdir -p $(LIBDIR)
 	mkdir -p $(BINDIR)
 	mkdir -p $(PERLLIB)
@@ -81,7 +83,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	mkdir -p $(DBDIR)
 	mkdir -p $(CGIDIR)
 
-	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR)
+	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR) 
 
 	for p in master/www/*.tmpl master/www/*.png master/www/*.css resources/favicon.ico; do \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \

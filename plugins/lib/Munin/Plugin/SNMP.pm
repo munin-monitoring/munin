@@ -191,6 +191,10 @@ hosts file) it is possible to do this:
 
 The port to connect to.  Default 161.
 
+=item env.timeout
+
+The timeout in seconds to use. Default 5.
+
 =item env.version
 
 The SNMP version to use for the connection. One of 1, 2, 3, snmpv1,
@@ -207,15 +211,21 @@ Security is handled differently for versions 1/2c and 3.  See below.
 
     # Common options.
     my @options = (-hostname    => $host,
-		   -port	=> $port,
+	           -port	=> $port,
                    -version     => $version,
     );
 
+    
     # User defined options
     if (defined($userargs[0])) {
 	push(@options,@userargs);
     }
-
+    
+    # Timeout 
+    if (defined($ENV{timeout})) {
+	push(@options, (-timeout => $ENV{timeout}));
+    }
+    
     if ($version eq '1' or $version eq 'snmpv1' or
 	$version eq '2' or $version eq 'snmpv2c') {
 
@@ -551,6 +561,7 @@ L<Net::SNMP>
 =head1 AUTHOR
 
 Dagfinn Ilmari Mannsåker, Nicolai Langfeldt
+Rune Nordbøe Skillingstad added timeout support.
 
 =head1 COPYRIGHT/License.
 

@@ -25,13 +25,13 @@ postgres_tuples_ - Plugin to monitor PostgreSQL tuple access.
 =head1 CONFIGURATION
 
 Configuration is done through libpq environment variables, for example
-PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugins::Pgsql>.
+PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugin::Pgsql>.
 
 To monitor a specific database, link to postgres_tuples_<databasename>.
 
 =head1 SEE ALSO
 
-L<Munin::Plugins::Pgsql>
+L<Munin::Plugin::Pgsql>
 
 =head1 MAGIC MARKERS
 
