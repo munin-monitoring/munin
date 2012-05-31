@@ -1,3 +1,35 @@
+munin (1.0.1-1) unstable; urgency=medium
+
+  * Urgency medium to make the Sarge freeze.
+  * New upstream release, fixing the following:
+    - [munin-graph/1.0] multiple .negative options is broken,
+      thanks to Andre TOmt (Closes: #250982).
+    - [plugin:hddtemp2/1.0] Must run under "C" locale (Closes: #253497).
+    - munin-node: LANG-dependant behaviour changes (Closes: #255312).
+    - [plugin:sensors_temp/1.0] Omits temperature values without
+      max and/or hysteresis value(s), thanks to Elmar Hoffmann
+      (Closes: #256380).
+    - [plugin:sensors_volt/1.0] Omits negative voltages, thanks to Elmar
+      Hoffmann (Closes: #256734).
+    - [plugin:ipac_ng/1.0] Syntax error, thanks to Stefani
+      Banerian (Closes: #264714).
+    - [plugin:hddtemp2/1.0] Ignores env.ignore (it's not supposed
+      to, really! :), thanks to Michel Meyers (Closes: #265022).
+    - munin-node: plugin iostat_ios has improper magic file
+      marker, thanks to Micah Anderson (Closes: #262708).
+  * Set Maintainer: to the Munin team address.
+  * Add Tore Anderson and myself to Uploaders:
+  * Make the hddtemp plugins run as group "disk" to ensure access to the
+    disks.
+
+ -- Dagfinn Ilmari Mannsaker <ilmari@ilmari.org>  Wed, 18 Aug 2004 20:55:27 +0200
+
+munin (1.0.0-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Tore Anderson <tore@debian.org>  Sun, 18 Jul 2004 13:19:31 +0200
+
 munin (0+1.0.0pre5-1) unstable; urgency=low
 
   * New upstream release:
