@@ -1,4 +1,4 @@
-munin (2.0.0-1) UNRELEASED; urgency=medium
+munin (2.0.0-1) unstable; urgency=medium
 
   * New upstream version. Roughly eight years after munin 1.0 there is now
     finally munin 2.0! See /usr/share/doc/munin/Announce-2.0 in the munin
@@ -9,7 +9,7 @@ munin (2.0.0-1) UNRELEASED; urgency=medium
   * Make munin-node suggest munin-plugins-java and not munin-java-plugins.
   * Lower build-depends on debhelper to version 8. (Closes: #675209)
 
- -- Holger Levsen <holger@debian.org>  Sun, 27 May 2012 16:16:19 +0200
+ -- Holger Levsen <holger@debian.org>  Thu, 31 May 2012 22:21:59 +0200
 
 munin (2.0~rc6-3) unstable; urgency=low
 
