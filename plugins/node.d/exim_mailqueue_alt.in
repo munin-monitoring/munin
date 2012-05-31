@@ -1,0 +1,91 @@
+#!@@GOODSH@@
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+exim_mailqueue_alt - Plugin to monitor the exim mail queue
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+ exim      - exim binary location
+ queuewarn - warning limit
+ queuecrit - critical limit
+
+The plugin needs to be run as the same user as exim, commonly "mail".
+
+=head2 EXAMPLE CONFIGURATION
+
+ [exim_mailqueue_alt]
+  user mail
+  env.queuewarn  2000
+  env.queuecrit 10000
+
+For a Debian based system, a minimal example configuration would be:
+
+ [exim_mailqueue_alt]
+  user Debian-exim
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=
+
+=cut
+
+PATH='/bin:/sbin:/usr/bin:/usr/sbin'
+# You cannot trust the exit status of which
+EXIM=$(which exim 2>/dev/null)
+case $EXIM:$? in
+    *:1|no*) EXIM=$(which exim4 2>/dev/null)
+esac
+case $EXIM:$? in
+    *:1|no*) EXIM=''
+esac
+
+QUEUECRIT=200
+
+EXIM=${exim:-$EXIM}
+QUEUEWARN=${queuewarn:-100}
+QUEUECRIT=${queuecrit:-200}
+
+if [ "$1" = "config" ]; then
+	echo 'graph_title Exim mailqueue'
+	echo 'graph_args --base 1000 -l 0'
+	echo 'graph_vlabel mails in queue'
+	echo 'graph_order frozen active bounces total'
+	echo 'graph_category exim'
+	echo 'active.label active'
+	echo 'active.draw STACK'
+	echo 'bounces.label bounces'
+	echo 'bounces.draw LINE2'
+	echo 'frozen.label frozen'
+	echo 'frozen.draw AREA'
+	echo 'total.label total'
+	echo 'total.draw LINE2'
+	echo "total.warning $QUEUEWARN"
+	echo "total.critical $QUEUECRIT"
+	exit 0
+fi
+
+$EXIM -bpr | awk 'BEGIN { bounces = 0; frozen = 0; total = 0 }
+                  $4 == "<>" { bounces++; }
+                  $6 == "frozen" { frozen++ }
+                  /<[^>]*>/ { total++ }
+                  END {
+                      print "frozen.value " frozen;
+                      print "bounces.value " bounces;
+                      print "total.value " total;
+                      print "active.value " total - frozen;
+                  }'

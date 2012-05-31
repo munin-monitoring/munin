@@ -1,0 +1,59 @@
+#!@@GOODSH@@
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+open_inodes - Plugin to monitor the number of open files in the system
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+if [ "$1" = "autoconf" ]; then
+	if [ -r /proc/sys/fs/inode-nr ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 0
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Inode table usage'
+	echo 'graph_args --base 1000 -l 0'
+	echo 'graph_vlabel number of open inodes'
+	echo 'graph_category system'
+	echo 'graph_info This graph monitors the Linux open inode table.'
+	echo 'used.label open inodes'
+	echo 'used.info The number of currently open inodes.'
+	print_warning used
+	print_critical used
+	echo 'max.label inode table size'
+	echo 'max.info The size of the system inode table. This is dynamically adjusted by the kernel.'
+	print_warning max
+	print_critical max
+	exit 0
+fi
+
+awk '{print "used.value " $1-$2 "\nmax.value " $1}' < /proc/sys/fs/inode-nr

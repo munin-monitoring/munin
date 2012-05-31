@@ -1,0 +1,110 @@
+#!@@PERL@@
+# -*- perl -*-
+# vim: ft=perl
+
+=head1 NAME
+
+snmp__winmem - Munin plugin to monitor memory usage on an SNMP device.
+
+=head1 APPLICABLE SYSTEMS
+
+Any SNMP-capable device that reports the
+HOST-RESOURCES-MIB::hrSWRunPerfMem column for the hrSWRunPerfTable.
+
+In particular, this allows memory usage to be monitored on machines
+running Microsoft Windows.
+
+=head1 CONFIGURATION
+
+As a rule SNMP plugins need site specific configuration.  The default
+configuration (shown here) will only work on insecure sites/devices.
+
+   [snmp_*]
+	env.version 2
+        env.community public
+
+In general SNMP is not very secure at all unless you use SNMP version
+3 which supports authentication and privacy (encryption).  But in any
+case the community string for your devices should not be "public".
+
+Please see 'perldoc Munin::Plugin::SNMP' for further configuration
+information.
+
+=head1 INTERPRETATION
+
+The amount of memory currently in use by the processes on the system.
+
+=head1 MIB INFORMATION
+
+This plugin requires support for the HOST-RESOURCES-MIB (RFC 2790).  It
+uses the contents of the hrSWRunPerfMem column of hrSWRunPerfTable.
+
+=head1 MAGIC MARKERS
+
+  #%# family=snmpauto
+  #%# capabilities=snmpconf
+
+=head1 VERSION
+
+  $Id$
+
+=head1 BUGS
+
+None known.
+
+=head1 AUTHOR
+
+Copyright (C) 2004-2006 Jimmy Olsen, Dagfinn Ilmari Mannsaaker
+
+Documented and updated to use Munin::Plugin::SNMP by Matthew Boyle.
+
+=head1 LICENSE
+
+GPLv2.
+
+=cut
+
+use strict;
+use Munin::Plugin::SNMP;
+
+if (defined $ARGV[0] and $ARGV[0] eq "snmpconf")
+{
+	print "require .1.3.6.1.2.1.25.5.1.1.2. [0-9]\n";
+	print "require .1.3.6.1.2.1.25.2.2.0 [0-9]\n";
+	exit 0;
+}
+
+if (defined $ARGV[0] and $ARGV[0] eq "config") {
+	my ($host) = Munin::Plugin::SNMP->config_session();
+
+	print "host_name $host\n" unless ($host eq 'localhost');
+	print <<'EOC';
+graph_title Windows Memory usage
+graph_args --base 1024 -l 0
+graph_vlabel Bytes
+graph_category system
+graph_info This graph shows the memory usage of a windows system.
+used.label Used memory
+used.info Total memory used
+used.draw AREA
+total.label Available memory
+total.info Total memory available
+total.draw LINE1
+EOC
+	exit 0;
+}
+
+my $session = Munin::Plugin::SNMP->session();
+
+my $result = $session->get_table(-baseoid => '1.3.6.1.2.1.25.5.1.1.2');
+my $used = 0;
+
+foreach my $val (values %$result) {
+    $used += ($val * 1024);
+}
+
+my $total = $session->get_single('1.3.6.1.2.1.25.2.2.0') * 1024;
+
+print "used.value $used\n";
+print "total.value $total\n";
+

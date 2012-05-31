@@ -1,0 +1,16 @@
+#! /usr/bin/perl
+# Dump a Perl storable file to clear text
+# (c) GPL - Steve Schnepp <steve.schnepp@pwkf.org>
+
+use strict;
+use warnings;
+
+use Storable;
+use Data::Dumper;
+
+$Data::Dumper::Indent = 1;
+
+while (my $file = shift) {
+	my $ref = Storable::retrieve($file);
+	print Dumper($ref);
+}

@@ -1,0 +1,246 @@
+#!@@GOODSH@@
+#
+: <<=cut
+
+=head1 NAME
+
+cpu - Plugin to monitor CPU usage.
+
+=head1 APPLICABLE SYSTEMS
+
+All Linux systems
+
+=head1 CONFIGURATION
+
+The following is default configuration
+
+  [cpu]
+	env.HZ	100
+
+See "BUGS" for a explanation of this setting.
+
+=head2 EXAMPLE WARNING AND CRITICAL SETTINGS
+
+You can also set warning and critical levels for each of the data
+series the plugin reports.  The following environment variables are
+used as default for all fields:
+
+  env.warning
+  env.critical
+
+But each field can be controlled separately:
+
+  env.system_warning
+  env.system_critical
+
+  env.user_warning
+  env.user_critical
+
+  env.nice_warning
+  env.nice_critical
+
+  env.idle_warning
+  env.idle_critical
+
+For some kernels there is also the following settings:
+
+  env.iowait_warning
+  env.iowait_critical
+  env.irq_warning
+  env.irq_critical
+  env.softirq_warning
+  env.softirq_critical
+  env.steal_warning
+  env.steal_critical
+  env.guest_warning
+  env.guest_critical
+
+=head1 INTERPRETATION
+
+The plugin shows cpu usage in percent. In case of more than one core
+it displays 100% for each core.
+
+If a core is 100% busy there will be no "iowait" showing, that only
+shows if the CPU has nothing else to do while it waits on IO.
+Therefore a 100% busy core can hide a lot of iowait.  Please refer to
+the IO latency and other disk related graphs for further information
+about IO performance.
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+
+=head1 VERSION
+
+  $Id$
+
+=head1 BUGS
+
+Some combinations of hardware and Linux (probably only 2.4 kernels)
+use 1000 units/second in /proc/stat corresponding to the systems
+HZ. (see /usr/src/linux/include/asm/param.h). But Almost all systems
+use 100 units/second and this is our default. Even if
+Documentation/proc.txt in the kernel source says otherwise. - Finding
+and fix by dz@426.ch
+
+Otherwise none known
+
+=head1 AUTHOR
+
+Unknown
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+if [ "$1" = "autoconf" ]; then
+	if [ -r /proc/stat ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 0
+	fi
+fi
+
+HZ=${HZ:-100}
+
+extinfo=""
+
+if egrep -q '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat; then
+	extinfo="iowait irq softirq"
+	if egrep -q '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat; then
+		extextinfo="steal"
+	fi
+	if egrep -q '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat; then
+		extextextinfo="guest"
+	fi
+
+fi
+
+if [ "$1" = "config" ]; then
+
+	NCPU=$(egrep '^cpu[0-9]+ ' /proc/stat | wc -l)
+	if [ "$scaleto100" = "yes" ]; then
+		graphlimit=100
+	else
+		graphlimit=$(($NCPU * 100))
+	fi
+	echo 'graph_title CPU usage'
+	echo "graph_order system user nice idle" $extinfo
+	echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit $graphlimit"
+	echo 'graph_vlabel %'
+	echo 'graph_scale no'
+	echo 'graph_info This graph shows how CPU time is spent.'
+	echo 'graph_category system'
+	echo 'graph_period second'
+	echo 'system.label system'
+	echo 'system.draw AREA'
+	echo 'system.min 0'
+	echo 'system.type DERIVE'
+	echo "system.info CPU time spent by the kernel in system activities" 
+	echo 'user.label user'
+	echo 'user.draw STACK'
+	echo 'user.min 0'
+	echo 'user.type DERIVE'
+	echo 'user.info CPU time spent by normal programs and daemons'
+	echo 'nice.label nice'
+	echo 'nice.draw STACK'
+	echo 'nice.min 0'
+	echo 'nice.type DERIVE'
+	echo 'nice.info CPU time spent by nice(1)d programs'
+	echo 'idle.label idle'
+	echo 'idle.draw STACK'
+	echo 'idle.min 0'
+	echo 'idle.type DERIVE'
+	echo 'idle.info Idle CPU time'
+
+	for field in system user nice idle; do
+		print_adjusted_thresholds "$field" "$graphlimit"
+	done
+
+	if [ "$scaleto100" = "yes" ]; then
+		echo "system.cdef system,$NCPU,/"
+		echo "user.cdef user,$NCPU,/"
+		echo "nice.cdef nice,$NCPU,/"
+		echo "idle.cdef idle,$NCPU,/"
+	fi
+	if [ ! -z "$extinfo" ]
+	then
+		echo 'iowait.label iowait'
+		echo 'iowait.draw STACK'
+		echo 'iowait.min 0'
+		echo 'iowait.type DERIVE'
+		echo 'iowait.info CPU time spent waiting for I/O operations to finish when there is nothing else to do.'
+		echo 'irq.label irq'
+		echo 'irq.draw STACK'
+		echo 'irq.min 0'
+		echo 'irq.type DERIVE'
+		echo 'irq.info CPU time spent handling interrupts'
+		echo 'softirq.label softirq'
+		echo 'softirq.draw STACK'
+		echo 'softirq.min 0'
+		echo 'softirq.type DERIVE'
+		echo 'softirq.info CPU time spent handling "batched" interrupts'
+		if [ "$scaleto100" = "yes" ]; then
+			echo "iowait.cdef iowait,$NCPU,/"
+			echo "irq.cdef irq,$NCPU,/"
+			echo "softirq.cdef softirq,$NCPU,/"
+		fi
+		for field in iowait irq softirq; do
+			print_adjusted_thresholds "$field" "$graphlimit"
+		done
+	fi
+
+	if [ ! -z "$extextinfo" ]
+	then
+		echo 'steal.label steal'
+		echo 'steal.draw STACK'
+		echo 'steal.min 0'
+		echo 'steal.type DERIVE'
+		echo 'steal.info The time that a virtual CPU had runnable tasks, but the virtual CPU itself was not running'
+		if [ "$scaleto100" = "yes" ]; then
+			echo "steal.cdef steal,$NCPU,/"
+		fi
+		for field in steal; do
+			print_adjusted_thresholds "$field" "$graphlimit"
+		done
+	fi
+
+	if [ ! -z "$extextextinfo" ]
+	then
+		echo 'guest.label guest'
+		echo 'guest.draw STACK'
+		echo 'guest.min 0'
+		echo 'guest.type DERIVE'
+		echo 'guest.info The time spent running a virtual CPU for guest operating systems under the control of the Linux kernel.'
+		if [ "$scaleto100" = "yes" ]; then
+			echo "guest.cdef guest,$NCPU,/"
+		fi
+		for field in guest; do
+			print_adjusted_thresholds "$field" "$graphlimit"
+		done
+	fi
+
+	exit 0
+fi
+
+# Note: Counters/derive need to report integer values.  Also we need
+# to avoid 10e+09 and the like %.0f should do this.
+
+if [ ! -z "$extextextinfo" ]; then
+	awk -v hz=$HZ '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\nsteal.value %.0f\nguest.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz, $9*100/hz, $10*100/hz }' < /proc/stat
+elif [ ! -z "$extextinfo" ]; then
+	awk -v hz=$HZ '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\nsteal.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz, $9*100/hz }' < /proc/stat
+elif [ ! -z "$extinfo" ]; then
+	awk -v hz=$HZ '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\niowait.value %.0f\nirq.value %.0f\nsoftirq.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz, $6*100/hz, $7*100/hz, $8*100/hz }' < /proc/stat
+else
+	awk -v hz=$HZ '/^cpu / { printf "user.value %.0f\nnice.value %.0f\nsystem.value %.0f\nidle.value %.0f\n", $2*100/hz, $3*100/hz, $4*100/hz, $5*100/hz }' < /proc/stat
+fi

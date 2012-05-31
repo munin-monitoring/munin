@@ -1,0 +1,97 @@
+#!@@GOODSH@@
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+load - Plugin to monitor the load average on a system.
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin
+
+=over 4
+
+=item load_warn <load>
+
+Warning threshold for load (Default: 10)
+
+=item load_crit <load>
+
+Critical threshold for load (Default: 120)
+
+=back
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+Unknownl LICENSE
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+# If run with the "autoconf"-parameter, give our opinion on wether we
+# should be run on this system or not. This is optinal, and only used by
+# munin-config. In the case of this plugin, we should most probably
+# always be included.
+
+if [ "$1" = "autoconf" ]; then
+	echo yes
+	exit 0
+fi
+
+# If run with the "config"-parameter, give out information on how the
+# graphs should look. 
+ 
+if [ "$1" = "config" ]; then
+        LOAD_WARN=${load_warn:-10}
+        LOAD_CRIT=${load_crit:-120}
+
+	# The host name this plugin is for. (Can be overridden to have
+	# one machine answer for several)
+
+	# The title of the graph
+	echo 'graph_title Load average'
+	# Arguments to "rrdtool graph". In this case, tell it that the
+	# lower limit of the graph is '0', and that 1k=1000 (not 1024)
+	echo 'graph_args --base 1000 -l 0'
+	# The Y-axis label
+	echo 'graph_vlabel load'
+	# We want Cur/Min/Avg/Max unscaled (i.e. 0.42 load instead of
+	# 420 milliload)
+	echo 'graph_scale no'
+	# Graph category. Defaults to 'other'
+	echo 'graph_category system'
+	# The fields. "label" is used in the legend. "label" is the only
+	# required subfield. 
+	echo 'load.label load'
+	# These two are optional. They are only used if you have
+	# configured your munin to tell a Nagios-server about any
+	# problems
+	echo "load.warning $LOAD_WARN"
+	echo "load.critical $LOAD_CRIT"
+	# This one is purely to add an explanation to the web page. The first
+	# one is for the graph itself, while the second one is for the field
+	# "load".
+	echo 'graph_info The load average of the machine describes how many processes are in the run-queue (scheduled to run "immediately").'
+	echo 'load.info Average load for the five minutes.'
+
+	# Last, if run with the "config"-parameter, quit here (don't
+	# display any data)
+	exit 0
+fi
+
+# If not run with any parameters at all (or only unknown ones), do the
+# real work - i.e. display the data. Almost always this will be
+# "value" subfield for every data field.
+
+printf "load.value "
+uptime  | sed -e 's/^.*load averages: [^ ]* //' -e 's/ [^ ]*$//'

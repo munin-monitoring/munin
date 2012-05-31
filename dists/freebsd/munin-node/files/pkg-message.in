@@ -1,0 +1,21 @@
+
+********************************************************************
+Unless this file already existed, a sample configuration file
+has been placed in %%PREFIX%%/etc/munin/munin-node.conf.
+
+Please edit it according to your needs.
+
+********************************************************************
+
+The Munin client will *not* be started automatically. To allow it
+to start, put this line in /etc/rc.conf:
+
+munin_node_enable="YES"
+
+Then, it will be started on the next boot. If this line is already
+present, the client will be started now.  Otherwise, edit
+/etc/rc.conf and execute this command:
+
+    %%PREFIX%%/etc/rc.d/munin-node.sh start
+********************************************************************
+

@@ -1,0 +1,41 @@
+This is a pre-release checklist for the maintainer.
+
+ * is there any "FIX" in: ChangeLog, INSTALL, Announce?
+
+ * Is .htaccess installed?
+ * rm -f /etc/munin/plugins/* 
+      Does munin-node-configure -d show any autoconf errors?
+      Does munin-node-configure --debug run nicely or do we get perl errors?
+
+ * Update plugins/plugins.history.in:
+
+   1. cd plugins
+
+   2. Figure out which r the previous tag was at and do this (r910 was
+	  1.3.2 and r1234 is head)
+      svn --verbose log -r910:1234 | fgrep node.d | grep -w A | 
+         cut -d/ -f 4- | sed 's/^node\.d\.//'
+
+   3. Check if the listed plugins are still present (or moved):
+
+      svn --verbose log -r910:1234 | fgrep node.d | grep -w A |
+          cut -d/ -f 4- | sed s'/(.*//' | xargs ls -ld >/dev/null
+
+ * Update ChangeLog
+
+ * cd ..; svn cp svn://janl@munin-monitoring.org/munin/trunk \
+	svn://janl@munin-monitoring.org/munin/tags/1.3.4
+
+ * Update RELEASE in the tag
+
+ * make tar
+
+ * Broadcast the good news:
+   1. make a sha256sum : sha256sum munin-version.tar.gz > munin-version.tar.gz.sha256sum
+      and sign it using gpg.
+   2. Upload the tar.gz on sourceforge.net
+   3. Create a news on sf annoucing it
+   4. Update our front page
+   5. Create a new release on freshmeat.net 
+   6. Send an email to the ML 
+

@@ -1,0 +1,56 @@
+#!@@GOODSH@@
+#  -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+entropy - Plugin to monitor available entropy
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+if [ "$1" = "autoconf" ]; then
+	if [ -r /proc/sys/kernel/random/entropy_avail ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 0
+	fi
+fi
+ 
+if [ "$1" = "config" ]; then
+	echo 'graph_title Available entropy'
+	echo 'graph_args --base 1000 -l 0'
+	echo 'graph_vlabel entropy (bytes)'
+	echo 'graph_scale no'
+	echo 'graph_category system'
+	echo 'graph_info This graph shows the amount of entropy available in the system.'
+	echo 'entropy.label entropy'
+	echo 'entropy.info The number of random bytes available. This is typically used by cryptographic applications.'
+	print_warning entropy
+	print_critical entropy
+	exit 0
+fi
+
+echo -n "entropy.value "
+cat /proc/sys/kernel/random/entropy_avail

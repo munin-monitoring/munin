@@ -1,0 +1,77 @@
+#!@@GOODSH@@
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+load - Plugin to monitor system load
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+=over 4
+
+=item load_warning <float>
+
+Threshold for when to report a warning
+
+=item load_critical <float>
+
+Threshold for when to report a critical
+
+=back
+
+=head2 EXAMPLE CONFIGURATION
+
+ [load]
+  env.load_warning 5
+  env.load_critical 10
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+if [ "$1" = "autoconf" ]; then
+        echo 'yes'
+        exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+    cat <<EOF
+graph_title Load average
+graph_category system
+graph_scale no
+graph_vlabel load
+graph_args --base 1000 -l 0
+graph_info The load average of the machine describes how many processes are in the run-queue 
+load.label load
+load.info 5 minute load average
+EOF
+	print_warning load
+	print_critical load
+        exit 0
+fi
+
+# Hmm. Antall elementer endrer seg. (15 - 18)
+# 4:30pm  up 81 day(s), 10 min(s),  4 users,  load average: 0.89, 0.55, 0.51
+#
+
+printf "load.value "
+/bin/uptime | sed -e 's/.*, \([\.0-9]*\),.*/\1/g'
+

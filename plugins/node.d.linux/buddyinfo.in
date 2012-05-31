@@ -1,0 +1,165 @@
+#!@@PERL@@ -w
+# -*- mode: cperl; cperl-indent-level: 8; -*-
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+buddyinfo - Plugin to monitor memory fragmentation on Linux systems.
+
+=head1 APPLICABLE SYSTEMS
+
+Linux 2.5.40+, 2.6.x
+
+=head1 CONFIGURATION
+
+None needed.
+
+To optionally use a logarithmic scale on the graphs, define the
+environment variable logarithmic. For example:
+
+ [buddyinfo]
+ env.logarithmic yes
+
+=head1 INTERPRETATION
+
+Linux manages virtual memory on a page granularity. There are some operations
+however that require physically contiguous pages to be allocated by the kernel.
+Such allocations may fail if the memory gets fragmented and even though there
+are enough pages free, but they are not contiguous.
+
+This plugin monitors the amount of contiguous areas, called higher order pages.
+The order means the exponent of two of the size of the area, so order 2 means
+2^2 = 4 pages.
+
+=head1 SEE ALSO
+
+See C<Documentation/filesystems/proc.txt> in the Linux source tree for the
+description of the buddyinfo file.
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=autoconf
+
+=head1 AUTHOR
+
+Gábor Gombás <gombasg@sztaki.hu>
+
+=head1 LICENSE
+
+GPLv2 or later
+
+=cut
+
+use strict;
+use Munin::Plugin;
+use POSIX;
+use Carp;
+
+need_multigraph();
+
+if ($ARGV[0] and $ARGV[0] eq 'autoconf') {
+	if (-f "/proc/buddyinfo") {
+		print "yes\n";
+	}
+	else {
+		print "no (/proc/buddyinfo is missing)\n";
+	}
+	exit 0;
+}
+
+# The most common page size is 4k, but it is not universal
+my $pagesize = POSIX::sysconf(&POSIX::_SC_PAGESIZE) / 1024;
+
+my $zones = {};
+
+open(FH, '< /proc/buddyinfo')
+	or croak "Failed to open '/proc/buddyinfo': $!";
+while (my $line = <FH>) {
+	chomp $line;
+
+	$line =~ m/Node (\d+), zone\s+(\S+)\s+(\S.*)$/;
+	my $name = "Node $1, zone $2";
+	my @cnt = split(/ +/, $3);
+	$zones->{$name} = \@cnt;
+}
+close FH;
+
+my $totals = [];
+foreach my $zone (keys %$zones) {
+	for my $i (0 .. $#{$zones->{$zone}}) {
+		$totals->[$i] += $zones->{$zone}->[$i]
+	}
+}
+
+sub do_config {
+	print "multigraph buddyinfo\n";
+	print "graph_title Memory fragmentation\n";
+	print "graph_args --base 1024";
+	if (exists $ENV{"logarithmic"}) {
+		print " --logarithmic --units=si\n";
+	} else {
+		print " --lower-limit 0\n";
+	}
+	print "graph_vlabel pages free\n";
+	print "graph_category system\n";
+	print "graph_info This graph shows the number of free pages of different size\n";
+	print "graph_order " . join(' ', map { "order$_" } (0 .. $#{$totals})) . "\n";
+	for my $i (0 .. $#{$totals}) {
+		print "order$i.label Order $i\n";
+		print "order$i.info Number of order $i (" . ($pagesize * 2 ** $i) . " KiB) pages\n";
+		print "order$i.type GAUGE\n";
+		print "order$i.min 0\n";
+	}
+	for my $zone (sort keys %$zones) {
+		my $zoneid = $zone;
+		$zoneid = clean_fieldname($zone);
+
+		print "multigraph buddyinfo.$zoneid\n";
+		print "graph_title Memory fragmentation in $zone\n";
+		print "graph_args --base 1024";
+		if (exists $ENV{"logarithmic"}) {
+			print " --logarithmic --units=si\n";
+		} else {
+			print " --lower-limit 0\n";
+		}
+		print "graph_vlabel pages free\n";
+		print "graph_category system\n";
+		print "graph_info This graph shows the number of free pages in $zone\n";
+		print "graph_order " .
+			join(' ', map { "order$_" } (0 .. $#{$zones->{$zone}})) . "\n";
+		for my $i (0 .. $#{$zones->{$zone}}) {
+			print "order$i.label Order $i\n";
+			print "order$i.info Number of order $i (" .
+				($pagesize * 2 ** $i) . " KiB) pages\n";
+			print "order$i.type GAUGE\n";
+			print "order$i.min 0\n";
+		}
+	}
+}
+
+sub do_fetch {
+	print "multigraph buddyinfo\n";
+	for my $i (0 .. $#{$totals}) {
+		print "order$i.value " . $totals->[$i] . "\n";
+	}
+	for my $zone (sort keys %$zones) {
+		my $zoneid = $zone;
+		$zoneid =~ tr/ ,/__/;
+
+		print "multigraph buddyinfo.$zoneid\n";
+		for my $i (0 .. $#{$zones->{$zone}}) {
+			print "order$i.value " . $zones->{$zone}->[$i] . "\n";
+		}
+	}
+}
+
+if ($ARGV[0] and $ARGV[0] eq 'config') {
+	do_config();
+	exit 0;
+}
+
+do_fetch();

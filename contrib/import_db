@@ -1,0 +1,27 @@
+#! /usr/bin/perl
+# Import clear text hash to a binary dictionary
+# (c) GPL - Steve Schnepp <steve.schnepp@pwkf.org>
+
+use strict;
+use warnings;
+
+use Fcntl;   # For O_RDWR, O_CREAT, etc.
+use DB_File;
+
+my $db_file = shift;
+unless ($db_file) {
+	print STDERR "usage: $0 db_file [ textfile1 ... textfileN ]\n"; 
+	exit 1;
+};
+
+my %hash;
+
+tie(%hash, 'DB_File', $db_file, O_RDWR | O_CREAT) or die "$!";
+
+while(<>) {
+	chomp;
+	my ($key, $value) = split(/\s+/, $_, 2);
+	$hash{$key} = $value;
+}
+
+untie(%hash);

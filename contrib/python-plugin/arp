@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+
+"""
+Linux ARP plugin test
+
+Morten Siebuhr
+sbhr@sbhr.dk
+12/12 2008
+"""
+
+from munin import Plugin
+from os.path import exists
+
+p = Plugin("ARP Cache", "MAC addresses", "Network")
+
+# Information
+p.info = "Shows how many interfaces are listed in the system's ARP cache"
+p.args = "--base 1000 -l 0"
+
+# Autoconfigure
+p.autoconf = lambda: exists("/proc/net/arp")
+
+# Populate with data
+for line in open("/proc/net/arp").readlines():
+    if "IP address" in line:
+        continue
+
+    (ip, hw, flags, address, mogl, dev) = line.split()
+
+    if not dev in p:
+        p[dev].value = 0
+        p[dev].label = dev
+        p[dev].draw = "AREA"
+    
+    p[dev].value += 1
+
+# Run it!
+p.run()

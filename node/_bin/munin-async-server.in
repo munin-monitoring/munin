@@ -1,0 +1,242 @@
+#! @@PERL@@
+# -*- cperl -*-
+#
+# Copyright (C) 2010 Steve Schnepp
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# $Id$
+
+use strict;
+use warnings;
+
+use IO::Socket;
+use IO::File;
+use File::Path qw(mkpath);
+use Getopt::Long;
+use Pod::Usage;
+
+use Munin::Node::SpoolWriter;
+
+my $host = "localhost:4949";
+my $SPOOLDIR = "@@SPOOLDIR@@";
+my $do_fork;
+my $verbose;
+my $debug;
+my $help;
+
+
+GetOptions(
+	"host=s" => \$host,
+	"spooldir|s=s" => \$SPOOLDIR,
+
+	"fork" => \$do_fork,
+
+	"help|h" => \$help,
+	"verbose|v" => \$verbose,
+	"debug" => \$debug,
+) or pod2usage(1);
+if ($help) {
+	pod2usage(1);
+}
+
+unless (-d $SPOOLDIR) {
+	mkpath($SPOOLDIR, { verbose => $verbose, } ) 
+		or die ("Cannot create '$SPOOLDIR': $!");
+}
+
+my $spoolwriter = Munin::Node::SpoolWriter->new(
+	spooldir => $SPOOLDIR,
+);
+
+my $process_name = "main";
+
+my $plugin_rate_filename = "$SPOOLDIR/plugin_rates";
+
+my @plugins;
+{
+	print STDERR "[$$][$process_name] Reading config from $host\n" if $verbose;
+	my $sock = new IO::Socket::INET( 
+		PeerAddr	=> "$host", 
+		Proto	=> 'tcp'
+	) || die "Error creating socket: $!"; 
+
+	print $sock "cap multigraph\n";
+	print $sock "list\n";
+	<$sock>; # Read the first header comment line
+	<$sock>; # Read the multigraph response line
+	my $plugins_line = <$sock>;
+	chomp($plugins_line);
+
+	{
+		my $fh_list = IO::File->new(
+			"$SPOOLDIR/munin-daemon.list",
+			"w",
+		);
+
+		print $fh_list $plugins_line;
+		print $fh_list "\n";
+	}
+
+	@plugins = split(/ /, $plugins_line);
+}
+
+# Q&D child collection
+$SIG{CHLD} = 'IGNORE';
+
+# now, update regularly...
+# ... but each plugin in its own process to avoid delay-leaking
+my %last_updated;
+MAIN: while(1) { 
+	my $when = time;
+	my $when_next = $when + 3600; # wake up at least every hour
+	PLUGIN: foreach my $plugin (@plugins) {
+		# See if this plugin should be updated
+		my $plugin_rate = get_hash($plugin, $plugin_rate_filename) || 300;
+		if ($when < ($last_updated{$plugin} || 0) + $plugin_rate) {
+			# not yet, next plugin
+			next;
+		}
+
+		# Should update it
+		$last_updated{$plugin} = $when;
+		if ($when + $plugin_rate < $when_next) {
+			$when_next = $when + $plugin_rate;
+		} 
+
+		if ($do_fork && fork()) {
+			# parent, return directly
+			next PLUGIN;
+		}
+		# Setting the command name for a useful top information
+		$process_name = "plugin:$plugin";
+		local $0 = "munin-async-server [$process_name]";
+		
+		fetch_data($plugin, $when);
+	
+
+		# We end here if we forked
+		last MAIN if $do_fork;
+	}
+
+	# Sleep until next plugin exec.
+	sleep $when_next - time; 
+}
+		
+print STDERR "[$$][$process_name] Exiting\n" if $verbose;
+
+sub fetch_data
+{
+	my $plugin = shift;
+	my $when = shift;
+
+		my $sock = new IO::Socket::INET( 
+			PeerAddr	=> "$host", 
+			Proto	=> 'tcp'
+		) || die "Error creating socket: $!"; 
+		<$sock>; # skip header
+
+		print STDERR "[$$][$process_name] asking for config\n" if $verbose;
+
+		print $sock "config $plugin\n";
+
+		my $output_rows = [];
+
+		while(my $line = <$sock>) {
+			print STDERR "[sock] $line" if $debug;
+			chomp($line);
+
+			if ($line =~ m/^\./) {
+				# Starting with . => end
+				last;
+			}
+
+			push @$output_rows, $line;
+			if ($line =~ m/^update_rate (\d+)/) {
+				# The plugin has a special update_rate: overriding it
+				# XXX - Doesn't take into account a per field update_rate
+
+				# This has to be sent back to the master
+				set_hash($plugin, $1, $plugin_rate_filename);
+			}
+		}
+
+		print STDERR "[$$][$process_name] asking for data\n" if $verbose;
+		print $sock "fetch $plugin\n";
+
+		while(my $line = <$sock>) {
+			print STDERR "[sock] $line" if $debug;
+			chomp($line);
+
+			if ($line =~ m/^\./) {
+				# Starting with . => end
+				last;
+			}
+
+			# Save the line
+			push @$output_rows, $line;
+		}
+
+		# Write the whole load into the spool
+		$spoolwriter->write($when, $plugin, $output_rows);
+}
+
+sub get_hash
+{
+	my ($key, $filename) = @_;
+	my %hash;
+
+	use Fcntl;   # For O_RDWR, O_CREAT, etc.
+	use DB_File;
+	tie (%hash, 'DB_File', $filename, O_RDWR|O_CREAT, 0666) 
+		or die "$!";
+	my $value = $hash{$key};
+	untie(%hash);
+
+	return $value;
+}
+
+sub set_hash
+{
+	my ($key, $value, $filename) = @_;
+	my %hash;
+
+	use Fcntl;   # For O_RDWR, O_CREAT, etc.
+	use DB_File;
+	tie (%hash, 'DB_File', $filename, O_RDWR|O_CREAT, 0666) 
+		or die "$!";
+	$hash{$key} = $value;
+	untie(%hash);
+}
+
+
+
+__END__
+
+=head1 NAME
+
+munin-async-server - A program to spool munin-node calls
+
+=head1 SYNOPSIS
+
+munin-async-server [options]
+
+ Options:
+     --host <hostname:port>     Connect to this munin-node [localhost:4949]
+     -s --spool <spooldir>      Store the spooled data in this dir [@@SPOOLDIR@@]
+
+        --fork                  Do fork
+     -v --verbose               Be verbose
+     -h --help                  View this message	

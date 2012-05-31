@@ -1,0 +1,3 @@
+#!/bin/bash
+
+echo -e "$*\nquit" | nc localhost 4948

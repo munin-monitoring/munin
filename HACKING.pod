@@ -1,0 +1,147 @@
+# this is in pod format (try `perldoc HACKING.pod`)
+
+=pod
+
+=head1 NAME
+
+HACKING.pod - contributing to Munin
+
+=head1 SYNOPSIS
+
+This is the guide for Munin internals contributors (developers,
+testers, documenters.)
+
+If you are looking for more information on how to I<use> Munin you
+probably want L<http://munin-monitoring.org/wiki/Documentation>
+instead.
+
+The munin code is marked by years on the battle front. You will
+therefore find code that deviates from the guidelines defined
+here. However, all new code should be made to comply.
+
+These guidelines are an RFC for the time being and are of course
+negotiable.
+
+
+=head1 GETTING STARTED
+
+In the dev_script directory you will find scripts that are meant to be
+useful for developing. Most of them are tools for creating and using
+munin in a sandbox.
+
+=head2 THE SANDBOX
+
+=over
+
+=item B<install>
+
+To make a clean rebuild of the sandbox
+
+ ./dev_scripts/install 1
+
+To just install the latest changes
+
+ ./dev_scripts/install
+
+=item B<enable/disable tls>
+
+To test TLS, you can enable a paranoid TLS configuration by running:
+
+ ./dev_scripts/enable_tls
+
+And disable it with:
+
+ ./dev_scripts/disable_tls
+
+=item B<start/stop munin-node>
+
+ ./dev_scripts/start_munin-node [munin-node params ...]
+
+And
+
+ ./dev_scripts/stop_munin-node
+
+To do both:
+
+ ./dev_scripts/restart_munin-node [munin-node params ...]
+
+
+=item B<query_munin_node>
+
+Use this command to query the munin-node directly:
+
+ ./dev_scripts/query_munin_node list
+
+=item B<run>
+
+To run Munin master programs (munin-update, munin-html, munin-cron,
+etc) use the run command.
+
+ ./dev_scripts/run CMD [CMD args ...]
+
+
+=back
+
+
+=head1 PUNCTUATION VARIABLES
+
+Don't use punctuation variables (see Perl Best Practices page 79.)
+
+ use English qw(-no_match_vars);
+
+We'll add an exception for $_, and $! as they should be fairly widely
+recognized.
+
+
+=head1 FORMATTING
+
+=head2 perltidy
+
+FIX
+
+
+=head1 TESTS AND COVERAGE
+
+Use test-driven devolopment.
+
+In node, server, or common:
+
+ perl Build.PL
+ ./Build test
+
+
+=head1 EXCEPTION HANDLING
+
+Currently there is no unified approach to handling exceptions. Use
+L<Carp>?
+
+ use Carp;
+ croak("Foo happened!");
+
+ confess("Foo happened!"); # With stack trace
+
+Exceptions are caught with an eval:
+
+ eval {
+     # Exceptionally scary code
+ };
+ if ($EVAL_ERROR) {
+     # Handle exception
+ }
+
+
+
+=head1 DOCUMENTATION
+
+The API documentation is embedded as POD in the code.  See L<perlpod>
+for more on POD.
+
+More is on L<http://munin-monitoring.org/wiki/Documentation>
+
+=head2 WRITING
+
+The POD should be defined all in one place. For plugins you place it at
+the top, else at the bottom.
+
+=cut
+

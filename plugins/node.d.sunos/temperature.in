@@ -1,0 +1,96 @@
+#!@@PERL@@
+# -*- perl -*-
+
+=head1 NAME
+
+temperature - Plugin to monitor temperature inside Sun systems
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+2004/04/16 Richard van den Berg <richard@vdberg.org>
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+$arch=`uname -m`;
+chomp($arch);
+$prtdiag="/usr/platform/$arch/sbin/prtdiag";
+@tempnam=();
+@tempval=();
+
+if($ARGV[0] eq "config") {
+	printconfig();
+	exit(0);
+}
+
+if($ARGV[0] eq "autoconf") {
+	if(! -x $prtdiag) {
+		print "no (no $prtdiag)\n";
+		exit(0);
+	}
+	gettemps();
+	if($#tempnam>=0) {
+		print "yes\n";
+		exit(0);
+	}
+
+	print "no\n";
+	exit(1);
+}
+
+gettemps();
+printtemps();
+
+exit(0);
+
+sub printtemps {
+	for($i=0;$i<=$#tempnam;$i++){
+		$name=$tempnam[$i];
+		$name =~ s/\s+/_/go;
+		print "temp_$name.value $tempval[$i]\n";
+	}
+}
+
+sub gettemps {
+	open(PRTDIAG,"$prtdiag -v|") || return;
+	$found=0;
+	while(<PRTDIAG>) {
+		$found=1 if(m/^[^\s].*temperature/i);
+		$found=0 if(m/^$/);
+		if($found) {
+			$tmp=substr($_,8);
+			if($tmp =~ m/ ([0-9]+)/g) {
+			  push(@tempval,$1);
+				push(@tempnam,substr($_,0,index($_,"  ")));
+				$tempnam[$#tempnam] =~ s/^\s//go;
+				$tempnam[$#tempnam] =~ s#^.*/##go;
+			}
+		}
+	}
+	close(PRTDIAG);
+}
+
+sub printconfig {
+	gettemps();
+	print "graph_title Temperature\n";
+	print "graph_args -l 0\n";
+	print "graph_category sensors\n";
+	print "graph_vlabel temp in C\n";
+	for($i=0;$i<=$#tempnam;$i++){
+		$name=$tempnam[$i];
+		$name =~ s/\s+/_/go;
+		print "temp_$name.label $tempnam[$i]\n";
+	}
+}

@@ -1,0 +1,30 @@
+# This file can be used as a .htaccess file, or a part of your apache
+# config file.
+#
+# For the .htaccess file option to work the munin www directory
+# (@@HTMLDIR@@) must have "AllowOverride all" or something close
+# to that set.
+#
+# As a config file enclose it in <directory> like so:
+# 
+# <directory @@HTMLDIR@@>
+
+AuthUserFile @@CONFDIR@@/munin-htpasswd
+AuthName "Munin"
+AuthType Basic
+require valid-user
+
+# This next part requires mod_expires to be enabled.
+#
+# We could use <IfModule mod_expires> around here, but I want it to be
+# as evident as possible that you either have to load mod_expires _or_
+# you coment out/remove these lines.
+
+# Set the default expiery time for files 5 minutes 10 seconds from
+# their creation (modification) time.  There are probably new files by
+# that time.
+
+ExpiresActive On
+ExpiresDefault M310
+
+# </directory>

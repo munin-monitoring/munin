@@ -1,0 +1,44 @@
+Introducing Munin 2.0!
+
+The most important features:
+
+* Even better scalability through:
+  - Full CGI integration.  It is for graphing as  well for html, if needed.  It
+    is also completely compatible with FastCGI, that only compiles once per run.
+  - Binary state data files.  This has enabled a really fast startup and
+    storing of state files. Quite useful in munin limits that does need to
+    access to the rrd files.
+  - Complete integration with rrdcached.  Starting with RRD 1.4, there is an
+    update daemon. It enables batched updates, and therefore reduce the IO
+    down. Even with 1000+ files to update every 5 min.
+  - Large performance improvements on almost all munin's components
+
+* Complete IPv6 integration.
+  - The master only require a new perl module (IO::Socket::INET6)
+  - The node needs a IPv6-patched Net::Server
+
+* Native SSH transport
+  - No need to have a hairy setup anymore.
+
+* Graph Zooming
+  - The UI is still raw, but right to the point.
+
+* New look on HTML pages, new graph colours with better contrast
+
+* IRC ( #munin @ OFTC ) has become a real support channel, mostly aimed at trunk.
+
+Availability:
+
+* You can find Munin 2.0 as source tar ball at sourceforge
+  (https://sourceforge.net/projects/munin/files/)
+
+* Debian Experimental. Hopefuly in the next stable release
+
+* Expected in EPEL (Extra Packages for (Red Hat) Enterprise Linux) within
+  not too long
+
+If you are a packager please contact us and we'll list your
+support/repository/whatever on our Wiki.
+
+Full details in
+http://munin-monitoring.org/browser/tags/2.0/ChangeLog

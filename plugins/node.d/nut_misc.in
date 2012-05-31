@@ -1,0 +1,104 @@
+#!@@PERL@@
+# -*- perl -*-
+
+=head1 NAME
+
+nut_misc - Plugin to monitor UPS via the upsc command
+
+=head1 CONFIGURATION
+
+The following configuration parameters are used by this plugin
+
+ [nut_misc]
+  env.upsname - <name@host>
+  env.upsc    - <command>
+
+=head2 DEFAULT CONFIGURATION
+
+ [nut_misc]
+  env.upsname bertha@127.0.0.1
+  env.upsc    upsc
+
+=head1 AUTHORS
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+
+=cut
+
+use strict;
+
+my %status;
+
+my %config = (
+	upsname => $ENV{"upsname"} ? $ENV{"upsname"} : 'bertha@127.0.0.1',
+	upsc => $ENV{"upsc"} ? $ENV{"upsc"} : 'upsc'
+);
+
+my %graph =  (
+	'battery_charge' => {
+				label => 'charge - %',
+				type => 'GAUGE',
+				draw => 'LINE2'
+			 },
+	'battery_voltage' => {
+				label => 'batt voltage - V',
+				type => 'GAUGE',
+				draw => 'LINE2'
+			 },
+	'battery_runtime' => {
+				label => 'runtime - min',
+				type => 'GAUGE',
+				draw => 'LINE2'
+			 },
+	'input_frequency' => {
+				label => 'input freq - Hz',
+				type => 'GAUGE',
+				draw => 'LINE2'
+			 },
+	'ups_load' => {
+				label => 'load - %',
+				type => 'GAUGE',
+				draw => 'LINE2'
+			 },
+	'ups_temperature' => {
+				label => 'temp - C',
+				type => 'GAUGE',
+				draw => 'LINE2'
+			 }
+);
+
+if ( defined $ARGV[0] and $ARGV[0] eq 'config' ) {
+	print "graph_title UPS Misc - $config{upsname}\n";
+	#print "graph_args -l 110\n";
+	#print "graph_vlabel Misc\n";
+	foreach my $key (keys %graph) {
+		print "$key.label $graph{$key}->{label}\n";
+		print "$key.type $graph{$key}->{type}\n";
+		print "$key.draw $graph{$key}->{draw}\n";
+	}
+} else {
+	&fetch_values;
+}
+
+sub fetch_values {
+	my $data = `$config{upsc} $config{upsname}`;
+	while ($data =~ /([a-z.]+): (.+)\b/g) {
+		my $label = $1;
+		my $value = $2;
+		$label =~ s/\./_/g;
+		$status{$label} = $value;
+	}
+	$status{'battery_runtime'} /= 60;
+	foreach my $label (sort keys %graph) {
+		print "$label.value $status{$label}\n";
+	}
+}
+

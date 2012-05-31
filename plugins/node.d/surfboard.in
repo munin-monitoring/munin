@@ -1,0 +1,88 @@
+#!@@PERL@@
+# -*- perl -*-
+
+=head1 NAME
+
+surfboard - Plugin to monitor surfboard cable modems
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 NOTES
+
+This plugin monitors Motorola Surfboard cable modems, models 4100 and
+4200. Most likely more models are compatible since Motorola uses many
+of the same settings/chipsets across cable modems.
+
+I know this will not work on Toshiba ones since they use a different
+url and page.
+
+This is real simple: it goes to your cable modem's IP address,
+generally 192.168.100.1, grabs a HTML file, and parses it.
+
+I use this to see how good my cable connection is. Good if you have
+choices in your area.
+
+Requires libwww-perl.
+
+=head1 AUTHOR
+
+Andrew Ryder <atr@mrcoffee.org>
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 BUGS
+
+Needs work, some variables used in the plugin should be made into
+configuration environment variables.
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+
+=cut
+
+use LWP::Simple;
+use strict;
+
+my $sb4200_url = "http://192.168.100.1/signaldata.html";
+my $url = get($sb4200_url);
+my $chunk = undef;
+my $snr = undef;
+my $powerleveld = undef;
+my $powerlevelu = undef;
+
+if ($ARGV[0] and $ARGV[0] eq "config") {
+    print "graph_title Surfboard Statistics\n";
+    print "graph_category network\n";
+    print "graph_order snr downstream upstream\n";
+    print "graph_vlabel surfboard statistics\n";
+    print "snr.label SnR dB\n";
+    print "snr.draw LINE\n";
+    print "downstream.label Power down dBmV\n";
+    print "downstream.draw LINE\n";
+    print "upstream.label Power up dBmV\n";
+    print "upstream.draw LINE\n";
+
+    exit 0;
+}
+
+while ($url =~ m{>Downstream(.*?)line\.gif}gs) {
+    $chunk = $1;
+    $chunk =~ s/\n//gs;
+    ($snr,$powerleveld,$powerlevelu) =
+        $chunk =~ m{Ratio<\/TD><TD>(.*?)\sdB.*?Power\sLevel<\/TD><TD>(.*?)dBmV.*Power\sLevel<\/TD><TD>(.*?)dBmV}i
+        or next;
+
+    # Munin up to 1.2.5/1.3.3 is intolerant of trailing space in values
+    $snr =~ s/\s+$//;
+    $powerleveld =~ s/\s+$//;
+    $powerlevelu =~ s/\s+$//;
+
+    print "snr.value $snr\n";
+    print "downstream.value $powerleveld\n";
+    print "upstream.value $powerlevelu\n";
+}

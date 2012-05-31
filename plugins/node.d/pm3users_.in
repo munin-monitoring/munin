@@ -1,0 +1,124 @@
+#!@@PERL@@ -w
+# -*- perl
+=pod
+
+=head1 NAME
+
+pm3users_ - SNMP wildcard plugin to monitor busy channels on L(ivingston|ucent) Portmaster Network Access Servers
+
+=head1 APPLICABLE SYSTEMS
+
+L(ivingston|ucent) Portmaster 3 (maybe PM2 and PM4, too. Dunno 'bout that)...
+
+=head1 CONFIGURATION
+
+Link into plugin dir with name pm3users_<hostname> or pm3users_<ip address>
+
+ [pm3users_somewherehost]
+  env.host       - Host name or IP address to poll (default: guessed from symlink, i.e. somewherehost)
+  env.port       - Port number (default: 161)
+  env.community  - SNMP read community to use (default: public)
+  env.maxpstn    - Number of analog modems onboard the PM3 (default: 20)
+  env.maxisdn    - Number of ISDN channels available (default: 30 == a full E1 line)
+
+=head1 BUGS
+
+Should be rewritten as a snmp__pm3users plugin using the Plugin::SNMP module.
+
+=head1 AUTHOR
+
+(C) 2004, Jacques Caruso
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+
+=cut
+
+use Net::SNMP;
+use strict;
+
+my $usertable = '1.3.6.1.4.1.307.3.2.1.1.1.4';
+my $modemtable = '1.3.6.1.4.1.307.3.2.1.1.1.13';
+my ($total, $pstn, $isdn) = (0, 0, 0);
+my ($maxpstn, $maxisdn) = (20, 30);
+my ($user, $modem) = ('', '');
+my ($host, $port, $community) = (undef, 161, 'public');
+my $progname = '';
+my $cmd = (defined($ARGV[0])) ? $ARGV[0] : '';
+
+# Check how we were called to guess the PM3's hostname
+($progname, $host) = split(/_/, $0) if ($0 =~ /^(?:|.*\/)pm3users_/);
+
+# Let's see if our configuration differs from the defaults
+(defined($ENV{'host'})) and $host = $ENV{'host'};
+(defined($ENV{'port'})) and $port = $ENV{'port'};
+(defined($ENV{'community'})) and $community = $ENV{'community'};
+
+# We need an host name
+(defined($host)) or die('# Error: cannot find the host to be monitored');
+
+# XXX maybe there is a way to get this info from the equipment
+# XXX remember to look into this
+(defined($ENV{'maxpstn'})) and $maxpstn = $ENV{'maxpstn'};
+(defined($ENV{'maxisdn'})) and $maxisdn = $ENV{'maxisdn'};
+my $maxtotal = $maxisdn;
+
+# Show default values if requested
+if ($cmd eq 'config') {
+	print("host_name $host\n");
+	print("graph_title Users on $host\n");
+	print("graph_args --lower-limit 0 --upper-limit $maxtotal\n");
+	print("graph_vlabel channels in use\n");
+	print("pstn.label PSTN\n");
+	print("pstn.max $maxpstn\n");
+	print("pstn.type GAUGE\n");
+	print("pstn.draw AREA\n");
+	print("pstn.colour 50f0ff\n");
+	print("isdn.label ISDN\n");
+	print("isdn.max $maxisdn\n");
+	print("isdn.type GAUGE\n");
+	print("isdn.draw STACK\n");
+	print("isdn.colour 9598dd\n");
+	print("total.label Total\n");
+	print("total.max $maxtotal\n");
+	print("total.type GAUGE\n");
+	print("total.draw LINE1\n");
+	print("total.colour 000000\n");
+
+# These options are unsupported in the current version:
+#	print("hrules $maxpstn:ff8800:Max PSTN users,$maxisdn:ff0000:Max ISDN users\n");
+
+	exit(0);
+}
+
+# Else proceed to poll the equipment
+my ($session, $error) = Net::SNMP->session(
+	-hostname	=> $host,
+	-community	=> $community,
+	-port		=> $port,
+);
+if (defined($session)) {
+	my $user = $session->get_table(
+		-baseoid => $usertable
+	);
+	my $modem = $session->get_table(
+		-baseoid => $modemtable
+	);
+
+	# Interface 1 is the console port, thus we start at 2
+	for my $i (2 .. 61) {
+		(scalar($user->{"$usertable.$i"}) ne '') and $total++;
+		(scalar($modem->{"$modemtable.$i"}) ne '') and $pstn++;
+	}
+	$session->close;
+}
+$isdn = $total - $pstn;
+print("pstn.value $pstn\n");
+print("isdn.value $isdn\n");
+print("total.value $total\n");
+exit(0);

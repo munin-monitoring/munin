@@ -1,0 +1,79 @@
+#!@@PERL@@
+# -*- perl -*-
+# this is public domain copy and share at will
+# quick n dirty hack to read specific performance data on HP-UX thru
+# measureware (perfview)
+#
+# Sigurd Mytting:
+# I wrote some quick and dirty plugins a few years ago who use Measureware
+# to gather data, known to work on 11.23, 11.11 and 11, both pa/risc and
+# itanium (A-class, N-class, rxwhatever, even the now thrown out superdome
+# upgraded from pa/risc to itanium with 64 cores/128GB memory).
+#
+# Bugs:
+# - This plugin lacks "autoconf".  If someone cleans it up to enable use
+#   of environment variables for binaries and state files and makes a
+#   "autoconf" command it will be suitable for family=auto and autoconf.
+#
+#%# family=contrib
+
+
+use strict;
+
+my $reptdata = "format DATAFILE
+headings=on
+separator=\",\"
+DATA TYPE GLOBAL
+  record_type
+  date
+  time
+  interval
+  gbl_proc_sample
+
+GBL_MEM_UTIL
+GBL_SWAP_SPACE_UTIL
+GBL_CPU_TOTAL_UTIL
+GBL_DISK_UTIL_PEAK
+";
+
+my $extract = "/opt/perf/bin/extract";
+my $datafile = "/var/tmp/munin.mwa.rep";
+my $reptfile = "/var/tmp/munin.rept-basic";
+
+if ($ARGV[0] eq "config") {
+    print "graph_title Global Utilization\n";
+    print "graph_vlabel %\n";
+    print "graph_args --upper-limit 100 -l 0\n";
+    print "GBL_DISK_UTIL_PEAK.label Disk peak\n";
+    print "GBL_SWAP_SPACE_UTIL.label Swap space\n";
+    print "GBL_CPU_TOTAL_UTIL.label CPU total\n";
+    print "GBL_MEM_UTIL.label Memory\n";
+    exit 0;
+}
+
+open OUT, ">$reptfile";
+print OUT $reptdata;
+close OUT;
+
+# get data:
+system "$extract -xp D -f $datafile,purge -g -r $reptfile  -l /var/opt/perf/datafiles/logglob > /dev/null 2>&1";
+unlink $reptfile;
+my $last;
+if (-f $datafile) {
+    $last=`tail -1 $datafile`;
+}
+unlink $datafile;
+
+#print $last ;
+
+# "Rec ","        ","     "," Sec  "," Proc ","Memory","      ","      "," Peak ",
+# "Type","  Date  ","Time ","/Intvl","Sample","  %   ","Swap %","CPU % ","Disk %",
+# "GLOB","02/01/05","16:55",   299,        5 ,   27.77,   14.00,    1.83,  1.63,
+
+
+my (undef, undef, undef, undef, $d, $GBL_MEM_UTIL, $GBL_SWAP_SPACE_UTIL, $GBL_CPU_TOTAL_UTIL, $GBL_DISK_UTIL_PEAK) = split /\,/,$last;
+
+print "GBL_DISK_UTIL_PEAK.value $GBL_DISK_UTIL_PEAK\n";
+print "GBL_SWAP_SPACE_UTIL.value $GBL_SWAP_SPACE_UTIL\n";
+print "GBL_CPU_TOTAL_UTIL.value $GBL_CPU_TOTAL_UTIL\n";
+print "GBL_MEM_UTIL.value $GBL_MEM_UTIL\n";

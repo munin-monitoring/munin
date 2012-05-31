@@ -1,0 +1,51 @@
+#!@@PERL@@
+# -*- mode: cperl; cperl-indent-level: 8; -*-
+
+=head1 NAME
+
+uptime - Plugin to measure uptime on solaris
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Adam J. Baker (adam@unb.ca)
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+use Munin::Plugin;
+
+my $KSTAT = '/usr/bin/kstat -p';
+my $STATISTIC = 'unix:0:system_misc:boot_time';
+
+if ($ARGV[0] eq 'autoconf') {
+        print "yes\n";
+} elsif ($ARGV[0] eq 'config') {
+        print "graph_title Uptime\n";
+        print "graph_args --base 1000 -l 0 \n";
+        print "graph_scale no\n";
+        print "graph_category system\n";
+        print "graph_vlabel uptime in days\n";
+        print "uptime.label uptime\n";
+        print "uptime.draw AREA\n";
+        print_thresholds("uptime");
+} else {
+        my $uptime = `$KSTAT $STATISTIC`;
+
+        $uptime =~ m/^$STATISTIC\s*(\d*)$/;
+
+        # uptime in days
+        printf "uptime.value %0.2f\n", ((time() - $1) / (60 * 60 * 24));
+}

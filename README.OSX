@@ -1,0 +1,29 @@
+Here's a howto on adding the users in the first place:
+
+bash-3.2# dscl . create /Groups/munin PrimaryGroupId 4949
+bash-3.2# dscl . create /Users/munin UniqueId 4949
+bash-3.2# dscl . create /Users/munin PrimaryGroupId 4949
+bash-3.2# dscl . create /Users/munin UserShell /bin/false
+bash-3.2# dscl . create /Users/munin NFSHomeDirectory /nohome
+bash-3.2# dscl . create /Users/munin RealName Munin
+bash-3.2# dscl . create /Groups/munin GroupMembership munin
+
+bash-3.2# dscl . -read /Users/munin
+dsAttrTypeNative:PrimaryGroupId: 4949
+dsAttrTypeNative:UniqueId: 4949
+AppleMetaNodeLocation: /Local/Default
+GeneratedUID: 2A56D7FE-00D0-4B81-BAE7-F842E675031D
+NFSHomeDirectory: /nohome
+RealName: Munin
+RecordName: munin
+RecordType: dsRecTypeStandard:Users
+UserShell: /bin/false
+
+bash-3.2# dscl . -read /Groups/munin
+dsAttrTypeNative:PrimaryGroupId: 4949
+AppleMetaNodeLocation: /Local/Default
+GeneratedUID: F53ACCA3-2CB9-440F-84A6-E2FADC44CB9E
+GroupMembership: munin
+RecordName: munin
+RecordType: dsRecTypeStandard:Groups
+

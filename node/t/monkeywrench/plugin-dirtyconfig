@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# To test munin-gather/update: This plugin is to emit broken
+# configuration when run with "config".
+
+do_autoconf () {
+    echo no
+    exit 1
+}
+
+do_ () {
+    # Fetch - emit valid data
+    echo test.value 5
+}
+
+do_config () {
+    # Missing graph_title - this is the indicator used by munin if the
+    # graph is configured.
+    echo graph_title Dirty config plugin
+    echo graph_args -l 0
+    echo graph_info Floppa
+    echo test.label Test series
+    do_
+}
+
+eval do_$1
+
+exit 0

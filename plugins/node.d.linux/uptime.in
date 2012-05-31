@@ -1,0 +1,50 @@
+#!@@GOODSH@@
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+uptime - Plugin to measure uptime.
+
+=head1 NOTES
+
+Especially the average and max values on the bigger graphs (yearly) can be interesting.
+
+=head1 AUTHOR
+
+Contributed by Nicolas Salles
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+if [ "$1" = "autoconf" ]; then
+        echo yes
+        exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+        echo 'graph_title Uptime'
+        echo 'graph_args --base 1000 -l 0 '
+        echo 'graph_scale no'
+        echo 'graph_vlabel uptime in days'
+        echo 'graph_category system'
+        echo 'uptime.label uptime'
+        echo 'uptime.draw AREA'
+        print_warning uptime
+        print_critical uptime
+        exit 0
+fi
+
+awk '{printf "uptime.value %.2f\n",$1/86400}' /proc/uptime

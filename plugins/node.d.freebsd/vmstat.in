@@ -1,0 +1,85 @@
+#!@@GOODSH@@
+# -*- sh -*-
+#
+# Plugin to monitor the number of procs in io-sleep and other wait
+# states. Uses `vmstat`.
+#
+# This plugin is now "legacy" because the generic processes plugin
+# shows substantially the same information.
+#
+# Parameters:
+#
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#
+# Magick markers (optional):
+#%# family=legacy
+#%# capabilities=autoconf
+
+
+
+OSV=`/sbin/sysctl -n kern.osrelease | cut -f1 -d.`
+
+if [ "$1" = "autoconf" ]; then
+	if [ "$OSV" -ge "5" ]; then
+		/sbin/sysctl -n vm.vmtotal 2>/dev/null >/dev/null
+		RESULT=$?
+		NAME=/sbin/sysctl
+	else
+		/usr/bin/vmstat 1 1 2>/dev/null >/dev/null
+		RESULT=$?
+		NAME=/usr/bin/vmstat
+	fi
+	if [ $RESULT -eq 0 ]; then
+		echo yes
+		exit 0
+	else
+		if [ $RESULT -eq 127 ]; then
+			echo "no (could not run \"$NAME\")"
+			exit 0
+		else
+			echo no
+			exit 0
+		fi
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+	echo 'graph_title VMstat'
+	echo 'graph_args --base 1000 -l 0'
+	echo 'graph_vlabel process states'
+	echo 'graph_category processes'
+	echo 'graph_info This graph shows number of processes in each state.'
+	if [ "$OSV" -ge "5" ]; then
+		echo 'running.label running'
+		echo 'running.info processes on CPU or waiting for CPU'
+		echo 'running.type GAUGE'
+		echo 'diskwait.label diskwait'
+		echo 'diskwait.info processes waiting for disk activity'
+		echo 'diskwait.type GAUGE'
+		echo 'pagewait.label pagewait'
+		echo 'pagewait.info processes waiting for page-in'
+		echo 'pagewait.type GAUGE'
+		echo 'sleep.label sleep'
+		echo 'sleep.info processes waiting for some event'
+		echo 'sleep.type GAUGE'
+	else
+		echo 'wait.label wait'
+		echo 'wait.type GAUGE'
+		echo 'sleep.label sleep'
+		echo 'sleep.type GAUGE'
+	fi
+	exit 0
+fi
+
+if [ "$OSV" -ge "5" ]; then
+	/sbin/sysctl -n vm.vmtotal | /usr/bin/awk '
+/^Processes:/ {
+	print "running.value", $3;
+	print "diskwait.value", $6;
+	print "pagewait.value", $9;
+	print "sleep.value", $11+0;
+}'
+else
+	/usr/bin/vmstat 1 2 | /usr/bin/awk 'END { print "wait.value " $1 "\nsleep.value " $2 }'
+fi

@@ -1,0 +1,183 @@
+#!@@PERL@@
+# -*-  perl -*-
+
+=head1 NAME
+
+tc - plugin to monitor traffic control queues
+
+=head1 APPLICABLE SYSTEMS
+
+Every Linux system with tc configured.
+
+=head1 CONFIGURATION
+
+This plugin automatically detects the queues that are configured.
+
+To specify the location of the tc command, set the tc environment variable.
+For example:
+
+  [tc]
+  env.tc /sbin/tc
+
+=head1 USAGE
+
+Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 BUGS
+
+None known.
+
+=head1 VERSION
+
+  $Id$
+
+=head1 AUTHOR
+
+Brian De Wolf
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+
+use warnings;
+use strict;
+
+use Munin::Plugin;
+
+my $TC = ($ENV{tc} or
+            (-x "/sbin/tc" and "/sbin/tc") or
+            (-x "/usr/sbin/tc" and "/usr/sbin/tc"));
+my $mode = ($ARGV[0] or "print");
+
+open(TC, "$TC -s qdisc |")
+    or die "Failed to run $TC: $!";
+
+my %qdiscs;
+my $autoconf = "no";
+
+my $current_qdisc;
+while(<TC>) {
+    chomp;
+    my $raw = $_;
+# An example:
+#qdisc pfifo_fast 0: dev eth1 root refcnt 2 bands 3 priomap  1 2 2 2 1 2 0 0 1 1 1 1 1 1 1 1
+    if(/^qdisc/) {
+        my (undef, $type, $name, undef, $dev) = split(/ /);
+
+        # Most linux boxes will have qdiscs, but they'll all be pfifo_fast.  If
+        # we see one that isn't, it implies someone configured tc and would be
+        # interested in our graphs.
+        $autoconf = "yes"
+            if $type ne "pfifo_fast";
+
+        $current_qdisc = clean_fieldname("${dev}_$name");
+        $qdiscs{$current_qdisc}{raw} = $raw;
+        $qdiscs{$current_qdisc}{name} = "$dev $name";
+# Sent 554351897174 bytes 265755405 pkt (dropped 19943, overlimits 0 requeues 1766011)
+    } elsif(/^ Sent/) {
+        # split on non-digits, leaving us with just the numbers
+        my (undef, $bytes, $packets, $dropped, $overlimit, $requeues) = split(/\D+/, $raw);
+        $qdiscs{$current_qdisc}{bytes} = $bytes;
+        $qdiscs{$current_qdisc}{packets} = $packets;
+        $qdiscs{$current_qdisc}{dropped} = $dropped;
+        $qdiscs{$current_qdisc}{overlimit} = $overlimit;
+        $qdiscs{$current_qdisc}{requeues} = $requeues;
+    }
+}
+
+close TC
+    or die "$TC returned error on exit: $!";
+
+if($mode eq 'autoconf') {
+    print "$autoconf\n";
+    exit 0;
+}
+
+# Print overview graphs
+foreach my $type (qw(bps pps dps ops rps)) {
+    print "\nmultigraph tc_$type\n";
+    my ($unit, $stat);
+    if($type eq "bps") {
+        $unit = "bits";
+        $stat = "bytes";
+    } elsif($type eq "pps") {
+        $unit = "packets";
+        $stat = "packets";
+    } elsif($type eq "dps") {
+        $unit = "dropped packets";
+        $stat = "dropped";
+    } elsif($type eq "ops") {
+        $unit = "overlimit packets";
+        $stat = "overlimit";
+    } elsif($type eq "rps") {
+        $unit = "requeued packets";
+        $stat = "requeues";
+    }
+    if($mode eq 'config') {
+        print <<EOF;
+graph_title Traffic control $unit per second per qdisc
+graph_args --base 1000
+graph_vlabel $unit per second
+graph_category network
+
+EOF
+        print "graph_order";
+        foreach my $qdisc (keys %qdiscs) {
+            print " $qdisc\_$type=tc_$type.$qdisc.$qdisc\_$type";
+        }
+        print "\n\n";
+    }
+    foreach my $qdisc (keys %qdiscs) {
+        my $fname = "${qdisc}_$type";
+        if($mode eq 'config') {
+            print <<EOF;
+$fname.label $qdiscs{$qdisc}{name}
+$fname.type DERIVE
+$fname.min 0
+$fname.update no
+$fname.draw LINE1
+$fname.info $qdiscs{$qdisc}{raw}
+EOF
+            print "$fname.cdef $fname,8,*\n"
+                if($type eq 'bps');
+            print_thresholds($fname);
+        } else {
+            print "$fname.value $qdiscs{$qdisc}{$stat}\n";
+        }
+    }
+
+    # Singleton graphs
+    foreach my $qdisc (keys %qdiscs) {
+        my $fname = "${qdisc}_$type";
+        print "\nmultigraph tc_$type.$qdisc\n";
+        if($mode eq 'config') {
+            print <<EOF;
+graph_title $qdiscs{$qdisc}{name} $unit per second
+graph_args --base 1000
+graph_vlabel $unit per second
+graph_category network
+
+$fname.label $qdiscs{$qdisc}{name} $type
+$fname.type DERIVE
+$fname.min 0
+$fname.info $qdiscs{$qdisc}{raw}
+$fname.draw AREA
+EOF
+            print "$fname.cdef $fname,8,*\n"
+                if($type eq 'bps');
+        } else {
+            print "$fname.value $qdiscs{$qdisc}{$stat}\n";
+        }
+    }
+}
+
+
+# vim: ft=perl sw=4 ts=4 et

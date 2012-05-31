@@ -1,0 +1,62 @@
+#!@@GOODSH@@
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+forks -Plugin to monitor the number of forks per second on the machine
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGICK MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+if [ "$1" = "autoconf" ]; then
+	if [ -r /proc/stat ]; then
+		echo yes 
+		exit 0
+	else
+		echo "no (/proc/stat not readable)"
+		exit 0
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Fork rate'
+	echo 'graph_args --base 1000 -l 0 '
+	echo 'graph_vlabel forks / ${graph_period}'
+	echo 'graph_category processes'
+	echo 'graph_info This graph shows the number of forks (new processes started) per second.'
+	echo 'forks.label forks'
+	echo 'forks.type DERIVE'
+	echo 'forks.min 0'
+	echo 'forks.max 100000'
+	echo 'forks.info The number of forks per second.'
+	print_warning forks
+	print_critical forks
+	exit 0
+fi
+
+echo -n "forks.value "
+awk '/processes/ {print $2}' /proc/stat
+
+
+

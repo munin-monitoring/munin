@@ -1,0 +1,205 @@
+body, h1, h2, h3, p, span, div { 
+  font-family: verdana, helvetica, arial, sans-serif;
+  font-size: small;
+ }
+
+body { 
+  background-color: #ffffff;
+  color: #000000;
+  
+ }
+
+h3.nobottom {
+    margin-top: 20px;
+    margin-bottom: 0px;
+}
+
+div.logo { 
+  background-image: url(logo.png);
+  background-repeat: no-repeat;  
+  width: 41px;
+  height: 59px;
+} 
+
+div.lighttext { 
+  background-color: #ffffff;
+  color: #777777;
+  font-style: italic;
+  
+ }
+
+.domain { 
+  font-size: medium;
+  font-weight: bold;
+ }
+
+.host { 
+  font-weight: bold;
+ }
+
+.service { 
+  font-size: x-small;
+  font-weight: bold;
+ }
+
+.center { 
+  text-align: center;
+}
+
+.small { 
+  font-size: smaller;
+ }
+
+.noborder { 
+  border-width: 0px;
+  border-collapse: collapse;
+ }
+
+table.largeinvisiblebox {
+        border-width: thin;
+        border-top: 0px;
+        border-bottom: 0px;
+        border-left: 0px;
+        border-right: 0px;
+        border-color: #999;
+        border-style: solid;
+        padding: 0px 0px 0px 0px;
+	margin: 0px 0px 0px 0px;
+	white-space: nowrap;
+	max-width: 90%;
+        width: 80%;
+}
+
+table.invisiblebox {
+        border-width: thin;
+        border-top: 0px;
+        border-bottom: 0px;
+        border-left: 0px;
+        border-right: 0px;
+        border-color: #999;
+        border-style: solid;
+        padding: 0px 0px 0px 0px;
+	margin: 0px 0px 0px 0px;
+	white-space: nowrap;
+	width: 1%;
+}
+
+td.graphbox {
+        border-width: thin;
+        border-top: 1px;
+        border-bottom: 1px;
+        border-left: 1px;
+        border-right: 1px;
+        border-color: #999;
+        border-style: solid;
+        padding: 4px 4px 4px 4px;
+	margin: 0px 0px 0px 0px;
+	white-space: nowrap;
+	width: 100%;
+}
+
+.box {
+        border-width: thin;
+        border-top: 1px;
+        border-bottom: 1px;
+        border-left: 1px;
+        border-right: 1px;
+        border-color: #999;
+        border-style: solid;
+        padding: 4px 4px 4px 4px;
+        margin: 2px 2px 2px 2px;
+        text-align: left;
+        width: 80%;
+        max-width: 90%
+}
+
+td.legendbox {
+        border-width: thin;
+        border-top: 1px;
+        border-bottom: 1px;
+        border-left: 1px;
+        border-right: 1px;
+        border-color: #999;
+        border-style: solid;
+        padding: 8px 4px 2px 2px;
+        margin: 2px 2px 2px 2px;
+        text-align: left;
+	width: 100%;
+}
+
+td.wrap {
+	white-space: normal;
+	max-width: 1%;
+}
+
+td.linkbox {
+        border-width: thin;
+        border-top: 1px;
+        border-bottom: 1px;
+        border-left: 1px;
+        border-right: 1px;
+        border-color: #999;
+        border-style: solid;
+        padding: 4px 4px 4px 4px;
+        margin: 2px 2px 2px 2px;
+	width: 100%;
+	white-space: normal;
+}
+
+.warntext {
+  font-weight: bold;
+  background-color: #cccc00;
+}
+
+.crittext {
+  font-weight: bold;
+  background-color: #ff6f22;
+}
+
+.ruler {
+  background-color: #999999;
+  border: 0px;
+  height: 1px;
+}
+
+.ruler2 {
+  background-color: #999999;
+  border: 0px;
+  height: 2px;
+}
+
+a.meek:link { 
+  color: #486aaf;
+  font-size: small;
+ }
+
+a.meek:visited { 
+  color: #af1a00;
+  font-size: small;
+ }
+
+a.meek:active { 
+  color: #486aaf;
+  font-size: small;
+ }
+
+a.meek:hover { 
+  color: #999999;
+  font-size: small;
+ }
+
+
+a.warn:link    { color: #cc9900; }
+a.warn:visited { color: #cc9900; }
+a.warn:active  { color: #cc9900; }
+a.warn:hover   { color: #cc9900; }
+
+a.crit:link    { color: #cc0000; } 
+a.crit:visited { color: #cc0000; } 
+a.crit:active  { color: #cc0000; } 
+a.crit:hover   { color: #cc0000; } 
+
+a:link    { color: #486aaf; } 
+a:visited { color: #486aaf; } 
+a:active  { color: #486aaf; } 
+a:hover   { color: #486aaf; } 

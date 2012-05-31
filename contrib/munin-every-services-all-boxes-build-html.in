@@ -1,0 +1,114 @@
+#!/usr/bin/perl -w
+
+=head1 munin-every-services-all-boxes-build-html
+
+This is a contributed program and is not installed by default or
+tested in the release process.  Install it in @@LIBDIR@@.
+
+This script will generate a page, by services, with all hosts
+included. handy if you want to watch memory usage on all of your
+infrastructure.
+
+=head1 installation
+
+add in  munin-cron:
+
+  find @@HTMLDIR@@ -name "*.png" | @@LIBDIR@@/munin-every-services-all-boxes-build-html
+
+[ -x @@LIBDIR@@/munin-html   ] && nice find @@HTMLDIR@@ -mtime -30 -name "*.png" | @@LIBDIR@@/munin-every-services-all-boxes-build-html $@;
+
+optional for find : -mtime -30 ; will ignore old files
+
+  mkdir @@LIBDIR@@/every-services-all-boxes
+
+  chown @@USER@@.@@GROUP@@ @@HTMLDIR@@/every-services-all-boxes
+
+in @@CONFDIR@@/templates/munin-overview.tmpl:
+
+ <div class="box">
+    <a href=every-services-all-boxes>every services on all boxes</a>
+
+=head1 TODO
+
+use the proprer template system in munin, and munin-html to generate
+the page, not just guessing it from the files
+
+=head1 License
+
+LGPL-2.1 
+
+=head1 Authors / credits
+
+8D Technologies
+
+=cut
+
+
+
+use strict;
+
+my $munin_www='@@HTMLDIR@@';
+
+my %host;
+my %plugin;
+my %domain;
+
+    my $htmlpluginfileindex="$munin_www/every-services-all-boxes/index.html";
+
+    open (IPF,">$htmlpluginfileindex") || die "cant open $htmlpluginfileindex : $!";
+
+    print IPF "<html><head><title>every services for all boxes</title></head><body><table>\n";
+
+while (<>)
+{
+    if (m|$munin_www/([\.\w]+)/([\.-\w]+)-([\.\w]+)-(\w+).png|)
+    {
+	$domain{$1}=1;
+	$host{$2}=$1;
+	$plugin{$3}=1;
+
+
+    }
+}
+
+my @prefered_plugins=("memory","swap","hddtemp_smartctl","sensors_temp");
+
+foreach (@prefered_plugins,sort keys %plugin)
+{
+    my $plugin=$_;
+    my $htmlpluginfile="$munin_www/every-services-all-boxes/munin-$plugin-all-boxes.html";
+
+    open (PF,">$htmlpluginfile") || die "cant open $htmlpluginfile : $!";
+
+    print PF "<html><head><title>$plugin all boxes</title></head><body><table>\n";
+    #print "plugin : $_\n";
+    print IPF qq|<a href="munin-$plugin-all-boxes.html">$plugin</a><br>|;
+
+    foreach (keys %domain)
+    {
+	#print "domain : $_\n";
+	my $domain=$_;
+	foreach (sort keys %host)
+	{
+	    my $host=$_;
+
+	    if ($host{$_} eq $domain)
+	    {
+		#print "host in domain : $host\n";
+		# test existence here
+
+		if ( -f "$munin_www/$domain/$host-$plugin-week.png" )
+		{
+		    print PF qq|<tr><td colspan=2><center> <a href="../$domain/$host.html">$host</a> <a href="../$domain/$host-$plugin.html">$plugin</a></center></tr></td>\n|;
+		    print PF "<tr>\n";
+		    print PF qq|<td><a href="../$domain/$host-$plugin.html"><img src="../$domain/$host-$plugin-day.png" alt="$plugin"/></a></td>\n|;
+		    print PF qq|<td><a href="../$domain/$host-$plugin.html"><img src="../$domain/$host-$plugin-week.png" alt="$plugin"/></a></td>\n|;
+		    print PF "</tr>\n";
+		}
+	    }
+	}
+    }
+    print PF "<table></body></html>\n";
+    close PF;
+}
+
