@@ -32,7 +32,7 @@ iowait reporting works to fully understand that number.
 
 =head1 MAGIC MARKERS
 
-  #%# family=auto
+  #%# family=legacy
   #%# capabilities=autoconf
 
 =head1 VERSION

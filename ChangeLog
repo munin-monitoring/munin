@@ -1,4 +1,17 @@
 -*- text -*-
+munin 2.0-beta2, r4256:4298, 2011-8-1
+
+Commits by janl, ligne, steve.schnepp
+
+Summary : 
+
+* HTML/CSS enhancements
+* munin-async-* enhancements
+* IPv6 enabled munin-node
+* Small munin-html performance improvements
+* Small plugins improvements
+* Various bugfixes since 2.0b2
+
 munin 2.0-beta2, r4199:4252, 2011-7-3
 
 Commits by bldewolf, steve.schnepp

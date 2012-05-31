@@ -310,7 +310,7 @@ sub _open_node_connection
         PeerAddr => $self->{host},
         PeerPort => $self->{port},
         Proto    => 'tcp',
-    ) or die "Failed to connect to node: $!\n";
+    ) or die "Failed to connect to node on $self->{host}:$self->{port}: $!\n";
 
     my $line = $self->_read_line or die "Failed to read banner\n";
 

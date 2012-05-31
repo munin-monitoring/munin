@@ -12,6 +12,12 @@ use Munin::Common::Defaults;
 use Munin::Node::Logger;
 
 
+use constant TIME        => 86_400;      # put 1 day of results into a spool file
+use constant MAXIMUM_AGE => TIME * 7;    # remove spool files more than a week old
+
+sub _snap_to_epoch_boundary { return $_[0] - ($_[0] % TIME) }
+
+
 sub new
 {
     my ($class, %args) = @_;
@@ -36,7 +42,9 @@ sub write
 {
     my ($self, $timestamp, $service, $data) = @_;
 
-    open my $fh , '>>', "$self->{spooldir}/munin-daemon.$service.0"
+    my $fmtTimestamp = _snap_to_epoch_boundary($timestamp);
+
+    open my $fh , '>>', "$self->{spooldir}/munin-daemon.$service.$fmtTimestamp"
         or die "Unable to open spool file: $!";
 
     print {$fh} "timestamp $timestamp\n";
@@ -53,11 +61,25 @@ sub write
 }
 
 
-# removes content from the spooldir older than $timestamp
-# TODO - For now, SpoolReader just parses the old thing. No need to
-# garbage-collect.
+# removes files from the spooldir older than MAXIMUM_AGE
 sub cleanup
-{}
+{
+    my ($self) = @_;
+
+    opendir my $dir, $self->{spooldir} or die $!;
+
+    foreach my $file (readdir $dir) {
+        my $timestamp;
+        next unless ($timestamp) = ($file =~ m{munin-daemon\.\w+\.(\d+)$})
+                and (time - $timestamp) > MAXIMUM_AGE;
+
+        my $filename = "$self->{spooldir}/$file";
+
+        unlink $filename or die "Unable to unlink '$filename': $!\n";
+    }
+
+    return;
+}
 
 
 1;

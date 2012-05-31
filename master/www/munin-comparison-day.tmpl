@@ -1,4 +1,4 @@
-<TMPL_INCLUDE NAME="partial/head.tmpl">
+<TMPL_INCLUDE NAME="partial/head.tmpl"><!-- -*- HTML -*- -->
 <body>
 <TMPL_INCLUDE NAME="partial/logo_navigation_comparison.tmpl">
 <div id="main" class="comparison">
@@ -22,7 +22,10 @@
 		</span><br />
 		<TMPL_IF NAME="CIMGDAY">
 			<a href="<TMPL_VAR NAME="URL1">">
-				<img src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">" 
+				<img
+				src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">"
+				class=i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>
+
 				 <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> 
 				 <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/>
 			</a>

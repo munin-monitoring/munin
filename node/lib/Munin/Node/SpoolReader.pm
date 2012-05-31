@@ -15,6 +15,11 @@ use Munin::Node::Config;
 my $config = Munin::Node::Config->instance;
 
 
+use constant TIME => 86_400;  # put 1 day of results into a spool file
+
+sub _snap_to_epoch_boundary { return $_[0] - ($_[0] % TIME) }
+
+
 sub new
 {
     my ($class, %args) = @_;
@@ -61,43 +66,52 @@ sub _cat_multigraph_file
 {
     my ($self, $service, $timestamp) = @_;
 
-    # FIXME: shortcut by checking mtime of file?
+    my $fmtTimestamp = _snap_to_epoch_boundary($timestamp);
 
-    open my $fh, '<', "$self->{spooldir}/munin-daemon.$service.0"
-        or die "Unable to open spool file: $!";
-
-    my $epoch;
-
-    # wind through to the start of the first results after $timestamp
-    while (<$fh>) {
-        ($epoch) = m/^timestamp (\d+)/ or next;
-        logger("Timestamp: $epoch") if $config->{DEBUG};
-        last if ($epoch > $timestamp);
-    }
-
-    if (eof $fh) {
-        logger("Epoch $timestamp not found in spool file for '$service'")
-            if $config->{DEBUG};
-        return '';
-    }
-
-    # The timestamp isn't part of the multigraph protocol, 
-    # just part of spoolfetch, so we have to filter it out, 
-    # and replace each value line with its current value
     my $data = "";
-    while(<$fh>) {
-	chomp;
-        if (m/^timestamp (\d+)/) {
-		# epoch is updated
-		$epoch = $1;
-		next;
-	}
 
-        if (m/^(\w+)\.value\s+(?:N:)?([0-9.]+|U)$/) {
-		$_ = "$1.value $epoch:$2";
-	}
+    rewinddir $self->{spooldirhandle}
+        or die "Unable to reset the spool directory handle: $!";
 
-	$data .= $_ . "\n";
+    foreach my $file (readdir $self->{spooldirhandle}) {
+        next unless $file =~ m/^munin-daemon\.$service.(\d+)$/;
+        next unless $1 >= $fmtTimestamp;
+
+        open my $fh, '<', "$self->{spooldir}/$file"
+            or die "Unable to open spool file: $!";
+
+        my $epoch;
+
+        # wind through to the start of the first results after $timestamp
+        while (<$fh>) {
+            ($epoch) = m/^timestamp (\d+)/ or next;
+            logger("Timestamp: $epoch") if $config->{DEBUG};
+            last if ($epoch > $timestamp);
+        }
+
+        if (eof $fh) {
+            logger("Epoch $timestamp not found in spool file for '$service'")
+                if $config->{DEBUG};
+            next;
+        }
+
+        # The timestamp isn't part of the multigraph protocol,
+        # just part of spoolfetch, so we have to filter it out,
+        # and replace each value line with its current value
+        while (<$fh>) {
+            chomp;
+            if (m/^timestamp (\d+)/) {
+                # epoch is updated
+                $epoch = $1;
+                next;
+            }
+
+            if (m/^(\w+)\.value\s+(?:N:)?([0-9.]+|U)$/) {
+                $_ = "$1.value $epoch:$2";
+            }
+
+            $data .= $_ . "\n";
+        }
     }
 
     return $data;
@@ -111,7 +125,8 @@ sub _get_spooled_plugins
     rewinddir $self->{spooldirhandle}
         or die "Unable to reset the spool directory handle: $!";
 
-    return map { m/^munin-daemon\.(\w+).0$/ ? $1 : () }
+    my %seen;
+    return map { m/^munin-daemon\.(\w+)\.\d+$/ && ! $seen{$1}++ ? $1 : () }
         readdir $self->{spooldirhandle};
 }
 

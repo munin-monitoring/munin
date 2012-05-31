@@ -272,6 +272,8 @@ sub get_picture_filename {
     my $cgi_tmp_dir = $config->{cgitmpdir} || "/tmp/munin-cgi-tmp";
 
     $params = $params ? "?$params" : "";
+    $params =~ tr/\//_/; # / are forbidden in a filename
+    $params = $1 if $params =~ m/(.*)/; # XXX - Q&D untaint
     return "$cgi_tmp_dir/$domain/$name/$service-$scale.png" . $params;
 }
 

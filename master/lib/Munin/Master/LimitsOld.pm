@@ -307,8 +307,8 @@ sub process_service {
 	my $value;
     	{
 		my $rrd_filename = munin_get_rrd_filename($field);
-		my ($current_updated_timestamp, $current_updated_value) = @{ $state->{value}{"$rrd_filename:42"}{current} };
-		my ($previous_updated_timestamp, $previous_updated_value) = @{ $state->{value}{"$rrd_filename:42"}{previous} };
+		my ($current_updated_timestamp, $current_updated_value) = @{ $state->{value}{"$rrd_filename:42"}{current} || [ ] };
+		my ($previous_updated_timestamp, $previous_updated_value) = @{ $state->{value}{"$rrd_filename:42"}{previous} || [ ] };
 
 		if (! $field->{type} || $field->{type} eq "GAUGE" || $field->{type} eq "ABSOLUTE") {
 			$value = $current_updated_value;

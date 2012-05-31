@@ -1,0 +1,205 @@
+This patch file has been copied off the Debian.  Their Net::Server package
+can be found at http://packages.qa.debian.org/libn/libnet-server-perl.html
+
+diff -ur lib.orig/Net/Server/Proto/SSLEAY.pm lib/Net/Server/Proto/SSLEAY.pm
+--- lib.orig/Net/Server/Proto/SSLEAY.pm	2010-07-09 18:44:48.000000000 +0200
++++ lib/Net/Server/Proto/SSLEAY.pm	2011-04-06 16:32:19.835579843 +0200
+@@ -23,7 +23,7 @@
+ 
+ use strict;
+ use vars qw($VERSION $AUTOLOAD @ISA);
+-use IO::Socket::INET;
++use IO::Socket::INET6;
+ use Fcntl ();
+ use Errno ();
+ use Socket ();
+@@ -38,7 +38,7 @@
+ }
+ 
+ $VERSION = $Net::Server::VERSION; # done until separated
+-@ISA = qw(IO::Socket::INET);
++@ISA = qw(IO::Socket::INET6);
+ 
+ sub object {
+     my $type  = shift;
+@@ -48,9 +48,12 @@
+     my $prop = $server->{'server'};
+     my $host;
+ 
+-    if ($port =~ m/^([\w\.\-\*\/]+):(\w+)$/) { # allow for things like "domain.com:80"
++    if ($port =~ m/^([\w\.\-\*\/]+):(\w+)$/) { # allow for things like "domain.com:80" (IPv4)
+         ($host, $port) = ($1, $2);
+     }
++    elsif( $port =~ m/^\[([\:\w\.\-\*\/]+)\]:(\w+)$/ ){ # allow for things like "[::1]:80" (IPv6)
++        ($host,$port) = ($1,$2);
++    }
+     elsif ($port =~ /^(\w+)$/) { # allow for things like "80"
+         ($host, $port) = ($default_host, $1);
+     }
+diff -ur lib.orig/Net/Server/Proto/SSL.pm lib/Net/Server/Proto/SSL.pm
+--- lib.orig/Net/Server/Proto/SSL.pm	2010-05-05 05:13:03.000000000 +0200
++++ lib/Net/Server/Proto/SSL.pm	2011-04-05 14:39:39.788076698 +0200
+@@ -39,10 +39,14 @@
+   my $prop = $server->{server};
+   my $host;
+ 
+-  ### allow for things like "domain.com:80"
++  ### allow for things like "domain.com:80" (IPv4)
+   if( $port =~ m/^([\w\.\-\*\/]+):(\w+)$/ ){
+     ($host,$port) = ($1,$2);
+ 
++  ### allow for things like "[::1]:80" (IPv6)
++  }elsif( $port =~ m/^\[([\:\w\.\-\*\/]+)\]:(\w+)$/ ){
++    ($host,$port) = ($1,$2);
++
+   ### allow for things like "80"
+   }elsif( $port =~ /^(\w+)$/ ){
+     ($host,$port) = ($default_host,$1);
+diff -ur lib.orig/Net/Server/Proto/TCP.pm lib/Net/Server/Proto/TCP.pm
+--- lib.orig/Net/Server/Proto/TCP.pm	2010-05-05 06:41:08.000000000 +0200
++++ lib/Net/Server/Proto/TCP.pm	2011-04-05 14:29:26.123577536 +0200
+@@ -23,10 +23,10 @@
+ 
+ use strict;
+ use vars qw($VERSION $AUTOLOAD @ISA);
+-use IO::Socket ();
++use IO::Socket::INET6 ();
+ 
+ $VERSION = $Net::Server::VERSION; # done until separated
+-@ISA = qw(IO::Socket::INET);
++@ISA = qw(IO::Socket::INET6);
+ 
+ sub object {
+   my $type  = shift;
+@@ -35,10 +35,14 @@
+   my ($default_host,$port,$server) = @_;
+   my $host;
+ 
+-  ### allow for things like "domain.com:80"
++  ### allow for things like "domain.com:80" (IPv4)
+   if( $port =~ m/^([\w\.\-\*\/]+):(\w+)$/ ){
+     ($host,$port) = ($1,$2);
+ 
++  ### allow for things like "[::1]:80" (IPv6)
++  }elsif( $port =~ m/^\[([\:\w\.\-\*\/]+)\]:(\w+)$/ ){
++    ($host,$port) = ($1,$2);
++
+   ### allow for things like "80"
+   }elsif( $port =~ /^(\w+)$/ ){
+     ($host,$port) = ($default_host,$1);
+diff -ur lib.orig/Net/Server.pm lib/Net/Server.pm
+--- lib.orig/Net/Server.pm	2010-07-09 16:55:31.000000000 +0200
++++ lib/Net/Server.pm	2011-04-06 16:33:57.739576765 +0200
+@@ -25,7 +25,8 @@
+ 
+ use strict;
+ use vars qw($VERSION);
+-use Socket qw(inet_aton inet_ntoa AF_INET AF_UNIX SOCK_DGRAM SOCK_STREAM);
++use Socket qw(unpack_sockaddr_in sockaddr_family AF_INET AF_INET6 AF_UNIX SOCK_DGRAM SOCK_STREAM);
++use Socket6 qw(inet_ntop inet_pton unpack_sockaddr_in6);
+ use IO::Socket ();
+ use IO::Select ();
+ use POSIX ();
+@@ -356,7 +357,7 @@
+   push @{ $prop->{host} }, (($prop->{host}->[-1]) x (@{ $prop->{port} } - @{ $prop->{host}})); # augment hosts with as many as port
+   foreach my $host (@{ $prop->{host} }) {
+     $host = '*' if ! defined $host || ! length $host;;
+-    $host = ($host =~ /^([\w\.\-\*\/]+)$/) ? $1 : $self->fatal("Unsecure host \"$host\"");
++    $host = ($host =~ /^([\[\]\:\w\.\-\*\/]+)$/) ? $1 : $self->fatal("Unsecure host \"$host\"");
+   }
+ 
+   $prop->{proto} = []               if ! defined $prop->{proto};
+@@ -757,12 +758,14 @@
+   ### read information about this connection
+   my $sockname = getsockname( $sock );
+   if( $sockname ){
++    $prop->{sockfamily} = sockaddr_family( $sockname );
+     ($prop->{sockport}, $prop->{sockaddr})
+-      = Socket::unpack_sockaddr_in( $sockname );
+-    $prop->{sockaddr} = inet_ntoa( $prop->{sockaddr} );
++      = ($prop->{sockfamily} == AF_INET6) ? unpack_sockaddr_in6( $sockname ) : unpack_sockaddr_in( $sockname );
++    $prop->{sockaddr} = inet_ntop( $prop->{sockfamily}, $prop->{sockaddr} );
+ 
+   }else{
+     ### does this only happen from command line?
++    $prop->{sockfamily} = AF_INET;
+     $prop->{sockaddr} = $ENV{'REMOTE_HOST'} || '0.0.0.0';
+     $prop->{sockhost} = 'inet.test';
+     $prop->{sockport} = 0;
+@@ -773,17 +776,17 @@
+   if( $prop->{udp_true} ){
+     $proto_type = 'UDP';
+     ($prop->{peerport} ,$prop->{peeraddr})
+-      = Socket::sockaddr_in( $prop->{udp_peer} );
++      = ($prop->{sockfamily} == AF_INET6) ? unpack_sockaddr_in6( $prop->{udp_peer} ) : unpack_sockaddr_in( $prop->{udp_peer} );
+   }elsif( $prop->{peername} = getpeername( $sock ) ){
+     ($prop->{peerport}, $prop->{peeraddr})
+-      = Socket::unpack_sockaddr_in( $prop->{peername} );
++      = ($prop->{sockfamily} == AF_INET6) ? unpack_sockaddr_in6( $prop->{peername} ) : unpack_sockaddr_in( $prop->{peername} );
+   }
+ 
+   if( $prop->{peername} || $prop->{udp_true} ){
+-    $prop->{peeraddr} = inet_ntoa( $prop->{peeraddr} );
++    $prop->{peeraddr} = inet_ntop( $prop->{sockfamily}, $prop->{peeraddr} );
+ 
+     if( defined $prop->{reverse_lookups} ){
+-      $prop->{peerhost} = gethostbyaddr( inet_aton($prop->{peeraddr}), AF_INET );
++      $prop->{peerhost} = gethostbyaddr( inet_pton($prop->{sockfamily}, $prop->{peeraddr}), $prop->{sockfamily} );
+     }
+     $prop->{peerhost} = '' unless defined $prop->{peerhost};
+ 
+@@ -803,7 +806,6 @@
+ ### user customizable hook
+ sub post_accept_hook {}
+ 
+-
+ ### perform basic allow/deny service
+ sub allow_deny {
+   my $self = shift;
+@@ -1145,7 +1147,7 @@
+       or $self->fatal("Can't dup socket [$!]");
+ 
+     ### hold on to the socket copy until exec
+-    $prop->{_HUP}->[$i] = IO::Socket::INET->new;
++    $prop->{_HUP}->[$i] = IO::Socket::INET6->new();
+     $prop->{_HUP}->[$i]->fdopen($fd, 'w')
+       or $self->fatal("Can't open to file descriptor [$!]");
+
+diff -ur lib.orig/Net/Server.pm lib/Net/Server.pm
+--- lib.orig/Net/Server.pm	2011-04-07 11:44:54.973953140 +0200
++++ lib/Net/Server.pm	2011-04-07 14:11:28.637453856 +0200
+@@ -824,25 +824,29 @@
+     && $#{ $prop->{cidr_allow} } == -1
+     && $#{ $prop->{cidr_deny} }  == -1;
+ 
++  ### work around Net::CIDR::cidrlookup() croaking,
++  ### if first parameter is an IPv4 address in IPv6 notation.
++  my $peeraddr = ($prop->{peeraddr} =~ /^\s*::ffff:([0-9.]+\s*)$/) ? $1 : $prop->{peeraddr};
++
+   ### if the addr or host matches a deny, reject it immediately
+   foreach ( @{ $prop->{deny} } ){
+     return 0 if $prop->{peerhost} =~ /^$_$/ && defined($prop->{reverse_lookups});
+-    return 0 if $prop->{peeraddr} =~ /^$_$/;
++    return 0 if $peeraddr =~ /^$_$/;
+   }
+   if ($#{ $prop->{cidr_deny} } != -1) {
+     require Net::CIDR;
+-    return 0 if Net::CIDR::cidrlookup($prop->{peeraddr}, @{ $prop->{cidr_deny} });
++    return 0 if Net::CIDR::cidrlookup($peeraddr, @{ $prop->{cidr_deny} });
+   }
+ 
+ 
+   ### if the addr or host isn't blocked yet, allow it if it is allowed
+   foreach ( @{ $prop->{allow} } ){
+     return 1 if $prop->{peerhost} =~ /^$_$/ && defined($prop->{reverse_lookups});
+-    return 1 if $prop->{peeraddr} =~ /^$_$/;
++    return 1 if $peeraddr =~ /^$_$/;
+   }
+   if ($#{ $prop->{cidr_allow} } != -1) {
+     require Net::CIDR;
+-    return 1 if Net::CIDR::cidrlookup($prop->{peeraddr}, @{ $prop->{cidr_allow} });
++    return 1 if Net::CIDR::cidrlookup($peeraddr, @{ $prop->{cidr_allow} });
+   }
+ 
+   return 0;
+ 
