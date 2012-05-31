@@ -277,10 +277,13 @@ sub emit_comparison_template {
 									NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
     );
     if($emit_to_stdout){
-		$comparisontemplates{$t}->output(print_to => *STDOUT);
+		print $comparisontemplates{$t}->output;
 	} else {
 		ensure_dir_exists($file);
-	    $comparisontemplates{$t}->output(print_to => $file);
+	    open(my $FILE, '>', $file)
+    	    or die "Cannot open $file for writing: $!";
+	    print $FILE $comparisontemplates{$t}->output;
+    	close $FILE;
 	}
 }
 
@@ -293,7 +296,6 @@ sub emit_graph_template {
 	die_on_bad_params => 0,
 	global_vars       => 1,
 	loop_context_vars => 1,
-	cache => 1,
 	filter            => sub {
 	    my $ref = shift;
 	    $$ref =~ s/URLX/URL$key->{'depth'}/g;
@@ -325,11 +327,14 @@ sub emit_graph_template {
                          );
 
     if($emit_to_stdout){
-		$graphtemplate->output(print_to => *STDOUT);
+		print $graphtemplate->output;
 	} else {
 	    my $filename = $key->{'filename'};
 		ensure_dir_exists($filename);
-    	    $graphtemplate->output(print_to => $filename);
+	    open(my $FILE, '>', $filename)
+			or die "Cannot open $filename for writing: $!";
+    	print $FILE $graphtemplate->output;
+	    close $FILE;
 	}
 }
 
@@ -341,7 +346,6 @@ sub emit_category_template {
 	die_on_bad_params => 0,
 	global_vars       => 1,
 	loop_context_vars => 1,
-	cache => 1,
 	);
 
 	my $filename = $key->{'filename-' . $time};
@@ -368,10 +372,13 @@ sub emit_category_template {
                          );
 
     if($emit_to_stdout){
-		$graphtemplate->output(print_to => *STDOUT);
+		print $graphtemplate->output;
 	} else {
 		ensure_dir_exists($filename);
-    	    $graphtemplate->output(print_to => $filename);
+	    open(my $FILE, '>', $filename)
+			or die "Cannot open $filename for writing: $!";
+    	print $FILE $graphtemplate->output;
+	    close $FILE;
 	}
 }
 
@@ -390,7 +397,6 @@ sub emit_problem_template {
 	die_on_bad_params => 0,
 	global_vars       => 1,
 	loop_context_vars => 1,
-	cache => 1,
 	);
 
 	my $filename = munin_get_html_filename($config);
@@ -417,10 +423,13 @@ sub emit_problem_template {
                          );
 
     if($emit_to_stdout){
-		$graphtemplate->output(print_to => *STDOUT);
+		print $graphtemplate->output;
 	} else {
 		ensure_dir_exists($filename);
-    	$graphtemplate->output(print_to => $filename);
+	    open(my $FILE, '>', $filename)
+			or die "Cannot open $filename for writing: $!";
+    	print $FILE $graphtemplate->output;
+	    close $FILE;
 	}
 }
 
@@ -433,7 +442,6 @@ sub emit_group_template {
 	die_on_bad_params => 0,
 	global_vars       => 1,
 	loop_context_vars => 1,
-	cache => 1,
 	filter            => sub {
 	    my $ref = shift;
 	    $$ref =~ s/URLX/URL$key->{'depth'}/g;
@@ -462,11 +470,14 @@ sub emit_group_template {
 						  NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
 	);
     if($emit_to_stdout){
-		$grouptemplate->output(print_to => *STDOUT);
+		print $grouptemplate->output;
 	} else {
     	my $filename = $key->{'filename'};
 		ensure_dir_exists($filename);
-		$grouptemplate->output(print_to => $filename);
+    	open(my $FILE, '>', $filename)
+		or die "Cannot open $filename for writing: $!";
+    	print $FILE $grouptemplate->output;
+	    close $FILE or die "Cannot close $filename after writing: $!";
 	}
 }
 
@@ -477,8 +488,7 @@ sub emit_service_template {
         filename          => "$tmpldir/munin-serviceview.tmpl",
         die_on_bad_params => 0,
 		global_vars=>1,
-        loop_context_vars => 1,
-	cache => 1,
+        loop_context_vars => 1
     );
 
 	my $pathnodes = $srv->{'path'};
@@ -513,13 +523,16 @@ sub emit_service_template {
     # No stored filename for this kind of html node.
     
 	if($emit_to_stdout){
-		$servicetemplate->output(print_to => *STDOUT);
+		print $servicetemplate->output;
 	} else {
 		my $filename = $srv->{'filename'};
 		ensure_dir_exists($filename);
 
 	    DEBUG "[DEBUG] Creating service page $filename";
-	    $servicetemplate->output(print_to => $filename);
+    	open(my $FILE, '>', $filename)
+        	or die "Cannot open '$filename' for writing: $!";
+	    print $FILE $servicetemplate->output;
+    	close $FILE or die "Cannot close '$filename' after writing: $!";
 	}
 }
 
@@ -538,7 +551,6 @@ sub emit_main_index {
         filename          => "$tmpldir/munin-overview.tmpl",
         die_on_bad_params => 0,
         loop_context_vars => 1,
-	cache => 1,
 		global_vars       => 1,
 		filter            => sub {
 		    my $ref = shift;
@@ -568,14 +580,17 @@ sub emit_main_index {
 					
     );
 	if($emit_to_stdout){
-		$template->output(print_to => *STDOUT);
+		print $template->output;
 	} else {
 	    my $filename = munin_get_html_filename($config);
 		ensure_dir_exists($filename);
 
 	    DEBUG "[DEBUG] Creating main index $filename";
 
-	    $template->output(print_to => $filename);
+    	open(my $FILE, '>', $filename)
+        	or die "Cannot open $filename for writing: $!";
+	    print $FILE $template->output;
+    	close $FILE;
 	}
 }
 
@@ -596,29 +611,25 @@ sub instanciate_comparison_templates {
             filename          => "$tmpldir/munin-comparison-day.tmpl",
             die_on_bad_params => 0,
 			global_vars       => 1,
-            loop_context_vars => 1,
-	    cache => 1,
+            loop_context_vars => 1
         ),
         week => HTML::Template->new(
             filename          => "$tmpldir/munin-comparison-week.tmpl",
             die_on_bad_params => 0,
 			global_vars       => 1,
-            loop_context_vars => 1,
-	    cache => 1,
+            loop_context_vars => 1
         ),
         month => HTML::Template->new(
             filename          => "$tmpldir/munin-comparison-month.tmpl",
 			global_vars       => 1,
             die_on_bad_params => 0,
-            loop_context_vars => 1,
-	    cache => 1,
+            loop_context_vars => 1
         ),
         year => HTML::Template->new(
             filename          => "$tmpldir/munin-comparison-year.tmpl",
 			global_vars       => 1,
             die_on_bad_params => 0,
-            loop_context_vars => 1,
-	    cache => 1,
+            loop_context_vars => 1
         ));
 }
 
