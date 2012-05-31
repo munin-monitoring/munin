@@ -4,9 +4,10 @@ munin (2.0.0-1) UNRELEASED; urgency=low
     finally munin 2.0! See /usr/share/doc/munin/Announce-2.0 in the munin
     package for the full announcement. And/or previous debian/changelog
     entries too. Enjoy! And please report bugs, 2.0.1 shall be out soon.
+    (Closes: #675153, #674148)
   * /etc/init/munin-node: chmod 755 /var/log/munin (Closes: #674747)
   * Make munin-node suggest munin-plugins-java and not munin-java-plugins.
-  * Lower build-depends on debhelper to version 8. (Closes: #675209) 
+  * Lower build-depends on debhelper to version 8. (Closes: #675209)
 
  -- Holger Levsen <holger@debian.org>  Sun, 27 May 2012 16:16:19 +0200
 
