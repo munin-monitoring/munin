@@ -7,9 +7,6 @@
 # 	drives		-- List drives to monitor. E.g. "hda hdc".
 #
 # $Log$
-# Revision 1.2.2.1  2005/01/03 16:29:03  ilmari
-# Fixed generic/hddtemp to call hddtemp -n to avoid having to parse its output (Deb#282021).
-#
 # Revision 1.2  2004/01/29 19:39:00  jimmyo
 # Generic plugins now use printf instead of echo -n, as this is more portable (SF#885564)
 #
@@ -49,7 +46,5 @@ if [ "$1" = "config" ]; then
         exit 0
 fi
 
-for a in $drives ; do
-    printf "$a.value " ; hddtemp -nq "/dev/$a"
-done
+for a in $drives ; do printf "$a.value " ; echo "`hddtemp -q /dev/$a | cut -f 3 -d ':'`" | awk '{print $1}' ; done
 

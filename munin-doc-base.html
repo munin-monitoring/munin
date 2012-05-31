@@ -62,7 +62,7 @@ datasouces in one graph.</dd>
 <dt><code>{name}.cdef</code><dd>RPN-expression. Modify the values before graphing. See the FAQ for examples.</dd>
 <dt><code>{name}.draw</code><dd>What to draw from the data source: AREA, LINE1-3. Defaults to LINE2.</dd>
 <dt><code>{name}.graph</code><dd>Set to "no" or "yes. Decides wether to graph the data source. Defaults to yes.</dd>
-<dt><code>{name}.max</code><dd>Maximum value. If the fetched value is above "max", it will be discarded.</dd>
+<dt><code>{name}.max</code><dd>Maximum value. If the fetched value is below "max", it will be discarded.</dd>
 <dt><code>{name}.min</code><dd>Minimum value. If the fetched value is below "min", it will be discarded.</dd>
 <dt><code>{name}.negative</code><dd>Name of field to 'mirror' on the opposite side of zero. See the FAQ for examples.</dd>
 <dt><code>{name}.skipdraw</code><dd>Disables drawing of datasource. NOTE: Deprecated - use {name}.graph instead.</dd>
@@ -96,6 +96,8 @@ can contain the following options:
  <dt><code>command &lt;command&gt;</code><dd>Run command instad of plugin. "%c" will
  be expanded to what would otherwise have been run. E.g. "<code>command sudo
  -u root %c</code>".
+ <dt><code>allow &lt;regex&gt;</code><dd>Allow hosts matching regex to run this plugin.
+ <dt><code>deny &lt;regex&gt;</code><dd>Deny hosts matching regex from running this plugin.
  <dt><code>env.&lt;var&gt; &lt;contents&gt;</code><dd>Will cause the environment
  variable <code>var</code> to be set to <code>contents</code> when
  running the plugin.

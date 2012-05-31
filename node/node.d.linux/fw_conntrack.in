@@ -30,12 +30,15 @@
 # NATed will almost always be the same as the total
 #
 # $Log$
+# Revision 1.3  2004/05/15 21:33:29  jimmyo
+# "Upped" som plugins from contrib/manual to manual or auto.
+#
 # Revision 1.2  2004/05/09 19:12:08  jimmyo
 # Cleanup of linux/fw*-plugins, by Nicolai Langfeldt
 #
 #
 # Magic markers?
-#%# family=contrib
+#%# family=manual
 #%# capabilities=autoconf
 
 case $1 in

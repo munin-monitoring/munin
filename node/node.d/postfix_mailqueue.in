@@ -5,6 +5,9 @@
 # Contributed by Nicolai Langfeldt
 # 
 # $Log$
+# Revision 1.3  2004/05/14 21:16:46  jimmyo
+# "Upped" som plugins from contrib/manual to auto.
+#
 # Revision 1.2  2004/05/09 21:11:15  jimmyo
 # New plugin (pm3users) and a bunch of patches from Jacques Caruso.
 #
@@ -21,7 +24,7 @@
 # Plugin contribution by Nicolai Langfeldt
 #
 # 
-#%# family=contrib
+#%# family=auto
 #%# capabilities=autoconf
 
 # Can be set via environment, but default is /var/spool/postfix

@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# munin-node	Control the Munin Node Server
+# munin-node	Control the Munin Node Server (formerly Linpro RRD client)
 #
 # chkconfig: 2345 90 10
 # description: munin node agents
@@ -12,26 +12,43 @@
 . /etc/rc.d/init.d/functions
 
 RETVAL=0
-BASENAME=munin-node
+PROCNAME=munin-node
+
+mkdir -p /var/run/munin 2>/dev/null
+chown munin /var/run/munin
 
 # See how we were called.
 case "$1" in
   start)
 	echo -n "Starting Munin Node: "
-	daemon /usr/sbin/munin-node
+	/usr/sbin/munin-node &
+	sleep 1
+	pkill -0 $PROCNAME
 	RETVAL=$?
-	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/$BASENAME
+	if [ $RETVAL -eq 0 ]
+	then
+		echo_success
+		touch /var/lock/subsys/munin-node
+	else
+		echo_failure
+	fi
 	echo
 	;;
   stop)
-	echo -n "Stopping Munin Node: "
-	killproc /usr/sbin/munin-node
+	echo -n "Stopping Munin Node agents: "
+	kill $(cat /var/run/munin/munin-node.pid)
 	RETVAL=$?
-	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/$BASENAME
+	if [ $RETVAL -eq 0 ]
+	then
+		echo_success
+		rm -f /var/lock/subsys/munin-node
+	else
+		echo_failure
+	fi
 	echo
 	;;
   status)
-	status /usr/sbin/munin-node
+	status $PROCNAME
 	RETVAL=$?
 	;;
   restart|reload)

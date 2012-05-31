@@ -12,8 +12,8 @@
 # Config variables:
 #
 # $Log$
-# Revision 1.1.2.1  2004/10/27 17:53:33  jimmyo
-# Fixed typo in linux/fw_packets (Deb#275537).
+# Revision 1.2  2004/05/15 21:33:29  jimmyo
+# "Upped" som plugins from contrib/manual to manual or auto.
 #
 # Revision 1.1  2004/05/09 19:12:08  jimmyo
 # Cleanup of linux/fw*-plugins, by Nicolai Langfeldt
@@ -24,13 +24,13 @@
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
 #
-#%# family=contrib
+#%# family=manual
 #%# capabilities=autoconf
 
 if ( $ARGV[0] ) {
 
     if ( $ARGV[0] eq 'autoconf' ) {
-	if (-f '/proc/net/snmp') {
+	if (-f '/proc/net/smtp') {
 	    print "yes\n";
 	    exit 0;
 	}

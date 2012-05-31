@@ -10,9 +10,6 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
-# Revision 1.4.2.1  2004/11/21 12:34:08  lupe
-# Allow FreeBSD >= 6
-#
 # Revision 1.4  2004/05/09 19:18:35  jimmyo
 # Added support for scaleto100-parameter (patch from Lupe Christoph).
 #
@@ -62,10 +59,10 @@ if [ "$1" = "config" ]; then
 	OSV=`/sbin/sysctl -n kern.osrelease | cut -f1 -d.`
 	if [ "$OSV" = "4" ]; then
 		STATUNITS=`/sbin/sysctl -n kern.clockrate | cut -f16 -d' '`
-	elif [ "$OSV" -ge "5" ]; then
+	elif [ "$OSV" = "5" ]; then
 		STATUNITS=`/sbin/sysctl -n kern.clockrate | cut -f13 -d' '`
 	fi
-	PERCENT=`/sbin/sysctl -n hw.ncpu | awk '{print ($1)*100}'`
+#	PERCENT=`/sbin/sysctl -n hw.ncpu | awk '{print ($1)*100}'`
 	SCALE=`echo 'scale=5;' $PERCENT/$STATUNITS | bc -q `
 	NCPU=`/sbin/sysctl -n hw.ncpu`
 	if [ "$scaleto100" = yes ]; then

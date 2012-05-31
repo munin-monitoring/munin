@@ -2,7 +2,8 @@
 
 export DH_VERBOSE=
 
-MAKEOPTS = CONFIG=debian/Makefile.config
+MAKEOPTS = CONFIG=debian/Makefile.config \
+	INSTALL_PLUGINS="auto manual"
 
 build: build-stamp
 build-stamp:

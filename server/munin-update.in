@@ -1,24 +1,12 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 #
 # Script to update the RRD-files with current information.
 #
 # $Id$
 #
 # $Log$
-# Revision 1.8.2.5  2004/10/22 16:40:13  jimmyo
-# Fixed bug in munin-update, to stop trying to read closed filehandles.
-#
-# Revision 1.8.2.4  2004/10/22 14:50:36  jimmyo
-# Fixed cronmail-bug in munin-update when client disconnects prematurely.
-#
-# Revision 1.8.2.3  2004/10/22 14:49:32  jimmyo
-# Fixed cronmail-bug in munin-update when client disconnects prematurely.
-#
-# Revision 1.8.2.2  2004/06/08 15:26:04  jimmyo
-# The server programs now open the log file at an earlier point.
-#
-# Revision 1.8.2.1  2004/06/08 14:55:42  jimmyo
-# Noise reduction in munin-update, when plugins say strange things (only log, don\'t complain on stderr).
+# Revision 1.9  2004/05/12 20:52:06  jimmyo
+# Turned -w on in munin-update
 #
 # Revision 1.8  2004/05/09 21:11:16  jimmyo
 # New plugin (pm3users) and a bunch of patches from Jacques Caruso.
@@ -116,8 +104,6 @@ my $cli_do_fork;
 my $cli_timeout;
 my $print_stdout = 0;
 
-my $log = new IO::Handle;
-
 # Get options
 $do_usage=1  unless 
 GetOptions ( "host=s"       => \@limit_hosts,
@@ -205,6 +191,8 @@ if (! -d $config->{rundir})
 }
 munin_runlock("$config->{rundir}/munin-update.lock");
 
+open (LOG,">>$config->{logdir}/munin-update.log") or die "Unable to open $config->{logdir}/munin-update.log\n";
+
 open (STATS,">$config->{dbdir}/munin-update.stats.tmp") or logger("Unable to open $config->{datadir}/munin-update.stats");
 
 my %children = ();
@@ -250,7 +238,7 @@ if ($do_fork)
     $SIG{ALRM} = sub { die "Timed out waiting for children. $!\n"};
     alarm (240);
 
-    for (;(%children - $bad_procs > 0);)
+    for (;(scalar (keys %children) - $bad_procs > 0);)
     {
 	    eval {
 		$SIG{ALRM} = sub {
@@ -327,7 +315,7 @@ if ($do_fork)
 		}
 	    if (@queue and defined $config->{max_processes} and
 		    $config->{max_processes} and
-		    keys %children < ($config->{max_processes}-1-$bad_procs))
+		    scalar (keys %children) < (($config->{max_processes})-1-$bad_procs))
 	    {
 		my $args = pop @queue;
 		logger ("de-queueing new connection: $args->[1]");
@@ -372,7 +360,7 @@ close (STATS);
 rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
 
 logger("Munin-update finished ($update_time sec)");
-close ($log);
+close (LOG);
 
 sub process_domain {
   my ($domain) = @_;
@@ -528,9 +516,6 @@ sub read_socket_single {
     my( $socket ) = @_;
     my $timed_out=0;
     my $res;
-
-    return undef unless defined $socket;
-
     eval {
       local $SIG{ALRM} = sub { $timed_out=1; close $socket; die "$!\n"};
       alarm( $timeout );
@@ -551,9 +536,6 @@ sub read_socket {
     my ($socket) = @_;
     my @array;
     my $timed_out=0;
-
-    return undef unless defined $socket;
-
     eval {
       local $SIG{ALRM} = sub { $timed_out=1; close $socket; die "$!\n"};
       alarm( $timeout );
@@ -578,10 +560,10 @@ sub config_node {
   my $fetchdomain;
   chomp($clientdomain) if $clientdomain;
   if (!$clientdomain) {
-      logger("Got unknown reply from client \"$domain\" -> \"name\" skipping");
+      logger("Got unknown reply from client: '$clientdomain' skipping");
       return 0;
   }
-  $clientdomain =~ s/\#.*(?:lrrd|munin) (?:client|node) at //;
+  $clientdomain =~ s/\#.*(?:lrrd|munins) (?:client|node) at //;
   if (exists $node->{'use_node_name'} and $node->{'use_node_name'} =~ /^\s*y(?:es)\s*$/i)
   {
       $fetchdomain = $clientdomain;
@@ -651,7 +633,7 @@ sub config_node {
 	$client = substr ($client,-18);
 	$node->{client}->{$servname}->{$client.".".$type} = "$value";
 	logger ("config: $name->$client.$type = $value") if $DEBUG;
-	if ($type eq "label") {
+	if (($type) and ($type eq "label")) {
 	  push (@graph_order,$client)
 	    unless grep (/^$client$/, @graph_order);
 	}
@@ -668,7 +650,7 @@ sub config_node {
     for my $subservice (keys %{$node->{client}->{$servname}}) {
       my ($client,$type) = split /\./,$subservice;
       my ($value) = $node->{client}->{$servname}->{$subservice};
-      if ($type eq "label") {
+      if (($type) and ($type eq "label")) {
 	my $fname = "$config->{dbdir}/$domain/$name-$servname-$client-" . 
 	    lc substr (($node->{client}->{$servname}->{"$client.type"}||"GAUGE"),0,1).
 	    ".rrd";
@@ -768,47 +750,17 @@ sub use_old_config
     logger ("Attempting to use old configuration for $domain -> $name.");
 }
 
-sub logger_open {
-    my $dirname = shift;
-
-    if (!$log->opened)
-    {
-	unless (open ($log, ">>$dirname/munin-update.log"))
-	{
-	    print STDERR "Warning: Could not open log file \"$dirname/munin-update.log\" for writing: $!";
-	}
-    }
-}
 
 
 sub logger {
-    my ($comment) = @_;
-    my $now = strftime "%b %d %H:%M:%S", localtime;
- 
-    if ($log->opened)
-    {
-	print $log "$now - $comment\n";
-    }
-    else
-    {
-	if (defined $config->{logdir})
-	{
-	    if (open ($log, ">>$config->{logdir}/munin-update.log"))
-	    {
-		 print $log "$now - $comment\n";
-	    }
-	    else
-	    {
-		 print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-update.log\" for writing: $!";
-		 print STDERR "$now - $comment\n";
-	    }
-	}
-	else
-	{
-	    print STDERR "$now - $comment\n";
-	}
-    }
+  my ($comment) = @_;
+  my $now = strftime "%b %d %H:%M:%S", localtime;
+  print ("$now - $$: $comment\n") if $print_stdout;
+  print LOG ("$now - $$: $comment\n");
+  flush LOG;
 }
+
+
 
 1;
 

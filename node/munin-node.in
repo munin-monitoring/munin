@@ -3,6 +3,12 @@
 # $Id$
 #
 # $Log$
+# Revision 1.14  2004/05/12 20:33:28  jimmyo
+# Made the allow/deny syntax more flexible.
+#
+# Revision 1.13  2004/05/10 21:16:11  jimmyo
+# Allow/deny in munin-node can now be configured per plugin, in addition to "globally" for the whole node.
+#
 # Revision 1.12  2004/04/27 21:18:33  jimmyo
 # Fixed a problem in the node when running as a non-root user and using sudo to run the plugins (Deb#236694).
 #
@@ -106,6 +112,7 @@ my $paranoia= 0;
 my @ignores = ();
 my %sconf   = ();
 my $timeout = 10;
+my $caddr   = "";
 
 $do_usage=1  unless 
 GetOptions ( "config=s"     => \$conffile,
@@ -315,8 +322,48 @@ sub print_service {
 
 sub list_services {
     my $node = $_[0] || $FQDN;
-    print join " ", keys %{$nodes{$node}};
+    print join " ", grep { &has_access ($_); } keys %{$nodes{$node}};
+    #print join " ", keys %{$nodes{$node}};
     print "\n";
+}
+
+sub has_access {
+	my $serv   = shift;
+	my $host   = $caddr;
+	my $rights = &get_var_arr (\%sconf, $serv, 'allow_deny');
+
+	unless (@{$rights})
+	{
+		return 1;
+	}
+	print STDERR "DEBUG: Checking access: $host;$serv;\n" if $DEBUG;
+	foreach my $ruleset (@{$rights})
+	{
+		foreach my $rule (@{$ruleset})
+		{
+			print STDERR "DEBUG: Checking access: $host;$serv;", $rule->[0], $rule->[1], ";\n" if $DEBUG;
+#			if ($rule->[1] =~ /\//)
+#			{ # CIDR
+#				print "DEBUG: CIDR $host;$serv;$rule->[1];\n";
+#				return 1;
+#			}
+#			else
+#			{ # regex
+				if ($host =~ m($rule->[1]))
+				{
+					if ($rule->[0] eq "allow")
+					{
+						return 1;
+					}
+					else
+					{
+						return 0;
+					}
+				}
+#			}
+		}
+	}
+	return 1;
 }
 
 sub logger {
@@ -346,7 +393,7 @@ sub run_service {
   $command ||="";
   my @lines = ();;
   my $timed_out = 0;
-  if ($services{$service}) {
+  if ($services{$service} and ($caddr eq "" or &has_access ($service))) {
     my $child = 0;
 
     if ($child = open (CHILD, "-|")) {
@@ -480,6 +527,7 @@ sub run_service {
 
 sub process_request {
   my $self = shift;
+  $caddr = $self->{server}->{peeraddr};
   print "# munin node at $FQDN\n";
   local $SIG{ALRM} = sub { logger ("Connection timed out."); die "timeout" };
   alarm($timeout);
@@ -587,7 +635,8 @@ sub load_auth_file
 		}
 
 		my $g = &get_gid ($group);
-		print "DEBUG: Config: $service->gid = ", $sconf->{$service}{'group'}, "\n" if $DEBUG;
+		print "DEBUG: Config: $service->gid = ", $sconf->{$service}{'group'}, "\n" 
+			if $DEBUG and defined $sconf->{$service}{'group'};
 		if (!defined $g and !$optional)
 		{
 		    warn "Group \"$group\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
@@ -615,6 +664,11 @@ sub load_auth_file
 	elsif (/^\s*host_name\s+(.+)\s*$/)
 	{
 	    $sconf->{$service}{'host_name'} = $1;
+	}
+	elsif (/^\s*(allow)\s+(.+)\s*$/ or /^\s*(deny)\s+(.+)\s*$/)
+	{
+	    push (@{$sconf->{$service}{'allow_deny'}}, [$1, $2]);
+		print STDERR "DEBUG: Pushing allow_deny: $1, $2\n" if $DEBUG;
 	}
 	elsif (/^\s*env\s+([^=\s]+)\s*=\s*(.+)$/)
 	{
@@ -673,6 +727,34 @@ sub check_perms
     }
 
     return 1;
+}
+
+sub get_var_arr
+{
+    my $sconf   = shift;
+    my $name    = shift;
+    my $var     = shift;
+    my $result  = [];
+
+    if (exists $sconf->{$name}{$var})
+    {
+	push (@{$result}, $sconf->{$name}{$var});
+    }
+
+    foreach my $wildservice (grep (/\*$/, reverse sort keys %{$sconf}))
+    {
+	(my $tmpservice = $wildservice) =~ s/\*$//;
+	next unless ($name =~ /^$tmpservice/);
+	print STDERR "Checking $wildservice...\n" if $DEBUG;
+
+	if (defined $sconf->{$wildservice}{$var})
+	{
+	    push (@{$result}, $sconf->{$wildservice}{$var});
+	    print STDERR ("DEBUG: Pushing: |", join (';', @{$sconf->{$wildservice}{$var}}), "|\n")
+		if $DEBUG;
+	}
+    }
+    return $result;
 }
 
 sub get_var

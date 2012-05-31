@@ -4,15 +4,6 @@
 # $Id$
 #
 # $Log$
-# Revision 1.4.2.3  2004/11/05 12:34:30  ilmari
-# Applied the munin-limits fix to munin-nagios, which is actually used.
-#
-# Revision 1.4.2.2  2004/06/08 15:26:04  jimmyo
-# The server programs now open the log file at an earlier point.
-#
-# Revision 1.4.2.1  2004/06/08 14:55:41  jimmyo
-# Noise reduction in munin-update, when plugins say strange things (only log, don\'t complain on stderr).
-#
 # Revision 1.4  2004/01/29 17:40:10  jimmyo
 # Fixed pod typos patched by Lupe Christoph (SF#884092)
 #
@@ -76,8 +67,6 @@ my $force_root = 0;
 my $removeok = 0;
 my $do_version = 0;
 
-my $log = new IO::Handle;
-
 # Get options
 $do_usage=1  unless 
 GetOptions ( "force!"       => \$force_sendmsg,
@@ -135,6 +124,7 @@ it as the user \"munin\". Aborting.\n\n";
 my $config = &munin_config ($conffile);
 my $modified=0;
 
+open LOG,">>$config->{logdir}/munin-nagios.log" or die "Unable to create/access $config->{logdir}/munin-nagios.log\n";
 logger("Starting munin-nagios, checking lock");
 munin_runlock("$config->{rundir}/munin-nagios.lock");
 logger("Created lock: $config->{rundir}/munin-nagios.lock");
@@ -220,8 +210,8 @@ sub process_service {
 	if (defined $client->{"$key.critical"} and 
 	    $client->{"$key.critical"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
 	{
-		$critical[0] = $1 if length $1;
-		$critical[1] = $2 if length $2;
+		$critical[0] = $1 if defined $1;
+		$critical[1] = $2 if defined $2;
 	}
 	elsif (defined $client->{"$key.critical"} and
 	    $client->{"$key.critical"} =~ /^\s*([-\d]+)\s*$/)
@@ -235,8 +225,8 @@ sub process_service {
 	if (defined $client->{"$key.warning"} and 
 	    $client->{"$key.warning"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
 	{
-		$warning[0] = $1 if length $1;
-		$warning[1] = $2 if length $2;
+		$warning[0] = $1 if defined $1;
+		$warning[1] = $2 if defined $2;
 	}
 	elsif (defined $client->{"$key.warning"} and
 	    $client->{"$key.warning"} =~ /^\s*([-\d]+)\s*$/)
@@ -321,49 +311,13 @@ sub process_service {
   }
 }
 
-sub logger_open {
-    my $dirname = shift;
-
-    if (!$log->opened)
-    {
-	unless (open ($log, ">>$dirname/munin-nagios.log"))
-	{
-	    print STDERR "Warning: Could not open log file \"$dirname/munin-nagios.log\" for writing: $!";
-	}
-    }
-}
-
-
 sub logger {
-    my ($comment) = @_;
-    my $now = strftime "%b %d %H:%M:%S", localtime;
- 
-    if ($log->opened)
-    {
-	print $log "$now - $comment\n";
-    }
-    else
-    {
-	if (defined $config->{logdir})
-	{
-	    if (open ($log, ">>$config->{logdir}/munin-nagios.log"))
-	    {
-		 print $log "$now - $comment\n";
-	    }
-	    else
-	    {
-		 print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-nagios.log\" for writing: $!";
-		 print STDERR "$now - $comment\n";
-	    }
-	}
-	else
-	{
-	    print STDERR "$now - $comment\n";
-	}
-    }
+  my ($comment) = @_;
+  my $now = strftime "%b %d %H:%M:%S", localtime;
+  print LOG "$now - $comment\n";
 }
 
-close $log;
+close LOG;
 
 =head1 NAME
 

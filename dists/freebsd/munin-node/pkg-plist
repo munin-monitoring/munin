@@ -1,94 +1,63 @@
-@comment etc/munin/VERSION.node must remain for upgrade version check
-@unexec if cmp -s %D/etc/munin/munin-node.conf %D/etc/munin/munin-node.conf.sample; then rm -f %D/etc/munin/munin-node.conf; fi
-etc/munin/munin-node.conf.sample
-@unexec if cmp -s %D/etc/munin/plugin-conf.d/plugins.conf %D/etc/munin/plugin-conf.d/plugins.conf.sample; then rm -f %D/etc/munin/plugin-conf.d/plugins.conf; fi
-etc/munin/plugin-conf.d/plugins.conf.sample
-@unexec rm %D/etc/rc.d/munin-node.sh 2>/dev/null || true
-@unexec rm /etc/rc.d/munin_node 2>/dev/null || true
+etc/munin/munin-node.conf
+etc/munin/plugin-conf.d/plugins.conf
+etc/rc.d/munin-node.sh
 sbin/munin-node
 sbin/munin-node-configure
 sbin/munin-run
-%%DATADIR%%/plugins/acpi
-%%DATADIR%%/plugins/amavis
-%%DATADIR%%/plugins/apache_accesses
-%%DATADIR%%/plugins/apache_processes
-%%DATADIR%%/plugins/apache_volume
-%%DATADIR%%/plugins/apc_envunit_
-%%DATADIR%%/plugins/bind9
-%%DATADIR%%/plugins/cpu
-%%DATADIR%%/plugins/df
-%%DATADIR%%/plugins/df_inode
-%%DATADIR%%/plugins/exim_mailqueue
-%%DATADIR%%/plugins/exim_mailstats
-%%DATADIR%%/plugins/folding@home
-%%DATADIR%%/plugins/hddtemp
-%%DATADIR%%/plugins/hddtemp2
-%%DATADIR%%/plugins/if_
-%%DATADIR%%/plugins/if_errcoll_
-%%DATADIR%%/plugins/ipac-ng
-%%DATADIR%%/plugins/ircu
-%%DATADIR%%/plugins/load
-%%DATADIR%%/plugins/mailman
-%%DATADIR%%/plugins/memory
-%%DATADIR%%/plugins/multips
-%%DATADIR%%/plugins/munin_graph
-%%DATADIR%%/plugins/munin_update
-%%DATADIR%%/plugins/mysql_bytes
-%%DATADIR%%/plugins/mysql_isam_space_
-%%DATADIR%%/plugins/mysql_queries
-%%DATADIR%%/plugins/mysql_slowqueries
-%%DATADIR%%/plugins/mysql_threads
-%%DATADIR%%/plugins/named
-%%DATADIR%%/plugins/netstat
-%%DATADIR%%/plugins/open_files
-%%DATADIR%%/plugins/plugins.history
-%%DATADIR%%/plugins/pm3users
-%%DATADIR%%/plugins/pop_stats
-%%DATADIR%%/plugins/postfix_mailqueue
-%%DATADIR%%/plugins/postfix_mailstats
-%%DATADIR%%/plugins/postfix_mailvolume
-%%DATADIR%%/plugins/processes
-%%DATADIR%%/plugins/ps_
-%%DATADIR%%/plugins/psu_
-%%DATADIR%%/plugins/samba
-%%DATADIR%%/plugins/sendmail_mailqueue
-%%DATADIR%%/plugins/sendmail_mailstats
-%%DATADIR%%/plugins/sendmail_mailtraffic
-%%DATADIR%%/plugins/snmp__df
-%%DATADIR%%/plugins/snmp__fc_if_
-%%DATADIR%%/plugins/snmp__fc_if_err_
-%%DATADIR%%/plugins/snmp__if_
-%%DATADIR%%/plugins/snmp__if_err_
-%%DATADIR%%/plugins/snmp__load
-%%DATADIR%%/plugins/snmp__processes
-%%DATADIR%%/plugins/snmp__users
-%%DATADIR%%/plugins/spamstats
-%%DATADIR%%/plugins/squid_cache
-%%DATADIR%%/plugins/squid_icp
-%%DATADIR%%/plugins/squid_requests
-%%DATADIR%%/plugins/squid_traffic
-%%DATADIR%%/plugins/surfboard
-%%DATADIR%%/plugins/swap
-%%DATADIR%%/plugins/sybase_space
-%%DATADIR%%/plugins/vmstat
+share/munin/plugins/apache_accesses
+share/munin/plugins/apache_processes
+share/munin/plugins/apache_volume
+share/munin/plugins/bind9
+share/munin/plugins/cpu
+share/munin/plugins/df
+share/munin/plugins/df_inode
+share/munin/plugins/exim_mailqueue
+share/munin/plugins/exim_mailstats
+share/munin/plugins/hddtemp
+share/munin/plugins/if_
+share/munin/plugins/if_errcoll_
+share/munin/plugins/ircu
+share/munin/plugins/load
+share/munin/plugins/mailman
+share/munin/plugins/memory
+share/munin/plugins/multips
+share/munin/plugins/munin_graph
+share/munin/plugins/munin_update
+share/munin/plugins/mysql_bytes
+share/munin/plugins/mysql_isam_space_
+share/munin/plugins/mysql_queries
+share/munin/plugins/mysql_slowqueries
+share/munin/plugins/mysql_threads
+share/munin/plugins/named
+share/munin/plugins/netstat
+share/munin/plugins/open_files
+share/munin/plugins/plugins.history
+share/munin/plugins/pop_stats
+share/munin/plugins/postfix_mailqueue
+share/munin/plugins/postfix_mailstats
+share/munin/plugins/postfix_mailvolume
+share/munin/plugins/processes
+share/munin/plugins/ps_
+share/munin/plugins/psu_
+share/munin/plugins/samba
+share/munin/plugins/snmp__if_
+share/munin/plugins/spamstats
+share/munin/plugins/squid_cache
+share/munin/plugins/squid_icp
+share/munin/plugins/squid_requests
+share/munin/plugins/squid_traffic
+share/munin/plugins/surfboard
+share/munin/plugins/swap
+share/munin/plugins/sybase_space
+share/munin/plugins/vmstat
 @unexec rmdir %D/var/munin/plugin-state 2>/dev/null || true
 @unexec rmdir %D/var/munin 2>/dev/null || true
-@unexec rmdir %D/%%DATADIR%% 2>/dev/null || true
+@dirrm share/munin/plugins
+@unexec rmdir %D/share/munin 2>/dev/null || true
+@unexec rm -rf %D/etc/munin/plugins 2>/dev/null || true
 @unexec rmdir %D/etc/munin/plugin-conf.d 2>/dev/null || true
 @unexec rmdir %D/etc/munin 2>/dev/null || true
-@unexec echo
-@unexec echo '********************************************************************'
 @unexec echo "If you want to *completely* remove munin-node, you have to"
-@unexec echo
-@unexec echo "    rm -rf %D/var/munin/plugin-state %D/etc/munin/VERSION.node \\"
-@unexec echo "           %D/etc/munin/munin-node.conf %D/etc/munin/plugins \\"
-@unexec echo "           /var/log/munin-node.log*"
-@unexec echo
-@unexec echo "If you have already deinstalled munin-main, you can also"
-@unexec echo
-@unexec echo "    rmdir %D/etc/munin %D/var/munin"
-@unexec echo
-@unexec echo "These files and directories have to be left on the system because"
-@unexec echo "you may be performing an update. This process can't tell."
-@unexec echo '********************************************************************'
-@unexec echo
+@unexec echo "    rm -rf %D/var/munin and %D/etc/munin %D/www/data/munin"
+@unexec echo "They have to be left on the system because you may be performing"
+@unexec echo "an update. This process can't tell."

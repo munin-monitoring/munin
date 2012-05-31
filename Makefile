@@ -137,34 +137,34 @@ build-doc: build-doc-stamp
 
 build-doc-stamp:
 	mkdir -p build/doc
-	-htmldoc munin-doc-base.html > build/doc/munin-doc.html
-	-htmldoc -t pdf --webpage build/doc/munin-doc.html > build/doc/munin-doc.pdf
-	-html2text -style pretty -nobs build/doc/munin-doc.html > build/doc/munin-doc.txt
+	htmldoc munin-doc-base.html > build/doc/munin-doc.html
+	htmldoc -t pdf --webpage build/doc/munin-doc.html > build/doc/munin-doc.pdf
+	html2text -style pretty -nobs build/doc/munin-doc.html > build/doc/munin-doc.txt
 
-	-htmldoc munin-faq-base.html > build/doc/munin-faq.html
-	-htmldoc -t pdf --webpage build/doc/munin-faq.html > build/doc/munin-faq.pdf
-	-html2text -style pretty -nobs build/doc/munin-faq.html > build/doc/munin-faq.txt
+	htmldoc munin-faq-base.html > build/doc/munin-faq.html
+	htmldoc -t pdf --webpage build/doc/munin-faq.html > build/doc/munin-faq.pdf
+	html2text -style pretty -nobs build/doc/munin-faq.html > build/doc/munin-faq.txt
 
 	touch build-doc-stamp
 
 build-man: build-man-stamp
 
-build-man-stamp: build
+build-man-stamp:
 	mkdir -p build/doc
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/node/munin-node > build/doc/munin-node.8
+		node/munin-node.in > build/doc/munin-node.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/node/munin-run > build/doc/munin-run.8
+		node/munin-run.in > build/doc/munin-run.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/node/munin-node-configure > build/doc/munin-node-configure.8
+		node/munin-node-configure.in > build/doc/munin-node-configure.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/server/munin-graph > build/doc/munin-graph.8
+		server/munin-graph.in > build/doc/munin-graph.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/server/munin-update > build/doc/munin-update.8
+		server/munin-update.in > build/doc/munin-update.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/server/munin-html > build/doc/munin-html.8
+		server/munin-html.in > build/doc/munin-html.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		build/server/munin-nagios > build/doc/munin-nagios.8
+		server/munin-nagios.in > build/doc/munin-nagios.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		server/munin-cron.pod > build/doc/munin-cron.8
 	pod2man  --section=5 --release=$(RELEASE) --center="Munin Documentation" \
@@ -178,6 +178,24 @@ deb:
 	-rm debian
 	-ln -s dists/debian
 	fakeroot debian/rules binary
+
+rpm-pre:
+	@for file in `find dists/redhat/ -type f -name '*.in'`; do			\
+		destname=`echo $$file | sed 's/.in$$//'`;		\
+		echo Generating $$destname..;				\
+		sed -e 's|@@VERSION@@|$(VERSION)|g'			\
+		    $$file > $$destname;				\
+	done
+	-cp dists/tarball/plugins.conf .
+	(cd ..; ln -s munin munin-$(VERSION))
+
+rpm: rpm-pre
+	tar -C .. --dereference --exclude CVS  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
+	(cd ..; rpm -tb munin-$(RELEASE).tar.gz)
+	
+rpm-src: rpm-pre
+	tar -C .. --dereference --exclude CVS  -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
+	(cd ..; rpm -ts munin-$(RELEASE).tar.gz)
 
 clean:
 ifeq ($(MAKELEVEL),0)

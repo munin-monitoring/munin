@@ -8,9 +8,6 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
-# Revision 1.1.2.1  2005/01/03 22:21:33  jimmyo
-# Made some plugins ({generic,linux}/df*, generic/samba) more portable.
-#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -40,7 +37,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Filesystem usage (in %)'
 	echo 'graph_args --upper-limit 100 -l 0'
 	echo 'graph_vlabel %'
-	df -P -l -x none | sed 1d | grep -v "//" | while read i; do
+	df -P -l -x none | tail +2 | grep -v "//" | while read i; do
 		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 }'`
 		echo -n "$name.label "
 		echo $i | awk "{ 
@@ -56,7 +53,7 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-df -P -l  -x none| sed 1d | grep -v "//" | while read i; do
+df -P -l  -x none| tail +2 | grep -v "//" | while read i; do
 	name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 ".value " }'`
 	echo -n "$name "
 	echo $i | awk '{ print $5 }' | cut -f1 -d%

@@ -1,8 +1,8 @@
 #! /bin/sh
 #
 # $Log$
-# Revision 1.4.2.1  2004/06/03 16:07:11  lupe
-# Update to 1.0.0pre5, remove logo.gif and style.css now
+# Revision 1.4  2004/04/16 15:50:48  lupe
+# Changes to get acceptance as a FreeBSD port
 #
 #
 
@@ -104,13 +104,6 @@ create_crontab_entries() {
 
 case $2 in
     PRE-INSTALL)
-	# Munin had a logo.gif up to 1.0.0pre3.
-	# Remove it, it's been replaced by logo.png
-	rm -f ${PKG_PREFIX}/www/data/munin/logo.gif
-	# The old stylesheet must go, too.
-	rm -f ${PKG_PREFIX}/www/data/munin/style.css
-	# Both new files will be put in place by munin-html
-
 	make_account munin munin "Munin owner"
 	make_directories
 	;;      

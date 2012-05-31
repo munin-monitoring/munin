@@ -3,12 +3,6 @@
 # $Id$
 #
 # $Log$
-# Revision 1.6.2.2  2004/12/22 20:48:45  jimmyo
-# Fix bug when encountering strange environment.
-#
-# Revision 1.6.2.1  2004/12/22 20:47:38  jimmyo
-# Fix bug when encountering strange environment.
-#
 # Revision 1.6  2004/04/30 13:14:53  jimmyo
 # Added support for snmpconf option in plugins.
 #
@@ -56,17 +50,11 @@ use Getopt::Long;
 
 # "Clean" environment to disable taint-checking on the environment. We _know_
 # that the environment is insecure, but we want to let admins shoot themselves
-# in the foot with it if they want to.
+# in the foot with it, if they want to.
 foreach my $key (keys %ENV)
 {
-	if ($ENV{$key} =~ /^(.*)$/)
-	{
-		$ENV{$key} = $1;
-	}
-	else
-	{
-		delete $ENV{$key};
-	}
+	$ENV{$key} =~ /^(.*)$/;
+	$ENV{$key} = $1;
 }
 
 my %services;

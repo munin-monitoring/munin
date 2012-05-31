@@ -15,6 +15,9 @@
 #	logfile      - What file to read in logdir
 #
 # $Log$
+# Revision 1.2  2004/05/14 21:16:46  jimmyo
+# "Upped" som plugins from contrib/manual to auto.
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -38,7 +41,7 @@
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
 #
-#%# family=contrib
+#%# family=auto
 #%# capabilities=autoconf
 
 my $statefile = "@@PLUGSTATE@@/munin-plugin-postfix_mailstats.state";

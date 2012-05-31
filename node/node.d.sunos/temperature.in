@@ -10,6 +10,14 @@
 #       autoconf (optional - used by munin-config)
 #
 # Revision 1.1	2004/04/16 Richard van den Berg <richard@vdberg.org>
+#
+# $Log$
+# Revision 1.2  2004/05/15 21:33:30  jimmyo
+# "Upped" som plugins from contrib/manual to manual or auto.
+#
+#
+#%# family=auto
+#%# capabilities=autoconf
 
 $arch=`uname -m`;
 chomp($arch);

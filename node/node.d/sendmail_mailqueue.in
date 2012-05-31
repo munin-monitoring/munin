@@ -15,10 +15,14 @@
 #       mtaqueue     - MTA queue directory
 #
 # $Log$
+# Revision 1.3  2004/05/14 21:16:46  jimmyo
+# "Upped" som plugins from contrib/manual to auto.
+#
 # Revision 1.2  2004/02/18 18:40:02  jimmyo
 # Added Log:
 #
-#
+#%# family=auto
+#%# capabilities=autoconf
 
 MSP_QUEUE=/var/spool/mqueue-client
 MTA_QUEUE=/var/spool/mqueue

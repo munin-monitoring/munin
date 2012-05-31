@@ -1,15 +1,14 @@
 Source: munin
 Section: net
 Priority: optional
-Maintainer: Munin Debian Maintainers <munin-deb-maint@linpro.no>
-Uploaders: Tore Anderson <tore@debian.org>, Dagfinn Ilmari Mannsaker <ilmari@ilmari.org>
+Maintainer: Tore Anderson <tore@debian.org>
 Build-Depends-Indep: debhelper (>> 4.0.0), perl, htmldoc, html2text
 Standards-Version: 3.6.1.0
 
 Package: munin-node
 Architecture: all
 Depends: ${perl:Depends}, libnet-server-perl, procps
-Suggests: munin, libwww-perl, libnet-snmp-perl, libnet-irc-perl, mysql-client, hddtemp, lm-sensors | acpi
+Suggests: munin
 Conflicts: lrrd-client (<= 0.9.9r5-1)
 Description: Network-wide graphing framework (node)
  Munin is a highly flexible and powerful solution used to create graphs of

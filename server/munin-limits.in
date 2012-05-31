@@ -2,9 +2,6 @@
 # Nagios
 #
 # $Log$
-# Revision 1.4.2.1  2004/09/24 16:32:26  jimmyo
-# Fixed bug in munin-limits when using ranges with only one number
-#
 # Revision 1.4  2004/01/29 17:40:10  jimmyo
 # Fixed pod typos patched by Lupe Christoph (SF#884092)
 #
@@ -134,8 +131,8 @@ sub process_service {
 	if (defined $client->{"$key.critical"} and 
 	    $client->{"$key.critical"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
 	{
-		$critical[0] = $1 if length $1;
-		$critical[1] = $2 if length $2;
+		$critical[0] = $1 if defined $1;
+		$critical[1] = $2 if defined $2;
 	}
 	elsif (defined $client->{"$key.critical"} and
 	    $client->{"$key.critical"} =~ /^\s*([-\d]+)\s*$/)
@@ -149,8 +146,8 @@ sub process_service {
 	if (defined $client->{"$key.warning"} and 
 	    $client->{"$key.warning"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
 	{
-		$warning[0] = $1 if length $1;
-		$warning[1] = $2 if length $2;
+		$warning[0] = $1 if defined $1;
+		$warning[1] = $2 if defined $2;
 	}
 	elsif (defined $client->{"$key.warning"} and
 	    $client->{"$key.warning"} =~ /^\s*([-\d]+)\s*$/)

@@ -3,9 +3,6 @@
 # Plugin to monitor the number of open files in the system.
 #
 # $Log$
-# Revision 1.2.2.1  2005/01/03 22:21:32  jimmyo
-# Made some plugins ({generic,linux}/df*, generic/samba) more portable.
-#
 # Revision 1.2  2004/01/29 19:39:00  jimmyo
 # Generic plugins now use printf instead of echo -n, as this is more portable (SF#885564)
 #
@@ -55,8 +52,8 @@ if [ "$1" = "config" ]; then
 fi
 
 printf "proc.value "
-smbstatus -b | grep -v "^$" | sed 1,3d | wc -l 
+smbstatus -b | grep -v "^$" | tail +4 | wc -l 
 printf "lock.value "
-smbstatus -L | grep -v "^$" | sed 1,3d | wc -l 
+smbstatus -L | grep -v "^$" | tail +4 | wc -l 
 printf "share.value "
-smbstatus -S | grep -v "^$" | sed 1,3d | wc -l 
+smbstatus -S | grep -v "^$" | tail +4 | wc -l 

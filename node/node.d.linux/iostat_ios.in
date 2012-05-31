@@ -1,25 +1,31 @@
-#!@@PERL@@ -w
+@@PERL@@
 #
 #
-# Plugin for watching io-bound traffic (in blocks) on disks.
+# Plugin for watching io-bound traffic (in number of operations) on disks.
 #
-# Usage: Link or copy into /etc/lrrd/client.d/
+# Usage: Link or copy into /etc/munin/plugins/
 #
 # Parameters:
 #
 #       config   (required)
-#       autoconf (optional - used by lrrd-config)
+#       autoconf (optional - used by munin-config)
 #
-# Magic markers (optional - used by lrrd-config and some installation 
+# $Log$
+# Revision 1.2  2004/05/15 21:33:29  jimmyo
+# "Upped" som plugins from contrib/manual to manual or auto.
+#
+#
+# Magic markers (optional - used by munin-config and some installation 
 # scripts):
 # 
-#%# family=contrib
+#%# family=manual
 
 use strict;
 
 use IO::File;
 
 use Storable qw(store retrieve);
+use Data::Dumper;
 
 # (c) 2004 - Per Andreas Buer
 # GPL v2 Yadda yadda.

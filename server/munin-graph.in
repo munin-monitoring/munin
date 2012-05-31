@@ -5,17 +5,11 @@
 # $Id$
 #
 # $Log$
-# Revision 1.8.2.4  2004/08/23 10:38:09  jimmyo
-# Fixed bug in munin-graph when choosing colours (Deb#267185).
+# Revision 1.10  2004/05/14 20:22:41  jimmyo
+# Code cleanups.
 #
-# Revision 1.8.2.3  2004/08/18 15:25:09  jimmyo
-# Applied patch from Matthieu Lochegnies to munin-graph, and fixed the same problem elsewhere in the code (Deb#250982, SF#924561).
-#
-# Revision 1.8.2.2  2004/06/08 15:26:04  jimmyo
-# The server programs now open the log file at an earlier point.
-#
-# Revision 1.8.2.1  2004/06/08 14:55:41  jimmyo
-# Noise reduction in munin-update, when plugins say strange things (only log, don\'t complain on stderr).
+# Revision 1.9  2004/05/13 21:48:49  jimmyo
+# Code cleanups.
 #
 # Revision 1.8  2004/05/09 21:11:16  jimmyo
 # New plugin (pm3users) and a bunch of patches from Jacques Caruso.
@@ -99,7 +93,10 @@ my $VERSION = "@@VERSION@@";
 # Limit graphing to certain hosts and/or services
 my @limit_hosts = ();
 my @limit_services = ();
-my @copy_fields    = ("label", "draw", "type", "rrdfile", "fieldname");
+
+# Fields to copy when "aliasing" a field
+my @copy_fields    = ("label", "draw", "type", "rrdfile", "fieldname"); 
+
 # Force drawing of "graph no". 
 my $force_graphing = 0;
 my $force_lazy = 1;
@@ -109,8 +106,6 @@ my $do_version = 0;
 my $list_images = 0;
 my $conffile = "@@CONFDIR@@/munin.conf";
 my %draw = ("day" => 1, "week" => 1, "month" => 1, "year" => 1);
-
-my $log = new IO::Handle;
 
 # Get options
 $do_usage=1  unless 
@@ -180,6 +175,7 @@ my $config= &munin_config ($conffile);
 
 
 munin_runlock("$config->{rundir}/munin-graph.lock");
+open LOG,">>$config->{logdir}/munin-graph.log";
 open (STATS,">$config->{dbdir}/munin-graph.stats.tmp") or logger("Unable to open $config->{dbdir}/munin-graph.stats.tmp");
 logger("Starting munin-graph");
 
@@ -218,7 +214,7 @@ logger("Munin-graph finished ($graph_time sec)");
 print STATS "GT|total|$graph_time\n";
 rename ("$config->{dbdir}/munin-graph.stats.tmp", "$config->{dbdir}/munin-graph.stats");
 close STATS;
-close $log;
+close LOG;
 
 sub process_domain {
     my ($domain) = @_;
@@ -231,6 +227,448 @@ sub process_domain {
 	print STATS "GN|$domain|$key|$node_time\n"
 	
     }
+}
+
+sub get_title {
+    my $node    = shift;
+    my $service = shift;
+    my $scale   = shift;
+
+    return ($node->{client}->{$service}->{'graph_title'}?
+	      $node->{client}->{$service}->{'graph_title'}:$service) .
+	      " - by $scale";
+}
+
+sub get_custom_graph_args
+{
+    my $node    = shift;
+    my $service = shift;
+    my $result  = [];
+
+    if ($node->{client}->{$service}->{graph_args}) {
+	push @$result, split /\s/,$node->{client}->{$service}->{graph_args};
+	return $result;
+    }
+    else
+    {
+	return undef;
+    }
+}
+
+sub get_vlabel
+{
+    my $node    = shift;
+    my $service = shift;
+
+    if ($node->{client}->{$service}->{graph_vlabel}) {
+	return $node->{client}->{$service}->{graph_vlabel};
+    }
+    elsif ($node->{client}->{$service}->{graph_vtitle})
+    {
+	return $node->{client}->{$service}->{graph_vtitle};
+    }
+    return undef;
+}
+
+sub should_scale
+{
+    my $node    = shift;
+    my $service = shift;
+
+    if (defined $node->{client}->{$service}->{graph_scale})
+    {
+	return &munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1);
+    }
+    elsif (defined $node->{client}->{$service}->{graph_noscale})
+    {
+	return ! &munin_get_bool_val ($node->{client}->{$service}->{graph_noscale}, 0);
+    }
+
+    return 1;
+}
+
+sub get_header {
+    my $node    = shift;
+    my $config  = shift;
+    my $domain  = shift;
+    my $host    = shift;
+    my $service = shift;
+    my $scale   = shift;
+    my $result  = [];
+    my $tmp_field;
+
+    # Picture filename
+    push @$result, &get_picture_filename ($config, $domain, $host, $service, $scale);
+
+    # Title
+    push @$result, ("--title", &get_title ($node, $service, $scale));
+
+    # When to start the graph
+    push @$result, "--start",$times{$scale};
+
+    # Custom graph args, vlabel and graph title
+    if (defined ($tmp_field = &get_custom_graph_args ($node, $service))) {
+	push (@$result, @{$tmp_field});
+    }
+    if (defined ($tmp_field = &get_vlabel ($node, $service))) {
+	push @$result, ("--vertical-label", $tmp_field);
+    }
+
+    push @$result,"--height", "175";
+    push @$result,"--imgformat", "PNG";
+    push @$result,"--lazy" if ($force_lazy);
+
+    push (@$result, "--units-exponent", "0") 
+	if (! &should_scale ($node, $service));
+
+    return $result;
+}
+
+sub get_field_order
+{
+    my $node    = shift;
+    my $config  = shift;
+    my $domain  = shift;
+    my $host    = shift;
+    my $service = shift;
+    my $scale   = shift;
+    my $result  = [];
+
+    if ($node->{client}->{$service}->{graph_order}) {
+	@$result = split /\s+/, $node->{client}->{$service}->{'graph_order'};
+    } 
+
+    for my $key (keys %{$node->{client}->{$service}}) {
+	my ($client,$type)="";
+	($client,$type) = split /\./,$key;
+	if (defined $type and $type eq "label") {
+	    push @$result,$client if !grep /^$client$/, @$result;;
+	} 
+    }
+    
+    return $result;
+}
+
+sub get_sum_command
+{
+    my $node    = shift;
+    my $service = shift;
+    my $field   = shift;
+
+    if (defined $node->{client}->{$service}->{$field.".special_sum"})
+    {
+	return $node->{client}->{$service}->{$field.".special_sum"};
+    }
+    elsif (defined $node->{client}->{$service}->{$field.".sum"})
+    {
+	return $node->{client}->{$service}->{$field.".sum"};
+    }
+
+    return undef;
+}
+sub get_stack_command
+{
+    my $node    = shift;
+    my $service = shift;
+    my $field   = shift;
+
+    if (defined $node->{client}->{$service}->{$field.".special_stack"})
+    {
+	return $node->{client}->{$service}->{$field.".special_stack"};
+    }
+    elsif (defined $node->{client}->{$service}->{$field.".stack"})
+    {
+	return $node->{client}->{$service}->{$field.".stack"};
+    }
+
+    return undef;
+}
+
+sub expand_specials
+{
+    my $node    = shift;
+    my $config  = shift;
+    my $domain  = shift;
+    my $host    = shift;
+    my $service = shift;
+    my $time    = shift;
+    my $preproc = shift;
+    my $order   = shift;
+    my $single  = shift;
+    my $result  = [];
+
+    my $fieldnum = 0;
+    for my $field (@$order) { # Search for 'specials'...
+	$fieldnum++;
+	my $tmp_field;
+	if (defined ($tmp_field = &get_stack_command ($node, $service, $field)))
+	{
+	    print "DEBUG: Doing special_stack...\n" if $DEBUG;
+	    my @spc_stack = ();
+	    foreach my $pre (split (/\s+/, $tmp_field))
+	    {
+		(my $name = $pre) =~ s/=.+//;
+		if (!@spc_stack)
+		{
+		    $node->{client}->{$service}->{$name.".draw"} = $node->{client}->{$service}->{$field.".draw"};
+		    $node->{client}->{$service}->{$field.".process"} = "no";
+		}
+		else
+		{
+		    $node->{client}->{$service}->{$name.".draw"} = "STACK";
+		}
+		push (@spc_stack, $name);
+		push (@$preproc, $pre);
+		push @$result, "$name.label";
+		push @$result, "$name.draw";
+		push @$result, "$name.cdef";
+
+		$node->{client}->{$service}->{$name.".label"} = $name;
+		$node->{client}->{$service}->{$name.".cdef"} = "$name,UN,0,$name,IF";
+		if (exists $node->{client}->{$service}->{$field.".cdef"} and !exists $node->{client}->{$service}->{$name.".onlynullcdef"})
+		{
+		    print "NotOnlynullcdef ($field)...\n" if $DEBUG;
+		    $node->{client}->{$service}->{$name.".cdef"} .= "," .
+			$node->{client}->{$service}->{$field.".cdef"};
+		    $node->{client}->{$service}->{$name.".cdef"} =~ s/\b$field\b/$name/g;
+		}
+		else
+		{
+		    print "Onlynullcdef ($field)...\n" if $DEBUG;
+		    $node->{client}->{$service}->{$name.".onlynullcdef"} = 1;
+		    push @$result, "$name.onlynullcdef";
+		}
+	    }
+	}
+	elsif (defined ($tmp_field = &get_sum_command ($node, $service, $field)))
+	{
+	    my @spc_stack = ();
+	    my $last_name = "";
+	    print "DEBUG: Doing special_sum...\n" if $DEBUG;
+
+		if (@$order == 1 or 
+			@$order == 2 && $node->{client}->{$service}->{$field.".negative"}) 
+		{
+			$single = 1;
+		}
+		
+	    foreach my $pre (split (/\s+/, $tmp_field))
+	    {
+		(my $path = $pre) =~ s/.+=//;
+		my $name = "z".$fieldnum."_".scalar (@spc_stack);
+		$last_name = $name;
+
+		$node->{client}->{$service}->{$name.".cdef"}  = "$name,UN,0,$name,IF";
+		$node->{client}->{$service}->{$name.".graph"} = "no";
+		$node->{client}->{$service}->{$name.".label"} = $name;
+		push @$result, "$name.cdef";
+		push @$result, "$name.graph";
+		push @$result, "$name.label";
+
+		push (@spc_stack, $name);
+		push (@$preproc, "$name=$pre");
+	    }
+	    $node->{client}->{$service}->{$last_name.".cdef"} .=
+		"," . join (',+,', @spc_stack[0 .. @spc_stack-2]) . ',+';
+	    if (exists $node->{client}->{$service}->{$field.".cdef"} and 
+		    length $node->{client}->{$service}->{$field.".cdef"})
+	    { # Oh bugger...
+		my $tc = $node->{client}->{$service}->{$field.".cdef"};
+		print "Oh bugger...($field, $time)...\n" if $DEBUG;
+		$tc =~ s/\b$field\b/$node->{client}->{$service}->{$last_name.".cdef"}/;
+		$node->{client}->{$service}->{$last_name.".cdef"} = $tc;
+	    }
+	    $node->{client}->{$service}->{$field.".process"} = "no";
+	    $node->{client}->{$service}->{$last_name.".draw"} = $node->{client}->{$service}->{$field.".draw"};
+	    $node->{client}->{$service}->{$last_name.".label"} = $node->{client}->{$service}->{$field.".label"};
+	    if (defined $node->{client}->{$service}->{$field.".graph"})
+	    {
+		$node->{client}->{$service}->{$last_name.".graph"} = $node->{client}->{$service}->{$field.".graph"};
+	    }
+	    else
+	    {
+		$node->{client}->{$service}->{$last_name.".graph"} = "yes";
+	    }
+	    if (defined $node->{client}->{$service}->{$field.".negative"})
+	    {
+		$node->{client}->{$service}->{$last_name.".negative"} = $node->{client}->{$service}->{$field.".negative"};;
+	    }
+	    $node->{client}->{$service}->{$field.".realname"} = $last_name;
+	    print "Setting node->{client}->{$service}->{$field} -> realname = $last_name...\n" if $DEBUG;
+	}
+    }
+    return $result;
+}
+
+sub single_value
+{
+    my $node    = shift;
+    my $config  = shift;
+    my $domain  = shift;
+    my $host    = shift;
+    my $service = shift;
+    my $field   = shift;
+    my $order   = shift;
+
+    return 1 if @$order == 1;
+    return 1 if (@$order == 2 and $node->{client}->{$service}->{$field.".negative"});
+
+# TODO: check for "graph no" on the fields
+    
+    return 0;
+}
+
+sub get_field_name
+{
+    my $name = shift;
+    
+    $name = substr (Digest::MD5::md5_hex ($name), -15)
+	if (length $name > 15);
+
+    return $name;
+}
+
+sub get_max_label_length
+{
+    my $node    = shift;
+    my $config  = shift;
+    my $domain  = shift;
+    my $host    = shift;
+    my $service = shift;
+    my $order   = shift;
+    my $result  = 0;
+
+    for my $field (@$order) {
+	my $path = undef;
+	(my $f = $field) =~ s/=.+//;
+	next if (exists $node->{client}->{$service}->{$f.".process"} and
+		 $node->{client}->{$service}->{$f.".process"} ne "yes");
+	next if (exists $node->{client}->{$service}->{$f.".skipdraw"});
+	next unless (!exists $node->{client}->{$service}->{$f.".graph"} or
+			$node->{client}->{$service}->{$f.".graph"} eq "yes");
+	if ($result < length ($node->{client}->{$service}->{$f.".label"} || $f)) {
+	    $result = length ($node->{client}->{$service}->{$f.".label"} || $f);
+	}
+	if (exists $node->{client}->{$service}->{graph_total} and 
+		length $node->{client}->{$service}->{graph_total} > $result)
+	{
+	    $result = length $node->{client}->{$service}->{graph_total};
+	}
+    }
+    return $result;
+}
+
+sub process_field {
+    my $node    = shift;
+    my $service = shift;
+    my $field   = shift;
+    return (&munin_get_bool_val ($node->{client}->{$service}->{$field.".process"}, 1));
+}
+
+sub draw_field {
+    my $node    = shift;
+    my $service = shift;
+    my $field   = shift;
+
+    return 0 if (exists $node->{client}->{$service}->{$field.".skipdraw"});
+    return (&munin_get_bool_val ($node->{client}->{$service}->{$field.".graph"}, 1));
+}
+
+sub get_picture_filename {
+    my $config  = shift;
+    my $domain  = shift;
+    my $name    = shift;
+    my $service = shift;
+    my $scale   = shift;
+
+    return "$config->{'htmldir'}/$domain/$name-$service-$scale.png";
+}
+
+sub get_rrd_filename {
+    my $node    = shift;
+    my $config  = shift;
+    my $domain  = shift;
+    my $name    = shift;
+    my $service = shift;
+    my $field   = shift;
+    my $path    = shift;
+    my $result  = "unknown";
+
+    if ($node->{client}->{$service}->{$field.".filename"})
+    {
+	$result = $node->{client}->{$service}->{$field.".filename"};
+    }
+    elsif ($path)
+    {
+	if (!defined ($node->{client}->{$service}->{$field.".label"}))
+	{
+	    print "DEBUG: Setting label: $field\n" if $DEBUG;
+	    $node->{client}->{$service}->{$field.".label"} = $field;
+	}
+
+	if ($path =~ /^\s*([^:;]+)[:;]([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
+	{
+	    $result = munin_get_filename ($1, $2, $3, $4);
+	    print "\nDEBUG1: Expanding $path...\n" if $DEBUG;
+	    if (! defined $node->{client}->{$service}->{$field."label"})
+	    {
+		for my $f (@copy_fields)
+		{
+		    if (not exists $node->{client}->{$service}->{"$field.$f"} and
+			    exists $config->{'domain'}->{$1}->{'node'}->{$2}->{'client'}->{$3}->{"$4.$f"})
+		    {
+			$node->{client}->{$service}->{"$field.$f"} = $config->{'domain'}->{$1}->{'node'}->{$2}->{'client'}->{$3}->{"$4.$f"};
+		    }
+		}
+	    }
+	}
+	elsif ($path =~ /^\s*([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
+	{
+	    print "\nDEBUG2: Expanding $path...\n" if $DEBUG;
+	    $result = munin_get_filename ($domain, $1, $2, $3);
+	    for my $f (@copy_fields)
+	    {
+		if (not exists $node->{client}->{$service}->{"$field.$f"} and
+			exists $config->{'domain'}->{$domain}->{'node'}->{$1}->{'client'}->{$2}->{"$3.$f"})
+		{
+		    print "DEBUG: Copying $f...\n" if $DEBUG;
+		    $node->{client}->{$service}->{"$field.$f"} = $config->{'domain'}->{$domain}->{'node'}->{$1}->{'client'}->{$2}->{"$3.$f"};
+		}
+	    }
+	}
+	elsif ($path =~ /^\s*([^:\.]+)[:\.]([^:\.]+)\s*$/)
+	{
+	    print "\nDEBUG3: Expanding $path...\n" if $DEBUG;
+	    $result = munin_get_filename ($domain, $name, $1, $2);
+	    for my $f (@copy_fields)
+	    {
+		if (not exists $node->{client}->{$service}->{"$field.$f"} and
+			exists $node->{client}->{$1}->{"$2.$f"})
+		{
+		    $node->{client}->{$service}->{"$field.$f"} = $node->{client}->{$1}->{"$2.$f"};
+		}
+	    }
+	}
+	elsif ($path =~ /^\s*([^:\.]+)\s*$/)
+	{
+	    print "\nDEBUG4: Expanding $path...\n" if $DEBUG;
+	    $result = munin_get_filename ($domain, $name, $service, $1);
+	    for my $f (@copy_fields)
+	    {
+		if (not exists $node->{client}->{$service}->{"$field.$f"} and
+			exists $node->{client}->{$service}->{"$1.$f"})
+		{
+		    $node->{client}->{$service}->{"$field.$f"} = $node->{client}->{$service}->{"$1.$f"};
+		}
+	    }
+	}
+    }
+    else
+    {
+	print "\nDEBUG5: Doing path...\n" if $DEBUG;
+	$result = munin_get_filename($domain,$name,$service,$field);
+    }
+    return $result;
 }
 
 sub process_node {
@@ -251,52 +689,11 @@ sub process_node {
 	    my @rrd;
 	    my @added = ();
 
-            # See if we should skip it because of conf-options
-	    next unless (ref $node->{client}->{$service});
-	    next if ($node->{client}->{$service}->{'graph'} and 
-				($node->{client}->{$service}->{'graph'} eq "no" ||
-				($node->{client}->{$service}->{'graph'} eq "on-demand") && !$force_graphing));
-            # See if we should skip it because of command-line arguments
-	    next if (@limit_services and not grep (/^$service$/, @limit_services));
-	    # filename
-	    push @rrd,"$config->{'htmldir'}/$domain/$name-$service-$time.png";
+            # See if we should skip the service 
+	    next if (&skip_service ($node, $service));
 
-	    # title
-	    push @rrd, "--title",($node->{client}->{$service}->{'graph_title'}?
-				  $node->{client}->{$service}->{'graph_title'}:$service) .
-				  " - by $time";
-
-	    # starttime
-	    push @rrd, "--start",$times{$time};
-	    if ($node->{client}->{$service}->{graph_args}) {
-		push @rrd,(split /\s/,$node->{client}->{$service}->{graph_args});
-	    }
-	    if ($node->{client}->{$service}->{graph_vlabel}) {
-		push @rrd, ("--vertical-label", $node->{client}->{$service}->{graph_vlabel});
-	    }
-	    elsif ($node->{client}->{$service}->{graph_vtitle})
-	    {
-		push @rrd, ("--vertical-label", $node->{client}->{$service}->{graph_vtitle});
-	    }
-	    push @rrd,"--height", "175";
-	    push @rrd,"--imgformat", "PNG";
-	    push @rrd,"--lazy" if ($force_lazy);
-
-	    if (exists $node->{client}->{$service}->{graph_noscale} and
-		    !exists $node->{client}->{$service}->{graph_scale})
-	    {
-		if (munin_get_bool_val ($node->{client}->{$service}->{graph_noscale}))
-		{
-		    $node->{client}->{$service}->{graph_scale} = "no";
-		}
-		else
-		{
-		    $node->{client}->{$service}->{graph_scale} = "yes";
-		}
-
-	    }
-	    push (@rrd, "--units-exponent", "0") 
-		if (! munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1));
+	    # Do the header (title, vtitle, size, etc...)
+	    push @rrd, @{&get_header ($node, $config, $domain, $name, $service, $time)};
 
 	    my $col_count;
 	    my $max_field_len = 0;
@@ -304,152 +701,25 @@ sub process_node {
 	    my $rrdname;
 	    my $force_single_value;
 
-	    if ($node->{client}->{$service}->{graph_order}) {
-		@field_order = split /\s+/, $node->{client}->{$service}->{'graph_order'};
-	    } else {
-		for my $key (keys %{$node->{client}->{$service}}) {
-		    my ($client,$type)="";
-		    ($client,$type) = split /\./,$key;
-		    if (defined $type and $type eq "label") {
-			push @field_order,$client;
-		    } 
-		}
-	    }
+	    @field_order =  @{&get_field_order ($node, $config, $domain, $name, $service, $time, \$force_single_value)};
+
 	    # Array to keep 'preprocess'ed fields.
 	    my @rrd_preprocess = ();
-	    my $fieldnum = 0;
-	    print "DEBUG: Drawing fields \"", join "\",\"", @field_order, "\".\n" if $DEBUG;
-	    for my $field (@field_order) { # Search for 'specials'...
-		$fieldnum++;
-		if (exists $node->{client}->{$service}->{$field.".special_stack"})
-		{
-			$node->{client}->{$service}->{$field.".stack"} = $node->{client}->{$service}->{$field.".special_stack"};
-		}
-		if (exists $node->{client}->{$service}->{$field.".special_sum"})
-		{
-			$node->{client}->{$service}->{$field.".sum"} = $node->{client}->{$service}->{$field.".special_sum"};
-		}
-		if (exists $node->{client}->{$service}->{$field.".stack"})
-		{
-		    print "DEBUG: Doing special_stack...\n" if $DEBUG;
-		    my @spc_stack = ();
-		    foreach my $pre (split (/\s+/, $node->{client}->{$service}->{$field.".stack"}))
-		    {
-			(my $name = $pre) =~ s/=.+//;
-			if (!@spc_stack)
-			{
-			    $node->{client}->{$service}->{$name.".draw"} = $node->{client}->{$service}->{$field.".draw"};
-			    $node->{client}->{$service}->{$field.".process"} = "no";
-			}
-			else
-			{
-			    $node->{client}->{$service}->{$name.".draw"} = "STACK";
-			}
-			push (@spc_stack, $name);
-			push (@rrd_preprocess, $pre);
-			push @added, "$name.label";
-			push @added, "$name.draw";
-			push @added, "$name.cdef";
+	    print "DEBUG: Expanding specials \"", join "\",\"", @field_order, "\".\n" if $DEBUG;
+	    @added = @{&expand_specials ($node, $config, $domain, $name, $service, $time, \@rrd_preprocess, \@field_order)};
 
-			$node->{client}->{$service}->{$name.".label"} = $name;
-			$node->{client}->{$service}->{$name.".cdef"} = "$name,UN,0,$name,IF";
-			if (exists $node->{client}->{$service}->{$field.".cdef"} and !exists $node->{client}->{$service}->{$name.".onlynullcdef"})
-			{
-			    print "NotOnlynullcdef ($field)...\n" if $DEBUG;
-			    $node->{client}->{$service}->{$name.".cdef"} .= "," .
-				$node->{client}->{$service}->{$field.".cdef"};
-			    $node->{client}->{$service}->{$name.".cdef"} =~ s/\b$field\b/$name/g;
-			}
-			else
-			{
-			    print "Onlynullcdef ($field)...\n" if $DEBUG;
-			    $node->{client}->{$service}->{$name.".onlynullcdef"} = 1;
-			    push @added, "$name.onlynullcdef";
-			}
-		    }
-		}
-		elsif (exists $node->{client}->{$service}->{$field.".sum"})
-		{
-		    my @spc_stack = ();
-		    my $last_name = "";
-		    print "DEBUG: Doing special_sum...\n" if $DEBUG;
-
-			if (@field_order == 1 or 
-				@field_order == 2 && $node->{client}->{$service}->{$field.".negative"}) 
-			{
-				$force_single_value = 1;
-			}
-			
-		    foreach my $pre (split (/\s+/, $node->{client}->{$service}->{$field.".sum"}))
-		    {
-			(my $path = $pre) =~ s/.+=//;
-			my $name = "z".$fieldnum."_".scalar (@spc_stack);
-			$last_name = $name;
-
-			$node->{client}->{$service}->{$name.".cdef"}  = "$name,UN,0,$name,IF";
-			$node->{client}->{$service}->{$name.".graph"} = "no";
-			$node->{client}->{$service}->{$name.".label"} = $name;
-			push @added, "$name.cdef";
-			push @added, "$name.graph";
-			push @added, "$name.label";
-
-			push (@spc_stack, $name);
-			push (@rrd_preprocess, "$name=$pre");
-		    }
-		    $node->{client}->{$service}->{$last_name.".cdef"} .=
-			"," . join (',+,', @spc_stack[0 .. @spc_stack-2]) . ',+';
-		    if (exists $node->{client}->{$service}->{$field.".cdef"} and 
-			    length $node->{client}->{$service}->{$field.".cdef"})
-		    { # Oh bugger...
-			my $tc = $node->{client}->{$service}->{$field.".cdef"};
-			print "Oh bugger...($field, $time)...\n" if $DEBUG;
-			$tc =~ s/\b$field\b/$node->{client}->{$service}->{$last_name.".cdef"}/;
-			$node->{client}->{$service}->{$last_name.".cdef"} = $tc;
-		    }
-		    $node->{client}->{$service}->{$field.".process"} = "no";
-		    $node->{client}->{$service}->{$last_name.".draw"} = $node->{client}->{$service}->{$field.".draw"};
-		    $node->{client}->{$service}->{$last_name.".label"} = $node->{client}->{$service}->{$field.".label"};
-		    if (defined $node->{client}->{$service}->{$field.".graph"})
-		    {
-			$node->{client}->{$service}->{$last_name.".graph"} = $node->{client}->{$service}->{$field.".graph"};
-		    }
-		    else
-		    {
-			$node->{client}->{$service}->{$last_name.".graph"} = "yes";
-		    }
-		    if (defined $node->{client}->{$service}->{$field.".negative"})
-		    {
-			$node->{client}->{$service}->{$last_name.".negative"} = $node->{client}->{$service}->{$field.".negative"};;
-		    }
-		    $node->{client}->{$service}->{$field.".realname"} = $last_name;
-		    print "Setting node->{client}->{$service}->{$field} -> realname = $last_name...\n" if $DEBUG;
-		}
-	    }
 	    @field_order = (@rrd_preprocess, @field_order);
-	    print "DEBUG: Drawing fields \"", join "\",\"", (@rrd_preprocess, @field_order), "\".\n" if $DEBUG;
-	    for my $field (@field_order) {
-		my $path = undef;
-		(my $f = $field) =~ s/=.+//;
-		next if (exists $node->{client}->{$service}->{$f.".process"} and
-			 $node->{client}->{$service}->{$f.".process"} ne "yes");
-		next if (exists $node->{client}->{$service}->{$f.".skipdraw"});
-		next unless (!exists $node->{client}->{$service}->{$f.".graph"} or
-				$node->{client}->{$service}->{$f.".graph"} eq "yes");
-		if ($max_field_len < length ($node->{client}->{$service}->{$f.".label"} || $f)) {
-		    $max_field_len = length ($node->{client}->{$service}->{$f.".label"} || $f);
-		}
-		if (exists $node->{client}->{$service}->{graph_total} and 
-			length $node->{client}->{$service}->{graph_total} > $max_field_len)
-		{
-		    $max_field_len = length $node->{client}->{$service}->{graph_total};
-		}
-	    }
+	    print "DEBUG: Checking field lengths \"", join "\",\"", (@rrd_preprocess, @field_order), "\".\n" if $DEBUG;
+
+	    # Get max label length
+	    $max_field_len = &get_max_label_length ($node, $config, $domain, $name, $service, \@field_order);
+
 	    # Array to keep negative data until we're finished with positive.
 	    my @rrd_negatives = ();
 	    my $filename = "unknown";
 	    my %total_pos;
 	    my %total_neg;
-	    print "DEBUG: Drawing fields \"", join "\",\"", @field_order, "\".\n" if $DEBUG;
+	    print "DEBUG: Treating fields \"", join "\",\"", @field_order, "\".\n" if $DEBUG;
 	    for my $field (@field_order) {
 		my $path  = undef;
 		if ($field =~ s/=(.+)//)
@@ -457,89 +727,14 @@ sub process_node {
 		    $path = $1;
 		}
 
-		next if ($node->{client}->{$service}->{$field.".process"} and
-			 $node->{client}->{$service}->{$field.".process"} ne "yes");
+		next unless &process_field ($node, $service, $field);
+		print "DEBUG: Processing field \"$field\".\n" if $DEBUG;
 		    
-		print "DEBUG: - $field...\n" if $DEBUG;
-		if ($node->{client}->{$service}->{$field.".filename"})
-		{
-		    $filename = $node->{client}->{$service}->{$field.".filename"};
-		}
-		elsif ($path)
-		{
-		    if (!defined ($node->{client}->{$service}->{$field.".label"}))
-		    {
-			print "DEBUG: Setting label: $field\n" if $DEBUG;
-			$node->{client}->{$service}->{$field.".label"} = $field;
-		    }
-
-		    if ($path =~ /^\s*([^:;]+)[:;]([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
-		    {
-			$filename = munin_get_filename ($1, $2, $3, $4);
-			print "\nDEBUG1: Expanding $path...\n" if $DEBUG;
-			if (! defined $node->{client}->{$service}->{$field."label"})
-			{
-			    for my $f (@copy_fields)
-			    {
-				if (not exists $node->{client}->{$service}->{"$field.$f"} and
-					exists $config->{'domain'}->{$1}->{'node'}->{$2}->{'client'}->{$3}->{"$4.$f"})
-				{
-				    $node->{client}->{$service}->{"$field.$f"} = $config->{'domain'}->{$1}->{'node'}->{$2}->{'client'}->{$3}->{"$4.$f"};
-				}
-			    }
-			}
-		    }
-		    elsif ($path =~ /^\s*([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
-		    {
-			print "\nDEBUG2: Expanding $path...\n" if $DEBUG;
-			$filename = munin_get_filename ($domain, $1, $2, $3);
-			for my $f (@copy_fields)
-			{
-			    if (not exists $node->{client}->{$service}->{"$field.$f"} and
-				    exists $config->{'domain'}->{$domain}->{'node'}->{$1}->{'client'}->{$2}->{"$3.$f"})
-			    {
-				print "DEBUG: Copying $f...\n" if $DEBUG;
-				$node->{client}->{$service}->{"$field.$f"} = $config->{'domain'}->{$domain}->{'node'}->{$1}->{'client'}->{$2}->{"$3.$f"};
-			    }
-			}
-		    }
-		    elsif ($path =~ /^\s*([^:\.]+)[:\.]([^:\.]+)\s*$/)
-		    {
-			print "\nDEBUG3: Expanding $path...\n" if $DEBUG;
-			$filename = munin_get_filename ($domain, $name, $1, $2);
-			for my $f (@copy_fields)
-			{
-			    if (not exists $node->{client}->{$service}->{"$field.$f"} and
-				    exists $node->{client}->{$1}->{"$2.$f"})
-			    {
-				$node->{client}->{$service}->{"$field.$f"} = $node->{client}->{$1}->{"$2.$f"};
-			    }
-			}
-		    }
-		    elsif ($path =~ /^\s*([^:\.]+)\s*$/)
-		    {
-			print "\nDEBUG4: Expanding $path...\n" if $DEBUG;
-			$filename = munin_get_filename ($domain, $name, $service, $1);
-			for my $f (@copy_fields)
-			{
-			    if (not exists $node->{client}->{$service}->{"$field.$f"} and
-				    exists $node->{client}->{$service}->{"$1.$f"})
-			    {
-				$node->{client}->{$service}->{"$field.$f"} = $node->{client}->{$service}->{"$1.$f"};
-			    }
-			}
-		    }
-		}
-		else
-		{
-		    print "\nDEBUG5: Doing path...\n" if $DEBUG;
-		    $filename = munin_get_filename($domain,$name,$service,$field);
-		}
-
+		# Getting name of rrd file
+		$filename = &get_rrd_filename ($node, $config, $domain, $name, $service, $field, $path);
 
 		my $update = RRDs::last ($filename);
 		$update = 0 if ! defined $update;
-
 		if ($update > $lastupdate)
 		{
 		    $lastupdate = $update;
@@ -547,20 +742,11 @@ sub process_node {
 
 		my $rrdfield = ($node->{client}->{$service}->{$field.".rrdfield"} || "42");
 		my $cdef = ($node->{client}->{$service}->{$field.".cdef"} ? "c" : "");
-		my $single_value = (@field_order == 1 or 
-			(@field_order == 2 && $node->{client}->{$service}->{$field.".negative"}) or
-			($force_single_value));
+		my $single_value = $force_single_value || &single_value ($node, $config, $domain, $name, $service, $field, \@field_order);
 		my $has_negative = exists $node->{client}->{$service}->{$field.".negative"};
 
 		# Trim the fieldname to make room for other field names. Hack.
-		if (length $field > 15)
-		{
-			$rrdname = substr (Digest::MD5::md5_hex ($field), -15);
-		}
-		else
-		{
-			$rrdname = $field;
-		}
+		$rrdname = &get_field_name ($field);
 
 		push (@rrd, "DEF:g$rrdname=" .
 		      $filename . ":" . $rrdfield . ":AVERAGE");
@@ -574,25 +760,26 @@ sub process_node {
 		}
 		if ($node->{client}->{$service}->{$field.".cdef"})
 		{
-		    push (@rrd, &expand_cdef($node->{client}->{$service}, $rrdname, $node->{client}->{$service}->{$field.".cdef"}));
+		    push (@rrd, &expand_cdef($node->{client}->{$service}, \$rrdname, $node->{client}->{$service}->{$field.".cdef"}));
+		    print "DEBUG: Field name after cdef set to $rrdname\n" if $DEBUG;
 		}
 		unless (exists $node->{client}->{$service}->{$field.".onlynullcdef"} and $node->{client}->{$service}->{$field.".onlynullcdef"})
 		{
-		    push (@rrd, "CDEF:c$rrdname=".$cdef."g$rrdname" . (($now-$update)>900 ? ",POP,UNKN" : ""));
+		    push (@rrd, "CDEF:c$rrdname=g$rrdname" . (($now-$update)>900 ? ",POP,UNKN" : ""));
 		}
-		next if (exists $node->{client}->{$service}->{$field.".skipdraw"});
-		next if (exists $node->{client}->{$service}->{$field.".graph"} and
-				$node->{client}->{$service}->{$field.".graph"} ne "yes");
+
+		next unless &draw_field ($node, $service, $field);
+		print "DEBUG: Drawing field \"$field\".\n" if $DEBUG;
 		
 		if ($single_value) # Only one field. Do min/max range.	
 		{
-			push (@rrd, "CDEF:min_max_diff=".$cdef."a$rrdname,".$cdef."i$rrdname,-");
-			push (@rrd, "CDEF:re_zero=min_max_diff,min_max_diff,-") 
-			    unless ($node->{client}->{$service}->{$field.".negative"});
-			push (@rrd, "AREA:".$cdef."i$rrdname#ffffff");
-			push (@rrd, "STACK:min_max_diff$range_colour");
-			push (@rrd, "LINE1:re_zero#000000")
-			    unless ($node->{client}->{$service}->{$field.".negative"});
+		    push (@rrd, "CDEF:min_max_diff=a$rrdname,i$rrdname,-");
+		    push (@rrd, "CDEF:re_zero=min_max_diff,min_max_diff,-") 
+			unless ($node->{client}->{$service}->{$field.".negative"});
+		    push (@rrd, "AREA:i$rrdname#ffffff");
+		    push (@rrd, "STACK:min_max_diff$range_colour");
+		    push (@rrd, "LINE2:re_zero#000000")
+			unless ($node->{client}->{$service}->{$field.".negative"});
 		}
 
 		if ($has_negative and !@rrd_negatives) # Push "global" headers...
@@ -605,7 +792,7 @@ sub process_node {
 		}
 
 		push (@rrd, ($node->{client}->{$service}->{$field.".draw"} || "LINE2") .
-		      ":" . $cdef . "g$rrdname" . 
+		      ":g$rrdname" . 
 		      ($single_value ? $single_colour : $COLOUR[$col_count++%@COLOUR]) . ":" .
 		      (escape ($node->{client}->{$service}->{"$field.label"}) || escape ($field))
 		      . (" " x ($max_field_len + 1 -
@@ -614,7 +801,8 @@ sub process_node {
 		# Check for negative fields (typically network traffic)
 		if ($has_negative)
 		{
-		    my $negfield = $node->{client}->{$service}->{$field.".negative"};
+		    my $negfield = &orig_to_cdef ($node->{client}->{$service}, $node->{client}->{$service}->{$field.".negative"});
+		    print "DEBUG: negfield = $negfield\n" if $DEBUG;
 		    if (exists $node->{client}->{$service}->{$negfield.".realname"})
 		    {
 		    	$negfield = $node->{client}->{$service}->{$negfield.".realname"};
@@ -626,63 +814,63 @@ sub process_node {
 		    	push (@rrd_negatives, "CDEF:re_zero=g$negfield,UN,0,0,IF");
 		    }
 
-		    push (@rrd_negatives, "CDEF:n".$cdef."g$negfield=".$cdef."g$negfield,-1,*");
+		    push (@rrd_negatives, "CDEF:ng$negfield=g$negfield,-1,*");
 
 		    if ($single_value) # Only one field. Do min/max range.	
 		    {
-			    push (@rrd, "CDEF:neg_min_max_diff=".$cdef."i$negfield,".$cdef."a$negfield,-");
-			    push (@rrd, "CDEF:ni$negfield=".$cdef."i$negfield,-1,*");
+			    push (@rrd, "CDEF:neg_min_max_diff=i$negfield,a$negfield,-");
+			    push (@rrd, "CDEF:ni$negfield=i$negfield,-1,*");
 			    push (@rrd, "AREA:ni$negfield#ffffff");
 			    push (@rrd, "STACK:neg_min_max_diff$range_colour");
 		    }
 
 		    push (@rrd_negatives, ($node->{client}->{$service}->{$negfield.".draw"} || "LINE2") .
-			":n" . $cdef . "g$negfield" . 
-			((defined $single_value and $single_value) ? $single_colour : $COLOUR[($col_count-1)%@COLOUR]));
+			":ng$negfield" . 
+			(defined $single_value and $single_value ? $single_colour : $COLOUR[$col_count-1%@COLOUR]));
 		    push (@rrd_negatives, "HRULE:".$node->{client}->{$service}->{"$negfield.warn"}.
-			((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR]))
+			(defined $single_value and $single_value ? "#ff0000" : $COLOUR[$col_count-1%@COLOUR]))
 			if $node->{client}->{$service}->{"$negfield.warn"};
                     # Special case - renamed field
 
 		    push (@rrd, "GPRINT:c$negfield:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
 		    push (@rrd, "GPRINT:c$rrdname:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-		    push (@rrd, "GPRINT:" . $cdef . "i$negfield:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
-		    push (@rrd, "GPRINT:" . $cdef . "i$rrdname:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-		    push (@rrd, "GPRINT:" . $cdef . "g$negfield:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
-		    push (@rrd, "GPRINT:" . $cdef . "g$rrdname:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-		    push (@rrd, "GPRINT:" . $cdef . "a$negfield:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
-		    push (@rrd, "GPRINT:" . $cdef . "a$rrdname:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "\\j");
-		    push (@{$total_pos{'min'}}, $cdef."i$rrdname");
-		    push (@{$total_pos{'avg'}}, $cdef."g$rrdname");
-		    push (@{$total_pos{'max'}}, $cdef."a$rrdname");
-		    push (@{$total_neg{'min'}}, $cdef."i$negfield");
-		    push (@{$total_neg{'avg'}}, $cdef."g$negfield");
-		    push (@{$total_neg{'max'}}, $cdef."a$negfield");
+		    push (@rrd, "GPRINT:i$negfield:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
+		    push (@rrd, "GPRINT:i$rrdname:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
+		    push (@rrd, "GPRINT:g$negfield:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
+		    push (@rrd, "GPRINT:g$rrdname:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
+		    push (@rrd, "GPRINT:a$negfield:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
+		    push (@rrd, "GPRINT:a$rrdname:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "\\j");
+		    push (@{$total_pos{'min'}}, "i$rrdname");
+		    push (@{$total_pos{'avg'}}, "g$rrdname");
+		    push (@{$total_pos{'max'}}, "a$rrdname");
+		    push (@{$total_neg{'min'}}, "i$negfield");
+		    push (@{$total_neg{'avg'}}, "g$negfield");
+		    push (@{$total_neg{'max'}}, "a$negfield");
 		}
 		else
 		{
 		    push (@rrd, "COMMENT: Cur:");
 		    push (@rrd, "GPRINT:c$rrdname:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, "yes")?"%s":"") . "");
 		    push (@rrd, "COMMENT: Min:");
-		    push (@rrd, "GPRINT:" . $cdef . "i$rrdname:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
+		    push (@rrd, "GPRINT:i$rrdname:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
 		    push (@rrd, "COMMENT: Avg:");
-		    push (@rrd, "GPRINT:" . $cdef . "g$rrdname:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
+		    push (@rrd, "GPRINT:g$rrdname:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
 		    push (@rrd, "COMMENT: Max:");
-		    push (@rrd, "GPRINT:" . $cdef . "a$rrdname:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "\\j");
-		    push (@{$total_pos{'min'}}, $cdef."i$rrdname");
-		    push (@{$total_pos{'avg'}}, $cdef."g$rrdname");
-		    push (@{$total_pos{'max'}}, $cdef."a$rrdname");
+		    push (@rrd, "GPRINT:a$rrdname:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "\\j");
+		    push (@{$total_pos{'min'}}, "i$rrdname");
+		    push (@{$total_pos{'avg'}}, "g$rrdname");
+		    push (@{$total_pos{'max'}}, "a$rrdname");
 		}
 
 
-		push (@rrd, "HRULE:".$node->{client}->{$service}->{"$field.warn"}.($single_value ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR]))
+		push (@rrd, "HRULE:".$node->{client}->{$service}->{"$field.warn"}.($single_value ? "#ff0000" : $COLOUR[$col_count-1%@COLOUR]))
 		    if $node->{client}->{$service}->{"$field.warn"};
 	    }
 
 	    if (@rrd_negatives)
 	    {
 		push (@rrd, @rrd_negatives);
-		push (@rrd, "LINE1:re_zero#000000"); # Redraw zero.
+		push (@rrd, "LINE2:re_zero#000000"); # Redraw zero.
 		if (exists $node->{client}->{$service}->{graph_total} and 
 			exists $total_pos{'min'} and exists $total_neg{'min'} and 
 			@{$total_pos{'min'}} and @{$total_neg{'min'}})
@@ -729,14 +917,14 @@ sub process_node {
 	    {
 		    push @rrd, "--end",(int($lastupdate/$resolutions{$time}))*$resolutions{$time};
 	    }
-	    print "\n\nrrdtool \"graph\" \"", join ("\" \"",@rrd), "\"\n" if $DEBUG;
+	    print "\n\nrrdtool \"graph\" \"", join ("\"\n\t\"",@rrd), "\"\n" if $DEBUG;
 	    RRDs::graph (@rrd);
 	    if (my $ERROR = RRDs::error) {
 		logger ("Unable to graph $filename: $ERROR");
 	    }
-	    elsif ($list_images)
+	    elsif ($list_images) # Command-line option to list images created
 	    {
-		print "$config->{'htmldir'}/$domain/$name-$service-$time.png\n";
+		print &get_picture_filename ($config, $domain, $name, $service, $time), "\n";
 	    }
 
 	    foreach (@added)
@@ -752,82 +940,82 @@ sub process_node {
     }
 }
 
-sub expand_cdef
+sub orig_to_cdef
 {
     my $service = shift;
-    my $cfield   = shift;
-    my $cdef    = shift;
+    my $field   = shift;
 
-    my ($max, $min, $avg) = ("CDEF:ca$cfield=$cdef", "CDEF:ci$cfield=$cdef", "CDEF:cg$cfield=$cdef");
+    if (defined $service->{$field.".cdef_name"})
+    {
+	return &orig_to_cdef ($service, $service->{$field.".cdef_name"});
+    }
+    return $field;
+}
+
+sub set_cdef_name
+{
+    my $service = shift;
+    my $field   = shift;
+    my $new     = shift;
+
+    $service->{$field.".cdef_name"} = $new;
+    print "DEBUG: set_cdef_name from $field to $new.\n" if $DEBUG;
+}
+
+sub skip_service
+{
+    my $node = shift;
+    my $service = shift;
+
+    # Check to make sure that service exists
+    return 1 unless (ref $node->{client}->{$service});
+
+    # See if we should skip it because of conf-options
+    return 1 if ($node->{client}->{$service}->{'graph'} and 
+	($node->{client}->{$service}->{'graph'} eq "no" ||
+	($node->{client}->{$service}->{'graph'} eq "on-demand") && !$force_graphing));
+
+    # See if we should skip it because of command-line arguments
+    return 1 if (@limit_services and not grep (/^$service$/, @limit_services));
+
+    # Don't skip
+    return 0;
+}
+
+sub expand_cdef
+{
+    my $service     = shift;
+    my $cfield_ref  = shift;
+    my $cdef        = shift;
+
+    my $new_field = &get_field_name ("cdef$$cfield_ref");
+
+    my ($max, $min, $avg) = ("CDEF:a$new_field=$cdef", "CDEF:i$new_field=$cdef", "CDEF:g$new_field=$cdef");
 
     foreach my $field (keys %$service)
     {
-		next unless ($field =~ /^(.+)\.label$/);
-		my $fieldname = $1;		my $rrdname = $fieldname;
-		if (length $fieldname > 15) # Use hash instead.
-		{
-			$rrdname = substr (Digest::MD5::md5_hex ($fieldname), -15); 
-		}
-		if (exists $service->{$fieldname.".cdef"} and 
-			length $service->{$fieldname.".cdef"} and
-			$cdef =~ /\b$fieldname\b/ and
-			$fieldname ne $cfield)
-		{
-			$max =~ s/([,=])$fieldname([,=]|$)/$1ca$rrdname$2/g;
-			$min =~ s/([,=])$fieldname([,=]|$)/$1ci$rrdname$2/g;
-			$avg =~ s/([,=])$fieldname([,=]|$)/$1cg$rrdname$2/g;
-		}
-		if ($cdef =~ /\b$fieldname\b/)
-		{
-			$max =~ s/([,=])$fieldname([,=]|$)/$1a$rrdname$2/g;
-			$min =~ s/([,=])$fieldname([,=]|$)/$1i$rrdname$2/g;
-			$avg =~ s/([,=])$fieldname([,=]|$)/$1g$rrdname$2/g;
-		}
+	next unless ($field =~ /^(.+)\.label$/);
+	my $fieldname = $1;		
+	my $rrdname = &orig_to_cdef ($service, $fieldname);
+	if ($cdef =~ /\b$fieldname\b/)
+	{
+		$max =~ s/([,=])$fieldname([,=]|$)/$1a$rrdname$2/g;
+		$min =~ s/([,=])$fieldname([,=]|$)/$1i$rrdname$2/g;
+		$avg =~ s/([,=])$fieldname([,=]|$)/$1g$rrdname$2/g;
+	}
     }
+
+    &set_cdef_name ($service, $$cfield_ref, $new_field);
+    $$cfield_ref = $new_field;
 
     return ($max, $min, $avg);
 }
 
-sub logger_open {
-    my $dirname = shift;
-
-    if (!$log->opened)
-    {
-	unless (open ($log, ">>$dirname/munin-graph.log"))
-	{
-	    print STDERR "Warning: Could not open log file \"$dirname/munin-graph.log\" for writing: $!";
-	}
-    }
-}
-
-
 sub logger {
-    my ($comment) = @_;
-    my $now = strftime "%b %d %H:%M:%S", localtime;
- 
-    if ($log->opened)
-    {
-	print $log "$now - $comment\n";
-    }
-    else
-    {
-	if (defined $config->{logdir})
-	{
-	    if (open ($log, ">>$config->{logdir}/munin-graph.log"))
-	    {
-		 print $log "$now - $comment\n";
-	    }
-	    else
-	    {
-		 print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-graph.log\" for writing: $!";
-		 print STDERR "$now - $comment\n";
-	    }
-	}
-	else
-	{
-	    print STDERR "$now - $comment\n";
-	}
-    }
+  my ($comment) = @_;
+  my $now = strftime "%b %d %H:%M:%S", localtime;
+  print LOG "$now - $comment\n";
+  flush LOG;
 }
 
 sub parse_path
