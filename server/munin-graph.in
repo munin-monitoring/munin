@@ -5,6 +5,18 @@
 # $Id$
 #
 # $Log$
+# Revision 1.28  2004/09/04 21:33:13  jimmyo
+# Handle strange characters better.
+#
+# Revision 1.27  2004/09/01 19:00:22  jimmyo
+# Moved function get_picture_filename from munin-graph to Munin.pm.
+#
+# Revision 1.26  2004/09/01 18:30:21  jimmyo
+# Added new options "graph_height" and "graph_width", to beter control size.
+#
+# Revision 1.25  2004/08/23 10:37:31  jimmyo
+# Fixed bug in munin-graph when choosing colours (Deb#267185).
+#
 # Revision 1.24  2004/08/18 15:32:20  jimmyo
 # Applied patch from Matthieu Lochegnies to munin-graph, and fixed the same problem elsewhere in the code (Deb#250982, SF#924561).
 #
@@ -358,7 +370,7 @@ sub get_header {
     my $tmp_field;
 
     # Picture filename
-    push @$result, &get_picture_filename ($config, $domain, $host, $service, $scale);
+    push @$result, &munin_get_picture_filename ($config, $domain, $host, $service, $scale);
 
     # Title
     push @$result, ("--title", &get_title ($node, $service, $scale));
@@ -374,7 +386,8 @@ sub get_header {
 	push @$result, ("--vertical-label", $tmp_field);
     }
 
-    push @$result,"--height", "175";
+    push @$result,"--height", &munin_get_val ($config, "graph_height", "175", $domain, $host, $service);
+    push @$result,"--width", &munin_get_val ($config, "graph_width", "400", $domain, $host, $service);
     push @$result,"--imgformat", "PNG";
     push @$result,"--lazy" if ($force_lazy);
 
@@ -653,16 +666,6 @@ sub process_field {
     return (&munin_get_bool_val ($node->{client}->{$service}->{$field.".process"}, 1));
 }
 
-sub get_picture_filename {
-    my $config  = shift;
-    my $domain  = shift;
-    my $name    = shift;
-    my $service = shift;
-    my $scale   = shift;
-
-    return "$config->{'htmldir'}/$domain/$name-$service-$scale.png";
-}
-
 sub get_rrd_filename {
     my $node    = shift;
     my $config  = shift;
@@ -899,9 +902,9 @@ sub process_node {
 
 		push (@rrd_negatives, ($node->{client}->{$service}->{$negfield.".draw"} || "LINE2") .
 		    ":ng$negfield" . 
-		    ((defined $single_value and $single_value) ? $single_colour : $COLOUR[$col_count-1%@COLOUR]));
+		    ((defined $single_value and $single_value) ? $single_colour : $COLOUR[($col_count-1)%@COLOUR]));
 		push (@rrd_negatives, "HRULE:".$node->{client}->{$service}->{"$negfield.warn"}.
-		    ((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[$col_count-1%@COLOUR]))
+		    ((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR]))
 		    if $node->{client}->{$service}->{"$negfield.warn"};
 		# Special case - renamed field
 
@@ -936,7 +939,7 @@ sub process_node {
 	    }
 
 
-	    push (@rrd, "HRULE:".$node->{client}->{$service}->{"$field.warn"}.($single_value ? "#ff0000" : $COLOUR[$col_count-1%@COLOUR]))
+	    push (@rrd, "HRULE:".$node->{client}->{$service}->{"$field.warn"}.($single_value ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR]))
 		if $node->{client}->{$service}->{"$field.warn"};
 	}
 
@@ -1006,7 +1009,7 @@ sub process_node {
 	    }
 	    elsif ($list_images) # Command-line option to list images created
 	    {
-		print &get_picture_filename ($config, $domain, $name, $service, $time), "\n";
+		print &munin_get_picture_filename ($config, $domain, $name, $service, $time), "\n";
 	    }
 	}
 
@@ -1163,6 +1166,7 @@ sub escape
 {
     my $text = shift;
     return undef if not defined $text;
+    $text =~ s/\\/\\\\/g;
     $text =~ s/:/\\:/g;
     return $text;
 }

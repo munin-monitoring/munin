@@ -1,6 +1,15 @@
 #!/usr/bin/perl -w
 #
 # $Log$
+# Revision 1.7  2004/09/05 12:00:18  jimmyo
+# Set family and capabilities.
+#
+# Revision 1.6  2004/09/04 21:58:28  jimmyo
+# Set category and info fields.
+#
+# Revision 1.5  2004/09/04 19:12:14  jimmyo
+# Accept ppp interfaces as well as ethernet interfaces.
+#
 # Revision 1.4  2004/04/30 16:58:14  jimmyo
 # Added max.
 #
@@ -20,6 +29,8 @@
 # Created by jo
 #
 #
+#%# family=snmpauto
+#%# capabilities=snmpconf
 
 use strict;
 use Net::SNMP;
@@ -37,7 +48,7 @@ if (defined $ARGV[0] and $ARGV[0] eq "snmpconf")
 {
 	print "number  1.3.6.1.2.1.2.1.0\n";
 	print "index   1.3.6.1.2.1.2.2.1.1.\n";
-	print "require 1.3.6.1.2.1.2.2.1.3. ^6\$\n"; # Type
+	print "require 1.3.6.1.2.1.2.2.1.3. ^(6|23)\$\n"; # Type
 	print "require 1.3.6.1.2.1.2.2.1.5. [1-9]\n"; # Speed
 	exit 0;
 }
@@ -92,6 +103,9 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	print "graph_order recv send\n";
 	print "graph_args --base 1000\n";
 	print "graph_vlabel bps in (-) / out (+)\n";
+	print "graph_category network\n";
+	print "graph_info This graph shows traffic for this network interface.\n";
+	print "send.info Bits sent/received by this interface.\n";
 	print "recv.label recv\n";
 	print "recv.type COUNTER\n";
 	print "recv.graph no\n";

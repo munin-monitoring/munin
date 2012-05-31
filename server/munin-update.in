@@ -5,6 +5,15 @@
 # $Id$
 #
 # $Log$
+# Revision 1.13  2004/09/04 21:33:13  jimmyo
+# Handle strange characters better.
+#
+# Revision 1.12  2004/08/31 18:12:59  jimmyo
+# Sanitise incoming field names a bit better.
+#
+# Revision 1.11  2004/08/31 18:11:04  jimmyo
+# Sanitise incoming field names a bit better.
+#
 # Revision 1.10  2004/05/20 20:47:19  jimmyo
 # The server programs now open the log file at an earlier point.
 #
@@ -633,7 +642,10 @@ sub config_node {
       }
       elsif (/^(\w+)\.(\w+)\s+(.+)/) {
 	my ($client,$type,$value) = ($1,$2,$3);
-	$client = substr ($client,-18);
+	$client = &sanitize_fieldname ($client);
+	if (($type) and ($type eq "label")) {
+	    $value =~ s/\\/_/g; # Sanitise labels
+	}
 	$node->{client}->{$servname}->{$client.".".$type} = "$value";
 	logger ("config: $name->$client.$type = $value") if $DEBUG;
 	if (($type) and ($type eq "label")) {
@@ -720,7 +732,7 @@ sub fetch_node {
 	my $key = $1;
 	my $value = $2;
 	my $comment = $3;
-	$key = substr($key,-18);
+	$key = &sanitize_fieldname ($key);
 	my $fname = "$config->{dbdir}/$domain/$name-$service-$key-".
 	  lc substr (($node->{client}->{$service}->{$key.".type"}||"GAUGE"),0,1).
 	    ".rrd";
@@ -794,6 +806,16 @@ sub logger {
 		  print STDERR "$now - $comment\n";
 	  }
     }
+}
+
+sub sanitize_fieldname
+{
+    my $name = shift;
+
+    $name =~ s/[\W-]/_/g;
+    $name = substr ($name,-18);
+
+    return $name;
 }
 
 

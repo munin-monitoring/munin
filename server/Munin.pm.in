@@ -4,6 +4,21 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.18  2004/09/04 21:33:13  jimmyo
+# Handle strange characters better.
+#
+# Revision 1.17  2004/09/01 19:00:22  jimmyo
+# Moved function get_picture_filename from munin-graph to Munin.pm.
+#
+# Revision 1.16  2004/09/01 18:30:21  jimmyo
+# Added new options "graph_height" and "graph_width", to beter control size.
+#
+# Revision 1.15  2004/08/23 10:01:07  jimmyo
+# Better error handling when fetching data from RRD files.
+#
+# Revision 1.14  2004/08/23 09:23:46  jimmyo
+# Better error handling when fetching data from rrd files.
+#
 # Revision 1.13  2004/07/02 14:19:06  jimmyo
 #   * Munin-graph: Added 'graph_sources' option. This is (in effect) the same as
 #     graph_order, but with a default of 'graph no'.
@@ -132,6 +147,7 @@ use Exporter;
 	   'munin_service_status',
 	   'munin_node_status',
 	   'munin_category_status',
+	   'munin_get_picture_filename',
 	   'munin_get_filename');
 
 use strict;
@@ -156,7 +172,7 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"htaccess", "warn", "use_default_name", "use_node_name", "port", 
 	"graph_noscale", "nsca", "nsca_server", "nsca_config", "extinfo", 
 	"fetch_data", "filename", "max_processes", "nagios", "info", "graph_info",
-	"graph_category", "graph_strategy",
+	"graph_category", "graph_strategy", "graph_width", "graph_height"
     );
 
 
@@ -168,6 +184,12 @@ sub munin_trend {
 sub munin_fetch {
     my ($file,$last,$type) = @_;
     my ($start,$step,$names,$data) = RRDs::fetch $file,$type || "AVERAGE";
+    unless (defined $data)
+    {
+        ::logger ("Could not fetch data from $file(".($type||"AVERAGE")."): ". R
+RDs::error);
+        return undef;
+    }
     my @array = map { @$_[0] } splice(@$data, $#$data - ($last || 1));
     return $array[0] if (!$last);
     return @array;
@@ -327,7 +349,11 @@ sub munin_parse_config
 	    $line = $prevline . $line;
 	    $prevline = "";
 	}
-	if ($line =~ /\\$/)
+	if ($line =~ /\\\\$/)
+	{
+	    $line =~ s/\\\\$/\\/;
+	}
+	elsif ($line =~ /\\$/)
 	{
 	    ($prevline = $line) =~ s/\\$//;
 	    next;
@@ -534,7 +560,12 @@ sub munin_writeconfig_loop {
 	elsif (defined $data->{$a} and length $data->{$a})
 	{
 	    print "Writing: $pre$a $data->{$a}\n" if $DEBUG;
-	    print $fh "$pre$a $data->{$a}\n";
+	    if ($data->{$a} =~ /\\$/)
+	    { # Backslash as last char has special meaning. Avoid it.
+		print $fh "$pre$a $data->{$a}\\\n"; 
+	    } else {
+		print $fh "$pre$a $data->{$a}\n";
+	    }
 	}
     }
 }
@@ -572,6 +603,16 @@ sub munin_config {
     
     $data = &munin_overwrite($data,$config);
     return ($data);
+}
+
+sub munin_get_picture_filename {
+    my $config  = shift;
+    my $domain  = shift;
+    my $name    = shift;
+    my $service = shift;
+    my $scale   = shift;
+
+    return "$config->{'htmldir'}/$domain/$name-$service-$scale.png";
 }
 
 sub munin_get_filename {

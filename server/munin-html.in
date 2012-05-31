@@ -3,6 +3,12 @@
 # $Id$
 #
 # $Log$
+# Revision 1.20  2004/09/01 19:46:01  jimmyo
+# Removed debug info.
+#
+# Revision 1.19  2004/09/01 19:44:46  jimmyo
+# Munin-html img-tags now sets image size, which helps when rendering pages with lots of graphs.
+#
 # Revision 1.18  2004/06/24 14:32:18  jimmyo
 # More work on output_graphs (renamed to graph_strategy, amongst others).
 #
@@ -248,6 +254,15 @@ for my $domain (@domainorder) {
 			$service{imgweek}="$node-$service-week.png";
 			$service{imgmonth}="$node-$service-month.png";
 			$service{imgyear}="$node-$service-year.png";
+
+			for my $scale (@times)
+			{
+				if (my ($w, $h) = &get_png_size (&munin_get_picture_filename ($config, $domain, $node, $service, $scale)))
+				{
+					$service{"img".$scale."width"} = $w;
+					$service{"img".$scale."height"} = $h;
+				}
+			}
 		}
 	    $service{url}="$node-$service.html";
 	    $service{domain}="$domain";
@@ -412,6 +427,37 @@ sub logger {
 		  print STDERR "$now - $comment\n";
 	  }
     }
+}
+
+sub get_png_size
+{
+	my $filename = shift;
+	my $width = undef;
+	my $height = undef;
+
+	if (open (PNG, $filename))
+	{
+		my $incoming;
+		binmode (PNG);
+		if (read (PNG, $incoming, 4))
+		{
+			if ($incoming =~ /PNG$/)
+			{
+				if (read (PNG, $incoming, 12))
+				{
+					if (read (PNG, $incoming, 4))
+					{
+						$width = unpack ("N", $incoming);
+						read (PNG, $incoming, 4);
+						$height = unpack ("N", $incoming);
+					}
+				}
+			}
+		}
+		close (PNG);
+	}
+
+	return ($width, $height);
 }
 
 logger("munin-html finished");

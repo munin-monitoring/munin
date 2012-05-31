@@ -1,3 +1,16 @@
+munin (1.1.4)
+
+  * Better error handling when fetching data from RRD files.
+  * Fixed bug in munin-graph when choosing colours (Deb#267185).
+  * Added plugin linux/df_abs
+  * Sanitise incoming fieldnames a bit better.
+  * Small layout improvements.
+  * Added new options "graph_height" and "graph_width", to beter control size.
+  * Added support for SNMP probing.
+  * SNMP plugin "if" now accepts PPP interfaces as well as ethernet
+    interfaces.
+  * SNMP plugin "df" now understands Windows SNMP daemon.
+  
 munin (1.1.3)
 
   * Applied patch from Jacques Caruso to make HTML output standards
