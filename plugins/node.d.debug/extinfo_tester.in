@@ -1,4 +1,5 @@
 #!@@BASH@@
+# -*- sh -*-
 
 #%# family=test
 

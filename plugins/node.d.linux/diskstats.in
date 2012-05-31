@@ -12,7 +12,7 @@ use Carp;
 use POSIX;
 use Munin::Plugin;
 use MIME::Base64;
-use Storable qw(freeze thaw);
+use Storable qw(nfreeze thaw);
 
 # Hardcoded pollinterval of 300 seconds
 my $poll_interval = 300;
@@ -137,7 +137,7 @@ sub add_new_state {
     }
 
     # FIXME: There ought to be a better way to do this.
-    $states{$cur_time} = encode_base64 freeze \%cur_diskstats;
+    $states{$cur_time} = encode_base64 nfreeze \%cur_diskstats;
 
     save_state(%states);
     return;

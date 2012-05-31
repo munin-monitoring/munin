@@ -1,4 +1,5 @@
 #!@@BASH@@
+# -*- sh -*-
 
 : <<=cut
 
@@ -169,7 +170,7 @@ if [ "$CMD" = "years" ]; then
 			fi
 		done
 		exit 0
-	fi 
+	fi
 	for i in `seq 0 $no_of_years`; do
 		year=$(echo ${arr1[$i]})
 		printf "y%s.value " ${year}

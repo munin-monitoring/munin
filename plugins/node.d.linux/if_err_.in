@@ -22,7 +22,7 @@ This plugin does not use environment variables.
 =head1 USAGE
 
 Any device found in /proc/net/dev can be monitored. Examples include
-ipsec*, eth*, irda* and lo. 
+ipsec*, eth*, irda* and lo.
 
 Please note that aliases cannot be monitored with this plugin.
 
@@ -71,7 +71,7 @@ if [ "$1" = "suggest" ]; then
 fi
 
 if [ "$1" = "config" ]; then
-	echo "graph_order rcvd trans" 
+	echo "graph_order rcvd trans"
 	echo "graph_title $INTERFACE errors"
 	echo 'graph_args --base 1000'
 	echo 'graph_vlabel packets in (-) / out (+) per ${graph_period}'
@@ -94,8 +94,8 @@ fi;
 
 # Escape dots in the interface name (eg. vlans) before using it as a regex
 if [ -r /sys/class/net/$INTERFACE/statistics/rx_bytes ]; then
-    echo "down.value $(cat /sys/class/net/$INTERFACE/statistics/rx_errors)"
-    echo "up.value $(cat /sys/class/net/$INTERFACE/statistics/tx_errors)"
+    echo "rcvd.value $(cat /sys/class/net/$INTERFACE/statistics/rx_errors)"
+    echo "trans.value $(cat /sys/class/net/$INTERFACE/statistics/tx_errors)"
 else
     awk -v interface="$INTERFACE" \
         'BEGIN { gsub(/\./, "\\.", interface) } \

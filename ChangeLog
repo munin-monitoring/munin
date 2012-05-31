@@ -1,5 +1,18 @@
 -*- text -*-
 
+munin 2.0-rc1, r4638, 2012-02-07
+
+Commits by kenyon, steve.schnepp
+
+Summary :
+
+* Fix Munin::Common (closes #1036)
+* Document the fact that Munin needs at least Log4Perl 1.18 (closes #969)
+* Colors can now also be specified by an index of the palette (closes #1186)
+* Some plugins don't follow LC_ALL spec, so setting LANG=C also. (closes #1014)
+* Rewrite of fw_conntrack and fw_forwarded_local (closes #843, #725)
+* Various fixes & typos
+
 munin 2.0-beta7, r4600, 2012-01-21
 
 Commits by kenyon, mha, tv, holger, steve.schnepp
