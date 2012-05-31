@@ -12,6 +12,9 @@
 # Config variables:
 #
 # $Log$
+# Revision 1.1.2.1  2004/10/27 17:53:33  jimmyo
+# Fixed typo in linux/fw_packets (Deb#275537).
+#
 # Revision 1.1  2004/05/09 19:12:08  jimmyo
 # Cleanup of linux/fw*-plugins, by Nicolai Langfeldt
 #
@@ -27,7 +30,7 @@
 if ( $ARGV[0] ) {
 
     if ( $ARGV[0] eq 'autoconf' ) {
-	if (-f '/proc/net/smtp') {
+	if (-f '/proc/net/snmp') {
 	    print "yes\n";
 	    exit 0;
 	}

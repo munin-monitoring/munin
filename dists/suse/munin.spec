@@ -1,26 +1,27 @@
-Name:		munin
-Version:	1.0.2
-Release:	1
+Name:      	munin
+Version:   	1.0.3
+Release:   	2
 
 Summary:	Network-wide graphing framework (grapher/gatherer)
-License:	GPL
+License: 	GPL
 Group:		System Environment/Daemons
 URL:		http://munin.sourceforge.net
-Packager:	Dagfinn Ilmari Mannsaker <ilmari@linpro.no>
+Packager:	Rune Nordbøe Skillingstad <runesk@linpro.no>
 Vendor:		Linpro AS
-Distribution:	Linpro Red Hat Software Archives
-Source0:	%{name}-%{version}.tar.gz
+Distribution:	Linpro AS SuSE Linux Software Archives
+Source0:	%{name}_%{version}.tar.gz
 Source1:	Makefile.config
 Source2:	munin-node.rc
 Source3:	munin.cron.d
 Source4:	munin.logrotate
 Source5:	munin-node.logrotate
 Source6:	munin-node.cron.d
-Patch0:		pidfilepath.patch
-Patch1:		no-data-dumper.patch
-BuildRoot:	%{_tmppath}/%{name}-%{version}-root
-Prereq:		/sbin/chkconfig, /sbin/service
+Requires:	perl-Config-General
+Requires:	perl-HTML-Template
+Requires:	rrdtool
+Obsoletes:	lrrd-server
 BuildArch:	noarch
+BuildRoot:	%{_tmppath}/%{name}-%{version}-root
 
 %description
 Munin is a highly flexible and powerful solution used to create graphs of
@@ -44,7 +45,11 @@ RRDtool. To see a real example of Munin in action, take a peek at
 %package node
 Group:		System Environment/Daemons
 Summary:	Network-wide graphing framework (node)
-BuildArch:	noarch
+BuildArch: 	noarch
+Requires: 	perl-Net-Server
+Requires:	ps
+Requires:	sysstat
+Obsoletes:	lrrd-client
 
 %description node
 Munin is a highly flexible and powerful solution used to create graphs of
@@ -70,44 +75,38 @@ RRDtool. To see a real example of Munin in action, take a peek at
 
 %prep
 %setup -q
-%patch0 -p1
-%patch1 -p0
 mkdir -p %{buildroot}
 
 %build
+
 # htmldoc and html2text are not available for Red Hat. Quick hack with perl:
 # Skip the PDFs.
 perl -pi -e 's,htmldoc munin,cat munin, or s,html(2text|doc),# $&,' Makefile
 perl -pi -e 's,\$\(INSTALL.+\.(pdf|txt) \$\(DOCDIR,# $&,' Makefile
 
 make 	clean
-make 	CONFIG=%{SOURCE1} \
-	build
+make    CONFIG=%{SOURCE1} \
+        build
+#make 	CONFIG=dists/suse/Makefile.config \
+#	build
 
 %install
-
-## Node
-make 	CONFIG=%{SOURCE1} \
-	DOCDIR=%{buildroot}%{_docdir}/munin \
-	MANDIR=%{buildroot}%{_mandir} \
-	DESTDIR=%{buildroot} \
-    	install-node install-node-plugins install-doc install-man
-
+make    CONFIG=%{SOURCE1} \
+        DOCDIR=%{buildroot}%{_docdir}/munin \
+        MANDIR=%{buildroot}%{_mandir} \
+        DESTDIR=%{buildroot} \
+        install-node install-node-plugins install-doc install-man
+				
 mkdir -p %{buildroot}/var/lib/munin/plugin-state
 mkdir -p %{buildroot}/var/log/munin
 mkdir -p %{buildroot}/var/run/munin
-
+				
 install -m0644 plugins.conf %{buildroot}/etc/munin/plugin-conf.d/munin-node
 
-# ugly hack, to prevent DBD::Sybase to become a dependency, as it's not
-# available in RHEL, and doesn't easily build with cpanflute. I don't know
-# enough rpm-fu to prevent it in a clean manner..
-find %{buildroot}/usr/share/munin/plugins -name '*sybase*' -print0 | xargs -0 chmod -x
-
 ## Server
-make 	CONFIG=%{SOURCE1} \
-	DESTDIR=%{buildroot} \
-	install-main
+make    CONFIG=%{SOURCE1} \
+        DESTDIR=%{buildroot} \
+        install-main
 
 mkdir -p %{buildroot}/var/www/html/munin
 mkdir -p %{buildroot}/var/log/munin
@@ -125,10 +124,10 @@ install -m0644 %{SOURCE5} %{buildroot}/etc/logrotate.d/munin-node
 
 install -m0644 ChangeLog %{buildroot}%{_docdir}/munin/ChangeLog
 
-
 %clean
 [ -n "%{buildroot}" -a "%{buildroot}" != / ] && rm -rf %{buildroot}
- 
+
+
 ## Server
 
 %pre
@@ -144,34 +143,37 @@ chown -R munin:munin /var/log/munin
 chown -R munin:munin /var/run/munin
 chown -R munin:munin /var/lib/munin
 
-
 ## Node
-
 %pre node
-
 getent group munin >/dev/null || groupadd -r munin
 getent passwd munin > /dev/null || useradd -r -d /var/lib/munin -g munin munin
 
 %post node
 if [ $1 = 1 ]
 then
-	/sbin/chkconfig --add munin-node
+        /sbin/chkconfig --add munin-node
 	/usr/sbin/munin-node-configure --shell | sh
 fi
+%{fillup_and_insserv -n -s -y munin munin-node START_MUNIN_NODE}
 mkdir -p /var/log/munin
 mkdir -p /var/lib/munin/plugin-state
 chown -R munin:munin /var/log/munin
 chown -R munin:munin /var/lib/munin
 chmod g+w /var/lib/munin/plugin-state
-find /usr/share/munin/plugins -name '*sybase*' -print0 | xargs -0 chmod +x
 
 %preun node
 if [ $1 = 0 ]
 then
-	/sbin/service munin-node stop > /dev/null 2>&1
-	/sbin/chkconfig --del munin-node
-	rmdir /var/log/munin 2>/dev/null || true
+        /sbin/service munin-node stop > /dev/null 2>&1
+        /sbin/chkconfig --del munin-node
+        rmdir /var/log/munin 2>/dev/null || true
 fi
+%stop_on_removal munin-node
+
+%postun node
+%restart_on_update munin-node
+%{insserv_cleanup}
+
 
 %files
 %defattr(-, root, root)
@@ -218,11 +220,10 @@ fi
 %dir /etc/munin/plugins
 
 %changelog
-* Thu Sep 09 2004 Dagfinn Ilmari Mannsaker <ilmar@linpro.no>
-- Update to version 1.0.2.
-* Wed Jul 07 2004 Tore Anderson <tore@linpro.no>
-- Update to version 1.0.0.
-- Modify the spec file quite heavily.  Beware of ugly hax.
+* Mon Nov 08 2004 Rune Nordbøe Skillingstad <runesk@linpro.no>
+- Updated version 1.0.3 / sync with redhat-build
+* Wed Aug 04 2004 Rune Nordbøe Skillingstad <runesk@linpro.no>
+- Initial SuSE build
 * Sun Feb 01 2004 Ingvar Hagelund <ingvar@linpro.no>
 - Sync with CVS. Version 1.0.0pre2
 * Sun Jan 18 2004 Ingvar Hagelund <ingvar@linpro.no>
@@ -244,3 +245,5 @@ fi
 - Small bugfixes in the rpm package
 * Tue Jun 18 2002 Kjetil Torgrim Homme <kjetilho@linpro.no>
 - new package
+
+

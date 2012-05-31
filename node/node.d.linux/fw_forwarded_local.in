@@ -9,6 +9,9 @@
 #
 #
 # $Log$
+# Revision 1.1.2.1  2004/10/27 17:49:18  jimmyo
+# Fixed typo in linux/fw_forwarded_local (Deb#275535).
+#
 # Revision 1.1  2004/05/09 21:20:31  jimmyo
 # Added fw_forwarded_local (by Xavier).
 #
@@ -27,7 +30,7 @@ if [ "$1" = "autoconf" ]; then
 	else
 		if [ $? -eq 127 ]
 		then
-			echo "no (ipcontrack not found)"
+			echo "no (ipconntrack not found)"
 			exit 1
 		else
 			echo no
@@ -38,7 +41,7 @@ fi
 
 if [ "$1" = "config" ]; then
 
-	echo 'graph_title ipcontrack'
+	echo 'graph_title ipconntrack'
 	echo 'graph_args -l 0 --base 1000'
 	echo 'graph_vlabel established connections'
 	echo 'forward.label forward'

@@ -1,0 +1,12 @@
+diff -ruN munin-1.0.0/node/munin-node.conf.in munin-1.0.0-foo/node/munin-node.conf.in
+--- munin-1.0.0/node/munin-node.conf.in	2004-01-29 18:15:47.000000000 +0100
++++ munin-1.0.0-foo/node/munin-node.conf.in	2004-07-07 16:02:43.000000000 +0200
+@@ -5,7 +5,7 @@
+ log_level 4
+ log_file @@LOGDIR@@/munin-node.log
+ port 4949
+-pid_file @@STATEDIR@@/munin-node.pid
++pid_file /var/run/munin-node.pid
+ background 1
+ setseid 1
+ 

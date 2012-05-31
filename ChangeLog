@@ -1,3 +1,13 @@
+munin (1.0.3)
+
+  * Fixed bug in munin-limits when using ranges with only one number
+  * Fixed cronmail-bug in munin-update when client disconnects prematurely.
+  * Fixed bug in munin-update, to stop trying to read closed filehandles.
+  * Fixed typo in linux/fw_forwarded_local (Deb#275535).
+  * Fixed typo in linux/fw_packets (Deb#275537).
+  * Plugin generic/acpi now autodetects even if the acpi version does not
+    contain the acpi_available program (Deb#275538).
+   
 munin (1.0.2)
 
   * Better error handling when fetching data from RRD files.
