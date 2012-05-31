@@ -1,6 +1,6 @@
 Name:      munin
 Version:   @@VERSION@@
-Release:   2
+Release:   1
 Copyright: GPL
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 URL:       http://www.linpro.no/
@@ -9,6 +9,7 @@ Group:     System Environment/Daemons
 Summary:   Munin is the Linpro RRD data agent
 BuildArchitectures: noarch
 Provides: perl(RRDs)
+Requires: perl-Config-General
 Requires: perl-HTML-Template
 Requires: perl-Net-Server
 Requires: rrdtool
@@ -44,13 +45,14 @@ mkdir -p %{buildroot}
 perl -pi -e 's,htmldoc munin,cat munin, or s,html(2text|doc),# $&,' Makefile
 perl -pi -e 's,\$\(INSTALL.+\.(pdf|txt) \$\(DOCDIR,# $&,' Makefile
 make 	clean
-make 	CONFIG=dists/redhat/Makefile.config \
+make 	CONFIG=dists/suse/Makefile.config \
 	build
 
 %install
 
+#rm -rf ${buildroot}/var/www/html/munin/cgi/cgi
 ## Node
-make 	CONFIG=dists/redhat/Makefile.config \
+make 	CONFIG=dists/suse/Makefile.config \
 	DOCDIR=%{buildroot}%{_docdir}/munin \
 	MANDIR=%{buildroot}%{_mandir} \
 	DESTDIR=%{buildroot} \
@@ -62,30 +64,30 @@ mkdir -p %{buildroot}/etc/munin/plugin-conf.d
 mkdir -p %{buildroot}/var/lib/munin
 mkdir -p %{buildroot}/var/log/munin
 
-#install -m 0755 node/redhat/munin-node %{buildroot}/etc/init.d/
-install -m0755 dists/redhat/munin-node.rc %{buildroot}/etc/init.d/munin-node
-install -m 0644 dists/tarball/plugins.conf %{buildroot}/etc/munin/
+install -m0755 dists/suse/munin-node.rc %{buildroot}/etc/init.d/munin-node
+install -m0644 dists/tarball/plugins.conf %{buildroot}/etc/munin/
 install -m0644 dists/tarball/plugins.conf %{buildroot}/etc/munin/plugin-conf.d/munin-node
 
 chmod -x %{buildroot}%{_datadir}/munin/plugins/sybase_space
 ## Server
 
-make 	CONFIG=dists/redhat/Makefile.config \
+make 	CONFIG=dists/suse/Makefile.config \
 	DESTDIR=%{buildroot} \
 	install-main
 
 # cf=%{buildroot}/etc/munin/munin.conf; sed 's,/var/www/munin,/var/www/html/munin,g' < $cf > $cf.patch && mv $cf.patch $cf
 
 mkdir -p %{buildroot}/var/www/html/munin
+mkdir -p %{buildroot}/var/www/html/munin/cgi
 mkdir -p %{buildroot}/var/log/munin
 mkdir -p %{buildroot}/etc/cron.d
 # silly RPM triggers want to make debug enabled libraries.  let it try.
 mkdir -p %{buildroot}/usr/lib/debug
 
-install -m 0755 dists/redhat/munin.cron.d %{buildroot}/etc/cron.d/munin
+install -m 0755 dists/suse/munin.cron.d %{buildroot}/etc/cron.d/munin
 install -m 0644 server/munin-htaccess %{buildroot}/var/www/html/munin/.htaccess
 install -m 0755 server/style.css %{buildroot}/var/www/html/munin
-
+#install -m 0755 server/munin-cgi-graph %{buildroot}/var/www/html/munin/cgi
 install -m 0644 ChangeLog %{buildroot}%{_docdir}/munin/ChangeLog
 
 
@@ -138,37 +140,37 @@ fi
 %{_bindir}/munin-cron
 %{_datadir}/munin/munin-graph
 %{_datadir}/munin/munin-html
-%{_datadir}/munin/munin-limits
+%{_datadir}/munin/munin-nagios
 %{_datadir}/munin/munin-update
 %{_libdir}/perl5/*perl/5.*/Munin.pm
 %dir /etc/munin/templates
 %dir /etc/munin
 /etc/munin/templates/*
 /etc/cron.d/munin
-%config(noreplace) /etc/munin/munin.conf
+/var/www/html/munin/cgi/*
+%config /etc/munin/munin.conf
 %attr(-, munin, root) %dir /var/lib/munin
 %attr(-, munin, root) %dir /var/log/munin
 %attr(-, munin, root) %dir /var/www/html/munin
-%attr(-, munin, root) %dir /var/www/html/munin/cgi/cgi
+%attr(-, munin, root) %dir /var/www/html/munin/cgi
 %attr(-, munin, root) /var/www/html/munin/style.css
 %config /var/www/html/munin/.htaccess
 %doc %{_mandir}/man8/munin-graph*
 %doc %{_mandir}/man8/munin-update*
-%doc %{_mandir}/man8/munin-limits*
+%doc %{_mandir}/man8/munin-nagios*
 %doc %{_mandir}/man8/munin-html*
 %doc %{_mandir}/man8/munin-cron*
 %doc %{_mandir}/man5/munin.conf*
 
 %files node
 %defattr(-, root, root)
-%config(noreplace) /etc/munin/munin-node.conf
-%config(noreplace) /etc/munin/plugin-conf.d/munin-node
+%config /etc/munin/munin-node.conf
+%config /etc/munin/plugin-conf.d/munin-node
 %config /etc/init.d/munin-node
-%config(noreplace) /etc/munin/plugins.conf
+%config /etc/munin/plugins.conf
 %{_sbindir}/munin-run
 %{_sbindir}/munin-node
 %{_sbindir}/munin-node-configure
-%{_sbindir}/munin-node-configure-snmp
 %dir /var/log/munin
 %dir %{_datadir}/munin
 %dir /etc/munin/plugins
@@ -185,6 +187,8 @@ fi
 #%doc %{_mandir}/man5/node.conf*
 
 %changelog
+* Wed Aug 04 2004 Rune Nordbøe Skillingstad <runesk@linpro.no>
+- Initial SuSE build
 * Sun Feb 01 2004 Ingvar Hagelund <ingvar@linpro.no>
 - Sync with CVS. Version 1.0.0pre2
 * Sun Jan 18 2004 Ingvar Hagelund <ingvar@linpro.no>

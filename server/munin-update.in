@@ -23,6 +23,12 @@
 # $Id$
 #
 # $Log$
+# Revision 1.26  2004/11/26 13:36:00  jimmyo
+# Log updates of nonexisting fields better (SF#1073172).
+#
+# Revision 1.25  2004/11/26 13:26:44  jimmyo
+# Added --stdout-option to all programs.
+#
 # Revision 1.24  2004/11/21 14:39:23  jimmyo
 # Renamed function munin_get_val to munin_get.
 #
@@ -928,13 +934,18 @@ sub fetch_node {
 	my $value = $2;
 	my $comment = $3;
 	$key = &sanitise_fieldname ($key, $fields);
-	my $fname = "$config->{dbdir}/$domain/$name-$service-$key-".
-	  lc substr (($node->{client}->{$service}->{$key.".type"}||"GAUGE"),0,1).
-	    ".rrd";
-	logger("Updating $fname with $value") if $DEBUG;
-	RRDs::update ("$fname", "N:$value");
-	if (my $ERROR = RRDs::error) {
-	  logger ("Unable to update $fname: $ERROR");
+	if (exists $node->{client}->{$service}->{$key.".label"})
+	{
+	    my $fname = "$config->{dbdir}/$domain/$name-$service-$key-".
+	      lc substr (($node->{client}->{$service}->{$key.".type"}||"GAUGE"),0,1).
+		".rrd";
+	    logger("Updating $fname with $value") if $DEBUG;
+	    RRDs::update ("$fname", "N:$value");
+	    if (my $ERROR = RRDs::error) {
+	      logger ("Unable to update $fname: $ERROR");
+	    }
+	} else {
+	    logger ("Unable to update $domain -> $name -> $service -> $key: No such field (no \"label\" field defined when running plugin with \"config\").");
 	}
       }
       elsif (/(\w+)\.extinfo\s+(.+)/) {
@@ -978,6 +989,7 @@ sub logger {
   my ($comment) = @_;
   my $now = strftime "%b %d %H:%M:%S", localtime;
 
+  print "$now - $comment\n" if $print_stdout;
   if ($log->opened)
   {
 	  print $log "$now - $comment\n";

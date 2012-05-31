@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.36  2004/11/26 13:24:20  jimmyo
+# Added --stdout-option to all programs.
+#
 # Revision 1.35  2004/11/21 15:29:19  jimmyo
 # Take line definitions with labels into account.
 #
@@ -164,6 +167,7 @@ my $conffile = "@@CONFDIR@@/munin.conf";
 my $force_root = 0;
 my $do_usage = 0;
 my $do_version = 0;
+my $stdout = 0;
 my $log = new IO::Handle;
 
 # Get options
@@ -173,6 +177,7 @@ GetOptions ( "host=s"       => \(),
 	     "service=s"    => \(),
 	     "config=s"     => \$conffile,
 	     "debug!"       => \$DEBUG,
+	     "stdout!"      => \$stdout,
 	     "help"         => \$do_usage, 
 	     "version!"     => \$do_version );
 
@@ -596,6 +601,7 @@ sub logger {
   my ($comment) = @_;
   my $now = strftime "%b %d %H:%M:%S", localtime;
 
+  print "$now - $comment\n" if $stdout;
   if ($log->opened)
   {
 	  print $log "$now - $comment\n";
