@@ -9,10 +9,16 @@ df_inode - Plugin to monitor disk usage (measuring inode usage in percent)
 
 =head1 CONFIGURATION
 
+This shows the default configuration
+
   [df*]
-    env.df /usr/gnu/bin/df    # /usr/ucb/df fails on zfs
+    env.df /usr/sbin/df
     env.warning 92
     env.critical 98
+
+A device specific warning/critical level is also supported.  Append
+the munin label (shown in the plugin display page) and append _warning
+or _critical respectively to get the (environment variable) name.
 
 =back
 
@@ -72,10 +78,10 @@ if [ "$1" = "config" ]; then
 	    5) mnt=$five;;
 	    6) mnt=$six;;
 	esac
-	case $dev in
-	    /usr/lib*|ctfs|objfs|mnttab|sharefs) continue;;
-	    swap) name=$(clean_fieldname $mnt);;
-	    *)    name=$(clean_fieldname $dev);;
+	case $dev:$mnt in
+	    /usr/lib*|ctfs:*|objfs:*|mnttab:*|sharefs:*|*:/cdrom/*|*:/media/*) continue;;
+	    swap:*) name=$(clean_fieldname $mnt);;
+	    *)      name=$(clean_fieldname $dev);;
 	esac
         echo "$name.label $mnt"
 	print_warning "$name"
@@ -94,8 +100,8 @@ eval $DF | $TAIL +2 | while read dev size used avail pct mnt; do
 	6) mnt=$six;;
     esac
     case $dev in
-	/usr/lib*|ctfs|objfs|mnttab|sharefs) continue;;
-	swap) name=$(clean_fieldname $mnt);;
+	/usr/lib*|ctfs:*|objfs:*|mnttab:*|sharefs:*|*:/cdrom/*|*:/media/*) continue;;
+	swap:*) name=$(clean_fieldname $mnt);;
 	*)    name=$(clean_fieldname $dev);;
     esac
     echo "$name.value $pct" | cut -f1 -d% 

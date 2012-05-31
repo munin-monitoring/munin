@@ -9,8 +9,51 @@ Some stats on 1.4.0 (relative to 1.3.4)
 * Way too much time since the last major stable release. 1.2.0 was
   uploaded to sourceforge in february 2005.
 
+
+munin (1.4.1, r3116:3166, 2009-12-04)
+
+* munin-node: Introduce a select loop to read from plugin
+  output/errors and avoid locking up
+* munin-node: Plugins that time out must not be added to service list
+* Looked into making sunos/memory use kstat but that's a hack of more
+  than 30 minutes, so document dependence on top instead
+* hddtemp_smartctl: make it quiet on systems that lack smartctl
+* sunos/iostat plugin now works
+* linux/load: Correct documentation on how to set warning levels
+* sunos/load: Set more graph_ things, including graph_scale no to
+  avoid "milliload"
+* Update exim_mailqueue plugin to use exiqgrep instead of exim, closing #780
+* sunos/df*: Add handling of /cdrom and /media mount points (ignore them)
+* M::M::Utils: Remove the "*BUG*", it is wrong and worrisome
+* linux/df*: Reinstate the warning and critical levels. Document how
+  to set them.
+* munin-graph: Correct ordering problem in command-line.
+  AREA|LINE/STACK sequences must not be interrupted by HRULEs and
+  such (broke graphing of old cpu plugins)
+* munin-graph: warning lines without range endpoint gets better detection.
+* linux/df: Reinstate the default filesystem filling limits.  Document how to
+    set them.
+* linux/if: 
+* Munin::Plugin: Support default values for warning and critical levels.
+* munin-*cgi-graph: Untaint the whole hostname, not only the first
+  occurance of something unholy
+* Munin-*cgi-graph: Let "." be legal in hostnames.
+* munin-graph: Recognize "max_graph_jobs" in the configuration instead
+  of logging errors
+* Also add munin_cgi_graph_jobs to the legal keywords
+* make tar now produces munin-$VERSION instead of using underline between
+* linux/if_: This change prevents the linux if_ plugin, when run as
+  non-root, from leaking stderr output from ethtool to the log.
+* postfix_mailstats: MUNIN_PLUGSTATE is an environment
+  variable. Thanks to pkhamre for reporting this.
+* linux/fw_forwarded_local: check for readability with test rather than cat.
+* Fixes to Announce-1.4.0
+
+
 munin (1.4.0, r3033:3115, 2009-11-27)
 
+* Give the docs a once-over and update ChangeLog
+* Update plugins.history
 * Mention Aleksey Studnev in jmx_ doc
 * Merge patch from debian bug http://bugs.debian.org/507069 where
   netstat plugin counts \"active connections rejected because of time

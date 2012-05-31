@@ -86,19 +86,82 @@ sub check_perms {
     return 1;
 }
 
+sub bitsof {
+    my ($vec) = @_;
 
-# NOTE:
-#
-# Since each pipe is only read from once, the child will block 
-# (and eventually time out) if it tries to print more data to 
-# either filehandle than the corresponding pipe's capacity.
-#
-# POSIX requires PIPE_BUF to be >=512 bytes, which should be
-# sufficient for even the most verbose plugins.  In any case,
-# most recent Unices seem to provide at least a whole page
-# (usually 4kB).
-sub run_as_child
-{
+    my $bits = unpack("b*", $vec);
+    
+    return $bits;
+}
+
+
+
+sub read_from_child {
+    # Read stuff from the file handles connected to the pluginds
+    # stdout and stderr and return two array references: one array of
+    # output and one array of errors.
+
+    my ($self, $stdout, $stderr) = @_;
+
+    my ($rout, $wout, $eout);
+
+    my $rin = my $win = my $ein = '';
+
+    my $output = my $errput = '';
+
+    vec($win,0,1)=0;
+    
+    vec($rin,fileno($stdout),1) = 1;
+    vec($rin,fileno($stderr),1) = 1;
+
+    $ein = $rin | $win;
+
+    while (1) {
+	# print STDERR "In read loop for plugin: read ",bitsof($rin),
+	# " - write ",bitsof($win)," - exceptions ",bitsof($ein),"\n"
+
+ 	my $nfound = select($rout=$rin, $wout=$win, $eout=$ein, undef);
+
+	# print STDERR "Found: $nfound read ",bitsof($rout),
+	# " - write ",bitsof($wout)," - exceptions ",bitsof($eout),"\n"
+	
+	if ($nfound == -1) {
+	    # !  Print error somewhere?
+	    last;
+	}
+	if ($nfound == 0) {
+	    # Exit but no error
+	    last;
+	}
+
+	# Should be something to read
+	if (vec($rout,fileno($stdout),1)) {
+	    # print STDERR "Atempting to read from plugins stdout\n";
+	    my $res = sysread($stdout,$output,4096,length($output));
+	    # print STDERR "Read $res bytes from plugin stdout\n";
+	    next if $res;
+	}
+	if (vec($rout,fileno($stderr),1)) {
+	    # print STDERR "Atempting to read from plugins stderr\n";
+	    my $res = sysread($stderr,$errput,4096,length($errput));
+	    # print STDERR "Read $res bytes from plugin stderr\n";
+	    next if $res;
+	}
+
+	# We are at the end so there was nothing to read this time.
+	# Since we are not using a timeout that must mean that something
+	# else happened.  We'll assume that this is the end.
+	last;
+    }
+
+    my @output = split (/[\r\n]+/,$output);
+    my @errors = split (/[\r\n]+/,$errput);
+
+    return (\@output,\@errors);
+}
+
+
+sub run_as_child {
     my ($self, $timeout, $code, @args) = @_;
 
     pipe my ($out_read, $out_write)
@@ -110,21 +173,25 @@ sub run_as_child
         # In parent
         close $out_write; close $err_write;
 
+	my $out;
+	my $err;
+
         # Give the child till the timeout to finish up
-        my $reaper = sub { waitpid($pid, 0); };
-        my $timed_out = !do_with_timeout($timeout, $reaper);
+        my $read_it_and_reap = sub { 
+	    ($out,$err) = $self->read_from_child($out_read,$err_read);
+	    waitpid($pid, 0);
+	};
+
+        my $timed_out = !do_with_timeout($timeout, $read_it_and_reap);
 
         Munin::Node::OS->reap_child_group($pid)
 	    if $timed_out;
 
-        chomp(my @out = <$out_read>);
-        chomp(my @err = <$err_read>);
-
         close $out_read; close $err_read;
 
         return {
-            stdout => \@out,
-            stderr => \@err,
+            stdout => $out,
+            stderr => $err,
             retval => $?,
             timed_out => $timed_out,
         };

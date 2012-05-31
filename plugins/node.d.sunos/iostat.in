@@ -1,4 +1,4 @@
-#!@@PERL@@
+#!@@PERL@@ -w
 # -*- perl -*-
 
 =head NAME
@@ -8,7 +8,7 @@ This plugin is based on io counters rather than calculated averages.
 
 =head1 APPLICABLE SYSTEMS
 
-SunOS/Solaris with that have /bin/iostat.
+SunOS/Solaris that have /bin/iostat.
 
 =head1 CONFIGURATION
 
@@ -38,7 +38,6 @@ GPLv2
 
 =cut
 
-use warning;
 use strict;
 
 use constant IOSTATBIN => "/bin/iostat";
@@ -68,23 +67,23 @@ if ($ARGV[0] && $ARGV[0] eq "config"){
     print "diskw.min 0\n";
 
     print "diskr.label Disk read\n";
-    print "diskr.type COUNTER\n";
+    print "diskr.type DERIVE\n";
     print "diskr.min 0\n";
 
     print "tapew.label Tape write\n";
-    print "tapew.type COUNTER\n";
+    print "tapew.type DERIVE\n";
     print "tapew.min 0\n";
 
     print "taper.label Tape read\n";
-    print "taper.type COUNTER\n";
+    print "taper.type DERIVE\n";
     print "taper.min 0\n";
 
     print "nfsw.label NFS write\n";
-    print "nfsw.type COUNTER\n";
+    print "nfsw.type DERIVE\n";
     print "nfsw.min 0\n";
 
     print "nfsr.label NFS read\n";
-    print "nfsr.type COUNTER\n";
+    print "nfsr.type DERIVE\n";
     print "nfsr.min 0\n";
     exit 0;
 }
@@ -119,7 +118,7 @@ while(<IOSTAT>){
 close(IOSTAT);
 
 foreach $dev ('disk','tape','nfs') {
-    print $dev,"w.value ",$bwi{$dev},"\n";
-    print $dev,"r.value ",$bri{$dev},"\n";
+    print $dev,"w.value ", (defined($bwi{$dev}) ? $bwi{$dev} : "U"), "\n";
+    print $dev,"r.value ", (defined($bri{$dev}) ? $bri{$dev} : "U"), "\n";
 }
 

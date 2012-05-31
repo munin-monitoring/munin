@@ -9,7 +9,7 @@ exim_mailqueue - Plugin to monitor exim queue size
 
 =head1 CONFIGURATION
 
-This plugin needs to run as a user that has access to run exim and
+This plugin needs to run as a user that has access to run exiqgrep and
 examine the queue directories.  This is done like this for example:
 
   [exim_*]
@@ -19,8 +19,7 @@ Configuration parameters for a file in @@CONFDIR@@/plugin-conf.d/
 if you need to override the defaults below:
 
   [exim_mailqueue]
-    env.spooldir   - Override what exim says
-    env.exim       - Where's exim?
+    env.exiqgrep   - Use if exiqgrep is not in $PATH
     env.graphtitle - Title of the graph
     env.queuewarn  - When to warn (of undelivered mails)
     env.queuecrit  - When to crit (of undelivered mails)
@@ -31,8 +30,7 @@ if you need to override the defaults below:
 
   [exim_mailqueue]
     env.graphtitle Exim Mailqueue
-    env.spooldir  <autodetected>
-    env.exim      <autodetected>
+    env.exiqgrep  <autodetected>
     env.queuewarn 100
     env.queuecrit 200
     env.frozenwarn 100
@@ -40,11 +38,31 @@ if you need to override the defaults below:
 
 =head1 AUTHOR
 
-Unknown author
+The original author was Audun Ytterdal, though the plugin has been heavily
+modified by lots of people since then.
 
 =head1 LICENSE
 
-Unknown license
+GPLv2
+
+=begin comment
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301 USA.
+
+=end comment
 
 =head1 MAGIC MARKERS
 
@@ -65,7 +83,7 @@ EOF
 # You cannot trust the exit status of which
 EXIQGREP=$(which exiqgrep 2>/dev/null)
 case $EXIQGREP:$? in
-    *:1|no*) EXQGREP=''
+    *:1|no*) EXIQGREP=''
 esac
 
 GRAPHTITLE='Exim Mailqueue'
@@ -111,7 +129,7 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-exiqgrep -cz | awk '
+$EXIQGREP -cz | awk '
   BEGIN { frozen=mails="U"; }
   /[0-9]+ matches out of [0-9]+ messages/ { frozen=$1; mails=($5-$1); }
   END { printf("frozen.value %s\nmails.value %s\n",frozen,mails); }

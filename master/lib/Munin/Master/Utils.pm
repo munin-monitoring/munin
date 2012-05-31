@@ -920,6 +920,7 @@ sub munin_get_keypath {
     while (ref ($i) eq "HASH") {
 	# Not sure when a #%#name node can go missing
 	my $name = $i->{'#%#name'} || '*BUG*';
+	goto gotoparent if $name eq '*BUG*';
 	last if $name eq 'root';
 	if ($host) {
 	    # Into group land now
@@ -934,6 +935,7 @@ sub munin_get_keypath {
 		unshift(@group,$name);
 	    }
 	}
+      gotoparent:
 	$i=$i->{'#%#parent'};
     }
 

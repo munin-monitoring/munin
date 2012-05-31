@@ -13,11 +13,11 @@ The following environment variables are used by this plugin:
 
 =over 4
 
-=item load_warn <float>
+=item load_warning <float>
 
 Threshold for when to report a warning
 
-=item load_crit <float>
+=item load_critical <float>
 
 Threshold for when to report a critical
 
@@ -26,8 +26,8 @@ Threshold for when to report a critical
 =head2 EXAMPLE CONFIGURATION
 
  [load]
-  env.load_warn 5
-  env.load_crit 10
+  env.load_warning 5
+  env.load_criting 10
 
 =head1 NOTES
 
@@ -83,7 +83,7 @@ if [ "$1" = "config" ]; then
 	# one is for the graph itself, while the second one is for the field
 	# "load".
 	echo 'graph_info The load average of the machine describes how many processes are in the run-queue (scheduled to run "immediately").'
-	echo 'load.info Average load for the five minutes.'
+	echo 'load.info 5 minute load average'
 
 	# Last, if run with the "config"-parameter, quit here (don't
 	# display any data)

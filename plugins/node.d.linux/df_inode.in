@@ -102,7 +102,7 @@ if ( $ARGV[0] eq "config" ) {
 
 	    # Create and print labels
 	    print "$name.label $dir\n";
-	    print_thresholds($name);
+	    print_thresholds($name,undef,undef,92,98);
 	}
     }
     close DF;

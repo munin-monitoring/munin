@@ -20,7 +20,7 @@ This plugin must run with root privileges
 
 =head1 NOTES
 
-#  forward: number of connections forwarder
+#  forward: number of connections forwarded
 #  local:   number of connections for the host itself
 
 =head1 MAGIC MARKERS
@@ -32,23 +32,16 @@ This plugin must run with root privileges
 =cut
 
 if [ "$1" = "autoconf" ]; then
-	if ( cat /proc/net/ip_conntrack 2>/dev/null >/dev/null ); then
+	if [ -r /proc/net/ip_conntrack ]
+	then
 		echo yes
-		exit 0
 	else
-		if [ $? -eq 127 ]
-		then
-			echo "no (ipconntrack not found)"
-			exit 0
-		else
-			echo no
-			exit 0
-		fi
+		echo "no (/proc/net/ip_conntrack missing or not readable)"
 	fi
+	exit 0
 fi
 
 if [ "$1" = "config" ]; then
-
 	echo 'graph_title ipconntrack'
 	echo 'graph_args -l 0 --base 1000'
 	echo 'graph_vlabel established connections'

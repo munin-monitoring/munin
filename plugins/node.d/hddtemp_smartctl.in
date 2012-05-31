@@ -90,30 +90,29 @@ on all platforms.
 
 use strict;
 
-my $smartctl = exists $ENV{smartctl} ? $ENV{smartctl} : undef;
+my $smartctl = exists $ENV{smartctl} ? $ENV{smartctl} : '';
 
 # If the envvar is not set, look for smartctl
-# first, try $PATH
-$smartctl = `which smartctl 2>/dev/null` unless $smartctl;
-chomp $smartctl;
-$smartctl = undef unless -x $smartctl;
-
-# Still not found? Check obvious places
-my @dirs = qw(/usr/bin /usr/sbin /usr/local/bin /usr/local/sbin);
-until ($smartctl or @dirs == 0) {
-  my $dir = shift @dirs;
-  my $path = $dir.'/smartctl';
-  $smartctl = $path if -x $path;
+if (!$smartctl) {
+   # Still not found? Check obvious places
+    my @dirs = split(':',$ENV{PATH});
+    push (@dirs, qw(/usr/bin /usr/sbin /usr/local/bin /usr/local/sbin) );
+    
+    until ($smartctl or @dirs == 0) {
+	my $dir = shift @dirs;
+	my $path = $dir.'/smartctl';
+	$smartctl = $path if -x $path;
+    }
 }
 
 # Check version of smartctl to determine --nocheck capabilities
 my $use_nocheck = 0;
-if (`$smartctl --version` =~ / version (\d+\.\d+) /i) {
-  $use_nocheck = $1 >= 5.37;
+if ($smartctl and `$smartctl --version` =~ / version (\d+\.\d+) /i) {
+    $use_nocheck = $1 >= 5.37;
 }
 
 # hdparm is used as a fallback
-my $hdparm = `which hdparm`;
+my $hdparm = `which hdparm 2>/dev/null`;
 
 my @drives;
 
