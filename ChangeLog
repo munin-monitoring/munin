@@ -1,9 +1,29 @@
+munin (1.1.1)
+
+  * Added a table in the service view page, with information about each 
+    field.
+  * Added plugin options "graph_info" and "<field>.info", which can be used
+    to describe the graph/fields in the above mentioned table.
+  * Bugfix in the linux/df_inode plugin, regarding filesystems withouth
+    inodes.
+  * Added warning and critical statuses to the info table in the service view.
+  * Added "info"-fields to linux/cpu and linux/load plugins, to demonstrate
+    how it works.
+  * Linux/ip_ wildcard plugin contributed by Mathy Vanvoorden (SF#954851).
+  * Added a definition file (definitions.html) to the server distribution.
+  * Use "sed 1d" instead of "tail +2" in df plugins (patch by Olivier
+    Delhomme).
+  * Tuned cdef-code to make it work properly after clean-up.
+  * Added "graph_category" option, to categorise plugins.
+  * Set categories to most of the plugins.
+
 munin (1.1.0)
 
   * Bug regarding logo namechange from logo.gif to logo.png, when installing.
   * Allow/deny in munin-node can now be configured per plugin, in addition
     to "globally" for the whole node.
   * "Upped" som plugins from contrib/manual to manual or auto.
+  * Code cleanups.
 
 munin (1.0.0pre4)
 

@@ -50,6 +50,7 @@ The node supports quite a few options.
 <dt><code>graph_order</code><dd>In witch order to draw the datasources. Can also include path aliases on the form alias=domain;host:graph.datasource. See further down for details.</dd>
 <dt><code>graph_vlabel</code><dd>Y-axis label of the graph. </dd>
 <dt><code>graph_vtitle</code><dd>Y-axis label of the graph. NOTE: Deprecated, use graph_vlabel.</dd>
+<dt><code>graph_info</code><dd>A description of the graph contents.</dd>
 <dt><code>graph_total</code><dd>If set, summarise all the datasources' values and use the value of graph_total as a label.</dd>
 <dt><code>graph_scale</code><dd>Default on. If set, disables scaling of min/max/cur values.</dd>
 <dt><code>graph</code><dd>Set to "yes" or "no". Decides wether to draw the graph. Defaults to "yes".</dd>
@@ -66,6 +67,7 @@ datasouces in one graph.</dd>
 <dt><code>{name}.min</code><dd>Minimum value. If the fetched value is below "min", it will be discarded.</dd>
 <dt><code>{name}.negative</code><dd>Name of field to 'mirror' on the opposite side of zero. See the FAQ for examples.</dd>
 <dt><code>{name}.skipdraw</code><dd>Disables drawing of datasource. NOTE: Deprecated - use {name}.graph instead.</dd>
+<dt><code>{name}.info</code><dd>A description of the field.</dd>
 <dt><code>{name}.type</code><dd>Type of datasource, COUNTER, ABSOLUTE, DERIVE and
 GAUGE, defaults to GAUGE. Read "man rrdcreate" for more info. </dd>
 <dt><code>{name}.warning</code><dd>Used by munin-nagios. Can be a max value or a range

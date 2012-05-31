@@ -3,6 +3,9 @@
 # Script to monitor disk usage.
 #
 # $Log$
+# Revision 1.2  2004/05/18 22:04:29  jimmyo
+# Use "sed 1d" instead of "tail +2" in df plugins (patch by Olivier Delhomme).
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -48,7 +51,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Filesystem usage (in %)'
 	echo 'graph_args --upper-limit 100 -l 0'
 	echo 'graph_vlabel %'
-	df -P -k | tail +2 | grep -v "//" | grep -v "nfs" | while read i; do
+	df -P -k | sed 1d | grep -v "//" | grep -v "nfs" | while read i; do
 		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $6 }'`
 		devName="$name.label "
 		fsLabel=`echo $i | awk '{ print $6 }'`
@@ -59,7 +62,7 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-df -P -k | tail +2 | grep -v "//" | grep -v "nfs" | while read i; do
+df -P -k | sed 1d | grep -v "//" | grep -v "nfs" | while read i; do
 	name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $6 ".value " }'`
 	name2=`echo $i | awk '{ print $5 }' | cut -f1 -d%`
         echo $name $name2

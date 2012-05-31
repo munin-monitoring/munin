@@ -1,0 +1,73 @@
+#!/bin/sh
+#
+# Wildcard-plugin to monitor IP addresses through iptables. To monitor an
+# IP, link ip_<ipaddress> to this file. E.g.
+#
+#    ln -s /usr/share/node/node/plugins-auto/ip_ /etc/munin/node.d/ip_192.168.0.1
+#
+# ...will monitor the IP 192.168.0.1.
+#
+# Aditionally, you need these iptables rules as the first rules (they don't do anything, just make packet counts)
+#
+#    iptables -A INPUT -d 192.168.0.1
+#    iptables -A OUTPUT -s 192.168.0.1
+#
+# Furthermore, this plugin needs to be run as root for iptables to work
+#
+# This plugin is based on the if_ plugin.
+#
+#$Log$
+#Revision 1.2  2004/05/20 13:57:12  jimmyo
+#Set categories to some of the plugins.
+#
+#Revision 1.1  2004/05/16 16:28:40  jimmyo
+#Linux/ip_ wildcard plugin contributed by Mathy Vanvoorden (SF#954851).
+#
+#
+# Magic markers (optional - used by munin-config and some installation
+# scripts):
+#
+#%# family=auto
+#%# capabilities=autoconf suggest
+
+
+IP=`basename $0 | sed 's/^ip_//g'`
+
+if [ "$1" = "autoconf" ]; then
+	if [ -r /proc/net/dev ]; then
+		echo yes
+		exit 0
+	else
+		echo "no (/proc/net/dev not found)"
+		exit 1
+	fi
+fi
+
+if [ "$1" = "suggest" ]; then
+	if [ -r /proc/net/dev ]; then
+		ifconfig | grep 'inet addr' | cut -f2 -d: | cut -f1 -d' ' | sed 's/\./\\\./g'
+		exit 0
+	else
+		exit 1
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+        echo "graph_order out in"
+        echo "graph_title $IP traffic"
+        echo 'graph_args --base 1000'
+        echo 'graph_vlabel $IP traffic'
+		echo 'graph_category network'
+        echo 'out.label sent (bps)'
+        echo 'out.type COUNTER'
+        echo 'out.cdef out,8,*'
+        echo 'in.label received (bps)'
+        echo 'in.type COUNTER'
+        echo 'in.cdef in,8,*' 
+        exit 0
+fi;
+
+iptables -L INPUT -v -n -x | grep -m1 $IP | awk "{ print \"in.value \" \$2 }"
+iptables -L OUTPUT -v -n -x | grep -m1 $IP | awk "{ print \"out.value \" \$2 }"
+

@@ -15,6 +15,9 @@
 # 	autoconf  (optional - only used by munin-config)
 #
 # $Log$
+# Revision 1.3  2004/05/20 13:57:12  jimmyo
+# Set categories to some of the plugins.
+#
 # Revision 1.2  2004/03/14 11:33:13  auduny
 # Added squidpatch from Jacques Caruso
 #
@@ -135,6 +138,7 @@ if($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_order Maximum Current\n";
     print "graph_vlabel bytes\n";
     print "graph_args -l 0\n";
+	print "graph_category squid\n";
     print "Maximum.label cache size\n";
     print "Maximum.cdef Maximum,1024,*\n";
     print "Maximum.draw AREA\n";

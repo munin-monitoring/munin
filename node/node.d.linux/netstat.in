@@ -8,6 +8,9 @@
 # 	autoconf (optional - only used by munin-config)
 #
 # $Log$
+# Revision 1.2  2004/05/20 13:57:12  jimmyo
+# Set categories to some of the plugins.
+#
 # Revision 1.1  2004/01/29 19:21:20  jimmyo
 # Moved generic netstat to linux-dir, as it is too spesific. Added Solaris version of the plugin as well. (SF#882354)
 #
@@ -50,6 +53,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Netstat'
 	echo 'graph_args -l 0 --base 1000'
 	echo 'graph_vlabel active connections'
+	echo 'graph_category network'
 	echo 'active.label active'
 	echo 'active.type COUNTER'
 	echo 'active.max 50000'''

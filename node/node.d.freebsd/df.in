@@ -8,6 +8,12 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.4  2004/05/20 19:02:36  jimmyo
+# Set categories on a bunch of plugins
+#
+# Revision 1.3  2004/05/18 22:04:30  jimmyo
+# Use "sed 1d" instead of "tail +2" in df plugins (patch by Olivier Delhomme).
+#
 # Revision 1.2  2004/02/01 19:00:29  lupe
 # Ignore devfs,fdescfs,linprocfs in addition to procfs,nfs.
 #
@@ -41,7 +47,8 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Filesystem usage (in %)'
 	echo 'graph_args --upper-limit 100 -l 0'
 	echo 'graph_vlabel %'
-	/bin/df -P -t noprocfs,devfs,fdescfs,linprocfs,nfs | tail +2 | grep -v "//" | while read i; do
+	echo 'graph_category disk'
+	/bin/df -P -t noprocfs,devfs,fdescfs,linprocfs,nfs | sed 1d | grep -v "//" | while read i; do
 		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 }'`
 		echo -n "$name.label "
 		echo $i | awk '{ print $6 }'
@@ -51,7 +58,7 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-/bin/df -P -t noprocfs,devfs,fdescfs,linprocfs,nfs | tail +2 | grep -v "//" | while read i; do
+/bin/df -P -t noprocfs,devfs,fdescfs,linprocfs,nfs | sed 1d | grep -v "//" | while read i; do
 	name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 ".value " }'`
 	echo -n "$name "
 	echo $i | awk '{ print $5 }' | cut -f1 -d%

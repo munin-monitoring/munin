@@ -23,9 +23,15 @@
   <TMPL_LOOP NAME="NODES">
   <li><span class="domain"><a href="<TMPL_VAR NAME="NODE">.html"><TMPL_VAR NAME="NODE"></a></span>
       <ul>
+	<TMPL_LOOP NAME="CATEGORIES">
+      <li><span class="domain"><a href="<TMPL_VAR NAME="NODE">.html#<TMPL_VAR NAME="NAME">"><TMPL_VAR NAME="NAME"></a></span>
+      <ul>
 	<TMPL_LOOP NAME="SERVICES">
 	<li><span class="host"><a href="<TMPL_VAR NAME="NODE">-<TMPL_VAR NAME="SERVICE">.html"><TMPL_VAR NAME="LABEL"></a></span></li>
         </TMPL_LOOP> 
+      </ul>
+   </li>
+   </TMPL_LOOP>
       </ul>
    </li>
    </TMPL_LOOP>

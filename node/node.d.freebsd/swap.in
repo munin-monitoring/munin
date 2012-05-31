@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.2  2004/05/20 19:02:36  jimmyo
+# Set categories on a bunch of plugins
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -50,6 +53,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Swap in/out'
 	echo 'graph_args -l 0 --base 1000'
 	echo 'graph_vlabel pages per second in (-) / out (+)'
+	echo 'graph_category system'
 	echo 'swap_in.label swap'
 	echo 'swap_in.type COUNTER'
 	echo 'swap_in.max 100000'

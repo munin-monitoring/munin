@@ -8,6 +8,9 @@
 # 	autoconf (optional - only used by munin-config)
 #
 # $Log$
+# Revision 1.2  2004/05/20 19:02:36  jimmyo
+# Set categories on a bunch of plugins
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -47,6 +50,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Netstat'
 	echo 'graph_args -l 0 --base 1000'
 	echo 'graph_vlabel active connections'
+	echo 'graph_category network'
 	echo 'active.label active'
 	echo 'active.type COUNTER'
 	echo 'active.max 50000'''

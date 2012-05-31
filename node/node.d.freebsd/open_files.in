@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.2  2004/05/20 19:02:36  jimmyo
+# Set categories on a bunch of plugins
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -48,6 +51,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title File table usage'
 	echo 'graph_args --base 1000 -l 0'
 	echo 'graph_vlabel number of open files'
+	echo 'graph_category system'
 	echo 'used.label open files'
 	echo 'max.label max open files'
 	/sbin/sysctl -n kern.maxfiles | awk  '{printf "used.warning %d\nused.critical %d\n",$1*0.92,$1*0.98}'

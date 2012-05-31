@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.3  2004/05/20 19:02:38  jimmyo
+# Set categories on a bunch of plugins
+#
 # Revision 1.2  2004/04/30 16:43:00  jimmyo
 # Cleaned up Solaris plugins.
 #
@@ -44,6 +47,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Paging Out'
 	echo 'graph_order pgout pgpgout pgfree scan'
 	echo "graph_args --base 1000"
+	echo 'graph_category system'
 	echo 'pgout.label pgout'
 	echo 'pgout.draw LINE2'
 	echo 'pgout.type COUNTER'

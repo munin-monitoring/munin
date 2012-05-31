@@ -3,6 +3,27 @@
 # $Id$
 #
 # $Log$
+# Revision 1.13  2004/05/20 19:05:53  jimmyo
+# Show categories
+#
+# Revision 1.12  2004/05/20 13:57:11  jimmyo
+# Set categories to some of the plugins.
+#
+# Revision 1.11  2004/05/20 12:20:24  jimmyo
+# Added "graph_category" option, to categorise plugins.
+#
+# Revision 1.10  2004/05/16 16:58:41  jimmyo
+# Added a definition file (definitions.html) to the server distribution.
+#
+# Revision 1.9  2004/05/16 11:27:39  jimmyo
+# Added warning and critical statuses to the info table in the service view.
+#
+# Revision 1.8  2004/05/16 00:36:19  jimmyo
+# Forgo an option
+#
+# Revision 1.7  2004/05/16 00:33:07  jimmyo
+# Added a descriptionary table at the bottom of the service view page. Also added "graph_info" and "<field>.info" which can be used by plugins to supply supplementary information for it.
+#
 # Revision 1.6  2004/05/12 10:46:47  jimmyo
 # Bugfix regarding logo namechange from logo.gif to logo.png, when installing.
 #
@@ -137,7 +158,7 @@ if ($config->{domain_order}) {
 }
 
 #Make sure the logo and the stylesheet file is in the html dir
-my @files = ("style.css", "logo.png");
+my @files = ("style.css", "logo.png", "definitions.html");
 foreach my $file( (@files) ) {
     if ((! -e "$config->{htmldir}/$file") or
 	 (-e "$config->{tmpldir}/$file") and 
@@ -170,6 +191,8 @@ for my $domain (@domainorder) {
 	$node{node}=$node;
 	$node{url}="$domain/$node.html";
 	my @services;
+	my @categories;
+	my %tmp_cats;
 	my @serviceorder;
 	if ($config->{domain}->{$domain}->{node}->{$node}->{service_order}) {
 	    @serviceorder = split / /, $config->{domain}->{$domain}->{node}->{$node}->{service_order};
@@ -184,6 +207,9 @@ for my $domain (@domainorder) {
 	    next unless (munin_get_bool ($config, "graph", 1, $domain, $node, $service));
 	    my @service;
 	    my %service;
+	    my $fieldnum = 0;
+	    my @graph_info;
+	    my @field_info;
 	    $service{service}=$service;
 	    $service{label}=$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_title};
 	    $service{imgday}="$node-$service-day.png";
@@ -193,27 +219,90 @@ for my $domain (@domainorder) {
 	    $service{url}="$node-$service.html";
 	    $service{domain}="$domain";
 	    $service{node}=$node;
+	    $service{category}= $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_category} || "other";
+
+        # Do "help" section
+		if (defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_info})
+		{
+			my %graph_info;
+			$graph_info{info} = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_info};
+			push @{$service{graphinfo}}, \%graph_info;
+		}
+		$service{fieldlist} .= "<tr><th align='left' valign='top'>Field</th><th align='left' valign='top'>Type</th><th align='left' valign='top'>Warn</th><th align='left' valign='top'>Crit</th><th></tr>";
+		foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}})
+		{
+			if ($field =~ /^([^\.]+)\.label/)
+			{
+				my $f = $1;
+				next unless (&munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $service, $f));
+
+				my %field_info;
+				$fieldnum++;
+
+				$field_info{'hr'}      = 1 unless ($fieldnum % 3);
+				$field_info{'label'}   = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".label"} || $f;
+				$field_info{'type'}    = lc ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".type"} || "GAUGE");
+				$field_info{'warn'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".warning"} || "None";
+				$field_info{'crit'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".critical"} || "None";
+				$field_info{'info'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".info"} || "";
+
+				my $state = &munin_field_status ($config, $domain, $node, $service, $f);
+				if (defined $state)
+				{
+					$field_info{'state_warning'}  = 1 if $state eq "warning";
+					$field_info{'state_critical'} = 1 if $state eq "critical";
+					$field_info{'state_unknown'}  = 1 if $state eq "unknown";
+				}
+				push @{$service{fieldinfo}}, \%field_info;
+			}
+		}
+
 	    push @services, \%service;
 	    push @service, \%service;
+	    push @{$tmp_cats{$service{'category'}}}, \%service;
 	    $servicetemplate->param(SERVICES => \@service,
 				    SERVICE => $service,
 				    NODE => $node,
 				    DOMAIN => $domain, 
-                                    DOMAINS => \@domainlist, 
-                                    TIMESTAMP => $timestamp);
+				    DOMAINS => \@domainlist, 
+				    TIMESTAMP => $timestamp);
 	    open (FILE, ">$config->{htmldir}/$domain/$node-$service.html") or die "Cannot open $config->{htmldir}/$domain/$node-$service.html";
 	    print FILE $servicetemplate->output;
 	    close FILE;
 	}
+	foreach my $key (keys %tmp_cats)
+	{
+		next if $key eq "other";
+	    my %tmp;
+	    print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
+	    $tmp{name} = ucfirst $key;
+	    $tmp{services} = \@{$tmp_cats{$key}};
+		$tmp{node} = $node;
+		$tmp{domain} = $domain;
+	    push @categories, \%tmp;
+	}
+	if (defined $tmp_cats{'other'})
+	{
+		my $key = 'other';
+	    my %tmp;
+	    print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
+	    $tmp{name} = ucfirst $key;
+	    $tmp{services} = \@{$tmp_cats{$key}};
+		$tmp{node} = $node;
+		$tmp{domain} = $domain;
+	    push @categories, \%tmp;
+	}
 	$nodetemplate->param(SERVICES => \@services,
 			     NODE => $node,
 			     DOMAIN => $domain,
-                             DOMAINS => \@domainlist, 
-                             TIMESTAMP => $timestamp);
+			     DOMAINS => \@domainlist, 
+			     TIMESTAMP => $timestamp,
+			     CATEGORIES => \@categories);
 	open (FILE, ">$config->{htmldir}/$domain/$node.html") or die "Cannot open $config->{htmldir}/$domain/$node.html";
  	print FILE $nodetemplate->output;
 	close FILE;
 	$node{services} = \@services;
+	$node{categories} = \@categories;
 	$node{domain} = $domain;
 	push @nodes,\%node;
 

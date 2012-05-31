@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.2  2004/05/20 19:02:38  jimmyo
+# Set categories on a bunch of plugins
+#
 # Revision 1.1  2004/01/29 19:21:20  jimmyo
 # Moved generic netstat to linux-dir, as it is too spesific. Added Solaris version of the plugin as well. (SF#882354)
 #
@@ -24,6 +27,7 @@ if (exists $ARGV[0] and $ARGV[0] eq "autoconf") {
   print "graph_title Netstat\n";
   print "graph_args -l 0 --base 1000\n";
   print "graph_vlabel active connections\n";
+  print "graph_category network\n";
   print "active.label active\n";
   print "active.type COUNTER\n";
   print "active.max 50000\n";

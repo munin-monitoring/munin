@@ -10,6 +10,9 @@
 # 	autoconf (optional)
 #
 # $Log$
+# Revision 1.2  2004/05/20 19:02:36  jimmyo
+# Set categories on a bunch of plugins
+#
 # Revision 1.1  2004/02/18 18:40:03  jimmyo
 # Added Log:
 #
@@ -31,7 +34,8 @@ if [ "$1" = "config" ]; then
 
 	echo 'graph_title Sendmail email traffic'
 	echo 'graph_order received sent rejected discarded'
-	echo 'graph_vlabel nb'
+	echo 'graph_vlabel mails'
+	echo 'graph_category sendmail'
 	echo 'received.label received'
 	echo 'sent.label sent'
 	echo 'rejected.label rejected'

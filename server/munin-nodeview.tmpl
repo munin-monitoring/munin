@@ -12,23 +12,36 @@
 <body>
 <table cellpadding="3" border="0">
   <tr>
-     <td><div class="logo">&nbsp;</div></td>
-     <td valign="top">
-         <h2><a href="../index.html">Overview</a> :: <a href="index.html">
-<TMPL_VAR NAME="DOMAIN"></a> :: <TMPL_VAR NAME="NODE"></h2>
-     </td>    
-    </tr>
- </table>
- <hr size="1" noshade />
- <table>
-  <TMPL_LOOP NAME="SERVICES">
-    <tr>
-      <td><a href="<TMPL_VAR NAME="URL">"><img src="<TMPL_VAR NAME="IMGDAY">" alt="" /></a></td>
-      <td><a href="<TMPL_VAR NAME="URL">"><img src="<TMPL_VAR NAME="IMGWEEK">" alt="" /><a></td>
-    </tr>
+    <td rowspan=2><div class="logo">&nbsp;</div></td>
+    <td valign="top">
+      <h2><a href="../index.html">Overview</a> :: <a href="index.html">
+      <TMPL_VAR NAME="DOMAIN"></a> :: <TMPL_VAR NAME="NODE"></h2>
+    </td>    
+  </tr>
+  <tr>
+    <td valign="top">
+      <h2><TMPL_VAR NAME="NODE"> :: [ <TMPL_LOOP NAME="CATEGORIES"><a href="#<TMPL_VAR NAME="NAME">"><TMPL_VAR NAME="NAME"></a> </TMPL_LOOP>]</h2>
+    </td>
+  </tr>
+</table>
+<hr size="1" noshade />
+  <TMPL_LOOP NAME="CATEGORIES">
+    <a name="<TMPL_VAR NAME="NAME">">&nbsp;</a>
+    <div class='graphbox'>
+      <table>
+        <tr><td colspan=2><h3><TMPL_VAR NAME="NAME"></h3></td></tr>
+        <tr><td colspan=2><hr size="2" noshade /></td></tr>
+        <TMPL_LOOP NAME="SERVICES">
+          <tr>
+            <td><a href="<TMPL_VAR NAME="URL">"><img src="<TMPL_VAR NAME="IMGDAY">" alt="" /></a></td>
+            <td><a href="<TMPL_VAR NAME="URL">"><img src="<TMPL_VAR NAME="IMGWEEK">" alt="" /><a></td>
+          </tr>
+        </TMPL_LOOP>
+      </table>
+    </div>
   </TMPL_LOOP>
- </table>
-  <div class="linkbox">
+
+ <div class="linkbox">
  <TMPL_LOOP NAME="DOMAINS">
 <a href="../<TMPL_VAR NAME="DOMAIN">/index.html"><TMPL_VAR NAME="DOMAIN"></a> :
     </TMPL_LOOP>

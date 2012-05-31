@@ -22,6 +22,9 @@
 # 	suggest  (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.2  2004/05/20 19:02:37  jimmyo
+# Set categories on a bunch of plugins
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -135,6 +138,7 @@ sub config
 	print "graph_args -l 0\n";
 	print "graph_total total\n";
 	print "graph_vlabel connections / second\n";
+	print "graph_category network\n";
 	my $first=1;
 	$vip = $vip || "";
 	if (exists ($ipvs->{$vip}) and exists ($ipvs->{$vip}->{$port}))

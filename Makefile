@@ -33,6 +33,7 @@ install-main: build
 	done
 	$(INSTALL) -m 0644 server/logo.png $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/style.css $(CONFDIR)/templates/
+	$(INSTALL) -m 0644 server/definitions.html $(CONFDIR)/templates/
 
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/server/munin.conf $(CONFDIR)/
 
