@@ -24,9 +24,9 @@ my $current_timeout;
 sub do_with_timeout {
     my ($timeout, $block) = @_;
 
-    croak "Argument exception: \$timeout" 
+    croak 'Argument exception: $timeout' 
         unless $timeout && $timeout =~ /^\d+$/;
-    croak "Argument exception: \$block" 
+    croak 'Argument exception: $block' 
         unless ref $block eq 'CODE';
 
     my $old_alarm           = alarm 0;
@@ -44,23 +44,25 @@ sub do_with_timeout {
 
     my $remaining_alarm = alarm 0;
 
-    $SIG{ALRM} = $old_handler ? $old_handler : 'DEFAULT';
+    $SIG{ALRM} = $old_handler || 'DEFAULT';
 
     $current_timeout = $old_current_timeout;
 
     if ($old_alarm) {
-	my $old_alarm = $old_alarm - $timeout + $remaining_alarm;
-	if ($old_alarm > 0) {
-	    alarm($old_alarm);
-	} 
-        else {
-            #It should have gone off already - so set it off
-	    kill 'ALRM', $$;
-	}
+        my $old_alarm = $old_alarm - $timeout + $remaining_alarm;
+
+        # HACK: give the outer loop a couple of seconds to finish up before
+        # timing out.  a compromise between the requirements of munin-node
+        # (which shouldn't have the inner plugin timeout trigger the outer
+        # session timeout) and munin-update (which has a hard-and-fast limit
+        # on the time the outer timeout can run for).
+        $old_alarm = 10 unless ($old_alarm > 0);
+
+        alarm($old_alarm);
     }
 
     if ($err) {
-        return if $EVAL_ERROR eq "alarm\n";
+        return 0 if $err eq "alarm\n";
         die;  # Propagate any other exceptions
     }
 
@@ -124,3 +126,5 @@ value.
 
 =back
 
+=cut
+# vim: ts=4 : sw=4 : et

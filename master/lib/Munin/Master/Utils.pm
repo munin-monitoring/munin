@@ -1,4 +1,5 @@
 package Munin::Master::Utils;
+# -*- cperl -*-
 
 # $Id$
 
@@ -611,10 +612,11 @@ sub munin_set_var_loc
 	}
         return munin_set_var_loc ($hash->{$tmpvar}, \@aloc, $val);
     } else {
-        WARN "[WARNING] munin_set_var_loc: Setting unknown option \"$tmpvar\"."
+        WARN "[WARNING] munin_set_var_loc: Setting unknown option '$tmpvar' at "
+	    . munin_get_keypath($hash)
 	    unless Munin::Common::Config::cl_is_keyword($tmpvar);
 
-	# FIX
+	# FIX - or not.
 
         $hash->{$tmpvar} = $val;
 	return $hash;
@@ -916,7 +918,8 @@ sub munin_get_keypath {
     my $i = $hash;
 
     while (ref ($i) eq "HASH") {
-	my $name = $i->{'#%#name'};
+	# Not sure when a #%#name node can go missing
+	my $name = $i->{'#%#name'} || '*BUG*';
 	last if $name eq 'root';
 	if ($host) {
 	    # Into group land now
@@ -1260,15 +1263,32 @@ sub munin_get_field_order
 
     for my $fieldnode (@{munin_find_field ($hash, "label")}) {
         my $fieldname = munin_get_node_name ($fieldnode);
-	push @$result,$fieldname if !grep /^\Q$fieldname\E(?:=|$)/, @$result;;
+	push @$result,$fieldname
+	    if !grep m[^\Q$fieldname\E(?:=|$)], @$result;;
     }
 
     for my $fieldnode (@{munin_find_field ($hash, "stack")}) {
         my $fieldname = munin_get_node_name ($fieldnode);
-	push @$result,$fieldname if !grep /^\Q$fieldname\E(?:=|$)/, @$result;;
+	push @$result,$fieldname 
+	    if !grep m[^\Q$fieldname\E(?:=|$)], @$result;;
+    }
+
+    # We have seen some occurances of redundance in the graph_order
+    # due to plugin bugs and so on.  This make process_service
+    # generate rrd commands with multiple definitions of the same
+    # data.  SO: Make sure there is no redundance in the order.
+
+    my %seen = ();
+    my $nresult = [];
+
+    for my $field (@$result) {
+	next if exists($seen{$field});
+
+	push @$nresult, $field;
+	$seen{$field}=1;
     }
     
-    return $result;
+    return $nresult;
 }
 
 

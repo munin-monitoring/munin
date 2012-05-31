@@ -1,5 +1,6 @@
 #!@@GOODSH@@
 # -*- sh -*-
+# vim: ft=sh
 
 : << =cut
 
@@ -43,7 +44,8 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-echo -n "threads.value "
-find /proc -maxdepth 1 -name '[1-9]*' -exec grep 'Threads' {}/status \; | awk ' { sum += $2; } END { print sum; }'
-# Alternate command:
-#ps --no-headers axm | grep '^    -' | wc -l
+# -s suppresses errors about files that vanished before they could
+# be read.  It isn't entirely portable, but GNU grep should be a given on
+# Linux.  Sadly awk has no such equivalent option or we could skip grep
+# altogether
+grep -s '^Threads' /proc/[0-9]*/status | awk '{ sum += $2; } END { print "threads.value", sum; }'

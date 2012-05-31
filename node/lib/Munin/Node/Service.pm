@@ -165,8 +165,6 @@ sub change_real_and_effective_user_and_group
 sub exec_service {
     my ($class, $dir, $service, $arg) = @_;
 
-    $arg ||= '';
-
     $class->change_real_and_effective_user_and_group($service);
 
     unless (Munin::Node::OS->check_perms("$dir/$service")) {
@@ -176,7 +174,7 @@ sub exec_service {
 
     $class->export_service_environment($service);
 
-    my @command = _service_command($dir, $service, $arg);
+    my @command = grep defined, _service_command($dir, $service, $arg);
     print STDERR "# About to run '", join (' ', @command), "'\n" if $config->{DEBUG};
     exec @command;
 }

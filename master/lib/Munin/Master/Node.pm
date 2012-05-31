@@ -50,6 +50,9 @@ sub _do_connect {
     # Connect to a munin node.  Return false if not, true otherwise.
     my ($self) = @_;
 
+    LOGCROAK("[FATAL] No address!  Did you forget to set 'update no' or to set 'address <IP>' ?")
+	if !defined($self->{address});
+
     if (! ( $self->{socket} = IO::Socket::INET->new(
 		PeerAddr  => $self->{address},
 		PeerPort  => $self->{port},

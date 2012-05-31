@@ -1,5 +1,6 @@
 #!@@PERL@@ -w
 # -*- perl -*-
+# vim: ft=perl
 
 =head1 NAME
 
@@ -87,12 +88,13 @@ sub report {
 	if @packages;
 }
 
-if (defined $ARGV[0]) {
+if ($ARGV[0]) {
     my $arg = $ARGV[0];
-    my %funcs = ( update =>\&update,
-		  config => \&config,
-		  autoconf => \&autoconf,
-		);
+    my %funcs = (
+        update   => \&update,
+        config   => \&config,
+        autoconf => \&autoconf,
+    );
 
     if (exists $funcs{$arg}) {
 	$funcs{$arg}->();

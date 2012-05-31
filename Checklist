@@ -1,5 +1,7 @@
 This is a pre-release checklist for the maintainer.
 
+ * is there any "FIX" in: ChangeLog, INSTALL, Announce?
+
  * Does make node-monkeywrench run without abnormal abortions?
  * Is .htaccess installed?
  * rm -f /etc/munin/plugins/* 

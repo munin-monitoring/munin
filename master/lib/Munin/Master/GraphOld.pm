@@ -404,15 +404,6 @@ sub expand_specials {
                 }
             }
 
-            # cdef is special...
-            if (!defined $service->{$fname}->{"cdef"}) {
-                if (defined $src->{"cdef"}) {
-                    (my $tmpcdef = $src->{"cdef"})
-                        =~ s/([,=])$sname([,=]|$)/$1$fname$2/g;
-                    munin_set_var_loc($service, [$fname, "cdef"], $tmpcdef);
-                }
-            }
-
             if (!defined $service->{$fname}->{"label"}) {
                 munin_set_var_loc($service, [$fname, "label"], $fname);
             }
@@ -1148,7 +1139,7 @@ sub process_service {
 	    }
         }
 
-	DEBUG "\n\nrrdtool 'graph' '" . join("'\n\t'", @complete) . "'\n";
+	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n";
 
         # Make sure directory exists
         munin_mkdir_p($picdirname, oct(777));
@@ -1286,7 +1277,7 @@ sub process_service {
                 unshift @rrd_sum, "--vertical-label", $label;
             }
 
-	    DEBUG "\n\nrrdtool 'graph' '" . join("'\n\t'", @rrd_sum) . "'\n";
+	    DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @rrd_sum) . "'\n";
 
             # Make sure directory exists
             munin_mkdir_p($picdirname, oct(777));

@@ -23,8 +23,8 @@ PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/*)
 MANCENTER        := "Munin Documentation"
 MAN8		 := master/_bin/munin-graph master/_bin/munin-update \
 			master/_bin/munin-limits master/_bin/munin-html
-PODMAN8          := master/doc/munin-cron master/doc/munin master/doc/munin-check
-PODMAN5          := master/doc/munin.conf node/doc/munin-node.conf
+PODMAN8          := build/master/doc/munin-cron master/doc/munin master/doc/munin-check
+PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
 
 .PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
         build build-common-prime build-common-pre build-doc \
@@ -53,7 +53,7 @@ unconfig:
 
 tags:
 	-rm -f TAGS
-	find master common -type f | egrep -v '/(build|_build|blib|.svn|\.t$$)/' | fgrep -v '~' | xargs etags -l perl -a
+	find master common -type f | egrep -v '/(build/|_build/|blib/|\.svn/)' | grep -v '\.t$$' | fgrep -v '~' | xargs etags -l perl -a
 
 ######################################################################
 

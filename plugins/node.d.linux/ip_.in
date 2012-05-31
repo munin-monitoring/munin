@@ -37,7 +37,8 @@ E.g.
   ln -s /usr/share/node/node/plugins-auto/ip_ \
         /etc/munin/node.d/ip_192.0.2.1
 
-...will monitor the IP 192.0.2.1.
+...will monitor the IP 192.0.2.1 (you may be using other directories
+in your setup).
 
 =head2 IPTABLES
 
@@ -45,6 +46,12 @@ You will need to set up iptables rules to create packet counters for
 incoming and outgoing traffic.  The examples here covers how to create
 the rules.  Given the multitude of methods used to configure iptables
 firewalls, they do not show how to make them survive a reboot.
+
+Please also note that we do not intend to make this script compatible
+with anything but these rules made explicitly for the plugin.  If you
+use a firewall tool to create iptables rules you may find that that
+will not work.  Please add the appropriate lines by hand (or by
+hand-made script) if so.
 
 =head3 IPv4
 
@@ -166,6 +173,8 @@ if [ "$1" = "config" ]; then
         exit 0
 fi;
 
-iptables -L ${INPUT} -v -n -x | grep -m1 $IP | awk "{ print \"in.value \" \$2 }"
-iptables -L ${OUTPUT} -v -n -x | grep -m1 $IP | awk "{ print \"out.value \" \$2 }"
+iptables -L ${INPUT} -v -n -x | grep -m1 "$IP " | 
+	awk "{ print \"in.value \" \$2 }"
 
+iptables -L ${OUTPUT} -v -n -x | grep -m1 "$IP " |
+	awk "{ print \"out.value \" \$2 }"

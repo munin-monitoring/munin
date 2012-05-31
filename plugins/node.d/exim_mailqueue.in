@@ -9,6 +9,12 @@ exim_mailqueue - Plugin to monitor exim queue size
 
 =head1 CONFIGURATION
 
+This plugin needs to run as a user that has access to run exim and
+examine the queue directories.  This is done like this for example:
+
+  [exim_*]
+    user exim
+
 Configuration parameters for a file in @@CONFDIR@@/plugin-conf.d/
 if you need to override the defaults below:
 
@@ -106,6 +112,7 @@ if [ "$1" = "config" ]; then
 fi
 
 exiqgrep -cz | awk '
-  /[0-9]+ matches out of [0-9]+ messages/
-     { printf("frozen.value %u\nmails.value %u\n", $1, $5-$1); exit }
-  { printf("frozen.value U\nmails.value U\n") }'
+  BEGIN { frozen=mails="U"; }
+  /[0-9]+ matches out of [0-9]+ messages/ { frozen=$1; mails=($5-$1); }
+  END { printf("frozen.value %s\nmails.value %s\n",frozen,mails); }
+'

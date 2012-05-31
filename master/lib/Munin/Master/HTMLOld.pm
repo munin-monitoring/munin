@@ -224,7 +224,8 @@ sub emit_comparison_template {
                                     NAME        => $key->{'name'},
                                     GROUPS      => $key->{'comparegroups'},
                                     PATH        => $key->{'path'},
-                                    CSSPATH     => $key->{'csspath'},
+                                    CSS_NAME    => $key->{'css_name'},
+                                    ROOT_PATH   => $key->{'root_path'},
                                     COMPLINKS   => find_complinks($t),
                                     LARGESET    => decide_largeset($key->{'peers'}), 
                                     PEERS       => $key->{'peers'},
@@ -259,9 +260,10 @@ sub emit_graph_template {
                           INFO_OPTION => 'Nodes on this level',
                           GROUPS      => $key->{'groups'},
                           PATH        => $key->{'path'},
-                          CSSPATH     => $key->{'csspath'},
+                          CSS_NAME    => $key->{'css_name'},
+                          ROOT_PATH   => $key->{'root_path'},
                           PEERS       => $key->{'peers'},
-                          LARGESET  => decide_largeset($key->{'peers'}), 
+                          LARGESET    => decide_largeset($key->{'peers'}), 
                           PARENT      => $key->{'path'}->[-2]->{'name'},
                           NAME        => $key->{'name'},
                           CATEGORIES  => $key->{'categories'},
@@ -295,7 +297,8 @@ sub emit_group_template {
                           INFO_OPTION => 'Groups on this level',
                           GROUPS    => $key->{'groups'},
                           PATH      => $key->{'path'},
-                          CSSPATH   => $key->{'csspath'},
+                          ROOT_PATH => $key->{'root_path'},
+                          CSS_NAME  => $key->{'css_name'},
                           PEERS     => $key->{'peers'},
                           LARGESET  => decide_largeset($key->{'peers'}), 
                           PARENT    => $key->{'path'}->[-2]->{'name'} || "Overview",
@@ -312,7 +315,7 @@ sub emit_group_template {
 
 
 sub emit_service_template {
-    my ($srv, $pathnodes, $peers, $csspath, $service) = @_;
+    my ($srv, $pathnodes, $peers, $css_name, $root_path, $service) = @_;
 
     my $servicetemplate = HTML::Template->new(
         filename          => "$tmpldir/munin-serviceview.tmpl",
@@ -333,7 +336,8 @@ sub emit_service_template {
                             PATH      => $pathnodes,
                             PEERS     => $peers,
                             LARGESET  => decide_largeset($peers), 
-                            CSSPATH   => $csspath,
+                            ROOT_PATH => $root_path,
+                            CSS_NAME  => $css_name,
                             CATEGORY  => ucfirst $srv->{'category'},
                             TAGLINE   => $htmltagline,
                            );
@@ -380,6 +384,7 @@ sub emit_main_index {
     $template->param(
                      TAGLINE   => $htmltagline,
                      GROUPS    => $groups,
+                     CSS_NAME  => get_css_name(),
     );
 
     my $filename = munin_get_html_filename($config);
@@ -543,7 +548,7 @@ sub get_group_tree {
     my $path    = [];     # (temporary) array of paths relevant to . (here)
     my $rpath   = undef;
     my $visible = 0;
-    my $csspath;
+    my $css_name;
 
     my $children = munin_get_sorted_children($hash);
 
@@ -634,7 +639,8 @@ sub get_group_tree {
                 : ($rpath = ""))}
     } reverse(undef, split('\/', $base));
 
-    ($csspath = $path->[0]->{'path'}) =~ s/index.html$/style.css/;
+    my $root_path = get_root_path($path);
+    $css_name = get_css_name();
 
     # We need a bit more info for the comparison templates
     my $compare         = munin_get_bool($hash, "compare", 1);
@@ -705,7 +711,8 @@ sub get_group_tree {
         "depth" => scalar(my @splitted_base = split("/", $base . "index.html"))
             - 1,
         "filename"           => munin_get_html_filename($hash),
-        "csspath"            => $csspath,
+        "css_name"           => $css_name,
+        "root_path"          => $root_path,
         "groups"             => $groups,
         "graphs"             => $graphs,
         "multigraph"         => munin_has_subservices ($hash),
@@ -731,6 +738,31 @@ sub get_group_tree {
     }
 
     return $ret;
+}
+
+
+=pod
+
+Method to find the relative url to the root of the munin tree. This is 
+needed to refer to stuff in the root from deeper in the levels. 
+
+returns the url path as a string.
+
+=cut
+
+sub get_root_path{
+    my ($path) = @_;
+    if ($path) {
+        (my $root = $path->[0]->{'path'}) =~ s/\/index.html$//;
+        return $root;
+    }
+    return "";
+}
+
+
+sub get_css_name{
+    #NOTE: this will do more in future versions. knuthaug 2009-11-15
+    return "style.css";
 }
 
 
@@ -866,7 +898,10 @@ sub generate_service_templates {
     my $peers     = get_peer_nodes($service,
         lc munin_get($service, "graph_category", "other"));
     my $parent = munin_get_parent_name($service);
-    (my $csspath = $pathnodes->[0]->{'path'}) =~ s/index.html$/style.css/;
+
+    
+    my $root_path = get_root_path($pathnodes);
+    my $css_name = get_css_name();
     my $bp = borrowed_path($service) || ".";
 
     $srv{'node'} = munin_get_node_name($service);
@@ -989,7 +1024,7 @@ sub generate_service_templates {
         $srv{'state_unknown'}  = 1 if $state eq "unknown";
     }
 
-    emit_service_template(\%srv, $pathnodes, $peers, $csspath, $service);
+    emit_service_template(\%srv, $pathnodes, $peers, $css_name, $root_path, $service);
 
     return \%srv;
 }

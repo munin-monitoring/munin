@@ -1,5 +1,6 @@
 #!@@PERL@@ -w
 # -*- perl -*-
+# vim:syntax=perl
 
 =head1 NAME
 
@@ -49,7 +50,7 @@ None known
 
 =head1 AUTHOR
 
-Copyright (C) 2000-2008 Torstein Svendsen, Henrik Grindal Bakken,
+Copyright (C) 2000-2009 Torstein Svendsen, Henrik Grindal Bakken,
 Jimmy Olsen, Nicolai Langfeldt and others.
 
 Torstein Svendsen recalls originally writing this with Henrik Grindal
@@ -75,53 +76,51 @@ use Munin::Plugin;
 
 ##########
 
-sub get_exim_logfile {
+sub get_exim_logfile
+{
     my ($spec, $type, $time) = @_;
     chomp($spec);
-    $time = time() unless $time;
+    $time ||= time();
     my $logfile = $spec;
     $logfile =~ s/^log_file_path = //;
     $logfile =~ s/\%s/$type/;
 
-    if( $logfile =~ /\%D/ ) {
-	my @t=localtime($time);
-	my $ts = sprintf("%04d%02d%02d",$t[5]+1900, $t[4]+1, $t[3]);
-	$logfile =~ s/\%D/$ts/g;
+    if ($logfile =~ /\%D/) {
+        my @t = localtime($time);
+        my $ts = sprintf("%04d%02d%02d", $t[5] + 1900, $t[4] + 1, $t[3]);
+        $logfile =~ s/\%D/$ts/g;
     }
     my @lfiles = split(/\s?:\s?/, $logfile);
     foreach (@lfiles) {
-	return $_ unless /^syslog/;
+        return $_ unless /^syslog/;
     }
-    return undef;
+    return;
 }
 
 
-my $pos;
-my $received = 0;
-my $completed = 0;
-my $rejected = 0;
-my $dirname;
+my ($pos, $received, $completed, $rejected);
 
-sub parseEximfile {
+sub parseEximfile
+{
     my ($fname, $start) = @_;
 
-    my ($LOGFILE,$rotated) = tail_open($fname, $start);
+    my ($LOGFILE, $rotated) = tail_open($fname, $start);
 
     if ($rotated) {
-	# Reset everything if the log has been rotated
-	$pos = $received = $completed = $rejected = 0;
+        # Reset everything if the log has been rotated
+        $pos = $received = $completed = $rejected = 0;
     }
 
-    my $line;
+    while (<$LOGFILE>) {
+        chomp;
 
-    while ($line = <$LOGFILE>) {
-	chomp ($line);
-
-	if (substr ($line, 37,2 ) eq '<=') {
-	    $received++;
-	} elsif (substr ($line, 37,9) eq 'Completed') {
-	    $completed++;
-	} elsif ($line=~/rejected/) {
+        if (/ <= /) {
+            $received++;
+        }
+        elsif (/ Completed /) {
+            $completed++;
+        }
+        elsif (/ rejected /) {
             $rejected++;
         }
     }
@@ -129,54 +128,51 @@ sub parseEximfile {
 }
 
 
-($dirname = $0) =~ s/[^\/]+$//;
-
 my $EXIM = "/usr/sbin/exim";
 
-$EXIM = "/usr/sbin/exim4" if (-x "/usr/sbin/exim4"); # a Debianism
-$EXIM = $ENV{'exim'} if defined  $ENV{'exim'};
+$EXIM = "/usr/sbin/exim4" if (-x "/usr/sbin/exim4");    # a Debianism
+$EXIM = $ENV{'exim'}      if defined $ENV{'exim'};
 
-my $LOGDIR = $ENV{'logdir'} || undef;
+my $LOGDIR  = $ENV{'logdir'}  || undef;
 my $LOGNAME = $ENV{'logname'} || '';
 
 my $logfile;
 
-if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
-    my $logfile;
+if ($ARGV[0] and $ARGV[0] eq "autoconf") {
+    if (defined($LOGDIR)) {
+        if (! -d $LOGDIR) {
+            print "no (logdir does not exist)\n";
+            exit 0;
+        }
+        $logfile = $LOGDIR . '/' . ($LOGNAME || 'mainlog');
+    }
+    else {
+        my $logfilespec = `$EXIM -bP log_file_path 2>/dev/null`;
 
-    if(defined($LOGDIR)) {
-	if(! -d $LOGDIR) {
-	    print "no (logdir does not exist)\n";
-	    exit 0;
-	}
-	$logfile = $LOGDIR . '/' . ($LOGNAME || 'mainlog');
-
-    } else {
-
-	my $logfilespec = `$EXIM -bP log_file_path 2>/dev/null`;
-
-	if (! $?) {
-	    $logfile = get_exim_logfile( $logfilespec, 'main');
-	    if (! defined($logfile) ) {
-		print "no (not able to parse output of '$EXIM -bP log_file_path' = '$logfilespec')\n";
-		exit 0;
-	    }
-	} elsif ($? eq "127") {
-	    print "no (exim not found)\n";
-	    exit 0;
-	} else {
-	    print "no ('$EXIM -bP log_file_path' returned an error)\n";
-	    exit 0;
-	}
+        if ($? == 0) {
+            $logfile = get_exim_logfile($logfilespec, 'main');
+            if (!defined($logfile)) {
+                print "no (not able to parse output of '$EXIM -bP log_file_path' = '$logfilespec')\n";
+                exit 0;
+            }
+        }
+        elsif ($? == 127) {
+            print "no (exim not found)\n";
+            exit 0;
+        }
+        else {
+            print "no ('$EXIM -bP log_file_path' returned an error)\n";
+            exit 0;
+        }
     }
 
     if ($logfile) {
-	if (-r "$logfile") {
-	    print "yes\n";
-	    exit 0;
-	} else {
-	    print "no (logfile '$logfile' not readable)\n";
-	}
+        if (-r "$logfile") {
+            print "yes\n";
+        }
+        else {
+            print "no (logfile '$logfile' not readable)\n";
+        }
     }
 
     exit 0;
@@ -185,17 +181,18 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
 
 my $logfilespec;
 
-if(defined($LOGDIR)) {
+if (defined($LOGDIR)) {
     $logfilespec = '';
     $logfile = $LOGDIR . '/' . ($LOGNAME || 'mainlog');
-} else {
-    $logfilespec = `$EXIM -bP log_file_path`;
-    $logfile = get_exim_logfile( $logfilespec, 'main');
+}
+else {
+    $logfilespec = `$EXIM -bP log_file_path 2>/dev/null`;
+    $logfile = get_exim_logfile($logfilespec, 'main');
 }
 
-exit 1 unless -r $logfile;
+die "Logfile '$logfile' is not readable\n" unless -r $logfile;
 
-if ( $ARGV[0] and $ARGV[0] eq "config" ) {
+if ($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title Exim mail throughput\n";
     print "graph_args --base 1000 -l 0\n";
     print "graph_vlabel mails/\${graph_period}\n";
@@ -214,32 +211,22 @@ if ( $ARGV[0] and $ARGV[0] eq "config" ) {
     exit 0;
 }
 
-if (! -f $logfile) {
-    print "completed.value U\n";
-    print "received.value U\n";
-    print "rejected.value U\n";
-    exit 0;
-}
+($pos, $received, $completed, $rejected) = restore_state();
 
-($pos,$received,$completed,$rejected) = restore_state();
-
-if (!defined($rejected)) {
-
+if (! defined $pos) {
     # No state file present.  Avoid startup spike: Do not read log
     # file up to now, but remember how large it is now, and next
     # time read from there.
-
-    $pos = (stat $logfile)[7]; # File size
-
-    $received = $completed = $rejected = 0;
-} else {
-    $pos = parseEximfile ($logfile, $pos);
+    $pos = (stat $logfile)[7];  # File size
+    $received = $completed = $rejected = 'U';
+}
+else {
+    $pos = parseEximfile($logfile, $pos);
 }
 
 print "received.value $received\n";
 print "completed.value $completed\n";
 print "rejected.value $rejected\n";
 
-save_state($pos,$received,$completed,$rejected);
+save_state($pos, $received, $completed, $rejected);
 
-# vim:syntax=perl

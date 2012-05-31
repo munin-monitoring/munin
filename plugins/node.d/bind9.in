@@ -7,31 +7,33 @@ bind9 - Plugin to monitor usage of bind 9 servers
 
 =head1 CONFIGURATION
 
-The following environment variables are used by this plugin:
+This plugin is configurable environment variables.  The following
+shows the default settings:
 
- logfile   - Location of the query log
-             (default: "/var/log/bind9/query.log")
- statefile - Location of the temporary state file
-             (default: "@@PLUGSTATE@@/bind9.state")
+ [bind9]
+    env.logfile   /var/log/bind9/query.log
+
+You must also configure query logging in your named.conf.  Please
+contribute your documentation about how to do that.  Thanks.
 
 =head1 AUTHOR
 
-Contributed by Nicolai Langfeldt
+Nicolai Langfeldt
 
 =head1 LICENSE
 
-Unknown license
+GPLv2
 
 =head1 MAGIC MARKERS
 
- #%# family=contrib
+  #%# family=manual
 
 =cut
 
 use strict;
 
-my $QUERYLOG=$ENV{logfile} || '/var/log/bind9/query.log';
-my $STATEFILE=$ENV{statefile} || '@@PLUGSTATE@@/bind9.state';
+my $QUERYLOG = $ENV{logfile} || '/var/log/bind9/query.log';
+my $STATEFILE= $ENV{MUNIN_PLUGSTATE}.'/bind9.state';
 my $OTHER=0;
 my %IN;
 
@@ -52,9 +54,9 @@ sub do_stats {
     open(Q,"< $QUERYLOG") or die "$!";
     while (<Q>) {
 	chomp;
-	if (/client \d+\.\d+.\d+.\d+\#\d+: query\: \S+ (\w+) (\w+)/) {
-	    if ($1 eq 'IN' and $2 !~ /^TYPE/) {
-		$IN{$2}++;
+	if (/client \d+\.\d+.\d+.\d+\#\d+: (view \S+\: |)query\: \S+ (\w+) (\w+)/) {
+	    if ($2 eq 'IN' and $3 !~ /^TYPE/) {
+                $IN{$3}++;
 	    } else {
 		$OTHER++;
 	    }

@@ -434,6 +434,7 @@ sub _split_config_line_ok {
     # If all is not well we'll corak here.
 
     my ($self,$longkey,$value) = @_;
+   
 
     my ($groups,$host,$key) = $self->_split_config_line($longkey);
 
@@ -441,8 +442,12 @@ sub _split_config_line_ok {
     my $last_word = pop(@words);
 
     if (! $self->is_keyword($last_word)) {
+	# We have seen some problems with $value in the following
+	# error message.  Se make sure it's defined so we can see the
+	# message.
+	$value = '' unless defined $value;
 	croak "Parse error in ".$self->{config_file}." for $key:\n".
-	    " Unknown keyword at end of left hand side of line ($key $value)\n";
+	    " Unknown keyword at end of left hand side of line $NR ($key $value)\n";
     }
 
     if ($host =~ /[^-A-Za-z0-9\.]/) {
