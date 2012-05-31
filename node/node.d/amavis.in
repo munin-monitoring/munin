@@ -15,7 +15,7 @@
 #
 
 TEMP_FILE=`mktemp -p /tmp/ munin-amavis.XXXXXX`
-AMAVIS_LOG=/var/log/mail/mail.info
+AMAVIS_LOG=${logfile:-/var/log/mail/mail.info}
 LOGTAIL=${logtail:-`which logtail`}
 STATEFILE=@@PLUGSTATE@@/amavis.offset
 
@@ -47,8 +47,8 @@ virus=U
 spamm=U
 spams=U
 
-`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
 ARGS=0
+`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
 if [ $? = 66 ]; then
     if [ ! -n "$logtail" ]; then
 	ARGS=1

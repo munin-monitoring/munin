@@ -10,6 +10,9 @@
 # Contributed by Nicolai Langfeldt
 #
 # $Log$
+# Revision 1.8.2.2  2005/03/07 19:06:13  jimmyo
+# sunos/memory repaired (SF#1143610).
+#
 # Revision 1.8.2.1  2005/02/16 18:03:46  jimmyo
 # minor bugfix in generic/bind9.
 #
@@ -67,7 +70,7 @@ sub get_state {
 sub do_stats {
     my $k; 
 
-    open(Q,"< $QUERYLOG") or die;
+    open(Q,"< $QUERYLOG") or die "$!";
     while (<Q>) {
 	chomp;
 	if (/client \d+\.\d+.\d+.\d+\#\d+: query\: \S+ (\w+) (\w+)/) {

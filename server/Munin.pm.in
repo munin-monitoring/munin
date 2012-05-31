@@ -22,6 +22,15 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.44.2.4  2005/03/09 17:57:37  jimmyo
+# Escape regexps more properly (Deb#296575).
+#
+# Revision 1.44.2.3  2005/03/06 22:22:40  jimmyo
+# Make sure all rrd-tunes are correct after an upgrade (Deb#296454, Deb#296645).
+#
+# Revision 1.44.2.2  2005/03/06 19:32:45  jimmyo
+# Make sure all rrd-tunes are correct after an upgrade (Deb#296454, Deb#296645).
+#
 # Revision 1.44.2.1  2005/02/01 22:02:30  jimmyo
 # Added category_order, to complete the *_order options.
 #
@@ -263,6 +272,8 @@ use Symbol 'gensym';
 my $nsca = new IO::Handle;
 my $config = undef;
 
+my $VERSION = "@@VERSION@@";
+
 my $DEBUG=0;
 my $configfile="@@CONFDIR@@/munin.conf";
 
@@ -280,7 +291,8 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"graph_height", "graph_sums", "local_address", "compare",
 	"text", "command", "contact", "contacts",  "max_messages", 
 	"always_send", "notify_alias", "line", "state", "graph_period",
-	"cgiurl_graph", "cgiurl", "service_order", "category_order"
+	"cgiurl_graph", "cgiurl", "service_order", "category_order",
+	"version"
     );
 
 my %legal_expanded = map { $_ => 1 } @legal;
@@ -658,7 +670,7 @@ sub munin_writeconfig_loop {
     my ($data,$fh,$pre) = @_;
     $pre |= "";
 
-    # Write datafile in new format
+    # Write datafile
     foreach my $a (keys %{$data})
     {
 	if (ref ($data->{$a}) eq "HASH")
@@ -691,6 +703,7 @@ sub munin_writeconfig_loop {
 	}
 	elsif (defined $data->{$a} and length $data->{$a})
 	{
+	    next if "$pre$a" eq "version"; # Handled separately
 	    print "Writing: $pre$a $data->{$a}\n" if $DEBUG;
 	    if ($data->{$a} =~ /\\$/)
 	    { # Backslash as last char has special meaning. Avoid it.
@@ -715,7 +728,9 @@ sub munin_writeconfig {
 	}
     }
 
-    # Write datafile in new format
+    # Write version
+    print $fh "version $VERSION\n";
+    # Write datafile
     &munin_writeconfig_loop ($data, $fh, "");
     
     if (defined $fh)
@@ -1101,7 +1116,7 @@ sub munin_get_field_order
 	($client,$type) = split /\./,$key;
 	if (defined $type and $type eq "label") 
 	{
-	    push @$result,$client if !grep /^$client(?:=|$)/, @$result;;
+	    push @$result,$client if !grep /^\Q$client\E(?:=|$)/, @$result;;
 	} 
     }
     
