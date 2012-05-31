@@ -1,0 +1,39 @@
+--- Makefile.config	2004-04-28 22:12:33.000000000 +0100
++++ Makefile.config	2004-11-06 15:51:37.915349072 +0000
+@@ -7,10 +7,10 @@
+ #
+ # the base of the Munin installation.
+ # 
+-PREFIX     = $(DESTDIR)/opt/munin
++PREFIX     = $(DESTDIR)/usr
+ 
+ # Where Munin keeps its configurations (server.conf, client.conf, ++)
+-CONFDIR    = $(DESTDIR)/etc/opt/munin
++CONFDIR    = $(DESTDIR)/etc/munin
+ 
+ # Server only - where to put munin-cron
+ BINDIR     = $(PREFIX)/bin
+@@ -19,19 +19,19 @@
+ SBINDIR    = $(PREFIX)/sbin
+ 
+ # Where to put text and html documentation
+-DOCDIR     = $(PREFIX)/doc
++DOCDIR     = $(PREFIX)/share/doc
+ 
+ # Where to put man pages
+-MANDIR     = $(PREFIX)/man
++MANDIR     = $(PREFIX)/share/man
+ 
+ # Where to put internal binaries and plugin repository
+ LIBDIR     = $(PREFIX)/lib
+ 
+ # Server only - Output directory
+-HTMLDIR    = $(PREFIX)/var/www
++HTMLDIR    = $(DESTDIR)/var/www/localhost/htdocs/munin
+ 
+ # Client only - Where to put RRD files and other intenal data
+-DBDIR      = $(DESTDIR)/var/opt/munin
++DBDIR      = $(DESTDIR)/var/lib/munin
+ 
+ # Client only - Where plugins should put their states. Must be writable by
+ # group "munin", and should be preserved between reboots

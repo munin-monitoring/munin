@@ -5,8 +5,16 @@ has been placed in %%PREFIX%%/etc/munin/munin-node.conf.
 
 Please edit it according to your needs.
 
-The Munin client will be started at system boot automatically.
-You can start it manually with:
-    %%PREFIX%%/etc/rc.d/munin-node.sh start
+********************************************************************
+
+The Munin client will *not* be started automatically. To allow it
+to start, put this line in /etc/rc.conf:
+
+munin_node_enable="YES"
+
+Then, it will be started on the next boot. To start it now, use
+this command:
+
+    /etc/rc.d/munin_node start
 ********************************************************************
 

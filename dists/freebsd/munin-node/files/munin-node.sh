@@ -14,7 +14,13 @@ case "$1" in
 		if [ -f $CONFIG ]; then
 			PIDFILE=`awk '$1 == "pid_file" { print $2 }' $CONFIG`
 			if [ -f $PIDFILE ]; then
-				/bin/kill `cat $PIDFILE` && echo -n ' munin-node'
+				PID=`cat $PIDFILE`
+				CMD=`ps -xa -o command -p $PID | sed 1d`
+				case "$CMD" in
+				*munin-node*)
+					/bin/kill $PID && echo -n ' munin-node'
+					;;
+				esac
 			fi
 		fi
 	;;

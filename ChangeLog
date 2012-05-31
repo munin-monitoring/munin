@@ -1,3 +1,16 @@
+munin (1.0.5)
+
+  * Removed use of $HOSTNAME in linux/cps_.
+  * Fixed bug in plugin linux/load, so it graphs the 5min load average instead
+    of the 1min load average.
+  * Expand man-page macros properly on man-page generation (Deb#286399).
+  * Fix bug when encountering strange environment (Deb#285173).
+  * Fix template variable escaping and other XHTML errors (based on patch
+    by Tommi Virtanen, Deb#287435).
+  * Fixed generic/hddtemp to call hddtemp -n to avoid having to parse its
+    output (Deb#282021).
+  * Made some plugins ({generic,linux}/df*, generic/samba) more portable.
+   
 munin (1.0.4)
 
   * Adapt linux/apt plugin to work properly with Debian testing/unstable

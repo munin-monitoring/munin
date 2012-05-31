@@ -5,6 +5,9 @@
 # Usage: Link or copy into /etc/munin/node.d/
 #
 # $Log$
+# Revision 1.1.2.1  2004/11/20 21:18:17  jimmyo
+# Fixed bug in plugin linux/load, so it graphs the 5min load average instead of the 1min load average.
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -73,7 +76,7 @@ fi
 # "value" subfield for every data field.
 
 echo -n "load.value "
-cut -f1 -d' ' < /proc/loadavg
+cut -f2 -d' ' < /proc/loadavg
 
 # How could this plugin have been written in its simplest form?
 # Something like this:

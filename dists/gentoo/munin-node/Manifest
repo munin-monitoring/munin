@@ -1,0 +1,5 @@
+MD5 fd5b3315c4e4861e157cffe143dd80d8 ChangeLog 713
+MD5 c2eb7d1cddb1fa1d6d7179931f9c89a0 munin-node-1.0.4.ebuild 1205
+MD5 3e856d572c30c71a25e76a5821ed1b7c files/digest-munin-node-1.0.4 63
+MD5 3e856d572c30c71a25e76a5821ed1b7c files/digest-munin-1.0.4 63
+MD5 c17560ea69dcca52897ea32a4de36de2 files/munin-node-1.0.4-gentoo.patch 2108

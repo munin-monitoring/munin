@@ -2,11 +2,11 @@
 # Date created:				25 Januar 2004
 # Whom:					Lupe Christoph <lupe@lupe-christoph.de>
 #
-# $FreeBSD: ports/sysutils/munin-main/Makefile,v 1.3 2004/06/03 22:38:35 pav Exp $
+# $FreeBSD: ports/sysutils/munin-main/Makefile,v 1.7 2004/12/14 01:43:10 sem Exp $
 #
 
 PORTNAME=	munin
-PORTVERSION=	1.0.3
+PORTVERSION=	1.0.4
 CATEGORIES=	sysutils perl5
 MASTER_SITES=	${MASTER_SITE_SOURCEFORGE}
 MASTER_SITE_SUBDIR=	munin
@@ -44,6 +44,12 @@ pre-install:
 	@PKG_PREFIX=${PREFIX} ${SH} pkg-install ${PKGNAME} PRE-INSTALL
 
 post-install:
+	@if [ ! -f ${PREFIX}/www/data/munin/style.css ]; then \
+		${INSTALL_DATA} ${PREFIX}/etc/munin/templates/style.css ${PREFIX}/www/data/munin/style.css; \
+	fi
+	@if [ ! -f ${PREFIX}/www/data/munin/logo.png ]; then \
+		${INSTALL_DATA} ${PREFIX}/etc/munin/templates/logo.png ${PREFIX}/www/data/munin/logo.png; \
+	fi
 	@${INSTALL_MAN} -C ${WRKSRC}/build/doc/munin.conf.5 ${PREFIX}/man/man5
 	@${INSTALL_MAN} -C ${WRKSRC}/build/doc/munin-cron.8 ${PREFIX}/man/man8
 	@${INSTALL_MAN} -C ${WRKSRC}/build/doc/munin-graph.8 ${PREFIX}/man/man8

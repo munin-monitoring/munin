@@ -1,0 +1,4 @@
+MD5 d099ed2a9070d4f0d0be74965949d564 munin-1.0.4.ebuild 1545
+MD5 fd5b3315c4e4861e157cffe143dd80d8 ChangeLog 713
+MD5 be0f698e03d0118775e0772825f85acb files/munin-1.0.4-gentoo.patch 1194
+MD5 3e856d572c30c71a25e76a5821ed1b7c files/digest-munin-1.0.4 63

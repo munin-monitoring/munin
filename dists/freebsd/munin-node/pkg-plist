@@ -1,7 +1,10 @@
 @comment etc/munin/VERSION.node must remain for upgrade version check
-etc/munin/munin-node.conf
-etc/munin/plugin-conf.d/plugins.conf
-etc/rc.d/munin-node.sh
+@unexec if cmp -s %D/etc/munin/munin-node.conf %D/etc/munin/munin-node.conf.sample; then rm -f %D/etc/munin/munin-node.conf; fi
+etc/munin/munin-node.conf.sample
+@unexec if cmp -s %D/etc/munin/plugin-conf.d/plugins.conf %D/etc/munin/plugin-conf.d/plugins.conf.sample; then rm -f %D/etc/munin/plugin-conf.d/plugins.conf; fi
+etc/munin/plugin-conf.d/plugins.conf.sample
+@unexec rm %D/etc/rc.d/munin-node.sh 2>/dev/null || true
+@unexec rm /etc/rc.d/munin_node 2>/dev/null || true
 sbin/munin-node
 sbin/munin-node-configure
 sbin/munin-run
@@ -73,7 +76,19 @@ sbin/munin-run
 @unexec rmdir %D/%%DATADIR%% 2>/dev/null || true
 @unexec rmdir %D/etc/munin/plugin-conf.d 2>/dev/null || true
 @unexec rmdir %D/etc/munin 2>/dev/null || true
+@unexec echo
+@unexec echo '********************************************************************'
 @unexec echo "If you want to *completely* remove munin-node, you have to"
-@unexec echo "    rm -rf %D/var/munin and %D/etc/munin %D/www/data/munin"
-@unexec echo "They have to be left on the system because you may be performing"
-@unexec echo "an update. This process can't tell."
+@unexec echo
+@unexec echo "    rm -rf %D/var/munin/plugin-state %D/etc/munin/VERSION.node \\"
+@unexec echo "           %D/etc/munin/munin-node.conf %D/etc/munin/plugins \\"
+@unexec echo "           /var/log/munin-node.log*"
+@unexec echo
+@unexec echo "If you have already deinstalled munin-main, you can also"
+@unexec echo
+@unexec echo "    rmdir %D/etc/munin %D/var/munin"
+@unexec echo
+@unexec echo "These files and directories have to be left on the system because"
+@unexec echo "you may be performing an update. This process can't tell."
+@unexec echo '********************************************************************'
+@unexec echo
