@@ -1,7 +1,12 @@
 #!@@GOODSH@@
+# -*- sh -*-
 #
-# Parameters:
-#   df - full path of df executable
+# $Id$
+#
+# Environment:
+#   df       - full path of df executable
+#   warning  - warning percentage, default 92
+#   critical - critical percentage, default 98
 #
 
 #%# family=auto
@@ -33,7 +38,8 @@ if [ "$1" = "config" ]; then
         $DF -k -l | $TAIL +2 | while read dev size used avail pct mnt; do
                 name=$(clean_fieldname $dev)
                 echo "$name.label $mnt"
-                echo "$name.warn 95"
+                echo "$name.warning ${warning:-92}"
+		echo "$name.critical ${critical:-98}"
         done
         exit 0
 fi

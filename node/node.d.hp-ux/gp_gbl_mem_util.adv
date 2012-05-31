@@ -1,0 +1,7 @@
+if (gbl_interval > 2) then 
+{
+    print "mem_util.value ",gbl_mem_util|6|2
+    print "mem_user.value ",gbl_mem_user_util|6|2
+    print "mem_sys.value ",gbl_mem_sys_and_cache_util|6|2
+    print "mem_free.value ",gbl_mem_free_util|6|2
+}

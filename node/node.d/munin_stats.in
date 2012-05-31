@@ -1,0 +1,74 @@
+#!@@PERL@@
+# -*- perl -*-
+#
+# Copyright (C) 2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+# $Id: $
+#
+# BUGS:
+#  This plugin may fail when the logs are long.  A statefile and log-tail
+#  thing would be needed.  See also munin_graph and munin_update.
+#
+# Magic markers (optinal - used by munin-config and some installation
+# scripts):
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+use strict;
+my $log;
+my @logs = ("update","graph","html","limits");
+my $logdir = ($ENV{'MUNIN_LOGDIR'} || '@@LOGDIR@@');
+
+
+if ($ARGV[0] and $ARGV[0] eq 'autoconf') {
+    foreach $log (@logs) {
+	my $update = "$logdir/munin-$log.log";
+	if (! -r $update) {
+	    print STDERR "no (Can't read $update)\n";
+	    exit 1;
+	}
+    }
+}
+
+
+if ($ARGV[0] and $ARGV[0] eq "config" ){
+    print "graph_title Munin processing time\n";
+    print "graph_args --base 1000 -l 0\n";
+    print "graph_scale yes\n";
+    print "graph_vlabel seconds\n";
+    print "graph_category munin\n";
+  
+    foreach $log (@logs) {
+	print("$log.label munin $log\n");
+	print("$log.draw AREASTACK\n");
+    }
+
+    exit 0;
+}
+
+foreach $log (@logs) {
+    my $update = "$logdir/munin-$log.log";
+
+    open(STA, "grep finished $update | tail -1 |") or exit 4;
+
+    while (<STA>) {
+	my ($time) = (/.*\((\d+\.\d+)\ssec\)$/);
+	($time) ? print "$log.value $time\n" : print "$log.value 0\n";
+    }
+    close(STA);
+}

@@ -27,7 +27,7 @@ fi
  
 if [ "$1" = "config" ]; then
 	# The title of the graph
-	echo 'graph_title Interrupts & context switches'
+	echo 'graph_title Interrupts and context switches'
 	# Arguments to "rrdtool graph". In this case, tell it that the
 	# lower limit of the graph is '0', and that 1k=1000 (not 1024)
 	echo 'graph_args --base 1000 -l 0'
@@ -60,7 +60,5 @@ fi
 
 # The real work
 
-sed 's/intr/intr.value/;s/ctxt/ctx.value/' < /proc/stat \
-  | egrep 'intr|ctx' \
-  | awk '{ print $1" "$2 }'
-
+awk '$1 == "intr" { print "intr.value " $2 }
+     $1 == "ctxt" { print "ctx.value " $2 }' /proc/stat

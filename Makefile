@@ -57,6 +57,7 @@ install-main: build
 	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/server/munin-htaccess $(HTMLDIR)/.htaccess
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/server/munin.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/server/munin-cron $(BINDIR)/
+	$(INSTALL) -m 0755 build/server/munin-check $(BINDIR)/
 	$(INSTALL) -m 0755 build/server/munin-update $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-html $(LIBDIR)/
@@ -76,6 +77,7 @@ uninstall-main: build
 	rm -f $(CONFDIR)/munin.conf 
 
 	rm -f $(BINDIR)/munin-cron 
+	rm -f $(BINDIR)/munin-check
 
 	rm -f $(LIBDIR)/munin-update
 	rm -f $(LIBDIR)/munin-graph
@@ -95,7 +97,7 @@ uninstall-main: build
 	-rmdir $(DBDIR)
 	-rmdir $(CGIDIR)
 
-install-node: build install-node-non-snmp install-node-snmp
+install-node: build install-node-non-snmp install-node-snmp install-munindoc
 	echo Done.
 
 uninstall-node: uninstall-node-non-snmp uninstall-node-snmp
@@ -103,6 +105,9 @@ uninstall-node: uninstall-node-non-snmp uninstall-node-snmp
 
 install-node-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(SBINDIR)/
+
+install-munindoc: build
+	$(INSTALL) -m 0755 build/node/munindoc $(BINDIR)/
 
 uninstall-node-snmp: build
 	rm -f $(SBINDIR)/munin-node-configure-snmp
@@ -120,9 +125,9 @@ install-node-non-snmp: build
 	mkdir -p $(STATEDIR)
 	mkdir -p $(PLUGSTATE)
 
-	$(CHGRP) $(GROUP) $(PLUGSTATE)
-	$(CHMOD) 775 $(PLUGSTATE)
-	$(CHMOD) 755 $(CONFDIR)/plugin-conf.d
+	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
+	$(CHMOD) 0775 $(PLUGSTATE)
+	$(CHMOD) 0755 $(CONFDIR)/plugin-conf.d
 
 	$(INSTALL) -m 0755 build/node/munin-node $(SBINDIR)/
 	$(INSTALL) -m 0755 build/node/munin-node-configure $(SBINDIR)/
@@ -138,8 +143,11 @@ uninstall-node-non-snmp: build
 	-rmdir $(CONFDIR)
 	-rmdir $(SBINDIR)
 
+
 # ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE
 # GENERIC ONES
+
+# Some HP-UX plugins needs *.adv support files in LIBDIR
 install-node-plugins: build $(PLUGINS) Makefile Makefile.config
 	for p in build/node/node.d/* build/node/node.d.$(OSTYPE)/* ; do \
 	    if test -f "$$p" ; then                                    \
@@ -152,9 +160,10 @@ install-node-plugins: build $(PLUGINS) Makefile Makefile.config
 		fi;                                                    \
 	    fi                                                         \
 	done
+	-mv $(LIBDIR)/plugins/*.adv $(LIBDIR)
 	-mkdir -p $(PLUGSTATE)
 	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
-	$(CHMOD) 0664 $(PLUGSTATE)
+	$(CHMOD) 0775 $(PLUGSTATE)
 	$(INSTALL) -m 0644 build/node/plugins.history $(LIBDIR)/plugins/
 	$(INSTALL) -m 0644 build/node/plugin.sh $(LIBDIR)/plugins/
 	mkdir -p $(PERLLIB)/Munin
@@ -166,9 +175,11 @@ uninstall-node-plugins: build $(PLUGINS)
 	done
 	rm -f $(LIBDIR)/plugins/plugins.history
 	rm -f $(LIBDIR)/plugins/plugin.sh
+	-rm -f $(LIBDIR)/*.adv
 
 #TODO:
-#configure plugins.
+# configure plugins.  Or not. Better done under the direction of the installer
+# or the packager.
 
 install-man: build-man Makefile Makefile.config
 	mkdir -p $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8
@@ -244,6 +255,7 @@ build-stamp: $(INFILES) Makefile Makefile.config
 		    -e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g'		\
 		    -e 's|@@GOODSH@@|$(GOODSH)|g'			\
 		    -e 's|@@BASH@@|$(BASH)|g'				\
+		    -e 's|@@HASSETR@@|$(HASSETR)|g'			\
 		    $$file > build/$$destname;				\
 	done
 

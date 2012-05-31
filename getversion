@@ -1,0 +1,14 @@
+#!/bin/sh
+VERSION=$(cat RELEASE)
+
+case $VERSION in
+    svn-*)
+	R=$(svn info | awk '/^Revision: / { print $2; }') || {
+	    echo Unable to get svn revision >&2
+	    exit 1
+	}
+	VERSION="$VERSION-r$R"
+	;;
+esac
+
+echo $VERSION

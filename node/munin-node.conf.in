@@ -4,13 +4,11 @@
 
 log_level 4
 log_file @@LOGDIR@@/munin-node.log
-port 4949
 pid_file @@STATEDIR@@/munin-node.pid
+
 background 1
 setseid 1
 
-# Which port to bind to;
-host *
 user root
 group root
 setsid yes
@@ -22,6 +20,7 @@ ignore_file \.bak$
 ignore_file %$
 ignore_file \.dpkg-(tmp|new|old|dist)$
 ignore_file \.rpm(save|new)$
+ignore_file \.pod$
 
 # Set this if the client doesn't report the correct hostname when
 # telnetting to localhost, port 4949
@@ -35,7 +34,10 @@ ignore_file \.rpm(save|new)$
 
 allow ^127\.0\.0\.1$
 
-# uncomment this to only listen on the loopback/localhost interface
-#
+# Which address to bind to;
+host *
 # host 127.0.0.1
+
+# And which port
+port 4949
 

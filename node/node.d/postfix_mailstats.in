@@ -191,7 +191,7 @@ sub parseLogfile
 	elsif ($line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/)
 	{
             my $cause = $1;
-            $cause = 'OTHER' unless $1 =/^\d+$/;
+            $cause = 'OTHER' unless $1 =~ /^\d+$/;
 	    $rejects->{$cause} ++;
 	}
     }

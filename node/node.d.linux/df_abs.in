@@ -1,4 +1,7 @@
 #!@@GOODSH@@
+# -*- sh -*-
+#
+# $Id$
 #
 # Script to monitor absolute disk usage.
 #
@@ -10,6 +13,8 @@
 # Environment
 #       exclude: space separated list if fs types to exclude.
 #                iso9660 by default
+#       warning: Warning _percentage_, default 92
+#       critical: Critical _percentage_, default 98
 #
 # Magic markers (optional - used by munin-config and installation
 # scripts):
@@ -42,8 +47,8 @@ if [ "$1" = "config" ]; then
 	       name="$(clean_fieldname $dev)"
 	       echo "$name.label $mnt"
 	       echo "$name.cdef $name,1024,*"
-	       echo "$name.warning $((size * 92 / 100))"
-	       echo "$name.critical $((size * 98 / 100))"
+	       echo "$name.warning $((size * ${warning:-92} / 100))"
+	       echo "$name.critical $((size * ${critical:-98} / 100))"
 	done
 	exit 0
 fi

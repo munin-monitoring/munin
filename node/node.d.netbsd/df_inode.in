@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor inode-usage.
 #
@@ -7,21 +7,8 @@
 # 	config   (required)
 # 	autoconf (optional - used by munin-config)
 #
-# $Log: df_inode.in,v $
-# Revision 1.1.1.1  2006/06/04 20:53:57  he
-# Import the client version of the Munin system monitoring/graphing
-# tool -- project homepage is at http://munin.sourceforge.net/
-#
-# This package has added support for NetBSD, via a number of new plugin
-# scripts where specific steps needs to be taken to collect information.
-#
-# I also modified the ntp_ plugin script to make it possible to not
-# plot the NTP poll delay, leaving just jitter and offset, which IMO
-# produces a more telling graph.
-#
-#
-#
-#
+# $Id: $
+# 
 # Magic markers (optional - used by munin-config and installation
 # scripts):
 #

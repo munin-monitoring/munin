@@ -1,42 +1,47 @@
 #!@@GOODSH@@
 #
-# Plugin to graph temperatures based on output from ACPI. Needs the
-# "acpi" program to work.
-#
-# Parameters:
-#
-# 	acpi      - Override path to acpi program
-#
+# ACPI Thermal zone plugin for munin.
+#   - Nicolai Langfeldt (janl@linpro.no) 2006-11-13
+# License: GPL
 #
 #%# family=auto
-#%# capabilities=autoconf
+#%# capabvilities=autoconf
 
-if [ "$1" = "autoconf" ]; then
-	acpi_available 2>/dev/null >/dev/null || ${acpi:-acpi} -t -B 2>/dev/null >/dev/null
-        if [ "$?" = "0" ]; then
-		acpi -t -B 2>/dev/null | grep '\d' >/dev/null 2>/dev/null
-		if [ "$?" = "0" ]; then
-		    echo yes
-		    exit 0
-		fi
-		echo "no (thermal not supported by ACPI)"
-		exit 1
-	else
-		echo "no (ACPI program not found)"
-		exit 2
-	fi
-fi
+ATZ="$(echo /proc/acpi/thermal_zone/*/temperature)"
 
-if [ "$1" = "config" ]; then
+do_ () { # Fetch
+    echo "$ATZ" | tr ' ' '\n' | awk -F'[ /\t]*' '{
+         ZONE=$5
+         getline < $0
+         print ZONE"_value "$2
+    }'
+    exit 0
+}
 
-        echo 'graph_title CPU temperature'
-        echo 'graph_args --base 1000 -l 0'
-        echo 'graph_vlabel temp in °C'
-        echo 'graph_category sensors'
-	echo 'graph_info This graph shows temperatures based on output from ACPI.'
-        echo cpu.label cpu
-	echo cpu.info CPU temperature.
-        exit 0
-fi
+do_config () {
+    echo "graph_title ACPI Thermal zone temperatures"
+    echo "graph_vlabel Celcius"
+    echo "graph_category sensors"
+    echo "graph_info This graph shows the temperature in different ACPI Thermal zones.  If there is only on it will usualy be the case temperature."
+    echo "$ATZ" |
+    awk -F'[ /]' '{
+         print $5".label "$5;
+    }'
+                  
+}
 
-${acpi:-acpi} -t -B | awk '{print "cpu.value " $4}'
+do_autoconf () {
+    for f in $ATZ; do
+	test -r $f || {
+	    echo "no (cannot read $f)"
+	    exit 1
+	}
+    done
+    echo yes
+    exit 0
+}
+
+case $1 in
+    config|autoconf|'')
+	eval do_$1
+esac

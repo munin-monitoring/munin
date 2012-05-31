@@ -1,27 +1,69 @@
 #!@@GOODSH@@
-#
-# Plugin to monitor the amavis mail filter.
-#
-# Usage: Place in /etc/lrrd/client.d/ (or link it there  using ln -s)
-#
-# Parameters understood:
-#
-# 	config   (required)
-# 	autoconf (optional)
-#
-# Config variables:
-#
-#       amavislog    - file where amavis logs are written
-#
-# #%# family=auto
-# #%# capabilities=autoconf
+
+: <<=cut
+
+=head1 NAME
+
+amavis - plugin to monitor the amavis mail filter.
+
+=head1 APPLICABLE SYSTEMS
+
+Hosts running amavis localy and logtail(8) installed.
+
+=head1 CONFIGURATION
+
+The following shows a typical configuration:
+
+  [amavis]
+     env.amavislog     /var/log/mail/mail.info
+     env.logtail       /usr/bin/logtail
+     group adm
+
+The log path shown is also the default.  On most systems the mail logs
+are not readable by nobody which the plugin usually runs at.  To
+enable log reading it needs to run as a group or user that has read
+access, as shown above.
+
+By default the logtail program is started without any explicit path,
+but if it is not found in the system $PATH then you'll need to specify
+the full path for the program.
+
+=head1 INTERPRETATION
+
+The plugin shows "probable spam", "surley spam" and "virus".  If your
+"probable spam" raises you may need to tune your spam configuration to
+classify more spam as "surley spam" and so be able to elliminate it.
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 VERSION
+
+  $Id$
+
+=head1 BUGS
+
+None known
+
+=head1 AUTHOR
+
+Unknown
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
 
 mktempfile () {
     $MUNIN_MKTEMP
 }
 
 AMAVIS_LOG=${amavislog:-/var/log/mail/mail.info}
-LOGTAIL=${logtail:-`which logtail`}
+LOGTAIL=${logtail:-logtail}
 STATEFILE=$MUNIN_PLUGSTATE/amavis.offset
 
 if [ "$1" = "autoconf" ]; then
@@ -45,12 +87,16 @@ fi
 
 if [ "$1" = "config" ]; then
 	echo 'graph_title Amavis filter statistics'
-	echo 'graph_order virus spam_maybe spam_sure total'
-	echo 'graph_vlabel nb'
+	echo 'graph_vlabel #'
+	echo 'graph_category antivirus'
 	echo 'virus.label virus'
+	echo 'virus.info Number of viruses caught in email'
 	echo 'spam_maybe.label probably spam'
+	echo 'spam_maybe.info Emails amavis thinks probably contains spam'
 	echo 'spam_sure.label surely spam'
-	echo 'total.label total'
+	echo 'spam_sure.info Emails amavis is sure contains spam'
+	echo 'total.label total mails'
+	echo 'total.info Total emails evaluated by amavis'
 	exit 0
 fi
 
@@ -59,7 +105,7 @@ virus=U
 spamm=U
 spams=U
 
-TEMP_FILE=`mktempfile munin-amavis.XXXXXX`
+TEMP_FILE=$(mktempfile munin-amavis.XXXXXX)
 
 if [ -n "$TEMP_FILE" -a -f "$TEMP_FILE" ]
 then
@@ -68,10 +114,10 @@ then
 	else
 	    $LOGTAIL ${AMAVIS_LOG} ${STATEFILE} | grep 'amavis\[.*\]:' > ${TEMP_FILE}
 	fi
-	total=`cat ${TEMP_FILE} | wc -l`
-	virus=`grep INFECTED ${TEMP_FILE} | wc -l`
-	spamm=`grep 'Passed.*Hits: 1[0-9][.]' ${TEMP_FILE} | wc -l`
-	spams=`grep 'Passed.*Hits: [2-9][0-9][0-9]*[.]' ${TEMP_FILE} | wc -l`
+	total=$(cat ${TEMP_FILE} | wc -l)
+	virus=$(grep INFECTED ${TEMP_FILE} | wc -l)
+	spamm=$(grep 'Passed.*Hits: 1[0-9][.]' ${TEMP_FILE} | wc -l)
+	spams=$(grep 'Passed.*Hits: [2-9][0-9][0-9]*[.]' ${TEMP_FILE} | wc -l)
 
 	/bin/rm -f $TEMP_FILE
 fi

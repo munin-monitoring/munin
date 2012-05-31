@@ -1,4 +1,5 @@
 #!@@PERL@@
+# -*- perl -*-
 #
 # Wildcard-script to monitor network port usage. To monitor a
 # port, link port_<service> to this file. E.g.
@@ -183,6 +184,9 @@ my %ports = ();
 
 count_tcp_ports(ST_ESTABLISHED, \%ports) if (-r "/proc/net/tcp");
 count_tcp6_ports(ST_ESTABLISHED, \%ports) if (-r "/proc/net/tcp6");
+
+# If there aint any the right answer is 0 no blank or U
+$ports{$port} = 0 if $ports{$port} == '';
 
 print "count.value ", $ports{$port}, "\n";
 # vim:syntax=perl

@@ -52,8 +52,8 @@ if [ "$1" = "config" ]; then
 	# These two are optional. They are only used if you have
 	# configured your munin to tell a Nagios-server about any
 	# problems
-	echo 'load.warning $LOAD_WARN'
-	echo 'load.critical $LOAD_CRIT'
+	echo "load.warning $LOAD_WARN"
+	echo "load.critical $LOAD_CRIT"
 	# This one is purely to add an explanation to the web page. The first
 	# one is for the graph itself, while the second one is for the field
 	# "load".

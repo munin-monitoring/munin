@@ -6,7 +6,7 @@
 #
 # Documentation for this is in http://munin.projects.linpro.no/wiki/CgiHowto
 #
-ScriptAlias /munin/dyn/ @@CGIDIR@@
+ScriptAlias /munin/dyn/ @@CGIDIR@@/
 
 <Directory @@CGIDIR@@>
 	AllowOverride None

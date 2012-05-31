@@ -1,27 +1,54 @@
 #!@@PERL@@
-#
-# $Id$
-#
-# Copyright 2003-2004 - Per Andreas Buer
-#
-# Parameters:
-#
-#   config
-#   autoconf
-#
-# Configuration variables
-#
-#   mysqlopts     - Options to pass to mysql
-#   mysqladmin    - Override location of mysqladmin
+# -*- perl -*-
 #
 #%# family=auto
 #%# capabilities=autoconf
 
+=head1 NAME
+
+mysql_queries - Munin plugin to display MySQL query rate.
+
+=head1 APPLICABLE SYSTEMS
+
+Any MySQL platform
+
+=head1 CONFIGURATION
+
+  [mysql*]
+     user root
+     env.mysqlopts <options-for-mysqladmin-here>
+     env.mysqladmin <optional-override-of-mysqladmin-path>
+
+It is most usual that root must run the mysqladmin command.
+
+Only use the .env settings if you need to override the defaults.
+
+=head1 INTERPRETATION
+
+To Be Written
+
+=head1 BUGS
+
+None known
+
+=head1 AUTHOR
+
+Copyright 2003-2008 - Per Andreas Buer
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 VERSION
+
+$Id$
+
+=cut
+
 use strict;
 
 my $MYSQLADMIN = $ENV{mysqladmin} || "mysqladmin";
-my $COMMAND    =      "$MYSQLADMIN $ENV{mysqlopts} extended-status";
-
+my $COMMAND    = "$MYSQLADMIN $ENV{mysqlopts} extended-status";
 
 my %WANTED = ( "Com_delete"  => "delete", 
 			   "Com_insert"  => "insert",

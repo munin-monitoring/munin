@@ -1,0 +1,59 @@
+#!@@GOODSH@@
+# -*- sh -*-
+#
+# Plugin to graph httpresponse time of a specific page
+#
+# Parameters:
+#
+#       target      - overrides the default 'index.html' page
+#       PATH        - set a sensible path
+#
+# BUG: SHOULD BE USING MKTEMP; THE /tmp USAGE IS PROBABLY DANGEROUS
+#
+#
+# $Id: $
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+final_target="http://localhost/"
+time_bin=$(which time)
+wget_bin=$(which wget)
+
+if [ "$1" = "autoconf" ]; then
+    result="yes"
+    [ "x$time_bin" = "x" ] && result=1
+    [ "x$wget_bin" = "x" ] && result=2
+    if [ "$result" != "yes" ]; then
+	echo "no (need time and wget programs)"
+	exit 1
+    fi
+    echo yes
+    exit 0
+fi
+
+if [ "$1" = "config" ]; then
+    echo "graph_title HTTP loadtime of a page"
+    echo "graph_args --base 1000 -l 0"
+    echo "graph_vlabel Load time in seconds"
+    echo "graph_category network"
+    echo "graph_info This graph shows load time in seconds of $final_target"
+    echo "loadtime.label loadtime"
+    echo "loadtime.info Load time"
+    exit 0
+fi
+
+[ "$target"  ] && final_target=$target
+
+trap 'rm -rf /tmp/apache_loadtime' EXIT
+
+# Make a dir.  Should be safe
+mkdir -p /tmp/apache_loadtime || exit 1
+
+cd /tmp/apache_loadtime || exit 1
+# This does not seem to load prerequisites propperly!
+$time_bin -p $wget_bin -p --no-cache --delete-after $final_target 3>&2 2>/tmp/apache_loadtime/time.tmp
+loadtime=$(awk '/^real / { print $2 }' /tmp/apache_loadtime/time.tmp)
+cd ..
+
+echo "loadtime.value $loadtime"

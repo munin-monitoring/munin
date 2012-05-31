@@ -1,5 +1,7 @@
 #!@@PERL@@
-# -*- perl -*-
+# -*-  perl -*-
+#
+# $Id$
 #
 # Plugin to monitor disk usage. Rewrite based on original shell-based version
 #
@@ -9,8 +11,11 @@
 #       autoconf (optional - used by munin-config)
 #
 # Environment
-#       exclude: space separated list if fs types to exclude.
-#                iso9660 by default
+#       exclude: space separated list if fs types to exclude.  by default a
+#                list of special, read-only or dynamically allocating file
+#                systems
+#       warning: Warning percentage, default 92.
+#       critical: Critical percentage, default 98.
 #
 # $Id$
 #
@@ -34,7 +39,9 @@ while (<MOUNTS>) {
 }
 close MOUNTS;
 
-my $exclude=$ENV{'exclude'} || 'iso9660';
+my $exclude=$ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs';
+my $warning=$ENV{'warning'} || '92';
+my $critical=$ENV{'critical'} || '98';
 my $dfopts = "-P -l ".join(' -x ',('',split('\s+',$exclude)));
 
 sub print_values() {
@@ -94,8 +101,8 @@ if ( $ARGV[0] eq "config" ) {
 	    print $name, ".label ", $dir, "\n";
 
 	    # FIXME: These ought to be tunable
-	    print "$name.warning 92\n";
-	    print "$name.critical 98\n";
+	    print "$name.warning $warning\n";
+	    print "$name.critical $critical\n";
 	}
     }
     close DF;

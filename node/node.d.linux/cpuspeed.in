@@ -6,8 +6,13 @@
 #
 # Parameters understood:
 #
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
+#   config   (required)
+#   autoconf (optional - used by munin-config)
+#
+# Environment variables:
+#
+#   scaleto100    show the frequency as a percentage
+#                 instead of absolute frequency
 #
 # Magic markers - optional - used by installation scripts and
 # munin-config:
@@ -16,44 +21,51 @@
 #%# capabilities=autoconf
 
 if [ "$1" = "autoconf" ]; then
-	if [ -r /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq ]; then
-		echo yes
-		exit 0
-	else
-		echo no
-		exit 1
-	fi
+    if [ -r /sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state ]; then
+        echo yes
+        exit 0
+    else
+        echo no
+        exit 1
+    fi
 fi
 
 
 if [ "$1" = "config" ]; then
-    cat <<EOF
-graph_title CPU frequency scaling
-graph_args --base 1000 -r --lower-limit 0
-graph_vlabel Hz
-graph_scale yes
-graph_info This graph shows at what speeds the CPUs are running
-graph_category system
-EOF
+    echo graph_title CPU frequency scaling
+    echo graph_args --base 1000
+    echo graph_info This graph shows the speeds at which the CPUs are running
+    echo graph_category system
 
-for c in /sys/devices/system/cpu/cpu*; do
-    N=${c##*/cpu}
-    MAXHZ=$(<$c/cpufreq/cpuinfo_max_freq)
-    cat <<EOF
-cpu$N.label CPU $N
-cpu$N.max $MAXHZ
-cpu$N.min $(<$c/cpufreq/cpuinfo_min_freq)
-cpu$N.type GAUGE
-EOF
     if [ "$scaleto100" = "yes" ]; then
-	echo "cpu$N.cdef $cpu$N,$MAXHZ,/"
+        echo "graph_vlabel Hz"
+        echo "graph_scale yes"
+    else
+        echo "graph_vlabel %"
+        echo "graph_scale no"
     fi
-done
 
-	exit 0
+    for c in /sys/devices/system/cpu/cpu*; do
+        N=${c##*/cpu}
+        MAXHZ=$(cat $c/cpufreq/cpuinfo_max_freq)
+        MINHZ=$(cat $c/cpufreq/cpuinfo_min_freq)
+
+        echo "cpu$N.label CPU $N"
+        echo "cpu$N.type DERIVE"
+        echo "cpu$N.max $MAXHZ"
+        echo "cpu$N.min $MINHZ"
+
+        if [ "$scaleto100" = "yes" ]; then
+            echo "cpu$N.cdef cpu$N,1000,*,$MAXHZ,/"
+        else
+            echo "cpu$N.cdef cpu$N,1000,*"
+        fi
+    done;
+    exit 0;
 fi
 
 for c in /sys/devices/system/cpu/cpu*; do
     N=${c##*/cpu}
-    echo "cpu$N.value $(<$c/cpufreq/scaling_cur_freq)"
+    awk -v cpu=$N '{ cycles += $1 * $2 } END { print "cpu" cpu ".value", cycles / 100 }' \
+        $c/cpufreq/stats/time_in_state
 done

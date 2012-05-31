@@ -1,0 +1,167 @@
+#!@@PERL@@ -w
+# -*- perl -*-
+
+# Plugin to monitor PostgreSQL memory usage; gives number of blocks
+# read from disk and from memory, showing how much of the database is
+# served from PostgreSQL's memory buffer.
+#
+# PLEASE NOTE: This plugin may not present the whole truth - the truth
+# may actually be even better than this plugin will show you! That is
+# because PostgreSQL statistics only considers memory block reads from
+# its own allocated memory. When PostgreSQL reads from disk, it may
+# actually still be read from memory, but from the _kernel_'s
+# memory. Summarily, your database server may run even better than
+# this plugin will indicate. See
+# http://www.postgresql.org/docs/7.4/interactive/monitoring-stats.html
+# for a (short) description.
+#
+# Copyright Bjÿrn Ruberg <bjorn@linpro.no> 2006
+#
+# Licenced under GPL v2.
+#
+# Usage:
+#
+#       Symlink into /etc/munin/plugins/ and add the monitored
+#       database to the filename. e.g.:
+#
+#       ln -s /usr/share/munin/plugins/postgres_block_read_ \
+#         /etc/munin/plugins/postgres_block_read_SomeDatabase
+#       This should, however, be given through autoconf and suggest.
+#
+#       If required, give username, password and/or PostgreSQL server
+#       host through environment variables. 
+# 
+#       You must also activate PostgreSQL statistics. See
+#       http://www.postgresql.org/docs/7.4/interactive/monitoring-stats.html
+#       for how to enable this. Specifically, the following lines must
+#       exist in your postgresql.conf:
+#
+#           stats_start_collector = true
+#           stats_block_level = true
+#
+#
+# Parameters:
+# 	
+# 	config
+# 	autoconf
+#
+# Configuration variables:
+#
+#	PGHOST		- Database server to use. Defaults to using ident
+#			  authentication with the local server.
+#	PGPORT		- Port to connect to. Defaults to '5432'.
+#	PGDATABASE	- Database to connect to. Defaults to 'template1'.
+#	PGUSER		- User to connect as, if necessary.
+#	PGPASSWORD	- Corresponding password to use, if necessary.
+#
+#	(See libpq documentation for more.)
+#	Note that PGDATABASE will default to 'template1' in this plugin, and
+#	without PGHOST it will try ident authentication with the local server,
+#	as the user that the plugin is running as.
+#
+# Configuration example:
+#
+#	# Use local server, ident authentication with the 'postgres' user.
+#	[postgres_*]
+#	user postgres
+#
+#	# Use local server, TCP authentication with a username and password.
+#	[postgres_*]
+#	env.PGHOST localhost
+#	env.PGUSER someuser
+#	env.PGPASSWORD somepassword
+#
+#
+# Magic markers
+#%# family=auto
+#%# capabilities=autoconf suggest
+
+use strict;
+use DBI;
+use Data::Dumper;
+use vars qw ( $debug $suggest $configure $dbh );
+
+# Default to template1 database.
+$ENV{'PGDATABASE'} ||= 'template1';
+
+if (exists $ARGV[0]) {
+    if ($ARGV[0] eq 'autoconf') {
+        # Check for DBD::Pg
+        if (! eval "require DBD::Pg;") {
+            print "no (DBD::Pg not found)";
+            exit 1;
+        }
+        # Then we try to detect Postgres presence by connecting to
+        # 'template1'.
+        my $tempdbh = DBI->connect ('dbi:Pg:', '', '');
+        if ($tempdbh) {
+            print "yes\n";
+            exit 0;
+        } else {
+            print "no (Can't connect to given host, please check environment settings)\n";
+            exit 1;
+        }
+    } elsif ($ARGV[0] eq 'debug') {
+        # Set debug flag
+        $debug = 1;
+    } elsif ($ARGV[0] eq 'config') {
+        # Set config flag
+        $configure = 1;
+    } elsif ($ARGV[0] eq 'suggest') {
+        # doesn't always work
+        my @datasources = DBI->data_sources ('Pg');
+        foreach my $dsn (grep !/\=template\d$/, @datasources) {
+            (my $db = $dsn) =~ s/^.*=//;
+            print "$db\n";
+        }
+        exit 0;
+    }
+}
+
+# Must do this here, after checking for autoconf/suggest/etc, because the
+# plugin must be able to run before it is linked to the databases.
+my (undef, undef, undef, $dbname) = split (/_/, $0, 4);
+die "No dbname configured (did you make the proper symlink?)" unless $dbname;
+
+my @datasources = DBI->data_sources ('Pg')
+    or die ("Can't read any possible data sources: $?");
+
+my $dbh = DBI->connect ('dbi:Pg:', '', '', {RaiseError =>1});
+unless($dbh) {
+    die("Error connecting to database (". $DBI::errstr .")\n");
+}
+
+if ($configure) {
+    print <<EOF;
+graph_title Postgres data reads from $dbname
+graph_args --base 1000
+graph_vlabel Blocks read per \${graph_period}
+graph_category PostgreSQL
+graph_info Shows number of blocks read from disk and from memory
+from_disk.label Read from disk
+from_disk.info Read from disk
+from_disk.type DERIVE
+from_disk.min 0
+from_disk.draw AREA
+from_memory.label Cached in memory
+from_memory.info Cached in memory
+from_memory.type DERIVE
+from_memory.min 0
+from_memory.draw STACK
+EOF
+} else {
+    my $sql  = "SELECT (SUM (heap_blks_read) + SUM (idx_blks_read) + ";
+    $sql .= "SUM (toast_blks_read) + SUM (tidx_blks_read)) AS disk, ";
+    $sql .= "(SUM (heap_blks_hit) +SUM (idx_blks_hit) + ";
+    $sql .= "SUM (toast_blks_hit) + SUM (tidx_blks_hit)) AS mem ";
+    $sql .= "from pg_statio_user_tables ";
+    print "# $sql\n" if $debug;
+    my $sth = $dbh->prepare ($sql);
+    $sth->execute();
+    if ($sth->rows > 0) {
+        printf ("# Rows: %d\n",  $sth->rows) if $debug;
+	my ($disk, $mem) = $sth->fetchrow_array();
+	print "from_disk.value $disk\n";
+	print "from_memory.value $mem\n";
+    }
+}

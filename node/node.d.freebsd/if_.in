@@ -33,7 +33,7 @@ fi
 
 if [ "$1" = "suggest" ]; then
 	if [ -x /usr/bin/netstat ]; then
-		netstat -i -b | sed -n -e '/^faith/d' -e '/^lo0/d' -e '/<Link#[0-9]*>/s/\** .*//p'
+		netstat -i -b -n | sed -n -e '/^faith/d' -e '/^lo[0-9]/d' -e '/^pflog/d' -e '/<Link#[0-9]*>/s/\** .*//p'
 		exit 0
 	else
 		exit 1
@@ -61,7 +61,7 @@ if [ "$1" = "config" ]; then
 fi
 
 if [ "$INTERFACE" = "aggregated" ]; then
-	/usr/bin/netstat -i -b | grep -v '^lo' | awk '
+	/usr/bin/netstat -i -b -n | grep -v '^lo' | awk '
 BEGIN { rsum = 0; osum = 0; }
 /<Link#[0-9]*>/ {
 	if (NF == 10) { 
@@ -76,7 +76,7 @@ END {
 }'
   
 else
-	/usr/bin/netstat -i -b -I $INTERFACE | awk '
+	/usr/bin/netstat -i -b -n -I $INTERFACE | awk '
 /<Link#[0-9]*>/ {
 	if (NF == 10) { 
 		print "rbytes.value", $6;
