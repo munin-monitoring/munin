@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.20  2004/11/24 12:01:07  jimmyo
+# Bugfix in munin-limits (it didn't work properly).
+#
 # Revision 1.19  2004/11/19 21:51:05  jimmyo
 # Cosmetics on the nagios warnings.
 #
@@ -379,7 +382,7 @@ sub generate_service_message {
 
     if ($worst)
     {
-	foreach my $c (split (/\s+/, munin_get_val ($config, "contacts", join (' ', keys %{$config->{'contact'}}), $domain, $name, $clientname)))
+	foreach my $c (split (/\s+/, munin_get ($config, "contacts", join (' ', keys %{$config->{'contact'}}), $domain, $name, $clientname)))
 	{
 	    next unless defined $config->{'contact'}->{$c}->{'command'};
 	    if (@limit_contacts and !grep (/^$c$/, @limit_contacts))
