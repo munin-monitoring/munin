@@ -202,7 +202,7 @@ Audun Ytterdal, Jimmy Olsen, and Tore Anderson.
 
 =head1 BUGS
 
-Please see L<http://munin.projects.linpro.no/report/1>.
+Please see L<http://munin-monitoring.org/report/1>.
 
 =head1 COPYRIGHT
 
@@ -224,7 +224,7 @@ node.  C<munin-node-configure> can use this information to help manage
 installed plugins.
 
 The network protocol is documented at
-L<http://munin.projects.linpro.no/wiki/network-protocol>
+L<http://munin-monitoring.org/wiki/network-protocol>
 
 
 =cut

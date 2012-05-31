@@ -727,7 +727,7 @@ sub main {
 # Each command handler should return an appropriate exit code
 
 
-# http://munin.projects.linpro.no/wiki/ConcisePlugins#autoconf
+# http://munin-monitoring.org/wiki/ConcisePlugins#autoconf
 sub autoconf {
     unless ($has_cache) {
 	print "no (Missing dependency Cache::Cache)\n";
@@ -748,7 +748,7 @@ sub autoconf {
 }
 
 
-# http://munin.projects.linpro.no/wiki/ConcisePlugins#suggest
+# http://munin-monitoring.org/wiki/ConcisePlugins#suggest
 sub suggest {
 
     # What is the best way to decide which graphs is applicable to a

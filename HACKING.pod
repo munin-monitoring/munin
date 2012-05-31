@@ -12,7 +12,7 @@ This is the guide for Munin internals contributors (developers,
 testers, documenters.)
 
 If you are looking for more information on how to I<use> Munin you
-probably want L<http://munin.projects.linpro.no/wiki/Documentation>
+probably want L<http://munin-monitoring.org/wiki/Documentation>
 instead.
 
 The munin code is marked by years on the battle front. You will
@@ -136,7 +136,7 @@ Exceptions are caught with an eval:
 The API documentation is embedded as POD in the code.  See L<perlpod>
 for more on POD.
 
-More is on L<http://munin.projects.linpro.no/wiki/Documentation>
+More is on L<http://munin-monitoring.org/wiki/Documentation>
 
 =head2 WRITING
 

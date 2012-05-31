@@ -1,21 +1,38 @@
 -*- text -*-
 
+munin 2.0-rc6, r4839, 2012-05-07
+
+Commits by kenyon, knan, matthias, runesk, steve.schnepp, ssm
+
+* hddtemp_smartctl: just use the device name as the labels
+* Update our website address in various files
+* Add explicit license for all plugins. (D: Closes #670428)
+
+Many bugfixes in munin-cgi-graph : 
+
+* If url parameters are not valid, send HTTP 404 instead of 500
+* Remove the use of tempfiles. (D: Closes #668778)
+* Move the generation of png via cgi under /var/lib/munin/cgi-tmp/ (D: Closes #668536)
+* Don't cache URL with parameters anymore, and don't keep uncached URLs (D: Closes #668667)
+* Validate the url chars. (D: Closes #668666)
+* Add a max setting for cgi image size. (D: Closes #670811)
+
 munin 2.0-rc5, r4795, 2012-04-11
 
 Commits by kenyon, steve.schnepp 
 
 Summary :
 
-- Adding the current action to the command line. Useful for debugging.
-- Adding a new URL param full_size_mode to enable predictible IMG sizes
-- Enable sparklines with the url param "only_graph"
-- Start RRD just before first update. To avoid a very costly 1st update.
-- Emit the hosts in a sorted order, instead of somewhat random.
-- Do not emit png list if file handle is not defined. (closes #666759)
-- Add old option of --force-root, but with a new name. more explicit (closes #601371)
-- We dont generate the png list when using cgi html.
-- Remove warning when asking "list" w/o a hostname (Closes #907952/U)
-- Many bug fixes (trac: Closes #967, #1210) (debian: Closes #583189, #568511, #475078, #666759)
+* Adding the current action to the command line. Useful for debugging.
+* Adding a new URL param full_size_mode to enable predictible IMG sizes
+* Enable sparklines with the url param "only_graph"
+* Start RRD just before first update. To avoid a very costly 1st update.
+* Emit the hosts in a sorted order, instead of somewhat random.
+* Do not emit png list if file handle is not defined. (D: Closes #666759)
+* Add old option of --force-root, but with a new name. more explicit (D: Closes #601371)
+* We dont generate the png list when using cgi html.
+* Remove warning when asking "list" w/o a hostname (U: Closes #907952)
+* Many bug fixes (Closes #967, #1210) (D: Closes #583189, #568511, #475078, #666759)
 
 munin 2.0-rc4, r4770, 2012-03-24
 
@@ -583,7 +600,7 @@ munin (1.4.0, r3033:3115, 2009-11-27)
   minor fixes.
 * Munin::Plugin: straight port of the multigraph assertion sub from Plugin.sh.
 * netbsd/sensors_: according to
-  <http://munin.projects.linpro.no/wiki/protocol-config>, graph_vtitle
+  <http://munin-monitoring.org/wiki/protocol-config>, graph_vtitle
   has been superseded by graph_vlabel.
 * a few more tests for Munin::Common::Config.
 * linux/fw_(packets|conntrack): check for readability not existence

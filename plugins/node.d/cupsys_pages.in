@@ -16,11 +16,11 @@ The following environment variables are used
 
 =head1 AUTHOR
 
-Unknown author
+Copyright 2004 Rune Nordbøe Skillingstad <rune@skillingstad.no>
 
 =head1 LICENSE
 
-Unknown license
+GPLv2
 
 =head1 MAGIC MARKERS
 
@@ -146,7 +146,7 @@ sub parselogfile {
     while (tell(LOGFILE) < $stop) {
 	my $line = <LOGFILE>;
 	chomp ($line);
-	if ($line =~ /^(\S+)\s+\S+\s+\d+\s+\[[^\]]+\]\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)$/) {
+	if ($line =~ /^(\S+)\s+\S+\s+\d+\s+\[[^\]]+\]\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)/) {
 	    if(!defined($printers{$1}) && keys(%printers) < $MAXLABEL) {
 		$printers{$1} += int($2)*int($3);
 	    } elsif(defined($printers{$1})) {

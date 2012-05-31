@@ -896,7 +896,7 @@ Knut Haugen, Audun Ytterdal and Jimmy Olsen.
 
 munin-html does, as of now, not check the syntax of the configuration file.
 
-Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
+Please report other bugs in the bug tracker at L<http://munin-monitoring.org/>.
 
 =head1 COPYRIGHT
 

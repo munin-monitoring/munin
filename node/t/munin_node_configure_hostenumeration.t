@@ -13,10 +13,10 @@ my @slash_24 = map { "192.168.2.$_" } 0 .. 255;
 ### resolve
 {
 	my @tests = (
-		[ 'munin.projects.linpro.no', 'Resolve IPv4 hostname' ],
-		[ '127.0.0.1',                'Resolve IPv4 numeric address' ],
-#		[ 'ipv6.google.com',          'Resolve IPv6 hostname' ],
-#		[ '::1',                      'Resolve IPv6 numeric address' ],
+		[ 'munin-monitoring.org', 'Resolve IPv4 hostname' ],
+		[ '127.0.0.1',            'Resolve IPv4 numeric address' ],
+#		[ 'ipv6.google.com',      'Resolve IPv6 hostname' ],
+#		[ '::1',                  'Resolve IPv6 numeric address' ],
 	);
 
 	while (my $test = shift @tests) {

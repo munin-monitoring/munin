@@ -738,7 +738,7 @@ sub _create_rrd_file {
         foreach my $resolution_computer(@resolutions_computer) {
             my ($multiplier, $multiplier_nb) = @{$resolution_computer};
 	    # Always add 10% to the RRA size, as specified in 
-	    # http://munin.projects.linpro.no/wiki/format-graph_data_size
+	    # http://munin-monitoring.org/wiki/format-graph_data_size
 	    $multiplier_nb += int ($multiplier_nb / 10) || 1;
             push (@args, 
                 "RRA:AVERAGE:0.5:$multiplier:$multiplier_nb",

@@ -18,7 +18,7 @@ As a rule SNMP plugins need site specific configuration.  The default
 configuration (shown here) will only work on insecure sites/devices.
 
    [snmp_*]
-	env.version 2
+        env.version 2
         env.community public
 
 In general SNMP is not very secure at all unless you use SNMP version
@@ -67,7 +67,7 @@ None known.
 
 Copyright (C) 2000-2009 by various authors.
 
-Original Nagios plugin: Sébastien Barbereau.
+Original Nagios plugin: SÃ©bastien Barbereau.
 
 Introduced to Munin in 2006 based on the Nagios plugin by: Andreas
 Schuldei
@@ -105,7 +105,7 @@ uptime.draw AREA
 }
 
 my $session = Munin::Plugin::SNMP->session(-translate =>
-					   [ -timeticks => 0x0 ]);
+                                           [ -timeticks => 0x0 ]);
 
 my $uptime = $session->get_single (".1.3.6.1.2.1.1.3.0") || 'U';
 
@@ -116,4 +116,3 @@ if ($uptime ne 'U') {
 }
 
 print "uptime.value ", $uptime, "\n";
-

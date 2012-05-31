@@ -69,6 +69,19 @@ setlocale (LC_TIME, 'C');
 my $nb_request = 0;
 my $nb_request_max = 0;
 while (new CGI::Fast) {
+    # 1rst thing is to validate the URL. Only a subset of chars are allowed.
+    # Return 404 if not compliant, w/o logging.
+    # This fixes http://bugs.debian.org/668666 and closes a lots of other potential bugs.
+    if ( has_offending_chars($ENV{PATH_INFO}) || has_offending_chars($ENV{QUERY_STRING}) ) {
+        # If parameters are not valid, just pretend we didn't find anything.
+        print "Status: 404 Not Found\r\n",
+          "Content-Type: image/png\r\n",
+          "X-Munin-Pid: $$\r\n",
+          "X-Munin-Request: $nb_request/$nb_request_max\r\n",
+          "\r\n";
+        next;
+    }
+
     my $pinpoint = undef;
     my $path = $ENV{PATH_INFO} || "";
 
@@ -121,12 +134,12 @@ while (new CGI::Fast) {
     }
 
     if (! &verify_parameters ($dom, $host, $serv, $scale)) {
-	print "Status: 500\r\n",
-	  "Content-Type: text/html\r\n",
+	# If parameters are not valid, just say we didn't find anything.
+	print "Status: 404 Not Found\r\n",
+	  "Content-Type: image/png\r\n",
 	  "X-Munin-Pid: $$\r\n",
 	  "X-Munin-Request: $nb_request/$nb_request_max\r\n",
-	  "\r\n",
-	  "Invalid parameters!\r\n";
+	  "\r\n";
 	next;
     }
 
@@ -141,6 +154,11 @@ while (new CGI::Fast) {
       $ENV{HTTP_CACHE_CONTROL} =~ /no-cache/i;
     # Be able to deactivate the cache with the url
     if (defined(CGI::param("no_cache")) && CGI::param("no_cache") eq "yes") {
+      $no_cache = 1;
+    }
+
+    # Having some QUERY_STRING disables the cache.
+    if (defined($ENV{QUERY_STRING})) {
       $no_cache = 1;
     }
 
@@ -183,8 +201,28 @@ while (new CGI::Fast) {
 	} else {
 	    $scale_options = "--$scale";
 	}
-	next unless
-	  draw_graph_or_complain($dom, $host, $serv, $scale_options, $filename);
+
+	# Try to generate the graph
+	eval {
+ 		draw_graph_or_complain($dom, $host, $serv, $scale_options, $filename);
+	};
+	
+	# handle exceptions
+	if ($@) {
+		if ($@ =~ m/^Could not find FQN/) {
+			# Unknown graph asked
+			print "Status: 404 Not Found\r\n",
+			      "Content-Type: image/png\r\n",
+			      "X-Munin-Pid: $$\r\n",
+			      "X-Munin-Request: $nb_request/$nb_request_max\r\n",
+			    "\r\n";
+			# Next item
+			next;
+		}
+		
+		# Generic error
+		die $@;
+	}
     }
 
     # Now send it: headers
@@ -203,6 +241,11 @@ while (new CGI::Fast) {
 
     # ... and graph data
     send_graph_data($filename);
+
+    # If $no_cache, remove the file. No need to keep it anyway.
+    # And it handles http://bugs.debian.org/668667
+    unlink($filename) if $no_cache;
+
 } continue {
 	$nb_request++;
 	if ($nb_request_max && $nb_request > $nb_request_max) {
@@ -270,7 +313,7 @@ sub get_picture_filename {
     my $scale   = shift;
     my $params  = shift;
 
-    my $cgi_tmp_dir = $config->{cgitmpdir} || "/tmp/munin-cgi-tmp";
+    my $cgi_tmp_dir = $config->{cgitmpdir} . "/munin-cgi-graph";
 
     $params = $params ? "?$params" : "";
     $params =~ tr/\//_/; # / are forbidden in a filename
@@ -278,6 +321,11 @@ sub get_picture_filename {
     return "$cgi_tmp_dir/$domain/$name/$service-$scale.png" . $params;
 }
 
+sub has_offending_chars {
+	my $url_part = shift;
+	return 0 if ! defined $url_part;
+	return $url_part =~ m:[^a-zA-Z0-9_/.,=-]:;
+}
 
 sub verify_parameters {
     my $dom   = shift;
@@ -307,6 +355,23 @@ sub verify_parameters {
 	    return 0;
 	}
     }
+
+    # Checks the image size requested.
+    if (( CGI::param("size_x") || "") =~ m/^(\d+)/) {
+	my $max_size_x = ( $config->{max_size_x} || 4000);
+	if ($1 > $max_size_x) {
+		WARN "[WARNING] Asked image size x too large : $1 > $max_size_x. Bailing out.";
+		return 0;
+	}
+    }
+    if (( CGI::param("size_y") || "") =~ m/^(\d+)/) {
+	my $max_size_y = ($config->{max_size_y} || 4000);
+	if ($1 > $max_size_y) {
+		WARN "[WARNING] Asked image size y too large : $1 > $max_size_y. Bailing out.";
+		return 0;
+	}
+    }
+
     return 1;
 }
 

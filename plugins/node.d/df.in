@@ -46,7 +46,6 @@ if [ "$1" = "config" ]; then
     echo 'graph_vlabel %'
     echo 'graph_category disk'
     echo 'graph_scale no'
-    echo 'graph_category disk'
     df -P -l  | sed -e 1d -e '/\/\//d' -e 's/%//' | sort |
     while read dev size used free pct fs; do
 	name=$(clean_fieldname $dev)

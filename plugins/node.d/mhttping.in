@@ -6,7 +6,7 @@
 # 1. Drop or symlink "mhttping" into plugins dir
 #
 # 2. Edit mhttping to tell it where the "data" text file and "results"
-# writeable directory are.
+# writable directory are.
 #
 # 3. Create the file "data" with a list of things to do...
 #

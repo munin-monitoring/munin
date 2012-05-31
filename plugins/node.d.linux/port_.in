@@ -8,17 +8,20 @@ port_ - Munin wildcard plugin to monitor netwok port usage.
 =head1 CONFIGURATION
 
 To monitor a port link port_<service> to this file. E.g.
+
   ln -s /usr/share/munin/plugins/port_ /etc/munin/plugins/port_ssh
-..will monitor ssh connections. Services are those from /etc/services.
+
+will monitor ssh connections. Services are those from /etc/services or
+a numeric port number.
 
 =head1 MAGIC MARKERS
 
-  #%# family=auto
-  #%# capabilities=autoconf
+  #%# family=manual
+  #%# capabilities=autoconf suggest
 
 =head1 BUGS
 
- The plugin doesnt count the tcp6 connections if tcp and tcp6 is used.
+The plugin doesnt count the tcp6 connections if tcp and tcp6 is used.
 
 =head1 VERSION
 
@@ -33,26 +36,6 @@ Unknown
 GPLv2
 
 =cut
-
-#
-# Wildcard-script to monitor network port usage. To monitor a
-# port, link port_<service> to this file. E.g.
-#
-#    ln -s /usr/share/munin/node/plugins-auto/port_ /etc/munin/node.d/port_www
-#
-# ...will monitor www connections. Services are those listed in
-# /etc/services.
-#
-# Parameters:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-# 	suggest  (optional - used by munin-config)
-#
-# Magic markers (optional - used by munin-config and some installation
-# scripts):
-#%# family=manual
-#%# capabilities=autoconf suggest
 
 use Munin::Plugin;
 
@@ -159,7 +142,7 @@ sub count_tcp6_ports
 
     # 128/4 + 1 corresponds to the IP address in hex + ":"
     my $local_port_offset = 128/4 + 1;
- 
+
     while (<NETSTAT>)
     {
 	my ($linenr, $local, $remote, $curstate) = split;
@@ -221,7 +204,7 @@ my %ports = ();
 count_tcp_ports(ST_ESTABLISHED, \%ports) if (-r "/proc/net/tcp");
 count_tcp6_ports(ST_ESTABLISHED, \%ports) if (-r "/proc/net/tcp6");
 
-# If there aint any the right answer is 0 no blank or U
+# If there aint any the right answer is 0, not blank or U.
 $ports{$port} = 0 if (!exists $ports{$port}) or ($ports{$port} eq '');
 
 print "count.value ", $ports{$port}, "\n";

@@ -155,7 +155,7 @@ the first character must be C<[a-zA-Z_]>.  To satisfy these demands
 the function replaces illegal characters with a '_'.
 
 See also
-L<http://munin.projects.linpro.no/wiki/notes_on_datasource_names>
+L<http://munin-monitoring.org/wiki/notes_on_datasource_names>
 
 =cut
 

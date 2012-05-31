@@ -1,6 +1,6 @@
 
 BASE     = /
-VENDOR	 = munin.sf.net
+VENDOR	 = munin-monitoring.org
 
 PKGNAME  = munin
 

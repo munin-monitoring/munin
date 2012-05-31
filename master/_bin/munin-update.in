@@ -201,7 +201,7 @@ and the directories to store them in.
 For a list of bugs concerning munin-update, see FIX<point to right
 ticket report>.
 
-Please report bugs in the bug tracker at L<http://munin.projects.linpro.no/>.
+Please report bugs in the bug tracker at L<http://munin-monitoring.org/>.
 
 
 =head1 AUTHORS

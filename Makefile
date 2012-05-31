@@ -83,10 +83,14 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	mkdir -p $(PERLLIB)/Munin/Master
 	mkdir -p $(HTMLDIR)
 	mkdir -p $(DBDIR)
+	mkdir -p $(DBDIR)/cgi-tmp
 	mkdir -p $(CGIDIR)
 
 	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR)
 	$(CHMOD) 0755 $(DBDIR)
+
+	$(CHOWN) $(CGIUSER) $(DBDIR)/cgi-tmp
+	$(CHMOD) 0755 $(DBDIR)/cgi-tmp
 
 	for p in master/www/*.tmpl ;  do \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \

@@ -439,13 +439,13 @@ are not validated.
 
 Sets the family and capabilities from the magic markers embedded in the plugin's
 executable, as specified by
-L<http://munin.projects.linpro.no/wiki/ConcisePlugins#Magicmarkers>
+L<http://munin-monitoring.org/wiki/ConcisePlugins#Magicmarkers>
 
 
 =item B<parse_autoconf_response(@response)>
 
 Parses and validates the autoconf response from the plugin, in the format
-specified by L<http://munin.projects.linpro.no/wiki/ConcisePlugins#autoconf>
+specified by L<http://munin-monitoring.org/wiki/ConcisePlugins#autoconf>
 
 Invalid input will cause an error to be logged against the plugin.
 
@@ -460,7 +460,7 @@ Invalid suggestions will cause an error to be logged against the plugin.
 =item B<parse_snmpconf_response(@response)>
 
 Parses and validates the snmpconf response from the plugin, in the format
-specified by L<http://munin.projects.linpro.no/wiki/ConcisePlugins#suggest>
+specified by L<http://munin-monitoring.org/wiki/ConcisePlugins#suggest>
 
 Invalid or inconsistent input will cause an error to be logged against the
 plugin.

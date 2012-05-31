@@ -18,7 +18,7 @@ The Munin master contains the following programs:
 =head1 SEE ALSO
 
 For more information, see the man pages of the individual 
-programs L<munin-update(8)>, L<munin-graph(8)>, L<munin-limits(8)>, L<munin-html(8)>, L<munin-cron(8)> or the Munin homepage L<http://munin.sf.net/>.
+programs L<munin-update(8)>, L<munin-graph(8)>, L<munin-limits(8)>, L<munin-html(8)>, L<munin-cron(8)> or the Munin homepage L<http://munin-monitoring.org/>.
 
 =head1 AUTHORS
 

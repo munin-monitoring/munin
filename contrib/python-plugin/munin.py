@@ -3,7 +3,7 @@
 """
 Makes it easy to create munin plugins...
 
-    http://munin.projects.linpro.no/wiki/protocol-config
+    http://munin-monitoring.org/wiki/protocol-config
 
 Morten Siebuhr
 sbhr@sbhr.dk
@@ -60,11 +60,11 @@ class Plugin(object):
 
     p = Plugin("Test measurement", "test/second", category="junk")
     p.autoconf = False
-    
+
     for name, value in {'a': 1, 'b': 2}:
         p[ name ].label = name
         p[ name ].value = value
-    
+
     p.run()
 
     (It will itself detect how the script is called and create the proper
@@ -112,7 +112,7 @@ class Plugin(object):
 
     def _print_values(self):
         """Print the values for all registered data sources.
-        
+
         Similar to running with "values"-argument."""
         for prefix, line in self._values.items():
             value = line.get_value(prefix)
@@ -133,7 +133,7 @@ class Plugin(object):
 
         # Print setup for individual lines
         for prefix, line in self._values.items():
-            
+
             # The "label" attribute MUST be defined
             assert "label" in line.get_config().keys(), "No 'label' defined."
 
@@ -174,4 +174,3 @@ class Plugin(object):
             return
 
         self._print_values()
-

@@ -31,7 +31,7 @@ Should be rewritten as a snmp__pm3users plugin using the Plugin::SNMP module.
 
 =head1 LICENSE
 
-Unknown license
+GPLv2
 
 =head1 MAGIC MARKERS
 
