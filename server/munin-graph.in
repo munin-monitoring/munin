@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.52  2005/01/08 22:34:38  jimmyo
+# Main: Fix bug with calculation of "Avg:" field when using graph_sums.
+#
 # Revision 1.51  2005/01/05 18:32:49  jimmyo
 # Main: Tables in service-view now containt the correct "Type" when using data aliases.
 #
@@ -1054,6 +1057,12 @@ sub process_node {
 		    {
 			my ($pre, $fname, $post) = ($1, $2, $3);
 			next if $fname eq "re_zero";
+			if ($post =~ /^:AVERAGE/)
+			{
+			    splice (@rrd_sum, $index, 1, $pre . ":x$fname" . $post);
+			    $index++;
+			    next;
+			}
 			next if grep /^x$fname$/, @defined;
 			push @defined, "x$fname";
 			my @replace;

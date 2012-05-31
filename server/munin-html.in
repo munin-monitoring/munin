@@ -20,6 +20,12 @@
 # $Id$
 #
 # $Log$
+# Revision 1.43  2005/02/01 21:51:51  jimmyo
+# Added category_order, to complete the *_order options.
+#
+# Revision 1.42  2005/01/29 18:21:41  jimmyo
+# Bugfix in munin-cgi-graph with hostnames including - (SF#1111510).
+#
 # Revision 1.41  2005/01/05 18:32:49  jimmyo
 # Main: Tables in service-view now containt the correct "Type" when using data aliases.
 #
@@ -327,6 +333,7 @@ for my $domain (@domainorder) {
 	$node{url}="$domain/$node.html";
 	my @services;
 	my @categories;
+	my %categories;
 	my %tmp_cats;
 	my @serviceorder;
 	if ($config->{domain}->{$domain}->{node}->{$node}->{service_order}) {
@@ -351,15 +358,15 @@ for my $domain (@domainorder) {
 	    my $method = &munin_get ($config, "graph_strategy", "cron");
 	    if ($method eq "cgi")
 	    {
-		$service{imgday}=$config->{'cgiurl_graph'}."/$domain/$node-$service-day.png";
-		$service{imgweek}=$config->{'cgiurl_graph'}."/$domain/$node-$service-week.png";
-		$service{imgmonth}=$config->{'cgiurl_graph'}."/$domain/$node-$service-month.png";
-		$service{imgyear}=$config->{'cgiurl_graph'}."/$domain/$node-$service-year.png";
+		$service{imgday}=$config->{'cgiurl_graph'}."/$domain/$node/$service-day.png";
+		$service{imgweek}=$config->{'cgiurl_graph'}."/$domain/$node/$service-week.png";
+		$service{imgmonth}=$config->{'cgiurl_graph'}."/$domain/$node/$service-month.png";
+		$service{imgyear}=$config->{'cgiurl_graph'}."/$domain/$node/$service-year.png";
 
 		if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
 		{
-		    $service{imgweeksum} = $config->{'cgiurl_graph'}."/$domain/$node-$service-week-sum.png";
-		    $service{imgyearsum} = $config->{'cgiurl_graph'}."/$domain/$node-$service-year-sum.png";
+		    $service{imgweeksum} = $config->{'cgiurl_graph'}."/$domain/$node/$service-week-sum.png";
+		    $service{imgyearsum} = $config->{'cgiurl_graph'}."/$domain/$node/$service-year-sum.png";
 		}
 	
 		if (my ($w, $h) = &calculate_png_size ($config, $domain, $node, $service))
@@ -495,7 +502,7 @@ for my $domain (@domainorder) {
 	    $tmp{services} = \@{$tmp_cats{$key}};
 	    $tmp{node} = $node;
 	    $tmp{domain} = $domain;
-	    push @categories, \%tmp;
+	    $categories{ucfirst $key} = \%tmp;
 	    $comparisons{$key}{$node} = \%tmp;
 	}
 	if (defined $tmp_cats{'other'})
@@ -514,8 +521,23 @@ for my $domain (@domainorder) {
 	    $tmp{services} = \@{$tmp_cats{$key}};
 	    $tmp{node} = $node;
 	    $tmp{domain} = $domain;
-	    push @categories, \%tmp;
+	    $categories{ucfirst $key} = \%tmp;
 	    $comparisons{'other'}{$node} = \%tmp;
+	}
+	# Handle category_order
+	@categories = ();
+	if ($config->{domain}->{$domain}->{node}->{$node}->{category_order}) {
+	    foreach my $cat (split /\s+/, $config->{domain}->{$domain}->{node}->{$node}->{category_order})
+	    {
+		push @categories, $categories{ucfirst $cat};
+	    }
+	    foreach my $cat (sort keys %categories)
+	    {
+		push @categories, $categories{$cat}
+			unless (grep /^$cat$/, @categories);
+	    }
+	} else {
+	    @categories = map { $categories{$_} } sort keys %categories;
 	}
 	$nodetemplate->param(SERVICES => \@services,
 			     NODE => $node,

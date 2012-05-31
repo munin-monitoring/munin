@@ -58,6 +58,7 @@ The plugin can output quite a few options:
 <dt><code>graph_total</code><dd>If set, summarise all the datasources' values and use the value of graph_total as a label.</dd>
 <dt><code>graph_scale</code><dd>Default on. If set, enables scaling of awg/min/max/cur values.</dd>
 <dt><code>graph_period</code><dd>Default "second". Set to "minute" to scale (almost) all graphs that are COUNTER or DERIVE based, to show data per minute instead of per second.</dd>
+<dt><code>graph_sums</code><dd>Creates two additional graphs for services using COUNTER or DERIVE fields. The new graphs show values per hour and day. NOTE: This feature requires rrdtool version 1.0.39 or above.</dd>
 <dt><code>graph</code><dd>Set to "yes" or "no". Decides wether to draw the graph. Defaults to "yes".</dd>
 <dt><code>update</code><dd>Set to "yes" or "no". Decides wether munin-update should fetch data for the graph. Defaults to "yes".</dd>
 <dt><code>host_name</code><dd>Override which host name this plugin is run for. Ugly -
@@ -231,6 +232,7 @@ Node-level options
  default plugins from a node. Good for hosts which changes hostname
  (e.g. laptops). NOTE: Deprecated. Use use_node_name instaed.
  <dt>contacts<dd>Set which contact entries to use for this node. Default is all contact entries existing under "contact" tree.
+ <dt>tls<dd>Set to force use of TLS when communicating with the node. (Default off.)
 </dl>
 </tt>
 
@@ -276,6 +278,12 @@ Usefull configuration in the server.conf file is:
 	option.</dd>
 <dt>domain_order [domain1] [domain2] .... <dd>In which order the domains
     should be listed, defaults to sorted. This is a top-level option.</dd>
+<dt>category_order_order [category1] [category2] .... <dd>In which order
+	the categories should be listed, defaults to sorted. This is a
+	node-level option.</dd>
+<dt>service_order_order [service1] [service2] .... <dd>In which order
+	the services should be listed, defaults to sorted. This is a
+	node-level option.</dd>
 
 <h3>munin-limits</h3>
 

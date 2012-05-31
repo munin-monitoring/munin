@@ -23,6 +23,15 @@
 # $Id$
 #
 # $Log$
+# Revision 1.31  2005/01/24 21:58:46  jimmyo
+# Make munin-update shut up when reading from a socket goes wrong.
+#
+# Revision 1.30  2005/01/24 17:25:39  jimmyo
+# Made TLS mode work.
+#
+# Revision 1.29  2005/01/10 20:48:58  jimmyo
+# Main/Node: Added support for TLS.
+#
 # Revision 1.28  2004/12/10 09:12:13  jimmyo
 # Fix bug when setting min to 0.
 #
@@ -178,6 +187,7 @@ my $timeout = 180;
 my $cli_do_fork;
 my $cli_timeout;
 my $print_stdout = 0;
+my $tls;
 
 my $log = new IO::Handle;
 
@@ -565,7 +575,7 @@ sub process_domain {
   for my $key ( keys %{$config->{domain}->{$domain}->{node}}) {
     if (@limit_hosts and !grep (/^$key$/, @limit_hosts))
     {
-	print "Skipping host \"$key\" - not in hostlist\n" if $DEBUG;
+	logger ("Skipping host \"$key\" - not in hostlist\n") if $DEBUG;
 	next;
     }
     if (defined $config->{max_processes} and $config->{max_processes} and 
@@ -683,6 +693,7 @@ sub process_node {
 	  nstore_fd ({}, \*SOCK);
 	}
       } else {
+		my $ctx;
 		if (!&config_node($domain,$name,$node,$oldnode,$socket))
 		{
 		    $config->{domain}->{$domain}->{node}->{$name} = $oldnode;
@@ -694,6 +705,7 @@ sub process_node {
 		    exit 1;
 		}
 		&fetch_node($domain,$name,$node,$socket);
+		Net::SSLeay::free ($tls) if ($tls); # Shut down TLS
 		close $socket;
 	        alarm (0); # Don't want to interrupt this.
 	        socket (SOCK, PF_UNIX, SOCK_STREAM, 0)   || die "socket: $!";
@@ -717,14 +729,84 @@ sub process_node {
       } else {
 		next unless (&config_node($domain,$name,$node,$oldnode,$socket));
 		&fetch_node($domain,$name,$node,$socket);
+		Net::SSLeay::free ($tls) if ($tls); # Shut down TLS
 		close $socket;
       }
 
   }
 }
 
+sub start_tls {
+    my $socket = shift;
+    my $ctx;
+
+    logger("Enabling TLS.");
+    if (! eval "require Net::SSLeay;")
+    {
+	logger ("Fatal: TLS enabled but Net::SSLeay unavailable.");
+	exit 2;
+    }
+    Net::SSLeay::load_error_strings();
+    Net::SSLeay::SSLeay_add_ssl_algorithms();
+    Net::SSLeay::randomize();
+    $ctx = Net::SSLeay::CTX_new();
+    if (!$ctx)
+    {
+	logger ("Fatal: Could not create SSL_CTX");
+	exit 11;
+    }
+    if (Net::SSLeay::CTX_set_options($ctx, &Net::SSLeay::OP_ALL))
+    {
+	logger ("Fatal: Could not set SSL_CTX options");
+	exit 12;
+    }
+
+    write_socket_single ($socket, "STARTTLS\n");
+    my $tlsresponse = read_socket_single ($socket);
+    if ($tlsresponse !~ /^200 /i)
+    {
+	logger ("Bad TLS response \"$tlsresponse\".");
+	exit 13;
+    }
+
+    if (! ($tls = Net::SSLeay::new($ctx)))
+    {
+	logger ("Fatal: Could not create TLS: $!");
+	exit 14;
+    }
+    Net::SSLeay::set_fd($tls, fileno($socket));
+
+    my $res = Net::SSLeay::connect($tls)
+}
+
+sub write_socket_single {
+    my $socket = shift;
+    my $text   = shift;
+    my $timed_out = 0;
+    logger ("DEBUG: Writing to socket: \"$text\".") if $DEBUG;
+    eval {
+	local $SIG{ALRM} = sub { die "Could not run list on socket: $!\n"};
+	alarm 5;
+	if ($tls)
+	{
+	    unless (Net::SSLeay::write($tls, $text))
+	    {
+		logger ("Fatal: error during socket write: $!");
+		exit 9;
+	    }
+	    Net::SSLeay::print_errs('SSL_write');
+	}
+	else
+	{
+	    print $socket $text;
+	}
+	alarm 0;
+    };
+    return 1;
+}
+
 sub read_socket_single {
-    my( $socket ) = @_;
+    my $socket = shift;
     my $timed_out=0;
     my $res;
 
@@ -733,8 +815,16 @@ sub read_socket_single {
     eval {
       local $SIG{ALRM} = sub { $timed_out=1; close $socket; die "$!\n"};
       alarm( $timeout );
-      $res = <$socket>;
-      chomp $res;
+      if ($tls)
+      {
+	  $res = Net::SSLeay::read($tls);
+	  Net::SSLeay::print_errs('SSL_read');
+      }
+      else
+      {
+	  $res = <$socket>;
+      }
+      chomp $res if defined $res;
       alarm 0;
     };
     if ($timed_out)
@@ -742,11 +832,12 @@ sub read_socket_single {
 	logger ("Socket read timed out: $@\n");
 	return undef;
     }
+    logger ("DEBUG: Reading from socket: \"$res\".") if $DEBUG;
     return $res;
 }
 
 sub read_socket {
-    my ($socket) = @_;
+    my $socket = shift;
     my @array;
     my $timed_out=0;
 
@@ -755,10 +846,22 @@ sub read_socket {
     eval {
       local $SIG{ALRM} = sub { $timed_out=1; close $socket; die "$!\n"};
       alarm( $timeout );
-      while (<$socket>) {
-  	chomp;
-  	last if (/^\.$/);
-  	push @array,$_;
+      if ($tls)
+      {
+	  while (defined ($_ = Net::SSLeay::read($tls))) {
+	    chomp;
+	    Net::SSLeay::print_errs('SSL_read');
+	    last if (/^\.$/);
+	    push @array,$_;
+	  }
+      }
+      else
+      {
+	  while (<$socket>) {
+	    chomp;
+	    last if (/^\.$/);
+	    push @array,$_;
+	  }
       }
       alarm 0;
     };
@@ -767,6 +870,7 @@ sub read_socket {
 	logger ("Socket read timed out: $@\n");
 	return undef;
     }
+    logger ("DEBUG: Reading from socket: \"".(join ("|",@array))."\".") if $DEBUG;
     return (@array);
 }
 
@@ -793,13 +897,19 @@ sub config_node {
       $fetchdomain = $name;
   }
   my $nodeconf_time = Time::HiRes::time;
+
+  if (&munin_get_bool ($config, "tls", undef, $domain, $name))
+  {
+      start_tls ($socket);
+  }
+
   logger("Configuring node: $name") if $DEBUG;
   my @services;
   eval {
     local $SIG{ALRM} = sub { die "Could not run list on $name ($fetchdomain): $!\n"};
     alarm 5; # Should be enough to check the list
-    print $socket "list $fetchdomain\n";
-    my $list = <$socket>;
+    write_socket_single ($socket, "list $fetchdomain\n");
+    my $list = read_socket_single ($socket);
     chomp $list;
     @services = split / /,$list;
     alarm 0;
@@ -830,7 +940,7 @@ sub config_node {
 	$node->{client}->{$servname}->{realservname} = $service;
     }
     logger("Configuring service: $name->$servname") if $DEBUG;
-    print $socket "config $service\n";
+    write_socket_single ($socket, "config $service\n");
     my @lines = read_socket($socket);
     return unless $socket;
     next unless (@lines);
@@ -926,7 +1036,7 @@ sub fetch_node {
     my $realservname = $node->{client}->{$service}->{realservname} || $service;
     delete $node->{client}->{$service}->{realservname}
 	if exists $node->{client}->{$service}->{realservname};
-    print $socket "fetch $realservname\n";
+    write_socket_single ($socket, "fetch $realservname\n");
     my @lines = &read_socket($socket);
     return unless $socket;
     my $fields = {};
@@ -996,6 +1106,7 @@ sub logger {
   if ($log->opened)
   {
 	  print $log "$now - $comment\n";
+	  $log->flush;
   }
   else
   {
@@ -1004,6 +1115,7 @@ sub logger {
 		  if (open ($log, ">>$config->{logdir}/munin-update.log"))
 		  {
 			  print $log "$now - $comment\n";
+			  $log->flush;
 		  }
 		  else
 		  {

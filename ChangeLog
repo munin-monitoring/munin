@@ -1,3 +1,32 @@
+munin (1.3.1)
+
+  * Main: Fix bug with calculation of "Avg:" field when using graph_sums.
+  * Main: Make munin-limits work properly with perl <5.8 (SF#1109039).
+  * Main: Bugfix in munin-cgi-graph with hostnames including - (SF#1111510).
+  * Main: Added category_order, to complete the *_order options.
+  * Main/Node: Added support for TLS.
+  * Plugin: linux/users now has proper hashbang.
+  * Plugin: Bugfix in generic/sendmail_mail* autoconf.
+  * Plugin: Changed default log for generic/postfix_mailstats from syslog to
+    mail.log. Downgraded it from auto to manual. (Deb#291720).
+  * Plugin: Made generic/amavis autodetect logtail format (Deb#284638, 
+    Deb#288395).
+  * Plugins: generic/named probes for more log files before giving up 
+    (Deb#291849).
+  * Plugins: New wildcard plugin generic/courier_ by Micah Anderson
+    (Deb#291854). 
+  * Plugins: New plugin generic/perdition by Micah Anderson (Deb#291855).
+  * Plugins: Plugin generic/squid_cache now handles multiple caches
+    (Deb#288579).
+  * Plugins: Improved graph_title of generic/postfix_* (Deb#292083).
+  * Plugins: Turn on graph_scale for generic/postfix_mailvolume.
+  * Plugins: Make generic/postfix_mailstats catch more formats (Deb#292110).
+  * Plugins: Added plugin generic/hddtemp_smartctl, made by Lupe Christoph.
+    Made it the default hddtemp plugin.
+  * Plugin: Added madwifi support to linux/if_* plugins.
+  * Installation: Make the single python plugin use @@PYTHON@@ again.
+  * Docs: Documented minimum requirements for use of graph_sums (SF#1109040).
+
 munin (1.3.0)
 
   * Main: Allow dots in PNG paths (patch by Jacques Caruso).

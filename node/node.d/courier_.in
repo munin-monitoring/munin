@@ -1,0 +1,93 @@
+#!/bin/sh
+#
+# Plugin to graph number of courier login/logouts
+# Requires: logtail
+#
+# This plugin should be symlinked to have the service name that you
+# want to track. If you want to watch imaplogin entries you would do: 
+# ln -s /usr/share/munin/plugins/courier_ /etc/munin/plugins/courier_imaplogin
+# if you wanted to track courierpop3login entries, then you would do:
+# ln -s /usr/share/munin/plugins/courier_ /etc/munin/plugins/courier_courierpop3login
+#
+# Coypright Micah Anderson <micah@riseup.net>
+# Jan 22, 2005
+#
+#
+#%# family=contrib
+#%# capabilities=autoconf
+
+# The different log lines we are interested in:
+#
+# imaplogin:
+# Jan 22 10:53:35 raven imaplogin: Connection, ip=[::ffff:192.168.0.1]
+# Jan 22 06:28:19 raven imaplogin: DISCONNECTED, user=someuser, ip=[::ffff:192.168.0.1], headers=0, body=0, time=22
+# Jan 22 10:53:35 raven imaplogin: LOGIN, user=someuser, ip=[::ffff:192.168.0.1], protocol=IMAP
+# Jan 22 06:28:16 raven imaplogin: LOGOUT, user=someuser, ip=[::ffff:192.168.0.1], headers=0, body=2811, time=0
+#
+# courierpop3login:
+# Jan 22 06:28:24 raven courierpop3login: Connection, ip=[::ffff:192.168.0.1]
+# Jan 22 06:48:22 raven courierpop3login: DISCONNECTED, user=someuser, ip=[::ffff:192.168.0.1], top=0, retr=0, time=21
+# Jan 22 06:28:24 raven courierpop3login: LOGIN, user=someuser, ip=[::ffff:192.168.0.1]
+# Jan 22 06:28:25 raven courierpop3login: LOGOUT, user=someuser, ip=[::ffff:192.168.0.1], top=0, retr=0, time=0
+
+
+# Set the location of the courier logs
+COURIER_LOG=${logfile:-/var/log/mail.log}
+SERVICE=${service:-`basename $0 | sed 's/^courier_//g'`}
+TEMP_FILE=`mktemp -p /tmp/ munin-courier.XXXXXX`
+OFFSET_FILE=@@PLUGSTATE@@/courier_${SERVICE}.offset
+LOGTAIL=${logtail:-/usr/sbin/logtail}
+
+if [ ! -f "$TEMP_FILE" ]; then
+    exit 3
+fi
+
+case $1 in
+    autoconf|detect)
+    if [ -f ${COURIER_LOG} -a -x ${LOGTAIL} ] 
+    then
+	echo yes
+	exit 0
+    else
+	echo "no (either $COURIER_LOG was not found, or logtail was not in your path)"
+	exit 1
+    fi
+    ;;
+    config)
+    cat <<EOF
+graph_title Courier $SERVICE Connections
+graph_vlabel Number of Connections
+graph_total Total
+connection.label connections
+disconnected.label disconnections
+login.label logins
+logout.label logouts
+EOF
+    exit 0
+    ;;
+esac
+
+`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
+ARGS=0
+if [ $? = 66 ]; then
+    if [ ! -n "$logtail" ]; then
+        ARGS=1
+    fi
+fi
+
+if [ $ARGS != 0 ]; then
+    ${LOGTAIL} -f ${COURIER_LOG} -o ${OFFSET_FILE} | grep "$SERVICE" > ${TEMP_FILE}
+else
+    ${LOGTAIL} ${COURIER_LOG} ${OFFSET_FILE} | grep "$SERVICE" > ${TEMP_FILE}
+fi
+connection=`grep Connection ${TEMP_FILE} | wc -l`
+disconnected=`grep DISCONNECTED ${TEMP_FILE} | wc -l`
+login=`grep LOGIN ${TEMP_FILE} | wc -l`
+logout=`grep LOGOUT ${TEMP_FILE} | wc -l`
+
+rm ${TEMP_FILE}
+
+echo "connection.value ${connection}"
+echo "disconnected.value ${disconnected}"
+echo "login.value ${login}"
+echo "logout.value ${logout}"

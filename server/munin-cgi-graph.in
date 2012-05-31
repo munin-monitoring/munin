@@ -21,6 +21,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.6  2005/01/29 18:21:41  jimmyo
+# Bugfix in munin-cgi-graph with hostnames including - (SF#1111510).
+#
 # Revision 1.5  2004/12/22 20:01:15  jimmyo
 # Optimised munin-cgi-graph a bit.
 #
@@ -62,8 +65,8 @@ my $config = &munin_readconfig ($conffile);
 
 my $path = $ENV{PATH_INFO} || "";
 $path =~ s/^\///;
-($dom, $host) = split /\//, $path;
-($host, $serv, $scale) = split /-/, $host, 3;
+($dom, $host, $serv) = split /\//, $path;  
+($serv, $scale) = split /-/, $serv, 2;
 $scale =~ s/\.png$//;
 
 &verify_parameters ($dom, $host, $serv, $scale);

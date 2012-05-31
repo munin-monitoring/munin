@@ -2,6 +2,9 @@
 #
 # Plugin to monitor hard drive temperatures.
 #
+# This plugin is an alternative to the hddtemp_smartctl, which is the 
+# preferred one.
+#
 # Requirements:
 # 	- S.M.A.R.T. to be turned on for your hard drives
 # 	- hddtemp program installed and in path
@@ -20,6 +23,9 @@
 # Revision 0.1  2004/02/24 Andrew Radke
 #
 # $Log$
+# Revision 1.8  2005/01/25 21:01:21  jimmyo
+# Added plugin generic/hddtemp_smartctl, made by Lupe Christoph. Made it the default hddtemp plugin.
+#
 # Revision 1.7  2004/11/20 21:56:15  jimmyo
 # Fixed bug in generic/hddtemp2, patch by arturaz (SF#1037002).
 #
@@ -43,7 +49,7 @@
 #
 #
 # Magic markers:
-#%# family=auto
+#%# family=contrib
 #%# capabilities=autoconf
 
 use strict;
