@@ -128,7 +128,7 @@ if (exists $ENV{smartctl}) {
 
 # Check version of smartctl to determine --nocheck capabilities
 my $use_nocheck = 0;
-if ($smartctl and `$smartctl --version` =~ / version (\d+\.\d+) /i) {
+if ($smartctl and `$smartctl --version` =~ / release (\d+\.\d+) /i) {
     $use_nocheck = $1 >= 5.37;
     warn "[DEBUG] Smartctl supports --nocheck\n" if $DEBUG;
 }

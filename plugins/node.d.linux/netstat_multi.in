@@ -965,7 +965,6 @@ foreach (@statfiles) {
     open F, $_;
     while(<F>)
     {
-        my $i = 0;
         chomp($_);
         my @line = split(/ /,$_);
         $line[0] =~ s/\://;
@@ -974,8 +973,7 @@ foreach (@statfiles) {
             @columns = @line;
             next;
         }
-        foreach(@line) {
-            $i++;
+        for (my $i = 1; $i < @line; $i++) {
             if ( length($columns[$i]) > 0 ) {
                 $datas{"$columns[0]_$columns[$i]"} = $line[$i];
             }
