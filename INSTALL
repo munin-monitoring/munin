@@ -9,6 +9,8 @@ To install the main programs:
 	- make install-main
 	- create a cron-entry to run "munin-cron" as the user "munin" every 5
 	  minutes
+	- if you want to use the dynamic graphs, configure the cgi directory
+	  (an example for apache can be found in README-apache-cgi).
 
 To install the documentation:
 

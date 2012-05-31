@@ -63,7 +63,7 @@ datasouces in one graph.</dd>
 <dt><code>{name}.cdef</code><dd>RPN-expression. Modify the values before graphing. See the FAQ for examples.</dd>
 <dt><code>{name}.draw</code><dd>What to draw from the data source: AREA, LINE1-3. Defaults to LINE2.</dd>
 <dt><code>{name}.graph</code><dd>Set to "no" or "yes. Decides wether to graph the data source. Defaults to yes.</dd>
-<dt><code>{name}.max</code><dd>Maximum value. If the fetched value is below "max", it will be discarded.</dd>
+<dt><code>{name}.max</code><dd>Maximum value. If the fetched value is above "max", it will be discarded.</dd>
 <dt><code>{name}.min</code><dd>Minimum value. If the fetched value is below "min", it will be discarded.</dd>
 <dt><code>{name}.negative</code><dd>Name of field to 'mirror' on the opposite side of zero. See the FAQ for examples.</dd>
 <dt><code>{name}.skipdraw</code><dd>Disables drawing of datasource. NOTE: Deprecated - use {name}.graph instead.</dd>
@@ -181,6 +181,7 @@ Explaination:
  <dt>rundir<dd>Where to put state files
  <dt>htaccess<dd>The default htaccessfile
  <dt>tmpldir<dd>Where the templates reside
+ <dt>graph_strategy<dd>Set to "cron" to draw the graphs periodically via cron every 5 minutes. Set to "cgi" to draw on-demand. (default cron)
  <dt>fork<dd>If set, run updates of several hosts simultaneously. (default yes)
  <dt>max_processes<dd>Set max number of simultaneous Munin processes.
  <dt>nsca*<dd>Nagios options. See seperate section

@@ -20,7 +20,7 @@
   </tr>
   <tr>
     <td valign="top">
-      <h2><TMPL_VAR NAME="NODE"> :: [ <TMPL_LOOP NAME="CATEGORIES"><a href="#<TMPL_VAR NAME="NAME">"><TMPL_VAR NAME="NAME"></a> </TMPL_LOOP>]</h2>
+      <h2><TMPL_VAR NAME="NODE"> :: [ <TMPL_LOOP NAME="CATEGORIES"><TMPL_IF NAME="STATE_WARNING"><span class='warntext'></TMPL_IF><TMPL_IF NAME="STATE_CRITICAL"><span class='crittext'></TMPL_IF><a href="#<TMPL_VAR NAME="NAME">"><TMPL_VAR NAME="NAME"></a><TMPL_IF NAME="STATE_CRITICAL"></span></TMPL_IF><TMPL_IF NAME="STATE_WARNING"></span></TMPL_IF> </TMPL_LOOP>]</h2>
     </td>
   </tr>
 </table>

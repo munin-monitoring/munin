@@ -1,0 +1,15 @@
+#
+# Apache configuration to support munin-cgi-graph
+#
+# In addition, the Munin log files and html area should be writable
+# to the web server.
+#
+ScriptAlias /munin/dyn/ @@CGIDIR@@
+
+<Directory @@CGIDIR@@>
+	AllowOverride None
+	Options ExecCGI -MultiViews +SymLinksIfOwnerMatch
+	Order allow,deny
+	Allow from all
+</Directory>
+

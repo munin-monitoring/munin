@@ -5,6 +5,33 @@
 # $Id$
 #
 # $Log$
+# Revision 1.21  2004/06/24 14:32:17  jimmyo
+# More work on output_graphs (renamed to graph_strategy, amongst others).
+#
+# Revision 1.20  2004/06/23 17:48:06  jimmyo
+# Bugfix in cdef calculations.
+#
+# Revision 1.19  2004/06/22 22:04:45  jimmyo
+# Added --cron option to munin-graph.
+#
+# Revision 1.18  2004/06/19 21:29:35  jimmyo
+# Added option to munin-graph to skip stats generation.
+#
+# Revision 1.17  2004/06/19 21:21:44  jimmyo
+# Added option to munin-graph to skip locking.
+#
+# Revision 1.16  2004/06/19 21:19:28  jimmyo
+# Log to correct log
+#
+# Revision 1.15  2004/06/16 21:08:33  jimmyo
+# Added automatic "graph no" to negative field when using negatives.
+#
+# Revision 1.14  2004/06/08 15:30:34  jimmyo
+# The server programs now open the log file at an earlier point.
+#
+# Revision 1.13  2004/05/20 20:47:19  jimmyo
+# The server programs now open the log file at an earlier point.
+#
 # Revision 1.12  2004/05/20 11:14:17  jimmyo
 # Tuned cdef-code to make it work properly after clean-up.
 #
@@ -109,9 +136,14 @@ my $force_lazy = 1;
 my $force_root = 0;
 my $do_usage = 0;
 my $do_version = 0;
+my $cron = 0;
 my $list_images = 0;
+my $skip_locking = 0;
+my $skip_stats = 0;
 my $conffile = "@@CONFDIR@@/munin.conf";
 my %draw = ("day" => 1, "week" => 1, "month" => 1, "year" => 1);
+
+my $log = new IO::Handle;
 
 # Get options
 $do_usage=1  unless 
@@ -126,8 +158,11 @@ GetOptions ( "force!"       => \$force_graphing,
 	     "month!"       => \$draw{'month'},
 	     "year!"        => \$draw{'year'},
 	     "list-images!" => \$list_images,
+	     "skip-locking!"=> \$skip_locking,
+	     "skip-stats!"  => \$skip_stats,
 	     "debug!"       => \$DEBUG,
 	     "version!"     => \$do_version,
+	     "cron!"        => \$cron,
 	     "help"         => \$do_usage );
 
 if ($do_usage)
@@ -142,6 +177,8 @@ Options:
     --help		View this message.
     --version		View version information.
     --debug		View debug messages.
+    --[no]cron		Behave as expected when run from cron. (Used internally 
+			in Munin.)
     --service <service>	Limit graphed services to <service>. Multiple --service
 			options may be supplied.
     --host <host>	Limit graphed hosts to <host>. Multiple --host options
@@ -179,10 +216,16 @@ it as the user \"munin\". Aborting.\n\n";
 
 my $config= &munin_config ($conffile);
 
+if (&munin_get_val ($config, "graph_strategy", "cron") ne "cron" and $cron)
+{ # We're run from cron, but munin.conf says we use dynamic graph generation
+    exit 0;
+}
 
-munin_runlock("$config->{rundir}/munin-graph.lock");
-open LOG,">>$config->{logdir}/munin-graph.log";
-open (STATS,">$config->{dbdir}/munin-graph.stats.tmp") or logger("Unable to open $config->{dbdir}/munin-graph.stats.tmp");
+munin_runlock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
+unless ($skip_stats)
+{
+	open (STATS,">$config->{dbdir}/munin-graph.stats.tmp") or logger("Unable to open $config->{dbdir}/munin-graph.stats.tmp");
+}
 logger("Starting munin-graph");
 
 my @COLOUR = ("#22ff22", "#0022ff", "#ff0000", "#00aaaa", "#ff00ff",
@@ -211,16 +254,16 @@ for my $key ( keys %{$config->{domain}}) {
     &process_domain($key);
     $domain_time = sprintf ("%.2f",(Time::HiRes::time - $domain_time));
     logger("Processed domain: $key ($domain_time sec)");
-    print STATS "GD|$key|$domain_time\n"
+    print STATS "GD|$key|$domain_time\n" unless $skip_stats;
 }
 
 
 $graph_time = sprintf ("%.2f",(Time::HiRes::time - $graph_time));
 logger("Munin-graph finished ($graph_time sec)");
-print STATS "GT|total|$graph_time\n";
+print STATS "GT|total|$graph_time\n" unless $skip_stats;
 rename ("$config->{dbdir}/munin-graph.stats.tmp", "$config->{dbdir}/munin-graph.stats");
-close STATS;
-close LOG;
+close STATS unless $skip_stats;
+close $log;
 
 sub process_domain {
     my ($domain) = @_;
@@ -230,7 +273,7 @@ sub process_domain {
 	process_node($domain,$key ,$config->{domain}->{$domain}->{node}->{$key} );	
 	$node_time = sprintf ("%.2f",(Time::HiRes::time - $node_time));
 	logger ("Processed node: $key ($node_time sec)");
-	print STATS "GN|$domain|$key|$node_time\n"
+	print STATS "GN|$domain|$key|$node_time\n" unless $skip_stats;
 	
     }
 }
@@ -500,6 +543,15 @@ sub expand_specials
 	    $node->{client}->{$service}->{$field.".realname"} = $last_name;
 	    print "Setting node->{client}->{$service}->{$field} -> realname = $last_name...\n" if $DEBUG;
 	}
+	elsif (defined $node->{client}->{$service}->{$field.".negative"})
+	{
+	    my $nf = $node->{client}->{$service}->{$field.".negative"};
+	    unless (defined $node->{client}->{$service}->{$nf.".graph"} or
+		    defined $node->{client}->{$service}->{$nf.".skipdraw"})
+	    {
+		$node->{client}->{$service}->{$nf.".graph"} = "no";
+	    }
+	}
     }
     return $result;
 }
@@ -753,7 +805,7 @@ sub process_node {
 		push (@rrd, "CDEF:c$rrdname=g$rrdname");
 		print "DEBUG: Field name after cdef set to $rrdname\n" if $DEBUG;
 	    }
-	    unless (exists $node->{client}->{$service}->{$field.".onlynullcdef"} and $node->{client}->{$service}->{$field.".onlynullcdef"})
+	    elsif (!(exists $node->{client}->{$service}->{$field.".onlynullcdef"} and $node->{client}->{$service}->{$field.".onlynullcdef"}))
 	    {
 		push (@rrd, "CDEF:c$rrdname=g$rrdname" . (($now-$update)>900 ? ",POP,UNKN" : ""));
 	    }
@@ -928,7 +980,7 @@ sub process_node {
 
 	$service_time = sprintf ("%.2f",(Time::HiRes::time - $service_time));
 	logger ("Graphed service : $service ($service_time sec * 4)");
-	print STATS "GS|$domain|$name|$service|$service_time\n";
+	print STATS "GS|$domain|$name|$service|$service_time\n" unless $skip_stats;
 
 	foreach (@added)
 	{
@@ -1010,11 +1062,45 @@ sub expand_cdef
     return ($max, $min, $avg);
 }
 
+sub logger_open {
+    my $dirname = shift;
+
+    if (!$log->opened)
+    {
+	  unless (open ($log, ">>$dirname/munin-graph.log"))
+	  {
+		  print STDERR "Warning: Could not open log file \"$dirname/munin-graph.log\" for writing: $!";
+	  }
+    }
+}
+
 sub logger {
   my ($comment) = @_;
   my $now = strftime "%b %d %H:%M:%S", localtime;
-  print LOG "$now - $comment\n";
-  flush LOG;
+
+  if ($log->opened)
+  {
+	  print $log "$now - $comment\n";
+  }
+  else
+  {
+	  if (defined $config->{logdir})
+	  {
+		  if (open ($log, ">>$config->{logdir}/munin-graph.log"))
+		  {
+			  print $log "$now - $comment\n";
+		  }
+		  else
+		  {
+			  print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-graph.log\" for writing: $!";
+			  print STDERR "$now - $comment\n";
+		  }
+	  }
+	  else
+	  {
+		  print STDERR "$now - $comment\n";
+	  }
+    }
 }
 
 sub parse_path

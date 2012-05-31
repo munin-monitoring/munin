@@ -43,6 +43,7 @@ install-main: build
 	$(INSTALL) -m 0755 build/server/munin-nagios $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-html $(LIBDIR)/
+	$(INSTALL) -m 0755 build/server/munin-cgi-graph $(CGIDIR)/
 
 	$(INSTALL) -m 0644 build/server/Munin.pm $(PERLLIB)/
 
@@ -130,6 +131,7 @@ build-stamp:
 		    -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'			\
 		    -e 's|@@VERSION@@|$(VERSION)|g'			\
 		    -e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g'			\
+		    -e 's|@@CGIDIR@@|$(CGIDIR)|g'			\
 		    $$file > build/$$destname;				\
 	done
 	touch build-stamp
@@ -138,13 +140,13 @@ build-doc: build-doc-stamp
 
 build-doc-stamp:
 	mkdir -p build/doc
-	htmldoc munin-doc-base.html > build/doc/munin-doc.html
-	htmldoc -t pdf --webpage build/doc/munin-doc.html > build/doc/munin-doc.pdf
-	html2text -style pretty -nobs build/doc/munin-doc.html > build/doc/munin-doc.txt
+	-htmldoc munin-doc-base.html > build/doc/munin-doc.html
+	-htmldoc -t pdf --webpage build/doc/munin-doc.html > build/doc/munin-doc.pdf
+	-html2text -style pretty -nobs build/doc/munin-doc.html > build/doc/munin-doc.txt
 
-	htmldoc munin-faq-base.html > build/doc/munin-faq.html
-	htmldoc -t pdf --webpage build/doc/munin-faq.html > build/doc/munin-faq.pdf
-	html2text -style pretty -nobs build/doc/munin-faq.html > build/doc/munin-faq.txt
+	-htmldoc munin-faq-base.html > build/doc/munin-faq.html
+	-htmldoc -t pdf --webpage build/doc/munin-faq.html > build/doc/munin-faq.pdf
+	-html2text -style pretty -nobs build/doc/munin-faq.html > build/doc/munin-faq.txt
 
 	touch build-doc-stamp
 
@@ -211,8 +213,7 @@ endif
 	-rm -f build-man-stamp
 
 source_dist: clean
-	cp dists/tarball/plugins.conf .
 	(cd ..; ln -s munin munin-$(VERSION))
-	tar -C .. --dereference --exclude CVS --exclude dists -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
+	tar -C .. --dereference --exclude CVS -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
 
 .PHONY: install install-main install-node install-doc install-man build build-doc deb clean source_dist

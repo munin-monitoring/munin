@@ -1,3 +1,22 @@
+munin (work)
+
+  * The server programs now open the log file at an earlier point.
+  * Munin-limits added to distro.
+  * Warnings and criticals now show up in nodeview and overview.
+  * Makefile no longer stopping when complaining about htmldoc errors
+  * Added contributed plugin generic/cupsys_pages, contributed by Rune N.
+    Skillingstad.
+  * Minor documentation bugfix.
+  * Added automatic "graph no" to negative field when using negatives.
+  * Added options to munin-graph to skip locking and stats generation.
+  * Added --cron option to munin-graph. This is used internally for 
+    special case checking when run from cron.
+  * Added dist-directory for Solaris packages.
+  * Created munin-cgi-graph, which creates dynamic graphs. 
+  * Added munin.conf option "graph_strategy (cgi|cron)" which defaults to
+    cron.
+  * Bugfix in cdef calculations.
+
 munin (1.1.1)
 
   * Added a table in the service view page, with information about each 

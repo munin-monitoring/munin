@@ -4,6 +4,27 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.12  2004/06/24 14:32:17  jimmyo
+# More work on output_graphs (renamed to graph_strategy, amongst others).
+#
+# Revision 1.11  2004/06/23 17:38:39  jimmyo
+# * Created munin-cgi-graph, which creates dynamic graphs.
+# * Added munin.conf option "output_graphs (cgi|cron)" which
+#   defaults to cron.
+#
+# Revision 1.10  2004/06/08 15:30:31  jimmyo
+# The server programs now open the log file at an earlier point.
+#
+# Revision 1.9  2004/06/08 15:18:21  jimmyo
+# The server programs now open the log file at an earlier point.
+#
+# Revision 1.8  2004/05/20 22:30:08  jimmyo
+# * Munin-limits added to distro.
+# * Breached limis now show up in overview and node view.
+#
+# Revision 1.7  2004/05/20 20:47:19  jimmyo
+# The server programs now open the log file at an earlier point.
+#
 # Revision 1.6  2004/05/20 12:20:24  jimmyo
 # Added "graph_category" option, to categorise plugins.
 #
@@ -104,6 +125,9 @@ use Exporter;
 	   'munin_get_bool_val',
 	   'munin_get_val',
 	   'munin_field_status',
+	   'munin_service_status',
+	   'munin_node_status',
+	   'munin_category_status',
 	   'munin_get_filename');
 
 use strict;
@@ -128,7 +152,7 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"use_default_name", "use_node_name", "port", "graph_noscale",
 	"nsca", "nsca_server", "nsca_config", "extinfo", "fetch_data",
 	"filename", "max_processes", "nagios", "info", "graph_info", 
-	"graph_category"
+	"graph_category", "graph_strategy",
     );
 
 
@@ -262,7 +286,7 @@ sub munin_readconfig {
 
     $conf ||= $configfile;
     if (! -r $conf and ! $missingok) {
-		::logger ("munin_readconfig: cannot open '$conf'\n");
+		::logger ("munin_readconfig: cannot open '$conf'");
 		return undef;
     }
     if (open (CFG, $conf))
@@ -421,19 +445,19 @@ sub munin_set_var_path
 
 	if (@sp == 3)
 	{
-	    print STDERR ("Warning: Unknown option \"$sp[2]\" in \"$dom;$host:$sp[0].$sp[1].$sp[2]\".\n")
+	    ::logger ("Warning: Unknown option \"$sp[2]\" in \"$dom;$host:$sp[0].$sp[1].$sp[2]\".")
 		unless grep /^$sp[2]$/, @legal;
 	    $hash->{domain}->{$dom}->{node}->{$host}->{client}->{$sp[0]}->{"$sp[1].$sp[2]"} = $val;
 	}
 	elsif (@sp == 2)
 	{
-	    print STDERR ("Warning: Unknown option \"$sp[1]\" in \"$dom;$host:$sp[0].$sp[1]\".\n")
+	    ::logger ("Warning: Unknown option \"$sp[1]\" in \"$dom;$host:$sp[0].$sp[1]\".")
 		unless grep /^$sp[1]$/, @legal;
 	    $hash->{domain}->{$dom}->{node}->{$host}->{client}->{$sp[0]}->{$sp[1]} = $val;
 	}
 	elsif (@sp == 1)
 	{
-	    print STDERR ("Warning: Unknown option \"$sp[0]\" in \"$dom;$host:$sp[0]\".\n")
+	    ::logger ("Warning: Unknown option \"$sp[0]\" in \"$dom;$host:$sp[0]\".")
 		unless grep /^$sp[0]$/, @legal;
 	    $hash->{domain}->{$dom}->{node}->{$host}->{$sp[0]} = $val;
 	}
@@ -449,7 +473,7 @@ sub munin_set_var_path
 
 	if (@sp == 1)
 	{
-	    print STDERR ("Warning: Unknown option \"$sp[0]\" in \"$dom;$sp[0]\".\n")
+	    ::logger ("Warning: Unknown option \"$sp[0]\" in \"$dom;$sp[0]\".")
 		unless grep /^$sp[0]$/, @legal;
 	    $hash->{domain}->{$dom}->{$sp[0]} = $val;
 	}
@@ -460,7 +484,7 @@ sub munin_set_var_path
     }
     elsif ($var =~ /^\s*([^;:\.]+)\s*$/)
     {
-	print STDERR ("Warning: Unknown option \"$1\" in \"$1\".\n")
+	::logger ("Warning: Unknown option \"$1\" in \"$1\".")
 	    unless grep /^$1$/, @legal;
 	$hash->{$1} = $val;
     }
@@ -536,8 +560,10 @@ sub munin_writeconfig {
     
 sub munin_config {
     my $conffile = shift;
+    $config = shift;
     $conffile ||= $configfile;
     $config = &munin_readconfig ($conffile);
+    ::logger_open ($config->{logdir});
     my $data = &munin_readconfig("$config->{dbdir}/datafile", 1, 1);
     
     $data = &munin_overwrite($data,$config);
@@ -685,80 +711,119 @@ sub munin_get_val
     }
 }
 
+sub munin_node_status
+{
+    my ($config, $limits, $domain, $node) = @_;
+    my $state = "ok";
+
+    return undef unless defined $config->{domain}->{$domain}->{node}->{$node};
+    my $snode = $config->{domain}->{$domain}->{node}->{$node};
+
+    foreach my $service (keys %{$snode})
+    {
+	my $fres  = &munin_service_status ($config, $limits, $domain, $node, $service);
+	if (defined $fres)
+	{
+	    if ($fres eq "critical")
+	    {
+		$state = $fres;
+		last;
+	    }
+	    elsif ($fres eq "warning")
+	    {
+		$state = $fres;
+	    }
+	}
+    }
+
+    return $state;
+}
+
+sub munin_category_status
+{
+    my ($config, $limits, $domain, $node, $category) = @_;
+    my $state = "ok";
+
+    return undef unless defined $config->{domain}->{$domain}->{node}->{$node};
+    my $snode = $config->{domain}->{$domain}->{node}->{$node};
+
+    foreach my $service (keys %{$snode->{client}})
+    {
+	next if ((not defined $snode->{client}->{$service}->{graph_category}) and
+		$category ne 'other');
+	next if ((defined $snode->{client}->{$service}->{graph_category}) and 
+		 ($snode->{client}->{$service}->{graph_category} ne $category));
+
+	my $fres  = &munin_service_status ($config, $limits, $domain, $node, $service);
+	if (defined $fres)
+	{
+	    if ($fres eq "critical")
+	    {
+		$state = $fres;
+		last;
+	    }
+	    elsif ($fres eq "warning")
+	    {
+		$state = $fres;
+	    }
+	}
+    }
+
+    return $state;
+}
+
+sub munin_service_status
+{
+    my ($config, $limits, $domain, $node, $service) = @_;
+    my $state = "ok";
+
+    return undef unless defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service};
+    foreach my $key (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}})
+    {
+	next unless $key =~ /^([^\.]+)\.label$/;
+	my $field = $1;
+	my $fres  = &munin_field_status ($config, $limits, $domain, $node, $service, $field);
+	if (defined $fres)
+	{
+	    if ($fres eq "critical")
+	    {
+		$state = $fres;
+		last;
+	    }
+	    elsif ($fres eq "warning")
+	    {
+		$state = $fres;
+	    }
+	}
+    }
+
+    return $state;
+}
+
 sub munin_field_status
 {
-    my ($config, $domain, $node, $service, $field) = @_;
+    my ($config, $limits, $domain, $node, $service, $field) = @_;
     my $state = undef;
 
     # Return undef if nagios is turned off, or the field doesn't have any limits
-    return undef unless (munin_get_bool ($config, "nagios", 1, $domain, $node, $service, $field));
     unless ((defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.warning"}) or
 	(defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.critical"}))
     {
 	return undef;
     }
 
-    my @critical = (undef, undef);
-    my @warning  = (undef, undef);
-    my $client   = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service};
-
-    # First we resolve the limits, and put them in some arrays
-    if (defined $client->{"$field.critical"} and 
-	$client->{"$field.critical"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
+    if (defined $limits->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.critical"})
     {
-	    $critical[0] = $1 if defined $1;
-	    $critical[1] = $2 if defined $2;
+	return "critical";
     }
-    elsif (defined $client->{"$field.critical"} and
-	$client->{"$field.critical"} =~ /^\s*([-\d]+)\s*$/)
+    elsif (defined $limits->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"$field.warning"})
     {
-	    $critical[1] = $1 if defined $1;
+	return "warning";
     }
-    elsif (defined $client->{"$field.critical"})
+    else
     {
-	@critical = (0, 0);
+	return "ok";
     }
-    if (defined $client->{"$field.warning"} and 
-	$client->{"$field.warning"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
-    {
-	    $warning[0] = $1 if defined $1;
-	    $warning[1] = $2 if defined $2;
-    }
-    elsif (defined $client->{"$field.warning"} and
-	$client->{"$field.warning"} =~ /^\s*([-\d]+)\s*$/)
-    {
-	    $warning[1] = $1 if defined $1;
-    }
-    elsif (defined $client->{"$field.warning"})
-    {
-	@warning = (0, 0);
-    }
-
-    # Fetch the last values from the rrd file...
-    my $filename = &munin_get_filename ($domain, $node, $service, $field);
-    my $value = sprintf "%.2f",&munin_fetch($filename);
-
-    # Compare
-    if ((defined ($critical[0]) and $value < $critical[0]) or
-	(defined ($critical[1]) and $value > $critical[1])) 
-    {
-	$state = 'critical';
-    }
-    elsif ((defined ($warning[0]) and $value < $warning[0]) or
-	   (defined ($warning[1]) and $value > $warning[1])) 
-    {
-	$state = 'warning';
-    }
-    elsif ($value eq "U") 
-    {
-      $state = 'unknown';
-    }
-    else 
-    {
-      $state = 'ok';
-    }
-
-    return $state;
 }
 
 1;
