@@ -5,14 +5,16 @@
 use strict;
 use warnings;
 
-my $db_file = shift;
-
-my %hash;
 use Fcntl;   # For O_RDWR, O_CREAT, etc.
 use DB_File;
-tie(%hash, 'DB_File', $db_file, O_RDWR) or die "$!";
 
-for my $key (sort keys %hash) {
-	my $value = $hash{$key};
-	print "$key\t$value\n";
+while (my $db_file = shift) {
+	my %hash;
+	tie(%hash, 'DB_File', $db_file, O_RDONLY) or die "$!";
+
+	for my $key (sort keys %hash) {
+		my $value = $hash{$key};
+		print "$key\t$value\n";
+	}
+	untie(%hash);
 }

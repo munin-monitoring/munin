@@ -186,13 +186,15 @@ case $1 in
 	echo 'graph_category network'
 	echo "graph_info This graph shows the traffic of the $INTERFACE network interface. Please note that the traffic is shown in bits per second, not bytes. IMPORTANT: On 32 bit systems the data source for this plugin uses 32bit counters, which makes the plugin unreliable and unsuitable for most 100Mb (or faster) interfaces, where traffic is expected to exceed 50Mbps over a 5 minute period.  This means that this plugin is unsuitable for most 32 bit production environments. To avoid this problem, use the ip_ plugin instead.  There should be no problems on 64 bit systems running 64 bit kernels."
 	echo 'down.label received'
-        echo 'down.type COUNTER'
+        echo 'down.type DERIVE'
         echo 'down.graph no'
         echo 'down.cdef down,8,*'
+	echo 'down.min 0'
         echo 'up.label bps'
-	echo 'up.type COUNTER'
+	echo 'up.type DERIVE'
 	echo 'up.negative down'
 	echo 'up.cdef up,8,*'
+	echo 'up.min 0'
 	print_warning down
 	print_warning up
 	print_critical down

@@ -66,7 +66,7 @@ logger_debug() if $config->{debug} or defined($ENV{CGI_DEBUG});
 
 # BEGIN FAST-CGI LOOP:
 my $nb_request = 0;
-my $nb_request_max = 10;
+my $nb_request_max = 0;
 while (new CGI::Fast) {
     my $pinpoint = undef;
     my $path = $ENV{PATH_INFO} || "";
@@ -129,7 +129,7 @@ while (new CGI::Fast) {
 	next;
     }
 
-    my $filename = get_picture_filename ($config, $dom, $host, $serv, $scale);
+    my $filename = get_picture_filename ($config, $dom, $host, $serv, $scale, $ENV{QUERY_STRING});
 
     my $time = time;
 
@@ -204,7 +204,7 @@ while (new CGI::Fast) {
     send_graph_data($filename);
 } continue {
 	$nb_request++;
-	if ($nb_request > $nb_request_max) {
+	if ($nb_request_max && $nb_request > $nb_request_max) {
 		# Cycle
 		last;
 	}
@@ -250,6 +250,9 @@ sub send_graph_data {
 	die "[FATAL] Could not open image file \"$filename\" for reading: $!\n";
     }
 
+    # No buffering wanted when sending the file
+    local $| = 1;
+
     while (sysread(GRAPH_PNG_FILE,$buffer,40960)) {
 	print $buffer;
     }
@@ -264,10 +267,12 @@ sub get_picture_filename {
     my $name    = shift;
     my $service = shift;
     my $scale   = shift;
+    my $params  = shift;
 
     my $cgi_tmp_dir = $config->{cgitmpdir} || "/tmp/munin-cgi-tmp";
 
-    return "$cgi_tmp_dir/$domain/$name/$service-$scale.png";
+    $params = $params ? "?$params" : "";
+    return "$cgi_tmp_dir/$domain/$name/$service-$scale.png" . $params;
 }
 
 

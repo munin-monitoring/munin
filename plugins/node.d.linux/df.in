@@ -90,6 +90,8 @@ my %usemntpt = ( tmpfs => 1, none => 1, udev => 1 );
 my $exclude = $ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs debugfs simfs';
 my $dfopts  = "-P -l ".join(' -x ',('',split('\s+',$exclude)));
 
+my $mode = ($ARGV[0] or "print");
+
 # Compile REs from env
 my @include_re;
 if (defined $ENV{include_re}) {
@@ -119,75 +121,49 @@ sub skip {
     return 0;
 }
 
-
-sub print_values() {
-
-    # Read from df
-    open (DF,"df $dfopts 2>/dev/null |") or die "Could not open pipe from df, $!";
-    <DF>; # Skip the header
-    while (<DF>) {
-	chomp;
-        next if m{//}; # Ignore lines containing //? Samba?
-
-	# Parse the output
-        my ($name, undef, $used, $avail, undef, $mountpt, undef) = split(/\s+/, $_, 7);
-
-	next if skip($name, $mountpt);
-	
-	$name = $mountpt if defined($usemntpt{$name}) && $usemntpt{$name};
-
-        $name = clean_fieldname($name);
-
-	my $ps = 0;
-
-	$ps = ($used / ($used+$avail)) * 100 if $used;
-
-	print $name, ".value ", $ps, "\n";
-    }
-    close DF;
-}
-
-if ($ARGV[0] and $ARGV[0] eq 'autoconf' ) {
+if ($mode eq 'autoconf' ) {
     if (`@@PERL@@ $0` eq '' ) {
-	print "no (no devices to monitor)\n";
+        print "no (no devices to monitor)\n";
     } else {
-	print "yes\n";
+        print "yes\n";
     }
     exit 0;
 }
 
-if ($ARGV[0] and $ARGV[0] eq 'config' ) {
+if ($mode eq 'config' ) {
     # The headers
     print "graph_title Disk usage in percent\n";
     print "graph_args --upper-limit 100 -l 0\n";
     print "graph_vlabel %\n";
     print "graph_scale no\n";
     print "graph_category disk\n";
-
-    # Read from df
-    open (DF,"df $dfopts 2>/dev/null |") or die "Unable to open pipe from df: $!";
-    <DF>; # Skip the header
-    while (<DF>) {
-        next if m{//};
-
-	# Parse the output
-        my ($name,undef,undef,undef,$ps,$mountpt,undef) = split(/\s+/,$_,7);
-
-	next if skip($name, $mountpt);
-
-	$name = $mountpt if defined($usemntpt{$name}) && $usemntpt{$name};
-
-        $name = clean_fieldname($name);
-
-	# Create and print labels
-	print $name, ".label ", $mountpt, "\n";
-
-	print_thresholds($name,undef,undef,92,98);
-    }
-    close DF;
-    exit 0;
 }
 
-print_values();
+# Read from df
+open (DF,"df $dfopts 2>/dev/null |") or die "Unable to open pipe from df: $!";
+<DF>; # Skip the header
+while (<DF>) {
+    next if m{//};
 
-# vim: ft=perl : sw=4 : ts=8 : et
+    # Parse the output
+    my ($name, undef, $used, $avail, undef, $mountpt, undef) = split(/\s+/, $_, 7);
+
+    next if skip($name, $mountpt);
+
+    # Calculate percentage used
+    my $ps = 0;
+    $ps = ($used / ($used+$avail)) * 100 if $used;
+
+    $name = $mountpt if defined($usemntpt{$name}) && $usemntpt{$name};
+    $name = clean_fieldname($name);
+
+    if($mode eq 'config') {
+        print $name, ".label ", $mountpt, "\n";
+        print_thresholds($name,undef,undef,92,98);
+    } else {
+        print $name, ".value ", $ps, "\n";
+    }
+}
+close DF;
+
+# vim: ft=perl : sw=4 : ts=4 : et

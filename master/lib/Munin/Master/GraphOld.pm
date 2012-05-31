@@ -115,23 +115,23 @@ my @COLOUR;     # Array of actuall colours to use
 {
     no warnings;
     $PALETTE{'old'} = [    # This is the old munin palette.  It lacks contrast.
-        qw(#22ff22 #0022ff #ff0000 #00aaaa #ff00ff
-            #ffa500 #cc0000 #0000cc #0080C0 #8080C0 #FF0080
-            #800080 #688e23 #408080 #808000 #000000 #00FF00
-            #0080FF #FF8000 #800000 #FB31FB
+        qw(22ff22 0022ff ff0000 00aaaa ff00ff
+            ffa500 cc0000 0000cc 0080C0 8080C0 FF0080
+            800080 688e23 408080 808000 000000 00FF00
+            0080FF FF8000 800000 FB31FB
             )];
 
     $PALETTE{'default'} = [   # New default palette.Better contrast,more colours
             #Greens Blues   Oranges Dk yel  Dk blu  Purple  lime    Reds    Gray
-        qw(#00CC00 #0066B3 #FF8000 #FFCC00 #330099 #990099 #CCFF00 #FF0000 #808080
-            #008F00 #00487D #B35A00 #B38F00         #6B006B #8FB300 #B30000 #BEBEBE
-            #80FF80 #80C9FF #FFC080 #FFE680 #AA80FF #EE00CC #FF8080
-            #666600 #FFBFFF #00FFCC #CC6699 #999900
+        qw(00CC00 0066B3 FF8000 FFCC00 330099 990099 CCFF00 FF0000 808080
+            008F00 00487D B35A00 B38F00         6B006B 8FB300 B30000 BEBEBE
+            80FF80 80C9FF FFC080 FFE680 AA80FF EE00CC FF8080
+            666600 FFBFFF 00FFCC CC6699 999900
             )];      # Line variations: Pure, earthy, dark pastel, misc colours
 }
 
-my $range_colour  = "#22ff22";
-my $single_colour = "#00aa00";
+my $range_colour  = "22ff22";
+my $single_colour = "00aa00";
 
 my %times = (
     "day"   => "-30h",
@@ -446,6 +446,31 @@ sub get_custom_graph_args {
     }
 }
 
+# insert these arguments after all others
+# needed for your own VDEF/CDEF/DEF combinations
+sub get_custom_graph_args_after {
+    my $service = shift;
+    my $result  = [];
+
+    my $args = munin_get($service, "graph_args_after");
+    if (defined $args) {
+        my $result = [&quotewords('\s+', 0, $args)];
+        return $result;
+    }
+    else {
+        return;
+    }
+}
+
+# set a graph end point in the future
+# needed for CDEF TREND and PREDICT
+sub get_end_offset {
+    my $service = shift;
+
+    # get number of seconds in future
+    return munin_get($service, "graph_future", 0);
+}
+
 sub get_vlabel {
     my $service = shift;
     my $scale   = munin_get($service, "graph_period", "second");
@@ -525,14 +550,19 @@ sub get_stack_command {
 
 sub expand_specials {
     my $service = shift;
-    my $preproc = shift;
     my $order   = shift;
-    my $single  = shift;
+
+    my $preproc = [];
+    my $single  ;
 
     # Test if already expanded
     {
-        my $cached_result  = $service->{"#%#expand_special_result"};
-        return $cached_result if (defined $cached_result);
+        my $cached = $service->{"#%#expand_specials"};
+	if (defined $cached) { 
+		DEBUG "[DEBUG] expand_specials(): already processed " . munin_dumpconfig_as_str($cached);
+        	return $cached;
+	}
+	DEBUG "[DEBUG] expand_specials(): not processed, proceeding for " . munin_dumpconfig_as_str($service);
     }
 
     # we have to compute the result;
@@ -686,9 +716,13 @@ sub expand_specials {
         }
     } # for (@$order)
 
-    # Save it for future
-    $service->{"#%#expand_special_result"} = $result;
-    return $result;
+    # Return & save it for future use
+    $service->{"#%#expand_specials"} = {
+	"added" => $result,
+	"preprocess" => $preproc,
+	"single" => $single,
+    };
+    return $service->{"#%#expand_specials"};
 }
 
 
@@ -763,7 +797,7 @@ sub fork_and_work {
     if (!$do_fork) {
 
         # We're not forking.  Do work and return.
-        DEBUG "[DEBUG] Doing work synchrnonously";
+        DEBUG "[DEBUG] Doing work synchronously";
         &$work;
         return;
     }
@@ -819,7 +853,6 @@ sub process_service {
     my $now          = time;
     my $fnum         = 0;
     my @rrd;
-    my @added = ();
 
     DEBUG "[DEBUG] Node name: $sname\n";
 
@@ -827,24 +860,22 @@ sub process_service {
     my $max_field_len = 0;
     my @field_order   = ();
     my $rrdname;
-    my $force_single_value;
 
     @field_order = @{munin_get_field_order($service)};
 
     # Array to keep 'preprocess'ed fields.
-    my @rrd_preprocess = ();
     DEBUG "[DEBUG] Expanding specials for $sname: \""
         . join("\",\"", @field_order) . "\".";
 
-    @added = @{
-        &expand_specials($service, \@rrd_preprocess, \@field_order,
-            \$force_single_value)};
+    my $expanded_result = expand_specials($service, \@field_order);
+    my $force_single_value = $expanded_result->{single};
+    my @added =  @{ $expanded_result->{added} };
 
-    @field_order = (@rrd_preprocess, @field_order);
-    DEBUG "[DEBUG] Checking field lengths for $sname: \""
-        . join("\",\"", @rrd_preprocess) . "\".";
+    # put preprocessed fields in front
+    unshift @field_order, @{ $expanded_result->{preprocess} };
 
     # Get max label length
+    DEBUG "[DEBUG] Checking field lengths for $sname: \"" . join('","', @field_order) . '".';
     $max_field_len = munin_get_max_label_length($service, \@field_order);
 
     # Global headers makes the value tables easier to read no matter how
@@ -989,7 +1020,7 @@ sub process_service {
                 if !munin_get($field, "negative");
 
             push(@rrd, "AREA:i$rrdname#ffffff");
-            push(@rrd, "STACK:min_max_diff$range_colour");
+            push(@rrd, "STACK:min_max_diff#$range_colour");
             push(@rrd, "LINE1:re_zero#000000")
                 if !munin_get($field, "negative");
         }
@@ -1016,18 +1047,13 @@ sub process_service {
             $global_headers = 2;    # Avoid further headers/labels
         }
 
-        my $colour;
+        my $colour = munin_get($field, "colour");
+	
+	# Select a default colour if no explict one
+	$colour ||= ($single_value) ? $single_colour : $COLOUR[$field_count % @COLOUR];
 
-        if (my $tmpcol = munin_get($field, "colour")) {
-            $colour = "#" . $tmpcol;
-        }
-        elsif ($single_value) {
-            $colour = $single_colour;
-        }
-        else {
-            $colour = $COLOUR[$field_count % @COLOUR];
-        }
-
+        # colour needed for transparent predictions and trends
+        munin_set($field, "colour", $colour);
         $field_count++;
 
         my $tmplabel = munin_get($field, "label", $fname);
@@ -1039,7 +1065,7 @@ sub process_service {
         push(@rrd,
                   $fielddraw
                 . ":g$rrdname"
-                . $colour . ":"
+                . "#$colour" . ":"
                 . escape($tmplabel)
                 . (" " x ($max_field_len + 1 - length $tmplabel)));
 
@@ -1068,17 +1094,17 @@ sub process_service {
                     "CDEF:neg_min_max_diff=i$negfieldname,a$negfieldname,-");
                 push(@rrd, "CDEF:ni$negfieldname=i$negfieldname,-1,*");
                 push(@rrd, "AREA:ni$negfieldname#ffffff");
-                push(@rrd, "STACK:neg_min_max_diff$range_colour");
+                push(@rrd, "STACK:neg_min_max_diff#$range_colour");
             }
 
-            push(@rrd_negatives, $fielddraw . ":ng$negfieldname" . $colour);
+            push(@rrd_negatives, $fielddraw . ":ng$negfieldname#$colour");
 
             # Draw HRULEs
             my $linedef = munin_get($negfield, "line");
             if ($linedef) {
                 my ($number, $ldcolour, $label) = split(/:/, $linedef, 3);
                 unshift(@rrd_negatives,
-                    "HRULE:" . $number . ($ldcolour ? "#$ldcolour" : $colour));
+                    "HRULE:" . $number . ($ldcolour ? "#$ldcolour" : "#$colour"));
             }
             elsif (my $tmpwarn = munin_get($negfield, "warning",2)) {
 
@@ -1089,9 +1115,9 @@ sub process_service {
                         @rrd,
                         "HRULE:" 
                             . $warn_min
-                            . (
+                            . "#" . (
                             $single_value
-                            ? "#ff0000"
+                            ? "ff0000"
                             : $COLOUR[($field_count - 1) % @COLOUR]));
                 }
                 if (defined($warn_max) and $warn_max ne '') {
@@ -1099,9 +1125,9 @@ sub process_service {
                         @rrd,
                         "HRULE:" 
                             . $warn_max
-                            . (
+                            . "#" . (
                             $single_value
-                            ? "#ff0000"
+                            ? "ff0000"
                             : $COLOUR[($field_count - 1) % @COLOUR]));
                 }
             }
@@ -1153,7 +1179,7 @@ sub process_service {
                     . (
                     $ldcolour ? "#$ldcolour"
                     : ((defined $single_value and $single_value) ? "#ff0000"
-                        : $colour))
+                        : "#$colour"))
                     . ((defined $label and length($label)) ? ":$label" : ""),
                 "COMMENT: \\j"
             );
@@ -1167,9 +1193,9 @@ sub process_service {
                     @rrd,
                     "HRULE:" 
                         . $warn_min
-                        . (
+                        . "#" . (
                         $single_value
-                        ? "#ff0000"
+                        ? "ff0000"
                         : $COLOUR[($field_count - 1) % @COLOUR]));
             }
             if (defined($warn_max) and $warn_max ne '') {
@@ -1177,9 +1203,9 @@ sub process_service {
                     @rrd,
                     "HRULE:" 
                         . $warn_max
-                        . (
+                        . "#" . (
                         $single_value
-                        ? "#ff0000"
+                        ? "ff0000"
                         : $COLOUR[($field_count - 1) % @COLOUR]));
             }
         }
@@ -1261,6 +1287,13 @@ sub process_service {
         push(@rrd, "COMMENT: Max$RRDkludge:") unless $global_headers;
         push(@rrd, "GPRINT:apostotal:MAX:$rrdformat" . $rrdscale . "\\j");
     }
+		
+    # insert these graph args in the end
+    if (defined(my $tmp_field = get_custom_graph_args_after($service))) {
+        push(@rrd, @{$tmp_field});
+    }
+
+
 
     my $nb_graphs_drawn = 0;
     for my $time (keys %times) {
@@ -1291,21 +1324,8 @@ sub process_service {
         }
         push @complete, @rrd;
 
-        push(@complete,
-                  "COMMENT:Last update$RRDkludge: "
-                . RRDescape(scalar localtime($lastupdate))
-                . "\\r");
-
-        if (time - 300 < $lastupdate && ! $pinpoint) {
-	    if (@added) { # stop one period earlier if it's a .sum or .stack
-		push @complete, "--end",
-		    (int(($lastupdate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
-	    } else {
-		push @complete, "--end",
-		    (int($lastupdate / $resolutions{$time})) * $resolutions{$time};
-	    }
-        }
-
+        # graph end in future
+        push (@complete, handle_trends($time, $lastupdate, $pinpoint, $service, $RRDkludge, @added));
 
         # Make sure directory exists
         munin_mkdir_p($picdirname, oct(777));
@@ -1385,20 +1405,10 @@ sub process_service {
             my @rrd_sum;
             push @rrd_sum, @{get_header($service, $time, 1)};
 
-            if (time - 300 < $lastupdate && ! $pinpoint) {
-		if (@added) { # stop 5 minutes earlier if it's a .sum or .stack
-		    push @rrd_sum, "--end",
-			(int(($lastupdate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
-		} else {
-		    push @rrd_sum, "--end",
-			(int($lastupdate / $resolutions{$time})) * $resolutions{$time};
-		}
-            }
+            # graph end in future
+            push (@rrd_sum, handle_trends($time, $lastupdate, $pinpoint, $service, $RRDkludge, @added));
+
             push @rrd_sum, @rrd;
-            push(@rrd_sum,
-                      "COMMENT:Last update$RRDkludge: "
-                    . RRDescape(scalar localtime($lastupdate))
-                    . "\\r");
 
             my $labelled = 0;
             my @defined  = ();
@@ -1503,6 +1513,81 @@ sub process_service {
     @added = ();
 }
 
+# sets enddate --end and draws a vertical ruler if enddate is in the future
+# future trends are also added to the graph here
+sub handle_trends {
+    my $time = shift;
+    my $lastupdate = shift;
+    my $pinpoint = shift;
+    my $service = shift;
+    my $RRDkludge = shift;
+    my @added = @_;
+    my @complete;
+
+    # enddate possibly in future
+    my $futuretime = $pinpoint ? 0 : $resolutions{$time} * get_end_offset($service);
+    my $enddate = $lastupdate + ($futuretime);
+    DEBUG "[DEBUG] lastupdate: $lastupdate, enddate: $enddate\n";
+
+    # future begins at this horizontal ruler
+    if ($enddate > $lastupdate) {
+        push(@complete, "VRULE:$lastupdate#999999");
+    }
+
+    # create trends/predictions
+    foreach my $field (@{munin_find_field($service, "label")}) {
+        my $fieldname = munin_get_node_name($field);
+	my $colour = $single_colour;
+
+        if (defined $service->{$fieldname}{'colour'}) {
+            $colour = "$service->{$fieldname}{'colour'}66";
+        }                                                                                                                                                    
+                                                                                                                                                             
+        my $cdef = "";
+        if (defined $service->{$fieldname}{'cdef'}) {
+            $cdef = "cdef";
+        }
+
+        #trends
+        if (defined $service->{$fieldname}{'trend'} and $service->{$fieldname}{'trend'} eq 'yes') {
+            push (@complete, "CDEF:t$fieldname=c$cdef$fieldname,$futuretime,TRENDNAN");
+            push (@complete, "LINE1:t$fieldname#$colour:$fieldname trend\\l");
+            DEBUG "[DEBUG] set trend for $fieldname\n";
+        }
+
+        #predictions
+        if (defined $service->{$fieldname}{'predict'}) {
+            #arguments: pattern length (e.g. 1 day), smoothing (multiplied with timeresolution)
+            my @predict = split(",", $service->{$fieldname}{'predict'});
+            my $predictiontime = int ($futuretime / $predict[0]) + 2; #2 needed for 1 day
+            my $smooth = $predict[1]*$resolutions{$time};
+            push (@complete, "CDEF:p$fieldname=$predict[0],-$predictiontime,$smooth,c$cdef$fieldname,PREDICT");
+            push (@complete, "LINE1:p$fieldname#$colour:$fieldname prediction\\l");
+            DEBUG "[DEBUG] set prediction for $fieldname\n";
+        }
+    }
+
+
+    push(@complete,
+        "COMMENT:Last update$RRDkludge: "
+        . RRDescape(scalar localtime($lastupdate))                                                                                                   
+        . "\\r");
+
+    # If pinpointing, --end should *NOT* be changed
+    if (! $pinpoint) {
+        if (time - 300 < $lastupdate) {
+            if (@added) { # stop one period earlier if it's a .sum or .stack
+                push @complete, "--end",
+                    (int(($enddate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
+            } else {
+                push @complete, "--end",
+                    (int($enddate / $resolutions{$time})) * $resolutions{$time};
+            }
+        }
+    }
+
+    return @complete;
+}
 
 sub get_fonts {
     # Set up rrdtool graph font options according to RRD version.

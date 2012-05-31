@@ -122,11 +122,10 @@ our $pluginstatedir = $ENV{'MUNIN_PLUGSTATE'}
 The automatically calculated name for the plugins state file.  The
 name is supplied by munin-node or munin-run (in the MUNIN_STATEFILE
 environment variable).  The file name contains the plugin name and the
-ip-number of the munin-master the node is talking to (munin-run leaves
-the master part blank) to enable stateful plugins that calculate
-gauguges and assumes a 5 minute run interval to work in munin-setups
-with multiple munin-masters (this is not a uncommon way to set up
-Munin).
+IP address of the munin-master the node is talking to (munin-run leaves
+the master part blank).  This enables stateful plugins that calculate
+gauges and assume a 5 minute run interval to work correctly in setups
+with multiple masters (this is not a uncommon way to set up Munin).
 
 To change the value of this please use the C<set_state_name($)>
 procedure (see below).

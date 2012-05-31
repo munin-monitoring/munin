@@ -23,6 +23,7 @@ use RRDs;
 use Symbol qw(gensym);
 use Data::Dumper;
 use Storable;
+use Scalar::Util qw(isweak weaken);
 
 our (@ISA, @EXPORT);
 
@@ -41,6 +42,7 @@ our (@ISA, @EXPORT);
 	   'munin_delete',
 	   'munin_overwrite',
 	   'munin_dumpconfig',
+	   'munin_dumpconfig_as_str',
 	   'munin_config',
 	   'munin_refreshconfig',
 	   'munin_draw_field',
@@ -52,6 +54,7 @@ our (@ISA, @EXPORT);
 	   'munin_node_status',
 	   'munin_category_status',
 	   'munin_get_picture_filename',
+	   'munin_get_picture_loc',
 	   'munin_get_html_filename',
 	   'munin_get_filename',
 	   'munin_get_keypath',
@@ -60,6 +63,7 @@ our (@ISA, @EXPORT);
 	   'munin_get_field_order',
 	   'munin_get_rrd_filename',
 	   'munin_get_node_name',
+	   'munin_get_orig_node_name',
 	   'munin_get_parent_name',
 	   'munin_get_node_fqn',
 	   'munin_find_node_by_fqn',
@@ -77,10 +81,12 @@ our (@ISA, @EXPORT);
 	   'munin_get_children',
 	   'munin_get_node_partialpath',
 	   'munin_has_subservices',
+	   'munin_get_host_path_from_string',
 	   'print_version_and_exit',
 	   'exit_if_run_by_super_user',
 	   'look_for_child',
 	   'wait_for_remaining_children',
+	   'auto_weaken',
 	   );
 
 my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
@@ -95,6 +101,61 @@ my @COPY_FIELDS    = ("label", "draw", "type", "rrdfile", "fieldname", "info");
 
 my @dircomponents = split('/',$0);
 my $me = pop(@dircomponents);
+
+
+# `auto_weaken` performs a breadth-first descend of all strong references to
+# references (possible cycles). If it encounters a reference to an item it has
+# already seen earlier it will weaken that reference.
+sub auto_weaken {
+	my $items = 0;
+	my $weakened = 0;
+	my %seen = map{ $_ => 1 } @_;
+	my @todo = @_;
+	while (my $cur = shift @todo) {
+		$items++;
+		if (ref($cur) eq 'HASH') {
+			for my $key (keys %$cur) {
+				next unless ref $cur->{$key};
+				next if isweak $cur->{$key};
+				my $tgt = $cur->{$key};
+				if ($seen{$tgt}) {
+					$weakened++;
+					weaken $cur->{$key};
+				} else {
+					$seen{$tgt} = 1;
+					push @todo, $tgt;
+				}
+			}
+		} elsif (ref($cur) eq 'ARRAY') {
+			for (my $i = 0 ; $i < @$cur ; $i++) {
+				next unless ref $cur->[$i];
+				next if isweak $cur->[$i];
+				my $tgt = $cur->[$i];
+				if ($seen{$tgt}) {
+					$weakened++;
+					weaken $cur->[$i];
+				} else {
+					$seen{$tgt} = 1;
+					push @todo, $tgt;
+				}
+			}
+		} elsif (ref($cur) eq 'SCALAR') {
+			next unless ref $$cur;
+			next if isweak $cur;
+			my $tgt = $$cur;
+			if ($seen{$tgt}) {
+				$weakened++;
+				weaken $cur;
+			} else {
+				$seen{$tgt} = 1;
+				push @todo, $tgt;
+			}
+		}
+	}
+	# print "items: $items, weakened: $weakened\n";
+	return @_;
+}
+
 
 
 sub munin_trend {
@@ -305,7 +366,7 @@ sub munin_readconfig {
     $config->{'tmpldir'}       ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/";
     $config->{'staticdir'}       ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/static/";
     $config->{'htmldir'}       ||= $Munin::Common::Defaults::MUNIN_HTMLDIR;
-    $config->{'spooldir'}      ||= $Munin::Common::Defaults::MUNIN_SSPOOLDIR;
+    $config->{'spooldir'}      ||= $Munin::Common::Defaults::MUNIN_SPOOLDIR;
     $config->{'#%#parent'}     = undef;
     $config->{'#%#name'}       = "root";
 
@@ -534,13 +595,22 @@ sub munin_get_parent_name
     }
 }
 
+sub munin_get_orig_node_name {
+    my $hash = shift;
+
+    if (ref ($hash) eq "HASH" and defined $hash->{'#%#name'}) {
+		return (defined $hash->{'#%#origname'}) ? $hash->{'#%#origname'} : $hash->{'#%#name'};
+    } else { 
+	return;
+    }
+}
 
 sub munin_get_node_name
 {
     my $hash = shift;
 
     if (ref ($hash) eq "HASH" and defined $hash->{'#%#name'}) {
-	return $hash->{'#%#name'};
+		return $hash->{'#%#name'};
     } else { 
 	return;
     }
@@ -596,9 +666,12 @@ sub munin_get_picture_loc {
     }
     if (defined $hash->{'#%#origin'}) {
 	$res = munin_get_picture_loc ($hash->{'#%#origin'});
+    } elsif (defined $hash->{'#%#origparent'}){
+        $res = munin_get_picture_loc ($hash->{'#%#origparent'});
+        push @$res, munin_get_orig_node_name ($hash) if defined $res;
     } elsif (defined $hash->{'#%#parent'}) {
-	$res = munin_get_picture_loc ($hash->{'#%#parent'});
-	push @$res, munin_get_node_name ($hash) if defined $res;
+	    $res = munin_get_picture_loc ($hash->{'#%#parent'});
+	    push @$res, munin_get_orig_node_name ($hash) if defined $res;
     }
     return $res;
 }
@@ -609,15 +682,18 @@ sub munin_get_node_loc {
     my $res = [];
 
     if (ref ($hash) ne "HASH") { # Not a has node
-    	return;
+        return;
     }
     if (defined $hash->{'#%#parent'}) {
-	$res = munin_get_node_loc ($hash->{'#%#parent'});
-	push @$res, munin_get_node_name ($hash) if defined $res;
+        if(defined $hash->{'#%#origparent'}){
+            $res = munin_get_node_loc ($hash->{'#%#origparent'});
+        } else {
+            $res = munin_get_node_loc ($hash->{'#%#parent'});
+        }
+        push @$res, munin_get_orig_node_name ($hash) if defined $res;
     }
     return $res;
 }
-
 
 sub munin_get_parent {
     my $hash = shift;
@@ -835,12 +911,14 @@ sub munin_writeconfig_storable {
     my $is_fh_already_managed = defined $fh;
     if (! $is_fh_already_managed) {
 	$fh = gensym();
+	
 	unless (open ($fh, ">", $datafilename)) {
 	    LOGCROAK "Fatal error: Could not open \"$datafilename\" for writing: $!";
 	}
     }
 
     # Write datafile.storable, in network order to be architecture indep
+	auto_weaken $data;
     Storable::nstore_fd($data, $fh);
 
     if (! $is_fh_already_managed) {
@@ -871,6 +949,15 @@ sub munin_writeconfig {
         DEBUG "[DEBUG] Closing filehandle \"$datafilename\"...\n";
         close ($fh);
     }
+}
+
+sub munin_dumpconfig_as_str {
+    my ($config) = @_;
+
+    local $Data::Dumper::Sortkeys = sub { [ sort grep {!/^#%#parent$/} keys %{$_[0]} ]; };
+    local $Data::Dumper::Indent = 1;
+
+    return Dumper $config;
 }
 
 
@@ -1545,6 +1632,21 @@ sub munin_has_subservices {
 	$hash->{'#%#has_subservices'} = scalar (grep $_, map { ref($hash->{$_}) eq "HASH" and $_ ne '#%#parent' and defined $hash->{$_}->{'graph_title'} ? 1 : undef } keys %$hash);
     }
     return $hash->{'#%#has_subservices'};
+}
+
+sub munin_get_host_path_from_string {
+	# splits a host definition, as used in the config, into a group array and a host name
+	my $key = shift;
+	my (@groups) = split(';', $key);
+	my $host = pop(@groups);
+	if(scalar @groups > 0){
+	} else {
+		my @groups = split('.', $key);
+		if(scalar @groups > 1){
+			@groups = ($groups[0]);
+		}
+	}
+	return (\@groups, $host);
 }
 
 1;

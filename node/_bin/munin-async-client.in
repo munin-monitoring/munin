@@ -32,7 +32,7 @@ use Munin::Node::SpoolReader;
 # Disable buffering
 $| = 1;
 
-my $SPOOLDIR = "/var/lib/munin/spool";
+my $SPOOLDIR = "@@SPOOLDIR@@";
 my $hostname = hostname();
 chomp($hostname);
 
@@ -121,7 +121,7 @@ munin-async-client - A program to replay spooled munin-node calls
 munin-async-client [options]
 
  Options:
-     -s --spooldir <spooldir>   Directory for spooled data [/var/lib/munin/spool]
+     -s --spooldir <spooldir>   Directory for spooled data [@@SPOOLDIR@@]
      --hostname <hostname>      Overrides the hostname [`hostname`]
 
      --spoolfetch               Enables the "spool" capability [no]

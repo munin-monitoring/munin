@@ -634,80 +634,36 @@ sub generate_service_message {
                 $c;
             } @cmd;
             $contactobj->{"num_messages"} = 0;
-            if ($cmd[0] eq "|") {
-                $cmd[0] = "|-";
+
+	    # Remove the useless crufty spec
+	    # (>(?) \w+
+
+            if ($cmd[0] eq "|" || $cmd[0] eq ">") {
+		    WARN "[WARN] Using deprecated interface with | or >";
+		    shift @cmd; # remove |,>
+		    shift @cmd; # remove the script name
+	    } elsif ($cmd[0] =~ m/^[|>]/) {
+		    WARN "[WARN] Using deprecated interface with | or >";
+		    # The | isn't alone, only remove 1 element
+		    shift @cmd; # remove |... or >....
             }
-            elsif ($cmd[0] !~ /^[|>]/) {
-                unshift(@cmd, "|-");
-            }
+
+	    # Now, we only have to open the pipe with shell expansion, and voila !
             DEBUG("[DEBUG] opening \"$c\" for writing: \""
 		  . join('" "', @cmd)
 		  . "\".");
-            if ($cmd[0] eq ">") {
-                ## no critic
-                if (!open($pipe, join(' ', @cmd))) {
-                    FATAL("[FATAL] Could not open "
-			  . join(' ', @cmd[1 .. $#cmd])
-			  . " for writing: $!");
-                    exit 3;
-                }
-                ## critic
-            }
-            else {
-                my $pid = open($pipe, "|-");
-                if (!defined $pid) {
-                    FATAL "Fatal: Unable to  fork: $!";
-                    exit 3;
-                }
-                if (!$pid) {    # Child
-                                # Fork of stdout-to-log filter
-                    my $logstdout;
-                    my $logstderr;
-                    my $logpid = open($logstdout, "|-");
-                    if (!defined $logpid) {
-                        FATAL "Fatal: Unable to  fork: $!";
-                        exit 3;
-                    }
-                    if (!$logpid) {    # Child
-                        while (<STDIN>) {
-                            chomp;
-                            INFO "Command \"$c\" stdout: $_";
-                        }
-                        exit 0;
-                    }
-                    close(STDOUT);
-                    *STDOUT = \$logstdout;
-                    $logpid = open($logstderr, "|-");
-                    if (!defined $logpid) {
-                        FATAL "Fatal: Unable to  fork: $!";
-                        exit 3;
-                    }
-                    if (!$logpid) {    # Child
-                        while (<STDIN>) {
-                            chomp;
-                            FATAL "Command \"$c\" stderr: $_";
-                        }
-                        exit 0;
-                    }
-                    open(STDOUT, ">&", $logstdout);
-                    open(STDERR, ">&", $logstderr);
 
-                    exec(@cmd[1 .. $#cmd])
-                        or WARN("[WARNING] Could not run command \""
-                            . join(' ', @cmd[1 .. $#cmd])
-                            . "\": $!");
-                    exit 5;
-
-                    # NOTREACHED
-                }
+	    my $full_cmd_line = join(' ', @cmd);
+            if (! open($pipe, "| $full_cmd_line")) {
+		    FATAL("[FATAL] Could not open $full_cmd_line for writing: $!");
+		    exit 3;
             }
+
             munin_set_var_loc($contactobj, ["pipe_command"], $cmd);
             munin_set_var_loc($contactobj, ["pipe"],         $pipe);
         }
         DEBUG "[DEBUG] sending message: \"$txt\"";
         print $pipe $txt, "\n" if (defined $pipe);
-        DEBUG "[DEBUG] explicitely closing pipe as suggested by schamane on #732";
-        close $pipe if (defined $pipe);
         $contactobj->{"num_messages"}
             = 1 + munin_get($contactobj, "num_messages", 0);   # $num_messages++
     }

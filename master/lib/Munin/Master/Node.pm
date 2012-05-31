@@ -89,7 +89,7 @@ sub _do_connect {
 	    my $remote_cmd = $uri->path;
 
 	    # Add any parameter to the cmd
-	    my $remote_connection_cmd = "/usr/bin/ssh $user_part" . $uri->host . " $remote_cmd $params";
+	    my $remote_connection_cmd = "/usr/bin/ssh -p" . $uri->port . " $user_part" . $uri->host . " $remote_cmd $params";
 
 	    # Open a double pipe
    	    use IPC::Open2;
@@ -130,7 +130,7 @@ sub _extract_name_from_greeting {
     if (!$greeting) {
 	die "[ERROR] Got no reply from node ".$self->{host}."\n";
     }
-    if ($greeting !~ /\#.*(?:lrrd|munin) (?:client|node) at (\S+)/) {
+    if ($greeting !~ /\#.*(?:lrrd|munin) (?:client|node) at (\S+)/i) {
 	die "[ERROR] Got unknown reply from node ".$self->{host}."\n";
     }
     return $1;
@@ -142,7 +142,8 @@ sub _run_starttls_if_required {
 
     # TLS should only be attempted if explicitly enabled. The default
     # value is therefore "disabled" (and not "auto" as before).
-    my $tls_requirement = $config->{tls};
+    my $tls_requirement = exists $self->{configref}->{tls} ?
+                                   $self->{configref}->{tls} : $config->{tls};
     DEBUG "TLS set to \"$tls_requirement\".";
     return if $tls_requirement eq 'disabled';
     my $logger = Log::Log4perl->get_logger("Munin::Master");

@@ -1,4 +1,14 @@
 -*- text -*-
+munin 2.0-beta1, r4124:4199, 2011-5-29
+
+Commits by bldewolf, feiner.tom, jo, jorne, kristian, ligne, mha, runesk, ssm, steve.schnepp
+
+Summary : 
+
+* Avoid memory leaks in munin-cgi
+* Enabling the generation of RRD with a different step size (eg: 10s instead of 5 min)
+* Various other bugfixes since 2.0a2
+
 munin 2.0-alpha2, r3856:4124, 2011-1-19
 
 Commits by bldewolf, feiner.tom, janl, knan, ligne, mha, ssm, steve.schnepp, lupe, jorne

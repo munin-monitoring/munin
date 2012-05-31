@@ -240,27 +240,29 @@ sub is_fresh_enough {
 	my %last_updated;
 
 	use Fcntl;   # For O_RDWR, O_CREAT, etc.
-   	use DB_File;
-   	tie(%last_updated, 'DB_File', $db_file, O_RDWR|O_CREAT, 0666) or ERROR "$!";
+   	use DB_File::Lock;
+   	tie(%last_updated, 'DB_File::Lock', $db_file, O_RDONLY, 0666, $DB_HASH, "read") or ERROR "$!";
 
 	my $last_updated_key = $last_updated{$key} || "0 0";
 	DEBUG "last_updated{$key}: " . $last_updated_key;
 	my @last = split(/ /, $last_updated_key);
+   	untie(%last_updated);
    
 	use Time::HiRes qw(gettimeofday tv_interval);	
 	my $now = [ gettimeofday ];
 
 	my $age = tv_interval(\@last, $now); 	
-	DEBUG "last: " . Dumper(\@last) . ", now: " . Dumper($now) . ", age: $age";
+	DEBUG "last: [" . join(",", @last) . "], now: [" . join(", ", @$now) . "], age: $age";
 	my $is_fresh_enough = ($age < $update_rate_in_seconds) ? 1 : 0;
 	DEBUG "is_fresh_enough  $is_fresh_enough";
 
 	if (! $is_fresh_enough) {
 		DEBUG "new value: " . join(" ", @$now);
+   		tie(%last_updated, 'DB_File::Lock', $db_file, O_RDONLY, 0666, $DB_HASH, "read") or ERROR "$!";
 		$last_updated{$key} = join(" ", @$now);
+		untie(%last_updated);
 	}
 
-   	untie(%last_updated);
 
 	return $is_fresh_enough;
 }
@@ -274,8 +276,8 @@ sub get_spoolfetch_timestamp {
 	my %last_updated;
 
 	use Fcntl;   # For O_RDWR, O_CREAT, etc.
-   	use DB_File;
-   	tie(%last_updated, 'DB_File', $db_file, O_RDWR|O_CREAT, 0666) or ERROR "$!";
+   	use DB_File::Lock;
+   	tie(%last_updated, 'DB_File::Lock', $db_file, O_RDONLY, 0666, $DB_HASH, "read") or ERROR "$!";
 
 	my $last_updated_value = $last_updated{$key} || "0";
 
@@ -294,8 +296,8 @@ sub set_spoolfetch_timestamp {
 	my %last_updated;
 
 	use Fcntl;   # For O_RDWR, O_CREAT, etc.
-   	use DB_File;
-   	tie(%last_updated, 'DB_File', $db_file, O_RDWR|O_CREAT, 0666) or ERROR "$!";
+   	use DB_File::Lock;
+   	tie(%last_updated, 'DB_File::Lock', $db_file, O_RDWR|O_CREAT, 0666, $DB_HASH, "write") or ERROR "$!";
 
 	# Using the last timestamp sended by the server :
 	# -> It can be be different than "now" to be able to process the backlock slowly
@@ -420,7 +422,6 @@ sub _compare_and_act_on_config_changes {
 	for my $data_source (keys %{$service_config}) {
 	    my $old_data_source = $data_source;
 	    my $ds_config = $service_config->{$data_source};
-	    $self->_set_rrd_data_source_defaults($ds_config);
 
 	    my $group = $self->{host}{group}{group_name};
 	    my $host = $self->{host}{host_name};
@@ -466,25 +467,24 @@ sub _compare_and_act_on_config_changes {
 sub _ds_config_eq {
     my ($self, $old_ds_config, $ds_config) = @_;
 
+    $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
     for my $key (%$old_ds_config) {
-        if ((not defined($old_ds_config->{$key}))
-            and not defined($ds_config->{$key})) {
-            # Both keys undefined, look further:
-            next;
-        }
+	my $old_value = $old_ds_config->{$key};
+	my $value = $ds_config->{$key};
 
-        if ((not defined($old_ds_config->{$key}))
-            or not defined($ds_config->{$key})) {
-            # One key undefined, but not both:
-            return '';
-        }
+        # if both keys undefined, look no further
+        next unless (defined($old_value) || defined($value));
 
-        if ($old_ds_config->{$key} ne $ds_config->{$key}) {
-            # Config content differs:
-            return '';
-        }
+	# so, at least one of the 2 is defined
+
+	# False if the $old_value is not defined
+	return 0 unless (defined($old_value));
+
+	# if something isn't the same, return false
+        return 0 if (! defined $value || $old_value ne $value);
     }
 
+    # Nothing different found, it has to be equal.
     return 1;
 }
 
@@ -536,6 +536,7 @@ sub _ensure_tuning {
                       max => '--maximum',
                       min => '--minimum');
 
+    $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
     for my $rrd_prop (qw(type max min)) {
         INFO "[INFO]: Config update, ensuring $rrd_prop of"
 	    . " '$rrd_file' is '$ds_config->{$rrd_prop}'.\n";
@@ -566,7 +567,6 @@ sub _update_rrd_files {
 	my $service_data   = $nested_service_data->{$service};
 
 	for my $ds_name (keys %{$service_config}) {
-	    $self->_set_rrd_data_source_defaults($service_config->{$ds_name});
 	    my $ds_config = $service_config->{$ds_name};
 
 	    unless (defined($ds_config->{label})) {
@@ -579,12 +579,10 @@ sub _update_rrd_files {
 	    # - per plugin
 	    # - globally
             my $configref = $self->{node}{configref};
-	    $ds_config->{graph_data_size} ||= $configref->{"$service.$ds_name.graph_data_size"};
-	    $ds_config->{graph_data_size} ||= $configref->{"$service.graph_data_size"};
+	    $ds_config->{graph_data_size} ||= get_config_for_service($nested_service_config->{global}{$service}, "graph_data_size");
 	    $ds_config->{graph_data_size} ||= $config->{graph_data_size};
             
-	    $ds_config->{update_rate} ||= $configref->{"$service.$ds_name.update_rate"};
-	    $ds_config->{update_rate} ||= $configref->{"$service.update_rate"};
+	    $ds_config->{update_rate} ||= get_config_for_service($nested_service_config->{global}{$service}, "update_rate");
 	    $ds_config->{update_rate} ||= $config->{update_rate};
 	    $ds_config->{update_rate} ||= 300; # default is 5 min
 
@@ -603,17 +601,37 @@ sub _update_rrd_files {
     return $last_timestamp;
 }
 
+sub get_config_for_service {
+	my ($array, $key) = @_;
+	
+	for my $elem (@$array) {
+		next unless $elem->[0] && $elem->[0] eq $key;
+		return $elem->[1];
+	}
 
-sub _set_rrd_data_source_defaults {
+	# Not found
+	return undef;
+}
+
+
+sub _get_rrd_data_source_with_defaults {
     my ($self, $data_source) = @_;
 
-    # Test for definedness, anything defined should not be overridden
-    # by defaults:
-    $data_source->{type} = 'GAUGE' unless defined($data_source->{type});
-    $data_source->{min}  = 'U'     unless defined($data_source->{min});
-    $data_source->{max}  = 'U'     unless defined($data_source->{max});
-    $data_source->{update_rate} = 300 unless defined($data_source->{update_rate});
-    $data_source->{graph_data_size} = "normal" unless defined($data_source->{graph_data_size});
+    # Copy it into a new hash, we don't want to alter the $data_source
+    # and anything already defined should not be overridden by defaults
+    my $ds_with_defaults = {
+	    type => 'GAUGE',
+	    min => 'U',
+	    max => 'U',
+
+	    update_rate => 300,
+	    graph_data_size => 'normal',
+    };
+    for my $key (keys %$data_source) {
+	    $ds_with_defaults->{$key} = $data_source->{$key};
+    }
+
+    return $ds_with_defaults;
 }
 
 
@@ -632,6 +650,7 @@ sub _create_rrd_file_if_needed {
 sub _get_rrd_file_name {
     my ($self, $service, $ds_name, $ds_config) = @_;
     
+    $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
     my $type_id = lc(substr(($ds_config->{type}), 0, 1));
 
     my $path = $self->{host}->get_full_path;
@@ -664,17 +683,16 @@ sub _create_rrd_file {
     my ($self, $rrd_file, $service, $ds_name, $ds_config) = @_;
 
     INFO "[INFO] creating rrd-file for $service->$ds_name: '$rrd_file'";
-    munin_mkdir_p(dirname($rrd_file), oct(777));
-    my @args = (
-        $rrd_file,
-        "--start", "-10y", # Always start RRD 10 years ago (should be enough), to be able to spoolfetch in it
-        sprintf('DS:42:%s:600:%s:%s', 
-                $ds_config->{type}, $ds_config->{min}, $ds_config->{max}),
-    );
 
+    munin_mkdir_p(dirname($rrd_file), oct(777));
+
+    my @args;
+
+    $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
     my $resolution = $ds_config->{graph_data_size};
     my $update_rate = $ds_config->{update_rate};
     if ($resolution eq 'normal') {
+	$update_rate = 300; # 'normal' means hard coded RRD $update_rate
         push (@args,
               "RRA:AVERAGE:0.5:1:576",   # resolution 5 minutes
               "RRA:MIN:0.5:1:576",
@@ -690,6 +708,7 @@ sub _create_rrd_file {
               "RRA:MAX:0.5:288:450");
     } 
     elsif ($resolution eq 'huge') {
+	$update_rate = 300; # 'huge' means hard coded RRD $update_rate
         push (@args, 
               "RRA:AVERAGE:0.5:1:115200",  # resolution 5 minutes, for 400 days
               "RRA:MIN:0.5:1:115200",
@@ -710,6 +729,17 @@ sub _create_rrd_file {
             ); 
         }
     }
+
+    # Add the RRD::create prefix (filename & RRD params) 
+    my $heartbeat = $update_rate * 2;
+    unshift (@args,
+        $rrd_file,
+        "--start", "-10y", # Always start RRD 10 years ago (should be enough), to be able to spoolfetch in it
+	"-s", $update_rate,
+        sprintf('DS:42:%s:%s:%s:%s', 
+                $ds_config->{type}, $heartbeat, $ds_config->{min}, $ds_config->{max}),
+    );
+
     DEBUG "[DEBUG] RRDs::create @args";
     RRDs::create @args;
     if (my $ERROR = RRDs::error) {
@@ -801,7 +831,7 @@ sub _update_rrd_file {
     # Some kind of mismatch between fetch and config can cause this.
     return if !defined($values);  
 
-    my $last_updated_timestamp = 0;
+    my $last_updated_timestamp = RRDs::last($rrd_file);
     my @update_rrd_data;
 	if ($config->{"rrdcached"} eq "on") {
 		if($RRDs::VERSION >= 1.3){
@@ -815,6 +845,10 @@ sub _update_rrd_file {
     for (my $i = 0; $i < scalar @$values; $i++) { 
         my $value = $values->[$i];
         my $when = $ds_values->{when}[$i];
+
+	# Ignore values that are too old for the RRD.
+	# Otherwise it will reject the whole update
+	next if ($when <= $last_updated_timestamp);
 
         if ($value =~ /\d[Ee]([+-]?\d+)$/) {
             # Looks like scientific format.  RRDtool does not
@@ -832,7 +866,7 @@ sub _update_rrd_file {
         # Schedule for addition
         push @update_rrd_data, "$when:$value";
 
-	$last_updated_timestamp = max($last_updated_timestamp, $when);
+	$last_updated_timestamp = $when;
     }
 
     DEBUG "[DEBUG] Updating $rrd_file with @update_rrd_data";
