@@ -78,11 +78,11 @@ if [ "$1" = "config" ]; then
         echo 'graph_vlabel Alerts / second'
         echo 'graph_scale no'
         echo 'alerts.label Alerts/second'
-	if [ -n $warning ]; then
-		echo 'alerts.warning $warning'
+	if [ -n "$warning" ]; then
+		echo "alerts.warning $warning"
 	fi
-	if [ -n $critical ]; then
-		echo 'alerts.critical $critical'
+	if [ -n "$critical" ]; then
+		echo "alerts.critical $critical"
 	fi
         echo 'alerts.info The number of alerts per second'
         echo 'graph_category Snort'
@@ -90,5 +90,5 @@ if [ "$1" = "config" ]; then
         exit 0
 fi
 
-echo -n "alerts.value "
+printf "alerts.value "
 echo $(tail -n1 $_target| awk -F, '{ print $4 }')

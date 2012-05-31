@@ -1,10 +1,14 @@
 # -*- cperl -*-
+# vim: ts=4 : sw=4 : et
 use warnings;
 use strict;
 
-use Test::More tests => 2;
+use Test::More tests => 5;
 
 use_ok('Munin::Master::Config');
+
+use Munin::Master::Config;
+use Munin::Common::Defaults;
 
 my $config = Munin::Master::Config->instance();
 my $userconfig = $config->{config};
@@ -13,59 +17,62 @@ $userconfig->parse_config(\*DATA);
 
 # Build the correct answer by hand.
 my $fasit = {
-	     'root_instance' => 1,
+    'root_instance' => 1,
 
-	     'oldconfig' =>
-	     {'config_file' => '/var/opt/munin/datafile'},
+    oldconfig => {
+    	config_file => "$Munin::Common::Defaults::MUNIN_DBDIR/datafile"
+    },
 
-	     'config' =>
-	     {
-	      config_file => '/etc/opt/munin/munin.conf',
-	      dbdir => '/opt/munin/sandbox/var/opt/munin',
-	      debug => 0,
-	      fork  => 1,
-	      graph_data_size => 'normal',
-	      groups =>
-	      {
-	       marvin =>
-	       {
-		hosts =>
-		{
-		 marvin =>
-		 {
-		  use_node_name => 1,
-		  address => '127.0.0.1',
-		  port => '4948',
-		  'load1.graph_title' => 'Loads side by side',
-		  'load1.graph_order' => 'fii=fii.foo.com:load.load fay=fay.foo.com:load.load',
-		  host_name => 'marvin',
-		  update => 1,
-		 },
-		},
-		group => undef,
-		group_name => 'marvin',
-	       },
-	      },
-	      htmldir => '/opt/munin/sandbox/www',
-	      local_address => '0',
-	      logdir => '/opt/munin/sandbox/var/log/munin',
-	      max_processes => 2 ** 53,
-	      rundir => '/opt/munin/sandbox/var/run/munin',
-	      timeout => 180,
-	      tls => 'disabled',
-	      tls_ca_certificate => '/opt/munin/common/t/tls/CA/ca_cert.pem',
-	      tls_certificate => '/opt/munin/common/t/tls/master_cert.pem',
-	      tls_private_key => '/opt/munin/common/t/tls/master_key.pem',
-	      tls_verify_certificate => 1,
-	      tls_verify_depth => '5',
-	      tmpldir => '/opt/munin/sandbox/etc/opt/munin/templates',
-	     }
-	    };
+    config => {
+        config_file     => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf",
+        dbdir           => '/opt/munin/sandbox/var/opt/munin',
+        debug           => 0,
+        fork            => 1,
+        graph_data_size => 'normal',
+        groups          => {
+            marvin => {
+                hosts => {
+                    marvin => {
+                        use_node_name       => 1,
+                        address             => '127.0.0.1',
+                        port                => '4948',
+                        'load1.graph_title' => 'Loads side by side',
+                        'load1.graph_order' => 'fii=fii.foo.com:load.load fay=fay.foo.com:load.load',
+                        host_name           => 'marvin',
+                        update              => 1,
+                    },
+                },
+                group      => undef,
+                group_name => 'marvin',
+            },
+        },
+        htmldir                => '/opt/munin/sandbox/www',
+        local_address          => 0,
+        logdir                 => '/opt/munin/sandbox/var/log/munin',
+        max_processes          => 2**53,
+        rundir                 => '/opt/munin/sandbox/var/run/munin',
+        timeout                => 180,
+        tls                    => 'disabled',
+        tls_ca_certificate     => '/opt/munin/common/t/tls/CA/ca_cert.pem',
+        tls_certificate        => '/opt/munin/common/t/tls/master_cert.pem',
+        tls_private_key        => '/opt/munin/common/t/tls/master_key.pem',
+        tls_verify_certificate => 1,
+        tls_verify_depth       => '5',
+        tmpldir                => '/opt/munin/sandbox/etc/opt/munin/templates',
+    },
+};
 
-$fasit->{config}{groups}{marvin}{hosts}{marvin}{group} =
-  $fasit->{'config'}{'groups'}{'marvin'};
+$fasit->{config}{groups}{marvin}{hosts}{marvin}{group}
+    = $fasit->{config}{groups}{marvin};
 
-is_deeply($config,$fasit,"Config hash contents");
+is_deeply($config, $fasit, 'Config hash contents');
+
+
+### _final_char_is
+ok(  Munin::Master::Config::_final_char_is('h', 'blah'), 'it was the last character');
+ok(! Munin::Master::Config::_final_char_is('a', 'blah'), 'it was not the last character');
+ok(! Munin::Master::Config::_final_char_is('z', 'blah'), 'it not in the string at all');
+
 
 __DATA__
 

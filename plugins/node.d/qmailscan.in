@@ -57,7 +57,7 @@ sed 's/clamdscan.*$//' /tmp/q2$$ | sed 's/[ \t]*$//' > /tmp/q$$
 #awk '{ print $NF }' /tmp/q$$ | sort | uniq -c | sed 's/\./_/g' | while read i; do
 cut -f 5 /tmp/q$$ | sort | uniq -c | sort -r | sed 's/\.\|-/_/g' | while read i; do
         name=`echo $i | awk '{print $2}'`;
-        echo -n "$name.value " ;
+        printf "%s.value " $name;
         echo $i | awk '{print $1}'
 done
 

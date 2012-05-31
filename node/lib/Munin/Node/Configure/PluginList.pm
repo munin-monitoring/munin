@@ -60,6 +60,7 @@ sub _load_available
 
     my @families = @{$self->{families}};
     my %found;
+    my $plugin_count = 0;
 
     my $history = Munin::Node::Configure::History->new(
         history_file => "$self->{libdir}/plugins.history",
@@ -74,13 +75,6 @@ sub _load_available
         my $plug = $item->{name};
 
         DEBUG("Considering '$path'");
-
-        # FIXME: should there ever be symlinks in here?  do we even need
-        # care unless we're going to try running it?
-        while (-l $path) {
-            $path = readlink($path);
-            $path = ($path =~ /^\//) ? $path : "$self->{libdir}/$path";
-        }
 
         my $plugin = Munin::Node::Configure::Plugin->new(name => $plug, path => $path);
 
@@ -97,10 +91,12 @@ sub _load_available
         }
 
         $found{$plug} = $plugin;
+        $plugin_count++;
     }
 
     $self->{plugins} = \%found;
-    DEBUG(sprintf "%u plugins available.", scalar keys %found);
+    DEBUG("$plugin_count plugins available.");
+
     return;
 }
 
@@ -110,7 +106,7 @@ sub _load_installed
     my ($self) = @_;
     my $service_count = 0;  # the number of services currently installed.
 
-    DEBUG("Searching '$self->{servicedir}' for installed plugins.");
+    DEBUG("Searching '$self->{servicedir}' for installed services.");
 
     foreach my $item (_valid_files($self->{services})) {
         my $path    = $item->{path};
@@ -161,24 +157,7 @@ sub names { return keys %{(shift)->{plugins}} }
 sub _valid_files
 {
     my ($dir) = @_;
-    my @items;
-
-    my $directory = $dir->{servicedir};
-
-    opendir (my $DIR, $directory)
-        or die "Fatal: Could not open '$directory' for reading: $!\n";
-
-    while (my $item = readdir $DIR) {
-        my $path = "$directory/$item";
-        unless ($dir->is_a_runnable_service($item)) {
-            DEBUG("Ignoring '$path'.");
-            next;
-        }
-        push @items, { path => $path, name => $item };
-    }
-    closedir $DIR;
-
-    return @items;
+    return map { { path => "$dir->{servicedir}/$_", name => $_ } } $dir->list;
 }
 
 

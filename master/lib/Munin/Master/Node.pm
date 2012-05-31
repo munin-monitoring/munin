@@ -29,6 +29,7 @@ sub new {
         host    => $host,
         tls     => undef,
         reader  => undef,
+        pid     => undef,
         writer  => undef,
         master_capabilities => "multigraph dirtyconfig",
         io_timeout => 120,
@@ -96,8 +97,23 @@ sub _do_connect {
 	    $self->{reader} = new IO::Handle();
 	    $self->{writer} = new IO::Handle();
 
-	    my $pid = open2($self->{reader}, $self->{writer}, $remote_connection_cmd);
-            ERROR "Failed to connect to node $self->{address} : $!" unless $pid;
+	    DEBUG "[DEBUG] open2($remote_connection_cmd)";
+	    $self->{pid} = open2($self->{reader}, $self->{writer}, $remote_connection_cmd);
+            ERROR "Failed to connect to node $self->{address} : $!" unless $self->{pid};
+    } elsif ($uri->scheme eq "cmd") {
+        # local commands should ignore the username, url and host
+        my $local_cmd = $uri->path;
+        my $local_pipe_cmd = $local_cmd . (defined $params ? " $params" : "");
+
+	    # Open a double pipe
+   	    use IPC::Open2;
+
+	    $self->{reader} = new IO::Handle();
+	    $self->{writer} = new IO::Handle();
+
+	    DEBUG "[DEBUG] open2($local_pipe_cmd)";
+	    $self->{pid} = open2($self->{reader}, $self->{writer}, $local_pipe_cmd);
+            ERROR "Failed to execute local command: $!" unless $self->{pid};
     } else {
 	    ERROR "Unknown scheme : " . $uri->scheme;
 	    return 0;
@@ -162,6 +178,9 @@ sub _do_close {
     close $self->{writer};
     $self->{reader} = undef;
     $self->{writer} = undef;
+
+    # Reap the underlying process
+    waitpid($self->{pid}, 0) if (defined $self->{pid});
 }
 
 
@@ -279,7 +298,7 @@ sub parse_service_config {
 	    new_service($service) unless $global_config->{$service};
 	    DEBUG "[CONFIG multigraph $plugin] Service is now $service";
 	}
-	elsif ($line =~ m{\A ([^\s\.]+) \s+ (.+) }xms) {
+	elsif ($line =~ m{\A ([^\s\.]+) \s+ (.+?) \s* $}xms) {
 	    $correct++;
 
 	    my $label = $self->_sanitise_fieldname($1);
@@ -288,7 +307,7 @@ sub parse_service_config {
 	    push @{$global_config->{$service}}, [$label, $2]
 	    	unless grep { $_->[0] eq $label }  @{$global_config->{$service}};
             DEBUG "[CONFIG graph global $plugin] $service->$label = $2";
-        } elsif ($line =~ m{\A ([^\.]+)\.value \s+ (.+) }xms) {
+        } elsif ($line =~ m{\A ([^\.]+)\.value \s+ (.+?) \s* $}xms) {
 	    $correct++;
 	    # Special case for dirtyconfig
             my ($ds_name, $value, $when) = ($1, $2, $now);
@@ -309,7 +328,7 @@ sub parse_service_config {
 	    push @{$data_source_config->{$service}{$ds_name}{when}}, $when;
 	    push @{$data_source_config->{$service}{$ds_name}{value}}, $value;
         }
-	elsif ($line =~ m{\A ([^\.]+)\.([^\s]+) \s+ (.+) }xms) {
+	elsif ($line =~ m{\A ([^\.]+)\.([^\s]+) \s+ (.+?) \s* $}xms) {
 	    $correct++;
 	    
             my ($ds_name, $ds_var, $ds_val) = ($1, $2, $3);
@@ -446,7 +465,7 @@ sub parse_service_data {
 	    push @{$values{$service}{$data_source}{when}}, $when;
 	    push @{$values{$service}{$data_source}{value}}, $value;
         }
-	elsif ($line =~ m{\A ([^\.]+)\.extinfo \s+ (.+) }xms) {
+	elsif ($line =~ m{\A ([^\.]+)\.extinfo \s+ (.+?) \s* $}xms) {
 	    # Extinfo is used in munin-limits
             my ($data_source, $value) = ($1, $2);
 	    
@@ -556,22 +575,14 @@ sub _node_read_single {
 
 sub _node_read {
     my ($self) = @_;
-    my @array = (); 
+    my @array = ();
 
-    my $timed_out = !do_with_timeout($self->{io_timeout}, sub {
-        while (1) {
-            my $line = $self->{tls} && $self->{tls}->session_started()
-                ? $self->{tls}->read()
-                : readline $self->{reader};
-            last unless defined $line;
-            last if $line =~ /^\.\n$/;
-            chomp $line;
-            push @array, $line;
-        }
-    });
-    if ($timed_out) {
-        LOGCROAK "[FATAL] Socket read timed out to ".$self->{host}.": $@\n";
+    my $line = $self->_node_read_single();
+    while($line ne ".") {
+        push @array, $line;
+        $line = $self->_node_read_single();
     }
+
     DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".";
     return @array;
 }

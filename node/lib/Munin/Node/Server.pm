@@ -42,12 +42,14 @@ my $config = Munin::Node::Config->instance();
 
 sub pre_loop_hook {
     my $self = shift;
-    print STDERR "In pre_loop_hook.\n" if $config->{DEBUG};
+    logger("In pre_loop_hook.") if $config->{DEBUG};
 
     $services = $config->{services} or die 'no services list';
     $spool    = $config->{spool};
 
-    _load_services();
+    my @services = $services->list;
+    @services{@services} = (1) x @services;
+
     $services->prepare_plugin_environment(keys %services);
     _add_services_to_nodes(keys %services);
     return $self->SUPER::pre_loop_hook();
@@ -62,34 +64,18 @@ sub request_denied_hook
 }
 
 
-sub _load_services {
-    opendir (my $DIR, $services->{servicedir})
-        || die "Cannot open plugindir: $services->{servicedir} $!";
-
-    for my $file (readdir($DIR)) {
-        next unless $services->is_a_runnable_service($file);
-        print STDERR "file: '$file'\n" if $config->{DEBUG};
-        $services{$file} = 1;
-    }
-
-    closedir $DIR;
-    return;
-}
-
-
 # Runs config on each plugin, and add them to the right nodes and plugin groups.
 sub _add_services_to_nodes
 {
     my (@services) = @_;
 
     for my $service (@services) {
-        print STDERR "Configuring $service\n" if $config->{DEBUG};
+        logger("Configuring $service\n") if $config->{DEBUG};
 
         my @response = _run_service($service, 'config');
 
         if (!@response or grep(/# Timed out/, @response)) {
-            print STDERR "Error running $service.  Dropping it.\n"
-                if $config->{DEBUG};
+            logger("Error running $service.  Dropping it.") if $config->{DEBUG};
             delete $services{$service};
             next;
         }
@@ -102,22 +88,22 @@ sub _add_services_to_nodes
         # hostname checks are case insensitive, so store everything in lowercase
         $node = lc($node);
 
-        print STDERR "\tAdding to node $node\n" if $config->{DEBUG};
+        logger("\tAdding to node $node") if $config->{DEBUG};
         push @{$nodes{$node}}, $service;
 
         # Note any plugins that require particular server capabilities.
         if (grep /^multigraph\s+/, @response) {
-            print STDERR "\tAdding to multigraph plugins\n" if $config->{DEBUG};
+            logger("\tAdding to multigraph plugins") if $config->{DEBUG};
             push @multigraph_services, $service;
         }
         if (grep /^[A-Za-z0-9_]+\.value /, @response) {
             # very dirty plugins -- they do a dirtyconfig even when
             # "not allowed" by their environment.
-            print STDERR "\tAdding to dirty plugins\n" if $config->{DEBUG};
+            logger("\tAdding to dirty plugins") if $config->{DEBUG};
             push @dirtyconfig_services, $service;
         }
     }
-    print STDERR "Finished configuring services\n" if $config->{DEBUG};
+    logger("Finished configuring services") if $config->{DEBUG};
 
     return;
 }
@@ -142,18 +128,28 @@ sub process_request
 
     _net_write($session, "# munin node at $config->{fqdn}\n");
 
+    my $line = '<no command received yet>';
+
     # catch and report any system errors in a clean way.
     eval {
         $timed_out = !do_with_timeout($services->{timeout}, sub {
-            while (defined (my $line = _net_read($session))) {
+            while (defined ($line = _net_read($session))) {
                 chomp $line;
-                _process_command_line($session, $line) or last;
+		if (! _process_command_line($session, $line)) {
+		    $line = "<finished '$line', ending input loop>";
+		    last;
+		}
+		# Reset timeout to wait a reasonable time for input
+		# from the master.
+	        # Misfeature: Plugin timeout and input timeout are identical
+		reset_timeout();
+		$line = "<waiting for input from master, previous was '$line'>";
             }
         });
     };
 
-    logger($EVAL_ERROR)            if ($EVAL_ERROR);
-    logger("Connection timed out") if ($timed_out);
+    logger($EVAL_ERROR)                                   if ($EVAL_ERROR);
+    logger("Node side timeout while processing: '$line'") if ($timed_out);
 
     return;
 }

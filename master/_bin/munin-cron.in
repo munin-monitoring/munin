@@ -9,11 +9,6 @@
 # munin-graph.  So run it in the background now, it will be done
 # before munin-graph.
 
-@@LIBDIR@@/munin-limits $@ &
-
-nice @@LIBDIR@@/munin-graph --cron $@ 2>&1 | 
-	fgrep -v "*** attempt to put segment in horiz list twice"
-
-wait
+@@LIBDIR@@/munin-limits $@ 
 
 nice @@LIBDIR@@/munin-html $@ || exit 1

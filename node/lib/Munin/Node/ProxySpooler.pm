@@ -8,7 +8,7 @@ use warnings;
 use Net::Server::Daemonize qw( daemonize safe_fork unlink_pid_file );
 use IO::Socket;
 use List::MoreUtils qw( any );
-use Time::HiRes qw( usleep ualarm gettimeofday );
+use Time::HiRes qw( ualarm gettimeofday );
 use Carp;
 
 use Munin::Common::Defaults;
@@ -27,11 +27,8 @@ sub new
 
     $args{spool} = Munin::Node::SpoolWriter->new(spooldir => $args{spooldir});
 
-    # don't want to run as root unless absolutely necessary.  but only root
-    # can change user
-    #
-    # FIXME: these will need changing to root/root as and when it starts
-    # running plugins
+    # don't want to run as root unless absolutely necessary.  but only root can
+    # change user
     $args{user}  = $< || $Munin::Common::Defaults::MUNIN_PLUGINUSER;
     $args{group} = $( || $Munin::Common::Defaults::MUNIN_GROUP;
 
@@ -60,20 +57,17 @@ sub run
 
     logger('Spooler starting up');
 
-    # ready to actually do stuff!
-
-    $self->_launch_pollers();
-
     # Indiscriminately kill every process in the group with SIGTERM when asked
-    # to quit.  this is just the list the Perl Cookbook suggests trapping.
+    # to quit.  this is just the list of signals the Perl Cookbook suggests
+    # trapping.
     #
     # FIXME: might be better if this was implemented with sigtrap pragma.
     #
-    # FIXME: bit of a race condition here, but the pollers shouldn't have nasty
-    # things lying about in their %SIG.
+    # !!!NOTE!!! this should always be the same list as the one down there in
+    # _launch_single_poller()
     $SIG{INT} = $SIG{TERM} = $SIG{HUP} = sub {
         logger("Spooler caught SIG$_[0].  Shutting down");
-        kill -15, $$;
+        kill -15 => $$;
 
         if ($self->{have_pid_file}) {
             logger('Removing pidfile') if $config->{DEBUG};
@@ -82,6 +76,8 @@ sub run
 
         exit 0;
     };
+
+    $self->_launch_pollers();
 
     logger('Spooler going to sleep');
 
@@ -208,6 +204,11 @@ sub _launch_single_poller
 
         return;
     }
+
+    # don't want the pollers to have the kill-all-the-process-group handler
+    # installed.  !!!NOTE!!! this should always be the same list as the one up
+    # there in run()
+    delete @SIG{qw( INT TERM HUP )};
 
     $0 .= " [$service]";
 
@@ -396,16 +397,52 @@ munin-node instance.
 
 =head1 SYNOPSIS
 
-  Munin::Node::ProxySpooler->run(%args);
+  Munin::Node::ProxySpooler->run(spooldir => '/var/spool/munin');
+  # never returns.
+
+  # meanwhile, in another process
+  my $spoolreader = Munin::Node::Spoolreader->new(
+      spooldir => '/var/spool/munin',
+  );
+  print $spoolreader->fetch(123456789);
 
 =head1 METHODS
 
 =over 4
 
-=item B<run(%args)>
+=item B<new>
 
-Forks off a spooler daemon, and returns control to the caller.  'spooldir' key
-should be the directory to write to.
+  Munin::Node::ProxySpooler->new(%args);
+
+Constructor.  It is called automatically by the C<run> method, so probably
+isn't of much use otherwise.
+
+=item B<run>
+
+  Munin::Node::ProxySpooler->run(%args);
+
+Daemonises the current process, and starts fetching data from a Munin node.
+
+Never returns.  The process will clean up and exit(0) upon receipt of SIGINT,
+SIGTERM or SIGHUP.
+
+=over 8
+
+=item C<spooldir>
+
+The directory to write results to.  Optional.
+
+=item C<host>, C<port>
+
+The host and port the spooler will gather results from.  Defaults to
+C<localhost> and C<4949> respectively, which should be acceptable for most
+purposes.
+
+=item C<pid_file>
+
+The pidfile to use.  Required.
+
+=back
 
 =back
 

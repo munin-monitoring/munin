@@ -16,11 +16,13 @@ use Munin::Common::Defaults;
 use Munin::Master::Logger;
 use Munin::Master::Config;
 use Munin::Common::Config;
-use Log::Log4perl qw (:easy);
+use Log::Log4perl qw(:easy);
 use POSIX qw(strftime);
-use POSIX ":sys_wait_h";
+use POSIX qw(:sys_wait_h);
 use RRDs;
-use Symbol 'gensym';
+use Symbol qw(gensym);
+use Data::Dumper;
+use Storable;
 
 our (@ISA, @EXPORT);
 
@@ -33,10 +35,14 @@ our (@ISA, @EXPORT);
 	   'munin_runlock',
 	   'munin_getlock',
 	   'munin_readconfig',
+	   'munin_readconfig_storable',
 	   'munin_writeconfig',
+	   'munin_writeconfig_storable',
 	   'munin_delete',
 	   'munin_overwrite',
+	   'munin_dumpconfig',
 	   'munin_config',
+	   'munin_refreshconfig',
 	   'munin_draw_field',
 	   'munin_get_bool',
 	   'munin_get_bool_val',
@@ -48,6 +54,7 @@ our (@ISA, @EXPORT);
 	   'munin_get_picture_filename',
 	   'munin_get_html_filename',
 	   'munin_get_filename',
+	   'munin_get_keypath',
 	   'munin_graph_column_headers',
 	   'munin_get_max_label_length',
 	   'munin_get_field_order',
@@ -55,9 +62,11 @@ our (@ISA, @EXPORT);
 	   'munin_get_node_name',
 	   'munin_get_parent_name',
 	   'munin_get_node_fqn',
+	   'munin_find_node_by_fqn',
 	   'munin_get_node_loc',
 	   'munin_get_node',
 	   'munin_set_var_loc',
+	   'munin_set_var_path',
 	   'munin_set',
 	   'munin_copy_node_toloc',
 	   'munin_get_separated_node',
@@ -231,7 +240,7 @@ sub munin_overwrite {
 
     my ($configfile,$overwrite) = @_;
     for my $key (keys %$overwrite) {
-        next if $key =~ /^#%#/;
+	next if substr($key,0,3) eq '#%#';
 	if (ref $overwrite->{$key}) {
 	    if (!defined $configfile->{$key}) {
 		if (ref $overwrite->{$key} eq "HASH") {
@@ -251,22 +260,41 @@ sub munin_overwrite {
     return ($configfile);
 }
 
+sub munin_readconfig_storable {
+	my ($conf) = @_;
+	
+	my $config = undef;
+	$conf ||= $configfile;
+
+    # try to read storable version
+    if ( (-r $conf) && open (my $CFG_STORABLE, '<', $conf)) { 
+		DEBUG "[DEBUG] munin_readconfig: found Storable version of $conf, using it";
+        $config = Storable::fd_retrieve($CFG_STORABLE); 
+        close ($CFG_STORABLE); 
+	}
+
+	return $config; 
+}
 
 sub munin_readconfig {
     my ($conf, $missingok, $corruptok) = @_;
 
     my $config = undef;
-    my @contents = undef;
 
     $conf ||= $configfile;
-    if (! -r $conf and ! $missingok) {
-	WARN "munin_readconfig: cannot open '$conf'";
-	return;
-    }
-    if (open (my $CFG, '<', $conf)) {
-	@contents = <$CFG>;
-	close ($CFG);
-        $config = munin_parse_config (\@contents);
+
+    # try first to read storable version
+	$config = munin_readconfig_storable("$conf.storable");
+	if(!defined $config){
+        if (! -r $conf and ! $missingok) {
+            WARN "munin_readconfig: cannot open '$conf'";
+            return;
+		}
+        if (open (my $CFG, '<', $conf)) {
+            my @contents = <$CFG>;
+            close ($CFG);
+            $config = munin_parse_config (\@contents);
+        }
     }
 
     # Some important defaults before we return...
@@ -275,6 +303,7 @@ sub munin_readconfig {
     $config->{'dbdir'}         ||= $Munin::Common::Defaults::MUNIN_DBDIR;
     $config->{'logdir'}        ||= $Munin::Common::Defaults::MUNIN_LOGDIR;
     $config->{'tmpldir'}       ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/";
+    $config->{'staticdir'}       ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/static/";
     $config->{'htmldir'}       ||= $Munin::Common::Defaults::MUNIN_HTMLDIR;
     $config->{'spooldir'}      ||= $Munin::Common::Defaults::MUNIN_SSPOOLDIR;
     $config->{'#%#parent'}     = undef;
@@ -397,28 +426,28 @@ sub munin_get_var_path
     return;
 }
 
- 
+
 sub munin_find_field {
     # Starting at the (presumably the root) $hash make recursive calls
     # until for example graph_title or value is found, and then
-    # continue recursing and itterating to all are found.
+    # continue recursing and itterating until all are found.
     #
     # Then we return a array of pointers into the $hash
+    #
+    # This function will not use REs as they are inordinately
+    # expensive.  There is a munin_find_field_for_limits that will
+    # match REs instead of whole strings.
 
-    my $hash  = shift;
-    my $field = shift;
-    my $avoid = shift;
+    my ($hash, $field, $avoid) = @_;
+
     my $res = [];
-
-    if (ref ($field) ne "Regexp") {
-	$field = qr/^$field$/;
-    }
 
     if (ref ($hash) eq "HASH") {
 	foreach my $key (keys %{$hash}) {
-	    next if $key =~ /^#%#/;
+	    next if substr($key,0,3) eq '#%#';
 	    last if defined $avoid and $key eq $avoid;
-	    if ($key =~ $field) {
+	    # Always check $key eq $field first here, or we break
+	    if ($key eq $field) {
 		push @$res, $hash;
 	    } elsif (ref ($hash->{$key}) eq "HASH") {
 		push @$res, @{munin_find_field ($hash->{$key}, $field, $avoid)};
@@ -431,9 +460,8 @@ sub munin_find_field {
 
 
 sub munin_find_field_for_limits {
-    my $hash  = shift;
-    my $field = shift;
-    my $avoid = shift;
+    my ($hash, $field, $avoid) = @_;
+
     my $res = [];
 
     if (ref ($field) ne "Regexp") {
@@ -442,7 +470,7 @@ sub munin_find_field_for_limits {
 
     if (ref ($hash) eq "HASH") {
 	foreach my $key (keys %{$hash}) {
-	    next if $key =~ /^#%#/;
+	    next if substr($key,0,3) eq '#%#';
 	    last if defined $avoid and $key eq $avoid;
 	    if (ref ($hash->{$key}) eq "HASH") {
 		push @$res, @{munin_find_field_for_limits ($hash->{$key}, $field, $avoid)};
@@ -463,7 +491,7 @@ sub munin_get_children {
     return if (ref ($hash) ne "HASH");
 
     foreach my $key (keys %{$hash}) {
-	next if $key =~ /^#%#/;
+	next if substr($key,0,3) eq '#%#';
 	if (defined $hash->{$key} and ref ($hash->{$key}) eq "HASH") {
 	    push @$res, $hash->{$key};
 	}
@@ -480,7 +508,7 @@ sub munin_get_separated_node
 
     if (ref ($hash) eq "HASH") {
 	foreach my $key (keys %$hash) {
-	    next if $key =~ /^#%#/;
+	    next if substr($key,0,3) eq '#%#';
 	    if (ref ($hash->{$key}) eq "HASH") {
 		$ret->{$key} = munin_get_separated_node ($hash->{$key});
 	    } else {
@@ -518,6 +546,7 @@ sub munin_get_node_name
     }
 }
 
+
 sub munin_get_node_fqn
 {
     my $hash = shift;
@@ -525,17 +554,38 @@ sub munin_get_node_fqn
     if (ref ($hash) eq "HASH") {
 	my $fqn = "";
 	if (defined $hash->{'#%#name'}) {
-		$fqn = $hash->{'#%#name'}; 
+		$fqn = $hash->{'#%#name'};
 	}
  	if (defined $hash->{'#%#parent'}) {
 		# Recursively prepend the parent, concatenation with /
 		$fqn = munin_get_node_fqn ($hash->{'#%#parent'}) . "/" . $fqn;
 	}
 	return $fqn;
-    } else { 
+    } else {
 	return;
     }
 }
+
+
+sub munin_find_node_by_fqn {
+    # The FQN should be relative to the point in the hash we're handed.
+    my($hash,$fqn) = @_;
+
+    my $here = $hash;
+
+    my @path = split('/',$fqn);
+
+    foreach my $pc (@path) {
+	next if $pc eq 'root';
+	if (exists $here->{$pc}) {
+	    $here = $here->{$pc};
+	} else {
+	    confess "Could not find FQN $fqn!";
+	}
+    }
+    return $here ;
+}
+
 
 sub munin_get_picture_loc {
     my $hash = shift;
@@ -616,20 +666,31 @@ sub munin_set_var_loc
     my $hash = shift;
     my $loc  = shift;
     my $val  = shift;
-    my @aloc = @$loc;
 
-    my $tmpvar = shift @aloc;
-    $tmpvar = shift @aloc while (defined $tmpvar and $tmpvar =~ /^#%#/);
-    if ($tmpvar !~ /\S/) {
+    my $iloc = 0;
+
+    # XXX -  Dirty breaking recursive function 
+    # --> Using goto is BAD, but enough for now
+START:
+
+    # Find the next normal value (that doesn't begin with #%#)
+    my $tmpvar = $loc->[$iloc++];
+    $tmpvar = $loc->[$iloc++] while (defined $tmpvar and
+				 substr($tmpvar,0,3) eq '#%#');
+
+    if (index($tmpvar, " ") != -1) {
 	ERROR "[ERROR] munin_set_var_loc: Cannot work on hash node \"$tmpvar\"";
 	return;
     }
-    if (@aloc > 0) {
-	if (!defined $hash->{$tmpvar} or !defined $hash->{$tmpvar}->{"#%#name"}) { # Init the new node
+    if (scalar @$loc > $iloc) {
+	if (!defined $hash->{$tmpvar} or !defined $hash->{$tmpvar}->{"#%#name"}) { 
+            # Init the new node
 	    $hash->{$tmpvar}->{"#%#parent"} = $hash;
 	    $hash->{$tmpvar}->{"#%#name"} = $tmpvar;
 	}
-        return munin_set_var_loc ($hash->{$tmpvar}, \@aloc, $val);
+	# Recurse
+        $hash = $hash->{$tmpvar};
+	goto START;
     } else {
         WARN "[WARNING] munin_set_var_loc: Setting unknown option '$tmpvar' at "
 	    . munin_get_keypath($hash)
@@ -746,7 +807,7 @@ sub munin_writeconfig_loop {
     my ($hash,$fh,$pre) = @_;
 
     foreach my $key (keys %$hash) {
-	next if $key =~ /#%#/;
+	next if substr($key,0,3) eq '#%#';
 	my $path = (defined $pre ? join(';', ($pre, $key)) : $key);
 	if (ref ($hash->{$key}) eq "HASH") {
 	    munin_writeconfig_loop ($hash->{$key}, $fh, $path);
@@ -766,28 +827,81 @@ sub munin_writeconfig_loop {
     }
 }
 
-
-sub munin_writeconfig {
+sub munin_writeconfig_storable {
     my ($datafilename,$data,$fh) = @_;
 
     DEBUG "[DEBUG] Writing state to $datafilename";
 
-    if (!defined $fh) {
+    my $is_fh_already_managed = defined $fh;
+    if (! $is_fh_already_managed) {
 	$fh = gensym();
 	unless (open ($fh, ">", $datafilename)) {
 	    LOGCROAK "Fatal error: Could not open \"$datafilename\" for writing: $!";
 	}
     }
 
+    # Write datafile.storable, in network order to be architecture indep
+    Storable::nstore_fd($data, $fh);
+
+    if (! $is_fh_already_managed) {
+        DEBUG "[DEBUG] Closing filehandle \"$datafilename\"...\n";
+        close ($fh);
+    }
+}
+
+sub munin_writeconfig {
+    my ($datafilename,$data,$fh) = @_;
+
+    DEBUG "[DEBUG] Writing state to $datafilename";
+
+    my $is_fh_already_managed = defined $fh;
+    if (! $is_fh_already_managed) {
+	$fh = gensym();
+	unless (open ($fh, ">", $datafilename)) {
+	    LOGCROAK "Fatal error: Could not open \"$datafilename\" for writing: $!";
+	}
+    }
+    
     # Write version
     print $fh "version $VERSION\n";
     # Write datafile
     munin_writeconfig_loop ($data, $fh);
-
-    DEBUG "[DEBUG] Closing filehandle \"$datafilename\"...\n";
-    close ($fh);
+    
+    if (! $is_fh_already_managed) {
+        DEBUG "[DEBUG] Closing filehandle \"$datafilename\"...\n";
+        close ($fh);
+    }
 }
 
+
+sub munin_dumpconfig {
+    my ($config) = @_;
+    my $indent = $Data::Dumper::Indent;
+    my $sorter = $Data::Dumper::Sortkeys;
+
+    $Data::Dumper::Sortkeys =
+      sub { [ sort grep {!/^#%#parent$/} keys %{$_[0]} ]; };
+    $Data::Dumper::Indent = 1;
+
+    print "##\n";
+    print "## NOTE: #%#parent is hidden to make the print readable!\n";
+    print "##\n";
+    print Dumper $config;
+
+    $Data::Dumper::Sortkeys = $sorter;
+    $Data::Dumper::Indent = $indent;
+}
+
+sub munin_refreshconfig {
+    my $config   = shift;
+    my @stat = stat("$config->{dbdir}/datafile");
+    if ($config->{'#%#datafile_mtime'} && $stat[9] > $config->{'#%#datafile_mtime'}) {
+	$config = munin_readconfig("$config->{dbdir}/datafile");
+    }
+
+    $config->{'#%#datafile_mtime'} = $stat[9];
+    return $config;
+}
 
 sub munin_config {
     my $conffile = shift;
@@ -947,6 +1061,7 @@ sub munin_get_keypath {
 	    # In service land, working towards host.
 	    # If i or my parent has a graph_title we're still working with services
 	    if (defined $i->{'#%#parent'}{graph_title} or defined $i->{graph_title}) {
+		$name =~ s/-/_/g; # can't handle dashes in service or below
 		unshift(@service,$name);
 	    } else {
 		$host = 1;
@@ -1078,7 +1193,7 @@ sub munin_copy_node_toloc
 
     if (ref ($from) eq "HASH") {
 	foreach my $key (keys %$from) {
-	    next if $key =~ /^#%#/;
+	    next if substr($key,0,3) eq '#%#';
 	    if (ref ($from->{$key}) eq "HASH") {
 		munin_copy_node_toloc ($from->{$key}, $to, [@$loc, $key]);
 	    } else {
@@ -1350,7 +1465,7 @@ sub munin_mkdir_p {
     my ($dirname, $umask) = @_;
 
     eval {
-        mkpath($dirname, {mode => $umask});
+        mkpath($dirname, 0, $umask);
     };
     return if $EVAL_ERROR;
     return 1;
@@ -1728,7 +1843,7 @@ Returns:
 =item B<munin_get_picture_loc>
 
 Get location array for hash node for picture purposes. Differs from
-munin_get_node_loc in that it honors #%#origin metadata 
+munin_get_node_loc in that it honors #%#origin metadata
 
 Parameters: 
  - $hash: A ref to the node 

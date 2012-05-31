@@ -275,7 +275,7 @@ define authentication:
 
 =item C<env.v3username>
 
-Username.  There is no default. Empty username ('') is allowed.
+Username.  There is no default.
 
 =item C<env.v3authpassword>
 
@@ -344,8 +344,7 @@ particular device, we do not know.
         # Username
         my $username  = $ENV{'v3username'};
 
-        if (defined $username) {  # Username can be ''
-            # FIXME: isn't it an error if no username was specified?
+        if ($username) {
             push @options, (
                 -username => $username
             );
@@ -476,7 +475,7 @@ sub get_single {
 
         my $response = $handle->get_request($oid);
 
-        if (!defined $response->{$oid} or $handle->error_status) {
+        if (!defined $response->{$oid} or $handle->error_status or $response->{$oid} eq 'noSuchObject') {
             print STDERR "# Error getting $oid: ",$handle->error(),"\n"
                 if $DEBUG;
             return;

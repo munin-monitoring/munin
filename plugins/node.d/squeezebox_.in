@@ -55,9 +55,6 @@ GPLv2
 
 =cut
 
-#%# family=auto
-#%# capabilities=autoconf suggest
-
 HOST=${squeezecenter_host:-localhost}
 PORT=${squeezecenter_port:-9090}
 NC=${netcat:-/bin/nc}
@@ -155,7 +152,8 @@ if [ "$CMD" = "years" ]; then
 		# echo -n "graph_order "
 		# echo $years_array | tr '[:space:]' " y"
 		# echo "graph_order y0"
-		echo -n "graph_order y"; echo $years_array | sed 's/ / y/g'
+		printf "graph_order y"
+        echo $years_array | sed 's/ / y/g'
 
 		for i in `seq 0 $no_of_years`; do
 			year=$(echo ${arr1[$i]})
@@ -174,7 +172,7 @@ if [ "$CMD" = "years" ]; then
 	fi 
 	for i in `seq 0 $no_of_years`; do
 		year=$(echo ${arr1[$i]})
-		echo -n "y${year}.value "
+		printf "y%s.value " ${year}
 		printf "%b" "albums 0 0 year:${year}\nexit\n" | $NC $HOST $PORT | sed 's/%3A/:/g' | cut -d ':' -f 3
 	done
 elif [ "$CMD" = "signalstrength" -o "$CMD" = "mixer volume" ]; then

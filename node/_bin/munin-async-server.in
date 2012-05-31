@@ -31,7 +31,7 @@ use Pod::Usage;
 use Munin::Node::SpoolWriter;
 
 my $host = "localhost:4949";
-my $SPOOLDIR = "/tmp/munin-async-spool";
+my $SPOOLDIR = "/var/lib/munin/spool";
 my $verbose;
 my $debug;
 my $help;
@@ -69,8 +69,10 @@ my @plugins;
 		Proto	=> 'tcp'
 	) || die "Error creating socket: $!"; 
 
+	print $sock "cap multigraph\n";
 	print $sock "list\n";
 	<$sock>; # Read the first header comment line
+	<$sock>; # Read the multigraph response line
 	my $plugins_line = <$sock>;
 	chomp($plugins_line);
 
@@ -88,7 +90,7 @@ my @plugins;
 }
 
 # Q&D child collection
-$SIG{CHLD} = sub { wait; };
+$SIG{CHLD} = 'IGNORE';
 
 # now, update regularly...
 # ... but each plugin in its own process to avoid delay-leaking
@@ -163,11 +165,11 @@ sub fetch_data
 
 		print STDERR "[$$][$process_name] asking for data\n" if $verbose;
 		print $sock "fetch $plugin\n";
-		
+
 		while(my $line = <$sock>) {
 			print STDERR "[sock] $line" if $debug;
 			chomp($line);
-			
+
 			if ($line =~ m/^\./) {
 				# Starting with . => end
 				last;
@@ -223,7 +225,7 @@ munin-async-server [options]
 
  Options:
      --host <hostname:port>     Connect to this munin-node [localhost:4949]
-     -s --spool <spooldir>      Store the spooled data in this dir [/tmp/munin-async-spool]
+     -s --spool <spooldir>      Store the spooled data in this dir [/var/lib/munin/spool]
 
      -v --verbose               Be verbose
      -h --help                  View this message	

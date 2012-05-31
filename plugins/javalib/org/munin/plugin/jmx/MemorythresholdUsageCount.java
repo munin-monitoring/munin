@@ -5,12 +5,16 @@ import org.munin.plugin.jmx.AbstractAnnotationGraphsProvider.Graph;
 @Graph(title = "MemorythresholdUsageCount", vlabel = "count", info = "Returns the number of times that the memory usage has crossed the usage threshold.")
 public class MemorythresholdUsageCount extends AbstractAnnotationGraphsProvider {
 
+	public MemorythresholdUsageCount(Config config) {
+		super(config);
+	}
+
 	private String[] gcValues;
 
 	@Override
-	public void prepareValues() throws Exception {
+	protected void prepareValues() throws Exception {
 		GetUsageThresholdCount collector = new GetUsageThresholdCount(
-				connection);
+				getConnection());
 		gcValues = collector.GC();
 	}
 
@@ -25,6 +29,6 @@ public class MemorythresholdUsageCount extends AbstractAnnotationGraphsProvider 
 	}
 
 	public static void main(String args[]) {
-		runGraph(new MemorythresholdUsageCount(), args);
+		runGraph(args);
 	}
 }

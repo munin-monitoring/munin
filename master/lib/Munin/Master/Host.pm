@@ -35,7 +35,7 @@ sub new {
 sub get_full_path {
     # Find the full nested named path of the current host object
     # might one for M::M::Group too and make it recursive instead of
-    # "just" itterative but not now.
+    # "just" iterative but not now.
 
     my ($self) = @_;
 
@@ -85,15 +85,13 @@ __END__
 =head1 NAME
 
 Munin::Master::Host - Holds information on hosts we are interested in
-collection data from. 
-
-=head1 SYNOPSIS
-
-FIX
+collecting data from. 
 
 =head1 DESCRIPTION
 
-Note that a host and a node is not the same thing. FIX elaborate
+NOTE that a host and a node are not the same thing -- some hosts may
+report services for several nodes, for example if they have SNMP plugins
+installed.
 
 =head1 METHODS
 
@@ -101,9 +99,24 @@ Note that a host and a node is not the same thing. FIX elaborate
 
 =item B<new>
 
-FIX
+  my $host = Munin::Master::Host->new($hostname, $group, \%attrs);
+
+Constructor.  C<$group> is the C<Munin::Master::Group> object this host
+belongs to.  Valid attributes include C<port>, C<update>, and
+c<use_node_name>.
+
+=item B<get_full_path>
+
+Returns the full nested named path of the host object (eg. "group1;group2;hostname").
 
 =item B<add_attributes_if_not_exists>
+
+  $host->add_attributes_if_not_exists(\%attrs);
+
+Merges the new attributes from %attrs into the host object, without
+overwriting any existing   
+
+=item B<get_canned_ds_config>
 
 FIX
 

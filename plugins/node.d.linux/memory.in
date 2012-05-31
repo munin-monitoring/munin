@@ -9,6 +9,20 @@ memory - Plugin to monitor memory usage
 
 No configuration
 
+=head2 Warning and Critical Values
+
+Warning and critical values can be passed in environment variables as byte
+values or they can be percentages using a % sign and the value will be
+calculated dynamically by the plugin. Thus, to warn on swap at 50% the
+configuration is:
+
+	[memory]
+	env.swap_warning 50%
+
+Note that swap is calculated against the total swap amount (SwapTotal), and all
+other fields are calculated against the total amount of memory (MemTotal).
+
+
 =head1 AUTHORS
 
 Original Author: Jimmy Olsen
@@ -173,7 +187,15 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	print "inact_clean.info Memory not currently used.\n";
     }
     for my $field qw(apps buffers swap cached free slab swap_cache page_tables vmalloc_used committed mapped active active_anon active_cache inactive inact_dirty inact_laundry inact_clean) {
-        print_thresholds($field);
+    	my ($warning, $critical) = get_thresholds($field);
+	my $total = $mems{MemTotal};
+	$total = $mems{SwapTotal} if($field eq "swap");
+
+	$warning = adjust_threshold($warning, $total);
+	$critical = adjust_threshold($critical, $total);
+
+	print "$field.warning $warning\n" if defined $warning;
+	print "$field.critical $critical\n" if defined $critical;
     }
     exit 0;
 }

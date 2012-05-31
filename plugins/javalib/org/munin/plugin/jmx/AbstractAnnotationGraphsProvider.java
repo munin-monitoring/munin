@@ -1,79 +1,67 @@
 package org.munin.plugin.jmx;
 
-import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.TreeSet;
 
-import javax.management.MBeanServerConnection;
-
 public abstract class AbstractAnnotationGraphsProvider extends
 		AbstractGraphsProvider {
-
-	protected MBeanServerConnection connection;
+	
+	protected AbstractAnnotationGraphsProvider(final Config config) {
+		super(config);
+	}
 
 	@Override
-	public void printConfig(PrintStream out) {
+	public void printConfig(PrintWriter out) {
 		printGraphConfig(out);
 		printFieldsConfig(out);
 	}
 
-	private void printGraphConfig(PrintStream out) {
+	protected void printGraphConfig(PrintWriter out) {
 		Graph graph = getClass().getAnnotation(Graph.class);
 		if (graph == null) {
 			throw new IllegalArgumentException(getClass()
 					+ " doesn't have @Graph annotation");
 		}
-		String graphTitle = "JVM (port " + Config.INSTANCE.getPort() + ") "
+		String graphTitle = "JVM (port " + config.getPort() + ") "
 				+ graph.title();
-		String graphVlabel = graph.vlabel();
-		String graphInfo = graph.info();
-		String graphArgs = graph.args();
-
-		out.println("graph_title " + graphTitle);
-		out.println("graph_vlabel " + graphVlabel);
-		if (graphInfo != null && graphInfo.length() > 0) {
-			out.println("graph_info " + graphInfo);
-		}
-		if (graphArgs != null && graphArgs.length() > 0) {
-			out.println("graph_args " + graphArgs);
-		}
-		out.println("graph_category " + Config.INSTANCE.getCategory());
+		printGraphConfig(out, graphTitle, graph.vlabel(), graph.info(), graph
+				.args(), graph.update(), graph.graph());
 	}
 
-	private void printFieldsConfig(PrintStream out) {
-		for (Method method : getFieldMethods()) {
-			Field field = method.getAnnotation(Field.class);
-			String fieldName = getFieldName(method);
-			String fieldLabel = field.label();
-			if (fieldLabel.length() == 0) {
-				fieldLabel = fieldName;
-			}
-
-			printFieldAttribute(out, fieldName, "label", fieldLabel);
-			printFieldAttribute(out, fieldName, "info", field.info());
-			printFieldAttribute(out, fieldName, "type", field.type());
-			if (!Double.isNaN(field.min())) {
-				printFieldAttribute(out, fieldName, "min", field.min());
-			}
-			printFieldAttribute(out, fieldName, "draw", field.draw());
-			printFieldAttribute(out, fieldName, "colour", field.colour());
+	protected void printFieldsConfig(PrintWriter out) {
+		for (AccessibleObject accessible : getFieldObjects()) {
+			printFieldConfig(out, accessible);
 		}
 	}
 
-	private Collection<Method> getFieldMethods() {
-		Method[] allMethods = getClass().getMethods();
+	protected void printFieldConfig(PrintWriter out, AccessibleObject accessible) {
+		Field field = accessible.getAnnotation(Field.class);
+		String fieldName = getFieldName(accessible);
+		String fieldLabel = field.label();
+		if (fieldLabel.length() == 0) {
+			fieldLabel = fieldName;
+		}
 
+		printFieldConfig(out, fieldName, fieldLabel, field.info(),
+				field.type(), field.draw(), field.colour(), field.min(), field
+						.max());
+	}
+
+	private Collection<AccessibleObject> getFieldObjects() {
 		// ensure methods are sorted by position first, then by name
-		TreeSet<Method> fieldMethods = new TreeSet<Method>(
-				new Comparator<Method>() {
+		TreeSet<AccessibleObject> fieldObjects = new TreeSet<AccessibleObject>(
+				new Comparator<AccessibleObject>() {
 
-					public int compare(Method m1, Method m2) {
+					public int compare(AccessibleObject m1, AccessibleObject m2) {
 						Integer pos1 = m1.getAnnotation(Field.class).position();
 						Integer pos2 = m2.getAnnotation(Field.class).position();
 						int result = pos1.compareTo(pos2);
@@ -85,36 +73,54 @@ public abstract class AbstractAnnotationGraphsProvider extends
 					}
 				});
 
-		for (Method method : allMethods) {
+		for (Method method : getClass().getMethods()) {
 			if (method.isAnnotationPresent(Field.class)) {
-				fieldMethods.add(method);
+				fieldObjects.add(method);
 			}
 		}
-		return fieldMethods;
+		for (java.lang.reflect.Field field : getClass().getFields()) {
+			if (field.isAnnotationPresent(Field.class)) {
+				fieldObjects.add(field);
+			}
+		}
+		return fieldObjects;
 	}
 
-	private String getFieldName(Method method) {
-		String fieldName = method.getAnnotation(Field.class).name();
+	protected String getFieldName(AccessibleObject accessible) {
+		String fieldName = accessible.getAnnotation(Field.class).name();
 		if (fieldName.length() == 0) {
-			fieldName = method.getName().substring(0, 1).toUpperCase()
-					+ method.getName().substring(1);
+			String n;
+			if (accessible instanceof Method) {
+				n = ((Method) accessible).getName();
+			} else if (accessible instanceof java.lang.reflect.Field) {
+				n = ((java.lang.reflect.Field) accessible).getName();
+			} else {
+				throw new IllegalArgumentException(
+						"AccessibleObject must be a field or a method: "
+								+ accessible);
+			}
+			fieldName = n.substring(0, 1).toUpperCase() + n.substring(1);
 		}
 		return fieldName;
 	}
 
-	private void printFieldAttribute(PrintStream out, String fieldName,
-			String attributeName, Object value) {
-		if (value != null) {
-			String stringValue = String.valueOf(value);
-			if (stringValue.length() > 0) {
-				out.println(fieldName + "." + attributeName + " " + value);
-			}
+	private Object getFieldValue(AccessibleObject accessible)
+			throws IllegalAccessException, InvocationTargetException {
+		Object value;
+		if (accessible instanceof Method) {
+			value = ((Method) accessible).invoke(this, new Object[0]);
+		} else if (accessible instanceof java.lang.reflect.Field) {
+			value = ((java.lang.reflect.Field) accessible).get(this);
+		} else {
+			throw new IllegalArgumentException(
+					"AccessibleObject must be a field or a method: "
+							+ accessible);
 		}
+		return value;
 	}
 
 	@Override
-	public void printValues(PrintStream out, MBeanServerConnection connection) {
-		this.connection = connection;
+	public void printValues(PrintWriter out) {
 		try {
 			prepareValues();
 		} catch (Exception e) {
@@ -122,21 +128,24 @@ public abstract class AbstractAnnotationGraphsProvider extends
 					+ getClass() + ": " + e.getMessage());
 			e.printStackTrace();
 		}
-		for (Method method : getFieldMethods()) {
-			String fieldName = getFieldName(method);
-			try {
-				Object value = method.invoke(this, new Object[0]);
-				printFieldAttribute(out, fieldName, "value", value);
-			} catch (Exception e) {
-				System.err.println("Failed to get value for field " + fieldName
-						+ ": " + e.getMessage());
-				e.printStackTrace();
-			}
+		for (AccessibleObject accessible : getFieldObjects()) {
+			printFieldValue(out, accessible);
 		}
-		this.connection = null;
 	}
 
-	public void prepareValues() throws Exception {
+	protected void printFieldValue(PrintWriter out, AccessibleObject accessible) {
+		String fieldName = getFieldName(accessible);
+		try {
+			Object value = getFieldValue(accessible);
+			printFieldAttribute(out, fieldName, "value", value);
+		} catch (Exception e) {
+			System.err.println("Failed to get value for field " + fieldName
+					+ ": " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+
+	protected void prepareValues() throws Exception {
 		// nothing
 	}
 
@@ -150,9 +159,13 @@ public abstract class AbstractAnnotationGraphsProvider extends
 		String info() default "";
 
 		String args() default "";
+
+		boolean update() default true;
+
+		boolean graph() default true;
 	}
 
-	@Target(ElementType.METHOD)
+	@Target( { ElementType.METHOD, ElementType.FIELD })
 	@Retention(RetentionPolicy.RUNTIME)
 	public @interface Field {
 		String name() default "";
@@ -164,6 +177,8 @@ public abstract class AbstractAnnotationGraphsProvider extends
 		String type() default "";
 
 		double min() default Double.NaN;
+
+		double max() default Double.NaN;
 
 		String draw() default "";
 

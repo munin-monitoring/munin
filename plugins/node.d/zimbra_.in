@@ -74,7 +74,7 @@ dated June, 1991.
 
 =head1 MAGIC MARKERS
 
- #%# family=auto
+ #%# family=contrib
  #%# capabilities=autoconf suggest
 
 =cut

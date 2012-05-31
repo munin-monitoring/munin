@@ -145,7 +145,9 @@ foreach my $kept (@keep) # For each disk...
 
 my $stor_id;
 
-if (defined $partitions{""})
+my $foundpartitions = keys %partitions;
+
+if ($foundpartitions == 0 or defined $partitions{""})
 { # Oh bugger. Some (or all) mountpoints were undeterminable. The backup
   # solution is to just graph everything that claims to be a FixedDisk,
   # without checking if it's removable etc
@@ -167,6 +169,20 @@ if (defined $partitions{""})
 { # Get the ones we're sure are really fixed
 
 	$stor_id   = get_by_regex ($session, $hrStorageDesc, '(^'.join('$|^',keys(%partitions)).'$)');
+}
+
+foreach my $storage (keys %$stor_id)
+{
+    $partitions{$stor_id->{$storage}}{storage} = $storage;
+    $partitions{$stor_id->{$storage}}{size}    = get_single ($session, $hrStorageSize . $storage);
+    if ($partitions{$stor_id->{$storage}}{size} == 0) {
+      delete $stor_id->{$storage} ;
+    }
+}
+
+foreach my $part (keys %partitions)
+{
+    if ($partitions{$part}{size} == 0) { delete $partitions{$part} ; }
 }
 
 if (defined $ARGV[0] and $ARGV[0] eq "config")
@@ -192,8 +208,6 @@ if (defined $ARGV[0] and $ARGV[0] eq "config")
 
 foreach my $storage (keys %$stor_id)
 {
-    $partitions{$stor_id->{$storage}}{storage} = $storage;
-    $partitions{$stor_id->{$storage}}{size}    = get_single ($session, $hrStorageSize . $storage);
     $partitions{$stor_id->{$storage}}{used}    = get_single ($session, $hrStorageUsed . $storage);
 }
 

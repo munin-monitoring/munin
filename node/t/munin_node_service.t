@@ -1,8 +1,12 @@
 use warnings;
 use strict;
 
-use Test::More tests => 24;
+use Test::More tests => 35;
 use Test::Differences;
+
+use Data::Dumper;
+use Carp;
+use File::Temp qw( tempdir );
 
 use Munin::Node::Service;
 
@@ -11,6 +15,17 @@ use English qw(-no_match_vars);
 my $uname = getpwuid $UID;
 my $gid   = (split / /, $GID)[0];
 my $gname = getgrgid $gid;
+
+
+our $dir;
+
+sub touch
+{
+    open my $f, '>', "$dir/$_[0]" or croak $!;
+    set_perms(0700, $_[0]);
+}
+sub set_perms { chmod((shift), "$dir/".(shift)) or croak $! }
+sub make_symlink { symlink "$dir/".(shift), "$dir/".(shift) or croak $! }
 
 
 my $config = Munin::Node::Config->instance();
@@ -43,8 +58,10 @@ $config->reinitialize({
         several_groups => { groups => [ 0, "($gname)" ] },
         several_groups_required => { groups => [ 0, $gname ] },
         several_groups_mixture => { groups => [ '(%%SSKK¤¤)', 0 ] },
-
-	}
+    },
+    ignores => [
+        '\.bak$',
+    ],
 });
 
 
@@ -57,6 +74,81 @@ $config->reinitialize({
 }
 
 
+### is_a_runnable_service
+{
+    local $dir = tempdir(CLEANUP => 1);
+
+    my $services = Munin::Node::Service->new(servicedir => $dir);
+
+    ok(! $services->is_a_runnable_service('good'), 'file does not exist');
+
+    {
+        my $name = 'good';
+        touch $name;
+        ok($services->is_a_runnable_service($name), 'Valid if executable');
+    }
+    {
+        my $name = 'notexec';
+        touch $name;
+        set_perms 0600, $name;
+        ok(! $services->is_a_runnable_service($name), 'Not valid if not executable');
+    }
+    {
+        my $name = '.hidden';
+        touch $name;
+        ok(! $services->is_a_runnable_service($name), 'Ignored if a dot-file');
+    }
+    {
+        my $name = 'configfile.conf';
+        touch $name;
+        ok(! $services->is_a_runnable_service($name), 'Ignored if a config file');
+    }
+    {
+        my $name = 'directory';
+        mkdir "$dir/$name";
+        ok(! $services->is_a_runnable_service($name), 'Ignored if a directory');
+    }
+    {
+        my $name = 'linky';
+        make_symlink 'good', $name;
+        ok($services->is_a_runnable_service($name), 'Symlinks are ok');
+    }
+    {
+        my $name = 'broken';
+        make_symlink 'missingfile', $name;
+        ok(! $services->is_a_runnable_service($name), 'But symlinks are not ok if they are broken');
+    }
+    {
+        my $name = 'blar g';
+        touch $name;
+        ok(! $services->is_a_runnable_service($name), 'Not valid if it contains dodgy characters');
+    }
+    {
+        my $name = 'blort.bak';
+        touch $name;
+        ok(! $services->is_a_runnable_service($name), 'Ignored files are ignored');
+    }
+}
+
+
+### list
+{
+    local $dir = tempdir(CLEANUP => 1);
+
+    my $services = Munin::Node::Service->new(servicedir => $dir);
+
+    touch 'one';
+    touch 'two';
+    touch 'boo';
+    touch '.notvisible';
+
+    eq_or_diff([ sort $services->list ], [ sort qw( one two boo )], 'listed all the valid services, no more, no less');
+}
+
+
+### prepare_plugin_environment
+
+
 # FIXME: required to avoid errors when calling export_service_environment().
 # would normally be exported by prepare_plugin_environment
 $ENV{MUNIN_MASTER_IP} = '';
@@ -66,9 +158,6 @@ $ENV{MUNIN_MASTER_IP} = '';
 	Munin::Node::Service->export_service_environment('test');
 	is($ENV{test_environment_variable}, 'fnord', 'Service-specific environment is exported');
 }
-
-
-### is_a_runnable_service
 
 
 ### _resolve_uid
@@ -88,6 +177,7 @@ $ENV{MUNIN_MASTER_IP} = '';
     eval { $services->_resolve_uid('bad_uid') };
     like($@, qr/'999999999'/, 'Exception thrown when resolving non-existant uid');
 }
+
 
 ### _resolve_gids
 {

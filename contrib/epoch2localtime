@@ -1,0 +1,6 @@
+#! /usr/bin/perl
+# Convert epoch to human readable time
+
+while (my $epoch = shift) {
+        print "" . localtime($epoch) . "\n";
+}

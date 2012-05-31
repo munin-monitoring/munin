@@ -9,10 +9,14 @@ import org.munin.plugin.jmx.AbstractAnnotationGraphsProvider.Graph;
 @Graph(title = "ThreadsDeadlocked", vlabel = "threads", info = "Returns the number of deadlocked threads for the JVM. Usually not available at readonly access level.")
 public class ThreadsDeadlocked extends AbstractAnnotationGraphsProvider {
 
+	public ThreadsDeadlocked(Config config) {
+		super(config);
+	}
+
 	@Field
 	public int threadsDeadlocked() throws IOException {
 		ThreadMXBean mxbean = ManagementFactory.newPlatformMXBeanProxy(
-				connection, ManagementFactory.THREAD_MXBEAN_NAME,
+				getConnection(), ManagementFactory.THREAD_MXBEAN_NAME,
 				ThreadMXBean.class);
 
 		long[] deadlockedThreads = mxbean.findMonitorDeadlockedThreads();
@@ -24,6 +28,6 @@ public class ThreadsDeadlocked extends AbstractAnnotationGraphsProvider {
 	}
 
 	public static void main(String args[]) {
-		runGraph(new ThreadsDeadlocked(), args);
+		runGraph(args);
 	}
 }

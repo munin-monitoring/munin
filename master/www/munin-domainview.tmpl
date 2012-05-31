@@ -1,18 +1,12 @@
 <TMPL_INCLUDE NAME="partial/head.tmpl">
-<!--
-	BODY matter.  Starts off with a table with the logo on the left, and various headlines on the right.
--->
 <body> 
 
 <TMPL_INCLUDE NAME="partial/logo_navigation.tmpl">
-
- <table class="largeinvisiblebox">
- <tr>
-   <td class="linkbox">
- <ul>	
-<!--
-    Outer body loop, going down, the groups (at this (current) level.  Listing level 1!
--->
+<div id="main">
+<TMPL_INCLUDE NAME="partial/navigation.tmpl">
+<div id="content">
+  <h2>Domain view</h2>
+  <ul>
   <TMPL_LOOP NAME="GROUPS">
       <li><span class="domain"><a href="<TMPL_VAR NAME="URLX">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
       <ul>
@@ -69,15 +63,10 @@
       </ul>
       </li>
   </TMPL_LOOP><!--END GROUPS Listing level 1 -->
- </ul>
- </td></tr>
- <tr><td></td></tr>
- <tr>
-    <td class="linkbox">
-      <TMPL_INCLUDE NAME="partial/bottom_navigation.tmpl">
-    </td>
- </tr>
- </table>
-  <TMPL_INCLUDE NAME="partial/generated_by.tmpl">
+  </ul>
+ 	<div class="contentpusher"></div>
+</div>
+</div>
+<TMPL_INCLUDE NAME="partial/footer.tmpl">
 </body>
 </html>

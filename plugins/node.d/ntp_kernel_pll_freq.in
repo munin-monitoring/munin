@@ -63,5 +63,5 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-echo -n 'ntp_pll_freq.value '
+printf 'ntp_pll_freq.value '
 ntpdc -c kern | awk -v fcomp=$fcomp '/^pll frequency:/ { print $3 + fcomp }'

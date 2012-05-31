@@ -13,6 +13,12 @@ The following environment variables are used by this plugin
 
  target - URL to fetch (default: "http://localhost/")
 
+=head1 BUGS
+
+This plugin used to be marked for auto-configuraiton.  Unfortunately
+it does not test if the $target is reachable or not, and the plugin
+has been made a contrib plugin pending fixing.
+
 =head1 AUTHOR
 
 Unknown author
@@ -23,8 +29,7 @@ Unknown license
 
 =head1 MAGIC MARKERS
 
- #%# family=auto
- #%# capabilities=autoconf
+ #%# family=contrib
 
 =cut
 
@@ -33,6 +38,11 @@ time_bin=$(which time)
 wget_bin=$(which wget)
 
 if [ "$1" = "autoconf" ]; then
+    # Need to actually test that the url is reachable, it makes
+    # no sense to install the plugin if there is no webserver on localhost.
+    echo "no (autoconfiguration not working correctly)
+    exit 0
+
     result="yes"
     [ "x$time_bin" = "x" ] && result=1
     [ "x$wget_bin" = "x" ] && result=2

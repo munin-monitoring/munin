@@ -17,11 +17,11 @@ my $node = bless { address => "127.0.0.1",
 $INPUT_RECORD_SEPARATOR = '';
 my @input = split("\n",<DATA>);
 
-# print "Input: ",@input,"\n";
+# make time() return a known-good value.
+BEGIN { *CORE::GLOBAL::time = sub { 1234567890 }; }
+my $time = time;
 
-my %answer = $node->parse_service_data("cpu",@input);
-
-# print Dumper \%answer;
+my %answer = $node->parse_service_data("cpu", @input);
 
 =comment
 
@@ -61,37 +61,37 @@ my $fasit = {
 =cut
 
 my $fasit = {
-          'cpu' => {
-                     'irq' => {
-                                'when' => '1256305015',
-                                'value' => '2770'
-                              },
-                     'system' => {
-                                   'when' => 'N',
-                                   'value' => '66594'
-                                 },
-                     'softirq' => {
-                                    'when' => '1256305015',
-                                    'value' => '127'
-                                  },
-                     'user' => {
-                                 'when' => 'N',
-                                 'value' => '145923'
-                               },
-                     'iowait' => {
-                                   'when' => 'N',
-                                   'value' => '14375'
-                                 },
-                     'idle' => {
-                                 'when' => 'N',
-                                 'value' => '2245122'
-                               },
-                     'nice' => {
-                                 'when' => 'N',
-                                 'value' => '268'
-                               }
-                   }
-        };
+    cpu => {
+        irq => {
+            when  => [ 1256305015 ],
+            value => [ 2770       ],
+        },
+        system => {
+            when  => [ $time ],
+            value => [ 66594 ],
+        },
+        softirq => {
+            when  => [ 1256305015 ],
+            value => [ 127        ],
+        },
+        user => {
+            when  => [ $time  ],
+            value => [ 145923 ],
+        },
+        iowait => {
+            when  => [ $time ],
+            value => [ 14375 ],
+        },
+        idle => {
+            when  => [ $time   ],
+            value => [ 2245122 ],
+        },
+        nice => {
+            when  => [ $time ],
+            value => [ 268   ],
+        },
+    },
+};
 
 is_deeply(\%answer,$fasit,"Plugin fetch output");
 

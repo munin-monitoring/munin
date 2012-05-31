@@ -58,7 +58,7 @@ my $vlabel = defined $ENV{'counter'} ? $ENV{'counter'} : 'entries';
 
 (my $name = $0) =~ s|.*/||;
 
-(my $host_name = $0) =~ s|.*_([^_]+)_.*|$1|;
+(my $host_name = $name) =~ s|.*_([^_]+)_.*|$1|;
 
 
 die("No log file specified") unless defined $logfile;

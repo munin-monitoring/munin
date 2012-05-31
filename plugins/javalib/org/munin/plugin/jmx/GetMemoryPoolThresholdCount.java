@@ -41,9 +41,6 @@ class GetMemoryPoolThresholdCount {
 		GCresult[i++] = gcmbeans.get(1).getCollectionUsageThresholdCount();
 		GCresult[i++] = gcmbeans.get(3).getCollectionUsageThresholdCount();
 		GCresult[i++] = gcmbeans.get(4).getCollectionUsageThresholdCount();
-		// System.out.println(gcmbeans.get(memtype).getName());
-		// denne printer Tenured Gen
-		// GCresult[i++]=gcmbeans.get(memtype).getCollectionUsageThreshold();
 
 		return GCresult;
 	}

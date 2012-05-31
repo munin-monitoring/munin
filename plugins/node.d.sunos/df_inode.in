@@ -20,6 +20,13 @@ A device specific warning/critical level is also supported.  Append
 the munin label (shown in the plugin display page) and append _warning
 or _critical respectively to get the (environment variable) name.
 
+To limit the monitored filesystems, configure the "only" environment variable.
+For example, to only monitor /, one would add to plugin-conf.d:
+
+  [df*]
+    env.only /
+
+
 =back
 
 =head1 AUTHOR
@@ -45,11 +52,11 @@ warning=${warning:-92}
 critical=${critical:-98}
 
 # Figure out correct way to invoke df and what output to use
-if $DF -P -l -i >/dev/null 2>&1; then
-	DF="$DF -P -l -i"
+if $DF -P -l -i $only >/dev/null 2>&1; then
+	DF="$DF -P -l -i $only"
 	FSNAME=6
 else
-	DF="$DF -oi 2>/dev/null"
+	DF="$DF -oi $only 2>/dev/null"
 	FSNAME=5
 	PCNT=4
 fi
@@ -62,7 +69,7 @@ fi
 
 if [ "$1" = "config" ]; then
 
-    echo 'graph_title Filesystem usage (inodes in %)'
+    echo 'graph_title Inode usage (in %)'
     echo 'graph_args --upper-limit 100'
     echo 'graph_category disk'
     echo 'graph_scale no'

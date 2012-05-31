@@ -61,6 +61,18 @@ sub is_a_runnable_service
 }
 
 
+sub list
+{
+    my ($self) = @_;
+    opendir my $dir, $self->{servicedir}
+        or die "Unable to open $self->{servicedir}: $!";
+    return grep { $self->is_a_runnable_service($_) } readdir $dir;
+}
+
+
+# FIXME: unexpected things are likely to happen if this isn't called before
+# running plugins.  it should be done automatically the first time a service is
+# run.
 sub prepare_plugin_environment
 {
     my ($self, @plugins) = @_;
@@ -236,6 +248,9 @@ sub exec_service
 }
 
 
+# Returns the command for the service and (optional) argument, expanding '%c'
+# as the original command (see 'command' directive in
+# <http://munin-monitoring.org/wiki/plugin-conf.d>).
 sub _service_command
 {
     my ($dir, $service, $argument) = @_;
@@ -290,60 +305,94 @@ Munin::Node::Service - Methods related to handling of Munin services
 
 =head1 SYNOPSIS
 
-
- my $bool = Munin::Node::Service->is_a_runnable_service($file_name);
- $result = Munin::Node::Service->fork_service($file_name)
-    if $bool;
+ my $services = Munin::Node::Service->new(timeout => 30);
+ $services->prepare_plugin_environment;
+ if ($services->is_a_runnable_service($file_name)) {
+    $services->fork_service($file_name);
+ }
 
 =head1 METHODS
 
 =over
 
+=item B<new>
+
+ my $services = Munin::Node::Service->new(%args);
+
+Constructor.  All arguments are optional.  Valid arguments are:
+
+=over 8
+
+=item C<servicedir>
+
+The directory that will be searched for services.
+
+=item C<defuser>, C<defgroup>
+
+The default uid and gid that services will run as.  Service-specific user and
+group directives (as set by the service configuration files) will override
+this.
+
+=item C<timeout>
+
+The default timeout for services.  Services taking longer than this to run will
+be killed.  Service-specific timeouts will (as set in the service configuration
+files) will override this value.
+
+=back
+
 =item B<is_a_runnable_service>
 
- my $bool = Munin::Node::Service->is_a_runnable_service($file_name, $dir);
+ my $bool = $services->is_a_runnable_service($file_name);
 
-Runs miscellaneous tests on $file_name in directory $dir. These tests are
-intended to verify that $file_name is a runnable service.
+Runs miscellaneous tests on $file_name in the service directory, to try and
+establish whether it is a runnable service.
 
-If not specified, $dir defaults to $config->{servicedir}
+=item B<list>
+  
+  my @services = $services->list;
 
-=item B<prepare_plugin_environment(@services)>
+Returns a list of all the runnable services in the directory.
+
+=item B<prepare_plugin_environment>
+
+ $services->prepare_plugin_environment(@services);
 
 Carries out various tasks that plugins require before being run, such as
 loading service configurations and exporting common environment variables.
 
 =item B<export_service_environment>
 
- Munin::Node::Service->export_service_enviromnent($service);
+ $services->export_service_enviromnent($service);
 
 Exports all the environment variables specific to service $service.
 
 =item B<change_real_and_effective_user_and_group>
 
- Munin::Node::Service->change_real_and_effective_user_and_group($service);
+ $service->change_real_and_effective_user_and_group($service);
 
-Changes the current process' effective group and user IDs to those specified
-in the configuration, or the default user or group otherwise.  Also changes
-the real group and user IDs if the operating system supports it.
+Changes the current process' effective group and user IDs to those specified in
+the configuration, or the default user or group otherwise.  Also changes the
+real group and user IDs if the operating system supports it.
 
 On failure, causes the process to exit.
 
 =item B<exec_service>
 
- Munin::Node::Service->exec_service($directory, $service, [$argument]);
+ $service->exec_service($service, [$argument]);
 
-Replaces the current process with an instance of service $service in $directory,
-running with the correct environment and privileges.
+Replaces the current process with an instance of service $service in
+$directory, running with the correct environment and privileges.
 
-This function never returns.
+This function never returns.  The process will exit(2) if the service to be run
+failed the paranoia check.
 
 =item B<fork_service>
 
- $result = Munin::Node::Service->fork_service($directory, $service, [$argument]);
+ $result = $service->fork_service($service, [$argument]);
 
-Identical to exec_service(), except it forks off a child to run the service.
-If the service takes longer than its configured timeout, it will be terminated.
+Identical to exec_service(), except it runs the service in a subprocess.  If
+the service takes longer than the timeout, it will be terminated.
 
 Returns a hash reference containing (among other things) the service's output
 and exit value.  (See documentation for run_as_child() in

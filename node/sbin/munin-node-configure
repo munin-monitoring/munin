@@ -38,21 +38,15 @@ sub main
 {
 	parse_args();
 
-    my $plugins = Munin::Node::Configure::PluginList->new(
-        libdir     => $config->{libdir},
-        servicedir => $config->{servicedir},
-
-        pidebug    => $config->{pidebug},
-
-        families => $config->{families},
-        newer    => $config->{newer},
-    );
+    my $plugins = $config->{plugins};
     $plugins->load();
 
     # Gather information
-    if (@{ $config->{snmp} }) {
-        my $snmp = init_snmp($plugins);
-        $snmp->run_probes($plugins);
+    if ($config->{snmp}) {
+        $plugins->{library}->prepare_plugin_environment($plugins->names);
+        fetch_plugin_snmpconf($plugins, $_) foreach ($plugins->list);
+
+        $config->{snmp}->run_probes($plugins);
     }
     elsif ($config->{suggest}) {
         gather_suggestions($plugins);
@@ -144,34 +138,48 @@ sub parse_args
     # comma-delimited form
     @snmp_hosts = map { split /,/ } @snmp_hosts;
 
-	$config->reinitialize({
+    my $snmp = init_snmp(
+        hosts        => \@snmp_hosts,
+        version      => $snmpver,
+        port         => $snmpport,
+
+        community    => $snmpcomm,
+
+        username     => $snmp3username,
+        authpassword => $snmp3authpass,
+        authprotocol => $snmp3authproto,
+        privpassword => $snmp3privpass,
+        privprotocol => $snmp3privproto,
+    ) if @snmp_hosts;
+
+    my $plugins = Munin::Node::Configure::PluginList->new(
+        libdir     => $libdir,
+        servicedir => $servicedir,
+
+        pidebug    => $pidebug,
+
+        families   => \@families,
+        newer      => $newer,
+    );
+
+    $config->reinitialize({
         %$config,
 
-        newer          => $newer,
-        shell          => $shell,
         exit_not_error => $exit_not_error,
         suggest        => $suggest,
+
+        shell          => $shell,
         remove_also    => $removes,
 
-        families => \@families,
+        snmp => $snmp,
+
+	plugins => $plugins,
 
         conffile   => $conffile,
-        servicedir => $servicedir,
+        servicedir => $servicedir,  # needed for creating/removing links
         sconfdir   => $sconfdir,
-        libdir     => $libdir,
-
-        snmp             => \@snmp_hosts,
-        snmp_version     => $snmpver,
-        snmp_port        => $snmpport,
-        snmp_community   => $snmpcomm,
-        snmpv3_username  => $snmp3username,
-        snmpv3_authpass  => $snmp3authpass,
-        snmpv3_authproto => $snmp3authproto,
-        snmpv3_privpass  => $snmp3privpass,
-        snmpv3_privproto => $snmp3privproto,
 
         DEBUG   => $debug,
-        PIDEBUG => $pidebug,
     });
 
     return;
@@ -303,33 +311,13 @@ sub link_add
 
 ### SNMP probing ###############################################################
 
-# Prepares for SNMP probing
 sub init_snmp
 {
-    my ($plugins) = @_;
-
-	unless (eval { require Munin::Node::SNMPConfig; }) {
+    unless (eval { require Munin::Node::SNMPConfig; }) {
         die "# ERROR: Cannot perform SNMP probing as Munin::Node::SNMPConfig module is not available.\n",
             $@;
-	}
-
-    $plugins->{library}->prepare_plugin_environment($plugins->names);
-
-    fetch_plugin_snmpconf($plugins, $_) foreach ($plugins->list);
-
-    return Munin::Node::SNMPConfig->new(
-        hosts        => $config->{snmp},
-        version      => $config->{snmp_version},
-        port         => $config->{snmp_port},
-
-        community    => $config->{snmp_community},
-
-        username     => $config->{snmpv3_username},
-        authpassword => $config->{snmpv3_authpass},
-        authprotocol => $config->{snmpv3_authproto},
-        privpassword => $config->{snmpv3_privpass},
-        privprotocol => $config->{snmpv3_privproto},
-    );
+    }
+    return Munin::Node::SNMPConfig->new(@_);
 }
 
 
@@ -457,12 +445,12 @@ munin-node-configure - View and modify which plugins are enabled.
 
 =head1 SYNOPSIS
 
-munin-node-configure [options]
+  munin-node-configure [options]
 
 =head1 DESCRIPTION
 
-B<munin-node-configure> is reports which plugins are enabled on the current
-node, and suggest changes to this list.
+B<munin-node-configure> reports which plugins are enabled on the current node,
+and suggest changes to this list.
 
 By default this program shows which plugins are activated on the system.
 
@@ -477,27 +465,30 @@ plugins will be printed. These can be reviewed or piped directly into a shell
 to install the plugins.
 
 
-=head1 OPTIONS
+=head1 GENERAL OPTIONS
 
 =over 4
 
 =item B<< --help >>
 
-Show this help page
+Show this help page.
 
 =item B<< --version >>
 
-Show version information
+Show version information.
 
 =item B<< --debug >>
 
-Print debug information on the operations of munin-node-configure (very
-verbose).  All debugging output is sent to STDOUT, prefixed with '#'.  Only
-errors go to STDERR.
+Print debug information on the operations of C<munin-node-configure>.  This can
+be very verbose.
+
+All debugging output is printed to STDOUT, and each line is prefixed with '#'.
+Only errors are printed to STDERR.
 
 =item B<< --pidebug >>
 
-Informs plugins that they should enable debugging.
+Plugin debug.  Sets the environment variable MUNIN_DEBUG to 1 so that plugins
+may enable debugging.
 
 =item B<< --config <file> >>
 
@@ -505,7 +496,7 @@ Override configuration file [@@CONFDIR@@/munin-node.conf]
 
 =item B<< --servicedir <dir> >>
 
-Override plugin dir [@@CONFDIR@@/plugins/]
+Override plugin directory [@@CONFDIR@@/plugins/]
 
 =item B<< --sconfdir <dir> >>
 
@@ -513,58 +504,145 @@ Override plugin configuration directory [@@CONFDIR@@/plugin-conf.d/]
 
 =item B<< --libdir <dir> >>
 
-Override plugin lib [@@LIBDIR@@/plugins/]
-
-=item B<< --families <family, ...> >>
-
-Override families (auto, manual, contrib, snmpauto).  Multiple families can be
-specified as a comma-separated list, by repeating the C<--families> option, or
-as a combination of the two.
-
-When listing installed plugins, the default families are auto, manual and
-contrib.  Only auto plugins are checked for plugins.  SNMP probing is only
-performed on snmpauto plugins.
-
-=item B<< --suggest >>
-
-Show suggestions instead of status
-
-=item B<< --shell >>
-
-Show shell commands instead of a table (implies --suggest unless --snmp was
-also provided)
+Override plugin library [@@LIBDIR@@/plugins/]
 
 =item B<< --exitnoterror >>
 
-Do not consider non-zero exit-value as error
+Do not consider plugins that exit non-zero exit-value as error.
+
+=item B<< --suggest >>
+
+Suggest plugins that might be added or removed, instead of those that are
+currently enabled.
+
+=back
+
+
+=head2 OUTPUT OPTIONS
+
+By default, C<munin-node-configure> will print out a table summarising the
+results.
+
+=over 4
+
+=item B<< --shell >>
+
+Instead of a table, print shell commands to install the new plugin suggestions.
+
+This implies C<--suggest>, unless C<--snmp> was also enabled.  By default, it
+will not attempt to remove any plugins.
 
 =item B<< --remove-also >>
 
-Also show rm-commands when doing --shell
+When C<--shell> is enabled, also provide commands to remove plugins that are no
+longer applicable from the service directory.
+
+=back
+
+
+=head2 PLUGIN SELECTION OPTIONS
+
+=over 4
+
+=item B<< --families <family,...> >>
+
+Override the list of families that will be used (auto, manual, contrib,
+snmpauto).  Multiple families can be specified as a comma-separated list, by
+repeating the C<--families> option, or as a combination of the two.
+
+When listing installed plugins, the default families are 'auto', 'manual' and
+'contrib'.  Only 'auto' plugins are checked for suggestions.  SNMP probing is only
+performed on 'snmpauto' plugins.
 
 =item B<< --newer <version> >>
 
-Only show suggestions related to plugins included more recently than
-version <version>.
+Only consider plugins added to the Munin core since <version>.  This option is
+useful when upgrading, since it can prevent plugins that have been manually
+removed from being resinstalled.  This only applies to plugins in the 'auto'
+family.
+
+=back
+
+=head2 SNMP Options
+
+=over 4
 
 =item B<< --snmp <host|cidr,...> >>
 
-Do SNMP probing on the host or CIDR network (e.g. "192.168.1.0/24"). This may
-take some time, especially if the probe includes many hosts. This option can
-be specified multiple times, or as a comma-separated list, to include more
-than one host/CIDR.
+Probe the SNMP agents on the host or CIDR network (e.g. "192.168.1.0/24"), to
+see what plugins they support. This may take some time, especially if the many
+hosts are specified.
+
+This option can be specified multiple times, or as a comma-separated list, to
+include more than one host/CIDR.
 
 =item B<< --snmpversion <ver> >>
 
-Set the SNMP version (1, 2c or 3) to use when probing. Default is "2c".
-
-=item B<< --snmpcommunity <comm> >>
-
-Set SNMP community string to use when probing. Default is "public".
+The SNMP version (1, 2c or 3) to use. ['2c']
 
 =item B<< --snmpport <port> >>
 
-Set SNMP port. Default is "161".
+The SNMP port to use [161]
+
+=item B<SNMP 1/2c authentication>
+
+SNMP versions 1 and 2c use a "community string" for authentication.  This is
+a shared password, sent in plaintext over the network.
+
+=item B<< --snmpcommunity <string> >>
+
+The community string for version 1 and 2c agents.  ['public'] (If this works
+your device is probably very insecure and needs a security checkup).
+
+=item B<SNMP 3 authentication>
+
+SNMP v3 has three security levels. Lowest is C<noAuthNoPriv>, which provides
+neither authentication nor encryption.  If a username and C<authpassword> are
+given it goes up to C<authNoPriv>, and the connection is authenticated.  If
+C<privpassword> is also given the security level becomes C<authPriv>, and the
+connection is authenticated and encrypted.
+
+B<Note>: Encryption can slow down slow or heavily loaded network devices.  For
+most uses C<authNoPriv> will be secure enough -- the password is sent over the
+network encrypted in any case.
+
+ContextEngineIDs are not (yet) supported.
+
+For further reading on SNMP v3 security models please consult RFC3414 and the
+documentation for L<Net::SNMP>.
+
+=item B<< --snmpusername <name> >>
+
+Username.  There is no default.
+
+=item B<< --snmpauthpassword <password> >>
+
+Authentication password.  Optional when encryption is also enabled, in which
+case defaults to the privacy password (C<--snmpprivpassword>).
+
+=item B<< --snmpauthprotocol <protocol> >>
+
+Authentication protocol.  One of 'md5' or 'sha' (HMAC-MD5-96, RFC1321 and
+SHA-1/HMAC-SHA-96, NIST FIPS PIB 180, RFC2264).  ['md5']
+
+=item B<< --snmpprivpassword <password> >>
+
+Privacy password to enable encryption.  There is no default.  An empty ('')
+password is considered as no password and will not enable encryption.
+
+Privacy requires a privprotocol as well as an authprotocol and a authpassword,
+but all of these are defaulted (to 'des', 'md5', and the privpassword value,
+respectively) and may therefore be left unspecified.
+
+=item B<< --snmpprivprotocol <protocol> >>
+
+If the privpassword is set this setting controls what kind of encryption is
+used to achive privacy in the session.  Only the very weak 'des' encryption
+method is supported officially.  ['des']
+
+munin-node-configure also supports '3des' (CBC-3DES-EDE, aka Triple-DES, NIST
+FIPS 46-3) as specified in IETF draft-reeder-snmpv3-usm-3desede.  Whether or
+not this works with any particular device, we do not know.
 
 =back
 

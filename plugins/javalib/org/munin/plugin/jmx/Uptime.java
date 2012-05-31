@@ -11,17 +11,21 @@ public class Uptime extends AbstractAnnotationGraphsProvider {
 
 	private static final double MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24d;
 
+	public Uptime(Config config) {
+		super(config);
+	}
+
 	@Field
 	public double uptime() throws IOException {
 		RuntimeMXBean osmxbean = ManagementFactory.newPlatformMXBeanProxy(
-				connection, ManagementFactory.RUNTIME_MXBEAN_NAME,
+				getConnection(), ManagementFactory.RUNTIME_MXBEAN_NAME,
 				RuntimeMXBean.class);
 
 		return osmxbean.getUptime() / MILLISECONDS_PER_DAY;
 	}
 
 	public static void main(String args[]) {
-		runGraph(new Uptime(), args);
+		runGraph(args);
 	}
 
 }

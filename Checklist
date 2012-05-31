@@ -5,6 +5,7 @@ This is a pre-release checklist for the maintainer.
  * Is .htaccess installed?
  * rm -f /etc/munin/plugins/* 
       Does munin-node-configure -d show any autoconf errors?
+      Does munin-node-configure --debug run nicely or do we get perl errors?
 
  * Update plugins/plugins.history.in:
 
@@ -28,4 +29,13 @@ This is a pre-release checklist for the maintainer.
  * Update RELEASE in the tag
 
  * make tar
+
+ * Broadcast the good news:
+   1. make a sha256sum : sha256sum munin-version.tar.gz > munin-version.tar.gz.sha256sum
+      and sign it using gpg.
+   2. Upload the tar.gz on sourceforge.net
+   3. Create a news on sf annoucing it
+   4. Update our front page
+   5. Create a new release on freshmeat.net 
+   6. Send an email to the ML 
 

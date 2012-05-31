@@ -91,40 +91,7 @@ ip=${ip:-127.0.0.1}
 port=${port:-5400}
 
 if [ "x$1" = "xsuggest" ] ; then
-  cat <<__EOF
-ClassesLoaded
-ClassesLoadedTotal
-ClassesUnloaded
-CompilationTimeTotal
-GCCount
-GCTime
-CurrentThreadCpuTime
-CurrentThreadUserTime
-MemoryAllocatedHeap
-MemoryAllocatedNonHeap
-MemoryEdenPeak
-MemoryEdenUsage
-MemoryEdenUsagePostGC
-MemoryObjectsPending
-MemoryPermGenPeak
-MemoryPermGenUsage
-MemoryPermGenUsagePostGC
-MemorySurvivorPeak
-MemorySurvivorUsage
-MemorySurvivorUsagePostGC
-MemoryTenuredGenPeak
-MemoryTenuredGenUsage
-MemoryTenuredGenUsagePostGC
-MemorythresholdPostGCCount
-MemorythresholdUsageCount
-ProcessorsAvailable
-Threads
-ThreadsDaemon
-ThreadsDeadlocked
-ThreadsPeak
-ThreadsStartedTotal
-Uptime
-__EOF
+  echo MultigraphAll
   exit 0
 fi
 
@@ -166,10 +133,11 @@ fi
 
 scriptname=${0##*/}
 jmxfunc=${scriptname##*_}
+prefix=${scriptname%_*}
 
 if [ "x$jmxfunc" = "x" ] ; then
   echo "error, plugin must be symlinked in order to run"
   exit 1
 fi
 
-ip=$ip port=$port $JAVA_BIN -cp $MUNIN_JAR org.munin.plugin.jmx.$jmxfunc $param
+ip=$ip port=$port $JAVA_BIN -cp $MUNIN_JAR org.munin.plugin.jmx.$jmxfunc $param $prefix

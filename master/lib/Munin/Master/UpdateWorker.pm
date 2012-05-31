@@ -63,6 +63,7 @@ sub do_work {
 	global => {},
 	);
 
+    INFO "[INFO] starting work for $nodedesignation.\n";
     my $done = $self->{node}->do_in_session(sub {
 
 	eval {
@@ -78,7 +79,8 @@ sub do_work {
 		    my $spoolfetch_last_timestamp = get_spoolfetch_timestamp($nodedesignation);
 		    %whole_config = $self->uw_spoolfetch($spoolfetch_last_timestamp);
 
-		    DEBUG "[DEBUG] whole_config:" . Dumper(\%whole_config);
+		    # XXX - Commented, should be protect by a "if logger.isDebugEnabled()"
+		    #DEBUG "[DEBUG] whole_config:" . Dumper(\%whole_config);
 
 		    # Gets the plugins from spoolfetch
 		    # Only keep the first one, the others will be multigraph-fetched
@@ -127,11 +129,12 @@ sub do_work {
 
 			# __root__ is only a placeholder plugin for 
 			# an empty spoolfetch so we should ignore it 
-			# if asked to fetch it
-			next if ($plugin eq "__root__");
-			
-			DEBUG "[DEBUG] No service data for $plugin, fetching it";
-			%service_data = $self->{node}->fetch_service_data($plugin);
+			# if asked to fetch it. 
+			# But we should still do everything after than.
+			if ($plugin ne "__root__") {
+				DEBUG "[DEBUG] No service data for $plugin, fetching it";
+				%service_data = $self->{node}->fetch_service_data($plugin);
+			}
 		}
 
 		# If update_rate is aligned, round the "when" for alignement
@@ -266,12 +269,13 @@ sub get_spoolfetch_timestamp {
 	my ($nodedesignation) = @_;
 
 	my $key = "$nodedesignation/__spoolfetch__";
-	my $db_file = $config->{dbdir} . "/last_updated.dic.txt";
+	my $db_file = $config->{dbdir} . "/spoolfetch.db";
 
 	my %last_updated;
 
-   	use Munin::Common::SyncDictFile;
-   	tie(%last_updated, 'Munin::Common::SyncDictFile', $db_file) or ERROR "$!";
+	use Fcntl;   # For O_RDWR, O_CREAT, etc.
+   	use DB_File;
+   	tie(%last_updated, 'DB_File', $db_file, O_RDWR|O_CREAT, 0666) or ERROR "$!";
 
 	my $last_updated_value = $last_updated{$key} || "0";
 
@@ -282,16 +286,20 @@ sub get_spoolfetch_timestamp {
 
 sub set_spoolfetch_timestamp {
 	my ($nodedesignation, $timestamp) = @_;
+	DEBUG "[DEBUG] set_spoolfetch_timestamp($nodedesignation, $timestamp)";
 
 	my $key = "$nodedesignation/__spoolfetch__";
-	my $db_file = $config->{dbdir} . "/last_updated.dic.txt";
+	my $db_file = $config->{dbdir} . "/spoolfetch.db";
 
 	my %last_updated;
 
-   	use Munin::Common::SyncDictFile;
-   	tie(%last_updated, 'Munin::Common::SyncDictFile', $db_file) or ERROR "$!";
+	use Fcntl;   # For O_RDWR, O_CREAT, etc.
+   	use DB_File;
+   	tie(%last_updated, 'DB_File', $db_file, O_RDWR|O_CREAT, 0666) or ERROR "$!";
 
-	$last_updated{$key} = time;
+	# Using the last timestamp sended by the server :
+	# -> It can be be different than "now" to be able to process the backlock slowly
+	$last_updated{$key} = $timestamp;
 
    	untie(%last_updated);
 }
@@ -458,11 +466,6 @@ sub _compare_and_act_on_config_changes {
 sub _ds_config_eq {
     my ($self, $old_ds_config, $ds_config) = @_;
 
-    if (%$old_ds_config ne %$ds_config) {
-        # Config keys differ:
-        return '';
-    }
-
     for my $key (%$old_ds_config) {
         if ((not defined($old_ds_config->{$key}))
             and not defined($ds_config->{$key})) {
@@ -609,6 +612,8 @@ sub _set_rrd_data_source_defaults {
     $data_source->{type} = 'GAUGE' unless defined($data_source->{type});
     $data_source->{min}  = 'U'     unless defined($data_source->{min});
     $data_source->{max}  = 'U'     unless defined($data_source->{max});
+    $data_source->{update_rate} = 300 unless defined($data_source->{update_rate});
+    $data_source->{graph_data_size} = "normal" unless defined($data_source->{graph_data_size});
 }
 
 
@@ -659,7 +664,7 @@ sub _create_rrd_file {
     my ($self, $rrd_file, $service, $ds_name, $ds_config) = @_;
 
     INFO "[INFO] creating rrd-file for $service->$ds_name: '$rrd_file'";
-    mkpath(dirname($rrd_file), {mode => oct(777)});
+    munin_mkdir_p(dirname($rrd_file), oct(777));
     my @args = (
         $rrd_file,
         "--start", "-10y", # Always start RRD 10 years ago (should be enough), to be able to spoolfetch in it
@@ -798,6 +803,15 @@ sub _update_rrd_file {
 
     my $last_updated_timestamp = 0;
     my @update_rrd_data;
+	if ($config->{"rrdcached"} eq "on") {
+		if($RRDs::VERSION >= 1.3){
+			push @update_rrd_data, "--daemon";
+			push @update_rrd_data, $config->{"rrdcached_socket"};
+		} else {
+			ERROR "[ERROR] RRDCached feature disabled: RRD version must be at least 1.3. Version found: " . $RRDs::VERSION;
+			$config->{"rrdcached"} = "off";
+		}
+	} 
     for (my $i = 0; $i < scalar @$values; $i++) { 
         my $value = $values->[$i];
         my $when = $ds_values->{when}[$i];

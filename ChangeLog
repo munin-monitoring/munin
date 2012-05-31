@@ -1,4 +1,94 @@
 -*- text -*-
+munin 2.0-alpha2, r3856:4124, 2011-1-19
+
+Commits by bldewolf, feiner.tom, janl, knan, ligne, mha, ssm, steve.schnepp, lupe, jorne
+
+Summary : 
+
+* Huge performance boost
+* munin-graph is over, cgi graphing only from now on
+* Enabling CGI HTML with an reworked UI
+* use a binary DB to store spoolfetch timestamps (fixes growing file bug in 2.0a1)
+* documentation cleanup
+
+Enhancements : 
+
+* Better node side timeout error message allowing things to be found out if needed
+* Properly label the bgbouncer queries-per-second graph.
+* Properly return undef when the SNMP client returns noSuchObject instead of setting an error.
+* munin-node: Insert a reset_timeout() call to enable the master to get in a word in edgeways after a slow plugin has executed
+* munin-html: Start using fork to save some wall-clock time.  Option --fork us now active and max_html_jobs is recognized by munin-html as the maximum number of paralell processes.
+* Actually recognize max_html_jobs as a config parameter
+* Add the publication part
+* Clean up Perl warnings due to use of undefined variables in two functions in LimitsOld.pm.
+* looking at the Net::SNMP doco, -username cannot be '' (it must be between 1 and 32 characters).
+* The time of munin-graph is over, cgi from now on
+* since pollers are now being respawned if they fall over, the shutdown-spooler signal handlers need to be removed before starting any poller up.
+* Cleanup of munin-cgi-graph:
+  - Make it log right
+  - Make it fast (now <0.1s pr graph on reasonable hardware)
+  - Remove $config deep copy, it is too expensive, we need to fix
+    expand_specials instead.
+  - BUG: Broke --pinpoint processing
+* Munin::Master::Utils:
+  - Replace some often used REs with string matches for speed.  Helped
+    speed up munin-cgi-graph quite a bit.  Introduced munin_dumpconfig
+    to help debug the expand_specials issue
+  - Introduce munin_find_node_by_fqn to do faster lookups of things
+    to graph.
+* Munin::Master::GraphOld:
+  - Restructure a bit to avoid double loading of $config (in
+    cooperation with munin-cgi-graph) and make it possible to pass
+    some graphing options (--only-fqn for example) in some new places.
+  - Propper logging the right way
+  - NOTE: All code relating to host and service filtering and looping
+    should be removed soonish - we're only using the FQN to find our
+    work now.
+* Replacing 'echo -n', which is implementation-defined - with printf, which is posix
+* munin-update: Add local URI scheme to enable running async collector directly on the master as this may somehow enable push-to master. Closes #981, thanks to jorne
+* ALWAYS dumps the RRD cmd used when an error occurs when RRD::graphing
+* Add some extra HTTP Response Headers
+* JMX refactoring by Joachim Sauer
+* add some external tools to ease a Storable datafile
+* Enabled multigraph capabilities for the munin-async-server
+* Re-work filtering in linux df plugin to be much more flexible.
+* Force lpstat to C locale instead of EN_us.
+
+Various bugfix (not exhaustive) : 
+
+* ${graph_period} substitution should happens in graph_title & fieldname (closes #881, thx stavros)
+* bugfix for mkpath on 5.8.8 (closes #992) -- thx Matthew Kent
+* fixes #991 (munin-update constantly thinks config has changed), thx mkent
+* Better checks for undefs in munin-limits (#973)
+* IPMI plugin now graphs power usage as well (#954)
+* Fix swap usage numbers in the sunos memory plugin (#696)
+* Make exim_mailstats plugin behave properly after initialisation (#985)
+* Fixed a bug where all services in a category were colored when a service had a warning or critical state
+* Clean up field names in the bonding_err_ plugin on linux (#962)
+* Cosmetic cleanups in snmp__if_multi plugin (#1008)
+* The snmp__if_multi plugin now makes proper use of 64bit counters if available (#1006)
+* The linux plugin selinux_avcstat now uses integers instead of floating points (#1005)
+* freebsd/coretemp - rrd doesn't do celsius/fahrenheit
+* Fix autoconf in the nfs_client plugin for linux nodes (#1015).
+* Fix issues with plugin names with - in them.
+* Make linux df plugin not die when it encounters a mountpoint it can't access (#940)
+* snmp__df - avoid division by zero
+* gets it working for net-snmp snmpd on a ubuntu 10.04 lts desktop with fuse mounts
+* Fix up Solaris's if_ plugin.
+* Low max_processes leads to hosts being skipped (closes #990) -- thx Matthew Kent
+* Make the mysql_ plugin better at parsing innodb output (#956)
+* Change call to mkpath to call to Utils module, resolving an issue with old perl (ticket #992)
+* snort_* : merge fix from branch 1.4 to trunk
+
+New plugins : 
+
+* add plugin : snmp__df_ram plugin
+* add plugin : PostgreSQL 9.0+ streaming replication lag
+* add plugin : linux/proc - for graphing information about groups of processes.
+
+Removed plugins :
+
+No one was disappointed :-)
 
 munin 2.0-alpha1, r3400:3856, 2010-7-14
 

@@ -12,7 +12,7 @@ Every Linux system with df installed.
 =head1 CONFIGURATION
 
 The plugin excludes per default the following special, read-only or
-dynamically allocating file systems from graphing: 
+dynamically allocating file systems from graphing:
 
   none unknown iso9660 squashfs udf romfs ramfs
 
@@ -35,7 +35,25 @@ You may specify filesystem specific warning and critical levels:
     env._dev_sda2_warning 98
     env._dev_sda2_critical 99
 
-=head1 USAGE 
+Devices can be explicitly included or excluded based on their mountpoint or
+device name using the include_re and exclude_re environment variables.  These
+environment variables are parsed as whitespace separated regular expressions.
+For example, if you wish to ignore the filesystem on /dev/sda2 and all
+filesystems mounted under /var except /var/tmp, these rules would achieve this:
+
+    env.include_re ^/var/tmp$
+    env.exclude_re /dev/sda2 ^/var/
+
+Please note that these expressions are tried against both mountpoints and
+device names, therefore broad matches could potentially filter out desired
+devices.  Anchoring is also useful for avoiding false positives (as seen in the
+example), but not strictly necessary.  Testing with munin-run is always a good
+idea.
+
+Also note that a mountpoint that is excluded by filesystem type but included by
+RE will not be included.
+
+=head1 USAGE
 
 Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
 
@@ -51,7 +69,7 @@ filesystems.
 
 =head1 VERSION
 
-$Id$
+  $Id$
 
 =head1 AUTHOR
 
@@ -69,65 +87,97 @@ use Munin::Plugin;
 # For these devices use the mount point, the device is useless
 my %usemntpt = ( tmpfs => 1, none => 1, udev => 1 );
 
-my $exclude=$ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs debugfs simfs';
-my $dfopts = "-P -l ".join(' -x ',('',split('\s+',$exclude)));
+my $exclude = $ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs debugfs simfs';
+my $dfopts  = "-P -l ".join(' -x ',('',split('\s+',$exclude)));
+
+# Compile REs from env
+my @include_re;
+if (defined $ENV{include_re}) {
+    foreach my $re (split m{\s+}, $ENV{include_re}) {
+        push @include_re, qr/$re/;
+    }
+}
+my @exclude_re;
+if (defined $ENV{exclude_re}) {
+    foreach my $re (split m{\s+}, $ENV{exclude_re}) {
+        push @exclude_re, qr/$re/;
+    }
+}
+
+sub skip {
+    my $name = shift;
+    my $mountpt = shift;
+
+    foreach my $re (@include_re) {
+        return 0 if ($name =~ $re or $mountpt =~ $re);
+    }
+
+    foreach my $re (@exclude_re) {
+        return 1 if ($name =~ $re or $mountpt =~ $re);
+    }
+
+    return 0;
+}
+
 
 sub print_values() {
 
     # Read from df
-    open (DF,"df $dfopts |") or die "Could not open pipe from df, $!";
+    open (DF,"df $dfopts 2>/dev/null |") or die "Could not open pipe from df, $!";
     <DF>; # Skip the header
     while (<DF>) {
 	chomp;
-	next if /\/\//; # Ignore lines containing //? Samba?
-	
-	# Parse the output
-	my ($name,undef,$used,$avail,undef,$mountpt,undef)=split(/\s+/,$_,7);
+        next if m{//}; # Ignore lines containing //? Samba?
 
+	# Parse the output
+        my ($name, undef, $used, $avail, undef, $mountpt, undef) = split(/\s+/, $_, 7);
+
+	next if skip($name, $mountpt);
+	
 	$name = $mountpt if defined($usemntpt{$name}) && $usemntpt{$name};
 
-	$name=clean_fieldname($name);
+        $name = clean_fieldname($name);
 
 	my $ps = 0;
 
-	$ps = ( $used / ($used+$avail) ) * 100 if $used;
+	$ps = ($used / ($used+$avail)) * 100 if $used;
 
 	print $name, ".value ", $ps, "\n";
     }
     close DF;
-    die "Error executing df. Exit code $?\n" if $?;
 }
 
-if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" ) {
-    if (`@@PERL@@ $0` eq "" ) {
-	print "no\n";
-	exit 0;
+if ($ARGV[0] and $ARGV[0] eq 'autoconf' ) {
+    if (`@@PERL@@ $0` eq '' ) {
+	print "no (no devices to monitor)\n";
     } else {
 	print "yes\n";
-	exit 0;
     }
+    exit 0;
 }
 
-if ( defined($ARGV[0]) and $ARGV[0] eq "config" ) {
+if ($ARGV[0] and $ARGV[0] eq 'config' ) {
     # The headers
     print "graph_title Disk usage in percent\n";
     print "graph_args --upper-limit 100 -l 0\n";
     print "graph_vlabel %\n";
     print "graph_scale no\n";
     print "graph_category disk\n";
-    
+
     # Read from df
-    open (DF,"df $dfopts |") or die "Unable to open pipe from df: $!";
+    open (DF,"df $dfopts 2>/dev/null |") or die "Unable to open pipe from df: $!";
     <DF>; # Skip the header
     while (<DF>) {
-	next if /\/\//;
-	
+        next if m{//};
+
 	# Parse the output
-	my ($name,undef,undef,undef,$ps,$mountpt,undef)=split(/\s+/,$_,7);
+        my ($name,undef,undef,undef,$ps,$mountpt,undef) = split(/\s+/,$_,7);
+
+	next if skip($name, $mountpt);
 
 	$name = $mountpt if defined($usemntpt{$name}) && $usemntpt{$name};
 
-	$name=clean_fieldname($name);
+        $name = clean_fieldname($name);
 
 	# Create and print labels
 	print $name, ".label ", $mountpt, "\n";
@@ -135,8 +185,9 @@ if ( defined($ARGV[0]) and $ARGV[0] eq "config" ) {
 	print_thresholds($name,undef,undef,92,98);
     }
     close DF;
-    die "Error executing df. Exit code $?\n" if $?;
     exit 0;
 }
 
 print_values();
+
+# vim: ft=perl : sw=4 : ts=8 : et

@@ -3,7 +3,11 @@
 
 =head1 NAME
 
-df_inode - Plugin to monitor inode-usage. 
+df_inode - Plugin to monitor inode-usage.
+
+=head1 APPLICABLE SYSTEMS
+
+Every Linux system with df installed.
 
 =head1 CONFIGURATION
 
@@ -14,22 +18,50 @@ This configuration snipplet is an example with the default configuration:
     env.warning 92
     env.critical 98
 
-=head1 NOTES
+The environment variables "warning" and "critical" sets the percentage
+from which Munin starts to warn about the disk usage.
 
-Rewrite based on original shell-based version
+Put it in a file in @@CONFDIR@@/plugin-conf.d/ and restart the munin-node.
 
-=head1 AUTHOR
+You may specify filesystem specific warning and critical levels:
 
-Ingvar Hagelund
+    env._dev_sda2_warning 98
+    env._dev_sda2_critical 99
 
-=head1 LICENSE
+You may also specify partitions to exclude.  In the aforementioned
+[df] section add this to exclude /dev/sda2 and /dev/md7
 
-GPLv2
+    env.partition_exclude /dev/sda2 /dev/md7
+
+Note: These are the device paths, not the mount points.
+
+=head1 USAGE
+
+Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
 
 =head1 MAGIC MARKERS
 
  #%# family=auto
  #%# capabilities=autoconf
+
+=head1 BUGS
+
+Uses device names instead of mount points to identify mounted
+filesystems.
+
+=head1 VERSION
+
+  $Id$
+
+=head1 AUTHOR
+
+Ingvar Hagelund
+
+Partition exclusion code added by Joshua Kugler
+
+=head1 LICENSE
+
+GPLv2
 
 =cut
 
@@ -39,8 +71,12 @@ use Munin::Plugin;
 # For these devices use the mount point, the device is useless
 my %usemntpt = ( tmpfs => 1, none => 1, udev => 1 );
 
-my $exclude=$ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs vfat debugfs simfs';
-my $dfopts = "-P -l -i ".join(' -x ',('',split('\s+',$exclude)));
+my $exclude = $ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs vfat debugfs simfs';
+my $dfopts  = "-P -l -i ".join(' -x ',('',split('\s+',$exclude)));
+
+my @excludepart;
+@excludepart = split m{\s+}, $ENV{partition_exclude} if $ENV{partition_exclude};
+
 
 sub print_values() {
 
@@ -48,15 +84,18 @@ sub print_values() {
     open (DF,"df $dfopts |") or die "Could not open pipe from df: $!";
     <DF>; # Skip the header
     while (<DF>) {
-	next if /\/\//;
-	
+        next if m{//};
+
 	# Parse the output
 	if ( /^(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)/ ) {
-	    my $ps=$5;
+	    my $ps = $5;
 
 	    my $name = $1;
+
+	    next if (grep $_ eq $name, @excludepart);
+
 	    $name = $6 if defined($usemntpt{$name}) && $usemntpt{$name};
-	    $name=clean_fieldname($name);
+	    $name = clean_fieldname($name);
 
 	    $ps =~ s/\%//;
 
@@ -67,18 +106,16 @@ sub print_values() {
     die "Error executing df. Exit code $?\n" if $?;
 }
 
-if ( $ARGV[0] eq "autoconf" ) {
-  if (`@@PERL@@ $0` eq "" ) {
-    print "no\n";
+if ($ARGV[0] and $ARGV[0] eq 'autoconf') {
+    if (`@@PERL@@ $0` eq '') {
+	print "no (no devices to monitor)\n";
+    } else {
+	print "yes\n";
+    }
     exit 0;
-  } else {
-    print "yes\n";
-    exit 0;
-  }
 }
 
-if ( $ARGV[0] eq "config" ) {
-
+if ($ARGV[0] and $ARGV[0] eq 'config') {
     # The headers
     print "graph_title Inode usage in percent\n";
     print "graph_args --upper-limit 100 -l 0\n";
@@ -90,19 +127,22 @@ if ( $ARGV[0] eq "config" ) {
     open (DF,"df $dfopts |") or die "Unable to open pipe from df: $!";
     <DF>; # Skip the header
     while (<DF>) {
-	next if /\/\//;
-	
+        next if m{//};
+
 	# Parse the output
 	if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
 	    my $dir=$6;
 
 	    my $name = $1;
+
+	    next if (grep $_ eq $name, @excludepart);
+
 	    $name = $dir if defined($usemntpt{$name}) && $usemntpt{$name};
-	    $name=clean_fieldname($name);
+	    $name = clean_fieldname($name);
 
 	    # Create and print labels
 	    print "$name.label $dir\n";
-	    print_thresholds($name,undef,undef,92,98);
+            print_thresholds($name, undef, undef, 92, 98);
 	}
     }
     close DF;
@@ -111,3 +151,5 @@ if ( $ARGV[0] eq "config" ) {
 }
 
 print_values();
+
+# vim: ft=perl : sw=4 : ts=8 : et

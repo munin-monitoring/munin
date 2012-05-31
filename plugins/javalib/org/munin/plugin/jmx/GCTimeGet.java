@@ -13,14 +13,14 @@ import javax.management.ObjectName;
 class GCTimeGet {
 
 	private ArrayList<GarbageCollectorMXBean> gcmbeans;
-	private String[] GCresult = new String[2];
+	private long[] GCresult = new long[2];
 	private MBeanServerConnection connection;
 
 	public GCTimeGet(MBeanServerConnection connection) {
 		this.connection = connection;
 	}
 
-	public String[] GC() throws IOException, MalformedObjectNameException {
+	public long[] GC() throws IOException, MalformedObjectNameException {
 		ObjectName gcName = null;
 
 		gcName = new ObjectName(
@@ -41,13 +41,9 @@ class GCTimeGet {
 		int i = 0;
 
 		for (GarbageCollectorMXBean gc : gcmbeans) {
-			GCresult[i++] = formatMillis(gc.getCollectionTime());
+			GCresult[i++] = gc.getCollectionTime();
 		}
 		
 		return GCresult;
-	}
-
-	private String formatMillis(long ms) {
-		return String.format("%.4f", ms / (double) 1000);
 	}
 }

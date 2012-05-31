@@ -4,15 +4,12 @@ munin-node.conf - Munin-node configuration file
 
 =head1 DESCRIPTION
 
-Munin-node is the node that Munin fetches data from, graphs, htmlifies
-and optionaly warns nagios about data it gathers. It's designed to let it
-be very easy to graph new datasources.
+F<munin-node.conf> is the configuration file for C<munin-node>, the agent that
+Munin fetches data from.
 
-"munin-node.conf" is the configuration file for munin-node.
-
-The format of the file is dictated by the use of Net::Server. A look at
-"perldoc Net::Server" will give a list of options that the file supports
-by using the module.
+The format is dictated by the use of C<Net::Server>. A look at C<perldoc
+Net::Server> will give a list of options that the file supports by using the
+module.  This page mainly covers the Munin-specific extensions.
 
 The following options are of special interest:
 
@@ -26,6 +23,17 @@ regular expression after the keyword so to allow localhost it must be
 written like this:
 
       allow ^127\.0\.0\.1$
+
+=item B<< cidr_allow NETWORK/MASK >>
+
+An alternative to C<allow RE>.  This allows the access list to be specified in
+CIDR format.  For instance, C<cidr_allow 192.0.2.0/24> would allow connections
+from any IP from 192.0.2.1 to 192.0.2.254.
+
+And C<cidr_allow 127.0.0.1/32> is the equivalent to the example above.  Note
+that the netmask B<must> be provided, even though it's just C</32>.
+
+This option requires that the C<Net::CIDR> Perl module be installed.
 
 =item B<< host IP >>
 

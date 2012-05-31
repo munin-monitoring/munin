@@ -480,29 +480,35 @@ sub get_limits {
     if (defined $crit and $crit =~ /^\s*([-+\d.]*):([-+\d.]*)\s*$/) {
         $critical[0] = $1 if length $1;
         $critical[1] = $2 if length $2;
-        DEBUG "[DEBUG] processing critical: $name -> $critical[0] : $critical[1]";
     }
     elsif (defined $crit and $crit =~ /^\s*([-+\d.]+)\s*$/) {
-        $critical[1] = $1 if defined $1;
-        DEBUG "[DEBUG] processing critical: $name -> : $critical[1]";
+        $critical[1] = $1;
     }
     elsif (defined $crit) {
         @critical = (0, 0);
-        DEBUG "[DEBUG] processing critical: $name -> $critical[0] : $critical[1]";
     }
+    if(defined $crit) {
+        DEBUG "[DEBUG] processing critical: $name -> "
+                . (defined $critical[0]? $critical[0] : "")
+                .  " : "
+                . (defined $critical[1]? $critical[1] : "");
+    }   
 
     if (defined $warn and $warn =~ /^\s*([-+\d.]*):([-+\d.]*)\s*$/) {
         $warning[0] = $1 if length $1;
         $warning[1] = $2 if length $2;
-        DEBUG "[DEBUG] processing warning: $name -> $warning[0] : $warning[1]";
     }
     elsif (defined $warn and $warn =~ /^\s*([-+\d.]+)\s*$/) {
-        $warning[1] = $1 if defined $1;
-        DEBUG "[DEBUG] processing warning: $name -> : $warning[1]";
+        $warning[1] = $1;
     }
     elsif (defined $warn) {
         @warning = (0, 0);
-        DEBUG "[DEBUG] processing warning: $name -> $warning[0] : $warning[1]";
+    }
+    if(defined $warn) {
+        DEBUG "[DEBUG] processing warning: $name -> "
+                . (defined $warning[0]? $warning[0] : "")
+                .  " : "
+                . (defined $warning[1]? $warning[1] : "");
     }
 
     if ($unknown_limit =~ /^\s*(\d+)\s*$/) {
@@ -714,12 +720,18 @@ sub message_expand {
     my @res  = ();
 
 
-    while (length($text)) {
+    while (defined($text) && length($text)) {
         if ($text =~ /^([^\$]+|)(?:\$(\{.*)|)$/) {
             push @res, $1;
             $text = $2;
         }
+
         my @a = extract_bracketed($text, '{}');
+        if(!defined $a[0]) {
+            $text = $a[1];
+            next;
+        }
+
         if ($a[0] =~ /^\{var:(\S+)\}$/) {
             $a[0] = munin_get($hash, $1, "");
         }
@@ -763,8 +775,8 @@ sub message_expand {
             my $t     = $3;
             my $res   = "";
             my $field = munin_get($hash, $f, 0);
-            my $check = ($field ne "0" and length($field));
-            $check = (!length($field) or $field eq "0") if $n;
+            my $check = (defined $field and $field ne "0" and length($field));
+            $check = (!$check) if $n;
 
             if ($check) {
                 $res .= message_expand($hash, $t);

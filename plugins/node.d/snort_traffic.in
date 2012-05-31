@@ -78,11 +78,11 @@ if [ "$1" = "config" ]; then
         echo 'graph_vlabel Mbits / second'
         echo 'graph_scale no'
         echo 'traffic.label Mbits/second'
-	if [ -n $warning ]; then
-		echo 'traffic.warning $warning'
+	if [ -n "$warning" ]; then
+		echo "traffic.warning $warning"
 	fi
-	if [ -n $critical ]; then
-		echo 'traffic.critical $critical'
+	if [ -n "$critical" ]; then
+		echo "traffic.critical $critical"
 	fi
         echo 'traffic.info Traffic in Mbites per second'
         echo 'graph_category Snort'
@@ -90,5 +90,5 @@ if [ "$1" = "config" ]; then
         exit 0
 fi
 
-echo -n "traffic.value "
+printf "traffic.value "
 echo $(tail -n1 $_target| awk -F, '{ print $3 }')

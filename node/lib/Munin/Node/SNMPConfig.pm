@@ -69,7 +69,6 @@ sub run_probes
 {
     my ($self, $plugins) = @_;
 
-    # FIXME: should preserve hostnames as much as possible.
     foreach my $host (expand_hosts(@{$self->{hosts}})) {
         $self->_probe_single_host($host, $plugins);
     }
@@ -298,17 +297,38 @@ The community string to use for SNMP version 1 or 2c.  Default is 'public'.
 
 =item username
 
-The username to use when 
+The SNMPv3 username to use.
 
 =item authpassword
 
+SNMPv3 Authentication password.  Optional when encryption is also enabled, in
+which case defaults to the privacy password (C<privpassword>).  The
+password is sent encrypted (one way hash) over the network.
+
 =item authprotocol
+
+SNMPv3 Authentication protocol.  One of 'md5' or 'sha' (HMAC-MD5-96, RFC1321
+and SHA-1/HMAC-SHA-96, NIST FIPS PIB 180, RFC2264).  The default is 'md5'.
 
 =item privpassword
 
+SNMPv3 Privacy password to enable encryption.  An empty ('') password is
+considered as no password and will not enable encryption.
+
+Privacy requires a v3privprotocol as well as a v3authprotocol and a
+v3authpassword, but all of these are defaulted (to 'des', 'md5', and the
+v3privpassword value, respectively) and may therefore be left unspecified.
+
 =item privprotocol
 
+If the v3privpassword is set this setting controls what kind of encryption is
+used to achive privacy in the session.  Only the very weak 'des' encryption
+method is supported officially.  The default is 'des'.
 
+The implementing perl module (L<Net::SNMP>) also supports '3des' (CBC-3DES-EDE
+aka Triple-DES, NIST FIPS 46-3) as specified in IETF
+draft-reeder-snmpv3-usm-3desede.  Whether or not this works with any particular
+device, we do not know.
 
 =back
 
