@@ -3,6 +3,12 @@
 # $Id$
 #
 # $Log$
+# Revision 1.5.2.3  2004/06/08 15:26:04  jimmyo
+# The server programs now open the log file at an earlier point.
+#
+# Revision 1.5.2.2  2004/06/08 14:55:41  jimmyo
+# Noise reduction in munin-update, when plugins say strange things (only log, don\'t complain on stderr).
+#
 # Revision 1.5.2.1  2004/05/11 20:23:07  jimmyo
 # Bug regarding logo namechange from logo.gif to logo.png, when installing.
 #
@@ -57,6 +63,7 @@ my $conffile = "@@CONFDIR@@/munin.conf";
 my $force_root = 0;
 my $do_usage = 0;
 my $do_version = 0;
+my $log = new IO::Handle;
 
 # Get options
 $do_usage=1  unless 
@@ -105,9 +112,9 @@ it as the user \"munin\". Aborting.\n\n";
     exit (1);
 }
 
-my $config = &munin_config ($conffile);
+my $config;
+$config = &munin_config ($conffile, $config);
 
-open LOG,">>$config->{logdir}/munin-html.log" or die "Cannot open $config->{logdir}/munin-html.log";
 logger("Starting munin-html, checking lock");
 
 munin_runlock("$config->{rundir}/munin-html.lock");
@@ -237,14 +244,51 @@ open (FILE, ">$config->{htmldir}/index.html") or die "Cannot open $config->{html
 print FILE $template->output;
 close FILE;
 
-sub logger {
-  my ($comment) = @_;
-  my $now = strftime "%b %d %H:%M:%S", localtime;
-  print LOG "$now - $comment\n";
+sub logger_open {
+    my $dirname = shift;
+
+    if (!$log->opened)
+    {
+	unless (open ($log, ">>$dirname/munin-html.log"))
+	{
+	    print STDERR "Warning: Could not open log file \"$dirname/munin-html.log\" for writing: $!";
+	}
+    }
 }
 
+
+sub logger {
+    my ($comment) = @_;
+    my $now = strftime "%b %d %H:%M:%S", localtime;
+ 
+    if ($log->opened)
+    {
+	print $log "$now - $comment\n";
+    }
+    else
+    {
+	if (defined $config->{logdir})
+	{
+	    if (open ($log, ">>$config->{logdir}/munin-html.log"))
+	    {
+		 print $log "$now - $comment\n";
+	    }
+	    else
+	    {
+		 print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-html.log\" for writing: $!";
+		 print STDERR "$now - $comment\n";
+	    }
+	}
+	else
+	{
+	    print STDERR "$now - $comment\n";
+	}
+    }
+}
+
+
 logger("munin-html finished");
-close LOG;
+close $log;
 
 =head1 NAME
 

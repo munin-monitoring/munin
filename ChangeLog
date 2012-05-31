@@ -1,3 +1,8 @@
+munin (1.0.0)
+
+  * Noise reduction in munin-update, when plugins say strange things (only
+    log, don't complain on stderr).
+
 munin (1.0.0pre5)
 
   * Bug regarding logo namechange from logo.gif to logo.png, when installing.

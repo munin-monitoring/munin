@@ -4,18 +4,24 @@ etc/rc.d/munin-node.sh
 sbin/munin-node
 sbin/munin-node-configure
 sbin/munin-run
+share/munin/plugins/acpi
+share/munin/plugins/amavis
 share/munin/plugins/apache_accesses
 share/munin/plugins/apache_processes
 share/munin/plugins/apache_volume
+share/munin/plugins/apc_envunit_
 share/munin/plugins/bind9
 share/munin/plugins/cpu
 share/munin/plugins/df
 share/munin/plugins/df_inode
 share/munin/plugins/exim_mailqueue
 share/munin/plugins/exim_mailstats
+share/munin/plugins/folding@home
 share/munin/plugins/hddtemp
+share/munin/plugins/hddtemp2
 share/munin/plugins/if_
 share/munin/plugins/if_errcoll_
+share/munin/plugins/ipac-ng
 share/munin/plugins/ircu
 share/munin/plugins/load
 share/munin/plugins/mailman
@@ -32,6 +38,7 @@ share/munin/plugins/named
 share/munin/plugins/netstat
 share/munin/plugins/open_files
 share/munin/plugins/plugins.history
+share/munin/plugins/pm3users
 share/munin/plugins/pop_stats
 share/munin/plugins/postfix_mailqueue
 share/munin/plugins/postfix_mailstats
@@ -40,7 +47,17 @@ share/munin/plugins/processes
 share/munin/plugins/ps_
 share/munin/plugins/psu_
 share/munin/plugins/samba
+share/munin/plugins/sendmail_mailqueue
+share/munin/plugins/sendmail_mailstats
+share/munin/plugins/sendmail_mailtraffic
+share/munin/plugins/snmp__df
+share/munin/plugins/snmp__fc_if_
+share/munin/plugins/snmp__fc_if_err_
 share/munin/plugins/snmp__if_
+share/munin/plugins/snmp__if_err_
+share/munin/plugins/snmp__load
+share/munin/plugins/snmp__processes
+share/munin/plugins/snmp__users
 share/munin/plugins/spamstats
 share/munin/plugins/squid_cache
 share/munin/plugins/squid_icp
@@ -52,9 +69,7 @@ share/munin/plugins/sybase_space
 share/munin/plugins/vmstat
 @unexec rmdir %D/var/munin/plugin-state 2>/dev/null || true
 @unexec rmdir %D/var/munin 2>/dev/null || true
-@dirrm share/munin/plugins
 @unexec rmdir %D/share/munin 2>/dev/null || true
-@unexec rm -rf %D/etc/munin/plugins 2>/dev/null || true
 @unexec rmdir %D/etc/munin/plugin-conf.d 2>/dev/null || true
 @unexec rmdir %D/etc/munin 2>/dev/null || true
 @unexec echo "If you want to *completely* remove munin-node, you have to"
