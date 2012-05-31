@@ -314,6 +314,8 @@ sub get_picture_filename {
     my $scale   = shift;
     my $params  = shift;
 
+    # XXX - hack to fix cgitmpdir default 
+    $config->{cgitmpdir} ||= "$Munin::Common::Defaults::MUNIN_DBDIR/cgi-tmp";
     my $cgi_tmp_dir = $config->{cgitmpdir} . "/munin-cgi-graph";
 
     $params = $params ? "?$params" : "";
