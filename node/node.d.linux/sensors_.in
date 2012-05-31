@@ -71,7 +71,7 @@ my %config = (
 			 graph_args => '--base 1000 -l 0'
 	               },
 	       temp => {
-			 regex => qr/^(\S[^:]*)\s*:\s+\+?(\d+(?:\.\d+)?)[° ]C(?:\s+\((?:high|limit)\s*=\s*\+?(\d+(?:\.\d+)?)[° ]C,\s*hyst(?:eresis)?\s*=\s*\+?(\d+(?:\.\d+)?)[° ]C\))?/m,
+			 regex => qr/^(\S[^:]*)\s*:\s+\+?(-?\d+(?:\.\d+)?)[° ]C(?:\s+\((?:high|limit)\s*=\s*\+?(-?\d+(?:\.\d+)?)[° ]C,\s*hyst(?:eresis)?\s*=\s*\+?(-?\d+(?:\.\d+)?)[° ]C\))?/m,
 			 title => 'Temperatures',
 			 vtitle => 'Celsius',
 			 print_threshold => \&temp_threshold,
@@ -117,7 +117,10 @@ if (defined $ARGV[0] and $ARGV[0] eq 'suggest') {
 
 $0 =~ /sensors_(.+)*$/;
 my $func = $1;
-exit 2 unless defined $func;
+unless (defined $func and exists $config{$func}) {
+  print STDERR 'plugin must be called as one of ',join(' ', map { 'sensors_'.$_ } keys %config), "\n";
+  exit 2;
+}
 
 if ( defined $ARGV[0] and $ARGV[0] eq 'config' ) {
   print "graph_title $config{$func}->{title}\n";

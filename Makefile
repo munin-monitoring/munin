@@ -50,12 +50,15 @@ install-main: build
 
 	$(INSTALL) -m 0644 build/server/Munin.pm $(PERLLIB)/
 
-install-node: build install-node-non-snmp install-node-snmp
+install-node: build install-node-non-snmp install-node-snmp install-munindoc
 	echo Done.
 
 install-node-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(SBINDIR)/
 
+install-munindoc: build 
+	$(INSTALL) -m 0755 build/node/munindoc $(BINDIR)/ 
+	
 install-node-non-snmp: build
 	$(CHECKGROUP)
 	mkdir -p $(CONFDIR)/plugins
@@ -76,19 +79,23 @@ install-node-non-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure $(SBINDIR)/
 	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
-	
+
+# ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE 
+# GENERIC ONES 
 install-node-plugins: build
-	for p in build/node/node.d.$(OSTYPE)/* build/node/node.d/*; do    		\
+	for p in build/node/node.d/* build/node/node.d.$(OSTYPE)/*; do    		\
 		if test -f "$$p" ; then                                     		\
 			family=`sed -n 's/^#%# family=\(.*\)$$/\1/p' $$p`;  		\
 			test "$$family" || family=contrib;                  		\
 			if echo $(INSTALL_PLUGINS) | grep $$family >/dev/null; then 	\
-				test -f "$(LIBDIR)/plugins/`basename $$p`"		\
-				|| $(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;    		\
+				$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;    		\
 			fi;                                                 		\
 		fi                                                          		\
 	done
 	$(INSTALL) -m 0644 build/node/plugins.history $(LIBDIR)/plugins/
+	$(INSTALL) -m 0644 build/node/plugin.sh $(LIBDIR)/plugins/
+	mkdir -p $(PERLLIB)/Munin
+	$(INSTALL) -m 0644 build/node/Plugin.pm $(PERLLIB)/Munin/
 
 	#TODO:
 	#configure plugins.
@@ -150,6 +157,9 @@ build-stamp:
 		    -e 's|@@USER@@|$(USER)|g'				\
 		    -e 's|@@GROUP@@|$(GROUP)|g'				\
 		    -e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g'		\
+		    -e 's|@@GOODSH@@|$(GOODSH)|g'			\
+		    -e 's|@@BASH@@|$(BASH)|g'				\
+		    -e 's|@@HASSETR@@|$(HASSETR)|g'			\
 		    $$file > build/$$destname;				\
 	done
 	touch build-stamp
@@ -255,5 +265,14 @@ endif
 source_dist: clean
 	(cd ..; ln -s $(DIR) munin-$(VERSION))
 	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
+
+node-monkeywrench: install-node
+	rm -rf $(CONFDIR)/plugins
+	rm -rf $(LIBDIR)/plugins
+	mkdir -p $(LIBDIR)/plugins
+	mkdir -p $(CONFDIR)/plugins
+	cp monkeywrench/plugin-break*_ $(LIBDIR)/plugins/
+	$(SBINDIR)/munin-node-configure --suggest
+	echo 'Done?'
 
 .PHONY: install install-main install-node install-doc install-man build build-doc deb clean source_dist

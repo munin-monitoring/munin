@@ -1,35 +1,49 @@
 #!@@PERL@@ -w
-# 
-# Plugin to monitor individual interrupts
-#
-# $Log$
-# Revision 1.7.2.1  2005/02/24 17:33:22  jimmyo
-# linux/irqstats should no longer fail on some systems (Deb#296452).
-#
-# Revision 1.7  2004/12/10 18:51:44  jimmyo
-# linux/apt* has been forced to LANG=C, to get predictable output.
-#
-# Revision 1.6  2004/12/10 10:47:49  jimmyo
-# Change name from ${scale} to ${graph_period}, to be more consistent.
-#
-# Revision 1.5  2004/12/09 22:12:56  jimmyo
-# Added "graph_period" option, to make "graph_sums" usable.
-#
-# Revision 1.4  2004/11/20 19:53:04  jimmyo
-# Removed debuging-settings. Sorry about that.
-#
-# Revision 1.3  2004/11/20 18:17:51  jimmyo
-# Added i-prefix to value lines as well (forgot earlier).
-#
-# Revision 1.2  2004/11/19 23:01:40  jimmyo
-# Fixed irqstats plugin so it doesn't use numbers as field names. Also expanded the label if possible, since munin-graph now handles long labels.
-#
-# Revision 1.1  2004/10/26 09:31:04  ilmari
-# Added plugin linux/irqstast, showing individual interrupt rates.
-#
-#
+# -*- cperl -*-
+
+=head1 NAME
+
+irqstats - Munin plugin to monitor individual interrupts on a Linux machine
+
+=head1 APPLICABLE SYSTEMS
+
+Any Linux system
+
+=head1 CONFIGURATION
+
+None needed
+
+=head1 INTERPRETATION
+
+The plugin simply shows the number of interrupts on each interrupt
+line.  The lines are identified by the attached equipment rather than
+the IRQ numbers.
+
+High interrupt rates may coincide with high loads on disk, network or
+other I/O, this is normal.
+
+=head1 VERSION
+
+  $Id$
+
+=head1 BUGS
+
+None known
+
+=head1 AUTHOR
+
+Unknown
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
 #%# family=auto
 #%# capabilities=autoconf
+
+
 use strict;
 
 if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
@@ -41,11 +55,24 @@ if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
 	exit(1);
     }
 }
-open my $in, '<', '/proc/interrupts'
-  or die "Can't open /proc/interrupts: $!\n";
 
-my @cpus = split(' ', <$in>);
-my $cpus = scalar @cpus;
+my $sun;
+$sun = 1 if (`uname -m` =~ /sparc/);
+
+my $in;
+my @cpus;
+my $cpus;
+
+if ($sun) {
+    @cpus = grep (/^cpu\d+/, `cat /proc/stat`);
+    $cpus = scalar @cpus;
+} else {
+    open $in, '<', '/proc/interrupts'
+      or die "Can't open /proc/interrupts: $!\n";
+    @cpus = split(' ', <$in>);
+    $cpus = scalar @cpus;
+}
+
 my $cpu;
 
 if ($0 =~ /(?:.*\/)?irqstats_(.+)/) {
@@ -65,17 +92,32 @@ sub sum (@) {
 
 while (my $line = <$in>) {
     my ($irq, $label, $type);
-    my @data = split(' ', $line, $cpus + 3);
+    my @data;
+    if ($sun) {
+	@data = split (' ', $line, $cpus + 2);
+    } else {
+	@data = split(' ', $line, $cpus + 3);
+    }
     chomp @data;
     $irq = shift @data;
-    next unless length $irq;
+    next unless defined($irq) and length $irq;
     chop $irq;
     if ($irq =~ /^\d+$/) {
+	# For numbered interrupts the format is set
 	$label = pop @data;
 	$type = pop @data;
+    } else {
+	# For named interrupts it's more confusing, slice and dice
+	# to divorce data from commentary
+	$label = join(" ",@data[$cpus..$#data]);
+	@data = @data[0..$cpus-1];
     }
+
     # Skip non-per-cpu values for per-cpu stats
-    next if defined($cpu) and $cpus > @data;
+    # This will ignore ERR: and MIS: lines on multi cpu systems
+    # (checked on 2.6.22, 2.6.24)
+    # next if defined($cpu) and $cpus > @data;
+
     push @irqs, {
 		 irq => $irq,
 		 label => $label,
@@ -106,3 +148,4 @@ EOM
     print "i", $_->{irq}, '.value ', $_->{count}, "\n" for @irqs;
 }
 
+__END__

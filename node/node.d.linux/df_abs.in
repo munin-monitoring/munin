@@ -1,4 +1,7 @@
-#!/bin/sh
+#!@@GOODSH@@
+# -*- sh -*-
+#
+# $Id$
 #
 # Script to monitor absolute disk usage.
 #
@@ -7,38 +10,30 @@
 # 	config   (required)
 # 	autoconf (optional - used by munin-config)
 #
-# $Log$
-# Revision 1.2.2.1  2005/02/16 22:50:14  jimmyo
-# linux/df* now ignores bind mounts.
-#
-# Revision 1.2  2004/08/24 13:37:29  ilmari
-# Add total line
-#
-# Revision 1.1  2004/08/24 12:26:48  ilmari
-# Added plugin linux/df_abs
+# Environment
+#       exclude: space separated list if fs types to exclude.
+#                iso9660 by default
+#       warning: Warning _percentage_, default 92
+#       critical: Critical _percentage_, default 98
 #
 # Magic markers (optional - used by munin-config and installation
 # scripts):
 #
+# $Id$
+#
 #%# family=manual
 #%# capabilities=autoconf
 
-MAXLABEL=20
-MAXNAME=15
+. $MUNIN_LIBDIR/plugins/plugin.sh
 
 if [ "$1" = "autoconf" ]; then
 	echo yes
 	exit 0
 fi
 
-clean_name() {
-    echo $1 | sed 's/[\/.-]/_/g; s/^_dev\(_mapper\)\?_//'| awk "{ 
-	if (length(\$1) > $MAXNAME)
-		print substr(\$1, length(\$1)-$MAXNAME+1)
-	else
-		print \$1
-	}"
-}
+exclude=${exclude:-iso9660}
+
+exclude=$(echo $exclude | sed -e 's/ +/ -x /g' -e 's/^/-x /')
 
 if [ "$1" = "config" ]; then
 
@@ -47,26 +42,18 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel bytes'
 	echo 'graph_category disk'
 	echo 'graph_total Total'
-	df -P -l -x none -x unknown | sed 1d | grep -v "//" | while read i; do
-		name=`clean_name $i`
-		echo -n "$name.label "
-		echo $i | awk "{ 
-			dir=\$6
-			if (length(dir) <= $MAXLABEL)
-				print dir
-			else
-				printf (\"...%s\n\", substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3)) 
-		}"
-		echo "$name.cdef $name,1024,*"
-		size=`echo $i | awk '{print $2}'`
-		echo "$name.warning $((size / 100 * 92))"
-		echo "$name.critical $((size / 100 * 98))"
+	df -P -l $exclude | sed 1d | grep -v "//" | 
+	   while read dev size used avail cap mnt; do
+	       name="$(clean_fieldname $dev)"
+	       echo "$name.label $mnt"
+	       echo "$name.cdef $name,1024,*"
+	       echo "$name.warning $((size * ${warning:-92} / 100))"
+	       echo "$name.critical $((size * ${critical:-98} / 100))"
 	done
 	exit 0
 fi
 
-df -P -l -x unknown  -x none| sed 1d | grep -v "//" | while read i; do
-	name=`clean_name $i`
-	echo -n "$name.value "
-	echo $i | awk '{ print $3 }'
+df -P -l $exclude | sed 1d | grep -v "//" | 
+   while read dev size used avail cap mnt; do
+	echo "$(clean_fieldname $dev).value $used"
 done

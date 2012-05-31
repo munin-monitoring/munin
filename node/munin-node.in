@@ -1,6 +1,8 @@
 #!@@PERL@@ -wT
+# -*- cperl -*-
 #
-# Copyright (C) 2004 Audun Ytterdal, Jimmy Olsen
+# Copyright (C) 2002-2006 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
+#    Nicolai Langfeldt
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,110 +18,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-#
 # $Id$
-#
-# $Log$
-# Revision 1.20.2.4  2005/03/16 19:55:34  ilmari
-# Allow root for the per-plugin group directive.
-#
-# Revision 1.20.2.3  2005/03/16 16:50:40  ilmari
-# Fix mis-merge of optional user support
-#
-# Revision 1.20.2.2  2005/03/13 12:46:04  jimmyo
-# Added support for optional user settings in node.
-#
-# Revision 1.20.2.1  2005/02/16 17:12:03  jimmyo
-# munin-node didn't treat default_plugin_user properly (Deb#295366).
-#
-# Revision 1.20  2004/12/22 21:33:48  jimmyo
-# Remove hardcoding of default user/group to run the plugin (SF#1083251).
-#
-# Revision 1.19  2004/12/09 20:03:25  jimmyo
-# Added two new plugins contributed by Jacques Caruso, generic/exim_mailqueue_alt and generic/mailscanner.
-#
-# Revision 1.18  2004/12/09 19:34:54  jimmyo
-# host_name in plugin-conf.d now overrides plugin output.
-#
-# Revision 1.17  2004/11/20 23:17:47  jimmyo
-# Added per-plugin timeouts, contributed by Chan Wilson (SF#881044).
-#
-# Revision 1.16  2004/11/16 20:00:42  jimmyo
-# License cleanups.
-#
-# Revision 1.15  2004/11/10 15:34:18  jimmyo
-# Added new plugin generic/apc_nis to monitor APC UPS, contributed by xavier.
-#
-# Revision 1.14  2004/05/12 20:33:28  jimmyo
-# Made the allow/deny syntax more flexible.
-#
-# Revision 1.13  2004/05/10 21:16:11  jimmyo
-# Allow/deny in munin-node can now be configured per plugin, in addition to "globally" for the whole node.
-#
-# Revision 1.12  2004/04/27 21:18:33  jimmyo
-# Fixed a problem in the node when running as a non-root user and using sudo to run the plugins (Deb#236694).
-#
-# Revision 1.11  2004/02/05 18:05:59  jimmyo
-# Improved timeout-handling in node (Deb#224480).
-#
-# Revision 1.10  2004/02/05 17:35:41  jimmyo
-# Made client timeouts configurable (not per plugin).
-#
-# Revision 1.9  2004/02/01 21:34:59  jimmyo
-# Remove dependency on pgrep (use process groups instead). (SF#881049)
-#
-# Revision 1.8  2004/02/01 20:46:29  jimmyo
-# Added better logging of plugin failures in the node. (SF#881045)
-#
-# Revision 1.7  2004/01/29 19:39:00  jimmyo
-# Generic plugins now use printf instead of echo -n, as this is more portable (SF#885564)
-#
-# Revision 1.6  2004/01/29 18:07:52  jimmyo
-# Bugfix from bug introduced 30 minutes ago
-#
-# Revision 1.5  2004/01/29 17:36:19  jimmyo
-# Updated copyright information
-#
-# Revision 1.4  2004/01/29 16:56:54  jimmyo
-# Fixed "group" bug. Added support for multiple and optional groups
-#
-# Revision 1.3  2004/01/17 22:04:29  toreanderson
-# Change the name in process listing to contain only the path to the munin-node
-# executable, without '/usr/bin/perl -wT' prepending it.
-#
-# Revision 1.2  2004/01/15 15:20:01  jimmyo
-# Making things workable after name change. Upping for test verwion.
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:06  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.28  2003/12/18 18:51:37  jimmyo
-# added configuration option "ignore_file", which takes regex for files to ignore (e.g. rpmnew/save) (Deb#224265).
-#
-# Revision 1.27  2003/12/18 17:58:18  jimmyo
-# Do a fake clean of the environment because of the taint checking.
-#
-# Revision 1.26  2003/12/17 21:29:26  jimmyo
-# Don\'t try to change uid/gid if not running as root. (Deb#224300)
-#
-# Revision 1.25  2003/12/10 15:30:02  jimmyo
-# Set path before trying to get hostname
-#
-# Revision 1.24  2003/12/10 15:11:40  jimmyo
-# A couple of bugfixes.
-#
-# Revision 1.23  2003/11/17 09:23:08  jimmyo
-# Fix taint checking for getting hostname
-#
-# Revision 1.22  2003/11/17 09:20:09  jimmyo
-# Fix for machines which don't have "host".
-#
-# Revision 1.21  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
 #
 
 package MyPackage;
@@ -129,6 +28,9 @@ use vars qw(@ISA);
 use Getopt::Long;
 use Net::Server::Fork; # any personality will do
 
+# Variable is set at build, with values detected by the makefiles
+my $HAS_SETR = @@HASSETR@@;
+
 chdir ("/");
 
 # "Clean" environment to disable taint-checking on the environment. We _know_
@@ -137,11 +39,38 @@ chdir ("/");
 foreach my $key (keys %ENV)
 {
         $ENV{$key} =~ /^(.*)$/;
-        $ENV{$key} = $1;
+        $ENV{$key} = $1 || ''; # It sometimes happens that the match was empty
 }
 
 $0 =~ /^(.*)$/; # for some strange reason won't "$0 = $0;" work.
 $0 = $1;
+
+# Make configuration settings available at runtime.
+$ENV{'MUNIN_PREFIX'}     = '@@PREFIX@@';
+$ENV{'MUNIN_CONFDIR'}    = '@@CONFDIR@@';   # /etc/munin,/etc/opt/munin or such
+$ENV{'MUNIN_BINDIR'}     = '@@BINDIR@@';
+$ENV{'MUNIN_SBINDIR'}    = '@@SBINDIR@@';
+$ENV{'MUNIN_DOCDIR'}     = '@@DOCDIR@@';
+$ENV{'MUNIN_LIBDIR'}     = '@@LIBDIR@@';    # LIBDIR/plugins contains plugin.sh
+$ENV{'MUNIN_HTMLDIR'}    = '@@HTMLDIR@@';
+$ENV{'MUNIN_CGIDIR'}     = '@@CGIDIR@@';
+$ENV{'MUNIN_DBDIR'}      = '@@DBDIR@@';
+$ENV{'MUNIN_PLUGSTATE'}  = '@@PLUGSTATE@@'; # Put plugin state files here!
+$ENV{'MUNIN_MANDIR'}     = '@@MANDIR@@';
+$ENV{'MUNIN_LOGDIR'}     = '@@LOGDIR@@';
+$ENV{'MUNIN_STATEDIR'}   = '@@STATEDIR@@';  # This is for .pid files
+$ENV{'MUNIN_USER'}       = '@@USER@@';      # User munin runs as (mostly)
+$ENV{'MUNIN_GROUP'}      = '@@GROUP@@';     # Group ditto
+$ENV{'MUNIN_PLUGINUSER'} = '@@PLUGINUSER@@';# Default user for plugin running
+$ENV{'MUNIN_VERSION'}    = '@@VERSION@@';
+$ENV{'MUNIN_PERL'}       = '@@PERL@@';
+$ENV{'MUNIN_PERLLIB'}    = '@@PERLLIB@@';
+$ENV{'MUNIN_GOODSH'}     = '@@GOODSH@@';
+$ENV{'MUNIN_BASH'}       = '@@BASH@@';
+$ENV{'MUNIN_PYTHON'}     = '@@PYTHON@@';
+$ENV{'MUNIN_OSTYPE'}     = '@@OSTYPE@@';
+$ENV{'MUNIN_HOSTNAME'}   = '@@HOSTNAME@@';
+$ENV{'MUNIN_MKTEMP'}     = '@@MKTEMP@@';
 
 @ISA = qw(Net::Server::Fork);
 my @ORIG_ARGV = @ARGV;
@@ -334,7 +263,7 @@ FILES:
 	}
 	closedir (DIR);
     }
-    
+
     opendir (DIR,$servicedir) || die "Cannot open plugindir: $servicedir $!";
 FILES:
     for my $file (grep { -f "$servicedir/$_" } readdir(DIR)) {
@@ -504,9 +433,12 @@ sub run_service {
 
 		print "# Want to run as euid/egid $u/$g\n" if $DEBUG;
 
-		$( = $g    unless $g == 0;
+		if ($HAS_SETR)
+		{
+			$( = $g    unless $g == 0;
+			$< = $u    unless $u == 0;
+		}
 		$) = $gs   unless $g == 0;
-		$< = $u    unless $u == 0;
 		$> = $u    unless $u == 0;
 
 		if ($> != $u or $g != (split (' ', $)))[0])
@@ -750,20 +682,20 @@ sub load_auth_file
 	}
 	elsif (/^\s*env\s+([^=\s]+)\s*=\s*(.+)$/)
 	{
-	    $sconf->{$service}{'env'}{$1} = $2;
-	    print "Saving $service->env->$1 = $2...\n" if $DEBUG;
-	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"env $1=$2\" should be rewritten to \"env.$1 $2\").";
+	    # $sconf->{$service}{'env'}{$1} = $2;
+	    # net_write ("Saving $service->env->$1 = $2...\n") if $DEBUG;
+	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"env $1=$2\" should be rewritten to \"env.$1 $2. Ignored.\").";
 	}
 	elsif (/^\s*env\.(\S+)\s+(.+)$/)
 	{
 	    $sconf->{$service}{'env'}{$1} = $2;
-	    print "Saving $service->env->$1 = $2...\n" if $DEBUG;
+	    net_write ("Saving $service->env->$1 = $2...\n") if $DEBUG;
 	}
 	elsif (/^\s*(\w+)\s+(.+)$/)
 	{
-	    $sconf->{$service}{'env'}{"lrrd_$1"} = $2;
-	    print "Saving $service->env->lrrd_$1 = $2...\n" if $DEBUG;
-	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"$1 $2\" should be rewritten to \"env lrrd_$1=$2\").";
+	    # $sconf->{$service}{'env'}{"lrrd_$1"} = $2;
+	    # net_write ("Saving $service->env->lrrd_$1 = $2...\n") if $DEBUG;
+        warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"$1 $2\" should be rewritten to \"env.$1 $2. Ignored.\").";
 	}
 	elsif (/\S/)
 	{

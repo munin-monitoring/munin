@@ -1,79 +1,81 @@
 #!@@PERL@@
 #
-# Plugin to monitor the number of accesses to Apache servers. It handles
-# a list of ports passed in from a plugin configuration file.
-#
-# Requirements:
-# 	- Needs access to http://localhost/server-status?auto (or modify the
-# 	  address for another host). See your apache documentation on how to
-# 	  set up this url in your httpd.conf. Apache needs ExtendedStatus
-# 	  enabled for this plugin to work
-#
-# Tip: To see if it's already set up correctly, just run this plugin
-# with the parameter "autoconf". If you get a "yes", everything should
-# work like a charm already.
-#
 # Parameters supported:
 #
 # 	config
 # 	autoconf
 #
-# Configurable variables
-#
-# 	url      - Override default status-url
-# 	ports    - HTTP port numbers
-#
-# $Log$
-# Revision 1.12  2004/12/10 18:51:43  jimmyo
-# linux/apt* has been forced to LANG=C, to get predictable output.
-#
-# Revision 1.11  2004/12/10 10:47:47  jimmyo
-# Change name from ${scale} to ${graph_period}, to be more consistent.
-#
-# Revision 1.10  2004/12/09 22:12:54  jimmyo
-# Added "graph_period" option, to make "graph_sums" usable.
-#
-# Revision 1.9  2004/09/26 22:14:39  jimmyo
-# Changd COUNTER -> DERIVE for some plugins. Set min/max values.
-#
-# Revision 1.8  2004/05/20 13:57:11  jimmyo
-# Set categories to some of the plugins.
-#
-# Revision 1.7  2004/05/14 21:16:46  jimmyo
-# "Upped" som plugins from contrib/manual to auto.
-#
-# Revision 1.6  2004/04/27 21:32:06  jimmyo
-# Clarified the vlabels in the apache-plugins (Deb#238594).
-#
-# Revision 1.5  2004/04/27 08:46:57  jimmyo
-# Fixed broken autoconf in apache-* plugins (Deb#236144).
-#
-# Revision 1.4  2004/02/18 15:47:35  jimmyo
-# The generic/apache_* plugins now have defined max values.
-#
-# Revision 1.3  2004/02/03 17:17:25  jimmyo
-# Generic/apache-plugins have been modified to properly to report the correct autoconf value. Also, bugfixes in _processes and _volume.
-#
-# Revision 1.2  2004/01/29 18:47:30  jimmyo
-# Made plugins apache_* compatible with older versions of LWP::UserAgent (SF#881411).
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.4  2003/12/18 16:35:33  jimmyo
-# fail more gracefully when using uninstalled perl modules.
-#
-# Revision 1.3  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
-#
-#
 # Magic markers:
 #%# family=auto
 #%# capabilities=autoconf
+
+=head1 NAME
+
+apache_processes - Munin plugin to monitor the number of accesses to
+Apache servers. It handles a list of ports passed in from a plugin
+configuration file.
+
+=head1 APPLICABLE SYSTEMS
+
+Apache HTTP servers with C</server-status> enabled.
+
+=head1 CONFIGURATION
+
+The plugin needs access to http://localhost/server-status?auto (or
+modify the URL for another host). See your Apache documentation on
+how to set up this URL in your httpd.conf. Apache needs ExtendedStatus
+enabled for this plugin to work.
+
+Tip: To see if it's already set up correctly, just run this plugin
+with the parameter "autoconf". If you get a "yes", everything should
+work like a charm already.
+
+This configuration section shows the defaults of the plugin:
+
+  [apache_*]
+     env.url   http://127.0.0.1:%d/server-status?auto
+     env.ports 80
+
+The %d in the url will be replaced with the port.  The default port is
+80 as snown.
+
+The port list is a space separated list of ports.  NOTE that one
+single Apache can have several open ports, and the plugin needs only
+to contact one to get the servers global status.  The list of ports is
+only needed if you have several B<different> Apaches configured on
+your host.
+
+If you need authenticated access to the URL you can specify the
+username and password in the URL.  For example:
+
+  [apache_volume]
+     env.url http://munin:spamalot@localhost/server-status?auto
+
+This will provide for HTTP basic authentication.
+
+=head1 INTERPRETATION
+
+The plugin shows the number of accesses (pages and other items served)
+globaly on the Apache server.
+
+=head1 VERSION
+
+  $Id$
+
+=head1 BUGS
+
+Does not support digest authentication.
+
+=head1 AUTHOR
+
+Unknown
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
 
 my $ret = undef;
 

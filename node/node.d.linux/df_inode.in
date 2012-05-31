@@ -1,44 +1,21 @@
-#!/bin/sh
+#!@@PERL@@
+# -*- perl -*-
 #
-# Plugin to monitor inode-usage.
+# $Id$
+#
+# Plugin to monitor inode-usage. Rewrite based on original shell-based
+# version
 #
 # Parameters understood:
 #
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
+#       config   (required)
+#       autoconf (optional - used by munin-config)
 #
-# $Log$
-# Revision 1.6.2.2  2005/03/12 21:35:07  jimmyo
-# Correct history loss in linux/{df,df_inode}.
+# Environment
+#       exclude: space separated list if fs types to exclude.
+#                iso9660 by default
 #
-# Revision 1.6.2.1  2005/02/16 22:50:14  jimmyo
-# linux/df* now ignores bind mounts.
-#
-# Revision 1.6  2004/12/09 20:27:45  jimmyo
-# Sort fields in df*-plugins alphabetically.
-#
-# Revision 1.5  2004/09/25 22:29:16  jimmyo
-# Added info fields to a bunch of plugins.
-#
-# Revision 1.4  2004/05/20 13:57:12  jimmyo
-# Set categories to some of the plugins.
-#
-# Revision 1.3  2004/05/18 22:04:30  jimmyo
-# Use "sed 1d" instead of "tail +2" in df plugins (patch by Olivier Delhomme).
-#
-# Revision 1.2  2004/05/16 11:23:36  jimmyo
-# Bugfix in the linux/df_inode plugin, regarding filesystems without inodes.
-#
-# Revision 1.1  2004/01/02 18:50:01  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.2  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
-#
+# $Id$
 #
 # Magic markers (optional - used by munin-config and installation
 # scripts):
@@ -46,51 +23,92 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-MAXLABEL=20
+use strict;
+use Munin::Plugin;
 
-fs() {
-	local escaped_mntpt=`echo "$*" | awk '{ print $NF }' | sed 's|/|\\\\/|g'`
-	awk "/^[^ ]* $escaped_mntpt / { print \$3 }" /proc/mounts | grep -v rootfs
+# Read /proc/mounts
+my %mounts;
+open (MOUNTS,"/proc/mounts") or die "Could not /proc/mounts for reading.";
+while (<MOUNTS>) {
+    # Does perl really not have any shorthand for this? I guess it has.
+    if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
+	$mounts{$2}=$3;
+    }
+}
+close MOUNTS;
+
+my $exclude=$ENV{'exclude'} || 'iso9660';
+my $warning=$ENV{'warning'} || 92;
+my $critical=$ENV{'critical'} || 98;
+my $dfopts = "-P -l -i ".join(' -x ',('',split('\s+',$exclude)));
+
+sub print_values() {
+
+    # Read from df
+    open (DF,"df $dfopts |") or die "Could not open pipe from df: $!";
+    <DF>; # Skip the header
+    while (<DF>) {
+	next if /\/\//;
+	
+	# Parse the output
+	if ( /^(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)/ ) {
+	    my $fs=$mounts{$6};
+	    next if $fs eq "reiserfs";
+
+	    my $ps=$5;
+	    my $name=clean_fieldname($1);
+
+	    $ps =~ s/\%//;
+
+	    print $name .  ".value  " . $ps . "\n";
+	}
+    }
+    close DF;
+    die "Error executing df. Exit code $?\n" if $?;
 }
 
-print_values() {
-	df -P -l -i -x none -x unknown | sed 1d | grep -v "//" | awk '$5 ~ /[0-9]%/ {print}' | while read i; do
-		if [ "`fs $i`" = "reiserfs" ] ; then continue ; fi
-		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 ".value " }'`
-		echo -n "$name "
-		echo $i | awk '{ print $5 }' | cut -f1 -d%
-	done
+if ( $ARGV[0] eq "autoconf" ) {
+  if (`@@PERL@@ $0` eq "" ) {
+    print "no\n";
+    exit 1;
+  } else {
+    print "yes\n";
+    exit 0;
+  }
 }
 
-if [ "$1" = "autoconf" ]; then
-	if [ "`print_values`" = "" ] ; then
-		echo no
-	else
-		echo yes
-	fi
-	exit 0
-fi
+if ( $ARGV[0] eq "config" ) {
 
-if [ "$1" = "config" ]; then
+    # The headers
+    print "graph_title Inode usage (in %)\n";
+    print "graph_args --upper-limit 100 -l 0\n";
+    print "graph_vlabel %\n";
+    print "graph_scale no\n";
+    print "graph_category disk\n";
 
-	echo 'graph_title Inode usage (in %)'
-	echo 'graph_args --upper-limit 100 -l 0'
-	echo 'graph_vlabel %'
-	echo 'graph_category disk'
-	echo 'graph_info This graph shows the inode usage for the partitions of types that use inodes.'
-	df -P -l -i -x unknown  -x none -T| sed 1d | grep -v "//" | sort | awk '$6 ~ /[0-9]%/ {print}' | awk "
-		\$2 !~ /reiserfs/ {
-                        dir=\$7
-			name=\$1; gsub(/[\/.-]/, \"_\", name);
-                        if (length(dir) <= $MAXLABEL)
-                                print name \".label \" dir
-                        else
-                                printf (\"%s.label ...%s\n\", name, substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3))
-			print name \".info \" \$7 \" (\" \$2 \") -> \" \$1;
-			print name \".warning 92\"
-			print name \".critical 98\" 
-                }"
-	exit 0
-fi
+    # Read from df
+    open (DF,"df $dfopts |") or die "Unable to open pipe from df: $!";
+    <DF>; # Skip the header
+    while (<DF>) {
+	next if /\/\//;
+	
+	# Parse the output
+	if ( /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
+	    my $fs=$mounts{$6};
+	    next if $fs eq "reiserfs";
 
-print_values
+	    my $dir=$6;
+	    my $name=clean_fieldname($1);
+
+	    # Create and print labels
+	    print "$name.label $dir\n";
+	    print "$name.warning $warning\n";
+	    print "$name.critical $critical\n";
+	}
+    }
+    close DF;
+    die "Error executing df. Exit code $?\n" if $?;
+    exit 0;
+}
+
+print_values();

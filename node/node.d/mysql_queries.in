@@ -1,71 +1,54 @@
 #!@@PERL@@
-#
-# $Id$
-#
-# Copyright 2003-2004 - Per Andreas Buer
-#
-# $Log$
-# Revision 1.11  2004/12/10 18:51:43  jimmyo
-# linux/apt* has been forced to LANG=C, to get predictable output.
-#
-# Revision 1.10  2004/12/10 10:47:47  jimmyo
-# Change name from ${scale} to ${graph_period}, to be more consistent.
-#
-# Revision 1.9  2004/12/09 22:12:55  jimmyo
-# Added "graph_period" option, to make "graph_sums" usable.
-#
-# Revision 1.8  2004/11/21 00:16:56  jimmyo
-# Changed a lot of plugins so they use DERIVE instead of COUNTER.
-#
-# Revision 1.7  2004/09/08 15:25:33  ilmari
-# Use @@PERL@@ in all perl shebang lines.
-#
-# Revision 1.6  2004/05/20 13:57:12  jimmyo
-# Set categories to some of the plugins.
-#
-# Revision 1.5  2004/04/27 18:58:53  jimmyo
-# Fixed bug in mysql-plugins (Deb#233762).
-#
-# Revision 1.4  2004/01/29 18:49:55  jimmyo
-# Bugfix in plugin mysql_queries - insertions were no longer graphed. (SF#881483).
-#
-# Revision 1.3  2004/01/29 17:36:20  jimmyo
-# Updated copyright information
-#
-# Revision 1.2  2004/01/15 16:35:43  jimmyo
-# Bugfix from Dagfinn I. Mannsåker, closing SF#876443, SF#865125.
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.8  2003/12/01 13:31:37  jimmyo
-# Bugfix to make stack/area right
-#
-# Revision 1.7  2003/11/08 00:10:13  jimmyo
-# New mysql_queries plugin
-#
-#
-# Parameters:
-#
-#   config
-#   autoconf
-#
-# Configuration variables
-#
-#   mysqlopts     - Options to pass to mysql
-#   mysqladmin    - Override location of mysqladmin
+# -*- perl -*-
 #
 #%# family=auto
 #%# capabilities=autoconf
 
+=head1 NAME
+
+mysql_queries - Munin plugin to display MySQL query rate.
+
+=head1 APPLICABLE SYSTEMS
+
+Any MySQL platform
+
+=head1 CONFIGURATION
+
+  [mysql*]
+     user root
+     env.mysqlopts <options-for-mysqladmin-here>
+     env.mysqladmin <optional-override-of-mysqladmin-path>
+
+It is most usual that root must run the mysqladmin command.
+
+Only use the .env settings if you need to override the defaults.
+
+=head1 INTERPRETATION
+
+To Be Written
+
+=head1 BUGS
+
+None known
+
+=head1 AUTHOR
+
+Copyright 2003-2008 - Per Andreas Buer
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 VERSION
+
+$Id$
+
+=cut
+
 use strict;
 
 my $MYSQLADMIN = $ENV{mysqladmin} || "mysqladmin";
-my $COMMAND    =      "$MYSQLADMIN $ENV{mysqlopts} extended-status";
-
+my $COMMAND    = "$MYSQLADMIN $ENV{mysqlopts} extended-status";
 
 my %WANTED = ( "Com_delete"  => "delete", 
 			   "Com_insert"  => "insert",
@@ -148,7 +131,7 @@ sub test_service {
     }
     else
     {
-	print "no (mysqadmin not found)\n";
+	print "no (mysqladmin not found)\n";
     }
     exit $return;
 }

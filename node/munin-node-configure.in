@@ -1,6 +1,7 @@
 #!@@PERL@@ -w
+# -*- perl -*-
 #
-# Copyright (C) 2004 Jimmy Olsen
+# Copyright (C) 2003-2006 Jimmy Olsen, Nicolai Langfeldt.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,72 +17,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-# Program to suggest configurations and configuration changes.
-#
-# $Log$
-# Revision 1.11.2.1  2005/03/09 21:49:57  jimmyo
-# munin-node-configure now properly respect user plugins.
-#
-# Revision 1.11  2004/12/10 10:40:12  jimmyo
-# Fix bug with underscore in wildcard plugins.
-#
-# Revision 1.10  2004/11/16 20:00:42  jimmyo
-# License cleanups.
-#
-# Revision 1.9  2004/09/07 19:33:32  jimmyo
-# Documented the SNMP options a bit better.
-#
-# Revision 1.8  2004/09/05 12:00:18  jimmyo
-# Set family and capabilities.
-#
-# Revision 1.7  2004/09/03 23:25:16  jimmyo
-# Brushed up the SNMP probe functionality.
-#
-# Revision 1.6  2004/09/03 22:59:03  jimmyo
-# Support comma-formatted snmp-options.
-#
-# Revision 1.5  2004/09/03 22:56:51  jimmyo
-# Added support for SNMP probing.
-#
-# Revision 1.4  2004/01/29 19:25:52  jimmyo
-# Fixed bad debug output (forgotten linebreaks) in munin-node-configure (SF#882385).
-#
-# Revision 1.3  2004/01/29 17:36:19  jimmyo
-# Updated copyright information
-#
-# Revision 1.2  2004/01/15 15:20:00  jimmyo
-# Making things workable after name change. Upping for test verwion.
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:06  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.11  2003/12/18 16:46:59  jimmyo
-# now prints the reason for suggesting to not use a plugin, as long as the plugins gives one.
-#
-# Revision 1.10  2003/12/17 21:29:26  jimmyo
-# Don\'t try to change uid/gid if not running as root. (Deb#224300)
-#
-# Revision 1.9  2003/11/10 22:05:42  toreanderson
-# bugfux
-#
-# Revision 1.8  2003/11/10 17:52:33  jimmyo
-# Small briainer-typo
-#
-# Revision 1.7  2003/11/10 17:32:18  jimmyo
-# Check what to do with new plugins when upgrading.
-#
-# Revision 1.6  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
-#
+# Program to suggest what plugins to use and not
 
 $| = 1; # Flush after every write to stdout
 
 use strict;
 use Getopt::Long;
+# use Data::Dumper;
 
 my $version    = "@@VERSION@@";
 my $config     = "@@CONFDIR@@/munin-node.conf";
@@ -104,6 +46,8 @@ my $do_usage   = 0;
 my $do_error   = 0;
 my $do_version = 0;
 my $newer      = undef;
+my $debugopt   = '--debug'; # Pass --debug to children or not
+my @errors     = ();
 
 $do_error = 1 unless GetOptions (
 	"help"            => \$do_usage,
@@ -144,6 +88,13 @@ Options:
 	--snmpversion <ver>     Set SNMP version (1, 2c or 3) [2c]
 	--snmpcommunity <comm>  Set SNMP community [public]
 
+By default this program shows which plugins are activated on the
+system.  If you specify --suggest it will present a table of plugins
+that will probably work (according to the plugins autoconf command).
+If you specify --shell shell commands to install those same plugins
+will be printed.  These can be reviewed or piped directly into a shell
+to install the plugins.
+
 ";
 
 	exit ($do_error); # 1 if error, 0 if --help
@@ -151,18 +102,24 @@ Options:
 
 if ($do_version)
 {
-    print "munin-node-configure (munin-node) version $version.\n";
-    print "Written by Jimmy Olsen\n";
-    print "\n";
-    print "Copyright (C) 2003-2004 Jimmy Olsen\n";
-    print "This is free software released under the GNU Public License. There is NO\n";
-    print "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n";
+    print <<"EOT";
+munin-node-configure (munin-node) version $version.
+Written by Jimmy Olsen
+
+Copyright (C) 2003-2006 Jimmy Olsen
+
+This is free software released under the GNU General Public License. There
+is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. For details, please refer to the file COPYING that is included
+with this software or refer to
+  http://www.fsf.org/licensing/licenses/gpl.txt
+EOT
     exit 0;
 }
 
 if (defined $newer and (!$shell or $removes))
 {
-    print "Fatal: --newer only supported along with --shell.\n";
+    print STDERR "Fatal: --newer only supported along with --shell.\n";
     exit 2;
 }
 
@@ -183,12 +140,14 @@ if (!@families)
     }
 }
 
-@families = split (/,/, join (',', @families));
-@snmp = split (/,/, join (',', @snmp));
+# Normalize input in case it was taken from commandline?
+# This seems like a noop no matter what went before.
+# @families = split (/,/, join (',', @families));
+# @snmp = split (/,/, join (',', @snmp));
 
 if (@snmp and !$shell)
 {
-    print "Fatal: --snmp only supported along with --shell.\n";
+    print STDERR "Fatal: --snmp only supported along with --shell.\n";
     exit 3;
 }
 
@@ -210,6 +169,8 @@ if (@families)
 
     foreach my $plug (sort keys %{$plugins})
     {
+#	print "New plugin: ", Dumper $plugins->{$plug},"\n";
+
 	next unless defined $plugins->{$plug}->{'family'};
 	next unless (grep (/^$plugins->{$plug}->{'family'}$/, @families));
 
@@ -334,10 +295,10 @@ if (@families)
 	    {
 		&normal ($plug, $now, "");
 	    }
-	    
 	}
     }
 }
+
 
 if (@snmp and $shell)
 {
@@ -349,8 +310,9 @@ if (@snmp and $shell)
 	    push (@params, "$bindir/munin-node-configure-snmp");
 	    push (@params, "--snmpversion", $snmpver) if defined $snmpver;
 	    push (@params, "--community", $snmpcomm) if defined $snmpcomm;
-	    push (@params, "--debug") if $debug;
+	    push (@params, $debugopt) if $debug;
 	    push (@params, @snmp);
+	    print "# executing: ",join(' ',@params),"\n" if $debug;
 	    exec (@params);
 	    # NOTREACHED
 	}
@@ -367,6 +329,13 @@ if (@snmp and $shell)
 	print STDERR "# of Munin to be installed, which is currently not installed, or not in the \n";
 	print STDERR "# rigt directory: $bindir\n";
     }
+}
+
+if (@errors) {
+    print STDERR "# There were some errors:\n";
+    print STDERR "# ",join("\n# ",@errors),"\n";
+
+    exit 1;
 }
 
 sub link_remove
@@ -399,17 +368,16 @@ sub normal
     printf ("%-26s | %-4s | %-39s\n", @_);
 }
 
-sub get_installed
-{
+sub get_installed {
 	(my $ps, my $dir) = @_;
 
-	print "DEBUG: Opening \"$dir\" for reading...\n" if $debug;
-	opendir (DIR, $dir) or die "Could not open \"$dir\" for reading: $!";
+	print "# Opening \"$dir\" for reading...\n" if $debug;
+	opendir (DIR, $dir) or die "Could not open \"$dir\" for reading: $!\n";
 	my @installed = readdir (DIR);
+	print "# Found ",scalar(@installed)," files\n" if $debug;
 	close (DIR);
 
-	foreach my $inst (@installed)
-	{
+	foreach my $inst (@installed) {
 		my $realfile = undef;
 
 		next unless -l "$dir/$inst"; # None of our business...
@@ -417,12 +385,12 @@ sub get_installed
 		next unless ($realfile =~ /^$libdir\//); # None of our business...
 		$realfile =~ s/^.+\///;
 
-		print "DEBUG: Checking file: $inst..." if $debug;
+		print "# Checking file: $inst..." if $debug;
 		if ($realfile =~ /_$/) # Wildcard plugin...
 		{
-		    print "$realfile..." if $debug;
+		    print "# $realfile..." if $debug;
 		    (my $wild = $inst) =~ s/^$realfile//;
-		    print "$wild..." if $debug;
+		    print "# $wild..." if $debug;
 		    push @{$ps->{$realfile}->{'suggest'}}, $wild;
 		}
 		$ps->{$realfile}->{'installed'} = "yes";
@@ -433,181 +401,217 @@ sub get_installed
 	return $ps;
 }
 
-sub get_plugins
-{
-	(my $ps, my $dir) = @_;
-	my %versions = ();
+sub get_plugins {
+    (my $ps, my $dir) = @_;
+    my %versions = ();
 
-	if (defined $newer and -f "$dir/plugins.history")
-	{
-	    if (open (HIST, "$dir/plugins.history"))
-	    {
-		my @slurp = <HIST>;
-		my $reached_version = 0;
-		my $ver = "0.0.0";
-		close (HIST);
-		my $uname = lc `uname`;
-		chomp $uname;
+    if (defined $newer and -f "$dir/plugins.history") {
+	if (open (HIST, "$dir/plugins.history")) {
+	    my @slurp = <HIST>;
+	    my $reached_version = 0;
+	    my $ver = "0.0.0";
+	    close (HIST);
+	    my $uname = lc `uname`;
+	    chomp $uname;
 
-		foreach my $line (@slurp)
-		{
-		    chomp $line;
-		    $line =~ s/#.*//g;
-		    $line =~ s/^\s+//g;
-		    $line =~ s/\s+$//g;
-		    next unless $line =~ /\S/;
+	    foreach my $line (@slurp) {
+		chomp $line;
+		$line =~ s/#.*//g;
+		$line =~ s/^\s+//g;
+		$line =~ s/\s+$//g;
+		next unless $line =~ /\S/;
 
-		    if ($line =~ /^\[([^\]]+)\]$/)
-		    {
-			$ver = $1;
-			print "Setting version to \"$ver\".\n" if $debug;
-			if ($ver eq $newer)
-			{
-			    $reached_version = 1;
-			}
-			elsif ($reached_version)
-			{
-			    $reached_version++;
-			}
+		if ($line =~ /^\[([^\]]+)\]$/) {
+		    $ver = $1;
+		    print "# Setting version to \"$ver\".\n" if $debug;
+		    if ($ver eq $newer) {
+			$reached_version = 1;
+		    } elsif ($reached_version) {
+			$reached_version++;
 		    }
-		    elsif ($reached_version < 2)
-		    {
-			next;
+		} elsif ($reached_version < 2) {
+		    next;
+		} elsif ($line =~ /^([^\/]+)\/(.+)$/) {
+		    if ($uname eq $1) {
+			$ps->{$2}->{'version'} = $ver;
+			print "# - Adding plugin '$2' to version tree ",
+			  "($ver)...\n" if $debug;
 		    }
-		    elsif ($line =~ /^([^\/]+)\/(.+)$/)
-		    {
-			if ($uname eq $1)
-			{
-			    $ps->{$2}->{'version'} = $ver;
-			    print "-- Adding plugin \"$2\" to version tree ($ver)...\n" if $debug;
-			}
-		    }
-		    elsif ($line =~ /^(.+)$/)
-		    {
-			$ps->{$1}->{'version'} = $ver;
-			print "-- Adding plugin \"$1\" to version tree ($ver)...\n" if $debug;
-		    }
+		} elsif ($line =~ /^(.+)$/) {
+		    $ps->{$1}->{'version'} = $ver;
+		    print "# - Adding plugin \"$1\" to version tree ",
+		      "($ver)...\n" if $debug;
 		}
 	    }
-	    else
-	    {
-		warn "Warning: Could not open \"$dir/plugins.history\": $!";
-	    }
+	} else {
+	    warn "Warning: Could not open \"$dir/plugins.history\": $!\n";
+	}
+    }
+
+    print "# Opening \"$dir\" for reading...\n" if $debug;
+    opendir (DIR, $dir) or die "Could not open \"$dir\" for reading: $!\n";
+    my @plugins = readdir (DIR);
+    print "# Found ",scalar(@plugins)," files\n" if $debug;
+    close (DIR);
+
+    foreach my $plug (@plugins) {
+	my $path = "$dir/$plug";
+	next if $plug =~ /^\./;
+	print "# Considering $dir/$plug for checking\n" if $debug;
+	# If anyone ever uses a relative symlink this will break so bad
+	$path = readlink($path) and
+	  $path = $path =~ /^\// ? $path : "$dir/$path"
+	    while -l $path;
+	if (!-f $path) {
+	    print "# File is not a file\n" if $debug;
+	    next;
+	}
+	if (!-x _) {
+	    print "# File is not executable\n" if $debug;
+	    next;
+	}
+	if ($plug =~ /~$/    or # Emacs droppings
+	    $plug =~ /.bak$/ or # Backup file
+	    $plug =~ /.swp$/) { # Vi droppings
+	    print "# File is a backup/leftover file\n" if $debug;
+	    next;
 	}
 
-	print "DEBUG: Opening \"$dir\" for reading...\n" if $debug;
-	opendir (DIR, $dir) or die "Could not open \"$dir\" for reading: $!";
-	my @plugins = readdir (DIR);
-	close (DIR);
+	$ps->{$plug}->{'family'} = "contrib"; # Set default family...
 
-	foreach my $plug (@plugins)
-	{
-		my $path = "$dir/$plug";
-		$path = readlink($path) and $path = $path =~ /^\// ? $path : "$dir/$path" while -l $path;
-		next unless -f $path;
-		next unless -x _;
-
-		next if $plug =~ /^\./;
-
-		$ps->{$plug}->{'family'} = "contrib"; # Set default family...
-
-		print "DEBUG: Checking plugin: $plug..." if $debug;
-		if (! open (FILE, "$dir/$plug"))
-		{
-			warn "WARNING: Could not open file \"$dir/$plug\" for reading ($!). Skipping.";
-			next;
+	print "# Checking plugin: $plug..." if $debug;
+	if (! open (FILE, "$dir/$plug")) {
+	    warn "WARNING: Could not open file '$dir/$plug' for reading $!.".
+	      "Skipping.\n";
+	    next;
+	}
+	while (<FILE>) {
+	    chomp;
+	    if (/#%#\s+family\s*=\s*(\S+)\s*$/) {
+		$ps->{$plug}->{'family'} = $1;
+		print "# $1..." if $debug;
+	    } elsif (/#%#\s+capabilities\s*=\s*(.+)$/) {
+		foreach my $cap (split (/\s+/, $1)) {
+		    $ps->{$plug}->{'capability'}->{$cap} = 1;
+		    print "# $cap..." if $debug;
 		}
-		while (<FILE>)
-		{
+	    }
+	}
+	close (FILE);
+
+	unless (grep (/^$ps->{$plug}->{'family'}$/, @families)) {
+	    print "\n" if $debug;
+	    next;
+	}
+	if ($ps->{$plug}->{'family'} eq "auto" and defined $newer and
+	    !defined $ps->{$plug}->{'version'}) {
+	    print "\n" if $debug;
+	    next;
+	}
+
+	if ($ps->{$plug}->{'capability'}->{'autoconf'}) {
+
+	    my @cmd=("$bindir/munin-run");
+	    push(@cmd,$debugopt) if $debug;
+	    push(@cmd,"--servicedir",$libdir, $plug, "autoconf");
+
+	    print "\n# Running: ",join(' ',@cmd),"\n" if $debug;
+
+	    my $fork = open (PLUG, "-|");
+
+	    if ($fork == -1) {
+		die "ERROR: Unable to fork: $!\n"
+	    } elsif ($fork == 0) { # Child
+		close (STDERR);
+		open (STDERR, ">&STDOUT");
+		exec (@cmd);
+	    } else {
+		# The join map we used here before was somehow
+		# fragile.  This construct is possible to
+		# debug.
+
+		my @pr = ();	# Plugin response
+
+		while (<PLUG>) {
+		    chomp;
+		    if (m/^yes$/ or m/^no(.*)?$/) {
+			# Some recognized response
+			print "# Got yes/no: $_\n" if $debug;
+			push(@pr,$_);
+		    } else {
+			# Something else
+			push(@errors,"Got junk from $plug: $_");
+			print "# Got junk: $_\n" if $debug;
+		    }
+		}
+
+		$ps->{$plug}->{'defaultreason'}=join(' ',@pr);
+	    }
+	    close (PLUG);
+	    if ($?) {
+		$ps->{$plug}->{'default'} = "no";
+	    } else {
+		$ps->{$plug}->{'default'} = "yes";
+	    }
+	    print "# ",$ps->{$plug}->{'default'}, ":",
+	      $ps->{$plug}->{'defaultreason'}, "..."
+		if $debug;
+	}
+
+	if ($ps->{$plug}->{'capability'}->{'suggest'}) {
+	    if (exists $ps->{$plug}->{'default'} and
+		$ps->{$plug}->{'default'} eq "yes") {
+
+		my @cmd=("$bindir/munin-run");
+		# Debug here breaks stuff.
+		# push(@cmd,$debugopt) if $debug;
+		push(@cmd,"--servicedir",$libdir, $plug, "suggest");
+
+		print "\n# Running: ",join(' ',@cmd),"\n" if $debug;
+
+		my $fork = open (PLUG, "-|");
+
+		if ($fork == -1) {
+		    die "ERROR: Unable to fork: $!\n"
+		} elsif ($fork == 0) { # Child
+		    # We would redirect stderr, but with suggest
+		    # it's hard to sort errors from the suggestions
+		    # as we have no idea what the suggestions might
+		    # be.
+		    exec (@cmd);
+		} else {
+		    # Fragile loop, blah blah (se above)
+
+		    my @sugg;
+
+		    while (<PLUG>) {
 			chomp;
-			if (/#%#\s+family\s*=\s*(\S+)\s*$/)
-			{
-				$ps->{$plug}->{'family'} = $1;
-				print "$1..." if $debug;
+			if (m/^#/) {
+			    # debug output from munin-run
+			    print "# Got junk: $_\n" if $debug;
+			} else {
+			    # This ought to be a suggestion.
+			    print "# Got suggestion: $_\n" if $debug;
+			    push(@sugg,$_);
 			}
-			elsif (/#%#\s+capabilities\s*=\s*(.+)$/)
-			{
-				foreach my $cap (split (/\s+/, $1))
-				{
-					$ps->{$plug}->{'capability'}->{$cap} = 1;
-					print "$cap..." if $debug;
-				}
-			}
+		    }
+		    @{$ps->{$plug}->{'suggest'}} = @sugg;
 		}
-		close (FILE);
-
-		unless (grep (/^$ps->{$plug}->{'family'}$/, @families)) {
-			print "\n" if $debug;
-			next;
+		close (PLUG);
+		if ($?) {
+		    @{$ps->{$plug}->{'suggest'}} = ();
 		}
-		if ($ps->{$plug}->{'family'} eq "auto" and defined $newer and
-			!defined $ps->{$plug}->{'version'}) {
-			print "\n" if $debug;
-			next;
-		}
+		print "# Suggested: ",
+		  join (' ', @{$ps->{$plug}->{'suggest'}}),"\n"
+		    if $debug;
 
-		if ($ps->{$plug}->{'capability'}->{'autoconf'})
-		{
-			my $fork = open (PLUG, "-|");
-
-			if ($fork == -1)
-			{
-				die "ERROR: Unable to fork: $!"
-			}
-			elsif ($fork == 0) # Child
-			{
-				close (STDERR);
-				open (STDERR, ">&STDOUT");
-				exec ("$bindir/munin-run", "--servicedir", $libdir, $plug, "autoconf");
-			}
-			else
-			{
-				$ps->{$plug}->{'defaultreason'} = join (' ', map {chomp; $_} <PLUG>);
-			}
-			close (PLUG);
-			if ($?)
-			{
-				$ps->{$plug}->{'default'} = "no";
-			}
-			else
-			{
-				$ps->{$plug}->{'default'} = "yes";
-			}
-			print $ps->{$plug}->{'default'}, ":", $ps->{$plug}->{'defaultreason'}, "..." if $debug;
-		}
-
-		if ($ps->{$plug}->{'capability'}->{'suggest'})
-		{
-			if (exists $ps->{$plug}->{'default'} and
-					$ps->{$plug}->{'default'} eq "yes")
-			{
-				my $fork = open (PLUG, "-|");
-
-				if ($fork == -1)
-				{
-					die "ERROR: Unable to fork: $!"
-				}
-				elsif ($fork == 0) # Child
-				{
-					exec ("$bindir/munin-run", "--servicedir", $libdir, $plug, "suggest");
-				}
-				else
-				{
-					push (@{$ps->{$plug}->{'suggest'}}, split (/\s+/, join (' ', map {chomp; $_} <PLUG>)));
-				}
-				close (PLUG);
-				if ($?)
-				{
-					$ps->{$plug}->{'suggest'} = "";
-				}
-				print join (' ', @{$ps->{$plug}->{'suggest'}}) if $debug;
-
-			}
-		}
-
-		print "\n" if $debug;
+		push(@errors,"ERROR: empty suggest from $plug");
+	    }
 	}
-	return $ps;
+	print "\n" if $debug;
+    }
+    #	print Dumper $ps;
+    return $ps;
 }
 
 1;
@@ -634,7 +638,9 @@ Show version information
 
 =item B<< --debug >>
 
-View debug information (very verbose)
+Print debug information (very verbose).  All debugging output is
+printed on STDOUT but each line is prefixed with '#'.  Only errors are
+printed on STDERR.
 
 =item B<< --config <file> >>
 
@@ -705,7 +711,7 @@ This is munin-node-configure v@@VERSION@@.
 
 =head1 AUTHORS
 
-Jimmy Olsen.
+Jimmy Olsen, Nicolai Langfeldt
 
 =head1 BUGS
 
@@ -713,7 +719,7 @@ None known.
 
 =head1 COPYRIGHT
 
-Copyright © 2003 Jimmy Olsen
+Copyright (C) 2003-2006 Jimmy Olsen, Nicolai Langfeldt.
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

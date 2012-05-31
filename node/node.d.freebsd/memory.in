@@ -51,7 +51,7 @@ fi
 
     PAGESIZE=`/sbin/sysctl -n vm.stats.vm.v_page_size`
     MEMSIZE=`/sbin/sysctl -n vm.stats.vm.v_page_count`
-    MEMMAX=`echo 'scale=2;' $PAGESIZE*$MEMSIZE | bc -q `
+    MEMMAX=`echo 'scale=2;' $PAGESIZE*$MEMSIZE | /usr/bin/bc -q `
 
 if [ "$1" = "config" ]; then
 
@@ -87,9 +87,9 @@ FREE_COUNT=`/sbin/sysctl -n vm.stats.vm.v_free_count`
 CACHE_COUNT=`/sbin/sysctl -n vm.stats.vm.v_cache_count`
 BUFFERS_COUNT=`/sbin/sysctl -n vfs.bufspace`
 WIRED_COUNT=`/sbin/sysctl -n vm.stats.vm.v_wire_count`
-echo 'print "active.value ";' $ACTIVE_COUNT*$PAGESIZE | bc -q
-echo 'print "inactive.value ";' $INACTIVE_COUNT*$PAGESIZE | bc -q
-echo 'print "cached.value ";' $CACHE_COUNT*$PAGESIZE | bc -q
-echo 'print "free.value ";' $FREE_COUNT*$PAGESIZE | bc -q
-echo 'print "wired.value ";' $WIRED_COUNT*$PAGESIZE | bc -q
+echo 'print "active.value ";' $ACTIVE_COUNT*$PAGESIZE | /usr/bin/bc -q
+echo 'print "inactive.value ";' $INACTIVE_COUNT*$PAGESIZE | /usr/bin/bc -q
+echo 'print "cached.value ";' $CACHE_COUNT*$PAGESIZE | /usr/bin/bc -q
+echo 'print "free.value ";' $FREE_COUNT*$PAGESIZE | /usr/bin/bc -q
+echo 'print "wired.value ";' $WIRED_COUNT*$PAGESIZE | /usr/bin/bc -q
 echo buffers.value $BUFFERS_COUNT

@@ -15,110 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-#
-#
-# $Log$
-# Revision 1.24.2.4  2005/02/19 16:06:14  ilmari
-# Place the munin-limits lock file in rundir, not dbdir.
-#
-# Revision 1.24.2.3  2005/02/19 16:04:03  ilmari
-# Fix the file vs. pipe check in munin-limits
-#
-# Revision 1.24.2.2  2005/02/16 20:03:31  jimmyo
-# yet another rewrite of munin-limits open call (SF#1115434).
-#
-# Revision 1.24.2.1  2005/01/25 20:07:36  jimmyo
-# Make munin-limits work properly with perl 5.6 (SF#1109039).
-#
-# Revision 1.24  2005/01/05 15:40:35  jimmyo
-# Main: "contacts" can now be set to "none".
-#
-# Revision 1.23  2005/01/05 12:12:30  jimmyo
-# Main: Added limit message option "strtrunc"
-#
-# Revision 1.22  2004/12/08 08:47:44  jimmyo
-# Fix bug where munin-limits didn't warn properly in all situations.
-#
-# Revision 1.21  2004/11/26 08:48:50  ilmari
-# Allow floating point values in warning/critical limits.
-#
-# Revision 1.20  2004/11/24 12:01:07  jimmyo
-# Bugfix in munin-limits (it didn't work properly).
-#
-# Revision 1.19  2004/11/19 21:51:05  jimmyo
-# Cosmetics on the nagios warnings.
-#
-# Revision 1.18  2004/11/19 21:32:39  jimmyo
-# Added a --force option to munin-limits, to force sending absolutely all messages.
-#
-# Revision 1.17  2004/11/19 21:05:54  jimmyo
-# Removed the munin-nagios program, as it is no longer needed.
-#
-# Revision 1.16  2004/11/19 20:51:24  jimmyo
-# New notification system finished (I think).
-#
-# Revision 1.15  2004/11/19 18:38:02  jimmyo
-# Worked a bit more on the notification system.
-#
-# Revision 1.14  2004/11/18 15:31:37  jimmyo
-# Worked a bit more on the notification system.
-#
-# Revision 1.13  2004/11/18 00:22:02  jimmyo
-# Midway implementation of new notification scheme.
-#
-# Revision 1.12  2004/11/16 20:00:44  jimmyo
-# License cleanups.
-#
-# Revision 1.11  2004/11/13 21:22:59  jimmyo
-# Changed some of the critical/warning output..
-#
-# Revision 1.10  2004/11/13 19:14:08  jimmyo
-# Changed the default warning/critical output a bit.
-#
-# Revision 1.9  2004/11/12 23:18:52  jimmyo
-# Added new options notify_enable and notify_text, to allow more finely tuned notifications (both what to notify and what text to send.)
-#
-# Revision 1.8  2004/09/24 16:31:07  jimmyo
-# Bugfixes.
-#
-# Revision 1.7  2004/09/08 15:25:33  ilmari
-# Use @@PERL@@ in all perl shebang lines.
-#
-# Revision 1.6  2004/06/08 15:30:34  jimmyo
-# The server programs now open the log file at an earlier point.
-#
-# Revision 1.5  2004/05/20 22:30:08  jimmyo
-# * Munin-limits added to distro.
-# * Breached limis now show up in overview and node view.
-#
-# Revision 1.4  2004/01/29 17:40:10  jimmyo
-# Fixed pod typos patched by Lupe Christoph (SF#884092)
-#
-# Revision 1.3  2004/01/29 17:34:06  jimmyo
-# Updated copyright information
-#
-# Revision 1.2  2004/01/15 15:20:01  jimmyo
-# Making things workable after name change. Upping for test verwion.
-#
-# Revision 1.1  2004/01/02 18:50:01  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:08  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.4  2003/11/07 20:46:12  jimmyo
-# Only require Config::General if using old config format.
-#
-# Revision 1.3  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
 
 use strict;
 
 use Munin;
 use POSIX qw(strftime);
 use Getopt::Long;
-use Text::Balanced qw (extract_multiple extract_delimited extract_quotelike extract_bracketed);
+use Time::HiRes;
+use Text::Balanced qw (extract_multiple extract_delimited
+		       extract_quotelike extract_bracketed);
 
 my $DEBUG=0;
 my $conffile = "@@CONFDIR@@/munin.conf";
@@ -188,6 +93,8 @@ logger("Starting munin-limits, checking lock");
 munin_runlock("$config->{rundir}/munin-limits.lock");
 logger("Created lock: $config->{rundir}/munin-limits.lock");
 
+my $update_time = Time::HiRes::time;
+
 if (!defined $config->{'contact'}->{'nagios'}->{'command'} and
 	defined $config->{'nsca'})
 {
@@ -204,8 +111,12 @@ for my $domain ( keys %{$config->{domain}}) {
     process_domain($domain);
 }
 &munin_writeconfig ("$config->{dbdir}/limits", \%notes);
-logger("munin-limits finished.");
 
+$update_time = sprintf ("%.2f",(Time::HiRes::time - $update_time));
+
+munin_removelock("$config->{rundir}/munin-limits.lock");
+
+logger("munin-limits finished ($update_time sec)");
 
 sub process_domain {
     my ($domain) = @_;
@@ -247,7 +158,13 @@ sub process_service {
 
 	    my $filename = "$config->{dbdir}/$domain/$name-$clientname-$key-".
 	    lc substr (($client->{"$key.type"}||"GAUGE"),0,1) . ".rrd";
-	    my $value = sprintf "%.2f",&munin_fetch("$filename");
+	    my $value = &munin_fetch("$filename");
+            # De-taint.
+	    if (!defined $value) {
+	        $value = "unknown";
+	    } else {
+	        $value = sprintf "%.2f",$value;
+	    }
 
 	    # Some fields that are nice to have in the plugin output
 	    $client->{$key.".value"} = $value;
@@ -262,7 +179,21 @@ sub process_service {
 	    $client->{$key.".wrange"} = (defined $warning->[0]?$warning->[0]:"").":".(defined $warning->[1]?$warning->[1]:"");
 
 	    logger ("value: $domain -> $name -> $clientname -> $key : $value") if $DEBUG;
-	    if ((defined ($critical->[0]) and $value < $critical->[0]) or
+	    if ($value eq "unknown") {
+		$critical->[0] ||= "";
+		$critical->[1] ||= "";
+		$client->{'worst'} = "UNKNOWN" if $client->{"worst"} eq "OK";
+		$client->{'worstid'} = 3 if $client->{"worstid"} == 0;
+		$notes{$domain}{$name}{$clientname}{"$key.state"} = "unknown";
+		$notes{$domain}{$name}{$clientname}{"$key.unknown"} = 
+		(defined $client->{"$key.extinfo"} ? "unknown: " . $client->{"$key.extinfo"} : "Value is unknown.");
+		if (!defined ($oldnotes->{'domain'}->{$domain}->{'node'}->{$name}->{'client'}->{$clientname}->{"$key.state"}) or 
+			$oldnotes->{'domain'}->{$domain}->{'node'}->{$name}->{'client'}->{$clientname}->{"$key.state"} ne "unknown")
+		{
+		    $client->{'state_changed'} = 1;
+		}
+	    }
+	    elsif ((defined ($critical->[0]) and $value < $critical->[0]) or
 	    (defined ($critical->[1]) and $value > $critical->[1])) {
 		$critical->[0] ||= "";
 		$critical->[1] ||= "";
@@ -285,8 +216,8 @@ sub process_service {
 	    {
 		$warning->[0] ||= "";
 		$warning->[1] ||= "";
-		$client->{'worst'} = "WARNING" if $client->{"worst"} eq "OK";
-		$client->{'worstid'} = 1 if $client->{"worstid"} == 0;
+		$client->{'worst'} = "WARNING" if $client->{"worst"} ne "CRITICAL";
+		$client->{'worstid'} = 1 if $client->{"worstid"} != 2;
 		$notes{$domain}{$name}{$clientname}{"$key.state"} = "warning";
 		$notes{$domain}{$name}{$clientname}{"$key.warning"} = 
 		(defined $client->{"$key.extinfo"}?
@@ -365,6 +296,7 @@ sub generate_service_message {
     my $worst = "";
     my %stats = ('critical' => [], 'warning' => [], 'unknown' => [], 'foks' => [], 'ok' => []);
 
+    logger ("generating service message: $domain -> $name -> $clientname") if $DEBUG;
     foreach my $key (keys %{$notes{$domain}{$name}{$clientname}})
     {
 	if ($key =~ /^([^\.]+)\.critical$/)
@@ -379,18 +311,18 @@ sub generate_service_message {
 	}
     	elsif ($key =~ /^([^\.]+)\.unknown$/)
 	{
-	    $worst = "unknown" unless $worst;
+	    $worst = "unknown" if (!$worst or $worst eq "ok");
 	    push @{$stats{'unknown'}}, $1;
 	}
     	elsif ($key =~ /^([^\.]+)\.ok$/)
 	{
 	    $worst = "ok" unless $worst;
-	    push @{$stats{'oks'}}, $1;
+	    push @{$stats{'ok'}}, $1;
 	    push @{$stats{'foks'}}, $1;
 	}
 	else
 	{
-	    push @{$stats{'oks'}}, $1;
+	    push @{$stats{'ok'}}, $1;
 	}
     }
     $client->{'cfields'}  = join " ", @{$stats{'critical'}};
@@ -500,8 +432,6 @@ sub generate_service_message {
 			    }
 			    exit 0;
 			}
-			close (STDOUT);
-			*STDOUT = \$logstdout;
 			my $logpid = open ($logstderr, "|-");
 			if (!defined $logpid)
 			{
@@ -517,18 +447,19 @@ sub generate_service_message {
 			    }
 			    exit 0;
 			}
-			close (STDERR);
-			*STDERR = \$logstderr;
+			open (STDOUT, ">&", $logstdout);
+			open (STDERR, ">&", $logstderr);
 
 			exec (@cmd[1 .. $#cmd]) or logger ("Warning: Could not run command \"" . join(' ',@cmd[1 .. $#cmd]) . "\": $!");
 			exit 5;
-                        # NOTREACHED
+			# NOTREACHED
 		    }
-		}
+	        }
 		$config->{'contact'}->{$c}->{'pipe_command'} = $cmd;
 		$config->{'contact'}->{$c}->{'pipe'} = $pipe;
 	    } 
 	    $pipe = $config->{'contact'}->{$c}->{'pipe'};
+	    logger ("sending message: \"$txt\"") if ($DEBUG);
 	    print $pipe $txt, "\n" if (defined $pipe);
 	    $config->{'contact'}->{$c}->{'num_messages'}++;
 	}
@@ -615,50 +546,30 @@ sub message_expand {
 }
 
 sub logger_open {
+    # Called from the Munin module when we call munin_config
     my $dirname = shift;
 
-    if (!$log->opened)
-    {
-	  unless (open ($log, ">>$dirname/munin-limits.log"))
-	  {
-		  print STDERR "Warning: Could not open log file \"$dirname/munin-limits.log\" for writing: $!";
-	  }
-	  else
-	  {
-		  close (STDERR);
-		  *STDERR = \$log;
-		
-	  }
+
+    if (!$log->opened) {
+	if (!open ($log, ">>$dirname/munin-limits.log")) {
+	    print STDERR "Warning: Could not open log file \"$dirname/munin-limits.log\" for writing: $!";
+	} else {
+	    open (STDERR, ">&", $log);
+	}
     }
 }
 
-sub logger {
-  my ($comment) = @_;
-  my $now = strftime "%b %d %H:%M:%S", localtime;
 
-  print "$now - $comment\n" if $stdout;
-  if ($log->opened)
-  {
-	  print $log "$now - $comment\n";
-  }
-  else
-  {
-	  if (defined $config->{logdir})
-	  {
-		  if (open ($log, ">>$config->{logdir}/munin-graph.log"))
-		  {
-			  print $log "$now - $comment\n";
-		  }
-		  else
-		  {
-			  print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-graph.log\" for writing: $!";
-			  print STDERR "$now - $comment\n";
-		  }
-	  }
-	  else
-	  {
-		  print STDERR "$now - $comment\n";
-	  }
+sub logger {
+    my ($comment) = @_;
+    my $now = strftime "%b %d %H:%M:%S", localtime;
+
+    print "$now - $comment\n" if $stdout;
+
+    if ($log->opened) {
+	print $log "$now - $comment\n";
+    } else {
+	die "Noone opened our log file at startup!";
     }
 }
 
@@ -736,7 +647,7 @@ This is munin-limits version @@VERSION@@
 
 =head1 AUTHORS
 
-Audun Ytterdal and Jimmy Olsen.
+Knut Haugen, Audun Ytterdal and Jimmy Olsen.
 
 =head1 BUGS
 
@@ -746,13 +657,18 @@ Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
 =head1 COPYRIGHT
 
-Copyright © 2002-2004 Knut Haugen, Audun Ytterdal, and Jimmy Olsen / Linpro AS.
+Copyright (C) 2002-2006 Knut Haugen, Audun Ytterdal, and Jimmy Olsen / Linpro AS.
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
 PURPOSE.
 
 This program is released under the GNU General Public License
+
+=head1 SEE ALSO
+
+For information on configuration options, please refer to the man page for
+F<munin.conf>.
 
 =cut
 

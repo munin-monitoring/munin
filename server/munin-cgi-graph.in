@@ -17,21 +17,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-#
 # $Id$
 #
-# $Log$
-# Revision 1.5.2.2  2005/03/09 20:12:40  jimmyo
-# Correct expires-headers in CGI output (SF#1159742).
-#
-# Revision 1.5.2.1  2005/01/29 18:22:59  jimmyo
-# Bugfix in munin-cgi-graph with hostnames including - (SF#1111510).
-#
-# Revision 1.5  2004/12/22 20:01:15  jimmyo
-# Optimised munin-cgi-graph a bit.
-#
-# Revision 1.4  2004/11/16 20:00:44  jimmyo
-# License cleanups.
+# Please see http://munin.projects.linpro.no/wiki/CgiHowto for how to
+# use this, and how to convert it to fastcgi which will improve speed.
 #
 
 use RRDs;
@@ -40,6 +29,7 @@ use strict;
 use IO::Handle;
 use Date::Manip;
 use POSIX qw(strftime);
+use IPC::SysV qw(IPC_CREAT);
 
 my $GRAPHER = "@@LIBDIR@@/munin-graph";
 my $conffile = "@@CONFDIR@@/munin.conf";
@@ -51,6 +41,7 @@ my %TIMES   = ( "day"   => ["--noweek", "--nomonth", "--noyear", "--nosumweek", 
 		"week-sum"  => ["--noday", "--nomonth", "--noyear", "--noweek", "--nosumyear"], 
 		"year-sum"  => ["--noday", "--noweek", "--nomonth", "--nosumweek", "--noyear"]
 	    );
+
 my %period  = ( "day"   => 300,
 		"week"  => 1800,
 		"month" => 7200,
@@ -58,11 +49,14 @@ my %period  = ( "day"   => 300,
 		"week-sum" => 1800,
 		"year-sum" => 86400
 	    );
+
 my $log = new IO::Handle;
 my $scale = "day";
 my $host  = "";
 my $serv  = "";
 my $dom   = "";
+my $lock  = "";
+my $IPC_KEY = 89340;
 
 my $config = &munin_readconfig ($conffile);
 
@@ -116,11 +110,40 @@ print "Expires: ", strftime ("%a, %d %b %Y %H:%M:%S GMT", gmtime(time+($period{$
 print "Last-Modified: $last_modified\n";
 print "\n";
 
+# Try to police the number of concurrent rrdgraph instances.  The
+# third value is the default maximum.
+
+# Fox kindly submitted a patch to convert to SysV IPC semaphores.
+# Lovely! (ticket #499).
+
+my $max_cgi_graph_jobs = &munin_get ($config, "max_cgi_graph_jobs" , 6, $dom);
+
+my $opstring; 
+
+# Get semaphore handle
+my $semid = semget($IPC_KEY, 0, 0 );
+
+if(!$semid) {
+    # Or create it if needed
+    $semid = semget($IPC_KEY, 1 , 0666 | IPC_CREAT ) ||
+	die "Creating semaphore: $!";
+
+    # And initialize to max_cgi_graph_jobs
+    $opstring = pack("s!s!s!",0, $max_cgi_graph_jobs,0);
+    semop($semid,$opstring) || die "$!";
+}
+
+# Decrement, or lock/hang/yield if already 0
+$opstring = pack("s!s!s!",0, -1, 0);
+semop($semid,$opstring);
 
 &graph ($filename);
 
-sub graph
-{
+# Increment (and release waiting processes)
+$opstring = pack("s!s!s!",0, 1, 0);
+semop($semid,$opstring);
+
+sub graph {
     my $filename = shift;
 
     open (GRAPH, $filename) or die "Warning: Could not open picture file \"$filename\" for reading: $!\n";
@@ -219,41 +242,38 @@ sub verify_parameters
 	}
 }
 
-sub graph_usable
-{
+sub graph_usable {
     my $filename = shift;
     my $time     = shift;
 
-    if (-f $filename)
-    {
+    if (-f $filename) {
 	my @stats = stat (_);
-	if (($stats[9]) > ($time - $time%$period{$scale}))
-	{
+	my $expire = ($stats[9] - $time%$period{$scale}+$period{$scale})-$time;
+#print STDERR "Expires in: $expire\n";
+
+	if ($expire >= 0) {
 #print STDERR "Skipping munin-graph-run for \"$filename\".\n";
-#print STDERR ("Graph unexpired for $scale. ($stats[9] , $time, ", ($time%$period{$scale}), ", ", ($time - $time%$period{$scale}), ").\n");
+#print STDERR ("Graph unexpired for $scale. ($stats[9] , $time, ". ($time%$period{$scale}). ", ". ($time - $time%$period{$scale}). ").\n");
 	    return 1;
-	}
-	else
-	{
-#print STDERR ("Graph expired for $scale. ($stats[9] , $time, ", ($time%$period{$scale}), ", ", ($time - $time%$period{$scale}), ").\n");
+	} else {
+#print STDERR ("Graph expired for $scale. ($stats[9] , $time, ". ($time%$period{$scale}). ", ". ($time - $time%$period{$scale}). ").\n");
 	    return 0;
 	}
     }
     return 0;
 }
 
-sub draw_graph
-{
+sub draw_graph {
     my $host  = shift;
     my $serv  = shift;
     my $scale = shift;
 
-    $serv =~ s/[^\w_\/"'\[\]\(\)+=-]/_/; $serv =~ /^(.+)$/; $serv = $1;
-    $host =~ s/[^\w_\/"'\[\]\(\)+=-]/_/; $host =~ /^(.+)$/; $host = $1;
+    $serv =~ s/[^\w_\/"'\[\]\(\)+=-]/_/; $serv =~ /^(.+)$/; $serv = $1; #"
+    $host =~ s/[^\w_\/"'\[\]\(\)+=-]/_/; $host =~ /^(.+)$/; $host = $1; #"
 
     my @params = ($GRAPHER);
     push @params, @$scale;
-    push @params, "--skip-locking", "--skip-stats";
+    push @params, "--skip-locking", "--skip-stats", "--nolazy";
     push @params, "--host", $host, "--service", $serv;
     push @params, "STDERR>&STDOUT";
 
@@ -268,8 +288,7 @@ sub draw_graph
     return $file;
 }
 
-sub modified
-{
+sub modified {
 # Format of since_string If-Modified-Since: Wed, 23 Jun 2004 16:11:06 GMT
 
     my $since_string = shift;

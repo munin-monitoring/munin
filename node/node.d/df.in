@@ -1,4 +1,7 @@
-#!/bin/sh
+#!@@GOODSH@@
+# -*- sh -*-
+#
+# $Id$
 #
 # Script to monitor disk usage.
 #
@@ -7,29 +10,9 @@
 # 	config   (required)
 # 	autoconf (optional - used by munin-config)
 #
-# $Log$
-# Revision 1.5  2004/12/09 20:27:45  jimmyo
-# Sort fields in df*-plugins alphabetically.
-#
-# Revision 1.4  2004/05/18 22:04:29  jimmyo
-# Use "sed 1d" instead of "tail +2" in df plugins (patch by Olivier Delhomme).
-#
-# Revision 1.3  2004/01/29 19:39:00  jimmyo
-# Generic plugins now use printf instead of echo -n, as this is more portable (SF#885564)
-#
-# Revision 1.2  2004/01/29 18:57:39  jimmyo
-# Disabled plugins df and df_inode on Solaris (SF#882274).
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.6  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
-#
+# Environment:
+#       warning  Warning percentage, default 92
+#       critical Critical percentage, default 98
 #
 # Magic markers (optional - used by munin-config and installation
 # scripts):
@@ -64,8 +47,8 @@ if [ "$1" = "config" ]; then
 			else
 				printf (\"...%s\n\", substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3)) 
 		}"
-		echo "$name.warning 92"
-		echo "$name.critical 98"
+	echo "$name.warning ${warning:-92}"
+	echo "$name.critical ${critical:-98}"
 	done
 	exit 0
 fi
