@@ -20,6 +20,9 @@
 # Revision 0.1  2004/02/24 Andrew Radke
 #
 # $Log$
+# Revision 1.7  2004/11/20 21:56:15  jimmyo
+# Fixed bug in generic/hddtemp2, patch by arturaz (SF#1037002).
+#
 # Revision 1.6  2004/08/18 17:51:05  jimmyo
 # Made generic/hddtemp2 understand environment variables with quotes (Deb#265022).
 #
@@ -49,7 +52,7 @@ $ENV{'LANG'} = "C"; # Hardcode lang so the hddtemp program to ease parsing of hd
 $ENV{'LC_ALL'} = "C"; # Hardcode lang so the hddtemp program to ease parsing of hddtemp-output.
 my $HDDTEMP = $ENV{'hddtemp'} || 'hddtemp';
 my %config = (
-	regex => qr/\/dev\/([^:]+): ([^:]+): ([\d.]+) C\n/m,
+	regex => qr/^\/dev\/([^:]+):\s*([^:]+):\s*([\d.]+) C/m,
 	title => "Temperatures (Hard Disks)",
 	vtitle => '°Celsius',
 	warning => 50,
@@ -78,7 +81,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
     exit 1;
   }
 
-  unless ($text =~ / C\n/) {
+  unless ($text =~ / C/) {
     print "no (no temperature readings)\n";
     exit 1;
   }

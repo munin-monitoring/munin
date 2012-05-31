@@ -10,6 +10,15 @@
 # 	autoconf (optional - used by lrrd-config)
 #
 # $Log$
+# Revision 1.11  2004/11/21 00:17:12  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
+# Revision 1.10  2004/11/20 23:58:22  jimmyo
+# The linux/iostat plugin now ignores devices without traffic (Deb#267195).
+#
+# Revision 1.9  2004/09/25 22:29:16  jimmyo
+# Added info fields to a bunch of plugins.
+#
 # Revision 1.8  2004/08/24 13:37:29  ilmari
 # Add total line
 #
@@ -101,7 +110,8 @@ if ( $ARGV[0] and $ARGV[0] eq "config")
 	print "graph_args --base 1024 -l 0\n";
 	print "graph_vlabel blocks per second read (-) / written (+)\n";
 	print "graph_category disk\n";
-	print "graph_total Total\n";
+	print "graph_total Total\n" if (keys (%devs) > 1);
+	print "graph_info This graph shows the I/O to and from block devices.\n";
 	print "graph_order";
 	foreach my $key (sort by_dev keys %devs)
 	{
@@ -111,12 +121,15 @@ if ( $ARGV[0] and $ARGV[0] eq "config")
 	foreach my $key (sort by_dev keys %devs)
 	{
 		print $key . "_read.label $devs{$key}->{name}\n";
-		print $key . "_read.type COUNTER\n";
+		print $key . "_read.type DERIVE\n";
 		print $key . "_read.max 900000\n";
+		print $key . "_read.min 0\n";
 		print $key . "_read.graph no\n";
 		print $key . "_write.label $devs{$key}->{name}\n";
-		print $key . "_write.type COUNTER\n";
+		print $key . "_write.info I/O on device $devs{$key}->{name}\n";
+		print $key . "_write.type DERIVE\n";
 		print $key . "_write.max 900000\n";
+		print $key . "_write.min 0\n";
 		print $key . "_write.negative " . $key . "_read\n";
 	}
 	exit 0;
@@ -180,12 +193,8 @@ sub fetch_detailed()
 				my @fields = split(/\s+/, $3);
 				my $tmpnam = $2;
 				my $major  = $1;
-				next if ($major ==   1); # RAM devices
-				next if ($major ==   9); # MD devices
-				next if ($major ==  58); # LVM devices
-				next if ($major == 254); # LVM2 devices
-				next if ($tmpnam =~ /part\d+$/);
-				next if ($tmpnam =~ /^\s*(?:sd|hd)[a-z]\d+\s*$/);
+				next if ($tmpnam =~ /\d+$/);
+				next unless grep { $_ } @fields;
 
 				$tmpnam =~ s/\/[[:alpha:]]+(\d+)/\/$1/g;
 				$tmpnam =~ s/^([^\/]+)\//$1/;

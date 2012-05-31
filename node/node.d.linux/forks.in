@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+# Plugin to monitor the number of forks per second on the machine.
+#
+# Parameters:
+#
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#
+# $Log$
+# Revision 1.2  2004/11/21 00:01:18  jimmyo
+# Moved the forks plugin to the processes category, where it belongs.
+#
+# Revision 1.1  2004/11/20 23:32:16  jimmyo
+# Added new plugin linux/forks, to graph forks per second.
+#
+#
+#
+# Magick markers (optional - used by munin-config and som installation
+# scripts):
+#%# family=auto
+#%# capabilities=autoconf
+
+
+
+if [ "$1" = "autoconf" ]; then
+	if [ -r /proc/stat ]; then
+		echo yes 
+		exit 0
+	else
+		echo "no (/proc/stat not readable)"
+		exit 1
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Fork rate'
+	echo 'graph_args --base 1000 -l 0 '
+	echo 'graph_vlabel forks / second'
+	echo 'graph_category processes'
+	echo 'graph_info This graph shows the number of forks (new processes started) per second.'
+	echo 'forks.label forks'
+	echo 'forks.type DERIVE'
+	echo 'forks.min 0'
+	echo 'forks.max 100000'
+	echo 'forks.info The number of forks per second.'
+	exit 0
+fi
+
+echo -n "forks.value "
+awk '/processes/ {print $2}' /proc/stat
+
+
+

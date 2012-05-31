@@ -12,12 +12,18 @@
 <body> 
 <table cellpadding="3" border="0">
   <tr>
-    <td><div class="logo">&nbsp;</div></td>
-     <td valign="top">
+    <td rowspan="2"><div class="logo">&nbsp;</div></td>
+    <td valign="top">
          <h2><a href="../index.html">Overview</a> :: <TMPL_VAR NAME="DOMAIN"></h2>
-    </td>
+    </td>    
   </tr>
- </table>
+  <TMPL_IF NAME="COMPARE">
+  <tr>
+    <td valign="top">
+      <h2><TMPL_VAR NAME="DOMAIN"> :: [ <a href="comparison-day.html">day</a> <a href="comparison-week.html">week</a> <a href="comparison-month.html">month</a> <a href="comparison-year.html">year</a> ]
+    </td>
+  </tr></TMPL_IF>
+</table>
 
  <table class="largeinvisiblebox">
  <tr>
@@ -30,7 +36,7 @@
       <li><span class="domain"><a href="<TMPL_VAR NAME="NODE">.html#<TMPL_VAR NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a></span>
       <ul>
 	<TMPL_LOOP NAME="SERVICES">
-	<li><span class="host"><a href="<TMPL_VAR NAME="NODE">-<TMPL_VAR NAME="SERVICE">.html"><TMPL_VAR ESCAPE="HTML" NAME="LABEL"></a></span></li>
+	<li><span class="host"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="NODE">-<TMPL_VAR NAME="SERVICE">.html"><TMPL_VAR ESCAPE="HTML" NAME="LABEL"></a></span></li>
         </TMPL_LOOP> 
       </ul>
    </li>

@@ -1,6 +1,47 @@
-#!/usr/bin/perl -w
+#!@@PERL@@ -w
+#
+# Copyright (C) 2004 Jimmy Olsen, Dagfinn Ilmari Mannsaaker
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
 #
 # $Log$
+# Revision 1.15  2004/11/21 00:16:56  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
+# Revision 1.14  2004/11/20 22:37:21  jimmyo
+# Strip strange characters.
+#
+# Revision 1.13  2004/11/20 22:10:49  jimmyo
+# Clean up output of plugin a bit.
+#
+# Revision 1.12  2004/11/20 22:06:22  jimmyo
+# Clean up output of plugin a bit.
+#
+# Revision 1.11  2004/11/16 20:08:26  jimmyo
+# License cleanups.
+#
+# Revision 1.10  2004/11/12 20:28:03  ilmari
+# No debugging info by default
+#
+# Revision 1.9  2004/09/08 15:25:33  ilmari
+# Use @@PERL@@ in all perl shebang lines.
+#
+# Revision 1.8  2004/09/07 13:19:22  ilmari
+# SNMP plugins now honour the "host" environment variable if they can't deduce the hostname from zsh.
+#
 # Revision 1.7  2004/09/05 12:00:18  jimmyo
 # Set family and capabilities.
 #
@@ -35,7 +76,7 @@
 use strict;
 use Net::SNMP;
 
-my $DEBUG = 1;
+my $DEBUG = 0;
 
 my $host      = $ENV{host}      || undef;
 my $port      = $ENV{port}      || 161;
@@ -63,7 +104,7 @@ if ($0 =~ /^(?:|.*\/)snmp_([^_]+)_if_(.+)$/)
 		$port = $2;
 	}
 }
-else
+elsif (!defined($host))
 {
 	print "# Debug: $0 -- $1 -- $2\n" if $DEBUG;
 	die "# Error: couldn't understand what I'm supposed to monitor.";
@@ -94,29 +135,39 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 		die "Croaking: " . $session->error();
 	}
 	my $name = $response->{$ifEntryDescr};
+	$name =~ s/[^\w\s]//g;
 	my $warn = undef;
 	if (defined ($response = $session->get_request($ifEntrySpeed)))
 	{
 		$warn = $response->{$ifEntrySpeed}/8;
 	}
-	print "graph_title $name traffic\n";
+	if (length ($name) > 15)
+	{
+		print "graph_title Interface $iface traffic\n";
+	}
+	else
+	{
+		print "graph_title Interface $name traffic\n";
+	}
 	print "graph_order recv send\n";
 	print "graph_args --base 1000\n";
 	print "graph_vlabel bps in (-) / out (+)\n";
 	print "graph_category network\n";
-	print "graph_info This graph shows traffic for this network interface.\n";
+	print "graph_info This graph shows traffic for the \"$name\" network interface.\n";
 	print "send.info Bits sent/received by this interface.\n";
 	print "recv.label recv\n";
-	print "recv.type COUNTER\n";
+	print "recv.type DERIVE\n";
 	print "recv.graph no\n";
 	print "recv.cdef recv,8,*\n";
 	print "recv.max 2000000000\n";
+	print "recv.min 0\n";
 	print "recv.warn ", (-$warn), "\n" if defined $warn;
 	print "send.label bps\n";
-	print "send.type COUNTER\n";
+	print "send.type DERIVE\n";
 	print "send.negative recv\n";
 	print "send.cdef send,8,*\n";
 	print "send.max 2000000000\n";
+	print "send.min 0\n";
 	print "send.warn $warn\n" if defined $warn;
 	exit 0; 
 }

@@ -1,3 +1,87 @@
+munin (1.1.5)
+
+  - Munin main package:
+    * Treat long field names properly. Sadly, this will lead to data loss
+      for fields that earlier had their field names truncated. :-(
+    * Small interface improvements in the HTML output.
+    * Changes of min and max values now causes corresponding changes in 
+      the RRD files.
+    * Added new option "graph_sums" which creates summarised graphs.
+    * Munin-update adapts to field type changes (loss-free conversion from
+      COUNTER->DERIVE et al.)
+    * Added new config option "local_address", to specify which local address
+      outgoing connections (from munin-update) should be used.
+    * Added "comparison" views, to view a whole hostgroup at once.
+    * Bugfix in munin-limits.
+    * Draw min/max ranges in all graphs with only one visible field.
+    * Replaced notification system. Munin can now send warning/critical
+      messages to whatever process/file that is needed.
+    * Removed the munin-nagios program, as it is no longer needed.
+    * Use column headers for min/max/cur/avg if label is too long.
+    * Minor template modifications, so the output HTML validates correctly
+      (SF#1039850).
+    * Added new field option "line", which draws HRULEs.
+	
+
+  - Munin-node:
+    * The node now changes dir to /, to make sure it's in a directory
+      readable by all users.
+    * Added per-plugin timeouts, contributed by Chan Wilson (SF#881044).
+
+  - Plugins
+    * SNMP plugin "df" properly strips the label and serial number from
+      Windows drive labels.
+    * SNMP plugins now honour the "host" environment variable if they can't
+      deduce the hostname from $0.
+    * Use @@PERL@@ in all perl shebang lines.
+    * Added new SNMP plugins for sensors, reading info from System-Informant on
+      Windows boxes.
+    * New wildcard plugin generic/ping_ to graph ping times.
+    * Replace "rpc" field with "total" in NFS and NFSD plugins.
+    * Added new plugin linux/apt_all, contributed by xavier.
+    * Added new plugins generic/courier_mta*, contributed by Rune N.
+      Skillingstad.
+    * Plugin generic/acpi now autodetects even if the acpi version does not
+      contain the acpi_available program.
+    * Added plugin linux/irqstast, showing individual interrupt rates.
+    * Fixed typo in linux/fw_forwarded_local (Deb#275535).
+    * Fixed typo in linux/fw_packets (Deb#275537).
+    * Added SNMP plugins for temperature and fan info provided by the
+      Fujitsu Siemens ServerView agents.
+    * Adapt linux/apt plugin to work properly with Debian testing/unstable
+      (patch from Rune N. Skillingstad).
+    * Added new plugin generic/apc_nis to monitor APC UPS, contributed by
+      xavier.
+    * Made graph_title a parameter for generic/exim_mailqueue (patch by Torstein
+      T. Svendsen, SF#1060834).
+    * Fixed typo in generic/sendmail_mailstats (patch by Lupe Christoph,
+      SF#1058128).
+    * Applied patch from Torstein T. Svendsen to generic/exim_mailstats, to
+      handle logfiles with timestamps in the name (SF#1055214).
+    * Applied patch from Nicolas Stransky to generic/hddtemp, to fetch temp more
+      elegantly (SF#1052845).
+    * Added new plugin linux/hddtemp_smartctl, made by Peter Gervai
+      (SF#1032727).
+    * Fixed linux/if_(err_) braindamage affecting hosts with vlans or
+      multi-digit interface numbers.
+    * Added wildcard plugin generic/smart_, contributed by Nicolas Stransky.
+    * Added plugin generic/loggrep for generic log grepping.
+    * Fixed bug in generic/sendmail_mailqueue, when queue is empty.
+    * Fixed bug in generic/hddtemp2, patch by arturaz (SF#1037002).
+    * Added new plugin linux/forks, to graph forks per second.
+    * The linux/iostat plugin now ignores devices without traffic (Deb#267195).
+    * Changed a lot of plugins so they use DERIVE instead of COUNTER.
+    * Upped generic/ntp_ to auto family.
+    * Upped generic/sendmail_mailstats and generic/sendmail_mailtraffic to
+      auto family.
+    * Fixed linux/sensors_ plugin to report warning and critical values
+      for temperatures and voltages if 'sensors' reports them.
+
+  - Installation
+    * Changed variable name of ARCH to OSTYPE, to avoid name crash on newer
+      FreeBSDs (SF#1068238).
+    * Added variable PYTHON, as we now have our first Python plugin.
+
 munin (1.1.4)
 
   * Better error handling when fetching data from RRD files.

@@ -1,6 +1,9 @@
 #!@@PERL@@
 
 # $Log$
+# Revision 1.2  2004/11/21 00:16:56  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -45,7 +48,8 @@ if($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title Mailman usage\n";
     print "graph_args --base 1000\n";
     print "posts.label posts\n";
-    print "posts.type COUNTER\n";
+    print "posts.type DERIVE\n";
+    print "posts.min 0\n";
     print "members.label members\n";
     print "members.type GAUGE\n";
     exit 0;

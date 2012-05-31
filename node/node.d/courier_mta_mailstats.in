@@ -1,0 +1,173 @@
+#!@@PERL@@ -w
+#
+# Plugin to monitor the number of mails delivered and rejected by courier-mta.
+#
+# Author: Rune Nordbøe Skillingstad <runesk@linpro.no>
+#
+# Usage: copy or link into /etc/munin/node.d/
+#
+# Parameters:
+#
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#
+# Config variables:
+#
+# 	logdir       - Where to find logfiles
+#	logfile      - What file to read in logdir
+#
+# $Log$
+# Revision 1.1  2004/10/19 18:45:30  jimmyo
+# Added new plugins generic/courier_mta*, contributed by Rune N. Skillingstad.
+#
+#
+# Magic markers (optional - used by munin-config and some installation
+# scripts):
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+my $statefile = "@@PLUGSTATE@@/munin-plugin-courier_mta_mailstats.state";
+my $pos   = undef;
+my $delivered = 0;
+my $rejects = {};
+my $LOGDIR  = $ENV{'logdir'}  || '/var/log';
+my $LOGFILE = $ENV{'logfile'} || 'mail.log';
+my $COURIER = $ENV{'courier'} || '/usr/sbin/courier';
+
+if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
+{
+    my $logfile;
+    if(-x $COURIER) {
+	if(-d $LOGDIR) {
+	    $logfile = "$LOGDIR/$LOGFILE";
+	    if(-f $logfile) {
+		if(-r "$logfile") {
+		    print "yes\n";
+		    exit 0;
+		} else {
+		    print "no (logfile not readable)\n";
+		}
+	    } else {
+		print "no (logfile not found)\n";
+	    }
+	} else {
+	    print "no (could not find logdir)\n";
+	}
+    } else {
+	print "no (could not find executable)\n";
+    }
+    exit 1;
+}
+
+my $logfile = "$LOGDIR/$LOGFILE";
+my $prevdate = get_prev_date();
+
+if(-f "$logfile.$prevdate") {
+    $rotlogfile = "$logfile.$prevdate";
+} elsif (-f "$logfile.0") {
+    $rotlogfile = $logfile . ".0";
+} elsif (-f "$logfile.1") {
+    $rotlogfile = $logfile . ".1";
+} elsif (-f "$logfile.01") {
+    $rotlogfile = $logfile . ".01";
+} else {
+    $rotlogfile = $logfile . ".0";
+}
+
+if(-f "$statefile") {
+    open (IN, "$statefile") or exit 4;
+    if(<IN> =~ /^(\d+):(\d+)/) {
+	($pos, $delivered) = ($1, $2);
+    }
+    while (<IN>) {
+    	if (/^(\d+):(\d+)$/) {
+	    $rejects->{$1} = $2;
+	}
+    }
+    close IN;
+}
+
+if(! -f $logfile and ! -f $rotlogfile) {
+    print "delivered.value U\n";
+    foreach my $i (keys %{$rejects}) {
+    	print "r$i.value U\n";
+    }
+    exit 0;
+}
+
+
+$startsize = (stat $logfile)[7];
+
+if(!defined $pos) {
+    # Initial run.
+    $pos = $startsize;
+}
+
+if($startsize < $pos) {
+    # Log rotated
+    parseLogfile ($rotlogfile, $pos, (stat $rotlogfile)[7]);
+    $pos = 0;
+}
+
+parseLogfile ($logfile, $pos, $startsize);
+$pos = $startsize;
+
+if($ARGV[0] and $ARGV[0] eq "config") {
+    print "graph_title Courier MTA mail throughput\n";
+    print "graph_args --base 1000 -l 0\n";
+    print "graph_vlabel mails / min\n";
+    print "graph_scale  no\n";
+    print "graph_total  Total\n";
+    print "delivered.label delivered\n";
+    print "delivered.type DERIVE\n";
+    print "delivered.draw AREA\n";
+    print "delivered.cdef delivered,60,*\n";
+    print "delivered.min 0\n";
+    foreach my $i (keys %{$rejects}) {
+	    print "r$i.label reject $i\n";
+	    print "r$i.type DERIVE\n";
+	    print "r$i.cdef r$i,60,*\n";
+	    print "r$i.draw STACK\n";
+	    print "r$i.min 0\n";
+    }
+    exit 0;
+}
+
+print "delivered.value $delivered\n";
+foreach my $i (keys %{$rejects}) {
+	print "r$i.value ", $rejects->{$i}, "\n";
+}
+
+if(-l $statefile) {
+    die("$statefile is a symbolic link, refusing to touch it.");
+}				
+open (OUT, ">$statefile") or exit 4;
+print OUT "$pos:$delivered\n";
+foreach my $i (keys %{$rejects}) {
+    print OUT "$i:", $rejects->{$i}, "\n";
+}
+close OUT;
+
+sub parseLogfile {    
+    my ($fname, $start, $stop) = @_;
+    open (LOGFILE, $fname) or exit 3;
+    seek (LOGFILE, $start, 0) or exit 2;
+    
+    while (tell (LOGFILE) < $stop) {
+	my $line =<LOGFILE>;
+	chomp ($line);
+	if($line =~ /(?:courierlocal|courieresmtp): id=.*,from=.*,addr=.*,size=\d+,success:.*delivered/) {
+	    $delivered++;
+	} elsif($line =~ /courieresmtpd: error,relay=.*(?:\d{1,3}\.){3}\d{1,3},from=[^:]+: (\d{3})/) {
+	    $rejects->{$1} ++;
+	}
+    }
+    close(LOGFILE);    
+}
+
+sub get_prev_date {
+	my @date = localtime (time - 86400);
+	my $prevdate = $date[5]+1900 . $date[4]+1 . $date[3];
+	return $prevdate;
+}

@@ -15,6 +15,12 @@
 # 	exim         - Where's exim?
 #
 # $Log$
+# Revision 1.4  2004/11/21 00:16:56  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
+# Revision 1.3  2004/11/10 15:54:49  jimmyo
+# Applied patch from Torstein T. Svendsen to generic/exim_mailstats, to handle logfiles with timestamps in the name (SF#1055214)
+#
 # Revision 1.2  2004/05/20 13:57:12  jimmyo
 # Set categories to some of the plugins.
 #
@@ -38,6 +44,28 @@
 #%# family=auto
 #%# capabilities=autoconf
 
+
+sub get_exim_logfile {
+    my ($spec, $type, $time) = @_;
+    chomp($spec);
+    $time = time() unless $time;
+    my $logfile = $spec;
+    $logfile =~ s/^log_file_path = //;
+    $logfile =~ s/\%s/$type/;
+
+    if( $logfile =~ /\%D/ ) {
+	my @t=localtime($time);
+	my $ts = sprintf("%04d%02d%02d",$t[5]+1900, $t[4]+1, $t[3]);
+	$logfile =~ s/\%D/$ts/g;
+    }        
+    my @lfiles = split(/\s?:\s?/, $logfile);
+    foreach (@lfiles) {
+	return $_ unless /^syslog/;
+    }
+}
+
+
+
 $statefile = "@@PLUGSTATE@@/plugin-exim_mailstats.state";
 $pos   = undef;
 $received = 0;
@@ -51,19 +79,18 @@ $LOGDIR = $ENV{'logdir'} || undef;
 if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
     my $logfile;
-    if (!$LOGDIR)
-    {
-	$logfile = `$EXIM -bP log_file_path 2>/dev/null`;
+    
+    if(defined($LOGDIR)) {
+	if(! -d $LOGDIR) {
+	    print "no (logdir does not exist)\n";
+	    exit(1);
+	}
+	$logfile = $LOGDIR . '/mainlog';
+    } else {
+	my $logfilespec = `$EXIM -bP log_file_path 2>/dev/null`;
 	if (! $?)
 	{
-	    if ($logfile =~ /^\S+\s+=\s+([^%]+)%/)
-	    {
-		$logfile = $1;
-	    }
-	    else
-	    {
-		print "no (could not find logfile)\n";
-	    }
+	    $logfile = get_exim_logfile( $logfilespec, 'main');
 	}
 	elsif ($? eq "127")
 	{
@@ -74,22 +101,10 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
 	    print "no\n";
 	}
     }
-    else
-    {
-	if (! -d $LOGDIR)
-	{
-	    print "no (could not find LOGDIR)\n";
-	}
-	else
-	{
-	    $logfile = $LOGDIR;
-	}
-    }
-
 
     if ($logfile)
     {
-	if (-r "$logfile/mainlog")
+	if (-r "$logfile")
 	{
 	    print "yes\n";
 	    exit 0;
@@ -102,10 +117,22 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
     exit 1;
 }
 
-exit 1 unless ($LOGDIR || (`$EXIM -bP log_file_path` =~ /^\S+\s+=\s+([^%]+)%/));
-$logfile    = ($LOGDIR || $1);
-$logfile .= "mainlog";
 
+my $logfilespec;
+
+if(defined($LOGDIR)) {
+    $logfilespec = '';
+    $logfile = $LOGDIR . '/' . 'mainlog';
+} else {
+    $logfilespec = `$EXIM -bP log_file_path`;
+    $logfile = get_exim_logfile( $logfilespec, 'main');
+}
+
+exit 1 unless -r $logfile;
+
+if( $logfilespec =~ /\%D/ ) {
+    $rotlogfile = get_exim_logfile( $logfilespec, 'main', (time()-(24*60*60)));
+} else {
 if (-f "$logfile.0")
 {
     $rotlogfile = $logfile . ".0";
@@ -122,6 +149,7 @@ else
 {
     $rotlogfile = $logfile . ".0";
 }
+}
 
 if ( $ARGV[0] and $ARGV[0] eq "config" )
 {
@@ -131,11 +159,13 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "graph_scale  no\n";
 	print "graph_category exim\n";
     print "received.label received\n";
-    print "received.type COUNTER\n";
+    print "received.type DERIVE\n";
+    print "received.min 0\n";
     print "received.draw AREA\n";
     print "received.cdef received,60,*\n";
     print "completed.label completed\n";
-    print "completed.type COUNTER\n";
+    print "completed.type DERIVE\n";
+    print "completed.min 0\n";
     print "completed.cdef completed,60,*\n";
     exit 0;
 }

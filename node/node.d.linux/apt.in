@@ -26,6 +26,10 @@
 #		chance that an update will occur.
 #
 # $Log$
+# Revision 1.2  2004/11/04 19:07:01  jimmyo
+# Adapt linux/apt plugin to work properly with Debian testing/unstable
+# (patch from Rune N. Skillingstad).
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -172,7 +176,7 @@ while (<APT>)
 			}
 		}
 	}
-	if (/^\d+\spackages upgraded,\s\d+\snewly installed, \d+ to remove and (\d+)  not upgraded/)
+	if (/^\d+\s(?:packages )?upgraded,\s\d+\snewly installed, \d+ to remove and (\d+)\s+not upgraded/)
 	{
 		$hold = $1;
 	}

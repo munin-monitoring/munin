@@ -3,6 +3,15 @@
 # Plugin created by Alexandre Dupouy, with the assistance of Mike Fedyk
 #
 # $Log$
+# Revision 1.7  2004/11/21 00:17:12  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
+# Revision 1.6  2004/10/01 12:32:09  ilmari
+# complete "rpc" removal
+#
+# Revision 1.5  2004/10/01 08:40:50  ilmari
+# Remove useless 'rpc' field, add total field
+#
 # Revision 1.4  2004/05/20 19:02:37  jimmyo
 # Set categories on a bunch of plugins
 #
@@ -22,7 +31,6 @@
 NFSD=/proc/net/rpc/nfsd
 
 proc="getattr setattr lookup access readlink read write create mkdir symlink mknod remove rmdir rename link readdir readdirplus fsstat fsinfo pathconf commit"
-rpc="rpc"
 
 if [ "$1" = "autoconf" ]; then
 	if [ -x "$NFSD" ]; then
@@ -38,28 +46,18 @@ if [ "$1" = "config" ]; then
 
 	echo 'graph_title NFS Server'
 	echo 'graph_args --base 1000 -l 0'
-	echo 'graph_vlabel proc detail'
+	echo 'graph_vlabel requests / second'
+	echo 'graph_total total'
 	echo 'graph_category NFS'
-	for a in $rpc ; do echo "$a.label $a" ; echo "$a.type COUNTER" ; done
-	for a in $proc ; do echo "$a.label $a" ; echo "$a.type COUNTER" ; done
+	for a in $proc ; do echo "$a.label $a" ; echo "$a.type DERIVE"; echo "$a.min 0"; done
 	exit 0
 fi
-
-i=2;
-
-for a in $rpc; do
-	echo -n "$a.value "
-	grep rpc /proc/net/rpc/nfsd \
-		| cut -f $i -d ' ' \
-		| awk '{print $1}'
-		i=$(expr $i + 1)
-done
 
 i=4;
 
 for a in $proc; do
 	echo -n "$a.value "
-	grep proc3 /proc/net/rpc/nfsd \
+	grep proc3 $NFSD \
 		| cut -f $i -d ' ' \
 		| awk '{print $1}'
 	i=$(expr $i + 1)

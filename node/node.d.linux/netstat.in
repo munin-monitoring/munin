@@ -8,6 +8,12 @@
 # 	autoconf (optional - only used by munin-config)
 #
 # $Log$
+# Revision 1.4  2004/11/21 00:17:12  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
+# Revision 1.3  2004/09/25 22:29:16  jimmyo
+# Added info fields to a bunch of plugins.
+#
 # Revision 1.2  2004/05/20 13:57:12  jimmyo
 # Set categories to some of the plugins.
 #
@@ -54,21 +60,31 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args -l 0 --base 1000'
 	echo 'graph_vlabel active connections'
 	echo 'graph_category network'
+	echo 'graph_info This graph shows the TCP activity of all the network interfaces combined.'
 	echo 'active.label active'
-	echo 'active.type COUNTER'
-	echo 'active.max 50000'''
+	echo 'active.type DERIVE'
+	echo 'active.max 50000'
+	echo 'active.min 0'
+	echo 'active.info The number of active TCP openings per second.'
 	echo 'passive.label passive'
-	echo 'passive.type COUNTER'
-	echo 'passive.max 50000'''
+	echo 'passive.type DERIVE'
+	echo 'passive.max 50000'
+	echo 'passive.min 0'
+	echo 'passive.info The number of passive TCP openings per second.'
 	echo 'failed.label failed'
-	echo 'failed.type COUNTER'
-	echo 'failed.max 50000'''
+	echo 'failed.type DERIVE'
+	echo 'failed.max 50000'
+	echo 'failed.min 0'
+	echo 'failed.info The number of failed TCP connection attempts per second.'
 	echo 'resets.label resets'
-	echo 'resets.type COUNTER'
-	echo 'resets.max 50000'''
+	echo 'resets.type DERIVE'
+	echo 'resets.max 50000'
+	echo 'resets.min 0'
+	echo 'resets.info The number of TCP connection resets.'
 	echo 'established.label established'
 	echo 'established.type GAUGE'
-	echo 'established.max 50000'''
+	echo 'established.max 50000'
+	echo 'established.info The number of currently open connections.'
 	exit 0
 fi
 

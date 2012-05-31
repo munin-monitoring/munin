@@ -1,10 +1,58 @@
-#!/usr/bin/perl -w
+#!@@PERL@@ -w
 #
-# Script to make graphs
+# Copyright (C) 2002-2004 Jimmy Olsen, Audun Ytterdal
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
 #
 # $Id$
 #
 # $Log$
+# Revision 1.39  2004/11/21 15:43:08  jimmyo
+# Copy info fields when using aliases.
+#
+# Revision 1.38  2004/11/21 14:39:23  jimmyo
+# Renamed function munin_get_val to munin_get.
+#
+# Revision 1.37  2004/11/21 14:30:55  jimmyo
+# Added new field option "line", which draws HRULEs.
+#
+# Revision 1.36  2004/11/19 23:01:46  jimmyo
+# Fixed irqstats plugin so it doesn't use numbers as field names. Also expanded the label if possible, since munin-graph now handles long labels.
+#
+# Revision 1.35  2004/11/19 22:26:57  jimmyo
+# Use column headers for min/max/cur/avg if label is too long.
+#
+# Revision 1.34  2004/11/16 20:00:44  jimmyo
+# License cleanups.
+#
+# Revision 1.33  2004/11/13 22:50:49  jimmyo
+# Draw min/max ranges in all graphs with only one visible field.
+#
+# Revision 1.32  2004/09/10 20:47:20  jimmyo
+# Changed the calculation of daily sums on the summed year graph.
+#
+# Revision 1.31  2004/09/10 19:24:18  jimmyo
+# Added new option "graph_sums" which creates summarised graphs.
+#
+# Revision 1.30  2004/09/08 15:25:33  ilmari
+# Use @@PERL@@ in all perl shebang lines.
+#
+# Revision 1.29  2004/09/07 21:45:38  jimmyo
+# Changes of min and max values now causes corresponding changes in the RRD files.
+#
 # Revision 1.28  2004/09/04 21:33:13  jimmyo
 # Handle strange characters better.
 #
@@ -151,7 +199,7 @@ my @limit_hosts = ();
 my @limit_services = ();
 
 # Fields to copy when "aliasing" a field
-my @copy_fields    = ("label", "draw", "type", "rrdfile", "fieldname"); 
+my @copy_fields    = ("label", "draw", "type", "rrdfile", "fieldname", "info"); 
 
 # Force drawing of "graph no". 
 my $force_graphing = 0;
@@ -164,7 +212,7 @@ my $list_images = 0;
 my $skip_locking = 0;
 my $skip_stats = 0;
 my $conffile = "@@CONFDIR@@/munin.conf";
-my %draw = ("day" => 1, "week" => 1, "month" => 1, "year" => 1);
+my %draw = ("day" => 1, "week" => 1, "month" => 1, "year" => 1, "sumyear" => 1, "sumweek" => 1);
 
 my $log = new IO::Handle;
 
@@ -180,6 +228,8 @@ GetOptions ( "force!"       => \$force_graphing,
 	     "week!"        => \$draw{'week'},
 	     "month!"       => \$draw{'month'},
 	     "year!"        => \$draw{'year'},
+	     "sumweek!"     => \$draw{'sumweek'},
+	     "sumyear!"     => \$draw{'sumyear'},
 	     "list-images!" => \$list_images,
 	     "skip-locking!"=> \$skip_locking,
 	     "skip-stats!"  => \$skip_stats,
@@ -213,6 +263,8 @@ Options:
     --[no]week		Create week-graphs.  [--week]
     --[no]month		Create month-graphs. [--month]
     --[no]year		Create year-graphs.  [--year]
+    --[no]sumweek	Create summarised week-graphs.  [--summweek]
+    --[no]sumyear	Create summarised year-graphs.  [--sumyear]
 
 ";
     exit 0;
@@ -232,14 +284,13 @@ if ($do_version)
 if ($> == 0 and !$force_root)
 {
     print "You are running this program as root, which is neither smart nor necessary. 
-If you really want to run it as root, use the --force-root option. Else, run 
 it as the user \"munin\". Aborting.\n\n";
     exit (1);
 }
 
 my $config= &munin_config ($conffile);
 
-if (&munin_get_val ($config, "graph_strategy", "cron") ne "cron" and $cron)
+if (&munin_get ($config, "graph_strategy", "cron") ne "cron" and $cron)
 { # We're run from cron, but munin.conf says we use dynamic graph generation
     exit 0;
 }
@@ -269,6 +320,11 @@ my %resolutions = (
              "week"  => "1500",
              "month" => "7200",
              "year"  => "86400");
+
+my %sumtimes = ( # time => [ label, seconds-in-period ]
+	    "week"   => ["per hour", 12],
+	    "year"   => ["per day", 288]
+	);
 
 for my $key ( keys %{$config->{domain}}) {
     my $domain_time= Time::HiRes::time;
@@ -366,11 +422,12 @@ sub get_header {
     my $host    = shift;
     my $service = shift;
     my $scale   = shift;
+    my $sum     = shift;
     my $result  = [];
     my $tmp_field;
 
     # Picture filename
-    push @$result, &munin_get_picture_filename ($config, $domain, $host, $service, $scale);
+    push @$result, &munin_get_picture_filename ($config, $domain, $host, $service, $scale, $sum||undef);
 
     # Title
     push @$result, ("--title", &get_title ($node, $service, $scale));
@@ -386,8 +443,8 @@ sub get_header {
 	push @$result, ("--vertical-label", $tmp_field);
     }
 
-    push @$result,"--height", &munin_get_val ($config, "graph_height", "175", $domain, $host, $service);
-    push @$result,"--width", &munin_get_val ($config, "graph_width", "400", $domain, $host, $service);
+    push @$result,"--height", &munin_get ($config, "graph_height", "175", $domain, $host, $service);
+    push @$result,"--width", &munin_get ($config, "graph_width", "400", $domain, $host, $service);
     push @$result,"--imgformat", "PNG";
     push @$result,"--lazy" if ($force_lazy);
 
@@ -614,7 +671,19 @@ sub single_value
     return 1 if @$order == 1;
     return 1 if (@$order == 2 and $node->{client}->{$service}->{$field.".negative"});
 
-# TODO: check for "graph no" on the fields
+    my $graphable = 0;
+    if (!defined $node->{client}->{$service}->{"graphable"})
+    {
+	foreach my $field (keys %{$node->{client}->{$service}})
+	{
+	    if ($field =~ /^([^\.]+)\.label/)
+	    {
+		$graphable++ unless &munin_draw_field ($node, $service, $1);
+	    }
+	}
+	$node->{client}->{$service}->{"graphable"} = $graphable;
+    }
+    return 1 if ($node->{client}->{$service}->{"graphable"} == 1);
     
     return 0;
 }
@@ -627,36 +696,6 @@ sub get_field_name
 	if (length $name > 15);
 
     return $name;
-}
-
-sub get_max_label_length
-{
-    my $node    = shift;
-    my $config  = shift;
-    my $domain  = shift;
-    my $host    = shift;
-    my $service = shift;
-    my $order   = shift;
-    my $result  = 0;
-
-    for my $field (@$order) {
-	my $path = undef;
-	(my $f = $field) =~ s/=.+//;
-	next if (exists $node->{client}->{$service}->{$f.".process"} and
-		 $node->{client}->{$service}->{$f.".process"} ne "yes");
-	next if (exists $node->{client}->{$service}->{$f.".skipdraw"});
-	next unless (!exists $node->{client}->{$service}->{$f.".graph"} or
-			$node->{client}->{$service}->{$f.".graph"} eq "yes");
-	if ($result < length ($node->{client}->{$service}->{$f.".label"} || $f)) {
-	    $result = length ($node->{client}->{$service}->{$f.".label"} || $f);
-	}
-	if (exists $node->{client}->{$service}->{graph_total} and 
-		length $node->{client}->{$service}->{graph_total} > $result)
-	{
-	    $result = length $node->{client}->{$service}->{graph_total};
-	}
-    }
-    return $result;
 }
 
 sub process_field {
@@ -690,7 +729,7 @@ sub get_rrd_filename {
 
 	if ($path =~ /^\s*([^:;]+)[:;]([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
 	{
-	    $result = munin_get_filename ($1, $2, $3, $4);
+	    $result = munin_get_filename ($config, $1, $2, $3, $4);
 	    print "\nDEBUG1: Expanding $path...\n" if $DEBUG;
 	    if (! defined $node->{client}->{$service}->{$field."label"})
 	    {
@@ -707,7 +746,7 @@ sub get_rrd_filename {
 	elsif ($path =~ /^\s*([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
 	{
 	    print "\nDEBUG2: Expanding $path...\n" if $DEBUG;
-	    $result = munin_get_filename ($domain, $1, $2, $3);
+	    $result = munin_get_filename ($config, $domain, $1, $2, $3);
 	    for my $f (@copy_fields)
 	    {
 		if (not exists $node->{client}->{$service}->{"$field.$f"} and
@@ -721,7 +760,7 @@ sub get_rrd_filename {
 	elsif ($path =~ /^\s*([^:\.]+)[:\.]([^:\.]+)\s*$/)
 	{
 	    print "\nDEBUG3: Expanding $path...\n" if $DEBUG;
-	    $result = munin_get_filename ($domain, $name, $1, $2);
+	    $result = munin_get_filename ($config, $domain, $name, $1, $2);
 	    for my $f (@copy_fields)
 	    {
 		if (not exists $node->{client}->{$service}->{"$field.$f"} and
@@ -734,7 +773,7 @@ sub get_rrd_filename {
 	elsif ($path =~ /^\s*([^:\.]+)\s*$/)
 	{
 	    print "\nDEBUG4: Expanding $path...\n" if $DEBUG;
-	    $result = munin_get_filename ($domain, $name, $service, $1);
+	    $result = munin_get_filename ($config, $domain, $name, $service, $1);
 	    for my $f (@copy_fields)
 	    {
 		if (not exists $node->{client}->{$service}->{"$field.$f"} and
@@ -748,7 +787,7 @@ sub get_rrd_filename {
     else
     {
 	print "\nDEBUG5: Doing path...\n" if $DEBUG;
-	$result = munin_get_filename($domain,$name,$service,$field);
+	$result = munin_get_filename($config, $domain,$name,$service,$field);
     }
     return $result;
 }
@@ -789,7 +828,8 @@ sub process_node {
 	print "DEBUG: Checking field lengths \"", join "\",\"", (@rrd_preprocess, @field_order), "\".\n" if $DEBUG;
 
 	# Get max label length
-	$max_field_len = &get_max_label_length ($node, $config, $domain, $name, $service, \@field_order);
+	$max_field_len = &munin_get_max_label_length ($node, $config, $domain, $name, $service, \@field_order);
+	my $global_headers = ($max_field_len > 20);
 
 	# Array to keep negative data until we're finished with positive.
 	my @rrd_negatives = ();
@@ -847,7 +887,7 @@ sub process_node {
 
 	    next unless &munin_draw_field ($node, $service, $field);
 	    print "DEBUG: Drawing field \"$field\".\n" if $DEBUG;
-	    
+
 	    if ($single_value) # Only one field. Do min/max range.	
 	    {
 		push (@rrd, "CDEF:min_max_diff=a$rrdname,i$rrdname,-");
@@ -866,6 +906,15 @@ sub process_node {
 		push (@rrd, "COMMENT:Min (-/+)");
 		push (@rrd, "COMMENT:Avg (-/+)");
 		push (@rrd, "COMMENT:Max (-/+) \\j");
+	    }
+	    elsif ($global_headers == 1)
+	    {
+		push (@rrd, "COMMENT:" . (" " x $max_field_len));
+		push (@rrd, "COMMENT: Cur:");
+		push (@rrd, "COMMENT:Min:");
+		push (@rrd, "COMMENT:Avg:");
+		push (@rrd, "COMMENT:Max:  \\j");
+		$global_headers++;
 	    }
 
 	    push (@rrd, ($node->{client}->{$service}->{$field.".draw"} || "LINE2") .
@@ -903,10 +952,22 @@ sub process_node {
 		push (@rrd_negatives, ($node->{client}->{$service}->{$negfield.".draw"} || "LINE2") .
 		    ":ng$negfield" . 
 		    ((defined $single_value and $single_value) ? $single_colour : $COLOUR[($col_count-1)%@COLOUR]));
-		push (@rrd_negatives, "HRULE:".$node->{client}->{$service}->{"$negfield.warn"}.
-		    ((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR]))
-		    if $node->{client}->{$service}->{"$negfield.warn"};
-		# Special case - renamed field
+
+		# Draw HRULEs
+		my $linedef = munin_get ($config, "line", undef, $domain, $name, $service, $node->{client}->{$service}->{$field.".negative"});
+		if ($linedef)
+		{
+		    my ($number, $colour, $label) = split (/:/, $linedef, 3);
+		    push (@rrd_negatives, "HRULE:".$number.
+			($colour ? "#$colour" :
+			  ((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR]))
+			);
+		}
+		elsif ($node->{client}->{$service}->{"$negfield.warn"})
+		{
+		    push (@rrd_negatives, "HRULE:".$node->{client}->{$service}->{$node->{client}->{$service}->{$field.".negative"}.".warn"}.
+			((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR]));
+		}
 
 		push (@rrd, "GPRINT:c$negfield:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
 		push (@rrd, "GPRINT:c$rrdname:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
@@ -925,13 +986,13 @@ sub process_node {
 	    }
 	    else
 	    {
-		push (@rrd, "COMMENT: Cur:");
+		push (@rrd, "COMMENT: Cur:") unless $global_headers;
 		push (@rrd, "GPRINT:c$rrdname:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, "yes")?"%s":"") . "");
-		push (@rrd, "COMMENT: Min:");
+		push (@rrd, "COMMENT: Min:") unless $global_headers;
 		push (@rrd, "GPRINT:i$rrdname:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-		push (@rrd, "COMMENT: Avg:");
+		push (@rrd, "COMMENT: Avg:") unless $global_headers;
 		push (@rrd, "GPRINT:g$rrdname:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-		push (@rrd, "COMMENT: Max:");
+		push (@rrd, "COMMENT: Max:") unless $global_headers;
 		push (@rrd, "GPRINT:a$rrdname:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "\\j");
 		push (@{$total_pos{'min'}}, "i$rrdname");
 		push (@{$total_pos{'avg'}}, "g$rrdname");
@@ -939,8 +1000,23 @@ sub process_node {
 	    }
 
 
-	    push (@rrd, "HRULE:".$node->{client}->{$service}->{"$field.warn"}.($single_value ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR]))
-		if $node->{client}->{$service}->{"$field.warn"};
+	    # Draw HRULEs
+	    my $linedef = munin_get ($config, "line", undef, $domain, $name, $service, $field);
+	    if ($linedef)
+	    {
+		my ($number, $colour, $label) = split (/:/, $linedef, 3);
+		$label =~ s/:/\\:/g if defined $label;
+		push (@rrd, "HRULE:".$number.
+		    ($colour ? "#$colour" :
+		      ((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR])) .
+		      ((defined $label and length ($label)) ? ":$label" : ""), 
+		      "COMMENT: \\j"
+		    );
+	    }
+	    elsif ($node->{client}->{$service}->{"$field.warn"})
+	    {
+		push (@rrd, "HRULE:".$node->{client}->{$service}->{"$field.warn"}.($single_value ? "#ff0000" : $COLOUR[($col_count-1)%@COLOUR]));
+	    }
 	}
 
 	if (@rrd_negatives)
@@ -977,13 +1053,13 @@ sub process_node {
 	    
 	    push (@rrd, "CDEF:dpostotal=ipostotal,UN,ipostotal,UNKN,IF");
 	    push (@rrd, "LINE1:dpostotal#000000:" . $node->{client}->{$service}->{graph_total} . (" " x ($max_field_len - length ($node->{client}->{$service}->{graph_total}) + 1)));
-	    push (@rrd, "COMMENT: Cur:");
+	    push (@rrd, "COMMENT: Cur:") unless $global_headers;
 	    push (@rrd, "GPRINT:gpostotal:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-	    push (@rrd, "COMMENT: Min:");
+	    push (@rrd, "COMMENT: Min:") unless $global_headers;
 	    push (@rrd, "GPRINT:ipostotal:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-	    push (@rrd, "COMMENT: Avg:");
+	    push (@rrd, "COMMENT: Avg:") unless $global_headers;
 	    push (@rrd, "GPRINT:gpostotal:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-	    push (@rrd, "COMMENT: Max:");
+	    push (@rrd, "COMMENT: Max:") unless $global_headers;
 	    push (@rrd, "GPRINT:apostotal:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "\\j");
 	}
 
@@ -1010,6 +1086,76 @@ sub process_node {
 	    elsif ($list_images) # Command-line option to list images created
 	    {
 		print &munin_get_picture_filename ($config, $domain, $name, $service, $time), "\n";
+	    }
+	}
+
+	if (&munin_get_bool_val ($node->{client}->{$service}->{"graph_sums"}, 0))
+	{
+	    foreach my $time (keys %sumtimes)
+	    {
+		next unless ($draw{"sum".$time});
+		my @rrd_sum;
+		push @rrd_sum, @{&get_header ($node, $config, $domain, $name, $service, $time, 1)};
+
+		if (time - 300 < $lastupdate)
+		{
+			push @rrd_sum, "--end",(int($lastupdate/$resolutions{$time}))*$resolutions{$time};
+		}
+		push @rrd_sum, @rrd;
+		push (@rrd_sum, "COMMENT:Last update: " . localtime($lastupdate) .  "\\r");
+
+		my $labelled = 0;
+		my @defined = ();
+		for (my $index = 0; $index <= $#rrd_sum; $index++)
+		{
+		    if ($rrd_sum[$index] =~ /^(--vertical-label|-v)$/)
+		    {
+			my $label = $node->{client}->{$service}->{"graph_vlabel_sum_$time"} || $sumtimes{$time}->[0];
+			splice (@rrd_sum, $index, 2, ("--vertical-label", $label));
+			$index++;
+			$labelled++;
+		    }
+		    elsif ($rrd_sum[$index] =~ /^(LINE[123]|STACK|AREA|GPRINT):([^#:]+)([#:].+)$/)
+		    {
+			my ($pre, $name, $post) = ($1, $2, $3);
+			next if $name eq "re_zero";
+			next if grep /^x$name$/, @defined;
+			push @defined, "x$name";
+			my @replace;
+
+			if ($time eq "week")
+			{ # Every plot is half an hour. Add two plots and multiply, to get per hour
+			    push @replace, "CDEF:x$name=PREV($name),UN,0,PREV($name),IF,$name,+,300,*,6,*";
+			}
+			else
+			{ # Every plot is one day exactly. Just multiply.
+			    push @replace, "CDEF:x$name=$name,300,*,288,*";
+			}
+			push @replace, $pre . ":x$name" . $post;
+			splice (@rrd_sum, $index, 1, @replace);
+			$index++;
+		    }
+		    elsif ($rrd_sum[$index] =~ /^(--lower-limit|--upper-limit|-l|-u)$/)
+		    {
+			$index++;
+			$rrd_sum[$index] = $rrd_sum[$index] * 300 * $sumtimes{$time}->[1];
+		    }
+		}
+		unless ($labelled)
+		{
+		    my $label = $node->{client}->{$service}->{"graph_vlabel_sum_$time"} || $sumtimes{$time}->[0];
+		    unshift @rrd_sum, "--vertical-label", $label;
+		}
+
+		print "\n\nrrdtool \"graph\" \"", join ("\"\n\t\"",@rrd_sum), "\"\n" if $DEBUG;
+		RRDs::graph (@rrd_sum);
+		if (my $ERROR = RRDs::error) {
+		    logger ("Unable to graph $filename: $ERROR");
+		}
+		elsif ($list_images) # Command-line option to list images created
+		{
+		    print &munin_get_picture_filename ($config, $domain, $name, $service, $time, 1), "\n";
+		}
 	    }
 	}
 
@@ -1145,19 +1291,19 @@ sub parse_path
 
     if ($path =~ /^\s*([^:]*):([^:]*):([^:]*):([^:]*)\s*$/)
     {
-	$filename = munin_get_filename ($1, $2, $3, $4);
+	$filename = munin_get_filename ($config, $1, $2, $3, $4);
     }
     elsif ($path =~ /^\s*([^:]*):([^:]*):([^:]*)\s*$/)
     {
-	$filename = munin_get_filename ($domain, $1, $2, $3);
+	$filename = munin_get_filename ($config, $domain, $1, $2, $3);
     }
     elsif ($path =~ /^\s*([^:]*):([^:]*)\s*$/)
     {
-	$filename = munin_get_filename ($domain, $node, $1, $2);
+	$filename = munin_get_filename ($config, $domain, $node, $1, $2);
     }
     elsif ($path =~ /^\s*([^:]*)\s*$/)
     {
-	$filename = munin_get_filename ($domain, $node, $service, $1);
+	$filename = munin_get_filename ($config, $domain, $node, $service, $1);
     }
     return $filename;
 }
@@ -1284,3 +1430,5 @@ PURPOSE.
 This program is released under the GNU General Public License
 
 =cut
+
+# vim: syntax=perl ts=8

@@ -49,7 +49,6 @@ linux/swap
 
 [0.9.9pre1]
 [0.9.9pre2]
-psu_
 squid_cache
 squid_requests
 squid_traffic
@@ -96,6 +95,12 @@ sunos/temperature
 [1.1.1]
 [1.1.2]
 [1.1.3]
-generic/hddtempd
-generic/uptime
+hddtempd
 [1.1.4]
+[1.1.5]
+linux/irqstats
+linux/forks
+smart_
+ntp_
+sendmail_mailstats
+sendmail_mailtraffic

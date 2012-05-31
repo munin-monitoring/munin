@@ -5,22 +5,23 @@
 </head>
 <body bgcolor=white text=black>
 <h2>Background</h2>
-Munin is a server/node pair that graph, htmlifies and optionaly
-warns nagios about data it gathers. It's designed to let it be very easy to
+Munin is a server/node pair that graphs, htmlifies and optionally
+sends out notifications about data it gathers. It's designed to let it be easy to
 graph new datasources.
 
 <h2>The Node</h2>
 
 <h3>munin-node</h3>
-Munin-node is a small perlscript listening to port 4949 using
-Net::Server. It reads all the scripts in /etc/munin/plugins on
-startup. The node accepts these commands:
+Munin-node is a perlscript listening to port 4949 using
+the Net::Server Perl module. It reads all the scripts in 
+/etc/munin/plugins (or CONFDIR/plugins/, to be more spesific) 
+on startup. The node accepts these commands:
 <tt>
 <dl>
- <dt>list [node]<dd>list available scripts for this node
  <dt>nodes<dd>List availbale nodes
- <dt>config [script]<dd>output configuration for [script]
- <dt>fetch [script]<dd>output script values
+ <dt>list [node]<dd>list available scripts for [node]
+ <dt>config &lt;script&gt;<dd>output configuration for &lt;script&gt;
+ <dt>fetch &lt;script&gt;<dd>output script value &lt;script&gt;
  <dt>version<dd>Output version string
  <dt>quit<dd>disconnect
 </dl>
@@ -31,9 +32,10 @@ These scripts can be in your language of choice: bash, perl, python, C,
 or anything else that your system can execute. The scripts can be run in
 several modes, the important ones being without parameters, and with the
 "config"-parameter. When run with "config" as parameter, the script
-should output the configuration of the graph. 
+should output the configuration of the graph. An example with the "load" 
+graph, which has one field (also called "load"):
 <pre>
-jo@yes:~$ munin-run load config
+jo@yes:~$ ./load config
 graph_title Load average
 graph_args --base 1000 -l 0
 graph_vlabel load
@@ -42,46 +44,48 @@ load.label load
 load.warning 10
 load.critical 120
 </pre>
-The node supports quite a few options.
+The plugin can output quite a few options:
 <dl>
 <dt><code>graph_title</code><dd>The title of the graph, defaults to the servicename.</dd>
 <dt><code>create_args</code><dd>If set, the arguments will be passed on to rrdcreate.</dd>
 <dt><code>graph_args</code><dd>If set, the arguments will be passed on to rrdgraph.</dd>
 <dt><code>graph_width</code><dd>Sets the width (in pixels) of the graph. Defaults to 400.</dd>
 <dt><code>graph_height</code><dd>Sets the height (in pixels) of the graph. Defaults to 175.</dd>
-<dt><code>graph_order</code><dd>In witch order to draw the datasources. Can also include path aliases on the form alias=domain;host:graph.datasource. See further down for details.</dd>
+<dt><code>graph_order</code><dd>In witch order to draw the fields. Can also include path aliases on the form alias=domain;host:graph.datasource. See further down for details.</dd>
 <dt><code>graph_vlabel</code><dd>Y-axis label of the graph. </dd>
 <dt><code>graph_vtitle</code><dd>Y-axis label of the graph. NOTE: Deprecated, use graph_vlabel.</dd>
 <dt><code>graph_info</code><dd>A description of the graph contents.</dd>
 <dt><code>graph_total</code><dd>If set, summarise all the datasources' values and use the value of graph_total as a label.</dd>
-<dt><code>graph_scale</code><dd>Default on. If set, disables scaling of min/max/cur values.</dd>
+<dt><code>graph_scale</code><dd>Default on. If set, enables scaling of awg/min/max/cur values.</dd>
 <dt><code>graph</code><dd>Set to "yes" or "no". Decides wether to draw the graph. Defaults to "yes".</dd>
 <dt><code>update</code><dd>Set to "yes" or "no". Decides wether munin-update should fetch data for the graph. Defaults to "yes".</dd>
 <dt><code>host_name</code><dd>Override which host name this plugin is run for. Ugly -
 see further down on how to do this in the node configuration files
 instead, which is more elegant.</dd>
-<dt><code>{name}.label</code><dd>REQUIRED. Name of the datasource. You can have many
+<dt><code>{field}.label</code><dd>REQUIRED. Name of the datasource. You can have many
 datasouces in one graph.</dd>
-<dt><code>{name}.cdef</code><dd>RPN-expression. Modify the values before graphing. See the FAQ for examples.</dd>
-<dt><code>{name}.draw</code><dd>What to draw from the data source: AREA, LINE1-3. Defaults to LINE2.</dd>
-<dt><code>{name}.graph</code><dd>Set to "no" or "yes. Decides wether to graph the data source. Defaults to yes.</dd>
-<dt><code>{name}.max</code><dd>Maximum value. If the fetched value is above "max", it will be discarded.</dd>
-<dt><code>{name}.min</code><dd>Minimum value. If the fetched value is below "min", it will be discarded.</dd>
-<dt><code>{name}.negative</code><dd>Name of field to 'mirror' on the opposite side of zero. See the FAQ for examples.</dd>
-<dt><code>{name}.skipdraw</code><dd>Disables drawing of datasource. NOTE: Deprecated - use {name}.graph instead.</dd>
-<dt><code>{name}.info</code><dd>A description of the field.</dd>
-<dt><code>{name}.type</code><dd>Type of datasource, COUNTER, ABSOLUTE, DERIVE and
+<dt><code>{field}.cdef</code><dd>RPN-expression. Modify the values before graphing. See the FAQ for examples.</dd>
+<dt><code>{field}.draw</code><dd>What to draw from the data source: AREA, LINE1-3. Defaults to LINE2.</dd>
+<dt><code>{field}.graph</code><dd>Set to "no" or "yes. Decides wether to graph the data source. Defaults to yes.</dd>
+<dt><code>{field}.max</code><dd>Maximum value. If the fetched value is above "max", it will be discarded.</dd>
+<dt><code>{field}.min</code><dd>Minimum value. If the fetched value is below "min", it will be discarded.</dd>
+<dt><code>{field}.negative</code><dd>Name of field to 'mirror' on the opposite side of zero. See the FAQ for examples.</dd>
+<dt><code>{field}.skipdraw</code><dd>Disables drawing of datasource. NOTE: Deprecated - use {field}.graph instead.</dd>
+<dt><code>{field}.info</code><dd>A description of the field.</dd>
+<dt><code>{field}.type</code><dd>Type of datasource, COUNTER, ABSOLUTE, DERIVE and
 GAUGE, defaults to GAUGE. Read "man rrdcreate" for more info. </dd>
-<dt><code>{name}.warning</code><dd>Used by munin-nagios. Can be a max value or a range
+<dt><code>{field}.line</code><dd>Draw a line (HRULE) associated with the field. Format is &lt;value&gt;[:colour[:label]].
+The default colour is the same as the field colour, or red if it's a single-field graph. Default label is unset.
+<dt><code>{field}.warning</code><dd>Used by munin-nagios. Can be a max value or a range
 sepereated by colon. E.g. "min:", ":max", "min:max", "max".</dd>
-<dt><code>{name}.critical</code><dd>Same as above.</dd>
+<dt><code>{field}.critical</code><dd>Same as above.</dd>
 </dl>
-{name} is limited to 19 characters, and the characters [a-zA-Z0-9_].<br>
+{field} is limited to 19 characters, and the characters [a-zA-Z0-9_]. The fist character cannot be a number.<br>
 <p>
 Without options the script should only give out {name}.value
 (value):
 <pre>
-jo@yes:~$ munin-run load
+jo@yes:~$ ./load
 load.value 0.41
 </pre>
 <p>
@@ -90,20 +94,23 @@ All scriptnames containing other characters than alphanumerics, "-",
 </p>
 <p>
 To run a plugin as a specific user and/or group, create a file in the
-plugin configuration. This file is parsed as munin-node starts up.  It
-can contain the following options:
+plugin configuration dir (default is CONFDIR/plugin-conf.d/). This file 
+is parsed as munin-node starts up. It can contain the following options:
 <dl>
  <dt>[&lt;plugin-name&gt;]<dd>The following lines are for
  <code>plugin-name</code>.
- <dt><code>user &lt;username|userid&gt;</code><dd>Run plugin as this user
- <dt><code>group &lt;groupname|groupid&gt;[, &lt;groupname|groupid&gt;] [...]</code><dd>Run plugin as this group. If group is inside paranthesis, don't croak if it's nonexistant.
+ <dt><code>user &lt;username|userid&gt;</code><dd>Run plugin as this user. Only works if munin-node is run as root.
+ <dt><code>group &lt;groupname|groupid&gt;[, &lt;groupname|groupid&gt;] [...]</code><dd>Run plugin as this group. If
+ group is inside paranthesis, don't croak if it's nonexistant. Only works if munin-node is run as root.
  <dt><code>command &lt;command&gt;</code><dd>Run command instad of plugin. "%c" will
  be expanded to what would otherwise have been run. E.g. "<code>command sudo
- -u root %c</code>".
+ -u root %c</code>". Nice to avoid running munin-node as root.
  <dt><code>allow &lt;regex&gt;</code><dd>Allow hosts matching regex to run this plugin.
  <dt><code>deny &lt;regex&gt;</code><dd>Deny hosts matching regex from running this plugin.
- <dt><code>env.&lt;var&gt; &lt;contents&gt;</code><dd>Will cause the environment
- variable <code>var</code> to be set to <code>contents</code> when
+ <dt><code>timeout &lt;seconds&gt;</code><dd>Use a timeout of &lt;seconds&gt; seconds instead of the default timeout
+ of 10 seconds, when running this plugin.
+ <dt><code>env.&lt;var&gt; &lt;contents&gt;</code><dd>Set the environment
+ variable <code>var</code> to <code>contents</code> before
  running the plugin.
 </dl>
 Example:
@@ -114,7 +121,7 @@ group mail
 [cps_*]
 user root
 
-# Will cause the variable "mysqlopts" to be set...
+# Will cause the variable "mysqlopts" to be set inside the plugins
 [mysql_*]
 env.mysqlopts --user foo --password fii
 </pre>
@@ -144,31 +151,31 @@ where you should place the files.
 
 <h2>The Server</h2>
 The server runs a cronjob as the user munin every 5 minutes. The cronjob
-runs munin-update,munin-nagios,munin-graph and munin-html one by one. All
+runs munin-update,munin-limits,munin-graph and munin-html one by one. All
 scripts creates a lockfile in @@STATEDIR@@. 
 
 Everytime a script starts, it checks if the pid in the lockfile is alive
 before starting.
 
-<h3>/etc/munin/munin.conf</h3>
+<h3>munin.conf</h3>
 This is the configuration-file for all serverscripts.
 
 <pre>
-#Configfile for munin-server
+#Configfile for munin
 dbdir       /var/lib/munin/
 htmldir     /var/www/munin/
 logdir      /var/log/munin
 rundir      /var/run/munin/
 
-#To warn Nagios
-#nsca           /usr/bin/send_nsca
-#nsca_config    /etc/nagios/send_nsca.cfg
-#nsca_server    nagios.server.org
+#To send email notifications
+contact.email.command mail -s "Notification from Munin" fnord@fnord.com
+#To notify nagios
+contact.nagios.command /usr/bin/send_nsca -H nagios-server.fnord.com -c /etc/send_nsca.cfg
 
 #
 # Edit and uncomment the following to start surveilance
 #
-#[machine.testdomain.org]
+#[machine.fnord.com]
 #  address localhost
 
 </pre>
@@ -177,29 +184,35 @@ Explaination:
 
 <tt>
 <dl>
- <dt>dbdir<dd>Rootdir for alle rrd-files (files go into $dbdir/$domain/)
- <dt>htmldir<dd>Where to png's and htmlfiles end up
- <dt>logdir<dd>Where to send logs
+ <dt>dbdir<dd>Rootdir for alle rrd-files (files go into &lt;dbdir&gt;/&lt;domain&gt;/)
+ <dt>htmldir<dd>Where the png's and htmlfiles end up
+ <dt>logdir<dd>Where to put logs
  <dt>rundir<dd>Where to put state files
  <dt>htaccess<dd>The default htaccessfile
  <dt>tmpldir<dd>Where the templates reside
  <dt>graph_strategy<dd>Set to "cron" to draw the graphs periodically via cron every 5 minutes. Set to "cgi" to draw on-demand. (default cron)
  <dt>fork<dd>If set, run updates of several hosts simultaneously. (default yes)
  <dt>max_processes<dd>Set max number of simultaneous Munin processes.
- <dt>nsca*<dd>Nagios options. See seperate section
+ <dt>nsca*<dd>Nagios options. See seperate section. Deprecated, use contacts instead.
+ <dt>contact.*<dd>Set contact information. See separate section.
+ <dt>contacts<dd>Set which contact entries to use. Default is all contact entries existing under "contact" tree.
  <dt>domain_order<dd>Change the order of domains. (Default is alphabetically sorted.)
- <dt>[foo.com;machine.dom.ain]<dd>Add machine.dom.ain to domain foo.com.
- <dt>[machine.dom.ain]<dd>Add machine.dom.ain to domain dom.ain. (A short form of [dom.ain;machine.dom.ain].)
+ <dt>local_address<dd>Set the local address to be used for connecting to the nodes.
+ <dt>[foo.com;machine.dom.ain]<dd>Add machine.dom.ain to group foo.com.
+ <dt>[machine.dom.ain]<dd>Add machine.dom.ain to group dom.ain. (A short form of [dom.ain;machine.dom.ain].)
 </dl>
 </tt>
 
 To add a new node, just put in a new section and add the
 <tt>address</tt> option.
 
-Domain-level options
+Group-level options
 <tt>
 <dl>
- <dt>node_order<dd>Changes order of nodes in a domain. (Default is alphabetically sorted.)
+ <dt>node_order<dd>Changes order of nodes in a group. (Default is alphabetically sorted.)
+ <dt>local_address<dd>Set the local address to be used for connecting to the nodes in the group.
+ <dt>compare<dd>Generate node comparisons for the nodes in this group.
+ <dt>contacts<dd>Set which contact entries to use for nodes in this group. Default is all contact entries existing under "contact" tree.
 </dl>
 </tt>
 
@@ -207,6 +220,7 @@ Node-level options
 <tt>
 <dl>
  <dt>address<dd>Set the node address
+ <dt>local_address<dd>Set the local address to be used for connecting to the node.
  <dt>port<dd>Set node port number (default 4949)
  <dt>use_node_name<dd>Set to "yes" or "y" to force getting all the
  default plugins from a node. Good for hosts which changes hostname
@@ -214,6 +228,7 @@ Node-level options
  <dt>use_default_name<dd>Set to "yes" or "y" to force getting all the
  default plugins from a node. Good for hosts which changes hostname
  (e.g. laptops). NOTE: Deprecated. Use use_node_name instaed.
+ <dt>contacts<dd>Set which contact entries to use for this node. Default is all contact entries existing under "contact" tree.
 </dl>
 </tt>
 
@@ -227,11 +242,11 @@ Field-level options
 </tt>
 
 <h3>munin-update</h3>
-Munin-update reads /etc/munin/munin.conf, searches for nodes,
+Munin-update reads munin.conf, searches for nodes,
 and connect to the munin-nodes using the address-field. When connected
 it will run the list-command to fetch available scripts, then it will
 run config for each script. This configuration will expand in the
-/etc/munin/munin.conf-file and rdd-databases will be created.
+<code>datafile</code> and rdd-databases will be created.
 Already expanded configuration will be skipped. Then munin-update runs
 through it's newly modified configuration file and runs <tt>fetch</tt> on all
 scripts.
@@ -259,7 +274,105 @@ Usefull configuration in the server.conf file is:
 	option.</dd>
 <dt>domain_order [domain1] [domain2] .... <dd>In which order the domains
     should be listed, defaults to sorted. This is a top-level option.</dd>
+
+<h3>munin-limits</h3>
+
+Munin-limits is a script to send an alert to a set of
+contacts. Munin-limits operates with three states -- ok, warning and critical.
+
+<h4>The quick and easy way</h4>
+
+For most people, the following line will do all the work:
+
+<pre>
+contact.email.command mail -s "Munin-notification for ${var:group} :: ${var:host}" <i>your@email.address.here</i>
+</pre>
+
+This entry will use the default <code>text</code> entry, which should probably suite most people. If you also use
+Nagios, try swapping all the <code>nsca*</code> parameters for:
+
+<pre>
+contact.nagios.command /usr/bin/send_nsca -H <i>your.nagios-host.here</i> -c <i>/etc/send_nsca.cfg</i>
+</pre>
+
+<h4>Defining contacts</h4>
+
+There are some top-level options available in munin.conf:
+
+<dl>
+<dt>contact.&lt;contact&gt;.command &lt;command&gt;<dd>Define which command to run. Mandatory for each contact. The
+command can start with "<code>&gt;&nbsp;</code>" (greater than space) to create/empty a file and write to it, or
+"<code>&gt;&gt;&nbsp;</code>" (greater than greater than space) to append to a file.
+<dt>contact.&lt;contact&gt;.text &lt;text&gt;<dd>Text to pipe into the command. Default is the text in <code>contact.default.text</code>, which is hardcoded (but can be overridden). <code>contact.nagios.text</code> also has a short hardcoded default suitable for transmission via nsca to Nagios.
+<dt>contact.&lt;contact&gt;.max_messages &lt;num&gt;<dd>Close (and reopen) command after &lt;num&gt; messages.
+<dt>contact.&lt;contact&gt;.always_send &lt;states&gt;<dd>Always send messages with a state that is mentioned in &lt;states&gt;. This only works for "warning" and "critical" states. &lt;states&gt; is a space delimited list.
+<dt>contacts &lt;contact-list&gt;<dd>A list of the available contacts to use by default. Defaults to all contacts with a <code>command</code> definition. Can be set on every level -- top-level, domain-level, node-level and service-level.
+</dl>
+
+<h4>Command and text definitions</h4>
+
+When defining the <code>command</code> and <code>text</code> entries, a number of variables are available for expansion.
+
+<dl>
+<dt>${var:&lt;variable&gt;}<dd>For example <code>${var:graph_title}</code>. All variables from the plugin are available, as well as the following:<dl>
+<dt>numofields<dd>Number of OKs in the service.
+<dt>numfofields<dd>Number of new OKs (which were not OK on the last run) in teh service.
+<dt>numwfields<dd>Number of warnings in the service.
+<dt>numcfields<dd>Number of criticals in the service.
+<dt>ofields<dd>Fields in the service with an OK state.
+<dt>fofields<dd>Fields in the service which just went to OK state.
+<dt>wfields<dd>Fields in the service with a state of warning.
+<dt>cfields<dd>Fields in the service with a state of critical.
+<dt>fields<dd>All fields in the service.
+<dt>worst<dd>The worst state of all the fields in the plugin.
+<dt>worstid<dd>0 for ok, 1 for warning, 2 for dcritical.
+<dt>wrange<dd>The warning range of the field.
+<dt>crange<dd>The critical range of the field.
+<dt>host<dd>The hostname.
+<dt>group<dd>The name of the group/domain.
+<dt>plugin<dd>The name of the plugin.
+<dt>value<dd>Current value of the field.
+</dl>
+<dt>${if:[!]&lt;field&gt; &lt;text&gt;}<dd>Include &lt;text&gt; only if &lt;field&gt; is not 0 or a zero length string. Reverse meaning if the "!" is included.
+<dt>${loop[&lt;sep&gt;]:&lt;list&gt; &lt;text&gt;}<dd>Print &lt;text&gt; once for each element of the space separated
+&lt;list&gt;. Separate the &lt;text&gt; additions with the contents of [sep] if it exists (note that the &lt; and &gt;
+should be included). Example: ${loop&lt;, &gt;:fields ${var:label} is ${var:state}}.
+</dl>
+
+<h4>Limit definitions in the plugin or munin.conf</h4>
+
+A contact is only contacted if a value falls outside the .warning or .critical fields in your configuration or
+plugin scripts.
+The value for these field can be a single maxvalue or a colonseperated
+range 
+<pre>
+processes.warning 10:300
+processes.critical 5:500
+</pre>
+A value lower than 10 or higher then 300 will result in a warning to
+nagios, a value lower than 5 or higher than 500 will result in a
+critical.
+<p>
+Other usefull ranges:
+<pre>
+[field].warning :400
+</pre>
+is equal to:
+<pre>
+[field].warning 400
+</pre>
+Only warn if lower than 300:
+<pre>
+[field].warning 300:
+</pre>
+
+When a service contains .critical or .warning it will chech it's status
+agains the last fetched value. Any change in the state (ok, warning, critical)
+will cause a notification to be sent.
+
 <h3>munin-nagios</h3>
+NOTE: As of version 1.1.5, munin-nagios is replaced by munin-limits.
+
 Munin-nagios is a optional script to send a passive alert to a
 nagios-server. For this to work, you need a nagios-nsca server,
 a working send_nsca configuration and the following configuration in

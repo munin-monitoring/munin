@@ -14,6 +14,9 @@
 # 	suggest  (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.4  2004/09/10 23:11:13  jimmyo
+# Degraded generic/psu_ from auto to manual.
+#
 # Revision 1.3  2004/05/20 13:57:12  jimmyo
 # Set categories to some of the plugins.
 #
@@ -32,7 +35,7 @@
 #
 #
 # Magic markers (optional):
-#%# family=auto
+#%# family=manual
 #%# capabilities=autoconf suggest
 
 

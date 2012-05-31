@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.7  2004/11/21 00:17:12  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
 # Revision 1.6  2004/05/20 13:57:12  jimmyo
 # Set categories to some of the plugins.
 #
@@ -83,25 +86,29 @@ if [ "$1" = "config" ]; then
 	echo 'system.label system'
 	echo 'system.draw AREA'
 	echo 'system.max 5000'
-	echo 'system.type COUNTER'
+	echo 'system.min 0'
+	echo 'system.type DERIVE'
 	echo "system.warning $SYSWARNING" 
 	echo "system.critical $SYSCRITICAL" 
 	echo "system.info CPU time spent by the kernel in system activities" 
 	echo 'user.label user'
 	echo 'user.draw STACK'
+	echo 'user.min 0'
 	echo 'user.max 5000'
 	echo "user.warning $USRWARNING"
-	echo 'user.type COUNTER'
+	echo 'user.type DERIVE'
 	echo 'user.info CPU time spent by normal programs and daemons'
 	echo 'nice.label nice'
 	echo 'nice.draw STACK'
+	echo 'nice.min 0'
 	echo 'nice.max 5000'
-	echo 'nice.type COUNTER'
+	echo 'nice.type DERIVE'
 	echo 'nice.info CPU time spent by nice(1)d programs'
 	echo 'idle.label idle'
 	echo 'idle.draw STACK'
+	echo 'idle.min 0'
 	echo 'idle.max 5000'
-	echo 'idle.type COUNTER'
+	echo 'idle.type DERIVE'
 	echo 'idle.info Idle CPU time'
 	if [ "$scaleto100" = "yes" ]; then
 		echo "system.cdef system,$NCPU,/"
@@ -113,18 +120,21 @@ if [ "$1" = "config" ]; then
 	then
 		echo 'iowait.label iowait'
 		echo 'iowait.draw STACK'
+		echo 'iowait.min 0'
 		echo 'iowait.max 5000'
-		echo 'iowait.type COUNTER'
+		echo 'iowait.type DERIVE'
 		echo 'iowait.info CPU time spent waiting for I/O operations to finish'
 		echo 'irq.label irq'
 		echo 'irq.draw STACK'
+		echo 'irq.min 0'
 		echo 'irq.max 5000'
-		echo 'irq.type COUNTER'
+		echo 'irq.type DERIVE'
 		echo 'irq.info CPU time spent handling interrupts'
 		echo 'softirq.label softirq'
 		echo 'softirq.draw STACK'
+		echo 'softirq.min 0'
 		echo 'softirq.max 5000'
-		echo 'softirq.type COUNTER'
+		echo 'softirq.type DERIVE'
 		echo 'softirq.info CPU time spent handling "batched" interrupts'
 		if [ "$scaleto100" = "yes" ]; then
 			echo "iowait.cdef iowait,$NCPU,/"

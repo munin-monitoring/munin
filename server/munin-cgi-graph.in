@@ -1,5 +1,29 @@
 #!@@PERL@@ -Tw
 #
+#
+# Copyright (C) 2004 Jimmy Olsen
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#
+# $Id$
+#
+# $Log$
+# Revision 1.4  2004/11/16 20:00:44  jimmyo
+# License cleanups.
+#
 
 use RRDs;
 use Munin;
@@ -11,15 +35,19 @@ use POSIX qw(strftime);
 my $GRAPHER = "@@LIBDIR@@/munin-graph";
 my $conffile = "@@CONFDIR@@/munin.conf";
 
-my %TIMES   = ( "day"   => ["--noweek", "--nomonth", "--noyear"], 
-		"week"  => ["--noday", "--nomonth", "--noyear"], 
-		"month" => ["--noday", "--noweek", "--noyear"], 
-		"year"  => ["--noday", "--noweek", "--nomonth"]
+my %TIMES   = ( "day"   => ["--noweek", "--nomonth", "--noyear", "--nosumweek", "--nosumyear"], 
+		"week"  => ["--noday", "--nomonth", "--noyear", "--nosumweek", "--nosumyear"], 
+		"month" => ["--noday", "--noweek", "--noyear", "--nosumweek", "--nosumyear"], 
+		"year"  => ["--noday", "--noweek", "--nomonth", "--nosumweek", "--nosumyear"],
+		"week-sum"  => ["--noday", "--nomonth", "--noyear", "--noweek", "--nosumyear"], 
+		"year-sum"  => ["--noday", "--noweek", "--nomonth", "--nosumweek", "--noyear"]
 	    );
 my %period  = ( "day"   => 300,
 		"week"  => 1800,
 		"month" => 7200,
-		"year"  => 86400
+		"year"  => 86400,
+		"week-sum" => 1800,
+		"year-sum" => 86400
 	    );
 my $log = new IO::Handle;
 my $scale = "day";
@@ -32,7 +60,7 @@ my $config= &munin_config ($conffile);
 my $path = $ENV{PATH_INFO} || "";
 $path =~ s/^\///;
 ($dom, $host) = split /\//, $path;
-($host, $serv, $scale) = split /-/, $host;
+($host, $serv, $scale) = split /-/, $host, 3;
 $scale =~ s/\.png$//;
 
 &verify_parameters ($dom, $host, $serv, $scale);
@@ -194,12 +222,12 @@ sub graph_usable
 	{
 #print STDERR "Skipping munin-graph-run for \"$filename\".\n";
 #print STDERR ("Graph unexpired for $scale. ($stats[9] , $time, ", ($time%$period{$scale}), ", ", ($time - $time%$period{$scale}), ").\n");
-	    return 0;
+	    return 1;
 	}
 	else
 	{
 #print STDERR ("Graph expired for $scale. ($stats[9] , $time, ", ($time%$period{$scale}), ", ", ($time - $time%$period{$scale}), ").\n");
-	    return 1;
+	    return 0;
 	}
     }
     return 0;
@@ -211,6 +239,9 @@ sub draw_graph
     my $serv  = shift;
     my $scale = shift;
 
+    $serv =~ s/[^\w_\/"'\[\]\(\)+=-]/_/; $serv =~ /^(.+)$/; $serv = $1;
+    $host =~ s/[^\w_\/"'\[\]\(\)+=-]/_/; $host =~ /^(.+)$/; $host = $1;
+
     my @params = ($GRAPHER);
     push @params, @$scale;
     push @params, "--skip-locking", "--skip-stats", "--nolazy";
@@ -219,7 +250,11 @@ sub draw_graph
 
 #print STDERR "Running: ", join (' ', @params), "\n";
     my $file = "/dev/null";
-    open (IN, "-|") or exec @params;
+    unless (open (IN, "-|")) 
+    { 
+	%ENV=(); 
+	exec @params;
+    }
     $file = join (' ', <IN>);
     close (IN);
     return $file;
@@ -236,3 +271,5 @@ sub modified
     return 1 if ($ifmodsec < $created);
     return 0;
 }
+
+# vim: syntax=perl ts=8

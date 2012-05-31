@@ -1,4 +1,4 @@
-#!@@PERL@@
+#!@@PERL@@ -w
 #
 # Munin plugin to monitor hdd temperature from a hddtemp daemon.
 #
@@ -42,7 +42,6 @@
 #%# capabilities=autoconf
 
 use strict;
-use warnings;
 use IO::Socket::INET;
 
 # Config

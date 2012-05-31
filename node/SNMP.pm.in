@@ -1,0 +1,203 @@
+# -*- mode: perl -*-
+#
+# Copyright (C) 2004 Dagfinn Ilmari Mannsaaker
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+package Munin::Plugin::SNMP;
+
+use Net::SNMP;
+@ISA = qw(Net::SNMP);
+
+# $Id$
+
+=head1 NAME
+
+Munin::Plugin::SNMP - Net::SNMP subclass for Munin plugins
+
+=head1 SYNOPSIS
+
+The Munin::Plugin::SNMP module extends Net::SNMP with methods useful for
+Munin plugins.
+
+=head1 METHODS
+
+=head2 session() - create new Munin::Plugin::SNMP object
+
+  ($session, $error) = Munin::Plugin::SNMP->session();
+
+This method overrides the Net::SNMP constructor to get the connection
+info from the plugin name and/or environment. The hostname is taken from
+the plugin symlink, which must be on the form
+C<snmp_E<lt>hostnameE<gt>_E<lt>plugin_nameE<gt>[_args]>. The following
+environment variables are consulted:
+
+=over
+
+=item host
+
+Used as the hostname to connect to (and output from the plugin) if the
+symlink does not contain a host name. If neither are set, an error is
+returned.
+
+=item port
+
+The port to connect to. Default 161.
+
+=item community
+
+The community name. Default public.
+
+=item version
+
+The SNMP version to use for the connection. Default auto.
+
+=back
+
+=cut
+
+sub session {
+    my $class = shift;
+    my $host      = $ENV{host}      || undef;
+    my $port      = $ENV{port}      || 161;
+    my $community = $ENV{community} || 'public';
+    my $version   = $ENV{version}   || undef;
+
+    if ($0 =~ /^(?:.*\/)?snmp_([^_]+)_/) {
+	$host = $1;
+	if ($host =~ /^([^:]+):(\d+)$/) {
+	    $host = $1;
+	    $port = $2;
+	}
+    } elsif (!defined($host)) {
+	return unless wantarray; # Scalar or void context
+	return (undef, 'Couldn not find monitoring target.'); # Array context
+    }
+
+    return $class->SUPER::session(-hostname  => $host,
+				  -community => $community,
+				  -port      => $port,
+				  ($version ? (-version => $version) : ()));
+}
+
+=head2 get_hash() - retrieve a table as a hash of hashes
+
+  $result = $session->get_hash(
+                         [-callback        => sub {},]     # non-blocking
+                         [-delay           => $seconds,]   # non-blocking 
+                         [-contextengineid => $engine_id,] # v3 
+                         [-contextname     => $name,]      # v3
+                         -baseoid          => $oid,
+			 -cols             => \%columns
+		     );
+
+This method calls C<get_table()> with all the given arguments except
+C<-cols>, and then transforms the data into a hash of hashes in the
+following manner:
+
+The keys of the main hash are the last element(s) of the OIDs, after
+C<$oid> and the matching keys from C<%columns> are removed. The values
+are hashes with keys corresponding to the values of C<%columns> hash and
+values from the subtables corresonding to the keys of C<%columns>.
+
+For this to work, all the keys of C<-cols> must have the same number of
+elements.
+
+Example: 
+
+  $session->get_hash(
+               -baseoid => '1.3.6.1.2.1.2.2.1', # IF-MIB
+               -cols    => {
+                            1 => 'index',
+                            2 => 'descr',
+                            4 => 'mtu',
+                           }
+            );
+
+given the following SNMP table:
+
+  IF-MIB::ifIndex.1 = INTEGER: 1
+  IF-MIB::ifIndex.2 = INTEGER: 2
+  IF-MIB::ifDescr.1 = STRING: lo0
+  IF-MIB::ifDescr.2 = STRING: lna0
+  IF-MIB::ifType.1 = INTEGER: softwareLoopback(24)
+  IF-MIB::ifType.2 = INTEGER: ethernetCsmacd(6)
+  IF-MIB::ifMtu.1 = INTEGER: 32768
+  IF-MIB::ifMtu.2 = INTEGER: 1500
+  ...
+
+will return a hash like this:
+
+  '1' => {
+          'index' => '1',
+          'mtu' => '32768',
+          'descr' => 'lo0'
+         },
+  '2' => {
+          'index' => '2',
+          'descr' => 'lna0',
+          'mtu' => '1500'
+         }
+
+=cut
+
+sub get_hash {
+    my $self = shift;
+    my %args = @_;
+    my %ret;
+    
+    my $base = $args{'-baseoid'};
+    my $cols = delete $args{'-cols'} or return;
+
+    my $table = $self->get_table(%args)
+      or return;
+
+    my $subtabs = join '|', keys %$cols;
+    my $re = qr/^\Q$base.\E($subtabs)\.(.*)/;
+    for my $key (keys %$table) {
+	$key =~ $re;
+	next unless defined($1 && $2);
+	$ret{$2}{$cols->{$1}} = $table->{$key};
+    }
+    return \%ret;
+}
+
+=head1 TODO
+
+Lots.
+
+=head1 BUGS
+
+C<get_hash()> doesn't handle tables with sparse indices.
+
+=back
+
+
+=head1 SEE ALSO
+
+L<Net::SNMP>
+
+=head1 AUTHOR
+
+Dagfinn Ilmari Mannsåker E<lt>ilmari@linpro.noE<gt>
+
+=head1 COPYRIGHT
+
+Copyright (c) 2004 Dagfinn Ilmari Mannsåker E<lt>ilmari@linpro.noE<gt>.
+All rights reserved. This program is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; version 2 dated June, 1991.
+
+=cut

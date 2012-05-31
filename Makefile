@@ -7,7 +7,7 @@ include $(DEFAULTS)
 include $(CONFIG)
 
 RELEASE          = $(shell cat RELEASE)
-INSTALL_PLUGINS ?= "auto manual contrib"
+INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
 INSTALL          = ./install-sh
 
 default: build
@@ -40,9 +40,9 @@ install-main: build
 	$(INSTALL) -m 0755 build/server/munin-cron $(BINDIR)/
 
 	$(INSTALL) -m 0755 build/server/munin-update $(LIBDIR)/
-	$(INSTALL) -m 0755 build/server/munin-nagios $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-html $(LIBDIR)/
+	$(INSTALL) -m 0755 build/server/munin-limits $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-cgi-graph $(CGIDIR)/
 
 	$(INSTALL) -m 0644 build/server/Munin.pm $(PERLLIB)/
@@ -53,6 +53,7 @@ install-node: build
 	mkdir -p $(CONFDIR)/plugin-conf.d
 	mkdir -p $(LIBDIR)/plugins
 	mkdir -p $(SBINDIR)
+	mkdir -p $(PERLLIB)/Munin/Plugin
 
 	mkdir -p $(LOGDIR)
 	mkdir -p $(STATEDIR)
@@ -67,9 +68,11 @@ install-node: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(SBINDIR)/
 	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
+	
+	$(INSTALL) -m 0644 build/node/SNMP.pm $(PERLLIB)/Munin/Plugin/
 
 install-node-plugins: build
-	for p in build/node/node.d.$(ARCH)/* build/node/node.d/*; do    		\
+	for p in build/node/node.d.$(OSTYPE)/* build/node/node.d/*; do    		\
 		if test -f "$$p" ; then                                     		\
 			family=`sed -n 's/^#%# family=\(.*\)$$/\1/p' $$p`;  		\
 			test "$$family" || family=contrib;                  		\
@@ -92,7 +95,7 @@ install-man: build-man
 	$(INSTALL) -m 0644 build/doc/munin-run.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-graph.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-update.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-nagios.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-limits.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-html.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-cron.8 $(MANDIR)/man8/
 
@@ -128,7 +131,8 @@ build-stamp:
 		    -e 's|@@STATEDIR@@|$(STATEDIR)|g'			\
 		    -e 's|@@PERL@@|$(PERL)|g'				\
 		    -e 's|@@PERLLIB@@|$(PERLLIB)|g'			\
-		    -e 's|@@ARCH@@|$(ARCH)|g'				\
+		    -e 's|@@PYTHON@@|$(PYTHON)|g'				\
+		    -e 's|@@OSTYPE@@|$(OSTYPE)|g'				\
 		    -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'			\
 		    -e 's|@@VERSION@@|$(VERSION)|g'			\
 		    -e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g'			\
@@ -166,9 +170,9 @@ build-man-stamp:
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		server/munin-update.in > build/doc/munin-update.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		server/munin-html.in > build/doc/munin-html.8
+		server/munin-limits.in > build/doc/munin-limits.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
-		server/munin-nagios.in > build/doc/munin-nagios.8
+		server/munin-html.in > build/doc/munin-html.8
 	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
 		server/munin-cron.pod > build/doc/munin-cron.8
 	pod2man  --section=5 --release=$(RELEASE) --center="Munin Documentation" \

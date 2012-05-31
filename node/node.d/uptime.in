@@ -6,6 +6,9 @@
 # Contributed by Nicolas Salles
 #
 # $Log$
+# Revision 1.2  2004/09/10 21:27:07  jimmyo
+# "Downed" uptime plugin from auto to manual.
+#
 # Revision 1.1  2004/08/18 17:58:39  jimmyo
 # Added plugin generic/uptime contributed by Nicolas Salles (SF#998665).
 #
@@ -13,7 +16,7 @@
 # Magic markers - optional - used by installation scripts and
 # munin-config:
 #
-#%# family=auto
+#%# family=manual
 #%# capabilities=autoconf
 
 if [ "$1" = "autoconf" ]; then

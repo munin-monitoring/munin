@@ -7,6 +7,12 @@
 # Usage: Link or copy into /etc/munin/node.d/
 #
 # $Log$
+# Revision 1.4  2004/11/21 00:17:12  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
+# Revision 1.3  2004/09/25 22:29:16  jimmyo
+# Added info fields to a bunch of plugins.
+#
 # Revision 1.2  2004/05/20 13:57:12  jimmyo
 # Set categories to some of the plugins.
 #
@@ -52,17 +58,23 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel interrupts & ctx switches / second'
 	# Graph category
 	echo 'graph_category system'
+	# Graph information
+	echo 'graph_info This graph shows the number of interrupts and context switches on the system. These are typically high on a busy system.'
+	echo 'intr.info Interrupts are events that alter sequence of instructions executed by a processor. They can come from either hardware (exceptions, NMI, IRQ) or software.'
+	echo 'ctx.info A context switch occurs when a multitasking operatings system suspends the currently running process, and starts executing another.'
 	# The fields. "label" is used in the legend. "label" is the only
 	# required subfield. 
 	echo 'intr.label interrupts'
 	echo 'ctx.label context switches'
 	# Specify type
-	echo 'intr.type COUNTER'
-	echo 'ctx.type COUNTER'
+	echo 'intr.type DERIVE'
+	echo 'ctx.type DERIVE'
 	# Set max (should always be done with counters) Note: this is max
 	# per second.
 	echo 'intr.max 100000'
 	echo 'ctx.max 100000'
+	echo 'intr.min 0'
+	echo 'ctx.min 0'
 
 	# Last, if run with the "config"-parameter, quit here (don't
 	# display any data)

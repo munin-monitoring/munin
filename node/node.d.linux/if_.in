@@ -8,10 +8,23 @@
 # ...will monitor eth0.
 #
 # Any devince found in /proc/net/dev can be monitored. Examples include
-# ipsec*, eth*, irda* and lo. Please note that vlans and aliases cannot
-# be monitored with this plugin.
+# ipsec*, eth*, irda* and lo. Please note that aliases cannot be
+# monitored with this plugin.
 #
 # $Log$
+# Revision 1.6  2004/11/12 20:08:01  ilmari
+# Fixed linux/if_(err_) braindamage affecting hosts with vlans or
+# multi-digit interface numbers.
+#
+# Revision 1.5  2004/09/26 22:28:42  jimmyo
+# Suggest wlan interfaces as well as eth interfaces.
+#
+# Revision 1.4  2004/09/25 22:29:16  jimmyo
+# Added info fields to a bunch of plugins.
+#
+# Revision 1.3  2004/09/12 20:54:24  jimmyo
+# Plugin now sets max value.
+#
 # Revision 1.2  2004/05/20 13:57:12  jimmyo
 # Set categories to some of the plugins.
 #
@@ -50,7 +63,7 @@ fi
 
 if [ "$1" = "suggest" ]; then
 	if [ -r /proc/net/dev ]; then
-		grep eth /proc/net/dev | cut -f1 -d: | sed 's/ //g'
+		egrep '(eth|wlan)' /proc/net/dev | cut -f1 -d: | sed 's/ //g'
 		exit 0
 	else
 		exit 1
@@ -64,6 +77,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000'
 	echo 'graph_vlabel bps in (-) / out (+)'
 	echo 'graph_category network'
+	echo "graph_info This graph shows the traffic of the $INTERFACE network interface. Please note that the traffic is showed in bits per second, not bytes."
 	echo 'down.label received'
         echo 'down.type COUNTER'
         echo 'down.graph no'
@@ -72,8 +86,25 @@ if [ "$1" = "config" ]; then
 	echo 'up.type COUNTER'
 	echo 'up.negative down'
 	echo 'up.cdef up,8,*'
+	if [ "$INTERFACE" = "wlan0" -o "$INTERFACE" = "wlan1" -o "$INTERFACE" = "wlan2" -o "$INTERFACE" = "wlan3" -o "$INTERFACE" = "wlan4" -o "$INTERFACE" = "wlan5" -o "$INTERFACE" = "wlan6" -o "$INTERFACE" = "wlan7" -o "$INTERFACE" = "wlan8" -o "$INTERFACE" = "wlan9" -o "$INTERFACE" = "wlan10" ]
+	then
+		echo -n "up.info Traffic of the $INTERFACE interface. Maximum speed is "
+		which iwlist >/dev/null 2>/dev/null || echo "undeterminable (please install iwlist)."
+		iwlist $INTERFACE rate 2>/dev/null | awk '/Current Bit Rate/ { split ($0, arr, "="); split (arr[2], arr2, "M"); print (arr2[1]*1000000) " bits per second.\nup.max " (arr2[1]*1000000) "\ndown.max "(arr2[1]*1000000); }'
+	else
+		echo -n "$INTERFACE.info Traffic of the $INTERFACE interface. Maximum speed is "
+		which ethtool >/dev/null 2>/dev/null || echo "undeterminable (please install ethtool)."
+		ethtool $INTERFACE 2>/dev/null | awk '/Speed/ { split ($2, arr2, "M"); print (arr2[1]*1000000) " bits per second.\nup.max " (arr2[1]*1000000) "\ndown.max "(arr2[1]*1000000); }'
+	fi
 	exit 0
 fi;
 
-grep $INTERFACE /proc/net/dev | cut -f2 -d: | awk "{ print \"up.value \" \$9 \"\ndown.value \" \$1}"
+# Escape dots in the interface name (eg. vlans) before using it as a regex
+awk -v interface="$INTERFACE" \
+    'BEGIN { gsub(/\./, "\\.", interface) } \
+    $1 ~ "^" interface ":" {
+        split($0, a, /: */); $0 = a[2]; \
+        print "down.value " $1 "\nup.value " $9 \
+    }' \
+    /proc/net/dev
 

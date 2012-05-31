@@ -1,8 +1,70 @@
-#!/usr/bin/perl
+#!@@PERL@@
+#
+# Copyright (C) 2002-2004 Jimmy Olsen, Audun Ytterdal
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
 #
 # $Id$
 #
 # $Log$
+# Revision 1.35  2004/11/21 15:29:19  jimmyo
+# Take line definitions with labels into account.
+#
+# Revision 1.34  2004/11/21 14:39:23  jimmyo
+# Renamed function munin_get_val to munin_get.
+#
+# Revision 1.33  2004/11/16 20:00:44  jimmyo
+# License cleanups.
+#
+# Revision 1.32  2004/11/14 20:10:38  jimmyo
+# Made sure the latest feature additions also work with the CGI option.
+#
+# Revision 1.31  2004/09/23 20:04:59  jimmyo
+# Added option "compare".
+#
+# Revision 1.30  2004/09/23 19:46:01  jimmyo
+# Added option "compare".
+#
+# Revision 1.29  2004/09/23 16:43:39  jimmyo
+# Don't show warnings/criticals in the HTML interface if the field/graph isn't plotted.
+#
+# Revision 1.28  2004/09/23 15:23:33  jimmyo
+# Added "comparison" views, to view a whole hostgroup at once.
+#
+# Revision 1.27  2004/09/14 22:08:58  jimmyo
+# Bugfix with domain_order.
+#
+# Revision 1.26  2004/09/13 21:45:55  jimmyo
+# node- and domain_order settings now does not exclude unmentioned entries.
+#
+# Revision 1.25  2004/09/10 21:06:56  jimmyo
+# Made summarised grahps work with dynamically generated graphs.
+#
+# Revision 1.24  2004/09/10 19:24:18  jimmyo
+# Added new option "graph_sums" which creates summarised graphs.
+#
+# Revision 1.23  2004/09/08 15:25:33  ilmari
+# Use @@PERL@@ in all perl shebang lines.
+#
+# Revision 1.22  2004/09/07 20:38:33  jimmyo
+# Added the internal field name to the HTML output as a tooltip.
+#
+# Revision 1.21  2004/09/07 18:56:03  jimmyo
+# Small interface improvements in the HTML output.
+#
 # Revision 1.20  2004/09/01 19:46:01  jimmyo
 # Removed debug info.
 #
@@ -155,6 +217,10 @@ my $config;
 my $limits;
 $config = &munin_config ($conffile, $config);
 $limits = &munin_readconfig ($config->{dbdir}."/limits", 1, 1);
+if (!defined $config->{'cgiurl'})
+{
+    $config->{'cgiurl'} = "/munin/dyn/";
+}
 
 logger("Starting munin-html, checking lock");
 
@@ -175,13 +241,22 @@ my $servicetemplate = HTML::Template->new(filename => "$config->{tmpldir}/munin-
 				       die_on_bad_params => 0,
 				       loop_context_vars => 1);
 
+my %comparisontemplates = (  day => HTML::Template->new(filename => "$config->{tmpldir}/munin-comparison-day.tmpl", die_on_bad_params => 0, loop_context_vars => 1),
+	                    week => HTML::Template->new(filename => "$config->{tmpldir}/munin-comparison-week.tmpl", die_on_bad_params => 0, loop_context_vars => 1),
+	                   month => HTML::Template->new(filename => "$config->{tmpldir}/munin-comparison-month.tmpl", die_on_bad_params => 0, loop_context_vars => 1),
+	                    year => HTML::Template->new(filename => "$config->{tmpldir}/munin-comparison-year.tmpl", die_on_bad_params => 0, loop_context_vars => 1)
+			  );
+
 my @domains;
 
 my @domainorder;
 if ($config->{domain_order}) {
     @domainorder = split / /, $config->{domain_order};
-} else {
-    @domainorder = sort (keys %{$config->{domain}});
+}
+foreach my $d (sort (keys %{$config->{domain}})) {
+    unless (grep (/^$d$/, @domainorder)) {
+	push @domainorder, $d;
+    }
 }
 
 #Make sure the logo and the stylesheet file is in the html dir
@@ -206,11 +281,17 @@ for my $domain (@domainorder) {
     my %domain;
     $domain{domain}=$domain;
     my @nodes;
-    my @nodeorder;
+    my %comparisons;
+    my @nodeorder = ();
     if ($config->{domain}->{$domain}->{node_order}) {
 	@nodeorder = split / /, $config->{domain}->{$domain}->{node_order};
-    } else {
-	@nodeorder = sort (keys %{$config->{domain}->{$domain}->{node}});
+    } 
+    foreach my $n (sort (keys %{$config->{domain}->{$domain}->{node}}))
+    {
+	unless (grep (/^$n$/, @nodeorder))
+	{
+	    push @nodeorder, $n;
+	}
     }
     for my $node (@nodeorder) {
         logger("processing node: $node");
@@ -240,30 +321,67 @@ for my $domain (@domainorder) {
 	    $service{service}=$service;
 	    $service{label}=$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_title};
 		
-		my $method = &munin_get_val ($config, "graph_strategy", "cron");
-		if ($method eq "cgi")
-		{
-			$service{imgday}="/munin/dyn/munin-cgi-graph/$domain/$node-$service-day.png";
-			$service{imgweek}="/munin/dyn/munin-cgi-graph/$domain/$node-$service-week.png";
-			$service{imgmonth}="/munin/dyn/munin-cgi-graph/$domain/$node-$service-month.png";
-			$service{imgyear}="/munin/dyn/munin-cgi-graph/$domain/$node-$service-year.png";
-		}
-		else
-		{
-			$service{imgday}="$node-$service-day.png";
-			$service{imgweek}="$node-$service-week.png";
-			$service{imgmonth}="$node-$service-month.png";
-			$service{imgyear}="$node-$service-year.png";
+	    my $method = &munin_get ($config, "graph_strategy", "cron");
+	    if ($method eq "cgi")
+	    {
+		$service{imgday}=$config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-day.png";
+		$service{imgweek}=$config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-week.png";
+		$service{imgmonth}=$config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-month.png";
+		$service{imgyear}=$config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-year.png";
 
-			for my $scale (@times)
+		if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
+		{
+		    $service{imgweeksum} = $config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-week-sum.png";
+		    $service{imgyearsum} = $config->{'cgiurl'}."munin-cgi-graph/$domain/$node-$service-year-sum.png";
+		}
+	
+		if (my ($w, $h) = &calculate_png_size ($config, $domain, $node, $service))
+		{
+		    for my $scale (@times)
+		    {
+			$service{"img".$scale."width"} = $w;
+			$service{"img".$scale."height"} = $h;
+		    }
+		    if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
+		    {
+			for my $scale (["week", "year"])
 			{
-				if (my ($w, $h) = &get_png_size (&munin_get_picture_filename ($config, $domain, $node, $service, $scale)))
+			    $service{"img".$scale."sumwidth"} = $w;
+			    $service{"img".$scale."sumheight"} = $h;
+			}
+		    }
+		}
+	    }
+	    else
+	    {
+		    $service{imgday}="$node-$service-day.png";
+		    $service{imgweek}="$node-$service-week.png";
+		    $service{imgmonth}="$node-$service-month.png";
+		    $service{imgyear}="$node-$service-year.png";
+
+		    for my $scale (@times)
+		    {
+			    if (my ($w, $h) = &get_png_size (&munin_get_picture_filename ($config, $domain, $node, $service, $scale)))
+			    {
+				    $service{"img".$scale."width"} = $w;
+				    $service{"img".$scale."height"} = $h;
+			    }
+		    }
+
+		    if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
+		    {
+			$service{imgweeksum} = "$node-$service-week-sum.png";
+			$service{imgyearsum} = "$node-$service-year-sum.png";
+			for my $scale (["week", "year"])
+			{
+				if (my ($w, $h) = &get_png_size (&munin_get_picture_filename ($config, $domain, $node, $service, $scale, 1)))
 				{
-					$service{"img".$scale."width"} = $w;
-					$service{"img".$scale."height"} = $h;
+					$service{"img".$scale."sumwidth"} = $w;
+					$service{"img".$scale."sumheight"} = $h;
 				}
 			}
-		}
+		    }
+	    }
 	    $service{url}="$node-$service.html";
 	    $service{domain}="$domain";
 	    $service{node}=$node;
@@ -288,13 +406,14 @@ for my $domain (@domainorder) {
 				$fieldnum++;
 
 				$field_info{'hr'}      = 1 unless ($fieldnum % 3);
+				$field_info{'field'}   = $f;
 				$field_info{'label'}   = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".label"} || $f;
 				$field_info{'type'}    = lc ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".type"} || "GAUGE");
 				$field_info{'warn'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".warning"} || "None";
 				$field_info{'crit'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".critical"} || "None";
 				$field_info{'info'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".info"} || "";
 
-				my $state = &munin_field_status ($config, $limits, $domain, $node, $service, $f);
+				my $state = &munin_field_status ($config, $limits, $domain, $node, $service, $f, 1);
 				if (defined $state)
 				{
 					$field_info{'state_warning'}  = 1 if $state eq "warning";
@@ -302,6 +421,16 @@ for my $domain (@domainorder) {
 					$field_info{'state_unknown'}  = 1 if $state eq "unknown";
 				}
 				push @{$service{fieldinfo}}, \%field_info;
+			}
+		}
+
+		{
+			my $state = &munin_service_status ($config, $limits, $domain, $node, $service, 1);
+			if (defined $state)
+			{
+				$service{'state_warning'}  = 1 if $state eq "warning";
+				$service{'state_critical'} = 1 if $state eq "critical";
+				$service{'state_unknown'}  = 1 if $state eq "unknown";
 			}
 		}
 
@@ -322,7 +451,7 @@ for my $domain (@domainorder) {
 	{
 	    next if $key eq "other";
 	    my %tmp;
-	    my $state = &munin_category_status ($config, $limits, $domain, $node, $key);
+	    my $state = &munin_category_status ($config, $limits, $domain, $node, $key, 1);
 	    print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
 	    if (defined $state)
 	    {
@@ -335,12 +464,13 @@ for my $domain (@domainorder) {
 	    $tmp{node} = $node;
 	    $tmp{domain} = $domain;
 	    push @categories, \%tmp;
+	    $comparisons{$key}{$node} = \%tmp;
 	}
 	if (defined $tmp_cats{'other'})
 	{
 	    my $key = 'other';
 	    my %tmp;
-	    my $state = &munin_category_status ($config, $limits, $domain, $node, $key);
+	    my $state = &munin_category_status ($config, $limits, $domain, $node, $key, 1);
 	    print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
 	    if (defined $state)
 	    {
@@ -353,6 +483,7 @@ for my $domain (@domainorder) {
 	    $tmp{node} = $node;
 	    $tmp{domain} = $domain;
 	    push @categories, \%tmp;
+	    $comparisons{'other'}{$node} = \%tmp;
 	}
 	$nodetemplate->param(SERVICES => \@services,
 			     NODE => $node,
@@ -372,6 +503,7 @@ for my $domain (@domainorder) {
     $domaintemplate->param(NODES => \@nodes,
                            DOMAIN => $domain, 
                            DOMAINS => \@domainlist, 
+     			   COMPARE => (&munin_get_bool ($config, "compare", 1, $domain) and @nodeorder > 1),
                            TIMESTAMP => $timestamp);
     open (FILE, ">$config->{htmldir}/$domain/index.html") or die "Cannot open $config->{htmldir}/index.html";
     print FILE $domaintemplate->output;
@@ -379,6 +511,66 @@ for my $domain (@domainorder) {
     
     $domain{nodes} = \@nodes;
     $domain{domain} = $domain;
+    $domain{compare} = (&munin_get_bool ($config, "compare", 1, $domain) and @nodeorder > 1);
+
+    my @cats = ();
+    foreach my $key (sort keys %comparisons)
+    {
+	my %cat;
+	my %servlist;
+	my $nodewidth = 0;
+
+	foreach my $node (sort keys %{$comparisons{$key}})
+	{
+	    foreach my $serv (@{$comparisons{$key}{$node}->{services}})
+	    {
+		$servlist{$serv->{service}}{$node} = $serv;
+		$nodewidth = $serv->{imgdaywidth} if (defined $serv->{imgdaywidth} and $serv->{imgdaywidth} > $nodewidth);
+	    }
+	}
+	foreach my $sname (sort keys %servlist)
+	{
+	    my %s;
+	    foreach my $node (@nodeorder)
+	    {
+		if (defined $servlist{$sname}{$node})
+		{
+		    $servlist{$sname}{$node}->{width} = $nodewidth;
+		    push (@{$s{nodes}}, $servlist{$sname}{$node});
+		}
+		else
+		{
+		    my %ts;
+		    $ts{label} = "Not present";
+		    $ts{service} = "$sname";
+		    $ts{title} = "Not present";
+		    $ts{node} = $node;
+		    $ts{width} = $nodewidth;
+		    push (@{$s{nodes}}, \%ts);
+		}
+	    }
+	    push @{$cat{services}}, \%s;
+	}
+	$cat{name} = ucfirst $key;
+	$cat{numnodes} = @nodeorder;
+	$cat{numnodes} = @nodeorder;
+	push @cats, \%cat;
+    }
+
+    if (&munin_get_bool ($config, "compare", 1, $domain) and @nodeorder > 1)
+    {
+	foreach my $t (@times)
+	{
+	    $comparisontemplates{$t}->param(DOMAIN => $domain,
+				 DOMAINS => \@domainlist, 
+				 TIMESTAMP => $timestamp,
+				 CATEGORIES => \@cats);
+	    open (FILE, ">$config->{htmldir}/$domain/comparison-$t.html") or die "Cannot open $config->{htmldir}/$domain/comparison-$t.html";
+	    print FILE $comparisontemplates{$t}->output;
+	    close FILE;
+	}
+    }
+
     push @domains,\%domain;
 }
 
@@ -429,13 +621,53 @@ sub logger {
     }
 }
 
+sub calculate_png_size
+{
+    	my $config = shift;
+	my $domain = shift;
+	my $node   = shift;
+	my $serv   = shift;
+
+        # base size of graph rectangle + space outside graph rectangle
+	my $height = munin_get ($config, "graph_height", 100, $domain, $node, $serv) + 156;
+	my $width  = munin_get ($config, "graph_width" , 400, $domain, $node, $serv) + 93;
+
+	# In addition, the height increases by 15 pixels for each label underneath
+	foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$serv}})
+	{
+	    if ($field =~ /^([^\.]+)\.label/)
+	    {
+		if (munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $serv, $1))
+		{
+		    $height += 15;
+		    my $tmpline = munin_get ($config, "line", undef, $domain, $node, $serv, $1);
+		    if ($tmpline)
+		    {
+			my @tmparr = ($tmpline =~ /:/g);
+			if (scalar (@tmparr) > 2)
+			{ # We've got line definitions with labels...
+			    $height += 15;
+			}
+		    }
+		}
+	    }
+	}
+	# ...and +15 if there's a graph total
+	$height += 15 if (munin_get ($config, "graph_total", undef, $domain, $node, $serv));
+	# ...and +15 if there's min/max-headers above the labels
+	$height += 15 if (munin_graph_column_headers ($config, $domain, $node, $serv));
+
+	return ($width, $height);
+}
+
 sub get_png_size
 {
 	my $filename = shift;
 	my $width = undef;
 	my $height = undef;
 
-	if (open (PNG, $filename))
+#if (open (PNG, $filename))
+	if (0)
 	{
 		my $incoming;
 		binmode (PNG);
@@ -544,3 +776,4 @@ This program is released under the GNU General Public License
 
 =cut
 
+# vim:syntax=perl:ts=8

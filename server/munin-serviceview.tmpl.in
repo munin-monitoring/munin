@@ -24,7 +24,7 @@
 
   <table class="invisiblebox">
     <tr>
-	  <td colspan=2><hr class="ruler" /></td>
+	  <td colspan="2"><hr class="ruler" /></td>
 	</tr>
     <tr>
       <td><img src="<TMPL_VAR NAME="IMGDAY">" alt="daily graph" <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/></td>
@@ -34,12 +34,18 @@
       <td><img src="<TMPL_VAR NAME="IMGMONTH">" alt="monthly graph" <TMPL_IF NAME="IMGMONTHWIDTH">width="<TMPL_VAR NAME="IMGMONTHWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGMONTHHEIGHT">height="<TMPL_VAR NAME="IMGMONTHHEIGHT">"</TMPL_IF>/></td>
       <td><img src="<TMPL_VAR NAME="IMGYEAR">" alt="yearly graph" <TMPL_IF NAME="IMGYEARWIDTH">width="<TMPL_VAR NAME="IMGYEARWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGYEARHEIGHT">height="<TMPL_VAR NAME="IMGYEARHEIGHT">"</TMPL_IF>/></td>
     </tr>
+<TMPL_IF NAME="IMGWEEKSUM">
+    <tr>
+      <td><img src="<TMPL_VAR NAME="IMGWEEKSUM">" alt="summed weekly graph" <TMPL_IF NAME="IMGWEEKSUMWIDTH">width="<TMPL_VAR NAME="IMGWEEKSUMWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGWEEKSUMHEIGHT">height="<TMPL_VAR NAME="IMGWEEKSUMHEIGHT">"</TMPL_IF>/></td>
+      <td><img src="<TMPL_VAR NAME="IMGYEARSUM">" alt="summed monthly graph" <TMPL_IF NAME="IMGYEARSUMWIDTH">width="<TMPL_VAR NAME="IMGYEARSUMWIDTH">" </TMPL_IF> <TMPL_IF NAME="IMGYEARSUMHEIGHT">height="<TMPL_VAR NAME="IMGYEARSUMHEIGHT">"</TMPL_IF>/></td>
+    </tr>
+</TMPL_IF>
 	<tr>
 	  <td colspan="2" class="legendbox">
 	    <table width='100%'>
 		  <TMPL_LOOP NAME="GRAPHINFO">
 		    <tr>
-		      <td colspan="5" align='left' valign='top'><TMPL_VAR NAME="INFO"></td>
+		      <td class='wrap' colspan="5" align='left' valign='top'><TMPL_VAR NAME="INFO"></td>
 		    </tr>
 		    <tr>
 		      <td colspan="5"><hr class="ruler2" /></td>
@@ -47,9 +53,9 @@
 		  </TMPL_LOOP>
 		    <tr>
 			  <th align='left' valign='top'>Field</th>
-			  <th align='left' valign='top'><a href="../definitions.html#data_types">Type</a></th>
-			  <th align='left' valign='top'>Warn</th>
-			  <th align='left' valign='top'>Crit</th>
+			  <th align='center' valign='top'><a href="../definitions.html#data_types">Type</a></th>
+			  <th align='center' valign='top'>Warn</th>
+			  <th align='center' valign='top'>Crit</th>
 			  <th>&nbsp;</th>
 		    </tr>
 		  <TMPL_LOOP NAME="FIELDINFO">
@@ -59,11 +65,11 @@
 		      </tr>
 		    </TMPL_IF>
 		    <tr>
-		      <td align='left' valign='top'><TMPL_VAR ESCAPE="HTML" NAME="LABEL"></td>
-		      <td align='left' valign='top'><TMPL_VAR NAME="TYPE"></td>
-		      <td align='left' valign='top'><TMPL_IF NAME="STATE_WARNING"><div class='warntext'></TMPL_IF><TMPL_VAR NAME="WARN"><TMPL_IF NAME="STATE_WARNING"></div></TMPL_IF></td>
-		      <td align='left' valign='top'><TMPL_IF NAME="STATE_CRITICAL"><div class='crittext'></TMPL_IF><TMPL_VAR NAME="CRIT"><TMPL_IF NAME="STATE_CRITICAL"></div></TMPL_IF></td>
-		      <td align='left' valign='top'><TMPL_VAR ESCAPE="HTML" NAME="INFO"></td>
+		      <td align='left' valign='top'><span title="Internal field name (for use in munin.conf): <TMPL_VAR ESCAPE="HTML" NAME="FIELD">"><TMPL_VAR ESCAPE="HTML" NAME="LABEL"></span></td>
+		      <td align='center' valign='top'><TMPL_VAR NAME="TYPE"></td>
+		      <td align='center' valign='top'><TMPL_IF NAME="STATE_WARNING"><div class='warntext'></TMPL_IF><TMPL_VAR NAME="WARN"><TMPL_IF NAME="STATE_WARNING"></div></TMPL_IF></td>
+		      <td align='center' valign='top'><TMPL_IF NAME="STATE_CRITICAL"><div class='crittext'></TMPL_IF><TMPL_VAR NAME="CRIT"><TMPL_IF NAME="STATE_CRITICAL"></div></TMPL_IF></td>
+		      <td class='wrap' align='left' valign='top'><TMPL_VAR ESCAPE="HTML" NAME="INFO"></td>
 		    </tr>
 		  </TMPL_LOOP>
 	    </table>
@@ -72,7 +78,7 @@
   </TMPL_LOOP>
   <tr><td></td></tr>
   <tr>
-    <td colspan=2 class="linkbox">
+    <td colspan="2" class="linkbox">
       <TMPL_LOOP NAME="DOMAINS">
         <a href="../<TMPL_VAR NAME="DOMAIN">/index.html"><TMPL_VAR NAME="DOMAIN"></a> :
       </TMPL_LOOP>

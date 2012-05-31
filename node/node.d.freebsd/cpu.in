@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.6  2004/11/21 00:16:56  jimmyo
+# Changed a lot of plugins so they use DERIVE instead of COUNTER.
+#
 # Revision 1.5  2004/05/20 19:02:36  jimmyo
 # Set categories on a bunch of plugins
 #
@@ -86,7 +89,8 @@ if [ "$1" = "config" ]; then
 	echo 'system.label system'
 	echo 'system.draw AREA'
 	echo 'system.max 5000'
-	echo 'system.type COUNTER'
+	echo 'system.type DERIVE'
+	echo 'system.min 0'
 #	echo "system.warning $SYSWARNING" 
 #	echo "system.critical $SYSCRITICAL" 
 	echo "system.cdef system,$STATUNITS,/,$PERCENT,*"
@@ -94,23 +98,27 @@ if [ "$1" = "config" ]; then
 	echo 'interrupt.draw STACK'
 	echo 'interrupt.max 5000'
 #	echo "interrupt.warning $INTWARNING"
-	echo 'interrupt.type COUNTER'
+	echo 'interrupt.type DERIVE'
+	echo 'interrupt.min 0'
 	echo "interrupt.cdef interrupt,$STATUNITS,/,$PERCENT,*"
 	echo 'user.label user'
 	echo 'user.draw STACK'
 	echo 'user.max 5000'
 #	echo "user.warning $USRWARNING"
-	echo 'user.type COUNTER'
+	echo 'user.type DERIVE'
+	echo 'user.min 0'
 	echo "user.cdef user,$STATUNITS,/,$PERCENT,*"
 	echo 'nice.label nice'
 	echo 'nice.draw STACK'
 	echo 'nice.max 5000'
-	echo 'nice.type COUNTER'
+	echo 'nice.type DERIVE'
+	echo 'nice.min 0'
 	echo "nice.cdef nice,$STATUNITS,/,$PERCENT,*"
 	echo 'idle.label idle'
 	echo 'idle.draw STACK'
 	echo 'idle.max 5000'
-	echo 'idle.type COUNTER'
+	echo 'idle.type DERIVE'
+	echo 'idle.min 0'
 	echo "idle.cdef idle,$STATUNITS,/,$PERCENT,*"
 	exit 0
 fi

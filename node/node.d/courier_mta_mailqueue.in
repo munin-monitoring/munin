@@ -1,0 +1,59 @@
+#!/bin/sh
+# 
+# Plugin to monitor courier-mta mail spools
+#
+# Author: Rune Nordbøe Skillingstad <runesk@linpro.no>
+#
+# Usage: copy or link into /etc/munin/node.d/
+#
+# Parameters:
+#
+#       config   (required)
+#       autoconf (optional - used by munin-config)
+#
+# Config variables:
+#
+#       spooldir     - Where to find mails in queue
+#
+# $Log$
+# Revision 1.1  2004/10/19 18:45:30  jimmyo
+# Added new plugins generic/courier_mta*, contributed by Rune N. Skillingstad.
+#
+#
+# Magic markers (optional - used by munin-config and some installation
+# scripts):
+#
+#%# family=auto
+#%# capabilities=autoconf
+ 
+# Can be set via environment, but default is /var/lib/courier/msgq/
+SPOOLDIR=${spooldir:-/var/lib/courier/msgq/}
+
+case $1 in
+    autoconf|detect)
+	if [ -d $SPOOLDIR/ -a -r $SPOOLDIR/ ] ; then
+	    echo yes
+	    exit 0
+        else
+	    echo "no (spooldir not found)"
+	    exit 1
+        fi;;
+    config)
+	cat <<'EOF'
+graph_title Courier MTA mailqueue
+graph_vlabel Mails in queue
+graph_args --base 1000 -l 0
+mails.label mails
+mails.draw AREA
+EOF
+	exit 0;;
+esac
+
+cd $SPOOLDIR >/dev/null 2>/dev/null || {
+     echo "# Cannot cd to $SPOOLDIR"
+     exit 1
+}
+
+cat <<EOF
+mails.value $(find . -type f | wc -l | sed 's/ *//')
+EOF

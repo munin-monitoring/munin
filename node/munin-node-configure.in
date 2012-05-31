@@ -1,8 +1,30 @@
 #!@@PERL@@ -w
 #
+# Copyright (C) 2004 Jimmy Olsen
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
 # Program to suggest configurations and configuration changes.
 #
 # $Log$
+# Revision 1.10  2004/11/16 20:00:42  jimmyo
+# License cleanups.
+#
+# Revision 1.9  2004/09/07 19:33:32  jimmyo
+# Documented the SNMP options a bit better.
+#
 # Revision 1.8  2004/09/05 12:00:18  jimmyo
 # Set family and capabilities.
 #
@@ -87,7 +109,7 @@ $do_error = 1 unless GetOptions (
 	"remove-also!"    => \$removes,
 	"libdir=s"        => \$libdir,
 	"families=s"      => \@families,
-	"version=s"       => \$do_version,
+	"version!"        => \$do_version,
 	"snmp=s"          => \@snmp,
 	"snmpversion=s"   => \$snmpver,
 	"snmpcommunity=s" => \$snmpcomm,
@@ -112,6 +134,7 @@ Options:
 	--remove-also		Also show rm-commands when doing --shell
 	--newer <version>	Only show suggestions related to plugins newer
 	                        than version <version>. [0.0.0]
+	--snmp <host|cidr>      Do SNMP probing on the host or CIDR network.
 	--snmpversion <ver>     Set SNMP version (1, 2c or 3) [2c]
 	--snmpcommunity <comm>  Set SNMP community [public]
 
@@ -126,10 +149,8 @@ if ($do_version)
     print "Written by Jimmy Olsen\n";
     print "\n";
     print "Copyright (C) 2003-2004 Jimmy Olsen\n";
-    print "This is free software released under the GNU Public License. There is
-    NO\n";
-    print "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PU
-    RPOSE.\n";
+    print "This is free software released under the GNU Public License. There is NO\n";
+    print "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n";
     exit 0;
 }
 
@@ -632,6 +653,21 @@ Show shell commands (implies --suggest)
 =item B<< --remove-also >>
 
 Also show rm-commands when doing --shell
+
+=item B<< --snmp <host|cidr,...> >>
+
+Do SNMP probing on the host or CIDR network (e.g. "192.168.1.0/24"). This
+may take some time, especially if the probe includes many hosts. This option
+can be specified multiple times, or once with a comma-separated list, to
+include more than one host/CIDR.
+
+=item B<< --snmpversion <ver> >>
+
+Set the SNMP version (1, 2c or 3) to use when probing. Default is "2c".
+
+=item B<< --snmpcommunity <comm> >>
+
+Set SNMP community to use when probing. Default is "public".
 
 =back
 

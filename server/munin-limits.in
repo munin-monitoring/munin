@@ -1,7 +1,62 @@
-#!/usr/bin/perl
-# Nagios
+#!@@PERL@@
+#
+# Copyright (C) 2004 Jimmy Olsen
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
 #
 # $Log$
+# Revision 1.19  2004/11/19 21:51:05  jimmyo
+# Cosmetics on the nagios warnings.
+#
+# Revision 1.18  2004/11/19 21:32:39  jimmyo
+# Added a --force option to munin-limits, to force sending absolutely all messages.
+#
+# Revision 1.17  2004/11/19 21:05:54  jimmyo
+# Removed the munin-nagios program, as it is no longer needed.
+#
+# Revision 1.16  2004/11/19 20:51:24  jimmyo
+# New notification system finished (I think).
+#
+# Revision 1.15  2004/11/19 18:38:02  jimmyo
+# Worked a bit more on the notification system.
+#
+# Revision 1.14  2004/11/18 15:31:37  jimmyo
+# Worked a bit more on the notification system.
+#
+# Revision 1.13  2004/11/18 00:22:02  jimmyo
+# Midway implementation of new notification scheme.
+#
+# Revision 1.12  2004/11/16 20:00:44  jimmyo
+# License cleanups.
+#
+# Revision 1.11  2004/11/13 21:22:59  jimmyo
+# Changed some of the critical/warning output..
+#
+# Revision 1.10  2004/11/13 19:14:08  jimmyo
+# Changed the default warning/critical output a bit.
+#
+# Revision 1.9  2004/11/12 23:18:52  jimmyo
+# Added new options notify_enable and notify_text, to allow more finely tuned notifications (both what to notify and what text to send.)
+#
+# Revision 1.8  2004/09/24 16:31:07  jimmyo
+# Bugfixes.
+#
+# Revision 1.7  2004/09/08 15:25:33  ilmari
+# Use @@PERL@@ in all perl shebang lines.
+#
 # Revision 1.6  2004/06/08 15:30:34  jimmyo
 # The server programs now open the log file at an earlier point.
 #
@@ -36,13 +91,22 @@ use strict;
 use Munin;
 use POSIX qw(strftime);
 use Getopt::Long;
+use Text::Balanced qw (extract_multiple extract_delimited extract_quotelike extract_bracketed);
+
 my $DEBUG=0;
 my $conffile = "@@CONFDIR@@/munin.conf";
 my $do_usage = 0;
 my @limit_hosts = ();
 my @limit_services = ();
+my @limit_contacts = ();
 my $force_root = 0;
 my %notes = ();
+my $stdout = 0;
+my $force = 0;
+my %default_text = ( "default" => '${var:group} :: ${var:host} :: ${var:graph_title}${if:cfields \n\tCRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields \n\tWARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields \n\tUNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields \n\tOKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}\n',
+    		     "nagios"  => '${var:host}\t${var:graph_title}\t${var:worstid}\t${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields OKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}',
+    		     "old-nagios"  => '${var:host}\t${var:plugin}\t${var:worstid}\t${var:graph_title}:${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields OKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}'
+		    );
 
 my $log = new IO::Handle;
 
@@ -51,8 +115,11 @@ $do_usage=1  unless
 GetOptions ( "force-root!"  => \$force_root,
 	     "host=s"       => \@limit_hosts,
 	     "service=s"    => \@limit_services,
+	     "contact=s"    => \@limit_contacts,
 	     "config=s"     => \$conffile,
 	     "debug!"       => \$DEBUG,
+	     "stdout!"      => \$stdout,
+	     "force!"       => \$force,
 	     "help"         => \$do_usage );
 
 if ($do_usage)
@@ -63,10 +130,14 @@ Options:
     --[no]force-root    Force running, even as root. [--noforce-root]
     --help		View this message.
     --debug		View debug messages.
+    --stdout		Log to stdout as well as the log file.
+    --force		Send messages even if they shouldn't normally be sent.
     --service <service>	Limit notified services to <service>. Multiple 
     			--service options may be supplied.
     --host <host>	Limit notified hosts to <host>. Multiple --host 
     			options may be supplied.
+    --contact <contact>	Limit notified contacts to <contact>. Multiple 
+    			--contact options may be supplied.
     --config <file>	Use <file> as configuration file. 
     			[/etc/munin/munin.conf]
 
@@ -83,14 +154,23 @@ it as the user \"munin\". Aborting.\n\n";
 }
 
 my $config = &munin_config ($conffile);
+my $oldnotes = &munin_readconfig ($config->{'dbdir'}."/limits", 1, 1);
 my $modified=0;
 
 logger("Starting munin-limits, checking lock");
 munin_runlock("$config->{dbdir}/munin-limits.lock");
 logger("Created lock: $config->{dbdir}/munin-limits.lock");
 
-	
-
+if (!defined $config->{'contact'}->{'nagios'}->{'command'} and
+	defined $config->{'nsca'})
+{
+    $config->{'contact'}->{'old-nagios'}->{'command'} = "$config->{nsca} $config->{nsca_server} -c $config->{nsca_config} -to 60";
+    $config->{'contact'}->{'old-nagios'}->{'always_send'} = "critical warning";
+}
+if (!defined $config->{'contact'}->{'nagios'}->{'always_send'})
+{
+    $config->{'contact'}->{'nagios'}->{'always_send'} = "critical warning";
+}
 
 for my $domain ( keys %{$config->{domain}}) {
     logger ("processing domain: $domain");
@@ -116,82 +196,327 @@ sub process_domain {
 sub process_node {
   my ($domain,$name,$node) = @_;
   for my $client (keys %{$node->{client}}) {
-      logger ("processing node: $client") if $DEBUG;
+      logger ("processing service: $client") if $DEBUG;
       process_service($domain,$name,$client,$node->{client}->{$client});
   }
 }
 
 sub process_service {
-  my $critical= undef;
-  my ($domain, $name,$clientname,$client) = @_;
-  return unless $client;
-  for my $service (keys %$client) {
-    logger ("processing service: $service") if $DEBUG;
-    if ($service =~ /(^.*)\.label/) {
-	my $key = $1;
-	next unless ((exists $client->{"$key.warning"}) || ($client->{"$key.critical"}));
-    	if (@limit_services and !grep (/^$service$/, @limit_services))
-	{
+    my $critical= undef;
+    my ($domain, $name,$clientname,$client) = @_;
+    return unless $client;
+    for my $service (keys %$client) {
+	if ($service =~ /(^.*)\.label/) {
+	    my $key = $1;
+	    next unless ((exists $client->{"$key.warning"}) || ($client->{"$key.critical"}));
+	    logger ("processing field: $key") if $DEBUG;
+	    if (@limit_services and !grep (/^$service$/, @limit_services))
+	    {
 		next;
-	}
-	my @critical = (undef, undef);
-	my @warning  = (undef, undef);
-	if (defined $client->{"$key.critical"} and 
-	    $client->{"$key.critical"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
-	{
-		$critical[0] = $1 if defined $1;
-		$critical[1] = $2 if defined $2;
-	}
-	elsif (defined $client->{"$key.critical"} and
-	    $client->{"$key.critical"} =~ /^\s*([-\d]+)\s*$/)
-	{
-		$critical[1] = $1 if defined $1;
-	}
-	elsif (defined $client->{"$key.critical"})
-	{
-	    @critical = (0, 0);
-	}
-	if (defined $client->{"$key.warning"} and 
-	    $client->{"$key.warning"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
-	{
-		$warning[0] = $1 if defined $1;
-		$warning[1] = $2 if defined $2;
-	}
-	elsif (defined $client->{"$key.warning"} and
-	    $client->{"$key.warning"} =~ /^\s*([-\d]+)\s*$/)
-	{
-		$warning[1] = $1 if defined $1;
-	}
-	elsif (defined $client->{"$key.warning"})
-	{
-	    @warning = (0, 0);
-	}
-	my $filename = "$config->{dbdir}/$domain/$name-$clientname-$key-".
+	    }
+	    my $critical;
+	    my $warning;
+	    ($warning, $critical) = get_limits ($client, $domain, $name, $clientname, $key);
+
+	    my $filename = "$config->{dbdir}/$domain/$name-$clientname-$key-".
 	    lc substr (($client->{"$key.type"}||"GAUGE"),0,1) . ".rrd";
-	my $value = sprintf "%.2f",&munin_fetch("$filename");
-	
-	if ((defined ($critical[0]) and $value < $critical[0]) or
-	    (defined ($critical[1]) and $value > $critical[1])) {
-	    $critical[0] ||= "";
-	    $critical[1] ||= "";
-	    $notes{$domain}{$name}{$clientname}{"$key.critical"} = 
+	    my $value = sprintf "%.2f",&munin_fetch("$filename");
+
+	    # Some fields that are nice to have in the plugin output
+	    $client->{$key.".value"} = $value;
+	    $client->{'fields'} = join (' ', map { $_ =~ s/\.label$//; $_} grep (/\.label/, keys %$client));
+	    $client->{'plugin'} = $clientname;
+	    $client->{'graph_options'} = $client->{'notify_alias'} if defined $client->{'notify_alias'};
+	    $client->{'host'} = $config->{'domain'}->{$domain}->{'node'}->{$name}->{'notify_alias'} || $name;
+	    $client->{'group'} = $config->{'domain'}->{$domain}->{'notify_alias'} || $domain;
+	    $client->{'worst'} = "OK";
+	    $client->{'worstid'} = 0;
+	    $client->{$key.".crange"} = (defined $critical->[0]?$critical->[0]:"").":".(defined $critical->[1]?$critical->[1]:"");
+	    $client->{$key.".wrange"} = (defined $warning->[0]?$warning->[0]:"").":".(defined $warning->[1]?$warning->[1]:"");
+
+	    logger ("value: $domain -> $name -> $clientname -> $key : $value") if $DEBUG;
+	    if ((defined ($critical->[0]) and $value < $critical->[0]) or
+	    (defined ($critical->[1]) and $value > $critical->[1])) {
+		$critical->[0] ||= "";
+		$critical->[1] ||= "";
+		$client->{'worst'} = "CRITICAL";
+		$client->{'worstid'} = 2;
+		$notes{$domain}{$name}{$clientname}{"$key.state"} = "critical";
+		$notes{$domain}{$name}{$clientname}{"$key.critical"} = 
 		(defined $client->{"$key.extinfo"}?
-		    "$value (not in $critical[0]:$critical[1]): ".
-		    $client->{"$key.extinfo"}:
-		    "Value is $value. Critical range ($critical[0]:$critical[1]) exceeded");
-	}
-	elsif ((defined ($warning[0]) and $value < $warning[0]) or
-	       (defined ($warning[1]) and $value > $warning[1])) {
-	    	$warning[0] ||= "";
-	    	$warning[1] ||= "";
+		"$value (not in $critical->[0]:$critical->[1]): ".
+		$client->{"$key.extinfo"}:
+		"Value is $value. Critical range ($critical->[0]:$critical->[1]) exceeded");
+		if (!defined ($oldnotes->{'domain'}->{$domain}->{'node'}->{$name}->{'client'}->{$clientname}->{"$key.state"}) or 
+			$oldnotes->{'domain'}->{$domain}->{'node'}->{$name}->{'client'}->{$clientname}->{"$key.state"} ne "critical")
+		{
+		    $client->{'state_changed'} = 1;
+		}
+	    }
+	    elsif ((defined ($warning->[0]) and $value < $warning->[0]) or 
+		(defined ($warning->[1]) and $value > $warning->[1])) 
+	    {
+		$warning->[0] ||= "";
+		$warning->[1] ||= "";
+		$client->{'worst'} = "WARNING" if $client->{"worst"} eq "OK";
+		$client->{'worstid'} = 1 if $client->{"worstid"} == 0;
+		$notes{$domain}{$name}{$clientname}{"$key.state"} = "warning";
 		$notes{$domain}{$name}{$clientname}{"$key.warning"} = 
-		  (defined $client->{"$key.extinfo"}?
-		        "$value (not in $warning[0]:$warning[1]): ".
-		   	$client->{"$key.extinfo"}:
-		   	"Value is $value. Warning range ($warning[0]:$warning[1]) exceeded");
+		(defined $client->{"$key.extinfo"}?
+		"$value (not in $warning->[0]:$warning->[1]): ".
+		$client->{"$key.extinfo"}:
+		"Value is $value. Warning range ($warning->[0]:$warning->[1]) exceeded");
+		if (!defined ($oldnotes->{'domain'}->{$domain}->{'node'}->{$name}->{'client'}->{$clientname}->{"$key.state"}) or 
+			$oldnotes->{'domain'}->{$domain}->{'node'}->{$name}->{'client'}->{$clientname}->{"$key.state"} ne "warning")
+		{
+		    $client->{'state_changed'} = 1;
+		}
+	    } 
+	    elsif (defined ($oldnotes->{'domain'}->{$domain}->{'node'}->{$name}->{'client'}->{$clientname}->{"$key.state"}) or
+		    $force)
+	    {
+		$notes{$domain}{$name}{$clientname}{"$key.ok"} = "OK";
+		$client->{'state_changed'} = 1;
+	    }
 	}
-      }
     }
+    generate_service_message ($domain, $name, $clientname, $client);
+}
+
+sub get_limits
+{
+    my $client = shift;
+    my $domain = shift;
+    my $name   = shift;
+    my $clientname = shift;
+    my $key    = shift;
+    my @critical = (undef, undef);
+    my @warning  = (undef, undef);
+    if (defined $client->{"$key.critical"} and 
+	$client->{"$key.critical"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
+    {
+	$critical[0] = $1 if length $1;
+	$critical[1] = $2 if length $2;
+	logger ("processing critical: $domain -> $name -> $clientname -> $key -> $critical[0] : $critical[1]") if $DEBUG;
+    }
+    elsif (defined $client->{"$key.critical"} and
+	$client->{"$key.critical"} =~ /^\s*([-\d]+)\s*$/)
+    {
+	$critical[1] = $1 if defined $1;
+	logger ("processing critical: $domain -> $name -> $clientname -> $key -> $critical[0] : $critical[1]") if $DEBUG;
+    }
+    elsif (defined $client->{"$key.critical"})
+    {
+	@critical = (0, 0);
+	logger ("processing critical: $domain -> $name -> $clientname -> $key -> $critical[0] : $critical[1]") if $DEBUG;
+    }
+    if (defined $client->{"$key.warning"} and 
+	$client->{"$key.warning"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
+    {
+	$warning[0] = $1 if length $1;
+	$warning[1] = $2 if length $2;
+	logger ("processing warning: $domain -> $name -> $clientname -> $key -> $warning[0] : $warning[1]") if $DEBUG;
+    }
+    elsif (defined $client->{"$key.warning"} and
+	$client->{"$key.warning"} =~ /^\s*([-\d]+)\s*$/)
+    {
+	$warning[1] = $1 if defined $1;
+	logger ("processing warning: $domain -> $name -> $clientname -> $key -> $warning[0] : $warning[1]") if $DEBUG;
+    }
+    elsif (defined $client->{"$key.warning"})
+    {
+	@warning = (0, 0);
+	logger ("processing warning: $domain -> $name -> $clientname -> $key -> $warning[0] : $warning[1]") if $DEBUG;
+    }
+    return (\@warning, \@critical);
+}
+
+sub generate_service_message {
+    my $critical= undef;
+    my ($domain, $name,$clientname,$client) = @_;
+    return unless $client;
+    my $worst = "";
+    my %stats = ('critical' => [], 'warning' => [], 'unknown' => [], 'foks' => [], 'ok' => []);
+
+    foreach my $key (keys %{$notes{$domain}{$name}{$clientname}})
+    {
+	if ($key =~ /^([^\.]+)\.critical$/)
+	{
+	    $worst = "critical";
+	    push @{$stats{'critical'}}, $1;
+	}
+    	elsif ($key =~ /^([^\.]+)\.warning$/)
+	{
+	    $worst = "warning" if $worst ne "critical";
+	    push @{$stats{'warning'}}, $1;
+	}
+    	elsif ($key =~ /^([^\.]+)\.unknown$/)
+	{
+	    $worst = "unknown" unless $worst;
+	    push @{$stats{'unknown'}}, $1;
+	}
+    	elsif ($key =~ /^([^\.]+)\.ok$/)
+	{
+	    $worst = "ok" unless $worst;
+	    push @{$stats{'oks'}}, $1;
+	    push @{$stats{'foks'}}, $1;
+	}
+	else
+	{
+	    push @{$stats{'oks'}}, $1;
+	}
+    }
+    $client->{'cfields'}  = join " ", @{$stats{'critical'}};
+    $client->{'wfields'}  = join " ", @{$stats{'warning'}};
+    $client->{'ufields'}  = join " ", @{$stats{'unknown'}};
+    $client->{'fofields'} = join " ", @{$stats{'foks'}};
+    $client->{'ofields'}  = join " ", @{$stats{'ok'}};
+    $client->{'numcfields'}  = scalar @{$stats{'critical'}};
+    $client->{'numwfields'}  = scalar @{$stats{'warning'}};
+    $client->{'numufields'}  = scalar @{$stats{'unknown'}};
+    $client->{'numfofields'} = scalar @{$stats{'foks'}};
+    $client->{'numofields'}  = scalar @{$stats{'ok'}};
+
+    if ($worst)
+    {
+	foreach my $c (split (/\s+/, munin_get_val ($config, "contacts", join (' ', keys %{$config->{'contact'}}), $domain, $name, $clientname)))
+	{
+	    next unless defined $config->{'contact'}->{$c}->{'command'};
+	    if (@limit_contacts and !grep (/^$c$/, @limit_contacts))
+	    {
+		next;
+	    }
+	    my $obsess = 0;
+	    if (defined ($config->{'contact'}->{$c}->{'always_send'}))
+	    {
+		$obsess = grep {scalar(@{$stats{$_}})} (split (/\s+/, lc $config->{'contact'}->{$c}->{'always_send'}));
+	    }
+	    if (!$client->{'state_changed'} and !$obsess)
+	    {
+		next;
+	    }
+	    my $precmd = $config->{'contact'}->{$c}->{'command'};
+	    my $pretxt = ($config->{'contact'}->{$c}->{'text'} || $config->{'contact'}->{'default'}->{'text'} || $default_text{$c} || $default_text{'default'});
+	    my $txt = message_expand ($pretxt, $client, "");
+	    my $cmd = message_expand ($precmd, $client, "");
+	    $txt =~ s/\\n/\n/g;
+	    $txt =~ s/\\t/\t/g;
+
+	    # In some cases we want to reopen the command
+	    if ($config->{'contact'}->{$c}->{'max_messages'} and defined ($config->{'contact'}->{$c}->{'num_messages'}) and
+		    $config->{'contact'}->{$c}->{'num_messages'} >= $config->{'contact'}->{$c}->{'max_messages'})
+	    {
+		close ($config->{'contact'}->{$c}->{'pipe'});
+		$config->{'contact'}->{$c}->{'pipe'} = undef;
+	    }
+	    elsif (defined ($config->{'contact'}->{$c}->{'pipe_command'}) and 
+		    $config->{'contact'}->{$c}->{'pipe_command'} ne $cmd)
+	    {
+		close ($config->{'contact'}->{$c}->{'pipe'});
+		$config->{'contact'}->{$c}->{'pipe'} = undef;
+	    }
+	
+	    my $pipe;
+	    if (!defined $config->{'contact'}->{$c}->{'pipe'})
+	    {
+		my @cmd = extract_multiple (
+			message_expand ($cmd),
+			[ sub { extract_delimited ($_[0], q{"'})},
+			  qr/\S+/
+			],
+			undef, 1);
+		@cmd = map { s/['"]$//; s/^['"]//; $_ } @cmd;
+		$config->{'contact'}->{$c}->{'num_messages'} = 0;
+		if ($cmd[0] eq "|")
+		{
+		    $cmd[0] = "|-";
+		} 
+		elsif ($cmd[0] !~ /^[|>]/)
+		{
+		    unshift (@cmd, "|-");
+		}
+		logger ("Debug: opening for writing: \"" . join('" "',@cmd) . "\".") if $DEBUG;
+		open ($pipe, $cmd[0], @cmd[1 .. $#cmd]) or logger ("Warning: Could not run command \"" . join(' ',@cmd) . "\": $!");
+		$config->{'contact'}->{$c}->{'pipe_command'} = $cmd;
+		$config->{'contact'}->{$c}->{'pipe'} = $pipe;
+	    } 
+	    $pipe = $config->{'contact'}->{$c}->{'pipe'};
+	    print $pipe $txt, "\n" if (defined $pipe);
+	    $config->{'contact'}->{$c}->{'num_messages'}++;
+	}
+    }
+}
+
+
+sub message_expand {
+    my $text   = shift;
+    my $client = shift;
+    my $prefix = shift || "";
+    my @res    = ();
+
+    while (length ($text))
+    {   
+	if ($text =~ /^([^\$]+|)(?:\$(\{.*)|)$/)
+	{
+	    push @res, $1;
+	    $text = $2;
+	}   
+	my @a = extract_bracketed ($text, '{}');
+	if ($a[0] =~ /^\{var:(\S+)\}$/)
+	{
+	    $a[0] = (defined $client->{$prefix.$1} ? $client->{$prefix.$1} : "");
+	}
+	elsif ($a[0] =~ /^\{loop<([^>]+)>:\s*(\S+)\s(.+)\}$/)
+	{
+	    my $d = $1;
+	    my $f = $2;
+	    my $t = $3;
+	    my @res  = ();
+	    if (defined $client->{$f})
+	    {
+		foreach my $sub (split /\s+/, $client->{$f})
+		{
+		    push @res, message_expand ($t, $client, $sub.".");
+		}
+	    } 
+	    $a[0] = join ($d, @res);
+	}
+	elsif ($a[0] =~ /^\{loop:\s*(\S+)\s(.+)\}$/)
+	{
+	    my $f = $1;
+	    my $t = $2;
+	    my $res  = "";
+	    if (defined $client->{$f})
+	    {
+		foreach my $sub (split /\s+/, $client->{$f})
+		{
+		    $res .= message_expand ($t, $client, $sub.".");
+		}
+	    } 
+	    $a[0] = $res;
+	}
+	elsif ($a[0] =~ /^\{if:\s*(\!)?(\S+)\s(.+)\}$/)
+	{
+	    my $n = $1;
+	    my $f = $2;
+	    my $t = $3;
+	    my $res  = "";
+	    my $check = (defined $client->{$prefix.$f} and length($client->{$prefix.$f}) and $client->{$prefix.$f} ne "0");
+
+	    $check = (!defined $client->{$prefix.$f} or !length($client->{$prefix.$f}) or $client->{$prefix.$f} eq "0")
+		if $n;
+
+	    if ($check)
+	    {
+		$res .= message_expand ($t, $client, $prefix);
+	    } 
+	    $a[0] = $res;
+	}
+	push @res, $a[0];
+	$text = $a[1];
+    }
+
+    return join ('', @res);
 }
 
 sub logger_open {
@@ -199,9 +524,9 @@ sub logger_open {
 
     if (!$log->opened)
     {
-	  unless (open ($log, ">>$dirname/munin-html.log"))
+	  unless (open ($log, ">>$dirname/munin-limits.log"))
 	  {
-		  print STDERR "Warning: Could not open log file \"$dirname/munin-html.log\" for writing: $!";
+		  print STDERR "Warning: Could not open log file \"$dirname/munin-limits.log\" for writing: $!";
 	  }
     }
 }
@@ -210,6 +535,7 @@ sub logger {
   my ($comment) = @_;
   my $now = strftime "%b %d %H:%M:%S", localtime;
 
+  print "$now - $comment\n" if $stdout;
   if ($log->opened)
   {
 	  print $log "$now - $comment\n";
@@ -257,6 +583,10 @@ Limit services to those of E<lt>serviceE<gt>. Multiple --service options may be 
 
 Limit hosts to those of E<lt>host<gt>. Multiple --host options may be supplied. [unset]
 
+=item B<< --contact <contact> >>
+
+Limit contacts to those of E<lt>contact<gt>. Multiple --contact options may be supplied. [unset]
+
 =item B<< --config <file> >>
 
 Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin.conf]
@@ -271,7 +601,7 @@ Force running as root (stupid and unnecessary). [--noforce-root]
 
 =item B<< --removeok >>
 
-Reset warning status (remove .ok-files).
+Reset warning status.
 
 =item B<< --help >>
 
@@ -329,3 +659,4 @@ This program is released under the GNU General Public License
 
 =cut
 
+# vim: syntax=perl ts=8

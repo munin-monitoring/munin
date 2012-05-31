@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!@@PERL@@ -w
 #
 # Plugin to monitor NTP states
 #
@@ -8,6 +8,15 @@
 # 	autoconf (optional - used by lrrd-config)
 #
 # $Log$
+# Revision 1.2  2004/11/21 20:23:36  jimmyo
+# Better autoconf handling.
+#
+# Revision 1.1  2004/11/21 19:35:23  jimmyo
+# Corrected file name.
+#
+# Revision 1.2  2004/09/08 15:25:33  ilmari
+# Use @@PERL@@ in all perl shebang lines.
+#
 # Revision 1.1  2004/01/30 15:07:38  jimmyo
 # Added generic plugins ntp_ and ntp_states to manual family (SF#887000).
 #
@@ -39,8 +48,13 @@ my %stateval = (
 if ($ARGV[0] and $ARGV[0] eq "autoconf") {
 	`ntpq -c help >/dev/null 2>/dev/null`;
 	if ($? eq "0") {
-		print "yes\n";
-		exit 0;
+		if (`ntpq -c "hostnames no" -c peers | wc -l` > 0) {
+			print "yes\n";
+			exit 0;
+		} else {
+			print "no (could not read peer list)\n";
+			exit 0;
+		}
 	} else {
 		print "no (ntpq not found)\n";
 		exit 1;

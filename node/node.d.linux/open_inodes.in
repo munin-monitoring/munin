@@ -3,6 +3,9 @@
 # Plugin to monitor the number of open files in the system.
 #
 # $Log$
+# Revision 1.3  2004/09/25 22:29:16  jimmyo
+# Added info fields to a bunch of plugins.
+#
 # Revision 1.2  2004/05/20 13:57:12  jimmyo
 # Set categories to some of the plugins.
 #
@@ -48,8 +51,11 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000 -l 0'
 	echo 'graph_vlabel number of open inodes'
 	echo 'graph_category system'
+	echo 'graph_info This graph monitors the Linux open inode table.'
 	echo 'used.label open inodes'
-	echo 'max.label peak open inodes'
+	echo 'used.info The number of currently open inodes.'
+	echo 'max.label inode table size'
+	echo 'max.info The size of the system inode table. This is dynamically adjusted by the kernel.'
 	exit 0
 fi
 

@@ -21,6 +21,13 @@ div.logo {
   height: 59px;
 } 
 
+div.lighttext { 
+  background-color: #ffffff;
+  color: #777777;
+  font-style: italic;
+  
+ }
+
 .domain { 
   font-size: medium;
   font-weight: bold;
@@ -69,7 +76,7 @@ table.invisiblebox {
         padding: 0px 0px 0px 0px;
 	margin: 0px 0px 0px 0px;
 	white-space: nowrap;
-	max-width: 90%;
+	max-width: 1%;
 }
 
 td.graphbox {
@@ -115,6 +122,11 @@ td.legendbox {
 	width: 100%;
 }
 
+td.wrap {
+	white-space: normal;
+	max-width: 1%;
+}
+
 td.linkbox {
         border-width: thin;
         border-top: 1px;
@@ -130,7 +142,7 @@ td.linkbox {
 
 .warntext {
   font-weight: bold;
-  background-color: #f2ff00;
+  background-color: #cccc00;
 }
 
 .crittext {
@@ -150,19 +162,38 @@ td.linkbox {
   height: 2px;
 }
 
-a:link { 
+a.meek:link { 
   color: #486aaf;
+  font-size: small;
  }
 
-a:visited { 
+a.meek:visited { 
   color: #af1a00;
+  font-size: small;
  }
 
-a:active { 
-    color: #486aaf;
+a.meek:active { 
+  color: #486aaf;
+  font-size: small;
  }
 
-a:hover { 
-    color: #999999;
+a.meek:hover { 
+  color: #999999;
+  font-size: small;
  }
 
+
+a.warn:link    { color: #cc9900; }
+a.warn:visited { color: #cc9900; }
+a.warn:active  { color: #cc9900; }
+a.warn:hover   { color: #cc9900; }
+
+a.crit:link    { color: #cc0000; } 
+a.crit:visited { color: #cc0000; } 
+a.crit:active  { color: #cc0000; } 
+a.crit:hover   { color: #cc0000; } 
+
+a:link    { color: #486aaf; } 
+a:visited { color: #486aaf; } 
+a:active  { color: #486aaf; } 
+a:hover   { color: #486aaf; } 
