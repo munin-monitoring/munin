@@ -12,6 +12,9 @@
 #   mysqlopts    - Options to pass to mysql
 #
 # $Log$
+# Revision 1.2  2004/04/27 18:58:53  jimmyo
+# Fixed bug in mysql-plugins (Deb#233762).
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -57,9 +60,11 @@ if [ "$1" = "config" ]; then
 	echo 'recv.label received'
 	echo 'recv.type COUNTER'
 	echo 'recv.draw LINE2'
+	echo 'recv.max 80000000'
 	echo 'recv.graph no'
 	echo 'sent.label bps'
 	echo 'sent.type COUNTER'
+	echo 'sent.max 80000000'
 	echo 'sent.draw LINE2'
 	echo 'sent.negative recv'
 	exit 0

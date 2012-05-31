@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.6  2004/04/30 13:14:53  jimmyo
+# Added support for snmpconf option in plugins.
+#
 # Revision 1.5  2004/01/29 19:39:00  jimmyo
 # Generic plugins now use printf instead of echo -n, as this is more portable (SF#885564)
 #
@@ -279,6 +282,10 @@ FILES:
 	    elsif ($ARGV[1] =~ /^a/i)
 	    {
 		$arg = "autoconf";
+	    }
+	    elsif ($ARGV[1] =~ /^snmp/i)
+	    {
+		$arg = "snmpconf";
 	    }
 	    elsif ($ARGV[1] =~ /^s/i)
 	    {

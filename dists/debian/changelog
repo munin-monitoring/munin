@@ -1,4 +1,4 @@
-munin (0+1.0.0pre2-1) unstable; urgency=low
+munin (0+1.0.0pre3-1) unstable; urgency=low
 
   * New upstream release, closes: #231049:
       - Project renamed from "LRRD" to "Munin".  Almost every file in the
@@ -25,6 +25,7 @@ munin (0+1.0.0pre2-1) unstable; urgency=low
       - Fix buggy HTML in the service view, closes: #230322.
       - Limit the maximum values from the vmstat plugin to 500000, to avoid
         spurious peaks to sneak in, closes: #225489, #225626.
+      - Further improvements to related to timeout handling, closes: #224480.
 
   * debian/plugins.conf:
       - Run the Exim mailstats plugin in the groups "mail" and "adm", to
@@ -43,7 +44,7 @@ munin (0+1.0.0pre2-1) unstable; urgency=low
         create the initial Munin configuration and data set based on the
         old files from LRRD.
 
- -- Tore Anderson <tore@debian.org>  Sun, 01 Feb 2004 02:41:50 +0100
+ -- Tore Anderson <tore@debian.org>  Thu, 05 Feb 2004 19:15:14 +0100
 
 lrrd (0.9.9r5-1) unstable; urgency=low
 

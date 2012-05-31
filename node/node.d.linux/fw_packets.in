@@ -1,0 +1,79 @@
+#!@@PERL@@ -w
+#
+# Plugin to monitor the throuhgput of a firewall.
+#
+# Usage: copy or link into /etc/munin/node.d/
+#
+# Parameters:
+#
+#       config   (required)
+#       autoconf (optional - used by munin-config)
+#
+# Config variables:
+#
+# $Log$
+# Revision 1.1  2004/05/09 19:12:08  jimmyo
+# Cleanup of linux/fw*-plugins, by Nicolai Langfeldt
+#
+# Revision 1.0  2004/05/06 21:39:54  jimmyo
+# fw_packets contributed by S. Banerian
+#
+# Magic markers (optional - used by munin-config and some installation
+# scripts):
+#
+#%# family=contrib
+#%# capabilities=autoconf
+
+if ( $ARGV[0] ) {
+
+    if ( $ARGV[0] eq 'autoconf' ) {
+	if (-f '/proc/net/smtp') {
+	    print "yes\n";
+	    exit 0;
+	}
+	print "no\n";
+	exit 0;
+
+    } elsif ( $ARGV[0] eq 'config' ) {
+	print <<EOM;
+graph_title Firewall Throughput
+graph_args --base 1000 -l 0
+graph_vlabel Packets/sec
+received.label Received
+received.draw AREA
+received.type COUNTER
+forwarded.label Forwarded
+forwarded.draw LINE2
+forwarded.type COUNTER
+EOM
+# Is LINE1 better I wonder?  The lines are meant to show how large a
+# portion of the total received packets gets forwarded.
+# rejected.label rejected
+# rejected.draw LINE2
+# rejected.type COUNTER
+	exit 0;
+    }
+}
+
+open(F, "/proc/net/snmp");
+
+while (<F>) {
+    if (/^Ip: \d/) {
+	@ip = split;
+	$forwarded = $ip[6];  #forwarded
+	$received = $ip[3];   #received
+	print "received.value $received\n";
+	print "forwarded.value $forwarded\n";
+
+	# This calculation is invalid, the packet may have been
+	# destined for the firewall, then the difference is wrong.  If
+	# you firewall does not receive traffic itself it is correct
+	# though.
+	# 
+	# print "rejected.value ", $received - $forwarded,"\n";
+	last;
+    }
+}
+close(F);
+
+# vim:syntax=perl

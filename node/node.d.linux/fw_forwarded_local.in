@@ -1,0 +1,53 @@
+#!/bin/sh
+#
+# Plugin to monitor network connections.
+#
+# Parameters:
+#
+# 	config   (required)
+# 	autoconf (optional - only used by munin-config)
+#
+#
+# $Log$
+# Revision 1.1  2004/05/09 21:20:31  jimmyo
+# Added fw_forwarded_local (by Xavier).
+#
+#
+# Magic markers (optional - used by munin-config and some installation
+# scripts):
+#%# family=contrib
+#%# capabilities=autoconf
+
+
+
+if [ "$1" = "autoconf" ]; then
+	if ( cat /proc/net/ip_conntrack 2>/dev/null >/dev/null ); then
+		echo yes
+		exit 0
+	else
+		if [ $? -eq 127 ]
+		then
+			echo "no (ipcontrack not found)"
+			exit 1
+		else
+			echo no
+			exit 1
+		fi
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title ipcontrack'
+	echo 'graph_args -l 0 --base 1000'
+	echo 'graph_vlabel established connections'
+	echo 'forward.label forward'
+	echo 'forward.type GAUGE'
+	echo 'forward.max 500'''
+	echo 'local.label local'
+	echo 'local.type GAUGE'
+	echo 'local.max 500'''
+	exit 0
+fi
+
+cat /proc/net/ip_conntrack | grep ESTABLISHED | sed 's/.*src=\(.*\) .*dst=\(.*\) sport.*src=\(.*\) .*dst=\(.*\) spo.*/\1 \2 \3 \4/g' | awk '{if($1 != $4){ FORW += 1} else { LOCAL += 1}} END {{print "forward.value "FORW} {print "local.value "LOCAL}}'

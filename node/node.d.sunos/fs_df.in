@@ -1,6 +1,9 @@
 #!/bin/sh
 
 # $Log$
+# Revision 1.2  2004/05/06 19:38:30  jimmyo
+# Made solaris-plugin fs_df work without GNU df (SF#944389).
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -11,15 +14,15 @@
 # Cleanups and log entries
 #
 #
-DF=/usr/local/bin/df
-TAIL=/usr/local/bin/tail 
+DF=/usr/sbin/df
+TAIL=/usr/bin/tail 
 
 if [ "$1" = "config" ]; then
 
         echo 'graph_title Filesystem usage (in %)'
         echo 'graph_args --upper-limit 100'
-        $DF -P -l | $TAIL +2 | while read i; do
-                name=`echo $i | sed 's/[\/.]/_/g' | awk '{ print $6 }' | $TAIL -c 15`
+        $DF -k -l | $TAIL +2 | while read i; do
+                name=`echo $i | sed 's/[\/.]/_/g' | awk '{ print $6 }' | $TAIL -15c`
                 printf "$name.label "
                 echo $i | awk '{ print $6 }'
                 printf "$name.warn "
@@ -28,8 +31,8 @@ if [ "$1" = "config" ]; then
         exit 0
 fi
 
-$DF -P -l | $TAIL +2 | while read i; do
-        name=`echo $i | sed 's/[\/.]/_/g' | awk '{ print $6 }' | $TAIL -c 15`
+$DF -k -l | $TAIL +2 | while read i; do
+        name=`echo $i | sed 's/[\/.]/_/g' | awk '{ print $6 }' | $TAIL -15c`
         printf "$name.value "
         echo $i | awk '{ print $5 }' | cut -f1 -d% 
 done

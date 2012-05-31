@@ -1,6 +1,9 @@
 #!/bin/sh
 #
 # $Log$
+# Revision 1.2  2004/05/09 20:42:08  jimmyo
+# Fixed problem with sunos/memory, when memory was reported in gigabytes (SF#930964).
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -33,10 +36,10 @@ fi
 
 MEMLINE=`$TOP -n -u | /bin/grep "^Memory" | sed 's/M//g'`
 
-REAL=`echo $MEMLINE | awk '{print $2}'`
-FREE=`echo $MEMLINE | awk '{print $4}'`
-SWAPU=`echo $MEMLINE | awk '{print $6}'`
-SWAPF=`echo $MEMLINE | awk '{print $10}'`
+REAL=`echo $MEMLINE | nawk '$2~/G$/ {sub("G","",$2);$2=$2 * 1024} {printf "%d\n", $2}'`
+REAL=`echo $MEMLINE | nawk '$4~/G$/ {sub("G","",$4);$4=$4 * 1024} {printf "%d\n", $4}'`
+REAL=`echo $MEMLINE | nawk '$6~/G$/ {sub("G","",$6);$6=$6 * 1024} {printf "%d\n", $6}'`
+REAL=`echo $MEMLINE | nawk '$10~/G$/ {sub("G","",$10);$10=$10 * 1024} {printf "%d\n", $10}'`
 
 MEMUSED=`expr $REAL - $FREE`
 SWAPTOT=`expr $SWAPU + $SWAPF`

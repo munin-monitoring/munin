@@ -3,6 +3,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.12  2004/04/27 21:18:33  jimmyo
+# Fixed a problem in the node when running as a non-root user and using sudo to run the plugins (Deb#236694).
+#
 # Revision 1.11  2004/02/05 18:05:59  jimmyo
 # Improved timeout-handling in node (Deb#224480).
 #
@@ -211,8 +214,6 @@ $FQDN ||= &get_fq_hostname;
 
 $ENV{FQDN}=$FQDN;
 
-&load_services;
-
 MyPackage->run(conf_file => $conffile,
 	       pid_file => "@@STATEDIR@@/munin-node.pid");
 exit;
@@ -221,6 +222,13 @@ exit;
 
 
 ### over-ridden subs below
+
+sub pre_loop_hook {
+    my $self = shift;
+	print STDERR "In pre_loop_hook.\n" if $DEBUG;
+    &load_services;
+    $self->SUPER::pre_loop_hook;
+}
 
 sub show_version {
   print "munins node on $FQDN version: $VERSION\n"
@@ -282,7 +290,7 @@ FILES:
 	next if (! -x "$servicedir/$file"); # File not executeable
 	print "file: '$file'\n" if $DEBUG;
 	$services{$file}=1;
-	my @rows = &run_service($file,"config");
+	my @rows = &run_service($file,"config", 1);
 	my $node = &get_var (\%sconf, $file, 'host_name') || $FQDN;
 
 	for my $row (@rows) {
@@ -334,7 +342,7 @@ sub reap_children {
 }
 
 sub run_service {
-  my ($service,$command) = @_;
+  my ($service,$command,$autoreap) = @_;
   $command ||="";
   my @lines = ();;
   my $timed_out = 0;
@@ -356,7 +364,19 @@ sub run_service {
       }
       unless (close CHILD)
       {
-	  logger ("Plugin \"$service\" exited with status $?.");
+	  if ($!)
+	  {
+	      # If Net::Server::Fork is currently taking care of reaping,
+	      # we get false errors. Filter them out.
+	      unless (defined $autoreap and $autoreap) 
+	      {
+		  logger ("Error while executing plugin \"$service\": $!");
+	      }
+	  }
+	  else
+	  {
+	      logger ("Plugin \"$service\" exited with status $?. --@lines--");
+	  }
       }
     }
     else {
@@ -405,7 +425,7 @@ sub run_service {
 	{
 	    print "# Error: unsafe permissions. Bailing out.";
 	    logger ("Error: unsafe permissions. Bailing out.");
-	    exit 1;
+	    exit 2;
 	}
 
 	# Setting environment...
@@ -433,12 +453,13 @@ sub run_service {
 		    push (@run, $t);
 		}
 	    }
-	    print STDERR "About to run \"", join (' ', @run), "\"\n" if $DEBUG;
-	    print "About to run \"", join (' ', @run), "\"\n" if $DEBUG;
+	    print STDERR "# About to run \"", join (' ', @run), "\"\n" if $DEBUG;
+	    print "# About to run \"", join (' ', @run), "\"\n" if $DEBUG;
 	    exec (@run) if @run;
 	}
 	else
 	{
+	    print "# Execing...\n" if $DEBUG;
 	    exec ("$servicedir/$service", $command);
 	}
       }

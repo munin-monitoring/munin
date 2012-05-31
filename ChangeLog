@@ -1,3 +1,47 @@
+munin (1.0.0pre4)
+
+  * Munin-update now properly ignores node with "update no".
+  * The generic/apache_* plugins now have defined max values.
+  * New plugins generic/{sendmail*,amavis,apc_envunit} contributed by Xavier
+    Redon.
+  * Turned off scaling of values for cpu-graphs (no more nano-percentages).
+  * New plugin linux/iostat_ios to graph the number of I/O operations.
+    Contributed by Per A. Buer.
+  * Added user configuration for generic/postfix* (SF#895680).
+  * Fixed links in HTML templates (Deb#236792).
+  * Fixed broken autoconf in apache-* plugins (Deb#236144).
+  * Fixed bug in mysql-plugins (Deb#233762).
+  * Fixed a problem in the node when running as a non-root user and
+    using sudo to run the plugins (Deb#236694).
+  * Clarified the vlabels in the apache-plugins (Deb#238594).
+  * Patched temp and voltage parts of linux-pugin sensors_* with better 
+    regexp (Deb#245289, SF#906868).
+  * Changed default ARCH variable in Makefile.config, to support
+    older tr-s (SF#898814).
+  * Make "graph_scale no" affect y-axis as well as numbers below the graph
+    (Deb#236834).
+  * New SNMP plugins: df, if_err, processes, fc_if (fibre-channel), fc_if_err,
+    users, load.
+  * Cleaned up Solaris plugins (SF#944389, ++)
+  * New logo by Bianca Pfingsten, sponsored by Mediahaus Biering Grafischer
+    Betrieb GmbH. (Thanks :-)
+  * Made solaris plugin fs_df work without GNU df (SF#944389).
+  * New solaris plugin temperature, by Richard van den Berg.
+  * Two new linux firewall plugins; fw_packets (by S. Banerian),
+    fw_conntrack (by Nicolai Langfeldt), and fw_forwarded_local (by Xavier).
+  * Modified sunos/cpu, linux/cpu and freebsd/cpu to take "scaleto100"-
+    parameter.
+  * Added patch to contrib-plugin linux/nfsd, to graph rpc count (Alexandre
+    Dupouy).
+  * Added plugin linux/nfs_client, contributed by Alexandre Dupouy.
+  * Added plugin ipac-ng, contributed by Arturas Slajus.
+  * Added plugin hddtemp2, contributred by Andrew Radke, modified by Lupe
+    Christoph.
+  * Added Folding@home plugin, contributed by Xavier.
+  * Fixed problem with sunos/memory, when memory was reported in gigabytes
+    (SF#930964)
+  * New plugin (pm3users) and a bunch of patches from Jacques Caruso.
+
 munin (1.0.0pre3)
 
   * Munin-graph had a perl 5.005_03 compatabilty problem, which slipped
@@ -57,7 +101,7 @@ munin (1.0.0pre2)
   * Bugfix; munin-html wrote bad html, as reported by Adam Heath. (Deb#230322)
   * Rewrite of linux/iostat by Mike Fedyk (Deb##223373,224113).
   * Linux/cpu now graphs all values on a 2.6 kernel (Deb#227946).
-  * Added new plugin linux/nfsd, contributed by Alexandre Dupouy.
+  * Added new plugins linux/nfsd and acpi, contributed by Alexandre Dupouy.
 
 munin (1.0.0pre1)
 

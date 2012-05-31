@@ -1,0 +1,59 @@
+#!/bin/sh
+#
+# Plugin created by Alexandre Dupouy, with the assistance of Mike Fedyk
+#
+# $Log$
+# Revision 1.2  2004/05/06 21:55:18  jimmyo
+# Added patch to contrib-plugin linux/nfsd, to graph rpc count (Alexandre Dupouy).
+#
+# Revision 1.1  2004/02/18 18:41:54  jimmyo
+# Plugin created by Alexandre Dupouy, with the assistance of Mike Fedyk
+#
+#
+#%# family=contrib
+#%# capabilities=autoconf
+
+NFSD=/proc/net/rpc/nfsd
+
+proc="getattr setattr lookup access readlink read write create mkdir symlink mknod remove rmdir rename link readdir readdirplus fsstat fsinfo pathconf commit"
+rpc="rpc"
+
+if [ "$1" = "autoconf" ]; then
+	if [ -x "$NFSD" ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 1
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title NFS Server'
+	echo 'graph_args --base 1000 -l 0'
+	echo 'graph_vlabel proc detail'
+	for a in $rpc ; do echo "$a.label $a" ; echo "$a.type COUNTER" ; done
+	for a in $proc ; do echo "$a.label $a" ; echo "$a.type COUNTER" ; done
+	exit 0
+fi
+
+i=2;
+
+for a in $rpc; do
+	echo -n "$a.value "
+	grep rpc /proc/net/rpc/nfsd \
+		| cut -f $i -d ' ' \
+		| awk '{print $1}'
+		i=$(expr $i + 1)
+done
+
+i=4;
+
+for a in $proc; do
+	echo -n "$a.value "
+	grep proc3 /proc/net/rpc/nfsd \
+		| cut -f $i -d ' ' \
+		| awk '{print $1}'
+	i=$(expr $i + 1)
+done

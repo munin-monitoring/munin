@@ -1,8 +1,8 @@
 #! /bin/sh
 #
 # $Log$
-# Revision 1.1  2004/02/01 18:32:33  lupe
-# Stop process before deinstall, offer to remove group "munin" after deinstall.
+# Revision 1.2  2004/02/06 18:49:58  lupe
+# Fixes for pkg_add compatibility.
 #
 #
 
@@ -36,8 +36,8 @@ yesno() {
 }
 
 stop_process() {
-    if [ -x /usr/local/etc/rc.d/munin-node.sh ]; then
-	/usr/local/etc/rc.d/munin-node.sh stop
+    if [ -x ${PKG_PREFIX}/etc/rc.d/munin-node.sh ]; then
+	${PKG_PREFIX}/etc/rc.d/munin-node.sh stop
     fi
 }
 

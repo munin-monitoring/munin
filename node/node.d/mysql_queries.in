@@ -5,6 +5,9 @@
 # Copyright 2003-2004 - Per Andreas Buer
 #
 # $Log$
+# Revision 1.5  2004/04/27 18:58:53  jimmyo
+# Fixed bug in mysql-plugins (Deb#233762).
+#
 # Revision 1.4  2004/01/29 18:49:55  jimmyo
 # Bugfix in plugin mysql_queries - insertions were no longer graphed. (SF#881483).
 #
@@ -96,6 +99,7 @@ graph_total total\n");
         my $title = $WANTED{$key};
         print("$title.label ${title}\n",
               "$title.type COUNTER\n",
+              "$title.max 500000\n",
               "$title.draw ", ($num) ? "STACK" : "AREA" ,  "\n",
              );
         $num++;

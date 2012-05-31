@@ -2,31 +2,325 @@
 
 use strict;
 use Net::SNMP;
+use Socket;
 
-my $DEBUG = 1;
+my $DEBUG = 0;
+
+my $config     = "../build/node/munin-node.conf";
+#my $config     = "/etc/munin/munin-node.conf";
+#my $servicedir = "/etc/munin/plugins";
+my $servicedir = ".";
+my $libdir     = "../build/node/node.d/";
+#my $bindir     = "/usr/sbin/";
+my $bindir     = "../build/node/";
 
 my $sysName      = "1.3.6.1.2.1.1.5.0";
 my $name;
 
-my ($session, $error) = Net::SNMP->session(
-		-hostname  => shift || 'localhost',
-		-community => shift || 'public',
-		-port      => shift || 161
-	);
-
-if (!defined ($session))
-{
-	die "Croaking: $error";
-}
-
+my $session;
+my $error;
 my $response;
-if (!defined ($response = $session->get_request($sysName)))
-{
-	die "Croaking: " . $session->error();
-}
-$name = $response->{$sysName};
 
-interfaces ($name);
+my @plugins = ("if", "if_err", "fc_if", "fc_if_err", "df", "processes", "users", "load");
+
+
+my %plugconf = ();
+my %hostconf = ();
+
+foreach my $plugin (@plugins)
+{
+	fetch_plugin_config ($plugin, \%plugconf);
+}
+
+
+while (my $addr = shift)
+{
+	my $num = 32;
+	if ($addr =~ /([^\/]+)\/(\d+)/)
+	{   
+		$num  = $2;
+		$addr = $1;
+	}   
+	$num = 32 - $num;
+	$num = 2 ** $num;
+	print "# Doing $addr / $num\n" if $DEBUG;
+	for (my $i = 0; $i < $num; $i++)
+	{
+		print "# Doing $addr -> $i...\n" if $DEBUG;
+		my $tmpaddr = $addr;
+		if ($tmpaddr =~ /(\d+)\.(\d+)\.(\d+)\.(\d+)/)
+		{
+			my @tmpaddr = split (/\./, $tmpaddr);
+			$tmpaddr[3] += $i;
+			$tmpaddr = gethostbyaddr (inet_aton (join ('.', @tmpaddr)), AF_INET);
+			$tmpaddr ||= join ('.', @tmpaddr);
+		}
+		print "# ($tmpaddr)\n" if $DEBUG;
+		do_host ("$tmpaddr", "public");
+	}
+}
+
+
+#interfaces ($name);
+
+sub do_host
+{
+	my $host = shift;
+	my $comm = shift;
+	my $port = 161;
+
+	if ($host =~ /([^:]+):(\d+)/)
+	{
+		$host = $1;
+		$port = $2;
+	}
+
+	($session, $error) = Net::SNMP->session(
+			-hostname  => $host,
+			-community => $comm,
+			-port      => shift || 161
+		);
+
+	if (!defined ($session))
+	{
+		print "# Dropping host \"$host\": $error" . "\n";
+		return 0;
+	}
+
+	if (!defined ($response = $session->get_request($sysName)))
+	{
+		print "# Dropping host \"$host\": " . $session->error() . "\n";
+		return 0;
+	}
+	$name = $response->{$sysName};
+
+	foreach my $plugin (@plugins)
+	{
+		my $auto = snmp_autoconf_plugin ($plugin, \%plugconf, \%hostconf, $host);
+
+		if (defined $auto)
+		{
+			if ($plugconf{$plugin}->{wild})
+			{
+				foreach my $id (@{$auto})
+				{
+					print "ln -s $libdir/snmp__$plugin", "_ $servicedir/snmp_$host", "_$plugin", "_$id\n";
+				}
+			}
+			else
+			{
+				print "ln -s $libdir/snmp__$plugin", " $servicedir/snmp_$host", "_$plugin\n";
+			}
+		}
+	}
+}
+
+sub snmp_autoconf_plugin
+{
+	my $plugname = shift;
+	my $plugconf = shift;
+	my $hostconf = shift;
+	my $host     = shift;
+
+	print "# Running autoconf on $plugname for $host...\n" if $DEBUG;
+
+    # First round of requirements
+	if (defined $plugconf->{$plugname}->{req})
+	{
+		print "# Checking requirements...\n" if $DEBUG;
+		foreach my $req (@{$plugconf->{$plugname}->{req}})
+		{
+			if ($req->[0] =~ /\.$/)
+			{
+				print "# Delaying testing of $req->[0], as we need the indexes first.\n" if $DEBUG;
+				next;
+			}
+			my $snmp_val = snmp_get_single ($session, $req->[0]);
+			if (!defined $snmp_val or $snmp_val !~ /$req->[1]/)
+			{
+				print "# Nope. Duh.\n" if $DEBUG;
+				return undef;
+			}
+		}
+	}
+
+    # We need the number of "things" to autoconf
+
+	my $num = 1;
+	if (defined $plugconf->{$plugname}->{num})
+	{
+		$num = snmp_get_single ($session, $plugconf->{$plugname}->{num});
+		return undef if !defined $num;
+	}
+	print "# Number of items to autoconf is $num...\n" if $DEBUG;
+
+    # Then the index base
+	my $indexes;
+	if (defined $plugconf->{$plugname}->{ind})
+	{
+		$indexes = snmp_get_index ($plugconf->{$plugname}->{ind}, $num);
+		return undef if !defined $indexes;
+	}
+	else
+	{
+		$indexes->{0} = 1;
+	}
+	print "# Got indexes: ", join (',', keys (%{$indexes})), "\n" if $DEBUG;
+
+	return undef unless scalar keys %{$indexes};
+
+    # Second round of requirements (now that we have the indexes)
+	if (defined $plugconf->{$plugname}->{req})
+	{
+		print "# Checking requirements...\n" if $DEBUG;
+		foreach my $req (@{$plugconf->{$plugname}->{req}})
+		{
+			if ($req->[0] !~ /\.$/)
+			{
+				print "# Already tested of $req->[0], before we got hold of the indexes.\n" if $DEBUG;
+				next;
+			}
+			
+			foreach my $key (keys %$indexes)
+			{
+				my $snmp_val = snmp_get_single ($session, $req->[0] . $key);
+				if (!defined $snmp_val or $snmp_val !~ /$req->[1]/)
+				{
+					print "# Nope. Deleting $key from possible solutions.\n" if $DEBUG;
+					delete $indexes->{$key}; # Disable
+				}
+			}
+		}
+	}
+
+	my @tmparr = sort keys %$indexes;
+	return \@tmparr;
+}
+
+sub fetch_plugin_config
+{
+	my $plugname = shift;
+	my $plugconf = shift;
+	my $plugin   = "snmp__" . $plugname;
+
+	if (-x "$libdir/$plugin" . "_")
+	{
+		$plugin .= "_";
+		$plugconf->{$plugname}->{wild} = 1;
+	}
+	elsif (-x "$libdir/$plugin")
+	{
+		$plugconf->{$plugname}->{wild} = 0;
+	}
+	else
+	{
+		print "# Skipping $plugname: Couldn't find plugin \"$libdir/$plugin\".\n" if $DEBUG;
+		return 0;
+	}
+
+	print "# SNMPconfing plugin \"$plugname\" ( $libdir/$plugin )\n" if $DEBUG;
+
+	my $fork = open (PLUG, "-|");
+
+	if ($fork == -1)
+	{
+		die "# ERROR: Unable to fork: $!";
+	}
+	elsif ($fork == 0) # Child
+	{
+		close (STDERR);
+		open (STDERR, ">&STDOUT");
+		exec ("$bindir/munin-run", "--config", $config, "--servicedir", $libdir, $plugin, "snmpconf");
+	}
+	else
+	{
+		while (<PLUG>)
+		{
+			chomp;
+			s/^\s+//;
+			s/\s+$//;
+			my ($a, $b) = split (/\s+/, $_, 2);
+			next unless defined $a;
+
+			if ($a =~ /^require$/i and defined $b)
+			{
+				my ($oid, $val) = split (/\s+/, $b);
+				if (! defined $val)
+				{
+					$val = ".*";
+				}
+				push (@{$plugconf->{$plugname}->{req}}, [$oid, $val]);
+				print "# Registered $plugname  requirement: $oid =~ /$val/\n" if $DEBUG;
+			}
+			elsif ($a =~ /^index$/i and defined $b)
+			{
+				$plugconf->{$plugname}->{ind} = $b;
+				print "# Registered $plugname  index      : $b\n" if $DEBUG;
+			}
+			elsif ($a =~ /^number$/i and defined $b)
+			{
+				$plugconf->{$plugname}->{num} = $b;
+				print "# Registered $plugname  number     : $b\n" if $DEBUG;
+			}
+			elsif ($a =~ /^env\.(\S+)$/)
+			{
+				$plugconf->{$plugname}->{env}->{$1} = $b;
+				print "# Registered $plugname  env        : $b\n" if $DEBUG;
+			}
+			else
+			{
+				print "# Couldn't parse line line $_\n";
+			}
+		}
+	}
+	return 0;
+}
+
+sub snmp_get_single
+{
+	my $session = shift;
+	my $oid     = shift;
+
+	if (!defined ($response = $session->get_request($oid)))
+	{
+		return undef;
+	}
+	return $response->{$oid};
+}
+
+sub snmp_get_index
+{
+	my $oid   = shift;
+	my $num   = shift;
+	my $ret   = $oid . "0";
+	my $rhash = {};
+
+	$num++; # Avaya switch b0rkenness...
+
+	for (my $i = 0; $i < $num; $i++)
+	{
+		if ($i == 0)
+		{
+			print "# Checking for $ret\n" if $DEBUG;
+			$response = $session->get_request($ret);
+		}
+		if ($i or !defined $response)
+		{
+			print "# Checking for sibling of $ret\n" if $DEBUG;
+			$response = $session->get_next_request($ret);
+		}
+		if (!$response)
+		{
+			return undef;
+		}
+		my @keys = keys %$response;
+		$ret = $keys[0];
+		last unless ($ret =~ /^$oid\d+$/);
+		print "# Index $i: ", join ('|', @keys), "\n" if $DEBUG;
+		$rhash->{$response->{$ret}} = 1;
+	}
+	return $rhash;
+}
 
 sub interfaces
 {
@@ -80,7 +374,7 @@ sub interfaces
 			die "Croaking: ", $session->error();
 		}
 		my @keys = keys %$response;
-		print "# Index $key: ", join ('|', @keys), ": ", $response->{$keys[0]}, "\n" if $DEBUG;
+		print "# Speed $key: ", join ('|', @keys), ": ", $response->{$keys[0]}, "\n" if $DEBUG;
 		if ($response->{$keys[0]} == 0)
 		{
 			delete $interfaces{$key};
@@ -95,7 +389,7 @@ sub interfaces
 			die "Croaking: ", $session->error();
 		}
 		my @keys = keys %$response;
-		print "# Index $key: ", join ('|', @keys), ": ", $response->{$keys[0]}, "\n" if $DEBUG;
+		print "# Type  $key: ", join ('|', @keys), ": ", $response->{$keys[0]}, "\n" if $DEBUG;
 		if ($response->{$keys[0]} != 6)
 		{
 			delete $interfaces{$key};

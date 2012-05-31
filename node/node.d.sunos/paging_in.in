@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.2  2004/04/30 16:43:00  jimmyo
+# Cleaned up Solaris plugins.
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -44,12 +47,15 @@ if [ "$1" = "config" ]; then
 	echo 'pgin.label pgin'
 	echo 'pgin.draw LINE2'
 	echo 'pgin.type COUNTER'
+	echo 'pgin.max 1000000000'
 	echo 'pgpgin.label pgpgin'
 	echo 'pgpgin.draw LINE2'
 	echo 'pgpgin.type COUNTER'
+	echo 'pgpgin.max 1000000000'
 	echo 'reclaim.label reclaim'
 	echo 'reclaim.draw LINE2'
 	echo 'reclaim.type COUNTER'
+	echo 'reclaim.max 1000000000'
 	exit 0
 fi
 

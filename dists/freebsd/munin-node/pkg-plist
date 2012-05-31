@@ -1,57 +1,63 @@
 etc/munin/munin-node.conf
 etc/munin/plugin-conf.d/plugins.conf
 etc/rc.d/munin-node.sh
-lib/plugins/apache_accesses
-lib/plugins/apache_processes
-lib/plugins/apache_volume
-lib/plugins/bind9
-lib/plugins/cpu
-lib/plugins/df
-lib/plugins/df_inode
-lib/plugins/exim_mailqueue
-lib/plugins/exim_mailstats
-lib/plugins/hddtemp
-lib/plugins/if_
-lib/plugins/if_errcoll_
-lib/plugins/ircu
-lib/plugins/load
-lib/plugins/mailman
-lib/plugins/memory
-lib/plugins/munin_graph
-lib/plugins/munin_update
-lib/plugins/mysql_bytes
-lib/plugins/mysql_isam_space_
-lib/plugins/mysql_queries
-lib/plugins/mysql_slowqueries
-lib/plugins/mysql_threads
-lib/plugins/named
-lib/plugins/netstat
-lib/plugins/open_files
-lib/plugins/plugins.history
-lib/plugins/pop_stats
-lib/plugins/postfix_mailqueue
-lib/plugins/postfix_mailstats
-lib/plugins/postfix_mailvolume
-lib/plugins/processes
-lib/plugins/ps_
-lib/plugins/psu_
-lib/plugins/samba
-lib/plugins/snmp__if_
-lib/plugins/spamstats
-lib/plugins/squid_cache
-lib/plugins/squid_icp
-lib/plugins/squid_requests
-lib/plugins/squid_traffic
-lib/plugins/surfboard
-lib/plugins/swap
-lib/plugins/sybase_space
-lib/plugins/vmstat
 sbin/munin-node
 sbin/munin-node-configure
 sbin/munin-run
-@unexec rmdir %D/var/munin/plugin-state
-@unexec rmdir %D/var/munin
-@dirrm lib/plugins
-@unexec rmdir %D/etc/munin/plugins
-@unexec rmdir %D/etc/munin/plugin-conf.d
-@unexec rmdir %D/etc/munin
+share/munin/plugins/apache_accesses
+share/munin/plugins/apache_processes
+share/munin/plugins/apache_volume
+share/munin/plugins/bind9
+share/munin/plugins/cpu
+share/munin/plugins/df
+share/munin/plugins/df_inode
+share/munin/plugins/exim_mailqueue
+share/munin/plugins/exim_mailstats
+share/munin/plugins/hddtemp
+share/munin/plugins/if_
+share/munin/plugins/if_errcoll_
+share/munin/plugins/ircu
+share/munin/plugins/load
+share/munin/plugins/mailman
+share/munin/plugins/memory
+share/munin/plugins/multips
+share/munin/plugins/munin_graph
+share/munin/plugins/munin_update
+share/munin/plugins/mysql_bytes
+share/munin/plugins/mysql_isam_space_
+share/munin/plugins/mysql_queries
+share/munin/plugins/mysql_slowqueries
+share/munin/plugins/mysql_threads
+share/munin/plugins/named
+share/munin/plugins/netstat
+share/munin/plugins/open_files
+share/munin/plugins/plugins.history
+share/munin/plugins/pop_stats
+share/munin/plugins/postfix_mailqueue
+share/munin/plugins/postfix_mailstats
+share/munin/plugins/postfix_mailvolume
+share/munin/plugins/processes
+share/munin/plugins/ps_
+share/munin/plugins/psu_
+share/munin/plugins/samba
+share/munin/plugins/snmp__if_
+share/munin/plugins/spamstats
+share/munin/plugins/squid_cache
+share/munin/plugins/squid_icp
+share/munin/plugins/squid_requests
+share/munin/plugins/squid_traffic
+share/munin/plugins/surfboard
+share/munin/plugins/swap
+share/munin/plugins/sybase_space
+share/munin/plugins/vmstat
+@unexec rmdir %D/var/munin/plugin-state 2>/dev/null || true
+@unexec rmdir %D/var/munin 2>/dev/null || true
+@dirrm share/munin/plugins
+@unexec rmdir %D/share/munin 2>/dev/null || true
+@unexec rm -rf %D/etc/munin/plugins 2>/dev/null || true
+@unexec rmdir %D/etc/munin/plugin-conf.d 2>/dev/null || true
+@unexec rmdir %D/etc/munin 2>/dev/null || true
+@unexec echo "If you want to *completely* remove munin-node, you have to"
+@unexec echo "    rm -rf %D/var/munin and %D/etc/munin %D/www/data/munin"
+@unexec echo "They have to be left on the system because you may be performing"
+@unexec echo "an update. This process can't tell."

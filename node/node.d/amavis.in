@@ -1,0 +1,53 @@
+#!/bin/sh
+#
+# Plugin to monitor the amavis mail filter.
+#
+# Usage: Place in /etc/lrrd/client.d/ (or link it there  using ln -s)
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional)
+#
+# Config variables:
+#
+#       amavislog    - file where amavis logs are written
+#
+
+TEMP_FILE=/tmp/lrrd-amavis
+AMAVIS_LOG=/var/log/mail/mail.info
+LOGTAIL=`which logtail`
+
+if [ "$amavislog"  ]; then AMAVIS_LOG=$amavislog ; fi
+
+if [ "$1" = "autoconf" ]; then
+        if [ -f ${AMAVIS_LOG} -a -x ${LOGTAIL} ] ; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 1
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+	echo 'graph_title Amavis filter statistics'
+	echo 'graph_order virus spam_maybe spam_sure total'
+	echo 'graph_vlabel nb'
+	echo 'virus.label virus'
+	echo 'spam_maybe.label probably spam'
+	echo 'spam_sure.label surely spam'
+	echo 'total.label total'
+	exit 0
+fi
+
+logtail ${AMAVIS_LOG} | grep 'amavis\[.*\]:' > ${TEMP_FILE}
+total=`cat ${TEMP_FILE} | wc -l`
+virus=`grep INFECTED ${TEMP_FILE} | wc -l`
+spamm=`grep 'Passed.*Hits: 1[0-9][.]' ${TEMP_FILE} | wc -l`
+spams=`grep 'Passed.*Hits: [2-9][0-9][0-9]*[.]' ${TEMP_FILE} | wc -l`
+
+echo "virus.value ${virus}"
+echo "spam_maybe.value ${spamm}"
+echo "spam_sure.value ${spams}"
+echo "total.value ${total}"

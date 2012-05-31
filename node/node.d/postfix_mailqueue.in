@@ -5,6 +5,9 @@
 # Contributed by Nicolai Langfeldt
 # 
 # $Log$
+# Revision 1.2  2004/05/09 21:11:15  jimmyo
+# New plugin (pm3users) and a bunch of patches from Jacques Caruso.
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -63,7 +66,7 @@ cd $SPOOLDIR >/dev/null 2>/dev/null || {
 
 cat <<EOF
 deferred.value `(test -d deferred && find deferred -type f ) | wc -l`
-active.value `(test -d active && find active -type f ) | wc -l` 
+active.value `(test -d active && find active -type f ) | wc -l`
 maildrop.value `(test -d maildrop && find maildrop -type f ) | wc -l`
 incoming.value `(test -d incoming && find incoming -type f ) | wc -l`
 corrupt.value `(test -d corrupt && find corrupt -type f ) | wc -l`

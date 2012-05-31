@@ -1,0 +1,49 @@
+#!/bin/sh
+#
+#%# family=contrib
+#%# capabilities=autoconf
+
+NFS=/proc/net/rpc/nfs
+
+proc="getattr setattr lookup access readlink read write create mkdir symlink mknod remove rmdir rename link readdir readdirplus fsstat fsinfo pathconf commit"
+rpc="rpc"
+
+if [ "$1" = "autoconf" ]; then
+	if [ -x "$NFS" ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 1
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title NFS Client'
+	echo 'graph_args --base 1000 -l 0'
+	echo 'graph_vlabel proc detail'
+	for a in $rpc ; do echo "$a.label $a" ; echo "$a.type COUNTER" ; done
+	for a in $proc ; do echo "$a.label $a" ; echo "$a.type COUNTER" ; done
+	exit 0
+fi
+
+i=2;
+
+for a in $rpc; do
+	echo -n "$a.value "
+	grep rpc $NFS \
+		| cut -f $i -d ' ' \
+		| awk '{print $1}'
+	i=$(expr $i + 1)
+done
+
+i=4;
+
+for a in $proc; do
+	echo -n "$a.value "
+	grep proc3 $NFS \
+		| cut -f $i -d ' ' \
+		| awk '{print $1}'
+	i=$(expr $i + 1)
+done

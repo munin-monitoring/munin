@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.2  2004/04/30 16:43:00  jimmyo
+# Cleaned up Solaris plugins.
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -44,15 +47,19 @@ if [ "$1" = "config" ]; then
 	echo 'pgout.label pgout'
 	echo 'pgout.draw LINE2'
 	echo 'pgout.type COUNTER'
+	echo 'pgout.max 1000000000'
 	echo 'pgpgout.label pgpgout'
 	echo 'pgpgout.draw LINE2'
 	echo 'pgpgout.type COUNTER'
+	echo 'pgpgout.max 1000000000'
 	echo 'pgfree.label pgfree'
 	echo 'pgfree.draw LINE2'
 	echo 'pgfree.type COUNTER'
+	echo 'pgfree.max 1000000000'
 	echo 'scan.label scan'
 	echo 'scan.draw LINE2'
 	echo 'scan.type COUNTER'
+	echo 'scan.max 1000000000'
 	exit 0
 fi
 
