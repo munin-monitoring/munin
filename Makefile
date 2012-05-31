@@ -36,7 +36,7 @@ install-main: build
 	$(INSTALL) -m 0644 server/logo.png $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/style.css $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/definitions.html $(CONFDIR)/templates/
-	$(INSTALL) -m 0755 server/VeraMono.ttf $(LIBDIR)/
+	$(INSTALL) -m 0644 server/VeraMono.ttf $(LIBDIR)/
 
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/server/munin.conf $(CONFDIR)/
 
@@ -57,6 +57,7 @@ install-node-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(SBINDIR)/
 
 install-munindoc: build 
+	mkdir -p $(BINDIR)
 	$(INSTALL) -m 0755 build/node/munindoc $(BINDIR)/ 
 	
 install-node-non-snmp: build

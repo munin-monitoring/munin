@@ -1,3 +1,19 @@
+munin (1.2.6)
+	* [r1631] / [r1632] node/node.d.linux/cpu.in: merge r1025 (Scale to
+	  >10 CPUs), closes Debian #485830 / Calculate $MAX with number of cpu
+	  multiplied with 100 ( instead of 5000 wich was the old fix value).
+
+	* [r1629] node/node.d/hddtemp_smartctl.in: Added a config example
+	  for cciss controllers.
+
+	* [r1624] Makefile: Create $(BINDIR) in the make target
+	  'install-munindoc'. This prevents an error during the
+	  installation of munin-node (see Trac #596).
+
+	* [r1621] Makefile: Don't install VeraMono.ttf as executable (with
+	  mode 755). This removes a lintian warning at the debian package
+	  build.
+
 munin (1.2.6rc2)
 	* [r1599] server/Munin.pm.in: added "ok" and "unknown" to @legal,
 	  this is the missing part from r1469 (merged r1288 from trunk)

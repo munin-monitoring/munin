@@ -124,3 +124,8 @@ generic/hddtemp_smartctl
 [1.2.3]
 [1.2.4]
 [1.2.5]
+[1.2.6rc0]
+generic/ntp_offset
+[1.2.6rc1]
+[1.2.6rc2]
+[1.2.6]
