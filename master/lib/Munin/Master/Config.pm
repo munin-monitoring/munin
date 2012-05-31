@@ -143,8 +143,7 @@ my %booleans = map {$_ => 1} qw(
 		dbdir            => $Munin::Common::Defaults::MUNIN_DBDIR,
 		debug            => 0,
 		fork             => 1,
-		rrdcached		 => 0,
-		rrdcached_socket => "/var/run/rrdcached.sock",
+		rrdcached_socket => "", # default is unused
 		graph_data_size  => 'normal',
 		groups           => {},
 		local_address    => 0,
@@ -369,8 +368,9 @@ sub _concat_config_line_ok {
     };
     if ($EVAL_ERROR) {
 	# _split_config_line_ok already logged the problem.
-	ERROR "[ERROR] Error occured in under [$prefix] in the configuration.";
-	die "[ERROR] Error occured in under [$prefix] in the configuration.  Please refer to the log if details are missing here.\n";
+	my $err_msg = "[ERROR] config error under [$prefix] for '$key $value' : $EVAL_ERROR";
+	ERROR $err_msg;
+	die $err_msg;
     }
 
     return $longkey;

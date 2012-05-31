@@ -205,6 +205,8 @@ sub _handle_worker_result {
     my ($worker_id, $time_used, $service_configs) 
         = ($res->[0], $res->[1]{time_used}, $res->[1]{service_configs});
 
+    my $update_time = sprintf("%.2f", $time_used);
+    INFO "[INFO]: Munin-update finished for node $worker_id ($update_time sec)";
     if (! defined $self->{STATS} ) {
 	# This is may only be the case when we get connection refused
 	ERROR "[BUG!] Did not collect any stats for $worker_id.  If this message appears in your logs a lot please email munin-users.  Thanks.";

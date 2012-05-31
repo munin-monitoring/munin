@@ -159,6 +159,9 @@ my $only_fqn = '';
 
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
 
+# RRD param for --daemon
+my @rrdcached_params;
+
 my $running     = 0;
 my $max_running = 6;
 my $do_fork     = 1;
@@ -295,6 +298,16 @@ sub graph_startup {
     my $palette = &munin_get($config, "palette", "default");
 
     $max_running = &munin_get($config, "max_graph_jobs", $max_running);
+
+    if ($config->{"rrdcached_socket"}) { 
+	    if ($RRDs::VERSION >= 1.3){
+		    push @rrdcached_params, "--daemon";
+		    push @rrdcached_params, $config->{"rrdcached_socket"}; 
+	    } else { 
+		    ERROR "[ERROR] RRDCached feature ignored: RRD version must be at least 1.3. Version found: " . $RRDs::VERSION; 
+	    }
+    }
+
 
     if ($max_running == 0) {
         $do_fork = 0;
@@ -585,7 +598,10 @@ sub expand_specials {
             my $src   = munin_get_node_partialpath($service, $spath);
             my $sname = munin_get_node_name($src);
 
-            next unless defined $src;
+            if(!defined $src) {
+	    	ERROR "[ERROR] Failed to find $fname source at $spath, skipping field";
+		next;
+	    }
             DEBUG "[DEBUG] Copying settings from $sname to $fname.";
 
             foreach my $foption ("draw", "type", "rrdfile", "fieldname", "info")
@@ -904,7 +920,7 @@ sub process_service {
     # Array to keep negative data until we're finished with positive.
     my @rrd_negatives = ();
 
-    my $filename = "unknown";
+    my $filename;
     my %total_pos;
     my %total_neg;
     my $autostacking = 0;
@@ -957,7 +973,13 @@ sub process_service {
         # Getting name of rrd file
         $filename = munin_get_rrd_filename($field, $path);
 
-        my $update = RRDs::last($filename);
+	if(!defined $filename) {
+		ERROR "[ERROR] Failed getting filename for $path, skipping field";
+		next;
+	}
+	# Here it is OK to flush the rrdcached, since we'll flush it anyway
+	# with graph
+        my $update = RRDs::last(@rrdcached_params, $filename);
         $update = 0 if !defined $update;
         if ($update > $lastupdate) {
             $lastupdate = $update;
@@ -1365,14 +1387,14 @@ sub process_service {
 		push @complete, "--lower-limit", $lower_limit;
 	}
 
-	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n";
+	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
 	$nb_graphs_drawn ++;
-        RRDs::graph(@complete);
+        RRDs::graph(@rrdcached_params, @complete);
         if (my $ERROR = RRDs::error) {
             ERROR "[RRD ERROR] Unable to graph $picfilename : $ERROR";
             # ALWAYS dumps the cmd used when an error occurs.
             # Otherwise, it will be difficult to debug post-mortem
-            ERROR "[RRD ERROR] rrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n";
+            ERROR "[RRD ERROR] rrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
         }
         else {
 
@@ -1489,7 +1511,7 @@ sub process_service {
             munin_mkdir_p($picdirname, oct(777));
 
 	    $nb_graphs_drawn ++;
-            RRDs::graph(@rrd_sum);
+            RRDs::graph(@rrdcached_params, @rrd_sum);
 
             if (my $ERROR = RRDs::error) {
                 ERROR "[RRD ERROR(sum)] Unable to graph "
@@ -1538,6 +1560,13 @@ sub handle_trends {
     foreach my $field (@{munin_find_field($service, "label")}) {
         my $fieldname = munin_get_node_name($field);
 	my $colour = $single_colour;
+
+	# Skip virtual fieldnames, otherwise beware of $hash->{foo}{bar}. 
+	#
+	# On a sidenote, what's the output of the following code ?
+	# perl -e '$a = {}; if ($a->{foo}{bar}) { print "Found Foo/Bar\n"; } \
+	#        if ($a->{foo}) { print "Found Foo\n"; }'
+	next if ! defined $service->{$fieldname};
 
         if (defined $service->{$fieldname}{'colour'}) {
             $colour = "$service->{$fieldname}{'colour'}66";

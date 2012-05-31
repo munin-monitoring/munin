@@ -28,8 +28,7 @@ use Scalar::Util qw(isweak weaken);
 our (@ISA, @EXPORT);
 
 @ISA = ('Exporter');
-@EXPORT = ('munin_trend',
-	   'munin_fetch',
+@EXPORT = (
 	   'munin_nscasend',
 	   'munin_createlock',
 	   'munin_removelock',
@@ -155,28 +154,6 @@ sub auto_weaken {
 	# print "items: $items, weakened: $weakened\n";
 	return @_;
 }
-
-
-
-sub munin_trend {
-    my (@array) = @_;
-    return ($array[$#array] - $array[0]);
-}
-
-
-sub munin_fetch {
-    my ($file,$last,$type) = @_;
-    my ($start,$step,$names,$data) = RRDs::fetch $file,$type || "AVERAGE";
-    unless (defined $data)
-    {
-        WARN ("[WARNING] Could not fetch data from $file(".($type||"AVERAGE")."): ". RRDs::error);
-        return;
-    }
-    my @array = map { @$_[0] } splice(@$data, $#$data - ($last || 1));
-    return $array[0] if (!$last);
-    return @array;
-}
-
 
 sub munin_draw_field {
     my $hash   = shift;
@@ -718,11 +695,13 @@ sub munin_get_node {
     my $loc  = shift;
 
     foreach my $tmpvar (@$loc) {
-	if ($tmpvar !~ /\S/) {
-	    ERROR "[ERROR] munin_get_node: Cannot work on hash node \"$tmpvar\"";
+	if (! exists $hash->{$tmpvar} ) {
+	    # Only complain on a blank key if is no key like that. Usually it
+	    # shouln't, so it avoids a needless regexp in this highly used
+	    # function
+	    ERROR "[ERROR] munin_get_node: Cannot work on hash node '$tmpvar'" if ($tmpvar !~ /\S/);
 	    return undef;
-	}
-	return undef if !exists $hash->{$tmpvar};
+        }	
 	$hash = $hash->{$tmpvar};
     }
     return $hash;
@@ -798,9 +777,9 @@ sub munin_get_node_partialpath
 	my @leftarr = split (/;/, $leftstring);
 	my @rightarr = split (/\./, $rightstring);
 	push @$varloc, @leftarr, @rightarr
-    } elsif ($var =~ /^\s*([^;:\.]+)\s*$/) {
+    } elsif ($var =~ /^\s*([^;:.]+)\s*$/) {
 	push @$varloc, $var;
-    } elsif ($var =~ /^\s*(.+)\.([^\.:;]+)$/) {
+    } elsif ($var =~ /^\s*([^.]+)\.([^:;]+)$/) {
 	my ($leftstring, $rightstring) = ($1, $2);
 
 	my @leftarr = split (/;/, $leftstring);
@@ -1519,7 +1498,6 @@ sub munin_get_rrd_filename {
     my $path    = shift;
 
     my $result  = undef;
-    my $name    = munin_get_node_name ($field);
 
     # Bail out on bad input data
     return if !defined $field or ref ($field) ne "HASH";
@@ -1729,9 +1707,6 @@ Parameters:
 Returns:
  - Success: Boolean; true if field will be graphed, false if not
  - Failure: undef
-
-=item B<munin_fetch>
-
 
 
 =item B<munin_field_status>
@@ -2124,10 +2099,6 @@ Parameters:
 Returns:
  - Success: The $hash we were handed
  - Failure: The $hash we were handed
-
-
-=item B<munin_trend>
-
 
 
 =item B<munin_writeconfig>

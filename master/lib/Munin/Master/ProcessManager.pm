@@ -10,6 +10,7 @@ use English qw(-no_match_vars);
 use IO::Socket;
 use POSIX qw(:sys_wait_h);
 use Storable qw(nstore_fd fd_retrieve);
+use Time::HiRes;
 
 use Munin::Common::Timeout;
 use Munin::Master::Config;
@@ -111,6 +112,9 @@ sub _start_waiting_workers {
         last if scalar keys %{$self->{active_workers}} == $self->{max_concurrent};
 	# Here we just start'em, check results in _collect_results
         $self->_start_next_worker();
+    } continue {
+	    # Sleep for a random time, to avoid too much process creation all at once
+	    sleep ( rand ($config->{worker_start_delay}) ) if $config->{worker_start_delay};
     }
 }
 

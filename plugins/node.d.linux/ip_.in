@@ -5,7 +5,7 @@
 
 =head1 NAME
 
-ip_ - Wildcard-plugin to monitor IP addresses through iptables
+ip_ - Wildcard-plugin to monitor IP addresses (v4 & v6) through iptables
 
 =head1 CONFIGURATION
 
@@ -21,6 +21,9 @@ Example configuration follows.  Only the first stanza is needed:
 
   [ip_192.168.0.1]
     env.hostname host.example.com
+  
+  [ip_1080::8:800:200c:417a]
+    env.hostname host6.example.com
 
 
 =head2 ENVIRONMENT VARIABLES
@@ -55,10 +58,18 @@ hand-made script) if so.
 
 =head3 IPv4
 
-For the IP address "192.0.2.0", you will need the rules:
+In case of a multihomed host, to monitor the local IP "192.0.2.1", you will
+need the rules:
 
-  iptables -I INPUT -d 192.0.2.1
+  iptables -I INPUT  -d 192.0.2.1
   iptables -I OUTPUT -s 192.0.2.1
+
+On the other case, for the remote IP "192.0.2.2", you will need the rules:
+(Notice that the -s and -d are reversed)
+  
+  iptables -I INPUT  -s 192.0.2.2
+  iptables -I OUTPUT -d 192.0.2.2
+
 
 These rules will insert, at the top of the iptables chains INPUT and
 OUTPUT one rule which will act as a packet counter.
@@ -75,10 +86,13 @@ counters.
 To create counters you will need to use "ip6tables" instead of
 "iptables".
 
-Example for the IPv6 address "2001:db8::1":
+Same example as above, for the local IPv6 address "2001:db8::1" and remote "2001:db8::2":
 
- ip6tables -I INPUT -d 2001:db8::1
+ ip6tables -I INPUT  -d 2001:db8::1
  ip6tables -I OUTPUT -s 2001:db8::1
+
+ ip6tables -I INPUT  -s 2001:db8::2
+ ip6tables -I OUTPUT -d 2001:db8::2
 
 =head1 BUGS
 

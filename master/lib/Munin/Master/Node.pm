@@ -14,6 +14,7 @@ use Munin::Common::Timeout;
 use Munin::Common::TLSClient;
 use Data::Dumper;
 use Log::Log4perl qw( :easy );
+use Time::HiRes qw( gettimeofday tv_interval );
 
 my $config = Munin::Master::Config->instance()->{config};
 
@@ -360,11 +361,18 @@ sub parse_service_config {
 sub fetch_service_config {
     my ($self, $service) = @_;
 
+    my $t0 = [gettimeofday];
+
     DEBUG "[DEBUG] Fetching service configuration for '$service'";
     $self->_node_write_single("config $service\n");
 
     # The whole config in one fell swoop.
     my @lines = $self->_node_read();
+
+    my $elapsed = tv_interval($t0);
+
+    my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
+    DEBUG "[DEBUG] config: $elapsed sec for '$service' on $nodedesignation";
 
     $service = $self->_sanitise_plugin_name($service);
 
@@ -496,9 +504,15 @@ sub parse_service_data {
 sub fetch_service_data {
     my ($self, $plugin) = @_;
 
+    my $t0 = [gettimeofday];
+
     $self->_node_write_single("fetch $plugin\n");
 
     my @lines = $self->_node_read();
+    
+    my $elapsed = tv_interval($t0);
+    my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
+    DEBUG "[DEBUG] data: $elapsed sec for '$plugin' on $nodedesignation";
 
     $plugin = $self->_sanitise_plugin_name($plugin);
 
