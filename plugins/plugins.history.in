@@ -235,7 +235,6 @@ nomadix_users_
 jmx_
 fail2ban
 zimbra_
-linux/diskstat_
 tomcat_
 squeezebox_
 snmp__netapp_diskusage_
@@ -318,3 +317,6 @@ sunos/iostat
 
 [1.4.2]
 munin_update
+
+[1.4.3]
+linux/diskstats

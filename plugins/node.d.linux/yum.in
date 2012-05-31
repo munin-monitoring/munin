@@ -27,8 +27,9 @@ Unknown license
 =cut
 
 use strict;
+use Munin::Common::Defaults;
 
-my $statefile = '@@PLUGSTATE@@/yum.state';
+my $statefile = "$Munin::Common::Defaults::MUNIN_PLUGSTATE/yum.state";
 
 sub update {
     if (-l $statefile) {
@@ -78,7 +79,8 @@ sub report {
     my @packages;
 
     open my $state, '<', $statefile
-	or die "Can't open $statefile for reading: $!\n";
+	or die "Can't open $statefile for reading: $!
+Please read 'munindoc yum' to understand why if the file does not exist.\n";
 
     chomp(@packages = <$state>);
     close $state;
@@ -98,11 +100,9 @@ if ($ARGV[0]) {
 
     if (exists $funcs{$arg}) {
 	$funcs{$arg}->();
-    }
-    else {
+    } else {
 	die "Unknown argument '$arg'\n";
     }
-}
-else {
+} else {
     report();
 }

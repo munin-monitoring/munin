@@ -163,7 +163,16 @@ sub _run_workers {
     }
     else {
         for my $worker (@{$self->{workers}}) {
-            my $res = $worker->do_work();
+
+	    my $res ;
+
+	    eval {
+		# do_work fails hard on a number of conditions
+		$res = $worker->do_work();
+	    };
+
+	    $res=undef if $EVAL_ERROR;
+
 	    my $worker_id = $worker->{ID};
 	    if (defined($res)) {
 		$self->_handle_worker_result([$worker_id, $res]);

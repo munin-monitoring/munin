@@ -50,10 +50,31 @@ my @exclude;  # Should take this from environment.
 # as wildcard plugin.
 my $host = '127.0.0.1';
 
-$ENV{PATH}="/bin:/usr/bin";
+my $lpstat = exists $ENV{lpstat} ? $ENV{lpstat} : '';
+ 
+# If the envvar is not set, look for lpstat
+if (!$lpstat) {
+   # Still not found? Check obvious places
+    my @dirs = split(':',$ENV{PATH});
+    push (@dirs, qw(/usr/bin /usr/sbin /usr/local/bin /usr/local/sbin) );
+
+    until ($lpstat or @dirs == 0) {
+        my $dir = shift @dirs;
+        my $path = $dir.'/lpstat';
+        $lpstat = $path if -x $path;
+    }
+} elsif (! -x $lpstat) {
+    # If it is set, verify it
+    warn "Predefined lpstat ($lpstat) is not a executable\n";
+    undef $lpstat;
+}
 
 if ($ARGV[0] eq 'autoconf') {
-    if( ! open(LPSTAT_R, "lpstat $host -r 2>/dev/null |") ) {
+    if( ! -x $lpstat ) {
+        print "no (lpstat not found)\n";
+        exit 0;
+    }
+    if( ! open(LPSTAT_R, "$lpstat $host -r 2>/dev/null |") ) {
         print "no (could not execute lpstat)\n";
         exit 0;
     }
@@ -70,7 +91,7 @@ if ($ARGV[0] eq 'autoconf') {
 # Check printers are accepting jobs
 ####################################################
 # Get list of printers, showing which are accepting jobs...
-if( ! open(LPSTAT_A, "lpstat $host -a|") ) {
+if( ! open(LPSTAT_A, "$lpstat $host -a|") ) {
     print "graph_title Could not execute lpstat command\n";
     exit -1;
 }
@@ -93,7 +114,7 @@ close(LPSTAT_A);
 # Check printers are enabled
 ####################################################
 # Get list of printers, showing which are enabled/disabled...
-if( ! open(LPSTAT_P, "lpstat $host -p|") ) {
+if( ! open(LPSTAT_P, "$lpstat $host -p|") ) {
     print "graph_title Could not execute lpstat command\n";
     exit -1;
 }
@@ -116,8 +137,8 @@ foreach $printer ( @printers ) {
         next;
     }
 
-    if( ! open(LPSTAT, "lpstat $host -o $printer|") ) {
-        print STDERR "Could not execute command: 'lpstat -o $printer' \n";
+    if( ! open(LPSTAT, "$lpstat $host -o $printer|") ) {
+        print STDERR "Could not execute command: '$lpstat -o $printer' \n";
         exit 2;
     }
     @jobs = ( <LPSTAT> );

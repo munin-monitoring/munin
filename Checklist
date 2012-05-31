@@ -8,12 +8,12 @@ This is a pre-release checklist for the maintainer.
 
  * Update plugins/plugins.history.in:
 
-   1.  cd plugins
+   1. cd plugins
 
    2. Figure out which r the previous tag was at and do this (r910 was
 	  1.3.2 and r1234 is head)
       svn --verbose log -r910:1234 | fgrep node.d | grep -w A | 
-         cut -d/ -f 4- | sed 's/^node.d.//'
+         cut -d/ -f 4- | sed 's/^node\.d\.//'
 
    3. Check if the listed plugins are still present (or moved):
 

@@ -12,7 +12,7 @@ No configuration
 
 =head1 AUTHOR
 
-Author unknown
+Author unknown.  Source code strongly related to the Exim plugin of old.
 
 =head1 LICENSE
 
@@ -24,7 +24,7 @@ License unknown
 
 =cut
 
-$statefile = "@@PLUGSTATE@@/munin-mailman-log.state";
+$statefile = "$MUNIN_PLUGSTATE/munin-mailman-log.state";
 $pos = undef;
 $posts = 0;
 $members = 0;
@@ -67,12 +67,13 @@ if(! -f $logfile &&
    ! -x $lister &&
    ! -f $rotlogfile) {
     print "posts.value U\n";
+    print "posts.extinfo Can't find any log files\n";
     print "members.value U\n";
     exit 0;
 }
 
 if(-f $statefile) {
-    open(IN, "<$statefile") or exit 4;
+    open(IN, "<$statefile") or die "Can't open $statefile for reading: $!";
     if(<IN> =~ /^(\d+):(\d+)/) {
 	($pos,$posts) = ($1, $2);
     }
@@ -85,9 +86,7 @@ if(!defined $pos) {
     # Initial run.
     $pos = $startsize;
     $startsize = 0;
-}
-
-if($startsize < $pos) {
+} elsif($startsize < $pos) {
     # Log rotated
     parseMailmanLog($rotlogfile, $pos, (stat $rotlogfile)[7]);
     $pos = 0;
@@ -101,14 +100,14 @@ parseMailmanLists();
 print "posts.value $posts\n";
 print "members.value $members\n";
 
-open (OUT, ">$statefile") or exit 4;
+open (OUT, ">$statefile") or die "Can't open $statefile for writing: $!";
 print OUT "$pos:$posts\n";
 close OUT;
 
 sub parseMailmanLog {
     my($fname, $start, $stop) = @_;
-    open(LOGFILE, $fname) or exit 3;
-    seek(LOGFILE, $start, 0) or exit 2;
+    open(LOGFILE, $fname) or die "Can't open $fname for reading: $!";
+    seek(LOGFILE, $start, 0) or die "Can't seek in $fname: $!";
     while(tell(LOGFILE) < $stop) {
 	my $line = <LOGFILE>;
 	if($line =~ / post to/) {
@@ -133,8 +132,10 @@ sub mailmanDomains {
     if (-e "$libdir/data") {
 	@domains = (".");
     } else {
-	opendir(DOMAINS, $libdir) or exit 3;
-	@domains = grep { !/^\@/ && !/^\./ && -d "$libdir/$_" } readdir(DOMAINS);
+	opendir(DOMAINS, $libdir) or 
+	    die "Can't open directory $libdir for reading: $!";
+	@domains = grep ( { !/^\@/ && !/^\./ && -d "$libdir/$_" }
+			  readdir(DOMAINS) );
 	closedir(DOMAINS);
     }
     return @domains;
@@ -142,8 +143,10 @@ sub mailmanDomains {
 
 sub mailmanLists {
     my ($domain) = @_;
-    opendir(LISTS, "$libdir/$domain/lists") or exit 3;
-    my @lists = grep { !/^\@/ && !/^\./ && -d "$libdir/$domain/lists/$_" } readdir(LISTS);
+    opendir(LISTS, "$libdir/$domain/lists") or
+	die "Can't open directory $libdir/$domain/lists for reading: $!";
+    my @lists = grep ( { !/^\@/ && !/^\./ && -d "$libdir/$domain/lists/$_" } 
+		       readdir(LISTS) );
     closedir(LISTS);
     return @lists;
 }
@@ -153,7 +156,8 @@ sub mailmanMembers {
     return 0 unless $domain;
     return 0 unless $list;
     my $cnt = 0;
-    open(MEMBERS, "DOMAIN=$domain $lister $list|") or exit 3;
+    open(MEMBERS, "DOMAIN=$domain $lister $list|") or
+	die "Cannot execute pipe: $lister $list: $!";
     while(<MEMBERS>) {
         $cnt++;
     }

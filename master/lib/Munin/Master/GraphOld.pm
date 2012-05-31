@@ -993,7 +993,7 @@ sub process_service {
                         ? "#ff0000"
                         : $COLOUR[($field_count - 1) % @COLOUR]));
             }
-            if (defined($warn_max) and $warn_min ne '') {
+            if (defined($warn_max) and $warn_max ne '') {
                 unshift(
                     @rrd,
                     "HRULE:" 
@@ -1092,7 +1092,8 @@ sub process_service {
 
         my @complete = get_fonts();
 
-        push(@complete, '-W', $watermark) if $RRDs::VERSION >= 1.2;
+	# Watermarks introduced in RRD 1.2.13.
+        push(@complete, '-W', $watermark) if $RRDs::VERSION >= 1.2013;
 
         # Do the header (title, vtitle, size, etc...)
         push @complete, @{get_header($service, $time)};
