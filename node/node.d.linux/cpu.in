@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.8  2004/12/09 22:12:56  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.7  2004/11/21 00:17:12  jimmyo
 # Changed a lot of plugins so they use DERIVE instead of COUNTER.
 #
@@ -83,6 +86,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_scale no'
 	echo 'graph_info This graph shows how CPU time is spent.'
 	echo 'graph_category system'
+	echo 'graph_period second'
 	echo 'system.label system'
 	echo 'system.draw AREA'
 	echo 'system.max 5000'

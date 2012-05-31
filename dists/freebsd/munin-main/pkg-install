@@ -1,8 +1,17 @@
 #! /bin/sh
 #
 # $Log$
-# Revision 1.4  2004/04/16 15:50:48  lupe
-# Changes to get acceptance as a FreeBSD port
+# Revision 1.6  2004/11/28 12:50:41  lupe
+# Update to 1.1.7.
+# Put distributed config in *.sample.
+# Remove unchanged configs on deinstall.
+# Add FreeBSD-specific plugins.conf.
+# Move munin-main logfiles to /var/log/munin-main.
+# Update /etc/newsyslog.conf to automatically rotate logfiles.
+# Pass system-wide Perl path to Munin Makefile.
+# Patch default path for Python.
+# Patch ping_ to get it to work on FreeBSD.
+# Patch sendmail_mailtraffic to get it to autoconfigure.
 #
 #
 
@@ -77,9 +86,9 @@ make_account() {
 make_directories() {
 	for dir in ${PKG_PREFIX}/www/data/munin \
                    ${PKG_PREFIX}/var/munin \
-                   /var/run/munin; do
+                   /var/run/munin /var/log/munin-main; do
 		mkdir -p $dir
-		chown munin $dir
+		chown munin:munin $dir
 	done
 }
 
@@ -99,6 +108,19 @@ create_crontab_entries() {
     fi
 }
 
+mklogdir() {
+}
+
+newsyslog() {
+    if fgrep -q '/var/log/munin-main/*' /etc/newsyslog.conf; then
+        :
+    else
+        cat >> /etc/newsyslog.conf <<EOT
+/var/log/munin-main/*	munin:munin	644  7	   *	@T00  GNWZ
+EOT
+    fi  
+}
+
 
 ########################################################################
 
@@ -108,6 +130,7 @@ case $2 in
 	make_directories
 	;;      
     POST-INSTALL)
+	newsyslog
 	create_crontab_entries '#BEGIN_MUNIN' '#END_MUNIN' <<EOT
 #
 # cron-jobs for munin
@@ -117,7 +140,6 @@ case $2 in
 MAILTO=root
 
 */5 * * * *     ${PKG_PREFIX}/bin/munin-cron
-10 10 * * *     ${DATADIR:=${PKG_PREFIX}/share/munin}/munin-nagios --removeok
 #END_MUNIN
 EOT
 	;;      

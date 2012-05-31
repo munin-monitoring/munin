@@ -18,6 +18,12 @@
 #
 #
 # $Log$
+# Revision 1.10  2004/12/10 10:47:47  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
+# Revision 1.9  2004/12/09 22:12:55  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.8  2004/11/21 00:16:56  jimmyo
 # Changed a lot of plugins so they use DERIVE instead of COUNTER.
 #
@@ -134,7 +140,7 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	print "graph_title FC $name errors\n";
 	print "graph_order errs\n";
 	print "graph_args --base 1000\n";
-	print "graph_vlabel errors / second\n";
+	print "graph_vlabel errors / ${graph_period}\n";
 	print "graph_category network\n";
 	print "graph_info This graph shows errors for fibrechannel controllers.\n";
 	print "errs.info Number of errors per second on this interface.\n";

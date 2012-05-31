@@ -12,6 +12,12 @@
 #   mysqlopts    - Options to pass to mysql
 #
 # $Log$
+# Revision 1.6  2004/12/10 10:47:47  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
+# Revision 1.5  2004/12/09 22:12:55  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.4  2004/11/21 00:16:56  jimmyo
 # Changed a lot of plugins so they use DERIVE instead of COUNTER.
 #
@@ -62,15 +68,15 @@ fi
 if [ "$1" = "config" ]; then
 	echo 'graph_title MySQL throughput'
 	echo 'graph_args --base 1024'
-	echo 'graph_vlabel bytes received (-) / sent (+)'
+	echo 'graph_vlabel bytes received (-) / sent (+) per ${graph_period}'
 	echo 'graph_category mysql'
-	echo 'recv.label received'
+	echo 'recv.label transfer rate'
 	echo 'recv.type DERIVE'
 	echo 'recv.min 0'
 	echo 'recv.draw LINE2'
 	echo 'recv.max 80000000'
 	echo 'recv.graph no'
-	echo 'sent.label bps'
+	echo 'sent.label transfer rate'
 	echo 'sent.type DERIVE'
 	echo 'sent.min 0'
 	echo 'sent.max 80000000'

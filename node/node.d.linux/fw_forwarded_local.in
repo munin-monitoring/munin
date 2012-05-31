@@ -9,6 +9,9 @@
 #
 #
 # $Log$
+# Revision 1.5  2004/12/09 18:00:00  jimmyo
+# linux/fw_forwarded_local now initialises properly (Deb#284673).
+#
 # Revision 1.4  2004/10/27 17:50:01  jimmyo
 # Fixed typo in linux/fw_forwarded_local (Deb#275535).
 #
@@ -60,4 +63,4 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-cat /proc/net/ip_conntrack | grep ESTABLISHED | sed 's/.*src=\(.*\) .*dst=\(.*\) sport.*src=\(.*\) .*dst=\(.*\) spo.*/\1 \2 \3 \4/g' | awk '{if($1 != $4){ FORW += 1} else { LOCAL += 1}} END {{print "forward.value "FORW} {print "local.value "LOCAL}}'
+cat /proc/net/ip_conntrack | grep ESTABLISHED | sed 's/.*src=\(.*\) .*dst=\(.*\) sport.*src=\(.*\) .*dst=\(.*\) spo.*/\1 \2 \3 \4/g' | awk 'BEGIN {{FORW=0} {LOCAL=0}} {if($1 != $4){ FORW += 1} else { LOCAL += 1}} END {{print "forward.value "FORW} {print "local.value "LOCAL}}'

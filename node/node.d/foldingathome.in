@@ -8,6 +8,9 @@
 #   autoconf (optional - only used by munin-config)
 #
 # $Log$
+# Revision 1.1  2004/12/09 16:49:30  jimmyo
+# Renamed generic/folding@home to generic/foldingathome (SF#1074241).
+#
 # Revision 1.2  2004/05/09 19:47:24  jimmyo
 # Added Folding@home plugin, contributed by Xavier.
 #

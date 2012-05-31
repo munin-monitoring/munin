@@ -9,6 +9,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.4  2004/11/28 09:43:54  lupe
+# 6-CURRENT support
+#
 # Revision 1.3  2004/05/20 19:02:36  jimmyo
 # Set categories on a bunch of plugins
 #
@@ -35,7 +38,7 @@
 OSV=`/sbin/sysctl -n kern.osrelease | cut -f1 -d.`
 
 if [ "$1" = "autoconf" ]; then
-	if [ "$OSV" = "5" ]; then
+	if [ "$OSV" -ge "5" ]; then
 		/sbin/sysctl -n vm.vmtotal 2>/dev/null >/dev/null
 		RESULT=$?
 		NAME=/sbin/sysctl
@@ -63,7 +66,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000 -l 0'
 	echo 'graph_vlabel process states'
 	echo 'graph_category processes'
-	if [ "$OSV" = "5" ]; then
+	if [ "$OSV" -ge "5" ]; then
 		echo 'running.label running'
 		echo 'running.type GAUGE'
 		echo 'diskwait.label diskwait'
@@ -81,7 +84,7 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-if [ "$OSV" = "5" ]; then
+if [ "$OSV" -ge "5" ]; then
 	sysctl -n vm.vmtotal | awk '
 /^Processes:/ {
 	print "running.value", $3;

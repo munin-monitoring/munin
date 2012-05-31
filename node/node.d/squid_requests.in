@@ -32,6 +32,12 @@
 # 	autoconf  (optional - only used by munin-config)
 #
 # $Log$
+# Revision 1.7  2004/12/10 10:47:47  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
+# Revision 1.6  2004/12/09 22:12:55  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.5  2004/11/16 20:18:09  jimmyo
 # License cleanups.
 #
@@ -160,25 +166,22 @@ sub query_squid {
 if($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title Squid client requests\n";
     print "graph_args --base 1000 -l 0\n";
-    print "graph_vlabel requests / min\n";
+    print "graph_vlabel requests / ${graph_period}\n";
     print "graph_order hits errors requests\n";
     print "graph_total total\n";
     print "graph_scale no\n";
-	print "graph_category squid\n";
+    print "graph_category squid\n";
     print "hits.label hits\n";
-    print "hits.cdef hits,60,*\n";
     print "hits.type DERIVE\n";
     print "hits.draw AREA\n";
     print "hits.min 0\n";
     print "hits.max 500000\n";
     print "errors.label errors\n";
-    print "errors.cdef errors,60,*\n";
     print "errors.type DERIVE\n";
     print "errors.draw STACK\n";
     print "errors.min 0\n";
     print "errors.max 500000\n";
     print "requests.label misses\n";
-    print "requests.cdef requests,60,*,hits,-,errors,-\n";
     print "requests.type DERIVE\n";
     print "requests.draw STACK\n";
     print "requests.min 0\n";

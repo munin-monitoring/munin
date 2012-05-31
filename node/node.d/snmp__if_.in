@@ -18,6 +18,12 @@
 #
 #
 # $Log$
+# Revision 1.17  2004/12/10 10:47:47  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
+# Revision 1.16  2004/12/09 22:12:55  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.15  2004/11/21 00:16:56  jimmyo
 # Changed a lot of plugins so they use DERIVE instead of COUNTER.
 #
@@ -151,7 +157,7 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 	}
 	print "graph_order recv send\n";
 	print "graph_args --base 1000\n";
-	print "graph_vlabel bps in (-) / out (+)\n";
+	print "graph_vlabel bits in (-) / out (+) per ${graph_period}\n";
 	print "graph_category network\n";
 	print "graph_info This graph shows traffic for the \"$name\" network interface.\n";
 	print "send.info Bits sent/received by this interface.\n";

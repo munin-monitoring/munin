@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.6  2004/12/09 20:27:45  jimmyo
+# Sort fields in df*-plugins alphabetically.
+#
 # Revision 1.5  2004/09/25 22:29:16  jimmyo
 # Added info fields to a bunch of plugins.
 #
@@ -69,7 +72,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel %'
 	echo 'graph_category disk'
 	echo 'graph_info This graph shows the inode usage for the partitions of types that use inodes.'
-	df -P -l -i  -x none -T| sed 1d | grep -v "//" | awk '$6 ~ /[0-9]%/ {print}' | awk "
+	df -P -l -i  -x none -T| sed 1d | grep -v "//" | sort | awk '$6 ~ /[0-9]%/ {print}' | awk "
 		\$2 !~ /reiserfs/ {
                         dir=\$7
 			name=\$1; gsub(/[\/.]/, \"_\", name);

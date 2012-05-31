@@ -20,6 +20,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.10  2004/12/09 17:13:36  jimmyo
+# Munin-run: Now behaves properly when running invalid plugins (SF#1074242).
+#
 # Revision 1.9  2004/11/20 23:34:35  jimmyo
 # Updated munin-run with extra options already checked into munin-node.
 #
@@ -331,6 +334,8 @@ FILES:
 	$nodes{$node}{$file}=1;
     }
     closedir DIR;
+    print "ERROR: Could not execute plugin (plugin doesn't exist?).\n";
+    exit 1;
 }
 
 sub run_service {
@@ -413,6 +418,7 @@ sub run_service {
     }
     else
     {
+	print STDERR "DEBUG: About to exec \"$servicedir/$service\"." if $DEBUG;
 	if (!exec ("$servicedir/$service", $command))
 	{
 	    print "no (could not execute plugin)\n"; exit 1;

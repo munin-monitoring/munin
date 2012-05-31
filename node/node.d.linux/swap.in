@@ -8,6 +8,12 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.5  2004/12/10 10:47:49  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
+# Revision 1.4  2004/12/09 22:12:56  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.3  2004/11/21 00:17:12  jimmyo
 # Changed a lot of plugins so they use DERIVE instead of COUNTER.
 #
@@ -49,7 +55,7 @@ if [ "$1" = "config" ]; then
 
 	echo 'graph_title Swap in/out'
 	echo 'graph_args -l 0 --base 1000'
-	echo 'graph_vlabel pages per second in (-) / out (+)'
+	echo 'graph_vlabel pages per ${graph_period} in (-) / out (+)'
 	echo 'graph_category system'
 	echo 'swap_in.label swap'
 	echo 'swap_in.type DERIVE'

@@ -1,3 +1,40 @@
+munin (1.1.8)
+
+  * Munin-limits: Log less noise.
+  * Munin-limits: Notify correctly in all situations.
+  * Munin-graph: Treat CDEFs in fields with long names properly.
+  * Munin-graph: Log an illegal STACK in the first field better (SF#1081903).
+  * Munin-run: Now behaves properly when running invalid plugins (SF#1074242).
+  * Munin-node: host_name in plugin-conf.d now overrides plugin output.
+  * Munin-graph: Added "graph_period" option, to make "graph_sums" usable.
+  * Munin-update: Fix bug when setting min to 0.
+  * Munin-node-configure: Fix bug with underscore in wildcard plugins.
+  * Plugin: New version of generic/smart_ by plugin creator (Nicolas
+    Stransky) (SF#1072459).
+  * Plugin: generic/uptime was re-classified as linux/uptime (SF#1074576).
+  * Plugin: Renamed generic/folding@home to generic/foldingathome (SF#1074241).
+  * Plugin: Modify generic/ping_ so it's compatible with Solaris ping
+    (SF#1074545).
+  * Plugin: Fixed broken autoconf in generic/sendmail_mailtraffic (SF#1074528).
+  * Plugin: Patched sunos/cpu to work on Solaris 9 (SF#1077899).
+  * Plugin: Major improvements to sunos/io_ops,bytes,busy, by Lupe Christoph
+    (SF#1077898).
+  * Plugin: Portability enhancementes to sunos/fs_df (SF#1077903).
+  * Plugin: linux/fw_forwarded_local now initialises properly (Deb#284673).
+  * Plugin: Added more sensible autoconf to generic/sybase_space.
+  * Plugin: Added more sensible autoconf to generic/munin_graph,munin_update.
+  * Plugin: Added two new plugins contributed by Jacques Caruso,
+    generic/exim_mailqueue_alt and generic/mailscanner.
+  * Plugin: New version of generic/pm3users_ by plugin creator Jacques Caruso.
+  * Plugin: generic/bind9 now handles syslog format as well (by xavier).
+  * Plugin: Two new contrib plugins generic/foldingathome_*, by xavier.
+  * Plugin: generic/named a bit more portable (by Will Froning).
+  * Plugin: Sort fields in df*-plugins alphabetically.
+  * Plugin: Added plugin generic/bind9_rndc, by Facq Laurent.
+  * Plugin: Two network ups tool plugins (generic/nut_*) contributed by xavier.
+  * Plugin: Added plugin generic/mhttping by Greg Connor.
+  * Plugin: linux/cps_ plugin now groks high numbers.
+
 munin (1.1.7)
 
   * Allow floating point values in warning/critical limits.
@@ -37,7 +74,6 @@ munin (1.1.5)
     * Minor template modifications, so the output HTML validates correctly
       (SF#1039850).
     * Added new field option "line", which draws HRULEs.
-	
 
   - Munin-node:
     * The node now changes dir to /, to make sure it's in a directory

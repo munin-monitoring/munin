@@ -23,6 +23,12 @@
 # $Id$
 #
 # $Log$
+# Revision 1.28  2004/12/10 09:12:13  jimmyo
+# Fix bug when setting min to 0.
+#
+# Revision 1.27  2004/12/09 16:20:06  jimmyo
+# generic/uptime was re-classified as linux/uptime (SF#1074576).
+#
 # Revision 1.26  2004/11/26 13:36:00  jimmyo
 # Log updates of nonexisting fields better (SF#1073172).
 #
@@ -270,7 +276,7 @@ my $bad_procs = 0;
 my $uaddr;
 if ($do_fork)
 {
-# Set up socket
+    # Set up socket
     $uaddr =  sockaddr_un("$config->{rundir}/$serversocket");
     socket (Server, PF_UNIX, SOCK_STREAM, 0)     || die "socket: $!";
     unlink ("$config->{'rundir'}/$serversocket");
@@ -458,13 +464,13 @@ sub compare_configs {
 		    if (&is_changed ($old, $new, $dom, $host, $serv, $field, "min"))
 		    {
 			&change_min ($config, $dom, $host, $serv, $field, 
-				($new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"} ?
+				(defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"} ?
 				$new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".min"} : undef));
 		    }
 		    if (&is_changed ($old, $new, $dom, $host, $serv, $field, "type"))
 		    {
 			&change_type ($oldconfig, $config, $dom, $host, $serv, $field, 
-				($new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".type"} ?
+				(defined $new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".type"} ?
 				$new->{domain}->{$dom}->{node}->{$host}->{client}->{$serv}->{$field.".type"} : undef));
 		    }
 		}
@@ -739,7 +745,6 @@ sub read_socket_single {
     return $res;
 }
 
-
 sub read_socket {
     my ($socket) = @_;
     my @array;
@@ -971,8 +976,6 @@ sub use_old_config
     logger ("Attempting to use old configuration for $domain -> $name.");
 }
 
-
-
 sub logger_open {
     my $dirname = shift;
 
@@ -1029,7 +1032,6 @@ sub sanitise_fieldname
 
     return $lname;
 }
-
 
 1;
 

@@ -1,6 +1,13 @@
 #!/bin/sh
 
+# Configuration variables
+#
+#   fs_df  - path to df executable (GNU df makes life easier)
+#
 # $Log$
+# Revision 1.4  2004/12/09 17:53:38  jimmyo
+# Portability enhancementes to sunos/fs_df (SF#1077903).
+#
 # Revision 1.3  2004/05/20 19:02:38  jimmyo
 # Set categories on a bunch of plugins
 #
@@ -18,26 +25,42 @@
 #
 #%# family=manual
 
-DF=/usr/local/bin/df
-TAIL=/usr/local/bin/tail 
+DF=${fs_df:-/usr/bin/df}
+TAIL=/usr/bin/tail
+
+if $DF -P -l -i >/dev/null 2>&1; then
+	DF="$DF -P -l -i"
+	FSNAME=6
+	PCNT=5
+else
+	DF="$DF -oi 2>/dev/null"
+	FSNAME=5
+	PCNT=4
+fi
 
 if [ "$1" = "config" ]; then
 
         echo 'graph_title Filesystem inode usage (in %)'
         echo 'graph_args --upper-limit 100'
 		echo 'graph_category disk'
-        $DF -P -l -i | $TAIL +2 | while read i; do
-                name=`echo $i | sed 's/[\/.]/_/g' | awk '{ print $6 }' | $TAIL -c 15`
-                printf "$name.label "
-                echo $i | awk '{ print $6 }'
-                printf "$name.warn "
-                echo 95
+        eval $DF | $TAIL +2 | while read i; do
+                name=`echo $i | sed 's/[\/.]/_/g' | awk '{ print $1 }'`
+		# Ignore tmpfs.
+		if [ "$name" != "swap" ]; then
+			printf "$name.label "
+			echo $i | awk '{ print $'$FSNAME' }'
+			printf "$name.warn "
+			echo 95
+		fi
         done
         exit 0
 fi
 
-$DF -P -l -i | $TAIL +2 | while read i; do
-        name=`echo $i | sed 's/[\/.]/_/g' | awk '{ print $6 }' | $TAIL -c 15`
-        printf "$name.value "
-        echo $i | awk '{ print $5 }' | cut -f1 -d% 
+eval $DF | $TAIL +2 | while read i; do
+        name=`echo $i | sed 's/[\/.]/_/g' | awk '{ print $1 }'`
+	# Ignore tmpfs.
+	if [ "$name" != "swap" ]; then
+		printf "$name.value "
+		echo $i | awk '{ p=$'$PCNT'; i=index(p, "%"); print substr(p, 1, i-1) }'
+	fi
 done

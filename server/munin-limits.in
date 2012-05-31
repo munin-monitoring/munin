@@ -18,6 +18,9 @@
 #
 #
 # $Log$
+# Revision 1.22  2004/12/08 08:47:44  jimmyo
+# Fix bug where munin-limits didn't warn properly in all situations.
+#
 # Revision 1.21  2004/11/26 08:48:50  ilmari
 # Allow floating point values in warning/critical limits.
 #
@@ -236,7 +239,7 @@ sub process_service {
 	    $client->{'host'} = $config->{'domain'}->{$domain}->{'node'}->{$name}->{'notify_alias'} || $name;
 	    $client->{'group'} = $config->{'domain'}->{$domain}->{'notify_alias'} || $domain;
 	    $client->{'worst'} = "OK";
-	    $client->{'worstid'} = 0;
+	    $client->{'worstid'} = 0 unless defined $client->{'worstid'};
 	    $client->{$key.".crange"} = (defined $critical->[0]?$critical->[0]:"").":".(defined $critical->[1]?$critical->[1]:"");
 	    $client->{$key.".wrange"} = (defined $warning->[0]?$warning->[0]:"").":".(defined $warning->[1]?$warning->[1]:"");
 
@@ -460,6 +463,7 @@ sub message_expand {
     my $prefix = shift || "";
     my @res    = ();
 
+    
     while (length ($text))
     {   
 	if ($text =~ /^([^\$]+|)(?:\$(\{.*)|)$/)

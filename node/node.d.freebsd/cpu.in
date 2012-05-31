@@ -10,6 +10,12 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.8  2004/12/09 22:12:55  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
+# Revision 1.7  2004/11/28 09:43:54  lupe
+# 6-CURRENT support
+#
 # Revision 1.6  2004/11/21 00:16:56  jimmyo
 # Changed a lot of plugins so they use DERIVE instead of COUNTER.
 #
@@ -65,10 +71,10 @@ if [ "$1" = "config" ]; then
 	OSV=`/sbin/sysctl -n kern.osrelease | cut -f1 -d.`
 	if [ "$OSV" = "4" ]; then
 		STATUNITS=`/sbin/sysctl -n kern.clockrate | cut -f16 -d' '`
-	elif [ "$OSV" = "5" ]; then
+	elif [ "$OSV" -ge "5" ]; then
 		STATUNITS=`/sbin/sysctl -n kern.clockrate | cut -f13 -d' '`
 	fi
-#	PERCENT=`/sbin/sysctl -n hw.ncpu | awk '{print ($1)*100}'`
+	PERCENT=`/sbin/sysctl -n hw.ncpu | awk '{print ($1)*100}'`
 	SCALE=`echo 'scale=5;' $PERCENT/$STATUNITS | bc -q `
 	NCPU=`/sbin/sysctl -n hw.ncpu`
 	if [ "$scaleto100" = yes ]; then
@@ -86,6 +92,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_vlabel %'
 	echo 'graph_scale no'
 	echo 'graph_category system'
+	echo 'graph_period second'
 	echo 'system.label system'
 	echo 'system.draw AREA'
 	echo 'system.max 5000'

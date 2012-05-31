@@ -15,6 +15,12 @@
 #      default.
 #
 # $Log$
+# Revision 1.3  2004/12/10 10:47:49  jimmyo
+# Change name from ${scale} to ${graph_period}, to be more consistent.
+#
+# Revision 1.2  2004/12/09 22:12:55  jimmyo
+# Added "graph_period" option, to make "graph_sums" usable.
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -56,7 +62,7 @@ if($ARGV[0] && $ARGV[0] eq "config")
   {
     print "graph_title Netstat\n";
     print "graph_args -l 0 --base 1000\n";
-    print "graph_vlabel requests connections\n";
+    print "graph_vlabel requests connections per ${graph_period}\n";
     print "requests.label requests\n";
     print "requests.type COUNTER\n";
     print "requests.max 50000\n";

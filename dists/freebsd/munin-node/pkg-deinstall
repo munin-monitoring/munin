@@ -1,10 +1,4 @@
 #! /bin/sh
-#
-# $Log$
-# Revision 1.2  2004/02/06 18:49:58  lupe
-# Fixes for pkg_add compatibility.
-#
-#
 
 ask() {
     local question default answer
@@ -36,8 +30,8 @@ yesno() {
 }
 
 stop_process() {
-    if [ -x ${PKG_PREFIX}/etc/rc.d/munin-node.sh ]; then
-	${PKG_PREFIX}/etc/rc.d/munin-node.sh stop
+    if [ -x $STARTSTOP ]; then
+	$STARTSTOP stop
     fi
 }
 
@@ -51,9 +45,39 @@ delete_group() {
     fi
 }
 
+delnewsyslog() {
+    tmp="/etc/#munin-node$$"
+    sed -e '/^\/var\/log\/munin-node.log[ 	]/d' /etc/newsyslog.conf >${tmp}
+    cat ${tmp} > /etc/newsyslog.conf
+    rm ${tmp}
+}
+
+newsyslog() {
+    ENTRY=`grep /var/log/munin-node.log /etc/newsyslog.conf`
+    DEFAULT='/var/log/munin-node.log			644  7	   *	@T00  Z	/var/run/munin/munin-node.pid'
+    if [ -z "$ENTRY" ]; then
+	exit 0
+    elif [ "$ENTRY" = "$DEFAULT" ]; then
+	delnewsyslog
+    elif yesno "You have changed the default munin-node entry in \"/etc/newsyslog.conf\".
+Do you want me to delete it?" y; then
+	delnewsyslog
+	echo "Done."
+    fi
+}
+
+
+OSVERSION=`/sbin/sysctl -n kern.osreldate`
+if [ $OSVERSION -lt 500000 ]; then
+    STARTSTOP=${PKG_PREFIX}/etc/rc.d/munin-node.sh
+else
+    STARTSTOP=/etc/rc.d/munin_node
+fi
+
 case $2 in
     DEINSTALL)
 	stop_process
+	newsyslog
 	;;
     POST-DEINSTALL)
 	delete_group munin
