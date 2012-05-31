@@ -81,7 +81,7 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"text", "command", "contact", "contacts",  "max_messages", 
 	"always_send", "notify_alias", "line", "state", "graph_period",
 	"cgiurl_graph", "cgiurl", "service_order", "category_order",
-	"version", "colour"
+	"version", "colour", "ok", "unknown"
     );
 
 my %legal_expanded = map { $_ => 1 } @legal;

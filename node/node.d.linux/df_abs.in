@@ -12,7 +12,7 @@
 #
 # Environment
 #       exclude: space separated list if fs types to exclude.
-#                iso9660 by default
+#                iso9660 squashfs udf romfs ramfs by default
 #       warning: Warning _percentage_, default 92
 #       critical: Critical _percentage_, default 98
 #
@@ -31,9 +31,9 @@ if [ "$1" = "autoconf" ]; then
 	exit 0
 fi
 
-exclude=${exclude:-iso9660}
+exclude=${exclude:-iso9660 squashfs udf romfs ramfs}
 
-exclude=$(echo $exclude | sed -e 's/ +/ -x /g' -e 's/^/-x /')
+exclude=$(echo $exclude | sed -e 's/ / -x /g' -e 's/^/-x /')
 
 if [ "$1" = "config" ]; then
 
