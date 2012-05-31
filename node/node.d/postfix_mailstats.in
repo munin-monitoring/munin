@@ -229,7 +229,7 @@ sub parseLogfile
 	{
 	    $delivered++;
 	} 
-	elsif ($line =~ /reject: \S+ \S+ \S+ (\S+)/)
+	elsif ($line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/)
 	{
 	    $rejects->{$1} ++;
 	}

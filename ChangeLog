@@ -1,3 +1,15 @@
+munin (1.2.3)
+
+  * Main: Remove stdout output (Deb#302502).
+  * Node: Added support for optional "user" settings in node.
+  * Node: Allow "root" for the per-plugin "group" directive.
+  * Plugins: sort drives in generic/hddtemp_smartcl (SF#1174847).
+  * Plugins: Fix autoconf for linux/{nfsd,nfs_client}.
+  * Plugins: Make linux/sensors_ handle multiline output better (Deb#300690).
+  * Plugins: generic/postfix_mailstats now treats reject-lines better
+    (Deb#302220).
+  * Plugins: Made generic/postfix_mailvolume autoconf less eager.
+
 munin (1.2.2)
 
   * Plugins: Correct history loss in linux/{df,df_inode}.

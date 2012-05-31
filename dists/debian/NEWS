@@ -1,4 +1,4 @@
-munin (1.2.1-1) unstable; urgency=low
+munin (1.2.2-1) unstable; urgency=low
 
   * The "contrib" plugins are not supported from upstream, and have therefore
     been removed from the package.  They have not been through a thorough QA
@@ -20,9 +20,9 @@ munin (1.2.1-1) unstable; urgency=low
     /etc/munin/plugins/ (overwriting the symlink).  That way, they will not be
     touched during the upgrade.
 
-    You may also download them from <http://www.linpro.no/projects/munin/>.
+    You may also download them from <http://munin.sourceforge.net/>.
 
- -- Tore Anderson <tore@debian.org>  Sat, 12 Mar 2005 20:17:12 +0100
+ -- Tore Anderson <tore@debian.org>  Sun, 13 Mar 2005 00:28:49 +0100
 
 munin (1.2.0-1) unstable; urgency=low
 
@@ -53,16 +53,6 @@ munin (1.2.0-1) unstable; urgency=low
 
     unless the latter was explicitly defined in /etc/munin/munin.conf, in which
     case the deprecated entries would be ignored.
-
-    This command is run through a shell, which may be interesting for users of
-    newer versions of NSCA, such as the one in Debian GNU/Linux 3.1, as it has
-    recently begun printing a message after successfully sending NSCA packets.
-    To avoid this, you may simply tack on something such as
-    
-        | grep -v '^[0-9]* data packet(s) sent to host successfully$'
-
-    at the end of the contact command in order to prevent cron from sending
-    mail to root every five minutes.
 
   * Data loss issue 1
     =================

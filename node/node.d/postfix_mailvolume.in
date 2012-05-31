@@ -59,42 +59,51 @@
 #%# family=auto
 #%# capabilities=autoconf
 
+# To search for postconf
+$ENV{PATH} = $ENV{PATH} . ":/sbin:/usr/sbin:/usr/local/sbin"; 
+
 my $statefile = "@@PLUGSTATE@@/munin-plugin-postfix_mailvolume.state";
 my $pos   = undef;
 my $volume = 0;
 my $LOGDIR  = $ENV{'logdir'}  || '/var/log';
 my $LOGFILE = $ENV{'logfile'} || 'syslog';
 
-
 if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
     my $logfile;
-    if (-d $LOGDIR)
+    `which postconf >/dev/null 2>/dev/null`;
+    if ($?)
     {
-	$logfile = "$LOGDIR/$LOGFILE";
-
-	if (-f $logfile)
+	if (-d $LOGDIR)
 	{
-            if (-r "$logfile")
-            {
-                print "yes\n";
-                exit 0;
-            }
-            else
-            {
-                print "no (logfile not readable)\n";
-            }
+	    $logfile = "$LOGDIR/$LOGFILE";
+
+	    if (-f $logfile)
+	    {
+		if (-r "$logfile")
+		{
+		    print "yes\n";
+		    exit 0;
+		}
+		else
+		{
+		    print "no (logfile not readable)\n";
+		}
+	    }
+	    else
+	    {
+		print "no (logfile not found)\n";
+	    }
 	}
 	else
 	{
-	    print "no (logfile not found)\n";
+	    print "no (could not find logdir)\n";
 	}
     }
     else
     {
-        print "no (could not find logdir)\n";
+	    print "no (postfix not found)\n";
     }
-
     exit 1;
 }
 

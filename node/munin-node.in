@@ -20,6 +20,15 @@
 # $Id$
 #
 # $Log$
+# Revision 1.20.2.4  2005/03/16 19:55:34  ilmari
+# Allow root for the per-plugin group directive.
+#
+# Revision 1.20.2.3  2005/03/16 16:50:40  ilmari
+# Fix mis-merge of optional user support
+#
+# Revision 1.20.2.2  2005/03/13 12:46:04  jimmyo
+# Added support for optional user settings in node.
+#
 # Revision 1.20.2.1  2005/02/16 17:12:03  jimmyo
 # munin-node didn't treat default_plugin_user properly (Deb#295366).
 #
@@ -487,7 +496,7 @@ sub run_service {
 			$defuser);
 		my $g  = $defgroup;
 		my $gs = "$g $g" .
-			($sconf{$service}{'group'}?" $sconf{$service}{group}":"");
+			(defined $sconf{$service}{'group'}?" $sconf{$service}{group}":"");
 
 		print "# Want to run as euid/egid $u/$g\n" if $DEBUG;
 
@@ -655,15 +664,31 @@ sub load_auth_file
 	}
 	elsif (/^\s*user\s+(\S+)\s*$/)
 	{
-	    my $tmpid = $1;
-	    $sconf->{$service}{'user'} = &get_uid ($tmpid);
-	    print "DEBUG: Config: $service->uid = ", $sconf->{$service}{'user'}, "\n" if $DEBUG;
-	    if (!defined $sconf->{$service}{'user'})
-	    {
-		warn "User \"$tmpid\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
-		return undef;
-	    }
-	}
+ 	    my $optional = 0;
+ 	    my $user = $1;
+ 
+ 	    if ($user =~ /^\(([^)]+)\)$/)
+ 	    {
+ 		$optional = 1;
+ 		$user = $1;
+ 	    }
+ 
+ 	    my $u = &get_uid ($user);
+ 	    if (!defined $u and !$optional)
+  	    {
+ 		warn "User \"$user\" in configuration file \"$dir/$file\" nonexistant. Skipping plugin.";
+  		return undef;
+  	    }
+ 	    elsif (!defined $u and $optional)
+ 	    {
+ 		net_write ("DEBUG: Skipping \"$user\" (optional).\n") if $DEBUG;
+ 		next;
+ 	    }
+ 	    else
+ 	    {
+ 		$sconf->{$service}{'user'} = $u;
+ 	    }
+  	}
 	elsif (/^\s*group\s+(.+)\s*$/)
 	{
 	    my $tmpid = $1;

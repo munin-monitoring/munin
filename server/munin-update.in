@@ -750,7 +750,7 @@ sub read_socket_single {
       local $SIG{ALRM} = sub { $timed_out=1; close $socket; exit 1;};
       alarm( $timeout );
       $res = <$socket>;
-      chomp $res;
+      chomp $res if defined $res;
       alarm 0;
     };
     if ($timed_out)
