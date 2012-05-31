@@ -591,7 +591,8 @@ sub _node_read_single {
       else {
           $res = readline $self->{reader};
       }
-      chomp $res if defined $res;
+      # Remove \r *and* \n. Normally only one, since we read line per line.
+      $res =~ tr/\x{d}\x{a}//d if defined $res;
       return 1;
     });
     if ($timed_out) {

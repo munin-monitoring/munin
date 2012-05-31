@@ -133,8 +133,7 @@ sub process_request
     # catch and report any system errors in a clean way.
     eval {
         $timed_out = !do_with_timeout($services->{timeout}, sub {
-	    my $per_line_timeout = 5;
-            while (defined ($line = do_with_timeout($per_line_timeout, sub { return _net_read($session); }))) {
+            while (defined ($line = _net_read($session)) {
                 chomp $line;
 		if (! _process_command_line($session, $line)) {
 		    $line = "<finished '$line', ending input loop>";

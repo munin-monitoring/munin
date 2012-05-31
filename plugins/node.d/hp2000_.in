@@ -1,5 +1,5 @@
 #!@@PERL@@ -w
-# hp2000_ - Munin plugin to for HP P2000 StorageWorks
+# hp2000_ - Munin plugin for HP P2000 StorageWorks
 # Copyright (C) 2012 Redpill Linpro AS
 #
 # Author: Trygve Vea <tv@redpill-linpro.com>
@@ -28,7 +28,7 @@
 #
 #     env.host     - http-host
 #     env.secret   - username_password
-#     env.aspect   - vdisk-statistics, controller-statistics or disk-statistics, 
+#     env.aspect   - vdisk-statistics, controller-statistics or disk-statistics,
 #                    volume-statistics.  If not specified, the plugin will attempt
 #                    to detect the aspect from the symlink-name using regex -
 #                    (/vdisk/, /controller/, /volume/ and /disk/)
@@ -589,9 +589,9 @@ foreach $key (sort keys %{$aspects{$cmd}}) {
 
     if ( $cmd ne 'disk-statistics' ) {
         foreach $name (sort keys %{$datas{'nodes'}}) {
-    
+
             print "multigraph $key.$name\n";
-    
+
             if ( $ARGV[0] eq 'config' ) {
                 foreach (@graph_parameters) {
                     if (!defined($aspects{$cmd}{$key}{$_})) {
@@ -606,9 +606,9 @@ foreach $key (sort keys %{$aspects{$cmd}}) {
                 }
 
                 print "\n";
-    
+
                 foreach $val (sort keys %{$aspects{$cmd}{$key}{'values'}}) {
-    
+
                     my $basename = $aspects{$cmd}{$key}{'values'}{$val}{'short'};
 
                     print "$basename.label $aspects{$cmd}{$key}{'values'}{$val}{'label'}\n";
@@ -662,15 +662,15 @@ foreach $key (sort keys %{$aspects{$cmd}}) {
                     }
 
                     foreach $val (sort keys %{$aspects{$cmd}{$key}{'values'}}) {
-    
+
                         my $basename = "disk_".$diskname[1]."_".$aspects{$cmd}{$key}{'values'}{$val}{'short'};
-    
+
                         print "$basename.label d$diskname[1]\n";
-    
+
                         if ( defined($aspects{$cmd}{$key}{'values'}{$val}{'negative'}) ) {
                             print "$basename.negative disk_".$diskname[1]."_$aspects{$cmd}{$key}{'values'}{$val}{'negative'}\n";
                         }
-    
+
                         foreach (@field_parameters) {
                             if (!defined($aspects{$cmd}{$key}{'values'}{$val}{$_})) {
                                 next;

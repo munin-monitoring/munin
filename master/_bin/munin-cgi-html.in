@@ -43,16 +43,18 @@ use Data::Dumper;
 my @times = ("day", "week", "month", "year");
 my $config;
 my $lastchanged = 0;
-my $htmlconfcache = "$Munin::Common::Defaults::MUNIN_DBDIR/htmlconf.storable";
+my $datafile = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.storable";
 
 # grab config
 html_startup([]);
 while(new CGI::Fast){
 	print header("text/html");
-	my $change = (stat($htmlconfcache))[9];
+	my $change = (stat($datafile))[9];
 	if($change > $lastchanged){
-		$config = get_config(1);
+		$config = get_config(0);
 		$lastchanged = $change;
+	} else {
+		$config = get_config(1);
 	}
 	show_page();
 }

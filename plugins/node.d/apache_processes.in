@@ -162,7 +162,7 @@ if ( defined $ARGV[0] and $ARGV[0] eq "config" )
 	    print "free$port.colour ccff00\n";
 	}
 	foreach my $port (@PORTS) {
-		foreach my $type qw "busy idle" {
+		foreach my $type (qw(busy idle)) {
 			print_thresholds("$type$port");
 		}
 	}

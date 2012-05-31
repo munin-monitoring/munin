@@ -79,7 +79,6 @@ if [ "$1" = "config" ]; then
         echo 'graph_info This graph shows ping RTT statistics.'
         echo "ping.label $host"
         echo "ping.info Ping RTT statistics for $host."
-        echo 'ping.draw LINE2'
         echo 'packetloss.label packet loss'
         echo 'packetloss.graph no'
         print_warning ping
