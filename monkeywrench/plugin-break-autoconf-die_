@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# Monkeywrench plugin that just produces a error and dies on autoconf
+#
+#%# family=auto
+#%# capabilities=autoconf suggest
+
+case $1 in
+    autoconf)
+        echo "Monkeywrench!"
+	exit 255
+	;;
+    suggest)
+        # This should not be called
+        echo "huh?"
+	exit 0
+	;;
+esac

@@ -1,6 +1,7 @@
 #!@@PERL@@
+# -*- perl -*-
 #
-# Copyright (C) 2002-2004 Jimmy Olsen, Audun Ytterdal
+# Copyright (C) 2002-2006 Jimmy Olsen, Audun Ytterdal
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,11 +25,11 @@ $|=1;
 use strict;
 use HTML::Template;
 use Getopt::Long;
+use Time::HiRes;
 use Munin;
 use POSIX qw(strftime);
 
 my @times = ( "day", "week", "month", "year" );
-
 
 my $DEBUG=0;
 my $VERSION="@@VERSION@@";
@@ -40,7 +41,7 @@ my $stdout = 0;
 my $log = new IO::Handle;
 
 # Get options
-$do_usage=1  unless 
+$do_usage=1  unless
 GetOptions ( "host=s"       => \(),
              "force-root!"  => \$force_root,
 	     "service=s"    => \(),
@@ -74,7 +75,7 @@ if ($do_version)
 munin-html version $VERSION.
 Written by Knut Haugen, Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS
 
-Copyright (C) 2002-2005
+Copyright (C) 2002-2006
 
 This is free software released under the GNU General Public License. There
 is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -92,6 +93,8 @@ If you really want to run it as root, use the --force-root option. Else, run
 it as the user \"munin\". Aborting.\n\n";
     exit (1);
 }
+
+my $update_time = Time::HiRes::time;
 
 my $config;
 my $limits;
@@ -138,7 +141,7 @@ my @domains;
 
 my @domainorder;
 if ($config->{domain_order}) {
-    @domainorder = split / /, $config->{domain_order};
+    @domainorder = split /\s+/, $config->{domain_order};
 }
 foreach my $d (sort (keys %{$config->{domain}})) {
     unless (grep (/^$d$/, @domainorder)) {
@@ -164,322 +167,352 @@ foreach my $file( (@files) ) {
 my @domainlist = map { { DOMAIN => $_ } } @domainorder;
 my $timestamp = strftime("%Y-%m-%d T %T", localtime);
 for my $domain (@domainorder) {
-    logger("processing domain: $domain");
-    my %domain;
-    $domain{domain}=$domain;
-    my @nodes;
-    my %comparisons;
-    my @nodeorder = ();
-    if ($config->{domain}->{$domain}->{node_order}) {
-	@nodeorder = split / /, $config->{domain}->{$domain}->{node_order};
-    } 
-    foreach my $n (sort (keys %{$config->{domain}->{$domain}->{node}}))
-    {
-	unless (grep (/^$n$/, @nodeorder))
-	{
-	    push @nodeorder, $n;
-	}
+  logger("processing domain: $domain");
+  my %domain;
+  $domain{domain}=$domain;
+  my @nodes;
+  my %comparisons;
+  my @nodeorder = ();
+  if ($config->{domain}->{$domain}->{node_order}) {
+    @nodeorder = split /\s+/, $config->{domain}->{$domain}->{node_order};
+  }
+  foreach my $n (sort (keys %{$config->{domain}->{$domain}->{node}})) {
+    unless (grep (/^$n$/, @nodeorder)) {
+      push @nodeorder, $n;
     }
-    for my $node (@nodeorder) {
-        logger("processing node: $node");
-	my %node;
-	$node{node}=$node;
-	$node{url}="$domain/$node.html";
-	my @services;
-	my @categories;
-	my %categories;
-	my %tmp_cats;
-	my @serviceorder;
-	if ($config->{domain}->{$domain}->{node}->{$node}->{service_order}) {
-	    @serviceorder = split / /, $config->{domain}->{$domain}->{node}->{$node}->{service_order};
-	} else {
-	    @serviceorder = sort (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}});
-	}
-	
-	for my $service (@serviceorder) {
-	    logger("processing service: $service");
-	    next unless defined( $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service} )
-	                    &&  $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service} ne "";
-	    next unless (munin_get_bool ($config, "graph", 1, $domain, $node, $service));
-	    my @service;
-	    my %service;
-	    my $fieldnum = 0;
-	    my @graph_info;
-	    my @field_info;
-	    $service{service}=$service;
-	    $service{label}=$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_title};
-		
-	    my $method = &munin_get ($config, "graph_strategy", "cron");
-	    if ($method eq "cgi")
-	    {
-		$service{imgday}=$config->{'cgiurl_graph'}."/$domain/$node/$service-day.png";
-		$service{imgweek}=$config->{'cgiurl_graph'}."/$domain/$node/$service-week.png";
-		$service{imgmonth}=$config->{'cgiurl_graph'}."/$domain/$node/$service-month.png";
-		$service{imgyear}=$config->{'cgiurl_graph'}."/$domain/$node/$service-year.png";
-
-		if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
-		{
-		    $service{imgweeksum} = $config->{'cgiurl_graph'}."/$domain/$node/$service-week-sum.png";
-		    $service{imgyearsum} = $config->{'cgiurl_graph'}."/$domain/$node/$service-year-sum.png";
-		}
-	
-		if (my ($w, $h) = &calculate_png_size ($config, $domain, $node, $service))
-		{
-		    for my $scale (@times)
-		    {
-			$service{"img".$scale."width"} = $w;
-			$service{"img".$scale."height"} = $h;
-		    }
-		    if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
-		    {
-			for my $scale (["week", "year"])
-			{
-			    $service{"img".$scale."sumwidth"} = $w;
-			    $service{"img".$scale."sumheight"} = $h;
-			}
-		    }
-		}
-	    }
-	    else
-	    {
-		    $service{imgday}="$node-$service-day.png";
-		    $service{imgweek}="$node-$service-week.png";
-		    $service{imgmonth}="$node-$service-month.png";
-		    $service{imgyear}="$node-$service-year.png";
-
-		    for my $scale (@times)
-		    {
-			    if (my ($w, $h) = &get_png_size (&munin_get_picture_filename ($config, $domain, $node, $service, $scale)))
-			    {
-				    $service{"img".$scale."width"} = $w;
-				    $service{"img".$scale."height"} = $h;
-			    }
-		    }
-
-		    if (&munin_get_bool_val ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{"graph_sums"}, 0))
-		    {
-			$service{imgweeksum} = "$node-$service-week-sum.png";
-			$service{imgyearsum} = "$node-$service-year-sum.png";
-			for my $scale (["week", "year"])
-			{
-				if (my ($w, $h) = &get_png_size (&munin_get_picture_filename ($config, $domain, $node, $service, $scale, 1)))
-				{
-					$service{"img".$scale."sumwidth"} = $w;
-					$service{"img".$scale."sumheight"} = $h;
-				}
-			}
-		    }
-	    }
-	    $service{url}="$node-$service.html";
-	    $service{domain}="$domain";
-	    $service{node}=$node;
-	    $service{category}= lc $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_category} || "other";
-
-        # Do "help" section
-		if (defined $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_info})
-		{
-			my %graph_info;
-			$graph_info{info} = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{graph_info};
-			push @{$service{graphinfo}}, \%graph_info;
-		}
-		$service{fieldlist} .= "<tr><th align='left' valign='top'>Field</th><th align='left' valign='top'>Type</th><th align='left' valign='top'>Warn</th><th align='left' valign='top'>Crit</th><th></tr>";
-#		foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}})
-		foreach my $f (@{&munin_get_field_order ($config->{domain}->{$domain}->{node}->{$node}, $config, $domain, $node, $service)})
-		{
-			$f =~ s/=(.*)$//;
-			my $path = $1;
-			next unless (&munin_draw_field ($config->{domain}->{$domain}->{node}->{$node}, $service, $f));
-			print "DEBUG: single_value: Checking field \"$f\" ($path).\n" if $DEBUG;
-
-			if (defined $path)
-			{
-			    munin_get_rrd_filename ($config->{domain}->{$domain}->{node}->{$node}, $config, $domain, $node, $service, $f, $path);
-			}
-
-			my %field_info;
-			$fieldnum++;
-
-			$field_info{'hr'}      = 1 unless ($fieldnum % 3);
-			$field_info{'field'}   = $f;
-			$field_info{'label'}   = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".label"} || $f;
-			$field_info{'type'}    = lc ($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".type"} || "GAUGE");
-			$field_info{'warn'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".warning"} || "None";
-			$field_info{'crit'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".critical"} || "None";
-			$field_info{'info'}    = $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}->{$f.".info"} || "";
-
-			my $state = &munin_field_status ($config, $limits, $domain, $node, $service, $f, 1);
-			if (defined $state)
-			{
-				$field_info{'state_warning'}  = 1 if $state eq "warning";
-				$field_info{'state_critical'} = 1 if $state eq "critical";
-				$field_info{'state_unknown'}  = 1 if $state eq "unknown";
-			}
-			push @{$service{fieldinfo}}, \%field_info;
-		}
-
-		{
-			my $state = &munin_service_status ($config, $limits, $domain, $node, $service, 1);
-			if (defined $state)
-			{
-				$service{'state_warning'}  = 1 if $state eq "warning";
-				$service{'state_critical'} = 1 if $state eq "critical";
-				$service{'state_unknown'}  = 1 if $state eq "unknown";
-			}
-		}
-
-	    push @services, \%service;
-	    push @service, \%service;
-	    push @{$tmp_cats{$service{'category'}}}, \%service;
-	    $servicetemplate->param(SERVICES => \@service,
-				    SERVICE => $service,
-				    NODE => $node,
-				    DOMAIN => $domain, 
-				    DOMAINS => \@domainlist, 
-				    TIMESTAMP => $timestamp);
-	    open (FILE, ">$config->{htmldir}/$domain/$node-$service.html") or die "Cannot open $config->{htmldir}/$domain/$node-$service.html";
-	    print FILE $servicetemplate->output;
-	    close FILE;
-	}
-	foreach my $key (keys %tmp_cats)
-	{
-	    next if $key eq "other";
-	    my %tmp;
-	    my $state = &munin_category_status ($config, $limits, $domain, $node, $key, 1);
-	    print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
-	    if (defined $state)
-	    {
-		    $tmp{'state_warning'}  = 1 if $state eq "warning";
-		    $tmp{'state_critical'} = 1 if $state eq "critical";
-		    $tmp{'state_unknown'}  = 1 if $state eq "unknown";
-	    }
-	    $tmp{name} = ucfirst $key;
-	    $tmp{services} = \@{$tmp_cats{$key}};
-	    $tmp{node} = $node;
-	    $tmp{domain} = $domain;
-	    $categories{ucfirst $key} = \%tmp;
-	    $comparisons{$key}{$node} = \%tmp;
-	}
-	if (defined $tmp_cats{'other'})
-	{
-	    my $key = 'other';
-	    my %tmp;
-	    my $state = &munin_category_status ($config, $limits, $domain, $node, $key, 1);
-	    print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
-	    if (defined $state)
-	    {
-		    $tmp{'state_warning'}  = 1 if $state eq "warning";
-		    $tmp{'state_critical'} = 1 if $state eq "critical";
-		    $tmp{'state_unknown'}  = 1 if $state eq "unknown";
-	    }
-	    $tmp{name} = ucfirst $key;
-	    $tmp{services} = \@{$tmp_cats{$key}};
-	    $tmp{node} = $node;
-	    $tmp{domain} = $domain;
-	    $categories{ucfirst $key} = \%tmp;
-	    $comparisons{'other'}{$node} = \%tmp;
-	}
-	# Handle category_order
-	@categories = ();
-	if ($config->{domain}->{$domain}->{node}->{$node}->{category_order}) {
-	    foreach my $cat (split /\s+/, $config->{domain}->{$domain}->{node}->{$node}->{category_order})
-	    {
-		push @categories, $categories{ucfirst $cat};
-	    }
-	    foreach my $cat (sort keys %categories)
-	    {
-		push @categories, $categories{$cat}
-			unless (grep { $_->{name} eq $cat } @categories);
-	    }
-	} else {
-	    @categories = map { $categories{$_} } sort keys %categories;
-	}
-	$nodetemplate->param(SERVICES => \@services,
-			     NODE => $node,
-			     DOMAIN => $domain,
-			     DOMAINS => \@domainlist, 
-			     TIMESTAMP => $timestamp,
-			     CATEGORIES => \@categories);
-	open (FILE, ">$config->{htmldir}/$domain/$node.html") or die "Cannot open $config->{htmldir}/$domain/$node.html";
- 	print FILE $nodetemplate->output;
-	close FILE;
-	$node{services} = \@services;
-	$node{categories} = \@categories;
-	$node{domain} = $domain;
-	push @nodes,\%node;
-
+  }
+  for my $node (@nodeorder) {
+    logger("processing node: $node");
+    my %node;
+    $node{node}=$node;
+    $node{url}="$domain/$node.html";
+    my @services;
+    my @categories;
+    my %categories;
+    my %tmp_cats;
+    my @serviceorder;
+    if ($config->{domain}->{$domain}->{node}->{$node}->{service_order}) {
+      @serviceorder = split /\s+/,
+	$config->{domain}->{$domain}->{node}->{$node}->{service_order};
+    } else {
+      @serviceorder = sort
+	keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}};
     }
-    $domaintemplate->param(NODES => \@nodes,
-                           DOMAIN => $domain, 
-                           DOMAINS => \@domainlist, 
-     			   COMPARE => (&munin_get_bool ($config, "compare", 1, $domain) and @nodeorder > 1),
-                           TIMESTAMP => $timestamp);
-    open (FILE, ">$config->{htmldir}/$domain/index.html") or die "Cannot open $config->{htmldir}/index.html";
-    print FILE $domaintemplate->output;
+
+    for my $service (@serviceorder) {
+      logger("processing service: $service");
+      next unless
+	defined($config->{domain}->{$domain}->{node}->{$node}->{client}->{$service} )
+	&&  $config->{domain}->{$domain}->{node}->{$node}->{client}->{$service} ne "";
+
+      next unless
+	munin_get_bool ($config, "graph", 1, $domain, $node, $service);
+
+      my @service;
+      my %service;
+      my $fieldnum = 0;
+      my @graph_info;
+      my @field_info;
+      $service{service}=$service;
+      $service{label}=
+	$config->{domain}->{$domain}->{node}->{$node}->{client}->
+	  {$service}->{graph_title};
+
+      my $method = &munin_get ($config, "graph_strategy", "cron");
+      if ($method eq "cgi") {
+	$service{imgday}=$config->{'cgiurl_graph'}.
+	  "/$domain/$node/$service-day.png";
+	$service{imgweek}=$config->{'cgiurl_graph'}.
+	  "/$domain/$node/$service-week.png";
+	$service{imgmonth}=$config->{'cgiurl_graph'}.
+	  "/$domain/$node/$service-month.png";
+	$service{imgyear}=$config->{'cgiurl_graph'}.
+	  "/$domain/$node/$service-year.png";
+
+	if (&munin_get_bool_val($config->{domain}->{$domain}->
+				{node}->{$node}->
+				{client}->{$service}->{"graph_sums"}, 0)) {
+	  $service{imgweeksum} =
+	    $config->{'cgiurl_graph'}."/$domain/$node/$service-week-sum.png";
+	  $service{imgyearsum} =
+	    $config->{'cgiurl_graph'}."/$domain/$node/$service-year-sum.png";
+	}
+
+# There is a disturbance in the force here, the sizes are off.
+#	if (my ($w, $h) =
+#	    &calculate_png_size ($config, $domain, $node, $service)) {
+#	  for my $scale (@times) {
+#	    $service{"img".$scale."width"} = $w;
+#	    $service{"img".$scale."height"} = $h;
+#	  }
+#	  if (&munin_get_bool_val($config->{domain}->{$domain}->
+#				  {node}->{$node}->
+#				  {client}->{$service}->{"graph_sums"}, 0)) {
+#	    for my $scale (["week", "year"]) {
+#	      $service{"img".$scale."sumwidth"} = $w;
+#	      $service{"img".$scale."sumheight"} = $h;
+#	    }
+#	  }
+#       }
+      } else {
+	# graph strategy cron
+	$service{imgday}="$node-$service-day.png";
+	$service{imgweek}="$node-$service-week.png";
+	$service{imgmonth}="$node-$service-month.png";
+	$service{imgyear}="$node-$service-year.png";
+
+	for my $scale (@times) {
+	  if (my ($w, $h) =
+	      &get_png_size(&munin_get_picture_filename($config, $domain,
+							$node, $service,
+							$scale))) {
+	    $service{"img".$scale."width"} = $w;
+	    $service{"img".$scale."height"} = $h;
+	  }
+	}
+
+	if (&munin_get_bool_val ($config->{domain}->{$domain}->
+				 {node}->{$node}->{client}->
+				 {$service}->{"graph_sums"}, 0)) {
+	  $service{imgweeksum} = "$node-$service-week-sum.png";
+	  $service{imgyearsum} = "$node-$service-year-sum.png";
+	  for my $scale (["week", "year"]) {
+	    if (my ($w, $h) =
+		&get_png_size (&munin_get_picture_filename($config,$domain,
+							   $node, $service,
+							   $scale, 1))) {
+	      $service{"img".$scale."sumwidth"} = $w;
+	      $service{"img".$scale."sumheight"} = $h;
+	    }
+	  }
+	}
+      }
+      $service{url}="$node-$service.html";
+      $service{domain}="$domain";
+      $service{node}=$node;
+      $service{category}= lc( $config->{domain}->{$domain}->
+			      {node}->{$node}->{client}->
+			      {$service}->{graph_category} || "other" );
+
+      # Do "help" section
+      if (defined($config->{domain}->{$domain}->
+		  {node}->{$node}->
+		  {client}->{$service}->{graph_info})) {
+	my %graph_info;
+
+	$graph_info{info} = $config->{domain}->{$domain}->
+	  {node}->{$node}->{client}->{$service}->{graph_info};
+
+	push @{$service{graphinfo}}, \%graph_info;
+      }
+
+      $service{fieldlist} .= "<tr><th align='left' valign='top'>Field</th><th align='left' valign='top'>Type</th><th align='left' valign='top'>Warn</th><th align='left' valign='top'>Crit</th><th></tr>";
+      # foreach my $field (keys %{$config->{domain}->{$domain}->{node}->{$node}->{client}->{$service}})
+      foreach my $f (@{&munin_get_field_order ($config->{domain}->{$domain}->{node}->{$node}, $config, $domain, $node, $service)}) {
+	$f =~ s/=(.*)$//;
+	my $path = $1;
+	next unless &munin_draw_field ($config->{domain}->{$domain}->
+				       {node}->{$node}, $service, $f);
+
+	print "DEBUG: single_value: Checking field \"$f\" ($path).\n"
+	  if $DEBUG;
+
+	if (defined $path) {
+	  # HUH? Get the filename and then forget? Some side effect here?
+	  munin_get_rrd_filename ($config->{domain}->{$domain}->
+				  {node}->{$node}, $config, $domain,
+				  $node, $service, $f, $path);
+	}
+
+	my %field_info;
+	$fieldnum++;
+
+	$field_info{'hr'}    = 1 unless ($fieldnum % 3);
+	$field_info{'field'} = $f;
+	$field_info{'label'} = $config->{domain}->{$domain}->
+	  {node}->{$node}->{client}->{$service}->{$f.".label"} || $f;
+
+	$field_info{'type'}  = lc( $config->{domain}->{$domain}->
+				   {node}->{$node}->{client}->{$service}->
+				   {$f.".type"} || "GAUGE" );
+
+	$field_info{'warn'}  = $config->{domain}->{$domain}->
+	  {node}->{$node}->{client}->{$service}->{$f.".warning"} || "None";
+	$field_info{'crit'}  = $config->{domain}->{$domain}->
+	  {node}->{$node}->{client}->{$service}->{$f.".critical"} || "None";
+	$field_info{'info'}  = $config->{domain}->{$domain}->
+	  {node}->{$node}->{client}->{$service}->{$f.".info"} || "";
+
+	my $state = &munin_field_status ($config, $limits, $domain,
+					 $node, $service, $f, 1);
+
+	if (defined $state) {
+	  $field_info{'state_warning'}  = 1 if $state eq "warning";
+	  $field_info{'state_critical'} = 1 if $state eq "critical";
+	  $field_info{'state_unknown'}  = 1 if $state eq "unknown";
+	}
+	push @{$service{fieldinfo}}, \%field_info;
+      }
+
+      {
+	my $state = &munin_service_status ($config, $limits, $domain,
+					   $node, $service, 1);
+	if (defined $state) {
+	  $service{'state_warning'}  = 1 if $state eq "warning";
+	  $service{'state_critical'} = 1 if $state eq "critical";
+	  $service{'state_unknown'}  = 1 if $state eq "unknown";
+	}
+      }
+
+      push @services, \%service;
+      push @service, \%service;
+      push @{$tmp_cats{$service{'category'}}}, \%service;
+      $servicetemplate->param(SERVICES => \@service,
+			      SERVICE => $service,
+			      NODE => $node,
+			      DOMAIN => $domain, 
+			      DOMAINS => \@domainlist, 
+			      TIMESTAMP => $timestamp);
+      open (FILE, ">$config->{htmldir}/$domain/$node-$service.html") or
+	die "Cannot open $config->{htmldir}/$domain/$node-$service.html";
+      print FILE $servicetemplate->output;
+      close FILE;
+    }
+    foreach my $key (keys %tmp_cats) {
+      next if $key eq "other";
+      my %tmp;
+      my $state = &munin_category_status ($config, $limits, $domain,
+					  $node, $key, 1);
+      print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
+      if (defined $state) {
+	$tmp{'state_warning'}  = 1 if $state eq "warning";
+	$tmp{'state_critical'} = 1 if $state eq "critical";
+	$tmp{'state_unknown'}  = 1 if $state eq "unknown";
+      }
+      $tmp{name} = ucfirst $key;
+      $tmp{services} = \@{$tmp_cats{$key}};
+      $tmp{node} = $node;
+      $tmp{domain} = $domain;
+      $categories{ucfirst $key} = \%tmp;
+      $comparisons{$key}{$node} = \%tmp;
+    }
+    if (defined $tmp_cats{'other'}) {
+      my $key = 'other';
+      my %tmp;
+      my $state = &munin_category_status ($config, $limits, $domain,
+					  $node, $key, 1);
+      print "DEBUG: Pushing category \"$node\" -> \"$key\"...\n" if $DEBUG;
+      if (defined $state) {
+	$tmp{'state_warning'}  = 1 if $state eq "warning";
+	$tmp{'state_critical'} = 1 if $state eq "critical";
+	$tmp{'state_unknown'}  = 1 if $state eq "unknown";
+      }
+      $tmp{name} = ucfirst $key;
+      $tmp{services} = \@{$tmp_cats{$key}};
+      $tmp{node} = $node;
+      $tmp{domain} = $domain;
+      $categories{ucfirst $key} = \%tmp;
+      $comparisons{'other'}{$node} = \%tmp;
+    }
+    # Handle category_order
+    @categories = ();
+    if ($config->{domain}->{$domain}->{node}->{$node}->{category_order}) {
+      foreach my $cat (split /\s+/,
+		       $config->{domain}->{$domain}->
+		       {node}->{$node}->{category_order}) {
+	push @categories, $categories{ucfirst $cat};
+      }
+      foreach my $cat (sort keys %categories) {
+	push @categories, $categories{$cat}
+	  unless (grep { $_->{name} eq $cat } @categories);
+      }
+    } else {
+      @categories = map { $categories{$_} } sort keys %categories;
+    }
+    $nodetemplate->param(SERVICES => \@services,
+			 NODE => $node,
+			 DOMAIN => $domain,
+			 DOMAINS => \@domainlist,
+			 TIMESTAMP => $timestamp,
+			 CATEGORIES => \@categories);
+    open (FILE, ">$config->{htmldir}/$domain/$node.html") or
+      die "Cannot open $config->{htmldir}/$domain/$node.html";
+    print FILE $nodetemplate->output;
     close FILE;
-    
-    $domain{nodes} = \@nodes;
-    $domain{domain} = $domain;
-    $domain{compare} = (&munin_get_bool ($config, "compare", 1, $domain) and @nodeorder > 1);
+    $node{services} = \@services;
+    $node{categories} = \@categories;
+    $node{domain} = $domain;
+    push @nodes,\%node;
 
-    my @cats = ();
-    foreach my $key (sort keys %comparisons)
-    {
-	my %cat;
-	my %servlist;
-	my $nodewidth = 0;
+  }
+  $domaintemplate->param(NODES => \@nodes,
+			 DOMAIN => $domain, 
+			 DOMAINS => \@domainlist, 
+			 COMPARE => (&munin_get_bool ($config, "compare", 1,
+						      $domain)
+				     and @nodeorder > 1),
+			 TIMESTAMP => $timestamp);
+  open (FILE, ">$config->{htmldir}/$domain/index.html") or
+    die "Cannot open $config->{htmldir}/index.html";
+  print FILE $domaintemplate->output;
+  close FILE;
 
-	foreach my $node (sort keys %{$comparisons{$key}})
-	{
-	    foreach my $serv (@{$comparisons{$key}{$node}->{services}})
-	    {
-		$servlist{$serv->{service}}{$node} = $serv;
-		$nodewidth = $serv->{imgdaywidth} if (defined $serv->{imgdaywidth} and $serv->{imgdaywidth} > $nodewidth);
-	    }
-	}
-	foreach my $sname (sort keys %servlist)
-	{
-	    my %s;
-	    foreach my $node (@nodeorder)
-	    {
-		if (defined $servlist{$sname}{$node})
-		{
-		    $servlist{$sname}{$node}->{width} = $nodewidth;
-		    push (@{$s{nodes}}, $servlist{$sname}{$node});
-		}
-		else
-		{
-		    my %ts;
-		    $ts{label} = "Not present";
-		    $ts{service} = "$sname";
-		    $ts{title} = "Not present";
-		    $ts{node} = $node;
-		    $ts{width} = $nodewidth;
-		    push (@{$s{nodes}}, \%ts);
-		}
-	    }
-	    push @{$cat{services}}, \%s;
-	}
-	$cat{name} = ucfirst $key;
-	$cat{numnodes} = @nodeorder;
-	$cat{numnodes} = @nodeorder;
-	push @cats, \%cat;
+  $domain{nodes} = \@nodes;
+  $domain{domain} = $domain;
+  $domain{compare} = (&munin_get_bool ($config, "compare", 1, $domain) 
+		      and @nodeorder > 1);
+
+  my @cats = ();
+  foreach my $key (sort keys %comparisons) {
+    my %cat;
+    my %servlist;
+    my $nodewidth = 0;
+
+    foreach my $node (sort keys %{$comparisons{$key}}) {
+      foreach my $serv (@{$comparisons{$key}{$node}->{services}}) {
+	$servlist{$serv->{service}}{$node} = $serv;
+	$nodewidth = $serv->{imgdaywidth}
+	  if (defined $serv->{imgdaywidth}
+	      and $serv->{imgdaywidth} > $nodewidth);
+      }
     }
-
-    if (&munin_get_bool ($config, "compare", 1, $domain) and @nodeorder > 1)
-    {
-	foreach my $t (@times)
-	{
-	    $comparisontemplates{$t}->param(DOMAIN => $domain,
-				 DOMAINS => \@domainlist, 
-				 TIMESTAMP => $timestamp,
-				 CATEGORIES => \@cats);
-	    open (FILE, ">$config->{htmldir}/$domain/comparison-$t.html") or die "Cannot open $config->{htmldir}/$domain/comparison-$t.html";
-	    print FILE $comparisontemplates{$t}->output;
-	    close FILE;
+    foreach my $sname (sort keys %servlist) {
+      my %s;
+      foreach my $node (@nodeorder) {
+	if (defined $servlist{$sname}{$node}) {
+	  $servlist{$sname}{$node}->{width} = $nodewidth;
+	  push (@{$s{nodes}}, $servlist{$sname}{$node});
+	} else {
+	  my %ts;
+	  $ts{label} = "Not present";
+	  $ts{service} = "$sname";
+	  $ts{title} = "Not present";
+	  $ts{node} = $node;
+	  $ts{width} = $nodewidth;
+	  push (@{$s{nodes}}, \%ts);
 	}
+      }
+      push @{$cat{services}}, \%s;
     }
+    $cat{name} = ucfirst $key;
+    $cat{numnodes} = @nodeorder;
+    $cat{numnodes} = @nodeorder;
+    push @cats, \%cat;
+  }
 
-    push @domains,\%domain;
+  if (&munin_get_bool ($config, "compare", 1, $domain) and @nodeorder > 1) {
+    foreach my $t (@times) {
+      $comparisontemplates{$t}->param(DOMAIN => $domain,
+				      DOMAINS => \@domainlist,
+				      TIMESTAMP => $timestamp,
+				      CATEGORIES => \@cats);
+      open (FILE, ">$config->{htmldir}/$domain/comparison-$t.html") or
+	die "Cannot open $config->{htmldir}/$domain/comparison-$t.html";
+      print FILE $comparisontemplates{$t}->output;
+      close FILE;
+    }
+  }
+  push @domains,\%domain;
 }
 
 $template->param(DOMAINS => \@domains, 
@@ -603,7 +636,9 @@ sub get_png_size
 	return ($width, $height);
 }
 
-logger("munin-html finished");
+$update_time = sprintf("%.2f",(Time::HiRes::time - $update_time));
+
+logger("munin-html finished ($update_time sec)");
 close $log;
 
 =head1 NAME
@@ -651,6 +686,10 @@ with Munin's node.  Munin is a group of programs to gather data from
 Munin's nodes, graph them, create html-pages, and optionally warn Nagios
 about any off-limit values.
 
+If munin.conf sets "graph_strategy cgi" then munin-html generates URLs
+referencing the graph CGI instead of referencing pre-generated
+graphs (made by munin-graph).
+
 Munin-html creates the html pages.
 
 =head1 FILES
@@ -677,7 +716,8 @@ Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
 =head1 COPYRIGHT
 
-Copyright © 2002-2004 Knut Haugen, Audun Ytterdal, and Jimmy Olsen / Linpro AS.
+Copyright (C) 2002-2006 Knut Haugen, Audun Ytterdal, and Jimmy Olsen /
+Linpro AS.
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

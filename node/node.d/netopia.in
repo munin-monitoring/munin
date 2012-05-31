@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 
 
 if [ "$1" = "config" ]; then

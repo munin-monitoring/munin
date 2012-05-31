@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 # 
 # Plugin to monitor the number of slow queries on a mysql-server
 #

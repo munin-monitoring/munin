@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Wildcard-plugin to monitor network interfaces. To monitor an
 # interface, link if_err_<interface> to this file. E.g.
@@ -17,7 +17,7 @@
 #%# family=auto
 #%# capabilities=autoconf suggest
 
-INTERFACE=`basename $0 | sed 's/^if_err_//g'`
+INTERFACE=${0##*/if_err_}
 
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/net/dev ]; then
@@ -30,12 +30,14 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 if [ "$1" = "suggest" ]; then
-	if [ -r /proc/net/dev ]; then
-		egrep '^ *(eth|wlan|ath|ra)[0-9]+:' /proc/net/dev | cut -f1 -d: | sed 's/ //g'
-		exit 0
-	else
-		exit 1
-	fi
+    if [ -r /proc/net/dev ]; then
+	awk '
+            /^ *(eth|tap|bond|wlan|ath|ra|sw)[0-9]+:/ {
+                 split($0, a, /: */);
+                 gsub(/^ +/,"",a[1]);
+                 if (($2 > 0) || ($10 > 0)) print a[1]; }' /proc/net/dev
+    fi
+    exit 0
 fi
 
 if [ "$1" = "config" ]; then

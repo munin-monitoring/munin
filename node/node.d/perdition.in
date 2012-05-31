@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to graph perdition connections and errors 
 # Requires: logtail

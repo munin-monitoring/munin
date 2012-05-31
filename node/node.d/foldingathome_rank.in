@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Folding@Home Rank
 #
@@ -12,11 +12,13 @@
 #%# family=contrib
 #%# capabilities=autoconf
 
-statefile=@@PLUGSTATE@@/plugin-fah_rank.state
+statefile=$MUNIN_PLUGSTATE/plugin-fah_rank.state
 
 if [ "$1" = "autoconf" ]; then
-    echo yes
-    exit 0
+    # No real check of anything
+    # echo yes
+    echo no
+    exit 1
 fi
 
 if [ "$1" = "config" ]; then

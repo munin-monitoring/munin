@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Skeleton-plugin to monitor ipac-ng rules. To monitor an
 # rule, copy ipac-ng and edit variables.

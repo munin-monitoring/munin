@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Folding@Home WU submited
 #
@@ -12,11 +12,13 @@
 #%# family=contrib
 #%# capabilities=autoconf
 
-statefile=@@PLUGSTATE@@/plugin-fah_wu.state
+statefile=$MUNIN_PLUGSTATE/plugin-fah_wu.state
 
 if [ "$1" = "autoconf" ]; then
-    echo yes
-    exit 0
+    # Didn't check anything, which is meaningless in this case.
+    # echo yes
+    echo no
+    exit 1
 fi
 
 if [ "$1" = "config" ]; then
@@ -29,7 +31,7 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-wu=`wget "http://vspx27.stanford.edu/cgi-bin/main.py?qtype=userpage&username=8d" -q -t 1 -T 5 -O - | egrep -A 2 "<TD> WU</TD>" | grep "<b>" | sed 's/.*<b> \([0-9]*\) .*/\1/'`
+wu=$(wget "http://vspx27.stanford.edu/cgi-bin/main.py?qtype=userpage&username=8d" -q -t 1 -T 5 -O - | egrep -A 2 "<TD> WU</TD>" | grep "<b>" | sed 's/.*<b> \([0-9]*\) .*/\1/')
 
 if [ "$wu" == "" ]; then
 	if [ -f $statefile ]; then

@@ -1,17 +1,18 @@
-#!/bin/sh
+#!@@GOODSH@@
 # 
 # Plugin to monitor the load average on a system.
 #
 # Usage: Link or copy into /etc/munin/node.d/
+#
+# Parameters
+#     env.load_warn <warning load>
+#     env.load_crit <critical load>
 #
 # Magic markers (optional - only used by munin-config and some
 # installation scripts):
 #
 #%# family=auto
 #%# capabilities=autoconf
-
-[ "$load_warn" ] && LOAD_WARN=$load_warn || LOAD_WARN=10
-[ "$load_crit" ] && LOAD_CRIT=$load_crit || LOAD_CRIT=120
 
 # If run with the "autoconf"-parameter, give our opinion on wether we
 # should be run on this system or not. This is optinal, and only used by
@@ -27,6 +28,9 @@ fi
 # graphs should look. 
  
 if [ "$1" = "config" ]; then
+        LOAD_WARN=${load_warn:-10}
+        LOAD_CRIT=${load_crit:-120}
+
 	# The host name this plugin is for. (Can be overridden to have
 	# one machine answer for several)
 
@@ -67,28 +71,3 @@ fi
 
 echo -n "load.value "
 cut -f2 -d' ' < /proc/loadavg
-
-# How could this plugin have been written in its simplest form?
-# Something like this:
-#
-# ---------------------
-# #!/bin/sh
-
-#
-# if [ "$1" = "config" ]; then
-
-# 	echo "graph_title Load average"
-#	echo 'graph_args --base 1000 -l 0'
-#	echo 'graph_vlabel load'
-# 	echo "load.label load"
-# 	exit 0
-# fi
-# echo -n "load.value "
-# cut -f1 -d' ' < /proc/loadavg
-# ---------------------
-#
-# Except for the Nagios-warnings (which most people don't have any need
-# for) and things used by installation scripts and munin-config (which
-# you don't need if you don't plan on submitting your plugin to the
-# pacakge), and the scaling (no milliload numbers) the two versions will
-# work identically.

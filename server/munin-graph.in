@@ -1,7 +1,7 @@
 #!@@PERL@@ -w
 # -*- cperl -*-
 #
-# Copyright (C) 2002-2004 Jimmy Olsen, Audun Ytterdal
+# Copyright (C) 2002-2006 Jimmy Olsen, Audun Ytterdal, Nicolai Langfeldt
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,9 +17,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-#
 # $Id$
-#
+
 $|=1;
 
 use strict;
@@ -33,7 +32,7 @@ use Time::HiRes;
 
 my $graph_time= Time::HiRes::time;
 my $DEBUG = 0;
-my $VERSION = "@@VERSION@@";
+my $VERSION = '@@VERSION@@';
 
 # Limit graphing to certain hosts and/or services
 my @limit_hosts = ();
@@ -42,7 +41,14 @@ my @limit_services = ();
 # RRDtool 1.2 requires \\: in comments
 my $RRDkludge = $RRDs::VERSION < 1.2 ? '' : '\\';
 
-# Force drawing of "graph no". 
+# And RRDtool 1.2 and later has draws lines with crayons so we hack
+# the LINE* options a bit.
+my $LINEkluge=0;
+if ($RRDs::VERSION >= 1.2) {
+    $LINEkluge=1;
+}
+
+# Force drawing of "graph no".
 my $force_graphing = 0;
 my $force_lazy = 1;
 my $force_root = 0;
@@ -578,13 +584,37 @@ sub process_node {
 	$max_field_len =
 	  &munin_get_max_label_length ($node, $config, $domain, $name,
 				       $service, \@field_order);
-	my $global_headers = ($max_field_len > 16);
+	# my $global_headers = ($max_field_len >= 16);
+	# Global headers makes the value tables easier to read no matter how
+	# wide the labels are.
+	my $global_headers = 1;
+
+	# Default format for printing under graph.
+	my $avgformat;
+	my $rrdformat=$avgformat="%6.2lf";
+
+	if (exists $node->{client}->{$service}->{graph_args} and
+	    $node->{client}->{$service}->{graph_args} =~ /--base\s+1024/) {
+	    # If the base unit is 1024 then 1012.56 is a valid
+	    # number to show.  That's 7 positions, not 6.
+	    $rrdformat=$avgformat="%7.2lf";
+	}
+
+	if (exists $node->{client}->{$service}->{graph_printf} ) {
+	    # Plugin specified complete printf format
+	    $rrdformat=$node->{client}->{$service}->{graph_printf};
+	}
+
+	my $rrdscale = '';
+	$rrdscale = '%s'
+	  if munin_get_bool_val ($node->{client}->{$service}->{graph_scale},1);
 
 	# Array to keep negative data until we're finished with positive.
 	my @rrd_negatives = ();
 	my $filename = "unknown";
 	my %total_pos;
 	my %total_neg;
+	my $autostacking=0;
 	print "DEBUG: Treating fields \"", join "\",\"", @field_order, "\".\n" if $DEBUG;
 	for my $field (@field_order) {
 	    my $path  = undef;
@@ -595,14 +625,39 @@ sub process_node {
 	    next unless &process_field ($node, $service, $field);
 	    print "DEBUG: Processing field \"$field\".\n" if $DEBUG;
 
-	    if ($field_count == 0 and 
-		munin_get ($config, "draw", "LINE2", $domain, $name, $service, $field) eq "STACK") {
+	    my $fielddraw = munin_get ($config, "draw", "LINE2", $domain,
+				       $name, $service, $field);
+
+	    if ($field_count == 0 and $fielddraw eq 'STACK') {
 		# Illegal -- first field is a STACK
-		logger ("ERROR: First field (\"$field\") of graph \"$domain\" :: \"$name\" :: \"$service\" is STACK. STACK can only be drawn after a LINEx or AREA.");
+		logger ("ERROR: First field (\"$field\") of graph \"$domain\"".
+			":: \"$name\" :: \"$service\" is STACK. STACK can ".
+			"only be drawn after a LINEx or AREA.");
+		$fielddraw = "LINE2";
 	    }
-		
+
+	    if ($fielddraw eq 'AREASTACK') {
+		if ($autostacking==0) {
+		    $fielddraw='AREA';
+		    $autostacking=1;
+		} else {
+		    $fielddraw='STACK';
+		}
+	    }
+
+	    if ($fielddraw =~ /LINESTACK(\d+(?:.\d+)?)/ ) {
+		if ($autostacking==0) {
+		    $fielddraw="LINE$1";
+		    $autostacking=1;
+		} else {
+		    $fielddraw='STACK';
+		}
+	    }
+
 	    # Getting name of rrd file
-	    $filename = &munin_get_rrd_filename ($node, $config, $domain, $name, $service, $field, $path);
+	    $filename = &munin_get_rrd_filename ($node, $config, $domain,
+						 $name, $service, $field,
+						 $path);
 
 	    my $update = RRDs::last ($filename);
 	    $update = 0 if ! defined $update;
@@ -610,9 +665,16 @@ sub process_node {
 		$lastupdate = $update;
 	    }
 
-	    my $rrdfield = ($node->{client}->{$service}->{$field.".rrdfield"} || "42");
-	    my $single_value = $force_single_value || &single_value ($node, $config, $domain, $name, $service, $field, \@field_order);
-	    my $has_negative = exists $node->{client}->{$service}->{$field.".negative"};
+	    # It does not look like $fieldname.rrdfield is possible to set
+	    my $rrdfield = ($node->{client}->{$service}->{$field.".rrdfield"}
+			    || "42");
+
+	    my $single_value = $force_single_value ||
+	      &single_value ($node, $config, $domain, $name,
+			     $service, $field, \@field_order);
+
+	    my $has_negative =
+	      exists $node->{client}->{$service}->{$field.".negative"};
 
 	    # Trim the fieldname to make room for other field names.
 	    $rrdname = &get_field_name ($field);
@@ -628,19 +690,24 @@ sub process_node {
 	    push (@rrd, "DEF:a$rrdname=" .
 		  $filename . ":" . $rrdfield . ":MAX");
 
-	    if (exists $node->{client}->{$service}->{$field.".onlynullcdef"} and
+	    if (exists $node->{client}->{$service}->{$field.".onlynullcdef"}
+		and
 		$node->{client}->{$service}->{$field.".onlynullcdef"}) {
-		push (@rrd, "CDEF:c$rrdname=g$rrdname" . (($now-$update)>900 ? ",POP,UNKN" : ""));
+		push (@rrd, "CDEF:c$rrdname=g$rrdname" .
+		      (($now-$update)>900 ? ",POP,UNKN" : ""));
 	    }
 
-	    if (($node->{client}->{$service}->{$field.".type"}||"GAUGE") ne "GAUGE"
+	    if (($node->{client}->{$service}->{$field.".type"}||"GAUGE")
+		ne "GAUGE"
 		and graph_by_minute ($config, $domain, $name, $service)) {
-		push (@rrd, &expand_cdef($node->{client}->{$service}, \$rrdname, "$field,60,*"));
+		push (@rrd, &expand_cdef($node->{client}->{$service},
+					 \$rrdname, "$field,60,*"));
 	    }
 
 	    if ($node->{client}->{$service}->{$field.".cdef"}) {
-		push (@rrd, &expand_cdef($node->{client}->{$service},
-					 \$rrdname, $node->{client}->{$service}->{$field.".cdef"}));
+		push (@rrd,&expand_cdef($node->{client}->{$service},
+					\$rrdname,
+					$node->{client}->{$service}->{$field.".cdef"}));
 		push (@rrd, "CDEF:c$rrdname=g$rrdname");
 		print "DEBUG: Field name after cdef set to $rrdname\n" if $DEBUG;
 	    } elsif (!(exists $node->{client}->{$service}->{$field.".onlynullcdef"}
@@ -677,12 +744,20 @@ sub process_node {
 		$global_headers++;
 	    }
 
-	    my $custom_colour = $node->{client}->{$service}->{$field.".colour"};
-	    $custom_colour = "#" . $custom_colour if $custom_colour;
+	    my $colour;
 
-	    push (@rrd, ($node->{client}->{$service}->{$field.".draw"} || "LINE2") .
-		  ":g$rrdname" .
-		  ($custom_colour || ($single_value ? $single_colour : $COLOUR[$field_count++%@COLOUR])) . ":" .
+	    if (exists $node->{client}->{$service}->{$field.".colour"}) {
+		$colour = "#".
+		  $node->{client}->{$service}->{$field.".colour"};
+	    } elsif ($single_value) {
+		$colour = $single_colour;
+	    } else {
+		$colour = $COLOUR[$field_count%@COLOUR];
+	    }
+
+	    $field_count++;
+
+	    push (@rrd, $fielddraw . ":g$rrdname" . $colour . ":" .
 		  (escape ($node->{client}->{$service}->{"$field.label"}) || escape ($field))
 		  . (" " x ($max_field_len + 1 -
 			    length ($node->{client}->{$service}->{"$field.label"} || $field))));
@@ -710,31 +785,28 @@ sub process_node {
 		    push (@rrd, "STACK:neg_min_max_diff$range_colour");
 		}
 
-		push (@rrd_negatives, ($node->{client}->{$service}->{$negfield.".draw"} || "LINE2") .
-		    ":ng$negfield" .
-		    ((defined $single_value and $single_value) ? $single_colour : $COLOUR[($field_count-1)%@COLOUR]));
+		push (@rrd_negatives, $fielddraw . ":ng$negfield" . $colour );
 
 		# Draw HRULEs
 		my $linedef = munin_get ($config, "line", undef, $domain, $name, $service, $node->{client}->{$service}->{$field.".negative"});
 		if ($linedef) {
-		    my ($number, $colour, $label) = split (/:/, $linedef, 3);
+		    my ($number, $ldcolour, $label) = split (/:/, $linedef, 3);
 		    push (@rrd_negatives, "HRULE:".$number.
-			($colour ? "#$colour" :
-			  ((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]))
-			);
+			($ldcolour ? "#$ldcolour" : $colour));
+
 		} elsif ($node->{client}->{$service}->{"$negfield.warn"}) {
 		    push (@rrd_negatives, "HRULE:".$node->{client}->{$service}->{$node->{client}->{$service}->{$field.".negative"}.".warn"}.
-			((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
+			  (defined $single_value and $single_value) ? "#ff0000" : $colour);
 		}
 
-		push (@rrd, "GPRINT:c$negfield:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
-		push (@rrd, "GPRINT:c$rrdname:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-		push (@rrd, "GPRINT:i$negfield:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
-		push (@rrd, "GPRINT:i$rrdname:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-		push (@rrd, "GPRINT:g$negfield:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
-		push (@rrd, "GPRINT:g$rrdname:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-		push (@rrd, "GPRINT:a$negfield:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
-		push (@rrd, "GPRINT:a$rrdname:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "\\j");
+		push (@rrd, "GPRINT:c$negfield:LAST:$rrdformat" . $rrdscale . "/\\g");
+		push (@rrd, "GPRINT:c$rrdname:LAST:$rrdformat" . $rrdscale . "");
+		push (@rrd, "GPRINT:i$negfield:MIN:$rrdformat" . $rrdscale . "/\\g");
+		push (@rrd, "GPRINT:i$rrdname:MIN:$rrdformat" . $rrdscale . "");
+		push (@rrd, "GPRINT:g$negfield:AVERAGE:$avgformat" . $rrdscale . "/\\g");
+		push (@rrd, "GPRINT:g$rrdname:AVERAGE:$avgformat" . $rrdscale . "");
+		push (@rrd, "GPRINT:a$negfield:MAX:$rrdformat" . $rrdscale . "/\\g");
+		push (@rrd, "GPRINT:a$rrdname:MAX:$rrdformat" . $rrdscale . "\\j");
 		push (@{$total_pos{'min'}}, "i$rrdname");
 		push (@{$total_pos{'avg'}}, "g$rrdname");
 		push (@{$total_pos{'max'}}, "a$rrdname");
@@ -743,32 +815,34 @@ sub process_node {
 		push (@{$total_neg{'max'}}, "a$negfield");
 	    } else {
 		push (@rrd, "COMMENT: Cur$RRDkludge:") unless $global_headers;
-		push (@rrd, "GPRINT:c$rrdname:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, "yes")?"%s":"") . "");
+		push (@rrd, "GPRINT:c$rrdname:LAST:$rrdformat" . $rrdscale . "");
 		push (@rrd, "COMMENT: Min$RRDkludge:") unless $global_headers;
-		push (@rrd, "GPRINT:i$rrdname:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
+		push (@rrd, "GPRINT:i$rrdname:MIN:$rrdformat" . $rrdscale . "");
 		push (@rrd, "COMMENT: Avg$RRDkludge:") unless $global_headers;
-		push (@rrd, "GPRINT:g$rrdname:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
+		push (@rrd, "GPRINT:g$rrdname:AVERAGE:$avgformat" . $rrdscale . "");
 		push (@rrd, "COMMENT: Max$RRDkludge:") unless $global_headers;
-		push (@rrd, "GPRINT:a$rrdname:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "\\j");
+		push (@rrd, "GPRINT:a$rrdname:MAX:$rrdformat" . $rrdscale . "\\j");
 		push (@{$total_pos{'min'}}, "i$rrdname");
 		push (@{$total_pos{'avg'}}, "g$rrdname");
 		push (@{$total_pos{'max'}}, "a$rrdname");
 	    }
 
-
 	    # Draw HRULEs
 	    my $linedef = munin_get ($config, "line", undef, $domain, $name, $service, $field);
 	    if ($linedef) {
-		my ($number, $colour, $label) = split (/:/, $linedef, 3);
+		my ($number, $ldcolour, $label) = split (/:/, $linedef, 3);
 		$label =~ s/:/\\:/g if defined $label;
 		push (@rrd, "HRULE:".$number.
-		    ($colour ? "#$colour" :
-		      ((defined $single_value and $single_value) ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR])) .
-		      ((defined $label and length ($label)) ? ":$label" : ""), 
+		    ($ldcolour ? "#$ldcolour" :
+		      ((defined $single_value and $single_value) ?
+		       "#ff0000" : $colour)).
+		      ((defined $label and length ($label)) ? ":$label" : ""),
 		      "COMMENT: \\j"
 		    );
 	    } elsif ($node->{client}->{$service}->{"$field.warn"}) {
-		push (@rrd, "HRULE:".$node->{client}->{$service}->{"$field.warn"}.($single_value ? "#ff0000" : $COLOUR[($field_count-1)%@COLOUR]));
+		push (@rrd,"HRULE:".
+		      $node->{client}->{$service}->{"$field.warn"}.
+		      ($single_value ? "#ff0000" : $colour));
 	    }
 	}
 
@@ -787,14 +861,14 @@ sub process_node {
 		push (@rrd, "CDEF:anegtotal=".join (",", map { "$_,UN,0,$_,IF" } @{$total_neg{'max'}}).(",+" x (@{$total_neg{'max'}}-1)));
 		push (@rrd, "CDEF:dpostotal=ipostotal,UN,ipostotal,UNKN,IF");
 		push (@rrd, "LINE1:dpostotal#000000:" . $node->{client}->{$service}->{graph_total} . (" " x ($max_field_len - length ($node->{client}->{$service}->{graph_total}) + 1)));
-		push (@rrd, "GPRINT:gnegtotal:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
-		push (@rrd, "GPRINT:gpostotal:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-		push (@rrd, "GPRINT:inegtotal:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
-		push (@rrd, "GPRINT:ipostotal:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-		push (@rrd, "GPRINT:gnegtotal:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
-		push (@rrd, "GPRINT:gpostotal:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
-		push (@rrd, "GPRINT:anegtotal:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "/\\g");
-		push (@rrd, "GPRINT:apostotal:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "\\j");
+		push (@rrd, "GPRINT:gnegtotal:LAST:$rrdformat" . $rrdscale . "/\\g");
+		push (@rrd, "GPRINT:gpostotal:LAST:$rrdformat" . $rrdscale . "");
+		push (@rrd, "GPRINT:inegtotal:MIN:$rrdformat" . $rrdscale . "/\\g");
+		push (@rrd, "GPRINT:ipostotal:MIN:$rrdformat" . $rrdscale . "");
+		push (@rrd, "GPRINT:gnegtotal:AVERAGE:$avgformat" . $rrdscale . "/\\g");
+		push (@rrd, "GPRINT:gpostotal:AVERAGE:$avgformat" . $rrdscale . "");
+		push (@rrd, "GPRINT:anegtotal:MAX:$rrdformat" . $rrdscale . "/\\g");
+		push (@rrd, "GPRINT:apostotal:MAX:$rrdformat" . $rrdscale . "\\j");
 	    }
 	}
 	elsif (exists $node->{client}->{$service}->{graph_total} and exists $total_pos{'min'} and @{$total_pos{'min'}}) {
@@ -805,36 +879,52 @@ sub process_node {
 	    push (@rrd, "CDEF:dpostotal=ipostotal,UN,ipostotal,UNKN,IF");
 	    push (@rrd, "LINE1:dpostotal#000000:" . $node->{client}->{$service}->{graph_total} . (" " x ($max_field_len - length ($node->{client}->{$service}->{graph_total}) + 1)));
 	    push (@rrd, "COMMENT: Cur$RRDkludge:") unless $global_headers;
-	    push (@rrd, "GPRINT:gpostotal:LAST:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
+	    push (@rrd, "GPRINT:gpostotal:LAST:$rrdformat" . $rrdscale . "");
 	    push (@rrd, "COMMENT: Min$RRDkludge:") unless $global_headers;
-	    push (@rrd, "GPRINT:ipostotal:MIN:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
+	    push (@rrd, "GPRINT:ipostotal:MIN:$rrdformat" . $rrdscale . "");
 	    push (@rrd, "COMMENT: Avg$RRDkludge:") unless $global_headers;
-	    push (@rrd, "GPRINT:gpostotal:AVERAGE:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "");
+	    push (@rrd, "GPRINT:gpostotal:AVERAGE:$avgformat" . $rrdscale ."");
 	    push (@rrd, "COMMENT: Max$RRDkludge:") unless $global_headers;
-	    push (@rrd, "GPRINT:apostotal:MAX:%6.2lf" . (munin_get_bool_val ($node->{client}->{$service}->{graph_scale}, 1)?"%s":"") . "\\j");
+	    push (@rrd, "GPRINT:apostotal:MAX:$rrdformat" . $rrdscale . "\\j");
 	}
 
 	for my $time (keys %times) {
 	    next unless ($draw{$time});
 	    my @complete = ();
+	    if ($RRDkludge) {
+		push (@complete,
+ 		      '--font' ,'LEGEND:7:@@LIBDIR@@/VeraMono.ttf',
+ 		      '--font' ,'UNIT:7:@@LIBDIR@@/VeraMono.ttf',
+ 		      '--font' ,'AXIS:7:@@LIBDIR@@/VeraMono.ttf');
+	    }
+
 	    logger ("Processing $name -> $time") if $DEBUG;
 
 	    # Do the header (title, vtitle, size, etc...)
 	    push @complete, @{&get_header ($node, $config, $domain, $name, $service, $time)};
+	    if ($LINEkluge) {
+		@rrd = map { s/LINE3:/LINE2.2:/; $_; } @rrd;
+		@rrd = map { s/LINE2:/LINE1.6:/; $_; } @rrd;
+		# LINE1 is thin enough.
+	    }
 	    push @complete, @rrd;
 
-	    push (@complete, "COMMENT:Last update$RRDkludge: " . RRDescape(scalar localtime($lastupdate)) .  "\\r");
+	    push (@complete, "COMMENT:Last update$RRDkludge: " . 
+		  RRDescape(scalar localtime($lastupdate)) .  "\\r");
 
 	    if (time - 300 < $lastupdate) {
-		push @complete, "--end",(int($lastupdate/$resolutions{$time}))*$resolutions{$time};
+		push @complete, "--end",
+		  (int($lastupdate/$resolutions{$time}))*$resolutions{$time};
 	    }
-	    print "\n\nrrdtool \"graph\" \"", join ("\"\n\t\"",@complete), "\"\n" if $DEBUG;
+	    print "\n\nrrdtool \"graph\" \"",
+	      join ("\"\n\t\"",@complete), "\"\n" if $DEBUG;
 	    RRDs::graph (@complete);
 	    if (my $ERROR = RRDs::error) {
 		logger ("Unable to graph $filename: $ERROR");
 	    } elsif ($list_images) {
 		# Command-line option to list images created
-		print &munin_get_picture_filename ($config, $domain, $name, $service, $time), "\n";
+		print &munin_get_picture_filename ($config, $domain, $name,
+						   $service, $time),"\n";
 	    }
 	}
 
@@ -1163,11 +1253,15 @@ with Munin's node.  Munin is a group of programs to gather data from
 Munin's nodes, graph them, create html-pages, and optionally warn Nagios
 about any off-limit values.
 
-munin-graph does the graphing. It is usually only used from within munin-cron.
+munin-graph does the graphing. It is usually only used from within
+munin-cron.  If munin.conf sets "graph_strategy cgi" then munin-graph
+does no work, instead munin-html generates references to the graphing
+CGI.  Please see http://munin.projects.linpro.no/wiki/CgiHowto for
+more information about CGI grpahing.
 
 It checks the rrd-files for updated values, and redraws the graphs if
 needed. To force redrawing of graphs (after setup-changes et alia), use
-'--nolazy'. 
+'--nolazy'.
 
 =head1 FILES
 
@@ -1178,7 +1272,7 @@ needed. To force redrawing of graphs (after setup-changes et alia), use
 
 =head1 AUTHORS
 
-Audun Ytterdal, Jimmy Olsen and Tore Anderson.
+Audun Ytterdal, Jimmy Olsen, Tore Anderson, Nicolai Langfeldt.
 
 =head1 BUGS
 
@@ -1188,7 +1282,7 @@ Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
 =head1 COPYRIGHT
 
-Copyright © 2002-2006 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
+Copyright (C) 2002-2006 Audun Ytterdal, Jimmy Olsen, Tore Anderson, and Nicolai Langfeldt
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

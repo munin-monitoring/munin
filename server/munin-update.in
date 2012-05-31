@@ -17,8 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-#
-#
 # Script to update the RRD-files with current information.
 #
 # $Id$
@@ -311,7 +309,7 @@ if (&munin_getlock("$config->{rundir}/munin-datafile.lock"))
 }
 else
 {
-    warn "Could not create lockfile \"$config->{rundir}/munin-update.lock\"";
+    die "Could not create lockfile \"$config->{rundir}/munin-update.lock\"";
 }
 
 $update_time = sprintf ("%.2f",(Time::HiRes::time - $update_time));
@@ -1106,61 +1104,76 @@ sub config_node {
 }
 
 sub fetch_node {
-  my ($domain,$name,$node,$socket) = @_;
-  my $nodefetch_time = Time::HiRes::time;
-  logger("Fetching node: $name") if $DEBUG;
-  for my $service (keys %{$node->{client}}) {
-    my $servicefetch_time = Time::HiRes::time;
-    logger("Fetching service: $name->$service") if $DEBUG;
-    next if (exists ($node->{client}->{$service}->{fetch_data}) and 
-	     $node->{client}->{$service}->{fetch_data} == 0);
-    next if (exists ($node->{client}->{$service}->{update}) and 
-	     $node->{client}->{$service}->{update} ne "yes");
-    next if (@limit_services and !grep (/^$service$/, @limit_services));
-    my $realservname = $node->{client}->{$service}->{realservname} || $service;
-    delete $node->{client}->{$service}->{realservname}
-	if exists $node->{client}->{$service}->{realservname};
-    write_socket_single ($socket, "fetch $realservname\n");
-    my @lines = &read_socket($socket);
-    return 0 unless $socket;
-    my $fields = {};
-    for (@lines) {
-      next unless defined $_;
-      if (/\# timeout/) {
-	logger("Client reported timeout in fetching of $service");
-      }
-      elsif (/(\w+)\.value\s+(.+)/) {
-	my $key = $1;
-	my $value = $2;
-	my $comment = $3;
-	$key = &sanitise_fieldname ($key, $fields);
-	if (exists $node->{client}->{$service}->{$key.".label"})
-	{
-	    my $fname = "$config->{dbdir}/$domain/$name-$service-$key-".
-	      lc substr (($node->{client}->{$service}->{$key.".type"}||"GAUGE"),0,1).
-		".rrd";
-	    logger("Updating $fname with $value") if $DEBUG;
-	    RRDs::update ("$fname", "N:$value");
-	    if (my $ERROR = RRDs::error) {
-	      logger ("Unable to update $fname: $ERROR");
-	    }
-	} else {
-	    logger ("Unable to update $domain -> $name -> $service -> $key: No such field (no \"label\" field defined when running plugin with \"config\").");
-	}
-      }
-      elsif (/(\w+)\.extinfo\s+(.+)/) {
-	$config->{domain}->{$domain}->{node}->{$name}->{client}->{$service}->{$1.".extinfo"} = $2;
-      }
-    }
-    $servicefetch_time = sprintf ("%.2f",(Time::HiRes::time - $servicefetch_time));
-    logger ("Fetched service: $name -> $service ($servicefetch_time sec)");
-    print STATS "FS|$domain|$name|$service|$servicefetch_time\n";
-  }
-  $nodefetch_time = sprintf ("%.2f",(Time::HiRes::time - $nodefetch_time));
-  logger ("Fetched node: $name ($nodefetch_time sec)");
-  print STATS "FN|$domain|$name|$nodefetch_time\n";
+    my ($domain,$name,$node,$socket) = @_;
+    my $nodefetch_time = Time::HiRes::time;
+    logger("Fetching node: $name") if $DEBUG;
+    for my $service (keys %{$node->{client}}) {
+	my $servicefetch_time = Time::HiRes::time;
+	logger("Fetching service: $name->$service") if $DEBUG;
+	next if (exists ($node->{client}->{$service}->{fetch_data}) and 
+		 $node->{client}->{$service}->{fetch_data} == 0);
+	next if (exists ($node->{client}->{$service}->{update}) and 
+		 $node->{client}->{$service}->{update} ne "yes");
+	next if (@limit_services and !grep (/^$service$/, @limit_services));
+	my $realservname = ( $node->{client}->{$service}->{realservname} ||
+			     $service );
+	delete $node->{client}->{$service}->{realservname}
+	  if exists $node->{client}->{$service}->{realservname};
+	write_socket_single ($socket, "fetch $realservname\n");
+	my @lines = &read_socket($socket);
+	return 0 unless $socket;
+	my $fields = {};
+	for (@lines) {
+	    next unless defined $_;
+	    if (/\# timeout/) {
+		logger("Client reported timeout in fetching of $service");
+	    } elsif (/(\w+)\.value\s+(\S+)\s*(\#.*)?$/) {
+		my $key = $1;
+		my $value = $2;
+		my $comment = $3;
 
-  return 1;
+		if ($value =~ /\d[Ee]([+-]?\d+)$/) {
+		    # Looks like scientific format.  RRDtool does not
+		    # like it so we convert it.
+		    my $magnitude = $1;
+		    if ($magnitude < 0) {
+			# Preserve at least 4 significant digits
+			$magnitude=abs($magnitude)+4;
+			$value=sprintf("%.%magnitudef",$value);
+		    } else {
+			$value=sprintf("%.4f",$value);
+		    }
+		}
+
+		$key = &sanitise_fieldname ($key, $fields);
+		if (exists $node->{client}->{$service}->{$key.".label"}) {
+		    my $fname =
+		      "$config->{dbdir}/$domain/$name-$service-$key-".
+			lc
+			  substr(($node->{client}->{$service}->{$key.".type"}||
+				  "GAUGE"),0,1).".rrd";
+
+		    logger("Updating $fname with $value") if $DEBUG;
+		    RRDs::update ("$fname", "N:$value");
+		    if (my $ERROR = RRDs::error) {
+			logger ("Unable to update $fname: $ERROR");
+		    }
+		} else {
+		    logger ("Unable to update $domain -> $name -> $service -> $key: No such field (no \"label\" field defined when running plugin with \"config\").");
+		}
+	    } elsif (/(\w+)\.extinfo\s+(.+)/) {
+		$config->{domain}->{$domain}->{node}->{$name}->{client}->{$service}->{$1.".extinfo"} = $2;
+	    }
+	}
+	$servicefetch_time = sprintf ("%.2f",(Time::HiRes::time - $servicefetch_time));
+	logger ("Fetched service: $name -> $service ($servicefetch_time sec)");
+	print STATS "FS|$domain|$name|$service|$servicefetch_time\n";
+    }
+    $nodefetch_time = sprintf ("%.2f",(Time::HiRes::time - $nodefetch_time));
+    logger ("Fetched node: $name ($nodefetch_time sec)");
+    print STATS "FN|$domain|$name|$nodefetch_time\n";
+
+    return 1;
 }
 
 sub use_old_config

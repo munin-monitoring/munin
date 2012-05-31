@@ -1,6 +1,5 @@
 #!@@PERL@@  -Tw
 #
-#
 # Copyright (C) 2004 Jimmy Olsen
 #
 # This program is free software; you can redistribute it and/or
@@ -49,6 +48,7 @@ my $scale = "day";
 my $host  = "";
 my $serv  = "";
 my $dom   = "";
+my $lock  = "";
 
 my $config = &munin_readconfig ($conffile);
 
@@ -102,8 +102,29 @@ print "Expires: ", strftime ("%a, %d %b %Y %H:%M:%S GMT", gmtime(time+($period{$
 print "Last-Modified: $last_modified\n";
 print "\n";
 
+# Try to police the number of concurrent rrdgraph instances.  The
+# third value is the default maximum.
+
+# NOTE: The munin_*lock functions are not exactly ideal for race prone
+# locking, they're a bit fuzzy.  A better solution, which would not
+# imply a "sleep 1" would be to use semaphores.  See "perldoc perlipc"
+# and "man semop".
+
+my $max_cgi_graph_jobs = &munin_get ($config, "max_cgi_graph_jobs" , 6, $dom);
+
+until ( $lock ) {
+    foreach my $n ( 1 .. $max_cgi_graph_jobs ) {
+       if (&munin_getlock ("$config->{rundir}/munin-cgi-graph-$n.lock")) {
+           $lock = "munin-cgi-graph-$n.lock";
+           last;
+       }
+    }
+    sleep 1;
+}
 
 &graph ($filename);
+
+munin_removelock($lock);
 
 sub graph
 {

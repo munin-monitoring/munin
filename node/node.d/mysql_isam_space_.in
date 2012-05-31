@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# -*- perl -*-
 #
 # Plugin to monitor the percent of table space used on isam and myisam
 # tables on a mysql server.
@@ -23,6 +24,7 @@ my $DB = `basename $0 | sed 's/^mysql_isam_space_//g' | tr '_' '-'` ;
 chomp $DB;
 my $STATEFILE = $ENV{'statefile'} || "@@PLUGSTATE@@/plugin-mysql_isam_space.state";
 my $MYSQLSHOW = $ENV{'mysqlshow'} || 'mysqlshow';
+my $ABSOLUTE  = $ENV{'absolute'} || 0;
 my @mysql_opts = ();
 
 if (exists $ENV{'mysqlopts'})
@@ -192,7 +194,7 @@ sub fetch_state_from_mysql
                         next if @fields > 2; # Separator line
 			if (! $headerseen and $fields[1] eq "Name")
                         { # Header line, grab field names
-                        	%index = map {($field[$_], $_)} 0..$#fields;
+                        	%index = map {($fields[$_], $_)} 0..$#fields;
 			}
                         else
 			{

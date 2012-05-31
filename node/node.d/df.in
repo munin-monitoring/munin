@@ -1,4 +1,5 @@
-#!/bin/sh
+#!@@GOODSH@@
+# -*- sh -*-
 #
 # Script to monitor disk usage.
 #
@@ -13,41 +14,40 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-MAXLABEL=20
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+print_values () {
+    df -P -l 2>/dev/null | sed -e 1d -e '/\/\//d' -e 's/%//' | 
+    while read dev size used free pct fs; do
+	echo "$(clean_fieldname $dev).value $pct"
+    done
+}
+
 
 if [ "$1" = "autoconf" ]; then
-	if [ `uname -s` = SunOS ]; then
-		echo no
-		exit 1
-	else
-		echo yes
-		exit 0
-	fi
+    if [ -z "$(print_values)" ] ; then
+	echo no
+	exit 1
+    else
+	echo yes
+	exit 0
+    fi
 fi
 
 if [ "$1" = "config" ]; then
-
-	echo 'graph_title Filesystem usage (in %)'
-	echo 'graph_args --upper-limit 100 -l 0'
-	echo 'graph_vlabel %'
-	df -P -l  | sed 1d | grep -v "//" | sort | while read i; do
-		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 }'`
-		printf "$name.label "
-		echo $i | awk "{ 
-			dir=\$6
-			if (length(dir) <= $MAXLABEL)
-				print dir
-			else
-				printf (\"...%s\n\", substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3)) 
-		}"
-		echo "$name.warning 92"
-		echo "$name.critical 98"
-	done
-	exit 0
+    echo 'graph_title Filesystem usage (in %)'
+    echo 'graph_args --upper-limit 100 -l 0'
+    echo 'graph_vlabel %'
+    echo 'graph_scale no'
+    df -P -l  | sed -e 1d -e '/\/\//d' -e 's/%//' | sort | 
+    while read dev size used free pct fs; do
+	name=$(clean_fieldname $dev)
+	echo "$name.label $fs"
+	echo "$name.warning 92"
+	echo "$name.critical 98"
+    done
+    exit 0
 fi
 
-df -P -l | sed 1d | grep -v "//" | while read i; do
-	name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 ".value " }'`
-	printf "$name "
-	echo $i | awk '{ print $5 }' | cut -f1 -d%
-done
+print_values
+

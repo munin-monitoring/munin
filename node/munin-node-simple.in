@@ -28,8 +28,8 @@ use strict;
 
 $| = 1;
 
-my $clientdir = "@@CONFIDR@@/node.d";
-my $conffile  = "@@CONFIDR@@/node-simple.conf";
+my $clientdir = "@@CONFDIR@@/node.d";
+my $conffile  = "@@CONFDIR@@/node-simple.conf";
 my $version   = "@@VERSION@@";
 
 # Empty environment

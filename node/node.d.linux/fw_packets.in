@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# -*- perl -*-
 #
 # Plugin to monitor the throuhgput of a firewall.
 #
@@ -9,12 +10,17 @@
 #       config   (required)
 #       autoconf (optional - used by munin-config)
 #
+# NOTE: MUST RUN AS ROOT.
+# @@CONFDIR@@/plugin-conf.d/global or other file in that dir must contain:
+# [fw*]
+#      user root
+#
 # Config variables:
 #
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
 #
-#%# family=manual
+#%# family=auto
 #%# capabilities=autoconf
 
 if ( $ARGV[0] ) {

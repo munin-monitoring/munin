@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Wildcard-plugin to monitor IP addresses through iptables. To monitor an
 # IP, link ip_<ipaddress> to this file. E.g.
@@ -23,7 +23,7 @@
 #%# capabilities=autoconf suggest
 
 
-IP=`basename $0 | sed 's/^ip_//g'`
+IP=${0##*/ip_}
 
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/net/dev ]; then

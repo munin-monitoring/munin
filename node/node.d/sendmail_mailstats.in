@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor sendmail statistics.
 #
@@ -20,7 +20,7 @@
 if [ -n "$mailstats" ]; then MAILSTATS=$mailstats; else MAILSTATS=`which mailstats`; fi
 
 if [ "$1" = "autoconf" ]; then
-	if [ -n "$MAILSTATS" -a -x $MAILSTATS ]; then
+	if [ -n "$MAILSTATS" -a -x "$MAILSTATS" ]; then
 		echo yes
 		exit 0
 	else

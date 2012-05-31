@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor CPU usage.
 #
@@ -26,7 +26,6 @@
 #              otherwise. - Finding and fix by dz@426.ch
 #
 # $Id$
-
 
 if [ "$1" = "autoconf" ]; then
 	if [ -r /proc/stat ]; then

@@ -23,9 +23,6 @@
 #%# family=contrib
 #%# capabilities=autoconf
 
-
-
-
 if [ "$1" = "autoconf" ]; then
 	echo yes
 	exit 0
@@ -37,6 +34,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --upper-limit 100 -l 0'
 	echo 'graph_vlabel %'
 	echo 'graph_category disk'
+	echo 'graph_scale no'
 	df -P -k | sed 1d | grep -v "//" | grep -v "nfs" | while read i; do
 		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $6 }'`
 		devName="$name.label "

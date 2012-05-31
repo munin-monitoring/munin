@@ -1,6 +1,11 @@
-#!/bin/sh
+#!@@GOODSH@@
+# -*- sh -*-
 #
-# Plugin to monitor inode-usage.
+
+# Plugin to monitor inode-usage.  This plugin is meant to be generic
+# unix but there will be specific kinks on each platform that may
+# justify custom versions.  It does not work on SunOS/Solaris.
+
 #
 # Parameters understood:
 #
@@ -13,58 +18,38 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-MAXLABEL=20
-
-fs() {
-	local escaped_mntpt=`echo "$*" | awk '{ print $NF }' | sed 's|/|\\\\/|g'`
-	awk "/^[^ ]* $escaped_mntpt / { print \$3 }" /proc/mounts | grep -v rootfs
-}
+. $MUNIN_LIBDIR/plugins/plugin.sh
 
 print_values() {
-	df -P -l -i | sed 1d | grep -v "//" | while read i; do
-		if [ "`fs $i`" = "reiserfs" ] ; then continue ; fi
-		name=`echo $i | sed 's/[\/.]/_/g'| awk '{ print $1 ".value " }'`
-		printf "$name "
-		echo $i | awk '{ print $5 }' | cut -f1 -d%
-	done
+    df -P -l -i 2>/dev/null | sed -e '1d' -e '/\/\//d' -e 's/%//' |
+    while read dev avail used free pct fs; do
+        echo "$(clean_fieldname $dev).value $pct"
+    done
 }
 
 if [ "$1" = "autoconf" ]; then
-	if [ "`print_values`" = "" ] ; then
-		echo no
-		exit 1
-	else
-		if [ `uname -s` = SunOS ]; then
-			echo no
-			exit 1
-		else
-			echo yes
-			exit 0
-		fi
-	fi
+    if [ -z "$(print_values)" ] ; then
+	echo no
+	exit 1
+    else
+	echo yes
 	exit 0
+    fi
 fi
 
 if [ "$1" = "config" ]; then
-
-	echo 'graph_title Inode usage (in %)'
-	echo 'graph_args --upper-limit 100 -l 0'
-	echo 'graph_vlabel %'
-	df -P -l -i  | sed 1d | grep -v "//" | sort | while read i; do
-		if [ "`fs $i`" = "reiserfs" ] ; then continue ; fi
-		name=`echo $i | sed 's/[\/.]/_/g'| awk '{ print $1 }'`
-		printf "$name.label "
-                echo $i | awk "{
-                        dir=\$6
-                        if (length(dir) <= $MAXLABEL)
-                                print dir
-                        else
-                                printf (\"...%s\n\", substr (dir, length(dir)-$MAXLABEL+4, $MAXLABEL-3))
-                }"
-		echo "$name.warning 92"
-		echo "$name.critical 98" 
-	done
-	exit 0
+    echo 'graph_title Inode usage (in %)'
+    echo 'graph_args --upper-limit 100 -l 0'
+    echo 'graph_vlabel %'
+    echo 'graph_scale no'
+    df -P -l -i  | sed -e '1d' -e '/\/\//d' -e 's/%//' | sort |
+    while read dev avail used free pct fs; do
+	name=$(clean_fieldname $dev)
+	echo "$name.label $fs"
+	echo "$name.warning 92"
+	echo "$name.critical 98" 
+    done
+    exit 0
 fi
 
 print_values

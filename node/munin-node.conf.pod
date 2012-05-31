@@ -14,7 +14,31 @@ The format of the file is dictated by the use of Net::Server. A look at
 "perldoc Net::Server" will give a list of options that the file supports
 by using the module.
 
-Additional options:
+The following options are of special interest:
+
+=over 5
+
+=item B<< allow RE >>
+
+IP based access list is implemented through this. The statement may be
+repeated many times.  It's important to note that it's actually a
+regular expression after the keyword so to allow localhost it must be
+written like this:
+
+      allow ^127\.0\.0\.1$
+
+=item B<< host IP >>
+
+The IP number of the interface munin-node should listen on.  By
+default munin-node listens to all interfaces.  To make munin-node
+listen only on the localhost interface - making it unavailable from
+the network do this:
+
+      host 127.0.0.1
+
+=back
+
+=head2 Additional options:
 
 =over 5
 
@@ -69,7 +93,8 @@ Jimmy Olsen.
 
 =head1 COPYRIGHT
 
-Copyright © 2002-2004 Audun Ytterdal and Jimmy Olsen / Linpro AS.
+Copyright (C) 2002-2006 Audun Ytterdal, Jimmy Olsen, Dagfin Ilmari
+Mansåker, Nicolai Langfeldt
 
 This is free software; see the source for copying conditions. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

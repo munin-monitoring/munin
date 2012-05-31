@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor network connections.
 #  forward: number of connections forwarder
@@ -12,9 +12,13 @@
 #
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
-#%# family=manual
+#%# family=auto
 #%# capabilities=autoconf
-
+#
+# NOTE: MUST RUN AS ROOT.
+# @@CONFDIR@@/plugin-conf.d/global or other file in that dir must contain:
+# [fw*]
+#      user root
 
 
 if [ "$1" = "autoconf" ]; then
@@ -41,10 +45,8 @@ if [ "$1" = "config" ]; then
 	echo 'graph_category network'
 	echo 'forward.label forward'
 	echo 'forward.type GAUGE'
-	echo 'forward.max 500'''
 	echo 'local.label local'
 	echo 'local.type GAUGE'
-	echo 'local.max 500'''
 	exit 0
 fi
 

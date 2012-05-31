@@ -7,6 +7,10 @@ use Net::SNMP;
 use Data::Dumper;
 use vars qw ($configure $suggest $sensor_unit $sensor_index %sensor);
 
+#
+# FIXME: Candidate to be snmp__cmctcsensor_
+#
+
 # Quit if run without specified sensors
 unless ($0 =~ /_\d+_\d+$/ || ($ARGV[0] && $ARGV[0] eq "suggest")) {
     print "Need sensor spesification symlinked in file name.\n";

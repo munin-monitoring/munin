@@ -104,7 +104,7 @@ sub test_service {
     }
     else
     {
-	print "no (mysqadmin not found)\n";
+	print "no (mysqladmin not found)\n";
     }
     exit $return;
 }

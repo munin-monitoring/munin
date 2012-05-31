@@ -1,0 +1,133 @@
+#!/bin/sh
+#
+# Plugin to monitor CPU usage.
+#
+# Usage: Place in /etc/munin/node.d/ (or link it there  using ln -s)
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#
+# $Log: cpu.in,v $
+# Revision 1.1.1.1  2006/06/04 20:53:57  he
+# Import the client version of the Munin system monitoring/graphing
+# tool -- project homepage is at http://munin.sourceforge.net/
+#
+# This package has added support for NetBSD, via a number of new plugin
+# scripts where specific steps needs to be taken to collect information.
+#
+# I also modified the ntp_ plugin script to make it possible to not
+# plot the NTP poll delay, leaving just jitter and offset, which IMO
+# produces a more telling graph.
+#
+#
+#
+# Magic markers - optional - used by installation scripts and
+# munin-config:
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+
+
+if [ "$1" = "autoconf" ]; then
+    if [ -x /sbin/sysctl ]; then
+	/sbin/sysctl kern.cp_time > /dev/null
+	if [ $? = "0" ]; then
+	    echo yes
+	    exit 0
+	else
+	    echo no
+	    exit 1
+	fi
+    else
+	echo no
+	exit 1
+    fi
+fi
+
+if [ "$1" = "config" ]; then
+
+    STATUNITS=`/sbin/sysctl -n kern.clockrate | cut -f15 -d' '`
+    PERCENT=`/sbin/sysctl -n hw.ncpu | awk '{print ($1)*100}'`
+    NCPU=`/sbin/sysctl -n hw.ncpu`
+    if [ "$scaleto100" = yes ]; then
+	CDEF="${STATUNITS},/,100,*,$NCPU,/"
+	PERCENT=100
+    else
+	CDEF="${STATUNITS},/,100,*"
+	PERCENT=$(($NCPU*100))
+    fi
+#	SYSWARNING=$PERCENT*30/100
+#	SYSCRITICAL=$PERCENT*50/100
+#	INTWARNING=$PERCENT*80/100
+#	USRWARNING=$PERCENT*80/100
+
+    echo 'graph_title CPU usage (' $NCPU ' CPUs)'
+    echo 'graph_order system interrupt user nice idle'
+    echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit $PERCENT "
+    echo 'graph_vlabel %'
+    echo 'graph_scale no'
+    echo 'graph_info This graph shows how CPU time is spent.'
+    echo 'graph_category system'
+    echo 'graph_period second'
+
+    echo 'system.label system'
+    echo 'system.draw AREA'
+    echo 'system.max 5000'
+    echo 'system.type DERIVE'
+    echo 'system.min 0'
+#	echo "system.warning $SYSWARNING" 
+#	echo "system.critical $SYSCRITICAL" 
+    echo 'system.info CPU time spent by the kernel in system activities'
+    echo "system.cdef system,$CDEF"
+
+    echo 'interrupt.label interrupt'
+    echo 'interrupt.draw STACK'
+    echo 'interrupt.max 5000'
+#	echo "interrupt.warning $INTWARNING"
+    echo 'interrupt.type DERIVE'
+    echo 'interrupt.min 0'
+    echo 'interrupt.info CPU time spent by the kernel processing interrupts'
+    echo "interrupt.cdef interrupt,$CDEF"
+
+    echo 'user.label user'
+    echo 'user.draw STACK'
+    echo 'user.max 5000'
+#	echo "user.warning $USRWARNING"
+    echo 'user.type DERIVE'
+    echo 'user.info CPU time spent by normal programs and daemons'
+    echo 'user.min 0'
+    echo "user.cdef user,$CDEF"
+
+    echo 'nice.label nice'
+    echo 'nice.draw STACK'
+    echo 'nice.max 5000'
+    echo 'nice.type DERIVE'
+    echo 'nice.info CPU time spent by nice(1)d programs'
+    echo 'nice.min 0'
+    echo "nice.cdef nice,$CDEF"
+
+    echo 'idle.label idle'
+    echo 'idle.draw STACK'
+    echo 'idle.max 5000'
+    echo 'idle.type DERIVE'
+    echo 'idle.info Idle CPU time'
+    echo 'idle.min 0'
+    echo "idle.cdef idle,$CDEF"
+
+    exit 0
+fi
+
+/sbin/sysctl kern.cp_time | awk '{
+	gsub(",", "");
+	split($0, a);
+	print "system.value " a[10];
+	print "interrupt.value " a[13];
+	print "user.value " a[4];
+	print "nice.value " a[7];
+	print "idle.value " a[16];
+}'
+
+

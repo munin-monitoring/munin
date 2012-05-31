@@ -1,0 +1,166 @@
+#!/bin/sh
+#
+# Plugin to monitor various environment sensors provided by envstat(8)
+# on NetBSD
+#
+# Requirements:
+# 	- envsys(4) driver configured and supported hardware present
+# 	- envstat(8) program present
+#
+# Parameters supported:
+#
+# 	config
+# 	autoconf
+# 	suggest
+#
+# $Log: sensors_.in,v $
+# Revision 1.1.1.1  2006/06/04 20:53:57  he
+# Import the client version of the Munin system monitoring/graphing
+# tool -- project homepage is at http://munin.sourceforge.net/
+#
+# This package has added support for NetBSD, via a number of new plugin
+# scripts where specific steps needs to be taken to collect information.
+#
+# I also modified the ntp_ plugin script to make it possible to not
+# plot the NTP poll delay, leaving just jitter and offset, which IMO
+# produces a more telling graph.
+#
+#
+#
+#%# family=auto
+#%# capabilities="autoconf suggest"
+
+if [ "$1" = "autoconf" ]; then
+    if [ -x /usr/sbin/envstat ]; then
+	if /usr/sbin/envstat -r >/dev/null 2>&1; then
+	    echo yes
+	    exit 0
+	else
+	    echo no '(no sensors available via envstat(8))'
+	    exit 1
+	fi
+    else
+	echo no '(/usr/sbin/envstat not executable)'
+	exit 1
+    fi
+fi
+	
+
+if [ "$1" = "suggest" ]; then
+    /usr/sbin/envstat -r | awk '
+/degC$/ { temp=1; }
+/RPM$/  { fans=1; }
+/V$/    { volt=1; }
+END {
+    if (temp) {
+	print "temp";
+    }
+    if (fans) {
+	print "fans";
+    }
+    if (volt) {
+	print "volt";
+    }
+}'
+    exit 0
+fi
+
+
+if [ "$1" = "config" ]; then
+    case $0 in
+	sensors_temp)
+            echo 'graph_title Fans'
+	    echo 'graph_vtitle RPM'
+	    echo 'graph_args --base 1000 -l 0'
+	    /usr/sbin/envstat -r | awk '
+BEGIN { p=0 }
+/degC$/ {
+    gsub(":", "", $1);
+    print "temp." $1 ".label " $1;
+    p=1;
+}
+END {
+    if (!p) {
+	exit 1;
+    }
+}'
+	    if [ $? != 0 ]; then
+		echo 'No temperature sensors found' >&2
+		exit 1
+	    fi
+	    ;;
+	sensors_fans)
+            echo 'graph_title Temperatures'
+	    echo 'graph_vtitle deg Celcius'
+	    echo 'graph_args --base 1000 -l 0'
+	    /usr/sbin/envstat -r | awk '
+BEGIN { p=0 }
+/RPM$/ {
+    gsub(":", "", $1);
+    print "fans." $1 ".label " $1;
+    p=1;
+}
+END {
+    if (!p) {
+	exit 1;
+    }
+}'
+	    if [ $? != 0 ]; then
+		echo 'No fan sensors found' >&2
+		exit 1
+	    fi
+	    ;;
+	sensors_volt)
+            echo 'graph_title Voltages'
+	    echo 'graph_vtitle Volt'
+	    echo 'graph_args --base 1000 --logarithmic'
+	    /usr/sbin/envstat -r | awk '
+BEGIN { p=0 }
+/V$/ {
+    gsub(":", "", $1);
+    print "volt." $1 ".label " $1;
+    p=1;
+}
+END {
+    if (!p) {
+	exit 1;
+    }
+}'
+	    if [ $? != 0 ]; then
+		echo 'No voltage sensors found' >&2
+		exit 1
+	    fi
+	    ;;
+    esac
+    echo 'graph_category sensors'
+
+    exit 0
+fi
+
+
+case $0 in
+    sensors_temp)
+        /usr/sbin/envstat -r | awk '
+/degC$/ {
+    gsub(":", "", $1);
+    print "temp." $1 ".value " $2;
+}
+'
+	;;
+    sensors_fans)
+        /usr/sbin/envstat -r | awk '
+/RPM$/ {
+    gsub(":", "", $1);
+    print "fans." $1 ".value " $2;
+}
+'
+	;;
+    sensors_volt)
+/usr/sbin/envstat -r | awk '
+/V$/ {
+    gsub(":", "", $1);
+    print "volt." $1 ".value " $2;
+}
+'
+    ;;
+esac

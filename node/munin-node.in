@@ -45,6 +45,33 @@ foreach my $key (keys %ENV)
 $0 =~ /^(.*)$/; # for some strange reason won't "$0 = $0;" work.
 $0 = $1;
 
+# Make configuration settings available at runtime.
+$ENV{'MUNIN_PREFIX'}     = '@@PREFIX@@';
+$ENV{'MUNIN_CONFDIR'}    = '@@CONFDIR@@';   # /etc/munin,/etc/opt/munin or such
+$ENV{'MUNIN_BINDIR'}     = '@@BINDIR@@';
+$ENV{'MUNIN_SBINDIR'}    = '@@SBINDIR@@';
+$ENV{'MUNIN_DOCDIR'}     = '@@DOCDIR@@';
+$ENV{'MUNIN_LIBDIR'}     = '@@LIBDIR@@';    # LIBDIR/plugins contains plugin.sh
+$ENV{'MUNIN_HTMLDIR'}    = '@@HTMLDIR@@';
+$ENV{'MUNIN_CGIDIR'}     = '@@CGIDIR@@';
+$ENV{'MUNIN_DBDIR'}      = '@@DBDIR@@';
+$ENV{'MUNIN_PLUGSTATE'}  = '@@PLUGSTATE@@'; # Put plugin state files here!
+$ENV{'MUNIN_MANDIR'}     = '@@MANDIR@@';
+$ENV{'MUNIN_LOGDIR'}     = '@@LOGDIR@@';
+$ENV{'MUNIN_STATEDIR'}   = '@@STATEDIR@@';  # This is for .pid files
+$ENV{'MUNIN_USER'}       = '@@USER@@';      # User munin runs as (mostly)
+$ENV{'MUNIN_GROUP'}      = '@@GROUP@@';     # Group ditto
+$ENV{'MUNIN_PLUGINUSER'} = '@@PLUGINUSER@@';# Default user for plugin running
+$ENV{'MUNIN_VERSION'}    = '@@VERSION@@';
+$ENV{'MUNIN_PERL'}       = '@@PERL@@';
+$ENV{'MUNIN_PERLLIB'}    = '@@PERLLIB@@';
+$ENV{'MUNIN_GOODSH'}     = '@@GOODSH@@';
+$ENV{'MUNIN_BASH'}       = '@@BASH@@';
+$ENV{'MUNIN_PYTHON'}     = '@@PYTHON@@';
+$ENV{'MUNIN_OSTYPE'}     = '@@OSTYPE@@';
+$ENV{'MUNIN_HOSTNAME'}   = '@@HOSTNAME@@';
+$ENV{'MUNIN_MKTEMP'}     = '@@MKTEMP@@';
+
 @ISA = qw(Net::Server::Fork);
 my @ORIG_ARGV = @ARGV;
 my %services;
@@ -213,8 +240,8 @@ sub show_nodes {
 sub get_fq_hostname {
     my $hostname;
     eval {
-        require Net::Domain;
-        $hostname = Net::Domain::hostfqdn();
+        require Sys::Hostname;
+        $hostname = (gethostbyname(Sys::Hostname::hostname()))[0];
     };
     return $hostname if $hostname;
 
@@ -930,9 +957,9 @@ sub load_auth_file
 	}
 	elsif (/^\s*env\s+([^=\s]+)\s*=\s*(.+)$/)
 	{
-	    $sconf->{$service}{'env'}{$1} = $2;
-	    net_write ("Saving $service->env->$1 = $2...\n") if $DEBUG;
-	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"env $1=$2\" should be rewritten to \"env.$1 $2\").";
+	    # $sconf->{$service}{'env'}{$1} = $2;
+	    # net_write ("Saving $service->env->$1 = $2...\n") if $DEBUG;
+	    warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"env $1=$2\" should be rewritten to \"env.$1 $2. Ignored.\").";
 	}
 	elsif (/^\s*env\.(\S+)\s+(.+)$/)
 	{
@@ -941,9 +968,9 @@ sub load_auth_file
 	}
 	elsif (/^\s*(\w+)\s+(.+)$/)
 	{
-	    $sconf->{$service}{'env'}{"lrrd_$1"} = $2;
-	    net_write ("Saving $service->env->lrrd_$1 = $2...\n") if $DEBUG;
-            warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"$1 $2\" should be rewritten to \"env lrrd_$1=$2\").";
+	    # $sconf->{$service}{'env'}{"lrrd_$1"} = $2;
+	    # net_write ("Saving $service->env->lrrd_$1 = $2...\n") if $DEBUG;
+            warn "Warning: Deprecated format in \"$dir/$file\" under \"[$service]\" (\"$1 $2\" should be rewritten to \"env.$1 $2. Ignored.\").";
 	}
 	elsif (/\S/)
 	{

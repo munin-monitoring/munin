@@ -17,10 +17,14 @@
 CONFIG=no
 
 case $1 in
-    autoconf) test -x /usr/bin/ipmitool && lsmod | grep -q ipmi && {
-	    	echo yes
-	    	exit 0
-              };;
+    autoconf)
+        ! test -x /usr/bin/ipmitool && 
+	  echo 'no (no /usr/bin/ipmitool)' && exit 1
+	! (/sbin/lsmod | grep -q ipmi) &&
+	  echo 'no (impi module not loaded' && exit 1
+	echo yes
+        exit 0
+	;;
     suggest) echo fans
              echo temp
 	     exit 0;;

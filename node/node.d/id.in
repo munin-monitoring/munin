@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Copyright (C) 2006 Dagfinn Ilmari Mannsaaker <ilmari@ilmari.org>
 #

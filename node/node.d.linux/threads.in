@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Munin-plugin to monitor the number of threads on Linux.
 #

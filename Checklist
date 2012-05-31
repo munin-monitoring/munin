@@ -1,0 +1,21 @@
+This is a pre-release checklist for the maintainer.
+
+ * Does make node-monkeywrench run without abnormal abortions?
+ * Is .htaccess installed?
+ * rm -f /etc/munin/plugins/* 
+      Does munin-node-configure -d show any autoconf errors?
+
+ * Update node/plugins.history.in:
+
+   Figure out which r the previous tag was at and do this (r910 was
+	1.3.2 and r1234 is head)
+   svn --verbose log -r910:1234 | fgrep node.d | grep -w A |
+	cut -c 25- | cut -d. -f1 | sort -u
+
+ * Check if the listed plugins are still present (or moved):
+
+   svn --verbose log -r910:1234 | fgrep node.d | grep -w A |
+        cut -c 18- | cut -d' ' -f1 | xargs ls -ld
+
+
+ 

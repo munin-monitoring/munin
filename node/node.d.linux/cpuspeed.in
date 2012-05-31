@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor CPU speed
 #
@@ -28,11 +28,11 @@ fi
 
 if [ "$1" = "config" ]; then
     cat <<EOF
-graph_title CPU frequency scaling'
+graph_title CPU frequency scaling
 graph_args --base 1000 -r --lower-limit 0
 graph_vlabel Hz
 graph_scale yes
-This graph shows at what speeds the CPUs are running
+graph_info This graph shows at what speeds the CPUs are running
 graph_category system
 EOF
 

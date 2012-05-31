@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 # 
 # Plugin to monitor postfix mail spools
 # 

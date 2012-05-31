@@ -1,4 +1,5 @@
 # Gnu make only.  Seriously.
+# $Id$
 
 # Defaults/paths from this file
 include Makefile.config
@@ -22,6 +23,14 @@ default: build
 
 install: install-main install-node install-node-plugins install-man
 
+uninstall: uninstall-main
+
+# This removes the installed config so that the next install-pass installs
+# a new config.  Target suitable for maintainers
+unconfig:
+	rm -f $(HTMLDIR)/.htaccess
+	rm -f $(CONFDIR)/munin.conf
+
 install-main: build
 	$(CHECKUSER)
 	mkdir -p $(CONFDIR)/templates
@@ -37,31 +46,67 @@ install-main: build
 
 	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR) $(RUNDIR) $(HTMLDIR) $(DBDIR)
 
-	for p in build/server/*.tmpl; do    		              \
+	for p in build/server/*.tmpl; do    		         \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
 	done
 	$(INSTALL) -m 0644 server/logo.png $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/style.css $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/definitions.html $(CONFDIR)/templates/
-	test -f $(HTMLDIR)/munin/.htaccess || $(INSTALL) -m 0644 build/server/munin-htaccess $(HTMLDIR)/munin/.htaccess
-
+	$(INSTALL) -m 0755 server/VeraMono.ttf $(LIBDIR)/
+	$(INSTALL) -m 0644 resources/favicon.ico $(HTMLDIR)/
+	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/server/munin-htaccess $(HTMLDIR)/.htaccess
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/server/munin.conf $(CONFDIR)/
-
 	$(INSTALL) -m 0755 build/server/munin-cron $(BINDIR)/
-
 	$(INSTALL) -m 0755 build/server/munin-update $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-html $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-limits $(LIBDIR)/
 	$(INSTALL) -m 0755 build/server/munin-cgi-graph $(CGIDIR)/
-
 	$(INSTALL) -m 0644 build/server/Munin.pm $(PERLLIB)/
+
+uninstall-main: build
+	for p in build/server/*.tmpl; do    	    \
+		rm -f $(CONFDIR)/templates/"$$p"  ; \
+	done
+	rm -f $(CONFDIR)/templates/logo.png
+	rm -f $(CONFDIR)/templates/style.css
+	rm -f $(CONFDIR)/templates/definitions.html
+	rm -f $(HTMLDIR)/.htaccess
+
+	rm -f $(CONFDIR)/munin.conf 
+
+	rm -f $(BINDIR)/munin-cron 
+
+	rm -f $(LIBDIR)/munin-update
+	rm -f $(LIBDIR)/munin-graph
+	rm -f $(LIBDIR)/munin-html
+	rm -f $(LIBDIR)/munin-limits
+	rm -f $(CGIDIR)/munin-cgi-graph
+
+	rm -f $(PERLLIB)/Munin.pm 
+	-rmdir $(CONFDIR)/templates
+	-rmdir $(CONFDIR)
+	-rmdir $(LIBDIR)
+	-rmdir $(BINDIR)
+
+	-rmdir $(LOGDIR)
+	-rmdir $(STATEDIR)
+	-rmdir $(HTMLDIR)
+	-rmdir $(DBDIR)
+	-rmdir $(CGIDIR)
 
 install-node: build install-node-non-snmp install-node-snmp
 	echo Done.
 
+uninstall-node: uninstall-node-non-snmp uninstall-node-snmp
+	echo Undone.
+
 install-node-snmp: build
 	$(INSTALL) -m 0755 build/node/munin-node-configure-snmp $(SBINDIR)/
+
+uninstall-node-snmp: build
+	rm -f $(SBINDIR)/munin-node-configure-snmp
+	-rmdir $(SBINDIR)
 
 install-node-non-snmp: build
 	$(CHECKGROUP)
@@ -84,20 +129,43 @@ install-node-non-snmp: build
 	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
 	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
 
+uninstall-node-non-snmp: build
+	rm -f $(SBINDIR)/munin-node 
+	rm -f $(SBINDIR)/munin-node-configure
+	rm -f $(CONFDIR)/munin-node.conf 
+	rm -f $(SBINDIR)/munin-run
+	-rmdir $(CONFDIR)/plugin-conf.d
+	-rmdir $(CONFDIR)
+	-rmdir $(SBINDIR)
 
+# ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE
+# GENERIC ONES
 install-node-plugins: build $(PLUGINS) Makefile Makefile.config
-	for p in build/node/node.d.$(OSTYPE)/* build/node/node.d/*; do \
+	for p in build/node/node.d/* build/node/node.d.$(OSTYPE)/* ; do \
 	    if test -f "$$p" ; then                                    \
 		family=`sed -n 's/^#%# family=\(.*\)$$/\1/p' $$p`;     \
 		test "$$family" || family=contrib;                     \
 		if echo $(INSTALL_PLUGINS) |                           \
 		   grep $$family >/dev/null; then 	               \
-			test -f "$(LIBDIR)/plugins/`basename $$p`"     \
-			|| $(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;  \
+			echo Installing $$p;                           \
+			$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;     \
 		fi;                                                    \
 	    fi                                                         \
 	done
+	-mkdir -p $(PLUGSTATE)
+	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
+	$(CHMOD) 0664 $(PLUGSTATE)
 	$(INSTALL) -m 0644 build/node/plugins.history $(LIBDIR)/plugins/
+	$(INSTALL) -m 0644 build/node/plugin.sh $(LIBDIR)/plugins/
+	mkdir -p $(PERLLIB)/Munin
+	$(INSTALL) -m 0644 build/node/Plugin.pm $(PERLLIB)/Munin/
+
+uninstall-node-plugins: build $(PLUGINS)
+	for p in build/node/node.d.$(OSTYPE)/* build/node/node.d/*; do \
+	    rm -f $(LIBDIR)/plugins/`basename $$p` \
+	done
+	rm -f $(LIBDIR)/plugins/plugins.history
+	rm -f $(LIBDIR)/plugins/plugin.sh
 
 #TODO:
 #configure plugins.
@@ -116,11 +184,28 @@ install-man: build-man Makefile Makefile.config
 	$(INSTALL) -m 0644 build/doc/munin-html.8 $(MANDIR)/man8/
 	$(INSTALL) -m 0644 build/doc/munin-cron.8 $(MANDIR)/man8/
 
+uninstall-man: build-man
+	rm -f $(MANDIR)/man5/munin-node.conf.5 
+	rm -f $(MANDIR)/man5/munin.conf.5 
+	rm -f $(MANDIR)/man8/munin-node.8
+	rm -f $(MANDIR)/man8/munin-node-configure.8 
+	rm -f $(MANDIR)/man8/munin-node-configure-snmp.8
+	rm -f $(MANDIR)/man8/munin-run.8
+	rm -f $(MANDIR)/man8/munin-graph.8 
+	rm -f $(MANDIR)/man8/munin-update.8 
+	rm -f $(MANDIR)/man8/munin-limits.8
+	rm -f $(MANDIR)/man8/munin-html.8
+	rm -f $(MANDIR)/man8/munin-cron.8 
+	-rmdir $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8 $(MANDIR)
+
 install-doc: build-doc
-	mkdir -p $(DOCDIR)
+	mkdir -p $(DOCDIR)/resources
 	$(INSTALL) -m 0644 README $(DOCDIR)/
 	$(INSTALL) -m 0644 COPYING $(DOCDIR)/
 	$(INSTALL) -m 0644 build/resources/* $(DOCDIR)/resources
+
+uninstall-doc: build-doc
+	rm -rf $(DOCDIR)
 
 build: build-stamp
 
@@ -129,6 +214,7 @@ build: build-stamp
 
 build-stamp: $(INFILES) Makefile Makefile.config
 	touch build-stamp
+	rm -rf build
 	@for file in $(INFILES); do			\
 		destname=`echo $$file | sed 's/.in$$//'`;		\
 		echo Generating build/$$destname..;			\
@@ -156,6 +242,8 @@ build-stamp: $(INFILES) Makefile Makefile.config
 		    -e 's|@@USER@@|$(USER)|g'				\
 		    -e 's|@@GROUP@@|$(GROUP)|g'				\
 		    -e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g'		\
+		    -e 's|@@GOODSH@@|$(GOODSH)|g'			\
+		    -e 's|@@BASH@@|$(BASH)|g'				\
 		    $$file > build/$$destname;				\
 	done
 
@@ -182,11 +270,13 @@ build-man-stamp: build Makefile Makefile.config
 
 
 deb:
+	(! grep MAINTAINER Makefile.config)
 	-rm debian
 	-ln -s dists/debian
 	fakeroot debian/rules binary
 
 rpm-pre:
+	(! grep MAINTAINER Makefile.config)
 	@for file in `find dists/redhat/ -type f -name '*.in'`; do			\
 		destname=`echo $$file | sed 's/.in$$//'`;		\
 		echo Generating $$destname..;				\
@@ -205,6 +295,7 @@ rpm-src: rpm-pre
 	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
 
 suse-pre:
+	(! grep MAINTAINER Makefile.config)
 	@for file in `find dists/suse/ -type f -name '*.in'`; do                \
 		destname=`echo $$file | sed 's/.in$$//'`;               \
 		echo Generating $$destname..;                           \
@@ -239,8 +330,10 @@ endif
 	-rm -f dists/suse/munin.spec
 
 source_dist: clean
-	(cd ..; ln -s $(DIR) munin-$(VERSION))
+	(! grep MAINTAINER Makefile.config)
+	(cd .. && ln -s $(DIR) munin-$(VERSION))
 	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
+	(cd .. && rm munin-$(VERSION))
 
 ifeq ($(MAKELEVEL),0)
 # Re-exec make with the test config
@@ -254,6 +347,15 @@ test: t/*.t t/install $(addprefix $(CONFDIR)/plugins/,$(test_plugins))
 		PERL5LIB=$(PERLLIB) $(PERL) $$test;\
 	done
 endif
+
+node-monkeywrench: install-node
+	rm -rf $(CONFDIR)/plugins
+	rm -rf $(LIBDIR)/plugins
+	mkdir -p $(LIBDIR)/plugins
+	mkdir -p $(CONFDIR)/plugins
+	cp monkeywrench/plugin-break*_ $(LIBDIR)/plugins/
+	$(SBINDIR)/munin-node-configure --suggest
+	echo 'Done?'
 
 t/install: 
 	$(MAKE) clean install-node install-node-plugins CONFIG=t/Makefile.config INSTALL_PLUGINS=test

@@ -1,0 +1,87 @@
+#!@@PERL@@
+# -*- perl -*-
+#
+# (C) 2004 Michael Kaiser tools (at) micha (dot) de
+#   Modified and made more generic by Nicolai Langfeldt, 2006
+# 
+# Plugin to monitor the number users logged in to a unix box.
+# Based on an idea of a hotsanic script.
+# Never tested for any other class than pts users. Until now,
+# I've only tested on various Linux boxen, but it might work
+# on other Un*x-alike systems as well. I'd like to hear from 
+# you, if you can report this script running on any other 
+# platform than Linux.
+#
+# Parameters:
+#
+# 	config
+#       autoconf
+#
+# $Id$
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+if ( defined($ARGV[0])) {
+    if ($ARGV[0] eq 'autoconf') {
+	print "yes\n";
+	exit 0;
+    }
+
+    if ( $ARGV[0] eq "config" ) {
+	print "graph_title Logged in users\n";
+	print "graph_args --base 1000 -l 0\n";
+	print "graph_vlabel Users\n";
+	print "graph_scale no\n";
+	print "graph_category system\n";
+	print "graph_printf %3.0lf\n";
+	print "tty.label tty\n";
+	print "tty.draw AREASTACK\n";
+	print "tty.colour 00FF00\n";
+	print "pty.label pty\n";
+	print "pty.draw AREASTACK\n";
+        print "pty.colour 0000FF\n";
+	print "pts.label pts\n";
+	print "pts.draw AREASTACK\n";
+	print "pts.colour 00FFFF\n";
+	print "X.label X displays\n";
+	print "X.draw AREASTACK\n";
+	print "X.info Users logged in on a X display\n";
+	print "X.colour 000000\n";
+	print "other.label Other users\n";
+	print "other.info Users loged in by indeterminate method\n";
+	print "other.colour FF0000\n";
+	exit 0;
+    }
+}
+
+$tty = 0;
+$pty = 0;
+$pts = 0;
+$X   = 0;
+$unc = 0;  # Unclassified
+
+open (WHO,"who |");
+
+foreach (<WHO>) {
+    (undef,$_,undef) = split /[\/ ]+/;
+    $tty++,next if /ttyv?/; # Linux virtual console tty (on some hosts)
+    $pty++,next if /pty|ttyp/;
+    $pts++,next if /pts/;
+    $tty++,next if /tty/;   # Regular tty
+
+    $X++,next if (/:\d+/); # Linux style X screen
+    $X++,next if (/X[0-9a-fA-F]*/); # Solaris style (ifi.uio.no only?)
+
+    $unc++;
+}
+
+close (WHO);
+
+print "tty.value $tty\n";
+print "pty.value $pty\n";
+print "pts.value $pts\n";
+print "X.value $X\n";
+print "other.value $unc\n";
+
+# vim:syntax=perl

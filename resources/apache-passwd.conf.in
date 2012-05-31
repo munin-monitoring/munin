@@ -2,7 +2,7 @@
 # following:
 
 <Directory /@@HTMLDIR@@>
-	AllowOverride AuthConfig
+	AllowOverride AuthConfig Limit
 </Directory>
 
 # If you don't like .htaccess files (they have some overhead compared
