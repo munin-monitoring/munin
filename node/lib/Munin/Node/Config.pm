@@ -43,6 +43,19 @@ sub reinitialize {
 }
 
 
+sub parse_config_from_file
+{
+    my $self = shift;
+    my ($file) = @_;
+
+    # Check permissions of configuration
+    unless (Munin::Node::OS->check_perms_if_paranoid($file)) {
+        croak "Fatal error. Bailing out.";
+    }
+    return $self->SUPER::parse_config_from_file(@_);
+}
+
+
 sub parse_config {
     my ($self, $IO_HANDLE) = @_;
 
@@ -183,9 +196,7 @@ sub parse_plugin_config_file {
     print STDERR "# Processing plugin configuration from $file\n"
 	if $self->{DEBUG};
 
-    eval {
-        $self->parse_plugin_config($CONF)
-    };
+    eval { $self->parse_plugin_config($CONF) };
     if ($EVAL_ERROR) {
         carp sprintf(
             '%s at %s line %d. Skipping the rest of the file',
@@ -213,9 +224,9 @@ sub parse_plugin_config {
         $self->_trim($line);
         next unless $line;
 
-	if ($line =~ m{\A \s* \[ ([^\]]+) \] \s* \z}xms) {
-	    $service = $1;
-	}
+        if ($line =~ m{\A \s* \[ ([^\]]+) \] \s* \z}xms) {
+            $service = $1;
+        }
         else {
             croak "Parse error: Clutter before section start."
                 unless $service;
@@ -245,13 +256,13 @@ sub _parse_plugin_line {
     my ($var_name, $var_value) = ($1, $2);
 
     if ($var_name eq 'user') {
-	# Evaluation of user name is lazy, so that configuration for
-	# plugins that are not used does not cause errors.
+        # Evaluation of user name is lazy, so that configuration for
+        # plugins that are not used does not cause errors.
         return (user => $var_value);
     }
     elsif ($var_name eq 'group') {
-	# Evaluation of group name is lazy too.
-	return (group => $var_value );
+        # Evaluation of group names is lazy too.
+        return (group => [split /[\s,]+/, $var_value]);
     }
     elsif ($var_name eq 'command') {
         return (command => [split /\s+/, $var_value]);
@@ -261,6 +272,9 @@ sub _parse_plugin_line {
     }
     elsif ($var_name eq 'timeout') {
         return (timeout => $var_value);
+    }
+    elsif ($var_name eq 'update_rate') {
+        return (update_rate => $var_value);
     }
     elsif (index($var_name, 'env.') == 0) {
         return (env => { substr($var_name, length 'env.') => $var_value});
@@ -354,11 +368,18 @@ Deletes all configuration variables
 Deletes all configuration variables and reinitalizes the object with
 values from \%variables.
 
+=item B<parse_config_from_file>
+
+  $config->parse_config_from_file($filename);
+
+Parses the munin node configuration from a file.  Dies if the file fails the
+paranoia checks.
+
 =item B<parse_config>
 
  $config->parse_config($io_handle);
 
-Parses the munin node configuration from a L<IO::Handle>.
+Parses the munin node configuration from a filehandle.
 
 =item B<process_plugin_configuration_files>
 
@@ -388,3 +409,4 @@ to matching plugins.
 See L<http://munin.projects.linpro.no/wiki/Priority_and_inheritance>
 
 =cut
+# vim: sw=4 : ts=4 : et

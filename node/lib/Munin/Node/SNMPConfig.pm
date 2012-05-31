@@ -16,16 +16,49 @@ sub new
 {
     my ($class, %opts) = @_;
 
-    my $snmpver  = delete $opts{version}   || '2c';
-    my $snmpcomm = delete $opts{community} || 'public';
-    my $snmpport = delete $opts{port}      || 161;
+    my %sec_args;
+
+    my $hosts    = $opts{hosts};
+    die "No host list specified\n" unless scalar @$hosts;
+
+    my $version  = $opts{version} || '2c';
+    my $port     = $opts{port}    || 161;
+
+    if ($version eq '3') {
+        # Privacy
+        my $privpw    = $opts{privpassword};
+        my $privproto = $opts{privprotocol} || 'des';
+
+        if ($privpw) {
+            $sec_args{-privpassword} = $privpw;
+            $sec_args{-privprotocol} = $privproto;
+            DEBUG('Enabled SNMPv3 privacy');
+        }
+
+        # Authentication
+        my $authpw    = $opts{authpassword} || $privpw;
+        my $authproto = $opts{authprotocol} || 'md5';
+
+        if ($authpw) {
+            $sec_args{-authpassword} = $authpw;
+            $sec_args{-authprotocol} = $authproto;
+            DEBUG('Enabled SNMPv3 authentication');
+        }
+
+        # Username
+        $sec_args{-username} = $opts{username};
+    }
+    else {
+        # version 1 or 2c
+        $sec_args{-community} = $opts{community} || 'public';
+    }
+
 
     my %snmp = (
-        community => $snmpcomm,
-        port      => $snmpport,
-        version   => $snmpver,
-
-        %opts,
+        hosts     => $hosts,
+        port      => $port,
+        version   => $version,
+        sec_args  => \%sec_args,
     );
 
     return bless \%snmp, $class;
@@ -45,6 +78,8 @@ sub run_probes
 }
 
 
+# Checks each plugin in turn against the host, and make a note of
+# those that are supported.
 sub _probe_single_host
 {
     my ($self, $host, $plugins) = @_;
@@ -52,9 +87,11 @@ sub _probe_single_host
     DEBUG("SNMP-probing $host");
 	my ($session, $error) = Net::SNMP->session(
 		-hostname  => $host,
-        -community => $self->{community},
         -port      => $self->{port},
         -version   => $self->{version},
+
+        %{$self->{sec_args}},
+
 		# Disable munging of responses into "human readable" form
 		-translate => 0,
 	);
@@ -71,6 +108,13 @@ sub _probe_single_host
 		}
 		else {
             DEBUG("Host '$host' doesn't support $plugin->{name}");
+            # TODO: Check whether there was a timeout?  that would indicate a
+            # bad community string, or no SNMP support (either no daemon, or
+            # unsupported protocol version) -- any downsides?  are there
+            # devices that timeout rather than return noSuchObject?  compromise
+            # would be to have a --ignore-snmp-timeouts cmdline flag.
+            #
+            # TODO, redux: capture and handle SNMPv3 errors.
 		}
 	}
 
@@ -85,67 +129,97 @@ sub _probe_single_host
 # which represents a valid plugin instance.
 sub _snmp_autoconf_plugin
 {
-	my ($plugin, $session) = @_;
+    my ($plugin, $session) = @_;
 
-	my (@indexes, @valid_indexes);
+    my $hostname = $session->hostname;
+    my @valid_indexes;
 
-	# First round of requirements
-	if ($plugin->{require_oid}) {
+    # First round of requirements -- check for specific OIDs.
+    if ($plugin->{require_oid}) {
         DEBUG("Checking required OIDs");
-		foreach my $req (@{$plugin->{require_oid}}) {
-			my ($oid, $filter) = @$req;
-			unless (_snmp_check_require($session, $oid, $filter)) {
+        foreach my $req (@{$plugin->{require_oid}}) {
+            my ($oid, $filter) = @$req;
+            unless (_snmp_check_require($session, $oid, $filter)) {
                 DEBUG("Missing requirement.");
-				return;
-			}
-		}
-	}
+                return;
+            }
+        }
+    }
 
-	# Fetch the list of indices
-	if ($plugin->{number}) {
-		my $num = _snmp_get_single($session, $plugin->{number});
-		return unless $num;
-		@indexes = (1 .. $num);
-	}
-	elsif ($plugin->{index}) {
-		my $result = $session->get_entries(-columns => [ $plugin->{index} ]);
-		unless ($result) {
-            DEBUG("Failed to fetch index.");
-			return;
-		}
-		@indexes = values %$result;
-	}
-    DEBUG(sprintf "Got indexes: %s", join(', ', @indexes));
+    # Second round of requirements -- check for valid rows in a table.
+    if ($plugin->{table}) {
+        my @columns = map { $_->[0] } @{$plugin->{table}};
 
-	# Second round of requirements (now that we have the indexes)
-	if ($plugin->{required_root}) {
-        DEBUG("Removing invalid indices");
-		foreach my $req (@{$plugin->{required_root}}) {
-			my ($oid, $filter) = @$req;
-			foreach my $index (@indexes) {
-				if (_snmp_check_require($session, $oid . $index, $filter)) {
-					push @valid_indexes, $index;
-				}
-				else {
-                    DEBUG("No. Removing $index from possible solutions.");
-				}
-			}
-		}
+        DEBUG('Fetching columns: ' . join ', ', @columns);
+        my $result = $session->get_entries(-columns => \@columns);
+        unless ($result) {
+            DEBUG('Failed to get required columns');
+            return;
+        }
 
-		unless (scalar @valid_indexes) {
-            DEBUG("No indices left.  Dropping plugin.");
-			return;
-		}
-	}
-	else {
-		# No further filters means they're all good by default
-		@valid_indexes = @indexes;
-	}
+        # sort into rows
+        my $subtabs = join '|', map { quotemeta } @columns;
+        my $re = qr/^($subtabs)\.(.*)/;
+        my %table;
 
-	# return list of arrayrefs, one for each good suggestion
-	my $hostname = $session->hostname;
-	return $plugin->is_wildcard ? map { [ $hostname, $_ ] } @valid_indexes
-	                            : [ $hostname ];
+        while (my ($oid, $value) = each %$result) {
+            my ($column, $index) = $oid =~ /$re/;
+            DEBUG("Row '$index', column '$column', value '$value'");
+            $table{$index}->{$column} = $value;
+        }
+
+        DEBUG('Checking for valid rows');
+
+        # work out what rows are invalid
+        # can shortcut unless it's a double-wildcard plugin
+        while (my ($index, $row) = each %table) {
+            if (_snmp_check_row($index, $row, @{$plugin->{table}})) {
+                if ($plugin->is_wildcard) {
+                    DEBUG(qq{Adding row '$index' to the list of valid indexes});
+                    push @valid_indexes, $row->{$plugin->{index}};
+                }
+                else {
+                    DEBUG('Table contains at least one valid row.');
+                    return [ $hostname ];
+                }
+            }
+        }
+
+        # if we got here, there were no matching rows.
+        unless ($plugin->is_wildcard and @valid_indexes) {
+            DEBUG('No valid rows found');
+            return;
+        }
+    }
+
+    # return list of arrayrefs, one for each good suggestion
+    return $plugin->is_wildcard ? map { [ $hostname, $_ ] } @valid_indexes
+                                : [ $hostname ];
+}
+
+
+# returns true if the row in a table fulfils all the requirements, false
+# otherwise.
+sub _snmp_check_row
+{
+    my ($index, $row, @requirements) = @_;
+
+    foreach my $req (@requirements) {
+        my ($oid, $regex) = @$req;
+
+        unless (defined $row->{$oid}) {
+            DEBUG(qq{Row '$index' doesn't have an entry for column '$oid'});
+            return 0;
+        }
+
+        if ($regex and $row->{$oid} !~ /$regex/) {
+            DEBUG(qq{Row '$index', column '$oid'.  Value '$row->{$oid}' doesn't match '$regex'});
+            return 0;
+        }
+    }
+
+    DEBUG(qq{Row '$index' is valid});
+    return 1;
 }
 
 
@@ -199,17 +273,44 @@ scanning capabilities.
 
 =over
 
-=item B<new>
+=item B<new(%arguments)>
 
-Constructor.
+Constructor.  Valid arguments are:
 
-Valid arguments are 'community', 'port', 'version' and 'hosts'.  All are
-optional, and default to 'public', 161, '2c' and an empty host-list (though
-obviously not providing any hosts is somewhat pointless).
+=over 4
 
-The host list should be in a format understood by
-Munin::Node::Configure::HostEnumeration
+=item hosts
 
+The list of hosts to scan, in a format understood by
+L<Munin::Node::Configure::HostEnumeration>.  Required.
+
+=item port
+
+Port to connect to.  Default is 161.
+
+=item version
+
+The SNMP version to use.  Default is '2c'.
+
+=item community
+
+The community string to use for SNMP version 1 or 2c.  Default is 'public'.
+
+=item username
+
+The username to use when 
+
+=item authpassword
+
+=item authprotocol
+
+=item privpassword
+
+=item privprotocol
+
+
+
+=back
 
 =item B<run_probes($plugins)>
 

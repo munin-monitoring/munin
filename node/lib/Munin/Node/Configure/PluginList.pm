@@ -12,20 +12,29 @@ use Munin::Node::Configure::Plugin;
 use Munin::Node::Configure::History;
 use Munin::Node::Configure::Debug;
 
-use Munin::Node::Config;
-my $config = Munin::Node::Config->instance();
-
 
 sub new
 {
     my ($class, %opts) = @_;
 
-    my $libdir     = delete $opts{libdir} or die "Must specify the directory\n";
+    my $libdir     = delete $opts{libdir}     or die "Must specify the directory\n";
     my $servicedir = delete $opts{servicedir} or die "Must specify the service directory\n";
+
+    my $library  = Munin::Node::Service->new(servicedir => $libdir);
+    my $services = Munin::Node::Service->new(servicedir => $servicedir);
+
+    my $families = delete $opts{families} or die "Must provide a list of families to load\n";
+    my $newer    = delete $opts{newer};
 
     my %plugin = (
         libdir     => $libdir,
+        library    => $library,
+
         servicedir => $servicedir,
+        services   => $services,
+
+        families   => $families,
+        newer      => $newer,
 
         %opts,
     );
@@ -38,8 +47,8 @@ sub new
 
 sub load
 {
-    my ($self, @families) = @_;
-    $self->_load_available(@families);
+    my ($self) = @_;
+    $self->_load_available();
     $self->_load_installed();
     return;
 }
@@ -47,18 +56,20 @@ sub load
 
 sub _load_available
 {
-    my ($self, @families) = @_;
+    my ($self) = @_;
+
+    my @families = @{$self->{families}};
     my %found;
 
     my $history = Munin::Node::Configure::History->new(
         history_file => "$self->{libdir}/plugins.history",
-        newer        => $config->{newer},
+        newer        => $self->{newer},
     );
     $history->load;
 
     DEBUG("Searching '$self->{libdir}' for available plugins.");
 
-    foreach my $item (_valid_files($self->{libdir})) {
+    foreach my $item (_valid_files($self->{library})) {
         my $path = $item->{path};
         my $plug = $item->{name};
 
@@ -81,7 +92,7 @@ sub _load_available
         }
 
         if ($history->too_old($plugin)) {
-            DEBUG("\tPlugin is older than $config->{newer}.  Skipping.");
+            DEBUG("\tPlugin is older than $self->{newer}.  Skipping.");
             next;
         }
 
@@ -101,7 +112,7 @@ sub _load_installed
 
     DEBUG("Searching '$self->{servicedir}' for installed plugins.");
 
-    foreach my $item (_valid_files($self->{servicedir})) {
+    foreach my $item (_valid_files($self->{services})) {
         my $path    = $item->{path};
         my $service = $item->{name};
 
@@ -149,21 +160,24 @@ sub names { return keys %{(shift)->{plugins}} }
 
 sub _valid_files
 {
-    my ($directory) = @_;
+    my ($dir) = @_;
     my @items;
+
+    my $directory = $dir->{servicedir};
 
     opendir (my $DIR, $directory)
         or die "Fatal: Could not open '$directory' for reading: $!\n";
 
     while (my $item = readdir $DIR) {
         my $path = "$directory/$item";
-        unless (Munin::Node::Service->is_a_runnable_service($item, $directory)) {
+        unless ($dir->is_a_runnable_service($item)) {
             DEBUG("Ignoring '$path'.");
             next;
         }
         push @items, { path => $path, name => $item };
     }
     closedir $DIR;
+
     return @items;
 }
 

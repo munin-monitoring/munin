@@ -78,11 +78,11 @@ if [ "$1" = "config" ]; then
         echo 'graph_vlabel Mbits / second'
         echo 'graph_scale no'
         echo 'traffic.label Mbits/second'
-	if [ -n "$warning" ]; then
-		echo "traffic.warning $warning"
+	if [ -n $warning ]; then
+		echo 'traffic.warning $warning'
 	fi
-	if [ -n "$critical" ]; then
-		echo "traffic.critical $critical"
+	if [ -n $critical ]; then
+		echo 'traffic.critical $critical'
 	fi
         echo 'traffic.info Traffic in Mbites per second'
         echo 'graph_category Snort'

@@ -1,75 +1,86 @@
 #!@@PERL@@ -w
 # -*- perl -*-
-#
-# Copyright (C) 2004 Jimmy Olsen, Dagfinn Ilmari Mannsaaker
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; version 2 dated June,
-# 1991.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-#
-#%# family=snmpauto
-#%# capabilities=snmpconf
+# vim: ft=perl
+
+=head1 NAME
+
+snmp__processes - Munin plugin to monitor the number of processes
+on an SNMP device.
+
+=head1 APPLICABLE SYSTEMS
+
+Any SNMP-capable device that reports the
+HOST-RESOURCES-MIB::hrSystemProcesses.0 OID.
+
+=head1 CONFIGURATION
+
+As a rule SNMP plugins need site specific configuration.  The default
+configuration (shown here) will only work on insecure sites/devices.
+
+   [snmp_*]
+	env.version 2
+        env.community public
+
+In general SNMP is not very secure at all unless you use SNMP version
+3 which supports authentication and privacy (encryption).  But in any
+case the community string for your devices should not be "public".
+
+Please see 'perldoc Munin::Plugin::SNMP' for further configuration
+information.
+
+=head1 INTERPRETATION
+
+The total number of processes currently operating on the system.
+
+=head1 MIB INFORMATION
+
+This plugin requires support for the HOST-RESOURCES-MIB (RFC 2790).  It
+reports the contents of the hrSystemProcesses OID.
+
+=head1 MAGIC MARKERS
+
+  #%# family=snmpauto
+  #%# capabilities=snmpconf
+
+=head1 VERSION
+
+  $Id$
+
+=head1 BUGS
+
+None known.
+
+Could be extended to report the value of hrSystemMaxProcesses if it
+exists.
+
+=head1 AUTHOR
+
+Copyright (C) 2004 Jimmy Olsen, Dagfinn Ilmari Mannsaaker
+
+Documented and updated to use Munin::Plugin::SNMP by Matthew Boyle
+in 2010.
+
+=head1 LICENSE
+
+GPLv2.
+
+=cut
 
 use strict;
-use Net::SNMP;
+use Munin::Plugin::SNMP;
 
-my $DEBUG = 0;
-my $MAXLABEL = 20;
-
-my $host      = $ENV{host}      || undef;
-my $port      = $ENV{port}      || 161;
-my $community = $ENV{community} || "public";
-my $iface     = $ENV{interface} || undef;
-
-my $response;
-
-if (defined $ARGV[0] and $ARGV[0] eq "snmpconf")
-{
-	print "require 1.3.6.1.2.1.25.1.6.0 [0-9]\n"; # Number
+if (defined $ARGV[0] and $ARGV[0] eq 'snmpconf') {
+	# .iso.org.dod.internet.mgmt.mib-2.host.hrSystem.hrSystemProcesses.0
+	print "require 1.3.6.1.2.1.25.1.6.0 [0-9]\n";
 	exit 0;
 }
 
-if ($0 =~ /^(?:|.*\/)snmp_([^_]+)_processes$/)
-{
-	$host  = $1;
-	if ($host =~ /^([^:]+):(\d+)$/)
-	{
-		$host = $1;
-		$port = $2;
-	}
-}
-elsif (!defined($host))
-{
-	print "# Debug: $0 -- $1\n" if $DEBUG;
-	die "# Error: couldn't understand what I'm supposed to monitor.";
-}
+if (defined $ARGV[0] and $ARGV[0] eq "config") {
+	my ($host) = Munin::Plugin::SNMP->config_session();
 
-my ($session, $error) = Net::SNMP->session(
-		-hostname  => $host,
-		-community => $community,
-		-port      => $port
-	);
-
-if (!defined ($session))
-{
-	die "Croaking: $error";
-}
-
-if (defined $ARGV[0] and $ARGV[0] eq "config")
-{
-	print "host_name $host\n" unless $host eq 'localhost';
-	print "graph_title Number of Processes
+	print "host_name $host\n" unless ($host eq 'localhost');
+	print <<'EOC';
+graph_title Number of Processes
 graph_args --base 1000 -l 0 
 graph_vlabel number of processes
 graph_category system
@@ -77,29 +88,10 @@ graph_info This graph shows the number of processes running on the system.
 processes.label processes
 processes.draw LINE2
 processes.info The number of processes.
-";
-
+EOC
 	exit 0;
 }
 
-print "processes.value ", &get_single ($session, "1.3.6.1.2.1.25.1.6.0"), "\n";
-
-sub get_single
-{
-	my $handle = shift;
-	my $oid    = shift;
-
-	print "# Getting single $oid...\n" if $DEBUG;
-
-	$response = $handle->get_request ($oid);
-
-	if (!defined $response->{$oid})
-	{
-	    return undef;
-	}
-	else
-	{
-	    return $response->{$oid};
-	}
-}
+my $session = Munin::Plugin::SNMP->session();
+print "processes.value ", $session->get_single('1.3.6.1.2.1.25.1.6.0'), "\n";
 

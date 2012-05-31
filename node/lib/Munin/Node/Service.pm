@@ -17,26 +17,41 @@ use Munin::Common::Defaults;
 my $config = Munin::Node::Config->instance();
 
 
-sub is_a_runnable_service {
-    my ($class, $file, $dir) = @_;
+sub new
+{
+    my ($class, %args) = @_;
 
-    $dir ||= $config->{servicedir};
+    # Set defaults
+    $args{servicedir} ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
 
-    my $path = "$dir/$file";
+    $args{defuser}  ||= getpwnam $Munin::Common::Defaults::MUNIN_PLUGINUSER;
+    $args{defgroup} ||= getgrnam $Munin::Common::Defaults::MUNIN_GROUP;
 
-    return unless -f $path && -x _;
+    $args{timeout}  ||= 10;
+    $args{pidebug}  ||= 0;
+
+    die "Fatal error. Bailing out.\n"
+        unless (Munin::Node::OS->check_perms_if_paranoid($args{servicedir}));
+
+    return bless \%args, $class;
+}
+
+
+sub is_a_runnable_service
+{
+    my ($self, $file) = @_;
+
+    return unless -f "$self->{servicedir}/$file" && -x _;
 
     # FIX isn't it enough to check that the file is executable and not
     # in 'ignores'? Can hidden files and config files be
     # unintentionally executable? What does config files do in the
     # service directory? Shouldn't we complain if there is junk in the
     # service directory?
-    return if $file =~ m/^\./;               # Hidden files
-    return if $file =~ m/\.conf$/;           # Config files
+    return if $file =~ m/^\./;      # Hidden files
+    return if $file =~ m/\.conf$/;  # Config files
 
-    return if $file !~ m/^([-\w.:]+)$/;      # Skip if any weird chars
-
-    $file = $1;                              # Not tainted anymore.
+    return if $file !~ m/^[-\w.:]+$/;  # Skip if any weird chars
 
     foreach my $regex (@{$config->{ignores}}) {
         return if $file =~ /$regex/;
@@ -48,14 +63,14 @@ sub is_a_runnable_service {
 
 sub prepare_plugin_environment
 {
-    my (@plugins) = @_;
+    my ($self, @plugins) = @_;
 
     Munin::Common::Defaults->export_to_environment();
 
     $config->{fqdn} ||= Munin::Node::OS->get_fq_hostname();
 
     # Export some variables plugins might be interested in
-    $ENV{MUNIN_DEBUG} = $config->{PIDEBUG} if $config->{PIDEBUG};
+    $ENV{MUNIN_DEBUG} = $self->{pidebug};
     $ENV{FQDN}        = $config->{fqdn};
 
     # munin-node will override this with the IP of the connecting master
@@ -67,11 +82,6 @@ sub prepare_plugin_environment
     # Some locales use "," as decimal separator. This can mess up a lot
     # of plugins.
     $ENV{LC_ALL} = 'C';
-
-    $config->{defuser} = getpwnam($Munin::Common::Defaults::MUNIN_PLUGINUSER)
-        unless defined $config->{defuser};
-    $config->{defgroup} = getgrnam($Munin::Common::Defaults::MUNIN_GROUP)
-        unless defined $config->{defgroup};
 
     if ($config->{sconffile}) {
         # only used by munin-run
@@ -87,7 +97,7 @@ sub prepare_plugin_environment
 
 
 sub export_service_environment {
-    my ($class, $service) = @_;
+    my ($self, $service) = @_;
     print STDERR "# Setting up environment\n" if $config->{DEBUG};
 
     # Provide a consistent default state-file.
@@ -102,113 +112,123 @@ sub export_service_environment {
 }
 
 
+# Resolves the uid the service should be run as.  If it cannot be resolved, an
+# exception will be thrown.
+sub _resolve_uid
+{
+    my ($self, $service) = @_;
+
+    my $user = $config->{sconf}{$service}{user};
+
+    # Need to test for defined, since a user might be specified with UID = 0
+    my $service_user = defined $user ? $user : $self->{defuser};
+
+    my $u = Munin::Node::OS->get_uid($service_user);
+    croak "User '$service_user' required for '$service' does not exist."
+        unless defined $u;
+
+    return $u;
+}
+
+
+# resolves the GIDs (real and effective) the service should be run as.
+# http://munin-monitoring.org/wiki/plugin-conf.d
+sub _resolve_gids
+{
+    my ($self, $service) = @_;
+
+    my $group_list = $config->{sconf}{$service}{groups};
+
+    my $default_gid = $self->{defgroup};
+
+    my @groups;
+
+    foreach my $group (@{$group_list||[]}) {
+        my $is_optional = ($group =~ m{\A \( ([^)]+) \) \z}xms);
+        $group = $1 if $is_optional;
+
+        my $gid = Munin::Node::OS->get_gid($group);
+
+        croak "Group '$group' required for '$service' does not exist"
+            unless defined $gid || $is_optional;
+
+        if (!defined $gid && $is_optional) {
+            carp "DEBUG: Skipping OPTIONAL nonexisting group '$group'"
+                if $config->{DEBUG};
+            next;
+        }
+        push @groups, $gid;
+    }
+
+    # Support running with more than one group in effect. See documentation on
+    # $EFFECTIVE_GROUP_ID in the perlvar(1) manual page.  Need to specify the
+    # default group twice: once for setegid(2), and once for setgroups(2).
+    my $egids = join ' ', ($default_gid) x 2, @groups;
+
+    return ($default_gid, $egids);
+}
+
+
 sub change_real_and_effective_user_and_group
 {
-    my ($class, $service) = @_;
+    my ($self, $service) = @_;
 
     my $root_uid = 0;
     my $root_gid = 0;
 
+    my $sconf = $config->{sconf}{$service};
+
     if ($REAL_USER_ID == $root_uid) {
-	# Need to test for defined here since a user might be
-        # specified with UID = 0
-        my $uid = defined $config->{sconf}{$service}{user}
-                    ? $config->{sconf}{$service}{user}
-                    : $config->{defuser};
+        # Resolve UIDs now, as they are not resolved when the config was read.
+        my $uid = $self->_resolve_uid($service);
 
-        # Resolve unresolved UID now - as it is not resolved when the
-        # config was read.
-
-        my $u = Munin::Node::OS->get_uid($uid);
-        croak "User '$uid' required for $service does not exist."
-	    unless defined $u;
-
-	# Ditto for groups
-	my $g = '';
-
-	if ( defined $config->{sconf}{$service}{group} ) {
-	    # Support running with more than one group in effect. See
-	    # documentation on $EFFECTIVE_GROUP_ID in the perlvar(1)
-	    # manual page.
-
-	    my @groups = ();
-	    my $groups = $config->{sconf}{$service}{group};
-
-	    for my $group (split /\s*,\s*/, $groups) {
-		my $is_optional = $group =~ m{\A \( ([^)]+) \) \z}xms;
-		$group          = $1 if $is_optional;
-
-		my $gid = Munin::Node::OS->get_gid($group);
-		croak "Group '$group' required for $service does not exist"
-		    unless defined $gid || $is_optional;
-
-		if (!defined $gid && $is_optional) {
-		    carp "DEBUG: Skipping OPTIONAL nonexisting group '$group'"
-			if $config->{DEBUG};
-		    next;
-		}
-		push @groups, $gid;
-	    } # for $groups
-	    $g = join(' ',@groups);
-        } # if defined group
-
-        my $dg  = $config->{defgroup};
-
-        my $gid;
-
-        # Specify the default group twice: once for setegid(2), and once
-        # for setgroups(2).  See perlvar for the gory details.
-        my $gs = "$dg $dg $g";
-
-        print STDERR "# Set /rgid/ruid/egid/euid/ to /$dg/$u/$gs/$u/\n"
-            if $config->{DEBUG};
+        # Ditto for groups
+        my ($rgid, $egids) = $self->_resolve_gids($service);
 
         eval {
             if ($Munin::Common::Defaults::MUNIN_HASSETR) {
-                Munin::Node::OS->set_real_group_id($dg)
-                      unless $dg == $root_gid;
-                Munin::Node::OS->set_real_user_id($u)
-                      unless $u == $root_uid;
+                print STDERR "# Setting /rgid/ruid/ to /$rgid/$uid/\n"
+                    if $config->{DEBUG};
+                Munin::Node::OS->set_real_group_id($rgid) unless $rgid == $root_gid;
+                Munin::Node::OS->set_real_user_id($uid)   unless $uid  == $root_uid;
             }
 
-            Munin::Node::OS->set_effective_group_id($gs)
-                  unless $dg == $root_gid;
-            Munin::Node::OS->set_effective_user_id($u)
-                  unless $u == $root_uid;
+            print STDERR "# Setting /egid/euid/ to /$egids/$uid/\n"
+                if $config->{DEBUG};
+            Munin::Node::OS->set_effective_group_id($egids) unless $rgid == $root_gid;
+            Munin::Node::OS->set_effective_user_id($uid)    unless $uid  == $root_uid;
         };
 
         if ($EVAL_ERROR) {
-            logger("Plugin '$service' Can't drop privileges: $EVAL_ERROR. "
-                       . "Bailing out.\n");
+            logger("# FATAL: Plugin '$service' Can't drop privileges: $EVAL_ERROR.");
             exit 1;
         }
     }
-    else {
-        if (defined $config->{sconf}{$service}{user}
-         or defined $config->{sconf}{$service}{group})
-        {
-            print "# Warning: Root privileges are required to change user/group.  "
-                . "The plugin may not behave as expected.\n";
-        }
+    elsif (defined $sconf->{user} or defined $sconf->{groups}) {
+        print "# Warning: Root privileges are required to change user/group.  "
+            . "The plugin may not behave as expected.\n";
     }
+
+    return;
 }
 
 
-sub exec_service {
-    my ($class, $dir, $service, $arg) = @_;
+sub exec_service
+{
+    my ($self, $service, $arg) = @_;
 
-    $class->change_real_and_effective_user_and_group($service);
+    $self->change_real_and_effective_user_and_group($service);
 
-    unless (Munin::Node::OS->check_perms_if_paranoid("$dir/$service")) {
+    unless (Munin::Node::OS->check_perms_if_paranoid("$self->{servicedir}/$service")) {
         logger ("Error: unsafe permissions on $service. Bailing out.");
         exit 2;
     }
 
-    $class->export_service_environment($service);
+    $self->export_service_environment($service);
 
-    Munin::Node::OS::set_plugin_umask();
+    Munin::Node::OS::set_umask();
 
-    my @command = grep defined, _service_command($dir, $service, $arg);
+    my @command = grep defined, _service_command($self->{servicedir}, $service, $arg);
     print STDERR "# About to run '", join (' ', @command), "'\n"
         if $config->{DEBUG};
 
@@ -220,7 +240,7 @@ sub _service_command
 {
     my ($dir, $service, $argument) = @_;
 
-    my @run = ();
+    my @run;
     my $sconf = $config->{sconf};
 
     if ($sconf->{$service}{command}) {
@@ -242,13 +262,13 @@ sub _service_command
 
 sub fork_service
 {
-    my ($class, $dir, $service, $arg) = @_;
+    my ($self, $service, $arg) = @_;
 
     my $timeout = $config->{sconf}{$service}{timeout}
-               || $config->{timeout};
+               || $self->{timeout};
 
     my $run_service = sub {
-        $class->exec_service($dir, $service, $arg);
+        $self->exec_service($service, $arg);
         # shouldn't be reached
         print STDERR "# ERROR: Failed to exec.\n";
         exit 42;
@@ -333,4 +353,4 @@ L<Munin::Node::Service> for a comprehensive description.)
 
 =cut
 
-# vim:syntax=perl : ts=4 : expandtab
+# vim: sw=4 : ts=4 : expandtab

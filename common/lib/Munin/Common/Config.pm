@@ -38,7 +38,8 @@ my %legal = map { $_ => 1 } (
 	"onlynullcdef", "group_order", "pipe", "pipe_command",
 	"unknown_limit", "num_unknowns", "dropdownlimit",
 	"max_graph_jobs", "max_cgi_graph_jobs", "munin_cgi_graph_jobs",
-        "max_html_jobs", );
+	"cgitmpdir", "update_rate",
+	);
 
 my %bools = map { $_ => 1} qw(yes no true false on off 1 0);
 
@@ -90,10 +91,13 @@ sub _trim {
 }
 
 
+# allows # characters to get through as long as they're escaped
+# with a backslash
 sub _strip_comment {
     my $class = shift;
 
-    $_[0] =~ s/#.*//;
+    $_[0] =~ s/(?<!\\)#.*//;
+    $_[0] =~ s/\\#/#/g;
 
     return;
 }

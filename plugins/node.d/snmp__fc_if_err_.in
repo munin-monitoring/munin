@@ -22,9 +22,10 @@
 #%# capabilities=snmpconf
 
 use strict;
-use Net::SNMP;
 
-my $DEBUG = 0;
+use Net::SNMP;
+use Munin::Plugin::SNMP;
+
 
 my $host      = $ENV{host}      || undef;
 my $port      = $ENV{port}      || 161;
@@ -35,7 +36,6 @@ my $response;
 
 if (defined $ARGV[0] and $ARGV[0] eq "snmpconf")
 {
-	print "number  1.3.6.1.2.1.8888.1.1.3.1.4.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0\n";
 	print "index   1.3.6.1.2.1.8888.1.1.6.1.1.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0.\n";
 	print "require 1.3.6.1.2.1.8888.1.1.6.1.5.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0. ^2\$\n"; # state = online
 	print "require 1.3.6.1.2.1.8888.1.1.6.1.14.16.0.8.0.136.3.52.64.0.0.0.0.0.0.0.0. [1-9]\n"; # Speed
@@ -54,7 +54,7 @@ if ($0 =~ /^(?:|.*\/)snmp_([^_]+)_fc_if_err_(.+)$/)
 }
 elsif (!defined($host))
 {
-	print "# Debug: $0 -- $1 -- $2\n" if $DEBUG;
+	print "# Debug: $0 -- $1 -- $2\n" if $Munin::Plugin::SNMP::DEBUG;
 	die "# Error: couldn't understand what I'm supposed to monitor.";
 }
 

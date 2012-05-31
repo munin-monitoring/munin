@@ -89,10 +89,7 @@ my $tmpldir;
 my $htmldir;
 
 my $do_dump = 0;
-my $do_fork = 1;
-my $max_running=6;
-my $running=0;
-
+my $do_fork = 0; # No effect in this program.
 
 sub html_startup {
 
@@ -124,8 +121,6 @@ sub html_startup {
 
     $tmpldir = $config->{tmpldir};
     $htmldir = $config->{htmldir};
-
-    $max_running = &munin_get($config, "max_html_jobs", $max_running);
 
     %comparisontemplates = instanciate_comparison_templates($tmpldir);
 
@@ -167,11 +162,14 @@ sub html_main {
     # Preparing the group tree...
     my $groups = get_group_tree($config);
 
+    
+
     if (!defined($groups) or scalar(%{$groups} eq '0')) {
 	LOGCROAK "[FATAL] There is nothing to do here, since there are no nodes with any plugins.  Please refer to http://munin-monitoring.org/wiki/FAQ_no_graphs";
     };
 	
-    if (defined $groups->{"name"} and $groups->{"name"} eq "#%#root") {
+
+    if (defined $groups->{"name"} and $groups->{"name"} eq "root") {
         $groups = $groups->{"groups"};    # root->groups
     }
 
@@ -182,6 +180,8 @@ sub html_main {
 	print Dumper $groups;
 	exit 0;
     }
+
+    
 
     generate_group_templates($groups);
 
@@ -414,7 +414,10 @@ sub copy_web_resources {
     # Make sure the logo and the stylesheet file is in the html dir
     # NOTE: The templates have hardcoded path to definitions.html, and it is not right, esp. when
     # we have nested groups and nested services.
-    my @files = ("style.css", "logo.png", "logo-h.png", "definitions.html", "favicon.ico");
+    my @files = (
+	    "style.css", "logo.png", "logo-h.png", "definitions.html", "favicon.ico",
+	    "dynazoom.html", "formatdate.js", "querystring.js",
+    );
 
     foreach my $file ((@files)) {
         if (   (!-e "$htmldir/$file")
@@ -509,7 +512,7 @@ sub get_peer_nodes {
         my $peername = munin_get_node_name($peer);
         next
             if $peername eq "contact"
-                and munin_get_node_name($parent) eq "#%#root";
+                and munin_get_node_name($parent) eq "root";
         if ($peername eq $me) {
             unshift @$ret, {"name" => $peername, "link" => undef};
         }
@@ -823,54 +826,6 @@ sub munin_get_sorted_children {
 }
 
 
-sub fork_and_work {
-    my ($work) = @_;
-
-    if (!$do_fork) {
-
-        # We're not forking.  Do work and return.
-        DEBUG "[DEBUG] Doing work synchrnonously";
-        &$work;
-        return;
-    }
-
-    # Make sure we don't fork too much
-    while ($running >= $max_running) {
-        DEBUG
-            "[DEBUG] Too many forks ($running/$max_running), wait for something to get done";
-        look_for_child("block");
-        --$running;
-    }
-
-    my $pid = fork();
-
-    if (!defined $pid) {
-        ERROR "[ERROR] fork failed: $!";
-        die "fork failed: $!";
-    }
-
-    if ($pid == 0) {
-
-        # This block does the real work.  Since we're forking exit
-        # afterwards.
-
-        &$work;
-
-        # See?!
-
-        exit 0;
-
-    }
-    else {
-        ++$running;
-        DEBUG "[DEBUG] Forked: $pid. Now running $running/$max_running";
-        while ($running and look_for_child()) {
-            --$running;
-        }
-    }
-}
-
-
 sub generate_group_templates {
     my $arr = shift || return;
     return unless ref($arr) eq "ARRAY";
@@ -884,7 +839,7 @@ sub generate_group_templates {
             
             if (defined $key->{'ngroups'} and $key->{'ngroups'}) {
                 # WTF: $key->{'groups'} = $key->{'groups'};
-                fork_and_work(sub {generate_group_templates($key->{'groups'})});
+                generate_group_templates($key->{'groups'});
 
                 emit_group_template($key);
                 
@@ -980,6 +935,11 @@ sub generate_service_templates {
         $srv{'imgmonth'} = $config->{'cgiurl_graph'} . "/$path-month.png";
         $srv{'imgyear'}  = $config->{'cgiurl_graph'} . "/$path-year.png";
 
+        $srv{'cimgday'}   = $config->{'cgiurl_graph'} . "/$path-day.png";
+        $srv{'cimgweek'}  = $config->{'cgiurl_graph'} . "/$path-week.png";
+        $srv{'cimgmonth'} = $config->{'cgiurl_graph'} . "/$path-month.png";
+        $srv{'cimgyear'}  = $config->{'cgiurl_graph'} . "/$path-year.png";
+
         if (munin_get_bool($service, "graph_sums", 0)) {
             $srv{'imgweeksum'}
                 = $config->{'cgiurl_graph'} . "/$path-week-sum.png";
@@ -1004,7 +964,27 @@ sub generate_service_templates {
         $srv{'cimgyear'}  = "$bp/$parent/$srv{node}-year.png";
     }
 
+    # Compute the ZOOM urls
+    {
+        my $epoch_now = time;
+	# The intervals are a bit larger, just like the munin-graph
+	my $start_day = $epoch_now - (3600 * 30);
+	my $start_week = $epoch_now - (3600 * 24 * 8);
+	my $start_month = $epoch_now - (3600 * 24 * 33);
+	my $start_year = $epoch_now - (3600 * 24 * 400);
+	my $size_x = 800;
+	my $size_y = 400;
+	my $common_url = "$root_path/dynazoom.html?plugin_name=$path&size_x=$size_x&size_y=$size_y";
+	$srv{zoomday} = "$common_url&start_epoch=$start_day&stop_epoch=$epoch_now";
+	$srv{zoomweek} = "$common_url&start_epoch=$start_week&stop_epoch=$epoch_now";
+	$srv{zoommonth} = "$common_url&start_epoch=$start_month&stop_epoch=$epoch_now";
+	$srv{zoomyear} = "$common_url&start_epoch=$start_year&stop_epoch=$epoch_now";
+    }
+
     for my $scale (@times) {
+        # Don't try to find the size if cgi is enabled, 
+        # otherwise old data might pollute  
+        next if ($method eq "cgi");
         if (my ($w, $h)
             = get_png_size(munin_get_picture_filename($service, $scale))) {
             $srv{"img" . $scale . "width"}  = $w;
@@ -1016,6 +996,7 @@ sub generate_service_templates {
         $srv{imgweeksum} = "$srv{node}-week-sum.png";
         $srv{imgyearsum} = "$srv{node}-year-sum.png";
         for my $scale (["week", "year"]) {
+            next if ($method eq "cgi");
             if (my ($w, $h)
                 = get_png_size(munin_get_picture_filename($service, $scale, 1)))
             {

@@ -12,11 +12,10 @@ setsid 1
 user root
 group root
 
-# Regexps for files to ignore
 
-ignore_file ~$
-#ignore_file [#~]$  # FIX doesn't work. '#' starts a comment
-ignore_file DEADJOE$
+# Regexps for files to ignore
+ignore_file [\#~]$
+ignore_file DEADJOE$ 
 ignore_file \.bak$
 ignore_file %$
 ignore_file \.dpkg-(tmp|new|old|dist)$
@@ -35,13 +34,11 @@ ignore_file \.pod$
 
 allow ^127\.0\.0\.1$
 
-# If you have installed the Net::CIDR perl module, you can use one or more
-# cidr_allow and cidr_deny address/mask patterns.  A connecting client must
-# match any cidr_allow, and not match any cidr_deny.  Note that a netmask
-# *must* be provided, even if it's /32
-#
-# Example:
-#
+# If you have installed the Net::CIDR perl module, you can use
+# multiple cidr_allow and cidr_deny address/mask patterns.  A
+# connecting client must match any cidr_allow, and not match any
+# cidr_deny.  Example:
+
 # cidr_allow 127.0.0.1/32
 # cidr_allow 192.0.2.0/24
 # cidr_deny  192.0.2.42/32

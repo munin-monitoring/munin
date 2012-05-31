@@ -32,7 +32,8 @@ PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
         source_dist \
         test clean \
         clean-% test-% build-% install-% \
-	tags
+	tags \
+	infiles
 
 .SECONDARY: node/Build master/Build plugins/Build
 
@@ -59,17 +60,18 @@ tags:
 ######################################################################
 
 ifeq ($(JCVALID),yes)
-install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-plugins-java install-man
+install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-plugins-java install-man install-async-prime
 else
-install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-man
+install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-man install-async-prime
 endif
 
 install-pre: Makefile Makefile.config
 	@$(CHECKUSER)
 	mkdir -p $(LOGDIR)
 	mkdir -p $(STATEDIR)
+	mkdir -p $(SPOOLDIR)
 	mkdir -p $(CONFDIR)
-	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR)
+	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR) $(SPOOLDIR)
 
 install-master-prime: $(INFILES_MASTER) install-pre install-master
 	mkdir -p $(CONFDIR)/templates
@@ -86,7 +88,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR) 
 	$(CHMOD) 0755 $(DBDIR)
 
-	for p in master/www/*.tmpl master/www/*.png master/www/*.css resources/favicon.ico; do \
+	for p in master/www/*.tmpl master/www/*.png master/www/*.css master/www/*.js resources/favicon.ico; do \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
 	done
 
@@ -95,6 +97,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	done
 
 	$(INSTALL) -m 0644 master/www/definitions.html $(CONFDIR)/templates/
+	$(INSTALL) -m 0644 master/www/dynazoom.html $(CONFDIR)/templates/
 	$(INSTALL) -m 0755 master/DejaVuSansMono.ttf $(LIBDIR)/
 	$(INSTALL) -m 0755 master/DejaVuSans.ttf $(LIBDIR)/
 
@@ -107,8 +110,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	$(INSTALL) -m 0755 build/master/_bin/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-html $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-limits $(LIBDIR)/
-	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/
-	$(INSTALL) -m 0755 build/master/_bin/munin-fastcgi-graph $(CGIDIR)/
+	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/munin-cgi-graph
 
 # Not ready to be installed yet	
 # $(INSTALL) -m 0755 build/master/_bin/munin-gather $(LIBDIR)/
@@ -149,6 +151,11 @@ install-plugins-java: build-plugins-java
 # configure plugins.  Or not. Better done under the direction of the installer
 # or the packager.
 
+install-async-prime:
+	mkdir -p $(LIBDIR)
+	$(INSTALL) -m 0755 build/node/_bin/munin-async-client $(LIBDIR)/
+	$(INSTALL) -m 0755 build/node/_bin/munin-async-server $(LIBDIR)/
+
 install-node-prime: install-node-pre install-node
 
 install-node-pre: build/node/munin-node.conf install-pre
@@ -179,10 +186,13 @@ install-doc: build-doc
 
 ######################################################################
 
+# Dummy rule to enable parallel building
+infiles: $(INFILES)
+
 ifeq ($(JCVALID),yes)
-build: $(INFILES) build-master build-common-prime build-node build-plugins build-plugins-java build-man
+build: infiles build-master build-common-prime build-node build-plugins build-plugins-java build-man
 else
-build: $(INFILES) build-master build-common-prime build-node build-plugins build-man
+build: infiles build-master build-common-prime build-node build-plugins build-man
 endif
 
 build/%: %.in
@@ -199,6 +209,7 @@ build/%: %.in
              -e 's|@@HTMLDIR@@|$(HTMLDIR)|g'                    \
              -e 's|@@DBDIR@@|$(DBDIR)|g'                        \
              -e 's|@@STATEDIR@@|$(STATEDIR)|g'                  \
+	     -e 's|@@SPOOLDIR@@|$(SPOOLDIR)|g'                  \
              -e 's|@@PERL@@|$(PERL)|g'                          \
              -e 's|@@PERLLIB@@|$(PERLLIB)|g'                    \
              -e 's|@@PYTHON@@|$(PYTHON)|g'                      \
@@ -225,9 +236,9 @@ build-common-prime: build-common-pre common/blib/lib/Munin/Common/Defaults.pm bu
 
 build-common-pre: common/Build
 	cd common && $(PERL) Build code
-	rm -f common/blib/lib/Munin/Common/Defaults.pm
 
 common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm build-common-pre
+	rm -f common/blib/lib/Munin/Common/Defaults.pm
 	$(PERL) -pe 's{(PREFIX     \s+=\s).*}{\1q{$(PREFIX)};}x;   \
                   s{(CONFDIR    \s+=\s).*}{\1q{$(CONFDIR)};}x;     \
                   s{(BINDIR     \s+=\s).*}{\1q{$(BINDIR)};}x;      \
@@ -239,6 +250,7 @@ common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm bu
                   s{(HTMLDIR	\s+=\s).*}{\1q{$(HTMLDIR)};}x;     \
                   s{(DBDIR	\s+=\s).*}{\1q{$(DBDIR)};}x;       \
                   s{(STATEDIR	\s+=\s).*}{\1q{$(STATEDIR)};}x;    \
+		  s{(SPOOLDIR	\s+=\s).*}{\1q{$(SPOOLDIR)};}x;    \
                   s{(PERL	\s+=\s).*}{\1q{$(PERL)};}x;        \
                   s{(PERLLIB	\s+=\s).*}{\1q{$(PERLLIB)};}x;     \
                   s{(PYTHON	\s+=\s).*}{\1q{$(PYTHON)};}x;      \
@@ -286,7 +298,7 @@ build/plugins/javalib/munin-jmx-plugins.jar: $(CLASSFILES)
 
 build/%.class: %.class
 	mkdir -p build/`dirname $*.class`
-	cp $*.class build/$*.class
+	cp $**.class build/`dirname $*.class`
 
 ######################################################################
 # DIST RULES
@@ -399,7 +411,7 @@ install-%: %/Build
             --install_path libdoc=$(MANDIR)/man3	\
 
 test-%: %/Build
-	cd $* && $(PERL) Build test || true
+	cd $* && $(PERL) Build test --verbose=0 || true
 
 clean-%: %/Build common/blib/lib/Munin/Common/Defaults.pm
 	cd $* && $(PERL) Build realclean

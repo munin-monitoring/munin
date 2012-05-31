@@ -6,6 +6,9 @@ FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
 cd $BASEDIR
 
 if [ $1 ]; then
+    ./dev_scripts/stop_munin-node
+    ./dev_scripts/stop_munin-sched
+
     rm -rf sandbox
     mkdir sandbox
     make clean || exit
@@ -46,3 +49,4 @@ tls_verify_depth 5
     echo "**********************************************************************"
     ./dev_scripts/run munin-node-configure --shell --families=contrib,auto | sh -x
 fi
+

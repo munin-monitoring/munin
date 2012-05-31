@@ -45,7 +45,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 use strict;
 use Net::SNMP;
 
-my $DEBUG = 0;
 my $MAXLABEL = 20;
 
 my $host      = $ENV{host}      || undef;
@@ -56,7 +55,7 @@ my $response;
 
 if (defined $ARGV[0] and $ARGV[0] eq "snmpconf")
 {
-	print "index   1.3.6.1.4.1.9600.1.10.6.1.1.\n";
+	print "require 1.3.6.1.4.1.9600.1.10.6.1.1.\n";
 	print "require 1.3.6.1.4.1.9600.1.10.6.1.3. 3\n"; # Type=fan
 	print "require 1.3.6.1.4.1.9600.1.10.6.1.7. [1-9]\n"; # Low value != 0
 	print "require 1.3.6.1.4.1.9600.1.10.6.1.9. [1-9]\n"; # High value != 0
@@ -75,7 +74,7 @@ if ($0 =~ /^(?:|.*\/)snmp_([^_]+)_sensors_mbm_fan$/)
 }
 elsif (!defined($host))
 {
-	print "# Debug: $0 -- $1\n" if $DEBUG;
+	print "# Debug: $0 -- $1\n" if $Munin::Plugin::SNMP::DEBUG;
 	die "# Error: couldn't understand what I'm supposed to monitor.";
 }
 
@@ -150,18 +149,18 @@ sub get_single
 	my $handle = shift;
 	my $oid    = shift;
 
-	print "# Getting single \"$oid\"..." if $DEBUG;
+	print "# Getting single \"$oid\"..." if $Munin::Plugin::SNMP::DEBUG;
 
 	$response = $handle->get_request ($oid);
 
 	if (!defined $response->{$oid})
 	{
-	    print "undef\n" if $DEBUG;
+	    print "undef\n" if $Munin::Plugin::SNMP::DEBUG;
 	    return undef;
 	}
 	else
 	{
-	    print "\"$response->{$oid}\"\n" if $DEBUG;
+	    print "\"$response->{$oid}\"\n" if $Munin::Plugin::SNMP::DEBUG;
 	    return $response->{$oid};
 	}
 }
@@ -176,18 +175,18 @@ sub get_by_regex
 	my $ret    = $oid . "0";
 	my $response;
 
-	print "# Starting browse of $oid...\n" if $DEBUG;
+	print "# Starting browse of $oid...\n" if $Munin::Plugin::SNMP::DEBUG;
 
 	while (1)
 	{
 		if ($num == 0)
 		{
-			print "# Checking for $ret...\n" if $DEBUG;
+			print "# Checking for $ret...\n" if $Munin::Plugin::SNMP::DEBUG;
 			$response = $handle->get_request ($ret);
 		}
 		if ($num or !defined $response)
 		{
-			print "# Checking for sibling of $ret...\n" if $DEBUG;
+			print "# Checking for sibling of $ret...\n" if $Munin::Plugin::SNMP::DEBUG;
 			$response = $handle->get_next_request ($ret);
 		}
 		if (!$response)
@@ -196,13 +195,13 @@ sub get_by_regex
 		}
 		my @keys = keys %$response;
 		$ret = $keys[0];
-		print "# Analyzing $ret (compared to $oid)...\n" if $DEBUG;
+		print "# Analyzing $ret (compared to $oid)...\n" if $Munin::Plugin::SNMP::DEBUG;
 		last unless ($ret =~ /^$oid/);
 		$num++;
 		next unless ($response->{$ret} =~ /$regex/);
 		@keys = split (/\./, $ret);
 		$result->{$keys[-1]} = $response->{$ret};;
-		print "# Index $num: ", $keys[-1], " (", $response->{$ret}, ")\n" if $DEBUG;
+		print "# Index $num: ", $keys[-1], " (", $response->{$ret}, ")\n" if $Munin::Plugin::SNMP::DEBUG;
 	};
 	return $result;
 }

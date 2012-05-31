@@ -322,9 +322,17 @@ munin_update
 linux/diskstats
 
 [1.4.4]
-linux/selinux_avcstat.in
-linux/lpar_cpu.in
-linux/buddyinfo.in
-linux/tcp.in
-node.d/proxy_plugin.in
+linux/selinux_avcstat
+linux/lpar_cpu
+linux/buddyinfo
+linux/tcp
+proxy_plugin
+
+[2.0]
+cygwin/df
+cygwin/netstat
+pgbouncer_connections
+pgbouncer_requests
+postgres_oldest_prepared_xact_
+postgres_prepared_xacts_
 

@@ -38,6 +38,9 @@ sub new
 sub is_wildcard { return ((shift)->{path} =~ /_$/); }
 
 
+sub is_snmp     { return ((shift)->{name} =~ /^snmp(?:v3)?__/); }
+
+
 sub in_family { $_[0]->{family} eq $_  && return 1 foreach @_; return 0; }
 
 
@@ -57,6 +60,7 @@ sub _same   { set_intersection(@_); }
 sub suggestion_string
 {
     my ($self) = @_;
+
     my $msg = '';
 
     if ($self->{default} eq 'yes') {
@@ -90,8 +94,8 @@ sub _reduce_wildcard
     my $name = $self->{name};
     my $wild;
 
-    if ($name =~ /^snmp_(_\w+)/) {
-        $link_name =~ /^snmp_(.+)$1(.*)/;
+    if ($name =~ /^snmp(?:v3)?_(_\w+)/) {
+        $link_name =~ /^snmp(?:v3)?_(.+)$1(.*)/;
         $wild = $1 . (length($2)? "/$2" : '');  # FIXME hack :-(
     }
     else {
@@ -131,10 +135,10 @@ sub _suggested_links
 {
     my ($self) = @_;
 
-    # no suggestions if there isn't any
+    # no suggestions if the plugin shouldn't be installed 
     return [] if $self->{default} ne 'yes';
 
-    if ($self->is_wildcard or $self->{name} =~ /^snmp__/) {
+    if ($self->is_wildcard or $self->is_snmp) {
         return [ map { $self->_expand_wildcard($_) } @{$self->{suggestions}} ];
     }
     else {
@@ -146,7 +150,7 @@ sub _suggested_links
 # return an arrayref of the installed or suggested wildcards (eg. 'eth0' or
 # 'switch.example.com/1').  nothing is returned if the plugin contains no wildcards.
 sub _installed_wild { return [ map { $_[0]->_reduce_wildcard($_) } @{$_[0]->{installed}} ]; }
-sub _suggested_wild { return [ map { _flatten_wildcard($_) } @{(shift)->{suggestions}}]; }
+sub _suggested_wild { return [ map { _flatten_wildcard($_) } @{(shift)->{suggestions}}   ]; }
 
 
 sub services_to_add
@@ -279,7 +283,7 @@ sub parse_snmpconf_response
 
             if ($oid =~ /$oid_root_pattern/) {
                 $oid =~ s/\.$//;
-                push @{ $self->{require_root} }, [$oid, $regex];
+                push @{ $self->{table} }, [$oid, $regex];
 
                 DEBUG("\tRegistered 'require': $oid");
                 DEBUG("\t\tFiltering on /$regex/") if $regex;
@@ -296,35 +300,41 @@ sub parse_snmpconf_response
         }
         elsif ($key eq 'index') {
             if ($self->{index}) {
-                $self->log_error('index redefined');
+                $self->log_error(q{'index' is already defined});
                 next;
             }
             unless ($value =~ /$oid_root_pattern/) {
-                $self->log_error('index must be an OID root');
+                $self->log_error(q{'index' must be an OID root});
                 next;
             }
+            unless ($self->is_wildcard) {
+                $self->log_error(q{'index' only applies to double-wildcard SNMP plugins (ie. with a trailing '_').  Use 'require' instead.});
+                # it's valid, just suggest the author does s/index/require/
+            }
 
-            ($self->{index} = $value) =~ s/\.$//;
+            $value =~ s/\.$//;
+
+            # two copies.  one for checking requirements, the other for
+            # retrieving the indices
+            push @{ $self->{table} }, [ $value ];
+            $self->{index} = $value;
+
             DEBUG("\tRegistered 'index'  : $value");
         }
         elsif ($key eq 'number') {
-            if ($self->{number}) {
-                $self->log_error('number redefined');
-                next;
-            }
-
-            unless ($value =~ /$oid_pattern/) {
-                $self->log_error('number must be an OID');
-                next;
-            }
-
-            $self->{number} = $value;
-            DEBUG("\tRegistered 'number' : $value");
+            $self->log_error(q{'number' is no longer used.});
         }
         else {
             $self->log_error("Couldn't parse line: $line");
         }
     }
+
+    if ($self->is_wildcard and !$self->{index}) {
+        $self->log_error(q{SNMP plugins with a trailing '_' need an index});
+        # FIXME: this should be fatal!
+    }
+
+    return;
 }
 
 
@@ -377,6 +387,11 @@ only double-wild plugins will return true (ie. 'snmp__memory' would
 return false, but 'snmp__if_' would return true).
 
 
+=item B<is_snmp()>
+
+Returns true if the plugin is an SNMP plugin.
+
+
 =item B<in_family(@families)>
 
 Returns true if plugin's family is in @families, false otherwise.
@@ -391,7 +406,7 @@ directory, 'no' otherwise.
 =item B<suggestion_string()>
 
 Returns a string detailing whether or not autoconf considers that the plugin
-should be installed.  The string may also report the reason why the plugin
+should be installed.  The string may also report the reason why the plugin 
 declined to be installed, or the list of suggestions it provided, if this
 information is available.
 
@@ -424,13 +439,13 @@ are not validated.
 
 Sets the family and capabilities from the magic markers embedded in the plugin's
 executable, as specified by
-http://munin.projects.linpro.no/wiki/ConcisePlugins#Magicmarkers
+L<http://munin.projects.linpro.no/wiki/ConcisePlugins#Magicmarkers>
 
 
 =item B<parse_autoconf_response(@response)>
 
 Parses and validates the autoconf response from the plugin, in the format
-specified by http://munin.projects.linpro.no/wiki/ConcisePlugins#autoconf
+specified by L<http://munin.projects.linpro.no/wiki/ConcisePlugins#autoconf>
 
 Invalid input will cause an error to be logged against the plugin.
 
@@ -445,7 +460,7 @@ Invalid suggestions will cause an error to be logged against the plugin.
 =item B<parse_snmpconf_response(@response)>
 
 Parses and validates the snmpconf response from the plugin, in the format
-specified by http://munin.projects.linpro.no/wiki/ConcisePlugins#suggest
+specified by L<http://munin.projects.linpro.no/wiki/ConcisePlugins#suggest>
 
 Invalid or inconsistent input will cause an error to be logged against the
 plugin.

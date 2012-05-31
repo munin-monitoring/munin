@@ -5,8 +5,7 @@
 
 =head1 NAME
 
-processes - Plugin to monitor processes on Linux FreeBSD, OpenBSD, NetBSD,
-Solaris and OSX.
+processes - Plugin to monitor processes and process states.
 
 =head1 ABOUT
 
@@ -67,11 +66,31 @@ munin-node.
 [ $ps ]      || ps="ps"
 
 # Find operating system
-[ $OPERSYS ] || OPERSYS=`uname` || exit 1
+[ $OPERSYS ] || OPERSYS=`uname | cut -f 1 -d _` || exit 1
 
 if [ "$1" = "autoconf" ]; then
+        case "$OPERSYS" in
+        Linux|SunOS|FreeBSD|OpenBSD|NetBSD|Darwin|CYGWIN)
+        $ps >/dev/null 2>/dev/null
+        if [ $? -ne 0 ]
+        then
+            echo "no (ps=$ps failed)"
+            exit 0
+        fi
+        echo | $awk '{ print "Hei" }' >/dev/null 2>/dev/null
+        if [ $? -ne 0 ]
+        then
+            echo "no (awk=$awk failed)"
+            exit 0
+        fi
 	echo yes
 	exit 0
+	;;
+	*)
+	echo "no (unknown OS)"
+	exit 0
+	;;
+	esac
 fi
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
@@ -196,7 +215,7 @@ if [ "$1" = "config" ]; then
 	echo "sleeping.info The number of processes that are sleeping for less than about 20 seconds."
 	print_warning sleeping
 	print_critical sleeping
-    else
+    elif [ "$OPERSYS" = "Linux" ] || [ "$OPERSYS" = "SunOS" ]; then
 	echo "sleeping.label sleeping"
 	echo "sleeping.draw AREA"
 	echo "sleeping.colour $SLEEPING"
@@ -215,27 +234,29 @@ if [ "$1" = "config" ]; then
 	print_critical uninterruptible
     fi
 
-    # Common flags
-    echo "zombie.label zombie"
-    echo "zombie.draw STACK"
-    echo "zombie.colour $ZOMBIE"
-    echo "zombie.info The number of defunct ("zombie") processes (process terminated and parent not waiting)."
-    print_warning zombie
-    print_critical zombie
+    # Common (non-cygwin) flags
+    if [ "$OPERSYS" != "CYGWIN" ]; then
+        echo "zombie.label zombie"
+        echo "zombie.draw STACK"
+        echo "zombie.colour $ZOMBIE"
+        echo "zombie.info The number of defunct ("zombie") processes (process terminated and parent not waiting)."
+        print_warning zombie
+        print_critical zombie
 
-    echo "stopped.label stopped"
-    echo "stopped.draw STACK"
-    echo "stopped.colour $STOPPED"
-    echo "stopped.info The number of stopped or traced processes."
-    print_warning stopped
-    print_critical stopped
+        echo "stopped.label stopped"
+        echo "stopped.draw STACK"
+        echo "stopped.colour $STOPPED"
+        echo "stopped.info The number of stopped or traced processes."
+        print_warning stopped
+        print_critical stopped
 
-    echo "runnable.label runnable"
-    echo "runnable.draw STACK"
-    echo "runnable.colour $RUNNABLE"
-    echo "runnable.info The number of runnable processes (on the run queue)."
-    print_warning runnable
-    print_critical runnable
+        echo "runnable.label runnable"
+        echo "runnable.draw STACK"
+        echo "runnable.colour $RUNNABLE"
+        echo "runnable.info The number of runnable processes (on the run queue)."
+        print_warning runnable
+        print_critical runnable
+    fi
 
     if [ "$OPERSYS" != "SunOS" ]; then
 	# Not using 'graph_total' due to backwards compability. SunOS uses 'total'.
@@ -331,4 +352,13 @@ print "sleeping.value "         0+stat["S"];
 print "stopped.value "          0+stat["T"];
 print "zombie.value "           0+stat["Z"];
 }'
+
+elif [ "$OPERSYS" = "CYGWIN" ]; then
+    # First line is header. Remove it. Also remove WINPID duplicates.
+    $ps -aW | sed '1d' | cut -c 30-36 | sort -u | $awk '
+{ processes++; }
+END {
+print "processes.value "        0+processes;
+}'
+
 fi

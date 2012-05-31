@@ -47,9 +47,6 @@ USA.
 
 EOF
 
-# Source plugin library functions
-. $MUNIN_LIBDIR/plugins/plugin.sh
-
 PROCDIR="/proc/net/bonding"
 MYSELF=$(basename $0)
 FILENAME="bonding_err_"
@@ -78,11 +75,10 @@ if [ "$1" = "config" ]; then
     echo "graph_category Network"
     echo "graph_args --base 1000 -l 0"
     grep "^Slave Interface:" ${PROCDIR}/${BONDINGIF} | while read a b if; do
-      fieldname=$(clean_fieldname "$if")
-      echo "if_${fieldname}.label ${if}"
-      echo "if_${fieldname}.type DERIVE"
-      echo "if_${fieldname}.min 0"
-      echo "if_${fieldname}.warning 0"
+      echo "if_${if}.label ${if}"
+      echo "if_${if}.type DERIVE"
+      echo "if_${if}.min 0"
+      echo "if_${if}.warning 0"
     done
   fi
   exit 0
@@ -95,10 +91,8 @@ fi
 
 BONDINGIF=$(echo $MYSELF | sed "s/^$FILENAME//")
 grep "^Slave Interface:" ${PROCDIR}/${BONDINGIF} | while read a b if; do
-  fieldname=$(clean_fieldname "$if")
-  echo -n "if_${fieldname}.value "
+  # echo "if_${if}.label ${if}"
+  echo -n "if_${if}.value "
   grep -A 2 "^Slave Interface: ${if}" ${PROCDIR}/${BONDINGIF} | grep "Link Failure Count:" | cut -d " " -f 4
 done
 
-
-# vim: syntax=sh ts=2 et

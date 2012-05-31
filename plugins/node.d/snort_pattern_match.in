@@ -79,11 +79,11 @@ if [ "$1" = "config" ]; then
         echo 'graph_vlabel % percent'
         echo 'graph_scale no'
         echo 'pattmatch.label % percent'
-	if [ -n "$warning" ]; then
-		echo "pattmatch.warning $warning"
+	if [ -n $warning ]; then
+		echo 'pattmatch.warning $warning'
 	fi
-	if [ -n "$critical" ]; then
-		echo "pattmatch.critical $critical"
+	if [ -n $critical ]; then
+		echo 'pattmatch.critical $critical'
 	fi
         echo 'pattmatch.info The percent of data received that Snort processes in pattern matching'
         echo 'graph_category Snort'

@@ -1,3 +1,4 @@
+# vim: ts=4 : sw=4 : et
 use warnings;
 use strict;
 
@@ -10,19 +11,32 @@ use strict;
 use English qw(-no_match_vars);
 use File::Find;
 use FindBin;
-use Test::More tests => 1;
+use Test::More;
 use Pod::Simple::TextContent;
+
+if ($ENV{TEST_POD}) {
+    plan tests => 1;
+}
+else {
+    plan skip_all => 'set TEST_POD to enable this test'
+}
 
 my $count = 0;
 
 find(\&fixes, "$FindBin::Bin/../lib");
 is($count, 0, "Should not find any FIX comments");
 
-sub fixes {
+sub fixes
+{
+    my $file = $File::Find::name;
 
-  my $file = $File::Find::name;
+    # skip SVN stuff
+    if ( -d and m{\.svn}) {
+        $File::Find::prune = 1;
+        return;
+    }
 
-  return unless -f $file;
+    return unless -f $file;
 
   #
   # Check comments
@@ -50,3 +64,4 @@ sub fixes {
       $pod_count,$file if $pod_count;
   $count += $pod_count;
 }
+

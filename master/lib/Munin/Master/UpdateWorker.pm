@@ -19,6 +19,7 @@ use Munin::Master::Utils;
 use RRDs;
 use Time::HiRes;
 use Data::Dumper;
+use List::Util qw(max);
 
 my $config = Munin::Master::Config->instance()->{config};
 
@@ -67,23 +68,87 @@ sub do_work {
 	eval {
 	    # A I/O timeout results in a violent exit.  Catch and handle.
 
-	    $self->{node}->negotiate_capabilities();
+	    my @node_capabilities = $self->{node}->negotiate_capabilities();
+
+            # Handle spoolfetch, one call to retrieve everything
+	    my %whole_config;
+	    my @plugins;
+	    if (grep /^spool$/, @node_capabilities) {
+		    # XXX - use 5min, should keep a real spoolfetch timestamping
+		    my $spoolfetch_last_timestamp = get_spoolfetch_timestamp($nodedesignation);
+		    %whole_config = $self->uw_spoolfetch($spoolfetch_last_timestamp);
+
+		    DEBUG "[DEBUG] whole_config:" . Dumper(\%whole_config);
+
+		    # Gets the plugins from spoolfetch
+		    # Only keep the first one, the others will be multigraph-fetched
+		    @plugins = ( $whole_config{global}{multigraph}[0] ) ;
+	    }
+
 	    # Note: A multigraph plugin can present multiple services.
-	    my @plugins =  $self->{node}->list_plugins();
+	    @plugins = $self->{node}->list_plugins() unless @plugins;
 
 	    for my $plugin (@plugins) {
 		if (%{$config->{limit_services}}) {
 		    next unless $config->{limit_services}{$plugin};
 		}
 
-		my %service_config = $self->uw_fetch_service_config($plugin);
+		DEBUG "[DEBUG] for my $plugin (@plugins)";
+
+		# Ask for config only if spoolfetch didn't already send it
+		my %service_config = %whole_config;
+	        unless (%service_config) {
+		       %service_config = $self->uw_fetch_service_config($plugin);
+		}
+
 		unless (%service_config) {
 		    WARN "[WARNING] Service $plugin on $nodedesignation ".
 			"returned no config";
 		    next;
 		}
 
-		my %service_data = $self->{node}->fetch_service_data($plugin);
+		# Check if this plugin has already sent its data via a dirtyconfig
+		# Note that spoolfetch also uses dirtyconfig
+		my %service_data = $self->handle_dirty_config(\%service_config);
+			
+		# default is 0 sec : always update when asked
+		my $update_rate = get_global_service_value(\%service_config, $plugin, "update_rate", 0); 
+		my ($update_rate_in_seconds, $is_update_aligned) = parse_update_rate($update_rate);
+		DEBUG "[DEBUG] update_rate $update_rate_in_seconds for $plugin on $nodedesignation";
+
+		if (! %service_data) {
+			# Check if this plugin has to be updated
+			if ($update_rate_in_seconds 
+				&& is_fresh_enough($nodedesignation, $plugin, $update_rate_in_seconds)) {
+			    # It's fresh enough, skip this $service
+			    DEBUG "[DEBUG] $plugin is fresh enough, not updating it";
+			    next;
+			}
+
+			# __root__ is only a placeholder plugin for 
+			# an empty spoolfetch so we should ignore it 
+			# if asked to fetch it
+			next if ($plugin eq "__root__");
+			
+			DEBUG "[DEBUG] No service data for $plugin, fetching it";
+			%service_data = $self->{node}->fetch_service_data($plugin);
+		}
+
+		# If update_rate is aligned, round the "when" for alignement
+		if ($is_update_aligned) {
+			foreach my $service (keys %service_data) {
+				my $current_service_data = $service_data{$service};
+				foreach my $field (keys %$current_service_data) {
+					my $whens = $current_service_data->{$field}->{when};
+					for (my $i = 0; $i < scalar @$whens; $i ++) {
+						my $when = $whens->[$i];
+						my $rounded_when = round_to_granularity($when, $update_rate_in_seconds);
+						$whens->[$i] = $rounded_when;
+					}
+				}
+			}
+		}
+
 
 		# Since different plugins can populate multiple
 		# positions in the service namespace we'll check for
@@ -126,8 +191,8 @@ sub do_work {
 		    %{$all_service_configs{global}},
 		    %{$service_config{global}});
 
-		$self->_update_rrd_files(\%service_config, \%service_data);
-
+		my $last_updated_timestamp = $self->_update_rrd_files(\%service_config, \%service_data);
+          	set_spoolfetch_timestamp($nodedesignation, $last_updated_timestamp);
 	    } # for @plugins
 	}; # eval
 
@@ -149,22 +214,175 @@ sub do_work {
     }
 }
 
+sub get_global_service_value {
+	my ($service_config, $service, $conf_field_name, $default) = @_;
+	foreach my $array (@{$service_config->{global}{$service}}) {
+		my ($field_name, $field_value) = @$array;
+		if ($field_name eq $conf_field_name) {
+			return $field_value;
+		}
+	}
+
+	return $default;
+}
+
+sub is_fresh_enough {
+	my ($nodedesignation, $service, $update_rate_in_seconds) = @_;
+
+	my $key = "$nodedesignation/$service";
+	DEBUG "is_fresh_enough asked for $key with a rate of $update_rate_in_seconds";
+
+	my $db_file = $config->{dbdir} . "/last_updated.db";
+
+	my %last_updated;
+
+	use Fcntl;   # For O_RDWR, O_CREAT, etc.
+   	use DB_File;
+   	tie(%last_updated, 'DB_File', $db_file, O_RDWR|O_CREAT, 0666) or ERROR "$!";
+
+	my $last_updated_key = $last_updated{$key} || "0 0";
+	DEBUG "last_updated{$key}: " . $last_updated_key;
+	my @last = split(/ /, $last_updated_key);
+   
+	use Time::HiRes qw(gettimeofday tv_interval);	
+	my $now = [ gettimeofday ];
+
+	my $age = tv_interval(\@last, $now); 	
+	DEBUG "last: " . Dumper(\@last) . ", now: " . Dumper($now) . ", age: $age";
+	my $is_fresh_enough = ($age < $update_rate_in_seconds) ? 1 : 0;
+	DEBUG "is_fresh_enough  $is_fresh_enough";
+
+	if (! $is_fresh_enough) {
+		DEBUG "new value: " . join(" ", @$now);
+		$last_updated{$key} = join(" ", @$now);
+	}
+
+   	untie(%last_updated);
+
+	return $is_fresh_enough;
+}
+
+sub get_spoolfetch_timestamp {
+	my ($nodedesignation) = @_;
+
+	my $key = "$nodedesignation/__spoolfetch__";
+	my $db_file = $config->{dbdir} . "/last_updated.dic.txt";
+
+	my %last_updated;
+
+   	use Munin::Common::SyncDictFile;
+   	tie(%last_updated, 'Munin::Common::SyncDictFile', $db_file) or ERROR "$!";
+
+	my $last_updated_value = $last_updated{$key} || "0";
+
+   	untie(%last_updated);
+
+	return $last_updated_value;
+}
+
+sub set_spoolfetch_timestamp {
+	my ($nodedesignation, $timestamp) = @_;
+
+	my $key = "$nodedesignation/__spoolfetch__";
+	my $db_file = $config->{dbdir} . "/last_updated.dic.txt";
+
+	my %last_updated;
+
+   	use Munin::Common::SyncDictFile;
+   	tie(%last_updated, 'Munin::Common::SyncDictFile', $db_file) or ERROR "$!";
+
+	$last_updated{$key} = time;
+
+   	untie(%last_updated);
+}
+
+sub parse_update_rate {
+	my ($update_rate_config) = @_;
+
+	my ($is_update_aligned, $update_rate_in_sec);
+	if ($update_rate_config =~ m/(\d+[a-z]?)( aligned)?/) {
+		$update_rate_in_sec = to_sec($1);
+		$is_update_aligned = $2;
+	} else {
+		return (0, 0);
+	}
+
+	return ($update_rate_in_sec, $is_update_aligned);
+}
+
+sub round_to_granularity {
+	my ($when, $granularity_in_sec) = @_;
+	$when = time if ($when eq "N"); # N means "now"
+
+	my $rounded_when = $when - ($when % $granularity_in_sec);
+	return $rounded_when;
+}
+
+sub handle_dirty_config {
+	my ($self, $service_config) = @_;
+	
+	my %service_data;
+
+	my $services = $service_config->{global}{multigraph};
+	foreach my $service (@$services) {
+		my $service_data_source = $service_config->{data_source}->{$service};
+		foreach my $field (keys %$service_data_source) {
+			my $field_value = $service_data_source->{$field}->{value};
+			my $field_when = $service_data_source->{$field}->{when};
+
+			# If value not present, this field is not dirty fetched
+			next if (! defined $field_value);
+
+			DEBUG "[DEBUG] handle_dirty_config:$service, $field, @$field_when";
+			# Moves the "value" to the service_data
+			$service_data{$service}->{$field} ||= { when => [], value => [], };
+	                push @{$service_data{$service}{$field}{value}}, @$field_value;
+			push @{$service_data{$service}{$field}{when}}, @$field_when;
+
+			delete($service_data_source->{$field}{value});
+			delete($service_data_source->{$field}{when});
+		}
+	}
+
+	return %service_data;
+}
+
+
+sub uw_spoolfetch {
+    my ($self, $timestamp) = @_;
+
+    my %whole_config = $self->{node}->spoolfetch($timestamp);
+
+    # munin.conf might override stuff
+    foreach my $plugin (keys %whole_config) {
+	    my $merged_config = $self->uw_override_with_conf($plugin, $whole_config{$plugin});
+	    $whole_config{$plugin} = $merged_config;
+    }
+
+    return %whole_config;
+}
 
 sub uw_fetch_service_config {
     my ($self, $plugin) = @_;
 
     # Note, this can die for several reasons.  Caller must eval us.
     my %service_config = $self->{node}->fetch_service_config($plugin);
+    my $merged_config = $self->uw_override_with_conf($plugin, \%service_config);
+
+    return %$merged_config;
+}
+
+sub uw_override_with_conf {
+    my ($self, $plugin, $service_config) = @_;
 
     if ($self->{host}{service_config} && 
 	$self->{host}{service_config}{$plugin}) {
 
-        %service_config
-            = (%service_config, %{$self->{host}{service_config}{$plugin}});
-
+        my %merged_config = (%$service_config, %{$self->{host}{service_config}{$plugin}});
+	$service_config = \%merged_config;
     }
 
-    return %service_config;
+    return $service_config;
 }
 
 
@@ -337,6 +555,8 @@ sub _update_rrd_files {
     my $nodedesignation = $self->{host}{host_name}."/".
 	$self->{host}{address}.":".$self->{host}{port};
 
+    my $last_timestamp = 0;
+
     for my $service (keys %{$nested_service_config->{data_source}}) {
 
 	my $service_config = $nested_service_config->{data_source}{$service};
@@ -344,24 +564,40 @@ sub _update_rrd_files {
 
 	for my $ds_name (keys %{$service_config}) {
 	    $self->_set_rrd_data_source_defaults($service_config->{$ds_name});
+	    my $ds_config = $service_config->{$ds_name};
 
-	    unless (defined($service_config->{$ds_name}{label})) {
+	    unless (defined($ds_config->{label})) {
 		ERROR "[ERROR] Unable to update $service on $nodedesignation -> $ds_name: Missing data source configuration attribute: label";
 		next;
 	    }
+	    
+	    # Sets the DS resolution, searching in that order : 
+	    # - per field 
+	    # - per plugin
+	    # - globally
+            my $configref = $self->{node}{configref};
+	    $ds_config->{graph_data_size} ||= $configref->{"$service.$ds_name.graph_data_size"};
+	    $ds_config->{graph_data_size} ||= $configref->{"$service.graph_data_size"};
+	    $ds_config->{graph_data_size} ||= $config->{graph_data_size};
+            
+	    $ds_config->{update_rate} ||= $configref->{"$service.$ds_name.update_rate"};
+	    $ds_config->{update_rate} ||= $configref->{"$service.update_rate"};
+	    $ds_config->{update_rate} ||= $config->{update_rate};
+	    $ds_config->{update_rate} ||= 300; # default is 5 min
 
-	    my $rrd_file 
-		= $self->_create_rrd_file_if_needed($service, $ds_name, 
-						    $service_config->{$ds_name});
+	    DEBUG "[DEBUG] asking for a rrd of size : " . $ds_config->{graph_data_size};
+	    my $rrd_file = $self->_create_rrd_file_if_needed($service, $ds_name, $ds_config);
 
 	    if (defined($service_data) and defined($service_data->{$ds_name})) {
-		$self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name});
+		$last_timestamp = max($last_timestamp, $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name}));
 	    }
 	    else {
 		WARN "[WARNING] Service $service on $nodedesignation returned no data for label $ds_name";
 	    }
 	}
     }
+
+    return $last_timestamp;
 }
 
 
@@ -413,7 +649,7 @@ sub _get_rrd_file_name {
     $file = File::Spec->catfile($config->{dbdir}, 
 				$file);
 	
-    DEBUG "[DEBUG] Made rrd filename: $file\n";
+    DEBUG "[DEBUG] rrd filename: $file\n";
 
     return $file;
 }
@@ -423,14 +659,16 @@ sub _create_rrd_file {
     my ($self, $rrd_file, $service, $ds_name, $ds_config) = @_;
 
     INFO "[INFO] creating rrd-file for $service->$ds_name: '$rrd_file'";
-    munin_mkdir_p(dirname($rrd_file), oct(777));
+    mkpath(dirname($rrd_file), {mode => oct(777)});
     my @args = (
         $rrd_file,
+        "--start", "-10y", # Always start RRD 10 years ago (should be enough), to be able to spoolfetch in it
         sprintf('DS:42:%s:600:%s:%s', 
                 $ds_config->{type}, $ds_config->{min}, $ds_config->{max}),
     );
-            
-    my $resolution = $config->{graph_data_size};
+
+    my $resolution = $ds_config->{graph_data_size};
+    my $update_rate = $ds_config->{update_rate};
     if ($resolution eq 'normal') {
         push (@args,
               "RRA:AVERAGE:0.5:1:576",   # resolution 5 minutes
@@ -451,41 +689,157 @@ sub _create_rrd_file {
               "RRA:AVERAGE:0.5:1:115200",  # resolution 5 minutes, for 400 days
               "RRA:MIN:0.5:1:115200",
               "RRA:MAX:0.5:1:115200"); 
+    } elsif ($resolution =~ /^custom (.+)/) {
+        # Parsing resolution to achieve computer format as defined on the RFC :
+        # FULL_NB, MULTIPLIER_1 MULTIPLIER_1_NB, ... MULTIPLIER_NMULTIPLIER_N_NB 
+        my @resolutions_computer = parse_custom_resolution($1, $update_rate);
+        foreach my $resolution_computer(@resolutions_computer) {
+            my ($multiplier, $multiplier_nb) = @{$resolution_computer};
+	    # Always add 10% to the RRA size, as specified in 
+	    # http://munin.projects.linpro.no/wiki/format-graph_data_size
+	    $multiplier_nb += int ($multiplier_nb / 10) || 1;
+            push (@args, 
+                "RRA:AVERAGE:0.5:$multiplier:$multiplier_nb",
+                "RRA:MIN:0.5:$multiplier:$multiplier_nb",
+                "RRA:MAX:0.5:$multiplier:$multiplier_nb"
+            ); 
+        }
     }
+    DEBUG "[DEBUG] RRDs::create @args";
     RRDs::create @args;
     if (my $ERROR = RRDs::error) {
         ERROR "[ERROR] Unable to create '$rrd_file': $ERROR";
     }
 }
 
+sub parse_custom_resolution {
+	my @elems = split(',\s*', shift);
+	my $update_rate = shift;
+
+	DEBUG "[DEBUG] update_rate: $update_rate";
+
+        my @computer_format;
+
+	# First element is always the full resoltion, converting to computer format
+	my $full_res = shift @elems; 
+	unshift @elems, "$update_rate for $full_res";
+
+        foreach my $elem (@elems) {
+                if ($elem =~ m/(\d+) (\d+)/) {
+                        # nothing to do, already in computer format
+                        push @computer_format, [$1, $2];
+                } elsif ($elem =~ m/(\w+) for (\w+)/) {
+                        my $nb_sec = to_sec($1);
+                        my $for_sec = to_sec($2);
+                        
+			my $multiplier = int ($nb_sec / $update_rate);
+                        my $multiplier_nb = int ($for_sec / $nb_sec);
+
+			DEBUG "[DEBUG] $elem"
+				. " -> nb_sec:$nb_sec, for_sec:$for_sec"
+				. " -> multiplier:$multiplier, multiplier_nb:$multiplier_nb"
+			;
+                        push @computer_format, [$multiplier, $multiplier_nb];
+                }
+	}
+
+        return @computer_format;
+}
+
+# return the number of seconds 
+# for the human readable format
+# s : second,  m : minute, h : hour
+# d : day, w : week, t : month, y : year
+sub to_sec {
+	my $secs_table = {
+		"s" => 1,
+		"m" => 60,
+		"h" => 60 * 60,
+		"d" => 60 * 60 * 24,
+		"w" => 60 * 60 * 24 * 7,
+		"t" => 60 * 60 * 24 * 31, # a month always has 31 days
+		"y" => 60 * 60 * 24 * 365, # a year always has 365 days 
+	};
+
+	my ($target) = @_;
+	if ($target =~ m/(\d+)([smhdwty])/i) {
+		return $1 * $secs_table->{$2};	
+	} else {
+		# no recognised unit, return the int value as seconds
+		return int $target;
+	}
+}
+
+sub to_mul {
+	my ($base, $target) = @_;
+	my $target_sec = to_sec($target);
+	if ($target %% $base != 0) {
+		return 0;
+	}
+
+	return round($target / $base); 
+}
+
+sub to_mul_nb {
+	my ($base, $target) = @_;
+	my $target_sec = to_sec($target);
+	if ($target %% $base != 0) {
+		return 0;
+	}
+}
 
 sub _update_rrd_file {
     my ($self, $rrd_file, $ds_name, $ds_values) = @_;
 
-    my $value = $ds_values->{value};
+    my $values = $ds_values->{value};
 
     # Some kind of mismatch between fetch and config can cause this.
-    return if !defined($value);  
+    return if !defined($values);  
 
-    if ($value =~ /\d[Ee]([+-]?\d+)$/) {
-        # Looks like scientific format.  RRDtool does not
-        # like it so we convert it.
-        my $magnitude = $1;
-        if ($magnitude < 0) {
-            # Preserve at least 4 significant digits
-            $magnitude = abs($magnitude) + 4;
-            $value = sprintf("%.*f", $magnitude, $value);
-        } else {
-            $value = sprintf("%.4f", $value);
+    my $last_updated_timestamp = 0;
+    my @update_rrd_data;
+    for (my $i = 0; $i < scalar @$values; $i++) { 
+        my $value = $values->[$i];
+        my $when = $ds_values->{when}[$i];
+
+        if ($value =~ /\d[Ee]([+-]?\d+)$/) {
+            # Looks like scientific format.  RRDtool does not
+            # like it so we convert it.
+            my $magnitude = $1;
+            if ($magnitude < 0) {
+                # Preserve at least 4 significant digits
+                $magnitude = abs($magnitude) + 4;
+                $value = sprintf("%.*f", $magnitude, $value);
+            } else {
+                $value = sprintf("%.4f", $value);
+            }
         }
+        
+        # Schedule for addition
+        push @update_rrd_data, "$when:$value";
+
+	$last_updated_timestamp = max($last_updated_timestamp, $when);
     }
 
-    DEBUG "[DEBUG] Updating $rrd_file with ".$ds_values->{when}.":$value";
-    RRDs::update($rrd_file, "$ds_values->{when}:$value");
+    DEBUG "[DEBUG] Updating $rrd_file with @update_rrd_data";
+    RRDs::update($rrd_file, @update_rrd_data);
     if (my $ERROR = RRDs::error) {
-	#confess Dumper @_;
+        #confess Dumper @_;
         ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
     }
+
+    return $last_updated_timestamp;
+}
+
+sub dump_to_file
+{
+	my ($filename, $obj) = @_;
+	open(DUMPFILE, ">> $filename");
+
+	use Data::Dumper;
+	print DUMPFILE Dumper($obj);
+
+	close(DUMPFILE);
 }
 
 1;

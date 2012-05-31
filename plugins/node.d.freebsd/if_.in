@@ -49,15 +49,13 @@ if [ "$1" = "config" ]; then
 	echo 'graph_category network'
 	echo "graph_info This graph shows the traffic of the $INTERFACE network interface. Please note that the traffic is shown in bits per second, not bytes. IMPORTANT: Since the data source for this plugin use 32bit counters, this plugin is really unreliable and unsuitable for most 100Mb (or faster) interfaces, where bursts are expected to exceed 50Mbps. This means that this plugin is unsuitable for most production environments."
 	echo 'rbytes.label received'
-        echo 'rbytes.type DERIVE'
+        echo 'rbytes.type COUNTER'
         echo 'rbytes.graph no'
         echo 'rbytes.cdef rbytes,8,*'
-	echo 'rbytes.min 0'
         echo 'obytes.label bps'
-	echo 'obytes.type DERIVE'
+	echo 'obytes.type COUNTER'
 	echo 'obytes.negative rbytes'
 	echo 'obytes.cdef obytes,8,*'
-	echo 'obytes.min 0'
 	echo "obytes.info Traffic sent (+) and received (-) on the $INTERFACE network interface."
 	exit 0
 fi

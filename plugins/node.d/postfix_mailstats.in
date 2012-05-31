@@ -62,7 +62,6 @@ my $logfile = "$LOGDIR/$LOGFILE";
 
 if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
-    my $logfile;
     if (-d $LOGDIR)
     {
 	if (-f $logfile)

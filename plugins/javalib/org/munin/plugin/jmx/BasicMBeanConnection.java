@@ -1,11 +1,12 @@
 package org.munin.plugin.jmx;
-import javax.management.remote.JMXServiceURL;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.Map;
+
 import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
-import java.util.Map;
-import java.io.IOException;
-import java.net.MalformedURLException;
+import javax.management.remote.JMXServiceURL;
 
 /* Inherit from this if you need another method for jboss/glassfish/etc */
 
@@ -13,10 +14,9 @@ public class BasicMBeanConnection {
 
     public static MBeanServerConnection get() throws IOException, MalformedURLException
     {
-        String[] connectionInfo = ConfReader.GetConnectionInfo();
-
-        JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + connectionInfo[0] + ":" + connectionInfo[1]+ "/jmxrmi");
-        Map<String, Object> credentials = ConfReader.GetConnectionCredentials();
+        Config config = Config.INSTANCE;
+		JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + config.getIp() + ":" + config.getPort()+ "/jmxrmi");
+        Map<String, Object> credentials = config.GetConnectionCredentials();
         JMXConnector c=JMXConnectorFactory.connect(u,credentials);
         MBeanServerConnection connection=c.getMBeanServerConnection();
         return (connection);

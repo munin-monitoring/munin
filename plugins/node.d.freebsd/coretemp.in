@@ -75,7 +75,7 @@ get() {
 	reqcpus
 	for cpu in $cpus ; do
 		echo -n "CPU$cpu.value "
-		sysctl -n dev.cpu.$cpu.temperature | tr -d C
+		sysctl -n dev.cpu.$cpu.temperature
 	done
 }
 

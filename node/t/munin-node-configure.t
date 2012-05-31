@@ -4,6 +4,7 @@ use strict;
 
 use Test::More 'no_plan';
 
+use POSIX ();
 use Data::Dumper;
 
 require_ok('sbin/munin-node-configure');
@@ -101,122 +102,6 @@ $config->reinitialize({
 #			"",
 #		],
 	);
-}
-
-
-### parse_snmpconf_response
-{
-	my @tests = (
-		[
-			[ 'require 1.3.6.1.2.1.25.2.2.0'   ],
-			{
-				require_oid => [
-					[ '1.3.6.1.2.1.25.2.2.0', undef ],
-				],
-			},
-			'Require - OID'
-		],
-		[
-			[ 'require .1.3.6.1.2.1.25.2.2.0' ],
-			{
-				require_oid => [
-					[ '.1.3.6.1.2.1.25.2.2.0', undef ],
-				],
-			},
-			'Require - OID with leading dot'
-		],
-		[
-			[ 'require 1.3.6.1.2.1.25.2.2.0  [0-9]' ],
-			{
-				require_oid => [
-					[ '1.3.6.1.2.1.25.2.2.0', '[0-9]' ],
-				],
-			},
-			'Require - OID with regex'
-		],
-		[
-			[ 'require 1.3.6.1.2.1.2.2.1.5.   [0-9]' ],
-			{
-				require_root => [
-					[ '1.3.6.1.2.1.2.2.1.5', '[0-9]' ],
-				],
-			},
-			'Require - OID root with regex'
-		],
-		[
-			[ 'require 1.3.6.1.2.1.2.2.1.5.', ],
-			{
-				require_root => [
-					[ '1.3.6.1.2.1.2.2.1.5', undef ],
-				],
-			},
-			'Require - OID root without regex'
-		],
-		[
-			[
-				'require 1.3.6.1.2.1.2.2.1.5.  [0-9]',
-				'require 1.3.6.1.2.1.2.2.1.10.  ',
-				'require 1.3.6.1.2.1.2.2.2.5   2',
-			],
-			{
-				require_root => [
-					[ '1.3.6.1.2.1.2.2.1.5', '[0-9]' ],
-				  	[ '1.3.6.1.2.1.2.2.1.10', undef  ],
-				],
-				require_oid => [
-					[ '1.3.6.1.2.1.2.2.2.5', '2' ],
-				],
-			},
-			'Require - Multiple require statements'
-		],
-		[
-			[ 'number  1.3.6.1.2.1.2.1.0', ],
-			{
-				number => '1.3.6.1.2.1.2.1.0',
-			},
-			'Number - OID'
-		],
-		[
-			[ 'number  1.3.6.1.2.1.2.1.', ],
-			{},
-			'Number - OID root is an error'
-		],
-		[
-			[ 'index 1.3.6.1.2.1.2.1.0', ],
-			{},
-			'Index - OID is an error'
-		],
-		[
-			[ 'index   1.3.6.1.2.1.2.1.', ],
-			{
-				'index' => '1.3.6.1.2.1.2.1',
-			},
-			'Index - OID root'
-		],
-		[
-			[
-				'index	1.3.6.1.2.1.2.2.0.',
-				'number 1.3.6.1.2.1.2.1.0  ',
-				'', # blank line
-				'require 1.3.6.1.2.1.2.2.2.5',
-			],
-			{
-				require_oid => [
-					[ '1.3.6.1.2.1.2.2.2.5', undef ],
-				],
-				number => '1.3.6.1.2.1.2.1.0',
-				'index' => '1.3.6.1.2.1.2.2.0',
-			},
-			'Putting it all together'
-		],
-
-	#	[
-	#		[ '', ],
-	#		{},
-	#		''
-	#	],
-	);
-
 }
 
 

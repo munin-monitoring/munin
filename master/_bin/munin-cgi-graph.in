@@ -1,7 +1,7 @@
-#!@@PERL@@  -Tw
+#!@@PERL@@ -Tw
 # -*- perl -*-
 #
-# Copyright (C) 2004 Jimmy Olsen
+# Copyright (C) 2004-2009 Jimmy Olsen, 
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,8 +19,7 @@
 #
 # $Id$
 #
-# Please see http://munin.projects.linpro.no/wiki/CgiHowto for how to
-# use this, and how to convert it to fastcgi which will improve speed.
+
 #
 
 use RRDs;
@@ -31,6 +30,8 @@ use IO::Handle;
 use Date::Manip;
 use POSIX qw(strftime);
 use IPC::SysV qw(IPC_CREAT);
+use CGI::Fast;
+use CGI::Carp 'fatalsToBrowser';
 
 my $GRAPHER = "$Munin::Common::Defaults::MUNIN_LIBDIR/munin-graph";
 my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
@@ -52,125 +53,137 @@ my %period  = ( "day"   => 300,
 	    );
 
 my $log = new IO::Handle;
+my $logfile;
 my $scale = "day";
 my $host  = "";
 my $serv  = "";
 my $dom   = "";
 my $lock  = "";
-my $IPC_KEY = 89340;
+my $IPC_KEY = 9340;
 
+# NOTE: You need to restart apache if the config file changes!
 my $config = &munin_readconfig ($conffile);
 
-my $path = $ENV{PATH_INFO} || "";
-$path =~ s/^\///;
-($dom, $host, $serv) = split /\//, $path;
-($serv, $scale) = split /-/, $serv, 2;
-$scale =~ s/\.png$//;
+# BEGIN FAST-CGI LOOP:
+while (new CGI::Fast) {
+    my $path = $ENV{PATH_INFO} || "";
+    ($dom, $host, $serv, $scale) = $path =~ m#^/(.*)/([^/]+)/(\w+)-([\w=,]+)\.png#; ## avoid bug in vim
 
-&verify_parameters ($dom, $host, $serv, $scale);
+    ::logger("asked for ($dom, $host, $serv, $scale)");
 
-my $filename = get_picture_filename ($config, $dom, $host, $serv, $scale);
-
-my $time = time;
-
-# Get semaphore handle - Before graphing as recommended by snide.
-my $semid = undef;
-
-sem_setup();
-
-my $no_cache = defined($ENV{HTTP_CACHE_CONTROL}) && $ENV{HTTP_CACHE_CONTROL} =~ /no-cache/i;
-
-if ($no_cache or (! &graph_usable($filename,$time) )) {
-    exit 0 unless draw_graph_or_complain($host, $serv, $TIMES{$scale});
-    goto draw;
-}
-
-# At this time the file exists.  But may be old.  Or not.
-
-my @stats         = stat ($filename);
-my $last_modified = strftime ("%a, %d %b %Y %H:%M:%S GMT", gmtime ($stats[9]));
-# "Expires" has to use last modified time as base:
-my $expires       = strftime ("%a, %d %b %Y %H:%M:%S GMT", 
-			      gmtime($stats[9]+($period{$scale}-($stats[9]%$period{$scale}))));
-
-# Check for If-Modified-Since and send 304 if not changed:
-if (defined $ENV{HTTP_IF_MODIFIED_SINCE} and 
-    !&modified ($ENV{HTTP_IF_MODIFIED_SINCE}, $stats[9]-1)) {
-    print "Status: 304\n";
-    print "Content-Type: image/png\n";
-    print "Expires: ", $expires, "\n";
-    print "Last-Modified: $last_modified\n";
-    print "\n";
-    exit 0;
-}
-
-draw:
-
-    @stats = stat ($filename) unless @stats;
-
-$last_modified = strftime ("%a, %d %b %Y %H:%M:%S GMT", gmtime ($stats[9]))
-    unless defined($last_modified); 
-
-$expires       = strftime ("%a, %d %b %Y %H:%M:%S GMT", 
-			     gmtime($stats[9]+($period{$scale}-($stats[9]%$period{$scale}))))
-    unless defined($expires);
-
-print "Content-Type: image/png\n";
-print "Expires: ", strftime ("%a, %d %b %Y %H:%M:%S GMT", gmtime(time+($period{$scale}-($time%$period{$scale})))), "\n";
-print "Last-Modified: $last_modified\n";
-print "\n";
-
-&graph ($filename);
-
-# # # # # # # # # # END OF MAIN
-
-sub sem_setup {
-    # Try to police the number of concurrent rrdgraph instances. 
-
-    # Fox kindly submitted a patch to convert to SysV IPC semaphores.
-    # Lovely! (ticket #499).
-
-    $semid = semget($IPC_KEY, 0, 0 );
-
-    if(!defined($semid)) {
-	# Or create it if needed
-	$semid = semget($IPC_KEY, 1 , oct(666) | IPC_CREAT );
-
-	die "Creating semaphore: $!" unless defined($semid);
-
-	my $max_cgi_graph_jobs = &munin_get ($config, "max_cgi_graph_jobs" , 6, $dom);
-
-	# And initialize to max_cgi_graph_jobs
-	my $opstring = pack("s!s!s!",0, $max_cgi_graph_jobs,0);
-	semop($semid,$opstring) || die "$!";
+    my $pinpoint;
+    if ($scale =~ /pinpoint=(\d+),(\d+)/) {
+	    $pinpoint = [ $1, $2, ]; 
     }
+  
+    if (! &verify_parameters ($dom, $host, $serv, $scale)) {
+	print "Status: 500\n";
+	print "Content-Type: text/html\n";
+	print "\n";
+	print "Invalid parameters!";
+	next;
+    }
+  
+    my $filename = get_picture_filename ($config, $dom, $host, $serv, $scale);
+  
+    my $time = time;
+  
+    # If a "Cache-Control: no-cache" header gets send, we regenerate the image in every case:
+    my $no_cache = $pinpoint || defined($ENV{HTTP_CACHE_CONTROL}) && $ENV{HTTP_CACHE_CONTROL} =~ /no-cache/i;
+    # Be able to deactivate the cache with the url
+    if (CGI::param("no_cache") && CGI::param("no_cache") eq "yes") {
+	    $no_cache = 1;
+    }
+
+    # Compute the cache values
+    my $graph_ttl = $pinpoint ? 1 : $period{$scale};
+    my $graph_last_expires = $time - $time % $graph_ttl;
+ 
+    my $graph_epoch = (! $no_cache) && file_newer_than($filename, $graph_last_expires);
+    if ($graph_epoch) {
+	# The graph is fresh enough. Sending either IMS if asked, or just skip generation 
+	# Check for If-Modified-Since and send 304 if not changed:
+	if (defined $ENV{HTTP_IF_MODIFIED_SINCE} && 
+		! rfctime_newer_than($ENV{HTTP_IF_MODIFIED_SINCE}, $graph_epoch)) {
+		print "Status: 304\n";
+		print "Content-Type: image/png\n";
+		print "Content-Length: 0\n";
+		my $headers = get_headers_for_file($filename, $graph_ttl);
+		
+		# Conditionaly add timing informations
+		print "Expires: $headers->{Expires}\n";
+		print "Last-Modified: " . $headers->{"Last-Modified"} . "\n";
+
+		print "\n";
+		# We replied, continue with the next request 
+		next;
+	}
+    } else {
+        # Should generate it
+	my $scale_options;
+	if ($pinpoint) {
+		$scale_options = [ "--pinpoint=" . $pinpoint->[0] . "," . $pinpoint->[1] ];
+	} else {
+		$scale_options = $TIMES{$scale};
+	}
+	next unless draw_graph_or_complain($dom, $host, $serv, $scale_options, $filename);
+    }
+
+    
+
+    # Sending headers
+    print "Status: 200\n";
+    print "Content-Type: image/png\n";
+    my $headers = get_headers_for_file($filename, $graph_ttl);
+    foreach my $header_name (keys %$headers) {
+	    print "$header_name: $headers->{$header_name}\n";
+    }
+
+    print "\n";
+
+    # Sending graph data
+    send_graph_data($filename);
+} continue {
+	# Be able to restart the fast cgi service from URL
+	if (CGI::param("cgi_exit") && CGI::param("cgi_exit") eq "yes") {
+		exit;
+	}
+}
+# END FAST-CGI LOOP
+
+sub get_headers_for_file {
+	my $filename = shift;
+	my $graph_ttl = shift;
+    
+	# At this time the file exists and should be served
+	my @stats       = stat ($filename);
+       	my $mtime_epoch = $stats[9];
+       	my $last_modified = get_w3c_date_from_epoch($mtime_epoch);
+
+	# "Expires" has to use last modified time as base:
+	my $graph_next_expires = $mtime_epoch - ($mtime_epoch % $graph_ttl) + $graph_ttl;
+       	my $expires       = get_w3c_date_from_epoch($graph_next_expires);
+
+	return {
+		"Expires" => $expires,
+		"Last-Modified" => $last_modified,
+		"Content-Length" => $stats[7],
+	};
+    
 }
 
-
-sub sem_get {
-    # Call this before doing heavy work.
-    # Decrement, or lock/hang/yield if already 0
-    my $opstring = pack("s!s!s!",0, -1, 0);
-    semop($semid,$opstring);
+sub get_w3c_date_from_epoch {
+	my $epoch = shift;
+	return strftime("%a, %d %b %Y %H:%M:%S GMT", gmtime($epoch));
 }
 
-
-sub sem_release {
-    # Call this after doing heavy work.
-    # Increment (and release waiting processes).
-    my $opstring = pack("s!s!s!",0, 1, 0);
-    semop($semid,$opstring);
-}
-
-
-sub graph {
-    # This just serves the file, no file is made.
+sub send_graph_data {
+    # Serve the graph contents.
     my $filename = shift;
 
-    open (my $GRAPH, '<', $filename) 
-        or die "Warning: Could not open picture file \"$filename\" for reading: $!\n";
-    print while (<$GRAPH>);
-    close ($GRAPH);
+    open (GRAPH_PNG_FILE, '<', $filename) or die "Warning: Could not open picture file \"$filename\" for reading: $!\n";
+    print while (<GRAPH_PNG_FILE>);
+    close (GRAPH_PNG_FILE)
 }
 
 
@@ -181,20 +194,9 @@ sub get_picture_filename {
     my $service = shift;
     my $scale   = shift;
 
-    return "$config->{'htmldir'}/$domain/$name/$service-$scale.png";
-}
+    my $cgi_tmp_dir = $config->{cgitmpdir} || "/tmp/munin-cgi-tmp";
 
-
-sub logger_open {
-    my $dirname = shift;
-
-    if (!$log->opened)
-    {
-	unless (open ($log, '>>', "$dirname/munin-cgi-graph.log"))
-	{
-	    print STDERR "Warning: Could not open log file \"$dirname/munin-cgi-graph.log\" for writing: $!";
-	}
-    }
+    return "$cgi_tmp_dir/$domain/$name/$service-$scale.png";
 }
 
 
@@ -208,9 +210,10 @@ sub logger {
   }
   else
   {
-          if (defined $config->{logdir})
+          if (defined $config->{logdir} && ! $logfile)
           {
-                  if (open ($log, '>>', "$config->{logdir}/munin-cgi-graph.log"))
+		  $logfile = $config->{logdir}. "/munin-cgi-graph.log";
+                  if (open ($log, '>>', $logfile))
                   {
                           print $log "$now - $comment\n";
                       }
@@ -219,6 +222,7 @@ sub logger {
                           print STDERR "Warning: Could not open log file \"$config->{logdir}/munin-cgi-graph.log\" for wr
 iting: $!";
                           print STDERR "$now - $comment\n";
+			  $logfile = "-:2"; # Set the logfile to STDERR
                   }
           }
           else
@@ -239,108 +243,127 @@ sub verify_parameters
 	if (!$dom)
 	{
 		print STDERR "Warning: Request for graph without specifying domain. Bailing out.\n";
-		exit 1;
+		return 0;
 	}
 	if (!$host)
 	{
 		print STDERR "Warning: Request for graph without specifying host. Bailing out.\n";
-		exit 1;
+		return 0;
 	}
 	if (!$serv)
 	{
 		print STDERR "Warning: Request for graph without specifying service. Bailing out.\n";
-		exit 1;
+		return 0;
 	}
 
 	if (!$scale)
 	{
 		print STDERR "Warning: Request for graph without specifying scale. Bailing out.\n";
-		exit 1;
+		return 0;
 	}
 	else
 	{
-		if (!defined $TIMES{$scale})
+		if (!defined $TIMES{$scale} && $scale !~ /pinpoint=\d+,\d+/)
 		{
 			print STDERR "Warning: Weird scale setting \"$scale\". Bailing out.\n";
-			exit 1;
+			return 0;
 		}
 	}
+	return 1;
 }
 
 
-sub graph_usable {
-    # Check how old the graph is and return 1 if it's new enough and 0 otherwise.
-    my ($filename, $time) = @_;
+sub file_newer_than {
+    my $filename = shift;
+    my $time     = shift;
 
     if (-f $filename) {
 	my @stats = stat (_);
-	# $stats[9] holds the "last update" time and this needs to be in the last update period:
-	if ($stats[9] > ($time - $time%$period{$scale})) {
-#print STDERR ("Graph unexpired for $scale. ($stats[9] , $time, ". ($time%$period{$scale}). ", ". ($time - $time%$period{$scale}). ").\n");
-	    return 1;
+	# $stats[9] holds the "last update" time and this needs 
+	# to be in the last update period
+	my $last_update = $stats[9];
+	if ($last_update > $time) {
+	    return $last_update;
 	} else {
-#print STDERR ("Graph expired for $scale. ($stats[9] , $time, ". ($time%$period{$scale}). ", ". ($time - $time%$period{$scale}). ").\n");
 	    return 0;
 	}
     }
+
+    # No file found
     return 0;
 }
 
 
 sub draw_graph {
+    # Draw a new graph - use semaphore to avoid too many concurrent munin-graph calls.
+    my $dom  = shift;
     my $host  = shift;
     my $serv  = shift;
     my $scale = shift;
 
-    $serv =~ s{[^\w_/"'\[\]\(\)\+=-]}{_}g; $serv =~ /^(.+)$/; $serv = $1; #"
-    # . needs to be legal in host names
-    $host =~ s{[^\w_/"'\[\]\(\)\.+=-]}{_}g; $host =~ /^(.+)$/; $host = $1; #"
+    my $filename = shift;
 
-    my @params = ($GRAPHER);
+    # remove old file if present
+    if (-f $filename) {
+        unlink($filename) or die("cannot remove old graph file: $!");
+    }
+
+    $serv =~ s{[^\w_\/"'\[\]\(\)+=-]}{_}g; $serv =~ /^(.+)$/; $serv = $1; #"
+    # . needs to be legal in host names
+    $host =~ s{[^\w_\/"'\[\]\(\)\.+=-]}{_}g; $host =~ /^(.+)$/; $host = $1; #"
+
+    my $fqn = "root/$dom/$host/$serv";
+
+    my @params = ();
     push @params, @$scale;
-    push @params, "--skip-locking", "--skip-stats", "--nolazy", "--list-images";
-    push @params, "--host", $host, "--service", $serv;
-    push @params, "STDERR>&STDOUT";
+    push @params, "--host", $host, "--only-fqn", $fqn;
+    push @params, "--no-fork"; # FastCgi forks for us
+    push @params, "--skip-locking", "--skip-stats", "--nolazy";
+    push @params, "--output-file", $filename;
+    push @params, "--log-file", $logfile;
+
+    push @params, "--size_x", CGI::param("size_x") if (CGI::param("size_x"));
+    push @params, "--size_y", CGI::param("size_y") if (CGI::param("size_y"));
+
+    push @params, "--upper_limit", CGI::param("upper_limit") if (CGI::param("upper_limit"));
+    push @params, "--lower_limit", CGI::param("lower_limit") if (CGI::param("lower_limit"));
+
+    push @params, "--debug" if (CGI::param("debug") && CGI::param("debug") eq "yes");
 
     my $file = "/dev/null";
-    my $IN;
-    sem_get();
 
-    # Note: This open is an implicit fork
-    if (! open ($IN, "-|")) { 
-	%ENV=();
-	exec @params;
-    }
-    $file = join (' ', <$IN>);
-    chomp($file);
+    # Use directly GraphOld;
+    use Munin::Master::GraphOld;
 
-    close ($IN);
-    sem_release();
+    graph_startup(\@params);
+    graph_main();
 
-    return $file;
+    return $filename;
 }
 
 
 sub draw_graph_or_complain {
+    use Time::HiRes qw(gettimeofday tv_interval);
+    my $t0 = [ gettimeofday ];
     my $ret = draw_graph(@_);
+    my $graph_duration = tv_interval($t0);
 
     if (! -f $ret) {
-	::logger ("Warning: Could not draw graph \"$host-$serv-$scale.png\": $ret");
+	::logger("Warning: Could not draw graph \"$host-$serv-$scale.png\": $ret");
 	print "Status: 500\n";
 	print "Content-Type: image/png\n";
 	print "\n";
-	return 0;
+        return 0;
     } else {
+    	print "X-Graph-Duration: $graph_duration\n";
 	return $ret;
     }
 }
 
 
-sub modified {
-    # See if file has been modified since "the last time".
-
+sub rfctime_newer_than {
+    # See if the file has been modified since "the last time".
     # Format of since_string If-Modified-Since: Wed, 23 Jun 2004 16:11:06 GMT
-
     my $since_string = shift;
     my $created      = shift;
     my $ifmodsec = &UnixDate (&ParseDateString ($since_string), "%s");

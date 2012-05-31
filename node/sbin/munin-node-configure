@@ -17,16 +17,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Program to suggest what plugins to use and not
 
 use strict;
 use warnings;
 
 use Getopt::Long;
-use POSIX ();
-
-use Data::Dumper;
-use Carp;
 
 use Munin::Common::Defaults;
 use Munin::Node::Configure::PluginList;
@@ -34,8 +29,6 @@ use Munin::Node::Configure::Debug;
 
 use Munin::Node::Config;
 my $config = Munin::Node::Config->instance();
-
-my $timeout = 10;
 
 my @all_families     = qw/auto manual contrib/;
 my @default_families = qw/auto/;
@@ -48,9 +41,13 @@ sub main
     my $plugins = Munin::Node::Configure::PluginList->new(
         libdir     => $config->{libdir},
         servicedir => $config->{servicedir},
-    );
 
-    $plugins->load(@{$config->{families}});
+        pidebug    => $config->{pidebug},
+
+        families => $config->{families},
+        newer    => $config->{newer},
+    );
+    $plugins->load();
 
     # Gather information
     if (@{ $config->{snmp} }) {
@@ -76,10 +73,7 @@ sub main
     # Report errors.
     # FIXME: surely exit 0 unless m-n-c itself has gone funny?
     if (my @errors = list_errors($plugins->list)) {
-        print STDERR "# The following plugins caused errors:\n";
-        foreach my $err (@errors) {
-            print STDERR "# $err\n";
-        }
+        print STDERR "# The following plugins caused errors:\n", @errors;
         exit 1;
     }
     exit 0;
@@ -93,31 +87,48 @@ sub parse_args
 	my $sconfdir   = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
 	my $libdir     = "$Munin::Common::Defaults::MUNIN_LIBDIR/plugins";
 
-	my $debug;
+	my $debug = 0;
+	my $pidebug = 0;
 	my ($suggest, $shell, $removes, $newer);
 	my $exit_not_error = 1;
 	my @families;
 	my (@snmp_hosts, $snmpver, $snmpcomm, $snmpport);
+    my ($snmp3username, $snmp3authpass, $snmp3authproto, $snmp3privpass, $snmp3privproto);
 
-	print_usage_and_exit() unless GetOptions(
-		"help"            => \&print_usage_and_exit,
-		"shell!"          => \$shell,
-		"exitnoterror!"   => \$exit_not_error,
-		"debug!"          => \$debug,
-		"suggest!"        => \$suggest,
-		"config=s"        => \$conffile,
-		"servicedir=s"    => \$servicedir,
-		"sconfdir=s"      => \$sconfdir,
-		"remove-also!"    => \$removes,
-		"libdir=s"        => \$libdir,
-		"families=s"      => \@families,
-		"version!"        => \&print_version_and_exit,
-		"snmp=s"          => \@snmp_hosts,
-		"snmpversion=s"   => \$snmpver,
-		"snmpcommunity=s" => \$snmpcomm,
-		"snmpport=i"      => \$snmpport,
-		"newer=s"         => \$newer
-	);
+    print_usage_and_exit() unless GetOptions(
+        'help'            => \&print_usage_and_exit,
+        'version'         => \&print_version_and_exit,
+
+        'suggest!'        => \$suggest,
+        'exitnoterror!'   => \$exit_not_error,
+        'newer=s'         => \$newer,
+
+        'shell!'          => \$shell,
+        'remove-also!'    => \$removes,
+
+        'debug!'          => \$debug,
+        'pidebug!'        => \$pidebug,
+
+        # paths
+        'config=s'        => \$conffile,
+        'servicedir=s'    => \$servicedir,
+        'sconfdir=s'      => \$sconfdir,
+        'libdir=s'        => \$libdir,
+        'families=s'      => \@families,
+
+        # SNMP
+        'snmp=s'          => \@snmp_hosts,
+        'snmpversion=s'   => \$snmpver,
+        'snmpport=i'      => \$snmpport,
+        # SNMPv1/2c
+        'snmpcommunity=s' => \$snmpcomm,
+        # SNMPv3
+        'snmpusername=s'  => \$snmp3username,
+        'snmpauthpass=s'  => \$snmp3authpass,
+        'snmpauthproto=s' => \$snmp3authproto,
+        'snmpprivpass=s'  => \$snmp3privpass,
+        'snmpprivproto=s' => \$snmp3privproto,
+    );
 
 	$config->parse_config_from_file($conffile);
 
@@ -134,111 +145,53 @@ sub parse_args
     @snmp_hosts = map { split /,/ } @snmp_hosts;
 
 	$config->reinitialize({
-		timeout => $timeout,
+        %$config,
 
-		%$config,
+        newer          => $newer,
+        shell          => $shell,
+        exit_not_error => $exit_not_error,
+        suggest        => $suggest,
+        remove_also    => $removes,
 
-		newer => $newer,
-		shell => $shell,
-		exit_not_error => $exit_not_error,
-		suggest => $suggest,
-		remove_also => $removes,
+        families => \@families,
 
-		families => \@families,
+        conffile   => $conffile,
+        servicedir => $servicedir,
+        sconfdir   => $sconfdir,
+        libdir     => $libdir,
 
-		conffile => $conffile,
-		servicedir => $servicedir,
-		sconfdir => $sconfdir,
-		libdir => $libdir,
+        snmp             => \@snmp_hosts,
+        snmp_version     => $snmpver,
+        snmp_port        => $snmpport,
+        snmp_community   => $snmpcomm,
+        snmpv3_username  => $snmp3username,
+        snmpv3_authpass  => $snmp3authpass,
+        snmpv3_authproto => $snmp3authproto,
+        snmpv3_privpass  => $snmp3privpass,
+        snmpv3_privproto => $snmp3privproto,
 
-		snmp => \@snmp_hosts,
-		snmp_version => $snmpver,
-		snmp_community => $snmpcomm,
-		snmp_port => $snmpport,
+        DEBUG   => $debug,
+        PIDEBUG => $pidebug,
+    });
 
-		DEBUG => $debug,
-	});
-
-	return;
+    return;
 }
 
 
 sub print_usage_and_exit
 {
-	my $all_families     = join(', ', @all_families);
-	my $default_families = join(', ', @default_families);
-
-	print qq{Usage: $0 [options]
-
-Options:
-    --help                  View this help page
-    --version               Show version information
-
-    --debug                 View debug information (very verbose).  All
-                            debugging output is printed on STDOUT but each
-                            line is prefixed with '#'.  Only errors are
-                            printed on STDERR.
-
-    --config <file>         Override configuration file
-                                [$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf]
-    --servicedir <dir>      Override plugin directory
-                                [$Munin::Common::Defaults::MUNIN_CONFDIR/plugins/]
-    --sconfdir <dir>        Override plugin configuration directory
-                                [$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d]
-    --libdir <dir>          Override plugin lib
-                                [$Munin::Common::Defaults::MUNIN_LIBDIR/plugins/]
-
-    --families <family,...> Override families ($all_families) [$default_families]
-    --suggest               Show suggestions instead of status
-    --shell                 Show shell commands (implies --suggest)
-    --exitnoterror          Do not consider non-zero exit-value as error
-    --remove-also           Also show rm-commands when doing --shell
-
-    --newer <version>       Only show suggestions related to plugins
-                            included more recently than version <version>.
-                            Only supported along with --shell.
-
-    --snmp <host|cidr>      Do SNMP probing on the host or CIDR network
-                            (e.g. "192.168.1.0/24"). This may take some
-                            time, especially if the probe includes many
-                            hosts. This option can be specified multiple
-                            times, or once with a comma-separated list, to
-                            include more than one host/CIDR.
-
-    --snmpversion <ver>     Set SNMP version (1, 2c or 3) [2c]
-    --snmpcommunity <comm>  Set SNMP community string [public]
-    --snmpport <port>       Set SNMP port [161]
-
-By default this program shows which plugins are activated on the system.
-
-If you specify --suggest, it will present a table of plugins that will
-probably work (according to the plugins' autoconf command).
-
-If you specify --shell, shell commands to install those same plugins
-will be printed. These can be reviewed or piped directly into a shell to
-install the plugins.
-
-};
-
-	exit 0;
+    require Pod::Usage;
+    Pod::Usage::pod2usage(-verbose => 1);
 }
 
 
 sub print_version_and_exit
 {
-	print qq{munin-node-configure (munin-node) version $Munin::Common::Defaults::MUNIN_VERSION.
-Written by Jimmy Olsen
-
-Copyright (C) 2003-2006 Jimmy Olsen
-
-This is free software released under the GNU General Public License. There
-is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
-PURPOSE. For details, please refer to the file COPYING that is included
-with this software or refer to
-  http://www.fsf.org/licensing/licenses/gpl.txt
-};
-
-	exit 0;
+    require Pod::Usage;
+    Pod::Usage::pod2usage(
+        -verbose => 99,
+        -sections => 'VERSION|COPYRIGHT',
+    );
 }
 
 
@@ -282,12 +235,12 @@ sub gather_suggestions
 	my ($plugins) = @_;
 
 	# We're going to be running plugins
-    Munin::Node::Service->prepare_plugin_environment($plugins->names);
+    $plugins->{library}->prepare_plugin_environment($plugins->names);
 
-	foreach my $plugin ($plugins->list) {
-		fetch_plugin_autoconf($plugin);
-        fetch_plugin_suggestions($plugin);
-	}
+    foreach my $plugin ($plugins->list) {
+        fetch_plugin_autoconf($plugins, $plugin);
+        fetch_plugin_suggestions($plugins, $plugin);
+    }
 
 	return;
 }
@@ -356,19 +309,26 @@ sub init_snmp
     my ($plugins) = @_;
 
 	unless (eval { require Munin::Node::SNMPConfig; }) {
-        die "# ERROR: Cannot perform SNMP probing since Munin::Node::SNMPConfig module is not available.\n",
+        die "# ERROR: Cannot perform SNMP probing as Munin::Node::SNMPConfig module is not available.\n",
             $@;
 	}
 
-    Munin::Node::Service->prepare_plugin_environment($plugins->names);
+    $plugins->{library}->prepare_plugin_environment($plugins->names);
 
-    fetch_plugin_snmpconf($_) foreach ($plugins->list);
+    fetch_plugin_snmpconf($plugins, $_) foreach ($plugins->list);
 
     return Munin::Node::SNMPConfig->new(
-        hosts      => $config->{snmp},
-        community  => $config->{snmp_community},
-        version    => $config->{snmp_version},
-        port       => $config->{snmp_port},
+        hosts        => $config->{snmp},
+        version      => $config->{snmp_version},
+        port         => $config->{snmp_port},
+
+        community    => $config->{snmp_community},
+
+        username     => $config->{snmpv3_username},
+        authpassword => $config->{snmpv3_authpass},
+        authprotocol => $config->{snmpv3_authproto},
+        privpassword => $config->{snmpv3_privpass},
+        privprotocol => $config->{snmpv3_privproto},
     );
 }
 
@@ -380,12 +340,11 @@ sub init_snmp
 # of the lines printed to STDOUT, with any debug output removed.
 sub run_plugin
 {
-    my ($plugin, $mode) = @_;
+    my ($plugins, $plugin, $mode) = @_;
     my $name = $plugin->{name};
 
 	DEBUG("Running '$mode' on $name" );
-	my $res = Munin::Node::Service->fork_service($config->{libdir},
-	                                             $name, $mode);
+    my $res = $plugins->{library}->fork_service($name, $mode);
 
 	# No if it timed out
 	if ($res->{timed_out}) {
@@ -415,10 +374,10 @@ sub run_plugin
 	}
 
 	# No if there is anything on stderr that's not debug
-	if (grep !/^#/, @{ $res->{stderr} }) {
-        $plugin->log_error("Junk printed to stderr");
-		# FIXME: log the other output
-		return;
+	if (my @junk = grep !/^#/, @{ $res->{stderr} }) {
+	       $plugin->log_error("Junk printed to stderr");
+	       DEBUG("Junk printed to stderr: @junk");
+	       return;
 	}
 
     # Ignore debug output
@@ -433,11 +392,11 @@ sub run_plugin
 # Sets the 'default' and 'defaultreason' fields
 sub fetch_plugin_autoconf
 {
-	my ($plugin) = @_;
+    my ($plugins, $plugin) = @_;
 
     return unless ($plugin->{capabilities}{autoconf});
 
-    my @response = run_plugin($plugin, 'autoconf') or return;
+    my @response = run_plugin($plugins, $plugin, 'autoconf') or return;
 	return $plugin->parse_autoconf_response(@response);
 }
 
@@ -446,14 +405,14 @@ sub fetch_plugin_autoconf
 # in the 'suggestions' field
 sub fetch_plugin_suggestions
 {
-	my ($plugin) = @_;
+    my ($plugins, $plugin) = @_;
 
 	# Only run if the autoconf gave the go-ahead
 	return unless ($plugin->{default} eq "yes");
 
     return unless ($plugin->{capabilities}{suggest});
 
-    my @suggested = run_plugin($plugin, 'suggest');
+    my @suggested = run_plugin($plugins, $plugin, 'suggest');
 	return $plugin->parse_suggest_response(@suggested);
 }
 
@@ -461,11 +420,11 @@ sub fetch_plugin_suggestions
 # Runs a given snmpconf-capable plugin, and notes the parameters it returns
 sub fetch_plugin_snmpconf
 {
-	my ($plugin) = @_;
+    my ($plugins, $plugin) = @_;
 
     return unless ($plugin->{capabilities}{snmpconf});
 
-    my @response = run_plugin($plugin, 'snmpconf');
+    my @response = run_plugin($plugins, $plugin, 'snmpconf');
 	return $plugin->parse_snmpconf_response(@response);
 }
 
@@ -477,8 +436,8 @@ sub list_errors
     my @error_list;
     foreach my $plugin (@_) {
         if (my @errors = @{$plugin->{errors}}) {
-            push @error_list, "$plugin->{name}:";
-            push @error_list, map { "\t$_" } @errors;
+            push @error_list, "# $plugin->{name}:\n";
+            push @error_list, map { "# \t$_\n" } @errors;
         }
     }
     return @error_list;
@@ -500,13 +459,31 @@ munin-node-configure - View and modify which plugins are enabled.
 
 munin-node-configure [options]
 
+=head1 DESCRIPTION
+
+B<munin-node-configure> is reports which plugins are enabled on the current
+node, and suggest changes to this list.
+
+By default this program shows which plugins are activated on the system.
+
+If you specify C<--suggest>, it will present a table of plugins that will
+probably work (according to the plugins' autoconf command).
+
+If you specify C<--snmp>, followed by a list of hosts, it will present a table
+of SNMP plugins that they support.
+
+If you additionally specify C<--shell>, shell commands to install those same
+plugins will be printed. These can be reviewed or piped directly into a shell
+to install the plugins.
+
+
 =head1 OPTIONS
 
-=over 5
+=over 4
 
 =item B<< --help >>
 
-View this help page
+Show this help page
 
 =item B<< --version >>
 
@@ -514,9 +491,13 @@ Show version information
 
 =item B<< --debug >>
 
-Print debug information (very verbose).  All debugging output is
-printed on STDOUT but each line is prefixed with '#'.  Only errors are
-printed on STDERR.
+Print debug information on the operations of munin-node-configure (very
+verbose).  All debugging output is sent to STDOUT, prefixed with '#'.  Only
+errors go to STDERR.
+
+=item B<< --pidebug >>
+
+Informs plugins that they should enable debugging.
 
 =item B<< --config <file> >>
 
@@ -534,9 +515,15 @@ Override plugin configuration directory [@@CONFDIR@@/plugin-conf.d/]
 
 Override plugin lib [@@LIBDIR@@/plugins/]
 
-=item B<< --families <family,...> >>
+=item B<< --families <family, ...> >>
 
-Override families (auto, manual, contrib) [auto]
+Override families (auto, manual, contrib, snmpauto).  Multiple families can be
+specified as a comma-separated list, by repeating the C<--families> option, or
+as a combination of the two.
+
+When listing installed plugins, the default families are auto, manual and
+contrib.  Only auto plugins are checked for plugins.  SNMP probing is only
+performed on snmpauto plugins.
 
 =item B<< --suggest >>
 
@@ -581,11 +568,6 @@ Set SNMP port. Default is "161".
 
 =back
 
-=head1 DESCRIPTION
-
-munin-node-configure is a script to show which plugins are currently enabled
-on the current node.  It can also suggest changes to this list.
-
 =head1 FILES
 
     @@CONFDIR@@/munin-node.conf
@@ -596,11 +578,13 @@ on the current node.  It can also suggest changes to this list.
 
 =head1 VERSION
 
-This is munin-node-configure v@@VERSION@@.
+This is munin-node-configure (munin-node) v@@VERSION@@.
+
+$Id$
 
 =head1 AUTHORS
 
-Jimmy Olsen, Nicolai Langfeldt
+Jimmy Olsen, Nicolai Langfeldt, Matthew Boyle
 
 =head1 BUGS
 
@@ -609,6 +593,8 @@ Please see L<http://munin.projects.linpro.no/report/1>.
 =head1 COPYRIGHT
 
 Copyright (C) 2003-2006 Jimmy Olsen, Nicolai Langfeldt.
+
+Copyright (C) 2009-2010 Matthew Boyle
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

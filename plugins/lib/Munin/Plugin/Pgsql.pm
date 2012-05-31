@@ -46,8 +46,9 @@ variables that libpq does. The most common ones used are:
  PGUSER      username to connect as
  PGPASSWORD  password to connect with, if a password is required
 
-The plugins will always connect to the 'template1' database, except for
-wildcard per-database plugins.
+The plugins will by default connect to the 'template1' database, except for
+wildcard per-database plugins. This can be overridden using the PGDATABASE
+variable, but this is usually a bad idea.
 
 =head2 Example
 
@@ -139,6 +140,10 @@ use Munin::Plugin;
  suggestquery   SQL query to run to generate the list of suggestions for a
                 wildcard plugin. Don't forget to include ALL if the plugin
                 supports aggregate statistics.
+ autoconfquery  SQL query to run as the last step of "autoconf", to determine
+                if the plugin should be run on this machine. Must return a single
+                row, two columns columns. The first one is a boolean field
+                representing yes or no, the second one a reason for "no".
  graphdraw      The draw parameter for the graph. The default is LINE1.
  graphtype      The type parameter for the graph. The default is GAUGE.
  graphperiod    The period for the graph. Copied directly to the config output.
@@ -154,10 +159,16 @@ use Munin::Plugin;
                 for each occurance a parameter with the value of the filtering
                 condition will be added to the DBI statement.
  paramdatabase  Makes the plugin connect to the database in the first parameter
-                (wildcard plugins only) instead of 'postgres'.
+                (wildcard plugins only) instead of 'template1'.
+ defaultdb      Makes the plugin connect to the database specified in this
+                parameter instead of 'template1'.
  extraconfig    This string is copied directly into the configuration output
                 when the plugin is run in config mode, allowing low-level
                 customization.
+ postprocess    A function that's called with the result of the base query,
+                and can post-process the result and return a new resultset.
+ postconfig     A function that's called with the result of the config query,
+                and can post-process the result and return a new resultset.
 
 =head3 Specifying queries
 
@@ -202,12 +213,16 @@ sub new {
         graphmax       => $args{graphmax},
         stack          => $args{stack},
         configquery    => $args{configquery},
+        autoconfquery  => $args{autoconfquery},
         base           => $args{base},
         wildcardfilter => $args{wildcardfilter},
         suggestquery   => $args{suggestquery},
         pivotquery     => $args{pivotquery},
         paramdatabase  => $args{paramdatabase},
+        defaultdb      => $args{defaultdb},
         extraconfig    => $args{extraconfig},
+        postprocess    => $args{postprocess},
+        postconfig     => $args{postconfig},
     };
 
     foreach my $k (keys %defaults) {
@@ -243,7 +258,12 @@ sub Config {
     my ($q, @p)
         = $self->replace_wildcard_parameters(
         $self->get_versioned_query($self->{configquery}));
-    foreach my $row (@{$self->runquery($q, \@p)}) {
+    my $r = $self->runquery($q, \@p);
+    if ($self->{postconfig}) {
+        $r = $self->{postconfig}->($r);
+    }
+
+    foreach my $row (@$r) {
         my $l = Munin::Plugin::clean_fieldname($row->[0]);
         print "$l.label $row->[1]\n";
         print "$l.info $row->[2]\n" if (defined $row->[2]);
@@ -263,7 +283,7 @@ sub Config {
 sub Autoconf {
     my ($self) = @_;
 
-    if (!$self->connect(1, 1)) {
+    if (!$self->connect(1)) {
         print "no ($self->{connecterror})\n";
         return 1;
     }
@@ -278,7 +298,16 @@ sub Autoconf {
         }
     }
 
-    # More magic needed?
+    # If the module has defined a query, run it and check the results. If it's
+    # not defined, assume we will now work.
+    if ($self->{autoconfquery}) {
+        my $r = $self->runquery($self->{autoconfquery});
+        if (!$r->[0]->[0]) {
+            print "no (" . $r->[0]->[1] . ")\n";
+            return 1;
+        }
+    }
+
     print "yes\n";
     return 0;
 }
@@ -286,7 +315,7 @@ sub Autoconf {
 sub Suggest {
     my ($self) = @_;
 
-    if (!$self->connect(1, 1)) {
+    if (!$self->connect(1)) {
         return 0;
     }
 
@@ -309,6 +338,9 @@ sub GetData {
             = $self->replace_wildcard_parameters(
             $self->get_versioned_query($self->{basequery}));
         my $r = $self->runquery($q, \@p, $self->{pivotquery});
+        if ($self->{postprocess}) {
+            $r = $self->{postprocess}->($r);
+        }
         foreach my $row (@$r) {
             my $l = Munin::Plugin::clean_fieldname($row->[0]);
             print $l . ".value " . $row->[1] . "\n";
@@ -351,9 +383,9 @@ sub Process {
 
 # Internal useful functions
 sub connect() {
-    my ($self, $noexit, $nowildcard) = @_;
+    my ($self, $noexit) = @_;
 
-    my $r = $self->_connect($nowildcard);
+    my $r = $self->_connect();
     return 1 if ($r);         # connect successful
     return 0 if ($noexit);    # indicate failure but don't exit
     print "Failed to connect to database: $self->{connecterror}\n";
@@ -361,19 +393,24 @@ sub connect() {
 }
 
 sub _connect() {
-    my ($self, $nowildcard) = @_;
+    my ($self) = @_;
 
     return 1 if ($self->{dbh});
 
     if (eval "require DBI; require DBD::Pg;") {
 
-        # Always connect to database template1, because it exists on both old
+        # By default, connect to database template1, because it exists on both old
         # and new versions of PostgreSQL, unless the database should be controlled
-        # by the first parameter.
+        # by the first parameter. Using the defaultdb parameter will override
+        # this. Finally, specifying the database name in the environment will
+        # override everything.
+        #
         # All other connection parameters are controlled by the libpq environment
         # variables.
         my $dbname = "template1";
-        $dbname = $self->wildcard_parameter(0) if ($self->{paramdatabase} && !defined($nowildcard));
+        $dbname = $self->{defaultdb}           if ($self->{defaultdb});
+        $dbname = $self->wildcard_parameter(0) if ($self->{paramdatabase});
+        $dbname = $ENV{"PGDATABASE"}           if ($ENV{"PGDATABASE"});
         $self->{dbh} = DBI->connect("DBI:Pg:dbname=$dbname");
         unless ($self->{dbh}) {
             $self->{connecterror} = "$DBI::errstr";
@@ -431,9 +468,9 @@ sub get_version {
 
 sub get_versioned_query {
     my ($self, $query) = @_;
-    $self->get_version();
     if (ref($query) eq "ARRAY") {
         my $rq = undef;
+        $self->get_version();
         foreach my $entry (@$query) {
             if (!defined($rq)) {
 

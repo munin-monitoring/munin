@@ -1,198 +1,87 @@
 -*- text -*-
 
-Some stats on 1.4.0 (relative to 1.3.4)
-* Over 1500 changesets since we started preparing for 1.4.0-alpha this
-  spring.
-* More than 100 new plugins since the 1.2 series
-* Commits from 23 different people, and contributions from far more!
-  Open source is great!
-* Way too much time since the last major stable release. 1.2.0 was
-  uploaded to sourceforge in february 2005.
+munin 2.0-alpha1, r3400:3856, 2010-7-14
 
+Commits by bldewolf, feiner.tom, janl, knan, ligne, mha, ssm, steve.schnepp
 
-munin 1.4.6, r3625:4259, 2011-7-7
-
-     r3625 | feiner.tom | 2010-05-27 20:56:35 +0200 (Thu, 27 May 2010) | 1 line
-     Update Changelog for 1.4.5
-     r3666 | ssm | 2010-06-03 08:25:07 +0200 (Thu, 03 Jun 2010) | 1 line
-     Merge r3665 to branches/1.4-stable
-     r3668 | feiner.tom | 2010-06-03 20:45:12 +0200 (Thu, 03 Jun 2010) | 1 line
-     Fix some copy-paste errors in the latest ChangeLog for 1.4.5, causing some lines to break and mess up
-     r3673 | mha | 2010-06-09 15:23:54 +0200 (Wed, 09 Jun 2010) | 3 lines
-     Include the name of the database in the graph title for PostgreSQL
-     wildcard graphs.
-     r3825 | feiner.tom | 2010-07-26 20:22:23 +0200 (Mon, 26 Jul 2010) | 1 line
-     Solve ticket #941, allow parsing of bind 9.6 instead of expecting 9.6.x. Thanks to Clemens Lang for the patch!
-     r3865 | janl | 2010-08-18 13:49:50 +0200 (Wed, 18 Aug 2010) | 2 lines
-     * Enhance node side timeout message to enable understanding what happened
-     r3868 | mha | 2010-08-19 11:19:37 +0200 (Thu, 19 Aug 2010) | 3 lines
-     Properly return undef when the SNMP client returns noSuchObject instead
-     of setting an error.
-     r3870 | janl | 2010-08-19 12:22:35 +0200 (Thu, 19 Aug 2010) | 2 lines
-     * munin-node: Insert a reset_timeout() to enable munin-update to get a word in edgeways after executing a slow plugin
-     r3872 | janl | 2010-08-20 14:12:55 +0200 (Fri, 20 Aug 2010) | 3 lines
-     * munin-html: Start using fork to save some wall-clock time.  Option --fork us now active and max_html_jobs is recognized by munin-html as the maximum number of paralell processes.
-     r3883 | bldewolf | 2010-09-02 20:12:53 +0200 (Thu, 02 Sep 2010) | 1 line
-     Clean up Perl warnings due to use of undefined variables in two functions in LimitsOld.pm in 1.4-stable as well.
-     r3884 | feiner.tom | 2010-09-09 15:57:19 +0200 (Thu, 09 Sep 2010) | 1 line
-     snort_* : fix bashism & literal quote causing $warning/$critical to be printed instead of their value. Thanks to Gerald Turner for the bug report (http://bugs.debian.org/595899)
-     r3907 | bldewolf | 2010-09-27 23:36:30 +0200 (Mon, 27 Sep 2010) | 1 line
-     Merge Solaris if_ fixups to 1.4-stable. Original commit to trunk is r3906.
-     r3929 | ligne | 2010-10-05 14:23:33 +0200 (Tue, 05 Oct 2010) | 2 lines
-     backport r3916 from trunk ("setting the pidfile here prevents it being changed in the config file").  fixes #975 in 1.4 branch.
-     r3930 | ligne | 2010-10-05 14:27:35 +0200 (Tue, 05 Oct 2010) | 2 lines
-     backport r3892 from trunk ("document the idiosyncrasies of cidr_{allow,deny} with regard to /32 netmasks"). fixes #948 in the 1.4 maintenance branch.
-     r3940 | ligne | 2010-10-06 18:54:45 +0200 (Wed, 06 Oct 2010) | 2 lines
-     when listing services, force the node name to lowercase.  ported from r3404.
-     r3948 | bldewolf | 2010-10-07 20:59:05 +0200 (Thu, 07 Oct 2010) | 1 line
-     Add previous commit to 1.4-stable branch as well.
-     r3955 | bldewolf | 2010-10-12 01:46:31 +0200 (Tue, 12 Oct 2010) | 1 line
-     Commit previous changes to 1.4-stable as well.
-     r3960 | feiner.tom | 2010-10-24 19:38:36 +0200 (Sun, 24 Oct 2010) | 10 lines
-     Apply patch from http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=601200.
-     munin-cgi / munin-fast-cgi must return the HTTP Last-Modified in GMT time otherwise it is a violation
-     of HTTP RFC 2606 "3.3.1 Full Date": 
-     "All HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT), without exception."
-     Looks like this was already fixed in trunk (http://munin-monitoring.org/browser/trunk/master/_bin/munin-cgi-graph.in#L234)
-     r3966 | lupe | 2010-10-28 14:11:59 +0200 (Thu, 28 Oct 2010) | 2 lines
-     Replace #!/bin/bash with #!@@BASH@@ in plugins/node.d/multigraph_tester.in.
-     r3985 | ssm | 2010-11-08 13:25:47 +0100 (Mon, 08 Nov 2010) | 3 lines
-     Merge r3984: Log a sensible service path when graphing
-     r3993 | bldewolf | 2010-11-11 01:34:00 +0100 (Thu, 11 Nov 2010) | 1 line
-     Make last commit's changes to trunk to 1.4-stable as well.
-     r3999 | bldewolf | 2010-11-12 20:35:38 +0100 (Fri, 12 Nov 2010) | 1 line
-     Apply these two changes to 1.4-stable as well: Remove unnecessary evals in TLS.pm that break do_with_timeout() calls.  Re-order TLS read function to handle both empty string and undef returns from Net::SSLeay::read.
-     r4001 | bldewolf | 2010-11-13 04:19:47 +0100 (Sat, 13 Nov 2010) | 1 line
-     Commit this change to 1.4-stable as well: Rewrite _node_read to use _node_read_single to read lines.  Previously, it read them directly from the socket/tls and didn't handle errors correctly.  Instead, we'll handle all errors in _node_read_single.
-     r4007 | bldewolf | 2010-11-18 00:23:48 +0100 (Thu, 18 Nov 2010) | 1 line
-     Commit these changes to 1.4-stable too: Correct comment in plugin.sh.  Add more convenience functions to plugin.sh.  Change cpu plugins for linux and sunos to use new adjusted threshold convenience functions, allowing users to specify limits as a % of the total cpu time available (percentage * number of cpus * 100).
-     r4063 | mha | 2010-12-16 15:46:08 +0100 (Thu, 16 Dec 2010) | 4 lines
-     Fix autoconf and suggest in postgres wildcard plugins that use the "paramdatabase" flag
-     Reported by Greg Smith.
-     r4073 | jo | 2011-01-04 15:43:44 +0100 (Tue, 04 Jan 2011) | 1 line
-     - Fixed issues with having multiple contacts defined (#732, #1004, backport of r3598).
-     r4076 | jo | 2011-01-07 12:24:51 +0100 (Fri, 07 Jan 2011) | 1 line
-     - Mark the ip_ plugin as a bash plugin, as it uses bash syntax (#1009)
-     r4078 | jo | 2011-01-07 13:10:28 +0100 (Fri, 07 Jan 2011) | 1 line
-     - make slapd_ plugin autoconf work, support anonymous bind, and env.server variable (#963)
-     r4081 | knan | 2011-01-11 12:57:02 +0100 (Tue, 11 Jan 2011) | 3 lines
-     snmp__df - fallback to filesystems only if no disks/partitions found
-     helps graphing a Check Point SecurePlatform (SPLAT)
-     r4084 | jo | 2011-01-14 11:31:54 +0100 (Fri, 14 Jan 2011) | 1 line
-     * Correct the initial rundir definition (#887).
-     r4086 | jo | 2011-01-14 13:41:09 +0100 (Fri, 14 Jan 2011) | 1 line
-     - Make lpstat plugin always use EN_us locale.
-     r4089 | jo | 2011-01-14 13:51:52 +0100 (Fri, 14 Jan 2011) | 1 line
-     - Make bind9 plugin handle non-existing statefile.
-     r4091 | jo | 2011-01-14 14:03:23 +0100 (Fri, 14 Jan 2011) | 1 line
-     Force lpstat to C locale instead of EN_us.
-     r4092 | jo | 2011-01-14 14:30:21 +0100 (Fri, 14 Jan 2011) | 1 line
-     - Make the mysql_ plugin better at parsing innodb output (#956)
-     r4094 | jo | 2011-01-14 14:48:15 +0100 (Fri, 14 Jan 2011) | 1 line
-     - Better checks for undefs in munin-limits (#973)
-     r4096 | jo | 2011-01-14 14:58:55 +0100 (Fri, 14 Jan 2011) | 1 line
-     - In the darwin load plugin, replaced 'echo -n', which is implementation-defined - with printf, which is posix (backport of trunk r3962)
-     r4099 | jo | 2011-01-14 16:07:06 +0100 (Fri, 14 Jan 2011) | 1 line
-     - Fix swap usage numbers in the sunos memory plugin (#696)
-     r4101 | jo | 2011-01-14 16:26:21 +0100 (Fri, 14 Jan 2011) | 1 line
-     - Make exim_mailstats plugin behave properly after initialisation (#985)
-     r4104 | jo | 2011-01-14 17:21:48 +0100 (Fri, 14 Jan 2011) | 1 line
-     Clean up field names in the bonding_err_ plugin on linux (#962)
-     r4105 | jo | 2011-01-14 17:47:06 +0100 (Fri, 14 Jan 2011) | 1 line
-     - Cosmetic cleanups in snmp__if_multi plugin (#1008)
-     r4107 | jo | 2011-01-14 17:54:01 +0100 (Fri, 14 Jan 2011) | 1 line
-     - The snmp__if_multi plugin now makes proper use of 64bit counters if available (#1006)
-     r4109 | jo | 2011-01-14 18:10:29 +0100 (Fri, 14 Jan 2011) | 1 line
-     - The linux plugin selinux_avcstat now uses integers instead of floating points (#1005)
-     r4112 | knan | 2011-01-17 11:03:29 +0100 (Mon, 17 Jan 2011) | 1 line
-     freebsd/coretemp - rrd doesn't do celsius/fahrenheit
-     r4113 | jo | 2011-01-17 13:19:00 +0100 (Mon, 17 Jan 2011) | 1 line
-     - Fix autoconf in the nfs_client plugin for linux nodes (#1015).
-     r4115 | knan | 2011-01-17 17:24:03 +0100 (Mon, 17 Jan 2011) | 1 line
-     add snmp__df_ram plugin
-     r4118 | jo | 2011-01-18 13:12:48 +0100 (Tue, 18 Jan 2011) | 1 line
-     Fix issues with plugin names with - in them.
-     r4119 | jo | 2011-01-18 14:15:33 +0100 (Tue, 18 Jan 2011) | 1 line
-     Make linux df plugin not die when it encounters a mountpoint it can't access (#940)
-     r4122 | knan | 2011-01-18 15:57:07 +0100 (Tue, 18 Jan 2011) | 3 lines
-     snmp__df - avoid division by zero
-     gets it working for net-snmp snmpd on a ubuntu 10.04 lts desktop with fuse mounts
-     r4130 | jo | 2011-01-20 16:51:37 +0100 (Thu, 20 Jan 2011) | 1 line
-     Fixed a very silly bug, where a field couldn't be named "root" (#921)
-     r4136 | feiner.tom | 2011-02-06 17:00:21 +0100 (Sun, 06 Feb 2011) | 1 line
-     Backport to 1.4 branch: Correct $ENV{MUNIN_PLUGSTATE} to $Munin::Common::Defaults::MUNIN_PLUGSTATE. http://bugs.debian.org/612108
-     r4141 | bldewolf | 2011-02-24 20:50:24 +0100 (Thu, 24 Feb 2011) | 1 line
-     Fix usage of read that breaks dash in 1.4-stable as well.
-     r4156 | bldewolf | 2011-04-09 09:25:23 +0200 (Sat, 09 Apr 2011) | 5 lines
-     Make the master check the node entry for a "tls" configuration option before
-     using the global value.  With this option, tls can now be disabled on a per
-     node basis, resolving #880.  (Pushed to 1.4-stable branch)
-     r4158 | bldewolf | 2011-04-10 03:54:24 +0200 (Sun, 10 Apr 2011) | 1 line
-     Change message that is logged when call to accept times out to INFO and give status only, as calls to accept should time out if work is not completed. (This time in 1.4-stable)
-     r4159 | bldewolf | 2011-04-10 04:47:04 +0200 (Sun, 10 Apr 2011) | 3 lines
-     Modify node.d.linux/if_ plugin to pull interface speed from sysfs if other methods don't work. (Now to 1.4-stable)
-     r4163 | bldewolf | 2011-04-15 06:42:08 +0200 (Fri, 15 Apr 2011) | 4 lines
-     Switch if_ plugins in 1.4-stable and trunk to use type DERIVE instead of COUNTER and set min to zero.
-     This resolves ticket #877.
-     r4169 | bldewolf | 2011-04-19 05:01:40 +0200 (Tue, 19 Apr 2011) | 11 lines
-     Backport trunk fixes to 1.4-stable:
-     r4168: Fix autoconf command in Solaris if_err_.
-     r4150 / r4132: Improvements to mysql_ plugin.
-     r4167: Refactoring linux df/df_inode, pull new features (namely white/blacklisting devices).
-     r4058: Improvements for Solaris df/df_inode.
-     r4057: Replace improper call to mkpath (same issue as ticket #992).
-     r3982: Fix call to mkpath in Utils.pm (ticket #992).
-     r3981: Don't accidentally skip hosts when max_processes is set (ticket #990).
-     r4178 | mha | 2011-05-06 10:47:43 +0200 (Fri, 06 May 2011) | 2 lines
-     Fix typo
-     r4193 | mha | 2011-05-15 10:55:56 +0200 (Sun, 15 May 2011) | 4 lines
-     Fix PostgreSQL lock list to not show NaN for zero locks
-         
-     Based on a suggested query by Brian de Wolf, slightly updated by me.
-
-munin 1.4.5, r3379,3611, 2010-5-27
-
-* Apply TLS improvements from r3483 to 1.4-stable branch
-* Fixes for TLS with unverifiable certificates
-* Apply r3451 from trunk: ligne: use the local $DEBUG to toggle debug output, 
-  rather than the one in 'main' package. 
-* Backport r3444: ligne: fix warnings when running under certain versions of
-  perl, caused by exporting an undefined variable to the environment. 
-  Thanks to Aleksandar Lazic (al4711) for the patch. 
-* Typo in SNMPv3 code fixes ticket #911
-* Backport r3546 to r3554 from trunk (fix for #912, and more extensive test 
-  coverage for Munin::Plugin::SNMP). 
-* Fix ticket #928. Adding missing max_cgi_graph_jobs directive to the 
-  %legal hash 
-* Remove trailing whitespace from 1.4-stable/node directory, as in trunk 
-* Ignore the sandbox and Module::Build-generated content, as in trunk
-* Backport r3439: ligne: and add a newline to the error message when there was
-  a plugin exec failure. 
-* Backport r3434: ligne: set Net::Server's syslog_ident parameter, so log 
-  lines have 'munin-node' as the process name, rather than the significantly
-  less useful 'net_server'. fixes ticket #789. 
-* snort_*:  clean up autoconf 
-* if_: cosmetic fix  
-* mysql_: comment typo 
-* jmx_: respect JRE_HOME, if configured 
-* merge r3406 (multigraph support for munin-node) into 1.4 maintenance branch. 
-* sensors_*: podify, document regexes, various bugfixes
-* amavis: prevent a spike in the graph after Amavis is restarted. 
-  Thanks to claudius for the patch. fixes ticket #889
-* snmp_netstat: tidy and document
-* snmp_netstat: Fix bug where snmp_netstat undercounts the number
-  of connections
-* uptime: graph should not scale, as it makes it hard to read after 1000
-  days of uptime 
-* postgres_users: Usernames fetched from pg_stat_activity need to be
-  distinctified
-* mysql_isam_space: undeprecate,  sanity-check mysqlshow output, fix autoconf 
-  fix various typos
-* munin_update: Fix bashism
-
-
-
-
+* Enhanced CGI (CGI::Fast, direct call to GraphOld.pm, cgitmpdir)
+* fixed comparison pages in CGI mode as (closes #831)
+* hostname checks are case in-sensitive now : every hostname is converted to
+  lowercase before use (closes #450)
+* Implementation of dirtyconfig (fixes #836), upgraded df plugin as an example.
+* custom format, per field/plugin, for graph_data_size
+* Add update_rate with optional "aligned" suboption to align RRD updates 
+  to granularity (avoids fractional for integer gauges)
+* SSH native transport (closes #842)
+* handle the last line of multiline options (fixes #855)
+* modify how varnish_ autoconf checks for the varnishstat executable. (closes
+  #873)
+* use STDERR if cgi cannot open logfile (closes #874)
+* Add comments to the extremely long regexes in the sensors plugin. 
+  Many thanks to Noga Gazit for the patch adding the comments! (attached in 
+  debian bug http://bugs.debian.org/573613
+* Fix sensors plugin parsing of Voltage, which needs to allow for whitespace 
+  at the begnining of the line. Debian bug: http://bugs.debian.org/573613. 
+  Thanks to Arthur Liu for the patch!
+* load $config once when using FastCGI, use Storable::dclone to deepclone the
+  $config, in order to make .sum work again (see #894) (thx Jani M.)
+* Remove iso-8859-1 degree character from the example output from sensors, 
+  as it is ran with LC_ALL=C
+* prevent a spike in the graph after Amavis is restarted.  Thanks to claudius 
+  for the patch. (closes #889)
+* set Net::Server's syslog_ident parameter, so log lines have 'munin-node' as 
+  the process name, rather than the significantly less useful 'net_server'. 
+  closes #789
+* fix warnings when running under certain versions of perl, caused by
+  exporting an undefined variable to the environment.  thanks to Aleksandar
+  Lazic (al4711) for the patch. (closes #896)
+* fix bug where snmp__netstat plugin can massively undercount the number of 
+  connections. 
+* add a $Munin::Plugin::SNMP::DEBUG variable, which is an alias for
+  $Munin::Plugin::DEBUG, so that SNMP plugins can automatically have debugging
+  turned on when MUNIN_DEBUG environment variable is enabled.
+* update snmp__rdp_users plugin to use M::P::SNMP, and document it.
+* node.d/df* minor spring cleaning
+* processes plugin - implement autoconf
+* Add --pidebug to munin-node-configure.  If PIDEBUG isn't defined,
+  Node/Service.pm complains about uninitialized values.
+* Fix TLS, resolving several bugs.
+* Uptime should not scale, as it makes it hard to read after 1000 days of
+  uptime. Thanks to Wakko Warner for noticing this (http://bugs.debian.org/575180)
+* strip the carriage return on the end of the capabilities list, if it exists.
+  needed when debugging using telnet.  closes #902.
+* Add plugins to monitor prepared transactions in PostgreSQL
+* Add a authors file for the buggers that use svn-git
+* add an experimental test script, that checks the POD sections embedded in plugins (as used by munindoc).
+* remove dependency on perl-5.10. (munin tries to be 5.8 only)
+* fixes on mysql_isam_space_
+* extend M::N::SNMPConfig to support SNMPv3 scanning.
+* munin-async-[client|server]. A proxy for async polling of the localhost's munin-node
+* defer JCVALID evaluation to runtime, since $(JC) can be redefined later in a
+  specific Makefile.config. The core Makefile.config serving as a
+  Makefile.default in this case.  
+* delete some obsolete tests.
+* Remove Bashism - Thanks to Raphael Geissert for pointing this out (bugs.debian.org/581126)
+* Adding a pure debugging munin-node
+* enable vectorized multiple-time updates
+* upgraded README to new website
+* get rid of unused variables, and needless initialisations.
+* first draft of a perlcritic policy.
+* Always start RRD 10 years ago to be able to spoolfetch in them. Otherwise we can only rewrite 10s of history.
+* more tests for m-n-c internals.
+* start to turn Munin::Node::Service into a "proper" class, rather than a bunch of static methods.
+* Include the name of the database in the graph title for PostgreSQL
+  wildcard graphs.
+* start to migrate munin-run to instance-based M::N::Service
+* update munin-node to use a M::N::Service instance.
+* add $Id$ keywords where missing.
+* allow # characters to be included in config files, as long as they're preceded by a backslash
+* avoid spamming the logfile with debug messages.
+* create a directory for storing spool files.
+* spoolfetch support for M::N::Server.
+* postfix_mailstats.in: $logfile was being redefined, causing problems during autoconf.  
+  thanks to Lupe Christoph for the patch.  fixes #930.
+* Addition of munin-sched
 
 munin 1.4.4, r3276,3379, 2010-2-26
 

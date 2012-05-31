@@ -14,27 +14,35 @@ sub plugin_factory
 
     my $dir = Directory::Scratch->new();
     return sub {
-	my ($name, @contents) = @_;
-	my $plugin = $dir->touch($name, @contents);
+        my ($name, @contents) = @_;
+        my $plugin = $dir->touch($name, @contents);
         chmod(0755, $plugin->stringify);
-	return Munin::Node::Configure::Plugin->new(
-	    path => $plugin->stringify,
-	    name => $plugin->basename,
-	);
+        return Munin::Node::Configure::Plugin->new(
+            path => $plugin->stringify,
+            name => $plugin->basename,
+        );
     };
 }
 
 
 ### new
 {
-    new_ok('Munin::Node::Configure::PluginList' => [
-	libdir     => '/usr/share/munin/plugins',
-	servicedir => '/etc/munin/plugins/',
-    ]);
+    my $pluginlist = new_ok('Munin::Node::Configure::PluginList' => [
+        libdir     => '/usr/share/munin/plugins',
+        servicedir => '/etc/munin/plugins/',
+        families   => [ 'auto' ],
+    ]) or next;
+
+    is($pluginlist->{libdir},     '/usr/share/munin/plugins', 'libdir key exists');
+    is($pluginlist->{servicedir}, '/etc/munin/plugins/',      'servicedir key exists');
+
+    isa_ok($pluginlist->{library},  'Munin::Node::Service', 'libdir is inflated');
+    isa_ok($pluginlist->{services}, 'Munin::Node::Service', 'servicedir is inflated');
 }
 
 
 ### _valid_files
+=cut
 SKIP: {
     skip 'Directory::Scratch not installed' unless FOUND_DIRECTORY_SCRATCH;
 
@@ -53,10 +61,11 @@ SKIP: {
     eval { Munin::Node::Configure::PluginList::_valid_files('/foo/blort/zork') };
     ok($@, 'Error on missing directory') or diag($@);
 }
-
+=cut
 
 
 ### list and names
+=cut
 SKIP: {
     skip 'Directory::Scratch not installed' unless FOUND_DIRECTORY_SCRATCH;
 
@@ -78,5 +87,6 @@ SKIP: {
 
     is_deeply([ sort $plugins->names ], [ sort @plugins ], 'All plugin names are returned');
 }
+=cut
 
-
+# vim: sw=4 : ts=4 : et

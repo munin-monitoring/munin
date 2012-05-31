@@ -50,7 +50,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 use strict;
 use Munin::Plugin::SNMP;
 
-my $DEBUG = 0;
 
 # memory usage pr. process
 my $hrSWRunPerfMem = "1.3.6.1.2.1.25.5.1.1.2.";
@@ -58,7 +57,7 @@ my $hrMemorySize = "1.3.6.1.2.1.25.2.2.0";
 
 if (defined $ARGV[0] and $ARGV[0] eq "snmpconf")
 {
-    print "index   $hrSWRunPerfMem\n";
+    print "require $hrSWRunPerfMem\n";
     print "require $hrSWRunPerfMem [1-9]\n";
     print "require $hrMemorySize\n"; # memsize
     exit 0;
@@ -77,7 +76,7 @@ if (defined $ARGV[0] and $ARGV[0] eq "config")
     print "graph_info This grap shows memory usage.\n";
 
     # some devices reports negative memtotal value
-    print "# Total memsize reported $memsize..." if $DEBUG;
+    print "# Total memsize reported $memsize..." if $Munin::Plugin::SNMP::DEBUG;
 
     if ($memsize > 0) 
     {

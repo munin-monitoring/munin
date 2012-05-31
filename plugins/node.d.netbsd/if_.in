@@ -61,16 +61,14 @@ if [ "$1" = "config" ]; then
 	echo "graph_info This graph shows the traffic of the $INTERFACE network interface. Please note that the traffic is shown in bits per second, not bytes."
 
 	echo 'rbytes.label received'
-        echo 'rbytes.type DERIVE'
+        echo 'rbytes.type COUNTER'
         echo 'rbytes.graph no'
         echo 'rbytes.cdef rbytes,8,*'
-	echo 'rbytes.min 0'
 
         echo 'obytes.label bps'
-	echo 'obytes.type DERIVE'
+	echo 'obytes.type COUNTER'
 	echo 'obytes.negative rbytes'
 	echo 'obytes.cdef obytes,8,*'
-	echo 'obytes.min 0'
 	echo "obytes.info Traffic sent (+) and received (-) on the $INTERFACE network interface."
 	exit 0
 fi;

@@ -63,7 +63,7 @@ use English qw(-no_match_vars);
 use File::Basename qw(basename);
 use Log::Log4perl qw(:easy);
 
-our @EXPORT = qw(logger_open logger_debug logger_level logger);
+our @EXPORT = qw(logger_open logger_open_stderr logger_debug logger_level logger);
 
 # Early open of the log.  Warning and more urgent messages will go to
 # screen.
@@ -72,7 +72,7 @@ Log::Log4perl->easy_init( $WARN );
 
 my $logdir = undef;
 my $logopened = 0;
-my $me = basename($PROGRAM_NAME);
+my $me = $1 if basename($PROGRAM_NAME) =~ m/(.*)/; # Fast untaint $PROGRAM_NAME
 
 sub _warn_catcher {
     if ($logopened) {
@@ -80,6 +80,21 @@ sub _warn_catcher {
     } else {
 	print STDERR join(" ",@_);
     }
+}
+
+sub logger_open_stderr {
+    if (!$logopened) {
+	# I'm a bit uncertain about the :utf8 bit.
+	Log::Log4perl->easy_init( { level    => $INFO,
+				    file     => ":utf8>&STDERR" } );
+	$logopened = 1;
+    }
+
+    get_logger('')->info("Opened log file");
+
+    # Get perl warnings into the log files
+    $SIG{__WARN__} = \&_warn_catcher;
+
 }
 
 sub logger_open {
@@ -92,10 +107,12 @@ sub logger_open {
 	confess("In logger_open, directory for log files undefined");
     }
 
+    my $log_filename = shift || "$dirname/$me.log";
+
     if (!$logopened) {
 	# I'm a bit uncertain about the :utf8 bit.
 	Log::Log4perl->easy_init( { level    => $INFO,
-				    file     => ":utf8>>$dirname/$me.log" } );
+				    file     => ":utf8>>$log_filename" } );
 	# warn "Logging to $dirname/$me.log";
 	$logopened = 1;
     }

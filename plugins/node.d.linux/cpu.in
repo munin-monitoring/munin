@@ -158,7 +158,8 @@ if [ "$1" = "config" ]; then
 	echo 'idle.info Idle CPU time'
 
 	for field in system user nice idle; do
-		print_adjusted_thresholds "$field" "$graphlimit"
+		print_warning "$field"
+		print_critical "$field"
 	done
 
 	if [ "$scaleto100" = "yes" ]; then
@@ -190,7 +191,8 @@ if [ "$1" = "config" ]; then
 			echo "softirq.cdef softirq,$NCPU,/"
 		fi
 		for field in iowait irq softirq; do
-			print_adjusted_thresholds "$field" "$graphlimit"
+			print_warning "$field"
+			print_critical "$field"
 		done
 	fi
 
@@ -205,7 +207,8 @@ if [ "$1" = "config" ]; then
                         echo "steal.cdef steal,$NCPU,/"
 		fi
 		for field in steal; do
-			print_adjusted_thresholds "$field" "$graphlimit"
+			print_warning "$field"
+			print_critical "$field"
 		done
 	fi
 	exit 0

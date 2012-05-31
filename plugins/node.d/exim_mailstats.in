@@ -106,8 +106,8 @@ sub parseEximfile
 
     my ($LOGFILE, $rotated) = tail_open($fname, $start);
 
-    if ($rotated || $received eq 'U') {
-        # Reset everything if the log has been rotated or we've just initialised
+    if ($rotated) {
+        # Reset everything if the log has been rotated
         $pos = $received = $completed = $rejected = 0;
     }
 

@@ -95,7 +95,8 @@ __END__
 
 =head1 NAME
 
-Munin::Node::Configure::HostEnumeration - Takes a list of hosts, and returns the corresponding IPs in dotted-quad form.
+Munin::Node::Configure::HostEnumeration - Takes a list of hosts, and returns
+the corresponding IPs in dotted-quad form.
 
 
 =head1 SYNOPSIS

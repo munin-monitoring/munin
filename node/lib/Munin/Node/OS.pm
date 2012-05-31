@@ -12,6 +12,7 @@ use Munin::Node::Config;
 use Munin::Common::Timeout;
 
 use POSIX ();
+use Sys::Hostname;
 
 sub get_uid {
     my ($class, $user) = @_;
@@ -37,70 +38,49 @@ sub _get_xid {
 }
 
 
-sub get_fq_hostname {
-    my ($class) = @_;
-
-    my $hostname = eval {
-        require Sys::Hostname;
-        return (gethostbyname(Sys::Hostname::hostname()))[0];
-    };
-    return $hostname if $hostname;
-
-    $hostname = `hostname`;
-    chomp($hostname);
-    $hostname =~ s/\s//g;
-    return $hostname;
-}
+sub get_fq_hostname { return (gethostbyname Sys::Hostname::hostname)[0]; }
 
 
-
-sub check_perms_if_paranoid {
+sub check_perms_if_paranoid
+{
     my ($class, $target) = @_;
-    my @stat;
 
     my $config = Munin::Node::Config->instance();
 
-    return unless defined $target;
+    return 0 unless defined $target;
     return 1 unless $config->{paranoia};
 
-    unless (-e "$target")    {
-	warn "Failed to check permissions on nonexistent target: '$target'";
-	return;
+    unless (-e $target) {
+        warn "Failed to check permissions on nonexistent target: '$target'";
+        return;
     }
 
     my ($mode, $uid, $gid) = (stat $target)[2,4,5];
-    if ($uid != 0 || ($gid != 0 && ($mode & oct(20))) || ($mode & oct(2))) {
-	warn sprintf(
-            "Warning: '$target' has dangerous permissions (%04o)",
-            $mode & oct(7777),
-        );
-	return;
+
+    if ($uid != 0
+     or $gid != 0 && ($mode & oct(20))
+     or               $mode & oct( 2) )
+    {
+        warn sprintf "Warning: '$target' has dangerous permissions (%04o)",
+                ($mode & oct(7777));
+        return 0;
     }
 
     # Check dir as well
-    if (-f "$target") {
-	(my $dirname = $target) =~ s/[^\/]+$//;
-	return $class->check_perms($dirname);
+    if (-f $target) {
+        (my $dirname = $target) =~ s{[^/]+$}{};
+        return $class->check_perms($dirname);
     }
 
     return 1;
 }
 
-sub bitsof {
-    my ($vec) = @_;
 
-    my $bits = unpack("b*", $vec);
-
-    return $bits;
-}
-
-
-
-sub read_from_child {
-    # Read stuff from the file handles connected to the pluginds
-    # stdout and stderr and return two array references: one array of
-    # output and one array of errors.
-
+# Read stuff from the file handles connected to the pluginds
+# stdout and stderr and return two array references: one array of
+# output and one array of errors.
+sub _read_from_child
+{
     my ($self, $stdout, $stderr) = @_;
 
     my ($rout, $wout, $eout);
@@ -117,13 +97,7 @@ sub read_from_child {
     $ein = $rin | $win;
 
     while (1) {
-	# print STDERR "In read loop for plugin: read ",bitsof($rin),
-	# " - write ",bitsof($win)," - exceptions ",bitsof($ein),"\n"
-
  	my $nfound = select($rout=$rin, $wout=$win, $eout=$ein, undef);
-
-	# print STDERR "Found: $nfound read ",bitsof($rout),
-	# " - write ",bitsof($wout)," - exceptions ",bitsof($eout),"\n"
 
 	if ($nfound == -1) {
 	    # !  Print error somewhere?
@@ -136,15 +110,11 @@ sub read_from_child {
 
 	# Should be something to read
 	if (vec($rout,fileno($stdout),1)) {
-	    # print STDERR "Atempting to read from plugins stdout\n";
 	    my $res = sysread($stdout,$output,4096,length($output));
-	    # print STDERR "Read $res bytes from plugin stdout\n";
 	    next if $res;
 	}
 	if (vec($rout,fileno($stderr),1)) {
-	    # print STDERR "Atempting to read from plugins stderr\n";
 	    my $res = sysread($stderr,$errput,4096,length($errput));
-	    # print STDERR "Read $res bytes from plugin stderr\n";
 	    next if $res;
 	}
 
@@ -178,7 +148,7 @@ sub run_as_child {
 
         # Give the child till the timeout to finish up
         my $read_it_and_reap = sub {
-	    ($out,$err) = $self->read_from_child($out_read,$err_read);
+	    ($out,$err) = $self->_read_from_child($out_read,$err_read);
 	    waitpid($pid, 0);
 	};
 
@@ -192,7 +162,7 @@ sub run_as_child {
         return {
             stdout => $out,
             stderr => $err,
-            retval => $?,
+            retval => $CHILD_ERROR,
             timed_out => $timed_out,
         };
     }
@@ -274,11 +244,8 @@ sub _set_xid {
 }
 
 
-sub set_plugin_umask {
-    # Set umask so that files created by plugins are group writable
-    # Only call right before exec-ing a pluigin.
-    umask(0002);
-}
+sub set_umask { umask(0002) or croak "Unable to set umask: $!\n"; }
+
 
 
 1;
@@ -287,7 +254,7 @@ __END__
 
 =head1 NAME
 
-Munin::Node::OS - OS related utility methods for the munin node.
+Munin::Node::OS - OS related utility methods for the Munin node.
 
 
 =head1 SYNOPSIS
@@ -305,14 +272,14 @@ Munin::Node::OS - OS related utility methods for the munin node.
  $uid = $class->get_uid($user)
 
 Returns the user ID. $user might either be a user name or a user
-ID. Returns undef if the user is nonexistent.
+ID. Returns undef if the user doesn't exist.
 
 =item B<get_gid>
 
  $gid = $class->get_gid($group)
 
 Returns the group ID. $group might either be a group name or a group
-ID. Returns undef if the group is nonexistent.
+ID. Returns undef if the group doesn't exist.
 
 =item B<get_fq_hostname>
 
@@ -320,9 +287,9 @@ ID. Returns undef if the group is nonexistent.
 
 Returns the fully qualified host name of the machine.
 
-=item B<check_perms>
+=item B<check_perms_if_paranoid>
 
- $bool = $class->check_perms($target);
+ $bool = $class->check_perms_if_paranoid($target);
 
 If paranoia is enabled, returns false unless $target is owned by root,
 and has safe permissions.  If $target is a file, also checks the
@@ -334,7 +301,7 @@ directory it inhabits.
 
 Creates a child process to run $code and waits for up to
 $timeout seconds for it to complete.  Returns a hashref
-containg the following keys:
+containing the following keys:
 
 =over
 
@@ -367,10 +334,10 @@ Sleeps for 2 seconds between SIGHUP and SIGKILL.
 
  my $bool = $class->possible_to_signal_process($pid)
 
-Check whether it’s possible to send a signal to $pid (that means, to
+Check whether it's possible to send a signal to $pid (that means, to
 be brief, that the process is owned by the same user, or we are the
 super-user).  This is a useful way to check that a child process is
-alive (even if only as a zombie) and hasn’t changed its UID.
+alive (even if only as a zombie) and hasn't changed its UID.
 
 =item B<set_effective_user_id>
 
@@ -395,6 +362,11 @@ See documentation for set_effective_user_id()
 
 See documentation for set_effective_user_id()
 
-=back
+=item B<set_umask>
+
+Set umask so that files created by plugins are group writeable
+Only call right before exec-ing a plugin.
+
 
 =cut
+# vim: ts=4 : sw=4 : et

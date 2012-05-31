@@ -11,3 +11,4 @@ if [ -f $DESTDIR/var/run/munin/munin-node.pid ]; then
 else 
     echo "Pid file not found. Not stopping"
 fi
+

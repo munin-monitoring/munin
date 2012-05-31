@@ -86,6 +86,8 @@ my $do_usage       = 0;
 my $do_version     = 0;
 my $cron           = 0;
 my $list_images    = 0;
+my $output_file    = undef;
+my $log_file       = undef;
 my $skip_locking   = 0;
 my $skip_stats     = 0;
 my $stdout         = 0;
@@ -99,6 +101,10 @@ my %draw           = (
     "sumyear" => 1,
     "sumweek" => 1
 );
+$draw{"pinpoint"} = 0; # XXX - Add a dummy pinpoint value
+
+my ($size_x, $size_y);
+my ($lower_limit, $upper_limit);
 
 my %PALETTE;    # Hash of available palettes
 my @COLOUR;     # Array of actuall colours to use
@@ -128,7 +134,8 @@ my %times = (
     "day"   => "-30h",
     "week"  => "-8d",
     "month" => "-33d",
-    "year"  => "-400d"
+    "year"  => "-400d",
+    "pinpoint"  => "dummy",
 );
 
 my %resolutions = (
@@ -145,6 +152,7 @@ my %sumtimes = (    # time => [ label, seconds-in-period ]
 # Limit graphing to certain hosts and/or services
 my @limit_hosts    = ();
 my @limit_services = ();
+my $only_fqn = 0;
 
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
 
@@ -154,10 +162,16 @@ my $do_fork     = 1;
 
 # "global" Configuration hash
 my $config;
+my $config_bak;
 
 # stats file handle
 my $STATS;
-my $DEBUG;
+my $DEBUG = 0;
+my $pinpoint = undef;
+
+my %init_draw = %draw;
+my @init_limit_hosts = @limit_hosts;
+my @init_limit_services = @limit_services;
 
 sub graph_startup {
 
@@ -165,6 +179,32 @@ sub graph_startup {
     #
     # Do once pr. run, pr possebly once pr. graph in the case of
     # munin-cgi-graph
+    
+    # Localise the stuff, overwise it will be stacked up with CGI
+    %draw = %init_draw;
+    @limit_hosts = @init_limit_hosts;
+    @limit_services = @init_limit_services;
+
+    $DEBUG	    = 0;
+    $pinpoint       = undef;
+
+    $force_graphing = 0;
+    $force_lazy     = 1;
+    $do_usage       = 0;
+    $do_version     = 0;
+    $cron           = 0;
+    $list_images    = 0;
+    $output_file    = undef;
+    $log_file       = undef;
+    $skip_locking   = 0;
+    $skip_stats     = 0;
+    $stdout         = 0;
+
+    $only_fqn 	    = 0;
+    $size_x 	    = undef;
+    $size_y         = undef;
+    $lower_limit    = undef;
+    $upper_limit    = undef;
 
     # Get options
     my ($args) = @_;
@@ -175,15 +215,23 @@ sub graph_startup {
                 "lazy!"         => \$force_lazy,
                 "host=s"        => \@limit_hosts,
                 "service=s"     => \@limit_services,
+                "only-fqn=s"     => \$only_fqn,
                 "config=s"      => \$conffile,
                 "stdout!"       => \$stdout,
                 "day!"          => \$draw{'day'},
                 "week!"         => \$draw{'week'},
                 "month!"        => \$draw{'month'},
                 "year!"         => \$draw{'year'},
+                "pinpoint=s"    => \$draw{'pinpoint'},
                 "sumweek!"      => \$draw{'sumweek'},
                 "sumyear!"      => \$draw{'sumyear'},
+		"size_x=i"      => \$size_x,
+		"size_y=i"      => \$size_y,
+		"upper_limit=s" => \$upper_limit,
+		"lower_limit=s" => \$lower_limit,
                 "list-images!"  => \$list_images,
+                "o|output-file=s"  => \$output_file,
+                "l|log-file=s"  => \$log_file,
                 "skip-locking!" => \$skip_locking,
                 "skip-stats!"   => \$skip_stats,
                 "debug!"        => \$DEBUG,
@@ -204,10 +252,33 @@ sub graph_startup {
 
     exit_if_run_by_super_user();
 
-    $config = &munin_config($conffile);
+    # Only read $config once (thx Jani M.)
+    # TODO - should maybe stat() the conf file to dyna reload the conf
+    use Storable;
+    if (! $config) {
+        $config = &munin_config($conffile);
+        $config_bak = Storable::dclone($config);
+    } else {
+	    undef_references($config);
+	    $config = Storable::dclone($config_bak);
+    }
 
-    logger_open($config->{'logdir'});
+    # untaint the $log_file variable
+    $log_file = $1 if ($log_file && $log_file =~ m/(.*)/);
+
+    if($log_file && $log_file eq "-:2") {
+	    # Logging to STDERR
+	    logger_open_stderr();
+    } else {
+	    logger_open($config->{'logdir'}, $log_file);
+    }
     logger_debug() if $DEBUG;
+    
+    # XXX - Special hack^h^h^h^h treatment for --pinpoint
+    if ($draw{'pinpoint'} && $draw{'pinpoint'} =~ m/^(\d+),(\d+)$/ ) {
+    	    %draw = ( "pinpoint" => $draw{'pinpoint'} ); # "pinpoint" replaces all the other timing options
+    	    $pinpoint = { "start" => $1, "end" => $2, }; # preparsed values
+    }
 
     my $palette = &munin_get($config, "palette", "default");
 
@@ -226,6 +297,13 @@ sub graph_startup {
 
 }
 
+sub undef_references {
+    my ($c) = @_;
+    foreach my $k (keys %$c) {
+        undef_references($c->{$k}) if (ref($c->{$k}) eq "HASH" && $k ne "#%#parent");
+        $c->{$k} = undef;
+    }
+}
 
 sub graph_check_cron {
 
@@ -281,7 +359,16 @@ sub get_title {
     my $service = shift;
     my $scale   = shift;
 
-    return (munin_get($service, "graph_title", $service) . " - by $scale");
+    my $scale_text;
+    if ($pinpoint) {
+	    my $start_text = localtime($pinpoint->{"start"});
+	    my $end_text = localtime($pinpoint->{"end"});
+	    $scale_text = "from $start_text to $end_text";
+    } else {
+        $scale_text = "by " . $scale;
+    }
+
+    return (munin_get($service, "graph_title", $service) . " - $scale_text");
 }
 
 sub get_custom_graph_args {
@@ -329,13 +416,18 @@ sub get_header {
     my $tmp_field;
 
     # Picture filename
-    push @$result, munin_get_picture_filename($service, $scale, $sum || undef);
+    push @$result, get_picture_filename($service, $scale, $sum || undef);
 
     # Title
     push @$result, ("--title", get_title($service, $scale));
 
     # When to start the graph
-    push @$result, "--start", $times{$scale};
+    if ($pinpoint) {
+    	push @$result, "--start", $pinpoint->{start};
+    	push @$result, "--end", $pinpoint->{end};
+    } else {
+    	push @$result, "--start", $times{$scale};
+    }
 
     # Custom graph args, vlabel and graph title
     if (defined($tmp_field = get_custom_graph_args($service))) {
@@ -345,8 +437,11 @@ sub get_header {
         push @$result, ("--vertical-label", $tmp_field);
     }
 
-    push @$result, "--height", munin_get($service, "graph_height", "175");
-    push @$result, "--width",  munin_get($service, "graph_width",  "400");
+    push @$result, "--height", ($size_y || munin_get($service, "graph_height", "175"));
+    push @$result, "--width",  ($size_x || munin_get($service, "graph_width",  "400"));
+
+    push @$result,"--rigid" if (defined $lower_limit || defined $upper_limit);
+
     push @$result, "--imgformat", "PNG";
     push @$result, "--lazy" if ($force_lazy);
 
@@ -458,7 +553,7 @@ sub expand_specials {
             DEBUG "DEBUG: expand_specials ($tmp_field): Doing sum...";
 
             if (@$order == 1
-                or (@$order == 2 and munin_get {$field, "negative", 0})) {
+                or (@$order == 2 and munin_get($field, "negative", 0))) {
                 $single = 1;
             }
 
@@ -642,7 +737,6 @@ sub process_service {
 
     # Make my graphs
     my $sname        = munin_get_node_name($service);
-    my $skeypath     = munin_get_keypath($service);
     my $service_time = Time::HiRes::time;
     my $lastupdate   = 0;
     my $now          = time;
@@ -1088,20 +1182,22 @@ sub process_service {
         push(@rrd, "GPRINT:apostotal:MAX:$rrdformat" . $rrdscale . "\\j");
     }
 
+    my $nb_graphs_drawn = 0;
     for my $time (keys %times) {
         next unless ($draw{$time});
-        my $picfilename = munin_get_picture_filename($service, $time);
+        my $picfilename = get_picture_filename($service, $time);
         (my $picdirname = $picfilename) =~ s/\/[^\/]+$//;
 
-        # DEBUG "[DEBUG] Picture filename: $picfilename";
+        DEBUG "[DEBUG] Picture filename: $picfilename";
 
         my @complete = get_fonts();
 
 	# Watermarks introduced in RRD 1.2.13.
         push(@complete, '-W', $watermark) if $RRDs::VERSION >= 1.2013;
 
-        # Do the header (title, vtitle, size, etc...)
-        push @complete, @{get_header($service, $time)};
+        # Do the header (title, vtitle, size, etc...), but IN THE BEGINNING
+        unshift @complete, @{get_header($service, $time)};
+
         if ($LINEkluge) {
             @rrd = map {
                 my $line = $_;
@@ -1119,7 +1215,7 @@ sub process_service {
                 . RRDescape(scalar localtime($lastupdate))
                 . "\\r");
 
-        if (time - 300 < $lastupdate) {
+        if (time - 300 < $lastupdate && ! $pinpoint) {
 	    if (@added) { # stop one period earlier if it's a .sum or .stack
 		push @complete, "--end",
 		    (int(($lastupdate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
@@ -1129,7 +1225,6 @@ sub process_service {
 	    }
         }
 
-	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n";
 
         # Make sure directory exists
         munin_mkdir_p($picdirname, oct(777));
@@ -1146,6 +1241,31 @@ sub process_service {
             } @complete;
         }
 
+	# Surcharging the graphing limits
+	my ($upper_limit_overrided, $lower_limit_overrided);
+	for (my $index = 0; $index <= $#complete; $index++) {
+		if ($complete[$index] =~ /^(--upper-limit|-u)$/ && (defined $upper_limit)) {
+			$upper_limit = get_scientific($upper_limit);
+			$complete[$index + 1] = $upper_limit;
+			$upper_limit_overrided = 1;
+		}
+		if ($complete[$index] =~ /^(--lower-limit|-l)$/ && (defined $lower_limit)) {
+			$lower_limit = get_scientific($lower_limit);
+			$complete[$index + 1] = $lower_limit;
+			$lower_limit_overrided = 1;
+		}
+	}
+
+	# Add the limit if not present
+	if (defined $upper_limit && ! $upper_limit_overrided) {
+		push @complete, "--upper-limit", $upper_limit;
+	}
+	if (defined $lower_limit && ! $lower_limit_overrided) {
+		push @complete, "--lower-limit", $lower_limit;
+	}
+
+	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n";
+	$nb_graphs_drawn ++;
         RRDs::graph(@complete);
         if (my $ERROR = RRDs::error) {
             ERROR "[RRD ERROR] Unable to graph $picfilename : $ERROR";
@@ -1157,29 +1277,30 @@ sub process_service {
             # reliable, esp. in combination with munin-*cgi-graph.
 
 	    # Since this disrupts rrd's --lazy option we're disableing
-	    # it until we can do it in a less distructive way, we need
-	    # to do it only on files that were updated _just_ now.
-	    # Should probably also only be done in cgi mode.
-
-            # utime $lastupdate, $lastupdate,
-	    # munin_get_picture_filename($service, $time);
+	    # it unless we (munin-graph) were specially asked --lazy.
+	    # This way --lazy continues to work as expected, and since
+	    # CGI uses --nolazy, http IMS are also working as expected.
+            if (! $force_lazy) {
+                DEBUG "[DEBUG] setting time on $picfilename";
+                utime $lastupdate, $lastupdate, $picfilename;
+            }
 
             if ($list_images) {
                 # Command-line option to list images created
-                print munin_get_picture_filename ($service, $time), "\n";
+                print $picfilename. "\n";
             }
         }
     }
 
     if (munin_get_bool($service, "graph_sums", 0)) {
         foreach my $time (keys %sumtimes) {
-            my $picfilename = munin_get_picture_filename($service, $time, 1);
+            my $picfilename = get_picture_filename($service, $time, 1);
             (my $picdirname = $picfilename) =~ s/\/[^\/]+$//;
             next unless ($draw{"sum" . $time});
             my @rrd_sum;
             push @rrd_sum, @{get_header($service, $time, 1)};
 
-            if (time - 300 < $lastupdate) {
+            if (time - 300 < $lastupdate && ! $pinpoint) {
 		if (@added) { # stop 5 minutes earlier if it's a .sum or .stack
 		    push @rrd_sum, "--end",
 			(int(($lastupdate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
@@ -1271,23 +1392,24 @@ sub process_service {
 
             # Make sure directory exists
             munin_mkdir_p($picdirname, oct(777));
-
+    
+	    $nb_graphs_drawn ++;
             RRDs::graph(@rrd_sum);
 
             if (my $ERROR = RRDs::error) {
                 ERROR "[RRD ERROR(sum)] Unable to graph "
-                    . munin_get_picture_filename($service, $time)
+                    . get_picture_filename($service, $time)
                     . ": $ERROR";
             }
             elsif ($list_images) {
                 # Command-line option to list images created
-                print munin_get_picture_filename ($service, $time, 1), "\n";
+                print get_picture_filename ($service, $time, 1), "\n";
             }
         } # foreach (keys %sumtimes)
     } # if graph_sums
 
     $service_time = sprintf("%.2f", (Time::HiRes::time - $service_time));
-    INFO "[INFO] Graphed service $skeypath ($service_time sec)";
+    INFO "Graphed service : $sname ($service_time sec for $nb_graphs_drawn graphs)";
     print $STATS "GS|$service_time\n" unless $skip_stats;
 
     foreach (@added) {
@@ -1340,13 +1462,26 @@ sub orig_to_cdef {
     return $fieldname;
 }
 
+sub ends_with {
+	my ($src, $searched) = @_;
+	DEBUG "[DEBUG] ends_with($src, $searched)\n";
+
+	my $is_ending = (substr($src, - length($searched)) eq $searched);
+	return $is_ending; 
+}
+
 
 sub skip_service {
     my $service = shift;
-    my $sname   = munin_get_node_name($service);
+    my $fqn   = munin_get_node_fqn($service);
+
+    # Skip if we've limited services with the omnipotent cli option only-fqn
+    return 1 if ($only_fqn and ! ends_with($fqn, $only_fqn));
+    DEBUG "[DEBUG] $fqn is in ($only_fqn)\n";
 
     # Skip if we've limited services with cli options
-    return 1 if (@limit_services and !grep /^$sname$/, @limit_services);
+    return 1 if (@limit_services and ! (grep { ends_with($fqn, $_) } @limit_services));
+    DEBUG "[DEBUG] $fqn is in (" . join(",", @limit_services) . ")\n";
 
     # Always graph if --force is present
     return 0 if $force_graphing;
@@ -1407,12 +1542,28 @@ sub parse_path {
     return $filename;
 }
 
+# Wrapper for munin_get_picture_filename to handle pinpoint
+sub get_picture_filename {
+	if (defined $output_file) { return $output_file; }
+	# delegate if not overriden
+	return munin_get_picture_filename(@_);
+}
+
 sub escape {
     my $text = shift;
     return if not defined $text;
     $text =~ s/\\/\\\\/g;
     $text =~ s/:/\\:/g;
     return $text;
+}
+
+sub get_scientific {
+	my $value = shift;
+	$value =~ s/m/e-03/;
+	$value =~ s/k/e+03/;
+	$value =~ s/M/e+06/;
+	$value =~ s/G/e+09/;
+	return $value;
 }
 
 sub RRDescape {
@@ -1444,12 +1595,20 @@ Options:
     --config <file>	Use <file> as configuration file. [$conffile]
     --[no]list-images	List the filenames of the images created. 
     			[--nolist-images]
+    --output-file  -o	Output graph file. (used for CGI graphing)
+    --log-file     -l	Output log file. (used for CGI graphing)
     --[no]day		Create day-graphs.   [--day]
     --[no]week		Create week-graphs.  [--week]
     --[no]month		Create month-graphs. [--month]
     --[no]year		Create year-graphs.  [--year]
     --[no]sumweek	Create summarised week-graphs.  [--summweek]
     --[no]sumyear	Create summarised year-graphs.  [--sumyear]
+
+    --pinpoint <start,stop> Create custom-graphs. <start,stop> is the standard unix Epoch. [not active]
+    --size_x <pixels>   Sets the X size of the graph in pixels [175]
+    --size_y <pixels>   Sets the Y size of the graph in pixels [400]
+    --lower_limit <lim> Sets the lower limit of the graph
+    --upper_limit <lim> Sets the upper limit of the graph
 
 ";
     exit 0;

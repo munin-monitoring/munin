@@ -11,11 +11,11 @@
 do_autoconf()
 {
 	echo yes
-
-	kill -PIPE $$
+	
+	kill -PIPE $$ 
 	exit 0
 }
 
 
-do_$1
+do_$1 
 

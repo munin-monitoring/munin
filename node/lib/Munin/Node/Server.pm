@@ -8,21 +8,27 @@ use strict;
 use warnings;
 
 use English qw(-no_match_vars);
-use Carp;
 
 use Munin::Node::Config;
 use Munin::Common::Defaults;
 use Munin::Common::Timeout;
 use Munin::Common::TLSServer;
 use Munin::Node::Logger;
-use Munin::Node::Service;
 use Munin::Node::Session;
 use Munin::Node::Utils;
+
+
+# the Munin::Node::Service object, used to run plugins, etc
+my $services;
+
+# may reference a Munin::Node::SpoolReader object, which is used to
+# to provide spooling functionality.
+my $spool;
 
 # A set of all services that this node can run.
 my %services;
 
-# Services that require the server to support multigraph plugins.
+# Services that require the server to support certain capabilities
 my (@multigraph_services, @dirtyconfig_services);
 
 # Which hosts this node's services applies to. Typically this is the
@@ -37,8 +43,12 @@ my $config = Munin::Node::Config->instance();
 sub pre_loop_hook {
     my $self = shift;
     print STDERR "In pre_loop_hook.\n" if $config->{DEBUG};
+
+    $services = $config->{services} or die 'no services list';
+    $spool    = $config->{spool};
+
     _load_services();
-    Munin::Node::Service->prepare_plugin_environment(keys %services);
+    $services->prepare_plugin_environment(keys %services);
     _add_services_to_nodes(keys %services);
     return $self->SUPER::pre_loop_hook();
 }
@@ -53,11 +63,11 @@ sub request_denied_hook
 
 
 sub _load_services {
-    opendir (my $DIR, $config->{servicedir})
-        || die "Cannot open plugindir: $config->{servicedir} $!";
+    opendir (my $DIR, $services->{servicedir})
+        || die "Cannot open plugindir: $services->{servicedir} $!";
 
     for my $file (readdir($DIR)) {
-        next unless Munin::Node::Service->is_a_runnable_service($file);
+        next unless $services->is_a_runnable_service($file);
         print STDERR "file: '$file'\n" if $config->{DEBUG};
         $services{$file} = 1;
     }
@@ -132,32 +142,18 @@ sub process_request
 
     _net_write($session, "# munin node at $config->{fqdn}\n");
 
-    my $line = '<no command received yet>';
-
     # catch and report any system errors in a clean way.
     eval {
-        $timed_out = !do_with_timeout($config->{'timeout'}, sub {
-            while (defined ($line = _net_read($session))) {
+        $timed_out = !do_with_timeout($services->{timeout}, sub {
+            while (defined (my $line = _net_read($session))) {
                 chomp $line;
-                if (! _process_command_line($session, $line)) {
-		    $line = "<finished '$line', ending input loop>";
-		    last;
-		}
-		$line = "<waiting for input from master, previous was '$line'>";
-		# Reset timeout to wait a reasonable time for input from the master
-		# Misfeature: Plugin timeout and input timeout becomes identical.
-		reset_timeout();
+                _process_command_line($session, $line) or last;
             }
         });
     };
 
-    if ($EVAL_ERROR) {
-        logger($EVAL_ERROR);
-    }
-
-    if ($timed_out) {
-        logger("Node side timeout while processing: '$line'");
-    }
+    logger($EVAL_ERROR)            if ($EVAL_ERROR);
+    logger("Connection timed out") if ($timed_out);
 
     return;
 }
@@ -178,7 +174,7 @@ sub _process_command_line {
         }
     }
 
-    logger ("DEBUG: Running command \"$_\".") if $config->{DEBUG};
+    logger ("DEBUG: Running command '$_'.") if $config->{DEBUG};
     if (/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
         _list_services($session, lc($1));
     }
@@ -198,7 +194,11 @@ sub _process_command_line {
         _print_service($session, _run_service($1))
     }
     elsif (/^config\s?(\S*)/i) {
-        _print_service($session, _run_service($1, "config"));
+        _print_service($session, _run_service($1, 'config'));
+    }
+    elsif (/^spoolfetch (\d+)/ and $spool) {
+        _net_write($session, $spool->fetch($1));
+        _net_write($session, ".\n");
     }
     elsif (/^starttls\s*$/i) {
         eval {
@@ -208,7 +208,7 @@ sub _process_command_line {
             logger($EVAL_ERROR);
             return 0;
         }
-        logger ("DEBUG: Returned from starttls.") if $config->{DEBUG};
+        logger ('DEBUG: Returned from starttls.') if $config->{DEBUG};
     }
     else {
         _net_write($session, "# Unknown command. Try cap, list, nodes, config, fetch, version or quit\n");
@@ -226,13 +226,16 @@ sub _expect_starttls {
 }
 
 
-sub _negotiate_session_capabilities {
+sub _negotiate_session_capabilities
+{
     my ($session, $server_capabilities) = @_;
 
-    my @node_cap = qw/
-        multigraph
-        dirtyconfig
-    /;
+    my $node_cap = 'multigraph dirtyconfig';
+    $node_cap .= ' spool' if $spool;
+
+    # telnet uses a full CRLF line ending.  chomp just removes the \n, so need
+    # to strip \r manually.  see ticket #902
+    $server_capabilities =~ s/\r$//;
 
     $session->{server_capabilities} = {
             map { $_ => 1 } split(/ /, $server_capabilities)
@@ -240,7 +243,7 @@ sub _negotiate_session_capabilities {
 
     $ENV{MUNIN_CAP_DIRTYCONFIG} = 1 if ($session->{server_capabilities}{dirtyconfig});
 
-    _net_write($session, sprintf("cap %s\n",join(" ", @node_cap)));
+    _net_write($session, "cap $node_cap\n");
 }
 
 
@@ -344,17 +347,16 @@ sub _run_service
     # temporarily ignore SIGCHLD.  this stops Net::Server from reaping the
     # dead service before we get the chance to check the return value.
     local $SIG{CHLD};
-    my $res = Munin::Node::Service->fork_service($config->{servicedir},
-                                                 $service, $command);
+    my $res = $services->fork_service($service, $command);
 
     if ($res->{timed_out}) {
         logger("Service '$service' timed out.");
         return '# Timed out';
     }
 
-    if (@{$res->{stderr}}) {
+    if (my @errors = grep !/^# /, @{$res->{stderr}}) {
         logger(qq{Error output from $service:});
-        logger("\t$_") foreach @{$res->{stderr}};
+        logger("\t$_") foreach @errors;
     }
 
     if ($res->{retval}) {
@@ -432,4 +434,4 @@ Logs the source of rejected connections.
 Processes the request.
 
 =cut
-vim: ts=4 : expandtab
+vim: ts=4 : et : sw=4

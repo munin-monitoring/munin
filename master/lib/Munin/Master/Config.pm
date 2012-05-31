@@ -148,7 +148,7 @@ my %booleans = map {$_ => 1} qw(
 		local_address    => 0,
 		logdir           => $Munin::Common::Defaults::MUNIN_LOGDIR,
 		max_processes    => $MAXINT,
-		rundir           => $Munin::Common::Defaults::MUNIN_STATEDIR,
+		rundir           => '/tmp',
 		timeout          => 180,
 		tls              => 'disabled',
 		tls_ca_certificate => "$Munin::Common::Defaults::MUNIN_CONFDIR/cacert.pem",

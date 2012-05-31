@@ -1,39 +1,30 @@
 package org.munin.plugin.jmx;
-import java.lang.management.ManagementFactory.*;
-import javax.management.MBeanServerConnection;
-import java.lang.management.MemoryPoolMXBean;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-public class MemorythresholdUsageCount {
 
-    public static void main(String args[])throws FileNotFoundException, IOException {
-        String[] connectionInfo= ConfReader.GetConnectionInfo();
+import org.munin.plugin.jmx.AbstractAnnotationGraphsProvider.Graph;
 
-        if (args.length == 1) {
-            if (args[0].equals("config")) {
-                System.out.println("graph_title JVM (port " + connectionInfo[1] + ") MemorythresholdUsageCount\n" +
-                        "graph_vlabel count\n" +
-			"graph_category " + connectionInfo[2] + "\n" +
-                        "graph_info Returns the number of times that the memory usage has crossed the usage threshold.\n" +
-                        "TenuredGen.label TenuredGen\n" +
-                        "TenuredGen.info UsageThresholdCount for Tenured Gen \n" +
-                        "PermGen.label PermGen\n" +
-                        "PermGen.info UsageThresholdCount for Perm Gen\n" 
-                       );
-            }
-         else {
-            try {
-                MBeanServerConnection connection = BasicMBeanConnection.get();
-                GetUsageThresholdCount collector = new GetUsageThresholdCount(connection);
-                String[] temp = collector.GC();
+@Graph(title = "MemorythresholdUsageCount", vlabel = "count", info = "Returns the number of times that the memory usage has crossed the usage threshold.")
+public class MemorythresholdUsageCount extends AbstractAnnotationGraphsProvider {
 
-                System.out.println("TenuredGen.value " + temp[0]);
-                System.out.println("PermGen.value " + temp[1]);
+	private String[] gcValues;
 
-            } catch (Exception e) {
-                System.out.print(e);
-            }
-        }
-    }
-}
+	@Override
+	public void prepareValues() throws Exception {
+		GetUsageThresholdCount collector = new GetUsageThresholdCount(
+				connection);
+		gcValues = collector.GC();
+	}
+
+	@Field(info = "UsageThresholdCount for Tenured Gen", position = 1)
+	public String tenuredGen() {
+		return gcValues[0];
+	}
+
+	@Field(info = "UsageThresholdCount for Perm Gen", position = 2)
+	public String permGen() {
+		return gcValues[1];
+	}
+
+	public static void main(String args[]) {
+		runGraph(new MemorythresholdUsageCount(), args);
+	}
 }

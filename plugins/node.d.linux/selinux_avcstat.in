@@ -31,7 +31,7 @@ if [ "$1" = "config" ]; then
         echo 'graph_args -l 0 --base 1000'
         echo 'graph_vlabel AVC operations'
         echo 'graph_category system'
-        echo 'graph_order lookups hits misses allocations reclaims frees'
+        echo 'graph_order lookups hits misses allocations reclaims frees lookups'
 
         echo 'lookups.label lookups'
         echo 'lookups.type DERIVE'
@@ -85,22 +85,21 @@ if [ "$1" = "config" ]; then
 fi
 
 if [ -r $AVCSTATS ]; then
-    { read
-      while read lookups hits misses allocations reclaims frees; do
-        LOOKUPS=$(($LOOKUPS + $lookups))
-        HITS=$(($HITS + $hits))
-        MISSES=$(($MISSES + $misses))
-        ALLOCATIONS=$(($ALLOCATIONS + $allocations))
-        RECLAIMS=$(($RECLAIMS + $reclaims))
-        FREES=$(($FREES + $frees))
-      done
-    } < $AVCSTATS
-    echo "lookups.value $LOOKUPS"
-    echo "hits.value $HITS"
-    echo "misses.value $MISSES"
-    echo "allocations.value $ALLOCATIONS"
-    echo "reclaims.value $RECLAIMS"
-    echo "frees.value $FREES"
+    awk ' NR > 1 {
+        lookups += $1;
+        hits += $2;
+        misses += $3;
+        allocations += $4;
+        reclaims += $5;
+        frees += $6;
+    } END {
+        print "lookups.value " lookups;
+        print "hits.value " hits;
+        print "misses.value " misses;
+        print "allocations.value " allocations;
+        print "reclaims.value " reclaims;
+        print "frees.value " frees;
+    } ' < $AVCSTATS
 else
     echo "lookups.value U"
     echo "hits.value U"

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@@GOODSH@@
 #
 # Plugin to monitor CPU usage.
 #
@@ -15,11 +15,11 @@
 #%# family=auto
 #%# capabilities=autoconf
 
-
+SYSCTL_BIN=$(which sysctl)
 
 if [ "$1" = "autoconf" ]; then
-	if [ -x /sbin/sysctl ]; then
-		/sbin/sysctl kern.cp_time > /dev/null
+	if [ ! -z "$SYSCTL_BIN" ]; then
+		$SYSCTL_BIN kern.cp_time > /dev/null
 		if [ $? = "0" ]; then
 			echo yes
 			exit 0
@@ -35,14 +35,14 @@ fi
 
 if [ "$1" = "config" ]; then
 
-	OSV=`/sbin/sysctl -n kern.osrelease | cut -f1 -d.`
+	OSV=`$SYSCTL_BIN -n kern.osrelease | cut -f1 -d.`
 	if [ "$OSV" = "4" ]; then
-		STATUNITS=`/sbin/sysctl -n kern.clockrate | cut -f16 -d' '`
+		STATUNITS=`$SYSCTL_BIN -n kern.clockrate | cut -f16 -d' '`
 	elif [ "$OSV" -ge "5" ]; then
-		STATUNITS=`/sbin/sysctl -n kern.clockrate | cut -f13 -d' '`
+		STATUNITS=`$SYSCTL_BIN -n kern.clockrate | cut -f13 -d' '`
 	fi
-	PERCENT=`/sbin/sysctl -n hw.ncpu | awk '{print ($1)*100}'`
-	NCPU=`/sbin/sysctl -n hw.ncpu`
+	PERCENT=`$SYSCTL_BIN -n hw.ncpu | awk '{print ($1)*100}'`
+	NCPU=`$SYSCTL_BIN -n hw.ncpu`
 	if [ "$scaleto100" = yes ]; then
 		CDEF="$STATUNITS,/,100,*,$NCPU,/"
 		PERCENT=100
@@ -104,5 +104,5 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-/sbin/sysctl kern.cp_time | awk '{ print "user.value " $2 "\nnice.value " $3 "\nsystem.value " $4 "\ninterrupt.value " $5 "\nidle.value " $6 }'
+$SYSCTL_BIN kern.cp_time | awk '{ print "user.value " $2 "\nnice.value " $3 "\nsystem.value " $4 "\ninterrupt.value " $5 "\nidle.value " $6 }'
 

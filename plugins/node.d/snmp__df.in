@@ -49,7 +49,6 @@ script.
 use strict;
 use Net::SNMP;
 
-my $DEBUG = 0;
 my $MAXLABEL = 20;
 
 my $host      = $ENV{host}      || undef;
@@ -61,7 +60,7 @@ my $response;
 
 if (defined $ARGV[0] and $ARGV[0] eq "snmpconf")
 {
-	print "index   1.3.6.1.2.1.25.2.3.1.1.\n";
+	print "require 1.3.6.1.2.1.25.2.3.1.1.\n";
 	print "require 1.3.6.1.2.1.25.2.3.1.2. 1.3.6.1.2.1.25.2.1.4\n"; # Type=fixed disk
 	print "require 1.3.6.1.2.1.25.2.3.1.5. [1-9]\n"; # Size > 0
 	exit 0;
@@ -78,7 +77,7 @@ if ($0 =~ /^(?:|.*\/)snmp_([^_]+)_df$/)
 }
 elsif (!defined($host))
 {
-	print "# Debug: $0 -- $1\n" if $DEBUG;
+	print "# Debug: $0 -- $1\n" if $Munin::Plugin::SNMP::DEBUG;
 	die "# Error: couldn't understand what I'm supposed to monitor.";
 }
 
@@ -126,7 +125,7 @@ foreach my $id (keys %$correct_capacity)
 	}
 }
 
-print "# Kept: ", join (',', @keep), "\n" if $DEBUG;
+print "# Kept: ", join (',', @keep), "\n" if $Munin::Plugin::SNMP::DEBUG;
 
 # Then we take a look at the partitions...
 
@@ -140,20 +139,18 @@ foreach my $kept (@keep) # For each disk...
     {
 	my $mp = get_single ($session, $hrFSMountPoint . $partition);
 	$partitions{$mp}{partition} = $partition;
-	print "# Added partition \"$mp\" as $partition...\n" if $DEBUG
+	print "# Added partition \"$mp\" as $partition...\n" if $Munin::Plugin::SNMP::DEBUG
     }
 }
 
 my $stor_id;
 
-my $foundpartitions = keys %partitions;
-
-if ($foundpartitions == 0 or defined $partitions{""})
+if (defined $partitions{""})
 { # Oh bugger. Some (or all) mountpoints were undeterminable. The backup
   # solution is to just graph everything that claims to be a FixedDisk,
   # without checking if it's removable etc
 
-    	print "# Unable to map mountpoints from filesystems to storages. Bugger.\n" if $DEBUG;
+    	print "# Unable to map mountpoints from filesystems to storages. Bugger.\n" if $Munin::Plugin::SNMP::DEBUG;
 	$stor_id = get_by_regex ($session, $hrStorageType, "1.3.6.1.2.1.25.2.1.4");
 	%partitions = ();
 
@@ -170,20 +167,6 @@ if ($foundpartitions == 0 or defined $partitions{""})
 { # Get the ones we're sure are really fixed
 
 	$stor_id   = get_by_regex ($session, $hrStorageDesc, '(^'.join('$|^',keys(%partitions)).'$)');
-}
-
-foreach my $storage (keys %$stor_id)
-{
-    $partitions{$stor_id->{$storage}}{storage} = $storage;
-    $partitions{$stor_id->{$storage}}{size}    = get_single ($session, $hrStorageSize . $storage);
-    if ($partitions{$stor_id->{$storage}}{size} == 0) {
-      delete $stor_id->{$storage} ;
-    }
-}
-
-foreach my $part (keys %partitions)
-{
-    if ($partitions{$part}{size} == 0) { delete $partitions{$part} ; }
 }
 
 if (defined $ARGV[0] and $ARGV[0] eq "config")
@@ -209,6 +192,8 @@ if (defined $ARGV[0] and $ARGV[0] eq "config")
 
 foreach my $storage (keys %$stor_id)
 {
+    $partitions{$stor_id->{$storage}}{storage} = $storage;
+    $partitions{$stor_id->{$storage}}{size}    = get_single ($session, $hrStorageSize . $storage);
     $partitions{$stor_id->{$storage}}{used}    = get_single ($session, $hrStorageUsed . $storage);
 }
 
@@ -222,18 +207,18 @@ sub get_single
 	my $handle = shift;
 	my $oid    = shift;
 
-	print "# Getting single $oid..." if $DEBUG;
+	print "# Getting single $oid..." if $Munin::Plugin::SNMP::DEBUG;
 
 	$response = $handle->get_request ($oid);
 
 	if (!defined $response->{$oid})
 	{
-	    print "undef\n" if $DEBUG;
+	    print "undef\n" if $Munin::Plugin::SNMP::DEBUG;
 	    return undef;
 	}
 	else
 	{
-	    print "\"$response->{$oid}\"\n" if $DEBUG;
+	    print "\"$response->{$oid}\"\n" if $Munin::Plugin::SNMP::DEBUG;
 	    return $response->{$oid};
 	}
 }
@@ -248,18 +233,18 @@ sub get_by_regex
 	my $ret    = $oid . "0";
 	my $response;
 
-	print "# Starting browse of $oid...\n" if $DEBUG;
+	print "# Starting browse of $oid...\n" if $Munin::Plugin::SNMP::DEBUG;
 
 	while (1)
 	{
 		if ($num == 0)
 		{
-			print "# Checking for $ret...\n" if $DEBUG;
+			print "# Checking for $ret...\n" if $Munin::Plugin::SNMP::DEBUG;
 			$response = $handle->get_request ($ret);
 		}
 		if ($num or !defined $response)
 		{
-			print "# Checking for sibling of $ret...\n" if $DEBUG;
+			print "# Checking for sibling of $ret...\n" if $Munin::Plugin::SNMP::DEBUG;
 			$response = $handle->get_next_request ($ret);
 		}
 		if (!$response)
@@ -268,13 +253,13 @@ sub get_by_regex
 		}
 		my @keys = keys %$response;
 		$ret = $keys[0];
-		print "# Analyzing $ret (compared to $oid)...\n" if $DEBUG;
+		print "# Analyzing $ret (compared to $oid)...\n" if $Munin::Plugin::SNMP::DEBUG;
 		last unless ($ret =~ /^$oid/);
 		$num++;
 		next unless ($response->{$ret} =~ /$regex/);
 		@keys = split (/\./, $ret);
 		$result->{$keys[-1]} = $response->{$ret};;
-		print "# Index $num: ", $keys[-1], " (", $response->{$ret}, ")\n" if $DEBUG;
+		print "# Index $num: ", $keys[-1], " (", $response->{$ret}, ")\n" if $Munin::Plugin::SNMP::DEBUG;
 	};
 	return $result;
 }

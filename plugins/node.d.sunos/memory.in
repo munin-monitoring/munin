@@ -74,8 +74,8 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 if [ "$1" = "config" ]; then
-  echo "graph_title Memory usage (in MB)"
-	echo 'graph_category system'
+        echo "graph_title Memory usage (in MB)"
+		echo 'graph_category system'
 	echo "real.label Physical mem"
 	echo "used.label Mem used"
 	echo "swapt.label Total swap"
@@ -105,17 +105,15 @@ function scale(value) {
 }
 /^Memory/ {
   real  = scale($2);
-  free  = scale($5);
-  swapt = scale($8);
-  swapf = scale($11);
+  free  = scale($4);
+  swapu = scale($6);
+  swapf = scale($10);
 
   memused = real - free
-  swapu = swapt - swapf
+  swaptot = swapu + swapf
 
   print "real.value", real
   print "used.value", memused
-  print "swapt.value", swapt
+  print "swapt.value", swaptot
   print "swapu.value", swapu
 }'
-
-# vim: syntax=sh ts=2 et

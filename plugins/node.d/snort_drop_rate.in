@@ -78,11 +78,11 @@ if [ "$1" = "config" ]; then
         echo 'graph_vlabel % percent'
         echo 'graph_scale no'
         echo 'droprate.label % percent'
-	if [ -n "$warning" ]; then
-		echo "droprate.warning $warning"
+	if [ -n $warning ]; then
+		echo 'droprate.warning $warning'
 	fi
-	if [ -n "$critical" ]; then
-		echo "droprate.critical $critical"
+	if [ -n $critical ]; then
+		echo 'droprate.critical $critical'
 	fi
         echo 'droprate.info Packet drop rate in %'
         echo 'graph_category Snort'

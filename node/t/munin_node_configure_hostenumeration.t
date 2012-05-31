@@ -34,17 +34,14 @@ my @slash_24 = map { "192.168.2.$_" } 0 .. 255;
 	my $hosts_in_net = \&Munin::Node::Configure::HostEnumeration::_hosts_in_net;
 	my (@ips, @expected);
 
-	my $_192_168_2_123 = inet_aton('192.168.2.123');
-	my $_192_168_2_1   = inet_aton('192.168.2.1');
-
-	@ips = $hosts_in_net->($_192_168_2_123, 24);
+	@ips = $hosts_in_net->('192.168.2.123', 24);
 	is_deeply(\@ips, \@slash_24, 'Class C is expanded correctly');
 
-	@ips = $hosts_in_net->($_192_168_2_123, 32);
+	@ips = $hosts_in_net->('192.168.2.123', 32);
 	@expected = ('192.168.2.123');
 	is_deeply(\@ips, \@expected, 'Single IP');
 
-	@ips = $hosts_in_net->($_192_168_2_123);
+	@ips = $hosts_in_net->('192.168.2.123');
 	@expected = ('192.168.2.123');
 	is_deeply(\@ips, \@expected, 'No netmask');
 }
@@ -79,13 +76,13 @@ use warnings;
 ### expand_hosts
 {
 	my @tests = (
-		[ [ '192.168.2.123'                  ], [ '192.168.2.123'          ], 'Single IP',                 ],
-		[ [ '192.168.2.123/24'               ], [ @slash_24,               ], 'IP-based CIDR range',       ],
-		[ [ 'test'                           ], [ '192.168.2.123'          ], 'Single hostname',           ],
-		[ [ 'test/24'                        ], [ @slash_24,               ], 'Hostname-based CIDR range', ],
-		[ [ 'test.example.com'               ], [ '192.168.2.123'          ], 'Single FQDN',               ],
-		[ [ 'test.example.com/24'            ], [ @slash_24,               ], 'FQDN-based CIDR range',     ],
-		[ [ 'test.example.com/24', 'gateway' ], [ @slash_24, '192.168.2.1' ], 'Multiple specifications',   ],
+		[ [ '192.168.2.123'                  ], [ '192.168.2.123'      ], 'Single IP',                 ],
+		[ [ '192.168.2.123/24'               ], [ @slash_24,           ], 'IP-based CIDR range',       ],
+		[ [ 'test'                           ], [ 'test'               ], 'Single hostname',           ],
+		[ [ 'test/24'                        ], [ @slash_24,           ], 'Hostname-based CIDR range', ],
+		[ [ 'test.example.com'               ], [ 'test.example.com'   ], 'Single FQDN',               ],
+		[ [ 'test.example.com/24'            ], [ @slash_24,           ], 'FQDN-based CIDR range',     ],
+		[ [ 'test.example.com/24', 'gateway' ], [ @slash_24, 'gateway' ], 'Multiple specifications',   ],
 	);
 
 	while (my $test = shift @tests) {

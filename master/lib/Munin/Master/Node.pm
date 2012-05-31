@@ -28,8 +28,9 @@ sub new {
         port    => $port,
         host    => $host,
         tls     => undef,
-        socket  => undef,
-        master_capabilities => qw(multigraph),
+        reader  => undef,
+        writer  => undef,
+        master_capabilities => "multigraph dirtyconfig",
         io_timeout => 120,
 	configref => $configref,
     };
@@ -58,14 +59,48 @@ sub _do_connect {
     LOGCROAK("[FATAL] No address!  Did you forget to set 'update no' or to set 'address <IP>' ?")
 	if !defined($self->{address});
 
-    if (! ( $self->{socket} = IO::Socket::INET->new(
-		PeerAddr  => $self->{address},
-		PeerPort  => $self->{port},
+    # Check if it's an URI or a plain host
+    use URI;
+
+    # Parameters are space-separated from the main address
+    my ($url, $params) = split(/ +/, $self->{address}, 2);
+    my $uri = new URI($url);
+
+    # If the scheme is not defined, it's a plain host. 
+    # Prefix it with munin:// to be able to parse it like others
+    $uri = new URI("munin://" . $url) unless $uri->scheme;
+    LOGCROAK("[FATAL] '$url' is not a valid address!") unless $uri->scheme;
+
+    if ($uri->scheme eq "munin") {
+        $self->{reader} = $self->{writer} = IO::Socket::INET->new(
+		PeerAddr  => $uri->host,
+		PeerPort  => $self->{port} || 4949,
 		LocalAddr => $config->{local_address},
 		Proto     => 'tcp', 
-		Timeout   => $config->{timeout}) ) ) {
-	ERROR "Failed to connect to node $self->{address}:$self->{port}/tcp : $!";
-	return 0;
+		Timeout   => $config->{timeout}
+	);
+	if (! $self->{reader} ) {
+		ERROR "Failed to connect to node $self->{address}:$self->{port}/tcp : $!";
+		return 0;
+	}
+    } elsif ($uri->scheme eq "ssh") {
+	    my $user_part = ($uri->user) ? ($uri->user . "@") : "";
+	    my $remote_cmd = $uri->path;
+
+	    # Add any parameter to the cmd
+	    my $remote_connection_cmd = "/usr/bin/ssh $user_part" . $uri->host . " $remote_cmd $params";
+
+	    # Open a double pipe
+   	    use IPC::Open2;
+
+	    $self->{reader} = new IO::Handle();
+	    $self->{writer} = new IO::Handle();
+
+	    my $pid = open2($self->{reader}, $self->{writer}, $remote_connection_cmd);
+            ERROR "Failed to connect to node $self->{address} : $!" unless $pid;
+    } else {
+	    ERROR "Unknown scheme : " . $uri->scheme;
+	    return 0;
     }
 
     my $greeting = $self->_node_read_single();
@@ -91,15 +126,14 @@ sub _run_starttls_if_required {
 
     # TLS should only be attempted if explicitly enabled. The default
     # value is therefore "disabled" (and not "auto" as before).
-    my $tls_requirement = exists $self->{configref}->{tls} ?
-                                   $self->{configref}->{tls} : $config->{tls};
+    my $tls_requirement = $config->{tls};
     DEBUG "TLS set to \"$tls_requirement\".";
     return if $tls_requirement eq 'disabled';
     my $logger = Log::Log4perl->get_logger("Munin::Master");
     $self->{tls} = Munin::Common::TLSClient->new({
         DEBUG        => $config->{debug},
         logger       => sub { $logger->warn(@_) },
-        read_fd      => fileno($self->{socket}),
+        read_fd      => fileno($self->{reader}),
         read_func    => sub { _node_read_single($self) },
         tls_ca_cert  => $config->{tls_ca_certificate},
         tls_cert     => $config->{tls_certificate},
@@ -108,7 +142,7 @@ sub _run_starttls_if_required {
         tls_vdepth   => $config->{tls_verify_depth},
         tls_verify   => $config->{tls_verify_certificate},
         tls_match    => $config->{tls_match},
-        write_fd     => fileno($self->{socket}),
+        write_fd     => fileno($self->{writer}),
         write_func   => sub { _node_write_single($self, @_) },
     });
 
@@ -124,8 +158,10 @@ sub _run_starttls_if_required {
 sub _do_close {
     my ($self) = @_;
 
-    close $self->{socket};
-    $self->{socket} = undef;
+    close $self->{reader};
+    close $self->{writer};
+    $self->{reader} = undef;
+    $self->{writer} = undef;
 }
 
 
@@ -216,6 +252,9 @@ sub parse_service_config {
 
     new_service($service);
 
+    # every 'N' has the same value. Should not take parsing time into the equation
+    my $now = time;
+
     for my $line (@lines) {
 
 	DEBUG "[CONFIG from $plugin] $line";
@@ -237,7 +276,7 @@ sub parse_service_config {
 	    if ($service eq 'multigraph') {
 		die "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
 	    }
-	    new_service($service);
+	    new_service($service) unless $global_config->{$service};
 	    DEBUG "[CONFIG multigraph $plugin] Service is now $service";
 	}
 	elsif ($line =~ m{\A ([^\s\.]+) \s+ (.+) }xms) {
@@ -245,8 +284,30 @@ sub parse_service_config {
 
 	    my $label = $self->_sanitise_fieldname($1);
 
-            push @{$global_config->{$service}}, [$label, $2];
+	    # add to config if not already here
+	    push @{$global_config->{$service}}, [$label, $2]
+	    	unless grep { $_->[0] eq $label }  @{$global_config->{$service}};
             DEBUG "[CONFIG graph global $plugin] $service->$label = $2";
+        } elsif ($line =~ m{\A ([^\.]+)\.value \s+ (.+) }xms) {
+	    $correct++;
+	    # Special case for dirtyconfig
+            my ($ds_name, $value, $when) = ($1, $2, $now);
+            
+	    $ds_name = $self->_sanitise_fieldname($ds_name);
+	    if ($value =~ /^(\d+):(.+)$/) {
+		$when = $1;
+		$value = $2;
+	    }
+            DEBUG "[CONFIG dirtyconfig $plugin] Storing $value from $when in $ds_name";
+
+	    # Creating the datastructure if not created already
+            $data_source_config->{$service}{$ds_name} ||= {};
+            $data_source_config->{$service}{$ds_name}{when} ||= [];
+            $data_source_config->{$service}{$ds_name}{value} ||= [];
+	
+	    # Saving the timed value in the datastructure
+	    push @{$data_source_config->{$service}{$ds_name}{when}}, $when;
+	    push @{$data_source_config->{$service}{$ds_name}{value}}, $value;
         }
 	elsif ($line =~ m{\A ([^\.]+)\.([^\s]+) \s+ (.+) }xms) {
 	    $correct++;
@@ -290,6 +351,19 @@ sub fetch_service_config {
     return $self->parse_service_config($service,@lines);
 }
 
+sub spoolfetch {
+    my ($self, $timestamp) = @_;
+
+    DEBUG "[DEBUG] Fetching spooled services since $timestamp (" . localtime($timestamp) . ")";
+    $self->_node_write_single("spoolfetch $timestamp\n");
+
+    # The whole stuff in one fell swoop.
+    my @lines = $self->_node_read();
+
+    # using the multigraph parsing. 
+    # Using "__root__" as a special plugin name. 
+    return $self->parse_service_config("__root__", @lines);
+}
 
 sub _validate_data_sources {
     my ($self, $all_data_source_config) = @_;
@@ -326,6 +400,9 @@ sub parse_service_data {
     DEBUG "[DEBUG] Now parsing fetch output from plugin $plugin on ".
 	$nodedesignation;
 
+    # every 'N' has the same value. Should not take parsing time into the equation
+    my $now = time;
+
     for my $line (@lines) {
 
 	DEBUG "[FETCH from $plugin] $line";
@@ -351,7 +428,7 @@ sub parse_service_data {
 	    }
 	}
 	elsif ($line =~ m{\A ([^\.]+)\.value \s+ ([\S:]+) }xms) {
-            my ($data_source, $value, $when) = ($1, $2, 'N');
+            my ($data_source, $value, $when) = ($1, $2, $now);
 
 	    $correct++;
 
@@ -364,10 +441,10 @@ sub parse_service_data {
 		$value = $2;
 	    }
 
-	    $values{$service}{$data_source} ||= {};
+	    $values{$service}{$data_source} ||= { when => [], value => [], };
 
-            $values{$service}{$data_source}{value} = $value;
-            $values{$service}{$data_source}{when}  = $when;
+	    push @{$values{$service}{$data_source}{when}}, $when;
+	    push @{$values{$service}{$data_source}{value}}, $value;
         }
 	elsif ($line =~ m{\A ([^\.]+)\.extinfo \s+ (.+) }xms) {
 	    # Extinfo is used in munin-limits
@@ -439,7 +516,7 @@ sub _node_write_single {
                 or exit 9;
         }
         else {
-            print { $self->{socket} } $text;
+            print { $self->{writer} } $text;
         }
     });
     if ($timed_out) {
@@ -459,7 +536,7 @@ sub _node_read_single {
           $res = $self->{tls}->read();
       }
       else {
-          $res = readline $self->{socket};
+          $res = readline $self->{reader};
       }
       chomp $res if defined $res;
     });
@@ -479,17 +556,36 @@ sub _node_read_single {
 
 sub _node_read {
     my ($self) = @_;
-    my @array = ();
+    my @array = (); 
 
-    my $line = $self->_node_read_single();
-    while($line ne ".") {
-        push @array, $line;
-        $line = $self->_node_read_single();
+    my $timed_out = !do_with_timeout($self->{io_timeout}, sub {
+        while (1) {
+            my $line = $self->{tls} && $self->{tls}->session_started()
+                ? $self->{tls}->read()
+                : readline $self->{reader};
+            last unless defined $line;
+            last if $line =~ /^\.\n$/;
+            chomp $line;
+            push @array, $line;
+        }
+    });
+    if ($timed_out) {
+        LOGCROAK "[FATAL] Socket read timed out to ".$self->{host}.": $@\n";
     }
-
     DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".";
     return @array;
 }
+
+# Defines the URL::scheme for munin
+package URI::munin;
+
+# We are like a generic server
+require URI::_server;
+@URI::munin::ISA=qw(URI::_server);
+
+# munin://HOST[:PORT]
+
+sub default_port { return 4949; }
 
 1;
 

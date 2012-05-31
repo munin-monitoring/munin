@@ -48,13 +48,13 @@ our (@ISA, @EXPORT);
 	   'munin_get_picture_filename',
 	   'munin_get_html_filename',
 	   'munin_get_filename',
-	   'munin_get_keypath',
 	   'munin_graph_column_headers',
 	   'munin_get_max_label_length',
 	   'munin_get_field_order',
 	   'munin_get_rrd_filename',
 	   'munin_get_node_name',
 	   'munin_get_parent_name',
+	   'munin_get_node_fqn',
 	   'munin_get_node_loc',
 	   'munin_get_node',
 	   'munin_set_var_loc',
@@ -278,7 +278,7 @@ sub munin_readconfig {
     $config->{'htmldir'}       ||= $Munin::Common::Defaults::MUNIN_HTMLDIR;
     $config->{'spooldir'}      ||= $Munin::Common::Defaults::MUNIN_SSPOOLDIR;
     $config->{'#%#parent'}     = undef;
-    $config->{'#%#name'}       = "#%#root";
+    $config->{'#%#name'}       = "root";
 
     return ($config);
 }
@@ -518,6 +518,24 @@ sub munin_get_node_name
     }
 }
 
+sub munin_get_node_fqn
+{
+    my $hash = shift;
+
+    if (ref ($hash) eq "HASH") {
+	my $fqn = "";
+	if (defined $hash->{'#%#name'}) {
+		$fqn = $hash->{'#%#name'}; 
+	}
+ 	if (defined $hash->{'#%#parent'}) {
+		# Recursively prepend the parent, concatenation with /
+		$fqn = munin_get_node_fqn ($hash->{'#%#parent'}) . "/" . $fqn;
+	}
+	return $fqn;
+    } else { 
+	return;
+    }
+}
 
 sub munin_get_picture_loc {
     my $hash = shift;
@@ -921,7 +939,7 @@ sub munin_get_keypath {
 	# Not sure when a #%#name node can go missing
 	my $name = $i->{'#%#name'} || '*BUG*';
 	goto gotoparent if $name eq '*BUG*';
-	last if $name eq '#%#root';
+	last if $name eq 'root';
 	if ($host) {
 	    # Into group land now
 	    unshift(@group,$name);
@@ -929,7 +947,6 @@ sub munin_get_keypath {
 	    # In service land, working towards host.
 	    # If i or my parent has a graph_title we're still working with services
 	    if (defined $i->{'#%#parent'}{graph_title} or defined $i->{graph_title}) {
-		$name =~ s/-/_/g; # can't handle dashes in service or below
 		unshift(@service,$name);
 	    } else {
 		$host = 1;
@@ -1267,7 +1284,7 @@ sub munin_get_field_order
     for my $fieldnode (@{munin_find_field ($hash, "label")}) {
         my $fieldname = munin_get_node_name ($fieldnode);
 	push @$result,$fieldname
-	    if !grep m[^\Q$fieldname\E(?:=|$)], @$result;;
+	    if !grep m[^\Q$fieldname\E(?:=|$)], @$result;
     }
 
     for my $fieldnode (@{munin_find_field ($hash, "stack")}) {
@@ -1333,7 +1350,7 @@ sub munin_mkdir_p {
     my ($dirname, $umask) = @_;
 
     eval {
-        mkpath($dirname, 0, $umask);
+        mkpath($dirname, {mode => $umask});
     };
     return if $EVAL_ERROR;
     return 1;

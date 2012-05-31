@@ -287,7 +287,7 @@ my %ASPECTS = (
 				'type' => 'GAUGE',
 				'label' => 'Number of object heads',
 				'info' => 'Each object head can have one '
-					. 'or more object attached, '
+					. 'or more ojbect attached, '
 					. 'typically based on the Vary: header'
 			}
 		}
@@ -677,11 +677,9 @@ sub usage
 # Otherwise exit with false and a human-readable reason.
 sub autoconf
 {
-	if (`which $varnishstatexec 2>/dev/null` eq '') {
-		print "no (which $varnishstatexec returns blank)\n";
-		exit 0;
-	}
-	print "yes\n";
+	(`which $varnishstatexec 2>/dev/null` =~ m{^/})
+		? print "yes\n"
+		: print "no ($varnishstatexec could not be found)\n";
 	exit 0;
 }
 

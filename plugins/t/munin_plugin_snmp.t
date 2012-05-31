@@ -17,6 +17,7 @@ use_ok('Munin::Plugin::SNMP');
 		[
 			'snmp_kenneth_mchoan',
 			[ 'kenneth', 161, 2, 'mchoan' ],
+			'Relative path',
 		],
 		[
 			'snmp_fiona_urvill_3',
@@ -43,7 +44,7 @@ use_ok('Munin::Plugin::SNMP');
 		my ($zero, $expected, $message) = @$test;
 		local $0 = $zero;
 		my @got = Munin::Plugin::SNMP->config_session();
-		is_deeply(\@got, $expected);	
+		is_deeply(\@got, $expected, $message);
 	}
 
 	# unable to get hostname

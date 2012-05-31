@@ -34,11 +34,10 @@ print_values () {
 if [ "$1" = "autoconf" ]; then
     if [ -z "$(print_values)" ] ; then
 	echo no
-	exit 0
     else
 	echo yes
-	exit 0
     fi
+    exit 0
 fi
 
 if [ "$1" = "config" ]; then
@@ -46,7 +45,8 @@ if [ "$1" = "config" ]; then
     echo 'graph_args --upper-limit 100 -l 0'
     echo 'graph_vlabel %'
     echo 'graph_scale no'
-    df -P -l  | sed -e 1d -e '/\/\//d' -e 's/%//' | sort | 
+    echo 'graph_category disk'
+    df -P -l  | sed -e 1d -e '/\/\//d' -e 's/%//' | sort |
     while read dev size used free pct fs; do
 	name=$(clean_fieldname $dev)
 	echo "$name.label $fs"
