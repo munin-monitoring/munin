@@ -41,7 +41,7 @@ sub new {
 
 sub run {
     my ($self) = @_;
-    
+
     $self->_create_rundir_if_missing();
 
     $self->_do_with_lock_and_timing(sub {
@@ -97,7 +97,7 @@ sub _create_rundir_if_missing {
     unless (-d $config->{rundir}) {
 	mkdir $config->{rundir}, oct(700)
             or croak "Failed to create rundir (".$config->{rundir}."): $!";
-        
+
     }
 }
 
@@ -135,6 +135,7 @@ sub _do_with_lock_and_timing {
 	    LOGCROAK "[FATAL] Could not open STATS to /dev/null (fallback for not being able to open $config->{dbdir}/munin-update.stats.tmp): $!";
     }
 
+    # Place global munin-update timeout here.
     my $retval = $block->();
 
     $update_time = sprintf("%.2f", (Time::HiRes::time - $update_time));

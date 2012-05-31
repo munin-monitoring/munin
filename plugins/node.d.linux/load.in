@@ -27,7 +27,7 @@ Threshold for when to report a critical
 
  [load]
   env.load_warning 5
-  env.load_criting 10
+  env.load_critical 10
 
 =head1 NOTES
 

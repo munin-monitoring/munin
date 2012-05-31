@@ -17,6 +17,9 @@ use Log::Log4perl qw( :easy );
 
 my $config = Munin::Master::Config->instance()->{config};
 
+# Note: This timeout governs both small commands and waiting for the total
+# output of a plugin.  It is reset for each read.
+
 sub new {
     my ($class, $address, $port, $host, $configref) = @_;
 
@@ -27,7 +30,7 @@ sub new {
         tls     => undef,
         socket  => undef,
         master_capabilities => qw(multigraph),
-        io_timeout => 5,
+        io_timeout => 120,
 	configref => $configref,
     };
 
@@ -234,7 +237,15 @@ sub parse_service_config {
 	    new_service($service);
 	    DEBUG "[CONFIG multigraph $plugin] Service is now $service";
 	}
-	elsif ($line =~ m{\A (\w+)\.(\w+) \s+ (.+) }xms) {
+	elsif ($line =~ m{\A ([^\s\.]+) \s+ (.+) }xms) {
+	    $correct++;
+
+	    my $label = $self->_sanitise_fieldname($1);
+
+            push @{$global_config->{$service}}, [$label, $2];
+            DEBUG "[CONFIG graph global $plugin] $service->$label = $2";
+        }
+	elsif ($line =~ m{\A ([^\.]+)\.([^\s]+) \s+ (.+) }xms) {
 	    $correct++;
 	    
             my ($ds_name, $ds_var, $ds_val) = ($1, $2, $3);
@@ -243,12 +254,6 @@ sub parse_service_config {
             $data_source_config->{$service}{$ds_name}{$ds_var} = $ds_val;
             DEBUG "[CONFIG dataseries $plugin] $service->$ds_name.$ds_var = $ds_val";
             push ( @graph_order, $ds_name ) if $ds_var eq 'label';
-        }
-	elsif ($line =~ m{\A (\w+) \s+ (.+) }xms) {
-	    $correct++;
-
-            push @{$global_config->{$service}}, [$1, $2];
-            DEBUG "[CONFIG graph global $plugin] $service->$1 = $2";
         }
 	else {
 	    $errors++;
@@ -435,8 +440,8 @@ sub _node_write_single {
         }
     });
     if ($timed_out) {
-        WARN "[WARNING] Socket write timed out to ".$self->{host}."\n";
-        return;
+        LOGCROAK "[FATAL] Socket write timed out to ".$self->{host}.
+	    ".  Terminating process.";
     }
     return 1;
 }
@@ -456,8 +461,8 @@ sub _node_read_single {
       chomp $res if defined $res;
     });
     if ($timed_out) {
-        WARN "[WARNING] Socket read timed out to ".$self->{host}."\n";
-        return;
+        LOGCROAK "[FATAL] Socket read timed out to ".$self->{host}.
+	    ".  Terminating process.";
     }
     DEBUG "[DEBUG] Reading from socket to ".$self->{host}.": \"$res\".";
     return $res;
@@ -480,8 +485,7 @@ sub _node_read {
         }
     });
     if ($timed_out) {
-        WARN "[WARNING] Socket read timed out to ".$self->{host}.": $@\n";
-        return;
+        LOGCROAK "[FATAL] Socket read timed out to ".$self->{host}.": $@\n";
     }
     DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".";
     return @array;

@@ -2,9 +2,6 @@ package org.munin.plugin.jmx;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import javax.management.MBeanServerConnection;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
 
 public class ThreadsDeadlocked  {
 
@@ -16,14 +13,12 @@ public class ThreadsDeadlocked  {
                 System.out.println("graph_title JVM (port " + connectionInfo[1] + ") ThreadsDeadlocked\n" +
 		"graph_vlabel threads\n" +
 		"graph_category " + connectionInfo[2] + "\n" +
-		"graph_info Returns the number of deadlocked threads for the JVM.\n" +
+		"graph_info Returns the number of deadlocked threads for the JVM. Usually not available at readonly access level.\n" +
 		"ThreadsDeadlocked.label ThreadsDeadlocked");
             }
         else {
             try {
-                JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" +connectionInfo[0] + ":" + connectionInfo[1] + "/jmxrmi");
-                JMXConnector c = JMXConnectorFactory.connect(u);
-                MBeanServerConnection connection = c.getMBeanServerConnection();
+                MBeanServerConnection connection = BasicMBeanConnection.get();
                 ThreadMXBean mxbean=ManagementFactory.newPlatformMXBeanProxy(connection, ManagementFactory.THREAD_MXBEAN_NAME, ThreadMXBean.class);
 
                 System.out.print("ThreadsDeadlocked.value ");

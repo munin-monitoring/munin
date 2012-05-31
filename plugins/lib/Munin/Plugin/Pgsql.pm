@@ -103,6 +103,8 @@ package Munin::Plugin::Pgsql;
 use strict;
 use warnings;
 
+use Munin::Plugin;
+
 =head2 Initialization
 
  use Munin::Plugin::Pgsql;
@@ -236,7 +238,7 @@ sub Config {
         = $self->replace_wildcard_parameters(
         $self->get_versioned_query($self->{configquery}));
     foreach my $row (@{$self->runquery($q, \@p)}) {
-        my $l = $row->[0];
+        my $l = Munin::Plugin::clean_fieldname($row->[0]);
         print "$l.label $row->[1]\n";
         print "$l.info $row->[2]\n" if (defined $row->[2]);
         print "$l.type $self->{graphtype}\n";
@@ -302,8 +304,8 @@ sub GetData {
             $self->get_versioned_query($self->{basequery}));
         my $r = $self->runquery($q, \@p, $self->{pivotquery});
         foreach my $row (@$r) {
-            my $l = $row->[0];
-            print $row->[0] . ".value " . $row->[1] . "\n";
+            my $l = Munin::Plugin::clean_fieldname($row->[0]);
+            print $l . ".value " . $row->[1] . "\n";
         }
         return;
     }

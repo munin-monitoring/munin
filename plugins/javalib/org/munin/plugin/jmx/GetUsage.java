@@ -26,8 +26,6 @@ class GetUsage {
 
         gcName = new ObjectName(ManagementFactory.MEMORY_POOL_MXBEAN_DOMAIN_TYPE+",*");//GARBAGE_COLLECTOR_MXBEAN_DOMAIN_TYPE + ",*");
 
-
-
         Set mbeans = connection.queryNames(gcName, null);
         if (mbeans != null) {
             gcmbeans = new ArrayList<MemoryPoolMXBean>();
@@ -40,17 +38,17 @@ class GetUsage {
             }
         }
 
-
-
-
-
         int i = 0;
-            GCresult[i++] =gcmbeans.get(memtype).getUsage().getCommitted()+ "";
-            GCresult[i++] = gcmbeans.get(memtype).getUsage().getInit()+"";	
-	    GCresult[i++] = gcmbeans.get(memtype).getUsage().getMax()+"";
-	    GCresult[i++] = gcmbeans.get(memtype).getUsage().getUsed()+"";
-//           System.out.println(gcmbeans.get(memtype).getName());// denne printer Tenured Gen
-           GCresult[i++]=gcmbeans.get(memtype).getUsageThreshold()+""; 
+        GCresult[i++] = gcmbeans.get(memtype).getUsage().getCommitted()+"";
+        GCresult[i++] = gcmbeans.get(memtype).getUsage().getInit()+"";	
+        GCresult[i++] = gcmbeans.get(memtype).getUsage().getMax()+"";
+        GCresult[i++] = gcmbeans.get(memtype).getUsage().getUsed()+"";
+        try {
+           GCresult[4] = gcmbeans.get(memtype).getUsageThreshold()+""; 
+        }
+        catch (UnsupportedOperationException u) {
+           GCresult[4] = "U";
+        }
     return GCresult;
     }
 

@@ -94,7 +94,8 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	done
 
 	$(INSTALL) -m 0644 master/www/definitions.html $(CONFDIR)/templates/
-	$(INSTALL) -m 0755 master/VeraMono.ttf $(LIBDIR)/
+	$(INSTALL) -m 0755 master/DejaVuSansMono.ttf $(LIBDIR)/
+	$(INSTALL) -m 0755 master/DejaVuSans.ttf $(LIBDIR)/
 
 	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/master/www/munin-htaccess $(HTMLDIR)/.htaccess
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/master/munin.conf $(CONFDIR)/
@@ -299,24 +300,6 @@ tar-pre:
 tar: tar-pre
 	GZIP=-9 tar -C .. --dereference --exclude .svn -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
 
-rpm-pre:
-	(! grep MAINTAINER Makefile.config)
-	@for file in `find dists/redhat/ -type f -name '*.in'`; do			\
-		destname=`echo $$file | sed 's/.in$$//'`;		\
-		echo Generating $$destname..;				\
-		sed -e 's|@@VERSION@@|$(VERSION)|g'			\
-		    $$file > $$destname;				\
-	done
-	-cp dists/tarball/plugins.conf .
-#	(cd ..; ln -s munin munin-$(VERSION))
-
-rpm: rpm-pre
-	tar -C .. --dereference --exclude .svn -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
-	(cd ..; rpmbuild -tb munin_$(RELEASE).tar.gz)
-
-rpm-src: rpm-pre
-	tar -C .. --dereference --exclude .svn -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
-	(cd ..; rpmbuild -ts munin-$(RELEASE).tar.gz)
 
 suse-pre:
 	(! grep MAINTAINER Makefile.config)

@@ -5,9 +5,6 @@ package org.munin.plugin.jmx;
  */
 import java.lang.management.ManagementFactory;
 import javax.management.MBeanServerConnection;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
 import java.lang.management.CompilationMXBean;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -27,9 +24,7 @@ public class CompilationTimeTotal {
             }
          else {
             try {
-                JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + connectionInfo[0] + ":" + connectionInfo[1]+ "/jmxrmi");
-                JMXConnector c = JMXConnectorFactory.connect(u);
-                MBeanServerConnection connection = c.getMBeanServerConnection();
+                MBeanServerConnection connection = BasicMBeanConnection.get();
                 CompilationMXBean osmxbean = ManagementFactory.newPlatformMXBeanProxy(connection, ManagementFactory.COMPILATION_MXBEAN_NAME, CompilationMXBean.class);
 
                 System.out.println("CompilationTimeTotal.value " + osmxbean.getTotalCompilationTime() );

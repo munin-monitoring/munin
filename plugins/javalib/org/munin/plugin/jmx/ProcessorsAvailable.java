@@ -2,9 +2,6 @@ package org.munin.plugin.jmx;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import javax.management.MBeanServerConnection;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
 
 public class ProcessorsAvailable  {
 
@@ -21,9 +18,7 @@ public class ProcessorsAvailable  {
             }
         else {
             try {
-                JMXServiceURL u = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" +connectionInfo[0] + ":" + connectionInfo[1] + "/jmxrmi");
-                JMXConnector c = JMXConnectorFactory.connect(u);
-                MBeanServerConnection connection = c.getMBeanServerConnection();
+                MBeanServerConnection connection = BasicMBeanConnection.get();
                 OperatingSystemMXBean osmxbean = ManagementFactory.newPlatformMXBeanProxy(connection, ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
 
                 System.out.println("ProcessorsAvailable.value " + osmxbean.getAvailableProcessors());

@@ -1090,22 +1090,7 @@ sub process_service {
 
         # DEBUG "[DEBUG] Picture filename: $picfilename";
 
-        my @complete = ();
-        if ($RRDkludge) {
-
-            # since rrdtool 1.3 with libpango the LEGEND column alignment
-            # only works with monospace fonts
-            if ($RRDs::VERSION >= 1.3) {
-                push(@complete, '--font', 'LEGEND:7:monospace');
-            }
-            else {
-                push(@complete, '--font', 'LEGEND:7:$libdir/VeraMono.ttf');
-            }
-
-            push(@complete,
-                '--font', 'UNIT:7:$libdir/VeraMono.ttf',
-                '--font', 'AXIS:7:$libdir/VeraMono.ttf');
-        }
+        my @complete = get_fonts();
 
         push(@complete, '-W', $watermark) if $RRDs::VERSION >= 1.2;
 
@@ -1304,6 +1289,31 @@ sub process_service {
     }
     @added = ();
 }
+
+
+sub get_fonts {
+    # Set up rrdtool graph font options according to RRD version.
+
+    if ($RRDs::VERSION >= 1.2 and $RRDs::VERSION < 1.3) {
+	# RRD 1.2
+	# The RRD 1.2 documentation says you can identify font family
+	# names but I never got that to work, but full font path worked
+	return (
+		'--font', "LEGEND:7:$libdir/DejaVuSansMono.ttf",
+		'--font', "UNIT:7:$libdir/DejaVuSans.ttf",
+		'--font', "AXIS:7:$libdir/DejaVuSans.ttf",
+	       );
+    } elsif ($RRDs::VERSION >= 1.3) {
+	# RRD 1.3 and up
+	return (
+		'--font', "DEFAULT:0:DejaVuSans",
+		'--font', "LEGEND:7:DejaVuSansMono",
+	       );
+    }
+    
+    # Prior to RRD 1.2 we use no font options.
+    return;
+};
 
 
 sub graph_by_minute {

@@ -53,8 +53,8 @@ sub get_fq_hostname {
 }
 
 
-#FIX needs a better name
-sub check_perms {
+
+sub check_perms_if_paranoid {
     my ($class, $target) = @_;
     my @stat;
 
@@ -271,6 +271,13 @@ sub _set_xid {
     $! = undef;
     $$x = $id;
     croak $! if $!;
+}
+
+
+sub set_plugin_umask {
+    # Set umask so that files created by plugins are group writable
+    # Only call right before exec-ing a pluigin.
+    umask(0002);
 }
 
 

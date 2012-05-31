@@ -74,3 +74,31 @@ rename the plugins, but that will be a uphill battle, they'll be
 renamed back when you upgrade the next time).  Note that the plugins
 will change names as you upgrade and auto-configure your nodes, not
 when you upgrade the munin-master.
+
+
+Users of Munin 1.2 in combination with NMSes
+--------------------------------------------
+
+There are two issues that have been reported.
+
+Users of Munin in combination with Nagios have reported that because
+some graphs have changed their "graph_title" setting this
+dis-associates the tests from the right nagios checks.
+
+Also some plugins do not have default warning and critical levels set
+any more (e.g. "load") because the opinions on what is "normal" load
+differs widely.  This means that the plugins will not send warning and
+critical events to contacts any more.  The warning and critical levels
+should be settable for all of these plugins, please use the command
+"munindoc <plugin>" on the host where the plugin is installed to see
+how to set these levels.
+
+Too audit the differences in warning and critical levels you can make
+a copy of the munin file called "datafile" before upgrading (or get
+one from backup), and use egrep to get a listing of the settings prior
+to update:
+
+  egrep '(warning|critical)' datafile.old
+
+and again on the post-upgrade datafile to compare the lists so you can
+specify the ones you need.

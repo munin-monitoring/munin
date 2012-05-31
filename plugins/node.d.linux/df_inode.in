@@ -9,8 +9,8 @@ df_inode - Plugin to monitor inode-usage.
 
 This configuration snipplet is an example with the default configuration:
 
-  [df]
-    env.exclude none unknown iso9660 squashfs udf romfs ramfs
+  [df_inode]
+    env.exclude none unknown iso9660 squashfs udf romfs ramfs debugfs
     env.warning 92
     env.critical 98
 
@@ -39,7 +39,7 @@ use Munin::Plugin;
 # For these devices use the mount point, the device is useless
 my %usemntpt = ( tmpfs => 1, none => 1, udev => 1 );
 
-my $exclude=$ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs vfat';
+my $exclude=$ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs vfat debugfs';
 my $dfopts = "-P -l -i ".join(' -x ',('',split('\s+',$exclude)));
 
 sub print_values() {

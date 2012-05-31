@@ -167,7 +167,7 @@ sub parse_plugin_config_file {
     my ($self, $file) = @_;
 
     # check perms on a file also checks the directory permissions
-    if (!Munin::Node::OS->check_perms($file)) {
+    if (!Munin::Node::OS->check_perms_if_paranoid($file)) {
 	print STDERR "Plugin configuration $file has unsafe permissions, skipping\n";
 	return;
     }
@@ -249,28 +249,8 @@ sub _parse_plugin_line {
         return (user => $var_value);
     }
     elsif ($var_name eq 'group') {
-        
-        # Support running with more than one group in effect. See
-        # documentation on $EFFECTIVE_GROUP_ID in the perlvar(1)
-        # manual page.
-        my @groups = ();
-        for my $group (split /\s*,\s*/, $var_value) {
-            my $is_optional = $group =~ m{\A \( ([^)]+) \) \z}xms;
-            $group          = $1 if $is_optional;
-
-            my $gid = Munin::Node::OS->get_gid($group);
-            croak "Group '$group' does not exist"
-                unless defined $gid || $is_optional;
-
-            if (!defined $gid && $is_optional) {
-                carp "DEBUG: Skipping optional nonexistent group '$group'"
-                    if $self->{DEBUG};
-                next;
-            }
-            
-            push @groups, $gid;
-        }
-        return (group => join ' ', @groups);
+	# Evaluation of group name is lazy too.
+	return (group => $var_value );
     }
     elsif ($var_name eq 'command') {
         return (command => [split /\s+/, $var_value]);

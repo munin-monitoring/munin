@@ -315,3 +315,6 @@ snmp__print_pages
 
 [1.4.1]
 sunos/iostat
+
+[1.4.2]
+munin_update
