@@ -14,7 +14,8 @@
 #       amavislog    - file where amavis logs are written
 #
 
-TEMP_FILE=`mktemp -p /tmp/ munin-amavis.XXXXXX`
+@@MKTEMP@@
+
 AMAVIS_LOG=${logfile:-/var/log/mail/mail.info}
 LOGTAIL=${logtail:-`which logtail`}
 STATEFILE=@@PLUGSTATE@@/amavis.offset
@@ -55,7 +56,9 @@ if [ $? = 66 ]; then
     fi
 fi
 
-if [ -e $TEMP_FILE -a -f $TEMP_FILE ]
+TEMP_FILE=`mktempfile munin-amavis.XXXXXX`
+
+if [ -n "$TEMP_FILE" -a -f "$TEMP_FILE" ]
 then
 	if [ $ARGS != 0 ]; then
 	    logtail -f ${AMAVIS_LOG} -o $STATEFILE | grep 'amavis\[.*\]:' > ${TEMP_FILE}
@@ -66,7 +69,8 @@ then
 	virus=`grep INFECTED ${TEMP_FILE} | wc -l`
 	spamm=`grep 'Passed.*Hits: 1[0-9][.]' ${TEMP_FILE} | wc -l`
 	spams=`grep 'Passed.*Hits: [2-9][0-9][0-9]*[.]' ${TEMP_FILE} | wc -l`
-	/bin/rm $TEMP_FILE
+
+	/bin/rm -f $TEMP_FILE
 fi
 
 echo "virus.value ${virus}"

@@ -26,6 +26,7 @@
 #
 # courierpop3login:
 # Jan 22 06:28:24 raven courierpop3login: Connection, ip=[::ffff:192.168.0.1]
+5B
 # Jan 22 06:48:22 raven courierpop3login: DISCONNECTED, user=someuser, ip=[::ffff:192.168.0.1], top=0, retr=0, time=21
 # Jan 22 06:28:24 raven courierpop3login: LOGIN, user=someuser, ip=[::ffff:192.168.0.1]
 # Jan 22 06:28:25 raven courierpop3login: LOGOUT, user=someuser, ip=[::ffff:192.168.0.1], top=0, retr=0, time=0
@@ -34,13 +35,12 @@
 # Set the location of the courier logs
 COURIER_LOG=${logfile:-/var/log/mail.log}
 SERVICE=${service:-`basename $0 | sed 's/^courier_//g'`}
-TEMP_FILE=`mktemp -p /tmp/ munin-courier.XXXXXX`
 OFFSET_FILE=@@PLUGSTATE@@/courier_${SERVICE}.offset
 LOGTAIL=${logtail:-/usr/sbin/logtail}
 
-if [ ! -f "$TEMP_FILE" ]; then
-    exit 3
-fi
+mktempfile () {
+@@MKTEMP@@
+}
 
 case $1 in
     autoconf|detect)
@@ -73,6 +73,12 @@ if [ $? = 66 ]; then
     if [ ! -n "$logtail" ]; then
         ARGS=1
     fi
+fi
+
+TEMP_FILE=`mktempfile munin-courier.XXXXXX`
+
+if [ -z "$TEMP_FILE" -o ! -f "$TEMP_FILE" ]; then
+    exit 3
 fi
 
 if [ $ARGS != 0 ]; then

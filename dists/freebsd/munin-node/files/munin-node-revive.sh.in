@@ -23,5 +23,5 @@ load_rc_config $name
 #set -x
 pid=`check_pidfile $pidfile %%PREFIX%%/sbin/munin-node`
 if [ -z "$pid" ]; then
-  run_rc_command start
+  run_rc_command start > /dev/null
 fi

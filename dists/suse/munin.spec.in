@@ -1,6 +1,6 @@
 Name:      	munin
 Version:   	@@VERSION@@
-Release:   	1
+Release:	1
 
 Summary:	Network-wide graphing framework (grapher/gatherer)
 License: 	GPL
@@ -18,7 +18,7 @@ Source5:	munin-node.logrotate
 Source6:	munin-node.cron.d
 Source7:	plugins.conf
 Patch0:		patch-001
-Requires:	perl-Config-General
+Patch1:		patch-002
 Requires:	perl-HTML-Template
 Requires:	rrdtool
 Obsoletes:	lrrd-server
@@ -29,7 +29,9 @@ BuildRoot:	%{_tmppath}/%{name}-%{version}-root
 %define         libdir  /usr/share/munin
 %define         htmldir /srv/www/htdocs/munin
 %define         cgidir  /srv/www/cgi-bin
-
+%define         dbdir   /var/lib/munin
+%define         logdir  /var/log/munin
+%define         statedir /var/run/munin
 
 %description
 Munin is a highly flexible and powerful solution used to create graphs of
@@ -79,6 +81,7 @@ RRDtool. To see a real example of Munin in action, take a peek at
 %prep
 %setup -q
 %patch0
+%patch1 -p1
 mkdir -p %{buildroot}
 
 %build
@@ -97,14 +100,19 @@ make    CONFIG=%{SOURCE1} \
 	LIBDIR=%{libdir} \
 	CONFDIR=%{confdir} \
         DESTDIR=%{buildroot} \
+        DBDIR=%{dbdir} \
+        SBINDIR=%{_sbindir} \
+        LOGDIR=%{logdir} \
+        STATEDIR=%{statedir} \
         build
 
-mkdir -p %{buildroot}/var/lib/munin/plugin-state
-mkdir -p %{buildroot}/var/log/munin
-mkdir -p %{buildroot}/var/run/munin
+mkdir -p %{buildroot}%{dbdir}/plugin-state
+mkdir -p %{buildroot}%{logdir}
+mkdir -p %{buildroot}%{statedir}
 mkdir -p %{buildroot}/etc/init.d
 mkdir -p %{buildroot}/etc/cron.d
 mkdir -p %{buildroot}/etc/logrotate.d
+mkdir -p %{buildroot}%{htmldir}
 
 %install
 make    CONFIG=%{SOURCE1} \
@@ -115,6 +123,10 @@ make    CONFIG=%{SOURCE1} \
 	CGIDIR=%{buildroot}%{cgidir} \
 	CONFDIR=%{buildroot}%{confdir} \
         DESTDIR=%{buildroot} \
+        DBDIR=%{buildroot}%{dbdir} \
+        SBINDIR=%{buildroot}%{_sbindir} \
+        LOGDIR=%{buildroot}%{logdir} \
+        STATEDIR=%{buildroot}%{statedir} \
         install-main install-node install-node-plugins install-doc install-man 
 								
 install -m0755 %{SOURCE2} %{buildroot}/etc/init.d/munin-node
@@ -122,7 +134,7 @@ install -m0644 %{SOURCE3} %{buildroot}/etc/cron.d/munin
 install -m0644 %{SOURCE4} %{buildroot}/etc/logrotate.d/munin
 install -m0644 %{SOURCE5} %{buildroot}/etc/logrotate.d/munin-node
 install -m0644 %{SOURCE6} %{buildroot}/etc/cron.d/munin-node
-install -m0644 %{SOURCE7} %{buildroot}/etc/munin/plugin-conf.d/munin-node
+install -m0644 %{SOURCE7} %{buildroot}%{confdir}/plugin-conf.d/munin-node
 install -m0644 ChangeLog %{buildroot}%{_docdir}/munin/ChangeLog
 
 %clean
@@ -134,20 +146,21 @@ install -m0644 ChangeLog %{buildroot}%{_docdir}/munin/ChangeLog
 %pre
 
 getent group munin >/dev/null || groupadd -r munin
-getent passwd munin > /dev/null || useradd -r -d /var/lib/munin -g munin munin
+getent passwd munin > /dev/null || useradd -r -d %{dbdir} -g munin munin
 
 %post
-mkdir -p /var/log/munin
-mkdir -p /var/lib/munin
-chown -R munin:munin /var/www//munin
-chown -R munin:munin /var/log/munin
-chown -R munin:munin /var/run/munin
-chown -R munin:munin /var/lib/munin
+mkdir -p %{htmldir}
+mkdir -p %{logdir}
+mkdir -p %{dbdir}
+chown -R munin:munin %{htmldir}
+chown -R munin:munin %{logdir}
+chown -R munin:munin %{statedir}
+chown -R munin:munin %{dbdir}
 
 ## Node
 %pre node
 getent group munin >/dev/null || groupadd -r munin
-getent passwd munin > /dev/null || useradd -r -d /var/lib/munin -g munin munin
+getent passwd munin > /dev/null || useradd -r -d %{dbdir} -g munin munin
 
 %post node
 if [ $1 = 1 ]
@@ -156,18 +169,19 @@ then
 	/usr/sbin/munin-node-configure --shell | sh
 fi
 %{fillup_and_insserv -n -s -y munin munin-node START_MUNIN_NODE}
-mkdir -p /var/log/munin
-mkdir -p /var/lib/munin/plugin-state
-chown -R munin:munin /var/log/munin
-chown -R munin:munin /var/lib/munin
-chmod g+w /var/lib/munin/plugin-state
+mkdir -p %{logdir}
+mkdir -p %{dbdir}/plugin-state
+chown -R munin:munin %{logdir}
+chown -R munin:munin %{dbdir}
+chmod g+w %{dbdir}/plugin-state
+/etc/init.d/munin-node status >/dev/null 2>&1 || /etc/init.d/munin-node start
 
 %preun node
 if [ $1 = 0 ]
 then
         /sbin/service munin-node stop > /dev/null 2>&1
         /sbin/chkconfig --del munin-node
-        rmdir /var/log/munin 2>/dev/null || true
+        rmdir %{logdir} 2>/dev/null || true
 fi
 %stop_on_removal munin-node
 
@@ -195,11 +209,11 @@ fi
 %{_libdir}/perl5/*perl/5.*/Munin.pm
 %{_usr}/share/munin/munin-limits
 %{cgidir}/munin-cgi-graph
-%config /etc/munin/templates/*
+%config %{confdir}/templates/*
 %config /etc/cron.d/munin
-%config(noreplace) /etc/munin/munin.conf
+%config(noreplace) %{confdir}/munin.conf
 %config /etc/logrotate.d/munin
-%dir /var/run/munin
+%dir %{statedir}
 
 	    
 %files node
@@ -215,14 +229,29 @@ fi
 %{_sbindir}/munin-node-configure
 %{_sbindir}/munin-node-configure-snmp
 %{_datadir}/munin/plugins/*
-%config(noreplace) /etc/munin/munin-node.conf
-%config(noreplace) /etc/munin/plugin-conf.d/munin-node
+%config(noreplace) %{confdir}/munin-node.conf
+%config(noreplace) %{confdir}/plugin-conf.d/munin-node
 %config /etc/init.d/munin-node
 %config /etc/cron.d/munin-node
 %config /etc/logrotate.d/munin-node
-%dir /etc/munin/plugins
+%dir %{confdir}/plugins
 
 %changelog
+* Mon Apr  3 2005 Rune Nordbøe Skillingstad <runesk@linpro.no>
+- 1.2.3 release
+* Fri Apr  1 2005 Rune Nordbøe Skillingstad <runesk@linpro.no>
+- 1.2.2 release
+- Fixed SF bug 1164481 (missing /srv/www/htdocs/munin)
+- Fixed SF bug 1164477 (patch for Net::Domain on PPC64)
+* Fri Mar 11 2005 Rune Nordbøe Skillingstad <runesk@linpro.no>
+- 1.2.1 release
+* Wed Mar  9 2005 Rune Nordbøe Skillingstad <runesk@linpro.no>
+- Fixed erronumous path to web directory
+- Added start of node if not running
+* Thu Mar  8 2005 Rune Nordbøe Skillingstad <runesk@linpro.no>
+- Fixed some build path problems
+* Thu Feb 24 2005 Rune Nordbøe Skillingstad <runesk@linpro.no>
+- New major release
 * Wed Feb  9 2005 Rune Nordbøe Skillingstad <runesk@linpro.no>
 - Updated to version 1.2.0rc2.
 - Removed Nagios stuff

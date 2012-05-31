@@ -6,7 +6,7 @@
 # description: munin node agents
 # processname: munin-node
 # config: /etc/munin/munin-node.conf
-# pidfile: /var/run/muin-node.pid
+# pidfile: /var/run/munin/munin-node.pid
 
 # Source function library.
 . /etc/rc.d/init.d/functions

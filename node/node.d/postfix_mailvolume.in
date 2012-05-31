@@ -72,7 +72,7 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
     my $logfile;
     `which postconf >/dev/null 2>/dev/null`;
-    if ($?)
+    if (!$?)
     {
 	if (-d $LOGDIR)
 	{

@@ -6,7 +6,7 @@
 #
 
 PORTNAME=	munin
-PORTVERSION=	1.2.0.r2
+PORTVERSION=	1.2.2
 CATEGORIES=	sysutils perl5
 MASTER_SITES=	${MASTER_SITE_SOURCEFORGE}
 MASTER_SITE_SUBDIR=	munin
@@ -41,10 +41,10 @@ INSTALL_TARGET=	DATADIR=${DATADIR} PERL=${PERL} install-main
 MAN5=		munin.conf.5
 MAN8=		munin-cron.8 munin-graph.8 munin-html.8 munin-limits.8 munin-update.8
 
+SUB_FILES=pkg-message
+
 pre-install:
-	@${SED} 's@%%PREFIX%%@${PREFIX}@g' ${FILESDIR}/pkg-message > ${PKGMESSAGE}
 	@PKG_PREFIX=${PREFIX} ${SH} pkg-install ${PKGNAME} PRE-INSTALL
-	@mkdir -p ${PREFIX}/www/cgi-bin
 
 post-install:
 	@${INSTALL_DATA} ${WRKSRC}/build/server/munin.conf ${PREFIX}/etc/munin/munin.conf.sample
@@ -55,6 +55,8 @@ post-install:
 		${INSTALL_MAN} -C ${WRKSRC}/build/doc/$$man ${PREFIX}/man/man8; \
 	done
 	@DATADIR=${DATADIR} PKG_PREFIX=${PREFIX} ${SH} pkg-install ${PKGNAME} POST-INSTALL
+	@${CHOWN} munin /var/log/munin-main
+	@${CHGRP} munin /var/run/munin /var/log/munin-main ${PREFIX}/www/data/munin ${PREFIX}/var/munin
 	@${CAT} ${PKGMESSAGE}
 
 .include <bsd.port.post.mk>

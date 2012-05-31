@@ -57,8 +57,6 @@ init_plugins() {
 	prevver=$(cat ${PKG_PREFIX}/etc/munin/VERSION.node)
     fi
 
-    mkdir -p ${PKG_PREFIX}/etc/munin/plugins ${PKG_PREFIX}/var/munin/plugin-state
-
     if [ -n "$prevver" ]; then
 	echo -n "Initializing new plugins.."
 	${PKG_PREFIX}/sbin/munin-node-configure --shell --newer "${prevver%-*}" | sh -x

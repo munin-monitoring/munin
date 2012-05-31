@@ -371,7 +371,7 @@ sub print_service {
 
 sub list_services {
     my $node = $_[0] || $FQDN;
-    print join " ", grep { &has_access ($_); } keys %{$nodes{$node}};
+    print join " ", grep { &has_access ($_); } keys %{$nodes{$node}} if exists $nodes{$node};
     #print join " ", keys %{$nodes{$node}};
     print "\n";
 }

@@ -86,7 +86,7 @@ if ($ARGV[0] and $ARGV[0] =~ /^\s*suggest\s*$/i)
 		{
 			chomp;
 			next unless (hex (substr($_,83,2)) == 10);
-			my $p = substr( $_,40,4);
+			my $p = substr( $_,39,4);
 			if (defined $ports{hex($p)})
 			{
 			    $ports{hex($p)}++;

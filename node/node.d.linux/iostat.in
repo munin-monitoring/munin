@@ -204,8 +204,7 @@ sub fetch_detailed()
 				my $major  = $1;
 				if ($tmpnam =~ /\d+$/ ) {
 					# Special case for devices like cXdXpX,
-					# like the cciss driver. This is
-					# necessary, at least at RHEL3
+					# like the cciss driver
 					next unless $tmpnam =~ /\/c\d+d\d+$/
 				}
 				next unless grep { $_ } @fields;

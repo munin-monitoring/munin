@@ -82,7 +82,13 @@ fi;
 
 /usr/bin/netstat -i -b -I $INTERFACE | awk '
 /<Link#[0-9]*>/ {
-	print "ierrors.value", $6;
-	print "oerrors.value", $9;
-	print "collisions.value", $11;
+	if (NF == 10) {
+		print "ierrors.value", $5;
+		print "oerrors.value", $8;
+		print "collisions.value", $10;
+	} else {
+		print "ierrors.value", $6;
+		print "oerrors.value", $9;
+		print "collisions.value", $11;
+	}
 }'

@@ -68,15 +68,6 @@ make_account() {
     fi
 }
 
-make_directories() {
-	for dir in ${PKG_PREFIX}/www/data/munin \
-                   ${PKG_PREFIX}/var/munin \
-                   /var/run/munin /var/log/munin-main; do
-		mkdir -p $dir
-		chown munin:munin $dir
-	done
-}
-
 create_crontab_entries() {
     local b e
     b=$1
@@ -112,7 +103,6 @@ EOT
 case $2 in
     PRE-INSTALL)
 	make_account munin munin "Munin owner"
-	make_directories
 	;;      
     POST-INSTALL)
 	newsyslog
