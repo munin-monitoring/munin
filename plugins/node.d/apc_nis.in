@@ -5,17 +5,25 @@
 
 apc_nis - Plugin to monitor APC UPS via the nis port of apcupsd
 
-=cut
+=head1 CONFIGURATION
 
-# 
-#
-# Parameters:
-#
-#   config   (required)
-#
-# Magic markers (optional - used by munin-config and some installation
-# scripts):
-#%# family=contrib
+The following configuration parameters are used by this plugin
+
+ [apc_nis]
+  env.host     - hostname to connect to
+  env.port     - port number to connect to
+
+=head2 DEFAULT CONFIGURATION
+
+ [apc_nis]
+  env.host 127.0.0.1
+  env.port 3551
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+
+=cut
 
 use IO::Socket;
 use strict;
@@ -25,13 +33,16 @@ if($ARGV[0] and $ARGV[0] eq "autoconfig") {
 	exit 0;
 }
 
+my $host = exists $ENV{'host'} ? $ENV{'host'} : "127.0.0.1";
+my $port = exists $ENV{'port'} ? $ENV{'port'} : "3551";
+
 if($ARGV[0] and $ARGV[0] eq "config") {
-	print "graph_title apcupsd\n";
+	print "graph_title apcupsd $host:$port\n";
 	print "graph_args -l 0 --base 1000\n";
 	print "graph_vlabel A bit of all (Volt, time, %)\n";
 	print "battery_volt.label batt volt (V)\n";
 	print "battery_volt.type GAUGE\n";
-	print "battery_volt.max 140\n";
+	print "battery_volt.max 300\n";
 	print "battery_charge.label batt charge (%)\n";
 	print "battery_charge.type GAUGE\n";
 	print "battery_charge.max 200\n";
@@ -44,14 +55,14 @@ if($ARGV[0] and $ARGV[0] eq "config") {
 	print "time_left.label time left (min)\n";
 	print "time_left.type GAUGE\n";
 	print "time_left.max 200\n";
+        print "temperature.label internal temperature (celsius)\n";
+        print "temperature.type GAUGE\n";
+        print "temperature.max 100\n";
     exit 0;
 }
 
-my $server = "localhost";
-my $port = "3551";
-
 my $sock = new IO::Socket::INET (
-	PeerAddr => $server,
+	PeerAddr => $host,
 	PeerPort => $port,
 	Proto => 'tcp'
 	);
@@ -81,6 +92,9 @@ do {
 	} elsif($line =~ /\WTIMELEFT /) {
 		$line =~ s/.* (\d+.\d+).*/$1/;
 		print "time_left.value $line\n";
+	} elsif($line =~ /\WITEMP /) {
+		$line =~ s/.* (\d+.\d+).*/$1/;
+		print "temperature.value $line\n";
 	}
 } while(!($line =~ /END APC/));
 

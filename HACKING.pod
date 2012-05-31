@@ -19,7 +19,7 @@ The munin code is marked by years on the battle front. You will
 therefore find code that deviates from the guidelines defined
 here. However, all new code should be made to comply.
 
-These guidelines is an RFC for the time being and are of course
+These guidelines are an RFC for the time being and are of course
 negotiable.
 
 
@@ -85,7 +85,7 @@ etc) use the run command.
 
 =head1 PUNCTUATION VARIABLES
 
-Don't use punctuation variables (see PBP page 79.)
+Don't use punctuation variables (see Perl Best Practices page 79.)
 
  use English qw(-no_match_vars);
 
@@ -102,7 +102,7 @@ FIX
 
 =head1 TESTS AND COVERAGE
 
-Use TDD.
+Use test-driven devolopment.
 
 In node, server, or common:
 
@@ -120,7 +120,7 @@ L<Carp>?
 
  confess("Foo happened!"); # With stack trace
 
-Exceptions are caught with an eval
+Exceptions are caught with an eval:
 
  eval {
      # Exceptionally scary code

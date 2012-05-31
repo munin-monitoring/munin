@@ -93,10 +93,15 @@ if [ "$1" = "config" ]; then
 fi;
 
 # Escape dots in the interface name (eg. vlans) before using it as a regex
-awk -v interface="$INTERFACE" \
-    'BEGIN { gsub(/\./, "\\.", interface) } \
-    $1 ~ "^" interface ":" {
-        split($0, a, /: */); $0 = a[2]; \
-        print "rcvd.value " $3 "\ntrans.value " $11 \
-    }' \
-    /proc/net/dev
+if [ -r /sys/class/net/$INTERFACE/statistics/rx_bytes ]; then
+    echo "down.value $(cat /sys/class/net/$INTERFACE/statistics/rx_errors)"
+    echo "up.value $(cat /sys/class/net/$INTERFACE/statistics/tx_errors)"
+else
+    awk -v interface="$INTERFACE" \
+        'BEGIN { gsub(/\./, "\\.", interface) } \
+        $1 ~ "^" interface ":" {
+            split($0, a, /: */); $0 = a[2]; \
+            print "rcvd.value " $3 "\ntrans.value " $11 \
+        }' \
+        /proc/net/dev
+fi

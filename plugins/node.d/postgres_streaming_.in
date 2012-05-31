@@ -122,5 +122,5 @@ sub CalculateNumericalOffset
     die "Invalid offset: $stringofs" unless ($#pieces == 1);
 
     # First part is logid, second part is record offset
-    return (hex("ffffffff") * hex($pieces[0])) + hex($pieces[1]);
+    return (hex("ff000000") * hex($pieces[0])) + hex($pieces[1]);
 }

@@ -104,7 +104,7 @@ $pop->print("");
 
 ## Request status of messages.
 $pop->print("Action: command");
-$pop->print("Command: show channels");
+$pop->print("Command: core show channels");
 $pop->print("");
 my $result;
 while (($line = $pop->getline) and ($line !~ /END COMMAND/o))
@@ -116,6 +116,9 @@ while (($line = $pop->getline) and ($line !~ /END COMMAND/o))
 my $nb = (split ' ',$result)[0];
 $pop->print("Action: logoff");
 $pop->print("");
+
+## Exhaust buffer before closing (to avoid polluting Asterisk's logs)
+while ($line = $pop->getline) {}
 
 print "channels.value $nb\n";
 

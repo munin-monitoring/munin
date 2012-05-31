@@ -44,8 +44,7 @@ our (@ISA, @EXPORT);
 use POSIX qw ( strftime );
 use Getopt::Long;
 use Time::HiRes;
-use Text::Balanced qw ( extract_multiple extract_delimited
-    extract_quotelike extract_bracketed );
+use Text::Balanced qw ( extract_bracketed );
 use Log::Log4perl qw ( :easy );
 
 use Munin::Master::Logger;
@@ -105,6 +104,9 @@ sub limits_startup {
 
 
 sub limits_main {
+    # We're liable to receive SIGPIPEs if the given commands don't work
+    $SIG{PIPE} = 'IGNORE';
+
     my $update_time = Time::HiRes::time;
 
     my $lockfile = "$config->{rundir}/munin-limits.lock";
@@ -121,6 +123,8 @@ sub limits_main {
 
     process_limits();
 
+    close_pipes();
+
     &munin_writeconfig("$config->{dbdir}/limits", \%notes);
 
     $update_time = sprintf("%.2f", (Time::HiRes::time - $update_time));
@@ -130,6 +134,16 @@ sub limits_main {
     INFO "[INFO] munin-limits finished ($update_time sec)";
 }
 
+sub close_pipes {
+    foreach my $cont (@{munin_get_children($config->{"contact"})}) {
+        if($cont->{pipe}) {
+            my $c = munin_get_node_name($cont);
+
+            DEBUG "[DEBUG] Closing pipe for contact $c";
+            close $cont->{pipe} or WARN "[WARNING] Failed to close pipe for contact $c: $!";
+        }
+    }
+}
 
 sub process_limits {
 
@@ -285,7 +299,7 @@ sub process_service {
 
     my $state_file = sprintf ('%s/state-%s-%s.storable', $config->{dbdir}, $hash->{group}, $hash->{host}); 
     DEBUG "[DEBUG] state_file: $state_file";
-    my $state = Storable::retrieve($state_file);
+    my $state = munin_read_storable($state_file) || {};
 
     foreach my $field (@$children) {
         next if (!defined $field or ref($field) ne "HASH");
@@ -319,7 +333,7 @@ sub process_service {
 			# COUNTER never decrease. Report unknown.
 			$value = "U";
 		} else {
-			$value = ($current_updated_value - $previous_updated_value) / ($current_updated_value - $previous_updated_value);
+			$value = ($current_updated_value - $previous_updated_value) / ($current_updated_timestamp - $previous_updated_timestamp);
 		}
 	}
 
@@ -594,8 +608,10 @@ sub generate_service_message {
     foreach my $c (split(/\s+/, $contactlist)) {
         next if $c eq "none";
         my $contactobj = munin_get_node($config, ["contact", $c]);
-        next unless defined $contactobj;
-        next unless defined munin_get($contactobj, "command", undef);
+        if(!defined $contactobj) {
+            WARN("[WARNING] Missing configuration options for contact $c; skipping");
+            next;
+        }
         if (@limit_contacts and !grep (/^$c$/, @limit_contacts)) {
             next;
         }
@@ -607,8 +623,12 @@ sub generate_service_message {
         if (!$hash->{'state_changed'} and !$obsess) {
             next;    # No need to send notification
         }
-        DEBUG "state has changed, notifying $c";
-        my $precmd = munin_get($contactobj, "command");
+        DEBUG "[DEBUG] state has changed, notifying $c";
+        my $precmd = munin_get($contactobj, "command", undef);
+        if(!defined $precmd) {
+            WARN("[WARNING] Missing command option for contact $c; skipping");
+            next;
+        }
         my $pretxt = munin_get(
             $contactobj,
             "text",
@@ -621,69 +641,59 @@ sub generate_service_message {
         $txt =~ s/\\n/\n/g;
         $txt =~ s/\\t/\t/g;
 
-        # In some cases we want to reopen the command
+        if($cmd =~ /^\s*([|><]+)/) {
+            WARN "[WARNING] Found \"$1\" at beginning of command.  This should no longer be necessary and will be removed from the command before execution";
+            $cmd =~ s/^\s*[|><]+//;
+        }
+
         my $maxmess = munin_get($contactobj, "max_messages", 0);
         my $curmess = munin_get($contactobj, "num_messages", 0);
         my $curcmd  = munin_get($contactobj, "pipe_command", undef);
         my $pipe    = munin_get($contactobj, "pipe",         undef);
         if ($maxmess and $curmess >= $maxmess) {
-            close($pipe);
+            DEBUG "[DEBUG] Resetting pipe for $c because max messages was reached";
+            close($pipe) or WARN "[WARNING] Failed to close pipe for $c: $!";
             $pipe = undef;
-            munin_set_var_loc($contactobj, ["pipe"], undef);
-            DEBUG "[DEBUG] Closing \"$c\" -> command (max number of messages reached).";
+            munin_set($contactobj, "pipe", undef);
         }
         elsif ($curcmd and $curcmd ne $cmd) {
-            close($pipe);
+            DEBUG "[DEBUG] Resetting pipe for $c because the command has changed";
+            close($pipe) or WARN "[WARNING] Failed to close pipe for $c: $!";
             $pipe = undef;
-            munin_set_var_loc($contactobj, ["pipe"], undef);
-            DEBUG "[DEBUG] Closing \"$c\" -> command (command has changed).";
+            munin_set($contactobj, "pipe", undef);
         }
 
         if (!defined $pipe) {
-            my @cmd = extract_multiple(
-                message_expand($hash, $cmd),
-                [sub {extract_delimited($_[0], q{"'})}, qr/\S+/],
-                undef, 1
-            );
-            @cmd = map {
-                my $c = $_;
-                $c =~ s/['"]$//;
-                $c =~ s/^['"]//;
-                $c;
-            } @cmd;
-            $contactobj->{"num_messages"} = 0;
+            DEBUG "[DEBUG] Opening pipe for $c";
+            pipe(my $r, my $w) or WARN "[WARNING] Failed to open pipe for $c: $!";
+            my $pid = fork();
+            defined($pid) or WARN "[WARNING] Failed fork for pipe for $c: $!";
+            if($pid) { # parent
+                DEBUG "[DEBUG] Opened pipe for $c as pid $pid";
 
-	    # Remove the useless crufty spec
-	    # (>(?) \w+
-
-            if ($cmd[0] eq "|" || $cmd[0] eq ">") {
-		    WARN "[WARN] Using deprecated interface with | or >";
-		    shift @cmd; # remove |,>
-		    shift @cmd; # remove the script name
-	    } elsif ($cmd[0] =~ m/^[|>]/) {
-		    WARN "[WARN] Using deprecated interface with | or >";
-		    # The | isn't alone, only remove 1 element
-		    shift @cmd; # remove |... or >....
+                close $r;
+                $pipe = $w;
+                munin_set($contactobj, "pipe_command", $cmd);
+                munin_set($contactobj, "pipe",         $pipe);
+                munin_set($contactobj, "num_messages", 0);
+                $curmess = 0;
+            } else { # child
+                close $w;
+                open(STDIN, "<&", $r);
+                exec($cmd) or WARN "[WARNING] Failed to exec for contact $c in pid $$";
+                exit;
             }
-
-	    # Now, we only have to open the pipe with shell expansion, and voila !
-            DEBUG("[DEBUG] opening \"$c\" for writing: \""
-		  . join('" "', @cmd)
-		  . "\".");
-
-	    my $full_cmd_line = join(' ', @cmd);
-            if (! open($pipe, "| $full_cmd_line")) {
-		    FATAL("[FATAL] Could not open $full_cmd_line for writing: $!");
-		    exit 3;
-            }
-
-            munin_set_var_loc($contactobj, ["pipe_command"], $cmd);
-            munin_set_var_loc($contactobj, ["pipe"],         $pipe);
         }
-        DEBUG "[DEBUG] sending message: \"$txt\"";
-        print $pipe $txt, "\n" if (defined $pipe);
-        $contactobj->{"num_messages"}
-            = 1 + munin_get($contactobj, "num_messages", 0);   # $num_messages++
+
+        DEBUG "[DEBUG] sending message to $c: \"$txt\"";
+        if(defined $pipe and !print $pipe $txt, "\n") {
+            WARN "[WARNING] Writing to pipe for $c failed: $!";
+            close($pipe) or WARN "[WARNING] Failed to close pipe for $c: $!";
+            $pipe = undef;
+            munin_set($contactobj, "pipe", undef);
+        }
+
+        munin_set($contactobj, "num_messages", $curmess + 1);
     }
 }
 

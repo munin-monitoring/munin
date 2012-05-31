@@ -74,6 +74,12 @@ img.iunkn  { border: 1px solid #ffaa00; }
   margin: 0 auto;
   background-color: #fbfbfb;
   border: 1px solid #cfd6f8;
+  border-bottom-left-radius: 4px;
+  -moz-border-radius-bottomleft: 4px;
+  -webkit-border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  -moz-border-radius-bottomright: 4px;
+  -webkit-border-bottom-right-radius: 4px;
   border-top: 0;
   padding: 3px;
   height: 40px;
@@ -91,6 +97,10 @@ h1, h2 {
   margin-left: auto;
   margin-right: auto;
 }	
+
+#nav h2 { 
+     margin-top: 0.4em;
+ }
 
 h1 .logo {
   display: block;
@@ -122,12 +132,12 @@ h1 .logo {
 
 #nav ul li {
 	list-style-type: none;
-	margin: 0;
-	padding: 3px;
+	margin: 0 0 0 3px;
+	padding: 2px;
 }
 
 #nav ul {
-	margin: 1em 0;
+	margin: 0.2em 0 0.8em 0;
 	padding: 0;
 }
 
@@ -141,6 +151,14 @@ h1 .logo {
 	margin-left: 220px;
 	padding: 1em;
 }
+
+#content li { 
+    margin-left: -20px;
+ }
+
+#content > ul:first-of-type { 
+    margin-left: 2em;
+ } 
 
 .comparison #content {
 	margin-left: 0;
@@ -220,7 +238,7 @@ td {
   margin: 0 auto;
   background-color: #fbfbfb;
   border: 1px solid #cfd6f8;
-  padding: 3px;
+  padding: 5px;
   clear: both;
 }
 
@@ -230,7 +248,7 @@ td {
 
 #footer p.tagline {
   margin: 0;
-  font-size: small;
+  font-size: 80%;
   text-align: left;
 }
 

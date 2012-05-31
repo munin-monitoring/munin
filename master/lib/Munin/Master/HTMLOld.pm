@@ -35,16 +35,18 @@ This is the hierarchy of templates
 
   * munin-overview.tmpl - Overview with all groups and hosts shown (2 levels down)
     
-    * munin-domianview.tmpl - all members of one domain, showing links down to each single service
+    * munin-domainview.tmpl - all members of one domain, showing links down to each single service
       and/or sub-group
 
       * munin-nodeview.tmpl - two (=day, week) graphs from all plugins on the node
 
 	* munin-serviceview.tmpl - deepest level of view, shows all 4 graphs from one timeseries
 
-        OR
+      * Zoom view - zoomable graph based on one of the other four graphs
 
-    	* munin-nodeview.tmpl - multigraph sub-level.  When multigraph sublevels end ends
+    OR
+
+      * munin-nodeview.tmpl - multigraph sub-level.  When multigraph sublevels end ends
            the next is a munin-serviceview.
 
  * Comparison pages (x4) are at the service level.  Not sure how to work multigraph into them so
@@ -68,10 +70,10 @@ use POSIX qw(strftime);
 use Getopt::Long;
 use Time::HiRes;
 use File::Copy::Recursive qw(dircopy);
+use IO::File;
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
-use Munin::Master::HTMLOld;
 use Munin::Master::HTMLConfig;
 
 use Log::Log4perl qw( :easy );
@@ -149,7 +151,14 @@ sub get_config {
 		$htmlconfig = munin_readconfig_storable($htmlconfcache);
 	}
 	if(!defined $htmlconfig){
+		my $graphs_filename = $config->{dbdir} . "/graphs";
+		my $graphs_filename_tmp = $graphs_filename . ".tmp." . $$;
+    		$config->{"#%#graphs_fh"} = new IO::File("> $graphs_filename_tmp");
 		$htmlconfig = generate_config($config);
+    		$config->{"#%#graphs_fh"} = undef;
+
+		# Atomic move
+		rename($graphs_filename_tmp, $graphs_filename);
 	}
 	return $htmlconfig;
 }
@@ -160,8 +169,7 @@ sub html_main {
 
 	my $configtime = Time::HiRes::time;
     get_config(0);
-	my $fh;
-	munin_writeconfig_storable("$htmlconfcache", $htmlconfig, $fh);
+	munin_writeconfig_storable("$htmlconfcache", $htmlconfig);
 	my $groups = $htmlconfig;
 	$configtime = sprintf("%.2f", (Time::HiRes::time - $configtime));
 	INFO "[INFO] config generated ($configtime sec)";
@@ -178,6 +186,7 @@ sub html_main {
 
     munin_runlock($lockfile);
 
+
    # Preparing the group tree...
 
     if (!defined($groups) or scalar(%{$groups} eq '0')) {
@@ -189,11 +198,8 @@ sub html_main {
     }
 
     if ($do_dump) {
-	use Data::Dumper;
-
-	$Data::Dumper::Sortkeys = sub { my $a=shift; my @b = grep (!/#%#parent/, keys %$a); \@b; };
-	print Dumper $groups;
-	exit 0;
+	print munin_dumpconfig_as_str($groups);
+        exit 0;
     }
 	
     generate_group_templates($groups);
@@ -292,14 +298,14 @@ sub emit_graph_template {
     my ($key, $emit_to_stdout) = @_;
 
     my $graphtemplate = HTML::Template->new(
-	filename => "$tmpldir/munin-nodeview.tmpl",
-	die_on_bad_params => 0,
-	global_vars       => 1,
-	loop_context_vars => 1,
-	filter            => sub {
-	    my $ref = shift;
-	    $$ref =~ s/URLX/URL$key->{'depth'}/g;
-	});
+                                            filename => "$tmpldir/munin-nodeview.tmpl",
+                                            die_on_bad_params => 0,
+                                            global_vars       => 1,
+                                            loop_context_vars => 1,
+                                            filter            => sub {
+                                                my $ref = shift;
+                                                $$ref =~ s/URLX/URL$key->{'depth'}/g;
+                                            });
 
     DEBUG "[DEBUG] Creating graph(nodeview) page ".$key->{filename};
 
@@ -342,11 +348,11 @@ sub emit_category_template {
     my ($key, $time, $emit_to_stdout) = @_;
 
     my $graphtemplate = HTML::Template->new(
-	filename => "$tmpldir/munin-categoryview.tmpl",
-	die_on_bad_params => 0,
-	global_vars       => 1,
-	loop_context_vars => 1,
-	);
+                                            filename => "$tmpldir/munin-categoryview.tmpl",
+                                            die_on_bad_params => 0,
+                                            global_vars       => 1,
+                                            loop_context_vars => 1,
+                                           );
 
 	my $filename = $key->{'filename-' . $time};
 
@@ -355,6 +361,7 @@ sub emit_category_template {
     $graphtemplate->param(
                           PATH        => $key->{'path'},
                           CSS_NAME    => get_css_name(),
+                          HOST_URL    => $key->{'host_url'},
                           R_PATH      => ".",
 						  "TIME".$time => 1,
                           NAME        => $key->{'name'},
@@ -481,15 +488,70 @@ sub emit_group_template {
 	}
 }
 
+sub emit_zoom_template {
+    my($srv, $emit_to_stdout) = @_;
+    my $servicetemplate = HTML::Template->new(
+                                              filename          => "$tmpldir/munin-dynazoom.tmpl",
+                                              die_on_bad_params => 0,
+                                              global_vars       => 1,
+                                              loop_context_vars => 1
+                                             );
+	my $pathnodes = $srv->{'path'};
+	my $peers = $srv->{'peers'};
+
+    #remove underscores from peers and title (last path element)
+    if ($peers){
+        $peers = [ map { $_->{'name'} =~ s/_/ /g; $_;} @$peers ];
+    }
+    
+    $pathnodes->[scalar(@$pathnodes) - 1]->{'pathname'} =~ s/_/ /g;
+    $servicetemplate->param(
+                            INFO_OPTION => 'Graphs in same category',
+                            SERVICES  => [$srv],
+                            PATH      => $pathnodes, 
+                            PEERS     => $peers,
+                            LARGESET  => decide_largeset($peers), 
+                            R_PATH => $srv->{'root_path'},
+                            CSS_NAME  => get_css_name(),
+                            CATEGORY  => ucfirst $srv->{'category'},
+                            TAGLINE   => $htmltagline,
+						    ROOTGROUPS => $htmlconfig->{"groups"},
+                            MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
+                            TIMESTAMP	=> $timestamp,
+                            NGLOBALCATS => $htmlconfig->{"nglobalcats"},
+                            GLOBALCATS => $htmlconfig->{"globalcats"},
+                            NCRITICAL => scalar(@{$htmlconfig->{"problems"}->{"criticals"}}),
+                            NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
+                            NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
+                            SHOW_ZOOM_JS => 1,
+                           );
+
+    if($emit_to_stdout){
+		print $servicetemplate->output;
+	} else {
+		my $filename = $srv->{'filename'};
+		ensure_dir_exists($filename);
+        
+	    DEBUG "[DEBUG] Creating service page $filename";
+    	open(my $FILE, '>', $filename)
+          or die "Cannot open '$filename' for writing: $!";
+	    print $FILE $servicetemplate->output;
+    	close $FILE or die "Cannot close '$filename' after writing: $!";
+	}
+
+
+
+}
+
 sub emit_service_template {
 	my ($srv, $emit_to_stdout) = @_;
 
     my $servicetemplate = HTML::Template->new(
-        filename          => "$tmpldir/munin-serviceview.tmpl",
-        die_on_bad_params => 0,
-		global_vars=>1,
-        loop_context_vars => 1
-    );
+                                              filename          => "$tmpldir/munin-serviceview.tmpl",
+                                              die_on_bad_params => 0,
+                                              global_vars       => 1,
+                                              loop_context_vars => 1
+                                             );
 
 	my $pathnodes = $srv->{'path'};
 	my $peers = $srv->{'peers'};
@@ -511,14 +573,14 @@ sub emit_service_template {
                             CATEGORY  => ucfirst $srv->{'category'},
                             TAGLINE   => $htmltagline,
 						    ROOTGROUPS => $htmlconfig->{"groups"},
-						  MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
-						  TIMESTAMP	=> $timestamp,
-					NGLOBALCATS => $htmlconfig->{"nglobalcats"},
-					GLOBALCATS => $htmlconfig->{"globalcats"},
-						  NCRITICAL => scalar(@{$htmlconfig->{"problems"}->{"criticals"}}),
-						  NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
-						  NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
-        	                   );
+                            MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
+                            TIMESTAMP	=> $timestamp,
+                            NGLOBALCATS => $htmlconfig->{"nglobalcats"},
+                            GLOBALCATS => $htmlconfig->{"globalcats"},
+                            NCRITICAL => scalar(@{$htmlconfig->{"problems"}->{"criticals"}}),
+                            NWARNING => scalar(@{$htmlconfig->{"problems"}->{"warnings"}}),
+                            NUNKNOWN => scalar(@{$htmlconfig->{"problems"}->{"unknowns"}}),
+                           );
 
     # No stored filename for this kind of html node.
     
@@ -644,7 +706,7 @@ sub get_css_name{
 sub fork_and_work {
     my ($work) = @_;
 
-    if (!$do_fork) {
+    if (!$do_fork || !$max_running) {
 
         # We're not forking.  Do work and return.
         DEBUG "[DEBUG] Doing work synchrnonously";
@@ -716,11 +778,12 @@ sub generate_group_templates {
                 }
             }
             if (defined $key->{'ngraphs'} and $key->{'ngraphs'}) {
-                emit_graph_template($key,0);
+                emit_graph_template($key, 0);
 				foreach my $category (@{$key->{"categories"}}) {
 					foreach my $serv (@{$category->{"services"}}) {
 						unless($serv->{"multigraph"}){
 							emit_service_template($serv);
+							#emit_zoom_template($serv);
 						}
 					}
 				}

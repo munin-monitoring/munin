@@ -62,13 +62,15 @@ if(!eval "require XML::Simple;") {
     $ret .= "XML::Simple not found";
 } 
 
-my $URL      = exists $ENV{'url'}      ? $ENV{'url'}      : "http://%s:%s\@127.0.0.1:%d/manager/status?XML=true";
-my $PORT     = exists $ENV{'ports'}    ? $ENV{'ports'}    : 8080;
+my $URL      = exists $ENV{'url'}      ? $ENV{'url'}      : "http://%s:%s\@%s:%d/manager/status?XML=true";
+my $PORT     = exists $ENV{'port'}    ? $ENV{'port'}    : 8080;
+my $HOST     = exists $ENV{'host'}    ? $ENV{'host'}    : "127.0.0.1";
 my $USER     = exists $ENV{'user'}     ? $ENV{'user'}     : "munin";
 my $PASSWORD = exists $ENV{'password'} ? $ENV{'password'} : "munin";
 my $TIMEOUT  = exists $ENV{'timeout'}  ? $ENV{'timeout'}  : 30;
+my $CONNECTOR= exists $ENV{'connector'}  ? $ENV{'connector'}  : "http-".$PORT;
 
-my $url = sprintf $URL, $USER, $PASSWORD, $PORT;
+my $url = sprintf $URL, $USER, $PASSWORD, $HOST, $PORT;
 
 if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
     if($ret) {
@@ -106,12 +108,12 @@ my $response = $ua->request(HTTP::Request->new('GET',$url));
 my %options = ( KeyAttr => { connector => 'name' }, ForceArray => 1 );
 my $xml = $xs->XMLin($response->content, %options);
 
-if($xml->{'connector'}->{'http-'.$PORT}->{'threadInfo'}->[0]->{'currentThreadsBusy'} &&
-    $xml->{'connector'}->{'http-'.$PORT}->{'threadInfo'}->[0]->{'currentThreadCount'}) {
-    print "busy.value " . $xml->{'connector'}->{'http-'.$PORT}->{'threadInfo'}->[0]->{'currentThreadsBusy'} . "\n";
+if($xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadsBusy'} &&
+    $xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadCount'}) {
+    print "busy.value " . $xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadsBusy'} . "\n";
     print "idle.value " .
-	  ($xml->{'connector'}->{'http-'.$PORT}->{'threadInfo'}->[0]->{'currentThreadCount'} -
-	  $xml->{'connector'}->{'http-'.$PORT}->{'threadInfo'}->[0]->{'currentThreadsBusy'}) . "\n";
+	  ($xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadCount'} -
+	  $xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadsBusy'}) . "\n";
 } else {
     print "busy.value U\n";
     print "idle.value U\n";

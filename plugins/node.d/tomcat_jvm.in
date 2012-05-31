@@ -75,13 +75,14 @@ if(!eval "require XML::Simple;") {
     $ret .= "XML::Simple not found";
 } 
 
-my $URL      = exists $ENV{'url'}      ? $ENV{'url'}      : "http://%s:%s\@127.0.0.1:%d/manager/status?XML=true";
-my $PORT     = exists $ENV{'ports'}    ? $ENV{'ports'}    : 8080;
+my $URL      = exists $ENV{'url'}      ? $ENV{'url'}      : "http://%s:%s\@%s:%d/manager/status?XML=true";
+my $PORT     = exists $ENV{'port'}    ? $ENV{'port'}    : 8080;
+my $HOST     = exists $ENV{'host'}    ? $ENV{'host'}    : "127.0.0.1";
 my $USER     = exists $ENV{'user'}     ? $ENV{'user'}     : "munin";
 my $PASSWORD = exists $ENV{'password'} ? $ENV{'password'} : "munin";
 my $TIMEOUT  = exists $ENV{'timeout'}  ? $ENV{'timeout'}  : 30;
 
-my $url = sprintf $URL, $USER, $PASSWORD, $PORT;
+my $url = sprintf $URL, $USER, $PASSWORD, $HOST, $PORT;
 
 if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
     if($ret) {

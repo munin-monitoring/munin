@@ -15,6 +15,7 @@ use Munin::Common::TLSClient;
 use Data::Dumper;
 use Log::Log4perl qw( :easy );
 use Time::HiRes qw( gettimeofday tv_interval );
+use IO::Socket::INET6;
 
 my $config = Munin::Master::Config->instance()->{config};
 
@@ -46,9 +47,9 @@ sub do_in_session {
 
     if ($self->_do_connect()) {
 	$self->_run_starttls_if_required();
-	$block->();
+	my $exit_value = $block->();
 	$self->_do_close();
-	return 1; # If we're still here
+	return { exit_value => $exit_value }; # If we're still here
     }
     return 0;  # _do_connect failed.
 }
@@ -74,7 +75,7 @@ sub _do_connect {
     LOGCROAK("[FATAL] '$url' is not a valid address!") unless $uri->scheme;
 
     if ($uri->scheme eq "munin") {
-        $self->{reader} = $self->{writer} = IO::Socket::INET->new(
+        $self->{reader} = $self->{writer} = IO::Socket::INET6->new(
 		PeerAddr  => $uri->host,
 		PeerPort  => $self->{port} || 4949,
 		LocalAddr => $config->{local_address},
@@ -214,7 +215,11 @@ sub negotiate_capabilities {
 sub list_plugins {
     my ($self) = @_;
 
-    my $host = $self->{configref}{use_node_name}
+    # Check for one on this node- if not, use the global one
+    my $use_node_name = defined($self->{configref}{use_node_name})
+        ? $self->{configref}{use_node_name}
+        : $config->{use_node_name};
+    my $host = $use_node_name
         ? $self->{node_name}
         : $self->{host};
 
@@ -517,6 +522,18 @@ sub fetch_service_data {
     $plugin = $self->_sanitise_plugin_name($plugin);
 
     return $self->parse_service_data($plugin,@lines);
+}
+
+sub quit {
+    my ($self) = @_;
+
+    my $t0 = [gettimeofday];
+    $self->_node_write_single("quit \n");
+    my $elapsed = tv_interval($t0);
+    my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
+    DEBUG "[DEBUG] quit: $elapsed sec on $nodedesignation";
+
+    return 1;
 }
 
 

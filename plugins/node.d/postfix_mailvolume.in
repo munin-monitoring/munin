@@ -113,7 +113,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config" ) {
 my $logfile = "$LOGDIR/$LOGFILE";
 
 if (! -f $logfile) {
-    print "delivered.value U\n";
+    print "volume.value U\n";
     exit 1;
 }
 

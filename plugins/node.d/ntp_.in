@@ -16,8 +16,8 @@ The following environment variables are used by this plugin:
 =head1 NOTES
 
 This plugin is now "legacy" because it's not very useful, it is
-imposible to determine which peer is used as "master". There is a
-ntp_offset plugin that reports a more useful value.
+imposible to determine which peer is used as "master". The other ntp_*
+plugins are better. This one is no longer maintained.
 
 =head1 AUTHOR
 

@@ -5,7 +5,7 @@
 
 =head1 NAME
 
-uptime - Plugin to measure uptime. 
+uptime - Plugin to measure uptime.
 
 =head1 NOTES
 
@@ -29,22 +29,22 @@ Unknown license
 . $MUNIN_LIBDIR/plugins/plugin.sh
 
 if [ "$1" = "autoconf" ]; then
-	echo yes 
-	exit 0
+        echo yes
+        exit 0
 fi
 
 if [ "$1" = "config" ]; then
 
-	echo 'graph_title Uptime'
-	echo 'graph_args --base 1000 -l 0 '
-	echo 'graph_scale no'
-	echo 'graph_vlabel uptime in days'
-	echo 'graph_category system'
-	echo 'uptime.label uptime'
-	echo 'uptime.draw AREA'
-	print_warning uptime
-	print_critical uptime
-	exit 0
+        echo 'graph_title Uptime'
+        echo 'graph_args --base 1000 -l 0 '
+        echo 'graph_scale no'
+        echo 'graph_vlabel uptime in days'
+        echo 'graph_category system'
+        echo 'uptime.label uptime'
+        echo 'uptime.draw AREA'
+        print_warning uptime
+        print_critical uptime
+        exit 0
 fi
 
 awk '{printf "uptime.value %.2f\n",$1/86400}' /proc/uptime

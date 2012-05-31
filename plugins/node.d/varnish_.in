@@ -5,17 +5,17 @@
 # Copyright (C) 2009  Redpill Linpro AS
 #
 # Author: Kristian Lyngstol <kristian@bohemians.org>
-# 
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
@@ -30,24 +30,24 @@ Varnish 2.0 or newer with varnishstat
 
 =head1 CONFIGURATION
 
-The plugin needs to be able to execute varnishstat. 
+The plugin needs to be able to execute varnishstat.
 
 The configuration section shows the defaults
   [varnish_*]
      env.varnishstat varnishstat
-     env.name 
+     env.name
 
 env.varnishstat can be a full path to varnishstat if it's
-not in the path already. 
+not in the path already.
 
 env.name is blank (undefined) by default and can be used to specify a -n
 name argument to varnish if multiple instances are running on the same
 server.
 
-A few aspects are not linked by default. They are marked as 
+A few aspects are not linked by default. They are marked as
 'DEBUG' => 'yes' (or any other value). They are:
 
-data_structures, vcl_and_purges, lru, objects_per_objhead,
+data_structures, vcl_and_bans, lru, objects_per_objhead,
 obj_sendfile_vs_write, losthdr, esi, hcb, shm, shm_writes, overflow,
 session, session_herd
 
@@ -88,9 +88,10 @@ Kristian Lyngstol <kristian@bohemians.org>
 
 GPLv2
 
-=cut 
+=cut
 
 
+use XML::Parser;
 use strict;
 
 # Set to 1 to enable output when a variable is defined in a graph but
@@ -106,8 +107,6 @@ my $varnishstatexec = exists $ENV{'varnishstat'} ? $ENV{'varnishstat'} : "varnis
 # For multiple instances
 my $varnishname = exists $ENV{'name'} ? $ENV{'name'} : undef;
 
-my %varnishstat = ();
-my %varnishstatnames = ();
 my $self; # Haha, myself, what a clever pun.
 
 # Parameters that can be defined on top level of a graph. Config will print
@@ -122,16 +121,25 @@ my @graph_parameters = ('title','total','order','scale','vlabel','args');
 my @field_parameters = ('graph', 'min', 'max', 'draw', 'cdef', 'warning',
 			'colour', 'info', 'type');
 
+# Varnishstat data is stored here. Example
+# ('n_vbe' => { 'value' => '124', 'description'=>...,'flag'=>... }, SMA =>
+# { s0 => { 'value' => '...', 'flag'=> '...' },'Transient' => ...})
+# Both dynamic and static counters are kept here.
+#
+# Notes:
+#  - The 'flag' field for a counter is in RRD-dialect, not varnishstat
+my %data;
+
 # Data structure that defines all possible graphs (aspects) and how they
-# are to be plotted. Every top-level entry is a graph/aspect. Each top-level graph
-# MUST have title set and 'values'. 
-# 
+# are to be plotted. Every top-level entry is a graph/aspect. Each
+# top-level graph MUST have title set and 'values'.
+#
 # The 'values' hash must have at least one value definition. The actual
 # value used is either fetched from varnishstat based on the value-name, or
-# if 'rpn' is defined: calculated. 'type' SHOULD be set. 
+# if 'rpn' is defined: calculated. 'type' SHOULD be set.
 #
 # Graphs with 'DEBUG' set to anything is omitted from 'suggest'.
-# 
+#
 # 'rpn' on values allows easy access to graphs consisting of multiple
 # values from varnishstat. (Reverse polish notation). The RPN
 # implementation only accepts +-*/ and varnishstat-values.
@@ -140,15 +148,26 @@ my @field_parameters = ('graph', 'min', 'max', 'draw', 'cdef', 'warning',
 # varnishstat-description if left undefined, any value left undefined will
 # be left up to Munin to define/ignore/yell about.
 #
+# For dynamic counters, the values listed need to specify a counter and
+# family. This will plot the specified counter for each identity within
+# that family. Example: family of SMA, counter c_fail. This will create a
+# c_fail-counter for each of the SMA-identities (e.g: Transient, s0, etc).
+# For dynamic graphs, the value-name is only used to identify the data
+# point, and does not relate to any varnishstat data as that is set by
+# family/counter.
+#
+# Note that dynamic counters fetch the type from the XML and things like
+# min/max are currently not supported (and silently ignored).
+#
 # See munin documentation or rrdgraph/rrdtool for more information.
-my %ASPECTS = ( 
+my %ASPECTS = (
 	'request_rate' => {
 		'title' => 'Request rates',
 		'order' => 'cache_hit cache_hitpass cache_miss '
 			 . 'backend_conn backend_unhealthy '
 			 . 'client_req client_conn' ,
 		'values' => {
-			'client_conn' => { 
+			'client_conn' => {
 				'type' => 'DERIVE',
 				'min' => '0',
 				'colour' => '444444',
@@ -282,6 +301,10 @@ my %ASPECTS = (
 				'type' => 'GAUGE',
 				'label' => 'Number of objects'
 			},
+			'n_objcore' => {
+				'type' => 'GAUGE',
+				'label' => 'Number of object cores'
+			},
 			'n_objecthead' => {
 				'type' => 'GAUGE',
 				'label' => 'Number of object heads',
@@ -317,7 +340,7 @@ my %ASPECTS = (
 	},
 	'threads' => {
 		'title' => 'Thread status',
-		'values' => { 
+		'values' => {
 			'n_wrk' => {
 				'type' => 'GAUGE',
 				'min' => '0',
@@ -332,7 +355,7 @@ my %ASPECTS = (
 				'min' => '0',
 				'warning' => ':1'
 			},
-			'n_wrk_max' => { 
+			'n_wrk_max' => {
 				'type' => 'DERIVE',
 				'min' => '0'
 			},
@@ -349,21 +372,33 @@ my %ASPECTS = (
 	},
 	'memory_usage' => {
 		'title' => 'Memory usage',
-		'order' => 'sm_balloc sma_nbytes sms_nbytes',
-		'total' => 'Total',
 		'args' => '--base 1024',
+		'vlabel' => 'bytes',
 		'values' => {
 			'sm_balloc' => {
 				'type' => 'GAUGE',
-				'draw' => 'AREA'
 			},
 			'sma_nbytes' => {
 				'type' => 'GAUGE',
-				'draw' => 'STACK'
 			},
 			'sms_nbytes' => {
 				'type' => 'GAUGE',
-				'draw' => 'STACK'
+			},
+			'SMA_1' => {
+				'counter' => 'g_bytes',
+				'family' => 'SMA',
+			},
+			'SMA_2' => {
+				'counter' => 'g_space',
+				'family' => 'SMA',
+			},
+			'SMF_1' => {
+				'counter' => 'g_bytes',
+				'family' => 'SMF',
+			},
+			'SMF_2' => {
+				'counter' => 'g_space',
+				'family' => 'SMF',
 			}
 		}
 	},
@@ -532,14 +567,14 @@ my %ASPECTS = (
 				'type' => 'DERIVE',
 				'min' => '0'
 			},
-			'sms_nreq' => { 
+			'sms_nreq' => {
 				'type' => 'DERIVE',
 				'min' => '0'
 			}
 		}
 	},
-	'vcl_and_purges' => {
-		'title' => 'VCL and purges',
+	'vcl_and_bans' => {
+		'title' => 'VCL and bans',
 		'DEBUG' => 'yes',
 		'values' => {
 			'n_backend' => {
@@ -557,26 +592,26 @@ my %ASPECTS = (
 				'type' => 'DERIVE',
 				'min' => '0'
 			},
-			'n_purge' => {
+			'n_ban' => {
 				'type' => 'GAUGE'
 			},
-			'n_purge_add' => {
+			'n_ban_add' => {
 				'type' => 'DERIVE',
 				'min' => '0'
 			},
-			'n_purge_retire' => {
+			'n_ban_retire' => {
 				'type' => 'DERIVE',
 				'min' => '0'
 			},
-			'n_purge_obj_test' => {
+			'n_ban_obj_test' => {
 				'type' => 'DERIVE',
 				'min' => '0'
 			},
-			'n_purge_re_test' => {
+			'n_ban_re_test' => {
 				'type' => 'DERIVE',
 				'min' => '0'
 			},
-			'n_purge_dups' => {
+			'n_ban_dups' => {
 				'type' => 'DERIVE',
 				'min' => '0'
 			}
@@ -606,6 +641,61 @@ my %ASPECTS = (
 			'n_lru_moved' => {
 				'type' => 'DERIVE',
 				'min' => '0'
+			}
+		}
+	},
+	'bad' => {
+		'title' => 'Misbehavior',
+		'values' => {
+			'SMA_1' => {
+				'counter' => 'c_fail',
+				'family' => 'SMA',
+			},
+			'SMF_1' => {
+				'counter' => 'c_fail',
+				'family' => 'SMF',
+			},
+			'client_drop' => {
+				'type' => 'DERIVE'
+			},
+			'backend_unhealthy' => {
+				'type' => 'DERIVE'
+			},
+			'fetch_failed' => {
+				'type' => 'DERIVE'
+			},
+			'backend_busy' => {
+				'type' => 'DERIVE'
+			},
+			'n_wrk_failed' => {
+				'type' => 'DERIVE'
+			},
+			'n_wrk_max' => {
+				'type' => 'DERIVE'
+			},
+			'n_wrk_drop' => {
+				'type' => 'DERIVE'
+			},
+			'n_wrk_lqueue' => {
+				'type' => 'GAUGE'
+			},
+			'losthdr' => {
+				'type' => 'DERIVE'
+			},
+			'n_objoverflow' => {
+				'type' => 'DERIVE'
+			},
+			'esi_errors' => {
+				'type' => 'DERIVE'
+			},
+			'esi_warnings' => {
+				'type' => 'DERIVE'
+			},
+			'client_drop_late' => {
+				'type' => 'DERIVE'
+			},
+			'accept_fail' => {
+				'type' => 'DERIVE'
 			}
 		}
 	},
@@ -644,63 +734,25 @@ my %ASPECTS = (
 	}
 );
 
-# Populate %varnishstat with values and %varnishstatnames with
-# descriptions.
-sub populate_stats
-{
-	my $arg = "-1";
-	if ($varnishname) {
-		$arg .= " -n $varnishname";
-	} 
-	foreach my $line (`$varnishstatexec $arg`) {
-		chomp($line);
-		if ($line =~ /^([^ ]*)\s+(\d+)\s+(\d*\.\d*)\s+(.*)$/) {
-			$varnishstat{"$1"} = $2;
-			$varnishstatnames{"$1"} = $4;
-		}
-	}
-}
+################################
+# Various helper functions     #
+################################
 
-# Bail-function.
-sub usage
+# Translate $_[0] from varnish' internal types (flags) to munin/rrd
+# variants (e.g: from 'i' to GAUGE). Returns the result.
+sub translate_type
 {
-	if (defined(@_) && "@_" ne "") {
-		print STDERR "@_" . "\n\n";
+	my $d = $_[0];
+	if ($d eq "i") {
+		$d = "GAUGE";
+	} elsif ($d eq "a") {
+		$d = "DERIVE";
 	}
-	print STDERR "Known arguments: suggest, config, autoconf.\n";
-	print STDERR "Run with suggest to get a list of known aspects.\n";
-	exit 1;
-}
-
-# Print 'yes' if it's reasonable to use this plugin, or 'no' with a
-# human-readable error message. Always exit true, even if the response
-# is 'no'.
-sub autoconf
-{
-	# XXX: Solaris outputs errors to stderr and always returns true.
-	# XXX: See #873
-	if (`which $varnishstatexec 2>/dev/null` =~ m{^/}) {
-		print "yes\n";
-	} else {
-		print "no ($varnishstatexec could not be found)\n";
-	}
-	exit 0;
-}
-
-# Suggest relevant aspects/values of $self. 
-# 'DEBUG'-graphs are excluded.
-sub suggest
-{
-	foreach my $key (keys %ASPECTS) {
-		if (defined($ASPECTS{$key}{'DEBUG'}) && $FULL_SUGGEST != 1) {
-			next;
-		}
-		print "$key\n";
-	}
+	return $d;
 }
 
 # Print the value of a two-dimensional hash if it exist.
-# Returns false if non-existant.
+# Returns false if non-existent.
 #
 # Output is formatted for plugins if arg4 is blank, otherwise arg4 is used
 # as the title/name of the field (ie: arg4=graph_title).
@@ -720,75 +772,12 @@ sub print_if_exist
 	}
 }
 
-# Walk through the relevant aspect and print all top-level configuration
-# values and value-definitions. 
-sub get_config
+# Create a output-friendly name
+sub normalize_name
 {
-	my $graph = $_[0];
-
-	# Need to double-check since set_aspect only checks this if there
-	# is no argument (suggest/autoconf doesn't require a valid aspect)
-	if (!defined($ASPECTS{$graph})) {
-		usage "No such aspect";
-	}
-	my %values = %{$ASPECTS{$graph}{'values'}};
-
-	print "graph_category Varnish\n";
-	foreach my $field (@graph_parameters) {
-		print_if_exist(\%ASPECTS,$graph,$field,"graph_$field");
-	}
-
-	foreach my $value (keys %values) {
-		# Need either RPN definition or a varnishstat value.
-		if (!defined($varnishstat{$value}) &&
-		    !defined($values{$value}{'rpn'})) {
-			if ($DEBUG) {
-				print "ERROR: $value not part of varnishstat.\n"
-			}
-			next;
-		}
-		
-		if (!print_if_exist(\%values,$value,'label')) {
-			print "$value.label $varnishstatnames{$value}\n";
-		}
-		foreach my $field (@field_parameters) {
-			print_if_exist(\%values,$value,$field);
-		}
-	}
-}
-
-# Read and verify the aspect ($self). 
-sub set_aspect
-{
-	$self = $0;
-	$self =~ s/^.*\/varnish_//;
-	if (!defined($ASPECTS{$self}) && @ARGV == 0) {
-		usage "No such aspect";
-	}
-}
-
-# Handle arguments (config, autoconf, suggest)
-# Populate stats for config is necessary, but we want to avoid it for
-# autoconf as it would generate a nasty error.
-sub check_args
-{
-	if (@ARGV && $ARGV[0] eq '') {
-		shift @ARGV;
-	}
-	if (@ARGV == 1) {
-		if ($ARGV[0] eq "config") {
-			populate_stats;  
-			get_config($self);
-			exit 0;
-		} elsif ($ARGV[0] eq "autoconf") {
-			autoconf($self);
-			exit 0;
-		} elsif ($ARGV[0] eq "suggest") {
-			suggest;
-			exit 0;
-		}
-		usage "Unknown argument";
-	}
+	my $name = $_[0];
+	$name =~ s/[^a-zA-Z0-9]/_/g;
+	return $name;
 }
 
 # Braindead RPN: +,-,/,* will pop two items from @stack, and perform
@@ -822,7 +811,7 @@ sub rpn
 			$left = pop(@stack);
 			push(@stack,$left*$right);
 		} else {
-			push(@stack,int($varnishstat{$item}));
+			push(@stack,int($data{$item}{'value'}));
 		}
 	}
 	if (@stack > 1)
@@ -835,19 +824,285 @@ sub rpn
 	print "\n";
 }
 
+# Bail-function.
+sub usage
+{
+	if (defined(@_) && "@_" ne "") {
+		print STDERR "@_" . "\n\n";
+	}
+	print STDERR "Known arguments: suggest, config, autoconf.\n";
+	print STDERR "Run with suggest to get a list of known aspects.\n";
+	exit 1;
+}
+
+################################
+# XML Parsing                  #
+################################
+# The following code is for parsing varnishstat -x. While %data should be
+# stable, the following bits can easily be replaced with anything (json, an
+# other xml-parser, magic, etc)
+#
+# The basic concept is simple enough. Only worry about stuff inside
+# <state>. Updating %state on each new data field, and commit it to %data
+# when </state> is seen.
+#
+# We do use translate_type() on the 'flag' field.
+
+
+# Internal state for the XML parsing
+my %state = (
+	'stat' => 0,     # inside <stat> or not
+	'field' => 'none', # <name>, <value>, <stat>, etc.
+	'values' => ()
+);
+
+# Reset the state of XML, mainly used for end-elements.
+sub xml_reset_state() {
+	$state{'stat'} = '0';
+	$state{'field'} = 'none';
+	$state{'values'} = ();
+}
+
+# Callback for data entry. Cleans leading whitespace and updates state.
+sub xml_characters {
+	my $d = $_[1];
+	if ($state{'stat'} == 0) {
+		return;
+	}
+	$d =~ s/^\s*$//g;
+	if ($d eq "") {
+		return;
+	}
+	$state{'values'}{$state{'field'}} = $d;
+}
+
+# Store the current state in %data. Issued at </stat>
+# Note that 'flag' is translated to RRD-equivalents here.
+sub xml_commit_state
+{
+	my $name = $state{'values'}{'name'};
+	my $type = $state{'values'}{'type'};
+	my $ident = $state{'values'}{'ident'};
+
+	foreach my $key (keys %{$state{'values'}}) {
+		my $data = $state{'values'}{$key};
+		if ($key eq 'flag') {
+			$data = translate_type($data);
+		}
+		if (defined($type) and $type ne "") {
+			$data{$type}{$ident}{$name}{$key} = $data;
+		} else {
+			$data{$name}{$key} = $data
+		}
+	}
+}
+
+# Callback for end tag. E.g: </stat>
+sub xml_end_elem {
+	my $element = $_[1];
+	if ($element ne "stat") {
+		return;
+	}
+
+	xml_commit_state();
+	xml_reset_state();
+}
+
+# Callback for opening tag. E.g: <stat>
+sub xml_start_elem {
+	$state{'field'} = $_[1];
+	if ($state{'field'} eq "stat") {
+		$state{'stat'} = 1;
+	}
+}
+
+################################
+# Internal API                 #
+################################
+
+
+# Populate %data, includes both values and descriptions and more.
+# Currently driven by XML, but that could change.
+sub populate_stats
+{
+	my $arg = "-x";
+	my $parser = new XML::Parser(Handlers => {Start => \&xml_start_elem,
+						End => \&xml_end_elem,
+						Char => \&xml_characters} );
+	
+	if ($varnishname) {
+		$arg .= " -n $varnishname";
+	}
+	open (XMLDATA, "$varnishstatexec $arg|") or die "meh";
+	$parser->parse(*XMLDATA, ProtocolEncoding => 'ISO-8859-1');
+	close(XMLDATA);
+}
+
+# Prints the fields in the list in $_[2] (e.g: 'value'/'description') for
+# each identity of the varnish counter/family combination as defined by
+# the $_[0]-counter on the aspect definition. Err, that's jibberish, so
+# an example:
+#
+# e.g: dynamic_print('SMA_1','',('value'))
+# e.g: dynamic_print('SMA_2','.label',('ident','description'))
+# SMA_1 is the counter-value. If it is a dynamic counter, it has a counter
+# and family-member (e.g: counter: c_req, family: SMA) and print_dynamic
+# will print c_req for each SMA-identity.
+#
+# Note that the variables to print is a list. This is to allow printing a
+# single item with multiple fields. Typically for identity+description so
+# you can distinguish between different data points.
+#
+# Returns true if it was a dynamic counter.
+sub print_dynamic
+{
+	my $name = $_[0];
+	shift;
+	my $suffix = $_[0];
+	shift;
+	my @field = @_;
+	if (!defined($ASPECTS{$self}{'values'}{$name}{'counter'})) {
+		return 0;
+	}
+	if (!defined($ASPECTS{$self}{'values'}{$name}{'family'})) {
+		return 0;
+	}
+	my $counter = $ASPECTS{$self}{'values'}{$name}{'counter'};
+	my $type = $ASPECTS{$self}{'values'}{$name}{'family'};
+	
+	foreach my $key (keys %{$data{$type}}) {
+		my $pname = normalize_name($type . "_" . $key . "_" . $counter);
+		print $pname . $suffix . " ";
+		my $i = 0;
+		foreach my $f (@field) {
+			if ($i != 0) {
+				print " ";
+			}
+			$i += 1;
+			print $data{$type}{$key}{$counter}{$f};
+		}
+		print "\n";
+	}
+	return 1;
+}
+
+# Read and verify the aspect ($self).
+sub set_aspect
+{
+	$self = $0;
+	$self =~ s/^.*\/varnish_//;
+	if (!defined($ASPECTS{$self}) && @ARGV == 0) {
+		usage "No such aspect";
+	}
+}
+
+# Print 'yes' if it's reasonable to use this plugin, or 'no' with a
+# human-readable error message. Always exit true, even if the response
+# is 'no'.
+sub autoconf
+{
+	# XXX: Solaris outputs errors to stderr and always returns true.
+	# XXX: See #873
+	if (`which $varnishstatexec 2>/dev/null` =~ m{^/}) {
+		print "yes\n";
+	} else {
+		print "no ($varnishstatexec could not be found)\n";
+	}
+	exit 0;
+}
+
+# Suggest relevant aspects/values of $self.
+# 'DEBUG'-graphs are excluded.
+sub suggest
+{
+	foreach my $key (keys %ASPECTS) {
+		if (defined($ASPECTS{$key}{'DEBUG'}) && $FULL_SUGGEST != 1) {
+			next;
+		}
+		print "$key\n";
+	}
+}
+
+# Walk through the relevant aspect and print all top-level configuration
+# values and value-definitions.
+sub get_config
+{
+	my $graph = $_[0];
+
+	# Need to double-check since set_aspect only checks this if there
+	# is no argument (suggest/autoconf doesn't require a valid aspect)
+	if (!defined($ASPECTS{$graph})) {
+		usage "No such aspect";
+	}
+	my %values = %{$ASPECTS{$graph}{'values'}};
+
+	print "graph_category Varnish\n";
+	foreach my $field (@graph_parameters) {
+		print_if_exist(\%ASPECTS,$graph,$field,"graph_$field");
+	}
+
+	foreach my $value (keys %values) {
+		# Just print the description/type if it's a dynamic
+		# counter. It'll be silent if it isn't.
+		if(print_dynamic($value,'.label',('description','type','ident'))) {
+			print_dynamic($value,'.type',('flag'));
+			next;
+		}
+
+		# Need either RPN definition or a varnishstat value.
+		if (!defined($data{$value}{'value'}) &&
+		    !defined($values{$value}{'rpn'})) {
+			if ($DEBUG) {
+				print "ERROR: $value not part of varnishstat.\n"
+			}
+			next;
+		}
+		
+		if (!print_if_exist(\%values,$value,'label')) {
+			print "$value.label $data{$value}{'description'}\n";
+		}
+		foreach my $field (@field_parameters) {
+			print_if_exist(\%values,$value,$field);
+		}
+	}
+}
+
+# Handle arguments (config, autoconf, suggest)
+# Populate stats for config is necessary, but we want to avoid it for
+# autoconf as it would generate a nasty error.
+sub check_args
+{
+	if (@ARGV && $ARGV[0] eq '') {
+		shift @ARGV;
+	}
+	if (@ARGV == 1) {
+		if ($ARGV[0] eq "config") {
+			populate_stats;
+			get_config($self);
+			exit 0;
+		} elsif ($ARGV[0] eq "autoconf") {
+			autoconf($self);
+			exit 0;
+		} elsif ($ARGV[0] eq "suggest") {
+			suggest;
+			exit 0;
+		}
+		usage "Unknown argument";
+	}
+}
+
 ################################
 # Execution starts here        #
 ################################
 
 set_aspect;
 check_args;
-populate_stats; 
+populate_stats;
 
 # We only get here if we're supposed to.
-
 # Walks through the relevant values and either prints the varnishstat, or
 # if the 'rpn' variable is set, calls rpn() to execute ... the rpn.
-# 
+#
 # NOTE: Due to differences in varnish-versions, this checks if the value
 # actually exist before using it.
 foreach my $value (keys %{$ASPECTS{$self}{'values'}}) {
@@ -855,7 +1110,11 @@ foreach my $value (keys %{$ASPECTS{$self}{'values'}}) {
 		print "$value.value ";
 		rpn($ASPECTS{$self}{'values'}{$value}{'rpn'});
 	} else {
-		if (!defined($varnishstat{$value})) {
+		if (print_dynamic($value,'.value',('value'))) {
+			next;
+		}
+
+		if (!defined($data{$value}{'value'})) {
 			if ($DEBUG) {
 				print STDERR "Error: $value not part of "
 					   . "varnishstat.\n";
@@ -863,6 +1122,7 @@ foreach my $value (keys %{$ASPECTS{$self}{'values'}}) {
 			next;
 		}
 		print "$value.value ";
-		print "$varnishstat{$value}\n";
+		print "$data{$value}{'value'}\n";
 	}
 }
+

@@ -30,7 +30,7 @@ ejabberd_users
 ejabberd_usersindays
 
 
-If the autodetect-feature for vhosts breaks, you can set  
+If the autodetect-feature for vhosts breaks, you can set
 
 =over 4
 
@@ -50,7 +50,7 @@ For monitoring user statuses - define statuses environment variable:
   [ejabberd_*]
     env.statuses available away chat xa
 
-=back 
+=back
 
 For usersindays statistics define days environment variable.  Be
 careful on high loaded servers, because it will plot all days in one
@@ -119,9 +119,9 @@ fi
 # trying to autodetect running vhosts.
 if [ -z "$vhosts" ]; then
     for CFGPATH in /etc/ejabberd /usr/local/ejabberd/etc; do
-	if [ -f "$CFGPATH/ejabberd.cfg" ]; then
-	    EJCFG=$CFGPATH/ejabberd.cfg;
-	fi
+        if [ -f "$CFGPATH/ejabberd.cfg" ]; then
+            EJCFG=$CFGPATH/ejabberd.cfg;
+        fi
     done
     if [ -z "$EJCFG" ]; then
         echo "Unable to find ejabberd.cfg. Exiting." >&2
@@ -154,16 +154,16 @@ fi
 
 if [ "$1" = "config" ]; then
     if [ "$MODE" = "memory" ]; then
-	echo 'graph_args --base 1024 -l 0'
-	echo 'graph_scale yes'
-	echo 'graph_category ejabberd'
-	echo 'graph_info This graph shows a statistic of ejabberd'
-	echo 'graph_title Memory of ejabberd process'
-	echo 'graph_vlabel Bytes'
-	echo "ejabberd_memory_size.label actual memory";
-	echo "ejabberd_memory_size.info Memory used by ejabberd process in Bytes";
-	echo "ejabberd_memory_peak.label memory peak";
-	echo "ejabberd_memory_peak.info Memory peak of ejabberd process in Bytes";
+        echo 'graph_args --base 1024 -l 0'
+        echo 'graph_scale yes'
+        echo 'graph_category ejabberd'
+        echo 'graph_info This graph shows a statistic of ejabberd'
+        echo 'graph_title Memory of ejabberd process'
+        echo 'graph_vlabel Bytes'
+        echo "ejabberd_memory_size.label actual memory";
+        echo "ejabberd_memory_size.info Memory used by ejabberd process in Bytes";
+        echo "ejabberd_memory_peak.label memory peak";
+        echo "ejabberd_memory_peak.info Memory peak of ejabberd process in Bytes";
     else
     echo 'graph_args --base 1000 -l 0'
     echo 'graph_scale no'
@@ -171,58 +171,58 @@ if [ "$1" = "config" ]; then
     echo 'graph_info This graph shows a statistic of ejabberd'
 
     if [ "$MODE" = "connections" ]; then
-	echo 'graph_title Server-to-server conections'
-	echo 'graph_vlabel s2s'
+        echo 'graph_title Server-to-server conections'
+        echo 'graph_vlabel s2s'
         echo 's2s_connections_out.label incoming s2s connections'
         echo 's2s_connections_out.info Number of outgoing server to server connections'
         echo 's2s_connections_in.label outgoing s2s connections'
         echo 's2s_connections_in.info Number of incoming server to server connections'
     elif [ "$MODE" = "users" ]; then
-	echo 'graph_title Connected users'
-	echo 'graph_vlabel users'
-	for host in $vhosts; do
-	    formathost=$(echo $host | tr '.' '_')
-	    echo "connected_users_$formathost.label $host connected users";
-	    echo "connected_unique_users_$formathost.label $host unique connected users";
-	done;
+        echo 'graph_title Connected users'
+        echo 'graph_vlabel users'
+        for host in $vhosts; do
+            formathost=$(echo $host | tr '.' '_' | tr '-' '_')
+            echo "connected_users_$formathost.label $host connected users";
+            echo "connected_unique_users_$formathost.label $host unique connected users";
+        done;
     elif [ "$MODE" = "registrations" ]; then
-	echo 'graph_title Number of registered users'
-	echo 'graph_vlabel users'
-	for host in $vhosts; do
-	    formathost=$(echo $host | tr '.' '_')
-	    echo "registered_$formathost.label $host registered users";
-	    echo "registered_$formathost.info Registered users for vhost $host"
-	done;
+        echo 'graph_title Number of registered users'
+        echo 'graph_vlabel users'
+        for host in $vhosts; do
+            formathost=$(echo $host | tr '.' '_' | tr '-' '_')
+            echo "registered_$formathost.label $host registered users";
+            echo "registered_$formathost.info Registered users for vhost $host"
+        done;
     elif [ "$MODE" = "statuses" ]; then
-	echo 'graph_title Users with statuses'
-	echo 'graph_vlabel users'
-	for host in $vhosts; do
-		for status in $statuses; do
-			formathost=$(echo $host | tr '.' '_')
-		   echo "status_${formathost}_${status}.label $status on $host"; 
-	  	 	echo "status_${formathost}_${status}.info Number of users with status $status on $host [available, away, xa=not available, dnd=(do not disturb) or (busy), chat=free for chat]";
-		done;
-	done;
+        echo 'graph_title Users with statuses'
+        echo 'graph_vlabel users'
+        for host in $vhosts; do
+                for status in $statuses; do
+                        formathost=$(echo $host | tr '.' '_' | tr '-' '_')
+                   echo "status_${formathost}_${status}.label $status on $host";
+                        echo "status_${formathost}_${status}.info Number of users with status $status on $host [available, away, xa=not available, dnd=(do not disturb) or (busy), chat=free for chat]";
+                done;
+        done;
     elif [ "$MODE" = "threads" ]; then
-	echo 'graph_title Threads of ejabberd process'
-	echo 'graph_vlabel threads'
-	echo "ejabberd_threads.label number of threads";
-	echo "ejabberd_threads.info Number of threads of ejabberd process";
+        echo 'graph_title Threads of ejabberd process'
+        echo 'graph_vlabel threads'
+        echo "ejabberd_threads.label number of threads";
+        echo "ejabberd_threads.info Number of threads of ejabberd process";
     elif [ "$MODE" = "usersindays" ]; then
-	echo 'graph_title Active users in last days'
-	echo 'graph_vlabel users'
-	for host in $vhosts; do
-		for num in $days; do
-			formathost=$(echo $host | tr '.' '_')
-			echo "usersindays_${formathost}_${num}.label active users on $host in last $num days";
-			echo "usersindays_${formathost}_${num}.info Number of users active on $host in last $num days";
-		done;
-	done;
+        echo 'graph_title Active users in last days'
+        echo 'graph_vlabel users'
+        for host in $vhosts; do
+                for num in $days; do
+                        formathost=$(echo $host | tr '.' '_' | tr '-' '_')
+                        echo "usersindays_${formathost}_${num}.label active users on $host in last $num days";
+                        echo "usersindays_${formathost}_${num}.info Number of users active on $host in last $num days";
+                done;
+        done;
     elif [ "$MODE" = "uptime" ]; then
-	echo 'graph_title Uptime of ejabberd server'
-	echo 'uptime in days'
-	echo "uptime.label uptime"
-	echo 'uptime.draw AREA'
+        echo 'graph_title Uptime of ejabberd server'
+        echo 'graph_vlabel uptime in days'
+        echo "uptime.label uptime"
+        echo 'uptime.draw AREA'
     fi
     fi
     exit 0
@@ -236,36 +236,36 @@ fi
 
 if [ "$MODE" = "users" ]; then
     for host in $vhosts; do
-	formathost=$(echo $host | tr '.' '_')
-	echo "connected_users_$formathost.value $($EJCTL vhost $host stats onlineusers)"; 
-	echo "connected_unique_users_$formathost.value $($EJCTL connected-users | awk -v var=$host -F/ '{users[$1]} END {for (user in users) {if (index(user,var)) {count++}} print count}')"; 
+        formathost=$(echo $host | tr '.' '_' | tr '-' '_')
+        echo "connected_users_$formathost.value $($EJCTL stats-host onlineusers $host)";
+        echo "connected_unique_users_$formathost.value $($EJCTL connected-users | awk -v var=$host -v count=0 -F/ '{users[$1]} END {for (user in users) {if (index(user,var)) {count++}} print count}')";
     done
     exit 0
 fi
 
 if [ "$MODE" = "registrations" ]; then
     for host in $vhosts; do
-	formathost=$(echo $host | tr '.' '_')
-	num=$($EJCTL vhost $host stats registeredusers)
+        formathost=$(echo $host | tr '.' '_' | tr '-' '_')
+        num=$($EJCTL stats-host registeredusers $host)
         if [ "$?" != 0 ]; then
             num="U"
         fi
-	echo "registered_$formathost.value $num"; 
+        echo "registered_$formathost.value $num";
     done
     exit 0
 fi
 
 if [ "$MODE" = "statuses" ]; then
    for host in $vhosts; do
-	formathost=$(echo $host | tr '.' '_')
-		for status in $statuses; do
-			num=$($EJCTL vhost $host status-num $status)
-			if [ "$?" != 0 ]; then
-				num="U"
-			fi
-			echo "status_${formathost}_${status}.value $num";
-		done
-	 done
+        formathost=$(echo $host | tr '.' '_' | tr '-' '_')
+                for status in $statuses; do
+                        num=$($EJCTL status-num-host $status $host)
+                        if [ "$?" != 0 ]; then
+                                num="U"
+                        fi
+                        echo "status_${formathost}_${status}.value $num";
+                done
+         done
     exit 0
 fi
 
@@ -283,13 +283,13 @@ fi
 if [ "$MODE" = "usersindays" ]; then
         for host in $vhosts; do
                 for num in $days; do
-                        formathost=$(echo $host | tr '.' '_')
-                        echo "usersindays_${formathost}_${num}.value $($EJCTL vhost $host num-active-users $num)";
+                        formathost=$(echo $host | tr '.' '_' | tr '-' '_')
+                        echo "usersindays_${formathost}_${num}.value $($EJCTL num-active-users $host $num)";
                 done;
         done;
-	exit 0
+        exit 0
 fi
 
 if [ "$MODE" = "uptime" ]; then
-	echo "uptime.value $($EJCTL stats uptime-seconds | awk '{printf "%.2f", $1/86400}')"
+        echo "uptime.value $($EJCTL stats uptimeseconds | awk '{printf "%.2f", $1/86400}')"
 fi

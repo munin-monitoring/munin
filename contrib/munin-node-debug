@@ -25,6 +25,8 @@ my $dump_config;
 my $is_debug;
 my $help;
 my $update_rate = 10;
+my $spoolfetch_rate = 5;
+my $listen = "localhost";
 
 my $arg_ret = GetOptions(
 	"nb-plugins|n=i" => \$nb_plugins,
@@ -32,8 +34,12 @@ my $arg_ret = GetOptions(
 	"nb-servers|s=i" => \$nb_servers,
 
 	"startint-port|p=i" => \$starting_port,
+
+	"listen=s" => \$listen,
 	
+	"update-rate=i" => \$update_rate,
 	"spoolfetch" => \$spoolfetch,
+	"spoolfetch-rate=i" => \$spoolfetch_rate,
 
 	"dump|d" => \$dump_config,
 	"help|h" => \$help,
@@ -51,6 +57,8 @@ Options:
     -s --nb-servers <int>     Number of servers [3]
 
     -p --start-port <int>     Starting TCP listening port [24949]
+       --listen    <host>     Which IP to bind [localhost]. 
+                              Use '' or '*' to bind to every interface.
 
     -d --dump                 Only dump a generated munin.conf part [no]
        --debug                Print debug informations [no] 
@@ -76,10 +84,12 @@ if ($dump_config) {
 my @servers;
 for (my $i = 0; $i < $nb_servers; $i ++) {
 	my $port = $starting_port + $i;
-	debug("starting server on port $port");
+	# LocalAddr == * doesn't work, it has to be empty
+	my $localaddr = ($listen eq '*') ? '' : $listen;
+	debug("starting server on port $listen:$port");
 	my $server = IO::Socket::INET->new(
 		"LocalPort" => $port,
-		"LocalAddr" => "localhost",
+		"LocalAddr" => $localaddr,
 		"Listen" => 5,
 		"ReuseAddr" => 1,
 		"Proto" => "tcp",
@@ -109,7 +119,7 @@ while (my @ready = $select->can_read()) {
 sub service
 {
 	my $client = shift;
-	my $hostname = "host".$client->sockport().".debug";
+	my $hostname = "host".$client->sockport().".debug.lan";
 
 	print $client "# munin node at $hostname\n";
 
@@ -138,7 +148,7 @@ sub service
 			my $plugin_number = get_plugin_number($1);
 			for (my $i = 0; $i < $fields_per_plugin; $i ++) {
 				my $value = sin( (time / 3600) * $plugin_number + $i);
-				print $client "field_$1_$i.value $value\n";
+				print $client "field_". $plugin_number . "_$i.value $value\n";
 			}
 			print $client ".\n";
 		} elsif ($line =~ m/^spoolfetch (\d+)/) {
@@ -146,6 +156,12 @@ sub service
 
 			# One hour histo if asked from THE BEGINNING
 			$timestamp = (time - 3600) if ($timestamp == 0);
+
+			# Only send something every $spoolfetch_rate * $update_rate
+			if ( $timestamp > time - $spoolfetch_rate * $update_rate) {
+				print $client ".\n";
+				return;
+			}
 
 			# Sends spools strictly > LastSpooled
 			for (my $epoch = ($timestamp - $timestamp % $update_rate + $update_rate);

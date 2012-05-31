@@ -29,12 +29,12 @@ Unknown license
 
 EOF
 
-# $Id: ntp_kernel_pll_off.in,v 1.1.1.1 2006/06/04 20:53:57 he Exp $
+export PATH=/usr/local/sbin:$PATH
 
 if [ "$1" = "autoconf" ]; then
-    ntpdc -c kern 2>/dev/null | 
+    { ntpq -c kerninfo; ntpdc -c kerninfo; } 2>/dev/null |
     awk 'BEGIN { ev=1; }
-         /^pll offset:/ { ev=0; } 
+         /^pll offset:/ { ev=0; }
          END { if (ev == 0) { print "yes";} else { print "no"; } exit ev; }'
     exit 0
 fi
@@ -50,4 +50,12 @@ if [ "$1" = "config" ]; then
 fi
 
 printf 'ntp_pll_off.value '
-ntpdc -c kern | awk '/^pll offset:/ { print $3 }'
+
+if [ $(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]' | tr -d '.') -ge 427 ]
+then
+    cmd=ntpq
+else
+    cmd=ntpdc
+fi
+
+$cmd -c kerninfo | awk '/^pll offset:/ { print $3 }'

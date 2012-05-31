@@ -104,11 +104,13 @@ my %config = (
                        # RPM values. Verified in lm-sensors-3-3.1.2
             (\d+)      # Match one or more digits (Match current value as \$2)
             \s         # Exactly one space followed by 
-            RPM.*?     # RPM string, and then any chars
-            (\d+)      # Match one or more digits (Match minimum value as \$3)
-            \s         # Exactly one space followed by
+            (?:        # a optional group, which might contain the minimum value:
+              RPM.*?   # RPM string, and then any chars (but no newlines)
+              (\d+)    # Match one or more digits (Match minimum value as \$3)
+              \s       # Exactly one space followed by
+            )?         # end of optional group
             RPM        # RPM string
-                /xms,
+                /xm,
             title => 'Fans',
             vtitle => 'RPM',
             print_threshold => \&fan_threshold,
@@ -163,9 +165,9 @@ my %config = (
             [°\s]C     # Match degree char or space char, and then 'C' char
             \)         # ')' char
             )?         # >>>>end of statement
-        /xms,
+        /xm,
     title => 'Temperatures',
-    vtitle => 'Celsius',
+    vtitle => 'degrees Celsius',
     print_threshold => \&temp_threshold,
     graph_args => '--base 1000 -l 0'
     },
@@ -216,7 +218,7 @@ my %config = (
             \)          # ')' char
             )           # >>>>end of statement
 
-        /xms,
+        /xm,
 
     title => 'Voltages',
     vtitle => 'Volt',

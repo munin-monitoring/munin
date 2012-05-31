@@ -19,6 +19,7 @@ use Munin::Master::Utils;
 use RRDs;
 use Time::HiRes;
 use Data::Dumper;
+use Scalar::Util qw(weaken);
     
 use List::Util qw(max);
 
@@ -32,7 +33,7 @@ my $rrd_tune_flags = {
 };
 
 sub new {
-    my ($class, $host) = @_;
+    my ($class, $host, $worker) = @_;
 
     my $self = $class->SUPER::new($host->get_full_path);
     $self->{host} = $host;
@@ -41,6 +42,9 @@ sub new {
                                              $host->{host_name},
 					     $host);
     $self->{state} = {};
+    $self->{worker} = $worker;
+    weaken($self->{worker});
+
     return $self;
 }
 
@@ -70,7 +74,7 @@ sub do_work {
     # already have a lock on this.
     my $state_file = sprintf ('%s/state-%s.storable', $config->{dbdir}, $path); 
     DEBUG "[DEBUG] Reading state for $path in $state_file";
-    $self->{state} = ( -e $state_file ) ? Storable::retrieve($state_file) : { };
+    $self->{state} = munin_read_storable($state_file) || {};
 
     my %all_service_configs = (
 	data_source => {},
@@ -95,6 +99,14 @@ sub do_work {
 		    # XXX - Commented out, should be protect by a "if logger.isDebugEnabled()"
 		    #       since it is quite expensive
 		    #DEBUG "[DEBUG] whole_config:" . Dumper(\%whole_config);
+
+		    # spoolfetching reported no data, skipping it.
+		    if (! $whole_config{global}{multigraph}[1]) {
+			    INFO "[INFO] $nodedesignation didn't send any data for spoolfetch. Ignoring it.";
+			    # adding ourself to failed_workers, so we use 
+			    push @{ $self->{worker}->{failed_workers} },  $self->{ID};
+			   die "NO_SPOOLFETCH_DATA";
+		    }
 
 		    # Gets the plugins from spoolfetch
 		    # Only keep the first one, the others will be multigraph-fetched
@@ -211,12 +223,30 @@ sub do_work {
 		my $last_updated_timestamp = $self->_update_rrd_files(\%service_config, \%service_data);
           	$self->set_spoolfetch_timestamp($last_updated_timestamp);
 	    } # for @plugins
+
+	    # Send "quit" to node
+	    $self->{node}->quit();
+	   
 	}; # eval
 
-	if ($EVAL_ERROR) {
+	# kill the remaining process if needed
+	if ($self->{node}->{pid}) {
+		INFO "[INFO] Killing subprocess $self->{node}->{pid}";
+		kill $self->{node}->{pid};
+	}
+
+	if ($EVAL_ERROR =~ m/^NO_SPOOLFETCH_DATA /) {
+	    INFO "[INFO] No spoofetch data for $nodedesignation";
+	    return;
+	} elsif ($EVAL_ERROR) {
 	    ERROR "[ERROR] Error in node communication with $nodedesignation: "
 		.$EVAL_ERROR;
+	    return;
 	}
+
+	# Everything went smoothly.
+	DEBUG "[DEBUG] Everything went smoothly.";
+	return 1;
 
     }); # do_in_session
 
@@ -224,11 +254,10 @@ sub do_work {
 
     # Update the state file 
     DEBUG "[DEBUG] Writing state for $path in $state_file";
-    Storable::nstore($self->{state}, $state_file . ".tmp.$$");
-    rename($state_file . ".tmp.$$", $state_file);
+    munin_write_storable($state_file, $self->{state});
 
     # This handles failure in do_in_session,
-    return undef if !$done;
+    return undef if ! $done || ! $done->{exit_value};
 
     return {
         time_used => Time::HiRes::time - $update_time,

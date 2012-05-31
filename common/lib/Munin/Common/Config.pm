@@ -44,6 +44,7 @@ my %legal = map { $_ => 1 } (
     "graph_future", "trend", "predict",
 	"html_rename",
 	"worker_start_delay",
+	"num_messages",
 	);
 
 my %bools = map { $_ => 1} qw(yes no true false on off 1 0);

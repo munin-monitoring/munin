@@ -32,13 +32,17 @@ use Munin::Node::SpoolWriter;
 
 my $host = "localhost:4949";
 my $SPOOLDIR = "@@SPOOLDIR@@";
+my $do_fork;
 my $verbose;
 my $debug;
 my $help;
 
+
 GetOptions(
 	"host=s" => \$host,
 	"spooldir|s=s" => \$SPOOLDIR,
+
+	"fork" => \$do_fork,
 
 	"help|h" => \$help,
 	"verbose|v" => \$verbose,
@@ -107,18 +111,18 @@ MAIN: while(1) {
 
 		# Should update it
 		$last_updated{$plugin} = $when;
-		if (fork()) {
+		if ($do_fork && fork()) {
 			# parent, return directly
 			next PLUGIN;
 		}
 		# Setting the command name for a useful top information
 		$process_name = "plugin:$plugin";
-		$0 = "munin-async-server [$process_name]";
+		local $0 = "munin-async-server [$process_name]";
 		
 		fetch_data($plugin, $when);
 
-		# We end here
-		last MAIN;
+		# We end here if we forked
+		last MAIN if $do_fork;
 	}
 
 	# Sleep for 1s.
@@ -227,5 +231,6 @@ munin-async-server [options]
      --host <hostname:port>     Connect to this munin-node [localhost:4949]
      -s --spool <spooldir>      Store the spooled data in this dir [@@SPOOLDIR@@]
 
+        --fork                  Do fork
      -v --verbose               Be verbose
      -h --help                  View this message	

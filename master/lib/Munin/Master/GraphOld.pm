@@ -323,14 +323,6 @@ sub graph_startup {
     return $config;
 }
 
-sub undef_references {
-    my ($c) = @_;
-    foreach my $k (keys %$c) {
-        undef_references($c->{$k}) if (ref($c->{$k}) eq "HASH" && $k ne "#%#parent");
-        $c->{$k} = undef;
-    }
-}
-
 sub graph_check_cron {
 
     # Are we running from cron and do we have matching graph_strategy
@@ -630,16 +622,14 @@ sub expand_specials {
             my @spc_stack = ();
             foreach my $pre (split(/\s+/, $tmp_field)) {
                 (my $name = $pre) =~ s/=.+//;
-                if (!@spc_stack) {
-                    munin_set_var_loc(
-                        $service,
-                        [$name, "draw"],
-                        munin_get($service->{$field}, "draw", "LINE1"));
-                    munin_set_var_loc($service, [$field, "process"], "no");
-                }
-                else {
-                    munin_set_var_loc($service, [$name, "draw"], "STACK");
-                }
+
+                # Auto selects the .draw
+                my $draw = (!@spc_stack) ? munin_get($service->{$field}, "draw", "LINE1") : "STACK";
+                munin_set_var_loc($service, [$name, "draw"], $draw);
+
+                # Don't process this field later
+                munin_set_var_loc($service, [$field, "process"], "0");
+
                 push(@spc_stack, $name);
                 push(@$preproc,  $pre);
                 push @$result, "$name.label";
@@ -647,13 +637,11 @@ sub expand_specials {
                 push @$result, "$name.cdef";
 
                 munin_set_var_loc($service, [$name, "label"], $name);
-                munin_set_var_loc($service, [$name, "cdef"],
-                    "$name,UN,0,$name,IF");
+                munin_set_var_loc($service, [$name, "cdef"], "$name,UN,0,$name,IF");
                 if (munin_get($service->{$field}, "cdef")
                     and !munin_get_bool($service->{$name}, "onlynullcdef", 0)) {
                     DEBUG "[DEBUG] NotOnlynullcdef ($field)...";
-                    $service->{$name}->{"cdef"}
-                        .= "," . $service->{$field}->{"cdef"};
+                    $service->{$name}->{"cdef"} .= "," . $service->{$field}->{"cdef"};
                     $service->{$name}->{"cdef"} =~ s/\b$field\b/$name/g;
                 }
                 else {
@@ -699,7 +687,7 @@ sub expand_specials {
                 $tc =~ s/\b$field\b/$service->{$last_name}->{"cdef"}/;
                 $service->{$last_name}->{"cdef"} = $tc;
             }
-            munin_set_var_loc($service, [$field, "process"], "no");
+            munin_set_var_loc($service, [$field, "process"], "0");
             munin_set_var_loc(
                 $service,
                 [$last_name, "draw"],
@@ -854,6 +842,16 @@ sub fork_and_work {
     }
 }
 
+sub remove_dups {
+	my @ret;
+	my %keys;
+	for my $order (@_) {
+                (my $name = $order) =~ s/=.+//;
+		push @ret, $order unless ($keys{$name} ++);
+	}
+
+	return @ret;
+}
 
 sub process_service {
     my ($service) = @_;
@@ -889,6 +887,9 @@ sub process_service {
 
     # put preprocessed fields in front
     unshift @field_order, @{ $expanded_result->{preprocess} };
+
+    # Remove duplicates, while retaining the order
+    @field_order = remove_dups ( @field_order );
 
     # Get max label length
     DEBUG "[DEBUG] Checking field lengths for $sname: \"" . join('","', @field_order) . '".';
@@ -972,6 +973,11 @@ sub process_service {
 
         # Getting name of rrd file
         $filename = munin_get_rrd_filename($field, $path);
+	if (! $filename) {
+		ERROR "[ERROR] filename is empty for " . munin_dumpconfig_as_str($field) . ", $path";
+		# Ignore this field
+		next;
+	}
 
 	if(!defined $filename) {
 		ERROR "[ERROR] Failed getting filename for $path, skipping field";
@@ -996,7 +1002,7 @@ sub process_service {
 	
         $rrdname = &get_field_name($fname);
 
-		reset_cdef($service, $rrdname);
+        reset_cdef($service, $rrdname);
         if ($rrdname ne $fname) {
 
             # A change was made
@@ -1004,8 +1010,7 @@ sub process_service {
         }
 
         # Push will place the DEF too far down for some CDEFs to work
-        unshift(@rrd,
-            "DEF:g$rrdname=" . $filename . ":" . $rrdfield . ":AVERAGE");
+        unshift(@rrd, "DEF:g$rrdname=" . $filename . ":" . $rrdfield . ":AVERAGE");
         unshift(@rrd, "DEF:i$rrdname=" . $filename . ":" . $rrdfield . ":MIN");
         unshift(@rrd, "DEF:a$rrdname=" . $filename . ":" . $rrdfield . ":MAX");
 
@@ -1671,7 +1676,7 @@ sub orig_to_cdef {
 
     return unless ref($service) eq "HASH";
 
-    if (defined $service->{$fieldname}->{"cdef_name"}) {
+    if (defined $service->{$fieldname} && defined $service->{$fieldname}->{"cdef_name"}) {
         return orig_to_cdef($service, $service->{$fieldname}->{"cdef_name"});
     }
     return $fieldname;
@@ -1680,8 +1685,8 @@ sub orig_to_cdef {
 sub reset_cdef {
 	my $service = shift;
 	my $fieldname = shift;
-    return unless ref($service) eq "HASH";
-	if (defined $service->{$fieldname}->{"cdef_name"}) {
+	return unless ref($service) eq "HASH";
+	if (defined $service->{$fieldname} && defined $service->{$fieldname}->{"cdef_name"}) {
 		reset_cdef($service, $service->{$fieldname}->{"cdef_name"});
 		delete $service->{$fieldname}->{"cdef_name"};
 	}

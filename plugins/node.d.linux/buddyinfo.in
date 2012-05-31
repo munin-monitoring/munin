@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# -*- mode: cperl; cperl-indent-level: 8; -*-
 
 =pod
 
@@ -15,6 +16,12 @@ Linux 2.5.40+, 2.6.x
 =head1 CONFIGURATION
 
 None needed.
+
+To optionally use a logarithmic scale on the graphs, define the
+environment variable logarithmic. For example:
+
+ [buddyinfo]
+ env.logarithmic yes
 
 =head1 INTERPRETATION
 
@@ -91,7 +98,12 @@ foreach my $zone (keys %$zones) {
 sub do_config {
 	print "multigraph buddyinfo\n";
 	print "graph_title Memory fragmentation\n";
-	print "graph_args --base 1024 --lower-limit 0\n";
+	print "graph_args --base 1024";
+	if (exists $ENV{"logarithmic"}) {
+		print " --logarithmic --units=si\n";
+	} else {
+		print " --lower-limit 0\n";
+	}
 	print "graph_vlabel pages free\n";
 	print "graph_category system\n";
 	print "graph_info This graph shows the number of free pages of different size\n";
@@ -109,7 +121,12 @@ sub do_config {
 
 		print "multigraph buddyinfo.$zoneid\n";
 		print "graph_title Memory fragmentation in $zone\n";
-		print "graph_args --base 1024 --lower-limit 0\n";
+		print "graph_args --base 1024";
+		if (exists $ENV{"logarithmic"}) {
+			print " --logarithmic --units=si\n";
+		} else {
+			print " --lower-limit 0\n";
+		}
 		print "graph_vlabel pages free\n";
 		print "graph_category system\n";
 		print "graph_info This graph shows the number of free pages in $zone\n";

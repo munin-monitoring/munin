@@ -11,6 +11,7 @@ our (@ISA, @EXPORT);
 use POSIX qw(strftime);
 use Getopt::Long;
 use Time::HiRes;
+use Scalar::Util qw( weaken );
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
@@ -21,6 +22,7 @@ use Log::Log4perl qw( :easy );
 my @times = ("day", "week", "month", "year");
 
 my $DEBUG = 0;
+my $INDEX_FILENAME = "index.html";
 my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 
 my $config;
@@ -58,6 +60,7 @@ sub node_reorder {
 				foreach my $local_group (@$groups){
 					if(!defined $currentgroup->{$local_group}){
 						$currentgroup->{$local_group} = {'#%#name' => $local_group, '#%#parent' => $currentgroup};
+						weaken($currentgroup->{$local_group}{'#%#parent'});
 					}
 					$currentgroup = $currentgroup->{$local_group};
 				}
@@ -76,6 +79,7 @@ sub node_reorder {
 					$child->{"#%#origparent"} = $group;
 					$currentgroup->{$name} = $child;
 					$child->{"#%#parent"} = $currentgroup;
+					weaken($child->{"#%#parent"});
 				}
 			}
 		} else {
@@ -140,10 +144,12 @@ sub get_group_tree {
 
 		    # Make sure the link gets right even if the service has subservices
 	    	if (munin_has_subservices ($child)) {
-				$childnode->{'url'}  = $base . $childname . "/index.html"; #TODO: html generation should generate urls
+				$childnode->{'url'}  = $base . $childname . "/$INDEX_FILENAME"; #TODO: html generation should generate urls
 		    } else {
 				$childnode->{'url'}  = $base . $childname . ".html"; #TODO: html generation should generate urls
 	    	}
+
+            $childnode->{'host_url'}  = $base . $INDEX_FILENAME;
 
             #TODO: Think of a nicer way to generate relative urls (reference #1)
 			for (my $shrinkpath = $childnode->{'url'}, my $counter = 0;
@@ -181,7 +187,7 @@ sub get_group_tree {
     foreach my $cat (sort keys %$cattrav) {
         my $obj = {};
         $obj->{'name'}     = $cat;
-        $obj->{'url'}      = $base . "index.html#" . $cat;
+        $obj->{'url'}      = $base . "${INDEX_FILENAME}#" . $cat;
         $obj->{'services'} = [sort {lc($a->{'name'}) cmp lc($b->{'name'})}
                 @{$cattrav->{$cat}}];
         $obj->{'state_' . lc munin_category_status($hash, $limits, $cat, 1)}
@@ -204,7 +210,7 @@ sub get_group_tree {
             "pathname" => $_,
             "path" => (
                 defined $rpath
-                ? ($rpath .= "../") . "index.html"
+                ? ($rpath .= "../") . $INDEX_FILENAME
                 : ($rpath = ""))}
     } reverse(undef, split('\/', $base));
 	
@@ -222,10 +228,10 @@ sub get_group_tree {
  
 	my $ret = {
         "name"     => munin_get_node_name($hash),
-        "url"      => $base . "index.html",
+        "url"      => $base . $INDEX_FILENAME,
         "path"     => $path,
 		"#%#hash"     => $hash,
-        "depth" => scalar(my @splitted_base = split("/", $base . "index.html"))
+        "depth" => scalar(my @splitted_base = split("/", $base . $INDEX_FILENAME))
             - 1,
         "filename"           => munin_get_html_filename($hash),
         "css_name"           => $css_name,
@@ -430,28 +436,34 @@ sub generate_service_templates {
 
     my $path = join('/', @loc);
 
+    my %imgs;
+    $imgs{'imgday'}   = "$path-day.png";
+    $imgs{'imgweek'}  = "$path-week.png";
+    $imgs{'imgmonth'} = "$path-month.png";
+    $imgs{'imgyear'}  = "$path-year.png";
+    
+    $imgs{'cimgday'}   = "$path-day.png";
+    $imgs{'cimgweek'}  = "$path-week.png";
+    $imgs{'cimgmonth'} = "$path-month.png";
+    $imgs{'cimgyear'}  = "$path-year.png";
+    
+    if (munin_get_bool($service, "graph_sums", 0)) {
+        $imgs{'imgweeksum'} = "$path-week-sum.png";
+        $imgs{'imgyearsum'} = "$path-year-sum.png";
+    }
+
+    # dump all the png filename to a file
+    my $fh = $config->{"#%#graphs_fh"};
+    foreach my $img (keys %imgs) {
+	print $fh "/" . $imgs{$img} . "\n";
+    }
+
     if ($method eq "cgi") {
-        $srv{'imgday'}   = $config->{'cgiurl_graph'} . "/$path-day.png";
-        $srv{'imgweek'}  = $config->{'cgiurl_graph'} . "/$path-week.png";
-        $srv{'imgmonth'} = $config->{'cgiurl_graph'} . "/$path-month.png";
-        $srv{'imgyear'}  = $config->{'cgiurl_graph'} . "/$path-year.png";
-
-        $srv{'cimgday'}   = $config->{'cgiurl_graph'} . "/$path-day.png";
-        $srv{'cimgweek'}  = $config->{'cgiurl_graph'} . "/$path-week.png";
-        $srv{'cimgmonth'} = $config->{'cgiurl_graph'} . "/$path-month.png";
-        $srv{'cimgyear'}  = $config->{'cgiurl_graph'} . "/$path-year.png";
-
-        if (munin_get_bool($service, "graph_sums", 0)) {
-            $srv{'imgweeksum'}
-                = $config->{'cgiurl_graph'} . "/$path-week-sum.png";
-            $srv{'imgyearsum'}
-                = $config->{'cgiurl_graph'} . "/$path-year-sum.png";
-        }
+	map { $srv{$_} = $config->{'cgiurl_graph'} . "/" . $imgs{$_} } keys %imgs;
+    } else {
+	map { $srv{$_} = $root_path . "/" . $imgs{$_} } keys %imgs;
     }
-    else {
 
-        # graph strategy cron is disabled
-    }
 
     # Compute the ZOOM urls
     {
@@ -563,7 +575,7 @@ sub generate_service_templates {
 sub get_path_nodes {
     my $hash = shift || return;
     my $ret  = [];
-    my $link = "index.html";
+    my $link = $INDEX_FILENAME;
 
     unshift @$ret, {"pathname" => munin_get_node_name($hash), "path" => ""};
     while ($hash = munin_get_parent($hash)) {
@@ -580,7 +592,6 @@ sub get_peer_nodes {
     my $hash      = shift || return;
     my $category  = shift;
     my $ret       = [];
-    my $link      = "index.html";
     my $parent    = munin_get_parent($hash) || return;
     my $me        = munin_get_node_name($hash);
     my $pchildren = munin_get_children($parent);
@@ -589,50 +600,50 @@ sub get_peer_nodes {
         @$pchildren) {
         next unless defined $peer and ref($peer) eq "HASH";
         next
-            if defined $category
+          if defined $category
                 and lc(munin_get($peer, "graph_category", "other")) ne
-                $category;
+                  $category;
         next
-            if (!defined $peer->{'graph_title'}
-            and (!defined $peer->{'#%#visible'} or !$peer->{'#%#visible'}));
+          if (!defined $peer->{'graph_title'}
+              and (!defined $peer->{'#%#visible'} or !$peer->{'#%#visible'}));
         next
-            if (defined $peer->{'graph_title'}
+          if (defined $peer->{'graph_title'}
             and !munin_get_bool($peer, "graph", 1));
         my $peername = munin_get_node_name($peer);
         next
-            if $peername eq "contact"
-                and munin_get_node_name($parent) eq "root";
+          if $peername eq "contact"
+            and munin_get_node_name($parent) eq "root";
         if ($peername eq $me) {
             unshift @$ret, {"name" => $peername, "link" => undef};
         }
         else {
             # Handle different directory levels between subgraphs and regular graphs
-	    if (munin_has_subservices ($hash)) {
-		if (munin_has_subservices ($peer)) {
-		    # I've got subgraphs, peer's got subgraphs
-		    unshift @$ret,
-			{"name" => $peername, "link" => "../$peername/index.html"};
-		} else { 
-		    # I've got subgraphs, peer's a regular graph
-		    unshift @$ret,
-			{"name" => $peername, "link" => "../$peername.html"};
-		} 
-	    } elsif (munin_has_subservices ($peer)) {
-		# I'm a regular graph, peer's got subgraphs
-		unshift @$ret,
-		    {"name" => $peername, "link" => "$peername/index.html"};
-	    } else {
-		if (defined $peer->{'graph_title'}) {
-		    # Both me and peer are regular graphs
-		    unshift @$ret,
-			{"name" => $peername, "link" => "$peername.html"};
-		}
-		else {
-		    # We're not on the graph level -- handle group peering
-		    unshift @$ret,
-			{"name" => $peername, "link" => "../$peername/index.html"};
-		}
-	    }
+            if (munin_has_subservices ($hash)) {
+                if (munin_has_subservices ($peer)) {
+                    # I've got subgraphs, peer's got subgraphs
+                    unshift @$ret,
+                      {"name" => $peername, "link" => "../$peername/index.html"};
+                } else { 
+                    # I've got subgraphs, peer's a regular graph
+                    unshift @$ret,
+                      {"name" => $peername, "link" => "../$peername.html"};
+                } 
+            } elsif (munin_has_subservices ($peer)) {
+                # I'm a regular graph, peer's got subgraphs
+                unshift @$ret,
+                  {"name" => $peername, "link" => "$peername/index.html"};
+            } else {
+                if (defined $peer->{'graph_title'}) {
+                    # Both me and peer are regular graphs
+                    unshift @$ret,
+                      {"name" => $peername, "link" => "$peername.html"};
+                }
+                else {
+                    # We're not on the graph level -- handle group peering
+                    unshift @$ret,
+                      {"name" => $peername, "link" => "../$peername/index.html"};
+                }
+            }
         }
     }
     return $ret;

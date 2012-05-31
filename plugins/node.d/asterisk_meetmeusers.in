@@ -106,7 +106,7 @@ $pop->print("");
 
 ## Request status of messages.
 $pop->print("Action: command");
-$pop->print("Command: meetme");
+$pop->print("Command: meetme list");
 $pop->print("");
 
 my $nb = 0;
@@ -124,6 +124,9 @@ while (($line = $pop->getline) and ($line !~ /END COMMAND/o))
 
 $pop->print("Action: logoff");
 $pop->print("");
+
+## Exhaust buffer before closing (to avoid polluting Asterisk's logs)
+while ($line = $pop->getline) {}
 
 print "users.value $nb\n";
 

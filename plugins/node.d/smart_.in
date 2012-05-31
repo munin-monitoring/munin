@@ -1,11 +1,11 @@
 #!@@PYTHON@@
-# -*- encoding: iso-8859-1 -*-
+# -*- python -*-
 #
 # Wildcard-plugin to monitor S.M.A.R.T attribute values through smartctl,
 # which is part of smartmontools package:
 #         http://smartmontools.sourceforge.net/
-# 
-# To monitor a S.M.A.R.T device, link smart_<device> to this file. 
+#
+# To monitor a S.M.A.R.T device, link smart_<device> to this file.
 # E.g.
 #    ln -s /usr/share/munin/plugins/smart_ /etc/munin/plugins/smart_hda
 # ...will monitor /dev/hda.
@@ -16,10 +16,10 @@
 #   group disk
 #
 # Parameters
-# 	smartpath     - Specify path to smartctl program (Default: /usr/sbin/smartctl)
-# 	smartargs     - Override '-a' argument passed to smartctl with '-A -i'+smartargs
+#       smartpath     - Specify path to smartctl program (Default: /usr/sbin/smartctl)
+#       smartargs     - Override '-a' argument passed to smartctl with '-A -i'+smartargs
 #       ignorestandby - Ignore the standby state of the drive and perform SMART query. Default: False
-# 
+#
 # Parameters can be specified on a per-drive basis, eg:
 #   [smart_hda]
 #   user root
@@ -39,7 +39,7 @@
 #   env.smartargs -H -l error -d 3ware,2
 #
 # Author: Nicolas Stransky  <Nico@stransky.cx>
-# 
+#
 # v1.0 22/08/2004 - First draft
 # v1.2 28/08/2004 - Clean up the code, add a verbose option
 # v1.3 14/11/2004 - Compatibility with python<2.2. See comments in the code
@@ -181,7 +181,7 @@ def print_config(hard_drive) :
         verboselog('No state file, reading S.M.A.R.T values for the first time')
         read_values(hard_drive[0])
         pickle.dump(smart_values,open_state_file(hard_drive,"w"))
-        smart_values_state=smart_values 
+        smart_values_state=smart_values
 
     verboselog('Printing configuration')
     print('graph_title S.M.A.R.T values for drive '+string.join(hard_drive,","))
@@ -211,7 +211,7 @@ def print_unknown_from_statefile(hard_drive,smart_values) :
             sys.exit(1)
     else :
         verboselog('No state file, reading S.M.A.R.T values for the first time')
-        exit(1)
+        sys.exit(1)
 
     verboselog('Printing unknown values for all attributes in state file')
     attributes=smart_values_state.keys()
@@ -264,7 +264,7 @@ def find_smart_drives() :
                             drives.append(drive)
                     except :
                         continue
-            except : 
+            except :
                 verboselog('Failed to list devices in /sys/block')
         else :
             verboselog('Not running linux2.6, failing back to /proc/partitions')
@@ -275,7 +275,7 @@ def find_smart_drives() :
                     words=string.split(l)
                     if len(words)==0 or words[0][0] not in string.digits : continue
                     if words[0] in ['1','9','58','254'] : continue # Ignore RAM, md, LVM and LVM2 devices
-                    if words[-1][-1] not in string.digits : 
+                    if words[-1][-1] not in string.digits :
                         try :
                             verboselog('Trying '+words[-1]+'...')
                             exit_status=read_values(words[-1])
@@ -370,13 +370,13 @@ if len(sys.argv)>1 :
         print_config(hard_drive)
         sys.exit(0)
     elif sys.argv[1]=="autoconf" :
-        if os.path.exists(os.getenv('smartpath','/usr/sbin/smartctl')) : 
+        if os.path.exists(os.getenv('smartpath','/usr/sbin/smartctl')) :
             if not find_smart_drives():
                 print('no (no drives accessible)')
             else :
                 print('yes')
             sys.exit(0)
-        else : 
+        else :
             print('no (smartmontools not found)')
             sys.exit(0)
     elif sys.argv[1]=="suggest" :
@@ -395,7 +395,7 @@ hard_drive=get_hard_drive_name()
 read_values(hard_drive[0])
 if not emptyoutput: update_state_file(hard_drive)
 print_plugin_values(hard_drive)
-exit(0)
+sys.exit(0)
 
 
 ### The following is the smart_ plugin documentation, intended to be used with munindoc
@@ -415,7 +415,7 @@ installed and in function.
 
 To monitor a S.M.A.R.T device, create a link in the service directory
 of the munin-node named smart_<device>, which is pointing to this file.
- 
+
 E.g.
 
 ln -s /usr/share/munin/plugins/smart_ /etc/munin/plugins/smart_hda

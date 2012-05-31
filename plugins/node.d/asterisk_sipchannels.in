@@ -176,6 +176,9 @@ while (($line = $pop->getline) and ($line !~ /active SIP channel/o))
 $pop->print("Action: logoff");
 $pop->print("");
 
+## Exhaust buffer before closing (to avoid polluting Asterisk's logs)
+while ($line = $pop->getline) {}
+
 $i = 0;
 foreach my $codec (@CODECS) {
     print "$codec.value $results[$i]\n";

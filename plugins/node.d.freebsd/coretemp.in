@@ -1,5 +1,6 @@
 #!@@GOODSH@@
-#-
+# -*- sh -*-
+#
 # Copyright (c) 2008 Dag-Erling Coïdan Smørgrav
 # All rights reserved.
 #
@@ -27,6 +28,9 @@
 #
 # $Id$
 #
+
+# This plugin's functionality has been replaced by the dev_cpu_ plugin.
+#%# family=legacy
 
 # Munin plugin for CPU temperature on CPUs supported by FreeBSD's
 # coretemp driver (includes all Intel Core and Core 2 CPUs)

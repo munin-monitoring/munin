@@ -19,7 +19,6 @@ use Munin::Common::Config;
 use Log::Log4perl qw(:easy);
 use POSIX qw(strftime);
 use POSIX qw(:sys_wait_h);
-use RRDs;
 use Symbol qw(gensym);
 use Data::Dumper;
 use Storable;
@@ -38,6 +37,8 @@ our (@ISA, @EXPORT);
 	   'munin_readconfig_storable',
 	   'munin_writeconfig',
 	   'munin_writeconfig_storable',
+	   'munin_read_storable',
+	   'munin_write_storable',
 	   'munin_delete',
 	   'munin_overwrite',
 	   'munin_dumpconfig',
@@ -282,7 +283,7 @@ sub munin_overwrite {
 	if (ref $overwrite->{$key}) {
 	    if (!defined $configfile->{$key}) {
 		if (ref $overwrite->{$key} eq "HASH") {
-		    $configfile->{$key}->{'#%#parent'} = $configfile;
+		    $configfile->{$key}->{'#%#parent'} = $configfile; weaken($configfile->{$key}->{'#%#parent'});
 		    $configfile->{$key}->{'#%#name'}   = $key;
 		    munin_overwrite($configfile->{$key},$overwrite->{$key});
 		} else {
@@ -740,7 +741,7 @@ START:
     if (scalar @$loc > $iloc) {
 	if (!defined $hash->{$tmpvar} or !defined $hash->{$tmpvar}->{"#%#name"}) { 
             # Init the new node
-	    $hash->{$tmpvar}->{"#%#parent"} = $hash;
+	    $hash->{$tmpvar}->{"#%#parent"} = $hash; weaken($hash->{$tmpvar}->{"#%#parent"});
 	    $hash->{$tmpvar}->{"#%#name"} = $tmpvar;
 	}
 	# Recurse
@@ -882,28 +883,36 @@ sub munin_writeconfig_loop {
     }
 }
 
-sub munin_writeconfig_storable {
-    my ($datafilename,$data,$fh) = @_;
+sub munin_read_storable {
+	my ($storable_filename, $default) = @_;
 
-    DEBUG "[DEBUG] Writing state to $datafilename";
-
-    my $is_fh_already_managed = defined $fh;
-    if (! $is_fh_already_managed) {
-	$fh = gensym();
+	return Storable::retrieve($storable_filename) if (-e $storable_filename);
 	
-	unless (open ($fh, ">", $datafilename)) {
-	    LOGCROAK "Fatal error: Could not open \"$datafilename\" for writing: $!";
-	}
-    }
+	# Default
+	return $default;
+}
 
-    # Write datafile.storable, in network order to be architecture indep
-	auto_weaken $data;
-    Storable::nstore_fd($data, $fh);
+sub munin_write_storable {
+	my ($storable_filename, $data) = @_;
 
-    if (! $is_fh_already_managed) {
-        DEBUG "[DEBUG] Closing filehandle \"$datafilename\"...\n";
-        close ($fh);
-    }
+	my $storable_filename_tmp = $storable_filename . ".tmp.$$";
+
+	# Write datafile.storable, in network order to be architecture indep
+        Storable::nstore($data, $storable_filename_tmp);
+
+	# Atomic commit
+	rename ($storable_filename_tmp, $storable_filename);
+}
+
+sub munin_writeconfig_storable {
+	my ($datafilename,$data) = @_;
+
+	DEBUG "[DEBUG] Writing state to $datafilename";
+
+	# XXX - Refs should be weakened on construction
+	auto_weaken($data);
+
+	munin_write_storable($datafilename, $data);
 }
 
 sub munin_writeconfig {
@@ -1023,13 +1032,13 @@ sub munin_get_html_filename {
     } @$loc;
 	
     if (defined $hash->{'graph_title'} and !munin_has_subservices ($hash)) {
-	$plugin = pop @$loc or return;
+        $plugin = pop @$loc or return;
     }
-
+    
     if (@$loc) { # The rest is used as directory names...
-	$ret .= "/" . join ('/', @$loc);
+        $ret .= "/" . join ('/', @$loc);
     }
-
+    
     return "$ret/$plugin.html";
 }
 
@@ -1238,14 +1247,20 @@ sub munin_get_bool_val
 
 sub munin_get
 {
-    my $hash   = shift;
-    my $field  = shift;
-    my $default = shift;
+    my ($hash, $field, $default) = @_;
 
-    return $default if (ref ($hash) ne "HASH");
-    return $hash->{$field} if defined $hash->{$field} and ref($hash->{$field}) ne "HASH";
-    return $default if not defined $hash->{'#%#parent'};
-    return munin_get ($hash->{'#%#parent'}, $field, $default);
+    # Iterate to top if needed
+    do {
+        return $default if (ref ($hash) ne "HASH");
+
+        my $hash_field = $hash->{$field};
+        return $hash_field if (defined $hash_field && ref($hash_field) ne "HASH");
+
+        # Go up
+        $hash = $hash->{'#%#parent'};
+    } while (defined $hash);
+
+    return $default;
 }
 
 

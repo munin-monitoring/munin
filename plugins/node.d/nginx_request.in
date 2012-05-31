@@ -73,7 +73,8 @@ if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" )
 		exit 0;
 	}
 	
-	my $ua = LWP::UserAgent->new(timeout => 30);
+	my $ua = LWP::UserAgent->new(timeout => 30,
+			agent => sprintf("munin/%s (libwww-perl/%s)", $Munin::Common::Defaults::MUNIN_VERSION, $LWP::VERSION));
     my $response = $ua->request(HTTP::Request->new('GET',$URL));
 
 	unless ($response->is_success and $response->content =~ /server/im)
@@ -103,7 +104,8 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" )
 	exit 0;
 }
 
-my $ua = LWP::UserAgent->new(timeout => 30);
+my $ua = LWP::UserAgent->new(timeout => 30,
+		agent => sprintf("munin/%s (libwww-perl/%s)", $Munin::Common::Defaults::MUNIN_VERSION, $LWP::VERSION));
 
 my $response = $ua->request(HTTP::Request->new('GET',$URL));
 
