@@ -133,10 +133,11 @@ my @COLOUR;     # Array of actuall colours to use
 my $range_colour  = "22ff22";
 my $single_colour = "00aa00";
 
+# Use 400 x RRA step, in order to have 1px per RRA sample.
 my %times = (
-    "day"   => "-30h",
-    "week"  => "-8d",
-    "month" => "-33d",
+    "day"   => "-2000m",  # (i.e. -33h20m)
+    "week"  => "-12000m", # (i.e. -8d13h20m)
+    "month" => "-48000m", # (i.e. -33d8h)
     "year"  => "-400d",
     "pinpoint"  => "dummy",
 );
@@ -995,6 +996,9 @@ sub process_service {
         my $rrdfield = munin_get($field, "rrdfield", "42");
 
         my $single_value = $force_single_value || single_value($service);
+	
+	# XXX - single_value is wrong for some multigraph, disabling it for now
+	$single_value = 0;
 
         my $has_negative = munin_get($field, "negative");
 

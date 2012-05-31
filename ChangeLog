@@ -1,5 +1,18 @@
 -*- text -*-
 
+munin 2.0-beta7, r4600, 2012-01-21
+
+Commits by kenyon, mha, tv, holger, steve.schnepp
+
+Summary :
+
+* Spoolfetch uses _node_read_fast() now : 3MiB is now read in 2 s instead of 7 min.
+* Fix for the images when browsing in 'categories' view to be clickable.
+* Fixing the png generation, in order to have 1px per RRA sample. (closes #1184)
+* Fix for nested nodes
+* single_value is wrong for some multigraph, disabling it for now
+* new plugin : (haproxy_ng multigraph plugin for haproxy)
+
 munin 2.0-beta6, r4544, 2012-01-14
 
 Commits by kenyon, mha, holger, steve.schnepp

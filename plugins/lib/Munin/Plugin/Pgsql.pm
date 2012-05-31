@@ -171,6 +171,10 @@ use Munin::Plugin;
                 and can post-process the result and return a new resultset.
  postconfig     A function that's called with the result of the config query,
                 and can post-process the result and return a new resultset.
+ postautoconf   A function that's called with the result of the autoconf query,
+                and can post-process the result and return a new resultset.
+ postsuggest    A function that's called with the result of the suggest query,
+                and can post-process the result and return a new resultset.
 
 =head3 Specifying queries
 
@@ -227,6 +231,8 @@ sub new {
         extraconfig    => $args{extraconfig},
         postprocess    => $args{postprocess},
         postconfig     => $args{postconfig},
+        postautoconf   => $args{postautoconf},
+        postsuggest    => $args{postsuggest},
     };
 
     foreach my $k (keys %defaults) {
@@ -306,6 +312,9 @@ sub Autoconf {
     # not defined, assume we will now work.
     if ($self->{autoconfquery}) {
         my $r = $self->runquery($self->{autoconfquery});
+        if ($self->{postautoconf}) {
+            $r = $self->{postautoconf}->($r);
+        }
         if (!$r->[0]->[0]) {
             print "no (" . $r->[0]->[1] . ")\n";
             return 1;
@@ -326,6 +335,9 @@ sub Suggest {
     $self->ensure_version();
     if ($self->{suggestquery}) {
         my $r = $self->runquery($self->{suggestquery});
+        if ($self->{postsuggest}) {
+            $r = $self->{postsuggest}->($r);
+        }
         foreach my $row (@$r) {
             print $row->[0] . "\n";
         }
