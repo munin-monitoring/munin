@@ -1,3 +1,19 @@
+munin (1.2.0rc1)
+
+  * Main: Allow dots in PNG paths (patch by Jacques Caruso).
+  * Main: Properly size table below graphs in service-view.
+  * Main: Fix bug which lead to some graphs failing with STACK error.
+  * Main: Added limit message option "strtrunc".
+  * Main: "contacts" can now be set to "none".
+  * Main: Bugfix with graphs using both "graph_sums" and data aliases.
+  * Main: Tables in service-view now sorted according to graph_order.
+  * Main: Tables in service-view now containt the correct "Type" when using
+    data aliases.
+  * Plugins: generic/sendmail_mail{stats,traffic} updated.
+  * Plugins: Made generic/samba more portable (fixes by Nicolas Stransky).
+  * Plugins: Fixed typo in generic/loggrep breaking implicit labeling.
+  * Plugins: Bugfix in generic/amavis.
+
 munin (1.1.9)
 
   * Main: Optimised munin-cgi-graph a bit.

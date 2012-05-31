@@ -22,6 +22,18 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.44  2005/01/05 18:32:49  jimmyo
+# Main: Tables in service-view now containt the correct "Type" when using data aliases.
+#
+# Revision 1.43  2005/01/05 18:08:01  jimmyo
+# Main: Tables in service-view now sorted according to graph_order.
+#
+# Revision 1.42  2005/01/05 17:43:34  jimmyo
+# Main: Bugfix with graphs using both "graph_sums" and data aliases.
+#
+# Revision 1.41  2004/12/25 18:56:59  jimmyo
+# Allow dots in PNG paths (patch by Jacques Caruso).
+#
 # Revision 1.40  2004/12/22 21:08:30  jimmyo
 # Bugfix when using long labels and CGI graphing.
 #
@@ -234,7 +246,9 @@ use Exporter;
 	   'munin_get_picture_filename',
 	   'munin_get_filename',
 	   'munin_graph_column_headers',
-	   'munin_get_max_label_length'
+	   'munin_get_max_label_length',
+	   'munin_get_field_order',
+	   'munin_get_rrd_filename'
 	   );
 
 use strict;
@@ -268,6 +282,10 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 
 my %legal_expanded = map { $_ => 1 } @legal;
 
+# Fields to copy when "aliasing" a field
+my @copy_fields    = ("label", "draw", "type", "rrdfile", "fieldname", "info"); 
+
+
 sub munin_trend {
     my (@array) = @_;
     return ($array[$#array] - $array[0]);
@@ -291,6 +309,9 @@ sub munin_draw_field {
     my $service = shift;
     my $field   = shift;
 
+    $field =~ s/=.*//;
+
+    print "DEBUG: munin_draw_field: Checking $service -> $field: " . &munin_get_bool_val ($node->{client}->{$service}->{$field.".graph"}, 1) . ".\n" if $DEBUG;;
     return 0 if (exists $node->{client}->{$service}->{$field.".skipdraw"});
     return (&munin_get_bool_val ($node->{client}->{$service}->{$field.".graph"}, 1));
 }
@@ -719,24 +740,24 @@ sub munin_get_picture_filename {
     my $name    = shift;
     my $service = shift;
     my $scale   = shift;
-	my $sum     = shift;
-	my $dir     = $config->{'htmldir'};
+    my $sum     = shift;
+    my $dir     = $config->{'htmldir'};
 
     # Sanitise
-	$dir =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
-	$domain =~ s/[^\w_\/"'\[\]\(\)+=\.-]/_/g;
-	$name =~ s/[^\w_\/"'\[\]\(\)+=\.-]/_/g;
-	$service =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
-	$scale =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
+    $dir =~ s/[^\w_\/"'\[\]\(\)+=-]\./_/g;
+    $domain =~ s/[^\w_\/"'\[\]\(\)+=\.-]/_/g;
+    $name =~ s/[^\w_\/"'\[\]\(\)+=\.-]/_/g;
+    $service =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
+    $scale =~ s/[^\w_\/"'\[\]\(\)+=-]/_/g;
 
-	if (defined $sum and $sum)
-	{
-		return "$dir/$domain/$name-$service-$scale-sum.png";
-	}
-	else
-	{
-		return "$dir/$domain/$name-$service-$scale.png";
-	}
+    if (defined $sum and $sum)
+    {
+	    return "$dir/$domain/$name-$service-$scale-sum.png";
+    }
+    else
+    {
+	    return "$dir/$domain/$name-$service-$scale.png";
+    }
 }
 
 sub munin_get_filename {
@@ -1049,6 +1070,128 @@ sub munin_get_max_label_length
     }
     return $result;
 }
+
+sub munin_get_field_order
+{
+    my $node    = shift;
+    my $config  = shift;
+    my $domain  = shift;
+    my $host    = shift;
+    my $service = shift;
+    my $result  = [];
+
+    if ($node->{client}->{$service}->{graph_sources}) 
+    {
+	foreach my $gs (split /\s+/, $node->{client}->{$service}->{'graph_sources'})
+	{
+	    push (@$result, "-".$gs);
+	}
+    } 
+    if ($node->{client}->{$service}->{graph_order}) 
+    {
+	push (@$result, split /\s+/, $node->{client}->{$service}->{'graph_order'});
+    } 
+
+    for my $key (keys %{$node->{client}->{$service}}) 
+    {
+	my ($client,$type)="";
+	($client,$type) = split /\./,$key;
+	if (defined $type and $type eq "label") 
+	{
+	    push @$result,$client if !grep /^$client(?:=|$)/, @$result;;
+	} 
+    }
+    
+    return $result;
+}
+
+sub munin_get_rrd_filename {
+    my $node    = shift;
+    my $config  = shift;
+    my $domain  = shift;
+    my $name    = shift;
+    my $service = shift;
+    my $field   = shift;
+    my $path    = shift;
+    my $result  = "unknown";
+
+    if ($node->{client}->{$service}->{$field.".filename"})
+    {
+	$result = $node->{client}->{$service}->{$field.".filename"};
+    }
+    elsif ($path)
+    {
+	if (!defined ($node->{client}->{$service}->{$field.".label"}))
+	{
+	    print "DEBUG: Setting label: $field\n" if $DEBUG;
+	    $node->{client}->{$service}->{$field.".label"} = $field;
+	}
+
+	if ($path =~ /^\s*([^:;]+)[:;]([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
+	{
+	    $result = munin_get_filename ($config, $1, $2, $3, $4);
+	    print "\nDEBUG1: Expanding $path...\n" if $DEBUG;
+	    if (! defined $node->{client}->{$service}->{$field."label"})
+	    {
+		for my $f (@copy_fields)
+		{
+		    if (not exists $node->{client}->{$service}->{"$field.$f"} and
+			    exists $config->{'domain'}->{$1}->{'node'}->{$2}->{'client'}->{$3}->{"$4.$f"})
+		    {
+			$node->{client}->{$service}->{"$field.$f"} = $config->{'domain'}->{$1}->{'node'}->{$2}->{'client'}->{$3}->{"$4.$f"};
+		    }
+		}
+	    }
+	}
+	elsif ($path =~ /^\s*([^:]+):([^:\.]+)[:\.]([^:\.]+)\s*$/)
+	{
+	    print "\nDEBUG2: Expanding $path...\n" if $DEBUG;
+	    $result = munin_get_filename ($config, $domain, $1, $2, $3);
+	    for my $f (@copy_fields)
+	    {
+		if (not exists $node->{client}->{$service}->{"$field.$f"} and
+			exists $config->{'domain'}->{$domain}->{'node'}->{$1}->{'client'}->{$2}->{"$3.$f"})
+		{
+		    print "DEBUG: Copying $f...\n" if $DEBUG;
+		    $node->{client}->{$service}->{"$field.$f"} = $config->{'domain'}->{$domain}->{'node'}->{$1}->{'client'}->{$2}->{"$3.$f"};
+		}
+	    }
+	}
+	elsif ($path =~ /^\s*([^:\.]+)[:\.]([^:\.]+)\s*$/)
+	{
+	    print "\nDEBUG3: Expanding $path...\n" if $DEBUG;
+	    $result = munin_get_filename ($config, $domain, $name, $1, $2);
+	    for my $f (@copy_fields)
+	    {
+		if (not exists $node->{client}->{$service}->{"$field.$f"} and
+			exists $node->{client}->{$1}->{"$2.$f"})
+		{
+		    $node->{client}->{$service}->{"$field.$f"} = $node->{client}->{$1}->{"$2.$f"};
+		}
+	    }
+	}
+	elsif ($path =~ /^\s*([^:\.]+)\s*$/)
+	{
+	    print "\nDEBUG4: Expanding $path...\n" if $DEBUG;
+	    $result = munin_get_filename ($config, $domain, $name, $service, $1);
+	    for my $f (@copy_fields)
+	    {
+		if (not exists $node->{client}->{$service}->{"$field.$f"} and
+			exists $node->{client}->{$service}->{"$1.$f"})
+		{
+		    $node->{client}->{$service}->{"$field.$f"} = $node->{client}->{$service}->{"$1.$f"};
+		}
+	    }
+	}
+    }
+    else
+    {
+	print "\nDEBUG5: Doing path...\n" if $DEBUG;
+	$result = munin_get_filename($config, $domain,$name,$service,$field);
+    }
+    return $result;
+}
+
 
 1;
 

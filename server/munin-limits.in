@@ -18,6 +18,12 @@
 #
 #
 # $Log$
+# Revision 1.24  2005/01/05 15:40:35  jimmyo
+# Main: "contacts" can now be set to "none".
+#
+# Revision 1.23  2005/01/05 12:12:30  jimmyo
+# Main: Added limit message option "strtrunc"
+#
 # Revision 1.22  2004/12/08 08:47:44  jimmyo
 # Fix bug where munin-limits didn't warn properly in all situations.
 #
@@ -113,8 +119,8 @@ my %notes = ();
 my $stdout = 0;
 my $force = 0;
 my %default_text = ( "default" => '${var:group} :: ${var:host} :: ${var:graph_title}${if:cfields \n\tCRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields \n\tWARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields \n\tUNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields \n\tOKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}\n',
-    		     "nagios"  => '${var:host}\t${var:graph_title}\t${var:worstid}\t${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields OKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}',
-    		     "old-nagios"  => '${var:host}\t${var:plugin}\t${var:worstid}\t${var:graph_title}:${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields OKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}'
+    		     "nagios"  => '${var:host}\t${var:graph_title}\t${var:worstid}\t${strtrunc:350 ${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields OKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}}',
+    		     "old-nagios"  => '${var:host}\t${var:plugin}\t${var:worstid}\t${strtrunc:350 ${var:graph_title}:${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields OKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}}'
 		    );
 
 my $log = new IO::Handle;
@@ -390,6 +396,7 @@ sub generate_service_message {
     {
 	foreach my $c (split (/\s+/, munin_get ($config, "contacts", join (' ', keys %{$config->{'contact'}}), $domain, $name, $clientname)))
 	{
+	    next if $c eq "none";
 	    next unless defined $config->{'contact'}->{$c}->{'command'};
 	    if (@limit_contacts and !grep (/^$c$/, @limit_contacts))
 	    {
@@ -505,6 +512,12 @@ sub message_expand {
 	    } 
 	    $a[0] = $res;
 	}
+	elsif ($a[0] =~ /^\{strtrunc:\s*(\S+)\s(.+)\}$/)
+	{
+	    my $f = "%.".$1."s";
+	    my $t = $2;
+	    $a[0] = sprintf ($f, message_expand ($t, $client, $prefix));
+	}
 	elsif ($a[0] =~ /^\{if:\s*(\!)?(\S+)\s(.+)\}$/)
 	{
 	    my $n = $1;
@@ -537,6 +550,12 @@ sub logger_open {
 	  unless (open ($log, ">>$dirname/munin-limits.log"))
 	  {
 		  print STDERR "Warning: Could not open log file \"$dirname/munin-limits.log\" for writing: $!";
+	  }
+	  else
+	  {
+		  close (STDERR);
+		  *STDERR = \$log;
+		
 	  }
     }
 }
