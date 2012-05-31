@@ -15,6 +15,12 @@
 #	logfile      - What file to read in logdir
 #
 # $Log$
+# Revision 1.6.2.2  2005/01/25 20:26:10  jimmyo
+# Turn on graph_scale for generic/postfix_mailvolume.
+#
+# Revision 1.6.2.1  2005/01/25 20:24:10  jimmyo
+# Improved graph_title of generic/postfix_* (Deb#292083).
+#
 # Revision 1.6  2004/12/10 18:51:43  jimmyo
 # linux/apt* has been forced to LANG=C, to get predictable output.
 #
@@ -153,10 +159,10 @@ $pos = $startsize;
 
 if ( $ARGV[0] and $ARGV[0] eq "config" )
 {
-    print "graph_title Postfix mail throughput\n";
+    print "graph_title Postfix bytes throughput\n";
     print "graph_args --base 1000 -l 0\n";
     print "graph_vlabel bytes / \${graph_period}\n";
-    print "graph_scale  no\n";
+    print "graph_scale  yes\n";
     print "graph_category  postfix\n";
     print "volume.label throughput\n";
     print "volume.type DERIVE\n";
