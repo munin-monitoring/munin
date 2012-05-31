@@ -2,22 +2,6 @@
 # 
 # Plugin to monitor the number of open files in the system.
 #
-# $Log$
-# Revision 1.2  2004/05/20 13:57:12  jimmyo
-# Set categories to some of the plugins.
-#
-# Revision 1.1  2004/01/02 18:50:01  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.1  2003/11/24 09:57:27  jimmyo
-# Finn-Arne rewrote files_slapd to a generic files_
-#
-# Revision 1.1  2003/11/10 18:04:32  jimmyo
-# Contribution by Finn-Arne Johansen (SF#839212)
-#
 # Parameters:
 # 	
 # 	config   (required)

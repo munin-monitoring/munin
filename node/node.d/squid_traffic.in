@@ -31,48 +31,6 @@
 # 	config    (required)
 # 	autoconf  (optional - only used by munin-config)
 #
-# $Log$
-# Revision 1.8  2004/12/10 18:51:43  jimmyo
-# linux/apt* has been forced to LANG=C, to get predictable output.
-#
-# Revision 1.7  2004/12/10 10:47:47  jimmyo
-# Change name from ${scale} to ${graph_period}, to be more consistent.
-#
-# Revision 1.6  2004/12/09 22:12:55  jimmyo
-# Added "graph_period" option, to make "graph_sums" usable.
-#
-# Revision 1.5  2004/11/16 20:18:09  jimmyo
-# License cleanups.
-#
-# Revision 1.4  2004/09/26 22:03:52  jimmyo
-# Changd COUNTER -> DERIVE for some plugins. Set min/max values.
-#
-# Revision 1.3  2004/05/20 13:57:12  jimmyo
-# Set categories to some of the plugins.
-#
-# Revision 1.2  2004/03/14 11:33:13  auduny
-# Added squidpatch from Jacques Caruso
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.7  2003/12/18 17:26:26  jimmyo
-# Remove use of "use"
-#
-# Revision 1.6  2003/11/10 18:41:33  jimmyo
-# Removed Data::Dumper dependency.
-#
-# Revision 1.5  2003/11/07 21:36:25  jimmyo
-# Fixed typos and mental typos
-#
-# Revision 1.4  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
-#
-#
 #%# family=auto
 #%# capabilities=autoconf
 

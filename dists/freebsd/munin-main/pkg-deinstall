@@ -1,19 +1,4 @@
 #! /bin/sh
-#
-# $Log$
-# Revision 1.5  2004/11/28 12:50:41  lupe
-# Update to 1.1.7.
-# Put distributed config in *.sample.
-# Remove unchanged configs on deinstall.
-# Add FreeBSD-specific plugins.conf.
-# Move munin-main logfiles to /var/log/munin-main.
-# Update /etc/newsyslog.conf to automatically rotate logfiles.
-# Pass system-wide Perl path to Munin Makefile.
-# Patch default path for Python.
-# Patch ping_ to get it to work on FreeBSD.
-# Patch sendmail_mailtraffic to get it to autoconfigure.
-#
-#
 
 ask() {
     local question default answer

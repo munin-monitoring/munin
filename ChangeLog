@@ -1,3 +1,55 @@
+munin (1.3.2)
+
+  * Main/node: Implemented TLS support.
+  * Main: fix the file vs. pipe check in munin-limits.
+  * Main: place the munin-limits lock file in rundir, not dbdir.
+  * Main: Yet another rewrite of munin-limits open call (SF#1115434).
+  * Main: Make sure all rrd-tunes are correct after an upgrade (Deb#296454,
+    Deb#296645).
+  * Main: Better handling of broken connections (Deb#298108).
+  * Main: HTML cleanup (Deb#296676).
+  * Main: Re-enable width/height attributes to img tags.
+  * Main: Escape regexps more properly (Deb#296575).
+  * Main: Correct expires-headers in CGI output (SF#1159742).
+  * Main: Redirect stdout/stderr from munin-limits contact commands, to the
+    munin-limits log file (Deb#301196).
+  * Node: munin-node didn't treat default_plugin_user properly (Deb#295366).
+  * Node: munin-node-configure now properly respect user plugins.
+  * Plugins: sort drives in generic/hddtemp_smartcl (SF#1174847).
+  * Plugins: linux/if* now treats ra* interfaces as wireless.
+  * Plugins: minor bugfix in generic/bind9.
+  * Plugins: generic/sendmail_mailqueue handles bigger queues (fix by Mickey
+    Everts).
+  * Plugins: Made contrib-plugins generic/amavis and generic/mailstats more
+    secure.
+  * Plugins: Minor bugfix in linux/if_, with info fields.
+  * Plugins: Added warning note in linux/if_ output.
+  * Plugins: generic/smart_ exit value no longer triggers criticals.
+  * Plugins: linux/df* now ignores bind mounts.
+  * Plugins: Added plugin generic/snmp__cpuload.
+  * Plugins: generic/amavis now has configurable logfile location (Deb#296533).
+  * Plugins: linux/irqstats should no longer fail on some systems (Deb#296452).
+  * Plugins: modified graph_args of generic/apache_processes, to work around 
+    an rrdtool bug (Deb#296528).
+  * Plugins: All plugins using logtail now properly detect its format
+    (Deb#297628).
+  * Plugins: sunos/memory repaired (SF#1143610).
+  * Plugins: Made linux/if_ work with more versions of iwlist (SF#1150954).
+  * Plugins: generic/mailman now handles regular mailman (Deb#297904).
+  * Plugins: New contrib plugin generic/mbmon_ from Arne Schwabe.
+  * Plugins: Made linux/df work properly with tmpfs and devmapper (Deb#298442).
+  * Plugins: Thanks to Stephen Gran, generic/exim_mailstats now graphs rejects
+    (Deb#295799).
+  * Plugins: Only run 'exim -bpr' once in generic/exim_mailqueue_alt,
+    and use only awk to process the data.
+  * Plugins: Make linux/sensors_ handle multiline output better (Deb#300690).
+  * Plugins: generic/postfix_mailstats now treats reject-lines better
+    (Deb#302220).
+  * Docs: Added man page for munin-node-configure-snmp.
+  * Docs: Brushed up the comments in the default munin.conf a bit (Deb#294060).
+  * Docs: Fixed erronous cgiurl docs (SF#1159722).
+  * Installation: Create CIGdir if nonexistant.
+
 munin (1.3.1)
 
   * Main: Fix bug with calculation of "Avg:" field when using graph_sums.

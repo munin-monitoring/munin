@@ -18,62 +18,6 @@
 #
 # Program to suggest configurations and configuration changes.
 #
-# $Log$
-# Revision 1.11  2004/12/10 10:40:12  jimmyo
-# Fix bug with underscore in wildcard plugins.
-#
-# Revision 1.10  2004/11/16 20:00:42  jimmyo
-# License cleanups.
-#
-# Revision 1.9  2004/09/07 19:33:32  jimmyo
-# Documented the SNMP options a bit better.
-#
-# Revision 1.8  2004/09/05 12:00:18  jimmyo
-# Set family and capabilities.
-#
-# Revision 1.7  2004/09/03 23:25:16  jimmyo
-# Brushed up the SNMP probe functionality.
-#
-# Revision 1.6  2004/09/03 22:59:03  jimmyo
-# Support comma-formatted snmp-options.
-#
-# Revision 1.5  2004/09/03 22:56:51  jimmyo
-# Added support for SNMP probing.
-#
-# Revision 1.4  2004/01/29 19:25:52  jimmyo
-# Fixed bad debug output (forgotten linebreaks) in munin-node-configure (SF#882385).
-#
-# Revision 1.3  2004/01/29 17:36:19  jimmyo
-# Updated copyright information
-#
-# Revision 1.2  2004/01/15 15:20:00  jimmyo
-# Making things workable after name change. Upping for test verwion.
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:06  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.11  2003/12/18 16:46:59  jimmyo
-# now prints the reason for suggesting to not use a plugin, as long as the plugins gives one.
-#
-# Revision 1.10  2003/12/17 21:29:26  jimmyo
-# Don\'t try to change uid/gid if not running as root. (Deb#224300)
-#
-# Revision 1.9  2003/11/10 22:05:42  toreanderson
-# bugfux
-#
-# Revision 1.8  2003/11/10 17:52:33  jimmyo
-# Small briainer-typo
-#
-# Revision 1.7  2003/11/10 17:32:18  jimmyo
-# Check what to do with new plugins when upgrading.
-#
-# Revision 1.6  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
-#
 
 $| = 1; # Flush after every write to stdout
 
@@ -247,6 +191,7 @@ if (@families)
 		    {
 			foreach my $wild (sort @{$swant})
 			{
+			    next if -e "$servicedir/$plug"."_".$wild; # None of our business...
 			    if (! grep (/^$wild$/, @{$snow}))
 			    {
 				&link_add ($plug, $wild);
@@ -263,6 +208,7 @@ if (@families)
 		}
 		elsif ($now eq "no" and $want eq "yes")
 		{
+		    next if -e "$servicedir/$plug"; # None of our business...
 		    &link_add ($plug);
 		}
 	    }
@@ -290,6 +236,7 @@ if (@families)
 		{
 		    foreach my $wild (sort @{$swant})
 		    {
+			next if -e "$servicedir/$plug"."_".$wild; # None of our business...
 			if (! grep (/^$wild$/, @{$snow}))
 			{
 			    $sugg .= "+$wild ";
@@ -300,6 +247,7 @@ if (@families)
 	    }
 	    else
 	    {
+		next if -e "$servicedir/$plug"; # None of our business...
 		if ($now ne $want)
 		{
 		    $sugg = $want;

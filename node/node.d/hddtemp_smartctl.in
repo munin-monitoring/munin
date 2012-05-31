@@ -1,29 +1,19 @@
-#!/usr/bin/perl
+#!@@PERL@@ -w
 #
 # Plugin to monitor harddrive temperatures through SMART.
 #
 # client-conf.d/-options:
 #       
 #	smartctl	-- path to smartctl executable
-#	drives		-- List drives to monitor. E.g. "hda hdc".
-#	type_$dev	-- device type for one drive, e.g. 3ware,0
+#	drives		-- List drives to monitor. E.g. "env.drives hda hdc".
+#	type_$dev	-- device type for one drive, e.g. "env.type_sda 3ware,0"
+#	args_$dev	-- additional arguments to smartctl for one drive,
+#			   e.g. "env.args_hda -v 194,10xCelsius"
 #
-# $Log$
-# Revision 1.4  2005/01/29 22:14:02  jimmyo
-# Make the plugin check all rdsks.
-#
-# Revision 1.3  2005/01/26 09:31:36  jimmyo
-# Added license note.
-#
-# Revision 1.2  2005/01/25 21:01:21  jimmyo
-# Added plugin generic/hddtemp_smartctl, made by Lupe Christoph. Made it the default hddtemp plugin.
-#
-# Revision 1.1  2004/11/10 16:11:27  jimmyo
-# Added new plugin linux/hddtemp_smartctl, made by Peter Gervai (SF#1032727).
-#
-# Revision 1.0  2004/09/22 
-# New plugin: Peter Gervai <grin(*)grin.hu>
-#
+# Note for users of RAID controllers (smartmontools currently only
+# supports 3ware): you can specify the drives attached to your RAID
+# controller(s) as raiddev_num (e.g. sda_0). Then you must specify the
+# type like this: type_sda_0 3ware,0.
 #
 #%# family=auto
 #%# capabilities=autoconf
@@ -71,7 +61,7 @@ $smartctl = `which smartctl` unless $smartctl;
 chomp $smartctl;
 
 # Still not found? Check obvious places
-my @dirs, qw(/usr/bin /usr/sbin /usr/local/bin /usr/local/sbin);
+my @dirs = qw(/usr/bin /usr/sbin /usr/local/bin /usr/local/sbin);
 until ($smartctl or @dirs == 0) {
   my $dir = shift @dirs;
   my $path = $dir.'/smartctl';
@@ -96,6 +86,9 @@ if ($^O eq 'linux') {
 }
 
 @drives = split ' ', $ENV{drives} if exists $ENV{drives};
+
+# Sort list of drives
+@drives = sort @drives;
 
 if (exists $ARGV[0]) {
   if ($ARGV[0] eq 'autoconf') {
@@ -123,7 +116,12 @@ if (exists $ARGV[0]) {
 }
 
 foreach (@drives) {
-  my $cmd = $smartctl.' -A '.(exists $ENV{'type_'.$_} ? '-d '.$ENV{'type_'.$_}.' ' : '')."/dev/$_";
+  my $dev;
+  $dev = $_ =~ /(.*)(?:_\d+)/ ? $1 : $_;
+  my $cmd = $smartctl.' -a ';
+  $cmd .= $ENV{'args_'.$_}.' ' if exists $ENV{'args_'.$_};
+  $cmd .= '-d '.$ENV{'type_'.$_}.' ' if exists $ENV{'type_'.$_};
+  $cmd .= "/dev/$dev";
   my $output = `$cmd`;
   if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
     print "$_.value $1\n";

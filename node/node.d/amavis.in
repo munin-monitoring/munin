@@ -14,8 +14,8 @@
 #       amavislog    - file where amavis logs are written
 #
 
-TEMP_FILE=/tmp/lrrd-amavis.$$
-AMAVIS_LOG=/var/log/mail/mail.info
+TEMP_FILE=`mktemp /tmp/lrrd-amavis.XXXXXX`
+AMAVIS_LOG=${logfile:-/var/log/mail/mail.info}
 LOGTAIL=${logtail:-`which logtail`}
 STATEFILE=@@PLUGSTATE@@/amavis.offset
 
@@ -32,8 +32,8 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 # Try tailing a random file to check how arguments are passed
-`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
 ARGS=0
+`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
 if [ $? = 66 ]; then
     if [ ! -n "$logtail" ]; then
 	ARGS=1

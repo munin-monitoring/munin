@@ -108,7 +108,9 @@ is parsed as munin-node starts up. It can contain the following options:
  be expanded to what would otherwise have been run. E.g. "<code>command sudo
  -u root %c</code>". Nice to avoid running munin-node as root.
  <dt><code>allow &lt;regex&gt;</code><dd>Allow hosts matching regex to run this plugin.
+ <dt><code>allow tls</code><dd>Allow hosts which use TLS with verified certificates to run this plugin.
  <dt><code>deny &lt;regex&gt;</code><dd>Deny hosts matching regex from running this plugin.
+ <dt><code>deny tls</code><dd>Deny hosts which use TLS with verified certificates to run this plugin.
  <dt><code>timeout &lt;seconds&gt;</code><dd>Use a timeout of &lt;seconds&gt; seconds instead of the default timeout
  of 10 seconds, when running this plugin.
  <dt><code>env.&lt;var&gt; &lt;contents&gt;</code><dd>Set the environment
@@ -193,7 +195,8 @@ Explaination:
  <dt>htaccess<dd>The default htaccessfile
  <dt>tmpldir<dd>Where the templates reside
  <dt>graph_strategy<dd>Set to "cron" to draw the graphs periodically via cron every 5 minutes. Set to "cgi" to draw on-demand. (default cron)
- <dt>graphcgiurl<dd>URL to the CGI script doing the graphing (if graph_strategy is "cron"). (default <tt>/cgi-bin/munin-cgi-graph</tt>)
+ <dt>cgiurl<dd>URL to the directory where the CGI scripts (for the time being only one) doing the graphing (if graph_strategy is "cron"). (default <tt>/cgi-bin</tt>)
+ <dt>cgiurl_graph<dd>URL to the CGI script doing the graphing (if graph_strategy is "cron"). (default <tt>${cgiurl}/munin-cgi-graph</tt>)
  <dt>fork<dd>If set, run updates of several hosts simultaneously. (default yes)
  <dt>max_processes<dd>Set max number of simultaneous Munin processes.
  <dt>nsca*<dd>Nagios options. See seperate section. Deprecated, use contacts instead.
@@ -232,7 +235,10 @@ Node-level options
  default plugins from a node. Good for hosts which changes hostname
  (e.g. laptops). NOTE: Deprecated. Use use_node_name instaed.
  <dt>contacts<dd>Set which contact entries to use for this node. Default is all contact entries existing under "contact" tree.
- <dt>tls<dd>Set to force use of TLS when communicating with the node. (Default off.)
+ <dt>tls<dd>Configure TLS support when communicating with the node. Set to "enabled" to force TLS support, "disabled" to not use it, "paranoid" to force node certificate validation against a local CA file, and "auto" to try to get the most secure level of communication, but accept anything (including no TLS) if the node does not support it. (Default: "auto")
+ <dt>tls_private_key<dd>Set path to private key file. (Default "@@CONFDIR@@/munin.pem")
+ <dt>tls_certificate<dd>Set path to certificate file. (Default "@@CONFDIR@@/munin.pem")
+ <dt>tls_pem<dd>Set path to pem file (if you have both private key and certificate in the same file). (Default "@@CONFDIR@@/munin.pem")
 </dl>
 </tt>
 

@@ -13,14 +13,6 @@
 # 	config   (required)
 # 	autoconf (optional)
 #
-# $Log$
-# Revision 1.7  2005/01/24 19:16:33  jimmyo
-# Bugfix in generic/sendmail_* autoconf.
-#
-# Revision 1.6  2005/01/03 14:17:30  jimmyo
-# Plugins generic/sendmail_mail{stats,traffic} updated.
-#
-#
 # Magic markers (used by munin-node-configure)
 #%# capabilities=autoconf
 #%# family=auto

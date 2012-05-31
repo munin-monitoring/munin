@@ -1,26 +1,5 @@
 #!/bin/sh
 #
-# $Log$
-# Revision 1.4  2004/05/20 19:02:38  jimmyo
-# Set categories on a bunch of plugins
-#
-# Revision 1.3  2004/05/15 21:33:30  jimmyo
-# "Upped" som plugins from contrib/manual to manual or auto.
-#
-# Revision 1.2  2004/05/09 20:42:08  jimmyo
-# Fixed problem with sunos/memory, when memory was reported in gigabytes (SF#930964).
-#
-# Revision 1.1  2004/01/02 18:50:01  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.2  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
-#
-#
 #%# family=manual
 
 
@@ -41,12 +20,12 @@ fi
 #
 # Memory: 320M real, 142M free, 129M swap in use, 1095M swap free
 
-MEMLINE=`$TOP -n -u | /bin/grep "^Memory" | sed 's/M//g'`
+MEMLINE=`$TOP -n -u | /bin/grep "^Memory"`
 
-REAL=`echo $MEMLINE | nawk '$2~/G$/ {sub("G","",$2);$2=$2 * 1024} {printf "%d\n", $2}'`
-REAL=`echo $MEMLINE | nawk '$4~/G$/ {sub("G","",$4);$4=$4 * 1024} {printf "%d\n", $4}'`
-REAL=`echo $MEMLINE | nawk '$6~/G$/ {sub("G","",$6);$6=$6 * 1024} {printf "%d\n", $6}'`
-REAL=`echo $MEMLINE | nawk '$10~/G$/ {sub("G","",$10);$10=$10 * 1024} {printf "%d\n", $10}'`
+REAL=`echo $MEMLINE | nawk '$2~/G$/ {sub("G","",$2);$2=$2 * 1024} $2~/M$/ {printf "%d\n", $2}'`
+FREE=`echo $MEMLINE | nawk '$4~/G$/ {sub("G","",$4);$4=$4 * 1024} $2~/M$/ {printf "%d\n", $4}'`
+SWAPU=`echo $MEMLINE | nawk '$6~/G$/ {sub("G","",$6);$6=$6 * 1024} $2~/M$/ {printf "%d\n", $6}'`
+SWAPF=`echo $MEMLINE | nawk '$10~/G$/ {sub("G","",$10);$10=$10 * 1024} $2~/M$/ {printf "%d\n", $10}'`
 
 MEMUSED=`expr $REAL - $FREE`
 SWAPTOT=`expr $SWAPU + $SWAPF`

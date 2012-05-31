@@ -16,16 +16,11 @@
 # 
 # 	logfile		- The file where MailScanner logs its action (default: /var/log/mail.log)
 # 	logtail		- The location of the logtail command (default: /usr/sbin/logtail)
-# 	offsetfile	- The location of the offset file (default: /tmp/lrrd-mailscanner.offset)
+# 	offsetfile	- The location of the offset file (default: /tmp/munin-mailscanner.offset)
 #
 # Bugs:
 # 
 # 	None known
-#
-# $Log$
-# Revision 1.1  2004/12/09 20:03:26  jimmyo
-# Added two new plugins contributed by Jacques Caruso, generic/exim_mailqueue_alt and generic/mailscanner.
-#
 #
 # Magic markers:
 #%# family=contrib
@@ -35,7 +30,7 @@ use strict;
 
 my $logfile = '/var/log/mail.log';
 my $logtail = '/usr/sbin/logtail';
-my $offsetfile = '/tmp/lrrd-mailscanner.offset';
+my $offsetfile = "@@PLUGSTATE@@/munin-mailscanner.offset";
 my ($clean, $viruses, $spams, $others, $total) = (0, 0, 0, 0, 0);
 my $cmd = (defined($ARGV[0])) ? $ARGV[0] : '';
 

@@ -14,39 +14,6 @@
 # 	logdir       - Override what exim says
 # 	exim         - Where's exim?
 #
-# $Log$
-# Revision 1.7  2004/12/10 18:51:43  jimmyo
-# linux/apt* has been forced to LANG=C, to get predictable output.
-#
-# Revision 1.6  2004/12/10 10:47:47  jimmyo
-# Change name from ${scale} to ${graph_period}, to be more consistent.
-#
-# Revision 1.5  2004/12/09 22:12:54  jimmyo
-# Added "graph_period" option, to make "graph_sums" usable.
-#
-# Revision 1.4  2004/11/21 00:16:56  jimmyo
-# Changed a lot of plugins so they use DERIVE instead of COUNTER.
-#
-# Revision 1.3  2004/11/10 15:54:49  jimmyo
-# Applied patch from Torstein T. Svendsen to generic/exim_mailstats, to handle logfiles with timestamps in the name (SF#1055214)
-#
-# Revision 1.2  2004/05/20 13:57:12  jimmyo
-# Set categories to some of the plugins.
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.7  2003/11/15 11:10:28  jimmyo
-# Various fixes
-#
-# Revision 1.6  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
-#
-#
 # Magic markers (optional - used by munin-config and some installation
 # scripts):
 #
@@ -79,6 +46,7 @@ $statefile = "@@PLUGSTATE@@/plugin-exim_mailstats.state";
 $pos   = undef;
 $received = 0;
 $completed = 0;
+$rejected = 0;
 ($dirname = $0) =~ s/[^\/]+$//;
 $EXIM = "/usr/sbin/exim";
 $EXIM = "/usr/sbin/exim4" if (-x "/usr/sbin/exim4"); # a Debianism
@@ -174,6 +142,9 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "completed.label completed\n";
     print "completed.type DERIVE\n";
     print "completed.min 0\n";
+    print "rejected.label rejected\n";                                      
+    print "rejected.type DERIVE\n";
+    print "rejected.min 0\n";
     exit 0;
 }
 
@@ -181,15 +152,22 @@ if (! -f $logfile and ! -f $rotlogfile)
 {
     print "completed.value U\n";
     print "received.value U\n";
+    print "rejected.value U\n";
     exit 0;
 }
 
 if (-f "$statefile")
 {
     open (IN, "$statefile") or exit 4;
-    if (<IN> =~ /^(\d+):(\d+):(\d+)/)
+	my $in = <IN>;
+    if ($in =~ /^(\d+):(\d+):(\d+):(\d+)/)
+    {
+	($pos, $received, $completed, $rejected) = ($1, $2, $3, $4);
+    }
+    elsif ($in =~ /^(\d+):(\d+):(\d+)/)
     {
 	($pos, $received, $completed) = ($1, $2, $3);
+	$rejected = 0;
     }
     close IN;
 }
@@ -214,12 +192,13 @@ $pos = $startsize;
 
 print "received.value $received\n";
 print "completed.value $completed\n";
+print "rejected.value $rejected\n";
 
 if(-l $statefile) {
 	die("$statefile is a symbolic link, refusing to touch it.");
 }				
 open (OUT, ">$statefile") or exit 4;
-print OUT "$pos:$received:$completed\n";
+print OUT "$pos:$received:$completed:$rejected\n";
 close OUT;
 
 sub parseEximfile 
@@ -241,6 +220,10 @@ sub parseEximfile
 	{
 	    $completed++;
 	}
+        elsif ($line=~/rejected/)
+        {
+            $rejected++;
+        }
     }
     close(LOGFILE);    
 }

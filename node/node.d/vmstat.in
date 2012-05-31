@@ -8,30 +8,6 @@
 # 	config   (required)
 # 	autoconf (optional - used by munin-config)
 #
-# $Log$
-# Revision 1.4  2004/05/20 13:57:12  jimmyo
-# Set categories to some of the plugins.
-#
-# Revision 1.3  2004/01/30 14:40:08  jimmyo
-# Added max value to generic/vmstat plugin (Deb#225489).
-#
-# Revision 1.2  2004/01/29 19:00:42  jimmyo
-# Make vmstat plugin more portable (SF#882352).
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.3  2003/12/06 16:32:29  jimmyo
-# Better names. Idea from Mike Fedyk.
-#
-# Revision 1.2  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
-#
-#
 # Magick markers (optional):
 #%# family=auto
 #%# capabilities=autoconf

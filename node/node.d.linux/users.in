@@ -20,14 +20,6 @@
 #
 # $Id$
 #
-# $Log$
-# Revision 1.2  2005/01/24 17:25:39  jimmyo
-# Made TLS mode work.
-#
-# Revision 1.1  2004/12/20 13:43:36  jimmyo
-# Added plugin linux/users, created by Michael Kaiser.
-#
-#
 #%# family=contrib
 
 if ( $ARGV[0] and $ARGV[0] eq "config" )

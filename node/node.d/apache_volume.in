@@ -23,54 +23,6 @@
 # 	url      - Override default status-url
 # 	ports    - HTTP port numbers
 #
-# $Log$
-# Revision 1.12  2004/12/10 18:51:43  jimmyo
-# linux/apt* has been forced to LANG=C, to get predictable output.
-#
-# Revision 1.11  2004/12/10 10:47:47  jimmyo
-# Change name from ${scale} to ${graph_period}, to be more consistent.
-#
-# Revision 1.10  2004/12/09 22:12:54  jimmyo
-# Added "graph_period" option, to make "graph_sums" usable.
-#
-# Revision 1.9  2004/09/26 22:14:39  jimmyo
-# Changd COUNTER -> DERIVE for some plugins. Set min/max values.
-#
-# Revision 1.8  2004/05/20 13:57:12  jimmyo
-# Set categories to some of the plugins.
-#
-# Revision 1.7  2004/05/14 21:16:46  jimmyo
-# "Upped" som plugins from contrib/manual to auto.
-#
-# Revision 1.6  2004/04/27 21:32:06  jimmyo
-# Clarified the vlabels in the apache-plugins (Deb#238594).
-#
-# Revision 1.5  2004/04/27 08:46:57  jimmyo
-# Fixed broken autoconf in apache-* plugins (Deb#236144).
-#
-# Revision 1.4  2004/02/18 15:47:35  jimmyo
-# The generic/apache_* plugins now have defined max values.
-#
-# Revision 1.3  2004/02/03 17:17:25  jimmyo
-# Generic/apache-plugins have been modified to properly to report the correct autoconf value. Also, bugfixes in _processes and _volume.
-#
-# Revision 1.2  2004/01/29 18:47:30  jimmyo
-# Made plugins apache_* compatible with older versions of LWP::UserAgent (SF#881411).
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.4  2003/12/18 16:35:33  jimmyo
-# fail more gracefully when using uninstalled perl modules.
-#
-# Revision 1.3  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
-#
-#
 # Magic markers:
 #%# family=auto
 #%# capabilities=autoconf

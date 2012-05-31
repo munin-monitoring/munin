@@ -15,11 +15,6 @@
 # env.regex_imapd ^[0-9]* imapd:
 # env.regex_pop3d ^[0-9]* pop3d:
 # 
-# $Log$
-# Revision 1.1  2004/01/29 19:42:45  jimmyo
-# Added a new plugin generic/multips to count several procs in one graph. (SF#885579)
-#
-#
 # Magic markers (optional):
 #%# family=manual
 #%# capabilities=autoconf

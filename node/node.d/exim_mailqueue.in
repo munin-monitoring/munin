@@ -16,27 +16,6 @@
 # 	queuewarn    - When to warn
 # 	queuecrit    - When to crit
 #
-# $Log$
-# Revision 1.4  2004/11/10 15:47:10  jimmyo
-# Made graph_title a parameter for generic/exim_mailqueue (patch by Torstein T. Svendsen, SF#1060834).
-#
-# Revision 1.3  2004/05/20 13:57:12  jimmyo
-# Set categories to some of the plugins.
-#
-# Revision 1.2  2004/01/29 19:39:00  jimmyo
-# Generic plugins now use printf instead of echo -n, as this is more portable (SF#885564)
-#
-# Revision 1.1  2004/01/02 18:50:00  jimmyo
-# Renamed occurrances of lrrd -> munin
-#
-# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
-# Import of LRRD CVS tree after renaming to Munin
-#
-# Revision 1.5  2003/11/07 17:43:16  jimmyo
-# Cleanups and log entries
-#
-#
-#
 # Magic markers (optional - used by installation scripts and
 # munin-config):
 #
