@@ -23,7 +23,7 @@ my %booleans = map {$_ => 1} qw(
 
     sub instance {
         my ($class) = @_;
-        
+
         $instance ||= bless {
             config_file  => "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf",
         }, $class;
@@ -51,7 +51,7 @@ sub parse_config {
         next unless @var;
         if ($var[0] eq 'ignore_file') {
             push @{$self->{ignores}}, $var[1];
-        } 
+        }
         elsif ($var[0] eq 'unhandled') {
             next if defined $self->{sconf}{$var[1]};
             $self->{sconf}{$var[1]} = $var[2];
@@ -87,6 +87,7 @@ sub _parse_line {
         tls_private_key
         tls_verify_certificate
         tls_verify_depth
+        tls_match
     );
 
     if ($config_variables{$var_name}) {
@@ -123,7 +124,7 @@ sub _parse_line {
           cidr_allow
           cidr_deny
      );
-    
+
     sub _handled_by_net_server {
         my ($self, $var_name) = @_;
         return $handled_by_net_server{$var_name};
@@ -138,7 +139,7 @@ sub process_plugin_configuration_files {
         or croak "Could not open plugin configuration directory: $!";
 
     $self->{sconf} ||= {};
-    
+
     my @ignores = $self->{ignores} ? @{$self->{ignores}} : ();
     push @ignores, '^\.'; # Hidden files
 
@@ -147,14 +148,14 @@ FILE:
         # Untaint file
         next if $file !~ m/^([-\w.:]+)$/; # Skip if any weird chars
         $file = $1;
-        
+
         for my $regex (@ignores) {
             next FILE if $file =~ /$regex/;
         }
 
         $self->parse_plugin_config_file("$self->{sconfdir}/$file");
     }
-    
+
     closedir $DIR
         or carp "Failed to close directory '$self->{sconfdir}': $!";
 }
@@ -216,7 +217,7 @@ sub parse_plugin_config {
 	    $service = $1;
 	}
         else {
-            croak "Parse error: Clutter before section start." 
+            croak "Parse error: Clutter before section start."
                 unless $service;
 
             my @var = $self->_parse_plugin_line($line);
@@ -320,7 +321,7 @@ sub _apply_wildcard_to_service {
 
 __END__
 
-=head1 NAME 
+=head1 NAME
 
 Munin::Node::Config - Singleton node configuration container. Reads
 configuration files.
@@ -381,7 +382,7 @@ Parses the plugin configuration from an L<IO::Handle>.
 
  $config->apply_wildcards();
 
-Applies the contents of any wildcard plugin configuration sections 
+Applies the contents of any wildcard plugin configuration sections
 to matching plugins.
 
 See L<http://munin.projects.linpro.no/wiki/Priority_and_inheritance>

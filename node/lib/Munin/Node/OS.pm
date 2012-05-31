@@ -90,7 +90,7 @@ sub bitsof {
     my ($vec) = @_;
 
     my $bits = unpack("b*", $vec);
-    
+
     return $bits;
 }
 
@@ -110,7 +110,7 @@ sub read_from_child {
     my $output = my $errput = '';
 
     vec($win,0,1)=0;
-    
+
     vec($rin,fileno($stdout),1) = 1;
     vec($rin,fileno($stderr),1) = 1;
 
@@ -124,7 +124,7 @@ sub read_from_child {
 
 	# print STDERR "Found: $nfound read ",bitsof($rout),
 	# " - write ",bitsof($wout)," - exceptions ",bitsof($eout),"\n"
-	
+
 	if ($nfound == -1) {
 	    # !  Print error somewhere?
 	    last;
@@ -177,7 +177,7 @@ sub run_as_child {
 	my $err;
 
         # Give the child till the timeout to finish up
-        my $read_it_and_reap = sub { 
+        my $read_it_and_reap = sub {
 	    ($out,$err) = $self->read_from_child($out_read,$err_read);
 	    waitpid($pid, 0);
 	};
@@ -220,10 +220,10 @@ sub reap_child_group {
 
     return unless $child_pid;
     return unless $class->possible_to_signal_process($child_pid);
-    
+
     # Negative number signals the process group
     kill -1, $child_pid;           # SIGHUP
-    sleep 2; 
+    sleep 2;
     kill -9, $child_pid;           # SIGKILL
 }
 
@@ -265,7 +265,7 @@ sub set_real_group_id {
 
 sub _set_xid {
     my ($class, $x, $id) = @_;
-    
+
     # According to pervar manpage, assigning to $<, $> etc results in
     # a system call. So we need to check $! for errors.
     $! = undef;
@@ -332,7 +332,7 @@ directory it inhabits.
 
   $result = run_as_child($timeout, $coderef, @arguments);
 
-Creates a child process to run $code and waits for up to 
+Creates a child process to run $code and waits for up to
 $timeout seconds for it to complete.  Returns a hashref
 containg the following keys:
 

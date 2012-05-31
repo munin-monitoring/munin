@@ -6,9 +6,6 @@
 mysql_isam_space_ - Wildcard plugin to monitor the percent of table space used
 on isam and myisam tables on a mysql server.
 
-Note that this is a old plugin which is no longer installed by
-default.  It is retained for compatability with old installations.
-
 =head1 CONFIGURATION
 
 Configuration parameters for @@CONFDIR@@/PLUGIN,
@@ -45,8 +42,8 @@ munin-node.
 
 =end comment
 
-  #%# family=manual
-  #%# capabilities=suggest autoconf
+ #%# family=contrib
+ #%# capabilities=suggest autoconf
 
 =cut
 
@@ -54,9 +51,11 @@ munin-node.
 my $DB = `basename $0 | sed 's/^mysql_isam_space_//g' | tr '_' '-'` ;
 chomp $DB;
 my $STATEFILE = $ENV{'statefile'} || "@@PLUGSTATE@@/plugin-mysql_isam_space.state";
-my $MYSQLSHOW = $ENV{'mysqlshow'} || 'mysqlshow';
+my $MYSQLSHOW = $ENV{'mysqlshow'} || `which mysqlshow`;
 my $ABSOLUTE  = $ENV{'absolute'} || 0;
 my @mysql_opts = ();
+
+chomp $MYSQLSHOW;
 
 if (exists $ENV{'mysqlopts'})
 {
@@ -64,7 +63,7 @@ if (exists $ENV{'mysqlopts'})
 }
 
 my $tables = undef;
-my $databses = undef;
+my $databases = undef;
 
 &print_autoconf () if ($ARGV[0] and $ARGV[0] eq "autoconf");
 
@@ -93,7 +92,6 @@ sub print_config
 	print "graph_title MySQL \"$DB\" isam/myisam table-space usage\n";
 	print "graph_args --base 1000\n";
 	print "graph_vlabel percent\n";
-	print "graph_info Note that this is a old plugin which is no longer installed by default.  It is retained for compatability with old installations.\n";
 	print "graph_category mysql\n";
 	foreach my $t (keys %{$tables})
 	{
@@ -223,13 +221,18 @@ sub fetch_state_from_mysql
 		while (<IN>)
 		{
 			my @fields = split (/\s*\|\s*/);
-                        next if @fields > 2; # Separator line
+                        next if @fields < 2; # Separator line
 			if (! $headerseen and $fields[1] eq "Name")
                         { # Header line, grab field names
                         	%index = map {($fields[$_], $_)} 0..$#fields;
 			}
                         else
 			{
+				# mysqlshow says many fun things sometimes, sanity-check
+				next if $fields[$index{Data_length}] eq "";
+				next if ($fields[$index{Max_data_length}] eq "") && ( ! $ABSOLUTE );
+				next if ($fields[$index{Max_data_length}] == 0) && ( ! $ABSOLUTE );
+
 				my $value =
 					$ABSOLUTE ? $fields[$index{Data_length}]
 					: (100*$fields[$index{Data_length}]/$fields[$index{Max_data_length}]);

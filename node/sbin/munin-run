@@ -94,7 +94,7 @@ sub main
     Munin::Node::Service->exec_service($config->{servicedir}, $plugin, $arg);
 
     # Never reached, but just in case...
-    print STDERR "# FATAL: Failed to exec.";
+    print STDERR "# FATAL: Failed to exec.\n";
     exit 42;
 }
 

@@ -36,7 +36,7 @@ use warnings;
         capabilities => {
         },
     },
-    
+
     "No capabilities offered");
 }
 
@@ -49,7 +49,7 @@ use warnings;
             foo => 1,
         },
     },
-    
+
     "Ignore unknown capability");
 }
 

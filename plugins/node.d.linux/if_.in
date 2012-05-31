@@ -134,7 +134,7 @@ findspeed () {
     esac
 
     case $SPEED in
-	U) echo "up.info Traffic of the $INTERFACE interface. Unable to determine interface speed.  Please install ethtool, wireless-tools (or mii-tool), whatever is apropriate for the interface."
+	U) echo "up.info Traffic of the $INTERFACE interface. Unable to determine interface speed.  Please install ethtool, wireless-tools (or mii-tool), whatever is appropriate for the interface."
 	   return;;
     esac
 

@@ -97,17 +97,19 @@ sub main {
     });
 
     Munin::Node::Server->run(
-        conf_file => $conffile,
-        pid_file => "$Munin::Common::Defaults::MUNIN_STATEDIR/munin-node.pid"
+       syslog_ident => 'munin-node',
+       conf_file    => $conffile,
+       pid_file     => "$Munin::Common::Defaults::MUNIN_STATEDIR/munin-node.pid"
     );
 
     return 0;
 }
 
+
 sub parse_args {
     my @ORIG_ARGV  = @ARGV;
 
-    print_usage_and_exit() unless GetOptions ( 
+    print_usage_and_exit() unless GetOptions (
         "config=s"     => \$conffile,
         "debug!"       => \$DEBUG,
         "plugindebug!" => \$PIDEBUG,

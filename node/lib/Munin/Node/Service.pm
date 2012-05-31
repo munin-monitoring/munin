@@ -19,7 +19,7 @@ my $config = Munin::Node::Config->instance();
 
 sub is_a_runnable_service {
     my ($class, $file, $dir) = @_;
-    
+
     $dir ||= $config->{servicedir};
 
     my $path = "$dir/$file";
@@ -41,7 +41,7 @@ sub is_a_runnable_service {
     foreach my $regex (@{$config->{ignores}}) {
         return if $file =~ /$regex/;
     }
-    
+
     return 1;
 }
 
@@ -55,9 +55,9 @@ sub prepare_plugin_environment
     $config->{fqdn} ||= Munin::Node::OS->get_fq_hostname();
 
     # Export some variables plugins might be interested in
-    $ENV{MUNIN_DEBUG} = $config->{PIDEBUG};
+    $ENV{MUNIN_DEBUG} = $config->{PIDEBUG} if $config->{PIDEBUG};
     $ENV{FQDN}        = $config->{fqdn};
-    
+
     # munin-node will override this with the IP of the connecting master
     $ENV{MUNIN_MASTER_IP} = '';
 
@@ -81,7 +81,7 @@ sub prepare_plugin_environment
         $config->process_plugin_configuration_files();
     }
     $config->apply_wildcards(@plugins);
-    
+
     return;
 }
 
@@ -112,10 +112,10 @@ sub change_real_and_effective_user_and_group
     if ($REAL_USER_ID == $root_uid) {
 	# Need to test for defined here since a user might be
         # specified with UID = 0
-        my $uid = defined $config->{sconf}{$service}{user} 
+        my $uid = defined $config->{sconf}{$service}{user}
                     ? $config->{sconf}{$service}{user}
                     : $config->{defuser};
-        
+
         # Resolve unresolved UID now - as it is not resolved when the
         # config was read.
 
@@ -133,7 +133,7 @@ sub change_real_and_effective_user_and_group
 
 	    my @groups = ();
 	    my $groups = $config->{sconf}{$service}{group};
-	
+
 	    for my $group (split /\s*,\s*/, $groups) {
 		my $is_optional = $group =~ m{\A \( ([^)]+) \) \z}xms;
 		$group          = $1 if $is_optional;
@@ -165,13 +165,13 @@ sub change_real_and_effective_user_and_group
 
         eval {
             if ($Munin::Common::Defaults::MUNIN_HASSETR) {
-                Munin::Node::OS->set_real_group_id($dg) 
+                Munin::Node::OS->set_real_group_id($dg)
                       unless $dg == $root_gid;
                 Munin::Node::OS->set_real_user_id($u)
                       unless $u == $root_uid;
             }
 
-            Munin::Node::OS->set_effective_group_id($gs) 
+            Munin::Node::OS->set_effective_group_id($gs)
                   unless $dg == $root_gid;
             Munin::Node::OS->set_effective_user_id($u)
                   unless $u == $root_uid;
@@ -209,8 +209,8 @@ sub exec_service {
     Munin::Node::OS::set_plugin_umask();
 
     my @command = grep defined, _service_command($dir, $service, $arg);
-    print STDERR "# About to run '", join (' ', @command), "'\n" 
-	if $config->{DEBUG};
+    print STDERR "# About to run '", join (' ', @command), "'\n"
+        if $config->{DEBUG};
 
     exec @command;
 }
@@ -244,7 +244,7 @@ sub fork_service
 {
     my ($class, $dir, $service, $arg) = @_;
 
-    my $timeout = $config->{sconf}{$service}{timeout} 
+    my $timeout = $config->{sconf}{$service}{timeout}
                || $config->{timeout};
 
     my $run_service = sub {
@@ -283,7 +283,7 @@ Munin::Node::Service - Methods related to handling of Munin services
 
  my $bool = Munin::Node::Service->is_a_runnable_service($file_name, $dir);
 
-Runs miscellaneous tests on $file_name in directory $dir. These tests are 
+Runs miscellaneous tests on $file_name in directory $dir. These tests are
 intended to verify that $file_name is a runnable service.
 
 If not specified, $dir defaults to $config->{servicedir}
@@ -304,7 +304,7 @@ Exports all the environment variables specific to service $service.
  Munin::Node::Service->change_real_and_effective_user_and_group($service);
 
 Changes the current process' effective group and user IDs to those specified
-in the configuration, or the default user or group otherwise.  Also changes 
+in the configuration, or the default user or group otherwise.  Also changes
 the real group and user IDs if the operating system supports it.
 
 On failure, causes the process to exit.

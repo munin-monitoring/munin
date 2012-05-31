@@ -23,6 +23,8 @@ Needs nc in path for autoconf.
     env.username monitorRole
     env.password SomethingSecret
 
+    env.JRE_HOME /usr/lib/jvm/java-6-sun/jre
+
 Needed configuration on the Tomcat side: add
 
   -Dcom.sun.management.jmxremote \
@@ -79,6 +81,12 @@ GPLv2
 
 MUNIN_JAR="@@JAVALIBDIR@@/munin-jmx-plugins.jar"
 
+if [ "x$JRE_HOME" != "x" ] ; then
+  JRE=$JRE_HOME/bin/java
+  export JRE_HOME=$JRE_HOME
+fi
+JAVA_BIN=${JRE:-@@JAVARUN@@}
+
 ip=${ip:-127.0.0.1}
 port=${port:-5400}
 
@@ -129,7 +137,6 @@ if [ "x$1" = "xautoconf" ] ; then
     $NC -n -z $ip $port >/dev/null 2>&1
     CONNECT=$?
 
-    JAVA_BIN="@@JAVARUN@@"
     $JAVA_BIN -? >/dev/null 2>&1
     JAVA=$?
     if [ $JAVA -ne 0 ] ; then
@@ -165,4 +172,4 @@ if [ "x$jmxfunc" = "x" ] ; then
   exit 1
 fi
 
-ip=$ip port=$port @@JAVARUN@@ -cp $MUNIN_JAR org.munin.plugin.jmx.$jmxfunc $param
+ip=$ip port=$port $JAVA_BIN -cp $MUNIN_JAR org.munin.plugin.jmx.$jmxfunc $param

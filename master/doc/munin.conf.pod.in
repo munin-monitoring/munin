@@ -107,7 +107,7 @@ Default is C<cron>.  Affects: munin-graph and munin-html.
 =item B<local_address> I<value>
 
 The local address to connect any node from in case the master has
-several IP interfaces.  This can be overriden by a group or global
+several IP interfaces.  This can be overridden by a group or global
 directive.  Without this directive Munins traffic will originate from
 the master server according to the IP routing table.
 
@@ -125,7 +125,7 @@ disables concurrent processing.  Affects: munin-graph
 
 =item B<max_cgi_graph_jobs> <value>
 
-This directiuve specifies the maximum number of concurrent
+This directive specifies the maximum number of concurrent
 munin-cgi-graph jobs.  The web server can start a high number of
 munin-cgi-graph jobs which we can't stop, but munin-cgi-graph will
 throttle down how many rrdgraph calls will be running at the same time
@@ -173,6 +173,27 @@ certificate, if tls_verify_certificate is set to C<yes>.  Default is
 This directive sets how many signings up a chain of signatures TLS is
 willing to go to reach a known, trusted CA when verifying a
 certificate.  Default is C<5>.  Affects: munin-update.
+
+=item B<tls_match> <value>
+
+This directive, if defined, searches a dump of the certificate provided by the
+remote host for the given regex.  The dump of the certificate is two lines of
+the form:
+
+	Subject Name: /C=c/ST=st/L=l/O=o/OU=ou/CN=cn/emailAddress=email
+	Issuer  Name: /C=c/ST=st/O=o/OU=ou/CN=cn/emailAddress=email
+
+So, for example, one could match the subject distinguished name by the directive:
+
+	tls_match Subject Name: /C=c/ST=st/L=l/O=o/OU=ou/CN=cn/emailAddress=email
+
+Note that the fields are dumped in the order they appear in the certificate.
+It's best to view the dump of the certificate by running munin-update in debug
+mode and reviewing the logs.
+
+Unfortunately, due to the limited functionality of the SSL module in use, it is
+not possible to provide finer-grained filtering.  By default this value is not
+defined.  Affects: munin-update.
 
 =item FIXME: This section MAY be complete, it may be missing a directive or two.
 

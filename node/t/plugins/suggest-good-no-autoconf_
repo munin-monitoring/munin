@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# Munin test plugin: 
-# 
+# Munin test plugin:
+#
 # Suggest should never be run, because autoconf said it shouldn't
 # be installed
 #
@@ -21,7 +21,7 @@ do_suggest ()
 	echo one
 	echo two
 	echo three
-	
+
 	exit 0
 }
 

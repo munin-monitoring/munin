@@ -20,9 +20,9 @@ sub logger {
     chomp ($text);
     $text =~ s/\n/\\n/g;
 
-    printf STDERR ("%d/%02d/%02d-%02d:%02d:%02d [%d] %s\n", 
-                   $date[5]+1900, 
-                   $date[4]+1, 
+    printf STDERR ("%d/%02d/%02d-%02d:%02d:%02d [%d] %s\n",
+                   $date[5]+1900,
+                   $date[4]+1,
                    $date[3],
                    $date[2],
                    $date[1],
@@ -42,7 +42,7 @@ __END__
 
 =head1 NAME
 
-Munin::Node::Logger - The logger for munin node. 
+Munin::Node::Logger - The logger for munin node.
 
 =head1 SYNOPSIS
 
