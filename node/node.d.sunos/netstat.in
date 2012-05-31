@@ -1,0 +1,68 @@
+#!@@PERL@@
+#
+# $Id$
+#
+# $Log$
+# Revision 1.1  2004/01/29 19:21:20  jimmyo
+# Moved generic netstat to linux-dir, as it is too spesific. Added Solaris version of the plugin as well. (SF#882354)
+#
+#
+# Parameters:
+#
+#   config
+#   autoconf
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+use strict;
+
+if (exists $ARGV[0] and $ARGV[0] eq "autoconf") {
+  print "yes\n";
+  exit;
+} elsif (exists $ARGV[0] and $ARGV[0] eq "config") {
+  print "graph_title Netstat\n";
+  print "graph_args -l 0 --base 1000\n";
+  print "graph_vlabel active connections\n";
+  print "active.label active\n";
+  print "active.type COUNTER\n";
+  print "active.max 50000\n";
+  print "passive.label passive\n";
+  print "passive.type COUNTER\n";
+  print "passive.max 50000\n";
+  print "failed.label failed\n";
+  print "failed.type COUNTER\n";
+  print "failed.max 50000\n";
+  print "resets.label resets\n";
+  print "resets.type COUNTER\n";
+  print "resets.max 50000\n";
+  print "established.label established\n";
+  print "established.type GAUGE\n";
+  print "established.max 50000\n";
+  exit;
+}
+
+my %trans = (
+              tcpActiveOpens  => "active",
+              tcpPassiveOpens => "passive",
+              tcpAttemptFails => "failed",
+              tcpEstabResets  => "resets",
+              tcpCurrEstab    => "established"
+            );
+
+# Slurp mode
+undef $/;
+
+open(NETSTAT, '/usr/bin/netstat -s -P tcp|');
+$_ = <NETSTAT>;
+close(NETSTAT);
+
+s/^\n*//;
+
+s/^TCP/   /m;
+
+while (/\s+(\w+)\s*=\s*(\d+)/g) {
+  print "$trans{$1}.value $2\n" if exists $trans{$1};
+}
+
+

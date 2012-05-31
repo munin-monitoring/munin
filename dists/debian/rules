@@ -12,15 +12,16 @@ build-stamp:
 	
 	$(MAKE) build     $(MAKEOPTS)
 	$(MAKE) build-doc $(MAKEOPTS)
+	$(MAKE) build-man $(MAKEOPTS)
 	
-	$(MAKE) install-server $(MAKEOPTS) \
-		DESTDIR=debian/lrrd-server
+	$(MAKE) install-main $(MAKEOPTS) \
+		DESTDIR=debian/munin
 	
-	$(MAKE) install-client install-client-plugins $(MAKEOPTS) \
-		DESTDIR=debian/lrrd-client
+	$(MAKE) install-node install-node-plugins $(MAKEOPTS) \
+		DESTDIR=debian/munin-node
 	
 	install -m0644 debian/plugins.conf \
-		$(CURDIR)/debian/lrrd-client/etc/lrrd/client-conf.d/lrrd-client
+		$(CURDIR)/debian/munin-node/etc/munin/plugin-conf.d/munin-node
 	
 	touch build-stamp
 

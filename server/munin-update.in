@@ -5,6 +5,18 @@
 # $Id$
 #
 # $Log$
+# Revision 1.6  2004/01/30 14:28:19  jimmyo
+# More timeouts in munin-update (Deb#222674).
+#
+# Revision 1.5  2004/01/29 18:19:58  jimmyo
+# Made Munin compatible with perl 5.005_03 (patch by Lupe Christoph) (SF#884622)
+#
+# Revision 1.4  2004/01/29 17:40:10  jimmyo
+# Fixed pod typos patched by Lupe Christoph (SF#884092)
+#
+# Revision 1.3  2004/01/29 17:34:06  jimmyo
+# Updated copyright information
+#
 # Revision 1.2  2004/01/15 15:20:01  jimmyo
 # Making things workable after name change. Upping for test verwion.
 #
@@ -124,7 +136,7 @@ if ($do_version)
     print "munin-update version $VERSION.\n";
     print "Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS\n";
     print "\n";
-    print "Copyright (C) 2002-2003\n";
+    print "Copyright (C) 2002-2004\n";
     print "This is free software released under the GNU Public License. There is NO\n";
     print "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n";
     exit 0;
@@ -315,7 +327,7 @@ if ($bad_procs) # Use old configuration for killed children
 		my $oldnode = $children{$key}->[3];
 
 		use_old_config ($domain, $name, $oldnode);
-		logger ("Using old configuration for $domain -> $name.");
+		logger ("Attempting to use old configuration for $domain -> $name.");
 	}
 }
 
@@ -420,7 +432,7 @@ sub process_node {
   my $socket = new IO::Socket::INET ('PeerAddr' => "$node->{address}:".
 		  ($node->{port} || $config->{domain}->{$domain}->{port} || 
 		   $config->{port} || "4949"), 
-		  'Proto'    => "tcp");
+		  'Proto'    => "tcp", "Timeout" => $timeout);
   my $err = ($socket ? "" : $!);
 
   if ($do_fork)
@@ -431,7 +443,7 @@ sub process_node {
       my @tmp = ($$, $domain, $name);
 
       if (!$socket) {
-	logger ("Could not connect to $name($node->{address}): $err - Using old configuration");
+	logger ("Could not connect to $name($node->{address}): $err - Attempting to use old configuration");
 	# If we can't reach the client. Using old Configuration.
 	if (ref $oldnode) {
 	  $config->{domain}->{$domain}->{node}->{$name} = $oldnode;
@@ -477,7 +489,7 @@ sub process_node {
   else # No forking...
   {
       if (!$socket) {
-	logger ("Could not connect to $name($node->{address}): $err\nUsing old configuration");
+	logger ("Could not connect to $name($node->{address}): $err\nAttempting to use old configuration");
 	# If we can't reach the client. Using old Configuration.
 	if (ref $oldnode) {
 	  $config->{domain}->{$domain}->{node}->{$name} = $oldnode;
@@ -569,7 +581,7 @@ sub config_node {
   };
   if ($@) {
     die unless ($@ =~ m/Could not run list/);
-      logger ("Could not get list from $node->{address}: $!\nUsing old configuration");
+      logger ("Could not get list from $node->{address}: $!\nAttempting to use old configuration");
     if (ref $oldnode) {
       $config->{domain}->{$domain}->{node}->{$name} = $oldnode;
     }
@@ -600,7 +612,7 @@ sub config_node {
       if (/\# timeout/) {
 	logger("Client reported timeout in configuration of $servname");
 	if ($oldnode->{client}->{$servname}) {
-	  logger("Using old configuration");
+	  logger("Attempting to use old configuration");
 	  $config->{domain}->{$domain}->{node}->{$name}->{client}->{$servname} = $oldnode->{client}->{$servname};
 	} else {
 	  logger("Skipping configuration of $servname");
@@ -726,7 +738,7 @@ sub use_old_config
     my $oldnode = shift;
 
     $config->{domain}->{$domain}->{node}->{$name} = $oldnode;
-    logger ("Using old configuration for $domain -> $name.");
+    logger ("Attempting to use old configuration for $domain -> $name.");
 }
 
 
@@ -735,7 +747,8 @@ sub logger {
   my ($comment) = @_;
   my $now = strftime "%b %d %H:%M:%S", localtime;
   print ("$now - $$: $comment\n") if $print_stdout;
-  printflush LOG ("$now - $$: $comment\n");
+  print LOG ("$now - $$: $comment\n");
+  flush LOG;
 }
 
 
@@ -790,7 +803,7 @@ If set, will print log messages to stdout as well as syslog. [--nostdout]
 
 Set the network timeout to <seconds>. [180]
 
-==back
+=back
 
 =head1 DESCRIPTION
 
@@ -829,7 +842,7 @@ Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
 =head1 COPYRIGHT
 
-Copyright © 2002 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
+Copyright © 2002-2004 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

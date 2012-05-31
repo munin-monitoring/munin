@@ -3,6 +3,9 @@
 # Plugin to monitor the number of open files in the system.
 #
 # $Log$
+# Revision 1.2  2004/01/29 19:39:00  jimmyo
+# Generic plugins now use printf instead of echo -n, as this is more portable (SF#885564)
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -48,9 +51,9 @@ if [ "$1" = "config" ]; then
 	exit 0
 fi
 
-echo -n "proc.value "
+printf "proc.value "
 smbstatus -b | grep -v "^$" | tail +4 | wc -l 
-echo -n "lock.value "
+printf "lock.value "
 smbstatus -L | grep -v "^$" | tail +4 | wc -l 
-echo -n "share.value "
+printf "share.value "
 smbstatus -S | grep -v "^$" | tail +4 | wc -l 

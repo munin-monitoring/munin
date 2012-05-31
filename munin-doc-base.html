@@ -94,7 +94,7 @@ can contain the following options:
  <dt>[&lt;plugin-name&gt;]<dd>The following lines are for
  <code>plugin-name</code>.
  <dt>user &lt;username|userid&gt;<dd>Run plugin as this user
- <dt>group &lt;groupname|groupid&gt;<dd>Run plugin as this group
+ <dt>group &lt;groupname|groupid&gt;[, &lt;groupname|groupid&gt;] [...]<dd>Run plugin as this group. If group is inside paranthesis, don't croak if it's nonexistant.
  <dt>command &lt;command&gt;<dd>Run command instad of plugin. "%c" will
  be expanded to what would otherwise have been run. E.g. "<code>command sudo
  -u root %c</code>".
@@ -182,6 +182,7 @@ Explaination:
  <dt>fork<dd>If set, run updates of several hosts simultaneously. (default yes)
  <dt>max_processes<dd>Set max number of simultaneous LRRD processes.
  <dt>nsca*<dd>Nagios options. See seperate section
+ <dt>domain_order<dd>Change the order of domains. (Default is alphabetically sorted.)
  <dt>[foo.com;machine.dom.ain]<dd>Add machine.dom.ain to domain foo.com.
  <dt>[machine.dom.ain]<dd>Add machine.dom.ain to domain dom.ain. (A short form of [dom.ain;machine.dom.ain].)
 </dl>
@@ -249,7 +250,10 @@ peaks will show up as substancially lower than they were.
 Lrrd-html creates the html-pages for the graphs.<br>
 Usefull configuration in the server.conf file is:
 <dt>node_order [node1] [node2] .... <dd>In which order the nodes
-    should be listed, defaults to sorted.
+    should be listed, defaults to sorted. This is a domain-level
+	option.
+<dt>domain_order [domain1] [domain2] .... <dd>In which order the domains
+    should be listed, defaults to sorted. This is a top-level option.
 <h3>lrrd-nagios</h3>
 Lrrd-nagios is a optional script to send a passive alert to a
 nagios-server. For this to work, you need a nagios-nsca server,

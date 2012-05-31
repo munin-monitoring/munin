@@ -2,9 +2,18 @@
 #
 # $Id$
 #
-# Copyright 2003 - Per Andreas Buer
+# Copyright 2003-2004 - Per Andreas Buer
 #
 # $Log$
+# Revision 1.4  2004/01/29 18:49:55  jimmyo
+# Bugfix in plugin mysql_queries - insertions were no longer graphed. (SF#881483).
+#
+# Revision 1.3  2004/01/29 17:36:20  jimmyo
+# Updated copyright information
+#
+# Revision 1.2  2004/01/15 16:35:43  jimmyo
+# Bugfix from Dagfinn I. Mannsåker, closing SF#876443, SF#865125.
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -38,6 +47,7 @@ my $COMMAND    =      "$MYSQLADMIN $ENV{mysqlopts} extended-status";
 
 
 my %WANTED = ( "Com_delete"  => "delete", 
+			   "Com_insert"  => "insert",
                "Com_select"  => "select", 
                "Com_update"  => "update",
                "Com_replace" => "replace",
@@ -66,7 +76,7 @@ while (<SERVICE>) {
     my ($k, $v) = (m/(\w+).*?(\d+(?:\.\d+)?)/);
     next unless ($k);
     if (exists $WANTED{$k} ) {
-	print("$WANTED{$k} $v\n");
+	print("$WANTED{$k}.value $v\n");
     }
 }
 

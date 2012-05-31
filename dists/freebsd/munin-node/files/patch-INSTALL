@@ -1,0 +1,11 @@
+--- munin-1.0.0pre1.orig/INSTALL	Fri Jan  2 16:38:35 2004
++++ munin-1.0.0pre1/INSTALL	Sun Jan 25 12:01:44 2004
+@@ -13,7 +13,7 @@
+ To install the documentation:
+ 
+ 	- edit Makefile.config
+-	- make install-doc
++	- make install-doc install-man
+ 
+ To install the client:
+ 

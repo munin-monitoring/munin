@@ -5,6 +5,12 @@
 # $Id$
 #
 # $Log$
+# Revision 1.4  2004/01/30 15:04:02  jimmyo
+# Code tidying in munin-graph (SF#884625).
+#
+# Revision 1.3  2004/01/29 17:34:06  jimmyo
+# Updated copyright information
+#
 # Revision 1.2  2004/01/15 15:20:01  jimmyo
 # Making things workable after name change. Upping for test verwion.
 #
@@ -130,7 +136,7 @@ if ($do_version)
     print "munin-graph version $VERSION.\n";
     print "Written by Audun Ytterdal, Jimmy Olsen, Tore Anderson / Linpro AS\n";
     print "\n";
-    print "Copyright (C) 2002-2003\n";
+    print "Copyright (C) 2002-2004\n";
     print "This is free software released under the GNU Public License. There is NO\n";
     print "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n";
     exit 0;
@@ -727,25 +733,25 @@ sub expand_cdef
     foreach my $field (keys %$service)
     {
 		next unless ($field =~ /^(.+)\.label$/);
-		my $field = $1;		my $rrdname = $field;
-		if (length $field > 15) # Use hash instead.
+		my $fieldname = $1;		my $rrdname = $fieldname;
+		if (length $fieldname > 15) # Use hash instead.
 		{
-			$rrdname = substr (Digest::MD5::md5_hex ($field), -15); 
+			$rrdname = substr (Digest::MD5::md5_hex ($fieldname), -15); 
 		}
-		if (exists $service->{$field.".cdef"} and 
-			length $service->{$field.".cdef"} and
-			$cdef =~ /\b$field\b/ and
-			$field ne $cfield)
+		if (exists $service->{$fieldname.".cdef"} and 
+			length $service->{$fieldname.".cdef"} and
+			$cdef =~ /\b$fieldname\b/ and
+			$fieldname ne $cfield)
 		{
-			$max =~ s/([,=])$field([,=]|$)/$1ca$rrdname$2/g;
-			$min =~ s/([,=])$field([,=]|$)/$1ci$rrdname$2/g;
-			$avg =~ s/([,=])$field([,=]|$)/$1cg$rrdname$2/g;
+			$max =~ s/([,=])$fieldname([,=]|$)/$1ca$rrdname$2/g;
+			$min =~ s/([,=])$fieldname([,=]|$)/$1ci$rrdname$2/g;
+			$avg =~ s/([,=])$fieldname([,=]|$)/$1cg$rrdname$2/g;
 		}
-		if ($cdef =~ /\b$field\b/)
+		if ($cdef =~ /\b$fieldname\b/)
 		{
-			$max =~ s/([,=])$field([,=]|$)/$1a$rrdname$2/g;
-			$min =~ s/([,=])$field([,=]|$)/$1i$rrdname$2/g;
-			$avg =~ s/([,=])$field([,=]|$)/$1g$rrdname$2/g;
+			$max =~ s/([,=])$fieldname([,=]|$)/$1a$rrdname$2/g;
+			$min =~ s/([,=])$fieldname([,=]|$)/$1i$rrdname$2/g;
+			$avg =~ s/([,=])$fieldname([,=]|$)/$1g$rrdname$2/g;
 		}
     }
 
@@ -886,7 +892,7 @@ Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
 
 =head1 COPYRIGHT
 
-Copyright © 2002 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
+Copyright © 2002-2004 Audun Ytterdal, Jimmy Olsen, and Tore Anderson / Linpro AS.
 
 This is free software; see the source for copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

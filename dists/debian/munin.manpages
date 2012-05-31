@@ -1,0 +1,6 @@
+build/doc/munin-cron.8
+build/doc/munin-graph.8
+build/doc/munin-html.8
+build/doc/munin-nagios.8
+build/doc/munin-update.8
+build/doc/munin.conf.5

@@ -13,7 +13,7 @@ To install the main programs:
 To install the documentation:
 
 	- edit Makefile.config
-	- make install-doc
+	- make install-doc install-man
 
 To install the client:
 

@@ -4,6 +4,9 @@ package Munin;
 # $Id$
 #
 # $Log$
+# Revision 1.3  2004/01/29 18:19:58  jimmyo
+# Made Munin compatible with perl 5.005_03 (patch by Lupe Christoph) (SF#884622)
+#
 # Revision 1.2  2004/01/15 15:20:01  jimmyo
 # Making things workable after name change. Upping for test verwion.
 #
@@ -96,6 +99,7 @@ use strict;
 use RRDs;
 use Fcntl qw(:DEFAULT :flock);
 use IO::Handle;
+use Symbol 'gensym';
 
 my $nsca = new IO::Handle;
 my $config = undef;
@@ -492,7 +496,8 @@ sub munin_writeconfig {
 
     if (!defined $fh)
     {
-	unless (open ($fh, ">", $datafilename))
+	$fh = gensym();
+	unless (open ($fh, ">$datafilename"))
 	{
 	    die "Fatal error: Could not open \"$datafilename\" for writing: $!";
 	}

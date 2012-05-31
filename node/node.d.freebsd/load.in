@@ -8,6 +8,9 @@
 # installation scripts):
 #
 # $Log$
+# Revision 1.2  2004/01/15 16:58:10  jimmyo
+# FreeBSD-plugin load bugfix from Robert Lindgren (SF#865928).
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -59,6 +62,9 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000 -l 0'
 	# The Y-axis label
 	echo 'graph_vlabel load'
+	# We want Cur/Min/Avg/Max unscaled (i.e. 0.42 load instead of
+	# 420 milliload)
+	echo 'graph_noscale true'
 	# The fields. "label" is used in the legend. "label" is the only
 	# required subfield. 
 	echo 'load.label load'
@@ -78,7 +84,7 @@ fi
 # "value" subfield for every data field.
 
 echo -n "load.value "
-/sbin/sysctl vm.loadavg | cut -f4 -d' '
+/sbin/sysctl vm.loadavg | cut -f3 -d' '
 
 # How could this plugin have been written in its simplest form?
 # Something like this:

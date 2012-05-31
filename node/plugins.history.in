@@ -59,7 +59,6 @@ linux/entropy
 sunos/cpu
 sunos/if_
 sunos/if_errcoll_
-sunos/io_
 sunos/io_busy_
 sunos/io_bytes_
 sunos/io_ops_
@@ -77,3 +76,4 @@ users
 [0.9.9r6]
 [0.9.9r7]
 [1.0.0pre1]
+[1.0.0pre2]

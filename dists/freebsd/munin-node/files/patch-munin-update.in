@@ -1,0 +1,21 @@
+--- munin-1.0.0pre1.orig/server/munin-update.in	Thu Jan 15 16:20:01 2004
++++ munin-1.0.0pre1/server/munin-update.in	Sun Jan 25 16:15:09 2004
+@@ -735,7 +735,8 @@
+   my ($comment) = @_;
+   my $now = strftime "%b %d %H:%M:%S", localtime;
+   print ("$now - $$: $comment\n") if $print_stdout;
+-  printflush LOG ("$now - $$: $comment\n");
++  print LOG ("$now - $$: $comment\n");
++  flush LOG;
+ }
+ 
+ 
+@@ -790,7 +791,7 @@
+ 
+ Set the network timeout to <seconds>. [180]
+ 
+-==back
++=back
+ 
+ =head1 DESCRIPTION
+ 

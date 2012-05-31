@@ -23,6 +23,9 @@
 # 	ports    - HTTP port numbers
 #
 # $Log$
+# Revision 1.2  2004/01/29 18:47:30  jimmyo
+# Made plugins apache_* compatible with older versions of LWP::UserAgent (SF#881411).
+#
 # Revision 1.1  2004/01/02 18:50:00  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -64,7 +67,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" )
 	my @badports;
 	foreach my $port (@PORTS) {
 		my $url = sprintf $URL, $port;
-		my $response = $ua->get($url);
+		my $response = $ua->request(HTTP::Request->new('GET',$url));
 		push @badports, $port unless $response->is_success and $response->content =~ /IdleServers/;
 	}
 	if (@badports) {
@@ -92,7 +95,7 @@ my $ua = LWP::UserAgent->new(timeout => 30);
 
 foreach my $port (@PORTS) {
 	my $url = sprintf $URL, $port;
-	my $response = $ua->get($url);
+	my $response = $ua->request(HTTP::Request->new('GET',$url));
 	if ($response->content =~ /^Total Accesses:\s+(.+)$/im) {
 		print "accesses$port.value $1\n";
 	} else {

@@ -69,7 +69,7 @@ Jimmy Olsen.
 
 =head1 COPYRIGHT
 
-Copyright © 2002 Audun Ytterdal and Jimmy Olsen / Linpro AS.
+Copyright © 2002-2004 Audun Ytterdal and Jimmy Olsen / Linpro AS.
 
 This is free software; see the source for copying conditions. There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR

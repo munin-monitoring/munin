@@ -146,6 +146,19 @@ in the field definition. I.e., the above would become:
 </pre>
 </p>
 
+<h3>Q: Can I change the order of the domains?</h3>
+<p>
+	Yes, use the "domain_order" option at the topmost level. To specify
+	that you want the topmost level, either put the option before any
+	host/domain definitions, or reset the host/domain definition with 
+	"[]".
+<pre>
+	[]
+		domain_order foo.bar goo.bar alpha.bar
+</pre>
+The default domain order is alphabetically.
+</p>
+
 <h3>Q: Can I change the order of the nodes under a domain?</h3>
 <p>
 	Yes, use the "node_order" option under a domain. To specify that we
@@ -195,7 +208,7 @@ if [ "$1" = "config" ]; then
 fi
 
 # The real data-gathering
-echo -n "load.value "
+printf "load.value "
 cut -f1 -d' ' &lt; /proc/loadavg
 </pre>
 </p>
@@ -213,6 +226,14 @@ cut -f1 -d' ' &lt; /proc/loadavg
 	group mail
 </pre>
 Similarly, you could use the "user" option to run the plugin as a user.
+</p>
+<p>
+	If more than one group is needed, or some of the groups only exist on certain hosts (and
+	you want a common config file), the syntax supports this:
+<pre>
+[some_plugin]
+	group mail,adm,group1,group2,(group3_that_might_not_exist)
+</pre>
 </p>
 
 </body>

@@ -1,9 +1,6 @@
-LRRD was debianized by Tore Anderson <tore@linpro.no>, Mon, 18 Nov 2002.
+Munin is maintained for Debian by Tore Anderson <tore@debian.org>.
 
-It was downloaded from <http://www.linpro.no/projects/lrrd/>.
-
-It is developed by Linpro AS <http://www.linpro.no/>, in the hope that
-the free software community will find it useful.
+The upstream source is available from <http://www.linpro.no/projects/munin/>.
 
 Lead developers include:
 
@@ -13,7 +10,7 @@ Lead developers include:
   Knut Haugen     <knuthaug@linpro.no>
   Ingvar Hagelund <ingvar@linpro.no>
 
-LRRD is licensed under the terms of the GNU General Public License.
+Munin is licensed under the terms of the GNU General Public License.
 A verbatim copy of this license is found in the file
 
  `/usr/share/common-licenses/GPL'

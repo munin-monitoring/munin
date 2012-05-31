@@ -57,7 +57,7 @@ make 	CONFIG=dists/redhat/Makefile.config \
 	DOCDIR=%{buildroot}/%{_docdir}/lrrd \
 	MANDIR=%{buildroot}/%{_mandir} \
 	DESTDIR=%{buildroot} \
-    	install-client install-client-plugins install-doc
+    	install-client install-client-plugins install-doc install-man
 
 mkdir -p %{buildroot}/etc/init.d
 mkdir -p %{buildroot}/etc/lrrd/client.d

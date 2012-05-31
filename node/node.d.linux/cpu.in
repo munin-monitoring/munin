@@ -10,6 +10,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.2  2004/01/31 19:56:37  jimmyo
+# Linux/cpu now graphs all values on a 2.6 kernel (Deb#227946).
+#
 # Revision 1.1  2004/01/02 18:50:01  jimmyo
 # Renamed occurrances of lrrd -> munin
 #
@@ -39,6 +42,13 @@ if [ "$1" = "autoconf" ]; then
 	fi
 fi
 
+extinfo=""
+
+if (`egrep '^cpu +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+' /proc/stat 2>/dev/null >/dev/null`)
+then
+	extinfo="iowait irq softirq"
+fi
+
 if [ "$1" = "config" ]; then
 
 	PERCENT=`grep '^cpu. ' /proc/stat | wc -l | awk '{print ($1-1)*100}'`
@@ -46,7 +56,7 @@ if [ "$1" = "config" ]; then
 	SYSCRITICAL=$(($PERCENT*50/100))
 	USRWARNING=$(($PERCENT*80/100))
 	echo 'graph_title CPU usage'
-	echo 'graph_order system user nice idle'
+	echo "graph_order system user nice idle" $extinfo
 	echo "graph_args --base 1000 -r --lower-limit 0 --upper-limit $PERCENT "
 	echo 'graph_vlabel %'
 	echo 'system.label system'
@@ -68,8 +78,28 @@ if [ "$1" = "config" ]; then
 	echo 'idle.draw STACK'
 	echo 'idle.max 5000'
 	echo 'idle.type COUNTER'
+	if [ ! -z "$extinfo" ]
+	then
+		echo 'iowait.label iowait'
+		echo 'iowait.draw STACK'
+		echo 'iowait.max 5000'
+		echo 'iowait.type COUNTER'
+		echo 'irq.label irq'
+		echo 'irq.draw STACK'
+		echo 'irq.max 5000'
+		echo 'irq.type COUNTER'
+		echo 'softirq.label softirq'
+		echo 'softirq.draw STACK'
+		echo 'softirq.max 5000'
+		echo 'softirq.type COUNTER'
+	fi
 	exit 0
 fi
 
-awk '/^cpu / { print "user.value " $2 "\nnice.value " $3 "\nsystem.value " $4 "\nidle.value " $5 }' < /proc/stat
 
+if [ ! -z "$extinfo" ]
+then
+	awk '/^cpu / { print "user.value " $2 "\nnice.value " $3 "\nsystem.value " $4 "\nidle.value " $5 "\niowait.value " $6 "\nirq.value " $7 "\nsoftirq.value " $8 }' < /proc/stat
+else
+	awk '/^cpu / { print "user.value " $2 "\nnice.value " $3 "\nsystem.value " $4 "\nidle.value " $5 }' < /proc/stat
+fi
