@@ -1,0 +1,56 @@
+#!/bin/sh
+# 
+# Plugin to monitor the number of open files in the system.
+#
+# $Log$
+# Revision 1.1  2004/01/02 18:50:00  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.1  2003/11/24 10:01:53  jimmyo
+# New plugin by Finn-Arne Johansen
+#
+#
+# Parameters:
+# 	
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#
+# Magic markers (Used by munin-config and some installation scripts.
+# Optional):
+#
+#%# family=contrib
+#%# capabilities=autoconf
+
+
+
+if [ "$1" = "autoconf" ]; then
+	if [ -x /usr/sbin/lsof ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 1
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Samba status'
+	echo 'graph_args -l 0'
+	echo 'graph_vlabel number'
+	echo 'proc.label processes'
+	echo 'lock.label locked files'
+	echo 'share.label Open shares'
+	echo hei | awk  '{printf "max.warning %d\nmax.critical %d\n",900,960}'
+	exit 0
+fi
+
+echo -n "proc.value "
+smbstatus -b | grep -v "^$" | tail +4 | wc -l 
+echo -n "lock.value "
+smbstatus -L | grep -v "^$" | tail +4 | wc -l 
+echo -n "share.value "
+smbstatus -S | grep -v "^$" | tail +4 | wc -l 

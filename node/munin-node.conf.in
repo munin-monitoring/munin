@@ -1,0 +1,35 @@
+#
+# Example config-file for munin-node
+#
+
+log_level 4
+log_file @@LOGDIR@@/munin-node.log
+port 4949
+pid_file @@STATEDIR@@/munin-node.pid
+background 1
+setseid 1
+
+# Which port to bind to;
+host *
+user root
+group root
+setsid yes
+
+# Regexps for files to ignore
+
+ignore_file \.dpkg-(old|new)$
+ignore_file \.rpm(save|new)$
+ignore_file \.bak$
+
+# Set this if the client doesn't report the correct hostname when
+# telnetting to localhost, port 4949
+#
+#host_name @@HOSTNAME@@
+
+# A list of addresses that are allowed to connect.  This must be a
+# regular expression, due to brain damage in Net::Server, which
+# doesn't understand CIDR-style network notation.  You may repeat
+# the allow line as many times as you'd like
+
+allow ^127\.0\.0\.1$
+

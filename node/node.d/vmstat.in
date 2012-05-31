@@ -1,0 +1,59 @@
+#!/bin/sh
+#
+# Plugin to monitor the number of procs in io-sleep and other wait
+# states. Uses `vmstat`.
+#
+# Parameters: 
+#
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#
+# $Log$
+# Revision 1.1  2004/01/02 18:50:00  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.3  2003/12/06 16:32:29  jimmyo
+# Better names. Idea from Mike Fedyk.
+#
+# Revision 1.2  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
+# Magick markers (optional):
+#%# family=auto
+#%# capabilities=autoconf
+
+
+
+if [ "$1" = "autoconf" ]; then
+	if ( vmstat 1 1 >/dev/null 2>&1 ); then
+		echo yes
+		exit 0
+	else
+		if [ $? -eq 127 ]; then
+			echo "no (could not run \"vmstat\")"
+			exit 1
+		else
+			echo no
+			exit 1
+		fi
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title VMstat'
+	echo 'graph_args --base 1000 -l 0'
+	echo 'graph_vlabel process states'
+	echo 'wait.label running'
+	echo 'wait.type GAUGE'
+	echo 'sleep.label I/O sleep'
+	echo 'sleep.type GAUGE'
+	exit 0
+fi
+
+vmstat 1 2| awk 'END { print "wait.value " $1 "\nsleep.value " $2 }' 

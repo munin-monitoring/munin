@@ -1,0 +1,146 @@
+#!/bin/sh
+#
+# Munin plugin for named.  This is a bit experimental, we will have to see
+# which statistics prove to have any meaning to get a feel with what happens
+# on the nameserver.
+#
+# Nicolai Langfeldt (janl@linpro.no) 27.8.2003
+# 
+# Enviroment variables:
+#
+#	logfile   - set which log file to use
+# 
+# $Log$
+# Revision 1.1  2004/01/02 18:50:00  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.3  2003/11/26 15:57:21  jimmyo
+# Milliqueries not of interest...
+#
+# Revision 1.2  2003/11/26 14:47:31  jimmyo
+# No peaks...
+#
+# Revision 1.1  2003/11/26 09:26:04  jimmyo
+# Plugin contribution by Nicolai Langfeldt
+#
+# 
+#%# family=contrib
+
+# REQUIREMENTS: in your named.conf you must have statistics-interval set:
+# options {
+#    ...
+#    statistics-interval 1;
+#    ...
+# };
+# The number is in minutes.  At each interval just 3 lines is dumped.
+# It can be desturbing if you usually read the logs yourself, but
+# a 1 minute interval ensures very updated information to munin.
+# 5 minutes is the maximum I'd say.
+
+# The name of the file where syslog puts daemon output - ie the named
+# statistics output.  On solaris this is /var/adm/messages, on most
+# linuxes it is /var/log/messages.  But on Debian it is
+# /var/log/daemon which is read restricted so we have to run as a user
+# with read rights, or remove the restrictions.
+SYSLOGFILE=${logfile:-/var/adm/messages}
+
+# ----------------------------------------------------------------------
+
+pick_stat () {
+    ret=`echo "$2" | sed "s/.*$1=\([0-9]*\).*/\1/"`
+    if [ ! "$ret" ]; then
+    	echo 0;
+    else
+    	echo $ret
+    fi
+}
+
+do_stats () {
+
+    if [ ! -f $SYSLOGFILE ] ; then 
+	echo $SYSLOGFILE is unavailable to me >&2
+	exit 1
+    fi
+
+    # Get out the last XSTATS and NSTATS lines
+    XSTATS=`grep 'named.*XSTATS' "$SYSLOGFILE" | tail -1`
+    # NSTATS=`grep 'named.*NSTATS' "$SYSLOGFILE" | tail -1`
+
+    # We concentrate on what clients communicate with us about
+    # and counters that we suspect can indicate abuse or error conditions
+
+    # Received Queries: Total volume of queries received. 
+    # This should be nice and smooth.
+    echo "queries.value `pick_stat RQ "$XSTATS"`"
+
+    # Sent Answers: This should be the same as RQ except when there are
+    # errors.  May not be very interesting.
+    echo "answers.value `pick_stat SAns "$XSTATS"`"
+
+    # Sent and Forwarded queries, in a proxy setting this should be
+    # the same as Received Queries (?)
+    echo "forwarded.value `pick_stat SFwdQ "$XSTATS"`" 
+
+    # Received Zone Transfer queries - should be low.  High value could
+    # indicate some odd error or some kind of abuse
+    echo "axfr.value `pick_stat RAXFR "$XSTATS"`"	# Received AXFR Qs
+
+    # Received TCP connections: These are used for zone transfers or
+    # oversized (>512 byte) answers.  A high value here could indicate
+    # that you need to trim down the size of your answers somehow (Do you
+    # have a ton of MXes or NSes that gets reported back?), or this could
+    # be due to an error.  Or it could be due to abuse.
+    echo "tcp.value `pick_stat RTCP "$XSTATS"`"
+    
+    # Get a total of errors
+    errexpr="
+	    `pick_stat RNXD "$XSTATS"` +
+	    `pick_stat RFail "$XSTATS"` +
+	    `pick_stat RErr "$XSTATS"` +
+	    `pick_stat SErr "$XSTATS"` +
+	    `pick_stat RIQ "$XSTATS"` + 
+	    `pick_stat RFErr "$XSTATS"` ";
+
+    echo "errors.value `expr $errexpr`"
+}
+
+case $1 in
+    config)
+	cat <<'EOF'
+graph_title BIND DNS Query statistics
+graph_vlabel Queries / minute
+graph_scale no
+queries.label Queries
+queries.type DERIVE
+queries.min 0
+queries.cdef queries,60,*
+answers.label Answers
+answers.type DERIVE
+answers.cdef answers,60,*
+answers.min 0
+forwarded.label Forwarded
+forwarded.type DERIVE
+forwarded.cdef forwarded,60,*
+forwarded.min 0
+axfr.label AXFRs
+axfr.type DERIVE
+axfr.cdef axfr,60,*
+axfr.min 0
+tcp.label Qs by TCP
+tcp.type DERIVE
+tcp.cdef tcp,60,*
+tcp.min 0
+errors.label Errors
+errors.type DERIVE
+errors.cdef errors,60,*
+errors.min 0
+EOF
+	exit 0
+	;;
+esac
+
+do_stats
+

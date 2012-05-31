@@ -1,12 +1,12 @@
-- LRRD can warn via nagios (using nsca). This could (and should) be
+- Munin can warn via nagios (using nsca). This could (and should) be
   generalized so it could warn with arbitrary programs and parameters
   (e.g. send a mail). 
 - Create RPM package 
-- lrrd-update: tune the .rrd-file when min and max are changed.
-- lrrd-html show latest value in overviews
-- lrrd-html mark services over warning and critical 
-- lrrd-update serveral degrees of detail in the .rrd-files. Choose
+- munin-update: tune the .rrd-file when min and max are changed.
+- munin-html show latest value in overviews
+- munin-html mark services over warning and critical 
+- munin-update serveral degrees of detail in the .rrd-files. Choose
   which when creating the file. E.g. option: RRA:AVERAGE:0.5:1:115200
   (keep every 5 minutes for 400 days == around 900k per data source).
-- lrrd-nagios Only send 20 OK messages to nagios each time it's run.
+- munin-nagios Only send 20 OK messages to nagios each time it's run.
   Never more.

@@ -1,0 +1,70 @@
+#!/bin/sh
+#
+# Plugin to monitor CPU usage.
+#
+# Usage: Place in /etc/munin/node.d/ (or link it there  using ln -s)
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#
+# $Log$
+# Revision 1.1  2004/01/02 18:50:01  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.2  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+#
+# Magic markers - optional - used by installation scripts and
+# munin-config:
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+if [ "$1" = "autoconf" ]; then
+	if [ -x /usr/bin/kstat ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 1
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+	echo 'graph_title Paging In'
+	echo 'graph_order pgin pgpgin reclaim'
+	echo "graph_args --base 1000"
+	echo 'pgin.label pgin'
+	echo 'pgin.draw LINE2'
+	echo 'pgin.type COUNTER'
+	echo 'pgpgin.label pgpgin'
+	echo 'pgpgin.draw LINE2'
+	echo 'pgpgin.type COUNTER'
+	echo 'reclaim.label reclaim'
+	echo 'reclaim.draw LINE2'
+	echo 'reclaim.type COUNTER'
+	exit 0
+fi
+
+kstat -p -c misc -m cpu_stat -s '/^(pgin|pgpgin|pgf?rec)$/' | sed -e 's/.*://' | awk '
+BEGIN {
+	map["pgin"] = "pgin"
+	map["pgpgin"] = "pgpgin"
+	map["pgrec"] = "reclaim"
+	map["pgfrec"] = "reclaim"
+}
+length(map[$1]) > 0 {
+	sum[map[$1]] += $2
+}
+END {
+	for (item in sum) {
+		print item ".value", sum[item]
+	}
+}'

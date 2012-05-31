@@ -12,9 +12,9 @@ INSTALL          = ./install-sh
 
 default: build
 
-install: install-server install-client install-client-plugins install-doc
+install: install-main install-node install-node-plugins install-doc
 
-install-server: build
+install-main: build
 	$(CHECKUSER)
 	mkdir -p $(CONFDIR)/templates
 	mkdir -p $(LIBDIR)
@@ -28,25 +28,27 @@ install-server: build
 
 	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR) $(RUNDIR) $(HTMLDIR) $(DBDIR)
 
-	$(INSTALL) -m 0644 server/*.tmpl $(CONFDIR)/templates/
+	for p in server/*.tmpl; do    		              \
+		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
+	done
 	$(INSTALL) -m 0644 server/logo.gif $(CONFDIR)/templates/
 	$(INSTALL) -m 0644 server/style.css $(CONFDIR)/templates/
 
-	test -f "$(CONFDIR)/server.conf"  || $(INSTALL) -m 0644 build/server/server.conf $(CONFDIR)/
+	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/server/munin.conf $(CONFDIR)/
 
-	$(INSTALL) -m 0755 build/server/lrrd-cron $(BINDIR)/
+	$(INSTALL) -m 0755 build/server/munin-cron $(BINDIR)/
 
-	$(INSTALL) -m 0755 build/server/lrrd-update $(LIBDIR)/
-	$(INSTALL) -m 0755 build/server/lrrd-nagios $(LIBDIR)/
-	$(INSTALL) -m 0755 build/server/lrrd-graph $(LIBDIR)/
-	$(INSTALL) -m 0755 build/server/lrrd-html $(LIBDIR)/
+	$(INSTALL) -m 0755 build/server/munin-update $(LIBDIR)/
+	$(INSTALL) -m 0755 build/server/munin-nagios $(LIBDIR)/
+	$(INSTALL) -m 0755 build/server/munin-graph $(LIBDIR)/
+	$(INSTALL) -m 0755 build/server/munin-html $(LIBDIR)/
 
-	$(INSTALL) -m 0644 build/server/LRRD.pm $(PERLLIB)/
+	$(INSTALL) -m 0644 build/server/Munin.pm $(PERLLIB)/
 
-install-client: build
+install-node: build
 	$(CHECKGROUP)
-	mkdir -p $(CONFDIR)/client.d
-	mkdir -p $(CONFDIR)/client-conf.d
+	mkdir -p $(CONFDIR)/plugins
+	mkdir -p $(CONFDIR)/plugin-conf.d
 	mkdir -p $(LIBDIR)/plugins
 	mkdir -p $(SBINDIR)
 
@@ -56,15 +58,15 @@ install-client: build
 
 	$(CHGRP) $(GROUP) $(PLUGSTATE)
 	$(CHMOD) 775 $(PLUGSTATE)
-	$(CHMOD) 755 $(CONFDIR)/client-conf.d
+	$(CHMOD) 755 $(CONFDIR)/plugin-conf.d
 
-	$(INSTALL) -m 0755 build/client/lrrd-client $(SBINDIR)/
-	$(INSTALL) -m 0755 build/client/lrrd-client-configure $(SBINDIR)/
-	test -f "$(CONFDIR)/client.conf" || $(INSTALL) -m 0644 build/client/client.conf $(CONFDIR)/
-	$(INSTALL) -m 0755 build/client/lrrd-run $(SBINDIR)/
+	$(INSTALL) -m 0755 build/node/munin-node $(SBINDIR)/
+	$(INSTALL) -m 0755 build/node/munin-node-configure $(SBINDIR)/
+	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
+	$(INSTALL) -m 0755 build/node/munin-run $(SBINDIR)/
 
-install-client-plugins: build
-	for p in build/client/lrrd.d.$(ARCH)/* build/client/lrrd.d/*; do    		\
+install-node-plugins: build
+	for p in build/node/node.d.$(ARCH)/* build/node/node.d/*; do    		\
 		if test -f "$$p" ; then                                     		\
 			family=`sed -n 's/^#%# family=\(.*\)$$/\1/p' $$p`;  		\
 			test "$$family" || family=contrib;                  		\
@@ -74,7 +76,7 @@ install-client-plugins: build
 			fi;                                                 		\
 		fi                                                          		\
 	done
-	$(INSTALL) -m 0644 build/client/plugins.history $(LIBDIR)/plugins/
+	$(INSTALL) -m 0644 build/node/plugins.history $(LIBDIR)/plugins/
 
 	#TODO:
 	#configure plugins.
@@ -82,20 +84,20 @@ install-client-plugins: build
 install-doc: build-doc
 	mkdir -p $(DOCDIR)
 	mkdir -p $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8
-	$(INSTALL) -m 0644 build/doc/client.conf.5 $(MANDIR)/man5/
-	$(INSTALL) -m 0644 build/doc/server.conf.5 $(MANDIR)/man5/
-	$(INSTALL) -m 0644 build/doc/lrrd-client.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/lrrd-run.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/lrrd-graph.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/lrrd-update.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/lrrd-nagios.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/lrrd-html.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/lrrd-cron.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/lrrd-doc.* $(DOCDIR)/
-	$(INSTALL) -m 0644 build/doc/lrrd-faq.* $(DOCDIR)/
+	$(INSTALL) -m 0644 build/doc/munin-node.conf.5 $(MANDIR)/man5/
+	$(INSTALL) -m 0644 build/doc/munin.conf.5 $(MANDIR)/man5/
+	$(INSTALL) -m 0644 build/doc/munin-node.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-run.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-graph.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-update.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-nagios.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-html.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-cron.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 build/doc/munin-doc.* $(DOCDIR)/
+	$(INSTALL) -m 0644 build/doc/munin-faq.* $(DOCDIR)/
 	$(INSTALL) -m 0644 README.* $(DOCDIR)/
 	$(INSTALL) -m 0644 COPYING $(DOCDIR)/
-	$(INSTALL) -m 0644 client/lrrd.d/README $(DOCDIR)/README.plugins
+	$(INSTALL) -m 0644 node/node.d/README $(DOCDIR)/README.plugins
 
 build: build-stamp
 
@@ -129,34 +131,34 @@ build-doc: build-doc-stamp
 
 build-doc-stamp:
 	mkdir -p build/doc
-	htmldoc lrrd.html > build/doc/lrrd-doc.html
-	htmldoc -t pdf --webpage build/doc/lrrd-doc.html > build/doc/lrrd-doc.pdf
-	html2text -style pretty -nobs build/doc/lrrd-doc.html > build/doc/lrrd-doc.txt
+	htmldoc munin-doc-base.html > build/doc/munin-doc.html
+	htmldoc -t pdf --webpage build/doc/munin-doc.html > build/doc/munin-doc.pdf
+	html2text -style pretty -nobs build/doc/munin-doc.html > build/doc/munin-doc.txt
 
-	htmldoc lrrd-faq-base.html > build/doc/lrrd-faq.html
-	htmldoc -t pdf --webpage build/doc/lrrd-faq.html > build/doc/lrrd-faq.pdf
-	html2text -style pretty -nobs build/doc/lrrd-faq.html > build/doc/lrrd-faq.txt
+	htmldoc munin-faq-base.html > build/doc/munin-faq.html
+	htmldoc -t pdf --webpage build/doc/munin-faq.html > build/doc/munin-faq.pdf
+	html2text -style pretty -nobs build/doc/munin-faq.html > build/doc/munin-faq.txt
 
-	pod2man  --section=8 --release=$(RELEASE) --center="LRRD Documentation" \
-		client/lrrd-client.in > build/doc/lrrd-client.8
-	pod2man  --section=8 --release=$(RELEASE) --center="LRRD Documentation" \
-		client/lrrd-run.in > build/doc/lrrd-run.8
-	pod2man  --section=8 --release=$(RELEASE) --center="LRRD Documentation" \
-		client/lrrd-client-configure.in > build/doc/lrrd-client-configure.8
-	pod2man  --section=8 --release=$(RELEASE) --center="LRRD Documentation" \
-		server/lrrd-graph.in > build/doc/lrrd-graph.8
-	pod2man  --section=8 --release=$(RELEASE) --center="LRRD Documentation" \
-		server/lrrd-update.in > build/doc/lrrd-update.8
-	pod2man  --section=8 --release=$(RELEASE) --center="LRRD Documentation" \
-		server/lrrd-html.in > build/doc/lrrd-html.8
-	pod2man  --section=8 --release=$(RELEASE) --center="LRRD Documentation" \
-		server/lrrd-nagios.in > build/doc/lrrd-nagios.8
-	pod2man  --section=8 --release=$(RELEASE) --center="LRRD Documentation" \
-		server/lrrd-cron.pod > build/doc/lrrd-cron.8
-	pod2man  --section=5 --release=$(RELEASE) --center="LRRD Documentation" \
-		server/server.conf.pod > build/doc/server.conf.5
-	pod2man  --section=5 --release=$(RELEASE) --center="LRRD Documentation" \
-		client/client.conf.pod > build/doc/client.conf.5
+	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
+		node/munin-node.in > build/doc/munin-node.8
+	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
+		node/munin-run.in > build/doc/munin-run.8
+	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
+		node/munin-node-configure.in > build/doc/munin-node-configure.8
+	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
+		server/munin-graph.in > build/doc/munin-graph.8
+	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
+		server/munin-update.in > build/doc/munin-update.8
+	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
+		server/munin-html.in > build/doc/munin-html.8
+	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
+		server/munin-nagios.in > build/doc/munin-nagios.8
+	pod2man  --section=8 --release=$(RELEASE) --center="Munin Documentation" \
+		server/munin-cron.pod > build/doc/munin-cron.8
+	pod2man  --section=5 --release=$(RELEASE) --center="Munin Documentation" \
+		server/munin.conf.pod > build/doc/munin.conf.5
+	pod2man  --section=5 --release=$(RELEASE) --center="Munin Documentation" \
+		node/munin-node.conf.pod > build/doc/munin-node.conf.5
 
 	touch build-doc-stamp
 
@@ -166,24 +168,24 @@ deb:
 	fakeroot debian/rules binary
 
 rpm:
-	-rm -rf dists/redhat/lrrd-* dists/redhat/noarch
+	-rm -rf dists/redhat/munin-* dists/redhat/noarch
 	-dists/redhat/buildtargz.sh
 	-rpmbuild \
 		--define "_specdir dists/redhat"   \
 		--define "_sourcedir dists/redhat" \
 		--define "_srcrpmdir dists/redhat" \
-                -bs dists/redhat/lrrd.spec
+                -bs dists/redhat/munin.spec
 
 	-rpmbuild \
 		--define "_rpmtopdir `pwd`/dists/redhat" \
 		--define "_sourcedir %{_rpmtopdir}"      \
 		--define "_builddir %{_rpmtopdir}"       \
 		--define "_rpmdir %{_rpmtopdir}"         \
-	        -bb dists/redhat/lrrd.spec
+	        -bb dists/redhat/munin.spec
 
 	-mv dists/redhat/*rpm ..
 	-mv dists/redhat/noarch/*rpm ..
-	-rm -rf dists/redhat/lrrd-* dists/redhat/noarch
+	-rm -rf dists/redhat/munin-* dists/redhat/noarch
 
 clean:
 ifeq ($(MAKELEVEL),0)
@@ -198,7 +200,7 @@ endif
 
 source_dist: clean
 	cp dists/tarball/plugins.conf .
-	(cd ..; ln -s lrrd lrrd-$(VERSION))
-	tar -C .. --dereference --exclude CVS --exclude dists -cvzf ../lrrd_$(RELEASE).tar.gz lrrd-$(VERSION)/
+	(cd ..; ln -s munin munin-$(VERSION))
+	tar -C .. --dereference --exclude CVS --exclude dists -cvzf ../munin_$(RELEASE).tar.gz munin-$(VERSION)/
 
-.PHONY: install install-server install-client install-doc build build-doc deb rpm clean source_dist
+.PHONY: install install-main install-node install-doc build build-doc deb rpm clean source_dist

@@ -1,0 +1,287 @@
+#!/usr/bin/perl
+# Nagios
+#
+# $Log$
+# Revision 1.2  2004/01/15 15:20:01  jimmyo
+# Making things workable after name change. Upping for test verwion.
+#
+# Revision 1.1  2004/01/02 18:50:01  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:08  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.4  2003/11/07 20:46:12  jimmyo
+# Only require Config::General if using old config format.
+#
+# Revision 1.3  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+
+use strict;
+
+use Munin;
+use POSIX qw(strftime);
+use Getopt::Long;
+my $DEBUG=0;
+my $conffile = "@@CONFDIR@@/munin.conf";
+my $do_usage = 0;
+my @limit_hosts = ();
+my @limit_services = ();
+my $force_root = 0;
+my %notes = ();
+
+# Get options
+$do_usage=1  unless 
+GetOptions ( "force-root!"  => \$force_root,
+	     "host=s"       => \@limit_hosts,
+	     "service=s"    => \@limit_services,
+	     "config=s"     => \$conffile,
+	     "debug!"       => \$DEBUG,
+	     "help"         => \$do_usage );
+
+if ($do_usage)
+{
+    print "Usage: $0 [options]
+
+Options:
+    --[no]force-root    Force running, even as root. [--noforce-root]
+    --help		View this message.
+    --debug		View debug messages.
+    --service <service>	Limit notified services to <service>. Multiple 
+    			--service options may be supplied.
+    --host <host>	Limit notified hosts to <host>. Multiple --host 
+    			options may be supplied.
+    --config <file>	Use <file> as configuration file. 
+    			[/etc/munin/munin.conf]
+
+";
+    exit 0;
+}
+
+if ($> == 0 and !$force_root)
+{
+    print "You are running this program as root, which is neither smart nor necessary.
+If you really want to run it as root, use the --force-root option. Else, run
+it as the user \"munin\". Aborting.\n\n";
+    exit (1);
+}
+
+my $config = &munin_config ($conffile);
+my $modified=0;
+
+open LOG,">>$config->{logdir}/munin-limits.log" or die "Unable to create/access $config->{logdir}/munin-limits.log\n";
+logger("Starting munin-limits, checking lock");
+munin_runlock("$config->{dbdir}/munin-limits.lock");
+logger("Created lock: $config->{dbdir}/munin-limits.lock");
+
+	
+
+
+for my $domain ( keys %{$config->{domain}}) {
+    logger ("processing domain: $domain");
+    process_domain($domain);
+}
+&munin_writeconfig ("$config->{dbdir}/limits", \%notes);
+logger("munin-limits finished.");
+
+
+sub process_domain {
+    my ($domain) = @_;
+    for my $node ( keys %{$config->{domain}->{$domain}->{node}}) {
+    	if (@limit_hosts and !grep (/^$node$/, @limit_hosts))
+	{
+		logger ("skipping node: $node");
+		next;
+	}
+	logger ("processing node: $node");
+	process_node($domain,$node ,$config->{domain}->{$domain}->{node}->{$node} );
+    }
+}
+
+sub process_node {
+  my ($domain,$name,$node) = @_;
+  for my $client (keys %{$node->{client}}) {
+      logger ("processing node: $client") if $DEBUG;
+      process_service($domain,$name,$client,$node->{client}->{$client});
+  }
+}
+
+sub process_service {
+  my $critical= undef;
+  my ($domain, $name,$clientname,$client) = @_;
+  return unless $client;
+  for my $service (keys %$client) {
+    logger ("processing service: $service") if $DEBUG;
+    if ($service =~ /(^.*)\.label/) {
+	my $key = $1;
+	next unless ((exists $client->{"$key.warning"}) || ($client->{"$key.critical"}));
+    	if (@limit_services and !grep (/^$service$/, @limit_services))
+	{
+		next;
+	}
+	my @critical = (undef, undef);
+	my @warning  = (undef, undef);
+	if (defined $client->{"$key.critical"} and 
+	    $client->{"$key.critical"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
+	{
+		$critical[0] = $1 if defined $1;
+		$critical[1] = $2 if defined $2;
+	}
+	elsif (defined $client->{"$key.critical"} and
+	    $client->{"$key.critical"} =~ /^\s*([-\d]+)\s*$/)
+	{
+		$critical[1] = $1 if defined $1;
+	}
+	elsif (defined $client->{"$key.critical"})
+	{
+	    @critical = (0, 0);
+	}
+	if (defined $client->{"$key.warning"} and 
+	    $client->{"$key.warning"} =~ /^\s*([-\d]*):([-\d]*)\s*$/)
+	{
+		$warning[0] = $1 if defined $1;
+		$warning[1] = $2 if defined $2;
+	}
+	elsif (defined $client->{"$key.warning"} and
+	    $client->{"$key.warning"} =~ /^\s*([-\d]+)\s*$/)
+	{
+		$warning[1] = $1 if defined $1;
+	}
+	elsif (defined $client->{"$key.warning"})
+	{
+	    @warning = (0, 0);
+	}
+	my $filename = "$config->{dbdir}/$domain/$name-$clientname-$key-".
+	    lc substr (($client->{"$key.type"}||"GAUGE"),0,1) . ".rrd";
+	my $value = sprintf "%.2f",munin_fetch("$filename");
+	
+	if ((defined ($critical[0]) and $value < $critical[0]) or
+	    (defined ($critical[1]) and $value > $critical[1])) {
+	    $notes{$name}{$clientname}{'critical'} = 
+		(defined $client->{"$key.extinfo"}?
+		    "$value (not in $critical[0]:$critical[1]): ".
+		    $client->{"$key.extinfo"}:
+		    "Value is $value. Critical range ($critical[0]:$critical[1]) exceeded");
+	}
+	elsif ((defined ($warning[0]) and $value < $warning[0]) or
+	       (defined ($warning[1]) and $value > $warning[1])) {
+		$notes{$name}{$clientname}{'warning'} = 
+		  (defined $client->{"$key.extinfo"}?
+		        "$value (not in $warning[0]:$warning[1]): ".
+		   	$client->{"$key.extinfo"}:
+		   	"Value is $value. Warning range ($warning[0]:$warning[1]) exceeded");
+	}
+      }
+  }
+}
+
+sub logger {
+  my ($comment) = @_;
+  my $now = strftime "%b %d %H:%M:%S", localtime;
+  print LOG "$now - $comment\n";
+}
+
+close LOG;
+
+=head1 NAME
+
+munin-nagios - A program to warn nagios of any off-limit values
+
+=head1 SYNOPSIS
+
+munin-nagios [options]
+
+=head1 OPTIONS
+
+=over 5
+
+=item B<< --service <service> >>
+
+Limit services to those of E<lt>serviceE<gt>. Multiple --service options may be supplied. [unset]
+
+=item B<< --host <host> >>
+
+Limit hosts to those of E<lt>host<gt>. Multiple --host options may be supplied. [unset]
+
+=item B<< --config <file> >>
+
+Use E<lt>fileE<gt> as configuration file. [/etc/munin/munin.conf]
+
+=item B<< --[no]force >>
+
+Force sending of messages ieven if you normally wouldn't. [--noforce]
+
+=item B<< --[no]force-root >>
+
+Force running as root (stupid and unnecessary). [--noforce-root]
+
+=item B<< --removeok >>
+
+Reset warning status (remove .ok-files).
+
+=item B<< --help >>
+
+View help message.
+
+=item B<< --[no]debug >>
+
+If set, view debug messages. [--nodebug]
+
+==back
+
+=head1 DESCRIPTION
+
+Munin-nagios is a part of the package Munin, which is used in combination
+with Munin's node.  Munin is a group of programs to gather data from
+Munin's nodes, graph them, create html-pages, and optionally warn Nagios
+about any off-limit values.
+
+Munin-nagios can warn any nagios-servers about off-limit values.
+
+If a service has fields with "warning" or "critical"-options (e.g. "load.warning 10"), and the munin-server
+configuration file contains the necessary configuration options, munin-nagios will warn the nagios-server.
+
+=head1 CONFIGURATION
+
+The configuration file "munin.conf" must have the following optinons set correctly for munin-nagios to work:
+
+	nsca         /usr/bin/send_nsca
+	nsca_server  nagios-server.your.dom
+	nsca_config  /etc/nagios/send_nsca.cfg
+	
+In addition NSCA must be installed and configured correctly.
+
+=head1 FILES
+
+	@@CONFDIR@@/munin.conf
+	@@DBDIR@@/*
+	@@LOGDIR@@/munin-nagios
+	@@STATEDIR@@/*
+
+=head1 VERSION
+
+This is munin-nagios version @@VERSION@@
+
+=head1 AUTHORS
+
+Audun Ytterdal and Jimmy Olsen.
+
+=head1 BUGS
+
+munin-nagios does, as of now, not check the syntax of the configuration file.
+
+Please report other bugs in the bug tracker at L<http://munin.sf.net/>.
+
+=head1 COPYRIGHT
+
+Copyright © 2002 Knut Haugen, Audun Ytterdal, and Jimmy Olsen / Linpro AS.
+
+This is free software; see the source for copying conditions. There is
+NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+
+This program is released under the GNU General Public License
+
+=cut
+

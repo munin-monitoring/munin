@@ -1,0 +1,35 @@
+#!/bin/sh
+
+# $Log$
+# Revision 1.1  2004/01/02 18:50:01  jimmyo
+# Renamed occurrances of lrrd -> munin
+#
+# Revision 1.1.1.1  2004/01/02 15:18:07  jimmyo
+# Import of LRRD CVS tree after renaming to Munin
+#
+# Revision 1.2  2003/11/07 17:43:16  jimmyo
+# Cleanups and log entries
+#
+#
+DF=/usr/local/bin/df
+TAIL=/usr/local/bin/tail 
+
+if [ "$1" = "config" ]; then
+
+        echo 'graph_title Filesystem usage (in %)'
+        echo 'graph_args --upper-limit 100'
+        $DF -P -l | $TAIL +2 | while read i; do
+                name=`echo $i | sed 's/[\/.]/_/g' | awk '{ print $6 }' | $TAIL -c 15`
+                printf "$name.label "
+                echo $i | awk '{ print $6 }'
+                printf "$name.warn "
+                echo 95
+        done
+        exit 0
+fi
+
+$DF -P -l | $TAIL +2 | while read i; do
+        name=`echo $i | sed 's/[\/.]/_/g' | awk '{ print $6 }' | $TAIL -c 15`
+        printf "$name.value "
+        echo $i | awk '{ print $5 }' | cut -f1 -d% 
+done
