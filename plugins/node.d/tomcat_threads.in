@@ -9,13 +9,14 @@ separate then into "busy" or "idle" servers.
 
 =head1 CONFIGURATION
 
-Configurable variables
+The following environment variables are used by this plugin:
 
- timeout  - Connection timeout
- url      - Override default status-url
- port     - HTTP port number
- user     - Manager username
- password - Manager password
+ timeout   - Connection timeout
+ url       - Override default status-url
+ port      - HTTP port number
+ user      - Manager username
+ password  - Manager password
+ connector - Override connector to monitor
 
 =head1 USAGE
 
@@ -37,7 +38,7 @@ tomcat-users.xml example:
 
 =head1 AUTHOR
 
-Rune Nordbøe Skillingstad <runesk@linpro.no>
+Rune NordbÃ¸e Skillingstad <runesk@linpro.no>
 
 =head1 LICENSE
 

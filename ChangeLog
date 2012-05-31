@@ -1,5 +1,22 @@
 -*- text -*-
 
+munin 2.0-rc5, r4795, 2012-04-11
+
+Commits by kenyon, steve.schnepp 
+
+Summary :
+
+- Adding the current action to the command line. Useful for debugging.
+- Adding a new URL param full_size_mode to enable predictible IMG sizes
+- Enable sparklines with the url param "only_graph"
+- Start RRD just before first update. To avoid a very costly 1st update.
+- Emit the hosts in a sorted order, instead of somewhat random.
+- Do not emit png list if file handle is not defined. (closes #666759)
+- Add old option of --force-root, but with a new name. more explicit (closes #601371)
+- We dont generate the png list when using cgi html.
+- Remove warning when asking "list" w/o a hostname (Closes #907952/U)
+- Many bug fixes (trac: Closes #967, #1210) (debian: Closes #583189, #568511, #475078, #666759)
+
 munin 2.0-rc4, r4770, 2012-03-24
 
 Commits by holger

@@ -37,13 +37,14 @@ Manager password
 =head2 CONFIGURATION EXAMPLE
 
  [tomcat_volume]
-  env.ports    8081
-  env.user     someuser
-  env.password somepassword
+  env.ports     8081
+  env.user      someuser
+  env.password  somepassword
+  env.connector http-8081
 
 =head1 AUTHOR
 
-Rune Nordbøe Skillingstad <runesk@linpro.no>
+Rune NordbÃ¸e Skillingstad <runesk@linpro.no>
 
 =head1 USAGE
 

@@ -167,7 +167,8 @@ sub _process_command_line {
 
     logger ("DEBUG: Running command '$_'.") if $config->{DEBUG};
     if (/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
-        _list_services($session, lc($1));
+	my $hostname_lc = defined($1) ? lc($1) : undef;
+        _list_services($session, $hostname_lc);
     }
     elsif (/^cap\s?(.*)/i) {
         _negotiate_session_capabilities($session, $1);

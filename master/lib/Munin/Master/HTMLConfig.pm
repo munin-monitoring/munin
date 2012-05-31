@@ -454,8 +454,10 @@ sub generate_service_templates {
 
     # dump all the png filename to a file
     my $fh = $config->{"#%#graphs_fh"};
-    foreach my $img (keys %imgs) {
-	print $fh "/" . $imgs{$img} . "\n";
+    if ($fh) {
+	    foreach my $img (keys %imgs) {
+		print $fh "/" . $imgs{$img} . "\n";
+	    }
     }
 
     if ($method eq "cgi") {
