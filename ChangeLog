@@ -1,3 +1,8 @@
+munin (1.2.2)
+
+  * Plugins: Correct history loss in linux/{df,df_inode}.
+  * Plugins: Avoid negative spike in generic/exim_mailstats.
+
 munin (1.2.1)
   * Main: fix the file vs. pipe check in munin-limits.
   * Main: place the munin-limits lock file in rundir, not dbdir.

@@ -8,6 +8,9 @@
 # 	autoconf (optional - used by munin-config)
 #
 # $Log$
+# Revision 1.6.2.2  2005/03/12 21:35:07  jimmyo
+# Correct history loss in linux/{df,df_inode}.
+#
 # Revision 1.6.2.1  2005/02/16 22:50:14  jimmyo
 # linux/df* now ignores bind mounts.
 #
@@ -53,7 +56,7 @@ fs() {
 print_values() {
 	df -P -l -i -x none -x unknown | sed 1d | grep -v "//" | awk '$5 ~ /[0-9]%/ {print}' | while read i; do
 		if [ "`fs $i`" = "reiserfs" ] ; then continue ; fi
-		name=`echo $i | sed 's/[\/.]/_/g'| awk '{ print $1 ".value " }'`
+		name=`echo $i | sed 's/[\/.-]/_/g'| awk '{ print $1 ".value " }'`
 		echo -n "$name "
 		echo $i | awk '{ print $5 }' | cut -f1 -d%
 	done
@@ -78,7 +81,7 @@ if [ "$1" = "config" ]; then
 	df -P -l -i -x unknown  -x none -T| sed 1d | grep -v "//" | sort | awk '$6 ~ /[0-9]%/ {print}' | awk "
 		\$2 !~ /reiserfs/ {
                         dir=\$7
-			name=\$1; gsub(/[\/.]/, \"_\", name);
+			name=\$1; gsub(/[\/.-]/, \"_\", name);
                         if (length(dir) <= $MAXLABEL)
                                 print name \".label \" dir
                         else
