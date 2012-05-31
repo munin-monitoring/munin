@@ -8,7 +8,16 @@
 #	drives		-- List drives to monitor. E.g. "hda hdc".
 #	type_$dev	-- device type for one drive, e.g. 3ware,0
 #
+# Note for users of RAID controllers (smartmontools currently only
+# supports 3ware): you can specify the drives attached to your RAID
+# controller(s) as raiddev_num (e.g. sda_0). Then you must specify the
+# type like this: type_sda_0 3ware,0.
+#
 # $Log$
+# Revision 1.1.2.4  2005/02/17 10:59:33  lupe
+# Support more than one drive on RAID controllers. Explain how to configure
+# them.
+#
 # Revision 1.1.2.3  2005/01/29 22:14:36  jimmyo
 # Make the plugin check all rdsks.
 #
@@ -123,7 +132,9 @@ if (exists $ARGV[0]) {
 }
 
 foreach (@drives) {
-  my $cmd = $smartctl.' -A '.(exists $ENV{'type_'.$_} ? '-d '.$ENV{'type_'.$_}.' ' : '')."/dev/$_";
+  my $dev;
+  $dev = $_ =~ /(.*)(?:_\d+)/ ? $1 : $_;
+  my $cmd = $smartctl.' -a '.(exists $ENV{'type_'.$_} ? '-d '.$ENV{'type_'.$_}.' ' : '')."/dev/$dev";
   my $output = `$cmd`;
   if ($output =~ /Current Drive Temperature:\s*(\d+)/) {
     print "$_.value $1\n";

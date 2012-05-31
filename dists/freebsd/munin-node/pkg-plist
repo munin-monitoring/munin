@@ -1,11 +1,10 @@
+@unexec rm %D/bin/munin-node-revive 2>/dev/null || true
 @comment etc/munin/VERSION.node must remain for upgrade version check
 @unexec if cmp -s %D/etc/munin/munin-node.conf %D/etc/munin/munin-node.conf.sample; then rm -f %D/etc/munin/munin-node.conf; fi
 etc/munin/munin-node.conf.sample
 @unexec if cmp -s %D/etc/munin/plugin-conf.d/plugins.conf %D/etc/munin/plugin-conf.d/plugins.conf.sample; then rm -f %D/etc/munin/plugin-conf.d/plugins.conf; fi
-etc/munin/munin-node.conf.sample
 etc/munin/plugin-conf.d/plugins.conf.sample
 @unexec rm %D/etc/rc.d/munin-node.sh 2>/dev/null || true
-@unexec rm /etc/rc.d/munin_node 2>/dev/null || true
 sbin/munin-node
 sbin/munin-node-configure
 sbin/munin-node-configure-snmp
@@ -18,6 +17,8 @@ sbin/munin-run
 %%DATADIR%%/plugins/apc_envunit_
 %%DATADIR%%/plugins/apc_nis
 %%DATADIR%%/plugins/bind9
+%%DATADIR%%/plugins/bind9_rndc
+%%DATADIR%%/plugins/courier_
 %%DATADIR%%/plugins/courier_mta_mailqueue
 %%DATADIR%%/plugins/courier_mta_mailstats
 %%DATADIR%%/plugins/courier_mta_mailvolume
@@ -25,11 +26,16 @@ sbin/munin-run
 %%DATADIR%%/plugins/cupsys_pages
 %%DATADIR%%/plugins/df
 %%DATADIR%%/plugins/df_inode
+%%DATADIR%%/plugins/dhcpd3
 %%DATADIR%%/plugins/exim_mailqueue
+%%DATADIR%%/plugins/exim_mailqueue_alt
 %%DATADIR%%/plugins/exim_mailstats
-%%DATADIR%%/plugins/folding@home
+%%DATADIR%%/plugins/foldingathome
+%%DATADIR%%/plugins/foldingathome_rank
+%%DATADIR%%/plugins/foldingathome_wu
 %%DATADIR%%/plugins/hddtemp
 %%DATADIR%%/plugins/hddtemp2
+%%DATADIR%%/plugins/hddtemp_smartctl
 %%DATADIR%%/plugins/hddtempd
 %%DATADIR%%/plugins/if_
 %%DATADIR%%/plugins/if_errcoll_
@@ -38,7 +44,9 @@ sbin/munin-run
 %%DATADIR%%/plugins/load
 %%DATADIR%%/plugins/loggrep
 %%DATADIR%%/plugins/mailman
+%%DATADIR%%/plugins/mailscanner
 %%DATADIR%%/plugins/memory
+%%DATADIR%%/plugins/mhttping
 %%DATADIR%%/plugins/multips
 %%DATADIR%%/plugins/munin_graph
 %%DATADIR%%/plugins/munin_update
@@ -51,10 +59,13 @@ sbin/munin-run
 %%DATADIR%%/plugins/netstat
 %%DATADIR%%/plugins/ntp_
 %%DATADIR%%/plugins/ntp_states
+%%DATADIR%%/plugins/nut_misc
+%%DATADIR%%/plugins/nut_volts
 %%DATADIR%%/plugins/open_files
+%%DATADIR%%/plugins/perdition
 %%DATADIR%%/plugins/ping_
 %%DATADIR%%/plugins/plugins.history
-%%DATADIR%%/plugins/pm3users
+%%DATADIR%%/plugins/pm3users_
 %%DATADIR%%/plugins/pop_stats
 %%DATADIR%%/plugins/postfix_mailqueue
 %%DATADIR%%/plugins/postfix_mailstats
@@ -90,7 +101,6 @@ sbin/munin-run
 %%DATADIR%%/plugins/surfboard
 %%DATADIR%%/plugins/swap
 %%DATADIR%%/plugins/sybase_space
-%%DATADIR%%/plugins/uptime
 %%DATADIR%%/plugins/vmstat
 @unexec rm -f /var/run/munin/munin-node.pid
 @unexec rmdir /var/run/munin 2>/dev/null || true

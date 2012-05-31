@@ -1,32 +1,28 @@
 #!/bin/sh
+#
 
-PROGRAM=%PREFIX%/sbin/munin-node
-CONFIG=%PREFIX%/etc/munin/munin-node.conf
+# PROVIDE: munin-node
+# REQUIRE: DAEMON
+# BEFORE:  cron
+# KEYWORD: FreeBSD
 
-case "$1" in
-	start)
-		if [ -x $PROGRAM -a -f $CONFIG -a -d $PLUGINS ]; then
-			$PROGRAM --config $CONFIG && echo -n ' munin-node'
-		fi
-	;;
+#
+# Add the following lines to /etc/rc.conf to enable munin-node:
+# munin_node_enable (bool):      Set to "NO" by default.
+#                                Set it to "YES" to enable munin-node
+# munin_node_config (path):      Set to "%%PREFIX%%/etc/munin/munin-node.conf" by default.
+#
 
-	stop)
-		if [ -f $CONFIG ]; then
-			PIDFILE=`awk '$1 == "pid_file" { print $2 }' $CONFIG`
-			if [ -f $PIDFILE ]; then
-				PID=`cat $PIDFILE`
-				CMD=`ps -xa -o command -p $PID | sed 1d`
-				case "$CMD" in
-				*munin-node*)
-					/bin/kill $PID && echo -n ' munin-node'
-					;;
-				esac
-			fi
-		fi
-	;;
+. %%RC_SUBR%%
 
-	*)
-		echo "Usage: `basename $0` { start | stop }"
-		exit 64
-	;;
-esac
+name="munin_node"
+rcvar=`set_rcvar`
+
+[ -z "$munin_node_enable" ] && munin_node_enable="NO"
+[ -z "$munin_node_config" ] && munin_node_config="%%PREFIX%%/etc/munin/munin-node.conf"
+
+command="%%PREFIX%%/sbin/munin-node"
+pidfile=`awk '$1 == "pid_file" { print $2 }' $munin_node_config`
+
+load_rc_config $name
+run_rc_command "$1"

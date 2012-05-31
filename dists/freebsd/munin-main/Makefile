@@ -2,16 +2,16 @@
 # Date created:				25 Januar 2004
 # Whom:					Lupe Christoph <lupe@lupe-christoph.de>
 #
-# $FreeBSD: ports/sysutils/munin-main/Makefile,v 1.6 2004/11/16 13:39:54 vs Exp $
+# $FreeBSD: ports/sysutils/munin-main/Makefile,v 1.7 2004/12/14 01:43:10 sem Exp $
 #
 
 PORTNAME=	munin
-PORTVERSION=	1.1.7
+PORTVERSION=	1.2.0.r2
 CATEGORIES=	sysutils perl5
 MASTER_SITES=	${MASTER_SITE_SOURCEFORGE}
 MASTER_SITE_SUBDIR=	munin
 PKGNAMESUFFIX=	-main
-DISTNAME=	${PORTNAME}_${PORTVERSION:S/.p/pre/}
+DISTNAME=	${PORTNAME}_${PORTVERSION:S/.r/rc/}
 
 MAINTAINER=	lupe@lupe-christoph.de
 COMMENT=	Collector part of Munin
@@ -33,7 +33,7 @@ RUN_DEPENDS+=	${SITE_PERL}/${PERL_ARCH}/Storable.pm:${PORTSDIR}/devel/p5-Storabl
 
 USE_GMAKE=	yes
 PATCH_STRIP=	-p1
-WRKSRC=		${WRKDIR}/${PORTNAME}-${PORTVERSION:S/.p/pre/}
+WRKSRC=		${WRKDIR}/${PORTNAME}-${PORTVERSION:S/.r/rc/}
 PKGMESSAGE=	${WRKDIR}/pkg-message
 ALL_TARGET=	DATADIR=${DATADIR} PERL=${PERL} build build-man
 INSTALL_TARGET=	DATADIR=${DATADIR} PERL=${PERL} install-main

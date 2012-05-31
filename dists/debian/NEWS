@@ -1,0 +1,56 @@
+munin (1.2.0rc2-1) unstable; urgency=low
+
+  * There are two major bugfixes in the 1.2.x series of Munin since 1.0.x that
+    could not be accomplished without introducing a risk of losing historical
+    data after upgrades.  Or more precisely:  no data will be lost, but the
+    exact name of the RRD file will change, so that the update process will
+    start collecting data into a new, emtpy, file, which in turn will be read
+    by munin-graph, and the final result is that the graph will appear to have
+    lost all data.  The historical data will still be present in the old graph.
+    
+    I will attempt to detail how you can minimize the data loss by carefully
+    planning how to perform the upgrade.
+
+  * A number of plugins which in the 1.0.x series used the COUNTER data type
+    has now been changed to use the DERIVE type, with a minimum of 0.  The
+    reason is to hinder RRDtool from misdetecting counter wraps when a service
+    or machine is restarted, which resulted in abnormal spikes in those graphs.
+
+    The munin-update component from the 1.2.x series are able to recognize that
+    a plugin has changed thusly, and will automatically copy all the historic
+    data from the old RRD file into the new one, ensuring a smooth transition.
+    However, the munin-update component from the 1.0.x series are not aware of
+    this, and will react to this data type change by starting to collect data
+    into a new, empty, RRD file.
+
+    The method that will ensure a painless upgrade is simple:  Just ensure that
+    you upgrade the "munin" package before you upgrade the "munin-node" package
+    on any of the hosts it collects data from.
+
+    Should you however have already upgraded the packages in the wrong order,
+    you may salvage your graphs by manually change the data type in the old
+    RRD file, and afterwards rename it.  For instance, you may have this RRD
+    file containing the "user" field from the "cpu" plugin of munin-node 1.0.x:
+
+        /var/lib/munin/fud.no/lust.fud.no-cpu-user-c.rrd
+
+    After upgrading to version 1.2.x of munin-node, this will have changed to:
+
+        /var/lib/munin/fud.no/lust.fud.no-cpu-user-d.rrd
+
+    If the "munin" package wasn't upgraded before "munin-node" one, you will
+    have both files, and the latter one will only contain the data gathered
+    since the upgrade of the "munin-node" package.  In order to make the old
+    data reappear in the graph, you may do so using the following procedure:
+
+        cd /var/lib/munin/fud.no
+	rrdtool tune lust.fud.no-cpu-user-c.rrd -d 42:DERIVE
+	mv -f lust.fud.no-cpu-user-c.rrd lust.fud.no-cpu-user-d.rrd
+
+    You will have to repeat this process once for each field in each affected
+    plugin.  Also remember to ensure that the "munin" system user have write
+    access to the resulting RRD file when you are finished.  Be warned,
+    however, that by doing this you will lose all data collected since
+    munin-node was upgraded to version 1.2.x.
+
+ -- Tore Anderson <tore@linpro.no>  Wed, 16 Feb 2005 22:46:50 +0100
