@@ -83,8 +83,13 @@ use strict;
 use warnings;
 
 use Fcntl;
-use Text::CSV_XS;
 use Tie::File;
+
+my $ret = "";
+
+if (!eval "require Text::CSV_XS;") {
+        $ret = "No Text::CSV_XS";
+}
 
 my $csvpath = ($ENV{'csvpath'} || '/opt/zimbra/zmstat');
 
@@ -848,13 +853,16 @@ if ($ARGV[0]) {
             die ("Can't run config without a symlinked name\n");
         }
     } elsif ($ARGV[0] eq "autoconf") {
-        if (chdir $csvpath)
+        if ($ret ne "") {
+          print "no ($ret)\n";
+        }
+        elsif (chdir $csvpath)
         {
           print "yes\n";
         }
         else
         {
-          print "no\n";
+          print "no (chdir to $csvpath failed)\n";
         }
     } elsif ($ARGV[0] eq "suggest") {
         foreach my $key ( keys %ops )

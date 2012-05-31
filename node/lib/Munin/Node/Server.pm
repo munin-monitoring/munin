@@ -44,7 +44,8 @@ sub pre_loop_hook {
 }
 
 
-sub request_denied_hook {
+sub request_denied_hook
+{
     my $self = shift;
     logger("Denying connection from: $self->{server}->{peeraddr}");
     return;
@@ -81,19 +82,26 @@ sub _add_services_to_nodes
                                                'config');
         };
 
-        # FIXME: report errors, and remove any plugins that failed from %services;
-        next if ($EVAL_ERROR or $res->{timed_out} or $res->{retval});
+        # FIXME: report errors properly
+        if ($EVAL_ERROR or $res->{timed_out} or $res->{retval}) {
+            print STDERR "Error running $service.  Dropping it.\n"
+                if $config->{DEBUG};
+            delete $services{$service};
+        }
 
         my ($host_name) = grep /^host_name /, @{$res->{stdout}};
         my $node = $config->{sconf}{$service}{host_name}
                 || (split /\s+/, ($host_name || ''))[1]
                 || $config->{fqdn};
 
+        print STDERR "\tAdding to node $node\n" if $config->{DEBUG};
         $nodes{$node}{$service} = 1;
 
         # Note any plugins that require particular server capabilities.
         if (grep /^multigraph\s+/, @{$res->{stdout}}) {
-           push @multigraph_services, $service;
+            print STDERR "\tAdding to multigraph plugins\n"
+                if $config->{DEBUG};
+            push @multigraph_services, $service;
         }
     }
     print STDERR "Finished configuring services\n" if $config->{DEBUG};
@@ -102,7 +110,8 @@ sub _add_services_to_nodes
 }
 
 
-sub process_request {
+sub process_request
+{
     my $self = shift;
 
     my $session = Munin::Node::Session->new();

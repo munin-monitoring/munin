@@ -19,6 +19,11 @@ body {
 
  }
 
+
+select {
+  border: 1px solid #d1d1d1;
+}
+
 h2 {
   margin: 0em;
   padding: 0px;
@@ -105,9 +110,9 @@ table.largeinvisiblebox {
   width: 90%;
   margin: 0 auto 0em auto;
   background-color: #fbfbfb;
-  border-bottom: 1px solid #d1d1d1;
-  border-left: 1px solid #d1d1d1;
-  border-right: 1px solid #d1d1d1;
+  border-bottom: 1px solid #cfd6f8;
+  border-left: 1px solid #cfd6f8;
+  border-right: 1px solid #cfd6f8;
   overflow: auto;
 }
 
@@ -175,6 +180,41 @@ td.graphbox > table {
   text-align: left;
 }
 
+#legend {
+  margin: 2px;
+}
+
+#legend tr, #legend td{
+  padding: 3px 2px 3px 2px;
+  margin: 1px;
+}
+
+#legend th{
+  border-bottom: 1px solid #999999;
+}
+
+#legend .oddrow{
+  background-color: #f8f8f8;
+}
+
+#legend .oddrow td{
+  border-bottom: 1px solid #d8d8d8;
+}
+
+#legend .evenrow{
+  background-color: #fdfdfd;
+}
+
+#legend .evenrow td{
+  border-bottom: 1px solid #d8d8d8;
+}
+
+#legend .lastrow td{
+  border-bottom: 0px solid transparent !important;
+}
+
+
+
 td.legendbox {
   border: 1px solid #999999;
   padding: 8px 4px 2px 2px;
@@ -185,7 +225,7 @@ td.legendbox {
 
 td.wrap {
 	white-space: normal;
-	max-width: 1%;
+    width: 20%;
 }
 
 td.linkbox {
@@ -202,7 +242,7 @@ td.linkbox {
   margin: 1em auto -0.5em auto;
   padding-right: 0.5em;
   background-color: #fbfbfb;
-  border: 1px solid #d1d1d1;
+  border: 1px solid #bbc3ea;
 }
 
 #generated-table tbody td {
@@ -214,11 +254,17 @@ td.linkbox {
 .warntext {
   font-weight: bold;
   background-color: #cccc00;
+  padding: 0px;
+  margin: -1px;
+  border: 1px solid #b9b900;
 }
 
 .crittext {
   font-weight: bold;
   background-color: #ff6f22;
+  padding: 0px;
+  margin: -1px;
+  border: 1px solid #f16722;
 }
 
 .ruler {
@@ -271,6 +317,10 @@ ul li {
 
 a {
   border-width: 0px;
+}
+
+.heading {
+  font-weight: bold;
 }
 
 a.unkn:link    { color: #ffaa00; } 

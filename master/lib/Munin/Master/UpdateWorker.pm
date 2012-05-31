@@ -89,16 +89,14 @@ sub do_work {
 
 	    # Since different plugins can populate multiple positions in the
 	    # service namespace we'll check for collisions and warn of them.
-
 	    for my $service (keys %{$service_config{data_source}}) {
 		if (defined($all_service_configs{data_source}{$service})) {
-		    WARN "[WARNING] Service colision: plugin $plugin on $nodedesignation reports $service which already exists on that host.  Deleting new data.";
+		    WARN "[WARNING] Service collision: plugin $plugin on $nodedesignation reports $service which already exists on that host.  Deleting new data.";
 		    delete($service_config{data_source}{$service});
 		    delete($service_data{$service})
 			if defined $service_data{$service};
 		}
 	    }
-
 
 	    # .extinfo fields come from "fetch" but must be saved like "config".
 	    for my $service (keys %service_data) {
@@ -479,6 +477,7 @@ sub _update_rrd_file {
     DEBUG "[DEBUG] Updating $rrd_file with ".$ds_values->{when}.":$value";
     RRDs::update($rrd_file, "$ds_values->{when}:$value");
     if (my $ERROR = RRDs::error) {
+	#confess Dumper @_;
         ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
     }
 }

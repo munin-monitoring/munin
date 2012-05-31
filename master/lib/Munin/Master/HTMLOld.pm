@@ -186,9 +186,32 @@ sub html_main {
     INFO "[INFO] munin-html finished ($update_time sec)";
 }
 
+sub find_complinks{
+    my($type) = @_;
+    
+    my @links = ();
+    
+    foreach my $current (qw(day week month year)) {
+        my $data = {};
+
+        if ($type eq $current) {
+            $data->{'LINK'} = undef;
+        } 
+        else {
+            $data->{'LINK'} = "comparison-$current.html";            
+        }
+
+        $data->{'NAME'} = $current;
+        push(@links, $data);
+    }
+
+    return \@links;
+
+}
+
 
 sub emit_comparison_template {
-    my ($key,$t) = @_;
+    my ($key, $t) = @_;
 
     ( my $file = $key->{'filename'}) =~ s/index.html$//;
 
@@ -197,15 +220,18 @@ sub emit_comparison_template {
     DEBUG "[DEBUG] Creating comparison page $file";
 
     $comparisontemplates{$t}->param(
-	NAME        => $key->{'name'},
-	GROUPS      => $key->{'comparegroups'},
-	PATH        => $key->{'path'},
-	CSSPATH     => $key->{'csspath'},
-	PEERS       => $key->{'peers'},
-	PARENT      => $key->{'path'}->[-2]->{'name'},
-	CATEGORIES  => $key->{'comparecategories'},
-	NCATEGORIES => $key->{'ncomparecategories'},
-	TAGLINE     => $htmltagline,
+                                    INFO_OPTION => 'Groups on this level',
+                                    NAME        => $key->{'name'},
+                                    GROUPS      => $key->{'comparegroups'},
+                                    PATH        => $key->{'path'},
+                                    CSSPATH     => $key->{'csspath'},
+                                    COMPLINKS   => find_complinks($t),
+                                    LARGESET    => decide_largeset($key->{'peers'}), 
+                                    PEERS       => $key->{'peers'},
+                                    PARENT      => $key->{'path'}->[-2]->{'name'},
+                                    CATEGORIES  => $key->{'comparecategories'},
+                                    NCATEGORIES => $key->{'ncomparecategories'},
+                                    TAGLINE     => $htmltagline,
     );
 
     open(my $FILE, '>', $file)
@@ -230,16 +256,18 @@ sub emit_graph_template {
     DEBUG "[DEBUG] Creating graph(nodeview) page ".$key->{filename};
 
     $graphtemplate->param(
-	GROUPS      => $key->{'groups'},
-	PATH        => $key->{'path'},
-	CSSPATH     => $key->{'csspath'},
-	PEERS       => $key->{'peers'},
-	PARENT      => $key->{'path'}->[-2]->{'name'},
-	NAME        => $key->{'name'},
-	CATEGORIES  => $key->{'categories'},
-	NCATEGORIES => $key->{'ncategories'},
-	TAGLINE     => $htmltagline,
-	);
+                          INFO_OPTION => 'Nodes on this level',
+                          GROUPS      => $key->{'groups'},
+                          PATH        => $key->{'path'},
+                          CSSPATH     => $key->{'csspath'},
+                          PEERS       => $key->{'peers'},
+                          LARGESET  => decide_largeset($key->{'peers'}), 
+                          PARENT      => $key->{'path'}->[-2]->{'name'},
+                          NAME        => $key->{'name'},
+                          CATEGORIES  => $key->{'categories'},
+                          NCATEGORIES => $key->{'ncategories'},
+                          TAGLINE     => $htmltagline,
+                         );
 
     my $filename = $key->{'filename'};
     open(my $FILE, '>', $filename)
@@ -264,13 +292,15 @@ sub emit_group_template {
     DEBUG "[DEBUG] Creating group page ".$key->{filename};
 
     $grouptemplate->param(
-	GROUPS    => $key->{'groups'},
-	PATH      => $key->{'path'},
-	CSSPATH   => $key->{'csspath'},
-	PEERS     => $key->{'peers'},
-	PARENT    => $key->{'path'}->[-2]->{'name'} || "Overview",
-	COMPARE   => $key->{'compare'},
-	TAGLINE   => $htmltagline,
+                          INFO_OPTION => 'Groups on this level',
+                          GROUPS    => $key->{'groups'},
+                          PATH      => $key->{'path'},
+                          CSSPATH   => $key->{'csspath'},
+                          PEERS     => $key->{'peers'},
+                          LARGESET  => decide_largeset($key->{'peers'}), 
+                          PARENT    => $key->{'path'}->[-2]->{'name'} || "Overview",
+                          COMPARE   => $key->{'compare'},
+                          TAGLINE   => $htmltagline,
 	);
 
     my $filename = $key->{'filename'};
@@ -290,14 +320,23 @@ sub emit_service_template {
         loop_context_vars => 1
     );
 
+    #remove underscores from peers and title (last path element)
+    if ($peers){
+        $peers = [ map { $_->{'name'} =~ s/_/ /g; $_;} @$peers ];
+    }
+    
+    $pathnodes->[scalar(@$pathnodes) - 1]->{'name'} =~ s/_/ /g;
+
     $servicetemplate->param(
-        SERVICES  => [$srv],
-        PATH      => $pathnodes,
-        PEERS     => $peers,
-        CSSPATH   => $csspath,
-        CATEGORY  => ucfirst $srv->{'category'},
-	TAGLINE   => $htmltagline,
-    );
+                            INFO_OPTION => 'Graphs in same category',
+                            SERVICES  => [$srv],
+                            PATH      => $pathnodes,
+                            PEERS     => $peers,
+                            LARGESET  => decide_largeset($peers), 
+                            CSSPATH   => $csspath,
+                            CATEGORY  => ucfirst $srv->{'category'},
+                            TAGLINE   => $htmltagline,
+                           );
 
     # No stored filename for this kind of html node.
     my $filename = munin_get_html_filename($service);
@@ -314,6 +353,12 @@ sub emit_service_template {
     close $FILE or die "Cannot close '$filename' after writing: $!";
 }
 
+sub decide_largeset {
+
+    my ($peers) = @_;
+    return scalar(@$peers) > $config->{'dropdownlimit'} ? 1 : 0;
+
+}
 
 sub emit_main_index {
     # Draw main index
@@ -333,8 +378,8 @@ sub emit_main_index {
     # /usr/local/share/perl/5.10.0/Munin/Master/HTMLOld.pm line 140
 
     $template->param(
-	TAGLINE   => $htmltagline,
-        GROUPS    => $groups,
+                     TAGLINE   => $htmltagline,
+                     GROUPS    => $groups,
     );
 
     my $filename = munin_get_html_filename($config);
@@ -588,6 +633,7 @@ sub get_group_tree {
                 ? ($rpath .= "../") . "index.html"
                 : ($rpath = ""))}
     } reverse(undef, split('\/', $base));
+
     ($csspath = $path->[0]->{'path'}) =~ s/index.html$/style.css/;
 
     # We need a bit more info for the comparison templates
@@ -745,22 +791,22 @@ sub generate_group_templates {
 
 	    # This was only kept there for getting the peers
             delete $key->{'hashnode'}; 
-
+            
             if (defined $key->{'ngroups'} and $key->{'ngroups'}) {
                 # WTF: $key->{'groups'} = $key->{'groups'};
                 generate_group_templates($key->{'groups'});
 
-		emit_group_template($key);
-
+                emit_group_template($key);
+                
                 if ($key->{'compare'}) { # Create comparison templates as well 
                     foreach my $t (@times) {
-			emit_comparison_template($key,$t);
+                        emit_comparison_template($key,$t);
                     }
                 }
             }
 
             if (defined $key->{'ngraphs'} and $key->{'ngraphs'}) {
-		emit_graph_template($key);
+                emit_graph_template($key);
             }
         }
     }
@@ -815,12 +861,12 @@ sub generate_service_templates {
     my $fieldnum = 0;
     my @graph_info;
     my @field_info;
-    my @loc       = munin_get_node_loc($service);
+    my @loc       = @{munin_get_node_loc($service)};
     my $pathnodes = get_path_nodes($service);
     my $peers     = get_peer_nodes($service,
         lc munin_get($service, "graph_category", "other"));
     my $parent = munin_get_parent_name($service);
-    (my $csspath = $pathnodes->[0]->{'link'}) =~ s/index.html$/style.css/;
+    (my $csspath = $pathnodes->[0]->{'path'}) =~ s/index.html$/style.css/;
     my $bp = borrowed_path($service) || ".";
 
     $srv{'node'} = munin_get_node_name($service);
@@ -923,7 +969,7 @@ sub generate_service_templates {
         $field_info{'warn'}  = munin_get($fieldobj, "warning");
         $field_info{'crit'}  = munin_get($fieldobj, "critical");
         $field_info{'info'}  = munin_get($fieldobj, "info");
-	$field_info{'extinfo'} = munin_get($fieldobj, "extinfo");
+        $field_info{'extinfo'} = munin_get($fieldobj, "extinfo");
 
         my $state = munin_field_status($fieldobj, $limits, 1);
 
@@ -954,11 +1000,12 @@ sub get_path_nodes {
     my $ret  = [];
     my $link = "index.html";
 
-    unshift @$ret, {"name" => munin_get_node_name($hash), "link" => undef};
+    unshift @$ret, {"name" => munin_get_node_name($hash), "path" => undef};
     while ($hash = munin_get_parent($hash)) {
-        unshift @$ret, {"name" => munin_get_node_name($hash), "link" => $link};
+        unshift @$ret, {"name" => munin_get_node_name($hash), "path" => $link};
         $link = "../" . $link;
     }
+
     $ret->[0]->{'name'} = undef;
     return $ret;
 }

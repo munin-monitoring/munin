@@ -10,7 +10,7 @@ ipmi_sensor_ - Wildcard plugin for the sensors data provided by ipmi
 
 Copyright (c) 2006 Logilab
 
-Inspired by code writtent by Peter Palfrader
+Inspired by code written by Peter Palfrader
 
 =head1 CONFIGURATION
 
@@ -124,7 +124,10 @@ def parse_data( data ):
     return sensors
 
 def get_sensor_names():
-    p = Popen(["ipmitool","-I","open","sensor"], shell=False, stdout=PIPE)
+    try:
+        p = Popen(["ipmitool","-I","open","sensor"], shell=False, stdout=PIPE)
+    except OSError:
+        return
     data = p.stdout.readlines()
 
     units = {}
@@ -149,9 +152,15 @@ def get_sensors():
 
     if curtime-mtime>CACHEAGE:
 	if not SENSORS:
-            p = Popen(["ipmitool","-I","open","sensor"], shell=False, stdout=PIPE)
+            try:
+            	p = Popen(["ipmitool","-I","open","sensor"], shell=False, stdout=PIPE)
+            except OSError:
+                return
 	else:
-            p = Popen(["ipmitool","-I","open","sensor", "get"] + SENSORS, shell=False, stdout=PIPE)
+            try:
+                p = Popen(["ipmitool","-I","open","sensor", "get"] + SENSORS, shell=False, stdout=PIPE)
+            except OSError:
+                return
         data = p.stdout.read()
         try:
             f = file(cache_filename,"w")
@@ -279,7 +288,7 @@ def autoconf():
 
 def suggest():
     names = get_sensor_names()
-    if not os.access(CONFIG, F_OK):
+    if not access(CONFIG, F_OK):
         f = file(CONFIG, "w")
         for key, sensors in names.items():
             f.write("%s = %s\n" % (key, ",".join(sensors)))

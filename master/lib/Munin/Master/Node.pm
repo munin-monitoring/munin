@@ -281,12 +281,17 @@ sub fetch_service_config {
 sub _validate_data_sources {
     my ($self, $all_data_source_config) = @_;
 
+    my $nodedesignation = $self->{host}."/".$self->{address}.":".$self->{port};
+
     for my $service (keys %$all_data_source_config) {
 	my $data_source_config = $all_data_source_config->{$service};
 
 	for my $ds (keys %$data_source_config) {
-	    croak "Missing required attribute 'label' for data source '$ds'"
-		unless defined $data_source_config->{$ds}{label};
+	    if (!defined $data_source_config->{$ds}{label}) {
+		ERROR "Missing required attribute 'label' for data source '$ds' in service $service on $nodedesignation";
+		$data_source_config->{$ds}{label} = 'No .label provided';
+		$data_source_config->{$ds}{extinfo} = "NOTE: The plugin did not provide any label for the data source $ds.  It is in need of fixing.";
+	    }
 	}
     }
 }

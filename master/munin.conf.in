@@ -16,7 +16,7 @@
 # (Exactly one) directory to include all files from.  There is no
 # default.
 #
-# includedir @@CONFDIR@@/plugin-conf.d
+# includedir @@CONFDIR@@/munin-conf.d
 
 # Make graphs show values per minute instead of per second
 #graph_period minute

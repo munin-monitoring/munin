@@ -208,7 +208,8 @@ Security is handled differently for versions 1/2c and 3.  See below.
     # Common options.
     my @options = (-hostname    => $host,
 		   -port	=> $port,
-		   -version     => $version);
+                   -version     => $version,
+    );
 
     # User defined options
     if (defined($userargs[0])) {
@@ -470,11 +471,11 @@ sub get_single {
 
         print STDERR "# Getting single $oid...\n" if $::DEBUG;
 
-        my $response = $handle->get_request ($oid);
+        my $response = $handle->get_request($oid);
 
-        if (!defined $response->{$oid}) {
-	    print STDERR "# Error getting $oid: ",$handle->error(),"\n"
-	      if $::DEBUG;
+        if (!defined $response->{$oid} or $handle->error_status) {
+            print STDERR "# Error getting $oid: ",$handle->error(),"\n"
+                if $::DEBUG;
             return;
         }
 	return $response->{$oid};

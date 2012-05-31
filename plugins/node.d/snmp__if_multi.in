@@ -41,17 +41,21 @@ pr. second.
 =head1 MIB INFORMATION
 
 This plugin requires the IF-MIB the standard IETF MIB for network
-interfaces.  It reports the contents of the
+interfaces.
+
+It reports the contents of the
 IF-MIB::ifHCInOctets/IF-MIB::ifHCOutOctets if available,
 IF-MIB::ifInOctets/IF-MIB::ifOutOctets if not.  The former are 64 bit
 counters only available with SNMP 2 and later.  The later are 32 bit
 counters (see FEATURES below).
 
+For errors it reports ifInErrors + ifINDiscards and ifOutErrors +
+ifOutDiscards.
+
 =head1 MAGIC MARKERS
 
-  #%# familyyyyy=snmpauto
-  #%# familyyyyy=contrib
-  #%# capabilitiesssss=snmpconf
+  #%# family=snmpauto
+  #%# capabilities=snmpconf
 
 =head1 VERSION
 
@@ -97,7 +101,7 @@ around.
 =head1 AUTHOR
 
 Copyright (C) 2004-2009 Jimmy Olsen, Dagfinn Ilmari Mannsaaker,
-Nicolai Langfeldt and Redpill Linpro AS.
+Nicolai Langfeldt, Redpill Linpro AS and others.
 
 Original snmp__if_ plugin: Copyright (C) 2004-2009 Jimmy Olsen, Dagfinn
 Ilmari Mannsaaker.
@@ -107,7 +111,7 @@ Initial SNMPv3 support by "Confusedhacker".
 Documentation, porting to Munin::Plugin::SNMP and
 further grooming by Nicolai Langfeldt.
 
-Reworked to snmp__if_multi by Nicolai Langfeldt
+Reworked to snmp__if_multi by Nicolai Langfeldt.
 
 =head1 LICENSE
 
@@ -196,16 +200,13 @@ my $snmpinfo = $session->get_hash(
 				    8  => 'ifOperStatus',
 				    10 => 'ifInOctets',
 				    11 => 'ifInUcastPkts',
-				    12 => 'ifInNUcastPkts', # Depreciated
 				    13 => 'ifInDiscards',
 				    14 => 'ifInErrors',
 				    15 => 'ifUnUnknownProtos',
 				    16 => 'ifOutOctets',
-				    17 => 'ifOutUcastPkts', # Depreciated
 				    18 => 'ifOutNUcastPkts',
 				    19 => 'ifOutDiscards',
 				    20 => 'ifOutErrors',
-				    21 => 'ifOutQLen',      # Depreciated
 				  });
 
 
@@ -221,12 +222,54 @@ my $snmpinfoX = $session->get_hash( # ifXEntry - SNMP v2 and up only
 				      18 => 'ifAlias',
 				    });
 
+
+sub do_config_root {
+    my ($host) = @_;
+
+    print "multigraph if_bytes\n";
+    print "graph_title $host interface traffic\n";
+    print "graph_order recv send\n";
+    print "graph_args --base 1000\n";
+    print "graph_vlabel bits in (-) / out (+) per \${graph_period}\n";
+    print "graph_category network\n";
+    print "graph_info This graph shows the total traffic for $host\n";
+
+    print "send.info Bits sent/received by $host\n";
+    print "recv.label recv\n";
+    print "recv.type DERIVE\n";
+    print "recv.graph no\n";
+    print "recv.cdef recv,8,*\n";
+    print "recv.min 0\n";
+    print "send.label bps\n";
+    print "send.type DERIVE\n";
+    print "send.negative recv\n";
+    print "send.cdef send,8,*\n";
+    print "send.min 0\n";
+
+    print "multigraph if_errors\n";
+    print "graph_title $host interface errors\n";
+    print "graph_order recv send\n";
+    print "graph_args --base 1000\n";
+    print "graph_vlabel errors in (-) / out (+) per \${graph_period}\n";
+    print "graph_category network\n";
+    print "graph_info This graph shows the total errors for $host\n";
+
+    print "send.info Errors in outgoing/incomming traffic on $host\n";
+    print "recv.label recv\n";
+    print "recv.type DERIVE\n";
+    print "recv.graph no\n";
+    print "recv.cdef recv,8,*\n";
+    print "recv.min 0\n";
+    print "send.label bps\n";
+    print "send.type DERIVE\n";
+    print "send.negative recv\n";
+    print "send.cdef send,8,*\n";
+    print "send.min 0\n";
+}
+
+
 sub do_config_if {
     my ($host,$version,$if) = @_;
-
-    print "multigraph if/bytes/$if config\n";
-
-    print "host_name $host\n" unless $host eq 'localhost';
 
     my $alias = $snmpinfo->{$if}->{ifDescr} || "Interface $if";
 
@@ -241,6 +284,11 @@ sub do_config_if {
 	if ($response == 2) {
 	    # Interface is down
 	    $extrainfo .= ' The interface is currently down.'
+	} elsif ($response != 1) {
+	    # This interface is fishy
+	    delete $snmpinfo->{$if} if exists $snmpinfo->{$if};
+	    delete $snmpinfoX->{$if} if exists $snmpinfoX->{$if};
+	    return;
 	}
     }
 
@@ -248,12 +296,7 @@ sub do_config_if {
     my $speed = undef;
 
     if (defined ($speed = $snmpinfo->{$if}->{ifSpeed})) {
-	$warn = $speed/8;
-
-	# Warn at 1/8th of actuall speed?  Or just remove warning?
-	# Tempted to set warning at 80%. 80% over 5 minutes is
-	# pretty busy.  But probably not relevant as a warning on
-	# a NFS server?
+	$warn = $speed*100/75;
 
 	my $textspeed = scaleNumber($speed,,'bps','',
 				    'The interface speed is %.1f%s%s.');
@@ -274,6 +317,8 @@ sub do_config_if {
 	$extrainfo .= " I notice that you use SNMP version 1 which does not support 64 bit quantities.  You may get better results if you switch to SNMP version 2c or 3.  Please refer to the plugin documentation."
 	  if $version == 1;
     }
+
+    print "multigraph if_bytes.if_$if\n";
 
     print "graph_title Interface $alias traffic\n";
     print "graph_order recv send\n";
@@ -296,20 +341,100 @@ sub do_config_if {
     print "send.max $speed\n";
     print "send.min 0\n";
     print "send.warning $warn\n" if defined $warn;
+
+
+    print "multigraph if_errors.if_$if\n";
+
+    print "graph_title Interface $alias errors\n";
+    print "graph_order recv send\n";
+    print "graph_args --base 1000\n";
+    print "graph_vlabel bits in (-) / out (+) per \${graph_period}\n";
+    print "graph_category network\n";
+    print "graph_info This graph shows errors for the \"$alias\" network interface.$extrainfo\n";
+    print "send.info Errors in outgoing/incomming traffic on this interface.\n";
+    print "recv.label recv\n";
+    print "recv.type DERIVE\n";
+    print "recv.graph no\n";
+    print "recv.cdef recv,8,*\n";
+    print "recv.max $speed\n";
+    print "recv.min 0\n";
+    print "recv.warning 1\n";
+    print "send.label bps\n";
+    print "send.type DERIVE\n";
+    print "send.negative recv\n";
+    print "send.cdef send,8,*\n";
+    print "send.max $speed\n";
+    print "send.min 0\n";
+    print "send.warning 1\n";
 }
 
 
-sub do_fetch_if ($) {
+sub do_fetch_root {
+    # Construct root graphs fro the if_bytes and if_error spaces
+
+    my $in = 0;
+    my $out = 0;
+    my $inerr = 0;
+    my $outerr = 0;
+
+    foreach my $if (keys %{$snmpinfo}) {
+	# Do not take interface up or down-ness into account, the
+	# interface counters are not reset when the interface goes up
+	# so we must always account for all interfaces.
+
+	# But note that do_fetch_if has previously removed all
+	# interfaces with a "fishy" status.  That is a possible bug.
+	# Or a feature.  We'll see.
+
+	$in += $response = $snmpinfo->{$if}->{ifHCInOctets} ||
+	  $snmpinfo->{$if}->{ifInOctets};
+
+	$out += $snmpinfo->{$if}->{ifHCOutOctets} ||
+	  $snmpinfo->{$if}->{ifOutOctets};
+
+	$inerr += ( $snmpinfo->{$if}->{ifInErrors} || 0 ) +
+	  ( $snmpinfo->{$if}->{ifInDiscards} || 0 );
+
+	$outerr += ( $snmpinfo->{$if}->{ifOutErrors} || 0 ) +
+	  ( $snmpinfo->{$if}->{ifOutDiscards} || 0 );
+
+    }
+
+    print "multigraph if_bytes\n";
+    print "recv.value $in\n";
+    print "send.value $out\n";
+
+    print "multigraph if_errors\n";
+    print "recv.value $inerr\n";
+    print "send.value $outerr\n";
+}
+
+
+sub do_fetch_if {
     my($if) = @_;
 
-    print "multigraph if/bytes/$if fetch\n";
+    my $status = $snmpinfo->{$if}->{ifOperStatus} || 1;
 
-    if (defined ($response = $snmpinfo->{$if}->{ifOperStatus}) and
-	$response == 2) {
+    my $response;
+
+    # 1 means up
+    # 2 means set to down
+    # Everything else we ignore.
+
+    if ($status < 1 or $status > 2) {
+	delete $snmpinfo->{$if} if exists $snmpinfo->{$if};
+	delete $snmpinfoX->{$if} if exists $snmpinfoX->{$if};
+	return;
+    }
+
+    print "multigraph if_bytes.if_$if\n";
+
+    if ($status == 2) {
 	# Interface is down
 	print "recv.value U\n";
 	print "send.value U\n";
-	return;
+	print "send.extinfo This interface is down\n";
+	goto if_errors;
     }
 
     if (defined ($response = $snmpinfo->{$if}->{ifHCInOctets} ||
@@ -318,7 +443,7 @@ sub do_fetch_if ($) {
     } else {
 	# No response...
 	print "recv.value U\n";
-    }
+   }
 
     if (defined ($response = $snmpinfo->{$if}->{ifHCOutOctets} ||
 		 $snmpinfo->{$if}->{ifOutOctets})) {
@@ -327,28 +452,57 @@ sub do_fetch_if ($) {
 	# No response...
 	print "send.value U\n";
     }
+
+  if_errors:
+
+    print "multigraph if_errors.if_$if\n";
+
+    if ($status == 2) {
+	print "recv.value U\n";
+	print "send.value U\n";
+	print "send.extinfo This interface is down\n";
+	return;
+    }
+
+    $response = ( $snmpinfo->{$if}->{ifInErrors} || 0 ) +
+      ( $snmpinfo->{$if}->{ifInDiscards} || 0 );
+
+    print "recv.value $response\n";
+
+    $response = ( $snmpinfo->{$if}->{ifOutErrors} || 0 ) +
+      ( $snmpinfo->{$if}->{ifOutDiscards} || 0 );
+
+    print "send.value $response\n";
 }
+
 
 sub do_config {
 
     my ($host,undef,$version) = Munin::Plugin::SNMP->config_session();
 
+    print "host_name $host\n" unless $host eq 'localhost';
+
     # Also do overview graph with all ports summarized
     foreach my $if (sort {$a <=> $b} keys %{$snmpinfo}) {
 	do_config_if($host,$version,$if);
-	do_fetch_if($if); # if $dirtyconfig;
     }
+
+    do_config_root($host);
 }
+
 
 sub do_fetch {
     # Also do overview graph with all ports summarized and collected
     # meta information in graph_info.
     # Add to this error graphs and so on.  And meta information about
     # interface type.
+
     foreach my $if (sort {$a <=> $b} keys %{$snmpinfo}) {
 	do_fetch_if($if);
     }
+    do_fetch_root();
 }
+
 
 if ($ARGV[0] and $ARGV[0] eq "config") {
     do_config();

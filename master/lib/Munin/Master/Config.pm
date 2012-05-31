@@ -470,13 +470,25 @@ sub parse_config {
         
     my $section = undef;
 
+    my $continuation = '';
+
     my $prefix = '';
 
     while (my $line = <$io>) {
         $self->_strip_comment($line);
         $self->_trim($line);
+
         if ( !length($line) ) {
 	    next;
+	}
+
+	# Handle continuation lines (ending in \)
+	if ($line =~ s|\\$||) {
+	    $continuation .= $line;
+	    next;
+	} elsif ($continuation) {
+	    $line = $continuation;
+	    $continuation = '';
 	}
         
 	# Group/host/service configuration is saved for later persual.

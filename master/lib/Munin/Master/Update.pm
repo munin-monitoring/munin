@@ -45,7 +45,7 @@ sub run {
     $self->_create_rundir_if_missing();
 
     $self->_do_with_lock_and_timing(sub {
-        INFO "[INFO] Starting munin-update";
+        INFO "[INFO]: Starting munin-update";
 
         $self->{old_service_configs} = $self->_read_old_service_configs();
 
@@ -70,7 +70,9 @@ sub _read_old_service_configs {
     # Get old service configuration from the config instance since the
     # syntaxes are identical.
     my $oldconfig = Munin::Master::Config->instance()->{oldconfig};
-    my $datafile = $oldconfig->{config_file};
+
+    my $datafile = $oldconfig->{config_file} = $config->{dbdir}.'/datafile';
+
     my $file;
     
     if (-e $datafile ) {
@@ -129,7 +131,8 @@ sub _do_with_lock_and_timing {
     if (!open ($self->{STATS}, '>', "$config->{dbdir}/munin-update.stats.tmp")) {
         WARN "[WARNING] Could not open STATS to $config->{dbdir}/munin-update.stats.tmp: $!";
         # Use /dev/null instead - if the admin won't fix he won't care
-        open($self->{STATS}, '>', "/dev/null") or LOGCROAK "[FATAL] Could not open STATS to /dev/null (fallback for not being able to open $config->{dbdir}/munin-update.stats.tmp): $!";
+        open($self->{STATS}, '>', "/dev/null") or 
+	    LOGCROAK "[FATAL] Could not open STATS to /dev/null (fallback for not being able to open $config->{dbdir}/munin-update.stats.tmp): $!";
     }
 
     my $retval = $block->();
@@ -139,7 +142,7 @@ sub _do_with_lock_and_timing {
     close ($self->{STATS});
     $self->{STATS} = undef;
     rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
-    INFO "[INFO] Munin-update finished ($update_time sec)";
+    INFO "[INFO]: Munin-update finished ($update_time sec)";
 
     munin_removelock($lock);
 

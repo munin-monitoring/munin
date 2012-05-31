@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+package Munin::Master::LimitsOld;
 # -*- perl  -*-
 
 =begin comment
@@ -32,18 +32,25 @@ $Id$
 
 =cut
 
+use warnings;
 use strict;
+
+use Exporter;
+
+our (@ISA, @EXPORT);
+@ISA    = qw ( Exporter );
+@EXPORT = qw ( limits_startup limits_main );
+
+use POSIX qw ( strftime );
+use Getopt::Long 2.37 qw ( GetOptionsFromArray );
+use Time::HiRes;
+use Text::Balanced qw ( extract_multiple extract_delimited
+    extract_quotelike extract_bracketed );
+use Log::Log4perl qw ( :easy );
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
 use Munin::Common::Defaults;
-use POSIX qw(strftime);
-use Getopt::Long 2.37 qw(GetOptionsFromArray);
-use Time::HiRes;
-use Text::Balanced qw (extract_multiple extract_delimited
-    extract_quotelike extract_bracketed);
-use Log::Log4perl qw (:easy);
-use Carp;
 
 my $DEBUG          = 0;
 my $conffile       = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
@@ -260,7 +267,7 @@ sub process_service {
     my $children   = munin_get_children($hash);
 
     if (!ref $hash) {
-	confess("I was passed a non-hash!");
+	LOGCROAK("I was passed a non-hash!");
     }
 
     return if (@limit_services and !grep (/^$service$/, @limit_services));

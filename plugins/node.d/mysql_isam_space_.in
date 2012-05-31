@@ -6,6 +6,9 @@
 mysql_isam_space_ - Wildcard plugin to monitor the percent of table space used
 on isam and myisam tables on a mysql server.
 
+Note that this is a old plugin which is no longer installed by
+default.  It is retained for compatability with old installations.
+
 =head1 CONFIGURATION
 
 Configuration parameters for @@CONFDIR@@/PLUGIN,
@@ -42,8 +45,8 @@ munin-node.
 
 =end comment
 
- #%# family=contrib
- #%# capabilities=suggest autoconf
+  #%# family=manual
+  #%# capabilities=suggest autoconf
 
 =cut
 
@@ -90,6 +93,7 @@ sub print_config
 	print "graph_title MySQL \"$DB\" isam/myisam table-space usage\n";
 	print "graph_args --base 1000\n";
 	print "graph_vlabel percent\n";
+	print "graph_info Note that this is a old plugin which is no longer installed by default.  It is retained for compatability with old installations.\n";
 	print "graph_category mysql\n";
 	foreach my $t (keys %{$tables})
 	{

@@ -2,7 +2,7 @@ package Munin::Master::GraphOld;
 
 # -*- cperl -*-
 
-=comment
+=begin comment
 
 This is Munin::Master::GraphOld, a package shell to make munin-graph
 modular (so it can loaded persistently in munin-fastcgi-graph for
@@ -30,6 +30,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 $Id$
 
+=end comment
+
 =cut
 
 use warnings;
@@ -50,7 +52,8 @@ use Getopt::Long 2.37 qw(GetOptionsFromArray);
 use Time::HiRes;
 use Text::ParseWords;
 
-if ($RRDs::VERSION >= 1.3) {use Encode;}
+# For UTF-8 handling (plugins are assumed to use Latin 1)
+if ($RRDs::VERSION >= 1.3) { use Encode; }
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
@@ -368,9 +371,11 @@ sub expand_specials {
     my $preproc = shift;
     my $order   = shift;
     my $single  = shift;
+
     my $result  = [];
 
     my $fieldnum = 0;
+
     for my $field (@$order) {    # Search for 'specials'...
         my $tmp_field;
 
@@ -418,6 +423,7 @@ sub expand_specials {
 
         }
         elsif (defined($tmp_field = get_stack_command($service->{$field}))) {
+	    # Aliased with .stack
             DEBUG "DEBUG: expand_specials ($tmp_field): Doing stack...";
 
             my @spc_stack = ();
@@ -455,7 +461,7 @@ sub expand_specials {
                     push @$result, "$name.onlynullcdef";
                 }
             }
-        }
+        } # if get_stack_command
         elsif (defined($tmp_field = get_sum_command($service->{$field}))) {
             my @spc_stack = ();
             my $last_name = "";
@@ -482,8 +488,9 @@ sub expand_specials {
                 push(@spc_stack, $name);
                 push(@$preproc,  "$name=$pre");
             }
-            $service->{$last_name}->{"cdef"}
-                .= "," . join(',+,', @spc_stack[0 .. @spc_stack - 2]) . ',+';
+            $service->{$last_name}->{"cdef"} .=
+		"," . join(",$AddNAN,", @spc_stack[0 .. @spc_stack - 2]) .
+		",$AddNAN";
 
             if (my $tc = munin_get($service->{$field}, "cdef", 0))
             {    # Oh bugger...
@@ -518,7 +525,7 @@ sub expand_specials {
                 munin_set_var_loc($service, [$nf, "graph"], "no");
             }
         }
-    }
+    } # for (@$order)
     return $result;
 }
 
@@ -767,6 +774,7 @@ sub process_service {
         my $has_negative = munin_get($field, "negative");
 
         # Trim the fieldname to make room for other field names.
+	
         $rrdname = &get_field_name($fname);
 
         DEBUG "[DEBUG] RRD name / filename: $rrdname / $filename\n";
@@ -1131,10 +1139,16 @@ sub process_service {
                 . "\\r");
 
         if (time - 300 < $lastupdate) {
-            push @complete, "--end",
-                (int($lastupdate / $resolutions{$time})) * $resolutions{$time};
+	    if (@added) { # stop one period earlier if it's a .sum or .stack
+		push @complete, "--end",
+		    (int(($lastupdate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
+	    } else {
+		push @complete, "--end",
+		    (int($lastupdate / $resolutions{$time})) * $resolutions{$time};
+	    }
         }
-        TRACE "\n\nrrdtool \"graph\" \"" . join("\"\n\t\"", @complete) . "\"\n";
+
+	DEBUG "\n\nrrdtool 'graph' '" . join("'\n\t'", @complete) . "'\n";
 
         # Make sure directory exists
         munin_mkdir_p($picdirname, oct(777));
@@ -1161,10 +1175,15 @@ sub process_service {
             # the rrd file.  This makes http's If-Modified-Since more
             # reliable, esp. in combination with munin-*cgi-graph.
 
-            utime $lastupdate, $lastupdate,
-                munin_get_picture_filename($service, $time);
-            if ($list_images) {
+	    # Since this disrupts rrd's --lazy option we're disableing
+	    # it until we can do it in a less distructive way, we need
+	    # to do it only on files that were updated _just_ now.
+	    # Should probably also only be done in cgi mode.
 
+            # utime $lastupdate, $lastupdate,
+	    # munin_get_picture_filename($service, $time);
+
+            if ($list_images) {
                 # Command-line option to list images created
                 print munin_get_picture_filename ($service, $time), "\n";
             }
@@ -1180,9 +1199,13 @@ sub process_service {
             push @rrd_sum, @{get_header($service, $time, 1)};
 
             if (time - 300 < $lastupdate) {
-                push @rrd_sum, "--end",
-                    (int($lastupdate / $resolutions{$time}))
-                    * $resolutions{$time};
+		if (@added) { # stop 5 minutes earlier if it's a .sum or .stack
+		    push @rrd_sum, "--end",
+			(int(($lastupdate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
+		} else {
+		    push @rrd_sum, "--end",
+			(int($lastupdate / $resolutions{$time})) * $resolutions{$time};
+		}
             }
             push @rrd_sum, @rrd;
             push(@rrd_sum,
@@ -1263,8 +1286,7 @@ sub process_service {
                 unshift @rrd_sum, "--vertical-label", $label;
             }
 
-            DEBUG "\n\nrrdtool \"graph\" \""
-                . join("\"\n\t\"", @rrd_sum) . "\"\n";
+	    DEBUG "\n\nrrdtool 'graph' '" . join("'\n\t'", @rrd_sum) . "'\n";
 
             # Make sure directory exists
             munin_mkdir_p($picdirname, oct(777));
@@ -1277,12 +1299,11 @@ sub process_service {
                     . ": $ERROR";
             }
             elsif ($list_images) {
-
                 # Command-line option to list images created
                 print munin_get_picture_filename ($service, $time, 1), "\n";
             }
-        }
-    }
+        } # foreach (keys %sumtimes)
+    } # if graph_sums
 
     $service_time = sprintf("%.2f", (Time::HiRes::time - $service_time));
     INFO "Graphed service : $sname ($service_time sec * 4)";

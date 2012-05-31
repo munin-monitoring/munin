@@ -22,12 +22,11 @@ CLASSFILES       := $(shell find plugins/javalib/ -name '*.java' | sed 's/\(.*\)
 PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/*)
 MANCENTER        := "Munin Documentation"
 MAN8		 := master/_bin/munin-graph master/_bin/munin-update \
-			master/_bin/munin-limits master/_bin/munin-html \
-			master/_bin/munin-gather
+			master/_bin/munin-limits master/_bin/munin-html
 PODMAN8          := master/doc/munin-cron master/doc/munin master/doc/munin-check
 PODMAN5          := master/doc/munin.conf node/doc/munin-node.conf
 
-.PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-munindoc install-doc install-man \
+.PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
         build build-common-prime build-common-pre build-doc \
         source_dist \
         test clean \
@@ -59,9 +58,9 @@ tags:
 ######################################################################
 
 ifeq ($(JCVALID),yes)
-install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-plugins-java install-man install-munindoc
+install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-plugins-java install-man
 else
-install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-man install-munindoc
+install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-man
 endif
 
 install-pre: Makefile Makefile.config
@@ -73,6 +72,7 @@ install-pre: Makefile Makefile.config
 
 install-master-prime: $(INFILES_MASTER) install-pre install-master
 	mkdir -p $(CONFDIR)/templates
+	mkdir -p $(CONFDIR)/templates/partial
 	mkdir -p $(LIBDIR)
 	mkdir -p $(BINDIR)
 	mkdir -p $(PERLLIB)
@@ -86,6 +86,11 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	for p in master/www/*.tmpl master/www/*.png master/www/*.css resources/favicon.ico; do \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
 	done
+
+	for p in master/www/partial/*.tmpl; do \
+		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/partial/ ; \
+	done
+
 	$(INSTALL) -m 0644 master/www/definitions.html $(CONFDIR)/templates/
 	$(INSTALL) -m 0755 master/VeraMono.ttf $(LIBDIR)/
 
@@ -167,11 +172,6 @@ install-doc: build-doc
 	$(INSTALL) -m 0644 README $(DOCDIR)/
 	$(INSTALL) -m 0644 COPYING $(DOCDIR)/
 	$(INSTALL) -m 0644 build/resources/* $(DOCDIR)/resources
-
-install-munindoc: build
-	mkdir -p $(BINDIR)
-	$(INSTALL) -m 0755 build/node/bin/munindoc $(BINDIR)/
-
 
 ######################################################################
 

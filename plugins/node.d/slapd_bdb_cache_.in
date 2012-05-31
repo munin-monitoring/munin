@@ -1,5 +1,6 @@
 #!@@PERL@@ -w
-
+# -*- perl -*-
+#
 # Plugin copyright Bjorn Ruberg <bjorn@ruberg.no> 2005-2009
 # 
 # Licensed under GPLv2. Be nice.
@@ -42,18 +43,15 @@
 #%# family=auto
 #%# capabilities=autoconf suggest
 
-
 use strict;
 use vars qw ( $measure $config $dbdir $dbstat $warning);
 my $arg = shift (@ARGV);
 
 # Finding db_stat should be done here
 $dbstat = ($ENV{'dbstat'} || "/usr/bin/db4.6_stat");
-die ("Can't execute db_stat file '$dbstat'") unless -x $dbstat;
 
 # Also the LDAP database files
 $dbdir = ($ENV{'dbdir'} || "/var/lib/ldap");
-die ("Can't open database directory '$dbdir'") unless (-d $dbdir && -r $dbdir);
 
 # And the graph title
 my $title = ($ENV{'title'} || '');
@@ -76,7 +74,13 @@ if ($0 =~ /_pages$/) {
 if ($arg && $arg eq "config") {
     $config = 1;
 } elsif ($arg && $arg eq "autoconf") {
-    print "yes\n";
+    if (! -x $dbstat) {
+	print "no (Can't execute db_stat file '$dbstat')\n";
+    } elsif (-d $dbdir && -r $dbdir) {
+	print "no (Can't open database directory '$dbdir')";
+    } else {
+	print "yes\n";
+    }
     exit 0;
 } elsif ($arg && $arg eq "suggest") {
     print "pages\n";

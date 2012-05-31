@@ -1,13 +1,110 @@
 -*- text -*-
 
-munin (1.4.0-alpha, r1560:2898, 2009-11-06)
-
-Some stats:
-* Over 1330 changesets
+Some stats on 1.4.0:
+* Over 1430 changesets
 * More than 100 new plugins
-* commits from 13 different people
+* Commits from 13 different people (**FIXME** Check again at release)
 * Way too much time since the last major stable release
 
+
+munin (1.4.0-alpha2, r2899:2981, 2009-11-13)
+
+* set obsoleted tomcat_* plugins to family=manual
+* smart_ - fix autoconf yes and suggest empty
+* openvpn and misc ntp_* plugins: fix some nonzero autoconfs
+* mysql_: fix autoconf for missing Cache::Cache
+* zimbra_: fix autoconf when missing perl modules
+* Fix brokem munin-cgi-graph, which was : missing : --list-images param
+  for munin-graph, a missing chomp($file), and a wrong path to the
+  generated png. Also fix HTMLOld passing an array ref instead of an array
+* a bit more debug output for the node server -- note which node each
+  plugin is associated with, and whether it requires multigraph.
+* report when plugins are being ignored due to errors when they were
+  being configured.  not very detailed, but better than nothing.  also
+  delete them from the list of plugins, so they're not included in the list.
+* Munin-node:  fix logic in _suggested_links():
+  + never return any suggested links when the plugin shouldn't be installed.
+  + correctly handle SNMP plugins whose only wildcard parameter is the host.
+    (thanks to janl for spotting this was broken.)
+* Add proof of concept snort plugins
+* snmp__if_multi: Update to acutuall implementation of multigraph and some
+  further testing and corrections
+* INSTALL: Update w.r.t. support for SNMP v3
+* munin.conf: Correct "includedir" example
+* postfix_mailqueue: Fix autoconf for the negative case, pretty sure it
+  still works for the positive case O:-)
+* Fix various autoconf problems with slapd and ifx plugins
+* mysql_* plugins: Now obsoleted by new mysql_ plugin.  Set family=manual
+* Asterisk_* plugins: None of these support autoconf so remove magicmarker
+* HTML: Border on graphs in critical and warning state for nodeview.
+  Comparison views (hopefully) to follow
+* M::M::Utils: End the pod section with =cut, so that the last line, 
+  # vim: syntax=perl ts=8 wont slip into the man page
+* M::M::ProcessManager: documentation typo fix
+* bind9_rndc: reinstate @@PERL@@ substitution marker, which broke in r2958
+* Get the BIND logfile's size before rndc is run, rather than taking a
+  guess at where it might have been.  Fix for #746, thanks to guillomovitch
+  for the patch.
+* Clean up a typo, add use strict, use warnings to all 3 apache_* plugins,
+  add an info explanation for apache_accesses
+* HTML: munin-serviceview: add column header on 6th column in legend table
+* M::M::HTMLOld: removes underscore from top navigation element describing
+  the plugin name for the service page emission. you know for the visual
+  touch
+* HTML: added variable to set the text for the dropdown for each of the
+  template emitting functions.
+* Refactoring templates into partials (with include) to avod a lot of
+  duplication. There is some left. Better look on the legend table for
+  service-biew and dropdown with 'other' links with config
+  value. Default is 1 at the moment. Makefile adds install steps for
+  new partial folder
+* M::M::UpdateWorker: Typo--;
+* linux/df_inode: vfat doesn't have any inodes either.
+* More documentation of plugins
+* Graphs: Fix cur: values for .stack and .sum.
+* Graphs: ADDNAN in expand_specials cdefs
+* Remove .label requirement on .stack fields.
+* Changed munin_stats to check for
+  $Munin::Common::Defaults::MUNIN_LIBDIR/munin-update existance +
+  executable in order to autoconf it as previously it checked for the
+  existance of the munin master logs, which did not exist in a clean
+  installation. Also added a check + extinfo message in case any of the
+  log files are not readable
+* Fix copying of subhashes (#%#parent was broken in old version).  Fixed
+  various issues in a couple of programs.
+* M::M::ProcessManager: clarify what the numbers at the end of the log
+  message mean.
+* M::P::SNMP: for some reason, Net::SNMP doesn't consider 'No Such
+  Object' to be a real error.  Handle better in get_single.
+* linux/ip_: Use env.hostname to replace ip-number in graph_title.
+* pm3users_ : we can do colour now
+* ipmi_sensor_ - fix autoconf for missing ipmitool
+* M::M::Config: Handle continued lines (ending in \)
+* M::M::GraphOld: Comment out utime call that interferes with rrd's
+  --lazy option
+* M::M::Node: A missing .label isn't as fatal as all that.  Insert a
+  value and supply .extinfo to explain more
+* Make the linux/diskstat_ plugin work better w/o root access,
+  document a bit better
+* Remove obsolete nagios specific munin-limits commands from crontabs all over.
+* M::M::Update: Load datafile relative to the configured dbdir, not
+  the default dbdir
+* squeezebox_: Various enhancements
+* M::M::Node: More specific location of the missing label from the config output
+* M::M::LimitsOld: Forgot to actually make this into a exporter
+  module.  Thanks to Kevin Fenzi for pointing this out
+* mysql_ plugin: Update vlabels for concistency
+* Give the BIND plugins a graph_category as pointed out in email by Rado Rovny
+* Update mysql_ plugin from upstream
+* Get rid of munindoc.in from the installation (closes #742)
+* INSTALL: More modules, and a section on using CPAN-shell
+* Implement dropdown boxes for peers when there are more than
+  "dropdownlimit" number of peers. Implemented for all views except
+  overview, which is a special kind of, ehm, view. Also removes
+  underscores from names for graph peers to clean them up a bit
+
+
+munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 
 * squeezebox_: Changes to support several players
 * smart_: Exit 0 on autoconf as the doctor ordered

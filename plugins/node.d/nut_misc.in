@@ -1,13 +1,37 @@
 #!@@PERL@@
 # -*- perl -*-
-#
-# Plugin to monitor UPS via the upsc command
-#
-# Parameters:
-#
-#   env.upsname <name@host> (default: "bertha@127.0.0.1")
-#   env.upsc    <command>   (default: "upsc")
-#
+
+=head1 NAME
+
+nut_misc - Plugin to monitor UPS via the upsc command
+
+=head1 CONFIGURATION
+
+The following configuration parameters are used by this plugin
+
+ [nut_misc]
+  env.upsname - <name@host>
+  env.upsc    - <command>
+
+=head2 DEFAULT CONFIGURATION
+
+ [nut_misc]
+  env.upsname bertha@127.0.0.1
+  env.upsc    upsc
+
+=head1 AUTHORS
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+
+=cut
 
 use strict;
 

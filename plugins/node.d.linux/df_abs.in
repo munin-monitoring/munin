@@ -1,28 +1,51 @@
 #!@@BASH@@
 # -*- sh -*-
-#
-# $Id$
-#
-# Script to monitor absolute disk usage.
-#
-# Parameters understood:
-#
-# 	config   (required)
-# 	autoconf (optional - used by munin-config)
-#
-# Environment
-#       exclude: space separated list if fs types to exclude.
-#                iso9660 by default
-#       warning: Warning _percentage_, default 92
-#       critical: Critical _percentage_, default 98
-#
-# Magic markers (optional - used by munin-config and installation
-# scripts):
-#
-# $Id$
-#
-#%# family=manual
-#%# capabilities=autoconf
+
+: <<EOF
+
+=head1 NAME
+
+df_abs - Plugin to monitor absolute disk usage
+
+=head1 CONFIGURATION
+
+The following configuration parameters are used by this plugin
+
+ [df_abs]
+  env.exclude  - space separated list of file system types to exclude
+  env.warning  - Warning percentage
+  env.critical - Critical percentage
+
+=head2 DEFAULT CONFIGURATION
+
+ [df_abs]
+  env.exclude  iso9660
+  env.warning  92
+  env.critical 98
+
+=head1 AUTHORS
+
+Unknown author
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 BUGS
+
+Does not handle cases where the block special device is the same for
+multiple mounts.  On Ubuntu systems, this is commonly "none" for
+non-disk file systems like fusectl, debugfs, securityfs, devpts,
+tmpfs, etc...
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=autoconf
+
+=cut
+
+EOF
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 

@@ -31,7 +31,7 @@ my @legal = ("tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
 	"graph_data_size", "colour", "graph_printf", "ok", "unknown",
 	"palette", "realservname", "cdef_name", "graphable", "process",
 	"realname", "onlynullcdef", "group_order", "pipe", "pipe_command",
-	"unknown_limit", "notify_countdown",
+	"unknown_limit", "notify_countdown", "dropdownlimit",
     );
 
 my %legal_expanded = map { $_ => 1 } @legal;

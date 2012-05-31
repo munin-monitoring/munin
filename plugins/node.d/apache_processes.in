@@ -80,6 +80,8 @@ GPLv2
 
 =cut
 
+use strict;
+use warnings;
 use Munin::Plugin;
 
 my $ret = undef;
@@ -179,7 +181,7 @@ foreach my $port (@PORTS)
 	    print "idle$port.value U\n";
     }
     if ($response->content =~ /^(Scoreboard: .*)$/m) {
-	    $count = () = $1 =~ /\./g;
+	    my $count = () = $1 =~ /\./g;
 	    print "free$port.value $count\n";
     } else {
 	    print "free$port.value U\n";

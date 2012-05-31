@@ -1,0 +1,21 @@
+<table id="header-table">
+  <tr>
+    <td rowspan="2"><div class="logo">&nbsp;</div></td>
+    <td valign="top">
+    <h2><TMPL_INCLUDE NAME="path.tmpl">
+      :: [ <TMPL_LOOP NAME="COMPLINKS">
+      <TMPL_IF NAME="LINK">
+        <a href="<TMPL_VAR NAME="LINK">"><TMPL_VAR NAME="NAME"></a>
+        <TMPL_ELSE>
+          <TMPL_VAR NAME="NAME">
+        </TMPL_IF>
+      </TMPL_LOOP> ]
+    </h2>
+    </td>    
+  </tr>
+  <tr>
+    <td valign="top">
+      <h2><TMPL_VAR ESCAPE="HTML" NAME="NAME"> :: [ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="#<TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME">"><TMPL_VAR ESCAPE="HTML" NAME="GROUPNAME"></a> </TMPL_LOOP>]</h2>
+    </td>
+  </tr>
+</table>

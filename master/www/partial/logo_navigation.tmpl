@@ -1,0 +1,18 @@
+<table id="header-table">
+<TMPL_INCLUDE NAME="logo_path.tmpl">
+<!--            Second header line containing host name and a list of categories of the graphs -->
+  <TMPL_IF NAME="NCATEGORIES">
+   <tr>
+    <td valign="top">
+      <h2><TMPL_VAR NAME="NAME"><TMPL_IF NAME="NCATEGORIES"> :: [ <TMPL_LOOP NAME="CATEGORIES"><a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF> <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="#<TMPL_VAR ESCAPE="HTML" NAME="NAME">"><TMPL_VAR ESCAPE="HTML" NAME="NAME"></a> </TMPL_LOOP>]</TMPL_IF></h2>
+    </td>
+  </tr>
+  </TMPL_IF>
+  <TMPL_IF NAME="COMPARE">    
+  <tr>
+    <td valign="top">
+      <h2><TMPL_VAR ESCAPE="HTML" NAME="NAME"> :: [ <a href="comparison-day.html">day</a> <a href="comparison-week.html">week</a> <a href="comparison-month.html">month</a> <a href="comparison-year.html">year</a> ]</h2>
+    </td>
+  </tr>
+  </TMPL_IF>
+</table>

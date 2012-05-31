@@ -24,7 +24,7 @@ Unknown license
 
 =head1 MAGIC MARKERS
 
- #%# family=auto
+ #%# family=manual
  #%# capabilities=autoconf
 
 =cut
@@ -55,6 +55,8 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000 -l 0'
 	echo 'graph_vlabel slow queries / ${graph_period}'
 	echo 'graph_category mysql'
+	echo 'graph_info Note that this is a old plugin which is no longer installed by default.  It is retained for compatability with old installations.'
+
 	echo 'queries.label slow queries'
 	echo 'queries.type DERIVE'
 	echo 'queries.min 0'

@@ -96,52 +96,6 @@ sub gen_plugin
 }
 
 
-### _set_complement
-### _set_intersection
-{
-    my @tests = (
-        [
-            [ [qw/a b c/], [qw/a b c/] ], [ [], [qw/a b c/] ],
-            'Equal sets',
-        ],
-        [
-            [ [qw/a b c/], [qw/d e f/] ], [ [qw/a b c/], [] ],
-            'Disjoint sets',
-        ],
-        [
-            [ [qw/a b c/], [qw/c d e/] ], [ [qw/a b/], [qw/c/] ],
-            'Intersecting sets',
-        ],
-        [
-            [ [], [qw/a b c/] ], [ [], [] ],
-            'First set is empty',
-        ],
-        [
-            [ [qw/a b c/], [] ], [ [qw/a b c/], [] ],
-            'Second set is empty',
-        ],
-        [
-            [ [], [] ], [ [], [] ],
-            'Both sets are empty',
-        ],
-    );
-
-    foreach (@tests) {
-        my ($sets, $expected, $msg) = @$_;
-        is_deeply(
-            [ Munin::Node::Configure::Plugin::_set_difference(@$sets) ],
-            $expected->[0],
-            "$msg - complement"
-        );
-        is_deeply(
-            [ Munin::Node::Configure::Plugin::_set_intersection(@$sets) ],
-            $expected->[1],
-            "$msg - intersection"
-        );
-    }
-}
-
-
 ### _remove
 ### _add
 ### _same
@@ -266,6 +220,7 @@ sub gen_plugin
     is_deeply($p->_suggested_links, [], 'no suggestions by default');
     is_deeply($p->_suggested_wild , [], 'no suggested wildcards by default');
 
+    $p->{default} = 'yes';  # it's ok to run it now
     $p->add_instance('memory');
     is_deeply($p->_installed_links, ['memory'], 'one link installed');
     is_deeply($p->_installed_wild , [],         'no wildcards reported');
@@ -278,6 +233,7 @@ sub gen_plugin
     is_deeply($wcp->_suggested_links, [], 'no suggestions by default');
     is_deeply($wcp->_suggested_wild , [], 'no suggested wildcards by default');
 
+    $wcp->{default} = 'yes';  # it's ok to run it now
     $wcp->add_instance('if_eth0');
     is_deeply($wcp->_installed_links, ['if_eth0'], 'one link installed');
     is_deeply($wcp->_installed_wild , ['eth0'],    'one wildcard');
@@ -292,7 +248,8 @@ sub gen_plugin
 }
 {    
     my $sp = gen_plugin('snmp__load');
-    
+
+    $sp->{default} = 'yes';  # it's ok to run it now
     $sp->add_instance('snmp_switch.example.com_load');
     is_deeply($sp->_installed_links, ['snmp_switch.example.com_load'], 'one link installed');
     is_deeply($sp->_installed_wild , ['switch.example.com'],           'one wildcard');
@@ -309,6 +266,7 @@ sub gen_plugin
 {
     my $swcp = gen_plugin('snmp__if_');
 
+    $swcp->{default} = 'yes';  # it's ok to run it now
     $swcp->add_instance('snmp_switch.example.com_if_1');
     is_deeply($swcp->_installed_links, ['snmp_switch.example.com_if_1'], 'one link installed');
     is_deeply($swcp->_installed_wild , ['switch.example.com/1'],         'one wildcard');

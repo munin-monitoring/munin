@@ -232,7 +232,13 @@ sub munin_overwrite {
         next if $key =~ /^#%#/;
 	if (ref $overwrite->{$key}) {
 	    if (!defined $configfile->{$key}) {
-		$configfile->{$key} = $overwrite->{$key};
+		if (ref $overwrite->{$key} eq "HASH") {
+		    $configfile->{$key}->{'#%#parent'} = $configfile;
+		    $configfile->{$key}->{'#%#name'}   = $key;
+		    munin_overwrite($configfile->{$key},$overwrite->{$key});
+		} else {
+		    $configfile->{$key} = $overwrite->{$key};
+		}
 	    } else {
 		munin_overwrite($configfile->{$key},$overwrite->{$key});
 	    }
@@ -262,14 +268,15 @@ sub munin_readconfig {
     }
 
     # Some important defaults before we return...
-    $config->{'rundir'}   ||= $Munin::Common::Defaults::MUNIN_STATEDIR;
-    $config->{'dbdir'}    ||= $Munin::Common::Defaults::MUNIN_DBDIR;
-    $config->{'logdir'}   ||= $Munin::Common::Defaults::MUNIN_LOGDIR;
-    $config->{'tmpldir'}  ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/";
-    $config->{'htmldir'}  ||= $Munin::Common::Defaults::MUNIN_HTMLDIR;
-    $config->{'spooldir'} ||= $Munin::Common::Defaults::MUNIN_SSPOOLDIR;
-    $config->{'#%#parent'}  = undef;
-    $config->{'#%#name'}    = "root";
+    $config->{'dropdownlimit'} ||= $Munin::Common::Defaults::DROPDOWNLIMIT;
+    $config->{'rundir'}        ||= $Munin::Common::Defaults::MUNIN_STATEDIR;
+    $config->{'dbdir'}         ||= $Munin::Common::Defaults::MUNIN_DBDIR;
+    $config->{'logdir'}        ||= $Munin::Common::Defaults::MUNIN_LOGDIR;
+    $config->{'tmpldir'}       ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/";
+    $config->{'htmldir'}       ||= $Munin::Common::Defaults::MUNIN_HTMLDIR;
+    $config->{'spooldir'}      ||= $Munin::Common::Defaults::MUNIN_SSPOOLDIR;
+    $config->{'#%#parent'}     = undef;
+    $config->{'#%#name'}       = "root";
 
     return ($config);
 }
@@ -390,6 +397,12 @@ sub munin_get_var_path
 
  
 sub munin_find_field {
+    # Starting at the (presumably the root) $hash make recursive calls
+    # until for example graph_title or value is found, and then
+    # continue recursing and itterating to all are found.
+    #
+    # Then we return a array of pointers into the $hash
+
     my $hash  = shift;
     my $field = shift;
     my $avoid = shift;
@@ -550,19 +563,20 @@ sub munin_get_parent {
 }
 
 
-sub munin_get_node
-{
+sub munin_get_node {
+    # From the given point in the hash itterate deeper into the
+    # has along the path given by the array in $loc.
+    # 
+    # If any part of the path in $loc is undefined we bail.
     my $hash = shift;
     my $loc  = shift;
 
     foreach my $tmpvar (@$loc) {
 	if ($tmpvar !~ /\S/) {
 	    ERROR "[ERROR] munin_get_node: Cannot work on hash node \"$tmpvar\"";
-	    return;
+	    return undef;
 	}
-	# This used to be "return undef" which seems a bit hash and also has
-	# been reported to be harmful. - janl
-	next if !exists $hash->{$tmpvar};
+	return undef if !exists $hash->{$tmpvar};
 	$hash = $hash->{$tmpvar};
     }
     return $hash;
@@ -1248,6 +1262,11 @@ sub munin_get_field_order
         my $fieldname = munin_get_node_name ($fieldnode);
 	push @$result,$fieldname if !grep /^\Q$fieldname\E(?:=|$)/, @$result;;
     }
+
+    for my $fieldnode (@{munin_find_field ($hash, "stack")}) {
+        my $fieldname = munin_get_node_name ($fieldnode);
+	push @$result,$fieldname if !grep /^\Q$fieldname\E(?:=|$)/, @$result;;
+    }
     
     return $result;
 }
@@ -1264,7 +1283,9 @@ sub munin_get_rrd_filename {
     return if !defined $field or ref ($field) ne "HASH";
 
     # If the field has a .filename setting, use it
-    return $result if $result = munin_get ($field, "filename");
+    if ($result = munin_get ($field, "filename")) {
+	return $result;
+    }
 
     # Handle custom paths (used in .sum, .stack, graph_order, et al)
     if (defined $path and length $path) {
@@ -1880,5 +1901,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+=cut
 
 # vim: syntax=perl ts=8

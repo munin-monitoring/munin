@@ -1,39 +1,43 @@
 #!@@PERL@@ -w
 # -*- perl
-#
-# Graphs busy channels on L(ivingston|ucent) Portmaster 3 Network Access
-# Servers (maybe PM2 and PM4, too. Dunno 'bout that)...
-#
-# Usage: Copy or link into /etc/munin/plugins/
-#
-# Magic Name:
-#
-# 	pm3users_<hostname>
-# 	pm3users_<ip address>
-#
-# Requirements:
-# 
-# 	Perl Net::SNMP
-#
-# Parameters supported:
-# 
-# 	config (required)
-#
-# Configurable variables:
-# 
-# 	host		- Host name or IP address to poll (default: undefined)
-# 	port		- Port number (default: 161)
-#  	community	- SNMP read community to use (default: public)
-#  	maxpstn		- Number of analog modems onboard the PM3 (default: 20)
-#  	maxisdn		- Number of ISDN channels available (default: 30 == a full E1 line)
-#
-# Bugs:
-# 
-# 	None known (I'll regret saying that, I know)
-#
-# Magic markers:
-#%# family=contrib
-#%# capabilities=
+=pod
+
+=head1 NAME
+
+pm3users_ - SNMP wildcard plugin to monitor busy channels on L(ivingston|ucent) Portmaster Network Access Servers
+
+=head1 APPLICABLE SYSTEMS
+
+L(ivingston|ucent) Portmaster 3 (maybe PM2 and PM4, too. Dunno 'bout that)...
+
+=head1 CONFIGURATION
+
+Link into plugin dir with name pm3users_<hostname> or pm3users_<ip address>
+
+ [pm3users_somewherehost]
+  env.host       - Host name or IP address to poll (default: guessed from symlink, i.e. somewherehost)
+  env.port       - Port number (default: 161)
+  env.community  - SNMP read community to use (default: public)
+  env.maxpstn    - Number of analog modems onboard the PM3 (default: 20)
+  env.maxisdn    - Number of ISDN channels available (default: 30 == a full E1 line)
+
+=head1 BUGS
+
+Should be rewritten as a snmp__pm3users plugin using the Plugin::SNMP module.
+
+=head1 AUTHOR
+
+(C) 2004, Jacques Caruso
+
+=head1 LICENSE
+
+Unknown license
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+
+=cut
 
 use Net::SNMP;
 use strict;
@@ -74,19 +78,19 @@ if ($cmd eq 'config') {
 	print("pstn.max $maxpstn\n");
 	print("pstn.type GAUGE\n");
 	print("pstn.draw AREA\n");
+	print("pstn.colour 50f0ff\n");
 	print("isdn.label ISDN\n");
 	print("isdn.max $maxisdn\n");
 	print("isdn.type GAUGE\n");
 	print("isdn.draw STACK\n");
+	print("isdn.colour 9598dd\n");
 	print("total.label Total\n");
 	print("total.max $maxtotal\n");
 	print("total.type GAUGE\n");
 	print("total.draw LINE1\n");
+	print("total.colour 000000\n");
 
 # These options are unsupported in the current version:
-#	print("pstn.colour 50f0ff\n");
-#	print("isdn.colour 9598dd\n");
-#	print("total.colour 000000\n");
 #	print("hrules $maxpstn:ff8800:Max PSTN users,$maxisdn:ff0000:Max ISDN users\n");
 
 	exit(0);

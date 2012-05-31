@@ -9,7 +9,7 @@ mysql_ - Munin plugin to display misc MySQL server status
 
 =head1 APPLICABLE SYSTEMS
 
-Any MySQL platform, tested on MySQL 5.1.29 and 5.0.51
+Any MySQL platform, tested by the author on MySQL 5.1.29 and 5.0.51
 
 =head1 CONFIGURATION
 
@@ -34,6 +34,7 @@ Non-default example:
     env.mysqlconnection DBI:mysql:mysql;host=127.0.0.1;port=3306
     env.mysqluser root
     env.mysqlpassword geheim
+
 
 =head1 DEPENDENCIES
 
@@ -144,9 +145,12 @@ my %cache_options = (
     'default_expires_in' => 60,
 );
 
-my $shared_memory_cache = Cache::SharedMemoryCache->new(\%cache_options)
+my $shared_memory_cache ;
+if ($has_cache)
+{
+  $shared_memory_cache = Cache::SharedMemoryCache->new(\%cache_options)
     or die("Couldn't instantiate SharedMemoryCache");
-
+}
 
 #---------------------------------------------------------------------
 #  G R A P H   D E F I N I T I O N S
@@ -192,7 +196,7 @@ $graphs{bin_relay_log} = {
     config => {
 	global_attrs => {
 	    title  => 'Binary/Relay Logs',
-	    vlabel => 'FIX',
+	    vlabel => 'Log activity',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE1',
@@ -212,7 +216,7 @@ $graphs{commands} = {
     config => {
 	global_attrs => {
 	    title  => 'Command Counters',
-	    vlabel => 'commands / ${graph_period}',
+	    vlabel => 'Commands per ${graph_period}',
 	    total  => 'Questions',
 	},
 	data_source_attrs => {},
@@ -236,7 +240,7 @@ $graphs{connections} = {
     config => {
 	global_attrs => {
 	    title  => 'Connections',
-	    vlabel => 'connections / ${graph_period}',
+	    vlabel => 'Connections per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE1',
@@ -265,7 +269,7 @@ $graphs{files_tables} = {
     config => {
 	global_attrs => {
 	    title  => 'Files and tables',
-	    vlabel => 'tables',
+	    vlabel => 'Tables',
 	},
 	data_source_attrs => {
 	    type  => 'GAUGE',
@@ -289,7 +293,7 @@ $graphs{innodb_bpool} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Buffer Pool',
-	    vlabel => 'pages',
+	    vlabel => 'Pages',
 	    base   => '1024',
 	},
 	data_source_attrs => {
@@ -315,7 +319,7 @@ $graphs{innodb_bpool_act} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Buffer Pool Activity',
-	    vlabel => 'actions / ${graph_period}',
+	    vlabel => 'Activity per ${graph_period}',
 	    total  => 'Total',
 	},
 	data_source_attrs => {
@@ -335,7 +339,7 @@ $graphs{innodb_insert_buf} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Insert Buffer',
-	    vlabel => 'FIX',
+	    vlabel => 'Activity per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw => 'LINE1',
@@ -354,7 +358,7 @@ $graphs{innodb_io} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB IO',
-	    vlabel => 'FIX',
+	    vlabel => 'IO operations per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw => 'LINE1',
@@ -374,7 +378,7 @@ $graphs{innodb_io_pend} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB IO Pending',
-	    vlabel => 'FIX',
+	    vlabel => 'Pending operations',
 	},
 	data_source_attrs => {
 	    draw => 'LINE1',
@@ -397,7 +401,7 @@ $graphs{innodb_log} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Log',
-	    vlabel => 'FIX',
+	    vlabel => 'Log activity per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw => 'LINE1',
@@ -419,7 +423,7 @@ $graphs{innodb_rows} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Row Operations',
-	    vlabel => 'operations / ${graph_period}',
+	    vlabel => 'Operations per ${graph_period}',
 	    total  => 'Total',
 	},
 	data_source_attrs => {},
@@ -438,7 +442,7 @@ $graphs{innodb_semaphores} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Semaphores',
-	    vlabel => 'FIX',
+	    vlabel => 'Semaphores per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE1',
@@ -457,7 +461,7 @@ $graphs{innodb_tnx} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Transactions',
-	    vlabel => 'FIX',
+	    vlabel => 'Transactions per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE1',
@@ -495,7 +499,7 @@ $graphs{network_traffic} = {
 	global_attrs => {
 	    title  => 'Network Traffic',
 	    args   => '--base 1024',
-	    vlabel => 'bytes received (-) / sent (+) per ${graph_period}',
+	    vlabel => 'Bytes received (-) / sent (+) per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE2',
@@ -515,7 +519,7 @@ $graphs{qcache} = {
     config => {
 	global_attrs => {
 	    title  => 'Query Cache',
-	    vlabel => 'commands / second',
+	    vlabel => 'Commands per ${graph_period}',
 	},
 	data_source_attrs => {
 	     draw => 'LINE1',
@@ -536,7 +540,7 @@ $graphs{qcache_mem} = {
     config => {
 	global_attrs => {
 	    title  => 'Query Cache Memory',
-	    vlabel => 'bytes',
+	    vlabel => 'Bytes',
 	    args   => '--base 1024 --lower-limit 0',
 	},
 	data_source_attrs => {
@@ -556,7 +560,7 @@ $graphs{replication} = {
     config => {
 	global_attrs => {
 	    title  => 'Replication',
-	    vlabel => 'FIX',
+	    vlabel => 'Activity',
 	},
 	data_source_attrs => {
 	    draw => 'LINE1',
@@ -582,7 +586,7 @@ $graphs{select_types} = {
     config => {
 	global_attrs => {
 	    title  => 'Select types',
-	    vlabel => 'commands / ${graph_period}',
+	    vlabel => 'Commands per ${graph_period}',
 	    total  => 'Total',
 	},
 	data_source_attrs => {},
@@ -602,7 +606,7 @@ $graphs{slow} = {
     config => {
 	global_attrs => {
 	    title  => 'Slow Queries',
-	    vlabel => 'slow queries / ${graph_period}',
+	    vlabel => 'Slow queries per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE2',
@@ -619,7 +623,7 @@ $graphs{sorts} = {
     config => {
 	global_attrs => {
 	    title  => 'Sorts',
-	    vlabel => 'sorts / ${graph_period}',
+	    vlabel => 'Sorts / ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE2',
@@ -639,7 +643,7 @@ $graphs{table_locks} = {
     config => {
 	global_attrs => {
 	    title  => 'Table locks',
-	    vlabel => 'locks / ${graph_period}',
+	    vlabel => 'locks per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE2',
@@ -657,7 +661,7 @@ $graphs{tmp_tables} = {
     config => {
 	global_attrs => {
 	    title  => 'Temporary objects',
-	    vlabel => 'objects / ${graph_period}',
+	    vlabel => 'Objects per ${graph_period}',
 	},
 	data_source_attrs => {
 	    draw  => 'LINE2',
@@ -753,7 +757,7 @@ sub suggest {
     #   SHOW SLAVE STATUS
 
     local $_;
-    print "$_\n" for (sort keys(%graphs));
+    print "mysql_$_\n" for (sort keys(%graphs));
 
     return 0;
 }
@@ -1263,14 +1267,17 @@ sub parse_buffer_pool_and_memory {
 
 
 sub handle_incomplete_innodb_status {
-    warn "Output from SHOW ENGINE INNDOB STATUS was truncated";
-    # FIX more user friendly warning
 
-    # Is it possible to find some of the missing values from SHOW
+    warn "Output from SHOW ENGINE INNDOB STATUS was truncated. "
+	. "This happens if the output of SEIS exceeds 64KB. "
+	. "Several of the InnoDB graphs might be affected by this.";
+
+    # FIX Is it possible to find some of the missing values from SHOW
     # STATUS?
 }
 
 
 exit main() unless caller;
+
 
 1;

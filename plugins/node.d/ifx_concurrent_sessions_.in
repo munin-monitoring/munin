@@ -1,8 +1,6 @@
-#!@@PERL@@ -Tw
+#!@@PERL@@ -w
 # -*- perl -*-
 #
-#%# family=contrib
-#%# capabilities=autoconf suggest
 
 =head1 NAME
 
@@ -42,6 +40,9 @@ the $INFORMIXDIR/etc/onconfig file.
 
 =head1 BUGS
 
+This plugin hangs during autoconf - at least on systems without
+informix.  Therefore capabilities magic marker has been removed.
+
 May not autoconfigure correctly as noted above.
 
 =head1 AUTHOR
@@ -51,6 +52,10 @@ Contributed by <ralph dot grothe at itdz minus berlin dot de>
 =head1 LICENSE
 
 GPLv2
+
+=head1 MAGIC MARKERS
+
+  #%# family=manual
 
 =cut
 
@@ -92,7 +97,7 @@ if (@ARGV && $ARGV[0] =~ /autoconf|suggest/) {
     if ($ARGV[0] eq 'autoconf') {
 	if (@infdir) {
 	    print "yes\n";
-	    exit;
+	    exit 0;
 	}
 	else {
 	    print "no (Could not find oninit on this host)\n";
@@ -123,7 +128,7 @@ if (@ARGV && $ARGV[0] =~ /autoconf|suggest/) {
 	    print "$dir.$1\n" if $infsrv =~ /DBSERVERNAME\s+(\S+)/;
 	}
     }
-    exit;
+    exit 0;
 }
 
 # Retreive vital Informix environment from plugin's name
@@ -143,7 +148,7 @@ if (@ARGV && $ARGV[0] =~ /config/i) {
 	};
 	$config =~ s/^\s+//gm;
 	print $config;
-	exit;
+	exit 0;
 }
 
 #printf "%s\n%s\n", @ENV{qw(INFORMIXDIR INFORMIXSERVER)};exit;

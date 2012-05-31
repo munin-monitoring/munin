@@ -371,7 +371,10 @@ if len(sys.argv)>1 :
         sys.exit(0)
     elif sys.argv[1]=="autoconf" :
         if os.path.exists(os.getenv('smartpath','/usr/sbin/smartctl')) : 
-            print('yes')
+            if not find_smart_drives():
+                print('no (no drives accessible)')
+            else :
+                print('yes')
             sys.exit(0)
         else : 
             print('no (smartmontools not found)')

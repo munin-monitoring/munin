@@ -1,4 +1,5 @@
 #!@@PERL@@ -w
+# -*- perl -*-
 # vim: ft=perl
 
 # Copyright Bjorn Ruberg <bjorn@ruberg.no>
@@ -22,9 +23,13 @@
 #%# family=auto
 #%# capabilities=autoconf suggest
 
-# use strict;
-use Net::LDAP;
-#use Data::Dumper;
+use strict;
+
+my $ret = '';
+
+if (! eval "require Net::LDAP;") {
+   $ret = "Net::LDAP not found";
+}
 
 use vars qw ( $config $param $act $scope $descr $cn $vlabel
 	      $info $title $label);
@@ -162,7 +167,7 @@ EOF
         for (my $i = 0 ; $i < $max ; $i++) {
             my $entry = $mesg->entry ($i);
             my $cn = $entry->get_value ('cn');
-            $name = $action . "_" . lc ($cn);
+            my $name = $action . "_" . lc ($cn);
             print "$name.label $cn\n";
             print "$name.type DERIVE\n";
             print "$name.min 0\n";
@@ -184,15 +189,17 @@ EOF
 if ($ARGV[0]) {
     if ($ARGV[0] eq 'autoconf') {
         # Check for Net::LDAP
-        if (! eval "require Net::LDAP;") {
-            print "no (Net::LDAP not found)";
-            exit 0;
-        }
+	if ($ret) {
+	    print "no ($ret)\n";
+	    exit 0;
+	}
+
         # Check for LDAP version 3
         my $ldap = Net::LDAP->new ($server, version => 3)
-            or do { print "no (Needs LDAPv3)\n"; exit };
+            or do { print "no (Needs LDAPv3)\n"; exit 0; };
         $ldap->bind ($userdn, password => $userpw)
-            or do { print "no (Can't log in, check env file)\n"; exit };
+            or do { print "no (Can't log in, check env file)\n"; exit 0; };
+
     } elsif ($ARGV[0] eq "config") {
         if ($0 =~ /slapd_([\w\d_]+)$/) {
             my $action = $1;
