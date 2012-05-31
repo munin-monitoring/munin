@@ -1,4 +1,4 @@
-munin (2.0.0-1) UNRELEASED; urgency=low
+munin (2.0.0-1) UNRELEASED; urgency=medium
 
   * New upstream version. Roughly eight years after munin 1.0 there is now
     finally munin 2.0! See /usr/share/doc/munin/Announce-2.0 in the munin
