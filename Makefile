@@ -139,7 +139,8 @@ install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	mkdir -p $(PLUGSTATE)
 
 	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
-	$(CHMOD) 0775 $(PLUGSTATE)
+	# using g+rwxs, so plugins can create and modify their state file without help
+	$(CHMOD) 02775 $(PLUGSTATE)
 	$(CHMOD) 0755 $(CONFDIR)/plugin-conf.d
 
 	for p in build/plugins/node.d/* build/plugins/node.d.$(OSTYPE)/* ; do \
