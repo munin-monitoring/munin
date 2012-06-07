@@ -1,1 +1,17 @@
 language: perl
+branches:
+ only:
+  - master
+  - devel
+install: "/bin/true"
+before_install:
+ - "cpanm --notest File::Copy::Recursive"
+ - "cpanm --notest IO::Scalar"
+ - "cpanm --notest Log::Log4perl"
+ - "cpanm --notest Module::Build"
+ - "cpanm --notest Module::Build"
+ - "cpanm --notest Net::SNMP"
+ - "cpanm --notest Test::Differences"
+ - "cpanm --notest Test::LongString"
+ - "cpanm --notest Test::MockModule"
+ - "cpanm --notest Time::HiRes"
