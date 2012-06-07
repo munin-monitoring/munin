@@ -1,9 +1,39 @@
 #!/bin/sh
 
-version=$(cat RELEASE)
+# Generate a version string for use when building.
+#
+# If RELEASE exists, and is non-empty, use the contents of that file.
+# This is in case we're building from a tarball.
+#
+# If we're inside a git tree:
+#
+# - For the "devel" branch, generate a "devel-date-hash" version.
+#
+# - For other branches, use "git describe". This should result in a
+#   clean version for the tagged releases on "master", and a
+#   version-revision on the packaging tags.
+#
+# If we're still looking for a version, use "unknown".
 
-if which git >/dev/null; then
-  revision=$(git describe --always)
+current_git_branch() {
+    git branch | awk '$1 == "*" {print $2}'
+}
+
+generate_version_string() {
+    case $(current_git_branch) in
+        devel)
+            git log -n 1 --pretty='devel-%ad-%tc' --date=short
+            ;;
+        *)
+            git describe
+            ;;
+    esac
+}
+
+if [ -s "RELEASE" ]; then
+    cat RELEASE
+elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
+    generate_version_string
+else
+    echo "unknown"
 fi
-
-echo ${version}${revision:+:${revision}}
