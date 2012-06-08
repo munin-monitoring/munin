@@ -20,12 +20,13 @@ current_git_branch() {
 }
 
 generate_version_string() {
-    case $(current_git_branch) in
-        devel)
-            git log -n 1 --pretty='devel-%ad-%tc' --date=short
+    branch="$(current_git_branch)"
+    case "${branch}" in
+        master)
+            git describe
             ;;
         *)
-            git describe
+            git log -n 1 --pretty="${branch}-%ad-%tc" --date=short
             ;;
     esac
 }
