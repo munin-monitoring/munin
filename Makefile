@@ -12,7 +12,7 @@ CONFIG = Makefile.config
 include $(DEFAULTS)
 include $(CONFIG)
 
-RELEASE          := $(shell cat RELEASE)
+RELEASE          := $(shell $(CURDIR)/getversion)
 INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
 INSTALL          := ./install-sh
 DIR              := $(shell /bin/pwd | sed 's/^.*\///')
@@ -311,16 +311,8 @@ build/%.class: %.class
 ######################################################################
 # DIST RULES
 
-tar-pre:
-	(! grep MAINTAINER Makefile.config)
-	find . -name '*~' -exec rm -fv {} \;
-	PWD=`pwd`
-	-rm -f ../munin-$(VERSION)
-	(cd ..; ln -s $(PWD) munin-$(VERSION))
-
-tar: tar-pre
-	GZIP=-9 tar -C .. --dereference --exclude .svn -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
-
+tar:
+	git archive --prefix=munin-$(RELEASE)/ --format tar.gz -9 --output ../munin-$(RELEASE).tar.gz HEAD
 
 suse-pre:
 	(! grep MAINTAINER Makefile.config)
