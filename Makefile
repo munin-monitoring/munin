@@ -312,7 +312,12 @@ build/%.class: %.class
 # DIST RULES
 
 tar:
-	git archive --prefix=munin-$(RELEASE)/ --format tar.gz -9 --output ../munin-$(RELEASE).tar.gz HEAD
+	git archive --prefix=munin-$(RELEASE)/ --format=tar --output ../munin-$(RELEASE).tar HEAD
+	mkdir -p munin-$(RELEASE)/
+	echo $(RELEASE) > munin-$(RELEASE)/RELEASE
+	tar rf ../munin-$(RELEASE).tar --owner=root --group=root munin-$(RELEASE)/RELEASE
+	rm -rf munin-$(RELEASE)
+	gzip -f -9 ../munin-$(RELEASE).tar
 
 suse-pre:
 	(! grep MAINTAINER Makefile.config)
