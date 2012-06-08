@@ -12,7 +12,7 @@ CONFIG = Makefile.config
 include $(DEFAULTS)
 include $(CONFIG)
 
-RELEASE          := $(shell cat RELEASE)
+RELEASE          := $(shell $(CURDIR)/getversion)
 INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
 INSTALL          := ./install-sh
 DIR              := $(shell /bin/pwd | sed 's/^.*\///')
