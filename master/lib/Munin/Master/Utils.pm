@@ -886,9 +886,16 @@ sub munin_writeconfig_loop {
 sub munin_read_storable {
 	my ($storable_filename, $default) = @_;
 
-	return Storable::retrieve($storable_filename) if (-e $storable_filename);
+	if (-e $storable_filename) {
+		my $storable = eval { Storable::retrieve($storable_filename); };
+		return $storable unless $@;
+
+		# Didn't managed to read storable. 
+		# Removing it as it is already torched anyway.
+		unlink($storable_filename);
+	}
 	
-	# Default
+	# return default if no better option
 	return $default;
 }
 
