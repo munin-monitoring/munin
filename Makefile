@@ -311,16 +311,8 @@ build/%.class: %.class
 ######################################################################
 # DIST RULES
 
-tar-pre:
-	(! grep MAINTAINER Makefile.config)
-	find . -name '*~' -exec rm -fv {} \;
-	PWD=`pwd`
-	-rm -f ../munin-$(VERSION)
-	(cd ..; ln -s $(PWD) munin-$(VERSION))
-
-tar: tar-pre
-	GZIP=-9 tar -C .. --dereference --exclude .svn -cvzf ../munin-$(RELEASE).tar.gz munin-$(VERSION)/
-
+tar:
+	git archive --prefix=munin-$(RELEASE)/ --format tar.gz -9 --output ../munin-$(RELEASE).tar.gz HEAD
 
 suse-pre:
 	(! grep MAINTAINER Makefile.config)
