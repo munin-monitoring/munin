@@ -103,7 +103,7 @@ want to install Munin from source for other reasons, follow these
 steps:
 
 We recommend downloading a release tarball, which you can find on
-`sourceforge.net <http://sourceforge.net/projects/munin/files/stable/>`.
+`sourceforge.net <http://sourceforge.net/projects/munin/files/stable/>`_.
 
 Alternatively, if you want to hack on Munin, you should clone our git
 repository by doing.

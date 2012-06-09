@@ -17,6 +17,7 @@ Contents:
    installation/index.rst
    plugin/index.rst
    documentation/index.rst
+   example/index.rst
 
 Indices and tables
 ==================

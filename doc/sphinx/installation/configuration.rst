@@ -73,64 +73,12 @@ Add some nodes to CONFDIR/munin.conf
 Configure web server
 ====================
 
-On the master, you need to configure your web server.
+On the master, you need to configure a web server. 
 
-To generate graphs and html dynamically, you need the following
-configuration:
+If you have installed "munin" through distribution
+packages, a webserver may have been configured for you already.
 
-Add the following to CONFDIR/munin.conf
+If you installed from source, there is a minimal configuration example
+in the "resources" directory in the source tarball.
 
-    | html_strategy cgi
-    | graph_strategy cgi
-
-Apache HTTPD
-------------
-
-Add a new virtualhost, using the following example:
-
-
-    | <VirtualHost \*:80>
-    |     ServerName munin.example.org
-    |     ServerAlias munin
-    |
-    |     ServerAdmin  info@example.org
-    |
-    |     DocumentRoot /srv/www/munin.example.org
-    |
-    |     ErrorLog     /var/log/apache2/munin.example.org-error.log
-    |     CustomLog    /var/log/apache2/munin.example.org-access.log combined
-    |
-    |     ServerSignature Off
-    |
-    |     Alias /static /etc/munin/static
-    |
-    |     # Rewrites
-    |     RewriteEngine On
-    |
-    |     # HTML
-    |     RewriteCond %{REQUEST_URI} !^/static
-    |     RewriteCond %{REQUEST_URI} .html$ [or]
-    |     RewriteCond %{REQUEST_URI} =/
-    |     RewriteRule ^/(.*)          /usr/lib/cgi-bin/munin-cgi-html/$1 [L]
-    |
-    |     # Images
-    |
-    |     # - remove path to munin-cgi-graph, if present
-    |     RewriteRule ^/cgi-bin/munin-cgi-graph/(.*) /$1
-    |
-    |     RewriteCond %{REQUEST_URI}                 !^/static
-    |     RewriteCond %{REQUEST_URI}                 .png$
-    |     RewriteRule ^/(.*) /usr/lib/cgi-bin/munin-cgi-graph/$1 [L]
-    |
-    |     # Ensure we can run (fast)cgi scripts
-    |     <Directory "/usr/lib/cgi-bin">
-    |   Options +ExecCGI
-    |   <IfModule mod_fcgid.c>
-    |       SetHandler fcgid-script
-    |   </IfModule>
-    |   <IfModule !mod_fcgid.c>
-    |       SetHandler cgi-script
-    |   </IfModule>
-    |     </Directory>
-    |
-    | </VirtualHost>
+For a more complex example, see :ref:`example-webserver-apache`
