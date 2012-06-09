@@ -15,6 +15,7 @@ Contents:
    :maxdepth: 2
 
    installation/index.rst
+   master/index.rst
    plugin/index.rst
    documentation/index.rst
    example/index.rst
