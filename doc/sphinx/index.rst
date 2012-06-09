@@ -6,6 +6,9 @@
 Welcome to Munin's documentation!
 =================================
 
+Warning: This documentation is being developed. It is incomplete, and
+may even be plain wrong. Feedback is welcome.
+
 Contents:
 
 .. toctree::
