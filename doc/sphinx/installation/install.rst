@@ -80,6 +80,15 @@ Please note that this might not be the latest version of Munin. On
 Debian you have the option of enabling "backports", which may give
 access to later versions of Munin.
 
+RedHat / CentOS / Fedora
+------------------------
+
+At time of writing, only the 1.x version of munin is available in
+`EPEL
+<http://dl.fedoraproject.org/pub/epel/6/SRPMS/repoview/munin.html>`_.
+
+If you want 2.x, your best option is probably to install from source.
+
 Other systems
 -------------
 
