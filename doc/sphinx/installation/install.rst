@@ -60,12 +60,25 @@ Binary packages:
 Debian/Ubuntu
 -------------
 
-Munin is distributed with both Debian and Ubuntu. In order to get
-Munin up and running type `sudo apt-get install munin-node` on all
-nodes, and 'sudo apt-get install munin' on the master. Please note
-that this might not be the latest version of Munin. On Debian you have
-the option of enabling "backports", which may give access to later
-versions of Munin.
+Munin is distributed with both Debian and Ubuntu.
+
+In order to get Munin up and running type
+
+.. code-block:: bash
+
+ sudo apt-get install munin-node
+
+on all nodes, and
+
+.. code-block:: bash
+
+ sudo apt-get install munin
+
+on the master.
+
+Please note that this might not be the latest version of Munin. On
+Debian you have the option of enabling "backports", which may give
+access to later versions of Munin.
 
 Other systems
 -------------
