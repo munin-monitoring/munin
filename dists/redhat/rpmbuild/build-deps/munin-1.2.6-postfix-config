@@ -1,0 +1,4 @@
+[postfix*]
+user root
+env.logfile maillog
+env.logdir /var/log
