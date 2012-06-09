@@ -1415,7 +1415,7 @@ sub process_service {
 
 	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
 	$nb_graphs_drawn ++;
-        RRDs::graph(@rrdcached_params, @complete);
+        rrd_graph(@rrdcached_params, @complete);
         if (my $ERROR = RRDs::error) {
             ERROR "[RRD ERROR] Unable to graph $picfilename : $ERROR";
             # ALWAYS dumps the cmd used when an error occurs.
@@ -1828,6 +1828,10 @@ sub get_scientific {
 sub RRDescape {
     my $text = shift;
     return $RRDs::VERSION < 1.2 ? $text : escape($text);
+}
+
+sub rrd_graph {
+	RRDs::graph(@_);
 }
 
 
