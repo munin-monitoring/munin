@@ -92,12 +92,8 @@ If you want 2.x, your best option is probably to install from source.
 Other systems
 -------------
 
-You are probably best of compiling your own code. See `Installing Munin
-from source`_.
-
-If that worked for you, you can skip the rest of this document for
-now, and and start reading the much more interesting
-:ref:`tutorial-index` instead.
+On other systems, you are probably best off compiling your own code.
+See `Installing Munin from source`_.
 
 Installing Munin from source
 ============================
