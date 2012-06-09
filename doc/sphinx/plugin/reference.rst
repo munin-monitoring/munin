@@ -8,59 +8,92 @@ Fields
 On a configuration run, the plugin is called with the argument "config". The
 following fields are used.
 
-+--------------------+-----------------+----------+-----------------------------------------+-------------+---------+
-| Field              | Value           | type     | Description                             | See         | Default |
-+====================+=================+==========+=========================================+=============+=========+
-| graph_title        | string          | required | Sets the title of the graph             |             |         |
-+--------------------+-----------------+----------+-----------------------------------------+-------------+---------+
-| graph_args         | string          | optional | Arguments for the rrd grapher.          | rrdgraph(1) |         |
-|                    |                 |          | This is used to control how             | man page    |         |
-|                    |                 |          | the generated graph looks, and          |             |         |
-|                    |                 |          | how values are interpreted or           |             |         |
-|                    |                 |          | presented.                              |             |         |
-+--------------------+-----------------+----------+-----------------------------------------+-------------+---------+
-| graph_vlabel       | string          | optional | Label for the vertical axis             |             |         |
-|                    |                 |          | of the graph                            |             |         |
-+--------------------+-----------------+----------+-----------------------------------------+-------------+---------+
-| graph_category     | lower case      | optional | Category used to sort the               |             | misc    |
-|                    | string, no      |          | graph on the generated index            |             |         |
-|                    | whitespace      |          | web page.                               |             |         |
-+--------------------+-----------------+----------+-----------------------------------------+-------------+---------+
-| graph_info         | html text       | optional | Additional text for the                 |             |         |
-|                    |                 |          | generated graph web page                |             |         |
-+--------------------+-----------------+----------+-----------------------------------------+-------------+---------+
-| datapoint.label    | lower case      | required | The label used in the graph             |             |         |
-|                    | string, no      |          | for this field                          |             |         |
-|                    | whitespace      |          |                                         |             |         |
-+--------------------+-----------------+----------+-----------------------------------------+-------------+---------+
-| datapoint.info     | html text       | optional | Additional html text for the            |             |         |
-|                    |                 |          | generated graph web page, used          |             |         |
-|                    |                 |          | in the field description table          |             |         |
-+--------------------+-----------------+----------+-----------------------------------------+-------------+---------+
-| datapoint.warning  | integer, or     | optional | This field defines a threshold          |             |         |
-|                    | integer:integer |          | value or range. If the field value      |             |         |
-|                    | (signed)        |          | above the defined warning value,        |             |         |
-|                    |                 |          | or outside the range, the service is    |             |         |
-|                    |                 |          | considered to be in a "warning" state.  |             |         |
-+--------------------+-----------------+----------+-----------------------------------------+-------------+---------+
-| datapoint.critical | integer, or     | optional | This field defines a threshold          |             |         |
-|                    | integer:integer |          | value or range. If the field value      |             |         |
-|                    | (signed)        |          | is above the defined critical value,    |             |         |
-|                    |                 |          | or outside the range, the service is    |             |         |
-|                    |                 |          | considered to be in a "critical" state. |             |         |
-+--------------------+-----------------+----------+-----------------------------------------+-------------+---------+
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| Field              | Value            | type     | Description                              | See also         | Default |
++====================+==================+==========+==========================================+==================+=========+
+| graph_title        | string           | required | Sets the title of the graph              |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| graph_args         | string           | optional | Arguments for the rrd grapher. This is   | rrdgraph_        |         |
+|                    |                  |          | used to control how the generated graph  |                  |         |
+|                    |                  |          | looks, and how values are interpreted or |                  |         |
+|                    |                  |          | presented.                               |                  |         |
+|                    |                  |          |                                          |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| graph_vlabel       | string           | optional | Label for the vertical axis of the graph |                  |         |
+|                    |                  |          |                                          |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| graph_category     | lower case       | optional | Category used to sort the graph on the   |                  | misc    |
+|                    | string, no       |          | generated index web page.                |                  |         |
+|                    | whitespace       |          |                                          |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| graph_info         | html text        | optional | Additional text for the generated graph  |                  |         |
+|                    |                  |          | web page                                 |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| graph_scale        | yes|no           | optional | If "yes", the generated graph will be    |                  | no      |
+|                    |                  |          | scaled to the uppper and lower values of |                  |         |
+|                    |                  |          | the datapoints within the graph.         |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| graph_order        | space separated  | optional | Ensures that the listed datapoints are   | :ref:`borrowing` |         |
+|                    | list of          |          | displayed in order. Any additional       |                  |         |
+|                    | graph.datapoints |          | datapoints are added in the order of     |                  |         |
+|                    |                  |          | appearance after datapoitns appearing on |                  |         |
+|                    |                  |          | this list.                               |                  |         |
+|                    |                  |          |                                          |                  |         |
+|                    |                  |          | This field is also used for "borrowing", |                  |         |
+|                    |                  |          | which is the practice of taking          |                  |         |
+|                    |                  |          | datapoints from other graphs.            |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| datapoint.label    | lower case       | required | The label used in the graph for this     |                  |         |
+|                    | string, no       |          | field                                    |                  |         |
+|                    | whitespace       |          |                                          |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| datapoint.info     | html text        | optional | Additional html text for the generated   |                  |         |
+|                    |                  |          | graph web page, used in the field        |                  |         |
+|                    |                  |          | description table                        |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| datapoint.warning  | integer, or      | optional | This field defines a threshold value or  |                  |         |
+|                    | integer:integer  |          | range. If the field value above the      |                  |         |
+|                    | (signed)         |          | defined warning value, or outside the    |                  |         |
+|                    |                  |          | range, the service is considered to be in|                  |         |
+|                    |                  |          | a "warning" state.                       |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| datapoint.critical | integer, or      | optional | This field defines a threshold value or  |                  |         |
+|                    | integer:integer  |          | range. If the field value is above the   |                  |         |
+|                    | (signed)         |          | defined critical value, or outside the   |                  |         |
+|                    |                  |          | range, the service is considered to be in|                  |         |
+|                    |                  |          | a "critical" state.                      |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| datapoint.graph    | yes|no           | optional | Determines if this datapoint should be   |                  | yes     |
+|                    |                  |          | visible in the generated graph.          |                  |         |
+|                    |                  |          |                                          |                  |         |
+|                    |                  |          |                                          |                  |         |
+|                    |                  |          |                                          |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| datapoint.cdef     | CDEF statement   | optional | A CDEF statement is a Reverse Polish     | cdeftutorial_    |         |
+|                    |                  |          | Notation statement used to construct a   |                  |         |
+|                    |                  |          | datapoint from other datapoints.         |                  |         |
+|                    |                  |          |                                          |                  |         |
+|                    |                  |          | This is commonly used to calculate       |                  |         |
+|                    |                  |          | percentages.                             |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| datapoint.draw     | AREA | LINE |    |          | Determines how the graph datapoints are  | rrdgraph_        | LINE    |
+|                    | LINE[n] | STACK  |          | displayed in the graph. The "LINE" takes |                  |         |
+|                    |                  |          | an optional width suffix, commonly       |                  |         |
+|                    |                  |          | "LINE1", "LINE2", etc…                   |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
 
 On a data fetch run, the plugin is called with no arguments. the following
 fields are used.
 
-+-----------------+--------------+----------+------------------+-----+------------+
-| Field           | Value        | type     | Description      | See | Default    |
-+=================+==============+==========+==================+=====+============+
-| datapoint.value | integer, or  | required | This is used per |     | No default |
-|                 | "U"          |          |                  |     |            |
-|                 | (integer may |          |                  |     |            |
-|                 | be signed)   |          |                  |     |            |
-+-----------------+--------------+----------+------------------+-----+------------+
++-----------------+-----------------------+----------+------------------+------+------------+
+| Field           | Value                 | type     | Description      | See  | Default    |
+|                 |                       |          |                  | also |            |
++=================+=======================+==========+==================+======+============+
+| datapoint.value | integer, scientific   | required | The value to be  |      | No default |
+|                 | notation, or "U" (may |          | graphed.         |      |            |
+|                 | be signed)            |          |                  |      |            |
+|                 |                       |          |                  |      |            |
++-----------------+-----------------------+----------+------------------+------+------------+
 
 Example
 =======
@@ -91,3 +124,8 @@ Data fetch run
 
  # munin-run df
  _dev_hda1.value 83
+
+
+.. _cdeftutorial: http://oss.oetiker.ch/rrdtool/tut/cdeftutorial.en.html
+
+.. _rrdgraph: http://oss.oetiker.ch/rrdtool/doc/rrdgraph_graph.en.html
