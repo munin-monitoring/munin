@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    installation/index.rst
+   plugin/index.rst
    documentation/index.rst
 
 Indices and tables
