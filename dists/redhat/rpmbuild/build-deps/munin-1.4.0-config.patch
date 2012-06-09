@@ -1,0 +1,33 @@
+diff -Nur munin-1.4.0.orig/dists/redhat/Makefile.config munin-1.4.0/dists/redhat/Makefile.config
+--- munin-1.4.0.orig/dists/redhat/Makefile.config	2009-11-27 04:17:14.000000000 -0700
++++ munin-1.4.0/dists/redhat/Makefile.config	2009-11-30 22:28:20.000000000 -0700
+@@ -23,7 +23,7 @@
+ VERSION    = $(shell cat RELEASE)
+ USER       = munin
+ GROUP      = munin
+-PLUGINUSER = nobody
++PLUGINUSER = munin
+ GETENT     = $(shell which getent || which true 2>/dev/null)
+ CHECKUSER  = $(shell $(GETENT) passwd $(USER) >/dev/null 2>/dev/null || (echo "echo User $(USER) nonexistent. Create the user and retry; exit 2"))
+ CHECKGROUP = $(shell $(GETENT) group $(GROUP) >/dev/null 2>/dev/null || (echo "echo Group $(GROUP) nonexistent. Create the group and retry; exit 2"))
+diff -Nur munin-1.4.0.orig/master/munin.conf.in munin-1.4.0/master/munin.conf.in
+--- munin-1.4.0.orig/master/munin.conf.in	2009-11-27 04:17:18.000000000 -0700
++++ munin-1.4.0/master/munin.conf.in	2009-11-30 22:28:20.000000000 -0700
+@@ -15,7 +15,7 @@
+ 
+ # (Exactly one) directory to include all files from.
+ #
+-includedir @@CONFDIR@@/munin-conf.d
++# includedir @@CONFDIR@@/munin-conf.d
+ 
+ # Make graphs show values per minute instead of per second
+ #graph_period minute
+@@ -57,7 +57,7 @@
+ #contact.nagios.command /usr/bin/send_nsca nagios.host.comm -c /etc/nsca.conf
+ 
+ # a simple host tree
+-[@@HOSTNAME@@]
++[localhost]
+     address 127.0.0.1
+     use_node_name yes
+ 
