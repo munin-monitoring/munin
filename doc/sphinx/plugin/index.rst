@@ -9,5 +9,5 @@ configure, debug, and how to write new plugins.
 
 .. toctree::
 
-   borrowing.rst
+   aggregate.rst
    reference.rst

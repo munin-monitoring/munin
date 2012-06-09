@@ -1,4 +1,4 @@
-.. _borrowing:
+.. _aggregate:
 
 ==================
  Borrowing data

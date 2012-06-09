@@ -33,7 +33,7 @@ following fields are used.
 |                    |                  |          | scaled to the uppper and lower values of |                  |         |
 |                    |                  |          | the datapoints within the graph.         |                  |         |
 +--------------------+------------------+----------+------------------------------------------+------------------+---------+
-| graph_order        | space separated  | optional | Ensures that the listed datapoints are   | :ref:`borrowing` |         |
+| graph_order        | space separated  | optional | Ensures that the listed datapoints are   | :ref:`aggregate` |         |
 |                    | list of          |          | displayed in order. Any additional       |                  |         |
 |                    | graph.datapoints |          | datapoints are added in the order of     |                  |         |
 |                    |                  |          | appearance after datapoitns appearing on |                  |         |
