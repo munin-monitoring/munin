@@ -5,7 +5,7 @@ munin-2.0.1, 2012-06-10
 Well, first bugfix release. 
 SCM has moved from svn to git.
 
-Commits by luke, steve.schnepp, ssm
+Commits by luke, mwest, steve.schnepp, ssm
 
 Summary :
 
@@ -13,6 +13,7 @@ Summary :
 * change version strings to match git workflow
 * fix perms on state dir (D: closes #675593)
 * swallow stderr in cmd and ssh transport
+* remove the graph field in munin timings plugin
 
 Major enhancements to munin-async :
 
