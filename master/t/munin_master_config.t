@@ -59,6 +59,7 @@ my $fasit = {
         tls_verify_certificate => 1,
         tls_verify_depth       => '5',
         tmpldir                => '/opt/munin/sandbox/etc/opt/munin/templates',
+	cgitmpdir              => '/opt/munin/sandbox/var/opt/munin/cgi-tmp',
     },
 };
 
