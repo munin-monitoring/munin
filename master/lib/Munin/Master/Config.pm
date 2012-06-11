@@ -116,8 +116,6 @@ use Munin::Master::Group;
 use Munin::Master::Host;
 use Log::Log4perl qw( :easy );
 
-my $MAXINT = 2 ** 53;
-
 my %booleans = map {$_ => 1} qw(
     debug
     fork
