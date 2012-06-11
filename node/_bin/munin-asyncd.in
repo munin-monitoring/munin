@@ -31,7 +31,11 @@ use Pod::Usage;
 use Munin::Node::SpoolWriter;
 
 my $host = "localhost:4949";
+my $metahostname;
 my $SPOOLDIR = "@@SPOOLDIR@@";
+my $intervalsize = 86400;
+my $retaincount = 7;
+my $nocleanup;
 my $do_fork;
 my $verbose;
 my $debug;
@@ -41,11 +45,14 @@ my $help;
 GetOptions(
 	"host=s" => \$host,
 	"spooldir|s=s" => \$SPOOLDIR,
+	"interval|i=i" => \$intervalsize,
+	"retain|r=i" => \$retaincount,
 
 	"fork" => \$do_fork,
 
 	"help|h" => \$help,
 	"verbose|v" => \$verbose,
+	"nocleanup|n" => \$nocleanup,
 	"debug" => \$debug,
 ) or pod2usage(1);
 if ($help) {
@@ -57,8 +64,21 @@ unless (-d $SPOOLDIR) {
 		or die ("Cannot create '$SPOOLDIR': $!");
 }
 
+my $sock = new IO::Socket::INET(
+	PeerAddr        => "$host",
+	Proto   => 'tcp'
+) || die "Error creating socket: $!";
+my $nodeheader = <$sock>;
+print $sock "quit\n";
+close ($sock);
+( $metahostname ) = ( $nodeheader =~ /munin node at (\S+)\n/);
+$metahostname = "unknown" unless $metahostname;
+
 my $spoolwriter = Munin::Node::SpoolWriter->new(
 	spooldir => $SPOOLDIR,
+	interval_size => $intervalsize,
+	interval_keep => $retaincount,
+	hostname  => $metahostname,
 );
 
 my $process_name = "main";
@@ -99,6 +119,7 @@ $SIG{CHLD} = 'IGNORE';
 # now, update regularly...
 # ... but each plugin in its own process to avoid delay-leaking
 my %last_updated;
+my $last_cleanup=0;
 MAIN: while(1) { 
 	my $when = time;
 	my $when_next = $when + 3600; # wake up at least every hour
@@ -122,13 +143,21 @@ MAIN: while(1) {
 		}
 		# Setting the command name for a useful top information
 		$process_name = "plugin:$plugin";
-		local $0 = "munin-async-server [$process_name]";
+		local $0 = "munin-asyncd [$process_name]";
 		
 		fetch_data($plugin, $when);
 	
 
 		# We end here if we forked
 		last MAIN if $do_fork;
+	}
+
+	$spoolwriter->set_metadata("lastruntime", $when);
+
+	# Clean spool dir
+	if (!$nocleanup && $last_cleanup<(time - 600)) {
+		$last_cleanup = time;
+		$spoolwriter->cleanup();
 	}
 
 	# Sleep until next plugin exec.
@@ -227,15 +256,18 @@ __END__
 
 =head1 NAME
 
-munin-async-server - A program to spool munin-node calls
+munin-asyncd - A program to spool munin-node calls
 
 =head1 SYNOPSIS
 
-munin-async-server [options]
+munin-asyncd [options]
 
  Options:
      --host <hostname:port>     Connect to this munin-node [localhost:4949]
      -s --spool <spooldir>      Store the spooled data in this dir [@@SPOOLDIR@@]
+     -i --interval <seconds>    Override default interval size of one day [86400]
+     -r --retain <count>        Specify number of interval files to retain [7]
+     -n --nocleanup             Disable automated spool dir cleanup
 
         --fork                  Do fork
      -v --verbose               Be verbose

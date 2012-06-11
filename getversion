@@ -1,30 +1,40 @@
 #!/bin/sh
-# Be compatible here, use `` and such old stuff
 
-VERSION=`cat RELEASE`
+# Generate a version string for use when building.
+#
+# If RELEASE exists, and is non-empty, use the contents of that file.
+# This is in case we're building from a tarball.
+#
+# If we're inside a git tree:
+#
+# - For the "devel" branch, generate a "devel-date-hash" version.
+#
+# - For other branches, use "git describe". This should result in a
+#   clean version for the tagged releases on "master", and a
+#   version-revision on the packaging tags.
+#
+# If we're still looking for a version, use "unknown".
 
-if ls -d .svn > /dev/null 2>&1; then
-    INFO_CMD="svn info"
-elif ls -d .git > /dev/null 2>&1; then
-    if which git-svn > /dev/null 2>&1; then
-        INFO_CMD="git-svn info"
-    else
-        INFO_CMD="git svn info"
-    fi
+current_git_branch() {
+    git branch | awk '$1 == "*" {print $2}'
+}
+
+generate_version_string() {
+    branch="$(current_git_branch)"
+    case "${branch}" in
+        master)
+            git describe
+            ;;
+        *)
+            git log -n 1 --pretty="${branch}-%ad-%tc" --date=short
+            ;;
+    esac
+}
+
+if [ -s "RELEASE" ]; then
+    cat RELEASE
+elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
+    generate_version_string
 else
-    INFO_CMD="echo Revision: <UNKNOWN>"
+    echo "unknown"
 fi
-
-case $VERSION in
-    svn-*)
-	R=`$INFO_CMD | awk '/^Revision: / { print $2; }'` || {
-	    echo Unable to get svn revision >&2
-	    exit 1
-	}
-	VERSION="$VERSION-r$R"
-	;;
-esac
-
-echo $VERSION
-
-

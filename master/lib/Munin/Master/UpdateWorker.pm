@@ -81,7 +81,7 @@ sub do_work {
 	global => {},
 	);
 
-    INFO "[INFO] starting work for $nodedesignation.\n";
+    INFO "[INFO] starting work in $$ for $nodedesignation.\n";
     my $done = $self->{node}->do_in_session(sub {
 
 	eval {
