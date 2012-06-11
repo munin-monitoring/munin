@@ -1,4 +1,7 @@
 language: perl
+perl:
+  - "5.14"
+  - "5.10"
 branches:
  only:
   - master
