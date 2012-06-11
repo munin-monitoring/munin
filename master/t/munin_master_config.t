@@ -59,6 +59,7 @@ my $fasit = {
         tls_verify_certificate => 1,
         tls_verify_depth       => '5',
         tmpldir                => '/opt/munin/sandbox/etc/opt/munin/templates',
+	staticdir              => "$Munin::Common::Defaults::MUNIN_CONFDIR/static",
     },
 };
 
