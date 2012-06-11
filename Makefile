@@ -416,7 +416,7 @@ install-%: %/Build
             --install_path libdoc=$(MANDIR)/man3	\
 
 test-%: %/Build
-	cd $* && $(PERL) Build test --verbose=0 
+	cd $* && $(PERL) Build test --verbose=0 || true
 
 clean-%: %/Build common/blib/lib/Munin/Common/Defaults.pm
 	cd $* && $(PERL) Build realclean
