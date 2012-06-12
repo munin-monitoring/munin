@@ -112,7 +112,7 @@ This fails.  Frankly it should result in "multigraph".
 ### fetch_service_config
 {
     my $node = setup();
-    $node->mock('_node_read', sub { return ('# timeout: bla bla bla') });
+    $node->mock('_node_read', sub { return ['# timeout: bla bla bla'] });
     throws_ok { $node->fetch_service_config('foo') }
         qr/Timeout error on node/,
             'Fetch service config - Timeout throws exception';
@@ -120,13 +120,13 @@ This fails.  Frankly it should result in "multigraph".
 {
     my $node = setup();
     $node->mock('_node_read', sub { 
-        return (
+        return [
             '',
             '# bla bla bla',
             'foo bar',
             'zap gabonk',
             'baz.bar foo',
-        );
+        ];
     });
 
 #die Dumper { $node->fetch_service_config('fun') };
@@ -155,14 +155,14 @@ This fails.  Frankly it should result in "multigraph".
 {
     my $node = setup();
     $node->mock('_node_read', sub { 
-        return (
+        return [
             '',
             '# bla bla bla',
             'foo bar',
             'zap gabonk',
             'baz.label foo',
             'zip.label bar',
-        );
+        ];
     });
     my %res = $node->fetch_service_config('fun');
 
@@ -188,7 +188,7 @@ This fails.  Frankly it should result in "multigraph".
 {
     my $node = setup();
     $node->mock('_node_read', sub {
-        return (
+        return [
             '',
             '# bla bla bla',
             'foo bar',
@@ -196,7 +196,7 @@ This fails.  Frankly it should result in "multigraph".
             'baz.label foo',
             'zip.label bar',
             'graph_order zip baz',
-        );
+        ];
     });
     my %res = $node->fetch_service_config('fun');
     is_deeply(\%res, {
@@ -227,7 +227,7 @@ This fails.  Frankly it should result in "multigraph".
 ### fetch_service_data
 {
     my $node = setup();
-    $node->mock('_node_read', sub { return ('# timeout: bla bla bla') });
+    $node->mock('_node_read', sub { return ['# timeout: bla bla bla'] });
 
     throws_ok { $node->fetch_service_data('foo') }
         qr/Timeout in fetch from 'foo'/,
@@ -236,13 +236,13 @@ This fails.  Frankly it should result in "multigraph".
 {
     my $node = setup();
     $node->mock('_node_read', sub {
-        return (
+        return [
             '',
             '# bla bla bla',
             'fun.value bar',
             'zap.value gabonk',
             'baz.value foo',
-        );
+        ];
     });
 
     my $time = time;  # this will work, except when the clock ticks at the wrong time
