@@ -3,6 +3,7 @@ use strict;
 
 use Test::More tests => 17;
 use Time::HiRes qw(sleep);
+use File::Temp;
 
 use_ok('Munin::Master::ProcessManager');
 
@@ -10,10 +11,10 @@ use_ok('Munin::Master::ProcessManager');
 #
 #use Munin::Master::Logger;
 #logger_debug();
-#use Munin::Master::Config;
-#my $config = Munin::Master::Config->instance();
-#$config->{debug} = 1;
 
+use Munin::Master::Config;
+my $config = Munin::Master::Config->instance()->{config};
+$config->{rundir} = File::Temp->newdir();
 
 #
 # Define some test workers 
@@ -32,10 +33,8 @@ sub do_work {
 package Test::NastyWorker;
 use base q(Munin::Master::Worker);
 
-use Carp;
-
 sub do_work {
-    croak "I'm nasty!";
+    die "I'm nasty!";
 }
 
 package Test::SpinningWorker;
@@ -98,7 +97,7 @@ sub result_callback2 {
 sub error_callback2 {
     my ($worker_id, $msg) = @_;
 
-    ok($msg eq 'Timed out' || $msg eq 'Died', "Got error msg $msg");
+    ok($msg eq 'Timed out' || $msg eq "Died", "Got error msg $msg");
 }
 
 

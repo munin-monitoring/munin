@@ -34,7 +34,7 @@ sub new {
 
     my $self = {
         max_concurrent  => $config->{max_processes},
-        socket_file     => "$config->{rundir}/munin-master-processmanager-$$.sock",
+        socket_file     => $config->{rundir} . "/munin-master-processmanager-$$.sock",
         result_callback => $result_callback,
         error_callback  => $error_callback,
 
@@ -95,9 +95,9 @@ sub _prepare_unix_socket {
     socket my $sock, PF_UNIX, SOCK_STREAM, 0
         or croak "socket failed: $!";
     bind $sock, sockaddr_un($self->{socket_file})
-        or croak "bind failed: $!";
+        or croak "bind ($self->{socket_file}) failed: $!";
     chmod oct(700), $self->{socket_file}
-        or croak "chmod failed: $!";
+        or croak "chmod ($self->{socket_file}) failed: $!";
     listen $sock, SOMAXCONN
         or croak "listen failed: $!";
     
