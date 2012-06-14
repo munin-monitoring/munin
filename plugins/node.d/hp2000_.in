@@ -36,7 +36,7 @@
 # Suggested config:
 #
 #   [hp2000_san1_*]
-#   hostname san1
+#   host_name san1
 #   env.host 10.0.0.1
 #   env.secret username_password
 #
