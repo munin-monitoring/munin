@@ -24,4 +24,4 @@ the occational intrusion of the real world into the flow, keep it
 mostly on topic, and dont paste random links unless they are *really*
 spectacular and intelligent.
 
-.. _pastebin: http://gist.github.com/
+.. _pastebin: https://gist.github.com/
