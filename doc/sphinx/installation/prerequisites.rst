@@ -2,7 +2,7 @@
  Prerequisites
 ===============
 
-In order for you to install Varnish you must have the following:
+In order for you to install Munin you must have the following:
 
 Building munin
 ==============

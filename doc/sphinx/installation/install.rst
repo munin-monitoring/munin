@@ -118,7 +118,7 @@ than listed below, in particular the Python Docutils and Sphinx.
 Build dependencies on Debian / Ubuntu
 -------------------------------------
 
-In order to build Varnish from source you need a number of packages
+In order to build Munin from source you need a number of packages
 installed. On a Debian or Ubuntu system these are:
 
 * perl
