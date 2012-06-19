@@ -27,7 +27,7 @@ Developers / packagers need
 In order to build the documentation, you need:
 * sphinx
 
-Runnin munin
+Running munin
 ============
 
 In order to run munin, you need:
