@@ -1,6 +1,7 @@
 munin (2.0.1-1) UNRELEASED; urgency=low
 
   * New upstream version. 
+  * Update URL to upstream webpage in debian/copyright. (Closes: #676366) 
 
  -- Holger Levsen <holger@debian.org>  Thu, 21 Jun 2012 00:15:24 +0200
 
