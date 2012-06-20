@@ -96,28 +96,30 @@ sub _do_connect {
 	    # Add any parameter to the cmd
 	    my $remote_connection_cmd = "/usr/bin/ssh -p" . $uri->port . " $user_part" . $uri->host . " $remote_cmd $params";
 
-	    # Open a double pipe
-   	    use IPC::Open2;
+	    # Open a triple pipe
+   	    use IPC::Open3;
 
 	    $self->{reader} = new IO::Handle();
 	    $self->{writer} = new IO::Handle();
+	    $self->{stderr} = new IO::Handle();
 
-	    DEBUG "[DEBUG] open2($remote_connection_cmd)";
-	    $self->{pid} = open2($self->{reader}, $self->{writer}, $remote_connection_cmd);
+	    DEBUG "[DEBUG] open3($remote_connection_cmd)";
+	    $self->{pid} = open3($self->{writer}, $self->{reader}, $self->{stderr}, $remote_connection_cmd);
             ERROR "Failed to connect to node $self->{address} : $!" unless $self->{pid};
     } elsif ($uri->scheme eq "cmd") {
         # local commands should ignore the username, url and host
         my $local_cmd = $uri->path;
         my $local_pipe_cmd = $local_cmd . (defined $params ? " $params" : "");
 
-	    # Open a double pipe
-   	    use IPC::Open2;
+	    # Open a triple pipe
+   	    use IPC::Open3;
 
 	    $self->{reader} = new IO::Handle();
 	    $self->{writer} = new IO::Handle();
+	    $self->{stderr} = new IO::Handle();
 
-	    DEBUG "[DEBUG] open2($local_pipe_cmd)";
-	    $self->{pid} = open2($self->{reader}, $self->{writer}, $local_pipe_cmd);
+	    DEBUG "[DEBUG] open3($local_pipe_cmd)";
+	    $self->{pid} = open3($self->{writer}, $self->{reader}, $self->{stderr}, $local_pipe_cmd);
             ERROR "Failed to execute local command: $!" unless $self->{pid};
     } else {
 	    ERROR "Unknown scheme : " . $uri->scheme;
@@ -184,6 +186,10 @@ sub _do_close {
     close $self->{writer};
     $self->{reader} = undef;
     $self->{writer} = undef;
+
+    # Close stderr if needed
+    close $self->{stderr} if $self->{stderr};
+    $self->{stderr} = undef if $self->{stderr};
 
     # Reap the underlying process
     waitpid($self->{pid}, 0) if (defined $self->{pid});

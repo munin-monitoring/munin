@@ -1,6 +1,27 @@
 -*- text -*-
 
-munin-2.0, r4900, 2012-05-30
+munin-2.0.1, 2012-06-10
+
+Well, first bugfix release. 
+SCM has moved from svn to git.
+
+Commits by luke, mwest, steve.schnepp, ssm
+
+Summary :
+
+* remove .storable files if they are unreadable.
+* change version strings to match git workflow
+* fix perms on state dir (D: closes #675593)
+* swallow stderr in cmd and ssh transport
+* remove the graph field in munin timings plugin
+
+Major enhancements to munin-async :
+
+* rename of the process names, it is now munin-async(d).
+* implement automatic cleanup
+* implement metadata, for the spool to be self-descriptive
+
+munin-2.0.0, r4900, 2012-05-30
 
 It is 2.0-rc7, code wise. Only edited the mandatory doc files 
 (Changelog, UPGRADING, ...)

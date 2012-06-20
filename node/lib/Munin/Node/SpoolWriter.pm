@@ -9,13 +9,14 @@ use Carp;
 use IO::File;
 
 use Munin::Common::Defaults;
+use Munin::Common::SyncDictFile;
 use Munin::Node::Logger;
 
 
-use constant TIME        => 86_400;      # put 1 day of results into a spool file
-use constant MAXIMUM_AGE => TIME * 7;    # remove spool files more than a week old
+use constant DEFAULT_TIME => 86_400;      # put 1 day of results into a spool file
+use constant MAXIMUM_AGE  => 7;           # remove spool files more than a week old
 
-sub _snap_to_epoch_boundary { return $_[0] - ($_[0] % TIME) }
+sub _snap_to_epoch_boundary { my $self = shift; return $_[0] - ($_[0] % $self->{interval_size}) }
 
 
 sub new
@@ -27,6 +28,28 @@ sub new
     opendir $args{spooldirhandle}, $args{spooldir}
         or croak "Could not open spooldir '$args{spooldir}': $!";
 
+    $args{metadata} = _init_metadata($args{spooldir});
+
+    if(!$args{interval_size} && (my $interval_size = get_metadata(\%args, "interval_size"))) {
+	    $args{interval_size} = $interval_size;
+    }
+
+    if(!$args{interval_keep} && (my $interval_keep = get_metadata(\%args, "interval_keep"))) {
+	    $args{interval_keep} = $interval_keep;
+    }
+
+    if(!$args{hostname} && (my $hostname = get_metadata(\%args, "hostname"))) {
+	    $args{hostname} = $hostname;
+    }
+
+    $args{interval_size} = DEFAULT_TIME unless ($args{interval_size});
+    $args{interval_keep} = MAXIMUM_AGE unless ($args{interval_keep});
+    $args{hostname} = "unknown" unless ($args{hostname});
+
+    set_metadata(\%args, "interval_size", $args{interval_size}) if $args{interval_size} != get_metadata(\%args, "interval_size");
+    set_metadata(\%args, "interval_keep", $args{interval_keep}) if $args{interval_keep} != get_metadata(\%args, "interval_keep");
+    set_metadata(\%args, "hostname", $args{hostname}) if $args{hostname} ne get_metadata(\%args, "hostname");
+
     # TODO: paranoia check?  except dir doesn't (currently) have to be
     # root-owned.
 
@@ -36,15 +59,50 @@ sub new
 }
 
 
+#prepare tied hash for metadata persisted to $spooldir/SPOOL-META
+#should we pull these methods into a base class or create a spool manager class?
+sub _init_metadata
+{
+
+	my $spooldir = shift;
+	my %metadata;
+
+	tie %metadata, 'Munin::Common::SyncDictFile', $spooldir . "/SPOOL-META";
+
+	return \%metadata;
+
+}
+
+
+#retrieve metadata value for key
+sub get_metadata
+{
+	my ($self, $key) = @_;
+
+	return ${ $self->{metadata} }{$key};
+
+}
+
+
+#set metadata key:value and persist
+sub set_metadata
+{
+	my ($self, $key, $value) = @_;
+
+	${ $self->{metadata} }{$key} = $value;
+
+}
+
+
 # writes the results of a plugin run to the appropriate spool-file
 # need to remove any lines containing only a '.'
 sub write
 {
     my ($self, $timestamp, $service, $data) = @_;
 
-    my $fmtTimestamp = _snap_to_epoch_boundary($timestamp);
+    my $fmtTimestamp = $self->_snap_to_epoch_boundary($timestamp);
 
-    open my $fh , '>>', "$self->{spooldir}/munin-daemon.$service.$fmtTimestamp"
+    open my $fh , '>>', "$self->{spooldir}/munin-daemon.$service.$fmtTimestamp." . $self->{interval_size}
         or die "Unable to open spool file: $!";
 
     print {$fh} "timestamp $timestamp\n";
@@ -66,14 +124,16 @@ sub cleanup
 {
     my ($self) = @_;
 
+    my $maxage = $self->{interval_size} * $self->{interval_keep};
+
     opendir my $dir, $self->{spooldir} or die $!;
 
     foreach my $file (readdir $dir) {
-        my $timestamp;
-        next unless ($timestamp) = ($file =~ m{munin-daemon\.\w+\.(\d+)$})
-                and (time - $timestamp) > MAXIMUM_AGE;
+        next unless $file =~ m{munin-daemon\.\w+\.\d+\.\d+$};
 
         my $filename = "$self->{spooldir}/$file";
+        my $mtime = (stat $filename)[9];
+        next unless (time - $mtime) > $maxage;
 
         unlink $filename or die "Unable to unlink '$filename': $!\n";
     }

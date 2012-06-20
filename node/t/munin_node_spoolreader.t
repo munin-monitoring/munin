@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 22;
+use Test::More tests => 18;
 use Test::LongString;
 
 use POSIX ();
@@ -230,23 +230,5 @@ EOT
 
     is_deeply([ sort $reader->_get_spooled_plugins ], [ sort qw( fnord floop blort ) ], 'Retrieved list of spooled plugins');
     is($reader->list, "blort floop fnord\n", 'Retrieved stringified list of spooled plugins');
-}
-
-
-### _snap_to_epoch_boundary
-# NOTE the two versions of this sub absolutely need to be kept in sync,
-# otherwise things will break in subtle and horrible ways...
-{
-    my @tests = (
-        #  timestamp, epoch
-        [ 1310987426, 1310947200 ],
-        [ 1234567890, 1234483200 ],
-    );
-
-    # both need to provide the same answer!
-    foreach my $t (@tests) {
-        is(Munin::Node::SpoolReader::_snap_to_epoch_boundary($t->[0]), $t->[1]);
-        is(Munin::Node::SpoolWriter::_snap_to_epoch_boundary($t->[0]), $t->[1]);
-    }
 }
 
