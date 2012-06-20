@@ -1,3 +1,9 @@
+munin (2.0.1-1) UNRELEASED; urgency=low
+
+  * New upstream version. 
+
+ -- Holger Levsen <holger@debian.org>  Thu, 21 Jun 2012 00:15:24 +0200
+
 munin (2.0.0-1) unstable; urgency=medium
 
   * New upstream version. Roughly eight years after munin 1.0 there is now
