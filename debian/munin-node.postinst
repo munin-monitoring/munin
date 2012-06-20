@@ -25,7 +25,7 @@ initperms() {
 	chmod 755 /var/lib/munin
 
 	chown munin:munin /var/lib/munin/plugin-state
-	chmod 755 /var/lib/munin/plugin-state
+	chmod 775 /var/lib/munin/plugin-state
 
 	chown root:munin /etc/munin/plugin-conf.d
 	chmod 750 /etc/munin/plugin-conf.d
@@ -90,7 +90,7 @@ case "$1" in
 			fixoverrides
 		fi
 		# do this on upgrades (from old versions) and on new installs
-		if dpkg --compare-versions "$2" le "2.0~rc5-2" || [ "$2" = 0 ] ; then
+		if dpkg --compare-versions "$2" le "2.0.0-1" || [ "$2" = 0 ] ; then
 			initperms
 		fi
 		init_plugins

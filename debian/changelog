@@ -4,6 +4,8 @@ munin (2.0.1-1) UNRELEASED; urgency=low
   * Update URL to upstream webpage in debian/copyright. (Closes: #676366) 
   * Make munin-node depend on munin-plugins-core unconditionally and recommend
     munin-plugins-extra. (Closes: #677189)
+  * debian/munin-node.postinst: chmod 775 /var/lib/munin/plugin-state 
+    (Closes: #675593)
 
  -- Holger Levsen <holger@debian.org>  Thu, 21 Jun 2012 00:15:24 +0200
 
