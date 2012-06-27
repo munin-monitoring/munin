@@ -167,6 +167,9 @@ sub clean_fieldname ($) {
     # Replace remaining illegals with _
     $name =~ s/[^A-Za-z0-9_]/_/g;
 
+    # "root" is *not* allowed due to a 2.0 bug
+    $name = "__root" if $name eq "root";
+
     return $name;
 }
 
