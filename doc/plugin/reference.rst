@@ -76,10 +76,13 @@ following fields are used.
 |                    |                  |          | This is commonly used to calculate       |                  |         |
 |                    |                  |          | percentages.                             |                  |         |
 +--------------------+------------------+----------+------------------------------------------+------------------+---------+
-| datapoint.draw     | AREA | LINE |    |          | Determines how the graph datapoints are  | rrdgraph_        | LINE    |
-|                    | LINE[n] | STACK  |          | displayed in the graph. The "LINE" takes |                  |         |
-|                    |                  |          | an optional width suffix, commonly       |                  |         |
-|                    |                  |          | "LINE1", "LINE2", etc…                   |                  |         |
+| datapoint.draw     | AREA, LINE,      |          | Determines how the graph datapoints are  | rrdgraph_        | LINE    |
+|                    | LINE[n], STACK,  |          | displayed in the graph. The "LINE" takes |                  |         |
+|                    | AREASTACK,       |          | an optional width suffix, commonly       |                  |         |
+|                    | LINESTACK,       |          | "LINE1", "LINE2", etc…                   |                  |         |
+|                    | LINE[n]STACK     |          | The *STACK values are specific to munin  |                  |         |
+|                    |                  |          | and makes the first a LINE, LINE[n] or   |                  |         |
+|                    |                  |          | AREA datasource, and the rest as STACK.  |                  |         |
 +--------------------+------------------+----------+------------------------------------------+------------------+---------+
 
 On a data fetch run, the plugin is called with no arguments. the following
