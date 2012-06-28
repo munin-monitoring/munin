@@ -9,8 +9,9 @@ clean_fieldname () {
     # very much still break munin.
     #
     # usage: name="$(clean_fieldname "$item")"
-    # 
-    echo "$@" | sed -e 's/^[^A-Za-z_]/_/' -e 's/[^A-Za-z0-9_]/_/g'
+
+    # "root" is *not* allowed due to a 2.0 bug
+    echo "$@" | sed -e 's/^[^A-Za-z_]/_/' -e 's/[^A-Za-z0-9_]/_/g' -e 's/^root$/__root/'
 }
 
 

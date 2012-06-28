@@ -16,7 +16,7 @@ Munin master servers.
 Normaly needs no configuration.  You may configure it with the
 following parameter:
 
-  [muin*]
+  [munin*]
       env.UPDATE_STATSFILE .../munin-update.stats
       env.MUNIN_UPDATE_LOCACTION .../munin-update
 
