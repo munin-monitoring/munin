@@ -15,3 +15,4 @@ The munin master consists of the following components:
    munin-update.rst
    munin-limits.rst
    munin-html.rst
+   rrdcached.rst
