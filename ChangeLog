@@ -1,5 +1,15 @@
 -*- text -*-
 
+munin-2.0.2, 2012-06-29
+
+Summary :
+
+* munin-graph can be called again from cron
+* workaround "root" field name bug
+* initial doc/ subdir. will be munin book
+* emits percent in log about errors 
+* various bugfix
+
 munin-2.0.1, 2012-06-10
 
 Well, first bugfix release. 
