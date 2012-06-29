@@ -28,7 +28,7 @@ In order to build the documentation, you need:
 * sphinx
 
 Running munin
-============
+=============
 
 In order to run munin, you need:
 
