@@ -9,5 +9,6 @@ configure, debug, and how to write new plugins.
 
 .. toctree::
 
+   writing.rst
    aggregate.rst
    reference.rst
