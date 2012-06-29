@@ -16,6 +16,7 @@ Contents:
 
    installation/index.rst
    master/index.rst
+   node/index.rst
    plugin/index.rst
    documentation/index.rst
    example/index.rst
