@@ -20,10 +20,3 @@ Contents:
    documentation/index.rst
    example/index.rst
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
