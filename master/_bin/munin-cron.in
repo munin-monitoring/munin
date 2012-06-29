@@ -12,3 +12,8 @@
 @@LIBDIR@@/munin-limits $@ 
 
 nice @@LIBDIR@@/munin-html $@ || exit 1
+
+# Now the result of munin-html is needed for munin-graph.
+# It is always lauched, but will be a noop if 
+# graph_strategy is "cgi" 
+nice @@LIBDIR@@/munin-graph $@ || exit 1
