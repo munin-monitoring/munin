@@ -58,11 +58,24 @@ authorized_keys file for this user.
    specified instead of whatever command the connecting user tries to
    use.
 
+::
+
+  command="/usr/share/munin/munin-async --spoolfetch" ssh-rsa AAAA[...] munin@master
+
+The following options are recommended for security, but are strictly
+not necessary for the munin-async connection to work
+
  * You should add a "from=" parameter to the key to restrict where it
    can be used from.
 
-See the authorized_keys(5) man page for more information.
+ * You should add hardening options. At the time of writing, these are
+   "no-X11-forwarding", "no-agent-forwarding", "no-port-forwarding",
+   "no-pty" and "no-user-rc".
+
+   Some of these may also be set globally in /etc/ssh/sshd_config.
 
 ::
 
-  command="/usr/share/munin/munin-async-client --spoolfetch" ssh-rsa AAAA[...] munin@master
+  no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,no-user-rc,from="192.0.2.0/24",command="/usr/share/munin/munin-async --spoolfetch" ssh-rsa AAAA[...] munin@master
+
+See the sshd_config (5) and authorized_keys(5) man pages for more information.
