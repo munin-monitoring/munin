@@ -27,6 +27,9 @@ $Id$
 use strict;
 use warnings;
 use IO::Handle;
+BEGIN {
+    $Date::Manip::Backend = 'DM5';
+}
 use Date::Manip;
 use POSIX qw(strftime locale_h);
 use CGI::Fast qw(:cgi);
