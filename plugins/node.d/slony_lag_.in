@@ -63,12 +63,12 @@ my $pg = Munin::Plugin::Pgsql->new(
     basename => 'slony_lag_',
     title    => 'Slony lag',
     info     => 'Slony replication lag',
-    vlabel   => 'Lag',
+    vlabel   => 'Lag (seconds)',
     basequery =>
-        "SELECT st_received, extract(epoch FROM st_lag_time) FROM _%%PARAM1%%.sl_status ORDER BY 1",
+        "SELECT 'node_' || st_received, extract(epoch FROM st_lag_time) FROM _%%PARAM1%%.sl_status ORDER BY 1",
     paramdatabase => 1,
     configquery =>
-        "SELECT st_received, 'Node ' || st_received FROM _%%PARAM1%%.sl_status ORDER BY 1",
+        "SELECT 'node_' || st_received, 'Node ' || st_received FROM _%%PARAM1%%.sl_status ORDER BY 1",
     graphdraw => 'LINE',
 );
 
