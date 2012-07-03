@@ -16,7 +16,7 @@
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="Munin asynchronous server"
-NAME=munin-async-server
+NAME=munin-asyncd
 DAEMON=/usr/share/munin/$NAME
 DAEMON_ARGS=""
 PIDFILE=/var/run/munin/$NAME.pid

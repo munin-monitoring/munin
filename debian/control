@@ -142,7 +142,7 @@ Description: network-wide graphing framework (async master/client)
  virtually everything imaginable throughout your network, while still
  maintaining a rattling ease of installation and configuration.
  .
- This package contains munin-async-master and munin-async-client which can
+ This package contains munin-async and munin-asyncd which can
  be used for (optional) asynchronous operation of munin-update.
  .
  Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
