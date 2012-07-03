@@ -11,8 +11,17 @@ The munin master consists of the following components:
 
 .. toctree::
 
-   munin-cron.rst
-   munin-update.rst
-   munin-limits.rst
-   munin-html.rst
    rrdcached.rst
+
+References
+==========
+
+* :ref:`munin-cron`
+
+* :ref:`munin-graph`
+* :ref:`munin-html`
+* :ref:`munin-limits`
+* :ref:`munin-update`
+
+* :ref:`munin-cgi-graph`
+* :ref:`munin-cgi-html`

@@ -9,6 +9,5 @@ The munin node is installed on all monitored servers. It accepts
 
 .. toctree::
 
-   munin-node.rst
    reference.rst
    async.rst

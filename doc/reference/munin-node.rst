@@ -1,4 +1,6 @@
-.. _node-munin-node:
+.. _munin-node:
+
+.. program:: munin-node
 
 ============
  munin-node

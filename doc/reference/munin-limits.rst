@@ -1,5 +1,7 @@
 .. _munin-limits:
 
+.. program:: munin-limits
+
 ==============
  munin-limits
 ==============
