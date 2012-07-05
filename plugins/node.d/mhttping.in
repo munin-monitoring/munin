@@ -38,7 +38,6 @@ use strict ;
 
 my $datafile = "$ENV{MUNIN_PLUGSTATE}/mhttping.data" ;
 my $resultsdir = "/home/gconnor/mhttping/results/" ;
-my $httping = "/usr/local/bin/httping" ;
 my $timeout = 30 ;
 my $count = 3 ;
 my $options = "-c $count -s -t $timeout" ;
@@ -170,7 +169,7 @@ for $line ( @results ) {
 # Visit each site and grab the average time
 
 for $site ( keys(%url) ) {
-	$command="$httping $options $proxy{$site} -g $url{$site} 2>&1 " ;
+	$command="httping $options $proxy{$site} -g $url{$site} 2>&1 " ;
 	$debug && print "$command\n" ;
 
 	$result= `$command` ;
