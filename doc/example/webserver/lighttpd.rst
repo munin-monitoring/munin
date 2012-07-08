@@ -17,6 +17,9 @@ Munin configuration
 This example assumes the following configuration in
 /etc/munin/munin.conf
 
+.. index::
+   pair: example; munin.conf
+
 ::
 
  # graph_strategy should be commented out, if present
@@ -24,6 +27,9 @@ This example assumes the following configuration in
 
 Webserver configuration
 =======================
+
+.. index::
+   pair: example; lighttpd configuration
 
 ::
 
