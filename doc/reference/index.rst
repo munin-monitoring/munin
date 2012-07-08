@@ -13,14 +13,14 @@ Man pages
 
    munin-async.rst
    munin-asyncd.rst
+   munin-cgi-graph.rst
    munin-cgi-html.rst
    munin-cron.rst
-   munin-html.rst
    munin-graph.rst
+   munin-html.rst
    munin-limits.rst
-   munin-update.rst
    munin-node.rst
-   munin-cgi-graph.rst
+   munin-update.rst
 
 Other reference material
 ========================
