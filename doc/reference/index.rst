@@ -21,7 +21,10 @@ Man pages
    munin-html.rst
    munin-limits.rst
    munin-node.rst
+   munin-run.rst
    munin-update.rst
+   munin.conf.rst
+   munin-node.conf.rst
 
 Other reference material
 ========================

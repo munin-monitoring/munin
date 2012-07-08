@@ -6,52 +6,47 @@
  munin-cron
 ============
 
+DESCRIPTION
+===========
 
-.. object:: NAME
+Munin-cron is a part of the package Munin, which is used in
+combination with :ref:`munin-node`.
 
-   munin-cron - Cron script for the munin master
+Munin is a group of programs to gather data from Munin's nodes, graph
+them, create html-pages, and optionally warn Nagios about any
+off-limit values.
 
-.. object:: DESCRIPTION
+"munin-cron" runs the following programs, in the given order:
 
-   Munin-cron is a part of the package Munin, which is used in
-   combination with :ref:`munin-node`.
+#. :ref:`munin-update`
+#. :ref:`munin-limits`
+#. :ref:`munin-graph`
+   (unless configured to run from CGI)
+#. :ref:`munin-html`
+   (unless configured to run from CGI)
 
-   Munin is a group of programs to gather data from Munin's nodes,
-   graph them, create html-pages, and optionally warn Nagios about any
-   off-limit values.
+Unless the munin master is configured otherwise, "munin-cron" should
+run every 5 minutes.
 
-   "munin-cron" runs the following programs, in the given order:
+OPTIONS
+=======
 
-   #. :ref:`munin-update`
-   #. :ref:`munin-limits`
-   #. :ref:`munin-graph`
-      (unless configured to run from CGI)
-   #. :ref:`munin-html`
-      (unless configured to run from CGI)
+.. option:: --service <service>
 
-   Unless the munin master is configured otherwise, "munin-cron"
-   should run every 5 minutes.
+   Limit services to <service>. Multiple --service options may be
+   supplied. [unset]
 
-.. object:: OPTIONS
+.. option:: --host <host>
 
-   .. option:: --service <service>
+   Limit hosts to <host>. Multiple --host options may be supplied.
+   [unset]
 
-      Limit services to <service>. Multiple --service options may be
-      supplied. [unset]
+.. option:: --config <file>
 
-   .. option:: --host <host>
+   Use <file> as configuration file. [/etc/munin/munin.conf]
 
-      Limit hosts to <host>. Multiple --host options may be supplied.
-      [unset]
+SEE ALSO
+========
 
-   .. option:: --config <file>
-
-      Use <file> as configuration file. [/etc/munin/munin.conf]
-
-.. object:: AUTHORS
-
-   Audun Ytterdal and Jimmy Olsen.
-
-.. object:: COPYRIGHT
-
-   2002-2008 Audun Ytterdal and Jimmy Olsen / Linpro AS.
+:ref:`munin-update`, :ref:`munin-graph`, :ref:`munin-limits`,
+:ref:`munin-html`, :ref:`munin.conf`,

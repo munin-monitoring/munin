@@ -6,69 +6,69 @@
  munin-async
 =============
 
-.. object:: NAME
+DESCRIPTION
+===========
 
-   munin-async - Munin async client
+The munin async clients reads from a spool directory written by
+:ref:`munin-asyncd`.
 
-.. object:: DESCRIPTION
+It can optionally request a cleanup of this directory.
 
-   The munin async clients reads from a spool directory written by
-   :ref:`munin-asyncd`.
+OPTIONS
+=======
 
-   It can optionally request a cleanup of this directory.
+.. option:: --spooldir | -s <spooldir>
 
-.. object:: OPTIONS
+   Directory for spooled data [/var/lib/munin/spool]
 
-   .. option:: --spooldir | -s <spooldir>
+.. option:: --hostname <hostname>
 
-      Directory for spooled data [/var/lib/munin/spool]
+   Overrides the hostname [The local hostname]
 
-   .. option:: --hostname <hostname>
+   This is used to override the hostname used in the greeting
+   banner. This is used when using munin-async from the munin
+   master, and the data fetched is from another node.
 
-      Overrides the hostname [The local hostname]
+.. option:: --cleanup
 
-      This is used to override the hostname used in the greeting
-      banner. This is used when using munin-async from the munin
-      master, and the data fetched is from another node.
+   Clean up the spooldir after interactive session completes
 
-   .. option:: --cleanup
+.. option:: --cleanupandexit
 
-      Clean up the spooldir after interactive session completes
+   Clean up the spooldir and exit (non-interactive)
 
-   .. option:: --cleanupandexit
+.. option:: --spoolfetch
 
-      Clean up the spooldir and exit (non-interactive)
+   Enables the "spool" capability [no]
 
-   .. option:: --spoolfetch
+.. option:: --vectorfetch
 
-      Enables the "spool" capability [no]
+   Enables the "vectorized" fetching capability [no]
 
-   .. option:: --vectorfetch
+   Note that without this flag, the "fetch" command is disabled.
 
-      Enables the "vectorized" fetching capability [no]
+.. option:: --verbose | -v
 
-      Note that without this flag, the "fetch" command is disabled.
+   Be verbose
 
-   .. option:: --verbose | -v
+.. option:: --help | -h
 
-      Be verbose
+   View this message
 
-   .. option:: --help | -h
+EXAMPLES
+========
 
-      View this message
+.. code-block:: bash
 
-.. object:: EXAMPLES
+   munin-async --spoolfetch
 
-   .. code-block:: bash
+This starts an interactive munin node session, enabling the
+"spoolfetch" command. This does not connect to the local munin node.
+Everything happens within munin-async, which reads from the spool
+directory instead of connecting to the node.
 
-      munin-async --spoolfetch
+SEE ALSO
+========
 
-   This starts an interactive munin node session, enabling the
-   "spoolfetch" command. This does not connect to the local munin
-   node. Everything happens within munin-async, which reads from the
-   spool directory instead of connecting to the node.
-
-.. object:: SEE ALSO
-
-   See also :ref:`node-async` for more information and examples of how
-   to configure munin-async.
+See also :ref:`node-async` for more information and examples of how to
+configure munin-async.

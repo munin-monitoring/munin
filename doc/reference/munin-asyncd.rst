@@ -6,54 +6,53 @@
  munin-asyncd
 ==============
 
-.. object:: NAME
+DESCRIPTION
+===========
 
-   munin-asyncd - Munin async daemon
+The munin async daemon connects to a :ref:`munin node <munin-node>`
+periodically, and requests plugin configuration and data.
 
-.. object:: DESCRIPTION
+This is stored in a spool directory, which is read by
+:ref:`munin-async`.
 
-   The munin async daemon connects to a :ref:`munin node <munin-node>`
-   periodically, and requests plugin configuration and data.
+OPTIONS
+=======
 
-   This is stored in a spool directory, which is read by the
-   :ref:`munin async client <munin-async>`
+.. option:: --spool | -s <spooldir>
 
-.. object:: OPTIONS
+   Directory for spooled data [/var/lib/munin/spool]
 
-   .. option:: --spool | -s <spooldir>
+.. option:: --host <hostname:port>
 
-      Directory for spooled data [/var/lib/munin/spool]
+   Connect a munin node running on this host name and port
+   [localhost:4949]
 
-   .. option:: --host <hostname:port>
+.. option:: --interval <seconds>
 
-      Connect a munin node running on this host name and port
-      [localhost:4949]
+   Set default interval size [86400 (one day)]
 
-   .. option:: --interval <seconds>
+.. option:: --retain <count>
 
-      Set default interval size [86400 (one day)]
+   Number of interval files to retai [7]
 
-   .. option:: --retain <count>
+.. option:: --nocleanup
 
-      Number of interval files to retai [7]
+   Disable automated spool dir cleanup
 
-   .. option:: --nocleanup
+.. option:: --fork
 
-      Disable automated spool dir cleanup
+   Fork one thread per plugin available on the node. [no forking]
 
-   .. option:: --fork
+.. option:: --verbose | -v
 
-      Fork one thread per plugin available on the node.  [no forking]
+   Be verbose
 
-   .. option:: --verbose | -v
+.. option:: --help | -h
 
-      Be verbose
+   View this message
 
-   .. option:: --help | -h
+SEE ALSO
+========
 
-      View this message
-
-.. object:: SEE ALSO
-
-   See also :ref:`node-async` for more information and examples of how
-   to configure munin-asyncd.
+See also :ref:`node-async` for more information and examples of how to
+configure munin-asyncd.

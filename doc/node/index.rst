@@ -10,5 +10,4 @@ The munin node is installed on all monitored servers. It accepts
 .. toctree::
    :maxdepth: 2
 
-   reference.rst
    async.rst
