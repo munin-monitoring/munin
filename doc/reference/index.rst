@@ -10,6 +10,7 @@ Man pages
 =========
 
 .. toctree::
+   :maxdepth: 1
 
    munin-async.rst
    munin-asyncd.rst
@@ -26,5 +27,6 @@ Other reference material
 ========================
 
 .. toctree::
+   :maxdepth: 2
 
    plugin.rst
