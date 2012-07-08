@@ -6,135 +6,142 @@
  munin-graph
 =============
 
-.. object:: NAME
+DESCRIPTION
+===========
 
-munin-graph — Create graphs from RRD files
+The munin-graph script is run by munin-cron, and creates graphs from
+all RRD files in the munin database directory.
 
-.. object:: DESCRIPTION
+OPTIONS
+=======
 
-The munin-graph script is
+Some options can be negated by prefixing them with "no".
+Example: --fork and --nofork
 
-.. object:: OPTIONS
+.. option:: --fork
 
-   Some options can be negated by prefixing them with "no".
-   Example: --fork and --nofork
+   By default munin-graph forks subprocesses for drawing graphs to
+   utilize available cores and I/O bandwidth. Can be negated
+   with --nofork [--fork]
 
-   .. option:: --fork
+.. option:: --n <processes>
 
-      By default munin-graph forks subprocesses for drawing graphs to
-      utilize available cores and I/O bandwidth. Can be negated
-      with --nofork [--fork]
+   Max number of concurrent processes [6]
 
-   .. option:: --n <processes>
+.. option:: --force
 
-      Max number of concurrent processes [6]
+   Force drawing of graphs that are not usually drawn due to options
+   in the config file. Can be negated with --noforce [--noforce]
 
-   .. option:: --force
+.. option:: --lazy
 
-      Force drawing of graphs that are not usually drawn due to
-      options in the config file. Can be negated with --noforce
-      [--noforce]
+   Only redraw graphs when needed. Can be negated with --nolazy
+   [--lazy]
 
-   .. option:: --lazy
+.. option:: --help
 
-      Only redraw graphs when needed. Can be negated with --nolazy
-      [--lazy]
+   View this message.
 
-   .. option:: --help
+.. option:: --version
 
-      View this message.
+   View version information.
 
-   .. option:: --version
+.. option:: --debug
 
-      View version information.
+   View debug messages.
 
-   .. option:: --debug
+.. option:: --cron
 
-      View debug messages.
+   Behave as expected when run from cron. (Used internally in Munin.)
+   Can be negated with --nocron
 
-   .. option:: --cron
+.. option:: --host <host>
 
-      Behave as expected when run from cron. (Used internally in
-      Munin.) Can be negated with --nocron
+   Limit graphed hosts to <host>. Multiple --host options may be
+   supplied.
 
-   .. option:: --host <host>
+.. option:: --only-fqn <FQN>
 
-      Limit graphed hosts to <host>. Multiple --host options may be
-      supplied.
+   For internal use with CGI graphing. Graph only a single fully
+   qualified named graph,
 
-   .. option:: --only-fqn <FQN>
+   For instance: --only-fqn
+   root/Backend/dafnes.example.com/diskstats_iops
 
-      For internal use with CGI graphing. Graph only a single fully
-      qualified named graph,
+   Always use with the correct --host option.
 
-      For instance: --only-fqn
-      root/Backend/dafnes.example.com/diskstats_iops
+.. option:: --config <file>
 
-      Always use with the correct --host option.
+   Use <file> as configuration file. [/etc/munin/munin.conf]
 
-   .. option:: --config <file>
+.. option:: --list-images
 
-      Use <file> as configuration file. [/etc/munin/munin.conf]
+   List the filenames of the images created. Can be negated with
+   --nolist-images. [--nolist-images]
 
-   .. option:: --list-images
+.. option:: --output-file | -o
 
-      List the filenames of the images created. Can be negated with
-      --nolist-images. [--nolist-images]
+   Output graph file. (used for CGI graphing)
 
-   .. option:: --output-file | -o
+.. option:: --log-file | -l
 
-      Output graph file. (used for CGI graphing)
+   Output log file. (used for CGI graphing)
 
-   .. option:: --log-file | -l
+.. option:: --day
 
-      Output log file. (used for CGI graphing)
+   Create day-graphs. Can be negated with --noday. [--day]
 
-   .. option:: --day
+.. option:: --week
 
-      Create day-graphs. Can be negated with --noday. [--day]
+   Create week-graphs. Can be negated with --noweek. [--week]
 
-   .. option:: --week
+.. option:: --month
 
-      Create week-graphs. Can be negated with --noweek. [--week]
+   Create month-graphs. Can be negated with --nomonth. [--month]
 
-   .. option:: --month
+.. option:: --year
 
-      Create month-graphs. Can be negated with --nomonth. [--month]
+   Create year-graphs. Can be negated with --noyear. [--year]
 
-   .. option:: --year
+.. option:: --sumweek
 
-      Create year-graphs. Can be negated with --noyear. [--year]
+   Create summarised week-graphs. Can be negated with --nosumweek.
+   [--summweek]
 
-   .. option:: --sumweek
+.. option:: --sumyear
 
-      Create summarised week-graphs. Can be negated with --nosumweek.
-      [--summweek]
+   Create summarised year-graphs. Can be negated with --nosumyear.
+   [--sumyear]
 
-   .. option:: --sumyear
+.. option:: --pinpoint <start,stop>
 
-      Create summarised year-graphs. Can be negated with --nosumyear. [--sumyear]
+   Create custom-graphs. <start,stop> is the time in the standard unix
+   Epoch format. [not active]
 
-   .. option:: --pinpoint <start,stop>
+.. option:: --size_x <pixels>
 
-      Create custom-graphs. <start,stop> is the time in the standard
-      unix Epoch format. [not active]
+   Sets the X size of the graph in pixels [175]
 
-   .. option:: --size_x <pixels>
+.. option:: --size_y <pixels>
 
-      Sets the X size of the graph in pixels [175]
+   Sets the Y size of the graph in pixels [400]
 
-   .. option:: --size_y <pixels>
+.. option:: --lower_limit <lim>
 
-      Sets the Y size of the graph in pixels [400]
+   Sets the lower limit of the graph
 
-   .. option:: --lower_limit <lim>
+.. option:: --upper_limit <lim>
 
-      Sets the lower limit of the graph
+   Sets the upper limit of the graph
 
-   .. option:: --upper_limit <lim>
+.. note::
 
-      Sets the upper limit of the graph
+  :option:`--pinpoint` and :option:`--only-fqn` must not be combined
+  with any of :option:`--day`, :option:`--week`, :option:`--month` or
+  :option:`--year` (or their negating forms). The result of doing that
+  is undefined.
 
-   NOTE! --pinpoint and --only-fqn must not be combined with
-   --[no]<day|week|month|year> options. The result of doing that is
-   undefined.
+SEE ALSO
+========
+
+:ref:`munin-cron`, :ref:`munin-cgi-graph`
