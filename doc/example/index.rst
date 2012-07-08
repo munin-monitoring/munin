@@ -12,4 +12,4 @@ Examples of munin and related configuration are gathered here.
    webserver/apache-virtualhost.rst
    webserver/lighttpd.rst
    webserver/nginx.rst
-   plugin/aggregate.rst
+   graph/aggregate.rst

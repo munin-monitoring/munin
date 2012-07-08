@@ -18,6 +18,9 @@ Munin configuration
 This example assumes the following configuration in
 /etc/munin/munin.conf
 
+.. index::
+   pair: example; munin.conf
+
 ::
 
  # graph_strategy should be commented out, if present
@@ -29,6 +32,9 @@ FastCGI configuration
 This will spawn two FastCGI processes trees. One for munin cgi
 graphing and one for HTML generation. It will create a socket owned by
 www-data, and run the processes as the "munin" user.
+
+.. index::
+   pair: example; munin-cgi-graph invocation
 
 .. code-block:: bash
 
@@ -50,6 +56,9 @@ so you need to chown the log files, and edit /etc/logrotate.d/munin.
 
 Webserver configuration
 =======================
+
+.. index::
+   pair: example; lighttpd configuration
 
 ::
 
