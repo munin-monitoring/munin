@@ -4,12 +4,20 @@
  The Munin plugin
 ==================
 
-This document explains how munin plugins work, how to install,
-configure, debug, and how to write new plugins.
+Role
+====
+
+The munin plugin is a simple executable, which role is to gather one
+set of facts about the local server.
+
+The plugin is called with the argument "config" to get metadata, and
+with no arguments to get the values.
+
+Other documentation
+===================
 
 .. toctree::
    :maxdepth: 2
 
+   use.rst
    writing.rst
-   aggregate.rst
-   reference.rst
