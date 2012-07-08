@@ -1,4 +1,4 @@
-.. _master-index:
+.. _reference-index:
 
 ===========
  Reference
