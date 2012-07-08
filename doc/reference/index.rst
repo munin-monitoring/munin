@@ -16,6 +16,7 @@ Man pages
    munin-asyncd.rst
    munin-cgi-graph.rst
    munin-cgi-html.rst
+   munin-check.rst
    munin-cron.rst
    munin-graph.rst
    munin-html.rst
