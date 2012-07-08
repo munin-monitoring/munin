@@ -19,7 +19,7 @@ Man pages
    munin-limits.rst
    munin-update.rst
    munin-node.rst
-
+   munin-cgi-graph.rst
 
 Other reference material
 ========================
