@@ -5,7 +5,7 @@
 =========================
 
 The munin asynchronous proxy node (or "munin-async") connects to the
-local node periodically, and spools the results. 
+local node periodically, and spools the results.
 
 When the munin master connects, all the data is available instantly.
 
@@ -52,7 +52,7 @@ On the munin node
 Configure your munin node to only listen on "127.0.0.1".
 
 You will also need to add the public key of the munin user to the
-authorized_keys file for this user. 
+authorized_keys file for this user.
 
  * You must add a "command=" parameter to the key to run the command
    specified instead of whatever command the connecting user tries to

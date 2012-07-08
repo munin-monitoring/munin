@@ -89,7 +89,7 @@ Munin logging
 -------------
 
 There should be no messages regarding rrdcached in
-/var/log/munin/munin-update.log. 
+/var/log/munin/munin-update.log.
 
 
 On failure to connect, there will be log lines like:

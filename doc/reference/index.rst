@@ -27,4 +27,3 @@ Other reference material
 .. toctree::
 
    plugin.rst
-

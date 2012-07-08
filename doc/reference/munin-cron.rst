@@ -35,17 +35,17 @@
 .. object:: OPTIONS
 
    .. option:: --service <service>
-   
+
       Limit services to <service>. Multiple --service options may be
       supplied. [unset]
-   
+
    .. option:: --host <host>
-   
+
       Limit hosts to <host>. Multiple --host options may be supplied.
       [unset]
-   
+
    .. option:: --config <file>
-   
+
       Use <file> as configuration file. [/etc/munin/munin.conf]
 
 .. object:: AUTHORS
