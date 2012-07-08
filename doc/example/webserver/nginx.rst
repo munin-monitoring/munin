@@ -54,19 +54,19 @@ Webserver configuration
 ::
 
     location ^~ /cgi-bin/munin-cgi-graph/ {
-	fastcgi_split_path_info ^(/cgi-bin/munin-cgi-graph)(.*);
-	fastcgi_param PATH_INFO $fastcgi_path_info;
-	fastcgi_pass unix:/var/run/munin/fastcgi-graph.sock;
-	include fastcgi_params;
+        fastcgi_split_path_info ^(/cgi-bin/munin-cgi-graph)(.*);
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+        fastcgi_pass unix:/var/run/munin/fastcgi-graph.sock;
+        include fastcgi_params;
     }
 
     location /munin/static/ {
-	alias /etc/munin/static/;
+        alias /etc/munin/static/;
     }
 
     location /munin/ {
-	fastcgi_split_path_info ^(/munin)(.*);
-	fastcgi_param PATH_INFO $fastcgi_path_info;
-	fastcgi_pass unix:/var/run/munin/fastcgi-html.sock;
-	include fastcgi_params;
+        fastcgi_split_path_info ^(/munin)(.*);
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+        fastcgi_pass unix:/var/run/munin/fastcgi-html.sock;
+        include fastcgi_params;
     }

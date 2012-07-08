@@ -73,7 +73,7 @@ Add some nodes to CONFDIR/munin.conf
 Configure web server
 ====================
 
-On the master, you need to configure a web server. 
+On the master, you need to configure a web server.
 
 If you have installed "munin" through distribution
 packages, a webserver may have been configured for you already.

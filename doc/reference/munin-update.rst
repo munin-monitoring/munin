@@ -17,6 +17,6 @@
    each field in each plugin.
 
    Running munin-update with the --debug flag will often give plenty
-   of hints on what might be wrong. 
+   of hints on what might be wrong.
 
    munin-update is a component in the Munin server.

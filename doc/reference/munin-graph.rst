@@ -12,7 +12,7 @@ munin-graph — Create graphs from RRD files
 
 .. object:: DESCRIPTION
 
-The munin-graph script is 
+The munin-graph script is
 
 .. object:: OPTIONS
 
@@ -65,10 +65,10 @@ The munin-graph script is
    .. option:: --only-fqn <FQN>
 
       For internal use with CGI graphing. Graph only a single fully
-      qualified named graph, 
+      qualified named graph,
 
       For instance: --only-fqn
-      root/Backend/dafnes.example.com/diskstats_iops 
+      root/Backend/dafnes.example.com/diskstats_iops
 
       Always use with the correct --host option.
 
