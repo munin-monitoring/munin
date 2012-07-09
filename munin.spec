@@ -1,6 +1,6 @@
 Name:      munin
 Version:   2.0.2
-Release:   1%{?dist}
+Release:   2%{?dist}
 Summary:   Network-wide graphing framework (grapher/gatherer)
 License:   GPLv2 and Bitstream Vera
 Group:     System Environment/Daemons
@@ -108,6 +108,47 @@ maintaining a rattling ease of installation and configuration.
 
 This package contains common files that are used by both the server (munin)
 and node (munin-node) packages. 
+
+%package doc
+Group: System Environment/Daemons
+Summary: Network-wide graphing framework (docs and man pages)
+BuildArch: noarch
+
+%description doc
+Munin is a highly flexible and powerful solution used to create graphs of
+virtually everything imaginable throughout your network, while still
+maintaining a rattling ease of installation and configuration.
+
+This package contains common documents and the manual pages for all of
+the munin packages.
+
+%package async
+Group: System Environment/Daemons
+Summary: Network-wide graphing framework (asynchronous client tools)
+BuildArch: noarch
+Requires: %{name}-node = %{version}
+
+%description async
+Munin is a highly flexible and powerful solution used to create graphs of
+virtually everything imaginable throughout your network, while still
+maintaining a rattling ease of installation and configuration.
+
+This package contains the tools necessary for setting up an asynchronous
+client / spooling system
+
+%package plugins
+Group: System Environment/Daemons
+Summary: Network-wide graphing framework (common plugins)
+BuildArch: noarch
+Requires: %{name}-node = %{version}
+
+%description plugins
+Munin is a highly flexible and powerful solution used to create graphs of
+virtually everything imaginable throughout your network, while still
+maintaining a rattling ease of installation and configuration.
+
+This package contains a set of common plugins a node (munin-node) may
+use
 
 %if %{?rhel}%{!?rhel:0} > 4
 %package java-plugins
@@ -238,7 +279,6 @@ exit 0
  
 %files
 %defattr(-, root, root)
-%doc %{_docdir}/%{name}-%{version}/
 %{_bindir}/munin-cron
 %{_bindir}/munindoc
 %{_bindir}/munin-check
@@ -264,8 +304,6 @@ exit 0
 %attr(-, munin, munin) %dir /var/run/munin
 %attr(-, munin, munin) %dir /var/log/munin
 %attr(-, munin, munin) /var/www/html/munin
-%doc %{_mandir}/man8/munin*
-%doc %{_mandir}/man5/munin.conf*
 
 %files node
 %defattr(-, root, root)
@@ -288,21 +326,32 @@ exit 0
 %dir %{_sysconfdir}/munin
 %attr(-, munin, munin) %dir /var/lib/munin
 %dir %attr(-, munin, munin) /var/lib/munin/plugin-state
-%{_datadir}/munin/munin-async
-%{_datadir}/munin/munin-asyncd
-%{_datadir}/munin/plugins/
-%doc %{_docdir}/%{name}-%{version}/
-%doc %{_mandir}/man5/munin-node*
-%doc %{_mandir}/man3/Munin*
-%doc %{_mandir}/man1/munin*
 %{perl_vendorlib}/Munin/Node
 %{perl_vendorlib}/Munin/Plugin*
 
 %files common
 %defattr(-, root, root)
-%doc Announce-2.0 ChangeLog COPYING HACKING.pod perltidyrc README RELEASE UPGRADING
 %dir %{perl_vendorlib}/Munin
 %{perl_vendorlib}/Munin/Common
+
+%files doc
+%defattr(-, root, root)
+%doc Announce-2.0 ChangeLog COPYING HACKING.pod perltidyrc README RELEASE UPGRADING
+%doc %{_docdir}/%{name}-*
+%doc %{_mandir}/man8/munin*
+%doc %{_mandir}/man5/munin.conf*
+%doc %{_mandir}/man5/munin-node*
+%doc %{_mandir}/man3/Munin*
+%doc %{_mandir}/man1/munin*
+
+%files async
+%defattr(-, root, root)
+%{_datadir}/munin/munin-async
+%{_datadir}/munin/munin-asyncd
+
+%files plugins
+%defattr(-, root, root)
+%{_datadir}/munin/plugins/
 
 %if %{?rhel}%{!?rhel:0} > 4
 %files java-plugins
@@ -315,6 +364,9 @@ exit 0
 %endif
 
 %changelog
+* Sun Jul  8 2012 Matt West <mwest@zynga.com> - 2.0.2-2
+- Created plugins, doc, and async packages
+
 * Fri Jul  6 2012 Matt West <mwest@zynga.com> - 2.0.2-1
 - New upstream release
 
