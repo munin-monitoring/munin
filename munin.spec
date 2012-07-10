@@ -1,6 +1,6 @@
 Name:      munin
 Version:   2.0.2
-Release:   2%{?dist}
+Release:   3%{?dist}
 Summary:   Network-wide graphing framework (grapher/gatherer)
 License:   GPLv2 and Bitstream Vera
 Group:     System Environment/Daemons
@@ -8,11 +8,7 @@ URL:       http://munin.projects.linpro.no/
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 Source: http://downloads.sourceforge.net/sourceforge/munin/%{name}-%{version}.tar.gz
 
-%if %{?rhel}%{!?rhel:0} > 4
-BuildRequires: java-1.6.0-devel
-BuildRequires: mx4j
-BuildRequires: jpackage-utils
-%elseif %if %{?fedora}%{!?fedora:0} >= 6
+%if %{?rhel}%{!?rhel:0} > 4 || %{?fedora}%{!?fedora:0} >= 6
 BuildRequires: java-1.6.0-devel
 BuildRequires: mx4j
 BuildRequires: jpackage-utils
@@ -39,9 +35,7 @@ Requires: logrotate
 Requires: /bin/mail
 Requires(pre): shadow-utils
 Requires: perl
-%if %{?rhel}%{!?rhel:0} > 5
-Requires: dejavu-sans-mono-fonts
-%elseif %if %{?fedora}%{!?fedora:0} > 6
+%if %{?rhel}%{!?rhel:0} > 5 || %{?fedora}%{!?fedora:0} > 6
 Requires: dejavu-sans-mono-fonts
 %else
 Requires: bitstream-vera-fonts
@@ -150,16 +144,7 @@ maintaining a rattling ease of installation and configuration.
 This package contains a set of common plugins a node (munin-node) may
 use
 
-%if %{?rhel}%{!?rhel:0} > 4
-%package java-plugins
-Group: System Environment/Daemons
-Summary: java-plugins for munin
-Requires: %{name}-node = %{version}
-BuildArch: noarch
-
-%description java-plugins
-java-plugins for munin-node. 
-%elseif %{?fedora}%{!?fedora:0} > 6
+%if %{?rhel}%{!?rhel:0} > 4 || %{?fedora}%{!?fedora:0} > 6
 %package java-plugins
 Group: System Environment/Daemons
 Summary: java-plugins for munin
@@ -174,9 +159,7 @@ java-plugins for munin-node.
 %setup -q
 
 %build
-%if %{?rhel}%{!?rhel:0} > 4
-export  CLASSPATH=plugins/javalib/org/munin/plugin/jmx:$(build-classpath mx4j):$CLASSPATH
-%elseif %{?fedora}%{!?fedora:0} > 6
+%if %{?rhel}%{!?rhel:0} > 4 || %{?fedora}%{!?fedora:0} > 6
 export  CLASSPATH=plugins/javalib/org/munin/plugin/jmx:$(build-classpath mx4j):$CLASSPATH
 %endif
 make 	CONFIG=dists/redhat/Makefile.config
@@ -189,9 +172,7 @@ make	CONFIG=dists/redhat/Makefile.config \
  	DOCDIR=%{buildroot}%{_docdir}/%{name}-%{version} \
 	MANDIR=%{buildroot}%{_mandir} \
 	DESTDIR=%{buildroot} \
-%if %{?rhel}%{!?rhel:0} > 4
-	JAVALIBDIR=%{buildroot}%{_datadir}/java \
-%elseif %{?fedora}%{!?fedora:0} > 6
+%if %{?rhel}%{!?rhel:0} > 4 || %{?fedora}%{!?fedora:0} > 6
 	JAVALIBDIR=%{buildroot}%{_datadir}/java \
 %endif
 	install
@@ -353,17 +334,16 @@ exit 0
 %defattr(-, root, root)
 %{_datadir}/munin/plugins/
 
-%if %{?rhel}%{!?rhel:0} > 4
-%files java-plugins
-%defattr(-, root, root)
-%{_datadir}/java/%{name}-jmx-plugins.jar
-%elseif %{?fedora}%{!?fedora:0} > 6
+%if %{?rhel}%{!?rhel:0} > 4 || %{?fedora}%{!?fedora:0} > 6
 %files java-plugins
 %defattr(-, root, root)
 %{_datadir}/java/%{name}-jmx-plugins.jar
 %endif
 
 %changelog
+* Tue Jul 10 2012 Matt West <mwest@zynga.com> - 2.0.2-3
+- Fine tuning spec file conditional statements
+
 * Sun Jul  8 2012 Matt West <mwest@zynga.com> - 2.0.2-2
 - Created plugins, doc, and async packages
 
