@@ -74,7 +74,7 @@ if (! graph_check_cron() ) {
 # BEGIN FAST-CGI LOOP:
 my $nb_request = 0;
 my $nb_request_max = 0;
-my $graph_fh = new IO::File($config->{libdir} . "/graphs");
+my $graph_fh = new IO::File($config->{dbdir} . "/graphs");
 while (my $path = <$graph_fh>) {
     my $pinpoint = undef;
     print "Request path is $path";
