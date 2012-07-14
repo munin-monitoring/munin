@@ -21,7 +21,8 @@ So, we just let the plugin sample itself the values at a rate it feels adequate.
 
 This enables various constructions, mostly around ''streaming'' plugins to achieve highly detailed sampling with a very small overhead.
 
-! Notes
+Notes
++++++
 
 This protocol is currently completely transparent to @@munin-node@@, and therefore it means that it can be used even on older (1.x) nodes. Only a 2.0 master is required.
 
@@ -30,19 +31,22 @@ Protocol details
 
 The protocol itself is derived from the spoolfetch extension.
 
-!! Config
+Config
+++++++
 
 A new directive is used, @@update_rate@@. It enables the master to create the rrd with an adequate step. 
 
-Omitting it would lead to rrd averaging the supersampled values onto the default 5 min rate. This means __data loss__.
+Omitting it would lead to rrd averaging the supersampled values onto the default 5 min rate. This means **data loss**.
 
-! Notes
+Notes
+#####
 
 The heartbeat has always a 2 step size, so failure to send all the samples will result with unknown values, as expected. 
 
 The RRD file size is always the same in the default config, as all the RRA are configured proportionally to the @@update_rate@@. This means that, since you'll keep as much data as with the default, you keep it for a shorter time.
 
-!! Fetch
+Fetch
++++++
 
 When spoolfetching, the epoch is also sent in front of the value. Supersampling is then just a matter of sending multiple epoch/value lines, with monotonically increasing epoch. Note that since the epoch is an integer value for rrdtool, the smallest granularity is 1 second. For the time being, the protocol itself does also mandates integers. We can easily imagine that with another database as backend, an extension could be hacked together. 
 
@@ -67,5 +71,6 @@ Undersampling
 Some plugins are on the opposite side of the spectrum, as they only need a lower precision. 
 
 It makes sense when : 
-* data should be kept for a ''very'' long time
-* data is __very__ expensive to generate and it doesn't vary fast.
+
+* data should be kept for a *very* long time
+* data is *very* expensive to generate and it varies only slowly.
