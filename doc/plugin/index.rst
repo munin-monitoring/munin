@@ -21,3 +21,4 @@ Other documentation
 
    use.rst
    writing.rst
+   supersampling.rst
