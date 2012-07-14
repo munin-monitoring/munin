@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # Plugin to test complex multigraph thingies
 
 # This plugin, ideally, creates a multigraph tree that is 3 levels deep.  The
@@ -19,7 +19,7 @@
 # the second tier is able to.  XXX: Edit this paragraph when we fix it. :)
 
 
-test "$1" = "config" && cat <<EOF
+[ "$1" = "config" ] && cat <<EOF
 multigraph multigraph_complex
 graph_title Testing multigraph
 graph_args --base 1000
@@ -209,7 +209,7 @@ fake1_in.draw AREA
 fake1_in.cdef fake1_in,8,*
 EOF
 
-test "$1" = "" && cat <<EOF
+[ "$1" = "" ] && cat <<EOF
 multigraph multigraph_complex.multigraph_complex_fake2.multigraph_complex_fake2_out
 fake2_out.value 728
 
@@ -230,4 +230,3 @@ fake1_in.value 5076
 EOF
 
 exit 0
-
