@@ -161,7 +161,7 @@ my $only_fqn = '';
 
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
 
-# RRD param for --daemon
+# RRD param for RRDCACHED_ADDRESS
 my @rrdcached_params;
 
 my $running     = 0;
@@ -308,8 +308,9 @@ sub graph_startup {
 
     if ($config->{"rrdcached_socket"}) { 
 	    if ($RRDs::VERSION >= 1.3){
-		    push @rrdcached_params, "--daemon";
-		    push @rrdcached_params, $config->{"rrdcached_socket"}; 
+		# Using the RRDCACHED_ADDRESS environnement variable, as
+                # it is way less intrusive than the command line args.
+                $ENV{RRDCACHED_ADDRESS} = $config->{"rrdcached_socket"};
 	    } else { 
 		    ERROR "[ERROR] RRDCached feature ignored: RRD version must be at least 1.3. Version found: " . $RRDs::VERSION; 
 	    }
