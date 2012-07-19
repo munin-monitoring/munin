@@ -409,8 +409,6 @@ build-%: %/Build
 	cd $* && $(PERL) Build
 
 build-common: common/Build
-	cd common && $(PERL) Build && rm -f common/blib/lib/Munin/Common/Defaults.pm && true
-
 
 # BUG: the Build script writes files under PWD when it does "install"
 # can't seem to find a way to persuade it to write otherwhere.
