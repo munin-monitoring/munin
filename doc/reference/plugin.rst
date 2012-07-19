@@ -48,6 +48,15 @@ following fields are used.
 |                    |                  |          | which is the practice of taking          |                  |         |
 |                    |                  |          | datapoints from other graphs.            |                  |         |
 +--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| update_rate        | integer          | optional | Sets the update_rate used by the munin   |                  |         |
+|                    | (seconds)        |          | master when it creates the RRD file.     |                  |         |
+|                    |                  |          |                                          |                  |         |
+|                    |                  |          | The update rate is the interval at which |                  |         |
+|                    |                  |          | the RRD file expects to have data.       |                  |         |
+|                    |                  |          |                                          |                  |         |
+|                    |                  |          | This field requires a munin master       |                  |         |
+|                    |                  |          | version of at least 2.0.0                |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
 | datapoint.label    | lower case       | required | The label used in the graph for this     |                  |         |
 |                    | string, no       |          | field                                    |                  |         |
 |                    | whitespace       |          |                                          |                  |         |
