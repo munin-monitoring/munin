@@ -12,6 +12,12 @@ CONFIG = Makefile.config
 include $(DEFAULTS)
 include $(CONFIG)
 
+ifeq ($(JCVALID),yes)
+JAVA_BUILD=build-plugins-java
+JAVA_INSTALL=install-plugins-java
+JAVA_PLUGINS=plugins/node.d.java/*
+endif
+
 RELEASE          := $(shell $(CURDIR)/getversion)
 INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
 INSTALL          := ./install-sh
@@ -19,12 +25,11 @@ DIR              := $(shell /bin/pwd | sed 's/^.*\///')
 INFILES          := $(shell find . -name '*.in' | sed 's/\.\/\(.*\)\.in$$/build\/\1/')
 INFILES_MASTER   := $(shell find master -name '*.in' | sed 's/\(.*\)\.in$$/build\/\1/')
 CLASSFILES       := $(shell find plugins/javalib -name '*.java' | sed 's/\(.*\)\.java$$/build\/\1.class/')
-PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/*)
+PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/* $(JAVA_PLUGINS))
 MANCENTER        := "Munin Documentation"
 MAN8		 := master/_bin/munin-update master/_bin/munin-limits master/_bin/munin-html master/_bin/munin-graph
 PODMAN8          := build/master/doc/munin-cron master/doc/munin master/doc/munin-check
 PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
-
 
 .PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
         build build-common-prime build-common-pre build-doc \
@@ -58,11 +63,7 @@ tags:
 
 ######################################################################
 
-ifeq ($(JCVALID),yes)
-install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-plugins-java install-man install-async-prime
-else
-install: install-master-prime install-common-prime install-node-prime install-plugins-prime install-man install-async-prime
-endif
+install: install-master-prime install-common-prime install-node-prime install-plugins-prime $(JAVA_INSTALL) install-man install-async-prime
 
 install-pre: Makefile Makefile.config
 	@$(CHECKUSER)
@@ -104,8 +105,8 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/partial/ ; \
 	done
 
-	$(INSTALL) -m 0755 master/DejaVuSansMono.ttf $(LIBDIR)/
-	$(INSTALL) -m 0755 master/DejaVuSans.ttf $(LIBDIR)/
+	$(INSTALL) -m 0644 master/DejaVuSansMono.ttf $(LIBDIR)/
+	$(INSTALL) -m 0644 master/DejaVuSans.ttf $(LIBDIR)/
 
 	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/master/www/munin-htaccess $(HTMLDIR)/.htaccess
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/master/munin.conf $(CONFDIR)/
@@ -130,6 +131,10 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 install-node-plugins: install-plugins-prime
 
 # Some HP-UX plugins needs *.adv support files in LIBDIR
+ifneq ($(OSTYPE),hp-ux)
+HPUXONLY=true ||
+endif
+
 install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	@$(CHECKGROUP)
 
@@ -149,13 +154,20 @@ install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 		$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;     \
 	    fi                                                 \
 	done
-	-mv $(LIBDIR)/plugins/*.adv $(LIBDIR)
+	$(HPUXONLY) mv $(LIBDIR)/plugins/*.adv $(LIBDIR)
 	$(INSTALL) -m 0644 build/plugins/plugins.history $(LIBDIR)/plugins/
 	$(INSTALL) -m 0644 build/plugins/plugin.sh $(LIBDIR)/plugins/
 
 install-plugins-java: build-plugins-java
 	mkdir -p $(JAVALIBDIR)
 	$(INSTALL) -m 0644 build/plugins/javalib/munin-jmx-plugins.jar $(JAVALIBDIR)/
+	mkdir -p $(LIBDIR)/plugins
+	for p in build/plugins/node.d.java/*; do               \
+	    if test -f "$$p" ; then                            \
+		echo Installing $$p;                           \
+		$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;     \
+	    fi                                                 \
+	done
 
 #TODO:
 # configure plugins.  Or not. Better done under the direction of the installer
@@ -199,11 +211,7 @@ install-doc: build-doc
 # Dummy rule to enable parallel building
 infiles: $(INFILES)
 
-ifeq ($(JCVALID),yes)
-build: infiles build-master build-common-prime build-node build-plugins build-plugins-java build-man
-else
-build: infiles build-master build-common-prime build-node build-plugins build-man
-endif
+build: infiles build-master build-common-prime build-node build-plugins $(JAVA_BUILD) build-man
 
 build/%: %.in
 	@echo "$< -> $@"

@@ -65,15 +65,15 @@ use File::Find;  # In perl 5 since the start
 my @infdir;
 if (@ARGV && $ARGV[0] =~ /autoconf|suggest/) {
     # Taint mode requires this
-    local $ENV{PATH} = '/usr/bin';
+    local $ENV{PATH} = '/bin:/usr/bin';
     # First, try lookup in proc table
     # Note, this will only work if oninit was started with full path
     # On Linux we could easily retreive INFORMIXDIR from /proc by
     # tr \\00 \\012 < /proc/$PID/environ | grep INFORMIXDIR
     # Following ps command should work on Linux and Solaris
-    my $pscmd = '/usr/bin/ps -p `/usr/bin/pgrep -P1 oninit -d,` -o ppid= -o args=';
+    my $pscmd = 'ps -p `pgrep -P1 oninit -d,` -o ppid= -o args=';
     # while HP-UX discerns itself once more
-    $pscmd = 'UNIX95= /usr/bin/ps -C oninit -o ppid= -o args='
+    $pscmd = 'UNIX95= ps -C oninit -o ppid= -o args='
     	if ($^O =~ /hp-?ux/i);
     @infdir = map $_->[1],
 	grep $_->[0]==1,
