@@ -1,3 +1,13 @@
+munin (2.0.2-1) UNRELEASED; urgency=low
+
+  [ Holger Levsen ]
+  * New upstream version.
+
+  [ Stig Sandbeck Mathisen ]
+  * Rename "munin-async-*" to munin-async and munin-asyncd.
+
+ -- Holger Levsen <holger@debian.org>  Sat, 21 Jul 2012 11:35:01 -0600
+
 munin (2.0.1-1) unstable; urgency=low
 
   * New upstream version. 
