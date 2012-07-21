@@ -1,7 +1,7 @@
 munin (2.0.2-1) UNRELEASED; urgency=low
 
   [ Holger Levsen ]
-  * New upstream version.
+  * New upstream version, reintroducing munin-graph. (Closes: #681674)
 
   [ Stig Sandbeck Mathisen ]
   * Rename "munin-async-*" to munin-async and munin-asyncd.
