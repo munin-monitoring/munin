@@ -1,0 +1,65 @@
+.. _example-webserver-apache:
+
+==================================
+ Apache virtualhost configuration
+==================================
+
+This example describes how to set up munin on a separate apache httpd
+virtual host. It uses FastCGI if this is available, and falls back to
+CGI if it is not.
+
+Munin configuration
+===================
+
+This example assumes the following configuration in
+/etc/munin/munin.conf
+
+::
+
+ # graph_strategy should be commented out, if present
+ html_strategy  cgi
+
+Virtualhost configuration
+=========================
+
+Add a new virtualhost, using the following example:
+
+::
+
+ <VirtualHost *:80>
+     ServerName munin.example.org
+     ServerAlias munin
+
+     ServerAdmin  info@example.org
+
+     DocumentRoot /srv/www/munin.example.org
+
+     ErrorLog  /var/log/apache2/munin.example.org-error.log
+     CustomLog /var/log/apache2/munin.example.org-access.log combined
+
+     # Rewrites
+     RewriteEngine On
+
+     # Static content in /static
+     RewriteRule ^/favicon.ico /etc/munin/static/favicon.ico [L]
+     RewriteRule ^/static/(.*) /etc/munin/static/$1          [L]
+
+     # HTML
+     RewriteCond %{REQUEST_URI} .html$ [or]
+     RewriteCond %{REQUEST_URI} =/
+     RewriteRule ^/(.*)          /usr/lib/cgi-bin/munin-cgi-html/$1 [L]
+
+     # Images
+     RewriteRule ^/cgi-bin/munin-cgi-graph/(.*) /usr/lib/cgi-bin/munin-cgi-graph/$1 [L]
+
+     # Ensure we can run (fast)cgi scripts
+     <Directory "/usr/lib/cgi-bin">
+         Options +ExecCGI
+         <IfModule mod_fcgid.c>
+             SetHandler fcgid-script
+         </IfModule>
+         <IfModule !mod_fcgid.c>
+             SetHandler cgi-script
+         </IfModule>
+     </Directory>
+ </VirtualHost>

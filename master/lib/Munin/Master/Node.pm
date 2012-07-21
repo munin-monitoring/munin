@@ -508,7 +508,9 @@ sub parse_service_data {
         }
     }
     if ($errors) {
-	WARN "[WARNING] $errors lines had errors while $correct lines were correct in data from 'fetch $plugin' on $nodedesignation";
+	my $percent = ($errors / ($errors + $correct)) * 100; 
+	$percent = sprintf("%.2f", $percent);
+	WARN "[WARNING] $errors lines had errors while $correct lines were correct ($percent%) in data from 'fetch $plugin' on $nodedesignation";
     }
 
     return %values;

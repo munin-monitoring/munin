@@ -63,8 +63,6 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     }
     print "update.warning 240\n";
     print "update.critical 285\n";
-    print "graph.warning 240\n";
-    print "graph.critical 285\n";
     exit 0;
 }
 
