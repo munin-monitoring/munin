@@ -1,4 +1,4 @@
-munin (2.0.2-1) UNRELEASED; urgency=low
+munin (2.0.2-1) unstable; urgency=low
 
   [ Holger Levsen ]
   * New upstream version, reintroducing munin-graph (Closes: #681674) and
@@ -7,9 +7,9 @@ munin (2.0.2-1) UNRELEASED; urgency=low
   * Add proper LSB headers to all init scripts. (Closes: #680223)
 
   [ Stig Sandbeck Mathisen ]
-  * Rename "munin-async-*" to munin-async and munin-asyncd.
+  * debian/control: Rename "munin-async-*" to munin-async and munin-asyncd.
 
- -- Holger Levsen <holger@debian.org>  Sat, 21 Jul 2012 11:35:01 -0600
+ -- Holger Levsen <holger@debian.org>  Sat, 21 Jul 2012 12:43:33 -0600
 
 munin (2.0.1-1) unstable; urgency=low
 
