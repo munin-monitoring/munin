@@ -43,10 +43,11 @@ PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
 
 .SUFFIXES: .java .class
 
+# This HAS to be the 1st rule
+default: build
+
 .java.class:
 	cd plugins/javalib && $(JC) $(JFLAGS) $(subst plugins/javalib/,,$*.java)
-
-default: build
 
 uninstall:
 	echo "Uninstall is not implemented yet"
