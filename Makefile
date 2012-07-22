@@ -47,7 +47,7 @@ PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
 default: build
 
 .java.class:
-	cd plugins/javalib && $(JC) $(JFLAGS) $(subst plugins/javalib/,,$*.java)
+	$(JC) -sourcepath plugins/javalib -d build/plugins/javalib $(JFLAGS) plugins/javalib/$(subst plugins/javalib/,,$*.java)
 
 uninstall:
 	echo "Uninstall is not implemented yet"
@@ -313,9 +313,12 @@ build-plugins-java: build/plugins/javalib/munin-jmx-plugins.jar
 build/plugins/javalib/munin-jmx-plugins.jar: $(CLASSFILES)
 	cd build/plugins/javalib && $(JAR) cf munin-jmx-plugins.jar org/munin/plugin/jmx
 
-build/%.class: %.class
-	mkdir -p build/`dirname $*.class`
-	cp $**.class build/`dirname $*.class`
+build-java-stamp:
+	mkdir -p build/plugins/javalib
+	touch build-java-stamp
+
+build/%.class: %.class build-java-stamp
+	@echo "Compiling $*"
 
 ######################################################################
 # DIST RULES
@@ -364,6 +367,7 @@ endif
 	-rm -f build-stamp
 	-rm -f build-doc-stamp
 	-rm -f build-man-stamp
+	-rm -f build-java-stamp
 	-rm -rf t/install
 
 	-rm -f dists/redhat/munin.spec
