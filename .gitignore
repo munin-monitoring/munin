@@ -1,4 +1,5 @@
 */Build
 */_build/
 */blib/
-build-doc-stamp
+build-*-stamp
+build/
