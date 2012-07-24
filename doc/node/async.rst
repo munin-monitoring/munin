@@ -5,7 +5,7 @@
 =========================
 
 The munin asynchronous proxy node (or "munin-async") connects to the
-local node periodically, and spools the results. 
+local node periodically, and spools the results.
 
 When the munin master connects, all the data is available instantly.
 
@@ -52,17 +52,30 @@ On the munin node
 Configure your munin node to only listen on "127.0.0.1".
 
 You will also need to add the public key of the munin user to the
-authorized_keys file for this user. 
+authorized_keys file for this user.
 
  * You must add a "command=" parameter to the key to run the command
    specified instead of whatever command the connecting user tries to
    use.
 
+::
+
+  command="/usr/share/munin/munin-async --spoolfetch" ssh-rsa AAAA[...] munin@master
+
+The following options are recommended for security, but are strictly
+not necessary for the munin-async connection to work
+
  * You should add a "from=" parameter to the key to restrict where it
    can be used from.
 
-See the authorized_keys(5) man page for more information.
+ * You should add hardening options. At the time of writing, these are
+   "no-X11-forwarding", "no-agent-forwarding", "no-port-forwarding",
+   "no-pty" and "no-user-rc".
+
+   Some of these may also be set globally in /etc/ssh/sshd_config.
 
 ::
 
-  command="/usr/share/munin/munin-async-client --spoolfetch" ssh-rsa AAAA[...] munin@master
+  no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,no-user-rc,from="192.0.2.0/24",command="/usr/share/munin/munin-async --spoolfetch" ssh-rsa AAAA[...] munin@master
+
+See the sshd_config (5) and authorized_keys(5) man pages for more information.

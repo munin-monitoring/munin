@@ -430,8 +430,6 @@ sub generate_service_templates {
     $srv{'root_path'} = $root_path;
 	$srv{'filename'}  = $filename;
 
-    my $method = "cgi"; # Method can no longer be either cron or cgi, it's always cgi
-
     $srv{'url'} = "$srv{node}.html";
 
     my $path = join('/', @loc);
@@ -460,7 +458,7 @@ sub generate_service_templates {
 	    }
     }
 
-    if ($method eq "cgi") {
+    if ($config->{'graph_strategy'} eq "cgi") {
 	map { $srv{$_} = $config->{'cgiurl_graph'} . "/" . $imgs{$_} } keys %imgs;
     } else {
 	map { $srv{$_} = $root_path . "/" . $imgs{$_} } keys %imgs;
@@ -477,7 +475,7 @@ sub generate_service_templates {
 	my $start_year = $epoch_now - (3600 * 24 * 400);
 	my $size_x = 800;
 	my $size_y = 400;
-	my $common_url = "$root_path/static/dynazoom.html?plugin_name=$path&size_x=$size_x&size_y=$size_y";
+	my $common_url = "$root_path/static/dynazoom.html?cgiurl_graph=$config->{'cgiurl_graph'}&plugin_name=$path&size_x=$size_x&size_y=$size_y";
 	$srv{zoomday} = "$common_url&start_epoch=$start_day&stop_epoch=$epoch_now";
 	$srv{zoomweek} = "$common_url&start_epoch=$start_week&stop_epoch=$epoch_now";
 	$srv{zoommonth} = "$common_url&start_epoch=$start_month&stop_epoch=$epoch_now";
@@ -487,7 +485,7 @@ sub generate_service_templates {
 	for my $scale (@times) {
         # Don't try to find the size if cgi is enabled, 
         # otherwise old data might pollute  
-        next if ($method eq "cgi");
+        next if ($config->{'graph_strategy'} eq "cgi");
         if (my ($w, $h)
             = get_png_size(munin_get_picture_filename($service, $scale))) {
             $srv{"img" . $scale . "width"}  = $w;
@@ -499,7 +497,7 @@ sub generate_service_templates {
         $srv{imgweeksum} = "$srv{node}-week-sum.png";
         $srv{imgyearsum} = "$srv{node}-year-sum.png";
         for my $scale (["week", "year"]) {
-            next if ($method eq "cgi");
+            next if ($config->{'graph_strategy'} eq "cgi");
             if (my ($w, $h)
                 = get_png_size(munin_get_picture_filename($service, $scale, 1)))
             {

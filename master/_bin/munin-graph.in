@@ -27,6 +27,9 @@ $Id$
 use strict;
 use warnings;
 use IO::Handle;
+BEGIN {
+    $Date::Manip::Backend = 'DM5';
+}
 use Date::Manip;
 use POSIX qw(strftime);
 use Time::HiRes qw(gettimeofday tv_interval);
@@ -71,7 +74,7 @@ if (! graph_check_cron() ) {
 # BEGIN FAST-CGI LOOP:
 my $nb_request = 0;
 my $nb_request_max = 0;
-my $graph_fh = new IO::File($config->{libdir} . "/graphs");
+my $graph_fh = new IO::File($config->{dbdir} . "/graphs");
 while (my $path = <$graph_fh>) {
     my $pinpoint = undef;
     print "Request path is $path";

@@ -1,4 +1,7 @@
 .. _example-plugin-aggregate:
+.. index::
+   single: Aggregating munin plugins
+   pair: plugin; aggregate
 
 ==============================
  Graph aggregation by example

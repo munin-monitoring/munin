@@ -4,6 +4,9 @@
  Plugin reference
 ==================
 
+.. index::
+   pair: plugin; fields
+
 Fields
 ======
 
@@ -35,7 +38,7 @@ following fields are used.
 |                    |                  |          | scaled to the uppper and lower values of |                  |         |
 |                    |                  |          | the datapoints within the graph.         |                  |         |
 +--------------------+------------------+----------+------------------------------------------+------------------+---------+
-| graph_order        | space separated  | optional | Ensures that the listed datapoints are   | :ref:`aggregate` |         |
+| graph_order        | space separated  | optional | Ensures that the listed datapoints are   |                  |         |
 |                    | list of          |          | displayed in order. Any additional       |                  |         |
 |                    | graph.datapoints |          | datapoints are added in the order of     |                  |         |
 |                    |                  |          | appearance after datapoitns appearing on |                  |         |
@@ -44,6 +47,15 @@ following fields are used.
 |                    |                  |          | This field is also used for "borrowing", |                  |         |
 |                    |                  |          | which is the practice of taking          |                  |         |
 |                    |                  |          | datapoints from other graphs.            |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| update_rate        | integer          | optional | Sets the update_rate used by the munin   |                  |         |
+|                    | (seconds)        |          | master when it creates the RRD file.     |                  |         |
+|                    |                  |          |                                          |                  |         |
+|                    |                  |          | The update rate is the interval at which |                  |         |
+|                    |                  |          | the RRD file expects to have data.       |                  |         |
+|                    |                  |          |                                          |                  |         |
+|                    |                  |          | This field requires a munin master       |                  |         |
+|                    |                  |          | version of at least 2.0.0                |                  |         |
 +--------------------+------------------+----------+------------------------------------------+------------------+---------+
 | datapoint.label    | lower case       | required | The label used in the graph for this     |                  |         |
 |                    | string, no       |          | field                                    |                  |         |
@@ -99,6 +111,9 @@ fields are used.
 |                 | be signed)            |          |                  |      |            |
 |                 |                       |          |                  |      |            |
 +-----------------+-----------------------+----------+------------------+------+------------+
+
+.. index::
+   pair: plugin; executing
 
 Example
 =======

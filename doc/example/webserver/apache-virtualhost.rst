@@ -14,6 +14,9 @@ Munin configuration
 This example assumes the following configuration in
 /etc/munin/munin.conf
 
+.. index::
+   pair: example; munin.conf
+
 ::
 
  # graph_strategy should be commented out, if present
@@ -23,6 +26,9 @@ Virtualhost configuration
 =========================
 
 Add a new virtualhost, using the following example:
+
+.. index::
+   pair: example; apache httpd configuration
 
 ::
 

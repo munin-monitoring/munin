@@ -857,8 +857,9 @@ sub _update_rrd_file {
 		} elsif($RRDs::VERSION < 1.3){
 			WARN "[WARN] RRDCached feature ignored: perl RRDs lib version must be at least 1.3. Version found: " . $RRDs::VERSION;
 		} else {
-			push @update_rrd_data, "--daemon";
-			push @update_rrd_data, $config->{"rrdcached_socket"};
+			# Using the RRDCACHED_ADDRESS environnement variable, as
+			# it is way less intrusive than the command line args.
+			$ENV{RRDCACHED_ADDRESS} = $config->{"rrdcached_socket"};
 		}
 	} 
     
