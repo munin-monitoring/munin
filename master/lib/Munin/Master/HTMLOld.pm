@@ -269,6 +269,19 @@ sub emit_comparison_template {
 		push((@$comparepeers), {"name" => $peer->{"name"}, "link" => $comparelink});
 	}
 
+    foreach my $cat(@{$key->{'comparecategories'}}) {
+        foreach my $service(@{$cat->{'services'}}) {
+            foreach my $node(@{$service->{'nodes'}}) {
+                foreach my $imgsrc(qw(imgday imgweek imgmonth imgyear
+                              cimgday cimgweek cimgmonth cimgyear
+                              zoomday zoomweek zoommonth zoomyear)) {
+                    next unless defined($node->{$imgsrc});
+                    $node->{$imgsrc} =~ s|^\.\./\.\./|../|;
+                }
+            }
+        }
+    }
+
     $comparisontemplates{$t}->param(
                                     INFO_OPTION => 'Groups on this level',
                                     NAME        => $key->{'name'},
@@ -372,6 +385,16 @@ sub emit_category_template {
 	my $filename = $key->{'filename-' . $time};
 
     DEBUG "[DEBUG] Creating global category page ".$filename;
+
+    foreach my $graphs(@{$key->{'graphs'}}) {
+        foreach my $graph(@{$graphs->{'graphs'}}) {
+            foreach my $imgsrc(qw(imgday imgweek imgmonth imgyear
+                              cimgday cimgweek cimgmonth cimgyear
+                              zoomday zoomweek zoommonth zoomyear)) {
+                $graph->{$imgsrc} =~ s|^\.\./||
+            }
+        }
+    }
 
     $graphtemplate->param(
                           PATH        => $key->{'path'},
