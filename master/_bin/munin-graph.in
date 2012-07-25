@@ -77,7 +77,7 @@ my $nb_request_max = 0;
 my $graph_fh = new IO::File($config->{dbdir} . "/graphs");
 while (my $path = <$graph_fh>) {
     my $pinpoint = undef;
-    print "Request path is $path";
+    INFO "Request path is $path";
 
     # The full URL looks like this:
     # Case 1:
