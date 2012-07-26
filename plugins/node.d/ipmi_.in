@@ -45,10 +45,12 @@ CONFIG=no
 
 case $1 in
     autoconf)
-        ! test -x /usr/bin/ipmitool && 
-	  echo 'no (no /usr/bin/ipmitool)' && exit 0
-	! (/sbin/lsmod | grep -q ipmi) &&
-	  echo 'no (impi module not loaded' && exit 0
+	type -p ipmitool &>/dev/null ||
+	  { echo 'no (missing ipmitool command)' && exit 0; }
+	
+	ipmitool sensor &>/dev/null || 
+	  { echo 'no (unable to access IPMI device)' && exit 0; }
+
 	echo yes
         exit 0
 	;;
