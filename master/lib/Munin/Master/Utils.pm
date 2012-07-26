@@ -978,7 +978,9 @@ sub munin_refreshconfig {
     my $config   = shift;
     my @stat = stat("$config->{dbdir}/datafile");
     if ($config->{'#%#datafile_mtime'} && $stat[9] > $config->{'#%#datafile_mtime'}) {
+	my $dbdir = $config->{dbdir};
 	$config = munin_readconfig("$config->{dbdir}/datafile");
+	$config->{dbdir} = $dbdir;
     }
 
     $config->{'#%#datafile_mtime'} = $stat[9];
