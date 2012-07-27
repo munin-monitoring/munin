@@ -150,7 +150,7 @@ while (<DF>) {
 
     next if skip($name, $mountpt);
 
-    next unless ($used =~ '^\d+' && $avail =~ '^\d+');
+    next unless ($used =~ '^\d+$' && $avail =~ '^\d+$');
 
     # Calculate percentage used
     my $ps = 0;
