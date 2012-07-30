@@ -1,5 +1,28 @@
 -*- text -*-
 
+munin-2.0.4, 2012-07-30
+
+Summary: 
+
+* fixes for munin-graph
+* fixes for df_inode plugin
+
+Detailed Changelone
+
+Diego Elio Petteno:
+      master: fix relative paths when using cron-based page generation.
+      munin-graph: do not output text meant for CGI.
+      munin-graph: use INFO for further details during execution.
+      munin-graph: use the same default (non-cgi) as the rest of the Master.
+
+Steve Schnepp:
+      Makefile: add a comment about JCVALID
+
+Stig Sandbeck Mathisen:
+      Ignore reiserfs in the df_inode plugin
+      Make df_inode plugin more robust.
+      Add missing regular expression anchors
+
 munin-2.0.3, 2012-07-24
 
 A quite raw output of 'git shortlog' :
