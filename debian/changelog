@@ -1,7 +1,11 @@
 munin (2.0.4-1) UNRELEASED; urgency=low
 
+  [ Holger Levsen ]
   * New upstream version(s), fixing lots of bugs and adding documentation and
     manpages. See upstream ChangeLog for the full list.
+
+  [ Helmut Grohne ]
+  * Move cgi scripts to /usr/lib/munin/cgi. (Closes: #682869)
 
  -- Holger Levsen <holger@debian.org>  Mon, 06 Aug 2012 13:28:28 +0200
 
