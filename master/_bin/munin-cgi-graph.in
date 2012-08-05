@@ -27,6 +27,9 @@ $Id$
 use strict;
 use warnings;
 use IO::Handle;
+BEGIN {
+    $Date::Manip::Backend = 'DM5';
+}
 use Date::Manip;
 use POSIX qw(strftime locale_h);
 use CGI::Fast qw(:cgi);
@@ -159,7 +162,7 @@ while (new CGI::Fast) {
     }
 
     # Having some QUERY_STRING disables the cache.
-    if (defined($ENV{QUERY_STRING})) {
+    if (defined($ENV{QUERY_STRING}) && $ENV{QUERY_STRING}) {
       $no_cache = 1;
     }
 

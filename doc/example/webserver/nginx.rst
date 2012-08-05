@@ -18,6 +18,9 @@ Munin configuration
 This example assumes the following configuration in
 /etc/munin/munin.conf
 
+.. index::
+   pair: example; munin.conf
+
 ::
 
  # graph_strategy should be commented out, if present
@@ -29,6 +32,9 @@ FastCGI configuration
 This will spawn two FastCGI processes trees. One for munin cgi
 graphing and one for HTML generation. It will create a socket owned by
 www-data, and run the processes as the "munin" user.
+
+.. index::
+   pair: example; munin-cgi-graph invocation
 
 .. code-block:: bash
 
@@ -51,22 +57,25 @@ so you need to chown the log files, and edit /etc/logrotate.d/munin.
 Webserver configuration
 =======================
 
+.. index::
+   pair: example; lighttpd configuration
+
 ::
 
     location ^~ /cgi-bin/munin-cgi-graph/ {
-	fastcgi_split_path_info ^(/cgi-bin/munin-cgi-graph)(.*);
-	fastcgi_param PATH_INFO $fastcgi_path_info;
-	fastcgi_pass unix:/var/run/munin/fastcgi-graph.sock;
-	include fastcgi_params;
+        fastcgi_split_path_info ^(/cgi-bin/munin-cgi-graph)(.*);
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+        fastcgi_pass unix:/var/run/munin/fastcgi-graph.sock;
+        include fastcgi_params;
     }
 
     location /munin/static/ {
-	alias /etc/munin/static/;
+        alias /etc/munin/static/;
     }
 
     location /munin/ {
-	fastcgi_split_path_info ^(/munin)(.*);
-	fastcgi_param PATH_INFO $fastcgi_path_info;
-	fastcgi_pass unix:/var/run/munin/fastcgi-html.sock;
-	include fastcgi_params;
+        fastcgi_split_path_info ^(/munin)(.*);
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+        fastcgi_pass unix:/var/run/munin/fastcgi-html.sock;
+        include fastcgi_params;
     }

@@ -17,6 +17,9 @@ Munin configuration
 This example assumes the following configuration in
 /etc/munin/munin.conf
 
+.. index::
+   pair: example; munin.conf
+
 ::
 
  # graph_strategy should be commented out, if present
@@ -25,11 +28,14 @@ This example assumes the following configuration in
 Webserver configuration
 =======================
 
+.. index::
+   pair: example; lighttpd configuration
+
 ::
 
   alias.url += ( "/munin-static" => "/etc/munin/static" )
   alias.url += ( "/munin"        => "/var/cache/munin/www/" )
-   
+
   fastcgi.server += ("/cgi-bin/munin-cgi-graph" =>
                      (( "socket"      => "/var/run/lighttpd/munin-cgi-graph.sock",
                         "bin-path"    => "/usr/lib/cgi-bin/munin-cgi-graph",
@@ -41,7 +47,7 @@ Webserver configuration
                         "check-local" => "disable",
                      ))
                    )
-   
+
   url.rewrite-repeat += (
                      "/munin/(.*)" => "/cgi-bin/munin-cgi-html/$1",
                      "/cgi-bin/munin-cgi-html$" => "/cgi-bin/munin-cgi-html/",

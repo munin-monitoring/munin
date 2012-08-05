@@ -27,6 +27,9 @@ $Id$
 use strict;
 use warnings;
 use IO::Handle;
+BEGIN {
+    $Date::Manip::Backend = 'DM5';
+}
 use Date::Manip;
 use POSIX qw(strftime);
 use Time::HiRes qw(gettimeofday tv_interval);
@@ -71,10 +74,10 @@ if (! graph_check_cron() ) {
 # BEGIN FAST-CGI LOOP:
 my $nb_request = 0;
 my $nb_request_max = 0;
-my $graph_fh = new IO::File($config->{libdir} . "/graphs");
+my $graph_fh = new IO::File($config->{dbdir} . "/graphs");
 while (my $path = <$graph_fh>) {
     my $pinpoint = undef;
-    print "Request path is $path";
+    INFO "Request path is $path";
 
     # The full URL looks like this:
     # Case 1:
@@ -328,13 +331,8 @@ sub draw_graph_or_complain {
     if (! -f $ret) {
 	my ($dom, $host, $serv, $scale, $filename ) = @_;
 	WARN "[WARNING] Could not draw graph \"$filename\": $ret";
-	print "Status: 500\r\n",
-	  "Content-Type: text/plain\r\n",
-	  "\r\n",
-	  "Could not draw graph \"$filename\"\r\n";
         return 0;
     } else {
-    	print "X-Graph-Duration: $graph_duration\r\n";
 	return $ret;
     }
 }

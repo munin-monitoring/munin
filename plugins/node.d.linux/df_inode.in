@@ -14,7 +14,7 @@ Every Linux system with df installed.
 The plugin excludes per default the following special, read-only or
 dynamically allocating file systems from graphing:
 
-  none unknown iso9660 squashfs udf romfs ramfs
+  none unknown iso9660 squashfs udf romfs ramfs vfat debugfs simfs nilfs2 rootfs
 
 To change this set the environment variable "exclude" with a list of
 space separated fs types.  The environment variables "warning" and
@@ -24,7 +24,7 @@ the disk usage.
 This configuration snipplet is an example with the defaults:
 
   [df_inode]
-    env.exclude none unknown iso9660 squashfs udf romfs ramfs debugfs
+    env.exclude none unknown iso9660 squashfs udf romfs ramfs vfat debugfs simfs nilfs2 rootfs
     env.warning 92
     env.critical 98
 
@@ -87,7 +87,7 @@ use Munin::Plugin;
 # For these devices use the mount point, the device is useless
 my %usemntpt = ( tmpfs => 1, none => 1, udev => 1 );
 
-my $exclude = $ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs vfat debugfs simfs';
+my $exclude = $ENV{'exclude'} || 'none unknown iso9660 squashfs udf romfs ramfs vfat debugfs simfs nilfs2 rootfs reiserfs';
 my $dfopts  = "-P -l -i ".join(' -x ',('',split('\s+',$exclude)));
 
 my $mode = ($ARGV[0] or "print");
@@ -149,6 +149,8 @@ while (<DF>) {
     my ($name, undef, $used, $avail, undef, $mountpt, undef) = split(/\s+/, $_, 7);
 
     next if skip($name, $mountpt);
+
+    next unless ($used =~ '^\d+$' && $avail =~ '^\d+$');
 
     # Calculate percentage used
     my $ps = 0;

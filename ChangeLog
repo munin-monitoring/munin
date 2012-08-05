@@ -1,5 +1,97 @@
 -*- text -*-
 
+munin-2.0.4, 2012-07-30
+
+Summary: 
+
+* fixes for munin-graph
+* fixes for df_inode plugin
+
+Detailed Changelone
+
+Diego Elio Petteno:
+      master: fix relative paths when using cron-based page generation.
+      munin-graph: do not output text meant for CGI.
+      munin-graph: use INFO for further details during execution.
+      munin-graph: use the same default (non-cgi) as the rest of the Master.
+
+Steve Schnepp:
+      Makefile: add a comment about JCVALID
+
+Stig Sandbeck Mathisen:
+      Ignore reiserfs in the df_inode plugin
+      Make df_inode plugin more robust.
+      Add missing regular expression anchors
+
+munin-2.0.3, 2012-07-24
+
+A quite raw output of 'git shortlog' :
+
+Christian Ruppert:
+      nginx_{request,status}: include Munin::Plugin to fix version identifier.
+
+Christoph Biedl:
+      fix bug that disabled gfx CGI caching
+
+Dan McGee:
+      Force usage of the DM5 Date::Manip backend
+      Don't remove Defaults.pm when invoking build-common target
+      Expand list of filesystems excluded in Linux df_inode plugin
+
+Daniel Kahn Gillmor:
+      slony_lag_: allow >1 subscribers
+
+Diego Elio Petteno:
+      ifx_concurrent_sessions_: allow ps and pgrep to be in /bin as well as /usr/bin
+      build: only move adv files if building on HP-UX.
+      build: install TTF files as non-executables
+      config: respect LIBDIR override.
+      build: only install Java plugin files if JCVALID=yes
+      df: exclude cgroup_root filesystem type as well.
+      Add build-doc-stamp to .gitignore.
+      master: bring back checks for graph_strategy set to cron.
+
+Jeremy Olexa:
+      config: make sure to translate correctly for C-locale only
+
+Steve Schnepp:
+      fix munin-graph typo in opening $graph_fh
+      port multigraph_complex to pure POSIX shell
+      doc: add "supersampling" plugins
+      doc: adding supersampling section
+      doc: changing markup
+      use cgiurl_graph config in dynazoom.html
+      use environment var for rrdcached
+      revert to the same naming than 1.4.x
+      makefile: added a comment on LANG
+      node: only use basename for $0
+      Makefile: move default rule to be the 1st one
+      directly compile to output dir
+      git: ignore more build assets
+
+Stig Sandbeck Mathisen:
+      Add documentation for writing a munin plugin.
+      Correct reStructuredText syntax warnings
+      Remove references we do not have targets for yet
+      Document the munin node
+      Add information about authorized_key hardening
+      restructure documentation, work in progress
+      Whitespace cleanup in the doc tree
+      Add munin-cgi-graph manpage
+      Add munin-cgi-html man page
+      Order the man pages alphabetically
+      Use correct reference
+      Set a max depth for the table of contents
+      Rename the graph aggregation directory appropriately
+      Write proper man pages, and ensure "make man" creates them
+      Add better description on the main index pages
+      Add a directory reference page
+      Remove plugin/aggregate, we have a replacement in examples/graph/aggregate
+      Clean up table of contents in reference/
+      Add "how to use plugins" page
+      Add munin-check man page
+      Add markup and links for the supersampling doc
+
 munin-2.0.2, 2012-06-29
 
 Summary :
