@@ -269,6 +269,11 @@ sub emit_comparison_template {
 		push((@$comparepeers), {"name" => $peer->{"name"}, "link" => $comparelink});
 	}
 
+    # when comparing categories, we're generating the page inside the
+    # domain, but the images' urls will point inside the node itself,
+    # or even worse within a category inside it. We strip out the
+    # extra '../' that is used to generate a relative path which is no
+    # longer valid.
     foreach my $cat(@{$key->{'comparecategories'}}) {
         foreach my $service(@{$cat->{'services'}}) {
             foreach my $node(@{$service->{'nodes'}}) {
@@ -276,7 +281,7 @@ sub emit_comparison_template {
                               cimgday cimgweek cimgmonth cimgyear
                               zoomday zoomweek zoommonth zoomyear)) {
                     next unless defined($node->{$imgsrc});
-                    $node->{$imgsrc} =~ s|^\.\./\.\./|../|;
+                    $node->{$imgsrc} =~ s|^\.\./\.\./(?:\.\./)?|../|;
                 }
             }
         }
@@ -391,7 +396,7 @@ sub emit_category_template {
             foreach my $imgsrc(qw(imgday imgweek imgmonth imgyear
                               cimgday cimgweek cimgmonth cimgyear
                               zoomday zoomweek zoommonth zoomyear)) {
-                $graph->{$imgsrc} =~ s|^\.\./||
+                $graph->{$imgsrc} =~ s|^(?:\.\./)+||
             }
         }
     }
