@@ -82,7 +82,7 @@ sub emit_page {
  
   if(!defined $group->{"depth"} || $group->{"depth"} == 0){ #root url
 	my $problems = get_next_part($path);
-	if($problems eq "problems.html"){
+	if(defined $problems && $problems eq "problems.html"){
 		emit_problem_template(1);
 	} else {
 		unshift(@$path, $problems);
