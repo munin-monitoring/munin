@@ -1,3 +1,10 @@
+munin (2.0.4-1) UNRELEASED; urgency=low
+
+  * New upstream version(s), fixing lots of bugs and adding documentation and
+    manpages. See upstream ChangeLog for the full list.
+
+ -- Holger Levsen <holger@debian.org>  Mon, 06 Aug 2012 13:28:28 +0200
+
 munin (2.0.2-1) unstable; urgency=low
 
   [ Holger Levsen ]
