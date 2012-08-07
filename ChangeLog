@@ -1,5 +1,9 @@
 -*- text -*-
 
+munin 1.4.8
+
+* cherry-picked bcdb2795: Correct the initial rundir definition (#887).
+
 Some stats on 1.4.0 (relative to 1.3.4)
 * Over 1500 changesets since we started preparing for 1.4.0-alpha this
   spring.
