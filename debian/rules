@@ -37,12 +37,6 @@ override_dh_auto_install:
 		MANDIR=$(CURDIR)/debian/munin-doc/usr/share/man \
 		DESTDIR=$(CURDIR)/debian/munin-plugins-java
 
-	# Move the jmx_ plugin to the munin-plugins-java package
-	# see http://bugs.debian.org/667493
-	mkdir -p $(CURDIR)/debian/munin-plugins-java/usr/share/munin/plugins/
-	mv -v $(CURDIR)/debian/munin-plugins-core/usr/share/munin/plugins/jmx_ \
-		$(CURDIR)/debian/munin-plugins-java/usr/share/munin/plugins/jmx_
-
 	# Install apache configuration
 	install -D -m0644 debian/munin.apache.conf \
 		$(CURDIR)/debian/munin/etc/munin/apache.conf
