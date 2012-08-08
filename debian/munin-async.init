@@ -50,9 +50,6 @@ do_start()
 	start-stop-daemon --start --background --make-pidfile --pidfile $PIDFILE --chuid $DAEMON_USER --exec $DAEMON -- \
 		$DAEMON_ARGS \
 		|| return 2
-	# Add code here, if necessary, that waits for the process to be ready
-	# to handle requests from services started subsequently which depend
-	# on this one.  As a last resort, sleep for some time.
 }
 
 #
@@ -65,7 +62,7 @@ do_stop()
         if [ ! -r $PIDFILE ]; then
                 pid=$(pidofproc -p $PIDFILE $DAEMON)
                 if [ -z "$pid" ]; then
-                        log_progress_msg "stopped beforehand"
+                        [ "$VERBOSE" != no ] && log_progress_msg "stopped beforehand"
                         log_end_msg 0
                         return 0
                 fi
@@ -87,7 +84,7 @@ do_stop()
                 log_end_msg 1
                 return 1
         done
-        [ $ret -eq 0 ] && log_progress_msg "done"
+        [ $ret -eq 0 ] && [ "$VERBOSE" != no ] && log_progress_msg "done"
         log_end_msg $ret
         return $ret
 }
