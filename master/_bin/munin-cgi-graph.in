@@ -162,7 +162,7 @@ while (new CGI::Fast) {
     }
 
     # Having some QUERY_STRING disables the cache.
-    if (defined($ENV{QUERY_STRING}) && $ENV{QUERY_STRING}) {
+    if (defined($ENV{QUERY_STRING}) && $ENV{QUERY_STRING} ne "") {
       $no_cache = 1;
     }
 
