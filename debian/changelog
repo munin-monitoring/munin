@@ -3,6 +3,11 @@ munin (2.0.4-1) UNRELEASED; urgency=low
   [ Holger Levsen ]
   * New upstream version(s), fixing lots of bugs and adding documentation and
     manpages. See upstream ChangeLog for the full list.
+  * munin-async.init: 
+    - run munin-async as munin-async user (Closes: #684171)
+    - use stop function from munin-node.init to make it actually stop it 
+      (Closes: #684170). In the future we should replace both initscripts with
+      saner rewrites.
 
   [ Helmut Grohne ]
   * Move cgi scripts to /usr/lib/munin/cgi. (Closes: #682869)
