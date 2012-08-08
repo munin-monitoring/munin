@@ -8,6 +8,8 @@ munin (2.0.4-1) UNRELEASED; urgency=low
     - use stop function from munin-node.init to make it actually stop it 
       (Closes: #684170). In the future we should replace both initscripts with
       saner rewrites.
+  * Cherry-pick 29f42237 and f011b9ca to fix regression in munin-cgi-graph
+    preventing it from caching at all. (Closes: #683064)
 
   [ Helmut Grohne ]
   * Move cgi scripts to /usr/lib/munin/cgi. (Closes: #682869)
