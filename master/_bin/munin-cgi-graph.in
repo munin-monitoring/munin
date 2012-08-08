@@ -225,7 +225,13 @@ while (new CGI::Fast) {
 		}
 		
 		# Generic error
-		die $@;
+		# .. we DO NOT DIE, as spawn-fcgi doesn't like it.
+		ERROR "[ERROR] $@";
+		print "Status: 500\r\n",
+			"Content-Type: text/plain\r\n",
+			"X-Munin-Pid: $$\r\n",
+			"X-Munin-Request $nb_request/$nb_request_max\r\n",
+			"";
 	}
     }
 
@@ -295,7 +301,9 @@ sub send_graph_data {
 
     if (! open (GRAPH_PNG_FILE, '<', $filename) ) {
 	ERROR "[FATAL] Could not open image file \"$filename\" for reading: $!\n";
-	die "[FATAL] Could not open image file \"$filename\" for reading: $!\n";
+	# We don't send anything...
+	# .. we DO NOT DIE, as spawn-fcgi doesn't like it. 
+	return;
     }
 
     # No buffering wanted when sending the file
@@ -414,7 +422,6 @@ sub draw_graph {
     # remove old file if present
     if (-f $filename and !unlink($filename)) {
 	ERROR "[FATAL] Could not remove \"$filename\": $!";
-	die("[FATAL] cannot remove old graph file \"$filename\": $!");
     }
 
     $serv =~ s{[^\w_\/"'\[\]\(\)+=-]}{_}g; $serv =~ /^(.+)$/; $serv = $1; #"
