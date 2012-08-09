@@ -287,6 +287,7 @@ sub _write_new_service_configs {
     print $io "version $Munin::Common::Defaults::MUNIN_VERSION\n";
     $datafile_hash->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
 
+    $self->_print_service_configs_for_not_updated_hosts($io, $datafile_hash);
     $self->_print_old_service_configs_for_failed_workers($io, $datafile_hash);
 
     for my $host (keys %{$self->{service_configs}}) {
@@ -306,6 +307,28 @@ sub _write_new_service_configs {
 
     # Also write the binary (Storable) version
     munin_writeconfig_storable($config->{dbdir}.'/datafile.storable', $datafile_hash);
+}
+
+
+sub _print_service_configs_for_not_updated_hosts {
+    my ($self, $handle, $datafile_hash) = @_;
+
+    my @hosts = $self->{group_repository}->get_all_hosts();
+    @hosts = grep { !$_->{update} } @hosts;
+
+    for my $workerdata (@hosts) {
+	my $worker = $workerdata->get_full_path();
+
+	for my $datum (keys %$workerdata) {
+	    # Skip some book-keeping
+	    next if ($datum eq 'group')
+		or ($datum eq 'host_name');
+
+	    printf $handle "%s:%s %s\n", $worker, $datum, $workerdata->{$datum};
+	    munin_set_var_path($datafile_hash, $worker . ":". $datum, $workerdata->{$datum});
+	}
+
+    }
 }
 
 
