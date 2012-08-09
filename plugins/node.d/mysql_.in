@@ -17,6 +17,11 @@ This script is used to generate data for several graphs. To generate
 data for one specific graph, you need to create a symbolic link with a
 name like mysql_<GRAPH> to this script.
 
+If you need to run against multiple MySQL instances on the same host,
+create your symlinks with names like mysql<N>_<GRAPH> where N is any
+non-negative integer. You must also set the env.cachenamespace variable
+to a unique value for each group of symlinks.
+
 To get a list of symlinks that can be created, run:
 
   ./mysql_ suggest
@@ -34,6 +39,12 @@ Non-default example:
     env.mysqlconnection DBI:mysql:mysql;host=127.0.0.1;port=3306
     env.mysqluser root
     env.mysqlpassword geheim
+    env.cachenamespace munin_mysql_pri
+  [mysql2_*]
+    env.mysqlconnection DBI:mysql:mysql;host=127.0.0.1;port=13306
+    env.mysqluser root
+    env.mysqlpassword ryuWyawEv
+    env.cachenamespace munin_mysql_alt
 
 Warning and critical values can be set via the environment in the usual way.
 For example:
@@ -145,6 +156,7 @@ my %config = (
     'dsn'        => $ENV{'mysqlconnection'} || 'DBI:mysql:mysql',
     'user'       => $ENV{'mysqluser'}       || 'root',
     'password'   => $ENV{'mysqlpassword'}   || '',
+    'cache_namespace' => $ENV{'cachenamespace'} || 'munin_mysql',
 );
 
 
@@ -153,7 +165,7 @@ my %config = (
 #---------------------------------------------------------------------
 
 my %cache_options = (
-    'namespace'          => 'munin_mysql',
+    'namespace'          => $config{cache_namespace},
     'default_expires_in' => 60,
 );
 
@@ -700,7 +712,8 @@ our $data; # Was 'my'. Changed to 'our' to facilitate testing.
 
 
 sub main {
-    my $graph = substr(basename($0), length('mysql_'));
+    my $graph = basename($0);
+    $graph =~ s/^mysql[0-9]*_//g; # allow multiple instances
     my $command = $ARGV[0] || 'show';
 
     my %command_map = (
