@@ -1,0 +1,4 @@
+debian/munin-cgi-graph.init
+debian/munin-cgi-html.init
+debian/munin-cgi.conf
+debian/munin.nginx.conf
