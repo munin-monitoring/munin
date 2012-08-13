@@ -320,6 +320,7 @@ sub generate_compare_groups {
         foreach my $tmpserv (@{$tmpcat->{'services'}}) {
           $comparecatshash->{$tmpcat->{'name'}}->{'services'}->{$tmpserv->{'name'}}->{'nodes'}->{$tmpgroup->{'name'}} = $tmpserv;
           $comparecatshash->{$tmpcat->{'name'}}->{'services'}->{$tmpserv->{'name'}}->{'nodes'}->{$tmpgroup->{'name'}}->{'nodename'} = $tmpgroup->{'name'};
+          $comparecatshash->{$tmpcat->{'name'}}->{'services'}->{$tmpserv->{'name'}}->{'nodes'}->{$tmpgroup->{'name'}}->{'nodeurl'} = $tmpgroup->{'url'};
         }
       }
     }
