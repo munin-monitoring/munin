@@ -14,7 +14,7 @@ Every Linux system with df installed.
 The plugin excludes per default the following special, read-only or
 dynamically allocating file systems from graphing:
 
-  none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs simfs
+  none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs
 
 To change this set the environment variable "exclude" with a list of
 space separated fs types.  The environment variables "warning" and
@@ -24,7 +24,7 @@ the disk usage.
 This configuration snipplet is an example with the defaults:
 
   [df]
-    env.exclude none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs simfs
+    env.exclude none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs
     env.warning 92
     env.critical 98
 
@@ -85,9 +85,9 @@ use strict;
 use Munin::Plugin;
 
 # For these devices use the mount point, the device is useless
-my %usemntpt = ( tmpfs => 1, none => 1, udev => 1 );
+my %usemntpt = ( tmpfs => 1, none => 1, udev => 1, simfs => 1 );
 
-my $exclude = $ENV{'exclude'} || 'none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs simfs cgroup_root';
+my $exclude = $ENV{'exclude'} || 'none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root';
 my $dfopts  = "-P -l ".join(' -x ',('',split('\s+',$exclude)));
 
 my $mode = ($ARGV[0] or "print");
