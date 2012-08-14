@@ -1,5 +1,22 @@
 -*- text -*-
 
+munin-2.0.5, 2012-08-14
+
+Diego Elio Petteno:
+      ipmi_: improve autoconf handling
+      sensors_: add support for power monitoring.
+      munin-cgi-html: apply patch from ticket #1200
+      master: fix images for plugins w/ sub-categories.
+      snmp__print_pages: fix snmpconf:
+
+Malte S. Stretz:
+      Don't exclude simfs per default.
+
+Steve Schnepp:
+      fix: dbdir shall not revert to default on m-u runs
+      munin-cgi-graph: refine the fix for not cached cgi
+      munin-cgi-graph: don't ever die() in CGI
+
 munin-2.0.4, 2012-07-30
 
 Summary: 
@@ -7,7 +24,7 @@ Summary:
 * fixes for munin-graph
 * fixes for df_inode plugin
 
-Detailed Changelone
+Detailed Changelog
 
 Diego Elio Petteno:
       master: fix relative paths when using cron-based page generation.

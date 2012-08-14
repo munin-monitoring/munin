@@ -231,6 +231,44 @@ my %config = (
     print_threshold => \&volt_threshold,
     graph_args => '--base 1000 --logarithmic'
         },
+
+    power => {
+        regex => qr/
+            ^           # String must start with:
+            ([^:\n]*)   # Match any non-whitespace char, except ':' and new line
+                        # one space in front of them.
+                        # (match the label as \$1)
+
+            \s*:\s*     # Zero or more spaces followed by ':' and
+                        # zero or more spaces followed by
+            (\d+        # Match one or more digits
+                        # (match the power as \$2) followed by
+            (?:\.\d+)?) # Zero or one match of '.' char followed by one or more digits.
+                        # '?:' means it is not a numbered capture group.
+            \sW         # one space, 'W' char
+
+            (?:         # >>>>Match the following statement.
+                        # '?:' means it is not a numbered capture group.
+            \s+         # One or more space followed by
+            \(          # '(' char
+            crit        # Match crit string
+            \s*=\s*     # Match zero or more spaces and then '=' char and
+                        # then zero or more spaces, followed by
+            (\d+         # Match one or more digits
+                        # (Match the minimum value as \$3) followed by
+            (?:\.\d+)?) # Zero or one match of '.' char followed by one or more
+                        # digits. '?:' means it is not a numbered capture group.
+            \sW\s*     # One space char, 'W' character followed by zero or
+                        # more spaces
+            \)          # ')' char
+            )?          # >>>>end of statement
+        /xm,            # Use extended regular expressions and treat string as multiple lines.
+
+        title => 'Power',
+        vtitle => 'Watts',
+        print_threshold => \&power_threshold,
+        graph_args => '--base 1000 --logarithmic'
+    },
 );
 
 if ( defined $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
@@ -327,6 +365,17 @@ sub volt_threshold {
   my $dist = $diff * $warn_percent / 100;
   printf "$name.warning %.2f:%.2f\n", $min + $dist, $max - $dist;
   printf "$name.critical $min:$max\n";
+}
+
+sub power_threshold {
+  my $name = shift;
+  my $crit = shift;
+  my $warn_percent = exists $ENV{watt_warn_percent} ? $ENV{watt_warn_percent} : 20;
+
+  return unless defined ($crit);
+
+  printf "$name.warning :%.2f\n", $crit * (100-$warn_percent)/100;
+  printf "$name.critical :$crit\n";
 }
 
 # vim:syntax=perl
