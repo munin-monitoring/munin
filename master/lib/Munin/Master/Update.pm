@@ -287,7 +287,7 @@ sub _write_new_service_configs {
     print $io "version $Munin::Common::Defaults::MUNIN_VERSION\n";
     $datafile_hash->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
 
-    $self->_print_service_configs_for_not_updated_hosts($io, $datafile_hash);
+    $self->_print_service_configs_for_not_updated_services($io, $datafile_hash);
     $self->_print_old_service_configs_for_failed_workers($io, $datafile_hash);
 
     for my $host (keys %{$self->{service_configs}}) {
@@ -310,23 +310,24 @@ sub _write_new_service_configs {
 }
 
 
-sub _print_service_configs_for_not_updated_hosts {
+sub _print_service_configs_for_not_updated_services {
     my ($self, $handle, $datafile_hash) = @_;
 
     my @hosts = $self->{group_repository}->get_all_hosts();
-    @hosts = grep { !$_->{update} } @hosts;
 
     for my $workerdata (@hosts) {
-	my $worker = $workerdata->get_full_path();
+        my $worker = $workerdata->get_full_path();
 
-	for my $datum (keys %$workerdata) {
-	    # Skip some book-keeping
-	    next if ($datum eq 'group')
-		or ($datum eq 'host_name');
+        my @data = grep { /\.update$/ and !$workerdata->{$_} } keys %$workerdata;
+        for my $match (@data) {
+            my $prefix = substr $match, 0, -6;
 
-	    printf $handle "%s:%s %s\n", $worker, $datum, $workerdata->{$datum};
-	    munin_set_var_path($datafile_hash, $worker . ":". $datum, $workerdata->{$datum});
-	}
+            for my $datum (grep { /^\Q$prefix\E/ } keys %$workerdata) {
+                printf $handle "%s:%s %s\n", $worker, $datum, $workerdata->{$datum};
+                munin_set_var_path($datafile_hash, $worker . ":". $datum, $workerdata->{$datum});
+            }
+
+        }
 
     }
 }
