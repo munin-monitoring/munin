@@ -1,22 +1,22 @@
-munin (2.0.4-1) unstable; urgency=low
+munin (2.0.5-1) unstable; urgency=low
 
   [ Holger Levsen ]
-  * New upstream version(s), fixing lots of bugs and adding documentation and
-    manpages. See upstream ChangeLog for the full list. Remove workaround
-    concerning java-plugins (667493) in debian/rules as upstream has fixed
-    this in e7e29c4 in 2.0.3.
+  * New upstream versions, fixing lots of bugs (including a regression in 
+    munin-cgi-graph preventing it from caching at all (Closes: #683064))
+    and adding documentation and manpages.  See upstream ChangeLog for the
+    full list. 
+  * Remove workaround  concerning java-plugins (667493) in debian/rules 
+    as upstream has fixed this in e7e29c4 in 2.0.3.
   * munin-async.init: 
     - run munin-async as munin-async user (Closes: #684171)
     - use stop function from munin-node.init to make it actually stop it 
       (Closes: #684170). In the future we should replace both initscripts with
       saner rewrites.
-  * Cherry-pick 29f42237 and f011b9ca to fix regression in munin-cgi-graph
-    preventing it from caching at all. (Closes: #683064)
 
   [ Helmut Grohne ]
   * Move cgi scripts to /usr/lib/munin/cgi. (Closes: #682869)
 
- -- Holger Levsen <holger@debian.org>  Thu, 09 Aug 2012 00:55:27 +0200
+ -- Holger Levsen <holger@debian.org>  Tue, 14 Aug 2012 19:12:54 +0200
 
 munin (2.0.2-1) unstable; urgency=low
 
