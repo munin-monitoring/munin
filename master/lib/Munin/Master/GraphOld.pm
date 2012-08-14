@@ -1423,6 +1423,9 @@ sub process_service {
             # Otherwise, it will be difficult to debug post-mortem
             ERROR "[RRD ERROR] rrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
         }
+        elsif (!-f $picfilename) {
+		ERROR "[RRD ERROR] rrdtool graph did not generate the image (make sure there are data to graph).\n";
+        }
         else {
 
             # Set time of png file to the time of the last update of
