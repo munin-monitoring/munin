@@ -30,6 +30,7 @@ GPLv2
 =head1 MAGIC MARKERS
 
  #%# family=contrib
+ #%# capabilities=autoconf
 
 =cut
 
