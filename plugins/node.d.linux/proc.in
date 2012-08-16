@@ -64,7 +64,7 @@ Each graph uses data from the proc filesystem.
 =head1 MAGIC MARKERS
 
  #%# family=auto
- #%# capabilities=autoconf multigraph
+ #%# capabilities=multigraph
 
 =head1 VERSION
 
@@ -366,16 +366,8 @@ sub usage
     if (@_) {
         print STDERR "@_" . "\n\n";
     }
-    print STDERR "Known arguments: config, autoconf.\n";
+    print STDERR "Known arguments: config.\n";
     exit 1;
-}
-
-# Print 'yes' and exit true if it's reasonable to use this plugin.
-# Otherwise exit with false and a human-readable reason.
-sub autoconf
-{
-    print "no (Needs manual configuration, check documentation)\n";
-    exit 0;
 }
 
 # Print the value of a two-dimensional hash if it exist.
@@ -412,7 +404,7 @@ sub get_config
     my $uniqname = $_[1];
 
     # Need to double-check since set_aspect only checks this if there
-    # is no argument (autoconf doesn't require a valid aspect)
+    # is no argument
     if (!defined($ASPECTS{$graph})) {
         usage "No such aspect ( $graph )";
     }
@@ -563,9 +555,8 @@ sub set_aspect
     }
 }
 
-# Handle arguments (config, autoconf)
-# Populate stats for config is necessary, but we want to avoid it for
-# autoconf as it would generate a nasty error.
+# Handle arguments (config)
+# Populate stats for config is necessary
 sub check_args
 {
     if (@ARGV && $ARGV[0] eq '') {
@@ -583,9 +574,6 @@ sub check_args
                     $i++;
                 }
             }
-            exit 0;
-        } elsif ($ARGV[0] eq "autoconf") {
-            autoconf($self);
             exit 0;
         }
         usage "Unknown argument";
