@@ -38,17 +38,16 @@ time_bin=$(which time)
 wget_bin=$(which wget)
 
 if [ "$1" = "autoconf" ]; then
-    # Need to actually test that the url is reachable, it makes
-    # no sense to install the plugin if there is no webserver on localhost.
-    echo "no (autoconfiguration not working correctly)"
-    exit 0
-
     result="yes"
     [ "x$time_bin" = "x" ] && result=1
     [ "x$wget_bin" = "x" ] && result=2
     if [ "$result" != "yes" ]; then
-	echo "no (need time and wget programs)"
-	exit 0
+    	echo "no (need time and wget programs)"
+	    exit 0
+    fi
+    if ! $wget_bin -q -O /dev/null $target; then
+        echo "no (Cannot run wget against \"$target\")"
+        exit 0
     fi
     echo yes
     exit 0
