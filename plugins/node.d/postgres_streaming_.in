@@ -27,9 +27,9 @@ postgres_streaming_ - Plugin to monitor PostgreSQL streaming replication lag.
 
 The configuration for the database connections need to be made in
 pg_service.conf (see the PostgreSQL documentation). To specify which
-cluster to monitor, link this plugin to postgres_lag_<master>:<slave>, where
-<master> and <slave> are the names of the services specified in
-pg_service.conf.
+cluster to monitor, link this plugin to
+postgres_streaming_<master>:<slave>, where <master> and <slave> are
+the names of the services specified in pg_service.conf.
 
 =head1 SEE ALSO
 

@@ -27,8 +27,8 @@ postgres_transactions_ - Plugin to monitor PostgreSQL transactions.
 Configuration is done through libpq environment variables, for example
 PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugin::Pgsql>.
 
-To monitor a specific database, link to postgres_size_<databasename>.
-To monitor all databases, link to postgres_size_ALL.
+To monitor a specific database, link to postgres_transactions_<databasename>.
+To monitor all databases, link to postgres_transactions_ALL.
 
 =head1 SEE ALSO
 
