@@ -37,19 +37,19 @@ if($ARGV[0] and $ARGV[0] eq "autoconf") {
 my $host = exists $ENV{'host'} ? $ENV{'host'} : "127.0.0.1";
 my $port = exists $ENV{'port'} ? $ENV{'port'} : "3551";
 
+my $sock = new IO::Socket::INET (
+    PeerAddr => $host,
+    PeerPort => $port,
+    Proto => 'tcp'
+    );
+
+die "Could not create socket: $!\n" unless $sock;
+
+my $buf = pack("CC", 0, 6);
+print $sock $buf;
+print $sock "status\n";
+
 if($ARGV[0] and $ARGV[0] eq "config") {
-    my $sock = new IO::Socket::INET (
-        PeerAddr => $host,
-        PeerPort => $port,
-        Proto => 'tcp'
-        );
-
-    die "Could not create socket: $!\n" unless $sock;
-
-    my $buf = pack("CC", 0, 6);
-    print $sock $buf;
-    print $sock "status\n";
-
     # Test for some capabilities.
     my $has_temperature = 0;
     my $line;
@@ -88,18 +88,6 @@ if($ARGV[0] and $ARGV[0] eq "config") {
     }
     exit 0;
 }
-
-my $sock = new IO::Socket::INET (
-    PeerAddr => $host,
-    PeerPort => $port,
-    Proto => 'tcp'
-    );
-
-die "Could not create socket: $!\n" unless $sock;
-
-my $buf = pack("CC", 0, 6);
-print $sock $buf;
-print $sock "status\n";
 
 my $line;
 do {
