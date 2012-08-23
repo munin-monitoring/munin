@@ -38,7 +38,7 @@ do_ () { # Fetch
 
 do_config () {
     echo "graph_title Colour testing plugin"
-    echo "graph_vtitle Colour index and colour"
+    echo "graph_vlabel Colour index and colour"
     for I in $(seq 1 $NUMCOL); do
         echo "l$I.label "${col[$I]}
         echo "l$I.colour "${col[$I]}

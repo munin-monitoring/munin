@@ -35,7 +35,7 @@ my $HDDTEMP = $ENV{'hddtemp'} || 'hddtemp';
 my %config = (
 	regex => qr/^\/dev\/([^:]+):\s*([^:]+):\s*([\d.]+) C/m,
 	title => "Temperatures (Hard Disks)",
-	vtitle => '°Celsius',
+	vlabel => '°Celsius',
 	warning => 50,
 	critical => 60,
 	graph_args => '--base 1000'
@@ -73,7 +73,7 @@ if ( defined $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
 
 if ( defined $ARGV[0] and $ARGV[0] eq 'config' ) {
   print "graph_title $config{title}\n";
-  print "graph_vtitle $config{vtitle}\n";
+  print "graph_vlabel $config{vlabel}\n";
   print "graph_args --base 1000\n";
   print "graph_category sensors\n";
   my $text = `$HDDTEMP`;
