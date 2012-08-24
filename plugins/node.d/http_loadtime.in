@@ -1,4 +1,4 @@
-#!@@GOODSH@@
+#!@@BASH@@
 # -*- sh -*-
 
 : << =cut
@@ -30,25 +30,22 @@ GPLv2
 =head1 MAGIC MARKERS
 
  #%# family=contrib
+ #%# capabilities=autoconf
 
 =cut
 
 target=${target:-"http://localhost/"}
-time_bin=$(which time)
-wget_bin=$(which wget)
 
 if [ "$1" = "autoconf" ]; then
-    # Need to actually test that the url is reachable, it makes
-    # no sense to install the plugin if there is no webserver on localhost.
-    echo "no (autoconfiguration not working correctly)"
-    exit 0
-
     result="yes"
-    [ "x$time_bin" = "x" ] && result=1
-    [ "x$wget_bin" = "x" ] && result=2
+    command -v wget 2>/dev/null || result=1
     if [ "$result" != "yes" ]; then
-	echo "no (need time and wget programs)"
-	exit 0
+    	echo "no (need time and wget programs)"
+	    exit 0
+    fi
+    if ! $wget_bin -q -O /dev/null $target; then
+        echo "no (Cannot run wget against \"$target\")"
+        exit 0
     fi
     echo yes
     exit 0
@@ -70,7 +67,7 @@ TMPDIR=`mktemp -d` || exit 1
 trap "rm -rf $TMPDIR" EXIT
 
 cd $TMPDIR || exit 1
-loadtime=$($time_bin -p $wget_bin -p --no-cache --delete-after $target -q 2>&1 | awk '/^real / { print $2 }')
+loadtime=$(time -p wget -p --no-cache --delete-after $target -q 2>&1 | awk '/^real / { print $2 }')
 cd ..
 
 echo "loadtime.value $loadtime"

@@ -207,7 +207,7 @@ while (new CGI::Fast) {
 	}
 
 	# Try to generate the graph
-	eval {
+	my $generated_file = eval {
  		draw_graph_or_complain($dom, $host, $serv, $scale_options, $filename);
 	};
 	
@@ -232,7 +232,11 @@ while (new CGI::Fast) {
 			"X-Munin-Pid: $$\r\n",
 			"X-Munin-Request $nb_request/$nb_request_max\r\n",
 			"";
+		next;
 	}
+
+	# draw_graph_or_complain return 0, but already displayed a message
+	next unless ($generated_file);
     }
 
     # Now send it: headers
