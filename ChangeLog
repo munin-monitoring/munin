@@ -1,5 +1,10 @@
 -*- text -*-
 
+munin-2.0.6, 2012-08-?
+
+Holger Levsen:
+      munin-cgi-graph: ignore @ARGV to fix CVE-2012-3513 and Debian #684076
+
 munin-2.0.5, 2012-08-14
 
 Diego Elio Petteno:

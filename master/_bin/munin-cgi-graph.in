@@ -56,7 +56,7 @@ my %period  = ( "day"   => 300,
 my $logfile;
 my $scale = "day";
 
-my @params = @ARGV;
+my @params ;
 
 push @params, "--no-fork"; # FastCgi forks for us
 push @params, "--skip-locking", "--skip-stats", "--nolazy";
