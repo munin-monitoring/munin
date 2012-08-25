@@ -6,6 +6,14 @@ Holger Levsen:
       munin-cgi-graph: ignore @ARGV to fix CVE-2012-3513 and Debian #684076
       munin-cron: call munin-graph with --cron argument (Closes: 685343)
 
+      Rename cgi-bin to munin-cgi: the default for the Apache webserver is to
+       setup a ScriptAlias for /cgi-bin. The ScriptAlias directive does
+       not permit changing sublocations, thus making it impossible to impose
+       further restrictions like access controls etc.
+       This change was done in munin-cgi-graph, munin-graph, HTMLConfig.pm,
+       static/dynazoom.html and static/zoom.js _and_ also needs to be done in
+       the distribution specific webserver configuration file.
+
 munin-2.0.5, 2012-08-14
 
 Diego Elio Petteno:

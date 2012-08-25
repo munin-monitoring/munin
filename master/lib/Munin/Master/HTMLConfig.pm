@@ -95,7 +95,7 @@ sub initiate_cgiurl_graph {
             $config->{'cgiurl_graph'} = $config->{'cgiurl'} . "/munin-cgi-graph";
         }
         else {
-            $config->{'cgiurl_graph'} = "/cgi-bin/munin-cgi-graph";
+            $config->{'cgiurl_graph'} = "/munin-cgi/munin-cgi-graph";
         }
 		DEBUG "[DEBUG] Determined that cgiurl_graph is ".$config->{'cgiurl_graph'};
     }
