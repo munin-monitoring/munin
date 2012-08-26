@@ -95,7 +95,7 @@ sub initiate_cgiurl_graph {
             $config->{'cgiurl_graph'} = $config->{'cgiurl'} . "/munin-cgi-graph";
         }
         else {
-            $config->{'cgiurl_graph'} = "/cgi-bin/munin-cgi-graph";
+            $config->{'cgiurl_graph'} = "/munin-cgi/munin-cgi-graph";
         }
 		DEBUG "[DEBUG] Determined that cgiurl_graph is ".$config->{'cgiurl_graph'};
     }
@@ -454,8 +454,11 @@ sub generate_service_templates {
     # dump all the png filename to a file
     my $fh = $config->{"#%#graphs_fh"};
     if ($fh) {
-	    foreach my $img (keys %imgs) {
-		print $fh "/" . $imgs{$img} . "\n";
+	    # values %imgs = the image file
+	    # get them uniq, so we don't write them twice
+	    my %paths = map { $_, 1 } (values %imgs);
+	    foreach my $img (keys %paths) {
+		print $fh "/" . $img . "\n";
 	    }
     }
 

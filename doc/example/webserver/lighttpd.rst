@@ -36,20 +36,20 @@ Webserver configuration
   alias.url += ( "/munin-static" => "/etc/munin/static" )
   alias.url += ( "/munin"        => "/var/cache/munin/www/" )
 
-  fastcgi.server += ("/cgi-bin/munin-cgi-graph" =>
+  fastcgi.server += ("/munin/cgi/munin-cgi-graph" =>
                      (( "socket"      => "/var/run/lighttpd/munin-cgi-graph.sock",
-                        "bin-path"    => "/usr/lib/cgi-bin/munin-cgi-graph",
+                        "bin-path"    => "/usr/lib/munin/cgi/munin-cgi-graph",
                         "check-local" => "disable",
                      )),
-                    "/cgi-bin/munin-cgi-html" =>
+                    "/munin-cgi/munin-cgi-html" =>
                      (( "socket"      => "/var/run/lighttpd/munin-cgi-html.sock",
-                        "bin-path"    => "/usr/lib/cgi-bin/munin-cgi-html",
+                        "bin-path"    => "/usr/lib/munin/cgi/munin-cgi-html",
                         "check-local" => "disable",
                      ))
                    )
 
   url.rewrite-repeat += (
-                     "/munin/(.*)" => "/cgi-bin/munin-cgi-html/$1",
-                     "/cgi-bin/munin-cgi-html$" => "/cgi-bin/munin-cgi-html/",
-                     "/cgi-bin/munin-cgi-html/static/(.*)" => "/munin-static/$1"
+                     "/munin/(.*)" => "/munin-cgi/munin-cgi-html/$1",
+                     "/munin-cgi/munin-cgi-html$" => "/munin-cgi/munin-cgi-html/",
+                     "/munin-cgi/munin-cgi-html/static/(.*)" => "/munin-static/$1"
                      )

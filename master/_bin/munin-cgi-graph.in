@@ -56,7 +56,7 @@ my %period  = ( "day"   => 300,
 my $logfile;
 my $scale = "day";
 
-my @params = @ARGV;
+my @params ;
 
 push @params, "--no-fork"; # FastCgi forks for us
 push @params, "--skip-locking", "--skip-stats", "--nolazy";
@@ -92,7 +92,7 @@ while (new CGI::Fast) {
 
     # The full URL looks like this:
     # Case 1:
-    # http://localhost:8080/cgi-bin/munin-cgi-graph/client/\
+    # http://localhost:8080/munin-cgi/munin-cgi-graph/client/\
     #    Backend/dafnes.client.example.com/diskstats_iops-week.png
     # $path should be
     #   /client/Backend/dafnes.client.example.com/diskstats_iops-week.png
@@ -100,7 +100,7 @@ while (new CGI::Fast) {
     # Interesting bits about that url: Nested groups!
     #
     # Case 2:
-    # http://localhost:8080/cgi-bin/munin-cgi-graph/client/\
+    # http://localhost:8080/munin-cgi/munin-cgi-graph/client/\
     #    Backend/dafnes.client.example.com/diskstats_iops/sda-week.png
     # $path should be
     #    /client/Backend/dafnes.client.example.com/diskstats_iops/\
@@ -110,7 +110,7 @@ while (new CGI::Fast) {
     # nesting bits at the end.
     #
     # Case 3:
-    # http://localhost:8080/cgi-bin/munin-cgi-graph/client/\
+    # http://localhost:8080/munin-cgi/munin-cgi-graph/client/\
     #   dafnes.client.example.com/if_err_bond0-day.png
     # $path:
     #   /client/dafnes.client.example.com/if_err_bond0-day.png
@@ -207,7 +207,7 @@ while (new CGI::Fast) {
 	}
 
 	# Try to generate the graph
-	eval {
+	my $generated_file = eval {
  		draw_graph_or_complain($dom, $host, $serv, $scale_options, $filename);
 	};
 	
@@ -232,7 +232,11 @@ while (new CGI::Fast) {
 			"X-Munin-Pid: $$\r\n",
 			"X-Munin-Request $nb_request/$nb_request_max\r\n",
 			"";
+		next;
 	}
+
+	# draw_graph_or_complain return 0, but already displayed a message
+	next unless ($generated_file);
     }
 
     # Now send it: headers

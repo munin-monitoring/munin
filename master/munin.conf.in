@@ -44,7 +44,7 @@ includedir @@CONFDIR@@/munin-conf.d
 
 # If the automatic CGI url is wrong for your system override it here:
 #
-#cgiurl_graph /cgi-bin/munin-cgi-graph
+#cgiurl_graph /munin-cgi/munin-cgi-graph
 
 # max_size_x and max_size_y are the max size of images in pixel.
 # Default is 4000. Do not make it too large otherwise RRD might use all
