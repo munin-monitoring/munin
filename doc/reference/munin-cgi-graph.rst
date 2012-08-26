@@ -62,7 +62,7 @@ EXAMPLES
 
 When given an URI like the following:
 
-http://munin/cgi-bin/munin-cgi-graph/example.org/client.example.org/cpu-week.png
+http://munin/munin-cgi/munin-cgi-graph/example.org/client.example.org/cpu-week.png
 
 munin-cgi-graph will be called with the following environment:
 
@@ -75,7 +75,7 @@ following command line:
 
    sudo -u www-data \
    PATH_INFO=/example.org/client.example.org/irqstats-day.png \
-   /usr/lib/cgi-bin/munin-cgi-graph | less
+   /usr/lib/munin/cgi/munin-cgi-graph | less
 
 The "less" is strictly not needed, but is recommended since
 munin-cgi-graph will output binary data to your terminal.
@@ -91,4 +91,4 @@ descriptors:
    sudo -u www-data \
    CGI_DEBUG=yes \
    PATH_INFO=/example.org/client.example.org/irqstats-day.png \
-   /usr/lib/cgi-bin/munin-cgi-graph 2>&1 >/dev/null | less
+   /usr/lib/munin/cgi/munin-cgi-graph 2>&1 >/dev/null | less

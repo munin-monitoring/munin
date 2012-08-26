@@ -39,10 +39,10 @@ www-data, and run the processes as the "munin" user.
 .. code-block:: bash
 
   spawn-fcgi -s /var/run/munin/fastcgi-graph.sock -U www-data \
-    -u munin -g munin /usr/lib/cgi-bin/munin-cgi-graph
+    -u munin -g munin /usr/lib/munin/cgi/munin-cgi-graph
 
   spawn-fcgi -s /var/run/munin/fastcgi-html.sock  -U www-data \
-    -u munin -g munin /usr/lib/cgi-bin/munin-html-graph
+    -u munin -g munin /usr/lib/munin/cgi/munin-html-graph
 
 Note: Depending on your installation method, the "munin-\*-graph"
 programs may be in another directory. Check Makefile.config if you
@@ -62,8 +62,8 @@ Webserver configuration
 
 ::
 
-    location ^~ /cgi-bin/munin-cgi-graph/ {
-        fastcgi_split_path_info ^(/cgi-bin/munin-cgi-graph)(.*);
+    location ^~ /munin-cgi/munin-cgi-graph/ {
+        fastcgi_split_path_info ^(/munin-cgi/munin-cgi-graph)(.*);
         fastcgi_param PATH_INFO $fastcgi_path_info;
         fastcgi_pass unix:/var/run/munin/fastcgi-graph.sock;
         include fastcgi_params;

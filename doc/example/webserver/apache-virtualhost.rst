@@ -53,13 +53,13 @@ Add a new virtualhost, using the following example:
      # HTML
      RewriteCond %{REQUEST_URI} .html$ [or]
      RewriteCond %{REQUEST_URI} =/
-     RewriteRule ^/(.*)          /usr/lib/cgi-bin/munin-cgi-html/$1 [L]
+     RewriteRule ^/(.*)          /usr/lib/munin/cgi/munin-cgi-html/$1 [L]
 
      # Images
-     RewriteRule ^/cgi-bin/munin-cgi-graph/(.*) /usr/lib/cgi-bin/munin-cgi-graph/$1 [L]
+     RewriteRule ^/munin-cgi/munin-cgi-graph/(.*) /usr/lib/munin/cgi/munin-cgi-graph/$1 [L]
 
      # Ensure we can run (fast)cgi scripts
-     <Directory "/usr/lib/cgi-bin">
+     <Directory "/usr/lib/munin/cgi">
          Options +ExecCGI
          <IfModule mod_fcgid.c>
              SetHandler fcgid-script

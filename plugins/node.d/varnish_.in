@@ -827,7 +827,7 @@ sub rpn
 # Bail-function.
 sub usage
 {
-	if (defined(@_) && "@_" ne "") {
+	if (@_) {
 		print STDERR "@_" . "\n\n";
 	}
 	print STDERR "Known arguments: suggest, config, autoconf.\n";

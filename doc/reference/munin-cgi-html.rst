@@ -52,7 +52,7 @@ COMMAND-LINE
 ------------
 
 When given an URI like the following:
-http://munin.example.org/cgi-bin/munin-cgi-html/example.org
+http://munin.example.org/munin-cgi/munin-cgi-html/example.org
 
 munin-cgi-html will be called with the following environment:
 
@@ -65,7 +65,7 @@ following command line:
 
    sudo -u www-data \
    PATH_INFO=/example.org \
-   /usr/lib/cgi-bin/munin-cgi-html
+   /usr/lib/munin/cgi/munin-cgi-html
 
 SEE ALSO
 ========

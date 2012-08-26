@@ -15,13 +15,13 @@
 		<span class="nodetitle"><a href="<TMPL_VAR ESCAPE="URL" NAME="NODENAME">/index.html">
 			<TMPL_VAR ESCAPE="HTML" NAME="NODENAME"></a> :: <TMPL_IF NAME="URL1">
 				<a <TMPL_IF NAME="STATE_WARNING">class="warn"</TMPL_IF>
-				 <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="URL1">">
+				 <TMPL_IF NAME="STATE_CRITICAL">class="crit"</TMPL_IF> href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URL">">
 				</TMPL_IF>
 				<TMPL_VAR ESCAPE="HTML" NAME="LABEL">
 				<TMPL_IF NAME="URL1"></a></TMPL_IF>
 		</span><br />
 		<TMPL_IF NAME="CIMGDAY">
-			<a href="<TMPL_VAR NAME="URL1">">
+			<a href="<TMPL_VAR NAME="R_PATH">/<TMPL_VAR NAME="URL">">
 				<img src="<TMPL_VAR NAME="CIMGDAY">" alt="<TMPL_VAR ESCAPE="HTML" NAME="LABEL">"
 				class="i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
 				 <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> 

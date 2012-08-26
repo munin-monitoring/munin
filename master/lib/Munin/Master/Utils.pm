@@ -974,12 +974,29 @@ sub munin_dumpconfig {
     $Data::Dumper::Indent = $indent;
 }
 
+sub purge_cycles($)
+{
+	my @topurge = (shift);
+	while (my $item = shift @topurge) {
+		if (ref($item) eq "HASH") {
+			push @topurge, values %$item;
+			%$item = ();
+		} elsif (ref($item) eq 'ARRAY') {
+			push @topurge, @$item;
+			@$item = ();
+		}
+	}
+}
+
 sub munin_refreshconfig {
     my $config   = shift;
     my @stat = stat("$config->{dbdir}/datafile");
     if ($config->{'#%#datafile_mtime'} && $stat[9] > $config->{'#%#datafile_mtime'}) {
+	# keep dbdir, as we don't reload that part
 	my $dbdir = $config->{dbdir};
-	$config = munin_readconfig("$config->{dbdir}/datafile");
+	# purge cyclic current config
+	purge_cycles($config);
+	$config = munin_readconfig("$dbdir/datafile");
 	$config->{dbdir} = $dbdir;
     }
 
