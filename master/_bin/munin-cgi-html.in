@@ -84,6 +84,7 @@ sub emit_page {
   #process groups
   $group = traverse_groups($path, $group);
  
+  update_timestamp();
   if(!defined $group->{"depth"} || $group->{"depth"} == 0){ #root url
 	my $problems = get_next_part($path);
 	if(defined $problems && $problems eq "problems.html"){
