@@ -45,8 +45,12 @@ my $config;
 my $lastchanged = 0;
 my $datafile = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.storable";
 
+my @params;
+push @params, "--config", $ENV{'MUNIN_CONFIG'}
+        if (defined $ENV{'MUNIN_CONFIG'});
+
 # grab config
-html_startup([]);
+html_startup(\@params);
 while(new CGI::Fast){
 	print header("text/html");
 	my $change = (stat($datafile))[9];
