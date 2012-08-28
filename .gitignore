@@ -3,3 +3,4 @@
 */blib/
 build-*-stamp
 build/
+.*.swp
