@@ -72,6 +72,9 @@ sub _do_connect {
     my ($url, $params) = split(/ +/, $self->{address}, 2);
     my $uri = new URI($url);
 
+    # If address is only "ssh://host/" $params will not get set
+    $params = "" unless defined $params;
+
     # If the scheme is not defined, it's a plain host. 
     # Prefix it with munin:// to be able to parse it like others
     $uri = new URI("munin://" . $url) unless $uri->scheme;
@@ -109,7 +112,7 @@ sub _do_connect {
     } elsif ($uri->scheme eq "cmd") {
         # local commands should ignore the username, url and host
         my $local_cmd = $uri->path;
-        my $local_pipe_cmd = $local_cmd . (defined $params ? " $params" : "");
+        my $local_pipe_cmd = "$local_cmd $params";
 
 	    # Open a triple pipe
    	    use IPC::Open3;
