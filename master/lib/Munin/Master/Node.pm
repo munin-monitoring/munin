@@ -400,7 +400,7 @@ sub spoolfetch {
     $self->_node_write_single("spoolfetch $timestamp\n");
 
     # The whole stuff in one fell swoop.
-    my $lines = $self->_node_read_fast();
+    my $lines = $self->_node_read();
 
     # using the multigraph parsing. 
     # Using "__root__" as a special plugin name. 
