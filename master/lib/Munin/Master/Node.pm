@@ -638,6 +638,9 @@ sub _node_read_fast {
 		last if $buf eq ".\n";
         }
 
+	# Remove the last line that only contains ".\n"
+	$buf =~ s/\.\n$//;
+
 	return [ split(/\n/, $buf) ];
 }
 
