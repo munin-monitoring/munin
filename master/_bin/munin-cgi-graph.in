@@ -58,6 +58,8 @@ my $scale = "day";
 
 my @params ;
 
+push @params, "--config", $ENV{'MUNIN_CONFIG'}
+       if (defined $ENV{'MUNIN_CONFIG'});
 push @params, "--no-fork"; # FastCgi forks for us
 push @params, "--skip-locking", "--skip-stats", "--nolazy";
 push @params, "--log-file", $logfile;
