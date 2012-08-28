@@ -630,7 +630,12 @@ sub _node_read_fast {
 
 		# Stop when we read a \n.\n
 		# ... No need to have a full regex : simple index()
-		last unless index($buf, "\n.\n", $offset - $read_len) < 0;
+		my $start_offset = $offset - $read_len - 3;
+		$start_offset = 0 if $start_offset < 0;
+		last if index($buf, "\n.\n", $start_offset) >= 0;
+
+		# if empty, the client only sends a plain ".\n"
+		last if $buf eq ".\n";
         }
 
 	return [ split(/\n/, $buf) ];
