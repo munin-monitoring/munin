@@ -13,6 +13,7 @@ use Munin::Common::Timeout;
 
 use POSIX ();
 use Sys::Hostname;
+use File::Path qw(make_path);
 
 sub get_uid {
     my ($class, $user) = @_;
@@ -267,6 +268,14 @@ sub set_plugin_umask {
     # Set umask so that files created by plugins are group writable
     # Only call right before exec-ing a pluigin.
     umask(0002);
+
+sub mkdir_subdir {
+    my ($path, $user) = @_;
+
+    unless (-d "$path/$user") {
+        mkdir("$path/$user");
+        chown($user, "root", "$path/$user");
+    }
 }
 
 

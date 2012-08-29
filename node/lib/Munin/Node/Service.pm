@@ -90,8 +90,12 @@ sub export_service_environment {
     my ($class, $service) = @_;
     print STDERR "# Setting up environment\n" if $config->{DEBUG};
 
+    # We append the USER to the MUNIN_PLUGSTATE, to avoid CVE-2012-3512
+    my $user = $config->{sconf}{$service}{user};
+    $ENV{MUNIN_PLUGSTATE} = "$Munin::Common::Defaults::MUNIN_PLUGSTATE/$user";
+
     # Provide a consistent default state-file.
-    $ENV{MUNIN_STATEFILE} = "$Munin::Common::Defaults::MUNIN_PLUGSTATE/$service-$ENV{MUNIN_MASTER_IP}";
+    $ENV{MUNIN_STATEFILE} = "$ENV{MUNIN_PLUGSTATE}/$service-$ENV{MUNIN_MASTER_IP}";
 
     my $env = $config->{sconf}{$service}{env} or return;
 
@@ -197,7 +201,11 @@ sub change_real_and_effective_user_and_group
 sub exec_service {
     my ($class, $dir, $service, $arg) = @_;
 
-    $class->change_real_and_effective_user_and_group($service);
+    # XXX - Create the statedir for the user
+    my $user = $config->{sconf}{$service}{user};
+    Munin::Node::OS->mkdir_subdir("$Munin::Common::Defaults::MUNIN_PLUGSTATE", $user);
+
+    $self->change_real_and_effective_user_and_group($service);
 
     unless (Munin::Node::OS->check_perms_if_paranoid("$dir/$service")) {
         logger ("Error: unsafe permissions on $service. Bailing out.");

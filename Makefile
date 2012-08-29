@@ -127,8 +127,8 @@ install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	mkdir -p $(LIBDIR)/plugins
 	mkdir -p $(PLUGSTATE)
 
-	$(CHOWN) $(PLUGINUSER):$(GROUP) $(PLUGSTATE)
-	$(CHMOD) 0775 $(PLUGSTATE)
+	$(CHOWN) root:root $(PLUGSTATE)
+	$(CHMOD) 0755 $(PLUGSTATE)
 	$(CHMOD) 0755 $(CONFDIR)/plugin-conf.d
 
 	for p in build/plugins/node.d/* build/plugins/node.d.$(OSTYPE)/* ; do \
