@@ -255,7 +255,8 @@ sub mkdir_subdir {
 
     unless (-d "$path/$user") {
         mkdir("$path/$user");
-        chown($user, "root", "$path/$user");
+	my ($login,$pass,$uid,$gid) = getpwnam($user);
+        chown($uid, 0, "$path/$user");
     }
 }
 
