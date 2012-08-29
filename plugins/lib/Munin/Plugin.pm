@@ -88,7 +88,8 @@ our $me = (split '/', $0)[-1];
 =head3 $Munin::Plugin::pluginstatedir
 
 Identical to the environment variable MUNIN_PLUGSTATE (available since
-Munin 1.3.3) or the install time @Z<>@PLUGSTATE@Z<>@ 'constant'.
+Munin 1.3.3)
+
 You can use this if you need to save several different state files.
 But there is also a function to change the state file name so the
 state file support functions can be used for several state files.

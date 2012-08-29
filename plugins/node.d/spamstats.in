@@ -24,7 +24,7 @@ GPLv2
 =cut
 
 
-$statefile = $ENV{statefile} || "@@PLUGSTATE@@/munin-spamstats.state";
+$statefile = $ENV{statefile} || "$ENV{MUNIN_PLUGSTATE}/munin-spamstats.state";
 $pos   = undef;
 $ham = 0;
 $spam = 0;

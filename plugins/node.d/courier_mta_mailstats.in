@@ -29,7 +29,7 @@ Unknown
 
 =cut
 
-my $statefile = "@@PLUGSTATE@@/munin-plugin-courier_mta_mailstats.state";
+my $statefile = "$ENV{MUNIN_PLUGSTATE}/munin-plugin-courier_mta_mailstats.state";
 my $pos   = undef;
 my $delivered = 0;
 my $rejects = {};
