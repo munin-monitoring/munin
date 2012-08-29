@@ -43,7 +43,7 @@ use strict;
 
 my $logfile = '/var/log/mail.log';
 my $logtail = '/usr/sbin/logtail';
-my $offsetfile = "@@PLUGSTATE@@/munin-mailscanner.offset";
+my $offsetfile = "$ENV{MUNIN_PLUGSTATE}/munin-mailscanner.offset";
 my ($clean, $viruses, $spams, $others, $total) = (0, 0, 0, 0, 0);
 my $cmd = (defined($ARGV[0])) ? $ARGV[0] : '';
 

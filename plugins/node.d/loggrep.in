@@ -79,7 +79,7 @@ for my $key (map {/^regex_(.+)/} keys %ENV) {
 
 die("No regexes specified") unless keys %regex;
 
-my $statefile = "@@PLUGSTATE@@/$name.state";
+my $statefile = "$ENV{MUNIN_PLUGSTATE}/$name.state";
 
 if ($ARGV[0] and $ARGV[0] eq 'config') {
     my $title = $ENV{title} || "Entries in $logfile";
