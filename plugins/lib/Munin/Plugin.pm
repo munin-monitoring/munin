@@ -42,7 +42,7 @@ If your Munin installation predates the MUNIN_* environment variables
 (introduced in 1.3.3) you can put this in your plugin configuration:
 
   [*]
-      env.MUNIN_PLUGSTATE /lib/munin/plugin-state
+      env.MUNIN_PLUGSTATE /var/lib/munin-node/plugin-state
       env.MUNIN_LIBDIR /usr/share/munin
 
 IF, indeed that is the munin plugin state directory.  The default
@@ -602,7 +602,7 @@ need to be run as a special user or need special priveliges.
 There is some test stuff in this module.
 
   Test like this:
-  MUNIN_PLUGSTATE=/var/lib/munin/plugin-state -e 'require "Plugin.pm.in"; Munin::Plugin::_test;' -- or something.
+  MUNIN_PLUGSTATE=/var/lib/munin-node/plugin-state -e 'require "Plugin.pm.in"; Munin::Plugin::_test;' -- or something.
 
   sub _test () {
     my $pos;
