@@ -28,7 +28,7 @@ GPLv2
 
 =cut
 
-my $statefile = "@@PLUGSTATE@@/munin-plugin-courier_mta_mailvolume.state";
+my $statefile = "$ENV{MUNIN_PLUGSTATE}/munin-plugin-courier_mta_mailvolume.state";
 my $pos       = undef;
 my $volume    = 0;
 my $LOGDIR    = $ENV{'logdir'}  || '/var/log';

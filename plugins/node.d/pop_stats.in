@@ -4,7 +4,7 @@
 
 #%# family=contrib
 
-$pop{'statefile'} = "@@PLUGSTATE@@/munin-pop-log.state";
+$pop{'statefile'} = "$ENV{MUNIN_PLUGSTATE}/munin-pop-log.state";
 $pos   = undef;
 $logons = 0;
 

@@ -49,7 +49,7 @@ sub cache_open
 {
     my ($fd, $file) = @_;
 
-    my $cache_dir = "@@PLUGSTATE@@";
+    my $cache_dir = "$ENV{MUNIN_PLUGSTATE}";
     my $cache = $file;
     $cache =~ s:/:_:g;
     $cache = "$cache_dir/$cache";

@@ -24,9 +24,7 @@ License unknown
 
 =cut
 
-use Munin::Common::Defaults;
-
-$statefile = "$Munin::Common::Defaults::MUNIN_PLUGSTATE/munin-mailman-log.state";
+$statefile = "$ENV{MUNIN_PLUGSTATE}/munin-mailman-log.state";
 $pos = undef;
 $posts = 0;
 $members = 0;

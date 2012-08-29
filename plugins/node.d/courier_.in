@@ -54,7 +54,7 @@ Unknown
 # Set the location of the courier logs
 COURIER_LOG=${logfile:-/var/log/mail.log}
 SERVICE=${service:-`basename $0 | sed 's/^courier_//g'`}
-OFFSET_FILE=@@PLUGSTATE@@/courier_${SERVICE}.offset
+OFFSET_FILE=${MUNIN_PLUGSTATE}/courier_${SERVICE}.offset
 LOGTAIL=${logtail:-/usr/sbin/logtail}
 
 mktempfile () {

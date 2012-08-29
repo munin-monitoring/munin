@@ -36,7 +36,7 @@ use strict ;
 
 ############################## STUFF YOU MIGHT NEED TO CHANGE
 
-my $datafile = "@@PLUGSTATE@@/mhttping.data" ;
+my $datafile = "$ENV{MUNIN_PLUGSTATE}/mhttping.data" ;
 my $resultsdir = "/home/gconnor/mhttping/results/" ;
 my $httping = "/usr/local/bin/httping" ;
 my $timeout = 30 ;

@@ -55,7 +55,7 @@ mktempfile () {
 
 # Set the location of the perdition logs
 PERDITION_LOG=${logfile:-/var/log/perdition.log}
-OFFSET_FILE=@@PLUGSTATE@@/perdition.offset
+OFFSET_FILE=${MUNIN_PLUGSTATE}/perdition.offset
 LOGTAIL=${logtail:-/usr/sbin/logtail}
 
 case $1 in

@@ -62,7 +62,7 @@ use IO::File;
 use Storable qw(store retrieve);
 use Munin::Plugin;
 
-use constant STATEFILE => '@@PLUGSTATE@@/iostat-ios.state';
+use constant STATEFILE => "$ENV{MUNIN_PLUGSTATE}/iostat-ios.state";
 
 
 if (defined($ARGV[0]) and $ARGV[0] eq 'autoconf') {
