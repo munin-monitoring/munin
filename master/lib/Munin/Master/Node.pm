@@ -72,6 +72,9 @@ sub _do_connect {
     my ($url, $params) = split(/ +/, $self->{address}, 2);
     my $uri = new URI($url);
 
+    # If address is only "ssh://host/" $params will not get set
+    $params = "" unless defined $params;
+
     # If the scheme is not defined, it's a plain host. 
     # Prefix it with munin:// to be able to parse it like others
     $uri = new URI("munin://" . $url) unless $uri->scheme;
@@ -109,7 +112,7 @@ sub _do_connect {
     } elsif ($uri->scheme eq "cmd") {
         # local commands should ignore the username, url and host
         my $local_cmd = $uri->path;
-        my $local_pipe_cmd = $local_cmd . (defined $params ? " $params" : "");
+        my $local_pipe_cmd = "$local_cmd $params";
 
 	    # Open a triple pipe
    	    use IPC::Open3;
@@ -630,8 +633,16 @@ sub _node_read_fast {
 
 		# Stop when we read a \n.\n
 		# ... No need to have a full regex : simple index()
-		last unless index($buf, "\n.\n", $offset - $read_len) < 0;
+		my $start_offset = $offset - $read_len - 3;
+		$start_offset = 0 if $start_offset < 0;
+		last if index($buf, "\n.\n", $start_offset) >= 0;
+
+		# if empty, the client only sends a plain ".\n"
+		last if $buf eq ".\n";
         }
+
+	# Remove the last line that only contains ".\n"
+	$buf =~ s/\.\n$//;
 
 	return [ split(/\n/, $buf) ];
 }
