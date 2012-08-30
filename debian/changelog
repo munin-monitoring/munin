@@ -1,6 +1,19 @@
-munin (2.0.6-1) UNRELEASED; urgency=low
+munin (2.0.6~git-1) UNRELEASED; urgency=low
 
-  * 2.0.6 is actually unreleased still...
+  * 2.0.6 is actually unreleased still, this is based on the current git
+    commit 6183662. The following fixes are included:
+    - munin-node: more secure state file handling, introducing a new plugin 
+      state directory root, owned by uid 0. Then each plugin runs in its own 
+      UID plugin state directory, owned by the said UID. (Closes: 684075),
+      (Closes: #679897), closes CVE-2012-3512.
+    - munin-cgi-graph: ignore @ARGV to fix CVE-2012-3513 (Closes: #684076),
+      thanks to Helmut Grohne <helmut@subdivi.de>
+    - munin-cron: call munin-graph with --cron argument (Closes: #685343)
+    - Master/Node.pm: fix _node_read_fast() to accept all valid returns
+      (Closes: #686089) and _do_connect() to not use an uninitialized
+      variable. (Closes: #686090)
+    - munin-async: make spoolread less restrictive about (valid) plugin names
+      (Closes: #686093)
   * Update Location and Scriptalias in shipped apache.conf to reflect changes
     introduced upstream in 64dfec73 coming in 2.0.6. This fixes a regression
     introduced in fixing #682869.
