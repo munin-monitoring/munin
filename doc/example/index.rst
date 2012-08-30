@@ -13,3 +13,4 @@ Examples of munin and related configuration are gathered here.
    webserver/lighttpd.rst
    webserver/nginx.rst
    graph/aggregate.rst
+   tips/multimaster.rst

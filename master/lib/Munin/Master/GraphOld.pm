@@ -334,7 +334,7 @@ sub graph_startup {
 sub graph_check_cron {
 
     # Are we running from cron and do we have matching graph_strategy
-    if (&munin_get($config, "graph_strategy") eq "cgi" and $cron) {
+    if (&munin_get($config, "graph_strategy", "cron") ne "cron" and $cron) {
 
         # Strategy mismatch: We're run from cron, but munin.conf says
         # we use dynamic graph generation

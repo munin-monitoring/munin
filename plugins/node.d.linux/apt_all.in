@@ -52,7 +52,7 @@ use strict;
 $ENV{'LANG'}="C";
 $ENV{'LC_ALL'}="C";
 
-my $statefile = "@@PLUGSTATE@@/plugin-apt.state";
+my $statefile = "$ENV{MUNIN_PLUGSTATE}/plugin-apt.state";
 my @releases = ("stable", "testing","unstable");
 
 
