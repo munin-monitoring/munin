@@ -1,10 +1,10 @@
-munin (2.0.6~git-1) UNRELEASED; urgency=low
+munin (2.0.6~git-1) experimental; urgency=low
 
   * 2.0.6 is actually unreleased still, this is based on the current git
     commit 6183662. The following fixes are included:
     - munin-node: more secure state file handling, introducing a new plugin 
       state directory root, owned by uid 0. Then each plugin runs in its own 
-      UID plugin state directory, owned by the said UID. (Closes: 684075),
+      UID plugin state directory, owned by the said UID. (Closes: #684075),
       (Closes: #679897), closes CVE-2012-3512.
     - munin-cgi-graph: ignore @ARGV to fix CVE-2012-3513 (Closes: #684076),
       thanks to Helmut Grohne <helmut@subdivi.de>
@@ -18,7 +18,7 @@ munin (2.0.6~git-1) UNRELEASED; urgency=low
     introduced upstream in 64dfec73 coming in 2.0.6. This fixes a regression
     introduced in fixing #682869.
 
- -- Holger Levsen <holger@debian.org>  Sat, 25 Aug 2012 22:25:20 +0200
+ -- Holger Levsen <holger@debian.org>  Thu, 30 Aug 2012 08:26:09 +0000
 
 munin (2.0.5-1) unstable; urgency=low
 
