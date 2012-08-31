@@ -7,9 +7,10 @@ transition.
 
 The most important change is the CGI requirement.
 
- * Munin graphs are now generated on-demand by the web server, and the
-   "munin-graph" execution has been removed from the munin-cron script.
-   Its use is now mostly for debugging purposes.
+ * Munin graphs can now generated on-demand by the web server. It is mandatory
+   for the new zooming feature. The cron "munin-graph" is still the default, as
+   it really ease new install and upgrading for small setups. Going the CGI road
+   is recommended way if you experience performance issues with the cron setup.
 
  * Munin html pages may be generated on-demand by the web server. The
    default is still to run "munin-html" from cron after every update.

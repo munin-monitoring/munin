@@ -6,6 +6,10 @@ munin-2.0.6, 2012-08-31
 Summary
 -------
 
+graph cron is the default again. 
+
+This enables simple install either to work out of the box or be upgraded from 1.4.x in a far easier way than with the CGI default.
+
 Only fixes, but many of them.
 * fixes for munin-graph (cron + cgi)
 * fixes for munin-update
