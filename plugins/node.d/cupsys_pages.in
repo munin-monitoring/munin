@@ -32,7 +32,7 @@ GPLv2
 use strict;
 use Munin::Plugin;
 
-my $statefile = "@@PLUGSTATE@@/munin-cupsys-pages.state";
+my $statefile = "$ENV{MUNIN_PLUGSTATE}/munin-cupsys-pages.state";
 my $pos       = undef;
 my %printers  = ();
 

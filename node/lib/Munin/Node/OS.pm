@@ -13,6 +13,7 @@ use Munin::Common::Timeout;
 
 use POSIX ();
 use Sys::Hostname;
+use File::Path qw(make_path);
 
 sub get_uid {
     my ($class, $user) = @_;
@@ -249,6 +250,16 @@ sub _set_xid {
 
 sub set_umask { umask(0002) or croak "Unable to set umask: $!\n"; }
 
+sub mkdir_subdir {
+    my ($class, $path, $uid) = @_;
+
+    my $user = getpwuid($uid);
+
+    unless (-d "$path/$user") {
+        mkdir("$path/$user");
+        chown($uid, 0, "$path/$user");
+    }
+}
 
 
 1;

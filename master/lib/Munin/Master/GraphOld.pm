@@ -334,7 +334,7 @@ sub graph_startup {
 sub graph_check_cron {
 
     # Are we running from cron and do we have matching graph_strategy
-    if (&munin_get($config, "graph_strategy") eq "cgi" and $cron) {
+    if (&munin_get($config, "graph_strategy", "cron") ne "cron" and $cron) {
 
         # Strategy mismatch: We're run from cron, but munin.conf says
         # we use dynamic graph generation
@@ -1422,6 +1422,9 @@ sub process_service {
             # ALWAYS dumps the cmd used when an error occurs.
             # Otherwise, it will be difficult to debug post-mortem
             ERROR "[RRD ERROR] rrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
+        }
+        elsif (!-f $picfilename) {
+		ERROR "[RRD ERROR] rrdtool graph did not generate the image (make sure there are data to graph).\n";
         }
         else {
 

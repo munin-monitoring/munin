@@ -27,9 +27,8 @@ GPLv2
 =cut
 
 use strict;
-use Munin::Common::Defaults;
 
-my $statefile = "$Munin::Common::Defaults::MUNIN_PLUGSTATE/yum.state";
+my $statefile = "$ENV{MUNIN_PLUGSTATE}/yum.state";
 
 sub update {
     if (-l $statefile) {

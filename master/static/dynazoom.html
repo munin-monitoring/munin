@@ -79,7 +79,7 @@ var image = document.getElementById("image");
 var divOverlay = document.getElementById("overlayDiv");
 
 
-form.cgiurl_graph.value = qs.get("cgiurl_graph", "/cgi-bin/munin-cgi-graph");
+form.cgiurl_graph.value = qs.get("cgiurl_graph", "/munin-cgi/munin-cgi-graph");
 form.plugin_name.value = qs.get("plugin_name", "localdomain/localhost.localdomain/if_eth0");
 form.start_epoch.value = qs.get("start_epoch", "1236561663");
 form.stop_epoch.value = qs.get("stop_epoch", "1237561663");

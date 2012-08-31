@@ -27,7 +27,14 @@ $Id$
 use strict;
 use warnings;
 use IO::Handle;
+
 BEGIN {
+    # This is needed because Date::Manip has deprecated the functional
+    # interface in >= 6.x. So, we force the use of the 5.x API.
+    $Date::Manip::Backend = 'DM5';
+
+    # Double line here to avoid spurious warnings about D::M::Backend being
+    # used only once.
     $Date::Manip::Backend = 'DM5';
 }
 use Date::Manip;
@@ -81,7 +88,7 @@ while (my $path = <$graph_fh>) {
 
     # The full URL looks like this:
     # Case 1:
-    # http://localhost:8080/cgi-bin/munin-cgi-graph/client/\
+    # http://localhost:8080/munin-cgi/munin-cgi-graph/client/\
     #    Backend/dafnes.client.example.com/diskstats_iops-week.png
     # $path should be
     #   client/Backend/dafnes.client.example.com/diskstats_iops-week.png
@@ -89,7 +96,7 @@ while (my $path = <$graph_fh>) {
     # Interesting bits about that url: Nested groups!
     #
     # Case 2:
-    # http://localhost:8080/cgi-bin/munin-cgi-graph/client/\
+    # http://localhost:8080/munin-cgi/munin-cgi-graph/client/\
     #    Backend/dafnes.client.example.com/diskstats_iops/sda-week.png
     # path should be
     #    client/Backend/dafnes.client.example.com/diskstats_iops/\
@@ -99,7 +106,7 @@ while (my $path = <$graph_fh>) {
     # nesting bits at the end.
     #
     # Case 3:
-    # http://localhost:8080/cgi-bin/munin-cgi-graph/client/\
+    # http://localhost:8080/munin-cgi/munin-cgi-graph/client/\
     #   dafnes.client.example.com/if_err_bond0-day.png
     # path:
     #   client/dafnes.client.example.com/if_err_bond0-day.png

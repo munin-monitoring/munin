@@ -42,7 +42,7 @@ If your Munin installation predates the MUNIN_* environment variables
 (introduced in 1.3.3) you can put this in your plugin configuration:
 
   [*]
-      env.MUNIN_PLUGSTATE /lib/munin/plugin-state
+      env.MUNIN_PLUGSTATE /var/lib/munin-node/plugin-state
       env.MUNIN_LIBDIR /usr/share/munin
 
 IF, indeed that is the munin plugin state directory.  The default
@@ -88,7 +88,8 @@ our $me = (split '/', $0)[-1];
 =head3 $Munin::Plugin::pluginstatedir
 
 Identical to the environment variable MUNIN_PLUGSTATE (available since
-Munin 1.3.3) or the install time @Z<>@PLUGSTATE@Z<>@ 'constant'.
+Munin 1.3.3)
+
 You can use this if you need to save several different state files.
 But there is also a function to change the state file name so the
 state file support functions can be used for several state files.
@@ -602,7 +603,7 @@ need to be run as a special user or need special priveliges.
 There is some test stuff in this module.
 
   Test like this:
-  MUNIN_PLUGSTATE=/var/lib/munin/plugin-state -e 'require "Plugin.pm.in"; Munin::Plugin::_test;' -- or something.
+  MUNIN_PLUGSTATE=/var/lib/munin-node/plugin-state -e 'require "Plugin.pm.in"; Munin::Plugin::_test;' -- or something.
 
   sub _test () {
     my $pos;
