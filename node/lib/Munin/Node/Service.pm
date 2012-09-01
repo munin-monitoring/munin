@@ -120,7 +120,8 @@ sub export_service_environment {
     print STDERR "# Setting up environment\n" if $config->{DEBUG};
 
     # We append the USER to the MUNIN_PLUGSTATE, to avoid CVE-2012-3512
-    my $user = $config->{sconf}{$service}{user};
+    my $uid = $self->_resolve_uid($service);
+    my $user = getpwuid($uid);
     $ENV{MUNIN_PLUGSTATE} = "$Munin::Common::Defaults::MUNIN_PLUGSTATE/$user";
 
     # Provide a consistent default state-file.
@@ -241,8 +242,8 @@ sub exec_service
     my ($self, $service, $arg) = @_;
 
     # XXX - Create the statedir for the user
-    my $user = $config->{sconf}{$service}{user};
-    Munin::Node::OS->mkdir_subdir("$Munin::Common::Defaults::MUNIN_PLUGSTATE", $user);
+    my $uid = $self->_resolve_uid($service);
+    Munin::Node::OS->mkdir_subdir("$Munin::Common::Defaults::MUNIN_PLUGSTATE", $uid);
 
     $self->change_real_and_effective_user_and_group($service);
 

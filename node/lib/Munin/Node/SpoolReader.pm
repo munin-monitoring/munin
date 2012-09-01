@@ -158,7 +158,7 @@ sub _get_spooled_plugins
         or die "Unable to reset the spool directory handle: $!";
 
     my %seen;
-    return map { m/^munin-daemon\.([0-9a-zA-Z_.-]+)\.\d+\.\d+$/ && ! $seen{$1}++ ? $1 : () }
+    return map { m/^munin-daemon\.(.*)\.\d+\.\d+$/ && ! $seen{$1}++ ? $1 : () }
         readdir $self->{spooldirhandle};
 }
 

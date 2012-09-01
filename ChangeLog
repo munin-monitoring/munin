@@ -1,11 +1,49 @@
 -*- text -*-
 
-munin-2.0.6, 2012-08-?
+munin-2.0.6, 2012-08-31
+
+-------
+Summary
+-------
+
+graph cron is the default again. 
+
+This enables simple install either to work out of the box or be upgraded from 1.4.x in a far easier way than with the CGI default.
+
+Only fixes, but many of them.
+* fixes for munin-graph (cron + cgi)
+* fixes for munin-update
+* fixes for links in templates
+* fixes for the various security bugs
+
+------------------
+Detailed Changelog
+------------------
+
+Adrien "ze" Urban:
+      templates: fix multiple bad links (mostly with subgroups)
+      graph: cosmetics for no-data to graph
+      db/graphs: remove duplicate entries
+      munin-cgi-graph: fixed memory leak
+      doc: nginx - Authentication and group access
+      doc: multimaster     contrib: munin-mergedb.pl (tool for multimaster)
+      doc: fix missing link to tips/multimaster
+      munin-cgi-*: use MUNIN_CONFIG if available
+      munin-cgi-html: update timestamp when running for a while
+
+Chen-Yu Tsai:
+      update: write node/services with update=no to datafile as well
+
+Diego Elio Petteno:
+      snmp__print_pages: fix snmpconf.
+      http_loadtime: use bash instead of any sh; `time` is not a standard command
+      proc: fix Perl syntax to not use deprecated defined(@array)
+      proc: drop autoconf capability and handling code.
+      varnish_: remove another deprecated defined(@array)
 
 Holger Levsen:
       munin-cgi-graph: ignore @ARGV to fix CVE-2012-3513 and Debian #684076
-      munin-cron: call munin-graph with --cron argument (Closes: 685343)
-
+      munin-cron: call munin-graph with --cron argument (Closes: D#685343)
       Rename cgi-bin to munin-cgi: the default for the Apache webserver is to
        setup a ScriptAlias for /cgi-bin. The ScriptAlias directive does
        not permit changing sublocations, thus making it impossible to impose
@@ -13,6 +51,34 @@ Holger Levsen:
        This change was done in munin-cgi-graph, munin-graph, HTMLConfig.pm,
        static/dynazoom.html and static/zoom.js _and_ also needs to be done in
        the distribution specific webserver configuration file.
+
+Niall Donegan:
+      Quick fix to http_loadtime
+      Added back in the capacities magic marker
+
+Peter Palfrader:
+      update: bugfix _node_read_fast() (Closes: D#686089, D#686090)
+      update: remove the last line to fix parsing errors
+      update: fix use of undefined variable
+      async: fix retrieve of ip_
+      We probably also want to allow : in spool filenames
+
+Robin H. Johnson:
+      mysql_: Multiple instance support.
+
+Steve Schnepp:
+      adding a new sum+cdef tester plugin
+      munin.conf.in: show the defaut value in the sample
+      adding some comments for HTML cron vs cgi
+      Only kill & log if the subprocess is still alive
+      update/spoolfetch: disable _node_read_fast
+      node: more secure state file handling (Closes: #1234, CVE-2012-3512, D#684075, D#679897)
+      plugins: use runtime $ENV{MUNIN_PLUGSTATE}
+      master: revert to cron GFX per default
+      plugins: fix for uninitialized $MUNIN_VERSION
+      master: fix the D::M:B warning in munin-graph
+      async: allow any good-looking-enough file in spool (Closes: D#686093)
+      plugin: revert removal of munin_graph field
 
 munin-2.0.5, 2012-08-14
 
