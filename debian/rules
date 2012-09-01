@@ -29,6 +29,10 @@ override_dh_auto_install:
 		MANDIR=$(CURDIR)/debian/munin-doc/usr/share/man \
 		DESTDIR=$(CURDIR)/debian/munin-node
 
+	# workaround bug in upstream Makefile
+	mkdir -p $(CURDIR)/debian/munin-async/var/lib
+	mv $(CURDIR)/debian/munin-node/var/lib/munin-async $(CURDIR)/debian/munin-async/var/lib/munin-async
+
 	$(MAKE) install-plugins-prime $(MAKEOPTS) \
 		MANDIR=$(CURDIR)/debian/munin-doc/usr/share/man \
 		DESTDIR=$(CURDIR)/debian/munin-plugins-core

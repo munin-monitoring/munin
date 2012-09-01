@@ -20,6 +20,8 @@ munin (2.0.6-1) UNRELEASED; urgency=low
   * munin-node.postinst: don't create /var/lib/munin/plugin-state anymore as
     munin-node now uses /var/lib/munin-nodes/plugin-state and subdirs and
     handles creation by itself.
+  * debian/rules: workaround bug in upstream Makefile targets to move 
+    /var/lib/async from munin-node package to munin-async.
 
  -- Holger Levsen <holger@debian.org>  Thu, 30 Aug 2012 08:26:09 +0000
 
