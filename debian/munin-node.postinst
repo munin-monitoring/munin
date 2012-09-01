@@ -16,23 +16,15 @@ add_munin_system_user() {
 }
 
 initperms() {
-	mkdir -p /var/lib/munin/plugin-state 
-
 	chown munin:adm /var/log/munin
 	chmod 755 /var/log/munin
 	
-	chown munin:munin /var/lib/munin
-	chmod 755 /var/lib/munin
-
-	chown munin:munin /var/lib/munin/plugin-state
-	chmod 775 /var/lib/munin/plugin-state
-
 	chown root:munin /etc/munin/plugin-conf.d
 	chmod 750 /etc/munin/plugin-conf.d
 }
 
 fixoverrides() {
-
+	# even though we don't use /var/lib/munin/(plugin-state) anymore we should still remove old overrides
         overrides="
 /etc/munin/plugin-conf.d
 /var/lib/munin

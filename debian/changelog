@@ -17,6 +17,9 @@ munin (2.0.6-1) UNRELEASED; urgency=low
       (Closes: #686093)
   * Update Location and Scriptalias in shipped apache.conf to fix a regression
     introduced in fixing #682869.
+  * munin-node.postinst: don't create /var/lib/munin/plugin-state anymore as
+    munin-node now uses /var/lib/munin-nodes/plugin-state and subdirs and
+    handles creation by itself.
 
  -- Holger Levsen <holger@debian.org>  Thu, 30 Aug 2012 08:26:09 +0000
 
