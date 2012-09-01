@@ -1,7 +1,8 @@
-munin (2.0.6~git-1) experimental; urgency=low
+munin (2.0.6-1) UNRELEASED; urgency=low
 
-  * 2.0.6 is actually unreleased still, this is based on the current git
-    commit 6183662. The following fixes are included:
+  * New upstream release 2.0.6, switching back to cron graphing (as it better
+    for small setups) and besides that only containing bugfixes, but many of 
+    them. See the upstream ChangeLog for the full list.
     - munin-node: more secure state file handling, introducing a new plugin 
       state directory root, owned by uid 0. Then each plugin runs in its own 
       UID plugin state directory, owned by the said UID. (Closes: #684075),
@@ -14,8 +15,7 @@ munin (2.0.6~git-1) experimental; urgency=low
       variable. (Closes: #686090)
     - munin-async: make spoolread less restrictive about (valid) plugin names
       (Closes: #686093)
-  * Update Location and Scriptalias in shipped apache.conf to reflect changes
-    introduced upstream in 64dfec73 coming in 2.0.6. This fixes a regression
+  * Update Location and Scriptalias in shipped apache.conf to fix a regression
     introduced in fixing #682869.
 
  -- Holger Levsen <holger@debian.org>  Thu, 30 Aug 2012 08:26:09 +0000
