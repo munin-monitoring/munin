@@ -10,8 +10,8 @@ Build-Depends-Indep: perl, htmldoc, html2text, default-jdk
 Build-Depends: debhelper (>=8), quilt
 Standards-Version: 3.9.3
 Homepage: http://munin-monitoring.org
-Vcs-svn: svn://munin-monitoring.org/munin/branches/debian/wheezy
-Vcs-Browser: http://munin-monitoring.org/browser/
+Vcs-Git: git://anonscm.debian.org/collab-maint/munin.git
+Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/munin.git
 
 Package: munin-node
 Architecture: all
