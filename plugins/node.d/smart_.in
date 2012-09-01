@@ -110,7 +110,10 @@ def read_values(hard_drive):
     try :
         verboselog('Reading S.M.A.R.T values')
         os.putenv('LC_ALL','C')
-        smart_output=os.popen(os.getenv('smartpath','/usr/sbin/smartctl')+' '+os.getenv('smartargs','-a')+(os.getenv('ignorestandby',False) and ' ' or ' -n standby ')+'-A -i /dev/'+hard_drive)
+        device='/dev/'+hard_drive
+        if not os.path.exists(device):
+            device='/dev/disk/by-id/'+hard_drive
+        smart_output=os.popen(os.getenv('smartpath','/usr/sbin/smartctl')+' '+os.getenv('smartargs','-a')+(os.getenv('ignorestandby',False) and ' ' or ' -n standby ')+'-A -i '+device)
         read_values=0
         lastline=None
         for l in smart_output :
@@ -227,7 +230,7 @@ def print_unknown_from_statefile(hard_drive,smart_values) :
 def get_hard_drive_name() :
     global plugin_name
     try :
-        name=[plugin_name[string.rindex(plugin_name,'_')+1:]]
+        name=[plugin_name[string.index(plugin_name,'_')+1:]]
         if os.uname()[0]=="SunOS" :
             try :
                 # if hard_drive name starts with "rdsk" or "rmt", try to reconstruct the path
@@ -237,14 +240,15 @@ def get_hard_drive_name() :
                     name[0]=os.path.join("rmt",name[0][3:])
             except :
                 verboselog('Failed to find SunOS hard_drive')
-        # For 3ware cards, we have to set multiple plugins for the same hard drive name.
-        # Let's see if we find a '-' in the drive name.
-        if name[0].find('-')!=-1:
-            # Put the drive name and it's number in a list
-            name=[name[0][:string.rindex(name[0],'-')],name[0][string.rindex(name[0],'-')+1:]]
+        if (not os.path.exists('/dev/'+name[0])) and (not os.path.exists('/dev/disk/by-id/'+name[0])):
+            # For 3ware cards, we have to set multiple plugins for the same hard drive name.
+            # Let's see if we find a '-' in the drive name.
+            if name[0].find('-')!=-1:
+                # Put the drive name and it's number in a list
+                name=[name[0][:string.rindex(name[0],'-')],name[0][string.rindex(name[0],'-')+1:]]
         # Chech that the drive exists in /dev
-        if not os.path.exists('/dev/'+name[0]):
-            verboselog('/dev/'+name[0]+' not found!')
+        if (not os.path.exists('/dev/'+name[0])) and (not os.path.exists('/dev/disk/by-id/'+name[0])):
+            verboselog('/dev/(disk/by-id/)?'+name[0]+' not found!')
             sys.exit(1)
         return(name)
     except :
