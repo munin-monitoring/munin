@@ -22,7 +22,9 @@ munin (2.0.6-1) UNRELEASED; urgency=low
     handles creation by itself.
   * debian/rules: workaround bug in upstream Makefile targets to move 
     /var/lib/async from munin-node package to munin-async.
-  * debian/control: update Vcs: headers to point to uptodate repositories.
+  * debian/control:
+    - make munin-async depend on munin-node for now.
+    - update Vcs: headers to point to an uptodate repository.
 
  -- Holger Levsen <holger@debian.org>  Thu, 30 Aug 2012 08:26:09 +0000
 
