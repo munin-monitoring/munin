@@ -1,4 +1,4 @@
-munin (2.0.6-1) UNRELEASED; urgency=low
+munin (2.0.6-1) UNRELEASED; urgency=high
 
   * New upstream release 2.0.6, switching back to cron graphing (as it better
     for small setups) and besides that only containing bugfixes, but many of 
