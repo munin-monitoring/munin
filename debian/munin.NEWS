@@ -1,13 +1,12 @@
-munin (2.0~rc6-1) unstable; urgency=low
+munin (2.0.6-1) unstable; urgency=medium
 
-    Welcome to munin 2.0~rc6! Please read the changelog and the documentation
-    to learn about new features. 
+    Welcome to munin 2.0.6! Please read the changelog and the documentation
+    to learn about new features.
 
-    If you're upgrading and have modified /etc/munin/munin.conf in the past
-    you will now need to set "cgitmpdir /var/lib/munin/cgi-tmp" manually.
-
-    "graph_strategy cgi" is the default now. (In theory, you could get the 
-    old cron based graphing to work as well, but we strongly recommend not to.)
+    If you're upgrading and using (fast)cgi graphing ("graph_strategy cgi"
+    in munin.conf) you will need to modify both your /etc/munin/munin.conf
+    as well as the webserver configuration due to changed cgi pathes to
+    enable secure setups.
     See http://munin-monitoring.org/wiki/CgiHowto2 for more information.
 
     The munin-node package now only provides the actual node, plugins are 
@@ -15,7 +14,7 @@ munin (2.0~rc6-1) unstable; urgency=low
     in 2.0
     The documentation for munin has been moved to the new "munin-doc" package.
 
- -- Holger Levsen <holger@debian.org>  Sun, 13 May 2012 17:57:24 +0200
+ -- Holger Levsen <holger@debian.org>  Mon, 03 Sep 2012 12:04:02 +0200
 
 munin (1.4.0-1) unstable; urgency=low
 

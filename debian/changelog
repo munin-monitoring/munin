@@ -7,6 +7,10 @@ munin (2.0.6-1) UNRELEASED; urgency=high
       state directory root, owned by uid 0. Then each plugin runs in its own 
       UID plugin state directory, owned by the said UID. (Closes: #684075),
       (Closes: #679897), closes CVE-2012-3512.
+      So all properly written plugins will use
+      /var/lib/munin-node/plugin-state/$uid/$some_file now - please report
+      plugins that are still using /var/lib/munin/plugin-state/ - as those
+      might pose a security risk!
     - munin-cgi-graph: ignore @ARGV to fix CVE-2012-3513 (Closes: #684076),
       thanks to Helmut Grohne <helmut@subdivi.de>
     - munin-cron: call munin-graph with --cron argument (Closes: #685343)
@@ -25,6 +29,9 @@ munin (2.0.6-1) UNRELEASED; urgency=high
   * debian/control:
     - make munin-async depend on munin-node for now.
     - update Vcs: headers to point to an uptodate repository.
+  * update munin.NEWS to reflect that everybody using cgi graphing needs to
+    update the configuration files and that cron graphing is the default
+    again. (cgi graphing was the default from pre-2.0 until 2.0.5)
 
  -- Holger Levsen <holger@debian.org>  Thu, 30 Aug 2012 08:26:09 +0000
 
