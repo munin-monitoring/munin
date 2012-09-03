@@ -29,6 +29,7 @@ munin (2.0.6-1) UNRELEASED; urgency=high
   * debian/control:
     - make munin-async depend on munin-node for now.
     - update Vcs: headers to point to an uptodate repository.
+  * Remove build/resources/apache-cgi.conf from munin.docs as it's outdated.
   * update munin.NEWS to reflect that everybody using cgi graphing needs to
     update the configuration files and that cron graphing is the default
     again. (cgi graphing was the default from pre-2.0 until 2.0.5)
