@@ -135,7 +135,7 @@ sub html_startup {
 
     munin_readconfig_base($conffile);
     # XXX: should not need that part here, yet.
-    $config = munin_readconfig_part('datafile');
+    $config = munin_readconfig_part('datafile', 0);
  
     logger_open($config->{'logdir'});
     logger_debug() if $DEBUG;

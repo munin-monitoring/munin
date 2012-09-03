@@ -100,7 +100,7 @@ sub limits_startup {
 
     munin_readconfig_base($conffile);
     # XXX: check if it does actualy need that part
-    $config = munin_readconfig_part('datafile');
+    $config = munin_readconfig_part('datafile', 0);
 
     logger_open($config->{'logdir'});
     logger_debug() if $DEBUG;
@@ -119,7 +119,7 @@ sub limits_main {
 
     munin_runlock("$config->{rundir}/munin-limits.lock");
 
-    $oldnotes = &munin_readconfig_part('limits');
+    $oldnotes = &munin_readconfig_part('limits', 1);
 
     initialize_for_nagios();
 

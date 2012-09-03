@@ -1019,6 +1019,7 @@ sub munin_configpart_revision {
 
 sub munin_readconfig_part {
     my $what = shift;
+    my $missingok = shift;
     if (! defined $config_parts->{$what}) {
 	ERROR "[ERROR] munin_readconfig_part with unknown part name ($what).";
 	return undef;
@@ -1026,15 +1027,30 @@ sub munin_readconfig_part {
     # for now, we only really care about storable.
     # No reason to bother reading non-storable elements anyway.
     my $filename = "$config->{dbdir}/$what.storable";
-    return undef if (! -f $filename);
-    my @stat = stat($filename);
-    if ($config_parts->{$what}{timestamp} < $stat[9]) {
-	# could use _raw if we wanted to read non-storable fallback
-	my $part = munin_readconfig_storable($filename);
+    my $part = {};
+    my $doupdate = 0;
+    if (! -f $filename) {
+	unless (defined $missingok and $missingok) {
+		ERROR "[FATAL] munin_readconfig_part($what) - missing file";
+		exit(1);
+	}
+	# missing ok, return last value if we have one, copy config if not
+	if (undef == $config_parts->{$what}{config}) {
+		$doupdate = 1;
+	}
+    } else {
+    	my @stat = stat($filename);
+	if ($config_parts->{$what}{timestamp} < $stat[9]) {
+	    # could use _raw if we wanted to read non-storable fallback
+	    $part = munin_readconfig_storable($filename);
+	    $config_parts->{$what}{timestamp} = $stat[9];
+	    $doupdate = 1;
+	}
+    }
+    if ($doupdate) {
 	$part->{'#%#name'} = 'root';
 	$part->{'#%#parent'} = undef;
 	$part = munin_overwrite($part, $config);
-	$config_parts->{$what}{timestamp} = $stat[9];
 	$config_parts->{$what}{config} = $part;
 	++$config_parts->{$what}{revision};
     }

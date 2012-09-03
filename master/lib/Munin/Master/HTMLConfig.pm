@@ -37,7 +37,7 @@ sub generate_config {
     $problems = {"criticals" => [], "warnings" => [], "unknowns" => []};
     my $rev = munin_configpart_revision();
 
-    $config = munin_readconfig_part('datafile');
+    $config = munin_readconfig_part('datafile', 0);
     if ($rev != munin_configpart_revision()) {
 	# datafile got updated
 	initiate_cgiurl_graph();

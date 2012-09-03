@@ -301,7 +301,7 @@ sub graph_startup {
     if (!defined($config)) {
 	munin_readconfig_base($conffile);
 	# XXX: check if it needs datafile at that point
-	$config = munin_readconfig_part('datafile');
+	$config = munin_readconfig_part('datafile', 0);
     }
 
     my $palette = &munin_get($config, "palette", "default");
