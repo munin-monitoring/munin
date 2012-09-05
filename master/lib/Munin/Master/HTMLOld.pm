@@ -82,7 +82,6 @@ my @times = ("day", "week", "month", "year");
 
 my $DEBUG      = 0;
 my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
-my $htmlconfcache = "$Munin::Common::Defaults::MUNIN_DBDIR/htmlconf.storable";
 my $do_usage   = 0;
 my $do_version = 0;
 my $stdout     = 0;
@@ -134,10 +133,11 @@ sub html_startup {
 
     exit_if_run_by_super_user() unless $force_run_as_root;
 
-    $config = munin_config($conffile, $config);
-	$htmlconfcache = $config->{"dbdir"} . "/htmlconf.storable";
+    munin_readconfig_base($conffile);
+    # XXX: should not need that part here, yet.
+    $config = munin_readconfig_part('datafile', 0);
  
-	logger_open($config->{'logdir'});
+    logger_open($config->{'logdir'});
     logger_debug() if $DEBUG;
 
     $tmpldir = $config->{tmpldir};
@@ -151,11 +151,7 @@ sub html_startup {
 }
 
 sub get_config {
-	my $cache = shift;
 	$htmlconfig = undef;
-	if($cache){
-		$htmlconfig = munin_readconfig_storable($htmlconfcache);
-	}
 	if(!defined $htmlconfig){
 		my $graphs_filename = $config->{dbdir} . "/graphs";
 		my $graphs_filename_tmp = $graphs_filename . ".tmp." . $$;
@@ -165,7 +161,7 @@ sub get_config {
 		 	$config->{"#%#graphs_fh"} = new IO::File("> $graphs_filename_tmp");
 		}
 
-		$htmlconfig = generate_config($config);
+		$htmlconfig = generate_config();
 
 		unless ($ENV{SCRIPT_NAME}) {
 			# Closing the file
@@ -182,17 +178,16 @@ sub html_main {
     my $staticdir = $config->{staticdir};
     copy_web_resources($staticdir, $htmldir);
 
-	my $configtime = Time::HiRes::time;
-    get_config(0);
-	munin_writeconfig_storable("$htmlconfcache", $htmlconfig);
-	my $groups = $htmlconfig;
-	$configtime = sprintf("%.2f", (Time::HiRes::time - $configtime));
-	INFO "[INFO] config generated ($configtime sec)";
+    my $configtime = Time::HiRes::time;
+    get_config();
+    my $groups = $htmlconfig;
+    $configtime = sprintf("%.2f", (Time::HiRes::time - $configtime));
+    INFO "[INFO] config generated ($configtime sec)";
 
     if (munin_get($config,"html_strategy","cron") eq "cgi"){
-		INFO "[INFO] html_strategy is cgi. Skipping template generation";
-		return;
-	}
+	INFO "[INFO] html_strategy is cgi. Skipping template generation";
+	return;
+    }
 
     my $update_time = Time::HiRes::time;
     my $lockfile = "$config->{rundir}/munin-html.lock";
@@ -218,9 +213,9 @@ sub html_main {
     }
 	
     generate_group_templates($groups);
-	generate_category_templates($htmlconfig->{"globalcats"});
+    generate_category_templates($htmlconfig->{"globalcats"});
     emit_main_index($groups,$timestamp,0);
-	emit_problem_template(0);
+    emit_problem_template(0);
 
     INFO "[INFO] Releasing lock file $lockfile";
 

@@ -98,7 +98,9 @@ sub limits_startup {
 
     exit_if_run_by_super_user() unless $force_run_as_root;
 
-    $config = &munin_config($conffile);
+    munin_readconfig_base($conffile);
+    # XXX: check if it does actualy need that part
+    $config = munin_readconfig_part('datafile', 0);
 
     logger_open($config->{'logdir'});
     logger_debug() if $DEBUG;
@@ -117,7 +119,7 @@ sub limits_main {
 
     munin_runlock("$config->{rundir}/munin-limits.lock");
 
-    $oldnotes = &munin_readconfig($config->{'dbdir'} . "/limits", 1, 1);
+    $oldnotes = &munin_readconfig_part('limits', 1);
 
     initialize_for_nagios();
 
@@ -128,6 +130,7 @@ sub limits_main {
     close_pipes();
 
     &munin_writeconfig("$config->{dbdir}/limits", \%notes);
+    &munin_writeconfig_storable("$config->{dbdir}/limits.storable", \%notes);
 
     $update_time = sprintf("%.2f", (Time::HiRes::time - $update_time));
 
