@@ -27,20 +27,31 @@ my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 
 my $config;
 my $limits;
+my $cache;
 
 my $categories;
 my $problems;
 
 sub generate_config {
-	$config = shift;
-	$categories = {};
-	$problems = {"criticals" => [], "warnings" => [], "unknowns" => []};
-	$limits = munin_readconfig($config->{dbdir} . "/limits",1,1); #TODO: candidate for caching
+    $categories = {};
+    $problems = {"criticals" => [], "warnings" => [], "unknowns" => []};
+    my $rev = munin_configpart_revision();
 
+    $config = munin_readconfig_part('datafile', 0);
+    if ($rev != munin_configpart_revision()) {
+	# datafile got updated
 	initiate_cgiurl_graph();
 	# convert config for html generation: reorder nodes to their rightful group
 	node_reorder($config);
-	return get_group_tree($config);
+    }
+
+    $limits = munin_readconfig_part("limits");
+    # if only limits changed, still update our cache
+    if ($rev != munin_configpart_revision()) {
+	$cache = get_group_tree($config);
+    }
+
+    return $cache;
 }
 
 sub node_reorder {

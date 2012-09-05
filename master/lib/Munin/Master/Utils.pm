@@ -33,7 +33,7 @@ our (@ISA, @EXPORT);
 	   'munin_removelock',
 	   'munin_runlock',
 	   'munin_getlock',
-	   'munin_readconfig',
+	   'munin_readconfig_raw',
 	   'munin_readconfig_storable',
 	   'munin_writeconfig',
 	   'munin_writeconfig_storable',
@@ -43,8 +43,9 @@ our (@ISA, @EXPORT);
 	   'munin_overwrite',
 	   'munin_dumpconfig',
 	   'munin_dumpconfig_as_str',
-	   'munin_config',
-	   'munin_refreshconfig',
+	   'munin_readconfig_base',
+	   'munin_readconfig_part',
+	   'munin_configpart_revision',
 	   'munin_draw_field',
 	   'munin_get_bool',
 	   'munin_get_bool_val',
@@ -93,6 +94,19 @@ my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
 
 my $nsca = new IO::Handle;
 my $config = undef;
+my $config_parts = {
+	# config parts that might be loaded and reloaded at times
+	'datafile' => {
+		'timestamp' => 0,
+		'config' => undef,
+		'revision' => 0,
+	},
+	'limits' => {
+		'timestamp' => 0,
+		'config' => undef,
+		'revision' => 0,
+	},
+};
 
 my $configfile="$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 
@@ -154,6 +168,35 @@ sub auto_weaken {
 	}
 	# print "items: $items, weakened: $weakened\n";
 	return @_;
+}
+
+# based on auto_weaken search, but only cares about #%#parents
+sub weaken_config {
+    my @todo = @_;
+    while (my $cur = shift @todo) {
+	if (ref($cur) eq 'HASH') {
+	    for my $key (keys %$cur) {
+		next unless ref $cur->{$key};
+		next if isweak $cur->{$key};
+		if ($key eq '#%#parent') {
+		    weaken($cur->{$key});
+		    next;
+		}
+		push @todo, $cur->{$key};
+	    }
+	} elsif (ref($cur) eq 'ARRAY') {
+	    for (my $i = 0 ; $i < @$cur ; $i++) {
+		next unless ref $cur->[$i];
+		next if isweak $cur->[$i];
+		push @todo, $cur->[$i];
+	    }
+	} elsif (ref($cur) eq 'SCALAR') {
+	    next unless ref $$cur;
+	    next if isweak $cur;
+	    push @todo, $$cur;
+	}
+    }
+    return @_;
 }
 
 sub munin_draw_field {
@@ -300,55 +343,43 @@ sub munin_overwrite {
 }
 
 sub munin_readconfig_storable {
-	my ($conf) = @_;
-	
-	my $config = undef;
-	$conf ||= $configfile;
+    my ($file) = @_;
+
+    my $part = undef;
+    $file ||= $configfile;
 
     # try to read storable version
-    if ( (-r $conf) && open (my $CFG_STORABLE, '<', $conf)) { 
-		DEBUG "[DEBUG] munin_readconfig: found Storable version of $conf, using it";
-        $config = Storable::fd_retrieve($CFG_STORABLE); 
+    if ((-r $file) && open (my $CFG_STORABLE, '<', $file)) { 
+        DEBUG "[DEBUG] munin_readconfig: found Storable version of $file, using it";
+        $part = Storable::fd_retrieve($CFG_STORABLE); 
         close ($CFG_STORABLE); 
-	}
+	weaken_config($part);
+    }
 
-	return $config; 
+    return $part; 
 }
 
-sub munin_readconfig {
-    my ($conf, $missingok, $corruptok) = @_;
+sub munin_readconfig_raw {
+    my ($conf, $missingok) = @_;
 
-    my $config = undef;
+    my $part = undef;
 
     $conf ||= $configfile;
-
     # try first to read storable version
-	$config = munin_readconfig_storable("$conf.storable");
-	if(!defined $config){
+    $part = munin_readconfig_storable("$conf.storable");
+    if (!defined $part) {
         if (! -r $conf and ! $missingok) {
             WARN "munin_readconfig: cannot open '$conf'";
             return;
-		}
+        }
         if (open (my $CFG, '<', $conf)) {
             my @contents = <$CFG>;
             close ($CFG);
-            $config = munin_parse_config (\@contents);
+            $part = munin_parse_config (\@contents);
         }
     }
 
-    # Some important defaults before we return...
-    $config->{'dropdownlimit'} ||= $Munin::Common::Defaults::DROPDOWNLIMIT;
-    $config->{'rundir'}        ||= $Munin::Common::Defaults::MUNIN_STATEDIR;
-    $config->{'dbdir'}         ||= $Munin::Common::Defaults::MUNIN_DBDIR;
-    $config->{'logdir'}        ||= $Munin::Common::Defaults::MUNIN_LOGDIR;
-    $config->{'tmpldir'}       ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/";
-    $config->{'staticdir'}       ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/static/";
-    $config->{'htmldir'}       ||= $Munin::Common::Defaults::MUNIN_HTMLDIR;
-    $config->{'spooldir'}      ||= $Munin::Common::Defaults::MUNIN_SPOOLDIR;
-    $config->{'#%#parent'}     = undef;
-    $config->{'#%#name'}       = "root";
-
-    return ($config);
+    return $part;
 }
 
 
@@ -974,42 +1005,63 @@ sub munin_dumpconfig {
     $Data::Dumper::Indent = $indent;
 }
 
-sub purge_cycles($)
-{
-	my @topurge = (shift);
-	while (my $item = shift @topurge) {
-		if (ref($item) eq "HASH") {
-			push @topurge, values %$item;
-			%$item = ();
-		} elsif (ref($item) eq 'ARRAY') {
-			push @topurge, @$item;
-			@$item = ();
-		}
-	}
-}
-
-sub munin_refreshconfig {
-    my $config   = shift;
-    my @stat = stat("$config->{dbdir}/datafile");
-    if ($config->{'#%#datafile_mtime'} && $stat[9] > $config->{'#%#datafile_mtime'}) {
-	# keep dbdir, as we don't reload that part
-	my $dbdir = $config->{dbdir};
-	# purge cyclic current config
-	purge_cycles($config);
-	$config = munin_readconfig("$dbdir/datafile");
-	$config->{dbdir} = $dbdir;
+sub munin_configpart_revision {
+    my $what = shift;
+    if (defined $what and defined $config_parts->{$what}) {
+	return $config_parts->{$what}{revision};
     }
-
-    $config->{'#%#datafile_mtime'} = $stat[9];
-    return $config;
+    my $rev = 0;
+    foreach $what (keys %$config_parts) {
+	$rev += $config_parts->{$what}{revision};
+    }
+    return $rev;
 }
 
-sub munin_config {
+sub munin_readconfig_part {
+    my $what = shift;
+    my $missingok = shift;
+    if (! defined $config_parts->{$what}) {
+	ERROR "[ERROR] munin_readconfig_part with unknown part name ($what).";
+	return undef;
+    }
+    # for now, we only really care about storable.
+    # No reason to bother reading non-storable elements anyway.
+    my $filename = "$config->{dbdir}/$what.storable";
+    my $part = {};
+    my $doupdate = 0;
+    if (! -f $filename) {
+	unless (defined $missingok and $missingok) {
+		ERROR "[FATAL] munin_readconfig_part($what) - missing file";
+		exit(1);
+	}
+	# missing ok, return last value if we have one, copy config if not
+	if (undef == $config_parts->{$what}{config}) {
+		$doupdate = 1;
+	}
+    } else {
+    	my @stat = stat($filename);
+	if ($config_parts->{$what}{timestamp} < $stat[9]) {
+	    # could use _raw if we wanted to read non-storable fallback
+	    $part = munin_readconfig_storable($filename);
+	    $config_parts->{$what}{timestamp} = $stat[9];
+	    $doupdate = 1;
+	}
+    }
+    if ($doupdate) {
+	$part->{'#%#name'} = 'root';
+	$part->{'#%#parent'} = undef;
+	$part = munin_overwrite($part, $config);
+	$config_parts->{$what}{config} = $part;
+	++$config_parts->{$what}{revision};
+    }
+    return $config_parts->{$what}{config};
+}
+
+sub munin_readconfig_base {
     my $conffile = shift;
-    my $config   = shift;
 
     $conffile ||= $configfile;
-    $config     = munin_readconfig ($conffile);
+    $config = munin_readconfig_raw($conffile);
 
     if (defined $config->{'includedir'}) {
 	my $dirname = $config->{'includedir'};
@@ -1026,15 +1078,25 @@ sub munin_config {
 	foreach my $f (@files) {
 	    INFO "Reading additional config from $f";
 
-	    my $extra = munin_readconfig ($f);
-	    $config = munin_overwrite($extra,$config);
+	    my $extra = munin_readconfig_raw ($f);
+	    # let the new values overwrite what we already have
+	    $config = munin_overwrite($config, $extra);
 	}
     }
 
-    my $data    = munin_readconfig("$config->{dbdir}/datafile", 1, 1);
+    # Some important defaults before we return...
+    $config->{'dropdownlimit'} ||= $Munin::Common::Defaults::DROPDOWNLIMIT;
+    $config->{'rundir'}        ||= $Munin::Common::Defaults::MUNIN_STATEDIR;
+    $config->{'dbdir'}         ||= $Munin::Common::Defaults::MUNIN_DBDIR;
+    $config->{'logdir'}        ||= $Munin::Common::Defaults::MUNIN_LOGDIR;
+    $config->{'tmpldir'}       ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/";
+    $config->{'staticdir'}     ||= "$Munin::Common::Defaults::MUNIN_CONFDIR/static/";
+    $config->{'htmldir'}       ||= $Munin::Common::Defaults::MUNIN_HTMLDIR;
+    $config->{'spooldir'}      ||= $Munin::Common::Defaults::MUNIN_SPOOLDIR;
+    $config->{'#%#parent'}     = undef;
+    $config->{'#%#name'}       = "root";
 
-    $data = munin_overwrite($data,$config);
-    return ($data);
+    return $config;
 }
 
 
@@ -1699,9 +1761,16 @@ Returns:
  - Failure: undef
 
 
-=item B<munin_config>
+=item B<munin_readconfig_base>
 
+Read configuration file, include dir files, and initalize important
+default values that are optional.
 
+Parameters:
+ - $file: munin.conf filename. If ommited, default filename is used.
+
+Returns:
+ - Success: The $config hash (also cached in module)
 
 =item B<munin_copy_node>
 
@@ -2074,9 +2143,15 @@ Returns:
  - Failure: undef
 
 
-=item B<munin_readconfig>
+=item B<munin_readconfig_part>
 
+Read a partial configuration
 
+Parameters:
+ - $what: name of the part that should be loaded (datafile or limits)
+
+Returns:
+ - Success: a $config with the $specified part, but overwriten by $config
 
 =item B<munin_removelock>
 
