@@ -13,7 +13,6 @@ use Munin::Common::Timeout;
 
 use POSIX ();
 use Sys::Hostname;
-use File::Path qw(make_path);
 
 sub get_uid {
     my ($class, $user) = @_;
