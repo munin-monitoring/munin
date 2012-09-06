@@ -473,7 +473,7 @@ sub generate_service_templates {
 	    }
     }
 
-    if ($config->{'graph_strategy'} eq "cgi") {
+    if (munin_get($config, "graph_strategy", "cron") eq "cgi") {
 	map { $srv{$_} = $config->{'cgiurl_graph'} . "/" . $imgs{$_} } keys %imgs;
     } else {
 	map { $srv{$_} = $root_path . "/" . $imgs{$_} } keys %imgs;
@@ -500,7 +500,7 @@ sub generate_service_templates {
 	for my $scale (@times) {
         # Don't try to find the size if cgi is enabled, 
         # otherwise old data might pollute  
-        next if ($config->{'graph_strategy'} eq "cgi");
+        next if (munin_get($config, "graph_strategy", "cron") eq "cgi");
         if (my ($w, $h)
             = get_png_size(munin_get_picture_filename($service, $scale))) {
             $srv{"img" . $scale . "width"}  = $w;
@@ -512,7 +512,7 @@ sub generate_service_templates {
         $srv{imgweeksum} = "$srv{node}-week-sum.png";
         $srv{imgyearsum} = "$srv{node}-year-sum.png";
         for my $scale (["week", "year"]) {
-            next if ($config->{'graph_strategy'} eq "cgi");
+            next if (munin_get($config, "graph_strategy", "cron") eq "cgi");
             if (my ($w, $h)
                 = get_png_size(munin_get_picture_filename($service, $scale, 1)))
             {
