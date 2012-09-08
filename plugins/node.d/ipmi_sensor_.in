@@ -63,7 +63,7 @@ variables.
 
 
 from subprocess import Popen, PIPE
-from os import stat, access, R_OK, F_OK
+from os import stat, access, R_OK, F_OK, environ
 from os.path import join
 from stat import ST_MTIME
 from time import time
