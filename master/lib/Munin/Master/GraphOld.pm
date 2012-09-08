@@ -1350,7 +1350,7 @@ sub process_service {
     for my $time (keys %times) {
         next unless ($draw{$time});
         my $picfilename = get_picture_filename($service, $time);
-	INFO "[INFO] Looking into drawing $picfilename";
+	DEBUG "[DEBUG] Looking into drawing $picfilename";
         (my $picdirname = $picfilename) =~ s/\/[^\/]+$//;
 
         DEBUG "[DEBUG] Picture filename: $picfilename";
