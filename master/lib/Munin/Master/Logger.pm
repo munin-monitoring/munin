@@ -90,7 +90,7 @@ sub logger_open_stderr {
 	$logopened = 1;
     }
 
-    get_logger('')->info("Opened log file");
+    get_logger('')->debug("Opened log file");
 
     # Get perl warnings into the log files
     $SIG{__WARN__} = \&_warn_catcher;
@@ -117,7 +117,7 @@ sub logger_open {
 	$logopened = 1;
     }
 
-    get_logger('')->info("Opened log file");
+    get_logger('')->debug("Opened log file");
 
     # Get perl warnings into the log files
     $SIG{__WARN__} = \&_warn_catcher;

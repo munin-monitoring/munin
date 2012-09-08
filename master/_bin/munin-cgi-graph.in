@@ -90,7 +90,7 @@ while (new CGI::Fast) {
     my $pinpoint = undef;
     my $path = $ENV{PATH_INFO} || "";
 
-    INFO "Request path is $path";
+    DEBUG "Request path is $path";
 
     # The full URL looks like this:
     # Case 1:
@@ -133,7 +133,7 @@ while (new CGI::Fast) {
     my ($dom, $host, $serv, $scale) =
       $path =~ m#^/(.*)/([^/]+)/([\w-]+)-([\w=,]+)\.png#; ## avoid bug in vim
 
-    INFO "asked for ($dom, $host, $serv, $scale)";
+    DEBUG "asked for ($dom, $host, $serv, $scale)";
 
     if ($scale =~ /pinpoint=(\d+),(\d+)/) {
 	    $pinpoint = [ $1, $2, ];

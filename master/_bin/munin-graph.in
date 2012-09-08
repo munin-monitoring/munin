@@ -84,7 +84,7 @@ my $nb_request_max = 0;
 my $graph_fh = new IO::File($config->{dbdir} . "/graphs");
 while (my $path = <$graph_fh>) {
     my $pinpoint = undef;
-    INFO "Request path is $path";
+    DEBUG "Request path is $path";
 
     # The full URL looks like this:
     # Case 1:
@@ -126,7 +126,7 @@ while (my $path = <$graph_fh>) {
     my ($dom, $host, $serv, $scale) =
       $path =~ m#^/(.*)/([^/]+)/(\w+)-([\w=,]+)\.png#; ## avoid bug in vim
 
-    INFO "asked for ($dom, $host, $serv, $scale)";
+    DEBUG "asked for ($dom, $host, $serv, $scale)";
 
     if ($scale =~ /pinpoint=(\d+),(\d+)/) {
 	    $pinpoint = [ $1, $2, ];
@@ -159,15 +159,8 @@ while (my $path = <$graph_fh>) {
     }
 
     # Now send it: headers
-    INFO "X-Munin-Request: $nb_request/$nb_request_max";
+    DEBUG "X-Munin-Request: $nb_request/$nb_request_max";
 
-    my $headers = get_headers_for_file($filename, $graph_ttl);
-    foreach my $header_name (keys %$headers) {
-        INFO "$header_name: $headers->{$header_name}";
-    }
-
-    # ... and graph data
-    # send_graph_data($filename);
 } continue {
 	$nb_request++;
 	if ($nb_request_max && $nb_request > $nb_request_max) {
@@ -178,27 +171,6 @@ while (my $path = <$graph_fh>) {
 # END FAST-CGI LOOP - Time to die.  Nicely.
 
 exit 0;
-
-
-sub get_headers_for_file {
-    my ($filename, $graph_ttl) = @_;
-
-    # At this time the file exists and should be served
-    my @stats       = stat ($filename);
-    my $mtime_epoch = $stats[9];
-    my $last_modified = get_w3c_date_from_epoch($mtime_epoch);
-
-    # "Expires" has to use last modified time as base:
-    my $graph_next_expires = $mtime_epoch - ($mtime_epoch % $graph_ttl) + $graph_ttl;
-    my $expires       = get_w3c_date_from_epoch($graph_next_expires);
-
-    return {
-	    "Expires" => $expires,
-	    "Last-Modified" => $last_modified,
-	    "Content-Length" => $stats[7],
-	   };
-}
-
 
 sub get_w3c_date_from_epoch {
     my($epoch) = @_;
