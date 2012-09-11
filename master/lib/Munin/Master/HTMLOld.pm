@@ -151,25 +151,23 @@ sub html_startup {
 }
 
 sub get_config {
-	$htmlconfig = undef;
-	if(!defined $htmlconfig){
+	my $use_cache = shift;
+	# usecache should match being in a cgi ($ENV{SCRIPT_NAME})
+	if ($use_cache) {
+		$htmlconfig = generate_config($use_cache);
+	} else {
 		my $graphs_filename = $config->{dbdir} . "/graphs";
 		my $graphs_filename_tmp = $graphs_filename . ".tmp." . $$;
 
-		# If we are in a CGI html context, no graphing file dump !
-		unless ($ENV{SCRIPT_NAME}) {
-		 	$config->{"#%#graphs_fh"} = new IO::File("> $graphs_filename_tmp");
-		}
+		$config->{"#%#graphs_fh"} = new IO::File("> $graphs_filename_tmp");
 
-		$htmlconfig = generate_config();
+		$htmlconfig = generate_config($use_cache);
 
-		unless ($ENV{SCRIPT_NAME}) {
-			# Closing the file
-    			$config->{"#%#graphs_fh"} = undef;
+		# Closing the file
+    		$config->{"#%#graphs_fh"} = undef;
 
-			# Atomic move
-			rename($graphs_filename_tmp, $graphs_filename);
-		}
+		# Atomic move
+		rename($graphs_filename_tmp, $graphs_filename);
 	}
 	return $htmlconfig;
 }
@@ -179,7 +177,7 @@ sub html_main {
     copy_web_resources($staticdir, $htmldir);
 
     my $configtime = Time::HiRes::time;
-    get_config();
+    get_config(0);
     my $groups = $htmlconfig;
     $configtime = sprintf("%.2f", (Time::HiRes::time - $configtime));
     INFO "[INFO] config generated ($configtime sec)";

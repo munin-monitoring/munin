@@ -52,7 +52,7 @@ push @params, "--config", $ENV{'MUNIN_CONFIG'}
 html_startup(\@params);
 while(new CGI::Fast){
 	print header("text/html");
-	$config = get_config();
+	$config = get_config(1);
 	show_page();
 }
 
