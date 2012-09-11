@@ -100,11 +100,19 @@ my $config_parts = {
 		'timestamp' => 0,
 		'config' => undef,
 		'revision' => 0,
+		'include_base' => 1,
 	},
 	'limits' => {
 		'timestamp' => 0,
 		'config' => undef,
 		'revision' => 0,
+		'include_base' => 1,
+	},
+	'htmlconf' => {
+		'timestamp' => 0,
+		'config' => undef,
+		'revision' => 0,
+		'include_base' => 0,
 	},
 };
 
@@ -1050,7 +1058,8 @@ sub munin_readconfig_part {
     if ($doupdate) {
 	$part->{'#%#name'} = 'root';
 	$part->{'#%#parent'} = undef;
-	$part = munin_overwrite($part, $config);
+	$part = munin_overwrite($part, $config)
+		if ($config_parts->${what}{include_base});
 	$config_parts->{$what}{config} = $part;
 	++$config_parts->{$what}{revision};
     }

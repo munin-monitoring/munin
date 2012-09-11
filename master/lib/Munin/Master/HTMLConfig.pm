@@ -33,6 +33,12 @@ my $categories;
 my $problems;
 
 sub generate_config {
+    my $use_cache = shift;
+    if ($use_cache) {
+	# if there is some cache, use it (for cgi)
+    	$cache = munin_readconfig_part('htmlconf', 1);
+	return $cache if (defined $cache);
+    }
     $categories = {};
     $problems = {"criticals" => [], "warnings" => [], "unknowns" => []};
     my $rev = munin_configpart_revision();
@@ -49,6 +55,19 @@ sub generate_config {
     # if only limits changed, still update our cache
     if ($rev != munin_configpart_revision()) {
 	$cache = get_group_tree($config);
+	# htmlconf cache
+	#  munin-html writes it
+	#  munin-cgi-html reads it
+	#
+	#  full cron - written, never read
+	#  munin-html and munin-cgi-html - written, and read as cache
+	#  full munin-cgi-html - should not exist!
+	#    and here, we avoid leaving a never-updating cache file
+	if (!$use_cache) {
+	    my $cachefile = "$config->{dbdir}/htmlconf.storable";
+	    munin_writeconfig_storable($cachefile, $cache)
+		if (!$use_cache);
+	}
     }
 
     return $cache;
