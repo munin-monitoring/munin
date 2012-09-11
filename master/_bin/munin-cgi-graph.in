@@ -450,6 +450,10 @@ sub draw_graph {
     push @params, "--lower_limit", CGI::param("lower_limit")
       if (CGI::param("lower_limit"));
 
+    # Sets the RRD step for graphing
+    push @params, "--step", CGI::param("step")
+      if (defined(CGI::param("step")));
+
     # Sometimes we want to set the IMG size, and not the canvas.
     push @params, "--full_size_mode"
       if (CGI::param("full_size_mode"));
