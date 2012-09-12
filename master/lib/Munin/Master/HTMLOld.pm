@@ -168,6 +168,17 @@ sub get_config {
 
 		# Atomic move
 		rename($graphs_filename_tmp, $graphs_filename);
+
+		# htmlconf cache
+		#  munin-html writes it
+		#  munin-cgi-html reads it
+		#
+		#  full cron - written, never read
+		#  munin-html and munin-cgi-html - written, and read as cache
+		#  full munin-cgi-html - should not exist!
+		#    and here, we avoid leaving a never-updating cache file
+		my $cachefile = "$config->{dbdir}/htmlconf.storable";
+		munin_writeconfig_storable($cachefile, $htmlconfig);
 	}
 	return $htmlconfig;
 }

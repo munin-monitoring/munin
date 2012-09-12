@@ -1044,7 +1044,10 @@ sub munin_readconfig_part {
 	}
 	# missing ok, return last value if we have one, copy config if not
 	if (undef == $config_parts->{$what}{config}) {
-		$doupdate = 1;
+		# well, not if we shouldn't include the config
+		if ($config_parts->{$what}{include_base}) {
+			$doupdate = 1;
+		}
 	}
     } else {
     	my @stat = stat($filename);
