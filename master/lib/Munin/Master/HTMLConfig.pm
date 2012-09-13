@@ -35,6 +35,7 @@ my $problems;
 sub generate_config {
     my $use_cache = shift;
     if ($use_cache) {
+	$cache = undef; # undef, for RAM usage
 	# if there is some cache, use it (for cgi)
     	my $newcache = munin_readconfig_part('htmlconf', 1);
 	if (defined $newcache) {
@@ -57,6 +58,7 @@ sub generate_config {
     $limits = munin_readconfig_part("limits");
     # if only limits changed, still update our cache
     if ($rev != munin_configpart_revision()) {
+	$cache = undef; # undef, for RAM usage
 	$cache = get_group_tree($config);
     }
 
