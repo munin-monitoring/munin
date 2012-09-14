@@ -264,7 +264,7 @@ munin-asyncd [options]
 
  Options:
      --host <hostname:port>     Connect to this munin-node [localhost:4949]
-     -s --spool <spooldir>      Store the spooled data in this dir [@@SPOOLDIR@@]
+     -s --spooldir <spooldir>      Store the spooled data in this dir [@@SPOOLDIR@@]
      -i --interval <seconds>    Override default interval size of one day [86400]
      -r --retain <count>        Specify number of interval files to retain [7]
      -n --nocleanup             Disable automated spool dir cleanup
