@@ -141,14 +141,25 @@ my @drives;
 
 # Try to get a default set of drives
 if ($^O eq 'linux') {
-  # On Linux, we know how to enumerate ide drives. SCSI is not as easy
+  # On Linux, we know how to enumerate ide drives.
+  my @drivesIDE;
   if (-d '/proc/ide') {
     opendir(IDE, '/proc/ide');
-    @drives = grep /hd[a-z]/, readdir IDE;
+    @drivesIDE = grep /hd[a-z]/, readdir IDE;
     closedir(IDE);
   }
-  # "SCSI disks" could be both SCSI or SATA - we can't know which
-  # without probing them.
+
+  # Look for SCSI / SATA drives in /sys
+  my @drivesSCSI;
+  if (-d '/sys/block/') {
+    opendir(SCSI, '/sys/block/');
+    @drivesSCSI = grep /sd[a-z]/, readdir SCSI;
+    closedir(SCSI);
+   }
+
+  # Get list of all drives we found
+  @drives=(@drivesIDE,@drivesSCSI);
+  
 } elsif ($^O eq 'freebsd') {
   opendir(DEV, '/dev');
   @drives = grep /^ad[0-9]+$/, readdir DEV;
