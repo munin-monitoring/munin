@@ -1061,8 +1061,7 @@ sub munin_readconfig_part {
     if ($doupdate) {
 	$part->{'#%#name'} = 'root';
 	$part->{'#%#parent'} = undef;
-	$part = munin_overwrite($part, $config)
-		if ($config_parts->{$what}{include_base});
+	$part = munin_overwrite($part, $config) if ($config_parts->{$what}{include_base});
 	$config_parts->{$what}{config} = $part;
 	++$config_parts->{$what}{revision};
     }
