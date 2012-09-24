@@ -28,8 +28,8 @@ postgres_oldest_prepared_xact_ - Plugin to monitor age of the oldest
 Configuration is done through libpq environment variables, for example
 PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugin::Pgsql>.
 
-To monitor a specific database, link to postgres_size_<databasename>.
-To monitor all databases, link to postgres_size_ALL.
+To monitor a specific database, link to postgres_oldest_prepared_xact_<databasename>.
+To monitor all databases, link to postgres_oldest_prepared_xact_ALL.
 
 =head1 SEE ALSO
 

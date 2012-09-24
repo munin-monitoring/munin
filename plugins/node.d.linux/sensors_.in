@@ -118,7 +118,7 @@ my %config = (
             RPM        # RPM string
                 /xm,   # Use extended regular expressions and treat string as multiple lines.
             title => 'Fans',
-            vtitle => 'RPM',
+            vlabel => 'RPM',
             print_threshold => \&fan_threshold,
             graph_args => '--base 1000 -l 0'
       },
@@ -174,7 +174,7 @@ my %config = (
             )?         # >>>>end of group
         /xm,           # Use extended regular expressions and treat string as multiple lines.
     title => 'Temperatures',
-    vtitle => 'degrees Celsius',
+    vlabel => 'degrees Celsius',
     print_threshold => \&temp_threshold,
     graph_args => '--base 1000 -l 0'
     },
@@ -227,7 +227,7 @@ my %config = (
         /xm,            # Use extended regular expressions and treat string as multiple lines.
 
     title => 'Voltages',
-    vtitle => 'Volt',
+    vlabel => 'Volt',
     print_threshold => \&volt_threshold,
     graph_args => '--base 1000 --logarithmic'
         },
@@ -265,7 +265,7 @@ my %config = (
         /xm,            # Use extended regular expressions and treat string as multiple lines.
 
         title => 'Power',
-        vtitle => 'Watts',
+        vlabel => 'Watts',
         print_threshold => \&power_threshold,
         graph_args => '--base 1000 --logarithmic'
     },
@@ -306,7 +306,7 @@ exit 2 unless defined $func;
 
 if ( defined $ARGV[0] and $ARGV[0] eq 'config' ) {
   print "graph_title $config{$func}->{title}\n";
-  print "graph_vtitle $config{$func}->{vtitle}\n";
+  print "graph_vlabel $config{$func}->{vlabel}\n";
   print "graph_args $config{$func}->{graph_args}\n";
   print "graph_category sensors\n";
   my $text = `$SENSORS`;
