@@ -182,13 +182,13 @@ sub collect_and_print ($$) {
   if ($config) {
     if ($function eq 'volt') {
       print "graph_title Voltages of NVidia graphics card\n";
-      print "graph_vtitle Voltage\n";
+      print "graph_vlabel Voltage\n";
     } elsif ($function eq 'clock') {
       print "graph_title Clock speeds of NVidia graphics card\n";
-      print "graph_vtitle Hz\n";
+      print "graph_vlabel Hz\n";
     } elsif ($function eq 'temp') {
       print "graph_title Temperatures of NVidia graphics card\n";
-      print "graph_vtitle Degrees Celcius\n";
+      print "graph_vlabel Degrees Celcius\n";
     } else {
       die "$me: Unknown function!\n";
     }
