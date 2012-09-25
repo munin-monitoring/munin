@@ -59,7 +59,7 @@ use strict;
 use warnings;
 
 use IO::File;
-use Storable qw(store retrieve);
+use Storable qw(nstore retrieve);
 use Munin::Plugin;
 
 use constant STATEFILE => "$ENV{MUNIN_PLUGSTATE}/iostat-ios.state";
@@ -206,7 +206,7 @@ sub cmp_io {
 
 sub store_state {
     my ($R) = @_;
-    store($R, STATEFILE);
+    nstore($R, STATEFILE);
 }
 
 
