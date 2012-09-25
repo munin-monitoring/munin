@@ -175,6 +175,7 @@ use Munin::Plugin;
                 and can post-process the result and return a new resultset.
  postsuggest    A function that's called with the result of the suggest query,
                 and can post-process the result and return a new resultset.
+ multigraph     The multigraph parameter if plugin supports multigraphs.
 
 =head3 Specifying queries
 
@@ -233,6 +234,7 @@ sub new {
         postconfig     => $args{postconfig},
         postautoconf   => $args{postautoconf},
         postsuggest    => $args{postsuggest},
+        multigraph     => $args{multigraph},
     };
 
     foreach my $k (keys %defaults) {
@@ -248,6 +250,7 @@ sub Config {
 
     $self->ensure_version();
 
+    print "multigraph $self->{multigraph}\n" if ($self->{multigraph});
     my $w = $self->wildcard_parameter();
     if ($w) {
       print "graph_title $self->{title} ($w)\n";
@@ -350,6 +353,7 @@ sub GetData {
     my ($self) = @_;
     $self->ensure_version();
     if ($self->{basequery}) {
+        print "multigraph $self->{multigraph}\n" if ($self->{multigraph});
         my ($q, @p)
             = $self->replace_wildcard_parameters(
             $self->get_versioned_query($self->{basequery}));
