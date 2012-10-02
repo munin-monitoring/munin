@@ -81,8 +81,17 @@ if (! graph_check_cron() ) {
 # BEGIN FAST-CGI LOOP:
 my $nb_request = 0;
 my $nb_request_max = 0;
-my $graph_fh = new IO::File($config->{dbdir} . "/graphs");
-while (my $path = <$graph_fh>) {
+
+# Use args urls. If none specified, revert to plain graph
+my @graphs = @ARGV;
+if (! @graphs) {
+	my $fh = new IO::File($config->{dbdir} . "/graphs");
+
+	# Slurping everything. Fast & efficient. Should not be too big anyway.
+	@graphs = <$fh>;
+}
+
+for my $path (@graphs) {
     my $pinpoint = undef;
     INFO "Request path is $path";
 
