@@ -1,5 +1,63 @@
 -*- text -*-
 
+munin-2.0.7, 2012-10-03
+
+-------
+Summary
+-------
+
+- Fixed datafiles handling from munin-update to others (cgi & cron).
+  We only use storable datafiles now as it is less error prone.
+
+- Many other minor fixes
+
+Closes: #1259, D#688528, D#497400, D#687495, D#686982, #1251, #1251, #1102, D#628533, #1102, D#628533, D#681938
+
+------------------
+Detailed Changelog
+------------------
+
+Adrien "ze" Urban:
+      master: fix new config reading for m-u 1st run
+      master: fixed datafiles handling
+
+Diego Elio Petteno:
+      docs: fix link names
+      apc_nis: create only one socket before going for config.
+      apc_nis: improve configuration.
+      plugins: replace deprecated graph_vtitle with graph_vlabel.
+      ejabberd_: allow overriding the ejabberd.cfg path and add /etc/jabber to search paths.
+      fw_conntrack: count both ipv4 and ipv6 connections together
+
+Jon Whiteman:
+      plugins: fix plugin vserver_cpu_ for 9+ cpu cores
+
+Kazunori Kojima:
+      Makefile.config: fix bad interpreter
+
+Kenyon Ralph:
+      node.d.linux/interrupts: encode as UTF-8
+
+Steve Schnepp:
+      resources: remove osoblete apache-cgi.conf sample
+      node: remove File::Path as it's not needed
+      redhat: move the redhat stuff outside main repo
+      master: fix too many warnings in munin-graph.log
+      master: remove useless log lines, send to debug
+      plugins: fix import in ipmi_sensor_
+      master: fix typo in Utils.pm
+      plugins: fix apt_all plugin statedir for cron
+      asyncd: fix --spooldir help
+      master: split rrd updates when using rrdcached
+      plugins: use Storable::nstore() instead of store()
+      plugins: ignore wrong state files.
+
+Thorsten Gunkel:
+      plugins: auto detect SATA in hddtemp_smartctl
+
+Vincent Danjean:
+      plugins: add by-id to smart_
+
 munin-2.0.6, 2012-08-31
 
 -------
