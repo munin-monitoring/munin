@@ -124,7 +124,7 @@ EOF
 
 my $command;
 if ( -x $conntrack) {
-    $command = "$conntrack -L -o extended 2>/dev/null";
+    $command = "$conntrack -L -o extended -f ipv4 2>/dev/null; $conntrack -L -o extended -f ipv6 2>/dev/null";
 } elsif ( -r $nf_conntrack_file ) {
     $command = "cat $nf_conntrack_file";
 } else {
