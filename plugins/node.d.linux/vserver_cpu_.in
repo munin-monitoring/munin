@@ -244,11 +244,11 @@ for j in $CPUS ; do
 			NAME=`echo $LABEL | cut -d. -f1 |  tr '-' '_'`
 			echo -n "${NAME}_$j.value "
 			if [ "$MODE" == "cpu" ] ; then
-				USERCPU=`cat /proc/virtual/$i/sched |grep "cpu $j"| cut -d' ' -f3`
-				SYSCPU=`cat /proc/virtual/$i/sched |grep "cpu $j"| cut -d' ' -f4`
+				USERCPU=`cat /proc/virtual/$i/sched |grep "cpu $j:"| cut -d' ' -f3`
+				SYSCPU=`cat /proc/virtual/$i/sched |grep "cpu $j:"| cut -d' ' -f4`
 	 			echo $[$USERCPU + $SYSCPU]
 			else
-				cat /proc/virtual/$i/sched |grep "cpu $j"| cut -d' ' -f5
+				cat /proc/virtual/$i/sched |grep "cpu $j:"| cut -d' ' -f5
 			fi
 		fi	
 	done
