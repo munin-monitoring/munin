@@ -277,7 +277,8 @@ sub get_full_group_path {
 sub process_service {
     my $hash       = shift || return;
     my $hobj       = get_host_node($hash);
-    my $host       = get_notify_name($hobj);
+    my $host       = munin_get_node_name($hobj);
+    my $hostalias  = get_notify_name($hobj);
     my $service    = munin_get_node_name($hash);
     my $hparentobj = munin_get_parent($hobj);
     my $parent     = munin_get_node_name($hobj);
@@ -296,12 +297,12 @@ sub process_service {
     $hash->{'fields'} = join(' ', map {munin_get_node_name($_)} @$children);
     $hash->{'plugin'} = $service;
     $hash->{'graph_title'} = get_full_service_name($hash);
-    $hash->{'host'}  = $host;
+    $hash->{'host'}  = $hostalias;
     $hash->{'group'} = get_full_group_path($hparentobj);
     $hash->{'worst'} = "ok";
     $hash->{'worstid'} = 0 unless defined $hash->{'worstid'};
 
-    my $state_file = sprintf ('%s/state-%s-%s.storable', $config->{dbdir}, $hash->{group}, $hash->{host}); 
+    my $state_file = sprintf ('%s/state-%s-%s.storable', $config->{dbdir}, $hash->{group}, $host);
     DEBUG "[DEBUG] state_file: $state_file";
     my $state = munin_read_storable($state_file) || {};
 
