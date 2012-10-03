@@ -61,7 +61,6 @@ my @limit_contacts = ();
 my $stdout         = 0;
 my $force_run_as_root = 0;
 my %notes          = ();
-my $force          = 0;
 my $config;
 my $oldnotes;
 my $modified     = 0;
@@ -87,7 +86,6 @@ sub limits_startup {
         "config=s"  => \$conffile,
         "debug!"    => \$DEBUG,
         "stdout!"   => \$stdout,
-        "force!"    => \$force,
         "force-run-as-root!" => \$force_run_as_root,
         "version!"  => \$do_version,
         "help"      => \$do_usage
@@ -500,11 +498,11 @@ sub process_service {
 
             }
         }
-        elsif (defined $onfield and defined $onfield->{"state"} or $force) {
+        elsif (defined $onfield and defined $onfield->{"state"}) {
             munin_set_var_loc(\%notes, [@$fpath, "state"], "ok");
             munin_set_var_loc(\%notes, [@$fpath, "ok"],    "OK");
 
-	    if ($onfield->{'state'} ne 'ok' or $force) {
+	    if ($onfield->{'state'} ne 'ok') {
 		$hash->{'state_changed'} = 1;
 	    }
         }
