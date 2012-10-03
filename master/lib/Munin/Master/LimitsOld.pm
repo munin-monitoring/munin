@@ -632,10 +632,12 @@ sub generate_service_message {
             next;
         }
         my $obsess = 0;
-        my $cas = munin_get($contactobj, "always_send");
-        if (defined $cas) {
-            $obsess = grep {scalar(@{$stats{$_}})} (split(/\s+/, lc $cas));
-        }
+	my $always_send = munin_get($contactobj, "always_send");
+	foreach my $cas (split(/\s+/, lc $always_send)) {
+	    if(defined($stats{$cas})) {
+		$obsess += scalar @{$stats{$cas}};
+	    }
+	}
         if (!$hash->{'state_changed'} and !$obsess) {
             next;    # No need to send notification
         }
