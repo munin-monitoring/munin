@@ -342,6 +342,9 @@ sub process_service {
 		} elsif ($field->{type} eq "COUNTER" && $current_updated_value < $previous_updated_value) {
 			# COUNTER never decrease. Report unknown.
 			$value = "U";
+		} elsif ($current_updated_value eq "U" || $previous_updated_value eq "U" ) {
+			# One of the values is unknown. Report unknown.
+			$value = "U";
 		} else {
 			$value = ($current_updated_value - $previous_updated_value) / ($current_updated_timestamp - $previous_updated_timestamp);
 		}
