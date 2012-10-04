@@ -61,7 +61,6 @@ my @limit_contacts = ();
 my $stdout         = 0;
 my $force_run_as_root = 0;
 my %notes          = ();
-my $force          = 0;
 my $config;
 my $oldnotes;
 my $modified     = 0;
@@ -87,7 +86,6 @@ sub limits_startup {
         "config=s"  => \$conffile,
         "debug!"    => \$DEBUG,
         "stdout!"   => \$stdout,
-        "force!"    => \$force,
         "force-run-as-root!" => \$force_run_as_root,
         "version!"  => \$do_version,
         "help"      => \$do_usage
@@ -279,7 +277,8 @@ sub get_full_group_path {
 sub process_service {
     my $hash       = shift || return;
     my $hobj       = get_host_node($hash);
-    my $host       = get_notify_name($hobj);
+    my $host       = munin_get_node_name($hobj);
+    my $hostalias  = get_notify_name($hobj);
     my $service    = munin_get_node_name($hash);
     my $hparentobj = munin_get_parent($hobj);
     my $parent     = munin_get_node_name($hobj);
@@ -298,12 +297,12 @@ sub process_service {
     $hash->{'fields'} = join(' ', map {munin_get_node_name($_)} @$children);
     $hash->{'plugin'} = $service;
     $hash->{'graph_title'} = get_full_service_name($hash);
-    $hash->{'host'}  = $host;
+    $hash->{'host'}  = $hostalias;
     $hash->{'group'} = get_full_group_path($hparentobj);
     $hash->{'worst'} = "ok";
     $hash->{'worstid'} = 0 unless defined $hash->{'worstid'};
 
-    my $state_file = sprintf ('%s/state-%s-%s.storable', $config->{dbdir}, $hash->{group}, $hash->{host}); 
+    my $state_file = sprintf ('%s/state-%s-%s.storable', $config->{dbdir}, $hash->{group}, $host);
     DEBUG "[DEBUG] state_file: $state_file";
     my $state = munin_read_storable($state_file) || {};
 
@@ -344,6 +343,9 @@ sub process_service {
 			$value = "U";
 		} elsif ($field->{type} eq "COUNTER" && $current_updated_value < $previous_updated_value) {
 			# COUNTER never decrease. Report unknown.
+			$value = "U";
+		} elsif ($current_updated_value eq "U" || $previous_updated_value eq "U" ) {
+			# One of the values is unknown. Report unknown.
 			$value = "U";
 		} else {
 			$value = ($current_updated_value - $previous_updated_value) / ($current_updated_timestamp - $previous_updated_timestamp);
@@ -497,11 +499,11 @@ sub process_service {
 
             }
         }
-        elsif (defined $onfield and defined $onfield->{"state"} or $force) {
+        elsif (defined $onfield and defined $onfield->{"state"}) {
             munin_set_var_loc(\%notes, [@$fpath, "state"], "ok");
             munin_set_var_loc(\%notes, [@$fpath, "ok"],    "OK");
 
-	    if ($onfield->{'state'} ne 'ok' or $force) {
+	    if ($onfield->{'state'} ne 'ok') {
 		$hash->{'state_changed'} = 1;
 	    }
         }
@@ -629,10 +631,12 @@ sub generate_service_message {
             next;
         }
         my $obsess = 0;
-        my $cas = munin_get($contactobj, "always_send");
-        if (defined $cas) {
-            $obsess = grep {scalar(@{$stats{$_}})} (split(/\s+/, lc $cas));
-        }
+	my $always_send = munin_get($contactobj, "always_send");
+	foreach my $cas (split(/\s+/, lc $always_send)) {
+	    if(defined($stats{$cas})) {
+		$obsess += scalar @{$stats{$cas}};
+	    }
+	}
         if (!$hash->{'state_changed'} and !$obsess) {
             next;    # No need to send notification
         }
