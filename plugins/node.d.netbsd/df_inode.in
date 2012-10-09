@@ -44,7 +44,7 @@ fi
 
 if [ "$1" = "config" ]; then
 
-    echo 'graph_title Inode usage (in %)'
+    echo 'graph_title Inode usage in percent'
     echo 'graph_args --upper-limit 100 -l 0'
     echo 'graph_vlabel %'
     echo 'graph_category disk'
