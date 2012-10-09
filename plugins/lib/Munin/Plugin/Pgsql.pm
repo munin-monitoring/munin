@@ -146,7 +146,8 @@ use Munin::Plugin;
                 if the plugin should be run on this machine. Must return a single
                 row, two columns columns. The first one is a boolean field
                 representing yes or no, the second one a reason for "no".
- graphdraw      The draw parameter for the graph. The default is LINE1.
+ graphdraw      The draw parameter for the graph. The default is LINE1. This
+                can be an array, see "Specifying graphdraw" section for details.
  graphtype      The type parameter for the graph. The default is GAUGE.
  graphperiod    The period for the graph. Copied directly to the config output.
  graphmin       The min parameter for the graph. The default is no minimum.
@@ -193,6 +194,21 @@ This array is parsed from top to bottom, so the entires must be in order of
 version number. The *last* value found where the version specified is higher
 than or equal to the version of the server will be used (yes, it counts
 backwards).
+
+=head3 Specifying graphdraw
+
+The graphdraw parameter can be of two forms. If you specify it as a string, e.g.
+ graphdraw => LINE1
+its value will be used for all counters returned by the query. If you specify
+an array of graph types in the form below (assuming you have three counters):
+ graphdraw => [ AREA, LINE1, LINE1 ]
+Then graph type for each of the counters will be set according to the elements
+of the array. Graph types need to be specified in the order or being returned
+by 'configquery'.
+
+The size of the array should match the number of defined counters. If 'stack'
+parameter is in use, then only first element of array will be used for the first
+counter and the remaining ones will be overidden by 'STACK'.
 
 =cut
 
@@ -276,7 +292,21 @@ sub Config {
         $r = $self->{postconfig}->($r);
     }
 
-    foreach my $row (@$r) {
+    if (ref($self->{graphdraw}) eq 'ARRAY') {
+        if (scalar @$r != scalar @{ $self->{graphdraw} }) {
+            die "graphdraw array does not match the number of data sources";
+        }
+    }
+    else {
+        my $graphdraw = $self->{graphdraw};
+        $self->{graphdraw} = [];
+        for (0 .. scalar(@$r) - 1) {
+            push (@{$self->{graphdraw}}, $graphdraw);
+        }
+    }
+
+    for (0 .. scalar(@$r) - 1) {
+        my $row = @$r[$_];
         my $l = Munin::Plugin::clean_fieldname($row->[0]);
         print "$l.label $row->[1]\n";
         print "$l.info $row->[2]\n" if (defined $row->[2]);
@@ -285,7 +315,7 @@ sub Config {
             print "$l.draw STACK\n";
         }
         else {
-            print "$l.draw $self->{graphdraw}\n";
+            print "$l.draw $self->{graphdraw}[$_]\n";
         }
         print "$l.min $self->{graphmin}\n" if (defined $self->{graphmin});
         print "$l.max $self->{graphmax}\n" if (defined $self->{graphmax});
