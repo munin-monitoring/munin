@@ -209,6 +209,23 @@ sub _process_command_line {
     return 1;
 }
 
+# We override this function from Net::Server.  It prefers to read
+# /proc/PID/cmdline, which causes $0 to become /usr/bin/perl (after a re-exec
+# to the argv returned by this function), while we want to keep the value
+# which is the path to the script itself.
+sub _get_commandline {
+  my $self = shift;
+
+  my $script = $0;
+  # make relative path absolute
+  $script = $ENV{'PWD'} .'/'. $script if $script =~ m|^[^/]+/| && $ENV{'PWD'};
+  # untaint for later use in hup
+  # TBD: should we prevent script names containing TAB, LF and other unusual
+  # characters?
+  $script =~ /^(.+)$/;
+  return [ $1, @ARGV ]
+}
+
 
 sub _expect_starttls {
     my ($session) = @_;
