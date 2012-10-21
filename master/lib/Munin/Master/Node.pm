@@ -93,11 +93,12 @@ sub _do_connect {
 		return 0;
 	}
     } elsif ($uri->scheme eq "ssh") {
+	    my $ssh_command = "ssh -o ChallengeResponseAuthentication=no -o StrictHostKeyChecking=no ";
 	    my $user_part = ($uri->user) ? ($uri->user . "@") : "";
 	    my $remote_cmd = $uri->path;
 
 	    # Add any parameter to the cmd
-	    my $remote_connection_cmd = "/usr/bin/ssh -p" . $uri->port . " $user_part" . $uri->host . " $remote_cmd $params";
+	    my $remote_connection_cmd = $ssh_command . " -p " . $uri->port . " " . $user_part . $uri->host . " " . $remote_cmd . " " . $params;
 
 	    # Open a triple pipe
    	    use IPC::Open3;
