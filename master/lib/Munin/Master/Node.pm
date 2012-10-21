@@ -130,23 +130,23 @@ sub _do_connect {
 	    return 0;
     }
 
-    my $greeting = $self->_node_read_single();
-    $self->{node_name} = $self->_extract_name_from_greeting($greeting);
+    # check all the lines until we find one that matches the expected
+    # greeting; ignore anything that doesn't look like it as long as
+    # there is output. This allows to accept SSH connections where
+    # lastlog or motd is used.
+    until(defined($self->{node_name})) {
+	my $greeting = $self->_node_read_single();
+	if (!$greeting) {
+	    die "[ERROR] Got unknown reply from node ".$self->{host}."\n";
+	}
+
+	if ($greeting =~ /\#.*(?:lrrd|munin) (?:client|node) at (\S+)/i) {
+	    $self->{node_name} = $1;
+	}
+    };
+
     return 1;
 }
-
-
-sub _extract_name_from_greeting {
-    my ($self, $greeting) = @_;
-    if (!$greeting) {
-	die "[ERROR] Got no reply from node ".$self->{host}."\n";
-    }
-    if ($greeting !~ /\#.*(?:lrrd|munin) (?:client|node) at (\S+)/i) {
-	die "[ERROR] Got unknown reply from node ".$self->{host}."\n";
-    }
-    return $1;
-}
-
 
 sub _run_starttls_if_required {
     my ($self) = @_;
