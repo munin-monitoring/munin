@@ -1,0 +1,12 @@
+diff --git a/node/munin-node.conf.in b/node/munin-node.conf.in
+index b2e2ed4..fd40f64 100644
+--- a/node/munin-node.conf.in
++++ b/node/munin-node.conf.in
+@@ -33,6 +33,7 @@ ignore_file \.pod$
+ # may repeat the allow line as many times as you'd like
+ 
+ allow ^127\.0\.0\.1$
++allow ^::1$
+ 
+ # If you have installed the Net::CIDR perl module, you can use one or more
+ # cidr_allow and cidr_deny address/mask patterns.  A connecting client must
