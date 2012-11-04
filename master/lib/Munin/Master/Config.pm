@@ -156,7 +156,7 @@ my %booleans = map {$_ => 1} qw(
 		tls_verify_depth => 5,
 		tmpldir          => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates",
 	        staticdir        => "$Munin::Common::Defaults::MUNIN_CONFDIR/static",
-	        cgitmpdir        => "$Munin::Common::Defaults::MUNIN_DBDIR/cgi-tmp",
+	        cgitmpdir        => "$Munin::Common::Defaults::MUNIN_CGITMPDIR",
 	    }, $class ),
 
 	    oldconfig => bless ( {
