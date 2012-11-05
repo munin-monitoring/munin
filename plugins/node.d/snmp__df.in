@@ -196,7 +196,6 @@ foreach my $part (keys %partitions) {
 sub get_name_by_mp {
   my $mp = shift;
   $mp =~ s/[^a-z0-9_]/_/gi;
-  $mp =~ s/_+$//g;
   $mp =~ tr/A-Z/a-z/;
   return "p$mp";
 }
