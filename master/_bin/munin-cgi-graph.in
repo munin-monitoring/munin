@@ -28,6 +28,7 @@ use strict;
 use warnings;
 use IO::Handle;
 BEGIN {
+    no warnings;
     $Date::Manip::Backend = 'DM5';
 }
 use Date::Manip;
