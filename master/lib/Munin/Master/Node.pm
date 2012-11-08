@@ -93,11 +93,12 @@ sub _do_connect {
 		return 0;
 	}
     } elsif ($uri->scheme eq "ssh") {
+	    my $ssh_command = "ssh -o ChallengeResponseAuthentication=no -o StrictHostKeyChecking=no ";
 	    my $user_part = ($uri->user) ? ($uri->user . "@") : "";
-	    my $remote_cmd = $uri->path;
+	    my $remote_cmd = ($uri->path ne '/') ? $uri->path : "";
 
 	    # Add any parameter to the cmd
-	    my $remote_connection_cmd = "/usr/bin/ssh -p" . $uri->port . " $user_part" . $uri->host . " $remote_cmd $params";
+	    my $remote_connection_cmd = $ssh_command . " -p " . $uri->port . " " . $user_part . $uri->host . " " . $remote_cmd . " " . $params;
 
 	    # Open a triple pipe
    	    use IPC::Open3;
@@ -129,23 +130,23 @@ sub _do_connect {
 	    return 0;
     }
 
-    my $greeting = $self->_node_read_single();
-    $self->{node_name} = $self->_extract_name_from_greeting($greeting);
+    # check all the lines until we find one that matches the expected
+    # greeting; ignore anything that doesn't look like it as long as
+    # there is output. This allows to accept SSH connections where
+    # lastlog or motd is used.
+    until(defined($self->{node_name})) {
+	my $greeting = $self->_node_read_single();
+	if (!$greeting) {
+	    die "[ERROR] Got unknown reply from node ".$self->{host}."\n";
+	}
+
+	if ($greeting =~ /\#.*(?:lrrd|munin) (?:client|node) at (\S+)/i) {
+	    $self->{node_name} = $1;
+	}
+    };
+
     return 1;
 }
-
-
-sub _extract_name_from_greeting {
-    my ($self, $greeting) = @_;
-    if (!$greeting) {
-	die "[ERROR] Got no reply from node ".$self->{host}."\n";
-    }
-    if ($greeting !~ /\#.*(?:lrrd|munin) (?:client|node) at (\S+)/i) {
-	die "[ERROR] Got unknown reply from node ".$self->{host}."\n";
-    }
-    return $1;
-}
-
 
 sub _run_starttls_if_required {
     my ($self) = @_;

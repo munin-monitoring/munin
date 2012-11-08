@@ -26,15 +26,22 @@ generate_version_string() {
             git describe
             ;;
         *)
-            git log -n 1 --pretty="${branch}-%ad-%tc" --date=short
+            GIT_REVISION="$(git describe --long | sed 's/-g.*//')"
+            git log -n 1 --pretty="${GIT_REVISION}-${branch}-%ad-%tc" --date=short
             ;;
     esac
+}
+
+generate_version_string_from_dir() {
+	basename $(pwd) | grep -e '^munin-' | cut -c7-
 }
 
 if [ -s "RELEASE" ]; then
     cat RELEASE
 elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
     generate_version_string
+elif [ ! -z "$(generate_version_string_from_dir)" ]; then
+	generate_version_string_from_dir
 else
     echo "unknown"
 fi

@@ -773,9 +773,15 @@ sub parse_custom_resolution {
 
         my @computer_format;
 
-	# First element is always the full resoltion, converting to computer format
-	my $full_res = shift @elems; 
-	unshift @elems, "$update_rate for $full_res";
+	# First element is always the full resolution
+	my $full_res = shift @elems;
+	if ($full_res =~ m/^\d+$/) {
+		# Only numeric, computer format
+		unshift @elems, "1 $full_res";
+	} else {
+		# Human readable. Adding $update_rate in front of
+		unshift @elems, "$update_rate for $full_res";
+	}
 
         foreach my $elem (@elems) {
                 if ($elem =~ m/(\d+) (\d+)/) {
@@ -974,8 +980,8 @@ Copyright (C) 2002-2009  Jimmy Olsen, et al.
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  You should have received a copy of the GNU General Public License along
+  with this program; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
