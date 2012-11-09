@@ -1,5 +1,54 @@
 -*- text -*-
 
+munin-2.0.8, 2012-11-08
+
+-------
+Summary
+-------
+
+Small bugfix-only release.
+
+- Many minor fixes
+
+------------------
+Detailed Changelog
+------------------
+
+Andrea Piccinelli:
+      http_loadtime: fixed stderr redirection with 'time'
+
+Anton Tolchanov:
+      Fixed parsing of first element in custom graph_data_size
+
+Diego Elio Petteno:
+      master: on limit checks, if one of the two values is 'U', make the final value 'U' as well.
+      master: on limits, be more careful on checking what always_send is set to.
+      master: munin-limits: remove --force parameter
+      master: munin-limits: open the data file based on hostname, not alias.
+      plugins: Remove all '%' characters from plugins' graph_titles.
+      master: factor out the SSH command, and set parameters to disable interactions
+      master: if there is no path present, don't send a remote command.
+      master: ignore all the lines before the greeting.
+
+Juho Juopperi:
+      Fix multiping to show packetloss correctly
+
+Kjetil Torgrim Homme:
+      fix problem with SIGHUP causing exec of unqualified script name
+
+Marc Schutz:
+      Update licenses to current address of FSF.
+
+Steve Schnepp:
+      master: fixed graph_data_size custom parsing
+      getversion: update to use the debian-auto one.
+      master: add an ip6 example in the sample munin.conf
+      gitignore: ignoring output dir sandbox/
+
+Stig Sandbeck Mathisen:
+      Update apache httpd configuration example for 2.0.7
+
+
 munin-2.0.7, 2012-10-03
 
 -------
