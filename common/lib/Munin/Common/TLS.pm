@@ -132,8 +132,9 @@ sub _creat_tls_context {
     }
 
     # Tune a few things...
-    if (Net::SSLeay::CTX_set_options($ctx, &Net::SSLeay::OP_ALL)) {
-	$self->{logger}("[ERROR] Could not set SSL_CTX options");
+    Net::SSLeay::CTX_set_options($ctx, Net::SSLeay::OP_ALL());
+    if (my $errno = Net::SSLeay::ERR_get_error()) {
+	$self->{logger}("[ERROR] Could not set SSL_CTX options: " + Net::SSLeay::ERR_error_string($errno));
 	return 0;
     }
 
