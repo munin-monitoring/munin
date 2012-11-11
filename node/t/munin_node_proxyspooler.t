@@ -10,9 +10,11 @@ use IO::Scalar;
 use POSIX ();
 use Data::Dumper;
 use Time::HiRes qw( tv_interval gettimeofday ualarm );
+use File::Temp qw( tempdir );
 
 use Munin::Node::ProxySpooler;
 
+$Munin::Common::Defaults::MUNIN_SPOOLDIR = tempdir(CLEANUP => 1);
 
 # the hostname and port of a node to test against.
 my ($host, $port) = @ENV{qw( MUNIN_HOST MUNIN_PORT )};
