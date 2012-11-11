@@ -55,12 +55,12 @@ sub setup {
 ### _extract_name_from_greeting
 {
     my $node = Munin::Master::Node->new();
-    is($node->_extract_name_from_greeting('# munin node at foo.example.com'),
-       'foo.example.com', 'Node name from new greeting');
-    is($node->_extract_name_from_greeting('# lrrd client at foo.example.com'),
-       'foo.example.com', 'Node name from old greeting');
-}
+    $node->_extract_name_from_greeting('# munin node at foo.example.com');
+    is($node->{node_name}, 'foo.example.com', 'Node name from new greeting');
 
+    $node->_extract_name_from_greeting('# lrrd client at foo.example.com');
+    is($node->{node_name}, 'foo.example.com', 'Node name from old greeting');
+}
 
 ### negotiate_capabilities
 {
