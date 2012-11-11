@@ -3,7 +3,7 @@ use warnings;
 use strict;
 
 use Munin::Master::Config;
-use Test::More tests => 14;
+use Test::More tests => 15;
 use Test::MockModule;
 use Test::MockObject::Extends;
 use Test::Exception;
@@ -22,6 +22,10 @@ sub setup {
     my $node_mock = Test::MockObject::Extends->new($node);
     
     $node_mock->mock('_node_write_single', sub {});
+    $node_mock->mock('_node_read_fast', sub {
+		       my ($self) = @_;
+		       return $self->_node_read();
+		     });
     return $node_mock;
 }
 
@@ -39,7 +43,7 @@ sub setup {
     $node->mock('_node_read_single', sub { 
         return '# munin node at foo.example.com' 
     });
-    my $inet = Test::MockModule->new('IO::Socket::INET');
+    my $inet = Test::MockModule->new('IO::Socket::INET6');
     $inet->mock(new => sub { return {} });
 
     $node->_do_connect();
@@ -62,7 +66,7 @@ sub setup {
 {
     my $node = setup();
     $node->mock('_node_read_single', sub { 
-        return ('cap multigraph');
+        return 'cap multigraph';
     });
     my @res = $node->negotiate_capabilities();
 
@@ -71,7 +75,7 @@ sub setup {
 {
     my $node = setup();
     $node->mock('_node_read_single', sub { 
-        return ('# Unknown command. Try list, nodes, config, fetch, version or quit');
+        return '# Unknown command. Try list, nodes, config, fetch, version or quit';
     });
     my @res = $node->negotiate_capabilities();
 
@@ -79,21 +83,16 @@ sub setup {
 }
 
 
-=begin comment
-
-This fails.  Frankly it should result in "multigraph".
 {
     my $node = setup();
-    $node->mock('_node_read_single', sub { 
-        return ('cap bar baz foo');
-    });
+    $node->mock('_node_read_single', sub {
+		  my @array = ('cap bar baz foo');
+		  return \@array;
+		});
     my @res = $node->negotiate_capabilities();
 
-    is_deeply(\@res, ['baz'], 'Capabilities - none');
+    is_deeply(\@res, ['NA'], 'Capabilities - none');
 }
-=end comment
-
-=cut
 
 
 ### list_plugins
@@ -112,22 +111,26 @@ This fails.  Frankly it should result in "multigraph".
 ### fetch_service_config
 {
     my $node = setup();
-    $node->mock('_node_read', sub { return ('# timeout: bla bla bla') });
+    $node->mock('_node_read', sub {
+		  my @array = ('# timeout: bla bla bla');
+		  return \@array;
+		});
     throws_ok { $node->fetch_service_config('foo') }
         qr/Timeout error on node/,
             'Fetch service config - Timeout throws exception';
 }
 {
     my $node = setup();
-    $node->mock('_node_read', sub { 
-        return (
-            '',
-            '# bla bla bla',
-            'foo bar',
-            'zap gabonk',
-            'baz.bar foo',
-        );
-    });
+    $node->mock('_node_read', sub {
+		  my @array = (
+			       '',
+			       '# bla bla bla',
+			       'foo bar',
+			       'zap gabonk',
+			       'baz.bar foo',
+			      );
+		  return \@array;
+		});
 
 #die Dumper { $node->fetch_service_config('fun') };
 
@@ -155,15 +158,16 @@ This fails.  Frankly it should result in "multigraph".
 {
     my $node = setup();
     $node->mock('_node_read', sub { 
-        return (
-            '',
-            '# bla bla bla',
-            'foo bar',
-            'zap gabonk',
-            'baz.label foo',
-            'zip.label bar',
-        );
-    });
+		  my @array = (
+			       '',
+			       '# bla bla bla',
+			       'foo bar',
+			       'zap gabonk',
+			       'baz.label foo',
+			       'zip.label bar',
+			      );
+		  return \@array;
+		});
     my %res = $node->fetch_service_config('fun');
 
     is_deeply(\%res, {
@@ -188,16 +192,17 @@ This fails.  Frankly it should result in "multigraph".
 {
     my $node = setup();
     $node->mock('_node_read', sub {
-        return (
-            '',
-            '# bla bla bla',
-            'foo bar',
-            'zap gabonk',
-            'baz.label foo',
-            'zip.label bar',
-            'graph_order zip baz',
-        );
-    });
+		  my @array = (
+			       '',
+			       '# bla bla bla',
+			       'foo bar',
+			       'zap gabonk',
+			       'baz.label foo',
+			       'zip.label bar',
+			       'graph_order zip baz',
+			      );
+		  return \@array;
+		});
     my %res = $node->fetch_service_config('fun');
     is_deeply(\%res, {
             global => {
@@ -227,7 +232,10 @@ This fails.  Frankly it should result in "multigraph".
 ### fetch_service_data
 {
     my $node = setup();
-    $node->mock('_node_read', sub { return ('# timeout: bla bla bla') });
+    $node->mock('_node_read', sub {
+		  my @array = ('# timeout: bla bla bla');
+		  return \@array;
+		});
 
     throws_ok { $node->fetch_service_data('foo') }
         qr/Timeout in fetch from 'foo'/,
@@ -236,14 +244,15 @@ This fails.  Frankly it should result in "multigraph".
 {
     my $node = setup();
     $node->mock('_node_read', sub {
-        return (
-            '',
-            '# bla bla bla',
-            'fun.value bar',
-            'zap.value gabonk',
-            'baz.value foo',
-        );
-    });
+		  my @array = (
+			       '',
+			       '# bla bla bla',
+			       'fun.value bar',
+			       'zap.value gabonk',
+			       'baz.value foo',
+			      );
+		  return \@array;
+		});
 
     my $time = time;  # this will work, except when the clock ticks at the wrong time
     my %res = $node->fetch_service_data('foo');

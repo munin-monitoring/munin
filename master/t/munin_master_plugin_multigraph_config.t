@@ -25,7 +25,7 @@ my @input = split("\n",<DATA>);
 
 # print "Input: ",@input,"\n";
 
-my %answer = $node->parse_service_config("multigraph_tester",@input);
+my %answer = $node->parse_service_config("multigraph_tester", \@input);
 
 # Output captured from Data::Dumper
 my $fasit = {

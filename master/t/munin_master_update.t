@@ -4,9 +4,12 @@ use strict;
 use English qw(-no_match_vars);
 use Test::MockModule;
 use Test::More tests => 2;
+use File::Temp qw( tempdir );
 
 use_ok('Munin::Master::Update');
 
+my $config = Munin::Master::Config->instance()->{config};
+$config->{dbdir} = tempdir(CLEANUP => 1);
 
 # Make 'keys' return the keys in sorted order.
 package Munin::Master::Update;
@@ -28,8 +31,8 @@ sub remove_indentation {
 }
 
 #
-my $config = Test::MockModule->new('Munin::Master::Config');
-$config->mock(get_groups_and_hosts => sub { return () });
+my $mockconfig = Test::MockModule->new('Munin::Master::Config');
+$mockconfig->mock(get_groups_and_hosts => sub { return () });
 
 
 #
@@ -37,23 +40,27 @@ $config->mock(get_groups_and_hosts => sub { return () });
     my $update = Munin::Master::Update->new();
 
     $update->{service_configs} = {
-        'g1;host1' => {
-            service1 => {
-                global => [[qw(graph_title service1)],], 
-                data_source => {
-                    data_source1 => {max => 'U', min => 'U'},
-                    data_source2 => {max => 'U', min => 'U'},
-                }, 
-            },
-        },
-        'g1;host2' => {
-            service1 => {
-                global => [[qw(graph_title service1)],], 
-                data_source => {
-                    data_source1 => {max => 'U', min => 'U'},
-                }, 
-            },
-        },
+	'g1;host1' => {
+	    global => {
+		service1 => [['graph_title', 'service1']],
+	    },
+	    data_source => {
+		service1 => {
+		    data_source1 => {max => 'U', min => 'U'},
+		    data_source2 => {max => 'U', min => 'U'},
+		},
+	    },
+	},
+	'g1;host2' => {
+	    global => {
+		service1 => [['graph_title', 'service1']],
+	    },
+	    data_source => {
+		service1 => {
+		    data_source1 => {max => 'U', min => 'U'},
+		},
+	    },
+	},
     };
 
     my $result = "";
@@ -62,14 +69,14 @@ $config->mock(get_groups_and_hosts => sub { return () });
 
     my $expected = remove_indentation(q{
         version svn
-        g1;host1;service1;graph_title service1
-        g1;host1;service1;data_source1;max U
-        g1;host1;service1;data_source1;min U
-        g1;host1;service1;data_source2;max U
-        g1;host1;service1;data_source2;min U
-        g1;host2;service1;graph_title service1
-        g1;host2;service1;data_source1;max U
-        g1;host2;service1;data_source1;min U
+        g1;host1:service1.graph_title service1
+        g1;host1:service1.data_source1.max U
+        g1;host1:service1.data_source1.min U
+        g1;host1:service1.data_source2.max U
+        g1;host1:service1.data_source2.min U
+        g1;host2:service1.graph_title service1
+        g1;host2:service1.data_source1.max U
+        g1;host2:service1.data_source1.min U
     });
 
     is($result, $expected, 'Write new service config');
