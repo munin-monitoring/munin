@@ -13,10 +13,10 @@ my $os = 'Munin::Node::OS';
 
 ### get_uid
 {
-	my $uname = getpwuid $UID;
+	my $uname = getpwuid $EUID;
 
-	is($os->get_uid($uname), $UID, 'Lookup by user name');
-	is($os->get_uid($UID),   $UID, 'Lookup by user ID');
+	is($os->get_uid($uname), $EUID, 'Lookup by user name');
+	is($os->get_uid($EUID),  $EUID, 'Lookup by user ID');
 
 	is($os->get_uid('%%SSKK¤¤'), undef, 'Nonexistent user name');
 	is($os->get_uid(999999999),  undef, 'Nonexistent user ID');

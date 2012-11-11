@@ -43,13 +43,13 @@ isa_ok($conf, 'Munin::Node::Config');
 
 ### Default user
 {
-    my $uname = getpwuid $UID;
+    my $uname = getpwuid $EUID;
 
     my @res = $conf->_parse_line("default_client_user $uname");
-    is_deeply(\@res, [defuser => $UID], 'Parsing default user name');
+    is_deeply(\@res, [defuser => $EUID], 'Parsing default user name');
 
     @res = $conf->_parse_line("default_client_user $UID");
-    is_deeply(\@res, [defuser => $UID], 'Parsing default user ID');
+    is_deeply(\@res, [defuser => $EUID], 'Parsing default user ID');
     
     eval { $conf->_parse_line("default_client_user xxxyyyzzz") };
     like($@, qr{Default user does not exist}, "Default user exists");
@@ -184,13 +184,13 @@ isa_ok($conf, 'Munin::Node::Config');
 
 ### user
 {
-    my $uname = getpwuid $UID;
+    my $uname = getpwuid $EUID;
 
     my @res = $conf->_parse_plugin_line("user $uname");
     is_deeply(\@res, [user => $uname], 'Parsing plugin user name');
 
-    @res = $conf->_parse_plugin_line("user $UID");
-    is_deeply(\@res, [user => $UID], 'Parsing plugin user ID');
+    @res = $conf->_parse_plugin_line("user $EUID");
+    is_deeply(\@res, [user => $EUID], 'Parsing plugin user ID');
 }
 
 ### group

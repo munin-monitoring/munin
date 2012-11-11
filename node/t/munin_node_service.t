@@ -12,8 +12,8 @@ use Munin::Node::Service;
 
 use English qw(-no_match_vars);
 
-my $uname = getpwuid $UID;
-my $gid   = (split / /, $GID)[0];
+my $uname = getpwuid $EUID;
+my $gid   = (split / /, $EGID)[0];
 my $gname = getgrgid $gid;
 
 
@@ -39,7 +39,7 @@ $config->reinitialize({
 
         # testing user resolution
         uname => { user => $uname },
-        uid   => { user => $UID   },
+        uid   => { user => $EUID   },
         bad_uname => { user => '%%SSKK¤¤' },
         bad_uid   => { user => 999999999  },
 
@@ -155,7 +155,7 @@ $ENV{MUNIN_MASTER_IP} = '';
 
 ### export_service_environment
 {
-  my $services = Munin::Node::Service->new(defuser => $UID);
+  my $services = Munin::Node::Service->new(defuser => $EUID);
 
   $services->export_service_environment('test');
   is($ENV{test_environment_variable}, 'fnord', 'Service-specific environment is exported');
@@ -164,10 +164,10 @@ $ENV{MUNIN_MASTER_IP} = '';
 
 ### _resolve_uid
 {
-    my $services = Munin::Node::Service->new(defuser => $UID);
+    my $services = Munin::Node::Service->new(defuser => $EUID);
 
-    is($services->_resolve_uid('uname'), $UID, 'Lookup by service-specific username');
-    is($services->_resolve_uid('uid'),   $UID, 'Lookup by service-specific username');
+    is($services->_resolve_uid('uname'), $EUID, 'Lookup by service-specific username');
+    is($services->_resolve_uid('uid'),   $EUID, 'Lookup by service-specific username');
 
     $services->{defuser} = 0;
 
