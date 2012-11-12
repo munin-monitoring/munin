@@ -311,10 +311,17 @@ sub process_service {
         my $fname   = munin_get_node_name($field);
         my $fpath   = munin_get_node_loc($field);
         my $onfield = munin_get_node($oldnotes, $fpath);
+	my $oldstate= '';
 
 	# Test directly here as get_limits is in truth recursive and
 	# that fools us when processing multigraphs.
 	next if (!defined($field->{warning}) and !defined($field->{critical}));
+
+	# get the old state if there is one, or leave it empty.
+	if ( defined($onfield) or
+	     defined($onfield->{"state"}) ) {
+	    $oldstate = $onfield->{"state"};
+	}
 
         my ($warn, $crit, $unknown_limit) = get_limits($field);
 
@@ -384,9 +391,7 @@ sub process_service {
                     : "Value is unknown.";
             my $num_unknowns;
 
-            if (   !defined $onfield
-                or !defined $onfield->{"state"}
-                or $onfield->{"state"} ne "unknown") {
+            if ( $oldstate ne "unknown") {
                 $hash->{'state_changed'} = 1;
             }
             else {
@@ -464,12 +469,8 @@ sub process_service {
                         . ") exceeded"
                 ));
 
-            if (   !defined $onfield
-                or !defined $onfield->{"state"}
-                or $onfield->{"state"} ne "critical") {
-
+            if ( $oldstate ne "critical") {
                 $hash->{'state_changed'} = 1;
-
             }
         }
         elsif ((defined($warn->[0]) and $value < $warn->[0])
@@ -491,19 +492,15 @@ sub process_service {
                         . ") exceeded"
                 ));
 
-            if (   !defined $onfield
-                or !defined $onfield->{"state"}
-                or $onfield->{"state"} ne "warning") {
-
+            if ( $oldstate ne "warning") {
                 $hash->{'state_changed'} = 1;
-
             }
         }
-        elsif (defined $onfield and defined $onfield->{"state"}) {
+        else {
             munin_set_var_loc(\%notes, [@$fpath, "state"], "ok");
             munin_set_var_loc(\%notes, [@$fpath, "ok"],    "OK");
 
-	    if ($onfield->{'state'} ne 'ok') {
+	    if ($oldstate ne 'ok') {
 		$hash->{'state_changed'} = 1;
 	    }
         }
