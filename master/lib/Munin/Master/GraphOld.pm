@@ -1904,7 +1904,7 @@ sub RRDs_graph {
 		print $out_fh "        <columns>" . (scalar @$columns) . "</columns>\n";
 		print $out_fh "        <legend>\n";
 		for my $column ( @{ $columns } ) {
-			print $out_fh "            <entry>$column<entry>\n";
+			print $out_fh "            <entry>$column</entry>\n";
 		}
 		print $out_fh "        </legend>\n";
 		print $out_fh "    </meta>\n";
