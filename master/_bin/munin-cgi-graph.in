@@ -75,7 +75,7 @@ push @params, "--log-file", $logfile;
 my $config = graph_startup(\@params);
 
 logger_open($config->{'logdir'});
-if defined($ENV{CGI_DEBUG}) {
+if(defined($ENV{CGI_DEBUG})) {
 	logger_debug();
 	push @params, "--debug", $logfile;
 }
