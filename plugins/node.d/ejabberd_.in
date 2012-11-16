@@ -267,7 +267,7 @@ if [ "$MODE" = "statuses" ]; then
    for host in $vhosts; do
         formathost=$(echo $host | tr '.' '_' | tr '-' '_')
                 for status in $statuses; do
-                        num=$($EJCTL status-num-host $status $host)
+                        num=$($EJCTL status-num-host $host $status)
                         if [ "$?" != 0 ]; then
                                 num="U"
                         fi
