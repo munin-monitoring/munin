@@ -58,6 +58,7 @@ my %content_types = (
 	"png" => "image/png",
 	"csv" => "text/csv",
 	"json" => "application/json",
+	"xml" => "text/xml",
 );
 
 my $logfile;
@@ -141,7 +142,7 @@ while (new CGI::Fast) {
     # Note: $serv *may* have some "-" inside (See #1218)
 
     my ($dom, $host, $serv, $scale, $fileext) =
-      $path =~ m#^/(.*)/([^/]+)/([\w-]+)-([\w=,]+)\.(png|csv|json)#; ## avoid bug in vim
+      $path =~ m#^/(.*)/([^/]+)/([\w-]+)-([\w=,]+)\.(png|csv|json|xml)#; ## avoid bug in vim
 
     DEBUG "asked for ($dom, $host, $serv, $scale, $fileext)";
 

@@ -1895,6 +1895,31 @@ sub RRDs_graph {
 			print $out_fh "\n";
 		}
 	} elsif ($fileext eq "xml") {
+		print $out_fh "<xport>\n";
+		print $out_fh "    <meta>\n";
+		print $out_fh "        <start>$start</start>\n";
+		print $out_fh "        <step>$step</step>\n";
+		print $out_fh "        <end>$end</end>\n";
+		print $out_fh "        <rows>" . (scalar @$values) . "</rows>\n";
+		print $out_fh "        <columns>" . (scalar @$columns) . "</columns>\n";
+		print $out_fh "        <legend>\n";
+		for my $column ( @{ $columns } ) {
+			print $out_fh "            <entry>$column<entry>\n";
+		}
+		print $out_fh "        </legend>\n";
+		print $out_fh "    </meta>\n";
+		print $out_fh "    <data>\n";
+		my $idx_value = 0;
+		for (my $epoch = $start; $epoch <= $end; $epoch += $step) {
+			print $out_fh "        <row><t>$epoch</t>";
+			my $row = $values->[$idx_value++];
+			for my $value (@$row) {
+				print $out_fh "<v>" . (defined $value ? $value : 'NaN') . "</v>";
+			}
+			print $out_fh "</row>\n";
+		}
+		print $out_fh "    </data>\n";
+		print $out_fh "</xport>\n";
 	} elsif ($fileext eq "json") {
 		print $out_fh "{\n";
 		print $out_fh "    meta: { \n";
@@ -1915,7 +1940,7 @@ sub RRDs_graph {
 			print $out_fh "        [ $epoch";
 			my $row = $values->[$idx_value++];
 			for my $value (@$row) {
-				print $out_fh ", " . (defined $value ? $value : '""');
+				print $out_fh ", " . (defined $value ? $value : '"NaN"');
 			}
 			print $out_fh " ],\n";
 		}
