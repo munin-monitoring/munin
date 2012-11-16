@@ -168,6 +168,8 @@ my $running     = 0;
 my $max_running = 6;
 my $do_fork     = 1;
 
+my $fileext     = "png";
+
 # "global" Configuration hash
 my $config = undef;
 
@@ -241,6 +243,8 @@ sub graph_startup {
     $lower_limit    = undef;
     $upper_limit    = undef;
 
+    $fileext        = "png";
+
     # Get options
     my ($args) = @_;
     local @ARGV = @{$args};
@@ -272,6 +276,7 @@ sub graph_startup {
 		"upper_limit=s" => \$upper_limit,
 		"lower_limit=s" => \$lower_limit,
                 "list-images!"  => \$list_images,
+                "format=s"      => \$fileext,
                 "o|output-file=s"  => \$output_file,
                 "l|log-file=s"  => \$log_file,
                 "skip-locking!" => \$skip_locking,
@@ -366,6 +371,8 @@ sub graph_main {
     $upper_limit    = undef;
     $pinpoint       = undef;
 
+    $fileext        = "png";
+
     # XXX [DEBUG]
     my $debug = undef;
 
@@ -390,6 +397,8 @@ sub graph_main {
 		"only_graph!"   => \$only_graph,
 		"upper_limit=s" => \$upper_limit,
 		"lower_limit=s" => \$lower_limit,
+
+                "format=s"      => \$fileext,
 	    );
 
     # XXX [DEBUG]
@@ -1416,9 +1425,8 @@ sub process_service {
 		push @complete, "--lower-limit", $lower_limit;
 	}
 
-	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
 	$nb_graphs_drawn ++;
-        RRDs::graph(@rrdcached_params, @complete);
+        RRDs_graph(@rrdcached_params, @complete);
         if (my $ERROR = RRDs::error) {
             ERROR "[RRD ERROR] Unable to graph $picfilename : $ERROR";
             # ALWAYS dumps the cmd used when an error occurs.
@@ -1537,13 +1545,12 @@ sub process_service {
                 unshift @rrd_sum, "--vertical-label", $label;
             }
 
-	    DEBUG "[DEBUG] \n\nrrdtool graph '" . join("' \\\n\t'", @rrd_sum) . "'\n";
 
             # Make sure directory exists
             munin_mkdir_p($picdirname, oct(777));
 
 	    $nb_graphs_drawn ++;
-            RRDs::graph(@rrdcached_params, @rrd_sum);
+            RRDs_graph(@rrdcached_params, @rrd_sum);
 
             if (my $ERROR = RRDs::error) {
                 ERROR "[RRD ERROR(sum)] Unable to graph "
@@ -1834,6 +1841,72 @@ sub get_scientific {
 sub RRDescape {
     my $text = shift;
     return $RRDs::VERSION < 1.2 ? $text : escape($text);
+}
+
+sub RRDs_graph {
+	if ($fileext eq "png") {
+	        DEBUG "[DEBUG] \n\nrrdtool graph '" . join("' \\\n\t'", @_) . "'\n";
+		return RRDs::graph(@_);
+	}
+
+	DEBUG "[DEBUG] RRDs_graph(fileext=$fileext)";
+	my $outfile = shift @_;
+
+	# Open outfile
+	DEBUG "[DEBUG] Open outfile($outfile)";
+	my $out_fh = new IO::File(">$outfile");
+
+	# Remove unknown args
+	my @xport;
+	while ( defined ( my $arg = shift @_ )) {
+		if ($arg eq "--start" || $arg eq "--end") {
+			push @xport, $arg;
+			push @xport, shift @_;
+			next;
+		}
+		if ($arg =~ m/^C?DEF:/) { push @xport, $arg; next; }
+
+		if ($arg =~ m/^(LINE|AREA|STACK)/) {
+			my ($type, $var, $legend) = split(/:/, $arg);
+
+			$type = "XPORT"; # Only 1 export type
+			$var =~ s/#.*//; # Remove optional color
+
+			# repaste..
+			push @xport, "$type:$var:$legend";
+
+			next;
+		}
+
+		# Ignore the arg
+	}
+	# Now we have to fetch the textual values
+        DEBUG "[DEBUG] \n\nrrdtool xport '" . join("' \\\n\t'", @xport) . "'\n";
+	my ($start, $end, $step, $nb_vars, $columns, $values) = RRDs::xport(@xport);
+	if ($fileext eq "csv") {
+		print $out_fh '"epoch", "' . join('", "', @{ $columns } ) . "\"\n";
+		my $idx_value = 0;
+		for (my $epoch = $start; $epoch <= $end; $epoch += $step) {
+			print $out_fh "$epoch";
+			my $row = $values->[$idx_value++];
+			for my $value (@$row) {
+				print $out_fh "," . (defined $value ? $value : "");
+			}
+			print $out_fh "\n";
+		}
+	} elsif ($fileext eq "xml") {
+	} elsif ($fileext eq "json") {
+		print $out_fh "" . join(", ", @{ $columns } ) . "\n";
+		my $idx_value = 0;
+		for (my $epoch = $start; $epoch <= $end; $epoch += $step) {
+			print $out_fh "$epoch";
+			my $row = $values->[$idx_value++];
+			for my $value (@$row) {
+				print $out_fh "," . (defined $value ? $value : "");
+			}
+			print $out_fh "\n";
+		}
+	}
 }
 
 

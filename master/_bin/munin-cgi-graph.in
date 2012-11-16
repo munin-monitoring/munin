@@ -74,7 +74,10 @@ push @params, "--log-file", $logfile;
 my $config = graph_startup(\@params);
 
 logger_open($config->{'logdir'});
-logger_debug() if defined($ENV{CGI_DEBUG});
+if defined($ENV{CGI_DEBUG}) {
+	logger_debug();
+	push @params, "--debug", $logfile;
+}
 
 # BEGIN FAST-CGI LOOP:
 setlocale (LC_TIME, 'C');
@@ -156,7 +159,7 @@ while (new CGI::Fast) {
 	next;
     }
 
-    my $filename = get_picture_filename ($config, $dom, $host, $serv, $scale, $ENV{QUERY_STRING});
+    my $filename = get_picture_filename ($config, $dom, $host, $serv, $scale, $fileext, $ENV{QUERY_STRING});
 
     my $time = time;
 
