@@ -1896,16 +1896,31 @@ sub RRDs_graph {
 		}
 	} elsif ($fileext eq "xml") {
 	} elsif ($fileext eq "json") {
-		print $out_fh "" . join(", ", @{ $columns } ) . "\n";
+		print $out_fh "{\n";
+		print $out_fh "    meta: { \n";
+		print $out_fh "        start: $start,\n";
+		print $out_fh "        step: $step,\n";
+		print $out_fh "        end: $end,\n";
+		print $out_fh "        rows: " . (scalar @$values) . ",\n";
+		print $out_fh "        columns: " . (scalar @$columns) . ",\n";
+		print $out_fh "        legend: [\n";
+		for my $column ( @{ $columns } ) {
+			print $out_fh "            \"$column\",\n";
+		}
+		print $out_fh "        ],\n";
+		print $out_fh "    }, \n";
+		print $out_fh "    data: [ \n";
 		my $idx_value = 0;
 		for (my $epoch = $start; $epoch <= $end; $epoch += $step) {
-			print $out_fh "$epoch";
+			print $out_fh "        [ $epoch";
 			my $row = $values->[$idx_value++];
 			for my $value (@$row) {
-				print $out_fh "," . (defined $value ? $value : "");
+				print $out_fh ", " . (defined $value ? $value : '""');
 			}
-			print $out_fh "\n";
+			print $out_fh " ],\n";
 		}
+		print $out_fh "    ], \n";
+		print $out_fh "}\n";
 	}
 }
 
