@@ -5,6 +5,6 @@ build-*-stamp
 build/
 .*.swp
 /sandbox/
-common/Build.bat
-common/MYMETA.json
-common/MYMETA.yml
+Build.bat
+MYMETA.json
+MYMETA.yml
