@@ -85,7 +85,7 @@ if [ "$1" = "config" ]; then
 fi
 
 if [ -r $AVCSTATS ]; then
-    { read
+    { read HEADER
       while read lookups hits misses allocations reclaims frees; do
         LOOKUPS=$(($LOOKUPS + $lookups))
         HITS=$(($HITS + $hits))
