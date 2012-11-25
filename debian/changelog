@@ -15,6 +15,8 @@ munin (2.0.6-2) UNRELEASED; urgency=low
     Daniel Black. (Closes: #676798)
   * Fix wrong assumption about Net::SSLeay::CTX_set_options return value.
     Thanks to intrigeri for this patch. (Closes: #675377)
+  * munin-async.init: Run munin-async after munin-node has been started.
+    (Closes: #691390) - Thanks to Daniel Black again.
 
  -- Holger Levsen <holger@debian.org>  Sat, 15 Sep 2012 14:02:44 +0200
 
