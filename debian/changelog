@@ -8,6 +8,8 @@ munin (2.0.6-2) UNRELEASED; urgency=low
       upgrades from versions where it was still removed (up to 1.4.6-3) but
       not re-created (from 1.4.6-1 onwards). Thanks to Gregor Herrman for the
       patch and intrigeri for reviewing. (Closes: #677943)
+  * Add documentation for munin-async, thanks to Daniel Black. 
+    (Closes: #681803)
 
  -- Holger Levsen <holger@debian.org>  Sat, 15 Sep 2012 14:02:44 +0200
 
