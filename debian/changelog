@@ -3,6 +3,11 @@ munin (2.0.6-2) UNRELEASED; urgency=low
   * munin-node.postinst: delete /var/lib/munin(-node)/plugin-state recursivly
     on purge. The plugin-state is outdated after a few minutes anyway.
     (Closes: #687715)
+  * Fix "/etc/apache2/conf.d/munin removed on upgrade":
+    - debian/munin.postinst: create symlink for new installs and also for
+      upgrades from versions where it was still removed (up to 1.4.6-3) but
+      not re-created (from 1.4.6-1 onwards). Thanks to Gregor Herrman for the
+      patch and intrigeri for reviewing. (Closes: #677943)
 
  -- Holger Levsen <holger@debian.org>  Sat, 15 Sep 2012 14:02:44 +0200
 
