@@ -1,0 +1,59 @@
+Thanks to our move to git, dists/ is now obsolete.
+
+Each distributions has now its own git repository.
+
+There inner structure is up to them, but we can see 2 pattern emerging :
+
+1. Fork of official repository
+
+This is the simplest thing to do. Just fork the official munin repo, and add your distribution specific things.
+
+It enables a very effective way of sending distro-originated patches upstream. It used to be awkward to use when we where using svn, but the move to git made it a breeze.
+
+2. Standalone repository
+
+Some distributions just create a new repo, containing only what's specific to them. It usually takes the form of some build instructions and several patch files.
+
+It enables a very simple separation of what's coming from upstream and what's ditro originated. It also was the only practical way prior to the git move.
+
+Some of these specifics were usually integrated here, in dists/*.
+
+3. Urls reference.
+
+Please note that we don't know about every distrib. If yours favorite one is missing, just send a patch to add it here.
+
+Order here is alphabetic, to remain neutral :-)
+
+* Debian
+
+Different releases are tracked via different branches.
+
+type: fork
+www: http://
+git:
+
+* FreeBSD
+
+type:
+www:
+git:
+
+* Gentoo
+
+type:
+www:
+git:
+
+* Redhat and Fedora
+
+RHEL and Fedora are hosted directly on pkgs.fedoraproject.org.
+
+type: specific
+www: http://pkgs.fedoraproject.org/cgit/munin.git
+git: git://pkgs.fedoraproject.org/munin.git
+
+* Ubuntu
+
+type:
+www:
+git:

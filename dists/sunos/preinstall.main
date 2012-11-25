@@ -1,4 +1,0 @@
-#!/bin/sh
-
-groupadd munin 2>/dev/null || true
-useradd -g munin munin 2>/dev/null || true

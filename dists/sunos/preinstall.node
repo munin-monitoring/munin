@@ -1,3 +1,0 @@
-#!/bin/sh
-
-groupadd munin 2>/dev/null || true
