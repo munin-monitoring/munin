@@ -1,4 +1,0 @@
-Redhat specifics are hosted directly on pkgs.fedoraproject.org.
-
-www: http://pkgs.fedoraproject.org/cgit/munin.git
-git: git://pkgs.fedoraproject.org/munin.git
