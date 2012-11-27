@@ -955,7 +955,10 @@ sub sort_by_dm_last {
         }
     }
 
-    return ( sort @non_dm ), ( sort @dm );
+    return
+	( sort {$cur_diskstats{$a}->{'graph_id'} cmp $cur_diskstats{$b}->{'graph_id'}} @non_dm ),
+	( sort {$cur_diskstats{$a}->{'graph_id'} cmp $cur_diskstats{$b}->{'graph_id'}} @dm ),
+    ;
 }
 
 # filter_device_list
