@@ -1,0 +1,30 @@
+commit a18229c522e1df5468a7dcb3a2f4c96aca56a761
+Author: Steve Schnepp <steve.schnepp@pwkf.org>
+Date:   Tue Nov 27 07:28:43 2012 +0100
+
+    master: connect to AAAA and A address
+    
+    According to Michael Renner in D#678662 :
+    
+    The lack of the "MulitHomed" parameter causes IO::Socket::INET6 to give
+    preferential treatment to AAAA-addresses and fail if they don't yield a socket.
+    When enabling MultiHomed IO::Socket::INET6 will try all returned addresses.
+    
+    See http://search.cpan.org/~shlomif/IO-Socket-INET6-2.69/lib/IO/Socket/INET6.pm#CONSTRUCTOR for detailed information.
+    
+    Thx to Kelsey Cummings for reporting it on the ml.
+    
+    Closes: D#678662
+
+diff --git a/master/lib/Munin/Master/Node.pm b/master/lib/Munin/Master/Node.pm
+index 6549fbf..af9d69e 100644
+--- a/master/lib/Munin/Master/Node.pm
++++ b/master/lib/Munin/Master/Node.pm
+@@ -86,6 +86,7 @@ sub _do_connect {
+ 		PeerPort  => $self->{port} || 4949,
+ 		LocalAddr => $config->{local_address},
+ 		Proto     => 'tcp', 
++		MultiHomed => 1,
+ 		Timeout   => $config->{timeout}
+ 	);
+ 	if (! $self->{reader} ) {
