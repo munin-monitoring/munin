@@ -2,3 +2,4 @@
 237-hddtemp_smartctl-sata-detect.patch
 238-munin-node-ipv6allow.patch
 239-fix-too-many-warnings-in-munin-graph.log.patch
+240-Do-not-use-the-read-without-variable-bashism.patch
