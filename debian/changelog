@@ -14,8 +14,6 @@ munin (2.0.6-2) UNRELEASED; urgency=low
     mostly to document that IPv6 addresses are allowed as well. Thanks to
     Daniel Black. (Closes: #676798)
     This is debian/patches/238-munin-node-ipv6allow.patch
-  * munin-async.init: Run munin-async after munin-node has been started.
-    (Closes: #691390) - Thanks to Daniel Black again.
   * HTMLConfig.pm: cherry-pick 789c59e from 2.0.7 to avoid (using the default
     configuration) /var/log/munin/munin-html.log being flooded with 106 lines
     of noisy warnings (out of 112 lines in total) every 5min. (Closes: #689291)
@@ -38,8 +36,13 @@ munin (2.0.6-2) UNRELEASED; urgency=low
     the ENV var MUNIN_PLUGSTATE doesn't exist, so we need to set a default.
     (Closes: #687495). This has been in included in 2.0.7 and is
     debian/patches/244-fix-apt_all-plugin-statedir-for-cron.patch
+  * munin-async.init: Run munin-async after munin-node has been started.
+    (Closes: #691390) - Thanks to Daniel Black for this and the next two
+    fixes:
   * munin-async.postinst: fix /var/lib/munin-async ownership (once on upgrades
     from previous versions) and for new installs. (Closes: #691309)
+  * munin-async.logrotate: correct location of munin-async logfiles. 
+    (Closes: #691758)
 
  -- Holger Levsen <holger@debian.org>  Sat, 15 Sep 2012 14:02:44 +0200
 
