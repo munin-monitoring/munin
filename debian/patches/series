@@ -1,3 +1,4 @@
 100-DejaVu-Fonts-Path.patch
 237-hddtemp_smartctl-sata-detect.patch
 238-munin-node-ipv6allow.patch
+239-fix-too-many-warnings-in-munin-graph.log.patch

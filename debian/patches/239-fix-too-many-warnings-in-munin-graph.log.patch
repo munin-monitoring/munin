@@ -1,0 +1,47 @@
+From 789c59e3a27f5d38cabd02c8f57fec605e6146a8 Mon Sep 17 00:00:00 2001
+From: Steve Schnepp <steve.schnepp@pwkf.org>
+Date: Thu, 6 Sep 2012 13:46:17 +0200
+Subject: [PATCH] master: fix too many warnings in munin-graph.log
+
+When graph_strategy was missing, a warning was emitted since the value is
+undef.
+
+Closes: #1251
+---
+ master/lib/Munin/Master/HTMLConfig.pm |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/master/lib/Munin/Master/HTMLConfig.pm b/master/lib/Munin/Master/HTMLConfig.pm
+index dfa8b70..bbccffa 100644
+--- a/master/lib/Munin/Master/HTMLConfig.pm
++++ b/master/lib/Munin/Master/HTMLConfig.pm
+@@ -473,7 +473,7 @@ sub generate_service_templates {
+ 	    }
+     }
+ 
+-    if ($config->{'graph_strategy'} eq "cgi") {
++    if (munin_get($config, "graph_strategy", "cron") eq "cgi") {
+ 	map { $srv{$_} = $config->{'cgiurl_graph'} . "/" . $imgs{$_} } keys %imgs;
+     } else {
+ 	map { $srv{$_} = $root_path . "/" . $imgs{$_} } keys %imgs;
+@@ -500,7 +500,7 @@ sub generate_service_templates {
+ 	for my $scale (@times) {
+         # Don't try to find the size if cgi is enabled, 
+         # otherwise old data might pollute  
+-        next if ($config->{'graph_strategy'} eq "cgi");
++        next if (munin_get($config, "graph_strategy", "cron") eq "cgi");
+         if (my ($w, $h)
+             = get_png_size(munin_get_picture_filename($service, $scale))) {
+             $srv{"img" . $scale . "width"}  = $w;
+@@ -512,7 +512,7 @@ sub generate_service_templates {
+         $srv{imgweeksum} = "$srv{node}-week-sum.png";
+         $srv{imgyearsum} = "$srv{node}-year-sum.png";
+         for my $scale (["week", "year"]) {
+-            next if ($config->{'graph_strategy'} eq "cgi");
++            next if (munin_get($config, "graph_strategy", "cron") eq "cgi");
+             if (my ($w, $h)
+                 = get_png_size(munin_get_picture_filename($service, $scale, 1)))
+             {
+-- 
+1.7.2.5
+
