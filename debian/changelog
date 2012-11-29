@@ -30,7 +30,7 @@ munin (2.0.6-2) UNRELEASED; urgency=low
     Thanks to intrigeri for this patch. (Closes: #675377)
     This is 242-Fix-wrong-assumption-about-Net-SSLeay-CTX_set_option.patch
   * http_loadtime plugin: fix stderr redirection (which broke the plugin
-    completly) (Closes: #691448)
+    completely) (Closes: #691448)
     This is 243-http_loadtime-fixed-stderr-redirection-with-time.patch
   * apt_all plugin: the apt_all plugin has its state updated in cron. There
     the ENV var MUNIN_PLUGSTATE doesn't exist, so we need to set a default.
