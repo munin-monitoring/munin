@@ -30,6 +30,9 @@ munin (2.0.6-2) UNRELEASED; urgency=low
   * Fix wrong assumption about Net::SSLeay::CTX_set_options return value.
     Thanks to intrigeri for this patch. (Closes: #675377)
     This is 242-Fix-wrong-assumption-about-Net-SSLeay-CTX_set_option.patch
+  * http_loadtime plugin: fix stderr redirection (which broke the plugin
+    completly) (Closes: #691448)
+    This is 243-http_loadtime-fixed-stderr-redirection-with-time.patch
 
  -- Holger Levsen <holger@debian.org>  Sat, 15 Sep 2012 14:02:44 +0200
 
