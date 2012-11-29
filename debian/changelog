@@ -13,6 +13,7 @@ munin (2.0.6-2) UNRELEASED; urgency=low
   * Patch node/munin-node.conf.in to allow incoming IPv6 from localhost,
     mostly to document that IPv6 addresses are allowed as well. Thanks to
     Daniel Black. (Closes: #676798)
+    This is debian/patches/238-munin-node-ipv6allow.patch
   * Fix wrong assumption about Net::SSLeay::CTX_set_options return value.
     Thanks to intrigeri for this patch. (Closes: #675377)
   * munin-async.init: Run munin-async after munin-node has been started.
