@@ -1,0 +1,29 @@
+From d53b34d1bdfafece48e50f2d690b2e1130b6f1dd Mon Sep 17 00:00:00 2001
+From: Steve Schnepp <steve.schnepp@pwkf.org>
+Date: Thu, 13 Sep 2012 12:18:29 +0200
+Subject: [PATCH] plugins: fix apt_all plugin statedir for cron
+
+The apt_all plugin has its state updated in cron. There the ENV var
+MUNIN_PLUGSTATE doesn't exist, so we need to set a default.
+
+Closes: D#687495
+---
+ plugins/node.d.linux/apt_all.in |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/plugins/node.d.linux/apt_all.in b/plugins/node.d.linux/apt_all.in
+index 0c491f8..101c5d0 100644
+--- a/plugins/node.d.linux/apt_all.in
++++ b/plugins/node.d.linux/apt_all.in
+@@ -52,7 +52,7 @@ use strict;
+ $ENV{'LANG'}="C";
+ $ENV{'LC_ALL'}="C";
+ 
+-my $statefile = "$ENV{MUNIN_PLUGSTATE}/plugin-apt.state";
++my $statefile = ($ENV{MUNIN_PLUGSTATE} || '@@PLUGSTATE@@/root/') . "/plugin-apt.state";
+ my @releases = ("stable", "testing","unstable");
+ 
+ 
+-- 
+1.7.2.5
+
