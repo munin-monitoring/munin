@@ -1,0 +1,32 @@
+From 380550392ba37eaa32203342c082d4013dfcba21 Mon Sep 17 00:00:00 2001
+From: intrigeri <intrigeri@debian.org>
+Date: Wed, 21 Nov 2012 12:02:53 +0100
+Subject: [PATCH] Fix wrong assumption about Net::SSLeay::CTX_set_options return value (Closes: #675377)
+
+The examples I can see in the Net::SSLeay perldoc indicate that this function
+returns true on success:
+
+    Net::SSLeay::CTX_set_options($ctx, &Net::SSLeay::OP_ALL)
+         or die_if_ssl_error("ssl ctx set options");
+
+... while the Munin code assumed the opposite.
+---
+ common/lib/Munin/Common/TLS.pm |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/common/lib/Munin/Common/TLS.pm b/common/lib/Munin/Common/TLS.pm
+index 604422d..5211bf8 100644
+--- a/common/lib/Munin/Common/TLS.pm
++++ b/common/lib/Munin/Common/TLS.pm
+@@ -132,7 +132,7 @@ sub _creat_tls_context {
+     }
+ 
+     # Tune a few things...
+-    if (Net::SSLeay::CTX_set_options($ctx, &Net::SSLeay::OP_ALL)) {
++    if (! Net::SSLeay::CTX_set_options($ctx, &Net::SSLeay::OP_ALL)) {
+ 	$self->{logger}("[ERROR] Could not set SSL_CTX options");
+ 	return 0;
+     }
+-- 
+1.7.2.5
+
