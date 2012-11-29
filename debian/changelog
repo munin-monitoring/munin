@@ -38,6 +38,8 @@ munin (2.0.6-2) UNRELEASED; urgency=low
     the ENV var MUNIN_PLUGSTATE doesn't exist, so we need to set a default.
     (Closes: #687495). This has been in included in 2.0.7 and is
     debian/patches/244-fix-apt_all-plugin-statedir-for-cron.patch
+  * munin-async.postinst: fix /var/lib/munin-async ownership (once on upgrades
+    from previous versions) and for new installs. (Closes: #691309)
 
  -- Holger Levsen <holger@debian.org>  Sat, 15 Sep 2012 14:02:44 +0200
 
