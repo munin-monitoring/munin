@@ -37,15 +37,3 @@ index 0000000..58765dc
 +       while read lookups hits misses allocations reclaims frees; do
 +         LOOKUPS=$(($LOOKUPS + $lookups))
 +         HITS=$(($HITS + $hits))
-diff --git a/debian/patches/series b/debian/patches/series
-index 4f43be9..58ab1a8 100644
---- a/debian/patches/series
-+++ b/debian/patches/series
-@@ -1,3 +1,4 @@
- 100-DejaVu-Fonts-Path.patch
- 237-hddtemp_smartctl-sata-detect.patch
- 238-munin-node-ipv6allow.patch
-+239-Do-not-use-the-read-without-variable-bashism.patch
--- 
-1.7.10.4
-
