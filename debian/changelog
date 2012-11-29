@@ -22,6 +22,7 @@ munin (2.0.6-2) UNRELEASED; urgency=low
     configuration) /var/log/munin/munin-html.log being flooded with 106 lines
     of noisy warnings (out of 112 lines in total) every 5min. (Closes: 689291)
     This is debian/patches/239-fix-too-many-warnings-in-munin-graph.log.patch
+  * munin-doc: Break and replace munin-common << 2. (Closes: #694355)
 
  -- Holger Levsen <holger@debian.org>  Sat, 15 Sep 2012 14:02:44 +0200
 
