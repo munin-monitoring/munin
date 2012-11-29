@@ -5,35 +5,19 @@ Subject: [PATCH] Do not use the "read without variable" bashism. (Closes:
  #690711)
 
 ---
- ...not-use-the-read-without-variable-bashism.patch |   21 ++++++++++++++++++++
- debian/patches/series                              |    1 +
- 2 files changed, 22 insertions(+)
- create mode 100644 debian/patches/239-Do-not-use-the-read-without-variable-bashism.patch
+ plugins/node.d.linux/selinux_avcstat.in |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/debian/patches/239-Do-not-use-the-read-without-variable-bashism.patch b/debian/patches/239-Do-not-use-the-read-without-variable-bashism.patch
-new file mode 100644
-index 0000000..58765dc
---- /dev/null
-+++ b/debian/patches/239-Do-not-use-the-read-without-variable-bashism.patch
-@@ -0,0 +1,21 @@
-+From: intrigeri <intrigeri@debian.org>
-+Date: Wed, 21 Nov 2012 10:05:15 +0100
-+Subject: Do not use the "read without variable" bashism.
-+
-+---
-+ plugins/node.d.linux/selinux_avcstat.in |    2 +-
-+ 1 file changed, 1 insertion(+), 1 deletion(-)
-+
-+diff --git a/plugins/node.d.linux/selinux_avcstat.in b/plugins/node.d.linux/selinux_avcstat.in
-+index dc436ef..92abf13 100644
-+--- a/plugins/node.d.linux/selinux_avcstat.in
-++++ b/plugins/node.d.linux/selinux_avcstat.in
-+@@ -85,7 +85,7 @@ if [ "$1" = "config" ]; then
-+ fi
-+ 
-+ if [ -r $AVCSTATS ]; then
-+-    { read
-++    { read HEADER
-+       while read lookups hits misses allocations reclaims frees; do
-+         LOOKUPS=$(($LOOKUPS + $lookups))
-+         HITS=$(($HITS + $hits))
+diff --git a/plugins/node.d.linux/selinux_avcstat.in b/plugins/node.d.linux/selinux_avcstat.in
+index dc436ef..92abf13 100644
+--- a/plugins/node.d.linux/selinux_avcstat.in
++++ b/plugins/node.d.linux/selinux_avcstat.in
+@@ -85,7 +85,7 @@ if [ "$1" = "config" ]; then
+ fi
+ 
+ if [ -r $AVCSTATS ]; then
+-    { read
++    { read HEADER
+       while read lookups hits misses allocations reclaims frees; do
+         LOOKUPS=$(($LOOKUPS + $lookups))
+         HITS=$(($HITS + $hits))
