@@ -25,6 +25,10 @@ munin (2.0.6-2) UNRELEASED; urgency=low
   * munin-doc: Break and replace munin-common << 2. (Closes: #694355)
   * selinux_avcstat plugin: Do not use the "read without variable" bashism,
     thanks to intrigeri for the patch. (Closes: #690711)
+  * Have master support multi-homed nodes that only listen on IPv4.
+    (Closes: #678662) This is upstream commit a18229c5, thanks to Michael
+    Renner for the testing and the patch!
+    This is debian/patches/241-master-connect-to-AAAA-and-A-address.patch
 
  -- Holger Levsen <holger@debian.org>  Sat, 15 Sep 2012 14:02:44 +0200
 
