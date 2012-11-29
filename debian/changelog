@@ -43,6 +43,8 @@ munin (2.0.6-2) UNRELEASED; urgency=low
     from previous versions) and for new installs. (Closes: #691309)
   * munin-async.logrotate: correct location of munin-async logfiles. 
     (Closes: #691758)
+  * Use dh --with quilt so that the patches are actually applied. 
+    (Closes: #691327)
 
  -- Holger Levsen <holger@debian.org>  Sat, 15 Sep 2012 14:02:44 +0200
 
