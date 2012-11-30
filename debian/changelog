@@ -1,6 +1,6 @@
 munin (2.0.6-2) UNRELEASED; urgency=low
 
-  * munin-node.postinst: delete /var/lib/munin(-node)/plugin-state recursivly
+  * munin-node.postinst: delete /var/lib/munin(-node)/plugin-state recursively
     on purge. The plugin-state is outdated after a few minutes anyway.
     (Closes: #687715)
   * Fix "/etc/apache2/conf.d/munin removed on upgrade":
