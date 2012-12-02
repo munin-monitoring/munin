@@ -41,7 +41,7 @@ testfun () {
 	STATUS=$?
 	if [ $STATUS = 0 -a -n "$TEMP_FILE" -a -f "$TEMP_FILE" ]; then
 		rm -f $TEMP_FILE
-		echo $MKTEMP
+		echo "${MKTEMP/$/\\$}"
 		exit
 	else
 		rm -f $TEMP_FILE
