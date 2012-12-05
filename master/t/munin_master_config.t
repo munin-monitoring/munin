@@ -49,7 +49,7 @@ my $fasit = {
         htmldir                => '/opt/munin/sandbox/www',
         local_address          => 0,
         logdir                 => '/opt/munin/sandbox/var/log/munin',
-        max_processes          => 2**53,
+        max_processes          => 16,
         rundir                 => '/opt/munin/sandbox/var/run/munin',
         timeout                => 180,
         tls                    => 'disabled',
@@ -59,6 +59,9 @@ my $fasit = {
         tls_verify_certificate => 1,
         tls_verify_depth       => '5',
         tmpldir                => '/opt/munin/sandbox/etc/opt/munin/templates',
+	staticdir              => '/opt/munin/sandbox/etc/opt/munin/static',
+	rrdcached_socket       => '/var/run/rrdcached.sock',
+	cgitmpdir              => '/opt/munin/sandbox/var/cache/munin-cgi',
     },
 };
 
@@ -88,6 +91,7 @@ rundir  /opt/munin/sandbox/var/run/munin
 
 # Where to look for the HTML templates
 tmpldir	/opt/munin/sandbox/etc/opt/munin/templates
+staticdir /opt/munin/sandbox/etc/opt/munin/static
 
 # Make graphs show values per minute instead of per second
 #graph_period minute
@@ -97,6 +101,7 @@ tmpldir	/opt/munin/sandbox/etc/opt/munin/templates
 # documentation.
 #
 #graph_strategy cgi
+cgitmpdir /opt/munin/sandbox/var/cache/munin-cgi
 
 # Drop somejuser@fnord.comm and anotheruser@blibb.comm an email everytime
 # something changes (OK -> WARNING, CRITICAL -> OK, etc)
@@ -113,6 +118,8 @@ tls_certificate /opt/munin/common/t/tls/master_cert.pem
 tls_ca_certificate /opt/munin/common/t/tls/CA/ca_cert.pem
 tls_verify_certificate yes
 tls_verify_depth 5
+
+rrdcached_socket /var/run/rrdcached.sock
 
 # a simple host tree
 [marvin]

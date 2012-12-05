@@ -3,15 +3,18 @@ use strict;
 
 use Test::More tests => 17;
 use Time::HiRes qw(sleep);
+use File::Temp qw( tempdir );
 
 use_ok('Munin::Master::ProcessManager');
+
+use Munin::Master::Config;
+my $config = Munin::Master::Config->instance()->{config};
+$config->{rundir} = tempdir(CLEANUP => 1);
 
 ### Uncomment to see log messages
 #
 #use Munin::Master::Logger;
 #logger_debug();
-#use Munin::Master::Config;
-#my $config = Munin::Master::Config->instance();
 #$config->{debug} = 1;
 
 

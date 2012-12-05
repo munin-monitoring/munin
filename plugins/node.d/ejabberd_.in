@@ -133,7 +133,7 @@ if [ -z "$vhosts" ]; then
     fi
     if [ -z "$configfile" ]; then
         echo "Unable to find ejabberd.cfg. Exiting." >&2
-        exit -1
+        exit 1
     fi
     # you have to have all of vhosts defined on one line in $EJCFG or in plugins-conf.d/munin-node config file
     vhosts=$(awk '/^\s*{hosts/ {gsub( /\{\s?hosts\s?,|[\",\[\]]|\}\s?.|localhost/ ,""); print;}' $EJCFG);
@@ -147,7 +147,7 @@ EJPID=$(ps -ef | awk '/ejabberd/ && /\/bin\/beam(.smp)?/ {print $2}')
 if [ -z "$vhosts" ]; then
     echo "No vhosts to sample." >&2
     echo "Please set env.vhosts in plugins-conf.d/munin-node." >&2
-    exit -1
+    exit 1
 fi
 
 MODE=`basename $0 | sed 's/^ejabberd_//g'`
@@ -157,7 +157,7 @@ if ! [ "$MODE" = "connections" -o "$MODE" = "users" \
   -o "$MODE" = "memory" -o "$MODE" = "threads" \
   -o "$MODE" = "usersindays" -o "$MODE" = "uptime" ]; then
     echo "ERROR: Unknown mode \"$MODE\". Exiting." >&2
-    exit -1
+    exit 1
 fi
 
 if [ "$1" = "config" ]; then
@@ -267,7 +267,7 @@ if [ "$MODE" = "statuses" ]; then
    for host in $vhosts; do
         formathost=$(echo $host | tr '.' '_' | tr '-' '_')
                 for status in $statuses; do
-                        num=$($EJCTL status-num-host $status $host)
+                        num=$($EJCTL status-num-host $host $status)
                         if [ "$?" != 0 ]; then
                                 num="U"
                         fi
