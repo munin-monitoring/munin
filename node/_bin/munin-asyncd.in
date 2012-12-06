@@ -81,6 +81,8 @@ my $spoolwriter = Munin::Node::SpoolWriter->new(
 	hostname  => $metahostname,
 );
 
+local $0 = "munin-asyncd [$metahostname] [idle]";
+
 my $process_name = "main";
 
 my $plugin_rate_filename = "$SPOOLDIR/plugin_rates";
@@ -93,6 +95,7 @@ my @plugins;
 		Proto	=> 'tcp'
 	) || die "Error creating socket: $!"; 
 
+	local $0 = "munin-asyncd [$metahostname] [list]";
 	print $sock "cap multigraph\n";
 	print $sock "list\n";
 	<$sock>; # Read the first header comment line
@@ -153,7 +156,7 @@ MAIN: while(1) {
 
 		# Setting the command name for a useful top information
 		$process_name = "plugin:$plugin";
-		local $0 = "munin-asyncd [$process_name]";
+		local $0 = "munin-asyncd [$metahostname] [$process_name]";
 		
 		fetch_data($plugin, $when, $sock);
 
