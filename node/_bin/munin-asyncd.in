@@ -123,6 +123,7 @@ my $last_cleanup=0;
 MAIN: while(1) { 
 	my $when = time;
 	my $when_next = $when + 3600; # wake up at least every hour
+	my $sock;
 	PLUGIN: foreach my $plugin (@plugins) {
 		# See if this plugin should be updated
 		my $plugin_rate = get_hash($plugin, $plugin_rate_filename) || 300;
@@ -141,16 +142,26 @@ MAIN: while(1) {
 			# parent, return directly
 			next PLUGIN;
 		}
+
+		unless ($sock) {
+			$sock = new IO::Socket::INET(
+				PeerAddr	=> "$host",
+				Proto	=> 'tcp'
+			) || die "Error creating socket: $!";
+			<$sock>; # skip header
+		}
+
 		# Setting the command name for a useful top information
 		$process_name = "plugin:$plugin";
 		local $0 = "munin-asyncd [$process_name]";
 		
-		fetch_data($plugin, $when);
-	
+		fetch_data($plugin, $when, $sock);
 
 		# We end here if we forked
 		last MAIN if $do_fork;
 	}
+
+	print $sock "quit\n" if $sock;
 
 	$spoolwriter->set_metadata("lastruntime", $when);
 
@@ -170,12 +181,7 @@ sub fetch_data
 {
 	my $plugin = shift;
 	my $when = shift;
-
-		my $sock = new IO::Socket::INET( 
-			PeerAddr	=> "$host", 
-			Proto	=> 'tcp'
-		) || die "Error creating socket: $!"; 
-		<$sock>; # skip header
+	my $sock = shift;
 
 		print STDERR "[$$][$process_name] asking for config\n" if $verbose;
 
