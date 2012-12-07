@@ -25,24 +25,23 @@ The following components are part of munin-master:
      <munin-node>`, which is then stored in RRD files.
 
    * :ref:`munin-graph` is run by :ref:`munin-cron`. It generates
-     graphs in PNG format from the RRD files. See also
-     :ref:`munin-cgi-graph`.
+     metadata used by :ref:`munin-cgi-graph`. If graph_strategy is set
+     to "cron", it generates static graphs in PNG format.
 
    * :ref:`munin-limits` is run by :ref:`munin-cron`. It notifies any
      configured contacts if a value moves between "ok", "warn" or
      "crit". Munin is commonly used in combination with Nagios, which
      is then configured as a contact.
 
-   * :ref:`munin-html` is run by :ref:`munin-cron`. It generates HTML
-     pages. See also :ref:`munin-cgi-html`.
+   * :ref:`munin-html` is run by :ref:`munin-cron`. It generates
+     metadata used by :ref:`munin-cgi-html`. If html_strategy is set
+     to "cron", it also generates static HTML pages.
 
-   * :ref:`munin-cgi-graph` is run by a web server. If graph_strategy
-     is set to "cgi", munin-cron will not run munin-graph, and assumes
-     that the web server runs :ref:`munin-cgi-graph` instead.
+   * :ref:`munin-cgi-graph` is run by a web server, and generates
+     graphs on request.
 
-   * :ref:`munin-cgi-html` is run by a web server. If html_strategy is
-     set to "cgi", munin-cron will not run munin-html, and assumes
-     that the web server runs :ref:`munin-cgi-html` instead.
+   * :ref:`munin-cgi-html` is run by a web server, and generates HTML
+     pages on request.
 
 Configuration
 =============
