@@ -1,3 +1,12 @@
+munin (2.0.9-1) experimental; urgency=low
+
+  * UNRELEASED
+  * New upstream bugfix release(s).
+    - Drop all debian/patches/ (except 100-DejaVu-Fonts-Path.patch) as they
+      were included in 2.0.7-2.0.9.
+
+ -- Holger Levsen <holger@debian.org>  Tue, 11 Dec 2012 18:33:18 +0100
+
 munin (2.0.6-2) UNRELEASED; urgency=low
 
   * munin-node.postinst: delete /var/lib/munin(-node)/plugin-state recursively
