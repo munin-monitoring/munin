@@ -63,14 +63,11 @@ sub main {
     parse_args();
     exit_if_run_by_super_user();
 
-    $config = munin_readconfig($conffile);
+    $config = munin_readconfig_base($conffile);
 
     logger_open($config->{'logdir'});
 
-
-    if (-e "$config->{dbdir}/datafile") {
-        $oldconfig= &munin_readconfig("$config->{dbdir}/datafile", 1, 1);
-    }
+    $oldconfig = &munin_readconfig_part('datafile', 1);
     
     # CLI parameters override the configuration file.
     if (defined $cli_timeout) {
@@ -110,10 +107,11 @@ sub main {
 
     unlink ("$config->{rundir}/$serversocket");
 
-    {
-        my $overwrite = munin_readconfig($conffile);
-        $config = munin_overwrite($config, $overwrite);
-    }
+# XXX: WTF is that ?
+#    {
+#        my $overwrite = munin_readconfig($conffile);
+#        $config = munin_overwrite($config, $overwrite);
+#    }
 
     compare_configs ($oldconfig, $config);
 

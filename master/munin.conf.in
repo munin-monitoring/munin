@@ -110,6 +110,10 @@ includedir @@CONFDIR@@/munin-conf.d
 # [fay.foo.com]
 #       address fay
 #
+## IPv6 host. note that the ip adress has to be in brackets
+# [ip6.foo.com]
+#       address [2001::1234:1]
+#
 ## Then we want totals...
 # [foo.com;Totals] #Force it into the "foo.com"-domain...
 #       update no   # Turn off data-fetching for this "host".

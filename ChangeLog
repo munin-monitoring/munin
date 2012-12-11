@@ -1,5 +1,164 @@
 -*- text -*-
 
+munin-2.0.9, 2012-12-05
+
+-------
+Summary
+-------
+
+Small bugfix-only release.
+
+- Many minor fixes
+
+------------------
+Detailed Changelog
+------------------
+
+Daniel Black:
+      node: allow ipv6 localhost in sample conf
+
+Diego Elio Petteno:
+      common: fix TLS options settings.
+      master: fix config test, add missing configuration options and update defaults.
+      master: fix and rename htmlold test to test HTMLConfig instead.
+      master: remove test for function that has been deleted.
+      master: check for timeout before checking for failure to connect.
+      master: remove one more test that requires a big rewrite to make sense.
+      master: fix tests so that they actually pass for master.
+      node: fix export_service_environment test.
+      node: add a temporary default spooldir to the proxyspooler test.
+      master: make sure to always consider limits, for when always_send is configured.
+      master: fix test when executing from a release tarball.
+
+Magnus Hagander:
+      Fix PostgreSQL plugins to work with development versions
+
+Marc Schutz:
+      New regexes for virus/spam count in amavis plugin.
+
+Sebastian Noack:
+      Fixed broken exit codes in ejabberd plugin.
+      Fixed order of arguments for 'ejabberdctl status-num-host' in ejabberd plugin.
+
+Steve Schnepp:
+      master: remove date manip warning in cgi graph
+      contrib: rename the net::server patch
+      master: connect to AAAA and A address
+
+Stig Sandbeck Mathisen:
+      Remove documentation disclaimer
+
+intrigeri:
+      plugins: do not use the "read w/o variable" bashism.
+
+
+munin-2.0.8, 2012-11-08
+
+-------
+Summary
+-------
+
+Small bugfix-only release.
+
+- Many minor fixes
+
+------------------
+Detailed Changelog
+------------------
+
+Andrea Piccinelli:
+      http_loadtime: fixed stderr redirection with 'time'
+
+Anton Tolchanov:
+      Fixed parsing of first element in custom graph_data_size
+
+Diego Elio Petteno:
+      master: on limit checks, if one of the two values is 'U', make the final value 'U' as well.
+      master: on limits, be more careful on checking what always_send is set to.
+      master: munin-limits: remove --force parameter
+      master: munin-limits: open the data file based on hostname, not alias.
+      plugins: Remove all '%' characters from plugins' graph_titles.
+      master: factor out the SSH command, and set parameters to disable interactions
+      master: if there is no path present, don't send a remote command.
+      master: ignore all the lines before the greeting.
+
+Juho Juopperi:
+      Fix multiping to show packetloss correctly
+
+Kjetil Torgrim Homme:
+      fix problem with SIGHUP causing exec of unqualified script name
+
+Marc Schutz:
+      Update licenses to current address of FSF.
+
+Steve Schnepp:
+      master: fixed graph_data_size custom parsing
+      getversion: update to use the debian-auto one.
+      master: add an ip6 example in the sample munin.conf
+      gitignore: ignoring output dir sandbox/
+
+Stig Sandbeck Mathisen:
+      Update apache httpd configuration example for 2.0.7
+
+
+munin-2.0.7, 2012-10-03
+
+-------
+Summary
+-------
+
+- Fixed datafiles handling from munin-update to others (cgi & cron).
+  We only use storable datafiles now as it is less error prone.
+
+- Many other minor fixes
+
+Closes: #1259, D#688528, D#497400, D#687495, D#686982, #1251, #1251, #1102, D#628533, #1102, D#628533, D#681938
+
+------------------
+Detailed Changelog
+------------------
+
+Adrien "ze" Urban:
+      master: fix new config reading for m-u 1st run
+      master: fixed datafiles handling
+
+Diego Elio Petteno:
+      docs: fix link names
+      apc_nis: create only one socket before going for config.
+      apc_nis: improve configuration.
+      plugins: replace deprecated graph_vtitle with graph_vlabel.
+      ejabberd_: allow overriding the ejabberd.cfg path and add /etc/jabber to search paths.
+      fw_conntrack: count both ipv4 and ipv6 connections together
+
+Jon Whiteman:
+      plugins: fix plugin vserver_cpu_ for 9+ cpu cores
+
+Kazunori Kojima:
+      Makefile.config: fix bad interpreter
+
+Kenyon Ralph:
+      node.d.linux/interrupts: encode as UTF-8
+
+Steve Schnepp:
+      resources: remove osoblete apache-cgi.conf sample
+      node: remove File::Path as it's not needed
+      redhat: move the redhat stuff outside main repo
+      master: fix too many warnings in munin-graph.log
+      master: remove useless log lines, send to debug
+      plugins: fix import in ipmi_sensor_
+      master: fix typo in Utils.pm
+      plugins: fix apt_all plugin statedir for cron
+      asyncd: fix --spooldir help
+      master: split rrd updates when using rrdcached
+      plugins: use Storable::nstore() instead of store()
+      plugins: ignore wrong state files.
+
+Thorsten Gunkel:
+      plugins: auto detect SATA in hddtemp_smartctl
+
+Vincent Danjean:
+      plugins: add by-id to smart_
+
 munin-2.0.6, 2012-08-31
 
 -------

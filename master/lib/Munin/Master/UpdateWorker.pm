@@ -773,9 +773,15 @@ sub parse_custom_resolution {
 
         my @computer_format;
 
-	# First element is always the full resoltion, converting to computer format
-	my $full_res = shift @elems; 
-	unshift @elems, "$update_rate for $full_res";
+	# First element is always the full resolution
+	my $full_res = shift @elems;
+	if ($full_res =~ m/^\d+$/) {
+		# Only numeric, computer format
+		unshift @elems, "1 $full_res";
+	} else {
+		# Human readable. Adding $update_rate in front of
+		unshift @elems, "$update_rate for $full_res";
+	}
 
         foreach my $elem (@elems) {
                 if ($elem =~ m/(\d+) (\d+)/) {
@@ -893,7 +899,24 @@ sub _update_rrd_file {
     }
 
     DEBUG "[DEBUG] Updating $rrd_file with @update_rrd_data";
-    RRDs::update($rrd_file, @update_rrd_data);
+    if ($ENV{RRDCACHED_ADDRESS} && (scalar @update_rrd_data > 32) ) {
+        # RRDCACHED only takes about 4K worth of commands. If the commands is
+        # too large, we have to break it in smaller calls.
+        #
+        # Note that 32 is just an arbitrary choosed number. It might be tweaked.
+        #
+        # For simplicity we only call it with 1 update each time, as RRDCACHED
+        # will buffer for us as suggested on the rrd mailing-list.
+        # https://lists.oetiker.ch/pipermail/rrd-users/2011-October/018196.html
+        for my $update_rrd_data (@update_rrd_data) {
+            RRDs::update($rrd_file, $update_rrd_data);
+            # Break on error.
+            last if RRDs::error;
+        }
+    } else {
+        RRDs::update($rrd_file, @update_rrd_data);
+    }
+
     if (my $ERROR = RRDs::error) {
         #confess Dumper @_;
         ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
@@ -957,8 +980,8 @@ Copyright (C) 2002-2009  Jimmy Olsen, et al.
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  You should have received a copy of the GNU General Public License along
+  with this program; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 

@@ -253,14 +253,14 @@ sub _do_work {
             $res = $worker->do_work();
 	    return 1;
         });
-	if (!defined($res)) {
-	    ERROR "[ERROR] $worker failed to connect to node";
-	    $retval = $E_CONNECT;
-	} elsif ($timed_out) {
+	if ($timed_out) {
             ERROR "[ERROR] $worker timed out";
             $res = undef;
             $retval = $E_TIMED_OUT;
-        }
+        } elsif (!defined($res)) {
+	    ERROR "[ERROR] $worker failed to connect to node";
+	    $retval = $E_CONNECT;
+	}
     };
     if ($EVAL_ERROR) {
         ERROR "[ERROR] $worker died with '$EVAL_ERROR'";

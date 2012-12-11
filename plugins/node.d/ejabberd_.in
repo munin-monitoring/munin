@@ -63,6 +63,15 @@ graph.
 
 =back
 
+If your ejabberd.cfg cannot be found you can se it this way
+
+=over 4
+
+  [ejabberd_*]
+    env.configfile /etc/ejabberd/ejabberd.cfg
+
+=back
+
 =head1 MAGIC MARKERS
 
   #%# family=contrib
@@ -87,9 +96,6 @@ data series names.  Munin works around this limit and the restriction
 does not apply.
 
 There is no way to configure the path to ejabberdctl.
-
-There is no way to configure the "/etc" path.  /etc/ejabberd and
-/usr/local/ejabberd/etc is hardcoded in the script.
 
 =cut
 
@@ -118,14 +124,16 @@ fi
 
 # trying to autodetect running vhosts.
 if [ -z "$vhosts" ]; then
-    for CFGPATH in /etc/ejabberd /usr/local/ejabberd/etc; do
-        if [ -f "$CFGPATH/ejabberd.cfg" ]; then
-            EJCFG=$CFGPATH/ejabberd.cfg;
-        fi
-    done
-    if [ -z "$EJCFG" ]; then
+    if [ -z "$configfile" ]; then
+	for CFGPATH in /etc/ejabberd /etc/ejabber /usr/local/ejabberd/etc; do
+            if [ -f "$CFGPATH/ejabberd.cfg" ]; then
+		configfile=$CFGPATH/ejabberd.cfg;
+            fi
+	done
+    fi
+    if [ -z "$configfile" ]; then
         echo "Unable to find ejabberd.cfg. Exiting." >&2
-        exit -1
+        exit 1
     fi
     # you have to have all of vhosts defined on one line in $EJCFG or in plugins-conf.d/munin-node config file
     vhosts=$(awk '/^\s*{hosts/ {gsub( /\{\s?hosts\s?,|[\",\[\]]|\}\s?.|localhost/ ,""); print;}' $EJCFG);
@@ -139,7 +147,7 @@ EJPID=$(ps -ef | awk '/ejabberd/ && /\/bin\/beam(.smp)?/ {print $2}')
 if [ -z "$vhosts" ]; then
     echo "No vhosts to sample." >&2
     echo "Please set env.vhosts in plugins-conf.d/munin-node." >&2
-    exit -1
+    exit 1
 fi
 
 MODE=`basename $0 | sed 's/^ejabberd_//g'`
@@ -149,7 +157,7 @@ if ! [ "$MODE" = "connections" -o "$MODE" = "users" \
   -o "$MODE" = "memory" -o "$MODE" = "threads" \
   -o "$MODE" = "usersindays" -o "$MODE" = "uptime" ]; then
     echo "ERROR: Unknown mode \"$MODE\". Exiting." >&2
-    exit -1
+    exit 1
 fi
 
 if [ "$1" = "config" ]; then
@@ -259,7 +267,7 @@ if [ "$MODE" = "statuses" ]; then
    for host in $vhosts; do
         formathost=$(echo $host | tr '.' '_' | tr '-' '_')
                 for status in $statuses; do
-                        num=$($EJCTL status-num-host $status $host)
+                        num=$($EJCTL status-num-host $host $status)
                         if [ "$?" != 0 ]; then
                                 num="U"
                         fi

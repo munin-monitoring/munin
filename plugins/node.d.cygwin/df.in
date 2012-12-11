@@ -66,7 +66,7 @@ if [ "$1" = "autoconf" ]; then
 fi
 
 if [ "$1" = "config" ]; then
-    echo 'graph_title Filesystem usage (in %)'
+    echo 'graph_title Disk usage in percent'
     echo 'graph_args --upper-limit 100 -l 0'
     echo 'graph_vlabel %'
     echo 'graph_scale no'

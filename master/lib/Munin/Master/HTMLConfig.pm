@@ -27,20 +27,40 @@ my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 
 my $config;
 my $limits;
+my $cache;
 
 my $categories;
 my $problems;
 
 sub generate_config {
-	$config = shift;
-	$categories = {};
-	$problems = {"criticals" => [], "warnings" => [], "unknowns" => []};
-	$limits = munin_readconfig($config->{dbdir} . "/limits",1,1); #TODO: candidate for caching
+    my $use_cache = shift;
+    if ($use_cache) {
+	# if there is some cache, use it (for cgi)
+    	my $newcache = munin_readconfig_part('htmlconf', 1);
+	if (defined $newcache) {
+		$cache = $newcache;
+		return $cache;
+	}
+    }
+    $categories = {};
+    $problems = {"criticals" => [], "warnings" => [], "unknowns" => []};
+    my $rev = munin_configpart_revision();
 
+    $config = munin_readconfig_part('datafile', 0);
+    if ($rev != munin_configpart_revision()) {
+	# datafile got updated
 	initiate_cgiurl_graph();
 	# convert config for html generation: reorder nodes to their rightful group
 	node_reorder($config);
-	return get_group_tree($config);
+    }
+
+    $limits = munin_readconfig_part("limits");
+    # if only limits changed, still update our cache
+    if ($rev != munin_configpart_revision()) {
+	$cache = get_group_tree($config);
+    }
+
+    return $cache;
 }
 
 sub node_reorder {
@@ -462,7 +482,7 @@ sub generate_service_templates {
 	    }
     }
 
-    if ($config->{'graph_strategy'} eq "cgi") {
+    if (munin_get($config, "graph_strategy", "cron") eq "cgi") {
 	map { $srv{$_} = $config->{'cgiurl_graph'} . "/" . $imgs{$_} } keys %imgs;
     } else {
 	map { $srv{$_} = $root_path . "/" . $imgs{$_} } keys %imgs;
@@ -489,7 +509,7 @@ sub generate_service_templates {
 	for my $scale (@times) {
         # Don't try to find the size if cgi is enabled, 
         # otherwise old data might pollute  
-        next if ($config->{'graph_strategy'} eq "cgi");
+        next if (munin_get($config, "graph_strategy", "cron") eq "cgi");
         if (my ($w, $h)
             = get_png_size(munin_get_picture_filename($service, $scale))) {
             $srv{"img" . $scale . "width"}  = $w;
@@ -501,7 +521,7 @@ sub generate_service_templates {
         $srv{imgweeksum} = "$srv{node}-week-sum.png";
         $srv{imgyearsum} = "$srv{node}-year-sum.png";
         for my $scale (["week", "year"]) {
-            next if ($config->{'graph_strategy'} eq "cgi");
+            next if (munin_get($config, "graph_strategy", "cron") eq "cgi");
             if (my ($w, $h)
                 = get_png_size(munin_get_picture_filename($service, $scale, 1)))
             {

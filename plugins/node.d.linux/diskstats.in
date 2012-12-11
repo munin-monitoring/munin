@@ -44,7 +44,12 @@ if ( defined $ARGV[0] && $ARGV[0] eq 'config' ) {
 }
 
 # Restore data from previous run
-my ( $prev_time, %prev_diskstats ) = choose_old_state();
+my ( $prev_time, %prev_diskstats );
+eval {
+	# Using eval, if it breaks while retreive, $R is still undef.
+	# No need to unlink() it, since it will be overriden anyway.
+	( $prev_time, %prev_diskstats ) = choose_old_state();
+};
 
 # Persist state from current run
 add_new_state( time(), %cur_diskstats );

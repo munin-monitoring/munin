@@ -299,7 +299,9 @@ sub graph_startup {
     # we either need to die or restart ourselves when this
     # happens.
     if (!defined($config)) {
-	$config = &munin_config($conffile);
+	munin_readconfig_base($conffile);
+	# XXX: check if it needs datafile at that point
+	$config = munin_readconfig_part('datafile', 0);
     }
 
     my $palette = &munin_get($config, "palette", "default");
@@ -353,7 +355,7 @@ sub graph_main {
 
     # The loaded $config is stale within 5 minutes.
     # So, we need to reread it when this happens.
-    $config = munin_refreshconfig($config);
+    $config = munin_readconfig_part('datafile');
    
     # Reset an eventual custom size
     $size_x 	    = undef;
@@ -1348,7 +1350,7 @@ sub process_service {
     for my $time (keys %times) {
         next unless ($draw{$time});
         my $picfilename = get_picture_filename($service, $time);
-	INFO "[INFO] Looking into drawing $picfilename";
+	DEBUG "[DEBUG] Looking into drawing $picfilename";
         (my $picdirname = $picfilename) =~ s/\/[^\/]+$//;
 
         DEBUG "[DEBUG] Picture filename: $picfilename";

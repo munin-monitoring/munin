@@ -155,8 +155,10 @@ $ENV{MUNIN_MASTER_IP} = '';
 
 ### export_service_environment
 {
-	Munin::Node::Service->export_service_environment('test');
-	is($ENV{test_environment_variable}, 'fnord', 'Service-specific environment is exported');
+  my $services = Munin::Node::Service->new(defuser => $UID);
+
+  $services->export_service_environment('test');
+  is($ENV{test_environment_variable}, 'fnord', 'Service-specific environment is exported');
 }
 
 

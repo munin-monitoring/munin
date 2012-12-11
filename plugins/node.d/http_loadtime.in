@@ -67,7 +67,7 @@ TMPDIR=`mktemp -d` || exit 1
 trap "rm -rf $TMPDIR" EXIT
 
 cd $TMPDIR || exit 1
-loadtime=$(time -p wget -p --no-cache --delete-after $target -q 2>&1 | awk '/^real / { print $2 }')
+loadtime=$((time -p wget -p --no-cache --delete-after $target -q) 2>&1 | awk '/^real / { print $2 }')
 cd ..
 
 echo "loadtime.value $loadtime"

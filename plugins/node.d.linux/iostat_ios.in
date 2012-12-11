@@ -59,7 +59,7 @@ use strict;
 use warnings;
 
 use IO::File;
-use Storable qw(store retrieve);
+use Storable qw(nstore retrieve);
 use Munin::Plugin;
 
 use constant STATEFILE => "$ENV{MUNIN_PLUGSTATE}/iostat-ios.state";
@@ -206,14 +206,18 @@ sub cmp_io {
 
 sub store_state {
     my ($R) = @_;
-    store($R, STATEFILE);
+    nstore($R, STATEFILE);
 }
 
 
 sub get_state {
     my ($R);
     return(undef) unless ( -r STATEFILE);
-    $R = retrieve( STATEFILE );
+    eval {
+	# Using eval, if it breaks while retreive, $R is still undef.
+	# No need to unlink() it, since it will be overriden anyway.
+	$R = retrieve( STATEFILE );
+    };
     return($R);
 }
 

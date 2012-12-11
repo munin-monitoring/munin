@@ -84,7 +84,7 @@ foreach(@bdf) {
 my $maxlabel = 20;
 
 if(defined($ARGV[0]) and $ARGV[0] eq "config") {
-    print "graph_title Inode usage (in %)\n";
+    print "graph_title Inode usage in percent\n";
     print "graph_args --upper-limit 100 -l 0\n";
     print "graph_vlabel %\n";
     print "graph_category disk\n";

@@ -25,7 +25,7 @@ my @input = split("\n",<DATA>);
 BEGIN { *CORE::GLOBAL::time = sub { 1234567890 }; }
 my $time = time;
 
-my %answer = $node->parse_service_data("multigraph_tester", @input);
+my %answer = $node->parse_service_data("multigraph_tester", \@input);
 
 
 # Output captured from Data::Dumper

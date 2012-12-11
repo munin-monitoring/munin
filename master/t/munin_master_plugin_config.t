@@ -20,7 +20,7 @@ my @input = split("\n",<DATA>);
 
 # print "Input: ",@input,"\n";
 
-my %answer = $node->parse_service_config("Test",@input);
+my %answer = $node->parse_service_config("Test", \@input);
 
 =comment
 

@@ -53,10 +53,9 @@ WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
-USA.
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 =end comment
 
@@ -244,11 +243,11 @@ for j in $CPUS ; do
 			NAME=`echo $LABEL | cut -d. -f1 |  tr '-' '_'`
 			echo -n "${NAME}_$j.value "
 			if [ "$MODE" == "cpu" ] ; then
-				USERCPU=`cat /proc/virtual/$i/sched |grep "cpu $j"| cut -d' ' -f3`
-				SYSCPU=`cat /proc/virtual/$i/sched |grep "cpu $j"| cut -d' ' -f4`
+				USERCPU=`cat /proc/virtual/$i/sched |grep "cpu $j:"| cut -d' ' -f3`
+				SYSCPU=`cat /proc/virtual/$i/sched |grep "cpu $j:"| cut -d' ' -f4`
 	 			echo $[$USERCPU + $SYSCPU]
 			else
-				cat /proc/virtual/$i/sched |grep "cpu $j"| cut -d' ' -f5
+				cat /proc/virtual/$i/sched |grep "cpu $j:"| cut -d' ' -f5
 			fi
 		fi	
 	done
