@@ -96,9 +96,9 @@ Description: network-wide graphing framework (java plugins for node)
 
 Package: munin
 Architecture: all
-Depends: ${perl:Depends}, ${misc:Depends}, perl-modules | libparse-recdescent-perl, librrds-perl (>= 1.2), libhtml-template-perl, libdigest-md5-perl, libtime-hires-perl, libstorable-perl, rrdtool, adduser, liblog-log4perl-perl (>= 1.18), ttf-dejavu, munin-common (>= ${binary:Version}), cron, libdate-manip-perl, libcgi-fast-perl, libfile-copy-recursive-perl, liburi-perl, libio-socket-inet6-perl
+Depends: ${perl:Depends}, ${misc:Depends}, perl-modules | libparse-recdescent-perl, librrds-perl (>= 1.2), libhtml-template-perl, libdigest-md5-perl, libtime-hires-perl, libstorable-perl, rrdtool, adduser, liblog-log4perl-perl (>= 1.18), ttf-dejavu, munin-common (>= ${binary:Version}), cron, libdate-manip-perl, libfile-copy-recursive-perl, liburi-perl, libio-socket-inet6-perl
 Recommends: munin-node, munin-doc
-Suggests: www-browser, httpd, libnet-ssleay-perl
+Suggests: www-browser, httpd, libnet-ssleay-perl, libapache2-mod-fcgid
 Description: network-wide graphing framework (grapher/gatherer)
  Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still
