@@ -162,6 +162,9 @@ MAIN: while(1) {
 			<$sock>; # skip header
 		}
 
+		# $sock is still not open. moving to next plugin to try again
+		next unless $sock;
+
 		# Setting the command name for a useful top information
 		$process_name = "plugin:$plugin";
 		local $0 = "munin-asyncd [$metahostname] [$process_name]";
