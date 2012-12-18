@@ -16,13 +16,24 @@
 # If we're still looking for a version, use "unknown".
 
 current_git_branch() {
-    git branch | awk '$1 == "*" {print $2}'
+    # Handle this too:
+
+    # git checkout 2.0.9
+    # git branch
+    # * (no branch)
+    #   devel
+
+    GB="$(git branch | awk '$1 == "*" {print $2}')"
+    case $GB in
+	"(no" ) echo;;
+	*     ) echo $GB;;
+    esac
 }
 
 generate_version_string() {
     branch="$(current_git_branch)"
     case "${branch}" in
-        master)
+        ""|master)
             git describe
             ;;
         *)
