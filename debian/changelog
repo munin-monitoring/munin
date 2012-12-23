@@ -42,6 +42,8 @@ munin (2.0.6-2) UNRELEASED; urgency=low
     debian/patches.
   * Drop 101-suppress-occasional-unknown-states-to-avoid-alerts.patch which
     is included since munin 1.4.4.
+  * Drop 100-DejaVu-Fonts-Path.patch since it only affects a codepath used
+    with rrdtool 1.2.
 
  -- Holger Levsen <holger@debian.org>  Sat, 15 Sep 2012 14:02:44 +0200
 
