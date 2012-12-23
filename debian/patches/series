@@ -1,6 +1,5 @@
 100-DejaVu-Fonts-Path.patch
 237-hddtemp_smartctl-sata-detect.patch
-240-Do-not-use-the-read-without-variable-bashism.patch
 241-master-connect-to-AAAA-and-A-address.patch
 242-Fix-wrong-assumption-about-Net-SSLeay-CTX_set_option.patch
 243-http_loadtime-fixed-stderr-redirection-with-time.patch
