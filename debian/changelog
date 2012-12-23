@@ -1,3 +1,15 @@
+munin (2.0.9-2) experimental; urgency=low
+
+  * Include the changes from 2.0.6-2 as actually uploaded to sid - and not as
+    proposed in #694790.
+  * For 2.0.9-2 this effectly means stop using quilt (all patches have been
+    removed anyway, see 2.0.6-2 changelog) and a different (=the actual)
+    debian/changelog entry for 2.0.6-2. So this upload is basically a no-op.
+  * Which actually means that 2.0.9-2 equals 2.0.9 plus 099cc00f, which was
+    added in 2.0.6-2.
+
+ -- Holger Levsen <holger@debian.org>  Sun, 23 Dec 2012 17:19:55 +0100
+
 munin (2.0.9-1) experimental; urgency=low
 
   * New upstream bugfix release(s).
