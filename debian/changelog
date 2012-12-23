@@ -13,29 +13,22 @@ munin (2.0.6-2) UNRELEASED; urgency=low
   * Patch node/munin-node.conf.in to allow incoming IPv6 from localhost,
     mostly to document that IPv6 addresses are allowed as well. Thanks to
     Daniel Black. (Closes: #676798)
-    This is debian/patches/238-munin-node-ipv6allow.patch
   * HTMLConfig.pm: cherry-pick 789c59e from 2.0.7 to avoid (using the default
     configuration) /var/log/munin/munin-html.log being flooded with 106 lines
     of noisy warnings (out of 112 lines in total) every 5min. (Closes: #689291)
-    This is debian/patches/239-fix-too-many-warnings-in-munin-graph.log.patch
   * munin-doc: Break and replace munin-common << 2. (Closes: #694355)
   * selinux_avcstat plugin: Do not use the "read without variable" bashism,
     thanks to intrigeri for the patch. (Closes: #690711)
-    This is 240-Do-not-use-the-read-without-variable-bashism.patch
   * Have master support multi-homed nodes that only listen on IPv4.
     (Closes: #678662) This is upstream commit a18229c5, thanks to Michael
     Renner for the testing and the patch!
-    This is debian/patches/241-master-connect-to-AAAA-and-A-address.patch
   * Fix wrong assumption about Net::SSLeay::CTX_set_options return value.
     Thanks to intrigeri for this patch. (Closes: #675377)
-    This is 242-Fix-wrong-assumption-about-Net-SSLeay-CTX_set_option.patch
   * http_loadtime plugin: fix stderr redirection (which broke the plugin
     completely) (Closes: #691448)
-    This is 243-http_loadtime-fixed-stderr-redirection-with-time.patch
   * apt_all plugin: the apt_all plugin has its state updated in cron. There
     the ENV var MUNIN_PLUGSTATE doesn't exist, so we need to set a default.
     (Closes: #687495). This has been in included in 2.0.7 and is
-    debian/patches/244-fix-apt_all-plugin-statedir-for-cron.patch
   * munin-async.init: Run munin-async after munin-node has been started.
     (Closes: #691390) - Thanks to Daniel Black for this and the next two
     fixes:
@@ -43,8 +36,10 @@ munin (2.0.6-2) UNRELEASED; urgency=low
     from previous versions) and for new installs. (Closes: #691309)
   * munin-async.logrotate: correct location of munin-async logfiles. 
     (Closes: #691758)
-  * Use dh --with quilt so that the patches are actually applied. 
-    (Closes: #691327)
+  * Do not change debian/rules to "dh --with quilt" (so #691327 is still open
+    in sid), so the two remaining patches are not applied. All other patches
+    have been cherry-picked into the git branch debian and removed from
+    debian/patches.
   * Drop 101-suppress-occasional-unknown-states-to-avoid-alerts.patch which
     is included since munin 1.4.4.
 
