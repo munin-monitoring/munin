@@ -28,6 +28,10 @@ Server:
 - RRD with Perl support - this means that RRDs.pm must be available
   and "perl -MRRDs -e ':;'" must run without errors.
 
+  RRD version 1.4.6 or greater is recommended. Munin will work in
+  general with RRD 1.2, but you will experience performance issues,
+  and graphing will fail in certain corner cases.
+
 - Perl modules for server: 
    - Time::HiRes
    - Storable
