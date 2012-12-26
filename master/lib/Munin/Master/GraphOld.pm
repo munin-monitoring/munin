@@ -51,7 +51,12 @@ use Time::HiRes;
 use Text::ParseWords;
 
 # For UTF-8 handling (plugins are assumed to use Latin 1)
-if ($RRDs::VERSION >= 1.3) { use Encode; }
+if ($RRDs::VERSION >= 1.3) {
+    require Encode;
+    require Encode::Guess;
+    Encode->import;
+    Encode::Guess->import;
+}
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
@@ -1381,15 +1386,17 @@ sub process_service {
         # Make sure directory exists
         munin_mkdir_p($picdirname, oct(777));
 
-        # Since version 1.3 rrdtool uses libpango which needs its input
-        # as utf8 string. So we assume that every input is in latin1
-        # and decode it to perl's internal representation and then to utf8.
+        # Since version 1.3 rrdtool uses libpango which needs its
+        # input as utf8 string. We use Encoding::Guess to check if
+        # it's already utf8, if not then assume that it's in latin1
+        # and decode it to perl's internal representation and then to
+        # utf8.
 
         if ($RRDs::VERSION >= 1.3) {
             @complete = map {
                 my $str = $_;
-                $str = encode("utf8", (decode("latin1", $_)));
-                $str;
+                my $utf8 = guess_encoding($str, 'utf8');
+                ref $utf8 ? $str : encode('utf8', decode('latin1', $str));
             } @complete;
         }
 
