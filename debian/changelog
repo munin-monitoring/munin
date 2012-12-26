@@ -25,7 +25,7 @@ munin (2.0.9-1) experimental; urgency=low
   * Add libapache2-mod-fcgid to munin's suggests.
   * Support libapache2-mod-fcgid in /etc/munin/apache.conf out of the box
     (Closes: #695228), remove configuration for libapache2-mod-fastcgi as it's
-    non-free.
+    non-free. (Closes: #683112)
   * debian/rules: set MUNIN_VERSION correctly during build. (Closes: #694527)
 
  -- Holger Levsen <holger@debian.org>  Tue, 11 Dec 2012 22:33:55 +0100
