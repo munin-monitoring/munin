@@ -1,6 +1,8 @@
 munin (2.0.9-3) UNRELEASED; urgency=low
 
-  * debian/plugin.conf: remove exclude example from [df*]. (Closes: #694531)
+  * debian/plugin.conf: 
+    - remove exclude example from [df*]. (Closes: #694531)
+    - run sendmail_* plugins as smmta user. (Closes: #606465)
 
  -- Holger Levsen <holger@debian.org>  Mon, 24 Dec 2012 12:40:52 +0100
 
