@@ -9,7 +9,7 @@ asterix_channels - Plugin to monitor number of active channels
 
 The following configuration parameters are used by this plugin
 
- [asterisk_voicemail]
+ [asterisk_channels]
   env.host     - hostname to connect to
   env.port     - port number to connect to
   env.username - username used for authentication
@@ -20,7 +20,7 @@ defaults.
 
 =head2 DEFAULT CONFIGURATION
 
- [asterisk_voicemail]
+ [asterisk_channels]
   env.host 127.0.0.1
   env.port 5038
 
