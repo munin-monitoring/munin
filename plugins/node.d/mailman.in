@@ -8,7 +8,13 @@ management systems
 
 =head1 CONFIGURATION
 
-No configuration
+Configuration for this plugin depends on the mailman's settings on the
+system. Here are the defaults:
+
+[mailman]
+  env.logfile /var/log/mailman/post
+  env.libdir  /var/lib/mailman
+  env.lister  /usr/lib/mailman/bin/list_members
 
 =head1 AUTHOR
 
@@ -29,10 +35,10 @@ $pos = undef;
 $posts = 0;
 $members = 0;
 
-# System paths (as known to mailman-limacute
-$logfile = "/var/log/mailman/post";
-$libdir  = "/var/lib/mailman";
-$lister  = "/usr/lib/mailman/bin/list_members";
+# System paths
+$logfile = $ENV{'logfile'} || "/var/log/mailman/post";
+$libdir  = $ENV{'libdir'}  || "/var/lib/mailman";
+$lister  = $ENV{'lister'}  || "/usr/lib/mailman/bin/list_members";
 
 if (-f "$logfile.0")
 {
