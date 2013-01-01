@@ -151,6 +151,7 @@ my ($session, $error);
 
 # SNMP needed for both config and fetch.
 $session = Munin::Plugin::SNMP->session();
+$session->translate([-nosuchinstance => 0]);
 
 if ($ARGV[0] and $ARGV[0] eq "config") {
     my ($host,undef,$version) = Munin::Plugin::SNMP->config_session();
@@ -191,7 +192,8 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	$extrainfo .= " ".$textspeed if $textspeed;
     }
 
-    if (defined ($session->get_single($ifEntryIn64Octets))) {
+    if (defined ($session->get_single($ifEntryIn64Octets))
+       && $session->get_single($ifEntryIn64Octets) != '') {
 
 	# If we get an answer at the 64 bit OID then this switch
 	# supports the extended MIB
