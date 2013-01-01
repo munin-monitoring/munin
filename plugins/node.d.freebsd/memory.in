@@ -68,9 +68,12 @@ BUFFERS_COUNT=$(/sbin/sysctl -n vfs.bufspace)
 CACHE_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_cache_count)
 FREE_COUNT=$(/sbin/sysctl -n vm.stats.vm.v_free_count)
 
+# Buffers are also wired.
+WIRED_COUNT=$(($WIRED_COUNT*$PAGESIZE - $BUFFERS_COUNT))
+
 echo active.value $(($ACTIVE_COUNT*$PAGESIZE))
 echo inactive.value $(($INACTIVE_COUNT*$PAGESIZE))
-echo wired.value $(($WIRED_COUNT*$PAGESIZE))
+echo wired.value $(($WIRED_COUNT))
 echo buffers.value $(($BUFFERS_COUNT))
 echo cached.value $(($CACHE_COUNT*$PAGESIZE))
 echo free.value $(($FREE_COUNT*$PAGESIZE))
