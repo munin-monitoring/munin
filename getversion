@@ -8,7 +8,7 @@
 # * If we're inside a git tree:
 #   - For the "master" branch, use "git describe".
 #   - For "detached" branches (mostly for tag checkouts), also use "git describe".
-#   - For other branches, use a "$VERSION-$NBCOMMITS-$BRANCH-$DATE-$COMMIT" 
+#   - For other branches, use a "$VERSION-$NBCOMMITS-$BRANCH-$DATE-g$COMMIT"
 #     sortof version.
 #
 # * Try to make it up from the directory name (munin-2.0.1 -> 2.0.1)
@@ -38,7 +38,8 @@ generate_version_string() {
             ;;
         *)
             GIT_REVISION="$(git describe --long | sed 's/-g.*//')"
-            git log -n 1 --pretty="${GIT_REVISION}-${branch}-%ad-%h" --date=short
+            # As git describe, we also use the "-g" magic string to denote a git hash
+            git log -n 1 --pretty="${GIT_REVISION}-${branch}-%ad-g%h" --date=short
             ;;
     esac
 }
