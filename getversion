@@ -38,7 +38,7 @@ generate_version_string() {
             ;;
         *)
             GIT_REVISION="$(git describe --long | sed 's/-g.*//')"
-            git log -n 1 --pretty="${GIT_REVISION}-${branch}-%ad-%tc" --date=short
+            git log -n 1 --pretty="${GIT_REVISION}-${branch}-%ad-%h" --date=short
             ;;
     esac
 }
