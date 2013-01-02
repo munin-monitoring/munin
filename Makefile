@@ -37,6 +37,7 @@ PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
         test clean \
         clean-% test-% build-% install-% \
 	tags \
+	book \
 	infiles
 
 .SECONDARY: node/Build master/Build plugins/Build
@@ -430,3 +431,11 @@ test-%: %/Build
 
 clean-%: %/Build common/blib/lib/Munin/Common/Defaults.pm
 	cd $* && $(PERL) Build realclean
+
+######################################################################
+
+# This builds the Munin Documentation book (default as PDF)
+
+BOOK_TYPE ?= "latexpdf"
+book:
+	cd doc && make $(BOOK_TYPE)
