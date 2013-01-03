@@ -12,10 +12,6 @@ The following environment variables are used by this plugin
 
 =over 4
 
-=item timeout
-
-Connection timeout
-
 =item url
 
 Override default status-url
@@ -73,23 +69,20 @@ tomcat-users.xml example:
 =cut
 
 use strict;
+use Munin::Plugin::HTTP;
 
 my $ret = undef;
-
-if(!eval "require LWP::UserAgent;") {
-    $ret = "LWP::UserAgent not found";
-}
 
 if(!eval "require XML::Simple;") {
     $ret .= "XML::Simple not found";
 }
 
+my $UA       = Muning::Plugin::HTTP->new;
 my $URL      = exists $ENV{'url'}      ? $ENV{'url'}      : "http://%s:%s\@%s:%d/manager/status?XML=true";
 my $PORT     = exists $ENV{'port'}     ? $ENV{'port'}     : exists $ENV{'ports'} ? $ENV{'ports'} : 8080;
 my $HOST     = exists $ENV{'host'}     ? $ENV{'host'}     : "127.0.0.1";
 my $USER     = exists $ENV{'user'}     ? $ENV{'user'}     : "munin";
 my $PASSWORD = exists $ENV{'password'} ? $ENV{'password'} : "munin";
-my $TIMEOUT  = exists $ENV{'timeout'}  ? $ENV{'timeout'}  : 30;
 my $CONNECTOR= exists $ENV{'connector'}? $ENV{'connector'}: "http-".$PORT;
 
 my $url = sprintf $URL, $USER, $PASSWORD, $HOST, $PORT;
@@ -99,8 +92,7 @@ if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
 	print "no ($ret)\n";
 	exit 0;
     }
-    my $au = LWP::UserAgent->new(timeout => $TIMEOUT);
-    my $repsonse = $au->request(HTTP::Request->new('GET',$url));
+    my $repsonse = $UA->request(HTTP::Request->new('GET',$url));
     if($repsonse->is_success and $repsonse->content =~ /<status>.*<\/status>/im) {
 	print "yes\n";
 	exit 0;
@@ -122,9 +114,8 @@ if(exists $ARGV[0] and $ARGV[0] eq "config") {
     exit 0;
 }
 
-my $ua = LWP::UserAgent->new(timeout => $TIMEOUT);
 my $xs = new XML::Simple;
-my $response = $ua->request(HTTP::Request->new('GET',$url));
+my $response = $UA->request(HTTP::Request->new('GET',$url));
 my %options = ( KeyAttr => { connector => 'name' }, ForceArray => 1 );
 my $xml = $xs->XMLin($response->content, %options);
 
