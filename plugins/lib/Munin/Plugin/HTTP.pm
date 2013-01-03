@@ -39,6 +39,8 @@ interface, including some common system environment variables.
   env.http_timeout 25
   env.http_proxy http://mylocalproxy:3128/
   env.https_proxy http://mylocalproxy:3128/
+  env.http_username someuser
+  env.http_password somepassword
 
 =over
 
@@ -52,6 +54,15 @@ time for processing.
 The proxy server to use when making the request. The plugins based on
 this module will respect the system variables, as would tools like
 wget and curl.
+
+=item C<env.http_username>, C<env.http_password>
+
+The username and password to use for authentication. This will only be
+used if requested, for any realm that is requested. Basic auth is
+supported.
+
+Don't use this with HTTP proxies, put the passwords in the front of
+the url in the form of C<http://user:pass@proxy/> instead.
 
 =head1 REQUIREMENTS
 
@@ -90,4 +101,10 @@ sub new {
   $ua->env_proxy;
 
   return $ua;
+}
+
+sub get_basic_credentials {
+  my ($realm, $uri, $isproxy) = $_;
+
+  return $isproxy ? () : ($ENV{'http_username'}, $ENV{'http_password'});
 }
