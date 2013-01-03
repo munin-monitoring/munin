@@ -65,7 +65,9 @@ tags:
 
 ######################################################################
 
-install: install-master-prime install-common-prime install-node-prime install-plugins-prime $(JAVA_INSTALL) install-man install-async-prime
+install: install-master-prime install-minimal install-man
+
+install-minimal: install-common-prime install-node-prime install-plugins-prime $(JAVA_INSTALL) install-async-prime
 
 install-pre: Makefile Makefile.config
 	@$(CHECKUSER)
