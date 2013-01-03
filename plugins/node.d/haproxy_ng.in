@@ -35,38 +35,19 @@
 #
 #   [haproxy_backend]
 #   env.url http://backend.example.com/haproxy-status;csv;norefresh
-#   env.username monitor
-#   env.password somepasswordorother
+#   env.http_username monitor
+#   env.http_password somepasswordorother
 #
 # Magic markers:
 #%# family=contrib
 
-use Munin::Plugin;
+use Munin::Plugin::HTTP;
 
 need_multigraph();
 
-my $ret = undef;
-if (! eval "require LWP::UserAgent;")
-{
-    $ret = "LWP::UserAgent not found";
-}
-
 my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://localhost/haproxy-status;csv;norefresh";
 
-{
-    package MyLWP;
-    @ISA = qw(LWP::UserAgent);
-
-    sub new {
-        my $self = LWP::UserAgent::new(@_);
-        $self;
-    }
-    sub get_basic_credentials {
-        return ($ENV{"username"}, $ENV{"password"});
-    }
-}
-
-my $ua = MyLWP->new(timeout => 30);
+my $ua = Munin::Plugin::HTTP->new;
 
 my @types = qw(frontend backend server);
 my $url = $URL;

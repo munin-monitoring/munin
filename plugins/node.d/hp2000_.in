@@ -61,10 +61,9 @@
 # Magic markers:
 #%# family=contrib
 
-use LWP::UserAgent;
 use Digest::MD5 qw(md5_hex);
 use XML::LibXML;
-use Munin::Plugin;
+use Munin::Plugin::HTTP;
 
 need_multigraph();
 
@@ -462,7 +461,7 @@ my %aspects = (
 # Authenticate with the controller, get session key.
 my $md5_hash = md5_hex( $secret );
 
-$ua = LWP::UserAgent->new;
+$ua = Munin::Plugin::HTTP->new;
 $url = "http://$host/api/login/" . $md5_hash;
 $req = HTTP::Request->new(GET => $url);
 $res = $ua->request($req);
@@ -487,7 +486,7 @@ foreach my $prop ( @props ) {
 
 $url = "http://$host/api/show/$cmd";
 
-$ua = LWP::UserAgent->new;
+$ua = Munin::Plugin::HTTP->new;
 $req = HTTP::Request->new(GET => $url);
 $req->header('sessionKey' => $sessionKey );
 $req->header('dataType' => 'ipa' );

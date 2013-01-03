@@ -76,34 +76,17 @@ GPLv2
 
 use strict;
 use warnings;
-use Munin::Plugin;
+use Munin::Plugin::HTTP;
 
-my $ret = undef;
-if (! eval "require LWP::UserAgent;")
-{
-	$ret = "LWP::UserAgent not found";
-        if ( ! defined $ARGV[0] ) {
-                die $ret;
-        }
-}
-
+my $UA = Muning::Plugin::HTTP->new;
 my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://127.0.0.1:%d/server-status?auto";
 my @PORTS = exists $ENV{'ports'} ? split(' ', $ENV{'ports'}) : (80);
 
 if ( defined $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
-	if ($ret)
-	{
-		print "no ($ret)\n";
-		exit 0;
-	}
-	
-	my $ua = LWP::UserAgent->new(timeout => 30,
-			agent => sprintf("munin/%s (libwww-perl/%s)", $Munin::Common::Defaults::MUNIN_VERSION, $LWP::VERSION));
-
 	foreach my $port (@PORTS) {
 		my $url = sprintf $URL, $port;
-		my $response = $ua->request(HTTP::Request->new('GET',$url));
+		my $response = $UA->request(HTTP::Request->new('GET',$url));
                 if ($response->is_success) {
                         if ($response->content =~ /^Total Accesses:/im ){
                                 next;
@@ -144,12 +127,9 @@ if ( defined $ARGV[0] and $ARGV[0] eq "config" )
 	exit 0;
 }
 
-my $ua = LWP::UserAgent->new(timeout => 30,
-		agent => sprintf("munin/%s (libwww-perl/%s)", $Munin::Common::Defaults::MUNIN_VERSION, $LWP::VERSION));
-
 foreach my $port (@PORTS) {
 	my $url = sprintf $URL, $port;
-	my $response = $ua->request(HTTP::Request->new('GET',$url));
+	my $response = $UA->request(HTTP::Request->new('GET',$url));
 	if ($response->content =~ /^Total kBytes:\s+(.+)$/im) {
 		print "volume$port.value ", int($1*1024), "\n";
 	} else {

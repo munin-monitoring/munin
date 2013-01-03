@@ -52,19 +52,13 @@ GPLv2
 
 =cut
 
-my $ret = undef;
-if (! eval "require LWP::UserAgent;")
-{
-	$ret = "LWP::UserAgent not found";
-}
+use Munin::Plugin::HTTP;
 
+my $UA = Munin::Plugin::HTTP->new;
 my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://localhost/haproxy-status;csv;norefresh";
 
-my $ua = LWP::UserAgent->new(timeout => 30,
-		agent => sprintf("munin/%s (libwww-perl/%s)", $Munin::Common::Defaults::MUNIN_VERSION, $LWP::VERSION));
-
 my $url = $URL;
-my $response = $ua->request(HTTP::Request->new('GET',$url));
+my $response = $UA->request(HTTP::Request->new('GET',$url));
 my $content = $response->content;
 my %backends = ();
 
