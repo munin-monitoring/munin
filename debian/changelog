@@ -1,6 +1,6 @@
 munin (2.0.9-3) UNRELEASED; urgency=low
 
-  * debian/plugin.conf: 
+  * debian/plugin.conf:
     - remove exclude example from [df*]. (Closes: #694531)
     - run sendmail_* plugins as smmta user. (Closes: #606465)
 
@@ -28,12 +28,17 @@ munin (2.0.9-1) experimental; urgency=low
   * Support libapache2-mod-fcgid in /etc/munin/apache.conf out of the box
     (Closes: #695228), remove configuration for libapache2-mod-fastcgi as it's
     non-free. (Closes: #683112)
+
+ -- Holger Levsen <holger@debian.org>  Tue, 11 Dec 2012 22:33:55 +0100
+
+munin (2.0.6-3) unstable; urgency=low
+
   * debian/rules: set MUNIN_VERSION correctly during build. (Closes: #694527)
   * debian/munin-async.logrotate:
     - use adm group for created files.
     - use *0 as glob, not *.0 (Closes: #691758)
 
- -- Holger Levsen <holger@debian.org>  Tue, 11 Dec 2012 22:33:55 +0100
+ -- Holger Levsen <holger@debian.org>  Fri, 04 Jan 2013 15:14:09 +0100
 
 munin (2.0.6-2) unstable; urgency=low
 
