@@ -97,15 +97,20 @@ apache_install() {
 
 case "$1" in
 	configure)
-		add_munin_system_user
-		# this can go away after wheezy
+		if [ "$2" = 0 ] ; then
+			add_munin_system_user
+		fi
+		# after wheezy / squeeze-sloppy-backports this and fixoverrides() can be removed completly
 		if dpkg --compare-versions "$2" le "2.0~rc5-1" ; then
 			fixoverrides
 		fi
-		if dpkg --compare-versions "$2" le "2.0~rc6-2" || [ "$2" = 0 ] ; then
+		# after wheezy / squeeze-sloppy-backports just test for [ "$2" = 0 ]
+		if dpkg --compare-versions "$2" le "2.0~rc6-2" ; then
 			initperms
 		fi
-		apache_install
+		if [ "$2" = 0 ] ; then
+			apache_install
+		fi
 		;;
 	abort-upgrade|abort-deconfigure|abort-remove)
 		:

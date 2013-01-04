@@ -22,8 +22,8 @@ initperms() {
 case "$1" in
 	configure)
 		add_munin_async_user
-		# this can go away after wheezy
-		if dpkg --compare-versions "$2" le "2.0.6-1~" || [ "$2" = 0 ] ; then
+		# after wheezy / squeeze-sloppy-backports just test for [ "$2" = 0 ]
+		if dpkg --compare-versions "$2" le "2.0.6-1~" ; then
 			initperms
 		fi
 		;;

@@ -3,6 +3,11 @@ munin (2.0.9-3) UNRELEASED; urgency=low
   * debian/plugin.conf:
     - remove exclude example from [df*]. (Closes: #694531)
     - run sendmail_* plugins as smmta user. (Closes: #606465)
+  * debian/*.postinst:
+    - only (try to) create users on first install, not on every upgrade.
+    - only configure apache on first install.
+    - add better comments what legacy code to remove after
+    squeeze-sloppy-backports.
 
  -- Holger Levsen <holger@debian.org>  Mon, 24 Dec 2012 12:40:52 +0100
 
