@@ -188,7 +188,7 @@ regardless of server version. The other form is an array, looking like this:
     "8.1", "SELECT 'query for 8.1 or earlier',... FROM ..."
   ]
  ]
-This array is parsed from top to bottom, so the entires must be in order of
+This array is parsed from top to bottom, so the entries must be in order of
 version number. The *last* value found where the version specified is higher
 than or equal to the version of the server will be used (yes, it counts
 backwards).
