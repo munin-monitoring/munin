@@ -365,7 +365,7 @@ Deletes all configuration variables
 
  $config->reinitialize(\%variables);
 
-Deletes all configuration variables and reinitalizes the object with
+Deletes all configuration variables and reinitializes the object with
 values from \%variables.
 
 =item B<parse_config_from_file>

@@ -181,7 +181,7 @@ sub get_group_tree {
 
             push @{$cattrav->{lc munin_get($child, "graph_category", "other")}}, $childnode;
 
-		    # IFF this is a multigraph plugin there may be sub-graphs.
+		    # If this is a multigraph plugin there may be sub-graphs.
 		    push( @$groups, grep {defined $_} get_group_tree($child, $base.munin_get_node_name($child)."/"));
 
             $visible = 1;
