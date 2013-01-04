@@ -12,7 +12,7 @@ use Munin::Node::Config;
 use Munin::Common::Timeout;
 
 use POSIX ();
-use Sys::Hostname;
+use Net::Domain qw(hostfqdn);
 
 sub get_uid {
     my ($class, $user) = @_;
@@ -38,9 +38,7 @@ sub _get_xid {
 }
 
 sub get_fq_hostname { 
-    my $short = Sys::Hostname::hostname();
-
-    return (gethostbyname $short)[0] || $short || "unknown";
+    return hostfqdn || "unknown";
 }
 
 sub check_perms_if_paranoid
