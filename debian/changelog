@@ -1,11 +1,11 @@
-munin (2.0.6-3) UNRELEASD; urgency=low
+munin (2.0.6-3) unstable; urgency=low
 
   * debian/rules: set MUNIN_VERSION correctly during build. (Closes: #694527)
   * debian/munin-async.logrotate:
     - use adm group for created files.
     - use *0 as glob, not *.0 (Closes: #691758)
 
- -- Holger Levsen <holger@debian.org>  Wed, 26 Dec 2012 14:32:18 +0100
+ -- Holger Levsen <holger@debian.org>  Fri, 04 Jan 2013 15:14:09 +0100
 
 munin (2.0.6-2) unstable; urgency=low
 
