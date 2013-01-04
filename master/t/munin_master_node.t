@@ -55,12 +55,12 @@ sub setup {
 ### _extract_name_from_greeting
 {
     my $node = Munin::Master::Node->new();
-    is($node->_extract_name_from_greeting('# munin node at foo.example.com'),
-       'foo.example.com', 'Node name from new greeting');
-    is($node->_extract_name_from_greeting('# lrrd client at foo.example.com'),
-       'foo.example.com', 'Node name from old greeting');
-}
+    $node->_extract_name_from_greeting('# munin node at foo.example.com');
+    is($node->{node_name}, 'foo.example.com', 'Node name from new greeting');
 
+    $node->_extract_name_from_greeting('# lrrd client at foo.example.com');
+    is($node->{node_name}, 'foo.example.com', 'Node name from old greeting');
+}
 
 ### negotiate_capabilities
 {
@@ -86,8 +86,7 @@ sub setup {
 {
     my $node = setup();
     $node->mock('_node_read_single', sub {
-		  my @array = ('cap bar baz foo');
-		  return \@array;
+		  return ['cap bar baz foo'];
 		});
     my @res = $node->negotiate_capabilities();
 
@@ -112,8 +111,7 @@ sub setup {
 {
     my $node = setup();
     $node->mock('_node_read', sub {
-		  my @array = ('# timeout: bla bla bla');
-		  return \@array;
+		  return ['# timeout: bla bla bla'];
 		});
     throws_ok { $node->fetch_service_config('foo') }
         qr/Timeout error on node/,
@@ -122,14 +120,12 @@ sub setup {
 {
     my $node = setup();
     $node->mock('_node_read', sub {
-		  my @array = (
-			       '',
-			       '# bla bla bla',
-			       'foo bar',
-			       'zap gabonk',
-			       'baz.bar foo',
-			      );
-		  return \@array;
+		  return ['',
+			  '# bla bla bla',
+			  'foo bar',
+			  'zap gabonk',
+			  'baz.bar foo',
+			 ];
 		});
 
 #die Dumper { $node->fetch_service_config('fun') };
@@ -158,15 +154,13 @@ sub setup {
 {
     my $node = setup();
     $node->mock('_node_read', sub { 
-		  my @array = (
-			       '',
-			       '# bla bla bla',
-			       'foo bar',
-			       'zap gabonk',
-			       'baz.label foo',
-			       'zip.label bar',
-			      );
-		  return \@array;
+		  return ['',
+			  '# bla bla bla',
+			  'foo bar',
+			  'zap gabonk',
+			  'baz.label foo',
+			  'zip.label bar',
+			 ];
 		});
     my %res = $node->fetch_service_config('fun');
 
@@ -192,16 +186,14 @@ sub setup {
 {
     my $node = setup();
     $node->mock('_node_read', sub {
-		  my @array = (
-			       '',
-			       '# bla bla bla',
-			       'foo bar',
-			       'zap gabonk',
-			       'baz.label foo',
-			       'zip.label bar',
-			       'graph_order zip baz',
-			      );
-		  return \@array;
+		  return ['',
+			  '# bla bla bla',
+			  'foo bar',
+			  'zap gabonk',
+			  'baz.label foo',
+			  'zip.label bar',
+			  'graph_order zip baz',
+			  ];
 		});
     my %res = $node->fetch_service_config('fun');
     is_deeply(\%res, {
@@ -233,8 +225,7 @@ sub setup {
 {
     my $node = setup();
     $node->mock('_node_read', sub {
-		  my @array = ('# timeout: bla bla bla');
-		  return \@array;
+		  return ['# timeout: bla bla bla'];
 		});
 
     throws_ok { $node->fetch_service_data('foo') }
@@ -244,14 +235,12 @@ sub setup {
 {
     my $node = setup();
     $node->mock('_node_read', sub {
-		  my @array = (
-			       '',
-			       '# bla bla bla',
-			       'fun.value bar',
-			       'zap.value gabonk',
-			       'baz.value foo',
-			      );
-		  return \@array;
+		  return ['',
+			  '# bla bla bla',
+			  'fun.value bar',
+			  'zap.value gabonk',
+			  'baz.value foo',
+			 ];
 		});
 
     my $time = time;  # this will work, except when the clock ticks at the wrong time

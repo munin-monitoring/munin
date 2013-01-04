@@ -116,8 +116,6 @@ use Munin::Master::Group;
 use Munin::Master::Host;
 use Log::Log4perl qw( :easy );
 
-my $MAXINT = 2 ** 53;
-
 my %booleans = map {$_ => 1} qw(
     debug
     fork
@@ -143,7 +141,6 @@ my %booleans = map {$_ => 1} qw(
 		dbdir            => $Munin::Common::Defaults::MUNIN_DBDIR,
 		debug            => 0,
 		fork             => 1,
-		rrdcached_socket => "", # default is unused
 		graph_data_size  => 'normal',
 		groups           => {},
 		local_address    => 0,
