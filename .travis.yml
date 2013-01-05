@@ -8,7 +8,8 @@ branches:
   - master
   - devel
 install: "/bin/true"
-before_install:
+before_script:
+ - "sudo apt-get install librrds-perl"
  - "cpanm --notest File::Copy::Recursive"
  - "cpanm --notest File::Slurp"
  - "cpanm --notest HTML::Template"
@@ -25,4 +26,3 @@ before_install:
  - "cpanm --notest Test::MockModule"
  - "cpanm --notest Test::MockObject::Extends"
  - "cpanm --notest Time::HiRes"
- - "cpanm --notest RRDs"
