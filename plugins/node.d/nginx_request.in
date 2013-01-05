@@ -64,7 +64,7 @@ my $port = exists $ENV{'port'} ? $ENV{'port'} : "80";
 
 if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" )
 {
-	my $response = $UA->request(HTTP::Request->new('GET',$URL));
+	my $response = $UA->get($URL);
 
 	unless ($response->is_success and $response->content =~ /server/im)
 	{
@@ -93,7 +93,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" )
 	exit 0;
 }
 
-my $response = $UA->request(HTTP::Request->new('GET',$URL));
+my $response = $UA->get($URL);
 
 if ($response->content =~ /^\s+(\d+)\s+(\d+)\s+(\d+)/m) {
     print "request.value $3\n";
