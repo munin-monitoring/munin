@@ -88,14 +88,14 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	mkdir -p $(PERLLIB)/Munin/Master
 	mkdir -p $(HTMLDIR)
 	mkdir -p $(DBDIR)
-	mkdir -p $(DBDIR)/cgi-tmp
+	mkdir -p $(CGITMPDIR)
 	mkdir -p $(CGIDIR)
 
 	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR)
 	$(CHMOD) 0755 $(DBDIR)
 
-	$(CHOWN) $(CGIUSER) $(DBDIR)/cgi-tmp
-	$(CHMOD) 0755 $(DBDIR)/cgi-tmp
+	$(CHOWN) $(CGIUSER) $(CGITMPDIR)
+	$(CHMOD) 0755 $(CGITMPDIR)
 
 	for p in master/www/*.tmpl ;  do \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
@@ -281,6 +281,7 @@ common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm bu
                   s{(VERSION	\s+=\s).*}{\1q{$(VERSION)};}x;     \
                   s{(PLUGSTATE	\s+=\s).*}{\1q{$(PLUGSTATE)};}x;   \
                   s{(CGIDIR	\s+=\s).*}{\1q{$(CGIDIR)};}x;      \
+                  s{(CGITMPDIR	\s+=\s).*}{\1q{$(CGITMPDIR)};}x;   \
                   s{(USER	\s+=\s).*}{\1q{$(USER)};}x;        \
                   s{(GROUP	\s+=\s).*}{\1q{$(GROUP)};}x;       \
                   s{(PLUGINUSER	\s+=\s).*}{\1q{$(PLUGINUSER)};}x;  \

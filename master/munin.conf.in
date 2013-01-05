@@ -21,7 +21,7 @@
 # temporary cgi files are here. note that it has to be writable by 
 # the cgi user (usually nobody or httpd).
 #
-# cgitmpdir @@DBDIR@@/cgi-tmp
+# cgitmpdir @@CGITMPDIR@@
 
 # (Exactly one) directory to include all files from.
 includedir @@CONFDIR@@/munin-conf.d
