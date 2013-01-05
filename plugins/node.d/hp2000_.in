@@ -463,8 +463,7 @@ my $md5_hash = md5_hex( $secret );
 
 $ua = Munin::Plugin::HTTP->new;
 $url = "http://$host/api/login/" . $md5_hash;
-$req = HTTP::Request->new(GET => $url);
-$res = $ua->request($req);
+$res = $ua->get($url);
 
 # Parse the XML content using LibXML to obtain the session key
 my $parser  = XML::LibXML->new();

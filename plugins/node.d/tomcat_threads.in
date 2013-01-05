@@ -74,7 +74,7 @@ if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
 	print "no ($ret)\n";
 	exit 0;
     }
-    my $repsonse = $UA->request(HTTP::Request->new('GET',$url));
+    my $repsonse = $UA->get($url);
     if($repsonse->is_success and $repsonse->content =~ /<status>.*<\/status>/im) {
 	print "yes\n";
 	exit 0;
@@ -99,7 +99,7 @@ if(exists $ARGV[0] and $ARGV[0] eq "config") {
 }
 
 my $xs = new XML::Simple;
-my $response = $UA->request(HTTP::Request->new('GET',$url));
+my $response = $UA->get($url);
 my %options = ( KeyAttr => { connector => 'name' }, ForceArray => 1 );
 my $xml = $xs->XMLin($response->content, %options);
 

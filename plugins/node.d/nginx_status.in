@@ -66,7 +66,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" ) {
 	exit 0;
     }
 
-    my $response = $UA->request(HTTP::Request->new('GET',$URL));
+    my $response = $UA->get($URL);
 
     unless ($response->is_success and $response->content =~ /server/im) {
 	print "no (no nginx status on $URL)\n";
@@ -102,7 +102,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" ) {
     exit 0;
 }
 
-my $response = $UA->request(HTTP::Request->new('GET',$URL));
+my $response = $UA->get($URL);
 
 #Active connections: 1845 
 #server accepts handled requests

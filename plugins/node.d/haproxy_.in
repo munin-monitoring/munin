@@ -58,7 +58,7 @@ my $UA = Munin::Plugin::HTTP->new;
 my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://localhost/haproxy-status;csv;norefresh";
 
 my $url = $URL;
-my $response = $UA->request(HTTP::Request->new('GET',$url));
+my $response = $UA->get($url);
 my $content = $response->content;
 my %backends = ();
 
