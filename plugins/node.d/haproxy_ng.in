@@ -51,7 +51,7 @@ my $ua = Munin::Plugin::HTTP->new;
 
 my @types = qw(frontend backend server);
 my $url = $URL;
-my $response = $ua->request(HTTP::Request->new('GET',$url));
+my $response = $ua->get($url);
 my $content = $response->content;
 my $set;
 my @columns;
