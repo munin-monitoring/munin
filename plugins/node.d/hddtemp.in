@@ -28,7 +28,7 @@ if [ "$1" = "config" ]; then
 
         echo 'graph_title HDD temperature'
         echo 'graph_args --base 1000 -l 0'
-        echo 'graph_vlabel temp in °C'
+        echo 'graph_vlabel Degrees Celsius'
         echo 'graph_category sensors'
         for a in $drives ; do echo $a.label $a ; done
         exit 0

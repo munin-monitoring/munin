@@ -192,7 +192,7 @@ if (defined $ARGV[0]) {
     }
   } elsif ($ARGV[0] eq 'config') {
     print "graph_title HDD temperature\n";
-    print "graph_vlabel temp in °C\n";
+    print "graph_vlabel Degrees Celsius\n";
     print "graph_category sensors\n";
     print "graph_info This graph shows the temperature in degrees Celsius of the hard drives in the machine.\n";
     foreach (@drives) {
