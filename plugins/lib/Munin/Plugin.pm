@@ -65,6 +65,7 @@ our @EXPORT = qw(
         scaleNumber
         need_multigraph
         readfile
+        readarray
 );
 
 use Munin::Common::Defaults;
@@ -457,6 +458,27 @@ sub readfile($) {
   close $FH;
 
   return $content;
+}
+
+=head3 $content = readarray($path)
+
+Read the first line of a file into an array.
+
+This is extremely helpful when reading data out of /proc or /sys that
+the kernel exposes.
+
+=cut
+
+sub readarray($) {
+  my ($path) = @_;
+
+  open my $FH, "<", $path or return undef;
+  my $line = <$FH>;
+  chomp($line);
+  my @row = split(/\s+/, $line);
+  close $FH;
+
+  return @row;
 }
 
 =head3 $position = tail_close($file_handle)
