@@ -76,7 +76,7 @@ init_plugins() {
 
 case "$1" in
 	configure)
-		if [ "$2" = 0 ] ; then
+		if [ -z "$2" ] ; then
 			add_munin_system_user
 		fi
 		# after wheezy / squeeze-sloppy-backports this and fixoverrides() can be removed completly
