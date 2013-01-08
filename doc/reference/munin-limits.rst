@@ -45,15 +45,29 @@ OPTIONS
    Limit services to those of <service>. Multiple --service options
    may be supplied. [unset]
 
+.. option:: --always-send <severity list>
+
+   Force sending of messages even if you normally wouldn't.
+
+   The <severity list> can be a whitespace or comma separated list of
+   the values "ok", "warning", "critical" or "unknown".
+
+   This option may be specified several times, to add more values.
+
+   Use of "--always-send" overrides the "always_send" value in
+   munin.conf for configured contacts.  See also --force.
+
 .. option:: --force
 
-   Force sending of messages even if you normally wouldn't. Can be
-   negated with --noforce. [--noforce]
+   Alias for "--always-send ok,warning,critical,unknown"
 
-.. option:: --force-root
+.. option:: --force-run-as-root
 
-   Force running as root (stupid and unnecessary). Can be negated
-   with --noforce-root [--noforce-root]
+   munin-limits will normally prevent you from running as root. Use
+   this option to override this.
+
+   The use of this option is not recommended. You may have to clean up
+   file permissions in order for munin to run normally afterwards.
 
 .. option:: --help
 
