@@ -66,11 +66,23 @@ Limit contacts to those of E<lt>contact<gt>. Multiple --contact options may be s
 
 Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin.conf]
 
-=item B<< --[no]force >>
+=item B<< --always-send <severity list> >>
 
-Force sending of messages even if you normally wouldn't. [--noforce]
+Force sending of messages even if you normally wouldn't.
 
-=item B<< --[no]force-root >>
+The <severity list> can be a whitespace or comma separated list of the
+values "ok", "warning", "critical" or "unknown".
+
+This option may be specified several times, to add more values.
+
+Use of "--always-send" overrides the "always_send" value in munin.conf
+for configured contacts. See also --force.
+
+=item B<< --force >>
+
+Alias for "--always-send ok,warning,critical,unknown"
+
+=item B<< --[no]force-run-as-root >>
 
 Force running as root (stupid and unnecessary). [--noforce-root]
 
