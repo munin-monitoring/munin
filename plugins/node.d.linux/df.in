@@ -14,7 +14,7 @@ Every Linux system with df installed.
 The plugin excludes per default the following special, read-only or
 dynamically allocating file systems from graphing:
 
-  none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs
+  none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root
 
 To change this set the environment variable "exclude" with a list of
 space separated fs types.  The environment variables "warning" and
@@ -24,7 +24,7 @@ the disk usage.
 This configuration snipplet is an example with the defaults:
 
   [df]
-    env.exclude none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs
+    env.exclude none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root
     env.warning 92
     env.critical 98
 
