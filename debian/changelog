@@ -1,3 +1,11 @@
+munin (2.0.9-4) UNRELEASED; urgency=low
+
+  * munin.postinst: Fix install/upgrade detection
+  * Cherry-pick from upstream:
+    - munin-limits: Add --always-send, --force options
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Wed, 09 Jan 2013 11:34:41 +0100
+
 munin (2.0.9-3) experimental; urgency=low
 
   * debian/plugin.conf:
