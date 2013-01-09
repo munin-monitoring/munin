@@ -54,6 +54,13 @@ my %period  = ( "day"   => 300,
 		"year-sum" => 86400
 	    );
 
+my %content_types = (
+	"png" => "image/png",
+	"csv" => "text/csv",
+	"json" => "application/json",
+	"xml" => "text/xml",
+);
+
 my $logfile;
 my $scale = "day";
 
@@ -68,7 +75,10 @@ push @params, "--log-file", $logfile;
 my $config = graph_startup(\@params);
 
 logger_open($config->{'logdir'});
-logger_debug() if defined($ENV{CGI_DEBUG});
+if(defined($ENV{CGI_DEBUG})) {
+	logger_debug();
+	push @params, "--debug", $logfile;
+}
 
 # BEGIN FAST-CGI LOOP:
 setlocale (LC_TIME, 'C');
@@ -131,10 +141,10 @@ while (new CGI::Fast) {
     #
     # Note: $serv *may* have some "-" inside (See #1218)
 
-    my ($dom, $host, $serv, $scale) =
-      $path =~ m#^/(.*)/([^/]+)/([\w-]+)-([\w=,]+)\.png#; ## avoid bug in vim
+    my ($dom, $host, $serv, $scale, $fileext) =
+      $path =~ m#^/(.*)/([^/]+)/([\w-]+)-([\w=,]+)\.(png|csv|json|xml)#; ## avoid bug in vim
 
-    DEBUG "asked for ($dom, $host, $serv, $scale)";
+    DEBUG "asked for ($dom, $host, $serv, $scale, $fileext)";
 
     if ($scale =~ /pinpoint=(\d+),(\d+)/) {
 	    $pinpoint = [ $1, $2, ];
@@ -143,14 +153,14 @@ while (new CGI::Fast) {
     if (! &verify_parameters ($dom, $host, $serv, $scale)) {
 	# If parameters are not valid, just say we didn't find anything.
 	print "Status: 404 Not Found\r\n",
-	  "Content-Type: image/png\r\n",
+	  "Content-Type: $content_types{$fileext}\r\n",
 	  "X-Munin-Pid: $$\r\n",
 	  "X-Munin-Request: $nb_request/$nb_request_max\r\n",
 	  "\r\n";
 	next;
     }
 
-    my $filename = get_picture_filename ($config, $dom, $host, $serv, $scale, $ENV{QUERY_STRING});
+    my $filename = get_picture_filename ($config, $dom, $host, $serv, $scale, $fileext, $ENV{QUERY_STRING});
 
     my $time = time;
 
@@ -189,7 +199,7 @@ while (new CGI::Fast) {
 	    my $headers = get_headers_for_file($filename, $graph_ttl);
 
 	    print "Status: 304\r\n",
-	      "Content-Type: image/png\r\n",
+	      "Content-Type: $content_types{$fileext}\r\n",
 	      "X-Munin-Pid: $$\r\n",
 	      "X-Munin-Request: $nb_request/$nb_request_max\r\n",
 	      "Content-Length: 0\r\n",
@@ -211,7 +221,7 @@ while (new CGI::Fast) {
 
 	# Try to generate the graph
 	my $generated_file = eval {
- 		draw_graph_or_complain($dom, $host, $serv, $scale_options, $filename);
+ 		draw_graph_or_complain($dom, $host, $serv, $scale_options, $fileext, $filename);
 	};
 	
 	# handle exceptions
@@ -219,7 +229,7 @@ while (new CGI::Fast) {
 		if ($@ =~ m/^Could not find FQN/) {
 			# Unknown graph asked
 			print "Status: 404 Not Found\r\n",
-			      "Content-Type: image/png\r\n",
+			      "Content-Type: $content_types{$fileext}\r\n",
 			      "X-Munin-Pid: $$\r\n",
 			      "X-Munin-Request: $nb_request/$nb_request_max\r\n",
 			    "\r\n";
@@ -244,7 +254,7 @@ while (new CGI::Fast) {
 
     # Now send it: headers
     print "Status: 200\r\n",
-      "Content-Type: image/png\r\n",
+      "Content-Type: $content_types{$fileext}\r\n",
       "X-Munin-Pid: $$\r\n",
       "X-Munin-Request: $nb_request/$nb_request_max\r\n",
     "";
@@ -330,6 +340,7 @@ sub get_picture_filename {
     my $name    = shift;
     my $service = shift;
     my $scale   = shift;
+    my $fileext = shift;
     my $params  = shift;
 
     # XXX - hack to fix cgitmpdir default 
@@ -339,7 +350,7 @@ sub get_picture_filename {
     $params = $params ? "?$params" : "";
     $params =~ tr/\//_/; # / are forbidden in a filename
     $params = $1 if $params =~ m/(.*)/; # XXX - Q&D untaint
-    return "$cgi_tmp_dir/$domain/$name/$service-$scale.png" . $params;
+    return "$cgi_tmp_dir/$domain/$name/$service-$scale.$fileext" . $params;
 }
 
 sub has_offending_chars {
@@ -423,6 +434,7 @@ sub draw_graph {
     my $host  = shift;
     my $serv  = shift;
     my $scale = shift;
+    my $fileext = shift;
 
     my $filename = shift;
 
@@ -439,6 +451,7 @@ sub draw_graph {
     my @params = ( '--host', $host,
 		   '--only-fqn', "root/$dom/$host/$serv",
 		   $scale,
+		   '--format', "$fileext",
 		   '--output-file', $filename );
 
     # Sets the correct size on a by_graph basis
@@ -478,7 +491,7 @@ sub draw_graph_or_complain {
     my $graph_duration = tv_interval($t0);
 
     if (! -f $ret) {
-	my ($dom, $host, $serv, $scale, $filename ) = @_;
+	my ($dom, $host, $serv, $scale, $fileext, $filename ) = @_;
 	WARN "[WARNING] Could not draw graph \"$filename\": $ret";
 	print "Status: 500\r\n",
 	  "Content-Type: text/plain\r\n",
