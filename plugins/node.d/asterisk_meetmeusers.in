@@ -59,13 +59,8 @@ address with the copyright notice upgrade with your name.
 
 =cut
 
+use IO::Socket;
 use strict;
-
-my $ret = undef;
-if (! eval "require Net::Telnet;")
-{
-    $ret = "Net::Telnet not found";
-}
 
 if ($ARGV[0] and $ARGV[0] eq "config")
 {
@@ -85,28 +80,29 @@ my $port = exists $ENV{'port'} ? $ENV{'port'} : "5038";
 my $username = $ENV{'username'};
 my $secret   = $ENV{'secret'};
 
-my $pop = new Net::Telnet (Telnetmode => 0);
-$pop->open(Host => $host,
-	   Port => $port);
+my $pop = new IO::Socket::INET (PeerAddr => $host,
+				PeerPort => $port,
+				Proto => 'tcp');
+die "Could not create socket: $!\n" unless $pop;
 
 ## Read connection message.
 my $line = $pop->getline;
 die $line unless $line =~ /^Asterisk/;
 
 ## Send user name.
-$pop->print("Action: login");
-$pop->print("Username: $username");
-$pop->print("Secret: $secret");
-$pop->print("Events: off");
-$pop->print("");
+$pop->print("Action: login\n");
+$pop->print("Username: $username\n");
+$pop->print("Secret: $secret\n");
+$pop->print("Events: off\n");
+$pop->print("\n");
 
 #Response: Success
 #Message: Authentication accepted
 
 ## Request status of messages.
-$pop->print("Action: command");
-$pop->print("Command: meetme list");
-$pop->print("");
+$pop->print("Action: command\n");
+$pop->print("Command: meetme list\n");
+$pop->print("\n");
 
 my $nb = 0;
 
@@ -121,8 +117,8 @@ while (($line = $pop->getline) and ($line !~ /END COMMAND/o))
     $nb = $1 if $line =~ /MeetMe users:\s(\d)$/;
 }
 
-$pop->print("Action: logoff");
-$pop->print("");
+$pop->print("Action: logoff\n");
+$pop->print("\n");
 
 ## Exhaust buffer before closing (to avoid polluting Asterisk's logs)
 while ($line = $pop->getline) {}

@@ -81,14 +81,8 @@ elsif (!defined($host))
 	die "# Error: couldn't understand what I'm supposed to monitor.";
 }
 
-# Disk level
-my $hrDeviceType           = "1.3.6.1.2.1.25.3.2.1.2."; # Should be iso.3.6.1.2.1.25.3.1.6 (DiskStorage)
-my $hrDiskStorageRemoveble = "1.3.6.1.2.1.25.3.6.1.3."; # Should be false (2).
-                                                        # Windows reports 0.
-my $hrDiskStorageCapacity  = "1.3.6.1.2.1.25.3.6.1.4."; # Should be more than 0
-
 # Partition level
-my $hrPartitionFSIndex     = "1.3.6.1.2.1.25.3.7.1.5."; # Should be more than 0
+my $hrFSIndex              = "1.3.6.1.2.1.25.3.8.1.1."; # Should be more than 0
 my $hrFSMountPoint         = "1.3.6.1.2.1.25.3.8.1.2."; # Used to look up filesystem
 
 # Filesystem level
@@ -108,39 +102,17 @@ if (!defined ($session))
 {
 	die "Croaking: $error";
 }
-
-# First we want to find the harddisks...
-my $correct_capacity  = get_by_regex ($session, $hrDiskStorageCapacity, "[1-9]");
-my $correct_type      = get_by_regex ($session, $hrDeviceType, "^1.3.6.1.2.1.25.3.1.6\$");
-my $correct_removable = get_by_regex ($session, $hrDiskStorageRemoveble, "^(0|2)\$");
-
-my @keep = ();
-
-foreach my $id (keys %$correct_capacity)
-{
-	if (exists $correct_type->{$id} and 
-	    exists $correct_removable->{$id})
-	{
-	    push (@keep, $id);
-	}
-}
-
-print "# Kept: ", join (',', @keep), "\n" if $Munin::Plugin::SNMP::DEBUG;
-
-# Then we take a look at the partitions...
+# Take a look at the partitions...
 
 my %partitions;
 
-foreach my $kept (@keep) # For each disk...
-{
-    my $parts = get_by_regex ($session, $hrPartitionFSIndex . "$kept.", "[1-9]");
+my $parts = get_by_regex ($session, $hrFSIndex, "[1-9]");
 
-    foreach my $partition (keys %$parts)
-    {
-	my $mp = get_single ($session, $hrFSMountPoint . $partition);
-	$partitions{$mp}{partition} = $partition;
-	print "# Added partition \"$mp\" as $partition...\n" if $Munin::Plugin::SNMP::DEBUG
-    }
+foreach my $partition (keys %$parts)
+{
+    my $mp = get_single ($session, $hrFSMountPoint . $partition);
+    $partitions{$mp}{partition} = $partition;
+    print "# Added partition \"$mp\" as $partition...\n" if $Munin::Plugin::SNMP::DEBUG;
 }
 
 my $stor_id;

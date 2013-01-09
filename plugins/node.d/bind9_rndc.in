@@ -64,6 +64,11 @@ my $rndc = defined($ENV{rndc}) ? $ENV{rndc} : '/usr/sbin/rndc';
 my $querystats = $ENV{querystats} || '/var/run/named.stats';
 my %IN;
 
+# attempt to create log file if it doesn't exist
+if ( ! -r $querystats ) {
+    system("$rndc stats");
+}
+
 # open the log file, and get its size
 open(my $stats, '<', $querystats) or die "$0: $querystats: $!\n";
 my $size = (stat $stats)[7];

@@ -427,7 +427,7 @@ sub _connect() {
         $dbname = $self->{defaultdb}           if ($self->{defaultdb});
         $dbname = $self->wildcard_parameter(0) if ($self->{paramdatabase} && !defined($nowildcard));
         $dbname = $ENV{"PGDATABASE"}           if ($ENV{"PGDATABASE"});
-        $self->{dbh} = DBI->connect("DBI:Pg:dbname=$dbname");
+        $self->{dbh} = DBI->connect("DBI:Pg:dbname=$dbname", '', '', {pg_server_prepare => 0});
         unless ($self->{dbh}) {
             $self->{connecterror} = "$DBI::errstr";
             return 0;
