@@ -1,8 +1,8 @@
-munin (2.0.10-1) UNRELEASED; urgency=low
+munin (2.0.10-1) experimental; urgency=low
 
   * New upstream release (Closes: #615957, #671448)
 
- -- Stig Sandbeck Mathisen <ssm@debian.org>  Wed, 09 Jan 2013 19:16:02 +0100
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Thu, 10 Jan 2013 11:07:33 +0100
 
 munin (2.0.9-5) experimental; urgency=low
 
