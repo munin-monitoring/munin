@@ -4,11 +4,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
   <link rel="stylesheet" href="<TMPL_VAR NAME="R_PATH">/static/style-new.css" type="text/css" /> 
-<!-- XXX -->
+<TMPL_IF NAME="DYN_IMAGES">
   <link rel="stylesheet" href="<TMPL_VAR NAME="R_PATH">/static/style.lazyload.css" type="text/css" /> 
      <script src="<TMPL_VAR NAME="R_PATH">/static/jquery-1.8.3.min.js" type="text/javascript" language="javascript"></script>
      <script src="<TMPL_VAR NAME="R_PATH">/static/jquery.lazyload.min.js" type="text/javascript" language="javascript"></script>
-<!-- XXX -->
+</TMPL_IF>
   <TMPL_IF NAME="SHOW_ZOOM_JS">
      <script src="<TMPL_VAR NAME="R_PATH">/static/formatdate.js" type="text/javascript" language="javascript"/>
      <script src="<TMPL_VAR NAME="R_PATH">/static/querystring.js" type="text/javascript" language="javascript"/>

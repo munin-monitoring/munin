@@ -11,14 +11,13 @@
 	<TMPL_LOOP NAME="SERVICES">
 		<tr><td>
 		<a href="<TMPL_VAR NAME="URLX">">
-<!-- XXX without lazyload
+<TMPL_UNLESS NAME="DYN_IMAGES">
 		<img class="i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
 		 src="<TMPL_VAR NAME="IMGDAY">"
 		 alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">" 
          <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> 
 		 <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/>
-XXX -->
-<!-- XXX with lazyload -->
+<TMPL_ELSE>
                 <noscript>
 		<img class="i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
 		 src="<TMPL_VAR NAME="IMGDAY">"
@@ -32,17 +31,16 @@ XXX -->
 		 alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">" 
          <TMPL_IF NAME="IMGDAYWIDTH">width="<TMPL_VAR NAME="IMGDAYWIDTH">" </TMPL_IF> 
 		 <TMPL_IF NAME="IMGDAYHEIGHT">height="<TMPL_VAR NAME="IMGDAYHEIGHT">"</TMPL_IF>/>
-<!-- XXX -->
+</TMPL_UNLESS>
 		</a></td>
         <td><a href="<TMPL_VAR NAME="URLX">">
-<!-- XXX without lazyload
+<TMPL_UNLESS NAME="DYN_IMAGES">
 		<img class="i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
 		 src="<TMPL_VAR NAME="IMGWEEK">" 
 		 alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">" 
 		 <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF> 
 		 <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>/>
-XXX -->
-<!-- XXX with lazyload -->
+<TMPL_ELSE>
 		<noscript>
 		<img class="i<TMPL_IF NAME="STATE_WARNING">warn</TMPL_IF><TMPL_IF NAME="STATE_CRITICAL">crit</TMPL_IF>"
 		 src="<TMPL_VAR NAME="IMGWEEK">" 
@@ -56,7 +54,7 @@ XXX -->
 		 alt="<TMPL_VAR ESCAPE="HTML" NAME="NAME">" 
 		 <TMPL_IF NAME="IMGWEEKWIDTH">width="<TMPL_VAR NAME="IMGWEEKWIDTH">" </TMPL_IF> 
 		 <TMPL_IF NAME="IMGWEEKHEIGHT">height="<TMPL_VAR NAME="IMGWEEKHEIGHT">"</TMPL_IF>/>
-<!-- XXX -->
+</TMPL_UNLESS>
 		</a></td>
 		</tr>
 	</TMPL_LOOP>
