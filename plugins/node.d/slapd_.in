@@ -233,7 +233,9 @@ if ($ARGV[0]) {
                            base   => $basedn,
                            scope  => 'one',
                            filter => '(objectClass=monitorServer)',
-                           attrs  => 'cn',
+                           attrs  => [
+                                       'cn',
+                                     ],
                            );
         if ($mesg->code) {
           print "no (" . $mesg->error . ")\n";
