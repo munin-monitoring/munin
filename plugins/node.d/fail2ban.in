@@ -71,7 +71,7 @@ list_jails() {
             *'Jail list:'*)
                 line="${line##*Jail list*:}"
                 line="${line//[ $'\t']/}"
-                printf "${line//,/$'\n'}\n"
+                [ -n "$line" ] && printf "${line//,/$'\n'}\n"
                 ;;
         esac
     done
