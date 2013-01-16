@@ -33,7 +33,7 @@ function Querystring(qs) { // optionally pass a querystring to parse
 
 Querystring.prototype.get = function(key, default_) {
 	var value = this.params[key];
-	return (value != null) ? value : default_;
+	return (value != null) && (value != '') ? value : default_;
 }
 
 Querystring.prototype.contains = function(key) {
