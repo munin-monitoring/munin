@@ -112,7 +112,7 @@ my %draw           = (
 my %init_draw = %draw;
 my $pinpoint = {};
 
-my ($size_x, $size_y, $full_size_mode, $only_graph);
+my ($size_x, $size_y, $step, $full_size_mode, $only_graph);
 my ($lower_limit, $upper_limit);
 
 my %PALETTE;    # Hash of available palettes
@@ -243,6 +243,7 @@ sub graph_startup {
 
     $size_x 	    = undef;
     $size_y         = undef;
+    $step           = undef;
     $full_size_mode = undef;
     $only_graph     = undef;
     $lower_limit    = undef;
@@ -276,6 +277,7 @@ sub graph_startup {
                 "sumyear!"      => \$draw{'sumyear'},
 		"size_x=i"      => \$size_x,
 		"size_y=i"      => \$size_y,
+		"step=i"        => \$step,
 		"full_size_mode!"=> \$full_size_mode,
 		"only_graph!"=> \$only_graph,
 		"upper_limit=s" => \$upper_limit,
@@ -370,6 +372,7 @@ sub graph_main {
     # Reset an eventual custom size
     $size_x 	    = undef;
     $size_y         = undef;
+    $step           = undef;
     $full_size_mode = undef;
     $only_graph     = undef;
     $lower_limit    = undef;
@@ -398,6 +401,7 @@ sub graph_main {
 
 		"size_x=i"      => \$size_x,
 		"size_y=i"      => \$size_y,
+		"step=i"        => \$step,
 		"full_size_mode!"=> \$full_size_mode,
 		"only_graph!"   => \$only_graph,
 		"upper_limit=s" => \$upper_limit,
@@ -558,6 +562,7 @@ sub get_header {
 
     push @$result, '--slope-mode' if $RRDs::VERSION >= 1.2;
 
+    push @$result, "--step", $step if $step;
     push @$result, "--height", ($size_y || munin_get($service, "graph_height", "175"));
     push @$result, "--width",  ($size_x || munin_get($service, "graph_width",  "400"));
 
