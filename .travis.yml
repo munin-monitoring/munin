@@ -8,7 +8,10 @@ branches:
   - master
   - devel
 install: "/bin/true"
-before_install:
+before_script:
+ - "sudo apt-get install librrds-perl"
+# TODO - here we shall ln from the perlbrew dir to system dir :
+# /usr/lib/perl5/RRDs.pm /usr/lib/perl5/auto/RRDs/RRDs.bs /usr/lib/perl5/auto/RRDs/RRDs.so
  - "cpanm --notest File::Copy::Recursive"
  - "cpanm --notest File::Slurp"
  - "cpanm --notest HTML::Template"
