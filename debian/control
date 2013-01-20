@@ -7,7 +7,7 @@ Uploaders: Holger Levsen <holger@debian.org>,
  Tom Feiner <feiner.tom@gmail.com>,
  Steve Schnepp <steve.schnepp@pwkf.org>
 Build-Depends-Indep: perl, htmldoc, html2text, default-jdk
-Build-Depends: debhelper (>=8), quilt
+Build-Depends: debhelper (>=8)
 Standards-Version: 3.9.3
 Homepage: http://munin-monitoring.org
 Vcs-Git: git://anonscm.debian.org/collab-maint/munin.git
@@ -152,6 +152,8 @@ Package: munin-doc
 Section: doc
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends}
+Breaks:   munin-common (<< 2)
+Replaces: munin-common (<< 2)
 Description: network-wide graphing framework (documentation)
  Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still

@@ -1,0 +1,130 @@
+***** Installing munin-async *****
+
+When using munin, one often runs into one of two problems:
+    * There are so many nodes to update, the update takes more than the
+      update interval
+    * Some servers may be connected over flaky lines, so an update may be lost
+      due to timeout
+
+With version 2.0, the designers of munin have started addressing those
+problems. Today we look at one part of that solution, munin-async. Note that I
+am using the packages from Debian testing. Your experience on other OSs
+may vary. Here are the steps I needed to take in order for the client to
+collect munin-async data from the various servers:
+
+**** Install munin-async on the monitored machines AND the graphing server ****
+
+The munin-async Debian package contains both the client AND the server scripts
+for async work. This is not consistent, since previously all the data fetching
+scripts were in the munin package, and all the data serving scripts were in the
+munin-node package. It also means that you have to install munin-async
+(creating the munin-async user, with its own entry in passwd file and its
+shell set to /bin/bash) on the server, not just on the clients. I don’t like
+leaving that open.
+
+(on remote machine and on server)
+apt-get install munin-async
+
+**** Start munin-asyncd on servers where data is to be collected ****
+
+(on remote machine) service munin-async start
+
+**** Prepare the master for using ssh to connect to servers ****
+
+Change the shell of the munin user to bash so you can do these changes as the
+munin user:
+vipw
+su - munin
+cd /var/lib/munin
+mkdir .ssh
+cd .ssh
+ssh-keygen -q -N "" -f /var/lib/munin/.ssh/id_rsa
+cat /var/lib/munin/.ssh/id_rsa.pub
+
+Place the ssh public key in /var/lib/munin/.ssh) (on the remote machine)
+
+mkdir /var/lib/munin-async/.ssh
+
+(on the server)
+scp /var/lib/munin/.ssh/id_rsa.pub root@example.net:/var/lib/munin-async/.ssh/authorized_keys
+chown -R munin:munin /var/lib/munin/.ssh
+
+ssh munin-async@example.net
+exit
+
+Note that you need to check the connection for EVERY host from which you intend
+to collect data in the async manner. munin is NOT handling this dialogue:
+The authenticity of host 'example.net (2600:more:fool:you:f9b)' can't be
+established.
+RSA key fingerprint is 61:aa:aa:aa:aa:aa:aa:aa:aa:aa:aa:aa:aa:aa:aa:aa.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added 'example.net,2600:moore:fool:you:f9b' (RSA) to the
+list of known hosts.
+
+So you need to log in “by hand” first, from the user munin, in order to record
+the key. Or you need to copy the key from antoher known_hosts file, which may
+be tricky. Now change the shell of munin back to /bin/false, for security.
+
+chsh -s /bin/false munin
+
+**** Change the system definition in /etc/munin/munin.conf ****
+
+(or, as I prefer to do it, in /etc/munin/munin-conf.d/hostlist.conf ).
+[async.my-machine.net]
+ address ssh://munin-async@example.net /usr/share/munin/munin-async --spooldir
+/var/lib/munin/spool --spoolfetch
+ use_node_name yes
+
+I am using async in the definition name merely so that I can compare the data
+from the two collection methods.
+
+**** Security enhancement ****
+To prevent your monitored server being compromised if someone manages to break
+into your munin collection server, you should edit the /var/lib/munin-
+async/.ssh/authorized_keys file and add
+
+no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty,no-user-rc,command="/usr/sbin/munin-async  --spooldir /var/lib/munin/spool --spoolfetch"
+
+to the beginning of the relevant line. Additionally consider from="(remote machine IPs)".
+
+**** Adding plugins ****
+
+When you add a plugin, it won’t be visible unless you first restart munin-node
+and THEN munin-async.
+
+**** Troubleshooting tips ****
+
+If you haven’t logged in to the host “by hand” or added its keys to
+known_hosts some other way, the fetch will fail. The only log in the munin-
+update file will say something like:
+
+Socket read from async.example.net failed. A Terminating process. at /usr/
+share/perl5/Munin/Master/UpdateWorker.pm line ...
+Another possible cause of mysterious failure to fetch data from the remote host
+(that does not give a clear error message) is munin-asyncd not running on the
+target server, or having no prefetched data yet.
+
+**** Additional ideas ****
+
+Balint Deak suggested in a post on the munin-users mailing list: What I would
+add to this is that if you have many hosts, or hosts are added on a daily
+basis, it may be annoying to always remember to log in to each new box and say
+“yes” at the prompt.
+
+If you create a config file for ssh in the $HOME/.ssh/config for the user that
+runs the master (defaults to ‘munin’) and tell ssh not to check the host key
+when authenticating, then no prompt will be displayed even for new or unknown
+hosts.
+
+Add something like:
+Host *
+  UserKnownHostsFile=/dev/null
+  StrictHostKeyChecking=no
+
+I don’t think this makes the setup less secure, but it would make the
+automation of adding new hosts to the system easier.
+
+Regards,
+Balint
+
+From http://www.matija.si/system-administration/2012/07/15/installing-munin-async/ with edits from Daniel Black

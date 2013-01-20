@@ -86,6 +86,7 @@ sub _do_connect {
 		PeerPort  => $self->{port} || 4949,
 		LocalAddr => $config->{local_address},
 		Proto     => 'tcp', 
+		MultiHomed => 1,
 		Timeout   => $config->{timeout}
 	);
 	if (! $self->{reader} ) {

@@ -1,8 +1,67 @@
-munin (2.0.6-1~bpo60+1) squeeze-backports; urgency=low
+munin (2.0.6-3) unstable; urgency=low
 
-  * Rebuild for squeeze-backports.
+  * debian/rules: set MUNIN_VERSION correctly during build. (Closes: #694527)
+  * debian/munin-async.logrotate:
+    - use adm group for created files.
+    - use *0 as glob, not *.0 (Closes: #691758)
 
- -- Holger Levsen <holger@debian.org>  Thu, 06 Sep 2012 16:00:46 +0200
+ -- Holger Levsen <holger@debian.org>  Fri, 04 Jan 2013 15:14:09 +0100
+
+munin (2.0.6-2) unstable; urgency=low
+
+  * Fix "/etc/apache2/conf.d/munin removed on upgrade":
+    - debian/munin.postinst: create symlink for new installs and also for
+      upgrades from versions where it was still removed (up to 1.4.6-3) but
+      not re-created (from 1.4.6-1 onwards). Thanks to Gregor Herrman for the
+      patch and intrigeri for reviewing. (Closes: #677943)
+  * munin-doc: Break and replace munin-common << 2. (Closes: #694355)
+  * munin-node.postinst: delete /var/lib/munin(-node)/plugin-state recursively
+    on purge. The plugin-state is outdated after a few minutes anyway.
+    (Closes: #687715)
+  * apt_all plugin: the apt_all plugin has its state updated in cron. There
+    the ENV var MUNIN_PLUGSTATE doesn't exist, so we need to set a default.
+    (Closes: #687495). This has been in included in 2.0.7 as d53b34d.
+  * munin-async.init: Run munin-async after munin-node has been started.
+    (Closes: #691390) - Thanks to Daniel Black for this and the next two
+    fixes:
+  * munin-async.postinst: fix /var/lib/munin-async ownership (once on upgrades
+    from previous versions) and for new installs. (Closes: #691309)
+  * munin-async.logrotate: correct location of munin-async logfiles.
+    (Closes: #691758)
+  * Add documentation for munin-async, thanks to Daniel Black.
+    (Closes: #681803)
+  * Have master support multi-homed nodes that only listen on IPv4.
+    (Closes: #678662) This is upstream commit a18229c5 from 2.0.9, thanks to
+    Michael Renner for the testing and the patch!
+  * Patch node/munin-node.conf.in to allow incoming IPv6 from localhost,
+    mostly to document that IPv6 addresses are allowed as well. Thanks to
+    Daniel Black. (Closes: #676798) This is upstream commit 7501128 which was
+    included in 2.0.9.
+  * Common/TLS.pm: use the correct error checking functions from Net::SSLeay,
+    cherry-pick c112139 from 2.0.9. (Closes: #675377)
+  * HTMLConfig.pm: cherry-pick 789c59e from 2.0.7 to avoid (using the default
+    configuration) /var/log/munin/munin-html.log being flooded with 106 lines
+    of noisy warnings (out of 112 lines in total) every 5min. (Closes: #689291)
+  * selinux_avcstat plugin: Do not use the "read without variable" bashism,
+    thanks to intrigeri for the patch. (Closes: #690711)
+    This fix has been included upstream as 099cc00f.
+  * http_loadtime plugin: fix stderr redirection (which broke the plugin
+    completely) (Closes: #691448) - This is upstream commit 9a1cbce from
+    2.0.8.
+  * Keep using "dh $@" (=without anything) and not change to "dh --with quilt"
+    (so #691327 is still open in sid and wheezy.).
+  * Drop 101-suppress-occasional-unknown-states-to-avoid-alerts.patch as it
+    is included since 1.4.4.
+  * Drop 100-DejaVu-Fonts-Path.patch since it only affects a codepath used
+    with rrdtool 1.2.
+  * Drop 237-hddtemp_smartctl-sata-detect.patch and cherry-pick the identical
+    commit 29e4ca9 from 2.0.7 instead: this was the bugfix for #497400,
+    included in both lenny and squeeze releases (so it fixes a regression, and
+    so today introducing #497400 would be an important bug.)
+  * Remove quilt from build-depends. We are not using it and have not been
+    using it since March 2012 / 2.0~rc2-1.
+
+ -- Holger Levsen <holger@debian.org>  Sun, 23 Dec 2012 16:53:43 +0100
 
 munin (2.0.6-1) unstable; urgency=high
 

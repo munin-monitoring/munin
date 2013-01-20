@@ -15,9 +15,17 @@ add_munin_async_user() {
 	fi
 }
 
+initperms() {
+	chown munin-async:munin-async /var/lib/munin-async
+}
+
 case "$1" in
 	configure)
 		add_munin_async_user
+		# this can go away after wheezy
+		if dpkg --compare-versions "$2" le "2.0.6-1~" || [ "$2" = 0 ] ; then
+			initperms
+		fi
 		;;
 	abort-upgrade|abort-deconfigure|abort-remove)
 		:

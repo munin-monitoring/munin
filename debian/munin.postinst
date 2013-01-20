@@ -63,8 +63,9 @@ apache_install() {
         webserver=apache2
         webserver_init_script="/etc/init.d/$webserver"
         if [ -d /etc/$webserver/conf.d ] && [ ! -e /etc/$webserver/conf.d/munin ]; then
-		if [ -z "$prevver" ] ; then
+		if [ -z "$prevver" ] || ( dpkg --compare-versions $prevver ge 1.4.6-1~ && dpkg --compare-versions $prevver lt 1.4.7~ ) ; then
 			# only create link on new installs
+			# or when upgrading from a version where it was removed unconditionally
 	                ln -s ../../munin/apache.conf /etc/$webserver/conf.d/munin
 		fi
 		if [ -f $webserver_init_script ];then
