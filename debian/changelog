@@ -1,3 +1,9 @@
+munin (2.0.6-3~bpo60+1) squeeze-backports; urgency=low
+
+  * Rebuild for squeeze-backports.
+
+ -- Holger Levsen <holger@debian.org>  Sun, 20 Jan 2013 12:13:25 +0100
+
 munin (2.0.6-3) unstable; urgency=low
 
   * debian/rules: set MUNIN_VERSION correctly during build. (Closes: #694527)
