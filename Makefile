@@ -64,7 +64,16 @@ tags:
 
 ######################################################################
 
-install: install-master-prime install-common-prime install-node-prime install-plugins-prime $(JAVA_INSTALL) install-man install-async-prime
+install-really: install-master-prime install-common-prime install-node-prime install-plugins-prime $(JAVA_INSTALL) install-man install-async-prime
+
+install:
+	@echo 'Munin does not support "make uninstall".'
+	@echo ''
+	@echo 'Therefore, installing from tgz is not recommended for causual users.'
+	@echo 'Please use a packaged version, or be prepared to mess up your system...'
+	@echo ''
+	@echo 'If you REALLY want to install from source, use "make install-really"'
+	@exit 1
 
 install-pre: Makefile Makefile.config
 	@$(CHECKUSER)
