@@ -39,6 +39,13 @@ includedir @@CONFDIR@@/munin-conf.d
 #
 #graph_strategy cron
 
+# Munin HTML templates use this variable to decide whether to use dynamic
+# ("lazy") loading of images with javascript so that images are loaded as they
+# are scrolled in view. This prevents excessive load on the web server. It is
+# especially useful when graph_strategy is cgi. Default is 0 (off).
+#
+#html_dynamic_images 1
+
 # munin-cgi-graph is invoked by the web server up to very many times at the
 # same time.  This is not optimal since it results in high CPU and memory
 # consumption to the degree that the system can thrash.  Again the default is

@@ -98,6 +98,12 @@ munin-update.
 
 Deprecated. (Graphs are now always drawn via CGI.)
 
+=item B<html_dynamic_images> I<value>
+
+The default HTML templates use this variable to decide whether to use dynamic
+("lazy") loading of images with javascript so that images are loaded as they
+are scrolled in view. This prevents excessive load on the web server. 
+
 =item B<local_address> I<value>
 
 The local address to connect any node from in case the master has
