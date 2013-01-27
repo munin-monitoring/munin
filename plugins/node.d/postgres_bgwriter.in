@@ -27,6 +27,16 @@ postgres_bgwriter_ - Plugin to monitor the PostgreSQL Background Writer.
 Configuration is done through libpq environment variables, for example
 PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugin::Pgsql>.
 
+To monitor several instances, link to postgres_<tag>_bgwriter
+The <tag> can be what you want but without "_". It allows you to define several
+database configuration.
+
+Example :
+  [postgres_pg91_*]
+  env.PGPORT 5432
+  [postgres_pg92_*]
+  env.PGPORT 5432
+
 =head1 SEE ALSO
 
 L<Munin::Plugin::Pgsql>
