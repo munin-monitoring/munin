@@ -29,6 +29,16 @@ PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugin::Pgsql>.
 
 To monitor a specific database, link to postgres_size_<databasename>.
 To monitor all databases, link to postgres_size_ALL.
+To monitor several instances, link to postgres_<tag>_size_<databasename|ALL>.
+The <tag> can be what you want but without "_". It's allow you to define several
+database configuration.
+
+Example :
+  [postgres_pg91_*]
+  env.PGPORT 5432
+
+  [postgres_pg92_*]
+  env.PGPORT 5432
 
 =head1 SEE ALSO
 
@@ -58,9 +68,13 @@ use strict;
 use warnings;
 
 use Munin::Plugin::Pgsql;
+use File::Basename;
+
+my $basename = basename($0);
+$basename =~ s/(postgres(_[^_]+)?_size_).+/$1/;
 
 my $pg = Munin::Plugin::Pgsql->new(
-    basename => 'postgres_size_',
+    basename => $basename,
     title    => 'PostgreSQL database size',
     info     => 'Size of database',
     vlabel   => 'Size',
