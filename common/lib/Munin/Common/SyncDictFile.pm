@@ -46,6 +46,9 @@ sub STORE {
 	DEBUG("Print the stored $key:$value");
 	print $fh_tmp "$key:$value\n";
 
+	# close (therefore flush data) before rename
+	$fh_tmp = undef;
+
 	# overwrite atomically
 	# XXX - any locked process will have an old version
 	rename $self->{filename} . ".tmp", $self->{filename};
