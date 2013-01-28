@@ -28,10 +28,11 @@
 #
 #     env.host     - http-host
 #     env.secret   - username_password
-#     env.aspect   - vdisk-statistics, controller-statistics or disk-statistics,
-#                    volume-statistics.  If not specified, the plugin will attempt
-#                    to detect the aspect from the symlink-name using regex -
-#                    (/vdisk/, /controller/, /volume/ and /disk/)
+#     env.aspect   - vdisk-statistics, controller-statistics, disk-statistics,
+#                    volume-statistics or port-statistics.  If not specified,
+#                    the plugin will attempt to detect the aspect from the
+#                    symlink-name using regex (/vdisk/, /controller/,
+#                    /volume/, /disk/ and /port/)
 #
 # Suggested config:
 #
@@ -46,6 +47,7 @@
 #  hp2000_san1_disk
 #  hp2000_san1_controller
 #  hp2000_san1_volume
+#  hp2000_san1_port
 #
 # And direct your munin.conf to the node configured with this plugin, using
 # node 'san1'.
@@ -73,16 +75,91 @@ if ( $0 =~ /vdisk/ ) { $cmd = 'vdisk-statistics'; }
 elsif ( $0 =~ /controller/ ) { $cmd = 'controller-statistics'; }
 elsif ( $0 =~ /volume/ ) { $cmd = 'volume-statistics'; }
 elsif ( $0 =~ /disk/ ) { $cmd = 'disk-statistics'; }
+elsif ( $0 =~ /port/ ) { $cmd = 'host-port-statistics'; }
 
 if ( exists $ENV{'aspect'} ) { $cmd = $ENV{'aspect'}; }
 my $host = $ENV{'host'};
 my $secret = $ENV{'secret'};
 
-my @plugins = ('vdisk-statistics', 'controller-statistics', 'disk-statistics', 'volume-statistics');
+my @plugins = ('vdisk-statistics', 'controller-statistics', 'disk-statistics', 'volume-statistics', 'host-port-statistics');
 my @graph_parameters = ('title','total','order','scale','vlabel','args', 'category');
 my @field_parameters = ('graph', 'min', 'max', 'draw', 'cdef', 'warning', 'colour', 'info', 'type');
 
 my %aspects = (
+    'host-port-statistics' => {
+        'port_iops' => {
+            'title' => 'IOPS by Hostport',
+            'category' => 'host-port',
+            'vlabel' => '(- reads / + writes) ops per second',
+            'min' => 0,
+            'values' => {
+                'number-of-reads' => {
+                    'short' => 'nor',
+                    'type' => 'DERIVE',
+                    'draw' => 'LINE1',
+                    'label' => 'bps',
+                    'min' => 0,
+                    'graph' => 'no',
+                },
+                'number-of-writes' => {
+                    'short' => 'now',
+                    'type' => 'DERIVE',
+                    'draw' => 'LINE1',
+                    'label' => 'bps',
+                    'min' => 0,
+                    'negative' => 'nor',
+                },
+            }
+        },
+        'port_bandwidth' => {
+            'title' => 'Bandwidth by Hostport',
+            'category' => 'host-port',
+            'vlabel' => '(- reads / + writes) bytes per second',
+            'min' => 0,
+            'values' => {
+                'data-read-numeric' => {
+                    'short' => 'dr',
+                    'type' => 'DERIVE',
+                    'draw' => 'LINE1',
+                    'label' => 'bps',
+                    'min' => 0,
+                    'graph' => 'no'
+                },
+                'data-written-numeric' => {
+                    'short' => 'dw',
+                    'type' => 'DERIVE',
+                    'draw' => 'LINE1',
+                    'label' => 'bps',
+                    'min' => 0,
+                    'negative' => 'dr',
+                },
+            }
+        },
+        'port_response_time' => {
+            'title' => 'Response time by Hostport',
+            'category' => 'host-port',
+            'vlabel' => '(- read / + write) response time in micros.',
+            'min' => 0,
+            'values' => {
+                'avg-rsp-time' => {
+                    'short' => 'wrt',
+                    'type' => 'GAUGE',
+                    'draw' => 'LINE1',
+                    'label' => 'micros.',
+                    'min' => 0,
+                    'graph' => 'no'
+                },
+                'avg-read-rsp-time' => {
+                    'short' => 'rrt',
+                    'type' => 'GAUGE',
+                    'draw' => 'LINE1',
+                    'label' => 'micros.',
+                    'min' => 0,
+                    'negative' => 'wrt',
+                }
+            }
+        },
+    },
     'volume-statistics' => {
         'volume_bandwidth' => {
             'title' => 'Bandwidth',
