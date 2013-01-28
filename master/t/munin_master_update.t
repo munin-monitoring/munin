@@ -3,8 +3,13 @@ use strict;
 
 use English qw(-no_match_vars);
 use Test::MockModule;
+use Test::MockObject;
 use Test::More tests => 2;
 use File::Temp qw( tempdir );
+
+package RRDs;
+sub create();
+package main;
 
 use_ok('Munin::Master::Update');
 
@@ -33,7 +38,6 @@ sub remove_indentation {
 #
 my $mockconfig = Test::MockModule->new('Munin::Master::Config');
 $mockconfig->mock(get_groups_and_hosts => sub { return () });
-
 
 #
 {
