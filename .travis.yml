@@ -18,6 +18,7 @@ before_install:
  - "cpanm --notest Module::Build"
  - "cpanm --notest Module::Build"
  - "cpanm --notest Net::SNMP"
+ - "cpanm --notest Net::Server"
  - "cpanm --notest Net::SSLeay"
  - "cpanm --notest Test::Deep"
  - "cpanm --notest Test::Differences"
