@@ -17,6 +17,8 @@ $mock->fake_module( 'RRDs',
 
 use_ok('Munin::Master::Update');
 
+use Munin::Common::Defaults;
+
 my $config = Munin::Master::Config->instance()->{config};
 $config->{dbdir} = tempdir(CLEANUP => 1);
 
