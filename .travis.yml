@@ -25,3 +25,4 @@ before_install:
  - "cpanm --notest Test::MockModule"
  - "cpanm --notest Test::MockObject::Extends"
  - "cpanm --notest Time::HiRes"
+ - "sudo sh -c 'echo $(grep $(hostname) /etc/hosts | cut -f1 -d ) host.example.com' > /etc/hosts"
