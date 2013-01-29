@@ -6,6 +6,15 @@ use Test::MockModule;
 use Test::More tests => 2;
 use File::Temp qw( tempdir );
 
+use Test::MockObject;
+
+# Faking RRDs.pm, as we don't really need it
+my $mock = Test::MockObject->new();
+$mock->fake_module( 'RRDs',
+	'create' => sub { },
+	'error' => sub { },
+);
+
 use_ok('Munin::Master::Update');
 
 my $config = Munin::Master::Config->instance()->{config};
@@ -33,7 +42,6 @@ sub remove_indentation {
 #
 my $mockconfig = Test::MockModule->new('Munin::Master::Config');
 $mockconfig->mock(get_groups_and_hosts => sub { return () });
-
 
 #
 {
