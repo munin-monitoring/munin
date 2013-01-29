@@ -16,7 +16,6 @@ before_install:
  - "cpanm --notest IO::Socket::INET6"
  - "cpanm --notest Log::Log4perl"
  - "cpanm --notest Module::Build"
- - "cpanm --notest Module::Build"
  - "cpanm --notest Net::SNMP"
  - "cpanm --notest Net::Server"
  - "cpanm --notest Net::SSLeay"
