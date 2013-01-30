@@ -25,3 +25,10 @@ before_install:
  - "cpanm --notest Test::MockModule"
  - "cpanm --notest Test::MockObject::Extends"
  - "cpanm --notest Time::HiRes"
+notifications:
+  email: false
+  irc:
+    on_success: always # change
+    on_failure: always
+    channels:
+      - "irc.oftc.net#munin"
