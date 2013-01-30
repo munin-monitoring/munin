@@ -16,6 +16,7 @@ sda0.  By setting
 
    [iostat]
    env.SHOW_NUMBERED 1
+   env.include_only sda,sdb
 
 it will show numbered devices.  This is sometimes needed in
 virtualized environments (e.g. Xen) where sda1 to sda<n> exists but
@@ -55,6 +56,7 @@ use strict;
 
 use Munin::Plugin;
 
+my $include_only = $ENV{'include_only'} || "";
 my $detailed_present = 0;
 my $stat_present = 0;
 my $include_numbered = 0;    # By default we want sda but not sda1
@@ -136,6 +138,9 @@ sub fetch_stat() {
 	    next unless $dev =~ /\S/;
 	    next unless ($dev =~ /\((\d+),(\d+)\):\(\d+,(\d+),(\d+),(\d+),(\d+)\)/);
 	    my $name = "dev".$1."_".$2;
+
+	    next if ($include_only ne "" and $include_only !~ $name);
+
 	    $devs{$name} =
 	      {
 	       name => $name,
@@ -180,6 +185,8 @@ sub fetch_detailed() {
 		$tmpnam =~ s/\/[[:alpha:]]+(\d+)/\/$1/g;
 		$tmpnam =~ s/^([^\/]+)\//$1/;
 		$tmpnam =~ s/\/disc$//;
+
+		next if ($include_only ne "" and $include_only !~ $tmpnam);
 
 		$devs{"dev".$major."_".&get_disk_count($major)} = 
 		  {
