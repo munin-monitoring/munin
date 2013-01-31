@@ -481,12 +481,12 @@ sub generate_service_templates {
 	    }
     }
 
-    if (munin_get($config, "graph_strategy", "cron") eq "cgi") {
-	map { $srv{$_} = $config->{'cgiurl_graph'} . "/" . $imgs{$_} } keys %imgs;
-    } else {
-	map { $srv{$_} = $root_path . "/" . $imgs{$_} } keys %imgs;
+    my $imgpath = $root_path;
+    if ( munin_get($config, "graph_strategy", "cron") eq "cgi" ) {
+	$imgpath = $config->{'cgiurl_graph'};
     }
 
+    map { $srv{$_} = $imgpath . "/" . $imgs{$_} } keys %imgs;
 
     # Compute the ZOOM urls
     {
