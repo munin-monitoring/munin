@@ -47,9 +47,8 @@ sub generate_config {
     my $rev = munin_configpart_revision();
 
     $config = munin_readconfig_part('datafile', 0);
+    initiate_cgiurl_graph(); # we don't set a default like for others
     if ($rev != munin_configpart_revision()) {
-	# datafile got updated
-	initiate_cgiurl_graph();
 	# convert config for html generation: reorder nodes to their rightful group
 	node_reorder($config);
     }
