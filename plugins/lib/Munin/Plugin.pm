@@ -260,11 +260,11 @@ file name.
 
 The file will contain a starting line with a magic number so that the
 library can see the difference between an actual state file and a file
-containing rubbsh.  Currently this magic number is
+containing rubbish.  Currently this magic number is
 '%MUNIN-STATE1.0\n'. Files with this magic number will contain the
 vector verbatim with \r, \n and % URL encoded.
 
-The function takes security precautions, like protesting fataly if the
+The function takes security precautions, like protesting fatally if the
 state file is a symbolic link (symbolic link overwriting can have
 unfortunate security ramifications).
 
@@ -325,7 +325,7 @@ variables named after the field: "$field_warning" and
 $field_warning or $field_critical values then look for the variables
 "warning" and "critical" and return those values if any.
 
-IFF the second and/or third arguments are specified then they will be
+If the second and/or third arguments are specified then they will be
 used to specify the name of variables giving the the warning and
 critical levels.
 

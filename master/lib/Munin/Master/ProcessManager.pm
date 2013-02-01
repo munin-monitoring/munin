@@ -296,7 +296,7 @@ __END__
 
 =head1 NAME
 
-Munin::Master::ProcessManager - Manager for parallell execution of Workers.
+Munin::Master::ProcessManager - Manager for parallel execution of Workers.
 
 =head1 SYNOPSIS
 

@@ -1774,11 +1774,11 @@ Returns:
 
 =item B<munin_readconfig_base>
 
-Read configuration file, include dir files, and initalize important
+Read configuration file, include dir files, and initialize important
 default values that are optional.
 
 Parameters:
- - $file: munin.conf filename. If ommited, default filename is used.
+ - $file: munin.conf filename. If omitted, default filename is used.
 
 Returns:
  - Success: The $config hash (also cached in module)
@@ -1941,7 +1941,7 @@ Returns:
 
 =item B<munin_get_max_label_length>
 
-Get the length of the longest labe in a graph.
+Get the length of the longest label in a graph.
 
 Parameters:
  - $hash: the graph in question
@@ -2121,7 +2121,7 @@ Returns:
 
  munin_mkdir_p('/a/path/', oct('777'));
 
-Make a directory and recursivly any nonexistent directory in the path
+Make a directory and recursively any nonexistent directory in the path
 to it.
 
 
@@ -2162,7 +2162,7 @@ Parameters:
  - $what: name of the part that should be loaded (datafile or limits)
 
 Returns:
- - Success: a $config with the $specified part, but overwriten by $config
+ - Success: a $config with the $specified part, but overwritten by $config
 
 =item B<munin_removelock>
 

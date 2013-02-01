@@ -8,6 +8,8 @@ use warnings;
 use Carp;
 use IO::File;
 
+use Fcntl qw(:DEFAULT :flock);
+
 use Munin::Common::Defaults;
 use Munin::Common::SyncDictFile;
 use Munin::Node::Logger;
@@ -104,6 +106,7 @@ sub write
 
     open my $fh , '>>', "$self->{spooldir}/munin-daemon.$service.$fmtTimestamp." . $self->{interval_size}
         or die "Unable to open spool file: $!";
+    flock($fh, LOCK_EX);
 
     print {$fh} "timestamp $timestamp\n";
     print {$fh} "multigraph $service\n" unless $data->[0] =~ m{^multigraph};
