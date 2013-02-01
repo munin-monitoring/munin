@@ -1,5 +1,53 @@
 -*- text -*-
 
+munin-2.0.11, 2013-02-01
+
+-------
+Summary
+-------
+
+Bugfix-only release.
+
+- Important async fixes
+- Many fixes
+
+Closes: D:698079, D:697907
+
+------------------
+Detailed Changelog
+------------------
+
+Diego Elio Petteno:
+      hddtemp*: avoid using the degrees symbol in vlabel.
+      Update .gitignore.
+      master: always initialize the default cgiurl_graph value.
+      master: simplify logic for mapping images to their path.
+      master: provide a default to graph_strategy.
+      master: avoid repeated tests on graph_strategy.
+      master: remove unused variable.
+      pod: declare all POD-processed files as utf8 encoded.
+
+Marc Schutz:
+      fail2ban: Handle the case where no jails are configured.
+
+Stefan Rubner:
+      plugins/mysql_: fix check if InnoDB is disabled
+
+Steve Schnepp:
+      plugins/slapd_: fix Net::LDAP call
+      asyncd: fix races in writing to spool
+      asyncd: typo in pod
+      asyncd: try to reuse socket when asking node
+      asyncd: add the hostname in $0
+      asyncd: fix timeout bug & adding some debug
+      asyncd: ignore current plugin if failing cnx to node
+      asyncd: close the datafile before rename
+      asyncd: quickfix a sleeping dataloss bug
+
+Stig Sandbeck Mathisen:
+      Fix spelling mistakes in POD sections
+
+
 munin-2.0.10, 2013-01-09
 
 -------
