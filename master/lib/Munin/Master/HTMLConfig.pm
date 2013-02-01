@@ -23,7 +23,6 @@ my @times = ("day", "week", "month", "year");
 
 my $DEBUG = 0;
 my $INDEX_FILENAME = "index.html";
-my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 
 my $config;
 my $limits;
