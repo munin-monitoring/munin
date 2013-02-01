@@ -506,27 +506,21 @@ sub generate_service_templates {
     }
 
 	for my $scale (@times) {
-        # Don't try to find the size if cgi is enabled, 
-        # otherwise old data might pollute  
-        next if ($config->{graph_strategy} eq 'cgi');
-        if (my ($w, $h)
-            = get_png_size(munin_get_picture_filename($service, $scale))) {
-            $srv{"img" . $scale . "width"}  = $w;
-            $srv{"img" . $scale . "height"} = $h;
-        }
-    }
+		if (my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale))) {
+			$srv{"img" . $scale . "width"}  = $w;
+			$srv{"img" . $scale . "height"} = $h;
+		}
+	}
 
     if (munin_get_bool($service, "graph_sums", 0)) {
         $srv{imgweeksum} = "$srv{node}-week-sum.png";
         $srv{imgyearsum} = "$srv{node}-year-sum.png";
+
         for my $scale (["week", "year"]) {
-            next if ($config->{graph_strategy} eq 'cgi');
-            if (my ($w, $h)
-                = get_png_size(munin_get_picture_filename($service, $scale, 1)))
-            {
-                $srv{"img" . $scale . "sumwidth"}  = $w;
-                $srv{"img" . $scale . "sumheight"} = $h;
-            }
+			if (my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale, 1))) {
+				$srv{"img" . $scale . "sumwidth"}  = $w;
+				$srv{"img" . $scale . "sumheight"} = $h;
+			}
         }
     }
 
@@ -725,6 +719,8 @@ sub get_png_size {
     my $filename = shift;
     my $width    = undef;
     my $height   = undef;
+
+	return (undef, undef) if $config->{graph_strategy} eq "cgi";
 
     if (open(my $PNG, '<', $filename)) {
         my $incoming;
