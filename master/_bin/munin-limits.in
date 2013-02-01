@@ -1,6 +1,8 @@
 #!@@PERL@@
 # -*- cperl  -*-
 
+=encoding utf8
+
 =begin comment
 
 Copyright (C) 2004-2008 Jimmy Olsen

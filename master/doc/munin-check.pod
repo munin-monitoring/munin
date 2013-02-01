@@ -1,3 +1,5 @@
+=encoding utf8
+
 =head1 NAME
 
 munin-check - A program to fix permissions of Munin directories and files

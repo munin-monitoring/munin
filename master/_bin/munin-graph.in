@@ -1,6 +1,8 @@
 #!@@PERL@@ -T
 # -*- cperl -*-
 
+=encoding utf8
+
 =begin comment
 
 Copyright (C) 2004-2010 Jimmy Olsen, Steve Schnepp

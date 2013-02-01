@@ -1,6 +1,8 @@
 #!@@PERL@@
 # -*- cperl -*-
 
+=encoding utf8
+
 =begin comment
 
 Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal, Kjell Magne
