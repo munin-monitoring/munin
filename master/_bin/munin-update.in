@@ -109,6 +109,8 @@ exit main() unless caller;
 
 __END__
 
+=encoding utf8
+
 =head1 NAME
 
 munin-update - A program to gather data from machines running munin-node
