@@ -662,7 +662,7 @@ sub generate_service_message {
 		$obsess += scalar @{$stats{$cas}};
 	    }
 	}
-        if (!$hash->{'state_changed'} and !$obsess) {
+        if (!$hash->{'state_changed'} or !$obsess) {
             next;    # No need to send notification
         }
         DEBUG "[DEBUG] state has changed, notifying $c";
