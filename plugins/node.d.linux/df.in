@@ -1,9 +1,9 @@
 #!@@PERL@@ -w
-# -*-  perl -*-
+# -*- cperl -*-
 
 =head1 NAME
 
-df - Munin plugin to monitor disk usage
+df - Munin plugin to monitor disk or inode usage
 
 =head1 APPLICABLE SYSTEMS
 
@@ -15,6 +15,9 @@ The plugin excludes per default the following special, read-only or
 dynamically allocating file systems from graphing:
 
   none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root
+
+Additionally, when graphing inode usage, C<nilfs2> will be ignored as
+well.
 
 To change this set the environment variable "exclude" with a list of
 space separated fs types.  The environment variables "warning" and
@@ -55,7 +58,9 @@ RE will not be included.
 
 =head1 USAGE
 
-Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
+Link this plugin to @@CONFDIR@@/plugins/ and restart the
+munin-node. If you want to monitor inode usage instead of disk usage,
+just link the plugin as C<df_inode>.
 
 =head1 MAGIC MARKERS
 
@@ -67,13 +72,10 @@ Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
 Uses device names instead of mount points to identify mounted
 filesystems.
 
-=head1 VERSION
-
-  $Id$
-
 =head1 AUTHOR
 
-Ingvar Hagelund
+Copyright (C) 2013 Diego Elio Pettenò
+Based on the original plugin by Ingvar Hagelund
 
 =head1 LICENSE
 
@@ -84,86 +86,87 @@ GPLv2
 use strict;
 use Munin::Plugin;
 
+# Reset locale to C
+$ENV{LC_ALL} = 'C';
+
 # For these devices use the mount point, the device is useless
 my %usemntpt = ( tmpfs => 1, none => 1, udev => 1, simfs => 1 );
 
-my $exclude = $ENV{'exclude'} || 'none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root';
-my $dfopts  = "-P -l ".join(' -x ',('',split('\s+',$exclude)));
+my @exclude = qw(none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root);
+my $dfopts = "-P -l ";
+my $title = "Disk usage";
+
+if ( $Munin::Plugin::me == "df_inode" ) {
+  $title = "Inode usage";
+  $dfopts .= "-i ";
+  push(@excludes, 'nilfs2');
+}
+
+@excludes = split(/\s+/, $ENV{excludes}) if $ENV{excludes};
+
+$dfopts .= join(' -x', @excludes);
 
 my $mode = ($ARGV[0] or "print");
 
 # Compile REs from env
-my @include_re;
-if (defined $ENV{include_re}) {
-    foreach my $re (split m{\s+}, $ENV{include_re}) {
-        push @include_re, qr/$re/;
-    }
+my @include_re = map(qr/$_/, split(/\s+/, $ENV{include_re}));
+my @exclude_re = map(qr/$_/, split(/\s+/, $ENV{exclude_re}));
+
+sub split_and_skip {
+  my ($line) = @_;
+
+  # Parse the output
+  my ($name, undef, undef, undef, $capacity, $mountpt, undef) = split(/\s+/, $_, 7);
+
+  return undef if $name eq 'Filesystem';
+
+  foreach my $re (@include_re) {
+    return undef if ($name =~ $re or $mountpt =~ $re);
+  }
+
+  foreach my $re (@exclude_re) {
+    return undef if ($name =~ $re or $mountpt =~ $re);
+  }
+
+  $name = $mountpt if $usemntpt{$name};
+
+  $capacity =~ s/%$//;
+
+  return [clean_fieldname($name), $mountpt, $capacity];
 }
-my @exclude_re;
-if (defined $ENV{exclude_re}) {
-    foreach my $re (split m{\s+}, $ENV{exclude_re}) {
-        push @exclude_re, qr/$re/;
-    }
-}
 
-sub skip {
-    my $name = shift;
-    my $mountpt = shift;
-
-    foreach my $re (@include_re) {
-        return 0 if ($name =~ $re or $mountpt =~ $re);
-    }
-
-    foreach my $re (@exclude_re) {
-        return 1 if ($name =~ $re or $mountpt =~ $re);
-    }
-
-    return 0;
-}
+my @df_output = grep(defined($_), map(split_and_skip, split("\n", `df $dfopts 2>/dev/null`)));
 
 if ($mode eq 'autoconf' ) {
-    if (`@@PERL@@ $0` eq '' ) {
-        print "no (no devices to monitor)\n";
-    } else {
-        print "yes\n";
-    }
+  if ( scalar(@df_output) ) {
+    print "no (no device to monitor)\n";
+  } else {
+    print "yes\n";
+  }
+  exit 0;
+} elsif ($mode eq 'config' ) {
+  print <<END;
+graph_title $title in percent
+graph_args --upper-limit 100 -l 0
+graph_vlabel %
+graph_scale no
+graph_category disk
+END
+
+  foreach my $df (@df_output) {
+    my ($name, $mountpt) = @{$df};
+    print $name, ".label ", $mountpt, "\n";
+    print_thresholds($name, undef, undef, 92, 98);
+  }
+
+  unless ( ($ENV{MUNIN_CAP_DIRTYCONFIG} || 0) == 1 ) {
     exit 0;
+  }
 }
 
-if ($mode eq 'config' ) {
-    # The headers
-    print "graph_title Disk usage in percent\n";
-    print "graph_args --upper-limit 100 -l 0\n";
-    print "graph_vlabel %\n";
-    print "graph_scale no\n";
-    print "graph_category disk\n";
+foreach my $df (@df_output) {
+  my ($name, undef, $percent) = @{$df};
+  print $name, ".value ", $percent, "\n";
 }
 
-# Read from df
-open (DF,"df $dfopts 2>/dev/null |") or die "Unable to open pipe from df: $!";
-<DF>; # Skip the header
-while (<DF>) {
-    next if m{//};
-
-    # Parse the output
-    my ($name, undef, $used, $avail, undef, $mountpt, undef) = split(/\s+/, $_, 7);
-
-    next if skip($name, $mountpt);
-
-    # Calculate percentage used
-    my $ps = 0;
-    $ps = ($used / ($used+$avail)) * 100 if $used;
-
-    $name = $mountpt if defined($usemntpt{$name}) && $usemntpt{$name};
-    $name = clean_fieldname($name);
-
-    if($mode eq 'config') {
-        print $name, ".label ", $mountpt, "\n";
-        print_thresholds($name,undef,undef,92,98);
-    } else {
-        print $name, ".value ", $ps, "\n";
-    }
-}
-close DF;
-
-# vim: ft=perl : sw=4 : ts=4 : et
+# vim: ft=perl : sw=2 : ts=2 : et

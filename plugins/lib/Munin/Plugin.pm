@@ -64,6 +64,8 @@ our @EXPORT = qw(
         tail_open tail_close
         scaleNumber
         need_multigraph
+        readfile
+        readarray
 );
 
 use Munin::Common::Defaults;
@@ -435,6 +437,48 @@ sub tail_open ($$) {
 	die "$me: Seek to position $position of '$file' failed: $!\n";
     }
     return ($FH, $filereset);
+}
+
+
+=head3 $content = readfile($path)
+
+Read the whole content of a file (usually a single line) into a scalar.
+
+This is extremely helpful when reading data out of /proc or /sys that
+the kernel exposes.
+
+=cut
+
+sub readfile($) {
+  my ($path) = @_;
+
+  open my $FH, "<", $path or return undef;
+  local $/;
+  my $content = <$FH>;
+  close $FH;
+
+  return $content;
+}
+
+=head3 $content = readarray($path)
+
+Read the first line of a file into an array.
+
+This is extremely helpful when reading data out of /proc or /sys that
+the kernel exposes.
+
+=cut
+
+sub readarray($) {
+  my ($path) = @_;
+
+  open my $FH, "<", $path or return undef;
+  my $line = <$FH>;
+  chomp($line);
+  my @row = split(/\s+/, $line);
+  close $FH;
+
+  return @row;
 }
 
 =head3 $position = tail_close($file_handle)

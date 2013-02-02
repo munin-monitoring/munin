@@ -1,0 +1,290 @@
+#!@@PERL@@ -w
+# -*- cperl -*-
+
+=head1 NAME
+
+apache - Munin multigraph plugin to monitor Apache statistics.
+
+=head1 NOTES
+
+This plugin will produce multiple graphs showing:
+
+ - the number of accesses to Apache servers;
+ - the number of apache processes running on the machine;
+ - the volume of data sent from Apache servers.
+
+=head1 APPLICABLE SYSTEMS
+
+Apache HTTP servers with C</server-status> enabled.
+
+=head1 CONFIGURATION
+
+The plugin needs access to http://localhost/server-status?auto (or
+modify the URL for another host). See your Apache documentation on
+how to set up this URL in your httpd.conf. Apache needs ExtendedStatus
+enabled for this plugin to work.
+
+Tip: To see if it's already set up correctly, just run this plugin
+with the parameter "autoconf". If you get a "yes", everything should
+work like a charm already.
+
+This configuration section shows the defaults of the plugin:
+
+  [apache]
+     env.url   http://127.0.0.1:%d/server-status?auto
+     env.ports 80
+
+The %d in the url will be replaced with the port.  The default port is
+80 as shown.
+
+The port list is a space separated list of ports.  NOTE that one
+single Apache can have several open ports, and the plugin needs only
+to contact one to get the servers global status.  The list of ports is
+only needed if you have several B<different> Apaches configured on
+your host.
+
+If you need authenticated access to the URL you can either specify the
+username and password in the URL, or use the C<http_username> and
+C<http_password> variables.  For example:
+
+  [apache]
+     env.url http://munin:spamalot@localhost/server-status?auto
+
+or
+
+  [apache]
+     env.http_username munin
+     env.http_password spamalot
+
+This will provide for HTTP basic authentication.
+
+=head2 WILDCARD CONFIGURATION
+
+It's possible to use the plugin in a virtual-node capacity, in which
+case the URL will automatically default to the hostname defiend after
+the second underscore in the plugin name:
+
+  [apache_someserver]
+     env.url http://someserver:%d/server-status?auto
+
+=head1 INTERPRETATION
+
+=head2 APACHE ACCESES
+
+The graph shows the number of accesses (pages and other items served)
+globally on the Apache server.
+
+=head2 APACHE PROCESSES
+
+The graph shows the number of Apache processes running on the
+machine, and in addition separate "busy" and "idle" servers count.
+
+If there is a flat ceiling effect on the graph where the number of
+servers does not increase any more, in spite of no idle servers, then
+the server has probably reached its C<MaxClients> setting.  In this
+case it's very likely that some clients are getting connection refused
+or some other problem when connecting to your server.  In this case
+increase the C<MaxClients> setting.  Unless there is also no more free
+memory.
+
+=head2 APACHE VOLUME
+
+The graph shows the Apache HTTP servers global data volume in
+bytes. I.e. how many bytes the server has served.
+
+If there is a flat ceiling effect on the graph you may have reached
+some kind of bandwidth limit on your outgoing connection.
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 AUTHOR
+
+Rewritten by Diego Elio Pettenò <flameeyes@flameeyes.eu> based upon
+original apache_accesses, apache_processes and apache_volume plugins
+of unknown origin.
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+use strict;
+use warnings;
+use Munin::Plugin::HTTP;
+
+my $HOSTNAME = $1 if $Munin::Plugin::me =~ /_([^_]+)$/;
+
+my $ret = undef;
+
+if ( exists $ENV{'hostname'} ) {
+  $HOSTNAME = $ENV{'hostname'};
+}
+
+my $URL = "http://127.0.0.1:%d/server-status?auto";
+if ( exists $ENV{'url'} ) {
+  $URL = $ENV{'url'};
+} elsif ( defined $HOSTNAME ) {
+  $URL = "http://$HOSTNAME:%d/server-status?auto"
+}
+
+my @PORTS = exists $ENV{'ports'} ? split(' ', $ENV{'ports'}) : (80);
+my $UA = Munin::Plugin::HTTP->new;
+
+if ( defined $ARGV[0] and $ARGV[0] eq "autoconf" ) {
+  if ($ret) {
+    print "no ($ret)\n";
+    exit 0;
+  }
+
+  foreach my $port (@PORTS) {
+    my $url = sprintf $URL, $port;
+    my $response = $UA->get($url);
+    if ($response->is_success) {
+      if ($response->content =~ /^Total Accesses:/im ) {
+	next;
+      } else {
+	print "no (ExtendedStatus option for apache" 
+	  . " mod_status is missing on port $port)\n";
+	exit 0;
+      }
+    } elsif ($response->code == 404) {
+      print "no (apache server-status not found. check if mod_status is enabled)\n";
+      exit 0;
+    } else {
+      print "no (Port $port: ". $response->message .")\n";
+      exit 0;
+    }
+  }
+  print "yes\n";
+  exit 0;
+}
+
+if ( defined $ARGV[0] and $ARGV[0] eq "config" ) {
+  if ( defined $HOSTNAME ) {
+    print "host_name $HOSTNAME\n";
+  }
+
+  print <<END;
+
+multigraph apache_accesses
+graph_title Apache accesses
+graph_args --base 1000 -l 0
+graph_vlabel accesses / \${graph_period}
+graph_category apache
+END
+
+  foreach my $port (@PORTS) {
+    print <<END;
+accesses$port.label port $port
+accesses$port.type DERIVE
+accesses$port.info The number of accesses (pages and other items served) globally on the Apache server
+accesses$port.min 0
+END
+    print_thresholds("accesses$port");
+  }
+
+  print <<END;
+
+multigraph apache_processes
+graph_title Apache processes
+graph_args --base 1000 -l 0
+graph_vlabel processes
+graph_total total
+graph_category apache
+END
+
+  print "graph_order ";
+  foreach my $port (@PORTS) {
+    print "busy$port idle$port free$port ";
+  }
+  print "\n";
+
+  foreach my $port (@PORTS) {
+    print <<END;
+busy$port.label busy servers on port $port
+busy$port.draw LINE2
+busy$port.min 0
+idle$port.label idle servers on port $port
+idle$port.draw STACK
+idle$port.min 0
+free$port.label free slots on port $port
+free$port.draw STACK
+free$port.min 0
+END
+
+    print_thresholds("busy$port");
+    print_thresholds("idle$port");
+    print_thresholds("free$port");
+  }
+
+  print <<END;
+
+multigraph apache_volume
+graph_title Apache volume
+graph_args --base 1024 -l 0
+graph_vlabel KiB per \${graph_period}
+graph_category apache
+END
+
+  foreach my $port (@PORTS) {
+    print <<END;
+volume$port.label port $port
+volume$port.type DERIVE
+volume$port.min 0
+END
+
+    print_thresholds("volume$port");
+  }
+
+  exit 0;
+}
+
+my %multigraphs = (
+		   accesses => "multigraph apache_accesses\n",
+		   processes => "multigraph apache_processes\n",
+		   volume => "multigraph apache_volume\n"
+		  );
+
+foreach my $port (@PORTS) {
+  my $url = sprintf $URL, $port;
+  my $response = $UA->get($url);
+
+  if ($response->content =~ /^Total Accesses:\s+(.+)$/im) {
+    $multigraphs{accesses} .= "accesses$port.value $1\n";
+  } else {
+    $multigraphs{accesses} .= "accesses$port.value U\n";
+  }
+
+  if ($response->content =~ /^Busy(?:Servers|Workers):\s+(.+)$/im) {
+    $multigraphs{processes} .= "busy$port.value $1\n";
+  } else {
+    $multigraphs{processes} .= "busy$port.value U\n";
+  }
+  if ($response->content =~ /^Idle(?:Servers|Workers):\s+(.+)$/im) {
+    $multigraphs{processes} .= "idle$port.value $1\n";
+  } else {
+    $multigraphs{processes} .= "idle$port.value U\n";
+  }
+  if ($response->content =~ /^(Scoreboard: .*)$/m) {
+    my $count = () = $1 =~ /\./g;
+    $multigraphs{processes} .= "free$port.value $count\n";
+  } else {
+    $multigraphs{processes} .= "free$port.value U\n";
+  }
+
+  if ($response->content =~ /^Total kBytes:\s+(.+)$/im) {
+    $multigraphs{volume} .= "volume$port.value $1\n";
+  } else {
+    $multigraphs{volume} .= "volume$port.value U\n";
+  }
+}
+
+foreach my $graph (keys %multigraphs) {
+  print $multigraphs{$graph};
+}
+
+# vim:syntax=perl

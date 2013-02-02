@@ -1,0 +1,345 @@
+#!@@PERL@@ -w
+# -*- cperl -*-
+
+=head1 NAME
+
+squid - Multigraph-capable plugin to monitor Squid
+
+=head1 NOTES
+
+This plugin will produce multiple graphs showing:
+
+ - the number of requests (replaces squid_requests);
+ - the traffic (replaces squid_traffic);
+ - the size of the cache (replaces squid_cache);
+ - the traffic to the ICP peers (replaces squid_icp);
+ - the mean size of stored objects (replaces squid_objectsize).
+
+=head1 CONFIGURATION
+
+The following configuration parameters are used by this plugin
+
+ [squid]
+  env.host     - hostname to connect to
+  env.port     - port number to connect to
+  env.username - username used for authentication
+  env.password - password used for authentication
+
+
+=head2 DEFAULT CONFIGURATION
+
+ [squid]
+  env.host 127.0.0.1
+  env.port 3128
+
+=head2 WILDCARD CONFIGURATION
+
+It's possible to use the plugin in a virtual-node capacity, in which
+case the host configuration will default to the hostname following the
+underscore:
+
+ [squid_someserver]
+  env.host someserver
+  env.port 3128
+
+=head1 AUTHORS
+
+Copyright (C) 2013 Diego Elio Pettenò
+Copyright (C) 2004 Jimmy Olsen, Audun Ytterdal, Tore Anderson
+Copyright (C) 2008 Bjorn Ruberg
+
+=head1 LICENSE
+
+Gnu GPLv2
+
+=begin comment
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 dated June, 1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301 USA.
+
+=end comment
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+use Munin::Plugin;
+use IO::Socket::INET;
+
+my $hostname = $1 if $Munin::Plugin::me =~ /_([^_]+)$/;
+
+my $peeraddr = $ENV{'host'} || $hostname || '127.0.0.1';
+my $peerport = $ENV{'port'} || '3128';
+
+my $username = $ENV{'username'};
+my $password = $ENV{'password'};
+
+my $requirements = undef;
+if (! eval "require HTTP::Headers" or ! eval "require HTTP::Response" ) {
+  $requirements = "HTTP::Message not found";
+}
+
+sub getobject {
+  my $socket = IO::Socket::INET->new(PeerAddr => $peeraddr,
+				     PeerPort => $peerport,
+				     Proto => 'tcp',
+				     Timeout => 25);
+  if ( ! $socket ) {
+    $requirements = $!;
+    return undef;
+  }
+
+  my ($object) = @_;
+
+  my $request_line = sprintf("GET cache_object://%s/%s HTTP/1.0\r\n",
+			     $peeraddr, $object);
+  my $headers = HTTP::Headers->new('Accept' => '*/*',
+				   'User-Agent' => sprintf("munin/%s (squid)",
+							   $Munin::Common::Defaults::MUNIN_VERSION)
+				  );
+  if ( $username and $password ) {
+    $headers->authorization_basic($username, $password);
+    $headers->proxy_authorization_basic($username, $password);
+  }
+
+  $socket->print($request_line . $headers->as_string("\r\n") . "\r\n");
+  my $response = HTTP::Response->parse(join('', $socket->getlines));
+
+  $socket->close();
+
+  return $response;
+}
+
+sub get_icp {
+  my $server_list = getobject('server_list');
+  if ( $server_list->content =~ /There are no neighbors/ ) {
+    return undef;
+  }
+
+  my @lines = split(/\r\n/, $server_list->content);
+
+  my $ret;
+  my $id = "";
+  for (my $i = 0; $i <= $#lines; $i++) {
+    chomp $lines[$i];
+    if ($lines[$i] =~ /Address[^:]+:\s*([\d\.]+)\s*$/) {
+      my $host = $1;
+      $id = "h" . $host;
+      $id =~ s/\.//g;
+
+      my $h;
+      if ($h = Net::hostent::gethost ($host)) {
+	$ret->{$id}->{host} = lc $h->name;
+      } else {
+	$ret->{$id}->{host} = $host;
+      }
+    } elsif ($lines[$i] =~ /FETCHES\s*:\s*(\d+)/) {
+      $ret->{$id}->{fetches} = $1;
+    }
+  }
+}
+
+my $counters = getobject('counters');
+my $storedir = getobject('storedir');
+my $info     = getobject('info');
+my $icp_data = get_icp;
+
+if ( $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
+  if ( $requirements ) {
+    print "no ($requirements)\n";
+  } else {
+    if (! $counters->is_success ) {
+      my $status = $counters->status_line; $status =~ s/[\r\n]//g;
+      print "no ($status)\n";
+    } else {
+      print "yes\n";
+    }
+  }
+
+  exit 0;
+} elsif ( $ARGV[0] and $ARGV[0] eq 'config' ) {
+  print "host_name $hostname" if $hostname;
+
+  if ( $counters->is_success ) {
+    print <<END;
+
+multigraph squid_requests
+graph_title Squid client requests
+graph_args --base 1000 -l 0
+graph_vlabel requests / \${graph_period}
+graph_order hits errors misses
+graph_total total
+graph_category squid
+
+hits.label hits
+hits.type DERIVE
+hits.draw AREASTACK
+hits.min 0
+errors.label errors
+errors.type DERIVE
+errors.draw AREASTACK
+errors.min 0
+misses.label misses
+misses.type DERIVE
+misses.draw AREASTACK
+misses.min 0
+
+multigraph squid_traffic
+graph_title Squid Traffic
+graph_args --base 1024 -l 0
+graph_vlabel bytes per \${graph_period}
+graph_order in out hit_out
+graph_category squid
+
+in.label received
+in.type DERIVE
+in.min 0
+out.label sent
+out.type DERIVE
+out.min 0
+hit_out.label sent from cache
+hit_out.type DERIVE
+hit_out.min 0
+END
+  }
+
+  if ( $storedir->is_success ) {
+    print <<END;
+
+multigraph squid_swap
+graph_title Squid swap size
+graph_order Maximum Current
+graph_vlabel bytes
+graph_args --base 1024 -l 0
+graph_category squid
+max.label Maximum Swap Size
+current.label Current Store Swap Size
+END
+  }
+
+  if ( $info->is_success ) {
+    print <<END;
+
+multigraph squid_objectsize
+graph_title Squid object size
+graph_vlabel bytes
+graph_args --base 1024 -l 0
+graph_category squid
+size.label Mean Object Size
+END
+  }
+
+  if ( $icp_data ) {
+    print <<END;
+
+multigraph squid_icp
+graph_title Squid Relay Statistics
+graph_vlabel requests / \${graph_period}
+graph_args --base 1000 -l 0
+graph_total total
+graph_category squid
+END
+
+    foreach my $i (sort keys %{$icp_data}) {
+      print "$i.label ", $icp_data->{$i}->{host}, "\n";
+      print "$i.type DERIVE\n";
+      print "$i.max 500000\n";
+      print "$i.min 0\n";
+      print "$i.draw AREASTACK\n";
+    }
+  }
+
+  unless ( ($ENV{MUNIN_CAP_DIRTYCONFIG} || 0) == 1 ) {
+    exit 0;
+  }
+}
+
+exit 1 if $requirements;
+
+if ( $counters->is_success ) {
+  my $hits =
+    ($counters->content =~ /client_http\.hits = ([0-9]+)/) ? $1 : "U";
+  my $errors =
+    ($counters->content =~ /client_http\.errors = ([0-9]+)/) ? $1 : "U";
+  my $requests =
+    ($counters->content =~ /client_http\.requests = ([0-9]+)/) ? $1 : undef;
+  my $misses = $requests ? ($requests - $errors - $hits) : "U";
+
+  my $in =
+    ($counters->content =~ /client_http\.kbytes_in = ([0-9]+)/) ? ($1 * 1024) : "U";
+  my $out =
+    ($counters->content =~ /client_http\.kbytes_out = ([0-9]+)/) ? ($1 * 1024) : "U";
+  my $hits_out =
+    ($counters->content =~ /client_http\.hit_kbytes_out = ([0-9]+)/) ? ($1 * 1024) : "U";
+
+  print <<END;
+
+multigraph squid_requests
+hits.value $hits
+errors.value $errors
+misses.value $misses
+
+multigraph squid_traffic
+in.value $in
+out.value $out
+hits_out.value $hits_out
+END
+}
+
+if ( $storedir->is_success ) {
+  my $max =
+    ($storedir->content =~ /Maximum (?:Swap )?Size\s*:\s*([0-9]+) KB/) ? ($1 * 1024) : "U";
+  my $current =
+    ($storedir->content =~ /Current (?:Store Swap )?Size\s*:\s*([0-9]+) KB/) ? ($1 * 1024) : "U";
+
+  print <<END;
+
+multigraph squid_swap
+max.value $max
+current.value $current
+END
+}
+
+if ( $info->is_success ) {
+  my $size = 'U';
+  if ( $info->content =~ /Mean Object Size:\s*([0-9.]+) ([KMG])B/i ) {
+    $size = $1;
+    my $unit = $2;
+    if ( $unit eq 'K' ) {
+      $size *= 1024;
+    } elsif ( $unit eq 'M' ) {
+      $size *= (1024*1024);
+    } elsif ( $unit eq 'G' ) {
+      $size *= (1024*1024*1024);
+    }
+  }
+
+  print <<END;
+
+multigraph squid_objectsize
+size.value $size
+END
+}
+
+if ( $icp_data ) {
+  print "multigraph squid_icp\n";
+
+  foreach my $i (keys %{$icp_data}) {
+    print "$i.value ", $icp_data->{$i}->{fetches}, "\n";
+  }
+}

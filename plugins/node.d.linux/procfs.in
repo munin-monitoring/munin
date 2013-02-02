@@ -1,0 +1,267 @@
+#!@@PERL@@
+# -*- cperl -*-
+
+=head1 NAME
+
+procfs - Plugin to monitor general system statistics
+
+=head1 APPLICABLE SYSTEMS
+
+All Linux systems where /proc is accessible
+
+=head1 CONFIGURATION
+
+The following is default configuration
+
+  [cpu]
+	env.HZ	100
+
+=over 4
+
+=item C<env.HZ>
+
+Some combinations of hardware and Linux (probably only 2.4 kernels)
+use 1000 units/second in /proc/stat corresponding to the systems
+HZ. (see /usr/src/linux/include/asm/param.h). But Almost all systems
+use 100 units/second and this is our default. Even if
+Documentation/proc.txt in the kernel source says otherwise. - Finding
+and fix by dz@426.ch
+
+=back
+
+=head2 EXAMPLE WARNING AND CRITICAL SETTINGS
+
+You can also set warning and critical levels for each of the data
+series the plugin reports.  The following environment variables are
+used as default for all fields:
+
+  env.warning
+  env.critical
+
+But each field can be controlled separately. The available fields for
+the CPU graph are:
+
+  system, user, nice, idle, iowait, irq, softirq, steal, guest,
+  guest_nice
+
+=head1 INTERPRETATION
+
+=head2 CPU
+
+The plugin shows cpu usage in percent. In case of more than one core
+it displays 100% for each core.
+
+If a core is 100% busy there will be no "iowait" showing, that only
+shows if the CPU has nothing else to do while it waits on IO.
+Therefore a 100% busy core can hide a lot of iowait.  Please refer to
+the IO latency and other disk related graphs for further information
+about IO performance.
+
+=head2 INTERRUPTS
+
+The plugin monitors the number of interrupts and context switches on a
+system.
+
+=head2 FORKS
+
+The plugin monitors the number of forks per second on the machine
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 AUTHOR
+
+Copyright (C) 2013 Diego Elio Pettenò
+Rewritten from multiple plugins, integrating work by:
+
+ - Ragnar Wisløff
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+use strict;
+use Munin::Plugin;
+
+my $HZ = $ENV{HZ} || 100;
+
+sub _parse_stat_file {
+  my ($file) = @_;
+
+  my %hash;
+  foreach my $line (split(/\r?\n/, readfile($file))) {
+    my @line_s = split(/\s+/, $line);
+    my $name = shift(@line_s);
+    $hash{$name} = \@line_s;
+  }
+
+  return %hash;
+}
+
+my %stat = _parse_stat_file("/proc/stat");
+my %vmstat = _parse_stat_file("/proc/vmstat");
+
+my $ncpu = scalar(grep(/^cpu[0-9]+ /, keys %stat));
+
+
+my @cpu_fields = qw(system user nice idle iowait irq softirq steal guest guest_nice);
+my %cpu_data;
+@cpu_data{@cpu_fields} = @stat{cpu};
+
+my $intr    = $stat{intr}[0]      || "U";
+my $ctxt    = $stat{ctxt}[0]      || "U";
+my $forks   = $stat{processes}[0] || "U";
+
+my $swapin  = $vmstat{pswpin}[0]  || $stat{swap}[0] || "U";
+my $swapout = $vmstat{pswpout}[0] || $stat{swap}[1] || "U";
+
+my %cpu_field_info =
+  (
+   "system" => "CPU time spent by the kernel in system activities",
+   "user"   => "CPU time spent by normal programs and daemons",
+   "nice"   => "CPU time spent by nice(1)d programs",
+   "idle"   => "Idle CPU time",
+   "iowait" => "CPU time spent waiting for I/O operations to finish when there is nothing else to do",
+   "irq"    => "CPU time spent handling interrupts",
+   "softirq"=> "CPU time spent handling \"batched\" interrupts",
+   "steal"  => "The time that a virtual CPU had runnable tasks, but the virtual CPU itself was not running",
+   "guest"  => "The time spent running a virtual CPU for guest operating systems",
+   "guest_nice" => "The time spent running a virtual CPU for a niced guest operating system"
+  );
+
+if ( defined $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
+  print %stat ? "yes\n" : "no\n";
+  exit 0;
+} elsif ( defined $ARGV[0] and $ARGV[0] eq 'config' ) {
+  my $cpu_limit = $ncpu * 100;
+
+  print <<END;
+
+multigraph interrupts
+graph_title Interrupts and context switches
+graph_args --base 1000 -l 0
+graph_vlabel events per \${graph_period}
+graph_category system
+graph_info This graph shows the number of interrupts and context switches on the system. These are typically high on a busy system.
+intr.label interrupts
+intr.type DERIVE
+intr.max 100000
+intr.min 0
+intr.info Interrupts are events that alter sequence of instructions executed by a processor. They can come from either hardware (exceptions, NMI, IRQ) or software
+ctx.label context switches
+ctx.type DERIVE
+ctx.max 100000
+ctx.min
+ctx.info A context switch occurs when a multitasking operatings system suspends the currently running process, and starts executing another.
+END
+
+  print_thresholds("intr");
+  print_thresholds("ctxt");
+
+  print <<END;
+
+multigraph forks
+graph_title Fork rate
+graph_args --base 1000 -l 0
+graph_vlabel forks per \${graph_period}
+graph_info This graph shows the number of forks (new processes started) per second.
+graph_category system
+forks.label forks
+forks.type DERIVE
+forks.min 0
+forks.max 100000
+END
+
+  print_thresholds("forks");
+
+  # the swap graph might not always be possible, as the kernel might
+  # not support swap at all, in which case we just avoid preparing it
+  # at all
+  if ( -r "/proc/swaps" ) {
+    print <<END;
+
+multigraph swap
+graph_title Swap in/out
+graph_args --base 1000 -l 0
+graph_vlabel page per \${graph_period} in (-) / out (+)
+graph_category system
+swap_in.label swap
+swap_in.type DERIVE
+swap_in.min 0
+swap_in.graph no
+swap_out.label swap
+swap_out.type DERIVE
+swap_out.min 0
+swap_out.negative swap_in
+END
+
+    print_thresholds("swap_in");
+    print_thresholds("swap_out");
+  }
+
+  print <<END;
+
+multigraph cpu
+graph_title CPU usage
+graph_args --base 1000 -r --lower-limit 0 --upper-limit $cpu_limit
+graph_vlabel %
+graph_scale no
+graph_info This graph shows how CPU time is spent.
+graph_category system
+graph_period second
+END
+
+  foreach my $field (@cpu_fields) {
+    last unless defined($cpu_data{$field});
+
+    my $info = $cpu_field_info{$field};
+
+    print <<END;
+$field.label $field
+$field.min 0
+$field.max $cpu_limit
+$field.draw AREASTACK
+$field.type DERIVE
+$field.info $info
+END
+
+    adjust_threshold($field, $cpu_limit);
+    print_thresholds($field);
+  }
+
+  unless ( ($ENV{MUNIN_CAP_DIRTYCONFIG} || 0) == 1 ) {
+    exit 0;
+  }
+}
+
+print <<END;
+
+multigraph forks
+forks.value $forks
+
+multigraph interrupts
+intr.value $intr
+ctxt.value $ctxt
+
+END
+
+if ( -r "/proc/swaps" ) {
+  print <<END;
+multigraph swap
+swap_in.value $swapin
+swap_out.value $swapout
+
+END
+}
+
+print "multigraph cpu\n";
+foreach my $field (@cpu_fields) {
+  last unless defined($cpu_data{$field});
+  my $value = ($cpu_data{$field} * 100)/$HZ;
+
+  print $field, ".value ", $value, "\n";
+}
