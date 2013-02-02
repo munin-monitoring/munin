@@ -11,6 +11,11 @@ Any Linux system
 
 =head1 CONFIGURATION
 
+Specified devices may be skipped.
+
+   [irqstats]
+   env.skipdevs blkif,vif
+
 None needed
 
 =head1 USAGE
@@ -51,6 +56,8 @@ GPLv2
 
 use Munin::Plugin;
 use strict;
+
+my $skipdevs = $ENV{'skipdevs'} || "";
 
 if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
     if(-r '/proc/interrupts') {
@@ -96,7 +103,7 @@ sub sum (@) {
     return $sum;
 }
 
-while (my $line = <$in>) {
+LINE: while (my $line = <$in>) {
     my ($irq, $label, $type);
     my @data;
     if ($sun) {
@@ -117,6 +124,11 @@ while (my $line = <$in>) {
 	# to divorce data from commentary
 	$label = join(" ",@data[$cpus..$#data]);
 	@data = @data[0..$cpus-1];
+    }
+
+    # skip devices specified in config
+    foreach my $skipdev (split(',', $skipdevs)) {
+        next LINE if ($label =~ $skipdev);
     }
 
     # Skip non-per-cpu values for per-cpu stats
