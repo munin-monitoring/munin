@@ -28,7 +28,7 @@ Configuration is done through libpq environment variables, for example
 PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugin::Pgsql>.
 
 To monitor several instances, link to postgres_<tag>_checkpoints
-The <tag> can be what you want but without "_". It's allow you to define several
+The <tag> can be what you want but without "_". It allows you to define several
 database configuration.
 
 Example :

@@ -31,7 +31,7 @@ PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugin::Pgsql>.
 To monitor a specific database, link to postgres_oldest_prepared_xact_<databasename>.
 To monitor all databases, link to postgres_oldest_prepared_xact_ALL.
 To monitor several instances, link to postgres_<tag>_oldest_prepared_xact_<databasename|ALL>
-The <tag> can be what you want but without "_". It's allow you to define several
+The <tag> can be what you want but without "_". It allows you to define several
 database configuration.
 
 Example :
