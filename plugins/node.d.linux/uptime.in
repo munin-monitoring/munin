@@ -1,11 +1,13 @@
-#!@@GOODSH@@
-# -*- sh -*-
-
-: << =cut
+#!@@PERL@@
+# -*- cperl -*-
 
 =head1 NAME
 
 uptime - Plugin to measure uptime.
+
+=head1 CONFIGURATION
+
+No configuration
 
 =head1 NOTES
 
@@ -13,7 +15,8 @@ Especially the average and max values on the bigger graphs (yearly) can be inter
 
 =head1 AUTHOR
 
-Contributed by Nicolas Salles
+Copyright (C) 2013 Diego Elio Pettenò
+Originally contributed by Nicolas Salles
 
 =head1 LICENSE
 
@@ -26,25 +29,32 @@ GPLv2
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+use strict;
+use Munin::Plugin;
 
-if [ "$1" = "autoconf" ]; then
-        echo yes
-        exit 0
-fi
+my ($uptime) = readarray("/proc/uptime");
 
-if [ "$1" = "config" ]; then
+if ( defined $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
+  print $uptime ? "yes\n" : "no\n";
 
-        echo 'graph_title Uptime'
-        echo 'graph_args --base 1000 -l 0 '
-        echo 'graph_scale no'
-        echo 'graph_vlabel uptime in days'
-        echo 'graph_category system'
-        echo 'uptime.label uptime'
-        echo 'uptime.draw AREA'
-        print_warning uptime
-        print_critical uptime
-        exit 0
-fi
+  exit 0;
+} elsif ( defined $ARGV[0] and $ARGV[0] eq 'config' ) {
+  print <<END;
+graph_title Uptime
+graph_args --base 1000 -l 0
+graph_scale no
+graph_vlabel days
+graph_category system
+uptime.label uptime
+uptime.draw AREA
+END
 
-awk '{printf "uptime.value %.2f\n",$1/86400}' /proc/uptime
+  print_thresholds("uptime");
+
+  unless ( ($ENV{MUNIN_CAP_DIRTYCONFIG} || 0) == 1 ) {
+    exit 0;
+  }
+}
+
+printf "uptime.value %.2f\n", $uptime/86400;
+
