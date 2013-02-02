@@ -423,13 +423,13 @@ sub graph_main {
         autoflush $STATS 1;
     }
 
-    INFO "Starting munin-graph";
+    DEBUG "[DEBUG] Starting munin-graph";
 
     process_work(@limit_hosts);
 
     $graph_time = sprintf("%.2f", (Time::HiRes::time - $graph_time));
 
-    INFO "Munin-graph finished ($graph_time sec)";
+    DEBUG "[DEBUG] Munin-graph finished ($graph_time sec)";
 
     print $STATS "GT|total|$graph_time\n" unless $skip_stats;
 
