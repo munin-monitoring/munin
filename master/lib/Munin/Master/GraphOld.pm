@@ -62,7 +62,7 @@ use Munin::Master::Logger;
 use Munin::Master::Utils;
 use Munin::Common::Defaults;
 
-use Log::Log4perl qw( :easy );
+my $log = Munin::Master::Logger->new();
 
 # RRDtool 1.2 requires \\: in comments
 my $RRDkludge = $RRDs::VERSION < 1.2 ? '' : '\\';
@@ -326,7 +326,7 @@ sub graph_startup {
                 # it is way less intrusive than the command line args.
                 $ENV{RRDCACHED_ADDRESS} = $config->{"rrdcached_socket"};
 	    } else { 
-		    ERROR "[ERROR] RRDCached feature ignored: RRD version must be at least 1.3. Version found: " . $RRDs::VERSION; 
+		    $log->error "RRDCached feature ignored: RRD version must be at least 1.3. Version found: " . $RRDs::VERSION;
 	    }
     }
 
@@ -339,7 +339,8 @@ sub graph_startup {
         @COLOUR = @{$PALETTE{$palette}};
     }
     else {
-        die "Unknown palette named by 'palette' keyword: $palette\n";
+        $log->critical "Unknown palette named by 'palette' keyword: $palette\n";
+        die;
     }
 
     return $config;
@@ -410,26 +411,23 @@ sub graph_main {
                 "format=s"      => \$fileext,
 	    );
 
-    # XXX [DEBUG]
-    logger_debug() if $debug;
-
     my $graph_time = Time::HiRes::time;
 
     munin_runlock("$config->{rundir}/munin-graph.lock") unless $skip_locking;
 
     unless ($skip_stats) {
         open($STATS, '>', "$config->{dbdir}/munin-graph.stats.tmp")
-            or WARN "[WARNING] Unable to open $config->{dbdir}/munin-graph.stats.tmp";
+            or $log->warning "Unable to open $config->{dbdir}/munin-graph.stats.tmp";
         autoflush $STATS 1;
     }
 
-    DEBUG "[DEBUG] Starting munin-graph";
+    $log->info "Starting munin-graph";
 
     process_work(@limit_hosts);
 
     $graph_time = sprintf("%.2f", (Time::HiRes::time - $graph_time));
 
-    DEBUG "[DEBUG] Munin-graph finished ($graph_time sec)";
+    $log->info "Munin-graph finished ($graph_time sec)";
 
     print $STATS "GT|total|$graph_time\n" unless $skip_stats;
 
@@ -600,10 +598,10 @@ sub expand_specials {
     {
         my $cached = $service->{"#%#expand_specials"};
 	if (defined $cached) { 
-		DEBUG "[DEBUG] expand_specials(): already processed " . munin_dumpconfig_as_str($cached);
+		$log->debug "expand_specials(): already processed " . munin_dumpconfig_as_str($cached);
         	return $cached;
 	}
-	DEBUG "[DEBUG] expand_specials(): not processed, proceeding for " . munin_dumpconfig_as_str($service);
+	$log->debug "expand_specials(): not processed, proceeding for " . munin_dumpconfig_as_str($service);
     }
 
     # we have to compute the result;
@@ -627,10 +625,10 @@ sub expand_specials {
             my $sname = munin_get_node_name($src);
 
             if(!defined $src) {
-	    	ERROR "[ERROR] Failed to find $fname source at $spath, skipping field";
+                $log->error "Failed to find $fname source at $spath, skipping field";
 		next;
 	    }
-            DEBUG "[DEBUG] Copying settings from $sname to $fname.";
+            $log->debug "Copying settings from $sname to $fname.";
 
             foreach my $foption ("draw", "type", "rrdfile", "fieldname", "info")
             {
@@ -653,7 +651,7 @@ sub expand_specials {
         }
         elsif (defined($tmp_field = get_stack_command($service->{$field}))) {
 	    # Aliased with .stack
-            DEBUG "[DEBUG] expand_specials ($tmp_field): Doing stack...";
+            $log->debug "expand_specials ($tmp_field): Doing stack...";
 
             my @spc_stack = ();
             foreach my $pre (split(/\s+/, $tmp_field)) {
@@ -676,12 +674,12 @@ sub expand_specials {
                 munin_set_var_loc($service, [$name, "cdef"], "$name,UN,0,$name,IF");
                 if (munin_get($service->{$field}, "cdef")
                     and !munin_get_bool($service->{$name}, "onlynullcdef", 0)) {
-                    DEBUG "[DEBUG] NotOnlynullcdef ($field)...";
+                    $log->debug "NotOnlynullcdef ($field)...";
                     $service->{$name}->{"cdef"} .= "," . $service->{$field}->{"cdef"};
                     $service->{$name}->{"cdef"} =~ s/\b$field\b/$name/g;
                 }
                 else {
-                    DEBUG "[DEBUG] Onlynullcdef ($field)...";
+                    $log->debug "Onlynullcdef ($field)...";
                     munin_set_var_loc($service, [$name, "onlynullcdef"], 1);
                     push @$result, "$name.onlynullcdef";
                 }
@@ -690,7 +688,7 @@ sub expand_specials {
         elsif (defined($tmp_field = get_sum_command($service->{$field}))) {
             my @spc_stack = ();
             my $last_name = "";
-            DEBUG "[DEBUG] expand_specials ($tmp_field): Doing sum...";
+            $log->debug "expand_specials ($tmp_field): Doing sum...";
 
             if (@$order == 1
                 or (@$order == 2 and munin_get($field, "negative", 0))) {
@@ -719,7 +717,7 @@ sub expand_specials {
 
             if (my $tc = munin_get($service->{$field}, "cdef", 0))
             {    # Oh bugger...
-                DEBUG "[DEBUG] Oh bugger...($field)...\n";
+                $log->debug "Oh bugger...($field)...\n";
                 $tc =~ s/\b$field\b/$service->{$last_name}->{"cdef"}/;
                 $service->{$last_name}->{"cdef"} = $tc;
             }
@@ -772,12 +770,12 @@ sub single_value {
     my $graphable = munin_get($service, "graphable", 0);
     if (!$graphable) {
         foreach my $field (@{munin_get_field_order($service)}) {
-            DEBUG "[DEBUG] single_value: Checking field \"$field\".";
+            $log->debug "single_value: Checking field \"$field\".";
             $graphable++ if munin_draw_field($service->{$field});
         }
         munin_set_var_loc($service, ["graphable"], $graphable);
     }
-    DEBUG "[DEBUG] service "
+    $log->debug "service "
       . join(' :: ', @{munin_get_node_loc($service)})
 	. " has $graphable elements.";
     return ($graphable == 1);
@@ -837,15 +835,15 @@ sub fork_and_work {
     if (!$do_fork) {
 
         # We're not forking.  Do work and return.
-        DEBUG "[DEBUG] Doing work synchronously";
+        $log->debug "Doing work synchronously";
         &$work;
         return;
     }
 
     # Make sure we don't fork too much
     while ($running >= $max_running) {
-        DEBUG
-            "[DEBUG] Too many forks ($running/$max_running), wait for something to get done";
+        $log->debug
+            "Too many forks ($running/$max_running), wait for something to get done";
         look_for_child("block");
         --$running;
     }
@@ -853,7 +851,7 @@ sub fork_and_work {
     my $pid = fork();
 
     if (!defined $pid) {
-        ERROR "[ERROR] fork failed: $!";
+        $log->error "fork failed: $!";
         die "fork failed: $!";
     }
 
@@ -871,7 +869,7 @@ sub fork_and_work {
     }
     else {
         ++$running;
-        DEBUG "[DEBUG] Forked: $pid. Now running $running/$max_running";
+        $log->debug "Forked: $pid. Now running $running/$max_running";
         while ($running and look_for_child()) {
             --$running;
         }
@@ -904,7 +902,7 @@ sub process_service {
     my $fnum         = 0;
     my @rrd;
 
-    DEBUG "[DEBUG] Node name: $sname\n";
+    $log->debug "Node name: $sname\n";
 
     my $field_count   = 0;
     my $max_field_len = 0;
@@ -914,7 +912,7 @@ sub process_service {
     @field_order = @{munin_get_field_order($service)};
 
     # Array to keep 'preprocess'ed fields.
-    DEBUG "[DEBUG] Expanding specials for $sname: \""
+    $log->debug "Expanding specials for $sname: \""
         . join("\",\"", @field_order) . "\".";
 
     my $expanded_result = expand_specials($service, \@field_order);
@@ -928,7 +926,7 @@ sub process_service {
     @field_order = remove_dups ( @field_order );
 
     # Get max label length
-    DEBUG "[DEBUG] Checking field lengths for $sname: \"" . join('","', @field_order) . '".';
+    $log->debug "Checking field lengths for $sname: \"" . join('","', @field_order) . '".';
     $max_field_len = munin_get_max_label_length($service, \@field_order);
 
     # Global headers makes the value tables easier to read no matter how
@@ -962,7 +960,7 @@ sub process_service {
     my %total_neg;
     my $autostacking = 0;
 
-    DEBUG "[DEBUG] Treating fields \"" . join("\",\"", @field_order) . "\".";
+    $log->debug "Treating fields \"" . join("\",\"", @field_order) . "\".";
     for my $fname (@field_order) {
         my $path  = undef;
         my $field = undef;
@@ -973,7 +971,7 @@ sub process_service {
         $field = munin_get_node($service, [$fname]);
 
         next if (!defined $field or !$field or !process_field($field));
-        DEBUG "[DEBUG] Processing field \"$fname\" ["
+        $log->debug "Processing field \"$fname\" ["
             . munin_get_node_name($field) . "].";
 
         my $fielddraw = munin_get($field, "draw", "LINE1");
@@ -981,7 +979,7 @@ sub process_service {
         if ($field_count == 0 and $fielddraw eq 'STACK') {
 
             # Illegal -- first field is a STACK
-            DEBUG "ERROR: First field (\"$fname\") of graph "
+            $log->error "First field (\"$fname\") of graph "
                 . join(' :: ', munin_get_node_loc($service))
                 . " is STACK. STACK can only be drawn after a LINEx or AREA.";
             $fielddraw = "LINE1";
@@ -1010,13 +1008,13 @@ sub process_service {
         # Getting name of rrd file
         $filename = munin_get_rrd_filename($field, $path);
 	if (! $filename) {
-		ERROR "[ERROR] filename is empty for " . munin_dumpconfig_as_str($field) . ", $path";
+		$log->error "filename is empty for " . munin_dumpconfig_as_str($field) . ", $path";
 		# Ignore this field
 		next;
 	}
 
 	if(!defined $filename) {
-		ERROR "[ERROR] Failed getting filename for $path, skipping field";
+		$log->error "Failed getting filename for $path, skipping field";
 		next;
 	}
 	# Here it is OK to flush the rrdcached, since we'll flush it anyway
@@ -1067,7 +1065,7 @@ sub process_service {
         if (my $tmpcdef = munin_get($field, "cdef")) {
             push(@rrd, expand_cdef($service, \$rrdname, $tmpcdef));
             push(@rrd, "CDEF:c$rrdname=g$rrdname");
-            DEBUG "[DEBUG] Field name after cdef set to $rrdname";
+            $log->debug "Field name after cdef set to $rrdname";
         }
         elsif (!munin_get_bool($field, "onlynullcdef", 0)) {
             push(@rrd,
@@ -1076,7 +1074,7 @@ sub process_service {
         }
 
         next if !munin_draw_field($field);
-        DEBUG "[DEBUG] Drawing field \"$fname\".";
+        $log->debug "Drawing field \"$fname\".";
 
         if ($single_value) {
 
@@ -1369,10 +1367,10 @@ sub process_service {
     for my $time (keys %times) {
         next unless ($draw{$time});
         my $picfilename = get_picture_filename($service, $time);
-	DEBUG "[DEBUG] Looking into drawing $picfilename";
+	$log->debug "Looking into drawing $picfilename";
         (my $picdirname = $picfilename) =~ s/\/[^\/]+$//;
 
-        DEBUG "[DEBUG] Picture filename: $picfilename";
+        $log->debug "Picture filename: $picfilename";
 
         my @complete = get_fonts();
 
@@ -1440,13 +1438,13 @@ sub process_service {
 	$nb_graphs_drawn ++;
         RRDs_graph(@rrdcached_params, @complete);
         if (my $ERROR = RRDs::error) {
-            ERROR "[RRD ERROR] Unable to graph $picfilename : $ERROR";
+            $log->error "Unable to graph $picfilename : $ERROR";
             # ALWAYS dumps the cmd used when an error occurs.
             # Otherwise, it will be difficult to debug post-mortem
-            ERROR "[RRD ERROR] rrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
+            $log->error "rrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
         }
         elsif (!-f $picfilename) {
-		ERROR "[RRD ERROR] rrdtool graph did not generate the image (make sure there are data to graph).\n";
+            $log->error "rrdtool graph did not generate the image (make sure there are data to graph).\n";
         }
         else {
 
@@ -1459,7 +1457,7 @@ sub process_service {
 	    # This way --lazy continues to work as expected, and since
 	    # CGI uses --nolazy, http IMS are also working as expected.
             if (! $force_lazy) {
-                DEBUG "[DEBUG] setting time on $picfilename";
+                $log->debug "setting time on $picfilename";
                 utime $lastupdate, $lastupdate, $picfilename;
             }
 
@@ -1473,7 +1471,7 @@ sub process_service {
     if (munin_get_bool($service, "graph_sums", 0)) {
         foreach my $time (keys %sumtimes) {
             my $picfilename = get_picture_filename($service, $time, 1);
-	    INFO "Looking into drawing $picfilename";
+	    $log->info "Looking into drawing $picfilename";
             (my $picdirname = $picfilename) =~ s/\/[^\/]+$//;
             next unless ($draw{"sum" . $time});
             my @rrd_sum;
@@ -1565,7 +1563,7 @@ sub process_service {
             RRDs_graph(@rrdcached_params, @rrd_sum);
 
             if (my $ERROR = RRDs::error) {
-                ERROR "[RRD ERROR(sum)] Unable to graph "
+                $log->error "rrdgraph: Unable to graph "
                     . get_picture_filename($service, $time)
                     . ": $ERROR";
             }
@@ -1577,7 +1575,7 @@ sub process_service {
     } # if graph_sums
 
     $service_time = sprintf("%.2f", (Time::HiRes::time - $service_time));
-    INFO "[INFO] Graphed service $skeypath ($service_time sec for $nb_graphs_drawn graphs)";
+    $log->info "Graphed service $skeypath ($service_time sec for $nb_graphs_drawn graphs)";
     print $STATS "GS|$service_time\n" unless $skip_stats;
 
     foreach (@added) {
@@ -1600,7 +1598,7 @@ sub handle_trends {
     # enddate possibly in future
     my $futuretime = $pinpoint ? 0 : $resolutions{$time} * get_end_offset($service);
     my $enddate = $lastupdate + ($futuretime);
-    DEBUG "[DEBUG] lastupdate: $lastupdate, enddate: $enddate\n";
+    $log->debug "lastupdate: $lastupdate, enddate: $enddate\n";
 
     # future begins at this horizontal ruler
     if ($enddate > $lastupdate) {
@@ -1632,7 +1630,7 @@ sub handle_trends {
         if (defined $service->{$fieldname}{'trend'} and $service->{$fieldname}{'trend'} eq 'yes') {
             push (@complete, "CDEF:t$fieldname=c$cdef$fieldname,$futuretime,TRENDNAN");
             push (@complete, "LINE1:t$fieldname#$colour:$fieldname trend\\l");
-            DEBUG "[DEBUG] set trend for $fieldname\n";
+            $log->debug "set trend for $fieldname\n";
         }
 
         #predictions
@@ -1643,7 +1641,7 @@ sub handle_trends {
             my $smooth = $predict[1]*$resolutions{$time};
             push (@complete, "CDEF:p$fieldname=$predict[0],-$predictiontime,$smooth,c$cdef$fieldname,PREDICT");
             push (@complete, "LINE1:p$fieldname#$colour:$fieldname prediction\\l");
-            DEBUG "[DEBUG] set prediction for $fieldname\n";
+            $log->debug "set prediction for $fieldname\n";
         }
     }
 
@@ -1752,14 +1750,14 @@ sub skip_service {
 
     # Skip if we've limited services with the omnipotent cli option only-fqn
     return 1 if ($only_fqn and ! ends_with($fqn, $only_fqn));
-    DEBUG "[DEBUG] $fqn is in ($only_fqn)\n";
+    $log->debug "$fqn is in ($only_fqn)\n";
 
     # Skip if we've limited services with cli options
     return 1
       if (@limit_services and
 	  ! (grep { ends_with($fqn, $_) } @limit_services));
 
-    DEBUG "[DEBUG] $fqn is in (" . join(",", @limit_services) . ")\n";
+    $log->debug "$fqn is in (" . join(",", @limit_services) . ")\n";
 
     # Always graph if --force is present
     return 0 if $force_graphing;
@@ -1857,15 +1855,15 @@ sub RRDescape {
 
 sub RRDs_graph {
 	if ($fileext eq "png") {
-	        DEBUG "[DEBUG] \n\nrrdtool graph '" . join("' \\\n\t'", @_) . "'\n";
+	        $log->debug "\n\nrrdtool graph '" . join("' \\\n\t'", @_) . "'\n";
 		return RRDs::graph(@_);
 	}
 
-	DEBUG "[DEBUG] RRDs_graph(fileext=$fileext)";
+	$log->debug "RRDs_graph(fileext=$fileext)";
 	my $outfile = shift @_;
 
 	# Open outfile
-	DEBUG "[DEBUG] Open outfile($outfile)";
+	$log->debug "Open outfile($outfile)";
 	my $out_fh = new IO::File(">$outfile");
 
 	# Remove unknown args
@@ -1893,7 +1891,7 @@ sub RRDs_graph {
 		# Ignore the arg
 	}
 	# Now we have to fetch the textual values
-        DEBUG "[DEBUG] \n\nrrdtool xport '" . join("' \\\n\t'", @xport) . "'\n";
+        $log->debug "\n\nrrdtool xport '" . join("' \\\n\t'", @xport) . "'\n";
 	my ($start, $end, $step, $nb_vars, $columns, $values) = RRDs::xport(@xport);
 	if ($fileext eq "csv") {
 		print $out_fh '"epoch", "' . join('", "', @{ $columns } ) . "\"\n";

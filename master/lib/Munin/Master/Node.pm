@@ -10,17 +10,15 @@ use strict;
 
 use Carp;
 use Munin::Master::Config;
+use Munin::Master::Logger;
 use Munin::Common::Timeout;
 use Munin::Common::TLSClient;
 use Data::Dumper;
-use Log::Log4perl qw( :easy );
 use Time::HiRes qw( gettimeofday tv_interval );
 use IO::Socket::INET6;
 
 my $config = Munin::Master::Config->instance()->{config};
-
-# Quick version, to enable "DEBUG ... if $debug" constructs
-my $debug = $config->{debug};
+my $log = Munin::Master::Logger->new;
 
 # Note: This timeout governs both small commands and waiting for the total
 # output of a plugin.  It is reset for each read.
@@ -62,7 +60,7 @@ sub _do_connect {
     # Connect to a munin node.  Return false if not, true otherwise.
     my ($self) = @_;
 
-    LOGCROAK("[FATAL] No address!  Did you forget to set 'update no' or to set 'address <IP>' ?")
+    $log->critical("No address!  Did you forget to set 'update no' or to set 'address <IP>' ?")
 	if !defined($self->{address});
 
     # Check if it's an URI or a plain host
@@ -78,7 +76,7 @@ sub _do_connect {
     # If the scheme is not defined, it's a plain host. 
     # Prefix it with munin:// to be able to parse it like others
     $uri = new URI("munin://" . $url) unless $uri->scheme;
-    LOGCROAK("[FATAL] '$url' is not a valid address!") unless $uri->scheme;
+    $log->critical("'$url' is not a valid address!") unless $uri->scheme;
 
     if ($uri->scheme eq "munin") {
         $self->{reader} = $self->{writer} = IO::Socket::INET6->new(
@@ -90,7 +88,7 @@ sub _do_connect {
 		Timeout   => $config->{timeout}
 	);
 	if (! $self->{reader} ) {
-		ERROR "Failed to connect to node $self->{address}:$self->{port}/tcp : $!";
+		$log->error("Failed to connect to node $self->{address}:$self->{port}/tcp : $!");
 		return 0;
 	}
     } elsif ($uri->scheme eq "ssh") {
@@ -108,9 +106,9 @@ sub _do_connect {
 	    $self->{writer} = new IO::Handle();
 	    $self->{stderr} = new IO::Handle();
 
-	    DEBUG "[DEBUG] open3($remote_connection_cmd)";
+	    $log->debug("open3($remote_connection_cmd)");
 	    $self->{pid} = open3($self->{writer}, $self->{reader}, $self->{stderr}, $remote_connection_cmd);
-            ERROR "Failed to connect to node $self->{address} : $!" unless $self->{pid};
+            $log->error("Failed to connect to node $self->{address} : $!") unless $self->{pid};
     } elsif ($uri->scheme eq "cmd") {
         # local commands should ignore the username, url and host
         my $local_cmd = $uri->path;
@@ -123,11 +121,11 @@ sub _do_connect {
 	    $self->{writer} = new IO::Handle();
 	    $self->{stderr} = new IO::Handle();
 
-	    DEBUG "[DEBUG] open3($local_pipe_cmd)";
+	    $log->debug("open3($local_pipe_cmd)");
 	    $self->{pid} = open3($self->{writer}, $self->{reader}, $self->{stderr}, $local_pipe_cmd);
-            ERROR "Failed to execute local command: $!" unless $self->{pid};
+            $log->error("Failed to execute local command: $!") unless $self->{pid};
     } else {
-	    ERROR "Unknown scheme : " . $uri->scheme;
+	    $log->error("Unknown scheme : " . $uri->scheme);
 	    return 0;
     }
 
@@ -138,7 +136,8 @@ sub _do_connect {
     until(defined($self->{node_name})) {
 	my $greeting = $self->_node_read_single();
 	if (!$greeting) {
-	    die "[ERROR] Got unknown reply from node ".$self->{host}."\n";
+	    $log->critical("Got unknown reply from node ".$self->{host}."\n");
+            die;
 	}
 
 	$self->_extract_name_from_greeting($greeting);
@@ -161,12 +160,12 @@ sub _run_starttls_if_required {
     # value is therefore "disabled" (and not "auto" as before).
     my $tls_requirement = exists $self->{configref}->{tls} ?
                                    $self->{configref}->{tls} : $config->{tls};
-    DEBUG "TLS set to \"$tls_requirement\".";
+    $log->debug("TLS set to \"$tls_requirement\".");
     return if $tls_requirement eq 'disabled';
-    my $logger = Log::Log4perl->get_logger("Munin::Master");
+
     $self->{tls} = Munin::Common::TLSClient->new({
         DEBUG        => $config->{debug},
-        logger       => sub { $logger->warn(@_) },
+        logger       => $log,
         read_fd      => fileno($self->{reader}),
         read_func    => sub { _node_read_single($self) },
         tls_ca_cert  => $config->{tls_ca_certificate},
@@ -183,7 +182,8 @@ sub _run_starttls_if_required {
     if (!$self->{tls}->start_tls()) {
         $self->{tls} = undef;
         if ($tls_requirement eq "paranoid" or $tls_requirement eq "enabled") {
-	    die "[ERROR] Could not establish TLS connection to '$self->{address}'. Skipping.\n";
+            $log->critical("Could not establish TLS connection to '$self->{address}'. Skipping.\n");
+	    die;
         }
     }
 }
@@ -213,7 +213,7 @@ sub negotiate_capabilities {
     # other takes advantage of the capabilities it understands (or
     # dumbs itself down to the counterparts level of sophistication).
 
-    DEBUG "[DEBUG] Negotiating capabilities\n";
+    $log->debug("Negotiating capabilities\n");
 
     $self->_node_write_single("cap $self->{master_capabilities}\n");
     my $cap = $self->_node_read_single();
@@ -225,7 +225,7 @@ sub negotiate_capabilities {
     my @node_capabilities = split(/\s+/,$cap);
     shift @node_capabilities ; # Get rid of leading "cap".
 
-    DEBUG "[DEBUG] Node says /$cap/\n";
+    $log->debug("Node says /$cap/\n");
 
     return @node_capabilities;
 }
@@ -243,14 +243,15 @@ sub list_plugins {
         : $self->{host};
 
     if (not $host) {
-	die "[ERROR] Couldn't find out which host to list on $host.\n";
+	$log->critical("Couldn't find out which host to list on $host.\n");
+        die;
     }
 
     $self->_node_write_single("list $host\n");
     my $list = $self->_node_read_single();
 
     if (not $list) {
-        WARN "[WARNING] Config node $self->{host} listed no services for $host.  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.";
+        $log->warning("Config node $self->{host} listed no services for $host.  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.");
     }
 
     return split / /, $list;
@@ -292,8 +293,8 @@ sub parse_service_config {
     };
 
 
-    DEBUG "[DEBUG] Now parsing config output from plugin $plugin on "
-	.$self->{host};
+    $log->debug("Now parsing config output from plugin $plugin on "
+	.$self->{host});
 
     new_service($service);
 
@@ -302,10 +303,11 @@ sub parse_service_config {
 
     for my $line (@$lines) {
 
-	DEBUG "[CONFIG from $plugin] $line" if $debug;
+	$log->debug("[CONFIG from $plugin] $line");
 
 	if ($line =~ /\# timeout/) {
-	    die "[ERROR] Timeout error on $nodedesignation during fetch of $plugin. \n";
+	    $log->critical("Timeout error on $nodedesignation during fetch of $plugin");
+            die "Timeout error on $nodedesignation during fetch of $plugin";
 	}
 
         next unless $line;
@@ -319,10 +321,11 @@ sub parse_service_config {
 	    $service = $1;
 
 	    if ($service eq 'multigraph') {
-		die "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+		$log->critical("SERVICE can't be named \"$service\" in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port});
+                die;
 	    }
 	    new_service($service) unless $global_config->{$service};
-	    DEBUG "[CONFIG multigraph $plugin] Service is now $service";
+	    $log->debug("[CONFIG multigraph $plugin] Service is now $service");
 	}
 	elsif ($line =~ m{\A ([^\s\.]+) \s+ (.+?) \s* $}xms) {
 	    $correct++;
@@ -332,7 +335,7 @@ sub parse_service_config {
 	    # add to config if not already here
 	    push @{$global_config->{$service}}, [$label, $2]
 	    	unless grep { $_->[0] eq $label }  @{$global_config->{$service}};
-            DEBUG "[CONFIG graph global $plugin] $service->$label = $2" if $debug;
+            $log->debug("[CONFIG graph global $plugin] $service->$label = $2");
         } elsif ($line =~ m{\A ([^\.]+)\.value \s+ (.+?) \s* $}xms) {
 	    $correct++;
 	    # Special case for dirtyconfig
@@ -343,7 +346,7 @@ sub parse_service_config {
 		$when = $1;
 		$value = $2;
 	    }
-            DEBUG "[CONFIG dirtyconfig $plugin] Storing $value from $when in $ds_name";
+            $log->debug("[CONFIG dirtyconfig $plugin] Storing $value from $when in $ds_name");
 
 	    # Creating the datastructure if not created already
             $data_source_config->{$service}{$ds_name} ||= {};
@@ -361,17 +364,17 @@ sub parse_service_config {
             $ds_name = $self->_sanitise_fieldname($ds_name);
             $data_source_config->{$service}{$ds_name} ||= {};
             $data_source_config->{$service}{$ds_name}{$ds_var} = $ds_val;
-            DEBUG "[CONFIG dataseries $plugin] $service->$ds_name.$ds_var = $ds_val" if $debug;
+            $log->debug("[CONFIG dataseries $plugin] $service->$ds_name.$ds_var = $ds_val");
             push ( @graph_order, $ds_name ) if $ds_var eq 'label';
         }
 	else {
 	    $errors++;
-	    DEBUG "[DEBUG] Protocol exception: unrecognized line '$line' from $plugin on $nodedesignation.\n";
+	    $log->debug("Protocol exception: unrecognized line '$line' from $plugin on $nodedesignation.\n");
         }
     }
 
     if ($errors) {
-	WARN "[WARNING] $errors lines had errors while $correct lines were correct in data from 'config $plugin' on $nodedesignation";
+	$log->warning("$errors lines had errors while $correct lines were correct in data from 'config $plugin' on $nodedesignation");
     }
 
     $self->_validate_data_sources($data_source_config);
@@ -387,7 +390,7 @@ sub fetch_service_config {
 
     my $t0 = [gettimeofday];
 
-    DEBUG "[DEBUG] Fetching service configuration for '$service'";
+    $log->debug("Fetching service configuration for '$service'");
     $self->_node_write_single("config $service\n");
 
     # The whole config in one fell swoop.
@@ -396,7 +399,7 @@ sub fetch_service_config {
     my $elapsed = tv_interval($t0);
 
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
-    DEBUG "[DEBUG] config: $elapsed sec for '$service' on $nodedesignation";
+    $log->debug("config: $elapsed sec for '$service' on $nodedesignation");
 
     $service = $self->_sanitise_plugin_name($service);
 
@@ -406,7 +409,7 @@ sub fetch_service_config {
 sub spoolfetch {
     my ($self, $timestamp) = @_;
 
-    DEBUG "[DEBUG] Fetching spooled services since $timestamp (" . localtime($timestamp) . ")";
+    $log->debug("Fetching spooled services since $timestamp (" . localtime($timestamp) . ")");
     $self->_node_write_single("spoolfetch $timestamp\n");
 
     # The whole stuff in one fell swoop.
@@ -427,7 +430,7 @@ sub _validate_data_sources {
 
 	for my $ds (keys %$data_source_config) {
 	    if (!defined $data_source_config->{$ds}{label}) {
-		ERROR "Missing required attribute 'label' for data source '$ds' in service $service on $nodedesignation";
+		$log->error("Missing required attribute 'label' for data source '$ds' in service $service on $nodedesignation");
 		$data_source_config->{$ds}{label} = 'No .label provided';
 		$data_source_config->{$ds}{extinfo} = "NOTE: The plugin did not provide any label for the data source $ds.  It is in need of fixing.";
 	    }
@@ -449,19 +452,20 @@ sub parse_service_data {
 	$service => {},
     );
 
-    DEBUG "[DEBUG] Now parsing fetch output from plugin $plugin on ".
-	$nodedesignation;
+    $log->debug("Now parsing fetch output from plugin $plugin on ".
+	$nodedesignation);
 
     # every 'N' has the same value. Should not take parsing time into the equation
     my $now = time;
 
     for my $line (@$lines) {
 
-	DEBUG "[FETCH from $plugin] $line";
+	$log->debug("[FETCH from $plugin] $line");
 
 	if ($line =~ /\# timeout/) {
-	    die "[WARNING] Timeout in fetch from '$plugin' on ".
-		$nodedesignation;
+            my $message = "Timeout in fetch from '$plugin' on " . $nodedesignation;
+	    $log->critical($message);
+            croak $message;
 	}
 
         next unless $line;
@@ -474,8 +478,8 @@ sub parse_service_data {
 	    $values{$service} = {};
 
 	    if ($service eq 'multigraph') {
-		ERROR "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".
-		    $nodedesignation;
+		$log->error("SERVICE can't be named \"$service\" in plugin $plugin on ".
+		    $nodedesignation);
 		croak("Plugin error.  Please consult the log.");
 	    }
 	}
@@ -486,7 +490,7 @@ sub parse_service_data {
 
             $data_source = $self->_sanitise_fieldname($data_source);
 
-	    DEBUG "[FETCH from $plugin] Storing $value in $data_source";
+	    $log->debug("[FETCH from $plugin] Storing $value in $data_source");
 
 	    if ($value =~ /^(\d+):(.+)$/) {
 		$when = $1;
@@ -513,14 +517,14 @@ sub parse_service_data {
 	}
         else {
 	    $errors++;
-            DEBUG "[DEBUG] Protocol exception while fetching '$service' from $plugin on $nodedesignation: unrecognized line '$line'";
+            $log->debug("Protocol exception while fetching '$service' from $plugin on $nodedesignation: unrecognized line '$line'");
 	    next;
         }
     }
     if ($errors) {
 	my $percent = ($errors / ($errors + $correct)) * 100; 
 	$percent = sprintf("%.2f", $percent);
-	WARN "[WARNING] $errors lines had errors while $correct lines were correct ($percent%) in data from 'fetch $plugin' on $nodedesignation";
+	$log->warning("$errors lines had errors while $correct lines were correct ($percent%) in data from 'fetch $plugin' on $nodedesignation");
     }
 
     return %values;
@@ -538,7 +542,7 @@ sub fetch_service_data {
     
     my $elapsed = tv_interval($t0);
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
-    DEBUG "[DEBUG] data: $elapsed sec for '$plugin' on $nodedesignation";
+    $log->debug("data: $elapsed sec for '$plugin' on $nodedesignation");
 
     $plugin = $self->_sanitise_plugin_name($plugin);
 
@@ -552,7 +556,7 @@ sub quit {
     $self->_node_write_single("quit \n");
     my $elapsed = tv_interval($t0);
     my $nodedesignation = $self->{host}."/".$self->{address}."/".$self->{port};
-    DEBUG "[DEBUG] quit: $elapsed sec on $nodedesignation";
+    $log->debug("quit: $elapsed sec on $nodedesignation");
 
     return 1;
 }
@@ -581,7 +585,7 @@ sub _sanitise_fieldname {
 sub _node_write_single {
     my ($self, $text) = @_;
 
-    DEBUG "[DEBUG] Writing to socket: \"$text\".";
+    $log->debug("Writing to socket: \"$text\".");
     my $timed_out = !do_with_timeout($self->{io_timeout}, sub {
         if ($self->{tls} && $self->{tls}->session_started()) {
             $self->{tls}->write($text) or exit 9;
@@ -591,8 +595,9 @@ sub _node_write_single {
 	return 1;
     });
     if ($timed_out) {
-        LOGCROAK "[FATAL] Socket write timed out to ".$self->{host}.
-	    ".  Terminating process.";
+        $log->critical("[FATAL] Socket write timed out to ".$self->{host}.
+                       ".  Terminating process.");
+        die;
     }
     return 1;
 }
@@ -614,15 +619,16 @@ sub _node_read_single {
       return 1;
     });
     if ($timed_out) {
-        LOGCROAK "[FATAL] Socket read timed out to ".$self->{host}.
-	    ".  Terminating process.";
+        $log->critical("[FATAL] Socket read timed out to ".$self->{host}.
+                       ". Terminating process.");
+        die;
     }
     if (!defined($res)) {
 	# Probable socket not open.  Why are we here again then?
 	# aren't we supposed to be in "do in session"?
-	LOGCROAK "[FATAL] Socket read from ".$self->{host}." failed.  Terminating process.";
+	$log->critical("Socket read from ".$self->{host}." failed.  Terminating process.");
     }
-    DEBUG "[DEBUG] Reading from socket to ".$self->{host}.": \"$res\"." if $debug;
+    $log->debug("Reading from socket to ".$self->{host}.": \"$res\".");
     return $res;
 }
 
@@ -664,7 +670,7 @@ sub _node_read {
         $line = $self->_node_read_single();
     }
 
-    DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".";
+    $log->debug("Reading from socket: \"".(join ("\\n",@array))."\".");
     return \@array;
 }
 

@@ -9,7 +9,6 @@ use English qw(-no_match_vars);
 use Carp;
 
 use Time::HiRes;
-use Log::Log4perl qw( :easy );
 
 use Munin::Common::Defaults;
 use Munin::Master::Config;
@@ -19,6 +18,7 @@ use Munin::Master::ProcessManager;
 use Munin::Master::Utils;
 
 my $config = Munin::Master::Config->instance()->{config};
+my $log    = Munin::Master::Logger->new;
 
 sub new {
     my ($class) = @_;
@@ -45,7 +45,7 @@ sub run {
     $self->_create_rundir_if_missing();
 
     $self->_do_with_lock_and_timing(sub {
-        INFO "[INFO]: Starting munin-update";
+        $log->info("Starting munin-update");
 
         $self->{old_service_configs} = $self->_read_old_service_configs();
 
@@ -77,14 +77,14 @@ sub _read_old_service_configs {
     
     if (-e $datafile ) {
 	if (! open( $file, '<', $datafile)) {
-	    WARN "[Warning] Cannot open datafile $datafile";
+	    $log->warn("Cannot open datafile $datafile");
 	    return {};
 	}
 	eval {
 	    $oldconfig->parse_config($file);
 	};
 	if ($EVAL_ERROR) {
-	    WARN "[Warning] Could not parse datafile $datafile: $EVAL_ERROR";
+	    $log->warn("Could not parse datafile $datafile: $EVAL_ERROR");
 	}
     }
     return $oldconfig;
@@ -95,9 +95,10 @@ sub _create_rundir_if_missing {
     my ($self) = @_;
 
     unless (-d $config->{rundir}) {
-	mkdir $config->{rundir}, oct(700)
-            or croak "Failed to create rundir (".$config->{rundir}."): $!";
-
+	unless (mkdir $config->{rundir}, oct(700)) {
+            $log->critical("Failed to create rundir (".$config->{rundir}."): $!");
+            die;
+        }
     }
 }
 
@@ -129,10 +130,10 @@ sub _do_with_lock_and_timing {
 
     my $update_time = Time::HiRes::time;
     if (!open ($self->{STATS}, '>', "$config->{dbdir}/munin-update.stats.tmp")) {
-        WARN "[WARNING] Could not open STATS to $config->{dbdir}/munin-update.stats.tmp: $!";
+        $log->warning("Could not open STATS to $config->{dbdir}/munin-update.stats.tmp: $!");
         # Use /dev/null instead - if the admin won't fix he won't care
         open($self->{STATS}, '>', "/dev/null") or 
-	    LOGCROAK "[FATAL] Could not open STATS to /dev/null (fallback for not being able to open $config->{dbdir}/munin-update.stats.tmp): $!";
+	    $log->critical("Could not open STATS to /dev/null (fallback for not being able to open $config->{dbdir}/munin-update.stats.tmp): $!");
     }
 
     # Place global munin-update timeout here.
@@ -143,7 +144,7 @@ sub _do_with_lock_and_timing {
     close ($self->{STATS});
     $self->{STATS} = undef;
     rename ("$config->{dbdir}/munin-update.stats.tmp", "$config->{dbdir}/munin-update.stats");
-    INFO "[INFO]: Munin-update finished ($update_time sec)";
+    $log->info("Munin-update finished ($update_time sec)");
 
     munin_removelock($lock);
 
@@ -179,7 +180,7 @@ sub _run_workers {
 	    } else {
 		# Need to handle connection failure same as other
 		# failures.  do_connect fails softly.
-		WARN "[WARNING] Failed worker ".$worker_id."\n";
+		$log->warning("Failed worker ".$worker_id."\n");
 		push @{$self->{failed_workers}}, $worker_id;
 	    }
         }
@@ -199,17 +200,18 @@ sub _handle_worker_result {
 
     if (!defined($res)) {
 	# no result? problem
-	LOGCROAK("[FATAL] Handle_worker_result got handed a failed worker result");
+	$log->critical("Handle_worker_result got handed a failed worker result");
+        die;
     }
 
     my ($worker_id, $time_used, $service_configs) 
         = ($res->[0], $res->[1]{time_used}, $res->[1]{service_configs});
 
     my $update_time = sprintf("%.2f", $time_used);
-    INFO "[INFO]: Munin-update finished for node $worker_id ($update_time sec)";
+    $log->info("Munin-update finished for node $worker_id ($update_time sec)");
     if (! defined $self->{STATS} ) {
 	# This is may only be the case when we get connection refused
-	ERROR "[BUG!] Did not collect any stats for $worker_id.  If this message appears in your logs a lot please email munin-users.  Thanks.";
+	$log->error("[BUG!] Did not collect any stats for $worker_id.  If this message appears in your logs a lot please email munin-users.  Thanks.");
     } else {
 	printf { $self->{STATS} } "UD|%s|%.2f\n", $worker_id, $time_used;
     }
@@ -224,7 +226,7 @@ sub _create_self_aware_worker_exception_handler {
     return sub {
         my ($worker, $reason) = @_;
 	my $worker_id = $worker->{ID};
-	DEBUG "[DEBUG] In exception handler for failed worker $worker_id";
+	$log->debug("In exception handler for failed worker $worker_id");
         push @{$self->{failed_workers}}, $worker_id;
     };
 }
@@ -344,7 +346,7 @@ sub _print_old_service_configs_for_failed_workers {
 
 	# No data available on the failed worker
 	if (!defined($workerdata)) {
-	    INFO "[INFO] No old data available for failed worker $worker.  This node will disappear from the html web page hierarchy\n";
+	    $log->info("No old data available for failed worker $worker.  This node will disappear from the html web page hierarchy\n");
 	    next;
 	}
 	

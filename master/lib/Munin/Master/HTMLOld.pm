@@ -76,7 +76,7 @@ use Munin::Master::Logger;
 use Munin::Master::Utils;
 use Munin::Master::HTMLConfig;
 
-use Log::Log4perl qw( :easy );
+my $log = Munin::Master::Logger->new;
 
 my @times = ("day", "week", "month", "year");
 
@@ -191,17 +191,17 @@ sub html_main {
     get_config(0);
     my $groups = $htmlconfig;
     $configtime = sprintf("%.2f", (Time::HiRes::time - $configtime));
-    INFO "[INFO] config generated ($configtime sec)";
+    $log->info "config generated ($configtime sec)";
 
     if (munin_get($config,"html_strategy","cron") eq "cgi"){
-	INFO "[INFO] html_strategy is cgi. Skipping template generation";
+	$log->info "html_strategy is cgi. Skipping template generation";
 	return;
     }
 
     my $update_time = Time::HiRes::time;
     my $lockfile = "$config->{rundir}/munin-html.lock";
 
-    INFO "[INFO] Starting munin-html, getting lock $lockfile";
+    $log->info "Starting munin-html, getting lock $lockfile";
 
     munin_runlock($lockfile);
 
@@ -209,7 +209,8 @@ sub html_main {
    # Preparing the group tree...
 
     if (!defined($groups) or scalar(%{$groups} eq '0')) {
-	LOGCROAK "[FATAL] There is nothing to do here, since there are no nodes with any plugins.  Please refer to http://munin-monitoring.org/wiki/FAQ_no_graphs";
+	$log->critical("[FATAL] There is nothing to do here, since there are no nodes with any plugins.  Please refer to http://munin-monitoring.org/wiki/FAQ_no_graphs");
+        die;
     };
 	
     if (defined $groups->{"name"} and $groups->{"name"} eq "root") {
@@ -226,13 +227,13 @@ sub html_main {
     emit_main_index($groups,$timestamp,0);
     emit_problem_template(0);
 
-    INFO "[INFO] Releasing lock file $lockfile";
+    $log->info "Releasing lock file $lockfile";
 
     munin_removelock("$lockfile");
 
     $update_time = sprintf("%.2f", (Time::HiRes::time - $update_time));
 
-    INFO "[INFO] munin-html finished ($update_time sec)";
+    $log->info "munin-html finished ($update_time sec)";
 }
 
 sub find_complinks{
@@ -265,7 +266,7 @@ sub emit_comparison_template {
     ( my $file = $key->{'filename'}) =~ s/index.html$//;
 
 	$file .= "comparison-$t.html";
-   	DEBUG "[DEBUG] Creating comparison page $file";
+        $log->debug "Creating comparison page $file";
 
 	# Rewrite peer urls to point to comparison-$t
 	my $comparepeers = [];
@@ -344,7 +345,7 @@ sub emit_graph_template {
                                                 $$ref =~ s/URLX/URL$key->{'depth'}/g;
                                             });
 
-    DEBUG "[DEBUG] Creating graph(nodeview) page ".$key->{filename};
+    $log->debug "Creating graph(nodeview) page ".$key->{filename};
 
     $graphtemplate->param(
                           INFO_OPTION => 'Nodes on this level',
@@ -398,7 +399,7 @@ sub emit_category_template {
 
 	my $filename = $key->{'filename-' . $time};
 
-    DEBUG "[DEBUG] Creating global category page ".$filename;
+    $log->debug "Creating global category page ".$filename;
 
     foreach my $graphs(@{$key->{'graphs'}}) {
         foreach my $graph(@{$graphs->{'graphs'}}) {
@@ -461,7 +462,7 @@ sub emit_problem_template {
 	my $filename = munin_get_html_filename($config);
 	$filename =~ s/index.html$/problems.html/g;
 
-    INFO "[INFO] Creating problem page ".$filename;
+    $log->info "Creating problem page ".$filename;
 
     $graphtemplate->param(
                           CSS_NAME    => get_css_name(),
@@ -506,7 +507,7 @@ sub emit_group_template {
 	    $$ref =~ s/URLX/URL$key->{'depth'}/g;
 	});
 
-    DEBUG "[DEBUG] Creating group page ".$key->{filename};
+    $log->debug "Creating group page ".$key->{filename};
 
     $grouptemplate->param(
                           INFO_OPTION => 'Groups on this level',
@@ -584,7 +585,7 @@ sub emit_zoom_template {
 		my $filename = $srv->{'filename'};
 		ensure_dir_exists($filename);
         
-	    DEBUG "[DEBUG] Creating service page $filename";
+	    $log->debug "Creating service page $filename";
     	open(my $FILE, '>', $filename)
           or die "Cannot open '$filename' for writing: $!";
 	    print $FILE $servicetemplate->output;
@@ -642,7 +643,7 @@ sub emit_service_template {
 		my $filename = $srv->{'filename'};
 		ensure_dir_exists($filename);
 
-	    DEBUG "[DEBUG] Creating service page $filename";
+	    $log->debug "Creating service page $filename";
     	open(my $FILE, '>', $filename)
         	or die "Cannot open '$filename' for writing: $!";
 	    print $FILE $servicetemplate->output;
@@ -699,7 +700,7 @@ sub emit_main_index {
 	    my $filename = munin_get_html_filename($config);
 		ensure_dir_exists($filename);
 
-	    DEBUG "[DEBUG] Creating main index $filename";
+	    $log->debug "Creating main index $filename";
 
     	open(my $FILE, '>', $filename)
         	or die "Cannot open $filename for writing: $!";
@@ -712,8 +713,8 @@ sub emit_main_index {
 sub copy_web_resources {
     my ($staticdir, $htmldir) = @_;
 	unless(dircopy($staticdir, "$htmldir/static")){
-		ERROR "[ERROR] Could not copy contents from $staticdir to $htmldir";
-		die "[ERROR] Could not copy contents from $staticdir to $htmldir";
+		$log->critical "Could not copy contents from $staticdir to $htmldir";
+		die;
 	}
 }
 
@@ -761,14 +762,14 @@ sub fork_and_work {
     if (!$do_fork || !$max_running) {
 
         # We're not forking.  Do work and return.
-        DEBUG "[DEBUG] Doing work synchrnonously";
+        $log->debug "Doing work synchrnonously";
         &$work;
         return;
     }
 
     # Make sure we don't fork too much
     while ($running >= $max_running) {
-        DEBUG
+        $log->debug
             "[DEBUG] Too many forks ($running/$max_running), wait for something to get done";
         look_for_child("block");
         --$running;
@@ -777,8 +778,8 @@ sub fork_and_work {
     my $pid = fork();
 
     if (!defined $pid) {
-        ERROR "[ERROR] fork failed: $!";
-        die "fork failed: $!";
+        $log->critical "fork failed: $!";
+        die;
     }
 
     if ($pid == 0) {
@@ -795,7 +796,7 @@ sub fork_and_work {
     }
     else {
         ++$running;
-        DEBUG "[DEBUG] Forked: $pid. Now running $running/$max_running";
+        $log->debug "Forked: $pid. Now running $running/$max_running";
         while ($running and look_for_child()) {
             --$running;
         }

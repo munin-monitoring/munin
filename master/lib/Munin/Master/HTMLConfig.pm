@@ -17,13 +17,12 @@ use Munin::Master::Logger;
 use Munin::Master::Utils;
 use Data::Dumper;
 
-use Log::Log4perl qw( :easy );
-
 my @times = ("day", "week", "month", "year");
 
 my $DEBUG = 0;
 my $INDEX_FILENAME = "index.html";
 my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
+my $log = Munin::Master::Logger->new;
 
 my $config;
 my $limits;
@@ -86,7 +85,7 @@ sub node_reorder {
 				}
 
 				if(defined $currentgroup->{$name}){
-					ERROR $child->{"html_rename"} . " already exists. Renaming not possible.";
+					$log->error($child->{"html_rename"} . " already exists. Renaming not possible.");
 				} else {
 					# remove node from structure
 					undef $group->{$child->{"#%#name"}};
@@ -117,7 +116,7 @@ sub initiate_cgiurl_graph {
         else {
             $config->{'cgiurl_graph'} = "/munin-cgi/munin-cgi-graph";
         }
-		DEBUG "[DEBUG] Determined that cgiurl_graph is ".$config->{'cgiurl_graph'};
+        $log->debug("Determined that cgiurl_graph is ".$config->{'cgiurl_graph'});
     }
 }
 
@@ -441,7 +440,7 @@ sub generate_service_templates {
     my $bp = borrowed_path($service) || ".";
 
     $srv{'node'} = munin_get_node_name($service);
-    DEBUG "[DEBUG] processing service: $srv{node}";
+    $log->debug("processing service: $srv{node}");
     $srv{'service'}   = $service;
     $srv{"multigraph"}= munin_has_subservices($service);
     $srv{'label'}     = munin_get($service, "graph_title");

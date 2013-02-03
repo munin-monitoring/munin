@@ -45,7 +45,6 @@ use POSIX qw ( strftime );
 use Getopt::Long;
 use Time::HiRes;
 use Text::Balanced qw ( extract_bracketed );
-use Log::Log4perl qw ( :easy );
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
@@ -74,6 +73,7 @@ my %default_text = (
     "old-nagios" =>
         '${var:host}\t${var:plugin}\t${var:worstid}\t${strtrunc:350 ${var:graph_title}:${if:cfields CRITICALs:${loop<,>:cfields  ${var:label} is ${var:value} (outside range [${var:crange}])${if:extinfo : ${var:extinfo}}}.}${if:wfields WARNINGs:${loop<,>:wfields  ${var:label} is ${var:value} (outside range [${var:wrange}])${if:extinfo : ${var:extinfo}}}.}${if:ufields UNKNOWNs:${loop<,>:ufields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}${if:fofields OKs:${loop<,>:fofields  ${var:label} is ${var:value}${if:extinfo : ${var:extinfo}}}.}}'
 );
+my $log = Munin::Master::Logger->new();
 
 sub limits_startup {
 
@@ -119,7 +119,7 @@ sub limits_main {
 
     my $lockfile = "$config->{rundir}/munin-limits.lock";
 
-    INFO "[INFO] Starting munin-limits, getting lock $lockfile";
+    $log->info("Starting munin-limits, getting lock $lockfile");
 
     munin_runlock("$config->{rundir}/munin-limits.lock");
 
@@ -140,7 +140,7 @@ sub limits_main {
 
     munin_removelock("$config->{rundir}/munin-limits.lock");
 
-    INFO "[INFO] munin-limits finished ($update_time sec)";
+    $log->info("munin-limits finished ($update_time sec)");
 }
 
 sub close_pipes {
@@ -148,8 +148,8 @@ sub close_pipes {
         if($cont->{pipe}) {
             my $c = munin_get_node_name($cont);
 
-            DEBUG "[DEBUG] Closing pipe for contact $c";
-            close $cont->{pipe} or WARN "[WARNING] Failed to close pipe for contact $c: $!";
+            $log->debug("Closing pipe for contact $c");
+            close $cont->{pipe} or $log->warning("Failed to close pipe for contact $c: $!");
         }
     }
 }
@@ -189,7 +189,7 @@ sub initialize_contacts {
     }
     munin_set_var_loc($config, ["contacts"], $defaultcontacts);
 
-    DEBUG "[DEBUG] Set default \"contacts\" to \"$defaultcontacts\"";
+    $log->debug("Set default \"contacts\" to \"$defaultcontacts\"");
 }
 
 
@@ -300,12 +300,13 @@ sub process_service {
     my $children   = munin_get_children($hash);
 
     if (!ref $hash) {
-	LOGCROAK("I was passed a non-hash!");
+	$log->critical("I was passed a non-hash!");
+        die;
     }
     return if (@limit_hosts and !grep (/^$host$/, @limit_hosts));
     return if (@limit_services and !grep (/^$service$/, @limit_services));
 
-    DEBUG "[DEBUG] processing service: $service";
+    $log->debug("processing service: $service");
 
     # Some fields that are nice to have in the plugin output
     $hash->{'fields'} = join(' ', map {munin_get_node_name($_)} @$children);
@@ -317,7 +318,7 @@ sub process_service {
     $hash->{'worstid'} = 0 unless defined $hash->{'worstid'};
 
     my $state_file = sprintf ('%s/state-%s-%s.storable', $config->{dbdir}, $hash->{group}, $host);
-    DEBUG "[DEBUG] state_file: $state_file";
+    $log->debug("state_file: $state_file");
     my $state = munin_read_storable($state_file) || {};
 
     foreach my $field (@$children) {
@@ -342,8 +343,8 @@ sub process_service {
         # Skip fields without warning/critical definitions
         next if (!defined $warn and !defined $crit);
 
-        DEBUG "[DEBUG] processing field: " . join('::', @$fpath);
-        DEBUG "[DEBUG] field: " . munin_dumpconfig_as_str($field);
+        $log->debug("processing field: " . join('::', @$fpath));
+        $log->debug("field: " . munin_dumpconfig_as_str($field));
 	my $value;
     	{
 		my $rrd_filename = munin_get_rrd_filename($field);
@@ -387,7 +388,7 @@ sub process_service {
             . (defined $crit->[1] ? $crit->[1] : "");
         $field->{'wrange'} = (defined $warn->[0] ? $warn->[0] : "") . ":"
             . (defined $warn->[1] ? $warn->[1] : "");
-        DEBUG("[DEBUG] value: "
+        $log->debug("value: "
 	      . join('::', @$fpath)
 	      . ": $value (crit: "
 	      . $field->{'crange'}
@@ -546,10 +547,10 @@ sub get_limits {
         @critical = (0, 0);
     }
     if(defined $crit) {
-        DEBUG "[DEBUG] processing critical: $name -> "
+        $log->debug("processing critical: $name -> "
                 . (defined $critical[0]? $critical[0] : "")
                 .  " : "
-                . (defined $critical[1]? $critical[1] : "");
+                . (defined $critical[1]? $critical[1] : ""));
     }   
 
     if (defined $warn and $warn =~ /^\s*([-+\d.]*):([-+\d.]*)\s*$/) {
@@ -563,10 +564,10 @@ sub get_limits {
         @warning = (0, 0);
     }
     if(defined $warn) {
-        DEBUG "[DEBUG] processing warning: $name -> "
+        $log->debug("processing warning: $name -> "
                 . (defined $warning[0]? $warning[0] : "")
                 .  " : "
-                . (defined $warning[1]? $warning[1] : "");
+                . (defined $warning[1]? $warning[1] : ""));
     }
 
     if ($unknown_limit =~ /^\s*(\d+)\s*$/) {
@@ -577,7 +578,7 @@ sub get_limits {
                 $unknown_limit = 1;
             }
         }
-        DEBUG "[DEBUG] processing unknown_limit: $name -> $unknown_limit";
+        $log->debug("processing unknown_limit: $name -> $unknown_limit");
     }
 
     return (\@warning, \@critical, $unknown_limit);
@@ -596,8 +597,8 @@ sub generate_service_message {
 
     my $contacts = munin_get_children(munin_get_node($config, ["contact"]));
 
-    DEBUG "[DEBUG] generating service message: "
-	. join('::', @{munin_get_node_loc($hash)});
+    $log->debug("generating service message: "
+	. join('::', @{munin_get_node_loc($hash)}));
 
     my $children = 
 	munin_get_children(
@@ -627,7 +628,7 @@ sub generate_service_message {
     $hash->{'numofields'}  = scalar @{$stats{'ok'}};
 
     my $contactlist = munin_get($hash, "contacts", "");
-    DEBUG("[DEBUG] Contact list for "
+    $log->debug("Contact list for "
 	  . join('::', @{munin_get_node_loc($hash)})
 	  . ": $contactlist");
 
@@ -635,7 +636,7 @@ sub generate_service_message {
         next if $c eq "none";
         my $contactobj = munin_get_node($config, ["contact", $c]);
         if(!defined $contactobj) {
-            WARN("[WARNING] Missing configuration options for contact $c; skipping");
+            $log->warning("Missing configuration options for contact $c; skipping");
             next;
         }
         if (@limit_contacts and !grep (/^$c$/, @limit_contacts)) {
@@ -665,10 +666,10 @@ sub generate_service_message {
         if (!$hash->{'state_changed'} and !$obsess) {
             next;    # No need to send notification
         }
-        DEBUG "[DEBUG] state has changed, notifying $c";
+        $log->debug("state has changed, notifying $c");
         my $precmd = munin_get($contactobj, "command", undef);
         if(!defined $precmd) {
-            WARN("[WARNING] Missing command option for contact $c; skipping");
+            $log->warning("Missing command option for contact $c; skipping");
             next;
         }
         my $pretxt = munin_get(
@@ -684,7 +685,7 @@ sub generate_service_message {
         $txt =~ s/\\t/\t/g;
 
         if($cmd =~ /^\s*([|><]+)/) {
-            WARN "[WARNING] Found \"$1\" at beginning of command.  This should no longer be necessary and will be removed from the command before execution";
+            $log->warning("Found \"$1\" at beginning of command.  This should no longer be necessary and will be removed from the command before execution");
             $cmd =~ s/^\s*[|><]+//;
         }
 
@@ -693,25 +694,25 @@ sub generate_service_message {
         my $curcmd  = munin_get($contactobj, "pipe_command", undef);
         my $pipe    = munin_get($contactobj, "pipe",         undef);
         if ($maxmess and $curmess >= $maxmess) {
-            DEBUG "[DEBUG] Resetting pipe for $c because max messages was reached";
-            close($pipe) or WARN "[WARNING] Failed to close pipe for $c: $!";
+            $log->debug("Resetting pipe for $c because max messages was reached");
+            close($pipe) or $log->warning("Failed to close pipe for $c: $!");
             $pipe = undef;
             munin_set($contactobj, "pipe", undef);
         }
         elsif ($curcmd and $curcmd ne $cmd) {
-            DEBUG "[DEBUG] Resetting pipe for $c because the command has changed";
-            close($pipe) or WARN "[WARNING] Failed to close pipe for $c: $!";
+            $log->debug("Resetting pipe for $c because the command has changed");
+            close($pipe) or $log->warning("Failed to close pipe for $c: $!");
             $pipe = undef;
             munin_set($contactobj, "pipe", undef);
         }
 
         if (!defined $pipe) {
-            DEBUG "[DEBUG] Opening pipe for $c";
-            pipe(my $r, my $w) or WARN "[WARNING] Failed to open pipe for $c: $!";
+            $log->debug("Opening pipe for $c");
+            pipe(my $r, my $w) or $log->warning("Failed to open pipe for $c: $!");
             my $pid = fork();
-            defined($pid) or WARN "[WARNING] Failed fork for pipe for $c: $!";
+            defined($pid) or $log->warning("Failed fork for pipe for $c: $!");
             if($pid) { # parent
-                DEBUG "[DEBUG] Opened pipe for $c as pid $pid";
+                $log->debug("Opened pipe for $c as pid $pid");
 
                 close $r;
                 $pipe = $w;
@@ -722,15 +723,15 @@ sub generate_service_message {
             } else { # child
                 close $w;
                 open(STDIN, "<&", $r);
-                exec($cmd) or WARN "[WARNING] Failed to exec for contact $c in pid $$";
+                exec($cmd) or $log->warning("Failed to exec for contact $c in pid $$");
                 exit;
             }
         }
 
-        DEBUG "[DEBUG] sending message to $c: \"$txt\"";
+        $log->debug("sending message to $c: \"$txt\"");
         if(defined $pipe and !print $pipe $txt, "\n") {
-            WARN "[WARNING] Writing to pipe for $c failed: $!";
-            close($pipe) or WARN "[WARNING] Failed to close pipe for $c: $!";
+            $log->warning("Writing to pipe for $c failed: $!");
+            close($pipe) or $log->warning("Failed to close pipe for $c: $!");
             $pipe = undef;
             munin_set($contactobj, "pipe", undef);
         }
