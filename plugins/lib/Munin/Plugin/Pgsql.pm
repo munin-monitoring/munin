@@ -50,6 +50,9 @@ The plugins will by default connect to the 'template1' database, except for
 wildcard per-database plugins. This can be overridden using the PGDATABASE
 variable, but this is usually a bad idea.
 
+If you are using plugin for several postgres instances, you can customize
+graph title with the environment variable PGLABEL.
+
 =head2 Example
 
  [postgres_*]
@@ -267,12 +270,13 @@ sub Config {
     $self->ensure_version();
 
     print "multigraph $self->{multigraph}\n" if ($self->{multigraph});
+    my $pglabel = defined($ENV{'PGLABEL'}) ? ' '.$ENV{'PGLABEL'} : '';
     my $w = $self->wildcard_parameter();
     if ($w) {
-      print "graph_title $self->{title} ($w)\n";
+      print "graph_title $self->{title}${pglabel} ($w)\n";
     }
     else {
-      print "graph_title $self->{title}\n";
+      print "graph_title $self->{title}${pglabel}\n";
     }
     print "graph_vlabel $self->{vlabel}\n";
     print "graph_category $self->{category}\n";
