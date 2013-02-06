@@ -119,9 +119,7 @@ foreach my $kept (@keep) {	# For each disk...
 
 my $stor_id;
 
-my $foundpartitions = keys %partitions;
-
-if ($foundpartitions == 0 or defined $partitions{""}) {
+if (! defined $partitions{""}) {
   # Oh bugger. Some (or all) mountpoints were undeterminable. The backup
   # solution is to just graph everything that claims to be a FixedDisk,
   # without checking if it's removable etc
