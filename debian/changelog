@@ -1,8 +1,8 @@
-munin (2.0.11-1) UNRELEASED; urgency=low
+munin (2.0.11-1) experimental; urgency=low
 
   * New upstream release.
 
- -- Holger Levsen <holger@debian.org>  Fri, 08 Feb 2013 18:21:29 +0100
+ -- Holger Levsen <holger@debian.org>  Fri, 08 Feb 2013 22:21:15 +0100
 
 munin (2.0.10-1) experimental; urgency=low
 
