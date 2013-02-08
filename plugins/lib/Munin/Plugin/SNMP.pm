@@ -88,7 +88,7 @@ needed in the configuration phase.  It returns a 4 tuple consisting of:
 
 =item 1) the host name
 
-=item 2) the udp port to use
+=item 2) the UDP port to use
 
 =item 3) the SNMP version to use (3 for version 3, 2 for version 1 or 2c)
 
@@ -135,7 +135,7 @@ sub session {
 
 This method overrides the Net::SNMP constructor to get the connection
 information from the plugin name and/or environment.  Please note that
-no error string is returned.  The function handles errors internaly -
+no error string is returned.  The function handles errors internally -
 giving a error message and calling die.  Calling die is the right
 thing to do.
 
@@ -302,7 +302,7 @@ unspecified.
 =item C<env.v3privprotocol>
 
 If the v3privpassword is set this setting controls what kind of
-encryption is used to achive privacy in the session.  Only the very weak
+encryption is used to achieve privacy in the session.  Only the very weak
 'des' encryption method is supported officially.  The default is 'des'.
 
 The implementing perl module (L<Net::SNMP>) also supports '3des'
@@ -380,7 +380,7 @@ transforms the data into a hash of hashes in the following manner:
 The keys of the main hash are the last element(s) of the OIDs, after
 C<$oid> and the matching keys from C<%columns> are removed. The values
 are hashes with keys corresponding to the values of C<%columns> hash and
-values from the subtables corresonding to the keys of C<%columns>.
+values from the subtables corresponding to the keys of C<%columns>.
 
 For this to work, all the keys of C<-cols> must have the same number
 of elements.  Also, don't try to specify a next-to-next-to-leaf-node
@@ -542,12 +542,12 @@ L<Net::SNMP>
 
 =head1 AUTHOR
 
-Dagfinn Ilmari Mannsåker, Nicolai Langfeldt
-Rune Nordbøe Skillingstad added timeout support.
+Dagfinn Ilmari MannsÃ¥ker, Nicolai Langfeldt
+Rune NordbÃ¸e Skillingstad added timeout support.
 
 =head1 COPYRIGHT/License.
 
-Copyright (c) 2004-2009 Dagfinn Ilmari Mannsåker and Nicolai Langfeldt.
+Copyright (c) 2004-2009 Dagfinn Ilmari MannsÃ¥ker and Nicolai Langfeldt.
 
 All rights reserved. This program is free software; you can
 redistribute it and/or modify it under the terms of the GNU General

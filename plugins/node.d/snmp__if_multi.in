@@ -99,7 +99,7 @@ Should support indexing by
 Pulling in a user definable set of ifName/ifDescr/ifAlias for textual
 description and even graph_title would also be nice.
 
-IFF we get a patch to support the .oldname attribute then we may use
+If we get a patch to support the .oldname attribute then we may use
 that to let the operator change the indexing dynamicaly without data
 loss.
 

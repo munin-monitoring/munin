@@ -322,7 +322,7 @@ v3privpassword value, respectively) and may therefore be left unspecified.
 =item privprotocol
 
 If the v3privpassword is set this setting controls what kind of encryption is
-used to achive privacy in the session.  Only the very weak 'des' encryption
+used to achieve privacy in the session.  Only the very weak 'des' encryption
 method is supported officially.  The default is 'des'.
 
 The implementing perl module (L<Net::SNMP>) also supports '3des' (CBC-3DES-EDE

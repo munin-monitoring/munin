@@ -124,7 +124,7 @@ if it completed within the timeout.  If the timeout is reached and the code is s
 running, it halts it and returns undef.
 
 NB: every $code_ref should return something defined, otherwise the caller doesn't know
-if a timeout occured. 
+if a timeout occurred.
 
 Calls to do_with_timeout() can be nested.  Any exceptions raised 
 by $block are propagated.

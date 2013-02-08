@@ -558,7 +558,7 @@ performed on 'snmpauto' plugins.
 
 Only consider plugins added to the Munin core since <version>.  This option is
 useful when upgrading, since it can prevent plugins that have been manually
-removed from being resinstalled.  This only applies to plugins in the 'auto'
+removed from being reinstalled.  This only applies to plugins in the 'auto'
 family.
 
 =back
@@ -637,7 +637,7 @@ respectively) and may therefore be left unspecified.
 =item B<< --snmpprivprotocol <protocol> >>
 
 If the privpassword is set this setting controls what kind of encryption is
-used to achive privacy in the session.  Only the very weak 'des' encryption
+used to achieve privacy in the session.  Only the very weak 'des' encryption
 method is supported officially.  ['des']
 
 munin-node-configure also supports '3des' (CBC-3DES-EDE, aka Triple-DES, NIST

@@ -154,11 +154,11 @@ sub _load_private_key {
             }
             else {
 	        if ($self->{tls_paranoia} eq "paranoid") {
-	    	    $self->{logger}("[ERROR] Problem occured when trying to read file with private key \"$self->{tls_priv}\": $!");
+                    $self->{logger}("[ERROR] Problem occurred when trying to read file with private key \"$self->{tls_priv}\": $!");
 		    return 0;
 	        }
 	        else {
-	    	    $self->{logger}("[ERROR] Problem occured when trying to read file with private key \"$self->{tls_priv}\": $!. Continuing without private key.");
+                    $self->{logger}("[ERROR] Problem occurred when trying to read file with private key \"$self->{tls_priv}\": $!. Continuing without private key.");
 	        }
 	    }
 	}
@@ -179,7 +179,7 @@ sub _load_certificate {
 	    if (!Net::SSLeay::CTX_use_certificate_file($self->{tls_context}, 
                                                        $self->{tls_cert}, 
                                                        &Net::SSLeay::FILETYPE_PEM)) {
-	        $self->{logger}("[WARNING] Problem occured when trying to read file with certificate \"$self->{tls_cert}\": $!. Continuing without certificate.");
+	        $self->{logger}("[WARNING] Problem occurred when trying to read file with certificate \"$self->{tls_cert}\": $!. Continuing without certificate.");
 	    }
         }
     }
@@ -196,7 +196,7 @@ sub _load_ca_certificate {
 
     if ($self->{tls_ca_cert} && -e $self->{tls_ca_cert}) {
     	if(!Net::SSLeay::CTX_load_verify_locations($self->{tls_context}, $self->{tls_ca_cert}, '')) {
-    	    $self->{logger}("[WARNING] Problem occured when trying to read file with the CA's certificate \"$self->{tls_ca_cert}\": ".&Net::SSLeay::print_errs("").". Continuing without CA's certificate.");
+            $self->{logger}("[WARNING] Problem occurred when trying to read file with the CA's certificate \"$self->{tls_ca_cert}\": ".&Net::SSLeay::print_errs("").". Continuing without CA's certificate.");
    	 }
     }
 
@@ -468,6 +468,6 @@ Encrypted write.
 
  my $bool = $tls->session_started();
 
-Returns true if the tls object is ready to read/write encrypted data.
+Returns true if the TLS object is ready to read/write encrypted data.
 
 =back
