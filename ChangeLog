@@ -1,5 +1,12 @@
 -*- text -*-
 
+munin-2.0.11.1, 2013-02-09
+
+Ironically, asyncd is broken in .11, as a typo makes it uncompilable.
+This is a patched release, and I'll remove any .11 tgz as it's not-working.
+
+Sorry.
+
 munin-2.0.11, 2013-02-01
 
 -------

@@ -136,11 +136,11 @@ my $last_cleanup=0;
 MAIN: while(1) { 
 	my $when = time;
 
-	(
+	{
 		# XXX - quickfix a bug that when sleeping too little, would
 		# then sleep a whole $timeout
 		$timeout = 1;
-	)
+	}
 
 	my $when_next = $when + $timeout; # wake up at least every $timeout sec
 	my $sock;
