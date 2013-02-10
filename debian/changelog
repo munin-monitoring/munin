@@ -1,3 +1,9 @@
+munin (2.0.11.1-1) experimental; urgency=low
+
+  * New upstream release, fixing a typo.
+
+ -- Holger Levsen <holger@debian.org>  Sun, 10 Feb 2013 17:09:21 +0100
+
 munin (2.0.11-1) experimental; urgency=low
 
   * New upstream release.
