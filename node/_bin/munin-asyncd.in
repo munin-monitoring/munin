@@ -126,14 +126,23 @@ my @plugins;
 	@plugins = split(/ /, $plugins_line);
 }
 
+my $keepgoing = 1;
+
+sub termhandler() {
+	$keepgoing = 0;
+}
+
 # Q&D child collection
 $SIG{CHLD} = 'IGNORE';
+$SIG{HUP} = 'IGNORE';
+$SIG{INT} = 'termhandler';
+$SIG{TERM} = 'termhandler';
 
 # now, update regularly...
 # ... but each plugin in its own process to avoid delay-leaking
 my %last_updated;
 my $last_cleanup=0;
-MAIN: while(1) { 
+MAIN: while($keepgoing) {
 	my $when = time;
 
 	{
