@@ -1,8 +1,12 @@
 <head>
 	<script language="JavaScript" src="formatdate.js"></script>
 	<script language="JavaScript" src="querystring.js"></script>
+	<link rel="stylesheet" href="./style-new.css" type="text/css" />
 </head>
 <body>
+<div id="header">
+	<h1><a href="/munin/"><span class="logo"></span></a> <span class="currentpage">Dynamic Graph Zoom</span></h1>
+</div>
 	
 <div style="position:relative;">
 	<img id="image" />
@@ -15,11 +19,13 @@
 
 </td>
 <td>
-	Zooming is very easy, it's done in 3 clicks (regular clicks, no drag&amp;drop):
+	Zooming is very easy, it's done in 3 clicks (regular clicks, not drag &amp; drop):
 	<ul>
-		<li> First click to define the start of zoom.
-		<li> Second click to define the ending of zoom.
-		<li> Third click inside the defined zone to zoom, outside to cancel the zone.
+    <ol>
+		<li> click to define the start.
+		<li> click to define the end.
+		<li> click inside the shaded area to zoom (outside to cancel).
+    </ol>
 	</ul>
 <td>
 </tr>
