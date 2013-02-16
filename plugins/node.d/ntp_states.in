@@ -68,6 +68,8 @@ my %stateval = (
                );
 my %peers_condition;
 my $resolver = Net::DNS::Resolver->new;
+$resolver->tcp_timeout(5);
+$resolver->udp_timeout(5);
 
 # Returns a hash whose keys are peer IP addresses and values are
 # condition numbers.
