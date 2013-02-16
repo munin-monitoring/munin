@@ -40,16 +40,7 @@ use Munin::Plugin;
 use strict;
 use warnings;
 use File::Spec;
-
-my $ret = undef;
-
-if (!eval "require Net::DNS;")
-{
-        $ret = "Net::DNS not found";
-        if (!defined $ARGV[0]) {
-                die $ret;
-        }
-}
+use Net::DNS;
 
 # Include /usr/local/sbin in the path to use the ntpq installed by
 # ports on FreeBSD instead of the base system, which is probably
