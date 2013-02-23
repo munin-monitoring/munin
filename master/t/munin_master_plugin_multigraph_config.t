@@ -7,6 +7,17 @@ use Data::Dumper;
 
 use Test::More qw(no_plan);
 
+use Test::MockModule;
+my $mocklog = Test::MockModule->new('Munin::Master::Logger');
+$mocklog->mock(
+    debug    => sub { },
+    info     => sub { },
+    notice   => sub { },
+    warning  => sub { },
+    error    => sub { },
+    critical => sub { }
+);
+
 # use Test::More tests => 15;
 
 use_ok('Munin::Master::Node');

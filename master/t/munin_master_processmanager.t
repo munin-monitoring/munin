@@ -5,6 +5,17 @@ use Test::More tests => 17;
 use Time::HiRes qw(sleep);
 use File::Temp qw( tempdir );
 
+use Test::MockModule;
+my $mocklog = Test::MockModule->new('Munin::Master::Logger');
+$mocklog->mock(
+    debug    => sub { },
+    info     => sub { },
+    notice   => sub { },
+    warning  => sub { },
+    error    => sub { },
+    critical => sub { }
+);
+
 use_ok('Munin::Master::ProcessManager');
 
 use Munin::Master::Config;

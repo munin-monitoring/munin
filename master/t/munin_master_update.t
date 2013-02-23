@@ -45,6 +45,16 @@ sub remove_indentation {
 my $mockconfig = Test::MockModule->new('Munin::Master::Config');
 $mockconfig->mock(get_groups_and_hosts => sub { return () });
 
+my $mocklog = Test::MockModule->new('Munin::Master::Logger');
+$mocklog->mock(
+    debug    => sub { },
+    info     => sub { },
+    notice   => sub { },
+    warning  => sub { },
+    error    => sub { },
+    critical => sub { }
+);
+
 #
 {
     my $update = Munin::Master::Update->new();
