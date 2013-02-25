@@ -28,12 +28,16 @@ use File::Path qw(mkpath);
 use Getopt::Long;
 use Pod::Usage;
 
+use List::Util qw(min max);
+
 use Munin::Node::SpoolWriter;
 
 my $host = "localhost:4949";
 my $metahostname;
 my $SPOOLDIR = "@@SPOOLDIR@@";
 my $intervalsize = 86400;
+my $timeout = 3600;
+my $minrate = 300;
 my $retaincount = 7;
 my $nocleanup;
 my $do_fork;
@@ -46,6 +50,8 @@ GetOptions(
 	"host=s" => \$host,
 	"spooldir|s=s" => \$SPOOLDIR,
 	"interval|i=i" => \$intervalsize,
+	"timeout=i" => \$timeout,
+	"minrate=i" => \$minrate,
 	"retain|r=i" => \$retaincount,
 
 	"fork" => \$do_fork,
@@ -58,6 +64,9 @@ GetOptions(
 if ($help) {
 	pod2usage(1);
 }
+
+# Debug implies Verbose
+$verbose = 1 if $debug;
 
 unless (-d $SPOOLDIR) {
 	mkpath($SPOOLDIR, { verbose => $verbose, } ) 
@@ -80,6 +89,7 @@ my $spoolwriter = Munin::Node::SpoolWriter->new(
 	interval_keep => $retaincount,
 	hostname  => $metahostname,
 );
+$0 = "munin-asyncd [$metahostname] [idle]";
 
 my $process_name = "main";
 
@@ -93,7 +103,10 @@ my @plugins;
 		Proto	=> 'tcp'
 	) || die "Error creating socket: $!"; 
 
+	local $0 = "munin-asyncd [$metahostname] [list]";
+	print STDERR "[sock][>] cap multigraph\n" if $debug;
 	print $sock "cap multigraph\n";
+	print STDERR "[sock][>] list\n" if $debug;
 	print $sock "list\n";
 	<$sock>; # Read the first header comment line
 	<$sock>; # Read the multigraph response line
@@ -122,7 +135,15 @@ my %last_updated;
 my $last_cleanup=0;
 MAIN: while(1) { 
 	my $when = time;
-	my $when_next = $when + 3600; # wake up at least every hour
+
+	{
+		# XXX - quickfix a bug that when sleeping too little, would
+		# then sleep a whole $timeout
+		$timeout = 1;
+	}
+
+	my $when_next = $when + $timeout; # wake up at least every $timeout sec
+	my $sock;
 	PLUGIN: foreach my $plugin (@plugins) {
 		# See if this plugin should be updated
 		my $plugin_rate = get_hash($plugin, $plugin_rate_filename) || 300;
@@ -133,24 +154,39 @@ MAIN: while(1) {
 
 		# Should update it
 		$last_updated{$plugin} = $when;
-		if ($when + $plugin_rate < $when_next) {
-			$when_next = $when + $plugin_rate;
-		} 
+		$when_next = min($when_next, $when + max($plugin_rate, $minrate));
 
 		if ($do_fork && fork()) {
 			# parent, return directly
 			next PLUGIN;
 		}
+
+		unless ($sock) {
+			$sock = new IO::Socket::INET(
+				PeerAddr	=> "$host",
+				Proto	=> 'tcp'
+			) || die "Error creating socket: $!";
+			<$sock>; # skip header
+		}
+
+		# $sock is still not open. moving to next plugin to try again
+		next unless $sock;
+
 		# Setting the command name for a useful top information
 		$process_name = "plugin:$plugin";
-		local $0 = "munin-asyncd [$process_name]";
-		
-		fetch_data($plugin, $when);
-	
+		local $0 = "munin-asyncd [$metahostname] [$process_name]";
+
+		fetch_data($plugin, $when, $sock);
 
 		# We end here if we forked
 		last MAIN if $do_fork;
 	}
+
+	print STDERR "[$$][$process_name][>] quit\n" if $verbose;
+	print $sock "quit\n" if $sock;
+
+	print STDERR "[$$][$process_name] closing sock\n" if $verbose;
+	$sock = undef;
 
 	$spoolwriter->set_metadata("lastruntime", $when);
 
@@ -161,7 +197,12 @@ MAIN: while(1) {
 	}
 
 	# Sleep until next plugin exec.
-	sleep $when_next - time; 
+	my $sleep_sec = $when_next - time;
+
+	if ($sleep_sec > 0) {
+		print STDERR "[$$][$process_name] Sleeping $sleep_sec sec\n" if $verbose;
+		sleep $sleep_sec;
+	}
 }
 		
 print STDERR "[$$][$process_name] Exiting\n" if $verbose;
@@ -170,22 +211,18 @@ sub fetch_data
 {
 	my $plugin = shift;
 	my $when = shift;
+	my $sock = shift;
 
-		my $sock = new IO::Socket::INET( 
-			PeerAddr	=> "$host", 
-			Proto	=> 'tcp'
-		) || die "Error creating socket: $!"; 
-		<$sock>; # skip header
+		print STDERR "[$$][$process_name][>][$plugin] asking for config\n" if $verbose;
 
-		print STDERR "[$$][$process_name] asking for config\n" if $verbose;
-
+		print STDERR "[sock][>][$plugin] config $plugin\n" if $debug;
 		print $sock "config $plugin\n";
 
 		my $output_rows = [];
 
 		while(my $line = <$sock>) {
-			print STDERR "[sock] $line" if $debug;
 			chomp($line);
+			print STDERR "[sock][<][$plugin] $line\n" if $debug;
 
 			if ($line =~ m/^\./) {
 				# Starting with . => end
@@ -202,12 +239,13 @@ sub fetch_data
 			}
 		}
 
-		print STDERR "[$$][$process_name] asking for data\n" if $verbose;
+		print STDERR "[$$][$process_name][>][$plugin] asking for data\n" if $verbose;
+		print STDERR "[sock][>][$plugin] fetch $plugin\n" if $debug;
 		print $sock "fetch $plugin\n";
 
 		while(my $line = <$sock>) {
-			print STDERR "[sock] $line" if $debug;
 			chomp($line);
+			print STDERR "[sock][<][$plugin] $line\n" if $debug;
 
 			if ($line =~ m/^\./) {
 				# Starting with . => end
@@ -264,8 +302,10 @@ munin-asyncd [options]
 
  Options:
      --host <hostname:port>     Connect to this munin-node [localhost:4949]
-     -s --spooldir <spooldir>      Store the spooled data in this dir [@@SPOOLDIR@@]
+     -s --spool <spooldir>      Store the spooled data in this dir [/var/lib/munin-async]
      -i --interval <seconds>    Override default interval size of one day [86400]
+        --timeout <seconds>     Wake up at least this number of seconds. [3600]
+        --minrate <seconds>     This is the minimal rate you want to poll a node [300]
      -r --retain <count>        Specify number of interval files to retain [7]
      -n --nocleanup             Disable automated spool dir cleanup
 
