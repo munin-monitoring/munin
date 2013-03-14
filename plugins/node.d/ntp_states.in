@@ -76,7 +76,7 @@ sub make_hash {
                 if ($line =~ m/^\s*\d+/) {
                         my (undef, undef, $assid, undef, undef, undef, undef, $condition_str, undef, undef) = split(/\s+/, $line);
                         chomp(my $peerinfo = `ntpq -n -c "readvar $assid srcadr"`);
-                        $peerinfo =~ s/\R//g;
+                        $peerinfo =~ s/\r//g;
                         my ($peer_addr) = ($peerinfo =~ m/srcadr=(.*)/);
 
                         # some states get the last letter cut off in
