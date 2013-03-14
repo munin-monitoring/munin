@@ -9,7 +9,7 @@ postfix_mailqueue - Plugin to monitor postfix mail spools
 
 =head1 ABOUT
 
-A guide to postfix mail queue manageent can be found at
+A guide to postfix mail queue management can be found at
 L<http://www.postfix.org/QSHAPE_README.html#queues>
 
 A summary:
