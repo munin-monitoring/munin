@@ -1611,6 +1611,7 @@ sub handle_trends {
     foreach my $field (@{munin_find_field($service, "label")}) {
         my $fieldname = munin_get_node_name($field);
 	my $colour = $single_colour;
+        my $rrdname = get_field_name($fieldname)
 
 	# Skip virtual fieldnames, otherwise beware of $hash->{foo}{bar}. 
 	#
@@ -1630,8 +1631,8 @@ sub handle_trends {
 
         #trends
         if (defined $service->{$fieldname}{'trend'} and $service->{$fieldname}{'trend'} eq 'yes') {
-            push (@complete, "CDEF:t$fieldname=c$cdef$fieldname,$futuretime,TRENDNAN");
-            push (@complete, "LINE1:t$fieldname#$colour:$fieldname trend\\l");
+            push (@complete, "CDEF:t$rrdname=c$cdef$rrdname,$futuretime,TRENDNAN");
+            push (@complete, "LINE1:t$rrdname#$colour:$fieldname trend\\l");
             DEBUG "[DEBUG] set trend for $fieldname\n";
         }
 
@@ -1641,8 +1642,8 @@ sub handle_trends {
             my @predict = split(",", $service->{$fieldname}{'predict'});
             my $predictiontime = int ($futuretime / $predict[0]) + 2; #2 needed for 1 day
             my $smooth = $predict[1]*$resolutions{$time};
-            push (@complete, "CDEF:p$fieldname=$predict[0],-$predictiontime,$smooth,c$cdef$fieldname,PREDICT");
-            push (@complete, "LINE1:p$fieldname#$colour:$fieldname prediction\\l");
+            push (@complete, "CDEF:p$rrdname=$predict[0],-$predictiontime,$smooth,c$cdef$rrdname,PREDICT");
+            push (@complete, "LINE1:p$rrdname#$colour:$fieldname prediction\\l");
             DEBUG "[DEBUG] set prediction for $fieldname\n";
         }
     }
