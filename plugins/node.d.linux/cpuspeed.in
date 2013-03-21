@@ -90,6 +90,9 @@ if [ "$1" = "config" ]; then
 	if [ -r $c/cpufreq/cpuinfo_max_freq ]; then
 
             MAXHZ=$(cat $c/cpufreq/cpuinfo_max_freq)
+            # Adding 10% to $MAXHZ, to cope with polling jitters
+            # See bug D#615957
+            MAXHZ=$(( $MAXHZ + $MAXHZ / 10 ))
             echo "cpu$N.max $MAXHZ"
 
             if [ "$scaleto100" = "yes" ]; then

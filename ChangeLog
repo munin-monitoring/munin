@@ -1,5 +1,113 @@
 -*- text -*-
 
+munin-2.0.11.1, 2013-02-09
+
+Ironically, asyncd is broken in .11, as a typo makes it uncompilable.
+This is a patched release, and I'll remove any .11 tgz as it's not-working.
+
+Sorry.
+
+munin-2.0.11, 2013-02-01
+
+-------
+Summary
+-------
+
+Bugfix-only release.
+
+- Important async fixes
+- Many fixes
+
+Closes: D:698079, D:697907
+
+------------------
+Detailed Changelog
+------------------
+
+Diego Elio Petteno:
+      hddtemp*: avoid using the degrees symbol in vlabel.
+      Update .gitignore.
+      master: always initialize the default cgiurl_graph value.
+      master: simplify logic for mapping images to their path.
+      master: provide a default to graph_strategy.
+      master: avoid repeated tests on graph_strategy.
+      master: remove unused variable.
+      pod: declare all POD-processed files as utf8 encoded.
+
+Marc Schutz:
+      fail2ban: Handle the case where no jails are configured.
+
+Stefan Rubner:
+      plugins/mysql_: fix check if InnoDB is disabled
+
+Steve Schnepp:
+      plugins/slapd_: fix Net::LDAP call
+      asyncd: fix races in writing to spool
+      asyncd: typo in pod
+      asyncd: try to reuse socket when asking node
+      asyncd: add the hostname in $0
+      asyncd: fix timeout bug & adding some debug
+      asyncd: ignore current plugin if failing cnx to node
+      asyncd: close the datafile before rename
+      asyncd: quickfix a sleeping dataloss bug
+
+Stig Sandbeck Mathisen:
+      Fix spelling mistakes in POD sections
+
+
+munin-2.0.10, 2013-01-09
+
+-------
+Summary
+-------
+
+Bugfix-only release.
+
+- The --force flag of munin-limits is back, sorry for the disruptive API change in the 2.0.x series.
+- Many fixes
+
+Closes: D#615957, D#671448
+
+------------------
+Detailed Changelog
+------------------
+
+D. Johnson:
+      templates: fix overview missing tag
+
+Diego Elio Petteno:
+      mailman: allow user to configure paths instead of hardcoding them.
+      asterisk_*: remove dependency on Net::Telnet.
+      asterisk_channels: fix name of plugin in configuration examples.
+
+Gerald Turner:
+      plugins/bind9_rndc: fix if named.stats is on tmpfs
+
+Holger Levsen:
+      plugins/df: update exclude list doc to match code
+
+Magnus Hagander:
+      Disable server-side prepared statements for pg plugins
+
+Michal Cihar:
+      plugins/snmp__df: find all mount points
+
+Nicolai Langfeldt:
+      getversion: Handle checked out tags better
+
+Steve Schnepp:
+      fix plugins.history
+      plugins/cpuspeed: fix if cpus are at maximum speed
+      getversion: update doc
+      getversion: use the commit SHA instead of tree SHA
+      getversion: prefix the commit with "-g" magic
+      getversion: apply the changes described in doc
+      getversion: also fix the stable-* rules
+
+Stig Sandbeck Mathisen:
+      munin-limits: Add --always-send, --force options
+
+
 munin-2.0.9, 2012-12-05
 
 -------

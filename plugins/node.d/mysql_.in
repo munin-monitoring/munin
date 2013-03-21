@@ -970,7 +970,7 @@ sub update_innodb {
 	$sth->execute();
     };
     if ($@) {
-	if ($@ =~ /Unknown table engine 'INNODB'|Cannot call SHOW INNODB STATUS because skip-innodb is defined/i) {
+	if ($@ =~ /Unknown (storage|table) engine 'INNODB'|Cannot call SHOW INNODB STATUS because skip-innodb is defined/i) {
 	    $data->{_innodb_disabled} = 1;
 	    return;
 	}
