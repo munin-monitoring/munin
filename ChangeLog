@@ -1,5 +1,36 @@
 -*- text -*-
 
+munin-2.0.12, 2013-03-21
+
+-------
+Summary
+-------
+
+Bugfix-only release.
+
+- Fixed TLS/SSL transport
+- Fixed extra logging
+
+Closes: #1251, #1258, D:699803, D:689291, D:687912
+
+------------------
+Detailed Changelog
+------------------
+
+Bjørn Ruberg:
+      plugins/bonding_err_: adjust for newer kernels
+ 
+Steve Schnepp:
+      node: don't ignore timeout config option
+      plugins/apt: fix plugin statedir for cron
+      html: fix bug introduced by 1aec747c10
+      graph: remove all extra INFO messages
+      plugins/proc: fix bug in selecting via uid
+      dev_scripts: remove warnings
+      graph: remote superfluous -T in cmdline
+      master: fix TLS enabled updates
+
+
 munin-2.0.11.1, 2013-02-09
 
 Ironically, asyncd is broken in .11, as a typo makes it uncompilable.

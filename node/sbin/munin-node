@@ -66,6 +66,7 @@ sub main
         defuser    => $config->{defuser},
         defgroup   => $config->{defgroup},
         pidebug    => $PIDEBUG,
+        timeout    => $config->{timeout},
     );
 
     $config->reinitialize({
