@@ -481,7 +481,7 @@ sub generate_service_templates {
     }
 
     my $imgpath = $root_path;
-    if ( $config->{graph_strategy} eq 'cgi' ) {
+    if ( munin_get($config, "graph_strategy", "cron") eq "cgi" ) {
 	$imgpath = $config->{'cgiurl_graph'};
     }
 
@@ -505,7 +505,8 @@ sub generate_service_templates {
     }
 
 	for my $scale (@times) {
-		if (my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale))) {
+		my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale));
+		if ($w && $h) {
 			$srv{"img" . $scale . "width"}  = $w;
 			$srv{"img" . $scale . "height"} = $h;
 		}
@@ -516,10 +517,11 @@ sub generate_service_templates {
         $srv{imgyearsum} = "$srv{node}-year-sum.png";
 
         for my $scale (["week", "year"]) {
-			if (my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale, 1))) {
-				$srv{"img" . $scale . "sumwidth"}  = $w;
-				$srv{"img" . $scale . "sumheight"} = $h;
-			}
+		my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale, 1));
+		if ($w && $h) {
+			$srv{"img" . $scale . "sumwidth"}  = $w;
+			$srv{"img" . $scale . "sumheight"} = $h;
+		}
         }
     }
 
@@ -719,7 +721,7 @@ sub get_png_size {
     my $width    = undef;
     my $height   = undef;
 
-	return (undef, undef) if $config->{graph_strategy} eq "cgi";
+    return (undef, undef) if (munin_get($config, "graph_strategy", "cron") eq "cgi") ;
 
     if (open(my $PNG, '<', $filename)) {
         my $incoming;
