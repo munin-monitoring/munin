@@ -403,15 +403,9 @@ sub graph_main {
         autoflush $STATS 1;
     }
 
-    INFO "Starting munin-graph";
-
     process_work(@limit_hosts);
 
     $graph_time = sprintf("%.2f", (Time::HiRes::time - $graph_time));
-
-    INFO "Munin-graph finished ($graph_time sec)";
-
-    print $STATS "GT|total|$graph_time\n" unless $skip_stats;
 
     rename(
         "$config->{dbdir}/munin-graph.stats.tmp",
@@ -1451,7 +1445,7 @@ sub process_service {
     if (munin_get_bool($service, "graph_sums", 0)) {
         foreach my $time (keys %sumtimes) {
             my $picfilename = get_picture_filename($service, $time, 1);
-	    INFO "Looking into drawing $picfilename";
+	    DEBUG "Looking into drawing $picfilename";
             (my $picdirname = $picfilename) =~ s/\/[^\/]+$//;
             next unless ($draw{"sum" . $time});
             my @rrd_sum;
@@ -1556,7 +1550,7 @@ sub process_service {
     } # if graph_sums
 
     $service_time = sprintf("%.2f", (Time::HiRes::time - $service_time));
-    INFO "[INFO] Graphed service $skeypath ($service_time sec for $nb_graphs_drawn graphs)";
+    DEBUG "[DEBUG] Graphed service $skeypath ($service_time sec for $nb_graphs_drawn graphs)";
     print $STATS "GS|$service_time\n" unless $skip_stats;
 
     foreach (@added) {
