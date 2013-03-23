@@ -178,35 +178,6 @@ sub auto_weaken {
 	return @_;
 }
 
-# based on auto_weaken search, but only cares about #%#parents
-sub weaken_config {
-    my @todo = @_;
-    while (my $cur = shift @todo) {
-	if (ref($cur) eq 'HASH') {
-	    for my $key (keys %$cur) {
-		next unless ref $cur->{$key};
-		next if isweak $cur->{$key};
-		if ($key eq '#%#parent') {
-		    weaken($cur->{$key});
-		    next;
-		}
-		push @todo, $cur->{$key};
-	    }
-	} elsif (ref($cur) eq 'ARRAY') {
-	    for (my $i = 0 ; $i < @$cur ; $i++) {
-		next unless ref $cur->[$i];
-		next if isweak $cur->[$i];
-		push @todo, $cur->[$i];
-	    }
-	} elsif (ref($cur) eq 'SCALAR') {
-	    next unless ref $$cur;
-	    next if isweak $cur;
-	    push @todo, $$cur;
-	}
-    }
-    return @_;
-}
-
 sub munin_draw_field {
     my $hash   = shift;
 
@@ -361,7 +332,6 @@ sub munin_readconfig_storable {
         DEBUG "[DEBUG] munin_readconfig: found Storable version of $file, using it";
         $part = Storable::fd_retrieve($CFG_STORABLE); 
         close ($CFG_STORABLE); 
-	weaken_config($part);
     }
 
     return $part; 
