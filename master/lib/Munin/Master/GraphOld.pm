@@ -1630,7 +1630,6 @@ sub handle_trends {
 
     # If pinpointing, --end should *NOT* be changed
     if (! $pinpoint) {
-        if (time - 300 < $lastupdate) {
             if (@added) { # stop one period earlier if it's a .sum or .stack
                 push @complete, "--end",
                     (int(($enddate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
@@ -1638,7 +1637,6 @@ sub handle_trends {
                 push @complete, "--end",
                     (int($enddate / $resolutions{$time})) * $resolutions{$time};
             }
-        }
     }
 
     return @complete;
