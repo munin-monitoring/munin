@@ -248,6 +248,7 @@ sub graph_startup {
     # NOTE!  Some of these options are available in graph_main too
     # if you make changes here, make them there too.
 
+    my $debug;
     &print_usage_and_exit
         unless GetOptions (
                 "force!"        => \$force_graphing,
@@ -280,7 +281,8 @@ sub graph_startup {
                 "cron!"         => \$cron,
                 "fork!"         => \$do_fork,
                 "n=n"           => \$max_running,
-                "help"          => \$do_usage
+                "help"          => \$do_usage,
+                "debug!"        => \$debug,
         );
 
     if ($do_version) {
