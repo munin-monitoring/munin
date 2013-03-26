@@ -17,6 +17,11 @@ group root
 #
 # global_timeout 900
 
+# This is the timeout for each plugin.
+# Units are in sec. Default is 1 min
+#
+# timeout 60
+
 # Regexps for files to ignore
 ignore_file [\#~]$
 ignore_file DEADJOE$
