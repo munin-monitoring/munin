@@ -43,7 +43,7 @@ if [ "$1" = "autoconf" ]; then
     	echo "no (need time and wget programs)"
 	    exit 0
     fi
-    if ! $wget_bin -q -O /dev/null $target; then
+    if ! $wget_bin -q -O /dev/null $target  --user-agent "Munin - http_loadtime"; then
         echo "no (Cannot run wget against \"$target\")"
         exit 0
     fi
