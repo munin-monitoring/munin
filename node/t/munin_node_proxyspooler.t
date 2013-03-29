@@ -277,8 +277,8 @@ SKIP: {
 
     cmp_deeply(\@intervals, array_each(
         any(
-            num(0.5,       0.005),
-            num(0.5 + 0.3, 0.005),
+            num(0.5,       0.05),
+            num(0.5 + 0.3, 0.05),
         )
     ), 'Callback takes longer than the interval');
 }
@@ -302,8 +302,8 @@ SKIP: {
 
     cmp_deeply(\@intervals, array_each(
         any(
-            num(0.1,       0.005),
-            num(0.1 + 0.1, 0.005),
+            num(0.1,       0.05),
+            num(0.1 + 0.1, 0.05),
         )
     ), 'Callback takes about the same time as interval');
 }
