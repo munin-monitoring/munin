@@ -137,6 +137,7 @@ if ($Munin::Plugin::me =~ /_if_(\d+)$/) {
 }
 
 my $ifEntryDescr       = "1.3.6.1.2.1.2.2.1.2.$iface";
+my $ifEntryHiSpeed     = "1.3.6.1.2.1.31.1.1.1.15.$iface";
 my $ifEntrySpeed       = "1.3.6.1.2.1.2.2.1.5.$iface";
 my $ifEntryStatus      = "1.3.6.1.2.1.2.2.1.8.$iface";
 my $ifEntryInOctets    = "1.3.6.1.2.1.2.2.1.10.$iface";
@@ -180,6 +181,21 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     my $speed = undef;
 
     if (defined ($speed = $session->get_single($ifEntrySpeed))) {
+        # ifSpeed only supports values up to 4.3Gbps, because it's a
+        # 32-bit value.  For faster interfaces, e.g. 10GE or 8Gb/s FC,
+        # use ifHighSpeed instead, which contains the interface speed
+        # in Mbps (e.g. 1000 for GE).
+        #
+        # To detect whether we should use ifHighSpeed, check for an
+        # ifSpeed value of 2^32-1 (4294967295).  For some reason
+        # Brocade Fabric OS returns 2^32-2 instead, so check that as
+        # well.
+
+	if ($speed == 4294967294 || $speed == 4294967295) {
+		$speed = $session->get_single($ifEntryHiSpeed)
+			* 1000 * 1000;
+	}
+
 	$warn = $speed/8;
 
 	# Warn at 1/8th of actuall speed?  Or just remove warning?
