@@ -1276,6 +1276,10 @@ sub process_service {
     }
 
     my $graphtotal = munin_get($service, "graph_total");
+    if (defined $graphtotal and $graphtotal eq "undef") {
+        $graphtotal = undef;
+    }
+
     if (@rrd_negatives) {
         push(@rrd, @rrd_negatives);
         push(@rrd, "LINE1:re_zero#000000");    # Redraw zero.
