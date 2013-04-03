@@ -15,31 +15,6 @@ DAEMON=/usr/sbin/munin-node
 PIDFILE=/var/run/munin/munin-node.pid
 CONFFILE=/etc/munin/munin-node.conf
 
-# log_daemon_msg() and log_progress_msg() isn't present in present in Sarge.
-# Below is a copy of them from lsb-base 3.0-5, for the convenience of back-
-# porters.  If the installed version of lsb-base provides these functions,
-# they will be used instead.
-
-log_daemon_msg () {
-    if [ -z "$1" ]; then
-        return 1
-    fi
-
-    if [ -z "$2" ]; then
-        echo -n "$1:"
-        return
-    fi
-    
-    echo -n "$1: $2"
-}
-
-log_progress_msg () {
-    if [ -z "$1" ]; then
-        return 1
-    fi
-    echo -n " $@"
-}
-
 . /lib/lsb/init-functions
 [ -r /etc/default/munin-node ] && . /etc/default/munin-node
 
