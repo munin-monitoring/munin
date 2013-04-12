@@ -230,38 +230,6 @@ sub _create_self_aware_worker_exception_handler {
 }
 
 
-# FIX merge with UpdateWorker::_get_rrd_file_name
-# FIX seems like dead code?  Or only used in ensure_?
-sub _get_rrd_file_name {
-    my ($self, $host, $service, $ds_name, $ds_type) = @_;
-    
-    my $type_id = lc(substr(($ds_type), 0, 1));
-    my ($g, $h) = split /;/, $host;
-    # // ... perl mode
-    my $file = sprintf("%s-%s-%s-%s.rrd",
-                       $h,
-                       $service,
-                       $ds_name,
-                       $type_id);
-
-    # Not really a danger (we're not doing this stuff via the shell),
-    # so more to avoid confusion with silly filenames.
-    ($g, $file) = map { 
-        my $p = $_;
-        $p =~ tr/\//_/; 
-        $p =~ s/^\./_/g;
-        $p;
-    } ($g, $file);
-	
-    my $rrd_file = File::Spec->catfile($config->{dbdir}, 
-                                       $g,
-                                       $file);
-    croak "RRD file '$rrd_file' not found" unless -e $rrd_file;
-
-    return $rrd_file;
-}
-
-
 sub _write_new_service_configs_locked {
     my ($self) = @_;
 
