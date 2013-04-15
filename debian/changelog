@@ -7,7 +7,7 @@ munin (2.0.12-2) UNRELEASED; urgency=low
 
 munin (2.0.12-1) experimental; urgency=low
 
-  * New upstream release
+  * New upstream release. (Closes: #699803, #703479, #689291)
 
  -- Stig Sandbeck Mathisen <ssm@debian.org>  Sat, 23 Mar 2013 19:52:33 +0100
 
