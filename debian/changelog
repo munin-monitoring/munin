@@ -1,3 +1,10 @@
+munin (2.0.6-4) UNRELEASED; urgency=low
+
+  * Master/Node.pm: cherry-pick 71d0a86 from 2.0.12 to fix TLS enabled
+    updates. (Closes: #699803)
+
+ -- Holger Levsen <holger@debian.org>  Mon, 15 Apr 2013 22:16:04 +0200
+
 munin (2.0.6-3) unstable; urgency=low
 
   * debian/rules: set MUNIN_VERSION correctly during build. (Closes: #694527)
