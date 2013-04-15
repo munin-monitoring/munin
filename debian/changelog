@@ -2,6 +2,9 @@ munin (2.0.6-4) UNRELEASED; urgency=low
 
   * Master/Node.pm: cherry-pick 71d0a86 from 2.0.12 to fix TLS enabled
     updates. (Closes: #699803)
+  * several master components: turn INFO messages into DEBUG messages to avoid
+    logfiles reaching gigabyte sizes in a few days. The cherries picked were
+    8ad5dda (from 2.0.7) and 4372cdf (from 2.0.12). (Closes: #703479)
 
  -- Holger Levsen <holger@debian.org>  Mon, 15 Apr 2013 22:16:04 +0200
 
