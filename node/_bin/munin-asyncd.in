@@ -154,16 +154,32 @@ MAIN: while($keepgoing) {
 	my $when_next = $when + $timeout; # wake up at least every $timeout sec
 	my $sock;
 	PLUGIN: foreach my $plugin (@plugins) {
-		# See if this plugin should be updated
 		my $plugin_rate = get_hash($plugin, $plugin_rate_filename) || 300;
-		if ($when < ($last_updated{$plugin} || 0) + $plugin_rate) {
-			# not yet, next plugin
-			next;
+
+		if (exists($last_updated{$plugin})) {
+			# if the plugin was updated in the future, somebody changed the clock
+			if ($when < $last_updated{$plugin}) {
+				$last_updated{$plugin} = $when;
+			}
+
+			# it's not time for plugin to update yet
+			if ($when < $last_updated{$plugin} + $plugin_rate) {
+				$when_next = min($when_next, $last_updated{$plugin} + $plugin_rate);
+				next PLUGIN;
+			}
 		}
 
-		# Should update it
-		$last_updated{$plugin} = $when;
-		$when_next = min($when_next, $when + max($plugin_rate, $minrate));
+		# We want to update plugin now!
+
+		# This cheats a bit to try to maintain constant
+		# update rate: Just add 1 period to previous
+		# last_updated unless we used very much time (more
+		# than one period!)
+		$last_updated{$plugin} = (exists($last_updated{$plugin}) && $when < $last_updated{$plugin} + 2 * $plugin_rate)
+			? ($last_updated{$plugin} + $plugin_rate)
+			: $when;
+
+		$when_next = min($when_next, $last_updated{$plugin} + $plugin_rate);
 
 		if ($do_fork && fork()) {
 			# parent, return directly
@@ -208,6 +224,8 @@ MAIN: while($keepgoing) {
 	# Sleep until next plugin exec.
 	my $sleep_sec = $when_next - time;
 
+	# $sleep_sec is converted to unsigned integer! sleep(-1)
+	# will sleep(0xffffffff) (very long)
 	if ($sleep_sec > 0) {
 		print STDERR "[$$][$process_name] Sleeping $sleep_sec sec\n" if $verbose;
 		sleep $sleep_sec;
