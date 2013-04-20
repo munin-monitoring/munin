@@ -1,8 +1,18 @@
-munin (2.0.6-3~bpo60+1) squeeze-backports; urgency=low
+munin (2.0.6-4~bpo60+1) squeeze-backports; urgency=low
 
   * Rebuild for squeeze-backports.
 
- -- Holger Levsen <holger@debian.org>  Sun, 20 Jan 2013 12:13:25 +0100
+ -- Holger Levsen <holger@debian.org>  Sat, 20 Apr 2013 09:02:02 +0200
+
+munin (2.0.6-4) unstable; urgency=medium
+
+  * Master/Node.pm: cherry-pick 71d0a86 from 2.0.12 to fix TLS enabled
+    updates. (Closes: #699803)
+  * several master components: turn INFO messages into DEBUG messages to avoid
+    logfiles reaching gigabyte sizes in a few days. The cherries picked were
+    8ad5dda (from 2.0.7) and 4372cdf (from 2.0.12). (Closes: #703479)
+
+ -- Holger Levsen <holger@debian.org>  Tue, 16 Apr 2013 15:48:03 +0200
 
 munin (2.0.6-3) unstable; urgency=low
 
