@@ -18,6 +18,7 @@ use POSIX;
 $| = 1;
 
 my $nb_servers = 3;
+my $nb_groups;
 my $nb_plugins = 30;
 my $fields_per_plugin = 5;
 my $starting_port = 24949;
@@ -34,6 +35,7 @@ my $arg_ret = GetOptions(
 	"nb-plugins|n=i" => \$nb_plugins,
 	"nb-fields|f=i" => \$fields_per_plugin,
 	"nb-servers|s=i" => \$nb_servers,
+	"nb-groups|g=i" => \$nb_groups,
 	"update-rate=i" => \$update_rate,
 
 	"startint-port|p=i" => \$starting_port,
@@ -57,6 +59,7 @@ Options:
     --help                   View this message.
 
     -s --nb-servers <int>     Number of servers [3]
+    -g --nb-groups <int>      Number of groups  [0]
     -p --start-port <int>     Starting TCP listening port [24949]
 
     -n --nb-plugins <int>     Number of plugins per server [30] 
@@ -83,7 +86,7 @@ $starting_epoch = time + $starting_epoch if ($starting_epoch < 0);
 if ($dump_config) {
 	for (my $i = 0; $i < $nb_servers; $i++) {
 		my $port = $starting_port + $i;
-		print "[host$port.debug.lan]\n";
+		print "[" . get_hostname($port) . "]\n";
 		print "     address 127.0.0.1\n";
 		print "     port $port\n";
 		print "\n";
@@ -132,7 +135,7 @@ while (my @ready = $select->can_read()) {
 sub service
 {
 	my $client = shift;
-	my $hostname = "host".$client->sockport().".debug.lan";
+	my $hostname = get_hostname($client->sockport());
 
 	print $client "# munin node at $hostname\n";
 
@@ -210,6 +213,14 @@ sub get_plugin_number
 	my $plugin_name = shift;
 	my $plugin_number = $1 if ($plugin_name =~ m/(\d+)/);
 	return $plugin_number;
+}
+
+sub get_hostname
+{
+	my $port = shift;
+	my $group_extra = ($nb_groups) ? (".g" . ($port - $starting_port) % $nb_groups) : "";
+	my $hostname = "host$port$group_extra.debug.lan";
+	return $hostname;
 }
 
 sub debug 
