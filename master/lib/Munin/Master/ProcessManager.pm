@@ -237,6 +237,7 @@ sub _handle_worker_error {
     );
     my $worker_id = $self->{active_workers}{$worker_pid}{ID};
     my $exit_code = $CHILD_ERROR >> 8;
+    DEBUG "[DEBUG] Reaping $worker_pid.  Exit value/signal: $exit_code/$code2msg{$exit_code}";
     $self->{error_callback}($self->{active_workers}{$worker_pid},
                             $code2msg{$exit_code} || $exit_code);
 
