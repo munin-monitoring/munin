@@ -221,6 +221,9 @@ sub _vet_finished_workers {
 	INFO "[INFO] Reaping $self->{active_workers}{$worker_pid}.  Exit value/signal: $child_exit/$child_signal";
         delete $self->{active_workers}{$worker_pid};
     }
+
+    # Sleep for a fixed, but small amount of time (100ms), to avoid pegging 100% CPU if called in a small loop
+    sleep(0.1);
 }
 
 
