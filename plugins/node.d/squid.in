@@ -81,7 +81,10 @@ use strict;
 use Munin::Plugin;
 use IO::Socket::INET;
 
-my $hostname = $1 if $Munin::Plugin::me =~ /_([^_]+)$/;
+
+my $plugin = Munin::Plugin::Framework->new;
+
+$plugin->hostname = $1 if $Munin::Plugin::me =~ /_([^_]+)$/;
 
 my $peeraddr = $ENV{'host'} || $hostname || '127.0.0.1';
 my $peerport = $ENV{'port'} || '3128';
@@ -159,117 +162,12 @@ my $storedir = getobject('storedir');
 my $info     = getobject('info');
 my $icp_data = get_icp;
 
-if ( $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
-  if ( $requirements ) {
-    print "no ($requirements)\n";
-  } else {
-    if (! $counters->is_success ) {
-      my $status = $counters->status_line; $status =~ s/[\r\n]//g;
-      print "no ($status)\n";
-    } else {
-      print "yes\n";
-    }
-  }
-
-  exit 0;
-} elsif ( $ARGV[0] and $ARGV[0] eq 'config' ) {
-  print "host_name $hostname" if $hostname;
-
-  if ( $counters->is_success ) {
-    print <<END;
-
-multigraph squid_requests
-graph_title Squid client requests
-graph_args --base 1000 -l 0
-graph_vlabel requests / \${graph_period}
-graph_order hits errors misses
-graph_total total
-graph_category squid
-
-hits.label hits
-hits.type DERIVE
-hits.draw AREASTACK
-hits.min 0
-errors.label errors
-errors.type DERIVE
-errors.draw AREASTACK
-errors.min 0
-misses.label misses
-misses.type DERIVE
-misses.draw AREASTACK
-misses.min 0
-
-multigraph squid_traffic
-graph_title Squid Traffic
-graph_args --base 1024 -l 0
-graph_vlabel bytes per \${graph_period}
-graph_order in out hit_out
-graph_category squid
-
-in.label received
-in.type DERIVE
-in.min 0
-out.label sent
-out.type DERIVE
-out.min 0
-hit_out.label sent from cache
-hit_out.type DERIVE
-hit_out.min 0
-END
-  }
-
-  if ( $storedir->is_success ) {
-    print <<END;
-
-multigraph squid_swap
-graph_title Squid swap size
-graph_order Maximum Current
-graph_vlabel bytes
-graph_args --base 1024 -l 0
-graph_category squid
-max.label Maximum Swap Size
-current.label Current Store Swap Size
-END
-  }
-
-  if ( $info->is_success ) {
-    print <<END;
-
-multigraph squid_objectsize
-graph_title Squid object size
-graph_vlabel bytes
-graph_args --base 1024 -l 0
-graph_category squid
-size.label Mean Object Size
-END
-  }
-
-  if ( $icp_data ) {
-    print <<END;
-
-multigraph squid_icp
-graph_title Squid Relay Statistics
-graph_vlabel requests / \${graph_period}
-graph_args --base 1000 -l 0
-graph_total total
-graph_category squid
-END
-
-    foreach my $i (sort keys %{$icp_data}) {
-      print "$i.label ", $icp_data->{$i}->{host}, "\n";
-      print "$i.type DERIVE\n";
-      print "$i.max 500000\n";
-      print "$i.min 0\n";
-      print "$i.draw AREASTACK\n";
-    }
-  }
-
-  unless ( ($ENV{MUNIN_CAP_DIRTYCONFIG} || 0) == 1 ) {
-    exit 0;
-  }
+if ( $requirements ) {
+  $plugin->autoconf = "no ($requirements)";
+} elsif ( !$counters->is_success ) {
+  $plugin->autoconf = "no ($counters->status_line)";
+  $plugin->autoconf =~ s/[\r\n]//g;
 }
-
-exit 1 if $requirements;
 
 if ( $counters->is_success ) {
   my $hits =
@@ -287,18 +185,73 @@ if ( $counters->is_success ) {
   my $hits_out =
     ($counters->content =~ /client_http\.hit_kbytes_out = ([0-9]+)/) ? ($1 * 1024) : "U";
 
-  print <<END;
-
-multigraph squid_requests
-hits.value $hits
-errors.value $errors
-misses.value $misses
-
-multigraph squid_traffic
-in.value $in
-out.value $out
-hits_out.value $hits_out
-END
+  $plugin->add_graphs
+    (
+     squid_requests =>
+     {
+      title => "Squid client requests",
+      args => "--base 1000 -l 0",
+      vlabel => "requests per \${graph_period}",
+      order => "hits errors misses",
+      total => "total",
+      category => "network",
+      fields =>
+      {
+       hits =>
+       {
+	type => "DERIVE",
+	draw => "AREASTACK",
+	min => 0,
+	value => $hits,
+       },
+       errors =>
+       {
+	type => "DERIVE",
+	draw => "AREASTACK",
+	min => 0,
+	value => $errors,
+       },
+       misses =>
+       {
+	type => "DERIVE",
+	draw => "AREASTACK",
+	min => 0,
+	value => $misses,
+       },
+      },
+     },
+     "squid_traffic" =>
+     {
+      title => "Squid Traffic",
+      args => "--base 1024 -l 0",
+      vlabel => "bytes per \${graph_period}",
+      order => "in out hits_out",
+      fields =>
+      {
+       in =>
+       {
+	label => "received",
+	type => "DERIVE",
+	min => "0",
+	value => $in,
+       },
+       out =>
+       {
+	label => "sent",
+	type => "DERIVE",
+	min => "0",
+	value => $out,
+       },
+       hits_out =>
+       {
+	label => "sent from cache",
+	type => "DERIVE",
+	min => "0",
+	value => $hits_out,
+       },
+      },
+     },
+    );
 }
 
 if ( $storedir->is_success ) {
@@ -307,12 +260,21 @@ if ( $storedir->is_success ) {
   my $current =
     ($storedir->content =~ /Current (?:Store Swap )?Size\s*:\s*([0-9]+) KB/) ? ($1 * 1024) : "U";
 
-  print <<END;
-
-multigraph squid_swap
-max.value $max
-current.value $current
-END
+  $plugin->add_graphs
+    (
+     "squid_swap" =>
+     {
+      title => "Squid swap size",
+      order => "max current",
+      vlabel => "bytes",
+      args => "--base 1024 -l 0",
+      fields =>
+      {
+       max => { label => "Maximum Swap Size", value => $max },
+       current => { label => "Current Store Swap Size", value => $current }
+      }
+     },
+    );
 }
 
 if ( $info->is_success ) {
@@ -329,17 +291,44 @@ if ( $info->is_success ) {
     }
   }
 
-  print <<END;
-
-multigraph squid_objectsize
-size.value $size
-END
+  $plugin->add_graphs
+    (
+     "squid_objectsize" =>
+     {
+      title => "Squid object size",
+      vlabel => "bytes",
+      args => "--base 1024 -l 0",
+      fields =>
+      {
+       size => { label => "Mean Object Size", value => $size }
+      },
+     }
+    );
 }
 
 if ( $icp_data ) {
-  print "multigraph squid_icp\n";
+  $plugin->add_graphs
+    (
+     "squid_icp" =>
+     {
+      title => "Squid Relay Statistics",
+      vlabel => "requests per \${graph_period}",
+      args => "--base 1000 -l 0",
+      total => "total",
+      fields => {},
+     },
+    );
 
-  foreach my $i (keys %{$icp_data}) {
-    print "$i.value ", $icp_data->{$i}->{fetches}, "\n";
+  foreach my $i (sort keys %{$icp_data}) {
+    $plugin->{graphs}->{"squid_icp"}->{fields}->{$i} =
+      {
+       label => $icp_data->{$i}->{host},
+       type => "DERIVE",
+       min => 0,
+       draw => "AREASTACK",
+       value => $icp_data->{$i}->{fetches}
+      };
   }
 }
+
+$plugin->run;

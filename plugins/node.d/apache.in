@@ -115,176 +115,141 @@ GPLv2
 use strict;
 use warnings;
 use Munin::Plugin::HTTP;
+use Munin::Plugin::Framework;
 
-my $HOSTNAME = $1 if $Munin::Plugin::me =~ /_([^_]+)$/;
+my $plugin = Munin::Plugin::Framework->new;
 
-my $ret = undef;
+$plugin->{hostname} = $1 if $Munin::Plugin::me =~ /_([^_]+)$/;
 
 if ( exists $ENV{'hostname'} ) {
-  $HOSTNAME = $ENV{'hostname'};
+  $plugin->{hostname} = $ENV{'hostname'};
 }
 
 my $URL = "http://127.0.0.1:%d/server-status?auto";
 if ( exists $ENV{'url'} ) {
   $URL = $ENV{'url'};
-} elsif ( defined $HOSTNAME ) {
-  $URL = "http://$HOSTNAME:%d/server-status?auto"
+} elsif ( defined $plugin->{hostname} ) {
+  $URL = "http://$plugin->{hostname}:%d/server-status?auto"
 }
 
 my @PORTS = exists $ENV{'ports'} ? split(' ', $ENV{'ports'}) : (80);
 my $UA = Munin::Plugin::HTTP->new;
-
-if ( defined $ARGV[0] and $ARGV[0] eq "autoconf" ) {
-  if ($ret) {
-    print "no ($ret)\n";
-    exit 0;
-  }
-
-  foreach my $port (@PORTS) {
-    my $url = sprintf $URL, $port;
-    my $response = $UA->get($url);
-    if ($response->is_success) {
-      if ($response->content =~ /^Total Accesses:/im ) {
-	next;
-      } else {
-	print "no (ExtendedStatus option for apache" 
-	  . " mod_status is missing on port $port)\n";
-	exit 0;
-      }
-    } elsif ($response->code == 404) {
-      print "no (apache server-status not found. check if mod_status is enabled)\n";
-      exit 0;
-    } else {
-      print "no (Port $port: ". $response->message .")\n";
-      exit 0;
-    }
-  }
-  print "yes\n";
-  exit 0;
-}
-
-if ( defined $ARGV[0] and $ARGV[0] eq "config" ) {
-  if ( defined $HOSTNAME ) {
-    print "host_name $HOSTNAME\n";
-  }
-
-  print <<END;
-
-multigraph apache_accesses
-graph_title Apache accesses
-graph_args --base 1000 -l 0
-graph_vlabel accesses / \${graph_period}
-graph_category apache
-END
-
-  foreach my $port (@PORTS) {
-    print <<END;
-accesses$port.label port $port
-accesses$port.type DERIVE
-accesses$port.info The number of accesses (pages and other items served) globally on the Apache server
-accesses$port.min 0
-END
-    print_thresholds("accesses$port");
-  }
-
-  print <<END;
-
-multigraph apache_processes
-graph_title Apache processes
-graph_args --base 1000 -l 0
-graph_vlabel processes
-graph_total total
-graph_category apache
-END
-
-  print "graph_order ";
-  foreach my $port (@PORTS) {
-    print "busy$port idle$port free$port ";
-  }
-  print "\n";
-
-  foreach my $port (@PORTS) {
-    print <<END;
-busy$port.label busy servers on port $port
-busy$port.draw LINE2
-busy$port.min 0
-idle$port.label idle servers on port $port
-idle$port.draw STACK
-idle$port.min 0
-free$port.label free slots on port $port
-free$port.draw STACK
-free$port.min 0
-END
-
-    print_thresholds("busy$port");
-    print_thresholds("idle$port");
-    print_thresholds("free$port");
-  }
-
-  print <<END;
-
-multigraph apache_volume
-graph_title Apache volume
-graph_args --base 1024 -l 0
-graph_vlabel KiB per \${graph_period}
-graph_category apache
-END
-
-  foreach my $port (@PORTS) {
-    print <<END;
-volume$port.label port $port
-volume$port.type DERIVE
-volume$port.min 0
-END
-
-    print_thresholds("volume$port");
-  }
-
-  exit 0;
-}
-
-my %multigraphs = (
-		   accesses => "multigraph apache_accesses\n",
-		   processes => "multigraph apache_processes\n",
-		   volume => "multigraph apache_volume\n"
-		  );
+my %responses;
 
 foreach my $port (@PORTS) {
   my $url = sprintf $URL, $port;
-  my $response = $UA->get($url);
+  $responses{$port} = $UA->get($url);
+}
 
-  if ($response->content =~ /^Total Accesses:\s+(.+)$/im) {
-    $multigraphs{accesses} .= "accesses$port.value $1\n";
+while (my ($port, $response) = each(%responses)) {
+  if ($response->is_success) {
+    if ($response->content =~ /^Total Accesses:/im ) {
+      next;
+    } else {
+      $plugin->{autoconf} = "no (ExtendedStatus option for apache mod_status is missing on port $port)";
+    }
+  } elsif ($response->code == 404) {
+    $plugin->{autoconf} = "no (apache server-status not found. check if mod_status is enabled)\n";
   } else {
-    $multigraphs{accesses} .= "accesses$port.value U\n";
-  }
-
-  if ($response->content =~ /^Busy(?:Servers|Workers):\s+(.+)$/im) {
-    $multigraphs{processes} .= "busy$port.value $1\n";
-  } else {
-    $multigraphs{processes} .= "busy$port.value U\n";
-  }
-  if ($response->content =~ /^Idle(?:Servers|Workers):\s+(.+)$/im) {
-    $multigraphs{processes} .= "idle$port.value $1\n";
-  } else {
-    $multigraphs{processes} .= "idle$port.value U\n";
-  }
-  if ($response->content =~ /^(Scoreboard: .*)$/m) {
-    my $count = () = $1 =~ /\./g;
-    $multigraphs{processes} .= "free$port.value $count\n";
-  } else {
-    $multigraphs{processes} .= "free$port.value U\n";
-  }
-
-  if ($response->content =~ /^Total kBytes:\s+(.+)$/im) {
-    $multigraphs{volume} .= "volume$port.value $1\n";
-  } else {
-    $multigraphs{volume} .= "volume$port.value U\n";
+    $plugin->{autoconf} = "no (Port $port: ". $response->message .")\n";
   }
 }
 
-foreach my $graph (keys %multigraphs) {
-  print $multigraphs{$graph};
+$plugin->{graphs} =
+  {
+   apache_accesses =>
+   {
+    title    => "Apache accesses",
+    args     => "--base 1000 -l 0",
+    vlabel   => "accesses per \${graph_period}",
+    category => "apache",
+    info     => "The number of accesses (pages and other items served) globally on the Apache server",
+    order    => "",
+    fields   => { }
+   },
+   apache_processes =>
+   {
+    title    => "Apache processes",
+    args     => "--base 1000 -l 0",
+    vlabel   => "processes",
+    total    => "total",
+    category => "apache",
+   },
+   apache_volume =>
+   {
+    title    => "Apache volume",
+    args     => "--base 1024 -l 0",
+    vlabel   => "KiB per \${graph_period}",
+    scale    => "no", # these are already expressed in KiB, avoid kKiB
+    category => "apache",
+   },
+  };
+
+foreach my $port (@PORTS) {
+  my ($accesses, $busy, $idle, $free, $volume);
+
+  if ( $responses{$port}->is_success ) {
+    my $content = $responses{$port}->content;
+
+    if ($content =~ /^Total Accesses:\s+(.+)$/im) {
+      $accesses = $1;
+    }
+
+    if ($content =~ /^Busy(?:Servers|Workers):\s+(.+)$/im) {
+      $busy = $1;
+    }
+
+    if ($content =~ /^Idle(?:Servers|Workers):\s+(.+)$/im) {
+      $idle = $1;
+    }
+
+    if ($content =~ /^(Scoreboard: .*)$/m) {
+      $free = () = $1 =~ /\./g;
+    }
+
+    if ($content =~ /^Total kBytes:\s+(.+)$/im) {
+      $volume = $1;
+    }
+  }
+
+  $plugin->{graphs}->{apache_accesses}->{fields}->{"accesses$port"} =
+    {
+     label => "port $port",
+     type  => "DERIVE",
+     min   => 0,
+     value => $accesses,
+    };
+
+  $plugin->{graphs}->{apache_processes}->{order} .= "busy$port idle$port free$port ";
+  $plugin->{graphs}->{apache_processes}->{fields}->{"busy$port"} =
+    {
+     label => "busy servers on port $port",
+     draw  => "LINE2",
+     min   => 0,
+     value => $busy,
+    };
+  $plugin->{graphs}->{apache_processes}->{fields}->{"idle$port"} =
+    {
+     label => "idle servers on port $port",
+     draw  => "STACK",
+     min   => 0,
+     value => $idle,
+    };
+  $plugin->{graphs}->{apache_processes}->{fields}->{"free$port"} =
+    {
+     label => "free slots on port $port",
+     draw  => "STACK",
+     min   => 0,
+     value => $free,
+    };
+
+  $plugin->{graphs}->{apache_volume}->{fields}->{"volume$port"} =
+    {
+     label => "port $port",
+     type  => "DERIVE",
+     min   => 0,
+     value => $volume
+    };
 }
 
-# vim:syntax=perl
+$plugin->run;

@@ -56,68 +56,70 @@ GPLv2
 =cut
 
 use strict;
+use Munin::Plugin::Framework;
 use Munin::Plugin;
 use File::Basename;
 
-# we'll opent he hwmon class, then find all the devices registered
+my $plugin = Munin::Plugin::Framework->new;
+
+# we'll open the hwmon class, then find all the devices registered
 # there.
 my $classdir = '/sys/class/hwmon';
 my @devdirs = <$classdir/hwmon*>;
 
-if ( defined $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
-  if ( scalar(@devdirs) > 0 ) {
-    print "yes\n";
-  } else {
-    print "no (no hwmon device found)\n";
-  }
+$plugin->{autoconf} = "no (no hwmon device found)" if ( scalar(@devdirs) == 0 );
 
-  exit 0;
-}
-
-my %sensors = (
-	     in => {
-		    inputs => [],
-		    title => "Voltages",
-		    vlabel => "Volt",
-		    graph_args => "--base 1000 --logarithmic",
-		    denominator => 1000 # milliVolt -> Volt
-		   },
-	     fan => {
-		     inputs => [],
-		     title => "Fans speed",
-		     vlabel => "RPM",
-		     graph_args => "--base 1000 -l 0",
-		     denominator => 1
-		    },
-	     temp => {
-		      inputs => [],
-		      title => "Temperatures",
-		      vlabel => "Degrees Celsius",
-		      graph_args => "--base 1000 -l 0",
-		      denominator => 1000 # milliCelsius -> Celsius
-		     },
-	     curr => {
-		      inputs => [],
-		      title => "Currents",
-		      vlabel => "A",
-		      graph_args => "--base 1000 -l 0",
-		      denominator => 1000 # milliAmperes -> Amperes
-		     },
-	     power => {
-		       inputs => [],
-		       title => "Power",
-		       vlabel => "W",
-		       graph_args => "--base 1000 -l 0",
-		       denominator => 1000000 # microWatts -> Watts
-		      },
-	     humidity => {
-			  inputs => [],
-			  title => "Humidity",
-			  vlabel => "%",
-			  graph_args => "--base 1000 -l 0 -u 100",
-			  denominator => 1
-			 }
-	    );
+$plugin->add_graphs
+  (
+   hwmon_in =>
+   {
+    title => "Voltages",
+    vlabel => "Volt",
+    args => "--base 1000 --logarithmic",
+    denominator => 1000, # milliVolt -> Volt
+    fields => {}
+   },
+   hwmon_fan =>
+   {
+    title => "Fans speed",
+    vlabel => "RPM",
+    args => "--base 1000 -l 0",
+    denominator => 1,
+    fields => {}
+   },
+   hwmon_temp =>
+   {
+    title => "Temperatures",
+    vlabel => "Degrees Celsius",
+    args => "--base 1000 -l 0",
+    denominator => 1000, # milliCelsius -> Celsius
+    fields => {}
+   },
+   hwmon_curr =>
+   {
+    title => "Currents",
+    vlabel => "A",
+    args => "--base 1000 -l 0",
+    denominator => 1000, # milliAmperes -> Amperes
+    fields => {}
+   },
+   hwmon_power =>
+   {
+    title => "Power",
+    vlabel => "W",
+    args => "--base 1000 -l 0",
+    denominator => 1000000, # microWatts -> Watts
+    fields => {}
+   },
+   hwmon_humidity =>
+   {
+    title => "Humidity",
+    vlabel => "%",
+    args => "--base 1000 -l 0 -u 100",
+    denominator => 1,
+    fields => {}
+   },
+  );
 
 foreach my $devdir (@devdirs) {
   my $devname = basename($devdir);
@@ -139,64 +141,36 @@ foreach my $devdir (@devdirs) {
     my $type = $2;
     my $graphid = clean_fieldname("$devname $name");
     my $path = "$devdir/$name";
-    my $label = ($devlabel || "") . " $name";
 
-    push(@{$sensors{$type}->{inputs}}, { path => $path, label => $label, graphid => $graphid });
+    my $denominator = $plugin->graphs->{"hwmon_" . $type}->{denominator};
+
+    my ($label) = readarray($path . "_label") || (($devname || "") . " $name");
+
+    my ($lwarn) = readarray($path . "_min");
+    $lwarn /= $denominator if $lwarn;
+
+    my ($hwarn) = readarray($path . "_max");
+    $hwarn /= $denominator if $hwarn;
+
+    my ($lcrit) = readarray($path . "_lcrit");
+    $lcrit /= $denominator if $lcrit;
+
+    my ($hcrit) = readarray($path . "_crit");
+    $hcrit /= $denominator if $hcrit;
+
+    my ($val) = readarray($path . "_input");
+    $val /= $denominator if $val;
+
+    $plugin->graphs->{"hwmon_" . $type}->{fields}->{$graphid} =
+      {
+       label => $label,
+       warning  => ($lwarn || $hwarn ) ? "$lwarn:$hwarn" : undef,
+       critical => ($lcrit || $hcrit ) ? "$lcrit:$hcrit" : undef,
+       value => $val,
+      };
   }
 }
 
-if ( defined $ARGV[0] and $ARGV[0] eq 'config' ) {
-  foreach my $type (keys %sensors) {
-    # don't print anything if no value is found
-    next if scalar(@{$sensors{$type}->{inputs}}) == 0;
-
-    print <<END;
-
-multigraph hwmon_$type
-graph_title $sensors{$type}->{title}
-graph_vlabel $sensors{$type}->{vlabel}
-graph_args $sensors{$type}->{graph_args}
-graph_category sensors
-END
-
-    foreach my $sensor (@{$sensors{$type}->{inputs}}) {
-      my ($label) = readarray("$sensor->{path}_label");
-      print $sensor->{graphid}, ".label ", ($label || $sensor->{label}), "\n";
-
-      my ($lwarn) = readarray("$sensor->{path}_min");
-      $lwarn = $lwarn/$sensors{$type}->{denominator} if $lwarn;
-
-      my ($hwarn) = readarray("$sensor->{path}_max");
-      $hwarn = $hwarn/$sensors{$type}->{denominator} if $hwarn;
-
-      print "$sensor->{graphid}.warning $lwarn:$hwarn\n" if $lwarn || $hwarn;
-
-      my ($lcrit) = readarray("$sensor->{path}_lcrit");
-      $lcrit = $lcrit/$sensors{$type}->{denominator} if $lcrit;
-
-      my ($hcrit) = readarray("$sensor->{path}_crit");
-      $hcrit = $hcrit/$sensors{$type}->{denominator} if $hcrit;
-
-      print "$sensor->{graphid}.critical $lcrit:$hcrit\n" if $lcrit || $hcrit;
-    }
-  }
-
-  unless ( ($ENV{MUNIN_CAP_DIRTYCONFIG} || 0) == 1 ) {
-    exit 0;
-  }
-}
-
-foreach my $type (keys %sensors) {
-  # don't print anything if no value is found
-  next if scalar(@{$sensors{$type}->{inputs}}) == 0;
-
-  print "multigraph hwmon_$type\n";
-
-  foreach my $sensor (@{$sensors{$type}->{inputs}}) {
-    my ($val) = readarray("$sensor->{path}_input");
-    $val /= $sensors{$type}->{denominator} if $val;
-    print $sensor->{graphid}, ".value ", ($val || "U"), "\n";
-  }
-}
+$plugin->run;
 
 # vim:syntax=perl

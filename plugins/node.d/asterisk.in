@@ -75,6 +75,7 @@ GPLv2
 
 use strict;
 use Munin::Plugin;
+use Munin::Plugin::Framework;
 use IO::Socket;
 
 sub asterisk_command {
@@ -104,10 +105,12 @@ sub asterisk_command {
   return $reply;
 }
 
-$0 =~ /asterisk(?:_(.+))$/;
-my $hostname = $1;
+my $plugin = Munin::Plugin::Framework->new;
 
-my $peeraddr = $ENV{'host'} || $hostname || '127.0.0.1';
+$0 =~ /asterisk(?:_(.+))$/;
+$plugin->{hostname} = $1;
+
+my $peeraddr = $ENV{'host'} || $plugin->{hostname} || '127.0.0.1';
 my $peerport = $ENV{'port'} || '5038';
 
 my $username = $ENV{'username'};
@@ -116,6 +119,9 @@ my $secret   = $ENV{'secret'};
 my @CHANNELS = exists $ENV{'channels'} ? split ' ',$ENV{'channels'} : qw(Zap IAX2 SIP);
 my @CODECS = exists $ENV{'codecs'} ? split ' ',$ENV{'codecs'} : qw(gsm ulaw alaw);
 my @CODECSX = exists $ENV{'codecsx'} ? split ' ',$ENV{'codecsx'} : qw(0x2 0x4 0x8);
+
+my %CODEC_IDS;
+@CODEC_IDS{@CODECS} = @CODECSX;
 
 my $line, my $error;
 my $socket = new IO::Socket::INET(PeerAddr => $peeraddr,
@@ -139,240 +145,221 @@ if ( $socket ) {
   while ( $line = $socket->getline and $line ne "\r\n" ) {}
 }
 
-if ( $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
-  if ( $error ) {
-    print "no ($error)\n";
-  } else {
-    print "yes\n";
+my ($active_channels, $messages, @channels_list, $users, $conferences, %codecs);
+
+if ( !$error ) {
+  my $channels_response = asterisk_command($socket, "core show channels");
+  #Channel              Location             State   Application(Data)
+  #Zap/pseudo-198641660 s@frompstn:1         Rsrvd   (None)
+  #Zap/1-1              4@frompstn:1         Up      MeetMe(5500)
+  #2 active channels
+  #1 active call
+  $active_channels = $1 if $channels_response =~ /\n([0-9]+) active channels/;
+  @channels_list = split(/\r\n/, $channels_response);
+
+  my $voicemail_response = asterisk_command($socket, "voicemail show users");
+  #Context    Mbox  User                      Zone       NewMsg
+  #default    1234  Example Mailbox                           1
+  #other      1234  Company2 User                             0
+  #2 voicemail users configured.
+  if ( $voicemail_response and $voicemail_response !~ /no voicemail users/ ) {
+    $messages = 0;
+    foreach my $line (split(/\r\n/, $voicemail_response)) {
+      next unless $line =~ / ([0-9]+)$/;
+      $messages += $1;
+    }
   }
 
-  exit 0;
-} elsif ( $ARGV[0] and $ARGV[0] eq 'config' ) {
-  print "host_name $hostname" if $hostname;
+  my $meetme_response = asterisk_command($socket, "meetme list");
+  #Conf Num       Parties        Marked     Activity  Creation
+  #5500           0001           N/A        00:00:03  Static
+  #* Total number of MeetMe users: 1
+  if ( $meetme_response ) {
+    if ( $meetme_response =~ /No active/ ) {
+      $users = 0;
+      $conferences = 0;
+    } else {
+      my @meetme_list = split(/\r\n/, $meetme_response);
 
-  print <<END;
+      $users = pop(@meetme_list);
+      $users =~ s/^Total number of MeetMe users: ([0-9]+)$/$1/;
 
-multigraph asterisk_channels
-graph_title Asterisk active channels
-graph_args --base 1000 -l 0
-graph_vlabel channels
-graph_category asterisk
-total.label channels
-END
-
-  foreach my $channel (@CHANNELS) {
-    print <<END;
-$channel.draw AREASTACK
-$channel.label $channel channels
-END
+      $conferences = scalar(@meetme_list) -1;
+    }
   }
 
-print <<END;
+  my $sipchannels_response = asterisk_command($socket, "sip show channels");
+  #Peer             User/ANR    Call ID      Seq (Tx/Rx)   Format
+  #192.168.1.135    yann        6902112b3e0  00101/00002   g729
+  #1 active SIP channel(s)
 
-multigraph asterisk_voicemail
-graph_title Asterisk voicemail messages
-graph_args --base 1000 -l 0
-graph_vlabel messages
-graph_category asterisk
-messages.label Total messages
-END
+  my $iaxchannels_response = asterisk_command($socket, "iax2 show channels");
+  #Channel               Peer             Username    ID (Lo/Rem)  Seq (Tx/Rx)  Lag      Jitter  JitBuf  Format
+  #IAX2/rodolphe@rodolp  10.8.53.6        rodolphe    00003/01287  00006/00004  00000ms  0148ms  0000ms  gsm
+  #1 active IAX channel(s)
 
-print <<END;
+  if ( $sipchannels_response or $iaxchannels_response ) {
+    %codecs = ( other => 0, unknown => 0 );
+    foreach my $codec (@CODECS) {
+      $codecs{$codec} = 0;
+    }
 
-multigraph asterisk_meetme
-graph_title Asterisk meetme statistics
-graph_args --base 1000 -l 0
-graph_category asterisk
-users.label Connected users
-conferences.label Active conferences
-END
+    # split the channels' listing and drop header and footnotes
+    my @sipchannels = $sipchannels_response ? split(/\r\n/, $sipchannels_response) : ();
+    pop(@sipchannels); shift(@sipchannels);
+    my @iaxchannels = $iaxchannels_response ? split(/\r\n/, $iaxchannels_response) : ();
+    pop(@iaxchannels); shift(@iaxchannels);
 
-print <<END;
+    foreach my $sipchan (@sipchannels) {
+      my $found = 0;
+      my @fields = split ' ', $sipchan;
+      if ($fields[4] eq '0x0') {
+	$codecs{unknown} += 1;
+	next;
+      }
+      foreach my $codec (@CODECS) {
+	if ($fields[4] eq $CODEC_IDS{$codec}) {
+	  $codecs{$codec} += 1;
+	  $found = 1;
+	  last;
+	}
+      }
+      if (! $found) {
+	$codecs{other} += 1;
+	print STDERR "CODEC: SIP other format $fields[4]\n" if $Munin::Plugin::DEBUG;
+      }
+    }
 
-multigraph asterisk_codecs
-graphs_title Asterisk channels per codec
-graph_args --base 1000 -l 0
-graph_vlabel channels
-graph_category asterisk
-END
+    foreach my $iaxchan (@iaxchannels) {
+      my $found = 0;
+      my @fields = split ' ', $iaxchan;
 
-  foreach my $codec (@CODECS) {
-    print <<END;
-$codec.draw AREASTACK
-$codec.label $codec channels
-END
-  }
-
-print <<END;
-other.draw AREASTACK
-other.label Other known codecs
-unknwon.draw AREASTACK
-unknown.label Unknown codec
-END
-
-  unless ( ($ENV{MUNIN_CAP_DIRTYCONFIG} || 0) == 1 ) {
-    exit 0;
+      if ($fields[8] eq '0x0') {
+	$codecs{unknown} += 1;
+	next;
+      }
+      foreach my $codec (@CODECS) {
+	if ($fields[8] eq $CODEC_IDS{$codec}) {
+	  $codecs{$codec} += 1;
+	  $found = 1;
+	  last;
+	}
+      }
+      if (! $found) {
+	$codecs{other} += 1;
+	print STDERR "CODEC: IAX2 other format: $fields[8]\n" if $Munin::Plugin::DEBUG;
+      }
+    }
   }
 }
-
-# if we arrive here and we don't have a socket, it's time to exit.
-die $error if $error;
-
-my $channels_response = asterisk_command($socket, "core show channels");
-#Channel              Location             State   Application(Data)
-#Zap/pseudo-198641660 s@frompstn:1         Rsrvd   (None)
-#Zap/1-1              4@frompstn:1         Up      MeetMe(5500)
-#2 active channels
-#1 active call
-
-my $voicemail_response = asterisk_command($socket, "voicemail show users");
-#Context    Mbox  User                      Zone       NewMsg
-#default    1234  Example Mailbox                           1
-#other      1234  Company2 User                             0
-#2 voicemail users configured.
-
-my $meetme_response = asterisk_command($socket, "meetme list");
-#Conf Num       Parties        Marked     Activity  Creation
-#5500           0001           N/A        00:00:03  Static
-#* Total number of MeetMe users: 1
-
-my $sipchannels_response = asterisk_command($socket, "sip show channels");
-#Peer             User/ANR    Call ID      Seq (Tx/Rx)   Format
-#192.168.1.135    yann        6902112b3e0  00101/00002   g729
-#1 active SIP channel(s)
-
-my $iaxchannels_response = asterisk_command($socket, "iax2 show channels");
-#Channel               Peer             Username    ID (Lo/Rem)  Seq (Tx/Rx)  Lag      Jitter  JitBuf  Format
-#IAX2/rodolphe@rodolp  10.8.53.6        rodolphe    00003/01287  00006/00004  00000ms  0148ms  0000ms  gsm
-#1 active IAX channel(s)
 
 # After all the data is fetched we can proceed to process it, the
 # connection can be closed as we don't need any more data.
-$socket->close();
+$socket->close() if $socket;
 
-my $active_channels = 'U';
-$active_channels = $1 if $channels_response =~ /\n([0-9]+) active channels/;
+$plugin->{autoconf} = "no ($error)" if $error;
 
-print <<END;
+$plugin->add_graphs
+  (
+   asterisk_channels =>
+   {
+    title => "Asterisk active channels",
+    args => "--base 1000 -l 0",
+    vlabel => "channels",
+    category => "asterisk",
+    order => "total " . join(' ', @CHANNELS),
+    fields =>
+    {
+     total =>
+     {
+      label => "channels",
+      min => 0,
+      value => $active_channels,
+     },
+    },
+   },
+   asterisk_voicemail =>
+   {
+    title => "Asterisk voicemail messages",
+    args => "--base 1000 -l 0",
+    vlabel => "messages",
+    category => "asterisk",
+    fields =>
+    {
+     messages =>
+     {
+      label => "Total messages",
+      min => 0,
+      value => $messages,
+     },
+    },
+   },
+   asterisk_meetme =>
+   {
+    title => "Asterisk meetme statistics",
+    args => "--base 1000 -l 0",
+    category => "asterisk",
+    fields =>
+    {
+     users =>
+     {
+      label => "Connected Users",
+      min => 0,
+      value => $users,
+     },
+     conferences =>
+     {
+      label => "Active conferences",
+      min => 0,
+      value => $conferences,
+     },
+    },
+   },
+   asterisk_codecs =>
+   {
+    title => "Asterisk channels per codec",
+    args => "--base 1000 -l 0",
+    vlabel => "channels",
+    category => "asterisk",
+    order => join(' ', @CODECS) . " other unknown",
+    fields =>
+    {
+     other =>
+     {
+      label => "Other known codecs",
+      min => 0,
+      draw => "AREASTACK",
+      value => $codecs{other},
+     },
+     unknown =>
+     {
+      label => "Unknown codec",
+      min => 0,
+      draw => "AREASTACK",
+      value => $codecs{unknown},
+     },
+    },
+   },
+  );
 
-multigraph asterisk_channels
-total.value $active_channels
-END
-
-my @channels_list = split(/\r\n/, $channels_response) if $channels_response;
 foreach my $channel (@CHANNELS) {
-  print "$channel.value ";
-  print $channels_response ? scalar(grep(/^$channel\//, @channels_list)) : "U";
-  print "\n";
+  $plugin->{graphs}->{asterisk_channels}->{fields}->{$channel} =
+    {
+     draw => "AREASTACK",
+     label => "$channel channels",
+     min => 0,
+     value => @channels_list ? scalar(grep(/^$channel\//, @channels_list)) : undef,
+    };
 }
 
-print "\nmultigraph asterisk_voicemail\n";
-if ( !$voicemail_response or $voicemail_response =~ /no voicemail users/ ) {
-  print "total.value U\n";
-} else {
-  my $messages = 0;
-  foreach my $line (split(/\r\n/, $voicemail_response)) {
-    next unless $line =~ / ([0-9]+)$/;
-    $messages += $1;
-  }
-
-  print "total.value $messages\n";
+foreach my $codec (@CODECS) {
+  $plugin->{graphs}->{asterisk_codecs}->{fields}->{$codec} =
+    {
+     label => "$codec channels",
+     min => 0,
+     draw => "AREASTACK",
+     value => $codecs{$codec},
+    };
 }
 
-print "\nmultigraph asterisk_meetme\n";
-if ( !$meetme_response ) {
-  print <<END;
-users.value U
-conferences.value U
-END
-} else {
-  if ( $meetme_response =~ /No active/ ) {
-    print <<END;
-users.value 0
-conferences.value 0
-END
-  } else {
-    my @meetme_list = split(/\r\n/, $meetme_response);
-
-    my $users = pop(@meetme_list);
-    $users =~ s/^Total number of MeetMe users: ([0-9]+)$/$1/;
-
-    print "users.value $users\n";
-    print "conferences.value " . (scalar(@meetme_list)-1) . "\n";
-  }
-}
-
-print "\nmultigraph asterisk_codecs\n";
-if ( !$sipchannels_response and !$iaxchannels_response ) {
-  foreach my $codec (@CODECS) {
-    print "$codec.value U\n";
-  }
-  print <<END;
-other.value U
-unknown.valeu U
-END
-} else {
-  my @results;
-  my ($i, $start, $unknown, $other)=(0,0,0,0);
-  foreach my $codec (@CODECS) {
-    $results[$i] = 0;
-    $i++;
-  }
-
-  # split the channels' listing and drop header and footnotes
-  my @sipchannels = $sipchannels_response ? split(/\r\n/, $sipchannels_response) : ();
-  pop(@sipchannels); shift(@sipchannels);
-  my @iaxchannels = $iaxchannels_response ? split(/\r\n/, $iaxchannels_response) : ();
-  pop(@iaxchannels); shift(@iaxchannels);
-
-  foreach my $sipchan (@sipchannels) {
-    my $found = 0;
-    my @fields = split ' ', $sipchan;
-    if ($fields[4] eq '0x0') {
-      $unknown += 1;
-      next;
-    }
-    foreach my $codec (@CODECSX) {
-      if ($fields[4] eq "$codec") {
-	$results[$i] = $results[$i] + 1;
-	$found = 1;
-	last;
-      }
-      $i++;
-    }
-    if (! $found) {
-      $other += 1;
-      print STDERR "CODEC: SIP other format $fields[4]\n" if $Munin::Plugin::DEBUG;
-    }
-  }
-
-  foreach my $iaxchan (@iaxchannels) {
-    my $found = 0;
-    my @fields = split ' ', $iaxchan;
-
-    if ($fields[8] eq '0x0') {
-      $unknown += 1;
-      next;
-    }
-    foreach my $codec (@CODECSX) {
-      if ($fields[8] eq "$codec") {
-	$results[$i] = $results[$i] + 1;
-	$found = 1;
-	last;
-      }
-      $i++;
-    }
-    if (! $found) {
-      $other += 1;
-      print STDERR "CODEC: IAX2 other format: $fields[8]\n" if $Munin::Plugin::DEBUG;
-    }
-  }
-
-  $i = 0;
-  foreach my $codec (@CODECS) {
-    print "$codec.value $results[$i]\n";
-    $i++;
-  }
-  print "other.value $other\n";
-  print "unknown.value $unknown\n";
-}
+$plugin->run;
