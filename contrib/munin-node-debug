@@ -12,6 +12,7 @@ use warnings;
 use IO::Socket;
 use IO::Select;
 use Getopt::Long;
+use POSIX;
 
 # No buffering
 $| = 1;
@@ -123,7 +124,7 @@ while (my @ready = $select->can_read()) {
 			service($client);
 			# Exit the child
 			debug("[$$] Finished");
-			exit;
+			POSIX::_exit(0);
 		}
 	}
 }
