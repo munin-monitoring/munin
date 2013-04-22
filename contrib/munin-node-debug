@@ -138,7 +138,7 @@ sub service
 	while (my $line = <$client>) {
 		chomp($line);
 		debug("[$$] client of $hostname asked : $line");
-		if ($line =~ m/^list /) {
+		if ($line =~ m/^list$/ || $line =~ m/^list /) {
 			for (my $i = 0; $i < $nb_plugins; $i ++) {
 				print $client "debug_plugin_$i ";
 			}
