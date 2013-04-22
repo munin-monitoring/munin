@@ -80,7 +80,7 @@ sub start_work {
     
     do_with_timeout($self->{timeout}, sub {
         $self->_collect_results($sock);
-	exit 1;
+	POSIX::_exit(1);
     }) or croak "Work timed out before all workers finished";
 
     $self->{workers} = [];
@@ -89,7 +89,7 @@ sub start_work {
     $self->_free_socket($sock);
 
     # Here we exit() normally
-    exit 0;
+    POSIX::_exit(0);
 }
 
 
@@ -145,7 +145,7 @@ sub _start_next_worker {
         $0 .= " [$worker]";
 	my $res = $self->_do_work($worker);
 	DEBUG "[DEBUG] Exit status $res for worker $worker";
-        exit $res;
+        POSIX::_exit($res);
     } 
 }
 
