@@ -547,7 +547,7 @@ sub _ensure_tuning {
     my ($self, $service, $data_source, $ds_config) = @_;
     my $success = 1;
 
-    return 1 if $ENV{NO_UPDATE};
+    return 1 if $ENV{NO_UPDATE} || $ENV{NO_TUNING};
 
     my $rrd_file =
         $self->_get_rrd_file_name($service, $data_source,
