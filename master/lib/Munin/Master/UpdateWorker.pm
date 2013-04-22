@@ -547,6 +547,8 @@ sub _ensure_tuning {
     my ($self, $service, $data_source, $ds_config) = @_;
     my $success = 1;
 
+    return 1 if $ENV{NO_UPDATE};
+
     my $rrd_file =
         $self->_get_rrd_file_name($service, $data_source,
                                   $ds_config);
@@ -759,7 +761,7 @@ sub _create_rrd_file {
     );
 
     DEBUG "[DEBUG] RRDs::create @args";
-    RRDs::create @args;
+    RRDs::create @args unless $ENV{NO_UPDATE};
     if (my $ERROR = RRDs::error) {
         ERROR "[ERROR] Unable to create '$rrd_file': $ERROR";
     }
@@ -909,12 +911,12 @@ sub _update_rrd_file {
         # will buffer for us as suggested on the rrd mailing-list.
         # https://lists.oetiker.ch/pipermail/rrd-users/2011-October/018196.html
         for my $update_rrd_data (@update_rrd_data) {
-            RRDs::update($rrd_file, $update_rrd_data);
+            RRDs::update($rrd_file, $update_rrd_data) unless $ENV{NO_UPDATE};
             # Break on error.
             last if RRDs::error;
         }
     } else {
-        RRDs::update($rrd_file, @update_rrd_data);
+        RRDs::update($rrd_file, @update_rrd_data) unless $ENV{NO_UPDATE};
     }
 
     if (my $ERROR = RRDs::error) {

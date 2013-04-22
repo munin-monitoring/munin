@@ -76,12 +76,8 @@ sub _read_old_service_configs {
     my $file;
     
     if (-e $datafile ) {
-	if (! open( $file, '<', $datafile)) {
-	    WARN "[Warning] Cannot open datafile $datafile";
-	    return {};
-	}
 	eval {
-	    $oldconfig->parse_config($file);
+		$oldconfig = munin_readconfig_raw($datafile);
 	};
 	if ($EVAL_ERROR) {
 	    WARN "[Warning] Could not parse datafile $datafile: $EVAL_ERROR";
