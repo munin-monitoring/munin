@@ -4,7 +4,7 @@
  nginx configuration
 =====================
 
-This example describes how to set up munin with Nginx.
+This example describes how to set up munin with Nginx. This document describes two alternative configurations: 1) serving static, cron-made graphs and HTML, and 2) serving dynamically-generated graphs and HTML using FastCGI.
 
 
 Serving cron-made graphs and HTML
