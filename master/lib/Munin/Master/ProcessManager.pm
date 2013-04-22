@@ -70,17 +70,26 @@ sub start_work {
     
     my $sock = $self->_prepare_unix_socket();
 
+    # Detach ourself from main process, to avoid leaking RAM when forking afterwards
+    if (fork()) {
+	wait();
+	return $?;
+    }
+
     $self->_start_waiting_workers();
     
     do_with_timeout($self->{timeout}, sub {
         $self->_collect_results($sock);
-	return 1;
+	exit 1;
     }) or croak "Work timed out before all workers finished";
 
     $self->{workers} = [];
     DEBUG "[DEBUG] Work done";
 
     $self->_free_socket($sock);
+
+    # Here we exit() normally
+    exit 0;
 }
 
 
@@ -100,7 +109,7 @@ sub _prepare_unix_socket {
         or croak "chmod failed: $!";
     listen $sock, SOMAXCONN
         or croak "listen failed: $!";
-    
+
     return $sock;
 }
 
