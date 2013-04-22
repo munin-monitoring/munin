@@ -53,7 +53,7 @@ sub run {
         $self->_run_workers();
 
 	# I wonder if the following should really be done with timing. - janl
-        $self->_write_new_service_configs_locked();
+        $self->_write_new_service_configs();
     });
 }
 
@@ -230,43 +230,22 @@ sub _create_self_aware_worker_exception_handler {
 }
 
 
-sub _write_new_service_configs_locked {
-    my ($self) = @_;
-
-    my $lock_file = "$config->{rundir}/munin-datafile.lock";
-    munin_runlock($lock_file);
-
-    open my $dump, '>', $self->{config_dump_file}
-        or croak "Fatal error: Could not open '$self->{config_dump_file}' for writing: $!";
-
-    $self->_write_new_service_configs($dump);
-
-    close $dump
-        or croak "Fatal error: Could not close '$self->{config_dump_file}': $!";
-
-    munin_removelock($lock_file);
-}
-
-
 sub _write_new_service_configs {
-    my ($self, $io) = @_;
+    my ($self) = @_;
     my $datafile_hash = {};
 
-    print $io "version $Munin::Common::Defaults::MUNIN_VERSION\n";
     $datafile_hash->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
 
-    $self->_print_service_configs_for_not_updated_services($io, $datafile_hash);
-    $self->_print_old_service_configs_for_failed_workers($io, $datafile_hash);
+    $self->_print_service_configs_for_not_updated_services($datafile_hash);
+    $self->_print_old_service_configs_for_failed_workers($datafile_hash);
 
     for my $host (keys %{$self->{service_configs}}) {
         for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
             for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
-                print $io "$host:$service.$attr->[0] $attr->[1]\n";
                 munin_set_var_path($datafile_hash, "$host:$service.$attr->[0]", $attr->[1]);
             }
             for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
                 for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
-                    print $io "$host:$service.$data_source.$attr $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr}\n";
                     munin_set_var_path($datafile_hash, "$host:$service.$data_source.$attr", $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr});
                 }
             }
@@ -279,7 +258,7 @@ sub _write_new_service_configs {
 
 
 sub _print_service_configs_for_not_updated_services {
-    my ($self, $handle, $datafile_hash) = @_;
+    my ($self, $datafile_hash) = @_;
 
     my @hosts = $self->{group_repository}->get_all_hosts();
 
@@ -291,7 +270,6 @@ sub _print_service_configs_for_not_updated_services {
             my $prefix = substr $match, 0, -6;
 
             for my $datum (grep { /^\Q$prefix\E/ } keys %$workerdata) {
-                printf $handle "%s:%s %s\n", $worker, $datum, $workerdata->{$datum};
                 munin_set_var_path($datafile_hash, $worker . ":". $datum, $workerdata->{$datum});
             }
 
@@ -302,7 +280,7 @@ sub _print_service_configs_for_not_updated_services {
 
 
 sub _print_old_service_configs_for_failed_workers {
-    my ($self, $handle, $datafile_hash) = @_;
+    my ($self, $datafile_hash) = @_;
 
     for my $worker (@{$self->{failed_workers}}) {
 	# The empty set contains "undef" it seems
@@ -321,7 +299,6 @@ sub _print_old_service_configs_for_failed_workers {
 	    next if ($datum eq 'group')
 		or ($datum eq 'host_name');
 
-	    printf $handle "%s:%s %s\n", $worker, $datum, $workerdata->{$datum};
 	    munin_set_var_path($datafile_hash, $worker . ":". $datum, $workerdata->{$datum});
 	}
 	
