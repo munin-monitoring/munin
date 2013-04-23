@@ -56,7 +56,7 @@ sub main
     $0 =~ /^(.*)$/;
     $0 = $1;
 
-    my ($plugin, $arg) = parse_args();
+    my ($plugin, $args) = parse_args();
 
     # Loads the settings from munin-node.conf.
     # Ensures that, where options can be set both in the config and in
@@ -87,7 +87,7 @@ sub main
 
     # no need for a timeout -- the user can kill this process any
     # time they want.
-    $services->exec_service($plugin, $arg);
+    $services->exec_service($plugin, $args);
 
     # Never reached, but just in case...
     print STDERR "# FATAL: Failed to exec.\n";
@@ -101,7 +101,7 @@ sub parse_args
     my $sconfdir   = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
     my $sconffile;
 
-    my ($plugin, $arg);
+    my ($plugin, $args);
 
     print_usage_and_exit() unless GetOptions(
             "config=s"     => \$conffile,
@@ -118,10 +118,14 @@ sub parse_args
     print_usage_and_exit() unless $ARGV[0];
 
     # Detaint the plugin name
-    ($plugin) = ($ARGV[0] =~ m/^([-\w.:]+)$/) or die "# ERROR: Invalid plugin name '$ARGV[0].\n";
-    if ($ARGV[1]) {
-        ($arg) = ($ARGV[1] =~ m/^(\w+)$/)
-            or die "# ERROR: Invalid characters in argument '$ARGV[1]'.\n";
+    my $dirty_plugin = shift @ARGV;
+    ($plugin) = ($dirty_plugin =~ m/^([-\w.:]+)$/) or die "# ERROR: Invalid plugin name '$dirty_plugin.\n";
+
+    # Detaint the plugin args
+    for my $dirty_arg (@ARGV) {
+        my ($arg) = ($dirty_arg =~ m/^(\w+)$/)
+            or die "# ERROR: Invalid characters in argument '$dirty_arg'.\n";
+	push @$args, $arg;
     }
 
     # Detaint service directory.  FIXME: do more strict detainting?
@@ -141,7 +145,7 @@ sub parse_args
         paranoia   => $paranoia,
     });
 
-    return ($plugin, $arg);
+    return ($plugin, $args, );
 }
 
 
