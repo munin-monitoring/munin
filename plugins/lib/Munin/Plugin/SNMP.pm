@@ -524,6 +524,29 @@ sub get_by_regex
     return \%result;
 }
 
+=head2 handle_caps() - Emit relevant "config" output for node
+
+This emits the relevant config lines for the initial run of the node
+
+=cut
+sub handle_caps
+{
+	# XXX - Should handle this way better !
+	return unless ($ARGV[1] && $ARGV[0] eq "config" && $ARGV[1] eq "cap" );
+
+	# Only asking for "cap"
+	my ($host,undef,$version) = config_session();
+
+	# We are a virtualhost enabled plugin
+	print "host_name $host\n" unless $host eq 'localhost';
+
+	# We are a multigraph enabled plugin
+	print "multigraph dummy\n"; 
+
+	# Stopping here
+	exit(0);
+}
+
 1;
 
 =head1 TODO

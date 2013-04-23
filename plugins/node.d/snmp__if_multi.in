@@ -828,6 +828,7 @@ sub do_fetch {
 
 # ############################## MAIN ################################
 
+Munin::Plugin::SNMP::handle_caps();
 do_collect;
 do_preprocess;
 
