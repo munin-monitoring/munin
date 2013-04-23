@@ -271,20 +271,23 @@ sub _service_command
 {
     my ($dir, $service, $argument) = @_;
 
+    # Dereference $argument if ARRAYREF
+    my @arguments = ref($argument) ? @$argument : ($argument);
+
     my @run;
     my $sconf = $config->{sconf};
 
     if ($sconf->{$service}{command}) {
         for my $t (@{ $sconf->{$service}{command} }) {
             if ($t eq '%c') {
-                push @run, ("$dir/$service", $argument);
+                push @run, ("$dir/$service", @arguments);
             } else {
                 push @run, ($t);
             }
         }
     }
     else {
-        @run = ("$dir/$service", $argument);
+        @run = ("$dir/$service", @arguments);
     }
 
     return @run;
