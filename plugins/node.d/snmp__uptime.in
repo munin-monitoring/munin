@@ -1,15 +1,15 @@
 #!@@GOODSH@@
 
+export host=${host:-$(basename $0 | cut -f2 -d '_' | tr '_' '.')}
 # Handle caps
 if [ "$1" = "config" -a "$2" = "cap" ]; then
-	HOSTNAME=$(basename $0 | cut -f2 -d '_' | tr '_' '.')
-	[ "$HOSTNAME" = "localhost" ] || echo "host_name $HOSTNAME"
+	[ "$host" = "localhost" ] || echo "host_name $host"
 	echo "multigraph dummy"
 	exit 0
 fi
 
 
-@@PERL@@ -w <<__END__
+@@PERL@@ -w "$@" - <<'__END__'
 # -*- cperl -*-
 # vim: ft=perl
 

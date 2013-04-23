@@ -1,15 +1,15 @@
 #!@@GOODSH@@
 
+export host=${host:-$(basename $0 | cut -f2 -d '_' | tr '_' '.')}
 # Handle caps
 if [ "$1" = "config" -a "$2" = "cap" ]; then
-	HOSTNAME=$(basename $0 | cut -f2 -d '_' | tr '_' '.')
-	[ "$HOSTNAME" = "localhost" ] || echo "host_name $HOSTNAME"
+	[ "$host" = "localhost" ] || echo "host_name $host"
 	echo "multigraph dummy"
 	exit 0
 fi
 
 
-@@PERL@@ -w <<__END__
+@@PERL@@ -w "$@" <<'__END__'
 # -*- cperl -*-
 
 =head1 NAME
@@ -130,7 +130,6 @@ be able to use 64 bit counters - if the device supports them.
 This problem is a feature of the device SNMP implementation or your
 usage of it, it is nothing the plugin can fix.  In the future Munin
 
-__END__
 may be able to run the plugin more often than the counter wraps
 around.
 
@@ -850,3 +849,5 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 }
 
 do_fetch();
+
+__END__
