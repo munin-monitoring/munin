@@ -1,4 +1,15 @@
-#!@@PERL@@ -w
+#!@@GOODSH@@
+
+# Handle caps
+if [ "$1" = "config" -a "$2" = "cap" ]; then
+	HOSTNAME=$(basename $0 | cut -f2 -d '_' | tr '_' '.')
+	[ "$HOSTNAME" = "localhost" ] || echo "host_name $HOSTNAME"
+	echo "multigraph dummy"
+	exit 0
+fi
+
+
+@@PERL@@ -w <<__END__
 # -*- cperl -*-
 # vim: ft=perl
 
@@ -84,8 +95,6 @@ GPLv2 or (at your option) any later version.
 use strict;
 use Munin::Plugin::SNMP;
 
-Munin::Plugin::SNMP::handle_caps();
-
 if (defined $ARGV[0] and $ARGV[0] eq "snmpconf") {
         print "require 1.3.6.1.2.1.1.3.0 [0-9]\n"; # Number
         exit 0;
@@ -118,3 +127,5 @@ if ($uptime ne 'U') {
 }
 
 print "uptime.value ", $uptime, "\n";
+
+__END__

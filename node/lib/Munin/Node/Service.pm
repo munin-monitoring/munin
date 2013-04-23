@@ -256,7 +256,10 @@ sub exec_service
 
     Munin::Node::OS::set_umask();
 
-    my @command = grep defined, _service_command($self->{servicedir}, $service, $arg);
+    # Dereference $argument if ARRAYREF
+    my @arguments = ref($arg) ? @$arg : ( $arg );
+
+    my @command = grep defined, _service_command($self->{servicedir}, $service, @arguments);
     print STDERR "# About to run '", join (' ', @command), "'\n"
         if $config->{DEBUG};
 
@@ -269,10 +272,9 @@ sub exec_service
 # <http://munin-monitoring.org/wiki/plugin-conf.d>).
 sub _service_command
 {
-    my ($dir, $service, $argument) = @_;
-
-    # Dereference $argument if ARRAYREF
-    my @arguments = ref($argument) ? @$argument : ($argument);
+    my $dir = shift;
+    my $service = shift;
+    my @arguments = @_;
 
     my @run;
     my $sconf = $config->{sconf};
