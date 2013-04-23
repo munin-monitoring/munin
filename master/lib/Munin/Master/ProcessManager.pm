@@ -73,7 +73,8 @@ sub start_work {
     # Detach ourself from main process, to avoid leaking RAM when forking afterwards
     if (fork()) {
 	wait();
-	return $?;
+	my $child_exit = $CHILD_ERROR >> 8;
+	return $child_exit
     }
 
     $self->_start_waiting_workers();
