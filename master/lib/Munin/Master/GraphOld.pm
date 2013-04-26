@@ -258,6 +258,7 @@ sub graph_startup {
     # NOTE!  Some of these options are available in graph_main too
     # if you make changes here, make them there too.
 
+    my $debug;
     &print_usage_and_exit
         unless GetOptions (
                 "force!"        => \$force_graphing,
@@ -292,7 +293,8 @@ sub graph_startup {
                 "cron!"         => \$cron,
                 "fork!"         => \$do_fork,
                 "n=n"           => \$max_running,
-                "help"          => \$do_usage
+                "help"          => \$do_usage,
+                "debug!"        => \$debug,
         );
 
     if ($do_version) {
@@ -1654,7 +1656,6 @@ sub handle_trends {
 
     # If pinpointing, --end should *NOT* be changed
     if (! $pinpoint) {
-        if (time - 300 < $lastupdate) {
             if (@added) { # stop one period earlier if it's a .sum or .stack
                 push @complete, "--end",
                     (int(($enddate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
@@ -1662,7 +1663,6 @@ sub handle_trends {
                 push @complete, "--end",
                     (int($enddate / $resolutions{$time})) * $resolutions{$time};
             }
-        }
     }
 
     return @complete;

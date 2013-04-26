@@ -34,6 +34,7 @@ my $problems;
 sub generate_config {
     my $use_cache = shift;
     if ($use_cache) {
+	$cache = undef; # undef, for RAM usage
 	# if there is some cache, use it (for cgi)
     	my $newcache = munin_readconfig_part('htmlconf', 1);
 	if (defined $newcache) {
@@ -55,6 +56,7 @@ sub generate_config {
     $limits = munin_readconfig_part("limits");
     # if only limits changed, still update our cache
     if ($rev != munin_configpart_revision()) {
+	$cache = undef; # undef, for RAM usage
 	$cache = get_group_tree($config);
     }
 
@@ -614,8 +616,11 @@ sub get_peer_nodes {
     my $me        = munin_get_node_name($hash);
     my $pchildren = munin_get_children($parent);
 
-    foreach my $peer (sort {munin_get_node_name($b) cmp munin_get_node_name($a)}
-        @$pchildren) {
+    my @peers = map { $_->[0] }
+        sort { $a->[1] cmp $b->[1] }
+        map { [ $_, munin_get_node_name($_) ] } @$pchildren;
+
+    foreach my $peer (@peers) {
         next unless defined $peer and ref($peer) eq "HASH";
         next
           if defined $category
