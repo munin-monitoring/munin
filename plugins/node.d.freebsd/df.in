@@ -24,7 +24,7 @@ if [ "$1" = "autoconf" ]; then
 	exit 0
 fi
 
-EXCLUDEDFS="-t noprocfs,devfs,fdescfs,linprocfs,linsysfs,nfs,nullfs"
+EXCLUDEDFS="-t noprocfs,devfs,fdescfs,linprocfs,linsysfs,nfs,nullfs,cd9660"
 
 if [ $(uname -s) = "GNU/kFreeBSD" ]; then
 	EXCLUDEDFS=$(echo $EXCLUDEDFS | sed 's/^-t /-x /; s/,/ -x /g')
