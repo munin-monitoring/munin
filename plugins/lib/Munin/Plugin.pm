@@ -314,7 +314,11 @@ sub restore_state {
 }
 
 sub _restore_state_raw {
-    open my $STATE, '<', $statefile or return;
+    if (-e $statefile) {
+    	open my $STATE, '<', $statefile or warn "$me: Statefile exists but I cannot open it!";
+    } else {
+    	return;
+    }
 
     # Test the 1rst line
     my $filemagic = <$STATE>;
