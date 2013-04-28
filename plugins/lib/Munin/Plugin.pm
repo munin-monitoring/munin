@@ -307,8 +307,8 @@ sub restore_state {
 	my @state;
 
 	# Protects _restore_state_raw() with an eval()
-	eval { @state = return _restore_state_raw(); };
-	if ($@) { @state = (); }
+	eval { @state = _restore_state_raw(); };
+	if ($@) { @state = (); warn $@; }
 
 	return @state;
 }
