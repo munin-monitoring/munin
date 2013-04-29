@@ -1609,7 +1609,7 @@ sub handle_trends {
     foreach my $field (@{munin_find_field($service, "label")}) {
         my $fieldname = munin_get_node_name($field);
 	my $colour = $single_colour;
-        my $rrdname = get_field_name($fieldname)
+        my $rrdname = get_field_name($fieldname);
 
 	# Skip virtual fieldnames, otherwise beware of $hash->{foo}{bar}. 
 	#
