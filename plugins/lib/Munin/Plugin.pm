@@ -307,14 +307,19 @@ sub restore_state {
 	my @state;
 
 	# Protects _restore_state_raw() with an eval()
-	eval { @state = return _restore_state_raw(); };
-	if ($@) { @state = (); }
+	eval { @state = _restore_state_raw(); };
+	if ($@) { @state = (); warn $@; }
 
 	return @state;
 }
 
 sub _restore_state_raw {
-    open my $STATE, '<', $statefile or return;
+    my $STATE;
+    if (-e $statefile) {
+    	open $STATE, '<', $statefile or warn "$me: Statefile exists but I cannot open it!";
+    } else {
+    	return;
+    }
 
     # Test the 1rst line
     my $filemagic = <$STATE>;
