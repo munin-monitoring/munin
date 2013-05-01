@@ -163,6 +163,7 @@ sub parseLogfile
 	} 
 	elsif ($line =~ /postfix\/smtpd.*proxy-reject: \S+ (\S+)/ ||
 	       $line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/ ||
+	       $line =~ /postfix\/postscreen.*reject: \S+ \S+ \S+ (\S+)/ ||
 	       $line =~ /postfix\/cleanup.* reject: (\S+)/)
 	{
 	    $rejects->{$1}++;
