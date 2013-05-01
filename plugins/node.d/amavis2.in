@@ -49,7 +49,6 @@ munin-node.
 use strict;
 use warnings;
 
-use lib $ENV{'MUNIN_LIBDIR'};
 use Munin::Plugin;
 
 my $LOGDIR  = (defined($ENV{'logdir'}) ? $ENV{'logdir'} : '/var/log');
