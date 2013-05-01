@@ -316,9 +316,9 @@ sub restore_state {
 sub _restore_state_raw {
     my $STATE;
     if (-e $statefile) {
-    	open $STATE, '<', $statefile or warn "$me: Statefile exists but I cannot open it!";
+        open $STATE, '<', $statefile or warn "$me: Statefile exists but I cannot open it!";
     } else {
-    	return;
+        return;
     }
 
     # Test the 1rst line
