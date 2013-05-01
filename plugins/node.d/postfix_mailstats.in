@@ -51,7 +51,7 @@ use strict;
 use Munin::Plugin;
 
 my $pos;
-my $delivered = 0;
+my $delivered;
 my $rejects = ();
 my $LOGDIR  = (defined($ENV{'logdir'}) ? $ENV{'logdir'} : '/var/log');
 my $LOGFILE = (defined($ENV{'logdir'}) ? $ENV{'logfile'} : 'mail.log');
@@ -92,12 +92,15 @@ my @state = restore_state();
 $pos = shift @state;
 $delivered = shift @state;
 
+$pos = 0 unless defined($pos);
+$delivered = 0 unless defined($delivered);
+
 my %rejects = @state;
 
 if (! -f $logfile)
 {
     print "delivered.value U\n";
-    foreach my $i (sort keys %{$rejects})
+    foreach my $i (sort keys %rejects)
     {
     	print "r$i.value U\n";
     }
@@ -128,7 +131,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "delivered.type DERIVE\n";
     print "delivered.draw AREA\n";
     print "delivered.min 0\n";
-    foreach my $i (sort keys %{$rejects})
+    foreach my $i (sort keys %rejects)
     {
 	    print "r$i.label reject $i\n";
 	    print "r$i.type DERIVE\n";
@@ -139,9 +142,9 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
 }
 
 print "delivered.value $delivered\n";
-foreach my $i (sort keys %{$rejects})
+foreach my $i (sort keys %rejects)
 {
-	print "r$i.value ", $rejects->{$i}, "\n";
+	print "r$i.value ", $rejects{$i}, "\n";
 }
 
 save_state($pos, $delivered, %rejects);
@@ -165,7 +168,7 @@ sub parseLogfile
 	       $line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/ ||
 	       $line =~ /postfix\/cleanup.* reject: (\S+)/)
 	{
-	    $rejects->{$1}++;
+	    $rejects{$1}++;
 	}
     }
     return tail_close($logfd);
