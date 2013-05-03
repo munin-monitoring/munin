@@ -154,18 +154,19 @@ sub parseLogfile
 	{
 	    $total++;
 
-	    if ($line =~ /INFECTED.*Hits:/)
+	    if ($line =~ /INFECTED /i)
 	    {
 	        $virus++;
 	    }
-	    elsif ($line =~ /SPAMMY.*Hits:/)
+	    elsif ($line =~ /SPAMMY /i)
 	    {
-		    $spam_maybe++;
+	        $spam_maybe++;
 	    }
-	    elsif ($line =~ /SPAM .*Hits:/)
+	    elsif ($line =~ /SPAM /i)
 	    {
-		   $spam_sure++;
+	        $spam_sure++;
 	    }
+	}
     }
     return tail_close($logfd);
 }
