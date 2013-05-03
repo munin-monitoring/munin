@@ -41,7 +41,7 @@ munin-node.
 
 =end comment
 
- #%# family=manual
+ #%# family=auto
  #%# capabilities=autoconf
 
 =cut
@@ -92,12 +92,16 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "graph_category antivirus\n";
 
     print "virus.label virus\n";
+    print "virus.type DERIVE\n";
     print "virus.info Number of viruses caught in email\n";
     print "spam_maybe.label probably spam\n";
+    print "spam_maybe.type DERIVE\n";
     print "spam_maybe.info Emails amavis thinks probably contain spam\n";
     print "spam_sure.label surely spam\n";
+    print "spam_sure.type DERIVE\n";
     print "spam_sure.info Emails amavis is sure to contain spam\n";
     print "total.label total mails\n";
+    print "total.type DERIVE\n";
     print "total.info Total emails evaluated by amavis\n";
     exit 0;
 }
@@ -115,7 +119,7 @@ my ($pos, $virus, $spam_maybe, $spam_sure, $total) = restore_state();
 
 $virus = 0 unless defined($virus);
 $spam_maybe = 0 unless defined($spam_maybe);
-$spam_sure = 0unless defined($spam_sure);
+$spam_sure = 0 unless defined($spam_sure);
 $total = 0 unless defined($total);
 
 my $startsize = (stat $logfile)[7];
@@ -146,22 +150,22 @@ sub parseLogfile
 	my $line = <$logfd>;
 	chomp ($line);
 
-	if ($line =~ /Hits:/) 
+	if ($line =~ /amavis.*(PASSED CLEAN|SPAMMY|INFECTED|SPAM), .*Hits:/i)
 	{
 	    $total++;
-	} 
-	elsif ($line =~ /INFECTED.*Hits:/)
-	{
-	    $virus++;
-	}
-	elsif ($line =~ /SPAMMY.*Hits:/)
-	{
-		$spam_maybe++;
-	}
-	elsif ($line =~ /SPAM .*Hits:/)
-	{
-		$spam_sure++;
-	}
+
+	    if ($line =~ /INFECTED.*Hits:/)
+	    {
+	        $virus++;
+	    }
+	    elsif ($line =~ /SPAMMY.*Hits:/)
+	    {
+		    $spam_maybe++;
+	    }
+	    elsif ($line =~ /SPAM .*Hits:/)
+	    {
+		   $spam_sure++;
+	    }
     }
     return tail_close($logfd);
 }
