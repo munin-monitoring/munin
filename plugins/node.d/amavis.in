@@ -150,22 +150,22 @@ sub parseLogfile
 	my $line = <$logfd>;
 	chomp ($line);
 
-	if ($line =~ /Hits:/) 
+	if ($line =~ /amavis.*(PASSED CLEAN|SPAMMY|INFECTED|SPAM), .*Hits:/i)
 	{
 	    $total++;
-	} 
-	elsif ($line =~ /INFECTED.*Hits:/)
-	{
-	    $virus++;
-	}
-	elsif ($line =~ /SPAMMY.*Hits:/)
-	{
-		$spam_maybe++;
-	}
-	elsif ($line =~ /SPAM .*Hits:/)
-	{
-		$spam_sure++;
-	}
+
+	    if ($line =~ /INFECTED.*Hits:/)
+	    {
+	        $virus++;
+	    }
+	    elsif ($line =~ /SPAMMY.*Hits:/)
+	    {
+		    $spam_maybe++;
+	    }
+	    elsif ($line =~ /SPAM .*Hits:/)
+	    {
+		   $spam_sure++;
+	    }
     }
     return tail_close($logfd);
 }
