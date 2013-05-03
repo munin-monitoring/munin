@@ -166,6 +166,7 @@ sub parseLogfile
 	    {
 		   $spam_sure++;
 	    }
+	}
     }
     return tail_close($logfd);
 }
