@@ -23,7 +23,7 @@ Closes: #775, #947, #1267, D:558800
 Detailed Changelog
 ------------------
 
-Jens Holzk‰mper:
+Jens Holzk√§mper:
       different state files for cron job & as plugin
 
 Kenyon Ralph:
@@ -86,7 +86,7 @@ Closes: #1251, #1258, D:699803, D:689291, D:687912
 Detailed Changelog
 ------------------
 
-Bj¯rn Ruberg:
+Bj√∏rn Ruberg:
       plugins/bonding_err_: adjust for newer kernels
  
 Steve Schnepp:
@@ -976,7 +976,7 @@ munin 1.4.4, r3276,3379, 2010-2-26
 * varnish_: backend_unhealthy is a DERIVE value, note that canonical upstream 
   is the varnish project
 * Add simfs" to linux df* plugins ignore list
-* linux/buddyinfo multigraph plugin by G·bor Gomb·s 
+* linux/buddyinfo multigraph plugin by G√°bor Gomb√°s 
 * Remediate patches from Gentoo that never came upstream.  
   Prevents possible output on stderr in plugin linux/iostat_ios and corrects 
   linux/fw_forwarded_local to handle a missing /proc/net/ip_conntrack
@@ -984,7 +984,7 @@ munin 1.4.4, r3276,3379, 2010-2-26
 * linux/diskstats: Upstream update, closes #838 #835 #837
 * linux/ip_: Better matching of IPv6 addresses.  Use a single awk command 
   instead of a mix of awk and grep.
-* mysql_: fix graph_base error (Closes #840) Patch from G·bor Gomb·s
+* mysql_: fix graph_base error (Closes #840) Patch from G√°bor Gomb√°s
 * mysql_: plugin suggests wrong values (closes #857)
 * linux/selinux_avcstat - exit 0 on autoconf
 * linux/tcp: Add contributed plugin from Tim Small
@@ -1457,7 +1457,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 * Update plugin configuration for varnish_
 * Make notifications work again
 * munin.conf: Set HTML and CGI dir consistently
-* Added new mysql_ by Kjell-Magne ÿierud plugin, document origin, and
+* Added new mysql_ by Kjell-Magne √òierud plugin, document origin, and
   sentence the others to exile (family=contrib)
 * Fix "make/make install" problems, document the other
 * Change <img> framing a bit to allow coloured frames (once the templates are updated)
@@ -1484,7 +1484,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 * munin.conf: include cgiurl_graph example
 * memcached_: New wildcard plugin
 * Refactoring of munin-update, munin-node and munin-node-configure
-  by Kjell-Mangne ÿierud and Matthew Boyle.  Actuall tests for testing
+  by Kjell-Mangne √òierud and Matthew Boyle.  Actuall tests for testing
   the programs were added too!
 * templates: 
 * html templates: The timestamp can't really be ISO8601 with the support
@@ -1562,7 +1562,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
   across all three applications.
 * Report errors against plugins with inconsistent/unexpected magic markers.
 * Java plugins written by FIX.  Adapted for inclusion in munin by Erik
-  Bols¯, Tom Feiner and Ilya Kikoin.  THANKS!
+  Bols√∏, Tom Feiner and Ilya Kikoin.  THANKS!
 * Applied patch by Katriel Traum for snmp__memory that converts the plugin
   to use Munin::Plugin::SNMP, and does some clean-ups
 * New plugin: nomadix_users_.  Monitors a kind of enterprise wifi
@@ -1639,7 +1639,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 * Make Munin::Master::Utils capable of logging
 * Make the pg plugins work properly when DBD::Pg is not present
   (by saying they can't work).
-* Add slapd_* (OpenLDAP) plugins by Bj¯rn Ruberg
+* Add slapd_* (OpenLDAP) plugins by Bj√∏rn Ruberg
 * Add PGSQL plugin framework by Magnus Hagander, and some plugins
 * linux/iostat_ios: check if $ARGV[0] is defined to avoid "use of
   uninitialized value" warnings. Thanks for the report to nicklock!
@@ -1936,7 +1936,7 @@ munin (1.3.4, r1277:1560, 8/3/2008)
  * exim_mailstats did not have human readable error messages, it tried
    signaling by coded exit statuses
  * ntp_*: Implement option to supress showing delay graph (suggested by
-   HÂvard Eidnes, fixes #350)
+   H√•vard Eidnes, fixes #350)
  * Generic processes plugin submitted by Lars Stand. Thanks!! (#441)
  * Fix typo in munin-limits (oks -> ok) closes debian #387283
  * Enhanced doc of cgi mode in munin.conf - closes debian #307963
@@ -1976,7 +1976,7 @@ munin (1.3.4, r1277:1560, 8/3/2008)
  * munin-node: Added a newline on TLS logging
  * Added tls_ca_certificate to @legal
  * squid_objectsize: New plugin to show mean object size in Squid.
-   Useful for tuning the caching size.  Thanks to Bj¯rn
+   Useful for tuning the caching size.  Thanks to Bj√∏rn
  * Munin-master programs: Remove locks as we're done with them.
    Removes ambiguity around left over lock files.
  * Introducing the munindoc command and example documentation
@@ -2696,7 +2696,7 @@ munin (1.0.0pre3)
 
 munin (1.0.0pre2)
 
-  * Plugin mysql_queries bugfix from Dagfinn I. MannsÂker (SF#876443,
+  * Plugin mysql_queries bugfix from Dagfinn I. Manns√•ker (SF#876443,
     SF#865125).
   * FreeBSD-plugin load bugfix from Robert Lindgren (SF#865928).
   * Fixed Node/run bug when changing groups.
