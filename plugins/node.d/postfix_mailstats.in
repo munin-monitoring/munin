@@ -41,7 +41,7 @@ munin-node.
 
 =end comment
 
- #%# family=manual
+ #%# family=auto
  #%# capabilities=autoconf
 
 =cut
