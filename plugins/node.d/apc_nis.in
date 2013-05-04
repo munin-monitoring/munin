@@ -78,21 +78,18 @@ if($ARGV[0] and $ARGV[0] eq "config") {
     print "battery_volt.max 300\n";
     print "battery_charge.label batt charge (%)\n";
     print "battery_charge.type GAUGE\n";
-    print "battery_charge.max 200\n";
+    print "battery_charge.max 100\n";
     print "line_volt.label line (V)\n";
     print "line_volt.type GAUGE\n";
     print "line_volt.max 300\n";
     print "line_volt.warning ${line_volt_min}:${line_volt_max}\n";
     print "load.label ups load (%)\n";
     print "load.type GAUGE\n";
-    print "load.max 200\n";
     print "time_left.label time left (min)\n";
     print "time_left.type GAUGE\n";
-    print "time_left.max 200\n";
     if ($has_temperature) {
         print "temperature.label internal temperature (°C)\n";
         print "temperature.type GAUGE\n";
-        print "temperature.max 100\n";
     }
     exit 0;
 }
