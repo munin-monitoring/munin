@@ -1,148 +1,174 @@
-#!@@GOODSH@@
-# -*- sh -*-
-# vim: ft=sh
-
-: <<=cut
+#!@@PERL@@
+# -*- perl -*-
 
 =head1 NAME
 
-amavis - plugin to monitor the amavis mail filter.
+amavis - plugin to monitor the amavis mail filter
 
 =head1 APPLICABLE SYSTEMS
 
-Hosts running amavis localy and logtail(8) installed.
+Hosts running amavis
 
 =head1 CONFIGURATION
 
-The configuration environment variables are available
+Configuration parameters for @@CONFDIR@@/amavis,
+if you need to override the defaults below:
 
-=over 4
+ [amavis]
+  env.logdir  - Which logfile to use
+  env.logfile - What file to read in logdir
 
-=item amavislog
+=head2 DEFAULT CONFIGURATION
 
-Path to logfile (Default: "/var/log/mail/mail.info")
-
-=item logtail
-
-Path to logtail command (Default: "logtail")
-
-=back
-
-On most systems the mail logs are not readable by nobody which the
-plugin usually runs at.  To enable log reading it needs to run as a
-group or user that has read access, as shown above.
-
-By default the logtail program is started without any explicit path,
-but if it is not found in the system $PATH then you'll need to specify
-the full path for the program.
-
-=head2 EXAMPLE CONFIGURATION
-
-The following shows a typical configuration:
-
-  [amavis]
-     env.amavislog     /var/log/mail/mail.info
-     env.logtail       /usr/bin/logtail
-     group adm
-
-=head1 INTERPRETATION
-
-The plugin shows "probable spam", "surley spam" and "virus".  If your
-"probable spam" raises you may need to tune your spam configuration to
-classify more spam as "surley spam" and so be able to elliminate it.
-
-=head1 MAGIC MARKERS
-
-  #%# family=auto
-  #%# capabilities=autoconf
-
-=head1 VERSION
-
-  $Id$
-
-=head1 BUGS
-
-Should use counters since the origin data is really counters.  If the
-node has multiple masters the data served will now be incorrect.
-Proper operation may require porting to perl or such.
+ [amavis]
+  env.logdir  /var/log
+  env.logfile mail.log
 
 =head1 AUTHOR
 
-Unknown
+Ported to Perl from the original shell script by Mark Meyer.
 
 =head1 LICENSE
 
 GPLv2
 
+=head1 MAGIC MARKERS
+
+=begin comment
+
+These magic markers are used by munin-node-configure when installing
+munin-node.
+
+=end comment
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
 =cut
 
-mktempfile () {
-    cmd=`echo $MUNIN_MKTEMP | sed s/\\$1/$1/`
-    $cmd
+use strict;
+use warnings;
+
+use Munin::Plugin;
+
+my $LOGDIR  = (defined($ENV{'logdir'}) ? $ENV{'logdir'} : '/var/log');
+my $LOGFILE = (defined($ENV{'logdir'}) ? $ENV{'logfile'} : 'mail.info');
+
+my $logfile = "$LOGDIR/$LOGFILE";
+
+if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
+{
+    if (-d $LOGDIR)
+    {
+	if (-f $logfile)
+	{
+            if (-r $logfile)
+            {
+                print "yes\n";
+                exit 0;
+            }
+            else
+            {
+                print "no (logfile '$logfile' not readable)\n";
+            }
+	}
+	else
+	{
+	    print "no (logfile '$logfile' not found)\n";
+	}
+    }
+    else
+    {
+        print "no (could not find logdir '$LOGDIR')\n";
+    }
+
+    exit 0;
 }
 
-AMAVIS_LOG=${amavislog:-/var/log/mail/mail.info}
-LOGTAIL=${logtail:-logtail}
-STATEFILE=$MUNIN_PLUGSTATE/amavis.offset
+if ( $ARGV[0] and $ARGV[0] eq "config" )
+{
+    print "graph_title Amavis filter statistics\n";
+    print "graph_vlabel \\#\n";
+    print "graph_category antivirus\n";
 
-if [ "$1" = "autoconf" ]; then
-        if [ -f "${AMAVIS_LOG}" -a -n "${LOGTAIL}" -a -x "${LOGTAIL}" ] ; then
-		echo yes
-		exit 0
-	else
-		echo no
-		exit 0
-	fi
-fi
+    print "virus.label virus\n";
+    print "virus.type DERIVE\n";
+    print "virus.info Number of viruses caught in email\n";
+    print "spam_maybe.label probably spam\n";
+    print "spam_maybe.type DERIVE\n";
+    print "spam_maybe.info Emails amavis thinks probably contain spam\n";
+    print "spam_sure.label surely spam\n";
+    print "spam_sure.type DERIVE\n";
+    print "spam_sure.info Emails amavis is sure to contain spam\n";
+    print "total.label total mails\n";
+    print "total.type DERIVE\n";
+    print "total.info Total emails evaluated by amavis\n";
+    exit 0;
+}
 
-# Try tailing a random file to check how arguments are passed
-ARGS=0
-`$LOGTAIL /etc/hosts 2>/dev/null >/dev/null`
-if [ $? = 66 ]; then
-    if [ ! -n "$logtail" ]; then
-	ARGS=1
-    fi
-fi
+if (! -f $logfile) 
+{
+    print "virus.value U\n";
+    print "spam_maybe.value U\n";
+    print "spam_sure.value U\n";
+    print "total.value U\n";
+    exit 0;
+}
 
-if [ "$1" = "config" ]; then
-	echo 'graph_title Amavis filter statistics'
-	echo 'graph_vlabel \#'
-	echo 'graph_category antivirus'
-	echo 'virus.label virus'
-	echo 'virus.info Number of viruses caught in email'
-	echo 'spam_maybe.label probably spam'
-	echo 'spam_maybe.info Emails amavis thinks probably contains spam'
-	echo 'spam_sure.label surely spam'
-	echo 'spam_sure.info Emails amavis is sure contains spam'
-	echo 'total.label total mails'
-	echo 'total.info Total emails evaluated by amavis'
-	exit 0
-fi
+my ($pos, $virus, $spam_maybe, $spam_sure, $total) = restore_state();
 
-total=U
-virus=U
-spamm=U
-spams=U
+$virus = 0 unless defined($virus);
+$spam_maybe = 0 unless defined($spam_maybe);
+$spam_sure = 0 unless defined($spam_sure);
+$total = 0 unless defined($total);
 
-TEMP_FILE=$(mktempfile munin-amavis.XXXXXX)
+my $startsize = (stat $logfile)[7];
 
-if [ -n "$TEMP_FILE" -a -f "$TEMP_FILE" ]
-then
-	if [ $ARGS != 0 ]; then
-	    $LOGTAIL -f ${AMAVIS_LOG} -o ${STATEFILE} | grep 'amavis\[.*\]:' > ${TEMP_FILE}
-	else
-	    $LOGTAIL ${AMAVIS_LOG} ${STATEFILE} | grep 'amavis\[.*\]:' > ${TEMP_FILE}
-	fi
-	total=$(grep -c 'Hits:' ${TEMP_FILE})
-	virus=$(grep -c 'INFECTED.*Hits:' ${TEMP_FILE})
-	spamm=$(grep -c 'SPAMMY.*Hits:' ${TEMP_FILE})
-	spams=$(grep -c 'SPAM .*Hits:' ${TEMP_FILE})
+if (!defined $pos)
+{
+    # Initial run.
+    $pos = $startsize;
+}
 
-	/bin/rm -f $TEMP_FILE
-fi
+$pos = parseLogfile($logfile, $pos, $startsize);
 
-echo "virus.value ${virus}"
-echo "spam_maybe.value ${spamm}"
-echo "spam_sure.value ${spams}"
-echo "total.value ${total}"
+print "virus.value $virus\n";
+print "spam_maybe.value $spam_maybe\n";
+print "spam_sure.value $spam_sure\n";
+print "total.value $total\n";
 
+save_state($pos, $virus, $spam_maybe, $spam_sure, $total);
+
+sub parseLogfile 
+{    
+    my ($fname, $start, $stop) = @_;
+
+	my ($logfd, $reset) = tail_open($fname, $start);
+
+    while (tell($logfd) < $stop) 
+    {
+	my $line = <$logfd>;
+	chomp ($line);
+
+	if ($line =~ /amavis.*(PASSED CLEAN|SPAMMY|INFECTED|SPAM), .*Hits:/i)
+	{
+	    $total++;
+
+	    if ($line =~ /INFECTED /i)
+	    {
+	        $virus++;
+	    }
+	    elsif ($line =~ /SPAMMY /i)
+	    {
+	        $spam_maybe++;
+	    }
+	    elsif ($line =~ /SPAM /i)
+	    {
+	        $spam_sure++;
+	    }
+	}
+    }
+    return tail_close($logfd);
+}
+
+# vim:syntax=perl
