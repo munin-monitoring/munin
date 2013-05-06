@@ -328,7 +328,7 @@ sub process_service {
 		my ($previous_updated_timestamp, $previous_updated_value) = @{ $state->{value}{"$rrd_filename:42"}{previous} || [ ] };
 
 		my $heartbeat = 600; # XXX - $heartbeat is a fixed 10 min (2 runs of 5 min).
-		if (! $field->{type} || $field->{type} eq "GAUGE" || $field->{type} eq "ABSOLUTE") {
+		if (! $field->{type} || $field->{type} eq "GAUGE") {
 			$value = $current_updated_value;
 		} elsif (! defined $current_updated_value || ! defined $previous_updated_value || $current_updated_timestamp == $previous_updated_timestamp) {
 			# No derive computing possible. Report unknown.
@@ -342,10 +342,19 @@ sub process_service {
 		} elsif ($field->{type} eq "COUNTER" && $current_updated_value < $previous_updated_value) {
 			# COUNTER never decrease. Report unknown.
 			$value = "U";
-		} elsif ($current_updated_value eq "U" || $previous_updated_value eq "U" ) {
-			# One of the values is unknown. Report unknown.
+		} elsif ($current_updated_value eq "U") {
+			# The current value is unknown. Report unknown.
+			$value = "U";
+		} elsif ($field->{type} eq "ABSOLUTE") {
+			# The previous value is unimportant, as if ABSOLUTE, the counter is reset anytime the value is read
+			$value = $current_updated_value / ($current_updated_timestamp - $previous_updated_timestamp);
+		} elsif ($previous_updated_value eq "U") {
+			# The previous value is unknown.
+			# Report unknown, as we are not ABSOLUTE
 			$value = "U";
 		} else {
+			# Everything is ok for DERIVE/COUNTER
+			# compute the value per timeunit
 			$value = ($current_updated_value - $previous_updated_value) / ($current_updated_timestamp - $previous_updated_timestamp);
 		}
 	}
