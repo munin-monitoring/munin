@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!@@PERL@@
 # -*- perl -*-
 
 =head1 NAME
@@ -90,9 +90,10 @@ if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
 my @state = restore_state();
 
 $pos = shift @state;
-$delivered = shift @state;
+my $startsize = (stat $logfile)[7];
+$pos = $startsize unless defined($pos);
 
-$pos = 0 unless defined($pos);
+$delivered = shift @state;
 $delivered = 0 unless defined($delivered);
 
 my %rejects = @state;
