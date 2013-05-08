@@ -26,6 +26,7 @@ use strict;
 
 # Put only core Perl modules here, as we don't want to ask for more deps
 use File::Temp; # File::Temp was first released with perl 5.006001
+use File::Basename;
 
 # This file uses subroutine prototypes. This is concidered a bad
 # practice according to PBP (see page 194).
@@ -70,6 +71,7 @@ our @EXPORT = qw(
         readfile
         readarray
         rotlog
+        testfile
 );
 
 use Munin::Common::Defaults;
@@ -665,7 +667,7 @@ Checks for rotated logfiles and returns its name
 =cut
 sub rotlog (@) {
 
-    my $logfile = shift(@_);
+    my $logfile = shift;
     my $rotlogfile;
 
     if (-f "$logfile.0")
@@ -687,6 +689,52 @@ sub rotlog (@) {
     return $rotlogfile;
 };
 
+=head3 $autoconf = testfile($file,$param)
+
+Checks if file exists and is readable, returns an
+autoconf string if $param is 'autoconf'
+
+=cut
+
+sub testfile (@) {
+
+    my $file = shift;
+    my $param = shift;
+    my $dir = dirname($file);
+    my $s;
+    my $exit=0;
+
+    if (-d $dir)
+    {
+        if (-f $file)
+        {
+            if (-r $file)
+            {
+                $s = "yes";
+            }
+            else
+            {
+                $exit = "1";
+                $s = "no (file '$file' not readable)";
+            }
+        }
+        else
+        {
+            $exit = "2";
+            $s = "no (file '$file' not found)";
+        }
+    }
+    else
+    {
+        $exit = "3";
+        $s = "no (could not find dir '$dir')";
+    }
+    if ( defined($param) && $param eq "autoconf" )
+    {
+        return ($exit, $s);
+    }
+    return $exit;
+};
 
 =head3 Testing
 
