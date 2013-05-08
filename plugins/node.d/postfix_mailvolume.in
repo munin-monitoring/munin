@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!@@PERL@@
 # -*- perl -*-
 
 =head1 NAME
@@ -17,6 +17,7 @@ The following shows the default configuration.
   [postfix*]
     env.logdir /var/log
     env.logfile syslog
+    env.postconf /usr/sbin/postconf
 
 =head1 INTERPRETATION
 
@@ -49,12 +50,14 @@ GPLv2
 =cut
 
 use strict;
+use warnings;
 use Munin::Plugin;
 
 my $pos   = undef;
 my $volume = 0;
 my $LOGDIR  = $ENV{'logdir'}  || '/var/log';
 my $LOGFILE = $ENV{'logfile'} || 'syslog';
+my $POSTCONF = $ENV{'postconf'} || '/usr/sbin/postconf';
 
 sub parseLogfile {
     my ($fname, $start) = @_;
@@ -75,7 +78,7 @@ sub parseLogfile {
 
 if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
     my $logfile;
-    `which postconf >/dev/null 2>/dev/null`;
+    `which $POSTCONF >/dev/null 2>/dev/null`;
     if (!$?) {
 	$logfile = "$LOGDIR/$LOGFILE";
 
