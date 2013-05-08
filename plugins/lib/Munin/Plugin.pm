@@ -69,6 +69,7 @@ our @EXPORT = qw(
         need_multigraph
         readfile
         readarray
+        rotlog
 );
 
 use Munin::Common::Defaults;
@@ -656,6 +657,35 @@ need to be run as a special user or need special priveliges.
 
     exit 0;
 }
+
+=head3 $rotlogfile = rotlog($logfile)
+
+Checks for rotated logfiles and returns its name
+
+=cut
+sub rotlog (@) {
+
+    my $logfile = shift(@_);
+    my $rotlogfile;
+
+    if (-f "$logfile.0")
+    {
+        $rotlogfile = $logfile . ".0";
+    }
+    elsif (-f "$logfile.1")
+    {
+        $rotlogfile = $logfile . ".1";
+    }
+    elsif (-f "$logfile.01")
+    {
+        $rotlogfile = $logfile . ".01";
+    }
+    else
+    {
+        $rotlogfile = $logfile . ".0";
+    }
+    return $rotlogfile;
+};
 
 
 =head3 Testing

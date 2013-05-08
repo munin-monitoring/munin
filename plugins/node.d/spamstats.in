@@ -45,24 +45,8 @@ my $LOGFILE = (defined($ENV{'logdir'}) ? $ENV{'logfile'} : 'mail.info');
 my $SPAMD = (defined($ENV{'spamd'}) ? $ENV{'spamd'} : 'spamd');
 my $logfile = "$LOGDIR/$LOGFILE";
 
-my $rotlogfile;
 
-if (-f "$logfile.0")
-{
-    $rotlogfile = $logfile . ".0";
-}
-elsif (-f "$logfile.1")
-{
-    $rotlogfile = $logfile . ".1";
-}
-elsif (-f "$logfile.01")
-{
-    $rotlogfile = $logfile . ".01";
-}
-else
-{
-    $rotlogfile = $logfile . ".0";
-}
+my $rotlogfile = rotlog($logfile);
 
 if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
 {
