@@ -7,7 +7,7 @@ spamstats - Plugin to graph spamassassin throughput
 
 =head1 CONFIGURATION
 
-Configuration parameters for @@CONFDIR@@/amavis,
+Configuration parameters for @@CONFDIR@@/spamstats,
 if you need to override the defaults below:
 
  [spamstats]
@@ -20,7 +20,6 @@ if you need to override the defaults below:
  [spamstats]
   env.logdir  /var/log
   env.logfile mail.log
-  env.spamd /usr/sbin/spamd
 
 =head1 AUTHOR
 
@@ -43,7 +42,7 @@ use Munin::Plugin;
 
 my $LOGDIR  = (defined($ENV{'logdir'}) ? $ENV{'logdir'} : '/var/log');
 my $LOGFILE = (defined($ENV{'logdir'}) ? $ENV{'logfile'} : 'mail.info');
-my $SPAMD = (defined($ENV{'spamd'}) ? $ENV{'spamd'} : '/usr/sbin/spamd');
+my $SPAMD = (defined($ENV{'spamd'}) ? $ENV{'spamd'} : 'spamd');
 my $logfile = "$LOGDIR/$LOGFILE";
 
 my $rotlogfile;
