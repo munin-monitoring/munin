@@ -14,12 +14,14 @@ if you need to override the defaults below:
  [postfix_mailstats]
   env.logdir  - Which logfile to use
   env.logfile - What file to read in logdir
+  env.postconf - Path to postconf binary
 
 =head2 DEFAULT CONFIGURATION
 
  [postfix_mailstats]
   env.logdir  /var/log
   env.logfile mail.log
+  env.postconf /usr/sbin/postconf
 
 =head1 AUTHOR
 
@@ -47,7 +49,7 @@ munin-node.
 =cut
 
 use strict;
-
+use warnings;
 use Munin::Plugin;
 
 my $pos;
@@ -55,35 +57,41 @@ my $delivered;
 my $rejects = ();
 my $LOGDIR  = (defined($ENV{'logdir'}) ? $ENV{'logdir'} : '/var/log');
 my $LOGFILE = (defined($ENV{'logdir'}) ? $ENV{'logfile'} : 'mail.log');
-
+my $POSTCONF = (defined($ENV{'postconf'}) ? $ENV{'postconf'} : '/usr/sbin/postconf';
 my $logfile = "$LOGDIR/$LOGFILE";
 
 if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
 {
-    if (-d $LOGDIR)
+    `which $POSTCONF >/dev/null 2>/dev/null`;
+    if (!$?)
     {
-	if (-f $logfile)
-	{
-            if (-r $logfile)
-            {
-                print "yes\n";
-                exit 0;
-            }
-            else
-            {
-                print "no (logfile '$logfile' not readable)\n";
-            }
-	}
-	else
-	{
-	    print "no (logfile '$logfile' not found)\n";
-	}
-    }
+        if (-d $LOGDIR)
+        {
+	    if (-f $logfile)
+	    {
+                if (-r $logfile)
+                {
+                    print "yes\n";
+                    exit 0;
+                }
+                else
+                {
+                    print "no (logfile '$logfile' not readable)\n";
+                }
+	    }
+	    else
+	    {
+	        print "no (logfile '$logfile' not found)\n";
+	    }
+        }
+        else
+        {
+            print "no (could not find logdir '$LOGDIR')\n";
+        }
     else
     {
-        print "no (could not find logdir '$LOGDIR')\n";
+        print "no (postfix not found)\n";
     }
-
     exit 0;
 }
 
