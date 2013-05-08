@@ -7,7 +7,20 @@ spamstats - Plugin to graph spamassassin throughput
 
 =head1 CONFIGURATION
 
-This plugin does not have any configuration
+Configuration parameters for @@CONFDIR@@/amavis,
+if you need to override the defaults below:
+
+ [spamstats]
+  env.logdir  - Which logfile to use
+  env.logfile - What file to read in logdir
+  env.spamd - Path to spamd binary
+
+=head2 DEFAULT CONFIGURATION
+
+ [spamstats]
+  env.logdir  /var/log
+  env.logfile mail.log
+  env.spamd /usr/sbin/spamd
 
 =head1 AUTHOR
 
@@ -19,7 +32,8 @@ GPLv2
 
 =head1 MAGIC MARKERS
 
- #%# family=contrib
+ #%# family=auto
+ #%# capabilities=autoconf
 
 =cut
 
@@ -27,8 +41,10 @@ use strict;
 
 use Munin::Plugin;
 
-my $logfile = (defined $ENV{logdir} ? $ENV{logdir} : "/var/log/");
-$logfile .= $ENV{logfile} || "syslog";
+my $LOGDIR  = (defined($ENV{'logdir'}) ? $ENV{'logdir'} : '/var/log');
+my $LOGFILE = (defined($ENV{'logdir'}) ? $ENV{'logfile'} : 'mail.info');
+my $SPAMD = (defined($ENV{'spamd'}) ? $ENV{'spamd'} : '/usr/sbin/spamd');
+my $logfile = "$LOGDIR/$LOGFILE";
 
 my $rotlogfile;
 
@@ -47,6 +63,42 @@ elsif (-f "$logfile.01")
 else
 {
     $rotlogfile = $logfile . ".0";
+}
+
+if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
+{
+    `which $SPAMD >/dev/null 2>/dev/null`;
+    if (!$?)
+    {
+        if (-d $LOGDIR)
+        {
+            if (-f $logfile)
+            {
+                if (-r $logfile)
+                {
+                    print "yes\n";
+                    exit 0;
+                }
+                else
+                {
+                    print "no (logfile '$logfile' not readable)\n";
+                }
+            }
+            else
+            {
+                print "no (logfile '$logfile' not found)\n";
+            }
+        }
+        else
+        {
+            print "no (could not find logdir '$LOGDIR')\n";
+        }
+    }
+    else
+    {
+        print "no (could not find spamassasin)\n";
+    }
+    exit 0;
 }
 
 if ( $ARGV[0] and $ARGV[0] eq "config" )
