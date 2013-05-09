@@ -1,5 +1,8 @@
-munin (2.0.12-2) UNRELEASED; urgency=low
+munin (2.0.13-1) UNRELEASED; urgency=low
 
+  * New upstream release. (Closes: #558800) - See upstream changelog for the
+    full list of changes.
+  * Add conntrack to munin-plugins-core suggests. (upstream trac #1267)
   * munin-node.init: drop support for sarge, five years after Debian dropped
     it.
 
