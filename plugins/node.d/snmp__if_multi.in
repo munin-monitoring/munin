@@ -596,7 +596,7 @@ sub do_config_root {
 sub do_config_if {
     my ($host,$version,$if) = @_;
 
-    my $alias = $snmpinfo->{$if}->{ifDescr} || "Interface $if";
+    my $alias = $snmpinfoX->{$if}->{ifAlias} || $snmpinfo->{$if}->{ifDescr} || "Interface $if";
 
     if (! ($alias =~ /\d+/) ) {
 	# If there are no numbers in the $alias add the if index
@@ -715,17 +715,10 @@ sub do_fetch_root {
 	# interfaces with a "fishy" status.  That is a possible bug.
 	# Or a feature.  We'll see.
 
-	$in += $snmpinfoX->{$if}->{ifHCInOctets} ||
-	  $snmpinfo->{$if}->{ifInOctets};
-
-	$out += $snmpinfoX->{$if}->{ifHCOutOctets} ||
-	  $snmpinfo->{$if}->{ifOutOctets};
-
-	$inerr += ( $snmpinfo->{$if}->{ifInErrors} || 0 ) +
-	  ( $snmpinfo->{$if}->{ifInDiscards} || 0 );
-
-	$outerr += ( $snmpinfo->{$if}->{ifOutErrors} || 0 ) +
-	  ( $snmpinfo->{$if}->{ifOutDiscards} || 0 );
+	$in += $snmpinfoX->{$if}->{ifHCInOctets} || $snmpinfo->{$if}->{ifInOctets} || 0;
+	$out += $snmpinfoX->{$if}->{ifHCOutOctets} || $snmpinfo->{$if}->{ifOutOctets} || 0;
+	$inerr += $snmpinfoX->{$if}->{ifInErrors} || $snmpinfo->{$if}->{ifInDiscards} || 0;
+	$outerr += $snmpinfoX->{$if}->{ifOutErrors} || $snmpinfo->{$if}->{ifOutDiscards} || 0;
 
     }
 

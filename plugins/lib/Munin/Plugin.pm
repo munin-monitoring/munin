@@ -24,6 +24,9 @@ package Munin::Plugin;
 use warnings;
 use strict;
 
+# Put only core Perl modules here, as we don't want to ask for more deps
+use File::Temp; # File::Temp was first released with perl 5.006001
+
 # This file uses subroutine prototypes. This is concidered a bad
 # practice according to PBP (see page 194).
 
@@ -273,12 +276,9 @@ unfortunate security ramifications).
 sub save_state (@) {
     print "State file: $statefile\n" if $DEBUG;
 
-    if (-l $statefile) {
-	die "$me: $statefile is a symbolic link.  Refusing to touch it for security reasons.\n";
-    }
-
-    open my $STATE, '>', $statefile or
-      die "$me: Could not open statefile '$statefile' for writing: $!\n";
+    # Open a tempfile, to rename() after. ensures atomic updates.
+    my $STATE = File::Temp->new(DIR => $pluginstatedir, UNLINK => 0 )
+	or die "$me: Could not open temporary statefile in '$pluginstatedir' for writing: $!\n";
 
     # Munin-state 1.0 encodes %, \n and \r in URL encoding and leaves
     # the rest.
@@ -286,6 +286,8 @@ sub save_state (@) {
     print $STATE join("\n",_encode_state(@_)),"\n";
 
     close $STATE;
+
+    rename($STATE->filename, $statefile);
 }
 
 =head3 @state_vector = restore_state()
@@ -300,20 +302,29 @@ also be printed, which will appear in the munin-node logs).
 =cut
 
 sub restore_state {
-    # Read a state vector from a plugin appropriate state file
-    local $/;
+	my @state;
 
+	# Protects _restore_state_raw() with an eval()
+	eval { @state = return _restore_state_raw(); };
+	if ($@) { @state = (); }
+
+	return @state;
+}
+
+sub _restore_state_raw {
     open my $STATE, '<', $statefile or return;
 
-    my @state = split(/\n/, <$STATE>);
-
-    my $filemagic = shift(@state);
-
-    if ($filemagic ne '%MUNIN-STATE1.0') {
+    # Test the 1rst line
+    my $filemagic = <$STATE>;
+    if ($filemagic ne "%MUNIN-STATE1.0\n") {
 	warn "$me: Statefile $statefile has unrecognized magic number: '$filemagic'\n";
 	return;
     }
 
+    # Slurp the rest
+    local $/;
+
+    my @state = split(/\n/, <$STATE>);
     return _decode_state(@state);
 }
 

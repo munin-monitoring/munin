@@ -38,12 +38,12 @@ target=${target:-"http://localhost/"}
 
 if [ "$1" = "autoconf" ]; then
     result="yes"
-    command -v wget 2>/dev/null || result=1
+    command -v wget 2>/dev/null >/dev/null || result=1
     if [ "$result" != "yes" ]; then
     	echo "no (need time and wget programs)"
 	    exit 0
     fi
-    if ! $wget_bin -q -O /dev/null $target; then
+    if ! wget -q -O /dev/null $target; then
         echo "no (Cannot run wget against \"$target\")"
         exit 0
     fi
@@ -62,12 +62,12 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-TMPDIR=`mktemp -d` || exit 1
+TEMPO_DIR=$(mktemp -dt munin_http_loadtime.XXXXXX) || exit 1
 
-trap "rm -rf $TMPDIR" EXIT
+trap "rm -rf $TEMPO_DIR" EXIT
 
-cd $TMPDIR || exit 1
-loadtime=$((time -p wget -p --no-cache --delete-after $target -q) 2>&1 | awk '/^real / { print $2 }')
+cd $TEMPO_DIR || exit 1
+loadtime=$((/usr/bin/time -p wget -p --no-cache --delete-after $target -q) 2>&1 | awk '/^real / { print $2 }')
 cd ..
 
 echo "loadtime.value $loadtime"

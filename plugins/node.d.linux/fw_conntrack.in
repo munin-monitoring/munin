@@ -32,6 +32,9 @@ ESTABLISHED.
 ASSURED is after ACK is seen after SYN_RECV.  Therefore ASSURED is
 plotted but not UNREPLIED.
 
+Note that the plugin depends on the netfilter "conntrack" userspace tool.
+It comes from http://conntrack-tools.netfilter.org/
+
 =head1 AUTHORS
 
 =over

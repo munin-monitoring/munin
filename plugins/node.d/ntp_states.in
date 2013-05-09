@@ -40,16 +40,7 @@ use Munin::Plugin;
 use strict;
 use warnings;
 use File::Spec;
-
-my $ret = undef;
-
-if (!eval "require Net::DNS;")
-{
-        $ret = "Net::DNS not found";
-        if (!defined $ARGV[0]) {
-                die $ret;
-        }
-}
+use Net::DNS;
 
 # Include /usr/local/sbin in the path to use the ntpq installed by
 # ports on FreeBSD instead of the base system, which is probably
@@ -68,6 +59,8 @@ my %stateval = (
                );
 my %peers_condition;
 my $resolver = Net::DNS::Resolver->new;
+$resolver->tcp_timeout(5);
+$resolver->udp_timeout(5);
 
 # Returns a hash whose keys are peer IP addresses and values are
 # condition numbers.
@@ -83,7 +76,7 @@ sub make_hash {
                 if ($line =~ m/^\s*\d+/) {
                         my (undef, undef, $assid, undef, undef, undef, undef, $condition_str, undef, undef) = split(/\s+/, $line);
                         chomp(my $peerinfo = `ntpq -n -c "readvar $assid srcadr"`);
-                        $peerinfo =~ s/\R//g;
+                        $peerinfo =~ s/\s//g;
                         my ($peer_addr) = ($peerinfo =~ m/srcadr=(.*)/);
 
                         # some states get the last letter cut off in
