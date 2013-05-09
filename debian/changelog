@@ -1,4 +1,4 @@
-munin (2.0.13-1) UNRELEASED; urgency=low
+munin (2.0.13-1) unstable; urgency=low
 
   * New upstream release. (Closes: #558800) - See upstream changelog for the
     full list of changes.
@@ -9,7 +9,7 @@ munin (2.0.13-1) UNRELEASED; urgency=low
   * munin.logrotate rules: use delaycompress (Closes: #705515) - Thanks to
     Michael Shuler for the patch.
 
- -- Holger Levsen <holger@debian.org>  Wed, 03 Apr 2013 15:33:34 +0200
+ -- Holger Levsen <holger@debian.org>  Thu, 09 May 2013 11:51:59 +0200
 
 munin (2.0.12-1) experimental; urgency=low
 
