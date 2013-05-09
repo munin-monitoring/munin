@@ -5,6 +5,7 @@ munin (2.0.13-1) UNRELEASED; urgency=low
   * Add conntrack to munin-plugins-core suggests. (upstream trac #1267)
   * munin-node.init: drop support for sarge, five years after Debian dropped
     it.
+  * Bump standards-version to 3.9.4, no changes necessary.
 
  -- Holger Levsen <holger@debian.org>  Wed, 03 Apr 2013 15:33:34 +0200
 

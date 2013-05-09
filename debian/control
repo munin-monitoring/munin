@@ -8,7 +8,7 @@ Uploaders: Holger Levsen <holger@debian.org>,
  Steve Schnepp <steve.schnepp@pwkf.org>
 Build-Depends-Indep: perl, htmldoc, html2text, default-jdk
 Build-Depends: debhelper (>=8)
-Standards-Version: 3.9.3
+Standards-Version: 3.9.4
 Homepage: http://munin-monitoring.org
 Vcs-Git: git://anonscm.debian.org/collab-maint/munin.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/munin.git
