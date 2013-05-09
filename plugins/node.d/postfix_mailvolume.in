@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!@@PERL@@
 # -*- perl -*-
 
 =head1 NAME
@@ -17,6 +17,7 @@ The following shows the default configuration.
   [postfix*]
     env.logdir /var/log
     env.logfile syslog
+    env.postconf postconf
 
 =head1 INTERPRETATION
 
@@ -49,12 +50,15 @@ GPLv2
 =cut
 
 use strict;
+use warnings;
 use Munin::Plugin;
 
 my $pos   = undef;
 my $volume = 0;
-my $LOGDIR  = $ENV{'logdir'}  || '/var/log';
-my $LOGFILE = $ENV{'logfile'} || 'syslog';
+my $LOGDIR  = (defined($ENV{'logdir'}) ? $ENV{'logdir'} : '/var/log');
+my $LOGFILE = (defined($ENV{'logfile'}) ? $ENV{'logfile'} : 'syslog');
+my $POSTCONF = $ENV{'postconf'} || 'postconf';
+my $logfile = "$LOGDIR/$LOGFILE";
 
 sub parseLogfile {
     my ($fname, $start) = @_;
@@ -74,25 +78,17 @@ sub parseLogfile {
 }
 
 if ( $ARGV[0] and $ARGV[0] eq "autoconf" ) {
-    my $logfile;
-    `which postconf >/dev/null 2>/dev/null`;
-    if (!$?) {
-	$logfile = "$LOGDIR/$LOGFILE";
 
-	if (-f $logfile) {
-            if (-r "$logfile") {
-                print "yes\n";
-                exit 0;
-            } else {
-                print "no (logfile '$logfile' not readable)\n";
-            }
-	} else {
-	    print "no (logfile '$logfile' not found)\n";
-	}
-    } else {
-	print "no (postfix not found)\n";
+    `which $POSTCONF >/dev/null 2>/dev/null`;
+    if (!$?)
+    {
+        my (undef, $s) = testfile($logfile,"autoconf");
+        print "$s\n"
     }
-
+    else
+    {
+	    print "no (postfix not found)\n";
+    }
     exit 0;
 }
 
@@ -110,8 +106,6 @@ if ( $ARGV[0] and $ARGV[0] eq "config" ) {
 }
 
 
-my $logfile = "$LOGDIR/$LOGFILE";
-
 if (! -f $logfile) {
     print "volume.value U\n";
     exit 1;
@@ -119,18 +113,24 @@ if (! -f $logfile) {
 
 ($pos,$volume) = restore_state();
 
-if (!defined($volume)) {
-    
-    # No state file present.  Avoid startup spike: Do not read log
-    # file up to now, but remember how large it is now, and next
-    # time read from there.
+$volume = 0 unless defined($volume);
 
-    $pos = (stat $logfile)[7]; # File size
+my $startsize = (stat $logfile)[7];
+# Initial run.
+$pos = $startsize unless defined($pos);
 
-    $volume = 0;
-} else {
-    $pos = parseLogfile ($logfile, $pos);
+if ($startsize < $pos)
+{
+    # Log rotated
+    my $rotlogfile = rotlog($logfile);
+    if ( testfile($rotlogfile))
+    {
+        parseLogfile($rotlogfile, $pos, (stat $rotlogfile)[7]);
+    }
+    $pos = 0;
 }
+
+$pos = parseLogfile($logfile, $pos);
 
 print "volume.value $volume\n";
 
