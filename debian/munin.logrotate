@@ -3,6 +3,7 @@
 	missingok
 	rotate 7
 	compress
+	delaycompress
 	notifempty
 	create 640 munin adm
 }
@@ -12,6 +13,7 @@
 	missingok
 	rotate 7
 	compress
+	delaycompress
 	notifempty
 	create 640 munin adm
 }
@@ -21,6 +23,7 @@
 	missingok
 	rotate 7
 	compress
+	delaycompress
 	notifempty
 	create 640 munin adm
 }
@@ -30,6 +33,7 @@
 	missingok
 	rotate 7
 	compress
+	delaycompress
 	notifempty
 	create 640 munin adm
 }
@@ -39,6 +43,7 @@
 	missingok
 	rotate 7
 	compress
+	delaycompress
 	notifempty
 	#create 640 www-data adm
 	# see http://munin-monitoring.org/ticket/1152

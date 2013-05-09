@@ -6,6 +6,8 @@ munin (2.0.13-1) UNRELEASED; urgency=low
   * munin-node.init: drop support for sarge, five years after Debian dropped
     it.
   * Bump standards-version to 3.9.4, no changes necessary.
+  * munin.logrotate rules: use delaycompress (Closes: #705515) - Thanks to
+    Michael Shuler for the patch.
 
  -- Holger Levsen <holger@debian.org>  Wed, 03 Apr 2013 15:33:34 +0200
 
