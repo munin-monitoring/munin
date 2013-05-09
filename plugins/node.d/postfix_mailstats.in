@@ -21,7 +21,6 @@ if you need to override the defaults below:
  [postfix_mailstats]
   env.logdir  /var/log
   env.logfile mail.log
-  env.postconf /usr/sbin/postconf
 
 =head1 AUTHOR
 
@@ -52,12 +51,9 @@ use strict;
 use warnings;
 use Munin::Plugin;
 
-my $pos;
-my $delivered;
-my $rejects = ();
 my $LOGDIR  = (defined($ENV{'logdir'}) ? $ENV{'logdir'} : '/var/log');
-my $LOGFILE = (defined($ENV{'logdir'}) ? $ENV{'logfile'} : 'mail.log');
-my $POSTCONF = (defined($ENV{'postconf'}) ? $ENV{'postconf'} : '/usr/sbin/postconf';
+my $LOGFILE = (defined($ENV{'logfile'}) ? $ENV{'logfile'} : 'mail.log');
+my $POSTCONF = (defined($ENV{'postconf'}) ? $ENV{'postconf'} : 'postconf');
 my $logfile = "$LOGDIR/$LOGFILE";
 
 if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
@@ -65,29 +61,9 @@ if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
     `which $POSTCONF >/dev/null 2>/dev/null`;
     if (!$?)
     {
-        if (-d $LOGDIR)
-        {
-	    if (-f $logfile)
-	    {
-                if (-r $logfile)
-                {
-                    print "yes\n";
-                    exit 0;
-                }
-                else
-                {
-                    print "no (logfile '$logfile' not readable)\n";
-                }
-	    }
-	    else
-	    {
-	        print "no (logfile '$logfile' not found)\n";
-	    }
-        }
-        else
-        {
-            print "no (could not find logdir '$LOGDIR')\n";
-        }
+        my (undef, $s) = testfile($logfile,"autoconf");
+        print "$s\n"
+    }
     else
     {
         print "no (postfix not found)\n";
@@ -97,35 +73,11 @@ if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
 
 my @state = restore_state();
 
-$pos = shift @state;
-my $startsize = (stat $logfile)[7];
-$pos = $startsize unless defined($pos);
+my $pos = shift @state;
 
-$delivered = shift @state;
-$delivered = 0 unless defined($delivered);
+my $delivered = shift @state;
 
 my %rejects = @state;
-
-if (! -f $logfile)
-{
-    print "delivered.value U\n";
-    foreach my $i (sort keys %rejects)
-    {
-    	print "r$i.value U\n";
-    }
-    exit 0;
-}
-
-
-my $startsize = (stat $logfile)[7];
-
-if (!defined $pos)
-{
-    # Initial run.
-    $pos = $startsize;
-}
-
-$pos = parseLogfile($logfile, $pos, $startsize);
 
 if ( $ARGV[0] and $ARGV[0] eq "config" )
 {
@@ -150,7 +102,37 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     exit 0;
 }
 
+if (! -f $logfile)
+{
+    print "delivered.value U\n";
+    foreach my $i (sort keys %rejects)
+    {
+    	print "r$i.value U\n";
+    }
+    exit 0;
+}
+
+my $startsize = (stat $logfile)[7];
+# Initial run.
+$pos = $startsize unless defined($pos);
+
+if ($startsize < $pos)
+{
+    # Log rotated
+    my $rotlogfile = rotlog($logfile);
+    if ( testfile($rotlogfile))
+    {
+        parseLogfile($rotlogfile, $pos, (stat $rotlogfile)[7]);
+    }
+    $pos = 0;
+}
+
+$pos = parseLogfile($logfile, $pos, $startsize);
+
+$delivered = 0 unless defined($delivered);
+
 print "delivered.value $delivered\n";
+
 foreach my $i (sort keys %rejects)
 {
 	print "r$i.value ", $rejects{$i}, "\n";
@@ -158,28 +140,28 @@ foreach my $i (sort keys %rejects)
 
 save_state($pos, $delivered, %rejects);
 
-sub parseLogfile 
-{    
+sub parseLogfile
+{
     my ($fname, $start, $stop) = @_;
 
-	my ($logfd, $reset) = tail_open($fname, $start);
+    my ($logfd, $reset) = tail_open($fname, $start);
 
-    while (tell($logfd) < $stop) 
+    while (tell($logfd) < $stop)
     {
-	my $line = <$logfd>;
-	chomp ($line);
+        my $line = <$logfd>;
+        chomp ($line);
 
-	if ($line =~ /qmgr.*from=.*size=[0-9]*/) 
-	{
-	    $delivered++;
-	} 
-	elsif ($line =~ /postfix\/smtpd.*proxy-reject: \S+ (\S+)/ ||
-	       $line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/ ||
-	       $line =~ /postfix\/postscreen.*reject: \S+ \S+ \S+ (\S+)/ ||
-	       $line =~ /postfix\/cleanup.* reject: (\S+)/)
-	{
-	    $rejects{$1}++;
-	}
+        if ($line =~ /qmgr.*from=.*size=[0-9]*/)
+        {
+	        $delivered++;
+        }
+        elsif ($line =~ /postfix\/smtpd.*proxy-reject: \S+ (\S+)/ ||
+           $line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/ ||
+           $line =~ /postfix\/postscreen.*reject: \S+ \S+ \S+ (\S+)/ ||
+           $line =~ /postfix\/cleanup.* reject: (\S+)/)
+        {
+	        $rejects{$1}++;
+        }
     }
     return tail_close($logfd);
 }
