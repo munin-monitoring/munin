@@ -41,10 +41,9 @@ use strict;
 use Munin::Plugin;
 
 my $LOGDIR  = (defined($ENV{'logdir'}) ? $ENV{'logdir'} : '/var/log');
-my $LOGFILE = (defined($ENV{'logdir'}) ? $ENV{'logfile'} : 'mail.info');
+my $LOGFILE = (defined($ENV{'logfile'}) ? $ENV{'logfile'} : 'mail.log');
 my $SPAMD = (defined($ENV{'spamd'}) ? $ENV{'spamd'} : 'spamd');
 my $logfile = "$LOGDIR/$LOGFILE";
-my $rotlogfile = rotlog($logfile);
 
 if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
 {
@@ -79,6 +78,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     exit 0;
 }
 
+my $rotlogfile = rotlog($logfile);
 if (! -f $logfile and ! -f $rotlogfile)
 {
     print "ham.value U\n";
@@ -98,20 +98,21 @@ $pos = $startsize unless defined($pos);
 if ($startsize < $pos)
 {
     # Log rotated
-    if ( testfile($rotlogfile)) {
-        parselogfile ($rotlogfile, $pos, (stat $rotlogfile)[7]);
+    if ( testfile($rotlogfile))
+    {
+        parseLogfile($rotlogfile, $pos, (stat $rotlogfile)[7]);
     }
     $pos = 0;
 }
 
-$pos = parselogfile ($logfile, $pos, $startsize);
+$pos = parseLogfile($logfile, $pos, $startsize);
 
 print "ham.value $ham\n";
 print "spam.value $spam\n";
 
 save_state($pos, $ham, $spam);
 
-sub parselogfile
+sub parseLogfile
 {
     my ($fname, $start, $stop) = @_;
     my ($logfd, undef) = tail_open($fname, $start);
