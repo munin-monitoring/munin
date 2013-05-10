@@ -7,7 +7,19 @@ spamstats - Plugin to graph spamassassin throughput
 
 =head1 CONFIGURATION
 
-This plugin does not have any configuration
+Configuration parameters for @@CONFDIR@@/spamstats,
+if you need to override the defaults below:
+
+ [spamstats]
+  env.logdir  - Which logfile to use
+  env.logfile - What file to read in logdir
+  env.spamd - Path to spamd binary
+
+=head2 DEFAULT CONFIGURATION
+
+ [spamstats]
+  env.logdir  /var/log
+  env.logfile mail.log
 
 =head1 AUTHOR
 
@@ -19,7 +31,8 @@ GPLv2
 
 =head1 MAGIC MARKERS
 
- #%# family=contrib
+ #%# family=auto
+ #%# capabilities=autoconf
 
 =cut
 
@@ -27,26 +40,24 @@ use strict;
 
 use Munin::Plugin;
 
-my $logfile = (defined $ENV{logdir} ? $ENV{logdir} : "/var/log/");
-$logfile .= $ENV{logfile} || "syslog";
+my $LOGDIR  = (defined($ENV{'logdir'}) ? $ENV{'logdir'} : '/var/log');
+my $LOGFILE = (defined($ENV{'logfile'}) ? $ENV{'logfile'} : 'mail.log');
+my $SPAMD = (defined($ENV{'spamd'}) ? $ENV{'spamd'} : 'spamd');
+my $logfile = "$LOGDIR/$LOGFILE";
 
-my $rotlogfile;
-
-if (-f "$logfile.0")
+if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
 {
-    $rotlogfile = $logfile . ".0";
-}
-elsif (-f "$logfile.1")
-{
-    $rotlogfile = $logfile . ".1";
-}
-elsif (-f "$logfile.01")
-{
-    $rotlogfile = $logfile . ".01";
-}
-else
-{
-    $rotlogfile = $logfile . ".0";
+    `which $SPAMD >/dev/null 2>/dev/null`;
+    if (!$?)
+    {
+        my (undef, $s) = testfile($logfile,"autoconf");
+        print "$s\n"
+    }
+    else
+    {
+        print "no (could not find spamassasin)\n";
+    }
+    exit 0;
 }
 
 if ( $ARGV[0] and $ARGV[0] eq "config" )
@@ -54,7 +65,8 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "host_name $ENV{FQDN}\n";
     print "graph_title SpamAssassin throughput\n";
     print "graph_args --base 1000 -l 0\n";
-    print "graph_vlabel mails/\${graph_period}\n";
+    print "graph_period minute\n";
+    print "graph_vlabel mails / \${graph_period}\n";
     print "graph_order ham spam\n";
     print "ham.label ham\n";
     print "ham.type DERIVE\n";
@@ -67,6 +79,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     exit 0;
 }
 
+my $rotlogfile = rotlog($logfile);
 if (! -f $logfile and ! -f $rotlogfile)
 {
     print "ham.value U\n";
@@ -80,49 +93,44 @@ $ham = 0 unless defined($ham);
 $spam = 0 unless defined($spam);
 
 my $startsize = (stat $logfile)[7];
-
-if (!defined $pos)
-{
-    # Initial run.
-    $pos = $startsize;
-}
+# Initial run.
+$pos = $startsize unless defined($pos);
 
 if ($startsize < $pos)
 {
     # Log rotated
-    if (-f $rotlogfile) {
-        parselogfile ($rotlogfile, $pos, (stat $rotlogfile)[7]);
+    if ( testfile($rotlogfile))
+    {
+        parseLogfile($rotlogfile, $pos, (stat $rotlogfile)[7]);
     }
     $pos = 0;
 }
 
-$pos = parselogfile ($logfile, $pos, $startsize);
-
-$pos = $startsize;
+$pos = parseLogfile($logfile, $pos, $startsize);
 
 print "ham.value $ham\n";
 print "spam.value $spam\n";
 
 save_state($pos, $ham, $spam);
 
-sub parselogfile
+sub parseLogfile
 {
     my ($fname, $start, $stop) = @_;
-	my ($logfd, $reset) = tail_open($fname, $start);
+    my ($logfd, undef) = tail_open($fname, $start);
 
     while (tell($logfd) < $stop)
     {
-	my $line =<$logfd>;
-	chomp ($line);
+        my $line =<$logfd>;
+        chomp ($line);
 
-	if ($line =~ m/clean message/) 
-	{
-	    $ham++;
-	} 
-	elsif ($line =~ m/identified spam/)
-	{
-	    $spam++;
-	}
+        if ($line =~ m/clean message/)
+        {
+            $ham++;
+        }
+        elsif ($line =~ m/identified spam/)
+        {
+            $spam++;
+        }
     }
-    return tail_close($logfd);    
+    return tail_close($logfd);
 }
