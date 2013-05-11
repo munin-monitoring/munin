@@ -399,11 +399,6 @@ sub process_service {
             $crit->[0] ||= "";
             $crit->[1] ||= "";
 
-            if (munin_get_bool($hobj, 'ignore_unknown', "false")) {
-                DEBUG("[DEBUG] ignoring unknown value");
-                next;
-            }
-
             my $state = "unknown";
             my $extinfo = defined $field->{"extinfo"}
                     ? "unknown: " . $field->{"extinfo"}
@@ -459,6 +454,11 @@ sub process_service {
             elsif ($state eq "warning") {
                 $hash->{'worst'} = "WARNING" if $hash->{"worst"} ne "CRITICAL";
                 $hash->{'worstid'} = 1 if $hash->{"worstid"} != 2;
+            }
+
+            if (munin_get_bool($hobj, 'ignore_unknown', "false")) {
+                DEBUG("[DEBUG] ignoring unknown value");
+                $hash->{'state_changed'} = 0;
             }
 
             munin_set_var_loc(\%notes, [@$fpath, "state"], $state);
