@@ -399,6 +399,11 @@ sub process_service {
             $crit->[0] ||= "";
             $crit->[1] ||= "";
 
+            if (munin_get_bool($hobj, 'ignore_unknown', "false")) {
+                DEBUG("[DEBUG] ignoring unknown value");
+                next;
+            }
+
             my $state = "unknown";
             my $extinfo = defined $field->{"extinfo"}
                     ? "unknown: " . $field->{"extinfo"}
