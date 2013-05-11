@@ -520,7 +520,11 @@ sub process_service {
             munin_set_var_loc(\%notes, [@$fpath, "ok"],    "OK");
 
 	    if ($oldstate ne 'ok') {
-		$hash->{'state_changed'} = 1;
+                if ($oldstate eq 'unknown' && munin_get_bool($hobj, 'ignore_unknown', 'false')) {
+                    DEBUG("[DEBUG] ignoring transition from UNKNOWN to OK");
+                } else {
+		    $hash->{'state_changed'} = 1;
+                }
 	    }
         }
     }
