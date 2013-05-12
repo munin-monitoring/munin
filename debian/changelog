@@ -1,4 +1,4 @@
-munin (2.0.14-1) UNRELEASED; urgency=low
+munin (2.0.14-1) unstable; urgency=low
 
   * New upstream bugfix release. (Closes: #707811) - See upstream changelog
     for the full list of changes.
@@ -6,7 +6,7 @@ munin (2.0.14-1) UNRELEASED; urgency=low
     appropriate Breaks: and Replaces: relationsships. (Closes: #707611)
   * Make dependencies on librrds-perl and liblog-log4perl-perl unversioned.
 
- -- Holger Levsen <holger@debian.org>  Sun, 12 May 2013 15:26:28 +0200
+ -- Holger Levsen <holger@debian.org>  Sun, 12 May 2013 15:50:01 +0200
 
 munin (2.0.13-1) unstable; urgency=low
 
