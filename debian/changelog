@@ -4,6 +4,7 @@ munin (2.0.14-1) UNRELEASED; urgency=low
     for the full list of changes.
   * ntp_ plugin was moved from munin-plugins-extra to munin-plugins-core, add
     appropriate Breaks: and Replaces: relationsships. (Closes: #707611)
+  * Make dependencies on librrds-perl and liblog-log4perl-perl unversioned.
 
  -- Holger Levsen <holger@debian.org>  Sun, 12 May 2013 15:26:28 +0200
 
