@@ -1,3 +1,10 @@
+munin (2.0.13-2) UNRELEASED; urgency=low
+
+  * ntp_ plugin was moved from munin-plugins-extra to munin-plugins-core, add
+    appropriate Breaks: and Replaces: relationsships. (Closes: #707611)
+
+ -- Holger Levsen <holger@debian.org>  Sun, 12 May 2013 15:26:28 +0200
+
 munin (2.0.13-1) unstable; urgency=low
 
   * New upstream release. (Closes: #558800, 702442) - See upstream changelog

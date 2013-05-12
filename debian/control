@@ -34,8 +34,8 @@ Description: network-wide graphing framework (node)
 
 Package: munin-plugins-core
 Provides: munin-plugins
-Replaces: munin-plugins (<<1.999.4548-3~), munin-node (<<1.999.4548-3~)
-Breaks: munin-plugins (<<1.999.4548-3~), munin-node (<<1.999.4548-3~)
+Replaces: munin-plugins (<<1.999.4548-3~), munin-node (<<1.999.4548-3~), munin-plugins-extra (<<2.0.13-1)
+Breaks: munin-plugins (<<1.999.4548-3~), munin-node (<<1.999.4548-3~), munin-plugins-extra (<<2.0.13-1)
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends}, munin-common (>= ${binary:Version}) 
 Recommends: libnet-snmp-perl
