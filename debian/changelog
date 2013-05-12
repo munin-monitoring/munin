@@ -1,5 +1,7 @@
-munin (2.0.13-2) UNRELEASED; urgency=low
+munin (2.0.14-1) UNRELEASED; urgency=low
 
+  * New upstream bugfix release. (Closes: #707811) - See upstream changelog
+    for the full list of changes.
   * ntp_ plugin was moved from munin-plugins-extra to munin-plugins-core, add
     appropriate Breaks: and Replaces: relationsships. (Closes: #707611)
 
