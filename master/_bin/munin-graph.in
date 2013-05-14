@@ -1,5 +1,7 @@
-#!@@PERL@@ -T
+#!@@PERL@@
 # -*- cperl -*-
+
+=encoding utf8
 
 =begin comment
 

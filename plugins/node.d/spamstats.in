@@ -23,14 +23,14 @@ GPLv2
 
 =cut
 
+use strict;
 
-$statefile = $ENV{statefile} || "$ENV{MUNIN_PLUGSTATE}/munin-spamstats.state";
-$pos   = undef;
-$ham = 0;
-$spam = 0;
+use Munin::Plugin;
 
-$logfile = $ENV{logdir} || "/var/log/";
+my $logfile = (defined $ENV{logdir} ? $ENV{logdir} : "/var/log/");
 $logfile .= $ENV{logfile} || "syslog";
+
+my $rotlogfile;
 
 if (-f "$logfile.0")
 {
@@ -74,17 +74,12 @@ if (! -f $logfile and ! -f $rotlogfile)
     exit 0;
 }
 
-if (-f "$statefile")
-{
-    open (IN, "$statefile") or exit 4;
-    if (<IN> =~ /^(\d+):(\d+):(\d+)/)
-    {
-	($pos, $ham, $spam) = ($1, $2, $3);
-    }
-    close IN;
-}
+my ($pos, $ham, $spam) = restore_state();
 
-$startsize = (stat $logfile)[7];
+$ham = 0 unless defined($ham);
+$spam = 0 unless defined($spam);
+
+my $startsize = (stat $logfile)[7];
 
 if (!defined $pos)
 {
@@ -101,25 +96,23 @@ if ($startsize < $pos)
     $pos = 0;
 }
 
-parselogfile ($logfile, $pos, $startsize);
+$pos = parselogfile ($logfile, $pos, $startsize);
+
 $pos = $startsize;
 
 print "ham.value $ham\n";
 print "spam.value $spam\n";
 
-open (OUT, ">$statefile") or exit 4;
-print OUT "$pos:$ham:$spam\n";
-close OUT;
+save_state($pos, $ham, $spam);
 
-sub parselogfile 
-{    
+sub parselogfile
+{
     my ($fname, $start, $stop) = @_;
-    open (LOGFILE, $fname) or exit 3;
-    seek (LOGFILE, $start, 0) or exit 2;
+	my ($logfd, $reset) = tail_open($fname, $start);
 
-    while (tell (LOGFILE) < $stop) 
+    while (tell($logfd) < $stop)
     {
-	my $line =<LOGFILE>;
+	my $line =<$logfd>;
 	chomp ($line);
 
 	if ($line =~ m/clean message/) 
@@ -131,5 +124,5 @@ sub parselogfile
 	    $spam++;
 	}
     }
-    close(LOGFILE);    
+    return tail_close($logfd);    
 }

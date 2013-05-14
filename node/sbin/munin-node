@@ -66,6 +66,7 @@ sub main
         defuser    => $config->{defuser},
         defgroup   => $config->{defgroup},
         pidebug    => $PIDEBUG,
+        timeout    => $config->{timeout},
     );
 
     $config->reinitialize({
@@ -173,14 +174,14 @@ Only run plugins owned by root. Check permissions as well. [--noparanoia]
 
 View this help message.
 
-=item B< --debug >
+=item B< --[no]debug >
 
 View debug messages.  This can be very verbose.
 
-=item B< --pidebug >
+=item B< --[no]pidebug >
 
 Plugin debug.  Sets the environment variable MUNIN_DEBUG to 1 so that plugins
-may enable debugging.
+may enable debugging. [--nopidebug]
 
 =back
 

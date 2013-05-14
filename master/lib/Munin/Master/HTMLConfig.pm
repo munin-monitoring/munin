@@ -23,7 +23,6 @@ my @times = ("day", "week", "month", "year");
 
 my $DEBUG = 0;
 my $INDEX_FILENAME = "index.html";
-my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 
 my $config;
 my $limits;
@@ -35,6 +34,7 @@ my $problems;
 sub generate_config {
     my $use_cache = shift;
     if ($use_cache) {
+	$cache = undef; # undef, for RAM usage
 	# if there is some cache, use it (for cgi)
     	my $newcache = munin_readconfig_part('htmlconf', 1);
 	if (defined $newcache) {
@@ -47,9 +47,8 @@ sub generate_config {
     my $rev = munin_configpart_revision();
 
     $config = munin_readconfig_part('datafile', 0);
+    initiate_cgiurl_graph(); # we don't set a default like for others
     if ($rev != munin_configpart_revision()) {
-	# datafile got updated
-	initiate_cgiurl_graph();
 	# convert config for html generation: reorder nodes to their rightful group
 	node_reorder($config);
     }
@@ -57,6 +56,7 @@ sub generate_config {
     $limits = munin_readconfig_part("limits");
     # if only limits changed, still update our cache
     if ($rev != munin_configpart_revision()) {
+	$cache = undef; # undef, for RAM usage
 	$cache = get_group_tree($config);
     }
 
@@ -482,12 +482,12 @@ sub generate_service_templates {
 	    }
     }
 
-    if (munin_get($config, "graph_strategy", "cron") eq "cgi") {
-	map { $srv{$_} = $config->{'cgiurl_graph'} . "/" . $imgs{$_} } keys %imgs;
-    } else {
-	map { $srv{$_} = $root_path . "/" . $imgs{$_} } keys %imgs;
+    my $imgpath = $root_path;
+    if ( munin_get($config, "graph_strategy", "cron") eq "cgi" ) {
+	$imgpath = $config->{'cgiurl_graph'};
     }
 
+    map { $srv{$_} = $imgpath . "/" . $imgs{$_} } keys %imgs;
 
     # Compute the ZOOM urls
     {
@@ -507,27 +507,23 @@ sub generate_service_templates {
     }
 
 	for my $scale (@times) {
-        # Don't try to find the size if cgi is enabled, 
-        # otherwise old data might pollute  
-        next if (munin_get($config, "graph_strategy", "cron") eq "cgi");
-        if (my ($w, $h)
-            = get_png_size(munin_get_picture_filename($service, $scale))) {
-            $srv{"img" . $scale . "width"}  = $w;
-            $srv{"img" . $scale . "height"} = $h;
-        }
-    }
+		my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale));
+		if ($w && $h) {
+			$srv{"img" . $scale . "width"}  = $w;
+			$srv{"img" . $scale . "height"} = $h;
+		}
+	}
 
     if (munin_get_bool($service, "graph_sums", 0)) {
         $srv{imgweeksum} = "$srv{node}-week-sum.png";
         $srv{imgyearsum} = "$srv{node}-year-sum.png";
+
         for my $scale (["week", "year"]) {
-            next if (munin_get($config, "graph_strategy", "cron") eq "cgi");
-            if (my ($w, $h)
-                = get_png_size(munin_get_picture_filename($service, $scale, 1)))
-            {
-                $srv{"img" . $scale . "sumwidth"}  = $w;
-                $srv{"img" . $scale . "sumheight"} = $h;
-            }
+		my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale, 1));
+		if ($w && $h) {
+			$srv{"img" . $scale . "sumwidth"}  = $w;
+			$srv{"img" . $scale . "sumheight"} = $h;
+		}
         }
     }
 
@@ -620,8 +616,11 @@ sub get_peer_nodes {
     my $me        = munin_get_node_name($hash);
     my $pchildren = munin_get_children($parent);
 
-    foreach my $peer (sort {munin_get_node_name($b) cmp munin_get_node_name($a)}
-        @$pchildren) {
+    my @peers = map { $_->[0] }
+        sort { $a->[1] cmp $b->[1] }
+        map { [ $_, munin_get_node_name($_) ] } @$pchildren;
+
+    foreach my $peer (@peers) {
         next unless defined $peer and ref($peer) eq "HASH";
         next
           if defined $category
@@ -726,6 +725,8 @@ sub get_png_size {
     my $filename = shift;
     my $width    = undef;
     my $height   = undef;
+
+    return (undef, undef) if (munin_get($config, "graph_strategy", "cron") eq "cgi") ;
 
     if (open(my $PNG, '<', $filename)) {
         my $incoming;

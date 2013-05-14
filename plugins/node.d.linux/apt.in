@@ -75,7 +75,7 @@ use strict;
 
 $ENV{'LANG'}="C";
 $ENV{'LC_ALL'}="C";
-my $statefile = "$ENV{MUNIN_PLUGSTATE}/plugin-apt.state";
+my $statefile = ($ENV{MUNIN_PLUGSTATE} || '@@PLUGSTATE@@/root/') . "/plugin-apt.state";
 
 sub update_state() {
 	if(-l $statefile) {

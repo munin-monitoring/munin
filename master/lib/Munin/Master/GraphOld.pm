@@ -258,6 +258,7 @@ sub graph_startup {
     # NOTE!  Some of these options are available in graph_main too
     # if you make changes here, make them there too.
 
+    my $debug;
     &print_usage_and_exit
         unless GetOptions (
                 "force!"        => \$force_graphing,
@@ -292,7 +293,8 @@ sub graph_startup {
                 "cron!"         => \$cron,
                 "fork!"         => \$do_fork,
                 "n=n"           => \$max_running,
-                "help"          => \$do_usage
+                "help"          => \$do_usage,
+                "debug!"        => \$debug,
         );
 
     if ($do_version) {
@@ -423,15 +425,9 @@ sub graph_main {
         autoflush $STATS 1;
     }
 
-    DEBUG "[DEBUG] Starting munin-graph";
-
     process_work(@limit_hosts);
 
     $graph_time = sprintf("%.2f", (Time::HiRes::time - $graph_time));
-
-    DEBUG "[DEBUG] Munin-graph finished ($graph_time sec)";
-
-    print $STATS "GT|total|$graph_time\n" unless $skip_stats;
 
     rename(
         "$config->{dbdir}/munin-graph.stats.tmp",
@@ -1282,6 +1278,10 @@ sub process_service {
     }
 
     my $graphtotal = munin_get($service, "graph_total");
+    if (defined $graphtotal and $graphtotal eq "undef") {
+        $graphtotal = undef;
+    }
+
     if (@rrd_negatives) {
         push(@rrd, @rrd_negatives);
         push(@rrd, "LINE1:re_zero#000000");    # Redraw zero.
@@ -1473,7 +1473,7 @@ sub process_service {
     if (munin_get_bool($service, "graph_sums", 0)) {
         foreach my $time (keys %sumtimes) {
             my $picfilename = get_picture_filename($service, $time, 1);
-	    INFO "Looking into drawing $picfilename";
+	    DEBUG "Looking into drawing $picfilename";
             (my $picdirname = $picfilename) =~ s/\/[^\/]+$//;
             next unless ($draw{"sum" . $time});
             my @rrd_sum;
@@ -1577,7 +1577,7 @@ sub process_service {
     } # if graph_sums
 
     $service_time = sprintf("%.2f", (Time::HiRes::time - $service_time));
-    INFO "[INFO] Graphed service $skeypath ($service_time sec for $nb_graphs_drawn graphs)";
+    DEBUG "[DEBUG] Graphed service $skeypath ($service_time sec for $nb_graphs_drawn graphs)";
     print $STATS "GS|$service_time\n" unless $skip_stats;
 
     foreach (@added) {
@@ -1611,6 +1611,7 @@ sub handle_trends {
     foreach my $field (@{munin_find_field($service, "label")}) {
         my $fieldname = munin_get_node_name($field);
 	my $colour = $single_colour;
+        my $rrdname = get_field_name($fieldname);
 
 	# Skip virtual fieldnames, otherwise beware of $hash->{foo}{bar}. 
 	#
@@ -1630,8 +1631,8 @@ sub handle_trends {
 
         #trends
         if (defined $service->{$fieldname}{'trend'} and $service->{$fieldname}{'trend'} eq 'yes') {
-            push (@complete, "CDEF:t$fieldname=c$cdef$fieldname,$futuretime,TRENDNAN");
-            push (@complete, "LINE1:t$fieldname#$colour:$fieldname trend\\l");
+            push (@complete, "CDEF:t$rrdname=c$cdef$rrdname,$futuretime,TRENDNAN");
+            push (@complete, "LINE1:t$rrdname#$colour:$fieldname trend\\l");
             DEBUG "[DEBUG] set trend for $fieldname\n";
         }
 
@@ -1641,8 +1642,8 @@ sub handle_trends {
             my @predict = split(",", $service->{$fieldname}{'predict'});
             my $predictiontime = int ($futuretime / $predict[0]) + 2; #2 needed for 1 day
             my $smooth = $predict[1]*$resolutions{$time};
-            push (@complete, "CDEF:p$fieldname=$predict[0],-$predictiontime,$smooth,c$cdef$fieldname,PREDICT");
-            push (@complete, "LINE1:p$fieldname#$colour:$fieldname prediction\\l");
+            push (@complete, "CDEF:p$rrdname=$predict[0],-$predictiontime,$smooth,c$cdef$rrdname,PREDICT");
+            push (@complete, "LINE1:p$rrdname#$colour:$fieldname prediction\\l");
             DEBUG "[DEBUG] set prediction for $fieldname\n";
         }
     }
@@ -1655,7 +1656,6 @@ sub handle_trends {
 
     # If pinpointing, --end should *NOT* be changed
     if (! $pinpoint) {
-        if (time - 300 < $lastupdate) {
             if (@added) { # stop one period earlier if it's a .sum or .stack
                 push @complete, "--end",
                     (int(($enddate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
@@ -1663,7 +1663,6 @@ sub handle_trends {
                 push @complete, "--end",
                     (int($enddate / $resolutions{$time})) * $resolutions{$time};
             }
-        }
     }
 
     return @complete;

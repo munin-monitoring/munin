@@ -18,10 +18,6 @@ profile-strictness = quiet
 severity = 5
 allow = $_ $!
 
-[Miscellanea::RequireRcsKeywords]
-severity = 5
-keywords = Id
-
 [CodeLayout::RequireTidyCode]
 perltidyrc = perltidyrc
 

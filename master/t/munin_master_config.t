@@ -28,6 +28,7 @@ my $fasit = {
         dbdir           => '/opt/munin/sandbox/var/opt/munin',
         debug           => 0,
         fork            => 1,
+        graph_strategy  => 'cron',
         graph_data_size => 'normal',
         groups          => {
             marvin => {

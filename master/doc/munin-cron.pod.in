@@ -1,3 +1,5 @@
+=encoding utf8
+
 =head1 NAME
 
 munin-cron - A program to batch other Munin master programs

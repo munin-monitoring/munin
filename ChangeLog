@@ -1,5 +1,213 @@
 -*- text -*-
 
+munin-2.0.13, 2013-04-26
+
+-------
+Summary
+-------
+
+Bugfix & perf release.
+
+- Fixes for munin-async
+- Enhanced perf for munin-html
+- Relaxed the timeout for munin-node
+  2.0.12 fixed the timeout code. But it had a nasty side-effect as the timeout
+  setting is shared for global timeout and plugin timout. This version
+  decouples both by introducing a new global_timeout munin-node.conf variable
+  that defaults to 15 min.
+
+
+Closes: #775, #947, #1267, D:558800
+
+------------------
+Detailed Changelog
+------------------
+
+Jens Holzk√§mper:
+      different state files for cron job & as plugin
+
+Kenyon Ralph:
+      ntp_: rewrite plugin to support IPv6
+      ntp_states: decrease timeouts so DNS queries don't cause node timeout
+      ntp_states: don't use this silly plugin loading method
+      node.d/ntp_states: improve compatibility with older perls
+
+Kim B. Heino:
+      plugin/diskstats: fix negative stats, relax limits
+      plugins/http_loadtime: more wget/time fixes
+      plugins/lpstat: fix autodetection
+      plugins/snmp__if_multi: prefer ifAlias for alias name
+      plugins/postfix_mailstats: support proxy-rejected (amavis) log lines
+      asyncd: add more signal handlers.
+
+Steve Schnepp:
+      master: whitespace fix in Utils.pm
+      master: avoid having 2 concurrent $htmlconfig
+      master: undef the config pre-reload (frees mem)
+      master: RAM usage for $cache
+      master: remove weaken on storable::read
+      master: remove auto_weaken()
+      contrib: add a test for memory leaks
+      contrib: complete test with Storable dump/load
+      plugins: add doc about conntrack
+      plugins: use $PATH for external commands in shell
+      plugins/postfix_mailstats: using a per-minute graph
+      plugins/snmp_if: replace 32b counters by 64b ones
+      node: set the global timeout to 15 min
+      node: add timeout documentation in sample conf
+      master: add --debug to munin-graph
+      master: fix end date when predicting
+      plugins/Plugin.pm: fix a security issue on state
+      plugins/Plugin.pm: fix bad state file handling
+      p/http_loadtime: fix failure on FreeBSD
+      p/http_loadtime: do not reuse $TMPDIR
+      dev_scripts: run should only run executable files
+      node: add a lock to spoolreader
+      node: update doc to show negative args
+
+Stig Sandbeck Mathisen:
+      Use a more efficient sort on the list of nodes
+
+
+munin-2.0.12, 2013-03-21
+
+-------
+Summary
+-------
+
+Bugfix-only release.
+
+- Fixed TLS/SSL transport
+- Fixed extra logging
+
+Closes: #1251, #1258, D:699803, D:689291, D:687912
+
+------------------
+Detailed Changelog
+------------------
+
+Bj√∏rn Ruberg:
+      plugins/bonding_err_: adjust for newer kernels
+ 
+Steve Schnepp:
+      node: don't ignore timeout config option
+      plugins/apt: fix plugin statedir for cron
+      html: fix bug introduced by 1aec747c10
+      graph: remove all extra INFO messages
+      plugins/proc: fix bug in selecting via uid
+      dev_scripts: remove warnings
+      graph: remote superfluous -T in cmdline
+      master: fix TLS enabled updates
+
+
+munin-2.0.11.1, 2013-02-09
+
+Ironically, asyncd is broken in .11, as a typo makes it uncompilable.
+This is a patched release, and I'll remove any .11 tgz as it's not-working.
+
+Sorry.
+
+munin-2.0.11, 2013-02-01
+
+-------
+Summary
+-------
+
+Bugfix-only release.
+
+- Important async fixes
+- Many fixes
+
+Closes: D:698079, D:697907
+
+------------------
+Detailed Changelog
+------------------
+
+Diego Elio Petteno:
+      hddtemp*: avoid using the degrees symbol in vlabel.
+      Update .gitignore.
+      master: always initialize the default cgiurl_graph value.
+      master: simplify logic for mapping images to their path.
+      master: provide a default to graph_strategy.
+      master: avoid repeated tests on graph_strategy.
+      master: remove unused variable.
+      pod: declare all POD-processed files as utf8 encoded.
+
+Marc Schutz:
+      fail2ban: Handle the case where no jails are configured.
+
+Stefan Rubner:
+      plugins/mysql_: fix check if InnoDB is disabled
+
+Steve Schnepp:
+      plugins/slapd_: fix Net::LDAP call
+      asyncd: fix races in writing to spool
+      asyncd: typo in pod
+      asyncd: try to reuse socket when asking node
+      asyncd: add the hostname in $0
+      asyncd: fix timeout bug & adding some debug
+      asyncd: ignore current plugin if failing cnx to node
+      asyncd: close the datafile before rename
+      asyncd: quickfix a sleeping dataloss bug
+
+Stig Sandbeck Mathisen:
+      Fix spelling mistakes in POD sections
+
+
+munin-2.0.10, 2013-01-09
+
+-------
+Summary
+-------
+
+Bugfix-only release.
+
+- The --force flag of munin-limits is back, sorry for the disruptive API change in the 2.0.x series.
+- Many fixes
+
+Closes: D#615957, D#671448
+
+------------------
+Detailed Changelog
+------------------
+
+D. Johnson:
+      templates: fix overview missing tag
+
+Diego Elio Petteno:
+      mailman: allow user to configure paths instead of hardcoding them.
+      asterisk_*: remove dependency on Net::Telnet.
+      asterisk_channels: fix name of plugin in configuration examples.
+
+Gerald Turner:
+      plugins/bind9_rndc: fix if named.stats is on tmpfs
+
+Holger Levsen:
+      plugins/df: update exclude list doc to match code
+
+Magnus Hagander:
+      Disable server-side prepared statements for pg plugins
+
+Michal Cihar:
+      plugins/snmp__df: find all mount points
+
+Nicolai Langfeldt:
+      getversion: Handle checked out tags better
+
+Steve Schnepp:
+      fix plugins.history
+      plugins/cpuspeed: fix if cpus are at maximum speed
+      getversion: update doc
+      getversion: use the commit SHA instead of tree SHA
+      getversion: prefix the commit with "-g" magic
+      getversion: apply the changes described in doc
+      getversion: also fix the stable-* rules
+
+Stig Sandbeck Mathisen:
+      munin-limits: Add --always-send, --force options
+
+
 munin-2.0.9, 2012-12-05
 
 -------
@@ -768,7 +976,7 @@ munin 1.4.4, r3276,3379, 2010-2-26
 * varnish_: backend_unhealthy is a DERIVE value, note that canonical upstream 
   is the varnish project
 * Add simfs" to linux df* plugins ignore list
-* linux/buddyinfo multigraph plugin by G·bor Gomb·s 
+* linux/buddyinfo multigraph plugin by G√°bor Gomb√°s 
 * Remediate patches from Gentoo that never came upstream.  
   Prevents possible output on stderr in plugin linux/iostat_ios and corrects 
   linux/fw_forwarded_local to handle a missing /proc/net/ip_conntrack
@@ -776,7 +984,7 @@ munin 1.4.4, r3276,3379, 2010-2-26
 * linux/diskstats: Upstream update, closes #838 #835 #837
 * linux/ip_: Better matching of IPv6 addresses.  Use a single awk command 
   instead of a mix of awk and grep.
-* mysql_: fix graph_base error (Closes #840) Patch from G·bor Gomb·s
+* mysql_: fix graph_base error (Closes #840) Patch from G√°bor Gomb√°s
 * mysql_: plugin suggests wrong values (closes #857)
 * linux/selinux_avcstat - exit 0 on autoconf
 * linux/tcp: Add contributed plugin from Tim Small
@@ -1249,7 +1457,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 * Update plugin configuration for varnish_
 * Make notifications work again
 * munin.conf: Set HTML and CGI dir consistently
-* Added new mysql_ by Kjell-Magne ÿierud plugin, document origin, and
+* Added new mysql_ by Kjell-Magne √òierud plugin, document origin, and
   sentence the others to exile (family=contrib)
 * Fix "make/make install" problems, document the other
 * Change <img> framing a bit to allow coloured frames (once the templates are updated)
@@ -1276,7 +1484,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 * munin.conf: include cgiurl_graph example
 * memcached_: New wildcard plugin
 * Refactoring of munin-update, munin-node and munin-node-configure
-  by Kjell-Mangne ÿierud and Matthew Boyle.  Actuall tests for testing
+  by Kjell-Mangne √òierud and Matthew Boyle.  Actuall tests for testing
   the programs were added too!
 * templates: 
 * html templates: The timestamp can't really be ISO8601 with the support
@@ -1354,7 +1562,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
   across all three applications.
 * Report errors against plugins with inconsistent/unexpected magic markers.
 * Java plugins written by FIX.  Adapted for inclusion in munin by Erik
-  Bols¯, Tom Feiner and Ilya Kikoin.  THANKS!
+  Bols√∏, Tom Feiner and Ilya Kikoin.  THANKS!
 * Applied patch by Katriel Traum for snmp__memory that converts the plugin
   to use Munin::Plugin::SNMP, and does some clean-ups
 * New plugin: nomadix_users_.  Monitors a kind of enterprise wifi
@@ -1431,7 +1639,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 * Make Munin::Master::Utils capable of logging
 * Make the pg plugins work properly when DBD::Pg is not present
   (by saying they can't work).
-* Add slapd_* (OpenLDAP) plugins by Bj¯rn Ruberg
+* Add slapd_* (OpenLDAP) plugins by Bj√∏rn Ruberg
 * Add PGSQL plugin framework by Magnus Hagander, and some plugins
 * linux/iostat_ios: check if $ARGV[0] is defined to avoid "use of
   uninitialized value" warnings. Thanks for the report to nicklock!
@@ -1728,7 +1936,7 @@ munin (1.3.4, r1277:1560, 8/3/2008)
  * exim_mailstats did not have human readable error messages, it tried
    signaling by coded exit statuses
  * ntp_*: Implement option to supress showing delay graph (suggested by
-   HÂvard Eidnes, fixes #350)
+   H√•vard Eidnes, fixes #350)
  * Generic processes plugin submitted by Lars Stand. Thanks!! (#441)
  * Fix typo in munin-limits (oks -> ok) closes debian #387283
  * Enhanced doc of cgi mode in munin.conf - closes debian #307963
@@ -1768,7 +1976,7 @@ munin (1.3.4, r1277:1560, 8/3/2008)
  * munin-node: Added a newline on TLS logging
  * Added tls_ca_certificate to @legal
  * squid_objectsize: New plugin to show mean object size in Squid.
-   Useful for tuning the caching size.  Thanks to Bj¯rn
+   Useful for tuning the caching size.  Thanks to Bj√∏rn
  * Munin-master programs: Remove locks as we're done with them.
    Removes ambiguity around left over lock files.
  * Introducing the munindoc command and example documentation
@@ -2488,7 +2696,7 @@ munin (1.0.0pre3)
 
 munin (1.0.0pre2)
 
-  * Plugin mysql_queries bugfix from Dagfinn I. MannsÂker (SF#876443,
+  * Plugin mysql_queries bugfix from Dagfinn I. Manns√•ker (SF#876443,
     SF#865125).
   * FreeBSD-plugin load bugfix from Robert Lindgren (SF#865928).
   * Fixed Node/run bug when changing groups.

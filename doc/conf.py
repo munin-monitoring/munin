@@ -42,7 +42,9 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Munin'
-copyright = '2012, Stig Sandbeck Mathisen <ssm@fnord.no>'
+description = 'Munin monitoring'
+authors   = 'The Munin project and its contributors'
+copyright = '2012-2013, %s' % authors
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -185,7 +187,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('index', 'Munin.tex', 'Munin Documentation',
-   'Stig Sandbeck Mathisen \\textless{}ssm@fnord.no\\textgreater{}', 'manual'),
+   authors, 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -298,12 +300,13 @@ man_pages = [
     ('reference/munin.conf',
      'munin.conf',
      'Configuration file for the munin master',
-     [],
+     [authors,
+	  'Stig Sandbeck Mathisen'],
      5),
     ('reference/munin-node.conf',
      'munin-node.conf',
      'Configuration file for the munin node',
-     [],
+     [authors],
      5),
 ]
 
@@ -317,8 +320,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'Munin', 'Munin Documentation',
-   'Stig Sandbeck Mathisen <ssm@fnord.no>', 'Munin', 'One line description of project.',
+  ('index', project, 'Munin Documentation',
+   authors, project, description,
    'Miscellaneous'),
 ]
 
@@ -336,9 +339,9 @@ texinfo_documents = [
 
 # Bibliographic Dublin Core info.
 epub_title = 'Munin'
-epub_author = 'Stig Sandbeck Mathisen <ssm@fnord.no>'
-epub_publisher = 'Stig Sandbeck Mathisen <ssm@fnord.no>'
-epub_copyright = '2012, Stig Sandbeck Mathisen <ssm@fnord.no>'
+epub_author = authors
+epub_publisher = 'The Munin Project'
+epub_copyright = copyright
 
 # The language of the text. It defaults to the language option
 # or en if the language is not set.

@@ -1,3 +1,5 @@
+=encoding utf8
+
 =head1 NAME
 
 munin.conf - Munin configuration file
@@ -236,16 +238,54 @@ only to that node.
 
 =over
 
-=item B<address> <value>
+=item B<address> I<value>
 
-The IP address of the node.  Required.
+The host name, IP address, or alternate transport used to contact the
+node.
 
-=item B<local_address> <value>
+Alternate transport is specified with:
+
+C<ssh://E<lt>addressE<gt>/E<lt>commandE<gt> E<lt>command line argumentsE<gt>>
+
+See also the B<ALTERNATE TRANSPORT> example.
+
+=item B<port> I<value>
+
+The port number of the node. Ignored if using alternate transport.
+Default is "4949".
+
+=item B<local_address> I<value>
 
 The local address to connect to the node from.  This overrides a group or
 global directive.
 
-=item FIXME: This section is incomplete.
+=item B<use_node_name> I<value>
+
+Overrides the name supplied by the node. Allowed values: "yes" and
+"no". Defaults to "no".
+
+=item B<contacts> I<value>
+
+A list of contacts used by munin-limits to report values passing the
+warning and critical thresholds.
+
+If set to something else than "no", names a list of contacts which
+should be notified for this node. Default is "no".
+
+=item B<notify_alias> I<value>
+
+Used by "munin-limits".
+
+If set, changes the name by which the node presents itself when
+warning through munin-limits.
+
+=item B<update> I<value>
+
+Fetch data from this node with "munin-update"? Allowed values are
+"yes" and "no". Defaults to "yes".
+
+If you make a virtual node which borrow data from real nodes for
+aggregate graphs, set this to "no" for that node.
 
 =back
 
@@ -306,7 +346,7 @@ On all the examples below, all the 'top-level' parameters (dbdir,
 logdir, htmldir, tmpldir) are not present. They are only skipped for
 brevity - they are needed.
 
-=head1 EXAMPLE 1
+=head2 EXAMPLE 1
 
 An example with three servers on two domains:
 
@@ -322,7 +362,7 @@ An example with three servers on two domains:
 This will appear as two groups (one.dom and two.dom), having
 respectively two and one node.
 
-=head1 EXAMPLE 2
+=head2 EXAMPLE 2
 
 Summarize the 'load'-graphs of the two servers in one.dom, in a 'total
 load'-graph.
@@ -333,6 +373,18 @@ load'-graph.
 		load.sum_load.label load
 		load.sum_load.special_stack machine1=machine1.one.dom:load.load machine2=machine2.one.dom:load.load
 	
+
+=head2 ALTERNATE TRANSPORT
+
+Connect to munin-nodes on a remote site, through a bastion host, using
+ssh.
+
+  [mail.site2.example.org]
+    address ssh://bastion.site2.example.org/bin/nc mail.site2.example.org 4949
+
+  [www.site2.example.org]
+    address ssh://bastion.site2.example.org/bin/nc www.site2.example.org 4949
+
 
 =head1 AUTHORS
 

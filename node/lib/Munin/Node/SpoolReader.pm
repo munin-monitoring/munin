@@ -8,6 +8,8 @@ use warnings;
 use Carp;
 use IO::File;
 
+use Fcntl qw(:DEFAULT :flock);
+
 use Munin::Common::Defaults;
 use Munin::Common::SyncDictFile;
 use Munin::Node::Logger;
@@ -111,6 +113,7 @@ sub _cat_multigraph_file
 
         open my $fh, '<', "$self->{spooldir}/$file"
             or die "Unable to open spool file: $!";
+        flock($fh, LOCK_SH);
 
         my $epoch;
 
