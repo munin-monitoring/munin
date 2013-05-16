@@ -17,6 +17,16 @@ use_ok('Munin::Master::Node');
 my $config = Munin::Master::Config->instance();
 $config->{node}{use_node_name} = 1;
 
+my $mocklog = Test::MockModule->new('Munin::Master::Logger');
+$mocklog->mock(
+    debug    => sub { },
+    info     => sub { },
+    notice   => sub { },
+    warning  => sub { },
+    error    => sub { },
+    critical => sub { }
+);
+
 sub setup {
     my $node = Munin::Master::Node->new('127.0.0.1', 4949, 'node');
     my $node_mock = Test::MockObject::Extends->new($node);

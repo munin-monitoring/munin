@@ -8,12 +8,12 @@ use strict;
 
 use Carp;
 use English qw(-no_match_vars);
-use Log::Log4perl qw( :easy );
 
 use File::Basename;
 use File::Path;
 use File::Spec;
 use Munin::Master::Config;
+use Munin::Master::Logger;
 use Munin::Master::Node;
 use Munin::Master::Utils;
 use RRDs;
@@ -24,6 +24,7 @@ use Scalar::Util qw(weaken);
 use List::Util qw(max);
 
 my $config = Munin::Master::Config->instance()->{config};
+my $log    = Munin::Master::Logger->new;
 
 # Flags that have RRD autotuning enabled.
 my $rrd_tune_flags = {
@@ -66,14 +67,14 @@ sub do_work {
 			     $path);
 
     if (!munin_getlock($lock_file)) {
-	WARN "Could not get lock $lock_file for $nodedesignation. Skipping node.";
-        die "Could not get lock $lock_file for $nodedesignation. Skipping node.\n";
+	$log->critical("Could not get lock $lock_file for $nodedesignation. Skipping node.");
+        die;
     }
 
     # Reading the state file, no need to lock it, since it's per node and we
     # already have a lock on this.
     my $state_file = sprintf ('%s/state-%s.storable', $config->{dbdir}, $path); 
-    DEBUG "[DEBUG] Reading state for $path in $state_file";
+    $log->debug("Reading state for $path in $state_file");
     $self->{state} = munin_read_storable($state_file) || {};
 
     my %all_service_configs = (
@@ -81,7 +82,7 @@ sub do_work {
 	global => {},
 	);
 
-    INFO "[INFO] starting work in $$ for $nodedesignation.\n";
+    $log->info("starting work in $$ for $nodedesignation.\n");
     my $done = $self->{node}->do_in_session(sub {
 
 	eval {
@@ -99,11 +100,11 @@ sub do_work {
 
 		    # XXX - Commented out, should be protect by a "if logger.isDebugEnabled()"
 		    #       since it is quite expensive
-		    #DEBUG "[DEBUG] whole_config:" . Dumper(\%whole_config);
+		    #$log->debug "whole_config:" . Dumper(\%whole_config);
 
 		    # spoolfetching reported no data, skipping it.
 		    if (! $whole_config{global}{multigraph}[1]) {
-			    INFO "[INFO] $nodedesignation didn't send any data for spoolfetch. Ignoring it.";
+			    $log->info("$nodedesignation didn't send any data for spoolfetch. Ignoring it.");
 			    # adding ourself to failed_workers, so we use 
 			    push @{ $self->{worker}->{failed_workers} },  $self->{ID};
 			   die "NO_SPOOLFETCH_DATA";
@@ -122,7 +123,7 @@ sub do_work {
 		    next unless $config->{limit_services}{$plugin};
 		}
 
-		DEBUG "[DEBUG] for my $plugin (@plugins)";
+		$log->debug("for my $plugin (@plugins)");
 
 		# Ask for config only if spoolfetch didn't already send it
 		my %service_config = %whole_config;
@@ -132,8 +133,8 @@ sub do_work {
 		}
 
 		unless (%service_config) {
-		    WARN "[WARNING] Service $plugin on $nodedesignation ".
-			"returned no config";
+		    $log->warning("Service $plugin on $nodedesignation ".
+			"returned no config");
 		    next;
 		}
 
@@ -144,14 +145,14 @@ sub do_work {
 		# default is 0 sec : always update when asked
 		my $update_rate = get_global_service_value(\%service_config, $plugin, "update_rate", 0); 
 		my ($update_rate_in_seconds, $is_update_aligned) = parse_update_rate($update_rate);
-		DEBUG "[DEBUG] update_rate $update_rate_in_seconds for $plugin on $nodedesignation";
+		$log->debug("update_rate $update_rate_in_seconds for $plugin on $nodedesignation");
 
 		if (! %service_data) {
 			# Check if this plugin has to be updated
 			if ($update_rate_in_seconds 
 				&& $self->is_fresh_enough($nodedesignation, $plugin, $update_rate_in_seconds)) {
 			    # It's fresh enough, skip this $service
-			    DEBUG "[DEBUG] $plugin is fresh enough, not updating it";
+			    $log->debug("$plugin is fresh enough, not updating it");
 			    next;
 			}
 
@@ -160,7 +161,7 @@ sub do_work {
 			# if asked to fetch it. 
 			# But we should still do everything after than.
 			if ($plugin ne "__root__") {
-				DEBUG "[DEBUG] No service data for $plugin, fetching it";
+				$log->debug("No service data for $plugin, fetching it");
 				local $0 = "$0 -- fetch($plugin)";
 				%service_data = $self->{node}->fetch_service_data($plugin);
 			}
@@ -188,9 +189,9 @@ sub do_work {
 
 		for my $service (keys %{$service_config{data_source}}) {
 		    if (defined($all_service_configs{data_source}{$service})) {
-			WARN "[WARNING] Service collision: plugin $plugin on "
+			$log->warning("Service collision: plugin $plugin on "
 			    ."$nodedesignation reports $service which already "
-			    ."exists on that host.  Deleting new data.";
+			    ."exists on that host.  Deleting new data.");
 			delete($service_config{data_source}{$service});
 		    delete($service_data{$service})
 			if defined $service_data{$service};
@@ -206,9 +207,9 @@ sub do_work {
 			if (defined $extinfo) {
 			    $service_config{data_source}{$service}{$ds}{extinfo} =
 				$extinfo;
-			    DEBUG "[DEBUG] Copied extinfo $extinfo into "
+			    $log->debug("Copied extinfo $extinfo into "
 				."service_config for $service / $ds on "
-				.$nodedesignation;
+				.$nodedesignation);
 			}
 		    }
 		}
@@ -234,21 +235,21 @@ sub do_work {
 
 	# kill the remaining process if needed
 	if ($self->{node}->{pid} && kill(0, $self->{node}->{pid})) {
-		INFO "[INFO] Killing subprocess $self->{node}->{pid}";
+		$log->info("Killing subprocess $self->{node}->{pid}");
 		kill $self->{node}->{pid};
 	}
 
 	if ($EVAL_ERROR =~ m/^NO_SPOOLFETCH_DATA /) {
-	    INFO "[INFO] No spoofetch data for $nodedesignation";
+	    $log->info("No spoofetch data for $nodedesignation");
 	    return;
 	} elsif ($EVAL_ERROR) {
-	    ERROR "[ERROR] Error in node communication with $nodedesignation: "
-		.$EVAL_ERROR;
+	    $log->error("Error in node communication with $nodedesignation: "
+		.$EVAL_ERROR);
 	    return;
 	}
 
 	# Everything went smoothly.
-	DEBUG "[DEBUG] Everything went smoothly.";
+	$log->debug("Everything went smoothly.");
 	return 1;
 
     }); # do_in_session
@@ -256,7 +257,7 @@ sub do_work {
     munin_removelock($lock_file);
 
     # Update the state file 
-    DEBUG "[DEBUG] Writing state for $path in $state_file";
+    $log->debug("Writing state for $path in $state_file");
     munin_write_storable($state_file, $self->{state});
 
     # This handles failure in do_in_session,
@@ -283,22 +284,22 @@ sub get_global_service_value {
 sub is_fresh_enough {
 	my ($self, $nodedesignation, $service, $update_rate_in_seconds) = @_;
 
-	DEBUG "is_fresh_enough asked for $service with a rate of $update_rate_in_seconds";
+	$log->debug("is_fresh_enough asked for $service with a rate of $update_rate_in_seconds");
 
 	my $last_updated = $self->{state}{last_updated}{$service} || "0 0";
-	DEBUG "last_updated{$service}: " . $last_updated;
+	$log->debug("last_updated{$service}: " . $last_updated);
 	my @last = split(/ /, $last_updated);
    
 	use Time::HiRes qw(gettimeofday tv_interval);	
 	my $now = [ gettimeofday ];
 
 	my $age = tv_interval(\@last, $now); 	
-	DEBUG "last: [" . join(",", @last) . "], now: [" . join(", ", @$now) . "], age: $age";
+	$log->debug("last: [" . join(",", @last) . "], now: [" . join(", ", @$now) . "], age: $age");
 	my $is_fresh_enough = ($age < $update_rate_in_seconds) ? 1 : 0;
-	DEBUG "is_fresh_enough  $is_fresh_enough";
+	$log->debug("is_fresh_enough  $is_fresh_enough");
 
 	if (! $is_fresh_enough) {
-		DEBUG "new value: " . join(" ", @$now);
+		$log->debug("new value: " . join(" ", @$now));
 		$self->{state}{last_updated}{$service} = join(" ", @$now);
 	}
 
@@ -314,7 +315,7 @@ sub get_spoolfetch_timestamp {
 
 sub set_spoolfetch_timestamp {
 	my ($self, $timestamp) = @_;
-	DEBUG "[DEBUG] set_spoolfetch_timestamp($timestamp)";
+	$log->debug("set_spoolfetch_timestamp($timestamp)");
 
 	# Using the last timestamp sended by the server :
 	# -> It can be be different than "now" to be able to process the backlock slowly
@@ -358,7 +359,7 @@ sub handle_dirty_config {
 			# If value not present, this field is not dirty fetched
 			next if (! defined $field_value);
 
-			DEBUG "[DEBUG] handle_dirty_config:$service, $field, @$field_when";
+			$log->debug("handle_dirty_config:$service, $field, @$field_when");
 			# Moves the "value" to the service_data
 			$service_data{$service}->{$field} ||= { when => [], value => [], };
 	                push @{$service_data{$service}{$field}{value}}, @$field_value;
@@ -523,17 +524,17 @@ sub _ensure_filename {
     if ($rrd_file ne $old_rrd_file) {
         if (-f $old_rrd_file and -f $rrd_file) {
             my $host = $self->{host}{host_name};
-            WARN "[WARNING]: $hostspec $service $data_source config change "
+            $log->warning("$hostspec $service $data_source config change "
 		. "suggests moving '$old_rrd_file' to '$rrd_file' "
 		. "but both exist; manually merge the data "
-                . "or remove whichever file you care less about.\n";
+                . "or remove whichever file you care less about.\n");
 	    return '';
         } elsif (-f $old_rrd_file) {
-            INFO "[INFO]: Config update, changing name of '$old_rrd_file'"
-                   . " to '$rrd_file' on $hostspec ";
+            $log->info("Config update, changing name of '$old_rrd_file'"
+                   . " to '$rrd_file' on $hostspec ");
             unless (rename ($old_rrd_file, $rrd_file)) {
-                ERROR "[ERROR]: Could not rename '$old_rrd_file' to"
-		    . " '$rrd_file' for $hostspec: $!\n";
+                $log->error("Could not rename '$old_rrd_file' to"
+		    . " '$rrd_file' for $hostspec: $!\n");
                 return '';
             }
         }
@@ -553,13 +554,13 @@ sub _ensure_tuning {
 
     $ds_config = $self->_get_rrd_data_source_with_defaults($ds_config);
     for my $rrd_prop (keys %$rrd_tune_flags) {
-        INFO "[INFO]: Config update, ensuring $rrd_prop of"
-	    . " '$rrd_file' is '$ds_config->{$rrd_prop}'.\n";
+        $log->info("Config update, ensuring $rrd_prop of"
+	    . " '$rrd_file' is '$ds_config->{$rrd_prop}'.\n");
         RRDs::tune($rrd_file, $rrd_tune_flags->{$rrd_prop},
                    "42:$ds_config->{$rrd_prop}");
         if (my $tune_error = RRDs::error()) {
-            ERROR "[ERROR] Tuning $rrd_prop of '$rrd_file' to"
-		. " '$ds_config->{$rrd_prop}' failed.\n";
+            $log->error("Tuning $rrd_prop of '$rrd_file' to"
+		. " '$ds_config->{$rrd_prop}' failed.\n");
             $success = '';
         }
     }
@@ -585,7 +586,7 @@ sub _update_rrd_files {
 	    my $ds_config = $service_config->{$ds_name};
 
 	    unless (defined($ds_config->{label})) {
-		ERROR "[ERROR] Unable to update $service on $nodedesignation -> $ds_name: Missing data source configuration attribute: label";
+		$log->error("Unable to update $service on $nodedesignation -> $ds_name: Missing data source configuration attribute: label");
 		next;
 	    }
 	    
@@ -601,7 +602,7 @@ sub _update_rrd_files {
 	    $ds_config->{update_rate} ||= $config->{update_rate};
 	    $ds_config->{update_rate} ||= 300; # default is 5 min
 
-	    DEBUG "[DEBUG] asking for a rrd of size : " . $ds_config->{graph_data_size};
+	    $log->debug("asking for a rrd of size : " . $ds_config->{graph_data_size});
 
 	    # Avoid autovivification (for multigraphs)
 	    my $first_epoch = (defined($service_data) and defined($service_data->{$ds_name})) ? ($service_data->{$ds_name}->{when}->[0]) : 0;
@@ -611,7 +612,7 @@ sub _update_rrd_files {
 		$last_timestamp = max($last_timestamp, $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name}));
 	    }
 	    else {
-		WARN "[WARNING] Service $service on $nodedesignation returned no data for label $ds_name";
+		$log->warning("Service $service on $nodedesignation returned no data for label $ds_name");
 	    }
 	}
     }
@@ -691,7 +692,7 @@ sub _get_rrd_file_name {
     $file = File::Spec->catfile($config->{dbdir}, 
 				$file);
 	
-    DEBUG "[DEBUG] rrd filename: $file\n";
+    $log->debug("rrd filename: $file\n");
 
     return $file;
 }
@@ -700,7 +701,7 @@ sub _get_rrd_file_name {
 sub _create_rrd_file {
     my ($self, $rrd_file, $service, $ds_name, $ds_config, $first_epoch) = @_;
 
-    INFO "[INFO] creating rrd-file for $service->$ds_name: '$rrd_file'";
+    $log->info("creating rrd-file for $service->$ds_name: '$rrd_file'");
 
     munin_mkdir_p(dirname($rrd_file), oct(777));
 
@@ -758,10 +759,10 @@ sub _create_rrd_file {
                 $ds_config->{type}, $heartbeat, $ds_config->{min}, $ds_config->{max}),
     );
 
-    DEBUG "[DEBUG] RRDs::create @args";
+    $log->debug("RRDs::create @args");
     RRDs::create @args;
     if (my $ERROR = RRDs::error) {
-        ERROR "[ERROR] Unable to create '$rrd_file': $ERROR";
+        $log->error("Unable to create '$rrd_file': $ERROR");
     }
 }
 
@@ -769,7 +770,7 @@ sub parse_custom_resolution {
 	my @elems = split(',\s*', shift);
 	my $update_rate = shift;
 
-	DEBUG "[DEBUG] update_rate: $update_rate";
+	$log->debug("update_rate: $update_rate");
 
         my @computer_format;
 
@@ -794,10 +795,9 @@ sub parse_custom_resolution {
 			my $multiplier = int ($nb_sec / $update_rate);
                         my $multiplier_nb = int ($for_sec / $nb_sec);
 
-			DEBUG "[DEBUG] $elem"
+			$log->debug("$elem"
 				. " -> nb_sec:$nb_sec, for_sec:$for_sec"
-				. " -> multiplier:$multiplier, multiplier_nb:$multiplier_nb"
-			;
+				. " -> multiplier:$multiplier, multiplier_nb:$multiplier_nb");
                         push @computer_format, [$multiplier, $multiplier_nb];
                 }
 	}
@@ -859,9 +859,9 @@ sub _update_rrd_file {
     my @update_rrd_data;
 	if ($config->{"rrdcached_socket"}) {
 		if (! -e $config->{"rrdcached_socket"} || ! -w $config->{"rrdcached_socket"}) {
-			WARN "[WARN] RRDCached feature ignored: rrdcached socket not writable";
+			$log->warning("RRDCached feature ignored: rrdcached socket not writable");
 		} elsif($RRDs::VERSION < 1.3){
-			WARN "[WARN] RRDCached feature ignored: perl RRDs lib version must be at least 1.3. Version found: " . $RRDs::VERSION;
+			$log->warning("RRDCached feature ignored: perl RRDs lib version must be at least 1.3. Version found: " . $RRDs::VERSION);
 		} else {
 			# Using the RRDCACHED_ADDRESS environnement variable, as
 			# it is way less intrusive than the command line args.
@@ -898,7 +898,7 @@ sub _update_rrd_file {
 	$current_updated_value = $value;
     }
 
-    DEBUG "[DEBUG] Updating $rrd_file with @update_rrd_data";
+    $log->debug("Updating $rrd_file with @update_rrd_data");
     if ($ENV{RRDCACHED_ADDRESS} && (scalar @update_rrd_data > 32) ) {
         # RRDCACHED only takes about 4K worth of commands. If the commands is
         # too large, we have to break it in smaller calls.
@@ -919,7 +919,7 @@ sub _update_rrd_file {
 
     if (my $ERROR = RRDs::error) {
         #confess Dumper @_;
-        ERROR "[ERROR] In RRD: Error updating $rrd_file: $ERROR";
+        $log->error("In RRD: Error updating $rrd_file: $ERROR");
     }
 
     # Stores the previous and the current value in the state db to avoid having to do an RRD lookup if needed

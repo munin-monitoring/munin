@@ -16,7 +16,6 @@ use Munin::Common::Defaults;
 use Munin::Master::Logger;
 use Munin::Master::Config;
 use Munin::Common::Config;
-use Log::Log4perl qw(:easy);
 use POSIX qw(strftime);
 use POSIX qw(:sys_wait_h);
 use Symbol qw(gensym);
@@ -123,6 +122,7 @@ my @COPY_FIELDS    = ("label", "draw", "type", "rrdfile", "fieldname", "info");
 my @dircomponents = split('/',$0);
 my $me = pop(@dircomponents);
 
+my $log = Munin::Master::Logger->new;
 
 sub munin_draw_field {
     my $hash   = shift;
@@ -143,12 +143,12 @@ sub munin_nscasend {
     if ($label)
     {
 	print $nsca "$name\t$service: $label\t$level\t$comment\n";
-	DEBUG "To $nsca: $name;$service: $label;$level;$comment\n";
+	$log->debug("To $nsca: $name;$service: $label;$level;$comment\n");
     }
     else
     {
 	print $nsca "$name\t$service\t$level\t$comment\n";
-	DEBUG "[DEBUG] To $nsca: $name;$service;$level;$comment\n";
+	$log->debug("To $nsca: $name;$service;$level;$comment\n");
     }
 }
 
@@ -157,12 +157,13 @@ sub munin_createlock {
     # Create lock file, fail and die if not possible.
     my ($lockname) = @_;
     if (sysopen (LOCK,$lockname,O_WRONLY | O_CREAT | O_EXCL)) {
-	DEBUG "[DEBUG] Creating lock : $lockname succeeded\n";
+	$log->debug("Creating lock : $lockname succeeded\n");
 	print LOCK $$; # we want the pid inside for later use
 	close LOCK;
 	return 1;
     } else {
-	LOGCROAK("Creating lock $lockname failed: $!\n");
+	log->critical("Creating lock $lockname failed: $!\n");
+        die;
     }
 }
 
@@ -171,15 +172,18 @@ sub munin_removelock {
     # Remove lock or die trying.
     my ($lockname) = @_;
 
-    unlink $lockname or
-      LOGCROAK("[FATAL ERROR] Error deleting lock $lockname: $!\n");
+    unless (unlink $lockname) {
+        $log->critical("Error deleting lock $lockname: $!");
+        die;
+    }
 }
 
 
 sub munin_runlock {
     my ($lockname) = @_;
     unless (munin_getlock($lockname)) {
-	LOGCROAK("[FATAL ERROR] Lock already exists: $lockname. Dying.\n");
+	$log->critical("Lock already exists: $lockname. Dying.");
+        die;
     }
     return 1;
 }
@@ -188,7 +192,7 @@ sub munin_runlock {
 sub munin_getlock {
     my ($lockname) = @_;
     if (-f $lockname) {
-	DEBUG "[DEBUG] Lock $lockname already exists, checking process";
+	$log->debug ("Lock $lockname already exists, checking process");
 	# Is the lockpid alive?
 
 	# To check this is inteligent and so on.  It also makes for a
@@ -196,28 +200,35 @@ sub munin_getlock {
 	# cron every 5 minutes this should not be a real threat.  This
 	# ream of code should complete in less than 5 minutes.
 
-	open my $LOCK, '<', $lockname or
-	  LOGCROAK("Could not open $lockname for reading: $!\n");
+        my $LOCK;
+	unless (open $LOCK, '<', $lockname) {
+            $log->critical("Could not open $lockname for reading: $!\n");
+            die;
+        }
+
 	my $pid = <$LOCK>;
 	$pid = '' if !defined($pid);
-	close($LOCK) or LOGCROAK("Could not close $lockname: $!\n");
+	unless (close($LOCK)) {
+            $log->critical("Could not close $lockname: $!\n");
+            die;
+        }
 	
-	DEBUG "[DEBUG] Lock contained pid '$pid'";
+	$log->debug("Lock contained pid '$pid'");
 	
         # Make sure it's a proper pid
 	if (defined($pid) and $pid =~ /^(\d+)$/ and $1 != 1) {
 	    $pid = $1;
 	    if (kill(0, $pid)) {
-		DEBUG "[DEBUG] kill -0 $pid worked - it is still alive. Locking failed.";
+		$log->debug("kill -0 $pid worked - it is still alive. Locking failed.");
 	        return 0;
 	    }
-	    INFO "[INFO] Process $pid is dead, stealing lock, removing file";
+	    $log->info("Process $pid is dead, stealing lock, removing file");
 	} else {
-	    INFO "[INFO] PID in lock file is bogus.  Removing lock file";
+	    $log->info("PID in lock file is bogus.  Removing lock file");
 	}
 	munin_removelock($lockname);
     }
-    DEBUG "[DEBUG] Creating new lock file $lockname";
+    $log->debug("Creating new lock file $lockname");
     munin_createlock($lockname);
     return 1;
 }
@@ -227,13 +238,13 @@ sub munin_delete {
     my ($config,$data) = @_;
     for my $domain (keys %{$data->{domain}}) {
 	unless ($config->{domain}->{$domain}) {
-	    DEBUG "[DEBUG] Removing domain: $domain";
+	    $log->debug ("Removing domain: $domain");
 	    delete ($data->{domain}->{$domain});
 	    next;
 	}
 	for my $node (keys %{$data->{domain}->{$domain}->{node}}) {
 	    unless ($config->{domain}->{$domain}->{node}->{$node}) {
-		DEBUG "[DEBUG] Removing node from $domain: $node";
+		$log->debug("Removing node from $domain: $node");
 		delete ($data->{domain}->{$domain}->{node}->{$node});
 	    }
 	}
@@ -275,7 +286,7 @@ sub munin_readconfig_storable {
 
     # try to read storable version
     if ((-r $file) && open (my $CFG_STORABLE, '<', $file)) { 
-        DEBUG "[DEBUG] munin_readconfig: found Storable version of $file, using it";
+        $log->debug("munin_readconfig: found Storable version of $file, using it");
         $part = Storable::fd_retrieve($CFG_STORABLE); 
         close ($CFG_STORABLE); 
     }
@@ -293,7 +304,7 @@ sub munin_readconfig_raw {
     $part = munin_readconfig_storable("$conf.storable");
     if (!defined $part) {
         if (! -r $conf and ! $missingok) {
-            WARN "munin_readconfig: cannot open '$conf'";
+            $log->warning("munin_readconfig: cannot open '$conf'");
             return;
         }
         if (open (my $CFG, '<', $conf)) {
@@ -371,7 +382,7 @@ sub munin_get_var_path
     my $var  = shift;
     my $val  = shift;
 
-    DEBUG "DEBUG: Getting var \"$var\" = \"$val\"\n";
+    $log->debug("Getting var \"$var\" = \"$val\"\n");
     if ($var =~ /^\s*([^;:]+);([^;:]+):(\S+)\s*$/)
     {
 	my ($dom, $host, $rest) = ($1, $2, $3);
@@ -655,7 +666,7 @@ sub munin_get_node {
 	    # Only complain on a blank key if is no key like that. Usually it
 	    # shouln't, so it avoids a needless regexp in this highly used
 	    # function
-	    ERROR "[ERROR] munin_get_node: Cannot work on hash node '$tmpvar'" if ($tmpvar !~ /\S/);
+	    $log->error("munin_get_node: Cannot work on hash node '$tmpvar'") if ($tmpvar !~ /\S/);
 	    return undef;
         }	
 	$hash = $hash->{$tmpvar};
@@ -690,7 +701,7 @@ START:
 				 substr($tmpvar,0,3) eq '#%#');
 
     if (index($tmpvar, " ") != -1) {
-	ERROR "[ERROR] munin_set_var_loc: Cannot work on hash node \"$tmpvar\"";
+	$log->error("munin_set_var_loc: Cannot work on hash node \"$tmpvar\"");
 	return;
     }
     if (scalar @$loc > $iloc) {
@@ -703,8 +714,8 @@ START:
         $hash = $hash->{$tmpvar};
 	goto START;
     } else {
-        WARN "[WARNING] munin_set_var_loc: Setting unknown option '$tmpvar' at "
-	    . munin_get_keypath($hash)
+        $log->warning("munin_set_var_loc: Setting unknown option '$tmpvar' at "
+	    . munin_get_keypath($hash))
 	    unless Munin::Common::Config::cl_is_keyword($tmpvar);
 
 	# FIX - or not.
@@ -745,7 +756,7 @@ sub munin_get_node_partialpath
 	my @leftarr = split (/;/, $1);
 	push @$varloc, @leftarr;
     } else {
-	ERROR "[ERROR] munin_get_node_partialpath: Malformed variable path \"$var\".";
+	$log->error("munin_get_node_partialpath: Malformed variable path \"$var\".");
     }
 
     # We've got both parts of the loc (varloc and hashloc) -- let's figure out 
@@ -766,7 +777,7 @@ sub munin_set_var_path
 
     my $result = undef;
 
-    DEBUG "[DEBUG] munin_set_var_path: Setting var \"$var\" = \"$val\"";
+    $log->debug("munin_set_var_path: Setting var \"$var\" = \"$val\"");
 
     if ($var =~ /^\s*([^:]+):(\S+)\s*$/) {
 	my ($leftstring, $rightstring) = ($1, $2);
@@ -789,11 +800,11 @@ sub munin_set_var_path
 	my @leftarr = split (/;/, $1);
 	$result = munin_set_var_loc ($hash, [@leftarr], $val);
     } else {
-	ERROR "Error: munin_set_var_path: Malformatted variable path \"$var\".";
+	$log->error("Error: munin_set_var_path: Malformatted variable path \"$var\".");
     }
 
     if (!defined $result) {
-	ERROR "Error: munin_set_var_path: Failed setting \"$var\" = \"$val\".";
+	$log->error("Error: munin_set_var_path: Failed setting \"$var\" = \"$val\".");
     }
 
     return $hash;
@@ -827,7 +838,7 @@ sub munin_writeconfig_loop {
 	    next if !defined $hash->{$key} or !length $hash->{$key};
             (my $outstring = $hash->{$key}) =~ s/([^\\])#/$1\\#/g;
 	    # Too much.  Can be seen in the file itself.
-	    # DEBUG "[DEBUG] Writing: $path $outstring\n";
+	    # $log->debug "Writing: $path $outstring\n";
 	    if ($outstring =~ /\\$/)
 	    { # Backslash as last char has special meaning. Avoid it.
 		print $fh "$path $outstring\\\n"; 
@@ -869,7 +880,7 @@ sub munin_write_storable {
 sub munin_writeconfig_storable {
 	my ($datafilename,$data) = @_;
 
-	DEBUG "[DEBUG] Writing state to $datafilename";
+	$log->debug("Writing state to $datafilename");
 
 	munin_write_storable($datafilename, $data);
 }
@@ -877,13 +888,14 @@ sub munin_writeconfig_storable {
 sub munin_writeconfig {
     my ($datafilename,$data,$fh) = @_;
 
-    DEBUG "[DEBUG] Writing state to $datafilename";
+    $log->debug("Writing state to $datafilename");
 
     my $is_fh_already_managed = defined $fh;
     if (! $is_fh_already_managed) {
 	$fh = gensym();
 	unless (open ($fh, ">", $datafilename)) {
-	    LOGCROAK "Fatal error: Could not open \"$datafilename\" for writing: $!";
+	    $log->critical("Fatal error: Could not open \"$datafilename\" for writing: $!");
+            die;
 	}
     }
     
@@ -893,7 +905,7 @@ sub munin_writeconfig {
     munin_writeconfig_loop ($data, $fh);
     
     if (! $is_fh_already_managed) {
-        DEBUG "[DEBUG] Closing filehandle \"$datafilename\"...\n";
+        $log->debug("Closing filehandle \"$datafilename\"...\n");
         close ($fh);
     }
 }
@@ -942,7 +954,7 @@ sub munin_readconfig_part {
     my $what = shift;
     my $missingok = shift;
     if (! defined $config_parts->{$what}) {
-	ERROR "[ERROR] munin_readconfig_part with unknown part name ($what).";
+	$log->error("munin_readconfig_part with unknown part name ($what).");
 	return undef;
     }
     # for now, we only really care about storable.
@@ -952,7 +964,7 @@ sub munin_readconfig_part {
     my $doupdate = 0;
     if (! -f $filename) {
 	unless (defined $missingok and $missingok) {
-		ERROR "[FATAL] munin_readconfig_part($what) - missing file";
+		$log->critical("munin_readconfig_part($what) - missing file");
 		exit(1);
 	}
 	# missing ok, return last value if we have one, copy config if not
@@ -990,18 +1002,18 @@ sub munin_readconfig_base {
 
     if (defined $config->{'includedir'}) {
 	my $dirname = $config->{'includedir'};
-	DEBUG "Includedir statement to include files in $dirname";
+	$log->debug("Includedir statement to include files in $dirname");
 
 	my $DIR;
 	opendir($DIR, $dirname) or
-	    WARN "[Warning] Could not open includedir directory $dirname: $OS_ERROR\n";
+	    $log->warning("Could not open includedir directory $dirname: $OS_ERROR\n");
 	my @files = grep { ! /^\.|~$/ } readdir($DIR);
 	closedir($DIR);
 
 	@files = map { $_ = $dirname.'/'.$_; } (sort @files);
 
 	foreach my $f (@files) {
-	    INFO "Reading additional config from $f";
+	    $log->info("Reading additional config from $f");
 
 	    my $extra = munin_readconfig_raw ($f);
 	    # let the new values overwrite what we already have
@@ -1116,11 +1128,11 @@ sub munin_path_to_loc
 	my @leftarr = split (/;/, $1);
 	$result = [@leftarr];
     } else {
-	ERROR "[ERROR] munin_path_to_loc: Malformatted variable path \"$path\".";
+	$log->error("munin_path_to_loc: Malformatted variable path \"$path\".");
     }
 
     if (!defined $result) {
-	ERROR "[ERROR] munin_path_to_loc: Failed converting \"$path\".";
+	$log->error("munin_path_to_loc: Failed converting \"$path\".");
     }
 
     return $result;
@@ -1543,7 +1555,7 @@ sub munin_get_rrd_filename {
 
 	for my $f (@COPY_FIELDS) {
 	    if (not exists $field->{$f} and exists $sourcenode->{$f}) {
-		DEBUG "DEBUG: Copying $f...\n";
+		$log->debug("Copying $f...\n");
 		munin_set_var_loc ($field, [$f], $sourcenode->{$f});
 	    }
 	}
@@ -1606,13 +1618,13 @@ sub look_for_child {
     }
 
     if ($pid < 0) {
-        ERROR "[ERROR] Unexpectedly ran out of children: $!";
-	croak "[ERROR] Ran out of children: $!\n";
+        $log->critical("Unexpectedly ran out of children: $!");
+	die;
     }
 
     if ($? != 0) {
-        WARN "[WARNING] Child $pid failed: " . ($? << 8) . 
-	    "(signal " . ($? & 0xff) . ")";
+        $log->warning("Child $pid failed: " . ($? << 8) .
+	    "(signal " . ($? & 0xff) . ")");
     }
     return 1;
 }

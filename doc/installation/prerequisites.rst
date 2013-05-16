@@ -57,7 +57,7 @@ The munin master needs
     * Getopt::Long
     * HTML::Template
     * IO::Socket::INET6
-    * Log::Log4perl 1.18 or later
+    * Log::Dispatch
     * Net::SSLeay (Optional, if you want to use SSL/TLS)
     * Params::Validate
     * Storable
