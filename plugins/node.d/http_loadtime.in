@@ -5,13 +5,20 @@
 
 =head1 NAME
 
-http_loadtime - Plugin to graph HTTP response time of a specific page
+http_loadtime - Plugin to graph the HTTP response times of specific pages
 
 =head1 CONFIGURATION
 
 The following environment variables are used by this plugin
 
- target - URL to fetch (default: "http://localhost/")
+ target - comma separated URL(s) to fetch (default: "http://localhost/")
+ example:
+   [http_loadtime]
+   env.target http://localhost.de,http://localhost.de/some-site.html
+   env.requisites true
+
+ Do not enable the download of page requisites (env.requisites) for https
+ sites since wget needs incredible long to perform this on big sites...
 
 =head1 AUTHOR
 
@@ -30,7 +37,14 @@ GPLv2
 =cut
 
 target=${target:-"http://localhost/"}
+requisites=${requisites:-"false"}
+
+urls=`echo $target | tr "," "\n"`
 wget_opt="--user-agent \"Munin - http_loadtime\" --no-cache -q"
+if [ "$requisites" == "true" ]; then
+  wget_opt="$wget_opt --page-requisites"
+fi
+
 time_bin=`which time`
 
 if [ "$1" = "autoconf" ]; then
@@ -39,29 +53,42 @@ if [ "$1" = "autoconf" ]; then
     command -v tr        2>&1 >/dev/null || result=1
     command -v wget      2>&1 >/dev/null || result=1
     if [ "$result" != "yes" ]; then
-    	echo "no (programs time, wget and tr required)"
-	    exit 0
+       echo "no (programs time, wget and tr required)"
+           exit 0
     fi
 
-    # check if url responds
+    # check if urls respond
     #
-    wget --spider $target $wget_opt
-    if [ "$?" != "0" ]; then
-        echo "no (Cannot run wget against \"$target\")"
-        exit 0
-    fi
+    for uri in $urls
+    do
+        wget --spider $uri $wget_opt
+        if [ "$?" != "0" ]; then
+            echo "no (Cannot run wget against \"$uri\")"
+            exit 0
+        fi
+    done
+
     echo yes
     exit 0
 fi
+
+function escapeUri {
+    echo "$1" | tr ":" "_" | tr "/" "_" | tr "." "_" | tr "-" "_"
+}
 
 if [ "$1" = "config" ]; then
     echo "graph_title HTTP loadtime of a page"
     echo "graph_args --base 1000 -l 0"
     echo "graph_vlabel Load time in seconds"
     echo "graph_category network"
-    echo "graph_info This graph shows load time in seconds of $target"
-    echo "loadtime.label loadtime"
-    echo "loadtime.info Load time"
+    echo "graph_info This graph shows the load time in seconds"
+    for uri in $urls
+    do
+        uri_short=`echo ${uri:0:30}`
+        if [ "$uri_short" != "$uri" ]; then uri_short=$uri_short"..."; fi
+        echo `escapeUri $uri`".label $uri_short"
+        echo `escapeUri $uri`".info page load time"
+    done
     exit 0
 fi
 
@@ -70,7 +97,12 @@ TEMPO_DIR=$(mktemp -dt munin_http_loadtime.XXXXXX) || exit 1
 trap "rm -rf $TEMPO_DIR" EXIT
 
 cd $TEMPO_DIR || exit 1
-loadtime=`$time_bin --quiet -f "%e" wget $wget_opt $target 2>&1`
-cd -
 
-echo "loadtime.value $loadtime"
+for uri in $urls
+do
+    loadtime=`$time_bin --quiet -f "%e" wget $wget_opt $uri 2>&1`
+
+    echo `escapeUri $uri`".value $loadtime"
+done
+
+cd -
