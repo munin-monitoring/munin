@@ -1,5 +1,227 @@
 -*- text -*-
 
+munin-2.1.0, 2013-04-23
+
+-------
+Summary
+-------
+
+This starts the 2.1.x series. It is an unstable series. It helps to package and
+test for broader testing than if it was only in the devel git branch.
+
+We won't build summed up changelogs for unstable releases. 
+
+------------------
+Detailed Changelog
+------------------
+
+Bill Thiede (2):
+      Initialize site variable so /bin/sh on FreeBSD 8.3 is happy.
+      plugins/node.d/hddtemp_smartctl: allow more types of devices on FreeBSD
+
+Charles RAPENNE (1):
+      Display correctly cpu usage on SMP machines
+
+Claudius (1):
+      plugins/node.d/postfix_mailstats: add regex to count mails rejected by postfix postscreen daemon
+
+Claudius Herder (1):
+      plugins/node.d/postfix_mailstats: change family from manual to auto
+
+Diego Elio Pettenò (33):
+      Update .gitignore.
+      mailman: allow user to configure paths instead of hardcoding them.
+      asterisk_*: remove dependency on Net::Telnet.
+      asterisk_channels: fix name of plugin in configuration examples.
+      plugins: implement Munin::Plugin::HTTP
+      plugins: implement standard variables for HTTP authentication.
+      build: create an install-minimal target that only installs the Node components
+      master: restore _extract_name_from_greeting and fix its tests.
+      node: use Net::Domain::hostfqdn instead of Sys::Hostname::hostname to get the hostname.
+      build: no longer ignore the result of tests.
+      node: always use the Effective UID not just the UID.
+      test: use the syntax that Steve used for ARRAYREFs.
+      plugins: use the get method on the Munin::Plugin::HTTP instance instead of request.
+      master: make it possible to configure the default cgi-tmp directory.
+      hddtemp*: avoid using the degrees symbol in vlabel.
+      snmp__df.in: convert to use Munin::Plugin::SNMP.
+      snmp__df: restore old fieldname before rewrite.
+      asterisk: introduce a new, multigraph-capable plugin for asterisk.
+      apache: replace old Apache plugin with new, multigraph-capable one.
+      squid: introduce new Squid plugin to replace the old ones.
+      plugins: introduce a readfile() function to Munin::Plugin
+      entropy: rewrite plugin in Perl.
+      hwmon: introduce a new, multigraph and /sys-based plugin for hardware sensors.
+      uptime: rewrite plugin in Perl
+      load: rewrite plugin in Perl.
+      df: improve plugin and merge with df_inode.
+      procfs: create an aggregated plugin for all data coming from /proc/stat
+      plugins: start implementing a new framework for plugins writing.
+      procsys: implement a new plugin to replace entropy, open_files and open_inodes.
+      plugins: rewrite new multigraph plugins for using the Framework
+      procfs: merge load and uptime plugins.
+      perlcritic: do not require rcs keywords.
+      dir-locals: customize Emacs settings for Perl syntax.
+
+Gabor Szabo (7):
+      call getpwuid, getgrgid and getpwuid only if NOT on Windows
+      gitignore generated files
+      use the standard Cwd module instead of PWD as a step to work on Windows as well
+      gitignore generated META files
+      common: win32 ignore getpwuid, getgrgid, getpwuid
+      tests: use Cwd module instead of PWD
+      gitignore win32 generated files
+
+Gael (2):
+      plugins: multiple postgres installs per host
+      plugins/Pgsql: add env.PGLABEL to customize title
+
+Hiroaki Abe (1):
+      plugins/freebsd/{df,df_inode}: exclude cd9660 file systems.
+
+Holger Levsen (1):
+      make documentation match code. (inspired by D#694531)
+
+Jens Holzkämper (1):
+      different state files for cron job & as plugin
+
+Kenyon Ralph (9):
+      add link to github wiki
+      don't double-count buffers, since buffers are also wired
+      snmp__if_: handle noSuchInstance
+      ntp_: rewrite plugin to support IPv6
+      ntp_states: decrease timeouts so DNS queries don't cause node timeout
+      ntp_states: don't use this silly plugin loading method
+      node.d/ntp_states: improve compatibility with older perls
+      doc/example/webserver/nginx.rst: explain that two configurations are documented
+      ChangeLog: encode as UTF-8
+
+Kirill Bychkov (1):
+      Create directory with OpenBSD-compatible plugins.
+
+Lasse Karstensen (1):
+      doc: add example for munin with cron under nginx.
+
+Magnus Hagander (1):
+      Disable server-side prepared statements for pg plugins
+
+Marc Schütz (4):
+      Escape $ in MKTEMP
+      Use perl instead of bashism.
+      fail2ban: Handle the case where no jails are configured.
+      Treat empty query param as absent.
+
+Mark Meyer (3):
+      Plugin.pm: enhance $statefile error handling
+      plugins: enhance spamstats and postfix_mailstats
+      p/postfix_mailstats: rejected values stored now
+
+Nicolai Langfeldt (1):
+      getversion: Handle checked out tags better
+
+Nicolas Dandrimont (1):
+      snmp__if_multi: get the interface alias from SNMPv2 if it is defined
+
+Philipp Toelke (1):
+      master: fix field.trend field with long names
+
+Robert (1):
+      Reduce logging at INFO level in munin-graph
+
+Ruslan Kabalin (2):
+      plugins/Pgsql.pm: add multigraph support
+      plugins/Pgsql.pm: allow multiple graph types
+
+Steve Schnepp (55):
+      master: add a custom step field in dynazoom
+      cgi-graph: also accept csv & json extensions
+      cgi-graph: Adding csv output
+      cgi-graph: adding json output
+      cgi-graph: adding xml output
+      cgi-graph: fix typo
+      cgi-graph: fix xml output
+      master: autodetect the node encoding
+      getversion: update doc
+      getversion: use the commit SHA instead of tree SHA
+      getversion: prefix the commit with "-g" magic
+      getversion: apply the changes described in doc
+      Makefile: add a target for book
+      getversion: also fix the stable-* rules
+      rrdcached is undef by default, not ""
+      do not use maxint
+      dists: remove all dists specific stuff
+      README: add some light on what happens to contributions
+      master: enable specific gfx generation via cron
+      master: contrib tool for cron multithread gfx
+      plugins/diskstats: enhance the field ordering
+      asyncd: ident help options
+      asyncd: adding support for non std default rate
+      tests: fix RRDs deps in unit testing
+      tests: fix warning about potential typo
+      tests: Net::Server dep was missing in .travis.yml
+      tests: Module::Build is duplicated in .travis.yml
+      tests: rm the OS::get_fq_hostname() test for "."
+      tests: Use only IRC notifications for TravisCI
+      Plugin.pm: introduce a readarray() function
+      doc: remove scientific with decimal
+      templates: use most of the page instead of 90%
+      plugins/proc: enhance documentation
+      master: update test for config default
+      node: use a 5% tolerance for timings tests
+      doc: adding some context to async
+      master: add feature to disable graph_total
+      p/http_loadtime: avoid temporary files
+      p/snmp__if_: support ifHighSpeed
+      p/snmp__if_: accept interface num with leading 0
+      master: initial add of munin-cgi-datafile
+      master: use .in for cgi datafile
+      master: use -T for cgi datafile
+      master: remove unused Update::_get_rrd_file_name()
+      plugins/apt_all: Avoid using an external cron job
+      contrib/mnd: list command does not need ending space
+      master: use only the storable format for datafile
+      master/t: remove the plain datafile dump test
+      master/ProcessManager: avoid cpu hog when wait()
+      master/ProcessManager: adding a debug msg for reap
+      doc/async: fix formatting
+      master: fix typo from 2fdef85
+      plugins: remove unneeded "use lib"
+      master/www: Add the graph name on top of images
+      asyncd: minrate defaults to update_rate
+
+Stig Sandbeck Mathisen (8):
+      Update munin-graph and munin-html documentation
+      Recommend a modern version of RRD
+      Add test for POD Spelling errors
+      Fix spelling mistakes in POD sections
+      munin-limits: Add --always-send, --force options
+      Add doc for missing node directives in munin.conf
+      Set "the munin project and its contributors" as authors, and use that in the copyright string.
+      Add node definitions to the munin.conf reference
+
+Taylor Jasko (1):
+      plugins/http_loadtime: add specific user-agent
+
+Trygve Vea (1):
+      hp2000_: New aspect for port based metrics.
+
+Viljo Viitanen (2):
+      master/html: implement lazy loading for images
+      html: Add a "loading circle" on lazyload
+
+ivan (1):
+      iostat and irqstats include/exclude list
+
+ko-zu (1):
+      Update plugins/node.d/bind9_rndc.in
+
+leeclemens (1):
+      fixed typo
+
+tsaavik (1):
+      dynazoom: added logo and backlink
+
+
 munin-2.0.13, 2013-04-26
 
 -------
