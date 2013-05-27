@@ -1,3 +1,9 @@
+munin (2.1.1-1) UNRELEASED; urgency=low
+
+  * New upstream development release. (Closes: #598554)
+
+ -- Holger Levsen <holger@debian.org>  Mon, 27 May 2013 21:30:33 +0200
+
 munin (2.0.14-1) unstable; urgency=low
 
   * New upstream bugfix release. (Closes: #707811) - See upstream changelog
