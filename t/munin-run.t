@@ -1,8 +1,11 @@
 use Test::More tests => 6;
 use strict;
 
-my $PREFIX = $ENV{PWD}.'/t/install';
-my $run    = "$PREFIX/sbin/munin-run --sconfdir=$ENV{PWD}/t/plugin-conf.d";
+use Cwd qw(cwd);
+
+my $cwd = cwd();
+my $PREFIX = "$cwd/t/install";
+my $run    = "$PREFIX/sbin/munin-run --sconfdir=$cwd/t/plugin-conf.d";
 
 sub run {
     my $plugin = shift or die "run(): plugin required\n";

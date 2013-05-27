@@ -37,6 +37,7 @@ PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
         test clean \
         clean-% test-% build-% install-% \
 	tags \
+	book \
 	infiles
 
 .SECONDARY: node/Build master/Build plugins/Build
@@ -64,7 +65,9 @@ tags:
 
 ######################################################################
 
-install: install-master-prime install-common-prime install-node-prime install-plugins-prime $(JAVA_INSTALL) install-man install-async-prime
+install: install-master-prime install-minimal install-man
+
+install-minimal: install-common-prime install-node-prime install-plugins-prime $(JAVA_INSTALL) install-async-prime
 
 install-pre: Makefile Makefile.config
 	@$(CHECKUSER)
@@ -85,14 +88,14 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	mkdir -p $(PERLLIB)/Munin/Master
 	mkdir -p $(HTMLDIR)
 	mkdir -p $(DBDIR)
-	mkdir -p $(DBDIR)/cgi-tmp
+	mkdir -p $(CGITMPDIR)
 	mkdir -p $(CGIDIR)
 
 	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR)
 	$(CHMOD) 0755 $(DBDIR)
 
-	$(CHOWN) $(CGIUSER) $(DBDIR)/cgi-tmp
-	$(CHMOD) 0755 $(DBDIR)/cgi-tmp
+	$(CHOWN) $(CGIUSER) $(CGITMPDIR)
+	$(CHMOD) 0755 $(CGITMPDIR)
 
 	for p in master/www/*.tmpl ;  do \
 		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
@@ -120,6 +123,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	$(INSTALL) -m 0755 build/master/_bin/munin-limits $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-datafile2storable $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-storable2datafile $(LIBDIR)/
+	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-datafile $(CGIDIR)/munin-cgi-datafile
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/munin-cgi-graph
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-html $(CGIDIR)/munin-cgi-html
 
@@ -278,6 +282,7 @@ common/blib/lib/Munin/Common/Defaults.pm: common/lib/Munin/Common/Defaults.pm bu
                   s{(VERSION	\s+=\s).*}{\1q{$(VERSION)};}x;     \
                   s{(PLUGSTATE	\s+=\s).*}{\1q{$(PLUGSTATE)};}x;   \
                   s{(CGIDIR	\s+=\s).*}{\1q{$(CGIDIR)};}x;      \
+                  s{(CGITMPDIR	\s+=\s).*}{\1q{$(CGITMPDIR)};}x;   \
                   s{(USER	\s+=\s).*}{\1q{$(USER)};}x;        \
                   s{(GROUP	\s+=\s).*}{\1q{$(GROUP)};}x;       \
                   s{(PLUGINUSER	\s+=\s).*}{\1q{$(PLUGINUSER)};}x;  \
@@ -426,7 +431,15 @@ install-%: %/Build
             --install_path libdoc=$(MANDIR)/man3	\
 
 test-%: %/Build
-	cd $* && $(PERL) Build test --verbose=0 || true
+	cd $* && $(PERL) Build test --verbose=1
 
 clean-%: %/Build common/blib/lib/Munin/Common/Defaults.pm
 	cd $* && $(PERL) Build realclean
+
+######################################################################
+
+# This builds the Munin Documentation book (default as PDF)
+
+BOOK_TYPE ?= "latexpdf"
+book:
+	cd doc && make $(BOOK_TYPE)

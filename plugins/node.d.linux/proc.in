@@ -43,9 +43,10 @@ through environment variables.
 
 
 env.procname defines the processname as seen inside the paranthesis of the 
-second column in /proc/pid/stat. If you don't get the data you expect, you
+second column in /proc/<PID>/stat. If you don't get the data you expect, you
 can check if the value is what you expect here. This is what's used for the 
 first filter, and args/user-filters are then applied on top of this filter. 
+Note that <PID> is the PID of the process that you are interested in.
 
 env.procargs defines a string which is matched against the command line of the
 process.  It's a wildcard match, so you don't have to provide the entire

@@ -67,6 +67,8 @@ our @EXPORT = qw(
         tail_open tail_close
         scaleNumber
         need_multigraph
+        readfile
+        readarray
 );
 
 use Munin::Common::Defaults;
@@ -239,8 +241,6 @@ sub _decode_state (@) {
     # Internal function: Return a decoded instance of the state vector
     my @ns = @_;
 
-    my $encmagic=shift(@ns);
-
     @ns = map { _decode_string($_); } @_;
 
     return @ns;
@@ -302,21 +302,32 @@ also be printed, which will appear in the munin-node logs).
 =cut
 
 sub restore_state {
+	# Protects _restore_state_raw() with an eval()
+	eval { @state = _restore_state_raw(); };
+	if ($@) { @state = (); warn $@; }
+
+	return _decode_state(@state);
+}
+
+sub _restore_state_raw {
+    my $STATE;
+    if (-e $statefile) {
+        open $STATE, '<', $statefile or die "$me: Statefile exists but I cannot open it!";
+    } else {
+        return;
+    }
+
     # Read a state vector from a plugin appropriate state file
     local $/;
 
-    open my $STATE, '<', $statefile or return;
-
     my @state = split(/\n/, <$STATE>);
-
     my $filemagic = shift(@state);
 
     if ($filemagic ne '%MUNIN-STATE1.0') {
-	warn "$me: Statefile $statefile has unrecognized magic number: '$filemagic'\n";
-	return;
+	die "$me: Statefile $statefile has unrecognized magic number: '$filemagic'\n";
     }
 
-    return _decode_state(@state);
+    return @state;
 }
 
 =head3 ($warning, $critical) = get_thresholds($field, [$warning_env, [$critical_env]])
@@ -437,6 +448,48 @@ sub tail_open ($$) {
 	die "$me: Seek to position $position of '$file' failed: $!\n";
     }
     return ($FH, $filereset);
+}
+
+
+=head3 $content = readfile($path)
+
+Read the whole content of a file (usually a single line) into a scalar.
+
+This is extremely helpful when reading data out of /proc or /sys that
+the kernel exposes.
+
+=cut
+
+sub readfile($) {
+  my ($path) = @_;
+
+  open my $FH, "<", $path or return undef;
+  local $/;
+  my $content = <$FH>;
+  close $FH;
+
+  return $content;
+}
+
+=head3 $content = readarray($path)
+
+Read the first line of a file into an array.
+
+This is extremely helpful when reading data out of /proc or /sys that
+the kernel exposes.
+
+=cut
+
+sub readarray($) {
+  my ($path) = @_;
+
+  open my $FH, "<", $path or return undef;
+  my $line = <$FH>;
+  chomp($line);
+  my @row = split(/\s+/, $line);
+  close $FH;
+
+  return @row;
 }
 
 =head3 $position = tail_close($file_handle)

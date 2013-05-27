@@ -33,7 +33,7 @@ current_git_branch() {
 generate_version_string() {
     branch="$(current_git_branch)"
     case "${branch}" in
-        ""|master|stable-*)
+        ""|master|devel|stable-*)
             git describe
             ;;
         *)

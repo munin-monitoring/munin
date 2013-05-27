@@ -41,26 +41,24 @@ munin-node.
 
 =end comment
 
- #%# family=manual
+ #%# family=auto
  #%# capabilities=autoconf
-
-=head1 RANDOM COMMENTS
-
-Would be cool if someone ported this to Munin::Plugin for both state
-file and log tailing.
 
 =cut
 
-my $statefile = $ENV{'MUNIN_PLUGSTATE'} . "/munin-plugin-postfix_mailstats.state";
+use strict;
+
+use Munin::Plugin;
+
 my $pos;
-my $delivered = 0;
-my $rejects = {};
-my $LOGDIR  = $ENV{'logdir'}  || '/var/log';
-my $LOGFILE = $ENV{'logfile'} || 'mail.log';
+my $delivered;
+my $rejects = ();
+my $LOGDIR  = (defined($ENV{'logdir'}) ? $ENV{'logdir'} : '/var/log');
+my $LOGFILE = (defined($ENV{'logdir'}) ? $ENV{'logfile'} : 'mail.log');
 
 my $logfile = "$LOGDIR/$LOGFILE";
 
-if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
+if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
 {
     if (-d $LOGDIR)
     {
@@ -89,28 +87,20 @@ if ( $ARGV[0] and $ARGV[0] eq "autoconf" )
     exit 0;
 }
 
+my @state = restore_state();
 
-if ( -f $statefile)
-{
-    open (IN, '<', $statefile) or die "Unable to open state-file: $!\n";
-    if (<IN> =~ /^(\d+):(\d+)/)
-    {
-	($pos, $delivered) = ($1, $2);
-    }
-    while (<IN>)
-    {
-    	if (/^([0-9a-z.\-]+):(\d+)$/)
-	{
-		$rejects->{$1} = $2;
-	}
-    }
-    close IN;
-}
+$pos = shift @state;
+$delivered = shift @state;
+
+$pos = 0 unless defined($pos);
+$delivered = 0 unless defined($delivered);
+
+my %rejects = @state;
 
 if (! -f $logfile)
 {
     print "delivered.value U\n";
-    foreach my $i (sort keys %{$rejects})
+    foreach my $i (sort keys %rejects)
     {
     	print "r$i.value U\n";
     }
@@ -118,7 +108,7 @@ if (! -f $logfile)
 }
 
 
-$startsize = (stat $logfile)[7];
+my $startsize = (stat $logfile)[7];
 
 if (!defined $pos)
 {
@@ -126,8 +116,7 @@ if (!defined $pos)
     $pos = $startsize;
 }
 
-parseLogfile($logfile, $pos, $startsize);
-$pos = $startsize;
+$pos = parseLogfile($logfile, $pos, $startsize);
 
 if ( $ARGV[0] and $ARGV[0] eq "config" )
 {
@@ -142,7 +131,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "delivered.type DERIVE\n";
     print "delivered.draw AREA\n";
     print "delivered.min 0\n";
-    foreach my $i (sort keys %{$rejects})
+    foreach my $i (sort keys %rejects)
     {
 	    print "r$i.label reject $i\n";
 	    print "r$i.type DERIVE\n";
@@ -153,33 +142,22 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
 }
 
 print "delivered.value $delivered\n";
-foreach my $i (sort keys %{$rejects})
+foreach my $i (sort keys %rejects)
 {
-	print "r$i.value ", $rejects->{$i}, "\n";
+	print "r$i.value ", $rejects{$i}, "\n";
 }
 
-if(-l $statefile) {
-	die("$statefile is a symbolic link, refusing to touch it.");
-}				
-open (OUT, '>', $statefile) or die "Unable to open statefile: $!\n";
-print OUT "$pos:$delivered\n";
-foreach my $i (sort keys %{$rejects})
-{
-	print OUT "$i:", $rejects->{$i}, "\n";
-}
-close OUT;
+save_state($pos, $delivered, %rejects);
 
 sub parseLogfile 
 {    
     my ($fname, $start, $stop) = @_;
-    open (LOGFILE, $fname)
-    	or die "Unable to open logfile $fname for reading: $!\n";
-    seek (LOGFILE, $start, 0)
-    	or die "Unable to seek to $start in $fname: $!\n";
 
-    while (tell (LOGFILE) < $stop) 
+	my ($logfd, $reset) = tail_open($fname, $start);
+
+    while (tell($logfd) < $stop) 
     {
-	my $line = <LOGFILE>;
+	my $line = <$logfd>;
 	chomp ($line);
 
 	if ($line =~ /qmgr.*from=.*size=[0-9]*/) 
@@ -188,12 +166,13 @@ sub parseLogfile
 	} 
 	elsif ($line =~ /postfix\/smtpd.*proxy-reject: \S+ (\S+)/ ||
 	       $line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/ ||
+	       $line =~ /postfix\/postscreen.*reject: \S+ \S+ \S+ (\S+)/ ||
 	       $line =~ /postfix\/cleanup.* reject: (\S+)/)
 	{
-	    $rejects->{$1}++;
+	    $rejects{$1}++;
 	}
     }
-    close(LOGFILE) or warn "Error closing $fname: $!\n";    
+    return tail_close($logfd);
 }
 
 # vim:syntax=perl

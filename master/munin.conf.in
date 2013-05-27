@@ -21,7 +21,7 @@
 # temporary cgi files are here. note that it has to be writable by 
 # the cgi user (usually nobody or httpd).
 #
-# cgitmpdir @@DBDIR@@/cgi-tmp
+# cgitmpdir @@CGITMPDIR@@
 
 # (Exactly one) directory to include all files from.
 includedir @@CONFDIR@@/munin-conf.d
@@ -38,6 +38,13 @@ includedir @@CONFDIR@@/munin-conf.d
 # It is single threaded *by design* now.
 #
 #graph_strategy cron
+
+# Munin HTML templates use this variable to decide whether to use dynamic
+# ("lazy") loading of images with javascript so that images are loaded as they
+# are scrolled in view. This prevents excessive load on the web server. It is
+# especially useful when graph_strategy is cgi. Default is 0 (off).
+#
+#html_dynamic_images 1
 
 # munin-cgi-graph is invoked by the web server up to very many times at the
 # same time.  This is not optimal since it results in high CPU and memory

@@ -43,7 +43,7 @@ if [ "$1" = "autoconf" ]; then
     	echo "no (need time and wget programs)"
 	    exit 0
     fi
-    if ! wget -q -O /dev/null $target; then
+    if ! wget -q -O /dev/null $target  --user-agent "Munin - http_loadtime"; then
         echo "no (Cannot run wget against \"$target\")"
         exit 0
     fi
@@ -67,7 +67,7 @@ TEMPO_DIR=$(mktemp -dt munin_http_loadtime.XXXXXX) || exit 1
 trap "rm -rf $TEMPO_DIR" EXIT
 
 cd $TEMPO_DIR || exit 1
-loadtime=$((/usr/bin/time -p wget -p --no-cache --delete-after $target -q) 2>&1 | awk '/^real / { print $2 }')
+loadtime=$((time -p wget --no-cache -O /dev/null -o /dev/null $target -q) 2>&1 | awk '/^real / { print $2 }')
 cd ..
 
 echo "loadtime.value $loadtime"

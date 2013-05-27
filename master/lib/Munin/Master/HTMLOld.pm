@@ -352,6 +352,7 @@ sub emit_graph_template {
                           GROUPS      => $key->{'groups'},
                           PATH        => $key->{'path'},
                           CSS_NAME    => get_css_name(),
+                          DYN_IMAGES  => $config->{'html_dynamic_images'},
                           R_PATH   => $key->{'root_path'},
                           PEERS       => $key->{'peers'},
                           LARGESET    => decide_largeset($key->{'peers'}), 

@@ -106,8 +106,8 @@ fields are used.
 | Field           | Value                 | type     | Description      | See  | Default    |
 |                 |                       |          |                  | also |            |
 +=================+=======================+==========+==================+======+============+
-| datapoint.value | integer, scientific   | required | The value to be  |      | No default |
-|                 | notation, or "U" (may |          | graphed.         |      |            |
+| datapoint.value | integer, decimal      | required | The value to be  |      | No default |
+|                 | numbers , or "U" (may |          | graphed.         |      |            |
 |                 | be signed)            |          |                  |      |            |
 |                 |                       |          |                  |      |            |
 +-----------------+-----------------------+----------+------------------+------+------------+

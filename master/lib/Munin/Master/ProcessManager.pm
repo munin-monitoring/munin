@@ -221,6 +221,9 @@ sub _vet_finished_workers {
 	INFO "[INFO] Reaping $self->{active_workers}{$worker_pid}.  Exit value/signal: $child_exit/$child_signal";
         delete $self->{active_workers}{$worker_pid};
     }
+
+    # Sleep for a fixed, but small amount of time (100ms), to avoid pegging 100% CPU if called in a small loop
+    sleep(0.1);
 }
 
 
@@ -234,6 +237,7 @@ sub _handle_worker_error {
     );
     my $worker_id = $self->{active_workers}{$worker_pid}{ID};
     my $exit_code = $CHILD_ERROR >> 8;
+    DEBUG "[DEBUG] Reaping $worker_pid.  Exit value/signal: $exit_code/$code2msg{$exit_code}";
     $self->{error_callback}($self->{active_workers}{$worker_pid},
                             $code2msg{$exit_code} || $exit_code);
 

@@ -51,7 +51,12 @@ use Time::HiRes;
 use Text::ParseWords;
 
 # For UTF-8 handling (plugins are assumed to use Latin 1)
-if ($RRDs::VERSION >= 1.3) { use Encode; }
+if ($RRDs::VERSION >= 1.3) {
+    require Encode;
+    require Encode::Guess;
+    Encode->import;
+    Encode::Guess->import;
+}
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
@@ -107,7 +112,7 @@ my %draw           = (
 my %init_draw = %draw;
 my $pinpoint = {};
 
-my ($size_x, $size_y, $full_size_mode, $only_graph);
+my ($size_x, $size_y, $step, $full_size_mode, $only_graph);
 my ($lower_limit, $upper_limit);
 
 my %PALETTE;    # Hash of available palettes
@@ -167,6 +172,8 @@ my @rrdcached_params;
 my $running     = 0;
 my $max_running = 6;
 my $do_fork     = 1;
+
+my $fileext     = "png";
 
 # "global" Configuration hash
 my $config = undef;
@@ -236,10 +243,13 @@ sub graph_startup {
 
     $size_x 	    = undef;
     $size_y         = undef;
+    $step           = undef;
     $full_size_mode = undef;
     $only_graph     = undef;
     $lower_limit    = undef;
     $upper_limit    = undef;
+
+    $fileext        = "png";
 
     # Get options
     my ($args) = @_;
@@ -268,11 +278,13 @@ sub graph_startup {
                 "sumyear!"      => \$draw{'sumyear'},
 		"size_x=i"      => \$size_x,
 		"size_y=i"      => \$size_y,
+		"step=i"        => \$step,
 		"full_size_mode!"=> \$full_size_mode,
 		"only_graph!"=> \$only_graph,
 		"upper_limit=s" => \$upper_limit,
 		"lower_limit=s" => \$lower_limit,
                 "list-images!"  => \$list_images,
+                "format=s"      => \$fileext,
                 "o|output-file=s"  => \$output_file,
                 "l|log-file=s"  => \$log_file,
                 "skip-locking!" => \$skip_locking,
@@ -362,11 +374,14 @@ sub graph_main {
     # Reset an eventual custom size
     $size_x 	    = undef;
     $size_y         = undef;
+    $step           = undef;
     $full_size_mode = undef;
     $only_graph     = undef;
     $lower_limit    = undef;
     $upper_limit    = undef;
     $pinpoint       = undef;
+
+    $fileext        = "png";
 
     # XXX [DEBUG]
     my $debug = undef;
@@ -388,10 +403,13 @@ sub graph_main {
 
 		"size_x=i"      => \$size_x,
 		"size_y=i"      => \$size_y,
+		"step=i"        => \$step,
 		"full_size_mode!"=> \$full_size_mode,
 		"only_graph!"   => \$only_graph,
 		"upper_limit=s" => \$upper_limit,
 		"lower_limit=s" => \$lower_limit,
+
+                "format=s"      => \$fileext,
 	    );
 
     # XXX [DEBUG]
@@ -540,6 +558,7 @@ sub get_header {
 
     push @$result, '--slope-mode' if $RRDs::VERSION >= 1.2;
 
+    push @$result, "--step", $step if $step;
     push @$result, "--height", ($size_y || munin_get($service, "graph_height", "175"));
     push @$result, "--width",  ($size_x || munin_get($service, "graph_width",  "400"));
 
@@ -1259,6 +1278,10 @@ sub process_service {
     }
 
     my $graphtotal = munin_get($service, "graph_total");
+    if (defined $graphtotal and $graphtotal eq "undef") {
+        $graphtotal = undef;
+    }
+
     if (@rrd_negatives) {
         push(@rrd, @rrd_negatives);
         push(@rrd, "LINE1:re_zero#000000");    # Redraw zero.
@@ -1377,15 +1400,17 @@ sub process_service {
         # Make sure directory exists
         munin_mkdir_p($picdirname, oct(777));
 
-        # Since version 1.3 rrdtool uses libpango which needs its input
-        # as utf8 string. So we assume that every input is in latin1
-        # and decode it to perl's internal representation and then to utf8.
+        # Since version 1.3 rrdtool uses libpango which needs its
+        # input as utf8 string. We use Encoding::Guess to check if
+        # it's already utf8, if not then assume that it's in latin1
+        # and decode it to perl's internal representation and then to
+        # utf8.
 
         if ($RRDs::VERSION >= 1.3) {
             @complete = map {
                 my $str = $_;
-                $str = encode("utf8", (decode("latin1", $_)));
-                $str;
+                my $utf8 = guess_encoding($str, 'utf8');
+                ref $utf8 ? $str : encode('utf8', decode('latin1', $str));
             } @complete;
         }
 
@@ -1412,9 +1437,8 @@ sub process_service {
 		push @complete, "--lower-limit", $lower_limit;
 	}
 
-	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
 	$nb_graphs_drawn ++;
-        RRDs::graph(@rrdcached_params, @complete);
+        RRDs_graph(@rrdcached_params, @complete);
         if (my $ERROR = RRDs::error) {
             ERROR "[RRD ERROR] Unable to graph $picfilename : $ERROR";
             # ALWAYS dumps the cmd used when an error occurs.
@@ -1533,13 +1557,12 @@ sub process_service {
                 unshift @rrd_sum, "--vertical-label", $label;
             }
 
-	    DEBUG "[DEBUG] \n\nrrdtool graph '" . join("' \\\n\t'", @rrd_sum) . "'\n";
 
             # Make sure directory exists
             munin_mkdir_p($picdirname, oct(777));
 
 	    $nb_graphs_drawn ++;
-            RRDs::graph(@rrdcached_params, @rrd_sum);
+            RRDs_graph(@rrdcached_params, @rrd_sum);
 
             if (my $ERROR = RRDs::error) {
                 ERROR "[RRD ERROR(sum)] Unable to graph "
@@ -1588,6 +1611,7 @@ sub handle_trends {
     foreach my $field (@{munin_find_field($service, "label")}) {
         my $fieldname = munin_get_node_name($field);
 	my $colour = $single_colour;
+        my $rrdname = get_field_name($fieldname);
 
 	# Skip virtual fieldnames, otherwise beware of $hash->{foo}{bar}. 
 	#
@@ -1607,8 +1631,8 @@ sub handle_trends {
 
         #trends
         if (defined $service->{$fieldname}{'trend'} and $service->{$fieldname}{'trend'} eq 'yes') {
-            push (@complete, "CDEF:t$fieldname=c$cdef$fieldname,$futuretime,TRENDNAN");
-            push (@complete, "LINE1:t$fieldname#$colour:$fieldname trend\\l");
+            push (@complete, "CDEF:t$rrdname=c$cdef$rrdname,$futuretime,TRENDNAN");
+            push (@complete, "LINE1:t$rrdname#$colour:$fieldname trend\\l");
             DEBUG "[DEBUG] set trend for $fieldname\n";
         }
 
@@ -1618,8 +1642,8 @@ sub handle_trends {
             my @predict = split(",", $service->{$fieldname}{'predict'});
             my $predictiontime = int ($futuretime / $predict[0]) + 2; #2 needed for 1 day
             my $smooth = $predict[1]*$resolutions{$time};
-            push (@complete, "CDEF:p$fieldname=$predict[0],-$predictiontime,$smooth,c$cdef$fieldname,PREDICT");
-            push (@complete, "LINE1:p$fieldname#$colour:$fieldname prediction\\l");
+            push (@complete, "CDEF:p$rrdname=$predict[0],-$predictiontime,$smooth,c$cdef$rrdname,PREDICT");
+            push (@complete, "LINE1:p$rrdname#$colour:$fieldname prediction\\l");
             DEBUG "[DEBUG] set prediction for $fieldname\n";
         }
     }
@@ -1828,6 +1852,112 @@ sub get_scientific {
 sub RRDescape {
     my $text = shift;
     return $RRDs::VERSION < 1.2 ? $text : escape($text);
+}
+
+sub RRDs_graph {
+	if ($fileext eq "png") {
+	        DEBUG "[DEBUG] \n\nrrdtool graph '" . join("' \\\n\t'", @_) . "'\n";
+		return RRDs::graph(@_);
+	}
+
+	DEBUG "[DEBUG] RRDs_graph(fileext=$fileext)";
+	my $outfile = shift @_;
+
+	# Open outfile
+	DEBUG "[DEBUG] Open outfile($outfile)";
+	my $out_fh = new IO::File(">$outfile");
+
+	# Remove unknown args
+	my @xport;
+	while ( defined ( my $arg = shift @_ )) {
+		if ($arg eq "--start" || $arg eq "--end") {
+			push @xport, $arg;
+			push @xport, shift @_;
+			next;
+		}
+		if ($arg =~ m/^C?DEF:/) { push @xport, $arg; next; }
+
+		if ($arg =~ m/^(LINE|AREA|STACK)/) {
+			my ($type, $var, $legend) = split(/:/, $arg);
+
+			$type = "XPORT"; # Only 1 export type
+			$var =~ s/#.*//; # Remove optional color
+
+			# repaste..
+			push @xport, "$type:$var:$legend";
+
+			next;
+		}
+
+		# Ignore the arg
+	}
+	# Now we have to fetch the textual values
+        DEBUG "[DEBUG] \n\nrrdtool xport '" . join("' \\\n\t'", @xport) . "'\n";
+	my ($start, $end, $step, $nb_vars, $columns, $values) = RRDs::xport(@xport);
+	if ($fileext eq "csv") {
+		print $out_fh '"epoch", "' . join('", "', @{ $columns } ) . "\"\n";
+		my $idx_value = 0;
+		for (my $epoch = $start; $epoch <= $end; $epoch += $step) {
+			print $out_fh "$epoch";
+			my $row = $values->[$idx_value++];
+			for my $value (@$row) {
+				print $out_fh "," . (defined $value ? $value : "");
+			}
+			print $out_fh "\n";
+		}
+	} elsif ($fileext eq "xml") {
+		print $out_fh "<xport>\n";
+		print $out_fh "    <meta>\n";
+		print $out_fh "        <start>$start</start>\n";
+		print $out_fh "        <step>$step</step>\n";
+		print $out_fh "        <end>$end</end>\n";
+		print $out_fh "        <rows>" . (scalar @$values) . "</rows>\n";
+		print $out_fh "        <columns>" . (scalar @$columns) . "</columns>\n";
+		print $out_fh "        <legend>\n";
+		for my $column ( @{ $columns } ) {
+			print $out_fh "            <entry>$column</entry>\n";
+		}
+		print $out_fh "        </legend>\n";
+		print $out_fh "    </meta>\n";
+		print $out_fh "    <data>\n";
+		my $idx_value = 0;
+		for (my $epoch = $start; $epoch <= $end; $epoch += $step) {
+			print $out_fh "        <row><t>$epoch</t>";
+			my $row = $values->[$idx_value++];
+			for my $value (@$row) {
+				print $out_fh "<v>" . (defined $value ? $value : 'NaN') . "</v>";
+			}
+			print $out_fh "</row>\n";
+		}
+		print $out_fh "    </data>\n";
+		print $out_fh "</xport>\n";
+	} elsif ($fileext eq "json") {
+		print $out_fh "{\n";
+		print $out_fh "    meta: { \n";
+		print $out_fh "        start: $start,\n";
+		print $out_fh "        step: $step,\n";
+		print $out_fh "        end: $end,\n";
+		print $out_fh "        rows: " . (scalar @$values) . ",\n";
+		print $out_fh "        columns: " . (scalar @$columns) . ",\n";
+		print $out_fh "        legend: [\n";
+		for my $column ( @{ $columns } ) {
+			print $out_fh "            \"$column\",\n";
+		}
+		print $out_fh "        ],\n";
+		print $out_fh "    }, \n";
+		print $out_fh "    data: [ \n";
+		my $idx_value = 0;
+		for (my $epoch = $start; $epoch <= $end; $epoch += $step) {
+			print $out_fh "        [ $epoch";
+			my $row = $values->[$idx_value++];
+			for my $value (@$row) {
+				print $out_fh ", " . (defined $value ? $value : '"NaN"');
+			}
+			print $out_fh " ],\n";
+		}
+		print $out_fh "    ], \n";
+		print $out_fh "}\n";
+	}
 }
 
 

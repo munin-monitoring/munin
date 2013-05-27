@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 29;
+use Test::More tests => 28;
 use Test::LongString;
 use Config;  # for signal numbers and names
 
@@ -13,10 +13,10 @@ my $os = 'Munin::Node::OS';
 
 ### get_uid
 {
-	my $uname = getpwuid $UID;
+	my $uname = getpwuid $EUID;
 
-	is($os->get_uid($uname), $UID, 'Lookup by user name');
-	is($os->get_uid($UID),   $UID, 'Lookup by user ID');
+	is($os->get_uid($uname), $EUID, 'Lookup by user name');
+	is($os->get_uid($EUID),  $EUID, 'Lookup by user ID');
 
 	is($os->get_uid('%%SSKK¤¤'), undef, 'Nonexistent user name');
 	is($os->get_uid(999999999),  undef, 'Nonexistent user ID');
@@ -42,7 +42,8 @@ my $os = 'Munin::Node::OS';
 ### get_fq_hostname
 {
 	ok($os->get_fq_hostname, 'Was able to establish the FQDN');
-	isnt(index($os->get_fq_hostname, '.'), -1, 'FQDN contains at least one dot');
+	# XXX - Disabled as TravisCI doesn't support fqdn with a dot in them.
+	#isnt(index($os->get_fq_hostname, '.'), -1, 'FQDN contains at least one dot');
 }
 
 

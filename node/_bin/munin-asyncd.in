@@ -37,13 +37,14 @@ my $metahostname;
 my $SPOOLDIR = "@@SPOOLDIR@@";
 my $intervalsize = 86400;
 my $timeout = 3600;
-my $minrate = 300;
+my $minrate;
 my $retaincount = 7;
 my $nocleanup;
 my $do_fork;
 my $verbose;
 my $debug;
 my $help;
+my $update_rate = 300;
 
 
 GetOptions(
@@ -53,6 +54,7 @@ GetOptions(
 	"timeout=i" => \$timeout,
 	"minrate=i" => \$minrate,
 	"retain|r=i" => \$retaincount,
+	"update-rate=i" => \$update_rate,
 
 	"fork" => \$do_fork,
 
@@ -64,6 +66,9 @@ GetOptions(
 if ($help) {
 	pod2usage(1);
 }
+
+# $minrate defaults to $update_rate.
+$minrate = $update_rate if ! defined $minrate;
 
 # Debug implies Verbose
 $verbose = 1 if $debug;
@@ -155,7 +160,7 @@ MAIN: while($keepgoing) {
 	my $sock;
 	PLUGIN: foreach my $plugin (@plugins) {
 		# See if this plugin should be updated
-		my $plugin_rate = get_hash($plugin, $plugin_rate_filename) || 300;
+		my $plugin_rate = get_hash($plugin, $plugin_rate_filename) || $update_rate;
 		if ($when < ($last_updated{$plugin} || 0) + $plugin_rate) {
 			# not yet, next plugin
 			next;
@@ -248,6 +253,11 @@ sub fetch_data
 			}
 		}
 
+		# handle the special case of cli update_rate
+		if ($update_rate && ! grep { $_ =~ m/^update_rate (\d+)/ } @$output_rows ) {
+			push @$output_rows, "update_rate $update_rate";
+		}
+
 		print STDERR "[$$][$process_name][>][$plugin] asking for data\n" if $verbose;
 		print STDERR "[sock][>][$plugin] fetch $plugin\n" if $debug;
 		print $sock "fetch $plugin\n";
@@ -310,11 +320,13 @@ munin-asyncd - A program to spool munin-node calls
 munin-asyncd [options]
 
  Options:
-     --host <hostname:port>     Connect to this munin-node [localhost:4949]
-     -s --spool <spooldir>      Store the spooled data in this dir [/var/lib/munin-async]
+        --host <hostname:port>  Connect to this munin-node [localhost:4949]
+     -s --spooldir <spooldir>   Store the spooled data in this dir [@@SPOOLDIR@@]
      -i --interval <seconds>    Override default interval size of one day [86400]
+        --update-rate <seconds> Override default update_date [300]
         --timeout <seconds>     Wake up at least this number of seconds. [3600]
-        --minrate <seconds>     This is the minimal rate you want to poll a node [300]
+        --minrate <seconds>     This is the minimal rate you want to poll a node [$update_date]
+                                Note that having $update_date < $minrate leads to unexpected results.
      -r --retain <count>        Specify number of interval files to retain [7]
      -n --nocleanup             Disable automated spool dir cleanup
 

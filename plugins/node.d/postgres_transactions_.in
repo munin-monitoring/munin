@@ -29,6 +29,15 @@ PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugin::Pgsql>.
 
 To monitor a specific database, link to postgres_transactions_<databasename>.
 To monitor all databases, link to postgres_transactions_ALL.
+To monitor several instances, link to postgres_<tag>_transactions_<databasename|ALL>
+The <tag> can be what you want but without "_". It allows you to define several
+database configuration.
+
+Example :
+  [postgres_pg91_*]
+  env.PGPORT 5432
+  [postgres_pg92_*]
+  env.PGPORT 5432
 
 =head1 SEE ALSO
 
@@ -60,7 +69,7 @@ use warnings;
 use Munin::Plugin::Pgsql;
 
 my $pg = Munin::Plugin::Pgsql->new(
-    basename => 'postgres_transactions_',
+    basename => 'postgres_[^_]*_?transactions_',
     title    => 'PostgreSQL transactions',
     info     => 'Transactions per second',
     vlabel   => 'Trans / sec',

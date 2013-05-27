@@ -596,7 +596,9 @@ sub do_config_root {
 sub do_config_if {
     my ($host,$version,$if) = @_;
 
-    my $alias = $snmpinfoX->{$if}->{ifAlias} || $snmpinfo->{$if}->{ifDescr} || "Interface $if";
+    my $alias = $snmpinfoX->{$if}->{ifAlias} ||
+        $snmpinfo->{$if}->{ifDescr} ||
+        "Interface $if";
 
     if (! ($alias =~ /\d+/) ) {
 	# If there are no numbers in the $alias add the if index

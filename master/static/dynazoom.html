@@ -1,8 +1,12 @@
 <head>
 	<script language="JavaScript" src="formatdate.js"></script>
 	<script language="JavaScript" src="querystring.js"></script>
+	<link rel="stylesheet" href="./style-new.css" type="text/css" />
 </head>
 <body>
+<div id="header">
+	<h1><a href="/munin/"><span class="logo"></span></a> <span class="currentpage">Dynamic Graph Zoom</span></h1>
+</div>
 	
 <div style="position:relative;">
 	<img id="image" />
@@ -15,11 +19,13 @@
 
 </td>
 <td>
-	Zooming is very easy, it's done in 3 clicks (regular clicks, no drag&amp;drop):
+	Zooming is very easy, it's done in 3 clicks (regular clicks, not drag &amp; drop):
 	<ul>
-		<li> First click to define the start of zoom.
-		<li> Second click to define the ending of zoom.
-		<li> Third click inside the defined zone to zoom, outside to cancel the zone.
+    <ol>
+		<li> click to define the start.
+		<li> click to define the end.
+		<li> click inside the shaded area to zoom (outside to cancel).
+    </ol>
 	</ul>
 <td>
 </tr>
@@ -61,6 +67,14 @@
 			<input type="text" name="size_x" size="5"> / <input type="text" name="size_y" size="5" >
 		</td>
 	</tr>
+	<!-- Step -->
+	<tr>
+		<td>Step (granularity) <em>(seconds)</em>:</td>
+
+		<td>
+			<input type="text" name="step" size="5">
+		</td>
+	</tr>
 </table>
 	<input type=hidden name="cgiurl_graph" />
 	<input type=submit />
@@ -87,6 +101,7 @@ form.lower_limit.value = qs.get("lower_limit", "");
 form.upper_limit.value = qs.get("upper_limit", "");
 form.size_x.value = qs.get("size_x", "");
 form.size_y.value = qs.get("size_y", "");
+form.step.value = qs.get("step", "");
 
 form.btnMaj.onclick = majDates;
 form.btnZoomOut.onclick = zoomOut;
@@ -104,6 +119,7 @@ function refreshImg() {
 		+ "&upper_limit=" + form.upper_limit.value
 		+ "&size_x=" + form.size_x.value
 		+ "&size_y=" + form.size_y.value
+		+ "&step=" + form.step.value
 	;
 
 	return ((+form.stop_epoch.value) - (+form.start_epoch.value)) / (+form.size_x.value);

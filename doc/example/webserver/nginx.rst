@@ -4,7 +4,43 @@
  nginx configuration
 =====================
 
-This example describes how to set up munin on nginx.
+This example describes how to set up munin with Nginx. This document describes two alternative configurations: 1) serving static, cron-made graphs and HTML, and 2) serving dynamically-generated graphs and HTML using FastCGI.
+
+
+Serving cron-made graphs and HTML
+=================================
+
+Nginx is quite good at serving static files, and as such the configuration is
+mostly in place already.
+
+The paths are as in use on a Debian Linux system.
+Add the following to /etc/nginx/sites-enabled/default::
+
+    location /munin/static/ {
+            alias /etc/munin/static/;
+            expires modified +1w;
+    }
+
+    location /munin/ {
+            auth_basic            "Restricted";
+            # Create the htpasswd file with the htpasswd tool.
+            auth_basic_user_file  /etc/nginx/htpasswd;
+
+            alias /var/cache/munin/www/;
+            expires modified +310s;
+    }
+
+
+If this is a dedicated Munin server, you might want to redirect the front
+page as well::
+
+    location / {
+            rewrite ^/$ munin/ redirect; break;
+    }
+
+
+Using FastCGI
+=============
 
 nginx does not spawn FastCGI processes by itself, but comes with an
 external "spawn-fcgi" program.
@@ -13,7 +49,7 @@ We need one process for the graph rendering, and one for the html
 generation.
 
 Munin configuration
-===================
+-------------------
 
 This example assumes the following configuration in
 /etc/munin/munin.conf
@@ -27,7 +63,7 @@ This example assumes the following configuration in
  html_strategy cgi
 
 FastCGI configuration
-=====================
+---------------------
 
 This will spawn two FastCGI processes trees. One for munin cgi
 graphing and one for HTML generation. It will create a socket owned by
@@ -55,7 +91,7 @@ the /var/log/munin/munin-cgi-\*.log files may be owned by the
 so you need to chown the log files, and edit /etc/logrotate.d/munin.
 
 Webserver configuration
-=======================
+-----------------------
 
 .. index::
    pair: example; nginx configuration
@@ -79,6 +115,7 @@ Webserver configuration
         fastcgi_pass unix:/var/run/munin/fastcgi-html.sock;
         include fastcgi_params;
     }
+
 
 Authentication and group access
 ===============================

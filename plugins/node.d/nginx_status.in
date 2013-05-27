@@ -55,15 +55,9 @@ license.  Munin is GPLv2 licensed.
 
 =cut
 
-use Munin::Plugin;
-use Munin::Common::Defaults;
+use Munin::Plugin::HTTP;
 
-my $ret = undef;
-
-if (! eval "require LWP::UserAgent;"){
-	$ret = "LWP::UserAgent not found";
-}
-
+my $UA = Munin::Plugin::HTTP->new;
 my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://localhost/nginx_status";
 
 if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" ) {
@@ -72,9 +66,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" ) {
 	exit 0;
     }
 
-    my $ua = LWP::UserAgent->new(timeout => 30,
-			agent => sprintf("munin/%s (libwww-perl/%s)", $Munin::Common::Defaults::MUNIN_VERSION, $LWP::VERSION));
-    my $response = $ua->request(HTTP::Request->new('GET',$URL));
+    my $response = $UA->get($URL);
 
     unless ($response->is_success and $response->content =~ /server/im) {
 	print "no (no nginx status on $URL)\n";
@@ -110,10 +102,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" ) {
     exit 0;
 }
 
-my $ua = LWP::UserAgent->new(timeout => 30,
-		agent => sprintf("munin/%s (libwww-perl/%s)", $Munin::Common::Defaults::MUNIN_VERSION, $LWP::VERSION));
-
-my $response = $ua->request(HTTP::Request->new('GET',$URL));
+my $response = $UA->get($URL);
 
 #Active connections: 1845 
 #server accepts handled requests
