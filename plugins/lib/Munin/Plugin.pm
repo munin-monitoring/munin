@@ -241,8 +241,6 @@ sub _decode_state (@) {
     # Internal function: Return a decoded instance of the state vector
     my @ns = @_;
 
-    my $encmagic=shift(@ns);
-
     @ns = map { _decode_string($_); } @_;
 
     return @ns;
@@ -304,35 +302,32 @@ also be printed, which will appear in the munin-node logs).
 =cut
 
 sub restore_state {
-	my @state;
-
 	# Protects _restore_state_raw() with an eval()
 	eval { @state = _restore_state_raw(); };
 	if ($@) { @state = (); warn $@; }
 
-	return @state;
+	return _decode_state(@state);
 }
 
 sub _restore_state_raw {
     my $STATE;
     if (-e $statefile) {
-        open $STATE, '<', $statefile or warn "$me: Statefile exists but I cannot open it!";
+        open $STATE, '<', $statefile or die "$me: Statefile exists but I cannot open it!";
     } else {
         return;
     }
 
-    # Test the 1rst line
-    my $filemagic = <$STATE>;
-    if ($filemagic ne "%MUNIN-STATE1.0\n") {
-	warn "$me: Statefile $statefile has unrecognized magic number: '$filemagic'\n";
-	return;
-    }
-
-    # Slurp the rest
+    # Read a state vector from a plugin appropriate state file
     local $/;
 
     my @state = split(/\n/, <$STATE>);
-    return _decode_state(@state);
+    my $filemagic = shift(@state);
+
+    if ($filemagic ne '%MUNIN-STATE1.0') {
+	die "$me: Statefile $statefile has unrecognized magic number: '$filemagic'\n";
+    }
+
+    return @state;
 }
 
 =head3 ($warning, $critical) = get_thresholds($field, [$warning_env, [$critical_env]])

@@ -222,6 +222,29 @@ tsaavik (1):
       dynazoom: added logo and backlink
 
 
+munin-2.0.14, 2013-05-10
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+- Fixes for plugin.pm state handling
+- Fix the limits for ABSOLUTE
+
+------------------
+Detailed Changelog
+------------------
+
+Kenyon Ralph:
+      plugins/node.d/apc_nis: improve maximum limits
+
+Steve Schnepp:
+      master: fix limits computation for ABSOLUTE
+      Revert "plugins/Plugin.pm: fix bad state file handling"
+
+
 munin-2.0.13, 2013-04-26
 
 -------
