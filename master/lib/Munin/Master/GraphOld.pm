@@ -1600,6 +1600,8 @@ sub handle_trends {
             $colour = "$service->{$fieldname}{'colour'}66";
         }                                                                                                                                                    
                                                                                                                                                              
+        my $rrd_fieldname = get_field_name($fieldname);
+
         my $cdef = "";
         if (defined $service->{$fieldname}{'cdef'}) {
             $cdef = "cdef";
@@ -1607,8 +1609,8 @@ sub handle_trends {
 
         #trends
         if (defined $service->{$fieldname}{'trend'} and $service->{$fieldname}{'trend'} eq 'yes') {
-            push (@complete, "CDEF:t$fieldname=c$cdef$fieldname,$futuretime,TRENDNAN");
-            push (@complete, "LINE1:t$fieldname#$colour:$fieldname trend\\l");
+            push (@complete, "CDEF:t$rrd_fieldname=c$cdef$rrd_fieldname,$futuretime,TRENDNAN");
+            push (@complete, "LINE1:t$rrd_fieldname#$colour:$service->{$fieldname}->{'label'} trend\\l");
             DEBUG "[DEBUG] set trend for $fieldname\n";
         }
 
@@ -1618,8 +1620,8 @@ sub handle_trends {
             my @predict = split(",", $service->{$fieldname}{'predict'});
             my $predictiontime = int ($futuretime / $predict[0]) + 2; #2 needed for 1 day
             my $smooth = $predict[1]*$resolutions{$time};
-            push (@complete, "CDEF:p$fieldname=$predict[0],-$predictiontime,$smooth,c$cdef$fieldname,PREDICT");
-            push (@complete, "LINE1:p$fieldname#$colour:$fieldname prediction\\l");
+            push (@complete, "CDEF:p$rrd_fieldname=$predict[0],-$predictiontime,$smooth,c$cdef$rrd_fieldname,PREDICT");
+            push (@complete, "LINE1:p$rrd_fieldname#$colour:$service->{$fieldname}->{'label'} prediction\\l");
             DEBUG "[DEBUG] set prediction for $fieldname\n";
         }
     }
