@@ -1,0 +1,3 @@
+Tests: munin-node munin-master
+Depends: munin-node, munin
+Restrictions: needs-root
