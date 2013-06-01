@@ -16,7 +16,7 @@ if [ $1 ]; then
 fi
 
 make DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin || exit
-fakeroot make install-common-prime install-master-prime install-node-prime install-plugins-prime install-man DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin || exit
+fakeroot make install-common-prime install-master-prime install-node-prime install-plugins-prime install-man install-async DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin || exit
 
 
 if [ $1 ]; then
