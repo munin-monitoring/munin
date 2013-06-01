@@ -306,6 +306,8 @@ sub graph_startup {
 	$config = munin_readconfig_part('datafile', 0);
     }
 
+    munin_set($config, "debug", $debug);
+
     my $palette = &munin_get($config, "palette", "default");
 
     $max_running = &munin_get($config, "max_graph_jobs", $max_running);
