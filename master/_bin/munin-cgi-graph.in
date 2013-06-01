@@ -345,7 +345,8 @@ sub get_picture_filename {
 sub has_offending_chars {
 	my $url_part = shift;
 	return 0 if ! defined $url_part;
-	return $url_part =~ m:[^a-zA-Z0-9_/.,=&-]:;
+	# "." and ":" are for ip_ in IPv4 & IPv6
+	return $url_part =~ m:[^a-zA-Z0-9_/.,=&\:-]:;
 }
 
 sub verify_parameters {
