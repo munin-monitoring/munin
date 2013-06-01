@@ -1,9 +1,13 @@
-munin (2.0.14-2) UNRELEASED; urgency=low
+munin (2.0.15-1) UNRELEASED; urgency=low
 
+  [ Holger Levsen ]
   * Remove Tom Feiner and Steve Schnepp from debian/control. Thanks for all
     your work, Tom and Steve!
 
- -- Holger Levsen <holger@debian.org>  Mon, 27 May 2013 22:39:45 +0200
+  [ Stig Sandbeck Mathisen ]
+  * New upstream version (Closes: #710527, #710529)
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Sat, 01 Jun 2013 21:59:11 +0200
 
 munin (2.0.14-1) unstable; urgency=low
 
