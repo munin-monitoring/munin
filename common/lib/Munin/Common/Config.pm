@@ -27,7 +27,7 @@ my %legal = map { $_ => 1 } (
 	"graph_category", "graph_strategy", "graph_width",
 	"graph_height", "graph_sums", "local_address", "compare",
 	"text", "command", "contact", "contacts", "max_messages",
-	"always_send", "notify_alias", "line", "state",
+	"always_send", "notify_alias", "ignore_unknown", "line", "state",
 	"graph_period", "cgiurl_graph", "cgiurl", "tls",
 	"service_order", "category_order", "version",
 	"tls_certificate", "tls_private_key", "tls_pem",

@@ -465,6 +465,11 @@ sub process_service {
                 $hash->{'worstid'} = 1 if $hash->{"worstid"} != 2;
             }
 
+            if (munin_get_bool($hobj, 'ignore_unknown', "false")) {
+                DEBUG("[DEBUG] ignoring unknown value");
+                $hash->{'state_changed'} = 0;
+            }
+
             munin_set_var_loc(\%notes, [@$fpath, "state"], $state);
             munin_set_var_loc(\%notes, [@$fpath, $state], $extinfo);
             if (defined $num_unknowns) {
@@ -524,7 +529,11 @@ sub process_service {
             munin_set_var_loc(\%notes, [@$fpath, "ok"],    "OK");
 
 	    if ($oldstate ne 'ok') {
-		$hash->{'state_changed'} = 1;
+                if ($oldstate eq 'unknown' && munin_get_bool($hobj, 'ignore_unknown', 'false')) {
+                    DEBUG("[DEBUG] ignoring transition from UNKNOWN to OK");
+                } else {
+		    $hash->{'state_changed'} = 1;
+                }
 	    }
         }
     }
