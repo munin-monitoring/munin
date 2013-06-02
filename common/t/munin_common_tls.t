@@ -12,6 +12,18 @@ use English qw(-no_match_vars);
 use FindBin;
 use IO::Handle;
 use Socket;
+use Munin::Common::Logger;
+use Test::MockObject::Extends;
+
+sub mock_log {
+    my $log = Munin::Common::Logger->new;
+    $log = Test::MockObject::Extends->new($log);
+    $log->mock( 'debug',   sub { } );
+    $log->mock( 'info',    sub { } );
+    $log->mock( 'warning', sub { } );
+    $log->mock( 'error',   sub { } );
+    return $log;
+}
 
 sub do_server {
     my ($socket) = @_;
@@ -25,7 +37,7 @@ sub do_server {
 
     my $tls = Munin::Common::TLSServer->new({
         DEBUG        => 1,
-        logger       => sub { print "LOG SERVER: ", @_, "\n" },
+        logger       => mock_log(),
         read_fd      => fileno($socket),
         read_func    => sub { print "Server reading ...\n"; my $line = <$socket>; print "Server done. ($line)\n"; return $line; },
         tls_ca_cert  => "$FindBin::Bin/tls/CA/ca_cert.pem",
@@ -54,7 +66,7 @@ sub do_client {
 
     my $tls = Munin::Common::TLSClient->new({
         DEBUG        => 1,
-        logger       => sub { print "LOG CLIENT: ", @_, "\n" },
+        logger       => mock_log(),
         read_fd      => fileno($socket),
         read_func    => sub { print "Client reading ...\n"; my $line = <$socket>; print "Client done. ($line)\n"; return $line; },
         tls_ca_cert  => "$FindBin::Bin/tls/CA/ca_cert.pem",

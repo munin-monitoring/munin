@@ -114,7 +114,9 @@ use English qw(-no_match_vars);
 use Munin::Common::Defaults;
 use Munin::Master::Group;
 use Munin::Master::Host;
-use Log::Log4perl qw( :easy );
+use Munin::Master::Logger;
+
+my $log = Munin::Master::Logger->new;
 
 my %booleans = map {$_ => 1} qw(
     debug
@@ -353,8 +355,8 @@ sub _concat_config_line_ok {
     my ($self, $prefix, $key, $value) = @_;
 
     if (!defined($key) or !$key) {
-	ERROR "[ERROR] Somehow we're missing a keyword sometime after section [$prefix]";
-	die "[ERROR] Somehow we're missing a keyword sometime after section [$prefix]";
+	$log->critical("Somehow we're missing a keyword sometime after section [$prefix]");
+	die;
     }
 
     my $longkey = $self->_concat_config_line($prefix,$key,$value);
@@ -368,8 +370,8 @@ sub _concat_config_line_ok {
     if ($EVAL_ERROR) {
 	# _split_config_line_ok already logged the problem.
 	my $err_msg = "[ERROR] config error under [$prefix] for '$key $value' : $EVAL_ERROR";
-	ERROR $err_msg;
-	die $err_msg;
+	$log->critical($err_msg);
+	die;
     }
 
     return $longkey;
@@ -454,8 +456,8 @@ sub _split_config_line_ok {
 
     if ($host =~ /[^-A-Za-z0-9\.]/) {
 	# Since we're not quite sure what context we're called in we'll report the error message more times rather than fewer.
-	ERROR "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.";
-	croak "[ERROR] Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.\n";
+	$log->critical("Hostname '$host' contains illegal characters (http://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names).  Please fix this by replacing illegal characters with '-'.  Remember to do it on both in the master configuration and on the munin-node.");
+        die;
     }
 
     return ($groups,$host,$key);

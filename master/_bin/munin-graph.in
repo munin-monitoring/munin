@@ -320,7 +320,7 @@ sub draw_graph_or_complain {
 
     if (! -f $ret) {
 	my ($dom, $host, $serv, $scale, $filename ) = @_;
-	WARN "[WARNING] Could not draw graph \"$filename\": $ret";
+	$log->error "Could not draw graph \"$filename\": $ret";
         return 0;
     } else {
 	return $ret;

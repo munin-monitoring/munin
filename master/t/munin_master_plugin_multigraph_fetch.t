@@ -8,6 +8,17 @@ use Data::Dumper;
 
 use Test::More tests => 2;
 
+use Test::MockModule;
+my $mocklog = Test::MockModule->new('Munin::Master::Logger');
+$mocklog->mock(
+    debug    => sub { },
+    info     => sub { },
+    notice   => sub { },
+    warning  => sub { },
+    error    => sub { },
+    critical => sub { }
+);
+
 use_ok('Munin::Master::Node');
 
 # use_ok('Munin::Master::Logger');

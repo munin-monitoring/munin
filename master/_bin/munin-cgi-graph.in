@@ -41,7 +41,6 @@ use Munin::Master::GraphOld;
 use Munin::Master::Utils;
 
 use Munin::Master::Logger;
-use Log::Log4perl qw( :easy );
 
 my $GRAPHER = "$Munin::Common::Defaults::MUNIN_LIBDIR/munin-graph";
 my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
@@ -73,12 +72,7 @@ push @params, "--skip-locking", "--skip-stats", "--nolazy";
 push @params, "--log-file", $logfile;
 
 my $config = graph_startup(\@params);
-
-logger_open($config->{'logdir'});
-if(defined($ENV{CGI_DEBUG})) {
-	logger_debug();
-	push @params, "--debug", $logfile;
-}
+my $log = Munin::Master::Logger->new;
 
 # BEGIN FAST-CGI LOOP:
 setlocale (LC_TIME, 'C');
@@ -101,7 +95,7 @@ while (new CGI::Fast) {
     my $pinpoint = undef;
     my $path = $ENV{PATH_INFO} || "";
 
-    DEBUG "Request path is $path";
+    $log->debug "Request path is $path";
 
     # The full URL looks like this:
     # Case 1:
@@ -144,7 +138,7 @@ while (new CGI::Fast) {
     my ($dom, $host, $serv, $scale, $fileext) =
       $path =~ m#^/(.*)/([^/]+)/([\w-]+)-([\w=,]+)\.(png|csv|json|xml)#; ## avoid bug in vim
 
-    DEBUG "asked for ($dom, $host, $serv, $scale, $fileext)";
+    $log->debug "asked for ($dom, $host, $serv, $scale, $fileext)";
 
     if ($scale =~ /pinpoint=(\d+),(\d+)/) {
 	    $pinpoint = [ $1, $2, ];
@@ -239,7 +233,7 @@ while (new CGI::Fast) {
 		
 		# Generic error
 		# .. we DO NOT DIE, as spawn-fcgi doesn't like it.
-		ERROR "[ERROR] $@";
+		$log->error "$@";
 		print "Status: 500\r\n",
 			"Content-Type: text/plain\r\n",
 			"X-Munin-Pid: $$\r\n",
@@ -317,7 +311,7 @@ sub send_graph_data {
     my $buffer;
 
     if (! open (GRAPH_PNG_FILE, '<', $filename) ) {
-	ERROR "[FATAL] Could not open image file \"$filename\" for reading: $!\n";
+	$log->error "Could not open image file \"$filename\" for reading: $!\n";
 	# We don't send anything...
 	# .. we DO NOT DIE, as spawn-fcgi doesn't like it. 
 	return;
@@ -366,24 +360,24 @@ sub verify_parameters {
     my $scale = shift;
 
     if (!$dom) {
-	WARN '[WARNING] Request for graph without specifying domain. Bailing out.';
+	$log->warning 'Request for graph without specifying domain. Bailing out.';
 	return 0;
     }
     if (!$host) {
-	WARN '[WARNING] Request for graph without specifying host. Bailing out.';
+	$log->warning 'Request for graph without specifying host. Bailing out.';
 	return 0;
     }
     if (!$serv) {
-	WARN '[WARNING] Request for graph without specifying service. Bailing out.';
+	$log->warning 'Request for graph without specifying service. Bailing out.';
 	return 0;
     }
 
     if (!$scale) {
-	WARN '[WARNING] Request for graph without specifying scale. Bailing out.';
+	$log->warning 'Request for graph without specifying scale. Bailing out.';
 	return 0;
     } else {
 	if (!defined $period{$scale} && $scale !~ /pinpoint=\d+,\d+/) {
-	    WARN '[WARNING] Weird pinpoint setting "'.$scale.'". Bailing out.';
+	    $log->warning 'Weird pinpoint setting "'.$scale.'". Bailing out.';
 	    return 0;
 	}
     }
@@ -392,14 +386,14 @@ sub verify_parameters {
     if (( CGI::param("size_x") || "") =~ m/^(\d+)/) {
 	my $max_size_x = ( $config->{max_size_x} || 4000);
 	if ($1 > $max_size_x) {
-		WARN "[WARNING] Asked image size x too large : $1 > $max_size_x. Bailing out.";
+		$log->warning "Asked image size x too large : $1 > $max_size_x. Bailing out.";
 		return 0;
 	}
     }
     if (( CGI::param("size_y") || "") =~ m/^(\d+)/) {
 	my $max_size_y = ($config->{max_size_y} || 4000);
 	if ($1 > $max_size_y) {
-		WARN "[WARNING] Asked image size y too large : $1 > $max_size_y. Bailing out.";
+		$log->warning "Asked image size y too large : $1 > $max_size_y. Bailing out.";
 		return 0;
 	}
     }
@@ -440,7 +434,7 @@ sub draw_graph {
 
     # remove old file if present
     if (-f $filename and !unlink($filename)) {
-	ERROR "[FATAL] Could not remove \"$filename\": $!";
+	$log->error "Could not remove \"$filename\": $!";
     }
 
     $serv =~ s{[^\w_\/"'\[\]\(\)+=-]}{_}g; $serv =~ /^(.+)$/; $serv = $1; #"
@@ -496,7 +490,7 @@ sub draw_graph_or_complain {
 
     if (! -f $ret) {
 	my ($dom, $host, $serv, $scale, $fileext, $filename ) = @_;
-	WARN "[WARNING] Could not draw graph \"$filename\": $ret";
+	$log->warning "Could not draw graph \"$filename\": $ret";
 	print "Status: 500\r\n",
 	  "Content-Type: text/plain\r\n",
 	  "\r\n",

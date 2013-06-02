@@ -8,7 +8,6 @@ use warnings;
 use strict;
 
 use Carp;
-use Log::Log4perl qw( :easy );
 
 
 sub new {
