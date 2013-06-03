@@ -302,6 +302,7 @@ also be printed, which will appear in the munin-node logs).
 =cut
 
 sub restore_state {
+	my @state;
 	# Protects _restore_state_raw() with an eval()
 	eval { @state = _restore_state_raw(); };
 	if ($@) { @state = (); warn $@; }
