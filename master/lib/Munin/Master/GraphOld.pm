@@ -306,7 +306,7 @@ sub graph_startup {
 	$config = munin_readconfig_part('datafile', 0);
     }
 
-    munin_set($config, "debug", $debug);
+    $config->{debug} = $debug;
 
     my $palette = &munin_get($config, "palette", "default");
 
