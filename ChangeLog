@@ -1,5 +1,26 @@
 -*- text -*-
 
+munin-2.0.16, 2013-06-03
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+- Fixed a spurious WARNING in GFX cgi
+
+------------------
+Detailed Changelog
+------------------
+
+Kenyon Ralph:
+      plugins/ntp_: fix parsing older ntpq output
+
+Steve Schnepp:
+      master: fix warning in GraphOld.pm
+
+
 munin-2.0.15, 2013-06-01
 
 -------
