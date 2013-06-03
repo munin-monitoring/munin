@@ -117,7 +117,7 @@ sub parseEximfile
         if (/ <= /) {
             $received++;
         }
-        elsif (m/ Completed$/) {
+        elsif (m/ Completed(?: |$)/) {
             $completed++;
         }
         elsif (/ rejected /) {
