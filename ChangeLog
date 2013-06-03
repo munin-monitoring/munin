@@ -1,5 +1,9 @@
 -*- text -*-
 
+munin-2.1.2, 2013-06-03
+
+Fixed typo in Plugin.pm
+
 munin-2.1.1, 2013-05-27
 
 This is the merge of 2.0.14
