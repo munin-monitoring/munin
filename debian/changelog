@@ -1,8 +1,9 @@
-munin (2.1.2-1) UNRELEASED; urgency=low
+munin (2.1.2-1) experimental; urgency=low
 
   * New upstream version
+  * Add dep8 autopkg tests
 
- -- Stig Sandbeck Mathisen <ssm@debian.org>  Tue, 04 Jun 2013 09:32:45 +0200
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Tue, 04 Jun 2013 09:41:53 +0200
 
 munin (2.1.1-1) experimental; urgency=low
 
