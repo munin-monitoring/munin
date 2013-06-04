@@ -115,11 +115,10 @@ foreach my $line (@associations) {
                 my (undef, undef, $assid, undef, undef, undef, undef, undef, undef, undef) = split(/\s+/, $line);
                 chomp(my $peerinfo = `ntpq -n -c "readvar $assid srcadr,delay,offset,jitter"`);
                 $peerinfo =~ s/\R/ /g;
-                ($srcadr, $delay, $offset, $jitter) = split(/, /, $peerinfo);
-                ($srcadr) = ($srcadr =~ m/srcadr=(.*)/);
-                ($delay) = ($delay =~ m/delay=(.*)/);
-                ($offset) = ($offset =~ m/offset=(.*)/);
-                ($jitter) = ($jitter =~ m/jitter=(.*)/);
+                ($srcadr) = ($peerinfo =~ m/srcadr=([^, ]+)/);
+                ($delay) = ($peerinfo =~ m/delay=([^, ]+)/);
+                ($offset) = ($peerinfo =~ m/offset=([^, ]+)/);
+                ($jitter) = ($peerinfo =~ m/jitter=([^, ]+)/);
                 last if lc($srcadr) eq lc($name);
         }
 }
@@ -154,11 +153,11 @@ if (lc($srcadr) ne lc($name)) {
                         my (undef, undef, $assid, undef, undef, undef, undef, undef, undef, undef) = split(/\s+/, $line);
                         chomp(my $peerinfo = `ntpq -n -c "readvar $assid srcadr,delay,offset,jitter"`);
                         $peerinfo =~ s/\R/ /g;
-                        ($srcadr, $delay, $offset, $jitter) = split(/, /, $peerinfo);
-                        ($srcadr) = new Net::IP($srcadr =~ m/srcadr=(.*)/);
-                        ($delay) = ($delay =~ m/delay=(.*)/);
-                        ($offset) = ($offset =~ m/offset=(.*)/);
-                        ($jitter) = ($jitter =~ m/jitter=(.*)/);
+                        ($srcadr) = ($peerinfo =~ m/srcadr=([^, ]+)/);
+                        ($delay) = ($peerinfo =~ m/delay=([^, ]+)/);
+                        ($offset) = ($peerinfo =~ m/offset=([^, ]+)/);
+                        ($jitter) = ($peerinfo =~ m/jitter=([^, ]+)/);
+                        ($srcadr) = new Net::IP($srcadr);
 
                         ADDRS: foreach my $addr (@addresses) {
                                 if (defined($srcadr->overlaps($addr)) and $srcadr->overlaps($addr) == $IP_IDENTICAL) {
