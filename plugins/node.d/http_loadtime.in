@@ -36,6 +36,9 @@ GPLv2
 
 =cut
 
+MUNIN_LIBDIR=${MUNIN_LIBDIR:-"/usr/share/munin"}
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
 target=${target:-"http://localhost/"}
 requisites=${requisites:-"false"}
 
@@ -73,10 +76,6 @@ if [ "$1" = "autoconf" ]; then
     exit 0
 fi
 
-function escapeUri {
-    echo "$1" | tr ":" "_" | tr "/" "_" | tr "." "_" | tr "-" "_"
-}
-
 if [ "$1" = "config" ]; then
     echo "graph_title HTTP loadtime of a page"
     echo "graph_args --base 1000 -l 0"
@@ -87,8 +86,9 @@ if [ "$1" = "config" ]; then
     do
         uri_short=`echo ${uri:0:30}`
         if [ "$uri_short" != "$uri" ]; then uri_short=$uri_short"..."; fi
-        echo `escapeUri $uri`".label $uri_short"
-        echo `escapeUri $uri`".info page load time"
+        esc_uri="$(clean_fieldname "$uri")"
+        echo $esc_uri".label $uri_short"
+        echo $esc_uri".info page load time"
     done
     exit 0
 fi
@@ -103,7 +103,8 @@ for uri in $urls
 do
     loadtime=`$time_bin --quiet -f "%e" wget $wget_opt $uri 2>&1`
 
-    echo `escapeUri $uri`".value $loadtime"
+    esc_uri="$(clean_fieldname "$uri")"
+    echo $esc_uri".value $loadtime"
 done
 
 cd -
