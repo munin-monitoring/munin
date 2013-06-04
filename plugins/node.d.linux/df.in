@@ -24,7 +24,7 @@ the disk usage.
 This configuration snipplet is an example with the defaults:
 
   [df]
-    env.exclude none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root
+    env.exclude none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root devtmpfs
     env.warning 92
     env.critical 98
 
@@ -87,7 +87,7 @@ use Munin::Plugin;
 # For these devices use the mount point, the device is useless
 my %usemntpt = ( tmpfs => 1, none => 1, udev => 1, simfs => 1 );
 
-my $exclude = $ENV{'exclude'} || 'none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root';
+my $exclude = $ENV{'exclude'} || 'none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root devtmpfs';
 my $dfopts  = "-P -l ".join(' -x ',('',split('\s+',$exclude)));
 
 my $mode = ($ARGV[0] or "print");
