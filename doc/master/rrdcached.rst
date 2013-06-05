@@ -13,6 +13,14 @@ This will spool RRD changes in a queue, and flush changes on demand,
 and periodically. This will replace lots of random writes with a much
 smaller amount of sequential writes.
 
+The effects on disk IO can be quite dramatic. 
+
+This example is a graph of a munin master with 400 nodes. Even with
+storage on mirrored SSDs, the effect of adding rrdcached is an immediate
+reduction in IO, and especially on wait times.
+
+.. image:: rrdcached_effects.png
+
 Configuring rrdcached
 =====================
 
@@ -65,9 +73,10 @@ rrdcached:
 
  chgrp www-data /run/munin/rrdcached.sock
 
-Recommended: If you have systemd installed, use a systemd service. If
-you have upstart installed, write a daemon job configuration file. If
-you use systemd, you can add "-g" to the rrdcached command line.
+Recommended: If you have systemd or upstart installed, use the examples below.
+
+* :ref:`example-rrdcached-upstart`
+* :ref:`example-rrdcached-systemd`
 
 Configuring munin to use  rrdcached
 ===================================
