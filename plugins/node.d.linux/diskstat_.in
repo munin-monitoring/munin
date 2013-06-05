@@ -249,7 +249,6 @@ if ( defined $ARGV[0] && $ARGV[0] eq 'config' ) {
 graph_title Disk latency for /dev/$pretty_device
 graph_args --base 1000
 graph_category disk
-
 util.label Device utilization (percent)
 util.type GAUGE
 util.info Utilization of the device. If the time spent for I/O is close to 1000msec for a given second, the device is nearly 100% saturated.
@@ -270,7 +269,6 @@ avgwrwait.label Average Write IO Wait time (ms)
 avgwrwait.type GAUGE
 avgwrwait.info Average wait time for a write I/O from request start to finish (includes queue times et al)
 avgwrwait.min 0
-
 EOF
 
     }
@@ -281,14 +279,12 @@ graph_title Disk throughput for /dev/$pretty_device
 graph_args --base 1024
 graph_vlabel Bytes/second
 graph_category disk
-
 rdbytes.label Read Bytes
 rdbytes.type GAUGE
 rdbytes.min 0
 wrbytes.label Write Bytes
 wrbytes.type GAUGE
 wrbytes.min 0
-
 EOF
     }
     elsif ( $mode eq 'iops' ) {
@@ -298,7 +294,6 @@ graph_title Disk IOs for /dev/$pretty_device
 graph_args --base 1000
 graph_vlabel Units/second
 graph_category disk
-
 rdio.label Read IO/sec
 rdio.type GAUGE
 rdio.min 0
@@ -314,7 +309,6 @@ avgrdrqsz.min 0
 avgwrrqsz.label Average Write Request Size (KiB)
 avgwrrqsz.type GAUGE
 avgwrrqsz.min 0
-
 EOF
 
     }
@@ -404,34 +398,28 @@ sub calculate_and_print_values {
 
     if ( $mode eq 'latency' ) {
         print <<EOF;
-
 util.value $util_print
 svctm.value $servicetime
 avgwait.value $average_wait
 avgrdwait.value $average_rd_wait
 avgwrwait.value $average_wr_wait
-
 EOF
     }
     elsif ( $mode eq 'throughput' ) {
 
         print <<EOF;
-
 rdbytes.value $read_bytes_per_sec
 wrbytes.value $write_bytes_per_sec
-
 EOF
     }
     elsif ( $mode eq 'iops' ) {
 
         print <<EOF;
-
 rdio.value $read_io_per_sec
 wrio.value $write_io_per_sec
 avgrqsz.value $average_rq_size_in_kb
 avgrdrqsz.value $average_rd_rq_size_in_kb
 avgwrrqsz.value $average_wr_rq_size_in_kb
-
 EOF
 
     }
