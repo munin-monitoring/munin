@@ -318,6 +318,8 @@ sub graph_startup {
 	$config = munin_readconfig_part('datafile', 0);
     }
 
+    $config->{debug} = $debug;
+
     my $palette = &munin_get($config, "palette", "default");
 
     $max_running = &munin_get($config, "max_graph_jobs", $max_running);
@@ -1611,7 +1613,6 @@ sub handle_trends {
     foreach my $field (@{munin_find_field($service, "label")}) {
         my $fieldname = munin_get_node_name($field);
 	my $colour = $single_colour;
-        my $rrdname = get_field_name($fieldname);
 
 	# Skip virtual fieldnames, otherwise beware of $hash->{foo}{bar}. 
 	#
@@ -1624,6 +1625,9 @@ sub handle_trends {
             $colour = "$service->{$fieldname}{'colour'}66";
         }                                                                                                                                                    
                                                                                                                                                              
+	# rrd_fieldname is computed now to avoid virtual fieldnames
+	my $rrd_fieldname = get_field_name($fieldname);
+
         my $cdef = "";
         if (defined $service->{$fieldname}{'cdef'}) {
             $cdef = "cdef";
@@ -1631,8 +1635,8 @@ sub handle_trends {
 
         #trends
         if (defined $service->{$fieldname}{'trend'} and $service->{$fieldname}{'trend'} eq 'yes') {
-            push (@complete, "CDEF:t$rrdname=c$cdef$rrdname,$futuretime,TRENDNAN");
-            push (@complete, "LINE1:t$rrdname#$colour:$fieldname trend\\l");
+            push (@complete, "CDEF:t$rrd_fieldname=c$cdef$rrd_fieldname,$futuretime,TRENDNAN");
+            push (@complete, "LINE1:t$rrd_fieldname#$colour:$service->{$fieldname}->{'label'} trend\\l");
             DEBUG "[DEBUG] set trend for $fieldname\n";
         }
 
@@ -1642,8 +1646,8 @@ sub handle_trends {
             my @predict = split(",", $service->{$fieldname}{'predict'});
             my $predictiontime = int ($futuretime / $predict[0]) + 2; #2 needed for 1 day
             my $smooth = $predict[1]*$resolutions{$time};
-            push (@complete, "CDEF:p$rrdname=$predict[0],-$predictiontime,$smooth,c$cdef$rrdname,PREDICT");
-            push (@complete, "LINE1:p$rrdname#$colour:$fieldname prediction\\l");
+            push (@complete, "CDEF:p$rrd_fieldname=$predict[0],-$predictiontime,$smooth,c$cdef$rrd_fieldname,PREDICT");
+            push (@complete, "LINE1:p$rrd_fieldname#$colour:$service->{$fieldname}->{'label'} prediction\\l");
             DEBUG "[DEBUG] set prediction for $fieldname\n";
         }
     }

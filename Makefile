@@ -177,7 +177,9 @@ install-plugins-java: build-plugins-java
 # configure plugins.  Or not. Better done under the direction of the installer
 # or the packager.
 
-install-async-prime:
+install-async-prime: install-async
+
+install-async:
 	mkdir -p $(LIBDIR)
 	$(INSTALL) -m 0755 build/node/_bin/munin-async $(LIBDIR)/
 	$(INSTALL) -m 0755 build/node/_bin/munin-asyncd $(LIBDIR)/
