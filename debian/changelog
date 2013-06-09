@@ -1,10 +1,10 @@
-munin (2.0.16-2) UNRELEASED; urgency=low
+munin (2.0.16-2) unstable; urgency=low
 
   * plugins/df: ignore devtmpfs. Cherry picked ab42e8b as efe4526 from 
     upcoming 2.0.17. (Closes: #710527)
   * Add libcgi-fast-perl as alternative suggests. (Closes: #711272)
 
- -- Holger Levsen <holger@debian.org>  Sun, 09 Jun 2013 16:46:57 +0200
+ -- Holger Levsen <holger@debian.org>  Sun, 09 Jun 2013 16:54:33 +0200
 
 munin (2.0.16-1) unstable; urgency=low
 
