@@ -5,6 +5,8 @@ munin (2.0.6-4+deb7u1) UNRELEASED; urgency=low
       the final value 'U' as well. Cherry-picked 9d84cb3 as 764006e.
       (Closes: #711201)
     - fix limit for ABSOLUTE checks too. Cherry-picked 334b691 as 1e44056.
+  * plugins/df: ignore devtmpfs. Cherry picked from 2.0.16-2.
+    (Closes: #710527)
 
  -- Holger Levsen <holger@debian.org>  Sun, 09 Jun 2013 15:55:46 +0200
 
