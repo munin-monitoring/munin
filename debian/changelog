@@ -1,4 +1,4 @@
-munin (2.0.6-4+deb7u1) UNRELEASED; urgency=low
+munin (2.0.6-4+deb7u1) wheezy; urgency=low
 
   * master:
     - on limit checks, if one of the two values is 'U', make
@@ -14,7 +14,7 @@ munin (2.0.6-4+deb7u1) UNRELEASED; urgency=low
   * asyncd: use the same rules as munin-update. Cherry-picked d4ba06b as
     87975d0. (Closes: #710529)
 
- -- Holger Levsen <holger@debian.org>  Sun, 09 Jun 2013 15:55:46 +0200
+ -- Holger Levsen <holger@debian.org>  Sun, 09 Jun 2013 17:38:04 +0200
 
 munin (2.0.6-4) unstable; urgency=medium
 
