@@ -7,6 +7,8 @@ munin (2.0.6-4+deb7u1) UNRELEASED; urgency=low
     - fix limit for ABSOLUTE checks too. Cherry-picked 334b691 as 1e44056.
     - add ":" to the allowed chars in CGI. Cherry-picked 456e117 as 7d3cb5f.
       (Closes: #710527)
+    - fixes for munin-cgi-graph crashes in trend and predict. Cherry-picked
+      f325fd6 as 5cb74ba.
   * plugins/df: ignore devtmpfs. Cherry picked from 2.0.16-2.
     (Closes: #710899)
   * asyncd: use the same rules as munin-update. Cherry-picked d4ba06b as
