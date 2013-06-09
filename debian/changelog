@@ -1,3 +1,9 @@
+munin (2.0.6-4+deb7u1) UNRELEASED; urgency=low
+
+  * 
+
+ -- Holger Levsen <holger@debian.org>  Sun, 09 Jun 2013 15:55:46 +0200
+
 munin (2.0.6-4) unstable; urgency=medium
 
   * Master/Node.pm: cherry-pick 71d0a86 from 2.0.12 to fix TLS enabled
