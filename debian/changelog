@@ -1,6 +1,8 @@
 munin (2.0.6-4+deb7u1) UNRELEASED; urgency=low
 
-  * 
+  * master: on limit checks, if one of the two values is 'U', make 
+    the final value 'U' as well. Cherry-picked 9d84cb3 as 764006e. 
+    (Closes: 711201)
 
  -- Holger Levsen <holger@debian.org>  Sun, 09 Jun 2013 15:55:46 +0200
 
