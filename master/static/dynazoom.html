@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<title>Munin :: Dynamic Graph Zoom</title>
 	<script type="text/javascript" src="formatdate.js"></script>
 	<script type="text/javascript" src="querystring.js"></script>
 	<link rel="stylesheet" href="./style-new.css" type="text/css" />
@@ -25,18 +26,16 @@
 <div id="content-zoom" style="padding: 1em;">
 	
 	<div style="position:relative;">
-		<img id="image" style="cursor: crosshair;" />
+		<img id="image" style="cursor: crosshair;" src="#" alt="Zoomed graph" />
 		<div id="overlayDiv"></div>
 	</div>
 
 	<p>Zooming is very easy, it's done in 3 clicks (regular clicks, not drag &amp; drop):</p>
-	<ul>
     	<ol>
 		<li> click to define the start. </li>
 		<li> click to define the end. </li>
 		<li> click inside the shaded area to zoom (outside to cancel). </li>
 	</ol>
-	</ul>
 
 	<form name="myNewForm" id="myNewForm">
 	<table>
