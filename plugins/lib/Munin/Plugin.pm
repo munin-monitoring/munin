@@ -302,20 +302,29 @@ also be printed, which will appear in the munin-node logs).
 =cut
 
 sub restore_state {
-    # Read a state vector from a plugin appropriate state file
-    local $/;
+	my @state;
 
+	# Protects _restore_state_raw() with an eval()
+	eval { @state = _restore_state_raw(); };
+	if ($@) { @state = (); }
+
+	return @state;
+}
+
+sub _restore_state_raw {
     open my $STATE, '<', $statefile or return;
 
-    my @state = split(/\n/, <$STATE>);
-
-    my $filemagic = shift(@state);
-
-    if ($filemagic ne '%MUNIN-STATE1.0') {
+    # Test the 1rst line
+    my $filemagic = <$STATE>;
+    if ($filemagic ne "%MUNIN-STATE1.0\n") {
 	warn "$me: Statefile $statefile has unrecognized magic number: '$filemagic'\n";
 	return;
     }
 
+    # Slurp the rest
+    local $/;
+
+    my @state = split(/\n/, <$STATE>);
     return _decode_state(@state);
 }
 

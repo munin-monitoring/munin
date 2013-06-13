@@ -1,3 +1,30 @@
+munin (2.0.16-2) unstable; urgency=low
+
+  * plugins/df: ignore devtmpfs. Cherry picked ab42e8b as efe4526 from 
+    upcoming 2.0.17. (Closes: #710527)
+  * Add libcgi-fast-perl as alternative suggests. (Closes: #711272)
+
+ -- Holger Levsen <holger@debian.org>  Sun, 09 Jun 2013 16:54:33 +0200
+
+munin (2.0.16-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Tue, 04 Jun 2013 09:21:56 +0200
+
+munin (2.0.15-1) unstable; urgency=low
+
+  [ Holger Levsen ]
+  * Remove Tom Feiner and Steve Schnepp from debian/control. Thanks for all
+    your work, Tom and Steve!
+
+  [ Stig Sandbeck Mathisen ]
+  * New upstream version (Closes: #710527, #710529)
+  * Add dep8 autopkg tests
+  * Remove /var/lib/munin-node/ when purging munin-node
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Sat, 01 Jun 2013 23:20:45 +0200
+
 munin (2.0.14-1~bpo70+1) wheezy-backports; urgency=low
 
   * Rebuild for wheezy-backports.
@@ -19,6 +46,7 @@ munin (2.0.13-1) unstable; urgency=low
   * New upstream release. (Closes: #558800, 702442) - See upstream changelog
     for the full list of changes.
   * Add conntrack to munin-plugins-core suggests. (upstream trac #1267)
+    (Closes: #691048)
   * munin-node.init: drop support for sarge, five years after Debian dropped
     it.
   * Bump standards-version to 3.9.4, no changes necessary.

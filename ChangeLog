@@ -1,5 +1,53 @@
 -*- text -*-
 
+munin-2.0.16, 2013-06-03
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+- Fixed a spurious WARNING in GFX cgi
+
+------------------
+Detailed Changelog
+------------------
+
+Kenyon Ralph:
+      plugins/ntp_: fix parsing older ntpq output
+
+Steve Schnepp:
+      master: fix warning in GraphOld.pm
+
+
+munin-2.0.15, 2013-06-01
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+- Fixes for ip_ handling
+
+Closes: D:710527, D:710529
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp:
+      plugins/Plugin.pm: fix bad state file handling (fixed)
+      master: adding ":" to the allowed chars in CGI
+      dev_scripts: automate async install
+      master: re-enable debugging output in GraphOld.pm
+      asyncd: use the same rules as munin-update
+
+Stig Sandbeck Mathisen:
+      Fix for munin-cgi-graph crash in trend and predict.
+
+
 munin-2.0.14, 2013-05-10
 
 -------
