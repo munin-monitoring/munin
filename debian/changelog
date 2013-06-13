@@ -1,3 +1,9 @@
+munin (2.0.16-2~bpo70+1) wheezy-backports; urgency=low
+
+  * Rebuild for wheezy-backports.
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Thu, 13 Jun 2013 19:32:43 +0200
+
 munin (2.0.16-2) unstable; urgency=low
 
   * plugins/df: ignore devtmpfs. Cherry picked ab42e8b as efe4526 from 
