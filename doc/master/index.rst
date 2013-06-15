@@ -8,7 +8,12 @@ Role
 ====
 
 The munin master is responsible for gathering data from munin nodes.
-It stores this data in RRD, and graphs them on request.
+It stores this data in RRD [#]_. files, and graphs them on request. 
+It also checks wether the fetched values fell below or go over specific 
+threshholds (warning, critical) and will send alerts if this happens and
+the administrator configured it to do so.
+
+.. [#] RRDtool (acronym for round-robin database tool) aims to handle time-series data like network bandwidth, temperatures, CPU load, etc. The data are stored in a round-robin database (circular buffer), thus the system storage footprint remains constant over time. Source Wikipedia: http://en.wikipedia.org/wiki/RRDtool
 
 Components
 ==========
@@ -48,6 +53,15 @@ Configuration
 
 The munin master has its primary configuration file at
 :ref:`/etc/munin/munin.conf <munin.conf>`.
+
+Fetching values
+===============
+
+Sending alerts
+==============
+
+Graphing Charts
+===============
 
 Other documentation
 ===================
