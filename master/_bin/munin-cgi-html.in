@@ -41,7 +41,6 @@ use Log::Log4perl qw( :easy );
 use Data::Dumper;
 
 my @times = ("day", "week", "month", "year");
-my $config;
 my $lastchanged = 0;
 
 my @params;
@@ -50,10 +49,13 @@ push @params, "--config", $ENV{'MUNIN_CONFIG'}
 
 # grab config
 html_startup(\@params);
+my $config = get_config(1);
 while(new CGI::Fast){
 	print header("text/html");
-	$config = get_config(1);
 	show_page();
+} continue {
+	# Reload config, but after sending the result
+	$config = get_config(1);
 }
 
 sub show_page {
