@@ -22,7 +22,7 @@ Unix Manual Pages
   are also part of the distributed munin packages. Most Munin commands 
   (such as munin-run, and munindoc itself) are only documented through the usual Unix man command.
 
-Munin's Docbook
+Munin Guide
   The pages you are just viewing ;) We use RST [#]_. format here. If you have a github account, you can edit the pages online and send a pull request to contribute your work to the Munin master repository.
 
 Munin's Wiki
