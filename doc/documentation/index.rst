@@ -6,10 +6,11 @@
 
 This document is rather meta, it explains how to document Munin.
 
-We have different sorts of documentation:
+More than one place for docs
+=============================
 
 Plugin Docs
-  Are included in the plugins code files. We use POD [#]_. style format there and deliver a 
+  are included in the plugins code files. We use POD [#]_. style format there and deliver a 
   command line utility ``munindoc`` to display the info pages about the plugins.
   Call ``munindoc buddyinfo`` to get the documentation for plugin ``buddyinfo``
   
@@ -18,7 +19,7 @@ Plugin Docs
   to help us improve the plugins documentation.
 
 Unix Manual Pages
-  Are also part of the distributed munin packages. Most Munin commands 
+  are also part of the distributed munin packages. Most Munin commands 
   (such as munin-run, and munindoc itself) are only documented through the usual Unix man command.
 
 Munin's Docbook
@@ -34,6 +35,9 @@ Munin's Wiki
 .. _instructions http://munin-monitoring.org/wiki/munindoc
 .. [#] Plain Old Documentation, abbreviated pod, is a lightweight markup language used to document the Perl programming language. Source Wikipedia: http://en.wikipedia.org/wiki/Perldoc
 .. [#] The reStructuredText (frequently abbreviated as reST) project is part of the Python programming language Docutils project of the Python Doc-SIG (Documentation Special Interest Group). Source Wikipedia: http://en.wikipedia.org/wiki/ReStructuredText
+
+Nomenclature
+============
 
 .. toctree::
    :maxdepth: 2
