@@ -1,5 +1,4 @@
-
-Welcome to Munin's documentation!
+Welcome to the Munin Guide
 =================================
 
 Contents:
