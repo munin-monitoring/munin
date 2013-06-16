@@ -145,3 +145,12 @@ When it comes to getting readings from the plugin this is done with the normal f
 Notes
 ------
 For 1.4.0 we never tested with deeper levels of graphs than two as shown above. If you try deeper nestings anything could happen! ;-)
+
+Other documentation
+===================
+
+.. toctree::
+   :maxdepth: 1
+
+   protocol-multigraph.rst
+
