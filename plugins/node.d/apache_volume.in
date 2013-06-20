@@ -78,7 +78,7 @@ use strict;
 use warnings;
 use Munin::Plugin::HTTP;
 
-my $UA = Muning::Plugin::HTTP->new;
+my $UA = Munin::Plugin::HTTP->new;
 my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://127.0.0.1:%d/server-status?auto";
 my @PORTS = exists $ENV{'ports'} ? split(' ', $ENV{'ports'}) : (80);
 
