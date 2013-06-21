@@ -9,7 +9,7 @@ mysql_ - Munin plugin to display misc MySQL server status
 
 =head1 APPLICABLE SYSTEMS
 
-Any MySQL platform, tested by the author on MySQL 5.1.29 and 5.0.51
+Any MySQL platform, tested by the author on MySQL 5.6.12 and 5.5.32, 5.1.29, 5.0.51
 
 =head1 CONFIGURATION
 
