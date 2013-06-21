@@ -13,6 +13,7 @@ Any MySQL platform, tested by the authors on:
 * MySQL 5.0.51
 * MariaDB 5.5.39
 * MariaDB-5.5.39(galera).
+* MySQL 5.6.12
 * MariaDB 10.0.18
 
 Plugins:
