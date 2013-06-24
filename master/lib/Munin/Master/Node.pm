@@ -97,8 +97,12 @@ sub _do_connect {
 	    my $user_part = ($uri->user) ? ($uri->user . "@") : "";
 	    my $remote_cmd = ($uri->path ne '/') ? $uri->path : "";
 
+	    # we use $uri->_port and not $uri->port to have the raw, and avoid
+	    # the default being substituted if empty
+	    my $remote_port = ($uri->_port) ? " -p $uri->_port" : "";
+
 	    # Add any parameter to the cmd
-	    my $remote_connection_cmd = $ssh_command . " -p " . $uri->port . " " . $user_part . $uri->host . " " . $remote_cmd . " " . $params;
+	    my $remote_connection_cmd = $ssh_command . $remote_port . " " . $user_part . $uri->host . " " . $remote_cmd . " " . $params;
 
 	    # Open a triple pipe
    	    use IPC::Open3;
