@@ -183,17 +183,16 @@ To install a node:
 	  it it was already started.  The node only discovers new plugins
 	  when it is restarted.
 
-	  You probably want to use an init-script instead and you
-          might find a good one under build/dists or in the
-          build/resources directory (maybe you need to edit the init
-          script, check the given paths in the script you might use).
+	  You probably want to use an init-script/upstart config instead
+      and you might find a good one in the build/resources directory
+      (maybe you need to edit the file, check the given paths in the
+      file you might use).
 
 If you want to use SSH to contact the node from the master (rather
 than over tcp port 4949) please refer to
 http://munin-monitoring.org/wiki/Native_ssh
 
 For further build alternatives, see Makefile.
-
 
 Notes about node plugins
 ========================
