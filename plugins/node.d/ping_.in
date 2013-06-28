@@ -11,14 +11,14 @@ ping_ - Plugin to monitor ping times
 
 The following environment variables are used by this plugin
 
- ping_args       - Arguments to ping (default "-c 2")
- ping_args2      - Arguments after the host name (required for Solaris)
- ping            - Ping program to use
- host            - Host to ping. By default taken from command name.
- ping_warn       - Warning limit for nagios notification
- ping_crit       - Critical limit for nagios notification
- packetloss_warn - Warning limit for nagios notification
- packetloss_crit - Critical limit for nagios notification
+ ping_args           - Arguments to ping (default "-c 2")
+ ping_args2          - Arguments after the host name (required for Solaris)
+ ping                - Ping program to use
+ host                - Host to ping. By default taken from command name.
+ ping_warning        - Warning limit for nagios notification
+ ping_critical       - Critical limit for nagios notification
+ packetloss_warning  - Warning limit for nagios notification
+ packetloss_critical - Critical limit for nagios notification
 
 =head2 CONFIGURATION EXAMPLES
 
