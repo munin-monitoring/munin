@@ -9,7 +9,7 @@ mysql_ - Munin plugin to display misc MySQL server status
 
 =head1 APPLICABLE SYSTEMS
 
-Any MySQL platform, tested by the author on MySQL 5.1.29 and 5.0.51
+Any MySQL platform, tested by the author on MySQL 5.6.12 and 5.5.32, 5.1.29, 5.0.51
 
 =head1 CONFIGURATION
 
@@ -882,8 +882,11 @@ sub show {
 	if $graph_name =~ /innodb_/ && $data->{_innodb_disabled};
 
     for my $ds (@{$graph->{data_sources}}) {
-	printf "%s.value %s\n",
-	    clean_fieldname($ds->{name}), $data->{$ds->{name}};
+        my $value = exists $ds->{value}
+            ? $ds->{value}($data)
+                : $data->{$ds->{name}};
+
+        printf "%s.value %s\n", clean_fieldname($ds->{name}), defined($value) ? $value : 'U';
     }
 
     return 0;
@@ -1071,17 +1074,18 @@ sub parse_innodb_status {
 
     my %section_map = (
 
-	'BUFFER POOL AND MEMORY'   => \&parse_buffer_pool_and_memory,
-	'FILE I/O'                 => \&parse_file_io,
+	'BUFFER POOL AND MEMORY'      => \&parse_buffer_pool_and_memory,
+	'INDIVIDUAL BUFFER POOL INFO' => \&skip,
+	'FILE I/O'                    => \&parse_file_io,
 	'INSERT BUFFER AND ADAPTIVE HASH INDEX'
 	    => \&parse_insert_buffer_and_adaptive_hash_index,
-	'LATEST DETECTED DEADLOCK' => \&skip,
-	'LATEST FOREIGN KEY ERROR' => \&skip,
-	'LOG'                      => \&parse_log,
-	'ROW OPERATIONS'           => \&skip,
-	'SEMAPHORES'               => \&parse_semaphores,
-	'TRANSACTIONS'             => \&parse_transactions,
-	'BACKGROUND THREAD'        => \&skip,
+	'LATEST DETECTED DEADLOCK'    => \&skip,
+	'LATEST FOREIGN KEY ERROR'    => \&skip,
+	'LOG'                         => \&parse_log,
+	'ROW OPERATIONS'              => \&skip,
+	'SEMAPHORES'                  => \&parse_semaphores,
+	'TRANSACTIONS'                => \&parse_transactions,
+	'BACKGROUND THREAD'           => \&skip,
     );
 
     skip_heading();
@@ -1213,12 +1217,26 @@ sub parse_file_io {
 sub parse_insert_buffer_and_adaptive_hash_index {
     parse_section(
 	sub {
-	    m/\G(\d+) inserts, (\d+) merged recs, (\d+) merges\n/gc && do {
-		$data->{ib_ibuf_inserts}    = $1;
-		$data->{ib_ibuf_merged_rec} = $2;
-		$data->{ib_ibuf_merges}     = $3;
-		return 1;
-	    };
+      # MySQL < 5.5
+      m/\G(\d+) inserts, (\d+) merged recs, (\d+) merges\n/gc && do {
+        $data->{ib_ibuf_inserts}    = $1;
+        $data->{ib_ibuf_merged_rec} = $2;
+        $data->{ib_ibuf_merges}     = $3;
+        return 1;
+      };
+      # MySQL >= 5.5
+      m/\Gmerged operations:\n insert (\d+), delete mark \d+, delete \d+\ndiscarded operations:\n insert (\d+), delete mark \d+, delete \d+\n/gc && do {
+        $data->{ib_ibuf_inserts} = $1;
+        $data->{ib_ibuf_merged_rec} = $1 + $2;
+        return 1;
+      };
+      m/\GIbuf: size (\d+), free list len (\d+), seg size (\d+),(?: (\d+) merges)?\n/gc && do {
+        $data->{ib_ibuf_size}     = $1;
+        $data->{ib_ibuf_free_len} = $2;
+        $data->{ib_ibuf_seg_size} = $3;
+        $data->{ib_ibuf_merges}   = $4 if defined $4; # MySQL >= 5.5
+        return 1;
+      };
 	}
     );
 }
