@@ -610,6 +610,9 @@ sub _update_rrd_files {
 	    if (defined($service_data) and defined($service_data->{$ds_name})) {
 		$last_timestamp = max($last_timestamp, $self->_update_rrd_file($rrd_file, $ds_name, $service_data->{$ds_name}));
 	    }
+           elsif (defined $ds_config->{cdef} && $ds_config->{cdef} !~ /\b${ds_name}\b/) {
+               DEBUG "[DEBUG] Service $service on $nodedesignation label $ds_name is synthetic";
+           }
 	    else {
 		WARN "[WARNING] Service $service on $nodedesignation returned no data for label $ds_name";
 	    }
