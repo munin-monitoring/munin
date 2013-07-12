@@ -10,6 +10,7 @@ use English qw(-no_match_vars);
 
 # Functions here are unable to log as they don't know if they're used
 # by the node or the master which use divergent logging facilities.
+# In fact, the list in %legal is only used by the master.
 
 my %legal = map { $_ => 1 } (
 
@@ -46,6 +47,7 @@ my %legal = map { $_ => 1 } (
 	"html_rename",
 	"worker_start_delay",
 	"num_messages",
+	"timeout",
 	);
 
 my %bools = map { $_ => 1} qw(yes no true false on off 1 0);
