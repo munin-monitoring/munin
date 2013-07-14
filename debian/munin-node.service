@@ -1,0 +1,12 @@
+[Unit]
+Description=Munin Node
+
+[Service]
+Type=forking
+Restart=always
+ExecStart=/usr/sbin/munin-node
+PIDFile=/run/munin/munin-node.pid
+ExecStartPre=/usr/bin/install -d -o munin -g root -m 0755 /run/munin
+
+[Install]
+WantedBy=multi-user.target
