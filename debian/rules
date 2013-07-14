@@ -5,7 +5,7 @@ export DH_VERBOSE=1
 MAKEOPTS = CONFIG=debian/Makefile.config INSTALL_PLUGINS="auto manual snmpauto contrib"
 
 %:
-	dh $@
+	dh $@ --with systemd
 
 override_dh_auto_build:
 	# ./getversion reads RELEASE if it exists

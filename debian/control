@@ -11,6 +11,7 @@ Build-Depends-Indep:
  perl,
 Build-Depends:
  debhelper (>=8),
+ dh-systemd (>= 1.4),
 Standards-Version: 3.9.4
 Homepage: http://munin-monitoring.org
 Vcs-Git: git://anonscm.debian.org/collab-maint/munin.git
