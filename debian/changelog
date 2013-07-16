@@ -1,3 +1,9 @@
+munin (2.0.16-3) unstable; urgency=low
+
+  * Add systemd units
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Tue, 16 Jul 2013 14:15:18 +0200
+
 munin (2.0.16-2) unstable; urgency=low
 
   * plugins/df: ignore devtmpfs. Cherry picked ab42e8b as efe4526 from 
