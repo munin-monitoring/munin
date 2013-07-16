@@ -10,8 +10,6 @@
 # Description:       Create /var/run/munin on boot. Munin itself runs as CGI and has no extra startscript...
 ### END INIT INFO
 
-. /lib/lsb/init-functions
-
 case "$1" in
   start|restart|force-reload)
 	# Create various dirs
