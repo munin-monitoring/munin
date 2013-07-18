@@ -1,3 +1,9 @@
+munin (2.0.6-4+deb7u1~bpo60+1) squeeze-backports; urgency=low
+
+  * Rebuild for squeeze-backports.
+
+ -- Holger Levsen <holger@debian.org>  Thu, 18 Jul 2013 12:08:55 +0000
+
 munin (2.0.6-4+deb7u1) wheezy; urgency=low
 
   * master:
