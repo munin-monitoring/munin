@@ -5,7 +5,7 @@ perl:
   - "5.10"
 branches:
  only:
-  - master
+  - stable-2.0
   - devel
 install: "/bin/true"
 before_install:
@@ -16,8 +16,8 @@ before_install:
  - "cpanm --notest IO::Socket::INET6"
  - "cpanm --notest Log::Log4perl"
  - "cpanm --notest Module::Build"
- - "cpanm --notest Module::Build"
  - "cpanm --notest Net::SNMP"
+ - "cpanm --notest Net::Server"
  - "cpanm --notest Net::SSLeay"
  - "cpanm --notest Test::Deep"
  - "cpanm --notest Test::Differences"
@@ -25,3 +25,10 @@ before_install:
  - "cpanm --notest Test::MockModule"
  - "cpanm --notest Test::MockObject::Extends"
  - "cpanm --notest Time::HiRes"
+notifications:
+  email: false
+  irc:
+    on_success: always # change
+    on_failure: always
+    channels:
+      - "irc.oftc.net#munin"

@@ -109,7 +109,11 @@ sub write
     flock($fh, LOCK_EX);
 
     print {$fh} "timestamp $timestamp\n";
-    print {$fh} "multigraph $service\n" unless $data->[0] =~ m{^multigraph};
+
+    # squash the $service name with the same rules as the munin-update when using plain TCP
+    # Closes D:710529
+    my $service_squashed = $service; $service_squashed =~ tr/.:/__/;
+    print {$fh} "multigraph $service_squashed\n" unless $data->[0] =~ m{^multigraph};
 
     foreach my $line (@$data) {
         # Ignore blank lines and "."-ones.
