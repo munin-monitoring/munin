@@ -52,6 +52,8 @@ Unknown license
 =cut
 
 use strict;
+use Munin::Plugin;
+
 
 my $ret = undef;
 

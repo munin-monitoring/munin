@@ -55,6 +55,9 @@ license.  Munin is GPLv2 licensed.
 
 =cut
 
+use Munin::Plugin;
+
+
 my $ret = undef;
 
 if (! eval "require LWP::UserAgent;"){

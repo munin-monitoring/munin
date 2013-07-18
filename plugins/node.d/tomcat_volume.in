@@ -72,6 +72,8 @@ tomcat-users.xml example:
 =cut
 
 use strict;
+use Munin::Plugin;
+
 
 my $ret = undef;
 
