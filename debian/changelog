@@ -1,8 +1,20 @@
-munin (2.0.6-4~bpo60+1) squeeze-backports; urgency=low
+munin (2.0.6-4+deb7u1) wheezy; urgency=low
 
-  * Rebuild for squeeze-backports.
+  * master:
+    - on limit checks, if one of the two values is 'U', make
+      the final value 'U' as well. Cherry-picked 9d84cb3 as 764006e.
+      (Closes: #711201)
+    - fix limit for ABSOLUTE checks too. Cherry-picked 334b691 as 1e44056.
+    - add ":" to the allowed chars in CGI. Cherry-picked 456e117 as 7d3cb5f.
+      (Closes: #710527)
+    - fixes for munin-cgi-graph crashes in trend and predict. Cherry-picked
+      f325fd6 as 5cb74ba.
+  * plugins/df: ignore devtmpfs. Cherry picked from 2.0.16-2.
+    (Closes: #710899)
+  * asyncd: use the same rules as munin-update. Cherry-picked d4ba06b as
+    87975d0. (Closes: #710529)
 
- -- Holger Levsen <holger@debian.org>  Sat, 20 Apr 2013 09:02:02 +0200
+ -- Holger Levsen <holger@debian.org>  Sun, 09 Jun 2013 17:38:04 +0200
 
 munin (2.0.6-4) unstable; urgency=medium
 
