@@ -1,3 +1,9 @@
+munin (2.0.16-4) UNRELEASED; urgency=low
+
+  * Drop debian/munin-async.logrotate. (Closes: #717260) 
+
+ -- Holger Levsen <holger@debian.org>  Thu, 18 Jul 2013 16:33:02 +0200
+
 munin (2.0.16-3) unstable; urgency=low
 
   * Add systemd units
