@@ -1,5 +1,29 @@
 -*- text -*-
 
+munin-2.0.17, 2013-07-19
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: #1305, D:710899, D:712793, D:717265
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp:
+      p/df: also ignore devtmpfs
+      plugins/df_abs: fix the multiple block device
+      gitignore: ignoring output dir sandbox/
+      master: fix "graph_period hour"
+      plugins: fix uninitialized $MUNIN::VERSION
+ 
+Stig Sandbeck Mathisen:
+      Remove typo in the example rrdcached socket documentation
+
 munin-2.0.16, 2013-06-03
 
 -------
