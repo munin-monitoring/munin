@@ -1,8 +1,13 @@
 munin (2.0.16-4) UNRELEASED; urgency=low
 
+  [ Holger Levsen ]
   * Drop debian/munin-async.logrotate and also add code to
     munin-async.postinst to remove that file (and keep a backup if it was
     modified) on upgrades from older versions. (Closes: #717260)
+
+  [ Matthias Schmitz ]
+  * Don't make new touched logs munin-cgi-graph.log and munin-cgi-html.log
+    executable in postinst. (Closes: #717847)
 
  -- Holger Levsen <holger@debian.org>  Thu, 18 Jul 2013 16:33:02 +0200
 
