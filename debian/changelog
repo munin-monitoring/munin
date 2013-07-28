@@ -10,6 +10,8 @@ munin (2.0.16-4) UNRELEASED; urgency=low
     executable in postinst. (Closes: #717847)
   * Don't remove /var/lib/munin-node in munin-node's postrm. The directory
     belongs to munin-plugins-core.
+  * Really remove munin config snippet from apache2/conf.d during postrm.
+    (Closes: #708864)
 
  -- Holger Levsen <holger@debian.org>  Thu, 18 Jul 2013 16:33:02 +0200
 

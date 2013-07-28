@@ -35,7 +35,7 @@ if [ "$1" = "purge" ]; then
 	delete_dir_if_empty /etc/munin
 
 	webserver=apache2
-	if [ -e /etc/$webserver/conf.d/munin ]; then
+	if [ -L /etc/$webserver/conf.d/munin ]; then
 		# delete the link
 		rm -f /etc/$webserver/conf.d/munin
 		invoke-rc.d $webserver reload 3>/dev/null || true
