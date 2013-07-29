@@ -52,6 +52,8 @@ GPLv2
 
 =cut
 
+use Munin::Plugin;
+
 my $ret = undef;
 if (! eval "require LWP::UserAgent;")
 {

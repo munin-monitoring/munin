@@ -35,10 +35,8 @@ GPLv2
 
 =head1 BUGS
 
-Does not handle cases where the block special device is the same for
-multiple mounts.  On Ubuntu systems, this is commonly "none" for
-non-disk file systems like fusectl, debugfs, securityfs, devpts,
-tmpfs, etc...
+Does not handle cases where the block device is the same
+for multiple mounts.
 
 =head1 MAGIC MARKERS
 
@@ -56,6 +54,20 @@ if [ "$1" = "autoconf" ]; then
 	exit 0
 fi
 
+# Append $mnt in case $dev is not a real block device
+get_fieldname() {
+	dev="$1"
+	mnt="$2"
+	case "$dev" in
+		"/*" )
+			clean_fieldname $dev
+			;;
+		* )
+			clean_fieldname "$dev $mnt"
+			;;
+	esac
+}
+
 total=${total:-on}
 
 exclude=${exclude:-iso9660}
@@ -72,7 +84,7 @@ if [ "$1" = "config" ]; then
 	fi
 	df -P -l $exclude | sed 1d | grep -v "//" | 
 	while read dev size used avail cap mnt; do
-		name="$(clean_fieldname $dev)"
+		name="$(get_fieldname $dev $mnt)"
 		echo "$name.label $mnt"
 		echo "$name.cdef $name,1024,*"
 		warn=$(get_warning $name)
@@ -89,5 +101,5 @@ fi
 
 df -P -l $exclude | sed 1d | grep -v "//" | 
    while read dev size used avail cap mnt; do
-	echo "$(clean_fieldname $dev).value $used"
+	echo "$(get_fieldname $dev $mnt).value $used"
 done

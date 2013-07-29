@@ -57,7 +57,7 @@ license.  Munin is GPLv2 licensed.
 =cut
 
 use Munin::Plugin;
-use Munin::Common::Defaults;
+
 
 my $ret = undef;
 
