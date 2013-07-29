@@ -1,6 +1,7 @@
-munin (2.0.16-4) UNRELEASED; urgency=low
+munin (2.0.17-1) unstable; urgency=low
 
   [ Holger Levsen ]
+  * New upstream version. (Closes: #712793, #717265)
   * Drop debian/munin-async.logrotate and also add code to
     munin-async.postinst to remove that file (and keep a backup if it was
     modified) on upgrades from older versions. (Closes: #717260)
@@ -13,7 +14,7 @@ munin (2.0.16-4) UNRELEASED; urgency=low
   * Really remove munin config snippet from apache2/conf.d during postrm.
     (Closes: #708864)
 
- -- Holger Levsen <holger@debian.org>  Thu, 18 Jul 2013 16:33:02 +0200
+ -- Holger Levsen <holger@debian.org>  Tue, 30 Jul 2013 01:03:05 +0200
 
 munin (2.0.16-3) unstable; urgency=low
 
