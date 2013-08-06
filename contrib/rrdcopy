@@ -111,7 +111,7 @@ for (my $epoch = $start; $epoch <= $stop; $epoch += $step_sample) {
 	}
 
 	next unless @rrd_updates; 
-	print "RRDs::update($dst_rrd, --template, " . join(':', @ds_names) . ", " . join(", ", @rrd_updates) . "\n" if $ENV{DEBUG};
+	print "rrdtool update $dst_rrd --template " . join(':', @ds_names) . ", " . join(", ", @rrd_updates) . "\n" if $ENV{DEBUG};
 	RRDs::update(
 		$dst_rrd,
 		"--template", join(':', @ds_names), 
