@@ -86,7 +86,8 @@ for (my $epoch = $start; $epoch <= $stop; $epoch += $step_sample) {
 		$src_rrd,
 		"AVERAGE",
 		"--start", $epoch,
-		"--end", $epoch + $step_sample,
+		# the last should not be used
+		"--end", $epoch + $step_sample-1,
 	);
 
 
