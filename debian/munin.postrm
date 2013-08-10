@@ -48,7 +48,7 @@ if [ "$1" = "purge" ]; then
 	fi 
 	
 	# Remove configuration from Apache 2.4 conf dir
-	if [ -e /etc/$webserver/conf-available/munin.conf ]; then
+	if [ -L /etc/$webserver/conf-available/munin.conf ]; then
 		# delete the link
 		rm -f /etc/$webserver/conf-available/munin.conf
 	fi
