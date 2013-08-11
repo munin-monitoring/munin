@@ -109,7 +109,7 @@ case "$1" in
 			initperms
 		fi
 		if [ -z "$2" ] ; then
-			apache_install
+			apache_install $@
 		fi
 		;;
 	abort-upgrade|abort-deconfigure|abort-remove)
