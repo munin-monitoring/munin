@@ -213,7 +213,7 @@ install-doc: build-doc
 # Dummy rule to enable parallel building
 infiles: $(INFILES)
 
-build: infiles build-master build-common-prime build-node build-plugins $(JAVA_BUILD) build-man
+build: infiles build-master build-common-prime build-node build-plugins $(JAVA_BUILD) build-man substitue-confvar-inline
 
 build/%: %.in
 	@echo "$< -> $@"
@@ -252,6 +252,47 @@ build/%: %.in
 
 
 build-common-prime: build-common-pre common/blib/lib/Munin/Common/Defaults.pm build-common
+
+substitue-confvar-inline:
+	@sed -e 's|@@PREFIX@@|$(PREFIX)|g'                      \
+             -e 's|@@CONFDIR@@|$(CONFDIR)|g'                    \
+             -e 's|@@BINDIR@@|$(BINDIR)|g'                      \
+             -e 's|@@SBINDIR@@|$(SBINDIR)|g'                    \
+             -e 's|@@DOCDIR@@|$(DOCDIR)|g'                      \
+             -e 's|@@LIBDIR@@|$(LIBDIR)|g'                      \
+             -e 's|@@MANDIR@@|$(MANDIR)|g'                      \
+             -e 's|@@LOGDIR@@|$(LOGDIR)|g'                      \
+             -e 's|@@HTMLDIR@@|$(HTMLDIR)|g'                    \
+             -e 's|@@DBDIR@@|$(DBDIR)|g'                        \
+             -e 's|@@STATEDIR@@|$(STATEDIR)|g'                  \
+             -e 's|@@SPOOLDIR@@|$(SPOOLDIR)|g'                  \
+             -e 's|@@PERL@@|$(PERL)|g'                          \
+             -e 's|@@PERLLIB@@|$(PERLLIB)|g'                    \
+             -e 's|@@PYTHON@@|$(PYTHON)|g'                      \
+             -e 's|@@RUBY@@|$(RUBY)|g'                          \
+             -e 's|@@JAVARUN@@|$(JAVARUN)|g'                    \
+             -e 's|@@JAVALIBDIR@@|$(JAVALIBDIR)|g'              \
+             -e 's|@@OSTYPE@@|$(OSTYPE)|g'                      \
+             -e 's|@@HOSTNAME@@|$(HOSTNAME)|g'                  \
+             -e 's|@@MKTEMP@@|$(MKTEMP)|g'                      \
+             -e 's|@@VERSION@@|$(VERSION)|g'                    \
+             -e 's|@@PLUGSTATE@@|$(PLUGSTATE)|g'                \
+             -e 's|@@CGIDIR@@|$(CGIDIR)|g'                      \
+             -e 's|@@USER@@|$(USER)|g'                          \
+             -e 's|@@GROUP@@|$(GROUP)|g'                        \
+             -e 's|@@PLUGINUSER@@|$(PLUGINUSER)|g'              \
+             -e 's|@@GOODSH@@|$(GOODSH)|g'                      \
+             -e 's|@@BASH@@|$(BASH)|g'                          \
+             -e 's|@@HASSETR@@|$(HASSETR)|g'                    \
+             --in-place                                         \
+             ./master/blib/libdoc/Munin::Master::HTMLOld.3pm    \
+             ./master/blib/lib/Munin/Master/HTMLOld.pm          \
+             ./node/blib/sbin/munin-node-configure              \
+             ./node/blib/sbin/munin-node                        \
+             ./node/blib/sbin/munin-run                         \
+             ./node/blib/sbin/munin-sched                       \
+             ./build/doc/munin-node.conf.5
+
 
 build-common-pre: common/Build
 	cd common && $(PERL) Build code
