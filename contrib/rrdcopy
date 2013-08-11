@@ -20,7 +20,7 @@
 #	DS:42:GAUGE:600:U:U \
 #	RRA:AVERAGE:0.5:1:115200 \
 #	RRA:MIN:0.5:1:115200 \
-#       RRA:MAX:0.5:1:115200
+#	RRA:MAX:0.5:1:115200
 # 
 # It doesn't do any MIN/MAX replication since this information 
 # is usually not accurate at all when resampling.
