@@ -38,7 +38,10 @@ if [ "$1" = "purge" ]; then
 	if [ -L /etc/$webserver/conf.d/munin ]; then
 		# delete the link
 		rm -f /etc/$webserver/conf.d/munin
-		invoke-rc.d $webserver reload 3>/dev/null || true
+		# apache2-maintscript-helper will restart apache anyway
+		if [ ! -e /usr/share/apache2/apache2-maintscript-helper ] ; then
+			invoke-rc.d $webserver reload 3>/dev/null || true
+		fi
 	fi
 	
 	# Disable configuration with Apache 2.4
