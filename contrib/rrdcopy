@@ -107,7 +107,7 @@ for (my $epoch = $start; $epoch <= $stop; $epoch += $step_sample) {
 		print "Data:\n";
 	}
 
-        $fetched_epoch -= $fetched_step;
+	$fetched_epoch -= $fetched_step;
 
 	for my $line ( @$data ) {
 		$fetched_epoch += $fetched_step;
