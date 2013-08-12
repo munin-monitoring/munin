@@ -37,6 +37,8 @@ use CGI::Fast qw(:cgi);
 use CGI::Carp qw(fatalsToBrowser);
 use Time::HiRes qw(gettimeofday tv_interval);
 
+use Munin::Master;
+
 use Munin::Master::GraphOld;
 use Munin::Master::Utils;
 
@@ -67,7 +69,8 @@ push @params, "--log-file", $logfile;
 
 my $config = graph_startup(\@params);
 
-logger_open($config->{'logdir'});
+master_setup( $config );
+logger_open ( $config->{'logdir'} );
 logger_debug() if defined($ENV{CGI_DEBUG});
 
 # BEGIN FAST-CGI LOOP:
@@ -132,12 +135,12 @@ while (new CGI::Fast) {
     # Note: $serv *may* have some "-" inside (See #1218)
 
     my ($dom, $host, $serv, $scale) =
-      $path =~ m#^/(.*)/([^/]+)/([\w-]+)-([\w=,]+)\.png#; ## avoid bug in vim
+        $path =~ m#^/(.*)/([^/]+)/([\w-]+)-([\w=,]+)\.png#; ## avoid bug in vim
 
     DEBUG "asked for ($dom, $host, $serv, $scale)";
 
     if ($scale =~ /pinpoint=(\d+),(\d+)/) {
-	    $pinpoint = [ $1, $2, ];
+        $pinpoint = [ $1, $2, ];
     }
 
     if (! &verify_parameters ($dom, $host, $serv, $scale)) {
@@ -154,8 +157,9 @@ while (new CGI::Fast) {
 
     my $time = time;
 
-    # If a "Cache-Control: no-cache" header gets send, we regenerate the image in every case:
-    # Removed $pinpoint from the $no_cache expression - janl 2010-09-29
+    # If a "Cache-Control: no-cache" header gets sent, we regenerate
+    # the image in every case: Removed $pinpoint from the $no_cache
+    # expression - janl 2010-09-29
 
     my $no_cache = defined($ENV{HTTP_CACHE_CONTROL}) &&
       $ENV{HTTP_CACHE_CONTROL} =~ /no-cache/i;
@@ -182,7 +186,7 @@ while (new CGI::Fast) {
     if ($graph_epoch) {
       # The graph is fresh enough. Sending either IMS if asked, or
       # just skip generation
-	# Check for If-Modified-Since and send 304 if not changed:
+       # Check for If-Modified-Since and send 304 if not changed:
 	if (defined $ENV{HTTP_IF_MODIFIED_SINCE} &&
 	    ! rfctime_newer_than($ENV{HTTP_IF_MODIFIED_SINCE}, $graph_epoch)) {
 
@@ -211,9 +215,9 @@ while (new CGI::Fast) {
 
 	# Try to generate the graph
 	my $generated_file = eval {
- 		draw_graph_or_complain($dom, $host, $serv, $scale_options, $filename);
+	        draw_graph_or_complain($dom, $host, $serv, $scale_options, $filename);
 	};
-	
+
 	# handle exceptions
 	if ($@) {
 		if ($@ =~ m/^Could not find FQN/) {
@@ -226,7 +230,7 @@ while (new CGI::Fast) {
 			# Next item
 			next;
 		}
-		
+
 		# Generic error
 		# .. we DO NOT DIE, as spawn-fcgi doesn't like it.
 		ERROR "[ERROR] $@";
