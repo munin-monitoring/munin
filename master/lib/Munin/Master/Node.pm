@@ -141,12 +141,18 @@ sub _do_connect {
 	    die "[ERROR] Got unknown reply from node ".$self->{host}."\n";
 	}
 
-	if ($greeting =~ /\#.*(?:lrrd|munin) (?:client|node) at (\S+)/i) {
-	    $self->{node_name} = $1;
-	}
+	$self->{node_name} = $self->_extract_name_from_greeting($greeting);
     };
 
     return 1;
+}
+
+sub _extract_name_from_greeting {
+    my ($self, $greeting) = @_;
+
+    if ($greeting =~ /\#.*(?:lrrd|munin) (?:client|node) at (\S+)/i) {
+        return $1;
+    }
 }
 
 sub _run_starttls_if_required {
