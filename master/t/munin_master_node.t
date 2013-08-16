@@ -3,7 +3,7 @@ use warnings;
 use strict;
 
 use Munin::Master::Config;
-use Test::More tests => 15;
+use Test::More tests => 16;
 use Test::MockModule;
 use Test::MockObject::Extends;
 use Test::Exception;
@@ -59,6 +59,9 @@ sub setup {
        'foo.example.com', 'Node name from new greeting');
     is($node->_extract_name_from_greeting('# lrrd client at foo.example.com'),
        'foo.example.com', 'Node name from old greeting');
+    is($node->_extract_name_from_greeting('No mail.\nLast login: Fri Aug 16 02:36:32 2013 from localhost\n# munin node at bar.example.com'),
+       'bar.example.com', 'Node name from new greeting with lots of output from ssh/motd');
+
 }
 
 

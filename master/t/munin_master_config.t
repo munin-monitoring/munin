@@ -62,6 +62,7 @@ my $fasit = {
 	staticdir              => '/opt/munin/sandbox/etc/opt/munin/static',
 	rrdcached_socket       => '/var/run/rrdcached.sock',
 	cgitmpdir              => '/opt/munin/sandbox/var/cache/munin-cgi',
+	graph_strategy         => 'cron',
     },
 };
 
