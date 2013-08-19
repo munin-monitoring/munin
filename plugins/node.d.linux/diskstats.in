@@ -217,13 +217,6 @@ sub calculate_values {
     my $average_rd_wait_in_sec = $read_ios  ? $rd_ticks / $read_ios / 1000  : 0;
     my $average_wr_wait_in_sec = $write_ios ? $wr_ticks / $write_ios / 1000 : 0;
 
-    if ( $average_rd_wait_in_sec < 0 ) {
-      $average_rd_wait_in_sec = 0;
-    }
-    if ( $average_wr_wait_in_sec < 0 ) {
-      $average_wr_wait_in_sec = 0;
-    }
-
     my $average_rd_rq_size_in_kb =
       $read_ios ? $rd_sectors * $bytes_per_sector / 1000 / $read_ios : 0;
     my $average_wr_rq_size_in_kb =
