@@ -531,7 +531,7 @@ sub set_run
     my $i = 0;
     foreach(@procname) {
         $proctitlec[$i] = "$procname[$i]";
-        $procuniq[$i] = "$procname[$i]";
+        $procuniq[$i] = clean_fieldname("$procname[$i]");
         if (length($procargs[$i]) > 0 ) {
             $proctitlec[$i] = "$proctitlec[$i] $procargs[$i]";
             $procuniq[$i] = $procuniq[$i]."_".$procargs[$i];
