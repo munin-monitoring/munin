@@ -11,7 +11,7 @@ feature propper object orientation like munin-update and will have to
 wait until later.
 
 Copyright (C) 2002-2010 Jimmy Olsen, Audun Ytterdal, Kjell Magne
-Øierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
+ï¿½ierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -322,6 +322,8 @@ sub graph_startup {
 
     my $palette = &munin_get($config, "palette", "default");
 
+    my $custom_palette = &munin_get($config, "custom_palette", "");
+
     $max_running = &munin_get($config, "max_graph_jobs", $max_running);
 
     if ($config->{"rrdcached_socket"}) { 
@@ -344,6 +346,16 @@ sub graph_startup {
     }
     else {
         die "Unknown palette named by 'palette' keyword: $palette\n";
+    }
+
+    if ($custom_palette !~ /^$/) {
+        $custom_palette = uc($custom_palette);
+        if ($custom_palette =~ /^[0-9A-F]{6}(\s+[0-9A-F]{6})*$/) {
+            @COLOUR = split(/\s+/, $custom_palette);
+        }
+        else {
+            die "Invalid custom_palette: palette must be space separated 24-bit hex color code.";
+        }
     }
 
     return $config;

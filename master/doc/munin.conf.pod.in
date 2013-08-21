@@ -87,6 +87,10 @@ take considerably more time.  Affects: munin-update.
 Choose palette between the very nice "C<default>", and the good old
 "C<old>".
 
+=item B<custom_palette> rrggbb rrggbb ...
+
+Create user defined custom palette to colour graphs. Must be space separated 24-bit hex color codes.
+
 =item B<graph_data_size> I<value>
 
 This directive sets the resolution of the RRD files that are created.

@@ -65,6 +65,14 @@ otherwise.
 
    Affects: :ref:`munin-graph`
 
+.. option:: custom_palette rrggbb rrggbb ...
+
+   The user defined custom palette used by :ref:`munin-graph` and :ref:`munin-cgi-graph`
+   to colour the graphs. This option override existing palette.
+   The palette must be space-separeted 24-bit hex color code.
+
+   Affects: :ref:`munin-graph`
+   
 .. option:: graph_data_size <normal|huge>
 
    This directive sets the resolution of the RRD files that are
