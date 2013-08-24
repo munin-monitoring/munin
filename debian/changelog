@@ -1,3 +1,8 @@
+munin (2.0.17-2) UNRELEASED; urgency=low
+
+
+ -- Holger Levsen <holger@debian.org>  Sat, 24 Aug 2013 11:13:47 +0200
+
 munin (2.0.17-1) unstable; urgency=low
 
   [ Holger Levsen ]
