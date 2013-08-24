@@ -1,7 +1,12 @@
 munin (2.0.17-2) UNRELEASED; urgency=low
 
+  * munin-async.init:
+    - provide LSB status command.
+    - fix $SCRIPTNAME.
+    - rm pid file on stop. 
+    Thanks to Daniel Black for the patch. (Closes: #720280)
 
- -- Holger Levsen <holger@debian.org>  Sat, 24 Aug 2013 11:13:47 +0200
+ -- Holger Levsen <holger@debian.org>  Sat, 24 Aug 2013 11:10:59 +0200
 
 munin (2.0.17-1) unstable; urgency=low
 
