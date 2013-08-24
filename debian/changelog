@@ -1,5 +1,12 @@
 munin (2.0.17-2) UNRELEASED; urgency=low
 
+  [ Matthias Schmitz ]
+  * Don't remove munin's apache2.4 configuration on removal. This is the
+    behavior as we do with the apache2.2 configuration.
+  * As apache2-maintscript-helper doesn't work if called from a function we now
+    give $@ of the postinst to our apache_install function. (Closes: #718959)
+
+  [ Holger Levsen ]
   * munin-async.init:
     - provide LSB status command.
     - fix $SCRIPTNAME.
@@ -8,7 +15,7 @@ munin (2.0.17-2) UNRELEASED; urgency=low
   * munin-node.cron.d: set MUNIN_PLUGSTATE. (Closes: #720275) Thanks again to
     Daniel Black.
 
- -- Holger Levsen <holger@debian.org>  Sat, 24 Aug 2013 11:10:59 +0200
+ -- Matthias Schmitz <matthias@sigxcpu.org>  Sun, 11 Aug 2013 15:07:24 +0200
 
 munin (2.0.17-1) unstable; urgency=low
 
