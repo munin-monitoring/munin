@@ -5,6 +5,8 @@ munin (2.0.17-2) UNRELEASED; urgency=low
     - fix $SCRIPTNAME.
     - rm pid file on stop. 
     Thanks to Daniel Black for the patch. (Closes: #720280)
+  * munin-node.cron.d: set MUNIN_PLUGSTATE. (Closes: #720275) Thanks again to
+    Daniel Black.
 
  -- Holger Levsen <holger@debian.org>  Sat, 24 Aug 2013 11:10:59 +0200
 

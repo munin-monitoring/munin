@@ -4,6 +4,9 @@
 
 MAILTO=root
 
+# as the plugin is executed directly, this has to be set manually:
+MUNIN_PLUGSTATE=/var/lib/munin-node/plugin-state/root
+
 # If the APT plugin is enabled, update packages databases approx. once
 # an hour (12 invokations an hour, 1 in 12 chance that the update will
 # happen), but ensure that there will never be more than two hour (7200
