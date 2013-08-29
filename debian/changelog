@@ -1,4 +1,4 @@
-munin (2.0.17-2) UNRELEASED; urgency=low
+munin (2.0.17-2) unstable; urgency=low
 
   [ Matthias Schmitz ]
   * Don't remove munin's apache2.4 configuration on removal. This is the
@@ -16,7 +16,7 @@ munin (2.0.17-2) UNRELEASED; urgency=low
   * Provide examples how to configure munin for nginx, thanks to Daniel
     Dehennin. (Closes: #684466)
 
- -- Matthias Schmitz <matthias@sigxcpu.org>  Sun, 11 Aug 2013 15:07:24 +0200
+ -- Holger Levsen <holger@debian.org>  Thu, 29 Aug 2013 20:58:58 +0000
 
 munin (2.0.17-1) unstable; urgency=low
 
