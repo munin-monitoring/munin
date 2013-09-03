@@ -1,27 +1,13 @@
-==================
- Installing Munin
-==================
+====================
+ Munin Architecture
+====================
 
-With open source software, you can choose to install binary packages
-or install from source-code. To install a package or install from
-source is a matter of personal taste. If you don't know which method
-too choose read the whole document and choose the method you are most
-comfortable with.
-
-Master and node
-===============
-
-Munin is split into two distinct roles.
-
-Node
-----
-
-The "munin node" is a daemon which runs on all servers being
-monitored.
-
+Munin is split into distincts roles.
 
 Master
 ------
+
+This is what 
 
 The "munin master" connects to all munin nodes, collects data, and
 stores it in `RRD <http://oss.oetiker.ch/rrdtool/>`_
@@ -33,6 +19,29 @@ munin, it should be enough to install the munin master on one server.
 On the munin master, you will need a web server capable of running CGI
 or FastCGI. Apache HTTD should be suitable. Also reported to be
 working is nginx and lighttpd.
+
+Node
+----
+
+The "munin node" is a daemon which runs on all servers being
+monitored.
+
+
+==================
+ Installing Munin
+==================
+
+With open source software, you can choose to install binary packages
+or install from source-code. 
+
+Source or packages?
+===================
+
+We `stronly` recommend a packaged install, as the source distribution isn't as
+tested as the packaged one. The current state of the packages is so
+satifactory, that even the developpers use them instead.
+
+
 
 Source or packages?
 ===================
