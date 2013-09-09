@@ -6,6 +6,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   preface/index.rst
    installation/index.rst
    master/index.rst
    node/index.rst
