@@ -4,6 +4,15 @@
  Preface
 =========
 
+.. toctree::
+   :maxdepth: 2
+
+   whatis.rst
+   history.rst
+   conventions.rst
+   moreinfo.rst
+   bugreport.rst
+
 This guide is the official documentation of Munin. It has been written by the
 Munin developers and other volunteers in parallel to the development of the
 Munin software. It describes all the functionality that the current version of
