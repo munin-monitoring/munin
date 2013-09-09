@@ -30,7 +30,7 @@ client programs.
 extensibility capabilities of the server. Topics include user-defined data
 types and functions.
 
-`Part VI <install-index>`_ contains reference information about SQL commands,
+`Part VI <install-index>`_ contains reference information about Munin commands,
 client and server programs. This part supports the other parts with structured
 information sorted by command or program.
 
@@ -40,10 +40,13 @@ to Munin developers.
 .. Note::
         If you think that our Guide looks quite familiar, it is done on
         purpose, as we took a great inspiration of PostgreSQL’s Manual. We even
-        copied some generic sentences that was already very well worded.
+        copied some generic sentences that were already very well worded.
 
         In fact, the PostgreSQL project was, and still is, of a great guidance,
-        as it does so many things right.  The parts that were *imported* from
-        PostgreSQL are still under the `PostgreSQL license`__.
+        as it does so many things right. The parts that were *imported* from
+        PostgreSQL are obviously still under the `PostgreSQL license`__ [#]_.
 
 __ http://www.postgresql.org/about/licence/
+.. [#] We are not license experts, so if a PostgreSQL license guru has some
+       issues with that, we'll be happy to resolve them together.
+
