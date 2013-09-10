@@ -7,11 +7,12 @@ Contents:
    :maxdepth: 2
 
    preface/index.rst
-   installation/index.rst
+   tutorial/index.rst
    master/index.rst
    node/index.rst
    plugin/index.rst
    documentation/index.rst
+   installation/index.rst
    reference/index.rst
    example/index.rst
 

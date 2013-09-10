@@ -120,3 +120,33 @@ The following items should be contained in every bug report:
   processor, memory information, and so on. In most cases it is sufficient to
   report the vendor and version, but do not assume everyone knows what exactly
   "Debian" contains or that everyone runs on amd64.
+
+Where to Report
+===============
+
+In general fill in the bug report web-form available at the project's
+:ref:`web site<website>`. Entering a bug report this way causes it to be mailed to the
+<bugs@munin-monitoring.org> mailing list.
+
+If your bug report has security implications and you'd prefer that it not
+become immediately visible in public archives, don't send it to bugs. Security
+issues can be reported privately to <security@munin-monitoring.org>.
+
+Do not send bug reports to any of the :ref:`user mailing lists<mailing-lists>`. These mailing lists
+are for answering user questions, and their subscribers normally do not wish to
+receive bug reports. More importantly, they are unlikely to fix them. If you
+have some doubts about your issue being a bug, just drop by on :ref:`IRC` and ask
+there first.
+
+If you have a problem with the documentation, the best place to report it is on
+:ref:`IRC` where most of the devs hang out. Please be specific about what part
+of the documentation you are unhappy with.
+
+.. Note::
+
+        Due to the unfortunate amount of spam going around, all of the above
+        email addresses are closed mailing lists. That is, you need to be
+        subscribed to a list to be allowed to post on it.
+
+        If you would like to send mail but do not want to receive list traffic,
+        you can subscribe and set your subscription option to nomail.

@@ -4,6 +4,8 @@ Further Information
 
 Besides the documentation, that is, this guide, there are other resources about Munin:
 
+.. _website:
+
 Web
 ===
 
@@ -17,6 +19,8 @@ One very important part is the `FAQ`__ (Frequently Asked Questions), which
 contains most answers to a wide array of questions.
 
 __ http://munin-monitoring.org/wiki/faq
+
+.. _mailing-lists:
 
 Mailing Lists
 =============
@@ -38,6 +42,8 @@ the mailing lists and answer questions.
 
 If you learn something which is not in the documentation, write it up and
 contribute it. If you add features to the code, contribute them.
+
+.. _irc:
 
 IRC
 ===
