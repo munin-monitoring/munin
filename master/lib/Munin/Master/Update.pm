@@ -254,6 +254,9 @@ sub _write_new_service_configs {
 
     # Also write the binary (Storable) version
     munin_writeconfig_storable($config->{dbdir}.'/datafile.storable', $datafile_hash);
+
+    # Also write the SQL version
+    munin_writeconfig_sql($config->{dbdir}.'/datafile.sqlite', $datafile_hash);
 }
 
 
