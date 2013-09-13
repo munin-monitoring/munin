@@ -73,20 +73,8 @@ sub _read_old_service_configs {
 
     my $datafile = $oldconfig->{config_file} = $config->{dbdir}.'/datafile';
 
-    my $file;
-    
-    if (-e $datafile ) {
-	if (! open( $file, '<', $datafile)) {
-	    WARN "[Warning] Cannot open datafile $datafile";
-	    return {};
-	}
-	eval {
-	    $oldconfig->parse_config($file);
-	};
-	if ($EVAL_ERROR) {
-	    WARN "[Warning] Could not parse datafile $datafile: $EVAL_ERROR";
-	}
-    }
+    $oldconfig = munin_read_storable("$datafile.storable", $oldconfig);
+
     return $oldconfig;
 }
 
