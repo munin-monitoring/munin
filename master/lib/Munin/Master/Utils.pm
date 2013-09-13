@@ -884,6 +884,10 @@ sub munin_writeconfig_sql {
 	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename_tmp","","") or die $DBI::errstr;
 	$dbh->do("PRAGMA synchronous = 0");
 
+	# <helmut> halves io bandwidth at the expense of dysfunctional rollback
+	# We do not care for rollback yet
+	$dbh->do("PRAGMA journal_mode = OFF");
+
 	# Create DB
 	$dbh->do("CREATE TABLE object (id INTEGER, p_id INTEGER, type VARCHAR, name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE TABLE object_value (id INTEGER, name VARCHAR, value VARCHAR)");
