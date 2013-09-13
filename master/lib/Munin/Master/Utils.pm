@@ -889,9 +889,8 @@ sub munin_writeconfig_sql {
 	$dbh->do("PRAGMA journal_mode = OFF");
 
 	# Create DB
-	$dbh->do("CREATE TABLE object (id INTEGER, p_id INTEGER, type VARCHAR, name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE object (id INTEGER PRIMARY KEY, p_id INTEGER, type VARCHAR, name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE TABLE object_value (id INTEGER, name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX pk_object ON object (id)");
 	$dbh->do("CREATE UNIQUE INDEX pk_object_value ON object_value (id, name)");
 
 	# Inserting in DB
