@@ -840,12 +840,17 @@ sub munin_writeconfig_loop {
 }
 
 my $global_id = 1000;
+
+sub _get_next_id {
+	return $global_id ++;
+}
+
 sub munin_writeconfig_sql_loop {
 	my ($hash, $pre, $sth_node, $sth_value) = @_;
 
 	my $id = $hash->{'#%#id'};
 	unless ($id) {
-		$id = $global_id ++;
+		$id = _get_next_id();
 		$hash->{'#%#id'} = $id;
 	}
 
@@ -854,7 +859,7 @@ sub munin_writeconfig_sql_loop {
 		my $path = (defined $pre ? join(';', ($pre, $key)) : $key);
 
 		if (ref ($hash->{$key}) eq "HASH") {
-			my $sub_id = $global_id ++;
+			my $sub_id = _get_next_id();
 			$hash->{$key}->{'#%#id'} = $sub_id;
 			$sth_node->execute($sub_id, $id, $key, $pre);
 			munin_writeconfig_sql_loop ($hash->{$key}, $path, $sth_node, $sth_value);
