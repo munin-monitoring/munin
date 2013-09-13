@@ -846,7 +846,7 @@ sub _get_next_id {
 }
 
 sub munin_writeconfig_sql_loop {
-	my ($hash, $pre, $sth_node, $sth_value) = @_;
+	my ($hash, $pre, $sth_object, $sth_value) = @_;
 
 	my $id = $hash->{'#%#id'};
 	unless ($id) {
@@ -862,8 +862,8 @@ sub munin_writeconfig_sql_loop {
 			my $sub_id = _get_next_id();
 			$hash->{$key}->{'#%#id'} = $sub_id;
 			my $type = $hash->{$key}->{'#%#type'};
-			$sth_node->execute($sub_id, $id, $type, $key, $pre);
-			munin_writeconfig_sql_loop ($hash->{$key}, $path, $sth_node, $sth_value);
+			$sth_object->execute($sub_id, $id, $type, $key, $pre);
+			munin_writeconfig_sql_loop ($hash->{$key}, $path, $sth_object, $sth_value);
 		} else {
 			next if !defined $pre and $key eq "version"; # Handled separately
 			next if !defined $hash->{$key} or !length $hash->{$key};
@@ -885,16 +885,16 @@ sub munin_writeconfig_sql {
 	$dbh->do("PRAGMA synchronous = 0");
 
 	# Create DB
-	$dbh->do("CREATE TABLE node (id INTEGER, p_id INTEGER, type VARCHAR, name VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE TABLE node_value (id INTEGER, name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX pk_node ON node (id)");
-	$dbh->do("CREATE UNIQUE INDEX pk_node_value ON node_value (id, name)");
+	$dbh->do("CREATE TABLE object (id INTEGER, p_id INTEGER, type VARCHAR, name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE object_value (id INTEGER, name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX pk_object ON object (id)");
+	$dbh->do("CREATE UNIQUE INDEX pk_object_value ON object_value (id, name)");
 
 	# Inserting in DB
-	my $sth_node = $dbh->prepare('INSERT INTO node (id, p_id, type, name, path) VALUES (?, ?, ?, ?, ?)');
-	my $sth_value = $dbh->prepare('INSERT INTO node_value (id, name, value) VALUES (?, ?, ?)');
+	my $sth_object = $dbh->prepare('INSERT INTO object (id, p_id, type, name, path) VALUES (?, ?, ?, ?, ?)');
+	my $sth_value = $dbh->prepare('INSERT INTO object_value (id, name, value) VALUES (?, ?, ?)');
 
-	munin_writeconfig_sql_loop($data, "", $sth_node, $sth_value);
+	munin_writeconfig_sql_loop($data, "", $sth_object, $sth_value);
 
 	# Atomic remove
 	rename("$datafilename_tmp", "$datafilename");
