@@ -856,7 +856,7 @@ sub munin_writeconfig_sql_loop {
 		if (ref ($hash->{$key}) eq "HASH") {
 			my $sub_id = $global_id ++;
 			$hash->{$key}->{'#%#id'} = $sub_id;
-			$sth_node->execute($sub_id, $id, $path);
+			$sth_node->execute($sub_id, $id, $key, $pre);
 			munin_writeconfig_sql_loop ($hash->{$key}, $path, $sth_node, $sth_value);
 		} else {
 			next if !defined $pre and $key eq "version"; # Handled separately
@@ -879,13 +879,13 @@ sub munin_writeconfig_sql {
 	$dbh->do("PRAGMA synchronous = 0");
 
 	# Create DB
-	$dbh->do("CREATE TABLE node (id INTEGER, p_id INTEGER, path VARCHAR)");
+	$dbh->do("CREATE TABLE node (id INTEGER, p_id INTEGER, name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE TABLE node_value (id INTEGER, name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX pk_node ON node (id)");
 	$dbh->do("CREATE UNIQUE INDEX pk_node_value ON node_value (id, name)");
 
 	# Inserting in DB
-	my $sth_node = $dbh->prepare('INSERT INTO node (id, p_id, path) VALUES (?, ?, ?)');
+	my $sth_node = $dbh->prepare('INSERT INTO node (id, p_id, name, path) VALUES (?, ?, ?, ?)');
 	my $sth_value = $dbh->prepare('INSERT INTO node_value (id, name, value) VALUES (?, ?, ?)');
 
 	munin_writeconfig_sql_loop($data, "", $sth_node, $sth_value);
