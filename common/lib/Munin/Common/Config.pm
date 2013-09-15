@@ -119,10 +119,12 @@ sub _looks_like_a_bool {
 
 
 sub _parse_bool {
-    my ($class, $str) = @_;
+    my ($class, $str, $default) = @_;
 
-    croak "Parse exception: '$str' is not a boolean."
-        unless $class->_looks_like_a_bool($str);
+    if (! $class->_looks_like_a_bool($str)) {
+        return $default if defined $default;
+        croak "Parse exception: '$str' is not a boolean."
+    }
 
     return $str =~ m{\A no|false|off|0 \z}xi ? 0 : 1;
 }
