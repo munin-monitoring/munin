@@ -260,13 +260,15 @@ foreach ( @lines )
 sub fetch_graph
 {
     my $name = shift;
+    my $printname = $name;
+    $printname =~ s/-/_/g;
     my $graphkey = shift;
     my @names = split(/\./,$name);
     my $backend = $names[1];
     my $data;
     my $aspect = $graphs{$graphkey}{'aspect'};
 
-    print "multigraph HAP$name\n";
+    print "multigraph HAP$printname\n";
 
     if(!defined $ARGV[0]){ $data = 'values'; }
     elsif ( $ARGV[0] eq 'config' ) { $data = 'config' }
@@ -288,8 +290,9 @@ sub fetch_graph
     foreach $val (sort keys %{$aspects{$aspect}{'values'}}) {
         if ( $graphs{$graphkey}{'lines'} eq 'frontend' )
         {
-            foreach $fe ( sort keys %{$datas{'frontend'}} )
+            foreach my $tmpfe ( sort keys %{$datas{'frontend'}} )
             {
+                $fe = clean_fieldname ($tmpfe);
                 if ( $data eq 'config' ) {
                     print $fe."_$val.label $fe\n";
                     foreach (@field_parameters) {
@@ -307,19 +310,20 @@ sub fetch_graph
                     }
                 }
                 else {
-                    if ( $val eq 'lastchg' and $datas{'frontend'}{$fe}{'FRONTEND'}{'status'} eq 'DOWN' ) {
+                    if ( $val eq 'lastchg' and $datas{'frontend'}{$tmpfe}{'FRONTEND'}{'status'} eq 'DOWN' ) {
                         print $fe."_".$val.".value 0\n";
                     }
                     else {
-                        print $fe."_".$val.".value ".$datas{'frontend'}{$fe}{'FRONTEND'}{$val}."\n";
+                        print $fe."_".$val.".value ".$datas{'frontend'}{$tmpfe}{'FRONTEND'}{$val}."\n";
                     }
                 }
             }
         }
         elsif ( $graphs{$graphkey}{'lines'} eq 'backend' )
         {
-            foreach $be ( sort keys %{$datas{'backend'}} )
+            foreach my $tmpbe ( sort keys %{$datas{'backend'}} )
             {
+                $be = clean_fieldname ($tmpbe);
                 if ( $data eq 'config' ) {
                     print $be."_$val.label $be\n";
                     foreach (@field_parameters) {
@@ -337,19 +341,21 @@ sub fetch_graph
                     }
                 }
                 else {
-                    if ( $val eq 'lastchg' and $datas{'backend'}{$be}{'BACKEND'}{'status'} eq 'DOWN' ) {
+                    if ( $val eq 'lastchg' and $datas{'backend'}{$tmpbe}{'BACKEND'}{'status'} eq 'DOWN' ) {
                         print $be."_".$val.".value 0\n";
                     }
                     else {
-                        print $be."_".$val.".value ".$datas{'backend'}{$be}{'BACKEND'}{$val}."\n";
+                        print $be."_".$val.".value ".$datas{'backend'}{$tmpbe}{'BACKEND'}{$val}."\n";
                     }
                 }
             }
         }
         elsif ( $graphs{$graphkey}{'lines'} eq 'server' )
         {
-            foreach $server ( sort keys %{$datas{'server'}{$backend}} )
+            my $cleanbackend = clean_fieldname($backend);
+            foreach my $tmpserver ( sort keys %{$datas{'server'}{$backend}} )
             {
+                $server = clean_fieldname ($tmpserver);
                 if ( $data eq 'config' ) {
                     print $server."_$val.label $server\n";
                     foreach (@field_parameters) {
@@ -367,11 +373,11 @@ sub fetch_graph
                     }
                 }
                 else {
-                    if ( $val eq 'lastchg' and $datas{'server'}{$backend}{$server}{'status'} eq 'DOWN' ) {
+                    if ( $val eq 'lastchg' and $datas{'server'}{$backend}{$tmpserver}{'status'} eq 'DOWN' ) {
                         print $server."_".$val.".value 0\n";
                     }
                     else {
-                        print $server."_".$val.".value ".$datas{'server'}{$backend}{$server}{$val}."\n";
+                        print $server."_".$val.".value ".$datas{'server'}{$backend}{$tmpserver}{$val}."\n";
                     }
                 }
             }
@@ -395,7 +401,7 @@ sub proc_graph
 
         if ( $name =~ /BACKEND/ )
         {
-            foreach $be (sort keys %{$datas{'backend'}})
+            foreach my $be (sort keys %{$datas{'backend'}})
             {
                 my $name = $name;
                 $name =~ s/BACKEND/$be/;
