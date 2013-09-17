@@ -217,6 +217,11 @@ sub _create_self_aware_worker_exception_handler {
     };
 }
 
+sub _get_last_insert_id {
+	my ($dbh) = @_;
+	return $dbh->last_insert_id("", "", "", "");
+}
+
 sub _dump_into_sql {
 	my ($self) = @_;
 
@@ -239,28 +244,32 @@ sub _dump_into_sql {
         $dbh->do("CREATE TABLE node (id INTEGER PRIMARY KEY, name VARCHAR, path VARCHAR)");
         $dbh->do("CREATE TABLE node_attr (id INTEGER, name VARCHAR, value VARCHAR)");
         $dbh->do("CREATE UNIQUE INDEX pk_node_attr ON node_attr (id, name)");
-	my $sth_node = $dbh->prepare('INSERT INTO node (id, name, path) VALUES (?, ?, ?)');
+	my $sth_node = $dbh->prepare('INSERT INTO node (name, path) VALUES (?, ?)');
 	my $sth_node_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
 
         $dbh->do("CREATE TABLE service (id INTEGER PRIMARY KEY, node_id INTEGER, name VARCHAR, path VARCHAR)");
         $dbh->do("CREATE TABLE service_attr (id INTEGER, name VARCHAR, value VARCHAR)");
         $dbh->do("CREATE UNIQUE INDEX pk_service_attr ON service_attr (id, name)");
-	my $sth_service = $dbh->prepare('INSERT INTO service (id, node_id, name, path) VALUES (?, ?, ?, ?)');
+	my $sth_service = $dbh->prepare('INSERT INTO service (node_id, name, path) VALUES (?, ?, ?)');
 	my $sth_service_attr = $dbh->prepare('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
 	
         $dbh->do("CREATE TABLE ds (id INTEGER PRIMARY KEY, service_id INTEGER, name VARCHAR, path VARCHAR)");
         $dbh->do("CREATE TABLE ds_attr (id INTEGER, name VARCHAR, value VARCHAR)");
         $dbh->do("CREATE UNIQUE INDEX pk_ds_attr ON ds_attr (id, name)");
-	my $sth_ds = $dbh->prepare('INSERT INTO ds (id, service_id, name, path) VALUES (?, ?, ?, ?)');
+	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path) VALUES (?, ?, ?)');
 	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
 
 	# Configuration
 	$config->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
 	for my $key (keys %$config) {
+		next if ref $config->{$key};
 		$sth_param->execute($key, $config->{$key});
 	}
 
-    for my $host (keys %{$self->{service_configs}}) {
+	for my $host (keys %{$self->{service_configs}}) {
+		$sth_node->execute($host, $host);
+		my $host_id = _get_last_insert_id($dbh);
+=head
         for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
             for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
                 munin_set_var_path($datafile_hash, "$host:$service.$attr->[0]", $attr->[1]);
@@ -271,8 +280,11 @@ sub _dump_into_sql {
                 }
             }
         }
+=cut
     }
 
+    # Atomic commit (rename)
+    rename($datafilename_tmp, $datafilename);
 }
 
 sub _write_new_service_configs {
