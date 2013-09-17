@@ -37,7 +37,6 @@ our (@ISA, @EXPORT);
 	   'munin_readconfig_storable',
 	   'munin_writeconfig',
 	   'munin_writeconfig_storable',
-	   'munin_writeconfig_sql',
 	   'munin_read_storable',
 	   'munin_write_storable',
 	   'munin_delete',
@@ -879,70 +878,6 @@ sub munin_writeconfig_loop {
 	    }
 	}
     }
-}
-
-my $global_id = 1000;
-
-sub _get_next_id {
-	return $global_id ++;
-}
-
-sub munin_writeconfig_sql_loop {
-	my ($hash, $pre, $sth_object, $sth_value) = @_;
-
-	my $id = $hash->{'#%#id'};
-	unless ($id) {
-		$id = _get_next_id();
-		$hash->{'#%#id'} = $id;
-	}
-
-	foreach my $key (keys %$hash) {
-		next if substr($key,0,3) eq '#%#';
-		my $path = (defined $pre ? join(';', ($pre, $key)) : $key);
-
-		if (ref ($hash->{$key}) eq "HASH") {
-			my $sub_id = _get_next_id();
-			$hash->{$key}->{'#%#id'} = $sub_id;
-			my $type = $hash->{$key}->{'#%#type'};
-			$sth_object->execute($sub_id, $id, $type, $key, $pre);
-			munin_writeconfig_sql_loop ($hash->{$key}, $path, $sth_object, $sth_value);
-		} else {
-			next if !defined $pre and $key eq "version"; # Handled separately
-			next if !defined $hash->{$key} or !length $hash->{$key};
-			(my $outstring = $hash->{$key}) =~ s/([^\\])#/$1\\#/g;
-			$sth_value->execute($id, $key, $hash->{$key});
-		}
-	}
-}
-
-sub munin_writeconfig_sql {
-	my ($datafilename, $data) = @_;
-
-	my $datafilename_tmp = "$datafilename.tmp.$$";
-
-	DEBUG "[DEBUG] Writing sql to $datafilename";
-
-	use DBI;
-	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename_tmp","","") or die $DBI::errstr;
-	$dbh->do("PRAGMA synchronous = 0");
-
-	# <helmut> halves io bandwidth at the expense of dysfunctional rollback
-	# We do not care for rollback yet
-	$dbh->do("PRAGMA journal_mode = OFF");
-
-	# Create DB
-	$dbh->do("CREATE TABLE object (id INTEGER PRIMARY KEY, p_id INTEGER, type VARCHAR, name VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE TABLE object_value (id INTEGER, name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX pk_object_value ON object_value (id, name)");
-
-	# Inserting in DB
-	my $sth_object = $dbh->prepare('INSERT INTO object (id, p_id, type, name, path) VALUES (?, ?, ?, ?, ?)');
-	my $sth_value = $dbh->prepare('INSERT INTO object_value (id, name, value) VALUES (?, ?, ?)');
-
-	munin_writeconfig_sql_loop($data, "", $sth_object, $sth_value);
-
-	# Atomic remove
-	rename("$datafilename_tmp", "$datafilename");
 }
 
 sub munin_read_storable {
