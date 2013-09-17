@@ -1,0 +1,3 @@
+#! /bin/sh
+
+sqlite3  ./sandbox/var/opt/munin/datafile.sqlite '.dump' | tee ./sandbox/var/opt/munin/datafile.sql
