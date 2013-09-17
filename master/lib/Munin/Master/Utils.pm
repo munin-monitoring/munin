@@ -73,6 +73,7 @@ our (@ISA, @EXPORT);
 	   'munin_get_node',
 	   'munin_set_var_loc',
 	   'munin_set_var_path',
+	   'munin_set_type_path',
 	   'munin_set',
 	   'munin_copy_node_toloc',
 	   'munin_get_separated_node',
@@ -688,6 +689,7 @@ START:
     # Find the next normal value (that doesn't begin with #%#)
     my $tmpvar = $loc->[$iloc++];
     $tmpvar = $loc->[$iloc++] while (defined $tmpvar and
+				 $tmpvar ne '#%#type' and
 				 substr($tmpvar,0,3) eq '#%#');
 
     if (index($tmpvar, " ") != -1) {
@@ -758,6 +760,46 @@ sub munin_get_node_partialpath
     return $ret;
 }
 
+sub munin_set_type_path
+{
+    my $hash = shift;
+    my $var  = shift;
+    my $val  = shift;
+
+    my $result = undef;
+
+    DEBUG "[DEBUG] munin_set_type_path: Setting type \"$var\" = \"$val\"";
+
+    if ($var =~ /^\s*([^:]+):(\S+)\s*$/) {
+	my ($leftstring, $rightstring) = ($1, $2);
+
+	my @leftarr = split (/;/, $leftstring);
+	my @rightarr = split (/\./, $rightstring);
+	$result = munin_set_var_loc ($hash, [@leftarr, @rightarr, "#%#type"], $val);
+    } elsif ($var =~ /^\s*([^;:\.]+)\s*$/) {
+        $result = munin_set_var_loc ($hash, [$1, "#%#type"], $val);
+    } elsif ($var =~ /^\s*([^:;]+)$/) {
+	my @leftarr = split (/\./, $1);
+	$result = munin_set_var_loc ($hash, [@leftarr, "#%#type"], $val);
+    } elsif ($var =~ /^\s*(.+)\.([^\.:;]+)$/) {
+	my ($leftstring, $rightstring) = ($1, $2);
+
+	my @leftarr = split (/;/, $leftstring);
+	my @rightarr = split (/\./, $rightstring);
+	$result = munin_set_var_loc ($hash, [@leftarr, @rightarr, "#%#type"], $val);
+    } elsif ($var =~ /^\s*(\S+)\s*$/) {
+	my @leftarr = split (/;/, $1);
+	$result = munin_set_var_loc ($hash, [@leftarr, "#%#type"], $val);
+    } else {
+	ERROR "Error: munin_set_type_path: Malformatted variable path \"$var\".";
+    }
+
+    if (!defined $result) {
+	ERROR "Error: munin_set_type_path: Failed setting \"$var\" = \"$val\".";
+    }
+
+    return $hash;
+}
 
 sub munin_set_var_path
 {
