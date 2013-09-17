@@ -242,19 +242,19 @@ sub _dump_into_sql {
 	my $sth_param = $dbh->prepare('INSERT INTO param (name, value) VALUES (?, ?)');
 
         $dbh->do("CREATE TABLE node (id INTEGER PRIMARY KEY, name VARCHAR, path VARCHAR)");
-        $dbh->do("CREATE TABLE node_attr (id INTEGER, name VARCHAR, value VARCHAR)");
+        $dbh->do("CREATE TABLE node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
         $dbh->do("CREATE UNIQUE INDEX pk_node_attr ON node_attr (id, name)");
 	my $sth_node = $dbh->prepare('INSERT INTO node (name, path) VALUES (?, ?)');
 	my $sth_node_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
 
-        $dbh->do("CREATE TABLE service (id INTEGER PRIMARY KEY, node_id INTEGER, name VARCHAR, path VARCHAR)");
-        $dbh->do("CREATE TABLE service_attr (id INTEGER, name VARCHAR, value VARCHAR)");
+        $dbh->do("CREATE TABLE service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR)");
+        $dbh->do("CREATE TABLE service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
         $dbh->do("CREATE UNIQUE INDEX pk_service_attr ON service_attr (id, name)");
 	my $sth_service = $dbh->prepare('INSERT INTO service (node_id, name, path) VALUES (?, ?, ?)');
 	my $sth_service_attr = $dbh->prepare('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
 	
-        $dbh->do("CREATE TABLE ds (id INTEGER PRIMARY KEY, service_id INTEGER, name VARCHAR, path VARCHAR)");
-        $dbh->do("CREATE TABLE ds_attr (id INTEGER, name VARCHAR, value VARCHAR)");
+        $dbh->do("CREATE TABLE ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR)");
+        $dbh->do("CREATE TABLE ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
         $dbh->do("CREATE UNIQUE INDEX pk_ds_attr ON ds_attr (id, name)");
 	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path) VALUES (?, ?, ?)');
 	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
