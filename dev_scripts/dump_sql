@@ -1,3 +1,4 @@
 #! /bin/sh
 
-sqlite3  ./sandbox/var/opt/munin/datafile.sqlite '.dump' | tee ./sandbox/var/opt/munin/datafile.sql
+sqlite3  ./sandbox/var/opt/munin/datafile.sqlite '.dump' > ./sandbox/var/opt/munin/datafile.sql
+echo "Dumped in ./sandbox/var/opt/munin/datafile.sql"
