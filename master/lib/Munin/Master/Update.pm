@@ -269,22 +269,26 @@ sub _dump_into_sql {
 	for my $host (keys %{$self->{service_configs}}) {
 		$sth_node->execute($host, $host);
 		my $host_id = _get_last_insert_id($dbh);
-=head
-        for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
-            for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
-                munin_set_var_path($datafile_hash, "$host:$service.$attr->[0]", $attr->[1]);
-            }
-            for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
-                for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
-                    munin_set_var_path($datafile_hash, "$host:$service.$data_source.$attr", $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr});
-                }
-            }
-        }
-=cut
-    }
 
-    # Atomic commit (rename)
-    rename($datafilename_tmp, $datafilename);
+		for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
+			$sth_service->execute($host_id, $service, "$host:$service");
+			my $service_id = _get_last_insert_id($dbh);
+
+			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
+				$sth_service_attr->execute($service_id, $attr->[0], $attr->[1]);
+			}
+			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
+				$sth_ds->execute($service_id, $data_source, "$host:$service.$data_source");
+				my $ds_id = _get_last_insert_id($dbh);
+				for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
+					$sth_ds_attr->execute($ds_id, $attr, $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr});
+				}
+			}
+		}
+	}
+
+	# Atomic commit (rename)
+	rename($datafilename_tmp, $datafilename);
 }
 
 sub _write_new_service_configs {
