@@ -217,6 +217,63 @@ sub _create_self_aware_worker_exception_handler {
     };
 }
 
+sub _dump_into_sql {
+	my ($self) = @_;
+
+	my $datafilename = $config->{dbdir}."/datafile.sqlite";
+	my $datafilename_tmp = "$datafilename.tmp.$$";
+	DEBUG "[DEBUG] Writing sql to $datafilename";
+
+        use DBI;
+        my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename_tmp","","") or die $DBI::errstr;
+        $dbh->do("PRAGMA synchronous = 0");
+
+        # <helmut> halves io bandwidth at the expense of dysfunctional rollback
+        # We do not care for rollback yet
+        $dbh->do("PRAGMA journal_mode = OFF");
+
+        # Create DB
+        $dbh->do("CREATE TABLE param (name VARCHAR PRIMARY KEY, value VARCHAR)");
+	my $sth_param = $dbh->prepare('INSERT INTO param (name, value) VALUES (?, ?)');
+
+        $dbh->do("CREATE TABLE node (id INTEGER PRIMARY KEY, name VARCHAR, path VARCHAR)");
+        $dbh->do("CREATE TABLE node_attr (id INTEGER, name VARCHAR, value VARCHAR)");
+        $dbh->do("CREATE UNIQUE INDEX pk_node_attr ON node_attr (id, name)");
+	my $sth_node = $dbh->prepare('INSERT INTO node (id, name, path) VALUES (?, ?, ?)');
+	my $sth_node_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
+
+        $dbh->do("CREATE TABLE service (id INTEGER PRIMARY KEY, node_id INTEGER, name VARCHAR, path VARCHAR)");
+        $dbh->do("CREATE TABLE service_attr (id INTEGER, name VARCHAR, value VARCHAR)");
+        $dbh->do("CREATE UNIQUE INDEX pk_service_attr ON service_attr (id, name)");
+	my $sth_service = $dbh->prepare('INSERT INTO service (id, node_id, name, path) VALUES (?, ?, ?, ?)');
+	my $sth_service_attr = $dbh->prepare('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
+	
+        $dbh->do("CREATE TABLE ds (id INTEGER PRIMARY KEY, service_id INTEGER, name VARCHAR, path VARCHAR)");
+        $dbh->do("CREATE TABLE ds_attr (id INTEGER, name VARCHAR, value VARCHAR)");
+        $dbh->do("CREATE UNIQUE INDEX pk_ds_attr ON ds_attr (id, name)");
+	my $sth_ds = $dbh->prepare('INSERT INTO ds (id, service_id, name, path) VALUES (?, ?, ?, ?)');
+	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
+
+	# Configuration
+	$config->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
+	for my $key (keys %$config) {
+		$sth_param->execute($key, $config->{$key});
+	}
+
+    for my $host (keys %{$self->{service_configs}}) {
+        for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
+            for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
+                munin_set_var_path($datafile_hash, "$host:$service.$attr->[0]", $attr->[1]);
+            }
+            for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
+                for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
+                    munin_set_var_path($datafile_hash, "$host:$service.$data_source.$attr", $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr});
+                }
+            }
+        }
+    }
+
+}
 
 sub _write_new_service_configs {
     my ($self) = @_;
@@ -231,34 +288,23 @@ sub _write_new_service_configs {
     my $fh = new IO::File(">self.txt");
     print $fh Dumper($self);
 
+    $self->_dump_into_sql();
 
     for my $host (keys %{$self->{service_configs}}) {
         for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
             for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
                 munin_set_var_path($datafile_hash, "$host:$service.$attr->[0]", $attr->[1]);
-		# munin_set_type_path($datafile_hash, "$host:$service.$attr->[0]", "service_attr");
             }
             for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
                 for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
                     munin_set_var_path($datafile_hash, "$host:$service.$data_source.$attr", $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr});
-		    #   munin_set_type_path($datafile_hash, "$host:$service.$data_source.$attr", "ds_attr");
                 }
-                munin_set_type_path($datafile_hash, "$host:$service.$data_source", "ds");
             }
-            munin_set_type_path($datafile_hash, "$host:$service", "service");
         }
-        munin_set_type_path($datafile_hash, "$host:", "host");
     }
 
     # Also write the binary (Storable) version
     munin_writeconfig_storable($config->{dbdir}.'/datafile.storable', $datafile_hash);
-
-    use Data::Dumper;
-    my $fh = new IO::File(">datafile_hash.txt");
-    print $fh Dumper($datafile_hash);
-
-    # Also write the SQL version
-    munin_writeconfig_sql($config->{dbdir}.'/datafile.sqlite', $datafile_hash);
 }
 
 
