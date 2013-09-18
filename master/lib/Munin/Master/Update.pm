@@ -244,39 +244,39 @@ sub _dump_into_sql {
 	my $datafilename_tmp = "$datafilename.tmp.$$";
 	DEBUG "[DEBUG] Writing sql to $datafilename";
 
-        use DBI;
-        my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename_tmp","","") or die $DBI::errstr;
-        $dbh->do("PRAGMA synchronous = 0");
+	use DBI;
+	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename_tmp","","") or die $DBI::errstr;
+	$dbh->do("PRAGMA synchronous = 0");
 
-        # <helmut> halves io bandwidth at the expense of dysfunctional rollback
-        # We do not care for rollback yet
-        $dbh->do("PRAGMA journal_mode = OFF");
+	# <helmut> halves io bandwidth at the expense of dysfunctional rollback
+	# We do not care for rollback yet
+	$dbh->do("PRAGMA journal_mode = OFF");
 
-        # Create DB
-        $dbh->do("CREATE TABLE param (name VARCHAR PRIMARY KEY, value VARCHAR)");
+	# Create DB
+	$dbh->do("CREATE TABLE param (name VARCHAR PRIMARY KEY, value VARCHAR)");
 	my $sth_param = $dbh->prepare('INSERT INTO param (name, value) VALUES (?, ?)');
 
-        $dbh->do("CREATE TABLE grp (id INTEGER PRIMARY KEY, name VARCHAR, path VARCHAR)");
-        $dbh->do("CREATE TABLE grp_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
-        $dbh->do("CREATE UNIQUE INDEX pk_grp_attr ON grp_attr (id, name)");
+	$dbh->do("CREATE TABLE grp (id INTEGER PRIMARY KEY, name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE grp_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX pk_grp_attr ON grp_attr (id, name)");
 	my $sth_grp = $dbh->prepare('INSERT INTO grp (name, path) VALUES (?, ?)');
 	my $sth_grp_attr = $dbh->prepare('INSERT INTO grp_attr (id, name, value) VALUES (?, ?, ?)');
 
-        $dbh->do("CREATE TABLE node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
-        $dbh->do("CREATE TABLE node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
-        $dbh->do("CREATE UNIQUE INDEX pk_node_attr ON node_attr (id, name)");
+	$dbh->do("CREATE TABLE node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX pk_node_attr ON node_attr (id, name)");
 	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
 	my $sth_node_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
 
-        $dbh->do("CREATE TABLE service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR)");
-        $dbh->do("CREATE TABLE service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
-        $dbh->do("CREATE UNIQUE INDEX pk_service_attr ON service_attr (id, name)");
+	$dbh->do("CREATE TABLE service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX pk_service_attr ON service_attr (id, name)");
 	my $sth_service = $dbh->prepare('INSERT INTO service (node_id, name, path) VALUES (?, ?, ?)');
 	my $sth_service_attr = $dbh->prepare('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
-	
-        $dbh->do("CREATE TABLE ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR)");
-        $dbh->do("CREATE TABLE ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
-        $dbh->do("CREATE UNIQUE INDEX pk_ds_attr ON ds_attr (id, name)");
+
+	$dbh->do("CREATE TABLE ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX pk_ds_attr ON ds_attr (id, name)");
 	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path) VALUES (?, ?, ?)');
 	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
 
