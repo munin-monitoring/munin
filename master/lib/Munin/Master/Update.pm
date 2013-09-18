@@ -299,6 +299,9 @@ sub _dump_into_sql {
 		my $node_id = _get_last_insert_id($dbh);
 
 		for my $attr (keys %$node) {
+			# Ignore the configref key, as it is redundant
+			next if $attr eq "configref";
+
 			$sth_node_attr->execute($node_id, $attr, munin_dumpconfig_as_str($node->{$attr}));
 		}
 
