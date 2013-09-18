@@ -266,12 +266,19 @@ sub _dump_into_sql {
 		$sth_param->execute($key, $config->{$key});
 	}
 
-	for my $host (keys %{$self->{service_configs}}) {
-		$sth_node->execute($host, $host);
-		my $host_id = _get_last_insert_id($dbh);
+	for my $worker (@{$self->{workers}}) {
+		my $host = $worker->{ID};
+		my $node = $worker->{node};
+
+		$sth_node->execute($node->{host}, $host);
+		my $node_id = _get_last_insert_id($dbh);
+
+		for my $attr (keys %$node) {
+			$sth_node_attr->execute($node_id, $attr, munin_dumpconfig_as_str($node->{$attr}));
+		}
 
 		for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
-			$sth_service->execute($host_id, $service, "$host:$service");
+			$sth_service->execute($node_id, $service, "$host:$service");
 			my $service_id = _get_last_insert_id($dbh);
 
 			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {

@@ -943,6 +943,8 @@ sub munin_writeconfig {
 sub munin_dumpconfig_as_str {
     my ($config) = @_;
 
+    return $config unless ref $config;
+
     local $Data::Dumper::Sortkeys = sub { [ sort grep {!/^#%#parent$/} keys %{$_[0]} ]; };
     local $Data::Dumper::Indent = 1;
 
