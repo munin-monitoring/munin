@@ -146,6 +146,8 @@ sub _do_connect {
 	}
     };
 
+    INFO "node $self->{host} advertised itself as $self->{node_name} instead." if $self->{node_name} && $self->{node_name} ne $self->{host};
+
     return 1;
 }
 
@@ -237,15 +239,20 @@ sub list_plugins {
         ? $self->{node_name}
         : $self->{host};
 
-    if (not $host) {
+    my $use_default_node = defined($self->{configref}{use_default_node})
+        ? $self->{configref}{use_default_node}
+        : $config->{use_default_node};
+
+    if (! $use_default_node && ! $host) {
 	die "[ERROR] Couldn't find out which host to list on $host.\n";
     }
 
-    $self->_node_write_single("list $host\n");
+    my $list_host = $use_default_node ? "" : $host;
+    $self->_node_write_single("list $list_host\n");
     my $list = $self->_node_read_single();
 
     if (not $list) {
-        WARN "[WARNING] Config node $self->{host} listed no services for $host.  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.";
+        WARN "[WARNING] Config node $self->{host} listed no services for $host, (advertised as $self->{node_name}).  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.";
     }
 
     return split / /, $list;
