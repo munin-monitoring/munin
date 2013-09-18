@@ -222,6 +222,21 @@ sub _get_last_insert_id {
 	return $dbh->last_insert_id("", "", "", "");
 }
 
+sub _dump_groups_into_sql {
+	my ($groups, $path, $dbh, $sth_grp, $sth_grp_attr) = @_;
+
+	for my $grp_name (keys %$groups) {
+		my $grp_path = ($path eq "") ? $grp_name : "$path;$grp_name";
+		$sth_grp->execute($grp_name, $grp_path);
+
+		# Save the ID inside the datastructure.
+		# It is used to attach the node w/o doing an extra select
+		$groups->{$grp_name}{ID} = _get_last_insert_id($dbh);
+
+		_dump_groups_into_sql($groups->{$grp_name}{groups}, $grp_path, $dbh, $sth_grp, $sth_grp_attr);
+	}
+}
+
 sub _dump_into_sql {
 	my ($self) = @_;
 
@@ -241,10 +256,16 @@ sub _dump_into_sql {
         $dbh->do("CREATE TABLE param (name VARCHAR PRIMARY KEY, value VARCHAR)");
 	my $sth_param = $dbh->prepare('INSERT INTO param (name, value) VALUES (?, ?)');
 
-        $dbh->do("CREATE TABLE node (id INTEGER PRIMARY KEY, name VARCHAR, path VARCHAR)");
+        $dbh->do("CREATE TABLE grp (id INTEGER PRIMARY KEY, name VARCHAR, path VARCHAR)");
+        $dbh->do("CREATE TABLE grp_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
+        $dbh->do("CREATE UNIQUE INDEX pk_grp_attr ON grp_attr (id, name)");
+	my $sth_grp = $dbh->prepare('INSERT INTO grp (name, path) VALUES (?, ?)');
+	my $sth_grp_attr = $dbh->prepare('INSERT INTO grp_attr (id, name, value) VALUES (?, ?, ?)');
+
+        $dbh->do("CREATE TABLE node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
         $dbh->do("CREATE TABLE node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
         $dbh->do("CREATE UNIQUE INDEX pk_node_attr ON node_attr (id, name)");
-	my $sth_node = $dbh->prepare('INSERT INTO node (name, path) VALUES (?, ?)');
+	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
 	my $sth_node_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
 
         $dbh->do("CREATE TABLE service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR)");
@@ -266,11 +287,15 @@ sub _dump_into_sql {
 		$sth_param->execute($key, $config->{$key});
 	}
 
+	# Recursively create groups
+	_dump_groups_into_sql($self->{group_repository}{groups}, "", $dbh, $sth_grp, $sth_grp_attr);
+
 	for my $worker (@{$self->{workers}}) {
 		my $host = $worker->{ID};
 		my $node = $worker->{node};
+		my $grp_id = $worker->{host}->{group}->{ID};
 
-		$sth_node->execute($node->{host}, $host);
+		$sth_node->execute($grp_id, $node->{host}, $host);
 		my $node_id = _get_last_insert_id($dbh);
 
 		for my $attr (keys %$node) {
