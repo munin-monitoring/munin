@@ -48,13 +48,14 @@ to Munin developers.
 
 .. Note::
         If you think that our Guide looks quite familiar, it is done on
-        purpose, as we took a great inspiration of PostgreSQL’s Manual. We even
+        purpose, as we took a great inspiration of `PostgreSQL's Manual`__. We even
         copied some generic sentences that were already very well worded.
 
         In fact, the PostgreSQL project was, and still is, of a great guidance,
         as it does so many things right. The parts that were *imported* from
         PostgreSQL are obviously still under the `PostgreSQL license`__ [#]_.
 
+__ http://www.postgresql.org/docs/devel/static/index.html
 __ http://www.postgresql.org/about/licence/
 .. [#] We are not license experts, so if a PostgreSQL license guru has some
        issues with that, we'll be happy to resolve them together.
