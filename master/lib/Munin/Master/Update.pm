@@ -73,7 +73,7 @@ sub _read_old_service_configs {
 
     my $datafile = $oldconfig->{config_file} = $config->{dbdir}.'/datafile';
 
-    $oldconfig = munin_read_storable("$datafile.storable", $oldconfig);
+    $oldconfig = bless( munin_read_storable("$datafile.storable", $oldconfig), "Munin::Master::Config");
 
     return $oldconfig;
 }
