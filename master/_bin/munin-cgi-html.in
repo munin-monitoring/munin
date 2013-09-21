@@ -29,12 +29,16 @@ use warnings;
 use CGI::Fast qw(:cgi);
 use CGI::Carp qw(fatalsToBrowser);
 
+use HTML::Template;
+
 use Munin::Master::Utils;
 
 use Munin::Master::Logger;
 use Log::Log4perl qw( :easy );
 
 use Data::Dumper;
+
+my @times = qw(DAY WEEK MONTH YEAR);
 
 while (new CGI::Fast) {
 	my $path = $ENV{PATH_INFO};
@@ -62,9 +66,31 @@ while (new CGI::Fast) {
 	$sth_url->execute($path);
 	my ($id, $type) = $sth_url->fetchrow_array;
 
+	my $template;
 	if (! defined $id) {
 		# Not found
 		print header( -status => 404, );
+	} elsif ($type eq "group") {
+		# Emit group template
+	} elsif ($type eq "node") {
+		# Emit node template
+	} elsif ($type eq "service") {
+		# Emit service template
+		$template = HTML::Template->new(filename => 'munin-serviceview.tmpl');
+
+		# Create the params
+
+		for my $t (@times) {
+			$template->param( "ZOOM$t" => "", );
+			$template->param( "IMG$t" => "", );
+		}
+
+	} else {
+		# Unknown --> HTTP Gone....
+		print header( -status => 410, );
 		next;
 	}
+
+	print header( -status => 410, "-Content-Type" => "text/html", );
+	print $template->output;
 }
