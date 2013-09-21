@@ -39,17 +39,20 @@ use Data::Dumper;
 while (new CGI::Fast) {
 	my $path = $ENV{PATH_INFO};
 
+	# Remove the leading "/"
+	$path =~ s,^/,,;
+
         use DBI;
 
 	my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
         my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
 
 	# Handle special pages
-	if ($path eq "/") {
+	if ($path eq "") {
 		# Emit overview template
 		next;
 	}
-	if ($path eq "/problems.html") {
+	if ($path eq "problems.html") {
 		# Emit problem template
 		next;
 	}
