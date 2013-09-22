@@ -29,6 +29,7 @@ use warnings;
 use CGI::Fast qw(:cgi);
 use CGI::Carp qw(fatalsToBrowser);
 
+use POSIX;
 use HTML::Template;
 
 use Munin::Master::Utils;
@@ -41,24 +42,30 @@ use Data::Dumper;
 my @times = qw(DAY WEEK MONTH YEAR);
 
 while (new CGI::Fast) {
-	my $path = $ENV{PATH_INFO};
-
-	# Remove the leading "/"
-	$path =~ s,^/,,;
-
         use DBI;
-
 	my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
         my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+
+	my $template_filename;
+	my %template_params = (
+		MUNIN_VERSION	=> $Munin::Common::Defaults::MUNIN_VERSION,
+		TIMESTAMP       => strftime("%Y-%m-%d %T%z (%Z)", localtime),
+		R_PATH		=> "",
+	);
+
+	# Remove the leading "/"
+	my $path = $ENV{PATH_INFO};
+	$path =~ s,^/,,;
 
 	# Handle special pages
 	if ($path eq "") {
 		# Emit overview template
-		next;
-	}
-	if ($path eq "problems.html") {
+		$template_filename = 'munin-overview.tmpl';
+
+		goto RENDERING;
+	} elsif ($path eq "problems.html") {
 		# Emit problem template
-		next;
+		goto RENDERING;
 	}
 
 	# Handle normal pages
@@ -66,7 +73,6 @@ while (new CGI::Fast) {
 	$sth_url->execute($path);
 	my ($id, $type) = $sth_url->fetchrow_array;
 
-	my $template;
 	if (! defined $id) {
 		# Not found
 		print header( -status => 404, );
@@ -76,21 +82,31 @@ while (new CGI::Fast) {
 		# Emit node template
 	} elsif ($type eq "service") {
 		# Emit service template
-		$template = HTML::Template->new(filename => 'munin-serviceview.tmpl');
+		$template_filename = 'munin-serviceview.tmpl';
 
 		# Create the params
 
 		for my $t (@times) {
-			$template->param( "ZOOM$t" => "", );
-			$template->param( "IMG$t" => "", );
+			$template_params{"ZOOM$t"} = "";
+			$template_params{"IMG$t"} = "";
 		}
+	}
 
-	} else {
+RENDERING:
+	if (! $template_filename ) {
 		# Unknown --> HTTP Gone....
 		print header( -status => 410, );
 		next;
 	}
 
-	print header( -status => 410, "-Content-Type" => "text/html", );
-	print $template->output;
+	print header( -status => 200, "-Content-Type" => "text/html", );
+	my $template = HTML::Template->new(
+		filename => "/home/snide/munin/sql/sandbox/etc/opt/munin/templates/$template_filename",
+	);
+
+	while (my ($k, $v) = each %template_params) { 
+		$template->param($k => $v);
+	}
+
+	$template->output(print_to => *STDOUT);
 }
