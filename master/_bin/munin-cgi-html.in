@@ -62,7 +62,33 @@ while (new CGI::Fast) {
 		# Emit overview template
 		$template_filename = 'munin-overview.tmpl';
 
+		# Navigation params
+		###################
+
+		# Problems nav
+		{
+			my $sth = $dbh->prepare('SELECT SUM(critical), SUM(warning), SUM(unknown) FROM ds');
+			$sth->execute();
+			my ($critical, $warning, $unknown) = $sth->fetchrow_array;
+			$template_params{NCRITICAL} = $critical;
+			$template_params{NWARNING} = $warning;
+			$template_params{NUNKNOWN} = $unknown;
+		}
+
+		# Groups nav
+		{
+			my $sth = $dbh->prepare("SELECT g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group'");
+                        $sth->execute();
+			while (my ($_name, $_path) = $sth->fetchrow_array) {
+				push @{ $template_params{ROOTGROUPS} }, { NAME => $_name, URL => $_path };
+			}
+		}
+
+		# Categories nav
+		# TODO
+
 		goto RENDERING;
+
 	} elsif ($path eq "problems.html") {
 		# Emit problem template
 		goto RENDERING;
@@ -104,7 +130,7 @@ RENDERING:
 		filename => "/home/snide/munin/sql/sandbox/etc/opt/munin/templates/$template_filename",
 	);
 
-	while (my ($k, $v) = each %template_params) { 
+	while (my ($k, $v) = each %template_params) {
 		$template->param($k => $v);
 	}
 
