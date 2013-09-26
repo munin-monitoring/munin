@@ -79,9 +79,12 @@ while (new CGI::Fast) {
 		{
 			my $sth = $dbh->prepare("SELECT g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group'");
                         $sth->execute();
+
+			my $rootgroups = [];
 			while (my ($_name, $_path) = $sth->fetchrow_array) {
-				push @{ $template_params{ROOTGROUPS} }, { NAME => $_name, URL => $_path };
+				push @$rootgroups, { NAME => $_name, URL => $_path };
 			}
+			$template_params{ROOTGROUPS} = $rootgroups;
 		}
 
 		# Categories nav
