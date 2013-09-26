@@ -67,8 +67,7 @@ while (new CGI::Fast) {
 		{
 			$template_params{PATH} = [
 				{ } , # XXX - Template says first args has to be empty
-				{ "pathname" => "First", },
-				{ "pathname" => "Second", },
+				{ "pathname" => "Overview", },
 			];
 		}
 
