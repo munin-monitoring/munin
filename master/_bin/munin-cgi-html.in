@@ -130,9 +130,7 @@ RENDERING:
 		filename => "/home/snide/munin/sql/sandbox/etc/opt/munin/templates/$template_filename",
 	);
 
-	while (my ($k, $v) = each %template_params) {
-		$template->param($k => $v);
-	}
+	$template->param(%template_params);
 
 	$template->output(print_to => *STDOUT);
 }
