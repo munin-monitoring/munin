@@ -97,7 +97,20 @@ while (new CGI::Fast) {
 		}
 
 		# Categories nav
-		# TODO
+		{
+			my $sth = $dbh->prepare("SELECT DISTINCT value FROM service_attr WHERE name = 'graph_category'");
+                        $sth->execute();
+
+			my $globalcats = [];
+			while (my ($_category) = $sth->fetchrow_array) {
+				my %urls = map { ("URL$_" => lc("$_category-$_")) } @times;
+				push @$globalcats, {
+					NAME => $_category,
+					%urls,
+				};
+			}
+			$template_params{GLOBALCATS} = $globalcats;
+		}
 
 		goto RENDERING;
 
