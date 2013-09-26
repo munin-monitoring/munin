@@ -29,4 +29,4 @@ shift
 
 export PERL5LIB=$DESTDIR$PERLSITELIB
 
-exec $RUN "$@"
+$TIMING $RUN "$@"
