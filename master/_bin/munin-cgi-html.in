@@ -112,6 +112,8 @@ while (new CGI::Fast) {
 			$template_params{GLOBALCATS} = $globalcats;
 		}
 
+		# TODO - We still have to write the bottom navigation links
+
 		goto RENDERING;
 
 	} elsif ($path eq "problems.html") {
