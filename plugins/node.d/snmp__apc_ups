@@ -1,0 +1,533 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+snmp__apc_ups - Munin multigraph plugin for APC UPSes
+
+=head1 APPLICABLE SYSTEMS
+
+The UPS must support the PowerNet-MIB published by APC.  This includes
+the APC Smart-UPS series on which this plugin was tested.
+
+=head1 CONFIGURATION
+
+As a rule SNMP plugins need site specific configuration.  The default
+configuration (shown here) will only work on insecure sites/devices.
+
+   [snmp_*]
+        env.version 2
+        env.community public
+
+In general SNMP is not very secure at all unless you use SNMP version
+3 which supports authentication and privacy (encryption).  But in any
+case the community string for your devices should not be "public".
+
+Please see 'perldoc Munin::Plugin::SNMP' for further configuration
+information.
+
+=head1 INTERPRETATION
+
+Please refer to the PowerNet-MIB when in doubt.
+
+=head1 MIB INFORMATION
+
+This plugin requires support for the PowerNet-MIB published by APC.
+
+=head1 PROGRAMMERS
+
+This plugin is actually a generic SNMP multigraph plugin.  If you
+customize the data structures, especially %oidList and %label which is
+used to drive the loops.  Take care that labels and structure of these
+hashes match otherwise things will disappear with not much warning.
+But se munin-node.log, munin-update.log and run the plugin with
+munin-run.
+
+=head1 MAGIC MARKERS
+
+  #%# family=snmpauto
+  #%# capabilities=snmpconf
+
+=head1 BUGS
+
+Probably.
+
+=head1 AUTHOR
+
+Based on work by Gorlow Maxim and Andrey Yakovlev.  Totaly reworked by
+Nicolai Langfeldt, BroadNet AS, Oslo, Norway.
+
+(C) 2013 BroadNet AS, Nicolai Langfeldt
+
+=head1 LICENSE
+
+GPLv2 only.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 dated June, 1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+USA.
+
+=cut
+
+use strict;
+use warnings;
+
+use feature qw(say);
+
+use Carp;
+use Data::Dumper;
+
+use Munin::Plugin;
+use Munin::Plugin::SNMP;
+
+use vars qw($DEBUG);
+
+$DEBUG = $Munin::Plugin::DEBUG;
+
+# ################ Change here to customize
+
+# oidList - things to graph - must be complete
+
+my %oidList =
+  # _meta will be fetched but not graphed. The values can be placed in
+  # texts by [OID:1.3.6.....] notation in any text in the "config"
+  # output from the plugin. _meta is not used anywhere else than for
+  # this.
+  ( _meta =>
+    { upsBasicIdentModel             => '1.3.6.1.4.1.318.1.1.1.1.1.1.0',
+      upsAdvIdentSerialNumber        => '1.3.6.1.4.1.318.1.1.1.1.2.3.0',
+      upsAdvConfigRatedOutputVoltage => '1.3.6.1.4.1.318.1.1.1.5.2.1.0', # 230
+      upsAdvConfigHighTransferVolt   => '1.3.6.1.4.1.318.1.1.1.5.2.2.0', # 208
+      upsAdvConfigLowTransferVolt    => '1.3.6.1.4.1.318.1.1.1.5.2.3.0', # 253
+    },
+    time =>
+    { upsAdvBatteryRunTimeRemaining => '1.3.6.1.4.1.318.1.1.1.2.2.3.0',
+      upsAdvConfigLowBatteryRunTime => '1.3.6.1.4.1.318.1.1.1.5.2.8.0' },
+    volt =>
+    { upsAdvOutputVoltage           => '1.3.6.1.4.1.318.1.1.1.4.2.1.0',
+      upsAdvInputLineVoltage        => '1.3.6.1.4.1.318.1.1.1.3.2.1.0',
+      upsAdvInputMaxLineVoltage     => '1.3.6.1.4.1.318.1.1.1.3.2.2.0',
+      upsAdvInputMinLineVoltage     => '1.3.6.1.4.1.318.1.1.1.3.2.3.0' },
+    batteryvolt =>
+    { upsAdvBatteryActualVoltage    => '1.3.6.1.4.1.318.1.1.1.2.2.8.0' },
+    frequency =>
+    { upsAdvOutputFrequency         => '1.3.6.1.4.1.318.1.1.1.4.2.2.0',
+      upsAdvInputFrequency          => '1.3.6.1.4.1.318.1.1.1.3.2.4.0' },
+    status =>
+    { upsBasicOutputStatus          => '1.3.6.1.4.1.318.1.1.1.4.1.1.0',
+      upsBasicBatteryStatus         => '1.3.6.1.4.1.318.1.1.1.2.1.1.0',
+      upsAdvBatteryReplaceIndicator => '1.3.6.1.4.1.318.1.1.1.2.2.4.0',
+      upsCommStatus                 => '1.3.6.1.4.1.318.1.1.1.8.1.0',
+      upsAdvTestDiagnosticsResults  => '1.3.6.1.4.1.318.1.1.1.7.2.3.0' },
+    temperature =>
+    { upsAdvBatteryTemperature      => '1.3.6.1.4.1.318.1.1.1.2.2.2.0',
+      iemStatusProbeCurrentTemp     => '1.3.6.1.4.1.318.1.1.10.2.3.2.1.4.1' },
+    load =>
+    { upsAdvOutputLoad              => '1.3.6.1.4.1.318.1.1.1.4.2.3.0',
+      upsAdvBatteryCapacity         => '1.3.6.1.4.1.318.1.1.1.2.2.1.0' },
+    current =>
+    { upsAdvOutputCurrent           => '1.3.6.1.4.1.318.1.1.1.4.2.4.0',
+      upsAdvBatteryCurrent          => '1.3.6.1.4.1.318.1.1.1.2.2.9.0',
+      upsAdvTotalDCCurrent          => '1.3.6.1.4.1.318.1.1.1.2.2.10.0' },
+  );
+
+# Customize data series labels here.  Must be complete otherwise the
+# data series will not appear in graphs.
+
+my %label  =
+  ( time        => { upsAdvBatteryRunTimeRemaining => 'Time left',
+		     upsAdvConfigLowBatteryRunTime => 'Alarm' },
+    volt        => { upsAdvOutputVoltage           => 'Output',
+		     upsAdvInputLineVoltage        => 'Input',
+		     upsAdvInputMaxLineVoltage     => 'Max In',
+		     upsAdvInputMinLineVoltage     => 'Min In' },
+    batteryvolt => { upsAdvBatteryActualVoltage    => 'Battery' },
+    frequency   => { upsAdvOutputFrequency         => 'Output',
+		     upsAdvInputFrequency          => 'Input' },
+    status      => { upsBasicOutputStatus          => 'Output',
+		     upsBasicBatteryStatus         => 'Battery',
+		     upsCommStatus                 => 'Comms',
+		     upsAdvTestDiagnosticsResults  => 'Diag',
+		     upsAdvBatteryReplaceIndicator => 'Replace' },
+    temperature => { upsAdvBatteryTemperature      => 'Battery',
+		     iemStatusProbeCurrentTemp     => 'Probe' },
+    load        => { upsAdvOutputLoad              => 'Usage',
+		     upsAdvBatteryCapacity         => 'Total' },
+    current     => { upsAdvOutputCurrent           => 'Output',
+		     upsAdvBatteryCurrent          => 'Battery',
+		     upsAdvTotalDCCurrent          => 'Total DC' }
+  );
+
+
+# http://munin-monitoring.org/wiki/fieldname.type for more
+# information.  Overrides here:
+
+# Default
+my $tstype = 'GAUGE';
+
+# Overrides
+my %tstype = ();
+
+# How to draw.
+#
+# By default drawing is LINE1, overrides here.  It will be hard to do
+# the STACK types in this plugin since they are ordering sensitive.
+# If you want that you will need to expand this plugin to define and
+# use a %ordering hash that enforces field order so that stacks come
+# out right.
+
+my %tsdraw =
+  (
+    batteryvolt => { upsAdvBatteryActualVoltage    => 'LINE2' },
+  );
+
+# Minimum and maximum values.  Values outside the ragne given by these
+# will be tossed.  None needed by default, add as needed in the same
+# nested fashion as %label.
+
+my %tsmin  = ();
+
+my %tsmax  = ();
+
+# Example:
+#
+# my %tsmin =
+#  ( temperature => { upsAdvBatteryTemperature      => 10 } );
+#
+# my %tsmax =
+#  ( temperature => { upsAdvBatteryTemperature      => 150 } );
+
+# Warning and Critical ranges.  None needed by default.  Add as
+# needed.
+
+my %tswarn =
+  ( status      => { upsBasicOutputStatus => '2:5' },
+    time        => { upsAdvBatteryRunTimeRemaining => '90:' },
+  );
+
+
+my %tscrit =
+  ( status      => { upsAdvBatteryReplaceIndicator => '1:1',
+		     upsBasicBatteryStatus         => '2:2',
+		     upsBasicOutputStatus          => '2:6',
+		     upsCommStatus                 => '1:1',
+		     upsAdvTestDiagnosticsResults  => '1:1' },
+
+    frequency   => { upsAdvInputFrequency          => '49:51',
+		     upsAdvOutputFrequency         => '49:51' },
+
+    time        => { upsAdvBatteryRunTimeRemaining => '60:' },
+
+    volt        => { upsAdvOutputVoltage =>
+		     '[OID:1.3.6.1.4.1.318.1.1.1.5.2.3.0]:'.
+		     '[OID:1.3.6.1.4.1.318.1.1.1.5.2.2.0]',
+		     upsAdvInputLineVoltage =>
+		     '[OID:1.3.6.1.4.1.318.1.1.1.5.2.3.0]:'.
+		     '[OID:1.3.6.1.4.1.318.1.1.1.5.2.2.0]' },
+  );
+
+my %cdef   =
+  ( time   =>
+    { upsAdvBatteryRunTimeRemaining => 'upsAdvBatteryRunTimeRemaining,6000,/',
+      upsAdvConfigLowBatteryRunTime => 'upsAdvConfigLowBatteryRunTime,6000,/' }
+	   );
+
+
+my %title  =
+  ( time        => 'Time left on battery',
+    volt        => 'Line Voltages',
+    batteryvolt => 'Battery Voltage',
+    frequency   => 'Line frequency',
+    status      => 'Status codes',
+    temperature => 'Temperatures',
+    load        => 'Load/Capacity',
+    current     => 'Currents'
+  );
+
+# Vertical labels on the graph
+
+my %vlabel =
+  ( time        => 'minutes',
+    volt        => 'Volt',
+    batteryvolt => 'Volt',
+    frequency   => 'Hz',
+    status      => 'code value',
+    temperature => 'Celcius',
+    load        => 'Percent',
+    current     => 'Ampere',
+  );
+
+# Extra information on the whole graph.
+
+my %info   =
+  ( time        => 'Time left on battery and when shutdown occurs. In minutes.',
+    volt        => 'Current input and output voltages.  The min and max '.
+                   'readings are for the last minute.  Note that the values '.
+                   'are collected every 5 minutes. Nominal voltage is '.
+                   '[OID:1.3.6.1.4.1.318.1.1.1.5.2.1.0]',
+    status      => 'Coded statuses.  UPS Model: '.
+                   '[OID:1.3.6.1.4.1.318.1.1.1.1.1.1.0]. '.
+                   'Serial number: [OID:1.3.6.1.4.1.318.1.1.1.1.2.3.0]',
+    load        => 'Current load and capacity on/of the UPS in percent.',
+    current     => 'The current in amperes.',
+    temperature => 'Current temperatures.  Possebly only the battery.',
+    batteryvolt => 'Current battery bus DC voltage.  For a 24V battery pack '.
+                   'this should be around 26-27V.',
+    frequency   => 'Current input and output AC frequency',
+	      );
+
+# Extra information for a time series
+
+my %subinfo =
+  ( load =>
+    { upsAdvOutputLoad      => 'The current UPS load expressed in percent '.
+                               'of rated capacity.',
+      upsAdvBatteryCapacity => 'The remaining battery capacity expressed '.
+                               'in percent of full capacity.' },
+    status =>
+    { upsBasicOutputStatus  => 'Codes: 1: unknown, 2: onLine (GREEN), '.
+		'3: onBattery (YELLOW) 4: onSmartBoost 5: timedSleeping, '.
+		'6: softwareBypass 7: off 8: rebooting, '.
+		'9: switchedBypass 10: hardwareFailureBypass, '.
+		'11: sleepingUntilPowerReturn 12: onSmartTrim '.
+		'13: ecoMode 14: hotStandby 15: onBatteryTest',
+
+      upsBasicBatteryStatus => 'The status of the UPS batteries.  A '.
+		'batteryLow(3) value indicates the UPS will be unable '.
+                'to sustain the current load, and its services will be '.
+                'lost if power is not restored. The amount of run time '.
+                'in reserve at the time of low battery can be configured '.
+                'by the upsAdvConfigLowBatteryRunTime.',
+
+      upsAdvBatteryReplaceIndicator => 'Battery replacement indicator. '.
+                '1: All OK  2: Battery needs replacing',
+
+      upsCommStatus => "The status of agent's communication ".
+                'with UPS. 1: OK  2: Failed',
+
+      upsAdvTestDiagnosticsResults => 'The results of the last UPS '.
+                'diagnostics test performed. 1: OK, 2: Failed, '.
+                '3: invalidTest, 4: testInProgress' },
+
+    time =>
+    { upsAdvBatteryRunTimeRemaining => 'The UPS battery run time '.
+                'remaining before battery exhaustion.',
+      upsAdvConfigLowBatteryRunTime => 'The desired run time of the UPS, '.
+		'in minutes, once the low battery condition is reached. '.
+                'During this time the UPS will produce a constant warning '.
+                'tone which can not be disabled.' },
+    current =>
+    { upsAdvOutputCurrent => "The current in Amperes drawn by the load on the UPS.",
+      upsAdvBatteryCurrent => "The battery current in Apmeres.",
+      upsAdvTotalDCCurrent => "The total DC current in Amperes.", },
+  );
+
+# Extinfo is presented in conjunction with the time series information
+# under the graph.  Usually it supplies extra information specific to
+# a fault, but it might also provide any information for any reason.
+
+my %extinfo =
+  ( status =>
+    { upsAdvTestDiagnosticsResults => "Last diagnostic performed [OID:1.3.6.1.4.1.318.1.1.1.7.2.4.0]" } );
+
+# ########################## Code here
+
+sub collect_snmp {
+    # Mash together all the OIDs needed by the different graphs and
+    # make a (one) query to get them all.  Returns a hash of the
+    # values keyed by OID.
+    #
+    # Occurances of "noSuchInstance" is replaced by "U".
+
+    my ( $snmp ) = @_;
+
+    my @oids = ();
+
+    foreach my $graph ( keys %oidList ) {
+	foreach my $oid ( values %{ $oidList{$graph} } ) {
+	    push(@oids, $oid);
+	}
+    }
+
+    my $values = $snmp->get_request( -varbindlist => \@oids );
+
+    if ( $snmp->error() ) {
+	die "$Munin::Plugin::me: SNMP error ".$snmp->error();
+    }
+
+    # Modify $values in place
+    map { $values->{$_} = 'U'
+	    if $values->{$_} eq 'noSuchInstance'; } keys %$values;
+
+    return $values;
+}
+
+
+sub emit_a_fetch {
+    # Emit just one value line
+    my ( $text, $values, $key, $default ) = @_;
+
+    my $value = $values->{$key};
+    $value    = $default if ! defined $value;
+    $value    = 'U'      if ! defined $value;
+
+    say "$text $value";
+}
+
+
+sub emit_fetch {
+    # Spew out
+    my ( $graph, $oids, $values ) = @_;
+
+    foreach my $label (keys %$oids) {
+	emit_a_fetch( "$label.value", $values, $oids->{$label}, 'U' );
+    }
+}
+
+
+sub emit_fetches {
+    # Emit all the fetches for all the multigraphs
+    my ( $snmp, $oids ) = @_;
+
+    my $values = collect_snmp( $snmp, $oids );
+
+    foreach my $graph (keys %label) {
+	say "multigraph $graph";
+	emit_fetch ( $graph, $oids->{$graph}, $values );
+	say '';
+    }
+}
+
+
+sub replace_oid {
+    my ( $str, $values ) = @_;
+
+    # If "str is [OID:1.3.6.1.2.1.1.5.0] then return the contents of sysName.0
+
+    my $oid = substr( $str, 5, -1 );
+    $str = $values->{$oid};
+
+    return $str;
+}
+
+
+sub process_oids {
+    my ( $str, $values ) = @_;
+
+    if ( ! defined $values ) {
+	croak("no values");
+    }
+
+    if ( $str =~ m/OID:/ ) {
+	$str =~ s/(\[OID:[^]]*])/&replace_oid($1, $values)/eg;
+    }
+
+    return $str;
+}
+
+
+sub emit_a_config {
+    # Emit a config line
+    # IF there is a default, always emit line.
+    # IF there is no default, only emit line if the hash lookup
+    # exists.
+    my ( $values, $text, $hash, $graph, $label, $default ) = @_;
+
+    if ( defined $default ) {
+	my $value = $hash->{$graph}->{$label};
+	$value    = $default if ! defined $value;
+	$value    = 'U'      if ! defined $value;
+
+	say process_oids( "$text $value", $values );
+	return;
+    }
+
+    if ( exists $hash->{$graph}->{$label} ) {
+	say process_oids( "$text " . $hash->{$graph}->{$label}, $values );
+    }
+}
+
+
+sub emit_config {
+    # Emit a graph configuration
+    my ( $graph, $values ) = @_;
+
+    say "graph_title ".( $title{$graph} || "Untitled /$graph/");
+    say process_oids( "graph_vlabel " . $vlabel{$graph}, $values );
+    say "graph_category UPS";
+    say process_oids( "graph_info " . $info{$graph}, $values );
+
+    foreach my $label (keys %{ $label{$graph} } ) {
+	emit_a_config( $values, "$label.label", \%label, $graph, $label,
+		       $label );
+	emit_a_config( $values, "$label.draw",  \%tsdraw, $graph, $label,
+		       'LINE1'  );
+	emit_a_config( $values, "$label.type",  \%tstype, $graph, $label,
+		       $tstype );
+	emit_a_config( $values, "$label.min",   \%tsmin,  $graph, $label );
+	emit_a_config( $values, "$label.max",   \%tsmax,  $graph, $label );
+	emit_a_config( $values, "$label.cdef",  \%cdef,   $graph, $label );
+	emit_a_config( $values, "$label.info",  \%subinfo,$graph, $label );
+
+	emit_a_config( $values, "$label.warning",  \%tswarn, $graph, $label );
+	emit_a_config( $values, "$label.critical", \%tscrit, $graph, $label );
+    }
+}
+
+
+sub emit_configs {
+    my ( $snmp, $oids, $host, $results ) = @_;
+
+    my $values = collect_snmp( $snmp, $oids );
+
+    say "host_name $host";
+    say "";
+
+    foreach my $graph (keys %label) {
+	say "multigraph $graph";
+	emit_config( $graph, $values );
+
+	# If dirty config allowed:
+	emit_fetch ( $graph, $oids->{$graph}, $values );
+
+	say '';
+    }
+}
+
+
+sub main {
+    # need_multigraph();
+
+    if ($ARGV[0] and $ARGV[0] eq 'snmpconf') {
+	say "require 1.3.6.1.4.1.318.1.1.1.2.2.8.0 [0-9]";
+	exit 0;
+    }
+
+    my ( $host, undef ) = Munin::Plugin::SNMP::config_session();
+
+    # Ensure that we get times in ticks (hundredths of a second)
+    my $session =
+      Munin::Plugin::SNMP->session( -translate => [ -timeticks => 0x0 ] );
+
+
+    if ($ARGV[0] and $ARGV[0] eq 'config') {
+	emit_configs( $session, \%oidList, $host );
+	exit 0;
+    }
+
+    emit_fetches( $session, \%oidList );
+    exit 0;
+}
+
+
+
+main();
