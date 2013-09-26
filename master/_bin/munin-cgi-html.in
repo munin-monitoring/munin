@@ -140,7 +140,7 @@ RENDERING:
 
 	print header( -status => 200, "-Content-Type" => "text/html", );
 	my $template = HTML::Template->new(
-		filename => "/home/snide/munin/sql/sandbox/etc/opt/munin/templates/$template_filename",
+		filename => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/$template_filename",
 	);
 
 	$template->param(%template_params);
