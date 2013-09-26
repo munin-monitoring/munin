@@ -62,6 +62,16 @@ while (new CGI::Fast) {
 		# Emit overview template
 		$template_filename = 'munin-overview.tmpl';
 
+		# Header params
+		###################
+		{
+			$template_params{PATH} = [
+				{ } , # XXX - Template says first args has to be empty
+				{ "pathname" => "First", },
+				{ "pathname" => "Second", },
+			];
+		}
+
 		# Navigation params
 		###################
 
