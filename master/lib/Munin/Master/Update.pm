@@ -234,20 +234,22 @@ sub _get_url_from_path {
 }
 
 sub _dump_groups_into_sql {
-	my ($groups, $path, $dbh, $sth_grp, $sth_grp_attr, $sth_url) = @_;
+	my ($groups, $p_id, $path, $dbh, $sth_grp, $sth_grp_attr, $sth_url) = @_;
 
 	for my $grp_name (keys %$groups) {
 		my $grp_path = ($path eq "") ? $grp_name : "$path;$grp_name";
-		$sth_grp->execute($grp_name, $grp_path);
+		$sth_grp->execute($grp_name, $p_id, $grp_path);
+
+		my $id = _get_last_insert_id($dbh);
 
 		# Save the ID inside the datastructure.
 		# It is used to attach the node w/o doing an extra select
-		$groups->{$grp_name}{ID} = _get_last_insert_id($dbh);
+		$groups->{$grp_name}{ID} = $id;
 
 		my $url = _get_url_from_path($grp_path);
-		$sth_url->execute($groups->{$grp_name}{ID}, "group", $url);
+		$sth_url->execute($id, "group", $url);
 
-		_dump_groups_into_sql($groups->{$grp_name}{groups}, $grp_path, $dbh, $sth_grp, $sth_grp_attr, $sth_url);
+		_dump_groups_into_sql($groups->{$grp_name}{groups}, $id, $grp_path, $dbh, $sth_grp, $sth_grp_attr, $sth_url);
 	}
 }
 
@@ -270,10 +272,10 @@ sub _dump_into_sql {
 	$dbh->do("CREATE TABLE param (name VARCHAR PRIMARY KEY, value VARCHAR)");
 	my $sth_param = $dbh->prepare('INSERT INTO param (name, value) VALUES (?, ?)');
 
-	$dbh->do("CREATE TABLE grp (id INTEGER PRIMARY KEY, name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE grp (id INTEGER PRIMARY KEY, p_id REFERENCES grp(id), name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE TABLE grp_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX pk_grp_attr ON grp_attr (id, name)");
-	my $sth_grp = $dbh->prepare('INSERT INTO grp (name, path) VALUES (?, ?)');
+	my $sth_grp = $dbh->prepare('INSERT INTO grp (name, p_id, path) VALUES (?, ?, ?)');
 	my $sth_grp_attr = $dbh->prepare('INSERT INTO grp_attr (id, name, value) VALUES (?, ?, ?)');
 
 	$dbh->do("CREATE TABLE node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
@@ -310,7 +312,7 @@ sub _dump_into_sql {
 	}
 
 	# Recursively create groups
-	_dump_groups_into_sql($self->{group_repository}{groups}, "", $dbh, $sth_grp, $sth_grp_attr, $sth_url);
+	_dump_groups_into_sql($self->{group_repository}{groups}, undef, "", $dbh, $sth_grp, $sth_grp_attr, $sth_url);
 
 	for my $worker (@{$self->{workers}}) {
 		my $host = $worker->{ID};
