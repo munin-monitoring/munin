@@ -245,7 +245,6 @@ sub _dump_groups_into_sql {
 		$groups->{$grp_name}{ID} = _get_last_insert_id($dbh);
 
 		my $url = _get_url_from_path($grp_path);
-		print "execute($groups->{$grp_name}{ID}, 'group', $url)\n";
 		$sth_url->execute($groups->{$grp_name}{ID}, "group", $url);
 
 		_dump_groups_into_sql($groups->{$grp_name}{groups}, $grp_path, $dbh, $sth_grp, $sth_grp_attr, $sth_url);
