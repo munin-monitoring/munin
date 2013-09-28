@@ -224,12 +224,7 @@ sub _get_last_insert_id {
 
 sub _get_url_from_path {
 	my ($path) = @_;
-
-	print "path($path)=";
-
 	$path =~ tr,;:,//,;
-	print "$path\n";
-
 	return $path;
 }
 
