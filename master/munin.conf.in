@@ -75,7 +75,7 @@ includedir @@CONFDIR@@/munin-conf.d
 # If set too high, it might hit some process/ram/filedesc limits.
 # If set too low, munin-update might take more than 5 min.
 #
-# If you want munin-update to not be parallel set it to 0.
+# If you want munin-update to not be parallel set it to 1.
 #
 #max_processes 16
 
