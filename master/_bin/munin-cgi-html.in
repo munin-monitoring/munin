@@ -118,9 +118,9 @@ while (new CGI::Fast) {
 			# Note that it is quite naive, and not optimized for speed.
 			my $sth_grp = $dbh->prepare("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ?");
 			my $sth_grp_root = $dbh->prepare("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL");
-			my $sth_node = $dbh->prepare("SELECT n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ?");
+			my $sth_node = $dbh->prepare("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ?");
 
-			$template_params{GROUPS} = _get_params_groups($sth_grp, $sth_grp_root, $sth_node, undef);
+			$template_params{GROUPS} = _get_params_groups($dbh, $sth_grp, $sth_grp_root, $sth_node, undef);
 		}
 
 		# TODO - We still have to write the bottom navigation links
@@ -174,7 +174,7 @@ RENDERING:
 }
 
 sub _get_params_groups {
-	my ($sth_grp_normal, $sth_grp_root, $sth_node, $g_id) = @_;
+	my ($dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $g_id) = @_;
 
 	my $sth_grp;
 	if (defined $g_id) {
@@ -190,7 +190,30 @@ sub _get_params_groups {
 		push @$groups, {
 			NAME => $_name,
 			URL => $_path,
-			GROUPS => _get_params_groups($sth_grp_normal, $sth_grp_root, $sth_node, $_g_id),
+			GROUPS => _get_params_groups($dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $_g_id),
+		};
+	}
+
+	# Add the nodes
+	$sth_node->execute($g_id);
+	while (my ($_n_id, $_name, $_path) = $sth_node->fetchrow_array) {
+		my $sth = $dbh->prepare("SELECT DISTINCT sa.value FROM service s INNER JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_category' WHERE s.node_id = ?");
+		$sth->execute($_n_id);
+
+		my $categories = [];
+		while (my ($_category) = $sth->fetchrow_array) {
+			push @$categories, {
+				NAME => $_category,
+				URL => "$_path" . "#" . lc("$_category"),
+			};
+		}
+
+		push @$groups, {
+			CATEGORIES => $categories,
+			NCATEGORIES => (scalar @$categories), # This is a node.
+			NAME => $_name,
+			URL => $_path,
+			GROUPS => [],
 		};
 	}
 
