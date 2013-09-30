@@ -112,6 +112,17 @@ while (new CGI::Fast) {
 			$template_params{GLOBALCATS} = $globalcats;
 		}
 
+		# Main page
+		{
+			# Constructing the recursive datastructure.
+			# Note that it is quite naive, and not optimized for speed.
+			my $sth_grp = $dbh->prepare("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ?");
+			my $sth_grp_root = $dbh->prepare("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL");
+			my $sth_node = $dbh->prepare("SELECT n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ?");
+
+			$template_params{GROUPS} = _get_params_groups($sth_grp, $sth_grp_root, $sth_node, undef);
+		}
+
 		# TODO - We still have to write the bottom navigation links
 
 		goto RENDERING;
@@ -160,4 +171,28 @@ RENDERING:
 	$template->param(%template_params);
 
 	$template->output(print_to => *STDOUT);
+}
+
+sub _get_params_groups {
+	my ($sth_grp_normal, $sth_grp_root, $sth_node, $g_id) = @_;
+
+	my $sth_grp;
+	if (defined $g_id) {
+		$sth_grp = $sth_grp_normal;
+		$sth_grp->execute($g_id);
+	} else {
+		$sth_grp = $sth_grp_root;
+		$sth_grp->execute();
+	}
+
+	my $groups = [];
+	while (my ($_g_id, $_name, $_path) = $sth_grp->fetchrow_array) {
+		push @$groups, {
+			NAME => $_name,
+			URL => $_path,
+			GROUPS => _get_params_groups($sth_grp_normal, $sth_grp_root, $sth_node, $_g_id),
+		};
+	}
+
+	return $groups;
 }
