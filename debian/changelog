@@ -1,3 +1,9 @@
+munin (2.0.17-3) unstable; urgency=low
+
+  * munin-common: Call systemd-tmpfiles on install (Closes: #720875)
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Tue, 01 Oct 2013 10:56:21 +0200
+
 munin (2.0.17-2) unstable; urgency=low
 
   [ Matthias Schmitz ]
