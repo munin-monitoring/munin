@@ -174,12 +174,16 @@ MAIN: while($keepgoing) {
 			$sock = new IO::Socket::INET(
 				PeerAddr	=> "$host",
 				Proto	=> 'tcp'
-			) || die "Error creating socket: $!";
+			);
+
+			unless ($sock) {
+				warn "Error creating socket: $!, moving to next plugin to try again";
+				next;
+			}
+
 			<$sock>; # skip header
 		}
 
-		# $sock is still not open. moving to next plugin to try again
-		next unless $sock;
 
 		# Setting the command name for a useful top information
 		$process_name = "plugin:$plugin";
