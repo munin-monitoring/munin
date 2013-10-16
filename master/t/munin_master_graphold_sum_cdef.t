@@ -6,7 +6,7 @@ use strict;
 use Test::More tests => 3;
 use Test::MockModule;
 
-my $mock = Test::MockModule->new('RRDs');
+my $mock = Test::MockModule->new('RRDs', no_auto => 1);
 $mock->mock('errors' => sub { });
 
 use_ok('Munin::Master::GraphOld', qw(build_sum_cdef));
