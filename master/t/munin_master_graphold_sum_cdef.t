@@ -3,9 +3,12 @@
 use warnings;
 use strict;
 
-use Test::More tests => 4;
+use Test::More tests => 3;
+use Test::MockModule;
 
-use_ok('RRDs');
+my $mock = Test::MockModule->new('RRDs');
+$mock->mock('errors' => sub { });
+
 use_ok('Munin::Master::GraphOld', qw(build_sum_cdef));
 
 # It should be considered to move the RRDTool compatibility mechanisms into a centralized
