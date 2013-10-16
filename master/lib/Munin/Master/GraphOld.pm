@@ -37,9 +37,10 @@ use strict;
 
 use Exporter;
 
-our (@ISA, @EXPORT);
+our (@ISA, @EXPORT, @EXPORT_OK);
 @ISA    = qw(Exporter);
 @EXPORT = qw(graph_startup graph_check_cron graph_main graph_config);
+@EXPORT_OK = qw(build_sum_cdef); # exportable for tests
 
 use IO::Socket;
 use IO::Handle;
@@ -599,6 +600,14 @@ sub get_stack_command {
     return munin_get($field, "stack");
 }
 
+sub build_sum_cdef {
+    if (@_ == 1) {
+        return "";
+    } else {
+        return "," . join(",$AddNAN,", @_[0 .. @_ - 2]) . ",$AddNAN";
+    }
+}
+
 sub expand_specials {
     my $service = shift;
     my $order   = shift;
@@ -723,9 +732,8 @@ sub expand_specials {
                 push(@spc_stack, $name);
                 push(@$preproc,  "$name=$pre");
             }
-            $service->{$last_name}->{"cdef"} .=
-		"," . join(",$AddNAN,", @spc_stack[0 .. @spc_stack - 2]) .
-		",$AddNAN";
+            $service->{$last_name}->{"cdef"} .= build_sum_cdef(@spc_stack);
+
 
             if (my $tc = munin_get($service->{$field}, "cdef", 0))
             {    # Oh bugger...
