@@ -3,8 +3,9 @@
 use warnings;
 use strict;
 
-use Test::More tests => 3;
+use Test::More tests => 4;
 
+use_ok('RRDs');
 use_ok('Munin::Master::GraphOld', qw(build_sum_cdef));
 
 # It should be considered to move the RRDTool compatibility mechanisms into a centralized
