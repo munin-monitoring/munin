@@ -99,15 +99,19 @@ sub parse_args
 {
     my @ORIG_ARGV  = @ARGV;
 
+    my $servicedir_cmdline;
     print_usage_and_exit() unless GetOptions(
         "config=s"     => \$conffile,
-        "servicedir=s" => \$servicedir,
+        "servicedir=s" => \$servicedir_cmdline,
         "debug!"       => \$DEBUG,
         "pidebug!"     => \$PIDEBUG,
         "paranoia!"    => \$paranoia,
         "version"      => \&print_version_and_exit,
         "help"         => \&print_usage_and_exit,
     );
+
+    # We untaint the args brutally, since the sysadm should know what he does
+    $servicedir = $1 if defined $servicedir_cmdline && $servicedir_cmdline =~ m/(.*)/;
 
     # Reset ARGV (for HUPing)
     @ARGV = @ORIG_ARGV;
