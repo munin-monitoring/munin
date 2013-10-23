@@ -146,6 +146,7 @@ if (! defined $id) {
 	# Emit group template
 } elsif ($type eq "node") {
 	# Emit node template
+	$template_filename = 'munin-nodeview.tmpl';
 } elsif ($type eq "service") {
 	# Emit service template
 	$template_filename = 'munin-serviceview.tmpl';
