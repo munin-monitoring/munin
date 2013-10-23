@@ -53,107 +53,117 @@ while (new CGI::Fast) {
 		R_PATH		=> "",
 	);
 
-	# Remove the leading "/"
-	my $path = $ENV{PATH_INFO};
-	$path =~ s,^/,,;
+	# Common Navigation params
+	###################
 
-	# Handle special pages
-	if ($path eq "") {
-		# Emit overview template
-		$template_filename = 'munin-overview.tmpl';
-
-		# Header params
-		###################
-		{
-			$template_params{PATH} = [
-				{ } , # XXX - Template says first args has to be empty
-				{ "pathname" => "Overview", },
-			];
-		}
-
-		# Navigation params
-		###################
-
-		# Problems nav
-		{
-			my $sth = $dbh->prepare('SELECT SUM(critical), SUM(warning), SUM(unknown) FROM ds');
-			$sth->execute();
-			my ($critical, $warning, $unknown) = $sth->fetchrow_array;
-			$template_params{NCRITICAL} = $critical;
-			$template_params{NWARNING} = $warning;
-			$template_params{NUNKNOWN} = $unknown;
-		}
-
-		# Groups nav
-		{
-			my $sth = $dbh->prepare("SELECT g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group'");
-                        $sth->execute();
-
-			my $rootgroups = [];
-			while (my ($_name, $_path) = $sth->fetchrow_array) {
-				push @$rootgroups, { NAME => $_name, URL => $_path };
-			}
-			$template_params{ROOTGROUPS} = $rootgroups;
-		}
-
-		# Categories nav
-		{
-			my $sth = $dbh->prepare("SELECT DISTINCT value FROM service_attr WHERE name = 'graph_category'");
-                        $sth->execute();
-
-			my $globalcats = [];
-			while (my ($_category) = $sth->fetchrow_array) {
-				my %urls = map { ("URL$_" => lc("$_category-$_")) } @times;
-				push @$globalcats, {
-					NAME => $_category,
-					%urls,
-				};
-			}
-			$template_params{GLOBALCATS} = $globalcats;
-		}
-
-		# Main page
-		{
-			# Constructing the recursive datastructure.
-			# Note that it is quite naive, and not optimized for speed.
-			my $sth_grp = $dbh->prepare("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ?");
-			my $sth_grp_root = $dbh->prepare("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL");
-			my $sth_node = $dbh->prepare("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ?");
-
-			$template_params{GROUPS} = _get_params_groups($dbh, $sth_grp, $sth_grp_root, $sth_node, undef);
-		}
-
-		# TODO - We still have to write the bottom navigation links
-
-		goto RENDERING;
-
-	} elsif ($path eq "problems.html") {
-		# Emit problem template
-		goto RENDERING;
+	# Problems nav
+	{
+		my $sth = $dbh->prepare('SELECT SUM(critical), SUM(warning), SUM(unknown) FROM ds');
+		$sth->execute();
+		my ($critical, $warning, $unknown) = $sth->fetchrow_array;
+		$template_params{NCRITICAL} = $critical;
+		$template_params{NWARNING} = $warning;
+		$template_params{NUNKNOWN} = $unknown;
 	}
 
-	# Handle normal pages
-	my $sth_url = $dbh->prepare('SELECT id, type FROM url WHERE path = ?');
-	$sth_url->execute($path);
-	my ($id, $type) = $sth_url->fetchrow_array;
+	# Groups nav
+	{
+		my $sth = $dbh->prepare("SELECT g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group'");
+		$sth->execute();
 
-	if (! defined $id) {
-		# Not found
-		print header( -status => 404, );
-	} elsif ($type eq "group") {
-		# Emit group template
-	} elsif ($type eq "node") {
-		# Emit node template
-	} elsif ($type eq "service") {
-		# Emit service template
-		$template_filename = 'munin-serviceview.tmpl';
-
-		# Create the params
-
-		for my $t (@times) {
-			$template_params{"ZOOM$t"} = "";
-			$template_params{"IMG$t"} = "";
+		my $rootgroups = [];
+		while (my ($_name, $_path) = $sth->fetchrow_array) {
+			push @$rootgroups, { NAME => $_name, URL => $_path };
 		}
+		$template_params{ROOTGROUPS} = $rootgroups;
+	}
+
+	# Categories nav
+	{
+		my $sth = $dbh->prepare("SELECT DISTINCT value FROM service_attr WHERE name = 'graph_category'");
+		$sth->execute();
+
+		my $globalcats = [];
+		while (my ($_category) = $sth->fetchrow_array) {
+		my %urls = map { ("URL$_" => lc("$_category-$_")) } @times;
+		push @$globalcats, {
+			NAME => $_category,
+			%urls,
+		};
+	}
+	$template_params{GLOBALCATS} = $globalcats;
+}
+
+# Remove the leading "/"
+my $path = $ENV{PATH_INFO};
+$path =~ s,^/,,;
+
+# Handle special pages
+if ($path eq "") {
+	# Emit overview template
+	$template_filename = 'munin-overview.tmpl';
+
+	# Header params
+	###################
+	{
+		$template_params{PATH} = [
+			{ } , # XXX - Template says first args has to be empty
+			{ "pathname" => "Overview", },
+		];
+	}
+
+	# Main page
+	{
+		# Constructing the recursive datastructure.
+		# Note that it is quite naive, and not optimized for speed.
+		my $sth_grp = $dbh->prepare("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ?");
+		my $sth_grp_root = $dbh->prepare("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL");
+		my $sth_node = $dbh->prepare("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ?");
+
+		$template_params{GROUPS} = _get_params_groups($dbh, $sth_grp, $sth_grp_root, $sth_node, undef);
+	}
+
+	# TODO - We still have to write the bottom navigation links
+
+	goto RENDERING;
+
+} elsif ($path eq "problems.html") {
+	# Emit problem template
+	goto RENDERING;
+}
+
+# Handle normal pages
+my $sth_url = $dbh->prepare('SELECT id, type FROM url WHERE path = ?');
+$sth_url->execute($path);
+my ($id, $type) = $sth_url->fetchrow_array;
+
+if (! defined $id) {
+	# Not found
+	print header( -status => 404, );
+} elsif ($type eq "group") {
+	# Emit group template
+} elsif ($type eq "node") {
+	# Emit node template
+} elsif ($type eq "service") {
+	# Emit service template
+	$template_filename = 'munin-serviceview.tmpl';
+
+	my $sth_service = $dbh->prepare("SELECT value FROM service_attr WHERE id = ? and name = 'graph_title'");
+	$sth_service->execute($id);
+	my ($graph_title) = $sth_service->fetchrow_array();
+		$template_params{PATH} = [
+			{ } , # XXX - Template says first args has to be empty
+			{ "pathname" => "$graph_title", },
+		];
+
+	# Create the params
+	my %service_template_params;
+	for my $t (@times) {
+			$service_template_params{"ZOOM$t"} = "";
+			$service_template_params{"IMG$t"} = "$path-$t.png";
+		}
+
+		$template_params{SERVICES} = [ \%service_template_params,];
 	}
 
 RENDERING:
