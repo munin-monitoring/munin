@@ -54,6 +54,7 @@ use strict;
 use warnings;
 
 use Munin::Plugin::HTTP;
+use URI::Escape;
 
 my $ret = undef;
 
@@ -70,7 +71,7 @@ my $PASSWORD = exists $ENV{'password'} ? $ENV{'password'} : "munin";
 my $TIMEOUT  = exists $ENV{'timeout'}  ? $ENV{'timeout'}  : 30;
 my $CONNECTOR= $ENV{'connector'};
 
-my $url = sprintf $URL, $USER, $PASSWORD, $HOST, $PORT;
+my $url = sprintf $URL, uri_escape($USER), uri_escape($PASSWORD), $HOST, $PORT;
 
 if(exists $ARGV[0] and $ARGV[0] eq "autoconf") {
     if($ret) {
