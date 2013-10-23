@@ -132,7 +132,9 @@ if ($path eq "") {
 	goto RENDERING;
 }
 
-# Handle normal pages
+# Handle normal pages, remove an eventual .html
+$path =~ s/(index)?\.html$//;
+
 my $sth_url = $dbh->prepare('SELECT id, type FROM url WHERE path = ?');
 $sth_url->execute($path);
 my ($id, $type) = $sth_url->fetchrow_array;
