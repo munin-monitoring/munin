@@ -39,7 +39,7 @@ use Log::Log4perl qw( :easy );
 
 use Data::Dumper;
 
-my @times = qw(DAY WEEK MONTH YEAR);
+my @times = qw(day week month year);
 
 while (new CGI::Fast) {
         use DBI;
