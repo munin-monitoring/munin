@@ -150,13 +150,27 @@ if (! defined $id) {
 	# Emit service template
 	$template_filename = 'munin-serviceview.tmpl';
 
-	my $sth_service = $dbh->prepare("SELECT value FROM service_attr WHERE id = ? and name = 'graph_title'");
-	$sth_service->execute($id);
-	my ($graph_title) = $sth_service->fetchrow_array();
-		$template_params{PATH} = [
-			{ } , # XXX - Template says first args has to be empty
-			{ "pathname" => "$graph_title", },
-		];
+	my $sth;
+
+	$sth = $dbh->prepare("SELECT value FROM service_attr WHERE id = ? and name = 'graph_title'");
+	$sth->execute($id);
+	my ($graph_title) = $sth->fetchrow_array();
+
+	$sth = $dbh->prepare("SELECT n.id, n.name FROM node n INNER JOIN service s ON s.node_id = n.id");
+	$sth->execute($id);
+
+	$sth = $dbh->prepare("SELECT g.name FROM grp g INNER JOIN node n ON n.grp_id = g.id");
+	$sth->execute($id);
+	my ($node_title) = $sth->fetchrow_array();
+
+	my ($group_title) = $sth->fetchrow_array();
+
+	$template_params{PATH} = [
+		{ } , # XXX - Template says first args has to be empty
+		{ "pathname" => "$group_title", },
+		{ "pathname" => "$node_title", },
+		{ "pathname" => "$graph_title", },
+	];
 
 	# Create the params
 	my %service_template_params;
