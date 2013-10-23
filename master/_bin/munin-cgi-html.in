@@ -236,7 +236,7 @@ sub _get_params_groups {
 		while (my ($_category) = $sth->fetchrow_array) {
 			push @$categories, {
 				NAME => $_category,
-				URL => "$_path" . "#" . lc("$_category"),
+				URL => "$_path.html" . "#" . lc("$_category"),
 			};
 		}
 
@@ -244,7 +244,7 @@ sub _get_params_groups {
 			CATEGORIES => $categories,
 			NCATEGORIES => (scalar @$categories), # This is a node.
 			NAME => $_name,
-			URL => $_path,
+			URL => "$_path.html",
 			GROUPS => [],
 		};
 	}
