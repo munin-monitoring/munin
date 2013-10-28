@@ -314,6 +314,12 @@ sub parse_service_config {
 	    if ($service eq 'multigraph') {
 		die "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
 	    }
+	    if ($service =~ /(^\.|\.$|\.\.)/) {
+		die "[ERROR] SERVICE \"$service\" contains dots in wrong places in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+	    }
+	    if ($service !~ m/^[-\w.:.]+$/) {
+		die "[ERROR] SERVICE \"$service\" contains weird characters in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+	    }
 	    new_service($service) unless $global_config->{$service};
 	    DEBUG "[CONFIG multigraph $plugin] Service is now $service";
 	}
@@ -468,6 +474,16 @@ sub parse_service_data {
 
 	    if ($service eq 'multigraph') {
 		ERROR "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".
+		    $nodedesignation;
+		croak("Plugin error.  Please consult the log.");
+	    }
+	    if ($service =~ /(^\.|\.$|\.\.)/) {
+		ERROR "[ERROR] SERVICE \"$service\" contains dots in wrong places in plugin $plugin on ".
+		    $nodedesignation;
+		croak("Plugin error.  Please consult the log.");
+	    }
+	    if ($service !~ m/^[-\w.:.]+$/) {
+		ERROR "[ERROR] SERVICE \"$service\" contains weird characters in plugin $plugin on ".
 		    $nodedesignation;
 		croak("Plugin error.  Please consult the log.");
 	    }
