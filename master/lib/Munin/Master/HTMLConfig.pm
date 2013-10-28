@@ -156,6 +156,7 @@ sub get_group_tree {
 			 $shrinkpath;
 			 $shrinkpath =~ s/^[^\/]+\/?//, $counter++)
 	    	{
+                die ("Munin::Master::HTMLConfig ran into an endless loop") if ($counter >= 100);
                 $childnode->{'url' . $counter} = $shrinkpath;
             }
 
@@ -198,6 +199,7 @@ sub get_group_tree {
             $shrinkpath =~ /\//;
             $shrinkpath =~ s/^[^\/]+\/*//, $counter++
             ) {
+            die ("Munin::Master::HTMLConfig ran into an endless loop") if ($counter >= 100);
             $obj->{'url' . $counter} = $shrinkpath;
         }
         push @$cats, $obj;
@@ -297,6 +299,7 @@ sub get_group_tree {
             $shrinkpath =~ /\//;
             $shrinkpath =~ s/^[^\/]+\/*//, $counter++
             ) {
+            die ("Munin::Master::HTMLConfig ran into an endless loop") if ($counter >= 100);
             $ret->{'url' . $counter} = $shrinkpath;
         }
     }
