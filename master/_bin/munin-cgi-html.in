@@ -147,6 +147,45 @@ if (! defined $id) {
 } elsif ($type eq "node") {
 	# Emit node template
 	$template_filename = 'munin-nodeview.tmpl';
+
+	my $sth_category = $dbh->prepare(
+		"SELECT sa.value as graph_category FROM service s
+		INNER JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_category'
+		WHERE s.node_id = ?
+		ORDER BY graph_category");
+	$sth_category->execute($id);
+
+	my $categories = [];
+	while (my ($_category) = $sth_category->fetchrow_array) {
+		my $sth = $dbh->prepare("SELECT s.id, sa_t.value as service_title, u.path AS url
+			FROM service s
+			INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category' AND sa_c.value = ?
+			INNER JOIN service_attr sa_t ON sa_t.id = s.id AND sa_t.name = 'graph_title'
+			INNER JOIN url u ON u.id = s.id AND u.type = 'service'
+			WHERE s.node_id = ?
+			ORDER BY service_title ASC");
+		$sth->execute($_category, $id);
+
+		my $services = [];
+		while (my ($_s_id, $_service_title, $_url) = $sth->fetchrow_array) {
+			my %imgs = map { ("IMG$_" => lc("$_url-$_")) } @times;
+			push @$services, {
+				NAME => $_service_title,
+				URLX => $_url,
+				%imgs,
+			};
+		}
+
+
+		push @$categories, {
+			NAME => $_category,
+			SERVICES => $services,
+		};
+	}
+
+	$template_params{CATEGORIES} = $categories;
+
+
 } elsif ($type eq "service") {
 	# Emit service template
 	$template_filename = 'munin-serviceview.tmpl';
