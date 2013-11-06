@@ -70,7 +70,7 @@ from time import time
 import sys
 import re
 
-CACHEDIR = os.environ['MUNIN_PLUGSTATE']
+CACHEDIR = environ['MUNIN_PLUGSTATE']
 CACHEFILE = "plugin-ipmi_sensor.cache"
 CACHEAGE = 120
 CONFIG = '@@CONFDIR@@/ipmi'
