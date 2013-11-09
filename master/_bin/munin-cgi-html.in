@@ -137,6 +137,24 @@ if ($path eq "") {
 } elsif ($path eq "problems.html") {
 	# Emit problem template
 	goto RENDERING;
+} elsif ($path =~ m/static\/(.+)$/) {
+	# Emit the static page
+	my $page = $1;
+	my ($ext) = ($page =~ m/(.*)\.[^.]+$/);
+	my %mime_types = (
+		css => "text/css",
+		html => "text/html",
+		png => "image/png",
+		jpg => "image/jpeg",
+		jpeg => "image/jpeg",
+		js => "application/javascript",
+	);
+	print header( -status => 200, -Content-Type => $mime_types{$ext});
+	my $filename = "$Munin::Common::Defaults::MUNIN_CONFDIR/static/$page";
+	my $fh = new IO::File("$filename");
+	print $filename;
+	while (my $line = <$fh>) { print $line; }
+	next;
 }
 
 # Handle normal pages, remove an eventual .html
