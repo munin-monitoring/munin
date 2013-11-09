@@ -94,8 +94,15 @@ while (new CGI::Fast) {
 	$template_params{GLOBALCATS} = $globalcats;
 }
 
-# Remove the leading "/"
 my $path = $ENV{PATH_INFO};
+
+# If $path is empty, redirect to $path = "/"
+if ($path eq "") {
+	print header( -status => 301, Location => "$ENV{SCRIPT_NAME}/", );
+	next;
+}
+
+# Remove now the leading "/"
 $path =~ s,^/,,;
 
 # Handle special pages
