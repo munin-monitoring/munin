@@ -50,7 +50,7 @@ while (new CGI::Fast) {
 	my %template_params = (
 		MUNIN_VERSION	=> $Munin::Common::Defaults::MUNIN_VERSION,
 		TIMESTAMP       => strftime("%Y-%m-%d %T%z (%Z)", localtime),
-		R_PATH		=> "",
+		R_PATH		=> "$ENV{SCRIPT_NAME}",
 	);
 
 	# Common Navigation params
