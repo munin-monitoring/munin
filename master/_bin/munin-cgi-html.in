@@ -96,16 +96,17 @@ while (new CGI::Fast) {
 
 my $path = $ENV{PATH_INFO};
 
-# If $path is empty, redirect to $path = "/"
+# Force a trailing / on overview, to enable simpler url handling: it is like in
+# a subdir from the browser pov
 if ($path eq "") {
 	print header( -status => 301, Location => "$ENV{SCRIPT_NAME}/", );
 	next;
 }
 
-# Remove now the leading "/"
+# Remove now the leading "/" as *every* path will have it
 $path =~ s,^/,,;
 
-# Handle special pages
+# Handle all the special pages that are not in the url table, but with fixed urls
 if ($path eq "") {
 	# Emit overview template
 	$template_filename = 'munin-overview.tmpl';
