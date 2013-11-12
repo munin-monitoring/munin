@@ -1,3 +1,11 @@
+munin (2.0.6-4+deb7u2) wheezy-security; urgency=high
+
+  [ Christoph Biedl ]
+  * Avoid a node DoS on bad plugin (CVE-2013-6359)
+  * Avoid an OOM in HTML generation on bad multigraph data (CVE-2013-6048)
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Tue, 12 Nov 2013 22:54:54 +0100
+
 munin (2.0.6-4+deb7u1) wheezy; urgency=low
 
   * master:
