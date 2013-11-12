@@ -306,17 +306,28 @@ sub parse_service_config {
         next if $line =~ /^\#/;
 
 	if ($line =~ m{\A multigraph \s+ (.+) }xms) {
-	    $correct++;
-
 	    push_graphorder($service);
 
 	    $service = $1;
 
 	    if ($service eq 'multigraph') {
-		die "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+		ERROR "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+                $errors++;
+                last;
 	    }
+            if ($service =~ /(^\.|\.$|\.\.)/) {
+                ERROR "[ERROR] SERVICE \"$service\" contains dots in wrong places in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+                $errors++;
+                last;
+            }
+            if ($service !~ m/^[-\w.:.]+$/) {
+                ERROR "[ERROR] SERVICE \"$service\" contains weird characters in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+                $errors++;
+                last;
+            }
 	    new_service($service) unless $global_config->{$service};
 	    DEBUG "[CONFIG multigraph $plugin] Service is now $service";
+	    $correct++;
 	}
 	elsif ($line =~ m{\A ([^\s\.]+) \s+ (.+?) \s* $}xms) {
 	    $correct++;
@@ -462,16 +473,26 @@ sub parse_service_data {
         next if $line =~ /^\#/;
 
 	if ($line =~ m{\A multigraph \s+ (.+) }xms) {
-	    $correct++;
-
 	    $service = $1;
+            if ($service =~ /(^\.|\.$|\.\.)/) {
+                ERROR "[ERROR] SERVICE \"$service\" contains dots in wrong places in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+                $errors++;
+                last;
+            }
+            if ($service !~ m/^[-\w.:.]+$/) {
+                ERROR "[ERROR] SERVICE \"$service\" contains weird characters in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+                $errors++;
+                last;
+            }
 	    $values{$service} = {};
 
 	    if ($service eq 'multigraph') {
+                $errors++;
 		ERROR "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".
 		    $nodedesignation;
-		croak("Plugin error.  Please consult the log.");
+                last;
 	    }
+	    $correct++;
 	}
 	elsif ($line =~ m{\A ([^\.]+)\.value \s+ ([\S:]+) }xms) {
             my ($data_source, $value, $when) = ($1, $2, $now);
