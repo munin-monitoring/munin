@@ -67,9 +67,16 @@ while (new CGI::Fast) {
 			jpeg => "image/jpeg",
 			js => "application/javascript",
 		);
-		print header( -status => 200, -type => $mime_types{$ext});
+
 		my $filename = "$Munin::Common::Defaults::MUNIN_CONFDIR/static/$page";
 		my $fh = new IO::File("$filename");
+
+		if (! $fh) {
+			print header( -status => 404);
+			next;
+		}
+
+		print header( -status => 200, -type => $mime_types{$ext});
 		while (my $line = <$fh>) { print $line; }
 		next;
 	}
