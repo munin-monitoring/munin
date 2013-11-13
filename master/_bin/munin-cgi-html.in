@@ -42,6 +42,18 @@ use Data::Dumper;
 my @times = qw(day week month year);
 
 while (new CGI::Fast) {
+	my $path = $ENV{PATH_INFO};
+
+	# Force a trailing / on overview, to enable simpler url handling: it is like in
+	# a subdir from the browser pov
+	if ($path eq "") {
+		print header( -status => 301, Location => "$ENV{SCRIPT_NAME}/", );
+		next;
+	}
+
+	# Remove now the leading "/" as *every* path will have it
+	$path =~ s,^/,,;
+
         use DBI;
 	my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
         my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
@@ -93,18 +105,6 @@ while (new CGI::Fast) {
 	}
 	$template_params{GLOBALCATS} = $globalcats;
 }
-
-my $path = $ENV{PATH_INFO};
-
-# Force a trailing / on overview, to enable simpler url handling: it is like in
-# a subdir from the browser pov
-if ($path eq "") {
-	print header( -status => 301, Location => "$ENV{SCRIPT_NAME}/", );
-	next;
-}
-
-# Remove now the leading "/" as *every* path will have it
-$path =~ s,^/,,;
 
 # Handle all the special pages that are not in the url table, but with fixed urls
 if ($path eq "") {
