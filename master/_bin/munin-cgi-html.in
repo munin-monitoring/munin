@@ -82,8 +82,9 @@ while (new CGI::Fast) {
 	}
 
 	# Short evaluate the GRAPH png pages
-	if ($path =~ m/-(day|week|month|year)$/) {
-		print header( -status => 404);
+	if ($path =~ m/-(day|week|month|year).png$/) {
+		my $url = script_name() . "/../munin-cgi-graph" . path_info();
+		print header( -status => 301, -Location => $url);
 		next;
 	}
 
