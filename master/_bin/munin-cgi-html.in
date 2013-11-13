@@ -58,7 +58,7 @@ while (new CGI::Fast) {
 
 	# Problems nav
 	{
-		my $sth = $dbh->prepare_cached('SELECT SUM(critical), SUM(warning), SUM(unknown) FROM ds');
+		my $sth = $dbh->prepare_cached("SELECT SUM(critical), SUM(warning), SUM(unknown) FROM ds");
 		$sth->execute();
 		my ($critical, $warning, $unknown) = $sth->fetchrow_array;
 		$template_params{NCRITICAL} = $critical;
@@ -160,7 +160,7 @@ if ($path eq "") {
 # Handle normal pages, remove an eventual .html
 $path =~ s/(index)?\.html$//;
 
-my $sth_url = $dbh->prepare_cached('SELECT id, type FROM url WHERE path = ?');
+my $sth_url = $dbh->prepare_cached("SELECT id, type FROM url WHERE path = ?");
 $sth_url->execute($path);
 my ($id, $type) = $sth_url->fetchrow_array;
 
