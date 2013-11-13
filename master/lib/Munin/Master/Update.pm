@@ -270,18 +270,21 @@ sub _dump_into_sql {
 	$dbh->do("CREATE TABLE grp (id INTEGER PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE TABLE grp_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX pk_grp_attr ON grp_attr (id, name)");
+	$dbh->do("CREATE INDEX r_g_grp ON grp (p_id)");
 	my $sth_grp = $dbh->prepare('INSERT INTO grp (name, p_id, path) VALUES (?, ?, ?)');
 	my $sth_grp_attr = $dbh->prepare('INSERT INTO grp_attr (id, name, value) VALUES (?, ?, ?)');
 
 	$dbh->do("CREATE TABLE node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE TABLE node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX pk_node_attr ON node_attr (id, name)");
+	$dbh->do("CREATE INDEX r_n_grp ON node (grp_id)");
 	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
 	my $sth_node_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
 
 	$dbh->do("CREATE TABLE service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE TABLE service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX pk_service_attr ON service_attr (id, name)");
+	$dbh->do("CREATE INDEX r_s_node ON service (node_id)");
 	my $sth_service = $dbh->prepare('INSERT INTO service (node_id, name, path) VALUES (?, ?, ?)');
 	my $sth_service_attr = $dbh->prepare('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
 
@@ -289,6 +292,7 @@ sub _dump_into_sql {
 		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
 	$dbh->do("CREATE TABLE ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX pk_ds_attr ON ds_attr (id, name)");
+	$dbh->do("CREATE INDEX r_d_service ON ds (service_id)");
 	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path) VALUES (?, ?, ?)');
 	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
 
