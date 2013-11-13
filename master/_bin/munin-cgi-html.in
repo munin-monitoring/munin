@@ -54,6 +54,27 @@ while (new CGI::Fast) {
 	# Remove now the leading "/" as *every* path will have it
 	$path =~ s,^/,,;
 
+	# Handle static page now, since there is no need to do any SQL
+	if ($path =~ m/static\/(.+)$/) {
+		# Emit the static page
+		my $page = $1;
+		my ($ext) = ($page =~ m/.*\.([^.]+)$/);
+		my %mime_types = (
+			css => "text/css",
+			html => "text/html",
+			png => "image/png",
+			jpg => "image/jpeg",
+			jpeg => "image/jpeg",
+			js => "application/javascript",
+		);
+		print header( -status => 200, -type => $mime_types{$ext});
+		my $filename = "$Munin::Common::Defaults::MUNIN_CONFDIR/static/$page";
+		my $fh = new IO::File("$filename");
+		while (my $line = <$fh>) { print $line; }
+		next;
+	}
+
+	# Ok, now SQL is needed to go further
         use DBI;
 	my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
         my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
@@ -138,24 +159,8 @@ if ($path eq "") {
 } elsif ($path eq "problems.html") {
 	# Emit problem template
 	goto RENDERING;
-} elsif ($path =~ m/static\/(.+)$/) {
-	# Emit the static page
-	my $page = $1;
-	my ($ext) = ($page =~ m/.*\.([^.]+)$/);
-	my %mime_types = (
-		css => "text/css",
-		html => "text/html",
-		png => "image/png",
-		jpg => "image/jpeg",
-		jpeg => "image/jpeg",
-		js => "application/javascript",
-	);
-	print header( -status => 200, -type => $mime_types{$ext});
-	my $filename = "$Munin::Common::Defaults::MUNIN_CONFDIR/static/$page";
-	my $fh = new IO::File("$filename");
-	while (my $line = <$fh>) { print $line; }
-	next;
 }
+
 
 # Handle normal pages, remove an eventual .html
 $path =~ s/(index)?\.html$//;
