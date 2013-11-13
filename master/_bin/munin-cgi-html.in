@@ -261,7 +261,8 @@ RENDERING:
 
 	$template->param(%template_params);
 
-	$template->output(print_to => *STDOUT);
+	# We cannot use "print_to => \*STDOUT" since it does *NOT* work with FastCGI
+	print $template->output();
 }
 
 sub _get_params_groups {
