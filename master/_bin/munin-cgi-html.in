@@ -74,6 +74,12 @@ while (new CGI::Fast) {
 		next;
 	}
 
+	# Short evaluate the GRAPH png pages
+	if ($path =~ m/-(day|week|month|year)$/) {
+		print header( -status => 404);
+		next;
+	}
+
 	# Ok, now SQL is needed to go further
         use DBI;
 	my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
