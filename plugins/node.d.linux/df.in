@@ -146,7 +146,8 @@ while (<DF>) {
     next if m{//};
 
     # Parse the output
-    my ($name, undef, $used, $avail, undef, $mountpt, undef) = split(/\s+/, $_, 7);
+    chomp($_);
+    my ($name, undef, $used, $avail, undef, $mountpt) = split(/\s+/, $_, 6);
 
     next if skip($name, $mountpt);
 
