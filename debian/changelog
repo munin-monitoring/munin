@@ -1,3 +1,9 @@
+munin (2.0.18-1) unstable; urgency=high
+
+  * Imported upstream release 2.0.18 (CVE-2013-6359, CVE-2013-6048)
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Tue, 19 Nov 2013 13:05:16 +0100
+
 munin (2.0.17-3) unstable; urgency=low
 
   * munin-common: Call systemd-tmpfiles on install (Closes: #720875)
