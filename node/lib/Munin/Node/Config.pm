@@ -91,8 +91,10 @@ sub _parse_line {
     return if $self->_handled_by_net_server($var_name);
 
     my %config_variables = map { $_ => 1 } qw(
+        global_timeout
         ignore_file
         paranoia
+        spooldir
         timeout
         tls
         tls_ca_certificate

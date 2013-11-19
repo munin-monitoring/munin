@@ -47,13 +47,16 @@ if [ "$1" = "config" ]; then
 	echo 'graph_info This graph monitors the Linux open files table.'
 	echo 'used.label open files'
 	echo 'used.info The number of currently open files.'
-	print_warning used
-	print_critical used
+	computed_warning=$(awk '{printf "%d", $3*0.92}' < /proc/sys/fs/file-nr)
+	computed_critical=$(awk '{printf "%d", $3*0.98}' < /proc/sys/fs/file-nr)
+	p_warning=$(print_warning used)
+	p_critical=$(print_critical used)
+	[ -z "$p_warning" ] && echo "used.warning $computed_warning" || echo $p_warning
+	[ -z "$p_critical" ] && echo "used.critical $computed_critical" || echo $p_critical
 	echo 'max.label max open files'
 	echo 'max.info The maximum supported number of open files. Tune by modifying /proc/sys/fs/file-max.'
 	print_warning max
 	print_critical max
-	awk  '{printf "used.warning %d\nused.critical %d\n",$3*0.92,$3*0.98}' < /proc/sys/fs/file-nr
 	exit 0
 fi
 

@@ -145,12 +145,6 @@ my $last_cleanup=0;
 MAIN: while($keepgoing) {
 	my $when = time;
 
-	{
-		# XXX - quickfix a bug that when sleeping too little, would
-		# then sleep a whole $timeout
-		$timeout = 1;
-	}
-
 	my $when_next = $when + $timeout; # wake up at least every $timeout sec
 	my $sock;
 	PLUGIN: foreach my $plugin (@plugins) {
@@ -174,12 +168,16 @@ MAIN: while($keepgoing) {
 			$sock = new IO::Socket::INET(
 				PeerAddr	=> "$host",
 				Proto	=> 'tcp'
-			) || die "Error creating socket: $!";
+			);
+
+			unless ($sock) {
+				warn "Error creating socket: $!, moving to next plugin to try again";
+				next;
+			}
+
 			<$sock>; # skip header
 		}
 
-		# $sock is still not open. moving to next plugin to try again
-		next unless $sock;
 
 		# Setting the command name for a useful top information
 		$process_name = "plugin:$plugin";
@@ -211,6 +209,8 @@ MAIN: while($keepgoing) {
 	if ($sleep_sec > 0) {
 		print STDERR "[$$][$process_name] Sleeping $sleep_sec sec\n" if $verbose;
 		sleep $sleep_sec;
+	} else {
+		print STDERR "[$$][$process_name] Already late : should sleep $sleep_sec sec\n" if $verbose;
 	}
 }
 		
