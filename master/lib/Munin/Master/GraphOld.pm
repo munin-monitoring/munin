@@ -1167,7 +1167,9 @@ sub process_service {
                             . "#" . (
                             $single_value
                             ? "ff0000"
-                            : $COLOUR[($field_count - 1) % @COLOUR]));
+                            : $COLOUR[($field_count - 1) % @COLOUR])
+                            . "::dashes=1,8"
+                    );
                 }
                 if (defined($warn_max) and $warn_max ne '') {
                     unshift(
@@ -1177,7 +1179,9 @@ sub process_service {
                             . "#" . (
                             $single_value
                             ? "ff0000"
-                            : $COLOUR[($field_count - 1) % @COLOUR]));
+                            : $COLOUR[($field_count - 1) % @COLOUR])
+                            . "::dashes=1,8"
+                    );
                 }
             }
 
