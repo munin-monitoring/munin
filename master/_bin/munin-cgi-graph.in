@@ -150,7 +150,7 @@ while (new CGI::Fast) {
 
     if (! &verify_parameters ($dom, $host, $serv, $scale)) {
 	# If parameters are not valid, just say we didn't find anything.
-	print "Status: 404 Not Found\r\n",
+	print "Status: 404 Not Found (verify_parameters)\r\n",
 	  "Content-Type: $content_types{$fileext}\r\n",
 	  "X-Munin-Pid: $$\r\n",
 	  "X-Munin-Request: $nb_request/$nb_request_max\r\n",
