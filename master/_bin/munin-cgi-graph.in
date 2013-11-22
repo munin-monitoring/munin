@@ -72,7 +72,7 @@ push @params, "--skip-locking", "--skip-stats", "--nolazy";
 
 my $config = graph_startup(\@params);
 
-logger_open($config->{'logdir'});
+logger_open($1) if ($config->{'logdir'} =~ m/(.*)/);
 if(defined($ENV{CGI_DEBUG})) {
 	logger_debug();
 	push @params, "--debug";
