@@ -88,7 +88,7 @@ while (new CGI::Fast) {
     # This fixes http://bugs.debian.org/668666 and closes a lots of other potential bugs.
     if ( has_offending_chars($ENV{PATH_INFO}) || has_offending_chars($ENV{QUERY_STRING}) ) {
         # If parameters are not valid, just pretend we didn't find anything.
-        print "Status: 404 Not Found\r\n",
+        print "Status: 400 Bad Request (has_offending_chars)\r\n",
           "Content-Type: image/png\r\n",
           "X-Munin-Pid: $$\r\n",
           "X-Munin-Request: $nb_request/$nb_request_max\r\n",
