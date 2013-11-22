@@ -61,7 +61,6 @@ my %content_types = (
 	"xml" => "text/xml",
 );
 
-my $logfile;
 my $scale = "day";
 
 my @params ;
@@ -70,14 +69,13 @@ push @params, "--config", $ENV{'MUNIN_CONFIG'}
        if (defined $ENV{'MUNIN_CONFIG'});
 push @params, "--no-fork"; # FastCgi forks for us
 push @params, "--skip-locking", "--skip-stats", "--nolazy";
-push @params, "--log-file", $logfile;
 
 my $config = graph_startup(\@params);
 
 logger_open($config->{'logdir'});
 if(defined($ENV{CGI_DEBUG})) {
 	logger_debug();
-	push @params, "--debug", $logfile;
+	push @params, "--debug";
 }
 
 # BEGIN FAST-CGI LOOP:
