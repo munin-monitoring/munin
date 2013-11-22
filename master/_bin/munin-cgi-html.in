@@ -47,7 +47,11 @@ while (new CGI::Fast) {
 	# Force a trailing / on overview, to enable simpler url handling: it is like in
 	# a subdir from the browser pov
 	if ($path eq "") {
-		print header( -status => 301, Location => (script_name() . "/"), );
+		print header(
+			-status => 301,
+			-Location => (script_name() . "/"),
+			-Cache_Control => "public, max-age=14400",  # Cache is valid of 1 day
+		);
 		next;
 	}
 
@@ -84,7 +88,11 @@ while (new CGI::Fast) {
 	# Short evaluate the GRAPH png pages
 	if ($path =~ m/-(day|week|month|year).png$/) {
 		my $url = script_name() . "/../munin-cgi-graph" . path_info();
-		print header( -status => 301, -Location => $url);
+		print header(
+			-status => 301,
+			-Location => $url,
+			-Cache_Control => "public, max-age=14400",  # Cache is valid of 1 day
+		);
 		next;
 	}
 
