@@ -50,3 +50,12 @@ tls_verify_depth 5
     ./dev_scripts/run munin-node-configure --shell --families=contrib,auto | sh -x
 fi
 
+
+for i in $(find $DESTDIR -name 'munin-cgi-*' -type f -executable)
+do
+	echo "Untainting CGI $i"
+	echo "#! /usr/bin/perl" > $i.tmp
+	cat $i >> $i.tmp
+	chmod +x $i.tmp
+	mv $i.tmp $i
+done
