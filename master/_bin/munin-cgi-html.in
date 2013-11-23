@@ -224,7 +224,7 @@ if (! defined $id) {
 			my %imgs = map { ("IMG$_" => script_name() . "/../munin-cgi-graph" . lc("/$_url-$_.png")) } @times;
 			push @$services, {
 				NAME => $_service_title,
-				URLX => $_url,
+				URLX => url_absolutize("$_url.html"),
 				%imgs,
 			};
 		}
@@ -357,4 +357,10 @@ sub get_param
 	my ($value) = $dbh->selectrow_array("SELECT value FROM param WHERE name = ?", undef, ($param));
 
 	return $value;
+}
+
+sub url_absolutize
+{
+	my ($url) = @_;
+	return script_name() . "/" . $url;
 }
