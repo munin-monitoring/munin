@@ -194,6 +194,7 @@ my ($id, $type) = $sth_url->fetchrow_array;
 if (! defined $id) {
 	# Not found
 	print header( -status => 404, );
+	next;
 } elsif ($type eq "group") {
 	# Emit group template
 } elsif ($type eq "node") {
