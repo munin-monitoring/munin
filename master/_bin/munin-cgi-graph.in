@@ -27,11 +27,7 @@ $Id$
 use strict;
 use warnings;
 use IO::Handle;
-BEGIN {
-    no warnings;
-    $Date::Manip::Backend = 'DM5';
-}
-use Date::Manip;
+use Date::Parse;
 use POSIX qw(strftime locale_h);
 use CGI::Fast qw(:cgi);
 use CGI::Carp qw(fatalsToBrowser);
@@ -501,7 +497,7 @@ sub rfctime_newer_than {
     # Format of since_string If-Modified-Since: Wed, 23 Jun 2004 16:11:06 GMT
     my $since_string = shift;
     my $created      = shift;
-    my $ifmodsec = &UnixDate (&ParseDateString ($since_string), "%s");
+    my $ifmodsec = str2time ($since_string);
 
     return 1 if ($ifmodsec < $created);
     return 0;
