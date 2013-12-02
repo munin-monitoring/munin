@@ -277,8 +277,8 @@ if (! defined $id) {
 
 RENDERING:
 	if (! $template_filename ) {
-		# Unknown --> HTTP Gone....
-		print header( -status => 410, );
+		# Unknown
+		print header( -status => 404, );
 		next;
 	}
 
