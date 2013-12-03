@@ -146,7 +146,7 @@ while (my $path = <$graph_fh>) {
     my $graph_ttl = $period{$scale} || 1;
     my $graph_last_expires = $time - ($time % $graph_ttl);
 
-    {
+    if ($pinpoint || ! -f $filename || (stat(_))[9] < $graph_last_expires) {
         # Should generate it
 	my $scale_options;
 	if ($pinpoint) {
