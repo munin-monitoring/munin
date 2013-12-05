@@ -230,6 +230,42 @@ tsaavik (1):
       dynazoom: added logo and backlink
 
 
+munin-2.0.18, 2013-11-12
+
+-------
+Summary
+-------
+
+Bugfix + secfix release.
+
+Note that this release has 2 security fixes :
+* Avoid a node DoS on bad plugin (CVE-2013-6359)
+* Avoid an OOM in HTML generation on bad multigraph data (CVE-2013-6048)
+
+Closes: #910, #1397, D:728840, C:CVE-2013-6359, C:CVE-2013-6048
+
+------------------
+Detailed Changelog
+------------------
+
+Kjetil Torgrim Homme:
+      common: add missing keywords
+      common: refactor the keywords to ease changes
+
+Matthias Schmitz:
+      Substitute some @@ vars in generate files.
+
+Steve Schnepp:
+      plugins/open_files: fix overrided used.warn/crit
+      node/asyncd: fix a crash case
+      node/asynd: avoid wake up each second
+      master: fix unexpected "warning limit" lines
+      master: avoid an endless loop in HTML generation
+      master: validate multigraph argument
+      master: don't abort node collection on bad plugin
+      p/ipmi_sensor_: fix the environ() usage
+
+
 munin-2.0.17, 2013-07-19
 
 -------

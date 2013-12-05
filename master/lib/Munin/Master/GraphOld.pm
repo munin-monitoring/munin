@@ -1198,9 +1198,9 @@ sub process_service {
                 unshift(@rrd_negatives,
                     "HRULE:" . $number . ($ldcolour ? "#$ldcolour" : "#$colour"));
             }
-            elsif (my $tmpwarn = munin_get($negfield, "warning",2)) {
+            elsif (my $tmpwarn = munin_get($negfield, "warning")) {
 
-                my ($warn_min, $warn_max) = split(':', $tmpwarn);
+                my ($warn_min, $warn_max) = split(':', $tmpwarn,2);
 
                 if (defined($warn_min) and $warn_min ne '') {
                     unshift(
