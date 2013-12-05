@@ -86,7 +86,7 @@ To enable rrdcached on the munin master, you will need to set the
 
 ::
 
-  rrdcached_socket=/run/munin/rrdcached.sock
+  rrdcached_socket /run/munin/rrdcached.sock
 
 
 Is it working?

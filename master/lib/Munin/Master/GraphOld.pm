@@ -1081,6 +1081,10 @@ sub process_service {
             and graph_by_minute($service)) {
             push(@rrd, expand_cdef($service, \$rrdname, "$fname,60,*"));
         }
+        if (    munin_get($field, "type", "GAUGE") ne "GAUGE"
+            and graph_by_hour($service)) {
+            push(@rrd, expand_cdef($service, \$rrdname, "$fname,3600,*"));
+        }
 
         if (my $tmpcdef = munin_get($field, "cdef")) {
             push(@rrd, expand_cdef($service, \$rrdname, $tmpcdef));
@@ -1539,6 +1543,10 @@ sub process_service {
                                 # Already multiplied by 60
                                 push @replace,
                                     "CDEF:x$fname=PREV($fname),UN,0,PREV($fname),IF,$fname,+,5,*,6,*";
+                            } elsif (graph_by_hour($service)) {
+                                # Already multiplied by 3600, have to *divide* by 12
+                                push @replace,
+                                    "CDEF:x$fname=PREV($fname),UN,0,PREV($fname),IF,$fname,+,12,/,6,*";
                             }
                             else {
                                 push @replace,
@@ -1552,6 +1560,9 @@ sub process_service {
 
                                 # Already multiplied by 60
                                 push @replace, "CDEF:x$fname=$fname,5,*,288,*";
+                            } elsif (graph_by_hour($service)) {
+                                # Already multiplied by 3600, have to *divide* by 12
+                                push @replace, "CDEF:x$fname=$fname,12,/,288,*";
                             }
                             else {
                                 push @replace,
@@ -1737,6 +1748,12 @@ sub graph_by_minute {
     my $service = shift;
 
     return (munin_get($service, "graph_period", "second") eq "minute");
+}
+
+sub graph_by_hour {
+    my $service = shift;
+
+    return (munin_get($service, "graph_period", "second") eq "hour");
 }
 
 sub orig_to_cdef {
