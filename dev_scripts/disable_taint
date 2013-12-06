@@ -1,0 +1,8 @@
+#! /bin/sh
+
+FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
+. $FINDBIN/common.sh
+
+cd $BASEDIR
+
+perl -pi -e "s,bin/perl -T,bin/perl," $( find $DESTDIR -type f -executable )

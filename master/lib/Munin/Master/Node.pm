@@ -238,7 +238,7 @@ sub list_plugins {
     my $use_node_name = defined($self->{configref}{use_node_name})
         ? $self->{configref}{use_node_name}
         : $config->{use_node_name};
-    my $host = $use_node_name
+    my $host = Munin::Master::Config->_parse_bool($use_node_name, 0)
         ? $self->{node_name}
         : $self->{host};
 
@@ -246,11 +246,12 @@ sub list_plugins {
 	die "[ERROR] Couldn't find out which host to list on $host.\n";
     }
 
-    $self->_node_write_single("list $host\n");
+    my $host_list = ($use_node_name && $use_node_name eq "ignore") ? "" : $host;
+    $self->_node_write_single("list $host_list\n");
     my $list = $self->_node_read_single();
 
     if (not $list) {
-        WARN "[WARNING] Config node $self->{host} listed no services for $host.  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.";
+        WARN "[WARNING] Config node $self->{host} listed no services for '$host_list'.  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.";
     }
 
     return split / /, $list;

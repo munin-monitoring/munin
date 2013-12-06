@@ -9,6 +9,18 @@ use Storable;
 use Data::Dumper;
 
 $Data::Dumper::Indent = 1;
+$Data::Dumper::Quotekeys = 0;
+$Data::Dumper::Pair = ": ";
+$Data::Dumper::Terse = 1;
+$Data::Dumper::Deepcopy  = 1;
+
+$Data::Dumper::Sortkeys = sub {
+	my ($hash) = @_;
+	my @keys = sort keys %$hash;
+	@keys = grep { !/^#%#/ } @keys unless $ENV{KEEP_ALL};
+	return \@keys;
+};
+
 
 while (my $file = shift) {
 	my $ref = Storable::retrieve($file);

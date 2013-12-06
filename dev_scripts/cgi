@@ -1,0 +1,32 @@
+#!/bin/bash
+
+FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
+. $FINDBIN/common.sh
+
+cd $BASEDIR
+
+
+usage() {
+    echo "Usage: $0 <NAME>"
+    exit 1
+}
+
+
+if [ -z "$1" ]; then
+    usage
+fi
+
+
+RUN=$(find $DESTDIR -name $1 -type f -executable)
+shift
+
+if [ -z "$RUN" ]; then
+    usage
+fi
+
+export PATH_INFO=$1
+shift
+
+export PERL5LIB=$DESTDIR$PERLSITELIB
+
+$TIMING $RUN "$@"
