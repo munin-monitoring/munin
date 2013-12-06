@@ -98,19 +98,23 @@ following fields are used.
 |                    |                  |          | and makes the first a LINE, LINE[n] or   |                  |         |
 |                    |                  |          | AREA datasource, and the rest as STACK.  |                  |         |
 +--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| datapoint.type     | GAUGE, COUNTER,  | optional | Sets the RRD Data Source Type for this   | rrdcreate_       |         |
+|                    | DERIVE, ABSOLUTE |          | datapoint.  The type used may introduce  |                  |         |
+|                    |                  |          | restrictions for the value that can be   |                  |         |
+|                    |                  |          | used.                                    |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
 
 On a data fetch run, the plugin is called with no arguments. the following
 fields are used.
 
-+-----------------+-----------------------+----------+------------------+------+------------+
-| Field           | Value                 | type     | Description      | See  | Default    |
-|                 |                       |          |                  | also |            |
-+=================+=======================+==========+==================+======+============+
-| datapoint.value | integer, decimal      | required | The value to be  |      | No default |
-|                 | numbers , or "U" (may |          | graphed.         |      |            |
-|                 | be signed)            |          |                  |      |            |
-|                 |                       |          |                  |      |            |
-+-----------------+-----------------------+----------+------------------+------+------------+
++-----------------+------------------------------+----------+------------------+------+------------+
+| Field           | Value                        | type     | Description      | See  | Default    |
+|                 |                              |          |                  | also |            |
++=================+==============================+==========+==================+======+============+
+| datapoint.value | integer, decimal numbers ,   | required | The value to be  |      | No default |
+|                 | or "U" (may be signed). See  |          | graphed.         |      |            |
+|                 | rrdcreate_ for restrictions. |          |                  |      |            |
++-----------------+------------------------------+----------+------------------+------+------------+
 
 .. index::
    pair: plugin; executing
@@ -149,3 +153,5 @@ Data fetch run
 .. _cdeftutorial: http://oss.oetiker.ch/rrdtool/tut/cdeftutorial.en.html
 
 .. _rrdgraph: http://oss.oetiker.ch/rrdtool/doc/rrdgraph_graph.en.html
+
+.. _rrdcreate: http://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html
