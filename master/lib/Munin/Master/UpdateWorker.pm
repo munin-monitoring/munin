@@ -21,7 +21,7 @@ use Time::HiRes;
 use Data::Dumper;
 use Scalar::Util qw(weaken);
     
-use List::Util qw(max);
+use List::Util qw(max shuffle);
 
 my $config = Munin::Master::Config->instance()->{config};
 
@@ -116,6 +116,12 @@ sub do_work {
 
 	    # Note: A multigraph plugin can present multiple services.
 	    @plugins = $self->{node}->list_plugins() unless @plugins;
+
+	    # Shuffle @plugins to avoid always having the same ordering
+	    # XXX - It might be best to preorder them on the TIMETAKEN ASC
+	    #       in order that statisticall fast plugins are done first to increase
+	    #       the global throughtput
+	    @plugins = shuffle(@plugins);
 
 	    for my $plugin (@plugins) {
 		if (%{$config->{limit_services}}) {
