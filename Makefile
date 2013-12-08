@@ -123,6 +123,7 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	$(INSTALL) -m 0755 build/master/_bin/munin-limits $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-datafile2storable $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-storable2datafile $(LIBDIR)/
+	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-state $(CGIDIR)/munin-cgi-state
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-datafile $(CGIDIR)/munin-cgi-datafile
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/munin-cgi-graph
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-html $(CGIDIR)/munin-cgi-html
