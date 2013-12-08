@@ -88,15 +88,15 @@ while (new CGI::Fast) {
 
     # ... and json data
     print "{
-      'previous': [
-        '$prev_epoch',
-        '$prev_value'
-      ],
-      'current': [
-        '$cur_epoch',
-        '$cur_value'
-      ]
-    }";
+	'previous': [
+		'$prev_epoch',
+		'$prev_value'
+	],
+	'current': [
+		'$cur_epoch',
+		'$cur_value'
+	]
+}";
 
 } continue {
 	$nb_request++;
