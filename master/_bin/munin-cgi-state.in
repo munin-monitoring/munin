@@ -32,10 +32,11 @@ use Storable;
 use CGI::Fast qw(:cgi);
 use CGI::Carp qw(fatalsToBrowser);
 
-use Munin::Master::Logger;
+use Munin::Common::Defaults;
 use Log::Log4perl qw( :easy );
 
-my $GRAPHER = "$Munin::Common::Defaults::MUNIN_LIBDIR/munin-graph";
+Log::Log4perl->easy_init($DEBUG);
+
 my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 
 my $nb_request = 0;
@@ -58,12 +59,12 @@ while (new CGI::Fast) {
 
     DEBUG "Request path is $path";
 
-    my ($dom, $host, $serv) =
-      $path =~ m#^/(.*)/([^/]+)/([\w-]+)#; ## avoid bug in vim
+    my ($dom, $host, $serv, $field) =
+      $path =~ m#^/(.*)/([^/]+)/([\w-]+)/([\w-]+)#; ## avoid bug in vim
 
-    DEBUG "asked for ($dom, $host, $serv)";
+    DEBUG "asked for ($dom, $host, $serv, $field)";
 
-    my $value = get_value_filename($dom, $host, $serv);
+    my $value = get_value_filename($dom, $host, $serv, $field);
     if (! defined $value) {
 	print "Status: 404 Not Found\r\n",
 	  "Content-Type: application/json\r\n",
@@ -121,20 +122,22 @@ sub get_value_filename {
     my $service = shift;
     my $field   = shift;
 
-    my $filename = "$Munin::Common::Defaults::MUNIN_LIBDIR/state-$domain-$name.storable";
+    my $filename = "$Munin::Common::Defaults::MUNIN_DBDIR/state-$domain-$name.storable";
 
     my $s = Storable::retrieve($filename);
     return undef if ! defined $s;
 
-    my $rrd_file_prefix = "$Munin::Common::Defaults::MUNIN_LIBDIR/$domain/$name-$service-";
+    my $rrd_file_prefix = "$Munin::Common::Defaults::MUNIN_DBDIR/$domain/$name-$service-";
 
     for my $key (sort keys %{$s->{value}}) {
+
 	# XXX - Avoiding map{} in order to be more readable
 	next unless starts_with($key, $rrd_file_prefix);
 
-	my $f = substr($key, $rrd_file_prefix);
-	$f =~ s/-[dcg].rrd:\S+$//;
+	my $f = substr($key, length($rrd_file_prefix));
+	DEBUG "found $f";
 
+	$f =~ s/-[dcg].rrd:\S+$//;
 	if ($f eq $field) {
 		return $s->{value}{$key};
 	} 
