@@ -63,17 +63,7 @@ while (new CGI::Fast) {
 
     DEBUG "asked for ($dom, $host, $serv)";
 
-    if (! &verify_parameters ($dom, $host, $serv, $scale)) {
-	# If parameters are not valid, just say we didn't find anything.
-	print "Status: 404 Not Found\r\n",
-	  "Content-Type: application/json\r\n",
-	  "X-Munin-Pid: $$\r\n",
-	  "X-Munin-Request: $nb_request/$nb_request_max\r\n",
-	  "\r\n";
-	next;
-    }
-
-    my $value = get_value_filename ($config, $dom, $host, $serv);
+    my $value = get_value_filename($dom, $host, $serv);
     if (! defined $value) {
 	print "Status: 404 Not Found\r\n",
 	  "Content-Type: application/json\r\n",
@@ -126,7 +116,6 @@ sub starts_with
 
 
 sub get_value_filename {
-    my $config  = shift;
     my $domain  = shift;
     my $name    = shift;
     my $service = shift;
@@ -160,167 +149,6 @@ sub has_offending_chars {
 	return 0 if ! defined $url_part;
 	# "." and ":" are for ip_ in IPv4 & IPv6
 	return $url_part =~ m:[^a-zA-Z0-9_/.,=&\:-]:;
-}
-
-sub verify_parameters {
-    my $dom   = shift;
-    my $host  = shift;
-    my $serv  = shift;
-    my $scale = shift;
-
-    if (!$dom) {
-	WARN '[WARNING] Request for graph without specifying domain. Bailing out.';
-	return 0;
-    }
-    if (!$host) {
-	WARN '[WARNING] Request for graph without specifying host. Bailing out.';
-	return 0;
-    }
-    if (!$serv) {
-	WARN '[WARNING] Request for graph without specifying service. Bailing out.';
-	return 0;
-    }
-
-    if (!$scale) {
-	WARN '[WARNING] Request for graph without specifying scale. Bailing out.';
-	return 0;
-    } else {
-	if (!defined $period{$scale} && $scale !~ /pinpoint=\d+,\d+/) {
-	    WARN '[WARNING] Weird pinpoint setting "'.$scale.'". Bailing out.';
-	    return 0;
-	}
-    }
-
-    # Checks the image size requested.
-    if (( CGI::param("size_x") || "") =~ m/^(\d+)/) {
-	my $max_size_x = ( $config->{max_size_x} || 4000);
-	if ($1 > $max_size_x) {
-		WARN "[WARNING] Asked image size x too large : $1 > $max_size_x. Bailing out.";
-		return 0;
-	}
-    }
-    if (( CGI::param("size_y") || "") =~ m/^(\d+)/) {
-	my $max_size_y = ($config->{max_size_y} || 4000);
-	if ($1 > $max_size_y) {
-		WARN "[WARNING] Asked image size y too large : $1 > $max_size_y. Bailing out.";
-		return 0;
-	}
-    }
-
-    return 1;
-}
-
-
-sub file_newer_than {
-    my $filename = shift;
-    my $time     = shift;
-
-    if (-f $filename) {
-	my @stats = stat (_);
-	# $stats[9] holds the "last update" time and this needs
-	# to be in the last update period
-	my $last_update = $stats[9];
-	if ($last_update > $time) {
-	    return $last_update;
-	} else {
-	    return 0;
-	}
-    }
-
-    # No file found
-    return 0;
-}
-
-
-sub draw_graph {
-    my $dom  = shift;
-    my $host  = shift;
-    my $serv  = shift;
-    my $scale = shift;
-    my $fileext = shift;
-
-    my $filename = shift;
-
-    # remove old file if present
-    if (-f $filename and !unlink($filename)) {
-	ERROR "[FATAL] Could not remove \"$filename\": $!";
-    }
-
-    $serv =~ s{[^\w_\/"'\[\]\(\)+=-]}{_}g; $serv =~ /^(.+)$/; $serv = $1; #"
-    # . needs to be legal in host names
-    $host =~ s{[^\w_\/"'\[\]\(\)\.+=-]}{_}g; $host =~ /^(.+)$/; $host = $1; #"
-
-    # FIXME: Make "root" implied!
-    my @params = ( '--host', $host,
-		   '--only-fqn', "root/$dom/$host/$serv",
-		   $scale,
-		   '--format', "$fileext",
-		   '--output-file', $filename );
-
-    # Sets the correct size on a by_graph basis
-    push @params, "--size_x", CGI::param("size_x")
-      if (defined(CGI::param("size_x")));
-    push @params, "--size_y", CGI::param("size_y")
-      if (defined(CGI::param("size_y")));
-    push @params, "--upper_limit", CGI::param("upper_limit")
-      if (CGI::param("upper_limit"));
-    push @params, "--lower_limit", CGI::param("lower_limit")
-      if (CGI::param("lower_limit"));
-
-    # Sets the RRD step for graphing
-    push @params, "--step", CGI::param("step")
-      if (defined(CGI::param("step")));
-
-    # Sometimes we want to set the IMG size, and not the canvas.
-    push @params, "--full_size_mode"
-      if (CGI::param("full_size_mode"));
-    
-    # Sometimes we want only the graph. Nothing else.
-    push @params, "--only_graph"
-      if (CGI::param("only_graph"));
-
-    # XXX - the debug param is sticky. It really should be per request.
-    push @params, "--debug"
-      if (CGI::param("debug"));
-
-    graph_main(\@params);
-
-    return $filename;
-}
-
-
-sub draw_graph_or_complain {
-    my $t0 = [ gettimeofday ];
-
-    # Actuall work done here.
-    my $ret = draw_graph(@_);
-
-    my $graph_duration = tv_interval($t0);
-
-    if (! -f $ret) {
-	my ($dom, $host, $serv, $scale, $fileext, $filename ) = @_;
-	WARN "[WARNING] Could not draw graph \"$filename\": $ret";
-	print "Status: 500\r\n",
-	  "Content-Type: text/plain\r\n",
-	  "\r\n",
-	  "Could not draw graph \"$filename\"\r\n";
-        return 0;
-    } else {
-    	print "X-Graph-Duration: $graph_duration\r\n";
-	return $ret;
-    }
-}
-
-
-sub rfctime_newer_than {
-    # See if the file has been modified since "the last time".
-    # Format of since_string If-Modified-Since: Wed, 23 Jun 2004 16:11:06 GMT
-    my $since_string = shift;
-    my $created      = shift;
-    my $ifmodsec = &UnixDate (&ParseDateString ($since_string), "%s");
-
-    return 1 if ($ifmodsec < $created);
-    return 0;
 }
 
 # vim: syntax=perl ts=8
