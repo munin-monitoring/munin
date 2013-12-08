@@ -27,7 +27,9 @@ $Id$
 use strict;
 use warnings;
 use IO::Handle;
+
 use Storable;
+use JSON;
 
 use CGI::Fast qw(:cgi);
 use CGI::Carp qw(fatalsToBrowser);
@@ -59,13 +61,13 @@ while (new CGI::Fast) {
 
     DEBUG "Request path is $path";
 
-    my ($dom, $host, $serv, $field) =
-      $path =~ m#^/(.*)/([^/]+)/([\w-]+)/([\w-]+)#; ## avoid bug in vim
+    my ($dom, $host, $serv) =
+      $path =~ m#^/(.*)/([^/]+)/([\w-]+)#; ## avoid bug in vim
 
-    DEBUG "asked for ($dom, $host, $serv, $field)";
+    DEBUG "asked for ($dom, $host, $serv)";
 
-    my $value = get_value_filename($dom, $host, $serv, $field);
-    if (! defined $value) {
+    my $values = get_values_filename($dom, $host, $serv);
+    if (! defined $values) {
 	print "Status: 404 Not Found\r\n",
 	  "Content-Type: application/json\r\n",
 	  "X-Munin-Pid: $$\r\n",
@@ -83,20 +85,8 @@ while (new CGI::Fast) {
 
     print "\r\n";
 
-    my ($prev_epoch, $prev_value) = @{ $value->{previous} };
-    my ($cur_epoch, $cur_value) = @{ $value->{current} };
-
     # ... and json data
-    print "{
-	'previous': [
-		'$prev_epoch',
-		'$prev_value'
-	],
-	'current': [
-		'$cur_epoch',
-		'$cur_value'
-	]
-}";
+    print encode_json($values);
 
 } continue {
 	$nb_request++;
@@ -116,7 +106,7 @@ sub starts_with
 }
 
 
-sub get_value_filename {
+sub get_values_filename {
     my $domain  = shift;
     my $name    = shift;
     my $service = shift;
@@ -129,6 +119,7 @@ sub get_value_filename {
 
     my $rrd_file_prefix = "$Munin::Common::Defaults::MUNIN_DBDIR/$domain/$name-$service-";
 
+    my $values = {};
     for my $key (sort keys %{$s->{value}}) {
 
 	# XXX - Avoiding map{} in order to be more readable
@@ -136,15 +127,13 @@ sub get_value_filename {
 
 	my $f = substr($key, length($rrd_file_prefix));
 	DEBUG "found $f";
+	$f =~ s/-([dcg]).rrd:\S+$//;
 
-	$f =~ s/-[dcg].rrd:\S+$//;
-	if ($f eq $field) {
-		return $s->{value}{$key};
-	} 
+	$values->{$f} = $s->{value}{$key};
+	$values->{$f}{type} = $1;
     }
 
-    # Not found
-    return undef;
+    return $values;
 }
 
 sub has_offending_chars {
