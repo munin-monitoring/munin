@@ -276,15 +276,28 @@ sub parse_service_config {
     };
 
 
-    local *push_graphorder = sub {
-	my ($oldservice) = @_;
+   local *push_graphorder = sub {
+		my ($oldservice) = @_;
 
-	push( @{$global_config->{$oldservice}}, 
-	      ['graph_order', join(' ', @graph_order)] )
-	    unless !@graph_order || 
-	           grep { $_->[0] eq 'graph_order' } @{$global_config->{$oldservice}};
-	@graph_order = ( );
-    };
+		# We always appends the field names in config order to any
+		# graph_order given.
+		# Note that this results in duplicates in the internal state
+		# for @graph_order but munin_get_field_order() will eliminate
+		# them before graphing.
+
+		if (@graph_order) {
+			foreach (@{$global_config->{$oldservice}}) {
+				if ( $_->[0] eq 'graph_order' ) {
+					# append to a given graph_order
+					$_->[1] .= join(' ', '', @graph_order);
+					@graph_order = ( );
+					return;
+				}
+			}
+			push @{$global_config->{$oldservice}}, ['graph_order', join(' ', @graph_order)];
+		}
+		@graph_order = ( );
+	};
 
 
     DEBUG "[DEBUG] Now parsing config output from plugin $plugin on "
