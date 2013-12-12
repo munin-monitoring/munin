@@ -1,13 +1,69 @@
-munin (2.0.16-2~bpo70+1) wheezy-backports; urgency=low
+munin (2.0.18-1~bpo70+1) wheezy-backports; urgency=low
 
   * Rebuild for wheezy-backports.
 
- -- Stig Sandbeck Mathisen <ssm@debian.org>  Thu, 13 Jun 2013 19:32:43 +0200
+ -- Holger Levsen <holger@debian.org>  Thu, 12 Dec 2013 14:04:33 +0100
+
+munin (2.0.18-1) unstable; urgency=high
+
+  * Imported upstream release 2.0.18 (CVE-2013-6359, CVE-2013-6048)
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Tue, 19 Nov 2013 13:05:16 +0100
+
+munin (2.0.17-3) unstable; urgency=low
+
+  * munin-common: Call systemd-tmpfiles on install (Closes: #720875)
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Tue, 01 Oct 2013 10:56:21 +0200
+
+munin (2.0.17-2) unstable; urgency=low
+
+  [ Matthias Schmitz ]
+  * Don't remove munin's apache2.4 configuration on removal. This is the
+    behavior as we do with the apache2.2 configuration.
+  * As apache2-maintscript-helper doesn't work if called from a function we now
+    give $@ of the postinst to our apache_install function. (Closes: #718959)
+
+  [ Holger Levsen ]
+  * munin-async.init:
+    - provide LSB status command.
+    - fix $SCRIPTNAME.
+    - rm pid file on stop. 
+    Thanks to Daniel Black for the patch. (Closes: #720280)
+  * munin-node.cron.d: use munin-run to run plugins. (Closes: #720275)
+  * Provide examples how to configure munin for nginx, thanks to Daniel
+    Dehennin. (Closes: #684466)
+
+ -- Holger Levsen <holger@debian.org>  Thu, 29 Aug 2013 20:58:58 +0000
+
+munin (2.0.17-1) unstable; urgency=low
+
+  [ Holger Levsen ]
+  * New upstream version. (Closes: #712793, #717265)
+  * Drop debian/munin-async.logrotate and also add code to
+    munin-async.postinst to remove that file (and keep a backup if it was
+    modified) on upgrades from older versions. (Closes: #717260)
+
+  [ Matthias Schmitz ]
+  * Don't make new touched logs munin-cgi-graph.log and munin-cgi-html.log
+    executable in postinst. (Closes: #717847)
+  * Don't remove /var/lib/munin-node in munin-node's postrm. The directory
+    belongs to munin-plugins-core.
+  * Really remove munin config snippet from apache2/conf.d during postrm.
+    (Closes: #708864)
+
+ -- Holger Levsen <holger@debian.org>  Tue, 30 Jul 2013 01:03:05 +0200
+
+munin (2.0.16-3) unstable; urgency=low
+
+  * Add systemd units
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Tue, 16 Jul 2013 14:15:18 +0200
 
 munin (2.0.16-2) unstable; urgency=low
 
   * plugins/df: ignore devtmpfs. Cherry picked ab42e8b as efe4526 from 
-    upcoming 2.0.17. (Closes: #710527)
+    upcoming 2.0.17. (Closes: #710899)
   * Add libcgi-fast-perl as alternative suggests. (Closes: #711272)
 
  -- Holger Levsen <holger@debian.org>  Sun, 09 Jun 2013 16:54:33 +0200

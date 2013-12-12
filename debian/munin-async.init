@@ -21,7 +21,7 @@ DAEMON=/usr/share/munin/$NAME
 DAEMON_ARGS=""
 DAEMON_USER="munin-async"
 PIDFILE=/var/run/munin/$NAME.pid
-SCRIPTNAME=/etc/init.d/$NAME
+SCRIPTNAME=/etc/init.d/munin-async
 
 # Exit if the package is not installed
 [ -x "$DAEMON" ] || exit 0
@@ -84,6 +84,7 @@ do_stop()
                 log_end_msg 1
                 return 1
         done
+        rm "$PIDFILE"
         [ $ret -eq 0 ] && [ "$VERBOSE" != no ] && log_progress_msg "done"
         log_end_msg $ret
         return $ret
@@ -150,9 +151,35 @@ case "$1" in
 		;;
 	esac
 	;;
+  status)
+    pid=$(pidofproc -p $PIDFILE $DAEMON)
+  ret=$?
+  pid=${pid% } # pidofproc() supplies a trailing space, strip it
+  if [ $ret -eq 0 ]; then
+    log_success_msg "Munin-Async is running (PID: $pid)"
+    exit 0
+  # the LSB specifies that I in this case (daemon dead + pid file exists)
+  # should return 1, however lsb-base returned 2 in this case up to and
+  # including version 3.1-10 (cf. #381684).  Since that bug is present
+  # in Sarge, Ubuntu Dapper, and (at the time of writing) Ubuntu Etch,
+  # and taking into account that later versions of pidofproc() do not
+  # under any circumstance return 2, I'll keep understanding invalid
+  # return code for the time being, even though the LSB specifies it is
+  # to be used for the situation where the "program is dead and /var/lock
+  # lock file exists".
+  elif [ $ret -eq 1 ] || [ $ret -eq 2 ]; then
+    log_failure_msg "Munin-Async is dead, although $PIDFILE exists."
+    exit 1
+  elif [ $ret -eq 3 ]; then
+    log_warning_msg "Munin-Async is not running."
+    exit 3
+  fi
+  log_warning_msg "Munin-Async status unknown."
+  exit 4
+        ;;
   *)
 	#echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
-	echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload}" >&2
+	echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload|status}" >&2
 	exit 3
 	;;
 esac

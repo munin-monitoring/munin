@@ -4,8 +4,14 @@ Priority: optional
 Maintainer: Munin Debian Maintainers <packaging@munin-monitoring.org>
 Uploaders: Holger Levsen <holger@debian.org>, 
  Stig Sandbeck Mathisen <ssm@debian.org>
-Build-Depends-Indep: perl, htmldoc, html2text, default-jdk
-Build-Depends: debhelper (>=8)
+Build-Depends-Indep:
+ default-jdk,
+ html2text,
+ htmldoc,
+ perl,
+Build-Depends:
+ debhelper (>=8),
+ dh-systemd (>= 1.4),
 Standards-Version: 3.9.4
 Homepage: http://munin-monitoring.org
 Vcs-Git: git://anonscm.debian.org/collab-maint/munin.git
