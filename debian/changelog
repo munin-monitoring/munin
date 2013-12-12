@@ -1,3 +1,9 @@
+munin (2.0.18-1~bpo70+1) wheezy-backports; urgency=low
+
+  * Rebuild for wheezy-backports.
+
+ -- Holger Levsen <holger@debian.org>  Thu, 12 Dec 2013 14:04:33 +0100
+
 munin (2.0.18-1) unstable; urgency=high
 
   * Imported upstream release 2.0.18 (CVE-2013-6359, CVE-2013-6048)
