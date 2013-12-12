@@ -1,6 +1,8 @@
 munin (2.0.19-1) UNRELEASED; urgency=low
 
   * New upstream bugfix release.
+  * Provide upstart files for munin and munin-node. (Closes: #732002)
+    Thanks to James Page and Chuck Short for writing these.
 
  -- Holger Levsen <holger@debian.org>  Thu, 12 Dec 2013 13:28:44 +0100
 
