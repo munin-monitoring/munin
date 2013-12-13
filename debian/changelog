@@ -1,9 +1,9 @@
-munin (2.0.19-2) UNRELEASED; urgency=low
+munin (2.0.19-2) unstable; urgency=low
 
   * Provide upstart file for munin-async. (Closes: #732030)
     Thanks to James Page.
 
- -- Holger Levsen <holger@debian.org>  Fri, 13 Dec 2013 12:49:19 +0100
+ -- Holger Levsen <holger@debian.org>  Fri, 13 Dec 2013 12:50:22 +0100
 
 munin (2.0.19-1) unstable; urgency=low
 
