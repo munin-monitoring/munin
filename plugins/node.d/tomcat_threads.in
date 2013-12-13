@@ -119,7 +119,7 @@ if($xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadsBusy'
 } else {
     print "busy.value U\n";
     print "idle.value U\n";
-    print "total.value U\n";
+    print "total.value  U\n";
 }
 
 # vim:syntax=perl
