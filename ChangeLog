@@ -230,6 +230,26 @@ tsaavik (1):
       dynazoom: added logo and backlink
 
 
+munin-2.0.19, 2013-12-07
+
+-------
+Summary
+-------
+
+Bugfix release, aimed at fixing 2 bugs for Debian 7.3.
+Thanks again to Christoph Biedl for both (reports & patchs)
+
+Closes: #1394, #1395
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp:
+      master: fix failures on partial graph_order
+      master: lazy create PNG in cron
+
+
 munin-2.0.18, 2013-11-12
 
 -------
