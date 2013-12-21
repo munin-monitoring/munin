@@ -44,7 +44,8 @@ my $do_fork;
 my $verbose;
 my $debug;
 my $help;
-
+my @nodes;
+my %spoolwriter;
 
 GetOptions(
 	"host=s" => \$host,
@@ -68,34 +69,47 @@ if ($help) {
 # Debug implies Verbose
 $verbose = 1 if $debug;
 
-unless (-d $SPOOLDIR) {
-	mkpath($SPOOLDIR, { verbose => $verbose, } ) 
-		or die ("Cannot create '$SPOOLDIR': $!");
-}
-
 my $sock = new IO::Socket::INET(
 	PeerAddr        => "$host",
 	Proto   => 'tcp'
 ) || die "Error creating socket: $!";
 my $nodeheader = <$sock>;
+print STDERR "[sock][>] nodes\n" if $debug;
+print $sock "nodes\n";
+
+# get all virtual node names exposed by one physical node
+while(my $line = <$sock>) {
+	chomp($line);
+	print STDERR "[sock][<] $line\n" if $debug;
+	last if $line =~ /^\./;
+	push(@nodes, $line);
+}
+
 print $sock "quit\n";
 close ($sock);
 ( $metahostname ) = ( $nodeheader =~ /munin node at (\S+)\n/);
 $metahostname = "unknown" unless $metahostname;
 
-my $spoolwriter = Munin::Node::SpoolWriter->new(
-	spooldir => $SPOOLDIR,
+foreach my $node (@nodes) {
+	unless (-d "$SPOOLDIR/$node") {
+		mkpath("$SPOOLDIR/$node", { verbose => $verbose, } ) 
+			or die ("Cannot create '$SPOOLDIR/$node': $!");
+	}
+	$spoolwriter{$node} = Munin::Node::SpoolWriter->new(
+	spooldir => "$SPOOLDIR/$node",
 	interval_size => $intervalsize,
 	interval_keep => $retaincount,
 	hostname  => $metahostname,
-);
+	);
+}
+
 $0 = "munin-asyncd [$metahostname] [idle]";
 
 my $process_name = "main";
 
 my $plugin_rate_filename = "$SPOOLDIR/plugin_rates";
 
-my @plugins;
+my $plugins = {};
 {
 	print STDERR "[$$][$process_name] Reading config from $host\n" if $verbose;
 	my $sock = new IO::Socket::INET( 
@@ -106,24 +120,25 @@ my @plugins;
 	local $0 = "munin-asyncd [$metahostname] [list]";
 	print STDERR "[sock][>] cap multigraph\n" if $debug;
 	print $sock "cap multigraph\n";
-	print STDERR "[sock][>] list\n" if $debug;
-	print $sock "list\n";
 	<$sock>; # Read the first header comment line
 	<$sock>; # Read the multigraph response line
-	my $plugins_line = <$sock>;
-	chomp($plugins_line);
-
+	foreach my $node (@nodes)
 	{
-		my $fh_list = IO::File->new(
-			"$SPOOLDIR/munin-daemon.list",
-			"w",
-		);
-
-		print $fh_list $plugins_line;
-		print $fh_list "\n";
+		print STDERR "[sock][>] list $node\n" if $debug;
+		print $sock "list $node\n";
+		my $plugins_line = <$sock>;
+		chomp($plugins_line);
+		print STDERR "[sock][<] $plugins_line\n" if $debug;
+		{
+			my $fh_list = IO::File->new(
+				"$SPOOLDIR/$node/munin-daemon.list",
+				"w",
+			);
+			print $fh_list $plugins_line;
+			print $fh_list "\n";
+		}
+		$plugins->{$node} = [ split(/ /, $plugins_line) ];
 	}
-
-	@plugins = split(/ /, $plugins_line);
 }
 
 my $keepgoing = 1;
@@ -152,57 +167,65 @@ MAIN: while($keepgoing) {
 	}
 
 	my $when_next = $when + $timeout; # wake up at least every $timeout sec
-	my $sock;
-	PLUGIN: foreach my $plugin (@plugins) {
-		# See if this plugin should be updated
-		my $plugin_rate = get_hash($plugin, $plugin_rate_filename) || 300;
-		if ($when < ($last_updated{$plugin} || 0) + $plugin_rate) {
-			# not yet, next plugin
-			next;
+	foreach my $node (@nodes)
+	{
+		my $sock;
+		PLUGIN: foreach my $plugin ( @{$plugins->{$node}} ) {
+			# See if this plugin should be updated
+			my $plugin_rate = get_hash($plugin, $plugin_rate_filename) || 300;
+			if ($when < ($last_updated{$plugin} || 0) + $plugin_rate) {
+				# not yet, next plugin
+				next;
+			}
+
+			# Should update it
+			$last_updated{$plugin} = $when;
+			$when_next = min($when_next, $when + max($plugin_rate, $minrate));
+
+			if ($do_fork && fork()) {
+				# parent, return directly
+				next PLUGIN;
+			}
+
+			unless ($sock) {
+				$sock = new IO::Socket::INET(
+					PeerAddr	=> "$host",
+					Proto	=> 'tcp'
+				);
+				unless ($sock) { 
+					warn "Error creating socket: $!, moving to next plugin to try again"; 
+					next;
+				}
+				<$sock>; # skip header
+			}
+
+			# Setting the command name for a useful top information
+			$process_name = "plugin:$plugin";
+			local $0 = "munin-asyncd [$metahostname] [$process_name]";
+
+			fetch_data($node, $plugin, $when, $sock);
+
+			# We end here if we forked
+			last MAIN if $do_fork;
 		}
-
-		# Should update it
-		$last_updated{$plugin} = $when;
-		$when_next = min($when_next, $when + max($plugin_rate, $minrate));
-
-		if ($do_fork && fork()) {
-			# parent, return directly
-			next PLUGIN;
-		}
-
-		unless ($sock) {
-			$sock = new IO::Socket::INET(
-				PeerAddr	=> "$host",
-				Proto	=> 'tcp'
-			) || die "Error creating socket: $!";
-			<$sock>; # skip header
-		}
-
-		# $sock is still not open. moving to next plugin to try again
-		next unless $sock;
-
-		# Setting the command name for a useful top information
-		$process_name = "plugin:$plugin";
-		local $0 = "munin-asyncd [$metahostname] [$process_name]";
-
-		fetch_data($plugin, $when, $sock);
-
-		# We end here if we forked
-		last MAIN if $do_fork;
+		$spoolwriter{$node}->set_metadata("lastruntime", $when);
 	}
 
-	print STDERR "[$$][$process_name][>] quit\n" if $verbose;
-	print $sock "quit\n" if $sock;
-
-	print STDERR "[$$][$process_name] closing sock\n" if $verbose;
-	$sock = undef;
-
-	$spoolwriter->set_metadata("lastruntime", $when);
+	$process_name = "main";
+	if ($sock)
+	{
+		if ( $sock->connected ) {
+			print STDERR "[$$][$process_name][>] quit\n" if $verbose;
+			print $sock "quit\n" ;
+		}
+		print STDERR "[$$][$process_name] closing sock\n" if $verbose;
+		$sock = undef;
+	}
 
 	# Clean spool dir
 	if (!$nocleanup && $last_cleanup<(time - 600)) {
 		$last_cleanup = time;
-		$spoolwriter->cleanup();
+		foreach ( @nodes ) { $spoolwriter{$_}->cleanup() };
 	}
 
 	# Sleep until next plugin exec.
@@ -213,11 +236,12 @@ MAIN: while($keepgoing) {
 		sleep $sleep_sec;
 	}
 }
-		
+
 print STDERR "[$$][$process_name] Exiting\n" if $verbose;
 
 sub fetch_data
 {
+	my $node = shift;
 	my $plugin = shift;
 	my $when = shift;
 	my $sock = shift;
@@ -266,7 +290,7 @@ sub fetch_data
 		}
 
 		# Write the whole load into the spool
-		$spoolwriter->write($when, $plugin, $output_rows);
+		$spoolwriter{$node}->write($when, $plugin, $output_rows);
 }
 
 sub get_hash
