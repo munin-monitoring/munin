@@ -541,6 +541,7 @@ sub set_run
             $useruid{$procuser[$i]} = `getent passwd $procuser[$i] | cut -d : -f 3`;
             chomp($useruid{$procuser[$i]});
         }
+        $procuniq[$i] =~ s/(-|\.|\/)//g;
         $i++;
     }
 }
