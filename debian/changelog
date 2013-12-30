@@ -1,3 +1,10 @@
+munin (2.0.19-3) UNRELEASED; urgency=medium
+
+  * Delete all state data from /var/lib/munin-node/plugin-state/ during purge
+    of munin-plugins-core. (Closes: #732462)
+
+ -- Matthias Schmitz <matthias@sigxcpu.org>  Mon, 30 Dec 2013 10:33:42 +0100
+
 munin (2.0.19-2) unstable; urgency=low
 
   * Provide upstart file for munin-async. (Closes: #732030)
