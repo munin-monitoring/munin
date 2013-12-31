@@ -1,4 +1,112 @@
 -*- text -*-
+
+munin-2.1.4, 2013-12-31
+
+-------
+Summary
+-------
+
+This is the merge of the long running sql branch.
+It is still a WIP, and the cgi html is still not feature complete.
+
+But as it is here to stay, I decided to merge it in devel, to attract more
+eyeballs on it.
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (88):
+      master: also write the datafile as SQL
+      master: integrate the name in the sql schema
+      master: using an external seq() function
+      master: add a 'type' field for nodes
+      master: use "object" as table name
+      master: use PRAGMA journal_mode=OFF
+      master: use PRIMARY KEY directly
+      master: use the storable on old config
+      master: added "ignore" as value for use_node_name
+      master: adding the type of the node
+      master: adding a dump for $self in M::M::Update
+      master: rewrite the SQL layer --> natural schema
+      master: using last_insert_id() for automatic keys
+      master: import the rest of the data
+      dev_scripts: adding a textual dump for the sqlite DB
+      dev_scripts: removed data. say filename
+      master: adding foreign keys
+      master: remove munin_writeconfig_sql()
+      dev_scripts: only emit the filename
+      master/Update: reuse the std dump function
+      master: adding the node attributes in the SQL
+      master: adding groups in SQL
+      master: uniform whitespaces
+      Revert "master: adding the type of the node"
+      master: ignore redundant config structure
+      master: adding table url, to ease runtime lookups
+      dev_scripts: adding a sample nested munin.conf
+      master: blessing the oldconfig in "Munin::Master::Config"
+      master: rewrite munin-cgi-html.in
+      master: remove taint (TO BE REMOVED via REBASE)
+      master: remove the leading / from PATH_INFO
+      master: wip html cgi
+      master: WIP munin-cgi-html
+      dev_scripts: add a cgi helper
+      master: adding a munin-limit state on each ds
+      master: WIP on overview template generation
+      master: use directly the hash
+      master: use a simpler code
+      master: adding head.tmpl params
+      master/cgi/html: use the default constant
+      master/cgi/html: set the Title to "Overview"
+      devscripts/cgi: adding optional timings
+      master/cgi/html: adding categories
+      master/cgi/html: add TODO for bottom nav links
+      master/cgi/html: use HTML::Template::Pro
+      master: remove debug
+      master: use a parent/child for groups
+      master: remove debug
+      master: p_id is an INTEGER
+      master/cgi/html: WIP adding groups
+      contrib: use a very terse syntax to dump
+      master/cgi/html: adding node
+      master/cgi/html: add the d/w/m/y in groups
+      cgi/html: use lowercaes times
+      cgi/html: service template construction
+      cgi/html: remove the tailing .html
+      cgi/html: adding the service template
+      cgi/html: we use the node template
+      cgi/html: we use .html extensions
+      cgi/html: adding node model
+      cgi/html: the cgi is the base url
+      cgi/html: force the trailing / on overview
+      cgi/html: handle static files
+      cig/html: adding some comments
+      cgi/html: fix Content-Type header for /static/*
+      master: Add INDEX on every FOREIGN KEY
+      cgi/html: using DBH::prepare_cached() for SELECT
+      cgi/html: using " instead of ' in SQL
+      cgi/html: avoid direct-to-stdout with fast::cgi
+      cgi/master: fast-handle missing "/" for overview
+      cgi/html: fast-handle static pages
+      cgi/html: fast-handle png-like pages
+      cgi/html: Not existing static files should send 404
+      cgi/html: use CGI.pm fonctions instead of env vars
+      cgi/html: redirecting the graph to its CGI
+      cgi/html: fixing the extension for the graph urls
+      sql: suppress extra $log_file handling
+      dev_scripts: untaint the CGI scripts on dev box
+      cgi/graph: untaint the logger configuration
+      cgi/graph: send a HTTP-400 upon forbidden chars
+      cgi/graph: add an extra comment on 404
+      cgi/html: adding some Cache-Control rules to 301
+      cgi/html: avoid a 301 for PNG urls
+      cgi/html: avoid sending 2 HTTP headers
+      cgi/html: fix the link for the services
+      Revert "master: remove taint (TO BE REMOVED via REBASE)"
+      cgi/html: revert to use a 404 for unknown pages
+      dev_scripts: adding a taint helper
+
+
 munin-2.1.3, 2013-12-18
 
 -------
