@@ -22,17 +22,11 @@ The following configuration parameters are used by this plugin
 =head1 MAGIC MARKERS
 
  #%# family=contrib
- #%# capabilities=autoconf
 
 =cut
 
 use IO::Socket;
 use strict;
-
-if($ARGV[0] and $ARGV[0] eq "autoconf") {
-    print "yes\n";
-    exit 0;
-}
 
 my $host = exists $ENV{'host'} ? $ENV{'host'} : "127.0.0.1";
 my $port = exists $ENV{'port'} ? $ENV{'port'} : "3551";
