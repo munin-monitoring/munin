@@ -185,7 +185,9 @@ foreach my $storage (keys %$stor_id)
 
 foreach my $part (keys %partitions)
 {
-    print (&get_name_by_mp ($part), ".value ", ($partitions{$part}{used}*100/$partitions{$part}{size}), "\n");
+    my $used = $partitions{$part}{used} < 0 ? ($partitions{$part}{used}+4294967296) : $partitions{$part}{used};
+    my $size = $partitions{$part}{size} < 0 ? ($partitions{$part}{size}+4294967296) : $partitions{$part}{size};
+    print (&get_name_by_mp ($part), ".value ", ($used*100/$size), "\n");
 }
 
 sub get_single
