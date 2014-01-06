@@ -1,5 +1,203 @@
 -*- text -*-
 
+munin-2.1.4, 2013-12-31
+
+-------
+Summary
+-------
+
+This is the merge of the long running sql branch.
+It is still a WIP, and the cgi html is still not feature complete.
+
+But as it is here to stay, I decided to merge it in devel, to attract more
+eyeballs on it.
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (88):
+      master: also write the datafile as SQL
+      master: integrate the name in the sql schema
+      master: using an external seq() function
+      master: add a 'type' field for nodes
+      master: use "object" as table name
+      master: use PRAGMA journal_mode=OFF
+      master: use PRIMARY KEY directly
+      master: use the storable on old config
+      master: added "ignore" as value for use_node_name
+      master: adding the type of the node
+      master: adding a dump for $self in M::M::Update
+      master: rewrite the SQL layer --> natural schema
+      master: using last_insert_id() for automatic keys
+      master: import the rest of the data
+      dev_scripts: adding a textual dump for the sqlite DB
+      dev_scripts: removed data. say filename
+      master: adding foreign keys
+      master: remove munin_writeconfig_sql()
+      dev_scripts: only emit the filename
+      master/Update: reuse the std dump function
+      master: adding the node attributes in the SQL
+      master: adding groups in SQL
+      master: uniform whitespaces
+      Revert "master: adding the type of the node"
+      master: ignore redundant config structure
+      master: adding table url, to ease runtime lookups
+      dev_scripts: adding a sample nested munin.conf
+      master: blessing the oldconfig in "Munin::Master::Config"
+      master: rewrite munin-cgi-html.in
+      master: remove taint (TO BE REMOVED via REBASE)
+      master: remove the leading / from PATH_INFO
+      master: wip html cgi
+      master: WIP munin-cgi-html
+      dev_scripts: add a cgi helper
+      master: adding a munin-limit state on each ds
+      master: WIP on overview template generation
+      master: use directly the hash
+      master: use a simpler code
+      master: adding head.tmpl params
+      master/cgi/html: use the default constant
+      master/cgi/html: set the Title to "Overview"
+      devscripts/cgi: adding optional timings
+      master/cgi/html: adding categories
+      master/cgi/html: add TODO for bottom nav links
+      master/cgi/html: use HTML::Template::Pro
+      master: remove debug
+      master: use a parent/child for groups
+      master: remove debug
+      master: p_id is an INTEGER
+      master/cgi/html: WIP adding groups
+      contrib: use a very terse syntax to dump
+      master/cgi/html: adding node
+      master/cgi/html: add the d/w/m/y in groups
+      cgi/html: use lowercaes times
+      cgi/html: service template construction
+      cgi/html: remove the tailing .html
+      cgi/html: adding the service template
+      cgi/html: we use the node template
+      cgi/html: we use .html extensions
+      cgi/html: adding node model
+      cgi/html: the cgi is the base url
+      cgi/html: force the trailing / on overview
+      cgi/html: handle static files
+      cig/html: adding some comments
+      cgi/html: fix Content-Type header for /static/*
+      master: Add INDEX on every FOREIGN KEY
+      cgi/html: using DBH::prepare_cached() for SELECT
+      cgi/html: using " instead of ' in SQL
+      cgi/html: avoid direct-to-stdout with fast::cgi
+      cgi/master: fast-handle missing "/" for overview
+      cgi/html: fast-handle static pages
+      cgi/html: fast-handle png-like pages
+      cgi/html: Not existing static files should send 404
+      cgi/html: use CGI.pm fonctions instead of env vars
+      cgi/html: redirecting the graph to its CGI
+      cgi/html: fixing the extension for the graph urls
+      sql: suppress extra $log_file handling
+      dev_scripts: untaint the CGI scripts on dev box
+      cgi/graph: untaint the logger configuration
+      cgi/graph: send a HTTP-400 upon forbidden chars
+      cgi/graph: add an extra comment on 404
+      cgi/html: adding some Cache-Control rules to 301
+      cgi/html: avoid a 301 for PNG urls
+      cgi/html: avoid sending 2 HTTP headers
+      cgi/html: fix the link for the services
+      Revert "master: remove taint (TO BE REMOVED via REBASE)"
+      cgi/html: revert to use a 404 for unknown pages
+      dev_scripts: adding a taint helper
+
+
+munin-2.1.3, 2013-12-18
+
+-------
+Summary
+-------
+
+This is the merge of 2.0.15 to 2.0.19
+
+------------------
+Detailed Changelog
+------------------
+
+Daniel Black (1):
+      This corrects the truncating of negative values in the diskstats plugin     and calculates its value based on the evidence that this is a overflow     value.
+
+Harald Kraemer (4):
+      Handled single-value .sum's gracefully.
+      Added missing import
+      Mocked RRD dependency.
+      And another fix for travis.
+
+Martin Bureau (1):
+      Removed empty lines in plugin output
+
+Michiel Holtkamp (2):
+      Clean field names
+      Added documentation for 'Clean field names'
+
+Mikhail Lukyanchenko (1):
+      Update multigraphing.rst
+
+Mrten (1):
+      p/exim_mailstats: fix when 'Completed' isnt last
+
+Nicolai Langfeldt (5):
+      * Add munin-node upstart file snagged from ubuntu and @@ified
+      * Add snmp__apc_ups from contrib.  This is actually a generic snmp plugin using multigraph to show multiple aspects of device operation.
+      * Fixed the name to end in .in
+      ... and replace perl with @@PERL@@
+      * New plugin: ELTEK rectifier graphing
+
+Steve Schnepp (3):
+      master: keep warning if cdef has $ds_name as a component
+      plugins: adding the external_ plugin
+      master: using dashes for warning instead of solid
+
+Steven Lewis (1):
+      remove max limit on memcache_bytes_read and memcache_bytes_written
+
+Stig Sandbeck Mathisen (3):
+      Add more rrdcached documentation
+      Ensure iostat plugin on sunos outputs correct type
+      Document rrd types and values a bit better
+
+cdep.illabout (1):
+      Fix ping_ plugin's documentation to use _warning.
+
+diSabler (1):
+      Update lighttpd.rst
+
+dipohl (10):
+      list the different sorts of docs
+      docs: Add a section about wich sort of documentation to place in Munin's Wiki
+      docs: Outline sections
+      docs: Moved one more section from Munin-Wiki page to here (http://munin-monitoring.org/wiki/MuninNomenclature)
+      docs: more sections to move wiki content to here
+      docs: rename DocBook to Guide
+      docs: a further rename
+      docs: Rename this to "Munin Guide" as we have further documentations areas and need a less general term
+      docs: Add page about Multigraph Plugins
+      docs: Add page about Multigraph Protocoll
+
+elmuerte (2):
+      Update dynazoom.html
+      HTML is now valid according to w3 validator (no errors)
+
+erpel (1):
+      add format string for sensors that have hum. data
+
+ko-zu (3):
+      add custom_palette
+      add custom_palette option to override palette
+      add custom_palette
+
+y-ken (4):
+      Add support for MySQL 5.5/5.6
+      mysql_innodb_insert_buf compatibility problem fixed for MySQL 5.5/5.6
+      fixed indent
+      add verified version for mysql_ plugin
+
+
 munin-2.1.2, 2013-06-03
 
 Fixed typo in Plugin.pm
@@ -228,6 +426,134 @@ leeclemens (1):
 
 tsaavik (1):
       dynazoom: added logo and backlink
+
+
+munin-2.0.19, 2013-12-07
+
+-------
+Summary
+-------
+
+Bugfix release, aimed at fixing 2 bugs for Debian 7.3.
+Thanks again to Christoph Biedl for both (reports & patchs)
+
+Closes: #1394, #1395
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp:
+      master: fix failures on partial graph_order
+      master: lazy create PNG in cron
+
+
+munin-2.0.18, 2013-11-12
+
+-------
+Summary
+-------
+
+Bugfix + secfix release.
+
+Note that this release has 2 security fixes :
+* Avoid a node DoS on bad plugin (CVE-2013-6359)
+* Avoid an OOM in HTML generation on bad multigraph data (CVE-2013-6048)
+
+Closes: #910, #1397, D:728840, C:CVE-2013-6359, C:CVE-2013-6048
+
+------------------
+Detailed Changelog
+------------------
+
+Kjetil Torgrim Homme:
+      common: add missing keywords
+      common: refactor the keywords to ease changes
+
+Matthias Schmitz:
+      Substitute some @@ vars in generate files.
+
+Steve Schnepp:
+      plugins/open_files: fix overrided used.warn/crit
+      node/asyncd: fix a crash case
+      node/asynd: avoid wake up each second
+      master: fix unexpected "warning limit" lines
+      master: avoid an endless loop in HTML generation
+      master: validate multigraph argument
+      master: don't abort node collection on bad plugin
+      p/ipmi_sensor_: fix the environ() usage
+
+
+munin-2.0.17, 2013-07-19
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: #1305, D:710899, D:712793, D:717265
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp:
+      p/df: also ignore devtmpfs
+      plugins/df_abs: fix the multiple block device
+      gitignore: ignoring output dir sandbox/
+      master: fix "graph_period hour"
+      plugins: fix uninitialized $MUNIN::VERSION
+
+Stig Sandbeck Mathisen:
+      Remove typo in the example rrdcached socket documentation
+
+munin-2.0.16, 2013-06-03
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+- Fixed a spurious WARNING in GFX cgi
+
+------------------
+Detailed Changelog
+------------------
+
+Kenyon Ralph:
+      plugins/ntp_: fix parsing older ntpq output
+
+Steve Schnepp:
+      master: fix warning in GraphOld.pm
+
+
+munin-2.0.15, 2013-06-01
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+- Fixes for ip_ handling
+
+Closes: D:710527, D:710529
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp:
+      plugins/Plugin.pm: fix bad state file handling (fixed)
+      master: adding ":" to the allowed chars in CGI
+      dev_scripts: automate async install
+      master: re-enable debugging output in GraphOld.pm
+      asyncd: use the same rules as munin-update
+
+Stig Sandbeck Mathisen:
+      Fix for munin-cgi-graph crash in trend and predict.
 
 
 munin-2.0.14, 2013-05-10

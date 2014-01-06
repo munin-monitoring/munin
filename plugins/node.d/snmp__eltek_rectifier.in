@@ -1,0 +1,540 @@
+#!@@PERL@@
+
+=head1 NAME
+
+snmp__eltek_rectifier - Munin multigraph plugin for ELTEK rectifier/UPSes
+
+=head1 APPLICABLE SYSTEMS
+
+The device must support the ELTEK-DISTRIBUTED-MIB.  This includes
+ELTEK Minipack and other rectifiers and UPSes from ELTEK.
+
+=head1 CONFIGURATION
+
+As a rule SNMP plugins need site specific configuration.  The default
+configuration (shown here) will only work on insecure sites/devices.
+
+   [snmp_*]
+        env.version 2
+        env.community public
+
+In general SNMP is not very secure at all unless you use SNMP version
+3 which supports authentication and privacy (encryption).  But in any
+case the community string for your devices should not be "public".
+
+Please see 'perldoc Munin::Plugin::SNMP' for further configuration
+information.
+
+=head1 INTERPRETATION
+
+Please refer to the ELTEK-DISTRIBUTED-MIB when in doubt.
+
+=head1 MIB INFORMATION
+
+This plugin requires support for the ELTEK-DISTRIBUTED-MIB published
+by ELTEK.
+
+=head1 PROGRAMMERS
+
+This plugin is actually a generic SNMP multigraph plugin.  If you
+customize the data structures, especially %oidList and %label which is
+used to drive the loops.  Take care that labels and structure of these
+hashes match otherwise things will disappear with not much warning.
+But se munin-node.log, munin-update.log and run the plugin with
+unin-run.
+
+=head1 MAGIC MARKERS
+
+  #%# family=snmpauto
+  #%# capabilities=snmpconf
+
+=head1 BUGS
+
+The plugin was written for rectifiers, but will probably also be
+activated for ELTEK UPSes which it is not particularly suited for.
+
+=head1 AUTHOR
+
+Based on work by Gorlow Maxim and Andrey Yakovlev.  Totaly reworked by
+Nicolai Langfeldt, BroadNet AS, Oslo, Norway.
+
+(C) 2013 BroadNet AS, Nicolai Langfeldt
+
+=head1 LICENSE
+
+GPLv2 only.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 dated June, 1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+USA.
+
+=cut
+
+use strict;
+use warnings;
+
+use feature qw(say);
+
+use Carp;
+use Data::Dumper;
+
+use Munin::Plugin;
+use Munin::Plugin::SNMP;
+
+use vars qw($DEBUG);
+
+$DEBUG = $Munin::Plugin::DEBUG;
+
+# ################ Change here to customize
+
+# oidList - things to graph - must be complete
+
+my %oidList =
+  # _meta will be fetched but not graphed. The values can be placed in
+  # texts by [OID:1.3.6.....] notation in any text in the "config"
+  # output from the plugin. _meta is not used anywhere else than for
+  # this.
+  ( _meta =>
+    { systemTimeTime                     => '1.3.6.1.4.1.12148.9.1.1.1.0',
+      systemSiteInfoInstalledDate        => '1.3.6.1.4.1.12148.9.2.1.3.5.0',
+      systemSiteInfoSystemSeriaNum       => '1.3.6.1.4.1.12148.9.2.1.3.7.0',
+      systemSiteInfoControllerSeriaNum   => '1.3.6.1.4.1.12148.9.2.1.3.8.0',
+      batteryName                        => '1.3.6.1.4.1.12148.9.3.1.0',
+    },
+    volt =>
+    { acVoltage1 => '1.3.6.1.4.1.12148.9.6.1.0',
+      acVoltage2 => '1.3.6.1.4.1.12148.9.6.2.0',
+      acVoltage3 => '1.3.6.1.4.1.12148.9.6.3.0',
+    },
+    batteryvolt =>
+    { batteryVoltage => '1.3.6.1.4.1.12148.9.3.2.0',
+    },
+    capacity =>
+    { batteryCapacityTotal => '1.3.6.1.4.1.12148.9.3.20.4.0',
+      batteryCapacityLeft => '1.3.6.1.4.1.12148.9.3.20.2.0',
+    },
+    status =>
+    { systemLinkStatus              => '1.3.6.1.4.1.12148.9.1.8.0',
+      batteryBreakerStatus          => '1.3.6.1.4.1.12148.9.3.5.0',
+      alarmBatteryBreakerOpen       => '1.3.6.1.4.1.12148.9.7.1.12.0',
+      loadDistributionBreakerStatus => '1.3.6.1.4.1.12148.9.4.2.0',
+      alarmMajorRectifier           => '1.3.6.1.4.1.12148.9.7.1.14.0',
+      alarmMinorRectifier           => '1.3.6.1.4.1.12148.9.7.1.15.0',
+      alarmBatteryLifeEnded         => '1.3.6.1.4.1.12148.9.7.1.18.0',
+    },
+    temperature =>
+    { batteryTemp                   => '1.3.6.1.4.1.12148.9.3.4.0',
+    },
+    load =>
+    { rectifierUtilization          => '1.3.6.1.4.1.12148.9.5.4.0',
+    },
+    current =>
+    { batteryCurrent                => '1.3.6.1.4.1.12148.9.3.3.0',
+      loadDistributionCurrent       => '1.3.6.1.4.1.12148.9.4.1.0',
+      rectifierTotalCurrent         => '1.3.6.1.4.1.12148.9.5.3.0',
+    },
+  );
+
+# Customize data series labels here.  Must be complete otherwise the
+# data series will not appear in graphs.
+
+my %label  =
+  ( volt =>
+    { acVoltage1 => 'Input 1',
+      acVoltage2 => 'Input 2',
+      acVoltage3 => 'Input 3',
+    },
+    batteryvolt =>
+    { batteryVoltage => 'Battery',
+    },
+    capacity =>
+    { batteryCapacityTotal => 'Total',
+      batteryCapacityLeft => 'Left',
+    },
+    status =>
+    { systemLinkStatus              => 'Link',
+      batteryBreakerStatus          => 'Battery fuse',
+      alarmBatteryBreakerOpen       => 'Bat. fuse alarm',
+      loadDistributionBreakerStatus => 'Load dist. fuse',
+      alarmMajorRectifier           => 'Major Alarm',
+      alarmMinorRectifier           => 'Minor Alarm',
+      alarmBatteryLifeEnded         => 'Battery EOL',
+    },
+    temperature =>
+    { batteryTemp                   => 'Battery',
+    },
+    load =>
+    { rectifierUtilization          => 'Use',
+    },
+    current =>
+    { batteryCurrent                => 'Battery',
+      loadDistributionCurrent       => 'Load dist',
+      rectifierTotalCurrent         => 'Rect. Total',
+    },
+  );
+
+
+# http://munin-monitoring.org/wiki/fieldname.type for more
+# information.  Overrides here:
+
+# Default
+my $tstype = 'GAUGE';
+
+# Overrides
+my %tstype = ();
+
+# How to draw.
+#
+# By default drawing is LINE1, overrides here.  It will be hard to do
+# the STACK types in this plugin since they are ordering sensitive.
+# If you want that you will need to expand this plugin to define and
+# use a %ordering hash that enforces field order so that stacks come
+# out right.
+
+my %tsdraw =
+  (
+  );
+
+# Minimum and maximum values.  Values outside the ragne given by these
+# will be tossed.  None needed by default, add as needed in the same
+# nested fashion as %label.
+
+my %tsmin  = ();
+
+my %tsmax  = ();
+
+# Example:
+#
+# my %tsmin =
+#  ( temperature => { upsAdvBatteryTemperature      => 10 } );
+#
+# my %tsmax =
+#  ( temperature => { upsAdvBatteryTemperature      => 150 } );
+
+# Warning and Critical ranges.  None needed by default.  Add as
+# needed.
+
+my %tswarn =
+  ( status =>
+    { alarmMinorRectifier     => '0:0',
+      alarmBatteryBreakerOpen => '0:0',
+      batteryBreakerStatus    => '0:0',
+    }
+  );
+
+my %tscrit =
+  ( status =>
+    { alarmBatteryLifeEnded         => '0:0',
+      alarmMajorRectifier           => '0:0',
+      loadDistributionBreakerStatus => '0:0',
+      systemLinkStatus              => '1:1',
+    }
+  );
+
+=end
+
+=cut
+
+my %cdef   = ();
+
+my %title  =
+  ( volt        => 'Input Line Voltages',
+    batteryvolt => 'Battery Voltage',
+    capacity    => 'Battery capacity',
+    status      => 'Status codes',
+    temperature => 'Temperatures',
+    load        => 'Load',
+    current     => 'Currents'
+  );
+
+# Vertical labels on the graph
+
+my %vlabel =
+  ( volt        => 'Volt',
+    batteryvolt => 'Volt',
+    capacity    => 'Units',
+    status      => 'Code value',
+    temperature => 'Celcius',
+    load        => 'Percent',
+    current     => 'Ampere',
+  );
+
+# Extra information on the whole graph.
+
+my %info   =
+  ( volt        => 'Current input voltages.',
+    batteryvolt => 'Current battery voltages.',
+    capacity    => 'Battery capacity and use.  In % or Ah depending '.
+                   'on global system setting.',
+    status      => 'Coded statuses. 0 is normal, 1 is failed, except for '.
+                   'the link status where 1 is up and 0 is down. '.
+                   'Install date: [OID:1.3.6.1.4.1.12148.9.2.1.3.5.0] '.
+                   'System serial: [OID:1.3.6.1.4.1.12148.9.2.1.3.7.0] '.
+                   'Controller serial: [OID:1.3.6.1.4.1.12148.9.2.1.3.8.0] '.
+                   'Battery pack: [OID:1.3.6.1.4.1.12148.9.3.1.0].',
+    temperature => 'Current temperatures.  Possebly only the battery.',
+    load        => 'Current load and capacity on/of the UPS in percent.',
+    current     => 'The current in amperes.',
+  );
+
+# Extra information for a time series
+
+my %subinfo =
+  ( status =>
+    { systemLinkStatus => 'A flag showing the status of the serial port '.
+                          'used between the HEIDI Webpower adapter '.
+                          'or embedded WEB/SNMP card and the Smartpack '.
+                          'Control system.  If this flag shows status '.
+                          'linkdown, the propable cause is that the wrong '.
+                          'baudrate is set, which again is likely to happen '.
+                          'when booting a brand new board.  Execute a '.
+                          '"systemInitiateEEPROM" command to fix. '.
+                          'Not applicable for ComPack control unit',
+      batteryBreakerStatus => 'The state of the battery fuses/breakers can '.
+                          'be either normal(0) or alarm(1).',
+      alarmBatteryBreakerOpen => 'A battery breaker/fuse alarm.',
+      loadDistributionBreakerStatus => 'The state of the load fuses/breakers '.
+                          'can be either normal(0) or alarm(1)',
+      alarmMajorRectifier => 'This is a Major Rectifier alarm.',
+      alarmMinorRectifier => 'This is a Minor Rectifier alarm.',
+      alarmBatteryLifeEnded => 'The battery quality has dropped below '.
+                          'critical level. A battery test has measured the '.
+                          'fully charged capacity to be too low, and thus '.
+                          'probably the battery lifecycle to be near expired.',
+    },
+    current =>
+    { batteryCurrent      => 'The measured total battery current. '.
+                          'This is the sum of all the enabled shunt '.
+                          'measurements in the system. Negative battery '.
+                          'current indicates discharging of the batteries. '.
+                          'Positive battery current indicates charging of '.
+                          'the batteries.  Note that the units measured may '.
+                          'be i Amperes or in Deciamperes depending on global '.
+                          'system settings.',
+      loadDistributionCurrent => 'The total load current.  Note that the '.
+                          'units measured may be i Amperes or in Deciamperes '.
+                          'depending on global system settings.',
+      rectifierTotalCurrent => 'The DC systems total delivered rectifier '.
+                          'current.',
+    },
+    load =>
+    { rectifierUtilization => 'Utilization in % of available rectifier capacity'
+    },
+    capacity =>
+    { batteryCapacityTotal => 'This is the total Capacity of the battery. '.
+                          'This value is the installed capacity compensated '.
+                          'with the last battery tests quality level.',
+      batteryCapacityLeft => 'Capacity left in the battery.',
+    }
+  );
+
+# Extinfo is presented in conjunction with the time series information
+# under the graph.  Usually it supplies extra information specific to
+# a fault, but it might also provide any information for any reason.
+
+my %extinfo = ();
+
+# ########################## Code here
+
+sub collect_snmp {
+    # Mash together all the OIDs needed by the different graphs and
+    # make a (one) query to get them all.  Returns a hash of the
+    # values keyed by OID.
+    #
+    # Occurances of "noSuchInstance" is replaced by "U".
+
+    my ( $snmp ) = @_;
+
+    my @oids = ();
+
+    foreach my $graph ( keys %oidList ) {
+	foreach my $oid ( values %{ $oidList{$graph} } ) {
+	    push(@oids, $oid);
+	}
+    }
+
+    my $values = $snmp->get_request( -varbindlist => \@oids );
+
+    if ( $snmp->error() ) {
+	die "$Munin::Plugin::me: SNMP error ".$snmp->error();
+    }
+
+    # Modify $values in place
+    map { $values->{$_} = 'U'
+	    if $values->{$_} eq 'noSuchInstance'; } keys %$values;
+
+    return $values;
+}
+
+
+sub emit_a_fetch {
+    # Emit just one value line
+    my ( $text, $values, $key, $default ) = @_;
+
+    my $value = $values->{$key};
+    $value    = $default if ! defined $value;
+    $value    = 'U'      if ! defined $value;
+
+    say "$text $value";
+}
+
+
+sub emit_fetch {
+    # Spew out
+    my ( $graph, $oids, $values ) = @_;
+
+    foreach my $label (keys %$oids) {
+	emit_a_fetch( "$label.value", $values, $oids->{$label}, 'U' );
+    }
+}
+
+
+sub emit_fetches {
+    # Emit all the fetches for all the multigraphs
+    my ( $snmp, $oids ) = @_;
+
+    my $values = collect_snmp( $snmp, $oids );
+
+    foreach my $graph (keys %label) {
+	say "multigraph $graph";
+	emit_fetch ( $graph, $oids->{$graph}, $values );
+	say '';
+    }
+}
+
+
+sub replace_oid {
+    my ( $str, $values ) = @_;
+
+    # If "str is [OID:1.3.6.1.2.1.1.5.0] then return the contents of sysName.0
+
+    my $oid = substr( $str, 5, -1 );
+    $str = $values->{$oid};
+
+    return $str;
+}
+
+
+sub process_oids {
+    my ( $str, $values ) = @_;
+
+    if ( ! defined $values ) {
+	croak("no values");
+    }
+
+    if ( $str =~ m/OID:/ ) {
+	$str =~ s/(\[OID:[^]]*])/&replace_oid($1, $values)/eg;
+    }
+
+    return $str;
+}
+
+
+sub emit_a_config {
+    # Emit a config line
+    # IF there is a default, always emit line.
+    # IF there is no default, only emit line if the hash lookup
+    # exists.
+    my ( $values, $text, $hash, $graph, $label, $default ) = @_;
+
+    if ( defined $default ) {
+	my $value = $hash->{$graph}->{$label};
+	$value    = $default if ! defined $value;
+	$value    = 'U'      if ! defined $value;
+
+	say process_oids( "$text $value", $values );
+	return;
+    }
+
+    if ( exists $hash->{$graph}->{$label} ) {
+	say process_oids( "$text " . $hash->{$graph}->{$label}, $values );
+    }
+}
+
+
+sub emit_config {
+    # Emit a graph configuration
+    my ( $graph, $values ) = @_;
+
+    say "graph_title ".( $title{$graph} || "Untitled /$graph/");
+    say "graph_category Rectifier";
+    say process_oids( "graph_vlabel " . $vlabel{$graph}, $values );
+    say process_oids( "graph_info "   . $info{$graph},   $values );
+
+    foreach my $label (keys %{ $label{$graph} } ) {
+
+	emit_a_config( $values, "$label.label",    \%label,   $graph, $label,
+		       $label );
+	emit_a_config( $values, "$label.draw",     \%tsdraw,  $graph, $label,
+		       'LINE1'  );
+	emit_a_config( $values, "$label.type",     \%tstype,  $graph, $label,
+		       $tstype );
+
+	emit_a_config( $values, "$label.min",      \%tsmin,   $graph, $label );
+	emit_a_config( $values, "$label.max",      \%tsmax,   $graph, $label );
+	emit_a_config( $values, "$label.cdef",     \%cdef,    $graph, $label );
+	emit_a_config( $values, "$label.info",     \%subinfo, $graph, $label );
+	emit_a_config( $values, "$label.warning",  \%tswarn,  $graph, $label );
+	emit_a_config( $values, "$label.critical", \%tscrit,  $graph, $label );
+
+    }
+}
+
+
+sub emit_configs {
+    my ( $snmp, $oids, $host, $results ) = @_;
+
+    my $values = collect_snmp( $snmp, $oids );
+
+    say "host_name $host";
+    say "";
+
+    foreach my $graph (keys %label) {
+	say "multigraph $graph";
+	emit_config( $graph, $values );
+
+	# If dirty config allowed:
+	emit_fetch ( $graph, $oids->{$graph}, $values );
+
+	say '';
+    }
+}
+
+
+sub main {
+    need_multigraph();
+
+    if ($ARGV[0] and $ARGV[0] eq 'snmpconf') {
+	say "require 1.3.6.1.4.1.12148.9.1.1.1.0 [0-9]";
+	exit 0;
+    }
+
+    my ( $host, undef ) = Munin::Plugin::SNMP::config_session();
+
+    # Ensure that we get times in ticks (hundredths of a second)
+    my $session =
+      Munin::Plugin::SNMP->session( -translate => [ -timeticks => 0x0 ] );
+
+
+    if ($ARGV[0] and $ARGV[0] eq 'config') {
+	emit_configs( $session, \%oidList, $host );
+	exit 0;
+    }
+
+    emit_fetches( $session, \%oidList );
+    exit 0;
+}
+
+
+
+main();

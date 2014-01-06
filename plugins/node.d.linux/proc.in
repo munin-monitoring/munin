@@ -47,6 +47,8 @@ second column in /proc/<PID>/stat. If you don't get the data you expect, you
 can check if the value is what you expect here. This is what's used for the 
 first filter, and args/user-filters are then applied on top of this filter. 
 Note that <PID> is the PID of the process that you are interested in.
+For process names including non-alphanumeric characters (like space, dash,
+etc.) please see Special Process Names below.
 
 env.procargs defines a string which is matched against the command line of the
 process.  It's a wildcard match, so you don't have to provide the entire
@@ -57,6 +59,31 @@ provided, processes ran by any user are included.
 
 env.procaspect defines which graphs to render. Per default, all graphs are 
 included. You don't have to set this unless you want to exclude graphs.
+
+=head1 SPECIAL PROCESS NAMES
+
+If the process name (in env.procname) contains any characters other than
+[a-zA-Z_], they will be internally replaced by underscores ('_'). This is
+normally not a problem, unless you are setting warning/critical levels.
+
+For example, let's say you have have Plex Media Server running and you want
+to monitor how many processes it has running. The name that shows up in /proc
+is 'Plex Media Serv' (truncated, without the 'er' at the end), the internal
+field becomes: 'Plex_Media_Serv'.
+
+In order to let munin give a warning when the number of processes is outside
+the range 1:3, use the following in your munin configuration file (not the
+plugin configuration file):
+
+  [host.example.org]
+     proc_processes.Plex_Media_Serv.warning 1:3
+
+Please keep in mind that you still need the original name from /proc/pid/stat
+(including spaces or dashes) in your plugin configuration file:
+
+  [proc]
+     env.procname proc1|Plex Media Serv|proc2
+
 
 =head1 INTERPRETATION
 
@@ -531,7 +558,7 @@ sub set_run
     my $i = 0;
     foreach(@procname) {
         $proctitlec[$i] = "$procname[$i]";
-        $procuniq[$i] = "$procname[$i]";
+        $procuniq[$i] = clean_fieldname("$procname[$i]");
         if (length($procargs[$i]) > 0 ) {
             $proctitlec[$i] = "$proctitlec[$i] $procargs[$i]";
             $procuniq[$i] = $procuniq[$i]."_".$procargs[$i];

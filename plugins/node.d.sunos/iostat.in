@@ -118,7 +118,7 @@ while(<IOSTAT>){
 close(IOSTAT);
 
 foreach $dev ('disk','tape','nfs') {
-    print $dev,"w.value ", (defined($bwi{$dev}) ? $bwi{$dev} : "U"), "\n";
-    print $dev,"r.value ", (defined($bri{$dev}) ? $bri{$dev} : "U"), "\n";
+    print $dev,"w.value ", (defined($bwi{$dev}) ? sprintf("%d", $bwi{$dev}) : "U"), "\n";
+    print $dev,"r.value ", (defined($bri{$dev}) ? sprintf("%d", $bri{$dev}) : "U"), "\n";
 }
 

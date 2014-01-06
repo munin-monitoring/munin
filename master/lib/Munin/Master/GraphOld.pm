@@ -11,7 +11,7 @@ feature propper object orientation like munin-update and will have to
 wait until later.
 
 Copyright (C) 2002-2010 Jimmy Olsen, Audun Ytterdal, Kjell Magne
-Øierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
+ï¿½ierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -37,9 +37,10 @@ use strict;
 
 use Exporter;
 
-our (@ISA, @EXPORT);
+our (@ISA, @EXPORT, @EXPORT_OK);
 @ISA    = qw(Exporter);
 @EXPORT = qw(graph_startup graph_check_cron graph_main graph_config);
+@EXPORT_OK = qw(build_sum_cdef); # exportable for tests
 
 use IO::Socket;
 use IO::Handle;
@@ -318,7 +319,11 @@ sub graph_startup {
 	$config = munin_readconfig_part('datafile', 0);
     }
 
+    $config->{debug} = $debug;
+
     my $palette = &munin_get($config, "palette", "default");
+
+    my $custom_palette = &munin_get($config, "custom_palette", "");
 
     $max_running = &munin_get($config, "max_graph_jobs", $max_running);
 
@@ -342,6 +347,16 @@ sub graph_startup {
     }
     else {
         die "Unknown palette named by 'palette' keyword: $palette\n";
+    }
+
+    if ($custom_palette !~ /^$/) {
+        $custom_palette = uc($custom_palette);
+        if ($custom_palette =~ /^[0-9A-F]{6}(\s+[0-9A-F]{6})*$/) {
+            @COLOUR = split(/\s+/, $custom_palette);
+        }
+        else {
+            die "Invalid custom_palette: palette must be space separated 24-bit hex color code.";
+        }
     }
 
     return $config;
@@ -585,6 +600,14 @@ sub get_stack_command {
     return munin_get($field, "stack");
 }
 
+sub build_sum_cdef {
+    if (@_ == 1) {
+        return "";
+    } else {
+        return "," . join(",$AddNAN,", @_[0 .. @_ - 2]) . ",$AddNAN";
+    }
+}
+
 sub expand_specials {
     my $service = shift;
     my $order   = shift;
@@ -709,9 +732,8 @@ sub expand_specials {
                 push(@spc_stack, $name);
                 push(@$preproc,  "$name=$pre");
             }
-            $service->{$last_name}->{"cdef"} .=
-		"," . join(",$AddNAN,", @spc_stack[0 .. @spc_stack - 2]) .
-		",$AddNAN";
+            $service->{$last_name}->{"cdef"} .= build_sum_cdef(@spc_stack);
+
 
             if (my $tc = munin_get($service->{$field}, "cdef", 0))
             {    # Oh bugger...
@@ -1059,6 +1081,10 @@ sub process_service {
             and graph_by_minute($service)) {
             push(@rrd, expand_cdef($service, \$rrdname, "$fname,60,*"));
         }
+        if (    munin_get($field, "type", "GAUGE") ne "GAUGE"
+            and graph_by_hour($service)) {
+            push(@rrd, expand_cdef($service, \$rrdname, "$fname,3600,*"));
+        }
 
         if (my $tmpcdef = munin_get($field, "cdef")) {
             push(@rrd, expand_cdef($service, \$rrdname, $tmpcdef));
@@ -1172,9 +1198,9 @@ sub process_service {
                 unshift(@rrd_negatives,
                     "HRULE:" . $number . ($ldcolour ? "#$ldcolour" : "#$colour"));
             }
-            elsif (my $tmpwarn = munin_get($negfield, "warning",2)) {
+            elsif (my $tmpwarn = munin_get($negfield, "warning")) {
 
-                my ($warn_min, $warn_max) = split(':', $tmpwarn);
+                my ($warn_min, $warn_max) = split(':', $tmpwarn,2);
 
                 if (defined($warn_min) and $warn_min ne '') {
                     unshift(
@@ -1184,7 +1210,9 @@ sub process_service {
                             . "#" . (
                             $single_value
                             ? "ff0000"
-                            : $COLOUR[($field_count - 1) % @COLOUR]));
+                            : $COLOUR[($field_count - 1) % @COLOUR])
+                            . "::dashes=1,8"
+                    );
                 }
                 if (defined($warn_max) and $warn_max ne '') {
                     unshift(
@@ -1194,7 +1222,9 @@ sub process_service {
                             . "#" . (
                             $single_value
                             ? "ff0000"
-                            : $COLOUR[($field_count - 1) % @COLOUR]));
+                            : $COLOUR[($field_count - 1) % @COLOUR])
+                            . "::dashes=1,8"
+                    );
                 }
             }
 
@@ -1517,6 +1547,10 @@ sub process_service {
                                 # Already multiplied by 60
                                 push @replace,
                                     "CDEF:x$fname=PREV($fname),UN,0,PREV($fname),IF,$fname,+,5,*,6,*";
+                            } elsif (graph_by_hour($service)) {
+                                # Already multiplied by 3600, have to *divide* by 12
+                                push @replace,
+                                    "CDEF:x$fname=PREV($fname),UN,0,PREV($fname),IF,$fname,+,12,/,6,*";
                             }
                             else {
                                 push @replace,
@@ -1530,6 +1564,9 @@ sub process_service {
 
                                 # Already multiplied by 60
                                 push @replace, "CDEF:x$fname=$fname,5,*,288,*";
+                            } elsif (graph_by_hour($service)) {
+                                # Already multiplied by 3600, have to *divide* by 12
+                                push @replace, "CDEF:x$fname=$fname,12,/,288,*";
                             }
                             else {
                                 push @replace,
@@ -1611,7 +1648,6 @@ sub handle_trends {
     foreach my $field (@{munin_find_field($service, "label")}) {
         my $fieldname = munin_get_node_name($field);
 	my $colour = $single_colour;
-        my $rrdname = get_field_name($fieldname);
 
 	# Skip virtual fieldnames, otherwise beware of $hash->{foo}{bar}. 
 	#
@@ -1624,6 +1660,9 @@ sub handle_trends {
             $colour = "$service->{$fieldname}{'colour'}66";
         }                                                                                                                                                    
                                                                                                                                                              
+	# rrd_fieldname is computed now to avoid virtual fieldnames
+	my $rrd_fieldname = get_field_name($fieldname);
+
         my $cdef = "";
         if (defined $service->{$fieldname}{'cdef'}) {
             $cdef = "cdef";
@@ -1631,8 +1670,8 @@ sub handle_trends {
 
         #trends
         if (defined $service->{$fieldname}{'trend'} and $service->{$fieldname}{'trend'} eq 'yes') {
-            push (@complete, "CDEF:t$rrdname=c$cdef$rrdname,$futuretime,TRENDNAN");
-            push (@complete, "LINE1:t$rrdname#$colour:$fieldname trend\\l");
+            push (@complete, "CDEF:t$rrd_fieldname=c$cdef$rrd_fieldname,$futuretime,TRENDNAN");
+            push (@complete, "LINE1:t$rrd_fieldname#$colour:$service->{$fieldname}->{'label'} trend\\l");
             DEBUG "[DEBUG] set trend for $fieldname\n";
         }
 
@@ -1642,8 +1681,8 @@ sub handle_trends {
             my @predict = split(",", $service->{$fieldname}{'predict'});
             my $predictiontime = int ($futuretime / $predict[0]) + 2; #2 needed for 1 day
             my $smooth = $predict[1]*$resolutions{$time};
-            push (@complete, "CDEF:p$rrdname=$predict[0],-$predictiontime,$smooth,c$cdef$rrdname,PREDICT");
-            push (@complete, "LINE1:p$rrdname#$colour:$fieldname prediction\\l");
+            push (@complete, "CDEF:p$rrd_fieldname=$predict[0],-$predictiontime,$smooth,c$cdef$rrd_fieldname,PREDICT");
+            push (@complete, "LINE1:p$rrd_fieldname#$colour:$service->{$fieldname}->{'label'} prediction\\l");
             DEBUG "[DEBUG] set prediction for $fieldname\n";
         }
     }
@@ -1713,6 +1752,12 @@ sub graph_by_minute {
     my $service = shift;
 
     return (munin_get($service, "graph_period", "second") eq "minute");
+}
+
+sub graph_by_hour {
+    my $service = shift;
+
+    return (munin_get($service, "graph_period", "second") eq "hour");
 }
 
 sub orig_to_cdef {

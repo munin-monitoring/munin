@@ -1,0 +1,18 @@
+[Group1;h1.domain.test]
+    address 127.0.0.1
+    use_node_name ignore
+
+[Group1;h2.domain.test]
+    address 127.0.0.1
+    use_node_name ignore
+
+[Group2;Sub1;h3.domain.test]
+    address 127.0.0.1
+    use_node_name ignore
+[Group2;Sub2;h4.domain.test]
+    address 127.0.0.1
+    use_node_name ignore
+
+[Group2;Sub2;h5.domain.test]
+    address 127.0.0.1
+    use_node_name ignore

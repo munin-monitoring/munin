@@ -238,7 +238,7 @@ sub list_plugins {
     my $use_node_name = defined($self->{configref}{use_node_name})
         ? $self->{configref}{use_node_name}
         : $config->{use_node_name};
-    my $host = $use_node_name
+    my $host = Munin::Master::Config->_parse_bool($use_node_name, 0)
         ? $self->{node_name}
         : $self->{host};
 
@@ -246,11 +246,12 @@ sub list_plugins {
 	die "[ERROR] Couldn't find out which host to list on $host.\n";
     }
 
-    $self->_node_write_single("list $host\n");
+    my $host_list = ($use_node_name && $use_node_name eq "ignore") ? "" : $host;
+    $self->_node_write_single("list $host_list\n");
     my $list = $self->_node_read_single();
 
     if (not $list) {
-        WARN "[WARNING] Config node $self->{host} listed no services for $host.  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.";
+        WARN "[WARNING] Config node $self->{host} listed no services for '$host_list'.  Please see http://munin-monitoring.org/wiki/FAQ_no_graphs for further information.";
     }
 
     return split / /, $list;
@@ -281,15 +282,28 @@ sub parse_service_config {
     };
 
 
-    local *push_graphorder = sub {
-	my ($oldservice) = @_;
+   local *push_graphorder = sub {
+		my ($oldservice) = @_;
 
-	push( @{$global_config->{$oldservice}}, 
-	      ['graph_order', join(' ', @graph_order)] )
-	    unless !@graph_order || 
-	           grep { $_->[0] eq 'graph_order' } @{$global_config->{$oldservice}};
-	@graph_order = ( );
-    };
+		# We always appends the field names in config order to any
+		# graph_order given.
+		# Note that this results in duplicates in the internal state
+		# for @graph_order but munin_get_field_order() will eliminate
+		# them before graphing.
+
+		if (@graph_order) {
+			foreach (@{$global_config->{$oldservice}}) {
+				if ( $_->[0] eq 'graph_order' ) {
+					# append to a given graph_order
+					$_->[1] .= join(' ', '', @graph_order);
+					@graph_order = ( );
+					return;
+				}
+			}
+			push @{$global_config->{$oldservice}}, ['graph_order', join(' ', @graph_order)];
+		}
+		@graph_order = ( );
+	};
 
 
     DEBUG "[DEBUG] Now parsing config output from plugin $plugin on "
@@ -312,17 +326,28 @@ sub parse_service_config {
         next if $line =~ /^\#/;
 
 	if ($line =~ m{\A multigraph \s+ (.+) }xms) {
-	    $correct++;
-
 	    push_graphorder($service);
 
 	    $service = $1;
 
 	    if ($service eq 'multigraph') {
-		die "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+		ERROR "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+                $errors++;
+                last;
 	    }
+            if ($service =~ /(^\.|\.$|\.\.)/) {
+                ERROR "[ERROR] SERVICE \"$service\" contains dots in wrong places in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+                $errors++;
+                last;
+            }
+            if ($service !~ m/^[-\w.:.]+$/) {
+                ERROR "[ERROR] SERVICE \"$service\" contains weird characters in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+                $errors++;
+                last;
+            }
 	    new_service($service) unless $global_config->{$service};
 	    DEBUG "[CONFIG multigraph $plugin] Service is now $service";
+	    $correct++;
 	}
 	elsif ($line =~ m{\A ([^\s\.]+) \s+ (.+?) \s* $}xms) {
 	    $correct++;
@@ -468,16 +493,26 @@ sub parse_service_data {
         next if $line =~ /^\#/;
 
 	if ($line =~ m{\A multigraph \s+ (.+) }xms) {
-	    $correct++;
-
 	    $service = $1;
+            if ($service =~ /(^\.|\.$|\.\.)/) {
+                ERROR "[ERROR] SERVICE \"$service\" contains dots in wrong places in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+                $errors++;
+                last;
+            }
+            if ($service !~ m/^[-\w.:.]+$/) {
+                ERROR "[ERROR] SERVICE \"$service\" contains weird characters in plugin $plugin on ".$self->{host}."/".$self->{address}."/".$self->{port};
+                $errors++;
+                last;
+            }
 	    $values{$service} = {};
 
 	    if ($service eq 'multigraph') {
+                $errors++;
 		ERROR "[ERROR] SERVICE can't be named \"$service\" in plugin $plugin on ".
 		    $nodedesignation;
-		croak("Plugin error.  Please consult the log.");
+                last;
 	    }
+	    $correct++;
 	}
 	elsif ($line =~ m{\A ([^\.]+)\.value \s+ ([\S:]+) }xms) {
             my ($data_source, $value, $when) = ($1, $2, $now);

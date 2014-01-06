@@ -57,6 +57,12 @@ license.  Munin is GPLv2 licensed.
 
 use Munin::Plugin::HTTP;
 
+my $ret = undef;
+
+if (! eval "require LWP::UserAgent;"){
+	$ret = "LWP::UserAgent not found";
+}
+
 my $UA = Munin::Plugin::HTTP->new;
 my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://localhost/nginx_status";
 

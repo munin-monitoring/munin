@@ -61,7 +61,6 @@ my %content_types = (
 	"xml" => "text/xml",
 );
 
-my $logfile;
 my $scale = "day";
 
 my @params ;
@@ -70,14 +69,13 @@ push @params, "--config", $ENV{'MUNIN_CONFIG'}
        if (defined $ENV{'MUNIN_CONFIG'});
 push @params, "--no-fork"; # FastCgi forks for us
 push @params, "--skip-locking", "--skip-stats", "--nolazy";
-push @params, "--log-file", $logfile;
 
 my $config = graph_startup(\@params);
 
-logger_open($config->{'logdir'});
+logger_open($1) if ($config->{'logdir'} =~ m/(.*)/);
 if(defined($ENV{CGI_DEBUG})) {
 	logger_debug();
-	push @params, "--debug", $logfile;
+	push @params, "--debug";
 }
 
 # BEGIN FAST-CGI LOOP:
@@ -90,7 +88,7 @@ while (new CGI::Fast) {
     # This fixes http://bugs.debian.org/668666 and closes a lots of other potential bugs.
     if ( has_offending_chars($ENV{PATH_INFO}) || has_offending_chars($ENV{QUERY_STRING}) ) {
         # If parameters are not valid, just pretend we didn't find anything.
-        print "Status: 404 Not Found\r\n",
+        print "Status: 400 Bad Request (has_offending_chars)\r\n",
           "Content-Type: image/png\r\n",
           "X-Munin-Pid: $$\r\n",
           "X-Munin-Request: $nb_request/$nb_request_max\r\n",
@@ -152,7 +150,7 @@ while (new CGI::Fast) {
 
     if (! &verify_parameters ($dom, $host, $serv, $scale)) {
 	# If parameters are not valid, just say we didn't find anything.
-	print "Status: 404 Not Found\r\n",
+	print "Status: 404 Not Found (verify_parameters)\r\n",
 	  "Content-Type: $content_types{$fileext}\r\n",
 	  "X-Munin-Pid: $$\r\n",
 	  "X-Munin-Request: $nb_request/$nb_request_max\r\n",
@@ -356,7 +354,8 @@ sub get_picture_filename {
 sub has_offending_chars {
 	my $url_part = shift;
 	return 0 if ! defined $url_part;
-	return $url_part =~ m:[^a-zA-Z0-9_/.,=&-]:;
+	# "." and ":" are for ip_ in IPv4 & IPv6
+	return $url_part =~ m:[^a-zA-Z0-9_/.,=&\:-]:;
 }
 
 sub verify_parameters {

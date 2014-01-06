@@ -10,44 +10,132 @@ use English qw(-no_match_vars);
 
 # Functions here are unable to log as they don't know if they're used
 # by the node or the master which use divergent logging facilities.
+# In fact, the list in %legal is only used by the master.
 
-my %legal = map { $_ => 1 } (
-
-        "tmpldir", "ncsa", "ncsa_server", "ncsa_config", "rundir",
-	"dbdir", "logdir", "htmldir", "includedir", "domain_order",
-	"node_order", "graph_order", "graph_sources", "fork",
-	"graph_title", "create_args", "graph_args", "graph_vlabel",
-	"graph_vtitle", "graph_total", "graph_scale", "graph",
-	"update", "host_name", "label", "cdef", "draw", "graph",
-	"max", "min", "negative", "skipdraw", "type", "warning",
-	"critical", "stack", "sum", "address", "htaccess", "warn",
-	"use_default_name", "use_node_name", "port", "graph_noscale",
-	"nsca", "nsca_server", "nsca_config", "extinfo", "fetch_data",
-	"filename", "max_processes", "nagios", "info", "graph_info",
-	"graph_category", "graph_strategy", "graph_width",
-	"graph_height", "graph_sums", "local_address", "compare",
-	"text", "command", "contact", "contacts", "max_messages",
-	"always_send", "notify_alias", "line", "state",
-	"graph_period", "cgiurl_graph", "cgiurl", "tls",
-	"service_order", "category_order", "version",
-	"tls_certificate", "tls_private_key", "tls_pem",
-	"tls_verify_certificate", "tls_verify_depth", "tls_match",
-	"tls_ca_certificate", "graph_data_size", "colour",
-	"graph_printf", "ok", "unknown", "palette", "realservname",
-	"cdef_name", "graphable", "process", "realname",
-	"onlynullcdef", "group_order", "pipe", "pipe_command",
-	"unknown_limit", "num_unknowns", "dropdownlimit",
-	"max_graph_jobs", "max_cgi_graph_jobs", "munin_cgi_graph_jobs",
-	"max_html_jobs", "cgitmpdir", "update_rate",
-	"max_size_x", "max_size_y", 
-	"staticdir", "html_strategy",
-	"rrdcached_socket", "graph_args_after",
-    "graph_future", "trend", "predict",
-	"html_rename",
-	"worker_start_delay",
-	"num_messages",
-	"html_dynamic_images",
-	);
+my %legal = map { $_ => 1 } qw(
+	address
+	always_send
+	category_order
+	cdef
+	cdef_name
+	cgitmpdir
+	cgiurl
+	cgiurl_graph
+	colour
+	command
+	compare
+	contact
+	contacts
+	create_args
+	critical
+	dbdir
+	domain_order
+	draw
+	dropdownlimit
+	extinfo
+	fetch_data
+	filename
+	fork
+	graph
+	graph
+	graphable
+	graph_args
+	graph_args_after
+	graph_category
+	graph_data_size
+	graph_future
+	graph_height
+	graph_info
+	graph_noscale
+	graph_order
+	graph_period
+	graph_printf
+	graph_scale
+	graph_sources
+	graph_strategy
+	graph_sums
+	graph_title
+	graph_total
+	graph_vlabel
+	graph_vtitle
+	graph_width
+	group_order
+	host_name
+	htaccess
+	htmldir
+	html_dynamic_images
+	html_rename
+	html_strategy
+	includedir
+	info
+	label
+	line
+	local_address
+	logdir
+	max
+	max_cgi_graph_jobs
+	max_graph_jobs
+	max_html_jobs
+	max_messages
+	max_processes
+	max_size_x
+	max_size_y
+	min
+	munin_cgi_graph_jobs
+	nagios
+	ncsa
+	ncsa_config
+	ncsa_server
+	negative
+	node_order
+	notify_alias
+	nsca
+	nsca_config
+	nsca_server
+	num_messages
+	num_unknowns
+	ok
+	onlynullcdef
+	palette
+	pipe
+	pipe_command
+	port
+	predict
+	process
+	realname
+	realservname
+	rrdcached_socket
+	rundir
+	service_order
+	skipdraw
+	stack
+	state
+	staticdir
+	sum
+	text
+	timeout
+	tls
+	tls_ca_certificate
+	tls_certificate
+	tls_match
+	tls_pem
+	tls_private_key
+	tls_verify_certificate
+	tls_verify_depth
+	tmpldir
+	trend
+	type
+	unknown
+	unknown_limit
+	update
+	update_rate
+	use_default_name
+	use_node_name
+	version
+	warn
+	warning
+	worker_start_delay
+);
 
 my %bools = map { $_ => 1} qw(yes no true false on off 1 0);
 
@@ -119,10 +207,12 @@ sub _looks_like_a_bool {
 
 
 sub _parse_bool {
-    my ($class, $str) = @_;
+    my ($class, $str, $default) = @_;
 
-    croak "Parse exception: '$str' is not a boolean."
-        unless $class->_looks_like_a_bool($str);
+    if (! $class->_looks_like_a_bool($str)) {
+        return $default if defined $default;
+        croak "Parse exception: '$str' is not a boolean."
+    }
 
     return $str =~ m{\A no|false|off|0 \z}xi ? 0 : 1;
 }
