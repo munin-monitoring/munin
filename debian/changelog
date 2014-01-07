@@ -1,3 +1,18 @@
+munin (2.1.4-1) UNRELEASED; urgency=medium
+
+  * New upstream version (development branch)
+  * Add gbp.conf for easier package building with gbp
+  * munin: Add libdbi-perl, libdbd-sqlite3-perl and libcgi-fast-perl to Depends
+    Munin uses a sql backend from now so DBI and sqlite3 are needed.
+    The graphing needs CGI::Fast.pm even if it is cron based
+  * Switch to source format 3.0 (quilt)
+  * Add a patch for munin-cron to work around a bug in munin-graph
+  * Import changes from the debian branch to debian-experimental
+  * Add configuration for apache 2.4. Some configuration parameters changed so
+    a new configuration is needed.
+
+ -- Matthias Schmitz <matthias@sigxcpu.org>  Tue, 07 Jan 2014 23:02:02 +0100
+
 munin (2.1.2-1) experimental; urgency=low
 
   * New upstream version
