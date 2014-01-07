@@ -5,10 +5,15 @@ Maintainer: Munin Debian Maintainers <packaging@munin-monitoring.org>
 Uploaders: Holger Levsen <holger@debian.org>, 
  Stig Sandbeck Mathisen <ssm@debian.org>, 
  Tom Feiner <feiner.tom@gmail.com>,
- Steve Schnepp <steve.schnepp@pwkf.org>
-Build-Depends-Indep: perl, htmldoc, html2text, default-jdk
+ Steve Schnepp <steve.schnepp@pwkf.org>,
+ Matthias Schmitz <matthias@sigxcpu.org>
+Build-Depends-Indep:
+ default-jdk,
+ html2text,
+ htmldoc,
+ perl,
 Build-Depends: debhelper (>=8)
-Standards-Version: 3.9.4
+Standards-Version: 3.9.5
 Homepage: http://munin-monitoring.org
 Vcs-Git: git://anonscm.debian.org/collab-maint/munin.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/munin.git
@@ -152,7 +157,7 @@ Package: munin-doc
 Section: doc
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends}
-Breaks:   munin-common (<< 2)
+Breaks: munin-common (<< 2)
 Replaces: munin-common (<< 2)
 Description: network-wide graphing framework (documentation)
  Munin is a highly flexible and powerful solution used to create graphs of
