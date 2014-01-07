@@ -1,0 +1,21 @@
+From: Matthias Schmitz <matthias@sigxcpu.org>
+Date: Tue, 7 Jan 2014 19:38:05 +0100
+Subject: Remove any paramter to munin-graph in munin-cron
+
+* This is necessary because munin-graph in 2.1.x is slightly broken and expects
+  ether no cli parameter at all or a specific string which graph to render.
+  Upstream is aware of this problem. For now we fix this here.
+---
+ master/_bin/munin-cron.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/master/_bin/munin-cron.in b/master/_bin/munin-cron.in
+index 7027ed4..ca2c364 100755
+--- a/master/_bin/munin-cron.in
++++ b/master/_bin/munin-cron.in
+@@ -17,4 +17,4 @@ nice @@LIBDIR@@/munin-html $@ || exit 1
+ 
+ # The result of munin-html is needed for munin-graph.
+ # It is a noop if graph_strategy is "cgi"
+-nice @@LIBDIR@@/munin-graph --cron $@ || exit 1
++nice @@LIBDIR@@/munin-graph || exit 1
