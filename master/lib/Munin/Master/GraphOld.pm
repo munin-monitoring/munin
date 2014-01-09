@@ -941,6 +941,7 @@ sub process_service {
     my %total_neg;
     my $autostacking = 0;
 
+    my $first_def;
     DEBUG "[DEBUG] Treating fields \"" . join("\",\"", @field_order) . "\".";
     for my $fname (@field_order) {
         my $path  = undef;
@@ -1019,6 +1020,7 @@ sub process_service {
         # Trim the fieldname to make room for other field names.
 	
         $rrdname = &get_field_name($fname);
+        $first_def = "g$rrdname" unless $first_def;
 
         reset_cdef($service, $rrdname);
         if ($rrdname ne $fname) {
@@ -1415,6 +1417,18 @@ sub process_service {
 	}
 
 	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
+	# Add the night/day cycle
+	push @complete, (
+		"CDEF:dummy_val=$first_def",
+		"CDEF:n_d_a=LTIME,86400,%,28800,GE,LTIME,86400,%,64800,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
+		"CDEF:n_d_b=LTIME,86400,%,28800,LT,INF,LTIME,86400,%,64800,GE,INF,UNKN,dummy_val,*,IF,IF",
+		"CDEF:n_d_c=LTIME,604800,%,172800,GE,LTIME,604800,%,345600,LT,INF,UNKN,dummy_val,*,IF,UNKN,dummy_val,*,IF",
+		"AREA:n_d_a#FFC73B19",
+		"AREA:n_d_b#00519919",
+		"AREA:n_d_c#AAABA17F",
+	);
+
+
 	$nb_graphs_drawn ++;
         RRDs::graph(@rrdcached_params, @complete);
         if (my $ERROR = RRDs::error) {
