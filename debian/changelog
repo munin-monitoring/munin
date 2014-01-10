@@ -1,3 +1,9 @@
+munin (2.0.19-2~bpo70+1) wheezy-backports; urgency=low
+
+  * Rebuild for wheezy-backports.
+
+ -- Holger Levsen <holger@debian.org>  Fri, 10 Jan 2014 01:16:59 +0100
+
 munin (2.0.19-2) unstable; urgency=low
 
   * Provide upstart file for munin-async. (Closes: #732030)
