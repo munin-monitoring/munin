@@ -23,8 +23,8 @@ thereafter or plainly ask you to rework it. We might eventually squash some of
 your commits into one.
 
 Please always rebase your pull requests on a released version, ideally the
-lastest one. This makes the merging process much easier. The default branch,
-`master`, automatically tracks the lastest released version, so it is a very
+latest one. This makes the merging process much easier. The default branch,
+`master`, automatically tracks the latest released version, so it is a very
 good starting point.
 
 If you request a pull against `master`, your pull will be automatically closed
