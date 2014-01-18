@@ -287,6 +287,18 @@ RENDERING:
 		filename => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/$template_filename",
 	);
 
+	{
+		use Data::Dumper;
+		local $Data::Dumper::Terse = 1;
+		local $Data::Dumper::Sortkeys = 1;
+		local $Data::Dumper::Sparseseen = 1;
+		local $Data::Dumper::Deepcopy = 1;
+		local $Data::Dumper::Indent = 1;
+
+		$template_params{DEBUG} = Dumper(\%template_params);
+	}
+
+
 	$template->param(%template_params);
 
 	# We cannot use "print_to => \*STDOUT" since it does *NOT* work with FastCGI
