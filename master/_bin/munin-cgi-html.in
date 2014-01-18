@@ -333,8 +333,8 @@ sub _get_params_groups {
 		my $categories = [];
 		while (my ($_category_name) = $sth->fetchrow_array) {
 			my $category = _get_params_services($dbh, $_category_name, $_n_id);
-			$category->{URL} = "$_path.html" . "#" . lc("$_category_name");
 			$category->{URLX} = "$_path.html" . "#" . lc("$_category_name");
+			$category->{URL} = $category->{URLX}; # For category in overview
 			push @$categories, $category;
 		}
 
