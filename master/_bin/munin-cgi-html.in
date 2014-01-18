@@ -262,7 +262,7 @@ if (! defined $id) {
 	my %service_template_params;
 	for my $t (@times) {
 			$service_template_params{"ZOOM$t"} = "";
-			$service_template_params{"IMG$t"} = "$path-$t.png";
+			$service_template_params{"IMG$t"} = script_name() . "/../munin-cgi-graph/" . "$path-$t.png";
 		}
 
 		$template_params{SERVICES} = [ \%service_template_params,];
