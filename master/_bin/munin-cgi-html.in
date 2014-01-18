@@ -197,6 +197,22 @@ if (! defined $id) {
 	next;
 } elsif ($type eq "group") {
 	# Emit group template
+	$template_filename = 'munin-domainview.tmpl';
+
+
+	# Main page
+	{
+		# Constructing the recursive datastructure.
+		# Note that it is quite naive, and not optimized for speed.
+		my $sth_grp = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ?");
+		my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL");
+		my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ?");
+
+		# We cheat, as we only only use the sub-groups
+		my $root_group = _get_params_groups($dbh, $sth_grp, $sth_grp_root, $sth_node, undef);
+		$template_params{GROUPS} = $root_group->[0]{GROUPS};
+	}
+
 } elsif ($type eq "node") {
 	# Emit node template
 	$template_filename = 'munin-nodeview.tmpl';
