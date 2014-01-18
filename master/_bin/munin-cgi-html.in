@@ -225,31 +225,8 @@ if (! defined $id) {
 	$sth_category->execute($id);
 
 	my $categories = [];
-	while (my ($_category) = $sth_category->fetchrow_array) {
-		my $sth = $dbh->prepare_cached("SELECT s.id, sa_t.value as service_title, u.path AS url
-			FROM service s
-			INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category' AND sa_c.value = ?
-			INNER JOIN service_attr sa_t ON sa_t.id = s.id AND sa_t.name = 'graph_title'
-			INNER JOIN url u ON u.id = s.id AND u.type = 'service'
-			WHERE s.node_id = ?
-			ORDER BY service_title ASC");
-		$sth->execute($_category, $id);
-
-		my $services = [];
-		while (my ($_s_id, $_service_title, $_url) = $sth->fetchrow_array) {
-			my %imgs = map { ("IMG$_" => script_name() . "/../munin-cgi-graph" . lc("/$_url-$_.png")) } @times;
-			push @$services, {
-				NAME => $_service_title,
-				URLX => url_absolutize("$_url.html"),
-				%imgs,
-			};
-		}
-
-
-		push @$categories, {
-			NAME => $_category,
-			SERVICES => $services,
-		};
+	while (my ($_category_name) = $sth_category->fetchrow_array) {
+		push @$categories, _get_params_services($dbh, $_category_name, $id);
 	}
 
 	$template_params{CATEGORIES} = $categories;
@@ -354,11 +331,11 @@ sub _get_params_groups {
 		$sth->execute($_n_id);
 
 		my $categories = [];
-		while (my ($_category) = $sth->fetchrow_array) {
-			push @$categories, {
-				NAME => $_category,
-				URL => "$_path.html" . "#" . lc("$_category"),
-			};
+		while (my ($_category_name) = $sth->fetchrow_array) {
+			my $category = _get_params_services($dbh, $_category_name, $_n_id);
+			$category->{URL} = "$_path.html" . "#" . lc("$_category_name");
+			$category->{URLX} = "$_path.html" . "#" . lc("$_category_name");
+			push @$categories, $category;
 		}
 
 		push @$groups, {
@@ -366,11 +343,41 @@ sub _get_params_groups {
 			NCATEGORIES => (scalar @$categories), # This is a node.
 			NAME => $_name,
 			URL => "$_path.html",
+			URLX => "$_path.html",
 			GROUPS => [],
 		};
 	}
 
 	return $groups;
+}
+
+sub _get_params_services {
+	my ($dbh, $category_name, $node_id) = @_;
+
+	my $sth = $dbh->prepare_cached("SELECT s.id, sa_t.value as service_title, u.path AS url
+		FROM service s
+		INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category' AND sa_c.value = ?
+		INNER JOIN service_attr sa_t ON sa_t.id = s.id AND sa_t.name = 'graph_title'
+		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
+		WHERE s.node_id = ?
+		ORDER BY service_title ASC");
+	$sth->execute($category_name, $node_id);
+
+	my $services = [];
+	while (my ($_s_id, $_service_title, $_url) = $sth->fetchrow_array) {
+		my %imgs = map { ("IMG$_" => script_name() . "/../munin-cgi-graph" . lc("/$_url-$_.png")) } @times;
+		push @$services, {
+			NAME => $_service_title,
+			URLX => url_absolutize("$_url.html"),
+			%imgs,
+		};
+	}
+
+
+	return {
+		NAME => $category_name,
+		SERVICES => $services,
+	};
 }
 
 sub get_param
