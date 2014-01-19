@@ -25,6 +25,8 @@ before_install:
  - "cpanm --notest Test::MockModule"
  - "cpanm --notest Test::MockObject::Extends"
  - "cpanm --notest Time::HiRes"
+ - "cpanm --notest DBI"
+ - "cpanm --notest DBD::SQLite"
 notifications:
   email: false
   irc:
