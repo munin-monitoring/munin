@@ -216,6 +216,9 @@ if (! defined $id) {
 			{ } , # XXX - Template says first args has to be empty
 			{ "pathname" => "$template_params{GROUPS}[0]{NAME}", },
 		];
+
+		# Shows "[ d w m y ]"
+		$template_params{COMPARE} = 1;
 	}
 
 } elsif ($type eq "node") {
