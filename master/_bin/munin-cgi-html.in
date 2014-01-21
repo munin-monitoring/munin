@@ -211,6 +211,11 @@ if (! defined $id) {
 		# We cheat, as we only only use the sub-groups
 		my $root_group = _get_params_groups($dbh, $sth_grp, $sth_grp_root, $sth_node, undef);
 		$template_params{GROUPS} = $root_group->[0]{GROUPS};
+
+		$template_params{PATH} = [
+			{ } , # XXX - Template says first args has to be empty
+			{ "pathname" => "$template_params{GROUPS}[0]{NAME}", },
+		];
 	}
 
 } elsif ($type eq "node") {
