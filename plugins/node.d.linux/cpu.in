@@ -78,10 +78,10 @@ about IO performance.
 
 =head1 BUGS
 
-Some combinations of hardware and Linux (probably only 2.4 kernels)
+Some combinations of hardware and Linux
 use 1000 units/second in /proc/stat corresponding to the systems
-HZ. (see /usr/src/linux/include/asm/param.h). But Almost all systems
-use 100 units/second and this is our default. Even if
+HZ. (see /usr/src/linux/include/asm/param.h). But other systems
+use 100 units/second and this is our default if we can't detect it. Even if
 Documentation/proc.txt in the kernel source says otherwise. - Finding
 and fix by dz@426.ch
 
@@ -110,7 +110,35 @@ if [ "$1" = "autoconf" ]; then
 	fi
 fi
 
-HZ=${HZ:-100}
+
+if [ -z "$HZ" ]; then
+  for FILE in /proc/config /boot/config-`uname -r` ; do
+    for COMPRESS in '' '.gz' '.bz2'; do
+  	  if [ -r ${FILE}${COMPRESS} ]; then
+        break;
+      fi
+    done
+  	if [ -r ${FILE}${COMPRESS} ]; then
+      break;
+    fi
+  done
+  if [ -r ${FILE}${COMPRESS} ]; then
+    case ${COMPRESS} in
+    .gz)
+       CAT=zcat
+       ;;
+    .bz2)
+       CAT=bzcat
+       ;;
+    *)
+       CAT=cat
+       ;;
+    esac
+  	HZ=`${CAT} "${FILE}${COMPRESS}" | sed -n '/CONFIG_HZ=\([0-9]*\)/s//\1/p'`
+  else
+  	HZ=${HZ:-100}
+  fi
+fi
 
 extinfo=""
 
