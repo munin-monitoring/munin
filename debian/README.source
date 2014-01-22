@@ -1,53 +1,42 @@
-#
-# getting the upstream sources (and putting them in svn):
-#
+This repository has several branches:
+ stable-2.0          - upstream branch for stable Munin 2.0.x
+ devel               - upstream branch for development Munin 2.1.x
+ debian              - Debian packaging for sid/testing (Munin 2.0.x)
+ debian-wheezy       - Debian packaging in Wheezy (version in the stable release)
+ debian-bpo-wheezy   - backport packaging for Wheezy
+ debian-bpo-squeeze  - backport packaging for Squeeze
+ debian-experimental - Debian packaging for Debian Experimental (2.1.x)
 
-New upstream tarballs are located here http://sourceforge.net/projects/munin/ 
-old tarballs are available at munin.projects.linpro.no/munin/branches/debian/lenny/tarballs 
-too.
-Please put them in svn with signed md5- and sha1sum-files.
+You can build the packages with git-buildpackage following this workflow:
 
-#
-# Debian specific patches
-#
-Debian specific patches reside in debian/patches/ and are applied with quilt.
+Clone the git repository and setup the branches:
+  git clone https://alioth.debian.org/anonscm/git/collab-maint/munin.git
+  git checkout -b stable-2.0 origin/stable-2.0
+  git checkout -b debian origin/debian  # or for backports the matching branch
 
-#
-# using svn-buildpackage
-#
-cd trunk/
-svn-buildpackage
+To build packages for experimental:
+  git checkout -b devel origin/devel
+  git checkout -b debian-experimental origin/debian-experimental
 
-#
-# using svn-buildpackage with pbuilder and cowbuilder
-#
+Git-Buildpackage assumes a default repository layout which we don't use. So we
+ship a customized gbp.conf with the needed parameter to build. So building the
+packages is:
+  gbp buildpackage
 
-svn-pdebuild is an alias for: 
-"svn-buildpackage --svn-builder=pdebuild --pbuilder cowbuilder"
 
-Here a small readme in order to use this svn properly:
+To update the package you can follow this workflow:
 
-I'm used to this aliases to ease my life:
-      pclean='sudo rm -rf /var/cache/pbuilder/result/*'
-      pdebuild='pdebuild --pbuilder cowbuilder'
-      pdebuild-etch='pdebuild --pbuilder cowbuilder --  --basepath /var/cache/pbuilder/etch.cow/ --debian-etch-workaround'
-      pdebuild-lenny='pdebuild --pbuilder cowbuilder -- --basepath /var/cache/pbuilder/base-lenny.cow/'
-      plinda='linda /var/cache/pbuilder/result/*.changes'
-      plintian='lintian /var/cache/pbuilder/result/*.changes'
-      plogin='sudo cowbuilder --login'
-      pupdate='sudo cowbuilder --update'
-      pupdate-etch='sudo cowbuilder --update --basepath /var/cache/pbuilder/etch.cow/ --debian-etch-workaround'
-      pupdate-lenny='sudo cowbuilder --update --basepath /var/cache/pbuilder/base-lenny.cow/'
-      svn-debuild='svn-buildpackage -rfakeroot -us -uc'
-      svn-pdebuild='svn-buildpackage --svn-builder=pdebuild --pbuilder cowbuilder'
-      svn-pdebuild-etch='svn-buildpackage --svn-builder=pdebuild --pbuilder cowbuilder -- --basepath /var/cache/pbuilder/etch.cow --debian-etch-workaround'
+Add the upstream git repository as remote and fetch the branches
+  git remote add upstream_munin https://github.com/munin-monitoring/munin.git
+  git fetch upstream_munin
+  git branch -a      # should now list upstream's branches as well
+  
+Checkout the upstream branch you want to update (stable-2.0 / devel)
+  git checkout devel
 
-So for building this package go to trunk/ and call there e.g.:
-    svn-debuild (Build on the host system)
-or   
-    svn-pdebuild (Build in a chroot using cowdancer)
+Merge the tag you want (or HEAD)
+  git merge 2.1.4  # for the tag
+or
+  git merge upstream_munin/devel 
 
-In the first case the resulting files are found in ../build-area, in the
-second case the resulting files are found in /var/cache/pbuilder/result/
-
-I hope this helps to get this package build from svn :)
+Add debian/changelog and build.
