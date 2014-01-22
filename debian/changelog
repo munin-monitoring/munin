@@ -6,7 +6,10 @@ munin (2.1.4-1) UNRELEASED; urgency=medium
     Munin uses a sql backend from now so DBI and sqlite3 are needed.
     The graphing needs CGI::Fast.pm even if it is cron based
   * Switch to source format 3.0 (quilt)
-  * Add a patch for munin-cron to work around a bug in munin-graph
+  * Add a patch for munin-cron to work around a bug in munin-graph:
+    munin-graph in 2.1.x is slightly broken and expects
+    ether no cli parameter at all or a specific string which graph to render.
+    Upstream is aware of this problem. For now we fix this here.
   * Import changes from the debian branch to debian-experimental
   * Add configuration for apache 2.4. Some configuration parameters changed so
     a new configuration is needed.
