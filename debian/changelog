@@ -12,7 +12,8 @@ munin (2.1.4-1) UNRELEASED; urgency=medium
     Upstream is aware of this problem. For now we fix this here.
   * Import changes from the debian branch to debian-experimental
   * Add configuration for apache 2.4. Some configuration parameters changed so
-    a new configuration is needed.
+    a new configuration is needed. Closes: #722654
+  * Update README.source
 
  -- Matthias Schmitz <matthias@sigxcpu.org>  Tue, 07 Jan 2014 23:02:02 +0100
 
