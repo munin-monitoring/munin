@@ -15,6 +15,7 @@ Any MySQL platform, tested by the authors on:
 * MySQL 5.1.29,
 * MySQL 5.0.51
 * MariaDB 5.5.39
+* MariaDB-5.5.39(galera).
 
 =head1 CONFIGURATION
 
@@ -99,11 +100,15 @@ anything else to 1 for their respective fields in the "SHOW SLAVE STATUS" output
 This can be used to warn on slave failure if the warning and critical values
 are set as seen in a previous section.
 
+=item wsrep_cluster_status
+
+"Primary" is translated 0 and "non-Primary" to 1.
+
 =back
 
 =head1 LICENSE
 
-Copyright (C) 2008,2009 Kjell-Magne Øierud
+Copyright (C) 2008,2009 Kjell-Magne Øierud, 2014 Open Query
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -220,6 +225,286 @@ my %graphs = ();
 
 #---------------------------------------------------------------------
 
+
+$graphs{wsrep_cluster_status} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera Status',
+                vlabel => 'PRIMARY',
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+	            min   => '0',
+	            max   => '1',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_cluster_status', label => '0-Primary, 1-Non-Primary',
+                                           info  => 'If the host is primary',
+                                           type  => 'GAUGE',
+                                           critical => '1'},
+        ],
+};
+
+$graphs{wsrep_cluster_size} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera cluster size',
+                vlabel => 'Hosts',
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_cluster_size', label => 'Cluster size',
+                                           info  => 'The number of hosts in the cluster.',
+                                           type  => 'GAUGE'},
+        ],
+};
+
+
+# http://www.codership.com/wiki/doku.php?id=galera_node_fsm
+$graphs{wsrep_local_state} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera node state',
+                vlabel => 'State (galera_node_fsm)',
+                args   => '--lower-limit 0 --upper-limit 6',
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+	            min   => '0',
+	            max   => '6',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_local_state', label => '1-Joining, 2-Donor, 3-Joined, 4-Synced, 5-Donor, 6-Join after Donor ',
+                                          info  => 'The state of the node in the cluster.',
+                                          type  => 'GAUGE',
+                                          warning => '3.5:4.5'},
+        ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{wsrep_transactions} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera transactions',
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_last_committed', label => 'Committed transactions',
+                                             info  => '# of committed transactions.',
+                                             type  => 'COUNTER',
+                                             min   => 0},
+            {name => 'wsrep_local_commits',  label => 'Locally Committed transactions',
+                                             info  => '# of locally committed transactions.',
+                                             type  => 'COUNTER',
+                                             min   => 0},
+        ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{wsrep_writesets} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera writesets',
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_replicated', label => 'Writesets sent',
+                                         info  => '# of writesets sent to other nodes',
+                                         type  => 'COUNTER',
+                                         min   => 0},
+            {name => 'wsrep_received',   label => 'Writesets received',
+                                         info  => '# of writesets received from other nodes',
+                                         cdef  => 'wsrep_received,-1,*',
+                                         type  => 'COUNTER',
+                                         min   => 0},
+        ],
+};
+
+#-------------------------
+
+
+$graphs{wsrep_writesetbytes} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera writesets bytes/sec',
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_replicated_bytes', label => 'Writesets bytes sent',
+                                               info  => '# of bytes in writesets sent to other nodes',
+                                               type  => 'DERIVE',
+                                               min   => 0},
+            {name => 'wsrep_received_bytes',   label => 'Writesets bytes received',
+                                               info  => '# of bytes in writesets received from other nodes',
+                                               cdef  => 'wsrep_received_bytes,-1,*',
+                                               type  => 'DERIVE',
+                                               min   => 0},
+        ],
+};
+
+#-------------------------
+
+$graphs{wsrep_avgwritesetbytes} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera writesets average bytes',
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_replicated',       type  => 'DERIVE',
+                                               label => 'number of replicated events',
+                                               graph => 'no',
+                                               min   => 0},
+            {name => 'wsrep_received',         type  => 'DERIVE',
+                                               label => 'number of received events',
+                                               graph => 'no',
+                                               min   => 0},
+            {name => 'wsrep_replicated_bytes', type  => 'DERIVE',
+                                               label => 'size of replicated events',
+                                               graph => 'no',
+                                               min   => 0},
+            {name => 'wsrep_received_bytes',   type  => 'DERIVE',
+                                               label => 'size of received events',
+                                               graph => 'no',
+                                               min   => 0},
+            {name => 'wsrep_avgreplicated',    label => 'average size of sent writeset',
+                                               type  => 'GAUGE'},
+            {name => 'wsrep_avgreceived',      label => 'average size of received writeset',
+                                               type  => 'GAUGE'},
+
+        ],
+};
+
+
+#-------------------------
+
+$graphs{wsrep_errors} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera transaction problems'
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_local_cert_failures', label => 'Certification failures',
+                                                  type  => 'DERIVE',
+                                                  min   => 0},
+            {name => 'wsrep_local_bf_aborts',     label => 'Aborted local transactions',
+                                                  type  => 'DERIVE',
+                                                  min   => 0},
+            {name => 'wsrep_local_replays',       label => 'Replays',
+                                                  type  => 'DERIVE',
+                                                  min   => 0},
+        ],
+};
+
+#-------------------------
+
+$graphs{wsrep_queue} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera queues'
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_local_send_queue',     label => 'Send queue length',
+                                                   type  => 'GAUGE'},
+            {name => 'wsrep_local_send_queue_avg', label => 'Average send queue length',
+                                                   type  => 'GAUGE'},
+            {name => 'wsrep_local_recv_queue',     label => 'Receive queue length',
+                                                   type  => 'GAUGE'},
+            {name => 'wsrep_local_recv_queue_avg', label => 'Average receive queue length',
+                                                   type  => 'GAUGE'},
+        ],
+};
+
+#-------------------------
+
+$graphs{wsrep_concurrency} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera Performance Concurrency Window',
+                vlabel => 'Average distance in seq no'
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_apply_window',         label => 'apply window',
+                                                   type  => 'GAUGE'},
+            {name => 'wsrep_commit_window',        label => 'commit window',
+                                                   type  => 'GAUGE'},
+        ],
+};
+
+#-------------------------
+
+$graphs{wsrep_flow} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera flow control',
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_flow_control_paused',    label => 'Time flow control was paused',
+                                                     type  => 'GAUGE'},
+            {name => 'wsrep_flow_control_sent',      label => 'Pause events sent',
+                                                     type  => 'GAUGE'},
+            {name => 'wsrep_flow_control_recv',      label => 'Pause events received',
+                                                     type  => 'GAUGE'},
+        ],
+  };
+
+#-------------------------
+
+$graphs{wsrep_distance} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera distance',
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_cert_deps_distance',    label => 'cert_deps_distance',
+                                                    type  => 'GAUGE'},
+            {name => 'wsrep_slave_threads',	    label => 'wsrep_slave_threads',
+                                                    type  => 'GAUGE'},
+            {name => 'wsrep_commit_window',         label => 'commit_window',
+                                                    type  => 'GAUGE'},
+        ],
+};
+
+#-------------------------
 $graphs{bin_relay_log} = {
     config => {
 	global_attrs => {
@@ -1205,7 +1490,11 @@ sub config {
     while (my ($k, $v) = each %conf) {
 	print "graph_$k $v\n";
     }
-    print "graph_category mysql\n";
+    if ($graph_name =~ /wsrep_/) {
+      print "graph_category galera\n";
+    } else {
+      print "graph_category mysql\n";
+    }
 
     my $i = 0;
     for my $ds (@{$graph->{data_sources}}) {
@@ -1249,12 +1538,14 @@ sub show {
     die "Can't show data for '$graph_name' because InnoDB is disabled."
 	if $graph_name =~ /innodb_/ && $data->{_innodb_disabled};
 
-    for my $ds (@{$graph->{data_sources}}) {
-        my $value = exists $ds->{value}
-            ? $ds->{value}($data)
-                : $data->{$ds->{name}};
+    die "Can't show data for '$graph_name' because not a Galera mysql version."
+	if $graph_name =~ /wsrep_/ && $data->{_galera_disabled};
 
-        printf "%s.value %s\n", clean_fieldname($ds->{name}), defined($value) ? $value : 'U';
+    for my $ds (@{$graph->{data_sources}}) {
+        die "no name in ds in graph '$graph_name' for '$ds'" unless defined $ds->{name};
+        my $name = $ds->{name};
+        printf "%s.value %s\n",
+            clean_fieldname($name), $data->{$name} unless not defined $data->{$name};
     }
 
     return 0;
@@ -1333,6 +1624,10 @@ sub update_variables {
 					   # table_cache in MySQL
 					   # 5.1.2 and earlier.
     );
+    my %wsrep_cluster_status_map = (
+        'Primary' =>  0,
+        'non-Primary' => 1,
+    );
 
     for my $query (@queries) {
 	$data->{$query} = {};
@@ -1345,6 +1640,7 @@ sub update_variables {
 	}
 	$sth->finish();
     }
+
     $data->{'mysql_base_memory'} = $data->{'key_buffer_size'} 
                                          + $data->{'query_cache_size'}
                                          + $data->{'innodb_buffer_pool_size'}
@@ -1365,6 +1661,26 @@ sub update_variables {
 
    # wsrep_thread_count was separated from max_connections for mariadb-5.5.38 https://mariadb.atlassian.net/browse/MDEV-6206
    $data->{'mysql_connection_memory'} *= $data->{'max_connections'} + ( $data->{'wsrep_thread_count'} || 0 );
+
+    if ($data->{wsrep_cluster_status}) {
+      my $var = $wsrep_cluster_status_map{$data->{wsrep_cluster_status}};
+      $data->{wsrep_cluster_status} = $var;
+    }
+    if (defined $data->{wsrep_replicated_bytes} && defined $data->{wsrep_replicated}) {
+      if ($data->{wsrep_replicated} > 0) {
+         $data->{wsrep_avgreplicated} = $data->{wsrep_replicated_bytes} / $data->{wsrep_replicated};
+      } else {
+         $data->{wsrep_avgreplicated} = 0;
+      }
+    }
+    if (defined $data->{wsrep_received_bytes} && defined $data->{wsrep_received}) {
+      if ($data->{wsrep_received} > 0) {
+         $data->{wsrep_avgreceived} = $data->{wsrep_received_bytes} / $data->{wsrep_received};
+      } else {
+         $data->{wsrep_avgreceived} = 0;
+      }
+    }
+    $data->{_galera_disabled} = 1 unless ($data->{wsrep_provider_name});
 }
 
 
