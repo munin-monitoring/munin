@@ -191,7 +191,7 @@ sub munin_getlock {
 	    $pid = $1;
 	    kill(0, $pid);
 	    # Ignore ESRCH as not found is as good as if it worked
-	    if ($! == EPERM)) {
+	    if ($! == EPERM) {
 		LOGCROAK("[FATAL ERROR] kill -0 $pid attempted - it is still alive and we can't kill it. Locking failed.\n");
 		close LOCK;
 	        return 0;
