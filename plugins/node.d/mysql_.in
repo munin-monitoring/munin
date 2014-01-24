@@ -1072,6 +1072,7 @@ sub parse_innodb_status {
     my %section_map = (
 
 	'BUFFER POOL AND MEMORY'   => \&parse_buffer_pool_and_memory,
+	'INDIVIDUAL BUFFER POOL INFO' => \&skip,
 	'FILE I/O'                 => \&parse_file_io,
 	'INSERT BUFFER AND ADAPTIVE HASH INDEX'
 	    => \&parse_insert_buffer_and_adaptive_hash_index,
