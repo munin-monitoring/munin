@@ -883,7 +883,8 @@ sub show {
 
     for my $ds (@{$graph->{data_sources}}) {
 	printf "%s.value %s\n",
-	    clean_fieldname($ds->{name}), $data->{$ds->{name}};
+	    clean_fieldname($ds->{name}),
+	    defined $data->{$ds->{name}} ? $data->{$ds->{name}} : 'U';
     }
 
     return 0;
