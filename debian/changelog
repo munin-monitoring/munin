@@ -1,3 +1,11 @@
+munin (2.0.19-4) UNRELEASED; urgency=low
+
+  [ Matthias Schmitz ]
+  * Add configuration file for apache 2.4. (Closes: XXXXXX)
+  * Depends: libcgi-fast-perl as munin-cgi-graph needs this for zoomable graphs.
+
+ -- Holger Levsen <holger@debian.org>  Sat, 25 Jan 2014 23:50:54 +0100
+
 munin (2.0.19-3) unstable; urgency=medium
 
   [ Matthias Schmitz ]
