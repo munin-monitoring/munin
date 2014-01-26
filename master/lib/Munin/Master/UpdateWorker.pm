@@ -37,6 +37,11 @@ sub new {
 
     my $self = $class->SUPER::new($host->get_full_path);
     $self->{host} = $host;
+
+    # node addresses are optional, defaulting to node name
+    # More infos in #972 & D:592213
+    $host->{address} = _get_default_address($host) unless defined $host->{address};
+
     $self->{node} = Munin::Master::Node->new($host->{address},
                                              $host->{port},
                                              $host->{host_name},
@@ -916,6 +921,46 @@ sub dump_to_file
 
 	close(DUMPFILE);
 }
+
+sub _get_default_address
+{
+	my ($host) = @_;
+
+	# As suggested by madduck in D:592213
+	#
+	# Might I suggest that the address parameter became optional and that
+	# in its absence, the node's name is treated as a FQDN?
+	#
+	# If the node is specified with a group name, then one could use the
+	# following heuristics : $node, $group.$node
+	#
+	# relative names might well work but should be tried last
+
+	my $host_name = $host->{host_name};
+	my $group_name = $host->{group}->{group_name};
+	if ($host_name =~ m/\./ && _does_resolve($host_name)) {
+		return $host_name;
+	}
+
+	if ($group_name =~ m/\./ && _does_resolve("$group_name.$host_name")) {
+		return "$group_name.$host_name";
+	}
+
+	# Note that we do NOT care if relative names resolves or not, as it is
+	# our LAST chance anyway
+	return $host_name;
+}
+
+sub _does_resolve
+{
+	my ($name) = @_;
+
+	use Socket;
+
+	# evaluates to "True" if it resolves
+	return gethostbyname($name);
+}
+
 
 1;
 
