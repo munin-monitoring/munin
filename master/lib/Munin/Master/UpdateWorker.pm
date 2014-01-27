@@ -1,6 +1,8 @@
 package Munin::Master::UpdateWorker;
 use base qw(Munin::Master::Worker);
 
+# $Id$
+
 use warnings;
 use strict;
 
@@ -11,12 +13,9 @@ use Log::Log4perl qw( :easy );
 use File::Basename;
 use File::Path;
 use File::Spec;
-
-use Munin::Master;
 use Munin::Master::Config;
 use Munin::Master::Node;
 use Munin::Master::Utils;
-
 use RRDs;
 use Time::HiRes;
 use Data::Dumper;
@@ -864,7 +863,18 @@ sub _update_rrd_file {
 
     my ($previous_updated_timestamp, $previous_updated_value) = @{ $self->{state}{value}{"$rrd_file:42"}{current} || [ ] };
     my @update_rrd_data;
-
+	if ($config->{"rrdcached_socket"}) {
+		if (! -e $config->{"rrdcached_socket"} || ! -w $config->{"rrdcached_socket"}) {
+			WARN "[WARN] RRDCached feature ignored: rrdcached socket not writable";
+		} elsif($RRDs::VERSION < 1.3){
+			WARN "[WARN] RRDCached feature ignored: perl RRDs lib version must be at least 1.3. Version found: " . $RRDs::VERSION;
+		} else {
+			# Using the RRDCACHED_ADDRESS environnement variable, as
+			# it is way less intrusive than the command line args.
+			$ENV{RRDCACHED_ADDRESS} = $config->{"rrdcached_socket"};
+		}
+	} 
+    
     my ($current_updated_timestamp, $current_updated_value) = ($previous_updated_timestamp, $previous_updated_value);
     for (my $i = 0; $i < scalar @$values; $i++) { 
         my $value = $values->[$i];
@@ -895,11 +905,7 @@ sub _update_rrd_file {
     }
 
     DEBUG "[DEBUG] Updating $rrd_file with @update_rrd_data";
-
-    my @rrdc = ($rrd_file);
-    prepend_rrdc( \@rrdc );
-
-    if ( @Munin::Master::rrdc && (scalar @update_rrd_data > 32) ) {
+    if ($ENV{RRDCACHED_ADDRESS} && (scalar @update_rrd_data > 32) ) {
         # RRDCACHED only takes about 4K worth of commands. If the commands is
         # too large, we have to break it in smaller calls.
         #
@@ -909,11 +915,12 @@ sub _update_rrd_file {
         # will buffer for us as suggested on the rrd mailing-list.
         # https://lists.oetiker.ch/pipermail/rrd-users/2011-October/018196.html
         for my $update_rrd_data (@update_rrd_data) {
-            RRDs::update( @rrdc, $update_rrd_data );
+            RRDs::update($rrd_file, $update_rrd_data);
+            # Break on error.
             last if RRDs::error;
         }
     } else {
-        RRDs::update( @rrdc, @update_rrd_data );
+        RRDs::update($rrd_file, @update_rrd_data);
     }
 
     if (my $ERROR = RRDs::error) {

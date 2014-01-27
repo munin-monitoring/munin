@@ -11,7 +11,6 @@ use Getopt::Long;
 use Pod::Usage;
 use Log::Log4perl qw(:easy);
 
-use Munin::Master;
 use Munin::Master::Update;
 use Munin::Master::Logger;
 use Munin::Master::Config;
@@ -32,9 +31,9 @@ sub main {
     exit_if_run_by_super_user();
 
     configure();
-    master_setup( $config );
-    logger_open ( $config->{'logdir'} );
-    logger_debug( ) if $config->{debug};
+
+    logger_open($config->{'logdir'});
+    logger_debug() if $config->{debug};
 
     my $update = Munin::Master::Update->new();
     $update->run();

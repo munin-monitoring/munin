@@ -1,4 +1,6 @@
-package Munin::Master::GraphOld;  # -*- cperl -*-
+package Munin::Master::GraphOld;
+
+# -*- cperl -*-
 
 =begin comment
 
@@ -8,7 +10,7 @@ without making it object oriented yet.  The non "old" module will
 feature propper object orientation like munin-update and will have to
 wait until later.
 
-Copyright (C) 2002-2013 Jimmy Olsen, Audun Ytterdal, Kjell Magne
+Copyright (C) 2002-2010 Jimmy Olsen, Audun Ytterdal, Kjell Magne
 Øierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
 
 This program is free software; you can redistribute it and/or
@@ -23,6 +25,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+$Id$
 
 =end comment
 
@@ -49,7 +53,6 @@ use Text::ParseWords;
 # For UTF-8 handling (plugins are assumed to use Latin 1)
 if ($RRDs::VERSION >= 1.3) { use Encode; }
 
-use Munin::Master;
 use Munin::Master::Logger;
 use Munin::Master::Utils;
 use Munin::Common::Defaults;
@@ -157,6 +160,9 @@ my @limit_services = ();
 my $only_fqn = '';
 
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
+
+# RRD param for RRDCACHED_ADDRESS
+my @rrdcached_params;
 
 my $running     = 0;
 my $max_running = 6;
@@ -304,6 +310,17 @@ sub graph_startup {
 
     $max_running = &munin_get($config, "max_graph_jobs", $max_running);
 
+    if ($config->{"rrdcached_socket"}) { 
+	    if ($RRDs::VERSION >= 1.3){
+		# Using the RRDCACHED_ADDRESS environnement variable, as
+                # it is way less intrusive than the command line args.
+                $ENV{RRDCACHED_ADDRESS} = $config->{"rrdcached_socket"};
+	    } else { 
+		    ERROR "[ERROR] RRDCached feature ignored: RRD version must be at least 1.3. Version found: " . $RRDs::VERSION; 
+	    }
+    }
+
+
     if ($max_running == 0) {
         $do_fork = 0;
     }
@@ -341,7 +358,7 @@ sub graph_main {
     # The loaded $config is stale within 5 minutes.
     # So, we need to reread it when this happens.
     $config = munin_readconfig_part('datafile');
-
+   
     # Reset an eventual custom size
     $size_x 	    = undef;
     $size_y         = undef;
@@ -981,9 +998,7 @@ sub process_service {
 	}
 	# Here it is OK to flush the rrdcached, since we'll flush it anyway
 	# with graph
-	my (@update) = ( $filename );
-	prepend_rrdc( \@update );
-        my $update = RRDs::last( @update );
+        my $update = RRDs::last(@rrdcached_params, $filename);
         $update = 0 if !defined $update;
         if ($update > $lastupdate) {
             $lastupdate = $update;
@@ -993,14 +1008,14 @@ sub process_service {
         my $rrdfield = munin_get($field, "rrdfield", "42");
 
         my $single_value = $force_single_value || single_value($service);
-
+	
 	# XXX - single_value is wrong for some multigraph, disabling it for now
 	$single_value = 0;
 
         my $has_negative = munin_get($field, "negative");
 
         # Trim the fieldname to make room for other field names.
-
+	
         $rrdname = &get_field_name($fname);
 
         reset_cdef($service, $rrdname);
@@ -1397,21 +1412,17 @@ sub process_service {
 		push @complete, "--lower-limit", $lower_limit;
 	}
 
-	prepend_rrdc( \@complete );
-
-	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n";
-
+	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
 	$nb_graphs_drawn ++;
-
-        RRDs::graph( @complete );
+        RRDs::graph(@rrdcached_params, @complete);
         if (my $ERROR = RRDs::error) {
             ERROR "[RRD ERROR] Unable to graph $picfilename : $ERROR";
             # ALWAYS dumps the cmd used when an error occurs.
             # Otherwise, it will be difficult to debug post-mortem
-            ERROR "[RRD ERROR] rrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n";
+            ERROR "[RRD ERROR] rrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
         }
         elsif (!-f $picfilename) {
-	    ERROR "[RRD ERROR] rrdtool graph did not generate the image (make sure there are data to graph).\n";
+		ERROR "[RRD ERROR] rrdtool graph did not generate the image (make sure there are data to graph).\n";
         }
         else {
 
@@ -1528,9 +1539,7 @@ sub process_service {
             munin_mkdir_p($picdirname, oct(777));
 
 	    $nb_graphs_drawn ++;
-
-	    prepend_rrdc( \@rrd_sum );
-            RRDs::graph( @rrd_sum );
+            RRDs::graph(@rrdcached_params, @rrd_sum);
 
             if (my $ERROR = RRDs::error) {
                 ERROR "[RRD ERROR(sum)] Unable to graph "
@@ -1589,8 +1598,8 @@ sub handle_trends {
 
         if (defined $service->{$fieldname}{'colour'}) {
             $colour = "$service->{$fieldname}{'colour'}66";
-        }
-
+        }                                                                                                                                                    
+                                                                                                                                                             
         my $cdef = "";
         if (defined $service->{$fieldname}{'cdef'}) {
             $cdef = "cdef";
