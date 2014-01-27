@@ -10,6 +10,7 @@ use Carp;
 
 use Time::HiRes;
 use Log::Log4perl qw( :easy );
+use List::Util qw( shuffle );
 
 use Munin::Common::Defaults;
 use Munin::Master::Config;
@@ -98,6 +99,12 @@ sub _create_workers {
     # logger("Queuing '$name' for update.");
 
     my @hosts = $self->{group_repository}->get_all_hosts();
+
+    # Shuffle @hosts to avoid always having the same ordering
+    # XXX - It might be best to preorder them on the TIMETAKEN ASC
+    #       in order that statisticall fast hosts are done first to increase
+    #       the global throughtput
+    @hosts = shuffle(@hosts);
 
     if (%{$config->{limit_hosts}}) {
         @hosts = grep { $config->{limit_hosts}{$_->{host_name}} } @hosts
