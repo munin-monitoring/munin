@@ -295,7 +295,8 @@ sub parse_service_config {
 			foreach (@{$global_config->{$oldservice}}) {
 				if ( $_->[0] eq 'graph_order' ) {
 					# append to a given graph_order
-					$_->[1] .= join(' ', '', @graph_order);
+					$_->[1] = _merge_into_str_no_dup($_->[1], @graph_order);
+
 					@graph_order = ( );
 					return;
 				}
@@ -705,6 +706,16 @@ sub _node_read {
 
     DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".";
     return \@array;
+}
+
+sub _merge_into_str_no_dup
+{
+	use List::MoreUtils qw(uniq);
+
+	my $str = shift;
+	my @a = uniq( split(/ /, $str), @_);
+
+	return join(" ", @a);
 }
 
 # Defines the URL::scheme for munin
