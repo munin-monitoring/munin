@@ -1236,8 +1236,12 @@ sub parse_insert_buffer_and_adaptive_hash_index {
 		$data->{ib_ibuf_merged_rec} = $1 + $2;
 		return 1;
 	    };
-	    m/\GIbuf: size \d+, free list len \d+, seg size \d+, (\d+) merges\n/gc && do {
-		$data->{ib_ibuf_merges} = $1;
+
+      m/\GIbuf: size (\d+), free list len (\d+), seg size (\d+),(?: (\d+) merges)?\n/gc && do {
+    $data->{ib_ibuf_size}     = $1;
+    $data->{ib_ibuf_free_len} = $2;
+    $data->{ib_ibuf_seg_size} = $3;
+    $data->{ib_ibuf_merges}   = $4 if defined $4; # MySQL >= 5.5
 		return 1;
 	    };
 	}
