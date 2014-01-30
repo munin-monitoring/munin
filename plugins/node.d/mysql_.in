@@ -1068,7 +1068,7 @@ sub parse_innodb_status {
 
     # Add a dummy section to the end in case the innodb status output
     # has been truncated (Happens for status > 64K characters)
-    $_ .= "\n----------\nDUMMY\n";
+    $_ .= "\n----------\nDUMMY\n----------\n"; 
 
     my %section_map = (
 
@@ -1112,7 +1112,12 @@ sub parse_innodb_status {
 my $innodb_bigint_rx = qr{([[a-fA-F\d]+)(?: (\d+))?};
 
 
-sub match_dashes { return m/\G-+\n(?!-)/gc; }
+sub match_new_section { 
+   return m/\G
+            -+\n                 # --------------------------- 
+            (?= [A-Z\/ ]+\n      # SECTION NAME
+                [=-]+\n)/gcx;    # --------------------------- ('=' on end of output)
+}
 
 
 sub skip_line    { return m/\G.*\n/gc; }
@@ -1131,7 +1136,7 @@ sub parse_section {
 
     #warn substr($_, pos(), 10);
     for (;;) {
-	return if match_dashes();
+	return if match_new_section;
 	next if $parser->();
 	skip_line();
     }
