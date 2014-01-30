@@ -1294,8 +1294,8 @@ sub parse_buffer_pool_and_memory {
 
 sub handle_incomplete_innodb_status {
 
-    warn "Output from SHOW ENGINE INNDOB STATUS was truncated. "
-	. "This happens if the output of SEIS exceeds 64KB. "
+    warn "Output from SHOW ENGINE INNODB STATUS was truncated. "
+	. "This happens if the output of STATUS exceeds 64KB. "
 	. "Several of the InnoDB graphs might be affected by this.";
 
     # FIX Is it possible to find some of the missing values from SHOW
