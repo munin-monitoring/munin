@@ -920,8 +920,11 @@ sub update_data {
 
     # Set up defaults in case the server is not a slave
     $data->{relay_log_space} = 0;
-    $data->{slave_running}   = 0;
-    $data->{slave_stopped}   = 0;
+    $data->{slave_io_running}   = 0;
+    $data->{slave_sql_running}   = 0;
+    $data->{seconds_behind_master}   = 0;
+    $data->{Slave_open_temp_tables}   = 0;
+    $data->{Slave_retried_transactions}   = 0;
 
     # Set up defaults in case binlog is not enabled
     $data->{ma_binlog_size} = 0;
