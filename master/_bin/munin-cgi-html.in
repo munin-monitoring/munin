@@ -243,6 +243,10 @@ if (! defined $id) {
 
 	$template_params{CATEGORIES} = $categories;
 
+	$template_params{PATH} = [
+		{ } , # XXX - Template says first args has to be empty
+	];
+
 
 } elsif ($type eq "service") {
 	# Emit service template
