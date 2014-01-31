@@ -184,6 +184,10 @@ if ($path eq "") {
 
 } elsif ($path eq "problems.html") {
 	# Emit problem template
+
+	$template_filename = "munin-problemview.tmpl";
+
+
 	goto RENDERING;
 }
 
