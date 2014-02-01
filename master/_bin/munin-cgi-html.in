@@ -189,6 +189,19 @@ while (new CGI::Fast) {
 
 
 		goto RENDERING;
+	} elsif ($path =~ /^([^\/])+-(day|month|week|year)\.html$/) {
+		# That's a category URL
+		$template_filename = 'munin-categoryview.tmpl';
+
+		my $category = $1;
+		my $time = $2;
+
+		$template_params{PATH} = [
+		{ } , # XXX - Template says first args has to be empty
+		{ "pathname" => "Category", },
+		];
+
+		goto RENDERING;
 	}
 
 
