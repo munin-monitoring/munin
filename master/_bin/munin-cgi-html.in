@@ -179,16 +179,12 @@ while (new CGI::Fast) {
 		}
 
 		# TODO - We still have to write the bottom navigation links
-
-		goto RENDERING;
-
 	} elsif ($path eq "problems.html") {
 		# Emit problem template
 
 		$template_filename = "munin-problemview.tmpl";
 
-
-		goto RENDERING;
+		# TODO - Create the model (problem)
 	} elsif ($path =~ /^([^\/])+-(day|month|week|year)\.html$/) {
 		# That's a category URL
 		$template_filename = 'munin-categoryview.tmpl';
@@ -201,11 +197,13 @@ while (new CGI::Fast) {
 		{ "pathname" => "Category", },
 		];
 
-		goto RENDERING;
+		# TODO - Create the model (category)
 	}
 
+	# Handle normal pages only if not handled
+	goto RENDERING unless $template_filename;
 
-	# Handle normal pages, remove an eventual [/index].html
+	# Remove an eventual [/index].html
 	$path =~ s/(\/index)?\.html$//;
 
 	my $sth_url = $dbh->prepare_cached("SELECT id, type FROM url WHERE path = ?");
