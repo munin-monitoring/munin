@@ -1542,10 +1542,9 @@ sub show {
 	if $graph_name =~ /wsrep_/ && $data->{_galera_disabled};
 
     for my $ds (@{$graph->{data_sources}}) {
-        die "no name in ds in graph '$graph_name' for '$ds'" unless defined $ds->{name};
-        my $name = $ds->{name};
-        printf "%s.value %s\n",
-            clean_fieldname($name), $data->{$name} unless not defined $data->{$name};
+	printf "%s.value %s\n",
+	    clean_fieldname($ds->{name}),
+	    defined $data->{$ds->{name}} ? $data->{$ds->{name}} : 'U';
     }
 
     return 0;
