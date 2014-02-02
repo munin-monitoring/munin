@@ -35,6 +35,7 @@ Run from web server
    
 * :ref:`munin-cgi-html` is used to provide html pages on demand.
 * :ref:`munin-cgi-graph` is used to provide graph images on demand.
+* :ref:`munin-cgi-datafile` is used to provide metadata for nodes and plugins on json format.
 
 Munin node
 ==========
