@@ -308,6 +308,11 @@ man_pages = [
      'Configuration file for the munin node',
      [authors],
      5),
+    ('reference/munin',
+     'munin',
+     'Overview of munin components',
+     [authors],
+     7),
 ]
 
 # If true, show URL addresses after external links.

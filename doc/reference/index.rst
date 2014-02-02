@@ -12,6 +12,7 @@ Man pages
 .. toctree::
    :maxdepth: 1
 
+   munin.rst
    munin-async.rst
    munin-asyncd.rst
    munin-cgi-graph.rst
