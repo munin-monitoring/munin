@@ -48,5 +48,7 @@ OPTIONS
 SEE ALSO
 ========
 
+See :ref:`munin` for an overview over munin.
+
 :ref:`munin-update`, :ref:`munin-graph`, :ref:`munin-limits`,
 :ref:`munin-html`, :ref:`munin.conf`,

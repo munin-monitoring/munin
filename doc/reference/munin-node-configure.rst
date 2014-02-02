@@ -198,3 +198,8 @@ FILES
 * @@CONFDIR@@/plugins/*
 * @@LIBDIR@@/plugins/plugins.history
 * @@LIBDIR@@/plugins/*
+
+SEE ALSO
+========
+
+See :ref:`munin` for an overview over munin.

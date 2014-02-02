@@ -28,3 +28,8 @@ usual Unix man command.
 
 Note that not all plugins are documented yet. If you want to contribute plugin documentation, take a
 look at http://munin-monitoring.org/wiki/munindoc
+
+SEE ALSO
+========
+
+See :ref:`munin` for an overview over munin.
