@@ -318,6 +318,11 @@ man_pages = [
      'Display documentation for installed munin plugins',
      [authors],
      1),
+    ('reference/munin-node-configure',
+     'munin-node-configure',
+     'View and modify which plugins are enabled',
+     [authors],
+     1),
 ]
 
 # If true, show URL addresses after external links.

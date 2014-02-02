@@ -22,6 +22,7 @@ Man pages
    munin-graph.rst
    munin-html.rst
    munin-limits.rst
+   munin-node-configure.rst
    munin-node.rst
    munin-run.rst
    munin-update.rst
