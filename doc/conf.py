@@ -313,6 +313,11 @@ man_pages = [
      'Overview of munin components',
      [authors],
      7),
+    ('reference/munindoc',
+     'munindoc',
+     'Display documentation for installed munin plugins',
+     [authors],
+     1),
 ]
 
 # If true, show URL addresses after external links.

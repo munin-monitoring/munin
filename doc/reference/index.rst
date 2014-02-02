@@ -27,6 +27,7 @@ Man pages
    munin-update.rst
    munin.conf.rst
    munin-node.conf.rst
+   munindoc.rst
 
 Other reference material
 ========================
