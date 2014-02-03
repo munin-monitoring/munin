@@ -593,7 +593,7 @@ my $fields_source =
     'munin' =>
     {
       'label' => 'Quicklists',
-      'info'  => ''
+      'info'  => 'QuickLists'
     }
   },
   # ----------------------------------------------
@@ -1044,7 +1044,7 @@ my $fields_source =
     'munin' =>
     {
       'label' => 'Mlocked',
-      'info'  => ''
+      'info'  => 'Hlocked'
     }
   },
   # ----------------------------------------------
@@ -1057,7 +1057,7 @@ my $fields_source =
     'munin' =>
     {
       'label' => 'Shared memory',
-      'info'  => ''
+      'info'  => 'Shared memory'
     }
   },
   # ----------------------------------------------
@@ -1209,7 +1209,7 @@ my $fields_source =
     'munin' =>
     {
       'label' => 'Direct map 4k',
-      'info'  => ''
+      'info'  => 'Direct map 4k'
     }
   },
   # ----------------------------------------------
@@ -1222,7 +1222,7 @@ my $fields_source =
     'munin' =>
     {
       'label' => 'Direct map 2M',
-      'info'  => ''
+      'info'  => 'Direct map 2M'
     }
   },
   # ----------------------------------------------
@@ -1235,7 +1235,7 @@ my $fields_source =
     'munin' =>
     {
       'label' => 'Direct map 4M',
-      'info'  => ''
+      'info'  => 'Direct map 4M'
     }
   },
   # ----------------------------------------------
@@ -1248,7 +1248,7 @@ my $fields_source =
     'munin' =>
     {
       'label' => 'Direct map 1G',
-      'info'  => ''
+      'info'  => 'Direct map 1G'
     }
   },
   # ---------------------------------------------- slabinfo -------------
@@ -1958,6 +1958,7 @@ sub append_field
   my ($field_name, $target, $name, $label, $info) = @_[0..4];
   unless (exists($fields_source->{$field_name}))
   {
+    $info = "$name" unless defined $info && $info ne '';
     $fields_source->{$field_name} =
     {
       'src'   => { 'target' => $target, 'field' => $name },
@@ -1971,6 +1972,7 @@ sub append_formula_field
   my ($field_name, $formula, $label, $info) = @_[0..4];
   unless (exists($fields_source->{$field_name}))
   {
+    $name = "$formula" unless defined $name && $name ne '';
     $fields_source->{$field_name} =
     {
       'src'   => { 'calculated' => $formula },
