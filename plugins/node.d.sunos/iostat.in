@@ -39,6 +39,7 @@ GPLv2
 =cut
 
 use strict;
+use POSIX;
 
 use constant IOSTATBIN => "/bin/iostat";
 
@@ -118,7 +119,17 @@ while(<IOSTAT>){
 close(IOSTAT);
 
 foreach $dev ('disk','tape','nfs') {
-    print $dev,"w.value ", (defined($bwi{$dev}) ? $bwi{$dev} : "U"), "\n";
-    print $dev,"r.value ", (defined($bri{$dev}) ? $bri{$dev} : "U"), "\n";
+    if (defined $bwi{$dev}) {
+      $bwi{$dev} = floor $bwi{$dev};
+    } else {
+      $bwi{$dev} = "U";
+    }
+    if (defined $bri{$dev}) {
+      $bri{$dev} = floor $bri{$dev};
+    } else {
+      $bri{$dev} = "U";
+    }
+    print $dev,"w.value ", $bwi{$dev}, "\n";
+    print $dev,"r.value ", $bri{$dev}, "\n";
 }
 
