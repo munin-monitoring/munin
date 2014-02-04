@@ -329,7 +329,7 @@ sub populate_stats
             if ( $cmdline !~ /.*$procargs[$i].*/ ) {
                 next STATLINE;
             }
-            if ( length($procuser[$i] > 0 ) ) {
+            if ( length($procuser[$i]) > 0 ) {
                 if ( $cmduid ne $useruid{$procuser[$i]} ) {
                     next STATLINE;
                 }

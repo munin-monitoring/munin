@@ -1,5 +1,128 @@
 -*- text -*-
 
+munin-2.0.14, 2013-05-10
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+- Fixes for plugin.pm state handling
+- Fix the limits for ABSOLUTE
+
+------------------
+Detailed Changelog
+------------------
+
+Kenyon Ralph:
+      plugins/node.d/apc_nis: improve maximum limits
+
+Steve Schnepp:
+      master: fix limits computation for ABSOLUTE
+      Revert "plugins/Plugin.pm: fix bad state file handling"
+
+
+munin-2.0.13, 2013-04-26
+
+-------
+Summary
+-------
+
+Bugfix & perf release.
+
+- Fixes for munin-async
+- Enhanced perf for munin-html
+- Relaxed the timeout for munin-node
+  2.0.12 fixed the timeout code. But it had a nasty side-effect as the timeout
+  setting is shared for global timeout and plugin timout. This version
+  decouples both by introducing a new global_timeout munin-node.conf variable
+  that defaults to 15 min.
+
+
+Closes: #775, #947, #1267, D:558800
+
+------------------
+Detailed Changelog
+------------------
+
+Jens Holzkämper:
+      different state files for cron job & as plugin
+
+Kenyon Ralph:
+      ntp_: rewrite plugin to support IPv6
+      ntp_states: decrease timeouts so DNS queries don't cause node timeout
+      ntp_states: don't use this silly plugin loading method
+      node.d/ntp_states: improve compatibility with older perls
+
+Kim B. Heino:
+      plugin/diskstats: fix negative stats, relax limits
+      plugins/http_loadtime: more wget/time fixes
+      plugins/lpstat: fix autodetection
+      plugins/snmp__if_multi: prefer ifAlias for alias name
+      plugins/postfix_mailstats: support proxy-rejected (amavis) log lines
+      asyncd: add more signal handlers.
+
+Steve Schnepp:
+      master: whitespace fix in Utils.pm
+      master: avoid having 2 concurrent $htmlconfig
+      master: undef the config pre-reload (frees mem)
+      master: RAM usage for $cache
+      master: remove weaken on storable::read
+      master: remove auto_weaken()
+      contrib: add a test for memory leaks
+      contrib: complete test with Storable dump/load
+      plugins: add doc about conntrack
+      plugins: use $PATH for external commands in shell
+      plugins/postfix_mailstats: using a per-minute graph
+      plugins/snmp_if: replace 32b counters by 64b ones
+      node: set the global timeout to 15 min
+      node: add timeout documentation in sample conf
+      master: add --debug to munin-graph
+      master: fix end date when predicting
+      plugins/Plugin.pm: fix a security issue on state
+      plugins/Plugin.pm: fix bad state file handling
+      p/http_loadtime: fix failure on FreeBSD
+      p/http_loadtime: do not reuse $TMPDIR
+      dev_scripts: run should only run executable files
+      node: add a lock to spoolreader
+      node: update doc to show negative args
+
+Stig Sandbeck Mathisen:
+      Use a more efficient sort on the list of nodes
+
+
+munin-2.0.12, 2013-03-21
+
+-------
+Summary
+-------
+
+Bugfix-only release.
+
+- Fixed TLS/SSL transport
+- Fixed extra logging
+
+Closes: #1251, #1258, D:699803, D:689291, D:687912
+
+------------------
+Detailed Changelog
+------------------
+
+Bjørn Ruberg:
+      plugins/bonding_err_: adjust for newer kernels
+ 
+Steve Schnepp:
+      node: don't ignore timeout config option
+      plugins/apt: fix plugin statedir for cron
+      html: fix bug introduced by 1aec747c10
+      graph: remove all extra INFO messages
+      plugins/proc: fix bug in selecting via uid
+      dev_scripts: remove warnings
+      graph: remote superfluous -T in cmdline
+      master: fix TLS enabled updates
+
+
 munin-2.0.11.1, 2013-02-09
 
 Ironically, asyncd is broken in .11, as a typo makes it uncompilable.

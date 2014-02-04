@@ -624,6 +624,10 @@ sub _node_read_single {
 sub _node_read_fast {
 	my ($self) = @_;
 
+	# We cannot bypass the IO if using TLS
+	# so just reverting to normal mode.
+	return _node_read(@_) if $self->{tls};
+
 	# Disable Buffering here, to be able to use sysread()
 	local $| = 1;
 

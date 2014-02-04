@@ -1,6 +1,4 @@
-package Munin::Master::GraphOld;
-
-# -*- cperl -*-
+package Munin::Master::GraphOld;  # -*- cperl -*-
 
 =begin comment
 
@@ -10,7 +8,7 @@ without making it object oriented yet.  The non "old" module will
 feature propper object orientation like munin-update and will have to
 wait until later.
 
-Copyright (C) 2002-2010 Jimmy Olsen, Audun Ytterdal, Kjell Magne
+Copyright (C) 2002-2013 Jimmy Olsen, Audun Ytterdal, Kjell Magne
 Øierud, Nicolai Langfeldt, Linpro AS, Redpill Linpro AS and others.
 
 This program is free software; you can redistribute it and/or
@@ -25,8 +23,6 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-$Id$
 
 =end comment
 
@@ -53,6 +49,7 @@ use Text::ParseWords;
 # For UTF-8 handling (plugins are assumed to use Latin 1)
 if ($RRDs::VERSION >= 1.3) { use Encode; }
 
+use Munin::Master;
 use Munin::Master::Logger;
 use Munin::Master::Utils;
 use Munin::Common::Defaults;
@@ -161,9 +158,6 @@ my $only_fqn = '';
 
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
 
-# RRD param for RRDCACHED_ADDRESS
-my @rrdcached_params;
-
 my $running     = 0;
 my $max_running = 6;
 my $do_fork     = 1;
@@ -248,6 +242,7 @@ sub graph_startup {
     # NOTE!  Some of these options are available in graph_main too
     # if you make changes here, make them there too.
 
+    my $debug;
     &print_usage_and_exit
         unless GetOptions (
                 "force!"        => \$force_graphing,
@@ -280,7 +275,8 @@ sub graph_startup {
                 "cron!"         => \$cron,
                 "fork!"         => \$do_fork,
                 "n=n"           => \$max_running,
-                "help"          => \$do_usage
+                "help"          => \$do_usage,
+                "debug!"        => \$debug,
         );
 
     if ($do_version) {
@@ -307,17 +303,6 @@ sub graph_startup {
     my $palette = &munin_get($config, "palette", "default");
 
     $max_running = &munin_get($config, "max_graph_jobs", $max_running);
-
-    if ($config->{"rrdcached_socket"}) { 
-	    if ($RRDs::VERSION >= 1.3){
-		# Using the RRDCACHED_ADDRESS environnement variable, as
-                # it is way less intrusive than the command line args.
-                $ENV{RRDCACHED_ADDRESS} = $config->{"rrdcached_socket"};
-	    } else { 
-		    ERROR "[ERROR] RRDCached feature ignored: RRD version must be at least 1.3. Version found: " . $RRDs::VERSION; 
-	    }
-    }
-
 
     if ($max_running == 0) {
         $do_fork = 0;
@@ -356,7 +341,7 @@ sub graph_main {
     # The loaded $config is stale within 5 minutes.
     # So, we need to reread it when this happens.
     $config = munin_readconfig_part('datafile');
-   
+
     # Reset an eventual custom size
     $size_x 	    = undef;
     $size_y         = undef;
@@ -405,15 +390,9 @@ sub graph_main {
         autoflush $STATS 1;
     }
 
-    INFO "Starting munin-graph";
-
     process_work(@limit_hosts);
 
     $graph_time = sprintf("%.2f", (Time::HiRes::time - $graph_time));
-
-    INFO "Munin-graph finished ($graph_time sec)";
-
-    print $STATS "GT|total|$graph_time\n" unless $skip_stats;
 
     rename(
         "$config->{dbdir}/munin-graph.stats.tmp",
@@ -1002,7 +981,9 @@ sub process_service {
 	}
 	# Here it is OK to flush the rrdcached, since we'll flush it anyway
 	# with graph
-        my $update = RRDs::last(@rrdcached_params, $filename);
+	my (@update) = ( $filename );
+	prepend_rrdc( \@update );
+        my $update = RRDs::last( @update );
         $update = 0 if !defined $update;
         if ($update > $lastupdate) {
             $lastupdate = $update;
@@ -1012,14 +993,14 @@ sub process_service {
         my $rrdfield = munin_get($field, "rrdfield", "42");
 
         my $single_value = $force_single_value || single_value($service);
-	
+
 	# XXX - single_value is wrong for some multigraph, disabling it for now
 	$single_value = 0;
 
         my $has_negative = munin_get($field, "negative");
 
         # Trim the fieldname to make room for other field names.
-	
+
         $rrdname = &get_field_name($fname);
 
         reset_cdef($service, $rrdname);
@@ -1416,17 +1397,21 @@ sub process_service {
 		push @complete, "--lower-limit", $lower_limit;
 	}
 
-	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
+	prepend_rrdc( \@complete );
+
+	DEBUG "\n\nrrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n";
+
 	$nb_graphs_drawn ++;
-        RRDs::graph(@rrdcached_params, @complete);
+
+        RRDs::graph( @complete );
         if (my $ERROR = RRDs::error) {
             ERROR "[RRD ERROR] Unable to graph $picfilename : $ERROR";
             # ALWAYS dumps the cmd used when an error occurs.
             # Otherwise, it will be difficult to debug post-mortem
-            ERROR "[RRD ERROR] rrdtool 'graph' '" . join("' \\\n\t'", @rrdcached_params, @complete) . "'\n";
+            ERROR "[RRD ERROR] rrdtool 'graph' '" . join("' \\\n\t'", @complete) . "'\n";
         }
         elsif (!-f $picfilename) {
-		ERROR "[RRD ERROR] rrdtool graph did not generate the image (make sure there are data to graph).\n";
+	    ERROR "[RRD ERROR] rrdtool graph did not generate the image (make sure there are data to graph).\n";
         }
         else {
 
@@ -1453,7 +1438,7 @@ sub process_service {
     if (munin_get_bool($service, "graph_sums", 0)) {
         foreach my $time (keys %sumtimes) {
             my $picfilename = get_picture_filename($service, $time, 1);
-	    INFO "Looking into drawing $picfilename";
+	    DEBUG "Looking into drawing $picfilename";
             (my $picdirname = $picfilename) =~ s/\/[^\/]+$//;
             next unless ($draw{"sum" . $time});
             my @rrd_sum;
@@ -1543,7 +1528,9 @@ sub process_service {
             munin_mkdir_p($picdirname, oct(777));
 
 	    $nb_graphs_drawn ++;
-            RRDs::graph(@rrdcached_params, @rrd_sum);
+
+	    prepend_rrdc( \@rrd_sum );
+            RRDs::graph( @rrd_sum );
 
             if (my $ERROR = RRDs::error) {
                 ERROR "[RRD ERROR(sum)] Unable to graph "
@@ -1558,7 +1545,7 @@ sub process_service {
     } # if graph_sums
 
     $service_time = sprintf("%.2f", (Time::HiRes::time - $service_time));
-    INFO "[INFO] Graphed service $skeypath ($service_time sec for $nb_graphs_drawn graphs)";
+    DEBUG "[DEBUG] Graphed service $skeypath ($service_time sec for $nb_graphs_drawn graphs)";
     print $STATS "GS|$service_time\n" unless $skip_stats;
 
     foreach (@added) {
@@ -1602,8 +1589,8 @@ sub handle_trends {
 
         if (defined $service->{$fieldname}{'colour'}) {
             $colour = "$service->{$fieldname}{'colour'}66";
-        }                                                                                                                                                    
-                                                                                                                                                             
+        }
+
         my $cdef = "";
         if (defined $service->{$fieldname}{'cdef'}) {
             $cdef = "cdef";
@@ -1636,7 +1623,6 @@ sub handle_trends {
 
     # If pinpointing, --end should *NOT* be changed
     if (! $pinpoint) {
-        if (time - 300 < $lastupdate) {
             if (@added) { # stop one period earlier if it's a .sum or .stack
                 push @complete, "--end",
                     (int(($enddate-$resolutions{$time}) / $resolutions{$time})) * $resolutions{$time};
@@ -1644,7 +1630,6 @@ sub handle_trends {
                 push @complete, "--end",
                     (int($enddate / $resolutions{$time})) * $resolutions{$time};
             }
-        }
     }
 
     return @complete;

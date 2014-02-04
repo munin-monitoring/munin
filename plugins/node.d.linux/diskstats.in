@@ -195,6 +195,13 @@ sub calculate_values {
     my $average_rd_wait_in_sec = $read_ios  ? $rd_ticks / $read_ios / 1000  : 0;
     my $average_wr_wait_in_sec = $write_ios ? $wr_ticks / $write_ios / 1000 : 0;
 
+    if ( $average_rd_wait_in_sec < 0 ) {
+      $average_rd_wait_in_sec = 0;
+    }
+    if ( $average_wr_wait_in_sec < 0 ) {
+      $average_wr_wait_in_sec = 0;
+    }
+
     my $average_rd_rq_size_in_kb =
       $read_ios ? $rd_sectors * $bytes_per_sector / 1000 / $read_ios : 0;
     my $average_wr_rq_size_in_kb =
@@ -837,13 +844,13 @@ avgrdwait.label Read IO Wait time
 avgrdwait.type GAUGE
 avgrdwait.info Average wait time for a read I/O from request start to finish (includes queue times et al)
 avgrdwait.min 0
-avgrdwait.warning 0:1
+avgrdwait.warning 0:3
 avgrdwait.draw LINE1
 avgwrwait.label Write IO Wait time
 avgwrwait.type GAUGE
 avgwrwait.info Average wait time for a write I/O from request start to finish (includes queue times et al)
 avgwrwait.min 0
-avgwrwait.warning 0:1
+avgwrwait.warning 0:3
 avgwrwait.draw LINE1
 
 EOF

@@ -153,6 +153,7 @@ sub html_startup {
 sub get_config {
 	my $use_cache = shift;
 	# usecache should match being in a cgi ($ENV{SCRIPT_NAME})
+	$htmlconfig = undef; # avoid double ram usage
 	if ($use_cache) {
 		$htmlconfig = generate_config($use_cache);
 	} else {

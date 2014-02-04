@@ -12,16 +12,16 @@ usage() {
 }
 
 
-if [ "$1" == "" ]; then
+if [ -z "$1" ]; then
     usage
 fi
 
 
-RUN=$(find $DESTDIR -name $1)
+RUN=$(find $DESTDIR -name $1 -type f -executable)
 shift
 
-if [ "$RUN" == "" ]; then
+if [ -z "$RUN" ]; then
     usage
 fi
 
-env PERL5LIB=$DESTDIR/$PERLSITELIB $RUN "$@"
+env PERL5LIB=$DESTDIR$PERLSITELIB $RUN "$@"

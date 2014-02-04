@@ -77,13 +77,13 @@ if ($ARGV[0] eq 'autoconf') {
         print "no (lpstat not found)\n";
         exit 0;
     }
-    if( ! open(LPSTAT_R, "$lpstat $host -r 2>/dev/null |") ) {
+    if( ! open(LPSTAT_R, "$lpstat $host -v 2>/dev/null |") ) {
         print "no (could not execute lpstat)\n";
         exit 0;
     }
     $_ = <LPSTAT_R>;
-    if (! m/is running/mi) {
-        print "no (scheduler is not running)\n";
+    if (! m/device for /mi) {
+        print "no (no printers configured)\n";
         exit 0;
     }
     print "yes\n";

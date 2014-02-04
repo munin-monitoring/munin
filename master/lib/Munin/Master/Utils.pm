@@ -87,7 +87,6 @@ our (@ISA, @EXPORT);
 	   'exit_if_run_by_super_user',
 	   'look_for_child',
 	   'wait_for_remaining_children',
-	   'auto_weaken',
 	   );
 
 my $VERSION = $Munin::Common::Defaults::MUNIN_VERSION;
@@ -124,88 +123,6 @@ my @COPY_FIELDS    = ("label", "draw", "type", "rrdfile", "fieldname", "info");
 my @dircomponents = split('/',$0);
 my $me = pop(@dircomponents);
 
-
-# `auto_weaken` performs a breadth-first descend of all strong references to
-# references (possible cycles). If it encounters a reference to an item it has
-# already seen earlier it will weaken that reference.
-sub auto_weaken {
-	my $items = 0;
-	my $weakened = 0;
-	my %seen = map{ $_ => 1 } @_;
-	my @todo = @_;
-	while (my $cur = shift @todo) {
-		$items++;
-		if (ref($cur) eq 'HASH') {
-			for my $key (keys %$cur) {
-				next unless ref $cur->{$key};
-				next if isweak $cur->{$key};
-				my $tgt = $cur->{$key};
-				if ($seen{$tgt}) {
-					$weakened++;
-					weaken $cur->{$key};
-				} else {
-					$seen{$tgt} = 1;
-					push @todo, $tgt;
-				}
-			}
-		} elsif (ref($cur) eq 'ARRAY') {
-			for (my $i = 0 ; $i < @$cur ; $i++) {
-				next unless ref $cur->[$i];
-				next if isweak $cur->[$i];
-				my $tgt = $cur->[$i];
-				if ($seen{$tgt}) {
-					$weakened++;
-					weaken $cur->[$i];
-				} else {
-					$seen{$tgt} = 1;
-					push @todo, $tgt;
-				}
-			}
-		} elsif (ref($cur) eq 'SCALAR') {
-			next unless ref $$cur;
-			next if isweak $cur;
-			my $tgt = $$cur;
-			if ($seen{$tgt}) {
-				$weakened++;
-				weaken $cur;
-			} else {
-				$seen{$tgt} = 1;
-				push @todo, $tgt;
-			}
-		}
-	}
-	# print "items: $items, weakened: $weakened\n";
-	return @_;
-}
-
-# based on auto_weaken search, but only cares about #%#parents
-sub weaken_config {
-    my @todo = @_;
-    while (my $cur = shift @todo) {
-	if (ref($cur) eq 'HASH') {
-	    for my $key (keys %$cur) {
-		next unless ref $cur->{$key};
-		next if isweak $cur->{$key};
-		if ($key eq '#%#parent') {
-		    weaken($cur->{$key});
-		    next;
-		}
-		push @todo, $cur->{$key};
-	    }
-	} elsif (ref($cur) eq 'ARRAY') {
-	    for (my $i = 0 ; $i < @$cur ; $i++) {
-		next unless ref $cur->[$i];
-		next if isweak $cur->[$i];
-		push @todo, $cur->[$i];
-	    }
-	} elsif (ref($cur) eq 'SCALAR') {
-	    next unless ref $$cur;
-	    next if isweak $cur;
-	    push @todo, $$cur;
-	}
-    }
-    return @_;
-}
 
 sub munin_draw_field {
     my $hash   = shift;
@@ -361,7 +278,6 @@ sub munin_readconfig_storable {
         DEBUG "[DEBUG] munin_readconfig: found Storable version of $file, using it";
         $part = Storable::fd_retrieve($CFG_STORABLE); 
         close ($CFG_STORABLE); 
-	weaken_config($part);
     }
 
     return $part; 
@@ -955,9 +871,6 @@ sub munin_writeconfig_storable {
 
 	DEBUG "[DEBUG] Writing state to $datafilename";
 
-	# XXX - Refs should be weakened on construction
-	auto_weaken($data);
-
 	munin_write_storable($datafilename, $data);
 }
 
@@ -1053,6 +966,7 @@ sub munin_readconfig_part {
     	my @stat = stat($filename);
 	if ($config_parts->{$what}{timestamp} < $stat[9]) {
 	    # could use _raw if we wanted to read non-storable fallback
+	    $config_parts->{$what}{config} = undef; # Unalloc RAM for old config, since it will be overriden anyway.
 	    $part = munin_readconfig_storable($filename);
 	    $config_parts->{$what}{timestamp} = $stat[9];
 	    $doupdate = 1;

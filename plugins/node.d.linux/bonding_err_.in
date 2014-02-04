@@ -96,7 +96,7 @@ BONDINGIF=$(echo $MYSELF | sed "s/^$FILENAME//")
 grep "^Slave Interface:" ${PROCDIR}/${BONDINGIF} | while read a b if; do
   fieldname=$(clean_fieldname "$if")
   echo -n "if_${fieldname}.value "
-  grep -A 2 "^Slave Interface: ${if}" ${PROCDIR}/${BONDINGIF} | grep "Link Failure Count:" | cut -d " " -f 4
+  grep -A 4 "^Slave Interface: ${if}" ${PROCDIR}/${BONDINGIF} | grep "Link Failure Count:" | cut -d " " -f 4
 done
 
 

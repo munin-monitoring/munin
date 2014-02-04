@@ -34,6 +34,7 @@ my $problems;
 sub generate_config {
     my $use_cache = shift;
     if ($use_cache) {
+	$cache = undef; # undef, for RAM usage
 	# if there is some cache, use it (for cgi)
     	my $newcache = munin_readconfig_part('htmlconf', 1);
 	if (defined $newcache) {
@@ -55,6 +56,7 @@ sub generate_config {
     $limits = munin_readconfig_part("limits");
     # if only limits changed, still update our cache
     if ($rev != munin_configpart_revision()) {
+	$cache = undef; # undef, for RAM usage
 	$cache = get_group_tree($config);
     }
 
@@ -481,7 +483,7 @@ sub generate_service_templates {
     }
 
     my $imgpath = $root_path;
-    if ( $config->{graph_strategy} eq 'cgi' ) {
+    if ( munin_get($config, "graph_strategy", "cron") eq "cgi" ) {
 	$imgpath = $config->{'cgiurl_graph'};
     }
 
@@ -505,7 +507,8 @@ sub generate_service_templates {
     }
 
 	for my $scale (@times) {
-		if (my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale))) {
+		my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale));
+		if ($w && $h) {
 			$srv{"img" . $scale . "width"}  = $w;
 			$srv{"img" . $scale . "height"} = $h;
 		}
@@ -516,10 +519,11 @@ sub generate_service_templates {
         $srv{imgyearsum} = "$srv{node}-year-sum.png";
 
         for my $scale (["week", "year"]) {
-			if (my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale, 1))) {
-				$srv{"img" . $scale . "sumwidth"}  = $w;
-				$srv{"img" . $scale . "sumheight"} = $h;
-			}
+		my ($w, $h) = get_png_size(munin_get_picture_filename($service, $scale, 1));
+		if ($w && $h) {
+			$srv{"img" . $scale . "sumwidth"}  = $w;
+			$srv{"img" . $scale . "sumheight"} = $h;
+		}
         }
     }
 
@@ -612,8 +616,11 @@ sub get_peer_nodes {
     my $me        = munin_get_node_name($hash);
     my $pchildren = munin_get_children($parent);
 
-    foreach my $peer (sort {munin_get_node_name($b) cmp munin_get_node_name($a)}
-        @$pchildren) {
+    my @peers = map { $_->[0] }
+        sort { $a->[1] cmp $b->[1] }
+        map { [ $_, munin_get_node_name($_) ] } @$pchildren;
+
+    foreach my $peer (@peers) {
         next unless defined $peer and ref($peer) eq "HASH";
         next
           if defined $category
@@ -719,7 +726,7 @@ sub get_png_size {
     my $width    = undef;
     my $height   = undef;
 
-	return (undef, undef) if $config->{graph_strategy} eq "cgi";
+    return (undef, undef) if (munin_get($config, "graph_strategy", "cron") eq "cgi") ;
 
     if (open(my $PNG, '<', $filename)) {
         my $incoming;
