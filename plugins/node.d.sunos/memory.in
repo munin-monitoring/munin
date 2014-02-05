@@ -103,11 +103,27 @@ function scale(value) {
   else value /= 1024 * 1024;
   return value;
 }
-/^Memory/ {
+# Memory: 8184M real, 6147M free, 992M swap in use, 13G swap free
+/^Memory: .* real, .* free, .* swap in use, .* swap free/ {
+  real  = scale($2);
+  free  = scale($4);
+  swapu = scale($6);
+  swapf = scale($10);
+
+  memused = real - free
+  swapt = swapu + swapf
+
+  print "real.value", real
+  print "used.value", memused
+  print "swapt.value", swapt
+  print "swapu.value", swapu
+}
+# Memory: 8190M phys mem, 1827M free mem, 8205M swap, 8192M free swap
+/^Memory: .* phys mem, .* free mem, .* swap, .* free swap/ {
   real  = scale($2);
   free  = scale($5);
   swapt = scale($8);
-  swapf = scale($11);
+  swapf = scale($10);
 
   memused = real - free
   swapu = swapt - swapf
