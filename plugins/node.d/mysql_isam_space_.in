@@ -48,7 +48,7 @@ munin-node.
 =cut
 
 
-my $DB = `basename $0 | sed 's/^mysql_isam_space_//g' | tr '_' '-'` ;
+my $DB = `basename $0 | sed 's/^mysql_isam_space_//g'` ;
 chomp $DB;
 my $STATEFILE = $ENV{'statefile'} || "$ENV{MUNIN_PLUGSTATE}/plugin-mysql_isam_space.state";
 my $MYSQLSHOW = $ENV{'mysqlshow'} || `which mysqlshow`;
@@ -117,7 +117,7 @@ sub read_statefile
 
 	while (<IN>)
 	{
-		tr/æøå/eoa/;
+		tr/ï¿½ï¿½ï¿½/eoa/;
 		if (/^$DB\.([^\s]+)\s+([\d\.]+)\s*$/)
 		{
 			$tables->{$1} = $2;
@@ -176,7 +176,7 @@ sub fetch_state_from_mysql
 
 	foreach $line (@mysql_status)
 	{
-		$line =~ tr/æøå/eoa/;
+		$line =~ tr/ï¿½ï¿½ï¿½/eoa/;
 		if ($line =~ /^\|\s+([^\|\s]+)\s+\|\s+([^\|\s]+)\s+\|/)
 		{
 			next if ($1 eq "Databases");
