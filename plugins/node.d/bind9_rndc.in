@@ -63,6 +63,7 @@ use strict;
 my $rndc = defined($ENV{rndc}) ? $ENV{rndc} : '/usr/sbin/rndc';
 my $querystats = $ENV{querystats} || '/var/run/named.stats';
 my %IN;
+my %QIN;
 
 # attempt to create log file if it doesn't exist
 if ( ! -r $querystats ) {
@@ -139,6 +140,18 @@ if ($line eq '++ Incoming Requests ++') {
            rejections => 0,
           );
 
+    # jump to incoming queries section
+    while ($line ne '++ Incoming Queries ++') {
+        $line = <$stats>;
+        chomp $line;
+    }
+    while ($line = <$stats>) {
+        chomp $line;
+        last if $line =~ /^\+\+/;
+        next unless $line =~ /^\s+(\d+) (.*)$/;
+        $QIN{$2} = $1;
+    }
+
     # jump to server stats section
     while ($line ne '++ Name Server Statistics ++') {
         $line = <$stats>;
@@ -193,15 +206,28 @@ if ($line eq '++ Incoming Requests ++') {
 close($stats);
 
 if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
+    print "multigraph bind_in\n";
+    print "graph_title DNS Queries incoming by type\n";
+    print "graph_vlabel queries / \${graph_period}\n";
+    print "graph_category BIND\n";
+    for my $key (keys %QIN) {
+        print "query_$key.label $key\n";
+        print "query_$key.type DERIVE\n";
+        print "query_$key.min 0\n";
+    }
+
+    print "multigraph bind_stat\n";
     print "graph_title DNS Queries by status\n";
     print "graph_vlabel queries / \${graph_period}\n";
     print "graph_category BIND\n";
-
     for my $key (keys %IN) {
         print "query_$key.label $key\n";
         print "query_$key.type DERIVE\n";
         print "query_$key.min 0\n";
     }
 } else {
+    print "multigraph bind_in\n";
+    print "query_$_.value $QIN{$_}\n" for keys %QIN;
+    print "multigraph bind_stat\n";
     print "query_$_.value $IN{$_}\n" for keys %IN;
 }
