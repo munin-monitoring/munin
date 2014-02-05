@@ -56,7 +56,7 @@ if $DF -P -l -i $only >/dev/null 2>&1; then
 	DF="$DF -P -l -i $only"
 	FSNAME=6
 else
-	DF="$DF -oi $only 2>/dev/null"
+	DF="$DF -F ufs -oi $only 2>/dev/null"
 	FSNAME=5
 	PCNT=4
 fi
@@ -97,7 +97,7 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-eval $DF | $TAIL +2 | while read dev size used avail pct mnt; do
+eval $DF | $TAIL +2 | while read dev two three four five six; do
     case $PCNT in
 	5) pct=$five;;
 	4) pct=$four;;
