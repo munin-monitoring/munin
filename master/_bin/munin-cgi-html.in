@@ -193,8 +193,8 @@ while (new CGI::Fast) {
 		my $time = $2;
 
 		$template_params{PATH} = [
-		{ } , # XXX - Template says first args has to be empty
-		{ "pathname" => "Category", },
+			{ } , # XXX - Template says first args has to be empty
+			{ "pathname" => "Category", },
 		];
 
 		# TODO - Create the model (category)
