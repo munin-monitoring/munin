@@ -1,3 +1,11 @@
+munin (2.1.5-1) UNRELEASED; urgency=medium
+
+  * New upstream version (development branch)
+  * Replace dependency to ttf-dejavu by fonts-dejavu due to package renaming
+    (Closes: #737957).
+
+ -- Matthias Schmitz <matthias@sigxcpu.org>  Sat, 08 Feb 2014 00:14:33 +0100
+
 munin (2.1.4-1) experimental; urgency=medium
 
   [ Matthias Schmitz ]
