@@ -2,7 +2,10 @@ munin (2.0.19-4) UNRELEASED; urgency=low
 
   [ Matthias Schmitz ]
   * Add configuration file for apache 2.4. (Closes: XXXXXX)
-  * Depends: libcgi-fast-perl as munin-cgi-graph needs this for zoomable graphs.
+  * Depends: libcgi-fast-perl as munin-cgi-graph needs this for zoomable
+    graphs. (Closes: #737135)
+  * Replace dependency to ttf-dejavu by fonts-dejavu due to package renaming
+    (Closes: #737957).
 
  -- Holger Levsen <holger@debian.org>  Sat, 25 Jan 2014 23:50:54 +0100
 
