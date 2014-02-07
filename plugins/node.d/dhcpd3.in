@@ -141,8 +141,8 @@ if($ARGV[0] and $ARGV[0] eq "config") {
 	print "$network.min 0\n";
 	print "$network.max " . $limits{$network} ."\n"
 	  if ($limits{$network} > 0);
-	my $warn = int($limits{$network} * 0.9);
-	my $crit = int($limits{$network} * 0.95);
+	my $warn = int($limits{$network} * $WARNING);
+	my $crit = int($limits{$network} * $CRITICAL);
 	print "$network.warning $warn\n" if $warn;
 	print "$network.critical $crit\n" if $crit;
     }
@@ -170,14 +170,13 @@ sub parseconfig {
 	}
 	if($name && /^\}$/) {
 	    print "# DEBUG: End of subnet... NO RANGE?\n" if $DEBUG;
-	    delete($leases{$name});
+	    delete($leases{$name}) unless $limits{$name} > 0;
 	    $name = "";
 	}
-	if($name && /range\s+((?:\d+\.){3}\d+)\s+((?:\d+\.){3}\d+)/) {
+	if($name && /^\s*range\s+((?:\d+\.){3}\d+)\s+((?:\d+\.){3}\d+)/) {
 	    print "# DEBUG: range $1 -> $2\n" if $DEBUG;
 	    $limits{$name} += &rangecount($1, $2);
 	    print "# DEBUG: limit for $name is " . $limits{$name} . "\n" if $DEBUG;
-	    $name = "";
 	}
 	if(/^include \"([^\"]+)\";/) {
 	    my $includefile = $1;

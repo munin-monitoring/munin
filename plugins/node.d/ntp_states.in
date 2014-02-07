@@ -55,7 +55,8 @@ my %stateval = (
                  "outlyer"   => 4,
                  "candidate" => 5,
                  "sys.peer"  => 6,
-                 "pps.peer"  => 7
+                 "pps.peer"  => 7,
+                 "insane"    => 8
                );
 my %peers_condition;
 my $resolver = Net::DNS::Resolver->new;
@@ -89,7 +90,11 @@ sub make_hash {
                                 $condition_str = "falsetick";
                         }
 
-                        $peers_condition{$peer_addr} = $stateval{$condition_str};
+                        if (exists $stateval{$condition_str}) {
+                          $peers_condition{$peer_addr} = $stateval{$condition_str};
+                        } else {
+                          $peers_condition{$peer_addr} = 9;
+                        }
                 }
         }
 }

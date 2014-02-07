@@ -44,20 +44,6 @@ my @times = qw(day week month year);
 while (new CGI::Fast) {
 	my $path = path_info();
 
-	# Force a trailing / on overview, to enable simpler url handling: it is like in
-	# a subdir from the browser pov
-	if ($path eq "") {
-		print header(
-			-status => 301,
-			-Location => (script_name() . "/"),
-			-Cache_Control => "public, max-age=14400",  # Cache is valid of 1 day
-		);
-		next;
-	}
-
-	# Remove now the leading "/" as *every* path will have it
-	$path =~ s,^/,,;
-
 	# Handle static page now, since there is no need to do any SQL
 	if ($path =~ m/static\/(.+)$/) {
 		# Emit the static page
@@ -95,6 +81,24 @@ while (new CGI::Fast) {
 		);
 		next;
 	}
+
+	# Force either a trailing "/" or ".html" to enable simpler url handling: it is like in
+	# a subdir from the browser pov
+	if ($path eq "" || $path !~ /(\/|\.html)$/) {
+		#if ($path eq "") {
+		print header(
+			-status => 301,
+			-Location => (url(-path_info=>1,-query=>1) . "/"),
+			-Cache_Control => "public, max-age=14400",  # Cache is valid of 1 day
+		);
+		next;
+	}
+
+	# Remove now the leading "/" as *every* path will have it
+	$path =~ s,^/,,;
+
+	# Remove now the ending "/" as *every* dir will have it
+	$path =~ s,/$,,;
 
 	# Ok, now SQL is needed to go further
         use DBI;
@@ -140,136 +144,156 @@ while (new CGI::Fast) {
 
 		my $globalcats = [];
 		while (my ($_category) = $sth->fetchrow_array) {
-		my %urls = map { ("URL$_" => lc("$_category-$_")) } @times;
-		push @$globalcats, {
-			NAME => $_category,
-			%urls,
-		};
-	}
-	$template_params{GLOBALCATS} = $globalcats;
-}
-
-# Handle all the special pages that are not in the url table, but with fixed urls
-if ($path eq "") {
-	# Emit overview template
-	$template_filename = 'munin-overview.tmpl';
-
-	# Header params
-	###################
-	{
-		$template_params{PATH} = [
-			{ } , # XXX - Template says first args has to be empty
-			{ "pathname" => "Overview", },
-		];
-	}
-
-	# Main page
-	{
-		# Constructing the recursive datastructure.
-		# Note that it is quite naive, and not optimized for speed.
-		my $sth_grp = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ?");
-		my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL");
-		my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ?");
-
-		$template_params{GROUPS} = _get_params_groups($dbh, $sth_grp, $sth_grp_root, $sth_node, undef);
-	}
-
-	# TODO - We still have to write the bottom navigation links
-
-	goto RENDERING;
-
-} elsif ($path eq "problems.html") {
-	# Emit problem template
-	goto RENDERING;
-}
-
-
-# Handle normal pages, remove an eventual .html
-$path =~ s/(index)?\.html$//;
-
-my $sth_url = $dbh->prepare_cached("SELECT id, type FROM url WHERE path = ?");
-$sth_url->execute($path);
-my ($id, $type) = $sth_url->fetchrow_array;
-
-if (! defined $id) {
-	# Not found
-	print header( -status => 404, );
-	next;
-} elsif ($type eq "group") {
-	# Emit group template
-} elsif ($type eq "node") {
-	# Emit node template
-	$template_filename = 'munin-nodeview.tmpl';
-
-	my $sth_category = $dbh->prepare(
-		"SELECT sa.value as graph_category FROM service s
-		INNER JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_category'
-		WHERE s.node_id = ?
-		ORDER BY graph_category");
-	$sth_category->execute($id);
-
-	my $categories = [];
-	while (my ($_category) = $sth_category->fetchrow_array) {
-		my $sth = $dbh->prepare_cached("SELECT s.id, sa_t.value as service_title, u.path AS url
-			FROM service s
-			INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category' AND sa_c.value = ?
-			INNER JOIN service_attr sa_t ON sa_t.id = s.id AND sa_t.name = 'graph_title'
-			INNER JOIN url u ON u.id = s.id AND u.type = 'service'
-			WHERE s.node_id = ?
-			ORDER BY service_title ASC");
-		$sth->execute($_category, $id);
-
-		my $services = [];
-		while (my ($_s_id, $_service_title, $_url) = $sth->fetchrow_array) {
-			my %imgs = map { ("IMG$_" => script_name() . "/../munin-cgi-graph" . lc("/$_url-$_.png")) } @times;
-			push @$services, {
-				NAME => $_service_title,
-				URLX => url_absolutize("$_url.html"),
-				%imgs,
+			my %urls = map { ("URL$_" => url_absolutize(lc("$_category-$_"), 1)) } @times;
+			push @$globalcats, {
+				NAME => $_category,
+				%urls,
 			};
 		}
-
-
-		push @$categories, {
-			NAME => $_category,
-			SERVICES => $services,
-		};
+		$template_params{GLOBALCATS} = $globalcats;
 	}
 
-	$template_params{CATEGORIES} = $categories;
+	# Handle all the special pages that are not in the url table, but with fixed urls
+	if ($path eq "") {
+		# Emit overview template
+		$template_filename = 'munin-overview.tmpl';
+
+		# Header params
+		###################
+		{
+			$template_params{PATH} = [
+				{ } , # XXX - Template says first args has to be empty
+				{ "pathname" => "Overview", },
+			];
+		}
+
+		# Main page
+		{
+			# Constructing the recursive datastructure.
+			# Note that it is quite naive, and not optimized for speed.
+			my $sth_grp = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ?");
+			my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL");
+			my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ?");
+
+			$template_params{GROUPS} = _get_params_groups($dbh, $sth_grp, $sth_grp_root, $sth_node, undef);
+		}
+
+		# TODO - We still have to write the bottom navigation links
+	} elsif ($path eq "problems.html") {
+		# Emit problem template
+
+		$template_filename = "munin-problemview.tmpl";
+
+		# TODO - Create the model (problem)
+	} elsif ($path =~ /^([^\/])+-(day|month|week|year)\.html$/) {
+		# That's a category URL
+		$template_filename = 'munin-categoryview.tmpl';
+
+		my $category = $1;
+		my $time = $2;
+
+		$template_params{PATH} = [
+			{ } , # XXX - Template says first args has to be empty
+			{ "pathname" => "Category", },
+		];
+
+		# TODO - Create the model (category)
+	}
+
+	# Handle normal pages only if not handled
+	goto RENDERING unless $template_filename;
+
+	# Remove an eventual [/index].html
+	$path =~ s/(\/index)?\.html$//;
+
+	my $sth_url = $dbh->prepare_cached("SELECT id, type FROM url WHERE path = ?");
+	$sth_url->execute($path);
+	my ($id, $type) = $sth_url->fetchrow_array;
+
+	if (! defined $id) {
+		# Not found
+		print header( -status => 404, );
+		next;
+	} elsif ($type eq "group") {
+		# Emit group template
+		$template_filename = 'munin-domainview.tmpl';
 
 
-} elsif ($type eq "service") {
-	# Emit service template
-	$template_filename = 'munin-serviceview.tmpl';
+		# Main page
+		{
+			# Constructing the recursive datastructure.
+			# Note that it is quite naive, and not optimized for speed.
+			my $sth_grp = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ?");
+			my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL");
+			my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ?");
 
-	my $sth;
+			# We cheat, as we only only use the sub-groups
+			my $root_group = _get_params_groups($dbh, $sth_grp, $sth_grp_root, $sth_node, undef);
+			$template_params{GROUPS} = $root_group->[0]{GROUPS};
 
-	$sth = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = 'graph_title'");
-	$sth->execute($id);
-	my ($graph_title) = $sth->fetchrow_array();
+			$template_params{PATH} = [
+				{ } , # XXX - Template says first args has to be empty
+				{ "pathname" => "$template_params{GROUPS}[0]{NAME}", },
+			];
 
-	$sth = $dbh->prepare_cached("SELECT n.id, n.name FROM node n INNER JOIN service s ON s.node_id = n.id");
-	$sth->execute($id);
+			# Shows "[ d w m y ]"
+			$template_params{COMPARE} = 1;
+		}
 
-	$sth = $dbh->prepare_cached("SELECT g.name FROM grp g INNER JOIN node n ON n.grp_id = g.id");
-	$sth->execute($id);
-	my ($node_title) = $sth->fetchrow_array();
+	} elsif ($type eq "node") {
+		# Emit node template
+		$template_filename = 'munin-nodeview.tmpl';
 
-	my ($group_title) = $sth->fetchrow_array();
+		my $sth_category = $dbh->prepare(
+			"SELECT sa.value as graph_category FROM service s
+			INNER JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_category'
+			WHERE s.node_id = ?
+			ORDER BY graph_category");
+		$sth_category->execute($id);
 
-	$template_params{PATH} = [
-		{ } , # XXX - Template says first args has to be empty
-		{ "pathname" => "$group_title", },
-		{ "pathname" => "$node_title", },
-		{ "pathname" => "$graph_title", },
-	];
+		my $categories = [];
+		while (my ($_category_name) = $sth_category->fetchrow_array) {
+			push @$categories, _get_params_services($dbh, $_category_name, $id);
+		}
 
-	# Create the params
-	my %service_template_params;
-	for my $t (@times) {
+		$template_params{CATEGORIES} = $categories;
+
+		$template_params{PATH} = [
+			{ } , # XXX - Template says first args has to be empty
+		];
+
+
+	} elsif ($type eq "service") {
+		# Emit service template
+		$template_filename = 'munin-serviceview.tmpl';
+
+		my $sth;
+
+		$sth = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = 'graph_title'");
+		$sth->execute($id);
+		my ($graph_title) = $sth->fetchrow_array();
+
+		$sth = $dbh->prepare_cached("SELECT n.id, n.name FROM node n INNER JOIN service s ON s.node_id = n.id");
+		$sth->execute($id);
+
+		$sth = $dbh->prepare_cached("SELECT g.name FROM grp g INNER JOIN node n ON n.grp_id = g.id");
+		$sth->execute($id);
+		my ($node_title) = $sth->fetchrow_array();
+
+		my ($group_title) = $sth->fetchrow_array();
+
+		$template_params{PATH} = [
+			{ } , # XXX - Template says first args has to be empty
+			{ "pathname" => "$group_title", },
+			{ "pathname" => "$node_title", },
+			{ "pathname" => "$graph_title", },
+		];
+
+		# Create the params
+		my %service_template_params;
+		for my $t (@times) {
 			$service_template_params{"ZOOM$t"} = "";
-			$service_template_params{"IMG$t"} = "$path-$t.png";
+			$service_template_params{"IMG$t"} = script_name() . "/../munin-cgi-graph/" . "$path-$t.png";
 		}
 
 		$template_params{SERVICES} = [ \%service_template_params,];
@@ -286,6 +310,18 @@ RENDERING:
 	my $template = HTML::Template::Pro->new(
 		filename => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/$template_filename",
 	);
+
+	{
+		use Data::Dumper;
+		local $Data::Dumper::Terse = 1;
+		local $Data::Dumper::Sortkeys = 1;
+		local $Data::Dumper::Sparseseen = 1;
+		local $Data::Dumper::Deepcopy = 1;
+		local $Data::Dumper::Indent = 1;
+
+		$template_params{DEBUG} = Dumper(\%template_params);
+	}
+
 
 	$template->param(%template_params);
 
@@ -326,11 +362,11 @@ sub _get_params_groups {
 		$sth->execute($_n_id);
 
 		my $categories = [];
-		while (my ($_category) = $sth->fetchrow_array) {
-			push @$categories, {
-				NAME => $_category,
-				URL => "$_path.html" . "#" . lc("$_category"),
-			};
+		while (my ($_category_name) = $sth->fetchrow_array) {
+			my $category = _get_params_services($dbh, $_category_name, $_n_id);
+			$category->{URLX} = "$_path.html" . "#" . lc("$_category_name");
+			$category->{URL} = $category->{URLX}; # For category in overview
+			push @$categories, $category;
 		}
 
 		push @$groups, {
@@ -338,11 +374,41 @@ sub _get_params_groups {
 			NCATEGORIES => (scalar @$categories), # This is a node.
 			NAME => $_name,
 			URL => "$_path.html",
+			URLX => "$_path.html",
 			GROUPS => [],
 		};
 	}
 
 	return $groups;
+}
+
+sub _get_params_services {
+	my ($dbh, $category_name, $node_id) = @_;
+
+	my $sth = $dbh->prepare_cached("SELECT s.id, sa_t.value as service_title, u.path AS url
+		FROM service s
+		INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category' AND sa_c.value = ?
+		INNER JOIN service_attr sa_t ON sa_t.id = s.id AND sa_t.name = 'graph_title'
+		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
+		WHERE s.node_id = ?
+		ORDER BY service_title ASC");
+	$sth->execute($category_name, $node_id);
+
+	my $services = [];
+	while (my ($_s_id, $_service_title, $_url) = $sth->fetchrow_array) {
+		my %imgs = map { ("IMG$_" => script_name() . "/../munin-cgi-graph" . lc("/$_url-$_.png")) } @times;
+		push @$services, {
+			NAME => $_service_title,
+			URLX => url_absolutize("$_url.html"),
+			%imgs,
+		};
+	}
+
+
+	return {
+		NAME => $category_name,
+		SERVICES => $services,
+	};
 }
 
 sub get_param
@@ -361,6 +427,8 @@ sub get_param
 
 sub url_absolutize
 {
-	my ($url) = @_;
-	return script_name() . "/" . $url;
+	my ($url, $omit_first_slash) = @_;
+	my $url_a = script_name() . "/" . $url;
+	$url_a = substr($url_a, 1) if $omit_first_slash;
+	return $url_a;
 }

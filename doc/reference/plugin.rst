@@ -41,7 +41,7 @@ following fields are used.
 | graph_order        | space separated  | optional | Ensures that the listed datapoints are   |                  |         |
 |                    | list of          |          | displayed in order. Any additional       |                  |         |
 |                    | graph.datapoints |          | datapoints are added in the order of     |                  |         |
-|                    |                  |          | appearance after datapoitns appearing on |                  |         |
+|                    |                  |          | appearance after datapoints appearing on |                  |         |
 |                    |                  |          | this list.                               |                  |         |
 |                    |                  |          |                                          |                  |         |
 |                    |                  |          | This field is also used for "borrowing", |                  |         |
