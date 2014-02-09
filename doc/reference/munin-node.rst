@@ -105,3 +105,8 @@ Example configuration
 
   cidr_allow 127.0.0.0/8
   cidr_allow 192.0.2.129/32
+
+SEE ALSO
+========
+
+See :ref:`munin` for an overview over munin.

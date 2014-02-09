@@ -70,4 +70,6 @@ following command line:
 SEE ALSO
 ========
 
+See :ref:`munin` for an overview over munin.
+
 :ref:`munin-cgi-graph`.

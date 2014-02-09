@@ -12,6 +12,7 @@ Man pages
 .. toctree::
    :maxdepth: 1
 
+   munin.rst
    munin-async.rst
    munin-asyncd.rst
    munin-cgi-graph.rst
@@ -21,11 +22,13 @@ Man pages
    munin-graph.rst
    munin-html.rst
    munin-limits.rst
+   munin-node-configure.rst
    munin-node.rst
    munin-run.rst
    munin-update.rst
    munin.conf.rst
    munin-node.conf.rst
+   munindoc.rst
 
 Other reference material
 ========================

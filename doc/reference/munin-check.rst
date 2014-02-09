@@ -30,3 +30,8 @@ OPTIONS
 .. option:: --help | -h
 
    Display usage information
+
+SEE ALSO
+========
+
+See :ref:`munin` for an overview over munin.
