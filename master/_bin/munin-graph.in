@@ -28,16 +28,7 @@ use strict;
 use warnings;
 use IO::Handle;
 
-BEGIN {
-    # This is needed because Date::Manip has deprecated the functional
-    # interface in >= 6.x. So, we force the use of the 5.x API.
-    $Date::Manip::Backend = 'DM5';
-
-    # Double line here to avoid spurious warnings about D::M::Backend being
-    # used only once.
-    $Date::Manip::Backend = 'DM5';
-}
-use Date::Manip;
+use Date::Parse;
 use POSIX qw(strftime);
 use Time::HiRes qw(gettimeofday tv_interval);
 use IO::File;
@@ -350,7 +341,7 @@ sub rfctime_newer_than {
     # Format of since_string If-Modified-Since: Wed, 23 Jun 2004 16:11:06 GMT
     my $since_string = shift;
     my $created      = shift;
-    my $ifmodsec = &UnixDate (&ParseDateString ($since_string), "%s");
+    my $ifmodsec = str2time($since_string);
 
     return 1 if ($ifmodsec < $created);
     return 0;
