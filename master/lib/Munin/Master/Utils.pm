@@ -19,6 +19,7 @@ use Munin::Common::Config;
 use Log::Log4perl qw(:easy);
 use POSIX qw(strftime);
 use POSIX qw(:sys_wait_h);
+use POSIX qw(:errno_h);
 use Symbol qw(gensym);
 use Data::Dumper;
 use Storable;
@@ -29,7 +30,6 @@ our (@ISA, @EXPORT);
 @ISA = ('Exporter');
 @EXPORT = (
 	   'munin_nscasend',
-	   'munin_createlock',
 	   'munin_removelock',
 	   'munin_runlock',
 	   'munin_getlock',
@@ -153,20 +153,6 @@ sub munin_nscasend {
 }
 
 
-sub munin_createlock {
-    # Create lock file, fail and die if not possible.
-    my ($lockname) = @_;
-    if (sysopen (LOCK,$lockname,O_WRONLY | O_CREAT | O_EXCL)) {
-	DEBUG "[DEBUG] Creating lock : $lockname succeeded\n";
-	print LOCK $$; # we want the pid inside for later use
-	close LOCK;
-	return 1;
-    } else {
-	LOGCROAK("Creating lock $lockname failed: $!\n");
-    }
-}
-
-
 sub munin_removelock {
     # Remove lock or die trying.
     my ($lockname) = @_;
@@ -187,38 +173,42 @@ sub munin_runlock {
 
 sub munin_getlock {
     my ($lockname) = @_;
-    if (-f $lockname) {
-	DEBUG "[DEBUG] Lock $lockname already exists, checking process";
-	# Is the lockpid alive?
+    my $LOCK;
 
-	# To check this is inteligent and so on.  It also makes for a
-	# nice locking racing-condition.  BUT, since munin-* runs from
-	# cron every 5 minutes this should not be a real threat.  This
-	# ream of code should complete in less than 5 minutes.
+    if (sysopen (LOCK, $lockname, O_RDWR | O_CREAT)) {
+	DEBUG "[DEBUG] Create/open lock : $lockname succeeded\n";
+    } else {
+	LOGCROAK("Could not open $lockname for read/write: $!\n");
+    }
+    my $pid = <LOCK>;
 
-	open my $LOCK, '<', $lockname or
-	  LOGCROAK("Could not open $lockname for reading: $!\n");
-	my $pid = <$LOCK>;
-	$pid = '' if !defined($pid);
-	close($LOCK) or LOGCROAK("Could not close $lockname: $!\n");
+    if (defined($pid)) {
 	
 	DEBUG "[DEBUG] Lock contained pid '$pid'";
 	
         # Make sure it's a proper pid
-	if (defined($pid) and $pid =~ /^(\d+)$/ and $1 != 1) {
+	if ($pid =~ /^(\d+)$/ and $1 != 1) {
 	    $pid = $1;
-	    if (kill(0, $pid)) {
-		DEBUG "[DEBUG] kill -0 $pid worked - it is still alive. Locking failed.";
+	    kill(0, $pid);
+	    # Ignore ESRCH as not found is as good as if it worked
+	    if ($! == EPERM) {
+		LOGCROAK("[FATAL ERROR] kill -0 $pid attempted - it is still alive and we can't kill it. Locking failed.\n");
+		close LOCK;
 	        return 0;
 	    }
-	    INFO "[INFO] Process $pid is dead, stealing lock, removing file";
+	    INFO "[INFO] Process $pid is dead, stealing lock";
 	} else {
-	    INFO "[INFO] PID in lock file is bogus.  Removing lock file";
+	    INFO "[INFO] PID in lock file is bogus.";
 	}
-	munin_removelock($lockname);
+        seek(LOCK, 0, 0);
     }
-    DEBUG "[DEBUG] Creating new lock file $lockname";
-    munin_createlock($lockname);
+    DEBUG "[DEBUG] Writing out PID to lock file $lockname";
+    print LOCK $$; # we want the pid inside for later use
+    if (defined($pid) && length $$ < length $pid) {
+	# Since pid was defined we need to truncate incase len($) < len($pid)
+	truncate(LOCK, tell(LOCK))
+    }
+    close LOCK;
     return 1;
 }
 
