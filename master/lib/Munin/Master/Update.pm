@@ -268,13 +268,19 @@ sub _write_new_service_configs_locked {
     my $lock_file = "$config->{rundir}/munin-datafile.lock";
     munin_runlock($lock_file);
 
-    open my $dump, '>', $self->{config_dump_file}
-        or croak "Fatal error: Could not open '$self->{config_dump_file}' for writing: $!";
+    my $config_dump_file = $self->{config_dump_file};
+    my $config_dump_file_tmp = "$config_dump_file.$$";
+
+    open my $dump, '>', $config_dump_file_tmp
+        or croak "Fatal error: Could not open '$config_dump_file_tmp' for writing: $!";
 
     $self->_write_new_service_configs($dump);
 
     close $dump
-        or croak "Fatal error: Could not close '$self->{config_dump_file}': $!";
+        or croak "Fatal error: Could not close '$config_dump_file_tmp': $!";
+
+    rename $config_dump_file_tmp, $config_dump_file
+	or croak "Fatal error: Could not rename '$config_dump_file_tmp' to '$config_dump_file': $!";
 
     munin_removelock($lock_file);
 }
