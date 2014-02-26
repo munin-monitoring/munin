@@ -140,6 +140,8 @@ if ($line eq '++ Incoming Requests ++') {
            rejections_auth => 0,
            rejections_update => 0,
            rejections_transfers => 0,
+           rrl_dropped => 0,
+           rrl_truncated => 0,
           );
 
     # jump to server stats section
@@ -187,7 +189,11 @@ if ($line eq '++ Incoming Requests ++') {
                 $IN{rejections_transfers} = $n;
         } elsif ($msg eq 'requested transfers completed') {
                 $IN{transfers} = $n;
-	}
+        } elsif ($msg eq 'responses dropped for rate limits') {
+                $IN{rrl_dropped} = $n;
+        } elsif ($msg eq 'responses truncated for rate limits') {
+                $IN{rrl_truncated} = $n;
+        }
 }
 } else {
         # old format
