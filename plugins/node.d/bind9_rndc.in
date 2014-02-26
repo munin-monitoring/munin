@@ -152,9 +152,9 @@ if ($line eq '++ Incoming Requests ++') {
         my $n = $1;
         my $msg = lc($2);
 
-        if ($msg =~ m/requests.*received$/io) {
+        if ($msg =~ m/ipv[46] requests received$/io) {
                 $IN{requests} += $n;
-        } elsif ($msg =~ m/responses.*sent$/io ) {
+        } elsif ($msg =~ m/^responses sent$/io ) {
                 $IN{responses} += $n;
         } elsif ($msg eq 'queries resulted in successful answer') {
                 $IN{success} = $n;
