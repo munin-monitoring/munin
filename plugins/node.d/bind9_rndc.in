@@ -113,6 +113,27 @@ seek($stats , $size, 0);
 #                    6 IPv4 notifies sent
 # --- Statistics Dump ---
 
+my %IN_info = (
+           requests => "Requests received. Note: also counts non-queries like UPDATE and TRANSFER.",
+           responses => "Responses sent.",
+           success => "Queries which resulted in a successful answer. This means a query thich returns a NOERROR response with at least one answer RR.",
+           auth_answer => "Queries which resulted in authoritative answer.",
+           nonauth_answer => "Queries which resulted in non-authoritative answer.",
+           nxrrset => "Queries which resulted in NOERROR responses with no data.",
+           failure => "Query failures. A catch-all including more finegrained counters.",
+           nxdomain => "Queries which resulted in NXDOMAIN.",
+           recursion => "Queries which caused the server to perform recursion in order to find the final answer.",
+           duplicates => "Queries which the server attempted to recurse but discovered an existing query with the same IP address, port, query ID, name, type and class already being processed.",
+           transfers => "Requested zone transfers completed.",
+           rejections => "Recursive queries rejected.",
+           rejections_auth => "Authoritative (non-recursive) queries rejected.",
+           rejections_update => "Dynamic update requests rejected.",
+           rejections_transfers => "Zone transfer requests rejected.",
+           rrl_dropped => "Responses dropped (not sent) due to response rate limits.",
+           rrl_truncated => "Responses truncated due to response rate limits.",
+          );
+
+
 my $line;
 
 # first line has expected content
@@ -283,6 +304,7 @@ if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
         }
         print "query_$key.type DERIVE\n";
         print "query_$key.min 0\n";
+        print "query_$key.info $IN_info{$key}\n";
     }
 
     print "multigraph bind9_query_types\n";
