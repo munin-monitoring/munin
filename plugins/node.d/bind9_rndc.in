@@ -63,6 +63,7 @@ use strict;
 my $rndc = defined($ENV{rndc}) ? $ENV{rndc} : '/usr/sbin/rndc';
 my $querystats = $ENV{querystats} || '/var/run/named.stats';
 my %IN;
+my %QUERIES;
 
 # attempt to create log file if it doesn't exist
 if ( ! -r $querystats ) {
@@ -144,6 +145,51 @@ if ($line eq '++ Incoming Requests ++') {
            rrl_truncated => 0,
           );
 
+    %QUERIES = (
+           A => 0,
+           NS => 0,
+           CNAME => 0,
+           SOA => 0,
+           PTR => 0,
+           HINFO => 0,
+           MX => 0,
+           TXT => 0,
+           KEY => 0,
+           AAAA => 0,
+           SRV => 0,
+           NAPTR => 0,
+           A6 => 0,
+           DNAME => 0,
+           APL => 0,
+           DS => 0,
+           RRSIG => 0,
+           NSEC => 0,
+           DNSKEY => 0,
+           NSEC3PARAM => 0,
+           SPF => 0,
+           TKEY => 0,
+           IXFR => 0,
+           ANY => 0,
+           Others => 0,
+         );
+
+    # jump to incoming queries secion
+    while ($line ne '++ Incoming Queries ++') {
+        $line = <$stats>;
+        chomp $line;
+    }
+
+    while ($line ne '++ Outgoing Queries ++') {
+        $line = <$stats>;
+        chomp $line;
+        last if $line =~ /^\+\+/;
+        next unless $line =~ /^\s+(\d+) (.*)$/;
+        my $n = $1;
+        my $type = $2;
+
+        $QUERIES{$type} = $n;
+    }
+
     # jump to server stats section
     while ($line ne '++ Name Server Statistics ++') {
         $line = <$stats>;
@@ -210,6 +256,7 @@ if ($line eq '++ Incoming Requests ++') {
 close($stats);
 
 if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
+    print "multigraph bind9_rndc\n";
     print "graph_title DNS Queries by status\n";
     print "graph_vlabel queries / \${graph_period}\n";
     print "graph_category BIND\n";
@@ -223,6 +270,32 @@ if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
         print "query_$key.type DERIVE\n";
         print "query_$key.min 0\n";
     }
+
+    print "multigraph bind9_query_types\n";
+    print "graph_title DNS Queries by type\n";
+    print "graph_vlabel queries / \${graph_period}\n";
+    print "graph_category BIND\n";
+    print "graph_order query_A query_AAAA query_PTR query_SOA query_MX query_SRV ";
+    print             "query_TXT query_NS query_SPF query_A6 query_AXFR query_CNAME ";
+    print             "query_TKEY query_NAPTR query_DS query_HINFO query_IXFR ";
+    print             "query_DNSKEY query_KEY query_NSEC3PARAM query_DNAME query_NSEC ";
+    print             "query_RRSIG query_APL query_Others query_ANY\n";
+
+    for my $key ( keys %QUERIES) {
+        print "query_$key.label $key\n";
+        print "query_$key.type DERIVE\n";
+        print "query_$key.min 0\n";
+        if ($key eq "A") {
+            print "query_$key.draw AREA\n";
+        } else {
+            print "query_$key.draw STACK\n";
+        }
+    }
+
 } else {
+    print "multigraph bind9_rndc";
     print "query_$_.value $IN{$_}\n" for keys %IN;
+
+    print "multigraph bind9_query_types\n";
+    print "query_$_.value $QUERIES{$_}\n" for keys %QUERIES;
 }
