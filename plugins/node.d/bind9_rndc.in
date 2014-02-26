@@ -64,6 +64,7 @@ my $rndc = defined($ENV{rndc}) ? $ENV{rndc} : '/usr/sbin/rndc';
 my $querystats = $ENV{querystats} || '/var/run/named.stats';
 my %IN;
 my %QUERIES;
+my %IP;
 
 # attempt to create log file if it doesn't exist
 if ( ! -r $querystats ) {
@@ -173,6 +174,11 @@ if ($line eq '++ Incoming Requests ++') {
            Others => 0,
          );
 
+    %IP = (
+           v4 => 0,
+           v6 => 0,
+          );
+
     # jump to incoming queries secion
     while ($line ne '++ Incoming Queries ++') {
         $line = <$stats>;
@@ -205,6 +211,11 @@ if ($line eq '++ Incoming Requests ++') {
 
         if ($msg =~ m/ipv[46] requests received$/io) {
                 $IN{requests} += $n;
+		if ($msg =~ m/ipv4 requests received$/) {
+                    $IP{v4} = $n;
+                } elsif ($msg =~ m/ipv6 requests received$/) {
+                    $IP{v6} = $n;
+                }
         } elsif ($msg =~ m/^responses sent$/io ) {
                 $IN{responses} += $n;
         } elsif ($msg eq 'queries resulted in successful answer') {
@@ -295,10 +306,29 @@ if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
         }
     }
 
+    print "multigraph bind9_query_protocols\n";
+    print "graph_title DNS Queries by protocol\n";
+    print "graph_vlabel queries / \${graph_period}\n";
+    print "graph_category BIND\n";
+    print "graph_order v4 v6\n";
+
+    print "v4.label IPv4\n";
+    print "v4.type DERIVE\n";
+    print "v4.min 0\n";
+    print "v4.draw AREA\n";
+    print "v6.label IPv6\n";
+    print "v6.type DERIVE\n";
+    print "v6.min 0\n";
+    print "v6.draw STACK\n";
+
 } else {
     print "multigraph bind9_rndc\n";
     print "query_$_.value $IN{$_}\n" for keys %IN;
 
     print "multigraph bind9_query_types\n";
     print "query_$_.value $QUERIES{$_}\n" for keys %QUERIES;
+
+    print "multigraph bind9_query_protocols\n";
+    print "v4.value $IP{v4}\n";
+    print "v6.value $IP{v6}\n";
 }
