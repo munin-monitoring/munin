@@ -260,6 +260,9 @@ if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
     print "graph_title DNS Queries by status\n";
     print "graph_vlabel queries / \${graph_period}\n";
     print "graph_category BIND\n";
+    print "graph_order ";
+    print "query_$_ " for sort keys %IN;
+    print "\n";
 
     for my $key (keys %IN) {
         if ($key eq "rejections") {
