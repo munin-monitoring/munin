@@ -176,7 +176,9 @@ if ($line eq '++ Incoming Requests ++') {
                 $IN{duplicates} = $n;
         } elsif ($msg eq 'recursive queries rejected') {
                 $IN{rejections} = $n;
-        }
+        } elsif ($msg eq 'requested transfers completed') {
+                $IN{transfers} = $n;
+	}
 }
 } else {
         # old format
