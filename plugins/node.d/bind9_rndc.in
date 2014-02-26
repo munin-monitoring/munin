@@ -137,6 +137,9 @@ if ($line eq '++ Incoming Requests ++') {
            duplicates => 0,
            transfers => 0,
            rejections => 0,
+           rejections_auth => 0,
+           rejections_update => 0,
+           rejections_transfers => 0,
           );
 
     # jump to server stats section
@@ -176,6 +179,12 @@ if ($line eq '++ Incoming Requests ++') {
                 $IN{duplicates} = $n;
         } elsif ($msg eq 'recursive queries rejected') {
                 $IN{rejections} = $n;
+        } elsif ($msg eq 'auth queries rejected') {
+                $IN{rejections_auth} = $n;
+        } elsif ($msg eq 'update requests rejected') {
+                $IN{rejections_update} = $n;
+        } elsif ($msg eq 'transfer requests rejected') {
+                $IN{rejections_transfers} = $n;
         } elsif ($msg eq 'requested transfers completed') {
                 $IN{transfers} = $n;
 	}
@@ -200,7 +209,11 @@ if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
     print "graph_category BIND\n";
 
     for my $key (keys %IN) {
-        print "query_$key.label $key\n";
+        if ($key eq "rejections") {
+            print "query_$key.label rejections_recursive\n";
+        } else {
+            print "query_$key.label $key\n";
+        }
         print "query_$key.type DERIVE\n";
         print "query_$key.min 0\n";
     }
