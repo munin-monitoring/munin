@@ -120,7 +120,8 @@ my %IN_info = (
            auth_answer => "Queries which resulted in authoritative answer.",
            nonauth_answer => "Queries which resulted in non-authoritative answer.",
            nxrrset => "Queries which resulted in NOERROR responses with no data.",
-           failure => "Query failures. A catch-all including more finegrained counters.",
+           failure => "Other query failures. This corresponds to the failure counter of previous versions of BIND 9. Note: this counter is provided mainly for backward compatibility with the previous versions. Normally more fine-grained counters such as the various reject counters that would fall under this counter are provided, and this counter is not of much interest in practice.",
+           servfail => "Queries which resulted in SERVFAIL.",
            nxdomain => "Queries which resulted in NXDOMAIN.",
            recursion => "Queries which caused the server to perform recursion in order to find the final answer.",
            duplicates => "Queries which the server attempted to recurse but discovered an existing query with the same IP address, port, query ID, name, type and class already being processed.",
@@ -155,6 +156,7 @@ if ($line eq '++ Incoming Requests ++') {
            nonauth_answer => 0,
            nxrrset => 0,
            failure => 0,
+           servfail => 0,
            nxdomain => 0,
            recursion => 0,
            duplicates => 0,
@@ -248,9 +250,9 @@ if ($line eq '++ Incoming Requests ++') {
         } elsif ($msg eq 'queries resulted in nxrrset') {
                 $IN{nxrrset} = $n;
         } elsif ($msg eq 'queries resulted in servfail') {
-                $IN{failure} += $n;
+                $IN{servfail} = $n;
         } elsif ($msg eq 'other query failures') {
-                $IN{failure} += $n;
+                $IN{failure} = $n;
         } elsif ($msg eq 'queries resulted in nxdomain') {
                 $IN{nxdomain} = $n;
         } elsif ($msg eq 'queries caused recursion') {
