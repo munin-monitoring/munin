@@ -47,6 +47,7 @@ the correct stats in the file more reliable than before.
 Contributed by Laurent Facq 15/06/2004. Based on Nicolai Langfeldt's
 bind9 plugin. Reworked by Dagfinn Ilmari Mannsåker. BIND 9.6 patch
 from "Vrivellino". Reworked by guillomovitch and Kenyon Ralph.
+Multigraphified and updated for BIND 9.8 by Erik Inge Bolsø.
 
 =head1 LICENSE
 
