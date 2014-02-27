@@ -317,6 +317,7 @@ if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
     print "graph_title DNS Queries by type\n";
     print "graph_vlabel queries / \${graph_period}\n";
     print "graph_category BIND\n";
+    print "graph_args --base 1000 -l 0\n";
     print "graph_order query_A query_AAAA query_PTR query_SOA query_MX query_SRV ";
     print             "query_TXT query_NS query_SPF query_A6 query_AXFR query_CNAME ";
     print             "query_TKEY query_NAPTR query_DS query_HINFO query_IXFR ";
@@ -338,6 +339,7 @@ if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
     print "graph_title DNS Queries by protocol\n";
     print "graph_vlabel queries / \${graph_period}\n";
     print "graph_category BIND\n";
+    print "graph_args --base 1000 -l 0\n";
     print "graph_order v4 v6\n";
 
     print "v4.label IPv4\n";
