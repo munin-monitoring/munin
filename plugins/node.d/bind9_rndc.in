@@ -103,11 +103,14 @@ seek($stats , $size, 0);
 # ++ Outgoing Queries ++
 # ++ Name Server Statistics ++
 #                   13 IPv4 requests received
-#                   13 responses sent
-#                   13 queries resulted in successful answer
-#                    9 queries resulted in authoritative answer
-#                    4 queries resulted in non authoritative answer
-#                    4 queries caused recursion
+#                    5 IPv6 requests received
+#                   10 requests with EDNS(0) received
+#                   18 responses sent
+#                   10 responses with EDNS(0) sent
+#                   18 queries resulted in successful answer
+#                   12 queries resulted in authoritative answer
+#                    6 queries resulted in non authoritative answer
+#                    6 queries caused recursion
 #                    2 requested transfers completed
 # ++ Zone Maintenance Statistics ++
 #                    6 IPv4 notifies sent
