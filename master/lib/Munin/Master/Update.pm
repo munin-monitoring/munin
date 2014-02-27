@@ -368,9 +368,6 @@ sub _write_new_service_configs {
     $self->_print_service_configs_for_not_updated_services($datafile_hash);
     $self->_print_old_service_configs_for_failed_workers($datafile_hash);
 
-    my $fh = new IO::File(">self.txt");
-    print $fh munin_dumpconfig_as_str($self);
-
     $self->_dump_into_sql();
 
     for my $host (keys %{$self->{service_configs}}) {
