@@ -270,3 +270,8 @@ Connect to munin-nodes on a remote site, through a bastion host, using ssh.
 
   [www.site2.example.org]
     address ssh://bastion.site2.example.org/bin/nc www.site2.example.org 4949
+
+SEE ALSO
+========
+
+See :ref:`munin` for an overview over munin.

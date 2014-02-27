@@ -150,4 +150,6 @@ Example: --fork and --nofork
 SEE ALSO
 ========
 
+See :ref:`munin` for an overview over munin.
+
 :ref:`munin-cron`, :ref:`munin-cgi-graph`

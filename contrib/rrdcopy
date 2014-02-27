@@ -8,9 +8,19 @@
 # The tool copies all the datasources from the sources into the destination
 # like you mean it: 
 #  - start is the oldest value from src 
-#     (but cannot be younger as the youngest from dst)
+#     (but cannot be younger than the youngest from dst)
 #  - stop is the youngest value from src
 #  - asks src for the AVERAGED value on each step time.
+#
+# Since all of the src data must be younger than any of the data in dst, you
+# probably want dst to be a new rrd. A new munin-style "huge" rrd can be
+# created like this:
+#
+# rrdtool create $dstfile --start "-2y" -s 300 \
+#	DS:42:GAUGE:600:U:U \
+#	RRA:AVERAGE:0.5:1:115200 \
+#	RRA:MIN:0.5:1:115200 \
+#	RRA:MAX:0.5:1:115200
 # 
 # It doesn't do any MIN/MAX replication since this information 
 # is usually not accurate at all when resampling.
@@ -19,6 +29,7 @@
 # 0/absent - no debug
 # 1        - emit to stdout all the updates to dst
 # 2        - emit also the data that try
+# 3        - emit also the source data
 #
 # XXX - It depends on RRDs.pm ...
 # ... as I'm waiting for a patch to use the plain rrdtool cli :-)
@@ -73,8 +84,6 @@ foreach my $rra_name (sort {$a <=> $b} @rra_names) {
 		. (scalar localtime($start))
 		.")\n" if $ENV{DEBUG} && $ENV{DEBUG} >= 2;
 }
-
-#$start = 1240020352;
 	
 # Converting
 my ($step_sample) = $step * 128;
@@ -89,8 +98,34 @@ for (my $epoch = $start; $epoch <= $stop; $epoch += $step_sample) {
 		"--end", $epoch + $step_sample,
 	);
 
+	if ($ENV{DEBUG} && $ENV{DEBUG} >= 3) {
+		print "Start:       ", scalar localtime($fetched_epoch),
+		      " ($fetched_epoch)\n";
+		print "Step size:   $fetched_step seconds\n";
+		print "DS names:    ", join (", ", @$names)."\n";
+		print "Data points: ", $#$data + 1, "\n";
+		print "Data:\n";
+	}
+
+	$fetched_epoch -= $fetched_step;
 
 	for my $line ( @$data ) {
+		$fetched_epoch += $fetched_step;
+
+		# skip the last line, because it _should_ be picked up in the
+		# next block
+		if ($fetched_epoch >= $epoch + $step_sample) {
+			next;
+		}
+
+		if ($ENV{DEBUG} && $ENV{DEBUG} >= 3) {
+			print "  ", scalar localtime($fetched_epoch),
+			      " ($fetched_epoch) ";
+			for my $val (@$line) {
+				printf "%12.1f ", $val ? $val : 0.0;
+			}
+			print "\n";
+		}
 
 		my %current_data;
 		for ( my $ds_idx = 0; $ds_idx < scalar @$line; $ds_idx ++) {
@@ -105,17 +140,31 @@ for (my $epoch = $start; $epoch <= $stop; $epoch += $step_sample) {
 		# Ignore lines with all values set to "U"
 		next unless grep { $_ ne "U" } @values;
 		
-		push @rrd_updates, "$fetched_epoch:" . join(':', @values);
-
-		$fetched_epoch += $step;
+		my $current_epoch = $fetched_epoch;
+		while ( $current_epoch < $fetched_epoch + $fetched_step ) {
+			push @rrd_updates, "$current_epoch:" . join(':', @values);
+			$current_epoch += $step;
+		}
 	}
 
-	next unless @rrd_updates; 
-	print "RRDs::update($dst_rrd, --template, " . join(':', @ds_names) . ", " . join(", ", @rrd_updates) . "\n" if $ENV{DEBUG};
-	RRDs::update(
-		$dst_rrd,
-		"--template", join(':', @ds_names), 
-		@rrd_updates,
-	) or die "RRDs::update: $!";
+	next unless @rrd_updates;
+
+	print "rrdtool update $dst_rrd --template " . join(':', @ds_names) . " " . join(" ", @rrd_updates) . "\n" if $ENV{DEBUG};
+	system("rrdtool update $dst_rrd --template " . join(':', @ds_names) . " " . join(" ", @rrd_updates));
+
+	# if the bulk update failed, try to update every point
+	if ( $? != 0 ) {
+		for my $rrd_update ( @rrd_updates ) {
+			print "rrdtool update $dst_rrd --template " . join(':', @ds_names) . " " . join(" ", $rrd_update) . "\n" if $ENV{DEBUG};
+			system("rrdtool update $dst_rrd --template " . join(':', @ds_names) . " " . join(" ", $rrd_update));
+		}
+	}
+
+	# moved to rrdtool cli for this, but leaving it in case anyone cares
+	#RRDs::update(
+	#	$dst_rrd,
+	#	"--template", join(':', @ds_names),
+	#	@rrd_updates,
+	#) or die "RRDs::update: $!";
 }
 

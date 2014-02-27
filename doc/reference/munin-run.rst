@@ -72,3 +72,7 @@ FILES
 
 :ref:`/var/log/munin/munin-node.log <logdir>`
 
+SEE ALSO
+========
+
+See :ref:`munin` for an overview over munin.
