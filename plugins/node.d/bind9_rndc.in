@@ -47,6 +47,7 @@ the correct stats in the file more reliable than before.
 Contributed by Laurent Facq 15/06/2004. Based on Nicolai Langfeldt's
 bind9 plugin. Reworked by Dagfinn Ilmari Mannsåker. BIND 9.6 patch
 from "Vrivellino". Reworked by guillomovitch and Kenyon Ralph.
+Multigraphified and updated for BIND 9.8 by Erik Inge Bolsø.
 
 =head1 LICENSE
 
@@ -63,6 +64,8 @@ use strict;
 my $rndc = defined($ENV{rndc}) ? $ENV{rndc} : '/usr/sbin/rndc';
 my $querystats = $ENV{querystats} || '/var/run/named.stats';
 my %IN;
+my %QUERIES;
+my %IP;
 
 # attempt to create log file if it doesn't exist
 if ( ! -r $querystats ) {
@@ -101,15 +104,40 @@ seek($stats , $size, 0);
 # ++ Outgoing Queries ++
 # ++ Name Server Statistics ++
 #                   13 IPv4 requests received
-#                   13 responses sent
-#                   13 queries resulted in successful answer
-#                    9 queries resulted in authoritative answer
-#                    4 queries resulted in non authoritative answer
-#                    4 queries caused recursion
+#                    5 IPv6 requests received
+#                   10 requests with EDNS(0) received
+#                   18 responses sent
+#                   10 responses with EDNS(0) sent
+#                   18 queries resulted in successful answer
+#                   12 queries resulted in authoritative answer
+#                    6 queries resulted in non authoritative answer
+#                    6 queries caused recursion
 #                    2 requested transfers completed
 # ++ Zone Maintenance Statistics ++
 #                    6 IPv4 notifies sent
 # --- Statistics Dump ---
+
+my %IN_info = (
+           requests => "Requests received. Note: also counts non-queries like UPDATE and TRANSFER.",
+           responses => "Responses sent.",
+           success => "Queries which resulted in a successful answer. This means a query thich returns a NOERROR response with at least one answer RR.",
+           auth_answer => "Queries which resulted in authoritative answer.",
+           nonauth_answer => "Queries which resulted in non-authoritative answer.",
+           nxrrset => "Queries which resulted in NOERROR responses with no data.",
+           failure => "Other query failures. This corresponds to the failure counter of previous versions of BIND 9. Note: this counter is provided mainly for backward compatibility with the previous versions. Normally more fine-grained counters such as the various reject counters that would fall under this counter are provided, and this counter is not of much interest in practice.",
+           servfail => "Queries which resulted in SERVFAIL.",
+           nxdomain => "Queries which resulted in NXDOMAIN.",
+           recursion => "Queries which caused the server to perform recursion in order to find the final answer.",
+           duplicates => "Queries which the server attempted to recurse but discovered an existing query with the same IP address, port, query ID, name, type and class already being processed.",
+           transfers => "Requested zone transfers completed.",
+           rejections => "Recursive queries rejected.",
+           rejections_auth => "Authoritative (non-recursive) queries rejected.",
+           rejections_update => "Dynamic update requests rejected.",
+           rejections_transfers => "Zone transfer requests rejected.",
+           rrl_dropped => "Responses dropped (not sent) due to response rate limits.",
+           rrl_truncated => "Responses truncated due to response rate limits.",
+          );
+
 
 my $line;
 
@@ -132,12 +160,68 @@ if ($line eq '++ Incoming Requests ++') {
            nonauth_answer => 0,
            nxrrset => 0,
            failure => 0,
+           servfail => 0,
            nxdomain => 0,
            recursion => 0,
            duplicates => 0,
            transfers => 0,
            rejections => 0,
+           rejections_auth => 0,
+           rejections_update => 0,
+           rejections_transfers => 0,
+           rrl_dropped => 0,
+           rrl_truncated => 0,
           );
+
+    %QUERIES = (
+           A => 0,
+           NS => 0,
+           CNAME => 0,
+           SOA => 0,
+           PTR => 0,
+           HINFO => 0,
+           MX => 0,
+           TXT => 0,
+           KEY => 0,
+           AAAA => 0,
+           SRV => 0,
+           NAPTR => 0,
+           A6 => 0,
+           DNAME => 0,
+           APL => 0,
+           DS => 0,
+           RRSIG => 0,
+           NSEC => 0,
+           DNSKEY => 0,
+           NSEC3PARAM => 0,
+           SPF => 0,
+           TKEY => 0,
+           IXFR => 0,
+           ANY => 0,
+           Others => 0,
+         );
+
+    %IP = (
+           v4 => 0,
+           v6 => 0,
+          );
+
+    # jump to incoming queries secion
+    while ($line ne '++ Incoming Queries ++') {
+        $line = <$stats>;
+        chomp $line;
+    }
+
+    while ($line ne '++ Outgoing Queries ++') {
+        $line = <$stats>;
+        chomp $line;
+        last if $line =~ /^\+\+/;
+        next unless $line =~ /^\s+(\d+) (.*)$/;
+        my $n = $1;
+        my $type = $2;
+
+        $QUERIES{$type} = $n;
+    }
 
     # jump to server stats section
     while ($line ne '++ Name Server Statistics ++') {
@@ -152,9 +236,14 @@ if ($line eq '++ Incoming Requests ++') {
         my $n = $1;
         my $msg = lc($2);
 
-        if ($msg =~ m/requests.*received$/io) {
+        if ($msg =~ m/ipv[46] requests received$/io) {
                 $IN{requests} += $n;
-        } elsif ($msg =~ m/responses.*sent$/io ) {
+		if ($msg =~ m/ipv4 requests received$/) {
+                    $IP{v4} = $n;
+                } elsif ($msg =~ m/ipv6 requests received$/) {
+                    $IP{v6} = $n;
+                }
+        } elsif ($msg =~ m/^responses sent$/io ) {
                 $IN{responses} += $n;
         } elsif ($msg eq 'queries resulted in successful answer') {
                 $IN{success} = $n;
@@ -165,9 +254,9 @@ if ($line eq '++ Incoming Requests ++') {
         } elsif ($msg eq 'queries resulted in nxrrset') {
                 $IN{nxrrset} = $n;
         } elsif ($msg eq 'queries resulted in servfail') {
-                $IN{failure} += $n;
+                $IN{servfail} = $n;
         } elsif ($msg eq 'other query failures') {
-                $IN{failure} += $n;
+                $IN{failure} = $n;
         } elsif ($msg eq 'queries resulted in nxdomain') {
                 $IN{nxdomain} = $n;
         } elsif ($msg eq 'queries caused recursion') {
@@ -176,6 +265,18 @@ if ($line eq '++ Incoming Requests ++') {
                 $IN{duplicates} = $n;
         } elsif ($msg eq 'recursive queries rejected') {
                 $IN{rejections} = $n;
+        } elsif ($msg eq 'auth queries rejected') {
+                $IN{rejections_auth} = $n;
+        } elsif ($msg eq 'update requests rejected') {
+                $IN{rejections_update} = $n;
+        } elsif ($msg eq 'transfer requests rejected') {
+                $IN{rejections_transfers} = $n;
+        } elsif ($msg eq 'requested transfers completed') {
+                $IN{transfers} = $n;
+        } elsif ($msg eq 'responses dropped for rate limits') {
+                $IN{rrl_dropped} = $n;
+        } elsif ($msg eq 'responses truncated for rate limits') {
+                $IN{rrl_truncated} = $n;
         }
 }
 } else {
@@ -193,15 +294,71 @@ if ($line eq '++ Incoming Requests ++') {
 close($stats);
 
 if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
+    print "multigraph bind9_rndc\n";
     print "graph_title DNS Queries by status\n";
     print "graph_vlabel queries / \${graph_period}\n";
     print "graph_category BIND\n";
+    print "graph_order ";
+    print "query_$_ " for sort keys %IN;
+    print "\n";
 
     for my $key (keys %IN) {
+        if ($key eq "rejections") {
+            print "query_$key.label rejections_recursive\n";
+        } else {
+            print "query_$key.label $key\n";
+        }
+        print "query_$key.type DERIVE\n";
+        print "query_$key.min 0\n";
+        print "query_$key.info $IN_info{$key}\n";
+    }
+
+    print "multigraph bind9_query_types\n";
+    print "graph_title DNS Queries by type\n";
+    print "graph_vlabel queries / \${graph_period}\n";
+    print "graph_category BIND\n";
+    print "graph_args --base 1000 -l 0\n";
+    print "graph_order query_A query_AAAA query_PTR query_SOA query_MX query_SRV ";
+    print             "query_TXT query_NS query_SPF query_A6 query_AXFR query_CNAME ";
+    print             "query_TKEY query_NAPTR query_DS query_HINFO query_IXFR ";
+    print             "query_DNSKEY query_KEY query_NSEC3PARAM query_DNAME query_NSEC ";
+    print             "query_RRSIG query_APL query_Others query_ANY\n";
+
+    for my $key ( keys %QUERIES) {
         print "query_$key.label $key\n";
         print "query_$key.type DERIVE\n";
         print "query_$key.min 0\n";
+        if ($key eq "A") {
+            print "query_$key.draw AREA\n";
+        } else {
+            print "query_$key.draw STACK\n";
+        }
     }
+
+    print "multigraph bind9_query_protocols\n";
+    print "graph_title DNS Queries by protocol\n";
+    print "graph_vlabel queries / \${graph_period}\n";
+    print "graph_category BIND\n";
+    print "graph_args --base 1000 -l 0\n";
+    print "graph_order v4 v6\n";
+
+    print "v4.label IPv4\n";
+    print "v4.type DERIVE\n";
+    print "v4.min 0\n";
+    print "v4.draw AREA\n";
+    print "v6.label IPv6\n";
+    print "v6.type DERIVE\n";
+    print "v6.min 0\n";
+    print "v6.draw STACK\n";
+
 } else {
+    print "multigraph bind9_rndc\n";
     print "query_$_.value $IN{$_}\n" for keys %IN;
+
+    print "multigraph bind9_query_types\n";
+    print "query_$_.value $QUERIES{$_}\n" for keys %QUERIES;
+
+    print "multigraph bind9_query_protocols\n";
+    print "v4.value $IP{v4}\n";
+    print "v6.value $IP{v6}\n";
 }
