@@ -1,12 +1,16 @@
 language: perl
 perl:
+  - "5.18"
   - "5.16"
   - "5.14"
+  - "5.12"
   - "5.10"
+  - "5.8"
 branches:
  only:
   - stable-2.0
   - devel
+  - master
 install: "/bin/true"
 before_install:
  - "cpanm --notest File::Copy::Recursive"
@@ -25,6 +29,8 @@ before_install:
  - "cpanm --notest Test::MockModule"
  - "cpanm --notest Test::MockObject::Extends"
  - "cpanm --notest Time::HiRes"
+ - "cpanm --notest DBI"
+ - "cpanm --notest DBD::SQLite"
 notifications:
   email: false
   irc:

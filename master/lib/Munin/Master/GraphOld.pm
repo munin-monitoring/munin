@@ -1482,7 +1482,8 @@ sub process_service {
 
 	$nb_graphs_drawn ++;
         RRDs_graph(@rrdcached_params, @complete);
-        if (my $ERROR = RRDs::error) {
+        my $ERROR = RRDs::error;
+        if ($ERROR) {
             ERROR "[RRD ERROR] Unable to graph $picfilename : $ERROR";
             # ALWAYS dumps the cmd used when an error occurs.
             # Otherwise, it will be difficult to debug post-mortem
@@ -1614,7 +1615,8 @@ sub process_service {
 	    $nb_graphs_drawn ++;
             RRDs_graph(@rrdcached_params, @rrd_sum);
 
-            if (my $ERROR = RRDs::error) {
+            my $ERROR = RRDs::error;
+            if ($ERROR) {
                 ERROR "[RRD ERROR(sum)] Unable to graph "
                     . get_picture_filename($service, $time)
                     . ": $ERROR";

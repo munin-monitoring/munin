@@ -255,7 +255,7 @@ SKIP: {
     my $last = shift @times;
     my @intervals = map { my $interval = tv_interval($last, $_), $last = $_; $interval } @times;
 
-    cmp_deeply(\@intervals, array_each(num(0.01, 0.005)), 'Callback takes less long than the interval');
+    cmp_deeply(\@intervals, array_each(num(0.01, 0.006)), 'Callback takes less long than the interval');
 }
 {
     my $ii = 10;
@@ -277,8 +277,8 @@ SKIP: {
 
     cmp_deeply(\@intervals, array_each(
         any(
-            num(0.5,       0.05),
-            num(0.5 + 0.3, 0.05),
+            num(0.5,       0.2),
+            num(0.5 + 0.3, 0.2),
         )
     ), 'Callback takes longer than the interval');
 }

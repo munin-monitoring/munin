@@ -8,7 +8,7 @@ use Test::LongString;
 use POSIX ();
 use File::Temp qw( tempdir );
 use Data::Dumper;
-use File::Slurp;
+use File::Slurp qw(read_file);
 
 use Munin::Node::SpoolWriter;
 
