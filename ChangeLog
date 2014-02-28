@@ -1,5 +1,86 @@
 -*- text -*-
 
+munin-2.1.5, 2014-02-05
+
+-------
+Summary
+-------
+
+A minor fixing release. The CGI html is mostly feature complete.
+There are also some bug fixes, and all the trivial pull requests.
+
+Closes: #972, D:592213, D:735236
+
+------------------
+Detailed Changelog
+------------------
+
+IvAnZ (1):
+      Update proc.in
+
+Jose-Marcio Martins da Cruz (9):
+      Update dhcpd3.in
+      Update meminfo.in
+      Update munin-node
+      Update munin-node-configure
+      Update munin-run
+      Update munin-sched
+      Update memory.in
+      Update ntp_states.in
+      Update df_inode.in
+
+Justin Muller (1):
+      Fix typo.
+
+Kenyon Ralph (1):
+      add link to github wiki
+
+Lars Thegler (1):
+      Fix typo
+
+Steve Schnepp (24):
+      README: add some light on what happens to contributions
+      README: adding a branch merging policy blurb
+      master: Shuffle @hosts to avoid same poll order
+      master: shuffle @plugins to avoid same poll order
+      cgi/html: remove ending [/index]
+      cgi/html: adding a DEBUG of the datastructure
+      cgi/html: first take on domain view
+      cgi/html: adding services on categories
+      cgi/html: fix URL for images in node view
+      cgi/html: adding a comment for the double addition
+      cgi/html: adding the breadcrumb header
+      cgi/html: adding the [ d w m y ] in the header
+      cgi/html: handle directories without /
+      master: node address defaults to node name
+      master: use the full sourced version of JQuery
+      cgi/html: adding a dummy head for nodes
+      cgi/html: adding the template for problems
+      cgi/html: fixing the urls for categories
+      cgi/html: reindent correctly
+      cgi/html: adding a category url parsing
+      cgi/html: factorize jump to rendering
+      cgi/html: indent fix
+      p/dhcpd3: fix author name
+
+Stig Sandbeck Mathisen (2):
+      Revert "Merge pull request #120 from erpel/add_humidity_format_string"
+      Remove useless autoconf from apc_nis plugin
+
+Trygve Vea (1):
+      haproxy_ng: Fix some graphs which sometimes do not render.
+
+erpel (1):
+      add format string for sensors that have hum. data
+
+ivanzolotuhin (2):
+      Remove unrecognised symbols from "$procuniq"
+      procuniq - remove symbols which is not a-zA-Z0-9_
+
+leeclemens (1):
+      Add Airflow_Temperature_Cel as temperature reading
+
+
 munin-2.1.4, 2013-12-31
 
 -------
