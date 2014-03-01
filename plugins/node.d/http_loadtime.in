@@ -92,9 +92,9 @@ if [ "$1" = "config" ]; then
     exit 0
 fi
 
-TMPDIR=`mktemp -d` || exit 1
+TEMPO_DIR=$(mktemp -dt munin_http_loadtime.XXXXXX) || exit 1
 
-trap "rm -rf $TMPDIR" EXIT
+trap "rm -rf $TEMPO_DIR" EXIT
 
 cd $TEMPO_DIR || exit 1
 
