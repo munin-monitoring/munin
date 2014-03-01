@@ -36,7 +36,6 @@ GPLv2
 
 =cut
 
-MUNIN_LIBDIR=${MUNIN_LIBDIR:-"/usr/share/munin"}
 . $MUNIN_LIBDIR/plugins/plugin.sh
 
 target=${target:-"http://localhost/"}
