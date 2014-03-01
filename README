@@ -5,24 +5,6 @@ Munin is distributed under the GNU GPL version 2.  Munin is copyrighted
 
 Munin is homed at http://munin-monitoring.org/.  After you have completed 
 the INSTALL all the documentation can be found there.
-<<<<<<< HEAD
-
-Information on developing Munin with GitHub, such as how branches are used
-and the version numbering scheme, can be found in Munin's GitHub Wiki:
-https://github.com/munin-monitoring/munin/wiki/_pages
-
-Note to contributors:
-
-By sending us patches, you automatically license the code under the same terms
-as Munin.
-
-We also might edit your commits metadata (the comment part) for clarifications,
-but we'll leave the diff part intact (except for whitespace edits). So in case
-there's a problem with the commit diff, we either commit another patch
-thereafter or plainly ask you to rework it. We might eventually squash some of
-your commits into one.
-||||||| merged common ancestors
-=======
 
 Information on developing Munin with GitHub, such as how branches are used
 and the version numbering scheme, can be found in Munin's GitHub Wiki:
@@ -48,4 +30,3 @@ good starting point.
 If you request a pull against `master`, your pull will be automatically closed
 upon release. If you request against `devel`, your pull will be automatically
 closed upon merge.
->>>>>>> master
