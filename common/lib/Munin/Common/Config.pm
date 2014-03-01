@@ -68,6 +68,7 @@ my %legal = map { $_ => 1 } qw(
 	html_strategy
 	includedir
 	info
+	ignore_unknown
 	label
 	line
 	local_address

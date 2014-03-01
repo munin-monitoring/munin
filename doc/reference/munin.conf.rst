@@ -180,6 +180,13 @@ only to that node.
 
    If set, changes the name by which the node presents itself when warning through munin-limits.
 
+.. option:: ignore_unknown <yes|no>
+
+   If set, ignore any unknown values reported by the node. Allowed values are "yes"
+   and "no". Defaults to "no".
+
+   Useful when a node is expected to be off-line frequently.
+
 .. option:: update <yes|no>
 
    Fetch data from this node with :ref:`munin-update`? Allowed values are "yes" and "no". Defaults

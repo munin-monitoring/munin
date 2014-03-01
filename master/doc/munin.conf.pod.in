@@ -283,6 +283,15 @@ Used by "munin-limits".
 If set, changes the name by which the node presents itself when
 warning through munin-limits.
 
+=item B<ignore_unknown> I<value>
+
+Used by "munin-limits".
+
+If set, ignore any unknown values reported by the node. Allowed values are "yes"
+and "no". Defaults to "no".
+
+Useful when a node is expected to be off-line frequently.
+
 =item B<update> I<value>
 
 Fetch data from this node with "munin-update"? Allowed values are
