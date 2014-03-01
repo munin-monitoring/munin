@@ -106,4 +106,4 @@ do
     echo $esc_uri".value $loadtime"
 done
 
-cd -
+exit 0
