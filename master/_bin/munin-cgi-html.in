@@ -198,6 +198,19 @@ while (new CGI::Fast) {
 		];
 
 		# TODO - Create the model (category)
+		my $sth_category = $dbh->prepare(
+			"SELECT s.id, s.node_id as node_id, n.name as node_name, s.name as graph_name FROM service s
+			INNER JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_category'
+			INNER JOIN node n ON n.id = s.node_id
+			WHERE sa.value = ?
+			ORDER BY graph_name, node_name");
+		$sth_category->execute($category);
+
+		my $categories = [];
+		while (my ($_id, $_node_id, $node_name, $_graph_name) = $sth_category->fetchrow_array) {
+		}
+
+		$template_params{SERVICES} = [];
 	}
 
 	# Handle normal pages only if not aleady handled
