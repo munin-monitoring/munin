@@ -201,7 +201,7 @@ while (new CGI::Fast) {
 	}
 
 	# Handle normal pages only if not handled
-	goto RENDERING unless $template_filename;
+	goto RENDERING if $template_filename;
 
 	# Remove an eventual [/index].html
 	$path =~ s/(\/index)?\.html$//;
