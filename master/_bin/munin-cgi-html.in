@@ -144,7 +144,7 @@ while (new CGI::Fast) {
 
 		my $globalcats = [];
 		while (my ($_category) = $sth->fetchrow_array) {
-			my %urls = map { ("URL$_" => url_absolutize(lc("$_category-$_"), 1)) } @times;
+			my %urls = map { ("URL$_" => url_absolutize(lc("$_category-$_.html"), 1)) } @times;
 			push @$globalcats, {
 				NAME => $_category,
 				%urls,
