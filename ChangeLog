@@ -1,5 +1,83 @@
 -*- text -*-
 
+munin-2.1.6, 2014-03-09
+
+-------
+Summary
+-------
+
+A fixing release. The CGI html was somewhat broken.
+There are also some bug fixes, and all the trivial pull requests.
+
+Closes: #1389
+
+------------------
+Detailed Changelog
+------------------
+
+Brian Prodoehl (1):
+      rrdcopy: add simple "normal" to "huge" migration
+
+Daniel Black (2):
+      remove several race conditions around lock file by opening it once
+      syntax fix
+
+Erik Inge Bolsø (13):
+      p/bind9_rndc: avoid edns0 counters in req/resp
+      p/bind9_rndc: actually wire up transfers counter
+      p/bind9_rndc: add more reject categories
+      p/bind9_rndc: add bind rrl stats
+      p/bind9_rndc: multigraph + bind9_query_types
+      p/bind9_rndc: define a graph_order for main graph
+      p/bind9_rndc: fix old graph multigraph
+      p/bind9_rndc: add query by protocol graph
+      p/bind9_rndc: add counter desc from BIND9 ARM
+      p/bind9_rndc: split out servfail counter, add correct failure counter description
+      p/bind9_rndc: update example stats
+      p/bind9_rndc: authors
+      p/bind9_rndc: add graph_args for prettier stacks
+
+Steve Schnepp (22):
+      master: do not use -p $port if unset in ssh url
+      master: adding translucent AREA+STACK
+      travis: adding perl 5.18
+      travis: build the master branch
+      node/t: adding some time to the test
+      travis: adding a dep on dbd::sqlite
+      cgi/graph: replace Date::Manip with Date::Parse
+      t/master: use_node_name is not a bool anymore
+      master: fix partial graph_order handling
+      t/spoolreader: remove unused File::Slurp dep
+      t/spoolwriter: explicit use read_file from File::Slurp
+      master/graph: fix warning on = in conditional
+      travis: We do _not_ want to load RRDs.pm
+      travis: We want to support down to perl 5.8
+      travis: build the master branch
+      travis: test perl 5.12
+      travis: test perl 5.18
+      node/t: adding some time to the test
+      master: remove debug self.txt
+      README: fix merge 041b95b7
+      cgi/html: fix test in rendering special pages
+      cgi/html: explicit the comment
+
+Stig Sandbeck Mathisen (5):
+      doc: add munin(7) man page
+      doc: add munindoc(1) man page
+      doc: add munin-node-configure(1) man page
+      doc: add reference to munin-cgi-datafile
+      doc: add SEE ALSO link to munin(7)
+
+Tim Besard (3):
+      Add a ignore_unknown node-level directive, allowing to selectively ignore
+          unknown values when running munin-limits.
+      Also ignore transitions from UNKNOWN to OK.
+      Don't bail out, just prevent the state from changing.
+
+runesk (1):
+      Update snmp__df.in
+
+
 munin-2.1.5, 2014-02-05
 
 -------
