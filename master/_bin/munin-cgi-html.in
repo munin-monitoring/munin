@@ -200,7 +200,7 @@ while (new CGI::Fast) {
 		# TODO - Create the model (category)
 	}
 
-	# Handle normal pages only if not handled
+	# Handle normal pages only if not aleady handled
 	goto RENDERING if $template_filename;
 
 	# Remove an eventual [/index].html
