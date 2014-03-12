@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!@@PERL@@
 # -*- cperl -*-
 
 =head1 NAME
@@ -84,6 +84,7 @@ GPLv2
 =cut
 
 use strict;
+use warnings;
 use Munin::Plugin;
 
 # Reset locale to C
@@ -92,25 +93,26 @@ $ENV{LC_ALL} = 'C';
 # For these devices use the mount point, the device is useless
 my %usemntpt = ( tmpfs => 1, none => 1, udev => 1, simfs => 1 );
 
-my @exclude = qw(none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root devtmpfs)
+my @exclude = qw(none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root devtmpfs);
 my $dfopts = "-P -l ";
 my $title = "Disk usage";
 
-if ( $Munin::Plugin::me == "df_inode" ) {
+if ( $Munin::Plugin::me eq "df_inode" ) {
   $title = "Inode usage";
   $dfopts .= "-i ";
-  push(@excludes, 'nilfs2');
+  push(@exclude, 'nilfs2');
 }
 
-@excludes = split(/\s+/, $ENV{excludes}) if $ENV{excludes};
+@exclude = split(/\s+/, $ENV{exclude}) if $ENV{exclude};
 
-$dfopts .= join(' -x', @excludes);
+$dfopts .= join(' ', map { "-x" . $_ } @exclude);
 
 my $mode = ($ARGV[0] or "print");
 
 # Compile REs from env
-my @include_re = map(qr/$_/, split(/\s+/, $ENV{include_re}));
-my @exclude_re = map(qr/$_/, split(/\s+/, $ENV{exclude_re}));
+my (@include_re, @exclude_re);
+@include_re = map(qr/$_/, split(/\s+/, $ENV{include_re})) if ($ENV{include_re});
+@exclude_re = map(qr/$_/, split(/\s+/, $ENV{exclude_re})) if ($ENV{exclude_re});
 
 sub split_and_skip {
   my ($line) = @_;
