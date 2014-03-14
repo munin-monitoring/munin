@@ -35,7 +35,7 @@ use Munin::Node::OS;
 use Munin::Node::Service;
 use Munin::Node::Server;
 
-my $servicedir;
+my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
 my $sconfdir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
 my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
 my $DEBUG    = 0;
@@ -99,14 +99,19 @@ sub parse_args
 {
     my @ORIG_ARGV  = @ARGV;
 
+    my $servicedir_cmdline;
     print_usage_and_exit() unless GetOptions(
         "config=s"     => \$conffile,
+        "servicedir=s" => \$servicedir_cmdline,
         "debug!"       => \$DEBUG,
         "pidebug!"     => \$PIDEBUG,
         "paranoia!"    => \$paranoia,
         "version"      => \&print_version_and_exit,
         "help"         => \&print_usage_and_exit,
     );
+
+    # We untaint the args brutally, since the sysadm should know what he does
+    $servicedir = $1 if defined $servicedir_cmdline && $servicedir_cmdline =~ m/(.*)/;
 
     # Reset ARGV (for HUPing)
     @ARGV = @ORIG_ARGV;
@@ -165,6 +170,10 @@ and returning the output they produce.
 =item B<< --config <configfile> >>
 
 Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin-node.conf]
+
+=item B<< --servicedir <dir> >>
+
+Override plugin directory [@@CONFDIR@@/plugins/]
 
 =item B< --[no]paranoia >
 
