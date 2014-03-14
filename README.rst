@@ -8,7 +8,7 @@ Munin is homed at http://munin-monitoring.org/.  After you have completed
 the INSTALL all the documentation can be found there.
 
 Information on developing Munin with GitHub, such as how branches are used
-and the version numbering scheme, can be found in `Munin's GitHub Wiki`__:
+and the version numbering scheme, can be found in `Munin's GitHub Wiki`__.
 
 .. __ : https://github.com/munin-monitoring/munin/wiki/_pages
 
