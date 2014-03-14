@@ -76,7 +76,13 @@ my $nb_request = 0;
 my $nb_request_max = 0;
 
 # Use args urls. If none specified, revert to plain graph
-my @graphs = @ARGV;
+my @graphs;
+foreach (@ARGV) {
+	if ( $_ !~ /^--/ ) {
+		push(@graphs, $_);
+	}
+}
+
 if (! @graphs) {
 	my $fh = new IO::File($config->{dbdir} . "/graphs");
 
