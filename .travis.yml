@@ -39,3 +39,6 @@ notifications:
     template:
       - "%{repository} (%{branch} - %{commit} : %{author}): %{message}"
       - "Build details: %{build_url}"
+matrix:
+  # we don't need to continue any build when 1 test is failing.
+  fast_finish: true
