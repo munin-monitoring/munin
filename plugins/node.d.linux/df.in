@@ -118,7 +118,8 @@ sub split_and_skip {
   my ($line) = @_;
 
   # Parse the output
-  my ($name, undef, undef, undef, $capacity, $mountpt, undef) = split(/\s+/, $_, 7);
+  chomp($_);
+  my ($name, undef, undef, undef, $capacity, $mountpt) = split(/\s+/, $_, 6);
 
   return undef if $name eq 'Filesystem';
 
