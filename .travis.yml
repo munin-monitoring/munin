@@ -36,3 +36,6 @@ notifications:
     on_failure: always
     channels:
       - "irc.oftc.net#munin"
+    template:
+      - "%{repository} (%{branch} - %{commit} : %{author}): %{message}"
+      - "Build details: %{build_url}"
