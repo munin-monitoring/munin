@@ -230,7 +230,9 @@ while (new CGI::Fast) {
 
 	if (! defined $id) {
 		# Not found
-		print header( -status => 404, );
+		print header( -status => 404, "-Content-Type" => "text/plain", );
+		print path_info() . " is not specially handled\n";
+		print $path . " is not known\n";
 		next;
 	} elsif ($type eq "group") {
 		# Emit group template
