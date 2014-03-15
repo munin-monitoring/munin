@@ -1583,7 +1583,8 @@ sub handle_trends {
 
     # future begins at this horizontal ruler
     if ($enddate > $lastupdate) {
-        push(@complete, "VRULE:$lastupdate#999999:-:dashes=2,5");
+	my $extra = $RRDs::VERSION >= 1.3 ? ":-:dashes=2,5" : "";
+        push(@complete, "VRULE:$lastupdate#999999$extra");
     }
 
     # create trends/predictions
