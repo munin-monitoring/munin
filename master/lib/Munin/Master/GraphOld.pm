@@ -1578,7 +1578,7 @@ sub handle_trends {
 
     # enddate possibly in future
     my $futuretime = $pinpoint ? 0 : $resolutions{$time} * get_end_offset($service);
-    my $enddate = $lastupdate + ($futuretime);
+    my $enddate = time + ($futuretime);
     DEBUG "[DEBUG] lastupdate: $lastupdate, enddate: $enddate\n";
 
     # future begins at this horizontal ruler
