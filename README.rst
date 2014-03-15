@@ -32,3 +32,14 @@ good starting point.
 If you request a pull against ``master``, your pull will be automatically closed
 upon release. If you request against ``devel``, your pull will be automatically
 closed upon merge.
+
+Building status
+---------------
+
+stable-2.0 :
+
+.. image:: https://travis-ci.org/munin-monitoring/munin.png?branch=stable-2.0   :target: https://travis-ci.org/munin-monitoring/munin
+
+devel :
+
+.. image:: https://travis-ci.org/munin-monitoring/munin.png?branch=devel   :target: https://travis-ci.org/munin-monitoring/munin
