@@ -1583,7 +1583,7 @@ sub handle_trends {
 
     # future begins at this horizontal ruler
     if ($enddate > $lastupdate) {
-        push(@complete, "VRULE:$lastupdate#999999");
+        push(@complete, "VRULE:$lastupdate#999999:-:dashes=2,5");
     }
 
     # create trends/predictions
