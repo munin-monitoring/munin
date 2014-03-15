@@ -235,7 +235,7 @@ sub do_work {
 	# kill the remaining process if needed
 	if ($self->{node}->{pid} && kill(0, $self->{node}->{pid})) {
 		INFO "[INFO] Killing subprocess $self->{node}->{pid}";
-		kill $self->{node}->{pid};
+		kill 'TERM', $self->{node}->{pid};
 	}
 
 	if ($EVAL_ERROR =~ m/^NO_SPOOLFETCH_DATA /) {

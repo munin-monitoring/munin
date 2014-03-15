@@ -121,11 +121,10 @@ sub get_ios {
 
     if (-r "/proc/diskstats") {
         $kernel = 2.6;
-        $parts = new IO::File("/proc/diskstats") || die();
+        $parts = new IO::File("/proc/diskstats") || die("unable to open /proc/diskstats\n");
     } else {
         $kernel = 2.4;
-        $parts = new IO::File("/proc/partitions");
-        die("kernel $kernel not supported yet\n");
+        $parts = new IO::File("/proc/partitions") || die("unable to open /proc/partitions\n");
     }
 
     unless ($parts) {
