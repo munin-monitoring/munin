@@ -208,7 +208,9 @@ while (new CGI::Fast) {
 
 		my $categories = [];
 		while (my ($_id, $_node_id, $node_name, $_graph_name) = $sth_category->fetchrow_array) {
+			$_id;
 		}
+
 
 		$template_params{SERVICES} = [];
 	}
