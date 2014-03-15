@@ -213,6 +213,9 @@ while (new CGI::Fast) {
 
 
 		$template_params{SERVICES} = [];
+	} elsif ($path =~ /^([^\/])+\/comparison-(day|month|week|year)\.html$/) {
+		# That's a comparison URL
+		$template_filename = "munin-comparison-$2.tmpl";
 	}
 
 	# Handle normal pages only if not aleady handled
