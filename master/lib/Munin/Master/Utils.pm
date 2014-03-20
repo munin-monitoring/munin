@@ -996,7 +996,8 @@ sub munin_refreshconfig {
 	my $dbdir = $config->{dbdir};
 	# purge cyclic current config
 	purge_cycles($config);
-	$config = munin_readconfig("$dbdir/datafile");
+	my $new_config = munin_readconfig("$dbdir/datafile");
+	$config = munin_overwrite($new_config, $config);
 	$config->{dbdir} = $dbdir;
     }
 
