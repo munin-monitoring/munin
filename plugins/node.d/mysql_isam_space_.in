@@ -117,7 +117,7 @@ sub read_statefile
 
 	while (<IN>)
 	{
-		tr/ï¿½ï¿½ï¿½/eoa/;
+		tr/æøå/eoa/;
 		if (/^$DB\.([^\s]+)\s+([\d\.]+)\s*$/)
 		{
 			$tables->{$1} = $2;
@@ -176,7 +176,7 @@ sub fetch_state_from_mysql
 
 	foreach $line (@mysql_status)
 	{
-		$line =~ tr/ï¿½ï¿½ï¿½/eoa/;
+		$line =~ tr/æøå/eoa/;
 		if ($line =~ /^\|\s+([^\|\s]+)\s+\|\s+([^\|\s]+)\s+\|/)
 		{
 			next if ($1 eq "Databases");
