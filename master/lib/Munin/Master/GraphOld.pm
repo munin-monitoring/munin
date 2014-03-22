@@ -1651,12 +1651,13 @@ sub handle_trends {
 
     # enddate possibly in future
     my $futuretime = $pinpoint ? 0 : $resolutions{$time} * get_end_offset($service);
-    my $enddate = $lastupdate + ($futuretime);
+    my $enddate = time + ($futuretime);
     DEBUG "[DEBUG] lastupdate: $lastupdate, enddate: $enddate\n";
 
     # future begins at this horizontal ruler
     if ($enddate > $lastupdate) {
-        push(@complete, "VRULE:$lastupdate#999999");
+	my $extra = $RRDs::VERSION >= 1.3 ? ":-:dashes=2,5" : "";
+        push(@complete, "VRULE:$lastupdate#999999$extra");
     }
 
     # create trends/predictions
