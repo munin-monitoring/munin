@@ -80,6 +80,9 @@ if (! graph_check_cron() ) {
 	exit 0;
 }
 
+INFO "Starting munin-graph";
+my $graph_time = Time::HiRes::time;
+
 # BEGIN FAST-CGI LOOP:
 my $nb_request = 0;
 my $nb_request_max = 0;
@@ -171,6 +174,9 @@ while (my $path = <$graph_fh>) {
 	}
 }
 # END FAST-CGI LOOP - Time to die.  Nicely.
+
+$graph_time = sprintf("%.2f", (Time::HiRes::time - $graph_time));
+INFO "Munin-graph finished ($graph_time sec)";
 
 exit 0;
 
