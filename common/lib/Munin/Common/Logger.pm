@@ -111,17 +111,45 @@ Munin::Common::Logger - Perl extension for blah blah blah
 =head1 SYNOPSIS
 
    use Munin::Common::Logger;
-   blah blah blah
+
+   DEBUG("blah, blah, blah");
+   INFO("blah, blah, blah");
+   NOTICE("blah, blah, blah");
+   WARNING("blah, blah, blah");
+   ERROR("blah, blah, blah");
+   CRITICAL("blah, blah, blah");
+   ALERT("blah, blah, blah");
+   EMERGENCY("oops");
+   LOGCROAK("Goodbye, world!");
 
 =head1 DESCRIPTION
 
-Stub documentation for Munin::Common::Logger,
+Munin::Common::Logger handles logging for Munin.
 
-Blah blah blah.
+It uses Log::Dispatch for this, and exports utility functions to enable
+logging from other parts of Munin.
+
+To help transition from previous logging modules:
+
+=over
+
+=item  Functions are similar to Log4perl
+
+The functions used are similar to Log4perl, to make the number of code changes
+minimal.
+
+=item  Log messages are changed
+
+The "[SEVERITY]" prefix in the existing log messages are removed by
+Munin::Common::Logger. Severity is set by the function used to log,
+and used in the output formatting.
+
+=back
 
 =head2 EXPORT
 
-None by default.
+The functions DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT,
+EMERGENCY and LOGCROAK are exported by default.
 
 =head1 SEE ALSO
 
