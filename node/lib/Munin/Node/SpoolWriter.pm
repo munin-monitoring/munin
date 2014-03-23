@@ -12,7 +12,7 @@ use Fcntl qw(:DEFAULT :flock);
 
 use Munin::Common::Defaults;
 use Munin::Common::SyncDictFile;
-use Munin::Node::Logger;
+use Munin::Common::Logger;
 
 
 use constant DEFAULT_TIME => 86_400;      # put 1 day of results into a spool file
@@ -119,7 +119,7 @@ sub write
         # Ignore blank lines and "."-ones.
         next if (!defined($line) || $line eq '' || $line eq '.');
 
-        print {$fh} $line, "\n" or logger("Error writing results: $!");
+        print {$fh} $line, "\n" or ERROR("Error writing results: $!");
     }
 
     return;
