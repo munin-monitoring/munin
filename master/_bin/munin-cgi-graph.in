@@ -36,7 +36,6 @@ use Time::HiRes qw(gettimeofday tv_interval);
 use Munin::Master::GraphOld;
 use Munin::Master::Utils;
 
-use Munin::Master::Logger;
 use Munin::Common::Logger;
 
 my $GRAPHER = "$Munin::Common::Defaults::MUNIN_LIBDIR/munin-graph";
@@ -68,9 +67,7 @@ push @params, "--skip-locking", "--skip-stats", "--nolazy";
 
 my $config = graph_startup(\@params);
 
-logger_open($1) if ($config->{'logdir'} =~ m/(.*)/);
 if(defined($ENV{CGI_DEBUG})) {
-	logger_debug();
 	push @params, "--debug";
 }
 

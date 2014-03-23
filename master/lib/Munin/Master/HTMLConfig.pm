@@ -13,7 +13,6 @@ use Getopt::Long;
 use Time::HiRes;
 use Scalar::Util qw( weaken );
 
-use Munin::Master::Logger;
 use Munin::Master::Utils;
 use Data::Dumper;
 

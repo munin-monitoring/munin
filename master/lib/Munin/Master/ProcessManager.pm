@@ -14,7 +14,6 @@ use Time::HiRes;
 
 use Munin::Common::Timeout;
 use Munin::Master::Config;
-use Munin::Master::Logger;
 
 use Munin::Common::Logger;
 

@@ -32,9 +32,6 @@ sub main {
 
     configure();
 
-    logger_open($config->{'logdir'});
-    logger_debug() if $config->{debug};
-
     my $update = Munin::Master::Update->new();
     $update->run();
 

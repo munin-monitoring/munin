@@ -168,10 +168,8 @@ sub _run_starttls_if_required {
                                    $self->{configref}->{tls} : $config->{tls};
     DEBUG "TLS set to \"$tls_requirement\".";
     return if $tls_requirement eq 'disabled';
-    my $logger = Log::Log4perl->get_logger("Munin::Master");
     $self->{tls} = Munin::Common::TLSClient->new({
         DEBUG        => $config->{debug},
-        logger       => sub { $logger->warn(@_) },
         read_fd      => fileno($self->{reader}),
         read_func    => sub { _node_read_single($self) },
         tls_ca_cert  => $config->{tls_ca_certificate},

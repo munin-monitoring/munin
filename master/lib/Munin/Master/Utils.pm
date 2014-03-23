@@ -13,7 +13,6 @@ use Fcntl qw(:DEFAULT :flock);
 use File::Path;
 use IO::Handle;
 use Munin::Common::Defaults;
-use Munin::Master::Logger;
 use Munin::Master::Config;
 use Munin::Common::Config;
 use Munin::Common::Logger;

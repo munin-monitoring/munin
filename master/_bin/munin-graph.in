@@ -62,9 +62,6 @@ push @params, "--log-file", $logfile;
 
 my $config = graph_startup(\@params);
 
-logger_open($config->{'logdir'});
-logger_debug() if $config->{debug} or defined($ENV{CGI_DEBUG});
-
 if (! graph_check_cron() ) {
 	# Should not be launched from cron.
 	INFO "[INFO] graphing is cgi, do nothing";	
