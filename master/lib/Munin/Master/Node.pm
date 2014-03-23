@@ -13,7 +13,8 @@ use Munin::Master::Config;
 use Munin::Common::Timeout;
 use Munin::Common::TLSClient;
 use Data::Dumper;
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
+
 use Time::HiRes qw( gettimeofday tv_interval );
 use IO::Socket::INET6;
 

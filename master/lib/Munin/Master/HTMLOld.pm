@@ -76,7 +76,7 @@ use Munin::Master::Logger;
 use Munin::Master::Utils;
 use Munin::Master::HTMLConfig;
 
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
 
 my @times = ("day", "week", "month", "year");
 

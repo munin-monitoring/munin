@@ -39,7 +39,7 @@ use Munin::Master::GraphOld;
 use Munin::Master::Utils;
 
 use Munin::Master::Logger;
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
 
 my $GRAPHER = "$Munin::Common::Defaults::MUNIN_LIBDIR/munin-graph";
 my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";

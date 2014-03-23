@@ -114,7 +114,7 @@ use English qw(-no_match_vars);
 use Munin::Common::Defaults;
 use Munin::Master::Group;
 use Munin::Master::Host;
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
 
 my %booleans = map {$_ => 1} qw(
     debug

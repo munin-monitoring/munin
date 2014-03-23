@@ -9,7 +9,7 @@ use strict;
 use English qw(-no_match_vars);
 use Getopt::Long;
 use Pod::Usage;
-use Log::Log4perl qw(:easy);
+use Munin::Common::Logger;
 
 use Munin::Master::Update;
 use Munin::Master::Logger;

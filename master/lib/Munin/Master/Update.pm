@@ -9,7 +9,7 @@ use English qw(-no_match_vars);
 use Carp;
 
 use Time::HiRes;
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
 use List::Util qw( shuffle );
 
 use Munin::Common::Defaults;

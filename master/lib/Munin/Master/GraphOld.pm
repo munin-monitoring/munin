@@ -63,7 +63,7 @@ use Munin::Master::Logger;
 use Munin::Master::Utils;
 use Munin::Common::Defaults;
 
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
 
 # RRDtool 1.2 requires \\: in comments
 my $RRDkludge = $RRDs::VERSION < 1.2 ? '' : '\\';
