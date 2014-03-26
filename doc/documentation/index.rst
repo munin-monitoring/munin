@@ -32,7 +32,7 @@ Munin's Wiki
   whilst the things to say about the *Munin software* shall be placed here in the 
   `Munin Guide <https://munin.readthedocs.org/>`_.
 
-.. _instructions http://munin-monitoring.org/wiki/munindoc
+.. _instructions: http://munin-monitoring.org/wiki/munindoc
 .. [#] Plain Old Documentation, abbreviated pod, is a lightweight markup language used to document the Perl programming language. Source Wikipedia: http://en.wikipedia.org/wiki/Perldoc
 .. [#] The reStructuredText (frequently abbreviated as reST) project is part of the Python programming language Docutils project of the Python Doc-SIG (Documentation Special Interest Group). Source Wikipedia: http://en.wikipedia.org/wiki/ReStructuredText
 
