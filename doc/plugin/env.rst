@@ -26,10 +26,10 @@ Munin related
   Defines if the master is able to understand the ``multigraph`` keyword.
 
 .. csv-table:: Values
-  :header: "Value", "Description"
+	:header: "Value", "Description"
 
-  0, "Master does not understand the ``multigraph`` keyword".
-  1, "Master does understand the ``multigraph`` keyword".
+	"0", "Master does not understand the ``multigraph`` keyword."
+	"1", "Master does understand the ``multigraph`` keyword."
 
 ``MUNIN_PLUGSTATE``
   Defines the directory that a plugin must use if it wants to store
