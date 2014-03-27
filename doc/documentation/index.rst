@@ -23,18 +23,23 @@ Unix Manual Pages
   (such as munin-run, and munindoc itself) are only documented through the usual Unix man command.
 
 Munin Guide
-  The pages you are just viewing ;) We use RST [#]_. format here. If you have a github account, you can edit the pages online and send a pull request to contribute your work to the Munin master repository.
+  The pages you are just viewing ;) We use RST [#]_. format here. If you have a
+  GitHub_ account, you can even edit the pages online and send a pull request to
+  contribute your work to the official Munin repository.
 
 Munin's Wiki
   Currently it contains a mixture of all sorts of documentation listed above.
-  In the future the `wiki <http://munin-monitoring.org/wiki/>`_ 
-  shall be the place for docs concerning anything *around* Munin, 
+  In the future, the wiki_ shall be the place for docs concerning anything *around* Munin,
   whilst the things to say about the *Munin software* shall be placed here in the 
-  `Munin Guide <https://munin.readthedocs.org/>`_.
+  `Munin Guide`_.
 
 .. _instructions: http://munin-monitoring.org/wiki/munindoc
 .. [#] Plain Old Documentation, abbreviated pod, is a lightweight markup language used to document the Perl programming language. Source Wikipedia: http://en.wikipedia.org/wiki/Perldoc
 .. [#] The reStructuredText (frequently abbreviated as reST) project is part of the Python programming language Docutils project of the Python Doc-SIG (Documentation Special Interest Group). Source Wikipedia: http://en.wikipedia.org/wiki/ReStructuredText
+
+.. _GitHub: https://github.com/
+.. _Munin Guide: https://munin.readthedocs.org/
+.. _wiki: http://munin-monitoring.org/wiki/
 
 Nomenclature
 ============
