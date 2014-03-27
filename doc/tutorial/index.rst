@@ -14,9 +14,9 @@ be a complete or thorough treatment of the topics it covers.
 
 After you have worked through this tutorial you might want to move on to
 reading :ref:`Part II <protocol-index>` to gain a more formal knowledge of the
-Munin protocol, or :ref:`Part IV<api-index`  for information about developing
+Munin protocol, or :ref:`Part IV <api-index>`  for information about developing
 applications for Munin. Those who set up and manage their own server should
-also read :ref:`Part III<install-index>`.
+also read :ref:`Part III <install-index>`.
 
 .. toctree::
    :maxdepth: 2
