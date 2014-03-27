@@ -21,5 +21,5 @@ A Brief History of Munin
         Released 2.1
 
 
-Oct 2013
+July 2014
         target for 2.2
