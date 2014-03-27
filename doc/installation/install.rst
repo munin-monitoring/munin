@@ -5,7 +5,7 @@
 Munin is split into distincts roles.
 
 Master
-------
+======
 
 This is what 
 
@@ -21,7 +21,7 @@ or FastCGI. Apache HTTD should be suitable. Also reported to be
 working is nginx and lighttpd.
 
 Node
-----
+====
 
 The "munin node" is a daemon which runs on all servers being
 monitored.
@@ -41,13 +41,11 @@ We `stronly` recommend a packaged install, as the source distribution isn't as
 tested as the packaged one. The current state of the packages is so
 satifactory, that even the developpers use them instead.
 
-
-
-Source or packages?
-===================
-
 Installing Munin on most relevant operating systems can usually be
 done with with the systems package manager, typical examples being:
+
+Installing Munin from a package
+===============================
 
 FreeBSD
 -------
