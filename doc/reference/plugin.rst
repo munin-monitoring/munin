@@ -7,6 +7,8 @@
 .. index::
    pair: plugin; fields
 
+.. _update_rate:
+
 Fields
 ======
 

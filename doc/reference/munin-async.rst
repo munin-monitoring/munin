@@ -14,6 +14,8 @@ The munin async clients reads from a spool directory written by
 
 It can optionally request a cleanup of this directory.
 
+.. _spoolfetch:
+
 OPTIONS
 =======
 
