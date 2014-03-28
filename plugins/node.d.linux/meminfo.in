@@ -32,9 +32,9 @@ values).  Graph splitted to 8 groups, every group has child graphs:
     Summary `applicationName1` memory usage          v
     ...                                            - Summary application processes memory using
     Summary `applicationNameX` memory usage          ^
-  External fragmentztion: Buddyinfo                - Buddyinfo/ Nodes and zones summary
+  External fragmentation: Buddyinfo                - Buddyinfo/ Nodes and zones summary
      Node X, zone ZZZ                              - Chunks for each zone
-  External fragmentztion: Page type info           - Page type info, summary node-zone-type pages
+  External fragmentation: Page type info           - Page type info, summary node-zone-type pages
     Node X, zone ZZZ, type TTT                     - Free pages per node-zone-page by order
   Physical memory usage                            - Main graph, show phisical memory usage
     Active/Inactive memory                         - subj :)
@@ -420,7 +420,7 @@ my $graphs_source =
     'munin' =>
     {
       'args'     => '--base 1000',
-      'title'    => 'External fragmentztion: Buddyinfo',
+      'title'    => 'External fragmentation: Buddyinfo',
       'vtitle'   => 'chunks',
       'category' => 'memory',
       'info'     => 'External fragmentation is a problem under some workloads, and buddyinfo is a useful tool for helping diagnose these problems. Buddyinfo will give you a clue as to how big an area you can safely allocate, or why a previous allocation failed.',
@@ -470,7 +470,7 @@ my $graphs_source =
     'munin' =>
     {
       'args'     => '--base 1000',
-      'title'    => 'External fragmentztion: Page type info',
+      'title'    => 'External fragmentation: Page type info',
       'vtitle'   => 'pages',
       'info'     => 'The pagetypinfo gives the same type of information as buddyinfo except broken down by migrate-type and finishes with details on how many page blocks of each type exist.',
       'category' => 'memory'

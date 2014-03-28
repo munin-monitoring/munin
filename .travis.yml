@@ -34,7 +34,13 @@ before_install:
 notifications:
   email: false
   irc:
-    on_success: always # change
+    on_success: change # no need for spam
     on_failure: always
     channels:
       - "irc.oftc.net#munin"
+    template:
+      - "%{repository} (%{branch} - %{commit} : %{author}): %{message}"
+      - "Build details: %{build_url}"
+matrix:
+  # we don't need to continue any build when 1 test is failing.
+  fast_finish: true

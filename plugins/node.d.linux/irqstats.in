@@ -55,6 +55,7 @@ GPLv2
 =cut
 
 use Munin::Plugin;
+use Scalar::Util qw(looks_like_number);
 use strict;
 
 my $skipdevs = $ENV{'skipdevs'} || "";
@@ -99,7 +100,7 @@ my @irqs;
 
 sub sum (@) {
     my $sum = 0;
-    $sum += $_ || 0 for @_;	# Avoid complaints about empty strings
+    $sum += (looks_like_number($_) ? $_ : 0) || 0 for @_;	# Avoid complaints about empty strings
     return $sum;
 }
 

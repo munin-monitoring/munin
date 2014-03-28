@@ -6,6 +6,11 @@
 # ln -s), for example quota-usage_hda3. Use underscores instead of slashes, for
 # example to monitor /dev/mapper/vol-foo, name this quota-usage_mapper_vol-foo
 #
+# This plugin uses the soft and hard quota data for warning and critical
+# levels respectively.
+#
+# Source: https://svn.koumbit.net/koumbit/trunk/munin-plugins/quota-usage
+#
 # Parameters understood:
 #
 # 	config   (required)
@@ -28,7 +33,14 @@ while (<REP>) {
 	chomp;
 	if (/^-+$/../^$/) {
 		my @data = split(/ +/);
-		$users{$data[0]} = $data[2] if (@data > 2 && $data[2] > 0);
+
+		next if !$data[0] || $data[0] =~ /^#/;
+
+		if ( @data > 2 && $data[2] > 0 ) {
+		  $users{$data[0]}[0] = $data[2]; # current usage
+		  $users{$data[0]}[1] = $data[3]; # Soft quota
+		  $users{$data[0]}[2] = $data[4]; # Hard quota
+		}
 	}
 }
 close REP;
@@ -42,18 +54,29 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 	print "graph_category disk\n";
 	for my $user (@users_by_usage) {
 		my ($uid, $name) = (getpwnam($user))[2,6];
+		my $id = clean_fieldname($user);
 		$name = $user if (length($name) < length($user));
-		$user = clean_fieldname($user);
 		$name = (split(/,/, $name))[0];
-		printf "%s.label %s\n", $user, $name;
-		printf "%s.cdef %s,1024,*\n", $user, $user;
-		printf "%s.graph no\n", $user if ($uid < 1000);
+
+		printf "%s.label %s\n", $id, $name;
+		printf "%s.cdef %s,1024,*\n", $id, $id;
+
+		if ($users{$user}[1] && $users{$user}[1] > 0) {
+		  printf "%s.warning %s\n", $id, $users{$user}[1];
+		}
+		if ($users{$user}[2] && $users{$user}[2] > 0) {
+		  printf "%s.critical %s\n", $id, $users{$user}[2];
+		}
+
+		if ($uid < 200) {
+		  printf "%s.graph no\n", $id
+		}
 	}
 } else {
 	for my $user (@users_by_usage) {
 		my $esc = $user;
 		$esc = clean_fieldname($esc);
-		printf "%s.value %s\n", $esc, $users{$user};
+		printf "%s.value %s\n", $esc, $users{$user}[0];
 	}
 }
 

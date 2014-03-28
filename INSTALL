@@ -70,8 +70,7 @@ Node:
 - Perl modules: Net::Server, Net::Server::Fork, Time::HiRes
 
 - Perl module Net::SNMP for SNMP autoconfiguration and plugins
-
-- For SNMPv3: Perl modules Crypt::DES, Digest::SHA1, Digest::HMAC
+-- For SNMPv3 support in Net::SNMP: Perl modules Crypt::DES, Digest::HMAC
 
 - Net::SSLeay if you want to use SSL/TLS
 

@@ -71,6 +71,7 @@ if [ "$1" = "config" ]; then
 
 	case $dev:$mnt in
 	    /usr/lib*|ctfs:*|objfs:*|mnttab:*|sharefs:*|*:/cdrom/*|*:/media/*) continue;;
+	    /devices*|/platform*|*:/var/run*|*:/etc/svc*|proc:*|fd:*) continue;;
 	    swap:*) name=$(clean_fieldname $mnt);;
 	    *:*)    name=$(clean_fieldname $dev);;
 	esac
@@ -84,6 +85,7 @@ fi
 $DF -k -l $only | $TAIL +2 | while read dev size used avail pct mnt; do
 	case $dev:$mnt in
 	    /usr/lib*|ctfs:*|objfs:*|mnttab:*|sharefs:*|*:/cdrom/*|*:/media/*) continue;;
+	    /devices*|/platform*|*:/var/run*|*:/etc/svc*|proc:*|fd:*) continue;;
 	    swap:*) name=$(clean_fieldname $mnt);;
 	    *:*)    name=$(clean_fieldname $dev);;
 	esac
