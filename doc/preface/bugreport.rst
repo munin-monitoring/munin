@@ -44,7 +44,7 @@ but is not limited to, the following circumstances:
 - Munin fails to compile, build, or install according to the instructions on
   supported platforms.
 
-Here "program" refers to any executable, not only the backend process.
+Here "program" refers to any executable, not only the back-end process.
 
 Being slow or resource-hogging is not necessarily a bug. Read the documentation
 or ask on one of the mailing lists for help in tuning your applications.

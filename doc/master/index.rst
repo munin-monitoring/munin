@@ -9,8 +9,8 @@ Role
 
 The munin master is responsible for gathering data from munin nodes.
 It stores this data in RRD [#]_. files, and graphs them on request. 
-It also checks wether the fetched values fell below or go over specific 
-threshholds (warning, critical) and will send alerts if this happens and
+It also checks whether the fetched values fell below or go over specific
+threshold (warning, critical) and will send alerts if this happens and
 the administrator configured it to do so.
 
 .. [#] RRDtool (acronym for round-robin database tool) aims to handle time-series data like network bandwidth, temperatures, CPU load, etc. The data are stored in a round-robin database (circular buffer), thus the system storage footprint remains constant over time. Source Wikipedia: http://en.wikipedia.org/wiki/RRDtool
@@ -30,7 +30,7 @@ The following components are part of munin-master:
      <munin-node>`, which is then stored in RRD files.
 
    * :ref:`munin-graph` is run by :ref:`munin-cron`. It generates
-     metadata used by :ref:`munin-cgi-graph`. If graph_strategy is set
+     meta-data used by :ref:`munin-cgi-graph`. If graph_strategy is set
      to "cron", it generates static graphs in PNG format.
 
    * :ref:`munin-limits` is run by :ref:`munin-cron`. It notifies any
@@ -39,7 +39,7 @@ The following components are part of munin-master:
      is then configured as a contact.
 
    * :ref:`munin-html` is run by :ref:`munin-cron`. It generates
-     metadata used by :ref:`munin-cgi-html`. If html_strategy is set
+     meta-data used by :ref:`munin-cgi-html`. If html_strategy is set
      to "cron", it also generates static HTML pages.
 
    * :ref:`munin-cgi-graph` is run by a web server, and generates

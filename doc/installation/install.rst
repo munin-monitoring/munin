@@ -2,7 +2,7 @@
  Munin Architecture
 ====================
 
-Munin is split into distincts roles.
+Munin is split into distinct roles.
 
 Master
 ======
@@ -17,7 +17,7 @@ collect data from all nodes, and graph the results. When starting with
 munin, it should be enough to install the munin master on one server.
 
 On the munin master, you will need a web server capable of running CGI
-or FastCGI. Apache HTTD should be suitable. Also reported to be
+or FastCGI. Apache HTTPD should be suitable. Also reported to be
 working is nginx and lighttpd.
 
 Node
@@ -37,9 +37,9 @@ or install from source-code.
 Source or packages?
 ===================
 
-We `stronly` recommend a packaged install, as the source distribution isn't as
+We `strongly` recommend a packaged install, as the source distribution isn't as
 tested as the packaged one. The current state of the packages is so
-satifactory, that even the developpers use them instead.
+satisfactory, that even the developers use them instead.
 
 Installing Munin on most relevant operating systems can usually be
 done with with the systems package manager, typical examples being:
@@ -151,7 +151,7 @@ Running make
 
 There are make targets for node, master, documentation and man files.
 Generally you want to install everything on the master, and just the
-node and plugiuns on the nodes.
+node and plugins on the nodes.
 
 - Edit Makefile.config to suit your needs.
 

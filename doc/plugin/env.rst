@@ -1,7 +1,7 @@
 .. _plugin-env:
 
 =============================================
- Environment variables accessibles in plugins
+ Environment variables accessible in plugins
 =============================================
 
 .. index::
@@ -52,7 +52,7 @@ Munin related
 Config related
 ==============
 
-Here is a list of other environnement vars, that are derived from the ``Munin::Common::Defaults`` package.
+Here is a list of other environment vars, that are derived from the ``Munin::Common::Defaults`` package.
 
 ::
 
@@ -89,7 +89,7 @@ Here is a list of other environnement vars, that are derived from the ``Munin::C
 System related
 ==============
 
-Munin does redefine some system environnement vars :
+Munin does redefine some system environment vars :
 
 ``PATH``
 	This is redefined for security. It does provide a safe environment so
