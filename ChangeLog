@@ -1,5 +1,96 @@
 -*- text -*-
 
+munin-2.1.6.1, 2014-03-28
+
+-------
+Summary
+-------
+
+A merging release.
+
+There are also some bug fixes, and many of the pending pull requests.
+
+The naming scheme is convoluted, as meeting said that 2.1.7 will be the first
+with a JSON API, and I prefered to release early.
+
+Closes: #1296, #1350
+
+------------------
+Detailed Changelog
+------------------
+
+Axel Huebl (2):
+      p/http_loadtime: renable autoconf
+      p/http_loadtime: use plugin.sh to escape names
+
+Erik Inge Bolsø (2):
+      doc: Digest::SHA1 has been replaced by Digest::SHA in perl core 5.9.3
+      munin-update with max_processes=1 is the serial option
+
+Igor Kolar (1):
+      node: added --servicedir switch to munin-node
+
+Jose-Marcio Martins da Cruz (2):
+      Update df.in
+      Update bind9.in
+
+Lionel Sausin (1):
+      Allow spaces int he mount point in the plugin 'df'
+
+Marcello Barnaba (2):
+      Quota usage: map soft/hard quotas to warning/critical thresholds
+      Fix thresholds for users containing a dash in their name
+
+Matthias Schmitz (1):
+      Only get non-parameter parts of $ARGV to @graphs (Fix #1418)
+
+Michiel Holtkamp (3):
+      Clean field names
+      Added documentation for 'Clean field names'
+      Clean procargs and procuser as well
+
+Nanotech DESU (1):
+      Typo in meminfo plugin
+
+Robert Rothenberg (1):
+      p/mysql_isam_space_: do not munch database names
+
+Steve Schnepp (24):
+      node: untaint the service-dir args
+      p/http_loadtime: multi-URL and requisites support
+      p/http_loadtime: remove default for MUNIN_LIBDIR
+      p/http_loadtime: fix typo in temp dir var
+      p/http_loadtime: exit cleanly
+      cgi/html: fixing group url
+      cgi/html: fixing category url
+      travis: remove notify on successive successful
+      travis: change the IRC template
+      travis: failing fast
+      README: format the README in RST
+      README: fix typo
+      travis: We want to support down to perl 5.8
+      travis: test perl 5.18
+      travis: test perl 5.12
+      travis: build the master branch
+      travis: remove notify on successive successful
+      travis: change the IRC template
+      travis: failing fast
+      README: adding the travis status
+      README: formatting build status
+      master: add start and stop log for munin-graph
+      master: remove CGI reference in comments
+      p/mysql_isam_space_: fix the special char munging
+
+Stig Sandbeck Mathisen (1):
+      Fix multiple errors in "df" plugin for linux
+
+cgzones (1):
+      fix irqstats
+
+chapmajs (1):
+      Makefile: use configured man3ext from Perl
+
+
 munin-2.1.6, 2014-03-09
 
 -------
