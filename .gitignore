@@ -4,6 +4,7 @@
 build-*-stamp
 build/
 .*.swp
+*.bak
 /sandbox/
 MYMETA.*
 SPOOL-META
