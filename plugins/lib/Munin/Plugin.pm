@@ -432,7 +432,7 @@ sub tail_open ($$) {
 
     my $size = (stat($file))[7];
 
-    warn "**Size is $size\n" if $DEBUG;
+    warn "**Size of $file is $size\n" if $DEBUG;
 
     if (!defined($size)) {
 	warn "$me: Could not stat input file '$file': $!\n";

@@ -145,6 +145,7 @@ foreach $printer ( @printers ) {
         exit 2;
     }
     @jobs = ( <LPSTAT> );
+    $n_jobs = @jobs;
     $jobs{$printer}=$n_jobs || 0;
 }
 

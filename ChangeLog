@@ -587,6 +587,51 @@ tsaavik (1):
       dynazoom: added logo and backlink
 
 
+munin-2.0.20, 2014-03-28
+
+-------
+Summary
+-------
+
+Bugfix release. It fixes the "start should be less than end" bug.
+
+Closes: #1358, #1350, #1434, #1224
+
+------------------
+Detailed Changelog
+------------------
+
+Alexander Shorin (2):
+      Generate correct RRD filenames for nested graphs.
+      Fix unreasonable die in iostat_io
+
+Axel Huebl (1):
+      p/http_loadtime: renable autoconf
+
+Lars Thegler (1):
+      plugins/Plugin.pm: log filename in tail_open()
+
+Matthias Schmitz (2):
+      Use perl instead of GNU sed; fix spelling error
+      Fix small typo (misspelled name)
+
+Steve Schnepp (11):
+      p/Pgsql.pm: fix version check on windows
+      master/Update: atomic write datafile with tmp+ren
+      master: fix kill invocation
+      master/graph: fix gfx error when plugin is too old
+      travis: We want to support down to perl 5.8
+      travis: test perl 5.18
+      travis: test perl 5.12
+      travis: build the master branch
+      travis: remove notify on successive successful
+      travis: change the IRC template
+      travis: failing fast
+
+cernst1980 (1):
+      p/lpstat: fix jobsize
+
+
 munin-2.0.19, 2013-12-07
 
 -------

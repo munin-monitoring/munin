@@ -218,7 +218,7 @@ install-doc: build-doc
 # Dummy rule to enable parallel building
 infiles: $(INFILES)
 
-build: infiles build-master build-common-prime build-node build-plugins $(JAVA_BUILD) build-man substitue-confvar-inline
+build: infiles build-master build-common-prime build-node build-plugins $(JAVA_BUILD) build-man substitute-confvar-inline
 
 build/%: %.in
 	@echo "$< -> $@"
@@ -258,7 +258,7 @@ build/%: %.in
 
 build-common-prime: build-common-pre common/blib/lib/Munin/Common/Defaults.pm build-common
 
-substitue-confvar-inline:
+substitute-confvar-inline:
 	@sed -e 's|@@PREFIX@@|$(PREFIX)|g'                      \
              -e 's|@@CONFDIR@@|$(CONFDIR)|g'                    \
              -e 's|@@BINDIR@@|$(BINDIR)|g'                      \
