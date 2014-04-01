@@ -23,9 +23,9 @@ sub _timestamp {
 # This is for compatibility with old logging calls. This can safely be removed when all old logging
 # calls have been updated.
 sub _remove_label {
-	my ($message) = @_;
-	$message =~ s{^\[(DEBUG|INFO|NOTICE|WARNING|ERROR)\]\s*}{};
-	return $message;
+    my ($message) = @_;
+    $message =~ s{^\[(DEBUG|INFO|NOTICE|WARNING|ERROR)\][\s:]*}{};
+    return $message;
 }
 
 
@@ -34,17 +34,42 @@ my $screen_format = sub {
     my $level   = $args{level};
     my $message = $args{message};
 
-	$message = _remove_label($message);
+    $message = _remove_label($message);
 
-	chomp $message;
+    chomp $message;
 
-    return sprintf( "%s [%s]: %s\n",
-        _timestamp, $level, $message );
+    return sprintf( "%s [%s]: %s\n", _timestamp, $level, $message );
 };
 
-my $log ||=
-  Log::Dispatch->new( outputs =>
-      [ [ 'Screen', min_level => 'debug', callbacks => $screen_format ], ] );
+my $syslog_format = sub {
+    my %args    = @_;
+    my $level   = $args{level};
+    my $message = $args{message};
+
+    $message = _remove_label($message);
+
+    chomp $message;
+
+    return $message;
+};
+
+my $log ||= Log::Dispatch->new();
+
+use Log::Dispatch::Screen;
+$log->add(
+    Log::Dispatch::Screen->new(
+        min_level => 'error',
+        callbacks => $screen_format
+    )
+);
+
+use Log::Dispatch::Syslog;
+$log->add(
+    Log::Dispatch::Syslog->new(
+        min_level => 'debug',
+        callbacks => $syslog_format,
+    )
+);
 
 sub DEBUG {
     my ($message) = @_;
