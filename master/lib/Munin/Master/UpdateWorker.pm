@@ -8,7 +8,7 @@ use strict;
 
 use Carp;
 use English qw(-no_match_vars);
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
 
 use File::Basename;
 use File::Path;

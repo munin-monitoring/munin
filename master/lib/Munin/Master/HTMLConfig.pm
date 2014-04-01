@@ -13,11 +13,10 @@ use Getopt::Long;
 use Time::HiRes;
 use Scalar::Util qw( weaken );
 
-use Munin::Master::Logger;
 use Munin::Master::Utils;
 use Data::Dumper;
 
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
 
 my @times = ("day", "week", "month", "year");
 

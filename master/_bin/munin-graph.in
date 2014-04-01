@@ -39,7 +39,7 @@ use Munin::Master::GraphOld;
 use Munin::Master::Utils;
 
 use Munin::Master::Logger;
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
 
 my $GRAPHER = "$Munin::Common::Defaults::MUNIN_LIBDIR/munin-graph";
 my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
@@ -61,9 +61,6 @@ push @params, "--no-fork"; # We do *not* want to fork. Perf -> FastCGI
 push @params, "--log-file", $logfile;
 
 my $config = graph_startup(\@params);
-
-logger_open($config->{'logdir'});
-logger_debug() if $config->{debug} or defined($ENV{CGI_DEBUG});
 
 if (! graph_check_cron() ) {
 	# Should not be launched from cron.

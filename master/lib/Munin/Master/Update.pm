@@ -9,12 +9,11 @@ use English qw(-no_match_vars);
 use Carp;
 
 use Time::HiRes;
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
 use List::Util qw( shuffle );
 
 use Munin::Common::Defaults;
 use Munin::Master::Config;
-use Munin::Master::Logger;
 use Munin::Master::UpdateWorker;
 use Munin::Master::ProcessManager;
 use Munin::Master::Utils;
@@ -93,10 +92,6 @@ sub _create_rundir_if_missing {
 
 sub _create_workers {
     my ($self) = @_;
-
-    # FIX log skipped and queued workers:
-    # logger("Skipping '$name' (update disabled by config)");
-    # logger("Queuing '$name' for update.");
 
     my @hosts = $self->{group_repository}->get_all_hosts();
 

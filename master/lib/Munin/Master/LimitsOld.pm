@@ -45,9 +45,8 @@ use POSIX qw ( strftime );
 use Getopt::Long;
 use Time::HiRes;
 use Text::Balanced qw ( extract_bracketed );
-use Log::Log4perl qw ( :easy );
+use Munin::Common::Logger;
 
-use Munin::Master::Logger;
 use Munin::Master::Utils;
 use Munin::Common::Defaults;
 
@@ -105,9 +104,6 @@ sub limits_startup {
     munin_readconfig_base($conffile);
     # XXX: check if it does actualy need that part
     $config = munin_readconfig_part('datafile', 0);
-
-    logger_open($config->{'logdir'});
-    logger_debug() if $DEBUG;
 }
 
 

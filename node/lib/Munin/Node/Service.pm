@@ -10,7 +10,7 @@ use Carp;
 
 use Munin::Node::Config;
 use Munin::Node::OS;
-use Munin::Node::Logger;
+use Munin::Common::Logger;
 
 use Munin::Common::Defaults;
 
@@ -224,7 +224,7 @@ sub change_real_and_effective_user_and_group
         };
 
         if ($EVAL_ERROR) {
-            logger("# FATAL: Plugin '$service' Can't drop privileges: $EVAL_ERROR.");
+            CRITICAL("# FATAL: Plugin '$service' Can't drop privileges: $EVAL_ERROR.");
             exit 1;
         }
     }
@@ -248,7 +248,7 @@ sub exec_service
     $self->change_real_and_effective_user_and_group($service);
 
     unless (Munin::Node::OS->check_perms_if_paranoid("$self->{servicedir}/$service")) {
-        logger ("Error: unsafe permissions on $service. Bailing out.");
+        ERROR("Error: unsafe permissions on $service. Bailing out.");
         exit 2;
     }
 
