@@ -34,7 +34,6 @@ use HTML::Template::Pro;
 
 use Munin::Master::Utils;
 
-use Munin::Master::Logger;
 use Munin::Common::Logger;
 
 use Data::Dumper;

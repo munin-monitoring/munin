@@ -12,7 +12,6 @@ use Pod::Usage;
 use Munin::Common::Logger;
 
 use Munin::Master::Update;
-use Munin::Master::Logger;
 use Munin::Master::Config;
 use Munin::Master::Utils;
 

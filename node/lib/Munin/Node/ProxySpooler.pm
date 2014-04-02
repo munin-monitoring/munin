@@ -12,7 +12,6 @@ use Time::HiRes qw( ualarm gettimeofday );
 use Carp;
 
 use Munin::Common::Defaults;
-use Munin::Node::Logger;
 use Munin::Node::SpoolWriter;
 
 use Munin::Node::Config;

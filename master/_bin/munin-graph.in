@@ -38,7 +38,6 @@ use IO::File;
 use Munin::Master::GraphOld;
 use Munin::Master::Utils;
 
-use Munin::Master::Logger;
 use Munin::Common::Logger;
 
 my $GRAPHER = "$Munin::Common::Defaults::MUNIN_LIBDIR/munin-graph";
