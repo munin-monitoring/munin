@@ -1,0 +1,23 @@
+# Automatically enables "strict", "warnings", "utf8" and
+# Perl 5.10 features
+
+use Mojolicious::Lite;
+
+get '/nodes' => sub {
+	my $self = shift;
+	$self->respond_to(
+		json => {json => {hello => 'world'}},
+		xml  => {text => '<hello>world</hello>'},
+		any  => {data => 'AA', status => 204},
+		);
+};
+
+# Route with placeholder
+get '/:foo' => sub {
+  my $self = shift;
+  my $foo  = $self->param('foo');
+  $self->render(text => "Hello from $foo.");
+};
+
+# Start the Mojolicious command system
+app->start;
