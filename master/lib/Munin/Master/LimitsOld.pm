@@ -194,11 +194,6 @@ sub initialize_for_nagios {
         and defined $config->{'nsca'}) {
         $config->{'contact'}->{'old-nagios'}->{'command'}
             = "$config->{nsca} $config->{nsca_server} -c $config->{nsca_config} -to 60";
-        $config->{'contact'}->{'old-nagios'}->{'always_send'}
-            = "critical warning";
-    }
-    if (!defined $config->{'contact'}->{'nagios'}->{'always_send'}) {
-        $config->{'contact'}->{'nagios'}->{'always_send'} = "critical warning";
     }
 }
 
@@ -664,9 +659,13 @@ sub generate_service_message {
         }
         else {
             # List of severities from contact configuration
-            my $always_send_config = munin_get( $contactobj, "always_send" );
-            my @always_send_config = ($always_send_config);
-            $always_send = \@always_send_config;
+            if (my $always_send_config = munin_get( $contactobj, "always_send" )) {
+                my @always_send_config = ($always_send_config);
+                $always_send = \@always_send_config;
+            }
+            else {
+                $always_send = ['critical', 'warning'];
+            }
         }
 
         $always_send = validate_severities($always_send);
