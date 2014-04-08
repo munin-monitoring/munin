@@ -2,21 +2,28 @@
 # Perl 5.10 features
 
 use Mojolicious::Lite;
+use DBI;
+
+use Munin::Common::Defaults;
+
+my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
 
 get '/nodes' => sub {
 	my $self = shift;
-	$self->respond_to(
-		json => {json => {hello => 'world'}},
-		xml  => {text => '<hello>world</hello>'},
-		any  => {data => 'AA', status => 204},
-		);
-};
 
-# Route with placeholder
-get '/:foo' => sub {
-  my $self = shift;
-  my $foo  = $self->param('foo');
-  $self->render(text => "Hello from $foo.");
+	# Always reopen the DB since it could have changed since last time
+	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+
+	my $nodes = $dbh->selectall_arrayref(
+		"SELECT * FROM node",
+		{ Slice => {} }, # Each row is stored as a hashref
+	);
+
+	$self->respond_to(
+		json => {json => $nodes},
+		xml  => {xml => $nodes},
+		any  => {xml => $nodes},
+	);
 };
 
 # Start the Mojolicious command system
