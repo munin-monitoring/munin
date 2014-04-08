@@ -59,6 +59,7 @@ use Log::Dispatch::Screen;
 $log->add(
     Log::Dispatch::Screen->new(
         min_level => 'error',
+        @name => 'screen',
         callbacks => $screen_format
     )
 );
@@ -66,6 +67,7 @@ $log->add(
 use Log::Dispatch::Syslog;
 $log->add(
     Log::Dispatch::Syslog->new(
+        name => 'syslog',
         min_level => 'debug',
         callbacks => $syslog_format,
     )
