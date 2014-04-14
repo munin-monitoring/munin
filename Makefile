@@ -13,6 +13,13 @@ CONFIG = Makefile.config
 LC_ALL=C
 export LC_ALL
 
+# Not verbose by default
+V = 0
+
+# Use $(AT) instead of @ to reuse the value of V
+AT_0 := @
+AT = $(AT_$(V))
+
 include $(DEFAULTS)
 include $(CONFIG)
 
@@ -84,7 +91,7 @@ install: install-master-prime install-minimal install-man
 install-minimal: install-common-prime install-node-prime install-plugins-prime $(JAVA_INSTALL) install-async-prime
 
 install-pre: Makefile Makefile.config
-	@$(CHECKUSER)
+	$(AT) $(CHECKUSER)
 	mkdir -p $(LOGDIR)
 	mkdir -p $(STATEDIR)
 	mkdir -p $(SPOOLDIR)
@@ -155,7 +162,7 @@ HPUXONLY=true ||
 endif
 
 install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
-	@$(CHECKGROUP)
+	$(AT) $(CHECKGROUP)
 
 	mkdir -p $(CONFDIR)/plugins
 	mkdir -p $(CONFDIR)/plugin-conf.d
@@ -234,9 +241,9 @@ infiles: $(INFILES)
 build: infiles build-master build-common-prime build-node build-plugins $(JAVA_BUILD) build-man substitute-confvar-inline
 
 build/%: %.in
-	@echo "$< -> $@"
-	@mkdir -p build/`dirname $<`
-	@sed -e 's|@@PREFIX@@|$(PREFIX)|g'                      \
+	$(AT) echo "$< -> $@"
+	$(AT) mkdir -p build/`dirname $<`
+	$(AT) sed -e 's|@@PREFIX@@|$(PREFIX)|g'                      \
              -e 's|@@CONFDIR@@|$(CONFDIR)|g'                    \
              -e 's|@@BINDIR@@|$(BINDIR)|g'                      \
              -e 's|@@SBINDIR@@|$(SBINDIR)|g'                    \
@@ -272,7 +279,7 @@ build/%: %.in
 build-common-prime: build-common-pre common/blib/lib/Munin/Common/Defaults.pm build-common
 
 substitute-confvar-inline:
-	@sed -e 's|@@PREFIX@@|$(PREFIX)|g'                      \
+	$(AT) sed -e 's|@@PREFIX@@|$(PREFIX)|g'                  \
              -e 's|@@CONFDIR@@|$(CONFDIR)|g'                    \
              -e 's|@@BINDIR@@|$(BINDIR)|g'                      \
              -e 's|@@SBINDIR@@|$(SBINDIR)|g'                    \
@@ -379,7 +386,7 @@ build-java-stamp:
 	touch build-java-stamp
 
 build/%.class: %.class build-java-stamp
-	@echo "Compiling $*"
+	$(AT) echo "Compiling $*"
 
 ######################################################################
 # DIST RULES
@@ -394,7 +401,7 @@ tar:
 
 suse-pre:
 	(! grep MAINTAINER Makefile.config)
-	@for file in `find dists/suse/ -type f -name '*.in'`; do                \
+	$(AT) for file in `find dists/suse/ -type f -name '*.in'`; do                \
 		destname=`echo $$file | sed 's/.in$$//'`;               \
 		echo Generating $$destname..;                           \
 		sed -e 's|@@VERSION@@|$(VERSION)|g'                     \
@@ -452,7 +459,7 @@ old-test: t/*.t
 else
 test_plugins = id_default id_root env
 old-test: t/*.t t/install $(addprefix $(CONFDIR)/plugins/,$(test_plugins))
-	@for test in t/*.t; do \
+	$(AT) for test in t/*.t; do \
 		echo -n "$$test: "; \
 		PERL5LIB=$(PERLLIB) $(PERL) $$test;\
 	done
