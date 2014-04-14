@@ -309,7 +309,7 @@ substitute-confvar-inline:
              -e 's|@@GOODSH@@|$(GOODSH)|g'                      \
              -e 's|@@BASH@@|$(BASH)|g'                          \
              -e 's|@@HASSETR@@|$(HASSETR)|g'                    \
-             --in-place                                         \
+             -i ''                                              \
              ./master/blib/libdoc/Munin::Master::HTMLOld.$(MAN3EXT)	\
              ./master/blib/lib/Munin/Master/HTMLOld.pm          \
              ./node/blib/sbin/munin-node-configure              \
