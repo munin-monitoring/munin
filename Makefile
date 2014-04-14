@@ -9,6 +9,10 @@
 DEFAULTS = Makefile.config
 CONFIG = Makefile.config
 
+# We don't care about localized, and avoid OSX failures in "sed"
+LC_ALL=C
+export LC_ALL
+
 include $(DEFAULTS)
 include $(CONFIG)
 
