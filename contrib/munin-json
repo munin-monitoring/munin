@@ -1,3 +1,4 @@
+#! /usr/bin/perl
 # Automatically enables "strict", "warnings", "utf8" and
 # Perl 5.10 features
 
