@@ -59,7 +59,7 @@ use Log::Dispatch::Screen;
 $log->add(
     Log::Dispatch::Screen->new(
         name => 'screen',
-        min_level => 'error',
+        min_level => 'debug',
         callbacks => $screen_format
     )
 );
