@@ -12,35 +12,36 @@ my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
 get '/nodes' => sub {
 	my $self = shift;
 
-	# Always reopen the DB since it could have changed since last time
-	my $dbh = get_db();
-
-	my $nodes = $dbh->selectall_arrayref(
-		"SELECT * FROM node",
-		{ Slice => {} }, # Each row is stored as a hashref
-	);
-
-	$self->render(json => $nodes);
+	$self->render(json => get_table_data("node"));
 };
 
 get '/services' => sub {
 	my $self = shift;
 
-	# Always reopen the DB since it could have changed since last time
-	my $dbh = get_db();
-
-	my $nodes = $dbh->selectall_arrayref(
-		"SELECT * FROM service",
-		{ Slice => {} }, # Each row is stored as a hashref
-	);
-
-	$self->render(json => $nodes);
+	$self->render(json => get_table_data("service"));
 };
 
 # Start the Mojolicious command system
 app->start;
 
-sub get_db
+sub get_table_data
 {
-	return DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+	my ($table) = @_;
+
+	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+	my $nodes = $dbh->selectall_arrayref(
+		"SELECT * FROM $table",
+		{ Slice => {} }, # Each row is stored as a hashref
+	);
+
+	foreach my $node (@$nodes) {
+		my $attributes = $dbh->selectall_arrayref(
+			"SELECT * FROM $table"."_attr WHERE id = ?",
+			{ Slice => {} }, # Each row is stored as a hashref
+			$node->{id},
+		);
+		$node->{attr} = $attributes;
+	}
+
+	return $nodes;
 }
