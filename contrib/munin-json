@@ -34,13 +34,14 @@ sub get_table_data
 		{ Slice => {} }, # Each row is stored as a hashref
 	);
 
+	my $sth_attr = $dbh->prepare(
+		"SELECT name, value FROM $table"."_attr WHERE id = ?",
+	);
 	foreach my $node (@$nodes) {
-		my $attributes = $dbh->selectall_arrayref(
-			"SELECT * FROM $table"."_attr WHERE id = ?",
-			{ Slice => {} }, # Each row is stored as a hashref
-			$node->{id},
-		);
-		$node->{attr} = $attributes;
+		$sth_attr->execute($node->{id});
+		while (my ($_name, $_value) = $sth_attr->fetchrow_array) {
+			$node->{attr}{$_name} = $_value;
+		}
 	}
 
 	return $nodes;
