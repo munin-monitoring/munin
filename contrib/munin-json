@@ -9,6 +9,14 @@ use Munin::Common::Defaults;
 
 my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
 
+get '/grp' => sub {
+	my $self = shift;
+	my $id = $self->param('grp_id');
+
+	my @params = (! defined $id) ? () : ("id = ?", $id);
+	$self->render(json => get_table_data("grp", @params));
+};
+
 get '/nodes' => sub {
 	my $self = shift;
 	my $id = $self->param('node_id');
