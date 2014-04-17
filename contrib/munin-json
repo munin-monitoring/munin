@@ -12,32 +12,68 @@ my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
 get '/grp' => sub {
 	my $self = shift;
 	my $id = $self->param('grp_id');
+	my $p_id = $self->param('p_id');
 
-	my @params = (! defined $id) ? () : ("id = ?", $id);
+	my @params;
+	# Actually, the more specific ID *overrides* the other ones, therefore
+	# the order is important
+	if ($id) {
+		@params = ("id = ?", $id);
+	} elsif ($p_id) {
+		@params = ("p_id = ?", $p_id);
+	}
+
 	$self->render(json => get_table_data("grp", @params));
 };
 
 get '/nodes' => sub {
 	my $self = shift;
 	my $id = $self->param('node_id');
+	my $grp_id = $self->param('grp_id');
 
-	my @params = (! defined $id) ? () : ("id = ?", $id);
+	my @params;
+	# Actually, the more specific ID *overrides* the other ones, therefore
+	# the order is important
+	if ($id) {
+		@params = ("id = ?", $id);
+	} elsif ($grp_id) {
+		@params = ("grp_id = ?", $grp_id);
+	}
+
 	$self->render(json => get_table_data("node", @params));
 };
 
 get '/services' => sub {
 	my $self = shift;
 	my $id = $self->param('service_id');
+	my $node_id = $self->param('node_id');
 
-	my @params = (! defined $id) ? () : ("id = ?", $id);
+	my @params;
+	# Actually, the more specific ID *overrides* the other ones, therefore
+	# the order is important
+	if ($id) {
+		@params = ("id = ?", $id);
+	} elsif ($node_id) {
+		@params = ("node_id = ?", $node_id);
+	}
+
 	$self->render(json => get_table_data("service", @params));
 };
 
 get '/ds' => sub {
 	my $self = shift;
 	my $id = $self->param('ds_id');
+	my $service_id = $self->param('service_id');
 
-	my @params = (! defined $id) ? () : ("id = ?", $id);
+	my @params;
+	# Actually, the more specific ID *overrides* the other ones, therefore
+	# the order is important
+	if ($id) {
+		@params = ("id = ?", $id);
+	} elsif ($service_id) {
+		@params = ("service_id = ?", $service_id);
+	}
+
 	$self->render(json => get_table_data("ds", @params));
 };
 
@@ -49,9 +85,9 @@ sub get_table_data
 	my ($table, $where_clause, @params) = @_;
 	$where_clause = (! $where_clause) ? "" : "WHERE $where_clause";
 
-	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+	my $dbh = DBI->connect_cached("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
 
-	my $sth = $dbh->prepare( "SELECT * FROM $table $where_clause");
+	my $sth = $dbh->prepare_cached( "SELECT * FROM $table $where_clause");
 	$sth->execute(@params);
 
 	my $nodes = $sth->fetchall_arrayref(
@@ -59,7 +95,7 @@ sub get_table_data
 		#	{ Slice => {} }, # Each row is stored as a hashref
 	);
 
-	my $sth_attr = $dbh->prepare(
+	my $sth_attr = $dbh->prepare_cached(
 		"SELECT name, value FROM $table"."_attr WHERE id = ?",
 	);
 	foreach my $node (@$nodes) {
