@@ -11,14 +11,18 @@ my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
 
 get '/nodes' => sub {
 	my $self = shift;
+	my $id = $self->param('node_id');
 
-	$self->render(json => get_table_data("node"));
+	my @params = (! defined $id) ? () : ("id = ?", $id);
+	$self->render(json => get_table_data("node", @params));
 };
 
 get '/services' => sub {
 	my $self = shift;
+	my $id = $self->param('service_id');
 
-	$self->render(json => get_table_data("service"));
+	my @params = (! defined $id) ? () : ("id = ?", $id);
+	$self->render(json => get_table_data("service", @params));
 };
 
 # Start the Mojolicious command system
@@ -26,12 +30,17 @@ app->start;
 
 sub get_table_data
 {
-	my ($table) = @_;
+	my ($table, $where_clause, @params) = @_;
+	$where_clause = (! $where_clause) ? "" : "WHERE $where_clause";
 
 	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
-	my $nodes = $dbh->selectall_arrayref(
-		"SELECT * FROM $table",
-		{ Slice => {} }, # Each row is stored as a hashref
+
+	my $sth = $dbh->prepare( "SELECT * FROM $table $where_clause");
+	$sth->execute(@params);
+
+	my $nodes = $sth->fetchall_arrayref(
+		{}
+		#	{ Slice => {} }, # Each row is stored as a hashref
 	);
 
 	my $sth_attr = $dbh->prepare(
