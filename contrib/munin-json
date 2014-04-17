@@ -33,6 +33,14 @@ get '/services' => sub {
 	$self->render(json => get_table_data("service", @params));
 };
 
+get '/ds' => sub {
+	my $self = shift;
+	my $id = $self->param('ds_id');
+
+	my @params = (! defined $id) ? () : ("id = ?", $id);
+	$self->render(json => get_table_data("ds", @params));
+};
+
 # Start the Mojolicious command system
 app->start;
 
