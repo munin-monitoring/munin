@@ -31,6 +31,7 @@ before_install:
  - "cpanm --notest Time::HiRes"
  - "cpanm --notest DBI"
  - "cpanm --notest DBD::SQLite"
+ - sh contrib/install_rrd.sh
 notifications:
   email: false
   irc:
