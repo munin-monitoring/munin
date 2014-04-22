@@ -16,6 +16,8 @@ cd rrdtool-1.4.8
 	--disable-rrdcgi \
 	--disable-mmap \
 	--disable-pthread \
+	--enable-perl \
+	--enable-perl-site-install \
 	--disable-ruby \
 	--disable-lua \
 	--disable-tcl \
