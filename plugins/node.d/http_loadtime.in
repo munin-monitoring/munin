@@ -60,7 +60,7 @@ if [ "$1" = "autoconf" ]; then
     fi
 
     # if $target contains more than one url
-    if ! $wget_bin -q -O /dev/null $target; then
+    if ! wget -q -O /dev/null $target; then
 
         # check if urls respond
         #
