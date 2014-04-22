@@ -25,4 +25,7 @@ cd rrdtool-1.4.8
 	# Leave at the end
 
 make
-make install
+sudo make install
+
+# Test the install
+perl -MRRDs -e ''
