@@ -77,6 +77,23 @@ get '/ds' => sub {
 	$self->render(json => get_table_data("ds", @params));
 };
 
+get '/state' => sub {
+	my $self = shift;
+	my $id = $self->param('state_id');
+	my $ds_id = $self->param('ds_id');
+
+	my @params;
+	# Actually, the more specific ID *overrides* the other ones, therefore
+	# the order is important
+	if ($id) {
+		@params = ("id = ?", $id);
+	} elsif ($ds_id) {
+		@params = ("ds_id = ?", $ds_id);
+	}
+
+	$self->render(json => get_table_data("state", @params));
+};
+
 # Start the Mojolicious command system
 app->start;
 
