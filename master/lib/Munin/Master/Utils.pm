@@ -1161,9 +1161,9 @@ sub munin_get_keypath {
     }
 
     if ($asfile) {
-        return (shift @group).'/'.join('-',@group).'-'.join('-',@service);
+	return join('/',@group).'-'.join('-',@service);
     } else {
-        return join(';',@group).':'.join('.',@service);
+	return join(';',@group).':'.join('.',@service);
     }
 }
 
