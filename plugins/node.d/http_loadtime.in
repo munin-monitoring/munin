@@ -42,7 +42,7 @@ target=${target:-"http://localhost/"}
 requisites=${requisites:-"false"}
 
 urls=`echo $target | tr "," "\n"`
-wget_opt="--user-agent \"Munin - http_loadtime\" --no-cache -q"
+wget_opt="--user-agent \"Munin_-_http_loadtime\" --no-cache -q"
 if [ "$requisites" == "true" ]; then
   wget_opt="$wget_opt --page-requisites"
 fi
