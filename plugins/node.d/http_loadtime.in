@@ -58,19 +58,21 @@ if [ "$1" = "autoconf" ]; then
 	echo "no (programs time, wget and tr required)"
 	exit 0
     fi
+
+    # if $target contains more than one url
     if ! $wget_bin -q -O /dev/null $target; then
 
-    # check if urls respond
-    #
-    for uri in $urls
-    do
-        wget --spider $uri $wget_opt
-        if [ "$?" != "0" ]; then
-            echo "no (Cannot run wget against \"$uri\")"
-            exit 0
-        fi
-    done
-
+        # check if urls respond
+        #
+        for uri in $urls
+        do
+            wget --spider $uri $wget_opt
+            if [ "$?" != "0" ]; then
+                echo "no (Cannot run wget against \"$uri\")"
+                exit 0
+            fi
+        done
+    fi
     echo yes
     exit 0
 fi
