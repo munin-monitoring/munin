@@ -5,7 +5,7 @@ set -x
 set -e
 
 # install deps
-apt-get install libpango1.0-dev libxml2-dev
+sudo apt-get install libpango1.0-dev libxml2-dev
 
 # Download a fixed version
 wget http://oss.oetiker.ch/rrdtool/pub/rrdtool-1.4.8.tar.gz
