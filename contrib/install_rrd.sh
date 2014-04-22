@@ -4,6 +4,9 @@
 set -x
 set -e
 
+# We want to optimize for *compile time*
+export CFLAGS="-O0 -pipe"
+
 # install deps
 sudo apt-get install libpango1.0-dev libxml2-dev
 
