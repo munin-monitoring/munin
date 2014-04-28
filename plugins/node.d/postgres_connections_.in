@@ -85,7 +85,7 @@ my $pg = Munin::Plugin::Pgsql->new(
                 ON tmp.mstate=tmp2.mstate
                 ORDER BY 1;
 		",
-            [ 9.1, "SELECT tmp.state,COALESCE(count,0) FROM
+            [ 9.2, "SELECT tmp.state,COALESCE(count,0) FROM
                  (VALUES ('active'),('waiting'),('idle'),('idletransaction'),('unknown')) AS tmp(state)
 	        LEFT JOIN
                  (SELECT CASE WHEN waiting THEN 'waiting' WHEN current_query='<IDLE>' THEN 'idle' WHEN current_query='<IDLE> in transaction' THEN 'idletransaction' WHEN current_query='<insufficient privilege>' THEN 'unknown' ELSE 'active' END AS state,
