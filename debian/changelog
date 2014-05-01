@@ -1,8 +1,10 @@
-munin (2.1.6.1-1) UNRELEASED; urgency=medium
+munin (2.1.6.1-1) experimental; urgency=medium
 
   * Imported upstream release 2.1.6.1
+  * Backport fixes to http_loadtime plugin
+  * Install new documentation
 
- -- Stig Sandbeck Mathisen <ssm@debian.org>  Thu, 01 May 2014 19:36:00 +0200
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Thu, 01 May 2014 23:10:07 +0200
 
 munin (2.1.5-1) experimental; urgency=medium
 
