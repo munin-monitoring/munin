@@ -12,6 +12,7 @@ Build-Depends-Indep:
  html2text,
  htmldoc,
  perl,
+ python3-sphinx,
 Build-Depends: debhelper (>=8)
 Standards-Version: 3.9.5
 Homepage: http://munin-monitoring.org
@@ -156,7 +157,7 @@ Description: network-wide graphing framework (async master/client)
 Package: munin-doc
 Section: doc
 Architecture: all
-Depends: ${perl:Depends}, ${misc:Depends}
+Depends: ${perl:Depends}, ${misc:Depends}, libjs-underscore, libjs-jquery
 Breaks: munin-common (<< 2)
 Replaces: munin-common (<< 2)
 Description: network-wide graphing framework (documentation)
@@ -164,7 +165,8 @@ Description: network-wide graphing framework (documentation)
  virtually everything imaginable throughout your network, while still
  maintaining a rattling ease of installation and configuration.
  .
- This package contains all the documentation as POD files.
+ This package contains the munin book as HTML and the POD documentation
+ generated from comments in the code.
  .
  Munin is written in Perl, and relies heavily on Tobi Oetiker's excellent
  RRDtool. To see a real example of Munin in action, you can follow a link

@@ -1,0 +1,13 @@
+Document: munin-doc
+Title: Munin documentation
+Author: The Munin project and its contributors
+Abstract: The Munin documentation contains extensive information about the
+ Munin software and project. It contains information about the munin master,
+ node, and plugins. You will also find a tutorial on writing your own plugin,
+ and configuration examples for web servers running munin.
+Section: System/Monitoring
+
+Format: HTML
+Index: /usr/share/doc/munin-doc/html/index.html
+Files: /usr/share/doc/munin-doc/html/*.html
+       /usr/share/doc/munin-doc/html/*/*.html

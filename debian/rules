@@ -12,6 +12,7 @@ override_dh_auto_build:
 	dpkg-parsechangelog | sed -n 's/^Version: //p' > RELEASE
 	chmod 755 debian/ostype_helper
 	dh_auto_build -- $(MAKEOPTS)
+	make -C doc html man
 
 override_dh_auto_install:
 	# Install the major munin parts into different packages
@@ -30,6 +31,7 @@ override_dh_auto_install:
 	$(MAKE) install-node-prime $(MAKEOPTS) \
 		MANDIR=$(CURDIR)/debian/munin-doc/usr/share/man \
 		DESTDIR=$(CURDIR)/debian/munin-node
+	rm -rvf debian/munin-doc/usr/share/man/man1
 
 	# workaround bug in upstream Makefile
 	mkdir -p $(CURDIR)/debian/munin-async/var/lib
@@ -93,3 +95,15 @@ override_dh_auto_clean:
 
 # Disable build tests for now
 override_dh_auto_test:
+
+override_dh_installdocs:
+	dh_installdocs
+	@ # Use the packaged javascript libraries
+	if [ -d debian/munin-doc ]; then \
+		rm -f debian/munin-doc/usr/share/doc/munin-doc/html/_static/jquery.js; \
+		ln -s /usr/share/javascript/jquery/jquery.js \
+			debian/munin-doc/usr/share/doc/munin-doc/html/_static/jquery.js; \
+		rm -f debian/munin-doc/usr/share/doc/munin-doc/html/_static/underscore.js; \
+		ln -s /usr/share/javascript/underscore/underscore.js \
+			debian/munin-doc/usr/share/doc/munin-doc/html/_static/underscore.js; \
+	fi

@@ -1,44 +1,57 @@
-Debian-specific information regarding Munin
-===========================================
+======================================
+ Getting started with Munin on Debian
+======================================
 
-  Getting started
-  ---------------
+Documentation
+-------------
 
-    Using Munin requires to run a Munin master, which needs the munin
-    package installed and an arbitrary number of Munin nodes, with the
-    munin-node package installed. The master can and should also be a node.
+To have local documentation, install the «munin-doc» package, and open
+file:///usr/share/doc/munin-doc/html/index.html in a web browser.
 
-    On the master system point your browser to http://localhost/munin - to
-    customize edit /etc/munin/apache.conf if you are using apache2.
+Documentation is also available online at
+http://munin.readthedocs.org/en/latest/index.html
 
-    On the nodes, /etc/munin/munin-node.conf needs to be edited to allow 
-    access from the master node. 
+Set up the munin master
+-----------------------
 
-    Plugins reside in /usr/share/munin/plugins/, their usage is activated 
-    by linking them to /etc/munin/plugins/. Plugin configuration is best 
-    done in /etc/munin/plugin-conf.d/
+Pick one server to use as the munin master. Install the «munin»
+package on that server. Munin has a web interface, so you need to have
+a web server installed as well.
 
-    Further reading: http://munin-monitoring.org/wiki/Documentation
+Munin is pre-configured for apache2.4, but any web server capable of
+serving static files will do. If you are going to monitor many
+servers, using CGI or FastCGI will help.
 
-  Find the upstream source
-  ------------------------
-    This Debian package uses the upstream tarball located here:
-    http://sourceforge.net/projects/munin/ .
+The default configuration adds a /munin/ location to all the
+virtualhosts on the web server. If the hostname is master.example.com,
+munin will be available at http://master.example.com/munin/
 
-    It also uses quilt to apply some debian specific patches located in 
-    ./debian/patches/
+Configuration examples for other web servers is available in the
+documentation.
 
+Adding munin nodes
+------------------
 
-  Suggestions? Impressions? Questions? Fanmail? Love letters? Murder threats?
-  ---------------------------------------------------------------------------
+On all servers you want to monitor, install the «munin-node» package.
+This can, and should, include your munin master.
 
-    We've got a mailing list.  You'll find subscription information at
-    <http://lists.sourceforge.net/lists/listinfo/munin-users>.  All feedback
-    are welcome.
-    
-    If you feel like sending us things that can't be represented in binary (for
-    example beautiful people fluent in assembly, bacillus anthracis, cash,
-    explosives, and so on), take contact off-list, and we'll find a way of
-    arranging the logistics.
-  
- Enjoy!  :-)
+On each node, add an ACL entry to allow the munin master to connect:
+
+/etc/munin/munin-node.conf::
+
+  # master.example.com has address 192.0.2.2
+  cidr_allow 192.0.2.2/32
+
+Add node definitions to the munin master. They look like the following
+example::
+
+  [node1.example.com]
+  address 192.0.2.129
+
+You can add them to files in /etc/munin/munin-conf.d/*.conf
+(recommended), or to /etc/munin/munin.conf
+
+After changing munin-node configuration, you need to restart the munin
+node::
+
+  # service munin-node restart
