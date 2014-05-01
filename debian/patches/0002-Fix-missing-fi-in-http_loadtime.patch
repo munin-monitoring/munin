@@ -1,0 +1,45 @@
+From: Matthias Schmitz <matthias@sigxcpu.org>
+Date: Tue, 22 Apr 2014 21:40:56 +0200
+Subject: Fix missing "fi" in http_loadtime
+
+---
+ plugins/node.d/http_loadtime.in | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
+
+diff --git a/plugins/node.d/http_loadtime.in b/plugins/node.d/http_loadtime.in
+index e1c6140..660e0d0 100644
+--- a/plugins/node.d/http_loadtime.in
++++ b/plugins/node.d/http_loadtime.in
+@@ -58,19 +58,21 @@ if [ "$1" = "autoconf" ]; then
+ 	echo "no (programs time, wget and tr required)"
+ 	exit 0
+     fi
+-    if ! $wget_bin -q -O /dev/null $target; then
+ 
+-    # check if urls respond
+-    #
+-    for uri in $urls
+-    do
+-        wget --spider $uri $wget_opt
+-        if [ "$?" != "0" ]; then
+-            echo "no (Cannot run wget against \"$uri\")"
+-            exit 0
+-        fi
+-    done
++    # if $target contains more than one url
++    if ! $wget_bin -q -O /dev/null $target; then
+ 
++        # check if urls respond
++        #
++        for uri in $urls
++        do
++            wget --spider $uri $wget_opt
++            if [ "$?" != "0" ]; then
++                echo "no (Cannot run wget against \"$uri\")"
++                exit 0
++            fi
++        done
++    fi
+     echo yes
+     exit 0
+ fi

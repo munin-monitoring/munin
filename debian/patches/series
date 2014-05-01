@@ -1,1 +1,4 @@
 0001-Remove-any-paramter-to-munin-graph-in-munin-cron.patch
+0002-Fix-missing-fi-in-http_loadtime.patch
+0003-Don-t-use-wget_bin-anymore.patch
+0004-Using-only-one-word-as-user-agent.patch

@@ -1,0 +1,23 @@
+From: Matthias Schmitz <matthias@sigxcpu.org>
+Date: Tue, 22 Apr 2014 22:17:10 +0200
+Subject: Don't use $wget_bin anymore
+
+* The variable is gone from the plugin since around two years. This
+  commit removes the last left over.
+---
+ plugins/node.d/http_loadtime.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/plugins/node.d/http_loadtime.in b/plugins/node.d/http_loadtime.in
+index 660e0d0..8001e20 100644
+--- a/plugins/node.d/http_loadtime.in
++++ b/plugins/node.d/http_loadtime.in
+@@ -60,7 +60,7 @@ if [ "$1" = "autoconf" ]; then
+     fi
+ 
+     # if $target contains more than one url
+-    if ! $wget_bin -q -O /dev/null $target; then
++    if ! wget -q -O /dev/null $target; then
+ 
+         # check if urls respond
+         #
