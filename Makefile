@@ -30,6 +30,7 @@ MANCENTER        := "Munin Documentation"
 MAN8		 := master/_bin/munin-update master/_bin/munin-limits master/_bin/munin-html master/_bin/munin-graph
 PODMAN8          := build/master/doc/munin-cron master/doc/munin master/doc/munin-check
 PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
+MAN3EXT          := $(shell $(PERL) -e 'use Config; print $$Config{man3ext};')
 
 .PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
         build build-common-prime build-common-pre build-doc \
@@ -217,7 +218,7 @@ install-doc: build-doc
 # Dummy rule to enable parallel building
 infiles: $(INFILES)
 
-build: infiles build-master build-common-prime build-node build-plugins $(JAVA_BUILD) build-man substitue-confvar-inline
+build: infiles build-master build-common-prime build-node build-plugins $(JAVA_BUILD) build-man substitute-confvar-inline
 
 build/%: %.in
 	@echo "$< -> $@"
@@ -257,7 +258,7 @@ build/%: %.in
 
 build-common-prime: build-common-pre common/blib/lib/Munin/Common/Defaults.pm build-common
 
-substitue-confvar-inline:
+substitute-confvar-inline:
 	@sed -e 's|@@PREFIX@@|$(PREFIX)|g'                      \
              -e 's|@@CONFDIR@@|$(CONFDIR)|g'                    \
              -e 's|@@BINDIR@@|$(BINDIR)|g'                      \
@@ -289,7 +290,7 @@ substitue-confvar-inline:
              -e 's|@@BASH@@|$(BASH)|g'                          \
              -e 's|@@HASSETR@@|$(HASSETR)|g'                    \
              --in-place                                         \
-             ./master/blib/libdoc/Munin::Master::HTMLOld.3pm    \
+             ./master/blib/libdoc/Munin::Master::HTMLOld.$(MAN3EXT)	\
              ./master/blib/lib/Munin/Master/HTMLOld.pm          \
              ./node/blib/sbin/munin-node-configure              \
              ./node/blib/sbin/munin-node                        \

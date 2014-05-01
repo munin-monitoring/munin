@@ -26,6 +26,10 @@ such as this:
      category queries { query; };
  };
 
+Remark : depending on the traffic level of your bind server, you shall adjust
+the maximum size of the query.log file, above, to cover the five minutes delay
+between two munin polls.
+
 =head1 SEE ALSO
 
 =over

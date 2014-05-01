@@ -5,9 +5,14 @@ use strict;
 
 use Test::More tests => 3;
 use Test::MockModule;
+use Test::MockObject;
+
+# We do _not_ want to load RRDs.pm
+Test::MockObject->fake_module("RRDs", 'dummy' => sub {});
+$RRDs::VERSION = 1.4; # Let's pretend we have 1.4
 
 my $mock = Test::MockModule->new('RRDs', no_auto => 1);
-$mock->mock('errors' => sub { });
+$mock->mock('error' => '');
 
 use_ok('Munin::Master::GraphOld', qw(build_sum_cdef));
 

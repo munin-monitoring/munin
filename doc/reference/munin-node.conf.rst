@@ -173,4 +173,6 @@ A pretty normal configuration file:
 SEE ALSO
 ========
 
+See :ref:`munin` for an overview over munin.
+
 :ref:`munin-node`, :ref:`munin-run`

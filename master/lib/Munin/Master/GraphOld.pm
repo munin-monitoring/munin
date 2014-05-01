@@ -921,6 +921,7 @@ sub process_service {
     my $now          = time;
     my $fnum         = 0;
     my @rrd;
+    my @rrd_overlay;
 
     DEBUG "[DEBUG] Node name: $sname\n";
 
@@ -1154,12 +1155,24 @@ sub process_service {
 	my $period  = munin_get($service, "graph_period", "second");
 	$tmplabel =~ s/\$\{graph_period\}/$period/g;
 
+       if ($fielddraw eq "AREA" || $fielddraw eq "STACK") {
+		my $fielddraw_overlay = ($fielddraw eq "STACK" ? "STACK" : "LINE.5");
+                push(@rrd, $fielddraw . ":g$rrdname" . "#$colour" ."6F"
+			. ":". escape($tmplabel)
+			. (" " x ($max_field_len + 1 - length $tmplabel))
+);
+		push(@rrd_overlay, $fielddraw_overlay
+			. ":g$rrdname"
+			. "#$colour"
+);
+	} else {
         push(@rrd,
                   $fielddraw
                 . ":g$rrdname"
                 . "#$colour" . ":"
                 . escape($tmplabel)
                 . (" " x ($max_field_len + 1 - length $tmplabel)));
+	}
 
         # Check for negative fields (typically network (or disk) traffic)
         if ($has_negative) {
@@ -1422,7 +1435,7 @@ sub process_service {
                 $line;
             } @rrd;
         }
-        push @complete, @rrd;
+        push @complete, @rrd, @rrd_overlay;
 
         # graph end in future
         push (@complete, handle_trends($time, $lastupdate, $pinpoint, $service, $RRDkludge, @added));
@@ -1469,7 +1482,8 @@ sub process_service {
 
 	$nb_graphs_drawn ++;
         RRDs_graph(@rrdcached_params, @complete);
-        if (my $ERROR = RRDs::error) {
+        my $ERROR = RRDs::error;
+        if ($ERROR) {
             ERROR "[RRD ERROR] Unable to graph $picfilename : $ERROR";
             # ALWAYS dumps the cmd used when an error occurs.
             # Otherwise, it will be difficult to debug post-mortem
@@ -1601,7 +1615,8 @@ sub process_service {
 	    $nb_graphs_drawn ++;
             RRDs_graph(@rrdcached_params, @rrd_sum);
 
-            if (my $ERROR = RRDs::error) {
+            my $ERROR = RRDs::error;
+            if ($ERROR) {
                 ERROR "[RRD ERROR(sum)] Unable to graph "
                     . get_picture_filename($service, $time)
                     . ": $ERROR";
@@ -1636,7 +1651,7 @@ sub handle_trends {
 
     # enddate possibly in future
     my $futuretime = $pinpoint ? 0 : $resolutions{$time} * get_end_offset($service);
-    my $enddate = $lastupdate + ($futuretime);
+    my $enddate = time + ($futuretime);
     DEBUG "[DEBUG] lastupdate: $lastupdate, enddate: $enddate\n";
 
     # future begins at this horizontal ruler

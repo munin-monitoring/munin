@@ -98,8 +98,12 @@ sub _do_connect {
 	    my $user_part = ($uri->user) ? ($uri->user . "@") : "";
 	    my $remote_cmd = ($uri->path ne '/') ? $uri->path : "";
 
+	    # we use $uri->_port and not $uri->port to have the raw, and avoid
+	    # the default being substituted if empty
+	    my $remote_port = ($uri->_port) ? " -p $uri->_port" : "";
+
 	    # Add any parameter to the cmd
-	    my $remote_connection_cmd = $ssh_command . " -p " . $uri->port . " " . $user_part . $uri->host . " " . $remote_cmd . " " . $params;
+	    my $remote_connection_cmd = $ssh_command . $remote_port . " " . $user_part . $uri->host . " " . $remote_cmd . " " . $params;
 
 	    # Open a triple pipe
    	    use IPC::Open3;
@@ -295,7 +299,8 @@ sub parse_service_config {
 			foreach (@{$global_config->{$oldservice}}) {
 				if ( $_->[0] eq 'graph_order' ) {
 					# append to a given graph_order
-					$_->[1] .= join(' ', '', @graph_order);
+					$_->[1] = _merge_into_str_no_dup($_->[1], @graph_order);
+
 					@graph_order = ( );
 					return;
 				}
@@ -705,6 +710,16 @@ sub _node_read {
 
     DEBUG "[DEBUG] Reading from socket: \"".(join ("\\n",@array))."\".";
     return \@array;
+}
+
+sub _merge_into_str_no_dup
+{
+	use List::MoreUtils qw(uniq);
+
+	my $str = shift;
+	my @a = uniq( split(/ /, $str), @_);
+
+	return join(" ", @a);
 }
 
 # Defines the URL::scheme for munin

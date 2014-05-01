@@ -92,3 +92,8 @@ descriptors:
    CGI_DEBUG=yes \
    PATH_INFO=/example.org/client.example.org/irqstats-day.png \
    /usr/lib/munin/cgi/munin-cgi-graph 2>&1 >/dev/null | less
+
+SEE ALSO
+========
+
+See :ref:`munin` for an overview over munin.

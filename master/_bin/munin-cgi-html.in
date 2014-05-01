@@ -132,7 +132,7 @@ while (new CGI::Fast) {
 
 		my $rootgroups = [];
 		while (my ($_name, $_path) = $sth->fetchrow_array) {
-			push @$rootgroups, { NAME => $_name, URL => $_path };
+			push @$rootgroups, { NAME => $_name, URL => url_absolutize($_path, 1) };
 		}
 		$template_params{ROOTGROUPS} = $rootgroups;
 	}
@@ -144,7 +144,7 @@ while (new CGI::Fast) {
 
 		my $globalcats = [];
 		while (my ($_category) = $sth->fetchrow_array) {
-			my %urls = map { ("URL$_" => url_absolutize(lc("$_category-$_"), 1)) } @times;
+			my %urls = map { ("URL$_" => url_absolutize(lc("$_category-$_.html"), 1)) } @times;
 			push @$globalcats, {
 				NAME => $_category,
 				%urls,
@@ -200,8 +200,8 @@ while (new CGI::Fast) {
 		# TODO - Create the model (category)
 	}
 
-	# Handle normal pages only if not handled
-	goto RENDERING unless $template_filename;
+	# Handle normal pages only if not aleady handled
+	goto RENDERING if $template_filename;
 
 	# Remove an eventual [/index].html
 	$path =~ s/(\/index)?\.html$//;

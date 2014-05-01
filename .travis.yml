@@ -1,12 +1,16 @@
 language: perl
 perl:
+  - "5.18"
   - "5.16"
   - "5.14"
+  - "5.12"
   - "5.10"
+  - "5.8"
 branches:
  only:
   - stable-2.0
   - devel
+  - master
 install: "/bin/true"
 before_install:
  - "cpanm --notest File::Copy::Recursive"
@@ -25,10 +29,18 @@ before_install:
  - "cpanm --notest Test::MockModule"
  - "cpanm --notest Test::MockObject::Extends"
  - "cpanm --notest Time::HiRes"
+ - "cpanm --notest DBI"
+ - "cpanm --notest DBD::SQLite"
 notifications:
   email: false
   irc:
-    on_success: always # change
+    on_success: change # no need for spam
     on_failure: always
     channels:
       - "irc.oftc.net#munin"
+    template:
+      - "%{repository} (%{branch} - %{commit} : %{author}): %{message}"
+      - "Build details: %{build_url}"
+matrix:
+  # we don't need to continue any build when 1 test is failing.
+  fast_finish: true

@@ -54,5 +54,6 @@ OPTIONS
 SEE ALSO
 ========
 
-See also :ref:`node-async` for more information and examples of how to
-configure munin-asyncd.
+See :ref:`munin` for an overview over munin.
+
+See also :ref:`node-async` for more information and examples of how to configure munin-asyncd.
