@@ -77,21 +77,24 @@ get '/ds' => sub {
 	$self->render(json => get_table_data("ds", @params));
 };
 
-get '/state' => sub {
+get '/states' => sub {
 	my $self = shift;
 	my $id = $self->param('state_id');
-	my $ds_id = $self->param('ds_id');
+	my $type = $self->param('state_type');
 
+	my $where = "";
 	my @params;
-	# Actually, the more specific ID *overrides* the other ones, therefore
-	# the order is important
 	if ($id) {
-		@params = ("id = ?", $id);
-	} elsif ($ds_id) {
-		@params = ("ds_id = ?", $ds_id);
+		$where .= " AND id = ?";
+		push @params, $id;
+	}
+	if ($type) {
+		$where .= " AND type = ?";
+		push @params, $type;
 	}
 
-	$self->render(json => get_table_data("state", @params));
+	# We cannot use the generic db accessor
+	$self->render(json => get_state_data($where, @params));
 };
 
 # Start the Mojolicious command system
@@ -121,6 +124,24 @@ sub get_table_data
 			$node->{attr}{$_name} = $_value;
 		}
 	}
+
+	return $nodes;
+}
+
+# We cannot use the same DB accessor, as the state table is special
+sub get_state_data
+{
+	my ($where_clause, @params) = @_;
+
+	my $dbh = DBI->connect_cached("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+
+	my $sth = $dbh->prepare_cached( "SELECT * FROM state WHERE 1 = 1 $where_clause");
+	$sth->execute(@params);
+
+	my $nodes = $sth->fetchall_arrayref(
+		{}
+		#	{ Slice => {} }, # Each row is stored as a hashref
+	);
 
 	return $nodes;
 }
