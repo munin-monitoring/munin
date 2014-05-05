@@ -77,6 +77,26 @@ get '/ds' => sub {
 	$self->render(json => get_table_data("ds", @params));
 };
 
+get '/states' => sub {
+	my $self = shift;
+	my $id = $self->param('state_id');
+	my $type = $self->param('state_type');
+
+	my $where = "";
+	my @params;
+	if ($id) {
+		$where .= " AND id = ?";
+		push @params, $id;
+	}
+	if ($type) {
+		$where .= " AND type = ?";
+		push @params, $type;
+	}
+
+	# We cannot use the generic db accessor
+	$self->render(json => get_state_data($where, @params));
+};
+
 # Start the Mojolicious command system
 app->start;
 
@@ -104,6 +124,23 @@ sub get_table_data
 			$node->{attr}{$_name} = $_value;
 		}
 	}
+
+	return $nodes;
+}
+
+sub get_state_data
+{
+	my ($where_clause, @params) = @_;
+
+	my $dbh = DBI->connect_cached("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+
+	my $sth = $dbh->prepare_cached( "SELECT * FROM state WHERE 1 = 1 $where_clause");
+	$sth->execute(@params);
+
+	my $nodes = $sth->fetchall_arrayref(
+		{}
+		#	{ Slice => {} }, # Each row is stored as a hashref
+	);
 
 	return $nodes;
 }
