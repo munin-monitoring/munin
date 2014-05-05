@@ -678,6 +678,25 @@ tsaavik (1):
       dynazoom: added logo and backlink
 
 
+munin-2.0.21, 2014-04-22
+
+-------
+Summary
+-------
+
+Bugfix release. It fixes the regression on nested groups.
+The offending commit is only reverted, so the bug is here again.
+
+Reopens: #1224
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (1):
+      Revert "Generate correct RRD filenames for nested graphs. Fixes #1224"
+
+
 munin-2.0.20, 2014-03-28
 
 -------
