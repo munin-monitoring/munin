@@ -128,6 +128,7 @@ sub get_table_data
 	return $nodes;
 }
 
+# We cannot use the same DB accessor, as the state table is special
 sub get_state_data
 {
 	my ($where_clause, @params) = @_;
