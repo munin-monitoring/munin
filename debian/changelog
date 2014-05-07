@@ -1,7 +1,7 @@
 munin (2.0.19-4) UNRELEASED; urgency=low
 
   [ Matthias Schmitz ]
-  * Add configuration file for apache 2.4. (Closes: XXXXXX)
+  * Add configuration files for apache 2.4. (Closes: #722654, #672767)
   * Replace dependency to ttf-dejavu by fonts-dejavu due to package renaming
     (Closes: #737957).
 
