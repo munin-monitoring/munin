@@ -127,7 +127,7 @@ Description: network-wide graphing framework (grapher/gatherer)
 
 Package: munin-common
 Architecture: all
-Depends: ${perl:Depends}, ${misc:Depends}, perl-modules | libparse-recdescent-perl, liblist-moreutils-perl
+Depends: ${perl:Depends}, ${misc:Depends}, perl-modules | libparse-recdescent-perl, liblist-moreutils-perl, liblog-dispatch-perl
 Description: network-wide graphing framework (common)
  Munin is a highly flexible and powerful solution used to create graphs of
  virtually everything imaginable throughout your network, while still
