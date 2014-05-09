@@ -1,4 +1,4 @@
-munin (2.1.6.1-2) UNRELEASED; urgency=medium
+munin (2.1.7-1) UNRELEASED; urgency=medium
 
   [ Holger Levsen ]
   * Add "Testsuite: autopkgtest" to source entry in debian/control, so ci.debian.net will automatically pick it up.
@@ -6,8 +6,9 @@ munin (2.1.6.1-2) UNRELEASED; urgency=medium
   [ Stig Sandbeck Mathisen ]
   * Add new packaging guide
   * Update debian/gbp.conf to reflect new packaging guide
+  * Import upstream release 2.1.7
 
- -- Holger Levsen <holger@layer-acht.org>  Fri, 09 May 2014 09:16:59 +0200
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Fri, 09 May 2014 09:20:58 +0200
 
 munin (2.1.6.1-1) experimental; urgency=medium
 
