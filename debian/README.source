@@ -1,53 +1,181 @@
-#
-# getting the upstream sources (and putting them in svn):
-#
+=======================
+ Munin packaging guide
+=======================
 
-New upstream tarballs are located here http://sourceforge.net/projects/munin/ 
-old tarballs are available at munin.projects.linpro.no/munin/branches/debian/lenny/tarballs 
-too.
-Please put them in svn with signed md5- and sha1sum-files.
+This is a rough guide for the munin packaging in Debian. The tool used
+is «gbp», which is found in the «git-buildpackage» package.
 
-#
-# Debian specific patches
-#
-Debian specific patches reside in debian/patches/ and are applied with quilt.
+TL;DR
+=====
 
-#
-# using svn-buildpackage
-#
-cd trunk/
-svn-buildpackage
+For the impatient, here's a quick recipe for importing a new release::
 
-#
-# using svn-buildpackage with pbuilder and cowbuilder
-#
+  new_version=2.0.21
 
-svn-pdebuild is an alias for: 
-"svn-buildpackage --svn-builder=pdebuild --pbuilder cowbuilder"
+  # fetch any remote updates
+  gbp pull
 
-Here a small readme in order to use this svn properly:
+  # import new upstream release
+  gbp import-orig --uscan --upstream-vcs-tag=$new_version
+  dch -v ${new_version}-1 Imported new upstream release ${new_version}
+  git add debian/changelog
+  debcommit
 
-I'm used to this aliases to ease my life:
-      pclean='sudo rm -rf /var/cache/pbuilder/result/*'
-      pdebuild='pdebuild --pbuilder cowbuilder'
-      pdebuild-etch='pdebuild --pbuilder cowbuilder --  --basepath /var/cache/pbuilder/etch.cow/ --debian-etch-workaround'
-      pdebuild-lenny='pdebuild --pbuilder cowbuilder -- --basepath /var/cache/pbuilder/base-lenny.cow/'
-      plinda='linda /var/cache/pbuilder/result/*.changes'
-      plintian='lintian /var/cache/pbuilder/result/*.changes'
-      plogin='sudo cowbuilder --login'
-      pupdate='sudo cowbuilder --update'
-      pupdate-etch='sudo cowbuilder --update --basepath /var/cache/pbuilder/etch.cow/ --debian-etch-workaround'
-      pupdate-lenny='sudo cowbuilder --update --basepath /var/cache/pbuilder/base-lenny.cow/'
-      svn-debuild='svn-buildpackage -rfakeroot -us -uc'
-      svn-pdebuild='svn-buildpackage --svn-builder=pdebuild --pbuilder cowbuilder'
-      svn-pdebuild-etch='svn-buildpackage --svn-builder=pdebuild --pbuilder cowbuilder -- --basepath /var/cache/pbuilder/etch.cow --debian-etch-workaround'
+  # push new upstream release to packaging repository
+  git push origin debian upstream upstream/${new_version}
 
-So for building this package go to trunk/ and call there e.g.:
-    svn-debuild (Build on the host system)
-or   
-    svn-pdebuild (Build in a chroot using cowdancer)
+Then: refresh patches (if any), build, test, release, and upload.
 
-In the first case the resulting files are found in ../build-area, in the
-second case the resulting files are found in /var/cache/pbuilder/result/
+Git branches
+============
 
-I hope this helps to get this package build from svn :)
+The git repository branches used by packaging are:
+
+* debian - packaging branch for «unstable». All new releases going to
+  unstable → testing → stable goes here.
+
+* upstream - branch for importing the upstream releases.
+
+* pristine-tar - branch for the tarball deltas. The content of this
+  branch is one (hopefully small) file containing the differences
+  between a tarball and a release tag.
+
+If we have relases in «experimental», a pair of branches is used for
+that:
+
+* debian-experimental - packaging branch for experimental releases.
+
+* upstream-experimental - upstream branch for experimental releases.
+
+If we have to make security releases, they should go into branches
+named debian-$release and upstream-$release. Example for the "jessie"
+release:
+
+* debian-jessie - packaging branch for updates to the packages in
+  jessie. Typically used for security releases, and hopefully not
+  needed.
+
+* upstream-jessie - upstream release branch used by debian-jessie.
+
+
+Importing a new upstream versions
+=================================
+
+The upstream release tarballs are signed. They should be downloaded,
+verified, and added to the «pristine-tar» branch.
+
+Using "gbp import-orig"::
+
+  # Import, tag and merge
+  gbp import-orig --uscan --upstream-vcs-tag=2.0.21
+
+You need to figure out the upstream release tag beforehand, and use
+that on the command line. The "upstream-vcs-tag" ties it into the
+
+This does:
+* Import upstream tarball into «pristine-tar» branch
+
+* Commit the the tarball contents to the «upstream»-branch, adding the
+  upstream-vcs-tag as an extra parent to the commit. This links the
+  upstream commit history to the tag in the «upstream» packaging
+  branch.
+
+Bump the version in debian/changelog::
+
+  dch -v 2.0.21-1 Imported new upstream release 2.0.21
+  git add debian/changelog
+  debcommit
+
+Handling patches
+================
+
+Debian specific patches reside in debian/patches/ and are applied with
+quilt.
+
+Adding or refreshing the patches can be done with "gbp pq"
+(git-buildpackage patch-queue)::
+
+  # after new release, import or rebase patches from quilt into local branch
+  gbp pq import # if you do not have a patch branch already.
+                # Otherwise, do "gbp pq rebase".
+                # You will be told about this. :)
+
+  # make changes, commit to git
+  $editor file/to/be/edited.pl
+  git commit -m 'fix frobnication bug'
+
+  # Use "git cherry-pick" to backport patches
+  git cherry-pick $git_commit_id
+
+  # export patches from local branch back to quilt
+  gbp pq export
+
+  # git add / rm, and commit changes made to debian/patches
+  git commit -m 'Refresh patches'
+
+Refreshing should be done after each new upstream release.
+
+Backported patches included in the new release will be dropped when
+using "gbp pq import", "gbp pq export" and "git commit -a -m 'refresh
+patches' debian/patches"
+
+Building the package
+====================
+
+Build with your favourite packaging tool. The packaging should be
+compatible with most tools.
+
+These all work:
+
+* git-buildpackage
+* gitpkg (makes a .dsc source package, which can be built with
+  "sbuild" or "pbuilder")
+* sbuild
+* pbuilder
+* debuild
+* dpkg-buildpackage
+
+Testing the package
+===================
+
+Munin has "DEP-8" tests. This means you can test the built packages to
+see if they perform as expected.
+
+To run the tests in a prepared schroot, assuming its name is
+"autopkgtest-amd64"::
+
+  # run from the root of the munin packaging directory:
+
+  schroot_name=autopkgtest-amd64
+  munin_changes=/path/to/munin-1.2.3-1_amd64.changes
+  adt-run $(dcmd --deb $munin_changes) --built-tree=. --- adt-virt-schroot $schroot_name
+
+…or in a hopefully not-too-distant future, when adt-run can extract
+what it needs from source and binaries from the .changes file::
+
+  adt-run --changes $munin_changes --- adt-virt-schroot $schroot_name
+
+Releasing a package
+===================
+
+Before release, the changelog must be up to date. There is no need to
+change debian/changelog for each commit.
+
+* «gbp dch» - reads the git commit log, and writes to debian/changelog
+
+* «dch» - edits debian/changelog
+
+* «debcommit» - commits and tags.
+
+Example::
+
+  # Write changelog entries to debian/changelog
+  gbp dch -a
+
+  # Set the "release" to something else than UNRELEASED
+  dch -r
+
+  # Commit debian/changelog, and make a signed tag
+  debcommit -r --sign-tags -- debian/changelog
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>, Fri,  9 May 2014 09:10:13 +0200
