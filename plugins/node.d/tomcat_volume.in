@@ -77,7 +77,7 @@ if(!eval "require XML::Simple;") {
     $ret .= "XML::Simple not found";
 }
 
-my $UA       = Muning::Plugin::HTTP->new;
+my $UA       = Munin::Plugin::HTTP->new;
 my $URL      = exists $ENV{'url'}      ? $ENV{'url'}      : "http://%s:%s\@%s:%d/manager/status?XML=true";
 my $PORT     = exists $ENV{'port'}     ? $ENV{'port'}     : exists $ENV{'ports'} ? $ENV{'ports'} : 8080;
 my $HOST     = exists $ENV{'host'}     ? $ENV{'host'}     : "127.0.0.1";

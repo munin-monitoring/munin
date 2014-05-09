@@ -9,10 +9,9 @@ use strict;
 use English qw(-no_match_vars);
 use Getopt::Long;
 use Pod::Usage;
-use Log::Log4perl qw(:easy);
+use Munin::Common::Logger;
 
 use Munin::Master::Update;
-use Munin::Master::Logger;
 use Munin::Master::Config;
 use Munin::Master::Utils;
 
@@ -31,9 +30,6 @@ sub main {
     exit_if_run_by_super_user();
 
     configure();
-
-    logger_open($config->{'logdir'});
-    logger_debug() if $config->{debug};
 
     my $update = Munin::Master::Update->new();
     $update->run();

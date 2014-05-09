@@ -42,7 +42,7 @@ target=${target:-"http://localhost/"}
 requisites=${requisites:-"false"}
 
 urls=`echo $target | tr "," "\n"`
-wget_opt="--user-agent \"Munin - http_loadtime\" --no-cache -q"
+wget_opt="--user-agent \"Munin_-_http_loadtime\" --no-cache -q"
 if [ "$requisites" == "true" ]; then
   wget_opt="$wget_opt --page-requisites"
 fi
@@ -58,19 +58,21 @@ if [ "$1" = "autoconf" ]; then
 	echo "no (programs time, wget and tr required)"
 	exit 0
     fi
-    if ! $wget_bin -q -O /dev/null $target; then
 
-    # check if urls respond
-    #
-    for uri in $urls
-    do
-        wget --spider $uri $wget_opt
-        if [ "$?" != "0" ]; then
-            echo "no (Cannot run wget against \"$uri\")"
-            exit 0
-        fi
-    done
+    # if $target contains more than one url
+    if ! wget -q -O /dev/null $target; then
 
+        # check if urls respond
+        #
+        for uri in $urls
+        do
+            wget --spider $uri $wget_opt
+            if [ "$?" != "0" ]; then
+                echo "no (Cannot run wget against \"$uri\")"
+                exit 0
+            fi
+        done
+    fi
     echo yes
     exit 0
 fi

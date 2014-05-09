@@ -1,5 +1,81 @@
 -*- text -*-
 
+munin-2.1.7, 2014-05-05
+
+-------
+Summary
+-------
+
+The JSON release. Note that this is the first release with a working JSON API.
+It is still of alpha quality, since: 
+- The API might change a little, given the feedback
+- Only the Metadata is accessible, the RRD data will follow. So will the limits
+- New code implies new bugs :)
+- Perl 5.10 is required for the JSON API, as it is Mojo-based.
+
+It also contains a brand new Logging system, courtesy of ssm.
+
+------------------
+Detailed Changelog
+------------------
+
+Cyril Bouthors (1):
+      plugins/node.d/apache.in: graph Apache threads,
+
+Kjetil Torgrim Homme (1):
+      master/limits: global default for always_send
+
+Klas Meder Boqvist (1):
+      p/diskstats: enable warn levels in conf
+
+Matthias Schmitz (3):
+      Fix missing "fi" in http_loadtime
+      Don't use $wget_bin anymore
+      Using only one word as user-agent.
+
+Steve Schnepp (22):
+      plugins: fix typo (Muning::Plugin::HTTP)
+      master/graph: adding a dashed line for last update
+      master/graph: the dashes are not in RRD 1.2
+      json: first experiments
+      log: info is default to stdout
+      json: return the first json with nodes
+      logging: add explicit names to use old version
+      log: enable debug level by default
+      json: make it a proper Perl script
+      json: factorize DB handling
+      dev_scripts: add ability to run crontrib scripts
+      log: typo
+      json: retrieve the attributes
+      json: use direct attributes
+      json: adding the id selector to the url
+      json: adding group handling
+      json: adding ds handling
+      json: adding basic filter abilities
+      master/sql: add the DS states in the SQL db
+      json: add state support
+      json: implement the state api
+      json: adding comment about the special function
+
+Stig Sandbeck Mathisen (13):
+      Improve "make test-*", add verbose and test_files
+      Add new class Munin::Common::Logger
+      Replace Log4perl with Munin::Common::Logger
+      Replace logging in Munin::Common::TLS* with Munin::Common::Logger
+      Replace Munin::Master::Logger with Munin::Common::Logger
+      Replace Munin::Node::Logger with Munin::Common::Logger
+      Clean up tests
+      Update Build.PL and documentation
+      Munin::Common::Logger: Update documentation
+      Log errors to "screen", and debug to "syslog"
+      Remove use of removed Munin::{Master,Node}::Logger
+      use "eq" when comparing with undef
+      Mention graph_period in the plugin reference
+
+leeclemens (1):
+      Graph system peer's stratum
+
+
 munin-2.1.6.1, 2014-03-28
 
 -------
@@ -676,6 +752,25 @@ leeclemens (1):
 
 tsaavik (1):
       dynazoom: added logo and backlink
+
+
+munin-2.0.21, 2014-04-22
+
+-------
+Summary
+-------
+
+Bugfix release. It fixes the regression on nested groups.
+The offending commit is only reverted, so the bug is here again.
+
+Reopens: #1224
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (1):
+      Revert "Generate correct RRD filenames for nested graphs. Fixes #1224"
 
 
 munin-2.0.20, 2014-03-28

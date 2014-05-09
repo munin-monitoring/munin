@@ -8,6 +8,7 @@ use strict;
 
 use Carp;
 use English qw(-no_match_vars);
+use Munin::Common::Logger;
 
 sub new {
     my ($class, $args) = @_;
@@ -32,14 +33,14 @@ sub _initial_communication {
     $self->{write_func}("STARTTLS\n");
     my $tlsresponse = $self->{read_func}();
     if (!defined $tlsresponse) {
-        $self->{logger}("[ERROR] Bad TLS response \"\".");
+        ERROR ("Bad TLS response \"\".");
         return 0
     }
     if ($tlsresponse =~ /^TLS OK/) {
         $self->{remote_key} = 1;
     }
     elsif ($tlsresponse !~ /^TLS MAYBE/i) {
-        $self->{logger}("[ERROR] Bad TLS response \"$tlsresponse\".");
+        ERROR ("Bad TLS response \"$tlsresponse\".");
         return 0;
     }
 

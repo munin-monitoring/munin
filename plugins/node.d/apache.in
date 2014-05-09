@@ -186,7 +186,7 @@ $plugin->{graphs} =
   };
 
 foreach my $port (@PORTS) {
-  my ($accesses, $busy, $idle, $free, $volume);
+  my ($accesses, $busy, $idle, $free, $volume, $threads);
 
   if ( $responses{$port}->is_success ) {
     my $content = $responses{$port}->content;
@@ -210,6 +210,11 @@ foreach my $port (@PORTS) {
     if ($content =~ /^Total kBytes:\s+(.+)$/im) {
       $volume = $1;
     }
+
+	my $pid = `pidof -s apache2`;
+	chomp($pid);
+	$threads = `awk '/^Threads:/ {print \$2}' /proc/$pid/status`;
+	chomp($threads);
   }
 
   $plugin->{graphs}->{apache_accesses}->{fields}->{"accesses$port"} =
@@ -220,7 +225,7 @@ foreach my $port (@PORTS) {
      value => $accesses,
     };
 
-  $plugin->{graphs}->{apache_processes}->{order} .= "busy$port idle$port free$port ";
+  $plugin->{graphs}->{apache_processes}->{order} .= "busy$port idle$port free$port threads$port ";
   $plugin->{graphs}->{apache_processes}->{fields}->{"busy$port"} =
     {
      label => "busy servers on port $port",
@@ -241,6 +246,13 @@ foreach my $port (@PORTS) {
      draw  => "STACK",
      min   => 0,
      value => $free,
+    };
+  $plugin->{graphs}->{apache_processes}->{fields}->{"threads$port"} =
+    {
+     label => "threads on port $port",
+     draw  => "STACK",
+     min   => 0,
+     value => $threads,
     };
 
   $plugin->{graphs}->{apache_volume}->{fields}->{"volume$port"} =
