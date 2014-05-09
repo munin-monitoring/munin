@@ -86,54 +86,60 @@ install-pre: Makefile Makefile.config
 	mkdir -p $(CONFDIR)
 	$(CHOWN) $(USER) $(LOGDIR) $(STATEDIR) $(SPOOLDIR)
 
-install-master-prime: $(INFILES_MASTER) install-pre install-master
-	mkdir -p $(CONFDIR)/templates
+install-static:
 	mkdir -p $(CONFDIR)/static
+	for p in master/static/* ; do \
+		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/static/ ; \
+	done
+
+install-templates:
+	mkdir -p $(CONFDIR)/templates
+	for p in master/www/*.tmpl ;  do \
+		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
+	done
+
+install-partial:
 	mkdir -p $(CONFDIR)/templates/partial
+	for p in master/www/partial/*.tmpl; do \
+		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/partial/ ; \
+	done
+
+install-master-prime: $(INFILES_MASTER) install-pre install-master install-templates install-static install-partial
 	mkdir -p $(CONFDIR)/munin-conf.d
-	mkdir -p $(LIBDIR)
-	mkdir -p $(BINDIR)
 	mkdir -p $(PERLLIB)
 	mkdir -p $(PERLLIB)/Munin/Master
 	mkdir -p $(HTMLDIR)
-	mkdir -p $(DBDIR)
-	mkdir -p $(CGITMPDIR)
 	mkdir -p $(CGIDIR)
 
+	mkdir -p $(DBDIR)
 	$(CHOWN) $(USER) $(HTMLDIR) $(DBDIR)
 	$(CHMOD) 0755 $(DBDIR)
 
 	$(CHOWN) $(CGIUSER) $(CGITMPDIR)
 	$(CHMOD) 0755 $(CGITMPDIR)
 
-	for p in master/www/*.tmpl ;  do \
-		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/ ; \
-	done
-
-	for p in master/static/* ; do \
-		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/static/ ; \
-	done
-
-	for p in master/www/partial/*.tmpl; do \
-		$(INSTALL) -m 0644 "$$p" $(CONFDIR)/templates/partial/ ; \
-	done
-
+	mkdir -p $(LIBDIR)
 	$(INSTALL) -m 0644 master/DejaVuSansMono.ttf $(LIBDIR)/
 	$(INSTALL) -m 0644 master/DejaVuSans.ttf $(LIBDIR)/
 
 	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/master/www/munin-htaccess $(HTMLDIR)/.htaccess
+
 	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/master/munin.conf $(CONFDIR)/
 
+	mkdir -p $(BINDIR)
 	$(INSTALL) -m 0755 build/master/_bin/munin-cron $(BINDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-check $(BINDIR)/
+
 	$(INSTALL) -m 0755 build/master/_bin/munin-update $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-html $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-graph $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-limits $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-datafile2storable $(LIBDIR)/
 	$(INSTALL) -m 0755 build/master/_bin/munin-storable2datafile $(LIBDIR)/
+
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-datafile $(CGIDIR)/munin-cgi-datafile
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/munin-cgi-graph
+	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-gfx $(CGIDIR)/munin-cgi-gfx
 	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-html $(CGIDIR)/munin-cgi-html
 
 # Not ready to be installed yet

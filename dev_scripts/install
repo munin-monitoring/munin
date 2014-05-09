@@ -1,27 +1,32 @@
-#!/bin/bash
+#! /bin/sh
+
+# Stop when there is an uncatched error
+set -e
 
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
 . $FINDBIN/common.sh
 
 cd $BASEDIR
 
-if [ $1 ]; then
+if [ "$1" = "node" ]; then
+	echo "Cleaning up everything"
     ./dev_scripts/stop_munin-node
     ./dev_scripts/stop_munin-sched
 
     rm -rf sandbox
     mkdir sandbox
-    make clean || exit
+    make clean
     echo "**********************************************************************"
 fi
 
-make DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin || exit
-fakeroot make install-common-prime install-master-prime install-node-prime install-plugins-prime install-man install-async DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin || exit
+fakeroot make install-common-prime install-master-prime DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin
 
 
-if [ $1 ]; then
+if [ "$1" = "node"  ]; then
+	echo "Cleaning up everything"
     echo "**********************************************************************"
-    fakeroot make install-plugins-prime install-plugins-java DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin || exit
+    fakeroot make install-node-prime DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin
+    fakeroot make install-plugins-prime install-plugins-java DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin
     echo "**********************************************************************"
     perl -pi -e "s/port 4949/port 4948/; 
                  s/user root/user $USER/; 
