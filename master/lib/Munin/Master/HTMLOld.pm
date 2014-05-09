@@ -72,11 +72,10 @@ use Time::HiRes;
 use File::Copy::Recursive qw(dircopy);
 use IO::File;
 
-use Munin::Master::Logger;
 use Munin::Master::Utils;
 use Munin::Master::HTMLConfig;
 
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
 
 my @times = ("day", "week", "month", "year");
 
@@ -137,9 +136,6 @@ sub html_startup {
     # XXX: should not need that part here, yet.
     $config = munin_readconfig_part('datafile', 0);
  
-    logger_open($config->{'logdir'});
-    logger_debug() if $DEBUG;
-
     $tmpldir = $config->{tmpldir};
     $htmldir = $config->{htmldir};
 

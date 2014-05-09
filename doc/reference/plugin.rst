@@ -48,6 +48,20 @@ following fields are used.
 |                    |                  |          | which is the practice of taking          |                  |         |
 |                    |                  |          | datapoints from other graphs.            |                  |         |
 +--------------------+------------------+----------+------------------------------------------+------------------+---------+
+| graph_period       | second|minute|   | optional | Control the unit of the data that will   |                  |         |
+|                    | hour             |          | be displayed in the graphs. The default  |                  |         |
+|                    |                  |          | is "second".  Changing it to "minute" or |                  |         |
+|                    |                  |          | "hour" is useful in cases of a low       |                  |         |
+|                    |                  |          | frequency of whatever the plugin is      |                  |         |
+|                    |                  |          | measuring.                               |                  |         |
+|                    |                  |          |                                          |                  |         |
+|                    |                  |          | Changing the graph_period makes sense    |                  |         |
+|                    |                  |          | only when the data type is COUNTER or    |                  |         |
+|                    |                  |          | DERIVE.                                  |                  |         |
+|                    |                  |          |                                          |                  |         |
+|                    |                  |          | This does not change the sampling        |                  |         |
+|                    |                  |          | frequency of the data                    |                  |         |
++--------------------+------------------+----------+------------------------------------------+------------------+---------+
 | update_rate        | integer          | optional | Sets the update_rate used by the munin   |                  |         |
 |                    | (seconds)        |          | master when it creates the RRD file.     |                  |         |
 |                    |                  |          |                                          |                  |         |

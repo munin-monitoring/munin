@@ -9,12 +9,11 @@ use English qw(-no_match_vars);
 use Carp;
 
 use Time::HiRes;
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
 use List::Util qw( shuffle );
 
 use Munin::Common::Defaults;
 use Munin::Master::Config;
-use Munin::Master::Logger;
 use Munin::Master::UpdateWorker;
 use Munin::Master::ProcessManager;
 use Munin::Master::Utils;
@@ -93,10 +92,6 @@ sub _create_rundir_if_missing {
 
 sub _create_workers {
     my ($self) = @_;
-
-    # FIX log skipped and queued workers:
-    # logger("Skipping '$name' (update disabled by config)");
-    # logger("Queuing '$name' for update.");
 
     my @hosts = $self->{group_repository}->get_all_hosts();
 
@@ -310,6 +305,23 @@ sub _dump_into_sql {
 	my $sth_url = $dbh->prepare('INSERT INTO url (id, type, path) VALUES (?, ?, ?)');
 	$sth_url->{RaiseError} = 1;
 
+	# Table that contains all the states for the various plugins.
+	# This is the table that should get queried for the last/previous
+	# values, along with a precomputed alarm state (UNKNOWN, NORMAL,
+	# WARNING, CRITICAL)
+	#
+	# Note, this table is referenced by composite key (type,id) in order to be
+	# able to have any kind of states. Such as whole node states for example.
+	$dbh->do("CREATE TABLE state (id INTEGER, type VARCHAR,
+		last_epoch INTEGER, last_value VARCHAR,
+		prev_epoch INTEGER, prev_value VARCHAR,
+		alarm VARCHAR
+		)");
+	$dbh->do("CREATE UNIQUE INDEX pk_state ON url (type, id)");
+	my $sth_state = $dbh->prepare('INSERT INTO state (id, type, last_epoch, last_value, prev_epoch, prev_value) VALUES (?, ?, ?, ?, ?, ?)');
+	$sth_state->{RaiseError} = 1;
+
+
 	# Configuration
 	$config->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
 	for my $key (keys %$config) {
@@ -327,7 +339,8 @@ sub _dump_into_sql {
 
 		$sth_node->execute($grp_id, $node->{host}, $host);
 		my $node_id = _get_last_insert_id($dbh);
-		$sth_url->execute($node_id, "node", _get_url_from_path($host));
+		my $url = _get_url_from_path($host);
+		$sth_url->execute($node_id, "node", $url);
 
 		for my $attr (keys %$node) {
 			# Ignore the configref key, as it is redundant
@@ -335,6 +348,14 @@ sub _dump_into_sql {
 
 			$sth_node_attr->execute($node_id, $attr, munin_dumpconfig_as_str($node->{$attr}));
 		}
+
+		# Insert the state of each plugin
+		# Reading the state file
+		# Beware, that part is ugly, yet best is still coming.
+		my $path = $url; $path =~ s/\.html$//; $path =~ s/\//-/g;
+		my $state_file = sprintf ('%s/state-%s.storable', $config->{dbdir}, $path);
+		DEBUG "[DEBUG] Reading state for $path in $state_file (Dumping)";
+		my $state = munin_read_storable($state_file) || {};
 
 		for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
 			$sth_service->execute($node_id, $service, "$host:$service");
@@ -351,6 +372,19 @@ sub _dump_into_sql {
 				for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
 					$sth_ds_attr->execute($ds_id, $attr, $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr});
 				}
+
+				# Get the states for the DS
+				# XXX - Do *NOT* look at the following code. It will haunt you forever.
+				my $rrdfile_prefix = $config->{dbdir} . "/$url-$service-$data_source";
+				my $state_ds = $state->{value}{"$rrdfile_prefix-g.rrd:42"};
+				$state_ds  ||= $state->{value}{"$rrdfile_prefix-d.rrd:42"};
+				$state_ds  ||= $state->{value}{"$rrdfile_prefix-c.rrd:42"};
+				$state_ds  ||= $state->{value}{"$rrdfile_prefix-a.rrd:42"};
+
+				INFO "No state found for ds $ds_id ($rrdfile_prefix)" unless $state_ds;
+				next unless $state_ds;
+
+				$sth_state->execute($ds_id, "ds", @{ $state_ds->{current} }, @{ $state_ds->{previous} }, );
 			}
 		}
 	}

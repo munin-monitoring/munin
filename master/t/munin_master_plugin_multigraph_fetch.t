@@ -10,9 +10,6 @@ use Test::More tests => 2;
 
 use_ok('Munin::Master::Node');
 
-# use_ok('Munin::Master::Logger');
-# logger_debug();
-
 # Mock object enough to be able to call (some) object methods.
 my $node = bless { address => "127.0.0.1",
 		   port => "4949",

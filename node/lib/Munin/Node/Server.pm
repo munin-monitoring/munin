@@ -13,7 +13,7 @@ use Munin::Node::Config;
 use Munin::Common::Defaults;
 use Munin::Common::Timeout;
 use Munin::Common::TLSServer;
-use Munin::Node::Logger;
+use Munin::Common::Logger;
 use Munin::Node::Session;
 use Munin::Node::Utils;
 
@@ -42,7 +42,7 @@ my $config = Munin::Node::Config->instance();
 
 sub pre_loop_hook {
     my $self = shift;
-    logger("In pre_loop_hook.") if $config->{DEBUG};
+    DEBUG("In pre_loop_hook.") if $config->{DEBUG};
 
     $services = $config->{services} or die 'no services list';
     $spool    = $config->{spool};
@@ -59,7 +59,7 @@ sub pre_loop_hook {
 sub request_denied_hook
 {
     my $self = shift;
-    logger("Denying connection from: $self->{server}->{peeraddr}");
+    NOTICE("Denying connection from: $self->{server}->{peeraddr}");
     return;
 }
 
@@ -70,12 +70,12 @@ sub _add_services_to_nodes
     my (@services) = @_;
 
     for my $service (@services) {
-        logger("Configuring $service\n") if $config->{DEBUG};
+        DEBUG("Configuring $service\n") if $config->{DEBUG};
 
         my @response = _run_service($service, 'config');
 
         if (!@response or grep(/# Timed out/, @response)) {
-            logger("Error running $service.  Dropping it.") if $config->{DEBUG};
+            DEBUG("Error running $service.  Dropping it.") if $config->{DEBUG};
             delete $services{$service};
             next;
         }
@@ -88,22 +88,22 @@ sub _add_services_to_nodes
         # hostname checks are case insensitive, so store everything in lowercase
         $node = lc($node);
 
-        logger("\tAdding to node $node") if $config->{DEBUG};
+        DEBUG("\tAdding to node $node") if $config->{DEBUG};
         push @{$nodes{$node}}, $service;
 
         # Note any plugins that require particular server capabilities.
         if (grep /^multigraph\s+/, @response) {
-            logger("\tAdding to multigraph plugins") if $config->{DEBUG};
+            DEBUG("\tAdding to multigraph plugins") if $config->{DEBUG};
             push @multigraph_services, $service;
         }
         if (grep /^[A-Za-z0-9_]+\.value /, @response) {
             # very dirty plugins -- they do a dirtyconfig even when
             # "not allowed" by their environment.
-            logger("\tAdding to dirty plugins") if $config->{DEBUG};
+            DEBUG("\tAdding to dirty plugins") if $config->{DEBUG};
             push @dirtyconfig_services, $service;
         }
     }
-    logger("Finished configuring services") if $config->{DEBUG};
+    DEBUG("Finished configuring services") if $config->{DEBUG};
 
     return;
 }
@@ -146,8 +146,8 @@ sub process_request
         });
     };
 
-    logger($EVAL_ERROR)                                   if ($EVAL_ERROR);
-    logger("Node side timeout while processing: '$line'") if ($timed_out);
+    ERROR($EVAL_ERROR)                                   if ($EVAL_ERROR);
+    ERROR("Node side timeout while processing: '$line'") if ($timed_out);
 
     return;
 }
@@ -160,13 +160,13 @@ sub _process_command_line {
 
     if (_expect_starttls($session)) {
         if (!(/^starttls\s*$/i)) {
-            logger ("ERROR: Client did not request TLS. Closing.");
+            ERROR ("ERROR: Client did not request TLS. Closing.");
             _net_write($session, "# I require TLS. Closing.\n");
             return 0;
         }
     }
 
-    logger ("DEBUG: Running command '$_'.") if $config->{DEBUG};
+    DEBUG ("DEBUG: Running command '$_'.") if $config->{DEBUG};
     if (/^list\s*([0-9a-zA-Z\.\-]+)?/i) {
 	my $hostname_lc = defined($1) ? lc($1) : undef;
         _list_services($session, $hostname_lc);
@@ -198,10 +198,10 @@ sub _process_command_line {
             $session->{tls_started} = _process_starttls_command($session);
         };
         if ($EVAL_ERROR) {
-            logger($EVAL_ERROR);
+            ERROR($EVAL_ERROR);
             return 0;
         }
-        logger ('DEBUG: Returned from starttls.') if $config->{DEBUG};
+        DEBUG ('DEBUG: Returned from starttls.') if $config->{DEBUG};
     }
     else {
         _net_write($session, "# Unknown command. Try cap, list, nodes, config, fetch, version or quit\n");
@@ -277,7 +277,6 @@ sub _process_starttls_command {
 
     $session->{tls} = Munin::Common::TLSServer->new({
         DEBUG        => $config->{DEBUG},
-        logger       => \&logger,
         read_fd      => fileno(STDIN),
         read_func    => sub { die "Shouldn't need to read!?" },
         tls_ca_cert  => $ca_cert,
@@ -360,20 +359,20 @@ sub _run_service
     my $res = $services->fork_service($service, $command);
 
     if ($res->{timed_out}) {
-        logger("Service '$service' timed out.");
+        ERROR("Service '$service' timed out.");
         return '# Timed out';
     }
 
     if (my @errors = grep !/^# /, @{$res->{stderr}}) {
-        logger(qq{Error output from $service:});
-        logger("\t$_") foreach @errors;
+        ERROR(qq{Error output from $service:});
+        ERROR("\t$_") foreach @errors;
     }
 
     if ($res->{retval}) {
         my $plugin_exit   = $res->{retval} >> 8;
         my $plugin_signal = $res->{retval} & 127;
 
-        logger(qq{Service '$service' exited with status $plugin_exit/$plugin_signal.});
+        ERROR(qq{Service '$service' exited with status $plugin_exit/$plugin_signal.});
         return '# Bad exit';
     }
 
@@ -392,14 +391,14 @@ sub _net_read {
     else {
         $_ = <STDIN>;
     }
-    logger('DEBUG: < ' . (defined $_ ? $_ : 'undef')) if $config->{DEBUG};
+    DEBUG('DEBUG: < ' . (defined $_ ? $_ : 'undef')) if $config->{DEBUG};
     return $_;
 }
 
 
 sub _net_write {
     my ($session, $text) = @_;
-    logger("DEBUG: > $text") if $config->{DEBUG};
+    DEBUG("DEBUG: > $text") if $config->{DEBUG};
     if ($session->{tls} && $session->{tls}->session_started()) {
         $session->{tls}->write($text);
     }

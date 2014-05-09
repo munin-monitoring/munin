@@ -25,7 +25,6 @@ sub do_server {
 
     my $tls = Munin::Common::TLSServer->new({
         DEBUG        => 1,
-        logger       => sub { print "LOG SERVER: ", @_, "\n" },
         read_fd      => fileno($socket),
         read_func    => sub { print "Server reading ...\n"; my $line = <$socket>; print "Server done. ($line)\n"; return $line; },
         tls_ca_cert  => "$FindBin::Bin/tls/CA/ca_cert.pem",
@@ -54,7 +53,6 @@ sub do_client {
 
     my $tls = Munin::Common::TLSClient->new({
         DEBUG        => 1,
-        logger       => sub { print "LOG CLIENT: ", @_, "\n" },
         read_fd      => fileno($socket),
         read_func    => sub { print "Client reading ...\n"; my $line = <$socket>; print "Client done. ($line)\n"; return $line; },
         tls_ca_cert  => "$FindBin::Bin/tls/CA/ca_cert.pem",

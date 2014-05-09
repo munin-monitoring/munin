@@ -17,7 +17,7 @@ if [ -z "$1" ]; then
 fi
 
 
-RUN=$(find $DESTDIR -name $1 -type f -executable)
+RUN=$(find $FINDDIR -name $1 -type f -executable)
 shift
 
 if [ -z "$RUN" ]; then

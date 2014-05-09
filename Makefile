@@ -32,6 +32,14 @@ PODMAN8          := build/master/doc/munin-cron master/doc/munin master/doc/muni
 PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
 MAN3EXT          := $(shell $(PERL) -e 'use Config; print $$Config{man3ext};')
 
+ifneq ($(test_files),)
+TEST_OPTIONS += test_files="$(test_files)"
+endif
+
+ifneq ($(test_verbose),)
+TEST_OPTIONS += --verbose
+endif
+
 .PHONY: install install-pre install-master-prime install-node-prime install-node-pre install-common-prime install-doc install-man \
         build build-common-prime build-common-pre build-doc \
         source_dist \
@@ -475,7 +483,7 @@ install-%: %/Build
             --install_path libdoc=$(MANDIR)/man3	\
 
 test-%: %/Build
-	cd $* && $(PERL) Build test --verbose=1
+	cd $* && $(PERL) Build test $(TEST_OPTIONS)
 
 clean-%: %/Build common/blib/lib/Munin/Common/Defaults.pm
 	cd $* && $(PERL) Build realclean

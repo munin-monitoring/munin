@@ -835,6 +835,10 @@ sub do_config_device {
         my $pretty_device = $cur_diskstats{$device}->{'pretty_device_name'};
         my $graph_id      = $cur_diskstats{$device}->{'graph_id'};
 
+	# warning levels
+	my $avgrdwait_warning = $ENV{'avgrdwait_warning'} || '0:3';
+	my $avgwrwait_warning = $ENV{'avgwrwait_warning'} || '0:3';
+
         if ( $cur_diskstats{$device}->{'does_latency'} ) {
 
             print <<"EOF";
@@ -859,13 +863,13 @@ avgrdwait.label Read IO Wait time
 avgrdwait.type GAUGE
 avgrdwait.info Average wait time for a read I/O from request start to finish (includes queue times et al)
 avgrdwait.min 0
-avgrdwait.warning 0:3
+avgrdwait.warning $avgrdwait_warning
 avgrdwait.draw LINE1
 avgwrwait.label Write IO Wait time
 avgwrwait.type GAUGE
 avgwrwait.info Average wait time for a write I/O from request start to finish (includes queue times et al)
 avgwrwait.min 0
-avgwrwait.warning 0:3
+avgwrwait.warning $avgwrwait_warning
 avgwrwait.draw LINE1
 
 EOF
@@ -1144,6 +1148,14 @@ for running as root enter this in a plugin configuration file:
 
   [diskstats]
     user root
+
+=head2 Warning levels
+
+You can change the warning levels in a plugin configuration file:
+
+  [diskstats]
+    env.avgrdwait_warning 0:3
+    env.avgwrwait_warning 0:3
 
 =head2 Monitor specific devices
 

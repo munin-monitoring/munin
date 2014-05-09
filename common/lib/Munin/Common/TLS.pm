@@ -7,12 +7,12 @@ use strict;
 
 use Carp;
 use English qw(-no_match_vars);
+use Munin::Common::Logger;
 
 sub new {
     my ($class, $args) = @_;
 
     my $self = {
-        logger             => $args->{logger},
         read_fd            => $args->{read_fd},
         read_func          => $args->{read_func},
         write_fd           => $args->{write_fd},
@@ -61,7 +61,7 @@ sub _start_tls {
         verify         => $self->{tls_verify},
     );
 
-    $self->{logger}("[TLS] Enabling TLS.") if $self->{DEBUG};
+    DEBUG("[TLS] Enabling TLS.") if $self->{DEBUG};
     
     $self->_load_net_ssleay()
         or return 0;
@@ -84,7 +84,7 @@ sub _start_tls {
     
     if (! ($self->{tls_session} = Net::SSLeay::new($self->{tls_context})))
     {
-	$self->{logger}("[ERROR] Could not create TLS: $!");
+	ERROR("Could not create TLS: $!");
 	return 0;
     }
 
@@ -105,7 +105,7 @@ sub _load_net_ssleay {
         require Net::SSLeay;
     };
     if ($@) {
-	$self->{logger}("[ERROR] TLS enabled but Net::SSLeay unavailable.");
+	ERROR("TLS enabled but Net::SSLeay unavailable.");
 	return 0;
     }
 
@@ -127,14 +127,14 @@ sub _creat_tls_context {
 
     my $ctx = Net::SSLeay::CTX_new();
     if (!$ctx) {
-	$self->{logger}("[ERROR] Could not create SSL_CTX");
+	ERROR("Could not create SSL_CTX");
 	return 0;
     }
 
     # Tune a few things...
     Net::SSLeay::CTX_set_options($ctx, Net::SSLeay::OP_ALL());
     if (my $errno = Net::SSLeay::ERR_get_error()) {
-	$self->{logger}("[ERROR] Could not set SSL_CTX options: " + Net::SSLeay::ERR_error_string($errno));
+	ERROR("Could not set SSL_CTX options: " + Net::SSLeay::ERR_error_string($errno));
 	return 0;
     }
 
@@ -154,16 +154,16 @@ sub _load_private_key {
             }
             else {
 	        if ($self->{tls_paranoia} eq "paranoid") {
-                    $self->{logger}("[ERROR] Problem occurred when trying to read file with private key \"$self->{tls_priv}\": $!");
+                    ERROR("Problem occurred when trying to read file with private key \"$self->{tls_priv}\": $!");
 		    return 0;
 	        }
 	        else {
-                    $self->{logger}("[ERROR] Problem occurred when trying to read file with private key \"$self->{tls_priv}\": $!. Continuing without private key.");
+                    ERROR("Problem occurred when trying to read file with private key \"$self->{tls_priv}\": $!. Continuing without private key.");
 	        }
 	    }
 	}
 	else {
-	    $self->{logger}("[WARNING] No key file \"$self->{tls_priv}\". Continuing without private key.");
+	    WARNING("No key file \"$self->{tls_priv}\". Continuing without private key.");
         }
     }
 
@@ -179,12 +179,12 @@ sub _load_certificate {
 	    if (!Net::SSLeay::CTX_use_certificate_file($self->{tls_context}, 
                                                        $self->{tls_cert}, 
                                                        &Net::SSLeay::FILETYPE_PEM)) {
-	        $self->{logger}("[WARNING] Problem occurred when trying to read file with certificate \"$self->{tls_cert}\": $!. Continuing without certificate.");
+	        WARNING("Problem occurred when trying to read file with certificate \"$self->{tls_cert}\": $!. Continuing without certificate.");
 	    }
         }
     }
     else {
-	$self->{logger}("[WARNING] No certificate file \"$self->{tls_cert}\". Continuing without certificate.");
+	WARNING("No certificate file \"$self->{tls_cert}\". Continuing without certificate.");
     }
 
     return 1;
@@ -196,7 +196,7 @@ sub _load_ca_certificate {
 
     if ($self->{tls_ca_cert} && -e $self->{tls_ca_cert}) {
     	if(!Net::SSLeay::CTX_load_verify_locations($self->{tls_context}, $self->{tls_ca_cert}, '')) {
-            $self->{logger}("[WARNING] Problem occurred when trying to read file with the CA's certificate \"$self->{tls_ca_cert}\": ".&Net::SSLeay::print_errs("").". Continuing without CA's certificate.");
+            WARNING("Problem occurred when trying to read file with the CA's certificate \"$self->{tls_ca_cert}\": ".&Net::SSLeay::print_errs("").". Continuing without CA's certificate.");
    	 }
     }
 
@@ -211,7 +211,7 @@ sub _set_peer_requirements {
     Net::SSLeay::CTX_set_verify_depth ($self->{tls_context}, $self->{tls_vdepth});
     my $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
-        $self->{logger}("[WARNING] in set_verify_depth: $err");
+        WARNING("in set_verify_depth: $err");
     }
     Net::SSLeay::CTX_set_verify ($self->{tls_context}, 
                                  $self->{tls_verify}  ? &Net::SSLeay::VERIFY_PEER :
@@ -219,7 +219,7 @@ sub _set_peer_requirements {
                                  $self->_tls_verify_callback($tls_verified));
     $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
-        $self->{logger}("[WARNING] in set_verify: $err");
+        WARNING("in set_verify: $err");
     }
     
     return 1;
@@ -237,18 +237,18 @@ sub _tls_verify_callback {
 
         if ($ok) {
             $tls_verified->{"verified"} = 1;
-            $self->{logger}("[TLS] Verified certificate.") if $self->{DEBUG};
+            DEBUG("[TLS] Verified certificate.") if $self->{DEBUG};
             return 1;           # accept
         }
         
         if (!($tls_verified->{"verify"})) {
-            $self->{logger}("[TLS] Certificate failed verification, but we aren't verifying.") if $self->{DEBUG};
+            DEBUG("[TLS] Certificate failed verification, but we aren't verifying.") if $self->{DEBUG};
             $tls_verified->{"verified"} = 1;
             return 1;
         }
 
         if ($tls_verified->{"level"} > $tls_verified->{"required_depth"}) {
-            $self->{logger}("[TLS] Certificate verification failed at depth ".$tls_verified->{"level"}.".");
+            ERROR("[TLS] Certificate verification failed at depth ".$tls_verified->{"level"}.".");
             $tls_verified->{"verified"} = 0;
             return 0;
         }
@@ -272,7 +272,7 @@ sub _log_cipher_list {
         $p=Net::SSLeay::get_cipher_list($self->{tls_session},$i);
     } while $p;
     $cipher_list .= '\n';
-    $self->{logger}("[TLS] Available cipher list: $cipher_list.") if $self->{DEBUG};
+    DEBUG("[TLS] Available cipher list: $cipher_list.") if $self->{DEBUG};
 }
 
 
@@ -282,12 +282,12 @@ sub _set_ssleay_file_descriptors {
     Net::SSLeay::set_rfd($self->{tls_session}, $self->{read_fd});
     my $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
-        $self->{logger}("[TLS] Warning in set_rfd: $err");
+        ERROR("[TLS] Warning in set_rfd: $err");
     }
     Net::SSLeay::set_wfd($self->{tls_session}, $self->{write_fd});
     $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
-        $self->{logger}("[TLS] Warning in set_wfd: $err");
+        ERROR("[TLS] Warning in set_wfd: $err");
     }
 }
 
@@ -295,7 +295,7 @@ sub _set_ssleay_file_descriptors {
 sub _accept_or_connect {
     my ($self, $tls_verified) = @_;
 
-    $self->{logger}("[TLS] Accept/Connect: $self->{private_key_loaded}, " . $self->_use_key_if_present()) if $self->{DEBUG};
+    DEBUG("[TLS] Accept/Connect: $self->{private_key_loaded}, " . $self->_use_key_if_present()) if $self->{DEBUG};
     my $res;
     if ($self->_use_key_if_present()) {
         $res = Net::SSLeay::accept($self->{tls_session});
@@ -303,19 +303,19 @@ sub _accept_or_connect {
     else {
         $res = Net::SSLeay::connect($self->{tls_session});
     }
-    $self->{logger}("[TLS] Done Accept/Connect") if $self->{DEBUG};
+    DEBUG("[TLS] Done Accept/Connect") if $self->{DEBUG};
 
     my $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err)
     {
-	$self->{logger}("[ERROR] Could not enable TLS: " . $err);
+	ERROR ("Could not enable TLS: " . $err);
 	Net::SSLeay::free ($self->{tls_session});
 	Net::SSLeay::CTX_free ($self->{tls_context});
 	$self->{tls_session} = undef;
     }
     elsif (!$tls_verified->{"verified"} and $self->{tls_paranoia} eq "paranoid")
     {
-	$self->{logger}("[ERROR] Could not verify CA: " . Net::SSLeay::dump_peer_certificate($self->{tls_session}));
+	ERROR("Could not verify CA: " . Net::SSLeay::dump_peer_certificate($self->{tls_session}));
 	$self->_on_unverified_cert();
 	Net::SSLeay::free ($self->{tls_session});
 	Net::SSLeay::CTX_free ($self->{tls_context});
@@ -324,7 +324,7 @@ sub _accept_or_connect {
     elsif ($self->{"tls_match"} and
     	Net::SSLeay::dump_peer_certificate($self->{tls_session}) !~ /$self->{tls_match}/)
     { 
-	$self->{logger}("[ERROR] Could not match pattern \"" . $self->{tls_match} .
+	ERROR("Could not match pattern \"" . $self->{tls_match} .
 		"\" in dump of certificate.");
 	$self->_on_unmatched_cert();
 	Net::SSLeay::free ($self->{tls_session});
@@ -333,9 +333,9 @@ sub _accept_or_connect {
     }
     else
     {
-	$self->{logger}("[TLS] TLS enabled.") if $self->{DEBUG};
-	$self->{logger}("[TLS] Cipher `" . Net::SSLeay::get_cipher($self->{tls_session}) . "'.") if $self->{DEBUG};
-	$self->{logger}("[TLS] client cert: " . Net::SSLeay::dump_peer_certificate($self->{tls_session})) if $self->{DEBUG};
+	DEBUG("[TLS] TLS enabled.") if $self->{DEBUG};
+	DEBUG("[TLS] Cipher `" . Net::SSLeay::get_cipher($self->{tls_session}) . "'.") if $self->{DEBUG};
+	DEBUG("[TLS] client cert: " . Net::SSLeay::dump_peer_certificate($self->{tls_session})) if $self->{DEBUG};
     }
 }
 
@@ -373,12 +373,12 @@ sub read {
     my $read = Net::SSLeay::read($self->{tls_session});
     my $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
-        $self->{logger}("[TLS] Warning in read: $err");
+        ERROR("[TLS] Warning in read: $err");
         return;
     }
     undef $read if($read eq ''); # returning '' signals EOF
 
-    $self->{logger}("DEBUG: < $read") if $self->{DEBUG} && defined $read;
+    DEBUG("DEBUG: < $read") if $self->{DEBUG} && defined $read;
     return $read;
 }
 
@@ -389,12 +389,12 @@ sub write {
     croak "Tried to do an encrypted write, but a TLS session is not started" 
         unless $self->session_started();
 
-    $self->{logger}("DEBUG: > $text") if $self->{DEBUG};
+    DEBUG("DEBUG: > $text") if $self->{DEBUG};
 
     Net::SSLeay::write($self->{tls_session}, $text);
     my $err = &Net::SSLeay::print_errs("");
     if (defined $err and length $err) {
-        $self->{logger}("[TLS] Warning in write: $err");
+        ERROR("[TLS] Warning in write: $err");
         return 0;
     }
     
@@ -432,7 +432,6 @@ L<Munin::Common::TLSServer> and L<Munin::Common::TLSClient>.
 
  my $tls = Munin::Common::TLSFoo->new({ # Substitute Foo with Client or Server
      # Mandatory attributes:  
-     logger      => \&a_logger_func,
      read_fd     => fileno($socket),
      read_func   => \&a_socket_read_func,
      write_fd    => fileno($socket),
