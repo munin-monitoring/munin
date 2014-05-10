@@ -4,18 +4,6 @@ set -e
 
 prevver="$2"
 
-add_munin_system_user() {
-	if ! getent passwd munin >/dev/null; then
-		adduser --group --system --no-create-home \
-			--home /var/lib/munin munin;
-	fi
-	# workaround bug (#531021) in xen-tools
-	if ! getent group munin >/dev/null; then
-	        addgroup --system munin
-	        adduser munin munin
-	fi
-}
-
 initperms() {
 	chown munin:adm /var/log/munin
 	chmod 755 /var/log/munin
@@ -97,9 +85,6 @@ apache_install() {
 
 case "$1" in
 	configure)
-		if [ -z "$2" ] ; then
-			add_munin_system_user
-		fi
 		# after wheezy / squeeze-sloppy-backports this and fixoverrides() can be removed completly
 		if dpkg --compare-versions "$2" le "2.0~rc5-1" ; then
 			fixoverrides
