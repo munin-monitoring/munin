@@ -1,3 +1,3 @@
-Tests: munin-node munin-master
-Depends: munin-node, munin
-Restrictions: needs-root
+Tests: run-tests
+Depends: @,perl,netcat-openbsd
+Restrictions: needs-root breaks-testbed isolation-container
