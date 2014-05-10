@@ -1,4 +1,4 @@
-munin (2.0.21-1) UNRELEASED; urgency=low
+munin (2.0.21-1) unstable; urgency=low
 
   [ Matthias Schmitz ]
   * Add configuration files for apache 2.4. (Closes: #722654, #672767)
@@ -8,14 +8,20 @@ munin (2.0.21-1) UNRELEASED; urgency=low
   [ Holger Levsen ]
   * Recommend libcgi-fast-perl for munin as munin-cgi-graph needs this for
     zoomable graphs. (Closes: #737135)
-  * Add "Testsuite: autopkgtest" to source entry in debian/control, so ci.debian.net will automatically pick it up.
+  * Add "Testsuite: autopkgtest" to source entry in debian/control, so
+    ci.debian.net will automatically pick it up.
 
   [ Stig Sandbeck Mathisen ]
   * Add instructions for "git-buildpackage / gbp"
   * Add new packaging guide
   * Import upstream release 2.0.21
+  * Add patch to fix http_loadtime plugin
+  * Use 3.0 (quilt) as source format
+  * Update DEP-8 tests - use sharness
+  * munin-common: handle munin user creation
+  * Remove redundant Suggests: libcgi-fast-perl
 
- -- Stig Sandbeck Mathisen <ssm@debian.org>  Sat, 10 May 2014 12:06:52 +0200
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Sat, 10 May 2014 20:12:44 +0200
 
 munin (2.0.19-3) unstable; urgency=medium
 
