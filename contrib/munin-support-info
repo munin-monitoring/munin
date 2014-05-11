@@ -1,0 +1,146 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use FileHandle;
+
+use Munin::Common::Defaults;
+
+format HEADER =
+===========================
+ Munin support information
+==========================
+
+This is support information for Munin version @<<<<<<<<<<<<<<<<<<
+                                              $Munin::Common::Defaults::MUNIN_VERSION,
+.
+format_name STDOUT "HEADER";
+write STDOUT;
+
+eval {
+    require Munin::Master::Config;
+};
+if (!$@) {
+    my $globconfig = Munin::Master::Config->instance();
+    my $c = $globconfig->{'config'};
+
+    format MASTER =
+
+
+Munin Master
+============
+
+Configuration items from @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                         $c->{'config_file'},
+
+Strategies
+----------
+
+graph_strategy         @<<<<<<<<<<<<<<<<<<
+                       $c->{'graph_strategy'} ||= '(unset)',
+html_strategy          @<<<<<<<<<<<<<<<<<<
+                       $c->{'html_strategy'} ||= '(unset)',
+
+Directories
+-----------
+
+dbdir                  @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'dbdir'} ||= '(unset)',
+htmldir                @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'htmldir'} ||= '(unset)',
+logdir                 @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'logdir'} ||= '(unset)',
+rundir                 @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'rundir'} ||= '(unset)',
+tmpldir                @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'tmpldir'} ||= '(unset)',
+
+Processes
+---------
+
+fork                   @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'fork'} ||= '(unset)',
+max_cgi_graph_jobs     @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'max_cgi_graph_jobs'} ||= '(unset)',
+max_graph_jobs         @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'max_graph_jobs'} ||= '(unset)',
+max_processes          @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'max_processes'} ||= '(unset)',
+
+TLS
+---
+
+tls                    @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'tls'} ||= '(unset)',
+tls_ca_certificate     @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'tls_ca_certificate'} ||= '(unset)',
+tls_certificate        @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'tls_certificate'} ||= '(unset)',
+tls_match              @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'tls_match'} ||= '(unset)',
+tls_private_key        @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'tls_private_key'} ||= '(unset)',
+tls_verify_certificate @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'tls_verify_certificate'} ||= '(unset)',
+tls_verify_depth       @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'tls_verify_depth'} ||= '(unset)',
+.
+    format_name STDOUT "MASTER";
+    write STDOUT;
+}
+
+eval {
+    require Munin::Node::Config;
+};
+if (!$@) {
+    my $config = Munin::Node::Config->instance();
+    $config->parse_config_from_file($config->{'config_file'});
+    my $c = $config->{'sconf'};
+
+    format NODE =
+
+
+Munin Node
+==========
+
+Configuration items from @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                         $config->{'config_file'},
+
+Network
+-------
+
+host                   @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'host'} ||= '(unset)',
+port                   @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'port'} ||= '(unset)',
+
+Privileges
+----------
+
+user                   @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'user'} ||= '(unset)',
+group                  @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'group'} ||= '(unset)',
+
+Process
+-------
+
+background             @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'background'} ||= '(unset)',
+pid_file               @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'pid_file'} ||= '(unset)',
+setsid                 @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'setsid'} ||= '(unset)',
+
+Logging
+-------
+
+log_level              @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'log_level'} ||= '(unset)',
+log_file               @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                       $c->{'log_file'} ||= '(unset)',
+.
+
+    format_name STDOUT "NODE";
+    write STDOUT;
+}
