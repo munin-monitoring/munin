@@ -21,7 +21,6 @@ Testsuite: autopkgtest
 Package: munin-node
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
- adduser,
  gawk,
  libnet-server-perl,
  lsb-base (>= 3.2-4),
@@ -143,7 +142,6 @@ Description: network-wide graphing framework (java plugins for node)
 Package: munin
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
- adduser,
  cron,
  fonts-dejavu,
  libdate-manip-perl,
@@ -183,6 +181,7 @@ Description: network-wide graphing framework (grapher/gatherer)
 Package: munin-common
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
+ adduser,
  perl-modules | libparse-recdescent-perl,
  liblist-moreutils-perl,
 Description: network-wide graphing framework (common)
