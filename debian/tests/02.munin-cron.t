@@ -20,19 +20,19 @@ test_expect_success "setup" "
 "
 
 test_expect_success "munin-update" "
-  su - munin -s /bin/sh -c '/usr/share/munin/munin-update'
+  setuidgid munin /usr/share/munin/munin-update
 "
 
 test_expect_success "munin-limits" "
-  su - munin -s /bin/sh -c '/usr/share/munin/munin-limits'
+  setuidgid munin /usr/share/munin/munin-limits
 "
 
 test_expect_success "munin-graph" "
-  su - munin -s /bin/sh -c '/usr/share/munin/munin-graph'
+  setuidgid munin /usr/share/munin/munin-graph
 "
 
 test_expect_success "munin-html" "
-  su - munin -s /bin/sh -c '/usr/share/munin/munin-html'
+  setuidgid munin /usr/share/munin/munin-html
 "
 
 test_done
