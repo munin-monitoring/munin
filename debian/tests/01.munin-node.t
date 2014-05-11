@@ -32,8 +32,18 @@ test_expect_success "status (after start)" "
   service munin-node status
 "
 
+check_port() {
+    while ! nc -z localhost 4949; do
+        a=$(expr $a + 1)
+        if [ $a = 10 ]; then
+            return 1
+        fi
+        sleep 1;
+    done
+}
+
 test_expect_success "munin node port listening" "
-    nc -z localhost 4949
+  check_port
 "
 
 test_done
