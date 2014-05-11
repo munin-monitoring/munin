@@ -68,11 +68,11 @@ Provides: munin-plugins
 Replaces:
  munin-node (<<1.999.4548-3~),
  munin-plugins (<<1.999.4548-3~),
- munin-plugins-extra (<<2.0.13-1),
+ munin-plugins-extra (<<2.0.21-1),
 Breaks:
  munin-node (<<1.999.4548-3~),
  munin-plugins (<<1.999.4548-3~),
- munin-plugins-extra (<<2.0.13-1),
+ munin-plugins-extra (<<2.0.21-1),
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends}, munin-common (>= ${binary:Version})
 Recommends: libnet-snmp-perl
