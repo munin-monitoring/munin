@@ -32,9 +32,7 @@ Suggests:
  acpi | lm-sensors,
  ethtool,
  hdparm,
- libcache-cache-perl,
  libcrypt-ssleay-perl,
- libdbd-mysql-perl,
  libdbd-pg-perl,
  liblwp-useragent-determined-perl,
  libnet-irc-perl,
@@ -81,6 +79,8 @@ Suggests:
  libnet-netmask-perl,
  libnet-telnet-perl,
  libxml-parser-perl,
+ libcache-cache-perl,
+ libdbd-mysql-perl,
  python,
  ruby | ruby-interpreter,
 Description: network-wide graphing framework (plugins for node)
