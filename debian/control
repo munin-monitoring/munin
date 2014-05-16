@@ -81,6 +81,7 @@ Suggests:
  libxml-parser-perl,
  libcache-cache-perl,
  libdbd-mysql-perl,
+ libnet-dns-perl,
  python,
  ruby | ruby-interpreter,
 Description: network-wide graphing framework (plugins for node)
