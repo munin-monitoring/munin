@@ -330,8 +330,10 @@ sub _dump_into_sql {
 	# Configuration
 	$config->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
 	for my $key (keys %$config) {
-		next if ref $config->{$key};
-		$sth_param->execute($key, $config->{$key});
+		my $config_value = $config->{$key};
+		use Data::Dumper;
+		$config_value = Dumper($config_value) if ref $config_value;
+		$sth_param->execute($key, $config_value);
 	}
 
 	# Recursively create groups
