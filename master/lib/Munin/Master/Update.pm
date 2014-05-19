@@ -298,6 +298,11 @@ sub _dump_into_sql {
 	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path) VALUES (?, ?, ?)');
 	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
 
+	# We create some helper tables, that ease lookups at runtime
+	$dbh->do("CREATE TABLE ds_rrd (id INTEGER REFERENCES ds(id), filename VARCHAR, field VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX pk_ds_rrd ON ds_rrd (id)");
+	my $sth_ds_rrd = $dbh->prepare('INSERT INTO ds_rrd (id, filename, field) VALUES (?, ?, ?)');
+
 	# Table that contains all the URL paths, in order to have a very fast lookup
 	$dbh->do("CREATE TABLE url (id INTEGER, type VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX pk_url ON url (type, id)");
@@ -373,15 +378,24 @@ sub _dump_into_sql {
 					$sth_ds_attr->execute($ds_id, $attr, $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr});
 				}
 
-				# Get the states for the DS
-				# XXX - Do *NOT* look at the following code. It will haunt you forever.
-				my $rrdfile_prefix = $config->{dbdir} . "/$url-$service-$data_source";
-				my $state_ds = $state->{value}{"$rrdfile_prefix-g.rrd:42"};
-				$state_ds  ||= $state->{value}{"$rrdfile_prefix-d.rrd:42"};
-				$state_ds  ||= $state->{value}{"$rrdfile_prefix-c.rrd:42"};
-				$state_ds  ||= $state->{value}{"$rrdfile_prefix-a.rrd:42"};
+				# Compute the RRD file information
+				my $field_type = $self->{service_configs}{$host}{data_source}{$service}{$data_source}{type};
 
-				INFO "No state found for ds $ds_id ($rrdfile_prefix)" unless $state_ds;
+				# Default is GAUGE
+				$field_type ||= "GAUGE";
+
+				my $rrd_ext_type = lc(substr($field_type, 0, 1));
+				my $rrd_file = "$url-$service-$data_source-$rrd_ext_type.rrd";
+				my $rrd_field = "42"; # For now, this is a constant
+
+				# Setting the RRD file
+				$sth_ds_rrd->execute($ds_id, $rrd_file, $rrd_field);
+
+				# Get the states for the DS
+				my $rrdfile_key_state = "$config->{dbdir}/$rrd_file:$rrd_field";
+				my $state_ds = $state->{value}{$rrdfile_key_state};
+
+				INFO "No state found for ds $ds_id ($rrdfile_key_state)" unless $state_ds;
 				next unless $state_ds;
 
 				$sth_state->execute($ds_id, "ds", @{ $state_ds->{current} }, @{ $state_ds->{previous} }, );
