@@ -6,6 +6,7 @@ use Mojolicious::Lite;
 use DBI;
 
 use Munin::Common::Defaults;
+use Munin::Common::Logger;
 
 my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
 
@@ -95,6 +96,67 @@ get '/states' => sub {
 
 	# We cannot use the generic db accessor
 	$self->render(json => get_state_data($where, @params));
+};
+
+get '/timeseries/*url' => sub {
+	my $self = shift;
+	my $url = $self->param('url');
+	my $format = lc($self->param('format') || "json"); # Default is JSON
+
+	my $end = $self->param('end');
+	my $start = $self->param('start');
+	my $step = $self->param('step');
+
+	# Here is the meat of the JSON API : transforming some RRD timeseries
+	# into a Perl structure.  It is done in a pure MVC idiom, so we can
+	# present it later as CSV, JSON, XML (or even PNG & SVG)
+
+	# This will also serve as the basis of the new CGI, SQL-based
+	# graphing. We'll just factor the
+
+	# Building up the RRD command line
+	my @rrd_opts;
+	push @rrd_opts, "--start", $start if $start;
+	push @rrd_opts, "--end", $end if $end;
+	push @rrd_opts, "--step", $step if $step;
+
+	# Get the DS for the URL
+	my $dbh = DBI->connect_cached("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+	my $sth = $dbh->prepare_cached( "
+		SELECT dr.*, d.name FROM ds_rrd dr
+		INNER JOIN ds d ON d.id = dr.id
+		INNER JOIN url u ON u.id = dr.id AND u.type = 'ds' AND u.path = ?
+		UNION ALL
+		SELECT dr.*, d.name FROM ds_rrd dr
+		INNER JOIN ds d ON d.id = dr.id
+		INNER JOIN url u ON u.id = d.service_id AND u.type = 'service' AND u.path = ?
+		");
+	$sth->execute($url, $url);
+
+	my (@rrd_def, @rrd_xport);
+	while (my ($_id, $_filename, $_field, $_name) = $sth->fetchrow_array) {
+		push @rrd_def, "DEF:f_$_id=$Munin::Common::Defaults::MUNIN_DBDIR/$_filename:$_field:AVERAGE";
+		push @rrd_xport, "XPORT:f_$_id:$_name";
+	}
+
+	die "Not found" unless @rrd_def;
+
+	INFO "RRDs::xport(@rrd_opts, @rrd_def, @rrd_xport);";
+
+	use RRDs;
+	my ($real_start, $real_end, $real_step, $nb_vars, $columns, $values) = RRDs::xport(@rrd_opts, @rrd_def, @rrd_xport);
+	my $timeseries = {
+		meta => {
+			start => $real_start,
+			step => $real_step,
+			end => $real_end,
+			rows => (scalar @$values),
+			columns => (scalar @$columns),
+			legend => $columns,
+		},
+		data => $values,
+	};
+	$self->render(json => $timeseries);
 };
 
 # Start the Mojolicious command system
