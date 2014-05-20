@@ -1,0 +1,28 @@
+#! /bin/sh
+
+# Stop when there is an uncatched error
+set -e
+
+FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
+. $FINDBIN/common.sh
+
+cd $BASEDIR
+
+NB_NODES=${1:-"1"}
+GROUP=${2:-""}
+
+printf "creating nodes:"
+for i in $(seq 1 $NB_NODES)
+do
+	node_id="$i"
+	[ $GROUP != "" ] && node_id="$node_id.$GROUP"
+	node_name="node$(echo $node_id | md5sum | cut -c -4).$GROUP"
+	printf " %s" $node_name
+	cat > $DESTDIR/etc/opt/munin/munin-conf.d/$node_name <<EOF
+[$node_name]
+	address localhost
+	use_node_name ignore
+EOF
+done
+
+printf ".\n"
