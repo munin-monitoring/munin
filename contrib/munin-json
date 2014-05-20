@@ -4,6 +4,7 @@
 
 use Mojolicious::Lite;
 use DBI;
+use RRDs;
 
 use Munin::Common::Defaults;
 use Munin::Common::Logger;
@@ -143,7 +144,6 @@ get '/timeseries/*url' => sub {
 
 	INFO "RRDs::xport(@rrd_opts, @rrd_def, @rrd_xport);";
 
-	use RRDs;
 	my ($real_start, $real_end, $real_step, $nb_vars, $columns, $values) = RRDs::xport(@rrd_opts, @rrd_def, @rrd_xport);
 	my $timeseries = {
 		meta => {
