@@ -8,6 +8,7 @@ use warnings;
 use Storable;
 use Data::Dumper;
 
+# Use a JSON format
 $Data::Dumper::Indent = 1;
 $Data::Dumper::Quotekeys = 0;
 $Data::Dumper::Pair = ": ";
