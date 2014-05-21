@@ -58,6 +58,7 @@ my $log ||= Log::Dispatch->new();
 use Log::Dispatch::Screen;
 $log->add(
     Log::Dispatch::Screen->new(
+        stderr => 0,
         name => 'screen',
         min_level => 'debug',
         callbacks => $screen_format
