@@ -1,0 +1,299 @@
+#! /usr/bin/perl
+# Tool to convert 2.0.x Storables to 2.2.x SQL
+# (c) GPL - Steve Schnepp <steve.schnepp@pwkf.org>
+
+# Its main purpose is to be able to drop the munin-json in place on a vanilla
+# 2.0 install.
+
+use warnings;
+use strict;
+
+use DBI;
+
+use Munin::Common::Defaults;
+use Munin::Common::Logger;
+use Munin::Master::Config;
+
+my $config = Munin::Master::Config->instance()->{config};
+
+sub _get_last_insert_id {
+	my ($dbh) = @_;
+	return $dbh->last_insert_id("", "", "", "");
+}
+
+sub _get_url_from_path {
+	my ($path) = @_;
+	$path =~ tr,;:,//,;
+	return $path;
+}
+
+sub _dump_groups_into_sql {
+	my ($groups, $p_id, $path, $dbh, $sth_grp, $sth_grp_attr, $sth_url) = @_;
+
+	for my $grp_name (keys %$groups) {
+		my $grp_path = ($path eq "") ? $grp_name : "$path;$grp_name";
+		$sth_grp->execute($grp_name, $p_id, $grp_path);
+
+		my $id = _get_last_insert_id($dbh);
+
+		# Save the ID inside the datastructure.
+		# It is used to attach the node w/o doing an extra select
+		$groups->{$grp_name}{ID} = $id;
+
+		my $url = _get_url_from_path($grp_path);
+		$sth_url->execute($id, "group", $url);
+
+		_dump_groups_into_sql($groups->{$grp_name}{groups}, $id, $grp_path, $dbh, $sth_grp, $sth_grp_attr, $sth_url);
+	}
+}
+
+# Recursively attempts to type all the items in the datastructure
+# We do add a '#%#type' when we found out
+# XXX - Do not look too closely at it, unless you want to waste
+#       several hours ranting, cursing, refactoring, testing
+#       and then just giving up.
+# TODO - The algo doesn't work with multigraph yet
+sub _type_nodes {
+	my ($hash, @path) = @_;
+	DEBUG "asked for _type_nodes($hash, @path)";
+
+	# Scalars & arrays have no interest
+	return unless ref $hash eq "HASH";
+	{
+		my $node_name = $hash->{"#%#name"} || "__ROOT__";
+		DEBUG "found node named : $node_name";
+	}
+
+	# We go deeper to find a "graph_title" key.
+	if (! defined $hash->{graph_title} ) {
+		foreach my $key (keys %$hash) {
+			# Ignore meta entries
+			next if substr($key, 0, 3) eq "#%#";
+
+			# Recurse !
+			_type_nodes($hash->{$key}, @path, $key);
+		}
+		# We did our share of work, if not set we are on a group
+		$hash->{'#%#type'} ||= "grp";
+		return;
+	}
+	DEBUG "node has no graph_title";
+
+	# Current item is a service
+	$hash->{'#%#type'} = "service";
+
+	# Immediate parent is a node
+	$hash->{'#%#parent'}{'#%#type'} = "node";
+
+	# Immediate childrens are DS
+	foreach my $key (keys %$hash) {
+		next unless ref $hash->{$key} eq "HASH";
+		$hash->{$key}{'#%#type'} = "node";
+	}
+}
+
+use Storable;
+use Data::Dumper;
+
+_dump_into_sql(Storable::retrieve($config->{dbdir}."/datafile.storable"));
+
+sub _dump_into_sql {
+	my ($self) = @_;
+	_type_nodes($self);
+
+	return;
+
+	DEBUG Dumper($self);
+
+	my $datafilename = $config->{dbdir}."/datafile.sqlite";
+	my $datafilename_tmp = "$datafilename.tmp.$$";
+	DEBUG "[DEBUG] Writing sql to $datafilename";
+
+	use DBI;
+	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename_tmp","","") or die $DBI::errstr;
+	$dbh->{RaiseError} = 1;
+	$dbh->do("PRAGMA synchronous = 0");
+
+	# <helmut> halves io bandwidth at the expense of dysfunctional rollback
+	# We do not care for rollback yet
+	$dbh->do("PRAGMA journal_mode = OFF");
+
+	# Create DB
+	$dbh->do("CREATE TABLE param (name VARCHAR PRIMARY KEY, value VARCHAR)");
+	my $sth_param = $dbh->prepare('INSERT INTO param (name, value) VALUES (?, ?)');
+
+	$dbh->do("CREATE TABLE grp (id INTEGER PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE grp_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX pk_grp_attr ON grp_attr (id, name)");
+	$dbh->do("CREATE INDEX r_g_grp ON grp (p_id)");
+	my $sth_grp = $dbh->prepare('INSERT INTO grp (name, p_id, path) VALUES (?, ?, ?)');
+	my $sth_grp_attr = $dbh->prepare('INSERT INTO grp_attr (id, name, value) VALUES (?, ?, ?)');
+
+	$dbh->do("CREATE TABLE node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX pk_node_attr ON node_attr (id, name)");
+	$dbh->do("CREATE INDEX r_n_grp ON node (grp_id)");
+	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
+	my $sth_node_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
+
+	$dbh->do("CREATE TABLE service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX pk_service_attr ON service_attr (id, name)");
+	$dbh->do("CREATE INDEX r_s_node ON service (node_id)");
+	my $sth_service = $dbh->prepare('INSERT INTO service (node_id, name, path) VALUES (?, ?, ?)');
+	my $sth_service_attr = $dbh->prepare('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
+
+	$dbh->do("CREATE TABLE ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
+		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
+	$dbh->do("CREATE TABLE ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX pk_ds_attr ON ds_attr (id, name)");
+	$dbh->do("CREATE INDEX r_d_service ON ds (service_id)");
+	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path) VALUES (?, ?, ?)');
+	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
+
+	# We create some helper tables, that ease lookups at runtime
+	$dbh->do("CREATE TABLE ds_rrd (id INTEGER REFERENCES ds(id), filename VARCHAR, field VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX pk_ds_rrd ON ds_rrd (id)");
+	my $sth_ds_rrd = $dbh->prepare('INSERT INTO ds_rrd (id, filename, field) VALUES (?, ?, ?)');
+
+	# Table that contains all the URL paths, in order to have a very fast lookup
+	$dbh->do("CREATE TABLE url (id INTEGER, type VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX pk_url ON url (type, id)");
+	$dbh->do("CREATE UNIQUE INDEX u_url_path ON url (path)");
+	my $sth_url = $dbh->prepare('INSERT INTO url (id, type, path) VALUES (?, ?, ?)');
+
+	# Table that contains all the states for the various plugins.
+	# This is the table that should get queried for the last/previous
+	# values, along with a precomputed alarm state (UNKNOWN, NORMAL,
+	# WARNING, CRITICAL)
+	#
+	# Note, this table is referenced by composite key (type,id) in order to be
+	# able to have any kind of states. Such as whole node states for example.
+	$dbh->do("CREATE TABLE state (id INTEGER, type VARCHAR,
+		last_epoch INTEGER, last_value VARCHAR,
+		prev_epoch INTEGER, prev_value VARCHAR,
+		alarm VARCHAR
+		)");
+	$dbh->do("CREATE UNIQUE INDEX pk_state ON url (type, id)");
+	my $sth_state = $dbh->prepare('INSERT INTO state (id, type, last_epoch, last_value, prev_epoch, prev_value) VALUES (?, ?, ?, ?, ?, ?)');
+
+
+	# Configuration
+	$config->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
+	for my $key (keys %$config) {
+		my $config_value = $config->{$key};
+
+		if (ref $config_value) {
+			use Data::Dumper;
+			$config_value = Dumper($config_value);
+			INFO "$key is a complex value, dumping in to SQL as $config_value";
+		}
+
+		$sth_param->execute($key, $config_value);
+	}
+
+	# Recursively create groups
+	_dump_groups_into_sql($self->{group_repository}{groups}, undef, "", $dbh, $sth_grp, $sth_grp_attr, $sth_url);
+
+	for my $worker (@{$self->{workers}}) {
+		my $host = $worker->{ID};
+		my $node = $worker->{node};
+		my $grp_id = $worker->{host}->{group}->{ID};
+
+		$sth_node->execute($grp_id, $node->{host}, $host);
+		my $node_id = _get_last_insert_id($dbh);
+		my $url = _get_url_from_path($host);
+		$sth_url->execute($node_id, "node", $url);
+
+		for my $attr (keys %$node) {
+			# Ignore the configref key, as it is redundant
+			next if $attr eq "configref";
+
+			$sth_node_attr->execute($node_id, $attr, munin_dumpconfig_as_str($node->{$attr}));
+		}
+
+		# Insert the state of each plugin
+		# Reading the state file
+		# Beware, that part is ugly, yet best is still coming.
+		my $path = $url; $path =~ s/\.html$//; $path =~ s/\//-/g;
+		my $state_file = sprintf ('%s/state-%s.storable', $config->{dbdir}, $path);
+		DEBUG "[DEBUG] Reading state for $path in $state_file (Dumping)";
+		my $state = munin_read_storable($state_file) || {};
+
+		for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
+			$sth_service->execute($node_id, $service, "$host:$service");
+			my $service_id = _get_last_insert_id($dbh);
+			$sth_url->execute($service_id, "service", _get_url_from_path("$host:$service"));
+
+			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
+				$sth_service_attr->execute($service_id, $attr->[0], $attr->[1]);
+			}
+			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
+				$sth_ds->execute($service_id, $data_source, "$host:$service.$data_source");
+				my $ds_id = _get_last_insert_id($dbh);
+				$sth_url->execute($ds_id, "ds", _get_url_from_path("$host:$service:$data_source"));
+				for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
+					$sth_ds_attr->execute($ds_id, $attr, $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr});
+				}
+
+				# Compute the RRD file information
+				my $field_type = $self->{service_configs}{$host}{data_source}{$service}{$data_source}{type};
+
+				# Default is GAUGE
+				$field_type ||= "GAUGE";
+
+				my $rrd_ext_type = lc(substr($field_type, 0, 1));
+				my $rrd_file = "$url-$service-$data_source-$rrd_ext_type.rrd";
+				my $rrd_field = "42"; # For now, this is a constant
+
+				# Setting the RRD file
+				$sth_ds_rrd->execute($ds_id, $rrd_file, $rrd_field);
+
+				# Get the states for the DS
+				my $rrdfile_key_state = "$config->{dbdir}/$rrd_file:$rrd_field";
+				my $state_ds = $state->{value}{$rrdfile_key_state};
+
+				INFO "No state found for ds $ds_id ($rrdfile_key_state)" unless $state_ds;
+				next unless $state_ds;
+
+				$sth_state->execute($ds_id, "ds", @{ $state_ds->{current} }, @{ $state_ds->{previous} }, );
+			}
+		}
+	}
+
+	# Atomic commit (rename)
+	rename($datafilename_tmp, $datafilename);
+}
+
+1;
+
+
+__END__
+
+=head1 NAME
+
+Munin::Master::Update - Contacts Munin Nodes, gathers data from their
+service data sources, and stores this information in RRD files.
+
+=head1 SYNOPSIS
+
+ my $update = Munin::Master::Update->new();
+ $update->run();
+
+=head1 METHODS
+
+=over
+
+=item B<new>
+
+ my $update = Munin::Master::Update->new();
+
+Constructor.
+
+=item B<run>
+
+ $update->run();
+
+This is where all the work gets done.
+
+=back
