@@ -64,15 +64,6 @@ $log->add(
     )
 );
 
-use Log::Dispatch::Syslog;
-$log->add(
-    Log::Dispatch::Syslog->new(
-        name => 'syslog',
-        min_level => 'debug',
-        callbacks => $syslog_format,
-    )
-);
-
 sub DEBUG {
     my ($message) = @_;
     $log->debug($message);
