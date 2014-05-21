@@ -88,7 +88,7 @@ sub _type_nodes {
 	# Immediate childrens are DS
 	foreach my $key (keys %$hash) {
 		next unless ref $hash->{$key} eq "HASH";
-		$hash->{$key}{'#%#type'} = "node";
+		$hash->{$key}{'#%#type'} = "ds";
 	}
 }
 
