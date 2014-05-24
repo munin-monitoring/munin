@@ -99,11 +99,13 @@ _dump_into_sql(Storable::retrieve($config->{dbdir}."/datafile.storable"));
 
 sub _dump_into_sql {
 	my ($self) = @_;
+
+	# Doing some heavy reverse-eng to type the elements of the datastructure
+	# as the storable doesn't contain that stuff.
+	# NB: We cannot add it in Update.pm since it has to work with 2.0.6+,
+	# to cover all the most widespread versions
 	_type_nodes($self);
 
-	return;
-
-	DEBUG Dumper($self);
 
 	my $datafilename = $config->{dbdir}."/datafile.sqlite";
 	my $datafilename_tmp = "$datafilename.tmp.$$";
@@ -181,8 +183,10 @@ sub _dump_into_sql {
 	# Configuration
 	$config->{version} = $Munin::Common::Defaults::MUNIN_VERSION;
 	for my $key (keys %$config) {
-		my $config_value = $config->{$key};
+		# We ignore the "groups" keys, which is recomputed from the config file
+		next if $key eq "groups";
 
+		my $config_value = $config->{$key};
 		if (ref $config_value) {
 			use Data::Dumper;
 			$config_value = Dumper($config_value);
