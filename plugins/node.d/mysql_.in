@@ -424,21 +424,38 @@ $graphs{wsrep_errors} = {
 $graphs{wsrep_queue} = {
         config => {
             global_attrs => {
-                title  => 'Galera queues'
+                title  => 'Galera queues',
+	              vlabel => 'queue length received (-) / sent (+) per ${graph_period}',
             },
             data_source_attrs => {
                 draw  => 'LINE1',
             },
         },
         data_sources => [
-            {name => 'wsrep_local_send_queue',     label => 'Send queue length',
-                                                   type  => 'GAUGE'},
-            {name => 'wsrep_local_send_queue_avg', label => 'Average send queue length',
-                                                   type  => 'GAUGE'},
             {name => 'wsrep_local_recv_queue',     label => 'Receive queue length',
-                                                   type  => 'GAUGE'},
+                                                   type  => 'GAUGE',
+                                                   graph => 'no'},
+            {name => 'wsrep_local_recv_queue_min', label => 'Receive queue length min',
+                                                   type  => 'GAUGE',
+                                                   graph => 'no'},
             {name => 'wsrep_local_recv_queue_avg', label => 'Average receive queue length',
-                                                   type  => 'GAUGE'},
+                                                   type  => 'GAUGE',
+                                                   graph => 'no'},
+            {name => 'wsrep_local_recv_queue_max', label => 'Receive queue length max',
+                                                   type  => 'GAUGE',
+                                                   graph => 'no'},
+            {name => 'wsrep_local_send_queue',     label => 'Send queue length',
+                                                   type  => 'GAUGE',
+                                                   negative => 'wsrep_local_recv_queue'},
+            {name => 'wsrep_local_send_queue_min', label => 'Send queue length min',
+                                                   type  => 'GAUGE',
+                                                   negative => 'wsrep_local_recv_queue_min'},
+            {name => 'wsrep_local_send_queue_avg', label => 'Average send queue length',
+                                                   type  => 'GAUGE',
+                                                   negative => 'wsrep_local_recv_queue_avg'},
+            {name => 'wsrep_local_send_queue_max', label => 'Send queue length max',
+                                                   type  => 'GAUGE',
+                                                   negative => 'wsrep_local_recv_queue_max'},
         ],
 };
 
@@ -501,8 +518,8 @@ $graphs{wsrep_flow_paused} = {
         data_sources => [
             {name => 'wsrep_flow_control_paused',    label => 'Time flow control was paused',
                                                      type  => 'GAUGE',
-                                                     min   => 0,
-                                                     max   => 1,
+                                                     min   => '0',
+                                                     max   => '1',
                                                      warning => 0.1,
                                                      critical => 0.9},
         ],
