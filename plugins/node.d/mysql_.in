@@ -468,6 +468,7 @@ $graphs{wsrep_flow} = {
         config => {
             global_attrs => {
                 title  => 'Galera flow control',
+	              vlabel => 'events received (-) / sent (+) per ${graph_period}',
             },
             data_source_attrs => {
                 draw  => 'LINE1',
