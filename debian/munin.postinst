@@ -4,18 +4,6 @@ set -e
 
 prevver="$2"
 
-add_munin_system_user() {
-	if ! getent passwd munin >/dev/null; then
-		adduser --group --system --no-create-home \
-			--home /var/lib/munin munin;
-	fi
-	# workaround bug (#531021) in xen-tools
-	if ! getent group munin >/dev/null; then
-	        addgroup --system munin
-	        adduser munin munin
-	fi
-}
-
 initperms() {
 	chown munin:adm /var/log/munin
 	chmod 755 /var/log/munin
@@ -81,7 +69,7 @@ apache_install() {
 	# installing configuration for Apache 2.4
 	# link config to conf-available
 	if [ -d /etc/$webserver/conf-available ] && [ ! -e /etc/$webserver/conf-available/munin.conf ]; then
-		ln -s ../../munin/apache.conf /etc/$webserver/conf-available/munin.conf
+		ln -s ../../munin/apache24.conf /etc/$webserver/conf-available/munin.conf
 
 		# activate configuration on new install with apache2-mainscript-helper
 		# TODO: Migration from installed Munin with apache2.2 to apache 2.4
@@ -97,9 +85,6 @@ apache_install() {
 
 case "$1" in
 	configure)
-		if [ -z "$2" ] ; then
-			add_munin_system_user
-		fi
 		# after wheezy / squeeze-sloppy-backports this and fixoverrides() can be removed completly
 		if dpkg --compare-versions "$2" le "2.0~rc5-1" ; then
 			fixoverrides

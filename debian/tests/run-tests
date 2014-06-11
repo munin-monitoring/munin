@@ -1,0 +1,9 @@
+#!/bin/sh
+
+cd "$(dirname $0)"
+
+if [ -z "${ADTTMP:-}" ]; then
+  tempdir="$(mktemp -d --suffix=.autopkgtest)"
+fi
+
+prove -v *.t

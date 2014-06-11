@@ -1,8 +1,44 @@
-munin (2.0.19-2~bpo70+1) wheezy-backports; urgency=low
+munin (2.0.21-2) unstable; urgency=medium
 
-  * Rebuild for wheezy-backports.
+  * Move dependency «adduser» to «munin-common»
+  * debian/tests: Use «setuidgid» to run tests as another user
+  * debian/tests: wait 10 seconds for a listening port
+  * Update breaks/replaces for munin-plugins-core (Closes: #747696)
 
- -- Holger Levsen <holger@debian.org>  Fri, 10 Jan 2014 01:16:59 +0100
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Sun, 11 May 2014 14:51:17 +0200
+
+munin (2.0.21-1) unstable; urgency=low
+
+  [ Matthias Schmitz ]
+  * Add configuration files for apache 2.4. (Closes: #722654, #672767)
+  * Replace dependency to ttf-dejavu by fonts-dejavu due to package renaming
+    (Closes: #737957).
+
+  [ Holger Levsen ]
+  * Recommend libcgi-fast-perl for munin as munin-cgi-graph needs this for
+    zoomable graphs. (Closes: #737135)
+  * Add "Testsuite: autopkgtest" to source entry in debian/control, so
+    ci.debian.net will automatically pick it up.
+
+  [ Stig Sandbeck Mathisen ]
+  * Add instructions for "git-buildpackage / gbp"
+  * Add new packaging guide
+  * Import upstream release 2.0.21
+  * Add patch to fix http_loadtime plugin
+  * Use 3.0 (quilt) as source format
+  * Update DEP-8 tests - use sharness
+  * munin-common: handle munin user creation
+  * Remove redundant Suggests: libcgi-fast-perl
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Sat, 10 May 2014 20:12:44 +0200
+
+munin (2.0.19-3) unstable; urgency=medium
+
+  [ Matthias Schmitz ]
+  * Delete all state data from /var/lib/munin-node/plugin-state/ during purge
+    of munin-plugins-core. (Closes: #732462)
+
+ -- Holger Levsen <holger@debian.org>  Sat, 25 Jan 2014 23:02:44 +0100
 
 munin (2.0.19-2) unstable; urgency=low
 

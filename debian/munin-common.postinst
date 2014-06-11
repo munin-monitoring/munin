@@ -20,6 +20,14 @@ set -e
 
 case "$1" in
     configure)
+
+        # Ensure we have a system user
+        if ! getent passwd munin > /dev/null; then
+            adduser --quiet --system --group \
+                --home /var/lib/munin --no-create-home \
+                --gecos 'munin application user' munin
+        fi
+
         if [ -d /run/systemd/system ] ; then
             systemd-tmpfiles --create /usr/lib/tmpfiles.d/munin-common.conf >/dev/null || true
         fi
