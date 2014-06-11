@@ -882,11 +882,9 @@ sub show {
 	if $graph_name =~ /innodb_/ && $data->{_innodb_disabled};
 
     for my $ds (@{$graph->{data_sources}}) {
-        my $value = exists $ds->{value}
-            ? $ds->{value}($data)
-                : $data->{$ds->{name}};
-
-        printf "%s.value %s\n", clean_fieldname($ds->{name}), defined($value) ? $value : 'U';
+	printf "%s.value %s\n",
+	    clean_fieldname($ds->{name}),
+	    defined $data->{$ds->{name}} ? $data->{$ds->{name}} : 'U';
     }
 
     return 0;
@@ -922,8 +920,11 @@ sub update_data {
 
     # Set up defaults in case the server is not a slave
     $data->{relay_log_space} = 0;
-    $data->{slave_running}   = 0;
-    $data->{slave_stopped}   = 0;
+    $data->{slave_io_running}   = 0;
+    $data->{slave_sql_running}   = 0;
+    $data->{seconds_behind_master}   = 0;
+    $data->{Slave_open_temp_tables}   = 0;
+    $data->{Slave_retried_transactions}   = 0;
 
     # Set up defaults in case binlog is not enabled
     $data->{ma_binlog_size} = 0;
@@ -1070,13 +1071,13 @@ sub parse_innodb_status {
 
     # Add a dummy section to the end in case the innodb status output
     # has been truncated (Happens for status > 64K characters)
-    $_ .= "\n----------\nDUMMY\n";
+    $_ .= "\n----------\nDUMMY\n----------\n"; 
 
     my %section_map = (
 
-	'BUFFER POOL AND MEMORY'      => \&parse_buffer_pool_and_memory,
+	'BUFFER POOL AND MEMORY'   => \&parse_buffer_pool_and_memory,
 	'INDIVIDUAL BUFFER POOL INFO' => \&skip,
-	'FILE I/O'                    => \&parse_file_io,
+	'FILE I/O'                 => \&parse_file_io,
 	'INSERT BUFFER AND ADAPTIVE HASH INDEX'
 	    => \&parse_insert_buffer_and_adaptive_hash_index,
 	'LATEST DETECTED DEADLOCK'    => \&skip,
@@ -1114,7 +1115,12 @@ sub parse_innodb_status {
 my $innodb_bigint_rx = qr{([[a-fA-F\d]+)(?: (\d+))?};
 
 
-sub match_dashes { return m/\G-+\n(?!-)/gc; }
+sub match_new_section { 
+   return m/\G
+            -+\n                 # --------------------------- 
+            (?= [A-Z\/ ]+\n      # SECTION NAME
+                [=-]+\n)/gcx;    # --------------------------- ('=' on end of output)
+}
 
 
 sub skip_line    { return m/\G.*\n/gc; }
@@ -1133,7 +1139,7 @@ sub parse_section {
 
     #warn substr($_, pos(), 10);
     for (;;) {
-	return if match_dashes();
+	return if match_new_section;
 	next if $parser->();
 	skip_line();
     }
@@ -1190,7 +1196,7 @@ sub parse_transactions {
 sub parse_file_io {
     parse_section(
 	sub {
-	    m/\GPending normal aio reads: (\d+), aio writes: (\d+),\n\s*ibuf aio reads: (\d+), log i\/o's: (\d+), sync i\/o's: (\d+)\n/gc && do {
+	    m/\GPending normal aio reads: (\d+)(?: \[(?:\d+, )*\d+\] )?, aio writes: (\d+)(?: \[(?:\d+, )*\d+\] )?,\n\s*ibuf aio reads: (\d+), log i\/o's: (\d+), sync i\/o's: (\d+)\n/gc && do {
 		$data->{ib_iop_aioread}  = $1;
 		$data->{ib_iop_aiowrite} = $2;
 		$data->{ib_iop_ibuf_aio} = $3;
@@ -1217,26 +1223,27 @@ sub parse_file_io {
 sub parse_insert_buffer_and_adaptive_hash_index {
     parse_section(
 	sub {
-      # MySQL < 5.5
-      m/\G(\d+) inserts, (\d+) merged recs, (\d+) merges\n/gc && do {
-        $data->{ib_ibuf_inserts}    = $1;
-        $data->{ib_ibuf_merged_rec} = $2;
-        $data->{ib_ibuf_merges}     = $3;
-        return 1;
-      };
-      # MySQL >= 5.5
-      m/\Gmerged operations:\n insert (\d+), delete mark \d+, delete \d+\ndiscarded operations:\n insert (\d+), delete mark \d+, delete \d+\n/gc && do {
-        $data->{ib_ibuf_inserts} = $1;
-        $data->{ib_ibuf_merged_rec} = $1 + $2;
-        return 1;
-      };
+	    # MySQL < 5.5
+	    m/\G(\d+) inserts, (\d+) merged recs, (\d+) merges\n/gc && do {
+		$data->{ib_ibuf_inserts}    = $1;
+		$data->{ib_ibuf_merged_rec} = $2;
+		$data->{ib_ibuf_merges}     = $3;
+		return 1;
+	    };
+	    # MySQL >= 5.5
+	    m/\Gmerged operations:\n insert (\d+), delete mark \d+, delete \d+\ndiscarded operations:\n insert (\d+), delete mark \d+, delete \d+\n/gc && do {
+		$data->{ib_ibuf_inserts} = $1;
+		$data->{ib_ibuf_merged_rec} = $1 + $2;
+		return 1;
+	    };
+
       m/\GIbuf: size (\d+), free list len (\d+), seg size (\d+),(?: (\d+) merges)?\n/gc && do {
-        $data->{ib_ibuf_size}     = $1;
-        $data->{ib_ibuf_free_len} = $2;
-        $data->{ib_ibuf_seg_size} = $3;
-        $data->{ib_ibuf_merges}   = $4 if defined $4; # MySQL >= 5.5
-        return 1;
-      };
+    $data->{ib_ibuf_size}     = $1;
+    $data->{ib_ibuf_free_len} = $2;
+    $data->{ib_ibuf_seg_size} = $3;
+    $data->{ib_ibuf_merges}   = $4 if defined $4; # MySQL >= 5.5
+		return 1;
+	    };
 	}
     );
 }
@@ -1294,8 +1301,8 @@ sub parse_buffer_pool_and_memory {
 
 sub handle_incomplete_innodb_status {
 
-    warn "Output from SHOW ENGINE INNDOB STATUS was truncated. "
-	. "This happens if the output of SEIS exceeds 64KB. "
+    warn "Output from SHOW ENGINE INNODB STATUS was truncated. "
+	. "This happens if the output of STATUS exceeds 64KB. "
 	. "Several of the InnoDB graphs might be affected by this.";
 
     # FIX Is it possible to find some of the missing values from SHOW
