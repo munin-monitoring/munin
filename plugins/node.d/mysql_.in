@@ -479,7 +479,7 @@ $graphs{wsrep_flow} = {
                                                      min   => 0,
                                                      graph => 'no'},
             {name => 'wsrep_flow_control_sent',      label => 'Pause events sent',
-                                                     type  => 'DERIVE'
+                                                     type  => 'DERIVE',
                                                      min   => 0,
                                                      negative => 'wsrep_flow_control_recv'},
         ],
@@ -504,7 +504,7 @@ $graphs{wsrep_flow_paused} = {
                                                      max   => 1,
                                                      warning => 0.1,
                                                      critical => 0.9},
-        ].
+        ],
    };
 
 #-------------------------
