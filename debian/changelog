@@ -1,3 +1,9 @@
+munin (2.0.21-2~bpo70+1) wheezy-backports; urgency=low
+
+  * Rebuild for wheezy-backports.
+
+ -- Holger Levsen <holger@debian.org>  Wed, 11 Jun 2014 23:19:11 +0200
+
 munin (2.0.21-2) unstable; urgency=medium
 
   * Move dependency «adduser» to «munin-common»
@@ -138,12 +144,6 @@ munin (2.0.15-1) unstable; urgency=low
   * Remove /var/lib/munin-node/ when purging munin-node
 
  -- Stig Sandbeck Mathisen <ssm@debian.org>  Sat, 01 Jun 2013 23:20:45 +0200
-
-munin (2.0.14-1~bpo70+1) wheezy-backports; urgency=low
-
-  * Rebuild for wheezy-backports.
-
- -- Holger Levsen <holger@debian.org>  Thu, 23 May 2013 19:02:05 +0200
 
 munin (2.0.14-1) unstable; urgency=low
 
