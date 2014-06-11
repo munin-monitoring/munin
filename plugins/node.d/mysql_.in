@@ -539,6 +539,8 @@ $graphs{wsrep_distance} = {
         data_sources => [
             {name => 'wsrep_cert_deps_distance',    label => 'cert_deps_distance',
                                                     type  => 'GAUGE'},
+            {name => 'wsrep_cert_index_size',       label => 'wsrep_cert_index_size',
+                                                    type  => 'GAUGE'},
             {name => 'wsrep_slave_threads',	    label => 'wsrep_slave_threads',
                                                     type  => 'GAUGE'},
             {name => 'wsrep_commit_window',         label => 'commit_window',
