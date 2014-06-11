@@ -476,10 +476,14 @@ $graphs{wsrep_flow} = {
         data_sources => [
             {name => 'wsrep_flow_control_paused',    label => 'Time flow control was paused',
                                                      type  => 'GAUGE'},
-            {name => 'wsrep_flow_control_sent',      label => 'Pause events sent',
-                                                     type  => 'GAUGE'},
             {name => 'wsrep_flow_control_recv',      label => 'Pause events received',
-                                                     type  => 'GAUGE'},
+                                                     type  => 'DERIVE',
+                                                     min   => 0,
+                                                     graph => 'no'},
+            {name => 'wsrep_flow_control_sent',      label => 'Pause events sent',
+                                                     type  => 'DERIVE'
+                                                     min   => 0,
+                                                     negative => 'wsrep_flow_control_recv'},
         ],
   };
 
