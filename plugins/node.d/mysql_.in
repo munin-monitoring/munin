@@ -474,8 +474,6 @@ $graphs{wsrep_flow} = {
             },
         },
         data_sources => [
-            {name => 'wsrep_flow_control_paused',    label => 'Time flow control was paused',
-                                                     type  => 'GAUGE'},
             {name => 'wsrep_flow_control_recv',      label => 'Pause events received',
                                                      type  => 'DERIVE',
                                                      min   => 0,
@@ -486,6 +484,28 @@ $graphs{wsrep_flow} = {
                                                      negative => 'wsrep_flow_control_recv'},
         ],
   };
+
+
+#-------------------------
+
+$graphs{wsrep_flow_paused} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera flow control paused',
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_flow_control_paused',    label => 'Time flow control was paused',
+                                                     type  => 'GAUGE',
+                                                     min   => 0,
+                                                     max   => 1,
+                                                     warning => 0.1,
+                                                     critical => 0.9},
+        ].
+   };
 
 #-------------------------
 
