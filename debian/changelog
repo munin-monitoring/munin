@@ -1,3 +1,9 @@
+munin (2.0.21-3) UNRELEASED; urgency=low
+
+  * Add alternative depends on ttf-dejavu to ease backports to wheezy.
+
+ -- Holger Levsen <holger@debian.org>  Thu, 12 Jun 2014 11:45:31 +0200
+
 munin (2.0.21-2) unstable; urgency=medium
 
   * Move dependency «adduser» to «munin-common»
