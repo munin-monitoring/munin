@@ -498,6 +498,35 @@ $graphs{innodb_tnx} = {
 
 #---------------------------------------------------------------------
 
+$graphs{performance} = {
+    config => {
+	global_attrs => {
+	    title  => 'Performance Schema Losses',
+	},
+	data_source_attrs => {
+	    draw  => 'LINE1',
+	},
+    },
+    data_sources => [
+  {name => 'Performance_schema_cond_classes_lost',     label => 'Condition classes'},
+  {name => 'Performance_schema_cond_instances_lost',   label => 'Condition instances'},
+  {name => 'Performance_schema_file_classes_lost',     label => 'File classes'},
+  {name => 'Performance_schema_file_handles_lost',     label => 'File handles'},
+  {name => 'Performance_schema_file_instances_lost',   label => 'File instances'},
+  {name => 'Performance_schema_locker_lost',           label => 'Locker'},
+  {name => 'Performance_schema_mutex_classes_lost',    label => 'Mutex classes'},
+  {name => 'Performance_schema_mutex_instances_lost',  label => 'Mutex instances'},
+  {name => 'Performance_schema_rwlock_classes_lost',   label => 'Read/Write lock classes'},
+  {name => 'Performance_schema_rwlock_instances_lost', label => 'Read/Write lock instances'},
+  {name => 'Performance_schema_table_handles_lost',    label => 'Table handles'},
+  {name => 'Performance_schema_table_instances_lost',  label => 'Table instances'},
+  {name => 'Performance_schema_thread_classes_lost',   label => 'Thread classes'},
+  {name => 'Performance_schema_thread_instances_lost', label => 'Thread instances'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
 $graphs{myisam_indexes} = {
     config => {
 	global_attrs => {
