@@ -781,6 +781,24 @@ $graphs{handler_write} = {
 
 #---------------------------------------------------------------------
 
+$graphs{handler_tmp} = {
+    config => {
+  global_attrs => {
+      title  => 'Temporary Write/Update Handler',
+  },
+  data_source_attrs => {
+      draw => 'LINE2',
+      type => 'GAUGE',
+  },
+    },
+    data_sources => [
+  {name => 'Handler_tmp_write',  label => 'Writes'},
+  {name => 'Handler_tmp_update', label => 'Updates'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
 $graphs{execution} = {
     config => {
   global_attrs => {
