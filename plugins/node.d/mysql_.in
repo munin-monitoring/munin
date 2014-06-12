@@ -464,8 +464,8 @@ $graphs{wsrep_queue} = {
 $graphs{wsrep_concurrency} = {
         config => {
             global_attrs => {
-                title  => 'Galera Performance Concurrency Window',
-                vlabel => 'Average distance in seq no'
+                title  => 'Galera Performance - Apply to Comit',
+                vlabel => 'commit + / apply - '
             },
             data_source_attrs => {
                 draw  => 'LINE1',
@@ -473,9 +473,29 @@ $graphs{wsrep_concurrency} = {
         },
         data_sources => [
             {name => 'wsrep_apply_window',         label => 'apply window',
-                                                   type  => 'GAUGE'},
+                                                   type  => 'GAUGE',
+                                                   graph => 'no'},
+            {name => 'wsrep_apply_oooe',           label => 'apply out of order',
+                                                   type  => 'GAUGE',
+                                                   graph => 'no'},
+            {name => 'wsrep_apply_oool',           label => 'apply out of order (slowness)',
+                                                   type  => 'GAUGE',
+                                                   graph => 'no'},
+            {name => 'wsrep_apply_count',          label => 'apply out of order (count)',
+                                                   type  => 'GAUGE',
+                                                   graph => 'no'},
             {name => 'wsrep_commit_window',        label => 'commit window',
-                                                   type  => 'GAUGE'},
+                                                   type  => 'GAUGE',
+                                                   negative => 'wsrep_apply_window'},
+            {name => 'wsrep_commit_oooe',          label => 'commit out of order',
+                                                   type  => 'GAUGE',
+                                                   negative => 'wsrep_apply_oooe'},
+            {name => 'wsrep_commit_oool',          label => 'commit out of order (slowness)',
+                                                   type  => 'GAUGE',
+                                                   negative => 'wsrep_apply_oool'},
+            {name => 'wsrep_commit_count',         label => 'commit out of order (count)',
+                                                   type  => 'GAUGE',
+                                                   negative => 'wsrep_apply_count'},
         ],
 };
 
