@@ -744,13 +744,32 @@ $graphs{handler_transaction} = {
 
 #---------------------------------------------------------------------
 
+$graphs{handler_write} = {
+    config => {
+  global_attrs => {
+      title  => 'Write/Update Handler',
+  },
+  data_source_attrs => {
+      type => 'LINE2',
+      type => 'GAUGE',
+  },
+    },
+    data_sources => [
+  {name => 'handler_write',  label => 'Writes'},
+  {name => 'handler_update', label => 'Updates'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
 $graphs{execution} = {
     config => {
   global_attrs => {
       title  => 'Execution Events',
   },
   data_source_attrs => {
-      type => 'LINE2',
+      draw => 'LINE2',
+      type => 'GAUGE',
   },
     },
     data_sources => [
