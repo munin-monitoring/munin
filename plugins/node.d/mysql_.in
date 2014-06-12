@@ -700,6 +700,29 @@ $graphs{tmp_tables} = {
 
 
 #---------------------------------------------------------------------
+
+$graphs{handler_read} = {
+    config => {
+  global_attrs => {
+      title  => 'Read Handler',
+  },
+  data_source_attrs => {
+      draw  => 'AREASTACK',
+      type => 'GAUGE',
+  },
+    },
+    data_sources => [
+  {name => 'Handler_read_first',       label => 'Key First'},
+  {name => 'Handler_read_key',         label => 'Key Read'},
+  {name => 'Handler_read_last',        label => 'Key Last'},
+  {name => 'Handler_read_prev',        label => 'Key Prev'},
+  {name => 'Handler_read_rnd',         label => 'Row position'},
+  {name => 'Handler_read_rnd_deleted', label => 'Row position delete'},
+  {name => 'Handler_read_rnd_next',    label => 'Row position next'},
+    ],
+  };
+
+#---------------------------------------------------------------------
 #  M A I N
 #---------------------------------------------------------------------
 
