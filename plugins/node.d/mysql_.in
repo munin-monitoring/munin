@@ -372,42 +372,6 @@ $graphs{wsrep_writesetbytes} = {
         ],
 };
 
-#-------------------------
-
-$graphs{wsrep_avgwritesetbytes} = {
-        config => {
-            global_attrs => {
-                title  => 'Galera writesets average bytes',
-            },
-            data_source_attrs => {
-                draw  => 'LINE1',
-            },
-        },
-        data_sources => [
-            {name => 'wsrep_replicated',       type  => 'DERIVE',
-                                               label => 'number of replicated events',
-                                               graph => 'no',
-                                               min   => 0},
-            {name => 'wsrep_received',         type  => 'DERIVE',
-                                               label => 'number of received events',
-                                               graph => 'no',
-                                               min   => 0},
-            {name => 'wsrep_replicated_bytes', type  => 'DERIVE',
-                                               label => 'size of replicated events',
-                                               graph => 'no',
-                                               min   => 0},
-            {name => 'wsrep_received_bytes',   type  => 'DERIVE',
-                                               label => 'size of received events',
-                                               graph => 'no',
-                                               min   => 0},
-            {name => 'wsrep_avgreplicated',    label => 'average size of sent writeset',
-                                               type  => 'GAUGE'},
-            {name => 'wsrep_avgreceived',      label => 'average size of received writeset',
-                                               type  => 'GAUGE'},
-
-        ],
-};
-
 
 #-------------------------
 
