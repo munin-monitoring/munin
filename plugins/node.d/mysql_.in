@@ -723,6 +723,43 @@ $graphs{handler_read} = {
   };
 
 #---------------------------------------------------------------------
+
+$graphs{handler_transaction} = {
+    config => {
+  global_attrs => {
+      title  => 'Transactions Handler',
+  },
+  data_source_attrs => {
+      draw  => 'AREASTACK',
+      type => 'GAUGE',
+  },
+    },
+    data_sources => [
+  {name => 'Handler_commit',             label => 'Commit'},
+  {name => 'Handler_rollback',           label => 'Rollback'},
+  {name => 'Handler_savepoint',          label => 'Savepoint'},
+  {name => 'Handler_savepoint_rollback', label => 'Savepoint Rollback'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{execution} = {
+    config => {
+  global_attrs => {
+      title  => 'Execution Events',
+  },
+  data_source_attrs => {
+      type => 'LINE2',
+  },
+    },
+    data_sources => [
+  {name => 'Executed_events',   label => 'Events'},
+  {name => 'Executed_triggers', label => 'Triggers'},
+    ],
+  };
+
+#---------------------------------------------------------------------
 #  M A I N
 #---------------------------------------------------------------------
 
