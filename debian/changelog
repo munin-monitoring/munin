@@ -1,3 +1,9 @@
+munin (2.0.21-2~bpo70+2) wheezy-backports; urgency=low
+
+  * Add alternative depends on ttf-dejavu.
+
+ -- Holger Levsen <holger@debian.org>  Thu, 12 Jun 2014 11:41:11 +0200
+
 munin (2.0.21-2~bpo70+1) wheezy-backports; urgency=low
 
   * Rebuild for wheezy-backports.

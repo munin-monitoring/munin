@@ -143,7 +143,7 @@ Package: munin
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
  cron,
- fonts-dejavu,
+ fonts-dejavu | ttf-dejavu,
  libdate-manip-perl,
  libdigest-md5-perl,
  libfile-copy-recursive-perl,
