@@ -324,12 +324,13 @@ $graphs{wsrep_writesets} = {
             {name => 'wsrep_replicated', label => 'Writesets sent',
                                          info  => '# of writesets sent to other nodes',
                                          type  => 'COUNTER',
-                                         min   => 0},
+                                         min   => '0',
+                                         graph => 'no'},
             {name => 'wsrep_received',   label => 'Writesets received',
                                          info  => '# of writesets received from other nodes',
-                                         cdef  => 'wsrep_received,-1,*',
                                          type  => 'COUNTER',
-                                         min   => 0},
+                                         min   => '0',
+                                         negative => 'wsrep_replicated'},
         ],
 };
 
