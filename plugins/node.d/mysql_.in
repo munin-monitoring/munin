@@ -700,6 +700,24 @@ $graphs{tmp_tables} = {
 
 
 #---------------------------------------------------------------------
+
+$graphs{icp} = {
+    config => {
+	global_attrs => {
+	    title  => 'Index Condition Pushdown',
+	},
+	data_source_attrs => {
+	    draw  => 'LINE2',
+	    type => 'GAUGE',
+	},
+    },
+    data_sources => [
+	{name => 'Handler_icp_attempts', label => 'Attempts'},
+	{name => 'Handler_icp_match',    label => 'Matches'},
+    ],
+};
+
+#---------------------------------------------------------------------
 #  M A I N
 #---------------------------------------------------------------------
 
