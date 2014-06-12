@@ -769,13 +769,13 @@ $graphs{handler_write} = {
       title  => 'Write/Update Handler',
   },
   data_source_attrs => {
-      type => 'LINE2',
+      draw => 'LINE2',
       type => 'GAUGE',
   },
     },
     data_sources => [
-  {name => 'handler_write',  label => 'Writes'},
-  {name => 'handler_update', label => 'Updates'},
+  {name => 'Handler_write',  label => 'Writes'},
+  {name => 'Handler_update', label => 'Updates'},
     ],
   };
 
