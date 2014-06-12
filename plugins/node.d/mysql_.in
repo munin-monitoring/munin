@@ -701,6 +701,25 @@ $graphs{tmp_tables} = {
 
 #---------------------------------------------------------------------
 
+$graphs{rows} = {
+    config => {
+  global_attrs => {
+      title  => 'Rows',
+  },
+  data_source_attrs => {
+      draw  => 'LINE2',
+      type => 'GAUGE',
+  },
+    },
+    data_sources => [
+  {name => 'Rows_read',     label => 'Read'},
+  {name => 'Rows_sent',     label => 'Sent'},
+  {name => 'Rows_tmp_read', label => 'Temp Read'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
 $graphs{handler_read} = {
     config => {
   global_attrs => {
