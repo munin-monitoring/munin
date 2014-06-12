@@ -718,6 +718,25 @@ $graphs{icp} = {
 };
 
 #---------------------------------------------------------------------
+
+$graphs{mrr} = {
+    config => {
+	global_attrs => {
+	    title  => 'Multi Range Read optimizations',
+	},
+	data_source_attrs => {
+	    draw  => 'LINE2',
+	    type => 'GAUGE',
+	},
+    },
+    data_sources => [
+	{name => 'Handler_mrr_init', label => 'Uses'},
+	{name => 'Handler_mrr_key_refills',  label => 'Key refills'},
+	{name => 'Handler_mrr_rowid_refills',  label => 'Row refills'},
+    ],
+};
+
+#---------------------------------------------------------------------
 #  M A I N
 #---------------------------------------------------------------------
 
