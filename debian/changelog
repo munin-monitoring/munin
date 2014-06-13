@@ -1,3 +1,10 @@
+munin (2.0.21-2~bpo70+3) wheezy-backports; urgency=low
+
+  * Revert "Use dh-systemd when packaging" (c2628d6) so that these packages
+    work with systemd from stable and bpo.
+
+ -- Holger Levsen <holger@debian.org>  Fri, 13 Jun 2014 15:55:17 +0200
+
 munin (2.0.21-2~bpo70+2) wheezy-backports; urgency=low
 
   * Add alternative depends on ttf-dejavu.
