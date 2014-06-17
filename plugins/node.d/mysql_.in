@@ -1100,8 +1100,12 @@ sub parse_innodb_status {
 	    last;
 	}
 
-	die "Unknown section: $1" unless exists $section_map{$sec};
-	die "Parse error. Expected a section separator" unless m/\G-+\n/gc;
+	if (exists $section_map{$sec}) {
+      $section_map{$sec}->();
+	} else {
+      #warn "Unknown section: $1";
+      skip();
+	}
 
 	$section_map{$sec}->();
     }
