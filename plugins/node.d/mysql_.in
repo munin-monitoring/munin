@@ -531,7 +531,6 @@ $graphs{wsrep_flow_paused_ns} = {
         },
         data_sources => [
             {name => 'wsrep_flow_control_paused_ns',    label => 'Time flow control was paused (ns)',
-                                                     type  => 'GAUGE',
                                                      min   => '0',
                                                      warning => 20000,
                                                      critical => 1000000},
