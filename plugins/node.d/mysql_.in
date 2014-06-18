@@ -1002,7 +1002,8 @@ sub update_variables {
                                    + ( $tmp_table_size >= $max_heap_table_size ? $tmp_table_size : $max_heap_table_size )
                                    + ( $data->{'tokudb_read_buf_size'} || 0 );
 
-   $data->{'mysql_connection_memory'} *= $data->{'max_connections'};
+   # wsrep_thread_count was separated from max_connections for mariadb-5.5.38 https://mariadb.atlassian.net/browse/MDEV-6206
+   $data->{'mysql_connection_memory'} *= $data->{'max_connections'} + ( $data->{'wsrep_thread_count'} || 0 );
 }
 
 
