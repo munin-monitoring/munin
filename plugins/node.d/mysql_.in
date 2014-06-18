@@ -495,24 +495,46 @@ $graphs{wsrep_flow} = {
   };
 
 
+
 #-------------------------
 
 $graphs{wsrep_flow_paused} = {
         config => {
             global_attrs => {
-                title  => 'Galera flow control paused',
+                title  => 'Galera flow control paused ratio',
             },
             data_source_attrs => {
                 draw  => 'LINE1',
             },
         },
         data_sources => [
-            {name => 'wsrep_flow_control_paused',    label => 'Time flow control was paused',
+            {name => 'wsrep_flow_control_paused',    label => 'Ratio flow control was paused',
                                                      type  => 'GAUGE',
                                                      min   => '0',
                                                      max   => '1',
                                                      warning => 0.1,
                                                      critical => 0.9},
+        ],
+   };
+
+#-------------------------
+
+$graphs{wsrep_flow_paused_ns} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera flow control paused time',
+                vlabel => 'nanoseconds',
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_flow_control_paused_ns',    label => 'Time flow control was paused (ns)',
+                                                     type  => 'GAUGE',
+                                                     min   => '0',
+                                                     warning => 20000,
+                                                     critical => 1000000},
         ],
    };
 
