@@ -708,7 +708,7 @@ $graphs{rows} = {
   },
   data_source_attrs => {
       draw  => 'LINE2',
-      type => 'GAUGE',
+      type => 'DERIVE',
   },
     },
     data_sources => [
@@ -727,7 +727,7 @@ $graphs{handler_read} = {
   },
   data_source_attrs => {
       draw  => 'AREASTACK',
-      type => 'GAUGE',
+      type => 'DERIVE',
   },
     },
     data_sources => [
@@ -750,7 +750,7 @@ $graphs{handler_transaction} = {
   },
   data_source_attrs => {
       draw  => 'AREASTACK',
-      type => 'GAUGE',
+      type => 'DERIVE',
   },
     },
     data_sources => [
@@ -770,7 +770,7 @@ $graphs{handler_write} = {
   },
   data_source_attrs => {
       draw => 'LINE2',
-      type => 'GAUGE',
+      type => 'DERIVE',
   },
     },
     data_sources => [
@@ -788,7 +788,7 @@ $graphs{handler_tmp} = {
   },
   data_source_attrs => {
       draw => 'LINE2',
-      type => 'GAUGE',
+      type => 'DERIVE',
   },
     },
     data_sources => [
@@ -806,7 +806,7 @@ $graphs{execution} = {
   },
   data_source_attrs => {
       draw => 'LINE2',
-      type => 'GAUGE',
+      type => 'DERIVE',
   },
     },
     data_sources => [
