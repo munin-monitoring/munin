@@ -708,7 +708,7 @@ $graphs{icp} = {
 	},
 	data_source_attrs => {
 	    draw  => 'LINE2',
-	    type => 'GAUGE',
+	    type => 'DERIVE',
 	},
     },
     data_sources => [
@@ -726,7 +726,7 @@ $graphs{mrr} = {
 	},
 	data_source_attrs => {
 	    draw  => 'LINE2',
-	    type => 'GAUGE',
+	    type => 'DERIVE',
 	},
     },
     data_sources => [
