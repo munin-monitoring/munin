@@ -396,7 +396,7 @@ sub _get_params_services {
 
 	my $services = [];
 	while (my ($_s_id, $_service_title, $_url) = $sth->fetchrow_array) {
-		my %imgs = map { ("IMG$_" => script_name() . "/../munin-cgi-graph" . lc("/$_url-$_.png")) } @times;
+		my %imgs = map { ("IMG$_" => script_name() . "/../munin-cgi-graph" . "/$_url-$_.png") } @times;
 		push @$services, {
 			NAME => $_service_title,
 			URLX => url_absolutize("$_url.html"),
