@@ -498,6 +498,25 @@ $graphs{innodb_tnx} = {
 
 #---------------------------------------------------------------------
 
+$graphs{innodb_srv_master_thread} = {
+    config => {
+	global_attrs => {
+	    title  => 'InnoDB Master Thread',
+	},
+	data_source_attrs => {
+	    type  => 'DERIVE',
+	    draw  => 'AREASTACK',
+	},
+    },
+    data_sources => [
+	{name => 'ib_srv_main_flush_loops', label => 'Flush Loop'},
+	{name => 'ib_srv_main_background_loops', label => 'Background Loop'},
+	{name => 'ib_srv_main_flushs_writes', label => 'Flushes/Writes', draw  => 'LINE1'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
 $graphs{myisam_indexes} = {
     config => {
 	global_attrs => {
@@ -1085,7 +1104,7 @@ sub parse_innodb_status {
 	'ROW OPERATIONS'              => \&skip,
 	'SEMAPHORES'                  => \&parse_semaphores,
 	'TRANSACTIONS'                => \&parse_transactions,
-	'BACKGROUND THREAD'           => \&skip,
+	'BACKGROUND THREAD'           => \&parse_background_thread,
     );
 
     skip_heading();
@@ -1154,6 +1173,24 @@ sub parse_header_seconds {
 	}
     );
 }
+
+
+sub parse_background_thread {
+    parse_section(
+	sub {
+	    m/\Gsrv_master_thread loops: \d+ 1_second, \d+ sleeps, \d+ 10_second, (\d+) background, (\d+) flush/gc && do {
+		$data->{ib_srv_main_flush_loops} = $1;
+		$data->{ib_srv_main_background_loops} = $2;
+		return 1;
+	    };
+	    m/\Gsrv_master_thread log flush and writes: (\d+)/gc && do {
+		$data->{ib_srv_main_flushs_writes}  = $1;
+		return 1;
+	    };
+	}
+    );
+}
+
 
 sub parse_semaphores {
     parse_section(
