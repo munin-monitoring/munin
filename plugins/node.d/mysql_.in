@@ -1178,12 +1178,12 @@ sub parse_header_seconds {
 sub parse_background_thread {
     parse_section(
 	sub {
-	    m/\Gsrv_master_thread loops: \d+ 1_second, \d+ sleeps, \d+ 10_second, (\d+) background, (\d+) flush/gc && do {
+	    m/\Gsrv_master_thread loops: \d+ 1_second, \d+ sleeps, \d+ 10_second, (\d+) background, (\d+) flush\n/gc && do {
 		$data->{ib_srv_main_flush_loops} = $1;
 		$data->{ib_srv_main_background_loops} = $2;
 		return 1;
 	    };
-	    m/\Gsrv_master_thread log flush and writes: (\d+)/gc && do {
+	    m/\Gsrv_master_thread log flush and writes: (\d+)\n/gc && do {
 		$data->{ib_srv_main_flushs_writes}  = $1;
 		return 1;
 	    };
