@@ -1089,6 +1089,7 @@ sub parse_innodb_status {
     );
 
     skip_heading();
+    parse_header_seconds();
     for (;;) {
 	m/\G(.*)\n/gc;
 	my $sec = $1;
@@ -1121,8 +1122,8 @@ sub skip_line    { return m/\G.*\n/gc; }
 
 
 sub skip_heading {
-    # Heading is 6 lines
-    for my $foo (1...6) {
+    # Heading is 3 lines
+    for my $foo (1...3) {
 	skip_line or die('Parse error');
     }
 }
@@ -1142,6 +1143,17 @@ sub parse_section {
 
 sub skip { parse_section(sub {}); }
 
+
+sub parse_header_seconds {
+    parse_section(
+	sub {
+	    m/\GPer second averages calculated from the last (\d+) seconds\n/gc && do {
+		$data->{innodb_engine_status_seconds}  = $1;
+		return 1;
+	    };
+	}
+    );
+}
 
 sub parse_semaphores {
     parse_section(
