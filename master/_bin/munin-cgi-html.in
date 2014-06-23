@@ -139,7 +139,7 @@ while (new CGI::Fast) {
 
 	# Categories nav
 	{
-		my $sth = $dbh->prepare_cached("SELECT DISTINCT value FROM service_attr WHERE name = 'graph_category'");
+		my $sth = $dbh->prepare_cached("SELECT DISTINCT value FROM service_attr WHERE name = 'graph_category' ORDER BY value ASC");
 		$sth->execute();
 
 		my $globalcats = [];
