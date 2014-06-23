@@ -469,13 +469,19 @@ $graphs{innodb_semaphores} = {
 	    vlabel => 'Semaphores per ${graph_period}',
 	},
 	data_source_attrs => {
-	    draw  => 'LINE1',
+	    draw  => 'AREASTACK',
 	},
     },
     data_sources => [
 	{name => 'ib_spin_rounds', label => 'Spin Rounds'},
 	{name => 'ib_spin_waits',  label => 'Spin Waits'},
 	{name => 'ib_os_waits',    label => 'OS Waits'},
+  {name => 'ib_rw_shared_rounds', label => 'RW/S Rounds'},
+  {name => 'ib_rw_shared_waits',  label => 'RW/S Waits'},
+  {name => 'ib_rw_shared_os_waits',    label => 'RW/S OS Waits'},
+  {name => 'ib_rw_excl_rounds', label => 'RW/X Rounds'},
+  {name => 'ib_rw_excl_waits',  label => 'RW/X Waits'},
+  {name => 'ib_rw_excl_os_waits',    label => 'RW/X OS Waits'},
     ],
 };
 
@@ -1199,6 +1205,18 @@ sub parse_semaphores {
 		$data->{ib_spin_waits}  = $1;
 		$data->{ib_spin_rounds} = $2;
 		$data->{ib_os_waits}    = $3;
+		return 1;
+	    };
+	    m/\GRW-shared spins (\d+), rounds (\d+), OS waits (\d+)\n/gc && do {
+		$data->{ib_rw_shared_waits}  = $1;
+		$data->{ib_rw_shared_rounds} = $2;
+		$data->{ib_rw_shared_os_waits}    = $3;
+		return 1;
+	    };
+	    m/\GRW-excl spins (\d+), rounds (\d+), OS waits (\d+)\n/gc && do {
+		$data->{ib_rw_excl_waits}  = $1;
+		$data->{ib_rw_excl_rounds} = $2;
+		$data->{ib_rw_excl_os_waits}    = $3;
 		return 1;
 	    };
 	}
