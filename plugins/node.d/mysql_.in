@@ -334,6 +334,7 @@ $graphs{innodb_bpool} = {
 				      colour => 'cdcfc4'},
 	{name => 'ib_bpool_free',     label => 'Free pages'},
 	{name => 'ib_bpool_modpages', label => 'Modified pages'},
+	{name => 'ib_bpool_oldpages', label => 'Old pages'},
     ],
 };
 
@@ -1382,6 +1383,10 @@ sub parse_buffer_pool_and_memory {
 	    };
 	    m/\GModified db pages\s+(\d+)\n/gc && do {
 		$data->{ib_bpool_modpages} = $1;
+		return 1;
+	    };
+	    m/\GOld databse pages\s+(\d+)\n/gc && do {
+		$data->{ib_bpool_oldpages} = $1;
 		return 1;
 	    };
 	    m/\GPages read (\d+), created (\d+), written (\d+)\n/gc && do {
