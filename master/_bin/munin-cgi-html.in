@@ -245,7 +245,7 @@ while (new CGI::Fast) {
 		$template_filename = 'munin-nodeview.tmpl';
 
 		my $sth_category = $dbh->prepare(
-			"SELECT sa.value as graph_category FROM service s
+			"SELECT DISTINCT sa.value as graph_category FROM service s
 			INNER JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_category'
 			WHERE s.node_id = ?
 			ORDER BY graph_category");
