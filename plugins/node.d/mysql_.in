@@ -1133,7 +1133,7 @@ sub parse_innodb_status {
     my %section_map = (
 
 	'BUFFER POOL AND MEMORY'      => \&parse_buffer_pool_and_memory,
-	'INDIVIDUAL BUFFER POOL INFO' => \&skip,
+	'INDIVIDUAL BUFFER POOL INFO' => \&parse_individual_buffer_pool,
 	'FILE I/O'                    => \&parse_file_io,
 	'INSERT BUFFER AND ADAPTIVE HASH INDEX'
 	    => \&parse_insert_buffer_and_adaptive_hash_index,
@@ -1375,6 +1375,10 @@ sub parse_buffer_pool_and_memory {
 		$data->{ib_bpool_size} = $1;
 		return 1;
 	    };
+      m/\GBuffer pool size, bytes\s+(\d+)\n/gc && do {
+    $data->{ib_bpool_size_bytes} = $1;
+		return 1;
+      };
 	    m/\GFree buffers\s+(\d+)\n/gc && do {
 		$data->{ib_bpool_free} = $1;
 		return 1;
@@ -1428,6 +1432,39 @@ sub parse_buffer_pool_and_memory {
     );
 }
 
+sub parse_individual_buffer_pool {
+    parse_section(
+  sub {
+    m/\G---BUFFER POOL (\d+)\n/gc && do {
+      my $pool = $1;
+      $data->{ib_bpool_individual_pool_count} = $pool + 1;
+      m/\GBuffer pool size\s+(\d+)\n/gc && do {
+        $data->{"ib_bpool_individual_pool_${pool}_size"} = $1;
+      };
+      m/\GBuffer pool size, bytes\s+(\d+)\n/gc && do {
+        $data->{"ib_bpool_individual_pool_${pool}_size_bytes"} = $1;
+      };
+      m/\GFree buffers\s+(\d+)\nDatabase pages\s+(\d+)\nOld database pages\s+(\d+)\nModified db pages\s+(\d+)\nPending reads\s+(\d+)\nPending writes: LRU\s+(\d+), flush list\s+(\d+), single page\s+(\d+)\n/gc && do {
+        $data->{"ib_bpool_individual_pool_${pool}_free"} = $1;
+        $data->{"ib_bpool_individual_pool_${pool}_dbpages"} = $2;
+        $data->{"ib_bpool_individual_pool_${pool}_oldpages"} = $3;
+        $data->{"ib_bpool_individual_pool_${pool}_modpages"} = $4;
+        $data->{"ib_bpool_individual_pool_${pool}_pending_reads"} = $5;
+        $data->{"ib_bpool_individual_pool_${pool}_pending_writes_lru"} = $6;
+        $data->{"ib_bpool_individual_pool_${pool}_pending_writes_flush"} = $7;
+        $data->{"ib_bpool_individual_pool_${pool}_pending_writes_single"} = $8;
+      };
+      skip_line();
+      m/\GPages read (\d+), created (\d+), written (\d+)\n/gc && do {
+        $data->{"ib_bpool_individual_pool_${pool}_read"}    = $1;
+        $data->{"ib_bpool_individual_pool_${pool}_created"} = $2;
+        $data->{"ib_bpool_individual_pool_${pool}_written"} = $3;
+      };
+      return 1;
+    };
+        }
+  );
+}
 
 sub handle_incomplete_innodb_status {
 
