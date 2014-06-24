@@ -359,6 +359,33 @@ $graphs{innodb_bpool_act} = {
 
 #---------------------------------------------------------------------
 
+$graphs{innodb_bpool_internal_breakdown} = {
+    config => {
+        global_attrs => {
+            title  => 'InnoDB Internal breakdown',
+        },
+        data_source_attrs => {
+            draw => 'AREASTACK',
+            type => 'GAUGE',
+        },
+    },
+    data_sources => [
+        {name => 'ib_bpool_internal_adaptive_hash_size_const',    label => 'Adaptive Hash const'},
+        {name => 'ib_bpool_internal_adaptive_hash_size_var',      label => 'Adaptive Hash var'},
+        {name => 'ib_bpool_internal_page_hash_size_total',        label => 'Page Hash'},
+        {name => 'ib_bpool_internal_dictionary_cache_size_const', label => 'Dictionary const'},
+        {name => 'ib_bpool_internal_dictionary_cache_size_var',   label => 'Dictionary var'},
+        {name => 'ib_bpool_internal_file_system_size_const',      label => 'Filesystem const'},
+        {name => 'ib_bpool_internal_file_system_size_var',        label => 'Filesystem var'},
+        {name => 'ib_bpool_internal_lock_system_size_const',      label => 'Lock system const'},
+        {name => 'ib_bpool_internal_lock_system_size_var',        label => 'Lock system var'},
+        {name => 'ib_bpool_internal_recovery_system_size_const',  label => 'Recovery system const'},
+        {name => 'ib_bpool_internal_recovery_system_size_var',    label => 'Recovery system var'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
 $graphs{innodb_insert_buf} = {
     config => {
 	global_attrs => {
@@ -1363,6 +1390,28 @@ sub parse_buffer_pool_and_memory {
 		$data->{ib_bpool_written} = $3;
 		return 1;
 	    };
+      # mariadb-5.5
+      m/\GInternal hash tables \(constant factor \+ variable factor\)\n\s*Adaptive hash index\s*(\d+)\s*\((\d+) \+ (\d+)\) *\n\s+Page hash +(\d+) +\(buffer pool \d+ only\) *\n\s+Dictionary cache\s*(\d+)\s+\((\d+) \+ (\d+)\) *\n\s+File system\s+(\d+)\s+\((\d+) \+ (\d+)\) *\n\s+Lock system\s+(\d+)\s+\((\d+) \+ (\d+)\) *\n\s+Recovery system\s*(\d+)\s+\((\d+) \+ (\d+)\) *\n/gc  
+          && do {
+          $data->{ib_bpool_internal_adaptive_hash_size_total}  = $1;
+          $data->{ib_bpool_internal_adaptive_hash_size_const}  = $2;
+          $data->{ib_bpool_internal_adaptive_hash_size_var}    = $3;
+          $data->{ib_bpool_internal_page_hash_size_total}  = $4;
+          $data->{ib_bpool_internal_dictionary_cache_size_total}  = $5;
+          $data->{ib_bpool_internal_dictionary_cache_size_const}  = $6;
+          $data->{ib_bpool_internal_dictionary_cache_size_var}    = $7;
+          $data->{ib_bpool_internal_file_system_size_total}  = $8;
+          $data->{ib_bpool_internal_file_system_size_const}  = $9;
+          $data->{ib_bpool_internal_file_system_size_var}    = $10;
+          $data->{ib_bpool_internal_lock_system_size_total}  = $11;
+          $data->{ib_bpool_internal_lock_system_size_const}  = $12;
+          $data->{ib_bpool_internal_lock_system_size_var}    = $13;
+          $data->{ib_bpool_internal_recovery_system_size_total}  = $14;
+          $data->{ib_bpool_internal_recovery_system_size_const}  = $15;
+          $data->{ib_bpool_internal_recovery_system_size_var}    = $16;
+          return 1;
+      };
+
 	}
     );
 }
