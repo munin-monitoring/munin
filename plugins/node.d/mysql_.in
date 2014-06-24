@@ -370,9 +370,12 @@ $graphs{innodb_insert_buf} = {
 	},
     },
     data_sources => [
-	{name => 'ib_ibuf_inserts',    label => 'Inserts'},
-	{name => 'ib_ibuf_merged_rec', label => 'Merged Records'},
-	{name => 'ib_ibuf_merges',     label => 'Merges'},
+      {name => 'ib_ibuf_inserts',    label => 'Merge Inserts'},
+      {name => 'ib_ibuf_delete',     label => 'Merge Deletes'},
+      {name => 'ib_ibuf_merged_rec', label => 'Merged Records'},
+      {name => 'ib_ibuf_merges',     label => 'Merges'},
+      {name => 'ib_ibuf_discard_inserts', label => 'Discard Inserts'},
+      {name => 'ib_ibuf_discard_delete',  label => 'Discard Deletes'},
     ],
 };
 
@@ -1292,11 +1295,17 @@ sub parse_insert_buffer_and_adaptive_hash_index {
         return 1;
       };
       # MySQL >= 5.5
-      m/\Gmerged operations:\n insert (\d+), delete mark \d+, delete \d+\ndiscarded operations:\n insert (\d+), delete mark \d+, delete \d+\n/gc && do {
+      m/\Gmerged operations:\n insert (\d+), delete mark (\d+), delete (\d+)\ndiscarded operations:\n insert (\d+), delete mark (\d+), delete (\d+)\n/gc && do {
         $data->{ib_ibuf_inserts} = $1;
-        $data->{ib_ibuf_merged_rec} = $1 + $2;
+        $data->{ib_ibuf_delete_mark} = $2;
+        $data->{ib_ibuf_delete} = $3;
+        $data->{ib_ibuf_discard_inserts} = $4;
+        $data->{ib_ibuf_discard_delete_mark} = $5;
+        $data->{ib_ibuf_discard_delete} = $6;
+        $data->{ib_ibuf_merged_rec} = $data->{ib_ibuf_inserts} +  $data->{ib_ibuf_discard_inserts};
         return 1;
       };
+
       m/\GIbuf: size (\d+), free list len (\d+), seg size (\d+),(?: (\d+) merges)?\n/gc && do {
         $data->{ib_ibuf_size}     = $1;
         $data->{ib_ibuf_free_len} = $2;
