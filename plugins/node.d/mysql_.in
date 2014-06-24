@@ -365,9 +365,12 @@ $graphs{innodb_bpool_act} = {
 $graphs{innodb_bpool_internal_breakdown} = {
     config => {
         global_attrs => {
-            title  => 'InnoDB Internal breakdown',
+            title  => 'InnoDB Buffer Pool Internal breakdown',
+            args   => '--base 1024 --lower-limit 0',
+            vlabel => 'bytes',
         },
         data_source_attrs => {
+            min  => '0',
             draw => 'AREASTACK',
             type => 'GAUGE',
         },
