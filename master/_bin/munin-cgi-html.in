@@ -230,8 +230,9 @@ while (new CGI::Fast) {
 			$template_params{GROUPS} = _get_params_groups($dbh, $sth_grp, $sth_grp_root, $sth_node, $id);
 
 			$template_params{PATH} = [
-				{ } , # XXX - Template says first args has to be empty
-				{ "pathname" => "$template_params{GROUPS}[0]{NAME}", },
+				# first args should have path and r_path for backlink to overview
+				{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
+				url_to_path($path),
 			];
 
 			# Shows "[ d w m y ]"
@@ -257,7 +258,9 @@ while (new CGI::Fast) {
 		$template_params{CATEGORIES} = $categories;
 
 		$template_params{PATH} = [
-			{ } , # XXX - Template says first args has to be empty
+			# first args should have path and r_path for backlink to overview
+			{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
+			url_to_path($path),
 		];
 
 
@@ -421,6 +424,25 @@ sub get_param
 	my ($value) = $dbh->selectrow_array("SELECT value FROM param WHERE name = ?", undef, ($param));
 
 	return $value;
+}
+
+sub url_to_path
+{
+	my ($url) = @_;
+
+	my @paths = split m!/!, $url;
+
+	@paths = map {
+		(my $name = $paths[$_]) =~ tr/_/ /;
+		{
+			'pathname' => $name,
+			'path' => url_absolutize(join '/', @paths[0..$_]) . '/',
+		}
+	} 0..$#paths;
+
+	delete $paths[-1]{'path'};
+
+	return @paths;
 }
 
 sub url_absolutize
