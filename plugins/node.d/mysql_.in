@@ -1721,20 +1721,6 @@ sub update_variables {
       my $var = $wsrep_cluster_status_map{$data->{wsrep_cluster_status}};
       $data->{wsrep_cluster_status} = $var;
     }
-    if (defined $data->{wsrep_replicated_bytes} && defined $data->{wsrep_replicated}) {
-      if ($data->{wsrep_replicated} > 0) {
-         $data->{wsrep_avgreplicated} = $data->{wsrep_replicated_bytes} / $data->{wsrep_replicated};
-      } else {
-         $data->{wsrep_avgreplicated} = 0;
-      }
-    }
-    if (defined $data->{wsrep_received_bytes} && defined $data->{wsrep_received}) {
-      if ($data->{wsrep_received} > 0) {
-         $data->{wsrep_avgreceived} = $data->{wsrep_received_bytes} / $data->{wsrep_received};
-      } else {
-         $data->{wsrep_avgreceived} = 0;
-      }
-    }
     $data->{_galera_disabled} = 1 unless ($data->{wsrep_provider_name});
 }
 
