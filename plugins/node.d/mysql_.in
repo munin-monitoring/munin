@@ -344,7 +344,7 @@ $graphs{innodb_bpool_act} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Buffer Pool Activity',
-	    vlabel => 'Activity per ${graph_period}',
+	    vlabel => 'Pages per ${graph_period}',
 	    total  => 'Total',
 	},
 	data_source_attrs => {
@@ -352,9 +352,11 @@ $graphs{innodb_bpool_act} = {
 	},
     },
     data_sources => [
-	{name => 'ib_bpool_read',    label => 'Pages read'},
-	{name => 'ib_bpool_created', label => 'Pages created'},
-	{name => 'ib_bpool_written', label => 'Pages written'},
+	{name => 'ib_bpool_read',           label => 'Read'},
+	{name => 'ib_bpool_created',        label => 'Created'},
+	{name => 'ib_bpool_written',        label => 'Written'},
+	{name => 'ib_bpool_made_young',     label => 'Made young'},
+	{name => 'ib_bpool_made_not_young', label => 'Made not young'},
     ],
 };
 
@@ -1389,6 +1391,11 @@ sub parse_buffer_pool_and_memory {
 		$data->{ib_bpool_oldpages} = $1;
 		return 1;
 	    };
+      m/\GPages made young (\d+), not young (\d+)\n/gc && do {
+    $data->{ib_bpool_made_young}     = $1;
+    $data->{ib_bpool_made_not_young} = $2;
+		return 1;
+    };
 	    m/\GPages read (\d+), created (\d+), written (\d+)\n/gc && do {
 		$data->{ib_bpool_read}    = $1;
 		$data->{ib_bpool_created} = $2;
