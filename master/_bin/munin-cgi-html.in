@@ -445,6 +445,7 @@ sub url_to_path
 	} 0..$#paths;
 
 	delete $paths[-1]{'path'};
+	$paths[-1]{'__last__'} = 1;
 
 	return @paths;
 }
