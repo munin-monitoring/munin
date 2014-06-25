@@ -559,6 +559,60 @@ $graphs{innodb_srv_master_thread} = {
 
 #---------------------------------------------------------------------
 
+$graphs{innodb_queries} = {
+    config => {
+       global_attrs => {
+           title  => 'InnoDB Engine Queries and Transactions',
+           args   => '--lower-limit 0',
+       },
+       data_source_attrs => {
+           type  => 'GAUGE',
+       },
+    },
+    data_sources => [
+       {name => 'ib_innodb_queries', label => 'Active'},
+       {name => 'ib_innodb_transactions_active', label => 'Transactions'},
+       {name => 'ib_innodb_query_queue_len', label => 'Queued'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{innodb_read_views} = {
+    config => {
+       global_attrs => {
+           title  => 'InnoDB Read Views',
+           args   => '--lower-limit 0',
+       },
+       data_source_attrs => {
+           type  => 'GAUGE',
+       },
+    },
+    data_sources => [
+       {name => 'ib_innodb_read_views', label => 'Views'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{innodb_descriptors} = {
+    config => {
+       global_attrs => {
+           title  => 'InnoDB Descriptors',
+           args   => '--lower-limit 0',
+       },
+       data_source_attrs => {
+           type  => 'GAUGE',
+       },
+    },
+    data_sources => [
+       {name => 'ib_innodb_descriptors', label => 'Descriptors'},
+       {name => 'ib_innodb_descriptors_max', label => 'Max', draw => 'AREA', colour => 'ffd660'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
 $graphs{myisam_indexes} = {
     config => {
 	global_attrs => {
@@ -1143,7 +1197,7 @@ sub parse_innodb_status {
 	'LATEST DETECTED DEADLOCK'    => \&skip,
 	'LATEST FOREIGN KEY ERROR'    => \&skip,
 	'LOG'                         => \&parse_log,
-	'ROW OPERATIONS'              => \&skip,
+	'ROW OPERATIONS'              => \&parse_row_operations,
 	'SEMAPHORES'                  => \&parse_semaphores,
 	'TRANSACTIONS'                => \&parse_transactions,
 	'BACKGROUND THREAD'           => \&parse_background_thread,
@@ -1233,6 +1287,38 @@ sub parse_background_thread {
     );
 }
 
+sub parse_row_operations {
+    parse_section(
+        sub {
+            m/\G(\d+) queries inside InnoDB, (\d+) queries in queue\n/gc && do {
+                $data->{ib_innodb_queries}  = $1;
+                $data->{ib_innodb_query_queue_len} = $2;
+                return 1;
+            };
+            m/\G(\d+) read views open inside InnoDB\n/gc && do {
+                $data->{ib_innodb_read_views}  = $1;
+                return 1;
+            };
+            m/\G(\d+) transactions active inside InnoDB\n/gc && do {
+                $data->{ib_innodb_transactions_active}  = $1;
+                return 1;
+            };
+            m/\G(\d+) out of (\d+) descriptors used\n/gc && do {
+                $data->{ib_innodb_descriptors}  = $1;
+                $data->{ib_innodb_descriptors_max} = $2;
+                return 1;
+            };
+            # no need for this - its exposed as status variables
+            # m/\GNumber of rows inserted (\d+), updated (\d+), deleted (\d+), read (\d+)\n/gc && do {
+            #     $data->{ib_innodb_rows_inserted} = $1;
+            #     $data->{ib_innodb_rows_updated}  = $2;
+            #     $data->{ib_innodb_rows_deleted}  = $3;
+            #     $data->{ib_innodb_rows_read}     = $4;
+            #     return 1;
+            # };
+        }
+   );
+}
 
 sub parse_semaphores {
     parse_section(
