@@ -235,6 +235,8 @@ while (new CGI::Fast) {
 				url_to_path($path),
 			];
 
+			$template_params{NAME} = $template_params{PATH}[-1]{'pathname'};
+
 			# Shows "[ d w m y ]"
 			$template_params{COMPARE} = 1;
 		}
@@ -264,6 +266,7 @@ while (new CGI::Fast) {
 			url_to_path($path),
 		];
 
+		$template_params{NAME} = $template_params{PATH}[-1]{'pathname'};
 
 	} elsif ($type eq "service") {
 		# Emit service template
