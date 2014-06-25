@@ -359,7 +359,7 @@ sub _get_params_groups {
 	# Add the nodes
 	$sth_node->execute($g_id);
 	while (my ($_n_id, $_name, $_path) = $sth_node->fetchrow_array) {
-		my $sth = $dbh->prepare_cached("SELECT DISTINCT sa.value FROM service s INNER JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_category' WHERE s.node_id = ?");
+		my $sth = $dbh->prepare_cached("SELECT DISTINCT sa.value FROM service s INNER JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_category' WHERE s.node_id = ? ORDER BY sa.value ASC");
 		$sth->execute($_n_id);
 
 		my $categories = [];
