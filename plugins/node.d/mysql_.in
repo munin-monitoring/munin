@@ -1480,7 +1480,7 @@ sub parse_buffer_pool_and_memory {
 		$data->{ib_bpool_modpages} = $1;
 		return 1;
 	    };
-	    m/\GOld databse pages\s+(\d+)\n/gc && do {
+	    m/\GOld database pages\s+(\d+)\n/gc && do {
 		$data->{ib_bpool_oldpages} = $1;
 		return 1;
 	    };
