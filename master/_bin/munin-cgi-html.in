@@ -175,7 +175,7 @@ while (new CGI::Fast) {
 			my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL ORDER BY g.name ASC");
 			my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ? ORDER BY n.name ASC");
 
-			$template_params{GROUPS} = _get_params_groups($dbh, $sth_grp, $sth_grp_root, $sth_node, undef);
+			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, undef);
 		}
 
 		# TODO - We still have to write the bottom navigation links
@@ -227,7 +227,7 @@ while (new CGI::Fast) {
 			my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL ORDER BY g.name ASC");
 			my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ? ORDER BY n.name ASC");
 
-			$template_params{GROUPS} = _get_params_groups($dbh, $sth_grp, $sth_grp_root, $sth_node, $id);
+			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, $id);
 
 			$template_params{PATH} = [
 				# first args should have path and r_path for backlink to overview
@@ -331,7 +331,7 @@ RENDERING:
 }
 
 sub _get_params_groups {
-	my ($dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $g_id) = @_;
+	my ($path, $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $g_id) = @_;
 
 	my $sth_grp;
 	if (defined $g_id) {
@@ -347,7 +347,7 @@ sub _get_params_groups {
 		push @$groups, {
 			NAME => $_name,
 			URL => $_path,
-			GROUPS => _get_params_groups($dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $_g_id),
+			GROUPS => _get_params_groups($path, $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $_g_id),
 			COMPARE => 1,
 			PATH => [
 				{ PATH => '..', PATHNAME => undef, },
@@ -361,6 +361,9 @@ sub _get_params_groups {
 	while (my ($_n_id, $_name, $_path) = $sth_node->fetchrow_array) {
 		my $sth = $dbh->prepare_cached("SELECT DISTINCT sa.value FROM service s INNER JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_category' WHERE s.node_id = ? ORDER BY sa.value ASC");
 		$sth->execute($_n_id);
+
+		# trim off current path from target's path
+		substr($_path, 0, 1 + length($path)) = '' if $path;
 
 		my $categories = [];
 		while (my ($_category_name) = $sth->fetchrow_array) {
