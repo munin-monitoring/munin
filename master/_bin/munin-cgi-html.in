@@ -256,6 +256,7 @@ while (new CGI::Fast) {
 		}
 
 		$template_params{CATEGORIES} = $categories;
+		$template_params{NCATEGORIES} = scalar(@$categories);
 
 		$template_params{PATH} = [
 			# first args should have path and r_path for backlink to overview
