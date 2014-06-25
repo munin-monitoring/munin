@@ -1106,8 +1106,6 @@ sub parse_innodb_status {
       #warn "Unknown section: $1";
       skip();
 	}
-
-	$section_map{$sec}->();
     }
 }
 
