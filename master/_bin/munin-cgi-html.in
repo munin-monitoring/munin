@@ -300,24 +300,29 @@ while (new CGI::Fast) {
 
 		my $sth;
 
-		$sth = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = 'graph_title'");
+		$sth = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = 'graph_category'");
 		$sth->execute($id);
-		my ($graph_title) = $sth->fetchrow_array();
+		my ($graph_category) = $sth->fetchrow_array();
 
-		$sth = $dbh->prepare_cached("SELECT n.id, n.name FROM node n INNER JOIN service s ON s.node_id = n.id");
+		$sth = $dbh->prepare_cached("SELECT n.id FROM node n INNER JOIN service s ON s.node_id = n.id WHERE s.id = ?");
 		$sth->execute($id);
+		my ($node_id) = $sth->fetchrow_array();
 
-		$sth = $dbh->prepare_cached("SELECT g.name FROM grp g INNER JOIN node n ON n.grp_id = g.id");
-		$sth->execute($id);
-		my ($node_title) = $sth->fetchrow_array();
-
-		my ($group_title) = $sth->fetchrow_array();
+		# Generate peers
+		$template_params{PEERS} = [ map {
+			(my $name = basename($_->{"URLX"}, ".html")) =~ tr/_/ /;
+			{ NAME => $name, LINK => basename($_->{URLX}), }
+		} @{_get_params_services($dbh, $graph_category, $node_id)->{SERVICES}} ];
+		$template_params{LARGESET} = 1;
+		$template_params{INFO_OPTION} = 'Graphs in same category';
 
 		$template_params{PATH} = [
 			# first args should have path and r_path for backlink to overview
 			{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
 			url_to_path($path),
 		];
+
+		$template_params{CATEGORY} = ucfirst($graph_category);
 
 		# Create the params
 		my %service_template_params;
