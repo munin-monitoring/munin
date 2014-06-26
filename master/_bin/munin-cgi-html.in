@@ -314,10 +314,9 @@ while (new CGI::Fast) {
 		my ($group_title) = $sth->fetchrow_array();
 
 		$template_params{PATH} = [
-			{ } , # XXX - Template says first args has to be empty
-			{ "pathname" => "$group_title", },
-			{ "pathname" => "$node_title", },
-			{ "pathname" => "$graph_title", },
+			# first args should have path and r_path for backlink to overview
+			{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
+			url_to_path($path),
 		];
 
 		# Create the params
