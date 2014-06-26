@@ -37,6 +37,7 @@ use Munin::Master::Utils;
 use Munin::Master::Logger;
 use Log::Log4perl qw( :easy );
 
+use File::Basename;
 use Data::Dumper;
 
 my @times = qw(day week month year);
@@ -228,6 +229,31 @@ while (new CGI::Fast) {
 			my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ? ORDER BY n.name ASC");
 
 			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, $id);
+
+			my $sth_p_id = $dbh->prepare_cached("SELECT g.p_id FROM grp g WHERE g.id = ?");
+			$sth_p_id->execute($id);
+			my ($_p_id) = $sth_p_id->fetchrow_array;
+			my $sth_peer;
+
+			# Check for top level groups
+			if (defined $_p_id) {
+				$sth_peer = $sth_grp;
+				$sth_peer->execute($id);
+			} else {
+				$sth_peer = $sth_grp_root;
+				$sth_peer->execute();
+			}
+
+			# Construct list of peers
+			my $peers = [];
+			while (my (undef, $_name, $_url) = $sth_peer->fetchrow_array) {
+				$_url =~ s!/$!!;
+				push @$peers, { NAME => $_name, LINK => '../' . basename($_url) . '/' };
+			}
+
+			$template_params{PEERS} = $peers;
+			$template_params{LARGESET} = 1;
+			$template_params{INFO_OPTION} = 'Groups on this level';
 
 			$template_params{PATH} = [
 				# first args should have path and r_path for backlink to overview
