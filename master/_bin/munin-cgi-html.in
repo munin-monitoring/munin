@@ -197,6 +197,24 @@ while (new CGI::Fast) {
 		];
 
 		# TODO - Create the model (category)
+		my $sth_category = $dbh->prepare(
+			"SELECT s.id, s.node_id as node_id, n.name as node_name, s.name as graph_name FROM service s
+			INNER JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_category'
+			INNER JOIN node n ON n.id = s.node_id
+			WHERE sa.value = ?
+			ORDER BY graph_name, node_name");
+		$sth_category->execute($category);
+
+		my $categories = [];
+		while (my ($_id, $_node_id, $node_name, $_graph_name) = $sth_category->fetchrow_array) {
+			$_id;
+		}
+
+
+		$template_params{SERVICES} = [];
+	} elsif ($path =~ /^([^\/])+\/comparison-(day|month|week|year)\.html$/) {
+		# That's a comparison URL
+		$template_filename = "munin-comparison-$2.tmpl";
 	}
 
 	# Handle normal pages only if not aleady handled
@@ -211,7 +229,9 @@ while (new CGI::Fast) {
 
 	if (! defined $id) {
 		# Not found
-		print header( -status => 404, );
+		print header( -status => 404, "-Content-Type" => "text/plain", );
+		print path_info() . " is not specially handled\n";
+		print $path . " is not known\n";
 		next;
 	} elsif ($type eq "group") {
 		# Emit group template
@@ -347,6 +367,7 @@ sub _get_params_groups {
 			URL => $_path,
 			GROUPS => _get_params_groups($dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $_g_id),
 			COMPARE => 1,
+			R_PATH => script_name(), # TMPL_LOOP has only local vars
 			PATH => [
 				{ PATH => '..', PATHNAME => undef, },
 				{ PATH => '', PATHNAME => $_name, },
