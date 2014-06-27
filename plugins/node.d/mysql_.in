@@ -1117,6 +1117,9 @@ my $innodb_bigint_rx = qr{([[a-fA-F\d]+)(?: (\d+))?};
 sub match_dashes { return m/\G-+\n(?!-)/gc; }
 
 
+sub match_subsection { return m/\G-+[ a-zA-Z]+-+\n/gc; }
+
+
 sub skip_line    { return m/\G.*\n/gc; }
 
 
@@ -1130,10 +1133,17 @@ sub skip_heading {
 
 sub parse_section {
     my ($parser) = @_;
-
+    my $in_subsection = 0;
     #warn substr($_, pos(), 10);
     for (;;) {
-	return if match_dashes();
+        $in_subsection = $in_subsection || match_subsection();
+        if (match_dashes()) {
+           if ($in_subsection) {
+              $in_subsection = 0;
+           } else {
+              return;
+           }
+        }
 	next if $parser->();
 	skip_line();
     }
