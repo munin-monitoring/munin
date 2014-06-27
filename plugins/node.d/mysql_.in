@@ -774,6 +774,28 @@ $graphs{qcache_mem} = {
     ],
 };
 
+
+#---------------------------------------------------------------------
+
+$graphs{max_mem} = {
+    config => {
+	global_attrs => {
+	    title  => 'Maximium memory that Mysql could use',
+	    vlabel => 'Bytes',
+	    args   => '--base 1024 --lower-limit 0',
+	},
+	data_source_attrs => {
+	    draw => 'AREASTACK',
+	    type => 'GAUGE',
+	},
+    },
+    data_sources => [
+	{name => 'mysql_connection_memory',    label => 'Connection Memory'},
+	{name => 'mysql_base_memory',  label => 'Base MYSQL Memory'},
+    ],
+};
+
+
 #---------------------------------------------------------------------
 
 $graphs{replication} = {
@@ -1314,6 +1336,26 @@ sub update_variables {
 	}
 	$sth->finish();
     }
+    $data->{'mysql_base_memory'} = $data->{'key_buffer_size'} 
+                                         + $data->{'query_cache_size'}
+                                         + $data->{'innodb_buffer_pool_size'}
+                                         + ( $data->{'innodb_additional_mem_pool_size'} || 0 )
+                                         + $data->{'innodb_log_buffer_size'}
+                                         + ( $data->{'tokudb_cache_size'} || 0 );
+
+    my $tmp_table_size = $data->{'tmp_table_size'};
+    my $max_heap_table_size = $data->{'max_heap_table_size'};
+    $data->{'mysql_connection_memory'} = $data->{'read_buffer_size'}
+                                   + $data->{'read_rnd_buffer_size'}
+                                   + $data->{'sort_buffer_size'}
+                                   + $data->{'join_buffer_size'}
+                                   + $data->{'binlog_cache_size'}
+                                   + $data->{'thread_stack'}
+                                   + ( $tmp_table_size >= $max_heap_table_size ? $tmp_table_size : $max_heap_table_size )
+                                   + ( $data->{'tokudb_read_buf_size'} || 0 );
+
+   # wsrep_thread_count was separated from max_connections for mariadb-5.5.38 https://mariadb.atlassian.net/browse/MDEV-6206
+   $data->{'mysql_connection_memory'} *= $data->{'max_connections'} + ( $data->{'wsrep_thread_count'} || 0 );
 }
 
 
