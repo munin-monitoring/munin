@@ -731,6 +731,43 @@ $graphs{tmp_tables} = {
 
 
 #---------------------------------------------------------------------
+
+$graphs{icp} = {
+    config => {
+	global_attrs => {
+	    title  => 'Index Condition Pushdown',
+	},
+	data_source_attrs => {
+	    draw  => 'LINE2',
+	    type => 'DERIVE',
+	},
+    },
+    data_sources => [
+	{name => 'Handler_icp_attempts', label => 'Attempts'},
+	{name => 'Handler_icp_match',    label => 'Matches'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{mrr} = {
+    config => {
+	global_attrs => {
+	    title  => 'Multi Range Read optimizations',
+	},
+	data_source_attrs => {
+	    draw  => 'LINE2',
+	    type => 'DERIVE',
+	},
+    },
+    data_sources => [
+	{name => 'Handler_mrr_init', label => 'Uses'},
+	{name => 'Handler_mrr_key_refills',  label => 'Key refills'},
+	{name => 'Handler_mrr_rowid_refills',  label => 'Row refills'},
+    ],
+};
+
+#---------------------------------------------------------------------
 #  M A I N
 #---------------------------------------------------------------------
 
