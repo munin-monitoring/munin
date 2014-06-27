@@ -1,5 +1,84 @@
 -*- text -*-
 
+munin-2.1.8, 2014-06-27
+
+-------
+Summary
+-------
+
+This is mostly a Pull-Request release, mostly aimed at recent incarnations of
+MySQL-like systems.
+
+------------------
+Detailed Changelog
+------------------
+
+Andre Klärner (1):
+      node: support --sconfdir
+
+Brian De Wolf (1):
+      Improve kstat compatibility in sunos if_ plugins
+
+Christian Loos (5):
+      ignore 'INDIVIDUAL BUFFER POOL INFO' section in MySQL 5.5
+      fix parsing file io for MySQL 5.5
+      fix parsing insert_buffer_and_adaptive_hash_index for MySQL 5.5
+      fix Use of uninitialized value in printf
+      add the Accept-Encoding header to the wget call
+
+Daniel Black (40):
+      Break mysql innodb data on full sections
+      Fix spelling in mysql plugin for warning
+      Fix name of slave variables and initialize other variables in case slave isnt active
+      Capture a bit more information for mysql-5.5+ on innodb status
+      Graph the maximum memory mysql can use
+      add icp - index condition pushdown
+      Multi Range Read optimizations
+      graph hander_read
+      transactions handler + execution (triggers & events)
+      fix execution, add handler_write
+      graph for mysql rows
+      add subquery_cache status to query cache graph
+      fix handler_write
+      add handler_tmp
+      Performance schema losses
+      mysql plugin - separate out table and file graphs
+      Mariadb-10 show innodb status compatiblity
+      DERIVE not GAUGE for mrr and icp graphs
+      innodb_open_files as AREA on graph tables
+      handler_* and execution graphs are all DERIVE
+      wsrep_thread_count considerations for max_memory
+      Capture per second averages from show engine innodb status
+      parse mysql show engine status background thread
+      ib_srv_main_* to have regex that ends in \n
+      more semaphore data on RW-{shared/excl} spins
+      capture and graph more of INSERT BUFFER AND ADAPTIVE HASH INDEX
+      +innodb_bpool_internal_breakdown
+      graph innodb old pages on bpool graph
+      buffer poool - made young / not young added to buffer pool activity graph
+      individual buffer pool data parsing
+      fix innodb_bpool_internal_breakdown to base 1024 and a lower limit of 0
+      parse innodb row operations
+      spelling fix databse->database
+      remove calling $section_map{$sec}->(); twice
+      Break mysql innodb data on full sections
+      Fix spelling in mysql plugin for warning
+      Fix name of slave variables and initialize other variables in case slave isnt active
+      Capture a bit more information for mysql-5.5+ on innodb status
+      Mariadb-10 show innodb status compatiblity
+      remove calling $section_map{$sec}->(); twice
+
+Servilio Afre Puentes (1):
+      Fix formatting of literal block
+
+Stig Sandbeck Mathisen (2):
+      Add a script to output useful "support information"
+      Handle big numbers better in sprintf
+
+Tom Hendrikx (2):
+      Add a lower limit of 0 to postgres database size
+      Make the postgres_size_ y-axis behaviour configurable.
+
 munin-2.1.7, 2014-05-05
 
 -------
