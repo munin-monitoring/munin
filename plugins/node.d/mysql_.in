@@ -288,11 +288,10 @@ $graphs{connections} = {
 
 #---------------------------------------------------------------------
 
-$graphs{files_tables} = {
+$graphs{files} = {
     config => {
 	global_attrs => {
-	    title  => 'Files and tables',
-	    vlabel => 'Tables',
+	    title  => 'Files',
 	},
 	data_source_attrs => {
 	    type  => 'GAUGE',
@@ -300,14 +299,65 @@ $graphs{files_tables} = {
 	},
     },
     data_sources => [
-	{name => 'table_open_cache', label  => 'Table cache',
+	{name => 'open_files_limit', label  => 'File Limit',
 				     draw   => 'AREA',
 				     colour => 'cdcfc4'},
-	{name => 'Open_files',       label => 'Open files'},
-	{name => 'Open_tables',      label => 'Open tables'},
-	{name => 'Opened_tables',    label => 'Opened tables',
+	{name => 'Open_files',       label => 'Open files',
 				     type  => 'DERIVE',
-	                             min   => 0},
+	           min   => 0},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{tables} = {
+    config => {
+	global_attrs => {
+	    title  => 'Tables',
+	},
+	data_source_attrs => {
+	    type  => 'GAUGE',
+	    draw  => 'LINE1',
+	},
+    },
+    data_sources => [
+	{name => 'table_open_cache',   label  => 'Table cache',
+				     draw   => 'AREA',
+				     colour => 'cdcfc4'},
+	{name => 'innodb_open_files',  label => 'Innodb Table Cache Limit',
+				     draw   => 'AREA',
+				     colour => 'ffd660'},
+	{name => 'Open_tables',        label => 'Open tables'},
+	{name => 'Slave_open_temp_tables',  label => 'Open Slave Temp Tables'},
+	{name => 'Opened_tables',      label => 'Opened tables',
+				     type  => 'DERIVE',
+	           min   => 0},
+	{name => 'Opened_views',       label => 'Opened Views',
+				     type  => 'DERIVE',
+	           min   => 0},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{table_definitions} = {
+    config => {
+	global_attrs => {
+	    title  => 'Tables Definitions',
+	},
+	data_source_attrs => {
+	    type  => 'GAUGE',
+	    draw  => 'LINE1',
+	},
+    },
+    data_sources => [
+	{name => 'table_definition_cache',  label => 'Cache Limit',
+				     draw   => 'AREA',
+				     colour => 'cdcfc4'},
+	{name => 'Open_table_definitions',  label => 'Open'},
+	{name => 'Opened_table_definitions',  label => 'Opened',
+				     type  => 'DERIVE',
+	           min   => 0},
     ],
 };
 
