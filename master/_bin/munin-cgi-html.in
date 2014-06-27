@@ -343,6 +343,7 @@ while (new CGI::Fast) {
 
 		# Create the params
 		my %service_template_params;
+		$service_template_params{FIELDINFO} = _get_params_fields($dbh, $id);
 		for my $t (@times) {
 			$service_template_params{"ZOOM$t"} = "";
 			$service_template_params{"IMG$t"} = script_name() . "/../munin-cgi-graph/" . "$path-$t.png";
@@ -464,6 +465,44 @@ sub _get_params_services {
 		NAME => $category_name,
 		SERVICES => $services,
 	};
+}
+
+sub _get_params_fields {
+	my ($dbh, $service_id) = @_;
+
+	my $sth_ds = $dbh->prepare_cached("
+		SELECT ds.name, ds.warning, ds.critical,
+		a_l.value, IFNULL(a_t.value, 'GAUGE'), a_w.value, a_c.value, a_i.value
+		FROM ds
+		LEFT JOIN ds_attr a_l ON ds.id = a_l.id AND a_l.name = 'label'
+		LEFT JOIN ds_attr a_t ON ds.id = a_t.id AND a_t.name = 'type'
+		LEFT JOIN ds_attr a_w ON ds.id = a_w.id AND a_w.name = 'warning'
+		LEFT JOIN ds_attr a_c ON ds.id = a_c.id AND a_c.name = 'critical'
+		LEFT JOIN ds_attr a_i ON ds.id = a_i.id AND a_i.name = 'info'
+		WHERE ds.service_id = ?
+		ORDER BY ds.id ASC");
+	$sth_ds->execute($service_id);
+
+	my @fields;
+	my $cnt = 1;
+	while (my ($_ds_name, $_ds_s_warn, $_ds_s_crit, $_ds_label, $_ds_type, $_ds_warn, $_ds_crit, $_ds_info) =
+			$sth_ds->fetchrow_array) {
+		push @fields, {
+			FIELD => $_ds_name,
+			STATE_WARNING => $_ds_s_warn,
+			STATE_CRITICAL => $_ds_s_crit,
+			LABEL => $_ds_label,
+			TYPE => lc($_ds_type),
+			WARN => $_ds_warn,
+			CRIT => $_ds_crit,
+			INFO => $_ds_info,
+		};
+
+		$fields[-1]{__odd__} = 1 if $cnt++ % 2;
+	}
+	$fields[-1]{__last__} = 1;
+
+	return \@fields;
 }
 
 sub get_param
