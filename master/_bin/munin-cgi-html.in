@@ -271,6 +271,23 @@ while (new CGI::Fast) {
 		# Emit node template
 		$template_filename = 'munin-nodeview.tmpl';
 
+		# Construct list of peers
+		my $sth_peer = $dbh->prepare_cached(
+			"SELECT n.name, u.path FROM node n
+			INNER JOIN url u ON n.id = u.id AND u.type = 'node'
+			WHERE n.grp_id = (SELECT n.grp_id FROM node n WHERE n.id = ?)
+			ORDER BY n.name ASC");
+		$sth_peer->execute($id);
+
+		my $peers = [];
+		while (my ($_name, $_url) = $sth_peer->fetchrow_array) {
+			push @$peers, { NAME => $_name, LINK => basename($_url) . ".html" };
+		}
+
+		$template_params{PEERS} = $peers;
+		$template_params{LARGESET} = 1;
+		$template_params{INFO_OPTION} = 'Nodes on this level';
+
 		my $sth_category = $dbh->prepare(
 			"SELECT DISTINCT sa.value as graph_category FROM service s
 			INNER JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_category'
