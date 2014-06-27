@@ -782,6 +782,122 @@ $graphs{tmp_tables} = {
 
 #---------------------------------------------------------------------
 
+$graphs{rows} = {
+    config => {
+  global_attrs => {
+      title  => 'Rows',
+  },
+  data_source_attrs => {
+      draw  => 'LINE2',
+      type => 'DERIVE',
+  },
+    },
+    data_sources => [
+  {name => 'Rows_read',     label => 'Read'},
+  {name => 'Rows_sent',     label => 'Sent'},
+  {name => 'Rows_tmp_read', label => 'Temp Read'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{handler_read} = {
+    config => {
+  global_attrs => {
+      title  => 'Read Handler',
+  },
+  data_source_attrs => {
+      draw  => 'AREASTACK',
+      type => 'DERIVE',
+  },
+    },
+    data_sources => [
+  {name => 'Handler_read_first',       label => 'Key First'},
+  {name => 'Handler_read_key',         label => 'Key Read'},
+  {name => 'Handler_read_last',        label => 'Key Last'},
+  {name => 'Handler_read_prev',        label => 'Key Prev'},
+  {name => 'Handler_read_rnd',         label => 'Row position'},
+  {name => 'Handler_read_rnd_deleted', label => 'Row position delete'},
+  {name => 'Handler_read_rnd_next',    label => 'Row position next'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{handler_transaction} = {
+    config => {
+  global_attrs => {
+      title  => 'Transactions Handler',
+  },
+  data_source_attrs => {
+      draw  => 'AREASTACK',
+      type => 'DERIVE',
+  },
+    },
+    data_sources => [
+  {name => 'Handler_commit',             label => 'Commit'},
+  {name => 'Handler_rollback',           label => 'Rollback'},
+  {name => 'Handler_savepoint',          label => 'Savepoint'},
+  {name => 'Handler_savepoint_rollback', label => 'Savepoint Rollback'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{handler_write} = {
+    config => {
+  global_attrs => {
+      title  => 'Write/Update Handler',
+  },
+  data_source_attrs => {
+      draw => 'LINE2',
+      type => 'DERIVE',
+  },
+    },
+    data_sources => [
+  {name => 'Handler_write',  label => 'Writes'},
+  {name => 'Handler_update', label => 'Updates'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{handler_tmp} = {
+    config => {
+  global_attrs => {
+      title  => 'Temporary Write/Update Handler',
+  },
+  data_source_attrs => {
+      draw => 'LINE2',
+      type => 'DERIVE',
+  },
+    },
+    data_sources => [
+  {name => 'Handler_tmp_write',  label => 'Writes'},
+  {name => 'Handler_tmp_update', label => 'Updates'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{execution} = {
+    config => {
+  global_attrs => {
+      title  => 'Execution Events',
+  },
+  data_source_attrs => {
+      draw => 'LINE2',
+      type => 'DERIVE',
+  },
+    },
+    data_sources => [
+  {name => 'Executed_events',   label => 'Events'},
+  {name => 'Executed_triggers', label => 'Triggers'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
 $graphs{icp} = {
     config => {
 	global_attrs => {
