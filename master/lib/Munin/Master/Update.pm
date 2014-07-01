@@ -342,6 +342,10 @@ sub _dump_into_sql {
 			my $service_id = _get_last_insert_id($dbh);
 			$sth_url->execute($service_id, "service", _get_url_from_path("$host:$_service"));
 
+			# Check for multigraphs
+			my $subgraphs = scalar grep /^$service\..+/, keys %{$self->{service_configs}{$host}{data_source}};
+			$sth_service_attr->execute($service_id, 'subgraphs', $subgraphs) if $subgraphs;
+
 			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
 				$sth_service_attr->execute($service_id, $attr->[0], $attr->[1]);
 			}
