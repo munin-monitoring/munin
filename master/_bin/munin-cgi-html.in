@@ -411,6 +411,7 @@ RENDERING:
 	print header( -status => 200, "-Content-Type" => "text/html", );
 	my $template = HTML::Template::Pro->new(
 		filename => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/$template_filename",
+		loop_context_vars => 1,
 	);
 
 	{
@@ -540,7 +541,6 @@ sub _get_params_fields {
 	$sth_ds->execute($service_id);
 
 	my @fields;
-	my $cnt = 1;
 	while (my ($_ds_name, $_ds_s_warn, $_ds_s_crit, $_ds_graph, $_ds_label, $_ds_type, $_ds_warn, $_ds_crit, $_ds_info) =
 			$sth_ds->fetchrow_array) {
 		next if $_ds_graph eq 'no';
@@ -555,10 +555,7 @@ sub _get_params_fields {
 			CRIT => $_ds_crit,
 			INFO => $_ds_info,
 		};
-
-		$fields[-1]{__odd__} = 1 if $cnt++ % 2;
 	}
-	$fields[-1]{__last__} = 1;
 
 	return \@fields;
 }
@@ -592,7 +589,6 @@ sub url_to_path
 	} 0..$#paths;
 
 	delete $paths[-1]{'path'};
-	$paths[-1]{'__last__'} = 1;
 
 	return @paths;
 }
