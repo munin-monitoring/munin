@@ -180,6 +180,16 @@ while (new CGI::Fast) {
 		}
 
 		# TODO - We still have to write the bottom navigation links
+	} elsif ($path eq "dynazoom.html") {
+		# Emit dynamic zoom template
+
+		$template_params{SHOW_ZOOM_JS} = 1;
+		$template_params{PATH} = [
+			# first args should have path and r_path for backlink to overview
+			{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
+		];
+
+		$template_filename = "munin-dynazoom.tmpl";
 	} elsif ($path eq "problems.html") {
 		# Emit problem template
 
@@ -369,9 +379,20 @@ while (new CGI::Fast) {
 		# Create the params
 		my %service_template_params;
 		$service_template_params{FIELDINFO} = _get_params_fields($dbh, $id);
+		my $cgi_graph_url = script_name() . "/../munin-cgi-graph/";
+		my $epoch_now = time;
+		my %epoch_start = (
+			day => $epoch_now - (3600 * 30),
+			week => $epoch_now - (3600 * 24 * 8),
+			month => $epoch_now - (3600 * 24 * 33),
+			year => $epoch_now - (3600 * 24 * 400),
+		);
+
 		for my $t (@times) {
-			$service_template_params{"ZOOM$t"} = "";
-			$service_template_params{"IMG$t"} = script_name() . "/../munin-cgi-graph/" . "$path-$t.png";
+			my $epoch = "start_epoch=$epoch_start{$t}&stop_epoch=$epoch_now";
+			$service_template_params{"ZOOM$t"} = script_name() . "/dynazoom.html?cgiurl_graph=$cgi_graph_url" .
+				"&plugin_name=$path&size_x=800&size_y=400&$epoch";
+			$service_template_params{"IMG$t"} = $cgi_graph_url . "$path-$t.png";
 		}
 
 		# template uses loop for no apparent reason
