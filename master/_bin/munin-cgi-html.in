@@ -317,6 +317,10 @@ while (new CGI::Fast) {
 
 		my $sth;
 
+		$sth = $dbh->prepare_cached("SELECT name FROM service WHERE id = ?");
+		$sth->execute($id);
+		my ($graph_name) = $sth->fetchrow_array();
+
 		$sth = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = 'graph_category'");
 		$sth->execute($id);
 		my ($graph_category) = $sth->fetchrow_array();
@@ -325,15 +329,20 @@ while (new CGI::Fast) {
 		$sth->execute($id);
 		my ($graph_info) = $sth->fetchrow_array();
 
+		$sth = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = 'subgraphs'");
+		$sth->execute($id);
+		my ($multigraph) = $sth->fetchrow_array();
+
 		$sth = $dbh->prepare_cached("SELECT n.id FROM node n INNER JOIN service s ON s.node_id = n.id WHERE s.id = ?");
 		$sth->execute($id);
 		my ($node_id) = $sth->fetchrow_array();
 
 		# Generate peers
+		my ($graph_parent) = ($graph_name =~ /^(.*)\./);
 		$template_params{PEERS} = [ map {
 			(my $name = basename($_->{"URLX"}, ".html")) =~ tr/_/ /;
-			{ NAME => $name, LINK => basename($_->{URLX}), }
-		} @{_get_params_services(dirname($path), $dbh, $graph_category, undef, $node_id)->{SERVICES}} ];
+			{ NAME => $name, LINK => $multigraph ? ("../" . $_->{URLX}) : $_->{URLX}, }
+		} @{_get_params_services(dirname($path), $dbh, $graph_category, $graph_parent, $node_id)->{SERVICES}} ];
 		$template_params{LARGESET} = 1;
 		$template_params{INFO_OPTION} = 'Graphs in same category';
 
@@ -344,6 +353,18 @@ while (new CGI::Fast) {
 		];
 
 		$template_params{CATEGORY} = ucfirst($graph_category);
+
+		if ($multigraph) {
+			# Emit node template for multigraphs
+			$template_filename = 'munin-nodeview.tmpl';
+
+			my @categories = (_get_params_services($path, $dbh, $graph_category, $graph_name, $node_id));
+			$template_params{CATEGORIES} = \@categories;
+			$template_params{NCATEGORIES} = scalar(@categories);
+			$template_params{NAME} = $template_params{PATH}[-1]{'pathname'};
+
+			goto RENDERING;
+		}
 
 		# Create the params
 		my %service_template_params;
@@ -462,6 +483,8 @@ sub _get_params_services {
 	while (my ($_s_id, $_s_name, $_service_title, $_subgraphs, $_url) = $sth->fetchrow_array) {
 		# Skip sub-graphs if not in multigraph
 		next if not $multigraph_parent and $_s_name =~ /\./;
+		# Skip unrelated graphs if in multigraph
+		next if $multigraph_parent and $_s_name !~ /^$multigraph_parent\./;
 
 		my %imgs = map { ("IMG$_" => script_name() . "/../munin-cgi-graph" . "/$_url-$_.png") } @times;
 		push @$services, {
