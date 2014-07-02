@@ -297,7 +297,7 @@ while (new CGI::Fast) {
 
 		my $categories = [];
 		while (my ($_category_name) = $sth_category->fetchrow_array) {
-			push @$categories, _get_params_services($path, $dbh, $_category_name, $id);
+			push @$categories, _get_params_services($path, $dbh, $_category_name, undef, $id);
 		}
 
 		$template_params{CATEGORIES} = $categories;
@@ -333,7 +333,7 @@ while (new CGI::Fast) {
 		$template_params{PEERS} = [ map {
 			(my $name = basename($_->{"URLX"}, ".html")) =~ tr/_/ /;
 			{ NAME => $name, LINK => basename($_->{URLX}), }
-		} @{_get_params_services(dirname($path), $dbh, $graph_category, $node_id)->{SERVICES}} ];
+		} @{_get_params_services(dirname($path), $dbh, $graph_category, undef, $node_id)->{SERVICES}} ];
 		$template_params{LARGESET} = 1;
 		$template_params{INFO_OPTION} = 'Graphs in same category';
 
@@ -426,7 +426,7 @@ sub _get_params_groups {
 
 		my $categories = [];
 		while (my ($_category_name) = $sth->fetchrow_array) {
-			my $category = _get_params_services($path, $dbh, $_category_name, $_n_id);
+			my $category = _get_params_services($path, $dbh, $_category_name, undef, $_n_id);
 			$category->{URLX} = "$_path/" . "#" . $_category_name;
 			$category->{URL} = $category->{URLX}; # For category in overview
 			push @$categories, $category;
@@ -446,9 +446,9 @@ sub _get_params_groups {
 }
 
 sub _get_params_services {
-	my ($base_path, $dbh, $category_name, $node_id) = @_;
+	my ($base_path, $dbh, $category_name, $multigraph_parent, $node_id) = @_;
 
-	my $sth = $dbh->prepare_cached("SELECT s.id, sa_t.value as service_title, u.path AS url
+	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, sa_t.value as service_title, u.path AS url
 		FROM service s
 		INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category' AND sa_c.value = ?
 		INNER JOIN service_attr sa_t ON sa_t.id = s.id AND sa_t.name = 'graph_title'
@@ -458,7 +458,10 @@ sub _get_params_services {
 	$sth->execute($category_name, $node_id);
 
 	my $services = [];
-	while (my ($_s_id, $_service_title, $_url) = $sth->fetchrow_array) {
+	while (my ($_s_id, $_s_name, $_service_title, $_url) = $sth->fetchrow_array) {
+		# Skip sub-graphs if not in multigraph
+		next if not $multigraph_parent and $_s_name =~ /\./;
+
 		my %imgs = map { ("IMG$_" => script_name() . "/../munin-cgi-graph" . "/$_url-$_.png") } @times;
 		push @$services, {
 			NAME => $_service_title,
