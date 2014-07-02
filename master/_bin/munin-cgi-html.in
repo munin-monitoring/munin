@@ -448,24 +448,25 @@ sub _get_params_groups {
 sub _get_params_services {
 	my ($base_path, $dbh, $category_name, $multigraph_parent, $node_id) = @_;
 
-	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, sa_t.value as service_title, u.path AS url
+	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, sa_t.value as service_title, sa_s.value as subgraphs, u.path AS url
 		FROM service s
 		INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category' AND sa_c.value = ?
 		INNER JOIN service_attr sa_t ON sa_t.id = s.id AND sa_t.name = 'graph_title'
+		LEFT JOIN service_attr sa_s ON sa_s.id = s.id AND sa_s.name = 'subgraphs'
 		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
 		WHERE s.node_id = ?
 		ORDER BY service_title ASC");
 	$sth->execute($category_name, $node_id);
 
 	my $services = [];
-	while (my ($_s_id, $_s_name, $_service_title, $_url) = $sth->fetchrow_array) {
+	while (my ($_s_id, $_s_name, $_service_title, $_subgraphs, $_url) = $sth->fetchrow_array) {
 		# Skip sub-graphs if not in multigraph
 		next if not $multigraph_parent and $_s_name =~ /\./;
 
 		my %imgs = map { ("IMG$_" => script_name() . "/../munin-cgi-graph" . "/$_url-$_.png") } @times;
 		push @$services, {
 			NAME => $_service_title,
-			URLX => substr($_url, 1 + length($base_path)) . ".html",
+			URLX => substr($_url, 1 + length($base_path)) . ($_subgraphs ? "/" : ".html"),
 			%imgs,
 		};
 	}
