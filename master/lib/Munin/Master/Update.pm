@@ -358,9 +358,14 @@ sub _dump_into_sql {
 		my $state = munin_read_storable($state_file) || {};
 
 		for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
+			(my $_service = $service) =~ tr!.!/!;
 			$sth_service->execute($node_id, $service, "$host:$service");
 			my $service_id = _get_last_insert_id($dbh);
-			$sth_url->execute($service_id, "service", _get_url_from_path("$host:$service"));
+			$sth_url->execute($service_id, "service", _get_url_from_path("$host:$_service"));
+
+			# Check for multigraphs
+			my $subgraphs = scalar grep /^$service\..+/, keys %{$self->{service_configs}{$host}{data_source}};
+			$sth_service_attr->execute($service_id, 'subgraphs', $subgraphs) if $subgraphs;
 
 			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
 				$sth_service_attr->execute($service_id, $attr->[0], $attr->[1]);
@@ -368,7 +373,7 @@ sub _dump_into_sql {
 			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
 				$sth_ds->execute($service_id, $data_source, "$host:$service.$data_source");
 				my $ds_id = _get_last_insert_id($dbh);
-				$sth_url->execute($ds_id, "ds", _get_url_from_path("$host:$service:$data_source"));
+				$sth_url->execute($ds_id, "ds", _get_url_from_path("$host:$_service:$data_source"));
 				for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
 					$sth_ds_attr->execute($ds_id, $attr, $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr});
 				}
