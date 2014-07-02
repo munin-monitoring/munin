@@ -133,7 +133,7 @@ while (new CGI::Fast) {
 
 		my $rootgroups = [];
 		while (my ($_name, $_path) = $sth->fetchrow_array) {
-			push @$rootgroups, { NAME => $_name, URL => url_absolutize($_path, 1) };
+			push @$rootgroups, { NAME => $_name, R_PATH => script_name(), URL => $_path };
 		}
 		$template_params{ROOTGROUPS} = $rootgroups;
 	}
@@ -145,8 +145,9 @@ while (new CGI::Fast) {
 
 		my $globalcats = [];
 		while (my ($_category) = $sth->fetchrow_array) {
-			my %urls = map { ("URL$_" => url_absolutize(lc("$_category-$_.html"), 1)) } @times;
+			my %urls = map { ("URL$_" => "$_category-$_.html") } @times;
 			push @$globalcats, {
+				R_PATH => script_name(),
 				NAME => $_category,
 				%urls,
 			};
