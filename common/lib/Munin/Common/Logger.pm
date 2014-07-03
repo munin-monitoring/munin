@@ -15,6 +15,10 @@ our @EXPORT =
 use Log::Dispatch;
 use POSIX;
 
+sub _program_name {
+    my @path = split( '/', $0 );
+    return $path[-1];
+}
 
 sub _timestamp {
     return strftime( "%Y-%m-%d %H:%M:%S", localtime );
@@ -67,7 +71,8 @@ $log->add(
 use Log::Dispatch::Syslog;
 $log->add(
     Log::Dispatch::Syslog->new(
-        name => 'syslog',
+        name      => 'syslog',
+        ident     => _program_name,
         min_level => 'debug',
         callbacks => $syslog_format,
     )
