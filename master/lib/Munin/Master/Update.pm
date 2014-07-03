@@ -337,7 +337,16 @@ sub _dump_into_sql {
 		}
 
 		for my $service (keys %{$self->{service_configs}{$host}{data_source}}) {
+			# Static HTML and graphs (both static and CGI) use forward slashes ('/')
+			# as the separator for urls of multigraph graph nodes, like:
+			#
+			#    http://host/munin/DOMAIN/HOST/diskstats_iops/sda.html
+			#
+			# However the internal representation uses dots ('.'), like: diskstats_iops.sda
+			# Here we map the names of the service or graph name to the correct url,
+			# to make it easier for CGI html to work with.
 			(my $_service = $service) =~ tr!.!/!;
+
 			$sth_service->execute($node_id, $service, "$host:$service");
 			my $service_id = _get_last_insert_id($dbh);
 			$sth_url->execute($service_id, "service", _get_url_from_path("$host:$_service"));
