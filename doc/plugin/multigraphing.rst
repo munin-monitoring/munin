@@ -77,6 +77,7 @@ The setup is done in the usual way, with graph_title and other configuration ite
 Then for each of the interfaces the plugin emits these configuration items (interface number is indexed with $if in this, and should be replaced with name or number by the plugin itself, likewise for the other settings such as $alias, $speed and $warn. ${graph_period} is substituted by Munin. 
 
 ::
+
    multigraph if_bytes.if_$if
 
    graph_title Interface $alias traffic
