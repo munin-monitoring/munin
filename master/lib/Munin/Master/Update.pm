@@ -356,6 +356,9 @@ sub _dump_into_sql {
 			$sth_service_attr->execute($service_id, 'subgraphs', $subgraphs) if $subgraphs;
 
 			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
+				# Category names should not be case sensitive. Store them all in lowercase.
+				$attr->[1] = lc($attr->[1]) if $attr->[0] eq 'graph_category';
+
 				$sth_service_attr->execute($service_id, $attr->[0], $attr->[1]);
 			}
 			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
