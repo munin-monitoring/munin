@@ -197,7 +197,7 @@ while (new CGI::Fast) {
 		$template_filename = "munin-problemview.tmpl";
 
 		# TODO - Create the model (problem)
-	} elsif ($path =~ /^([^\/])+-(day|month|week|year)\.html$/) {
+	} elsif ($path =~ /^([^\/]+)-(day|month|week|year)\.html$/) {
 		# That's a category URL
 		$template_filename = 'munin-categoryview.tmpl';
 
@@ -205,11 +205,27 @@ while (new CGI::Fast) {
 		my $time = $2;
 
 		$template_params{PATH} = [
-			{ } , # XXX - Template says first args has to be empty
+			# first args should have path and r_path for backlink to overview
+			{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
 			{ "pathname" => "Category", },
+			{ "pathname" => ucfirst($category), },
 		];
 
-		# TODO - Create the model (category)
+		$template_params{CATEGORY} = $category;
+
+		# TODO Support graphs without explicit categories ('other')
+		my $sth_cat = $dbh->prepare_cached(
+			"SELECT DISTINCT s.name FROM service s
+			INNER JOIN service_attr sa ON s.id = sa.id AND sa.name = 'graph_category'
+			WHERE sa.value = ?
+			ORDER BY s.name");
+		$sth_cat->execute($category);
+
+		my @services;
+		while (my ($_service) = $sth_cat->fetchrow_array) {
+			push @services, _get_params_services_by_name($dbh, $_service, $time);
+		}
+		$template_params{SERVICES} = \@services;
 	}
 
 	# Handle normal pages only if not aleady handled
@@ -487,6 +503,46 @@ sub _get_params_groups {
 	}
 
 	return $groups;
+}
+
+# This is only called for category views, which start with the root URL,
+# so no need to handle basepath or multigraph parents for relative URLs
+sub _get_params_services_by_name {
+	my ($dbh, $service_name, $time) = @_;
+
+	# TODO warning/critical state (use SUM sub-queries?)
+	# XXX this may be slow
+	my $sth = $dbh->prepare_cached(
+		"SELECT s.id, sa_t.value as service_title, sa_s.value as subgraphs, u.path AS url,
+		n.name AS node_name, u_n.path AS node_url
+		FROM service s
+		INNER JOIN service_attr sa_t ON sa_t.id = s.id AND sa_t.name = 'graph_title'
+		LEFT JOIN service_attr sa_s ON sa_s.id = s.id AND sa_s.name = 'subgraphs'
+		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
+		INNER JOIN node n ON n.id = s.node_id
+		INNER JOIN url u_n ON u_n.id = s.node_id AND u_n.type = 'node'
+		WHERE s.name = ?
+		ORDER BY node_name ASC");
+	$sth->execute($service_name);
+
+	my $_url_var = "CIMG" . uc($time);
+	my $_time_var = "TIME" . uc($time);
+	my @graphs;
+	while (my ($_s_id, $_service_title, $_subgraphs, $_url, $_node_name, $_node_url) = $sth->fetchrow_array) {
+		push @graphs, {
+			HOST_URL => "$_node_url/",
+			NODENAME => $_node_name,
+			LABEL => $_service_title,
+			URLX => $_url . ($_subgraphs ? "/" : ".html"),
+			"CIMG$time" => script_name() . "/../munin-cgi-graph" . "/$_url-$time.png",
+			"TIME$time" => 1,
+		};
+	}
+
+	return {
+		NAME => $service_name,
+		GRAPHS => \@graphs,
+	};
 }
 
 sub _get_params_services {
