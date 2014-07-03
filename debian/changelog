@@ -1,4 +1,4 @@
-munin (2.1.7-1) UNRELEASED; urgency=medium
+munin (2.1.8-1) UNRELEASED; urgency=medium
 
   [ Holger Levsen ]
   * Add "Testsuite: autopkgtest" to source entry in debian/control, so
@@ -17,7 +17,10 @@ munin (2.1.7-1) UNRELEASED; urgency=medium
   * debian/control: Add suggests to libnet-dns-perl to munin-plugins-core.
     (Closes: #705260)
 
- -- Stig Sandbeck Mathisen <ssm@debian.org>  Fri, 09 May 2014 09:20:58 +0200
+  [ Stig Sandbeck Mathisen ]
+  * Imported upstream release 2.1.8
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Thu, 03 Jul 2014 19:48:22 +0200
 
 munin (2.1.6.1-1) experimental; urgency=medium
 
