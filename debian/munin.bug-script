@@ -1,0 +1,5 @@
+#!/bin/sh
+
+exec >&3
+
+/usr/share/munin/munin-support-info
