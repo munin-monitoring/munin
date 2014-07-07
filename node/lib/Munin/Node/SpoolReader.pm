@@ -100,13 +100,20 @@ sub list
 
 sub _cat_multigraph_file
 {
-    my ($self, $service, $timestamp) = @_;
+    my ($self, $service, $timestamp, $max_samples_per_service) = @_;
+
+    # Default $max_samples_per_service is 5, in order to have a 5x time
+    # increase in catchup.  This enables to not overwhelm the munin-update when
+    # there is big backlog to handle. Use "0" to send an infinite number of
+    # samples
+    $max_samples_per_service = 5 if (! defined $max_samples_per_service);
 
     my $data = "";
 
     rewinddir $self->{spooldirhandle}
         or die "Unable to reset the spool directory handle: $!";
 
+    my $nb_samples_sent = 0;
     foreach my $file (readdir $self->{spooldirhandle}) {
         next unless $file =~ m/^munin-daemon\.$service\.(\d+)\.(\d+)$/;
         next unless $1+$2 >= $timestamp;
@@ -147,6 +154,13 @@ sub _cat_multigraph_file
 
             $data .= $_ . "\n";
         }
+
+	# We just emitted something
+	$sample_send ++;
+	if ($max_samples && $sample_send > $max_samples) {
+		logger("Already sent $sample_send for '$service', ending.") if $config->{DEBUG};
+		last;
+	}
     }
 
     return $data;
