@@ -468,6 +468,7 @@ sub _get_params_groups {
 			URL => "$_path/",
 			GROUPS => _get_params_groups($path, $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $_g_id),
 			COMPARE => 1,
+			R_PATH => script_name(),
 			PATH => [
 				{ PATH => '..', PATHNAME => undef, },
 				{ PATH => '', PATHNAME => $_name, },
