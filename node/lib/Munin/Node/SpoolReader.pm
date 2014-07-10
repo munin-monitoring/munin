@@ -12,7 +12,7 @@ use Fcntl qw(:DEFAULT :flock);
 
 use Munin::Common::Defaults;
 use Munin::Common::SyncDictFile;
-use Munin::Node::Logger;
+use Munin::Common::Logger;
 
 use Munin::Node::Config;
 my $config = Munin::Node::Config->instance;
@@ -80,7 +80,7 @@ sub fetch
     my $return_str = '';
 
     my @plugins = $self->_get_spooled_plugins();
-    logger("timestamp:$timestamp, plugins:@plugins") if $config->{DEBUG};
+    DEBUG("timestamp:$timestamp, plugins:@plugins") if $config->{DEBUG};
     foreach my $plugin (@plugins) {
         $return_str .= $self->_cat_multigraph_file($plugin, $timestamp);
     }
@@ -120,12 +120,12 @@ sub _cat_multigraph_file
         # wind through to the start of the first results after $timestamp
         while (<$fh>) {
             ($epoch) = m/^timestamp (\d+)/ or next;
-            logger("Timestamp: $epoch") if $config->{DEBUG};
+            DEBUG("Timestamp: $epoch") if $config->{DEBUG};
             last if ($epoch > $timestamp);
         }
 
         if (eof $fh) {
-            logger("Epoch $timestamp not found in spool file for '$service'")
+            DEBUG("Epoch $timestamp not found in spool file for '$service'")
                 if $config->{DEBUG};
             next;
         }

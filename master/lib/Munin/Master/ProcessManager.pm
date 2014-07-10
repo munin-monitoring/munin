@@ -14,9 +14,8 @@ use Time::HiRes;
 
 use Munin::Common::Timeout;
 use Munin::Master::Config;
-use Munin::Master::Logger;
 
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
 
 my $E_DIED      = 18;
 my $E_TIMED_OUT = 19;

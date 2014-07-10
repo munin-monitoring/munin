@@ -11,13 +11,6 @@ use Munin::Master::Config;
 my $config = Munin::Master::Config->instance()->{config};
 $config->{rundir} = tempdir(CLEANUP => 1);
 
-### Uncomment to see log messages
-#
-#use Munin::Master::Logger;
-#logger_debug();
-#$config->{debug} = 1;
-
-
 #
 # Define some test workers 
 #

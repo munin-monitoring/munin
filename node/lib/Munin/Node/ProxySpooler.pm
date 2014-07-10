@@ -12,7 +12,6 @@ use Time::HiRes qw( ualarm gettimeofday );
 use Carp;
 
 use Munin::Common::Defaults;
-use Munin::Node::Logger;
 use Munin::Node::SpoolWriter;
 
 use Munin::Node::Config;
@@ -55,7 +54,7 @@ sub run
     STDERR->autoflush(1);
     # FIXME: reopen logfile on SIGHUP
 
-    logger('Spooler starting up');
+    INFO('Spooler starting up');
 
     # Indiscriminately kill every process in the group with SIGTERM when asked
     # to quit.  this is just the list of signals the Perl Cookbook suggests
@@ -66,11 +65,11 @@ sub run
     # !!!NOTE!!! this should always be the same list as the one down there in
     # _launch_single_poller()
     $SIG{INT} = $SIG{TERM} = $SIG{HUP} = sub {
-        logger("Spooler caught SIG$_[0].  Shutting down");
+        NOTICE("Spooler caught SIG$_[0].  Shutting down");
         kill -15 => $$;
 
         if ($self->{have_pid_file}) {
-            logger('Removing pidfile') if $config->{DEBUG};
+            DEBUG('Removing pidfile') if $config->{DEBUG};
             unlink_pid_file($self->{pid_file});
         }
 
@@ -79,21 +78,21 @@ sub run
 
     $self->_launch_pollers();
 
-    logger('Spooler going to sleep');
+    INFO('Spooler going to sleep');
 
     # Reap any dead pollers
     while (my $deceased = wait) {
         if ($deceased < 0) {
             last if $!{ECHILD};  # all the children are dead!
 
-            logger("wait() error: $!");
+            ERROR("wait() error: $!");
             next;
         }
 
         $self->_restart_poller($deceased);
     }
 
-    logger('Spooler shutting down');
+    NOTICE('Spooler shutting down');
     exit 0;
 }
 
@@ -114,19 +113,19 @@ sub _get_intervals
 
     foreach my $service (@services) {
         if (my $interval = $config->{sconf}{$service}{update_rate}) {
-            logger("Setting interval for service '$service' from config")
+            DEBUG("Setting interval for service '$service' from config")
                 if $config->{DEBUG};
             $intervals{$service} = $interval;
             next;
         }
         else {
-            logger("Fetching interval for service '$service' from node")
+            DEBUG("Fetching interval for service '$service' from node")
                 if $config->{DEBUG};
             $intervals{$service} = $self->_service_interval(
                 $self->_talk_to_node("config $service")
             );
         }
-        logger("Interval is $intervals{$service} seconds") if $config->{DEBUG};
+        DEBUG("Interval is $intervals{$service} seconds") if $config->{DEBUG};
     }
 
     $self->_close_node_connection;
@@ -150,15 +149,15 @@ sub _get_service_list
     my @nodes = $self->_get_node_list() or die "No nodes\n";
 
     foreach my $node (@nodes) {
-        logger("Fetching services for node $node") if $config->{DEBUG};
+        DEBUG("Fetching services for node $node") if $config->{DEBUG};
         my $service_list = $self->_talk_to_node("list $node");
 
         if ($service_list) {
-            logger("Got services $service_list") if $config->{DEBUG};
+            DEBUG("Got services $service_list") if $config->{DEBUG};
             push @services, split / /, $service_list;
         }
         else {
-            logger("No services for $node") if $config->{DEBUG};
+            DEBUG("No services for $node") if $config->{DEBUG};
         }
     }
 
@@ -193,11 +192,11 @@ sub _launch_single_poller
 {
     my ($self, $service, $interval) = @_;
 
-    logger("Launching poller for '$service' with an interval of ${interval}s")
+    DEBUG("Launching poller for '$service' with an interval of ${interval}s")
         if $config->{DEBUG};
 
     if (my $poller_pid = safe_fork()) {
-        logger("Poller for '$service' running with pid $poller_pid")
+        DEBUG("Poller for '$service' running with pid $poller_pid")
             if $config->{DEBUG};
 
         $self->{pollers}{$poller_pid} = $service;
@@ -214,10 +213,10 @@ sub _launch_single_poller
 
     # Fetch data
     _poller_loop($interval, sub {
-        logger(sprintf "%s: %d %d", $service, gettimeofday);  # FIXME: for testing timing accuracy
+        INFO(sprintf "%s: %d %d", $service, gettimeofday);  # FIXME: for testing timing accuracy
 
         my @result = $self->_fetch_service($service);
-        logger("Read " . scalar @result . " lines from $service")
+        DEBUG("Read " . scalar @result . " lines from $service")
             if $config->{DEBUG};
 
         $self->{spool}->write(time, $service, \@result);
@@ -280,16 +279,16 @@ sub _restart_poller
 
     my $exit   = ($? >> 8);
     my $signal = ($? & 127);
-    logger("Poller $pid ($service) exited with $exit/$signal");
+    NOTICE("Poller $pid ($service) exited with $exit/$signal");
 
     # avoid restarting the poller if it was last restarted too recently.
     if (time - ($self->{poller_restarted}{$service} || 0) < 10) {
-        logger("Poller for '$service' last restarted at $self->{poller_restarted}{$service}.  Giving up.");
+        ERROR("Poller for '$service' last restarted at $self->{poller_restarted}{$service}.  Giving up.");
         return;
     }
 
     # Respawn the poller
-    logger("Respawning poller for '$service'");
+    INFO("Respawning poller for '$service'");
     $self->_launch_single_poller($service, $self->{intervals}{$service});
     $self->{poller_restarted}{$service} = time;
 
@@ -303,7 +302,7 @@ sub _open_node_connection
 {
     my ($self) = @_;
 
-    logger("Opening connection to $self->{host}:$self->{port}")
+    DEBUG("Opening connection to $self->{host}:$self->{port}")
         if $config->{DEBUG};
 
     $self->{socket} = IO::Socket::INET->new(
@@ -352,7 +351,7 @@ sub _write_line
 {
     my ($self, $command) = @_;
 
-    logger("DEBUG: > $command") if $config->{DEBUG};
+    DEBUG("DEBUG: > $command") if $config->{DEBUG};
     $self->{socket}->print($command, "\n") or die "Write error to socket: $!\n";
 
     return;
@@ -367,7 +366,7 @@ sub _read_line
     my $line = $self->{socket}->getline;
     defined($line) or die "Read error from socket: $!\n";
     chomp $line;
-    logger("DEBUG: < $line") if $config->{DEBUG};
+    DEBUG("DEBUG: < $line") if $config->{DEBUG};
 
     return $line;
 }

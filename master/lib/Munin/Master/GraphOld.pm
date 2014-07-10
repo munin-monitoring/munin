@@ -59,11 +59,10 @@ if ($RRDs::VERSION >= 1.3) {
     Encode::Guess->import;
 }
 
-use Munin::Master::Logger;
 use Munin::Master::Utils;
 use Munin::Common::Defaults;
 
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
 
 # RRDtool 1.2 requires \\: in comments
 my $RRDkludge = $RRDs::VERSION < 1.2 ? '' : '\\';
@@ -426,9 +425,6 @@ sub graph_main {
 
                 "format=s"      => \$fileext,
 	    );
-
-    # XXX [DEBUG]
-    logger_debug() if $debug;
 
     my $graph_time = Time::HiRes::time;
 
@@ -1656,7 +1652,8 @@ sub handle_trends {
 
     # future begins at this horizontal ruler
     if ($enddate > $lastupdate) {
-        push(@complete, "VRULE:$lastupdate#999999");
+	my $extra = $RRDs::VERSION >= 1.3 ? ":-:dashes=2,5" : "";
+        push(@complete, "VRULE:$lastupdate#999999$extra");
     }
 
     # create trends/predictions

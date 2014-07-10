@@ -8,7 +8,7 @@ use warnings;
 use strict;
 
 use Carp;
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
 
 
 sub new {

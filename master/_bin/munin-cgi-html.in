@@ -34,8 +34,7 @@ use HTML::Template::Pro;
 
 use Munin::Master::Utils;
 
-use Munin::Master::Logger;
-use Log::Log4perl qw( :easy );
+use Munin::Common::Logger;
 
 use File::Basename;
 use Data::Dumper;

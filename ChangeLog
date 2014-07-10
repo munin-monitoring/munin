@@ -1,5 +1,160 @@
 -*- text -*-
 
+munin-2.1.8, 2014-06-27
+
+-------
+Summary
+-------
+
+This is mostly a Pull-Request release, mostly aimed at recent incarnations of
+MySQL-like systems.
+
+------------------
+Detailed Changelog
+------------------
+
+Andre Klärner (1):
+      node: support --sconfdir
+
+Brian De Wolf (1):
+      Improve kstat compatibility in sunos if_ plugins
+
+Christian Loos (5):
+      ignore 'INDIVIDUAL BUFFER POOL INFO' section in MySQL 5.5
+      fix parsing file io for MySQL 5.5
+      fix parsing insert_buffer_and_adaptive_hash_index for MySQL 5.5
+      fix Use of uninitialized value in printf
+      add the Accept-Encoding header to the wget call
+
+Daniel Black (40):
+      Break mysql innodb data on full sections
+      Fix spelling in mysql plugin for warning
+      Fix name of slave variables and initialize other variables in case slave isnt active
+      Capture a bit more information for mysql-5.5+ on innodb status
+      Graph the maximum memory mysql can use
+      add icp - index condition pushdown
+      Multi Range Read optimizations
+      graph hander_read
+      transactions handler + execution (triggers & events)
+      fix execution, add handler_write
+      graph for mysql rows
+      add subquery_cache status to query cache graph
+      fix handler_write
+      add handler_tmp
+      Performance schema losses
+      mysql plugin - separate out table and file graphs
+      Mariadb-10 show innodb status compatiblity
+      DERIVE not GAUGE for mrr and icp graphs
+      innodb_open_files as AREA on graph tables
+      handler_* and execution graphs are all DERIVE
+      wsrep_thread_count considerations for max_memory
+      Capture per second averages from show engine innodb status
+      parse mysql show engine status background thread
+      ib_srv_main_* to have regex that ends in \n
+      more semaphore data on RW-{shared/excl} spins
+      capture and graph more of INSERT BUFFER AND ADAPTIVE HASH INDEX
+      +innodb_bpool_internal_breakdown
+      graph innodb old pages on bpool graph
+      buffer poool - made young / not young added to buffer pool activity graph
+      individual buffer pool data parsing
+      fix innodb_bpool_internal_breakdown to base 1024 and a lower limit of 0
+      parse innodb row operations
+      spelling fix databse->database
+      remove calling $section_map{$sec}->(); twice
+      Break mysql innodb data on full sections
+      Fix spelling in mysql plugin for warning
+      Fix name of slave variables and initialize other variables in case slave isnt active
+      Capture a bit more information for mysql-5.5+ on innodb status
+      Mariadb-10 show innodb status compatiblity
+      remove calling $section_map{$sec}->(); twice
+
+Servilio Afre Puentes (1):
+      Fix formatting of literal block
+
+Stig Sandbeck Mathisen (2):
+      Add a script to output useful "support information"
+      Handle big numbers better in sprintf
+
+Tom Hendrikx (2):
+      Add a lower limit of 0 to postgres database size
+      Make the postgres_size_ y-axis behaviour configurable.
+
+munin-2.1.7, 2014-05-05
+
+-------
+Summary
+-------
+
+The JSON release. Note that this is the first release with a working JSON API.
+It is still of alpha quality, since: 
+- The API might change a little, given the feedback
+- Only the Metadata is accessible, the RRD data will follow. So will the limits
+- New code implies new bugs :)
+- Perl 5.10 is required for the JSON API, as it is Mojo-based.
+
+It also contains a brand new Logging system, courtesy of ssm.
+
+------------------
+Detailed Changelog
+------------------
+
+Cyril Bouthors (1):
+      plugins/node.d/apache.in: graph Apache threads,
+
+Kjetil Torgrim Homme (1):
+      master/limits: global default for always_send
+
+Klas Meder Boqvist (1):
+      p/diskstats: enable warn levels in conf
+
+Matthias Schmitz (3):
+      Fix missing "fi" in http_loadtime
+      Don't use $wget_bin anymore
+      Using only one word as user-agent.
+
+Steve Schnepp (22):
+      plugins: fix typo (Muning::Plugin::HTTP)
+      master/graph: adding a dashed line for last update
+      master/graph: the dashes are not in RRD 1.2
+      json: first experiments
+      log: info is default to stdout
+      json: return the first json with nodes
+      logging: add explicit names to use old version
+      log: enable debug level by default
+      json: make it a proper Perl script
+      json: factorize DB handling
+      dev_scripts: add ability to run crontrib scripts
+      log: typo
+      json: retrieve the attributes
+      json: use direct attributes
+      json: adding the id selector to the url
+      json: adding group handling
+      json: adding ds handling
+      json: adding basic filter abilities
+      master/sql: add the DS states in the SQL db
+      json: add state support
+      json: implement the state api
+      json: adding comment about the special function
+
+Stig Sandbeck Mathisen (13):
+      Improve "make test-*", add verbose and test_files
+      Add new class Munin::Common::Logger
+      Replace Log4perl with Munin::Common::Logger
+      Replace logging in Munin::Common::TLS* with Munin::Common::Logger
+      Replace Munin::Master::Logger with Munin::Common::Logger
+      Replace Munin::Node::Logger with Munin::Common::Logger
+      Clean up tests
+      Update Build.PL and documentation
+      Munin::Common::Logger: Update documentation
+      Log errors to "screen", and debug to "syslog"
+      Remove use of removed Munin::{Master,Node}::Logger
+      use "eq" when comparing with undef
+      Mention graph_period in the plugin reference
+
+leeclemens (1):
+      Graph system peer's stratum
+
+
 munin-2.1.6.1, 2014-03-28
 
 -------
@@ -676,6 +831,25 @@ leeclemens (1):
 
 tsaavik (1):
       dynazoom: added logo and backlink
+
+
+munin-2.0.21, 2014-04-22
+
+-------
+Summary
+-------
+
+Bugfix release. It fixes the regression on nested groups.
+The offending commit is only reverted, so the bug is here again.
+
+Reopens: #1224
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (1):
+      Revert "Generate correct RRD filenames for nested graphs. Fixes #1224"
 
 
 munin-2.0.20, 2014-03-28

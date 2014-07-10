@@ -288,11 +288,10 @@ $graphs{connections} = {
 
 #---------------------------------------------------------------------
 
-$graphs{files_tables} = {
+$graphs{files} = {
     config => {
 	global_attrs => {
-	    title  => 'Files and tables',
-	    vlabel => 'Tables',
+	    title  => 'Files',
 	},
 	data_source_attrs => {
 	    type  => 'GAUGE',
@@ -300,14 +299,65 @@ $graphs{files_tables} = {
 	},
     },
     data_sources => [
-	{name => 'table_open_cache', label  => 'Table cache',
+	{name => 'open_files_limit', label  => 'File Limit',
 				     draw   => 'AREA',
 				     colour => 'cdcfc4'},
-	{name => 'Open_files',       label => 'Open files'},
-	{name => 'Open_tables',      label => 'Open tables'},
-	{name => 'Opened_tables',    label => 'Opened tables',
+	{name => 'Open_files',       label => 'Open files',
 				     type  => 'DERIVE',
-	                             min   => 0},
+	           min   => 0},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{tables} = {
+    config => {
+	global_attrs => {
+	    title  => 'Tables',
+	},
+	data_source_attrs => {
+	    type  => 'GAUGE',
+	    draw  => 'LINE1',
+	},
+    },
+    data_sources => [
+	{name => 'table_open_cache',   label  => 'Table cache',
+				     draw   => 'AREA',
+				     colour => 'cdcfc4'},
+	{name => 'innodb_open_files',  label => 'Innodb Table Cache Limit',
+				     draw   => 'AREA',
+				     colour => 'ffd660'},
+	{name => 'Open_tables',        label => 'Open tables'},
+	{name => 'Slave_open_temp_tables',  label => 'Open Slave Temp Tables'},
+	{name => 'Opened_tables',      label => 'Opened tables',
+				     type  => 'DERIVE',
+	           min   => 0},
+	{name => 'Opened_views',       label => 'Opened Views',
+				     type  => 'DERIVE',
+	           min   => 0},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{table_definitions} = {
+    config => {
+	global_attrs => {
+	    title  => 'Tables Definitions',
+	},
+	data_source_attrs => {
+	    type  => 'GAUGE',
+	    draw  => 'LINE1',
+	},
+    },
+    data_sources => [
+	{name => 'table_definition_cache',  label => 'Cache Limit',
+				     draw   => 'AREA',
+				     colour => 'cdcfc4'},
+	{name => 'Open_table_definitions',  label => 'Open'},
+	{name => 'Opened_table_definitions',  label => 'Opened',
+				     type  => 'DERIVE',
+	           min   => 0},
     ],
 };
 
@@ -334,6 +384,7 @@ $graphs{innodb_bpool} = {
 				      colour => 'cdcfc4'},
 	{name => 'ib_bpool_free',     label => 'Free pages'},
 	{name => 'ib_bpool_modpages', label => 'Modified pages'},
+	{name => 'ib_bpool_oldpages', label => 'Old pages'},
     ],
 };
 
@@ -343,7 +394,7 @@ $graphs{innodb_bpool_act} = {
     config => {
 	global_attrs => {
 	    title  => 'InnoDB Buffer Pool Activity',
-	    vlabel => 'Activity per ${graph_period}',
+	    vlabel => 'Pages per ${graph_period}',
 	    total  => 'Total',
 	},
 	data_source_attrs => {
@@ -351,9 +402,41 @@ $graphs{innodb_bpool_act} = {
 	},
     },
     data_sources => [
-	{name => 'ib_bpool_read',    label => 'Pages read'},
-	{name => 'ib_bpool_created', label => 'Pages created'},
-	{name => 'ib_bpool_written', label => 'Pages written'},
+	{name => 'ib_bpool_read',           label => 'Read'},
+	{name => 'ib_bpool_created',        label => 'Created'},
+	{name => 'ib_bpool_written',        label => 'Written'},
+	{name => 'ib_bpool_made_young',     label => 'Made young'},
+	{name => 'ib_bpool_made_not_young', label => 'Made not young'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{innodb_bpool_internal_breakdown} = {
+    config => {
+        global_attrs => {
+            title  => 'InnoDB Buffer Pool Internal breakdown',
+            args   => '--base 1024 --lower-limit 0',
+            vlabel => 'bytes',
+        },
+        data_source_attrs => {
+            min  => '0',
+            draw => 'AREASTACK',
+            type => 'GAUGE',
+        },
+    },
+    data_sources => [
+        {name => 'ib_bpool_internal_adaptive_hash_size_const',    label => 'Adaptive Hash const'},
+        {name => 'ib_bpool_internal_adaptive_hash_size_var',      label => 'Adaptive Hash var'},
+        {name => 'ib_bpool_internal_page_hash_size_total',        label => 'Page Hash'},
+        {name => 'ib_bpool_internal_dictionary_cache_size_const', label => 'Dictionary const'},
+        {name => 'ib_bpool_internal_dictionary_cache_size_var',   label => 'Dictionary var'},
+        {name => 'ib_bpool_internal_file_system_size_const',      label => 'Filesystem const'},
+        {name => 'ib_bpool_internal_file_system_size_var',        label => 'Filesystem var'},
+        {name => 'ib_bpool_internal_lock_system_size_const',      label => 'Lock system const'},
+        {name => 'ib_bpool_internal_lock_system_size_var',        label => 'Lock system var'},
+        {name => 'ib_bpool_internal_recovery_system_size_const',  label => 'Recovery system const'},
+        {name => 'ib_bpool_internal_recovery_system_size_var',    label => 'Recovery system var'},
     ],
 };
 
@@ -370,9 +453,12 @@ $graphs{innodb_insert_buf} = {
 	},
     },
     data_sources => [
-	{name => 'ib_ibuf_inserts',    label => 'Inserts'},
-	{name => 'ib_ibuf_merged_rec', label => 'Merged Records'},
-	{name => 'ib_ibuf_merges',     label => 'Merges'},
+      {name => 'ib_ibuf_inserts',    label => 'Merge Inserts'},
+      {name => 'ib_ibuf_delete',     label => 'Merge Deletes'},
+      {name => 'ib_ibuf_merged_rec', label => 'Merged Records'},
+      {name => 'ib_ibuf_merges',     label => 'Merges'},
+      {name => 'ib_ibuf_discard_inserts', label => 'Discard Inserts'},
+      {name => 'ib_ibuf_discard_delete',  label => 'Discard Deletes'},
     ],
 };
 
@@ -469,13 +555,19 @@ $graphs{innodb_semaphores} = {
 	    vlabel => 'Semaphores per ${graph_period}',
 	},
 	data_source_attrs => {
-	    draw  => 'LINE1',
+	    draw  => 'AREASTACK',
 	},
     },
     data_sources => [
 	{name => 'ib_spin_rounds', label => 'Spin Rounds'},
 	{name => 'ib_spin_waits',  label => 'Spin Waits'},
 	{name => 'ib_os_waits',    label => 'OS Waits'},
+  {name => 'ib_rw_shared_rounds', label => 'RW/S Rounds'},
+  {name => 'ib_rw_shared_waits',  label => 'RW/S Waits'},
+  {name => 'ib_rw_shared_os_waits',    label => 'RW/S OS Waits'},
+  {name => 'ib_rw_excl_rounds', label => 'RW/X Rounds'},
+  {name => 'ib_rw_excl_waits',  label => 'RW/X Waits'},
+  {name => 'ib_rw_excl_os_waits',    label => 'RW/X OS Waits'},
     ],
 };
 
@@ -493,6 +585,108 @@ $graphs{innodb_tnx} = {
     },
     data_sources => [
 	{name => 'ib_tnx', label => 'Transactions created'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{innodb_srv_master_thread} = {
+    config => {
+	global_attrs => {
+	    title  => 'InnoDB Master Thread',
+	},
+	data_source_attrs => {
+	    type  => 'DERIVE',
+	    draw  => 'AREASTACK',
+	},
+    },
+    data_sources => [
+	{name => 'ib_srv_main_flush_loops', label => 'Flush Loop'},
+	{name => 'ib_srv_main_background_loops', label => 'Background Loop'},
+	{name => 'ib_srv_main_flushs_writes', label => 'Flushes/Writes', draw  => 'LINE1'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{innodb_queries} = {
+    config => {
+       global_attrs => {
+           title  => 'InnoDB Engine Queries and Transactions',
+           args   => '--lower-limit 0',
+       },
+       data_source_attrs => {
+           type  => 'GAUGE',
+       },
+    },
+    data_sources => [
+       {name => 'ib_innodb_queries', label => 'Active'},
+       {name => 'ib_innodb_transactions_active', label => 'Transactions'},
+       {name => 'ib_innodb_query_queue_len', label => 'Queued'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{innodb_read_views} = {
+    config => {
+       global_attrs => {
+           title  => 'InnoDB Read Views',
+           args   => '--lower-limit 0',
+       },
+       data_source_attrs => {
+           type  => 'GAUGE',
+       },
+    },
+    data_sources => [
+       {name => 'ib_innodb_read_views', label => 'Views'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{innodb_descriptors} = {
+    config => {
+       global_attrs => {
+           title  => 'InnoDB Descriptors',
+           args   => '--lower-limit 0',
+       },
+       data_source_attrs => {
+           type  => 'GAUGE',
+       },
+    },
+    data_sources => [
+       {name => 'ib_innodb_descriptors', label => 'Descriptors'},
+       {name => 'ib_innodb_descriptors_max', label => 'Max', draw => 'AREA', colour => 'ffd660'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{performance} = {
+    config => {
+	global_attrs => {
+	    title  => 'Performance Schema Losses',
+	},
+	data_source_attrs => {
+	    draw  => 'LINE1',
+	},
+    },
+    data_sources => [
+  {name => 'Performance_schema_cond_classes_lost',     label => 'Condition classes'},
+  {name => 'Performance_schema_cond_instances_lost',   label => 'Condition instances'},
+  {name => 'Performance_schema_file_classes_lost',     label => 'File classes'},
+  {name => 'Performance_schema_file_handles_lost',     label => 'File handles'},
+  {name => 'Performance_schema_file_instances_lost',   label => 'File instances'},
+  {name => 'Performance_schema_locker_lost',           label => 'Locker'},
+  {name => 'Performance_schema_mutex_classes_lost',    label => 'Mutex classes'},
+  {name => 'Performance_schema_mutex_instances_lost',  label => 'Mutex instances'},
+  {name => 'Performance_schema_rwlock_classes_lost',   label => 'Read/Write lock classes'},
+  {name => 'Performance_schema_rwlock_instances_lost', label => 'Read/Write lock instances'},
+  {name => 'Performance_schema_table_handles_lost',    label => 'Table handles'},
+  {name => 'Performance_schema_table_instances_lost',  label => 'Table instances'},
+  {name => 'Performance_schema_thread_classes_lost',   label => 'Thread classes'},
+  {name => 'Performance_schema_thread_instances_lost', label => 'Thread instances'},
     ],
 };
 
@@ -552,6 +746,8 @@ $graphs{qcache} = {
     data_sources => [
 	{name => 'Qcache_queries_in_cache', label => 'Queries in cache'},
 	{name => 'Qcache_hits',             label => 'Cache hits'},
+	{name => 'Subquery_cache_hit',      label => 'Subquery Cache hits'},
+	{name => 'Subquery_cache_miss',     label => 'Subquery Cache misses'},
 	{name => 'Qcache_inserts',          label => 'Inserts'},
 	{name => 'Qcache_not_cached',       label => 'Not cached'},
 	{name => 'Qcache_lowmem_prunes',    label => 'Low-memory prunes'},
@@ -577,6 +773,28 @@ $graphs{qcache_mem} = {
 	{name => 'Qcache_free_memory',  label => 'Free mem'},
     ],
 };
+
+
+#---------------------------------------------------------------------
+
+$graphs{max_mem} = {
+    config => {
+	global_attrs => {
+	    title  => 'Maximium memory that Mysql could use',
+	    vlabel => 'Bytes',
+	    args   => '--base 1024 --lower-limit 0',
+	},
+	data_source_attrs => {
+	    draw => 'AREASTACK',
+	    type => 'GAUGE',
+	},
+    },
+    data_sources => [
+	{name => 'mysql_connection_memory',    label => 'Connection Memory'},
+	{name => 'mysql_base_memory',  label => 'Base MYSQL Memory'},
+    ],
+};
+
 
 #---------------------------------------------------------------------
 
@@ -698,6 +916,159 @@ $graphs{tmp_tables} = {
     ],
 };
 
+
+#---------------------------------------------------------------------
+
+$graphs{rows} = {
+    config => {
+  global_attrs => {
+      title  => 'Rows',
+  },
+  data_source_attrs => {
+      draw  => 'LINE2',
+      type => 'DERIVE',
+  },
+    },
+    data_sources => [
+  {name => 'Rows_read',     label => 'Read'},
+  {name => 'Rows_sent',     label => 'Sent'},
+  {name => 'Rows_tmp_read', label => 'Temp Read'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{handler_read} = {
+    config => {
+  global_attrs => {
+      title  => 'Read Handler',
+  },
+  data_source_attrs => {
+      draw  => 'AREASTACK',
+      type => 'DERIVE',
+  },
+    },
+    data_sources => [
+  {name => 'Handler_read_first',       label => 'Key First'},
+  {name => 'Handler_read_key',         label => 'Key Read'},
+  {name => 'Handler_read_last',        label => 'Key Last'},
+  {name => 'Handler_read_prev',        label => 'Key Prev'},
+  {name => 'Handler_read_rnd',         label => 'Row position'},
+  {name => 'Handler_read_rnd_deleted', label => 'Row position delete'},
+  {name => 'Handler_read_rnd_next',    label => 'Row position next'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{handler_transaction} = {
+    config => {
+  global_attrs => {
+      title  => 'Transactions Handler',
+  },
+  data_source_attrs => {
+      draw  => 'AREASTACK',
+      type => 'DERIVE',
+  },
+    },
+    data_sources => [
+  {name => 'Handler_commit',             label => 'Commit'},
+  {name => 'Handler_rollback',           label => 'Rollback'},
+  {name => 'Handler_savepoint',          label => 'Savepoint'},
+  {name => 'Handler_savepoint_rollback', label => 'Savepoint Rollback'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{handler_write} = {
+    config => {
+  global_attrs => {
+      title  => 'Write/Update Handler',
+  },
+  data_source_attrs => {
+      draw => 'LINE2',
+      type => 'DERIVE',
+  },
+    },
+    data_sources => [
+  {name => 'Handler_write',  label => 'Writes'},
+  {name => 'Handler_update', label => 'Updates'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{handler_tmp} = {
+    config => {
+  global_attrs => {
+      title  => 'Temporary Write/Update Handler',
+  },
+  data_source_attrs => {
+      draw => 'LINE2',
+      type => 'DERIVE',
+  },
+    },
+    data_sources => [
+  {name => 'Handler_tmp_write',  label => 'Writes'},
+  {name => 'Handler_tmp_update', label => 'Updates'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{execution} = {
+    config => {
+  global_attrs => {
+      title  => 'Execution Events',
+  },
+  data_source_attrs => {
+      draw => 'LINE2',
+      type => 'DERIVE',
+  },
+    },
+    data_sources => [
+  {name => 'Executed_events',   label => 'Events'},
+  {name => 'Executed_triggers', label => 'Triggers'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{icp} = {
+    config => {
+	global_attrs => {
+	    title  => 'Index Condition Pushdown',
+	},
+	data_source_attrs => {
+	    draw  => 'LINE2',
+	    type => 'DERIVE',
+	},
+    },
+    data_sources => [
+	{name => 'Handler_icp_attempts', label => 'Attempts'},
+	{name => 'Handler_icp_match',    label => 'Matches'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{mrr} = {
+    config => {
+	global_attrs => {
+	    title  => 'Multi Range Read optimizations',
+	},
+	data_source_attrs => {
+	    draw  => 'LINE2',
+	    type => 'DERIVE',
+	},
+    },
+    data_sources => [
+	{name => 'Handler_mrr_init', label => 'Uses'},
+	{name => 'Handler_mrr_key_refills',  label => 'Key refills'},
+	{name => 'Handler_mrr_rowid_refills',  label => 'Row refills'},
+    ],
+};
 
 #---------------------------------------------------------------------
 #  M A I N
@@ -922,8 +1293,11 @@ sub update_data {
 
     # Set up defaults in case the server is not a slave
     $data->{relay_log_space} = 0;
-    $data->{slave_running}   = 0;
-    $data->{slave_stopped}   = 0;
+    $data->{slave_io_running}   = 0;
+    $data->{slave_sql_running}   = 0;
+    $data->{seconds_behind_master}   = 0;
+    $data->{Slave_open_temp_tables}   = 0;
+    $data->{Slave_retried_transactions}   = 0;
 
     # Set up defaults in case binlog is not enabled
     $data->{ma_binlog_size} = 0;
@@ -962,6 +1336,26 @@ sub update_variables {
 	}
 	$sth->finish();
     }
+    $data->{'mysql_base_memory'} = $data->{'key_buffer_size'} 
+                                         + $data->{'query_cache_size'}
+                                         + $data->{'innodb_buffer_pool_size'}
+                                         + ( $data->{'innodb_additional_mem_pool_size'} || 0 )
+                                         + $data->{'innodb_log_buffer_size'}
+                                         + ( $data->{'tokudb_cache_size'} || 0 );
+
+    my $tmp_table_size = $data->{'tmp_table_size'};
+    my $max_heap_table_size = $data->{'max_heap_table_size'};
+    $data->{'mysql_connection_memory'} = $data->{'read_buffer_size'}
+                                   + $data->{'read_rnd_buffer_size'}
+                                   + $data->{'sort_buffer_size'}
+                                   + $data->{'join_buffer_size'}
+                                   + $data->{'binlog_cache_size'}
+                                   + $data->{'thread_stack'}
+                                   + ( $tmp_table_size >= $max_heap_table_size ? $tmp_table_size : $max_heap_table_size )
+                                   + ( $data->{'tokudb_read_buf_size'} || 0 );
+
+   # wsrep_thread_count was separated from max_connections for mariadb-5.5.38 https://mariadb.atlassian.net/browse/MDEV-6206
+   $data->{'mysql_connection_memory'} *= $data->{'max_connections'} + ( $data->{'wsrep_thread_count'} || 0 );
 }
 
 
@@ -1070,25 +1464,26 @@ sub parse_innodb_status {
 
     # Add a dummy section to the end in case the innodb status output
     # has been truncated (Happens for status > 64K characters)
-    $_ .= "\n----------\nDUMMY\n";
+    $_ .= "\n----------\nDUMMY\n----------\n";
 
     my %section_map = (
 
 	'BUFFER POOL AND MEMORY'      => \&parse_buffer_pool_and_memory,
-	'INDIVIDUAL BUFFER POOL INFO' => \&skip,
+	'INDIVIDUAL BUFFER POOL INFO' => \&parse_individual_buffer_pool,
 	'FILE I/O'                    => \&parse_file_io,
 	'INSERT BUFFER AND ADAPTIVE HASH INDEX'
 	    => \&parse_insert_buffer_and_adaptive_hash_index,
 	'LATEST DETECTED DEADLOCK'    => \&skip,
 	'LATEST FOREIGN KEY ERROR'    => \&skip,
 	'LOG'                         => \&parse_log,
-	'ROW OPERATIONS'              => \&skip,
+	'ROW OPERATIONS'              => \&parse_row_operations,
 	'SEMAPHORES'                  => \&parse_semaphores,
 	'TRANSACTIONS'                => \&parse_transactions,
-	'BACKGROUND THREAD'           => \&skip,
+	'BACKGROUND THREAD'           => \&parse_background_thread,
     );
 
     skip_heading();
+    parse_header_seconds();
     for (;;) {
 	m/\G(.*)\n/gc;
 	my $sec = $1;
@@ -1099,10 +1494,12 @@ sub parse_innodb_status {
 	    last;
 	}
 
-	die "Unknown section: $1" unless exists $section_map{$sec};
-	die "Parse error. Expected a section separator" unless m/\G-+\n/gc;
-
-	$section_map{$sec}->();
+	if (exists $section_map{$sec}) {
+      $section_map{$sec}->();
+	} else {
+      #warn "Unknown section: $1";
+      skip();
+	}
     }
 }
 
@@ -1114,15 +1511,20 @@ sub parse_innodb_status {
 my $innodb_bigint_rx = qr{([[a-fA-F\d]+)(?: (\d+))?};
 
 
-sub match_dashes { return m/\G-+\n(?!-)/gc; }
+sub match_new_section {
+   return m/\G
+            -+\n                 # ---------------------------
+            (?= [A-Z\/ ]+\n      # SECTION NAME
+                [=-]+\n)/gcx;    # --------------------------- ('=' on end of output)
+}
 
 
 sub skip_line    { return m/\G.*\n/gc; }
 
 
 sub skip_heading {
-    # Heading is 6 lines
-    for my $foo (1...6) {
+    # Heading is 3 lines
+    for my $foo (1...3) {
 	skip_line or die('Parse error');
     }
 }
@@ -1133,7 +1535,7 @@ sub parse_section {
 
     #warn substr($_, pos(), 10);
     for (;;) {
-	return if match_dashes();
+	return if match_new_section;
 	next if $parser->();
 	skip_line();
     }
@@ -1143,6 +1545,67 @@ sub parse_section {
 sub skip { parse_section(sub {}); }
 
 
+sub parse_header_seconds {
+    parse_section(
+	sub {
+	    m/\GPer second averages calculated from the last (\d+) seconds\n/gc && do {
+		$data->{innodb_engine_status_seconds}  = $1;
+		return 1;
+	    };
+	}
+    );
+}
+
+
+sub parse_background_thread {
+    parse_section(
+	sub {
+	    m/\Gsrv_master_thread loops: \d+ 1_second, \d+ sleeps, \d+ 10_second, (\d+) background, (\d+) flush\n/gc && do {
+		$data->{ib_srv_main_flush_loops} = $1;
+		$data->{ib_srv_main_background_loops} = $2;
+		return 1;
+	    };
+	    m/\Gsrv_master_thread log flush and writes: (\d+)\n/gc && do {
+		$data->{ib_srv_main_flushs_writes}  = $1;
+		return 1;
+	    };
+	}
+    );
+}
+
+sub parse_row_operations {
+    parse_section(
+        sub {
+            m/\G(\d+) queries inside InnoDB, (\d+) queries in queue\n/gc && do {
+                $data->{ib_innodb_queries}  = $1;
+                $data->{ib_innodb_query_queue_len} = $2;
+                return 1;
+            };
+            m/\G(\d+) read views open inside InnoDB\n/gc && do {
+                $data->{ib_innodb_read_views}  = $1;
+                return 1;
+            };
+            m/\G(\d+) transactions active inside InnoDB\n/gc && do {
+                $data->{ib_innodb_transactions_active}  = $1;
+                return 1;
+            };
+            m/\G(\d+) out of (\d+) descriptors used\n/gc && do {
+                $data->{ib_innodb_descriptors}  = $1;
+                $data->{ib_innodb_descriptors_max} = $2;
+                return 1;
+            };
+            # no need for this - its exposed as status variables
+            # m/\GNumber of rows inserted (\d+), updated (\d+), deleted (\d+), read (\d+)\n/gc && do {
+            #     $data->{ib_innodb_rows_inserted} = $1;
+            #     $data->{ib_innodb_rows_updated}  = $2;
+            #     $data->{ib_innodb_rows_deleted}  = $3;
+            #     $data->{ib_innodb_rows_read}     = $4;
+            #     return 1;
+            # };
+        }
+   );
+}
+
 sub parse_semaphores {
     parse_section(
 	sub {
@@ -1150,6 +1613,18 @@ sub parse_semaphores {
 		$data->{ib_spin_waits}  = $1;
 		$data->{ib_spin_rounds} = $2;
 		$data->{ib_os_waits}    = $3;
+		return 1;
+	    };
+	    m/\GRW-shared spins (\d+), rounds (\d+), OS waits (\d+)\n/gc && do {
+		$data->{ib_rw_shared_waits}  = $1;
+		$data->{ib_rw_shared_rounds} = $2;
+		$data->{ib_rw_shared_os_waits}    = $3;
+		return 1;
+	    };
+	    m/\GRW-excl spins (\d+), rounds (\d+), OS waits (\d+)\n/gc && do {
+		$data->{ib_rw_excl_waits}  = $1;
+		$data->{ib_rw_excl_rounds} = $2;
+		$data->{ib_rw_excl_os_waits}    = $3;
 		return 1;
 	    };
 	}
@@ -1190,7 +1665,7 @@ sub parse_transactions {
 sub parse_file_io {
     parse_section(
 	sub {
-	    m/\GPending normal aio reads: (\d+), aio writes: (\d+),\n\s*ibuf aio reads: (\d+), log i\/o's: (\d+), sync i\/o's: (\d+)\n/gc && do {
+	    m/\GPending normal aio reads: (\d+)(?: \[(?:\d+, )*\d+\] )?, aio writes: (\d+)(?: \[(?:\d+, )*\d+\] )?,\n\s*ibuf aio reads: (\d+), log i\/o's: (\d+), sync i\/o's: (\d+)\n/gc && do {
 		$data->{ib_iop_aioread}  = $1;
 		$data->{ib_iop_aiowrite} = $2;
 		$data->{ib_iop_ibuf_aio} = $3;
@@ -1225,18 +1700,24 @@ sub parse_insert_buffer_and_adaptive_hash_index {
         return 1;
       };
       # MySQL >= 5.5
-      m/\Gmerged operations:\n insert (\d+), delete mark \d+, delete \d+\ndiscarded operations:\n insert (\d+), delete mark \d+, delete \d+\n/gc && do {
+      m/\Gmerged operations:\n insert (\d+), delete mark (\d+), delete (\d+)\ndiscarded operations:\n insert (\d+), delete mark (\d+), delete (\d+)\n/gc && do {
         $data->{ib_ibuf_inserts} = $1;
-        $data->{ib_ibuf_merged_rec} = $1 + $2;
+        $data->{ib_ibuf_delete_mark} = $2;
+        $data->{ib_ibuf_delete} = $3;
+        $data->{ib_ibuf_discard_inserts} = $4;
+        $data->{ib_ibuf_discard_delete_mark} = $5;
+        $data->{ib_ibuf_discard_delete} = $6;
+        $data->{ib_ibuf_merged_rec} = $data->{ib_ibuf_inserts} +  $data->{ib_ibuf_discard_inserts};
         return 1;
       };
+
       m/\GIbuf: size (\d+), free list len (\d+), seg size (\d+),(?: (\d+) merges)?\n/gc && do {
-        $data->{ib_ibuf_size}     = $1;
-        $data->{ib_ibuf_free_len} = $2;
-        $data->{ib_ibuf_seg_size} = $3;
-        $data->{ib_ibuf_merges}   = $4 if defined $4; # MySQL >= 5.5
-        return 1;
-      };
+    $data->{ib_ibuf_size}     = $1;
+    $data->{ib_ibuf_free_len} = $2;
+    $data->{ib_ibuf_seg_size} = $3;
+    $data->{ib_ibuf_merges}   = $4 if defined $4; # MySQL >= 5.5
+		return 1;
+	    };
 	}
     );
 }
@@ -1269,6 +1750,10 @@ sub parse_buffer_pool_and_memory {
 		$data->{ib_bpool_size} = $1;
 		return 1;
 	    };
+      m/\GBuffer pool size, bytes\s+(\d+)\n/gc && do {
+    $data->{ib_bpool_size_bytes} = $1;
+		return 1;
+      };
 	    m/\GFree buffers\s+(\d+)\n/gc && do {
 		$data->{ib_bpool_free} = $1;
 		return 1;
@@ -1281,21 +1766,85 @@ sub parse_buffer_pool_and_memory {
 		$data->{ib_bpool_modpages} = $1;
 		return 1;
 	    };
+	    m/\GOld database pages\s+(\d+)\n/gc && do {
+		$data->{ib_bpool_oldpages} = $1;
+		return 1;
+	    };
+      m/\GPages made young (\d+), not young (\d+)\n/gc && do {
+    $data->{ib_bpool_made_young}     = $1;
+    $data->{ib_bpool_made_not_young} = $2;
+		return 1;
+    };
 	    m/\GPages read (\d+), created (\d+), written (\d+)\n/gc && do {
 		$data->{ib_bpool_read}    = $1;
 		$data->{ib_bpool_created} = $2;
 		$data->{ib_bpool_written} = $3;
 		return 1;
 	    };
+      # mariadb-5.5
+      m/\GInternal hash tables \(constant factor \+ variable factor\)\n\s*Adaptive hash index\s*(\d+)\s*\((\d+) \+ (\d+)\) *\n\s+Page hash +(\d+) +\(buffer pool \d+ only\) *\n\s+Dictionary cache\s*(\d+)\s+\((\d+) \+ (\d+)\) *\n\s+File system\s+(\d+)\s+\((\d+) \+ (\d+)\) *\n\s+Lock system\s+(\d+)\s+\((\d+) \+ (\d+)\) *\n\s+Recovery system\s*(\d+)\s+\((\d+) \+ (\d+)\) *\n/gc  
+          && do {
+          $data->{ib_bpool_internal_adaptive_hash_size_total}  = $1;
+          $data->{ib_bpool_internal_adaptive_hash_size_const}  = $2;
+          $data->{ib_bpool_internal_adaptive_hash_size_var}    = $3;
+          $data->{ib_bpool_internal_page_hash_size_total}  = $4;
+          $data->{ib_bpool_internal_dictionary_cache_size_total}  = $5;
+          $data->{ib_bpool_internal_dictionary_cache_size_const}  = $6;
+          $data->{ib_bpool_internal_dictionary_cache_size_var}    = $7;
+          $data->{ib_bpool_internal_file_system_size_total}  = $8;
+          $data->{ib_bpool_internal_file_system_size_const}  = $9;
+          $data->{ib_bpool_internal_file_system_size_var}    = $10;
+          $data->{ib_bpool_internal_lock_system_size_total}  = $11;
+          $data->{ib_bpool_internal_lock_system_size_const}  = $12;
+          $data->{ib_bpool_internal_lock_system_size_var}    = $13;
+          $data->{ib_bpool_internal_recovery_system_size_total}  = $14;
+          $data->{ib_bpool_internal_recovery_system_size_const}  = $15;
+          $data->{ib_bpool_internal_recovery_system_size_var}    = $16;
+          return 1;
+      };
+
 	}
     );
 }
 
+sub parse_individual_buffer_pool {
+    parse_section(
+  sub {
+    m/\G---BUFFER POOL (\d+)\n/gc && do {
+      my $pool = $1;
+      $data->{ib_bpool_individual_pool_count} = $pool + 1;
+      m/\GBuffer pool size\s+(\d+)\n/gc && do {
+        $data->{"ib_bpool_individual_pool_${pool}_size"} = $1;
+      };
+      m/\GBuffer pool size, bytes\s+(\d+)\n/gc && do {
+        $data->{"ib_bpool_individual_pool_${pool}_size_bytes"} = $1;
+      };
+      m/\GFree buffers\s+(\d+)\nDatabase pages\s+(\d+)\nOld database pages\s+(\d+)\nModified db pages\s+(\d+)\nPending reads\s+(\d+)\nPending writes: LRU\s+(\d+), flush list\s+(\d+), single page\s+(\d+)\n/gc && do {
+        $data->{"ib_bpool_individual_pool_${pool}_free"} = $1;
+        $data->{"ib_bpool_individual_pool_${pool}_dbpages"} = $2;
+        $data->{"ib_bpool_individual_pool_${pool}_oldpages"} = $3;
+        $data->{"ib_bpool_individual_pool_${pool}_modpages"} = $4;
+        $data->{"ib_bpool_individual_pool_${pool}_pending_reads"} = $5;
+        $data->{"ib_bpool_individual_pool_${pool}_pending_writes_lru"} = $6;
+        $data->{"ib_bpool_individual_pool_${pool}_pending_writes_flush"} = $7;
+        $data->{"ib_bpool_individual_pool_${pool}_pending_writes_single"} = $8;
+      };
+      skip_line();
+      m/\GPages read (\d+), created (\d+), written (\d+)\n/gc && do {
+        $data->{"ib_bpool_individual_pool_${pool}_read"}    = $1;
+        $data->{"ib_bpool_individual_pool_${pool}_created"} = $2;
+        $data->{"ib_bpool_individual_pool_${pool}_written"} = $3;
+      };
+      return 1;
+    };
+        }
+  );
+}
 
 sub handle_incomplete_innodb_status {
 
-    warn "Output from SHOW ENGINE INNDOB STATUS was truncated. "
-	. "This happens if the output of SEIS exceeds 64KB. "
+    warn "Output from SHOW ENGINE INNODB STATUS was truncated. "
+	. "This happens if the output of STATUS exceeds 64KB. "
 	. "Several of the InnoDB graphs might be affected by this.";
 
     # FIX Is it possible to find some of the missing values from SHOW

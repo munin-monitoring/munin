@@ -39,6 +39,12 @@ Example :
   [postgres_pg92_*]
   env.PGPORT 5432
 
+Since munin 2.0.18, this graph starts at 0 (zero) on the y-axis. If you want
+to restore the old behaviour, then set in the plugin config:
+
+ [postgres_size_*]
+ env.legacy_y_axis yes
+
 =head1 SEE ALSO
 
 L<Munin::Plugin::Pgsql>
@@ -68,6 +74,8 @@ use warnings;
 
 use Munin::Plugin::Pgsql;
 
+my $graphmin = ($ENV{'legacy_y_axis'} ? undef : '0');
+
 my $pg = Munin::Plugin::Pgsql->new(
     basename => 'postgres_[^_]*_?size_',
     title    => 'PostgreSQL database size',
@@ -81,7 +89,8 @@ my $pg = Munin::Plugin::Pgsql->new(
         "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate AND NOT datname='postgres' UNION ALL SELECT 'ALL' ORDER BY 1 LIMIT 10",
     graphdraw => 'AREA',
     stack     => 1,
-    base      => 1024
+    base      => 1024,
+    graphmin  => $graphmin
 );
 
 $pg->Process();
