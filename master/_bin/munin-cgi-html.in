@@ -105,6 +105,7 @@ while (new CGI::Fast) {
 	my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
         my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
 
+	my $comparison;
 	my $template_filename;
 	my %template_params = (
 		MUNIN_VERSION	=> $Munin::Common::Defaults::MUNIN_VERSION,
@@ -196,7 +197,7 @@ while (new CGI::Fast) {
 		$template_filename = "munin-problemview.tmpl";
 
 		# TODO - Create the model (problem)
-	} elsif ($path =~ /^([^\/])+-(day|month|week|year)\.html$/) {
+	} elsif ($path =~ /^([^\/]+)-(day|month|week|year)\.html$/) {
 		# That's a category URL
 		$template_filename = 'munin-categoryview.tmpl';
 
@@ -204,11 +205,31 @@ while (new CGI::Fast) {
 		my $time = $2;
 
 		$template_params{PATH} = [
-			{ } , # XXX - Template says first args has to be empty
+			# first args should have path and r_path for backlink to overview
+			{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
 			{ "pathname" => "Category", },
+			{ "pathname" => ucfirst($category), },
 		];
 
-		# TODO - Create the model (category)
+		$template_params{CATEGORY} = $category;
+
+		# TODO Support graphs without explicit categories ('other')
+		my $sth_cat = $dbh->prepare_cached(
+			"SELECT DISTINCT s.name FROM service s
+			INNER JOIN service_attr sa ON s.id = sa.id AND sa.name = 'graph_category'
+			WHERE sa.value = ?
+			ORDER BY s.name");
+		$sth_cat->execute($category);
+
+		my @services;
+		while (my ($_service) = $sth_cat->fetchrow_array) {
+			push @services, _get_params_services_by_name($dbh, $_service, $time);
+		}
+		$template_params{SERVICES} = \@services;
+	} elsif ($path =~ /^(.+)\/comparison-(day|month|week|year)\.html$/) {
+		# That's a comparison URL, handle it as special case of groups
+		$path = $1;
+		$comparison = $2;
 	}
 
 	# Handle normal pages only if not aleady handled
@@ -226,52 +247,71 @@ while (new CGI::Fast) {
 		print header( -status => 404, );
 		next;
 	} elsif ($type eq "group") {
-		# Emit group template
-		$template_filename = 'munin-domainview.tmpl';
+		# Shared code for group views and comparison views
 
+		# Constructing the recursive datastructure.
+		# Note that it is quite naive, and not optimized for speed.
+		my $sth_grp = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ? ORDER BY g.name ASC");
+		my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL ORDER BY g.name ASC");
+		my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ? ORDER BY n.name ASC");
 
-		# Main page
-		{
-			# Constructing the recursive datastructure.
-			# Note that it is quite naive, and not optimized for speed.
-			my $sth_grp = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id = ? ORDER BY g.name ASC");
-			my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL ORDER BY g.name ASC");
-			my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ? ORDER BY n.name ASC");
+		my $sth_p_id = $dbh->prepare_cached("SELECT g.p_id FROM grp g WHERE g.id = ?");
+		$sth_p_id->execute($id);
+		my ($_p_id) = $sth_p_id->fetchrow_array;
+		my $sth_peer;
 
+		# Check for top level groups
+		if (defined $_p_id) {
+			$sth_peer = $sth_grp;
+			$sth_peer->execute($id);
+		} else {
+			$sth_peer = $sth_grp_root;
+			$sth_peer->execute();
+		}
+
+		# Construct list of peers
+		my $peers = [];
+		while (my (undef, $_name, $_url) = $sth_peer->fetchrow_array) {
+			$_url =~ s!/$!!;
+			push @$peers, { NAME => $_name, LINK => '../' . basename($_url) . '/' };
+		}
+
+		$template_params{PEERS} = $peers;
+		$template_params{LARGESET} = 1;
+		$template_params{INFO_OPTION} = 'Groups on this level';
+
+		# Generate navigational links
+		$template_params{PATH} = [
+			# first args should have path and r_path for backlink to overview
+			{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
+			url_to_path($path),
+		];
+
+		# hack: use the last element of the path as the name
+		$template_params{NAME} = $template_params{PATH}[-1]{'pathname'};
+
+		if ($comparison) {
+			# Emit group comparison template
+			$template_filename = "munin-comparison-$comparison.tmpl";
+
+			# Get all categories in this group
+			my $sth_cat = $dbh->prepare_cached(
+				"SELECT DISTINCT sa_c.value cat FROM node n
+				INNER JOIN service s ON s.node_id = n.id
+				INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category'
+				WHERE n.grp_id = ? ORDER BY sa_c.value ASC");
+			$sth_cat->execute($id);
+
+			$template_params{CATEGORIES} = [];
+			while (my ($cat_name) = $sth_cat->fetchrow_array) {
+				push @{$template_params{CATEGORIES}}, _get_params_services_for_comparison($path, $dbh, $cat_name, $id);
+			}
+		} else {
+			# Emit group template
+			$template_filename = 'munin-domainview.tmpl';
+
+			# Main page
 			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, $id);
-
-			my $sth_p_id = $dbh->prepare_cached("SELECT g.p_id FROM grp g WHERE g.id = ?");
-			$sth_p_id->execute($id);
-			my ($_p_id) = $sth_p_id->fetchrow_array;
-			my $sth_peer;
-
-			# Check for top level groups
-			if (defined $_p_id) {
-				$sth_peer = $sth_grp;
-				$sth_peer->execute($id);
-			} else {
-				$sth_peer = $sth_grp_root;
-				$sth_peer->execute();
-			}
-
-			# Construct list of peers
-			my $peers = [];
-			while (my (undef, $_name, $_url) = $sth_peer->fetchrow_array) {
-				$_url =~ s!/$!!;
-				push @$peers, { NAME => $_name, LINK => '../' . basename($_url) . '/' };
-			}
-
-			$template_params{PEERS} = $peers;
-			$template_params{LARGESET} = 1;
-			$template_params{INFO_OPTION} = 'Groups on this level';
-
-			$template_params{PATH} = [
-				# first args should have path and r_path for backlink to overview
-				{ "r_path" => url_absolutize(''), "path" => url_absolutize(''), },
-				url_to_path($path),
-			];
-
-			$template_params{NAME} = $template_params{PATH}[-1]{'pathname'};
 
 			# Shows "[ d w m y ]"
 			$template_params{COMPARE} = 1;
@@ -451,6 +491,7 @@ sub _get_params_groups {
 			URL => "$_path/",
 			GROUPS => _get_params_groups($path, $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $_g_id),
 			COMPARE => 1,
+			R_PATH => script_name(),
 			PATH => [
 				{ PATH => '..', PATHNAME => undef, },
 				{ PATH => '', PATHNAME => $_name, },
@@ -486,6 +527,99 @@ sub _get_params_groups {
 	}
 
 	return $groups;
+}
+
+sub _get_params_services_for_comparison {
+	my ($basepath, $dbh, $category_name, $grp_id) = @_;
+
+	# Get all possible services with the specified category under the specified group
+	my $sth_srv = $dbh->prepare_cached(
+		"SELECT DISTINCT s.name FROM service s
+		INNER JOIN node n ON s.node_id = n.id
+		INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category' AND sa_c.value = ?
+		WHERE n.grp_id = ? ORDER BY s.name ASC");
+
+	# Get node and service pairs
+	my $sth_node = $dbh->prepare_cached(
+		"SELECT n.name, u.path, s.path, s.title FROM node n
+		INNER JOIN url u ON u.id = n.id AND u.type = 'node'
+		LEFT JOIN
+			( SELECT s.id AS id, s.node_id AS node_id, sa_t.value AS title, u_s.path AS path FROM service s
+			INNER JOIN service_attr sa_t ON s.id = sa_t.id AND sa_t.name = 'graph_title'
+			INNER JOIN url u_s ON s.id = u_s.id AND u_s.type = 'service'
+			WHERE s.name = ? ) AS s ON n.id = s.node_id
+		WHERE n.grp_id = ?
+		ORDER BY n.name, s.title ASC");
+
+	my %category = (
+		GROUPNAME => $category_name,
+		SERVICES => [],
+	);
+
+	$sth_srv->execute($category_name, $grp_id);
+	while (my ($service_name) = $sth_srv->fetchrow_array) {
+		# Skip multigraph sub-graphs
+		next if $service_name =~ /\./;
+
+		my @nodes;
+		$sth_node->execute($service_name, $grp_id);
+		while (my ($node_name, $node_url, $srv_url, $srv_label) = $sth_node->fetchrow_array) {
+			my $_srv_url = "$srv_url.html" if defined $srv_url;
+			my %_img_urls = map { ("CIMG$_" => script_name() . "/../munin-cgi-graph" . "/$srv_url-$_.png") } @times if defined $srv_url;
+			push @nodes, {
+				R_PATH => script_name(),
+				NODENAME => $node_name,
+				URL1 => substr($node_url, length($basepath) + 1),
+				LABEL => $srv_label,
+				URL => $_srv_url,
+				%_img_urls,
+			};
+		}
+
+		push @{$category{SERVICES}}, { NODES => \@nodes };
+	}
+
+	return \%category;
+}
+
+# This is only called for category views, which start with the root URL,
+# so no need to handle basepath or multigraph parents for relative URLs
+sub _get_params_services_by_name {
+	my ($dbh, $service_name, $time) = @_;
+
+	# TODO warning/critical state (use SUM sub-queries?)
+	# XXX this may be slow
+	my $sth = $dbh->prepare_cached(
+		"SELECT s.id, sa_t.value as service_title, sa_s.value as subgraphs, u.path AS url,
+		n.name AS node_name, u_n.path AS node_url
+		FROM service s
+		INNER JOIN service_attr sa_t ON sa_t.id = s.id AND sa_t.name = 'graph_title'
+		LEFT JOIN service_attr sa_s ON sa_s.id = s.id AND sa_s.name = 'subgraphs'
+		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
+		INNER JOIN node n ON n.id = s.node_id
+		INNER JOIN url u_n ON u_n.id = s.node_id AND u_n.type = 'node'
+		WHERE s.name = ?
+		ORDER BY node_name ASC");
+	$sth->execute($service_name);
+
+	my $_url_var = "CIMG" . uc($time);
+	my $_time_var = "TIME" . uc($time);
+	my @graphs;
+	while (my ($_s_id, $_service_title, $_subgraphs, $_url, $_node_name, $_node_url) = $sth->fetchrow_array) {
+		push @graphs, {
+			HOST_URL => "$_node_url/",
+			NODENAME => $_node_name,
+			LABEL => $_service_title,
+			URLX => $_url . ($_subgraphs ? "/" : ".html"),
+			"CIMG$time" => script_name() . "/../munin-cgi-graph" . "/$_url-$time.png",
+			"TIME$time" => 1,
+		};
+	}
+
+	return {
+		NAME => $service_name,
+		GRAPHS => \@graphs,
+	};
 }
 
 sub _get_params_services {

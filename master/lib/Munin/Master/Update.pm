@@ -230,8 +230,80 @@ sub _get_url_from_path {
 	return $path;
 }
 
+sub _dump_conf_node_into_sql {
+	my ($node, $grp_id, $path, $dbh, $sth_node, $sth_node_attr,
+		$sth_service, $sth_service_attr,
+		$sth_ds, $sth_ds_attr,
+		$sth_url) = @_;
+
+	my $node_name = $node->{host_name};
+	my $node_path = "$path;$node_name";
+	$sth_node->execute($grp_id, $node_name, $node_path);
+
+	my $node_id = _get_last_insert_id($dbh);
+
+	$sth_url->execute($node_id, "node", _get_url_from_path($node_path));
+
+	# Save the ID inside the datastructure.
+	# It is used to attach the node w/o doing an extra select
+	$node->{ID} = $node_id;
+
+	# Look for custom graphs
+	# XXX Hopefully no one overrides the graph titles of plugins
+	my @services = grep { /\.graph_title$/ } keys %$node;
+	for my $service (@services) {
+		$service = substr $service, 0, -12;
+
+		# Insert graph
+		$sth_service->execute($node_id, $service, "$node_path:$service");
+		my $service_id = _get_last_insert_id($dbh);
+
+		# Replace '.' delimiter in graph name to '/' for URLs
+		# See comments in _dump_into_sql for why
+		(my $_service = $service) =~ tr!.!/!;
+		$sth_url->execute($service_id, "service", _get_url_from_path("$node_path:$_service"));
+
+		# Keep track of field ids
+		my %ds_ids;
+
+		# Look for matching graph settings
+		for my $attr (grep { /^$service\./ } keys %$node) {
+			my $value = $node->{$attr};
+			my $field = substr $attr, length($service) + 1;
+			my @args = split /\./, $field;
+
+			if (1 == scalar @args) {
+				# graph config
+
+				# Category names should not be case sensitive. Store them all in lowercase.
+				$value = lc($value) if $args[0] eq 'graph_category';
+				$sth_service_attr->execute($service_id, $args[0], $value);
+			} elsif (2 == scalar @args) {
+				# field config
+				my $data_source = $args[0];
+				my $ds_id = $ds_ids{$data_source};
+
+				if (!defined $ds_id) {
+					$sth_ds->execute($service_id, $data_source, "$node_path:$service.$data_source");
+					$ds_id = _get_last_insert_id($dbh);
+					$ds_ids{$data_source} = $ds_id;
+					$sth_url->execute($ds_id, "ds", _get_url_from_path("$node_path:$_service:$data_source"));
+				}
+
+				$sth_ds_attr->execute($ds_id, $args[1], $value);
+			} else {
+				# XXX what's left?
+			}
+		}
+	}
+}
+
 sub _dump_groups_into_sql {
-	my ($groups, $p_id, $path, $dbh, $sth_grp, $sth_grp_attr, $sth_url) = @_;
+	my ($groups, $p_id, $path, $dbh, $sth_grp, $sth_grp_attr,
+		$sth_node, $sth_node_attr,
+		$sth_service, $sth_service_attr,
+		$sth_ds, $sth_ds_attr,
+		$sth_url) = @_;
 
 	for my $grp_name (keys %$groups) {
 		my $grp_path = ($path eq "") ? $grp_name : "$path;$grp_name";
@@ -246,7 +318,20 @@ sub _dump_groups_into_sql {
 		my $url = _get_url_from_path($grp_path);
 		$sth_url->execute($id, "group", $url);
 
-		_dump_groups_into_sql($groups->{$grp_name}{groups}, $id, $grp_path, $dbh, $sth_grp, $sth_grp_attr, $sth_url);
+		for my $node (values %{$groups->{$grp_name}{hosts}}) {
+			_dump_conf_node_into_sql($node, $id, $grp_path, $dbh,
+				$sth_node, $sth_node_attr,
+				$sth_service, $sth_service_attr,
+				$sth_ds, $sth_ds_attr,
+				$sth_url);
+		}
+
+		_dump_groups_into_sql($groups->{$grp_name}{groups}, $id, $grp_path, $dbh,
+			$sth_grp, $sth_grp_attr,
+			$sth_node, $sth_node_attr,
+			$sth_service, $sth_service_attr,
+			$sth_ds, $sth_ds_attr,
+			$sth_url);
 	}
 }
 
@@ -330,17 +415,25 @@ sub _dump_into_sql {
 	}
 
 	# Recursively create groups
-	_dump_groups_into_sql($self->{group_repository}{groups}, undef, "", $dbh, $sth_grp, $sth_grp_attr, $sth_url);
+	_dump_groups_into_sql($self->{group_repository}{groups}, undef, "", $dbh,
+		$sth_grp, $sth_grp_attr,
+		$sth_node, $sth_node_attr,
+		$sth_service, $sth_service_attr,
+		$sth_ds, $sth_ds_attr,
+		$sth_url);
 
 	for my $worker (@{$self->{workers}}) {
 		my $host = $worker->{ID};
 		my $node = $worker->{node};
 		my $grp_id = $worker->{host}->{group}->{ID};
-
-		$sth_node->execute($grp_id, $node->{host}, $host);
-		my $node_id = _get_last_insert_id($dbh);
+		my $node_id = $worker->{host}->{ID};
 		my $url = _get_url_from_path($host);
-		$sth_url->execute($node_id, "node", $url);
+
+		if (!defined $node_id) {
+			$sth_node->execute($grp_id, $node->{host}, $host);
+			$node_id = _get_last_insert_id($dbh);
+			$sth_url->execute($node_id, "node", $url);
+		}
 
 		for my $attr (keys %$node) {
 			# Ignore the configref key, as it is redundant
@@ -377,6 +470,9 @@ sub _dump_into_sql {
 			$sth_service_attr->execute($service_id, 'subgraphs', $subgraphs) if $subgraphs;
 
 			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
+				# Category names should not be case sensitive. Store them all in lowercase.
+				$attr->[1] = lc($attr->[1]) if $attr->[0] eq 'graph_category';
+
 				$sth_service_attr->execute($service_id, $attr->[0], $attr->[1]);
 			}
 			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
