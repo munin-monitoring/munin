@@ -45,6 +45,7 @@ use POSIX qw ( strftime );
 use Getopt::Long;
 use Time::HiRes;
 use Text::Balanced qw ( extract_bracketed );
+use Scalar::Util qw( looks_like_number );
 use Munin::Common::Logger;
 
 use Munin::Master::Utils;
@@ -373,13 +374,26 @@ sub process_service {
 		}
 	}
 
-        # De-taint.
-        if (!defined $value || $value eq "U") {
-            $value = "unknown";
-        }
-        else {
-            $value = sprintf "%.2f", $value;
-        }
+    # De-taint.
+    if ( !defined $value || $value eq "U" ) {
+        $value = "unknown";
+    }
+    elsif ( looks_like_number($value) ) {
+        $value = sprintf "%.2f", $value;
+    }
+    else {
+        WARNING(  "Expected number, got \""
+                . $value . "\":"
+                . " group="
+                . $hash->{group}
+                . " host="
+                . $hash->{host}
+                . " plugin="
+                . $hash->{plugin}
+                . " field="
+                . $fname );
+        $value = "unknown";
+    }
 
         # Some fields that are nice to have in the plugin output
         $field->{'value'} = $value;
