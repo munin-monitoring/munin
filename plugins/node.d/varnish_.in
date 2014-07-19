@@ -167,6 +167,7 @@ my %ASPECTS = (
 			 . 'backend_conn backend_unhealthy '
 			 . 'client_req client_conn' ,
 		'values' => {
+			# Version 3 only
 			'client_conn' => {
 				'type' => 'DERIVE',
 				'min' => '0',
@@ -221,7 +222,7 @@ my %ASPECTS = (
 				'min' => '0',
 				'colour' => '785d0d'
 			},
-			# Version 4, client_conn does not exist, sess_conn does however
+			# Version 4 only
 			'sess_conn' => {
 				'type' => 'DERIVE',
 				'min' => '0',
@@ -308,10 +309,12 @@ my %ASPECTS = (
 				'type' => 'GAUGE',
 				'label' => 'Number of objects'
 			},
+			# Version 3 only
 			'n_objcore' => {
 				'type' => 'GAUGE',
 				'label' => 'Number of object cores'
 			},
+			# Version 4 only
 			'n_objectcore' => {
 				'type' => 'GAUGE',
 				'label' => 'Number of object cores'
@@ -331,7 +334,7 @@ my %ASPECTS = (
 		'args' => '-l 0',
 		'vlabel' => 'bit/s',
 		'values' => {
-			# Version 3
+			# These are the entries needed for Version 3
 			's_hdrbytes' => {
 				'type' => 'DERIVE',
 				'label' => 'Header traffic',
@@ -348,7 +351,7 @@ my %ASPECTS = (
 				'min' => '0',
 				'cdef' => 's_bodybytes,8,*'
 			},
-			# Version 4
+			# These are the entries needed for Version 4
 			's_resp_hdrbytes' => {
 				'type' => 'DERIVE',
 				'label' => 'Header traffic',
@@ -370,7 +373,7 @@ my %ASPECTS = (
 	'threads' => {
 		'title' => 'Thread status',
 		'values' => {
-			# Version 3
+			# These are the entries needed for Version 3
 			'n_wrk' => {
 				'type' => 'GAUGE',
 				'min' => '0',
@@ -398,7 +401,7 @@ my %ASPECTS = (
 				'min' => '0',
 				'warning' => ':0'
 			},
-			# Version 4
+			# These are the entries needed for Version 4
 			'threads' => {
 				'type' => 'GAUGE',
 				'min' => '0',
