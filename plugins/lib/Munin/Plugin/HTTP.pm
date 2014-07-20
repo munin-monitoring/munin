@@ -20,6 +20,8 @@
 # This Module is user documented inline, interspersed with code with
 # perlpod.
 
+=encoding utf8
+
 =head1 NAME
 
 Munin::Plugin::HTTP - LWP::UserAgent subclass for Munin plugins
@@ -63,6 +65,8 @@ supported.
 
 Don't use this with HTTP proxies, put the passwords in the front of
 the url in the form of C<http://user:pass@proxy/> instead.
+
+=back
 
 =head1 REQUIREMENTS
 
