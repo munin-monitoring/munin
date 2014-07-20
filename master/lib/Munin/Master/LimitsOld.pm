@@ -59,7 +59,7 @@ my @limit_hosts    = ();
 my @limit_services = ();
 my @limit_contacts = ();
 my @always_send    = ();
-my $stdout         = 0;
+my $screen         = 0;
 my $force          = 0;
 my $force_run_as_root = 0;
 my %notes          = ();
@@ -86,8 +86,8 @@ sub limits_startup {
         "service=s" => \@limit_services,
         "contact=s" => \@limit_contacts,
         "config=s"  => \$conffile,
-        "debug!"    => \$DEBUG,
-        "stdout!"   => \$stdout,
+        "debug"     => \$DEBUG,
+        "screen"    => \$screen,
         "force!"    => \$force,
         "always-send=s" => \@always_send,
         "force-run-as-root!" => \$force_run_as_root,
@@ -98,9 +98,9 @@ sub limits_startup {
     print_usage_and_exit()   if $do_usage;
     print_version_and_exit() if $do_version;
 
-    if ( $DEBUG || $stdout ) {
+    if ( $DEBUG || $screen ) {
         my %log;
-        $log{output} = 'screen' if $stdout;
+        $log{output} = 'screen' if $screen;
         $log{level}  = 'debug'  if $DEBUG;
         Munin::Common::Logger::configure(%log);
     }
@@ -212,7 +212,7 @@ sub print_usage_and_exit {
 Options:
     --help		View this message.
     --debug		View debug messages.
-    --stdout		Log to stdout as well as the log file.
+    --screen		Send log messages to the screen (STDERR).
     --always-send <severity list>
                         Send messages to contacts even if state has
                         not changed since the last run. The list is a
