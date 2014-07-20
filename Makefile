@@ -49,7 +49,8 @@ endif
 	book \
 	infiles
 
-.SECONDARY: node/Build master/Build plugins/Build
+.SECONDARY: common/Build master/Build node/Build plugins/Build
+.SECONDARY: common/MANIFEST master/MANIFEST node/MANIFEST plugins/MANIFEST
 
 .SUFFIXES: .java .class
 
