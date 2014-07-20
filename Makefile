@@ -492,6 +492,9 @@ install-%: %/Build
 test-%: %/Build
 	cd $* && $(PERL) Build test $(TEST_OPTIONS)
 
+testcritic:
+	$(MAKE) test TEST_OPTIONS=test_files=t/critic.t TEST_POD=1
+
 testcover-%: %/Build
 	cd $* && $(PERL) Build testcover
 
