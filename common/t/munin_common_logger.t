@@ -33,7 +33,7 @@ BEGIN { use_ok(Munin::Common::Logger); }
     );
 }
 
-# set_log_level_to
+# configure
 {
     ok( Munin::Common::Logger::would_log('warning'),
         'should log with warning' );
@@ -41,10 +41,21 @@ BEGIN { use_ok(Munin::Common::Logger); }
     ok( !Munin::Common::Logger::would_log('debug'),
         'should not log with debug' );
 
-    ok( Munin::Common::Logger::set_log_level_to('debug'),
+    ok( Munin::Common::Logger::configure( level => 'debug' ),
         'change log level to debug' );
 
     ok( Munin::Common::Logger::would_log('debug'), 'should log with debug' );
+
+    ok( Munin::Common::Logger::configure(
+            level  => 'warning',
+            output => 'screen'
+        ),
+        'change log level to warning, output to screen'
+    );
+
+    ok( !Munin::Common::Logger::would_log('debug'),
+        'should no longer log with debug'
+    );
 
 }
 
@@ -55,11 +66,15 @@ BEGIN { use_ok(Munin::Common::Logger); }
         'some debugging text' );
 }
 
-# _remove_all_logging
+# _remove_configured_logging
 #
 # (This should only be used for testing, but we need to test it as well. This turns off logging.)
 {
-    ok( Munin::Common::Logger::_remove_all_logging );
+    ok( !Munin::Common::Logger::_remove_default_logging,
+        'default logging should already be removed'
+    );
+    ok( Munin::Common::Logger::_remove_configured_logging,
+        'remove configured logging' );
 }
 
 # DEBUG, INFO, NOTICE, WARN, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY, LOGCROAK

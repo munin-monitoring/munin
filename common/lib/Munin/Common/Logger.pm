@@ -6,15 +6,16 @@ use warnings;
 use Carp;
 
 use Exporter;
+use Log::Dispatch;
 use Log::Dispatch::Screen;
 use Log::Dispatch::Syslog;
 
 our @ISA = qw(Exporter);
 
-our @EXPORT =
-  qw(DEBUG INFO NOTICE WARN WARNING ERROR CRITICAL FATAL ALERT EMERGENCY LOGCROAK);
+our @EXPORT
+    = qw(DEBUG INFO NOTICE WARN WARNING ERROR CRITICAL FATAL ALERT EMERGENCY LOGCROAK);
 
-use Log::Dispatch;
+use Params::Validate qw(validate SCALAR);
 use POSIX;
 
 sub _program_name {
@@ -63,7 +64,7 @@ our $log ||= Log::Dispatch->new();
 
 $log->add(
     Log::Dispatch::Screen->new(
-        name => 'screen',
+        name      => 'default-screen',
         min_level => 'error',
         callbacks => $screen_format
     )
@@ -71,35 +72,65 @@ $log->add(
 
 $log->add(
     Log::Dispatch::Syslog->new(
-        name      => 'syslog',
+        name      => 'default-syslog',
         ident     => _program_name,
         min_level => 'warning',
         callbacks => $syslog_format,
     )
 );
 
-sub _remove_all_logging {
-	$log->remove('screen');
-	$log->remove('syslog');
+sub _remove_default_logging {
+    $log->remove('default-screen');
+    $log->remove('default-syslog');
 }
 
-sub set_log_level_to {
-	my ($level) = @_;
+sub _remove_configured_logging {
+	$log->remove('configured');
+}
 
-	$log->remove('syslog');
-	$log->add(
-		Log::Dispatch::Syslog->new(
-			name      => 'syslog',
-			ident     => _program_name,
-			min_level => $level,
-			callbacks => $syslog_format,
-		)
-		);
+sub configure {
+    my %p = validate(
+        @_,
+        {   output => {
+                type    => SCALAR,
+                default => 'syslog',
+                regex   => qr/^(?:syslog|screen)$/
+            },
+            level => {
+                type    => SCALAR,
+                default => 'warning',
+                regex =>
+                    qr/^(?:debug|info|notice|warning|error|critical|alert|emergency)$/
+            },
+        }
+    );
+
+    _remove_default_logging;
+
+    if ( $p{output} eq 'screen' ) {
+        $log->add(
+            Log::Dispatch::Screen->new(
+                name      => 'configured',
+                min_level => $p{level},
+                callbacks => $screen_format
+            )
+        );
+    }
+    elsif ( $p{output} eq 'syslog' ) {
+        $log->add(
+            Log::Dispatch::Syslog->new(
+                name      => 'configured',
+                ident     => _program_name,
+                min_level => $p{level},
+                callbacks => $syslog_format,
+            )
+        );
+    }
 }
 
 sub would_log {
-	my ($level) = @_;
-	return $log->would_log($level);
+    my ($level) = @_;
+    return $log->would_log($level);
 }
 
 sub DEBUG {
@@ -180,7 +211,7 @@ Munin::Common::Logger - Perl extension for blah blah blah
 
    DEBUG(slow_and_expensive_operation) if Munin::Common::Logger::would_log('debug');
 
-   Munin::Common::Logger::set_log_level_to('debug') if $debug;
+   Munin::Common::Logger::configure( level => 'debug') if $debug;
 
 =head1 DESCRIPTION
 
@@ -215,11 +246,21 @@ EMERGENCY and LOGCROAK are exported by default.
 
 =over
 
-=item set_log_level_to
+=item configure { level => $level, output => $output }
 
-Set the minimum log level. Takes one argument, which is the log level to accept.
+  configure { level => 'error', output => 'screen'}
+
+  configure { level => 'debug', output => 'syslog'}
+
+Removes the default logging, and replaces it with the configured log output.
+
+Option "level" sets the minimum log level. Takes one argument, which is the log level to accept.
+Optional, default is "warning".
 
 See L<Log::Dispatch> for a list of valid log levels.
+
+Option "output" sets the log output. Valid outputs are 'screen' and 'syslog'. Optional, default is
+"syslog".
 
 =item would_log
 
