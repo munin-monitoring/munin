@@ -65,7 +65,7 @@ our $log ||= Log::Dispatch->new();
 $log->add(
     Log::Dispatch::Screen->new(
         name      => 'default-screen',
-        min_level => 'error',
+        min_level => 'critical',
         callbacks => $screen_format
     )
 );
