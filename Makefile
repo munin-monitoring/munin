@@ -434,6 +434,12 @@ endif
 
 test: test-common test-master test-node test-plugins
 
+testcover: testcover-common testcover-master testcover-node testcover-plugins
+
+testpod: testpod-common testpod-master testpod-node testpod-plugins
+
+testpodcoverage: testpodcoverage-common testpodcoverage-master testpodcoverage-node testpodcoverage-plugins
+
 ifeq ($(MAKELEVEL),0)
 # Re-exec make with the test config
 old-test: t/*.t
@@ -484,6 +490,18 @@ install-%: %/Build
 
 test-%: %/Build
 	cd $* && $(PERL) Build test $(TEST_OPTIONS)
+
+testcover-%: %/Build
+	cd $* && $(PERL) Build testcover
+
+testpod-%: %/Build %/MANIFEST
+	cd $* && $(PERL) Build testpod
+
+testpodcoverage-%: %/Build
+	cd $* && $(PERL) Build testpodcoverage
+
+%/MANIFEST: %/Build
+	cd $* && $(PERL) Build manifest
 
 clean-%: %/Build common/blib/lib/Munin/Common/Defaults.pm
 	cd $* && $(PERL) Build realclean
