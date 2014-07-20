@@ -6,6 +6,8 @@ use warnings;
 use Carp;
 
 use Exporter;
+use Log::Dispatch::Screen;
+use Log::Dispatch::Syslog;
 
 our @ISA = qw(Exporter);
 
@@ -57,9 +59,8 @@ my $syslog_format = sub {
     return $message;
 };
 
-my $log ||= Log::Dispatch->new();
+our $log ||= Log::Dispatch->new();
 
-use Log::Dispatch::Screen;
 $log->add(
     Log::Dispatch::Screen->new(
         name => 'screen',
@@ -68,15 +69,38 @@ $log->add(
     )
 );
 
-use Log::Dispatch::Syslog;
 $log->add(
     Log::Dispatch::Syslog->new(
         name      => 'syslog',
         ident     => _program_name,
-        min_level => 'debug',
+        min_level => 'warning',
         callbacks => $syslog_format,
     )
 );
+
+sub _remove_all_logging {
+	$log->remove('screen');
+	$log->remove('syslog');
+}
+
+sub set_log_level_to {
+	my ($level) = @_;
+
+	$log->remove('syslog');
+	$log->add(
+		Log::Dispatch::Syslog->new(
+			name      => 'syslog',
+			ident     => _program_name,
+			min_level => $level,
+			callbacks => $syslog_format,
+		)
+		);
+}
+
+sub would_log {
+	my ($level) = @_;
+	return $log->would_log($level);
+}
 
 sub DEBUG {
     my ($message) = @_;
@@ -154,6 +178,10 @@ Munin::Common::Logger - Perl extension for blah blah blah
    EMERGENCY("oops");
    LOGCROAK("Goodbye, world!");
 
+   DEBUG(slow_and_expensive_operation) if Munin::Common::Logger::would_log('debug');
+
+   Munin::Common::Logger::set_log_level_to('debug') if $debug;
+
 =head1 DESCRIPTION
 
 Munin::Common::Logger handles logging for Munin.
@@ -182,6 +210,73 @@ and used in the output formatting.
 
 The functions DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT,
 EMERGENCY and LOGCROAK are exported by default.
+
+=head1 FUNCTIONS
+
+=over
+
+=item set_log_level_to
+
+Set the minimum log level. Takes one argument, which is the log level to accept.
+
+See L<Log::Dispatch> for a list of valid log levels.
+
+=item would_log
+
+Returns true if a message would be logged given the log level. Takes one argument, which is the log
+level to check.
+
+Use this around expensive log statements, to skip them if they would not be logged.
+
+See L<Log::Dispatch> for a list of valid log levels.
+
+=item DEBUG
+
+Log with DEBUG priority. Takes one argument, which is the string to log.
+
+=item INFO
+
+Log with INFO priority. Takes one argument, which is the string to log.
+
+=item NOTICE
+
+Log with NOTICE priority. Takes one argument, which is the string to log.
+
+=item WARN
+
+Log with WARNING priority. Takes one argument, which is the string to log.
+
+=item WARNING
+
+Log with WARNING priority. Takes one argument, which is the string to log.
+
+=item ERROR
+
+Log with ERROR priority. Takes one argument, which is the string to log.
+
+=item CRITICAL
+
+Log with CRITICAL priority. Takes one argument, which is the string to log.
+
+=item EMERGENCY
+
+Log with EMERGENCY priority. Takes one argument, which is the string to log.
+
+=item ALERT
+
+Log with ALERT priority. Takes one argument, which is the string to log.
+
+=item FATAL
+
+Log with FATAL priority. Takes one argument, which is the string to log.
+
+=item LOGCROAK
+
+Log with CRITIAL priority exit the program. Takes one argument, which is the string to log.
+
+See also C<log_and_croak> in L<Log::Dispatch>.
+
+=back
 
 =head1 SEE ALSO
 
