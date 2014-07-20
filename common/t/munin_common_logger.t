@@ -46,6 +46,24 @@ BEGIN { use_ok(Munin::Common::Logger); }
 
     ok( Munin::Common::Logger::would_log('debug'), 'should log with debug' );
 
+}
+
+# configure - wrong options
+{
+    eval { Munin::Common::Logger::configure( level => 'invalid' ) };
+    like( $@, qr{did not pass regex check}, 'invalid log level' );
+
+    eval { Munin::Common::Logger::configure( output => 'invalid' ) };
+    like( $@, qr{did not pass regex check}, 'invalid log output' );
+
+}
+
+# configure - screen
+{
+    ok( Munin::Common::Logger::configure( output => 'screen' ),
+        'change log output to screen, default level'
+    );
+
     ok( Munin::Common::Logger::configure(
             level  => 'warning',
             output => 'screen'
@@ -53,8 +71,17 @@ BEGIN { use_ok(Munin::Common::Logger); }
         'change log level to warning, output to screen'
     );
 
-    ok( !Munin::Common::Logger::would_log('debug'),
-        'should no longer log with debug'
+}
+
+# configure - syslog
+{
+    ok( Munin::Common::Logger::configure( output => 'syslog' ),
+        'change output to syslog, default level' );
+    ok( Munin::Common::Logger::configure(
+            level  => 'warning',
+            output => 'syslog'
+        ),
+        'change log level to warning, output to syslog'
     );
 
 }

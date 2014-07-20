@@ -80,12 +80,12 @@ $log->add(
 );
 
 sub _remove_default_logging {
-    $log->remove('default-screen');
-    $log->remove('default-syslog');
+    $log->remove('default-screen') if $log->output('default-screen');
+    $log->remove('default-syslog') if $log->output('default-syslog');
 }
 
 sub _remove_configured_logging {
-	$log->remove('configured');
+    $log->remove('configured') if $log->output('configured');
 }
 
 sub configure {
@@ -106,6 +106,7 @@ sub configure {
     );
 
     _remove_default_logging;
+    _remove_configured_logging;
 
     if ( $p{output} eq 'screen' ) {
         $log->add(
@@ -126,6 +127,8 @@ sub configure {
             )
         );
     }
+
+    return $log;
 }
 
 sub would_log {
