@@ -410,5 +410,7 @@ to matching plugins.
 
 See L<http://munin-monitoring.org/wiki/Priority_and_inheritance>
 
+=back
+
 =cut
 # vim: sw=4 : ts=4 : et
