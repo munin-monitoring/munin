@@ -85,7 +85,7 @@ my $DEBUG      = 0;
 my $conffile   = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
 my $do_usage   = 0;
 my $do_version = 0;
-my $stdout     = 0;
+my $screen     = 0;
 my $force_run_as_root = 0;
 my $config;
 my $limits;
@@ -120,8 +120,8 @@ sub html_startup {
 	    "host=s"    => [],
 	    "service=s" => [],
 	    "config=s"  => \$conffile,
-	    "debug!"    => \$DEBUG,
-	    "stdout!"   => \$stdout,
+	    "debug"     => \$DEBUG,
+	    "screen"    => \$screen,
 	    "force-run-as-root!" => \$force_run_as_root,
 	    "help"      => \$do_usage,
 	    "version!"  => \$do_version,
@@ -131,6 +131,13 @@ sub html_startup {
 
     print_usage_and_exit() if $do_usage;
     print_version_and_exit() if $do_version;
+
+    if ( $DEBUG || $screen ) {
+        my %log;
+        $log{output} = 'screen' if $screen;
+        $log{level}  = 'debug'  if $DEBUG;
+        Munin::Common::Logger::configure(%log);
+    }
 
     exit_if_run_by_super_user() unless $force_run_as_root;
 
@@ -851,6 +858,7 @@ sub print_usage_and_exit {
 Options:
     --help		View this message.
     --debug		View debug messages.
+    --screen            Send log messages to the screen (STDERR).
     --version		View version information.
     --nofork            Compatibility. No effect.
     --service <service>	Compatibility. No effect.

@@ -93,7 +93,7 @@ my $output_file    = undef;
 my $log_file       = undef;
 my $skip_locking   = 0;
 my $skip_stats     = 0;
-my $stdout         = 0;
+my $screen         = 0;
 my $force_run_as_root = 0;
 my $conffile       = $Munin::Common::Defaults::MUNIN_CONFDIR . "/munin.conf";
 my $libdir         = $Munin::Common::Defaults::MUNIN_LIBDIR;
@@ -239,7 +239,7 @@ sub graph_startup {
     $log_file       = undef;
     $skip_locking   = 0;
     $skip_stats     = 0;
-    $stdout         = 0;
+    $screen         = 0;
 
     $size_x 	    = undef;
     $size_y         = undef;
@@ -267,7 +267,7 @@ sub graph_startup {
                 "service=s"     => \@limit_services,
                 "only-fqn=s"    => sub{ $only_fqn = process_fqn(@_); },
                 "config=s"      => \$conffile,
-                "stdout!"       => \$stdout,
+                "screen"        => \$screen,
                 "force-run-as-root!" => \$force_run_as_root,
                 "day!"          => \$draw{'day'},
                 "week!"         => \$draw{'week'},
@@ -294,7 +294,7 @@ sub graph_startup {
                 "fork!"         => \$do_fork,
                 "n=n"           => \$max_running,
                 "help"          => \$do_usage,
-                "debug!"        => \$debug,
+                "debug"         => \$debug,
         );
 
     if ($do_version) {
@@ -303,6 +303,13 @@ sub graph_startup {
 
     if ($do_usage) {
       print_usage_and_exit();
+    }
+
+    if ( $debug || $screen ) {
+        my %log;
+        $log{output} = 'screen' if $screen;
+        $log{level}  = 'debug'  if $debug;
+        Munin::Common::Logger::configure(%log);
     }
 
     exit_if_run_by_super_user() unless $force_run_as_root;
@@ -2032,6 +2039,7 @@ Options:
     --help		View this message.
     --version		View version information.
     --debug		View debug messages.
+    --screen            Send log messages to the screen (STDERR).
     --[no]cron		Behave as expected when run from cron. (Used internally
 			in Munin.)
     --host <host>       Limit graphed hosts to <host>. Multiple --host options

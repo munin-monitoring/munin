@@ -54,7 +54,11 @@ Example: --fork and --nofork
 
 .. option:: --debug
 
-   View debug messages.
+   Log debug messages.
+
+.. option:: --screen
+
+   If set, log messages to STDERR on the screen.
 
 .. option:: --cron
 
