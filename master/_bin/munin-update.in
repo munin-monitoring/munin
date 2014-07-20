@@ -31,6 +31,13 @@ sub main {
 
     configure();
 
+    if ( $config->{debug} || $config->{stdout} ) {
+        my %log;
+        $log{output} = 'screen' if $config->{stdout};
+        $log{level}  = 'debug'  if $config->{debug};
+        Munin::Common::Logger::configure(%log);
+    }
+
     my $update = Munin::Master::Update->new();
     $update->run();
 
@@ -79,6 +86,7 @@ sub parse_args {
         \%args, 
         "config_file=s",
         "debug!",
+        "stdout",
         "fork!",
         "host=s@",
         "service=s@",
@@ -118,6 +126,7 @@ munin-update [options]
  Options:
      --config_file=<file>    Use <file> as configuration file. 
      --[no]debug             Enable [or disable] debug messages. [--nodebug]
+     --stdout                Send log messages to stdout.
      --[no]fork              Query hosts in parallell (--fork), or 
                              sequentially (--nofork). [--fork]
      --host <host>	     Limit graphed hosts to <host>. Multiple --host 

@@ -305,6 +305,13 @@ sub graph_startup {
       print_usage_and_exit();
     }
 
+    if ( $debug || $stdout ) {
+        my %log;
+        $log{output} = 'screen' if $stdout;
+        $log{level}  = 'debug'  if $debug;
+        Munin::Common::Logger::configure(%log);
+    }
+
     exit_if_run_by_super_user() unless $force_run_as_root;
 
     # Only read $config once (thx Jani M.)

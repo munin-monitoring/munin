@@ -132,6 +132,13 @@ sub html_startup {
     print_usage_and_exit() if $do_usage;
     print_version_and_exit() if $do_version;
 
+    if ( $DEBUG || $stdout ) {
+        my %log;
+        $log{output} = 'screen' if $stdout;
+        $log{level}  = 'debug'  if $DEBUG;
+        Munin::Common::Logger::configure(%log);
+    }
+
     exit_if_run_by_super_user() unless $force_run_as_root;
 
     munin_readconfig_base($conffile);
