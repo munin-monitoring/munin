@@ -28,6 +28,7 @@ use Pod::Usage;
 use Munin::Node::SpoolReader;
 use Munin::Node::SpoolWriter;
 use Munin::Common::Defaults;
+use Munin::Common::Logger;
 
 # Disable buffering
 $| = 1;
@@ -57,6 +58,7 @@ GetOptions(
         "help|h" => \$help,
         "verbose|v" => \$verbose,
         "debug" => \$debug,
+        "screen" => \$screen,
 ) or pod2usage(1);
 if ($help) {
         pod2usage(1);
@@ -68,6 +70,13 @@ if ($cleanupandexit) {
 	exit;
 }
 
+if ( $verbose || $debug || $screen ) {
+    my %log;
+    $log{output} = 'screen'  if $screen;
+    $log{level}  = 'verbose' if $verbose;
+    $log{level}  = 'debug'   if $debug;
+    Munin::Common::Logger::configure(%log);
+}
 
 # Use STDIN/STDOUT, in order to be : 
 # 1. secure over internet (SSH), munin-node needs only 
@@ -82,7 +91,9 @@ $hostname = $spoolreader->get_metadata("hostname") || hostname();
 $hostname = $overridehost if $overridehost;
 chomp($hostname);
 
-die "spooldir [$SPOOLDIR] not found" unless -d $SPOOLDIR;
+LOGCROAK("spooldir [$SPOOLDIR] not found") unless -d $SPOOLDIR;
+
+INFO("Starting");
 
 print "# munin node at $hostname\n";
 
@@ -154,5 +165,8 @@ munin-async [options]
                                   Note that without this flag, the "fetch" 
 				  command is disabled.
 
+     --screen                   Log to screen instead of syslog
+     --debug                    Log debug messages
      -v --verbose               Be verbose
      -h --help                  View this message	
+
