@@ -37,6 +37,7 @@ Server:
    - Storable
    - Digest::MD5,
    - HTML::Template
+   - HTML::Template::Pro
    - Text::Balanced
    - Params::Validate
    - TimeDate
@@ -45,6 +46,7 @@ Server:
    - File::Copy::Recursive
    - CGI::Fast
    - IO::Socket::INET6
+   - Log::Dispatch
 
    - Developers/packagers: For testing
      - Test::MockModule
