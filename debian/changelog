@@ -1,3 +1,13 @@
+munin (1.4.5-3+deb6u1) UNRELEASED; urgency=low
+
+  [ Christoph Biedl ]
+  * node: more secure state file handling. Closes: #679897
+  * plugins: use runtime $ENV{MUNIN_PLUGSTATE}.
+  * Validate multigraph plugin name, CVE-2013-6048
+  * Don't abort data collection for a node due to malicious node (munin#1397)
+
+ -- Christoph Biedl <debian.axhn@manchmal.in-ulm.de>  Tue, 22 Jul 2014 21:40:11 +0200
+
 munin (1.4.5-3) unstable; urgency=low
 
   [ Tom Feiner ]
