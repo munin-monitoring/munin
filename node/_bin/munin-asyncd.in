@@ -30,7 +30,6 @@ use Pod::Usage;
 
 use List::Util qw(min max);
 
-use Munin::Common::SyncDictFile;
 use Munin::Node::SpoolWriter;
 
 my $host = "localhost:4949";
@@ -94,8 +93,6 @@ $0 = "munin-asyncd [$metahostname] [idle]";
 
 my $process_name = "main";
 
-my $plugin_rate_filename = "$SPOOLDIR/plugin_rates";
-
 my @plugins;
 {
 	print STDERR "[$$][$process_name] Reading config from $host\n" if $verbose;
@@ -139,11 +136,6 @@ $SIG{HUP} = 'IGNORE';
 $SIG{INT} = 'termhandler';
 $SIG{TERM} = 'termhandler';
 
-# Using the Munin::Common::SyncDictFile, to have a text-only DB, which is
-# fully-multiprocess aware.
-my %plugin_rates;
-tie (%plugin_rates, 'Munin::Common::SyncDictFile', $plugin_rate_filename) or die "$!";
-
 # now, update regularly...
 # ... but each plugin in its own process to avoid delay-leaking
 my %last_updated;
@@ -155,7 +147,7 @@ MAIN: while($keepgoing) {
 	my $sock;
 	PLUGIN: foreach my $plugin (@plugins) {
 		# See if this plugin should be updated
-		my $plugin_rate = $plugin_rates{$plugin} || 300;
+		my $plugin_rate = $spoolwriter->get_metadata("plugin_rates/$plugin") || 300;
 		if ($when < ($last_updated{$plugin} || 0) + $plugin_rate) {
 			# not yet, next plugin
 			next;
@@ -250,7 +242,7 @@ sub fetch_data
 				# XXX - Doesn't take into account a per field update_rate
 
 				# This has to be sent back to the master
-				$plugin_rates{$plugin} = $1;
+				$spoolwriter->set_metadata("plugin_rates/$plugin", $1);
 			}
 		}
 
