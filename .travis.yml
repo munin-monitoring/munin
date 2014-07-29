@@ -31,6 +31,7 @@ before_install:
  - "cpanm --notest Time::HiRes"
  - "cpanm --notest DBI"
  - "cpanm --notest DBD::SQLite"
+ - "cpanm --notest Devel::Cover::Report::Coveralls"
 notifications:
   email: false
   irc:
@@ -44,3 +45,5 @@ notifications:
 matrix:
   # we don't need to continue any build when 1 test is failing.
   fast_finish: true
+script:
+      perl Build.PL && ./Build build && cover -test -report coveralls
