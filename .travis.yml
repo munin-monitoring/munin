@@ -46,4 +46,4 @@ matrix:
   # we don't need to continue any build when 1 test is failing.
   fast_finish: true
 script:
-      perl Build.PL && ./Build build && cover -test -report coveralls
+      cd master && cover -test -report coveralls
