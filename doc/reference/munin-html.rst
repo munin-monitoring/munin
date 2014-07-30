@@ -37,7 +37,11 @@ underlying components, of which munin-html is one.
 
 .. option:: --debug
 
-   View debug messages.
+   Log debug messages.
+
+.. option:: --screen
+
+   If set, log messages to STDERR on the screen.
 
 .. option:: --version
 

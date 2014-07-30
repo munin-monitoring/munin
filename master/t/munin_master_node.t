@@ -12,6 +12,9 @@ use Test::Differences;
 
 use Data::Dumper;
 
+use Munin::Common::Logger;
+Munin::Common::Logger->_remove_default_logging;
+
 use_ok('Munin::Master::Node');
 
 my $config = Munin::Master::Config->instance();

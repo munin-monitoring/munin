@@ -103,15 +103,17 @@ my $response = $UA->get($url);
 my %options = ( KeyAttr => { connector => 'name' }, ForceArray => 1 );
 my $xml = $xs->XMLin($response->content, %options);
 
-if($xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadsBusy'} &&
-    $xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadCount'}) {
+if($xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadsBusy'} =~ /\d+/ &&
+    $xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadCount'} =~ /\d+/ ) {
     print "busy.value " . $xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadsBusy'} . "\n";
     print "idle.value " .
 	  ($xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadCount'} -
 	  $xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadsBusy'}) . "\n";
+	print "total.value " . $xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadCount'} . "\n";
 } else {
     print "busy.value U\n";
     print "idle.value U\n";
+    print "total.value U\n";
 }
 
 # vim:syntax=perl

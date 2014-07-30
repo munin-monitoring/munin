@@ -4,6 +4,8 @@ use strict;
 use Test::More tests => 17;
 use Time::HiRes qw(sleep);
 use File::Temp qw( tempdir );
+use Munin::Common::Logger;
+Munin::Common::Logger->_remove_default_logging;
 
 use_ok('Munin::Master::ProcessManager');
 

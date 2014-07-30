@@ -45,14 +45,6 @@ Server:
    - File::Copy::Recursive
    - CGI::Fast
    - IO::Socket::INET6
-   - Log::Log4perl 1.18 or later (which depends on
-     - IPC::Shareable
-     - Log::Dispatch
-     - Log::Dispatch::FileRotate
-     - MIME::Lite
-     - Mail::Sender
-     - Mail::Sendmail
-     - MailTools)
 
    - Developers/packagers: For testing
      - Test::MockModule

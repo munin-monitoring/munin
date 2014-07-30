@@ -442,5 +442,7 @@ Logs the source of rejected connections.
 
 Processes the request.
 
+=back
+
 =cut
 vim: ts=4 : et : sw=4

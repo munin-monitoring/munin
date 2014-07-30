@@ -1,5 +1,91 @@
 -*- text -*-
 
+munin-2.1.9, 2014-07-21
+
+-------
+Summary
+-------
+
+This is a release that focused on the HTML CGI thanks to Chen-Yu Tsai. It
+should now be on par with the 2.0 one.
+
+Stig also "fixed" the logging in order to avoid hammering your syslogd.
+
+------------------
+Detailed Changelog
+------------------
+
+AJ Ferrick (1):
+      Fix minor typos in Munin master index.rst
+
+Chen-Yu Tsai (40):
+      cgi/html: Do not lowercase image URLs
+      cgi/html: Sort groups in navigation bar by name
+      cgi/html: Sort categories in navigation bar by name
+      cgi/html: Sort groups and nodes by name in overview
+      cgi/html: Get distinct categories for node views
+      cgi/html: Fix group overview listings
+      cgi/html: Generate correct navigation path with links
+      cgi/html: Sort categories for each node in group overview
+      cgi/html: Generate correct relative links for sub-groups and sub-nodes
+      cgi/html: Do not lowercase category names in URLs
+      cgi/html: Add node service categories to navigation bar
+      cgi/html: Note the last element of navigation path
+      cgi/html: show name on navigation bar before categories/comparisons
+      cgi/html: Add same level groups for bottom navigation bar on group views
+      cgi/html: Fix top navigation path and links for service views
+      cgi/html: Add same category graphs for bottom navigation bar on service views
+      cgi/html: Add same level groups for bottom navigation bar for node views
+      cgi/html: Change node URL pattern to NODE/
+      cgi/html: Add trailing slash to group URLs
+      cgi/html: Generate relative URLs for services
+      cgi/html: Generate data field legends for service views
+      templates: Fix legend formatting in service views
+      M::M::Update: Use slash as multigraph sub-graph url separator in sql
+      M::M::U: Add number of subgraphs as service_attr in SQL
+      cgi/html: Display graph info in service view
+      cgi/html: Hide not graphed fields from legend
+      cgi/html: Detect and filter multigraphs from node service overview
+      cgi/html: Change URL ending for services with sub-graphs to '/'
+      cgi/html: Support multigraphs
+      static/zoom.js: Remove erroneous semmicolon
+      template/head: Add closing tag for dynazoom <script> tags
+      cgi/html: Enable dynazoom of service graphs
+      cgi/html: Let HTML::Template generate __(odd|even|last)__ tags
+      cgi/html: Side navigation links should use R_PATH and relative paths
+      M::M::U: Add comment explaning the usage of tr/// in commit f803c7d36f
+      M::M::U: Store graph categories in SQL in lowercase
+      cgi/html: Implement basic category view
+      M::M::U: Export plugin/field directives for custom graphs to SQL
+      cgi/html: Fix URLs for comparison views
+      cgi/html: group comparison view
+
+Daniel Black (1):
+      spelling fix maximium -> maximum
+
+Jimmy Shen (1):
+      /node.d/tomcat_threads.in: Fix if {'currentThreadsBusy'} go false when it is 0, and add a total value as 'currentThreadCount' so that the chart looks more readable.
+
+Stig Sandbeck Mathisen (17):
+      Use the program name without path as syslog prefix
+      If value is defined and not "U", try to ensure it looks like a number
+      Add "testcover", "testpod" and "testpodcoverage" targets to Makefile
+      Makefile: update list of secondary targets
+      Makefile: add a "testcritic" convencience target
+      remove POD tests already provided by Module::Build
+      Remove mention of Log4perl in INSTALL
+      Fix POD errors
+      Document is_keyword and cl_is_keyword in Munin::Common::Config
+      Ensure we can control the log level
+      Provide Munin::Common::Logger::configure
+      Set default screen log level to "critical"
+      Handle --debug and --screen options for log level and output
+      Silence logging during tests
+      Ensure that switching between log outputs works as intended
+      Use options --screen and --debug
+      Update documentation with --screen and --debug
+
+
 munin-2.1.8, 2014-06-27
 
 -------
