@@ -1,4 +1,4 @@
-munin (2.1.8-1) UNRELEASED; urgency=medium
+munin (2.1.9-1) UNRELEASED; urgency=medium
 
   [ Holger Levsen ]
   * Add "Testsuite: autopkgtest" to source entry in debian/control, so
@@ -19,8 +19,10 @@ munin (2.1.8-1) UNRELEASED; urgency=medium
 
   [ Stig Sandbeck Mathisen ]
   * Imported upstream release 2.1.8
+  * Imported upstream release 2.1.9
+  * Add dependency on libhtml-template-pro-perl
 
- -- Stig Sandbeck Mathisen <ssm@debian.org>  Thu, 03 Jul 2014 19:48:22 +0200
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Wed, 30 Jul 2014 13:23:52 +0200
 
 munin (2.1.6.1-1) experimental; urgency=medium
 
