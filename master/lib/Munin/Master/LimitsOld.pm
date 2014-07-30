@@ -45,6 +45,7 @@ use POSIX qw ( strftime );
 use Getopt::Long;
 use Time::HiRes;
 use Text::Balanced qw ( extract_bracketed );
+use Scalar::Util qw( looks_like_number );
 use Munin::Common::Logger;
 
 use Munin::Master::Utils;
@@ -58,7 +59,7 @@ my @limit_hosts    = ();
 my @limit_services = ();
 my @limit_contacts = ();
 my @always_send    = ();
-my $stdout         = 0;
+my $screen         = 0;
 my $force          = 0;
 my $force_run_as_root = 0;
 my %notes          = ();
@@ -85,8 +86,8 @@ sub limits_startup {
         "service=s" => \@limit_services,
         "contact=s" => \@limit_contacts,
         "config=s"  => \$conffile,
-        "debug!"    => \$DEBUG,
-        "stdout!"   => \$stdout,
+        "debug"     => \$DEBUG,
+        "screen"    => \$screen,
         "force!"    => \$force,
         "always-send=s" => \@always_send,
         "force-run-as-root!" => \$force_run_as_root,
@@ -96,6 +97,13 @@ sub limits_startup {
 
     print_usage_and_exit()   if $do_usage;
     print_version_and_exit() if $do_version;
+
+    if ( $DEBUG || $screen ) {
+        my %log;
+        $log{output} = 'screen' if $screen;
+        $log{level}  = 'debug'  if $DEBUG;
+        Munin::Common::Logger::configure(%log);
+    }
 
     exit_if_run_by_super_user() unless $force_run_as_root;
 
@@ -204,7 +212,7 @@ sub print_usage_and_exit {
 Options:
     --help		View this message.
     --debug		View debug messages.
-    --stdout		Log to stdout as well as the log file.
+    --screen		Send log messages to the screen (STDERR).
     --always-send <severity list>
                         Send messages to contacts even if state has
                         not changed since the last run. The list is a
@@ -373,13 +381,26 @@ sub process_service {
 		}
 	}
 
-        # De-taint.
-        if (!defined $value || $value eq "U") {
-            $value = "unknown";
-        }
-        else {
-            $value = sprintf "%.2f", $value;
-        }
+    # De-taint.
+    if ( !defined $value || $value eq "U" ) {
+        $value = "unknown";
+    }
+    elsif ( looks_like_number($value) ) {
+        $value = sprintf "%.2f", $value;
+    }
+    else {
+        WARNING(  "Expected number, got \""
+                . $value . "\":"
+                . " group="
+                . $hash->{group}
+                . " host="
+                . $hash->{host}
+                . " plugin="
+                . $hash->{plugin}
+                . " field="
+                . $fname );
+        $value = "unknown";
+    }
 
         # Some fields that are nice to have in the plugin output
         $field->{'value'} = $value;

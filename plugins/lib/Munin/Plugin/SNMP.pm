@@ -27,6 +27,8 @@
 
 # $Id$
 
+=encoding utf8
+
 =head1 NAME
 
 Munin::Plugin::SNMP - Net::SNMP subclass for Munin plugins
