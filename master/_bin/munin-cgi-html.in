@@ -316,7 +316,9 @@ while (new CGI::Fast) {
 			$template_params{NGROUPS} = scalar(@{$template_params{GROUPS}});
 
 			# Shows "[ d w m y ]"
-			$template_params{COMPARE} = 1;
+			# comparison only makes sense if there are 2 or more nodes
+			$template_params{COMPARE} = 1 if
+				1 < scalar grep { defined($_->{'NCATEGORIES'}) && $_->{'NCATEGORIES'} } @{$template_params{GROUPS}};
 		}
 
 	} elsif ($type eq "node") {
@@ -494,12 +496,14 @@ sub _get_params_groups {
 	foreach my $row (@$_sth_grp_data) {
 		my ($_g_id, $_name, $_path) = @$row;
 		my $_groups = _get_params_groups($path, $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $_g_id);
+		my $_compare_groups = scalar grep { defined($_->{'NCATEGORIES'}) && $_->{'NCATEGORIES'} } @$_groups;
 		push @$groups, {
 			NAME => $_name,
 			URL => "$_path/",
 			GROUPS => $_groups,
 			NGROUPS => scalar(@$_groups),
-			COMPARE => 1,
+			# comparison only makes sense if there are 2 or more nodes
+			COMPARE => ($_compare_groups > 1 ? 1 : 0),
 			R_PATH => script_name(),
 			PATH => [
 				{ PATH => '..', PATHNAME => undef, },
