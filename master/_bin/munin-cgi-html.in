@@ -178,6 +178,7 @@ while (new CGI::Fast) {
 			my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ? ORDER BY n.name ASC");
 
 			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, undef);
+			$template_params{NGROUPS} = scalar(@{$template_params{GROUPS}});
 		}
 
 		# TODO - We still have to write the bottom navigation links
@@ -312,6 +313,7 @@ while (new CGI::Fast) {
 
 			# Main page
 			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, $id);
+			$template_params{NGROUPS} = scalar(@{$template_params{GROUPS}});
 
 			# Shows "[ d w m y ]"
 			$template_params{COMPARE} = 1;
@@ -491,10 +493,12 @@ sub _get_params_groups {
 	my $_sth_grp_data = $sth_grp->fetchall_arrayref;
 	foreach my $row (@$_sth_grp_data) {
 		my ($_g_id, $_name, $_path) = @$row;
+		my $_groups = _get_params_groups($path, $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $_g_id);
 		push @$groups, {
 			NAME => $_name,
 			URL => "$_path/",
-			GROUPS => _get_params_groups($path, $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $_g_id),
+			GROUPS => $_groups,
+			NGROUPS => scalar(@$_groups),
 			COMPARE => 1,
 			R_PATH => script_name(),
 			PATH => [
