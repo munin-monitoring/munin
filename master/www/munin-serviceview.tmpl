@@ -79,7 +79,7 @@ This service is in CRITICAL state because one of the values reported is outside 
 	<th class="info">Info</th>
 </tr>
 <TMPL_LOOP NAME="FIELDINFO">
-<tr class="<TMPL_IF NAME="__odd__">oddrow<TMPL_ELSE>evenrow</TMPL_IF><TMPL_IF NAME="__last__"> lastrow</TMPL_IF">">
+<tr class="<TMPL_IF NAME="__odd__">oddrow<TMPL_ELSE>evenrow</TMPL_IF><TMPL_IF NAME="__last__"> lastrow</TMPL_IF>">
 	<td class="field"><TMPL_VAR ESCAPE="HTML" NAME="LABEL"></td>
     <td class="internal"><span title="For use in munin.conf"><TMPL_VAR ESCAPE="HTML" NAME="FIELD"></span></td>
     <td class="type"><TMPL_VAR NAME="TYPE"></td>
