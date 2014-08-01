@@ -485,7 +485,12 @@ sub _get_params_groups {
 	}
 
 	my $groups = [];
-	while (my ($_g_id, $_name, $_path) = $sth_grp->fetchrow_array) {
+
+	# This function is recursive and reuses the prepared statements,
+	# so we need to save the results first.
+	my $_sth_grp_data = $sth_grp->fetchall_arrayref;
+	foreach my $row (@$_sth_grp_data) {
+		my ($_g_id, $_name, $_path) = @$row;
 		push @$groups, {
 			NAME => $_name,
 			URL => "$_path/",
