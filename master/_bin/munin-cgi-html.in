@@ -128,7 +128,7 @@ while (new CGI::Fast) {
 
 	# Groups nav
 	{
-		my $sth = $dbh->prepare_cached("SELECT g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' ORDER BY g.name ASC");
+		my $sth = $dbh->prepare_cached("SELECT g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' WHERE g.p_id IS NULL ORDER BY g.name ASC");
 		$sth->execute();
 
 		my $rootgroups = [];
