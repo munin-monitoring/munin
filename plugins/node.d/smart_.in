@@ -86,15 +86,17 @@
 #%# capabilities=autoconf suggest
 #%# family=auto
 
+import os, sys, string, pickle
+from math import log
+
+# Increase verbosity (True/False) -> use munin-run --pidebug
+verbose=True if os.getenv('MUNIN_DEBUG') == '1' else False
+
 ## You may edit the following 3 variables
-# Increase verbosity (True/False)
-verbose=False
 # Suppress SMART warnings (True/False)
 report_warnings=True
 # You may not modify anything below this line
 
-import os, sys, string, pickle
-from math import log
 plugin_version="2.1"
 statefiledir=os.environ['MUNIN_PLUGSTATE']
 
