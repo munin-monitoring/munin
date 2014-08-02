@@ -4,16 +4,69 @@
 
 =head1 NAME
 
-yum - Plugin for monitoring pending package upgrades with yum
+yum - Munin plugin to monitor pending update packages.
+It will send a critical warning, if security updates are pending.
 
-=head1 USAGE
+=head1 APPLICABLE SYSTEMS
 
-This plugin needs to be called with the 'update' argument
-from cron to work as intended.
+On Linux distributions that use yum as software package management tool.
+
+=head1 CONFIGURATION
+
+This plugin will not show up in the Munin website per default
+as it contains information that is useful for any attacker.
+
+This is configured with the following config directive:
+
+=over 2
+
+# munin-run yum config
+
+B<graph no>
+
+=back
+
+
+If you have password protected your Munin website against public access and
+trust your known visitors, then you can make graph and more information 
+visible by setting the following environment variables:
+
+=over 2
+
+shownames - set to value 1, if you want to see the names of the pending packages in the field 'pending.extinfo'
+            E.g. "env.shownames 1".
+
+showgraph - set to value 'yes', if you want the plugins graph to show up in Munin website.
+            E.g. "env.showgraph yes".
+            Remove or comment the declaration of env.showgraph in plugin-conf.d if you want to
+            hide the plugins graph again.
+
+=back
+
+=head2 SPECIAL YUM PLUGIN NEEDED
+
+Package yum-plugin-security is needed as this Munin plugin investigates 
+how many security updates are pending.
+
+Install the package with the command:
+
+# yum install yum-plugin-security
+
+=head2 CRONJOB
+
+A cronjob has to be run outside of Munin to create and freshen up the
+plugins statefile with recent info from yum.
+Therein the plugin is called with the 'update' option.
+
+E.g. place a file with the following line in directory /etc/crond.d/:
+
+30 */6 * * * root /usr/sbin/munin-run yum update
 
 =head1 AUTHOR
 
 Copyright 2006 Dagfinn Ilmari Mannsåker <ilmari@lonres.com>
+
+Copyright 2014 Gabriele Pohl <contact@dipohl.de>
 
 =head1 LICENSE
 
@@ -21,13 +74,14 @@ GPLv2
 
 =head1 MAGIC MARKERS
 
- #%# family=auto
+ #%# family=manual
  #%# capabilities=autoconf
 
 =cut
 
 use strict;
 
+my $counter=0;
 my $statefile = "$ENV{MUNIN_PLUGSTATE}/yum.state";
 
 sub update {
@@ -38,20 +92,27 @@ sub update {
     open my $state, '>', $statefile
     or die "Can't open $statefile for writing: $!\n";
 
-    open my $yum, '-|', 'yum list updates'
-    or die "Can't run 'yum list updates': $!";
+    # Get number of security updates
+    open my $yum, '-|', 'yum -q --security list updates'
+    or die "Can't run 'yum -q --security list updates': $!";
 
-    # Skip header crap
     while (<$yum>) {
-    last if /^Updated/;
+        next unless /^(\S+)\.\S+\s+\S+\s+\S+/;
+        print "$1\n";
+        $counter++;
     }
+    print $state "$counter pending security updates\n";
+    close $yum or die "Error running 'yum -q --security list updates': $!\n";
+
+    open $yum, '-|', 'yum -q list updates'
+    or die "Can't run 'yum -q list updates': $!";
 
     while (<$yum>) {
     next unless /^(\S+)\.\S+\s+\S+\s+\S+/;
     print $state "$1\n";
     }
 
-    close $yum or die "Error running 'yum list updates': $!\n";
+    close $yum or die "Error running 'yum -q list updates': $!\n";
     close $state or die "Error writing $statefile: $!\n";
 }
 
@@ -69,10 +130,22 @@ sub autoconf {
 }
 
 sub config {
-    print "graph_title Pending packages\n";
-    print "graph no\n";
+
+    my $showgraph = exists $ENV{'showgraph'} ? 'yes' : 'no';
+
+    print "graph_title Pending Updates\n";
+    print "graph_category updates\n";
+    print "graph ", $showgraph, "\n";
+    print "security.label security\n";
+    print "security.info Number of pending security updates\n";
+    print "security.draw AREA\n";
+    print "security.colour COLOUR2\n";
+    print "security.critical 0\n";
     print "pending.label pending\n";
-    print "pending.warning 0:0\n";
+    print "pending.info Number of all pending updates (including security updates)\n";
+    print "pending.draw LINE2\n";
+    print "pending.warning 20\n";
+
 }
 
 sub report {
@@ -82,12 +155,23 @@ sub report {
     or die "Can't open $statefile for reading: $!
 Please read 'munindoc yum' to understand why if the file does not exist.\n";
 
+    # read number of security updates in first line
+    my $line = <$state>;
+    if ($line =~ /^(\d+) pending security updates$/) {
+        print 'security.value ', $1, "\n";
+    } else {
+        die "Missing info about pending security updates in plugins statefile\n";
+    }
+
     chomp(@packages = <$state>);
     close $state;
 
     print 'pending.value ', scalar(@packages), "\n";
-    print 'pending.extinfo ', join(' ', @packages), "\n"
-    if @packages;
+
+    if (exists $ENV{'shownames'}) {
+        print 'pending.extinfo ', join(' ', @packages), "\n"
+        if (@packages && ($ENV{'shownames'} eq 1));
+    }
 }
 
 if ($ARGV[0]) {
