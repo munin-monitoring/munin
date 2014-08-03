@@ -2,21 +2,23 @@
 # -*- perl -*-
 # vim: ft=perl : sw=4 : ts=4 : et
 
+=encoding utf8
+
 =head1 NAME
 
 yum - Munin plugin to monitor pending update packages.
-It will send a critical warning, if security updates are pending.
+It will send/show a critical warning, if security updates are pending.
 
 =head1 APPLICABLE SYSTEMS
 
-On Linux distributions that use yum as software package management tool.
+Linux distributions that use yum as software package management tool.
 
 =head1 CONFIGURATION
 
-This plugin will not show up in the Munin website per default
+The plugin will not show up in the Munin website per default
 as it contains information that is useful for any attacker.
 
-This is configured with the following config directive:
+That is done by the following config directive:
 
 =over 2
 
@@ -26,20 +28,27 @@ B<graph no>
 
 =back
 
-
-If you have password protected your Munin website against public access and
-trust your known visitors, then you can make graph and more information 
-visible by setting the following environment variables in plugins configuration:
+If you have password protected your Munin website and trust 
+your known visitors you can make graph and more information 
+visible by setting the following environment variables in the plugins configuration.
 
 =over 2
 
 shownames - set to value 1, if you want to see the names of the pending packages in the field 'pending.extinfo'
-            E.g. "env.shownames 1".
 
 showgraph - set to value 'yes', if you want the plugins graph to show up in Munin website.
-            E.g. "env.showgraph yes".
             Remove or comment the declaration of env.showgraph in plugin-conf.d if you want to
             hide the plugins graph again.
+
+=back
+
+B<Example>
+
+=over 2
+
+  [yum]
+  env.showgraph yes
+  env.shownames 0
 
 =back
 
