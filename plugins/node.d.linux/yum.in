@@ -29,7 +29,7 @@ B<graph no>
 
 If you have password protected your Munin website against public access and
 trust your known visitors, then you can make graph and more information 
-visible by setting the following environment variables:
+visible by setting the following environment variables in plugins configuration:
 
 =over 2
 
@@ -98,7 +98,6 @@ sub update {
 
     while (<$yum>) {
         next unless /^(\S+)\.\S+\s+\S+\s+\S+/;
-        print "$1\n";
         $counter++;
     }
     print $state "$counter pending security updates\n";
