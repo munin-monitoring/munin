@@ -97,7 +97,7 @@ sub make_hash {
                         if ($condition_str eq "sys.peer" and exists $ENV{"show_syspeer_stratum"}) {
                                 chomp(my $stratum = `ntpq -n -c "readvar $assid stratum"`);
                                 $stratum =~ s/\s//g;
-                                $syspeer_stratum_value = ($stratum =~ m/stratum=(.*)/);
+                                ($syspeer_stratum_value) = ($stratum =~ m/stratum=(.*)/);
                         }
 
                         if (exists $stateval{$condition_str}) {
