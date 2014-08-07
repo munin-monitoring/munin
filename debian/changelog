@@ -1,4 +1,4 @@
-munin (1.4.5-3+deb6u1) unstable; urgency=low
+munin (1.4.5-3+deb6u1) squeeze-lts; urgency=low
 
   [ Christoph Biedl ]
   * munin-node: more secure state file handling, introducing a new plugin
