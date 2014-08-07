@@ -3,3 +3,7 @@
 102-snort-bashism.patch
 103-ejabberd-cli.patch
 237-hddtemp_smartctl-sata-detect.patch
+CVE-2012-3512.patch
+CVE-2012-3512.2.patch
+CVE-2013-6359.patch
+CVE-2013-6048.patch

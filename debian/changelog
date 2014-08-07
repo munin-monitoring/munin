@@ -1,12 +1,23 @@
-munin (1.4.5-3+deb6u1) UNRELEASED; urgency=low
+munin (1.4.5-3+deb6u1) unstable; urgency=low
 
   [ Christoph Biedl ]
-  * node: more secure state file handling. Closes: #679897
-  * plugins: use runtime $ENV{MUNIN_PLUGSTATE}.
-  * Validate multigraph plugin name, CVE-2013-6048
-  * Don't abort data collection for a node due to malicious node (munin#1397)
+  * munin-node: more secure state file handling, introducing a new plugin
+    state directory root, owned by uid 0. Then each plugin runs in its own
+    UID plugin state directory, owned by that UID. (Closes: #684075),
+    (Closes: #679897), closes CVE-2012-3512.
+  * plugins: use runtime $ENV{MUNIN_PLUGSTATE}. So all properly written
+    plugins will use /var/lib/munin-node/plugin-state/$uid/$some_file now -
+    please report plugins that are still using /var/lib/munin/plugin-state/ -
+    as those  might pose a security risk!
+  * Validate multigraph plugin name, CVE-2013-6048.
+  * Don't abort data collection for a node due to malicious node, fixing
+    munin#1397, CVE-2013-6359.
 
- -- Christoph Biedl <debian.axhn@manchmal.in-ulm.de>  Tue, 22 Jul 2014 21:40:11 +0200
+  [ Holger Levsen ]
+  * Convert Christophs git commits into debian/patches, make his changelog
+    entries more verbose.
+
+ -- Holger Levsen <holger@debian.org>  Thu, 07 Aug 2014 16:21:39 +0200
 
 munin (1.4.5-3) unstable; urgency=low
 
