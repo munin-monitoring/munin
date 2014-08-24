@@ -1,0 +1,5 @@
+=head1 Oops!
+
+This plugin has no perldoc section yet.
+
+=cut
