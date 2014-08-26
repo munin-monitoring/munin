@@ -3,18 +3,26 @@
 #
 # Plugin to monitor memcache statistics
 #
-# This module has 3 seperate graph datasets:
+# This module has 3 seperate graph DATASETS:
 # rates
 # bytes
 # counters
 #
-# For each of them, symlink the memcached_ script to memcached_FOO where foo is
-# the datset name.
+# For each of them, symlink the memcached_ script to memcached_DATASET.
+#
+# If multiple memcache instances are running memcached_INSTANCE_DATASET can be
+# used and INSTANCE can be any instance name that will show up in the title.
+# In thise case your config should specify a different port/host for each like
+# using the following in plugin configuration file:
+#
+# [memcached_pages_*]
+# env.port=11212
 #
 # Parameters supported:
 #
 #  config
 #  autoconf
+#  suggest
 #
 # Configurable variables
 #
@@ -22,15 +30,14 @@
 # port  Port of the memcache daemon
 #
 # Author: Robin H. Johnson <robbat2@gentoo.org>
+# Edited for suggest/instance names: Daniel Black <daniel.black@openquery.com.au> - 2014-08-26
+#
 # Slightly based on the original version by Joshua Thijssen
 # <jthijssen@noxlogic.nl>
 #
-# Included in trunk for 1.4 by Nicolai Langfeldt.  Set family to contrib
-# and disabled autoconf due to lack of "suggest".
-#
 # Magic markers:
-#%# family=contrib
-#%# capabilities=noautoconf
+#%# family=auto
+#%# capabilities=suggest autoconf
 use strict;
 my $ret = undef; 
 if (! eval "require Cache::Memcached;") {
@@ -50,6 +57,11 @@ if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" ) {
 	exit 0;
 }
 
+if ( exists $ARGV[0] and $ARGV[0] eq "suggest" ) {
+	print "rates\nbytes\ncounters\n";
+	exit 0;
+}
+
 if($ret) {
 	print "no ($ret)\n";
 	exit 1;
@@ -58,8 +70,8 @@ if($ret) {
 # We do everything by this array
 my %all_vars = (
 		rates => {
+			graph_title => 'Memcached - Commands',
 			master => {
-				graph_title => 'Memcached - Commands',
 				graph_args => '--base 1000',
 				graph_vlabel => '/${graph_period}',
 				graph_category => 'memcache',
@@ -128,8 +140,8 @@ my %all_vars = (
 			},
 		},
 		bytes => {
+			graph_title => 'Memcached - Network traffic',
 			master => {
-				graph_title => 'Memcached - Network traffic',
 				graph_args => '--base 1000',
 				graph_vlabel => 'bytes in(-)/out(+) per ${graph_period}',
 				graph_category => 'memcache',
@@ -154,8 +166,8 @@ my %all_vars = (
 			},
 		},
 		counters => {
+			graph_title => 'Memcached - Current values',
 			master => {
-				graph_title => 'Memcached - Current values',
 				graph_args => '--base 1000',
 				#graph_args => '--base 1000 --loga',
 				graph_vlabel => 'Totals',
@@ -194,8 +206,9 @@ my %all_vars = (
 		}
 		);
 
-$0 =~ /memcached_(.+)*$/;
-my $func = $1;
+$0 =~ /memcached(_([^_]*))?_(.+)*$/;
+my $instance = $2;
+my $func = $3;
 exit 2 unless defined $func;
 my %vars = %{$all_vars{$func}};
 
@@ -207,17 +220,24 @@ my %vars = %{$all_vars{$func}};
 
 if ( exists $ARGV[0] and $ARGV[0] eq "config" ) {
 	my %v = %{$vars{'master'}};
+	my $graph_title = $vars{'graph_title'};
+	if (defined($instance)) {
+		$graph_title .= " - $instance";
+	}
+	print "graph_title $graph_title\n";
 	foreach my $k ( keys %v ) {
 		print "$k ".$v{$k}."\n"
 	}
 	print 'graph_order ';
 	foreach my $k ( sort(keys %vars) ) {
 		if($k eq 'master') { next; }
+		if($k eq 'graph_title') { next; }
 		print $k." ";
 	}
 	print "\n";
 	foreach my $k ( sort(keys %vars) ) {
 		if($k eq 'master') { next; }
+		if($k eq 'graph_title') { next; }
 		my %v = %{$vars{$k}};
 		foreach my $k2 (keys %v) {
 			if($k2 eq 'stat_group' or $k2 eq 'stat_name') { next; }
@@ -231,6 +251,7 @@ my $stats = $mc->stats ('misc');
 
 foreach my $k ( sort(keys %vars) ) {
 	if($k eq 'master') { next; }
+	if($k eq 'graph_title') { next; }
 	my %v = %{$vars{$k}};
 	if($v{type} eq 'COMPUTE') { next; }
 	my $sg = $v{stat_group};
