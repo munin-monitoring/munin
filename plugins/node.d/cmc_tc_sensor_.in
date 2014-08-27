@@ -115,7 +115,7 @@ if (!defined ($session)) {
 		my $type = $sensor{$sensor_unit}->{$sensor_index}->{'type'};
 		print "graph_title Sensor ${sensor_unit}\/${sensor_index}\n";
 		print "graph_args --base 1000 -l 0\n";
-		print "graph_category Environment\n";
+		print "graph_category sensors\n";
 
 		if ($sensor_types{$type} eq "temperature") {
 		    # Find thermometer scale (Celsius or Fahrenheit);
