@@ -58,7 +58,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title Sendmail queued mails'
 	echo 'graph_order mails'
 	echo 'graph_vlabel mails in queue'
-	echo 'graph_category sendmail'
+	echo 'graph_category mail'
 	echo 'mails.label mails'
 	exit 0
 fi

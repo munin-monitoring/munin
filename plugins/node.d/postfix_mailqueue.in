@@ -103,7 +103,7 @@ case $1 in
 	cat <<'EOF'
 graph_title Postfix Mailqueue
 graph_vlabel Mails in queue
-graph_category postfix
+graph_category mail
 graph_total Total
 active.label active
 deferred.label deferred

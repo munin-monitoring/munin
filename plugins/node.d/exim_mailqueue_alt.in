@@ -65,7 +65,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_args --base 1000 -l 0'
 	echo 'graph_vlabel mails in queue'
 	echo 'graph_order frozen active bounces total'
-	echo 'graph_category exim'
+	echo 'graph_category mail'
 	echo 'active.label active'
 	echo 'active.draw STACK'
 	echo 'bounces.label bounces'

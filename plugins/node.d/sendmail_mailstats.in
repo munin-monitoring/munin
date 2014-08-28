@@ -50,7 +50,7 @@ if [ "$1" = "config" ]; then
 	echo "graph_title Sendmail email traffic"
 	echo "graph_order received sent rejected discarded"
 	echo 'graph_vlabel messages/${graph_period}'
-	echo "graph_category sendmail"
+	echo "graph_category mail"
 	echo "discarded.label discarded"
 	echo "discarded.max 1000000"
 	echo "discarded.min 0"

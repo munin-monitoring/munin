@@ -51,7 +51,7 @@ if [ "$1" = "config" ]; then
 	echo "graph_title Sendmail email volumes"
 	echo "graph_order received sent"
 	echo 'graph_vlabel bytes/${graph_period}'
-	echo "graph_category sendmail"
+	echo "graph_category mail"
 	echo "received.label received"
 	echo "sent.label sent"
 	echo "received.max 1000000"
