@@ -44,7 +44,7 @@ svn checkout https://github.com/munin-monitoring/munin/trunk/plugins $WORKDIR
 cd $WORKDIR # I want a relative path as output of find and grep
 
 # Find relation between plugins and categories
-grep -iR category node.* | sort -u > $SCRIPTDIR/cat.lst
+grep -iR --exclude-from=$SCRIPTDIR/grep-files.excl category node.* | sort -u > $SCRIPTDIR/cat.lst
 awk -F : -f $SCRIPTDIR/split-greplist.awk $SCRIPTDIR/cat.lst | LC_COLLATE=C sort -u > $SCRIPTDIR/catsorted.lst
 
 # Create categories navigation snippet to integrate in each page
