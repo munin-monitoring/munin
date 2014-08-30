@@ -71,6 +71,12 @@ LC_COLLATE=C sort -u $SCRIPTDIR/nocat-plugins.lst > $SCRIPTDIR/other-plugins.lst
 # Create Gallery pages for category "other"
 awk -f $SCRIPTDIR/print-gallery.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/other-plugins.lst >$SCRIPTDIR/print-gallery2.log
 
+# Collect example graphs
+find node.* -name '*.png' | grep -v node.d.debug | sort > $SCRIPTDIR/example-graphs.lst
+
+# Include example graphs in perldoc pages
+awk -f $SCRIPTDIR/include-graphs.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/example-graphs.lst >$SCRIPTDIR/include-graphs.log
+
 # chown -R $WWWUSER.$WWWGROUP $HTMLDIR
 chmod -R a+rx $HTMLDIR
 

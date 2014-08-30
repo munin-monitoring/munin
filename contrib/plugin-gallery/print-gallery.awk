@@ -17,7 +17,7 @@ BEGIN {
   lastcategory = ""
   lastnode = ""
   firstnode = "true"
-  trailer = "\t<h2>Category :: %s</h2>\n\t<ul class=\"groupview\">\n"
+  header = "\t<h2>Category :: %s</h2>\n\t<ul class=\"groupview\">\n"
   nodeheader = "\t\t<li ><span class=\"domain\">%s</span>\n\t\t<ul>\n"
   nodefooter = "\t\t</ul>\n\t\t</li>\n"
   tmplplugin = "\t\t\t<li ><span class=\"host\">[<a href=\"https://raw.githubusercontent.com/munin-monitoring/munin/devel/plugins/%s\" title=\"Download\"><img src=\"./static/download.gif\" alt=\"Download\"></a>]&nbsp;<span class=\"host\"><a href=\"distro/plugins/%s/%s.html\" title=\"Info\">%s</a></span></li>\n"
@@ -48,7 +48,7 @@ BEGIN {
     # create file for this category
     fname = htmldir "/" category "-index.html"
     system ("cp " scriptdir "/static/prep-index.html " fname)
-    printf(trailer,category) >> fname
+    printf(header,category) >> fname
     lastcategory = category
     firstnode = "true"
   }
