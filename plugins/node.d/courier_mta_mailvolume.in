@@ -1,6 +1,8 @@
 #!@@PERL@@ -w
 # -*- perl -*-
 
+=encoding utf8
+
 =head1 NAME
 
 courier_mta_mailvolume - Plugin to monitor the volume og mails
@@ -15,7 +17,7 @@ The following environent variables are used by this plugin:
 
 =head1 AUTHOR
 
-Rune Nordbøe Skillingstad <runesk@linpro.no>
+Rune NordbÃ¸e Skillingstad <runesk@linpro.no>
 
 =head1 LICENSE
 
@@ -107,6 +109,7 @@ $pos = $startsize;
 
 if($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title Courier MTA mailvolume throughput\n";
+    print "graph_category mail\n";
     print "graph_args --base 1000 -l 0\n";
     print "graph_vlabel bytes / \${graph_period}\n";
     print "graph_scale  no\n";
