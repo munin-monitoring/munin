@@ -39,9 +39,14 @@ WORKDIR=$HTMLDIR/distro/plugins
 SCRIPTDIR=/home/gap/projects/munin/github/munin/contrib/plugin-gallery
 
 # Download github files
-svn checkout https://github.com/munin-monitoring/munin/trunk/plugins $WORKDIR
-
-cd $WORKDIR # I want a relative path as output of find and grep
+if test -d "$WORKDIR/.svn"; then
+  cd $WORKDIR 
+  svn update --accept theirs-full
+else
+  svn checkout https://github.com/munin-monitoring/munin/trunk/plugins $WORKDIR
+  # We want a relative path as output of find and grep
+  cd $WORKDIR 
+fi
 
 # Find relation between plugins and categories
 grep -iR --exclude-from=$SCRIPTDIR/grep-files.excl category node.* | sort -u > $SCRIPTDIR/cat.lst
@@ -75,12 +80,13 @@ awk -f $SCRIPTDIR/print-gallery.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htm
 find node.* -name '*.png' | grep -v node.d.debug | sort > $SCRIPTDIR/example-graphs.lst
 
 # Include example graphs in perldoc pages
-awk -f $SCRIPTDIR/include-graphs.awk -v scriptdir=$SCRIPTDIR workdir=$WORKDIR htmldir=$HTMLDIR $SCRIPTDIR/example-graphs.lst >$SCRIPTDIR/include-graphs.log
+awk -f $SCRIPTDIR/include-graphs.awk -v workdir=$WORKDIR $SCRIPTDIR/example-graphs.lst >$SCRIPTDIR/include-graphs.log
 
 # chown -R $WWWUSER.$WWWGROUP $HTMLDIR
 chmod -R a+rx $HTMLDIR
 
 # Some statistic
-echo `cat $SCRIPTDIR/nocat-plugins.lst | wc -l` " plugins without category were assigned to category 'other'"
+echo `cat $SCRIPTDIR/nocat-plugins.lst | wc -l` "plugins without category were assigned to category 'other'"
 echo `grep "output saved" $SCRIPTDIR/print-gallery*.log | wc -l` "times created perldoc pages with content"
 echo `grep "No documentation" $SCRIPTDIR/print-gallery*.log | wc -l` "times no perldoc content found"
+echo `cat $SCRIPTDIR/example-graphs.lst | wc -l` "example graph images illustrate the plugin pages"
