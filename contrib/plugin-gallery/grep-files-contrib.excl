@@ -1,0 +1,8 @@
+.svn/*
+*.conf
+*.html
+*.ini
+*.md
+*.png
+*.rst
+*.txt

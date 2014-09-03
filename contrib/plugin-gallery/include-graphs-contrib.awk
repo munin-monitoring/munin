@@ -3,7 +3,7 @@
 #
 # $Id$
 # Author: Gabriele Pohl (contact@dipohl.de)
-# Date: 2014-08-30
+# Date: 2014-09-03
 # 
 # This script is free software; you can redistribute it and/or modify
 # it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE as published
@@ -16,8 +16,9 @@
 
 BEGIN {
   FS = "/" 
+  lengraphdir = length("example-graphs")
   lastplugin = ""
-  lastnode= ""
+  lastdir= ""
   pattern= ">NAME</a></h1>"
   preheader = ">NAME\\</a>\\</h1>\\<h2>\\<a class=\"u\" name=\"example-graphs\">"
   postheader = "\\</a>\\</h2>\\<p>"
@@ -25,15 +26,15 @@ BEGIN {
 }
 
 {
-  # Column 1 of input file
-  node = $1
-  # Column 3 of input file
-  graphfile = $3
+  # Last Column of input file
+  graphfile = $(NF)
+  # Path to the plugin
+  plugindir = substr($0,1,length($0) - length(graphfile) - lengraphdir - 1 )
 
   # Pick plugin name out of graph file name
   if (match(graphfile,"-")) {
     plugin = substr(graphfile,1,RSTART-1)
-    print "Plugin = " node "/" plugin "\n"
+    print "Plugin = " plugindir plugin "\n"
   }
 
   # Next plugin
@@ -41,13 +42,13 @@ BEGIN {
     # finish snippet of last plugin
     if (FNR != 1) {
       inc = inc footer
-      cmd = "sed -i 's:" pattern ":" inc ":I' " workdir "/" lastnode "/" lastplugin ".html"
+      cmd = "sed -i 's:" pattern ":" inc ":I' " workdir "/" lastdir lastplugin ".html"
       system (cmd)
     }
     # create snippet for next plugin file
     inc = preheader plugin postheader
     lastplugin = plugin
-    lastnode = node
+    lastdir = plugindir
   }
 
   # Print graph include code
@@ -56,6 +57,6 @@ BEGIN {
 
 END { 
       inc = inc footer
-      cmd = "sed -i 's:" pattern ":" inc ":I' " workdir "/" node "/" lastplugin ".html"
+      cmd = "sed -i 's:" pattern ":" inc ":I' " workdir "/" lastdir lastplugin ".html"
       system (cmd)
 }

@@ -1,6 +1,6 @@
 BEGIN {
   lastcategory = "";
-  tmpl = "\t\t<li><a href=\"./%s-index.html\">%s</a></li>\n"
+  tmpl = "\t\t<li><a href=\"/%s-index.html\">%s</a></li>\n"
 }
 
 {
