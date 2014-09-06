@@ -28,6 +28,7 @@
 
 function Trim(string) {
     sub(/=>/, "", string)
+    sub(/=/, "", string)
     gsub(/\"/, "", string)
     gsub(/'/, "", string)
     sub(/^[[:space:]]/, "", string)
@@ -40,7 +41,7 @@ function GrabAlphaNum(string) {
 
   for (i=1; i<=length(string); i++) {
     lettr = substr(string,i,1);
-    if (match(lettr,"([[:alnum:]]|\-|\_)")) 
+    if (match(lettr,"([[:alnum:]]|\-|\_|\:)")) 
       strout = strout lettr
     else 
       break;
