@@ -17,11 +17,11 @@ if [ -z "$1" ]; then
 fi
 
 
-RUN=$(find $FINDDIR -name $1 -type f -executable)
+RUN=$(find $DESTDIR -name $1 -type f -perm -a-rx)
 shift
 
 if [ -z "$RUN" ]; then
     usage
 fi
 
-env PERL5LIB=$DESTDIR$PERLSITELIB $RUN "$@"
+env PERL5LIB=$PERL5LIB:$DESTDIR$PERLSITELIB $RUN "$@"

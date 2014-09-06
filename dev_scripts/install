@@ -1,5 +1,12 @@
 #!/bin/bash
 
+fakeroot()
+{
+	# We don't care about permission in dev_script files
+	"$@"
+}
+
+
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
 . $FINDBIN/common.sh
 
@@ -51,7 +58,7 @@ tls_verify_depth 5
 fi
 
 
-for i in $(find $DESTDIR -name 'munin-cgi-*' -type f -executable)
+for i in $(find $DESTDIR -name 'munin-cgi-*' -type f -perm -a-rx)
 do
 	echo "Untainting CGI $i"
 	echo "#! /usr/bin/perl" > $i.tmp

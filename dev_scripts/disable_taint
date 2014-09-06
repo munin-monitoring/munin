@@ -5,4 +5,4 @@ FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
 
 cd $BASEDIR
 
-perl -pi -e "s,bin/perl -T,bin/perl," $( find $FINDDIR -type f -executable )
+perl -pi -e "s,bin/perl -T,bin/perl," $( find $FINDDIR -type f -perm -a-rx)

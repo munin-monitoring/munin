@@ -169,7 +169,6 @@ install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	mkdir -p $(LIBDIR)/plugins
 	mkdir -p $(PLUGSTATE)
 
-	$(CHOWN) root:root $(PLUGSTATE)
 	$(CHMOD) 0755 $(PLUGSTATE)
 	$(CHMOD) 0755 $(CONFDIR)/plugin-conf.d
 
@@ -309,7 +308,7 @@ substitute-confvar-inline:
              -e 's|@@GOODSH@@|$(GOODSH)|g'                      \
              -e 's|@@BASH@@|$(BASH)|g'                          \
              -e 's|@@HASSETR@@|$(HASSETR)|g'                    \
-             -i ''                                              \
+             -i 'orig'                                          \
              ./master/blib/libdoc/Munin::Master::HTMLOld.$(MAN3EXT)	\
              ./master/blib/lib/Munin/Master/HTMLOld.pm          \
              ./node/blib/sbin/munin-node-configure              \
