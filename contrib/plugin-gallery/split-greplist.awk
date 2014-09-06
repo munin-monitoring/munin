@@ -35,12 +35,12 @@ function Trim(string) {
     return string
 }
 
-function GrabAlpha(string) {
+function GrabAlphaNum(string) {
   strout = ""
 
   for (i=1; i<=length(string); i++) {
     lettr = substr(string,i,1);
-    if (match(lettr,"[[:alpha:]]")) 
+    if (match(lettr,"([[:alnum:]]|\-|\_)")) 
       strout = strout lettr
     else 
       break;
@@ -58,7 +58,7 @@ BEGIN {}
       # RSTART is where the pattern starts
       category = substr($2,RSTART+15)
       category = Trim(category)
-      category = GrabAlpha(category)
+      category = GrabAlphaNum(category)
       if (length(category) < 1) category = "other"
       printf("%s %s\n", tolower(category), plugin)
       next
@@ -67,7 +67,7 @@ BEGIN {}
       # RSTART is where the pattern starts
       category = substr($2,RSTART+9)
       category = Trim(category)
-      category = GrabAlpha(category)
+      category = GrabAlphaNum(category)
       if (length(category) < 1) category = "other"
       printf("%s %s\n", tolower(category), plugin)
     }

@@ -87,6 +87,6 @@ chmod -R a+rx $HTMLDIR
 
 # Some statistic
 echo `cat $SCRIPTDIR/nocat-plugins.lst | wc -l` "plugins without category were assigned to category 'other'"
-echo `grep "output saved" $SCRIPTDIR/print-gallery*.log | wc -l` "times created perldoc pages with content"
-echo `grep "No documentation" $SCRIPTDIR/print-gallery*.log | wc -l` "times no perldoc content found"
+echo `grep "output saved" $SCRIPTDIR/print-gallery?.log | wc -l` "times created perldoc pages with content"
+echo `grep "No documentation" $SCRIPTDIR/print-gallery?.log | wc -l` "times no perldoc content found"
 echo `cat $SCRIPTDIR/example-graphs.lst | wc -l` "example graph images illustrate the plugin pages"
