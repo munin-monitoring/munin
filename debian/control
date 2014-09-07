@@ -134,7 +134,7 @@ Package: munin
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends},
  adduser,
- cron,
+ cron-daemon,
  fonts-dejavu,
  libcgi-fast-perl,
  libdate-manip-perl,
