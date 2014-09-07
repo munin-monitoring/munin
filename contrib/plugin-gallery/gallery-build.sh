@@ -12,9 +12,8 @@
 # for their plugins also. Rules are defined here:
 # http://munin-monitoring.org/wiki/PluginGallery
 #
-# $Id: gallery-build.sh,v 1.5 2014/08/23 17:32:34 gap Exp gap $
 # Author: Gabriele Pohl (contact@dipohl.de)
-# Date: 2014-08-19
+# Date: 2014-09-07
 #
 # This script is free software; you can redistribute it and/or modify
 # it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE as published
@@ -37,6 +36,9 @@ WORKDIR=$HTMLDIR/distro/plugins
 
 # This directory is for files only needed to build the Gallery
 SCRIPTDIR=/home/gap/projects/munin/github/munin/contrib/plugin-gallery
+
+# Remove POD pages of last run
+find $WORKDIR -name *.html -exec rm {} \;
 
 # Download github files
 if test -d "$WORKDIR/.svn"; then

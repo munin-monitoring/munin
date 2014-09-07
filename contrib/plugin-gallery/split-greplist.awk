@@ -6,16 +6,15 @@
 # in the plugin script files
 # 
 # OUTPUT
-# Column1 category
-# Column2 path to plugin file relative to github directory "plugin"
+# Left Column: path to plugin file relative to github directory "plugin"
+# Right side: string with category
 #
 # ASSUMPTION
 # Category is always only _one_ word
 # @plugin-authors: Use underscore to substitute blanks
 #
-# $Id: split-greplist.awk,v 1.3 2014/08/24 10:03:00 gap Exp gap $
 # Author: Gabriele Pohl (contact@dipohl.de)
-# Date: 2014-08-24
+# Date: 2014-09-07
 #
 # This script is free software; you can redistribute it and/or modify
 # it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE as published
@@ -55,18 +54,22 @@ BEGIN {}
 {
     plugin = $1
     if (match(plugin, "node.d.debug")) next;
-    if (match($2, "graph_category.*")) {
+    # Colon used as field separator, but as it
+    # can also be used as separator for subcategories, 
+    # we have to fetch the whole right side from $0
+    grepstr = substr($0, length($1)+2)
+    if (match(grepstr, "graph_category.*")) {
       # RSTART is where the pattern starts
-      category = substr($2,RSTART+15)
+      category = substr(grepstr,RSTART+15)
       category = Trim(category)
       category = GrabAlphaNum(category)
       if (length(category) < 1) category = "other"
       printf("%s %s\n", tolower(category), plugin)
       next
     }
-    if (match($2, "category.*=>.*")) {
+    if (match(grepstr, "category.*=>.*")) {
       # RSTART is where the pattern starts
-      category = substr($2,RSTART+9)
+      category = substr(grepstr,RSTART+9)
       category = Trim(category)
       category = GrabAlphaNum(category)
       if (length(category) < 1) category = "other"

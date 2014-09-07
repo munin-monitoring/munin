@@ -65,12 +65,17 @@ BEGIN {
 
   # Print plugin info
   printf(tmplplugin,pluginpath,nodedir,plugin,plugin) >> fname
-  cmd = "perldoc -o html -d " workdir "/" nodedir "/" plugin ".html " workdir "/" pluginpath " 2>&1"
-  result = system(cmd)
-  # On error put "Oops" page in place
-  if (result > 0) {
-    cmd = "cp " scriptdir "/static/leer.html " workdir "/" nodedir "/" plugin ".html 2>&1"
-    system(cmd)
+  docfilename = workdir "/" nodedir "/" plugin ".html"
+  cmd = "test -f " docfilename
+  rc = system(cmd)
+  if (rc!=0) {
+    cmd = "perldoc -o html -d " docfilename " " workdir "/" pluginpath " 2>&1"
+    result = system(cmd)
+    # On error put "Oops" page in place
+    if (result > 0) {
+      cmd = "cp " scriptdir "/static/leer.html " workdir "/" nodedir "/" plugin ".html 2>&1"
+      system(cmd)
+    }
   }
 }
 

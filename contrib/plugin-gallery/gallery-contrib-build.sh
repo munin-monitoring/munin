@@ -12,7 +12,7 @@
 # http://munin-monitoring.org/wiki/PluginGallery
 #
 # Author: Gabriele Pohl (contact@dipohl.de)
-# Date: 2014-09-03
+# Date: 2014-09-07
 #
 # This script is free software; you can redistribute it and/or modify
 # it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE as published
