@@ -1,6 +1,8 @@
 #!@@PERL@@ -w
 # -*- cperl -*-
 
+=encoding utf8
+
 =head1 NAME
 
 apache - Munin multigraph plugin to monitor Apache statistics.
@@ -69,7 +71,7 @@ the second underscore in the plugin name:
 
 =head1 INTERPRETATION
 
-=head2 APACHE ACCESES
+=head2 APACHE ACCESSES
 
 The graph shows the number of accesses (pages and other items served)
 globally on the Apache server.

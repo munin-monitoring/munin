@@ -3,6 +3,8 @@
 
 : << =cut
 
+=encoding utf8
+
 =head1 NAME
 
 df - Script to monitor disk usage
@@ -33,7 +35,7 @@ Check smb/cifs remote mounts. (Cygwin bug, 2002 vintage, still unfixed: -l switc
 
 =head1 AUTHOR
 
-Erik Inge Bols¯ <knan-munin@anduin.net>
+Erik Inge Bols√∏ <knan-munin@anduin.net>
 
 =head1 LICENSE
 

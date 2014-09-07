@@ -1,6 +1,8 @@
 #!@@PERL@@ -w
 # -*- cperl -*-
 
+=encoding utf8
+
 =head1 NAME
 
 asterisk - Multigraph-capable plugin to monitor Asterisk
@@ -59,8 +61,8 @@ underscore:
 
 =head1 AUTHOR
 
-Copyright (C) 2005-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
-Copyright (C) 2012 Diego Elio Pettenò <flameeyes@flameeyes.eu>
+ Copyright (C) 2005-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
+ Copyright (C) 2012 Diego Elio Pettenò <flameeyes@flameeyes.eu>
 
 =head1 LICENSE
 

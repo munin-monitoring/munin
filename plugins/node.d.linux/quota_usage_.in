@@ -1,21 +1,40 @@
 #!@@PERL@@
 #
-# Plugin to monitor quota on a specified device. Needs repquota and root privs
-#
-# Usage: place in /etc/munin/node.d/quota-usage_<dev> (or link it there using
-# ln -s), for example quota-usage_hda3. Use underscores instead of slashes, for
-# example to monitor /dev/mapper/vol-foo, name this quota-usage_mapper_vol-foo
-#
-# This plugin uses the soft and hard quota data for warning and critical
-# levels respectively.
-#
-# Source: https://svn.koumbit.net/koumbit/trunk/munin-plugins/quota-usage
-#
-# Parameters understood:
-#
-# 	config   (required)
-#
-#%# family=manual
+
+=head1 NAME
+
+quota_usage_ - Plugin to monitor quota on a specified device. 
+
+=head1 APPLICABLE SYSTEMS
+
+Needs repquota and root privs
+
+=head1 USAGE
+
+Create Service Link @@CONFDIR@@/plugins/quota-usage_<dev>
+for example C<quota-usage_hda3>. Use underscores instead of slashes, for
+example to monitor C</dev/mapper/vol-foo>, name this C<quota-usage_mapper_vol-foo>
+
+This plugin uses the soft and hard quota data for warning and critical
+levels respectively.
+
+=head1 MAGIC MARKERS
+
+  #%# family=manual
+
+=head1 AUTHOR
+
+Unknown author
+
+Source: L<https://svn.koumbit.net/koumbit/trunk/munin-plugins/quota-usage>
+
+L<http://munin-monitoring.org/attachment/ticket/143/quota-usage>
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
 
 use strict;
 use warnings;
