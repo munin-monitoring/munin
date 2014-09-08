@@ -43,7 +43,7 @@ find $WORKDIR -name *.html -exec rm {} \;
 # Download github files
 if test -d "$WORKDIR/.svn"; then
   cd $WORKDIR 
-  svn update --accept theirs-full
+#  svn update --accept theirs-full
 else
   svn checkout https://github.com/munin-monitoring/munin/trunk/plugins $WORKDIR
   # We want a relative path as output of find and grep

@@ -50,7 +50,7 @@ else
 fi
 
 # Find relation between plugins and categories
-grep -iR --exclude-from=$SCRIPTDIR/grep-files-contrib.excl graph_category * | sort -u > $SCRIPTDIR/cat-contrib.lst
+grep -iR --exclude-from=$SCRIPTDIR/grep-files-contrib.excl graph_category * | grep -v .svn | sort -u > $SCRIPTDIR/cat-contrib.lst
 awk -F : -f $SCRIPTDIR/split-greplist.awk $SCRIPTDIR/cat-contrib.lst | LC_COLLATE=C sort -u > $SCRIPTDIR/catsorted-contrib.lst
 
 # Create categories navigation snippet to integrate in each page
