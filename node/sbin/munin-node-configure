@@ -615,17 +615,17 @@ documentation for L<Net::SNMP>.
 
 Username.  There is no default.
 
-=item B<< --snmpauthpassword <password> >>
+=item B<< --snmpauthpass <password> >>
 
 Authentication password.  Optional when encryption is also enabled, in which
-case defaults to the privacy password (C<--snmpprivpassword>).
+case defaults to the privacy password (C<--snmpprivpass>).
 
 =item B<< --snmpauthprotocol <protocol> >>
 
 Authentication protocol.  One of 'md5' or 'sha' (HMAC-MD5-96, RFC1321 and
 SHA-1/HMAC-SHA-96, NIST FIPS PIB 180, RFC2264).  ['md5']
 
-=item B<< --snmpprivpassword <password> >>
+=item B<< --snmpprivpass <password> >>
 
 Privacy password to enable encryption.  There is no default.  An empty ('')
 password is considered as no password and will not enable encryption.
