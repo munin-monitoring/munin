@@ -43,7 +43,7 @@ find $WORKDIR -name *.html -exec rm {} \;
 # Download github files
 if test -d "$WORKDIR/.svn"; then
   cd $WORKDIR 
-#  svn update --accept theirs-full
+  svn update --accept theirs-full
 else
   svn checkout https://github.com/munin-monitoring/munin/trunk/plugins $WORKDIR
   # We want a relative path as output of find and grep
@@ -51,7 +51,7 @@ else
 fi
 
 # Find relation between plugins and categories
-grep -iR --exclude-from=$SCRIPTDIR/grep-files.excl category node.* | sort -u > $SCRIPTDIR/cat.lst
+grep -iR --exclude-from=$SCRIPTDIR/grep-files.excl category node.* | grep -v .svn | sort -u > $SCRIPTDIR/cat.lst
 awk -F : -f $SCRIPTDIR/split-greplist.awk $SCRIPTDIR/cat.lst | LC_COLLATE=C sort -u > $SCRIPTDIR/catsorted.lst
 
 # Create categories navigation snippet to integrate in each page
