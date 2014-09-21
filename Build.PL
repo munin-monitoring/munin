@@ -52,3 +52,5 @@ my $build = Module::Build->new(
 );
 
 $build->create_build_script;
+$build->dispatch('distmeta');
+$build->dispatch('manifest');
