@@ -1,3 +1,0 @@
-[env]
-host_name test.example.com
-env.munin_test test
