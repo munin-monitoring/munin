@@ -10,7 +10,6 @@ my $build = Module::Build->new(
     dist_version  => qx{./getversion},
     dist_author   => 'The Munin Project <project@munin-monitoring.org>',
     dist_abstract => 'networked resource monitoring tool with plugins',
-	install_path  => { conf => 'blib/etc' },
     license       => 'gpl2',
     requires      => {
         'perl'                   => '5.10.0',
