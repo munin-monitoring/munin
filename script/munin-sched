@@ -1,4 +1,4 @@
-#!@@PERL@@ -wT
+#!/usr/bin/perl -T
 # -*- cperl -*-
 #
 # Copyright (C) 2002-2010 Audun Ytterdal, Jimmy Olsen, Tore Anderson,

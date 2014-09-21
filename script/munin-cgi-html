@@ -1,4 +1,4 @@
-#!@@PERL@@ -T
+#!/usr/bin/perl -T
 # -*- cperl -*-
 
 =begin comment

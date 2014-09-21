@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 # -*- perl -*-
 #
 # This script provides the basis for a plugin documentation system for
@@ -30,6 +30,7 @@
 require 5;
 
 use strict;
+use warnings;
 use Pod::Perldoc;
 use File::Find;
 use Munin::Common::Defaults;
