@@ -60,7 +60,7 @@ otherwise.
 .. option:: palette <default|old>
 
    The palette used by :ref:`munin-graph` and :ref:`munin-cgi-graph`
-   to colour the graphs. The "default" palete has more colours and
+   to color the graphs. The "default" palette has more colors and
    better contrast than the "old" palette.
 
    Affects: :ref:`munin-graph`
@@ -68,8 +68,8 @@ otherwise.
 .. option:: custom_palette rrggbb rrggbb ...
 
    The user defined custom palette used by :ref:`munin-graph` and :ref:`munin-cgi-graph`
-   to colour the graphs. This option override existing palette.
-   The palette must be space-separeted 24-bit hex color code.
+   to color the graphs. This option override existing palette.
+   The palette must be space-separated 24-bit hex color code.
 
    Affects: :ref:`munin-graph`
    

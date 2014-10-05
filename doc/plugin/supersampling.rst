@@ -82,7 +82,7 @@ lines, with monotonically increasing epoch.
   Note that since the epoch is an integer value for rrdtool_, the
   smallest granularity is 1 second. For the time being, the protocol
   itself does also mandates integers. We can easily imagine that with
-  another database as backend, an extension could be hacked together.
+  another database as back-end, an extension could be hacked together.
 
 .. _rrdtool: http://oss.oetiker.ch/rrdtool/doc/rrdtool.en.html
 

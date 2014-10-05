@@ -23,5 +23,6 @@ Other documentation
 
    use.rst
    writing.rst
+   env.rst
    multigraphing.rst
    supersampling.rst
