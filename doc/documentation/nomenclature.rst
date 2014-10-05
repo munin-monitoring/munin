@@ -4,7 +4,7 @@
 
 To be able to use Munin, to understand the documentation, and - not to
 be neglected - to be able to write documentation that is consistent
-with Munin behaviour, we need a common nomenclature.
+with Munin behavior, we need a common nomenclature.
 
 Common terms
 ============
@@ -34,10 +34,10 @@ Common terms
 +--------------+--------------------------------------------+------------------------------+
 | Attribute    | Description found in output from plugins,  |                              |
 |              | both general (global) to the plugin, and   |                              |
-|              | also specific ot each Field.               |                              |
+|              | also specific to each Field.               |                              |
 +--------------+--------------------------------------------+------------------------------+
 | Environment  | Set up by munin node, used to control      |                              |
-| variable     | plugin behaviour.  Found in the plugin     |                              |
+| variable     | plugin behavior.  Found in the plugin     |                              |
 |              | configuration directory.                   |                              |
 |              | (/etc/munin/plugin-conf.d/)                |                              |
 +--------------+--------------------------------------------+------------------------------+
@@ -90,7 +90,7 @@ configures the plugins graph.
 Datasource specific plugin attribute
 ------------------------------------
 
-These are found both in the config outout of a plugin and in the
+These are found both in the config output of a plugin and in the
 normal readings of a plugin. A plugin may provide data from one or
 more data sources. Each data source needs its own set of
 field.attribute tuples to define how the data source should be
@@ -145,7 +145,7 @@ Attributes
 
 Directives
   The configuration files, however, are the administrator's domain.
-  Here, the administrator may -- through directives -- control the plugins' behaviour
+  Here, the administrator may -- through directives -- control the plugins' behavior
   and even override the plugin's attributes if so desired. 
   As such, directives (in configuration files) may override attributes (in plugins). 
 

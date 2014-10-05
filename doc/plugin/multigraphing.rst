@@ -110,7 +110,7 @@ Then for each of the interfaces the plugin emits these configuration items (inte
    graph_vlabel bits in (-) / out (+) per \${graph_period}
    graph_category network
    graph_info This graph shows errors for the \"$alias\" network interface.
-   send.info Errors in outgoing/incomming traffic on this interface.
+   send.info Errors in outgoing/incoming traffic on this interface.
    recv.label recv
    recv.type DERIVE
    recv.graph no

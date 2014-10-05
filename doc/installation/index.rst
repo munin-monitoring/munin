@@ -13,5 +13,4 @@ help, and how to report bugs.
    prerequisites.rst
    install.rst
    configuration.rst
-   help.rst
    upgrade.rst

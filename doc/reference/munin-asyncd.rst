@@ -33,7 +33,7 @@ OPTIONS
 
 .. option:: --retain <count>
 
-   Number of interval files to retai [7]
+   Number of interval files to retain [7]
 
 .. option:: --nocleanup
 

@@ -30,7 +30,7 @@ The following components are part of munin-master:
      <munin-node>`, which is then stored in RRD files.
 
    * :ref:`munin-graph` is run by :ref:`munin-cron`. It generates
-     metadata used by :ref:`munin-cgi-graph`. If graph_strategy is set
+     meta-data used by :ref:`munin-cgi-graph`. If graph_strategy is set
      to "cron", it generates static graphs in PNG format.
 
    * :ref:`munin-limits` is run by :ref:`munin-cron`. It notifies any
@@ -39,7 +39,7 @@ The following components are part of munin-master:
      is then configured as a contact.
 
    * :ref:`munin-html` is run by :ref:`munin-cron`. It generates
-     metadata used by :ref:`munin-cgi-html`. If html_strategy is set
+     meta-data used by :ref:`munin-cgi-html`. If html_strategy is set
      to "cron", it also generates static HTML pages.
 
    * :ref:`munin-cgi-graph` is run by a web server, and generates
