@@ -7,15 +7,23 @@
 
 numa - Plugin to graph  NUMA page hits and misses
 
+=head1 APPLICABLE SYSTEMS
+
+Linux kernels since 2.6.12
+
 =head1 CONFIGURATION
 
-This plugin does not normally require configuration.
+This plugin does not require configuration.
 
 The number after numa_ indicates the numa node. It is followed by
 either 'memory' or 'process'.
 
 numa_0_memory
 numa_1_process
+
+=head1 INTERPRETATION
+
+Remote and foreign access takes more time than local access.
 
 =head1 AUTHORS
 
