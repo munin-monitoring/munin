@@ -1208,7 +1208,7 @@ sub config {
     while (my ($k, $v) = each %conf) {
 	print "graph_$k $v\n";
     }
-    print "graph_category mysql2\n";
+    print "graph_category mysql\n";
 
     my $i = 0;
     for my $ds (@{$graph->{data_sources}}) {

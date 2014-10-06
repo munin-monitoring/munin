@@ -72,7 +72,7 @@ if [[ $1 = config ]]; then
 
     echo 'graph_title CPU usage'
     echo 'graph_order system user waitio idle'
-    echo 'graph_category CPU'
+    echo 'graph_category system'
     echo "graph_args --base 1000 --lower-limit 0 --rigid --upper-limit $graphlimit"
     echo 'graph_vlabel %'
     echo 'graph_scale no'
