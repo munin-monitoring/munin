@@ -148,6 +148,28 @@ sub add_new_state {
     return;
 }
 
+# subtract_wrapping_numbers
+#
+# Will subtract two numbers, but takes into account that the numbers
+# are represented as either a 32-bit value which wraps at 2 ** 32 - 1,
+# or a 64-bit value.
+
+sub subtract_wrapping_numbers {
+    my ( $cur_value, $prev_value ) = @_;
+
+    return $cur_value - $prev_value if $cur_value >= $prev_value;
+
+    # The numbers seems to have wrapped.
+    if ($prev_value <= 2 ** 32) {
+        # Unsigned int wraps here.
+        $cur_value += 2 ** 32;
+    } else {
+        $cur_value += 2 ** 64;
+    }
+
+    return $cur_value - $prev_value;
+}
+
 # calculate_values
 #
 # Calculates all data that get's graphed
@@ -159,16 +181,16 @@ sub calculate_values {
 
     my $interval = time() - $prev_time;
 
-    my $read_ios  = $cur_stats->{'rd_ios'} - $prev_stats->{'rd_ios'};
-    my $write_ios = $cur_stats->{'wr_ios'} - $prev_stats->{'wr_ios'};
+    my $read_ios  = subtract_wrapping_numbers($cur_stats->{'rd_ios'}, $prev_stats->{'rd_ios'});
+    my $write_ios = subtract_wrapping_numbers($cur_stats->{'wr_ios'}, $prev_stats->{'wr_ios'});
 
-    my $rd_ticks = $cur_stats->{'rd_ticks'} - $prev_stats->{'rd_ticks'};
-    my $wr_ticks = $cur_stats->{'wr_ticks'} - $prev_stats->{'wr_ticks'};
+    my $rd_ticks = subtract_wrapping_numbers($cur_stats->{'rd_ticks'}, $prev_stats->{'rd_ticks'});
+    my $wr_ticks = subtract_wrapping_numbers($cur_stats->{'wr_ticks'}, $prev_stats->{'wr_ticks'});
 
-    my $rd_sectors = $cur_stats->{'rd_sectors'} - $prev_stats->{'rd_sectors'};
-    my $wr_sectors = $cur_stats->{'wr_sectors'} - $prev_stats->{'wr_sectors'};
+    my $rd_sectors = subtract_wrapping_numbers($cur_stats->{'rd_sectors'}, $prev_stats->{'rd_sectors'});
+    my $wr_sectors = subtract_wrapping_numbers($cur_stats->{'wr_sectors'}, $prev_stats->{'wr_sectors'});
 
-    my $tot_ticks = $cur_stats->{'tot_ticks'} - $prev_stats->{'tot_ticks'};
+    my $tot_ticks = subtract_wrapping_numbers($cur_stats->{'tot_ticks'}, $prev_stats->{'tot_ticks'});
 
     my $read_io_per_sec  = $read_ios / $interval;
     my $write_io_per_sec = $write_ios / $interval;
