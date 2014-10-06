@@ -1,5 +1,7 @@
 package Munin::Master::HTMLOld;
 
+=encoding utf-8
+
 =begin comment
 -*- perl -*-
 
