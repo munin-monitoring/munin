@@ -1,25 +1,44 @@
 #!@@PERL@@ -w
-#
-# Plugin to monitor physical cpu usage in an IBM POWER P5 / OpenPower LPAR
-#
-# Usage: Place in /etc/munin/plugins (or make a symlink to it there)
-#
-# Parameters understood:
-#
-#       config
-#       autoconf
-#
-# This should be run as root, so drop a file with something like this in
-# /etc/munin/plugin-conf.d/lpar_cpu:
-#       [lpar_cpu]
-#       user root
-#
-# Great thanks to Nigel Griffith of IBM for the magic to get these values
-#
-# Author: Ingvar Hagelund <ingvar(at)linpro.no>
-#
-# Licence: GNU General Public Licence v2.0,
-# see http://www.gnu.org/copyleft/gpl.html
+
+=pod
+
+=head1 NAME
+
+lpar_cpu - Plugin to monitor physical cpu usage
+
+=head1 APPLICABLE SYSTEMS
+
+IBM POWER P5 / OpenPower LPAR
+
+=head1 USAGE
+
+Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
+
+=head1 CONFIGURATION
+
+This should be run as root, so drop a file
+with something like this in @@CONFDIR@@/plugin-conf.d/lpar_cpu:
+
+  [lpar_cpu]
+  user root
+
+=head1 AUTHOR
+
+Ingvar Hagelund <ingvar(at)linpro.no>
+
+Great thanks to Nigel Griffith of IBM for the magic to get these values.
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=autoconf
+
+=head1 LICENSE
+
+Licence: GNU General Public Licence v2.0,
+see http://www.gnu.org/copyleft/gpl.html
+
+=cut
 
 use strict;
 
