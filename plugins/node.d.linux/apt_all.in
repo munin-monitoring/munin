@@ -193,7 +193,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 
     print "graph_title Pending packages\n";
     print "graph_vlabel Total packages\n";
-    print "graph_category system\n";
+    print "graph_category security\n";
 
     foreach my $release (@releases) {
 	print "pending_$release.label pending_$release\n";

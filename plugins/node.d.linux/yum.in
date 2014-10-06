@@ -69,7 +69,9 @@ Therein the plugin is called with the 'update' option.
 
 E.g. place a file with the following line in directory /etc/crond.d/:
 
-30 */6 * * * root /usr/sbin/munin-run yum update
+  # Do not start at the same time like munin-cron,
+  # as both will access the plugins statefile
+  38 */6 * * * root /usr/sbin/munin-run yum update
 
 =head1 AUTHOR
 
@@ -142,7 +144,7 @@ sub config {
     my $showgraph = exists $ENV{'showgraph'} ? 'yes' : 'no';
 
     print "graph_title Pending Updates\n";
-    print "graph_category updates\n";
+    print "graph_category security\n";
     print "graph ", $showgraph, "\n";
     print "security.label security\n";
     print "security.info Number of pending security updates\n";

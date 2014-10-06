@@ -117,6 +117,7 @@ if ($ARGV[0] and $ARGV[0] eq "config")
 {
 
         print "graph_title Pending packages\n";
+        print "graph_category security\n";
         print "graph no\n";
         print "pending.label pending\n";
         print "pending.warning 0:0\n";
