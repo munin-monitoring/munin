@@ -1,8 +1,13 @@
-#! /usr/bin/perl
+#!@@PERL@@
+## -*- cperl -*-
+#
+#=encoding utf8
+
 # Automatically enables "strict", "warnings", "utf8" and
 # Perl 5.10 features
-
 use Mojolicious::Lite;
+
+# The real DBD driver will be autoloaded.
 use DBI;
 
 use Munin::Common::Defaults;
