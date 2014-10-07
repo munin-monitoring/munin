@@ -86,6 +86,9 @@ The statistics from innodb are mainly collected from the command
 A nice walk through is found at
 L<http://www.mysqlperformanceblog.com/2006/07/17/show-innodb-status-walk-through/>
 
+Undo logs:
+L<http://blog.jcole.us/2014/04/16/the-basics-of-the-innodb-undo-logging-and-history-system/>
+
 =head2 The graphs
 
 FIX point to relevant sections in the MySQL manual and other www
@@ -944,6 +947,24 @@ $graphs{innodb_tnx} = {
     },
     data_sources => [
 	{name => 'ib_tnx', label => 'Transactions created'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{innodb_history_list_length} = {
+    config => {
+	global_attrs => {
+	    title  => 'InnoDB History List Length',
+	    vlabel => 'Undo log units',
+	},
+	data_source_attrs => {
+	    draw  => 'LINE1',
+      type  => 'GAUGE',
+	},
+    },
+    data_sources => [
+	{name => 'ib_tnx_hist', label => 'History List Length'},
     ],
 };
 
