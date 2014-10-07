@@ -169,6 +169,7 @@ install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	mkdir -p $(LIBDIR)/plugins
 	mkdir -p $(PLUGSTATE)
 
+	$(CHOWN) root:root $(PLUGSTATE)
 	$(CHMOD) 0755 $(PLUGSTATE)
 	$(CHMOD) 0755 $(CONFDIR)/plugin-conf.d
 

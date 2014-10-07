@@ -22,13 +22,13 @@ if [ $1 ]; then
     echo "**********************************************************************"
 fi
 
-make DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin || exit
-fakeroot make install-common-prime install-master-prime install-node-prime install-plugins-prime install-man install-async DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin || exit
+make CHOWN=true DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin || exit
+fakeroot make install-common-prime install-master-prime install-node-prime install-plugins-prime install-man install-async DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin CHOWN=true || exit
 
 
 if [ $1 ]; then
     echo "**********************************************************************"
-    fakeroot make install-plugins-prime install-plugins-java DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin || exit
+    fakeroot make install-plugins-prime install-plugins-java DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin CHOWN=true || exit
     echo "**********************************************************************"
     perl -pi -e "s/port 4949/port 4948/; 
                  s/user root/user $USER/; 
