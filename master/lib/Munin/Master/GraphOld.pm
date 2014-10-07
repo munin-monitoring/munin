@@ -2,6 +2,8 @@ package Munin::Master::GraphOld;
 
 # -*- cperl -*-
 
+=encoding utf-8
+
 =begin comment
 
 This is Munin::Master::GraphOld, a package shell to make munin-graph
