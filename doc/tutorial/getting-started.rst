@@ -48,3 +48,17 @@ Note that an usual setup involves having a node running also on the master host,
 
 Adding a Node
 -------------
+
+Thanks to the plug-and-play architecture of Munin, this is very easy. You
+obviously have to install the node part on the host you want to monitor.
+
+::
+
+  $ apt-get install munin-node
+
+This will install the node, some default plugins and launch it.
+
+As the node runs as the root user in order to run plugins as any needed user,
+it now only listens on localhost as a security measure. You have to edit
+munin-node.conf in order to listen to the network, and add the master's IP on
+the authorized list.
