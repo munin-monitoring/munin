@@ -16,8 +16,19 @@ instructions on installation, and return to this guide when the installation is
 complete. Be sure to follow closely the section about setting up the
 appropriate configuration files.
 
-If your site administrator has not set things up in the default way, you might
-have some more work to do, as the examples that follow will need to be adapted.
+All the tutorial will assume a Debian installation, so all the commands are
+suited to the Debian package management system. As the one in Ubuntu is mostly
+the same, examples should work unchanged. For RPM-based systems, the equivalent
+yum command is left as an exercise to the reader, but should not be very hard
+to get.
+
+We cannot speak about every other OS, but any UNIX-like have been reported to
+work. Your safest best should still to stick to a supported OS if you don't
+feel adventurous.
+
+Also, you should need a dedicated server for the master role, as it mostly
+requires root access. Again, it is not required, but safety, and ability to
+copy/paste the samples, advise you to stick to these guidelines.
 
 Architectural Fundamentals
 --------------------------
