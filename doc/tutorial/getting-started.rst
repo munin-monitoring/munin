@@ -22,5 +22,9 @@ have some more work to do, as the examples that follow will need to be adapted.
 Architectural Fundamentals
 --------------------------
 
+Munin has a master-nodes architecture. The master is responsible for all central Munin-related tasks, and is usally referred to as the "munin server". The node is a small agent running on each monitored host. We can have agent-less monitoring but this is a special case that will be addressed only later.
+
+Note that an usual setup involves having a node running also on the master host, in order to munin to monitor itself.
+
 Adding a Node
 -------------
