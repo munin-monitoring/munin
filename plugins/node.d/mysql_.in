@@ -9,7 +9,12 @@ mysql_ - Munin plugin to display misc MySQL server status
 
 =head1 APPLICABLE SYSTEMS
 
-Any MySQL platform, tested by the author on MySQL 5.6.12 and 5.5.32, 5.1.29, 5.0.51
+Any MySQL platform, tested by the authors on:
+* MySQL 5.6.12
+* MySQL 5.5.32, 5.5.37
+* MySQL 5.1.29,
+* MySQL 5.0.51
+* MariaDB 5.5.39
 
 =head1 CONFIGURATION
 
@@ -1136,21 +1141,13 @@ sub suggest {
 
     # What is the best way to decide which graphs is applicable to a
     # given system?
-    #
-    # Does the database use InnoDB? A zero count from:
-    #
-    #   SELECT COUNT(*)
-    #     FROM tables
-    #    WHERE table_type = 'base table'
-    #      AND engine     = 'innodb'
-    #
-    # Does the database use binary logs? 'OFF' as the result from:
-    #
-    #   SHOW GLOBAL variables LIKE 'log_bin'
-    #
-    # Is the database setup as a slave? Empty result from:
-    #
-    #   SHOW SLAVE STATUS
+    # Answer:
+    # Use lack of variables to indicate that the capability doesn't exist
+    # Use variable values to indicate some graph isn't currently used.
+    # update_data() now does this.
+
+    update_data();
+
 
     foreach my $graph (sort keys(%graphs)) {
         print "$graph\n";
@@ -1285,27 +1282,39 @@ sub update_data {
     $data = $shared_memory_cache->get('data');
     return if $data;
 
-    #warn "Need to update cache";
-
     $data = {};
 
     my $dbh = db_connect();
 
-    # Set up defaults in case the server is not a slave
-    $data->{relay_log_space} = 0;
-    $data->{slave_io_running}   = 0;
-    $data->{slave_sql_running}   = 0;
-    $data->{seconds_behind_master}   = 0;
-    $data->{Slave_open_temp_tables}   = 0;
-    $data->{Slave_retried_transactions}   = 0;
-
-    # Set up defaults in case binlog is not enabled
-    $data->{ma_binlog_size} = 0;
-
     update_variables($dbh);
     update_innodb($dbh);
     update_master($dbh);
-    update_slave($dbh);
+    delete $graphs{replication} if update_slave($dbh)==1;
+
+    delete $graphs{bin_relay_log} if not defined $data->{relay_log_space}
+        && not defined $data->{ma_binlog_size};
+
+    delete $graphs{execution} if not defined $data->{Executed_events}
+        && not defined $data->{Executed_triggers};
+
+    delete $graphs{icp} if not defined $data->{Handler_icp_attempts}
+        && not defined $data->{Handler_icp_matches};
+
+    delete $graphs{adaptive_hash}
+        if not defined $data->{Innodb_adaptive_hash_hash_searches}
+        && not defined $data->{Innodb_adaptive_hash_non_hash_searches};
+
+    delete $graphs{innodb_bpool_internal_breakdown}
+        if not defined $data->{ib_bpool_internal_adaptive_hash_size_const};
+
+    delete $graphs{innodb_descriptors}
+        if not defined $data->{ib_innodb_descriptors};
+
+    delete $graphs{mrr} if not defined $data->{Handler_mrr_init};
+
+    delete $graphs{rows} if not defined $data->{Rows_sent};
+
+    delete $graphs{handler_temp} if not defined $data->{Handler_tmp_write};
 
     $shared_memory_cache->set('data', $data);
 }
@@ -1389,7 +1398,7 @@ sub update_master {
 	$sth->execute();
     };
     if ($@) {
-	# SHOW MASTER LOGS failed becuase binlog is not enabled
+	# SHOW MASTER LOGS failed because binlog is not enabled
 	return if $@ =~ /You are not using binary logging/;
 	die $@;
     }
@@ -1408,11 +1417,16 @@ sub update_slave {
     my $sth = $dbh->prepare('SHOW SLAVE STATUS');
     $sth->execute();
     my $row = $sth->fetchrow_hashref();
-    return unless $row;
+    return 1 unless $row;
     while (my ($k, $v) = each %$row) {
 	$data->{$k} = $v;
     }
     $sth->finish();
+
+    # We choose master_host here as a stopped slave
+    # may not indicate that we have reset all slave capability
+    # however the minimium requirement is a master_host
+    return 1 if not defined $data->{master_host};
 
     # undef when slave is stopped, or when MySQL fails to calculate
     # the lag (which happens depresingly often). (mk-heartbeat fixes
@@ -1425,7 +1439,7 @@ sub update_slave {
 	    ? 0 : 1;
     $data->{slave_io_running} = ($data->{slave_io_running} eq 'Yes')
 	    ? 0 : 1;
-
+    return 0;
 }
 
 
