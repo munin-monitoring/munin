@@ -30,21 +30,46 @@ Also, you should need a dedicated server for the master role, as it mostly
 requires root access. Again, it is not required, but safety, and ability to
 copy/paste the samples, advise you to stick to these guidelines.
 
+Nomenclature
+------------
+
+Please refer to the Nomenclature part to understand the terms used in this guide.
+
+
 Architectural Fundamentals
 --------------------------
 
-.. digraph:: architecture
 
-  Master --> Node1
-  Master --> Node2
-  Node1 --> Plugin1
-  Node1 --> Plugin2
-  Node2 --> Plugin3
-  Node2 --> Plugin4
+Munin has a master-nodes architecture. The master is responsible for all
+central Munin-related tasks, and is usally referred to as the "munin server".
+The node is a small agent running on each monitored host. We can have
+agent-less monitoring but this is a special case that will be addressed only
+later.
 
-Munin has a master-nodes architecture. The master is responsible for all central Munin-related tasks, and is usally referred to as the "munin server". The node is a small agent running on each monitored host. We can have agent-less monitoring but this is a special case that will be addressed only later.
+Munin also has a poller-based monitoring infrastructure. The master regularly
+connects to the various nodes, and then synchronously asks for the various
+metrics configuration and value.
 
-Note that an usual setup involves having a node running also on the master host, in order to munin to monitor itself.
+.. graphviz::
+
+   digraph  {
+        "master" -> "node1";
+        "master" -> "node2";
+        "master" -> "node3";
+   }
+
+And with the async :
+
+.. graphviz::
+
+   digraph  {
+        "master" -> async1 -> "node1";
+        "master" -> "node3";
+   }
+
+
+Note that an usual setup involves having a node running also on the master
+host, in order to munin to monitor itself.
 
 Adding a Node
 -------------
