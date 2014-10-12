@@ -30,7 +30,7 @@ GPLv2
 =cut
 
 target=${target:-"http://localhost/"}
-wget_opt="--user-agent \"Munin - http_loadtime\" --no-cache -q --delete-after"
+wget_opt="--user-agent munin/http_loadtime --no-cache -q --delete-after"
 time_bin=`which time`
 
 if [ "$1" = "autoconf" ]; then
