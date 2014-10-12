@@ -156,9 +156,9 @@ sub _cat_multigraph_file
         }
 
 	# We just emitted something
-	$sample_send ++;
-	if ($max_samples && $sample_send > $max_samples) {
-		logger("Already sent $sample_send for '$service', ending.") if $config->{DEBUG};
+	$nb_samples_sent ++;
+	if ($max_samples_per_service && $nb_samples_sent > $max_samples_per_service) {
+		logger("Already sent $nb_samples_sent for '$service', ending.") if $config->{DEBUG};
 		last;
 	}
     }
