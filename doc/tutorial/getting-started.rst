@@ -14,20 +14,51 @@ Munin.
 If you are installing Munin yourself, then refer to Install Chapter for
 instructions on installation, and return to this guide when the installation is
 complete. Be sure to follow closely the section about setting up the
-appropriate environment variables.
+appropriate configuration files.
 
-If your site administrator has not set things up in the default way, you might
-have some more work to do. For example, if the database server machine is a
-remote machine, you will need to set the PGHOST environment variable to the
-name of the database server machine. The environment variable PGPORT might also
-have to be set. The bottom line is this: if you try to start an application
-program and it complains that it cannot connect to the database, you should
-consult your site administrator or, if that is you, the documentation to make
-sure that your environment is properly set up. If you did not understand the
-preceding paragraph then read the next section
+All the tutorial will assume a Debian installation, so all the commands are
+suited to the Debian package management system. As the one in Ubuntu is mostly
+the same, examples should work unchanged. For RPM-based systems, the equivalent
+yum command is left as an exercise to the reader, but should not be very hard
+to get.
+
+We cannot speak about every other OS, but any UNIX-like have been reported to
+work. Your safest best should still to stick to a supported OS if you don't
+feel adventurous.
+
+Also, you should need a dedicated server for the master role, as it mostly
+requires root access. Again, it is not required, but safety, and ability to
+copy/paste the samples, advise you to stick to these guidelines.
 
 Architectural Fundamentals
 --------------------------
 
+.. digraph:: architecture
+
+  Master --> Node1
+  Master --> Node2
+  Node1 --> Plugin1
+  Node1 --> Plugin2
+  Node2 --> Plugin3
+  Node2 --> Plugin4
+
+Munin has a master-nodes architecture. The master is responsible for all central Munin-related tasks, and is usally referred to as the "munin server". The node is a small agent running on each monitored host. We can have agent-less monitoring but this is a special case that will be addressed only later.
+
+Note that an usual setup involves having a node running also on the master host, in order to munin to monitor itself.
+
 Adding a Node
 -------------
+
+Thanks to the plug-and-play architecture of Munin, this is very easy. You
+obviously have to install the node part on the host you want to monitor.
+
+::
+
+  $ apt-get install munin-node
+
+This will install the node, some default plugins and launch it.
+
+As the node runs as the root user in order to run plugins as any needed user,
+it now only listens on localhost as a security measure. You have to edit
+munin-node.conf in order to listen to the network, and add the master's IP on
+the authorized list.

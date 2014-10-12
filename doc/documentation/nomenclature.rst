@@ -37,7 +37,7 @@ Common terms
 |              | also specific to each Field.               |                              |
 +--------------+--------------------------------------------+------------------------------+
 | Environment  | Set up by munin node, used to control      |                              |
-| variable     | plugin behavior.  Found in the plugin     |                              |
+| variable     | plugin behavior.  Found in the plugin      |                              |
 |              | configuration directory.                   |                              |
 |              | (/etc/munin/plugin-conf.d/)                |                              |
 +--------------+--------------------------------------------+------------------------------+
