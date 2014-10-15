@@ -1,6 +1,11 @@
 Getting Started
 ================
 
+Nomenclature
+------------
+
+Please refer to the Nomenclature part to understand the terms used in this guide.
+
 Installation
 ------------
 
@@ -30,25 +35,45 @@ Also, you should need a dedicated server for the master role, as it mostly
 requires root access. Again, it is not required, but safety, and ability to
 copy/paste the samples, advise you to stick to these guidelines.
 
-Nomenclature
-------------
-
-Please refer to the Nomenclature part to understand the terms used in this guide.
-
-
 Architectural Fundamentals
 --------------------------
 
+Munin has a master-nodes architecture. 
 
-Munin has a master-nodes architecture. The master is responsible for all
-central Munin-related tasks, and is usally referred to as the "munin server".
+.. image:: Munin-Architecture.png
+
+------------
+Munin-Master
+------------
+
+The master is responsible for all central Munin-related tasks.
+
+
+It regularly connects to the various nodes, and then synchronously [#]_ 
+asks for the various metrics configuration and values and stores the data in RRD files.
+
+On the fly the values are checked against limits (that you may set) 
+and the Munin-Master will croak, if values go above or below the given thresholds.
+
+Here we also generate the graphs, as this is a heavy task that needs some resources. 
+Recent versions of Munin use cgi-graphing to generate graphs only 
+when the user want's to see them.
+
+----------
+Munin-Node
+----------
+
 The node is a small agent running on each monitored host. We can have
-agent-less monitoring but this is a special case that will be addressed only
-later.
+agent-less monitoring but this is a special case that will be addressed later.
 
-Munin also has a poller-based monitoring infrastructure. The master regularly
-connects to the various nodes, and then synchronously asks for the various
-metrics configuration and value.
+Note that an usual setup involves having a node running also on the master
+host, in order to munin to monitor itself.
+
+-------------
+Fetching Data
+-------------
+
+.. [#] Poller-based monitoring infrastructure 
 
 .. graphviz::
 
@@ -58,7 +83,7 @@ metrics configuration and value.
         "master" -> "node3";
    }
 
-And with the async :
+and also - where needed - per async
 
 .. graphviz::
 
@@ -67,9 +92,6 @@ And with the async :
         "master" -> "node3";
    }
 
-
-Note that an usual setup involves having a node running also on the master
-host, in order to munin to monitor itself.
 
 Adding a Node
 -------------
