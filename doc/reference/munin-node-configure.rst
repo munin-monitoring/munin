@@ -161,17 +161,17 @@ For further reading on SNMP v3 security models please consult RFC3414 and the do
 
    Username.  There is no default.
 
-.. option:: --snmpauthpassword <password>
+.. option:: --snmpauthpass <password>
 
    Authentication password. Optional when encryption is also enabled, in which case defaults to the
-   privacy password ("--snmpprivpassword").
+   privacy password ("--snmpprivpass").
 
 .. option:: --snmpauthprotocol <protocol>
 
    Authentication protocol. One of 'md5' or 'sha' (HMAC-MD5-96, RFC1321 and SHA-1/HMAC-SHA-96, NIST
    FIPS PIB 180, RFC2264). ['md5']
 
-.. option:: --snmpprivpassword <password>
+.. option:: --snmpprivpass <password>
 
    Privacy password to enable encryption. There is no default. An empty ('') password is considered
    as no password and will not enable encryption.
