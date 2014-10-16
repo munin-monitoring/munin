@@ -1,6 +1,8 @@
-munin (2.0.21-3) UNRELEASED; urgency=low
+munin (2.0.22-1) unstable; urgency=low
 
   [ Holger Levsen ]
+  * New upstream release, stable bugfix release supporting Perl 5.20.
+    (Closes: #675318, #711465, #750954, #751190, #753506, #761841, #762904)
   * debian/control:
     - Add alternative depends on ttf-dejavu to ease backports to wheezy.
     - Add suggests to libnet-dns-perl to munin-plugins-core. (Closes: #705260)
@@ -10,7 +12,7 @@ munin (2.0.21-3) UNRELEASED; urgency=low
   [ Stig Sandbeck Mathisen ]
   * Depend on virtual package "cron-daemon" instead of "cron" (Closes: #760272)
 
- -- Holger Levsen <holger@debian.org>  Fri, 17 Oct 2014 00:07:16 +0200
+ -- Holger Levsen <holger@debian.org>  Fri, 17 Oct 2014 00:46:31 +0200
 
 munin (2.0.21-2) unstable; urgency=medium
 
