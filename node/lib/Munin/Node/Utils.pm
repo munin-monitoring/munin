@@ -62,6 +62,7 @@ Returns the list of elements in arrayref \@a that are not in arrayref \@b.
 
 Returns the list of elements common to arrayrefs \@a and \@b.
 
+=back
 
 =cut
 # vim: ts=4 : et

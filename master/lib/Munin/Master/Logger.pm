@@ -2,6 +2,8 @@ package Munin::Master::Logger;
 
 # $Id$
 
+=encoding utf-8
+
 =head1 NAME
 
 Munin::Master::Logger - Munin master's old logging routines

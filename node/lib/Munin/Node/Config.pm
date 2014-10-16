@@ -290,14 +290,19 @@ sub _parse_plugin_line {
 
 sub apply_wildcards {
     my ($self, @services) = @_;
+    my $ws;
 
     # Need to sort the keys in descending order so that more specific
     # wildcards take precedence.
-    for my $wildservice (grep { /\*$/ } reverse sort keys %{$self->{sconf}}) {
-        my $ws = substr $wildservice, 0, -1;
+    for my $wildservice (grep { /\*$/ || /^\*/ } reverse sort keys %{$self->{sconf}}) {
+        if ($wildservice =~ /\*$/) {
+            $ws = substr $wildservice, 0, -1;
+        } else {
+            $ws = substr $wildservice, 1;
+        }
 
         for my $service (@services) {
-            next unless $service =~ /^$ws/;
+            next unless $service =~ /^$ws/ || $service =~ /$ws$/;
             $self->_apply_wildcard_to_service($self->{sconf}{$wildservice},
                                               $service);
         }
@@ -409,6 +414,8 @@ Applies the contents of any wildcard plugin configuration sections
 to matching plugins.
 
 See L<http://munin-monitoring.org/wiki/Priority_and_inheritance>
+
+=back
 
 =cut
 # vim: sw=4 : ts=4 : et

@@ -93,8 +93,6 @@ $0 = "munin-asyncd [$metahostname] [idle]";
 
 my $process_name = "main";
 
-my $plugin_rate_filename = "$SPOOLDIR/plugin_rates";
-
 my @plugins;
 {
 	print STDERR "[$$][$process_name] Reading config from $host\n" if $verbose;
@@ -149,7 +147,7 @@ MAIN: while($keepgoing) {
 	my $sock;
 	PLUGIN: foreach my $plugin (@plugins) {
 		# See if this plugin should be updated
-		my $plugin_rate = get_hash($plugin, $plugin_rate_filename) || 300;
+		my $plugin_rate = $spoolwriter->get_metadata("plugin_rates/$plugin") || 300;
 		if ($when < ($last_updated{$plugin} || 0) + $plugin_rate) {
 			# not yet, next plugin
 			next;
@@ -244,7 +242,7 @@ sub fetch_data
 				# XXX - Doesn't take into account a per field update_rate
 
 				# This has to be sent back to the master
-				set_hash($plugin, $1, $plugin_rate_filename);
+				$spoolwriter->set_metadata("plugin_rates/$plugin", $1);
 			}
 		}
 
@@ -268,36 +266,6 @@ sub fetch_data
 		# Write the whole load into the spool
 		$spoolwriter->write($when, $plugin, $output_rows);
 }
-
-sub get_hash
-{
-	my ($key, $filename) = @_;
-	my %hash;
-
-	use Fcntl;   # For O_RDWR, O_CREAT, etc.
-	use DB_File;
-	tie (%hash, 'DB_File', $filename, O_RDWR|O_CREAT, 0666) 
-		or die "$!";
-	my $value = $hash{$key};
-	untie(%hash);
-
-	return $value;
-}
-
-sub set_hash
-{
-	my ($key, $value, $filename) = @_;
-	my %hash;
-
-	use Fcntl;   # For O_RDWR, O_CREAT, etc.
-	use DB_File;
-	tie (%hash, 'DB_File', $filename, O_RDWR|O_CREAT, 0666) 
-		or die "$!";
-	$hash{$key} = $value;
-	untie(%hash);
-}
-
-
 
 __END__
 

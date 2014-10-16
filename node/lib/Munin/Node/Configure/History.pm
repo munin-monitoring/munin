@@ -140,5 +140,7 @@ Takes a Munin::Node::Configure::Plugin object.  Returns false unless the
 plugin should be ignored, true otherwise (ie. if 'newer' wasn't set, the plugin
 is user-contributed, etc).
 
+=back
+
 =cut
 # vim: sw=4 : ts=4 : expandtab

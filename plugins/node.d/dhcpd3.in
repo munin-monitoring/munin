@@ -169,15 +169,16 @@ sub parseconfig {
 	    print "# DEBUG: Found a subnet: $name\n" if $DEBUG;
 	}
 	if($name && /^\}$/) {
-	    print "# DEBUG: End of subnet... NO RANGE?\n" if $DEBUG;
-	    delete($leases{$name});
+            if(!exists $limits{$name}) {
+                print "# DEBUG: End of subnet... NO RANGE?\n" if $DEBUG;
+                delete($leases{$name});
+            }
 	    $name = "";
 	}
 	if($name && /range\s+((?:\d+\.){3}\d+)\s+((?:\d+\.){3}\d+)/) {
 	    print "# DEBUG: range $1 -> $2\n" if $DEBUG;
 	    $limits{$name} += &rangecount($1, $2);
 	    print "# DEBUG: limit for $name is " . $limits{$name} . "\n" if $DEBUG;
-	    $name = "";
 	}
 	if(/^include \"([^\"]+)\";/) {
 	    my $includefile = $1;

@@ -150,6 +150,10 @@ while (new CGI::Fast) {
 	next;
     }
 
+    # Environment variables are cleared each request
+    # so we must set RRDCACHED_ADDRESS each time
+    $ENV{RRDCACHED_ADDRESS} = $config->{rrdcached_socket} if $config->{rrdcached_socket};
+
     my $filename = get_picture_filename ($config, $dom, $host, $serv, $scale, $ENV{QUERY_STRING});
 
     my $time = time;
