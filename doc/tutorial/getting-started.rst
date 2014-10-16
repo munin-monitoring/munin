@@ -1,9 +1,6 @@
 Getting Started
 ================
 
-Nomenclature
-------------
-
 Please refer to the Nomenclature part to understand the terms used in this guide.
 
 Installation
@@ -37,14 +34,12 @@ copy/paste the samples, advise you to stick to these guidelines.
 
 Architectural Fundamentals
 --------------------------
-
 Munin has a master-nodes architecture. 
 
 .. image:: Munin-Architecture.png
 
-------------
 Munin-Master
-------------
+^^^^^^^^^^^^
 
 The master is responsible for all central Munin-related tasks.
 
@@ -59,9 +54,8 @@ Here we also generate the graphs, as this is a heavy task that needs some resour
 Recent versions of Munin use cgi-graphing to generate graphs only 
 when the user want's to see them.
 
-----------
 Munin-Node
-----------
+^^^^^^^^^^
 
 The node is a small agent running on each monitored host. We can have
 agent-less monitoring but this is a special case that will be addressed later.
@@ -69,9 +63,8 @@ agent-less monitoring but this is a special case that will be addressed later.
 Note that an usual setup involves having a node running also on the master
 host, in order to munin to monitor itself.
 
--------------
 Fetching Data
--------------
+^^^^^^^^^^^^^
 
 .. [#] Poller-based monitoring infrastructure 
 
@@ -91,7 +84,6 @@ and also - where needed - per async
         "master" -> async1 -> "node1";
         "master" -> "node3";
    }
-
 
 Adding a Node
 -------------

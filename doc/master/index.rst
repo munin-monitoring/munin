@@ -4,6 +4,8 @@
  The Munin master
 ==================
 
+See also Getting Started -> Architectural Fundamentals
+
 Role
 ====
 
