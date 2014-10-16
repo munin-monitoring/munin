@@ -1,8 +1,16 @@
 munin (2.0.21-3) UNRELEASED; urgency=low
 
-  * Add alternative depends on ttf-dejavu to ease backports to wheezy.
+  [ Holger Levsen ]
+  * debian/control:
+    - Add alternative depends on ttf-dejavu to ease backports to wheezy.
+    - Add suggests to libnet-dns-perl to munin-plugins-core. (Closes: #705260)
+    - Move suggests to libcache-cache-perl and libdbd-mysql-perl from munin-node
+      to munin-plugins-extra. (Closes: #698078)
 
- -- Holger Levsen <holger@debian.org>  Thu, 12 Jun 2014 11:45:31 +0200
+  [ Stig Sandbeck Mathisen ]
+  * Depend on virtual package "cron-daemon" instead of "cron" (Closes: #760272)
+
+ -- Holger Levsen <holger@debian.org>  Fri, 17 Oct 2014 00:07:16 +0200
 
 munin (2.0.21-2) unstable; urgency=medium
 
