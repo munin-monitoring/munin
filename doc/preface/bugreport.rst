@@ -125,8 +125,7 @@ Where to Report
 ===============
 
 In general fill in the bug report web-form available at the project's
-:ref:`web site<website>`. Entering a bug report this way causes it to be mailed to the
-<bugs@munin-monitoring.org> mailing list.
+:ref:`GitHub<github>`.
 
 If your bug report has security implications and you'd prefer that it not
 become immediately visible in public archives, don't send it to bugs. Security

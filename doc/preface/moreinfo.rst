@@ -20,6 +20,28 @@ contains most answers to a wide array of questions.
 
 __ http://munin-monitoring.org/wiki/faq
 
+.. _github:
+
+GitHub
+======
+
+The `Munin GitHub`__ has slowly become the center of all the community-driven
+development. It is a very solid platform, which has its drawbacks, but given
+the importance it has today one cannot ignore it.
+
+__ https://github.com/munin-monitoring/munin
+
+Therefore we have moved all our code pull requests there, and the issues are
+slowly migrating there also.
+
+The `contrib`__ part is even more lively than before. It has succesfully
+replaced the old MuninExchange site. Now with the `Plugin Gallery`__ it offer
+as much features as the old site.
+
+__ https://github.com/munin-monitoring/contrib
+
+__ http://gallery.munin-monitoring.org/
+
 .. _mailing-lists:
 
 Mailing Lists
