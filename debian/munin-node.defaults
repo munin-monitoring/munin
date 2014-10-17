@@ -1,0 +1,9 @@
+# This file sets environment varibles for starting munin-node.  It is used by
+# sysvinit, upstart and systemd.
+#
+# DAEMON_ARGS:
+#  - Adds extra arguments to the command line of the daemon.
+#  - Default setting is "" (unset)
+#
+# Example:
+# DAEMON_ARGS="--config /etc/munin/munin-node.conf"

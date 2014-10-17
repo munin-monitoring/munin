@@ -14,6 +14,7 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/sbin/munin-node
 PIDFILE=/var/run/munin/munin-node.pid
 CONFFILE=/etc/munin/munin-node.conf
+DAEMON_ARGS=
 
 . /lib/lsb/init-functions
 [ -r /etc/default/munin-node ] && . /etc/default/munin-node
