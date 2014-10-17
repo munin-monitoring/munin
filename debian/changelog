@@ -1,3 +1,10 @@
+munin (2.0.23-1) unstable; urgency=medium
+
+  * New upstream release. This time including commit 9fabbe7 which is the
+    bugfix for Perl 5.20 and CGI. (Closes: #762796)
+
+ -- Holger Levsen <holger@debian.org>  Fri, 17 Oct 2014 11:09:40 +0200
+
 munin (2.0.22-1) unstable; urgency=low
 
   [ Holger Levsen ]
