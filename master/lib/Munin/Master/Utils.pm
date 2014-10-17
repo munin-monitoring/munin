@@ -901,6 +901,10 @@ sub munin_read_storable {
 
 sub munin_write_storable {
 	my ($storable_filename, $data) = @_;
+	DEBUG "[DEBUG] about to write '$storable_filename'";
+
+	# We don't need to write anything if there is nothing to write.
+	return unless defined $data;
 
 	my $storable_filename_tmp = $storable_filename . ".tmp.$$";
 
