@@ -9,61 +9,69 @@ with Munin behavior, we need a common nomenclature.
 Common terms
 ============
 
-+--------------+--------------------------------------------+------------------------------+
-| Term         | Explanation                                | Also referred to as as       |
-+==============+============================================+==============================+
-| Munin Master | The central host / server where Munin      | master, server, munin server |
-|              | gathers all data.                          |                              |
-|              | The machine runs munin-cron                |                              |
-+--------------+--------------------------------------------+------------------------------+
-| Munin Node   | The daemon /  network service running      | In SNMP terms                |
-|              | on each host to be contacted by the        | it may be called an          |
-|              |                                            | agent.                       |
-+--------------+--------------------------------------------+------------------------------+
-| Plugin       | Each munin node handles one or more        | service                      |
-|              | plugins to monitor stuff on hosts          |                              |
-+--------------+--------------------------------------------+------------------------------+
-| Host         | A machine monitored by Munin,              |                              |
-|              | maybe by proxy on a munin node,            |                              |
-|              | or via a SNMP plugin                       |                              |
-+--------------+--------------------------------------------+------------------------------+
-| Field        | Each plugin presents data from one         | Data source                  |
-|              | or more data sources. Each found,          |                              |
-|              | read or calculated value corresponds       |                              |
-|              | to a field.attribute tuple.                |                              |
-+--------------+--------------------------------------------+------------------------------+
-| Attribute    | Description found in output from plugins,  |                              |
-|              | both general (global) to the plugin, and   |                              |
-|              | also specific to each Field.               |                              |
-+--------------+--------------------------------------------+------------------------------+
-| Environment  | Set up by munin node, used to control      |                              |
-| variable     | plugin behavior.  Found in the plugin      |                              |
-|              | configuration directory.                   |                              |
-|              | (/etc/munin/plugin-conf.d/)                |                              |
-+--------------+--------------------------------------------+------------------------------+
-| Global       | Used in the global context in the          |                              |
-| (plugin)     | configuration output from a plugin.        |                              |
-| attribute    | (Note: The attribute is considered         |                              |
-|              | "global" only to the plugin (and the       |                              |
-|              | node), and only when executed.             |                              |
-+--------------+--------------------------------------------+------------------------------+
-| Datasource   | Used in the datasource-specific context in |                              |
-| specific     | the output of a plugin                     |                              |
-| plugin       |                                            |                              |
-| attribute    |                                            |                              |
-+--------------+--------------------------------------------+------------------------------+
-| Global       | Used in munin.conf                         |                              |
-| directive    |                                            |                              |
-+--------------+--------------------------------------------+------------------------------+
-| Node level   | Used in munin.conf                         |                              |
-| directive    |                                            |                              |
-+--------------+--------------------------------------------+------------------------------+
-| Group level  | Used in munin.conf                         |                              |
-| directive    |                                            |                              |
-+--------------+--------------------------------------------+------------------------------+
-| Field level  | Used in munin.conf                         |                              |
-| directive    |                                            |                              |
-+--------------+--------------------------------------------+------------------------------+
+:Term: **Munin Master**
+:Explanation: The central host/server where Munin gathers all data to. This machine runs munin-cron
+:Synonyms: master
+
+
+:Term: **Munin Node**
+:Explanation: The daemon/network service running on each host to be contacted by the munin master to gather data.  Each node may monitor several hosts.  The Munin master will likely run a munin-node itself.
+:Synonyms: In SNMP this might be called an agent.
+
+
+:Term: **Plugin**
+:Explanation: Each Munin node handles one or more plugins to monitor stuff on hosts
+:Synonym: service
+
+
+:Term: **Host**
+:Explanation: A machine monitored by Munin, maybe by proxy on a munin node or via a snmp plugin
+:Synonym: N/A
+
+
+:Term: **Field**
+:Explanation: Each plugin presents data from one or more data sources.  Each found, read, calculated value corresponds to a field.attribute tuple
+:Synonym: Data source
+
+
+:Term: **Attribute**
+:Explanation: Description found in output from plugins, both general (global) to the plugin and also specific to each field
+:Synonym: N/A
+
+
+:Term: **Directive**
+:Explanation: Statements used in configuration files like munin.conf, munin-node.conf and plugin configuration directory (/etc/munin/plugin-conf.d/).
+:Synonym: N/A
+
+
+:Term: **Environment variable**
+:Explanation: Set up by munin-node, used to control plugin behaviour, found in plugin configuration directory (/etc/munin/plugin-conf.d/)
+:Synonym: N/A
+
+
+:Term: **Global (plugin) attributes**
+:Explanation: Used in the global context in a plugin's configuration output. NB: The attribute is considered "global" only to the plugin (and the node) and only when executed.
+:Synonym:
+
+
+:Term: **Datasource-specific plugin attributes**
+:Explanation: Used in the datasource-specific context in a plugin's output.
+:Synonym: N/A
+
+
+:Term: **Node-level directives**
+:Explanation: Used in munin.conf.
+:Synonym:
+
+
+:Term: **Group-level directives**
+:Explanation: Used in munin.conf.
+:Synonym:
+
+
+:Term: **Field-level directives**
+:Explanation: Used in munin.conf.
+:Synonym:
 
 
 Examples
