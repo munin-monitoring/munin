@@ -60,9 +60,6 @@ The munin master has its primary configuration file at
 Fetching values
 ===============
 
-Sending alerts
-==============
-
 Graphing Charts
 ===============
 
@@ -72,4 +69,5 @@ Other documentation
 .. toctree::
    :maxdepth: 2
 
+   ../tutorial/alert.rst
    rrdcached.rst

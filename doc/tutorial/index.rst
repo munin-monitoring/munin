@@ -22,4 +22,7 @@ also read :ref:`Part III <install-index>`.
    :maxdepth: 2
 
    getting-started.rst
+   wildcard-plugins.rst
+   alert.rst
    advanced-features.rst
+   snmp.rst

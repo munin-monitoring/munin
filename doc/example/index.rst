@@ -16,3 +16,10 @@ Examples of munin and related configuration are gathered here.
    rrdcached/systemd.rst
    graph/aggregate.rst
    tips/multimaster.rst
+
+Examples from Munin Wiki
+------------------------
+
+These should be checked against recent Munin versions and be transfered to the Munin-Guide.
+
+- `Loaning data from other graphs <http://munin-monitoring.org/wiki/LoaningData>`_

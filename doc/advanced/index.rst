@@ -8,3 +8,4 @@ Munin Advanced
    :maxdepth: 2
 
    hidden-knowledge.rst
+   network.rst

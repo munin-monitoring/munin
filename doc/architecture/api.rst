@@ -9,6 +9,7 @@ Specifications
 
 - `Munin Relay : a multiplexing relay <http://munin-monitoring.org/wiki/munin-relay>`_ (not yet implemented)
 - `REST API <http://munin-monitoring.org/wiki/RestApi>`_ (RFC)
+- `Stream plugin <http://munin-monitoring.org/wiki/api-stream>`_ (RFC)
 
 Ideas
 -----
