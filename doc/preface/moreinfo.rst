@@ -2,22 +2,53 @@
 Further Information
 ====================
 
-Besides the documentation, that is, this guide, there are other resources about Munin:
+Besides the official documentation, that is this guide, there are many other
+resources about Munin.
+
+The fact that info is scattered around makes it sometimes difficult to find
+relevant one. Each source has its purpose, and is usually only well-suited for
+some kind of documentation.
+
+Munin Guide
+===========
+
+These are the pages you are currently reading. It is aimed at the first read.
+The chapters are designed as a walkthough Munin's components in a very guided
+manner. Its read constitutes the **basis** of every documention available.
+Specially when asking live (IRC_, mailing-list_) channels, users there will
+expect that you read the Guide prior to asking.
+
+It is regularly updated, as its sources are directly in the munin source
+directory, the last version can always be accessed online at
+`http://munin.readthedocs.org/`__ thanks to ReadTheDoc__.
+
+It is specially designed for easy contribution and distribution thanks to
+`Sphinx`__. That aspect will be handled in :ref:`Contributing`.
+
+__ http://munin.readthedocs.org/
+__ http://readthedocs.org/
+__ http://sphinx-doc.org/
 
 .. _website:
 
 Web
 ===
 
-The `Munin web site`__ carries the most details on the latest release and other
-information to make your work or play with Munin more productive. It has a wiki
-format, so you can easily add some content.
+The `Munin web site`__ is the other main source of information. It has a wiki
+format, but as spammers have become lately very clever, all content is now
+added by registered users only.
+
+Information there has the tendency of being rather extensive, but old. This is
+mostly due to the fact that it was the first and only way of documenting Munin.
+So in case there is conflicting information on the wiki and on the Guide,
+better trust the Guide. We are obviously very glad if you can pinpoint the
+conflicting infos so we can correct the wrong one.
+
+Still, a very important part is the `FAQ`__ (Frequently Asked Questions), which
+contains many answers to a wide array of questions. It is the only part of the
+documenation in the wiki that is still regularly updated.
 
 __ http://munin-monitoring.org/wiki/WikiStart
-
-One very important part is the `FAQ`__ (Frequently Asked Questions), which
-contains most answers to a wide array of questions.
-
 __ http://munin-monitoring.org/wiki/faq
 
 .. _github:
@@ -26,20 +57,37 @@ GitHub
 ======
 
 The `Munin GitHub`__ has slowly become the center of all the community-driven
-development. It is a very solid platform, which has its drawbacks, but given
-the importance it has today one cannot ignore it.
+development. It is a very solid platform, and despites its drawback of
+delegation of control, given the importance it has today, no-one can ignore it.
+The mere fact that we opened a presence there has increased the amount of small
+contributions by an order of magnitude. Given that those are the meat of a
+global improvement, it ranked as a success.
+
+Main Repository
+---------------
+
+Therefore, we will move more and more services to cloud platforms as GitHub, as
+it enables us to focus on delivering software and not caring about so much
+infrastructure.
+
+We already moved all code pull requests there, and new issues should be opened
+there also. We obviously still accept any contribution by other means, such a
+email, but as we couldn't resist the move from SVN to GIT, we are moving from
+our Trac to GitHub.
 
 __ https://github.com/munin-monitoring/munin
 
-Therefore we have moved all our code pull requests there, and the issues are
-slowly migrating there also.
+Contrib Repository
+-------------------
 
-The `contrib`__ part is even more lively than before. It has succesfully
-replaced the old MuninExchange site. Now with the `Plugin Gallery`__ it offer
-as much features as the old site.
+The `contrib`__ part is even more live than before. It has very successfully
+replaced the old MuninExchange__ site. Now, together with the `Plugin
+Gallery`__ it offer all the useful features the old site offered, and is much
+easier to contribute to. It also ease the integration work, and therefore
+shortens the time it takes for your contributions to be reviewed and merged.
 
 __ https://github.com/munin-monitoring/contrib
-
+__ http://munin-monitoring.org/wiki/MuninExchangeIsDown
 __ http://gallery.munin-monitoring.org/
 
 .. _mailing-lists:
@@ -47,23 +95,16 @@ __ http://gallery.munin-monitoring.org/
 Mailing Lists
 =============
 
-The mailing lists are a very good place to have your questions answered, to
-share experiences with other users, and to contact the developers.
+If you don't find a specific answer to your question in the various
+documentations, the mailing lists are a very good place to have your questions
+shared with other users.
 
-Consult the Munin web site for details.
+It happens that they were much more used in the previous years, but nowadays it
+is much more common to seek an immediate answer on a specific issue, which is
+best handled by IRC_. Therefore the mailing lists do appear very quiet, as most
+users go on other channels.
 
-Yourself!
-=========
-
-Munin is an open-source project.
-
-As such, it depends on the user community for ongoing support. As you begin to
-use Munin, you will rely on others for help, either through the documentation
-or through the mailing lists. Consider contributing your knowledge back. Read
-the mailing lists and answer questions.
-
-If you learn something which is not in the documentation, write it up and
-contribute it. If you add features to the code, contribute them.
+The mailing-lists are : munin
 
 .. _irc:
 
@@ -90,3 +131,16 @@ mostly on topic, and dont paste random links unless they are *really*
 spectacular and intelligent.
 
 .. _pastebin: https://gist.github.com/
+
+Yourself!
+=========
+
+Munin is an open-source project.
+
+As such, it depends on the user community for ongoing support. As you begin to
+use Munin, you will rely on others for help, either through the documentation
+or through the mailing lists. Consider contributing your knowledge back. Read
+the mailing lists and answer questions.
+
+If you learn something which is not in the documentation, write it up and
+contribute it. If you add features to the code, contribute them.
