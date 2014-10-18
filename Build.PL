@@ -48,6 +48,8 @@ my $build = Module::Build->new(
         'Test::Deep'        => '0',
         'Test::LongString'  => '0',
         'File::Slurp'       => '9999.19',
+		'DBD::Pg'           => '0',
+		'DBD::Sybase'       => '0',
     },
 );
 
