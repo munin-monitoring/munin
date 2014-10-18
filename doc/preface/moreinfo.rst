@@ -87,7 +87,7 @@ easier to contribute to. It also ease the integration work, and therefore
 shortens the time it takes for your contributions to be reviewed and merged.
 
 __ https://github.com/munin-monitoring/contrib
-__ http://munin-monitoring.org/wiki/MuninExchange
+__ http://munin-monitoring.org/wiki/MuninExchangeIsDown
 __ http://gallery.munin-monitoring.org/
 
 .. _mailing-lists:
