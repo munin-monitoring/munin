@@ -8,6 +8,7 @@ Contents:
 
    preface/index.rst
    tutorial/index.rst
+   architecture/index.rst
    master/index.rst
    node/index.rst
    plugin/index.rst

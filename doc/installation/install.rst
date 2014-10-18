@@ -1,39 +1,29 @@
-====================
- Munin Architecture
-====================
-
-Munin is split into distinct roles.
-
-Master
-======
-
-The "munin master" connects to all munin nodes, collects data, and
-stores it in `RRD <http://oss.oetiker.ch/rrdtool/>`_
-
-You will need to install "munin-master" on the server which will
-collect data from all nodes, and graph the results. When starting with
-munin, it should be enough to install the munin master on one server.
-
-On the munin master, you will need a web server capable of running CGI
-or FastCGI. Apache HTTPD should be suitable. Also reported to be
-working is nginx and lighttpd.
-
-Node
-====
-
-The "munin node" is a daemon which runs on all servers being
-monitored.
-
+.. _installation:
 
 ==================
  Installing Munin
 ==================
 
-With open source software, you can choose to install binary packages
-or install from source-code.
+Due to :ref:`Munin's Architecture <architecture-index>` you have to
+install two different software packages depending on the role,
+that the machine will play. 
+
+You will need to install "munin-master" on the machine that will
+collect data from all nodes, and graph the results. When starting with
+Munin, it should be enough to install the Munin master on one server.
+
+On the Munin master, you will need a web server capable of running CGI
+or FastCGI. Apache HTTPD should be suitable. Also reported to be
+working is nginx and lighttpd.
+
+Install "munin-node" on the machines that shall be monitored by Munin.
+
 
 Source or packages?
 ===================
+
+With open source software, you can choose to install binary packages
+or install from source-code.
 
 We `strongly` recommend a packaged install, as the source distribution isn't as
 tested as the packaged one. The current state of the packages is so
@@ -88,11 +78,11 @@ access to later versions of Munin.
 RedHat / CentOS / Fedora
 ------------------------
 
-At time of writing, only the 1.x version of munin is available in
-`EPEL
+Current versions are available at `EPEL
 <http://dl.fedoraproject.org/pub/epel/6/SRPMS/repoview/munin.html>`_.
 
-If you want 2.x, your best option is probably to install from source.
+Likely you will have to fix SELinux issues when using 3rd-Party plugins and SELinux active and set to *enforcing mode* on the Munin node.
+In case you get competent and friendly support on `SELinux mailinglist <https://admin.fedoraproject.org/mailman/listinfo/selinux>`_.
 
 Other systems
 -------------
