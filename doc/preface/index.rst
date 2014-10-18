@@ -27,41 +27,58 @@ Further parts can be read in a more random manner, as one will search for a
 specific thing in it. Extensive care has been taken to fully leverage the
 hyperlinking abilities of modern documentation readers.
 
-:ref:`Part I <tutorial-index>` is an informal introduction for new users. It
-will try to cover most of what a user is expected to know about Munin. The
-focus here is really about taking the user by the hand and showing him around,
-while getting his hands a little wet. **Every Munin user should read this.**
+:ref:`Part I - Tutorial <tutorial-index>`
 
-:ref:`Part II <protocol-index>` documents the various syntax that are used all
-throughout Munin. It is about every thing a normal user can look himself
-without being considered as a developer. It means the syntax of the various
-config files, and the protocol on the network. **Every Munin user should read
-this.**
+        This part is an informal introduction for new users. It will try to
+        cover most of what a user is expected to know about Munin. The focus
+        here is really about taking the user by the hand and showing him
+        around, while getting his hands a little wet. **Every Munin user should
+        read this.**
 
-:ref:`Part III <install-index>` describes the installation and administration of
-the server. It is about the OS part of Munin, which would be UID, path for the
-various components, how upgrades should be handled. It is also about how Munin
-interacts with its environment, such as how to secure a Munin install [#]_, how to
-enhance the performance of it. **Everyone who runs a Munin server, be it for
-private use or for others, should read this part.**
+:ref:`Part II - Syntax <protocol-index>`
 
-:ref:`Part IV <api-index>` describes the programming interfaces for Munin for
-advanced users, such as the SQL schema of the metadata, or the structure of the
-spool directories. It should cover everything that isn't covered by :ref:`Part
-II <protocol-index>`.
+        This part documents the various syntax that are used all throughout
+        Munin.  It is about every thing a normal user can look himself without
+        being considered as a developer. It means the syntax of the various
+        config files, and the protocol on the network. **Every Munin user
+        should read this.**
 
-:ref:`Part V <advanced-index>` contains information for really advanced users
-about the obscure capabilities of Munin. Topics include undocumented stuff or
-even unwritten stuff that is still only in RFC phase.
+:ref:`Part III - Install <install-index>`
 
-:ref:`Part VI <reference-index>` contains reference information about Munin
-commands, client and server programs. This part supports the other parts with
-structured information sorted by command or program. This also serves as a
-repository for the full sample configs that are studied in the :ref:`Part I
-<tutorial-index>`
+        This part describes the installation and administration of the server.
+        It is about the OS part of Munin, which would be UID, path for the
+        various components, how upgrades should be handled. It is also about
+        how Munin interacts with its environment, such as how to secure a Munin
+        install [#]_, how to enhance the performance of it. **Everyone who runs
+        a Munin server, be it for private use or for others, should read this
+        part.**
 
-:ref:`Part VII <other-index>` contains assorted information that might be of
-use to Munin developers. This section serves usually as incubator for elements before they migrate to the previous parts.
+:ref:`Part IV - API <api-index>`
+
+        This part describes the programming interfaces for Munin for advanced
+        users, such as the SQL schema of the metadata, or the structure of the
+        spool directories. It should cover everything that isn't covered by
+        :ref:`Part II <protocol-index>`.
+
+:ref:`Part V  - Advanced use<advanced-index>`
+
+        This part contains information for really advanced users about the
+        obscure capabilities of Munin. Topics include undocumented stuff or
+        even unwritten stuff that is still only in RFC phase.
+
+:ref:`Part VI - Reference <reference-index>`
+
+        This part contains reference information about Munin commands, client
+        and server programs. This part supports the other parts with structured
+        information sorted by command or program. This also serves as a
+        repository for the full sample configs that are studied in the
+        :ref:`Part I <tutorial-index>`
+
+:ref:`Part VII - Others <other-index>`
+
+        This part contains assorted information that might be of use to Munin
+        developers. This section serves usually as incubator for elements
+        before they migrate to the previous parts.
 
 
 .. Note::
