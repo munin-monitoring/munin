@@ -66,3 +66,11 @@ Protocols
    :maxdepth: 2
 
    protocol.rst
+
+API
+===
+
+.. toctree::
+   :maxdepth: 2
+
+   api.rst

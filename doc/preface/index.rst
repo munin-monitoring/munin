@@ -60,7 +60,7 @@ hyperlinking abilities of modern documentation readers.
         spool directories. It should cover everything that isn't covered by
         :ref:`Part II <protocol-index>`.
 
-:ref:`Part V  - Advanced use<advanced-index>`
+:ref:`Part V - Advanced use <advanced-index>`
 
         This part contains information for really advanced users about the
         obscure capabilities of Munin. Topics include undocumented stuff or
