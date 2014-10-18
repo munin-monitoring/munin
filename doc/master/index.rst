@@ -4,7 +4,8 @@
  The Munin master
 ==================
 
-See also Getting Started -> Architectural Fundamentals
+For an overview see :ref:`Architectural Fundamentals <architecture-index>`
+
 
 Role
 ====
@@ -15,7 +16,7 @@ It also checks whether the fetched values fell below or go over specific
 thresholds (warning, critical) and will send alerts if this happens and
 the administrator configured it to do so.
 
-.. [#] RRDtool (acronym for round-robin database tool) aims to handle time-series data like network bandwidth, temperatures, CPU load, etc. The data are stored in a round-robin database (circular buffer), thus the system storage footprint remains constant over time. Source Wikipedia: http://en.wikipedia.org/wiki/RRDtool
+.. [#] `RRDtool <http://oss.oetiker.ch/rrdtool/>`_ (acronym for round-robin database tool) aims to handle time-series data like network bandwidth, temperatures, CPU load, etc. The data are stored in a round-robin database (circular buffer), thus the system storage footprint remains constant over time. Source Wikipedia: http://en.wikipedia.org/wiki/RRDtool
 
 Components
 ==========

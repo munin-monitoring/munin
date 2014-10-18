@@ -4,6 +4,8 @@
 Munin's Architecture
 ====================
 
+.. _architecture-overview:
+
 Overview
 ========
 
@@ -43,8 +45,8 @@ Note that an usual setup involves having a node running also on the master
 host, in order to munin to monitor itself.
 
 
-Component relations
-^^^^^^^^^^^^^^^^^^^
+Relations
+^^^^^^^^^
 
 - Each Munin master may monitor one or more Munin nodes (1:n)
 - More than one Munin master may monitor one or more Munin nodes (n:m)
@@ -57,8 +59,8 @@ Component relations
     - One or more data sources (fields) described by fieldname (1:n) 
     - Each data source has one or more attributes (1:n), with corresponding values 
 
-Other documentation
-===================
+Protocols
+=========
 
 .. toctree::
    :maxdepth: 2

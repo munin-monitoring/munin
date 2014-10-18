@@ -1,11 +1,16 @@
 .. _protocol-index:
 
-==================
-The Munin Protocol
-==================
+===================
+The Munin Protocols
+===================
+
+Here we describe the rules for collaboration and communication between :ref:`Munin's components <architecture-overview>`.
 
 Introduction
 ------------
+
+Contents on this page will focus on already implemented features. For *proposals* and *ideas* 
+look in the `Wiki <http://www.munin-monitoring.org/wiki/development>`_.
 
 Concepts
 --------
@@ -33,7 +38,7 @@ and also - where needed - per async
    }
 
 Dirty config
-^^^^^^^^^^^^
+============
 
 A *dirty* fetch is not desirable because some plugins (rightly) assume that 
 ``config`` is done first and then ``fetch`` and updates the state file accordingly.  
@@ -80,13 +85,11 @@ reduce the need for many plugin state files and such complexity.
 Should make plugin author lives much easier all together.
 
 
+Multigraph Plugins
+------------------
 Datatypes
 ---------
 GAUGE
 =====
 DERIVE
 ======
-Creating a New Plugin
----------------------
-Multigraph Plugins
-------------------

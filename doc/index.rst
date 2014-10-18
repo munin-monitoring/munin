@@ -12,8 +12,8 @@ Contents:
    master/index.rst
    node/index.rst
    plugin/index.rst
-   architecture/protocol.rst
    installation/index.rst
+   advanced/index.rst
    reference/index.rst
    example/index.rst
    documentation/index.rst
