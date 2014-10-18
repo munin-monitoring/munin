@@ -22,15 +22,15 @@ To make the large amount of information about Munin manageable, this guide has
 been organized in several parts. Each part is targeted at a different class of
 users, or at users in different stages of their Munin experience:
 
-:ref:`Part I <tutorial-index>` is an informal introduction for new users.
+Part I :ref:`Tutorial <tutorial-index>` is an informal introduction for new users.
 
-:ref:`Part II <protocol-index>` documents the query language environment, including
-data types and functions, as well as user-level performance tuning. Every Munin
-user should read this.
+Part II on :ref:`Munin's Architecture <architecture-index>` contains also info on 
+the query language environment, including data types and functions, as well as 
+user-level performance tuning. Every Munin user should read this.
 
-:ref:`Part III <install-index>` describes the installation and administration of
-the server. Everyone who runs a Munin server, be it for private use or for
-others, should read this part.
+Part III on :ref:`Munin Installation <install-index>` describes the installation 
+and administration of the server. Everyone who runs a Munin server, be it for 
+private use or for others, should read this part.
 
 :ref:`Part IV <api-index>` describes the programming interfaces for Munin
 client programs.

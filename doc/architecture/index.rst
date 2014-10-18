@@ -14,13 +14,16 @@ Munin has a master-nodes architecture.
 Components
 ==========
 
+Here we describe the components of Munin.
+On page :ref:`Protocols <protocol-index>` we talk about the rules for interaction between them. 
+
 Munin-Master
 ^^^^^^^^^^^^
 
 The master is responsible for all central Munin-related tasks.
 
 
-It regularly connects to the various nodes, and then synchronously [#]_ 
+It regularly connects to the various nodes, and then :ref:`synchronously <protocol-index>`
 asks for the various metrics configuration and values and stores the data in `RRD <http://oss.oetiker.ch/rrdtool/>` files.
 
 On the fly the values are checked against limits (that you may set) 
@@ -41,7 +44,7 @@ host, in order to munin to monitor itself.
 
 
 Component relations
-===================
+^^^^^^^^^^^^^^^^^^^
 
 - Each Munin master may monitor one or more Munin nodes (1:n)
 - More than one Munin master may monitor one or more Munin nodes (n:m)
@@ -54,29 +57,10 @@ Component relations
     - One or more data sources (fields) described by fieldname (1:n) 
     - Each data source has one or more attributes (1:n), with corresponding values 
 
-
-Fetching Data
-=============
-
-.. [#] Poller-based monitoring infrastructure 
-
-.. graphviz::
-
-   digraph  {
-        "master" -> "node1";
-        "master" -> "node2";
-        "master" -> "node3";
-   }
-
-and also - where needed - per async
-
-.. graphviz::
-
-   digraph  {
-        "master" -> async1 -> "node1";
-        "master" -> "node3";
-   }
+Other documentation
+===================
 
 .. toctree::
    :maxdepth: 2
 
+   protocol.rst

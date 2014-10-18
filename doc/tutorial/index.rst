@@ -22,5 +22,4 @@ also read :ref:`Part III <install-index>`.
    :maxdepth: 2
 
    getting-started.rst
-   protocol.rst
    advanced-features.rst

@@ -12,10 +12,11 @@ Contents:
    master/index.rst
    node/index.rst
    plugin/index.rst
-   documentation/index.rst
+   architecture/protocol.rst
    installation/index.rst
    reference/index.rst
    example/index.rst
+   documentation/index.rst
 
 Indices and tables
 ==================
