@@ -78,8 +78,23 @@ access to later versions of Munin.
 RedHat / CentOS / Fedora
 ------------------------
 
-Current versions are available at `EPEL
-<http://dl.fedoraproject.org/pub/epel/6/SRPMS/repoview/munin.html>`_.
+Current versions are available at `EPEL <https://fedoraproject.org/wiki/EPEL#What_packages_and_versions_are_available_in_EPEL.3F>`_.
+
+In order to install Munin type
+
+.. code-block:: bash
+
+   sudo yum install munin-node
+
+on all nodes, and
+
+.. code-block:: bash
+
+   sudo yum install munin
+
+on the master.
+
+You will have to enable the services in systemd to get them up and running.
 
 Likely you will have to fix SELinux issues when using 3rd-Party plugins and SELinux active and set to *enforcing mode* on the Munin node.
 In case you get competent and friendly support on `SELinux mailinglist <https://admin.fedoraproject.org/mailman/listinfo/selinux>`_.
