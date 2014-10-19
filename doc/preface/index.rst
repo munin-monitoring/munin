@@ -74,7 +74,7 @@ hyperlinking abilities of modern documentation readers.
         repository for the full sample configs that are studied in the
         :ref:`Part I <tutorial-index>`
 
-:ref:`Part VII - Others <other-index>`
+:ref:`Part VII - Others <others-index>`
 
         This part contains assorted information that might be of use to Munin
         developers. This section serves usually as incubator for elements

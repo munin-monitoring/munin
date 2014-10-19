@@ -14,8 +14,8 @@ Contents:
    plugin/index.rst
    installation/index.rst
    advanced/index.rst
-   others/index.rst
    reference/index.rst
+   others/index.rst
    example/index.rst
    documentation/index.rst
 
