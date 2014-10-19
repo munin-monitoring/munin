@@ -50,8 +50,5 @@ Common Plugins
 Multigraph Plugins
 ==================
 
-.. toctree::
-   :maxdepth: 2
+- See :ref:`Protocol for Multigraph Plugins <plugin-protocol-multigraph>`
 
-   ../plugin/multigraphing.rst
-   ../plugin/protocol-multigraph.rst
