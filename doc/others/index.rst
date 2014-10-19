@@ -4,6 +4,8 @@
 Other docs
 ==========
 
+.. _contributing:
+
 Contributing
 ============
 
@@ -81,7 +83,3 @@ After 2.0 has been published with this change in plugins would be
 simpler and combined with some other extensions it would greatly 
 reduce the need for many plugin state files and such complexity.  
 Should make plugin author lives much easier all together.
-
-.. _Contributing:
-
-

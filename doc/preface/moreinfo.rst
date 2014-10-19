@@ -15,7 +15,7 @@ Munin Guide
 These are the pages you are currently reading. It is aimed at the first read.
 The chapters are designed as a walkthough Munin's components in a very guided
 manner. Its read constitutes the **basis** of every documention available.
-Specially when asking live (IRC_, mailing-list_) channels, users there will
+Specially when asking live (IRC_, mailing-lists_) channels, users there will
 expect that you read the Guide prior to asking.
 
 It is regularly updated, as its sources are directly in the munin source
@@ -99,12 +99,25 @@ If you don't find a specific answer to your question in the various
 documentations, the mailing lists are a very good place to have your questions
 shared with other users.
 
+- `subscribe to the munin-users list <mailto:munin-users-request@lists.sourceforge.net?subject=subscribe>`_ (English)
+
+- `subscribe to the munin-users-de <mailto:munin-users-de-request@lists.sourceforge.net?subject=subscribe>`_ (German)
+
+- `subscribe to the munin-users-jp <mailto:munin-users-jp-request@lists.sourceforge.net?subject=subscribe>`_ (Japanese)
+
+Please also consult the list archives. Your Munin issue may have been discussed already.
+
+- `munin-users list archive <https://sourceforge.net/p/munin/mailman/munin-users/>`_ (English)
+
+- `munin-users-de list archive <https://sourceforge.net/p/munin/mailman/munin-users-de/>`_ (German)
+
+- `munin-users-jp list archive <https://sourceforge.net/p/munin/mailman/munin-users-jp>`_ (Japanese)
+
 It happens that they were much more used in the previous years, but nowadays it
 is much more common to seek an immediate answer on a specific issue, which is
 best handled by IRC_. Therefore the mailing lists do appear very quiet, as most
 users go on other channels.
 
-The mailing-lists are : munin
 
 .. _irc:
 
