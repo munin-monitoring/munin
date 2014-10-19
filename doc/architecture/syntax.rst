@@ -13,6 +13,13 @@ POD style documentation
 
 .. _magic-markers:
 
+Configuration
+=============
+
+- For the :ref:`Munin master <master-index>` in :ref:`/etc/munin/munin.conf <munin.conf>`.
+- For the :ref:`Munin node <node-index>` daemon in :ref:`/etc/munin/munin-node.conf <munin-node.conf>`.
+- For the :ref:`Munin plugins <plugin-index>` in :ref:`/etc/munin/plugin-conf.d/.. <plugin-conf.d>`.
+
 Magic Markers
 =============
 

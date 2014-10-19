@@ -39,6 +39,8 @@ from the distribution.
 .. index::
    pair: plugin; configuration
 
+.. _plugin-conf.d:
+
 Configuring
 ===========
 
