@@ -44,9 +44,7 @@ Network Protocol
 Common Plugins
 ==============
 
-**Wiki Pages:**
-
-- `Protocol for data exchange between master and node <http://munin-monitoring.org/wiki/network-protocol>`_
+- See :ref:`Protocol for data exchange between master and node <network-protocol>`
 
 
 Multigraph Plugins

@@ -60,6 +60,11 @@ The munin master has its primary configuration file at
 Fetching values
 ===============
 
+.. toctree::
+   :maxdepth: 2
+
+   network-protocol.rst
+
 Graphing Charts
 ===============
 
