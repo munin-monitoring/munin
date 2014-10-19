@@ -10,9 +10,13 @@ More than one place for docs
 =============================
 
 Plugin Docs
-  are included in the plugins code files. We use POD [#]_. style format there and deliver a 
+  are included in the plugins code files. We use POD [#]_. style format there and deliver a
   command line utility ``munindoc`` to display the info pages about the plugins.
-  Call ``munindoc buddyinfo`` to get the documentation for plugin ``buddyinfo``
+  Call ``munindoc buddyinfo`` to get the documentation for plugin ``buddyinfo``.
+
+  We use this POD sections also in the `Munin Gallery <http://gallery.munin-monitoring.org>`_.
+  See our `Wiki page <http://munin-monitoring.org/wiki/PluginGallery>`_ for instructions
+  how to contribute also example images for the gallery.
   
   Have a look at the `munindoc instruction page in our Trac wiki <http://munin-monitoring.org/wiki/munindoc>`_ 
   and edit or add the pod section in the plugins code file accordingly. Send a patch or a pull request on github 
