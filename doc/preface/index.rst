@@ -5,10 +5,9 @@
 =========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    whatis.rst
-   history.rst
    conventions.rst
    moreinfo.rst
    bugreport.rst

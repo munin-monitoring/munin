@@ -54,3 +54,4 @@ Other reference material
 
    directories.rst
    plugin.rst
+   history.rst
