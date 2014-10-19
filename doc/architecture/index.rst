@@ -35,6 +35,11 @@ Here we also generate the graphs, as this is a heavy task that needs some resour
 Recent versions of Munin use cgi-graphing to generate graphs only 
 when the user want's to see them.
 
+.. toctree::
+   :maxdepth: 2
+
+   ../master/index.rst
+
 Munin-Node
 ^^^^^^^^^^
 
@@ -44,6 +49,25 @@ agent-less monitoring but this is a special case that will be addressed later.
 Note that an usual setup involves having a node running also on the master
 host, in order to munin to monitor itself.
 
+.. toctree::
+   :maxdepth: 2
+
+   ../node/index.rst
+
+Munin-Plugin
+^^^^^^^^^^^^
+
+The munin plugin is a simple executable, which role is to gather one
+set of facts about the local server (or fetching data from a remote machine via SNMP)
+
+The plugin is called with the argument "config" to get metadata, and
+with no arguments to get the values. These are mandatory arguments for each plugin.
+We have some more standard arguments, which play a role in the process of automatic configuration.
+
+.. toctree::
+   :maxdepth: 2
+
+   ../plugin/index.rst
 
 Relations
 ^^^^^^^^^

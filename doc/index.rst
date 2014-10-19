@@ -8,10 +8,15 @@ Contents:
 
    preface/index.rst
    tutorial/index.rst
+
+.. toctree::
+   :maxdepth: 3
+
    architecture/index.rst
-   master/index.rst
-   node/index.rst
-   plugin/index.rst
+
+.. toctree::
+   :maxdepth: 2
+
    installation/index.rst
    advanced/index.rst
    reference/index.rst
