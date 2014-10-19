@@ -22,9 +22,16 @@ changed something (services, hardware  or configuration) on your
 node and want to adjust the collection of plugins accordingly. 
 Wenn you removed software start it with option '--remove-also'.
 
-To use a Munin plugin being delivered from a 3rd-Party, place 
-it in the plugin directory or in another directory of your choice, 
-make it executable and create the service link. 
+To use a Munin plugin being delivered from a `3rd-Party <http://gallery.munin-monitoring.org/contrib/>`_,
+place it in directory ``/usr/local/munin/lib/plugins`` (or in another 
+directory of your choice) make it executable and create the service link. 
+It may work also, if you put the plugin in the ``servicedir`` directly, 
+but this is not recommended to support use of utility 
+``munin-node-configure`` and to avoid struggle with SELinux.
+You may also put 3rd-Party plugins in the *official* plugin directory
+(usually ``/usr/share/munin/plugins``), but be prepared (Backup!)
+against overwriting existing plugin scripts with newer versions
+from the distribution.
 
 .. index::
    pair: plugin; configuration

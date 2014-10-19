@@ -20,8 +20,6 @@ Fetching Data
 
 Poller-based monitoring infrastructure 
 
-- `Protocol for data exchange between daemon and client <http://munin-monitoring.org/wiki/network-protocol>`_
-
 .. graphviz::
 
    digraph  {
@@ -40,5 +38,22 @@ and also - where needed - per async
    }
 
 
+Network Protocol
+----------------
+
+Common Plugins
+==============
+
+**Wiki Pages:**
+
+- `Protocol for data exchange between master and node <http://munin-monitoring.org/wiki/network-protocol>`_
+
+
 Multigraph Plugins
-------------------
+==================
+
+.. toctree::
+   :maxdepth: 2
+
+   ../plugin/multigraphing.rst
+   ../plugin/protocol-multigraph.rst
