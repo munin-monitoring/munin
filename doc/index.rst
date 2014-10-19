@@ -21,7 +21,6 @@ Contents:
    advanced/index.rst
    reference/index.rst
    others/index.rst
-   documentation/index.rst
 
 Indices and tables
 ==================

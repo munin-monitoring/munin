@@ -4,6 +4,16 @@
 Other docs
 ==========
 
+Contributing
+============
+
+We need help with completing the `Munin Gallery <http://gallery.munin-monitoring.org/>`_.
+A lot of plugins don't have their documentation in POD style format.
+And the Gallery needs more pics!
+
+See our wiki page with `instructions for gallery contributors <http://munin-monitoring.org/wiki/PluginGallery>`_.
+
+
 Developer Talk
 ==============
 
@@ -72,6 +82,6 @@ simpler and combined with some other extensions it would greatly
 reduce the need for many plugin state files and such complexity.  
 Should make plugin author lives much easier all together.
 
-Contributing
-============
+.. _Contributing:
+
 
