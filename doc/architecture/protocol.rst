@@ -87,9 +87,3 @@ Should make plugin author lives much easier all together.
 
 Multigraph Plugins
 ------------------
-Datatypes
----------
-GAUGE
-=====
-DERIVE
-======

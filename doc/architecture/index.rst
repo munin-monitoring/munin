@@ -67,6 +67,14 @@ Protocols
 
    protocol.rst
 
+Syntax
+======
+
+.. toctree::
+   :maxdepth: 2
+
+   syntax.rst
+
 API
 ===
 

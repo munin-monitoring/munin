@@ -44,3 +44,4 @@ Other documentation
    env.rst
    multigraphing.rst
    supersampling.rst
+   snmp.rst
