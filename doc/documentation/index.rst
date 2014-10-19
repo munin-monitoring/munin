@@ -45,10 +45,3 @@ Munin's Wiki
 .. _Munin Guide: https://munin.readthedocs.org/
 .. _wiki: http://munin-monitoring.org/wiki/
 
-Nomenclature
-============
-
-.. toctree::
-   :maxdepth: 2
-
-   nomenclature.rst

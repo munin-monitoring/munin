@@ -72,3 +72,6 @@ simpler and combined with some other extensions it would greatly
 reduce the need for many plugin state files and such complexity.  
 Should make plugin author lives much easier all together.
 
+Contributing
+============
+
