@@ -26,3 +26,4 @@ also read :ref:`Part III <install-index>`.
    alert.rst
    advanced-features.rst
    snmp.rst
+   monitoring-the-unreachable.rst

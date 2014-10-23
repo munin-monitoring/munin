@@ -19,7 +19,8 @@ Plugin Docs
   how to contribute also example images for the gallery.
   
   Have a look at the `munindoc instruction page in our Trac wiki <http://munin-monitoring.org/wiki/munindoc>`_ 
-  and edit or add the pod section in the plugins code file accordingly. Send a patch or a pull request on github 
+  and edit or add the pod section in the plugins code file accordingly. See the `perlpod Manual <http://perldoc.perl.org/perlpod.html>`_ 
+  for help on the syntax. Finally send a patch or a pull request on github 
   to help us improve the plugins documentation.
 
 Unix Manual Pages
