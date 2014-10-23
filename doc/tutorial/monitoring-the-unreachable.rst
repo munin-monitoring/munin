@@ -40,7 +40,6 @@ Bouncing
 This workaround uses netcat and inetd/xinetd to forward the queries 
 from the Munin server. All incoming connections to defined ports 
 are automatically forwarded to the Munin node using netcat. 
-This article explains the details.
 
 .. image:: MuninPortForwarding.png
 
@@ -60,3 +59,4 @@ including munin.conf is found here.
 Note that if the NAT device is a \*nix system, 
 you may also use the two approaches described above.
 
+.. image:: MuninPortForwarding.png
