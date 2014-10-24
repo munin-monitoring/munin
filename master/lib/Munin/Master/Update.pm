@@ -359,8 +359,12 @@ sub _print_old_service_configs_for_failed_workers {
 	    next if ($datum eq 'group')
 		or ($datum eq 'host_name');
 
-	    printf $handle "%s:%s %s\n", $worker, $datum, $workerdata->{$datum};
-	    munin_set_var_path($datafile_hash, $worker . ":". $datum, $workerdata->{$datum});
+	    if (defined $workerdata->{$datum}) {
+        printf $handle "%s:%s %s\n", $worker, $datum, $workerdata->{$datum};
+        munin_set_var_path($datafile_hash, $worker . ":". $datum, $workerdata->{$datum});
+	    } else {
+	      WARN "[Warning] no data $worker -> $datum";
+	    }
 	}
 	
     }
