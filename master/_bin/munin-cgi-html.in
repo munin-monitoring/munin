@@ -557,8 +557,7 @@ sub _get_params_services_for_comparison {
 		"SELECT n.name, u.path, s.path, s.title FROM node n
 		INNER JOIN url u ON u.id = n.id AND u.type = 'node'
 		LEFT JOIN
-			( SELECT s.id AS id, s.node_id AS node_id, sa_t.value AS title, u_s.path AS path FROM service s
-			INNER JOIN service_attr sa_t ON s.id = sa_t.id AND sa_t.name = 'graph_title'
+			( SELECT s.id AS id, s.node_id AS node_id, s.service_title AS title, u_s.path AS path FROM service s
 			INNER JOIN url u_s ON s.id = u_s.id AND u_s.type = 'service'
 			WHERE s.name = ? ) AS s ON n.id = s.node_id
 		WHERE n.grp_id = ?
@@ -603,10 +602,9 @@ sub _get_params_services_by_name {
 	# TODO warning/critical state (use SUM sub-queries?)
 	# XXX this may be slow
 	my $sth = $dbh->prepare_cached(
-		"SELECT s.id, sa_t.value as service_title, sa_s.value as subgraphs, u.path AS url,
+		"SELECT s.id, s.service_title as service_title, sa_s.value as subgraphs, u.path AS url,
 		n.name AS node_name, u_n.path AS node_url
 		FROM service s
-		INNER JOIN service_attr sa_t ON sa_t.id = s.id AND sa_t.name = 'graph_title'
 		LEFT JOIN service_attr sa_s ON sa_s.id = s.id AND sa_s.name = 'subgraphs'
 		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
 		INNER JOIN node n ON n.id = s.node_id
@@ -638,10 +636,9 @@ sub _get_params_services_by_name {
 sub _get_params_services {
 	my ($base_path, $dbh, $category_name, $multigraph_parent, $node_id) = @_;
 
-	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, sa_t.value as service_title, sa_s.value as subgraphs, u.path AS url
+	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, s.service_title as service_title, sa_s.value as subgraphs, u.path AS url
 		FROM service s
 		INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category' AND sa_c.value = ?
-		INNER JOIN service_attr sa_t ON sa_t.id = s.id AND sa_t.name = 'graph_title'
 		LEFT JOIN service_attr sa_s ON sa_s.id = s.id AND sa_s.name = 'subgraphs'
 		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
 		WHERE s.node_id = ?
