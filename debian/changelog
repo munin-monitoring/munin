@@ -1,11 +1,12 @@
-munin (2.0.23-2) UNRELEASED; urgency=medium
+munin (2.0.24-1) UNRELEASED; urgency=medium
 
   * Ensure consistent use of /etc/default/munin-node (Closes: #764594)
   * Add documentation links to systemd services
   * Fix the "apt_all update" cron job (Closes: 761366)
   * Declare compliance with Debian policy 3.9.6
+  * Imported upstream release 2.0.24
 
- -- Stig Sandbeck Mathisen <ssm@debian.org>  Sun, 26 Oct 2014 16:11:49 +0100
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Sun, 26 Oct 2014 16:15:18 +0100
 
 munin (2.0.23-1) unstable; urgency=medium
 
