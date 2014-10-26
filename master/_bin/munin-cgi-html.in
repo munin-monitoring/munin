@@ -380,21 +380,13 @@ while (new CGI::Fast) {
 
 		my $sth;
 
-		$sth = $dbh->prepare_cached("SELECT name FROM service WHERE id = ?");
+		$sth = $dbh->prepare_cached("SELECT name,graph_info,subgraphs FROM service WHERE id = ?");
 		$sth->execute($id);
-		my ($graph_name) = $sth->fetchrow_array();
+		my ($graph_name, $graph_info, $multigraph) = $sth->fetchrow_array();
 
 		$sth = $dbh->prepare_cached("SELECT category FROM service_categories WHERE id = ?");
 		$sth->execute($id);
 		my ($graph_category) = $sth->fetchrow_array();
-
-		$sth = $dbh->prepare_cached("SELECT graph_info FROM service WHERE id = ?");
-		$sth->execute($id);
-		my ($graph_info) = $sth->fetchrow_array();
-
-		$sth = $dbh->prepare_cached("SELECT subgraphs FROM service WHERE id = ?");
-		$sth->execute($id);
-		my ($multigraph) = $sth->fetchrow_array();
 
 		$sth = $dbh->prepare_cached("SELECT n.id FROM node n INNER JOIN service s ON s.node_id = n.id WHERE s.id = ?");
 		$sth->execute($id);
