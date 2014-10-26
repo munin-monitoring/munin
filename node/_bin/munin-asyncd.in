@@ -160,9 +160,14 @@ MAIN: while($keepgoing) {
 			next;
 		}
 
-		# Should update it
-		$last_updated{$plugin} = $when;
-		$when_next = min($when_next, $when + max($plugin_rate, $minrate));
+		# Should update it - based on wall clock time
+		my $should_have_been = $when - ($when % $plugin_rate);
+		my $should_be_next = $should_have_been + $plugin_rate;
+
+		$last_updated{$plugin} = $should_have_been;
+		if ($should_be_next < $when_next) {
+			$when_next = $should_be_next;
+		}
 
 		if ($do_fork && fork()) {
 			# parent, return directly
