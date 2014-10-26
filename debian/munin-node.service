@@ -3,8 +3,7 @@ Description=Munin Node
 Documentation=man:munin-node(1) http://munin.readthedocs.org/en/stable-2.0/reference/munin-node.html
 
 [Service]
-Environment=DAEMON_ARGS=
-EnvironmentFile=/etc/default/munin-node
+EnvironmentFile=-/etc/default/munin-node
 Type=forking
 Restart=always
 ExecStart=/usr/sbin/munin-node $DAEMON_ARGS
