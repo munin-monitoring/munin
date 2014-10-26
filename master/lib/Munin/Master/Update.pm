@@ -233,6 +233,7 @@ sub _get_url_from_path {
 sub _dump_conf_node_into_sql {
 	my ($node, $grp_id, $path, $dbh, $sth_node, $sth_node_attr,
 		$sth_service, $sth_service_attr,
+		$sth_service_category,
 		$sth_ds, $sth_ds_attr,
 		$sth_url) = @_;
 
@@ -276,11 +277,12 @@ sub _dump_conf_node_into_sql {
 				# graph config
 
 				# Category names should not be case sensitive. Store them all in lowercase.
-				if $attr->[0] eq 'graph_category' {
+				if ($attr->[0] eq 'graph_category') {
 						$attr->[1] = lc($attr->[1]);
 						$sth_service_category->execute($service_id, $attr->[1]);
-				} else
-				$sth_service_attr->execute($service_id, $args[0], $value);
+				} else {
+						$sth_service_attr->execute($service_id, $args[0], $value);
+				}
 			} elsif (2 == scalar @args) {
 				# field config
 				my $data_source = $args[0];
@@ -474,11 +476,12 @@ sub _dump_into_sql {
 
 			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
 				# Category names should not be case sensitive. Store them all in lowercase.
-				if $attr->[0] eq 'graph_category' {
+				if ($attr->[0] eq 'graph_category') {
 						$attr->[1] = lc($attr->[1]);
 						$sth_service_category->execute($service_id, $attr->[1]);
-				} else
-				$sth_service_attr->execute($service_id, $attr->[0], $attr->[1]);
+				} else {
+						$sth_service_attr->execute($service_id, $attr->[0], $attr->[1]);
+				}
 			}
 			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
 				$sth_ds->execute($service_id, $data_source, "$host:$service.$data_source");
