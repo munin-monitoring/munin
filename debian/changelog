@@ -1,4 +1,4 @@
-munin (2.0.24-1) UNRELEASED; urgency=medium
+munin (2.0.24-1) unstable; urgency=medium
 
   * Ensure consistent use of /etc/default/munin-node (Closes: #764594)
   * Add documentation links to systemd services
@@ -6,7 +6,7 @@ munin (2.0.24-1) UNRELEASED; urgency=medium
   * Declare compliance with Debian policy 3.9.6
   * Imported upstream release 2.0.24
 
- -- Stig Sandbeck Mathisen <ssm@debian.org>  Sun, 26 Oct 2014 16:15:18 +0100
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Sun, 26 Oct 2014 16:24:12 +0100
 
 munin (2.0.23-1) unstable; urgency=medium
 
