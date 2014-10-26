@@ -1,3 +1,4 @@
+
 .. _munin.conf:
 
 .. program:: munin.conf
@@ -12,6 +13,8 @@ DESCRIPTION
 This is the configuration file for the munin master. It is used by
 :ref:`munin-update`, :ref:`munin-graph`, :ref:`munin-limits`.
 :ref:`munin-html`, :ref:`munin-cgi-graph` and :ref:`munin-cgi-html`.
+
+.. _master-conf-global-directives:
 
 GLOBAL DIRECTIVES
 =================
@@ -109,6 +112,22 @@ otherwise.
    html pages you must configure a web server to run
    :ref:`munin-cgi-graph` instead.
 
+.. _directive-contact:
+
+.. option:: contact.<contact name>.command <command>
+
+   Define which contact command to run.
+
+.. option:: contact.<contact name>.text <text>
+
+   Text to pipe into the command.
+
+.. option:: contact.<contact name>.max_messages <number>
+
+   Close (and reopen) command after given number of messages. E.g. if set to 1 for an email target,
+   Munin sends 1 email for each warning/critical. Useful when relaying messages to external processes
+   that may handle a limited number of simultaneous warnings.
+
 .. index::
    pair: example; munin.conf
 
@@ -203,6 +222,8 @@ These directives follow a node definition and are of the form "plugin.directive 
 Using these directives you can override various directives for a plugin, such as its contacts, and
 can also be used to create graphs containing data from other plugins.
 
+.. _master-conf-field-directives:
+
 FIELD DIRECTIVES
 ----------------
 
@@ -282,3 +303,4 @@ SEE ALSO
 ========
 
 See :ref:`munin` for an overview over munin.
+
