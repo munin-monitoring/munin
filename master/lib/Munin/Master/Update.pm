@@ -233,6 +233,7 @@ sub _get_url_from_path {
 sub _dump_conf_node_into_sql {
 	my ($node, $grp_id, $path, $dbh, $sth_node, $sth_node_attr,
 		$sth_service, $sth_service_attr,
+		$sth_service_category,
 		$sth_ds, $sth_ds_attr,
 		$sth_url) = @_;
 
@@ -276,8 +277,12 @@ sub _dump_conf_node_into_sql {
 				# graph config
 
 				# Category names should not be case sensitive. Store them all in lowercase.
-				$value = lc($value) if $args[0] eq 'graph_category';
-				$sth_service_attr->execute($service_id, $args[0], $value);
+				if ($attr->[0] eq 'graph_category') {
+						$attr->[1] = lc($attr->[1]);
+						$sth_service_category->execute($service_id, $attr->[1]);
+				} else {
+						$sth_service_attr->execute($service_id, $args[0], $value);
+				}
 			} elsif (2 == scalar @args) {
 				# field config
 				my $data_source = $args[0];
@@ -302,6 +307,7 @@ sub _dump_groups_into_sql {
 	my ($groups, $p_id, $path, $dbh, $sth_grp,
 		$sth_node, $sth_node_attr,
 		$sth_service, $sth_service_attr,
+		$sth_service_category,
 		$sth_ds, $sth_ds_attr,
 		$sth_url) = @_;
 
@@ -322,6 +328,7 @@ sub _dump_groups_into_sql {
 			_dump_conf_node_into_sql($node, $id, $grp_path, $dbh,
 				$sth_node, $sth_node_attr,
 				$sth_service, $sth_service_attr,
+				$sth_service_category,
 				$sth_ds, $sth_ds_attr,
 				$sth_url);
 		}
@@ -330,6 +337,7 @@ sub _dump_groups_into_sql {
 			$sth_grp,
 			$sth_node, $sth_node_attr,
 			$sth_service, $sth_service_attr,
+			$sth_service_category,
 			$sth_ds, $sth_ds_attr,
 			$sth_url);
 	}
@@ -359,12 +367,14 @@ sub _dump_into_sql {
 	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
 	my $sth_node_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
 
-	$dbh->do("CREATE TABLE IF NOT EXISTS service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR, service_title VARCHAR, graph_info VARCHAR, subgraphs INTEGER)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_service_attr ON service_attr (id, name)");
 	$dbh->do("CREATE INDEX IF NOT EXISTS r_s_node ON service (node_id)");
-	my $sth_service = $dbh->prepare('INSERT INTO service (node_id, name, path) VALUES (?, ?, ?)');
+	my $sth_service = $dbh->prepare('INSERT INTO service (node_id, name, path, service_title, graph_info, subgraphs) VALUES (?, ?, ?, ?, ?, ?)');
 	my $sth_service_attr = $dbh->prepare('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
+	$dbh->do("CREATE TABLE IF NOT EXISTS service_categories (id INTEGER REFERENCES service(id), category VARCHAR NOT NULL, PRIMARY KEY (id,category))");
+	my $sth_service_category = $dbh->prepare('INSERT INTO service_categories (id, category) VALUES (?, ?)');
 
 	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
 		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
@@ -409,6 +419,7 @@ sub _dump_into_sql {
 		$sth_grp,
 		$sth_node, $sth_node_attr,
 		$sth_service, $sth_service_attr,
+		$sth_service_category,
 		$sth_ds, $sth_ds_attr,
 		$sth_url);
 
@@ -451,19 +462,22 @@ sub _dump_into_sql {
 			# to make it easier for CGI html to work with.
 			(my $_service = $service) =~ tr!.!/!;
 
-			$sth_service->execute($node_id, $service, "$host:$service");
+			my $graph_title = delete $self->{service_configs}{$host}{global}{graph_title};
+			my $graph_info = delete $self->{service_configs}{$host}{global}{graph_info};
+			# Check for multigraphs
+			my $subgraphs = scalar grep /^$service\..+/, keys %{$self->{service_configs}{$host}{data_source}};
+			$sth_service->execute($node_id, $service, "$host:$service", $graph_title, $graph_info, $subgraphs);
 			my $service_id = _get_last_insert_id($dbh);
 			$sth_url->execute($service_id, "service", _get_url_from_path("$host:$_service"));
 
-			# Check for multigraphs
-			my $subgraphs = scalar grep /^$service\..+/, keys %{$self->{service_configs}{$host}{data_source}};
-			$sth_service_attr->execute($service_id, 'subgraphs', $subgraphs) if $subgraphs;
-
 			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
 				# Category names should not be case sensitive. Store them all in lowercase.
-				$attr->[1] = lc($attr->[1]) if $attr->[0] eq 'graph_category';
-
-				$sth_service_attr->execute($service_id, $attr->[0], $attr->[1]);
+				if ($attr->[0] eq 'graph_category') {
+						$attr->[1] = lc($attr->[1]);
+						$sth_service_category->execute($service_id, $attr->[1]);
+				} else {
+						$sth_service_attr->execute($service_id, $attr->[0], $attr->[1]);
+				}
 			}
 			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
 				$sth_ds->execute($service_id, $data_source, "$host:$service.$data_source");
