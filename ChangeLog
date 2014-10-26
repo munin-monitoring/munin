@@ -1,5 +1,26 @@
 -*- text -*-
 
+munin-2.0.24, 2014-10-26
+
+-------
+Summary
+-------
+
+Bugfix release. It reopens D:675318, as it wasn't really fixed anyway.
+
+Closes: D:696981
+Reopens: D:675318
+
+------------------
+Detailed Changelog
+------------------
+
+Steve Schnepp (3):
+      m/update: fix "not a reference at /../Utils.pm"
+      Revert "p/postfix_mail: fix incorrect delivered message count"
+      p/postfix_mailstats: proper fix, but partial
+
+
 munin-2.0.23, 2014-10-17
 
 -------
