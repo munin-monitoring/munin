@@ -276,7 +276,10 @@ sub _dump_conf_node_into_sql {
 				# graph config
 
 				# Category names should not be case sensitive. Store them all in lowercase.
-				$value = lc($value) if $args[0] eq 'graph_category';
+				if $attr->[0] eq 'graph_category' {
+						$attr->[1] = lc($attr->[1]);
+						$sth_service_category->execute($service_id, $attr->[1]);
+				} else
 				$sth_service_attr->execute($service_id, $args[0], $value);
 			} elsif (2 == scalar @args) {
 				# field config
@@ -302,6 +305,7 @@ sub _dump_groups_into_sql {
 	my ($groups, $p_id, $path, $dbh, $sth_grp, $sth_grp_attr,
 		$sth_node, $sth_node_attr,
 		$sth_service, $sth_service_attr,
+		$sth_service_category,
 		$sth_ds, $sth_ds_attr,
 		$sth_url) = @_;
 
@@ -322,6 +326,7 @@ sub _dump_groups_into_sql {
 			_dump_conf_node_into_sql($node, $id, $grp_path, $dbh,
 				$sth_node, $sth_node_attr,
 				$sth_service, $sth_service_attr,
+				$sth_service_category,
 				$sth_ds, $sth_ds_attr,
 				$sth_url);
 		}
@@ -330,6 +335,7 @@ sub _dump_groups_into_sql {
 			$sth_grp, $sth_grp_attr,
 			$sth_node, $sth_node_attr,
 			$sth_service, $sth_service_attr,
+			$sth_service_category,
 			$sth_ds, $sth_ds_attr,
 			$sth_url);
 	}
@@ -368,6 +374,8 @@ sub _dump_into_sql {
 	$dbh->do("CREATE INDEX IF NOT EXISTS r_s_node ON service (node_id)");
 	my $sth_service = $dbh->prepare('INSERT INTO service (node_id, name, path) VALUES (?, ?, ?)');
 	my $sth_service_attr = $dbh->prepare('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
+	$dbh->do("CREATE TABLE IF NOT EXISTS service_categories (id INTEGER REFERENCES service(id), category VARCHAR NOT NULL, PRIMARY KEY (id,category))");
+	my $sth_service_category = $dbh->prepare('INSERT INTO service_categories (id, category) VALUES (?, ?)');
 
 	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
 		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
@@ -413,6 +421,7 @@ sub _dump_into_sql {
 		$sth_grp, $sth_grp_attr,
 		$sth_node, $sth_node_attr,
 		$sth_service, $sth_service_attr,
+		$sth_service_category,
 		$sth_ds, $sth_ds_attr,
 		$sth_url);
 
@@ -465,8 +474,10 @@ sub _dump_into_sql {
 
 			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
 				# Category names should not be case sensitive. Store them all in lowercase.
-				$attr->[1] = lc($attr->[1]) if $attr->[0] eq 'graph_category';
-
+				if $attr->[0] eq 'graph_category' {
+						$attr->[1] = lc($attr->[1]);
+						$sth_service_category->execute($service_id, $attr->[1]);
+				} else
 				$sth_service_attr->execute($service_id, $attr->[0], $attr->[1]);
 			}
 			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {

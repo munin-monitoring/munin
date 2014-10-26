@@ -140,7 +140,7 @@ while (new CGI::Fast) {
 
 	# Categories nav
 	{
-		my $sth = $dbh->prepare_cached("SELECT DISTINCT value FROM service_attr WHERE name = 'graph_category' ORDER BY value ASC");
+		my $sth = $dbh->prepare_cached("SELECT DISTINCT category FROM service_categories ORDER BY category ASC");
 		$sth->execute();
 
 		my $globalcats = [];
@@ -217,8 +217,8 @@ while (new CGI::Fast) {
 		# TODO Support graphs without explicit categories ('other')
 		my $sth_cat = $dbh->prepare_cached(
 			"SELECT DISTINCT s.name FROM service s
-			INNER JOIN service_attr sa ON s.id = sa.id AND sa.name = 'graph_category'
-			WHERE sa.value = ?
+			INNER JOIN service_categories sc ON s.id = sc.id
+			WHERE sc.category = ?
 			ORDER BY s.name");
 		$sth_cat->execute($category);
 
@@ -297,9 +297,9 @@ while (new CGI::Fast) {
 
 			# Get all categories in this group
 			my $sth_cat = $dbh->prepare_cached(
-				"SELECT DISTINCT sa_c.value cat FROM node n
+				"SELECT DISTINCT sa_c.category cat FROM node n
 				INNER JOIN service s ON s.node_id = n.id
-				INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category'
+				INNER JOIN service_categories sa_c ON sa_c.id = s.id
 				WHERE n.grp_id = ? ORDER BY sa_c.value ASC");
 			$sth_cat->execute($id);
 
@@ -343,8 +343,8 @@ while (new CGI::Fast) {
 		$template_params{INFO_OPTION} = 'Nodes on this level';
 
 		my $sth_category = $dbh->prepare(
-			"SELECT DISTINCT sa.value as graph_category FROM service s
-			INNER JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_category'
+			"SELECT DISTINCT sa.category as graph_category FROM service s
+			INNER JOIN service_categories sc ON sc.id = s.id
 			WHERE s.node_id = ?
 			ORDER BY graph_category");
 		$sth_category->execute($id);
@@ -375,7 +375,7 @@ while (new CGI::Fast) {
 		$sth->execute($id);
 		my ($graph_name) = $sth->fetchrow_array();
 
-		$sth = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = 'graph_category'");
+		$sth = $dbh->prepare_cached("SELECT category FROM service_categories WHERE id = ?");
 		$sth->execute($id);
 		my ($graph_category) = $sth->fetchrow_array();
 
@@ -515,7 +515,7 @@ sub _get_params_groups {
 	# Add the nodes
 	$sth_node->execute($g_id);
 	while (my ($_n_id, $_name, $_path) = $sth_node->fetchrow_array) {
-		my $sth = $dbh->prepare_cached("SELECT DISTINCT sa.value FROM service s INNER JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_category' WHERE s.node_id = ? ORDER BY sa.value ASC");
+		my $sth = $dbh->prepare_cached("SELECT DISTINCT sc.category FROM service s INNER JOIN service_categories sc ON sc.id = s.id WHERE s.node_id = ? ORDER BY sc.category ASC");
 		$sth->execute($_n_id);
 
 		# trim off current path from target's path
@@ -549,7 +549,7 @@ sub _get_params_services_for_comparison {
 	my $sth_srv = $dbh->prepare_cached(
 		"SELECT DISTINCT s.name FROM service s
 		INNER JOIN node n ON s.node_id = n.id
-		INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category' AND sa_c.value = ?
+		INNER JOIN service_categories sa_c ON sa_c.id = s.id AND sa_c.category = ?
 		WHERE n.grp_id = ? ORDER BY s.name ASC");
 
 	# Get node and service pairs
@@ -638,7 +638,7 @@ sub _get_params_services {
 
 	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, s.service_title as service_title, sa_s.value as subgraphs, u.path AS url
 		FROM service s
-		INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category' AND sa_c.value = ?
+		INNER JOIN service_categories sa_c ON sa_c.id = s.id AND sa_c.category = ?
 		LEFT JOIN service_attr sa_s ON sa_s.id = s.id AND sa_s.name = 'subgraphs'
 		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
 		WHERE s.node_id = ?
