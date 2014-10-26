@@ -182,7 +182,7 @@ sub parseLogfile
 	my $line = <LOGFILE>;
 	chomp ($line);
 
-	if ($line =~ /from=.*, status=sent .*/)
+	if ($line =~ / to=.*, status=sent /)
 	{
 	    $delivered++;
 	} 
