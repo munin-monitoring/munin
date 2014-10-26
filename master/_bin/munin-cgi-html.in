@@ -388,7 +388,7 @@ while (new CGI::Fast) {
 		$sth->execute($id);
 		my ($graph_category) = $sth->fetchrow_array();
 
-		$sth = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = 'graph_info'");
+		$sth = $dbh->prepare_cached("SELECT graph_info FROM service WHERE id = ?");
 		$sth->execute($id);
 		my ($graph_info) = $sth->fetchrow_array();
 

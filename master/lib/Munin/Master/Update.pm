@@ -368,11 +368,11 @@ sub _dump_into_sql {
 	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
 	my $sth_node_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
 
-	$dbh->do("CREATE TABLE IF NOT EXISTS service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR, service_title VARCHAR, subgraphs INTEGER)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR, service_title VARCHAR, graph_info VARCHAR, subgraphs INTEGER)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_service_attr ON service_attr (id, name)");
 	$dbh->do("CREATE INDEX IF NOT EXISTS r_s_node ON service (node_id)");
-	my $sth_service = $dbh->prepare('INSERT INTO service (node_id, name, path, service_title, subgraphs) VALUES (?, ?, ?, ?, ?)');
+	my $sth_service = $dbh->prepare('INSERT INTO service (node_id, name, path, service_title, graph_info, subgraphs) VALUES (?, ?, ?, ?, ?, ?)');
 	my $sth_service_attr = $dbh->prepare('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
 	$dbh->do("CREATE TABLE IF NOT EXISTS service_categories (id INTEGER REFERENCES service(id), category VARCHAR NOT NULL, PRIMARY KEY (id,category))");
 	my $sth_service_category = $dbh->prepare('INSERT INTO service_categories (id, category) VALUES (?, ?)');
@@ -465,9 +465,10 @@ sub _dump_into_sql {
 			(my $_service = $service) =~ tr!.!/!;
 
 			my $graph_title = delete $self->{service_configs}{$host}{global}{graph_title};
+			my $graph_info = delete $self->{service_configs}{$host}{global}{graph_info};
 			# Check for multigraphs
 			my $subgraphs = scalar grep /^$service\..+/, keys %{$self->{service_configs}{$host}{data_source}};
-			$sth_service->execute($node_id, $service, "$host:$service", $graph_title, $subgraphs);
+			$sth_service->execute($node_id, $service, "$host:$service", $graph_title, $graph_info, $subgraphs);
 			my $service_id = _get_last_insert_id($dbh);
 			$sth_url->execute($service_id, "service", _get_url_from_path("$host:$_service"));
 
