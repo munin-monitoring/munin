@@ -15,6 +15,7 @@ And the Gallery needs more pics!
 
 See our wiki page with `instructions for gallery contributors <http://munin-monitoring.org/wiki/PluginGallery>`_.
 
+.. _dev-talk:
 
 Developer Talk
 ==============

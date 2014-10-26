@@ -20,6 +20,10 @@ Contents:
    installation/index.rst
    advanced/index.rst
    reference/index.rst
+
+.. toctree::
+   :maxdepth: 3
+
    others/index.rst
 
 Indices and tables
