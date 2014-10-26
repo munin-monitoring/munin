@@ -339,54 +339,48 @@ sub _dump_into_sql {
 	my ($self) = @_;
 
 	my $datafilename = $config->{dbdir}."/datafile.sqlite";
-	my $datafilename_tmp = "$datafilename.tmp.$$";
 	DEBUG "[DEBUG] Writing sql to $datafilename";
 
 	use DBI;
-	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename_tmp","","") or die $DBI::errstr;
-	$dbh->do("PRAGMA synchronous = 0");
-
-	# <helmut> halves io bandwidth at the expense of dysfunctional rollback
-	# We do not care for rollback yet
-	$dbh->do("PRAGMA journal_mode = OFF");
+	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
 
 	# Create DB
-	$dbh->do("CREATE TABLE param (name VARCHAR PRIMARY KEY, value VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
 	my $sth_param = $dbh->prepare('INSERT INTO param (name, value) VALUES (?, ?)');
 
-	$dbh->do("CREATE TABLE grp (id INTEGER PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE TABLE grp_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX pk_grp_attr ON grp_attr (id, name)");
-	$dbh->do("CREATE INDEX r_g_grp ON grp (p_id)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id INTEGER PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS grp_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_grp_attr ON grp_attr (id, name)");
+	$dbh->do("CREATE INDEX IF NOT EXISTS r_g_grp ON grp (p_id)");
 	my $sth_grp = $dbh->prepare('INSERT INTO grp (name, p_id, path) VALUES (?, ?, ?)');
 	my $sth_grp_attr = $dbh->prepare('INSERT INTO grp_attr (id, name, value) VALUES (?, ?, ?)');
 
-	$dbh->do("CREATE TABLE node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE TABLE node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX pk_node_attr ON node_attr (id, name)");
-	$dbh->do("CREATE INDEX r_n_grp ON node (grp_id)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_node_attr ON node_attr (id, name)");
+	$dbh->do("CREATE INDEX IF NOT EXISTS r_n_grp ON node (grp_id)");
 	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
 	my $sth_node_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
 
-	$dbh->do("CREATE TABLE service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE TABLE service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX pk_service_attr ON service_attr (id, name)");
-	$dbh->do("CREATE INDEX r_s_node ON service (node_id)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_service_attr ON service_attr (id, name)");
+	$dbh->do("CREATE INDEX IF NOT EXISTS r_s_node ON service (node_id)");
 	my $sth_service = $dbh->prepare('INSERT INTO service (node_id, name, path) VALUES (?, ?, ?)');
 	my $sth_service_attr = $dbh->prepare('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
 
-	$dbh->do("CREATE TABLE ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
+	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
 		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
-	$dbh->do("CREATE TABLE ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX pk_ds_attr ON ds_attr (id, name)");
-	$dbh->do("CREATE INDEX r_d_service ON ds (service_id)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_ds_attr ON ds_attr (id, name)");
+	$dbh->do("CREATE INDEX IF NOT EXISTS r_d_service ON ds (service_id)");
 	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path) VALUES (?, ?, ?)');
 	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
 
 	# Table that contains all the URL paths, in order to have a very fast lookup
-	$dbh->do("CREATE TABLE url (id INTEGER, type VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX pk_url ON url (type, id)");
-	$dbh->do("CREATE UNIQUE INDEX u_url_path ON url (path)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS url (id INTEGER, type VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_url ON url (type, id)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_url_path ON url (path)");
 	my $sth_url = $dbh->prepare('INSERT INTO url (id, type, path) VALUES (?, ?, ?)');
 	$sth_url->{RaiseError} = 1;
 
@@ -397,12 +391,12 @@ sub _dump_into_sql {
 	#
 	# Note, this table is referenced by composite key (type,id) in order to be
 	# able to have any kind of states. Such as whole node states for example.
-	$dbh->do("CREATE TABLE state (id INTEGER, type VARCHAR,
+	$dbh->do("CREATE TABLE IF NOT EXISTS state (id INTEGER, type VARCHAR,
 		last_epoch INTEGER, last_value VARCHAR,
 		prev_epoch INTEGER, prev_value VARCHAR,
 		alarm VARCHAR
 		)");
-	$dbh->do("CREATE UNIQUE INDEX pk_state ON url (type, id)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON url (type, id)");
 	my $sth_state = $dbh->prepare('INSERT INTO state (id, type, last_epoch, last_value, prev_epoch, prev_value) VALUES (?, ?, ?, ?, ?, ?)');
 	$sth_state->{RaiseError} = 1;
 
@@ -498,9 +492,6 @@ sub _dump_into_sql {
 			}
 		}
 	}
-
-	# Atomic commit (rename)
-	rename($datafilename_tmp, $datafilename);
 }
 
 sub _write_new_service_configs {
