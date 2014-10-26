@@ -72,4 +72,4 @@ which will monitor interface 6 on the host ``10.0.0.1``.
 The *unlinked* filename for this plugin is ``snmp__if_``
 (note two underscores between ``snmp`` and ``if``).
 
-See `Using SNMP plugins <http://www.munin-monitoring.org/wiki/Using_SNMP_plugins>`_ for information about configuring SNMP plugins.
+See :ref:`Using SNMP plugins <tutorial-snmp>` for information about configuring SNMP plugins.

@@ -23,7 +23,7 @@ also read :ref:`Part III <install-index>`.
 
    getting-started.rst
    wildcard-plugins.rst
+   snmp.rst
    alert.rst
    advanced-features.rst
-   snmp.rst
    monitoring-the-unreachable.rst

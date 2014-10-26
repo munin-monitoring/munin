@@ -68,7 +68,6 @@ with the same ``address`` line)
     address 127.0.0.1
     use_node_name no
 
-
 Next time :ref:`munin-cron <munin-cron>` runs, the virtual node should start
 showing up in your Munin website.
 

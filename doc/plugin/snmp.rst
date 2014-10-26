@@ -4,6 +4,4 @@
 SNMP Plugins
 ============
 
-**Wiki Pages:**
-
-- `Using SNMP Plugins <http://munin-monitoring.org/wiki/Using_SNMP_plugins>`_
+- :ref:`Using SNMP Plugins <tutorial-snmp>`
