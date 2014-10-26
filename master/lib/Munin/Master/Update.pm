@@ -378,8 +378,7 @@ sub _dump_into_sql {
 	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
 
 	# Table that contains all the URL paths, in order to have a very fast lookup
-	$dbh->do("CREATE TABLE IF NOT EXISTS url (id INTEGER, type VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_url ON url (type, id)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS url (id INTEGER NOT NULL, type VARCHAR NOT NULL, path VARCHAR NOT NULL, PRIMARY KEY(id,type))");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_url_path ON url (path)");
 	my $sth_url = $dbh->prepare('INSERT INTO url (id, type, path) VALUES (?, ?, ?)');
 	$sth_url->{RaiseError} = 1;
