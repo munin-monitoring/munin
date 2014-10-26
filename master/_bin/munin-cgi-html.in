@@ -392,7 +392,7 @@ while (new CGI::Fast) {
 		$sth->execute($id);
 		my ($graph_info) = $sth->fetchrow_array();
 
-		$sth = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = 'subgraphs'");
+		$sth = $dbh->prepare_cached("SELECT subgraphs FROM service WHERE id = ?");
 		$sth->execute($id);
 		my ($multigraph) = $sth->fetchrow_array();
 
@@ -611,10 +611,9 @@ sub _get_params_services_by_name {
 	# TODO warning/critical state (use SUM sub-queries?)
 	# XXX this may be slow
 	my $sth = $dbh->prepare_cached(
-		"SELECT s.id, s.service_title as service_title, sa_s.value as subgraphs, u.path AS url,
+		"SELECT s.id, s.service_title as service_title, s.subgraphs as subgraphs, u.path AS url,
 		n.name AS node_name, u_n.path AS node_url
 		FROM service s
-		LEFT JOIN service_attr sa_s ON sa_s.id = s.id AND sa_s.name = 'subgraphs'
 		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
 		INNER JOIN node n ON n.id = s.node_id
 		INNER JOIN url u_n ON u_n.id = s.node_id AND u_n.type = 'node'
@@ -645,10 +644,9 @@ sub _get_params_services_by_name {
 sub _get_params_services {
 	my ($base_path, $dbh, $category_name, $multigraph_parent, $node_id) = @_;
 
-	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, s.service_title as service_title, sa_s.value as subgraphs, u.path AS url
+	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, s.service_title as service_title, s.subgraphs as subgraphs, u.path AS url
 		FROM service s
 		INNER JOIN service_categories sa_c ON sa_c.id = s.id AND sa_c.category = ?
-		LEFT JOIN service_attr sa_s ON sa_s.id = s.id AND sa_s.name = 'subgraphs'
 		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
 		WHERE s.node_id = ?
 		ORDER BY service_title ASC");
