@@ -396,7 +396,7 @@ sub _dump_into_sql {
 		prev_epoch INTEGER, prev_value VARCHAR,
 		alarm VARCHAR
 		)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON url (type, id)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
 	my $sth_state = $dbh->prepare('INSERT INTO state (id, type, last_epoch, last_value, prev_epoch, prev_value) VALUES (?, ?, ?, ?, ?, ?)');
 	$sth_state->{RaiseError} = 1;
 
