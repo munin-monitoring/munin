@@ -182,7 +182,7 @@ sub parseLogfile
 	my $line = <LOGFILE>;
 	chomp ($line);
 
-	if ($line =~ /qmgr.*from=.*size=[0-9]*/) 
+	if ($line =~ / to=.*, status=sent /)
 	{
 	    $delivered++;
 	} 

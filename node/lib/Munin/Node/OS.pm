@@ -380,6 +380,7 @@ See documentation for set_effective_user_id()
 Set umask so that files created by plugins are group writable
 Only call right before exec-ing a plugin.
 
+=back
 
 =cut
 # vim: ts=4 : sw=4 : et
