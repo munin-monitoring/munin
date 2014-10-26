@@ -299,7 +299,7 @@ sub _dump_conf_node_into_sql {
 }
 
 sub _dump_groups_into_sql {
-	my ($groups, $p_id, $path, $dbh, $sth_grp, $sth_grp_attr,
+	my ($groups, $p_id, $path, $dbh, $sth_grp,
 		$sth_node, $sth_node_attr,
 		$sth_service, $sth_service_attr,
 		$sth_ds, $sth_ds_attr,
@@ -327,7 +327,7 @@ sub _dump_groups_into_sql {
 		}
 
 		_dump_groups_into_sql($groups->{$grp_name}{groups}, $id, $grp_path, $dbh,
-			$sth_grp, $sth_grp_attr,
+			$sth_grp,
 			$sth_node, $sth_node_attr,
 			$sth_service, $sth_service_attr,
 			$sth_ds, $sth_ds_attr,
@@ -349,11 +349,8 @@ sub _dump_into_sql {
 	my $sth_param = $dbh->prepare('INSERT INTO param (name, value) VALUES (?, ?)');
 
 	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id INTEGER PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE TABLE IF NOT EXISTS grp_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_grp_attr ON grp_attr (id, name)");
 	$dbh->do("CREATE INDEX IF NOT EXISTS r_g_grp ON grp (p_id)");
 	my $sth_grp = $dbh->prepare('INSERT INTO grp (name, p_id, path) VALUES (?, ?, ?)');
-	my $sth_grp_attr = $dbh->prepare('INSERT INTO grp_attr (id, name, value) VALUES (?, ?, ?)');
 
 	$dbh->do("CREATE TABLE IF NOT EXISTS node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
@@ -409,7 +406,7 @@ sub _dump_into_sql {
 
 	# Recursively create groups
 	_dump_groups_into_sql($self->{group_repository}{groups}, undef, "", $dbh,
-		$sth_grp, $sth_grp_attr,
+		$sth_grp,
 		$sth_node, $sth_node_attr,
 		$sth_service, $sth_service_attr,
 		$sth_ds, $sth_ds_attr,
