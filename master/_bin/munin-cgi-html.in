@@ -214,26 +214,29 @@ while (new CGI::Fast) {
 
 		$template_params{CATEGORY} = $category;
 
+		my $sth_cat;
 		if ($category = 'other') {
 			# account for those that explictly mention 'other' as category
-			my $sth_cat = $dbh->prepare_cached(   
+			$sth_cat = $dbh->prepare_cached(
 				"SELECT DISTINCT s.name FROM service s
 				LEFT JOIN service_categories sc ON s.id = sc.id
 				WHERE sc.category = 'other' OR sc.id IS NULL
 				ORDER BY s.name");
-				$sth_cat->execute();
+			$sth_cat->execute();
 		} else {
-			my $sth_cat = $dbh->prepare_cached(
+			$sth_cat = $dbh->prepare_cached(
 				"SELECT DISTINCT s.name FROM service s
 				INNER JOIN service_categories sc ON s.id = sc.id
 				WHERE sc.category = ?
 				ORDER BY s.name");
-				$sth_cat->execute($category);
+			$sth_cat->execute($category);
 		}
 
 		my @services;
-		while (my ($_service) = $sth_cat->fetchrow_array) {
+		my ($_service) = $sth_cat->fetchrow_array;
+		while ($_service) {
 			push @services, _get_params_services_by_name($dbh, $_service, $time);
+			$_service = $sth_cat->fetchrow_array;
 		}
 		$template_params{SERVICES} = \@services;
 	} elsif ($path =~ /^(.+)\/comparison-(day|month|week|year)\.html$/) {
