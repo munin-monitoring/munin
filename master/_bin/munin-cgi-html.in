@@ -352,7 +352,7 @@ while (new CGI::Fast) {
 		$template_params{INFO_OPTION} = 'Nodes on this level';
 
 		my $sth_category = $dbh->prepare(
-			"SELECT DISTINCT sa.category as graph_category FROM service s
+			"SELECT DISTINCT sc.category as graph_category FROM service s
 			INNER JOIN service_categories sc ON sc.id = s.id
 			WHERE s.node_id = ?
 			ORDER BY graph_category");
