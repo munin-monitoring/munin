@@ -25,5 +25,6 @@ also read :ref:`Part III <install-index>`.
    wildcard-plugins.rst
    snmp.rst
    alert.rst
+   nagios.rst
    advanced-features.rst
    monitoring-the-unreachable.rst
