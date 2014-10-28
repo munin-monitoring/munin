@@ -52,7 +52,7 @@ The protocol itself is derived from the :ref:`spoolfetch` extension.
 Config
 ------
 
-A new plugin directive is used, :ref:`update_rate`. It enables the
+A new plugin directive is used, :ref:`update_rate <update_rate>`. It enables the
 master to create the rrd with an adequate step.
 
 Omitting it would lead to rrd averaging the supersampled values onto
@@ -66,7 +66,7 @@ the default 5 min rate. This means **data loss**.
 .. note:: Data size
 
   The RRD file size is always the same in the default config, as all
-  the RRA are configured proportionally to the :ref:`update_rate`.
+  the RRA are configured proportionally to the :ref:`update_rate <update_rate>`.
   This means that, since you'll keep as much data as with the default,
   you keep it for a shorter time.
 
