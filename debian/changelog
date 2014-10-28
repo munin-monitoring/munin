@@ -1,3 +1,12 @@
+munin (2.0.24-2) UNRELEASED; urgency=medium
+
+  * munin.README.Debian: Replace link to
+    http://munin-monitoring.org/wiki/Documentation with one to the new
+    http://guide.munin-monitoring.org/ which is better structured and also
+    translated.
+
+ -- Holger Levsen <holger@debian.org>  Tue, 28 Oct 2014 12:43:43 +0100
+
 munin (2.0.24-1) unstable; urgency=medium
 
   * Ensure consistent use of /etc/default/munin-node (Closes: #764594)

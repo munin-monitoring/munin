@@ -18,7 +18,7 @@ Debian-specific information regarding Munin
     by linking them to /etc/munin/plugins/. Plugin configuration is best 
     done in /etc/munin/plugin-conf.d/
 
-    Further reading: http://munin-monitoring.org/wiki/Documentation
+    Further reading: http://guide.munin-monitoring.org/
 
   Find the upstream source
   ------------------------
