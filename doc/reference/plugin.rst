@@ -86,8 +86,9 @@ following fields are used.
 :Field: **graph_order**
 :Value: space separated list of graph.datapoints
 :Type: optional
-:Description: Ensures that the listed datapoints are displayed in order. Any additional datapoints are added in the order of appearance after datapoints appearing on this list.
-   
+:Description:
+  Ensures that the listed datapoints are displayed in order. Any additional datapoints are added in the order of appearance after datapoints appearing on this list. 
+
   This field is also used for "borrowing", which is the practice of taking datapoints from other graphs.
 :See also:
 :Default:
@@ -99,10 +100,11 @@ following fields are used.
 :Field: **graph_period**
 :Value: second|minute|hour
 :Type: optional
-:Description: Control the unit of the data that will be displayed in the graphs. The default is "second".  Changing it to "minute" or "hour" is useful in cases of a low frequency of whatever the plugin is measuring.
-  
+:Description:
+  Control the unit of the data that will be displayed in the graphs. The default is "second". Changing it to "minute" or "hour" is useful in cases of a low frequency of whatever the plugin is measuring.
+
   Changing the graph_period makes sense only when the data type is COUNTER or DERIVE.
-  
+
   This does not change the sampling frequency of the data
 :See also:
 :Default:
@@ -114,10 +116,11 @@ following fields are used.
 :Field: **update_rate**
 :Value: integer (seconds)
 :Type: optional
-:Description: Sets the update_rate used by the munin master when it creates the RRD file.
-  
+:Description:
+  Sets the update_rate used by the munin master when it creates the RRD file.
+
   The update rate is the interval at which the RRD file expects to have data.
-  
+
   This field requires a munin master version of at least 2.0.0
 :See also:
 :Default:
@@ -184,8 +187,9 @@ following fields are used.
 :Field: **datapoint.cdef**
 :Value: CDEF statement
 :Type: optional
-:Description: A CDEF statement is a Reverse Polish Notation statement used to construct adatapoint from other datapoints.
-  
+:Description:
+  A CDEF statement is a Reverse Polish Notation statement used to construct adatapoint from other datapoints.
+
   This is commonly used to calculate percentages.
 :See also: cdeftutorial_
 :Default:
@@ -197,8 +201,9 @@ following fields are used.
 :Field: **datapoint.draw**
 :Value: AREA, LINE, LINE[n], STACK, AREASTACK, LINESTACK, LINE[n]STACK
 :Type: optional
-:Description: Determines how the graph datapoints are displayed in the graph. The "LINE" takes an optional width suffix, commonly "LINE1", "LINE2", etc…
-  
+:Description:
+  Determines how the graph datapoints are displayed in the graph. The "LINE" takes an optional width suffix, commonly "LINE1", "LINE2", etc…
+
   The \*STACK values are specific to munin and makes the first a LINE, LINE[n] or AREA datasource, and the rest as STACK.
 :See also: rrdgraph_
 :Default: 'LINE'
