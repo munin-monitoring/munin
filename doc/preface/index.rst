@@ -32,6 +32,7 @@ hyperlinking abilities of modern documentation readers.
         This is the part you are currently reading. It focus on very generic
         informations about Munin, and also gives some guidelines on how to
         interact with the Munin ecosystem.
+
         **Every Munin user should read this.**
 
 :ref:`Part I - Tutorial <tutorial-index>`
@@ -39,16 +40,18 @@ hyperlinking abilities of modern documentation readers.
         This part is an informal introduction for new users. It will try to
         cover most of what a user is expected to know about Munin. The focus
         here is really about taking the user by the hand and showing him
-        around, while getting his hands a little wet. **Every Munin user should
-        read this.**
+        around, while getting his hands a little wet.
+
+	**Every Munin user should read this.**
 
 :ref:`Part II - Architecture <architecture-index>`
 
         This part documents the various syntax that are used all throughout
         Munin.  It is about every thing a normal user can look himself without
         being considered as a developer. It means the syntax of the various
-        config files, and the protocol on the network. **Every Munin user
-        should read this.**
+        config files, and the protocol on the network.
+
+	**Every Munin user should read this.**
 
 :ref:`Part III - Install <install-index>`
 
@@ -56,9 +59,10 @@ hyperlinking abilities of modern documentation readers.
         It is about the OS part of Munin, which would be UID, path for the
         various components, how upgrades should be handled. It is also about
         how Munin interacts with its environment, such as how to secure a Munin
-        install [#]_, how to enhance the performance of it. **Everyone who runs
-        a Munin server, be it for private use or for others, should read this
-        part.**
+        install [#]_, how to enhance the performance of it.
+
+	**Everyone who runs a Munin server, be it for private use or for
+	others, should read this part.**
 
 :ref:`Part IV - API <api-index>`
 
