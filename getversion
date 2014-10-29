@@ -25,6 +25,7 @@ current_git_branch() {
 
     GB="$(git branch | awk '$1 == "*" {print $2}')"
     case $GB in
+	"(detached" ) echo;;
 	"(no" ) echo;;
 	*     ) echo $GB;;
     esac
