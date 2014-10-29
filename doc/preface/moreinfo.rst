@@ -143,6 +143,9 @@ the occational intrusion of the real world into the flow, keep it
 mostly on topic, and dont paste random links unless they are *really*
 spectacular and intelligent.
 
+Note that ``m-r-b`` is our beloved ``munin-relay-bot`` that bridges the
+``#munin`` channel on various IRC networks, such as Freenode.
+
 .. _pastebin: https://gist.github.com/
 
 Yourself!
