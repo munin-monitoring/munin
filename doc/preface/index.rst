@@ -27,6 +27,13 @@ Further parts can be read in a more random manner, as one will search for a
 specific thing in it. Extensive care has been taken to fully leverage the
 hyperlinking abilities of modern documentation readers.
 
+:ref:`Preface <preface-index>`
+
+        This is the part you are currently reading. It focus on very generic
+        informations about Munin, and also gives some guidelines on how to
+        interact with the Munin ecosystem.
+        **Every Munin user should read this.**
+
 :ref:`Part I - Tutorial <tutorial-index>`
 
         This part is an informal introduction for new users. It will try to
