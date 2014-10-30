@@ -34,6 +34,7 @@ Learn it here :ref:`How to write Munin plugins <plugin-writing>`.
    :maxdepth: 2
 
    writing.rst
+   writing-tips.rst
 
 Other documentation
 ===================
