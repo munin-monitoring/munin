@@ -28,6 +28,8 @@ Magic markers are prefixed with "#%#", and consists of a keyword, an equal sign,
 
 For a plugin that is part of munin, you should expect to see:
 
+.. code-block:: perl
+
  #%# family=auto
  #%# capabilities=autoconf suggest
 
