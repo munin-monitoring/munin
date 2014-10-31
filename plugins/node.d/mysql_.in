@@ -457,16 +457,12 @@ $graphs{wsrep_concurrency} = {
                                                    graph => 'no'},
             {name => 'wsrep_apply_oool',           label => 'apply out of order (slowness)',
                                                    graph => 'no'},
-            {name => 'wsrep_apply_count',          label => 'apply out of order (count)',
-                                                   graph => 'no'},
             {name => 'wsrep_commit_window',        label => 'commit window',
                                                    negative => 'wsrep_apply_window'},
             {name => 'wsrep_commit_oooe',          label => 'commit out of order',
                                                    negative => 'wsrep_apply_oooe'},
             {name => 'wsrep_commit_oool',          label => 'commit out of order (slowness)',
                                                    negative => 'wsrep_apply_oool'},
-            {name => 'wsrep_commit_count',         label => 'commit out of order (count)',
-                                                   negative => 'wsrep_apply_count'},
         ],
 };
 
