@@ -1,4 +1,4 @@
-#!@@BASH@@
+#!/bin/bash
 # -*- sh -*-
 
 : <<=cut
@@ -20,7 +20,7 @@ SqueezeCenter. If the plugin is run from another unit or in a
 non-default configuration, please use the environment variables
 'squeezebox_host' and 'squeezebox_port' to connect. Also, if your
 nc(1) binary is not called "nc", or not the one in $PATH, please define it
-in the plugin's environment file (@@CONFDIR@@/squeezebox or similar).
+in the plugin's environment file (/etc/munin/squeezebox or similar).
 
 Sample follows:
 

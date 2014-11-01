@@ -1,4 +1,4 @@
-#!@@PERL@@
+#!/usr/bin/perl
 
 =pod
 
@@ -8,7 +8,7 @@ cps_ - Plugin to monitor connections per second, for LVS loadbalancers.
 
 =head1 USAGE
 
-Create a service link in @@CONFDIR@@/plugins/ and restart the munin-node.
+Create a service link in /etc/munin/plugins/ and restart the munin-node.
 
 As this is a wildcard plugin it expects to get
 parameters via name of the service link.

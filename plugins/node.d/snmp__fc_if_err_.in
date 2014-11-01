@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!/usr/bin/perl -w
 # -*- perl -*-
 #
 # Copyright (C) 2004 Jimmy Olsen

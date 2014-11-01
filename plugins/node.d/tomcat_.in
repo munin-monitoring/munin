@@ -1,4 +1,4 @@
-#!@@RUBY@@
+#!/usr/bin/ruby
 @dummyvar = <<-'=cut'
 
 =head1 NAME

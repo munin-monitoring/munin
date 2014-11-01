@@ -1,4 +1,4 @@
-#!@@GOODSH@@
+#!/bin/sh
 # -*- sh -*-
 
 : <<=cut

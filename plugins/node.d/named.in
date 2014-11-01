@@ -1,4 +1,4 @@
-#!@@GOODSH@@
+#!/bin/sh
 # -*- sh -*-
 
 : << =cut
@@ -34,7 +34,7 @@ restrictions on the log file.
 
 =head1 CONFIGURATION
 
-Configuration parameters for @@CONFDIR@@/named,
+Configuration parameters for /etc/munin/named,
 if you need to override the defaults below:
 
  [named]

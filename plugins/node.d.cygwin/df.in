@@ -1,4 +1,4 @@
-#!@@GOODSH@@
+#!/bin/sh
 # -*- sh -*-
 
 : << =cut
@@ -15,7 +15,7 @@ Cygwin 1.7.x or higher systems with coreutils installed.
 
 =head1 USAGE
 
-Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
+Link this plugin to /etc/munin/plugins/ and restart the munin-node.
 
 The plugin excludes per default the following special, read-only or
 dynamically allocating file systems from graphing:

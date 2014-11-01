@@ -1,4 +1,4 @@
-#!@@PERL@@
+#!/usr/bin/perl
 # -*- perl -*-
 #
 # netstat_multi - Munin plugin for detailed Network statistics

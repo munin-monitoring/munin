@@ -1,4 +1,4 @@
-#!@@GOODSH@@
+#!/bin/sh
 #
 # Wildcard-script to monitor network interfaces. To monitor an
 # interface, link vlan_<interface> to this file. E.g.

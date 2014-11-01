@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!/usr/bin/perl -w
 
 =pod
 
@@ -12,12 +12,12 @@ IBM POWER P5 / OpenPower LPAR
 
 =head1 USAGE
 
-Link this plugin to @@CONFDIR@@/plugins/ and restart the munin-node.
+Link this plugin to /etc/munin/plugins/ and restart the munin-node.
 
 =head1 CONFIGURATION
 
 This should be run as root, so drop a file
-with something like this in @@CONFDIR@@/plugin-conf.d/lpar_cpu:
+with something like this in /etc/munin/plugin-conf.d/lpar_cpu:
 
   [lpar_cpu]
   user root

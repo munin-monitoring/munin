@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!/usr/bin/perl -w
 # -*- perl -*-
 # vim: ft=perl : sw=4 : ts=4 : et
 

@@ -1,4 +1,4 @@
-#!@@PYTHON@@
+#!/usr/bin/python
 # -*- python -*-
 
 """
@@ -17,7 +17,7 @@ Inspired by code written by Peter Palfrader
 ipmitool probably needs to be run as root, and it may take more than
 10 seconds on some hosts.
 
-Add the following to your @@CONFDIR@@/munin-node:
+Add the following to your /etc/munin/munin-node:
 
  [ipmi_sensor_*]
   user root
@@ -49,7 +49,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 =head1 BUGS
 
-Plugin reads @@CONFDIR@@/ipmi directly, instead of reading environment
+Plugin reads /etc/munin/ipmi directly, instead of reading environment
 variables.
 
 =head1 MAGIC MARKERS
@@ -72,7 +72,7 @@ import re
 CACHEDIR = environ['MUNIN_PLUGSTATE']
 CACHEFILE = "plugin-ipmi_sensor.cache"
 CACHEAGE = 120
-CONFIG = '@@CONFDIR@@/ipmi'
+CONFIG = '/etc/munin/ipmi'
 
 
 

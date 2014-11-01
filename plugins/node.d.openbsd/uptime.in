@@ -1,4 +1,4 @@
-#!@@GOODSH@@
+#!/bin/sh
 #
 # Plugin to measure uptime. Especially the average and max values on the
 # bigger graphs (yearly) can be interesting.

@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!/usr/bin/perl -w
 # -*- perl -*-
 #
 
@@ -20,7 +20,7 @@ As Informix installations can vary wildly the autoconf may fail.
 However, it is recommended to let munin-node-configure set the plugin
 links by e.g.
 
-   # @@SBINDIR@@/munin-node-configure --families contrib --shell |
+   # munin-node-configure --families contrib --shell |
      grep concurrent | sh -
 
 Yet, for this plugin to work it is most likely required to grant

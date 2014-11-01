@@ -1,4 +1,4 @@
-#!@@GOODSH@@
+#!/bin/sh
 # -*- sh -*-
 
 : <<EOF
@@ -15,7 +15,7 @@ we wish to graph.
 
 Example:
 
- ln -s @@LIBDIR@@/plugins/psu_ @@CONFDIR@@/plugins/psu_foo
+ ln -s /usr/share/munin/plugins/psu_ /etc/munin/plugins/psu_foo
 
 ...will monitor the user "foo"
 

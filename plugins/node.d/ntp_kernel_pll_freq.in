@@ -1,4 +1,4 @@
-#!@@GOODSH@@
+#!/bin/sh
 # -*- sh -*-
 
 : <<EOF
@@ -12,7 +12,7 @@ the NTP status
 
 No configuration
 
-This plugin optionally reads the file @@CONFDIR@@/ntp-freq-comp, which
+This plugin optionally reads the file /etc/munin/ntp-freq-comp, which
 should contain a number to be added to the frequency read by ntpdc.
 
 =head1 AUTHORS
@@ -46,8 +46,8 @@ if [ "$1" = "autoconf" ]; then
     exit 0
 fi
 
-if [ -f @@CONFDIR@@/ntp-freq-comp ]; then
-    fcomp=`cat @@CONFDIR@@/ntp-freq-comp`
+if [ -f /etc/munin/ntp-freq-comp ]; then
+    fcomp=`cat /etc/munin/ntp-freq-comp`
 else
     fcomp=0
 fi

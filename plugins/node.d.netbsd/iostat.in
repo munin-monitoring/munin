@@ -1,4 +1,4 @@
-#!@@GOODSH@@
+#!/bin/sh
 # -*- sh -*-
 #
 # Plugin for watching io-bound traffic (in bytes) on disks.

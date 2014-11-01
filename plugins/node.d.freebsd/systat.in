@@ -1,4 +1,4 @@
-#!@@GOODSH@@
+#!/bin/sh
 # System statistics for FreeBSD
 # Author: Gergely Czuczy <phoemix@harmless.hu>
 #

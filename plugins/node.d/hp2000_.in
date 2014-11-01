@@ -1,4 +1,4 @@
-#!@@PERL@@
+#!/usr/bin/perl
 # hp2000_ - Munin plugin for HP P2000 StorageWorks
 # Copyright (C) 2012 Redpill Linpro AS
 #

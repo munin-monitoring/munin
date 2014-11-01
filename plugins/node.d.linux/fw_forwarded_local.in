@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!/usr/bin/perl -w
 
 =head1 NAME
 
@@ -10,7 +10,7 @@ This plugin must run with root privileges
 
 =head2 CONFIGURATION EXAMPLE
 
-@@CONFDIR@@/plugin-conf.d/global or other file in that dir must contain:
+/etc/munin/plugin-conf.d/global or other file in that dir must contain:
 
  [fw_*]
   user root

@@ -1,4 +1,4 @@
-#!@@GOODSH@@
+#!/bin/sh
 # -*- sh -*-
 
 : << EOF
@@ -15,7 +15,7 @@ examine the queue directories.  This is done like this for example:
   [exim_*]
     user exim
 
-Configuration parameters for a file in @@CONFDIR@@/plugin-conf.d/
+Configuration parameters for a file in /etc/munin/plugin-conf.d/
 if you need to override the defaults below:
 
   [exim_mailqueue]

@@ -1,4 +1,4 @@
-#!@@GOODSH@@
+#!/bin/sh
 #
 # Wildcard-plugin to monitor disks. To monitor a disk,
 # link io_<function>_<disk> to this file. E.g.
@@ -31,7 +31,7 @@
 FUNCTION=`basename $0 | sed -e 's/io_//' -e 's/_.*//'`
 MODULE=`basename $0 | sed 's/^.*_//g'`
 CLASS=disk
-PERL=${PERL:-@@PERL@@}
+PERL=${PERL:-/usr/bin/perl}
 
 if [ -z "$FUNCTION" ]; then
 	exit
