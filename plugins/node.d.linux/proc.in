@@ -1,4 +1,4 @@
-#!@@PERL@@
+#!/usr/bin/perl
 # -*- perl -*-
 #
 # proc_ - Munin plugin to for Process information

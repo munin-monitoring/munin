@@ -1,4 +1,4 @@
-#!@@PERL@@
+#!/usr/bin/perl
 # -*- perl -*-
 #
 # varnish_ - Munin plugin to for Varnish
@@ -53,8 +53,8 @@ session, session_herd
 
 You can link them yourself with something like this:
 
-  ln -s @@LIBDIR@@/plugins/varnish_ \
-    @@CONFDIR@@/plugins/varnish_data_structures
+  ln -s /usr/share/munin/plugins/varnish_ \
+    /etc/munin/plugins/varnish_data_structures
 
 =head1 INTERPRETATION
 

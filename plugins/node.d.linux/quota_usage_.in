@@ -1,4 +1,4 @@
-#!@@PERL@@
+#!/usr/bin/perl
 #
 
 =head1 NAME
@@ -11,7 +11,7 @@ Needs repquota and root privs
 
 =head1 USAGE
 
-Create Service Link @@CONFDIR@@/plugins/quota-usage_<dev>
+Create Service Link /etc/munin/plugins/quota-usage_<dev>
 for example C<quota-usage_hda3>. Use underscores instead of slashes, for
 example to monitor C</dev/mapper/vol-foo>, name this C<quota-usage_mapper_vol-foo>
 

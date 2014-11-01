@@ -1,4 +1,4 @@
-#!@@BASH@@
+#!/bin/bash
 # -*- sh -*-
 
 : <<EOF

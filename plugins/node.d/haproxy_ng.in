@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!/usr/bin/perl -w
 #
 # haproxy_ng - Munin plugin HAProxy
 # Copyright (C) 2012 Redpill Linpro AS

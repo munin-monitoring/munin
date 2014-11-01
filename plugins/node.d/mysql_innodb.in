@@ -1,4 +1,4 @@
-#!@@GOODSH@@
+#!/bin/sh
 
 : << =cut
 
@@ -34,7 +34,7 @@ the default INNODB tablespace, do the following:
 
 =head1 CONFIGURATION
 
-Configuration parameters for @@CONFDIR@@/mysql_innodb,
+Configuration parameters for /etc/munin/mysql_innodb,
 if you need to override the defaults below:
 
  [mysql_innodb]

@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!/usr/bin/perl -w
 # -*- perl -*-
 #
 # Munin plugin to monitor hdd temperature from a hddtemp daemon.

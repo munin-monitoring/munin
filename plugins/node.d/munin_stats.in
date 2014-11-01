@@ -1,4 +1,4 @@
-#!@@PERL@@
+#!/usr/bin/perl
 # -*- perl -*-
 #
 # Copyright (C) 2006-2009 Rodolphe Quiedeville <rodolphe@quiedeville.org>
@@ -29,7 +29,7 @@ use warnings;
 use Munin::Plugin;
 
 my @logs = qw/update graph html limits/;
-my $logdir = ($ENV{'logdir'} || $ENV{'MUNIN_LOGDIR'} || '@@LOGDIR@@');
+my $logdir = ($ENV{'logdir'} || $ENV{'MUNIN_LOGDIR'} || '/var/log/munin');
 
 if ($ARGV[0] and $ARGV[0] eq 'autoconf') {
     my $munin_update_location = 

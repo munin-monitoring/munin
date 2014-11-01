@@ -15,7 +15,7 @@ On HP-UX with GlancePlus (GP) installed
 
 Run this command as root user to install the plugin
 
-  @@SBINDIR@@/munin-node-configure --families auto --shell|grep gp_gbl_mem_util|sh -
+  munin-node-configure --families auto --shell|grep gp_gbl_mem_util|sh -
 
 and restart your munin-node.
 
@@ -53,7 +53,7 @@ All the environment settings are needed by Glance.
 =head2 NOTE
 
 If you put the *.adv file  in above mentioned location
-add "ignore_file \.adv$" to your @@CONFDIR@@/munin-node.conf
+add "ignore_file \.adv$" to your /etc/munin/munin-node.conf
 to avoid parsing problems on start of munin-node.
 
 =head1 AUTHOR

@@ -1,4 +1,4 @@
-#!@@PERL@@
+#!/usr/bin/perl
 # -*- mode: cperl; cperl-indent-level: 8; -*-
 #
 # Plugin to monitor uptime in Darwin hosts.

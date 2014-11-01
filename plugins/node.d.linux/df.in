@@ -1,4 +1,4 @@
-#!@@PERL@@
+#!/usr/bin/perl
 # -*- cperl -*-
 
 =head1 NAME
@@ -31,7 +31,7 @@ This configuration snipplet is an example with the defaults:
     env.warning 92
     env.critical 98
 
-Put it in a file in @@CONFDIR@@/plugin-conf.d/ and restart the munin-node.
+Put it in a file in /etc/munin/plugin-conf.d/ and restart the munin-node.
 
 You may specify filesystem specific warning and critical levels:
 
@@ -71,7 +71,7 @@ the "env.include/env.exclude" settings mentioned above.
 
 =head1 USAGE
 
-Link this plugin to @@CONFDIR@@/plugins/ and restart the
+Link this plugin to /etc/munin/plugins/ and restart the
 munin-node. If you want to monitor inode usage instead of disk usage,
 just link the plugin as C<df_inode>.
 

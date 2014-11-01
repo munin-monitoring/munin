@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!/usr/bin/perl -w
 # -*- perl -*-
 
 =head1 NAME
@@ -8,7 +8,7 @@ on isam and myisam tables on a mysql server.
 
 =head1 CONFIGURATION
 
-Configuration parameters for @@CONFDIR@@/PLUGIN,
+Configuration parameters for /etc/munin/PLUGIN,
 if you need to override the defaults below:
 
  [mysql_isam_space_*]

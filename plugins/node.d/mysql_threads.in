@@ -1,4 +1,4 @@
-#!@@GOODSH@@
+#!/bin/sh
 # -*- sh -*-
 
 : << =cut
@@ -9,7 +9,7 @@ mysql_threads - Plugin to monitor the number of threads on a mysql-server.
 
 =head1 CONFIGURATION
 
-Configuration parameters for @@CONFDIR@@/mysql_threads, if you
+Configuration parameters for /etc/munin/mysql_threads, if you
 need to override the defaults below:
 
  [mysql_threads]

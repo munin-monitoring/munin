@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!/usr/bin/perl -w
 # -*- cperl -*-
 
 =head1 NAME
@@ -15,7 +15,7 @@ None needed
 
 =head1 USAGE
 
-Link this into @@CONFDIR@@/plugins/ and restart the munin-node.
+Link this into /etc/munin/plugins/ and restart the munin-node.
 
 =head1 INTERPRETATION
 
