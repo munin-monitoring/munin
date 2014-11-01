@@ -24,7 +24,7 @@ sub wanted {
         && process_file( $_, $name, $interpreter, $arguments );
 }
 
-File::Find::find( { wanted => \&wanted }, 'build/plugins' );
+File::Find::find( { wanted => \&wanted }, '_stage/plugins' );
 
 sub hashbang {
     my ($filename) = @_;

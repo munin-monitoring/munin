@@ -33,14 +33,14 @@ RELEASE          := $(shell $(CURDIR)/getversion)
 INSTALL_PLUGINS ?= "auto manual contrib snmpauto"
 INSTALL          := ./install-sh
 DIR              := $(shell /bin/pwd | sed 's/^.*\///')
-INFILES          := $(shell find . -name '*.in' | sed 's/\.\/\(.*\)\.in$$/build\/\1/')
+INFILES          := $(shell find . -name '*.in' | sed 's/\.\/\(.*\)\.in$$/_stage\/\1/')
 INFILES_MASTER   := $(shell find master -name '*.in' | sed 's/\(.*\)\.in$$/build\/\1/')
 CLASSFILES       := $(shell find plugins/javalib -name '*.java' | sed 's/\(.*\)\.java$$/build\/\1.class/')
 PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/* $(JAVA_PLUGINS))
 MANCENTER        := "Munin Documentation"
 MAN8		 := master/_bin/munin-update master/_bin/munin-limits master/_bin/munin-html master/_bin/munin-graph
-PODMAN8          := build/master/doc/munin-cron master/doc/munin master/doc/munin-check
-PODMAN5          := build/master/doc/munin.conf node/doc/munin-node.conf
+PODMAN8          := _stage/master/doc/munin-cron master/doc/munin master/doc/munin-check
+PODMAN5          := _stage/master/doc/munin.conf node/doc/munin-node.conf
 MAN3EXT          := $(shell $(PERL) -e 'use Config; print $$Config{man3ext};')
 
 ifneq ($(test_files),)
@@ -69,7 +69,7 @@ endif
 default: build
 
 .java.class:
-	$(JC) -sourcepath plugins/javalib -d build/plugins/javalib $(JFLAGS) plugins/javalib/$(subst plugins/javalib/,,$*.java)
+	$(JC) -sourcepath plugins/javalib -d _stage/plugins/javalib $(JFLAGS) plugins/javalib/$(subst plugins/javalib/,,$*.java)
 
 uninstall:
 	echo "Uninstall is not implemented yet"
@@ -133,23 +133,23 @@ install-master-prime: $(INFILES_MASTER) install-pre install-master
 	$(INSTALL) -m 0644 master/DejaVuSansMono.ttf $(LIBDIR)/
 	$(INSTALL) -m 0644 master/DejaVuSans.ttf $(LIBDIR)/
 
-	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 build/master/www/munin-htaccess $(HTMLDIR)/.htaccess
-	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 build/master/munin.conf $(CONFDIR)/
+	test -f $(HTMLDIR)/.htaccess || $(INSTALL) -m 0644 _stage/master/www/munin-htaccess $(HTMLDIR)/.htaccess
+	test -f "$(CONFDIR)/munin.conf"  || $(INSTALL) -m 0644 _stage/master/munin.conf $(CONFDIR)/
 
-	$(INSTALL) -m 0755 build/master/_bin/munin-cron $(BINDIR)/
-	$(INSTALL) -m 0755 build/master/_bin/munin-check $(BINDIR)/
-	$(INSTALL) -m 0755 build/master/_bin/munin-update $(LIBDIR)/
-	$(INSTALL) -m 0755 build/master/_bin/munin-html $(LIBDIR)/
-	$(INSTALL) -m 0755 build/master/_bin/munin-graph $(LIBDIR)/
-	$(INSTALL) -m 0755 build/master/_bin/munin-limits $(LIBDIR)/
-	$(INSTALL) -m 0755 build/master/_bin/munin-datafile2storable $(LIBDIR)/
-	$(INSTALL) -m 0755 build/master/_bin/munin-storable2datafile $(LIBDIR)/
-	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-datafile $(CGIDIR)/munin-cgi-datafile
-	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-graph $(CGIDIR)/munin-cgi-graph
-	$(INSTALL) -m 0755 build/master/_bin/munin-cgi-html $(CGIDIR)/munin-cgi-html
+	$(INSTALL) -m 0755 _stage/master/_bin/munin-cron $(BINDIR)/
+	$(INSTALL) -m 0755 _stage/master/_bin/munin-check $(BINDIR)/
+	$(INSTALL) -m 0755 _stage/master/_bin/munin-update $(LIBDIR)/
+	$(INSTALL) -m 0755 _stage/master/_bin/munin-html $(LIBDIR)/
+	$(INSTALL) -m 0755 _stage/master/_bin/munin-graph $(LIBDIR)/
+	$(INSTALL) -m 0755 _stage/master/_bin/munin-limits $(LIBDIR)/
+	$(INSTALL) -m 0755 _stage/master/_bin/munin-datafile2storable $(LIBDIR)/
+	$(INSTALL) -m 0755 _stage/master/_bin/munin-storable2datafile $(LIBDIR)/
+	$(INSTALL) -m 0755 _stage/master/_bin/munin-cgi-datafile $(CGIDIR)/munin-cgi-datafile
+	$(INSTALL) -m 0755 _stage/master/_bin/munin-cgi-graph $(CGIDIR)/munin-cgi-graph
+	$(INSTALL) -m 0755 _stage/master/_bin/munin-cgi-html $(CGIDIR)/munin-cgi-html
 
 # Not ready to be installed yet
-# $(INSTALL) -m 0755 build/master/_bin/munin-gather $(LIBDIR)/
+# $(INSTALL) -m 0755 _stage/master/_bin/munin-gather $(LIBDIR)/
 
 # ALWAYS DO THE OS SPECIFIC PLUGINS LAST! THAT WAY THEY OVERWRITE THE
 # GENERIC ONES
@@ -173,21 +173,21 @@ install-plugins-prime: install-plugins build $(PLUGINS) Makefile Makefile.config
 	$(CHMOD) 0755 $(PLUGSTATE)
 	$(CHMOD) 0755 $(CONFDIR)/plugin-conf.d
 
-	for p in build/plugins/node.d/* build/plugins/node.d.$(OSTYPE)/* ; do \
+	for p in _stage/plugins/node.d/* _stage/plugins/node.d.$(OSTYPE)/* ; do \
 	    if test -f "$$p" ; then                            \
 		echo Installing $$p;                           \
 		$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;     \
 	    fi                                                 \
 	done
 	$(HPUXONLY) mv $(LIBDIR)/plugins/*.adv $(LIBDIR)
-	$(INSTALL) -m 0644 build/plugins/plugins.history $(LIBDIR)/plugins/
-	$(INSTALL) -m 0644 build/plugins/plugin.sh $(LIBDIR)/plugins/
+	$(INSTALL) -m 0644 _stage/plugins/plugins.history $(LIBDIR)/plugins/
+	$(INSTALL) -m 0644 _stage/plugins/plugin.sh $(LIBDIR)/plugins/
 
 install-plugins-java: build-plugins-java
 	mkdir -p $(JAVALIBDIR)
-	$(INSTALL) -m 0644 build/plugins/javalib/munin-jmx-plugins.jar $(JAVALIBDIR)/
+	$(INSTALL) -m 0644 _stage/plugins/javalib/munin-jmx-plugins.jar $(JAVALIBDIR)/
 	mkdir -p $(LIBDIR)/plugins
-	for p in build/plugins/node.d.java/*; do               \
+	for p in _stage/plugins/node.d.java/*; do               \
 	    if test -f "$$p" ; then                            \
 		echo Installing $$p;                           \
 		$(INSTALL) -m 0755 $$p $(LIBDIR)/plugins/;     \
@@ -202,13 +202,13 @@ install-async-prime: install-async
 
 install-async:
 	mkdir -p $(LIBDIR)
-	$(INSTALL) -m 0755 build/node/_bin/munin-async $(LIBDIR)/
-	$(INSTALL) -m 0755 build/node/_bin/munin-asyncd $(LIBDIR)/
+	$(INSTALL) -m 0755 _stage/node/_bin/munin-async $(LIBDIR)/
+	$(INSTALL) -m 0755 _stage/node/_bin/munin-asyncd $(LIBDIR)/
 
 install-node-prime: install-node-pre install-node
 
-install-node-pre: build/node/munin-node.conf install-pre
-	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 build/node/munin-node.conf $(CONFDIR)/
+install-node-pre: _stage/node/munin-node.conf install-pre
+	test -f "$(CONFDIR)/munin-node.conf" || $(INSTALL) -m 0644 _stage/node/munin-node.conf $(CONFDIR)/
 
 
 install-common-prime: build-common install-common
@@ -216,22 +216,22 @@ install-common-prime: build-common install-common
 
 install-man: build-man Makefile Makefile.config
 	mkdir -p $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8
-	$(INSTALL) -m 0644 build/doc/munin-node.conf.5 $(MANDIR)/man5/
-	$(INSTALL) -m 0644 build/doc/munin.conf.5 $(MANDIR)/man5/
-	$(INSTALL) -m 0644 build/doc/munin-update.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-limits.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-graph.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-html.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-cron.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin-check.8 $(MANDIR)/man8/
-	$(INSTALL) -m 0644 build/doc/munin.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 _stage/doc/munin-node.conf.5 $(MANDIR)/man5/
+	$(INSTALL) -m 0644 _stage/doc/munin.conf.5 $(MANDIR)/man5/
+	$(INSTALL) -m 0644 _stage/doc/munin-update.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 _stage/doc/munin-limits.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 _stage/doc/munin-graph.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 _stage/doc/munin-html.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 _stage/doc/munin-cron.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 _stage/doc/munin-check.8 $(MANDIR)/man8/
+	$(INSTALL) -m 0644 _stage/doc/munin.8 $(MANDIR)/man8/
 
 
 install-doc: build-doc
 	mkdir -p $(DOCDIR)/resources
 	$(INSTALL) -m 0644 README $(DOCDIR)/
 	$(INSTALL) -m 0644 COPYING $(DOCDIR)/
-	$(INSTALL) -m 0644 build/resources/* $(DOCDIR)/resources
+	$(INSTALL) -m 0644 _stage/resources/* $(DOCDIR)/resources
 
 ######################################################################
 
@@ -240,9 +240,9 @@ infiles: $(INFILES)
 
 build: infiles build-master build-common-prime build-node build-plugins $(JAVA_BUILD) build-man substitute-confvar-inline
 
-build/%: %.in
+_stage/%: %.in
 	$(AT) echo "$< -> $@"
-	$(AT) mkdir -p build/`dirname $<`
+	$(AT) mkdir -p _stage/`dirname $<`
 	$(AT) sed -e 's|@@PREFIX@@|$(PREFIX)|g'                      \
              -e 's|@@CONFDIR@@|$(CONFDIR)|g'                    \
              -e 's|@@BINDIR@@|$(BINDIR)|g'                      \
@@ -316,7 +316,7 @@ substitute-confvar-inline:
              ./node/blib/sbin/munin-node                        \
              ./node/blib/sbin/munin-run                         \
              ./node/blib/sbin/munin-sched                       \
-             ./build/doc/munin-node.conf.5
+             ./_stage/doc/munin-node.conf.5
 
 
 build-common-pre: common/Build
@@ -359,33 +359,33 @@ build-doc: build-doc-stamp Makefile Makefile.config
 
 build-doc-stamp:
 	touch build-doc-stamp
-	mkdir -p build/doc
+	mkdir -p _stage/doc
 
 build-man: build-man-stamp Makefile Makefile.config
 
 build-man-stamp:
 	touch build-man-stamp
-	mkdir -p build/doc
+	mkdir -p _stage/doc
 	for f in $(MAN8); do \
-	   pod2man --section=8 --release=$(RELEASE) --center=$(MANCENTER) build/"$$f" > build/doc/`basename $$f`.8; \
+	   pod2man --section=8 --release=$(RELEASE) --center=$(MANCENTER) _stage/"$$f" > _stage/doc/`basename $$f`.8; \
 	done
 	for f in $(PODMAN8); do \
-	   pod2man --section=8 --release=$(RELEASE) --center=$(MANCENTER) "$$f".pod > build/doc/`basename $$f .pod`.8; \
+	   pod2man --section=8 --release=$(RELEASE) --center=$(MANCENTER) "$$f".pod > _stage/doc/`basename $$f .pod`.8; \
 	done
 	for f in $(PODMAN5); do \
-	   pod2man --section=5 --release=$(RELEASE) --center=$(MANCENTER) "$$f".pod > build/doc/`basename $$f .pod`.5; \
+	   pod2man --section=5 --release=$(RELEASE) --center=$(MANCENTER) "$$f".pod > _stage/doc/`basename $$f .pod`.5; \
 	done
 
-build-plugins-java: build/plugins/javalib/munin-jmx-plugins.jar
+build-plugins-java: _stage/plugins/javalib/munin-jmx-plugins.jar
 
-build/plugins/javalib/munin-jmx-plugins.jar: $(CLASSFILES)
-	cd build/plugins/javalib && $(JAR) cf munin-jmx-plugins.jar org/munin/plugin/jmx
+_stage/plugins/javalib/munin-jmx-plugins.jar: $(CLASSFILES)
+	cd _stage/plugins/javalib && $(JAR) cf munin-jmx-plugins.jar org/munin/plugin/jmx
 
 build-java-stamp:
-	mkdir -p build/plugins/javalib
+	mkdir -p _stage/plugins/javalib
 	touch build-java-stamp
 
-build/%.class: %.class build-java-stamp
+_stage/%.class: %.class build-java-stamp
 	$(AT) echo "Compiling $*"
 
 ######################################################################
