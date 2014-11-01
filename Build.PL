@@ -31,6 +31,7 @@ my $build = Module::Build->new(
         'URI'                    => '1.64',
     },
     script_files => qw(
+        script/munin-api
         script/munin-async
         script/munin-asyncd
         script/munin-cgi-datafile
