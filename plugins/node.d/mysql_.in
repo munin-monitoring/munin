@@ -1122,7 +1122,7 @@ $graphs{qcache_mem} = {
 $graphs{max_mem} = {
     config => {
 	global_attrs => {
-	    title  => 'Maximum memory that Mysql could use',
+	    title  => 'Maximium memory that Mysql could use',
 	    vlabel => 'Bytes',
 	    args   => '--base 1024 --lower-limit 0',
 	},
