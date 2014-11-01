@@ -806,6 +806,23 @@ $graphs{innodb_insert_buf} = {
 
 #---------------------------------------------------------------------
 
+$graphs{innodb_adaptive_hash} = {
+    config => {
+	global_attrs => {
+	    title  => 'InnoDB Adaptive Hash Optimiser',
+	},
+	data_source_attrs => {
+	    draw => 'LINE1',
+	},
+    },
+    data_sources => [
+	{name => 'Innodb_adaptive_hash_hash_searches',    label => 'Hash Searches'},
+	{name => 'Innodb_adaptive_hash_non_hash_searches', label => 'Nonhash Searches'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
 $graphs{innodb_io} = {
     config => {
 	global_attrs => {
@@ -1642,7 +1659,7 @@ sub update_data {
     delete $graphs{icp} if not defined $data->{Handler_icp_attempts}
         && not defined $data->{Handler_icp_matches};
 
-    delete $graphs{adaptive_hash}
+    delete $graphs{innodb_adaptive_hash}
         if not defined $data->{Innodb_adaptive_hash_hash_searches}
         && not defined $data->{Innodb_adaptive_hash_non_hash_searches};
 
