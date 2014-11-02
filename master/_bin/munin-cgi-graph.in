@@ -3,7 +3,7 @@
 
 =begin comment
 
-Copyright (C) 2004-2010 Jimmy Olsen, Steve Schnepp
+Copyright (C) 2014 Steve Schnepp
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -18,498 +18,52 @@ General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-$Id$
-
 =end comment
 
 =cut
 
 use strict;
 use warnings;
-use IO::Handle;
-use Date::Parse;
-use POSIX qw(strftime locale_h);
+
+
 use CGI::Fast qw(:cgi);
 use CGI::Carp qw(fatalsToBrowser);
-use Time::HiRes qw(gettimeofday tv_interval);
 
-use Munin::Master::GraphOld;
+use POSIX;
+
 use Munin::Master::Utils;
 
 use Munin::Common::Logger;
 
-my $GRAPHER = "$Munin::Common::Defaults::MUNIN_LIBDIR/munin-graph";
-my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin.conf";
+use File::Basename;
+use Data::Dumper;
 
-my %period  = ( "day"   => 300,
-		"week"  => 1800,
-		"month" => 7200,
-		"year"  => 86400,
-		"week-sum" => 1800,
-		"year-sum" => 86400
-	    );
+my @times = qw(day week month year);
 
-my %content_types = (
-	"png" => "image/png",
-	"csv" => "text/csv",
-	"json" => "application/json",
-	"xml" => "text/xml",
-);
-
-my $scale = "day";
-
-my @params ;
-
-push @params, "--config", $ENV{'MUNIN_CONFIG'}
-       if (defined $ENV{'MUNIN_CONFIG'});
-push @params, "--no-fork"; # FastCgi forks for us
-push @params, "--skip-locking", "--skip-stats", "--nolazy";
-
-my $config = graph_startup(\@params);
-
-if(defined($ENV{CGI_DEBUG})) {
-	push @params, "--debug";
-}
-
-# BEGIN FAST-CGI LOOP:
-setlocale (LC_TIME, 'C');
-my $nb_request = 0;
-my $nb_request_max = 0;
 while (new CGI::Fast) {
-    # 1rst thing is to validate the URL. Only a subset of chars are allowed.
-    # Return 404 if not compliant, w/o logging.
-    # This fixes http://bugs.debian.org/668666 and closes a lots of other potential bugs.
-    if ( has_offending_chars($ENV{PATH_INFO}) || has_offending_chars($ENV{QUERY_STRING}) ) {
-        # If parameters are not valid, just pretend we didn't find anything.
-        print "Status: 400 Bad Request (has_offending_chars)\r\n",
-          "Content-Type: image/png\r\n",
-          "X-Munin-Pid: $$\r\n",
-          "X-Munin-Request: $nb_request/$nb_request_max\r\n",
-          "\r\n";
-        next;
-    }
+	my $path = path_info();
 
-    my $pinpoint = undef;
-    my $path = $ENV{PATH_INFO} || "";
-
-    DEBUG "Request path is $path";
-
-    # The full URL looks like this:
-    # Case 1:
-    # http://localhost:8080/munin-cgi/munin-cgi-graph/client/\
-    #    Backend/dafnes.client.example.com/diskstats_iops-week.png
-    # $path should be
-    #   /client/Backend/dafnes.client.example.com/diskstats_iops-week.png
-    #
-    # Interesting bits about that url: Nested groups!
-    #
-    # Case 2:
-    # http://localhost:8080/munin-cgi/munin-cgi-graph/client/\
-    #    Backend/dafnes.client.example.com/diskstats_iops/sda-week.png
-    # $path should be
-    #    /client/Backend/dafnes.client.example.com/diskstats_iops/\
-    #    sda-week.png
-    #
-    # Interesting bit that url: Nested groups at the start and multigraph
-    # nesting bits at the end.
-    #
-    # Case 3:
-    # http://localhost:8080/munin-cgi/munin-cgi-graph/client/\
-    #   dafnes.client.example.com/if_err_bond0-day.png
-    # $path:
-    #   /client/dafnes.client.example.com/if_err_bond0-day.png
-    #
-    # Simplest (old munin 1.2): No nesting at any end, fixed number of /es
-    #
-    # Despite the slippery structure of the $path this expression works with
-    # the rest of the code.  To make a more scientific try we would need to
-    # split on / and traverse the $config to determine what kind of part
-    # (domain, nested domain, host, service/plugin, or nested service)
-    # we're looking at.
-    #
-    # Scale will in any case work out since - is only used before the
-    # day/week/month/year/pinpoint part, and the next part is always .png.
-    #
-    # Note: $serv *may* have some "-" inside (See #1218)
-
-    my ($dom, $host, $serv, $scale, $fileext) =
-      $path =~ m#^/(.*)/([^/]+)/([\w-]+)-([\w=,]+)\.(png|csv|json|xml)#; ## avoid bug in vim
-
-    DEBUG "asked for ($dom, $host, $serv, $scale, $fileext)";
-
-    if ($scale =~ /pinpoint=(\d+),(\d+)/) {
-	    $pinpoint = [ $1, $2, ];
-    }
-
-    if (! &verify_parameters ($dom, $host, $serv, $scale)) {
-	# If parameters are not valid, just say we didn't find anything.
-	print "Status: 404 Not Found (verify_parameters)\r\n",
-	  "Content-Type: $content_types{$fileext}\r\n",
-	  "X-Munin-Pid: $$\r\n",
-	  "X-Munin-Request: $nb_request/$nb_request_max\r\n",
-	  "\r\n";
-	next;
-    }
-
-    my $filename = get_picture_filename ($config, $dom, $host, $serv, $scale, $fileext, $ENV{QUERY_STRING});
-
-    my $time = time;
-
-    # If a "Cache-Control: no-cache" header gets send, we regenerate the image in every case:
-    # Removed $pinpoint from the $no_cache expression - janl 2010-09-29
-
-    my $no_cache = defined($ENV{HTTP_CACHE_CONTROL}) &&
-      $ENV{HTTP_CACHE_CONTROL} =~ /no-cache/i;
-    # Be able to deactivate the cache with the url
-    if (defined(CGI::param("no_cache")) && CGI::param("no_cache") eq "yes") {
-      $no_cache = 1;
-    }
-
-    # Having some QUERY_STRING disables the cache.
-    if (defined($ENV{QUERY_STRING}) && $ENV{QUERY_STRING} ne "") {
-      $no_cache = 1;
-    }
-
-    # Compute the cache values
-    # FIXME: Take the plugins update_rate into account here, at least for
-    # the day graph.  update_rate should be in $config
-    # my $graph_ttl = $pinpoint ? 1 : $period{$scale};
-    my $graph_ttl = $period{$scale} || 1;
-    my $graph_last_expires = $time - ($time % $graph_ttl);
-
-    my $graph_epoch = (! $no_cache) &&
-      file_newer_than($filename, $graph_last_expires);
-
-    if ($graph_epoch) {
-      # The graph is fresh enough. Sending either IMS if asked, or
-      # just skip generation
-	# Check for If-Modified-Since and send 304 if not changed:
-	if (defined $ENV{HTTP_IF_MODIFIED_SINCE} &&
-	    ! rfctime_newer_than($ENV{HTTP_IF_MODIFIED_SINCE}, $graph_epoch)) {
-
-	    my $headers = get_headers_for_file($filename, $graph_ttl);
-
-	    print "Status: 304\r\n",
-	      "Content-Type: $content_types{$fileext}\r\n",
-	      "X-Munin-Pid: $$\r\n",
-	      "X-Munin-Request: $nb_request/$nb_request_max\r\n",
-	      "Content-Length: 0\r\n",
-	      "Expires: $headers->{Expires}\r\n",
-	      "Last-Modified: ", $headers->{"Last-Modified"}, "\r\n".
-	      "\n";
-	    # We replied, continue with the next request
-	    next;
-
-	}
-    } else {
-        # Should generate it
-	my $scale_options;
-	if ($pinpoint) {
-	    $scale_options = "--pinpoint=" . $pinpoint->[0] . "," . $pinpoint->[1];
-	} else {
-	    $scale_options = "--$scale";
-	}
-
-	# Try to generate the graph
-	my $generated_file = eval {
- 		draw_graph_or_complain($dom, $host, $serv, $scale_options, $fileext, $filename);
-	};
-	
-	# handle exceptions
-	if ($@) {
-		if ($@ =~ m/^Could not find FQN/) {
-			# Unknown graph asked
-			print "Status: 404 Not Found\r\n",
-			      "Content-Type: $content_types{$fileext}\r\n",
-			      "X-Munin-Pid: $$\r\n",
-			      "X-Munin-Request: $nb_request/$nb_request_max\r\n",
-			    "\r\n";
-			# Next item
-			next;
-		}
-		
-		# Generic error
-		# .. we DO NOT DIE, as spawn-fcgi doesn't like it.
-		ERROR "[ERROR] $@";
-		print "Status: 500\r\n",
-			"Content-Type: text/plain\r\n",
-			"X-Munin-Pid: $$\r\n",
-			"X-Munin-Request $nb_request/$nb_request_max\r\n",
-			"";
+	if ($path !~ m/(.*)-(day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png)$/) {
+		# We don't understand this URL
+		print header(
+			-status => 404,
+			"X-Reason" => "invalid URL",
+		);
 		next;
 	}
 
-	# draw_graph_or_complain return 0, but already displayed a message
-	next unless ($generated_file);
-    }
+	my ($graph_path, $time, $start, $end, $format) = ($1, $2, $3, $4, $5);
 
-    # Now send it: headers
-    print "Status: 200\r\n",
-      "Content-Type: $content_types{$fileext}\r\n",
-      "X-Munin-Pid: $$\r\n",
-      "X-Munin-Request: $nb_request/$nb_request_max\r\n",
-    "";
+	# Ok, now SQL is needed to go further
+        use DBI;
+	my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
+        my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
 
-    my $headers = get_headers_for_file($filename, $graph_ttl);
-    foreach my $header_name (keys %$headers) {
-	print "$header_name: $headers->{$header_name}\r\n";
-    }
-
-    print "\r\n";
-
-    # ... and graph data
-    send_graph_data($filename);
-
-    # If $no_cache, remove the file. No need to keep it anyway.
-    # And it handles http://bugs.debian.org/668667
-    unlink($filename) if $no_cache;
-
-} continue {
-	$nb_request++;
-	if ($nb_request_max && $nb_request > $nb_request_max) {
-		# Cycle
-		last;
-	}
-}
-# END FAST-CGI LOOP - Time to die.  Nicely.
-
-exit 0;
-
-
-sub get_headers_for_file {
-    my ($filename, $graph_ttl) = @_;
-
-    # At this time the file exists and should be served
-    my @stats       = stat ($filename);
-    my $mtime_epoch = $stats[9];
-    my $last_modified = get_w3c_date_from_epoch($mtime_epoch);
-
-    # "Expires" has to use last modified time as base:
-    my $graph_next_expires = $mtime_epoch - ($mtime_epoch % $graph_ttl) + $graph_ttl;
-    my $expires       = get_w3c_date_from_epoch($graph_next_expires);
-
-    return {
-	    "Expires" => $expires,
-	    "Last-Modified" => $last_modified,
-	    "Content-Length" => $stats[7],
-	   };
 }
 
-
-sub get_w3c_date_from_epoch {
-    my($epoch) = @_;
-    return strftime("%a, %d %b %Y %H:%M:%S GMT", gmtime($epoch));
-}
-
-
-sub send_graph_data {
-    # Serve the graph contents.
-    my($filename) = @_;
-    my $buffer;
-
-    if (! open (GRAPH_PNG_FILE, '<', $filename) ) {
-	ERROR "[FATAL] Could not open image file \"$filename\" for reading: $!\n";
-	# We don't send anything...
-	# .. we DO NOT DIE, as spawn-fcgi doesn't like it. 
-	return;
-    }
-
-    # No buffering wanted when sending the file
-    local $| = 1;
-
-    while (sysread(GRAPH_PNG_FILE,$buffer,40960)) {
-	print $buffer;
-    }
-
-    close (GRAPH_PNG_FILE);
-}
-
-
-sub get_picture_filename {
-    my $config  = shift;
-    my $domain  = shift;
-    my $name    = shift;
-    my $service = shift;
-    my $scale   = shift;
-    my $fileext = shift;
-    my $params  = shift;
-
-    # XXX - hack to fix cgitmpdir default 
-    $config->{cgitmpdir} ||= "$Munin::Common::Defaults::MUNIN_CGITMPDIR";
-    my $cgi_tmp_dir = $config->{cgitmpdir} . "/munin-cgi-graph";
-
-    $params = $params ? "?$params" : "";
-    $params =~ tr/\//_/; # / are forbidden in a filename
-    $params = $1 if $params =~ m/(.*)/; # XXX - Q&D untaint
-    return "$cgi_tmp_dir/$domain/$name/$service-$scale.$fileext" . $params;
-}
-
-sub has_offending_chars {
-	my $url_part = shift;
-	return 0 if ! defined $url_part;
-	# "." and ":" are for ip_ in IPv4 & IPv6
-	return $url_part =~ m:[^a-zA-Z0-9_/.,=&\:-]:;
-}
-
-sub verify_parameters {
-    my $dom   = shift;
-    my $host  = shift;
-    my $serv  = shift;
-    my $scale = shift;
-
-    if (!$dom) {
-	WARN '[WARNING] Request for graph without specifying domain. Bailing out.';
-	return 0;
-    }
-    if (!$host) {
-	WARN '[WARNING] Request for graph without specifying host. Bailing out.';
-	return 0;
-    }
-    if (!$serv) {
-	WARN '[WARNING] Request for graph without specifying service. Bailing out.';
-	return 0;
-    }
-
-    if (!$scale) {
-	WARN '[WARNING] Request for graph without specifying scale. Bailing out.';
-	return 0;
-    } else {
-	if (!defined $period{$scale} && $scale !~ /pinpoint=\d+,\d+/) {
-	    WARN '[WARNING] Weird pinpoint setting "'.$scale.'". Bailing out.';
-	    return 0;
-	}
-    }
-
-    # Checks the image size requested.
-    if (( CGI::param("size_x") || "") =~ m/^(\d+)/) {
-	my $max_size_x = ( $config->{max_size_x} || 4000);
-	if ($1 > $max_size_x) {
-		WARN "[WARNING] Asked image size x too large : $1 > $max_size_x. Bailing out.";
-		return 0;
-	}
-    }
-    if (( CGI::param("size_y") || "") =~ m/^(\d+)/) {
-	my $max_size_y = ($config->{max_size_y} || 4000);
-	if ($1 > $max_size_y) {
-		WARN "[WARNING] Asked image size y too large : $1 > $max_size_y. Bailing out.";
-		return 0;
-	}
-    }
-
-    return 1;
-}
-
-
-sub file_newer_than {
-    my $filename = shift;
-    my $time     = shift;
-
-    if (-f $filename) {
-	my @stats = stat (_);
-	# $stats[9] holds the "last update" time and this needs
-	# to be in the last update period
-	my $last_update = $stats[9];
-	if ($last_update > $time) {
-	    return $last_update;
-	} else {
-	    return 0;
-	}
-    }
-
-    # No file found
-    return 0;
-}
-
-
-sub draw_graph {
-    my $dom  = shift;
-    my $host  = shift;
-    my $serv  = shift;
-    my $scale = shift;
-    my $fileext = shift;
-
-    my $filename = shift;
-
-    # remove old file if present
-    if (-f $filename and !unlink($filename)) {
-	ERROR "[FATAL] Could not remove \"$filename\": $!";
-    }
-
-    $serv =~ s{[^\w_\/"'\[\]\(\)+=-]}{_}g; $serv =~ /^(.+)$/; $serv = $1; #"
-    # . needs to be legal in host names
-    $host =~ s{[^\w_\/"'\[\]\(\)\.+=-]}{_}g; $host =~ /^(.+)$/; $host = $1; #"
-
-    # FIXME: Make "root" implied!
-    my @params = ( '--host', $host,
-		   '--only-fqn', "root/$dom/$host/$serv",
-		   $scale,
-		   '--format', "$fileext",
-		   '--output-file', $filename );
-
-    # Sets the correct size on a by_graph basis
-    push @params, "--size_x", CGI::param("size_x")
-      if (defined(CGI::param("size_x")));
-    push @params, "--size_y", CGI::param("size_y")
-      if (defined(CGI::param("size_y")));
-    push @params, "--upper_limit", CGI::param("upper_limit")
-      if (CGI::param("upper_limit"));
-    push @params, "--lower_limit", CGI::param("lower_limit")
-      if (CGI::param("lower_limit"));
-
-    # Sets the RRD step for graphing
-    push @params, "--step", CGI::param("step")
-      if (defined(CGI::param("step")));
-
-    # Sometimes we want to set the IMG size, and not the canvas.
-    push @params, "--full_size_mode"
-      if (CGI::param("full_size_mode"));
-    
-    # Sometimes we want only the graph. Nothing else.
-    push @params, "--only_graph"
-      if (CGI::param("only_graph"));
-
-    # XXX - the debug param is sticky. It really should be per request.
-    push @params, "--debug"
-      if (CGI::param("debug"));
-
-    graph_main(\@params);
-
-    return $filename;
-}
-
-
-sub draw_graph_or_complain {
-    my $t0 = [ gettimeofday ];
-
-    # Actuall work done here.
-    my $ret = draw_graph(@_);
-
-    my $graph_duration = tv_interval($t0);
-
-    if (! -f $ret) {
-	my ($dom, $host, $serv, $scale, $fileext, $filename ) = @_;
-	WARN "[WARNING] Could not draw graph \"$filename\": $ret";
-	print "Status: 500\r\n",
-	  "Content-Type: text/plain\r\n",
-	  "\r\n",
-	  "Could not draw graph \"$filename\"\r\n";
-        return 0;
-    } else {
-    	print "X-Graph-Duration: $graph_duration\r\n";
-	return $ret;
-    }
-}
-
-
-sub rfctime_newer_than {
-    # See if the file has been modified since "the last time".
-    # Format of since_string If-Modified-Since: Wed, 23 Jun 2004 16:11:06 GMT
-    my $since_string = shift;
-    my $created      = shift;
-    my $ifmodsec = str2time($since_string);
-
-    return 1 if ($ifmodsec < $created);
-    return 0;
-}
-
-# vim: syntax=perl ts=8
+# CGI in perl 5.20 is now seriously broken as it doesn't import into the namespace.
+# So we have to delegate explicitely. It's easier than prefixing with CGI:: each use.
+sub header { return CGI::header(@_); }
+sub path_info { return CGI::path_info(@_); }
+sub url { return CGI::url(@_); }
+sub script_name { return CGI::script_name(@_); }
