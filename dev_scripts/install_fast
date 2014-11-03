@@ -1,0 +1,6 @@
+#! /bin/sh
+
+set -x
+
+echo "#! /usr/bin/perl" > sandbox/opt/munin/www/cgi/munin-cgi-graph
+cat master/_bin/munin-cgi-graph.in >> sandbox/opt/munin/www/cgi/munin-cgi-graph
