@@ -54,6 +54,9 @@ while (new CGI::Fast) {
 
 	my ($graph_path, $time, $start, $end, $format) = ($1, $2, $3, $4, $5);
 
+	# Handle the "pinpoint" time
+	$time = "pinpoint" if $time =~ m/^pinpoint/;
+
 	# Ok, now SQL is needed to go further
         use DBI;
 	my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
