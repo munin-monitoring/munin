@@ -40,6 +40,8 @@ use Data::Dumper;
 
 my @times = qw(day week month year);
 
+Munin::Common::Logger::configure( level => 'debug', output => 'syslog');
+
 while (new CGI::Fast) {
 	my $path = path_info();
 
@@ -62,6 +64,7 @@ while (new CGI::Fast) {
 	my $datafilename = "$Munin::Common::Defaults::MUNIN_DBDIR/datafile.sqlite";
         my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
 
+	DEBUG "($graph_path, $time, $start, $end, $format)\n";
 }
 
 # CGI in perl 5.20 is now seriously broken as it doesn't import into the namespace.
