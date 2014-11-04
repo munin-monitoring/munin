@@ -347,10 +347,15 @@ sub _dump_into_sql {
 	my ($self) = @_;
 
 	my $datafilename = $config->{dbdir}."/datafile.sqlite";
-	DEBUG "[DEBUG] Writing sql to $datafilename";
+	my $datafilename_tmp = $config->{dbdir}."/.datafile.$$.sqlite";
+	DEBUG "[DEBUG] Writing sql to $datafilename_tmp";
 
 	use DBI;
-	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename_tmp","","") or die $DBI::errstr;
+
+	# We still use the temp file trick
+	$dbh->do("PRAGMA synchronous = 0");
+	$dbh->do("PRAGMA journal_mode = OFF");
 
 	# Create DB
 	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
@@ -502,6 +507,12 @@ sub _dump_into_sql {
 			}
 		}
 	}
+
+	# Close DB
+	$dbh->disconnect();
+
+	# Move into place
+	rename($datafilename_tmp, $datafilename);
 }
 
 sub _write_new_service_configs {
