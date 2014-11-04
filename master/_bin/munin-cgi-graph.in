@@ -55,6 +55,8 @@ while (new CGI::Fast) {
 	}
 
 	my ($graph_path, $time, $start, $end, $format) = ($1, $2, $3, $4, $5);
+	$start = "" unless defined $start;
+	$end = "" unless defined $end;
 
 	# Handle the "pinpoint" time
 	$time = "pinpoint" if $time =~ m/^pinpoint/;
