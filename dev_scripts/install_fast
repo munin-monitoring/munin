@@ -4,3 +4,6 @@ set -x
 
 echo "#! /usr/bin/perl" > sandbox/opt/munin/www/cgi/munin-cgi-graph
 cat master/_bin/munin-cgi-graph.in >> sandbox/opt/munin/www/cgi/munin-cgi-graph
+
+chmod -R u+w sandbox/usr/local/share/perl/5.20.1//Munin/Master/
+cp -v master/lib/Munin/Master/* sandbox/usr/local/share/perl/5.20.1//Munin/Master/
