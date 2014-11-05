@@ -1124,7 +1124,7 @@ $graphs{qcache} = {
 	},
     },
     data_sources => [
-	{name => 'Qcache_queries_in_cache', label => 'Queries in cache'},
+	{name => 'Qcache_queries_in_cache', label => 'Queries in cache', type  => 'GAUGE'},
 	{name => 'Qcache_hits',             label => 'Cache hits'},
 	{name => 'Subquery_cache_hit',      label => 'Subquery Cache hits'},
 	{name => 'Subquery_cache_miss',     label => 'Subquery Cache misses'},
