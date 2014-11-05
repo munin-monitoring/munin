@@ -40,7 +40,7 @@ use Data::Dumper;
 
 my @times = qw(day week month year);
 
-Munin::Common::Logger::configure( level => 'debug', output => 'syslog');
+Munin::Common::Logger::configure( level => 'debug', output => 'screen');
 
 while (new CGI::Fast) {
 	my $path = path_info();
