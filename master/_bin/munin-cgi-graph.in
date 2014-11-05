@@ -87,7 +87,7 @@ my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
 while (new CGI::Fast) {
 	my $path = path_info();
 
-	if ($path !~ m/(.*)-(day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png)$/) {
+	if ($path !~ m/^\/(.*)-(day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png)$/) {
 		# We don't understand this URL
 		print header(
 			-status => 404,
