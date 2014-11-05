@@ -42,6 +42,48 @@ my @times = qw(day week month year);
 
 Munin::Common::Logger::configure( level => 'debug', output => 'screen');
 
+my %PALETTE;    # Hash of available palettes
+my @COLOUR;     # Array of actuall colours to use
+
+{
+    no warnings;
+    $PALETTE{'old'} = [    # This is the old munin palette.  It lacks contrast.
+        qw(22ff22 0022ff ff0000 00aaaa ff00ff
+            ffa500 cc0000 0000cc 0080C0 8080C0 FF0080
+            800080 688e23 408080 808000 000000 00FF00
+            0080FF FF8000 800000 FB31FB
+            )];
+
+    $PALETTE{'default'} = [   # New default palette.Better contrast,more colours
+            #Greens Blues   Oranges Dk yel  Dk blu  Purple  lime    Reds    Gray
+        qw(00CC00 0066B3 FF8000 FFCC00 330099 990099 CCFF00 FF0000 808080
+            008F00 00487D B35A00 B38F00         6B006B 8FB300 B30000 BEBEBE
+            80FF80 80C9FF FFC080 FFE680 AA80FF EE00CC FF8080
+            666600 FFBFFF 00FFCC CC6699 999900
+            )];      # Line variations: Pure, earthy, dark pastel, misc colours
+}
+
+my $range_colour  = "22ff22";
+my $single_colour = "00aa00";
+
+# Use 400 x RRA step, in order to have 1px per RRA sample.
+my %times = (
+    "day"   => "-2000m",  # (i.e. -33h20m)
+    "week"  => "-12000m", # (i.e. -8d13h20m)
+    "month" => "-48000m", # (i.e. -33d8h)
+    "year"  => "-400d",
+    "pinpoint"  => "dummy",
+);
+
+my %resolutions = (
+    "day"   => "300",
+    "week"  => "1500",
+    "month" => "7200",
+    "year"  => "86400"
+);
+
+my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
+
 while (new CGI::Fast) {
 	my $path = path_info();
 
