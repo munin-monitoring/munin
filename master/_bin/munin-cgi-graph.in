@@ -146,22 +146,42 @@ while (new CGI::Fast) {
 	DEBUG "graph_order: $graph_order";
 
 	$sth = $dbh->prepare_cached("
-		SELECT ds.name, label.value FROM ds
-		LEFT OUTER JOIN ds_attr label ON label.id = ds.id AND label.name = 'label'
+		SELECT
+			ds.name,
+			l.value,
+			rf.value,
+			rd.value,
+			rc.value,
+			1 as dummy
+		FROM ds
+		LEFT OUTER JOIN ds_attr l ON l.id = ds.id AND l.name = 'label'
+		LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
+		LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rc.name = 'rrd:field'
+		LEFT OUTER JOIN ds_attr rc ON rc.id = ds.id AND rc.name = 'rrd:cdef'
+		LEFT OUTER JOIN ds_attr gc ON gc.id = ds.id AND gc.name = 'gfx:color'
 		WHERE ds.service_id = ?
 	");
 	$sth->execute($id);
 
-	while (my ($_ds_name, $_ds_label) = $sth->fetchrow_array()) {
-		# Adding them to $graph_order
-		$graph_order .= " " . $_ds_name;
+	# Construction of the RRD command line
+	# We don't care anymore for rrdtool less than 1.4
+	my @rrd_def;
+	my @rrd_gfx;
+	while (my ($_name, $_label, $_rrdfile, $_rrdfield, $_rrdcdef, $_color) = $sth->fetchrow_array()) {
+		my $rrdname = $_name;
+
+		# Fetch the data
+	        push @rrd_def, "DEF:avg_$rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
+	        push @rrd_def, "DEF:min_$rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
+	        push @rrd_def, "DEF:max_$rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
+
+		# Graph
+	        push @rrd_gfx, "LINE:avg_$rrdname#$_color:";
 	}
-	DEBUG "graph_order: $graph_order";
 
-	# We just remove every duplicate of $graph_order, so they appear in the right order
-	$graph_order = remove_dups($graph_order);
+	DEBUG "rrd_def: @rrd_def";
+	DEBUG "rrd_gfx: @rrd_gfx";
 
-	DEBUG "graph_order: $graph_order";
 }
 
 sub remove_dups {
