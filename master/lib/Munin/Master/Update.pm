@@ -382,12 +382,14 @@ sub _dump_into_sql {
 	my $sth_service_category = $dbh->prepare('INSERT INTO service_categories (id, category) VALUES (?, ?)');
 
 	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
+		type VARCHAR DEFAULT 'GAUGE',
 		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_ds_attr ON ds_attr (id, name)");
 	$dbh->do("CREATE INDEX IF NOT EXISTS r_d_service ON ds (service_id)");
 	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path) VALUES (?, ?, ?)');
 	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
+	my $sth_ds_type = $dbh->prepare('UPDATE ds SET type = ? where id = ?');
 
 	# Table that contains all the URL paths, in order to have a very fast lookup
 	$dbh->do("CREATE TABLE IF NOT EXISTS url (id INTEGER NOT NULL, type VARCHAR NOT NULL, path VARCHAR NOT NULL, PRIMARY KEY(id,type))");
@@ -488,17 +490,35 @@ sub _dump_into_sql {
 				$sth_ds->execute($service_id, $data_source, "$host:$service.$data_source");
 				my $ds_id = _get_last_insert_id($dbh);
 				$sth_url->execute($ds_id, "ds", _get_url_from_path("$host:$_service:$data_source"));
+
+				my $ds_type;
 				for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
-					$sth_ds_attr->execute($ds_id, $attr, $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr});
+					my $value = $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr};
+					$sth_ds_attr->execute($ds_id, $attr, $value);
+
+					$ds_type = uc($value) if $attr eq "type";
 				}
 
-				# Get the states for the DS
-				# XXX - Do *NOT* look at the following code. It will haunt you forever.
+				# Clean ds_type
+				$ds_type = "GAUGE" unless $ds_type =~ /^(DERIVE|COUNTER|ABSOLUTE)$/;
+
+				# Update the DS type. Could be done beforehand,
+				# but we don't really care about perf yet
+				$sth_ds_type->execute($ds_type, $ds_id);
+
 				my $rrdfile_prefix = $config->{dbdir} . "/$url-$service-$data_source";
-				my $state_ds = $state->{value}{"$rrdfile_prefix-g.rrd:42"};
-				$state_ds  ||= $state->{value}{"$rrdfile_prefix-d.rrd:42"};
-				$state_ds  ||= $state->{value}{"$rrdfile_prefix-c.rrd:42"};
-				$state_ds  ||= $state->{value}{"$rrdfile_prefix-a.rrd:42"};
+
+				my $rrd_file_type = lc(substr($ds_type, 0, 1));
+				my $rrd_file = "$rrdfile_prefix-$rrd_file_type.rrd";
+				my $rrd_field = "42"; # TODO - This could be overriden
+
+				# Insert RRD specific attributes
+				$sth_ds_attr->execute($ds_id, "rrd:file", $rrd_file);
+				$sth_ds_attr->execute($ds_id, "rrd:field", $rrd_field);
+				$sth_ds_attr->execute($ds_id, "rrd:cdef", "");
+
+				# Get the states for the DS
+				my $state_ds = $state->{value}{"$rrd_file:$rrd_field"};
 
 				INFO "No state found for ds $ds_id ($rrdfile_prefix)" unless $state_ds;
 				next unless $state_ds;
