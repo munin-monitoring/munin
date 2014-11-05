@@ -63,6 +63,8 @@ my @COLOUR;     # Array of actuall colours to use
             )];      # Line variations: Pure, earthy, dark pastel, misc colours
 }
 
+@COLOUR = @{ $PALETTE{'default'} };
+
 my $range_colour  = "22ff22";
 my $single_colour = "00aa00";
 
@@ -168,8 +170,11 @@ while (new CGI::Fast) {
 	# We don't care anymore for rrdtool less than 1.4
 	my @rrd_def;
 	my @rrd_gfx;
+	my $field_number = 0;
 	while (my ($_name, $_label, $_rrdfile, $_rrdfield, $_rrdcdef, $_color) = $sth->fetchrow_array()) {
 		my $rrdname = $_name;
+
+		DEBUG "rrdname: $rrdname";
 
 		# Fetch the data
 	        push @rrd_def, "DEF:avg_$rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
@@ -177,6 +182,7 @@ while (new CGI::Fast) {
 	        push @rrd_def, "DEF:max_$rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
 
 		# Graph
+		$_color = $COLOUR[$field_number++ % $#COLOUR] unless defined $_color;
 	        push @rrd_gfx, "LINE:avg_$rrdname#$_color:";
 	}
 
