@@ -119,7 +119,7 @@ BEGIN {
 	}
 }
 
-/RPM/ { 
+/RPM/ || /^Fan / { 
         NAME=THING=$1;
 	gsub(/[^A-Za-z0-9]/,"",NAME);
 	SPEED=$2;
