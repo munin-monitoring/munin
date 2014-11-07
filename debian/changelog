@@ -1,3 +1,10 @@
+munin (2.0.24-1~bpo70+1) wheezy-backports; urgency=medium
+
+  * Rebuild for wheezy-backports.
+  * Revert c2628d67 to not use dh-systemd, which is not available in wheezy. 
+
+ -- Holger Levsen <holger@debian.org>  Fri, 07 Nov 2014 00:59:54 +0000
+
 munin (2.0.24-1) unstable; urgency=medium
 
   * Ensure consistent use of /etc/default/munin-node (Closes: #764594)
