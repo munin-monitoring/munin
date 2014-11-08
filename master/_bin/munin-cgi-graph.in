@@ -189,6 +189,14 @@ while (new CGI::Fast) {
 	DEBUG "rrd_def: @rrd_def";
 	DEBUG "rrd_gfx: @rrd_gfx";
 
+	# Send the HTTP Headers
+	print header(
+		-status => 200,
+		"Content-type" => "image/png",
+	) unless CGI::url_param("no_header");
+
+	# Send the PNG output
+	system("rrdtool", "graph", "-", @rrd_def, @rrd_gfx);
 }
 
 sub remove_dups {
@@ -207,3 +215,4 @@ sub header { return CGI::header(@_); }
 sub path_info { return CGI::path_info(@_); }
 sub url { return CGI::url(@_); }
 sub script_name { return CGI::script_name(@_); }
+sub url_param { return CGI::url_param(@_); }
