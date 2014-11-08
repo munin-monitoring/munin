@@ -76,7 +76,7 @@ if ($arg && $arg eq "config") {
 } elsif ($arg && $arg eq "autoconf") {
     if (! -x $dbstat) {
 	print "no (Can't execute db_stat file '$dbstat')\n";
-    } elsif (-d $dbdir && -r $dbdir) {
+    } elsif (! -d $dbdir || ! -r $dbdir) {
 	print "no (Can't open database directory '$dbdir')";
     } else {
 	print "yes\n";
