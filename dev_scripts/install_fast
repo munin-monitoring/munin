@@ -2,8 +2,11 @@
 
 set -x
 
-echo "#! /usr/bin/perl" > sandbox/opt/munin/www/cgi/munin-cgi-graph
-cat master/_bin/munin-cgi-graph.in >> sandbox/opt/munin/www/cgi/munin-cgi-graph
+PERL_LIB_MUNIN=$(find sandbox -type d -name Munin)
+MUNIN_CGI_GRAPH=$(find sandbox -type f -name munin-cgi-graph)
 
-chmod -R u+w sandbox/usr/local/share/perl/5.20.1//Munin/Master/
-cp -v master/lib/Munin/Master/* sandbox/usr/local/share/perl/5.20.1//Munin/Master/
+echo "#! /usr/bin/perl" > $MUNIN_CGI_GRAPH
+cat master/_bin/munin-cgi-graph.in >> $MUNIN_CGI_GRAPH
+
+chmod -R u+w $PERL_LIB_MUNIN/Master
+cp -v master/lib/Munin/Master/* $PERL_LIB_MUNIN/Master
