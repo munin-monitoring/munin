@@ -183,7 +183,7 @@ while (new CGI::Fast) {
 
 		# Graph
 		$_color = $COLOUR[$field_number++ % $#COLOUR] unless defined $_color;
-	        push @rrd_gfx, "LINE:avg_$rrdname#$_color:\"$_label\"";
+	        push @rrd_gfx, "LINE:avg_$rrdname#$_color:$_label";
 	}
 
 	DEBUG "rrd_def: @rrd_def";
