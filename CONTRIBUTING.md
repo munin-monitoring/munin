@@ -19,3 +19,6 @@ First off, thanks for taking the time to contribute!
 * Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
 * Use the standard commit formatting (look at the one already made)
 
+## Coding style
+
+* Refer to [HACKING.pod](HACKING.pod)
