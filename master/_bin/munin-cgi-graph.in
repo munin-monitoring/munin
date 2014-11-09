@@ -209,7 +209,9 @@ while (new CGI::Fast) {
 		"--title", "$graph_title - $title",
 		"--watermark", "Munin " . $Munin::Common::Defaults::MUNIN_VERSION,
 		"--imgformat", uc($format),
+		"--start", $start,
 	);
+	push @rrd_header, "--end" , $end if $end;
 
 	# Send the PNG output
 	system("rrdtool", "graph", "-",
