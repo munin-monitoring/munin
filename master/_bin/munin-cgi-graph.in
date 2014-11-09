@@ -195,8 +195,16 @@ while (new CGI::Fast) {
 		"Content-type" => "image/png",
 	) unless CGI::url_param("no_header");
 
+	my @rrd_header = (
+		"--watermark", "Munin " . $Munin::Common::Defaults::MUNIN_VERSION,
+	);
+
 	# Send the PNG output
-	system("rrdtool", "graph", "-", @rrd_def, @rrd_gfx);
+	system("rrdtool", "graph", "-",
+		@rrd_header,
+		@rrd_def,
+		@rrd_gfx
+	);
 }
 
 sub remove_dups {
