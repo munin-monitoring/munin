@@ -26,6 +26,7 @@ use strict;
 use warnings;
 
 
+use Time::HiRes;
 use CGI::Fast;
 #use CGI::Carp qw(fatalsToBrowser);
 
@@ -87,6 +88,7 @@ my %resolutions = (
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
 
 while (new CGI::Fast) {
+	my $t0 = Time::HiRes::time;
 	my $path = path_info();
 
 	if ($path !~ m/^\/(.*)-(day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png)$/) {
@@ -214,10 +216,18 @@ while (new CGI::Fast) {
 	push @rrd_header, "--end" , $end if $end;
 
 	# Send the PNG output
+	my $tpng = Time::HiRes::time;
 	system("rrdtool", "graph", "-",
 		@rrd_header,
 		@rrd_def,
 		@rrd_gfx
+	);
+
+	my $ttot = Time::HiRes::time;
+	DEBUG sprintf("total:%.3fs (db:%.3fs rrd:%.3fs)",
+		($ttot - $t0),
+		($tpng - $t0),
+		($ttot - $tpng),
 	);
 }
 
