@@ -195,8 +195,20 @@ while (new CGI::Fast) {
 		"Content-type" => "image/png",
 	) unless CGI::url_param("no_header");
 
+	# Compute the title
+	my $title = "";
+	if ($time eq "pinpoint") {
+		my $start_text = localtime($start);
+		my $end_text = localtime($end);
+		$title = "from $start_text to $end_text";
+	} else {
+		$title = "by " . $time;
+	}
+
 	my @rrd_header = (
+		"--title", "$graph_title - $title",
 		"--watermark", "Munin " . $Munin::Common::Defaults::MUNIN_VERSION,
+		"--imgformat", uc($format),
 	);
 
 	# Send the PNG output
