@@ -100,7 +100,7 @@ my $title = "Disk usage";
 if ( $Munin::Plugin::me eq "df_inode" ) {
   $title = "Inode usage";
   $dfopts .= "-i ";
-  push(@exclude, 'nilfs2');
+  push(@exclude, 'nilfs2', 'reiserfs');
 }
 
 @exclude = split(/\s+/, $ENV{exclude}) if $ENV{exclude};
