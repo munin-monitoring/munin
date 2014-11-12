@@ -157,6 +157,7 @@ while (new CGI::Fast) {
 			rd.value,
 			rc.value,
 			gc.value,
+			gd.value,
 			1 as dummy
 		FROM ds
 		LEFT OUTER JOIN ds_attr l ON l.id = ds.id AND l.name = 'label'
@@ -164,6 +165,7 @@ while (new CGI::Fast) {
 		LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
 		LEFT OUTER JOIN ds_attr rc ON rc.id = ds.id AND rc.name = 'rrd:cdef'
 		LEFT OUTER JOIN ds_attr gc ON gc.id = ds.id AND gc.name = 'gfx:color'
+		LEFT OUTER JOIN ds_attr gd ON gd.id = ds.id AND gd.name = 'gfx:draw'
 		WHERE ds.service_id = ?
 	");
 	$sth->execute($id);
@@ -173,7 +175,7 @@ while (new CGI::Fast) {
 	my @rrd_def;
 	my @rrd_gfx;
 	my $field_number = 0;
-	while (my ($_name, $_label, $_rrdfile, $_rrdfield, $_rrdcdef, $_color) = $sth->fetchrow_array()) {
+	while (my ($_name, $_label, $_rrdfile, $_rrdfield, $_rrdcdef, $_color, $_drawtype) = $sth->fetchrow_array()) {
 		my $rrdname = $_name;
 
 		DEBUG "rrdname: $rrdname";
@@ -185,7 +187,8 @@ while (new CGI::Fast) {
 
 		# Graph
 		$_color = $COLOUR[$field_number++ % $#COLOUR] unless defined $_color;
-	        push @rrd_gfx, "LINE:avg_$rrdname#$_color:$_label";
+		$_drawtype = "LINE" unless defined $_drawtype;
+	        push @rrd_gfx, "$_drawtype:avg_$rrdname#$_color:$_label";
 	}
 
 	DEBUG "rrd_def: @rrd_def";
