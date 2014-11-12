@@ -330,7 +330,10 @@ sub _print_service {
 sub _list_services {
     my ($session, $node) = @_;
 
-    $node ||= $config->{fqdn};
+    if (scalar %nodes == 1 && ! exists $nodes{$node}) {
+	    # Only one node. Naming mismatch. Just give the use what he wants.
+	    ($node) = keys %nodes;
+    }
 
     if (exists $nodes{$node}) {
         my @services = @{$nodes{$node}};
