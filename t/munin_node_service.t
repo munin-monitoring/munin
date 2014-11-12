@@ -55,8 +55,8 @@ $config->reinitialize({
         opt_bad_gname => { group => [ '(%%SSKK¤¤)'  ] },
         opt_bad_gid   => { group => [ '(999999999)' ] },
 
-        several_groups => { group => [ 0, "($gname)" ] },
-        several_groups_required => { group => [ 0, $gname ] },
+        several_groups => { group => [ 0, "($gname)" ,0 ] },
+        several_groups_required => { group => [ 0, $gname, 0 ] },
         several_groups_mixture => { group => [ '(%%SSKK¤¤)', 0 ] },
     },
     ignores => [
@@ -187,8 +187,8 @@ $ENV{MUNIN_MASTER_IP} = '';
 
     eq_or_diff([ $services->_resolve_gids('no_groups')   ], [ $gid, "$gid $gid" ], 'default group by gid');
 
-    eq_or_diff([ $services->_resolve_gids('gid')   ], [ $gid, "$gid $gid 0" ], 'extra group by gid');
-    eq_or_diff([ $services->_resolve_gids('gname') ], [ $gid, "$gid $gid 0" ], 'extra group by name');
+    eq_or_diff([ $services->_resolve_gids('gid')   ], [ 0, "0 0" ], 'different group by gid');
+    eq_or_diff([ $services->_resolve_gids('gname') ], [ 0, "0 0" ], 'different group by name');
 
     eval { $services->_resolve_gids('bad_gid') };
     like($@, qr/'999999999'/, 'Exception thrown if an additional group could not be resolved');
@@ -196,25 +196,25 @@ $ENV{MUNIN_MASTER_IP} = '';
     eval { $services->_resolve_gids('bad_gname') };
     like($@, qr/'%%SSKK¤¤'/, 'Exception thrown if an additional group could not be resolved');
 
-    eq_or_diff([ $services->_resolve_gids('opt_gname')     ], [ $gid, "$gid $gid 0" ], 'extra optional group by name');
-    eq_or_diff([ $services->_resolve_gids('opt_bad_gname') ], [ $gid, "$gid $gid" ],   'unresolvable extra groups are ignored');
+    eq_or_diff([ $services->_resolve_gids('opt_gname')     ], [ 0, "0 0" ], 'optional group by name');
+    eq_or_diff([ $services->_resolve_gids('opt_bad_gname') ], [ $gid, "$gid $gid" ],   'unresolvable groups are ignored');
 
-    eq_or_diff([ $services->_resolve_gids('opt_gid')         ], [ $gid, "$gid $gid 0" ], 'extra optional group by gid');
-    eq_or_diff([ $services->_resolve_gids('opt_bad_gid') ], [ $gid, "$gid $gid" ],   'unresolvable extra gids are ignored');
+    eq_or_diff([ $services->_resolve_gids('opt_gid')         ], [ 0, "0 0" ], 'optional group by gid');
+    eq_or_diff([ $services->_resolve_gids('opt_bad_gid') ], [ $gid, "$gid $gid" ],   'unresolvable gids are ignored');
 
     eq_or_diff(
         [$services->_resolve_gids('several_groups') ],
-        [$gid, "$gid $gid 0 $gid"],
+        [0, "0 0 $gid 0"],
         'several extra groups'
     );
     eq_or_diff(
         [$services->_resolve_gids('several_groups_required')],
-        [$gid, "$gid $gid 0 $gid"],
+        [0, "0 0 $gid 0"],
         'several groups, less whitespace'
     );
     eq_or_diff(
         [$services->_resolve_gids('several_groups_mixture')],
-        [$gid, "$gid $gid 0"],
+        [0, "0 0"],
         'resolvable and unresolvable extra groups'
     );
 
