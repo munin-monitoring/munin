@@ -149,6 +149,25 @@ while (new CGI::Fast) {
 	my ($graph_order) = $sth->fetchrow_array();
 	DEBUG "graph_order: $graph_order";
 
+	$sth->execute($id, "graph_args");
+	my ($graph_args) = $sth->fetchrow_array();
+	DEBUG "graph_args: $graph_args";
+
+	$sth->execute($id, "graph_printf");
+	my ($graph_printf) = $sth->fetchrow_array();
+	DEBUG "graph_printf: $graph_printf";
+
+	# Default format for printing under graph.
+	my $rrdformat = "%6.2lf";
+	if ($graph_args =~ /--base\s+1024/) {
+		# If the base unit is 1024 then 1012.56 is a valid
+		# number to show.  That's 7 positions, not 6.
+		$rrdformat = "%7.2lf";
+	}
+
+	# Plugins can override this via "graph_printf"
+	$rrdformat = $graph_printf if $graph_printf;
+
 	$sth = $dbh->prepare_cached("
 		SELECT
 			ds.name,
@@ -174,6 +193,7 @@ while (new CGI::Fast) {
 	# We don't care anymore for rrdtool less than 1.4
 	my @rrd_def;
 	my @rrd_gfx;
+	my @rrd_legend;
 	my $field_number = 0;
 	while (my ($_name, $_label, $_rrdfile, $_rrdfield, $_rrdcdef, $_color, $_drawtype) = $sth->fetchrow_array()) {
 		my $rrdname = $_name;
@@ -189,6 +209,19 @@ while (new CGI::Fast) {
 		$_color = $COLOUR[$field_number++ % $#COLOUR] unless defined $_color;
 		$_drawtype = "LINE" unless defined $_drawtype;
 	        push @rrd_gfx, "$_drawtype:avg_$rrdname#$_color:$_label";
+
+		# Legend
+	        push @rrd_def, "VDEF:vavg_$rrdname=avg_$rrdname,AVERAGE";
+	        push @rrd_def, "VDEF:vmin_$rrdname=min_$rrdname,MINIMUM";
+	        push @rrd_def, "VDEF:vmax_$rrdname=max_$rrdname,MAXIMUM";
+
+	        push @rrd_def, "VDEF:vlst_$rrdname=avg_$rrdname,LAST";
+		push @rrd_def, "VDEF:v95p_$rrdname=avg_$rrdname,95,PERCENT";
+
+		push @rrd_legend, "GPRINT:vlst_$rrdname:$rrdformat";
+		push @rrd_legend, "GPRINT:vmin_$rrdname:$rrdformat";
+		push @rrd_legend, "GPRINT:vavg_$rrdname:$rrdformat";
+		push @rrd_legend, "GPRINT:vmax_$rrdname:$rrdformat";
 	}
 
 	DEBUG "rrd_def: @rrd_def";
@@ -218,12 +251,14 @@ while (new CGI::Fast) {
 	);
 	push @rrd_header, "--end" , $end if $end;
 
+
 	# Send the PNG output
 	my $tpng = Time::HiRes::time;
 	system("rrdtool", "graph", "-",
 		@rrd_header,
 		@rrd_def,
-		@rrd_gfx
+		@rrd_gfx,
+		@rrd_legend,
 	);
 
 	my $ttot = Time::HiRes::time;
