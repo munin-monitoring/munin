@@ -95,7 +95,7 @@ while (new CGI::Fast) {
 		# We don't understand this URL
 		print header(
 			-status => 404,
-			"X-Reason" => "invalid URL",
+			"X-Reason" => "invalid URL: $path",
 		);
 		next;
 	}
