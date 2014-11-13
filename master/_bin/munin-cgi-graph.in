@@ -105,6 +105,7 @@ while (new CGI::Fast) {
 			"X-Reason" => "invalid URL: $path",
 		);
 		next;
+	}
 
 
 	my ($graph_path, $time, $start, $end, $format) = ($1, $2, $3, $4, $5);
@@ -226,7 +227,7 @@ while (new CGI::Fast) {
 		push @rrd_def, "VDEF:vlst_$rrdname=avg_$rrdname,LAST";
 		push @rrd_def, "VDEF:v95p_$rrdname=avg_$rrdname,95,PERCENT";
 
-		push @rrd_gfx, "OMMENT: Cur\\:";
+		push @rrd_gfx, "COMMENT: Cur\\:";
 		push @rrd_gfx, "GPRINT:vlst_$rrdname:$rrdformat";
 		push @rrd_gfx, "COMMENT: Min\\:";
 		push @rrd_gfx, "GPRINT:vmin_$rrdname:$rrdformat";
