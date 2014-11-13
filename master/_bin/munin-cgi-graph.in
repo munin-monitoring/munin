@@ -39,8 +39,6 @@ use Munin::Common::Logger;
 use File::Basename;
 use Data::Dumper;
 
-my @times = qw(day week month year);
-
 Munin::Common::Logger::configure( level => 'debug', output => 'screen');
 
 my %PALETTE;    # Hash of available palettes
