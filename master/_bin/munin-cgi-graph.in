@@ -153,6 +153,15 @@ while (new CGI::Fast) {
 	$sth->execute($id, "graph_title");
 	my ($graph_title) = $sth->fetchrow_array();
 
+	$sth->execute($id, "graph_period");
+	my ($graph_period) = $sth->fetchrow_array();
+	$graph_period = "second" unless $graph_period;
+
+	# Note that graph_vtitle is *NOT* supported anymore
+	$sth->execute($id, "graph_vlabel");
+	my ($graph_vlabel) = $sth->fetchrow_array();
+	$graph_vlabel =~ s/\$\{graph_period\}/$graph_period/g;
+
 	$sth->execute($id, "graph_order");
 	my ($graph_order) = $sth->fetchrow_array();
 	DEBUG "graph_order: $graph_order";
@@ -258,6 +267,7 @@ while (new CGI::Fast) {
 		"--watermark", "Munin " . $Munin::Common::Defaults::MUNIN_VERSION,
 		"--imgformat", uc($format),
 		"--start", $start,
+		"--vertical-label", $graph_vlabel,
 	);
 	push @rrd_header, "--end" , $end if $end;
 
