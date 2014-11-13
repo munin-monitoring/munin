@@ -69,6 +69,7 @@ my $single_colour = "00aa00";
 
 # Use 400 x RRA step, in order to have 1px per RRA sample.
 my %times = (
+    "hour"  => "-4000s",  # (i.e. -1h6m40s)
     "day"   => "-2000m",  # (i.e. -33h20m)
     "week"  => "-12000m", # (i.e. -8d13h20m)
     "month" => "-48000m", # (i.e. -33d8h)
@@ -77,6 +78,7 @@ my %times = (
 );
 
 my %resolutions = (
+    "hour"  => "10",
     "day"   => "300",
     "week"  => "1500",
     "month" => "7200",
@@ -89,7 +91,7 @@ while (new CGI::Fast) {
 	my $t0 = Time::HiRes::time;
 	my $path = path_info();
 
-	if ($path !~ m/^\/(.*)-(day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png)$/) {
+	if ($path !~ m/^\/(.*)-(hour|day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png)$/) {
 		# We don't understand this URL
 		print header(
 			-status => 404,
