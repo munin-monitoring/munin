@@ -500,7 +500,7 @@ sub _dump_into_sql {
 				}
 
 				# Clean ds_type
-				$ds_type = "GAUGE" unless $ds_type =~ /^(DERIVE|COUNTER|ABSOLUTE)$/;
+				$ds_type = "GAUGE" unless $ds_type && $ds_type =~ /^(DERIVE|COUNTER|ABSOLUTE)$/;
 
 				# Update the DS type. Could be done beforehand,
 				# but we don't really care about perf yet
