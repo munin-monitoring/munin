@@ -215,7 +215,7 @@ while (new CGI::Fast) {
 		$template_params{CATEGORY} = $category;
 
 		my $sth_cat;
-		if ($category = 'other') {
+		if ($category eq 'other') {
 			# account for those that explictly mention 'other' as category
 			$sth_cat = $dbh->prepare_cached(
 				"SELECT DISTINCT s.name FROM service s
