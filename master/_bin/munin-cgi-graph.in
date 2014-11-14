@@ -311,7 +311,7 @@ while (new CGI::Fast) {
 	};
 
 	# Sending the file
-	DEBUG "sending '$rrd_fh->filename'";
+	DEBUG "sending '$rrd_fh'";
 
 	# Since the file desc is still open, we just rewind it to the beginning.
 	$rrd_fh->seek( 0, SEEK_SET );
