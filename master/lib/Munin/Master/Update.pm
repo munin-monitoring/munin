@@ -492,11 +492,13 @@ sub _dump_into_sql {
 				$sth_url->execute($ds_id, "ds", _get_url_from_path("$host:$_service:$data_source"));
 
 				my $ds_type;
+				my $gfx_color;
 				for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
 					my $value = $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr};
 					$sth_ds_attr->execute($ds_id, $attr, $value);
 
 					$ds_type = uc($value) if $attr eq "type";
+					$gfx_color = $value if $attr eq "color";
 				}
 
 				# Clean ds_type
@@ -516,6 +518,8 @@ sub _dump_into_sql {
 				$sth_ds_attr->execute($ds_id, "rrd:file", $rrd_file);
 				$sth_ds_attr->execute($ds_id, "rrd:field", $rrd_field);
 				$sth_ds_attr->execute($ds_id, "rrd:cdef", "");
+
+				$sth_ds_attr->execute($ds_id, "gfx:color", $gfx_color);
 
 				# Get the states for the DS
 				my $state_ds = $state->{value}{"$rrd_file:$rrd_field"};
