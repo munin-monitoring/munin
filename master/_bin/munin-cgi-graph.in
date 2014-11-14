@@ -172,18 +172,13 @@ while (new CGI::Fast) {
 
 	$sth->execute($id, "graph_printf");
 	my ($graph_printf) = $sth->fetchrow_array();
-	DEBUG "graph_printf: $graph_printf";
-
-	# Default format for printing under graph.
-	my $rrdformat = "%6.2lf";
-	if ($graph_args =~ /--base\s+1024/) {
+	if (! defined $graph_printf) {
 		# If the base unit is 1024 then 1012.56 is a valid
 		# number to show.  That's 7 positions, not 6.
-		$rrdformat = "%7.2lf";
+		$graph_printf = ($graph_args =~ /--base\s+1024/) ? "%7.2lf" : "%6.2lf";
 	}
 
-	# Plugins can override this via "graph_printf"
-	$rrdformat = $graph_printf if $graph_printf;
+	DEBUG "graph_printf: $graph_printf";
 
 	$sth = $dbh->prepare_cached("
 		SELECT
@@ -194,7 +189,8 @@ while (new CGI::Fast) {
 			rc.value,
 			gc.value,
 			gd.value,
-			1 as dummy
+			pf.value,
+			'dummy' as dummy
 		FROM ds
 		LEFT OUTER JOIN ds_attr l ON l.id = ds.id AND l.name = 'label'
 		LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
@@ -202,6 +198,7 @@ while (new CGI::Fast) {
 		LEFT OUTER JOIN ds_attr rc ON rc.id = ds.id AND rc.name = 'rrd:cdef'
 		LEFT OUTER JOIN ds_attr gc ON gc.id = ds.id AND gc.name = 'gfx:color'
 		LEFT OUTER JOIN ds_attr gd ON gd.id = ds.id AND gd.name = 'gfx:draw'
+		LEFT OUTER JOIN ds_attr pf ON pf.id = ds.id AND pf.name = 'printf'
 		WHERE ds.service_id = ?
 	");
 	$sth->execute($id);
@@ -213,8 +210,11 @@ while (new CGI::Fast) {
 	my @rrd_legend;
 
 	my $field_number = 0;
-	while (my ($_name, $_label, $_rrdfile, $_rrdfield, $_rrdcdef, $_color, $_drawtype) = $sth->fetchrow_array()) {
+	while (my ($_name, $_label, $_rrdfile, $_rrdfield, $_rrdcdef, $_color, $_drawtype, $_printf) = $sth->fetchrow_array()) {
 		my $rrdname = $_name;
+
+		# Plugins can override this via "graph_printf"
+		$_printf = $graph_printf unless defined $_printf;
 
 		DEBUG "rrdname: $rrdname";
 
@@ -237,13 +237,13 @@ while (new CGI::Fast) {
 		push @rrd_def, "VDEF:v95p_$rrdname=avg_$rrdname,95,PERCENT";
 
 		push @rrd_gfx, "COMMENT: Cur\\:";
-		push @rrd_gfx, "GPRINT:vlst_$rrdname:$rrdformat";
+		push @rrd_gfx, "GPRINT:vlst_$rrdname:$_printf";
 		push @rrd_gfx, "COMMENT: Min\\:";
-		push @rrd_gfx, "GPRINT:vmin_$rrdname:$rrdformat";
+		push @rrd_gfx, "GPRINT:vmin_$rrdname:$_printf";
 		push @rrd_gfx, "COMMENT: Avg\\:";
-		push @rrd_gfx, "GPRINT:vavg_$rrdname:$rrdformat";
+		push @rrd_gfx, "GPRINT:vavg_$rrdname:$_printf";
 		push @rrd_gfx, "COMMENT: Max\\:";
-		push @rrd_gfx, "GPRINT:vmax_$rrdname:$rrdformat" . "\\j";
+		push @rrd_gfx, "GPRINT:vmax_$rrdname:$_printf" . "\\j";
 	}
 
 	# Send the HTTP Headers
