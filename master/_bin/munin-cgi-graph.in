@@ -210,40 +210,47 @@ while (new CGI::Fast) {
 	my @rrd_legend;
 
 	my $field_number = 0;
-	while (my ($_name, $_label, $_rrdfile, $_rrdfield, $_rrdcdef, $_color, $_drawtype, $_printf) = $sth->fetchrow_array()) {
-		my $rrdname = $_name;
+	while (my ($_rrdname, $_label, $_rrdfile, $_rrdfield, $_rrdcdef, $_color, $_drawtype, $_printf) = $sth->fetchrow_array()) {
+		# Note that we do *NOT* provide any defaults for those
+		# $_rrdXXXX vars. Defaults will be done by munin-update.
+		#
+		# This will :
+		# 	- have only 1 reference on default values
+		# 	- reduce the size of the CGI part, which is good for
+		# 	  security (& sometimes performances)
 
-		# Plugins can override this via "graph_printf"
+
+		# Fields inherit this field from their plugin, if not overrided
 		$_printf = $graph_printf unless defined $_printf;
 
-		DEBUG "rrdname: $rrdname";
+		DEBUG "rrdname: $_rrdname";
 
-		# Fetch the data
-		push @rrd_def, "DEF:avg_$rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
-		push @rrd_def, "DEF:min_$rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
-		push @rrd_def, "DEF:max_$rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
+		# Fetch the data from the RRDs
+		push @rrd_def, "DEF:avg_$_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
+		push @rrd_def, "DEF:min_$_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
+		push @rrd_def, "DEF:max_$_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
 
-		# Graph
+		# Graph them
 		$_color = $COLOUR[$field_number++ % $#COLOUR] unless defined $_color;
 		$_drawtype = "LINE" unless defined $_drawtype;
-		push @rrd_gfx, "$_drawtype:avg_$rrdname#$_color:$_label";
+		push @rrd_gfx, "$_drawtype:avg_$_rrdname#$_color:$_label";
 
 		# Legend
-		push @rrd_def, "VDEF:vavg_$rrdname=avg_$rrdname,AVERAGE";
-		push @rrd_def, "VDEF:vmin_$rrdname=min_$rrdname,MINIMUM";
-		push @rrd_def, "VDEF:vmax_$rrdname=max_$rrdname,MAXIMUM";
+		push @rrd_def, "VDEF:vavg_$_rrdname=avg_$_rrdname,AVERAGE";
+		push @rrd_def, "VDEF:vmin_$_rrdname=min_$_rrdname,MINIMUM";
+		push @rrd_def, "VDEF:vmax_$_rrdname=max_$_rrdname,MAXIMUM";
 
-		push @rrd_def, "VDEF:vlst_$rrdname=avg_$rrdname,LAST";
-		push @rrd_def, "VDEF:v95p_$rrdname=avg_$rrdname,95,PERCENT";
+		push @rrd_def, "VDEF:vlst_$_rrdname=avg_$_rrdname,LAST";
+		push @rrd_def, "VDEF:v95p_$_rrdname=avg_$_rrdname,95,PERCENT";
 
 		push @rrd_gfx, "COMMENT: Cur\\:";
-		push @rrd_gfx, "GPRINT:vlst_$rrdname:$_printf";
+		push @rrd_gfx, "GPRINT:vlst_$_rrdname:$_printf";
 		push @rrd_gfx, "COMMENT: Min\\:";
-		push @rrd_gfx, "GPRINT:vmin_$rrdname:$_printf";
+		push @rrd_gfx, "GPRINT:vmin_$_rrdname:$_printf";
 		push @rrd_gfx, "COMMENT: Avg\\:";
-		push @rrd_gfx, "GPRINT:vavg_$rrdname:$_printf";
+		push @rrd_gfx, "GPRINT:vavg_$_rrdname:$_printf";
 		push @rrd_gfx, "COMMENT: Max\\:";
-		push @rrd_gfx, "GPRINT:vmax_$rrdname:$_printf" . "\\j";
+		push @rrd_gfx, "GPRINT:vmax_$_rrdname:$_printf" . "\\j";
 	}
 
 	# Send the HTTP Headers
