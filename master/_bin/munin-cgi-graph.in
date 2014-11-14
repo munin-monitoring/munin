@@ -98,7 +98,7 @@ while (new CGI::Fast) {
 	my $t0 = Time::HiRes::time;
 	my $path = path_info();
 
-	if ($path !~ m/^\/(.*)-(hour|day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png)$/) {
+	if ($path !~ m/^\/(.*)-(hour|day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png|[a-z]+)$/) {
 		# We don't understand this URL
 		print header(
 			-status => 404,
