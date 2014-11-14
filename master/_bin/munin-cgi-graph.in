@@ -273,6 +273,15 @@ while (new CGI::Fast) {
 	);
 	push @rrd_header, "--end" , $end if $end;
 
+	# Now it gets *REALLY* dirty: FastCGI doesn't handle correctly stdout
+	# streaming for rrdtool. So we have to revert to use a temporary file.
+	# This way of doing things might _eventually_ be reused later if we
+	# implement server-side caching, but I'd rather not to.
+	#
+	# I think caching would be better handled via HTTP headers:
+	# 	- on the browser
+	# 	- on a caching reverse proxy, such as varnish.
+
 	use File::Temp;
 	my $rrd_fh = File::Temp->new();
 	# Send the PNG output
@@ -296,6 +305,8 @@ while (new CGI::Fast) {
 
 	# Sending the file
 	DEBUG "sending '$rrd_fh->filename'";
+
+	# Since the file desc is still open, we just rewind it to the beginning.
 	$rrd_fh->seek( 0, SEEK_SET );
 	{
 		my $buffer;
