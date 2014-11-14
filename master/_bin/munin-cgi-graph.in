@@ -269,18 +269,40 @@ while (new CGI::Fast) {
 		"--start", $start,
 		"--vertical-label", $graph_vlabel,
 		"--slope-mode",
+		"--imginfo", "",
 	);
 	push @rrd_header, "--end" , $end if $end;
 
-
+	use File::Temp;
+	my $rrd_fh = File::Temp->new();
 	# Send the PNG output
 	my $tpng = Time::HiRes::time;
-	system("rrdtool", "graph", "-",
+	my @rrd_cmd = (
+		$rrd_fh->filename,
 		@rrd_header,
 		@rrd_def,
 		@rrd_gfx,
 		@rrd_legend,
 	);
+
+	use RRDs;
+	RRDs::graph(
+		@rrd_cmd,
+	);
+	if ($!) {
+		ERROR "Error generating image: $!";
+		INFO "@rrd_cmd";
+	};
+
+	# Sending the file
+	DEBUG "sending '$rrd_fh->filename'";
+	$rrd_fh->seek( 0, SEEK_SET );
+	{
+		my $buffer;
+		# No buffering wanted when sending the file
+		local $| = 1;
+		while (sysread($rrd_fh, $buffer, 40 * 1024)) { print $buffer; }
+	}
 
 	my $ttot = Time::HiRes::time;
 	DEBUG sprintf("total:%.3fs (db:%.3fs rrd:%.3fs)",
