@@ -132,6 +132,7 @@ my %legal = map { $_ => 1 } qw(
 	update_rate
 	use_default_name
 	use_node_name
+	use_default_node
 	version
 	warn
 	warning
