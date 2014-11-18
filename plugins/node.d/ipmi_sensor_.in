@@ -251,9 +251,16 @@ def config_unit(unit):
         if 'ucr+' in assertions:
             crit_u = values['upper critical'].replace("na","")
         if 'unc+' in assertions:
-            warn_u = values['upper non-critical'].replace("na","")
-        warn = "%s:%s" % (warn_l,warn_u)
-        crit = "%s:%s" % (crit_l,crit_u)
+            warn_u = values['Upper Non-Critical'].replace("na","")
+
+	#TODO add 'fans'
+	if 'rpm'==unit:
+		warn = "%s:%s" % (warn_u,warn_l)
+		crit = "%s:%s" % (crit_u,crit_l)
+	else:
+		warn = "%s:%s" % (warn_l,warn_u)
+		crit = "%s:%s" % (crit_l,crit_u)
+
         if warn!=":":
             print "%s.warning %s" % (nname, warn)
         if crit!=":":

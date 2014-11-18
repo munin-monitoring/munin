@@ -2,6 +2,8 @@
 
 First off, thanks for taking the time to contribute!
 
+There is an [more complete version](http://guide.munin-monitoring.org/en/latest/others/index.html#contributing) in the Guide.
+
 ## Submitting Issues
 
 * Include the version of Munin you are using and the OS.
