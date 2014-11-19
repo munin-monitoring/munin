@@ -20,6 +20,9 @@ your /etc/apt.conf defaults.
 [apt_all]
 env.options -o Debug::pkgDepCache::AutoInstall=false -o APT::Get::Show-Versions=false
 
+Note that apt is called with no extra options by default, so it fully honors
+your /etc/apt.conf defaults.
+
 =head1 USAGE
 
 This plugin needs a cronjob that runs apt-get update every hour or so
