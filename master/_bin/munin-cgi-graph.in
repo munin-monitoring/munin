@@ -200,6 +200,7 @@ while (new CGI::Fast) {
 		LEFT OUTER JOIN ds_attr gd ON gd.id = ds.id AND gd.name = 'draw'
 		LEFT OUTER JOIN ds_attr pf ON pf.id = ds.id AND pf.name = 'printf'
 		WHERE ds.service_id = ?
+		ORDER BY ds.ordr ASC
 	");
 	$sth->execute($id);
 

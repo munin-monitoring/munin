@@ -219,6 +219,17 @@ sub _create_self_aware_worker_exception_handler {
     };
 }
 
+sub _get_order {
+	my ($key, $array_as_string) = @_;
+	my @array = split(/ +/, $array_as_string);
+	for(my $idx = 0; $idx < scalar @array; $idx++) {
+		if ($array[$idx] eq $key) { return $idx; }
+	}
+
+	# Not found
+	return scalar @array;
+}
+
 sub _get_last_insert_id {
 	my ($dbh) = @_;
 	return $dbh->last_insert_id("", "", "", "");
@@ -383,11 +394,12 @@ sub _dump_into_sql {
 
 	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
 		type VARCHAR DEFAULT 'GAUGE',
+		ordr INTEGER DEFAULT 0,
 		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_ds_attr ON ds_attr (id, name)");
 	$dbh->do("CREATE INDEX IF NOT EXISTS r_d_service ON ds (service_id)");
-	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path) VALUES (?, ?, ?)');
+	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path, ordr) VALUES (?, ?, ?, ?)');
 	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
 	my $sth_ds_type = $dbh->prepare('UPDATE ds SET type = ? where id = ?');
 
@@ -477,17 +489,26 @@ sub _dump_into_sql {
 			my $service_id = _get_last_insert_id($dbh);
 			$sth_url->execute($service_id, "service", _get_url_from_path("$host:$_service"));
 
+			my $graph_order;
 			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
+				my ($attr_key, $attr_value) = @$attr;
 				# Category names should not be case sensitive. Store them all in lowercase.
-				if ($attr->[0] eq 'graph_category') {
-						$attr->[1] = lc($attr->[1]);
-						$sth_service_category->execute($service_id, $attr->[1]);
+				if ($attr_key eq 'graph_category') {
+					$attr_value = lc($attr_value);
+					$sth_service_category->execute($service_id, $attr_value);
 				} else {
-						$sth_service_attr->execute($service_id, $attr->[0], $attr->[1]);
+					$sth_service_attr->execute($service_id, $attr_key, $attr_value);
+				}
+
+				# Extract special vars
+				if ($attr_key eq 'graph_order') {
+					$graph_order = $attr_value;
 				}
 			}
+
 			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
-				$sth_ds->execute($service_id, $data_source, "$host:$service.$data_source");
+				my $order = _get_order($data_source, $graph_order);
+				$sth_ds->execute($service_id, $data_source, "$host:$service.$data_source", $order);
 				my $ds_id = _get_last_insert_id($dbh);
 				$sth_url->execute($ds_id, "ds", _get_url_from_path("$host:$_service:$data_source"));
 
