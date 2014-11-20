@@ -306,9 +306,10 @@ while (new CGI::Fast) {
 	RRDs::graph(
 		@rrd_cmd,
 	);
-	if ($!) {
-		ERROR "Error generating image: $!";
+	my $err = RRDs::error;
+	if ($err) {
 		INFO "@rrd_cmd";
+		ERROR "Error generating image: ". $err;
 	};
 
 	# Sending the file
