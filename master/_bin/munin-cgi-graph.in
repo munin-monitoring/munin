@@ -280,7 +280,6 @@ while (new CGI::Fast) {
 		"--start", $start,
 		"--vertical-label", $graph_vlabel,
 		"--slope-mode",
-		"--imginfo", "",
 
                 '--font', 'DEFAULT:0:DejaVuSans,DejaVu Sans,DejaVu LGC Sans,Bitstream Vera Sans',
                 '--font', 'LEGEND:7:DejaVuSansMono,DejaVu Sans Mono,DejaVu LGC Sans Mono,Bitstream Vera Sans Mono,monospace',
