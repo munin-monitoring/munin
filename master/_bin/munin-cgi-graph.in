@@ -223,6 +223,7 @@ while (new CGI::Fast) {
 
 		# Fields inherit this field from their plugin, if not overrided
 		$_printf = $graph_printf unless defined $_printf;
+		$_printf .= " %s";
 
 		DEBUG "rrdname: $_rrdname";
 
