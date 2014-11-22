@@ -92,6 +92,11 @@ my %resolutions = (
 	"year"  => "86400"
 );
 
+my %CONTENT_TYPES = (
+	"PNG" => "image/png",
+	"SVG" => "image/svg+xml",
+);
+
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
 
 while (new CGI::Fast) {
@@ -111,6 +116,10 @@ while (new CGI::Fast) {
 	my ($graph_path, $time, $start, $end, $format) = ($1, $2, $3, $4, $5);
 	$start = $times{$time} unless defined $start;
 	$end = "" unless defined $end;
+
+	# Only accept known formats
+	$format = uc($format);
+	$format = "PNG" unless $CONTENT_TYPES{$format};
 
 	# Handle the "pinpoint" time
 	$time = "pinpoint" if $time =~ m/^pinpoint/;
@@ -272,7 +281,7 @@ while (new CGI::Fast) {
 	# Send the HTTP Headers
 	print header(
 		-status => 200,
-		"Content-type" => "image/png",
+		"Content-type" => $CONTENT_TYPES{$format},
 	) unless CGI::url_param("no_header");
 
 	# Compute the title
@@ -300,7 +309,7 @@ while (new CGI::Fast) {
 	my @rrd_header = (
 		"--title", "$graph_title - $title",
 		"--watermark", "Munin " . $Munin::Common::Defaults::MUNIN_VERSION,
-		"--imgformat", uc($format),
+		"--imgformat", $format,
 		"--start", $start,
 		"--vertical-label", $graph_vlabel,
 		"--slope-mode",
