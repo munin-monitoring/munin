@@ -247,6 +247,9 @@ while (new CGI::Fast) {
 		$_drawtype = $field_number ? "STACK" : "AREA" if $_drawtype eq "AREASTACK";
 		$_drawtype = $field_number ? "STACK" : "AREA" if $_drawtype eq "AREASTACK";
 
+		# Override a STACK to LINE if it's the first field
+		$_drawtype = "LINE" if $_drawtype eq "STACK" && ! $field_number;
+
 		push @rrd_gfx, "$_drawtype:avg_$_rrdname#$_color:$_label";
 
 		# Legend
