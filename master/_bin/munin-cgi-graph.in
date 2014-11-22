@@ -242,6 +242,11 @@ while (new CGI::Fast) {
 		# Graph them
 		$_color = $COLOUR[$field_number++ % $#COLOUR] unless defined $_color;
 		$_drawtype = "LINE" unless defined $_drawtype;
+
+		# Handle the (LINE|AREA)STACK munin extensions
+		$_drawtype = $field_number ? "STACK" : "AREA" if $_drawtype eq "AREASTACK";
+		$_drawtype = $field_number ? "STACK" : "AREA" if $_drawtype eq "AREASTACK";
+
 		push @rrd_gfx, "$_drawtype:avg_$_rrdname#$_color:$_label";
 
 		# Legend
