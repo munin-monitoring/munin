@@ -245,7 +245,7 @@ while (new CGI::Fast) {
 
 		# Handle the (LINE|AREA)STACK munin extensions
 		$_drawtype = $field_number ? "STACK" : "AREA" if $_drawtype eq "AREASTACK";
-		$_drawtype = $field_number ? "STACK" : "AREA" if $_drawtype eq "AREASTACK";
+		$_drawtype = $field_number ? "STACK" : "LINE" if $_drawtype eq "LINESTACK";
 
 		# Override a STACK to LINE if it's the first field
 		$_drawtype = "LINE" if $_drawtype eq "STACK" && ! $field_number;
