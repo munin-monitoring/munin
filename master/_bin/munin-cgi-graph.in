@@ -274,6 +274,18 @@ while (new CGI::Fast) {
 		$title = "by " . $time;
 	}
 
+	my $width = url_param("size_x") || 400;  # We aligned our RRA to 400px
+	my $height = url_param("size_y") || 175; # Aligned to current CSS
+
+	# Sanitize $width & $height to 4000, to avoid RSS-based DoS
+	if (! is_int($width) || $width < 1 || $width > 4000) {
+		$width = 400;
+	}
+
+	if (! is_int($height) || $height < 1 || $height > 4000) {
+		$height = 175;
+	}
+
 	my @rrd_header = (
 		"--title", "$graph_title - $title",
 		"--watermark", "Munin " . $Munin::Common::Defaults::MUNIN_VERSION,
@@ -292,8 +304,8 @@ while (new CGI::Fast) {
                 '--color', 'AXIS#CFD6F8',   # And axis like html boxes
                 '--color', 'ARROW#CFD6F8',  # And arrow, ditto.
 
-                '--width', '400',   # We aligned our RRA to 400px
-                '--height', '175',  # Our standard Height
+                '--width', $width,
+                '--height', $height,
 
 		"--border", "0",
 	);
@@ -358,6 +370,12 @@ sub remove_dups {
 	@a = grep { ! ($seen{$_}++) } @a;
 
 	return join(" ", @a);
+}
+
+sub is_int {
+	my ($str) = @_;
+
+	return ($str =~ m/[0-9]+/);
 }
 
 # CGI in perl 5.20 is now seriously broken as it doesn't import into the namespace.
