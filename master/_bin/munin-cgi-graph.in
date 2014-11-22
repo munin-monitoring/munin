@@ -240,7 +240,7 @@ while (new CGI::Fast) {
 		push @rrd_def, "DEF:max_$_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
 
 		# Graph them
-		$_color = $COLOUR[$field_number++ % $#COLOUR] unless defined $_color;
+		$_color = $COLOUR[$field_number % $#COLOUR] unless defined $_color;
 		$_drawtype = "LINE" unless defined $_drawtype;
 
 		# Handle the (LINE|AREA)STACK munin extensions
@@ -264,6 +264,9 @@ while (new CGI::Fast) {
 		push @rrd_gfx, "GPRINT:vmin_$_rrdname:$_printf" . "\\g";
 		push @rrd_gfx, "GPRINT:vavg_$_rrdname:$_printf" . "\\g";
 		push @rrd_gfx, "GPRINT:vmax_$_rrdname:$_printf" . "\\j";
+	} continue {
+		# Move to here so it's always executed
+		$field_number ++;
 	}
 
 	# Send the HTTP Headers
