@@ -95,6 +95,7 @@ my %resolutions = (
 my %CONTENT_TYPES = (
 	"PNG" => "image/png",
 	"SVG" => "image/svg+xml",
+
 	"PDF" => "application/pdf",
 	"EPS" => "application/postscript",
 	"PS"  =>  "application/postscript",
