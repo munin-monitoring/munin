@@ -24,9 +24,13 @@ if [ -z "$RUN" ]; then
     usage
 fi
 
-export PATH_INFO=$1
+URL=$1
 shift
 
-export PERL5LIB=$DESTDIR$PERLSITELIB
+PATH_INFO=${URL%%\?*}
+QUERY_STRING=${URL##*\?}
 
+export PERL5LIB=$DESTDIR$PERLSITELIB:$PERL5LIB
+
+export PATH_INFO QUERY_STRING
 $TIMING $RUN "$@"

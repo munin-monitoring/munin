@@ -219,6 +219,17 @@ sub _create_self_aware_worker_exception_handler {
     };
 }
 
+sub _get_order {
+	my ($key, $array_as_string) = @_;
+	my @array = split(/ +/, $array_as_string);
+	for(my $idx = 0; $idx < scalar @array; $idx++) {
+		if ($array[$idx] eq $key) { return $idx; }
+	}
+
+	# Not found
+	return scalar @array;
+}
+
 sub _get_last_insert_id {
 	my ($dbh) = @_;
 	return $dbh->last_insert_id("", "", "", "");
@@ -347,10 +358,15 @@ sub _dump_into_sql {
 	my ($self) = @_;
 
 	my $datafilename = $config->{dbdir}."/datafile.sqlite";
-	DEBUG "[DEBUG] Writing sql to $datafilename";
+	my $datafilename_tmp = $config->{dbdir}."/.datafile.$$.sqlite";
+	DEBUG "[DEBUG] Writing sql to $datafilename_tmp";
 
 	use DBI;
-	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename","","") or die $DBI::errstr;
+	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename_tmp","","") or die $DBI::errstr;
+
+	# We still use the temp file trick
+	$dbh->do("PRAGMA synchronous = 0");
+	$dbh->do("PRAGMA journal_mode = OFF");
 
 	# Create DB
 	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
@@ -377,12 +393,15 @@ sub _dump_into_sql {
 	my $sth_service_category = $dbh->prepare('INSERT INTO service_categories (id, category) VALUES (?, ?)');
 
 	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
+		type VARCHAR DEFAULT 'GAUGE',
+		ordr INTEGER DEFAULT 0,
 		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
 	$dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
 	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_ds_attr ON ds_attr (id, name)");
 	$dbh->do("CREATE INDEX IF NOT EXISTS r_d_service ON ds (service_id)");
-	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path) VALUES (?, ?, ?)');
+	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path, ordr) VALUES (?, ?, ?, ?)');
 	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
+	my $sth_ds_type = $dbh->prepare('UPDATE ds SET type = ? where id = ?');
 
 	# Table that contains all the URL paths, in order to have a very fast lookup
 	$dbh->do("CREATE TABLE IF NOT EXISTS url (id INTEGER NOT NULL, type VARCHAR NOT NULL, path VARCHAR NOT NULL, PRIMARY KEY(id,type))");
@@ -470,30 +489,61 @@ sub _dump_into_sql {
 			my $service_id = _get_last_insert_id($dbh);
 			$sth_url->execute($service_id, "service", _get_url_from_path("$host:$_service"));
 
+			my $graph_order;
 			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
+				my ($attr_key, $attr_value) = @$attr;
 				# Category names should not be case sensitive. Store them all in lowercase.
-				if ($attr->[0] eq 'graph_category') {
-						$attr->[1] = lc($attr->[1]);
-						$sth_service_category->execute($service_id, $attr->[1]);
+				if ($attr_key eq 'graph_category') {
+					$attr_value = lc($attr_value);
+					$sth_service_category->execute($service_id, $attr_value);
 				} else {
-						$sth_service_attr->execute($service_id, $attr->[0], $attr->[1]);
-				}
-			}
-			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
-				$sth_ds->execute($service_id, $data_source, "$host:$service.$data_source");
-				my $ds_id = _get_last_insert_id($dbh);
-				$sth_url->execute($ds_id, "ds", _get_url_from_path("$host:$_service:$data_source"));
-				for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
-					$sth_ds_attr->execute($ds_id, $attr, $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr});
+					$sth_service_attr->execute($service_id, $attr_key, $attr_value);
 				}
 
-				# Get the states for the DS
-				# XXX - Do *NOT* look at the following code. It will haunt you forever.
+				# Extract special vars
+				if ($attr_key eq 'graph_order') {
+					$graph_order = $attr_value;
+				}
+			}
+
+			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
+				my $order = _get_order($data_source, $graph_order);
+				$sth_ds->execute($service_id, $data_source, "$host:$service.$data_source", $order);
+				my $ds_id = _get_last_insert_id($dbh);
+				$sth_url->execute($ds_id, "ds", _get_url_from_path("$host:$_service:$data_source"));
+
+				my $ds_type;
+				my $gfx_color;
+				for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
+					my $value = $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr};
+					$sth_ds_attr->execute($ds_id, $attr, $value);
+
+					$ds_type = uc($value) if $attr eq "type";
+					$gfx_color = $value if $attr eq "color";
+				}
+
+				# Clean ds_type
+				$ds_type = "GAUGE" unless $ds_type && $ds_type =~ /^(DERIVE|COUNTER|ABSOLUTE)$/;
+
+				# Update the DS type. Could be done beforehand,
+				# but we don't really care about perf yet
+				$sth_ds_type->execute($ds_type, $ds_id);
+
 				my $rrdfile_prefix = $config->{dbdir} . "/$url-$service-$data_source";
-				my $state_ds = $state->{value}{"$rrdfile_prefix-g.rrd:42"};
-				$state_ds  ||= $state->{value}{"$rrdfile_prefix-d.rrd:42"};
-				$state_ds  ||= $state->{value}{"$rrdfile_prefix-c.rrd:42"};
-				$state_ds  ||= $state->{value}{"$rrdfile_prefix-a.rrd:42"};
+
+				my $rrd_file_type = lc(substr($ds_type, 0, 1));
+				my $rrd_file = "$rrdfile_prefix-$rrd_file_type.rrd";
+				my $rrd_field = "42"; # TODO - This could be overriden
+
+				# Insert RRD specific attributes
+				$sth_ds_attr->execute($ds_id, "rrd:file", $rrd_file);
+				$sth_ds_attr->execute($ds_id, "rrd:field", $rrd_field);
+				$sth_ds_attr->execute($ds_id, "rrd:cdef", "");
+
+				$sth_ds_attr->execute($ds_id, "gfx:color", $gfx_color);
+
+				# Get the states for the DS
+				my $state_ds = $state->{value}{"$rrd_file:$rrd_field"};
 
 				INFO "No state found for ds $ds_id ($rrdfile_prefix)" unless $state_ds;
 				next unless $state_ds;
@@ -502,6 +552,12 @@ sub _dump_into_sql {
 			}
 		}
 	}
+
+	# Close DB
+	$dbh->disconnect();
+
+	# Move into place
+	rename($datafilename_tmp, $datafilename);
 }
 
 sub _write_new_service_configs {
