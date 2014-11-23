@@ -95,6 +95,7 @@ my %resolutions = (
 my %CONTENT_TYPES = (
 	"PNG" => "image/png",
 	"SVG" => "image/svg+xml",
+	"PDF" => "application/pdf",
 );
 
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
