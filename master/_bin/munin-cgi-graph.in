@@ -123,7 +123,14 @@ while (new CGI::Fast) {
 
 	# Only accept known formats
 	$format = uc($format);
-	$format = "PNG" unless $CONTENT_TYPES{$format};
+	if (! $CONTENT_TYPES{$format}) {
+		# We don't understand this format
+		print header(
+			-status => 404,
+			"X-Reason" => "invalid format $format",
+		);
+		next;
+	}
 
 	# Handle the "pinpoint" time
 	$time = "pinpoint" if $time =~ m/^pinpoint/;
