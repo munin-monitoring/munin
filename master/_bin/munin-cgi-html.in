@@ -250,6 +250,9 @@ while (new CGI::Fast) {
 		$comparison = $2;
 	}
 
+	my $graph_ext = url_param("graph_ext");
+	$graph_ext = "png" unless defined $graph_ext;
+
 	# Handle normal pages only if not aleady handled
 	goto RENDERING if $template_filename;
 
