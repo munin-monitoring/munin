@@ -102,7 +102,7 @@ certificate can be stored in the same file.
 
 =item B<tls_ca_certificate> <value>
 
-This directive sets the CA certificate to be used to verify the node's
+This directive sets the CA certificate to be used to verify the master's
 certificate, if tls_verify_certificate is set to C<yes>.  Default is
 @@CONFDIR@@/cacert.pem.
 
