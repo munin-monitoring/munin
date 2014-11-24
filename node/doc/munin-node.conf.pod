@@ -96,9 +96,10 @@ certificate can be stored in the same file.
 
 =item B<tls_certificate> <value>
 
-This directive sets the location of the TLS certificate to be used for
-TLS.  Default is @@CONFDIR@@/munin-node.pem.  The private key and
-certificate can be stored in the same file.
+This directive sets the location of the TLS certificate and optional
+intermediate CA certificates to be used for TLS.  Default is
+@@CONFDIR@@/munin-node.pem.  The private key and certificate can be
+stored in the same file.
 
 =item B<tls_ca_certificate> <value>
 
