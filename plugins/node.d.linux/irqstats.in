@@ -112,6 +112,16 @@ while (my $line = <$in>) {
 	# For numbered interrupts the format is set
 	$label = pop @data;
 	$type = pop @data;
+	# work around "MPIC \d" on powerpc
+	if ($type =~ "MPIC" && $label =~ s/^([12])\s+//) {
+	    $type .= " $1";;
+	}
+	# handle hwirq
+	if ($label =~ /^(\d+)\s+(.+)/) {
+	    $label = $1 eq $irq ? $2 : "$2 [$1]";
+	}
+	# handle level/edge
+	$label =~ s/^(Level|Edge)\s+//;
     } else {
 	# For named interrupts it's more confusing, slice and dice
 	# to divorce data from commentary
