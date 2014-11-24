@@ -1,5 +1,39 @@
 -*- text -*-
 
+munin-2.0.25, 2014-11-24
+
+-------
+Summary
+-------
+
+Bugfix release.
+
+Closes: GH:304, D:769415, D:770745, D:770746, D:770826
+
+------------------
+Detailed Changelog
+------------------
+
+Christoph Biedl (1):
+      p/irqstats: Improve generated labels
+
+Daniel Black (1):
+      ip/iostat_ios: also support /dev/xvdX devices
+
+Holger Levsen (1):
+      p/iostat_ios: also support /dev/vdX devices
+
+Picnic Pete (1):
+      Issue warning if no data
+
+Steve Schnepp (5):
+      m/Node: add [INFO] in a log
+      m/limits: remove warning about uninitialized
+      plugins/df_abs: fix the naming for regular devices
+      p/pgsql: Detect "rc" postgresql versions.
+      p/ping_: honor ping env variable
+
+
 munin-2.0.24, 2014-10-26
 
 -------
