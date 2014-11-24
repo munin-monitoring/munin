@@ -72,7 +72,7 @@ while (new CGI::Fast) {
 	}
 
 	# Short evaluate the GRAPH png pages
-	if ($path =~ m/-(day|week|month|year).png$/) {
+	if ($path =~ m/-(day|week|month|year).([a-z]+)$/) {
 		my $url = script_name() . "/../munin-cgi-graph" . path_info();
 		print header(
 			-status => 301,
@@ -81,6 +81,11 @@ while (new CGI::Fast) {
 		);
 		next;
 	}
+
+	my $graph_ext = url_param("graph_ext");
+	$graph_ext = "png" unless defined $graph_ext;
+	$graph_ext = "svg";
+
 
 	# Force either a trailing "/" or ".html" to enable simpler url handling: it is like in
 	# a subdir from the browser pov
@@ -177,7 +182,7 @@ while (new CGI::Fast) {
 			my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL ORDER BY g.name ASC");
 			my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ? ORDER BY n.name ASC");
 
-			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, undef);
+			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, undef, $graph_ext);
 			$template_params{NGROUPS} = scalar(@{$template_params{GROUPS}});
 		}
 
@@ -235,7 +240,7 @@ while (new CGI::Fast) {
 		my @services;
 		my ($_service) = $sth_cat->fetchrow_array;
 		while ($_service) {
-			push @services, _get_params_services_by_name($dbh, $_service, $time);
+# 			push @services, _get_params_services_by_name($dbh, $_service, $time, $graph_ext);
 			$_service = $sth_cat->fetchrow_array;
 		}
 		$template_params{SERVICES} = \@services;
@@ -317,14 +322,14 @@ while (new CGI::Fast) {
 
 			$template_params{CATEGORIES} = [];
 			while (my ($cat_name) = $sth_cat->fetchrow_array) {
-				push @{$template_params{CATEGORIES}}, _get_params_services_for_comparison($path, $dbh, $cat_name, $id);
+				push @{$template_params{CATEGORIES}}, _get_params_services_for_comparison($path, $dbh, $cat_name, $id, $graph_ext);
 			}
 		} else {
 			# Emit group template
 			$template_filename = 'munin-domainview.tmpl';
 
 			# Main page
-			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, $id);
+			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, $id, $graph_ext);
 			$template_params{NGROUPS} = scalar(@{$template_params{GROUPS}});
 
 			# Shows "[ d w m y ]"
@@ -363,7 +368,7 @@ while (new CGI::Fast) {
 
 		my $categories = [];
 		while (my ($_category_name) = $sth_category->fetchrow_array) {
-			push @$categories, _get_params_services($path, $dbh, $_category_name, undef, $id);
+			push @$categories, _get_params_services($path, $dbh, $_category_name, undef, $id, $graph_ext);
 		}
 
 		$template_params{CATEGORIES} = $categories;
@@ -400,7 +405,7 @@ while (new CGI::Fast) {
 		$template_params{PEERS} = [ map {
 			(my $name = basename($_->{"URLX"}, ".html")) =~ tr/_/ /;
 			{ NAME => $name, LINK => $multigraph ? ("../" . $_->{URLX}) : $_->{URLX}, }
-		} @{_get_params_services(dirname($path), $dbh, $graph_category, $graph_parent, $node_id)->{SERVICES}} ];
+		} @{_get_params_services(dirname($path), $dbh, $graph_category, $graph_parent, $node_id, $graph_ext)->{SERVICES}} ];
 		$template_params{LARGESET} = 1;
 		$template_params{INFO_OPTION} = 'Graphs in same category';
 
@@ -416,7 +421,7 @@ while (new CGI::Fast) {
 			# Emit node template for multigraphs
 			$template_filename = 'munin-nodeview.tmpl';
 
-			my @categories = (_get_params_services($path, $dbh, $graph_category, $graph_name, $node_id));
+			my @categories = (_get_params_services($path, $dbh, $graph_category, $graph_name, $node_id, $graph_ext));
 			$template_params{CATEGORIES} = \@categories;
 			$template_params{NCATEGORIES} = scalar(@categories);
 			$template_params{NAME} = $template_params{PATH}[-1]{'pathname'};
@@ -440,7 +445,7 @@ while (new CGI::Fast) {
 			my $epoch = "start_epoch=$epoch_start{$t}&stop_epoch=$epoch_now";
 			$service_template_params{"ZOOM$t"} = script_name() . "/dynazoom.html?cgiurl_graph=$cgi_graph_url" .
 				"&plugin_name=$path&size_x=800&size_y=400&$epoch";
-			$service_template_params{"IMG$t"} = $cgi_graph_url . "$path-$t.png";
+			$service_template_params{"IMG$t"} = $cgi_graph_url . "$path-$t.$graph_ext";
 		}
 
 		# template uses loop for no apparent reason
@@ -481,7 +486,7 @@ RENDERING:
 }
 
 sub _get_params_groups {
-	my ($path, $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $g_id) = @_;
+	my ($path, $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $g_id, $graph_ext) = @_;
 
 	my $sth_grp;
 	if (defined $g_id) {
@@ -499,7 +504,7 @@ sub _get_params_groups {
 	my $_sth_grp_data = $sth_grp->fetchall_arrayref;
 	foreach my $row (@$_sth_grp_data) {
 		my ($_g_id, $_name, $_path) = @$row;
-		my $_groups = _get_params_groups($path, $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $_g_id);
+		my $_groups = _get_params_groups($path, $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $_g_id, $graph_ext);
 		my $_compare_groups = scalar grep { defined($_->{'NCATEGORIES'}) && $_->{'NCATEGORIES'} } @$_groups;
 		push @$groups, {
 			NAME => $_name,
@@ -527,7 +532,7 @@ sub _get_params_groups {
 
 		my $categories = [];
 		while (my ($_category_name) = $sth->fetchrow_array) {
-			my $category = _get_params_services($path, $dbh, $_category_name, undef, $_n_id);
+			my $category = _get_params_services($path, $dbh, $_category_name, undef, $_n_id, $graph_ext);
 			$category->{URLX} = "$_path/" . "#" . $_category_name;
 			$category->{URL} = $category->{URLX}; # For category in overview
 			push @$categories, $category;
@@ -547,7 +552,7 @@ sub _get_params_groups {
 }
 
 sub _get_params_services_for_comparison {
-	my ($basepath, $dbh, $category_name, $grp_id) = @_;
+	my ($basepath, $dbh, $category_name, $grp_id, $graph_ext) = @_;
 
 	# Get all possible services with the specified category under the specified group
 	my $sth_srv = $dbh->prepare_cached(
@@ -581,7 +586,7 @@ sub _get_params_services_for_comparison {
 		$sth_node->execute($service_name, $grp_id);
 		while (my ($node_name, $node_url, $srv_url, $srv_label) = $sth_node->fetchrow_array) {
 			my $_srv_url = "$srv_url.html" if defined $srv_url;
-			my %_img_urls = map { ("CIMG$_" => script_name() . "/../munin-cgi-graph" . "/$srv_url-$_.png") } @times if defined $srv_url;
+			my %_img_urls = map { ("CIMG$_" => script_name() . "/../munin-cgi-graph" . "/$srv_url-$_.$graph_ext") } @times if defined $srv_url;
 			push @nodes, {
 				R_PATH => script_name(),
 				NODENAME => $node_name,
@@ -601,7 +606,7 @@ sub _get_params_services_for_comparison {
 # This is only called for category views, which start with the root URL,
 # so no need to handle basepath or multigraph parents for relative URLs
 sub _get_params_services_by_name {
-	my ($dbh, $service_name, $time) = @_;
+	my ($dbh, $service_name, $time, $graph_ext) = @_;
 
 	# TODO warning/critical state (use SUM sub-queries?)
 	# XXX this may be slow
@@ -625,7 +630,7 @@ sub _get_params_services_by_name {
 			NODENAME => $_node_name,
 			LABEL => $_service_title,
 			URLX => $_url . ($_subgraphs ? "/" : ".html"),
-			"CIMG$time" => script_name() . "/../munin-cgi-graph" . "/$_url-$time.png",
+			"CIMG$time" => script_name() . "/../munin-cgi-graph" . "/$_url-$time.$graph_ext",
 			"TIME$time" => 1,
 		};
 	}
@@ -637,7 +642,7 @@ sub _get_params_services_by_name {
 }
 
 sub _get_params_services {
-	my ($base_path, $dbh, $category_name, $multigraph_parent, $node_id) = @_;
+	my ($base_path, $dbh, $category_name, $multigraph_parent, $node_id, $graph_ext) = @_;
 
 	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, s.service_title as service_title, s.subgraphs as subgraphs, u.path AS url
 		FROM service s
@@ -654,7 +659,7 @@ sub _get_params_services {
 		# Skip unrelated graphs if in multigraph
 		next if $multigraph_parent and $_s_name !~ /^$multigraph_parent\./;
 
-		my %imgs = map { ("IMG$_" => script_name() . "/../munin-cgi-graph" . "/$_url-$_.png") } @times;
+		my %imgs = map { ("IMG$_" => script_name() . "/../munin-cgi-graph" . "/$_url-$_.$graph_ext") } @times;
 		push @$services, {
 			NAME => $_service_title,
 			URLX => substr($_url, 1 + length($base_path)) . ($_subgraphs ? "/" : ".html"),
