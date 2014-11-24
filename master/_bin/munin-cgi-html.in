@@ -467,7 +467,8 @@ RENDERING:
 		loop_context_vars => 1,
 	);
 
-	{
+	my $is_dump_enabled = url_param("dump");
+	if ($is_dump_enabled) {
 		use Data::Dumper;
 		local $Data::Dumper::Terse = 1;
 		local $Data::Dumper::Sortkeys = 1;
