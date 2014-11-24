@@ -753,3 +753,4 @@ sub header { return CGI::header(@_); }
 sub path_info { return CGI::path_info(@_); }
 sub url { return CGI::url(@_); }
 sub script_name { return CGI::script_name(@_); }
+sub url_param { return CGI::url_param(@_); }
