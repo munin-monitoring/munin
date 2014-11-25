@@ -1855,9 +1855,9 @@ sub expand_cdef {
         my $fieldname = munin_get_node_name($field);
         my $rrdname = &orig_to_cdef($service, $fieldname);
         if ($cdef =~ /\b$fieldname\b/) {
-            $max =~ s/([,=])$fieldname([,=]|$)/$1a$rrdname$2/g;
-            $min =~ s/([,=])$fieldname([,=]|$)/$1i$rrdname$2/g;
-            $avg =~ s/([,=])$fieldname([,=]|$)/$1g$rrdname$2/g;
+            $max =~ s/([,=])$fieldname(?=[,=]|$)/$1a$rrdname/g;
+            $min =~ s/([,=])$fieldname(?=[,=]|$)/$1i$rrdname/g;
+            $avg =~ s/([,=])$fieldname(?=[,=]|$)/$1g$rrdname/g;
         }
     }
 
