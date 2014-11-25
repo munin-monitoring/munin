@@ -176,9 +176,8 @@ sub _load_certificate {
 
     if ($self->{tls_cert} && -e $self->{tls_cert}) {
         if (defined $self->{tls_cert} and length $self->{tls_cert}) {
-	    if (!Net::SSLeay::CTX_use_certificate_file($self->{tls_context}, 
-                                                       $self->{tls_cert}, 
-                                                       &Net::SSLeay::FILETYPE_PEM)) {
+	    if (!Net::SSLeay::CTX_use_certificate_chain_file($self->{tls_context},
+	                                                     $self->{tls_cert})) {
 	        WARNING("Problem occurred when trying to read file with certificate \"$self->{tls_cert}\": $!. Continuing without certificate.");
 	    }
         }
