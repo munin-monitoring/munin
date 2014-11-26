@@ -240,7 +240,7 @@ while (new CGI::Fast) {
 		my @services;
 		my ($_service) = $sth_cat->fetchrow_array;
 		while ($_service) {
-# 			push @services, _get_params_services_by_name($dbh, $_service, $time, $graph_ext);
+			push @services, _get_params_services_by_name($dbh, $_service, $time, $graph_ext);
 			$_service = $sth_cat->fetchrow_array;
 		}
 		$template_params{SERVICES} = \@services;
