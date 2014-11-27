@@ -59,7 +59,7 @@ get_fieldname() {
 	dev="$1"
 	mnt="$2"
 	case "$dev" in
-		"/*" )
+		/* )
 			clean_fieldname $dev
 			;;
 		* )

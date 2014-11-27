@@ -105,7 +105,7 @@ sub filter {
     }
     if(defined($tmpnam)) {
         return 0 if ($tmpnam =~ /part\d+$/);
-        return 0 if ($tmpnam =~ /^\s*(?:sd|hd)[a-z]\d+\s*$/);
+        return 0 if ($tmpnam =~ /^\s*(?:sd|hd|x?vd)[a-z]\d+\s*$/);
     }
 
     return 1;
