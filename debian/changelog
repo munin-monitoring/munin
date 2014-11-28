@@ -1,7 +1,7 @@
 munin (2.0.25-1) unstable; urgency=medium
 
-  * New upstream bugfix release. (Closes: #769415, #770745, #770746, #770826),
-    see upstream ChaneLog for full list of changes.
+  * New upstream bugfix release, see upstream ChangeLog for full list of
+    changes. (Closes: #769415, #770745, #770746, #770826, #767017).
   * munin.README.Debian: Replace link to
     http://munin-monitoring.org/wiki/Documentation with one to the new
     http://guide.munin-monitoring.org/ which is better structured and also
