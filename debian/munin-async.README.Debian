@@ -41,7 +41,7 @@ cd .ssh
 ssh-keygen -q -N "" -f /var/lib/munin/.ssh/id_rsa
 cat /var/lib/munin/.ssh/id_rsa.pub
 
-Place the ssh public key in /var/lib/munin/.ssh) (on the remote machine)
+Place the ssh public key in /var/lib/munin-async/.ssh) (on the remote machine)
 
 mkdir /var/lib/munin-async/.ssh
 
@@ -83,7 +83,7 @@ To prevent your monitored server being compromised if someone manages to break
 into your munin collection server, you should edit the /var/lib/munin-
 async/.ssh/authorized_keys file and add
 
-no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty,no-user-rc,command="/usr/sbin/munin-async  --spooldir /var/lib/munin/spool --spoolfetch"
+no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty,no-user-rc,command="/usr/sbin/munin-async  --spooldir /var/lib/munin-async --spoolfetch"
 
 to the beginning of the relevant line. Additionally consider from="(remote machine IPs)".
 
