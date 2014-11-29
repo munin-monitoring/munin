@@ -99,6 +99,10 @@ my %CONTENT_TYPES = (
 	"PDF" => "application/pdf",
 	"EPS" => "application/postscript",
 	"PS"  =>  "application/postscript",
+
+	"CSV" => "text/csv",
+	"XML" => "text/xml",
+	"JSON" => "application/json",
 );
 
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
@@ -363,11 +367,10 @@ while (new CGI::Fast) {
 		@rrd_legend,
 	);
 
-	use RRDs;
-	RRDs::graph(
+	my $err = RRDs_graph_or_dump(
+		$format,
 		@rrd_cmd,
 	);
-	my $err = RRDs::error;
 	if ($err) {
 		INFO "@rrd_cmd";
 		ERROR "Error generating image: ". $err;
@@ -407,6 +410,125 @@ sub is_int {
 	my ($str) = @_;
 
 	return ($str =~ m/[0-9]+/);
+}
+
+sub escape_for_rrd {
+	my $text = shift;
+	return if not defined $text;
+	$text =~ s/\\/\\\\/g;
+	$text =~ s/:/\\:/g;
+	return $text;
+}
+
+sub RRDs_graph_or_dump {
+	use RRDs;
+
+	my $fileext = shift;
+	if ($fileext =~ m/PNG|SVG|EPS|PDF/) {
+	        DEBUG "[DEBUG] \n\nrrdtool graph '" . join("' \\\n\t'", @_) . "'\n";
+		return RRDs::graph(@_);
+	}
+
+	DEBUG "[DEBUG] RRDs_graph(fileext=$fileext)";
+	my $outfile = shift @_;
+
+	# Open outfile
+	DEBUG "[DEBUG] Open outfile($outfile)";
+	my $out_fh = new IO::File(">$outfile");
+
+	# Remove unknown args
+	my @xport;
+	while ( defined ( my $arg = shift @_ )) {
+		if ($arg eq "--start" || $arg eq "--end") {
+			push @xport, $arg;
+			push @xport, shift @_;
+			next;
+		}
+		if ($arg =~ m/^C?DEF:/) { push @xport, $arg; next; }
+
+		if ($arg =~ m/^(LINE|AREA|STACK)/) {
+			my ($type, $var, $legend) = split(/:/, $arg);
+
+			$type = "XPORT"; # Only 1 export type
+			$var =~ s/#.*//; # Remove optional color
+
+			# repaste..
+			push @xport, "$type:$var:$legend";
+
+			next;
+		}
+
+		# Ignore the arg
+	}
+	# Now we have to fetch the textual values
+        DEBUG "[DEBUG] \n\nrrdtool xport '" . join("' \\\n\t'", @xport) . "'\n";
+	my ($start, $end, $step, $nb_vars, $columns, $values) = RRDs::xport(@xport);
+	if ($fileext eq "CSV") {
+		print $out_fh '"epoch", "' . join('", "', @{ $columns } ) . "\"\n";
+		my $idx_value = 0;
+		for (my $epoch = $start; $epoch <= $end; $epoch += $step) {
+			print $out_fh "$epoch";
+			my $row = $values->[$idx_value++];
+			for my $value (@$row) {
+				print $out_fh "," . (defined $value ? $value : "");
+			}
+			print $out_fh "\n";
+		}
+	} elsif ($fileext eq "XML") {
+		print $out_fh "<xport>\n";
+		print $out_fh "    <meta>\n";
+		print $out_fh "        <start>$start</start>\n";
+		print $out_fh "        <step>$step</step>\n";
+		print $out_fh "        <end>$end</end>\n";
+		print $out_fh "        <rows>" . (scalar @$values) . "</rows>\n";
+		print $out_fh "        <columns>" . (scalar @$columns) . "</columns>\n";
+		print $out_fh "        <legend>\n";
+		for my $column ( @{ $columns } ) {
+			print $out_fh "            <entry>$column</entry>\n";
+		}
+		print $out_fh "        </legend>\n";
+		print $out_fh "    </meta>\n";
+		print $out_fh "    <data>\n";
+		my $idx_value = 0;
+		for (my $epoch = $start; $epoch <= $end; $epoch += $step) {
+			print $out_fh "        <row><t>$epoch</t>";
+			my $row = $values->[$idx_value++];
+			for my $value (@$row) {
+				print $out_fh "<v>" . (defined $value ? $value : 'NaN') . "</v>";
+			}
+			print $out_fh "</row>\n";
+		}
+		print $out_fh "    </data>\n";
+		print $out_fh "</xport>\n";
+	} elsif ($fileext eq "JSON") {
+		print $out_fh "{\n";
+		print $out_fh "    meta: { \n";
+		print $out_fh "        start: $start,\n";
+		print $out_fh "        step: $step,\n";
+		print $out_fh "        end: $end,\n";
+		print $out_fh "        rows: " . (scalar @$values) . ",\n";
+		print $out_fh "        columns: " . (scalar @$columns) . ",\n";
+		print $out_fh "        legend: [\n";
+		for my $column ( @{ $columns } ) {
+			print $out_fh "            \"$column\",\n";
+		}
+		print $out_fh "        ],\n";
+		print $out_fh "    }, \n";
+		print $out_fh "    data: [ \n";
+		my $idx_value = 0;
+		for (my $epoch = $start; $epoch <= $end; $epoch += $step) {
+			print $out_fh "        [ $epoch";
+			my $row = $values->[$idx_value++];
+			for my $value (@$row) {
+				print $out_fh ", " . (defined $value ? $value : '"NaN"');
+			}
+			print $out_fh " ],\n";
+		}
+		print $out_fh "    ], \n";
+		print $out_fh "}\n";
+	}
+
+	return RRDs::error();
 }
 
 # CGI in perl 5.20 is now seriously broken as it doesn't import into the namespace.
