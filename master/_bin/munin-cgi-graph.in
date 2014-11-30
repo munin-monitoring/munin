@@ -236,12 +236,11 @@ while (new CGI::Fast) {
 	my @rrd_gfx;
 	my @rrd_legend;
 
-	push @rrd_gfx, "COMMENT:           ";
-	push @rrd_gfx, "COMMENT:        Cur";
-	push @rrd_gfx, "COMMENT:        Min";
-	push @rrd_gfx, "COMMENT:        Avg";
-	push @rrd_gfx, "COMMENT:        Max";
-	push @rrd_gfx, "COMMENT:\\j";
+	push @rrd_gfx, "COMMENT: \\l";
+	push @rrd_gfx, "COMMENT:Cur\\t";
+	push @rrd_gfx, "COMMENT:Min\\t";
+	push @rrd_gfx, "COMMENT:Avg\\t";
+	push @rrd_gfx, "COMMENT:Max\\r";
 
 	my $lastupdated;
 
@@ -294,10 +293,10 @@ while (new CGI::Fast) {
 		push @rrd_def, "VDEF:vlst_$_rrdname=avg_$_rrdname,LAST";
 		push @rrd_def, "VDEF:v95p_$_rrdname=avg_$_rrdname,95,PERCENT";
 
-		push @rrd_gfx, "GPRINT:vlst_$_rrdname:$_printf" . "\\g";
-		push @rrd_gfx, "GPRINT:vmin_$_rrdname:$_printf" . "\\g";
-		push @rrd_gfx, "GPRINT:vavg_$_rrdname:$_printf" . "\\g";
-		push @rrd_gfx, "GPRINT:vmax_$_rrdname:$_printf" . "\\j";
+		push @rrd_gfx, "GPRINT:vlst_$_rrdname:$_printf" . "\\t";
+		push @rrd_gfx, "GPRINT:vmin_$_rrdname:$_printf" . "\\t";
+		push @rrd_gfx, "GPRINT:vavg_$_rrdname:$_printf" . "\\t";
+		push @rrd_gfx, "GPRINT:vmax_$_rrdname:$_printf" . "\\r";
 
 		$lastupdated = $_lastupdated if ! defined $lastupdated || $_lastupdated > $lastupdated;
 	} continue {
