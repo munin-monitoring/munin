@@ -214,6 +214,7 @@ while (new CGI::Fast) {
 			gc.value,
 			gd.value,
 			pf.value,
+			s.last_epoch,
 			'dummy' as dummy
 		FROM ds
 		LEFT OUTER JOIN ds_attr l ON l.id = ds.id AND l.name = 'label'
@@ -223,6 +224,7 @@ while (new CGI::Fast) {
 		LEFT OUTER JOIN ds_attr gc ON gc.id = ds.id AND gc.name = 'gfx:color'
 		LEFT OUTER JOIN ds_attr gd ON gd.id = ds.id AND gd.name = 'draw'
 		LEFT OUTER JOIN ds_attr pf ON pf.id = ds.id AND pf.name = 'printf'
+		LEFT OUTER JOIN state s ON s.id = ds.id AND s.type = 'ds'
 		WHERE ds.service_id = ?
 		ORDER BY ds.ordr ASC
 	");
@@ -241,8 +243,16 @@ while (new CGI::Fast) {
 	push @rrd_gfx, "COMMENT:        Max";
 	push @rrd_gfx, "COMMENT:\\j";
 
+	my $lastupdated;
+
 	my $field_number = 0;
-	while (my ($_rrdname, $_label, $_rrdfile, $_rrdfield, $_rrdcdef, $_color, $_drawtype, $_printf) = $sth->fetchrow_array()) {
+	while (my (
+			$_rrdname, $_label,
+			$_rrdfile, $_rrdfield, $_rrdcdef,
+			$_color, $_drawtype,
+			$_printf,
+			$_lastupdated,
+		) = $sth->fetchrow_array()) {
 		# Note that we do *NOT* provide any defaults for those
 		# $_rrdXXXX vars. Defaults will be done by munin-update.
 		#
@@ -288,10 +298,15 @@ while (new CGI::Fast) {
 		push @rrd_gfx, "GPRINT:vmin_$_rrdname:$_printf" . "\\g";
 		push @rrd_gfx, "GPRINT:vavg_$_rrdname:$_printf" . "\\g";
 		push @rrd_gfx, "GPRINT:vmax_$_rrdname:$_printf" . "\\j";
+
+		$lastupdated = $_lastupdated if ! defined $lastupdated || $_lastupdated > $lastupdated;
 	} continue {
 		# Move to here so it's always executed
 		$field_number ++;
 	}
+
+	my $last_update_str = escape_for_rrd(scalar localtime($lastupdated));
+	push @rrd_gfx, "COMMENT:Last update\\: $last_update_str\\r";
 
 	# Send the HTTP Headers
 	print header(
@@ -420,7 +435,7 @@ sub escape_for_rrd {
 	return $text;
 }
 
-sub RRDs_graph_or_dump {
+/bin/bash: q: command not found
 	use RRDs;
 
 	my $fileext = shift;
