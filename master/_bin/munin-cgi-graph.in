@@ -98,7 +98,7 @@ my %CONTENT_TYPES = (
 
 	"PDF" => "application/pdf",
 	"EPS" => "application/postscript",
-	"PS"  =>  "application/postscript",
+	"PS"  => "application/postscript",
 
 	"CSV" => "text/csv",
 	"XML" => "text/xml",
