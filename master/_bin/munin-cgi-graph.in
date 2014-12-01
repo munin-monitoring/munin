@@ -434,7 +434,7 @@ sub escape_for_rrd {
 	return $text;
 }
 
-/bin/bash: q: command not found
+sub RRDs_graph_or_dump {
 	use RRDs;
 
 	my $fileext = shift;
