@@ -386,7 +386,7 @@ while (new CGI::Fast) {
 		@rrd_cmd,
 	);
 	if ($err) {
-		INFO "@rrd_cmd";
+		INFO "'" . join("' '", @rrd_cmd) . "'";
 		ERROR "Error generating image: ". $err;
 	};
 
@@ -542,7 +542,8 @@ sub RRDs_graph_or_dump {
 		print $out_fh "}\n";
 	}
 
-	return RRDs::error();
+	my $rrd_error = RRDs::error();
+	return $rrd_error;
 }
 
 # CGI in perl 5.20 is now seriously broken as it doesn't import into the namespace.
