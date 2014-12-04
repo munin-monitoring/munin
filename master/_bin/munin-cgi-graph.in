@@ -396,7 +396,7 @@ while (new CGI::Fast) {
 		@rrd_cmd,
 	);
 	if ($err) {
-		INFO "'" . join("' '", @rrd_cmd) . "'";
+		INFO "'" . join("' \\\n'", @rrd_cmd) . "'";
 		ERROR "Error generating image: ". $err;
 	};
 
