@@ -13,7 +13,7 @@ No configuration
 
 =head2 DESCRIPTION
 
-This will monitor the cpu usage on your server.  It measures the amout
+This will monitor the cpu usage on your server.  It measures the amount
 of time spent on user requests, system requests, in iowait, and
 finally in idle.  It uses /usr/bin/iostat, which is usually installed.
 

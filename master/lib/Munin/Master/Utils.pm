@@ -1493,7 +1493,7 @@ sub munin_get_field_order
 	    if !grep m[^\Q$fieldname\E(?:=|$)], @$result;;
     }
 
-    # We have seen some occurances of redundance in the graph_order
+    # We have seen some occurrences of redundance in the graph_order
     # due to plugin bugs and so on.  This make process_service
     # generate rrd commands with multiple definitions of the same
     # data.  SO: Make sure there is no redundance in the order.

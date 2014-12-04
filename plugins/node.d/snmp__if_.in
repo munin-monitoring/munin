@@ -31,11 +31,11 @@ information.
 
 =head1 INTERPRETATION
 
-The graph shows a stright forward "bits per second" incomming and
-outgoing thruput.  "Incomming" is towards the monitored device.
+The graph shows a stright forward "bits per second" incoming and
+outgoing thruput.  "Incoming" is towards the monitored device.
 
 Note: The internal representation of the speeds is in bytes
-pr. second.  The plugin multiplies everyting by 8 to get bits
+pr. second.  The plugin multiplies everything by 8 to get bits
 pr. second.
 
 =head1 MIB INFORMATION
@@ -199,7 +199,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 
 	$warn = $speed/8;
 
-	# Warn at 1/8th of actuall speed?  Or just remove warning?
+	# Warn at 1/8th of actual speed?  Or just remove warning?
 	# Tempted to set warning at 80%. 80% over 5 minutes is pretty
 	# busy.
 

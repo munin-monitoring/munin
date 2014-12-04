@@ -232,7 +232,7 @@ while (new CGI::Fast) {
 		$comparison = $2;
 	}
 
-	# Handle normal pages only if not aleady handled
+	# Handle normal pages only if not already handled
 	goto RENDERING if $template_filename;
 
 	# Remove an eventual [/index].html

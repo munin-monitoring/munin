@@ -7,7 +7,7 @@ package Munin::Master::GraphOld;
 This is Munin::Master::GraphOld, a package shell to make munin-graph
 modular (so it can loaded persistently in munin-cgi-graph for example)
 without making it object oriented yet.  The non "old" module will
-feature propper object orientation like munin-update and will have to
+feature proper object orientation like munin-update and will have to
 wait until later.
 
 Copyright (C) 2002-2010 Jimmy Olsen, Audun Ytterdal, Kjell Magne
@@ -97,7 +97,7 @@ my $screen         = 0;
 my $force_run_as_root = 0;
 my $conffile       = $Munin::Common::Defaults::MUNIN_CONFDIR . "/munin.conf";
 my $libdir         = $Munin::Common::Defaults::MUNIN_LIBDIR;
-# Note: Nothing by default is more convenient and elliminates code while
+# Note: Nothing by default is more convenient and eliminates code while
 # for cgi graphing - but it breaks how munin-graph expected stuff to work.
 # I think.
 my %draw           = (
@@ -116,7 +116,7 @@ my ($size_x, $size_y, $step, $full_size_mode, $only_graph);
 my ($lower_limit, $upper_limit);
 
 my %PALETTE;    # Hash of available palettes
-my @COLOUR;     # Array of actuall colours to use
+my @COLOUR;     # Array of actual colours to use
 
 {
     no warnings;
@@ -1145,7 +1145,7 @@ sub process_service {
 		$colour = $COLOUR[$1 % @COLOUR];
 	}
 	
-	# Select a default colour if no explict one
+	# Select a default colour if no explicit one
 	$colour ||= ($single_value) ? $single_colour : $COLOUR[$field_count % @COLOUR];
 
         # colour needed for transparent predictions and trends

@@ -54,7 +54,7 @@ use IPC::Open3;
 #   Longest plugin execution time (lifetime)
 #   Longest plugin execution time last 5 minutes
 #
-# Plugin magic markers associated with this extention:
+# Plugin magic markers associated with this extension:
 # #%# supportedintervals=<value(s)>
 #     Value syntax: Single: <n>, range: <n-m>, enumeration: <n,m>
 #     Or combinations of the above. Postfixes m(inutes),h(ours)

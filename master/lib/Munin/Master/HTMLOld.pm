@@ -8,7 +8,7 @@ package Munin::Master::HTMLOld;
 This is Munin::Master::HTMLOld, a minimal package shell to make
 munin-html modular (so it can loaded persistently in
 munin-fastcgi-graph for example) without making it object oriented
-yet.  The non-"old" module will feature propper object orientation
+yet.  The non-"old" module will feature proper object orientation
 like munin-update and will have to wait until later.
 
 

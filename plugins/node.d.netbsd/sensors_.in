@@ -91,7 +91,7 @@ END {
 	    ;;
 	sensors_fans)
             echo 'graph_title Temperatures'
-	    echo 'graph_vlabel deg Celcius'
+	    echo 'graph_vlabel deg Celsius'
 	    echo 'graph_args --base 1000 -l 0'
 	    /usr/sbin/envstat -r | awk '
 BEGIN { p=0 }

@@ -138,7 +138,7 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_vlabel Errors in (-) / out (+) per \${graph_period}\n";
     print "graph_category network\n";
     print "graph_info This graph shows all kinds of errors for the \"$alias\" network interface.$extrainfo\n";
-    print "send.info Number of unsuccessfull send/receive operations (errors) on this interface.\n";
+    print "send.info Number of unsuccessful send/receive operations (errors) on this interface.\n";
     print "recv.label recv\n";
     print "recv.type DERIVE\n";
     print "recv.graph no\n";

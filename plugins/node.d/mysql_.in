@@ -724,9 +724,9 @@ $graphs{network_traffic} = {
 	},
     },
     data_sources => [
-	{name => 'Bytes_received', label => 'Bytes transfered',
+	{name => 'Bytes_received', label => 'Bytes transferred',
 				   graph => 'no'},
-	{name => 'Bytes_sent',     label    => 'Bytes transfered',
+	{name => 'Bytes_sent',     label    => 'Bytes transferred',
 				   negative => 'Bytes_received'},
     ],
 };
@@ -1389,7 +1389,7 @@ sub update_master {
 	$sth->execute();
     };
     if ($@) {
-	# SHOW MASTER LOGS failed becuase binlog is not enabled
+	# SHOW MASTER LOGS failed because binlog is not enabled
 	return if $@ =~ /You are not using binary logging/;
 	die $@;
     }
@@ -1506,7 +1506,7 @@ sub parse_innodb_status {
 
 # This regular expression handles the different formating of 64-bit
 # integers in different versions of the innodb engine. Either two
-# decimal 32-bit integers seperated by a space, or a single
+# decimal 32-bit integers separated by a space, or a single
 # hexadecimal 64-bit integer.
 my $innodb_bigint_rx = qr{([[a-fA-F\d]+)(?: (\d+))?};
 

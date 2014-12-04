@@ -24,7 +24,7 @@ The following environment variables are used
              used.
  dev_$dev  - monitoring device for one drive, e.g. twe0
 
-If the "smartctl" enviroment variable is not set the plugin will
+If the "smartctl" environment variable is not set the plugin will
 search your $PATH, /usr/bin, /usr/sbin, /usr/local/bin and
 /usr/local/sbin for a file called "smartctl", and use that.
 

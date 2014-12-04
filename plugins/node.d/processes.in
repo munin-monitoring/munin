@@ -259,7 +259,7 @@ if [ "$1" = "config" ]; then
     fi
 
     if [ "$OPERSYS" != "SunOS" ]; then
-	# Not using 'graph_total' due to backwards compability. SunOS uses 'total'.
+	# Not using 'graph_total' due to backwards compatibility. SunOS uses 'total'.
         #echo 'graph_total total'
         echo "processes.label total"
         echo "processes.draw LINE1"

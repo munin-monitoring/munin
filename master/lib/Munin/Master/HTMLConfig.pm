@@ -553,7 +553,7 @@ sub generate_service_templates {
 
             # This call is to make sure field settings are copied
             # for aliases, .stack, et al. Todo: put that part of
-            # munin_get_rrd_filename into its own functino.
+            # munin_get_rrd_filename into its own function.
             munin_get_rrd_filename($f, $path);
         }
 

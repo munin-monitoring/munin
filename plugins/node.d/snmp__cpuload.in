@@ -96,7 +96,7 @@ graph_vlabel %
 graph_info This graph shows the CPU load on the system.
 EOC
 	foreach my $cpu (keys %cpus) {
-		# CPU #1 will have $fieldname "cpu" to retain compatability with
+		# CPU #1 will have $fieldname "cpu" to retain compatibility with
 		# old snmp_cpuload plugin.
 		my $cpun = $cpu;
 		$cpun = '' if $cpun == 1;

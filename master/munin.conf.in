@@ -92,7 +92,7 @@ includedir @@CONFDIR@@/munin-conf.d
 #
 #rrdcached_socket /var/run/rrdcached.sock
 
-# Drop somejuser@fnord.comm and anotheruser@blibb.comm an email everytime
+# Drop somejuser@fnord.comm and anotheruser@blibb.comm an email every time
 # something changes (OK -> WARNING, CRITICAL -> OK, etc)
 #contact.someuser.command mail -s "Munin notification" somejuser@fnord.comm
 #contact.anotheruser.command mail -s "Munin notification" anotheruser@blibb.comm
@@ -117,7 +117,7 @@ includedir @@CONFDIR@@/munin-conf.d
 # [fay.foo.com]
 #       address fay
 #
-## IPv6 host. note that the ip adress has to be in brackets
+## IPv6 host. note that the ip address has to be in brackets
 # [ip6.foo.com]
 #       address [2001::1234:1]
 #

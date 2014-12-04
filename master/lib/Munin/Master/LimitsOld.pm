@@ -6,7 +6,7 @@ package Munin::Master::LimitsOld;
 This is Munin::Master::LimitsOld, a minimal package shell to make
 munin-limits modular (so it can be loaded persistently in a daemon for
 example) without making it object oriented yet.  The non-'old' module
-will feature propper object orientation like munin-update and will
+will feature proper object orientation like munin-update and will
 have to wait until later.
 
 
@@ -110,7 +110,7 @@ sub limits_startup {
     @always_send = qw{ok warning critical unknown} if $force;
 
     munin_readconfig_base($conffile);
-    # XXX: check if it does actualy need that part
+    # XXX: check if it does actually need that part
     $config = munin_readconfig_part('datafile', 0);
 }
 

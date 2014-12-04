@@ -1,7 +1,7 @@
 # note the policy causing each warning, so they can be turned off more easily
 verbose  = [%p] %m at %f line %l, near '%r'\n
 
-# no warnings if non-existant policies are mentioned in the config.
+# no warnings if non-existent policies are mentioned in the config.
 profile-strictness = quiet
 
 ### Turn off policies ##########################################################

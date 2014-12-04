@@ -79,7 +79,7 @@ BEGIN {
     TEMPS = "";
     POWER = "";
     CFANS = "graph_title Fan speeds based on IPMI\ngraph_vlabel RPM\ngraph_category Sensors\n";
-    CTEMPS = "graph_title Machine temperature based on IPMI\ngraph_vlabel Degrees celcius\ngraph_category Sensors\n";
+    CTEMPS = "graph_title Machine temperature based on IPMI\ngraph_vlabel Degrees celsius\ngraph_category Sensors\n";
     CPOWER = "graph_title Power usage based on IPMI\ngraph_vlabel W\ngraph_category Sensors\n";
 }
 

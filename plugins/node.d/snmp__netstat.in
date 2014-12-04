@@ -80,7 +80,7 @@ my @tcpStates = (
 	[ 0, 'lastAck',     'Connections waiting for an acknowledgment of the termination request previously sent to the remote TCP (which includes an acknowledgment of its connection termination request).' ],
 	[ 0, 'closing',     'Connections waiting for a termination request acknowledgment from the remote TCP.' ],
 	[ 0, 'timeWait',    'Connections waiting for enough time to pass to be sure the remote TCP received the acknowledgment of its termination request.' ],
-	[ 0, 'deleteTCP',   'Connections terminated by a SNMP Managment Station (put)' ]
+	[ 0, 'deleteTCP',   'Connections terminated by a SNMP Management Station (put)' ]
 );
 
 if (defined $ARGV[0] and $ARGV[0] eq 'snmpconf') {
