@@ -69,7 +69,7 @@ SIGKILL
 SIGTERM
 snmp
 SNMP
-snmpauthpassword
+snmpauthpass
 snmpauthprotocol
 snmpauto
 snmpcommunity

@@ -1,6 +1,8 @@
 #!@@PERL@@ -w
 # -*- perl -*-
 
+=encoding utf8
+
 =head1 NAME
 
 bind9_rndc - Plugin to monitor usage of bind 9 servers using rndc stats

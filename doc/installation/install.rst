@@ -1,44 +1,39 @@
+.. _installation:
+
 ==================
  Installing Munin
 ==================
 
-With open source software, you can choose to install binary packages
-or install from source-code. To install a package or install from
-source is a matter of personal taste. If you don't know which method
-too choose read the whole document and choose the method you are most
-comfortable with.
+Due to :ref:`Munin's Architecture <architecture-index>` you have to
+install two different software packages depending on the role,
+that the machine will play. 
 
-Master and node
-===============
-
-Munin is split into two distinct roles.
-
-Node
-----
-
-The "munin node" is a daemon which runs on all servers being
-monitored.
-
-
-Master
-------
-
-The "munin master" connects to all munin nodes, collects data, and
-stores it in `RRD <http://oss.oetiker.ch/rrdtool/>`_
-
-You will need to install "munin-master" on the server which will
+You will need to install "munin-master" on the machine that will
 collect data from all nodes, and graph the results. When starting with
-munin, it should be enough to install the munin master on one server.
+Munin, it should be enough to install the Munin master on one server.
 
-On the munin master, you will need a web server capable of running CGI
-or FastCGI. Apache HTTD should be suitable. Also reported to be
+On the Munin master, you will need a web server capable of running CGI
+or FastCGI. Apache HTTPD should be suitable. Also reported to be
 working is nginx and lighttpd.
+
+Install "munin-node" on the machines that shall be monitored by Munin.
+
 
 Source or packages?
 ===================
 
+With open source software, you can choose to install binary packages
+or install from source-code.
+
+We `strongly` recommend a packaged install, as the source distribution isn't as
+tested as the packaged one. The current state of the packages is so
+satisfactory, that even the developers use them instead.
+
 Installing Munin on most relevant operating systems can usually be
 done with with the systems package manager, typical examples being:
+
+Installing Munin from a package
+===============================
 
 FreeBSD
 -------
@@ -83,11 +78,26 @@ access to later versions of Munin.
 RedHat / CentOS / Fedora
 ------------------------
 
-At time of writing, only the 1.x version of munin is available in
-`EPEL
-<http://dl.fedoraproject.org/pub/epel/6/SRPMS/repoview/munin.html>`_.
+Current versions are available at `EPEL <https://fedoraproject.org/wiki/EPEL#What_packages_and_versions_are_available_in_EPEL.3F>`_.
 
-If you want 2.x, your best option is probably to install from source.
+In order to install Munin type
+
+.. code-block:: bash
+
+   sudo yum install munin-node
+
+on all nodes, and
+
+.. code-block:: bash
+
+   sudo yum install munin
+
+on the master.
+
+You will have to enable the services in systemd to get them up and running.
+
+Likely you will have to fix SELinux issues when using 3rd-Party plugins and SELinux active and set to *enforcing mode* on the Munin node.
+In case you get competent and friendly support on `SELinux mailinglist <https://admin.fedoraproject.org/mailman/listinfo/selinux>`_.
 
 Other systems
 -------------
@@ -144,7 +154,7 @@ Running make
 
 There are make targets for node, master, documentation and man files.
 Generally you want to install everything on the master, and just the
-node and plugiuns on the nodes.
+node and plugins on the nodes.
 
 - Edit Makefile.config to suit your needs.
 

@@ -219,6 +219,17 @@ sub _create_self_aware_worker_exception_handler {
     };
 }
 
+sub _get_order {
+	my ($key, $array_as_string) = @_;
+	my @array = split(/ +/, $array_as_string);
+	for(my $idx = 0; $idx < scalar @array; $idx++) {
+		if ($array[$idx] eq $key) { return $idx; }
+	}
+
+	# Not found
+	return scalar @array;
+}
+
 sub _get_last_insert_id {
 	my ($dbh) = @_;
 	return $dbh->last_insert_id("", "", "", "");
@@ -233,6 +244,7 @@ sub _get_url_from_path {
 sub _dump_conf_node_into_sql {
 	my ($node, $grp_id, $path, $dbh, $sth_node, $sth_node_attr,
 		$sth_service, $sth_service_attr,
+		$sth_service_category,
 		$sth_ds, $sth_ds_attr,
 		$sth_url) = @_;
 
@@ -276,8 +288,12 @@ sub _dump_conf_node_into_sql {
 				# graph config
 
 				# Category names should not be case sensitive. Store them all in lowercase.
-				$value = lc($value) if $args[0] eq 'graph_category';
-				$sth_service_attr->execute($service_id, $args[0], $value);
+				if ($attr->[0] eq 'graph_category') {
+						$attr->[1] = lc($attr->[1]);
+						$sth_service_category->execute($service_id, $attr->[1]);
+				} else {
+						$sth_service_attr->execute($service_id, $args[0], $value);
+				}
 			} elsif (2 == scalar @args) {
 				# field config
 				my $data_source = $args[0];
@@ -299,9 +315,10 @@ sub _dump_conf_node_into_sql {
 }
 
 sub _dump_groups_into_sql {
-	my ($groups, $p_id, $path, $dbh, $sth_grp, $sth_grp_attr,
+	my ($groups, $p_id, $path, $dbh, $sth_grp,
 		$sth_node, $sth_node_attr,
 		$sth_service, $sth_service_attr,
+		$sth_service_category,
 		$sth_ds, $sth_ds_attr,
 		$sth_url) = @_;
 
@@ -322,14 +339,16 @@ sub _dump_groups_into_sql {
 			_dump_conf_node_into_sql($node, $id, $grp_path, $dbh,
 				$sth_node, $sth_node_attr,
 				$sth_service, $sth_service_attr,
+				$sth_service_category,
 				$sth_ds, $sth_ds_attr,
 				$sth_url);
 		}
 
 		_dump_groups_into_sql($groups->{$grp_name}{groups}, $id, $grp_path, $dbh,
-			$sth_grp, $sth_grp_attr,
+			$sth_grp,
 			$sth_node, $sth_node_attr,
 			$sth_service, $sth_service_attr,
+			$sth_service_category,
 			$sth_ds, $sth_ds_attr,
 			$sth_url);
 	}
@@ -339,54 +358,54 @@ sub _dump_into_sql {
 	my ($self) = @_;
 
 	my $datafilename = $config->{dbdir}."/datafile.sqlite";
-	my $datafilename_tmp = "$datafilename.tmp.$$";
-	DEBUG "[DEBUG] Writing sql to $datafilename";
+	my $datafilename_tmp = $config->{dbdir}."/.datafile.$$.sqlite";
+	DEBUG "[DEBUG] Writing sql to $datafilename_tmp";
 
 	use DBI;
 	my $dbh = DBI->connect("dbi:SQLite:dbname=$datafilename_tmp","","") or die $DBI::errstr;
-	$dbh->do("PRAGMA synchronous = 0");
 
-	# <helmut> halves io bandwidth at the expense of dysfunctional rollback
-	# We do not care for rollback yet
+	# We still use the temp file trick
+	$dbh->do("PRAGMA synchronous = 0");
 	$dbh->do("PRAGMA journal_mode = OFF");
 
 	# Create DB
-	$dbh->do("CREATE TABLE param (name VARCHAR PRIMARY KEY, value VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS param (name VARCHAR PRIMARY KEY, value VARCHAR)");
 	my $sth_param = $dbh->prepare('INSERT INTO param (name, value) VALUES (?, ?)');
 
-	$dbh->do("CREATE TABLE grp (id INTEGER PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE TABLE grp_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX pk_grp_attr ON grp_attr (id, name)");
-	$dbh->do("CREATE INDEX r_g_grp ON grp (p_id)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS grp (id INTEGER PRIMARY KEY, p_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE INDEX IF NOT EXISTS r_g_grp ON grp (p_id)");
 	my $sth_grp = $dbh->prepare('INSERT INTO grp (name, p_id, path) VALUES (?, ?, ?)');
-	my $sth_grp_attr = $dbh->prepare('INSERT INTO grp_attr (id, name, value) VALUES (?, ?, ?)');
 
-	$dbh->do("CREATE TABLE node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE TABLE node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX pk_node_attr ON node_attr (id, name)");
-	$dbh->do("CREATE INDEX r_n_grp ON node (grp_id)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS node (id INTEGER PRIMARY KEY, grp_id INTEGER REFERENCES grp(id), name VARCHAR, path VARCHAR)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS node_attr (id INTEGER REFERENCES node(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_node_attr ON node_attr (id, name)");
+	$dbh->do("CREATE INDEX IF NOT EXISTS r_n_grp ON node (grp_id)");
 	my $sth_node = $dbh->prepare('INSERT INTO node (grp_id, name, path) VALUES (?, ?, ?)');
 	my $sth_node_attr = $dbh->prepare('INSERT INTO node_attr (id, name, value) VALUES (?, ?, ?)');
 
-	$dbh->do("CREATE TABLE service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE TABLE service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX pk_service_attr ON service_attr (id, name)");
-	$dbh->do("CREATE INDEX r_s_node ON service (node_id)");
-	my $sth_service = $dbh->prepare('INSERT INTO service (node_id, name, path) VALUES (?, ?, ?)');
+	$dbh->do("CREATE TABLE IF NOT EXISTS service (id INTEGER PRIMARY KEY, node_id INTEGER REFERENCES node(id), name VARCHAR, path VARCHAR, service_title VARCHAR, graph_info VARCHAR, subgraphs INTEGER)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS service_attr (id INTEGER REFERENCES service(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_service_attr ON service_attr (id, name)");
+	$dbh->do("CREATE INDEX IF NOT EXISTS r_s_node ON service (node_id)");
+	my $sth_service = $dbh->prepare('INSERT INTO service (node_id, name, path, service_title, graph_info, subgraphs) VALUES (?, ?, ?, ?, ?, ?)');
 	my $sth_service_attr = $dbh->prepare('INSERT INTO service_attr (id, name, value) VALUES (?, ?, ?)');
+	$dbh->do("CREATE TABLE IF NOT EXISTS service_categories (id INTEGER REFERENCES service(id), category VARCHAR NOT NULL, PRIMARY KEY (id,category))");
+	my $sth_service_category = $dbh->prepare('INSERT INTO service_categories (id, category) VALUES (?, ?)');
 
-	$dbh->do("CREATE TABLE ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
+	$dbh->do("CREATE TABLE IF NOT EXISTS ds (id INTEGER PRIMARY KEY, service_id INTEGER REFERENCES service(id), name VARCHAR, path VARCHAR,
+		type VARCHAR DEFAULT 'GAUGE',
+		ordr INTEGER DEFAULT 0,
 		unknown INTEGER DEFAULT 0, warning INTEGER DEFAULT 0, critical INTEGER DEFAULT 0)");
-	$dbh->do("CREATE TABLE ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX pk_ds_attr ON ds_attr (id, name)");
-	$dbh->do("CREATE INDEX r_d_service ON ds (service_id)");
-	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path) VALUES (?, ?, ?)');
+	$dbh->do("CREATE TABLE IF NOT EXISTS ds_attr (id INTEGER REFERENCES ds(id), name VARCHAR, value VARCHAR)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_ds_attr ON ds_attr (id, name)");
+	$dbh->do("CREATE INDEX IF NOT EXISTS r_d_service ON ds (service_id)");
+	my $sth_ds = $dbh->prepare('INSERT INTO ds (service_id, name, path, ordr) VALUES (?, ?, ?, ?)');
 	my $sth_ds_attr = $dbh->prepare('INSERT INTO ds_attr (id, name, value) VALUES (?, ?, ?)');
+	my $sth_ds_type = $dbh->prepare('UPDATE ds SET type = ? where id = ?');
 
 	# Table that contains all the URL paths, in order to have a very fast lookup
-	$dbh->do("CREATE TABLE url (id INTEGER, type VARCHAR, path VARCHAR)");
-	$dbh->do("CREATE UNIQUE INDEX pk_url ON url (type, id)");
-	$dbh->do("CREATE UNIQUE INDEX u_url_path ON url (path)");
+	$dbh->do("CREATE TABLE IF NOT EXISTS url (id INTEGER NOT NULL, type VARCHAR NOT NULL, path VARCHAR NOT NULL, PRIMARY KEY(id,type))");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS u_url_path ON url (path)");
 	my $sth_url = $dbh->prepare('INSERT INTO url (id, type, path) VALUES (?, ?, ?)');
 	$sth_url->{RaiseError} = 1;
 
@@ -397,12 +416,12 @@ sub _dump_into_sql {
 	#
 	# Note, this table is referenced by composite key (type,id) in order to be
 	# able to have any kind of states. Such as whole node states for example.
-	$dbh->do("CREATE TABLE state (id INTEGER, type VARCHAR,
+	$dbh->do("CREATE TABLE IF NOT EXISTS state (id INTEGER, type VARCHAR,
 		last_epoch INTEGER, last_value VARCHAR,
 		prev_epoch INTEGER, prev_value VARCHAR,
 		alarm VARCHAR
 		)");
-	$dbh->do("CREATE UNIQUE INDEX pk_state ON url (type, id)");
+	$dbh->do("CREATE UNIQUE INDEX IF NOT EXISTS pk_state ON state (type, id)");
 	my $sth_state = $dbh->prepare('INSERT INTO state (id, type, last_epoch, last_value, prev_epoch, prev_value) VALUES (?, ?, ?, ?, ?, ?)');
 	$sth_state->{RaiseError} = 1;
 
@@ -416,9 +435,10 @@ sub _dump_into_sql {
 
 	# Recursively create groups
 	_dump_groups_into_sql($self->{group_repository}{groups}, undef, "", $dbh,
-		$sth_grp, $sth_grp_attr,
+		$sth_grp,
 		$sth_node, $sth_node_attr,
 		$sth_service, $sth_service_attr,
+		$sth_service_category,
 		$sth_ds, $sth_ds_attr,
 		$sth_url);
 
@@ -461,35 +481,69 @@ sub _dump_into_sql {
 			# to make it easier for CGI html to work with.
 			(my $_service = $service) =~ tr!.!/!;
 
-			$sth_service->execute($node_id, $service, "$host:$service");
+			my $graph_title = delete $self->{service_configs}{$host}{global}{graph_title};
+			my $graph_info = delete $self->{service_configs}{$host}{global}{graph_info};
+			# Check for multigraphs
+			my $subgraphs = scalar grep /^$service\..+/, keys %{$self->{service_configs}{$host}{data_source}};
+			$sth_service->execute($node_id, $service, "$host:$service", $graph_title, $graph_info, $subgraphs);
 			my $service_id = _get_last_insert_id($dbh);
 			$sth_url->execute($service_id, "service", _get_url_from_path("$host:$_service"));
 
-			# Check for multigraphs
-			my $subgraphs = scalar grep /^$service\..+/, keys %{$self->{service_configs}{$host}{data_source}};
-			$sth_service_attr->execute($service_id, 'subgraphs', $subgraphs) if $subgraphs;
-
+			my $graph_order;
 			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
+				my ($attr_key, $attr_value) = @$attr;
 				# Category names should not be case sensitive. Store them all in lowercase.
-				$attr->[1] = lc($attr->[1]) if $attr->[0] eq 'graph_category';
-
-				$sth_service_attr->execute($service_id, $attr->[0], $attr->[1]);
-			}
-			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
-				$sth_ds->execute($service_id, $data_source, "$host:$service.$data_source");
-				my $ds_id = _get_last_insert_id($dbh);
-				$sth_url->execute($ds_id, "ds", _get_url_from_path("$host:$_service:$data_source"));
-				for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
-					$sth_ds_attr->execute($ds_id, $attr, $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr});
+				if ($attr_key eq 'graph_category') {
+					$attr_value = lc($attr_value);
+					$sth_service_category->execute($service_id, $attr_value);
+				} else {
+					$sth_service_attr->execute($service_id, $attr_key, $attr_value);
 				}
 
-				# Get the states for the DS
-				# XXX - Do *NOT* look at the following code. It will haunt you forever.
+				# Extract special vars
+				if ($attr_key eq 'graph_order') {
+					$graph_order = $attr_value;
+				}
+			}
+
+			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
+				my $order = _get_order($data_source, $graph_order);
+				$sth_ds->execute($service_id, $data_source, "$host:$service.$data_source", $order);
+				my $ds_id = _get_last_insert_id($dbh);
+				$sth_url->execute($ds_id, "ds", _get_url_from_path("$host:$_service:$data_source"));
+
+				my $ds_type;
+				my $gfx_color;
+				for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
+					my $value = $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr};
+					$sth_ds_attr->execute($ds_id, $attr, $value);
+
+					$ds_type = uc($value) if $attr eq "type";
+					$gfx_color = $value if $attr eq "color";
+				}
+
+				# Clean ds_type
+				$ds_type = "GAUGE" unless $ds_type && $ds_type =~ /^(DERIVE|COUNTER|ABSOLUTE)$/;
+
+				# Update the DS type. Could be done beforehand,
+				# but we don't really care about perf yet
+				$sth_ds_type->execute($ds_type, $ds_id);
+
 				my $rrdfile_prefix = $config->{dbdir} . "/$url-$service-$data_source";
-				my $state_ds = $state->{value}{"$rrdfile_prefix-g.rrd:42"};
-				$state_ds  ||= $state->{value}{"$rrdfile_prefix-d.rrd:42"};
-				$state_ds  ||= $state->{value}{"$rrdfile_prefix-c.rrd:42"};
-				$state_ds  ||= $state->{value}{"$rrdfile_prefix-a.rrd:42"};
+
+				my $rrd_file_type = lc(substr($ds_type, 0, 1));
+				my $rrd_file = "$rrdfile_prefix-$rrd_file_type.rrd";
+				my $rrd_field = "42"; # TODO - This could be overriden
+
+				# Insert RRD specific attributes
+				$sth_ds_attr->execute($ds_id, "rrd:file", $rrd_file);
+				$sth_ds_attr->execute($ds_id, "rrd:field", $rrd_field);
+				$sth_ds_attr->execute($ds_id, "rrd:cdef", "");
+
+				$sth_ds_attr->execute($ds_id, "gfx:color", $gfx_color);
+
+				# Get the states for the DS
+				my $state_ds = $state->{value}{"$rrd_file:$rrd_field"};
 
 				INFO "No state found for ds $ds_id ($rrdfile_prefix)" unless $state_ds;
 				next unless $state_ds;
@@ -499,7 +553,10 @@ sub _dump_into_sql {
 		}
 	}
 
-	# Atomic commit (rename)
+	# Close DB
+	$dbh->disconnect();
+
+	# Move into place
 	rename($datafilename_tmp, $datafilename);
 }
 

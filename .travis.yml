@@ -1,5 +1,6 @@
 language: perl
 perl:
+  - "5.20"
   - "5.18"
   - "5.16"
   - "5.14"
@@ -31,6 +32,7 @@ before_install:
  - "cpanm --notest Time::HiRes"
  - "cpanm --notest DBI"
  - "cpanm --notest DBD::SQLite"
+ - sh contrib/install_rrd.sh
 notifications:
   email: false
   irc:

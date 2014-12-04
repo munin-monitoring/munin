@@ -19,6 +19,7 @@
 #       smartpath     - Specify path to smartctl program (Default: /usr/sbin/smartctl)
 #       smartargs     - Override '-a' argument passed to smartctl with '-A -i'+smartargs
 #       ignorestandby - Ignore the standby state of the drive and perform SMART query. Default: False
+#       ignoreexit    - Bits in smartctl exit code to ignore, e.g. 64. Default: 0
 #
 # Parameters can be specified on a per-drive basis, eg:
 #   [smart_hda]
@@ -67,6 +68,7 @@
 #                 - Print the last line of smartctl output to verbose
 #                   log to aid in understanding why smartctl exited with
 #                   a nonzero status.
+# v2.2 2014-08-22 - Add "ignoreexit" environment variable.
 #
 # Copyright (c) 2004-2009 Nicolas Stransky.
 #
@@ -86,16 +88,18 @@
 #%# capabilities=autoconf suggest
 #%# family=auto
 
+import os, sys, string, pickle
+from math import log
+
+# Increase verbosity (True/False) -> use munin-run --pidebug
+verbose=True if os.getenv('MUNIN_DEBUG') == '1' else False
+
 ## You may edit the following 3 variables
-# Increase verbosity (True/False)
-verbose=False
 # Suppress SMART warnings (True/False)
 report_warnings=True
 # You may not modify anything below this line
 
-import os, sys, string, pickle
-from math import log
-plugin_version="2.1"
+plugin_version="2.2"
 statefiledir=os.environ['MUNIN_PLUGSTATE']
 
 def verboselog(s):
@@ -135,13 +139,15 @@ def read_values(hard_drive):
         if exit_status!=None :
             # smartctl exit code is a bitmask, check man page.
             num_exit_status=int(exit_status/256) # Python convention
+            num_exit_status=num_exit_status & ~int(os.getenv('ignoreexit',0)) # Allow to turn off warnings for some bits
+        else :
+            num_exit_status=0
+        if num_exit_status!=0 :
             if int(log(num_exit_status,2))<=2 :  # bit code
                 verboselog('smartctl cannot access S.M.A.R.T values on drive '+hard_drive+'. Command exited with code '+str(num_exit_status)+' (bit '+str(int(log(num_exit_status,2)))+')')
                 verboselog(lastline[:-1])
             else :
                 verboselog('smartctl exited with code '+str(num_exit_status)+' (bit '+str(int(log(num_exit_status,2)))+'). '+hard_drive+' may be FAILING RIGHT NOW!')
-        else :
-            num_exit_status=0
     except :
         verboselog('Cannot access S.M.A.R.T values! Check user rights or proper smartmontools installation/arguments.')
         sys.exit(1)
@@ -463,6 +469,7 @@ So following minimal configuration in plugin-conf.d/munin-node is needed.
   smartpath     - Specify path to smartctl program (Default: /usr/sbin/smartctl)
   smartargs     - Override '-a' argument passed to smartctl with '-A -i'+smartargs
   ignorestandby - Ignore the standby state of the drive and perform SMART query. Default: False
+  ignoreexit    - Bits in smartctl exit code to ignore, e.g. 64. Default: 0
 
 Parameters can be specified on a per-drive basis, eg:
 
@@ -493,6 +500,21 @@ In particular, for SATA drives, with older versions of smartctl:
   env.smartargs -H -l error -d 3ware,2
 
 =back
+
+The C<ignoreexit> parameter can be useful to exclude some bits in smartctl exit
+code, which is a bit mask described in its main page, from consideration. For
+example, if the drive had any errors in the past, the exit code would always
+have its bit 6 ("The device error log contains records of errors.") set, even if
+the errors happened a long time ago and are not relevant any more. To avoid
+getting munin warnings about this you can use
+
+=over 2
+
+  [smart_sda]
+  env.ignoreexit 64
+
+=back
+
 
 =head1 INTERPRETATION
 
@@ -587,7 +609,7 @@ B<munin-node-configure> use this to build the service links for this wildcard-pl
 
 =head1 VERSION
 
-Version 2.1
+Version 2.2
 
 =head1 BUGS
 

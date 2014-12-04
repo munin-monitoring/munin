@@ -27,7 +27,7 @@ Configuring rrdcached
 Parameters
 ----------
 
-RRDCached writes the spool data every 5 mintes by default. This is the
+RRDCached writes the spool data every 5 minutes by default. This is the
 same as the munin master. To have an effect, change the flushing
 intervals to allow more data to be spooled. Use the following
 parameters, and tune to your liking:

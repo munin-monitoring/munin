@@ -91,7 +91,7 @@ Each graph uses data from the proc filesystem.
 
 =head1 MAGIC MARKERS
 
- #%# family=auto
+ #%# family=manual
  #%# capabilities=multigraph
 
 =head1 VERSION
@@ -150,9 +150,6 @@ my %useruid = ();
 # You can set the env-var "procargs" to filter processes of their running
 # arguments.
 #my $args = exists $ENV{'procargs'} ? $ENV{'procargs'} : undef;
-
-# You can set the env-var "category" to override the default category.
-my $category = exists $ENV{'category'} ? $ENV{'category'} : "Process info";
 
 my %procstats = ();
 my $self;
@@ -348,7 +345,7 @@ sub populate_stats
         $procstats{$procuniq[$i]}{"write_bytes"} = 0;
         $procstats{$procuniq[$i]}{"cancelled_write_bytes"} = 0;
 
-        STATLINE: foreach my $line(`grep -h \\\($procname[$i]\\\) /proc/*/stat`) {
+        STATLINE: foreach my $line(`grep -h \\\($procname[$i]\\\) /proc/[0-9]*/stat`) {
             $line =~ /^(\d+)/;
             my $cmdline = `cat /proc/$1/cmdline | @@PERL@@ -F\"\\0\" -lane '\$s = join(\" \", \@F); print \$s;'`;
             my $cmduid = `cat /proc/$1/status | egrep '^Uid:' | awk '{ print \$2 }'`;
@@ -438,7 +435,7 @@ sub get_config
     }
     if ( $uniqname == -1 ) {
         print "multigraph proc_$graph\n";
-        print "graph_category $category\n";
+        print "graph_category processes\n";
         foreach my $field (@graph_parameters) {
             print_if_exist(\%ASPECTS,$graph,$field,"graph_$field");
         }
@@ -527,7 +524,7 @@ sub get_config
     print "multigraph proc_$graph.$uniqname\n";
     my %values = %{$ASPECTS{$graph}{'values'}};
 
-    print "graph_category $category\n";
+    print "graph_category processes\n";
     foreach my $field (@graph_parameters) {
         print_if_exist(\%ASPECTS,$graph,$field,"graph_$field",1);
     }

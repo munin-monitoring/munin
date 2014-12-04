@@ -167,6 +167,7 @@ my %ASPECTS = (
 			 . 'backend_conn backend_unhealthy '
 			 . 'client_req client_conn' ,
 		'values' => {
+			# Version 3 only
 			'client_conn' => {
 				'type' => 'DERIVE',
 				'min' => '0',
@@ -220,6 +221,13 @@ my %ASPECTS = (
 				'type' => 'DERIVE',
 				'min' => '0',
 				'colour' => '785d0d'
+			},
+			# Version 4 only
+			'sess_conn' => {
+				'type' => 'DERIVE',
+				'min' => '0',
+				'colour' => '444444',
+				'graph' => 'ON'
 			}
 		}
 	},
@@ -301,7 +309,13 @@ my %ASPECTS = (
 				'type' => 'GAUGE',
 				'label' => 'Number of objects'
 			},
+			# Version 3 only
 			'n_objcore' => {
+				'type' => 'GAUGE',
+				'label' => 'Number of object cores'
+			},
+			# Version 4 only
+			'n_objectcore' => {
 				'type' => 'GAUGE',
 				'label' => 'Number of object cores'
 			},
@@ -315,11 +329,12 @@ my %ASPECTS = (
 		}
 	},
 	'transfer_rates' => {
-		'title' => 'Transfer rates',
+		'title' => 'Client response transfer rates',
 		'order' => 's_bodybytes s_hdrbytes',
 		'args' => '-l 0',
 		'vlabel' => 'bit/s',
 		'values' => {
+			# These are the entries needed for Version 3
 			's_hdrbytes' => {
 				'type' => 'DERIVE',
 				'label' => 'Header traffic',
@@ -335,12 +350,30 @@ my %ASPECTS = (
 				'label' => 'Body traffic',
 				'min' => '0',
 				'cdef' => 's_bodybytes,8,*'
+			},
+			# These are the entries needed for Version 4
+			's_resp_hdrbytes' => {
+				'type' => 'DERIVE',
+				'label' => 'Header traffic',
+				'draw' => 'STACK',
+				'min' => '0',
+				'info' => 'HTTP Header traffic. TCP/IP '
+					. 'overhead is not included.',
+				'cdef' => 's_resp_hdrbytes,8,*'
+			},
+			's_resp_bodybytes' => {
+				'type' => 'DERIVE',
+				'draw' => 'AREA',
+				'label' => 'Body traffic',
+				'min' => '0',
+				'cdef' => 's_resp_bodybytes,8,*'
 			}
 		}
 	},
 	'threads' => {
 		'title' => 'Thread status',
 		'values' => {
+			# These are the entries needed for Version 3
 			'n_wrk' => {
 				'type' => 'GAUGE',
 				'min' => '0',
@@ -353,7 +386,7 @@ my %ASPECTS = (
 			'n_wrk_failed' => {
 				'type' => 'DERIVE',
 				'min' => '0',
-				'warning' => ':1'
+				'warning' => ':0'
 			},
 			'n_wrk_max' => {
 				'type' => 'DERIVE',
@@ -366,8 +399,31 @@ my %ASPECTS = (
 			'n_wrk_drop' => {
 				'type' => 'DERIVE',
 				'min' => '0',
-				'warning' => ':1'
-			}
+				'warning' => ':0'
+			},
+			# These are the entries needed for Version 4
+			'threads' => {
+				'type' => 'GAUGE',
+				'min' => '0',
+				'warning' => '1:'
+			},
+			'threads_created' => {
+				'type' => 'DERIVE',
+				'min' => '0'
+			},
+			'threads_failed' => {
+				'type' => 'DERIVE',
+				'min' => '0',
+				'warning' => ':0'
+			},
+			'threads_limited' => {
+				'type' => 'DERIVE',
+				'min' => '0'
+			},
+			'threads_destroyed' => {
+				'type' => 'DERIVE',
+				'min' => '0'
+			},
 		}
 	},
 	'memory_usage' => {
@@ -696,6 +752,19 @@ my %ASPECTS = (
 			},
 			'accept_fail' => {
 				'type' => 'DERIVE'
+			},
+			# Version 4 additions
+			'threads_failed' => {
+				'type' => 'DERIVE'
+			},
+			'sess_drop' => {
+				'type' => 'DERIVE'
+			},
+			'sess_fail' => {
+				'type' => 'DERIVE'
+			},
+			'threads_limited' => {
+				'type' => 'DERIVE'
 			}
 		}
 	},
@@ -889,7 +958,7 @@ sub xml_commit_state
 		if ($key eq 'flag') {
 			$data = translate_type($data);
 		}
-		if (defined($type) and $type ne "") {
+		if (defined($ident) and $ident ne "") {
 			$data{$type}{$ident}{$name}{$key} = $data;
 		} else {
 			$data{$name}{$key} = $data
@@ -1125,4 +1194,3 @@ foreach my $value (keys %{$ASPECTS{$self}{'values'}}) {
 		print "$data{$value}{'value'}\n";
 	}
 }
-

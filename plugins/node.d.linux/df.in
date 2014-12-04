@@ -56,6 +56,19 @@ idea.
 Also note that a mountpoint that is excluded by filesystem type but included by
 RE will not be included.
 
+By default, only local filesystems will be included. In case you want to
+monitor network filesystems too, you can set the commandline options for "df"
+manually in the configuration file. The default options are "-P -l".  For
+example, if you want to monitor a mounted GlusterFS, you can omit the "-l"
+parameter in the config file:
+
+    env.dfopts -P
+
+Please note that this will also add other shares you've mounted on your
+computer (Samba/CIFS, etc). If you don't want them, you can exclude them, using
+the "env.include/env.exclude" settings mentioned above.
+
+
 =head1 USAGE
 
 Link this plugin to @@CONFDIR@@/plugins/ and restart the
@@ -94,13 +107,13 @@ $ENV{LC_ALL} = 'C';
 my %usemntpt = ( tmpfs => 1, none => 1, udev => 1, simfs => 1 );
 
 my @exclude = qw(none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root devtmpfs);
-my $dfopts = "-P -l ";
+my $dfopts  = $ENV{'dfopts'} || "-P -l ";
 my $title = "Disk usage";
 
 if ( $Munin::Plugin::me eq "df_inode" ) {
   $title = "Inode usage";
   $dfopts .= "-i ";
-  push(@exclude, 'nilfs2');
+  push(@exclude, 'nilfs2', 'reiserfs');
 }
 
 @exclude = split(/\s+/, $ENV{exclude}) if $ENV{exclude};

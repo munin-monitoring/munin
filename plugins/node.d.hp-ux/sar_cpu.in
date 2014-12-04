@@ -1,22 +1,41 @@
 #!/usr/bin/sh
-#
-# HP-UX port from original cpu plugin, here using sar instead of
-# Solaris' kstat.  Also note that kstat as well as Linux /proc/stat
-# use counters (of cpu cycles?), whereas sar merely displays
-# percentages (hopefully this comes close enough)
-#
-# Customizations.  The values shown here are the defaults
-#
-#    [sar_cpu]
-#        env.SYSWPCT 30     # System percentage to warn at
-#        env.SYSCPCT 50     # System percentage where we're critical
-#        env.USRWPCT 80     # User percentage to warn at
-#        env.scaleto100 1   # Graph in percent rather than absolute ncpu
-#
-# Contributed by <ralph dot grothe at itdz minus berlin dot de>
-#
-#%# family=auto
-#%# capabilities=autoconf
+
+: << =cut
+
+=head1 NAME
+
+cpu - Plugin to monitor CPU usage
+
+HP-UX port from original cpu plugin, here using sar instead of
+Solaris' kstat.  Also note that kstat as well as Linux /proc/stat
+use counters (of cpu cycles?), whereas sar merely displays
+percentages (hopefully this comes close enough)
+
+=head1 CONFIGURATION
+
+Your may adapt the following parameters to your needs.
+The values shown here are the defaults
+
+ [sar_cpu]
+     env.SYSWPCT 30     # System percentage to warn at
+     env.SYSCPCT 50     # System percentage where we're critical
+     env.USRWPCT 80     # User percentage to warn at
+     env.scaleto100 1   # Graph in percent rather than absolute ncpu
+
+=head1 AUTHOR
+
+Contributed by <ralph dot grothe at itdz minus berlin dot de>
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
 
 PATH=/usr/bin:/usr/sbin
 
@@ -53,7 +72,7 @@ if [[ $1 = config ]]; then
 
     echo 'graph_title CPU usage'
     echo 'graph_order system user waitio idle'
-    echo 'graph_category CPU'
+    echo 'graph_category system'
     echo "graph_args --base 1000 --lower-limit 0 --rigid --upper-limit $graphlimit"
     echo 'graph_vlabel %'
     echo 'graph_scale no'

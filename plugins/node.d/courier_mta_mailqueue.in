@@ -3,6 +3,8 @@
 
 : << =cut
 
+=encoding utf8
+
 =head1 NAME
 
 courier_mta_mailqueue - Plugin to monitor courier-mta mail spool
@@ -29,7 +31,7 @@ None known
 
 =head1 AUTHOR
 
-Rune Nordb¯e Skillingstad <runesk@linpro.no>
+Rune Nordb√∏e Skillingstad <runesk@linpro.no>
 
 =head1 LICENSE
 
@@ -53,6 +55,7 @@ case $1 in
 	cat <<'EOF'
 graph_title Courier MTA mailqueue
 graph_vlabel Mails in queue
+graph_category mail
 graph_args --base 1000 -l 0
 mails.label mails
 mails.draw AREA

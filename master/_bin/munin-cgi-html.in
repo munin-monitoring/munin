@@ -72,7 +72,7 @@ while (new CGI::Fast) {
 	}
 
 	# Short evaluate the GRAPH png pages
-	if ($path =~ m/-(day|week|month|year).png$/) {
+	if ($path =~ m/-(day|week|month|year).([a-z]+)$/) {
 		my $url = script_name() . "/../munin-cgi-graph" . path_info();
 		print header(
 			-status => 301,
@@ -81,6 +81,11 @@ while (new CGI::Fast) {
 		);
 		next;
 	}
+
+	my $graph_ext = url_param("graph_ext");
+	$graph_ext = "png" unless defined $graph_ext;
+	$graph_ext = "svg";
+
 
 	# Force either a trailing "/" or ".html" to enable simpler url handling: it is like in
 	# a subdir from the browser pov
@@ -128,7 +133,7 @@ while (new CGI::Fast) {
 
 	# Groups nav
 	{
-		my $sth = $dbh->prepare_cached("SELECT g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' ORDER BY g.name ASC");
+		my $sth = $dbh->prepare_cached("SELECT g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' WHERE g.p_id IS NULL ORDER BY g.name ASC");
 		$sth->execute();
 
 		my $rootgroups = [];
@@ -140,7 +145,7 @@ while (new CGI::Fast) {
 
 	# Categories nav
 	{
-		my $sth = $dbh->prepare_cached("SELECT DISTINCT value FROM service_attr WHERE name = 'graph_category' ORDER BY value ASC");
+		my $sth = $dbh->prepare_cached("SELECT DISTINCT category FROM service_categories ORDER BY category ASC");
 		$sth->execute();
 
 		my $globalcats = [];
@@ -177,7 +182,8 @@ while (new CGI::Fast) {
 			my $sth_grp_root = $dbh->prepare_cached("SELECT g.id, g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' AND p_id IS NULL ORDER BY g.name ASC");
 			my $sth_node = $dbh->prepare_cached("SELECT n.id, n.name, u.path, n.path FROM node n INNER JOIN url u ON u.id = n.id AND u.type = 'node' AND n.grp_id = ? ORDER BY n.name ASC");
 
-			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, undef);
+			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, undef, $graph_ext);
+			$template_params{NGROUPS} = scalar(@{$template_params{GROUPS}});
 		}
 
 		# TODO - We still have to write the bottom navigation links
@@ -213,17 +219,27 @@ while (new CGI::Fast) {
 
 		$template_params{CATEGORY} = $category;
 
-		# TODO Support graphs without explicit categories ('other')
-		my $sth_cat = $dbh->prepare_cached(
-			"SELECT DISTINCT s.name FROM service s
-			INNER JOIN service_attr sa ON s.id = sa.id AND sa.name = 'graph_category'
-			WHERE sa.value = ?
-			ORDER BY s.name");
-		$sth_cat->execute($category);
+		my $sth_cat;
+		if ($category eq 'other') {
+			# account for those that explictly mention 'other' as category
+			$sth_cat = $dbh->prepare_cached(
+				"SELECT DISTINCT s.name FROM service s
+				LEFT JOIN service_categories sc ON s.id = sc.id
+				WHERE sc.category = 'other' OR sc.id IS NULL
+				ORDER BY s.name");
+			$sth_cat->execute();
+		} else {
+			$sth_cat = $dbh->prepare_cached(
+				"SELECT DISTINCT s.name FROM service s
+				INNER JOIN service_categories sc ON s.id = sc.id
+				WHERE sc.category = ?
+				ORDER BY s.name");
+			$sth_cat->execute($category);
+		}
 
 		my @services;
 		while (my ($_service) = $sth_cat->fetchrow_array) {
-			push @services, _get_params_services_by_name($dbh, $_service, $time);
+			push @services, _get_params_services_by_name($dbh, $_service, $time, $graph_ext);
 		}
 		$template_params{SERVICES} = \@services;
 	} elsif ($path =~ /^(.+)\/comparison-(day|month|week|year)\.html$/) {
@@ -231,6 +247,9 @@ while (new CGI::Fast) {
 		$path = $1;
 		$comparison = $2;
 	}
+
+	my $graph_ext = url_param("graph_ext");
+	$graph_ext = "png" unless defined $graph_ext;
 
 	# Handle normal pages only if not aleady handled
 	goto RENDERING if $template_filename;
@@ -296,25 +315,28 @@ while (new CGI::Fast) {
 
 			# Get all categories in this group
 			my $sth_cat = $dbh->prepare_cached(
-				"SELECT DISTINCT sa_c.value cat FROM node n
+				"SELECT DISTINCT sa_c.category cat FROM node n
 				INNER JOIN service s ON s.node_id = n.id
-				INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category'
+				INNER JOIN service_categories sa_c ON sa_c.id = s.id
 				WHERE n.grp_id = ? ORDER BY sa_c.value ASC");
 			$sth_cat->execute($id);
 
 			$template_params{CATEGORIES} = [];
 			while (my ($cat_name) = $sth_cat->fetchrow_array) {
-				push @{$template_params{CATEGORIES}}, _get_params_services_for_comparison($path, $dbh, $cat_name, $id);
+				push @{$template_params{CATEGORIES}}, _get_params_services_for_comparison($path, $dbh, $cat_name, $id, $graph_ext);
 			}
 		} else {
 			# Emit group template
 			$template_filename = 'munin-domainview.tmpl';
 
 			# Main page
-			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, $id);
+			$template_params{GROUPS} = _get_params_groups($path, $dbh, $sth_grp, $sth_grp_root, $sth_node, $id, $graph_ext);
+			$template_params{NGROUPS} = scalar(@{$template_params{GROUPS}});
 
 			# Shows "[ d w m y ]"
-			$template_params{COMPARE} = 1;
+			# comparison only makes sense if there are 2 or more nodes
+			$template_params{COMPARE} = 1 if
+				1 < scalar grep { defined($_->{'NCATEGORIES'}) && $_->{'NCATEGORIES'} } @{$template_params{GROUPS}};
 		}
 
 	} elsif ($type eq "node") {
@@ -339,15 +361,15 @@ while (new CGI::Fast) {
 		$template_params{INFO_OPTION} = 'Nodes on this level';
 
 		my $sth_category = $dbh->prepare(
-			"SELECT DISTINCT sa.value as graph_category FROM service s
-			INNER JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_category'
+			"SELECT DISTINCT sc.category as graph_category FROM service s
+			INNER JOIN service_categories sc ON sc.id = s.id
 			WHERE s.node_id = ?
 			ORDER BY graph_category");
 		$sth_category->execute($id);
 
 		my $categories = [];
 		while (my ($_category_name) = $sth_category->fetchrow_array) {
-			push @$categories, _get_params_services($path, $dbh, $_category_name, undef, $id);
+			push @$categories, _get_params_services($path, $dbh, $_category_name, undef, $id, $graph_ext);
 		}
 
 		$template_params{CATEGORIES} = $categories;
@@ -367,21 +389,13 @@ while (new CGI::Fast) {
 
 		my $sth;
 
-		$sth = $dbh->prepare_cached("SELECT name FROM service WHERE id = ?");
+		$sth = $dbh->prepare_cached("SELECT name,graph_info,subgraphs FROM service WHERE id = ?");
 		$sth->execute($id);
-		my ($graph_name) = $sth->fetchrow_array();
+		my ($graph_name, $graph_info, $multigraph) = $sth->fetchrow_array();
 
-		$sth = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = 'graph_category'");
+		$sth = $dbh->prepare_cached("SELECT category FROM service_categories WHERE id = ?");
 		$sth->execute($id);
 		my ($graph_category) = $sth->fetchrow_array();
-
-		$sth = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = 'graph_info'");
-		$sth->execute($id);
-		my ($graph_info) = $sth->fetchrow_array();
-
-		$sth = $dbh->prepare_cached("SELECT value FROM service_attr WHERE id = ? and name = 'subgraphs'");
-		$sth->execute($id);
-		my ($multigraph) = $sth->fetchrow_array();
 
 		$sth = $dbh->prepare_cached("SELECT n.id FROM node n INNER JOIN service s ON s.node_id = n.id WHERE s.id = ?");
 		$sth->execute($id);
@@ -392,7 +406,7 @@ while (new CGI::Fast) {
 		$template_params{PEERS} = [ map {
 			(my $name = basename($_->{"URLX"}, ".html")) =~ tr/_/ /;
 			{ NAME => $name, LINK => $multigraph ? ("../" . $_->{URLX}) : $_->{URLX}, }
-		} @{_get_params_services(dirname($path), $dbh, $graph_category, $graph_parent, $node_id)->{SERVICES}} ];
+		} @{_get_params_services(dirname($path), $dbh, $graph_category, $graph_parent, $node_id, $graph_ext)->{SERVICES}} ];
 		$template_params{LARGESET} = 1;
 		$template_params{INFO_OPTION} = 'Graphs in same category';
 
@@ -408,7 +422,7 @@ while (new CGI::Fast) {
 			# Emit node template for multigraphs
 			$template_filename = 'munin-nodeview.tmpl';
 
-			my @categories = (_get_params_services($path, $dbh, $graph_category, $graph_name, $node_id));
+			my @categories = (_get_params_services($path, $dbh, $graph_category, $graph_name, $node_id, $graph_ext));
 			$template_params{CATEGORIES} = \@categories;
 			$template_params{NCATEGORIES} = scalar(@categories);
 			$template_params{NAME} = $template_params{PATH}[-1]{'pathname'};
@@ -432,7 +446,7 @@ while (new CGI::Fast) {
 			my $epoch = "start_epoch=$epoch_start{$t}&stop_epoch=$epoch_now";
 			$service_template_params{"ZOOM$t"} = script_name() . "/dynazoom.html?cgiurl_graph=$cgi_graph_url" .
 				"&plugin_name=$path&size_x=800&size_y=400&$epoch";
-			$service_template_params{"IMG$t"} = $cgi_graph_url . "$path-$t.png";
+			$service_template_params{"IMG$t"} = $cgi_graph_url . "$path-$t.$graph_ext";
 		}
 
 		# template uses loop for no apparent reason
@@ -454,7 +468,8 @@ RENDERING:
 		loop_context_vars => 1,
 	);
 
-	{
+	my $is_dump_enabled = url_param("dump");
+	if ($is_dump_enabled) {
 		use Data::Dumper;
 		local $Data::Dumper::Terse = 1;
 		local $Data::Dumper::Sortkeys = 1;
@@ -473,7 +488,7 @@ RENDERING:
 }
 
 sub _get_params_groups {
-	my ($path, $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $g_id) = @_;
+	my ($path, $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $g_id, $graph_ext) = @_;
 
 	my $sth_grp;
 	if (defined $g_id) {
@@ -485,16 +500,25 @@ sub _get_params_groups {
 	}
 
 	my $groups = [];
-	while (my ($_g_id, $_name, $_path) = $sth_grp->fetchrow_array) {
+
+	# This function is recursive and reuses the prepared statements,
+	# so we need to save the results first.
+	my $_sth_grp_data = $sth_grp->fetchall_arrayref;
+	foreach my $row (@$_sth_grp_data) {
+		my ($_g_id, $_name, $_path) = @$row;
+		my $_groups = _get_params_groups($path, $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $_g_id, $graph_ext);
+		my $_compare_groups = scalar grep { defined($_->{'NCATEGORIES'}) && $_->{'NCATEGORIES'} } @$_groups;
 		push @$groups, {
 			NAME => $_name,
 			URL => "$_path/",
-			GROUPS => _get_params_groups($path, $dbh, $sth_grp_normal, $sth_grp_root, $sth_node, $_g_id),
-			COMPARE => 1,
+			GROUPS => $_groups,
+			NGROUPS => scalar(@$_groups),
+			# comparison only makes sense if there are 2 or more nodes
+			COMPARE => ($_compare_groups > 1 ? 1 : 0),
 			R_PATH => script_name(),
 			PATH => [
 				{ PATH => '..', PATHNAME => undef, },
-				{ PATH => '', PATHNAME => $_name, },
+				url_to_path($_path),
 			],
 		};
 	}
@@ -502,7 +526,7 @@ sub _get_params_groups {
 	# Add the nodes
 	$sth_node->execute($g_id);
 	while (my ($_n_id, $_name, $_path) = $sth_node->fetchrow_array) {
-		my $sth = $dbh->prepare_cached("SELECT DISTINCT sa.value FROM service s INNER JOIN service_attr sa ON sa.id = s.id AND sa.name = 'graph_category' WHERE s.node_id = ? ORDER BY sa.value ASC");
+		my $sth = $dbh->prepare_cached("SELECT DISTINCT sc.category FROM service s INNER JOIN service_categories sc ON sc.id = s.id WHERE s.node_id = ? ORDER BY sc.category ASC");
 		$sth->execute($_n_id);
 
 		# trim off current path from target's path
@@ -510,7 +534,7 @@ sub _get_params_groups {
 
 		my $categories = [];
 		while (my ($_category_name) = $sth->fetchrow_array) {
-			my $category = _get_params_services($path, $dbh, $_category_name, undef, $_n_id);
+			my $category = _get_params_services($path, $dbh, $_category_name, undef, $_n_id, $graph_ext);
 			$category->{URLX} = "$_path/" . "#" . $_category_name;
 			$category->{URL} = $category->{URLX}; # For category in overview
 			push @$categories, $category;
@@ -530,13 +554,13 @@ sub _get_params_groups {
 }
 
 sub _get_params_services_for_comparison {
-	my ($basepath, $dbh, $category_name, $grp_id) = @_;
+	my ($basepath, $dbh, $category_name, $grp_id, $graph_ext) = @_;
 
 	# Get all possible services with the specified category under the specified group
 	my $sth_srv = $dbh->prepare_cached(
 		"SELECT DISTINCT s.name FROM service s
 		INNER JOIN node n ON s.node_id = n.id
-		INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category' AND sa_c.value = ?
+		INNER JOIN service_categories sa_c ON sa_c.id = s.id AND sa_c.category = ?
 		WHERE n.grp_id = ? ORDER BY s.name ASC");
 
 	# Get node and service pairs
@@ -544,8 +568,7 @@ sub _get_params_services_for_comparison {
 		"SELECT n.name, u.path, s.path, s.title FROM node n
 		INNER JOIN url u ON u.id = n.id AND u.type = 'node'
 		LEFT JOIN
-			( SELECT s.id AS id, s.node_id AS node_id, sa_t.value AS title, u_s.path AS path FROM service s
-			INNER JOIN service_attr sa_t ON s.id = sa_t.id AND sa_t.name = 'graph_title'
+			( SELECT s.id AS id, s.node_id AS node_id, s.service_title AS title, u_s.path AS path FROM service s
 			INNER JOIN url u_s ON s.id = u_s.id AND u_s.type = 'service'
 			WHERE s.name = ? ) AS s ON n.id = s.node_id
 		WHERE n.grp_id = ?
@@ -565,7 +588,7 @@ sub _get_params_services_for_comparison {
 		$sth_node->execute($service_name, $grp_id);
 		while (my ($node_name, $node_url, $srv_url, $srv_label) = $sth_node->fetchrow_array) {
 			my $_srv_url = "$srv_url.html" if defined $srv_url;
-			my %_img_urls = map { ("CIMG$_" => script_name() . "/../munin-cgi-graph" . "/$srv_url-$_.png") } @times if defined $srv_url;
+			my %_img_urls = map { ("CIMG$_" => script_name() . "/../munin-cgi-graph" . "/$srv_url-$_.$graph_ext") } @times if defined $srv_url;
 			push @nodes, {
 				R_PATH => script_name(),
 				NODENAME => $node_name,
@@ -585,16 +608,14 @@ sub _get_params_services_for_comparison {
 # This is only called for category views, which start with the root URL,
 # so no need to handle basepath or multigraph parents for relative URLs
 sub _get_params_services_by_name {
-	my ($dbh, $service_name, $time) = @_;
+	my ($dbh, $service_name, $time, $graph_ext) = @_;
 
 	# TODO warning/critical state (use SUM sub-queries?)
 	# XXX this may be slow
 	my $sth = $dbh->prepare_cached(
-		"SELECT s.id, sa_t.value as service_title, sa_s.value as subgraphs, u.path AS url,
+		"SELECT s.id, s.service_title as service_title, s.subgraphs as subgraphs, u.path AS url,
 		n.name AS node_name, u_n.path AS node_url
 		FROM service s
-		INNER JOIN service_attr sa_t ON sa_t.id = s.id AND sa_t.name = 'graph_title'
-		LEFT JOIN service_attr sa_s ON sa_s.id = s.id AND sa_s.name = 'subgraphs'
 		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
 		INNER JOIN node n ON n.id = s.node_id
 		INNER JOIN url u_n ON u_n.id = s.node_id AND u_n.type = 'node'
@@ -611,7 +632,7 @@ sub _get_params_services_by_name {
 			NODENAME => $_node_name,
 			LABEL => $_service_title,
 			URLX => $_url . ($_subgraphs ? "/" : ".html"),
-			"CIMG$time" => script_name() . "/../munin-cgi-graph" . "/$_url-$time.png",
+			"CIMG$time" => script_name() . "/../munin-cgi-graph" . "/$_url-$time.$graph_ext",
 			"TIME$time" => 1,
 		};
 	}
@@ -623,13 +644,11 @@ sub _get_params_services_by_name {
 }
 
 sub _get_params_services {
-	my ($base_path, $dbh, $category_name, $multigraph_parent, $node_id) = @_;
+	my ($base_path, $dbh, $category_name, $multigraph_parent, $node_id, $graph_ext) = @_;
 
-	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, sa_t.value as service_title, sa_s.value as subgraphs, u.path AS url
+	my $sth = $dbh->prepare_cached("SELECT s.id, s.name, s.service_title as service_title, s.subgraphs as subgraphs, u.path AS url
 		FROM service s
-		INNER JOIN service_attr sa_c ON sa_c.id = s.id AND sa_c.name = 'graph_category' AND sa_c.value = ?
-		INNER JOIN service_attr sa_t ON sa_t.id = s.id AND sa_t.name = 'graph_title'
-		LEFT JOIN service_attr sa_s ON sa_s.id = s.id AND sa_s.name = 'subgraphs'
+		INNER JOIN service_categories sa_c ON sa_c.id = s.id AND sa_c.category = ?
 		INNER JOIN url u ON u.id = s.id AND u.type = 'service'
 		WHERE s.node_id = ?
 		ORDER BY service_title ASC");
@@ -642,7 +661,7 @@ sub _get_params_services {
 		# Skip unrelated graphs if in multigraph
 		next if $multigraph_parent and $_s_name !~ /^$multigraph_parent\./;
 
-		my %imgs = map { ("IMG$_" => script_name() . "/../munin-cgi-graph" . "/$_url-$_.png") } @times;
+		my %imgs = map { ("IMG$_" => script_name() . "/../munin-cgi-graph" . "/$_url-$_.$graph_ext") } @times;
 		push @$services, {
 			NAME => $_service_title,
 			URLX => substr($_url, 1 + length($base_path)) . ($_subgraphs ? "/" : ".html"),
@@ -734,3 +753,11 @@ sub url_absolutize
 	$url_a = substr($url_a, 1) if $omit_first_slash;
 	return $url_a;
 }
+
+# CGI in perl 5.20 is now seriously broken as it doesn't import into the namespace.
+# So we have to delegate explicitely. It's easier than prefixing with CGI:: each use.
+sub header { return CGI::header(@_); }
+sub path_info { return CGI::path_info(@_); }
+sub url { return CGI::url(@_); }
+sub script_name { return CGI::script_name(@_); }
+sub url_param { return CGI::url_param(@_); }

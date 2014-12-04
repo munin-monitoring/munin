@@ -1,6 +1,8 @@
 #!@@PERL@@ -w
 # -*- cperl -*-
 
+=encoding utf8
+
 =head1 NAME
 
 snmp__print_supplies - SNMP plugin to monitor pages printed on 
@@ -44,7 +46,7 @@ For printers having duplex module: pages != number of sheets
 
 =head1 AUTHOR
 
-Copyright (C) 2006-2009 Rune Nordbøe Skillingstad
+Copyright (C) 2006-2009 Rune NordbÃ¸e Skillingstad
 
 =head1 LICENSE
 
@@ -81,7 +83,7 @@ if(defined $ARGV[0] and $ARGV[0] eq "config") {
 graph_args --base 1000 -l 0 
 graph_vlabel Printed pages pr minute
 graph_scale no
-graph_category print
+graph_category printing
 graph_info This graph numer of printed pages
 graph_total Total
 pages.label pages

@@ -1,31 +1,45 @@
 #!@@PERL@@
-#
-# Plugin to monitor connections per second, for LVS loadbalancers.
-#
-# Wildcard names:
-#
-#      cps_<port>
-#      cps_<vip>_<port>
-#
-# Examples:
-#
-#      cps_smtp
-#      cps_mail.foo.boo_smtp
-#      cps_pop3
-#      cps_www.foo.boo_www
-#      cps_vvv.foo.boo_www
-#
-# Parameters understood:
-#
-#      config   (required)
-#      autoconf (optional - used by munin-config)
-#      suggest  (optional - used by munin-config)
-#
-# Magic markers - optional - used by installation scripts and munin-config:
-#
-#%# family=auto
-#%# capabilities=autoconf suggest
-#
+
+=pod
+
+=head1 NAME
+
+cps_ - Plugin to monitor connections per second, for LVS loadbalancers.
+
+=head1 USAGE
+
+Create a service link in @@CONFDIR@@/plugins/ and restart the munin-node.
+
+As this is a wildcard plugin it expects to get
+parameters via name of the service link.
+
+=over 2
+
+=item Wildcard names
+
+ cps_<port>
+ cps_<vip>_<port>
+
+=item Examples
+
+ cps_smtp
+ cps_mail.foo.boo_smtp
+ cps_pop3
+ cps_www.foo.boo_www
+ cps_vvv.foo.boo_www
+
+=back
+
+=head1 AUTHOR
+
+Unknown
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf suggest
+
+=cut
 
 use strict;
 

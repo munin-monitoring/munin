@@ -149,6 +149,8 @@ sub _do_connect {
 	$self->_extract_name_from_greeting($greeting);
     };
 
+    INFO "node $self->{host} advertised itself as $self->{node_name} instead." if $self->{node_name} && $self->{node_name} ne $self->{host};
+
     return 1;
 }
 
@@ -245,7 +247,11 @@ sub list_plugins {
         ? $self->{node_name}
         : $self->{host};
 
-    if (not $host) {
+    my $use_default_node = defined($self->{configref}{use_default_node})
+        ? $self->{configref}{use_default_node}
+        : $config->{use_default_node};
+
+    if (! $use_default_node && ! $host) {
 	die "[ERROR] Couldn't find out which host to list on $host.\n";
     }
 

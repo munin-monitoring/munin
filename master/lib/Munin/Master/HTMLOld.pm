@@ -1,6 +1,6 @@
 package Munin::Master::HTMLOld;
 
-=encoding utf8
+=encoding utf-8
 
 =begin comment
 -*- perl -*-
@@ -302,6 +302,7 @@ sub emit_comparison_template {
     }
 
     $comparisontemplates{$t}->param(
+                                    DYN_IMAGES  => $config->{'html_dynamic_images'},
                                     INFO_OPTION => 'Groups on this level',
                                     NAME        => $key->{'name'},
                                     GROUPS      => $key->{'comparegroups'},
@@ -423,6 +424,7 @@ sub emit_category_template {
                           R_PATH      => ".",
 						  "TIME".$time => 1,
                           NAME        => $key->{'name'},
+                          DYN_IMAGES  => $config->{'html_dynamic_images'},
                           TAGLINE     => $htmltagline,
 						  ROOTGROUPS  => $htmlconfig->{"groups"},
 						  MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
@@ -477,6 +479,7 @@ sub emit_problem_template {
 						  ROOTGROUPS  => $htmlconfig->{"groups"},
 						  MUNIN_VERSION => $Munin::Common::Defaults::MUNIN_VERSION,
 						  TIMESTAMP	=> $timestamp,
+                                                  DYN_IMAGES  => $config->{'html_dynamic_images'},
 						  NGLOBALCATS => $htmlconfig->{"nglobalcats"},
 						  GLOBALCATS => $htmlconfig->{"globalcats"},
 						  CRITICAL => $htmlconfig->{"problems"}->{"criticals"},
@@ -515,6 +518,7 @@ sub emit_group_template {
     DEBUG "[DEBUG] Creating group page ".$key->{filename};
 
     $grouptemplate->param(
+                          DYN_IMAGES  => $config->{'html_dynamic_images'},
                           INFO_OPTION => 'Groups on this level',
                           GROUPS    => $key->{'groups'},
                           PATH      => $key->{'path'},

@@ -119,7 +119,7 @@ def parse_data( data ):
         if not cur_sensor:
             continue
         label, data = line.split(":", 1)
-        cur_sensor[label.strip()] = data.strip()
+        cur_sensor[label.strip().lower()] = data.strip()
     return sensors
 
 def get_sensor_names():
@@ -242,18 +242,25 @@ def config_unit(unit):
         nname = normalize_sensor(lbl)
         
         print "%s.label %s" % (nname, lbl)
-        assertions = values['Assertions Enabled'].split()
+        assertions = values['assertions enabled'].split()
         warn_l = warn_u = crit_l = crit_u = ""
         if 'lcr-' in assertions:
-            crit_l = values['Lower Critical'].replace("na","")
+            crit_l = values['lower critical'].replace("na","")
         if 'lnc-' in assertions:
-            warn_l = values['Lower Non-Critical'].replace("na","")
+            warn_l = values['lower non-critical'].replace("na","")
         if 'ucr+' in assertions:
-            crit_u = values['Upper Critical'].replace("na","")
+            crit_u = values['upper critical'].replace("na","")
         if 'unc+' in assertions:
             warn_u = values['Upper Non-Critical'].replace("na","")
-        warn = "%s:%s" % (warn_l,warn_u)
-        crit = "%s:%s" % (crit_l,crit_u)
+
+	#TODO add 'fans'
+	if 'rpm'==unit:
+		warn = "%s:%s" % (warn_u,warn_l)
+		crit = "%s:%s" % (crit_u,crit_l)
+	else:
+		warn = "%s:%s" % (warn_l,warn_u)
+		crit = "%s:%s" % (crit_l,crit_u)
+
         if warn!=":":
             print "%s.warning %s" % (nname, warn)
         if crit!=":":
@@ -270,7 +277,7 @@ def report_unit(unit):
     data = get_sensors()
     for lbl in info['sensors']:
         nname = normalize_sensor(lbl)
-        value = data[lbl]["Sensor Reading"].split()[0]
+        value = data[lbl]["sensor reading"].split()[0]
         print "%s.value %s" % (nname, value)
     
 
@@ -299,10 +306,10 @@ def debug():
     print SENSORS
     data = get_sensors()
     for key, value in data.items():
-        print "%s : %s (%s - %s) [%s - %s] %s" % (key, value['Sensor Reading'],
-                                                  value['Lower Non-Critical'], value['Upper Non-Critical'],
-                                                  value['Lower Critical'], value['Upper Critical'],
-                                                  value['Assertions Enabled'],)
+        print "%s : %s (%s - %s) [%s - %s] %s" % (key, value['sensor reading'],
+                                                  value['lower non-critical'], value['upper non-critical'],
+                                                  value['lower critical'], value['upper critical'],
+                                                  value['assertions enabled'],)
 
 def main():
     if len(sys.argv)>1:

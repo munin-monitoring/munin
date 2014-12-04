@@ -1,60 +1,71 @@
 #!/usr/bin/sh
 #
-# gp_gbl_mem - Munin plug-in to fetch global memory utilisation via Glance
-#	      (should only run on HP-UX with GlancePlus (GP) installed therefore)		
-#
-# Requires:   Separate GP adviser syntax file whose location is made known
-#             by ADVISER environment variable which defaults to
-#             @@LIBDIR@@/gp_gbl_mem_util.adv.
-#
-#             Configuration for this plugin may look like this, the example
-#             shows the defaults, so only set them to override them.
-#             All the environment settings are needed by Glance.
-#
-#	[gp_*]
-#	    env.HOME	    /home/munin
-#             Munin users home dir, could also be /var/opt/munin
-#	    env.ADVISER_INT 4
-#	    env.ADVISER_ITS 2
-#           env.GLANCE /opt/perf/bin/glance
-#
-#	[gp_gbl_mem_util]
-#	    env.ADVISER	    @@LIBDIR@@/gp_gbl_mem_util.adv
-#
-#
-#	    Note, to avoid parsing problems on start of munin-node
-#	    add this entry to your munin-node.conf if you place the *.adv file 
-#	    in above mentioned location: "ignore_file \.adv$"
-#
-#	    The contents of the syntax file for this plugin should look like
-#           this:
-#
-#	if (gbl_interval > 2) then 
-#	{
-#	    print "mem_util.value ",gbl_mem_util|6|2
-#	    print "mem_user.value ",gbl_mem_user_util|6|2
-#	    print "mem_sys.value ",gbl_mem_sys_and_cache_util|6|2
-#	    print "mem_free.value ",gbl_mem_free_util|6|2
-#	}
-#
-#
-#	    For details about adviser syntax please refer to the documentation in:
-#
-#	    	/opt/perf/paperdocs/gp/C
-#
-#
-#	    For "installation" of plugin run as root:
-#
-# @@SBINDIR@@/munin-node-configure --families auto --shell|grep gp_gbl_mem_util|sh -
-#
-#	    and restart your munin-node
-#
-# Contributed by <ralph dot grothe at itdz minus berlin dot de>
-#
-# $Id$
-#
-#%# family=auto
-#%# capabilities=autoconf
+
+: <<=cut
+
+=head1 NAME
+
+gp_gbl_mem_util - Munin plugin to fetch global memory utilisation via Glance
+
+=head1 APPLICABLE SYSTEMS
+
+On HP-UX with GlancePlus (GP) installed
+
+=head1 USAGE 
+
+Run this command as root user to install the plugin
+
+  @@SBINDIR@@/munin-node-configure --families auto --shell|grep gp_gbl_mem_util|sh -
+
+and restart your munin-node.
+
+=head2 REQUIRES   
+
+Separate GP adviser syntax file whose location is made known
+by ADVISER environment variable which defaults to
+@@LIBDIR@@/gp_gbl_mem_util.adv.
+
+The contents of the syntax file should look like this:
+
+  if (gbl_interval > 2) then 
+  {
+      print "mem_util.value ",gbl_mem_util|6|2
+      print "mem_user.value ",gbl_mem_user_util|6|2
+      print "mem_sys.value ",gbl_mem_sys_and_cache_util|6|2
+      print "mem_free.value ",gbl_mem_free_util|6|2
+  }
+
+=head1 CONFIGURATION
+
+The example shows the defaults, so only set them to override them.
+All the environment settings are needed by Glance.
+
+  [gp_*]
+      # Munin users home dir, can also be /var/opt/munin
+      env.HOME /home/munin
+      env.ADVISER_INT 4
+      env.ADVISER_ITS 2
+      env.GLANCE /opt/perf/bin/glance
+
+  [gp_gbl_mem_util]
+      env.ADVISER	    @@LIBDIR@@/gp_gbl_mem_util.adv
+
+=head2 NOTE
+
+If you put the *.adv file  in above mentioned location
+add "ignore_file \.adv$" to your @@CONFDIR@@/munin-node.conf
+to avoid parsing problems on start of munin-node.
+
+=head1 AUTHOR
+
+ Ralph Grothe <ralph dot grothe at itdz minus berlin dot de>
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=cut
 
 PATH=/usr/bin:/usr/sbin
 MUNIN_RUN=@@SBINDIR@@/munin-run

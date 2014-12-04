@@ -1,18 +1,26 @@
 #!@@GOODSH@@
-#
-# Plugin to monitor SELinux Access Vector Cache (AVC).
-#
-#       config   (required)
-#       autoconf (optional - used by munin-config)
-#
-# GNU GPL, Lars Strand
-#
-#
-# Magic markers (used by munin-config and some installation scripts (i.e.
-# optional)):
-#%# family=auto
-#%# capabilities=autoconf
+# -*- sh -*-
 
+: << =cut
+
+=head1 NAME
+
+selinux_avcstat - Plugin to monitor SELinux Access Vector Cache (AVC)
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 AUTHOR
+
+Lars Strand
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
 
 AVCSTATS="/selinux/avc/cache_stats"
 

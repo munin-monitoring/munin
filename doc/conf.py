@@ -26,7 +26,7 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.doctest']
+extensions = ['sphinx.ext.doctest', 'sphinx.ext.graphviz' ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -44,7 +44,7 @@ master_doc = 'index'
 project = 'Munin'
 description = 'Munin monitoring'
 authors   = 'The Munin project and its contributors'
-copyright = '2012-2013, %s' % authors
+copyright = '2012-2014, %s' % authors
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -150,13 +150,13 @@ html_static_path = ['_static']
 #html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
-#html_show_sourcelink = True
+html_show_sourcelink = True
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
-#html_show_sphinx = True
+html_show_sphinx = True
 
 # If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
-#html_show_copyright = True
+html_show_copyright = True
 
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the
@@ -167,7 +167,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Munindoc'
+htmlhelp_basename = 'MuninGuide'
 
 
 # -- Options for LaTeX output --------------------------------------------------

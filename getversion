@@ -16,16 +16,22 @@
 # * If we're still looking for a version, just fallback to "unknown".
 
 current_git_branch() {
-    # Handle this too:
-
-    # git checkout 2.0.9
-    # git branch
-    # * (no branch)
-    #   devel
-
     GB="$(git branch | awk '$1 == "*" {print $2}')"
     case $GB in
+
+	# git checkout 402c6d6
+	# git branch
+	# * (detached from 402c6d6)
+	#   devel
+	# --> This is new with git 1.8+
+	"(detached" ) echo "detached";;
+
+	# git checkout 2.0.9
+	# git branch
+	# * (no branch)
+	#   devel
 	"(no" ) echo;;
+
 	*     ) echo $GB;;
     esac
 }

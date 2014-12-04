@@ -33,7 +33,7 @@
 #
 # Example:
 #
-#   [haproxy_backend]
+#   [haproxy_ng]
 #   env.url http://backend.example.com/haproxy-status;csv;norefresh
 #   env.http_username monitor
 #   env.http_password somepasswordorother

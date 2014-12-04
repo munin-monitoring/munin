@@ -1,0 +1,5 @@
+=head1 NAME
+
+This plugin has no perldoc section yet.
+
+=cut

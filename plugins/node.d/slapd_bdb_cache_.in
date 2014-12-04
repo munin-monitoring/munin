@@ -1,47 +1,80 @@
 #!@@PERL@@ -w
 # -*- perl -*-
-#
-# Plugin copyright Bjorn Ruberg <bjorn@ruberg.no> 2005-2009
-# 
-# Licensed under GPLv2. Be nice.
-#
-# Environment variables:
-#
-#   - dbstat   The full path to a db_stat binary able to
-#              communicate with the LDAP backend BDB
-#              database files. RHEL and friends use
-#              slapd_db_stat, while Debian and such use
-#              e.g. db4.6_stat.
-#   - dbdir    The full path to the directory where
-#              the LDAP backend BDB database files are.
-#   - title    (Optional) The plugin's title. Useful if you
-#              have more than one DIT installed.
-#   - warning  (Optional) A threshold integer value. Triggers
-#              plugin to send warnings if cache percentage 
-#              drops below the given value.
-#
-# Limitations:
-#
-# - The plugin only checks _one_ database directory. To work
-#   around that, i.e. if you have more than one DIT in your
-#   OpenLDAP, create symlinked files and corresponding entries
-#   in the Munin environment file(s). Note that this will
-#   break autoconf, i.e. autoconf will probably still suggest
-#   a default set of symlinks.
-#
-#   Sample config for multiple database directories:
-#   [slapd_bdb_cache_*]
-#   env.dbstat /usr/bin/db4.6_stat
-#
-#   [slapd_bdb_cache_database1_*]
-#   env.dbdir /var/lib/ldap/database1
-#
-#   [slapd_bdb_cache_database2_*]
-#   env.dbdir /var/lib/ldap/database2
-#
-# Magic markers
-#%# family=auto
-#%# capabilities=autoconf suggest
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+slapd_bdb_cache_
+
+=head1 CONFIGURATION
+
+Environment variables:
+
+=over 4
+
+=item dbstat
+
+The full path to a db_stat binary able to
+communicate with the LDAP backend BDB
+database files. RHEL and friends use
+slapd_db_stat, while Debian and such use
+e.g. db4.6_stat.
+
+=item dbdir
+
+The full path to the directory where
+the LDAP backend BDB database files are.
+
+=item title
+
+(Optional) The plugin's title. Useful if you
+have more than one DIT installed.
+
+=item warning
+
+(Optional) A threshold integer value. Triggers
+plugin to send warnings if cache percentage
+drops below the given value.
+
+=back
+
+=head2 LIMITATIONS
+
+The plugin only checks _one_ database directory. To work
+around that, i.e. if you have more than one DIT in your
+OpenLDAP, create symlinked files and corresponding entries
+in the Munin environment file(s). Note that this will
+break autoconf, i.e. autoconf will probably still suggest
+a default set of symlinks.
+
+Sample config for multiple database directories:
+
+  [slapd_bdb_cache_*]
+  env.dbstat /usr/bin/db4.6_stat
+
+  [slapd_bdb_cache_database1_*]
+  env.dbdir /var/lib/ldap/database1
+
+  [slapd_bdb_cache_database2_*]
+  env.dbdir /var/lib/ldap/database2
+
+=head1 COPYRIGHT
+
+Bjorn Ruberg <bjorn@ruberg.no> 2005-2009
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
 
 use strict;
 use vars qw ( $measure $config $dbdir $dbstat $warning);
