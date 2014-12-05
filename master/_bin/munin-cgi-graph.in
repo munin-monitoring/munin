@@ -76,12 +76,12 @@ my $single_colour = "00aa00";
 
 # Use 400 x RRA step, in order to have 1px per RRA sample.
 my %times = (
-	"hour"  => "-4000s",  # (i.e. -1h6m40s)
-	"day"   => "-2000m",  # (i.e. -33h20m)
-	"week"  => "-12000m", # (i.e. -8d13h20m)
-	"month" => "-48000m", # (i.e. -33d8h)
-	"year"  => "-400d",
-	"pinpoint"  => "dummy",
+	"hour"  => "end-4000s",  # (i.e. -1h6m40s)
+	"day"   => "end-2000m",  # (i.e. -33h20m)
+	"week"  => "end-12000m", # (i.e. -8d13h20m)
+	"month" => "end-48000m", # (i.e. -33d8h)
+	"year"  => "end-400d",
+	"pinpoint"  => "unused_value",
 );
 
 my %resolutions = (
@@ -304,8 +304,18 @@ while (new CGI::Fast) {
 		$field_number ++;
 	}
 
+
+	# $end is possibly in future
+	$end = $end ? $end : time;
+	DEBUG "[DEBUG] lastupdate: $lastupdated, end: $end\n";
+
+	# future begins at this horizontal ruler
+	#if ($end > $lastupdated) {
+	push(@rrd_gfx, "VRULE:$lastupdated#999999:Last update:dashes=2,5\\l");
 	my $last_update_str = escape_for_rrd(scalar localtime($lastupdated));
-	push @rrd_gfx, "COMMENT:Last update\\: $last_update_str\\r";
+	push @rrd_gfx, "COMMENT:\\u";
+	push @rrd_gfx, "COMMENT:$last_update_str\\r";
+	#}
 
 	# Send the HTTP Headers
 	print header(
