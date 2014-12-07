@@ -223,11 +223,24 @@ sub _get_order {
 	my ($key, $array_as_string) = @_;
 	my @array = split(/ +/, $array_as_string);
 	for(my $idx = 0; $idx < scalar @array; $idx++) {
-		if ($array[$idx] eq $key) { return $idx; }
+		my ($a, $b) = split(/=/, $array[$idx], 2);
+		if ($a eq $key) { return $idx; }
 	}
 
 	# Not found
 	return scalar @array;
+}
+
+sub _get_alias {
+	my ($key, $array_as_string) = @_;
+	my @array = split(/ +/, $array_as_string);
+	for(my $idx = 0; $idx < scalar @array; $idx++) {
+		my ($a, $b) = split(/=/, $array[$idx], 2);
+		if ($a eq $key) { return $b; }
+	}
+
+	# Not found
+	return undef;
 }
 
 sub _get_last_insert_id {
@@ -514,13 +527,17 @@ sub _dump_into_sql {
 
 				my $ds_type;
 				my $gfx_color;
+				my $cdef;
 				for my $attr (keys %{$self->{service_configs}{$host}{data_source}{$service}{$data_source}}) {
 					my $value = $self->{service_configs}{$host}{data_source}{$service}{$data_source}{$attr};
 					$sth_ds_attr->execute($ds_id, $attr, $value);
 
 					$ds_type = uc($value) if $attr eq "type";
 					$gfx_color = $value if $attr eq "color";
+					$cdef = $value if $attr eq "cdef";
 				}
+
+				my $alias = _get_alias($data_source, $graph_order);
 
 				# Clean ds_type
 				$ds_type = "GAUGE" unless $ds_type && $ds_type =~ /^(DERIVE|COUNTER|ABSOLUTE)$/;
@@ -529,7 +546,8 @@ sub _dump_into_sql {
 				# but we don't really care about perf yet
 				$sth_ds_type->execute($ds_type, $ds_id);
 
-				my $rrdfile_prefix = $config->{dbdir} . "/$url-$service-$data_source";
+				my $service_filename = $service; $service_filename =~ s/\./-/g;
+				my $rrdfile_prefix = $config->{dbdir} . "/$url-$service_filename-$data_source";
 
 				my $rrd_file_type = lc(substr($ds_type, 0, 1));
 				my $rrd_file = "$rrdfile_prefix-$rrd_file_type.rrd";
@@ -538,9 +556,10 @@ sub _dump_into_sql {
 				# Insert RRD specific attributes
 				$sth_ds_attr->execute($ds_id, "rrd:file", $rrd_file);
 				$sth_ds_attr->execute($ds_id, "rrd:field", $rrd_field);
-				$sth_ds_attr->execute($ds_id, "rrd:cdef", "");
+				$sth_ds_attr->execute($ds_id, "rrd:cdef", $cdef) if $cdef;
+				$sth_ds_attr->execute($ds_id, "rrd:alias", $alias) if $alias;
 
-				$sth_ds_attr->execute($ds_id, "gfx:color", $gfx_color);
+				$sth_ds_attr->execute($ds_id, "gfx:color", $gfx_color) if $gfx_color;
 
 				# Get the states for the DS
 				my $state_ds = $state->{value}{"$rrd_file:$rrd_field"};
