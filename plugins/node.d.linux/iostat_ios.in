@@ -24,7 +24,7 @@ each disk or block device on the system.
 
 Simple partitioned disks will only show as the whole disk.  When/if
 you use some device layer over that, such as LVM then LV devices will
-show up individualy.
+show up individually.
 
 When the IO-operation time here increases it is to be expected that
 the iowait on the CPU graph increases, but please read about how
@@ -213,7 +213,7 @@ sub get_state {
     my ($R);
     return(undef) unless ( -r STATEFILE);
     eval {
-	# Using eval, if it breaks while retreive, $R is still undef.
+	# Using eval, if it breaks while retrieve, $R is still undef.
 	# No need to unlink() it, since it will be overriden anyway.
 	$R = retrieve( STATEFILE );
     };

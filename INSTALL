@@ -280,7 +280,7 @@ support and they're even claiming to be complete - and our testing
 agrees. We (janl) have submitted a new version of Net::Server to CPAN 
 based on this.
 
-If you use Debian (or derivates) with Net::Server 0.99-2 or later or
+If you use Debian (or derivatives) with Net::Server 0.99-2 or later or
 if you find Net::Server 0.99.6.1 or more recent in your CPAN or
 Distribution repository is probably supports IPv6 out of the box.
 

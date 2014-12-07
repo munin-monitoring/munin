@@ -42,7 +42,7 @@ through environment variables.
      env.procaspect cpu|memory|ctxt_switches|threads|processes|io
 
 
-env.procname defines the processname as seen inside the paranthesis of the 
+env.procname defines the processname as seen inside the parenthesis of the 
 second column in /proc/<PID>/stat. If you don't get the data you expect, you
 can check if the value is what you expect here. This is what's used for the 
 first filter, and args/user-filters are then applied on top of this filter. 
@@ -396,7 +396,7 @@ sub usage
 }
 
 # Print the value of a two-dimensional hash if it exist.
-# Returns false if non-existant.
+# Returns false if non-existent.
 #
 # Output is formatted for plugins if arg4 is blank, otherwise arg4 is used
 # as the title/name of the field (ie: arg4=graph_title).

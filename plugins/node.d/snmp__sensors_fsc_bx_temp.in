@@ -111,7 +111,7 @@ if (defined $ARGV[0] and $ARGV[0] eq 'config') {
     print <<EOM;
 graph_title Temperatures
 graph_args -l 0
-graph_vlabel degrees Celcius
+graph_vlabel degrees Celsius
 graph_category sensors
 EOM
     print 'graph_order ', join(' ', map { get_id($_) } oid_lex_sort keys %$temps), "\n";

@@ -46,7 +46,7 @@ if ( defined $ARGV[0] && $ARGV[0] eq 'config' ) {
 # Restore data from previous run
 my ( $prev_time, %prev_diskstats );
 eval {
-	# Using eval, if it breaks while retreive, $R is still undef.
+	# Using eval, if it breaks while retrieve, $R is still undef.
 	# No need to unlink() it, since it will be overriden anyway.
 	( $prev_time, %prev_diskstats ) = choose_old_state();
 };
@@ -599,7 +599,7 @@ sub translate_lvm_name {
 
     my $device_name = basename($entry);
 
-# Check for single-dash-occurence to see if this could be a lvm devicemapper device.
+# Check for single-dash-occurrence to see if this could be a lvm devicemapper device.
     if ( $device_name =~ m/(?<!-)-(?!-)/ ) {
 
         # split device name into vg and lv parts
@@ -687,7 +687,7 @@ sub do_config_root {
     my @sorted_devices = sort_by_dm_last( keys %cur_diskstats );
 
     # If we don't trim labels, we have to find the correct graph width to
-    # accomodate all labels
+    # accommodate all labels
     unless ($trim_labels) {
 
         my @short_labels =
@@ -769,7 +769,7 @@ graph_args --base 1024
 graph_vlabel Bytes/\${graph_period} read (-) / write (+)
 graph_category disk
 graph_width $config_graph_width
-graph_info This graph shows averaged throughput for the given disk in bytes.  Higher throughput is usualy linked with higher service time/latency (separate graph).  The graph base is 1024 yeilding Kibi- and Mebi-bytes.
+graph_info This graph shows averaged throughput for the given disk in bytes.  Higher throughput is usually linked with higher service time/latency (separate graph).  The graph base is 1024 yielding Kibi- and Mebi-bytes.
 
 EOF
 
@@ -1178,7 +1178,7 @@ further information).
 
 =head2 Graph width and labels
 
-This plugin will increase the graph_width dynamically to accomodate
+This plugin will increase the graph_width dynamically to accommodate
 longer-than-normal device names. You can disable this behavior by
 setting the B<trim_labels> environment variable. Additionally, you can
 specify a fixed graph_width for the graphs.
@@ -1215,7 +1215,7 @@ given time frame, resulting in an average time per I/O on the
 block-device level.
 
 This value can give you a good comparison base amongst different
-controllers, storage subsystems and disks for similiar workloads.
+controllers, storage subsystems and disks for similar workloads.
 
 
 =head2 Syscall Wait Time

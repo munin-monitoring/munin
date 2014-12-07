@@ -304,12 +304,12 @@ if [ "$1" = "config" ]; then
 		;;
 	    VM)
 		echo "$NAME.label $LABEL: Virtual memory"
-		echo "$NAME.info Size of virtual memory used by $LABEL. (Number multipled by $pagesize to make it human readable)"
+		echo "$NAME.info Size of virtual memory used by $LABEL. (Number multiplied by $pagesize to make it human readable)"
 		echo "$NAME.cdef $NAME,$pagesize,*"
 		;;
 	    VML)
 		echo "$NAME.label $LABEL: Locked memory"
-		echo "$NAME.info Size of locked memory used by $LABEL. (Number multipled by $pagesize to make it human readable)"
+		echo "$NAME.info Size of locked memory used by $LABEL. (Number multiplied by $pagesize to make it human readable)"
 		echo "$NAME.cdef $NAME,$pagesize,*"
 		;;
 	    RSS)

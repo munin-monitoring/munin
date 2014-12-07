@@ -47,7 +47,7 @@ if [ "$1" = "config" ]; then
         echo 'lookups.max 1000000000'
         echo 'lookups.draw AREA'
         echo 'lookups.colour ff0000' # Red
-        echo 'lookups.info Number of access vector lookups. This number is a good indicator of the load beeing placed on the AVC.'
+        echo 'lookups.info Number of access vector lookups. This number is a good indicator of the load being placed on the AVC.'
 
         echo 'hits.label hits'
         echo 'hits.type DERIVE'

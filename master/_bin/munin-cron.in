@@ -1,7 +1,7 @@
 #!@@GOODSH@@
 
 # This used to test if the executables were installed.  But that is
-# perfectly redundant and supresses errors that the admin should see.
+# perfectly redundant and suppresses errors that the admin should see.
 
 @@LIBDIR@@/munin-update $@ || exit 1
 

@@ -10,7 +10,7 @@ digitemp
 
 =head1 CONFIGURATION
 
-The following enviroment variables are used by this plugin:
+The following environment variables are used by this plugin:
 
  digitemprc - config file to use. (Default /etc/digitemp.conf)
               This must be generated with digitemp_<model> -i

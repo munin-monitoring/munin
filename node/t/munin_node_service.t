@@ -174,10 +174,10 @@ $ENV{MUNIN_MASTER_IP} = '';
     is($services->_resolve_uid('no_user'), 0, 'Default user is used if specific user is not provided');
 
     eval { $services->_resolve_uid('bad_uname') };
-    like($@, qr/'%%SSKK¤¤'/, 'Exception thrown when resolving non-existant username');
+    like($@, qr/'%%SSKK¤¤'/, 'Exception thrown when resolving non-existent username');
 
     eval { $services->_resolve_uid('bad_uid') };
-    like($@, qr/'999999999'/, 'Exception thrown when resolving non-existant uid');
+    like($@, qr/'999999999'/, 'Exception thrown when resolving non-existent uid');
 }
 
 
@@ -260,7 +260,7 @@ $ENV{MUNIN_MASTER_IP} = '';
 {
     my $services = Munin::Node::Service->new(servicedir => '/fnord');
 	my $ret = $services->fork_service('foo');
-	is($ret->{retval} >> 8, 42, 'Attempted to run non-existant service');
+	is($ret->{retval} >> 8, 42, 'Attempted to run non-existent service');
 }
 
 

@@ -20,7 +20,7 @@ sda0.  By setting
 
 it will show numbered devices.  This is sometimes needed in
 virtualized environments (e.g. Xen) where sda1 to sda<n> exists but
-not sda.  In a virtualized environment this is usefull to show which
+not sda.  In a virtualized environment this is useful to show which
 guest OS/dom-U IO-traffic originates in.
 
 =head1 USAGE

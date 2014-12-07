@@ -27,7 +27,7 @@
 
 
 
-# If run with the "autoconf"-parameter, give our opinion on wether we
+# If run with the "autoconf"-parameter, give our opinion on whether we
 # should be run on this system or not. This is optinal, and only used by
 # munin-config. In the case of this plugin, we should most probably
 # always be included.

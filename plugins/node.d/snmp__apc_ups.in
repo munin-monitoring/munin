@@ -261,7 +261,7 @@ my %vlabel =
     batteryvolt => 'Volt',
     frequency   => 'Hz',
     status      => 'code value',
-    temperature => 'Celcius',
+    temperature => 'Celsius',
     load        => 'Percent',
     current     => 'Ampere',
   );
@@ -346,7 +346,7 @@ sub collect_snmp {
     # make a (one) query to get them all.  Returns a hash of the
     # values keyed by OID.
     #
-    # Occurances of "noSuchInstance" is replaced by "U".
+    # Occurrences of "noSuchInstance" is replaced by "U".
 
     my ( $snmp ) = @_;
 

@@ -3,7 +3,7 @@
 #
 # Plugin to monitor memcache statistics
 #
-# This module has 3 seperate graph DATASETS:
+# This module has 3 separate graph DATASETS:
 # rates
 # bytes
 # counters

@@ -49,7 +49,7 @@ The following shows a typical configuration:
 
 The plugin shows "probable spam", "surley spam" and "virus".  If your
 "probable spam" raises you may need to tune your spam configuration to
-classify more spam as "surley spam" and so be able to elliminate it.
+classify more spam as "surley spam" and so be able to eliminate it.
 
 =head1 MAGIC MARKERS
 

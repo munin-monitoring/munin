@@ -104,7 +104,7 @@ staticdir /opt/munin/sandbox/etc/opt/munin/static
 #graph_strategy cgi
 cgitmpdir /opt/munin/sandbox/var/cache/munin-cgi
 
-# Drop somejuser@fnord.comm and anotheruser@blibb.comm an email everytime
+# Drop somejuser@fnord.comm and anotheruser@blibb.comm an email every time
 # something changes (OK -> WARNING, CRITICAL -> OK, etc)
 #contact.someuser.command mail -s "Munin notification" somejuser@fnord.comm
 #contact.anotheruser.command mail -s "Munin notification" anotheruser@blibb.comm

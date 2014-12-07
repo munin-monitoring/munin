@@ -131,7 +131,7 @@ my $os = 'Munin::Node::OS';
 {
 	ok(  $os->possible_to_signal_process($$),     'can send a signal to ourselves');
 	ok(! $os->possible_to_signal_process(1),      'cannot signal to init');
-	ok(! $os->possible_to_signal_process(999999), 'cannot signal non-existant process');
+	ok(! $os->possible_to_signal_process(999999), 'cannot signal non-existent process');
 }
 
 ### set_effective_user_id

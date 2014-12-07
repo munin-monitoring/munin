@@ -222,7 +222,7 @@ sub parseleases {
             # 2037/12/31 23:59:59 is max date on perl <= 5.6
 	    print "# DEBUG: end $1\n" if $DEBUG;
 	    my $end = HTTP::Date::str2time($1, "GMT");
-	    # we asume that missing $end is valid due to 
+	    # we assume that missing $end is valid due to 
 	    # restrictions in Time::Local on perl <= 5.6
 	    if($end && $end < $time) { 
 		print "# DEBUG: old $end $time:(\n" if $DEBUG;

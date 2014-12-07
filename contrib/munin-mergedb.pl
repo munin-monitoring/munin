@@ -12,7 +12,7 @@ use strict;
 use Storable;
 use Munin::Master::Utils;
 
-# Exemple of config (munin-merge.conf):
+# Example of config (munin-merge.conf):
 #   # what to merge ?
 #   merge_datafile yes
 #   merge_limits yes
@@ -44,7 +44,7 @@ Usage:
 	$0 merge_dbdir
 
 merge_dbdir should include a config file named $configfile_name.
-This is also a security to avoid accidentaly breaking everything.
+This is also a security to avoid accidentally breaking everything.
 EOF
 	exit 1;
 }

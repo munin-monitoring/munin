@@ -27,7 +27,7 @@ use strict;
 # Put only core Perl modules here, as we don't want to ask for more deps
 use File::Temp; # File::Temp was first released with perl 5.006001
 
-# This file uses subroutine prototypes. This is concidered a bad
+# This file uses subroutine prototypes. This is considered a bad
 # practice according to PBP (see page 194).
 
 ## no critic Prototypes
@@ -565,7 +565,7 @@ sub scaleNumber {
 		 1E-21, 'z',  # zepto
 		 1E-24, 'y'); # yocto
 
-    # Get the absolute and exagerate it slightly since floating point
+    # Get the absolute and exaggerate it slightly since floating point
     # numbers don't compare very well.
     my $absnum = abs($number) * 1.0000001;
 
@@ -627,7 +627,7 @@ line.  You are probably looking for the command
 
 This should by preference be run as root, but other users can also be
 used as long as the plugin doesn not use a state file and does not
-need to be run as a special user or need special priveliges.
+need to be run as a special user or need special privileges.
 
 ";
 

@@ -68,7 +68,7 @@ if (@ARGV && $ARGV[0] =~ /autoconf|suggest/) {
     local $ENV{PATH} = '/bin:/usr/bin';
     # First, try lookup in proc table
     # Note, this will only work if oninit was started with full path
-    # On Linux we could easily retreive INFORMIXDIR from /proc by
+    # On Linux we could easily retrieve INFORMIXDIR from /proc by
     # tr \\00 \\012 < /proc/$PID/environ | grep INFORMIXDIR
     # Following ps command should work on Linux and Solaris
     my $pscmd = 'ps -p `pgrep -P1 oninit -d,` -o ppid= -o args=';
@@ -106,7 +106,7 @@ if (@ARGV && $ARGV[0] =~ /autoconf|suggest/) {
     }
 
     if ($ARGV[0] eq 'suggest') {
-	# Here we need to retreive INFORMIXSERVER
+	# Here we need to retrieve INFORMIXSERVER
 	# Common Informix installations stick to $INFORMIXDIR/etc/onconfig
 	foreach my $dir (@infdir) {
 	    local *ONCONFIG;
@@ -131,7 +131,7 @@ if (@ARGV && $ARGV[0] =~ /autoconf|suggest/) {
     exit 0;
 }
 
-# Retreive vital Informix environment from plugin's name
+# Retrieve vital Informix environment from plugin's name
 @ENV{qw(INFORMIXDIR INFORMIXSERVER)} = $0 =~ /[^.]+(.+)\.(.+)/;
 $ENV{INFORMIXDIR} =~ tr,.,/,;
 $ENV{PATH} = "$ENV{INFORMIXDIR}/bin";

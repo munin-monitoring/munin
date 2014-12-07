@@ -46,7 +46,7 @@ and divides it by the number of I/Os that happened in the given time frame,
 resulting in an average time per I/O on the block-device level.
 
 This value can give you a good comparison base amongst different controllers,
-storage subsystems and disks for similiar workloads.
+storage subsystems and disks for similar workloads.
 
 
 =head2 Syscall Wait Time
@@ -621,7 +621,7 @@ sub translate_lvm_name {
 
     my $device_name = basename($entry);
 
-# Check for single-dash-occurence to see if this could be a lvm devicemapper device.
+# Check for single-dash-occurrence to see if this could be a lvm devicemapper device.
     if ( $device_name =~ m/(?<!-)-(?!-)/ ) {
 
         # split device name into vg and lv parts

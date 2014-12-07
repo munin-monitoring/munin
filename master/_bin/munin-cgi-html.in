@@ -251,7 +251,7 @@ while (new CGI::Fast) {
 	my $graph_ext = url_param("graph_ext");
 	$graph_ext = "png" unless defined $graph_ext;
 
-	# Handle normal pages only if not aleady handled
+	# Handle normal pages only if not already handled
 	goto RENDERING if $template_filename;
 
 	# Remove an eventual [/index].html

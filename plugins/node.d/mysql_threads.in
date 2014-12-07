@@ -67,7 +67,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title MySQL threads'
 	echo 'graph_vlabel threads'
 	echo 'graph_category mysql'
-	echo 'graph_info Note that this is a old plugin which is no longer installed by default.  It is retained for compatability with old installations.'
+	echo 'graph_info Note that this is a old plugin which is no longer installed by default.  It is retained for compatibility with old installations.'
 	
 	echo 'threads.label mysql threads'
 	echo 'graph_args --base 1000'

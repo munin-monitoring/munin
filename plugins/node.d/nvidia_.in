@@ -129,7 +129,7 @@ sub collect_and_print ($$) {
     ($key =~ 'Type'   ) &&
       ($section eq 'Memory') && do { $cardinfo .= " $value memory"; };
 
-    # Yes, the apperance of the $cardinfo related things will be
+    # Yes, the appearance of the $cardinfo related things will be
     # fairly order sensitive, tell me if it breaks.
 
     my $label = clean_fieldname($key);
@@ -188,7 +188,7 @@ sub collect_and_print ($$) {
       print "graph_vlabel Hz\n";
     } elsif ($function eq 'temp') {
       print "graph_title Temperatures of NVidia graphics card\n";
-      print "graph_vlabel Degrees Celcius\n";
+      print "graph_vlabel Degrees Celsius\n";
     } else {
       die "$me: Unknown function!\n";
     }

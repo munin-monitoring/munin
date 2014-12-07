@@ -53,7 +53,7 @@ Chen-Yu Tsai (40):
       cgi/html: Enable dynazoom of service graphs
       cgi/html: Let HTML::Template generate __(odd|even|last)__ tags
       cgi/html: Side navigation links should use R_PATH and relative paths
-      M::M::U: Add comment explaning the usage of tr/// in commit f803c7d36f
+      M::M::U: Add comment explaining the usage of tr/// in commit f803c7d36f
       M::M::U: Store graph categories in SQL in lowercase
       cgi/html: Implement basic category view
       M::M::U: Export plugin/field directives for custom graphs to SQL
@@ -115,7 +115,7 @@ Christian Loos (5):
 Daniel Black (40):
       Break mysql innodb data on full sections
       Fix spelling in mysql plugin for warning
-      Fix name of slave variables and initialize other variables in case slave isnt active
+      Fix name of slave variables and initialize other variables in case slave isn't active
       Capture a bit more information for mysql-5.5+ on innodb status
       Graph the maximum memory mysql can use
       add icp - index condition pushdown
@@ -129,7 +129,7 @@ Daniel Black (40):
       add handler_tmp
       Performance schema losses
       mysql plugin - separate out table and file graphs
-      Mariadb-10 show innodb status compatiblity
+      Mariadb-10 show innodb status compatibility
       DERIVE not GAUGE for mrr and icp graphs
       innodb_open_files as AREA on graph tables
       handler_* and execution graphs are all DERIVE
@@ -149,9 +149,9 @@ Daniel Black (40):
       remove calling $section_map{$sec}->(); twice
       Break mysql innodb data on full sections
       Fix spelling in mysql plugin for warning
-      Fix name of slave variables and initialize other variables in case slave isnt active
+      Fix name of slave variables and initialize other variables in case slave isn't active
       Capture a bit more information for mysql-5.5+ on innodb status
-      Mariadb-10 show innodb status compatiblity
+      Mariadb-10 show innodb status compatibility
       remove calling $section_map{$sec}->(); twice
 
 Servilio Afre Puentes (1):
@@ -252,7 +252,7 @@ A merging release.
 There are also some bug fixes, and many of the pending pull requests.
 
 The naming scheme is convoluted, as meeting said that 2.1.7 will be the first
-with a JSON API, and I prefered to release early.
+with a JSON API, and I preferred to release early.
 
 Closes: #1296, #1350
 
@@ -630,7 +630,7 @@ Mikhail Lukyanchenko (1):
       Update multigraphing.rst
 
 Mrten (1):
-      p/exim_mailstats: fix when 'Completed' isnt last
+      p/exim_mailstats: fix when 'Completed' isn't last
 
 Nicolai Langfeldt (5):
       * Add munin-node upstart file snagged from ubuntu and @@ified
@@ -1569,7 +1569,7 @@ Robin H. Johnson:
 
 Steve Schnepp:
       adding a new sum+cdef tester plugin
-      munin.conf.in: show the defaut value in the sample
+      munin.conf.in: show the default value in the sample
       adding some comments for HTML cron vs cgi
       Only kill & log if the subprocess is still alive
       update/spoolfetch: disable _node_read_fast
@@ -1927,7 +1927,7 @@ Enhancements :
 * Properly label the bgbouncer queries-per-second graph.
 * Properly return undef when the SNMP client returns noSuchObject instead of setting an error.
 * munin-node: Insert a reset_timeout() call to enable the master to get in a word in edgeways after a slow plugin has executed
-* munin-html: Start using fork to save some wall-clock time.  Option --fork us now active and max_html_jobs is recognized by munin-html as the maximum number of paralell processes.
+* munin-html: Start using fork to save some wall-clock time.  Option --fork us now active and max_html_jobs is recognized by munin-html as the maximum number of parallel processes.
 * Actually recognize max_html_jobs as a config parameter
 * Add the publication part
 * Clean up Perl warnings due to use of undefined variables in two functions in LimitsOld.pm.
@@ -1950,7 +1950,7 @@ Enhancements :
   - Restructure a bit to avoid double loading of $config (in
     cooperation with munin-cgi-graph) and make it possible to pass
     some graphing options (--only-fqn for example) in some new places.
-  - Propper logging the right way
+  - Proper logging the right way
   - NOTE: All code relating to host and service filtering and looping
     should be removed soonish - we're only using the FQN to find our
     work now.
@@ -2138,7 +2138,7 @@ munin 1.4.4, r3276,3379, 2010-2-26
 * exim_mailstats: exim_mailstats doesnt count Completed properly. 
   Thanks to Wakko Warner for noticing this in http://bugs.debian.org/569621
 * Deprecated tomcat plugins: Fix in to work properly when only one connector
-  is availabe http://bugs.debian.org/543523
+  is available http://bugs.debian.org/543523
 * postfix_mailstats: Fix shell->perl syntax in perl plugin
 * apt: update description with a pointer to apt_all
 * jmx/GCCount - fix negative counts on jvm restart (closes #852)
@@ -2280,7 +2280,7 @@ munin (1.4.1, r3116:3166, 2009-12-04)
 * linux/if: 
 * Munin::Plugin: Support default values for warning and critical levels.
 * munin-*cgi-graph: Untaint the whole hostname, not only the first
-  occurance of something unholy
+  occurrence of something unholy
 * Munin-*cgi-graph: Let "." be legal in hostnames.
 * munin-graph: Recognize "max_graph_jobs" in the configuration instead
   of logging errors
@@ -2360,7 +2360,7 @@ munin (1.4.0, r3033:3115, 2009-11-27)
 * linux/fw_(packets|conntrack): check for readability not existence
   bail properly if /proc/net/snmp cannot be opened.
 * Fix #758: Enhance and fix error propagation, fix exception handling,
-  fix sub-process waiting/reaping, and finaly print old config data
+  fix sub-process waiting/reaping, and finally print old config data
   for failed nodes in a working way (probably worked before, but I
   broke it when I retooled how old_service_configs is read)
 * Munin::Master::ProcessManager: Correct the join command, which
@@ -2526,9 +2526,9 @@ munin (1.4.0-alpha2, r2899:2981, 2009-11-13)
 * Graphs: ADDNAN in expand_specials cdefs
 * Remove .label requirement on .stack fields.
 * Changed munin_stats to check for
-  $Munin::Common::Defaults::MUNIN_LIBDIR/munin-update existance +
+  $Munin::Common::Defaults::MUNIN_LIBDIR/munin-update existence +
   executable in order to autoconf it as previously it checked for the
-  existance of the munin master logs, which did not exist in a clean
+  existence of the munin master logs, which did not exist in a clean
   installation. Also added a check + extinfo message in case any of the
   log files are not readable
 * Fix copying of subhashes (#%#parent was broken in old version).  Fixed
@@ -2618,7 +2618,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 * munin.conf: include cgiurl_graph example
 * memcached_: New wildcard plugin
 * Refactoring of munin-update, munin-node and munin-node-configure
-  by Kjell-Mangne Øierud and Matthew Boyle.  Actuall tests for testing
+  by Kjell-Mangne Øierud and Matthew Boyle.  Actual tests for testing
   the programs were added too!
 * templates: 
 * html templates: The timestamp can't really be ISO8601 with the support
@@ -2628,7 +2628,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
   M::M::HTMLOld accordingly
 * Put INFO and DEBUG statements into the locking code to make it debugable
 * Fix bashisms in nutups_.in : function is useless
-* Introduced some actuall debugging output to munin-html
+* Introduced some actual debugging output to munin-html
 * Cleaned up logging in munin-html and M::M::Utils
 * munin-master: make getopt::long dependency explicit at build-time
 * linux/df*: Ubuntu Karmic uses "none" as device a lot, so handle that
@@ -2654,7 +2654,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 * Support multiple parameters to pg plugins, using colon to separate
   them.
 * Document max_graph_jobs and max_cgi_graph_jobs (see also the wiki).
-* Made munin-graph paralell (defaulting to 6 forked processes).
+* Made munin-graph parallel (defaulting to 6 forked processes).
   Adapted from 1.2 patch by Kjetil Homme.  Many many thanks!
 * check whether javac works before using it, skip java plugins if not
 * pgsql: Properly apply filters to config query as well for wildcard plugins,
@@ -2878,7 +2878,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 * hddtemp_smartctl: Only check if device is standby for sd? and hd?
   devices (it fails on raid devices).  Patch by anonymous trac user.  Thanks!
 * munin-graph: warn -> warning in two places - that will make graphs more
-  usefull - we hope - as noted by stevew@purdue.edu
+  useful - we hope - as noted by stevew@purdue.edu
 * Fix warn lines where warn is given as range (foo:bar).  Patch by
   stevew@purdue.edu.  Thanks!
 * Fix get_[gu]id to correctly recognize numbers and strings.  Patch by
@@ -2900,7 +2900,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 * Align snmp__if_ and snmp__if_err_ and remove filter on what kinds of
   interfaces they catch.
 * snmp__if_multi: Structure the multigraph namespace somewhat and add
-  some helpfull comments for the future programmer.
+  some helpful comments for the future programmer.
 * snmp__if_multi: A first multigraph plugin - now we just have to make
   munin understand it... 
 * Port snmp__if_err_ to Munin::Plugin::SNMP - it still needs aligning with
@@ -2940,7 +2940,7 @@ munin (1.4.0-alpha, r1560:2898, 2009-11-06)
 * Remove --force-root.  It's silly and causes naught but problems. 
   Added text in the root error message about how to su to munin.
 * Add a script to compute n'th percentile.  Needs some munin-update
-  extentions to work.
+  extensions to work.
 * munin_get_loc: Fix premature exit - patch by Joe Damato
 * This may fix the double legend headers bug
 * Clearify the autoconf "no" from linux/swap
@@ -3063,13 +3063,13 @@ munin (1.3.4, r1277:1560, 8/3/2008)
    files, needs to use log-tail and a state file
  * Make netstat plugins --logarithmic, and autoconfigure
  * Make iostat* plugins autoconfigure
- * Make netstat from darwin generic and elliminate identical plugins
+ * Make netstat from darwin generic and eliminate identical plugins
    from other BSD OSes
  * Add postgres_commits_ and postgres_queries_ contributed by Moses
    Moore based on work done by Vajtsz and others
  * exim_mailstats did not have human readable error messages, it tried
    signaling by coded exit statuses
- * ntp_*: Implement option to supress showing delay graph (suggested by
+ * ntp_*: Implement option to suppress showing delay graph (suggested by
    Håvard Eidnes, fixes #350)
  * Generic processes plugin submitted by Lars Stand. Thanks!! (#441)
  * Fix typo in munin-limits (oks -> ok) closes debian #387283
@@ -3160,7 +3160,7 @@ munin (1.3.4, r1277:1560, 8/3/2008)
  * postfix_mailvolume: multiple fixes for problems found in sibling
    exim_mailstats plugin:
   - Use english to communicate errors (not exit statuses)
-  - Discontinue use of rotated log files to elliminate associated bugs
+  - Discontinue use of rotated log files to eliminate associated bugs
   - Give reasons for not autoconfiguring plugin
  * munin-limits: Open log on demand.
  * Munin.pm Fix false red/yellow markers in html output.
@@ -3176,7 +3176,7 @@ munin (1.3.4, r1277:1560, 8/3/2008)
  * linux/if_ plugin: Clearify the 32 bit issue with fast interfaces
  * linux/irqstats plugin: Incorporate magic markers in pod
  * node.d/multips plugin: Document, use clean_fieldname to remove bugs,
-   add usefull .info information about processes watched.
+   add useful .info information about processes watched.
  * Various fixes to amavis plugin
  * Fix wrong chmod for plugin-state directory
 
@@ -3222,7 +3222,7 @@ munin (1.3.3, r910-r1236)
   * exim_* plugins: Problems with "which exim" on Solaris corrected
   * Put "host" thing in munin-node.conf template config
   * munin-node docs: Mention two most importand Net::Server config options.
-  * Linux df* plugins: Configurable filesystem-type exclution. cds by defaut
+  * Linux df* plugins: Configurable filesystem-type exclution. cds by default
   * plugin.sh: Utility functions for shell plugins
   * Munin::Plugin: Utility functions for perl plugins
   * Sample plugins: Convert to use plugin.sh and Munin::Plugin
@@ -4053,7 +4053,7 @@ lrrd (0.9.3-2)
   * lrrd-nagios now reuses send_nsca handles.
   * lrrd-update can now handle .extinfo-fields.
   * lrrd-nagios can now handle .extinfo-fields.
-  * Bugfixes, continuing Tore's movment of files
+  * Bugfixes, continuing Tore's movement of files
   * Parameterization of lrrd-*
   * Installation script for tarball.
 

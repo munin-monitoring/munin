@@ -33,7 +33,7 @@ it takes to query the nodes about each host configured in Munin.
 Munin is run from cron every 5 minutes and before the next run of
 munin-update the previous run needs to be done.  Each run of
 munin-update forks one process pr. host that needs to get data
-collected, so all collection runs in paralell.
+collected, so all collection runs in parallel.
 
 Any host that is slow, for example slower than 4 miniutes, causes a
 risk that the next run of munin-update must be cancled due to the

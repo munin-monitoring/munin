@@ -379,7 +379,7 @@ sub _concat_config_line_ok {
 
 sub _split_config_line {
     # After going to all that trouble with putting a "longkey" together
-    # we now persue splitting the key in a nice and accurate manner.
+    # we now pursue splitting the key in a nice and accurate manner.
     #
     # See also _concat_config_line
 

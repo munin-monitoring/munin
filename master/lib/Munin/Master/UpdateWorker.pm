@@ -177,7 +177,7 @@ sub do_work {
 			}
 		}
 
-		# If update_rate is aligned, round the "when" for alignement
+		# If update_rate is aligned, round the "when" for alignment
 		if ($is_update_aligned) {
 			foreach my $service (keys %service_data) {
 				my $current_service_data = $service_data{$service};
@@ -480,7 +480,7 @@ sub _compare_and_act_on_config_changes {
 					$old_ds_config, $ds_config)
 		    and $self->_ensure_tuning($service, $data_source,
 					      $ds_config);
-		# _ensure_filename prints helpfull warnings in the log
+		# _ensure_filename prints helpful warnings in the log
 	    } elsif ($just_upgraded) {
 		$self->_ensure_tuning($service, $data_source,
 				      $ds_config);

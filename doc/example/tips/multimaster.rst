@@ -36,9 +36,9 @@ Overview
 Munin-Master runs differents scripts via the cron script (munin-cron).
 
 ``munin-update``
-	is the only part actualy connecting to the nodes. It gathers
+	is the only part actually connecting to the nodes. It gathers
 	information and updates the rrd (you'll probably need rrdcached,
-	especialy via nfs).
+	especially via nfs).
 
 ``munin-limits``
 	checks what was collected, compared to the limits and places
@@ -51,7 +51,7 @@ Munin-Master runs differents scripts via the cron script (munin-cron).
 
 ``munin-graph``
 	generate the graphs. If you are thinking about getting many
-	masters, you probably have alot of graph, and don't want to
+	masters, you probably have a lot of graph, and don't want to
 	generate them every 5 minutes, but you would rather use
 	cgi-graph.
 
@@ -129,7 +129,7 @@ nfs storage.)
 As we deal with groups, we could just link top level groups to a common
 rrd tree.
 
-Exemple, if you have two updaters (update1 and update2), and 4 groups
+Example, if you have two updaters (update1 and update2), and 4 groups
 (customer1, customer2, customer3, customer4), you could make something
 like that::
 
