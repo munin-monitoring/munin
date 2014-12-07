@@ -1,5 +1,426 @@
 -*- text -*-
 
+munin-2.1.10, 2014-12-07
+
+-------
+Summary
+-------
+
+This is a release that is brings the graph CGI also on SQL meta-data.
+
+It does most of the 2.0 one, except mostly the .cdef that isn't handled. Some
+seldom used commands aren't, either, such as .total and .sum to name a few.
+
+------------------
+Detailed Changelog
+------------------
+
+Anders Ossowicki (1):
+      fix autoconf for nfsd plugin
+
+Bram Schoenmakers (2):
+      Fix SNMP password flags in documentation.
+      Fix SNMP password flags in documentation.
+
+Camilo Sperberg (1):
+      Typo on FastCGI configuration
+
+Chen-Yu Tsai (8):
+      cgi/graph: Set RRDCACHED_ADDRESS during each request
+      templates: Fix erroneous '>"' popping up
+      cgi/html: Only list root groups in navigation bar
+      cgi/html: Fix incomplete list of sub-groups in overview
+      cgi/html: Fix PATH for fetched groups
+      cgi/html: Output NGROUPS variable as number of GROUPS
+      cgi/html: Show comparison links only if there are 2 or more nodes
+      templates: Move zoom.js reference after dynazoom form
+
+Daniel Black (62):
+      Add suggest to plugin memcached. Add multiple instance support
+      Add numa plugin
+      replace bash with @@GOODSH@@ for NUMA plugin
+      add more documentation to numa plugin
+      add more documentation to numa plugin (hugepages note)
+      This corrects the truncating of negative values in the diskstats plugin     and calculates its value based on the evidence that this is a overflow     value.
+      Use sqlite locking on db file
+      Fix UNIQUE INDEX type,id on state table
+      Make type,id as primary key on url table
+      Run munin-asyncd fetching on wall clock type
+      Group attributes aren't used so remove table
+      Service has once service_title so that as a column
+      Service categories - many to many
+      Handle 'other' category
+      Populate service_title from graph_title
+      Subgraphs is just a column of services
+      graph_info is just a column of services
+      fetch multiple service infomation all in one go
+      syntax fixes
+      needed no space in sed -i.orig to work
+      Corrent perl err: Found = in conditional, should be ==
+      typo in table alias
+      Suggest capabilty removes unneeded graphs
+      Add galera monitoring variables
+      better handling of undefined data
+      fix wsrep_flow_control_sent/wsrep_flow_control_recv as DERIVES and make the wsrep_flow_control_recv -ve on same graph
+      galera flow control paused to own graph with warning at 0.1 and critical at 0.9
+      syntax fixes
+      pause events received not graphed. try adding label.
+      quote min/max values on wsrep_flow_control_paused, added wsrep_local_{recv|send}_queue_{min|max}, do +- graph on wsrep_local_{recv|send}_queue
+      add wsrep_cert_index_size to  wsrep_distance graph
+      add bits to wsrep_concurrency - requires https://github.com/codership/galera/pull/57
+      wsrep_writesets graph to +-
+      wsrep_writesetbytes graph additions for key/data/other bytes and into an area graph
+      remove wsrep_avgwritesetbytes
+      galera commit - title fix
+      add wsrep_flow_paused_ns and carify the titles/labels on wsrep_flow_paused
+      wsrep_flow_paused_ns not a GAUGE
+      remove poor quality wsrep_avgreplicated/wsrep_avgreceived data calculation
+      Remove apply and commit count from p/mysql
+      p/mysql add innodb_adaptive_hash graph
+      Suggest capabilty removes unneeded graphs
+      Add galera monitoring variables
+      better handling of undefined data
+      fix wsrep_flow_control_sent/wsrep_flow_control_recv as DERIVES and make the wsrep_flow_control_recv -ve on same graph
+      galera flow control paused to own graph with warning at 0.1 and critical at 0.9
+      syntax fixes
+      pause events received not graphed. try adding label.
+      quote min/max values on wsrep_flow_control_paused, added wsrep_local_{recv|send}_queue_{min|max}, do +- graph on wsrep_local_{recv|send}_queue
+      add wsrep_cert_index_size to  wsrep_distance graph
+      add bits to wsrep_concurrency - requires https://github.com/codership/galera/pull/57
+      wsrep_writesets graph to +-
+      wsrep_writesetbytes graph additions for key/data/other bytes and into an area graph
+      remove wsrep_avgwritesetbytes
+      galera commit - title fix
+      add wsrep_flow_paused_ns and carify the titles/labels on wsrep_flow_paused
+      wsrep_flow_paused_ns not a GAUGE
+      remove poor quality wsrep_avgreplicated/wsrep_avgreceived data calculation
+      Remove apply and commit count from p/mysql
+      p/mysql add innodb_adaptive_hash graph
+      mysql plugin - graph the history length
+      p/mysql Qcache_queries_in_cache is a gauge
+
+Eero Häkkinen (3):
+      Fix TLS documentation.
+      master/graph: fix cdef expansion to handle repeated field names
+      Support TLS certificate chain files.
+
+Gabriele (1):
+      Scripts to auto-generate the Munin Plugin Gallery     for plugins from the munin distribution stored at github
+
+Gabriele Pohl (57):
+      Clean up for Munin Plugin Gallery     - Removed option to set customized category in plugin configuration file. Nearly to none plugin offers this option. (IMHO: Customized category should be set in Munin Master configuration if needed)     - Changed category from "Process Info" to standard category "processes"     - Changed family from "auto" to "manual" as this plugin has no "autoconf" capability. It needs manual configuration to select the processes to observe.
+      Eliminate redundant plugin categories     environment -> sensors and print -> printing     btw. convert files to utf8
+      Move all mail plugins to category 'mail'
+      Exclude plugin file meminfo.in from category grep     This plugin introduces a bunch of new categories that are useless and disturbing for gallery navigation.
+      Example graphs for the plugin gallery
+      Insert example graph images into plugin gallery
+      Move courier plugins from category 'other' to 'mail'     btw. convert to utf8
+      Automatically override local stored plugins with newer versions from github
+      Set graph_category
+      Scripts to build gallery for contrib repo
+      Category names may include numbers, dash and underscore
+      Category may include colon (as separator for subcategory)
+      Ignore .svn also for Core Collection
+      Parse for subcategories, run perldoc only once for each plugin
+      Solve POD errors and move info to POD sections
+      Exclude .svn directories from grep search
+      exclude .svn files also in munin.git gallery
+      Transform documentation header into POD format
+      Set category to "security" for the plugins monitoring how many "Pending     Packages" we have
+      POD sections and example graphs for the gallery
+      Keep plugin categories at bay     Remove category cpu and category mysql2
+      Transfer wiki doku to Munin Guide     http://munin-monitoring.org/wiki/plugin-conf.d
+      Diagram for Munin-Master Architecture     added also some explanations
+      Munin-Architecture diagram
+      Moved wiki page to Munin Guide     first use of subsubsection     Point to Munin Architecture diagram (Link still missing)
+      Common Terms     Moved from Wiki to Guide     http://munin-monitoring.org/wiki/MuninNomenclature
+      New chapter for Munin's Architecture     and some references added
+      Forgot a file..
+      Better link to Epel (thanks to fenris02)
+      Move wiki page to Munin-Guide     http://munin-monitoring.org/wiki/protocol-dirty-config
+      protocol.rst moved to architecture chapter
+      Started new chapter "Advanced"     and move protcol beneath "Architecture"     added some references and links also
+      Reserve Chapter "Advanced" to really advanced topics     Moved "How to write plugins" back to plugins chapter
+      Added api-index
+      Added more links to wiki pages     Pages should be moved to the Guide or deleted in the wiki
+      added syntax page, more wiki links
+      Created chapter Others     and moved the draft docs thereto
+      Link from Preface to new chapter Others
+      Recommendations for Plugin-Installation     and a link to common master <-> node protocol
+      Tutorial on wildcard plugins moved from wiki to Guide     plus point to Munin Gallery
+      Show all components docs under "Architecture"
+      Network protocol moved from wiki to Guide
+      Syntax for Munin's configuration files
+      Moved some chapters
+      Move "Documenting Munin" to the preface
+      More info about mailing-lists and btw. repair cross-references
+      Moved History to Reference
+      Only content about Multigraph protocol on protocol page     removed page on topic "Multigraph plugin" from there
+      New page for Munin-Guide: Tutorial -> Network
+      Added cross references to new Tutorial article
+      Move wiki page "Using SNMP-Plugin" to Munin-Guide
+      Update references to SNMP-Plugin Tutorial
+      Move content of wiki page to Munin-Guide     http://munin-monitoring.org/wiki/HowToContact
+      Moved HowToContactNagios to Munin-Guide (Tutorial)
+      docs: Transform table format to field list
+      docs: Try to eliminate layout problem     with longer descriptions of more than one section.
+      docs: Block syntax with "|" in extended field lists
+
+Gerald Turner (2):
+      dhcpd3 plugin should support multiple ranges in a single subnet
+      lower-case the dictionary keys in ipmi_sensor_
+
+Holger Levsen (1):
+      Add 5 new plugins to monitor Jenkins servers.
+
+Joerg Jaspert (1):
+      make proc plugin more careful in /proc/
+
+Kjetil Torgrim Homme (1):
+      handle servers with "unspecified" unit for fans
+
+Klaus S. Madsen (1):
+      prevent diskstats plugin from reporting negative latency
+
+Rob Shortt (1):
+      node: munin plugin config ignores leading *
+
+Simon Whittaker (1):
+      haproxy_backend was not being picked up by munin, modified to haproxy_ng
+
+Steve Schnepp (180):
+      master: add "use_default_node"
+      contrib/rrdcopy: use the shell cmd line for debug
+      contrib/rrdcopy: fix the comma separator
+      rrdcopy: the last value should not be used
+      doc: reworked install doc
+      doc: adding a preface
+      doc: fixed typo in preface
+      doc: build_ can be a symbolic link
+      doc: adding some preface
+      doc: adding bug report section
+      doc: adding "getting help" section
+      doc: remove non-working search macro
+      doc: change settings
+      doc: fix typo in header
+      doc: adding "Where to Report" section
+      doc: adding page about plugin env
+      doc: fix table for env.rst
+      doc: adding the url to the PgSQL manual
+      doc: using cross doc ref
+      doc: add the tutorial skel
+      doc: adding a starting blurb
+      doc/index: fix an malformed hyperlink target
+      doc: fix Title level inconsistencies
+      doc: change target for 2.4
+      doc: fixing hyperlinks
+      doc: fixing more hyperlinks
+      doc/documenting: fix the external links
+      doc: spell check
+      gitignore: ignoring *.bak
+      travis: adding preliminary test for rrd
+      travis: be root for rrd install
+      travis: fix rrd tar extract
+      travis: customized rrd build
+      travis: be root to install rrdtools.
+      travis: install the Perl deps in the Perl dir
+      travis: add some whitespace
+      travis: optimize for compile times
+      node: Only spoolfetch send 5 samples per service
+      t: add Coveralls CI
+      t: use coverall for master
+      Revert "t: use coverall for master"
+      Revert "t: add Coveralls CI"
+      p/debug: adding a huge multigraph plugin
+      p/debug: speedup multigraph_huge by precomputing
+      Makefile: fix build on OSX
+      Makefile: use $(AT) to enable V=1 in make
+      Makefile: --in-place isn't supported, option is -i
+      dev_scripts: remove GNU readlink usage
+      Port the dev_scripts to OSX
+      Fix the chown correctly
+      api: Promote munin-json to the official munin-api
+      api: using the @@ construct
+      doc: add graphviz sphinx extension
+      doc: remove PGHOST references
+      doc: adding a summary of the architecture
+      doc: adding a very rough architecture diagram
+      doc: adding a blurb on a standard install
+      doc: adding the tuto for a node
+      doc: fix table formating
+      node: Only spoolfetch send 5 samples per service
+      asyncd: Use SyncDictFile for plugin_rates
+      asyncd: just use the SpoolWriter META-DATA
+      p/postfix_mail: fix incorrect delivered message count
+      p/http_loadtime: fix escaping of user agent
+      dev_scripts: overriding various USER in script
+      doc: rewording the architecture
+      cgi/html: fix CGI for perl 5.20
+      ChangeLog: 2.0.22
+      doc: Add the refernce to github
+      m/update: fix "not a reference at /../Utils.pm"
+      ChangeLog: 2.0.23
+      guide: Adding some precision on the various docs
+      guide: fix url for Wiki about MuninExchange
+      guide: preface clarifications
+      guide: formatting the preface
+      Rename HACKING to CONTRIBUTING
+      Revert "Rename HACKING to CONTRIBUTING"
+      Add a CONTRIBTING.md file
+      fix typo
+      Revert "p/postfix_mail: fix incorrect delivered message count"
+      p/postfix_mailstats: proper fix, but partial
+      ChangeLog: 2.0.24
+      getversion: handling detached checkouts
+      Makefile: doc/_build can be a symlink
+      doc: adding the preface summary
+      doc: introducting `m-r-b`
+      getversion: better handing of the (detached)
+      doc: formatting the preface index
+      cgi/graph: first version of SQL
+      cgi/graph: handle the pinpoint
+      cgi/graph: adding some debug
+      dev_scripts: adding a fast version of "install"
+      dev_scripts: Adding master .pm to install_fast
+      cgi/graph: setting default value for $start/$end
+      m/update: still use the temp file trick
+      cgi/graph: find the service
+      cgi/g: correctly handle the leading /
+      cgi/g: directly sets the correct $start
+      cgi/g: retrieve the fields to graphwq
+      cgi/g: debugging is currently done in CLI
+      node-debug: adding some variety in plugin types
+      update: adding a ds TYPE field in the SQL
+      cgi/g: Add some cmdline support
+      cgi/g: fix the SQL query
+      cgi/g: adding paletted color
+      cgi/g: adding the legend
+      cgi/g: Logging to screen for now
+      cgi/g: using common constants
+      cgi/g: do not ask any CGI import
+      dev_scripts: handle QUERY_STRING in CGI
+      cgi/g: no need to escape the .label
+      cgi/g: emit some real output
+      Adding a ref to HACKING.pod
+      cgi/g: adding watermark
+      cgi/g: Adding title
+      cgi/g: Setting --start and --end
+      cgi/g: logging some timings
+      Add an initial version of codingstyle
+      p/meminfo: fixed typos
+      p/ipmi_sensor_: fix fan thresholds
+      p/df: reiserfs doesn't use inodes
+      Perl 5.20 is officially supported
+      cgi/g: handling field.draw
+      cgi/g: Emit the offending path_info
+      cgi/g: adding some values as legends
+      node: if only one node, always select that one
+      m/update: avoid "uninitialized value $ds_type"
+      cgi/g: remove unused @times constant
+      cgi/g: adding the "hour" timing
+      whitefix
+      cgi/g: whitespace & comments
+      cgi/g: fix typos
+      cgi/g: support graph_vlabel
+      cgi/g: restore --slope-mode
+      cgi/g: every filetype is accepted
+      Adding a link to the Guide
+      dev_scripts: use the env PERL5LIB path in addition
+      cgi/g: handling per field printf
+      cgi/g: using a temporary file for Fast::CGI
+      m/update: save the field color in the SQL
+      cgi/g: fixing field.draw types
+      cgi/g: adding comments about the use of a tempfile
+      cgi/g: fix the naming scheme
+      cgi/g: fix the DEBUG showing the tempfile
+      cgi/h: fix a typo on the categories
+      master: add ordering in SQL
+      cgi/g: proper error handling with RRDs
+      cgi/g: use SI units
+      cgi/g: have the same look & feel as the 2.0 graphs
+      cgi/g: global headers is much cleaner
+      cgi/g: remove extra --imginfo
+      cgi/g: Reproduce the same look & feel of 2.0
+      cgi/g: handle the size_(x|y) url parameters
+      cgi/g: add the (LINE|AREA)STACK munin extensions
+      cgi/g: Handle a STACK as first field
+      cgi/g: update $field_number late enough
+      cgi/g: fix typo for LINEAREA handling
+      cgi/g: accept SVG as a format
+      cgi/g: support PDF format
+      cgi/g: support PS/EPS format
+      cgi/g: Separation of the regular image formats
+      t: the use_node_name has changed its meaning
+      cgi/h: Avoid emitting DUMP by default
+      cgi/h: be able to have SVG as images
+      cgi/h: redefine CGI::url_param()
+      cgi/h: only add the dump when dump=1
+      cgi/h: adding graph_ext url param
+      cgi/g: Reject unknown formats
+      cgi/h: fix typo
+      cgi/g: using the while(fetch) idiom
+      cgi/g: support text format (csv, xml, json)
+      cgi/g: support "last update" watermark
+      cgi/g: align legend columns
+      cgi/g: align
+      cgi/g: fix typo
+      cgi/g: align the legend items
+      cgi/g: emit a proper command line on error
+      cgi/g: draw a vertical line a last update time
+      cgi/g: use a multiline output
+      cgi/g: handle graph_order
+
+Stig Sandbeck Mathisen (9):
+      Add missing modules to INSTALL
+      Remove linux-specific plugin files_ (ticket:1661)
+      Detect more postgresql versions.
+      Fix POD errors
+      Fix SNMP password flags in t/pod-spelling.t
+      Add a "plugin writing tips" page
+      Mark example as a code block
+      Add a "plugin writing tips" page
+      Mark example as a code block
+
+Vadim Zeitlin (1):
+      Add "ignoreexit" parameter to smart_ plugin.
+
+Veres Lajos (1):
+      typofixes - https://github.com/vlajos/misspell_fixer
+
+^Rooker (1):
+      p/df: making commandline parameters configurable
+
+bra-fsn (1):
+      Fix iostat on FreeBSD
+
+dipohl (3):
+      rework yum.in
+      Update yum.in
+      yum.in: Fix file encoding
+
+driskell (2):
+      Update varnish plugin with Varnish 4 compatibility
+      Improve comments to say which fields are used in which version
+
+leeclemens (1):
+      Add missing parens around $syspeer_stratum_value
+
+lr1980 (1):
+      verbose level = MUNIN_DEBUG
+
+pneuly (1):
+      Modified munin-asyncd to fetch data from multiple virtual nodes served by one physical server
+
+tbear2500 (1):
+      Generate correct rrd filename
+
+Ørjan Ommundsen (2):
+      allow lazy loading of images in all views, not just nodeview
+      fix html syntax error in serviceview template introduced by dynamic images rewrite
+
+
+
+
 munin-2.1.9, 2014-07-21
 
 -------
