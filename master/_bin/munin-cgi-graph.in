@@ -293,9 +293,18 @@ while (new CGI::Fast) {
 		}
 
 		# Fetch the data from the RRDs
-		push @rrd_def, "DEF:avg_$_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
-		push @rrd_def, "DEF:min_$_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
-		push @rrd_def, "DEF:max_$_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
+		my $real_rrdname = $_rrdcdef ? "r_$_rrdname" : $_rrdname;
+		push @rrd_def, "DEF:avg_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
+		push @rrd_def, "DEF:min_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
+		push @rrd_def, "DEF:max_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
+
+		# Handle an eventual cdef
+		if ($_rrdcdef) {
+			# Sustitute the name with the real RRD
+			push @rrd_def, "CDEF:avg_$_rrdname=" . expand_cdef($_rrdname, $_rrdcdef, "avg_$real_rrdname");
+			push @rrd_def, "CDEF:min_$_rrdname=" . expand_cdef($_rrdname, $_rrdcdef, "min_$real_rrdname");
+			push @rrd_def, "CDEF:max_$_rrdname=" . expand_cdef($_rrdname, $_rrdcdef, "max_$real_rrdname");
+		}
 
 		# Graph them
 		$_color = $COLOUR[$field_number % $#COLOUR] unless defined $_color;
@@ -468,6 +477,15 @@ sub escape_for_rrd {
 	$text =~ s/\\/\\\\/g;
 	$text =~ s/:/\\:/g;
 	return $text;
+}
+
+sub expand_cdef {
+	my ($_rrdname, $_rrdcdef, $real_rrdname) = @_;
+	DEBUG "expand_cdef($_rrdname $_rrdcdef $real_rrdname)";
+	$_rrdcdef =~ s/(?<=[,=])$_rrdname(?=[,=]|$)/$real_rrdname/g;
+	$_rrdcdef =~ s/^$_rrdname(?=[,=]|$)/$real_rrdname/g; # Also handle the first element
+	DEBUG "=$_rrdcdef";
+	return $_rrdcdef;
 }
 
 sub RRDs_graph_or_dump {
