@@ -342,15 +342,17 @@ while (new CGI::Fast) {
 
 	# $end is possibly in future
 	$end = $end ? $end : time;
+	$lastupdated = "" unless $lastupdated;
 	DEBUG "[DEBUG] lastupdate: $lastupdated, end: $end\n";
 
 	# future begins at this horizontal ruler
-	#if ($end > $lastupdated) {
-	push(@rrd_gfx, "VRULE:$lastupdated#999999:Last update:dashes=2,5\\l");
-	my $last_update_str = escape_for_rrd(scalar localtime($lastupdated));
-	push @rrd_gfx, "COMMENT:\\u";
-	push @rrd_gfx, "COMMENT:$last_update_str\\r";
-	#}
+	if ($lastupdated) {
+		# TODO - we have to find the last updated for aliased items
+		push(@rrd_gfx, "VRULE:$lastupdated#999999:Last update:dashes=2,5\\l");
+		my $last_update_str = escape_for_rrd(scalar localtime($lastupdated));
+		push @rrd_gfx, "COMMENT:\\u";
+		push @rrd_gfx, "COMMENT:$last_update_str\\r";
+	}
 
 	# Send the HTTP Headers
 	print header(
