@@ -268,16 +268,16 @@ while (new CGI::Fast) {
 
 		DEBUG "rrdname: $_rrdname";
 
-		# Handle virtual DS by overriding ($_rrdfile, $_rrdfield)
+		# Handle virtual DS by overriding the fields that describe the RDD _file_
 		if ($_rrdalias && $_rrdalias =~ m/^(.*)\.([^.]+)$/) {
 			my ($_alias_service, $_alias_ds) = ($1, $2);
 
-
-			# This is a virtual DS, we have to fetch the original $_rrdfile & $_rrdfield
-			($_rrdfile, $_rrdfield) = $dbh->selectrow_array("
+			# This is a virtual DS, we have to fetch the original values
+			($_rrdfile, $_rrdfield, $_lastupdated) = $dbh->selectrow_array("
 				SELECT
 					rf.value,
 					rd.value,
+					st.last_epoch,
 					'dummy' as dummy
 				FROM ds
 				INNER JOIN service s ON s.id = ds.service_id AND (
@@ -286,10 +286,11 @@ while (new CGI::Fast) {
 				)
 				LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
 				LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
+				LEFT OUTER JOIN state st ON st.id = ds.id AND st.type = 'ds'
 				WHERE ds.name = ?
 				ORDER BY ds.ordr ASC
 			", undef, $_alias_service, $_alias_service, $_alias_ds);
-			DEBUG "($_alias_service $_alias_ds) = ($_rrdfile $_rrdfield)";
+			DEBUG "($_alias_service $_alias_ds) = ($_rrdfile $_rrdfield, $_lastupdated)";
 		}
 
 		# Fetch the data from the RRDs
@@ -332,7 +333,7 @@ while (new CGI::Fast) {
 		push @rrd_gfx, "GPRINT:vavg_$_rrdname:$_printf" . "\\t";
 		push @rrd_gfx, "GPRINT:vmax_$_rrdname:$_printf" . "\\r";
 
-		$lastupdated = $_lastupdated if ! defined $lastupdated || $_lastupdated > $lastupdated;
+		$lastupdated = $_lastupdated if ! defined $lastupdated || ($_lastupdated && $_lastupdated > $lastupdated);
 	} continue {
 		# Move to here so it's always executed
 		$field_number ++;
