@@ -28,7 +28,7 @@ use warnings;
 
 use Time::HiRes;
 use CGI::Fast;
-use CGI::Carp qw(fatalsToBrowser);
+#use CGI::Carp qw(fatalsToBrowser);
 
 use POSIX;
 
@@ -37,9 +37,9 @@ use Munin::Master::Utils;
 use Munin::Common::Logger;
 
 use File::Basename;
+use Data::Dumper;
 
-# Uncomment the following line if you want to debug. (TODO: Make it configurable)
-# Munin::Common::Logger::configure( level => 'debug', output => 'screen');
+Munin::Common::Logger::configure( level => 'debug', output => 'screen');
 
 # Hash of available palettes
 my %PALETTE;
