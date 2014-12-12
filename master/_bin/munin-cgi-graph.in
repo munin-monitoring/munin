@@ -484,7 +484,7 @@ sub escape_for_rrd {
 sub expand_cdef {
 	my ($_rrdname, $_rrdcdef, $real_rrdname) = @_;
 	DEBUG "expand_cdef($_rrdname $_rrdcdef $real_rrdname)";
-	$_rrdcdef =~ s/(?<=[,=])$_rrdname(?=[,=]|$)/$real_rrdname/g;
+	$_rrdcdef =~ s/(?<=[,=])$_rrdname(?=[,=]|$)/$real_rrdname/g; # ?<= is lookbehind, ?= is lookforward
 	$_rrdcdef =~ s/^$_rrdname(?=[,=]|$)/$real_rrdname/g; # Also handle the first element
 	DEBUG "=$_rrdcdef";
 	return $_rrdcdef;
