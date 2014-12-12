@@ -325,7 +325,6 @@ while (new CGI::Fast) {
 		push @rrd_def, "VDEF:vmax_$_rrdname=max_$_rrdname,MAXIMUM";
 
 		push @rrd_def, "VDEF:vlst_$_rrdname=avg_$_rrdname,LAST";
-		push @rrd_def, "VDEF:v95p_$_rrdname=avg_$_rrdname,95,PERCENT";
 
 		push @rrd_gfx, "COMMENT:\\u"; # Rewind the line, to have \r after the \l
 		push @rrd_gfx, "GPRINT:vlst_$_rrdname:$_printf" . "\\t";
