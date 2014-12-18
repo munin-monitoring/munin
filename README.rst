@@ -40,9 +40,14 @@ stable-2.0 : |build-stable2.0|
 
 devel : |build-devel|
 
+docs : |docs-latest|
+
 .. |build-stable2.0| image:: https://travis-ci.org/munin-monitoring/munin.png?branch=stable-2.0
    :target: https://travis-ci.org/munin-monitoring/munin
 
 .. |build-devel| image:: https://travis-ci.org/munin-monitoring/munin.png?branch=devel
    :target: https://travis-ci.org/munin-monitoring/munin
+
+.. |docs-latest| image:: https://readthedocs.org/projects/munin/badge/?version=latest
+   :target: http://guide.munin-monitoring.org/
 
