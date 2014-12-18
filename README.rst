@@ -2,7 +2,7 @@ This is Munin
 =============
 
 Munin is distributed under the GNU GPL version 2.  Munin is copyrighted
-2002-2012 by its various authors as identified in the source files.
+2002-2014 by its various authors as identified in the source files.
 
 Munin is homed at http://munin-monitoring.org/.  After you have completed 
 the INSTALL all the documentation can be found there.
