@@ -60,6 +60,13 @@ otherwise.
 
    Affects: :ref:`munin-update`
 
+.. option:: timeout <seconds>
+
+   This directive determines how long :ref:`munin-update` allows a worker to
+   fetch data from a single node.  Default is "180".
+
+   Affects: :ref:`munin-update`
+
 .. option:: palette <default|old>
 
    The palette used by :ref:`munin-graph` and :ref:`munin-cgi-graph`
