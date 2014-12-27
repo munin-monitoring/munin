@@ -26,7 +26,7 @@ use strict;
 use warnings;
 
 
-use CGI::Fast qw(:cgi);
+use CGI::Fast;
 use CGI::Carp qw(fatalsToBrowser);
 
 use POSIX;
