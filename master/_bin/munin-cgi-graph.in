@@ -28,7 +28,7 @@ use warnings;
 
 use Time::HiRes;
 use CGI::Fast;
-use CGI::Carp qw(fatalsToBrowser);
+#use CGI::Carp qw(fatalsToBrowser);
 
 use POSIX;
 
@@ -37,9 +37,9 @@ use Munin::Master::Utils;
 use Munin::Common::Logger;
 
 use File::Basename;
+use Data::Dumper;
 
-# Uncomment the following line if you want to debug. (TODO: Make it configurable)
-# Munin::Common::Logger::configure( level => 'debug', output => 'screen');
+Munin::Common::Logger::configure( level => 'debug', output => 'screen');
 
 # Hash of available palettes
 my %PALETTE;
@@ -215,6 +215,7 @@ while (new CGI::Fast) {
 			gc.value,
 			gd.value,
 			pf.value,
+			ne.value,
 			s.last_epoch,
 			'dummy' as dummy
 		FROM ds
@@ -226,6 +227,7 @@ while (new CGI::Fast) {
 		LEFT OUTER JOIN ds_attr gc ON gc.id = ds.id AND gc.name = 'gfx:color'
 		LEFT OUTER JOIN ds_attr gd ON gd.id = ds.id AND gd.name = 'draw'
 		LEFT OUTER JOIN ds_attr pf ON pf.id = ds.id AND pf.name = 'printf'
+		LEFT OUTER JOIN ds_attr ne ON ne.id = ds.id AND ne.name = 'negative'
 		LEFT OUTER JOIN state s ON s.id = ds.id AND s.type = 'ds'
 		WHERE ds.service_id = ?
 		ORDER BY ds.ordr ASC
@@ -236,7 +238,10 @@ while (new CGI::Fast) {
 	# We don't care anymore for rrdtool less than 1.4
 	my @rrd_def;
 	my @rrd_gfx;
+	my @rrd_gfx_negatives;
 	my @rrd_legend;
+
+	my %negatives;
 
 	push @rrd_gfx, "COMMENT:Cur\\t";
 	push @rrd_gfx, "COMMENT:Min\\t";
@@ -251,6 +256,7 @@ while (new CGI::Fast) {
 			$_rrdfile, $_rrdfield, $_rrdalias, $_rrdcdef,
 			$_color, $_drawtype,
 			$_printf,
+			$_negative,
 			$_lastupdated,
 		) = $sth->fetchrow_array()) {
 		# Note that we do *NOT* provide any defaults for those
@@ -261,6 +267,8 @@ while (new CGI::Fast) {
 		# 	- reduce the size of the CGI part, which is good for
 		# 	  security (& sometimes performances)
 
+		# If this field is the negative of another field, we don't draw it anymore
+		next if $negatives{$_rrdname};
 
 		# Fields inherit this field from their plugin, if not overrided
 		$_printf = $graph_printf unless defined $_printf;
@@ -268,16 +276,16 @@ while (new CGI::Fast) {
 
 		DEBUG "rrdname: $_rrdname";
 
-		# Handle virtual DS by overriding ($_rrdfile, $_rrdfield)
+		# Handle virtual DS by overriding the fields that describe the RDD _file_
 		if ($_rrdalias && $_rrdalias =~ m/^(.*)\.([^.]+)$/) {
 			my ($_alias_service, $_alias_ds) = ($1, $2);
 
-
-			# This is a virtual DS, we have to fetch the original $_rrdfile & $_rrdfield
-			($_rrdfile, $_rrdfield) = $dbh->selectrow_array("
+			# This is a virtual DS, we have to fetch the original values
+			($_rrdfile, $_rrdfield, $_lastupdated) = $dbh->selectrow_array("
 				SELECT
 					rf.value,
 					rd.value,
+					st.last_epoch,
 					'dummy' as dummy
 				FROM ds
 				INNER JOIN service s ON s.id = ds.service_id AND (
@@ -286,16 +294,26 @@ while (new CGI::Fast) {
 				)
 				LEFT OUTER JOIN ds_attr rf ON rf.id = ds.id AND rf.name = 'rrd:file'
 				LEFT OUTER JOIN ds_attr rd ON rd.id = ds.id AND rd.name = 'rrd:field'
+				LEFT OUTER JOIN state st ON st.id = ds.id AND st.type = 'ds'
 				WHERE ds.name = ?
 				ORDER BY ds.ordr ASC
 			", undef, $_alias_service, $_alias_service, $_alias_ds);
-			DEBUG "($_alias_service $_alias_ds) = ($_rrdfile $_rrdfield)";
+			DEBUG "($_alias_service $_alias_ds) = ($_rrdfile $_rrdfield, $_lastupdated)";
 		}
 
 		# Fetch the data from the RRDs
-		push @rrd_def, "DEF:avg_$_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
-		push @rrd_def, "DEF:min_$_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
-		push @rrd_def, "DEF:max_$_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
+		my $real_rrdname = $_rrdcdef ? "r_$_rrdname" : $_rrdname;
+		push @rrd_def, "DEF:avg_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":AVERAGE";
+		push @rrd_def, "DEF:min_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MIN";
+		push @rrd_def, "DEF:max_$real_rrdname=" . $_rrdfile . ":" . $_rrdfield . ":MAX";
+
+		# Handle an eventual cdef
+		if ($_rrdcdef) {
+			# Sustitute the name with the real RRD
+			push @rrd_def, "CDEF:avg_$_rrdname=" . expand_cdef($_rrdname, $_rrdcdef, "avg_$real_rrdname");
+			push @rrd_def, "CDEF:min_$_rrdname=" . expand_cdef($_rrdname, $_rrdcdef, "min_$real_rrdname");
+			push @rrd_def, "CDEF:max_$_rrdname=" . expand_cdef($_rrdname, $_rrdcdef, "max_$real_rrdname");
+		}
 
 		# Graph them
 		$_color = $COLOUR[$field_number % $#COLOUR] unless defined $_color;
@@ -316,15 +334,44 @@ while (new CGI::Fast) {
 		push @rrd_def, "VDEF:vmax_$_rrdname=max_$_rrdname,MAXIMUM";
 
 		push @rrd_def, "VDEF:vlst_$_rrdname=avg_$_rrdname,LAST";
-		push @rrd_def, "VDEF:v95p_$_rrdname=avg_$_rrdname,95,PERCENT";
 
 		push @rrd_gfx, "COMMENT:\\u"; # Rewind the line, to have \r after the \l
-		push @rrd_gfx, "GPRINT:vlst_$_rrdname:$_printf" . "\\t";
-		push @rrd_gfx, "GPRINT:vmin_$_rrdname:$_printf" . "\\t";
-		push @rrd_gfx, "GPRINT:vavg_$_rrdname:$_printf" . "\\t";
-		push @rrd_gfx, "GPRINT:vmax_$_rrdname:$_printf" . "\\r";
 
-		$lastupdated = $_lastupdated if ! defined $lastupdated || $_lastupdated > $lastupdated;
+		# Handle negatives
+		if ($_negative) {
+			# We'll have a negative counterpart
+			push @rrd_def, "CDEF:avg_n_$_rrdname=avg_$_negative,-1,*";
+			push @rrd_def, "CDEF:min_n_$_rrdname=min_$_negative,-1,*";
+			push @rrd_def, "CDEF:max_n_$_rrdname=max_$_negative,-1,*";
+
+			push @rrd_def, "VDEF:vavg_n_$_rrdname=avg_n_$_rrdname,AVERAGE";
+			push @rrd_def, "VDEF:vmin_n_$_rrdname=min_n_$_rrdname,MINIMUM";
+			push @rrd_def, "VDEF:vmax_n_$_rrdname=max_n_$_rrdname,MAXIMUM";
+
+			push @rrd_def, "VDEF:vlst_n_$_rrdname=avg_n_$_rrdname,LAST";
+
+			# We just handled $_negative, so we can ignore it later
+			$negatives{$_negative} ++;
+		}
+
+		# Displaying the values as POSITIVE/NEGATIVE if $_negative
+		push @rrd_gfx, "GPRINT:vlst_$_rrdname:$_printf";
+		push @rrd_gfx, "COMMENT:/", "GPRINT:vlst_n_$_rrdname:$_printf" if $_negative;
+		push @rrd_gfx, "COMMENT:\\t";
+		push @rrd_gfx, "GPRINT:vmin_$_rrdname:$_printf";
+		push @rrd_gfx, "COMMENT:/", "GPRINT:vmin_n_$_rrdname:$_printf" if $_negative;
+		push @rrd_gfx, "COMMENT:\\t";
+		push @rrd_gfx, "GPRINT:vavg_$_rrdname:$_printf";
+		push @rrd_gfx, "COMMENT:/", "GPRINT:vavg_n_$_rrdname:$_printf" if $_negative;
+		push @rrd_gfx, "COMMENT:\\t";
+		push @rrd_gfx, "GPRINT:vmax_$_rrdname:$_printf";
+		push @rrd_gfx, "COMMENT:/", "GPRINT:vmax_n_$_rrdname:$_printf" if $_negative;
+		push @rrd_gfx, "COMMENT:\\r";
+
+		# Push to another array, to have these at the end
+		push @rrd_gfx_negatives, "$_drawtype:avg_n_$_rrdname#$_color" if $_negative;
+
+		$lastupdated = $_lastupdated if ! defined $lastupdated || ($_lastupdated && $_lastupdated > $lastupdated);
 	} continue {
 		# Move to here so it's always executed
 		$field_number ++;
@@ -333,15 +380,17 @@ while (new CGI::Fast) {
 
 	# $end is possibly in future
 	$end = $end ? $end : time;
+	$lastupdated = "" unless $lastupdated;
 	DEBUG "[DEBUG] lastupdate: $lastupdated, end: $end\n";
 
 	# future begins at this horizontal ruler
-	#if ($end > $lastupdated) {
-	push(@rrd_gfx, "VRULE:$lastupdated#999999:Last update:dashes=2,5\\l");
-	my $last_update_str = escape_for_rrd(scalar localtime($lastupdated));
-	push @rrd_gfx, "COMMENT:\\u";
-	push @rrd_gfx, "COMMENT:$last_update_str\\r";
-	#}
+	if ($lastupdated) {
+		# TODO - we have to find the last updated for aliased items
+		push(@rrd_gfx, "VRULE:$lastupdated#999999:Last update:dashes=2,5\\l");
+		my $last_update_str = escape_for_rrd(scalar localtime($lastupdated));
+		push @rrd_gfx, "COMMENT:\\u";
+		push @rrd_gfx, "COMMENT:$last_update_str\\r";
+	}
 
 	# Send the HTTP Headers
 	print header(
@@ -414,6 +463,7 @@ while (new CGI::Fast) {
 		@rrd_header,
 		@rrd_def,
 		@rrd_gfx,
+		@rrd_gfx_negatives,
 		@rrd_legend,
 	);
 
@@ -470,12 +520,22 @@ sub escape_for_rrd {
 	return $text;
 }
 
+sub expand_cdef {
+	my ($_rrdname, $_rrdcdef, $real_rrdname) = @_;
+	DEBUG "expand_cdef($_rrdname $_rrdcdef $real_rrdname)";
+	$_rrdcdef =~ s/(?<=[,=])$_rrdname(?=[,=]|$)/$real_rrdname/g; # ?<= is lookbehind, ?= is lookforward
+	$_rrdcdef =~ s/^$_rrdname(?=[,=]|$)/$real_rrdname/g; # Also handle the first element
+	DEBUG "=$_rrdcdef";
+	return $_rrdcdef;
+}
+
 sub RRDs_graph_or_dump {
 	use RRDs;
 
 	my $fileext = shift;
 	if ($fileext =~ m/PNG|SVG|EPS|PDF/) {
-	        DEBUG "[DEBUG] \n\nrrdtool graph '" . join("' \\\n\t'", @_) . "'\n";
+		open (my $dump_sh, ">rrd.sh");
+		print $dump_sh "rrdtool graph '" . join("' \\\n\t'", @_) . "'\n";
 		return RRDs::graph(@_);
 	}
 
