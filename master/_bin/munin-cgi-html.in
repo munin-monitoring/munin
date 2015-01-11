@@ -86,6 +86,14 @@ while (new CGI::Fast) {
 	$graph_ext = "png" unless defined $graph_ext;
 	$graph_ext = "svg";
 
+	# Handle rest-like URL : .json & .xml
+	my $output_format = "html";
+	if ($path =~ /.(json|xml)$/) {
+		$output_format = $1;
+		# Replace that part with a /, in order to simplify the next handling
+		$path =~ s/.(json|xml)$/\//;
+	}
+
 
 	# Force either a trailing "/" or ".html" to enable simpler url handling: it is like in
 	# a subdir from the browser pov
@@ -462,29 +470,40 @@ RENDERING:
 		next;
 	}
 
-	print header( -status => 200, "-Content-Type" => "text/html", );
-	my $template = HTML::Template::Pro->new(
-		filename => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/$template_filename",
-		loop_context_vars => 1,
-	);
+	if ($output_format eq "html") {
+		print header( -status => 200, "-Content-Type" => "text/html", );
+		my $template = HTML::Template::Pro->new(
+			filename => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/$template_filename",
+			loop_context_vars => 1,
+		);
 
-	my $is_dump_enabled = url_param("dump");
-	if ($is_dump_enabled) {
-		use Data::Dumper;
-		local $Data::Dumper::Terse = 1;
-		local $Data::Dumper::Sortkeys = 1;
-		local $Data::Dumper::Sparseseen = 1;
-		local $Data::Dumper::Deepcopy = 1;
-		local $Data::Dumper::Indent = 1;
+		my $is_dump_enabled = url_param("dump");
+		if ($is_dump_enabled) {
+			use Data::Dumper;
+			local $Data::Dumper::Terse = 1;
+			local $Data::Dumper::Sortkeys = 1;
+			local $Data::Dumper::Sparseseen = 1;
+			local $Data::Dumper::Deepcopy = 1;
+			local $Data::Dumper::Indent = 1;
 
-		$template_params{DEBUG} = Dumper(\%template_params);
+			$template_params{DEBUG} = Dumper(\%template_params);
+		}
+
+		$template->param(%template_params);
+
+		# We cannot use "print_to => \*STDOUT" since it does *NOT* work with FastCGI
+		print $template->output();
+	} elsif ($output_format eq "xml") {
+		print header( -status => 200, "-Content-Type" => "text/xml", );
+
+		use XML::Dumper;
+		print pl2xml( \%template_params );
+	} elsif ($output_format eq "json") {
+		print header( -status => 200, "-Content-Type" => "application/json", );
+
+		use JSON;
+		print encode_json( \%template_params );
 	}
-
-
-	$template->param(%template_params);
-
-	# We cannot use "print_to => \*STDOUT" since it does *NOT* work with FastCGI
-	print $template->output();
 }
 
 sub _get_params_groups {
