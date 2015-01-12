@@ -502,7 +502,9 @@ RENDERING:
 		print header( -status => 200, "-Content-Type" => "application/json", );
 
 		use JSON;
-		print encode_json( \%template_params );
+		my $json = JSON->new();
+		$json = $json->pretty(1);
+		print $json->encode( \%template_params );
 	}
 }
 
