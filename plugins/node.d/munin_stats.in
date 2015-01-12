@@ -26,10 +26,29 @@
 use strict;
 use warnings;
 
+use File::ReadBackwards;
+
 use Munin::Plugin;
 
 my @logs = qw/update graph html limits/;
 my $logdir = ($ENV{'logdir'} || $ENV{'MUNIN_LOGDIR'} || '@@LOGDIR@@');
+
+
+sub uses_graph_cgi {
+    my $log_file = $_[0];
+    my $bw = File::ReadBackwards->new($log_file) or
+                            die "can't read 'log_file' $!";
+    if (defined(my $log_line = $bw->readline)) {
+        if ($log_line =~ ('.*graphing is cgi, do nothing$')) {
+            return 1;
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
+
 
 if ($ARGV[0] and $ARGV[0] eq 'autoconf') {
     my $munin_update_location = 
@@ -57,23 +76,29 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
           "graph_scale yes\n",
           "graph_vlabel seconds\n",
           "graph_category munin\n";
+    my $graph_cgi = 0;
     foreach my $log (@logs) {
-        print "$log.label munin $log\n";
-        print "$log.draw AREASTACK\n";
+        if ($log eq "graph") {
+            $graph_cgi = uses_graph_cgi("$logdir/munin-$log.log");
+        }
+        if ($log ne "graph" || $graph_cgi == 0) {
+            print "$log.label munin $log\n";
+            print "$log.draw AREASTACK\n";
+        }
     }
     print "update.warning 240\n";
     print "update.critical 285\n";
-    print "graph.warning 240\n";
-    print "graph.critical 285\n";
+    if ($graph_cgi == 0) {
+        print "graph.warning 240\n";
+        print "graph.critical 285\n";
+    }
     exit 0;
 }
-
-my %positions = restore_state();
-my %times;
 
 foreach my $log (@logs) {
     my $logfile = "$logdir/munin-$log.log";
     my $time = 'U';
+    my $graph_cgi = 0;
 
     if (! -r $logfile) {
         print "$log.extinfo Can't open $logfile for reading\n";
@@ -81,21 +106,23 @@ foreach my $log (@logs) {
         next;
     }
 
-    if (exists $positions{$log}) {
-        my ($LOGFILE, undef) = tail_open($logfile, $positions{$log});
-        while (<$LOGFILE>) {
-                $time = $1 if (/finished \((\d+\.\d+)\ssec\)$/);
+    if ($log eq "graph") {
+        $graph_cgi = uses_graph_cgi("$logdir/munin-$log.log");
+    }
+
+    my $bw = File::ReadBackwards->new("$logdir/munin-$log.log") or
+                            die "can't read 'log_file' $!";
+    my $found_previous_finished = 0;
+    while(defined(my $log_line = $bw->readline) && $found_previous_finished == 0) {
+        if ($log_line =~ (/finished \((\d+\.\d+)\ssec\)$/)) {
+            $time = $1;
+            $found_previous_finished = 1;
         }
-        $positions{$log} = tail_close($LOGFILE);
-    }
-    else {
-        # Do nothing on first run except find the current file end.
-        $positions{$log} = (stat $logfile)[7];
     }
 
-    print "$log.value $time\n";
+    if ($log ne "graph" || $graph_cgi == 0) {
+        print "$log.value $time\n";
+    }
 }
-
-save_state(%positions);
 
 # vim: ft=perl : ts=4 : expandtab
