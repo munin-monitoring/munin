@@ -34,18 +34,18 @@ my @logs = qw/update graph html limits/;
 my $logdir = ($ENV{'logdir'} || $ENV{'MUNIN_LOGDIR'} || '@@LOGDIR@@');
 
 
-sub uses_graph_cgi {
+sub uses_graph_cron {
     my $log_file = $_[0];
     my $bw = File::ReadBackwards->new($log_file) or
                             die "can't read 'log_file' $!";
     if (defined(my $log_line = $bw->readline)) {
         if ($log_line =~ ('.*graphing is cgi, do nothing$')) {
-            return 1;
-        } else {
             return 0;
+        } else {
+            return 1;
         }
     } else {
-        return 0;
+        return 1;
     }
 }
 
@@ -76,19 +76,19 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
           "graph_scale yes\n",
           "graph_vlabel seconds\n",
           "graph_category munin\n";
-    my $graph_cgi = 0;
+    my $print_graph = 1;
     foreach my $log (@logs) {
         if ($log eq "graph") {
-            $graph_cgi = uses_graph_cgi("$logdir/munin-$log.log");
+            $print_graph = uses_graph_cron("$logdir/munin-$log.log");
         }
-        if ($log ne "graph" || $graph_cgi == 0) {
+        if ($log ne "graph" || $print_graph) {
             print "$log.label munin $log\n";
             print "$log.draw AREASTACK\n";
         }
     }
     print "update.warning 240\n";
     print "update.critical 285\n";
-    if ($graph_cgi == 0) {
+    if ($print_graph) {
         print "graph.warning 240\n";
         print "graph.critical 285\n";
     }
@@ -98,16 +98,11 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 foreach my $log (@logs) {
     my $logfile = "$logdir/munin-$log.log";
     my $time = 'U';
-    my $graph_cgi = 0;
 
     if (! -r $logfile) {
         print "$log.extinfo Can't open $logfile for reading\n";
         print "$log.value $time\n";
         next;
-    }
-
-    if ($log eq "graph") {
-        $graph_cgi = uses_graph_cgi("$logdir/munin-$log.log");
     }
 
     my $bw = File::ReadBackwards->new("$logdir/munin-$log.log") or
@@ -120,7 +115,7 @@ foreach my $log (@logs) {
         }
     }
 
-    if ($log ne "graph" || $graph_cgi == 0) {
+    if ($log ne "graph" || uses_graph_cron("$logdir/munin-$log.log")) {
         print "$log.value $time\n";
     }
 }
