@@ -114,8 +114,8 @@ foreach my $log (@logs) {
                             die "can't read 'log_file' $!";
     my $found_previous_finished = 0;
     while(defined(my $log_line = $bw->readline) && $found_previous_finished == 0) {
-        if ($log_line =~ (/finished \((\d+\.\d+)\ssec\)$/)) {
-            $time = $1;
+        if ($log_line =~ (/(finished|generated) \((\d+\.\d+)\ssec\)$/)) {
+            $time = $2;
             $found_previous_finished = 1;
         }
     }
