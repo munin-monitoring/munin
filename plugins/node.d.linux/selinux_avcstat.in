@@ -22,7 +22,11 @@ GPLv2
 
 =cut
 
-AVCSTATS="/selinux/avc/cache_stats"
+if [ -r /selinux/avc/cache_stats ]; then
+  AVCSTATS="/selinux/avc/cache_stats"
+else
+  AVCSTATS="/sys/fs/selinux/avc/cache_stats"
+fi
 
 if [ "$1" = "autoconf" ]; then
         if [ -r $AVCSTATS ]; then
