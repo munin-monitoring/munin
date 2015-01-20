@@ -96,6 +96,20 @@ my %aspects = (
             }
         }
     },
+    'SessionRate' => {
+        'title' => 'SessionRate',
+        'category' => 'HAProxy',
+        'vlabel' => 'current',
+        'values' => {
+            'stot' => {
+                'type' => 'DERIVE',
+                'draw' => 'AREASTACK',
+                'min' => 0,
+                'label' => 'sessions',
+                'info' => 'sessions',
+            }
+        }
+    },
     'Uptime' => {
         'title' => 'Uptime',
         'category' => 'HAProxy',
@@ -172,18 +186,33 @@ my %graphs = (
     },
     'SessionsFront' => {
         'lines' => 'frontend',
-        'title' => 'Session rate by Frontend',
+        'title' => 'Current Sessions by Frontend',
         'aspect' => 'Sessions'
     },
     'SessionsBack' => {
         'lines' => 'backend',
-        'title' => 'Session rate by Backend',
+        'title' => 'Current Sessions by Backend',
         'aspect' => 'Sessions'
     },
     'SessionsBack.BACKEND' => {
         'lines' => 'server',
-        'title' => 'Session rate by backend: BACKEND',
+        'title' => 'Current Sessions by backend: BACKEND',
         'aspect' => 'Sessions'
+    },
+    'SessionRateFront' => {
+        'lines' => 'frontend',
+        'title' => 'Session rate by Frontend',
+        'aspect' => 'SessionRate'
+    },
+    'SessionRateBack' => {
+        'lines' => 'backend',
+        'title' => 'Session rate by Backend',
+        'aspect' => 'SessionRate'
+    },
+    'SessionRateBack.BACKEND' => {
+        'lines' => 'server',
+        'title' => 'Session rate by backend: BACKEND',
+        'aspect' => 'SessionRate'
     },
     'Uptime' => {
         'lines' => 'backend',
