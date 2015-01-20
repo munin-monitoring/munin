@@ -71,6 +71,7 @@ img.i      {
   box-shadow: 0px 0px 2px 0px #888;
   filter: progid:DXImageTransform.Microsoft.Shadow(color=#888, Direction=NaN, Strength=5);
   margin: 4px 4px 4px 0;
+  width: 499px;
 }
 img.iwarn  {
   border: 1px solid #ffd300;
@@ -80,6 +81,7 @@ img.iwarn  {
   box-shadow: 0px 0px 2px 0px #ffd300;
   filter: progid:DXImageTransform.Microsoft.Shadow(color=#ffd300, Direction=NaN, Strength=5);
   margin: 4px 4px 4px 0;
+  width: 499px;
 }
 img.icrit  {
   border: 1px solid #ff0000;
@@ -89,6 +91,7 @@ img.icrit  {
   box-shadow: 0px 0px 2px 0px #ff0000;
   filter: progid:DXImageTransform.Microsoft.Shadow(color=#ff0000, Direction=NaN, Strength=5);
   margin: 4px 4px 4px 0;
+  width: 499px;
 }
 img.iunkn  {
   border: 1px solid #ffaa00;
@@ -98,6 +101,7 @@ img.iunkn  {
   box-shadow: 0px 0px 2px 0px #ffaa00;
   filter: progid:DXImageTransform.Microsoft.Shadow(color=#ffaa00, Direction=NaN, Strength=5);
   margin: 4px 4px 4px 0;
+  width: 499px;
 }
 
 /* Header */
