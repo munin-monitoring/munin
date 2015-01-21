@@ -222,13 +222,13 @@ Options:
     --force		Alias for \"--always-send ok,warning,critical,unknown\".
                         Overrides --always-send command line, as well as the
                         always_send contact configuration options.
-    --service <service>	Limit notified services to <service>. Multiple 
+    --service <service>	Limit notified services to <service>. Multiple
     			--service options may be supplied.
-    --host <host>	Limit notified hosts to <host>. Multiple --host 
+    --host <host>	Limit notified hosts to <host>. Multiple --host
     			options may be supplied.
-    --contact <contact>	Limit notified contacts to <contact>. Multiple 
+    --contact <contact>	Limit notified contacts to <contact>. Multiple
     			--contact options may be supplied.
-    --config <file>	Use <file> as configuration file. 
+    --config <file>	Use <file> as configuration file.
     			[/etc/munin/munin.conf]
 
 ";
@@ -314,6 +314,7 @@ sub process_service {
     $hash->{'group'} = get_full_group_path($hparentobj);
     $hash->{'worst'} = "ok";
     $hash->{'worstid'} = 0 unless defined $hash->{'worstid'};
+    $hash->{'recovered'} = {};
 
     my $state_file = sprintf ('%s/state-%s-%s.storable', $config->{dbdir}, $hash->{group}, $host);
     DEBUG "[DEBUG] state_file: $state_file";
@@ -321,20 +322,19 @@ sub process_service {
 
     foreach my $field (@$children) {
         next if (!defined $field or ref($field) ne "HASH");
-        my $fname   = munin_get_node_name($field);
-        my $fpath   = munin_get_node_loc($field);
-        my $onfield = munin_get_node($oldnotes, $fpath);
-	my $oldstate= '';
+        my $fname    = munin_get_node_name($field);
+        my $fpath    = munin_get_node_loc($field);
+        my $onfield  = munin_get_node($oldnotes, $fpath);
+        my $oldstate = 'ok';
 
 	# Test directly here as get_limits is in truth recursive and
 	# that fools us when processing multigraphs.
 	next if (!defined($field->{warning}) and !defined($field->{critical}));
 
-	# get the old state if there is one, or leave it empty.
-	if ( defined($onfield) or
-	     defined($onfield->{"state"}) ) {
-	    $oldstate = $onfield->{"state"};
-	}
+        # get the old state if there is one, or leave it empty.
+        if (defined($onfield) and defined($onfield->{'state'})) {
+            $oldstate = $onfield->{'state'};
+        }
 
         my ($warn, $crit, $unknown_limit) = get_limits($field);
 
@@ -356,10 +356,10 @@ sub process_service {
 			# No derive computing possible. Report unknown.
 			$value = "U";
 		} elsif (time > $current_updated_timestamp + $heartbeat) {
-			# Current value is too old. Report unknown. 
+			# Current value is too old. Report unknown.
 			$value = "U";
 		} elsif ($current_updated_timestamp > $previous_updated_timestamp + $heartbeat) {
-			# Old value is too old. Report unknown. 
+			# Old value is too old. Report unknown.
 			$value = "U";
 		} elsif ($field->{type} eq "COUNTER" && $current_updated_value < $previous_updated_value) {
 			# COUNTER never decrease. Report unknown.
@@ -455,7 +455,7 @@ sub process_service {
                             $hash->{'state_changed'} = 0;
                             $state = $onfield->{"state"};
                             $extinfo = $onfield->{$state};
-                            
+
                             # Start counting the number of consecutive UNKNOWN
                             # values seen.
                             $num_unknowns = 1;
@@ -540,13 +540,14 @@ sub process_service {
             munin_set_var_loc(\%notes, [@$fpath, "state"], "ok");
             munin_set_var_loc(\%notes, [@$fpath, "ok"],    "OK");
 
-	    if ($oldstate ne 'ok') {
+            if ($oldstate ne 'ok') {
                 if ($oldstate eq 'unknown' && munin_get_bool($hobj, 'ignore_unknown', 'false')) {
                     DEBUG("[DEBUG] ignoring transition from UNKNOWN to OK");
                 } else {
-		    $hash->{'state_changed'} = 1;
+                    $hash->{'state_changed'} = 1;
+                    $hash->{'recovered'}{$fname} = 1;
                 }
-	    }
+            }
         }
     }
     generate_service_message($hash);
@@ -580,7 +581,7 @@ sub get_limits {
                 . (defined $critical[0]? $critical[0] : "")
                 .  " : "
                 . (defined $critical[1]? $critical[1] : "");
-    }   
+    }
 
     if (defined $warn and $warn =~ /^\s*([-+\d.]*):([-+\d.]*)\s*$/) {
         $warning[0] = $1 if length $1;
@@ -603,7 +604,7 @@ sub get_limits {
         $unknown_limit = $1 if defined $1;
         if (defined $unknown_limit) {
             if ($unknown_limit < 1) {
-                # Zero and negative numbers are not valid.  
+                # Zero and negative numbers are not valid.
                 $unknown_limit = 1;
             }
         }
@@ -629,20 +630,21 @@ sub generate_service_message {
     DEBUG "[DEBUG] generating service message: "
 	. join('::', @{munin_get_node_loc($hash)});
 
-    my $children = 
+    my $children =
 	munin_get_children(
-	    munin_get_node(\%notes, 
+	    munin_get_node(\%notes,
 			   munin_get_node_loc($hash)));
 
     if ( defined($children) ) {
-	foreach my $field (@$children) {
-	    if (defined $field->{"state"}) {
-		push @{$stats{$field->{"state"}}}, munin_get_node_name($field);
-		if ($field->{"state"} eq "ok") {
-		    push @{$stats{"foks"}}, munin_get_node_name($field);
-		}
-	    }
-	}
+        foreach my $field (@$children) {
+            if (defined $field->{'state'}) {
+                my $fname = munin_get_node_name($field);
+                push @{$stats{$field->{'state'}}}, $fname;
+                if ($field->{'state'} eq 'ok' and defined $hash->{'recovered'}{$fname}) {
+                    push @{$stats{'foks'}}, $fname;
+                }
+            }
+        }
     }
 
     $hash->{'cfields'}  = join " ", @{$stats{'critical'}};
