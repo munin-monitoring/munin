@@ -282,6 +282,8 @@ $graphs{connections} = {
 	{name => 'Aborted_connects',     label => 'Aborted connects'},
 	{name => 'Threads_connected',    label => 'Threads connected',
 					 type  => 'GAUGE'},
+	{name => 'Threads_running',      label => 'Threads running',
+					 type  => 'GAUGE'},
 	{name => 'Connections',          label => 'New connections'},
     ],
 };
