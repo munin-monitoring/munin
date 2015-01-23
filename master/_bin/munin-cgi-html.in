@@ -22,12 +22,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 =cut
 
+
+package Munin::Master::Http;
+
 use strict;
 use warnings;
 
 
-use CGI::Fast;
-use CGI::Carp qw(fatalsToBrowser);
+use HTTP::Server::Simple::CGI;
+use base qw(HTTP::Server::Simple::CGI);
 
 use POSIX;
 use HTML::Template::Pro;
@@ -44,7 +47,11 @@ my @times = qw(day week month year);
 # XXX - this is NOT thread-safe!
 my $cgi;
 
-while ($cgi = new CGI::Fast) {
+sub handle_request
+{
+	my $self = shift;
+	$cgi = shift;
+
 	my $path = $cgi->path_info();
 
 	# Handle static page now, since there is no need to do any SQL
@@ -66,12 +73,12 @@ while ($cgi = new CGI::Fast) {
 
 		if (! $fh) {
 			print $cgi->header( -status => 404);
-			next;
+			return;
 		}
 
 		print $cgi->header( -status => 200, -type => $mime_types{$ext});
 		while (my $line = <$fh>) { print $line; }
-		next;
+		return;
 	}
 
 	# Short evaluate the GRAPH png pages
@@ -82,7 +89,7 @@ while ($cgi = new CGI::Fast) {
 			-Location => $url,
 			-Cache_Control => "public, max-age=14400",  # Cache is valid of 1 day
 		);
-		next;
+		return;
 	}
 
 	my $graph_ext = $cgi->url_param("graph_ext");
@@ -107,7 +114,7 @@ while ($cgi = new CGI::Fast) {
 			-Location => ($cgi->url(-path_info=>1,-query=>1) . "/"),
 			-Cache_Control => "public, max-age=14400",  # Cache is valid of 1 day
 		);
-		next;
+		return;
 	}
 
 	# Remove now the leading "/" as *every* path will have it
@@ -275,7 +282,7 @@ while ($cgi = new CGI::Fast) {
 	if (! defined $id) {
 		# Not found
 		print $cgi->header( -status => 404, );
-		next;
+		return;
 	} elsif ($type eq "group") {
 		# Shared code for group views and comparison views
 
@@ -470,7 +477,7 @@ RENDERING:
 	if (! $template_filename ) {
 		# Unknown
 		print $cgi->header( -status => 404, );
-		next;
+		return;
 	}
 
 	if ($output_format eq "html") {
@@ -776,3 +783,7 @@ sub url_absolutize
 	return $url_a;
 }
 
+package main;
+
+# start the server on port 4948
+Munin::Master::Http->new(4948)->run();
