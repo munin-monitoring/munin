@@ -25,10 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 use strict;
 use warnings;
 
+package Munin::Master::Http;
+use HTTP::Server::Simple::CGI;
+use base qw(HTTP::Server::Simple::CGI);
 
 use Time::HiRes;
-use CGI::Fast;
-#use CGI::Carp qw(fatalsToBrowser);
 
 use POSIX;
 
@@ -108,7 +109,11 @@ my %CONTENT_TYPES = (
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
 
 my $cgi;
-while ($cgi = new CGI::Fast) {
+sub handle_request
+{
+	my $self = shift;
+	$cgi = shift;
+
 	my $t0 = Time::HiRes::time;
 	my $path = $cgi->path_info();
 
@@ -118,7 +123,7 @@ while ($cgi = new CGI::Fast) {
 			-status => 404,
 			"X-Reason" => "invalid URL: $path",
 		);
-		next;
+		return;
 	}
 
 
@@ -134,7 +139,7 @@ while ($cgi = new CGI::Fast) {
 			-status => 404,
 			"X-Reason" => "invalid format $format",
 		);
-		next;
+		return;
 	}
 
 	# Handle the "pinpoint" time
@@ -159,14 +164,14 @@ while ($cgi = new CGI::Fast) {
 			-status => 404,
 			"X-Reason" => "'$graph_path' Not Found in DB",
 		);
-		next;
+		return;
 	} elsif ($type ne "service") {
 		# Not supported yet
 		print $cgi->header(
 			-status => 404,
 			"X-Reason" => "'$type' graphing is not supported yet",
 		);
-		next;
+		return;
 	}
 
 	DEBUG "found node=$id, type=$type";
@@ -642,3 +647,8 @@ sub RRDs_graph_or_dump {
 	my $rrd_error = RRDs::error();
 	return $rrd_error;
 }
+
+package main;
+
+# start the server on port 4948
+Munin::Master::Http->new(4948)->run();
