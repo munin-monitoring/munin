@@ -107,13 +107,14 @@ my %CONTENT_TYPES = (
 
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
 
-while (new CGI::Fast) {
+my $cgi;
+while ($cgi = new CGI::Fast) {
 	my $t0 = Time::HiRes::time;
-	my $path = path_info();
+	my $path = $cgi->path_info();
 
 	if ($path !~ m/^\/(.*)-(hour|day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png|[a-z]+)$/) {
 		# We don't understand this URL
-		print header(
+		print $cgi->header(
 			-status => 404,
 			"X-Reason" => "invalid URL: $path",
 		);
@@ -129,7 +130,7 @@ while (new CGI::Fast) {
 	$format = uc($format);
 	if (! $CONTENT_TYPES{$format}) {
 		# We don't understand this format
-		print header(
+		print $cgi->header(
 			-status => 404,
 			"X-Reason" => "invalid format $format",
 		);
@@ -154,14 +155,14 @@ while (new CGI::Fast) {
 
 	if (! defined $id) {
 		# Not found
-		print header(
+		print $cgi->header(
 			-status => 404,
 			"X-Reason" => "'$graph_path' Not Found in DB",
 		);
 		next;
 	} elsif ($type ne "service") {
 		# Not supported yet
-		print header(
+		print $cgi->header(
 			-status => 404,
 			"X-Reason" => "'$type' graphing is not supported yet",
 		);
@@ -393,10 +394,10 @@ while (new CGI::Fast) {
 	}
 
 	# Send the HTTP Headers
-	print header(
+	print $cgi->header(
 		-status => 200,
 		"Content-type" => $CONTENT_TYPES{$format},
-	) unless CGI::url_param("no_header");
+	) unless $cgi->url_param("no_header");
 
 	# Compute the title
 	my $title = "";
@@ -408,8 +409,8 @@ while (new CGI::Fast) {
 		$title = "by " . $time;
 	}
 
-	my $width = url_param("size_x") || 400;  # We aligned our RRA to 400px
-	my $height = url_param("size_y") || 175; # Aligned to current CSS
+	my $width = $cgi->url_param("size_x") || 400;  # We aligned our RRA to 400px
+	my $height = $cgi->url_param("size_y") || 175; # Aligned to current CSS
 
 	# Sanitize $width & $height to 4000, to avoid RSS-based DoS
 	if (! is_int($width) || $width < 1 || $width > 4000) {
@@ -641,11 +642,3 @@ sub RRDs_graph_or_dump {
 	my $rrd_error = RRDs::error();
 	return $rrd_error;
 }
-
-# CGI in perl 5.20 is now seriously broken as it doesn't import into the namespace.
-# So we have to delegate explicitely. It's easier than prefixing with CGI:: each use.
-sub header { return CGI::header(@_); }
-sub path_info { return CGI::path_info(@_); }
-sub url { return CGI::url(@_); }
-sub script_name { return CGI::script_name(@_); }
-sub url_param { return CGI::url_param(@_); }
