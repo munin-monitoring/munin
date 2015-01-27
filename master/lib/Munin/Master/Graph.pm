@@ -123,8 +123,8 @@ sub handle_request
 
 	if ($path !~ m/^\/(.*)-(hour|day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png|[a-z]+)$/) {
 		# We don't understand this URL
+		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
-			-status => 404,
 			"X-Reason" => "invalid URL: $path",
 		);
 		return;
@@ -139,8 +139,8 @@ sub handle_request
 	$format = uc($format);
 	if (! $CONTENT_TYPES{$format}) {
 		# We don't understand this format
+		 print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
-			-status => 404,
 			"X-Reason" => "invalid format $format",
 		);
 		return;
@@ -164,15 +164,15 @@ sub handle_request
 
 	if (! defined $id) {
 		# Not found
+		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
-			-status => 404,
 			"X-Reason" => "'$graph_path' Not Found in DB",
 		);
 		return;
 	} elsif ($type ne "service") {
 		# Not supported yet
+		print "HTTP/1.0 404 Not found\r\n";
 		print $cgi->header(
-			-status => 404,
 			"X-Reason" => "'$type' graphing is not supported yet",
 		);
 		return;
@@ -403,8 +403,8 @@ sub handle_request
 	}
 
 	# Send the HTTP Headers
+	print "HTTP/1.0 200 OK\r\n";
 	print $cgi->header(
-		-status => 200,
 		"Content-type" => $CONTENT_TYPES{$format},
 	) unless $cgi->url_param("no_header");
 

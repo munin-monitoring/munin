@@ -42,25 +42,28 @@ sub handle_request
 		my $fh = new IO::File("$filename");
 
 		if (! $fh) {
-			print $cgi->header( -status => 404);
+			print "HTTP/1.0 404 Not found\r\n";
 			return;
 		}
 
-		print $cgi->header( -status => 200, -type => $mime_types{$ext});
+		print "HTTP/1.0 200 OK\r\n";
+		print $cgi->header( -type => $mime_types{$ext});
 		while (my $line = <$fh>) { print $line; }
 		return;
 	}
 
 	# Short evaluate the GRAPH png pages
-	if ($path =~ m/-(day|week|month|year).([a-z]+)$/) {
-		my $url = $cgi->script_name() . "/../munin-cgi-graph" . $cgi->path_info();
-		print $cgi->header(
-			-status => 301,
-			-Location => $url,
-			-Cache_Control => "public, max-age=14400",  # Cache is valid of 1 day
-		);
-		return;
-	}
+	# XXX - no need to, the switch is already made
+##	if ($path =~ m/-(day|week|month|year).([a-z]+)$/) {
+##		my $url = $cgi->script_name() . "/../munin-cgi-graph" . $cgi->path_info();
+##		print "HTTP/1.0 301 Redirect Permanent\r\n";
+##		print $cgi->header(
+##			-status => 301,
+##			-Location => $url,
+##			-Cache_Control => "public, max-age=14400",  # Cache is valid of 1 day
+##		);
+##		return;
+##	}
 
 	my $graph_ext = $cgi->url_param("graph_ext");
 	$graph_ext = "png" unless defined $graph_ext;
@@ -79,8 +82,8 @@ sub handle_request
 	# a subdir from the browser pov
 	if ($path eq "" || $path !~ /(\/|\.html)$/) {
 		#if ($path eq "") {
+		print "HTTP/1.0 301 Redirect Permanent\r\n";
 		print $cgi->header(
-			-status => 301,
 			-Location => ($cgi->url(-path_info=>1,-query=>1) . "/"),
 			-Cache_Control => "public, max-age=14400",  # Cache is valid of 1 day
 		);
@@ -251,7 +254,7 @@ sub handle_request
 
 	if (! defined $id) {
 		# Not found
-		print $cgi->header( -status => 404, );
+		print "HTTP/1.0 404 Not found\r\n";
 		return;
 	} elsif ($type eq "group") {
 		# Shared code for group views and comparison views
@@ -446,12 +449,13 @@ sub handle_request
 RENDERING:
 	if (! $template_filename ) {
 		# Unknown
-		print $cgi->header( -status => 404, );
+		print "HTTP/1.0 404 Not found\r\n";
 		return;
 	}
 
 	if ($output_format eq "html") {
-		print $cgi->header( -status => 200, "-Content-Type" => "text/html", );
+		print "HTTP/1.0 200 OK\r\n";
+		print $cgi->header( "-Content-Type" => "text/html", );
 		my $template = HTML::Template::Pro->new(
 			filename => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/$template_filename",
 			loop_context_vars => 1,
@@ -474,12 +478,14 @@ RENDERING:
 		# We cannot use "print_to => \*STDOUT" since it does *NOT* work with FastCGI
 		print $template->output();
 	} elsif ($output_format eq "xml") {
-		print $cgi->header( -status => 200, "-Content-Type" => "text/xml", );
+		print "HTTP/1.0 200 OK\r\n";
+		print $cgi->header( "-Content-Type" => "text/xml", );
 
 		use XML::Dumper;
 		print pl2xml( \%template_params );
 	} elsif ($output_format eq "json") {
-		print $cgi->header( -status => 200, "-Content-Type" => "application/json", );
+		print "HTTP/1.0 200 OK\r\n";
+		print $cgi->header( "-Content-Type" => "application/json", );
 
 		use JSON;
 		print encode_json( \%template_params );
@@ -695,7 +701,7 @@ sub _get_params_fields {
 	my @fields;
 	while (my ($_ds_name, $_ds_s_warn, $_ds_s_crit, $_ds_graph, $_ds_label, $_ds_type, $_ds_warn, $_ds_crit, $_ds_info) =
 			$sth_ds->fetchrow_array) {
-		next if $_ds_graph eq 'no';
+		next if $_ds_graph && $_ds_graph eq 'no';
 
 		push @fields, {
 			FIELD => $_ds_name,
