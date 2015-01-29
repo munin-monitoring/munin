@@ -62,6 +62,11 @@ my $ret = undef;
 if (! eval "require LWP::UserAgent;"){
 	$ret = "LWP::UserAgent not found";
 }
+if ($0 =~ /^nginx6_/) {
+        if (! eval "require Net::INET6Glue::INET_is_INET6;"){
+                $ret = "Net::INET6Glue::INET_is_INET6 not found";
+        }
+}
 
 my $UA = Munin::Plugin::HTTP->new;
 my $URL = exists $ENV{'url'} ? $ENV{'url'} : "http://localhost/nginx_status";
