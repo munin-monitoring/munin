@@ -784,6 +784,8 @@ sub suggest {
     #   SHOW SLAVE STATUS
 
     foreach my $graph (sort keys(%graphs)) {
+        next if $graph =~ /innodb_/ && $data->{_innodb_disabled};
+        next if $graph =~ /wsrep_/ && $data->{_galera_disabled};
         print "$graph\n";
     }
 
