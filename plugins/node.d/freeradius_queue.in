@@ -1,0 +1,103 @@
+#!/bin/sh
+: << =cut
+
+=head1 NAME
+
+freeradius_queue - Plugin to get number of waiting packets in FreeRADIUS queues
+
+=head1 APPLICABLE SYSTEMS
+
+FreeRADIUS 3.0.7 or later.
+
+=head1 CONFIGURATION
+
+This plugin uses the following configuration variables:
+
+ [freeradius_queue]
+  env.radmin     - Path to "radmin" executable.
+  env.socketfile - Path to administration socket.
+
+=head1 AUTHOR
+
+Copyright (C) 2015 Arran Cudbard-Bell <a.cudbardb@freeradius.org>
+
+=head1 LICENSE
+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+RADMIN=${radmin:-`which radmin 2>/dev/null`}
+RADMIN=${RADMIN:-/usr/sbin/radmin}
+SOCKETFILE=${socketfile:-/var/run/radiusd/radiusd.sock}
+
+#
+# Check we can execute radmin, and check that the stats queue
+# command exists, and provides us with valid results.
+#
+# Note: Before 3.0.7 there was no separate communications channel
+# for error codes or error messages, so radmin would always exit
+# with 0, even on failure.
+#
+if [ "$1" = "autoconf" ]; then
+    if [ -x $RADMIN ] && $RADMIN -f $SOCKETFILE -e "stats queue" 2>/dev/null | grep 'queue_len' > /dev/null; then
+        echo yes
+    else
+        echo no
+    fi
+    exit 0
+fi
+
+if [ "$1" = "config" ]; then
+    echo 'graph_title FreeRADIUS queued packets'
+    echo 'graph_args --base 1000 -l 0 '
+    echo 'graph_period second'
+    echo 'graph_vlabel requests / ${graph_period}'
+    echo 'graph_category Other'
+
+    echo 'queue_len_internal.label Internal'
+    echo 'queue_len_internal.info number of requests waiting in the internal queue'
+    echo 'queue_len_internal.type DERIVE'
+    echo 'queue_len_internal.min 0'
+
+    echo 'queue_len_proxy.label Proxy'
+    echo 'queue_len_proxy.info number of requests waiting in the proxy queue'
+    echo 'queue_len_proxy.type DERIVE'
+    echo 'queue_len_proxy.min 0'
+
+    echo 'queue_len_auth.label Authentication'
+    echo 'queue_len_auth.info number of requests waiting in the authentication queue'
+    echo 'queue_len_auth.type DERIVE'
+    echo 'queue_len_auth.min 0'
+
+    echo 'queue_len_acct.label Accounting'
+    echo 'queue_len_acct.info number of requests waiting in the accounting queue'
+    echo 'queue_len_acct.type DERIVE'
+    echo 'queue_len_acct.min 0'
+
+    echo 'queue_len_detail.label Detail reader'
+    echo 'queue_len_detail.info number of requests waiting in the detail queue'
+    echo 'queue_len_detail.type DERIVE'
+    echo 'queue_len_detail.min 0'
+
+    exit 0
+fi
+
+$RADMIN -f $SOCKETFILE -e "stats queue" | grep 'queue_len*' |  awk '{print $1".value " $2}'
