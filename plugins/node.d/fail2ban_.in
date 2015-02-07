@@ -1,0 +1,297 @@
+# #!@@PYTHON@@
+# -*- python -*-
+
+"""
+=head1 NAME
+
+fail2ban_ - Wildcard plugin to monitor fail2ban blacklists
+
+=head1 ABOUT
+
+Requires Python 2.7
+Requires fail2ban 0.9.2
+
+=head1 AUTHOR
+
+Copyright (c) 2015 Lee Clemens
+
+Inspired by fail2ban plugin written by Stig Sandbeck Mathisen
+
+=head1 CONFIGURATION
+
+fail2ban-client needs to be run as root.
+
+Add the following to your @@CONFDIR@@/munin-node:
+
+  [fail2ban_*]
+    user root
+
+=head1 LICENSE
+
+GNU GPLv2 or any later version
+
+=begin comment
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+General Public License for more details
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+=end comment
+
+=head1 BUGS
+
+Transient values (particularly ASNs) come and go...
+Better error handling (Popen), logging
+Optimize loops and parsing in __get_jail_status() and parse_fail2ban_status()
+Cymru ASNs aren't displayed in numerical order (internal name has alpha-prefix)
+Use JSON status once fail2ban exposes JSON status data
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
+"""
+
+from collections import Counter
+from os import path, stat, access, X_OK, environ
+from subprocess import Popen, PIPE
+from time import time
+import re
+import sys
+
+
+PLUGIN_BASE = "fail2ban_"
+
+CACHE_DIR = environ['MUNIN_PLUGSTATE']
+CACHE_MAX_AGE = 120
+
+STATUS_FLAVORS_FIELDS = {
+    "basic": ["jail"],
+    "cymru": ["asn", "country", "rir"]
+}
+
+
+def __parse_plugin_name():
+    if path.basename(__file__).count("_") == 1:
+        return path.basename(__file__)[len(PLUGIN_BASE):], ""
+    else:
+        return (path.basename(__file__)[len(PLUGIN_BASE):].split("_")[0],
+                path.basename(__file__)[len(PLUGIN_BASE):].split("_")[1])
+
+
+def __get_jails_cache_file():
+    return "%s/%s.state" % (CACHE_DIR, path.basename(__file__))
+
+
+def __get_jail_status_cache_file(jail_name):
+    return "%s/%s__%s.state" % (CACHE_DIR, path.basename(__file__), jail_name)
+
+
+def __parse_jail_names(jails_data):
+    """
+    Parse the jails returned by `fail2ban-client status`:
+
+    Status
+    |- Number of jail:	3
+    `- Jail list:	apache-badbots, dovecot, sshd
+    """
+    jails = []
+    for line in jails_data.splitlines()[1:]:
+        if line.startswith("`- Jail list:"):
+            return [jail.strip(" ,\t") for jail in
+                    line.split(":", 1)[1].split(" ")]
+    return jails
+
+
+def __get_jail_names():
+    """
+    Read jails from cache or execute `fail2ban-client status`
+     and pass stdout to __parse_jail_names
+    """
+    cache_filename = __get_jails_cache_file()
+    try:
+        mtime = stat(cache_filename).st_mtime
+    except OSError:
+        mtime = 0
+    if time() - mtime > CACHE_MAX_AGE:
+        p = Popen(["fail2ban-client", "status"], shell=False, stdout=PIPE)
+        jails_data = p.communicate()[0]
+        with open(cache_filename, 'w') as f:
+            f.write(jails_data)
+    else:
+        with open(cache_filename, 'r') as f:
+            jails_data = f.read()
+    return __parse_jail_names(jails_data)
+
+
+def autoconf():
+    """
+    Attempt to find fail2ban-client in path (using `which`) and ping the client
+    """
+    p_which = Popen(["which", "fail2ban-client"], shell=False, stdout=PIPE,
+                    stderr=PIPE)
+    stdout, stderr = p_which.communicate()
+    if len(stdout) > 0:
+        client_path = stdout.strip()
+        if access(client_path, X_OK):
+            p_ping = Popen([client_path, "ping"], shell=False)
+            p_ping.communicate()
+            if p_ping.returncode == 0:
+                print("yes")
+            else:
+                print("no (fail2ban-server does not respond to ping)")
+        else:
+            print("no (fail2ban-client is not executable)")
+    else:
+        import os
+
+        print("no (fail2ban-client not found in path: %s)" %
+              os.environ["PATH"])
+
+
+def suggest():
+    """
+    Iterate all defined flavors (source of data) and fields (graph to display)
+    """
+    # Just use basic for autoconf/suggest
+    flavor = "basic"
+    for field in STATUS_FLAVORS_FIELDS[flavor]:
+        print("%s_%s" % (flavor, field if len(flavor) > 0 else flavor))
+
+
+def __get_jail_status(jail, flavor):
+    """
+    Return cache or execute `fail2ban-client status <jail> <flavor>`
+     and save to cache and return
+    """
+    cache_filename = __get_jail_status_cache_file(jail)
+    try:
+        mtime = stat(cache_filename).st_mtime
+    except OSError:
+        mtime = 0
+    if time() - mtime > CACHE_MAX_AGE:
+        p = Popen(["fail2ban-client", "status", jail, flavor], shell=False,
+                  stdout=PIPE)
+        jail_status_data = p.communicate()[0]
+        with open(cache_filename, 'w') as f:
+            f.write(jail_status_data)
+    else:
+        with open(cache_filename, 'r') as f:
+            jail_status_data = f.read()
+    return jail_status_data
+
+
+def __normalize(name):
+    name = re.sub("[^a-z0-9A-Z]", "_", name)
+    return name
+
+
+def __count_groups(value_str):
+    """
+    Helper method to count unique values in the space-delimited value_str
+    """
+    return Counter([key for key in value_str.split(" ") if key])
+
+
+def config(flavor, field):
+    """
+    Print config data (e.g. munin-run config), including possible labels
+     by parsing real status data
+    """
+    print("graph_title fail2ban %s %s" % (flavor, field))
+    print("graph_args --base 1000 -l 0")
+    print("graph_vlabel Hosts banned")
+    print("graph_category security")
+    print("graph_info"
+          " Number of hosts banned using status flavor %s and field %s" %
+          (flavor, field))
+    munin_fields, field_labels, values = parse_fail2ban_status(flavor, field)
+    for munin_field in munin_fields:
+        print("%s.label %s" % (munin_field, field_labels[munin_field]))
+
+
+def run(flavor, field):
+    """
+    Parse the status data and print all values for a given flavor and field
+    """
+    munin_fields, field_labels, values = parse_fail2ban_status(flavor, field)
+    for munin_field in munin_fields:
+        print("%s.value %s" % (munin_field, values[munin_field]))
+
+
+def parse_fail2ban_status(flavor, field):
+    """
+    Shared method to parse jail status output and determine field names
+     and aggregate counts
+    """
+    field_labels = dict()
+    values = dict()
+    for jail in __get_jail_names():
+        jail_status = __get_jail_status(jail, flavor)
+        for line in jail_status.splitlines()[1:]:
+            if flavor == "basic":
+                if field == "jail":
+                    if line.startswith("   |- Currently banned:"):
+                        internal_name = __normalize(jail)
+                        field_labels[internal_name] = jail
+                        values[internal_name] = line.split(":", 1)[1].strip()
+                else:
+                    raise Exception(
+                        "Undefined field %s for flavor %s for jail %s" %
+                        (field, flavor, jail))
+            elif flavor == "cymru":
+                # Determine which line of output we care about
+                if field == "asn":
+                    search_string = "   |- Banned ASN list:"
+                elif field == "country":
+                    search_string = "   |- Banned Country list:"
+                elif field == "rir":
+                    search_string = "   `- Banned RIR list:"
+                else:
+                    raise Exception(
+                        "Undefined field %s for flavor %s for jail %s" %
+                        (field, flavor, jail))
+                if line.startswith(search_string):
+                    prefix = "%s_%s" % (flavor, field)
+                    # Now process/aggregate the counts
+                    counts_dict = __count_groups(line.split(":", 1)[1].strip())
+                    for key in counts_dict:
+                        internal_name = "%s_%s" % (prefix, __normalize(key))
+                        if internal_name in field_labels:
+                            values[internal_name] += counts_dict[key]
+                        else:
+                            field_labels[internal_name] = key
+                            values[internal_name] = counts_dict[key]
+            else:
+                raise Exception("Undefined flavor: %s for jail %s" %
+                                (flavor, jail))
+    return sorted(field_labels.keys()), field_labels, values
+
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        command = sys.argv[1]
+    else:
+        command = ""
+    if command == "autoconf":
+        autoconf()
+    elif command == "suggest":
+        suggest()
+    elif command == 'config':
+        flavor_, field_ = __parse_plugin_name()
+        config(flavor_, field_)
+    else:
+        flavor_, field_ = __parse_plugin_name()
+        run(flavor_, field_)
