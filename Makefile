@@ -27,12 +27,12 @@ clean: Build
 	./Build realclean
 	rm -rf _stage
 	rm -f MANIFEST META.json META.yml
-	rm -f lib/Munin/Location.pm
+	rm -f lib/Munin.pm
 
 ##############################
 # perl module
 
-Build: Build.PL lib/Munin/Location.pm
+Build: Build.PL lib/Munin.pm
 	$(PERL) Build.PL destdir=$(DESTDIR) installdirs=$(INSTALLDIRS)
 
 # Munin can always find and load its perl modules. We use this to
