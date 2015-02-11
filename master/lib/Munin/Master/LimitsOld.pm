@@ -333,7 +333,7 @@ sub process_service {
 	next if (!defined($field->{warning}) and !defined($field->{critical}));
 
 	# get the old state if there is one, or leave it empty.
-	if ( defined($onfield) or
+	if ( defined($onfield) and
 	     defined($onfield->{"state"}) ) {
 	    $oldstate = $onfield->{"state"};
 	}
