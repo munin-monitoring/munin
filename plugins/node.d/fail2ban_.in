@@ -217,6 +217,7 @@ def config(flavor, field):
     print("graph_info"
           " Number of hosts banned using status flavor %s and field %s" %
           (flavor, field))
+    print("graph_total total")
     munin_fields, field_labels, values = parse_fail2ban_status(flavor, field)
     for munin_field in munin_fields:
         print("%s.label %s" % (munin_field, field_labels[munin_field]))
