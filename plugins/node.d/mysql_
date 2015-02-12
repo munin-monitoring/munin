@@ -16,6 +16,9 @@ Any MySQL platform, tested by the authors on:
 * MariaDB 5.5.39
 * MariaDB-5.5.39(galera).
 
+Plugins:
+* MariaDB-10 Query Response Time: https://mariadb.com/kb/en/mariadb/query_response_time-plugin/
+
 =head1 CONFIGURATION
 
 This script is used to generate data for several graphs. To generate
@@ -1452,6 +1455,46 @@ $graphs{mrr} = {
 };
 
 #---------------------------------------------------------------------
+#  Plugin Graphs
+#  These are mysql plugins of type INFORMATION SCHEMA
+#
+#  These will be $added to graphs if available
+#---------------------------------------------------------------------
+
+my %graph_plugins = ();
+
+$graph_plugins{query_response_time} = {
+    count => {
+        config => {
+            global_attrs => {
+                title  => 'Query Response Time Count per ${graph_period}',
+            },
+            data_source_attrs => {
+                draw  => 'LINE2',
+                type => 'DERIVE',
+            },
+        },
+        # data_sources are populated by sub plugin_query_response_time
+        data_sources => [
+        ],
+   },
+   total => {
+        config => {
+            global_attrs => {
+                title  => 'Query Response Time Total per ${graph_period}',
+            },
+            data_source_attrs => {
+                draw  => 'LINE2',
+                type => 'DERIVE',
+            },
+        },
+        # data_sources are populated by sub plugin_query_response_time
+        data_sources => [
+        ],
+   }
+};
+
+#---------------------------------------------------------------------
 #  M A I N
 #---------------------------------------------------------------------
 
@@ -1574,6 +1617,8 @@ sub config {
     #
     # Not a problem since we don't graph these
 
+    update_data();
+
     die 'Unknown graph ' . ($graph_name ? $graph_name : '')
 	unless $graphs{$graph_name};
 
@@ -1621,12 +1666,12 @@ sub config {
 sub show {
     my $graph_name = shift;
 
+    update_data();
+
     die 'Unknown graph ' . ($graph_name ? $graph_name : '')
 	unless $graphs{$graph_name};
 
     my $graph = $graphs{$graph_name};
-
-    update_data();
 
     die "Can't show data for '$graph_name' because InnoDB is disabled."
 	if $graph_name =~ /innodb_/ && $data->{_innodb_disabled};
@@ -1670,6 +1715,7 @@ sub update_data {
     my $dbh = db_connect();
 
     update_variables($dbh);
+    update_plugins($dbh);
     update_innodb($dbh);
     update_master($dbh);
     delete $graphs{replication} if update_slave($dbh)==1;
@@ -1702,6 +1748,28 @@ sub update_data {
     $shared_memory_cache->set('data', $data);
 }
 
+
+sub update_plugins {
+    my ($dbh) = @_;
+
+    my %plugin_map = (
+	'query_response_time'         => \&plugin_query_response_time,
+    );
+
+    my $sth = $dbh->prepare("SHOW PLUGINS");
+    $sth->execute();
+    while (my $row = $sth->fetchrow_hashref()) {
+        next if $row->{'type'} ne 'INFORMATION SCHEMA';
+        my $sec = lc $row->{'name'};
+        next if not exists $plugin_map{$sec};
+        if ($plugin_map{$sec}->($dbh) == 0) {
+          while (my ($k, $v) = each %{$graph_plugins{$sec}}) {
+            $graphs{$sec . '_' . $k} = $v;
+          }
+        }
+    }
+    $sth->finish();
+}
 
 sub update_variables {
     my ($dbh) = @_;
@@ -1833,6 +1901,37 @@ sub update_slave {
 	    ? 0 : 1;
     $data->{slave_io_running} = ($data->{slave_io_running} eq 'Yes')
 	    ? 0 : 1;
+    return 0;
+}
+
+
+#---------------------------------------------------------------------
+#  Information SCHEMA tables represent data to be processed
+#---------------------------------------------------------------------
+
+
+sub plugin_query_response_time {
+    my ($dbh) = @_;
+
+    my %plugin_map = (
+	'QUERY_RESPONSE_TIME'         => \&plugin_query_response_time,
+    );
+
+    return 1 if not defined $data->{query_response_time_stats};
+    return 1 if $data->{query_response_time_stats} eq 'OFF';
+
+    my $sth = $dbh->prepare("SELECT * FROM INFORMATION_SCHEMA.QUERY_RESPONSE_TIME");
+    $sth->execute();
+    while (my $row = $sth->fetchrow_hashref()) {
+        my $time = $row->{'time'};
+        $data->{'query_response_time_count_' . $time} = $row->{'count'};
+        push @{$graph_plugins{query_response_time}->{count}->{data_sources}}, {name => 'query_response_time_count_' . $time, label => $time };
+        next if $row->{'total'} eq 'TOO LONG';
+        $data->{'query_response_time_total_' . $time} = $row->{'total'};
+        push @{$graph_plugins{query_response_time}->{total}->{data_sources}}, {name => 'query_response_time_total_' . $time, label => $time };
+    }
+    $sth->finish();
+
     return 0;
 }
 
