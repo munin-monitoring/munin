@@ -55,7 +55,7 @@ sub handle_request
 	# Short evaluate the GRAPH png pages
 	# XXX - no need to, the switch is already made
 ##	if ($path =~ m/-(day|week|month|year).([a-z]+)$/) {
-##		my $url = $cgi->script_name() . "/../munin-cgi-graph" . $cgi->path_info();
+##		my $url = '/' . "/../munin-cgi-graph" . $cgi->path_info();
 ##		print "HTTP/1.0 301 Redirect Permanent\r\n";
 ##		print $cgi->header(
 ##			-status => 301,
@@ -106,7 +106,7 @@ sub handle_request
 	my %template_params = (
 		MUNIN_VERSION	=> $Munin::Common::Defaults::MUNIN_VERSION,
 		TIMESTAMP       => strftime("%Y-%m-%d %T%z (%Z)", localtime),
-		R_PATH		=> $cgi->script_name(),
+		R_PATH		=> '/',
 	);
 
 	# Common Navigation params
@@ -129,7 +129,7 @@ sub handle_request
 
 		my $rootgroups = [];
 		while (my ($_name, $_path) = $sth->fetchrow_array) {
-			push @$rootgroups, { NAME => $_name, R_PATH => $cgi->script_name(), URL => $_path };
+			push @$rootgroups, { NAME => $_name, R_PATH => '/', URL => $_path };
 		}
 		$template_params{ROOTGROUPS} = $rootgroups;
 	}
@@ -143,7 +143,7 @@ sub handle_request
 		while (my ($_category) = $sth->fetchrow_array) {
 			my %urls = map { ("URL$_" => "$_category-$_.html") } @times;
 			push @$globalcats, {
-				R_PATH => $cgi->script_name(),
+				R_PATH => '/',
 				NAME => $_category,
 				%urls,
 			};
@@ -424,7 +424,7 @@ sub handle_request
 		# Create the params
 		my %service_template_params;
 		$service_template_params{FIELDINFO} = _get_params_fields($dbh, $id);
-		my $cgi_graph_url = $cgi->script_name() . "/../munin-cgi-graph/";
+		my $cgi_graph_url = '/' . "/../munin-cgi-graph/";
 		my $epoch_now = time;
 		my %epoch_start = (
 			day => $epoch_now - (3600 * 30),
@@ -435,7 +435,7 @@ sub handle_request
 
 		for my $t (@times) {
 			my $epoch = "start_epoch=$epoch_start{$t}&stop_epoch=$epoch_now";
-			$service_template_params{"ZOOM$t"} = $cgi->script_name() . "/dynazoom.html?cgiurl_graph=$cgi_graph_url" .
+			$service_template_params{"ZOOM$t"} = '/' . "/dynazoom.html?cgiurl_graph=$cgi_graph_url" .
 				"&plugin_name=$path&size_x=800&size_y=400&$epoch";
 			$service_template_params{"IMG$t"} = $cgi_graph_url . "$path-$t.$graph_ext";
 		}
@@ -520,7 +520,7 @@ sub _get_params_groups {
 			NGROUPS => scalar(@$_groups),
 			# comparison only makes sense if there are 2 or more nodes
 			COMPARE => ($_compare_groups > 1 ? 1 : 0),
-			R_PATH => $cgi->script_name(),
+			R_PATH => '/',
 			PATH => [
 				{ PATH => '..', PATHNAME => undef, },
 				url_to_path($_path),
@@ -593,9 +593,9 @@ sub _get_params_services_for_comparison {
 		$sth_node->execute($service_name, $grp_id);
 		while (my ($node_name, $node_url, $srv_url, $srv_label) = $sth_node->fetchrow_array) {
 			my $_srv_url = "$srv_url.html" if defined $srv_url;
-			my %_img_urls = map { ("CIMG$_" => $cgi->script_name() . "/../munin-cgi-graph" . "/$srv_url-$_.$graph_ext") } @times if defined $srv_url;
+			my %_img_urls = map { ("CIMG$_" => '/' . "/../munin-cgi-graph" . "/$srv_url-$_.$graph_ext") } @times if defined $srv_url;
 			push @nodes, {
-				R_PATH => $cgi->script_name(),
+				R_PATH => '/',
 				NODENAME => $node_name,
 				URL1 => substr($node_url, length($basepath) + 1),
 				LABEL => $srv_label,
@@ -637,7 +637,7 @@ sub _get_params_services_by_name {
 			NODENAME => $_node_name,
 			LABEL => $_service_title,
 			URLX => $_url . ($_subgraphs ? "/" : ".html"),
-			"CIMG$time" => $cgi->script_name() . "/../munin-cgi-graph" . "/$_url-$time.$graph_ext",
+			"CIMG$time" => '/' . "/../munin-cgi-graph" . "/$_url-$time.$graph_ext",
 			"TIME$time" => 1,
 		};
 	}
@@ -666,7 +666,7 @@ sub _get_params_services {
 		# Skip unrelated graphs if in multigraph
 		next if $multigraph_parent and $_s_name !~ /^$multigraph_parent\./;
 
-		my %imgs = map { ("IMG$_" => $cgi->script_name() . "/../munin-cgi-graph" . "/$_url-$_.$graph_ext") } @times;
+		my %imgs = map { ("IMG$_" => '/' . "/../munin-cgi-graph" . "/$_url-$_.$graph_ext") } @times;
 		push @$services, {
 			NAME => $_service_title,
 			URLX => substr($_url, 1 + length($base_path)) . ($_subgraphs ? "/" : ".html"),
@@ -754,7 +754,7 @@ sub url_to_path
 sub url_absolutize
 {
 	my ($url, $omit_first_slash) = @_;
-	my $url_a = $cgi->script_name() . "/" . $url;
+	my $url_a = '/' . "/" . $url;
 	$url_a = substr($url_a, 1) if $omit_first_slash;
 	return $url_a;
 }

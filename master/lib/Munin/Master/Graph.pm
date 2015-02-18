@@ -108,7 +108,7 @@ sub is_ext_handled
 {
 	my $ext = shift;
 	return undef unless $ext;
-	return defined $CONTENT_TYPES{$ext};
+	return defined $CONTENT_TYPES{uc($ext)};
 }
 
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
