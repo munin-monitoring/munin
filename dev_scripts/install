@@ -6,30 +6,42 @@ fakeroot()
 	"$@"
 }
 
+banner()
+{
+	echo *************************************************
+	echo * "$@"
+	echo *************************************************
+}
+
+
 
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
 . $FINDBIN/common.sh
 
 cd $BASEDIR
 
-if [ $1 ]; then
-    ./dev_scripts/stop_munin-node
-    ./dev_scripts/stop_munin-sched
+if [ "$1" = "clean" ]; then
+	banner CLEAN
+	./dev_scripts/stop_munin-node
+	./dev_scripts/stop_munin-sched
 
-    rm -rf sandbox
-    mkdir sandbox
-    make clean || exit
-    echo "**********************************************************************"
+	rm -rf sandbox
+	mkdir sandbox
+	make clean || exit
 fi
 
+banner BUILD
+
+# Avoiding the real CHOWN (/bin/true)
 make CHOWN=true DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin || exit
-fakeroot make install-common-prime install-master-prime install-node-prime install-plugins-prime install-man install-async DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin CHOWN=true USER=$(shell id -un) GROUP=$(shell id -gn) PLUGINUSER=$(shell id -un) CGIUSER=$(shell id -un) || exit
+make install DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin CHOWN=true USER=$(id -un) GROUP=$(id -gn) PLUGINUSER=$(id -un) CGIUSER=$(id -un) || exit
 
-
-if [ $1 ]; then
-    echo "**********************************************************************"
-    fakeroot make install-plugins-prime install-plugins-java DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin CHOWN=true USER=$(shell id -un) GROUP=$(shell id -gn) PLUGINUSER=$(shell id -un) CGIUSER=$(shell id -un) || exit
-    echo "**********************************************************************"
+# This is to have a local dev node.
+# Usually it is much more practical to install the real one, and use it
+if [ "$1" = "node" ]; then
+    banner INSTALL NODE
+    fakeroot make install-plugins-prime DESTDIR=$DESTDIR HTMLDIR=$DESTDIR/www/munin CHOWN=true USER=$(shell id -un) GROUP=$(shell id -gn) PLUGINUSER=$(shell id -un) CGIUSER=$(shell id -un) || exit
+    banner CONFIGURE NODE
     perl -pi -e "s/port 4949/port 4948/; 
                  s/user root/user $USER/; 
                  s/group root/group $GROUPS/;
@@ -53,16 +65,6 @@ tls_verify_depth 5
 
 \$1|" $DESTDIR/etc/opt/munin/munin.conf
 
-    echo "**********************************************************************"
+    banner CONFIGURE PLUGINS
     ./dev_scripts/run munin-node-configure --shell --families=contrib,auto | sh -x
 fi
-
-
-for i in $(find $DESTDIR -name 'munin-cgi-*' -type f -perm -a-rx)
-do
-	echo "Untainting CGI $i"
-	echo "#! /usr/bin/perl" > $i.tmp
-	cat $i >> $i.tmp
-	chmod +x $i.tmp
-	mv $i.tmp $i
-done
