@@ -21,7 +21,7 @@ default: build-munin
 build-munin: Build
 
 install: Build
-	./Build install $(ifneq $(DESTDIR),,destdir=$(DESTDIR),
+	./Build install --destdir=$(DESTDIR)
 
 clean: Build
 	./Build realclean
