@@ -355,8 +355,6 @@ sub parse_service_config {
                 $errors++;
                 last;
             }
-            # Also call _sanitise_plugin_name() on service name when spoolfetching
-            $service = $self->_sanitise_plugin_name($service);
 	    new_service($service) unless $global_config->{$service};
 	    DEBUG "[CONFIG multigraph $plugin] Service is now $service";
 	    $correct++;
