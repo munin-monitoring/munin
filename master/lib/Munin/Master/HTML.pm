@@ -1,33 +1,7 @@
-#!@@PERL@@ -T
-# -*- cperl -*-
-
-=begin comment
-
-Copyright (C) 2013 Steve Schnepp
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; version 2 dated June,
-1991.
-
-This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-=end comment
-
-=cut
+package Munin::Master::HTML;
 
 use strict;
 use warnings;
-
-
-use CGI::Fast;
-use CGI::Carp qw(fatalsToBrowser);
 
 use POSIX;
 use HTML::Template::Pro;
@@ -40,9 +14,15 @@ use File::Basename;
 use Data::Dumper;
 
 my @times = qw(day week month year);
+# Current incarnation of $cgi.
+# XXX - this is NOT thread-safe!
+my $cgi;
 
-while (new CGI::Fast) {
-	my $path = path_info();
+sub handle_request
+{
+	$cgi = shift;
+
+	my $path = $cgi->path_info();
 
 	# Handle static page now, since there is no need to do any SQL
 	if ($path =~ m/static\/(.+)$/) {
@@ -62,27 +42,30 @@ while (new CGI::Fast) {
 		my $fh = new IO::File("$filename");
 
 		if (! $fh) {
-			print header( -status => 404);
-			next;
+			print "HTTP/1.0 404 Not found\r\n";
+			return;
 		}
 
-		print header( -status => 200, -type => $mime_types{$ext});
+		print "HTTP/1.0 200 OK\r\n";
+		print $cgi->header( -type => $mime_types{$ext});
 		while (my $line = <$fh>) { print $line; }
-		next;
+		return;
 	}
 
 	# Short evaluate the GRAPH png pages
-	if ($path =~ m/-(day|week|month|year).([a-z]+)$/) {
-		my $url = script_name() . "/../munin-cgi-graph" . path_info();
-		print header(
-			-status => 301,
-			-Location => $url,
-			-Cache_Control => "public, max-age=14400",  # Cache is valid of 1 day
-		);
-		next;
-	}
+	# XXX - no need to, the switch is already made
+##	if ($path =~ m/-(day|week|month|year).([a-z]+)$/) {
+##		my $url = '/' . "/../munin-cgi-graph" . $cgi->path_info();
+##		print "HTTP/1.0 301 Redirect Permanent\r\n";
+##		print $cgi->header(
+##			-status => 301,
+##			-Location => $url,
+##			-Cache_Control => "public, max-age=14400",  # Cache is valid of 1 day
+##		);
+##		return;
+##	}
 
-	my $graph_ext = url_param("graph_ext");
+	my $graph_ext = $cgi->url_param("graph_ext");
 	$graph_ext = "png" unless defined $graph_ext;
 	$graph_ext = "svg";
 
@@ -99,12 +82,12 @@ while (new CGI::Fast) {
 	# a subdir from the browser pov
 	if ($path eq "" || $path !~ /(\/|\.html)$/) {
 		#if ($path eq "") {
-		print header(
-			-status => 301,
-			-Location => (url(-path_info=>1,-query=>1) . "/"),
+		print "HTTP/1.0 301 Redirect Permanent\r\n";
+		print $cgi->header(
+			-Location => ($cgi->url(-path_info=>1,-query=>1) . "/"),
 			-Cache_Control => "public, max-age=14400",  # Cache is valid of 1 day
 		);
-		next;
+		return;
 	}
 
 	# Remove now the leading "/" as *every* path will have it
@@ -123,7 +106,7 @@ while (new CGI::Fast) {
 	my %template_params = (
 		MUNIN_VERSION	=> $Munin::Common::Defaults::MUNIN_VERSION,
 		TIMESTAMP       => strftime("%Y-%m-%d %T%z (%Z)", localtime),
-		R_PATH		=> script_name(),
+		R_PATH		=> '/',
 	);
 
 	# Common Navigation params
@@ -146,7 +129,7 @@ while (new CGI::Fast) {
 
 		my $rootgroups = [];
 		while (my ($_name, $_path) = $sth->fetchrow_array) {
-			push @$rootgroups, { NAME => $_name, R_PATH => script_name(), URL => $_path };
+			push @$rootgroups, { NAME => $_name, R_PATH => '/', URL => $_path };
 		}
 		$template_params{ROOTGROUPS} = $rootgroups;
 	}
@@ -160,7 +143,7 @@ while (new CGI::Fast) {
 		while (my ($_category) = $sth->fetchrow_array) {
 			my %urls = map { ("URL$_" => "$_category-$_.html") } @times;
 			push @$globalcats, {
-				R_PATH => script_name(),
+				R_PATH => '/',
 				NAME => $_category,
 				%urls,
 			};
@@ -256,7 +239,7 @@ while (new CGI::Fast) {
 		$comparison = $2;
 	}
 
-	$graph_ext = url_param("graph_ext") || $graph_ext;
+	$graph_ext = $cgi->url_param("graph_ext") || $graph_ext;
 	$graph_ext = "png" unless defined $graph_ext;
 
 	# Handle normal pages only if not already handled
@@ -271,8 +254,8 @@ while (new CGI::Fast) {
 
 	if (! defined $id) {
 		# Not found
-		print header( -status => 404, );
-		next;
+		print "HTTP/1.0 404 Not found\r\n";
+		return;
 	} elsif ($type eq "group") {
 		# Shared code for group views and comparison views
 
@@ -441,7 +424,7 @@ while (new CGI::Fast) {
 		# Create the params
 		my %service_template_params;
 		$service_template_params{FIELDINFO} = _get_params_fields($dbh, $id);
-		my $cgi_graph_url = script_name() . "/../munin-cgi-graph/";
+		my $cgi_graph_url = '/' . "/../munin-cgi-graph/";
 		my $epoch_now = time;
 		my %epoch_start = (
 			day => $epoch_now - (3600 * 30),
@@ -452,7 +435,7 @@ while (new CGI::Fast) {
 
 		for my $t (@times) {
 			my $epoch = "start_epoch=$epoch_start{$t}&stop_epoch=$epoch_now";
-			$service_template_params{"ZOOM$t"} = script_name() . "/dynazoom.html?cgiurl_graph=$cgi_graph_url" .
+			$service_template_params{"ZOOM$t"} = '/' . "/dynazoom.html?cgiurl_graph=$cgi_graph_url" .
 				"&plugin_name=$path&size_x=800&size_y=400&$epoch";
 			$service_template_params{"IMG$t"} = $cgi_graph_url . "$path-$t.$graph_ext";
 		}
@@ -466,33 +449,46 @@ while (new CGI::Fast) {
 RENDERING:
 	if (! $template_filename ) {
 		# Unknown
-		print header( -status => 404, );
-		next;
+		print "HTTP/1.0 404 Not found\r\n";
+		return;
 	}
 
 	if ($output_format eq "html") {
-		print header( -status => 200, "-Content-Type" => "text/html", );
+		print "HTTP/1.0 200 OK\r\n";
+		print $cgi->header( "-Content-Type" => "text/html", );
 		my $template = HTML::Template::Pro->new(
 			filename => "$Munin::Common::Defaults::MUNIN_CONFDIR/templates/$template_filename",
 			loop_context_vars => 1,
 		);
+
+		my $is_dump_enabled = $cgi->url_param("dump");
+		if ($is_dump_enabled) {
+			use Data::Dumper;
+			local $Data::Dumper::Terse = 1;
+			local $Data::Dumper::Sortkeys = 1;
+			local $Data::Dumper::Sparseseen = 1;
+			local $Data::Dumper::Deepcopy = 1;
+			local $Data::Dumper::Indent = 1;
+
+			$template_params{DEBUG} = Dumper(\%template_params);
+		}
 
 		$template->param(%template_params);
 
 		# We cannot use "print_to => \*STDOUT" since it does *NOT* work with FastCGI
 		print $template->output();
 	} elsif ($output_format eq "xml") {
-		print header( -status => 200, "-Content-Type" => "text/xml", );
+		print "HTTP/1.0 200 OK\r\n";
+		print $cgi->header( "-Content-Type" => "text/xml", );
 
 		use XML::Dumper;
 		print pl2xml( \%template_params );
 	} elsif ($output_format eq "json") {
-		print header( -status => 200, "-Content-Type" => "application/json", );
+		print "HTTP/1.0 200 OK\r\n";
+		print $cgi->header( "-Content-Type" => "application/json", );
 
 		use JSON;
-		my $json = JSON->new();
-		$json = $json->pretty(1);
-		print $json->encode( \%template_params );
+		print encode_json( \%template_params );
 	}
 }
 
@@ -524,7 +520,7 @@ sub _get_params_groups {
 			NGROUPS => scalar(@$_groups),
 			# comparison only makes sense if there are 2 or more nodes
 			COMPARE => ($_compare_groups > 1 ? 1 : 0),
-			R_PATH => script_name(),
+			R_PATH => '/',
 			PATH => [
 				{ PATH => '..', PATHNAME => undef, },
 				url_to_path($_path),
@@ -597,9 +593,9 @@ sub _get_params_services_for_comparison {
 		$sth_node->execute($service_name, $grp_id);
 		while (my ($node_name, $node_url, $srv_url, $srv_label) = $sth_node->fetchrow_array) {
 			my $_srv_url = "$srv_url.html" if defined $srv_url;
-			my %_img_urls = map { ("CIMG$_" => script_name() . "/../munin-cgi-graph" . "/$srv_url-$_.$graph_ext") } @times if defined $srv_url;
+			my %_img_urls = map { ("CIMG$_" => '/' . "/../munin-cgi-graph" . "/$srv_url-$_.$graph_ext") } @times if defined $srv_url;
 			push @nodes, {
-				R_PATH => script_name(),
+				R_PATH => '/',
 				NODENAME => $node_name,
 				URL1 => substr($node_url, length($basepath) + 1),
 				LABEL => $srv_label,
@@ -641,7 +637,7 @@ sub _get_params_services_by_name {
 			NODENAME => $_node_name,
 			LABEL => $_service_title,
 			URLX => $_url . ($_subgraphs ? "/" : ".html"),
-			"CIMG$time" => script_name() . "/../munin-cgi-graph" . "/$_url-$time.$graph_ext",
+			"CIMG$time" => '/' . "/../munin-cgi-graph" . "/$_url-$time.$graph_ext",
 			"TIME$time" => 1,
 		};
 	}
@@ -670,7 +666,7 @@ sub _get_params_services {
 		# Skip unrelated graphs if in multigraph
 		next if $multigraph_parent and $_s_name !~ /^$multigraph_parent\./;
 
-		my %imgs = map { ("IMG$_" => script_name() . "/../munin-cgi-graph" . "/$_url-$_.$graph_ext") } @times;
+		my %imgs = map { ("IMG$_" => '/' . "/../munin-cgi-graph" . "/$_url-$_.$graph_ext") } @times;
 		push @$services, {
 			NAME => $_service_title,
 			URLX => substr($_url, 1 + length($base_path)) . ($_subgraphs ? "/" : ".html"),
@@ -705,7 +701,7 @@ sub _get_params_fields {
 	my @fields;
 	while (my ($_ds_name, $_ds_s_warn, $_ds_s_crit, $_ds_graph, $_ds_label, $_ds_type, $_ds_warn, $_ds_crit, $_ds_info) =
 			$sth_ds->fetchrow_array) {
-		next if $_ds_graph eq 'no';
+		next if $_ds_graph && $_ds_graph eq 'no';
 
 		push @fields, {
 			FIELD => $_ds_name,
@@ -758,15 +754,9 @@ sub url_to_path
 sub url_absolutize
 {
 	my ($url, $omit_first_slash) = @_;
-	my $url_a = script_name() . "/" . $url;
+	my $url_a = '/' . "/" . $url;
 	$url_a = substr($url_a, 1) if $omit_first_slash;
 	return $url_a;
 }
 
-# CGI in perl 5.20 is now seriously broken as it doesn't import into the namespace.
-# So we have to delegate explicitely. It's easier than prefixing with CGI:: each use.
-sub header { return CGI::header(@_); }
-sub path_info { return CGI::path_info(@_); }
-sub url { return CGI::url(@_); }
-sub script_name { return CGI::script_name(@_); }
-sub url_param { return CGI::url_param(@_); }
+1;

@@ -3,13 +3,10 @@
 set -x
 
 PERL_LIB_MUNIN=$(find sandbox -type d -name Munin)
-MUNIN_CGI_GRAPH=$(find sandbox -type f -name munin-cgi-graph)
-MUNIN_CGI_HTML=$(find sandbox -type f -name munin-cgi-html)
+MUNIN_HTTP=$(find sandbox -type f -name munin-httpd)
 
-echo "#! /usr/bin/perl" > $MUNIN_CGI_GRAPH
-cat master/_bin/munin-cgi-graph.in >> $MUNIN_CGI_GRAPH
-echo "#! /usr/bin/perl" > $MUNIN_CGI_HTML
-cat master/_bin/munin-cgi-html.in >> $MUNIN_CGI_HTML
+echo "#! /usr/bin/perl" > $MUNIN_HTTP
+cat master/_bin/munin-httpd.in >> $MUNIN_HTTP
 
 chmod -R u+w $PERL_LIB_MUNIN/Master
 cp -v master/lib/Munin/Master/* $PERL_LIB_MUNIN/Master

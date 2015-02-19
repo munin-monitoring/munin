@@ -25,10 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 use strict;
 use warnings;
 
+package Munin::Master::Graph;
 
 use Time::HiRes;
-use CGI::Fast;
-#use CGI::Carp qw(fatalsToBrowser);
 
 use POSIX;
 
@@ -105,19 +104,30 @@ my %CONTENT_TYPES = (
 	"JSON" => "application/json",
 );
 
+sub is_ext_handled
+{
+	my $ext = shift;
+	return undef unless $ext;
+	return defined $CONTENT_TYPES{uc($ext)};
+}
+
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
 
-while (new CGI::Fast) {
+my $cgi;
+sub handle_request
+{
+	$cgi = shift;
+
 	my $t0 = Time::HiRes::time;
-	my $path = path_info();
+	my $path = $cgi->path_info();
 
 	if ($path !~ m/^\/(.*)-(hour|day|week|month|year|pinpoint=(\d+),(\d+))\.(svg|json|csv|xml|png|[a-z]+)$/) {
 		# We don't understand this URL
-		print header(
-			-status => 404,
+		print "HTTP/1.0 404 Not found\r\n";
+		print $cgi->header(
 			"X-Reason" => "invalid URL: $path",
 		);
-		next;
+		return;
 	}
 
 
@@ -129,11 +139,11 @@ while (new CGI::Fast) {
 	$format = uc($format);
 	if (! $CONTENT_TYPES{$format}) {
 		# We don't understand this format
-		print header(
-			-status => 404,
+		 print "HTTP/1.0 404 Not found\r\n";
+		print $cgi->header(
 			"X-Reason" => "invalid format $format",
 		);
-		next;
+		return;
 	}
 
 	# Handle the "pinpoint" time
@@ -154,18 +164,18 @@ while (new CGI::Fast) {
 
 	if (! defined $id) {
 		# Not found
-		print header(
-			-status => 404,
+		print "HTTP/1.0 404 Not found\r\n";
+		print $cgi->header(
 			"X-Reason" => "'$graph_path' Not Found in DB",
 		);
-		next;
+		return;
 	} elsif ($type ne "service") {
 		# Not supported yet
-		print header(
-			-status => 404,
+		print "HTTP/1.0 404 Not found\r\n";
+		print $cgi->header(
 			"X-Reason" => "'$type' graphing is not supported yet",
 		);
-		next;
+		return;
 	}
 
 	DEBUG "found node=$id, type=$type";
@@ -393,10 +403,10 @@ while (new CGI::Fast) {
 	}
 
 	# Send the HTTP Headers
-	print header(
-		-status => 200,
+	print "HTTP/1.0 200 OK\r\n";
+	print $cgi->header(
 		"Content-type" => $CONTENT_TYPES{$format},
-	) unless CGI::url_param("no_header");
+	) unless $cgi->url_param("no_header");
 
 	# Compute the title
 	my $title = "";
@@ -408,8 +418,8 @@ while (new CGI::Fast) {
 		$title = "by " . $time;
 	}
 
-	my $width = url_param("size_x") || 400;  # We aligned our RRA to 400px
-	my $height = url_param("size_y") || 175; # Aligned to current CSS
+	my $width = $cgi->url_param("size_x") || 400;  # We aligned our RRA to 400px
+	my $height = $cgi->url_param("size_y") || 175; # Aligned to current CSS
 
 	# Sanitize $width & $height to 4000, to avoid RSS-based DoS
 	if (! is_int($width) || $width < 1 || $width > 4000) {
@@ -642,10 +652,4 @@ sub RRDs_graph_or_dump {
 	return $rrd_error;
 }
 
-# CGI in perl 5.20 is now seriously broken as it doesn't import into the namespace.
-# So we have to delegate explicitely. It's easier than prefixing with CGI:: each use.
-sub header { return CGI::header(@_); }
-sub path_info { return CGI::path_info(@_); }
-sub url { return CGI::url(@_); }
-sub script_name { return CGI::script_name(@_); }
-sub url_param { return CGI::url_param(@_); }
+1;

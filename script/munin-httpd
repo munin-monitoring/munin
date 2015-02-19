@@ -1,0 +1,63 @@
+#!/usr/bin/perl -T
+
+=encoding utf8
+
+=begin comment
+
+Copyright (C) 2014-2015 Steve Schnepp
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 dated June,
+1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+$Id$
+
+=end comment
+
+=cut
+
+package Munin::Master::Http;
+
+use strict;
+use warnings;
+
+use HTTP::Server::Simple::CGI;
+use base qw(HTTP::Server::Simple::CGI);
+
+use Munin::Master::Graph;
+use Munin::Master::HTML;
+
+my @times = qw(day week month year);
+# Current incarnation of $cgi.
+# XXX - this is NOT thread-safe!
+my $cgi;
+
+sub handle_request
+{
+	my $self = shift;
+	$cgi = shift;
+
+	my $path = $cgi->path_info();
+
+	# Dispatch by extension, so we can have the same URL prefix
+	my ($ext) = ($path =~ m/.*\.([^.]+)$/);
+	if (Munin::Master::Graph::is_ext_handled($ext)) {
+		Munin::Master::Graph::handle_request($cgi);
+	} else {
+		Munin::Master::HTML::handle_request($cgi);
+	}	
+}
+
+package main;
+
+# start the server on port 4948
+Munin::Master::Http->new(4948)->run();
