@@ -32,17 +32,14 @@ my $build = Module::Build->new(
     },
     script_files => [
         qw(
-            script/munin-api
             script/munin-async
             script/munin-asyncd
-            script/munin-cgi-datafile
-            script/munin-cgi-graph
-            script/munin-cgi-html
             script/munin-check
             script/munin-cron
             script/munin-datafile2storable
             script/munin-graph
             script/munin-html
+            script/munin-httpd
             script/munin-limits
             script/munin-node
             script/munin-node-configure
