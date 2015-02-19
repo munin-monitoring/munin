@@ -1,12 +1,7 @@
-*/Build
-*/_build/
-*/blib/
-build-*-stamp
 build/
-.*.swp
-*.bak
-/sandbox/
-MYMETA.*
-SPOOL-META
-/RELEASE
-Build.bat
+Build
+MANIFEST
+META.json
+META.yml
+# Generated Version of Munin.pm.in
+lib/Munin.pm
