@@ -163,6 +163,8 @@ my $last_cleanup=0;
 MAIN: while($keepgoing) {
 	my $when = time;
 
+	my $process_name_orig = $process_name;
+
 	my $when_next = $when + $timeout; # wake up at least every $timeout sec
 	foreach my $node (@nodes)
 	{
@@ -212,6 +214,7 @@ MAIN: while($keepgoing) {
 		}
 		$spoolwriter{$node}->set_metadata("lastruntime", $when);
 	}
+	$process_name = $process_name_orig;
 
 	$process_name = "main";
 	if ($sock)
@@ -250,16 +253,17 @@ sub fetch_data
 	my $when = shift;
 	my $sock = shift;
 
+
 		print STDERR "[$$][$process_name][>][$plugin] asking for config\n" if $verbose;
 
-		print STDERR "[sock][>][$plugin] config $plugin\n" if $debug;
+		print STDERR "[$$][$process_name][>][$plugin][sock] config $plugin\n" if $debug;
 		print $sock "config $plugin\n";
 
 		my $output_rows = [];
 
 		while(my $line = <$sock>) {
 			chomp($line);
-			print STDERR "[sock][<][$plugin] $line\n" if $debug;
+			print STDERR "[$$][$process_name][<][$plugin][sock] $line\n" if $debug;
 
 			if ($line =~ m/^\./) {
 				# Starting with . => end
@@ -282,12 +286,12 @@ sub fetch_data
 		}
 
 		print STDERR "[$$][$process_name][>][$plugin] asking for data\n" if $verbose;
-		print STDERR "[sock][>][$plugin] fetch $plugin\n" if $debug;
+		print STDERR "[$$][$process_name][>][$plugin][sock] fetch $plugin\n" if $debug;
 		print $sock "fetch $plugin\n";
 
 		while(my $line = <$sock>) {
 			chomp($line);
-			print STDERR "[sock][<][$plugin] $line\n" if $debug;
+			print STDERR "[$$][$process_name][<][$plugin][sock] $line\n" if $debug;
 
 			if ($line =~ m/^\./) {
 				# Starting with . => end
