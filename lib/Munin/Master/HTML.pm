@@ -52,19 +52,6 @@ sub handle_request
 		return;
 	}
 
-	# Short evaluate the GRAPH png pages
-	# XXX - no need to, the switch is already made
-##	if ($path =~ m/-(day|week|month|year).([a-z]+)$/) {
-##		my $url = '/' . "/../munin-cgi-graph" . $cgi->path_info();
-##		print "HTTP/1.0 301 Redirect Permanent\r\n";
-##		print $cgi->header(
-##			-status => 301,
-##			-Location => $url,
-##			-Cache_Control => "public, max-age=14400",  # Cache is valid of 1 day
-##		);
-##		return;
-##	}
-
 	my $graph_ext = $cgi->url_param("graph_ext");
 	$graph_ext = "png" unless defined $graph_ext;
 	$graph_ext = "svg";
@@ -424,7 +411,7 @@ sub handle_request
 		# Create the params
 		my %service_template_params;
 		$service_template_params{FIELDINFO} = _get_params_fields($dbh, $id);
-		my $cgi_graph_url = '/' . "/../munin-cgi-graph/";
+		my $cgi_graph_url = '/';
 		my $epoch_now = time;
 		my %epoch_start = (
 			day => $epoch_now - (3600 * 30),
@@ -593,7 +580,7 @@ sub _get_params_services_for_comparison {
 		$sth_node->execute($service_name, $grp_id);
 		while (my ($node_name, $node_url, $srv_url, $srv_label) = $sth_node->fetchrow_array) {
 			my $_srv_url = "$srv_url.html" if defined $srv_url;
-			my %_img_urls = map { ("CIMG$_" => '/' . "/../munin-cgi-graph" . "/$srv_url-$_.$graph_ext") } @times if defined $srv_url;
+			my %_img_urls = map { ("CIMG$_" => "/$srv_url-$_.$graph_ext") } @times if defined $srv_url;
 			push @nodes, {
 				R_PATH => '/',
 				NODENAME => $node_name,
@@ -637,7 +624,7 @@ sub _get_params_services_by_name {
 			NODENAME => $_node_name,
 			LABEL => $_service_title,
 			URLX => $_url . ($_subgraphs ? "/" : ".html"),
-			"CIMG$time" => '/' . "/../munin-cgi-graph" . "/$_url-$time.$graph_ext",
+			"CIMG$time" => "/$_url-$time.$graph_ext",
 			"TIME$time" => 1,
 		};
 	}
@@ -666,7 +653,7 @@ sub _get_params_services {
 		# Skip unrelated graphs if in multigraph
 		next if $multigraph_parent and $_s_name !~ /^$multigraph_parent\./;
 
-		my %imgs = map { ("IMG$_" => '/' . "/../munin-cgi-graph" . "/$_url-$_.$graph_ext") } @times;
+		my %imgs = map { ("IMG$_" => "/$_url-$_.$graph_ext") } @times;
 		push @$services, {
 			NAME => $_service_title,
 			URLX => substr($_url, 1 + length($base_path)) . ($_subgraphs ? "/" : ".html"),
