@@ -38,7 +38,7 @@ Build: Build.PL lib/Munin.pm
 # Munin can always find and load its perl modules. We use this to
 # point out where the configuration is installed.
 lib/Munin.pm: lib/Munin.pm.in
-	sed -e '/^# BEGIN_REPLACE/,/^# END_REPLACE/ c our $munin_conf = "$(CONFDIR)/munin.conf";\n\our $munin_node_conf = "$(CONFDIR)/munin-node.conf";' \
+	sed -e '/^# BEGIN_REPLACE/,/^# END_REPLACE/c our $$munin_conf = "$(CONFDIR)/munin.conf";\n\our $$munin_node_conf = "$(CONFDIR)/munin-node.conf";' \
 		$< > $@
 
 ######################################################################
