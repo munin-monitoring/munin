@@ -1,8 +1,8 @@
-#!@@PERL@@ -wT
+#!/usr/bin/perl -T
 # -*- cperl -*-
 #
-# Copyright (C) 2002-2009 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
-#    Nicolai Langfeldt
+# Copyright (C) 2002-2010 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
+#    Nicolai Langfeldt, Matthew Boyle
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -31,16 +31,18 @@ use Getopt::Long;
 
 use Munin::Common::Defaults;
 use Munin::Node::Config;
-use Munin::Node::OS;
-use Munin::Node::Service;
-use Munin::Node::Server;
+use Munin::Node::ProxySpooler;
 
-my $servicedir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins";
+my $servicedir;
 my $sconfdir = "$Munin::Common::Defaults::MUNIN_CONFDIR/plugin-conf.d";
 my $conffile = "$Munin::Common::Defaults::MUNIN_CONFDIR/munin-node.conf";
+my $spooldir = $Munin::Common::Defaults::MUNIN_SPOOLDIR;
+
+my ($host, $port);
+
 my $DEBUG    = 0;
-my $PIDEBUG  = 0;
 my $paranoia = 0;
+
 
 sub main
 {
@@ -54,6 +56,9 @@ sub main
         $ENV{$key} = $1;
     }
 
+    $0 =~ /^(.*)$/;
+    $0 = $1;
+
     parse_args();
 
     my $config = Munin::Node::Config->instance();
@@ -61,35 +66,23 @@ sub main
 
     $paranoia = $config->{paranoia} if defined $config->{paranoia};
 
-    my $services = Munin::Node::Service->new(
-        servicedir => $servicedir,
-        defuser    => $config->{defuser},
-        defgroup   => $config->{defgroup},
-        pidebug    => $PIDEBUG,
-        timeout    => $config->{timeout},
-    );
+    $host ||= $config->{sconf}{host} unless ($config->{sconf}{host} eq '*');
+    $port ||= $config->{sconf}{port} if $config->{sconf}{port};
 
     $config->reinitialize({
-        %$config,
-
-        services => $services,
-        sconfdir => $sconfdir,
-        conffile => $conffile,
-
         DEBUG    => $DEBUG,
-
         paranoia => $paranoia,
     });
 
-    Munin::Node::Server->run(
-        syslog_ident => 'munin-node',
-        conf_file    => $conffile,
-    );
+    Munin::Node::ProxySpooler->run(
+        spooldir     => $spooldir,
+        host         => $host,
+        port         => $port,
 
-    # Untaint $0 after Munin::Node::Server has had a chance of getting
-    # the original value
-    $0 =~ /([^\/]*)$/;
-    $0 = $1;
+        syslog_ident => 'munin-sched',
+        conf_file    => $conffile,
+        pid_file     => "$Munin::Common::Defaults::MUNIN_STATEDIR/munin-sched.pid"
+    );
 
     return 0;
 }
@@ -99,22 +92,21 @@ sub parse_args
 {
     my @ORIG_ARGV  = @ARGV;
 
-    my $servicedir_cmdline;
-    my $sconfdir_cmdline;
     print_usage_and_exit() unless GetOptions(
+        'host=s'       => \$host,
+        'port=i'       => \$port,
+
         "config=s"     => \$conffile,
-        "servicedir=s" => \$servicedir_cmdline,
-        'sconfdir=s'   => \$sconfdir_cmdline,
+
         "debug!"       => \$DEBUG,
-        "pidebug!"     => \$PIDEBUG,
         "paranoia!"    => \$paranoia,
+
         "version"      => \&print_version_and_exit,
         "help"         => \&print_usage_and_exit,
     );
 
-    # We untaint the args brutally, since the sysadm should know what he does
-    $servicedir = $1 if defined $servicedir_cmdline && $servicedir_cmdline =~ m/(.*)/;
-    $sconfdir   = $1 if defined $sconfdir_cmdline   && $sconfdir_cmdline   =~ m/(.*)/;
+    ($host) = ($host =~ m{([-\w.]+)}) if $host;
+    ($port) = ($port =~ m{(\d+)})     if $port;
 
     # Reset ARGV (for HUPing)
     @ARGV = @ORIG_ARGV;
@@ -149,16 +141,16 @@ __END__
 
 =head1 NAME
 
-munin-node - A daemon to gather information in cooperation with the main
+munin-sched - A daemon to gather information in cooperation with the main
 Munin program
 
 =head1 SYNOPSIS
 
-munin-node [--options]
+munin-sched [--options]
 
 =head1 DESCRIPTION
 
-munin-node is a daemon for reporting statistics on system performance.
+munin-sched is a daemon for reporting statistics on system performance.
 
 It doesn't produce these itself, but instead relies on a number of plugins
 which are responsible for gathering the data they require, and
@@ -174,14 +166,6 @@ and returning the output they produce.
 
 Use E<lt>fileE<gt> as configuration file. [@@CONFDIR@@/munin-node.conf]
 
-=item B<< --servicedir <dir> >>
-
-Override plugin directory [@@CONFDIR@@/plugins/]
-
-=item B<< --sconfdir <dir> >>
-
-Override plugin configuration directory [@@CONFDIR@@/plugin-conf.d/]
-
 =item B< --[no]paranoia >
 
 Only run plugins owned by root. Check permissions as well. [--noparanoia]
@@ -190,14 +174,9 @@ Only run plugins owned by root. Check permissions as well. [--noparanoia]
 
 View this help message.
 
-=item B< --[no]debug >
+=item B< --debug >
 
 View debug messages.  This can be very verbose.
-
-=item B< --[no]pidebug >
-
-Plugin debug.  Sets the environment variable MUNIN_DEBUG to 1 so that plugins
-may enable debugging. [--nopidebug]
 
 =back
 
@@ -206,12 +185,12 @@ may enable debugging. [--nopidebug]
     @@CONFDIR@@/munin-node.conf
     @@CONFDIR@@/plugins/*
     @@CONFDIR@@/plugin-conf.d/*
-    @@STATEDIR@@/munin-node.pid
-    @@LOGDIR@@/munin-node.log
+    @@STATEDIR@@/munin-sched.pid
+    @@LOGDIR@@/munin-sched.log
 
 =head1 VERSION
 
-This is munin-node v@@VERSION@@
+This is munin-sched v@@VERSION@@
 
 $Id$
 

@@ -25,9 +25,11 @@ Source or packages?
 With open source software, you can choose to install binary packages
 or install from source-code.
 
-We `strongly` recommend a packaged install, as the source distribution isn't as
-tested as the packaged one. The current state of the packages is so
-satisfactory, that even the developers use them instead.
+.. note::
+
+	We `strongly` recommend a packaged install, as the source distribution
+	isn't as tested as the packaged one. The current state of the packages
+	is so satisfactory, that even the developers use them instead.
 
 Installing Munin on most relevant operating systems can usually be
 done with with the systems package manager, typical examples being:
@@ -107,6 +109,14 @@ See `Installing Munin from source`_.
 
 Installing Munin from source
 ============================
+
+.. warning::
+
+	Usually you don't want to do that. The following lines are for
+	completeness, and reference for packagers.
+
+	The other reason would be because you want to contribute to the
+	development of Munin, and then you should use a development install.
 
 If there are no binary packages available for your system, or if you
 want to install Munin from source for other reasons, follow these

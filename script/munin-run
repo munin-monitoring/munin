@@ -1,4 +1,4 @@
-#!@@PERL@@ -T
+#!/usr/bin/perl -T
 # -*- perl -*-
 #
 # Copyright (C) 2004-2009

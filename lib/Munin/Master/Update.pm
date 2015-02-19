@@ -291,6 +291,8 @@ sub _dump_conf_node_into_sql {
 		# Keep track of field ids
 		my %ds_ids;
 
+		my $graph_category;
+
 		# Look for matching graph settings
 		for my $attr (grep { /^$service\./ } keys %$node) {
 			my $value = $node->{$attr};
@@ -304,6 +306,7 @@ sub _dump_conf_node_into_sql {
 				if ($attr->[0] eq 'graph_category') {
 						$attr->[1] = lc($attr->[1]);
 						$sth_service_category->execute($service_id, $attr->[1]);
+						$graph_category = $attr->[1];
 				} else {
 						$sth_service_attr->execute($service_id, $args[0], $value);
 				}
@@ -324,6 +327,9 @@ sub _dump_conf_node_into_sql {
 				# XXX what's left?
 			}
 		}
+
+		# Adding it to graph_categories pas "Other"
+		$sth_service_category->execute($service_id, "other") unless $graph_category;
 	}
 }
 
@@ -503,21 +509,25 @@ sub _dump_into_sql {
 			$sth_url->execute($service_id, "service", _get_url_from_path("$host:$_service"));
 
 			my $graph_order;
+			my $graph_category = "other";
 			for my $attr (@{$self->{service_configs}{$host}{global}{$service}}) {
 				my ($attr_key, $attr_value) = @$attr;
 				# Category names should not be case sensitive. Store them all in lowercase.
 				if ($attr_key eq 'graph_category') {
 					$attr_value = lc($attr_value);
-					$sth_service_category->execute($service_id, $attr_value);
-				} else {
-					$sth_service_attr->execute($service_id, $attr_key, $attr_value);
+					$graph_category  = $attr_value;
 				}
+
+				$sth_service_attr->execute($service_id, $attr_key, $attr_value);
 
 				# Extract special vars
 				if ($attr_key eq 'graph_order') {
 					$graph_order = $attr_value;
 				}
 			}
+
+			# Adding it to table "graph_categories"
+			$sth_service_category->execute($service_id, $graph_category);
 
 			for my $data_source (keys %{$self->{service_configs}{$host}{data_source}{$service}}) {
 				my $order = _get_order($data_source, $graph_order);

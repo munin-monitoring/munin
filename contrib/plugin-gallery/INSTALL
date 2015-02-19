@@ -27,7 +27,7 @@ So HTMLDIR should initially have this structure:
 ./static/logo-h.png
 ./static/download.gif
 ./static/favicon.ico
-./static/style-new.css
+./static/style-2.1.css
 
 Setup vhost for the gallery in your webservers configuration.
 
