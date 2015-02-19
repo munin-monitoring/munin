@@ -1,7 +1,16 @@
-build/
+# Backups
+*~
+*.bak
+
+# Perl Builded files
 Build
+build/
+_build/
 MANIFEST
 META.json
 META.yml
+MYMETA.json
+MYMETA.yml
+
 # Generated Version of Munin.pm.in
 lib/Munin.pm
