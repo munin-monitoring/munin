@@ -1,13 +1,13 @@
-.. _munindoc:
+.. _munin-doc:
 
 ==========
- munindoc
+ munin-doc
 ==========
 
 SYNOPSIS
 ========
 
-munindoc <plugin>
+munin-doc <plugin>
 
 DESCRIPTION
 ===========
@@ -23,11 +23,11 @@ Additional information typically found is usually the name of the plugin author,
 NOTES
 =====
 
-Most Munin commands (such as :ref:`munin-run`, and munindoc itself) is only documented through the
+Most Munin commands (such as :ref:`munin-run`, and munin-doc itself) is only documented through the
 usual Unix man command.
 
 Note that not all plugins are documented yet. If you want to contribute plugin documentation, take a
-look at http://munin-monitoring.org/wiki/munindoc
+/bin/bash: q: command not found
 
 SEE ALSO
 ========

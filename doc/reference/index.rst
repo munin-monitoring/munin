@@ -36,7 +36,7 @@ Man pages
    munin-update.rst
    munin.conf.rst
    munin-node.conf.rst
-   munindoc.rst
+   munin-doc.rst
 
 Examples and Templates
 ======================

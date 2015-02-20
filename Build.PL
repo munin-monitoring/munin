@@ -36,6 +36,7 @@ my $build = Module::Build->new(
             script/munin-asyncd
             script/munin-check
             script/munin-cron
+            script/munin-doc
             script/munin-datafile2storable
             script/munin-graph
             script/munin-html
@@ -47,7 +48,6 @@ my $build = Module::Build->new(
             script/munin-sched
             script/munin-storable2datafile
             script/munin-update
-            script/munindoc
             )
     ],
     test_requires => {
