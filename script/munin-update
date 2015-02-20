@@ -84,7 +84,7 @@ sub parse_args {
 
     GetOptions (
         \%args, 
-        "config_file=s",
+        "config|config_file=s",
         "debug",
         "screen",
         "fork!",
