@@ -21,7 +21,8 @@ default: build-munin
 build-munin: Build
 
 install: Build
-	./Build install --destdir=$(DESTDIR)
+	./Build install --destdir=$(DESTDIR) --verbose
+
 
 clean: Build
 	./Build realclean
@@ -33,7 +34,7 @@ clean: Build
 # perl module
 
 Build: Build.PL lib/Munin.pm
-	$(PERL) Build.PL destdir=$(DESTDIR) installdirs=$(INSTALLDIRS)
+	$(PERL) Build.PL --destdir=$(DESTDIR) --installdirs=$(INSTALLDIRS) --verbose
 
 # Munin can always find and load its perl modules. We use this to
 # point out where the configuration is installed.
