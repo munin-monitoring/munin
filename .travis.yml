@@ -6,7 +6,6 @@ perl:
   - "5.14"
   - "5.12"
   - "5.10"
-  - "5.8"
 branches:
  only:
   - stable-2.0
