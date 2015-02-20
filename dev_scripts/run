@@ -24,4 +24,6 @@ if [ -z "$RUN" ]; then
     usage
 fi
 
-env PERL5LIB=$PERL5LIB:$DESTDIR$PERLSITELIB $RUN "$@"
+# Use -Mlib=/foo to work with tainted Perl
+# ... Run all dev in tainted mode, to enhance security
+perl -Mlib=$DESTDIR$PERLSITELIB -T $RUN "$@"
