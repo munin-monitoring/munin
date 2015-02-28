@@ -17,13 +17,14 @@ Munin::Common::Logger->_remove_default_logging;
 
 use_ok('Munin::Master::Node');
 
-my $config = Munin::Master::Config->instance();
-$config->{node}{use_node_name} = 1;
 
 sub setup {
     my $node = Munin::Master::Node->new('127.0.0.1', 4949, 'node');
     my $node_mock = Test::MockObject::Extends->new($node);
-    
+
+    $node_mock->{configref} = Munin::Master::Config->instance();
+    $node_mock->{configref}{use_node_name} = 1;
+
     $node_mock->mock('_node_write_single', sub {});
     $node_mock->mock('_node_read_fast', sub {
 		       my ($self) = @_;
