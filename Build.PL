@@ -30,6 +30,9 @@ my $build = Module::Build->new(
         'RRDs'                   => '1.4008',
         'URI'                    => '1.64',
     },
+    PL_files => {
+        'lib/Munin.pm.PL' => 'lib/Munin.pm',
+    },
     script_files => [
         qw(
             script/munin-async

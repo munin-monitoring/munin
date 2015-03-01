@@ -1,3 +1,13 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+my $output_file = shift;
+open my $fh, ">", $output_file or die "Can't open $output_file: $!";
+
+
+print $fh <<'EOF_HEADER';
 # -*- perl -*-
 
 =head1 NAME
@@ -11,14 +21,14 @@ This module contains package variables for locating the configuration files used
 =head1 SYNOPSIS
 
 =head2 From perl
-	use Munin
+    use Munin
 
-	printf "MUNIN_CONF='%s'\n", Munin::munin_conf;
-	printf "MUNIN_NODE_CONF='%s'\n", Munin::munin_node_conf;
+    printf "MUNIN_CONF='%s'\n", Munin::munin_conf;
+    printf "MUNIN_NODE_CONF='%s'\n", Munin::munin_node_conf;
 
 =head2 From shell
 
-	munin_conf=$(perl -MMunin -e 'print $Munin::munin_conf')
+    munin_conf=$(perl -MMunin -e 'print $Munin::munin_conf')
 
 =head1 LICENSE
 
@@ -26,7 +36,7 @@ GPL v2 or later
 
 =begin comment
 
-Copyright (C) 2014 Stig Sandbeck Mathisen
+Copyright (C) 2014, 2015 Stig Sandbeck Mathisen
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -51,14 +61,17 @@ package Munin;
 use warnings;
 use strict;
 
-# BEGIN_REPLACE
+EOF_HEADER
 
-# Note: Items between BEGIN_REPLACE and END_REPLACE will be replaced with content generated at build
-# time.
 
-our $munin_conf = '/etc/munin/munin.conf';
-our $munin_node_conf = '/etc/munin/munin-node.conf';
+print $fh <<"EOF";
+our \$munin_conf      = '/etc/munin/munin.conf';
+our \$munin_node_conf = '/etc/munin/munin-node.conf';
+EOF
 
-# END_REPLACE
 
+print $fh <<'EOF_FOOTER';
+
+# This file was generated when building munin.
 1;
+EOF_FOOTER
