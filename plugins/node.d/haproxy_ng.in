@@ -35,8 +35,8 @@
 #
 #   [haproxy_ng]
 #   env.url http://backend.example.com/haproxy-status;csv;norefresh
-#   env.http_username monitor
-#   env.http_password somepasswordorother
+#   env.username monitor
+#   env.password somepasswordorother
 #
 # Magic markers:
 #%# family=contrib
