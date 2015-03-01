@@ -129,6 +129,7 @@ parseconfig($CONFIGFILE);
 
 if($ARGV[0] and $ARGV[0] eq "config") {
     print "graph_title dhcp leases\n";
+    print "graph_category network\n";
     print "graph_args --base 1000 -v leases -l 0\n";
     print "graph_order ".join(" ",sort(keys(%leases)))."\n";
     foreach my $network (sort(keys %leases)) {
