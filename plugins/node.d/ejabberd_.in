@@ -179,7 +179,7 @@ if [ "$1" = "config" ]; then
     echo 'graph_info This graph shows a statistic of ejabberd'
 
     if [ "$MODE" = "connections" ]; then
-        echo 'graph_title Server-to-server conections'
+        echo 'graph_title Server-to-server connections'
         echo 'graph_vlabel s2s'
         echo 's2s_connections_out.label incoming s2s connections'
         echo 's2s_connections_out.info Number of outgoing server to server connections'
