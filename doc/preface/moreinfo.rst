@@ -13,7 +13,7 @@ Munin Guide
 ===========
 
 These are the pages you are currently reading. It is aimed at the first read.
-The chapters are designed as a walkthough Munin's components in a very guided
+The chapters are designed as a walk-through of Munin's components in a very guided
 manner. Its read constitutes the **basis** of every documention available.
 Specially when asking live (IRC_, mailing-lists_) channels, users there will
 expect that you read the Guide prior to asking.
