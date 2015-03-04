@@ -20,7 +20,7 @@ procedure to check which plugins are suitable for your node and
 create the links automatically. You may call it everytime when you
 changed something (services, hardware  or configuration) on your
 node and want to adjust the collection of plugins accordingly. 
-Wenn you removed software start it with option '--remove-also'.
+If you removed software start it with option '--remove-also'.
 
 To use a Munin plugin being delivered from a `3rd-Party <http://gallery.munin-monitoring.org/contrib/>`_,
 place it in directory ``/usr/local/munin/lib/plugins`` (or in another 
