@@ -91,7 +91,7 @@ timeout <seconds>
   The default is 10 seconds, but some plugins may require more time. 
 
 command <command> 
-  Run <command> instad of plugin. %c will be expanded to what would otherwise have been run. E.g. command sudo -u root %c.
+  Run <command> instead of plugin. %c will be expanded to what would otherwise have been run. E.g. command sudo -u root %c.
 
 .. note::
 
