@@ -100,7 +100,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" )
 	print "request.type DERIVE\n";
 	print "request.min 0\n";
 	print "request.label requests port $port\n";
-	print "request.draw LINE2\n";
+	print "request.draw LINE\n";
 	
 	exit 0;
 }

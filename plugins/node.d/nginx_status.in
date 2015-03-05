@@ -93,19 +93,19 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" ) {
 
     print "total.label Active connections\n";
     print "total.info  Active connections\n";
-    print "total.draw LINE2\n";
+    print "total.draw LINE\n";
 
     print "reading.label Reading\n";
     print "reading.info  Reading\n";
-    print "reading.draw LINE2\n";
+    print "reading.draw LINE\n";
 
     print "writing.label Writing\n";
     print "writing.info  Writing\n";
-    print "writing.draw LINE2\n";
+    print "writing.draw LINE\n";
 
     print "waiting.label Waiting\n";
     print "waiting.info  Waiting\n";
-    print "waiting.draw LINE2\n";
+    print "waiting.draw LINE\n";
 
     exit 0;
 }
