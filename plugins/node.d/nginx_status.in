@@ -84,7 +84,7 @@ if ( exists $ARGV[0] and $ARGV[0] eq "autoconf" ) {
 }
 
 if ( exists $ARGV[0] and $ARGV[0] eq "config" ) {
-    print "graph_title NGINX status\n";
+    print "graph_title Nginx status\n";
     print "graph_args --base 1000\n";
     print "graph_category nginx\n";
     print "graph_vlabel Connections\n";
