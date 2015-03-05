@@ -11,27 +11,7 @@ branches:
   - stable-2.0
   - devel
   - master
-install: "/bin/true"
 before_install:
- - "cpanm --notest File::ReadBackwards"
- - "cpanm --notest File::Copy::Recursive"
- - "cpanm --notest File::Slurp"
- - "cpanm --notest HTML::Template"
- - "cpanm --notest IO::Scalar"
- - "cpanm --notest IO::Socket::INET6"
- - "cpanm --notest Log::Log4perl"
- - "cpanm --notest Module::Build"
- - "cpanm --notest Net::SNMP"
- - "cpanm --notest Net::Server"
- - "cpanm --notest Net::SSLeay"
- - "cpanm --notest Test::Deep"
- - "cpanm --notest Test::Differences"
- - "cpanm --notest Test::LongString"
- - "cpanm --notest Test::MockModule"
- - "cpanm --notest Test::MockObject::Extends"
- - "cpanm --notest Time::HiRes"
- - "cpanm --notest DBI"
- - "cpanm --notest DBD::SQLite"
  - sh contrib/install_rrd.sh
 notifications:
   email: false
