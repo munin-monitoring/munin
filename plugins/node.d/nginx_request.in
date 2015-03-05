@@ -90,7 +90,6 @@ if ( exists $ARGV[0] and $ARGV[0] eq "config" )
 	print "graph_args --base 1000\n";
 	print "graph_category nginx\n";
 	print "graph_vlabel Requests per \${graph_period}\n";
-	print "request.label req/sec\n";
 	print "request.type DERIVE\n";
 	print "request.min 0\n";
 	print "request.label requests port $port\n";
