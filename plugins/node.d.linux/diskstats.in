@@ -844,7 +844,7 @@ sub do_config_device {
             print <<"EOF";
 multigraph ${plugin_name}_latency.$graph_id
 graph_title Average latency for /dev/$pretty_device
-graph_args --base 1000 --logarithmic
+graph_args --base 1000
 graph_vlabel seconds
 graph_category disk
 graph_info This graph shows average waiting time/latency for different categories of disk operations.   The times that include the queue times indicate how busy your system is.  If the waiting time hits 1 second then your I/O system is 100% busy.
