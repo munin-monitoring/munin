@@ -150,8 +150,7 @@ $build->add_build_element('etc');
 
 if ( not $build->install_path('etc') ) {
     if ( $build->install_base ) {
-        $build->install_path(
-            'etc' => join( '/', $build->install_base, 'etc' ) );
+        $build->install_path( 'etc' => $build->install_base . '/etc' );
     }
     elsif ( $build->installdirs eq 'site' ) {
         $build->install_path( 'etc' => '/usr/local/etc/munin' );
@@ -165,8 +164,7 @@ $build->add_build_element('share');
 
 if ( not $build->install_path('share') ) {
     if ( $build->install_base ) {
-        $build->install_path(
-            'share' => join( '/', $build->install_base, 'share' ) );
+        $build->install_path( 'share' => $build->install_base . '/share' );
     }
     elsif ( $build->installdirs eq 'site' ) {
         $build->install_path( 'share' => '/usr/local/share/munin' );
@@ -176,27 +174,65 @@ if ( not $build->install_path('share') ) {
     }
 }
 
+if ( not $build->install_path('var') ) {
+    if ( $build->install_base ) {
+        $build->install_path( 'var' => $build->install_base . '/var' );
+    }
+    else {
+        $build->install_path( 'var' => '/var' );
+    }
+}
+
+##############################
 # Add generated variables to be used from .PL files
 
 # sharedir (aka libdir)
 $build->install_path( 'MUNIN_SHAREDIR' => $build->install_path('share') );
-$build->install_path( 'MUNIN_LIBDIR'   => $build->install_path('share') );
 
 # conf
 $build->install_path( 'MUNIN_CONFDIR' => $build->install_path('etc') );
 
 # runstate
-$build->install_path( 'MUNIN_RUNDIR'   => '/run/munin' );
-$build->install_path( 'MUNIN_STATEDIR' => '/run/munin' );
-$build->install_path(
-    'MUNIN_PLUGSTATE' => '/var/lib/munin-node/plugin-state' );
 
 # var
-$build->install_path( 'MUNIN_LOGDIR'    => '/var/log/munin' );
-$build->install_path( 'MUNIN_HTMLDIR'   => '/var/www/munin' );
-$build->install_path( 'MUNIN_DBDIR'     => '/var/lib/munin' );
-$build->install_path( 'MUNIN_CGITMPDIR' => '/var/cache/munin' );
-$build->install_path( 'MUNIN_SPOOLDIR'  => '/var/spool/munin' );
+if ( $build->install_base ) {
+    $build->install_path(
+        'MUNIN_RUNDIR' => $build->install_path('var') . '/run' );
+    $build->install_path(
+        'MUNIN_LOGDIR' => $build->install_path('var') . '/log' );
+    $build->install_path(
+        'MUNIN_HTMLDIR' => $build->install_path('var') . '/www' );
+    $build->install_path(
+        'MUNIN_DBDIR' => $build->install_path('var') . '/lib' );
+    $build->install_path(
+        'MUNIN_CGITMPDIR' => $build->install_path('var') . '/cache' );
+    $build->install_path(
+        'MUNIN_SPOOLDIR' => $build->install_path('var') . '/spool' );
+    $build->install_path(
+        'MUNIN_PLUGSTATE' => $build->install_path('var') . '/plugin-state' );
+}
+else {
+    $build->install_path(
+        'MUNIN_RUNDIR' => $build->install_path('var') . '/run/munin' );
+    $build->install_path(
+        'MUNIN_LOGDIR' => $build->install_path('var') . '/log/munin' );
+    $build->install_path(
+        'MUNIN_HTMLDIR' => $build->install_path('var') . '/www/munin' );
+    $build->install_path(
+        'MUNIN_DBDIR' => $build->install_path('var') . '/lib/munin' );
+    $build->install_path(
+        'MUNIN_CGITMPDIR' => $build->install_path('var') . '/cache/munin' );
+    $build->install_path(
+        'MUNIN_SPOOLDIR' => $build->install_path('var') . '/spool/munin' );
+    $build->install_path( 'MUNIN_PLUGSTATE' => $build->install_path('var')
+            . '/lib/munin-node/plugin-state' );
+}
+
+# Aliases, kept for as long as code uses these
+$build->install_path(
+    'MUNIN_STATEDIR' => $build->install_path('MUNIN_RUNDIR') );
+$build->install_path(
+    'MUNIN_LIBDIR' => $build->install_path('MUNIN_SHAREDIR') );
 
 $build->dispatch('manifest');
 $build->dispatch('distmeta');
