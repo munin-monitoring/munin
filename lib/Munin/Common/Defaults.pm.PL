@@ -14,8 +14,7 @@ use File::Basename qw(dirname);
 # This variable makes only sense in development environment
 my $COMPONENT_ROOT = dirname(__FILE__) . '/../../..';
 
-
-our $DROPDOWNLIMIT     = 1;
+our $DROPDOWNLIMIT = 1;
 
 our $MUNIN_PREFIX     = '';
 our $MUNIN_CONFDIR    = "$COMPONENT_ROOT/t/config/";
@@ -27,11 +26,11 @@ our $MUNIN_HTMLDIR    = '';
 our $MUNIN_CGIDIR     = '';
 our $MUNIN_CGITMPDIR  = '';
 our $MUNIN_DBDIR      = '';
-our $MUNIN_PLUGSTATE  = ''; 
+our $MUNIN_PLUGSTATE  = '';
 our $MUNIN_SPOOLDIR   = '';
 our $MUNIN_MANDIR     = '';
 our $MUNIN_LOGDIR     = "$COMPONENT_ROOT/log/";
-our $MUNIN_STATEDIR   = ''; 
+our $MUNIN_STATEDIR   = '';
 our $MUNIN_USER       = $^O eq 'MSWin32' ? '' : getpwuid $EUID;
 our $MUNIN_GROUP      = $^O eq 'MSWin32' ? '' : getgrgid $EGID;
 our $MUNIN_PLUGINUSER = $^O eq 'MSWin32' ? '' : getpwuid $EUID;
@@ -47,17 +46,16 @@ our $MUNIN_HOSTNAME   = '';
 our $MUNIN_MKTEMP     = '';
 our $MUNIN_HASSETR    = '';
 
-
 sub get_defaults {
     my ($class) = @_;
-    
+
     ## no critic
 
     no strict 'refs';
     my $defaults = {};
-    for my $g (keys %{"Munin::Common::Defaults::"}) {
+    for my $g ( keys %{"Munin::Common::Defaults::"} ) {
         next unless $g =~ /MUNIN_/;
-        $defaults->{$g} = ${*$g{'SCALAR'}};
+        $defaults->{$g} = ${ *$g{'SCALAR'} };
     }
 
     ## use critic
@@ -65,21 +63,18 @@ sub get_defaults {
     return $defaults;
 }
 
-
 sub export_to_environment {
     my ($class) = @_;
 
-    my %defaults = %{$class->get_defaults()};
-    while (my ($k, $v) = each %defaults) {
+    my %defaults = %{ $class->get_defaults() };
+    while ( my ( $k, $v ) = each %defaults ) {
         $ENV{$k} = $v;
     }
 
-    return
+    return;
 }
 
-
 1;
-
 
 __END__
 
