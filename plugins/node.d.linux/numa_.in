@@ -81,7 +81,7 @@ fi
 if [ "$1" = "suggest" ]; then
   node=0
   while [ 1 ]; do
-    if [[ -r /sys/devices/system/node/node${node}/numastat ]]; then
+    if [ -r "/sys/devices/system/node/node${node}/numastat" ]; then
       echo "${node}_process"
       echo "${node}_memory"
     else
