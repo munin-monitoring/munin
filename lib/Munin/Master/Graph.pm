@@ -455,6 +455,14 @@ sub handle_request
 	);
 	push @rrd_header, "--end" , $end if $end;
 
+	# Handle vertical limits
+	{
+		my $lower_limit  = $cgi->url_param("lower_limit");
+		my $upper_limit  = $cgi->url_param("upper_limit");
+		push @rrd_header, "--lower" , $lower_limit if defined $lower_limit;
+		push @rrd_header, "--upper" , $upper_limit if defined $upper_limit;
+	}
+
 	# Now it gets *REALLY* dirty: FastCGI doesn't handle correctly stdout
 	# streaming for rrdtool. So we have to revert to use a temporary file.
 	# This way of doing things might _eventually_ be reused later if we
