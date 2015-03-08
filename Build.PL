@@ -143,6 +143,10 @@ my $build = Module::Build->new(
         'Test::LongString'    => '0',
         'File::Slurp'         => '9999.19',
         'File::ReadBackwards' => '0',
+        'XML::Parser'         => '0',
+        'DBD::Pg'             => '0',
+        'Net::DNS'            => '0',
+        'XML::LibXML'         => '0',
     },
 
 );
