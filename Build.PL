@@ -5,13 +5,27 @@ use warnings;
 
 use Module::Build;
 
+my ( $version, $release_status );
+
+$version = qx{./getversion};
+chomp $version;
+
+if ( $version =~ m/^\d+\.\d+\.\d+$/ ) {
+    $release_status = 'stable';
+}
+else {
+    $release_status = 'unstable';
+}
+
 my $build = Module::Build->new(
-    module_name   => 'Munin',
-    dist_version  => qx{./getversion},
-    dist_author   => 'The Munin Project <project@munin-monitoring.org>',
-    dist_abstract => 'networked resource monitoring tool with plugins',
-    license       => 'gpl2',
-    requires      => {
+    module_name        => 'Munin',
+    dist_version       => $version,
+    release_status     => $release_status,
+    dist_author        => 'The Munin Project <project@munin-monitoring.org>',
+    dist_abstract      => 'networked resource monitoring tool with plugins',
+    license            => 'GPL2',
+    configure_requires => { 'Module::Build' => '0.21', },
+    requires           => {
         'perl'                   => '5.10.0',
         'DBD::SQLite'            => '1.42',
         'DBI'                    => '1.631',
