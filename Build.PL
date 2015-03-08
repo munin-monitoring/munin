@@ -146,6 +146,7 @@ my $build = Module::Build->new(
         'XML::Parser'         => '0',
         'DBD::Pg'             => '0',
         'Net::DNS'            => '0',
+        'Net::IP'             => '0',
         'XML::LibXML'         => '0',
     },
 
