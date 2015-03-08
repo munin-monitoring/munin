@@ -14,8 +14,6 @@ use strict;
 # If you change the class path take a look in get_defaults too, please!
 package Munin::Common::Defaults;
 
-# $Id$
-
 use English qw(-no_match_vars);
 use File::Basename qw(dirname);
 
