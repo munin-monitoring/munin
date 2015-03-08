@@ -13,8 +13,12 @@
 /MYMETA.json
 /MYMETA.yml
 
-# Generated Version of Munin.pm.in
+# Generated files (foo.PL -> foo)
+lib/Munin/Common/Defaults.pm
 lib/Munin.pm
+master/munin.conf
+node/munin-node.conf
+
 
 # Dev Sandbox
 /sandbox/
