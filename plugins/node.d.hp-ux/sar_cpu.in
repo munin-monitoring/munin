@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/usr/local/bin/bash
 
 : << =cut
 
