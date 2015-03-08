@@ -49,8 +49,7 @@ my $plugin_re = quotemeta($plugin);
 
 # Dirs in which to look for $plugin.pod and $plugin files.
 my @DIRS = ("$Munin::Common::Defaults::MUNIN_LIBDIR/plugins",
-	    "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins",
-            "$Munin::Common::Defaults::MUNIN_PERLLIB");
+	    "$Munin::Common::Defaults::MUNIN_CONFDIR/plugins");
 
 File::Find::find({wanted => \&wanted_pod}, @DIRS);
 File::Find::find({wanted => \&wanted_basename}, @DIRS);

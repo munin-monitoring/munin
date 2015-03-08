@@ -1,10 +1,31 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Module::Build;
+my $build = Module::Build->current;
+my $log_file = $build->install_path('MUNIN_LOGDIR') . '/munin-node.log';
+my $pid_file = $build->install_path('MUNIN_RUNDIR') . '/munin-node.pid';
+
+my $output_file = shift;
+open my $fh, ">", $output_file or die "Can't open $output_file: $!";
+
+
+print $fh <<'EOF';
 #
 # Example config-file for munin-node
 #
 
 log_level 4
-log_file @@LOGDIR@@/munin-node.log
-pid_file @@STATEDIR@@/munin-node.pid
+EOF
+
+print $fh <<"EOF";
+log_file $log_file
+pid_file $pid_file
+EOF
+
+print $fh <<'EOF';
 
 background 1
 setsid 1
@@ -34,7 +55,7 @@ ignore_file \.pod$
 # Set this if the client doesn't report the correct hostname when
 # telnetting to localhost, port 4949
 #
-#host_name @@HOSTNAME@@
+#host_name myhostname.example.com
 
 # A list of addresses that are allowed to connect.  This must be a
 # regular expression, since Net::Server does not understand CIDR-style
@@ -61,3 +82,5 @@ host *
 
 # And which port
 port 4949
+
+EOF
