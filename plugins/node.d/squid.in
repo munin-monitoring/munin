@@ -86,7 +86,7 @@ my $plugin = Munin::Plugin::Framework->new;
 
 $plugin->hostname = $1 if $Munin::Plugin::me =~ /_([^_]+)$/;
 
-my $peeraddr = $ENV{'host'} || $hostname || '127.0.0.1';
+my $peeraddr = $ENV{'host'} || $plugin->hostname || '127.0.0.1';
 my $peerport = $ENV{'port'} || '3128';
 
 my $username = $ENV{'username'};
