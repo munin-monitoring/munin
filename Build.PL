@@ -31,7 +31,8 @@ my $build = Module::Build->new(
         'URI'                    => '1.64',
     },
     PL_files => {
-        'lib/Munin.pm.PL' => 'lib/Munin.pm',
+        'lib/Munin.pm.PL'                 => 'lib/Munin.pm',
+        'lib/Munin/Common/Defaults.pm.PL' => 'lib/Munin/Common/Defaults.pm',
     },
     script_files => [
         qw(
