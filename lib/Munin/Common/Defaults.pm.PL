@@ -1,3 +1,13 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+my $output_file = shift;
+open my $fh, ">", $output_file or die "Can't open $output_file: $!";
+
+
+print $fh <<'EOF';
 use warnings;
 use strict;
 
@@ -109,3 +119,4 @@ Export all the package variables to the environment.
 
 =back
 
+EOF
