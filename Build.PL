@@ -135,13 +135,14 @@ my $build = Module::Build->new(
             )
     ],
     test_requires => {
-        'IO::Scalar'        => '0',
-        'Test::Differences' => '0.62',
-        'Test::MockModule'  => '0',
-        'Test::MockObject'  => '0',
-        'Test::Deep'        => '0',
-        'Test::LongString'  => '0',
-        'File::Slurp'       => '9999.19',
+        'IO::Scalar'          => '0',
+        'Test::Differences'   => '0.62',
+        'Test::MockModule'    => '0',
+        'Test::MockObject'    => '0',
+        'Test::Deep'          => '0',
+        'Test::LongString'    => '0',
+        'File::Slurp'         => '9999.19',
+        'File::ReadBackwards' => '0',
     },
 
 );
