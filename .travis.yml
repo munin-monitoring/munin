@@ -12,6 +12,8 @@ branches:
   - devel
   - master
 before_install:
+ - sudo apt-get update
+ - sudo apt-get install devscripts
  - sh contrib/install_rrd.sh
 notifications:
   email: false
