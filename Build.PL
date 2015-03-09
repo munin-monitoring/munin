@@ -189,6 +189,12 @@ if ( not $build->install_path('var') ) {
     }
 }
 
+$build->add_build_element('plugins');
+
+if ( not $build->install_path('plugins') ) {
+	$build->install_path( 'plugins' => $build->install_path('share') . '/plugins' );
+}
+
 ##############################
 # Add generated variables to be used from .PL files
 
