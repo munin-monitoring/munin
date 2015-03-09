@@ -1,5 +1,79 @@
 #!/usr/bin/env perl
 
+=head1 NAME
+
+Build - Build, test and install Munin
+
+=head1 SYNOPSIS
+
+  perl Build.PL [options]
+  ./Build test
+  ./Build install
+
+=head1 DESCRIPTION
+
+Installs Munin and its components, using Module::Build. Some files are generated using templates.
+
+=head1 OPTIONS
+
+Note: options are "sticky". Options set at C<perl Build.PL> are re-used for calls to C<./Build>
+later.
+
+=over
+
+=item --debug
+
+Enables debugging
+
+=item --installpaths, --install_base, --install_path
+
+Configures how munin is installed.
+
+=back
+
+=head1 EXAMPLES
+
+=over
+
+=item Set base install location
+
+Handled by Module::Build standard.  Overall options
+
+* C<--installpaths site>, installs under /usr/local (this is the default)
+
+* C<--installpaths vendor>, installs under /usr (used for packaging)
+
+* C<--installbase /opt/munin>, installs under the named directory. You are responsible for making
+  sure the perl library path is set.
+
+=item Override etcdir
+
+Override install path with C<--install_path etc=/path/to/etc>
+
+=item Override vardir
+
+Override install path with C<--install_path var=/path/to/var>
+
+=item Override sharedir
+
+Override install path with C<--install_path share=/path/to/share>
+
+Note: This affects plugins. Available plugins are installed to C</path/to/share/plugins/>, and
+C<>munin-node-configure> will look in this directory.
+
+=back
+
+=head1 PLUGINS
+
+Plugins are installed from:
+
+* plugins/node.d/ - Generic plugins for common applications, which should work on all platforms.
+
+* plugins/node.d.$^O/ - Specific plugins for the platform where Munin is built. (for the value of
+  $^O for your platform, see http://perldoc.perl.org/perlport.html)
+
+=cut
+
 use strict;
 use warnings;
 
