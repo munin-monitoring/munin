@@ -1,0 +1,9 @@
+# debian
+apt-get install \
+	liblog-dispatch-perl \
+	libio-socket-inet6-perl \
+	libwww-perl \
+	liblist-moreutils-perl \
+	rrdtool \
+	librrds-perl \
+	libdbd-sqlite3-perl \
