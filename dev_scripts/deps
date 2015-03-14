@@ -7,3 +7,6 @@ apt-get install \
 	rrdtool \
 	librrds-perl \
 	libdbd-sqlite3-perl \
+	libhttp-server-simple-perl \
+	libhtml-template-pro-perl \
+	libxml-dumper-perl \
