@@ -54,7 +54,6 @@ sub handle_request
 
 	my $graph_ext = $cgi->url_param("graph_ext");
 	$graph_ext = "png" unless defined $graph_ext;
-	$graph_ext = "svg";
 
 	# Handle rest-like URL : .json & .xml
 	my $output_format = "html";
