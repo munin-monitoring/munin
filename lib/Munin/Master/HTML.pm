@@ -92,7 +92,7 @@ sub handle_request
 	my %template_params = (
 		MUNIN_VERSION	=> $Munin::Common::Defaults::MUNIN_VERSION,
 		TIMESTAMP       => strftime("%Y-%m-%d %T%z (%Z)", localtime),
-		R_PATH		=> '/',
+		R_PATH		=> '',
 	);
 
 	# Common Navigation params
@@ -115,7 +115,7 @@ sub handle_request
 
 		my $rootgroups = [];
 		while (my ($_name, $_path) = $sth->fetchrow_array) {
-			push @$rootgroups, { NAME => $_name, R_PATH => '/', URL => $_path };
+			push @$rootgroups, { NAME => $_name, R_PATH => '', URL => $_path };
 		}
 		$template_params{ROOTGROUPS} = $rootgroups;
 	}
@@ -129,7 +129,7 @@ sub handle_request
 		while (my ($_category) = $sth->fetchrow_array) {
 			my %urls = map { ("URL$_" => "$_category-$_.html") } @times;
 			push @$globalcats, {
-				R_PATH => '/',
+				R_PATH => '',
 				NAME => $_category,
 				%urls,
 			};
@@ -506,7 +506,7 @@ sub _get_params_groups {
 			NGROUPS => scalar(@$_groups),
 			# comparison only makes sense if there are 2 or more nodes
 			COMPARE => ($_compare_groups > 1 ? 1 : 0),
-			R_PATH => '/',
+			R_PATH => '',
 			PATH => [
 				{ PATH => '..', PATHNAME => undef, },
 				url_to_path($_path),
@@ -581,7 +581,7 @@ sub _get_params_services_for_comparison {
 			my $_srv_url = "$srv_url.html" if defined $srv_url;
 			my %_img_urls = map { ("CIMG$_" => "/$srv_url-$_.$graph_ext") } @times if defined $srv_url;
 			push @nodes, {
-				R_PATH => '/',
+				R_PATH => '',
 				NODENAME => $node_name,
 				URL1 => substr($node_url, length($basepath) + 1),
 				LABEL => $srv_label,
