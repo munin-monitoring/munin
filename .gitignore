@@ -18,6 +18,7 @@ lib/Munin/Common/Defaults.pm
 lib/Munin.pm
 master/munin.conf
 node/munin-node.conf
+script/munin-cron
 
 
 # Dev Sandbox

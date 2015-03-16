@@ -79,6 +79,7 @@ use warnings;
 
 use Module::Build;
 use File::Find;
+use Config;
 
 my ( $version, $release_status );
 my $plugins_files = {};
@@ -126,6 +127,7 @@ my $build = Module::Build->new(
         'lib/Munin/Common/Defaults.pm.PL' => 'lib/Munin/Common/Defaults.pm',
         'master/munin.conf.PL'            => 'master/munin.conf',
         'node/munin-node.conf.PL'         => 'node/munin-node.conf',
+        'script/munin-cron.PL'            => 'script/munin-cron',
     },
     etc_files => {
         'master/munin.conf'    => 'etc/munin.conf',
@@ -292,6 +294,8 @@ $build->install_path( 'MUNIN_CONFDIR' => $build->install_path('etc') );
 # var
 if ( $build->install_base ) {
     $build->install_path(
+        'MUNIN_BINDIR' => $build->install_base . '/bin' );
+    $build->install_path(
         'MUNIN_RUNDIR' => $build->install_path('var') . '/run' );
     $build->install_path(
         'MUNIN_LOGDIR' => $build->install_path('var') . '/log' );
@@ -307,6 +311,12 @@ if ( $build->install_base ) {
         'MUNIN_PLUGSTATE' => $build->install_path('var') . '/plugin-state' );
 }
 else {
+	if ($build->installdirs eq 'site') {
+		$build->install_path( 'MUNIN_BINDIR' => $Config{installsitebin} );
+	}
+	else {
+		$build->install_path( 'MUNIN_BINDIR' => $Config{installvendorbin} );
+	}
     $build->install_path(
         'MUNIN_RUNDIR' => $build->install_path('var') . '/run/munin' );
     $build->install_path(

@@ -8,6 +8,7 @@ open my $fh, ">", $output_file or die "Can't open $output_file: $!";
 
 use Module::Build;
 my $build           = Module::Build->current;
+my $MUNIN_BINDIR    = $build->install_path('MUNIN_BINDIR');
 my $MUNIN_CONFDIR   = $build->install_path('MUNIN_CONFDIR');
 my $MUNIN_LIBDIR    = $build->install_path('MUNIN_LIBDIR');
 my $MUNIN_LOGDIR    = $build->install_path('MUNIN_LOGDIR');
