@@ -78,8 +78,10 @@ use strict;
 use warnings;
 
 use Module::Build;
+use File::Find;
 
 my ( $version, $release_status );
+my $plugins_files = {};
 
 $version = qx{./getversion};
 chomp $version;
@@ -188,7 +190,8 @@ my $build = Module::Build->new(
             'conf/templates/munin-nodeview.tmpl',
         'master/www/munin-htaccess.in' => 'conf/templates/munin-htaccess.in',
     },
-    script_files => [
+    plugins_files => $plugins_files,
+    script_files  => [
         qw(
             script/munin-async
             script/munin-asyncd
@@ -266,7 +269,26 @@ if ( not $build->install_path('var') ) {
 $build->add_build_element('plugins');
 
 if ( not $build->install_path('plugins') ) {
-	$build->install_path( 'plugins' => $build->install_path('share') . '/plugins' );
+    $build->install_path(
+        'plugins' => $build->install_path('share') . '/plugins' );
+}
+
+File::Find::find( { wanted => \&_find_plugins_wanted },
+    'plugins/node.d', "plugins/node.d.$^O" );
+
+sub _find_plugins_wanted {
+    my ( $dev, $ino, $mode, $nlink, $uid, $gid );
+
+    # Assume all plugins are located on the same directory level
+    my $dirlevel = scalar( split( '/', $File::Find::dir ) );
+    return unless $dirlevel == 2;
+
+    if ( ( ( $dev, $ino, $mode, $nlink, $uid, $gid ) = lstat($_) ) && -f _ ) {
+        my $dst = $File::Find::name;
+        my $src = join( '/', 'plugins', $_ );
+
+        $plugins_files->{$dst} = $src;
+    }
 }
 
 ##############################
