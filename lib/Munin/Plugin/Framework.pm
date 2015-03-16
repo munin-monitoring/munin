@@ -85,7 +85,7 @@ sub run {
 
   if ( $self->{mode} eq "autoconf" ) {
     my $res = "yes";
-    if ( !defined($self->{graphs}) || scalar(keys $self->{graphs}) == 0 ) {
+    if ( !defined($self->{graphs}) || scalar( keys %{ $self->{graphs} } ) == 0 ) {
       $res = "no (no graphs configured)";
     } elsif ( ref($self->{autoconf}) eq "CODE" ) {
       $res = $self->{autoconf}() if $self->{autoconf};
@@ -100,7 +100,7 @@ sub run {
 
     printf "host_name %s\n", $self->{hostname} if $self->{hostname};
 
-    while (my ($name, $graph) = each $self->{graphs} ) {
+    while (my ($name, $graph) = each %{ $self->{graphs} } ) {
       printf "multigraph %s\n", $name;
 
       foreach my $config (qw(title args vlabel category info order total)) {
@@ -112,12 +112,12 @@ sub run {
       if ( $scale eq "yes" ) {
 	# do nothing as this is the default
       } elsif ( $scale ne "no" ) {
-	print STDERR "Invalid value $scale for $name's scale.\n" if $DEBUG;
+	print STDERR "Invalid value $scale for ${name}'s scale.\n" if $DEBUG;
       } else {
 	print "graph_scale no\n";
       }
 
-      while ( my ($field, $data) = each $graph->{fields} ) {
+      while ( my ($field, $data) = each %{ $graph->{fields} } ) {
 	printf "%s.label %s\n", $field, ($data->{label} || $field);
 
 	my $draw = $data->{draw} || "LINE2";
@@ -170,10 +170,10 @@ sub run {
 
   $self->{pre_fetch}() if $self->{pre_fetch};
 
-  while (my ($name, $graph) = each $self->{graphs} ) {
+  while (my ($name, $graph) = each %{$self->{graphs}} ) {
     printf "multigraph %s\n", $name;
 
-    while ( my ($field, $data) = each $graph->{fields} ) {
+    while ( my ($field, $data) = each %{$graph->{fields}} ) {
       printf "%s.value %s\n", $field, (defined($data->{value}) ? $data->{value} : "U");
     }
   }
