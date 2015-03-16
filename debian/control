@@ -14,7 +14,7 @@ Build-Depends-Indep:
  libmodule-build-perl,
  perl,
  python3-sphinx,
-Build-Depends: debhelper (>=8)
+Build-Depends: debhelper (>=9)
 Standards-Version: 3.9.5
 Homepage: http://munin-monitoring.org
 Vcs-Git: git://anonscm.debian.org/collab-maint/munin.git
