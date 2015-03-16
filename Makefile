@@ -1,8 +1,10 @@
 # -*- makefile -*-
 
-# This is the top level Makefile for Munin.
+# This Makefile provides convenience targets for common build/test/install cases, as well as rules
+# for the release manager.
 
-# Some actions are handled by Build.PL (see perldoc Module::Build).
+# In the interest of keeping this Makefile simple, it does not attempt to provide the flexibility
+# provided by using Build.PL directly. (See perldoc Module::Build).
 
 # Defaults/paths. Allows $(CONFIG) to be overrided by
 # make command line
