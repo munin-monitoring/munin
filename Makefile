@@ -16,9 +16,10 @@ PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/* $(JAVA_PLUGI
 
 .PHONY: default build install clean test testcover testpod testpodcoverage tar
 
-default: build-munin
+default: blib
 
-build-munin: Build
+blib: Build
+	./Build
 
 install: Build
 	./Build install --destdir=$(DESTDIR) --verbose
