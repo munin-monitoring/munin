@@ -171,6 +171,11 @@ my $build = Module::Build->new(
 
 );
 
+##############################
+## Build element "etc"
+#
+# Contains generated configuration files
+
 $build->add_build_element('etc');
 
 if ( not $build->install_path('etc') ) {
@@ -185,7 +190,10 @@ if ( not $build->install_path('etc') ) {
     }
 }
 
-$build->add_build_element('share');
+##############################
+## Path "share"
+#
+# Used as root for other parts of munin, like "plugins"
 
 if ( not $build->install_path('share') ) {
     if ( $build->install_base ) {
@@ -199,6 +207,9 @@ if ( not $build->install_path('share') ) {
     }
 }
 
+##############################
+## Path "var"
+
 if ( not $build->install_path('var') ) {
     if ( $build->install_base ) {
         $build->install_path( 'var' => $build->install_base . '/var' );
@@ -207,6 +218,11 @@ if ( not $build->install_path('var') ) {
         $build->install_path( 'var' => '/var' );
     }
 }
+
+##############################
+## Build element "plugins"
+#
+# Contains munin plugins.  Installed under the "share" path by default.
 
 $build->add_build_element('plugins');
 
@@ -217,15 +233,6 @@ if ( not $build->install_path('plugins') ) {
 
 File::Find::find( { wanted => \&_find_plugins_wanted },
     'plugins/node.d', "plugins/node.d.$^O" );
-
-$build->add_build_element('web');
-
-if ( not $build->install_path('web') ) {
-    $build->install_path( 'web' => $build->install_path('etc') );
-}
-
-File::Find::find( { wanted => \&_find_web_templates_wanted }, 'master/www' );
-File::Find::find( { wanted => \&_find_web_static_wanted }, 'master/static' );
 
 sub _find_plugins_wanted {
 
@@ -240,6 +247,20 @@ sub _find_plugins_wanted {
         $plugins_files->{$src} = $dst;
     }
 }
+
+##############################
+## Build element "web"
+#
+# Contains static files and templates. Installed under the "etc" path by default.
+
+$build->add_build_element('web');
+
+if ( not $build->install_path('web') ) {
+    $build->install_path( 'web' => $build->install_path('etc') );
+}
+
+File::Find::find( { wanted => \&_find_web_templates_wanted }, 'master/www' );
+File::Find::find( { wanted => \&_find_web_static_wanted }, 'master/static' );
 
 sub _find_web_templates_wanted {
     if ( lstat && -f _ && /\.tmpl$/ ) {
