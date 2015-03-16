@@ -127,68 +127,67 @@ my $build = Module::Build->new(
         'node/munin-node.conf.PL'         => 'node/munin-node.conf',
     },
     etc_files => {
-        'master/munin.conf'             => 'conf/munin.conf',
-        'node/munin-node.conf'          => 'conf/munin-node.conf',
-        'master/static/style-new.css'   => 'conf/static/style-new.css',
-        'master/static/jquery-1.8.3.js' => 'conf/static/jquery-1.8.3.js',
-        'master/static/logo.png'        => 'conf/static/logo.png',
-        'master/static/logo-h-neg.png'  => 'conf/static/logo-h-neg.png',
-        'master/static/querystring.js'  => 'conf/static/querystring.js',
-        'master/static/style.css'       => 'conf/static/style.css',
-        'master/static/style-2.1.css'   => 'conf/static/style-2.1.css',
+        'master/munin.conf'             => 'etc/munin.conf',
+        'node/munin-node.conf'          => 'etc/munin-node.conf',
+        'master/static/style-new.css'   => 'etc/static/style-new.css',
+        'master/static/jquery-1.8.3.js' => 'etc/static/jquery-1.8.3.js',
+        'master/static/logo.png'        => 'etc/static/logo.png',
+        'master/static/logo-h-neg.png'  => 'etc/static/logo-h-neg.png',
+        'master/static/querystring.js'  => 'etc/static/querystring.js',
+        'master/static/style.css'       => 'etc/static/style.css',
+        'master/static/style-2.1.css'   => 'etc/static/style-2.1.css',
         'master/static/jquery.lazyload-1.9.3.js' =>
-            'conf/static/jquery.lazyload-1.9.3.js',
-        'master/static/definitions.html' => 'conf/static/definitions.html',
-        'master/static/zoom.js'          => 'conf/static/zoom.js',
-        'master/static/favicon.ico'      => 'conf/static/favicon.ico',
-        'master/static/logo-h.png'       => 'conf/static/logo-h.png',
-        'master/static/formatdate.js'    => 'conf/static/formatdate.js',
-        'master/static/placeholder.gif'  => 'conf/static/placeholder.gif',
-        'master/static/style-1.2.css'    => 'conf/static/style-1.2.css',
-        'master/static/dynazoom.html'    => 'conf/static/dynazoom.html',
-        'master/static/style.lazyload.css' =>
-            'conf/static/style.lazyload.css',
-        'master/www/partial/path.tmpl' => 'conf/templates/partial/path.tmpl',
+            'etc/static/jquery.lazyload-1.9.3.js',
+        'master/static/definitions.html'   => 'etc/static/definitions.html',
+        'master/static/zoom.js'            => 'etc/static/zoom.js',
+        'master/static/favicon.ico'        => 'etc/static/favicon.ico',
+        'master/static/logo-h.png'         => 'etc/static/logo-h.png',
+        'master/static/formatdate.js'      => 'etc/static/formatdate.js',
+        'master/static/placeholder.gif'    => 'etc/static/placeholder.gif',
+        'master/static/style-1.2.css'      => 'etc/static/style-1.2.css',
+        'master/static/dynazoom.html'      => 'etc/static/dynazoom.html',
+        'master/static/style.lazyload.css' => 'etc/static/style.lazyload.css',
+        'master/www/partial/path.tmpl' => 'etc/templates/partial/path.tmpl',
         'master/www/partial/logo_navigation.tmpl' =>
-            'conf/templates/partial/logo_navigation.tmpl',
+            'etc/templates/partial/logo_navigation.tmpl',
         'master/www/partial/footer.tmpl' =>
-            'conf/templates/partial/footer.tmpl',
+            'etc/templates/partial/footer.tmpl',
         'master/www/partial/logo_path.tmpl' =>
-            'conf/templates/partial/logo_path.tmpl',
+            'etc/templates/partial/logo_path.tmpl',
         'master/www/partial/navigation.tmpl' =>
-            'conf/templates/partial/navigation.tmpl',
-        'master/www/partial/head.tmpl' => 'conf/templates/partial/head.tmpl',
+            'etc/templates/partial/navigation.tmpl',
+        'master/www/partial/head.tmpl' => 'etc/templates/partial/head.tmpl',
         'master/www/partial/bottom_navigation.tmpl' =>
-            'conf/templates/partial/bottom_navigation.tmpl',
+            'etc/templates/partial/bottom_navigation.tmpl',
         'master/www/partial/logo_navigation_comparison.tmpl' =>
-            'conf/templates/partial/logo_navigation_comparison.tmpl',
+            'etc/templates/partial/logo_navigation_comparison.tmpl',
         'master/www/partial/generated_by.tmpl' =>
-            'conf/templates/partial/generated_by.tmpl',
+            'etc/templates/partial/generated_by.tmpl',
         'master/www/partial/logo_navigation_problem.tmpl' =>
-            'conf/templates/partial/logo_navigation_problem.tmpl',
+            'etc/templates/partial/logo_navigation_problem.tmpl',
         'master/www/munin-domainview.tmpl' =>
-            'conf/templates/munin-domainview.tmpl',
+            'etc/templates/munin-domainview.tmpl',
         'master/www/munin-problemview.tmpl' =>
-            'conf/templates/munin-problemview.tmpl',
+            'etc/templates/munin-problemview.tmpl',
         'master/www/munin-serviceview.tmpl' =>
-            'conf/templates/munin-serviceview.tmpl',
+            'etc/templates/munin-serviceview.tmpl',
         'master/www/munin-categoryview.tmpl' =>
-            'conf/templates/munin-categoryview.tmpl',
+            'etc/templates/munin-categoryview.tmpl',
         'master/www/munin-comparison-day.tmpl' =>
-            'conf/templates/munin-comparison-day.tmpl',
+            'etc/templates/munin-comparison-day.tmpl',
         'master/www/munin-comparison-week.tmpl' =>
-            'conf/templates/munin-comparison-week.tmpl',
+            'etc/templates/munin-comparison-week.tmpl',
         'master/www/munin-comparison-month.tmpl' =>
-            'conf/templates/munin-comparison-month.tmpl',
+            'etc/templates/munin-comparison-month.tmpl',
         'master/www/munin-dynazoom.tmpl' =>
-            'conf/templates/munin-dynazoom.tmpl',
+            'etc/templates/munin-dynazoom.tmpl',
         'master/www/munin-comparison-year.tmpl' =>
-            'conf/templates/munin-comparison-year.tmpl',
+            'etc/templates/munin-comparison-year.tmpl',
         'master/www/munin-overview.tmpl' =>
-            'conf/templates/munin-overview.tmpl',
+            'etc/templates/munin-overview.tmpl',
         'master/www/munin-nodeview.tmpl' =>
-            'conf/templates/munin-nodeview.tmpl',
-        'master/www/munin-htaccess.in' => 'conf/templates/munin-htaccess.in',
+            'etc/templates/munin-nodeview.tmpl',
+        'master/www/munin-htaccess.in' => 'etc/templates/munin-htaccess.in',
     },
     plugins_files => $plugins_files,
     script_files  => [
@@ -297,7 +296,7 @@ sub _find_plugins_wanted {
 # sharedir (aka libdir)
 $build->install_path( 'MUNIN_SHAREDIR' => $build->install_path('share') );
 
-# conf
+# etc
 $build->install_path( 'MUNIN_CONFDIR' => $build->install_path('etc') );
 
 # runstate
