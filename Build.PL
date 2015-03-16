@@ -139,7 +139,6 @@ my $build = Module::Build->new(
         qw(
             script/munin-async
             script/munin-asyncd
-            script/munin-check
             script/munin-cron
             script/munin-doc
             script/munin-datafile2storable
