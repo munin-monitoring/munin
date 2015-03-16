@@ -14,8 +14,6 @@ CONFIG = Makefile.config
 include $(DEFAULTS)
 include $(CONFIG)
 
-PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/* $(JAVA_PLUGINS))
-
 .PHONY: default build install clean test testcover testpod testpodcoverage tar
 
 default: blib
@@ -65,8 +63,3 @@ tar:
 	tar rf ../munin-$(RELEASE).tar --owner=root --group=root munin-$(RELEASE)/RELEASE
 	rm -rf munin-$(RELEASE)
 	gzip -f -9 ../munin-$(RELEASE).tar
-
-
-##############################
-# java plugin
-include Makefile.javaplugin
