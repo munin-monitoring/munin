@@ -11,6 +11,7 @@ Build-Depends-Indep:
  default-jdk,
  html2text,
  htmldoc,
+ libmodule-build-perl,
  perl,
  python3-sphinx,
 Build-Depends: debhelper (>=8)
