@@ -1,0 +1,132 @@
+#!/usr/bin/perl
+# -*- perl -*-
+
+=head1 NAME
+
+ircu - Plugin to graph the number of clients, channels and servers on
+an IRC network.
+
+=head1 CONFIGURATION
+
+No configuration.
+
+=head1 USAGE
+
+This plugin connects to an IRC server running on the local host.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+  #%# family=manual
+  #%# capabilities=autoconf
+
+=cut
+
+my $ret = undef;
+
+if (! eval "require Net::IRC;")
+{
+    $ret = "Net::IRC not found";
+}
+
+if ($ARGV[0] and $ARGV[0] eq "autoconf")
+{
+    if ($ret)
+    {
+	print "no ($ret)\n";
+	exit 0;
+    }
+    my $irc = new Net::IRC;
+    my $conn;
+
+    $irc = new Net::IRC; $conn = $irc->newconn(Nick => 'munin-ircd', Server => 'localhost');
+    if (!$conn)
+    {
+	print "no (Couldn't connect to IRC server)\n";
+	exit 0;
+    }
+    print "yes\n";
+    exit 0;
+}
+
+if($ARGV[0] and $ARGV[0] eq "config") {
+    print "host_name $ENV{FQDN}\n";
+    print "graph_title ircd status\n";
+    print "graph_order clients channels servers\n";
+    print "graph_args -l 0\n";
+    print "clients.label clients\n";
+    print "clients.draw LINE2\n";
+    print "channels.label channels\n";
+    print "channels.draw LINE2\n";
+    print "servers.label servers\n";
+    print "servers.draw LINE2\n";
+    exit 0;
+}
+
+my $irc = new Net::IRC;
+my $conn = $irc->newconn(Nick => 'munin-ircd',
+			 Server => 'localhost');
+
+my %result;
+#$conn->debug(0);
+
+sub luserclient {
+    my($self, $event) = @_;
+    # Do we have something like an UnrealIRCD?
+    if(($event->args)[1] =~  /There are (\d+) users and (\d+) invisible on (\d+) servers/) {
+	$result{'clients'} = $1 + $2 - 1; # don't count this script
+	$result{'servers'} = $3;
+    }
+    # Or maybe some freendode hyperion stuff?
+    elsif(($event->args)[1] =~  /There are (\d+) listed and (\d+) unlisted users on (\d+) servers/) {
+	$result{'clients'} = $1 + $2 - 1; # don't count this script
+	$result{'servers'} = $3;
+    }
+    # Or some recent ircnet ircd?
+    elsif(($event->args)[1] =~  /There are (\d+) users and \d+ services on (\d+) servers/) {
+	$result{'clients'} = $1 - 1; # don't count this script
+	$result{'servers'} = $2;
+    }
+    # Anything else goes here
+    elsif(($event->args)[1] =~  /There are (\d+) users and (\d+) invisible/) {
+	$result{'clients'} = $1 + $2 - 1; # don't count this script
+    }
+    # And here (if there are no invisible count)
+    elsif(($event->args)[1] =~  /There are (\d+) users/) {
+	$result{'clients'} = $1 - 1; # don't count this script
+    }
+}
+
+sub luserchannels {
+    my($self, $event) = @_;
+    if(($event->args)[1] =~  /^(\d+)/) {
+	$result{'channels'} = $1;
+    }
+}
+
+sub quit {
+    my($self, $event) = @_;
+    open(STDERR, ">/dev/null");
+    $self->quit();
+    print "clients.value " . $result{'clients'} . "\n";
+    print "channels.value " . $result{'channels'} . "\n";
+    print "servers.value " . $result{'servers'} . "\n";
+}
+
+$conn->add_global_handler('endofmotd', \&quit);
+$conn->add_global_handler('luserclient', \&luserclient);
+$conn->add_global_handler('luserchannels', \&luserchannels);
+
+
+while(1) {
+    $irc->do_one_loop();
+}		 
+
+# vim:syntax=perl

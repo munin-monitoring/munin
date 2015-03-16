@@ -1,0 +1,86 @@
+#!/bin/sh
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+ps_ - Wildcard plugin to monitor number of processes
+
+=head1 CONFIGURATION
+
+This is a wildcard plugin.  The wildcard prefix link name should be the process
+name to monitor.
+
+This plugin uses the following configuration variables:
+
+ [ps_*]
+  env.regex - Regular expression used to filter output from pgrep / ps.
+
+Whatever matches this regular expression is included in the count.
+
+=head2 DEFAULT CONFIGURATION
+
+The default configuration is to set "env.regex" to the link name prefix.
+
+=head2 EXAMPLE WILDCARD USAGE
+
+C<ln -s /usr/share/munin/node/plugins-auto/ps_ /etc/munin/node.d/ps_exim>
+
+...will monitor number of exim-processes.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+myname=`basename $0 | sed 's/^ps_//g'`
+
+name="${name-\<$myname\>}"
+REGEX="${regex-\<$name\>}"
+
+if [ "$1" = "autoconf" ]; then
+    # Makes little sense to autoconf if you can't suggest
+    echo no
+    exit 0
+fi
+
+if [ "$1" = "suggest" ]; then
+	exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo graph_title Number of $myname processes
+	echo 'graph_args --base 1000 --vertical-label processes -l 0'
+	echo 'graph_category processes'
+	echo "count.label $myname"
+	print_warning count
+	print_critical count
+	exit 0
+fi
+
+printf "count.value "
+
+PGREP=/usr/bin/pgrep
+
+if [ -x "$PGREP" ]; then
+	$PGREP -f -l "$name" | grep "$REGEX" | grep -v grep | wc -l
+elif [ -x /usr/ucb/ps ]; then
+	# Solaris without pgrep. How old is that?
+	/usr/ucb/ps auxwww | grep "$REGEX" | grep -v grep | wc -l
+else
+	ps auxwww | grep "$REGEX" | grep -v grep | wc -l
+fi

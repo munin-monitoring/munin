@@ -1,0 +1,61 @@
+#!/bin/sh
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+nfs4_client - Plugin to monitor NFSv4 client traffic
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+NFS=/proc/net/rpc/nfs
+
+proc="read write commit open open_confirm open_noattr open_downgrade close setattr fsinfo renew setclientid setclientid_confirm lock lockt locku access getattr lookup lookup_root remove rename link symlink create pathconf statfs readlink readdir server_caps delegreturn getacl setacl"
+
+if [ "$1" = "autoconf" ]; then
+	if [ -f "$NFS" ]; then
+		echo yes
+		exit 0
+	else
+		echo "no (no $NFS)"
+		exit 0
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title NFSv4 Client'
+	echo 'graph_args --base 1000 -l 0'
+	echo 'graph_vlabel requests / ${graph_period}'
+	echo 'graph_total total'
+	echo 'graph_category NFS'
+	for a in $proc ; do echo "$a.label $a" ; echo "$a.type DERIVE"; echo "$a.min 0"; done
+	exit 0
+fi
+
+awk '/proc4/ {
+    split("'"$proc"'", names)
+    split($0,values)
+    for (e in names) {
+        printf("%s.value %d\n", names[++i], values[i+3]);
+    }
+}' $NFS
+

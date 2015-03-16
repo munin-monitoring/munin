@@ -1,0 +1,669 @@
+#!/usr/bin/perl -w
+# -*- perl -*-
+# vim: sts=4 sw=4 ts=8
+
+=head1 NAME
+
+diskstat_ - Munin wildcard plugin to monitor various values provided
+via C</proc/diskstats>
+
+=head1 APPLICABLE SYSTEMS
+
+Linux 2.6 systems with extended block device statistics enabled.
+
+
+=head1 CONFIGURATION
+
+None needed.
+
+This plugin displays nicer device-mapper device names if it is run as
+root, but it functions as needed without root privilege.  To configure
+for running as root enter this in a plugin configuration file:
+
+  [diskstat_*]
+    user root
+
+=head1 INTERPRETATION
+
+Among the more self-describing or well-known values like C<throughput>
+(Bytes per second) there are a few which might need further introduction.
+
+
+=head2 Device Utilization
+
+Linux provides a counter which increments in a millisecond-interval for as long
+as there are outstanding I/O requests. If this counter is close to 1000msec
+in a given 1 second timeframe the device is nearly 100% saturated. This plugin
+provides values averaged over a 5 minute time frame per default, so it can't
+catch short-lived saturations, but it'll give a nice trend for semi-uniform
+load patterns as they're expected in most server or multi-user environments.
+
+
+=head2 Device IO Time
+
+The C<Device IO Time> takes the counter described under C<Device Utilization>
+and divides it by the number of I/Os that happened in the given time frame,
+resulting in an average time per I/O on the block-device level.
+
+This value can give you a good comparison base amongst different controllers,
+storage subsystems and disks for similar workloads.
+
+
+=head2 Syscall Wait Time
+
+These values describe the average time it takes between an application issuing
+a syscall resulting in a hit to a blockdevice to the syscall returning to the
+application.
+
+The values are bound to be higher (at least for read requests) than the time
+it takes the device itself to fulfill the requests, since calling overhead,
+queuing times and probably a dozen other things are included in those times.
+
+These are the values to watch out for when an user complains that C<the disks
+are too slow!>.
+
+
+=head3 What causes a block device hit?
+
+A non-exhaustive list:
+
+=over
+
+=item * Reads from files when the given range is not in the page cache or the O_DIRECT
+flag is set.
+
+=item * Writes to files if O_DIRECT or O_SYNC is set or sys.vm.dirty_(background_)ratio
+is exceeded.
+
+=item * Filesystem metadata operations (stat(2), getdents(2), file creation,
+modification of any of the values returned by stat(2), etc.)
+
+=item * The pdflush daemon writing out dirtied pages
+
+=item * (f)sync
+
+=item * Swapping
+
+=item * raw device I/O (mkfs, dd, etc.)
+
+=back
+
+=head1 ACKNOWLEDGEMENTS
+
+The core logic of this script is based on the B<iostat> tool of the
+B<sysstat> package written and maintained by Sebastien Godard.
+
+=head1 SEE ALSO
+
+See C<Documentation/iostats.txt> in your Linux source tree for further
+information about the C<numbers> involved in this module.
+
+L<http://www.westnet.com/~gsmith/content/linux-pdflush.htm> has a nice
+writeup about the pdflush daemon.
+
+=head1 VERSION
+
+  $Id$
+
+=head1 MAGIC MARKERS
+
+  #%# family=manual
+  #%# capabilities=autoconf suggest
+
+=head1 BUGS
+
+Does not work correctly with multiple Munin masters as it calculates
+averages between each time it is run.  In such a case it can be run
+twice in the same second, this causes "division by zero" errors.  If
+it is run two seconds apart the average it reports is over 2 seconds,
+not 5 minutes.
+
+=head1 AUTHOR
+
+Michael Renner <michael.renner@amd.co.at>
+
+=head1 LICENSE
+
+GPLv2
+
+
+=cut
+
+use strict;
+
+use File::Basename;
+use Carp;
+use POSIX;
+
+# We load our own version of save/restore_state if Munin::Plugin is unavailable.
+# Don't try this at home
+eval { require Munin::Plugin; Munin::Plugin->import; };
+
+if ($@) {
+    die "Munin::Plugin is required for this plugin to run";
+}
+
+# Sanity check to ensure that the script is called the correct name.
+
+if ( basename($0) !~ /^diskstat_/ ) {
+    die
+        qq(Please ensure that the name of the script and it's symlinks starts with "diskstat_"\n);
+}
+
+############
+# autoconf #
+############
+
+if ( defined $ARGV[0] && $ARGV[0] eq 'autoconf' ) {
+    my %stats;
+
+    # Capture any croaks on the way
+    eval { %stats = parse_diskstats() };
+
+    if ( !$@ && keys %stats ) {
+
+        print "yes\n";
+        exit 0;
+    }
+    else {
+        print "no\n";
+        exit 1;
+    }
+}
+
+###########
+# suggest #
+###########
+
+if ( defined $ARGV[0] && $ARGV[0] eq 'suggest' ) {
+
+    my %diskstats = parse_diskstats();
+
+    my %suggested_devices;
+
+DEVICE:
+    for my $devname ( sort keys %diskstats ) {
+
+        # Skip devices without traffic
+        next
+            if ( $diskstats{$devname}->{'rd_ios'} == 0
+            && $diskstats{$devname}->{'wr_ios'} == 0 );
+
+        for my $existing_device ( @{ $suggested_devices{'iops'} } ) {
+
+          # Filter out devices (partitions) which are matched by existing ones
+          # e.g. sda1 -> sda, c0d0p1 -> c0d0
+            next DEVICE if ( $devname =~ m/$existing_device/ );
+        }
+
+        push @{ $suggested_devices{'iops'} },       $devname;
+        push @{ $suggested_devices{'throughput'} }, $devname;
+
+        # Only suggest latency graphs if the device supports it
+        if (   $diskstats{$devname}->{'rd_ticks'} > 0
+            || $diskstats{$devname}->{'wr_ticks'} > 0 )
+        {
+            push @{ $suggested_devices{'latency'} }, $devname;
+        }
+    }
+
+    for my $mode ( keys %suggested_devices ) {
+        for my $device ( sort @{ $suggested_devices{$mode} } ) {
+
+            my $printdev = translate_device_name( $device, 'TO_FS' );
+            print "${mode}_$printdev\n";
+        }
+    }
+
+    exit 0;
+}
+
+# Reading the scripts invocation name and setting some parameters,
+# needed from here on
+
+my $basename = basename($0);
+my ( $mode, $device ) = $basename =~ m/diskstat_(\w+)_([-+:\w]+)$/;
+
+if ( not defined $device ) {
+    croak
+        qq(Didn't get a device name. Please put this script into munin's plugin directory and run the commands suggested by "munin-node-configure --shell".\n);
+}
+
+$device = translate_device_name( $device, 'FROM_FS' );
+
+##########
+# config #
+##########
+
+if ( defined $ARGV[0] && $ARGV[0] eq 'config' ) {
+
+    my $pretty_device = $device;
+
+    if ( $device =~ /^dm-\d+$/ ) {
+        $pretty_device = translate_devicemapper_name($device);
+    }
+
+    if ( $mode eq 'latency' ) {
+
+        print <<EOF;
+graph_title Disk latency for /dev/$pretty_device
+graph_args --base 1000
+graph_category disk
+util.label Device utilization (percent)
+util.type GAUGE
+util.info Utilization of the device. If the time spent for I/O is close to 1000msec for a given second, the device is nearly 100% saturated.
+util.min 0
+svctm.label Average device IO time (ms)
+svctm.type GAUGE
+svctm.info Average time an I/O takes on the block device
+svctm.min 0
+avgwait.label Average IO Wait time (ms)
+avgwait.type GAUGE
+avgwait.info Average wait time for an I/O from request start to finish (includes queue times et al)
+avgwait.min 0
+avgrdwait.label Average Read IO Wait time (ms)
+avgrdwait.type GAUGE
+avgrdwait.info Average wait time for a read I/O from request start to finish (includes queue times et al)
+avgrdwait.min 0
+avgwrwait.label Average Write IO Wait time (ms)
+avgwrwait.type GAUGE
+avgwrwait.info Average wait time for a write I/O from request start to finish (includes queue times et al)
+avgwrwait.min 0
+EOF
+
+    }
+    elsif ( $mode eq 'throughput' ) {
+
+        print <<EOF;
+graph_title Disk throughput for /dev/$pretty_device
+graph_args --base 1024
+graph_vlabel Bytes/second
+graph_category disk
+rdbytes.label Read Bytes
+rdbytes.type GAUGE
+rdbytes.min 0
+wrbytes.label Write Bytes
+wrbytes.type GAUGE
+wrbytes.min 0
+EOF
+    }
+    elsif ( $mode eq 'iops' ) {
+
+        print <<EOF;
+graph_title Disk IOs for /dev/$pretty_device
+graph_args --base 1000
+graph_vlabel Units/second
+graph_category disk
+rdio.label Read IO/sec
+rdio.type GAUGE
+rdio.min 0
+wrio.label Write IO/sec
+wrio.type GAUGE
+wrio.min 0
+avgrqsz.label Average Request Size (KiB)
+avgrqsz.type GAUGE
+avgrqsz.min 0
+avgrdrqsz.label Average Read Request Size (KiB)
+avgrdrqsz.type GAUGE
+avgrdrqsz.min 0
+avgwrrqsz.label Average Write Request Size (KiB)
+avgwrrqsz.type GAUGE
+avgwrrqsz.min 0
+EOF
+
+    }
+    else {
+        croak "Unknown mode $mode\n";
+    }
+    exit 0;
+}
+
+########
+# MAIN #
+########
+
+my %cur_diskstat = fetch_device_counters($device);
+
+my ( $prev_time, %prev_diskstat ) = restore_state();
+
+save_state( time(), %cur_diskstat );
+
+# Probably the first run for the given device, we need state to do our job,
+# so let's wait for the next run.
+exit if ( not defined $prev_time or not %prev_diskstat );
+
+calculate_and_print_values( $prev_time, \%prev_diskstat, \%cur_diskstat );
+
+########
+# SUBS #
+########
+
+sub calculate_and_print_values {
+    my ( $prev_time, $prev_stats, $cur_stats ) = @_;
+
+    my $bytes_per_sector = 512;
+
+    my $interval = time() - $prev_time;
+
+    my $read_ios  = $cur_stats->{'rd_ios'} - $prev_stats->{'rd_ios'};
+    my $write_ios = $cur_stats->{'wr_ios'} - $prev_stats->{'wr_ios'};
+
+    my $rd_ticks = $cur_stats->{'rd_ticks'} - $prev_stats->{'rd_ticks'};
+    my $wr_ticks = $cur_stats->{'wr_ticks'} - $prev_stats->{'wr_ticks'};
+
+    my $rd_sectors = $cur_stats->{'rd_sectors'} - $prev_stats->{'rd_sectors'};
+    my $wr_sectors = $cur_stats->{'wr_sectors'} - $prev_stats->{'wr_sectors'};
+
+    my $tot_ticks = $cur_stats->{'tot_ticks'} - $prev_stats->{'tot_ticks'};
+
+    my $read_io_per_sec  = $read_ios / $interval;
+    my $write_io_per_sec = $write_ios / $interval;
+
+    my $read_bytes_per_sec  = $rd_sectors / $interval * $bytes_per_sector;
+    my $write_bytes_per_sec = $wr_sectors / $interval * $bytes_per_sector;
+
+    my $total_ios         = $read_ios + $write_ios;
+    my $total_ios_per_sec = $total_ios / $interval;
+
+    # Utilization - or "how busy is the device"?
+    # If the time spent for I/O was close to 1000msec for
+    # a given second, the device is nearly 100% saturated.
+    my $utilization = $tot_ticks / $interval;
+
+    # Average time an I/O takes on the block device
+    my $servicetime
+        = $total_ios_per_sec ? $utilization / $total_ios_per_sec : 0;
+
+    # Average wait time for an I/O from start to finish
+    # (includes queue times et al)
+    my $average_wait
+        = $total_ios ? ( $rd_ticks + $wr_ticks ) / $total_ios : 0;
+    my $average_rd_wait = $read_ios  ? $rd_ticks / $read_ios  : 0;
+    my $average_wr_wait = $write_ios ? $wr_ticks / $write_ios : 0;
+
+    my $average_rq_size_in_kb
+        = $total_ios
+        ? ( $rd_sectors + $wr_sectors ) 
+        * $bytes_per_sector / 1024
+        / $total_ios
+        : 0;
+    my $average_rd_rq_size_in_kb
+        = $read_ios ? $rd_sectors * $bytes_per_sector / 1024 / $read_ios : 0;
+    my $average_wr_rq_size_in_kb
+        = $write_ios
+        ? $wr_sectors * $bytes_per_sector / 1024 / $write_ios
+        : 0;
+
+    my $util_print = $utilization / 10;
+
+    if ( $mode eq 'latency' ) {
+        print <<EOF;
+util.value $util_print
+svctm.value $servicetime
+avgwait.value $average_wait
+avgrdwait.value $average_rd_wait
+avgwrwait.value $average_wr_wait
+EOF
+    }
+    elsif ( $mode eq 'throughput' ) {
+
+        print <<EOF;
+rdbytes.value $read_bytes_per_sec
+wrbytes.value $write_bytes_per_sec
+EOF
+    }
+    elsif ( $mode eq 'iops' ) {
+
+        print <<EOF;
+rdio.value $read_io_per_sec
+wrio.value $write_io_per_sec
+avgrqsz.value $average_rq_size_in_kb
+avgrdrqsz.value $average_rd_rq_size_in_kb
+avgwrrqsz.value $average_wr_rq_size_in_kb
+EOF
+
+    }
+    else {
+        croak "Unknown mode $mode\n";
+    }
+
+}
+
+sub read_diskstats {
+
+    open STAT, '< /proc/diskstats'
+        or croak "Failed to open '/proc/diskstats': $!\n";
+
+    my @lines;
+
+    for my $line (<STAT>) {
+
+        # Strip trailing newline and leading whitespace
+        chomp $line;
+        $line =~ s/^\s+//;
+
+        my @elems = split /\s+/, $line;
+
+        # We explicitly don't support old-style diskstats
+        # There are situations where only _some_ lines (e.g.
+        # partitions on older 2.6 kernels) have fewer stats
+        # numbers, therefore we'll skip them silently
+        if ( @elems != 14 ) {
+            next;
+        }
+        push @lines, \@elems;
+    }
+
+    close STAT or croak "Failed to close '/proc/diskstats': $!";
+    return @lines;
+}
+
+sub read_sysfs {
+
+    my ($want_device) = @_;
+
+    my @devices;
+    my @lines;
+
+    if ( defined $want_device ) {
+
+        # sysfs uses '!' as replacement for '/', e.g. cciss!c0d0
+        $want_device =~ tr#/#!#;
+        @devices = $want_device;
+    }
+    else {
+        @devices = glob "/sys/block/*/stat";
+        @devices = map {m!/sys/block/([^/]+)/stat!} @devices;
+    }
+
+    for my $cur_device (@devices) {
+        my $stats_file = "/sys/block/$cur_device/stat";
+
+        open STAT, "< $stats_file"
+            or croak "Failed to open '$stats_file': $!\n";
+
+        my $line = <STAT>;
+
+        # Trimming whitespace
+        $line =~ s/^\s+//;
+        chomp $line;
+
+        my @elems = split /\s+/, $line;
+
+        croak "'$stats_file' doesn't contain exactly 11 values. Aborting"
+            if ( @elems != 11 );
+
+        # Translate the devicename back before storing the information
+        $cur_device =~ tr#!#/#;
+
+        # Faking missing diskstats values
+        unshift @elems, ( '', '', $cur_device );
+
+        push @lines, \@elems;
+
+        close STAT or croak "Failed to close '$stats_file': $!\n";
+    }
+
+    return @lines;
+}
+
+sub parse_diskstats {
+
+    my ($want_device) = @_;
+
+    my @stats;
+
+    if ( glob "/sys/block/*/stat" ) {
+
+        @stats = read_sysfs($want_device);
+    }
+    else {
+        @stats = read_diskstats();
+    }
+
+    my %diskstats;
+
+    for my $entry (@stats) {
+
+        my %devstat;
+
+        # Hash-Slicing for fun and profit
+        @devstat{
+            qw(major minor devname
+                rd_ios rd_merges rd_sectors rd_ticks
+                wr_ios wr_merges wr_sectors wr_ticks
+                ios_in_prog tot_ticks rq_ticks)
+            }
+            = @{$entry};
+
+        $diskstats{ $devstat{'devname'} } = \%devstat;
+    }
+
+    return %diskstats;
+}
+
+sub fetch_device_counters {
+
+    my ($want_device) = @_;
+
+    my %diskstats = parse_diskstats($want_device);
+
+    for my $devname ( keys %diskstats ) {
+
+        if ( $want_device eq $devname ) {
+            return %{ $diskstats{$devname} };
+        }
+    }
+    return undef;
+}
+
+# We use ':' (and formerly '+' and '-') as placeholder for '/' in device-names
+# used as calling name for the script.
+sub translate_device_name {
+
+    my ( $device, $mode ) = @_;
+
+    if ( $mode eq 'FROM_FS' ) {
+
+        # Hackaround to mitigate issues with unwisely chosen former separator
+        if ( not( $device =~ m/dm-\d+/ ) ) {
+            $device =~ tr#-+:#///#;
+        }
+
+    }
+    elsif ( $mode eq 'TO_FS' ) {
+
+        $device =~ tr#/#:#;
+
+    }
+    else {
+        croak "translate_device_name: Unknown mode\n";
+    }
+
+    return $device;
+}
+
+sub translate_devicemapper_name {
+    my ($device) = @_;
+
+    my ($want_minor) = $device =~ m/^dm-(\d+)$/;
+
+    croak "Failed to extract devicemapper id" unless defined($want_minor);
+
+    my $dm_major = find_devicemapper_major();
+    croak "Failed to get device-mapper major number\n"
+        unless defined $dm_major;
+
+    for my $entry ( glob "/dev/mapper/\*" ) {
+
+        my $rdev  = ( stat($entry) )[6];
+        my $major = floor( $rdev / 256 );
+        my $minor = $rdev % 256;
+
+        if ( $major == $dm_major && $minor == $want_minor ) {
+
+            my $pretty_name = translate_lvm_name($entry);
+
+	    $entry =~ s|/dev/||;
+
+            return defined $pretty_name ? $pretty_name : $entry;
+
+        }
+    }
+
+    # Return original string if the device can't be found.
+    return $device;
+}
+
+sub translate_lvm_name {
+
+    my ($entry) = @_;
+
+    my $device_name = basename($entry);
+
+# Check for single-dash-occurrence to see if this could be a lvm devicemapper device.
+    if ( $device_name =~ m/(?<!-)-(?!-)/ ) {
+
+        # split device name into vg and lv parts
+        my ( $vg, $lv ) = split /(?<!-)-(?!-)/, $device_name, 2;
+        return undef unless ( defined($vg) && defined($lv) );
+
+        # remove extraneous dashes from vg and lv names
+        $vg =~ s/--/-/g;
+        $lv =~ s/--/-/g;
+
+        $device_name = "$vg/$lv";
+
+        # Sanity check - does the constructed device name exist?
+        # Breaks unless we are root.
+        if ( stat("/dev/$device_name") ) {
+            return "$device_name";
+        }
+
+    }
+    return undef;
+}
+
+sub find_devicemapper_major {
+
+    open( FH, '< /proc/devices' )
+        or croak "Failed to open '/proc/devices': $!";
+
+    my $dm_major;
+
+    for my $line (<FH>) {
+        chomp $line;
+
+        my ( $major, $name ) = split /\s+/, $line, 2;
+
+        next unless defined $name;
+
+        if ( $name eq 'device-mapper' ) {
+            $dm_major = $major;
+            last;
+        }
+    }
+    close(FH);
+
+    return $dm_major;
+}

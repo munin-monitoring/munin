@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# Script to monitor disk usage.
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#
+# Environment
+#       warning  Percentage at which to give warning, default 92
+#       critical Percentage at which to give critical, default 98
+#
+# $Id$
+#
+# This package has added support for NetBSD, via a number of new plugin
+# scripts where specific steps needs to be taken to collect information.
+#
+# Magic markers (optional - used by munin-config and installation
+# scripts):
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+TYPES=noprocfs,devfs,fdescfs,ptyfs,kernfs,nfs
+
+if [ "$1" = "autoconf" ]; then
+	echo yes
+	exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Disk usage in percent'
+	echo 'graph_args --upper-limit 100 -l 0'
+	echo 'graph_vlabel %'
+	echo 'graph_category disk'
+	echo 'graph_scale no'
+	echo 'graph_info This graph shows disk usage on the machine.'
+	mfs=0
+	/bin/df -P -t $TYPES | tail +2 | grep -v "//" | while read i; do
+		case $i in
+		mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
+		*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
+		esac
+		echo -n "$name.label "
+		echo $i | awk '{ print $6 }'
+		echo "$name.warning ${warning:-92}"
+		echo "$name.critical ${critical:-98}"
+	done
+	exit 0
+fi
+
+mfs=0
+/bin/df -P -t $TYPES | tail +2 | grep -v "//" | while read i; do
+	case $i in
+	mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
+	*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
+	esac
+	echo -n "$name.value "
+	echo $i | awk '{ print $5 }' | cut -f1 -d%
+done

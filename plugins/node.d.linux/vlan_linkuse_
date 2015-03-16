@@ -1,0 +1,88 @@
+#!/usr/bin/perl -w
+# Wildcard-script to monitor network interfaces. To monitor an
+# interface, link vlan_<interface> to this file. E.g.
+#
+#    ln .vlan_inetuse_ vlan_inetuse_eth1-200
+#
+# ...will monitor eth1.200 <=> eth0
+#
+# The interface must also have an accounting iptables rule defined, _before_
+# any action rules. E.g., in /etc/network/vlan-firewall.d/eth1-200-out, you
+# will find: 
+# 	
+# 	--out-interface eth0
+#
+# ...which will make the out-traffic graphable. (Both in and out-files must
+# have such rules. Look at the existing for examples.
+#
+#%# family=manual
+
+
+use strict;
+
+my $INTERFACE=`basename $0 | sed 's/^vlan_linkuse_//g' | tr '_' '-'` ;
+#my $INTERFACE="eth1-200";
+chomp $INTERFACE;
+
+my %contraries = ("dpt" => "spt", "spt" => "dpt");
+
+my %in_octets = ();
+my %out_octets = ();
+
+open (IN, "/sbin/iptables -v -x -L $INTERFACE-in |") or 
+	die "Could not run iptables: $!\n";
+while (<IN>)
+{
+	if (/^\s*\d+\s+(\d+)  +([a-z]+)\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+(?:\s+|)(.+|)$/)
+	{
+		my ($octets, $proto, $comment) = ($1, $2, $3);
+		chop $comment;
+		next unless (($proto eq "all") and (!$comment));
+		if ($ARGV[0] and $ARGV[0] eq "config")
+		{
+			print "graph_order in out\n";
+			print "graph_title VLAN $INTERFACE internet usage\n";
+			print "graph_args --base 1000\n";
+			print "graph_category network\n";
+			print "graph_vlabel bits per \${graph_period} in (-) / out (+)\n";
+			print "in.label bps\n"; 
+			print "in.cdef in,8,*\n"; 
+			print "in.graph no\n"; 
+			print "in.type DERIVE\n"; 
+			print "in.min 0\n"; 
+		}
+		else
+		{
+			print "in.value $octets\n";
+		}
+	}
+}
+close IN;
+die "Error running iptables. Dying\n" if $?;
+
+open (IN, "/sbin/iptables -v -x -L $INTERFACE-out |") or 
+	die "Could not run iptables: $!\n";
+while (<IN>)
+{
+	if (/^\s*\d+\s+(\d+)  +([a-z]+)\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+(?:\s+|)(.+|)$/)
+	{
+		my ($octets, $proto, $comment) = ($1, $2, $3);
+		chop $comment;
+		next unless (($proto eq "all") and (!$comment));
+		if ($ARGV[0] and $ARGV[0] eq "config")
+		{
+			print "out.label bps\n"; 
+			print "out.cdef out,8,*\n"; 
+			print "out.negative in\n"; 
+			print "out.type DERIVE\n"; 
+			print "out.min 0\n"; 
+		}
+		else
+		{
+			print "out.value $octets\n";
+		}
+	}
+}
+close IN;
+die "Error running iptables. Dying\n" if $?;
+# vim:syntax=perl

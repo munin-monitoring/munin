@@ -1,0 +1,1292 @@
+#!/usr/bin/perl
+# -*- perl -*-
+# vim: sts=4 sw=4 ts=8
+
+# Docs at the bottom
+
+use strict;
+use warnings;
+
+use File::Basename;
+use Carp;
+use POSIX;
+use Munin::Plugin;
+use MIME::Base64;
+use Storable qw(nfreeze thaw);
+
+# Hardcoded pollinterval of 300 seconds
+my $poll_interval = 300;
+
+# Graph width defaults to 400 in Munin 1.4
+my $graph_width = $ENV{'graph_width'} ? $ENV{'graph_width'} : 400;
+
+# Should lables be trimmed to fit graph width?
+my $trim_labels = $ENV{'trim_labels'};
+
+my $plugin_name = $Munin::Plugin::me;
+
+# Check for multigraph capabilities
+need_multigraph();
+
+# Handle munin 'autoconf' command
+do_autoconf() if ( $ARGV[0] && $ARGV[0] eq 'autoconf' );
+
+# Fetch current counter values
+my %cur_diskstats = fetch_device_counters();
+
+# Weed out unwanted devices
+filter_device_list( \%cur_diskstats );
+
+# Handle munin 'config' command
+# This can only be done after getting the device data
+if ( defined $ARGV[0] && $ARGV[0] eq 'config' ) {
+    do_config();
+}
+
+# Restore data from previous run
+my ( $prev_time, %prev_diskstats );
+eval {
+	# Using eval, if it breaks while retrieve, $R is still undef.
+	# No need to unlink() it, since it will be overriden anyway.
+	( $prev_time, %prev_diskstats ) = choose_old_state();
+};
+
+# Persist state from current run
+add_new_state( time(), %cur_diskstats );
+
+# Probably the first run for the given device, we need state to do our job,
+# so let's wait for the next run.
+exit if ( not defined $prev_time or not %prev_diskstats );
+
+# Here happens the magic
+generate_multigraph_data( $prev_time, \%prev_diskstats, \%cur_diskstats );
+
+exit 0;
+
+########
+# SUBS #
+########
+
+# generate_multigraph_data
+#
+# Creates the data which is needed by munin's fetch command
+
+sub generate_multigraph_data {
+
+    my ( $prev_time, $prev_diskstats, $cur_diskstats ) = @_;
+
+    my %results;
+
+    for my $device ( keys %{$cur_diskstats} ) {
+        $results{$device} =
+          calculate_values( $prev_time, $prev_diskstats{$device},
+            $cur_diskstats{$device} );
+    }
+
+    print_values_root( \%results );
+
+    for my $device ( keys %results ) {
+        print_values_device( $device, $results{$device} );
+    }
+    return;
+}
+
+# choose_old_state
+#
+# Look through the list of old states and choose the one which is closest
+# to the poll interval
+
+sub choose_old_state {
+
+    my (%states) = restore_state();
+
+    return unless ( keys %states );
+
+    my $now = time();
+
+    my $old_delta;
+    my $return_timestamp;
+
+    for my $timestamp ( sort keys %states ) {
+
+        # Calculate deviation from ideal interval
+        my $delta = abs( $now - $timestamp - $poll_interval );
+
+        # Safe initial delta
+        $old_delta = $delta + 1 unless defined $old_delta;
+
+        # Bail out and use previous result if it was closer to the interval
+        last if ( $delta > $old_delta );
+
+        $old_delta        = $delta;
+        $return_timestamp = $timestamp;
+    }
+    return $return_timestamp,
+      %{ thaw decode_base64 $states{$return_timestamp} };
+}
+
+# add_new_state
+#
+# Add the current state to the list of states
+# Discard any state that is noticeable older than the poll interval
+
+sub add_new_state {
+    my ( $cur_time, %cur_diskstats ) = @_;
+
+    my (%states) = restore_state();
+    my $now = time();
+
+    for my $timestamp ( sort keys %states ) {
+        last if ( ( $now - $timestamp ) <= $poll_interval * 1.5 );
+        delete $states{$timestamp};
+    }
+
+    # FIXME: There ought to be a better way to do this.
+    $states{$cur_time} = encode_base64 nfreeze \%cur_diskstats;
+
+    save_state(%states);
+    return;
+}
+
+# subtract_wrapping_numbers
+#
+# Will subtract two numbers, but takes into account that the numbers
+# are represented as either a 32-bit value which wraps at 2 ** 32 - 1,
+# or a 64-bit value.
+
+sub subtract_wrapping_numbers {
+    my ( $cur_value, $prev_value ) = @_;
+
+    return $cur_value - $prev_value if $cur_value >= $prev_value;
+
+    # The numbers seems to have wrapped.
+    if ($prev_value <= 2 ** 32) {
+        # Unsigned int wraps here.
+        $cur_value += 2 ** 32;
+    } else {
+        $cur_value += 2 ** 64;
+    }
+
+    return $cur_value - $prev_value;
+}
+
+# calculate_values
+#
+# Calculates all data that get's graphed
+
+sub calculate_values {
+    my ( $prev_time, $prev_stats, $cur_stats ) = @_;
+
+    my $bytes_per_sector = 512;
+
+    my $interval = time() - $prev_time;
+
+    my $read_ios  = subtract_wrapping_numbers($cur_stats->{'rd_ios'}, $prev_stats->{'rd_ios'});
+    my $write_ios = subtract_wrapping_numbers($cur_stats->{'wr_ios'}, $prev_stats->{'wr_ios'});
+
+    my $rd_ticks = subtract_wrapping_numbers($cur_stats->{'rd_ticks'}, $prev_stats->{'rd_ticks'});
+    my $wr_ticks = subtract_wrapping_numbers($cur_stats->{'wr_ticks'}, $prev_stats->{'wr_ticks'});
+
+    my $rd_sectors = subtract_wrapping_numbers($cur_stats->{'rd_sectors'}, $prev_stats->{'rd_sectors'});
+    my $wr_sectors = subtract_wrapping_numbers($cur_stats->{'wr_sectors'}, $prev_stats->{'wr_sectors'});
+
+    my $tot_ticks = subtract_wrapping_numbers($cur_stats->{'tot_ticks'}, $prev_stats->{'tot_ticks'});
+
+    my $read_io_per_sec  = $read_ios / $interval;
+    my $write_io_per_sec = $write_ios / $interval;
+
+    my $read_bytes_per_sec  = $rd_sectors / $interval * $bytes_per_sector;
+    my $write_bytes_per_sec = $wr_sectors / $interval * $bytes_per_sector;
+
+    my $total_ios         = $read_ios + $write_ios;
+    my $total_ios_per_sec = $total_ios / $interval;
+
+    # Utilization - or "how busy is the device"?
+    # If the time spent for I/O was close to 1000msec for
+    # a given second, the device is nearly 100% saturated.
+    my $utilization = $tot_ticks / $interval;
+
+    # Average time an I/O takes on the block device
+    my $servicetime_in_sec =
+      $total_ios_per_sec ? $utilization / $total_ios_per_sec / 1000 : 0;
+
+    # Average wait time for an I/O from start to finish
+    # (includes queue times et al)
+    my $average_wait_in_sec =
+      $total_ios ? ( $rd_ticks + $wr_ticks ) / $total_ios / 1000 : 0;
+    my $average_rd_wait_in_sec = $read_ios  ? $rd_ticks / $read_ios / 1000  : 0;
+    my $average_wr_wait_in_sec = $write_ios ? $wr_ticks / $write_ios / 1000 : 0;
+
+    my $average_rd_rq_size_in_kb =
+      $read_ios ? $rd_sectors * $bytes_per_sector / 1000 / $read_ios : 0;
+    my $average_wr_rq_size_in_kb =
+        $write_ios
+      ? $wr_sectors * $bytes_per_sector / 1000 / $write_ios
+      : 0;
+
+    my $util_print = $utilization / 10;
+
+    return {
+        utilization              => $util_print,
+        servicetime              => $servicetime_in_sec,
+        average_wait             => $average_wait_in_sec,
+        average_rd_wait          => $average_rd_wait_in_sec,
+        average_wr_wait          => $average_wr_wait_in_sec,
+        read_bytes_per_sec       => $read_bytes_per_sec,
+        write_bytes_per_sec      => $write_bytes_per_sec,
+        read_io_per_sec          => $read_io_per_sec,
+        write_io_per_sec         => $write_io_per_sec,
+        average_rd_rq_size_in_kb => $average_rd_rq_size_in_kb,
+        average_wr_rq_size_in_kb => $average_wr_rq_size_in_kb,
+    };
+
+}
+
+# print_values_root
+#
+# Return multigraph values for root graphs
+
+sub print_values_root {
+
+    my ($result) = @_;
+
+    print "multigraph ${plugin_name}_latency\n";
+
+    for my $device ( keys %{$result} ) {
+
+        next unless ( $cur_diskstats{$device}->{'does_latency'} );
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
+
+        print "${graph_id}_avgwait.value "
+          . $result->{$device}->{'average_wait'} . "\n";
+    }
+
+    print "\nmultigraph ${plugin_name}_utilization\n";
+
+    for my $device ( keys %{$result} ) {
+
+        next unless ( $cur_diskstats{$device}->{'does_latency'} );
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
+
+        print "${graph_id}_util.value "
+          . $result->{$device}->{'utilization'} . "\n";
+    }
+
+    print "\nmultigraph ${plugin_name}_throughput\n";
+
+    for my $device ( keys %{$result} ) {
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
+        print "${graph_id}_rdbytes.value "
+          . $result->{$device}->{'read_bytes_per_sec'} . "\n";
+        print "${graph_id}_wrbytes.value "
+          . $result->{$device}->{'write_bytes_per_sec'} . "\n";
+    }
+
+    print "\nmultigraph ${plugin_name}_iops\n";
+
+    for my $device ( keys %{$result} ) {
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
+        print "${graph_id}_rdio.value "
+          . $result->{$device}->{'read_io_per_sec'} . "\n";
+        print "${graph_id}_wrio.value "
+          . $result->{$device}->{'write_io_per_sec'} . "\n";
+    }
+    return;
+}
+
+# print_values_device
+#
+# Return multigraph values for device graphs
+
+sub print_values_device {
+
+    my ( $device, $result ) = @_;
+    my $graph_id = $cur_diskstats{$device}->{'graph_id'};
+
+    if ( $cur_diskstats{$device}->{'does_latency'} ) {
+        print <<"EOF";
+
+multigraph ${plugin_name}_latency.$graph_id
+svctm.value $result->{'servicetime'}
+avgwait.value $result->{'average_wait'}
+avgrdwait.value $result->{'average_rd_wait'}
+avgwrwait.value $result->{'average_wr_wait'}
+
+multigraph ${plugin_name}_utilization.$graph_id
+util.value $result->{'utilization'}
+EOF
+
+    }
+
+    print <<"EOF";
+
+multigraph ${plugin_name}_throughput.$graph_id
+rdbytes.value $result->{'read_bytes_per_sec'}
+wrbytes.value $result->{'write_bytes_per_sec'}
+
+multigraph ${plugin_name}_iops.$graph_id
+rdio.value $result->{'read_io_per_sec'}
+wrio.value $result->{'write_io_per_sec'}
+avgrdrqsz.value $result->{'average_rd_rq_size_in_kb'}
+avgwrrqsz.value $result->{'average_wr_rq_size_in_kb'}
+EOF
+
+    return;
+}
+
+# read_procfs
+#
+# Pull diskstat information from procfs
+
+sub read_procfs {
+
+    my $statfh;
+
+    open $statfh, '<', '/proc/diskstats'
+      or croak "Failed to open '/proc/diskstats': $!\n";
+
+    my @lines;
+
+    while ( my $line = <$statfh> ) {
+
+        # Strip trailing newline and leading whitespace
+        chomp $line;
+        $line =~ s/^\s+//;
+
+        my @elems = split /\s+/, $line;
+
+        # We explicitly don't support old-style diskstats
+        # There are situations where only _some_ lines (e.g.
+        # partitions on older 2.6 kernels) have fewer stats
+        # numbers, therefore we'll skip them silently
+        if ( @elems != 14 ) {
+            next;
+        }
+        push @lines, \@elems;
+    }
+
+    close $statfh or croak "Failed to close '/proc/diskstats': $!";
+    return @lines;
+}
+
+# read_sysfs
+#
+# Pull diskstat information from sysfs
+
+sub read_sysfs {
+
+    my @devices;
+    my @lines;
+
+    @devices = glob "/sys/block/*/stat";
+    @devices = map { m!/sys/block/([^/]+)/stat! } @devices;
+
+    for my $cur_device (@devices) {
+        my $stats_file = "/sys/block/$cur_device/stat";
+
+        my $statfh;
+
+        open $statfh, '<', $stats_file
+          or croak "Failed to open '$stats_file': $!\n";
+
+        my $line = <$statfh>;
+
+        close $statfh or croak "Failed to close '$stats_file': $!\n";
+
+        # Trimming whitespace
+        $line =~ s/^\s+//;
+        chomp $line;
+
+        my @elems = split /\s+/, $line;
+
+        croak "'$stats_file' doesn't contain exactly 11 values. Aborting"
+          if ( @elems != 11 );
+
+        # Translate the devicename back before storing the information
+        $cur_device =~ tr#!#/#;
+
+        # Faking missing diskstats values
+        unshift @elems, ( '', '', $cur_device );
+
+        push @lines, \@elems;
+    }
+
+    return @lines;
+}
+
+# parse_diskstats
+#
+# Pulls diskstat information eitehr from procfs or sysfs, parses them and provides
+# helper information.
+
+sub parse_diskstats {
+
+    my @stats;
+
+    if ( glob "/sys/block/*/stat" ) {
+
+        @stats = read_sysfs();
+    }
+    else {
+        @stats = read_procfs();
+    }
+
+    my %diskstats;
+
+    for my $entry (@stats) {
+
+        my %devstat;
+
+        # Hash-Slicing for fun and profit
+        @devstat{
+            qw(major minor devname
+              rd_ios rd_merges rd_sectors rd_ticks
+              wr_ios wr_merges wr_sectors wr_ticks
+              ios_in_prog tot_ticks rq_ticks)
+          }
+          = @{$entry};
+
+        # Resolve devicemapper names to their LVM counterparts
+        my $device = $devstat{'devname'};
+        my $pretty_device;
+
+        if ( $device =~ /^dm-\d+$/ ) {
+            $pretty_device = translate_devicemapper_name($device);
+        }
+
+        $pretty_device ||= $device;
+
+        $devstat{'pretty_device_name'} = $pretty_device;
+
+        # Short device name only containing the stuff after the last '/'
+        # for graph labels et al.
+
+        ( $devstat{'short_pretty_device_name'} ) =
+          $pretty_device =~ m#/?([^/]+)$#;
+
+        if ($trim_labels) {
+
+            $devstat{'pretty_device_name'} =
+              trim_label( 'pos', $devstat{'pretty_device_name'} );
+            $devstat{'short_pretty_device_name'} =
+              trim_label( 'posneg', $devstat{'short_pretty_device_name'} );
+        }
+
+        # The graph identifier needs to be cleaned up because munin will
+        # complain about strange characters in the name otherwise
+        #
+        # The LVM <-> device mapper id mapping isn't stable across reboots,
+        # use the LVM volume name instead
+
+        $devstat{'graph_id'} = clean_fieldname($pretty_device);
+
+        # Does the device provide latency information?
+        $devstat{'does_latency'} =
+          $devstat{'rd_ticks'} + $devstat{'wr_ticks'} ? 1 : 0;
+
+        $diskstats{ $devstat{'devname'} } = \%devstat;
+    }
+
+    return %diskstats;
+}
+
+# fetch_device_counters
+#
+# Filters partitions and devices without IOs from diskstats
+# and returns them
+
+sub fetch_device_counters {
+
+    my %diskstats = parse_diskstats();
+
+    my @valid_devices;
+  DEVICE:
+
+# We need to see the devices before the partitions to make the partition filter work
+#
+# Sorting by the length of the device name gives us this certainty
+
+    for my $devname ( sort { length($a) <=> length($b) } keys %diskstats ) {
+
+        # Remove devices without traffic
+        if (   $diskstats{$devname}->{'rd_ios'} == 0
+            && $diskstats{$devname}->{'wr_ios'} == 0 )
+        {
+            delete $diskstats{$devname};
+            next DEVICE;
+        }
+
+# Filter out partitions, since we only want to track the data of the parent devices
+#
+# We skip:
+# - sda1 -> sda
+# - c0d0p1 -> c0d0
+# - md1p1 -> md1
+# - etherd/e1.1p1 -> etherd/e1.1
+#
+# But we don't want to filter:
+# - dm-100 -> dm-1
+# - etherd/e1.10 -> etherd/e1.1
+#
+# To achieve this we skip a device if
+# - it looks like a device we use with a "p\d" suffix
+# - it looks like a device we use with a "\d" suffix, and the device didn't
+#   have a numeric suffix in the first place
+
+        for my $valid_device (@valid_devices) {
+
+            if (
+                $devname =~ m/^${valid_device}p\d+$/
+                || (   $valid_device !~ /\d$/
+                    && $devname =~ m/^$valid_device\d+$/ )
+              )
+            {
+                delete $diskstats{$devname};
+                next DEVICE;
+            }
+        }
+
+        push @valid_devices, $devname;
+    }
+
+    return %diskstats;
+}
+
+# translate_devicemapper_name
+#
+# Tries to find a devicemapper name based on a minor number
+# Returns either a resolved LVM path or the original devicename
+
+sub translate_devicemapper_name {
+    my ($device) = @_;
+
+    my ($want_minor) = $device =~ m/^dm-(\d+)$/;
+
+    croak "Failed to extract devicemapper id" unless defined($want_minor);
+
+    my $dm_major = find_devicemapper_major();
+    croak "Failed to get device-mapper major number\n"
+      unless defined $dm_major;
+
+    for my $entry ( glob "/dev/mapper/\*" ) {
+
+        my $rdev  = ( stat($entry) )[6];
+        my $major = floor( $rdev / 256 );
+        my $minor = $rdev % 256;
+
+        if ( $major == $dm_major && $minor == $want_minor ) {
+
+            my $pretty_name = translate_lvm_name($entry);
+
+            $entry =~ s|/dev/||;
+
+            return defined $pretty_name ? $pretty_name : $entry;
+        }
+    }
+
+    # Return original string if the device can't be found.
+    return $device;
+}
+
+# translate_lvm_name
+#
+# Translates devicemapper names to their nicer LVM counterparts
+# e.g. /dev/mapper/VGfoo-LVbar -> /dev/VGfoo/LVbar
+
+sub translate_lvm_name {
+
+    my ($entry) = @_;
+
+    my $device_name = basename($entry);
+
+# Check for single-dash-occurrence to see if this could be a lvm devicemapper device.
+    if ( $device_name =~ m/(?<!-)-(?!-)/ ) {
+
+        # split device name into vg and lv parts
+        my ( $vg, $lv ) = split /(?<!-)-(?!-)/, $device_name, 2;
+        return unless ( defined($vg) && defined($lv) );
+
+        # remove extraneous dashes from vg and lv names
+        $vg =~ s/--/-/g;
+        $lv =~ s/--/-/g;
+
+        $device_name = "$vg/$lv";
+
+        # Sanity check - does the constructed device name exist?
+        # Breaks unless we are root.
+        if ( stat("/dev/$device_name") ) {
+            return "$device_name";
+        }
+
+    }
+    return;
+}
+
+# find_devicemapper_major
+#
+# Searches for the major number of the devicemapper device
+
+sub find_devicemapper_major {
+
+    my $devicefh;
+
+    open( $devicefh, '<', '/proc/devices' )
+      or croak "Failed to open '/proc/devices': $!";
+
+    my $dm_major;
+
+    while ( my $line = <$devicefh> ) {
+        chomp $line;
+
+        my ( $major, $name ) = split /\s+/, $line, 2;
+
+        next unless defined $name;
+
+        if ( $name eq 'device-mapper' ) {
+            $dm_major = $major;
+            last;
+        }
+    }
+    close($devicefh);
+
+    return $dm_major;
+}
+
+sub do_autoconf {
+
+    my %stats;
+
+    # Capture any croaks on the way
+    if ( eval { %stats = parse_diskstats() } && keys %stats ) {
+
+        print "yes\n";
+        exit 0;
+    }
+    else {
+        print "no\n";
+        exit 1;
+    }
+}
+
+sub do_config {
+
+    do_config_root();
+    do_config_device();
+
+    exit 0;
+}
+
+# do_config_root
+#
+# Print the configuration for the root graphs
+
+sub do_config_root {
+
+    my $config_graph_width = $graph_width;
+
+    my @sorted_devices = sort_by_dm_last( keys %cur_diskstats );
+
+    # If we don't trim labels, we have to find the correct graph width to
+    # accommodate all labels
+    unless ($trim_labels) {
+
+        my @short_labels =
+          map { $cur_diskstats{$_}->{'short_pretty_device_name'} }
+          keys %cur_diskstats;
+        my @long_labels =
+          map { $cur_diskstats{$_}->{'pretty_device_name'} }
+          keys %cur_diskstats;
+
+        my $graph_width_short =
+          find_required_graph_width( 'posneg', @short_labels );
+        my $graph_width_long = find_required_graph_width( 'pos', @long_labels );
+
+        $config_graph_width =
+            $graph_width_short > $graph_width_long
+          ? $graph_width_short
+          : $graph_width_long;
+    }
+
+    # Print config for latency
+
+    print <<"EOF";
+multigraph ${plugin_name}_latency
+graph_title Disk latency per device
+graph_args --base 1000
+graph_vlabel Average IO Wait (seconds)
+graph_category disk
+graph_width $config_graph_width
+
+EOF
+
+    for my $device (@sorted_devices) {
+        next unless $cur_diskstats{$device}->{'does_latency'};
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
+
+        print <<"EOF";
+${graph_id}_avgwait.label $cur_diskstats{$device}->{'pretty_device_name'}
+${graph_id}_avgwait.type GAUGE
+${graph_id}_avgwait.info Average wait time for an I/O request
+${graph_id}_avgwait.min 0
+${graph_id}_avgwait.draw LINE1
+EOF
+    }
+
+    # Print config for utilization
+
+    print <<"EOF";
+
+multigraph ${plugin_name}_utilization
+graph_title Utilization per device
+graph_args --base 1000 --lower-limit 0 --upper-limit 100 --rigid
+graph_vlabel % busy
+graph_category disk
+graph_width $config_graph_width
+graph_scale no
+
+EOF
+
+    for my $device (@sorted_devices) {
+        next unless $cur_diskstats{$device}->{'does_latency'};
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
+
+        print <<"EOF";
+${graph_id}_util.label $cur_diskstats{$device}->{'pretty_device_name'}
+${graph_id}_util.type GAUGE
+${graph_id}_util.info Utilization of the device
+${graph_id}_util.min 0
+${graph_id}_util.draw LINE1
+EOF
+    }
+
+    # Print config for throughput
+
+    print <<"EOF";
+
+multigraph ${plugin_name}_throughput
+graph_title Throughput per device
+graph_args --base 1024
+graph_vlabel Bytes/\${graph_period} read (-) / write (+)
+graph_category disk
+graph_width $config_graph_width
+graph_info This graph shows averaged throughput for the given disk in bytes.  Higher throughput is usually linked with higher service time/latency (separate graph).  The graph base is 1024 yielding Kibi- and Mebi-bytes.
+
+EOF
+
+    for my $device (@sorted_devices) {
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
+
+        print <<"EOF";
+${graph_id}_rdbytes.label $cur_diskstats{$device}->{'short_pretty_device_name'}
+${graph_id}_rdbytes.type GAUGE
+${graph_id}_rdbytes.min 0
+${graph_id}_rdbytes.draw LINE1
+${graph_id}_rdbytes.graph no
+${graph_id}_wrbytes.label $cur_diskstats{$device}->{'short_pretty_device_name'}
+${graph_id}_wrbytes.type GAUGE
+${graph_id}_wrbytes.min 0
+${graph_id}_wrbytes.draw LINE1
+${graph_id}_wrbytes.negative ${graph_id}_rdbytes
+EOF
+    }
+
+    # Print config for iops
+
+    print <<"EOF";
+
+multigraph ${plugin_name}_iops
+graph_title Disk IOs per device
+graph_args --base 1000
+graph_vlabel IOs/\${graph_period} read (-) / write (+) 
+graph_category disk
+graph_width $config_graph_width
+
+EOF
+
+    for my $device (@sorted_devices) {
+        my $graph_id = $cur_diskstats{$device}->{'graph_id'};
+
+        print <<"EOF";
+${graph_id}_rdio.label $cur_diskstats{$device}->{'short_pretty_device_name'}
+${graph_id}_rdio.type GAUGE
+${graph_id}_rdio.min 0
+${graph_id}_rdio.draw LINE1
+${graph_id}_rdio.graph no
+${graph_id}_wrio.label $cur_diskstats{$device}->{'short_pretty_device_name'}
+${graph_id}_wrio.type GAUGE
+${graph_id}_wrio.min 0
+${graph_id}_wrio.draw LINE1
+${graph_id}_wrio.negative ${graph_id}_rdio
+EOF
+    }
+    print "\n";
+    return;
+}
+
+# do_config_device
+#
+# Print the configuration for all device graphs
+
+sub do_config_device {
+
+    for my $device ( sort keys %cur_diskstats ) {
+
+        # Nice name for graph
+        my $pretty_device = $cur_diskstats{$device}->{'pretty_device_name'};
+        my $graph_id      = $cur_diskstats{$device}->{'graph_id'};
+
+	# warning levels
+	my $avgrdwait_warning = $ENV{'avgrdwait_warning'} || '0:3';
+	my $avgwrwait_warning = $ENV{'avgwrwait_warning'} || '0:3';
+
+        if ( $cur_diskstats{$device}->{'does_latency'} ) {
+
+            print <<"EOF";
+multigraph ${plugin_name}_latency.$graph_id
+graph_title Average latency for /dev/$pretty_device
+graph_args --base 1000 --logarithmic
+graph_vlabel seconds
+graph_category disk
+graph_info This graph shows average waiting time/latency for different categories of disk operations.   The times that include the queue times indicate how busy your system is.  If the waiting time hits 1 second then your I/O system is 100% busy.
+
+svctm.label Device IO time
+svctm.type GAUGE
+svctm.info Average time an I/O takes on the block device not including any queue times, just the round trip time for the disk request.
+svctm.min 0
+svctm.draw LINE1
+avgwait.label IO Wait time
+avgwait.type GAUGE
+avgwait.info Average wait time for an I/O from request start to finish (includes queue times et al)
+avgwait.min 0
+avgwait.draw LINE1
+avgrdwait.label Read IO Wait time
+avgrdwait.type GAUGE
+avgrdwait.info Average wait time for a read I/O from request start to finish (includes queue times et al)
+avgrdwait.min 0
+avgrdwait.warning $avgrdwait_warning
+avgrdwait.draw LINE1
+avgwrwait.label Write IO Wait time
+avgwrwait.type GAUGE
+avgwrwait.info Average wait time for a write I/O from request start to finish (includes queue times et al)
+avgwrwait.min 0
+avgwrwait.warning $avgwrwait_warning
+avgwrwait.draw LINE1
+
+EOF
+
+            print <<"EOF";
+multigraph ${plugin_name}_utilization.$graph_id
+graph_title Disk utilization for /dev/$pretty_device
+graph_args --base 1000 --lower-limit 0 --upper-limit 100 --rigid
+graph_vlabel % busy
+graph_category disk
+graph_scale no
+
+util.label Utilization
+util.type GAUGE
+util.info Utilization of the device in percent. If the time spent for I/O is close to 1000msec for a given second, the device is nearly 100% saturated.
+util.min 0
+util.draw LINE1
+
+EOF
+
+        }
+
+        print <<"EOF";
+multigraph ${plugin_name}_throughput.$graph_id
+graph_title Disk throughput for /dev/$pretty_device
+graph_args --base 1024
+graph_vlabel Pr \${graph_period} read (-) / write (+)
+graph_category disk
+graph_info This graph shows disk throughput in bytes pr \${graph_period}.  The graph base is 1024 so KB is for Kibi bytes and so on.
+
+rdbytes.label invisible
+rdbytes.type GAUGE
+rdbytes.min 0
+rdbytes.draw LINE1
+rdbytes.graph no
+wrbytes.label Bytes
+wrbytes.type GAUGE
+wrbytes.min 0
+wrbytes.draw LINE1
+wrbytes.negative rdbytes
+
+EOF
+
+# Problem with the following graph: the avgwrrqsz used to be labeled
+# "KiB" for KibiByte = 1024 bytes.  However the graph is 1000 based
+# and is mixing units, AND it does not have "graph_scale no" set
+# therefore the average request size can become milli (1000 based)
+# Kibi (1024 based) bytes which is such a horrible mess to contemplate
+# that we just can't allow it.
+
+# The reason we need to keep the Kilo/Kibi part of the unit is that
+# otherwise the scale of the numbers in the graph become so different
+# that the graph becomes unusable.  Therefore we're keeping the K unit
+# but we're making it 1000 based so that at least the K and the m are
+# use the same divisor.
+
+        print <<"EOF";
+multigraph ${plugin_name}_iops.$graph_id
+graph_title IOs for /dev/$pretty_device
+graph_args --base 1000
+graph_vlabel Units read (-) / write (+)
+graph_category disk
+graph_info This graph shows the number of IO operations pr second and the average size of these requests.  Lots of small requests should result in in lower throughput (separate graph) and higher service time (separate graph).  Please note that starting with munin-node 2.0 the divisor for K is 1000 instead of 1024 which it was prior to 2.0 beta 3.  This is because the base for this graph is 1000 not 1024.
+
+rdio.label dummy
+rdio.type GAUGE
+rdio.min 0
+rdio.draw LINE1
+rdio.graph no
+wrio.label IO/sec
+wrio.type GAUGE
+wrio.min 0
+wrio.draw LINE1
+wrio.negative rdio
+avgrdrqsz.label dummy
+avgrdrqsz.type GAUGE
+avgrdrqsz.min 0
+avgrdrqsz.draw LINE1
+avgrdrqsz.graph no
+avgwrrqsz.label Req Size (KB)
+avgwrrqsz.info Average Request Size in kilobytes (1000 based)
+avgwrrqsz.type GAUGE
+avgwrrqsz.min 0
+avgwrrqsz.draw LINE1
+avgwrrqsz.negative avgrdrqsz
+
+EOF
+
+    }
+    return;
+}
+
+# sort_by_dm_last
+#
+# Sort a given list, move devicemapper devices (dm-xx) to the end of the list
+
+sub sort_by_dm_last {
+
+    my @devices = @_;
+    my $re      = qr/^dm-\d+/;
+    my ( @dm, @non_dm );
+
+    for my $device (@devices) {
+        if ( $device =~ m/$re/ ) {
+            push @dm, $device;
+        }
+        else {
+            push @non_dm, $device;
+        }
+    }
+
+    return
+	( sort {$cur_diskstats{$a}->{'graph_id'} cmp $cur_diskstats{$b}->{'graph_id'}} @non_dm ),
+	( sort {$cur_diskstats{$a}->{'graph_id'} cmp $cur_diskstats{$b}->{'graph_id'}} @dm ),
+    ;
+}
+
+# filter_device_list
+#
+# Filter unwanted devices from given hash
+
+sub filter_device_list {
+
+    my ($devices) = @_;
+
+    my $include = $ENV{'include_only'};
+    my $exclude = $ENV{'exclude'};
+
+    croak
+      "include_only and exclude are mutually exclusive. Please specify only one"
+      if ( $include && $exclude );
+    return unless ( $include || $exclude );
+
+    my $mode = $include ? 0 : 1;
+
+    # Pull data from environment variable
+    my @filter_list =
+      map { my $dev = $_; $dev =~ s!^/dev/!!; $dev; } split /\s*,\s*/,
+      $include ? $include : $exclude;
+
+    for my $device ( keys %{$devices} ) {
+
+# Check if one of the user-provided names matches the current device-name or "pretty" LVM name
+        my $match = map {
+                 $device =~ m!\Q$_\E!
+              || $devices->{$device}->{'pretty_device_name'} =~ m!\Q$_\E!;
+        } @filter_list;
+
+# Delete the device when it matches and mode is exclude or when it doesn't match and mode is include(_only)
+        delete $devices->{$device} unless ( $match xor $mode );
+    }
+    return;
+}
+
+# calculate_pixels
+#
+# Calculates either
+# the amount of available label-characters for $graph_width
+# or
+# the necessary $graph_width for a given label length
+#
+# type refers to the graph being positive only or positive/negative
+
+sub calculate_pixels {
+
+    my ( $mode, $type, $data ) = @_;
+
+    # These values are probably wrong, but a good approximation
+    # $graph_width + $graph_border_width == real image width
+    my $graph_border_width = 97;
+
+    # ($data_characters + $max_label_length + $padding_characters)
+    # * $pixels_per_character == real image width
+    my $padding_characters   = 10;
+    my $pixels_per_character = 6;
+
+    my $data_characters;
+
+    if ( $type eq 'posneg' ) {
+
+        # nnn.nnU/nnn.nnU_ times 4
+        $data_characters = 64;
+    }
+    elsif ( $type eq 'pos' ) {
+
+        # nnn.nnU_ times 4
+        $data_characters = 32;
+    }
+    else {
+        croak "Wrong $type in calculate_pixels";
+    }
+
+    my $return_data;
+
+    if ( $mode eq 'required_width' ) {
+        $return_data =
+          $pixels_per_character *
+          ( $padding_characters + $data_characters + $data ) -
+          $graph_border_width;
+    }
+    elsif ( $mode eq 'available_characters' ) {
+        $return_data =
+          abs( ( $graph_width + $graph_border_width ) / $pixels_per_character )
+          - $padding_characters - $data_characters;
+
+    }
+    else {
+        croak "Wrong $mode in calculate_pixels";
+    }
+    return $return_data;
+}
+
+# find_required_graph_width
+#
+# Returns the necessary graph width for a list of labels and a type of graph
+
+sub find_required_graph_width {
+
+    my ( $type, @labels ) = @_;
+
+    my $longest_label_length = 0;
+
+    for my $label (@labels) {
+        if ( length $label > $longest_label_length ) {
+            $longest_label_length = length $label;
+        }
+    }
+
+    my $required_graph_width =
+      calculate_pixels( 'required_width', $type, $longest_label_length );
+    return $graph_width if ( $required_graph_width <= $graph_width );
+
+    # Return sufficient graph_width in 50 pixel increments
+    return $graph_width +
+      ( ceil( ( $required_graph_width - $graph_width ) / 50 ) * 50 );
+}
+
+# trim_label
+#
+# Trims a given label to it's non-wrapping size
+
+sub trim_label {
+
+    my ( $type, $label ) = @_;
+
+    my $available_characters =
+      calculate_pixels( 'available_characters', $type );
+
+    if ( $available_characters < length $label ) {
+        $label = '..' . substr $label, ( $available_characters - 2 ) * -1;
+    }
+
+    return $label;
+}
+
+__END__
+
+=head1 NAME
+
+diskstats - Munin multigraph plugin to monitor various values provided
+via C</proc/diskstats> or C</sys/block/*/stat>
+
+=head1 APPLICABLE SYSTEMS
+
+Linux 2.6 systems with extended block device statistics enabled.
+
+=head1 CONFIGURATION
+
+None needed.
+
+=head2 device-mapper names
+
+This plugin displays nicer device-mapper device names if it is run as
+root, but it functions as needed without root privilege.  To configure
+for running as root enter this in a plugin configuration file:
+
+  [diskstats]
+    user root
+
+=head2 Warning levels
+
+You can change the warning levels in a plugin configuration file:
+
+  [diskstats]
+    env.avgrdwait_warning 0:3
+    env.avgwrwait_warning 0:3
+
+=head2 Monitor specific devices
+
+You can specify which devices should get monitored by the plugin via
+environment variables. The variables are mutually exclusive and should
+contain a comma-separated list of device names. Partial names
+(e.g. 'sd' or 'dm-') are okay.
+
+  [diskstats]
+    env.include_only sda,sdb,cciss/c0d0
+
+or
+
+  [diskstats]
+    env.exclude sdc,VGroot/LVswap
+
+LVM volumes can be filtered either by their canonical names or their
+internal device-mapper based names (e.g. 'dm-3', see dmsetup(8) for
+further information).
+
+=head2 Graph width and labels
+
+This plugin will increase the graph_width dynamically to accommodate
+longer-than-normal device names. You can disable this behavior by
+setting the B<trim_labels> environment variable. Additionally, you can
+specify a fixed graph_width for the graphs.
+
+  [diskstats]
+    # Set graph_width to 450, device names which are longer get trimmed
+    env.trim_labels yes
+    env.graph_width 450
+
+
+=head1 INTERPRETATION
+
+Among the more self-describing or well-known values like C<throughput>
+(Bytes per second) there are a few which might need further
+introduction.
+
+
+=head2 Device Utilization
+
+Linux provides a counter which increments in a millisecond-interval
+for as long as there are outstanding I/O requests. If this counter is
+close to 1000msec in a given 1 second timeframe the device is nearly
+100% saturated. This plugin provides values averaged over a 5 minute
+time frame per default, so it can't catch short-lived saturations, but
+it'll give a nice trend for semi-uniform load patterns as they're
+expected in most server or multi-user environments.
+
+
+=head2 Device IO Time
+
+The C<Device IO Time> takes the counter described under C<Device
+Utilization> and divides it by the number of I/Os that happened in the
+given time frame, resulting in an average time per I/O on the
+block-device level.
+
+This value can give you a good comparison base amongst different
+controllers, storage subsystems and disks for similar workloads.
+
+
+=head2 Syscall Wait Time
+
+These values describe the average time it takes between an application
+issuing a syscall resulting in a hit to a blockdevice to the syscall
+returning to the application.
+
+The values are bound to be higher (at least for read requests) than
+the time it takes the device itself to fulfill the requests, since
+calling overhead, queuing times and probably a dozen other things are
+included in those times.
+
+These are the values to watch out for when an user complains that
+C<the disks are too slow!>.
+
+
+=head3 What causes a block device hit?
+
+A non-exhaustive list:
+
+=over
+
+=item * Reads from files when the given range is not in the page cache or the O_DIRECT
+flag is set.
+
+=item * Writes to files if O_DIRECT or O_SYNC is set or sys.vm.dirty_(background_)ratio
+is exceeded.
+
+=item * Filesystem metadata operations (stat(2), getdents(2), file creation,
+modification of any of the values returned by stat(2), etc.)
+
+=item * The pdflush daemon writing out dirtied pages
+
+=item * (f)sync
+
+=item * Swapping
+
+=item * raw device I/O (mkfs, dd, etc.)
+
+=back
+
+=head1 ACKNOWLEDGEMENTS
+
+The core logic of this script is based on the B<iostat> tool of the
+B<sysstat> package written and maintained by Sebastien Godard.
+
+=head1 SEE ALSO
+
+See C<Documentation/iostats.txt> in your Linux source tree for further
+information about the C<numbers> involved in this module.
+
+L<http://www.westnet.com/~gsmith/content/linux-pdflush.htm> has a nice
+writeup about the pdflush daemon.
+
+=head1 VERSION
+
+  $Id$
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 AUTHOR
+
+Michael Renner <michael.renner@amd.co.at>
+
+=head1 LICENSE
+
+GPLv2
+
+
+=cut

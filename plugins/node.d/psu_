@@ -1,0 +1,67 @@
+#!/bin/sh
+# -*- sh -*-
+
+: <<EOF
+
+=head1 NAME
+
+psu_ - Wildcard plugin to graph the number of processes by a given
+user.
+
+=head1 CONFIGURATION
+
+This is a wildcard plugin.  The link name extension is the user name
+we wish to graph.
+
+Example:
+
+ ln -s /usr/share/munin/plugins/psu_ /etc/munin/plugins/psu_foo
+
+...will monitor the user "foo"
+
+=head1 AUTHORS
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 BUGS
+
+Plugin is "autoconf suggest", but "suggest" will always return no
+suggestions.
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=autoconf suggest
+
+=cut
+
+EOF
+
+name=`basename $0 | sed 's/^psu_//g'`
+
+if [ "$1" = "autoconf" ]; then
+	echo yes
+	exit 0
+fi
+
+if [ "$1" = "suggest" ]; then
+	exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo graph_title Number of processes owned by $name
+	echo 'graph_args --base 1000 --vertical-label processes -l 0'
+	echo 'graph_category processes'
+	echo "count.label $name"
+	echo 'processes.draw LINE2'
+	exit 0
+fi
+
+printf "count.value "
+(pgrep -u "$name"; pgrep -U "$name") | sort -u | wc -l
+

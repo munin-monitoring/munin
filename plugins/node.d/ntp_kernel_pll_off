@@ -1,0 +1,61 @@
+#!/bin/sh
+# -*- sh -*-
+
+: <<EOF
+
+=head1 NAME
+
+ntp_kernel_pll_off - Plugin to monitor the kernel's PLL offset for the
+NTP status
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHORS
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+EOF
+
+export PATH=/usr/local/sbin:$PATH
+
+if [ "$1" = "autoconf" ]; then
+    { ntpq -c kerninfo; ntpdc -c kerninfo; } 2>/dev/null |
+    awk 'BEGIN { ev=1; }
+         /^pll offset:/ { ev=0; }
+         END { if (ev == 0) { print "yes";} else { print "no"; } exit ev; }'
+    exit 0
+fi
+
+if [ "$1" = "config" ]; then
+    echo 'graph_title NTP kernel PLL offset (secs)'
+    echo 'graph_vlabel PLL offset (secs)'
+    echo 'graph_category time'
+    echo 'graph_info The kernel offset for the phase-locked loop used by NTP'
+    echo 'ntp_pll_off.label pll-offset'
+    echo 'ntp_pll_off.info Phase-locked loop offset in seconds'
+    exit 0
+fi
+
+printf 'ntp_pll_off.value '
+
+if [ $(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]' | tr -d '.') -ge 427 ]
+then
+    cmd=ntpq
+else
+    cmd=ntpdc
+fi
+
+$cmd -c kerninfo | awk '/^pll offset:/ { print $3 }'

@@ -1,0 +1,56 @@
+#!/bin/sh
+# -*- sh -*-
+#
+# Plugin to show the amount of messages in the qmail queue
+#
+# Wed Mar 19 2008 Nils Breunese <nils@lemonbit.nl>
+# - Use a single call to qmail-qstat, no grep and just a single awk
+#
+# Sun Mar 16 2008 Nils Breunese <nils@lemonbit.nl>
+# - Use full path for qmail-qstat
+# - Made path to binary configurable
+# - Added check for autoconf
+# - Modified labels
+#
+# Based on the qmailqueue plugin contributed by David Obando (david@cryptix.de) - 23.11.2005
+#
+# Configuration:
+#  [qmailstat]
+#      env.qmailstat /usr/bin/qmail-qstat
+#
+# Magic markers - optional - used by installation scripts and munin-config:
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+QMAILQSTAT=/var/qmail/bin/qmail-qstat
+if [ "$qmailqstat" ]; then QMAILSTAT=$qmailqstat ; fi
+
+if [ "$1" = "autoconf" ]; then
+        if [ -f ${QMAILQSTAT} ] ; then
+                echo yes
+                exit 0
+        else
+                echo no
+                exit 0
+        fi
+fi
+
+if [ "$1" = "config" ]; then
+        echo 'graph_title Qmail queue'
+        echo 'graph_args --base 1000 -l 0'
+        echo 'graph_vlabel messages'
+        echo 'graph_category Mail'
+        echo 'graph_order total notpreprocessed'
+        echo 'total.label Total messages in queue'
+        echo 'total.min 0'
+        echo 'total.draw AREA'
+        echo 'total.warning 100'
+        echo 'total.critical 1000'
+        echo 'notpreprocessed.label Not yet preprocessed'
+        echo 'notpreprocessed.min 0'
+        echo 'notpreprocessed.draw LINE2'
+        exit 0
+fi
+
+$QMAILQSTAT | awk '{ if ( $7 == "preprocessed:" ) { print "notpreprocessed.value", $NF } else { print "total.value", $NF } }'

@@ -83,7 +83,6 @@ Here is a list of other environment vars, that are derived from the ``Munin::Com
 	MUNIN_RUBY
 	MUNIN_OSTYPE
 	MUNIN_HOSTNAME
-	MUNIN_MKTEMP
 	MUNIN_HASSETR
 
 System related

@@ -1,0 +1,105 @@
+#!/bin/bash
+# -*- sh -*-
+
+: <<EOF
+
+=head1 NAME
+
+df_abs - Plugin to monitor absolute disk usage
+
+=head1 CONFIGURATION
+
+The following configuration parameters are used by this plugin
+
+ [df_abs]
+  env.exclude  - space separated list of file system types to exclude
+  env.warning  - Warning percentage
+  env.critical - Critical percentage
+  env.total    - Enable/Disable graph total [on|off]
+
+=head2 DEFAULT CONFIGURATION
+
+ [df_abs]
+  env.exclude  iso9660
+  env.warning  92
+  env.critical 98
+  env.total    on
+
+=head1 AUTHORS
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 BUGS
+
+Does not handle cases where the block device is the same
+for multiple mounts.
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=autoconf
+
+=cut
+
+EOF
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+if [ "$1" = "autoconf" ]; then
+	echo yes
+	exit 0
+fi
+
+# Append $mnt in case $dev is not a real block device
+get_fieldname() {
+	dev="$1"
+	mnt="$2"
+	case "$dev" in
+		"/*" )
+			clean_fieldname $dev
+			;;
+		* )
+			clean_fieldname "$dev $mnt"
+			;;
+	esac
+}
+
+total=${total:-on}
+
+exclude=${exclude:-iso9660}
+exclude=$(echo $exclude | sed -r -e 's/ +/ -x /g' -e 's/^/-x /') 
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title Filesystem usage (in bytes)'
+	echo 'graph_args --base 1024 --lower-limit 0'
+	echo 'graph_vlabel bytes'
+	echo 'graph_category disk'
+	if [ "$total" = "on" ]; then
+		echo 'graph_total Total'
+	fi
+	df -P -l $exclude | sed 1d | grep -v "//" | 
+	while read dev size used avail cap mnt; do
+		name="$(get_fieldname $dev $mnt)"
+		echo "$name.label $mnt"
+		echo "$name.cdef $name,1024,*"
+		warn=$(get_warning $name)
+		crit=$(get_critical $name)
+		if [ -n "$warn" ]; then
+			echo "$name.warning $((size * $warn / 100))"
+		fi
+		if [ -n "$crit" ]; then
+			echo "$name.critical $((size * $crit / 100))"
+		fi
+	done
+	exit 0
+fi
+
+df -P -l $exclude | sed 1d | grep -v "//" | 
+   while read dev size used avail cap mnt; do
+	echo "$(get_fieldname $dev $mnt).value $used"
+done

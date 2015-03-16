@@ -1,0 +1,123 @@
+#!/usr/bin/perl -w
+# -*- perl -*-
+
+=head1 NAME
+
+proxy_plugin - Plugin to proxy connections to another process speaking the
+               munin-node protocol.
+
+The typical use-case for this is to proxy requests to for example a JBoss
+application server, without giving up the ability to run local plugins from
+munin-node as well.
+
+=head1 CONFIGURATION
+
+The following environment settings are the default configuration.
+
+  [<pluginname>]
+     env.proxyto localhost
+     env.proxyport 4950
+     env.proxyservice <pluginname>
+
+=head1 MAGIC MARKERS
+
+  #%# family=manual
+
+=head1 VERSION
+
+  $Id$
+
+=head1 BUGS
+
+The plugin is currently hardcoded to require multigraph. There may be usecases
+in the future where a non-multigraph version is useful.
+
+There is no detection of loops - if the plugin is pointed back at itself,
+infinite recursion is assured.
+
+There is no timeout for sending and receiving data. The plugin relies on
+munin-node to properly kill it if it runs too long.
+
+=head1 AUTHOR
+
+  Magnus Hagander <magnus.hagander@redpill-linpro.com>, Redpill Linpro AB
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+use strict;
+use Munin::Plugin;
+use IO::Socket;
+use File::Basename;
+
+# We are only going to support multigraph...
+need_multigraph();
+
+my $pluginname = basename($0);
+
+if($ARGV[0] and $ARGV[0] eq "autoconf") {
+	print "no\n"; # Might want to probe in the future?
+	exit 0;
+}
+
+my $what = '';
+if ($ARGV[0]) {
+	if ($ARGV[0] eq "config") {
+	   $what = "config";
+	}
+	else {
+		die "Unknown command $ARGV[0]\n";
+	}
+}
+else {
+	$what = "fetch";
+}
+
+# Get the configured parameters
+my $server  = $ENV{proxyto}      || "localhost";
+my $port    = $ENV{proxyport}    || 4950;
+my $service = $ENV{proxyservice} || $pluginname;
+
+# Make the connection
+my $sock = new IO::Socket::INET (
+	PeerAddr => $server,
+	PeerPort => $port,
+	Proto => 'tcp',
+	Timeout => 10, # only for connection it seems
+) or die "Could not connect to server $server on port $port\n";
+$sock->autoflush();
+
+my $hdr = $sock->getline();
+if ($hdr !~ /^# /) {
+   $sock->close();
+   die "Got invalid header from plugin: $hdr\n";
+}
+
+# Attempt to negotiate multigraph
+$sock->print("cap multigraph\n");
+my $r = $sock->getline();
+if ($r !~ /^cap.*multigraph/) {
+   $sock->close();
+   die "Remote does not speak multigraph: $r\n";
+}
+
+# Check if the plugin config is compatible
+$sock->print("list\n");
+$r = $sock->getline();
+unless (grep(/^$service$/, split(/ /, $r))) {
+   $sock->close();
+   die "Remote does know know of plugin $service (remote plugin list: $r)\n";
+}
+
+# Pass along the command and send back the results
+$sock->print("$what $service\n");
+while ($r = $sock->getline()) {
+	last if $r =~ /^\.\n$/;
+	print $r;
+}
+
+$sock->close();
+

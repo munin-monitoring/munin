@@ -1,0 +1,87 @@
+#!/bin/sh
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+multiping - Plugin to monitor ping times against several hosts
+
+=head1 CONFIGURATION
+
+The following environment variables are used
+
+ ping_args  - Arguments to ping (default "-c 2")
+ ping_args2 - Arguments after the host name (required for Solaris)
+ ping       - Ping program to use
+ host       - Host to ping
+
+Configuration example
+
+ [multiping]
+  env.host www.example.org mail.example.org
+
+Configuration example for Solaris
+
+ [multiping]
+  env.host www.example.org mail.example.org
+  env.ping_args -s
+  env.ping_args2 56 2
+
+=head1 AUTHOR
+
+Copyright (C) 2004 Jimmy Olsen
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 dated June,
+1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+
+=cut
+
+if [ -z "$host" ]; then
+    file_host=$(basename $0 | sed 's/^ping_//g')
+    host=${host:-${file_host:-www.google.com}}
+fi
+
+site=0
+if [ "$1" = "config" ]; then
+    echo graph_title Ping times
+    echo 'graph_args --base 1000 -l 0'
+    echo 'graph_vlabel seconds'
+    echo 'graph_category network'
+    echo 'graph_info This graph shows ping RTT statistics.'
+    for hosts in $host; do
+	site=`expr $site + 1`
+	echo "site$site.label $hosts"
+	echo "site$site.info Ping RTT statistics for $hosts."
+	echo "site$site.draw LINE2"
+	echo "site${site}_packetloss.label $hosts packet loss"
+	echo "site${site}_packetloss.graph no"
+    done
+    exit 0
+fi
+
+for hosts in $host 
+do
+    export site=$(expr $site + 1)
+    ${ping:-ping} ${ping_args:-'-c 2'} ${hosts} ${ping_args2} \
+	| perl -n -e 'print "site$ENV{'site'}.value ", $1 / 1000, "\n" 
+        if m@min/avg/max.*\s\d+(?:\.\d+)?/(\d+(?:\.\d+)?)/\d+(?:\.\d+)?@; 
+        print "site$ENV{'site'}_packetloss.value $1\n" if /(\d+)% packet loss/;'
+done

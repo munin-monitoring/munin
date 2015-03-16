@@ -1,0 +1,125 @@
+#!/bin/sh
+# -*- sh -*-
+#
+# Plugin to monitor various statistics exported by a UPS.
+#
+# Written by Andras Korn in 2005. Licensed under the GPL.
+#
+# usage: ups_upsid_function
+#
+#%# family=contrib
+#%# capabilities=autoconf suggest
+
+UPS=$(basename $0 | cut -d_ -f2)
+FUNCTION=$(basename $0 | cut -d_ -f3)
+
+if [ "$1" = "autoconf" ]; then
+	[ -x /bin/upsc ] && [ -r /etc/nut/ups.conf ] && echo yes && exit 0
+	echo "no (/bin/upsc or /etc/nut/ups.conf not found)"
+	exit 0
+fi
+
+if [ "$1" = "suggest" ]; then
+	grep '^\[[^]]*\]$' /etc/nut/ups.conf \
+		| tr -d '][' \
+		| while read ups; do
+			for i in voltages freq charge current; do
+				echo ${ups}_${i}
+			done
+		done
+fi
+
+voltages() {
+	if [ "$1" = "config" ]; then
+
+		echo "graph_title $UPS voltages"
+		echo "graph_args --base 1000 -l 0"
+		echo "graph_vlabel Volt"
+		for i in battery nominal input output; do
+			echo "${i}.label $i"
+			echo "${i}.type GAUGE"
+			echo "${i}.max 1000"
+			echo "${i}.min 0"
+		done
+	else
+		upsc $UPS | sed -n '/volt/{
+					s/://
+					/nominal/s/.* /nominal.value /
+					/voltage/s/\.[^ ]*/.value/
+					p
+				}'
+	fi
+}
+
+charge() {
+	if [ "$1" = "config" ]; then
+
+		echo "graph_title $UPS charge"
+		echo "graph_args --base 1000 -l 0"
+		echo "graph_vlabel %"
+		for i in charge low load; do
+			echo "${i}.label $i"
+			echo "${i}.type GAUGE"
+			echo "${i}.max 100"
+			echo "${i}.min 0"
+		done
+	else
+		upsc $UPS | sed -n '/charge/{
+					s/^[^:]*\.//g
+					s/:/.value/
+					p
+				}
+				/load/{
+					s/.*:/load.value/
+					p
+				}'
+	fi
+}
+
+frequency() {
+	if [ "$1" = "config" ]; then
+
+		echo "graph_title $UPS input AC frequency"
+		echo "graph_args --base 1000 -l 0"
+		echo "graph_vlabel frequency 1/s"
+		echo "acfreq.label AC frequency"
+		echo "acfreq.type GAUGE"
+		echo "acfreq.max 100"
+		echo "acfreq.min 5"
+	else
+		upsc $UPS | sed -n '/freq/{s/.*:/acfreq.value/;p}'
+	fi
+}
+
+current() {
+	if [ "$1" = "config" ]; then
+
+		echo "graph_title $UPS output current"
+		echo "graph_args --base 1000 -l 0"
+		echo "graph_vlabel Amper"
+		echo "current.label out-current"
+		echo "current.type GAUGE"
+		echo "current.max 100"
+		echo "current.min 0"
+	else
+		upsc $UPS | sed -n '/current/{s/.*:/current.value/;p}'
+	fi
+}
+
+[ "$1" = "config" ] && echo "graph_category sensors"
+
+case "$FUNCTION" in
+	voltages)
+		voltages $1
+		;;
+	charge)
+		charge $1
+		;;
+	freq)
+		frequency $1
+		;;
+	current)
+		current $1
+		;;
+esac
+

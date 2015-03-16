@@ -1,0 +1,732 @@
+#!/usr/bin/perl
+# -*- perl -*-
+#
+# proc_ - Munin plugin to for Process information
+# Copyright (C) 2009-2010 Redpill Linpro AS
+#
+# Author: Trygve Vea <tv@redpill-linpro.com>
+# Author: Kristian Lyngstøl <kristian@redpill-linpro.com>
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+=head1 NAME
+
+proc - Munin plugin to monitor various aspects of named processes
+
+=head1 APPLICABLE SYSTEMS
+
+Processes running under Linux for a longer timespan. 
+
+=head1 CONFIGURATION
+
+The plugin needs to be able to parse the /proc-filesystem.
+
+The plugin is configured by supplying a pipe-delimitered list of parameters 
+through environment variables.
+  [proc]
+     env.procname proc1|proc2|proc3
+     env.procargs |--run|
+     env.procuser joe||mary
+     env.procaspect cpu|memory|ctxt_switches|threads|processes|io
+
+
+env.procname defines the processname as seen inside the parenthesis of the 
+second column in /proc/<PID>/stat. If you don't get the data you expect, you
+can check if the value is what you expect here. This is what's used for the 
+first filter, and args/user-filters are then applied on top of this filter. 
+Note that <PID> is the PID of the process that you are interested in.
+For process names including non-alphanumeric characters (like space, dash,
+etc.) please see Special Process Names below.
+
+env.procargs defines a string which is matched against the command line of the
+process.  It's a wildcard match, so you don't have to provide the entire
+argument list if there's only one key option you care about filtering on.
+
+env.procuser defines the user the process has to run as. If nothing is
+provided, processes ran by any user are included.
+
+env.procaspect defines which graphs to render. Per default, all graphs are 
+included. You don't have to set this unless you want to exclude graphs.
+
+=head1 SPECIAL PROCESS NAMES
+
+If the process name (in env.procname) contains any characters other than
+[a-zA-Z_], they will be internally replaced by underscores ('_'). This is
+normally not a problem, unless you are setting warning/critical levels.
+
+For example, let's say you have have Plex Media Server running and you want
+to monitor how many processes it has running. The name that shows up in /proc
+is 'Plex Media Serv' (truncated, without the 'er' at the end), the internal
+field becomes: 'Plex_Media_Serv'.
+
+In order to let munin give a warning when the number of processes is outside
+the range 1:3, use the following in your munin configuration file (not the
+plugin configuration file):
+
+  [host.example.org]
+     proc_processes.Plex_Media_Serv.warning 1:3
+
+Please keep in mind that you still need the original name from /proc/pid/stat
+(including spaces or dashes) in your plugin configuration file:
+
+  [proc]
+     env.procname proc1|Plex Media Serv|proc2
+
+
+=head1 INTERPRETATION
+
+Each graph uses data from the proc filesystem.
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=multigraph
+
+=head1 VERSION
+
+ $Id$
+
+=head1 BUGS
+
+The graphs will be misleading in an event where you have multiple
+processes monitored, but less then all of them is restarted (or exits). This
+is due to the nature of counters, and I need to track state of individual
+processes to do this in a reliable way. It's on my TODO, but has a low priority
+as I consider this plugin something for graphing daemons.
+
+=head1 PATCHES-TO
+
+The munin-project.
+
+=head1 AUTHOR
+
+Trygve Vea <tv@redpill-linpro.com>
+Kristian Lyngstol <kristian@varnish-software.com>
+
+=head1 THANKS
+
+Thanks to Kristian Lyngstol, I stole most of the initial code in this plugin 
+from his varnish_-plugin, which is a really nice outline of how a 
+wildcardplugin should look like. I've added some weird hacks to make it output
+multigraph. It's pretty ugly, but it works.
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+use strict;
+use Munin::Plugin;
+
+# Set to 1 to enable output when a variable is defined in a graph but
+# omitted because it doesn't exist in varnishstat.
+my $DEBUG = 0;
+
+# You should set the env-var "procname" to filter processes of their name.
+# This will default to "init" unless you specify anything else.
+my @procname = split(/\|/, $ENV{'procname'});
+my @procargs = split(/\|/, $ENV{'procargs'});
+my @procuser = split(/\|/, $ENV{'procuser'});
+my @procaspect = exists $ENV{'procaspect'} ? split(/\|/, $ENV{'procaspect'}) : ('cpu', 'memory', 'ctxt_switches', 'threads', 'processes', 'io');
+my @proctitlec;
+my @procuniq;
+my %useruid = ();
+
+#my $procname = exists $ENV{'procname'} ? $ENV{'procname'} : "init";
+
+# You can set the env-var "procargs" to filter processes of their running
+# arguments.
+#my $args = exists $ENV{'procargs'} ? $ENV{'procargs'} : undef;
+
+my %procstats = ();
+my $self;
+my $i = 0;
+
+
+# Parameters that can be defined on top level of a graph. Config will print
+# them as "graph_$foo $value\n"
+my @graph_parameters = ('title','total','order','scale','vlabel','args');
+
+# Parameters that can be defined on a value-to-value basis and will be
+# blindly passed to config. Printed as "$fieldname.$param $value\n".
+my @field_parameters = ('graph', 'min', 'max', 'draw', 'cdef', 'warning',
+                        'colour', 'info', 'type', 'negative');
+# Data structure that defines all possible graphs (aspects) and how they
+# are to be plotted. Every top-level entry is a graph/aspect. Each top-level graph
+# MUST have title set and 'values'. 
+# 
+# 'rpn' on values allows easy access to graphs consisting of multiple
+# values from procstats. (Reverse polish notation). The RPN
+# implementation only accepts +-*/ and procstats-values.
+#
+# Any value left undefined will be left up to Munin to define/ignore/yell 
+# about.
+#
+# See munin documentation or rrdgraph/rrdtool for more information.
+my %ASPECTS = (
+    'cpu' => {
+        'title' => "CPU Usage",
+        'vlabel' => '%',
+        'order' => 'stime utime',
+        'args' => '-l 0',
+        'values' => {
+            'utime' => {
+                'type' => 'DERIVE',
+                'min' => '0',
+                'label' => 'User time',
+                'draw' => 'AREASTACK'
+            },
+            'stime' => {
+                'type' => 'DERIVE',
+                'min' => '0',
+                'label' => 'System time',
+                'draw' => 'AREASTACK'
+            }
+        }
+    },
+    'ctxt_switches' => {
+        'title' => "Context switches",
+        'vlabel' => 'ctxt switches p.s.',
+        'values' => {
+            'voluntary_ctxt_switches' => {
+                'type' => 'DERIVE',
+                'min' => '0',
+                'label' => 'Voluntary Context Switches'
+            },
+            'nonvoluntary_ctxt_switches' => {
+                'type' => 'DERIVE',
+                'min' => '0',
+                'label' => 'Nonvoluntary Context Switches'
+            }
+        }
+    },
+    'threads' => {
+        'title' => "Thread count",
+        'vlabel' => 'count',
+        'values' => {
+            'threads' => {
+                'type' => 'GAUGE',
+                'label' => 'Number of threads'
+            }
+        }
+    },
+    'processes' => {
+        'title' => "Process count",
+        'vlabel' => 'count',
+        'values' => {
+            'processes' => {
+                'type' => 'GAUGE',
+                'label' => 'Number of processes'
+            }
+        }
+    },
+    'memory' => {
+        'title' => "Memory usage",
+        'vlabel' => 'bytes',
+        'order' => 'VmStk VmExe VmLib VmData VmRSS VmSize',
+        'args' => '-l 0',
+        'values' => {
+            'VmSize' => {
+                'type' => 'GAUGE',
+                'label' => 'Virtual Memory Size'
+            },
+            'VmRSS' => {
+                'type' => 'GAUGE',
+                'label' => 'Resident set size',
+            },
+            'VmData' => {
+                'type' => 'GAUGE',
+                'label' => 'Data size',
+            },
+            'VmStk' => {
+                'type' => 'GAUGE',
+                'label' => 'Stack size',
+            },
+            'VmExe' => {
+                'type' => 'GAUGE',
+                'label' => 'Segments size',
+            },
+            'VmLib' => {
+                'type' => 'GAUGE',
+                'label' => 'Shared library size',
+            }
+        }
+    },
+    'io' => {
+        'title' => "I/O activity",
+        'vlabel' => '(-) reads / (+) writes',
+        'args' => '-l 0',
+        'values' => {
+            'rchar' => {
+                'type' => 'DERIVE',
+                'label' => 'bytes read',
+                'min' => '0',
+                'graph' => 'no'
+            },
+            'wchar' => {
+                'type' => 'DERIVE',
+                'label' => 'characters',
+                'min' => '0',
+#                'label' => 'bytes written',
+                'negative' => 'rchar'
+            },
+            'syscr' => {
+                'type' => 'DERIVE',
+                'label' => 'read syscalls',
+                'min' => '0',
+                'graph' => 'no'
+            },
+            'syscw' => {
+                'type' => 'DERIVE',
+                'label' => 'syscalls',
+                'min' => '0',
+#                'label' => 'write syscalls',
+                'negative' => 'syscr'
+            },
+            'read_bytes' => {
+                'type' => 'DERIVE',
+                'label' => 'read bytes',
+                'min' => '0',
+                'graph' => 'no'
+            },
+            'write_bytes' => {
+                'type' => 'DERIVE',
+                'label' => 'bytes',
+                'min' => '0',
+#                'label' => 'write bytes',
+                'negative' => 'read_bytes'
+#            },
+#            'cancelled_write_bytes' => {
+#                'type' => 'DERIVE',
+#                'label' => 'Cancelled write bytes'
+            }
+        }
+    }
+);
+
+# Populate %procstats with values.
+sub populate_stats
+{
+    my $i = -1;
+    foreach (@procname) {
+        $i++;
+        $procstats{$procuniq[$i]}{"utime"} = 0;
+        $procstats{$procuniq[$i]}{"stime"} = 0;
+        $procstats{$procuniq[$i]}{"threads"} = 0;
+        $procstats{$procuniq[$i]}{"vsize"} = 0;
+        $procstats{$procuniq[$i]}{"rss"} = 0;
+        $procstats{$procuniq[$i]}{"processes"} = 0;
+        $procstats{$procuniq[$i]}{"voluntary_ctxt_switches"} = 0;
+        $procstats{$procuniq[$i]}{"nonvoluntary_ctxt_switches"} = 0;
+        $procstats{$procuniq[$i]}{"VmSize"} = 0;
+        $procstats{$procuniq[$i]}{"VmRSS"} = 0;
+        $procstats{$procuniq[$i]}{"VmData"} = 0;
+        $procstats{$procuniq[$i]}{"VmStk"} = 0;
+        $procstats{$procuniq[$i]}{"VmExe"} = 0;
+        $procstats{$procuniq[$i]}{"VmLib"} = 0;
+        $procstats{$procuniq[$i]}{"rchar"} = 0;
+        $procstats{$procuniq[$i]}{"wchar"} = 0;
+        $procstats{$procuniq[$i]}{"syscr"} = 0;
+        $procstats{$procuniq[$i]}{"syscw"} = 0;
+        $procstats{$procuniq[$i]}{"read_bytes"} = 0;
+        $procstats{$procuniq[$i]}{"write_bytes"} = 0;
+        $procstats{$procuniq[$i]}{"cancelled_write_bytes"} = 0;
+
+    STATLINE:
+        foreach my $line(`grep -h \\\($procname[$i]\\\) /proc/[0-9]*/stat`) {
+            my ($pid) = $line =~ /^(\d+)/;
+
+            open( my $fh_cmdline, "<", "/proc/$pid/cmdline" ) or next STATLINE;
+            my $cmdline = do { local $/; <$fh_cmdline> };
+            close($fh_cmdline);
+
+            open( my $fh_status, "<", "/proc/$pid/status" ) or next STATLINE;
+            my $cmduid = do { local $/; <$fh_status> };
+            close($fh_status);
+
+            $cmdline =~ tr{\0}{ };
+
+            ($cmduid) = $cmduid =~ m{
+                                        ^Uid:    # We want the line starting with Uid:
+                                        \s+      # skip whitespace
+                                        (\d+)    # capture the first number on that line
+                                }smx;
+
+            next STATLINE if $procargs[$i] and $cmdline !~ /$procargs[$i]/;
+
+            if ( length($procuser[$i]) > 0 ) {
+                if ( $cmduid ne $useruid{$procuser[$i]} ) {
+                    next STATLINE;
+                }
+            }
+
+            if ($line =~ /^(\d+) \((.*)\) (.) \-?\d+ \-?\d+ \-?\d+ \-?\d+ \-?\d+ \d+ \d+ \d+ \d+ \d+ (\d+) (\d+) \d+ \d+ \-?\d+ \d+ (\d+) \-?\d+ \d+ (\d+) (\d+)/) {
+                $procstats{$procuniq[$i]}{"utime"} += $4;
+                $procstats{$procuniq[$i]}{"stime"} += $5;
+                $procstats{$procuniq[$i]}{"threads"} += $6;
+                $procstats{$procuniq[$i]}{"vsize"} += $7;
+                $procstats{$procuniq[$i]}{"rss"} += $8;
+                $procstats{$procuniq[$i]}{"processes"} += 1;
+                foreach my $line(`cat /proc/$1/status`){
+                    if ($line =~ /^Vm(.*):\s+(\d+) kB$/){
+                        $procstats{$procuniq[$i]}{"Vm$1"} += ($2*1024);
+                    }
+                    if ($line =~ /^(.*)_ctxt_switches:\s+(\d+)$/){
+                        $procstats{$procuniq[$i]}{"$1_ctxt_switches"} += $2;
+                    }
+                }
+                foreach my $line(`cat /proc/$1/io`){
+                    if ( $line =~ /^(.*):\s+(\d+)$/ ) {
+                        $procstats{$procuniq[$i]}{$1} += $2;
+                    }
+                }
+            }
+        }
+    }
+}
+
+# Bail-function.
+sub usage
+{
+    if (@_) {
+        print STDERR "@_" . "\n\n";
+    }
+    print STDERR "Known arguments: config.\n";
+    exit 1;
+}
+
+# Print the value of a two-dimensional hash if it exist.
+# Returns false if non-existent.
+#
+# Output is formatted for plugins if arg4 is blank, otherwise arg4 is used
+# as the title/name of the field (ie: arg4=graph_title).
+sub print_if_exist
+{
+    my %values = %{$_[0]};
+    my $value = $_[1];
+    my $field = $_[2];
+    my $title = "$value.$field";
+    if (defined($_[3])) {
+        $title = $_[3];
+    }
+    if (defined($values{$value}{$field})) {
+        if ( $field eq 'title'&& defined($_[4]) ) {
+            print "$title $values{$value}{$field} '$proctitlec[$i]'\n";
+        }
+        else {
+            print "$title $values{$value}{$field}\n";
+        }
+    } else {
+        return 0;
+    }
+}
+
+# Walk through the relevant aspect and print all top-level configuration
+# values and value-definitions. 
+sub get_config
+{
+    my $graph = $_[0];
+    my $uniqname = $_[1];
+
+    # Need to double-check since set_aspect only checks this if there
+    # is no argument
+    if (!defined($ASPECTS{$graph})) {
+        usage "No such aspect ( $graph )";
+    }
+    if ( $uniqname == -1 ) {
+        print "multigraph proc_$graph\n";
+        print "graph_category processes\n";
+        foreach my $field (@graph_parameters) {
+            print_if_exist(\%ASPECTS,$graph,$field,"graph_$field");
+        }
+        print "\n";
+
+        if ( $graph eq 'cpu' ) {
+            $i = 0;
+            foreach (@procname) {
+                print "$procuniq[$i].label $proctitlec[$i]\n";
+                print "$procuniq[$i].type DERIVE\n";
+                print "$procuniq[$i].info System + User CPU-time.\n";
+                print "$procuniq[$i].min 0\n";
+                print "$procuniq[$i].draw LINE2\n";
+                $i++;
+            }
+        }
+        if ( $graph eq 'ctxt_switches' ) {
+            $i = 0;
+            foreach (@procname) {
+                print "$procuniq[$i].label $proctitlec[$i]\n";
+                print "$procuniq[$i].type DERIVE\n";
+                print "$procuniq[$i].info Voluntary + Nonvoluntary context switches.\n";
+                print "$procuniq[$i].min 0\n";
+                print "$procuniq[$i].draw LINE2\n";
+                $i++;
+            }
+        }
+        if ( $graph eq 'threads' ) {
+            $i = 0;
+            foreach (@procname) {
+                print "$procuniq[$i].label $proctitlec[$i]\n";
+                print "$procuniq[$i].type GAUGE\n";
+                print "$procuniq[$i].info Threads.\n";
+                print "$procuniq[$i].min 0\n";
+                print "$procuniq[$i].draw LINE2\n";
+                $i++;
+            }
+        }
+        if ( $graph eq 'processes' ) {
+            $i = 0;
+            foreach (@procname) {
+                print "$procuniq[$i].label $proctitlec[$i]\n";
+                print "$procuniq[$i].type GAUGE\n";
+                print "$procuniq[$i].info Processes.\n";
+                print "$procuniq[$i].min 0\n";
+                print "$procuniq[$i].draw LINE2\n";
+                $i++;
+            }
+        }
+        if ( $graph eq 'memory' ) {
+            $i = 0;
+            foreach (@procname) {
+                print "$procuniq[$i].label $proctitlec[$i]\n";
+                print "$procuniq[$i].type GAUGE\n";
+                print "$procuniq[$i].info Resident memory.\n";
+                print "$procuniq[$i].min 0\n";
+                print "$procuniq[$i].draw LINE2\n";
+                $i++;
+            }
+        }
+        if ( $graph eq 'io' ) {
+            $i = 0;
+            foreach (@procname) {
+                print "$procuniq[$i]_rchar.label $proctitlec[$i]\n";
+                print "$procuniq[$i]_rchar.type DERIVE\n";
+                print "$procuniq[$i]_rchar.info writes.\n";
+                print "$procuniq[$i]_rchar.min 0\n";
+                print "$procuniq[$i]_rchar.graph no\n";
+#                print "$procuniq[$i]_rchar.draw LINE2\n";
+                print "$procuniq[$i]_wchar.label $proctitlec[$i]\n";
+                print "$procuniq[$i]_wchar.type DERIVE\n";
+                print "$procuniq[$i]_wchar.info Resident memory.\n";
+                print "$procuniq[$i]_wchar.min 0\n";
+                print "$procuniq[$i]_wchar.draw LINE2\n";
+                print "$procuniq[$i]_wchar.negative $procuniq[$i]_rchar\n";
+                $i++;
+            }
+        }
+
+
+        print "\n";
+
+        return;
+    }
+
+    print "multigraph proc_$graph.$uniqname\n";
+    my %values = %{$ASPECTS{$graph}{'values'}};
+
+    print "graph_category processes\n";
+    foreach my $field (@graph_parameters) {
+        print_if_exist(\%ASPECTS,$graph,$field,"graph_$field",1);
+    }
+    print "\n";
+    foreach my $value (sort keys %values) {
+        # Need either RPN definition or a procstats value.
+        if (!defined($procstats{$procuniq[$i]}{$value}) &&
+            !defined($values{$value}{'rpn'})) {
+                if ($DEBUG) {
+                    print "ERROR: $value not part of procstats.\n"
+                }
+                next;
+        }
+
+        if (!print_if_exist(\%values,$value,'label')) {
+            print "$value.label ".$ASPECTS{$graph}{'values'}{$value}{'label'}."\n";
+        }
+        foreach my $field (@field_parameters) {
+            print_if_exist(\%values,$value,$field);
+        }
+    }
+    print "\n";
+}
+
+# Set the run
+sub set_run
+{
+    my $i = 0;
+    foreach(@procname) {
+        $proctitlec[$i] = "$procname[$i]";
+        $procuniq[$i] = clean_fieldname("$procname[$i]");
+        if (length($procargs[$i]) > 0 ) {
+            $proctitlec[$i] = "$proctitlec[$i] $procargs[$i]";
+            $procuniq[$i] = $procuniq[$i]."_".clean_fieldname($procargs[$i]);
+        }
+        if (length($procuser[$i]) > 0 ) {
+            $proctitlec[$i] = "$proctitlec[$i] by $procuser[$i]";
+            $procuniq[$i] = $procuniq[$i]."___".clean_fieldname($procuser[$i]);
+            $useruid{$procuser[$i]} = `getent passwd $procuser[$i] | cut -d : -f 3`;
+            chomp($useruid{$procuser[$i]});
+        }
+        $procuniq[$i] = clean_fieldname($procuniq[$i]);
+        $i++;
+    }
+}
+
+# Read and verify the aspect ($self). 
+sub set_aspect
+{
+    $self = $0;
+    $self =~ s/^.*proc_//;
+    if (!defined($ASPECTS{$self}) && @ARGV == 0) {
+        usage "No such aspect";
+    }
+}
+
+# Handle arguments (config)
+# Populate stats for config is necessary
+sub check_args
+{
+    if (@ARGV && $ARGV[0] eq '') {
+        shift @ARGV;
+    }
+    if (@ARGV == 1) {
+        if ($ARGV[0] eq "config") {
+            populate_stats;
+            foreach(@procaspect) {
+                my $asp = $_;
+                get_config($asp,-1);
+            $i = 0;
+                foreach (@procname) {
+                    get_config($asp,$procuniq[$i]);
+                    $i++;
+                }
+            }
+            exit 0;
+        }
+        usage "Unknown argument";
+    }
+}
+
+# Braindead RPN: +,-,/,* will pop two items from @stack, and perform
+# the relevant operation on the items. If the item in the array isn't one
+# of the 4 basic math operations, a value from procstats is pushed on to
+# the stack. IE: 'client_req','client_conn','/' will leave the value of
+# "client_req/client_conn" on the stack.
+#
+# If only one item is left on the stack, it is printed. Otherwise, an error
+# message is printed.
+sub rpn
+{
+    my @stack;
+    my $left;
+    my $right;
+    foreach my $item (@{$_[0]}) {
+        if ($item eq "+") {
+            $right = pop(@stack);
+            $left = pop(@stack);
+            push(@stack,$left+$right);
+        } elsif ($item eq "-") {
+            $right = pop(@stack);
+            $left = pop(@stack);
+            push(@stack,$left-$right);
+        } elsif ($item eq "/") {
+            $right = pop(@stack);
+            $left = pop(@stack);
+            push(@stack,$left/$right);
+        } elsif ($item eq "*") {
+            $right = pop(@stack);
+            $left = pop(@stack);
+            push(@stack,$left*$right);
+        } else {
+            push(@stack,int($procstats{$item}));
+        }
+    }
+    if (@stack > 1)
+    {
+        print STDERR "RPN error: Stack has more than one item left.\n";
+        print STDERR "@stack\n";
+        exit 255;
+    }
+    print "@stack";
+    print "\n";
+}
+
+################################
+# Execution starts here        #
+################################
+
+need_multigraph();
+set_run;
+#set_aspect;
+check_args;
+populate_stats;
+
+# We only get here if we're supposed to.
+
+# Walks through the relevant values and either prints the procstat, or
+# if the 'rpn' variable is set, calls rpn() to execute ... the rpn.
+
+foreach (@procaspect) {
+    my $asp = $_;
+$i = 0;
+print "multigraph proc_$asp\n";
+foreach (@procname) {
+    if ( $asp eq 'cpu' ) {
+        print "$procuniq[$i].value " .
+              ($procstats{$procuniq[$i]}{'utime'} + 
+               $procstats{$procuniq[$i]}{'stime'})."\n";
+    }
+    if ( $asp eq 'ctxt_switches' ) {
+        print "$procuniq[$i].value " .
+              ($procstats{$procuniq[$i]}{'voluntary_ctxt_switches'} +
+               $procstats{$procuniq[$i]}{'nonvoluntary_ctxt_switches'})."\n";
+    }
+    if ( $asp eq 'threads' ) {
+        print "$procuniq[$i].value $procstats{$procuniq[$i]}{'threads'}\n";
+    }
+    if ( $asp eq 'processes' ) {
+        print "$procuniq[$i].value $procstats{$procuniq[$i]}{'processes'}\n";
+    }
+    if ( $asp eq 'memory' ) {
+        print "$procuniq[$i].value $procstats{$procuniq[$i]}{'VmRSS'}\n";
+    }
+    if ( $asp eq 'io' ) {
+        print "$procuniq[$i]_rchar.value $procstats{$procuniq[$i]}{'rchar'}\n";
+        print "$procuniq[$i]_wchar.value $procstats{$procuniq[$i]}{'wchar'}\n";
+    }
+    $i++;
+}
+print "\n";
+$i = 0;
+# Print the individual graph statistics
+foreach (@procname) {
+    print "multigraph proc_$asp.$procuniq[$i]\n";
+    foreach my $value (sort keys %{$ASPECTS{$asp}{'values'}}) {
+        if (defined($ASPECTS{$asp}{'values'}{$value}{'rpn'})) {
+            print "$value.value ";
+            rpn($ASPECTS{$asp}{'values'}{$value}{'rpn'});
+        } else {
+            print "$value.value ";
+            if (!defined($procstats{$procuniq[$i]}{$value})) {
+                print "0\n";
+                next;
+            }
+            print "$procstats{$procuniq[$i]}{$value}\n";
+        }
+    }
+    print "\n";
+    $i++;
+}
+}

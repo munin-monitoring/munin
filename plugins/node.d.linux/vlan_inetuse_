@@ -1,0 +1,239 @@
+#!/usr/bin/perl -w
+# Wildcard-script to monitor network interfaces. To monitor an
+# interface, link vlan_<interface> to this file. E.g.
+#
+#    ln .vlan_inetuse_ vlan_inetuse_eth1-200
+#
+# ...will monitor eth1.200 <=> eth0
+#
+# The interface must also have an accounting iptables rules defined, _before_
+# any action rules. E.g., in /etc/network/vlan-firewall.d/eth1-200-out, you
+# will find:
+#  
+#	--out-interface eth0 -p tcp --sport http 
+#	--out-interface eth0 -p tcp --sport smtp
+#	--out-interface eth0 -p tcp --sport ssh
+#	--out-interface eth0 -p tcp --sport domain
+#	--out-interface eth0 -p tcp
+#	--out-interface eth0 -p icmp
+#	--out-interface eth0 -p udp --sport domain
+#	--out-interface eth0 -p udp
+#       --out-interface eth0
+#
+# ...which will make the out-traffic graphable, separated into the categories
+# mentioned above. (Both in and out-files must have such rules. Look at the
+# existing for examples.
+#
+#%# family=manual
+
+use strict;
+
+my $INTERFACE=`basename $0 | sed 's/^vlan_inetuse_//g' | tr '_' '-'` ;
+#my $INTERFACE="eth1-200";
+chomp $INTERFACE;
+
+my %contraries = ("dpt" => "spt", "spt" => "dpt");
+
+my %in_octets = ();
+my %out_octets = ();
+
+open (IN, "/sbin/iptables -v -x -L $INTERFACE-in |") or 
+	die "Could not run iptables: $!\n";
+while (<IN>)
+{
+	if (/^\s*\d+\s+(\d+)  +([a-z]+)\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+(?:\s+|)(.+|)$/)
+	{
+		my ($octets, $proto, $comment) = ($1, $2, $3);
+		chop $comment;
+		$in_octets{$proto}{$comment} = $octets;
+	}
+}
+close IN;
+die "Error running iptables. Dying\n" if $?;
+
+open (IN, "/sbin/iptables -v -x -L $INTERFACE-out |") or 
+	die "Could not run iptables: $!\n";
+while (<IN>)
+{
+	if (/^\s*\d+\s+(\d+)  +([a-z]+)\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+(?:\s+|)(.+|)$/)
+	{
+		my ($octets, $proto, $comment) = ($1, $2, $3);
+		chop $comment;
+		$out_octets{$proto}{$comment} = $octets;
+		if (!exists $in_octets{$proto}{&contrary($comment)})
+		{
+			$in_octets{$proto}{&contrary($comment)} = "U";
+		}
+	}
+}
+close IN;
+die "Error running iptables. Dying\n" if $?;
+
+if ($ARGV[0] and $ARGV[0] eq "config")
+{
+	my @in_fields;
+	my @out_fields;
+	my @out;
+
+	foreach my $proto (sort keys %in_octets)
+	{
+		my $in_subtotal = 0;
+		my $out_subtotal = 0;
+		my $counter  = 0;
+		next if $proto eq "all";
+		foreach my $comment (sort keys %{$in_octets{$proto}})
+		{
+			my $in  = "in_" . &field($comment);
+			my $out = "out_" . &field(&contrary($comment));
+			my $label = $comment;
+			$label =~ s/:/=/g;
+			if (! $comment)
+			{
+				$in = "in_" . $proto . "_other";
+				$out = "out_" . $proto . "_other";
+				$label = "$proto other";
+			}
+
+			if (@in_fields)
+			{
+				push (@out , "$in.draw STACK\n"); 
+			}
+			else
+			{
+				push (@out , "$in.draw AREA\n"); 
+			}
+			push (@in_fields, "$in");
+			push (@out , "$in.label $label\n"); 
+			push (@out , "$in.cdef $in,8,*\n"); 
+			push (@out , "$in.graph no\n"); 
+			push (@out , "$in.type DERIVE\n"); 
+			push (@out , "$in.min 0\n"); 
+
+			if (@out_fields)
+			{
+				push (@out , "$out.draw STACK\n"); 
+			}
+			else
+			{
+				push (@out , "$out.draw AREA\n"); 
+			}
+			push (@out_fields, "$out");
+			push (@out , "$out.label $label\n"); 
+			push (@out , "$out.cdef $out,8,*\n"); 
+			push (@out , "$out.negative $in\n"); 
+			push (@out , "$out.type DERIVE\n"); 
+			push (@out , "$out.min 0\n"); 
+		}
+	}
+
+	if (@in_fields)
+	{
+		push (@out , "in_other.draw STACK\n"); 
+	}
+	else
+	{
+		push (@out , "in_other.draw AREA\n"); 
+	}
+	push (@in_fields, "in_other");
+	push (@out , "in_other.label other\n"); 
+	push (@out , "in_other.cdef in_other,8,*\n"); 
+	push (@out , "in_other.graph no\n"); 
+	push (@out , "in_other.type DERIVE\n"); 
+	push (@out , "in_other.min 0\n"); 
+
+	if (@out_fields)
+	{
+		push (@out , "out_other.draw STACK\n"); 
+	}
+	else
+	{
+		push (@out , "out_other.draw AREA\n"); 
+	}
+	push (@out_fields, "out_other");
+	push (@out , "out_other.label other\n"); 
+	push (@out , "out_other.cdef out_other,8,*\n"); 
+	push (@out , "out_other.negative in_other\n"); 
+	push (@out , "out_other.type DERIVE\n"); 
+	push (@out , "out_other.min 0\n"); 
+
+
+	print "graph_order ", join (' ', @in_fields, @out_fields), "\n";
+	print "graph_title VLAN $INTERFACE internet usage\n";
+	print "graph_total total\n";
+	print "graph_args --base 1000\n";
+	print "graph_vlabel bits per \${graph_period} in (-) / out (+)\n";
+	print "graph_category network\n";
+	print @out;
+	exit 0;
+}
+
+my $in_total = 0;
+my $out_total = 0;
+
+foreach my $proto (sort keys %in_octets)
+{
+	my $in_subtotal = 0;
+	my $out_subtotal = 0;
+	my $counter  = 0;
+	next if $proto eq "all";
+	foreach my $comment (sort keys %{$in_octets{$proto}})
+	{
+		if (! $comment)
+		{
+			$in_subtotal = $in_octets{$proto}{$comment}
+				unless $in_octets{$proto}{$comment} eq "U";
+			$in_total -= $in_subtotal
+				unless $in_octets{$proto}{$comment} eq "U";
+
+			$out_subtotal = $out_octets{$proto}{&contrary($comment)}
+				unless $out_octets{$proto}{&contrary($comment)} eq "U";
+			$out_total -= $out_subtotal
+				unless $out_octets{$proto}{&contrary($comment)} eq "U";
+
+			next;
+		}
+		$counter++;
+		print "in_", &field($comment), ".value ", $in_octets{$proto}{$comment}, "\n";
+		if (exists $out_octets{$proto}{&contrary($comment)})
+		{
+			print "out_", &field(&contrary($comment)), ".value ", $out_octets{$proto}{&contrary($comment)}, "\n";
+		}
+		else
+		{
+			print "out_", &field(&contrary($comment)), ".value U\n";
+		}
+		$in_subtotal -= $in_octets{$proto}{$comment}
+			unless $in_octets{$proto}{$comment} eq "U";
+		$out_subtotal -= $out_octets{$proto}{&contrary($comment)}
+			unless $out_octets{$proto}{&contrary($comment)} eq "U";
+	}
+	print "in_", $proto, "_other.value $in_subtotal\n";
+	print "out_", $proto, "_other.value $out_subtotal\n";
+}
+
+if (exists $in_octets{"all"}{""})
+{
+	print "in_other.value ", ($in_octets{"all"}{""}+$in_total), "\n";
+}
+if (exists $out_octets{"all"}{""})
+{
+	print "out_other.value ", ($out_octets{"all"}{""}+$out_total), "\n";
+}
+
+sub contrary
+{
+	my $string = shift;
+	foreach my $key (keys %contraries)
+	{
+		last if ($string =~ s/(\b)$key(\b)/$1$contraries{$key}$2/g);
+	}
+	return $string;
+}
+
+sub field
+{
+	my $string = shift;
+	$string =~ s/[: ]/_/g;
+	return $string;
+}
+# vim:syntax=perl

@@ -1,0 +1,209 @@
+#!/usr/bin/perl
+# -*- perl -*-
+#
+# Plugin by Greg Connor
+#
+# 1. Drop or symlink "mhttping" into plugins dir
+#
+# 2. Edit mhttping to tell it where the "data" text file and "results"
+# writable directory are.
+#
+# 3. Create the file "data" with a list of things to do...
+#
+# Format must include name=  url=  proxy=  in that order  (spaces or tabs ok)
+# Use proxy=none for direct
+#
+# name=google_mtv1        url=http://www.google.com
+# proxy=proxy1.mydomain.com:8080
+# name=yahoo_mtv1 url=http://www.yahoo.com proxy=proxy1.mydomain.com:8080
+# name=www_direct url=http://www.mydomain.com     proxy=none
+#
+# 4. Add to crontab to make "mhttping run" execute every 5 minutes, offset
+# from munin time a bit.  This can be any user who can run "httping" and
+# write to the "results" dir.
+#
+# 2-59/5 * * * *  /home/gconnor/mhttping/mhttping run >
+# /home/gconnor/mhttping/log 2>&1
+#
+# 5. Verify that "mhttping run" works, from command line and from cron.  Then
+# verify that "mtthping config" and "mhttping fetch" work.
+#
+# 6. Restart munin-node.
+#
+
+use strict ;
+
+
+############################## STUFF YOU MIGHT NEED TO CHANGE
+
+my $datafile = "$ENV{MUNIN_PLUGSTATE}/mhttping.data" ;
+my $resultsdir = "/home/gconnor/mhttping/results/" ;
+my $timeout = 30 ;
+my $count = 3 ;
+my $options = "-c $count -s -t $timeout" ;
+my $debug = 0 ;
+
+
+
+############################## CHANGE STUFF BELOW HERE AT YOUR OWN RISK
+
+sub do_fetch() ;
+sub do_config() ;
+sub do_run() ;
+
+
+if ( scalar(@ARGV) < 1 ) { do_fetch() ; }
+elsif ( scalar(@ARGV) > 1 ) {
+	print "$0: argument should be fetch, config, or run\n" ;
+	exit 99;
+}
+
+elsif ($ARGV[0] eq "fetch") 	{ &do_fetch() ; }
+elsif ($ARGV[0] eq "")	 	{ &do_fetch() ; }
+elsif ($ARGV[0] eq "config") 	{ &do_config() ; }
+elsif ($ARGV[0] eq "run")	{ &do_run() ; }
+elsif ($ARGV[0] eq "rundebug")	{ $debug=1; &do_run() ; }
+else {
+	print "$0: argument should be fetch, config, or run, not $ARGV[0]\n" ;
+	exit 99;
+}
+
+exit 0 ;
+
+
+
+##############################
+sub do_fetch() {
+
+my ( @results, $file, $mtime, $avg ) ;
+
+-d $resultsdir or `mkdir -p $resultsdir` ;
+opendir (RESULTSDIR, $resultsdir)
+	or die "Unable to open results dir $resultsdir: $!" ;
+@results = readdir (RESULTSDIR)
+	or die "Unable to read  results dir $resultsdir: $!" ;
+close (RESULTSDIR) ;
+
+for $file (@results) {
+	next if ($file =~ /^\./) ;
+	$mtime = (stat("$resultsdir/$file"))[9];
+	if ( $mtime < (time()-300) ) {
+		print ( STDERR "File too old, deleting: $file\n" ) ;
+		unlink("$resultsdir/$file") ;
+		next;
+	}
+	$avg = `cat $resultsdir/$file ` ;
+	chomp $avg ;
+
+	print "$file.value $avg\n" ;
+
+} # end for $dir
+
+
+} # end sub do_fetch()
+
+
+
+##############################
+sub do_config() {
+
+my ( @results, $file, $mtime, $avg ) ;
+
+-d $resultsdir or `mkdir -p $resultsdir` ;
+opendir (RESULTSDIR, $resultsdir)
+	or die "Unable to open results dir $resultsdir: $!" ;
+@results = readdir (RESULTSDIR)
+	or die "Unable to read  results dir $resultsdir: $!" ;
+close (RESULTSDIR) ;
+
+print "graph_title Web ping times\n" ;
+print "graph_vlabel response time (sec)\n" ;
+
+
+for $file (@results) {
+	next if ($file =~ /^\./) ;
+	print "$file.label $file\n" ;
+	print "$file.type GAUGE\n" ;
+	print "$file.warning $timeout\n" ;
+
+} # end for $file
+
+} # end sub do_config()
+
+
+##############################
+sub do_run() {
+
+my ( @results, $line, $site, %url, %proxy, $command, $result, %avgtime ) ;
+
+# Create results directory if it doesn't already exist
+
+-d $resultsdir or `mkdir -p $resultsdir` ;
+-d $resultsdir or die "Unable to create results dir $resultsdir: $!" ;
+
+# Read in the sites list (data file)
+
+@results = ` cat $datafile `
+	or die "Unable to read data file $datafile: $!" ;
+
+
+# Parse data file and store results in $site, $url{$site}, $proxy{$site}
+
+for $line ( @results ) {
+	chomp $line ;
+	next if ( $line =~ /^\s*#/ ) ;   #skip comments
+	next if ( $line =~ /^\s*$/ ) ;   #skip empty lines
+	if ( $line =~ /\s*name=(\S*)\s+url=(\S*)\s+proxy=(\S*)\s*/ ) {
+		$site = $1 ;  $url{$site} = $2 ; $proxy{$site} = $3 ;
+		if ( $proxy{$site} eq "none" || $proxy{$site} eq "" ) {
+			$proxy{$site} = "" ;
+		} else {
+			$proxy{$site} = "-x $proxy{$site}" ;
+		}
+	} else {
+		print ( STDERR "Can't parse this line, ignoring: $line\n" ) ;
+	}
+} # end for $line
+
+
+# Visit each site and grab the average time
+
+for $site ( keys(%url) ) {
+	$command="httping $options $proxy{$site} -g $url{$site} 2>&1 " ;
+	$debug && print "$command\n" ;
+
+	$result= `$command` ;
+	$debug && print "$result\n" ;
+
+	if ( $result =~ m{round-trip min/avg/max = .*/(.*)/.* ms} ) {
+		$avgtime{$site} = $1 / 1000 ;
+		$debug && print "site=$site avgtime=$avgtime{$site}\n" ;
+	} elsif ( $result =~ /timeout connecting to host/ ) {
+		print ( STDERR "Timeout connecting to $site\n" ) ;
+		print ( STDERR "command: $command\n" ) ;
+		print ( STDERR "result:".substr($result,0,60)."\n" ) ;
+		$avgtime{$site} = $timeout + 1 ;
+		$debug && print "site=$site avgtime=$avgtime{$site}\n" ;
+	} elsif ( $result =~ /error connecting to host/ ) {
+		print ( STDERR "Error connecting to $site\n" ) ;
+		print ( STDERR "command: $command\n" ) ;
+		print ( STDERR "result:".substr($result,0,60)."\n" ) ;
+		$avgtime{$site} = $timeout + 1 ;
+		$debug && print "site=$site avgtime=$avgtime{$site}\n" ;
+	} else {
+		print ( STDERR "Could not parse result of command:\n" ) ;
+		print ( STDERR "command: $command\n" ) ;
+		print ( STDERR "result:".substr($result,0,60)."\n" ) ;
+		$avgtime{$site} = "U" ;
+	} # end if $result
+
+	open ( RESULTSFILE, ">$resultsdir/$site" )
+		or die "Unable to write results file $resultsdir/$site: $!" ;
+	print ( RESULTSFILE "$avgtime{$site}\n" ) ;
+	close ( RESULTSFILE ) ;
+
+} # end for $site
+
+} # end sub do_run()
+
+

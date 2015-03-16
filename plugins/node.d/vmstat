@@ -1,0 +1,70 @@
+#!/bin/sh
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+vmstat - Plugin to monitor the number of processes in io-sleep and
+other wait states.
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 NOTES
+
+Uses the command "vmstat"
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+if [ "$1" = "autoconf" ]; then
+	if ( vmstat 1 1 >/dev/null 2>&1 ); then
+		echo yes
+		exit 0
+	else
+		if [ $? -eq 127 ]; then
+			echo "no (could not run \"vmstat\")"
+			exit 0
+		else
+			echo no
+			exit 0
+		fi
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title VMstat'
+	echo 'graph_args --base 1000 -l 0'
+	echo 'graph_vlabel process states'
+	echo 'graph_category processes'
+	echo 'wait.label running'
+	echo 'wait.type GAUGE'
+	echo 'wait.max 500000'
+	echo 'sleep.label I/O sleep'
+	echo 'sleep.type GAUGE'
+	echo 'sleep.max 500000'
+	print_warning wait
+	print_warning sleep
+	print_critical wait
+	print_critical sleep
+	exit 0
+fi
+
+vmstat 1 2 | awk '{wait = $1; sleep = $2} END { print "wait.value " wait "\nsleep.value " sleep }'

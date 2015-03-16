@@ -1,0 +1,168 @@
+#!/usr/bin/perl -w
+
+=head1 NAME
+
+fw_conntrack - Plugin to monitor the number of tracked connections
+through a Linux 2.4/2.6 firewall
+
+=head1 CONFIGURATION
+
+This plugin must run with root privileges
+
+=head2 CONFIGURATION EXAMPLE
+
+/etc/munin/plugin-conf.d/global or other file in that dir must contain:
+
+ [fw_*]
+  user root
+
+=head1 NOTES
+
+ESTABLISHED+FIN_WAIT+TIME_WAIT+SYN_SENT+UDP are the most interesting
+connections.
+
+The total list also includes SYN_RECV, CLOSE, CLOSE_WAIT, LAST_ACK and
+LISTEN, but these were not (often) observed on my firewall.
+
+TOTAL is the total number of tracked connections.
+
+ASSURED and UNREPLIED connections are complimentary subsets of
+ESTABLISHED.
+
+ASSURED is after ACK is seen after SYN_RECV.  Therefore ASSURED is
+plotted but not UNREPLIED.
+
+Note that the plugin depends on the netfilter "conntrack" userspace tool.
+It comes from http://conntrack-tools.netfilter.org/
+
+=head1 AUTHORS
+
+=over
+
+=item 2004.05.05: Initial version by Nicolai Langfeldt, Linpro AS, Oslo, Norway
+
+=item 2004.05.06: Enhanced to count NATed connections after input from Xavier on munin-users list
+
+=item 2011.09.23: Perl version by Alex Tomlins
+
+=back
+
+=head1 LICENSE
+
+GPL
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+use Munin::Plugin;
+
+my $conntrack = '/usr/sbin/conntrack';
+my $nf_conntrack_file = '/proc/net/nf_conntrack';
+my $ip_conntrack_file = '/proc/net/ip_conntrack';
+my @conntrack_max_files = qw(
+        /proc/sys/net/nf_conntrack_max
+        /proc/sys/net/netfilter/nf_conntrack_max
+        /proc/sys/net/ipv4/ip_conntrack_max
+        /proc/sys/net/ipv4/netfilter/ip_conntrack_max
+);
+
+if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" ) {
+    if ( -x $conntrack or -r $nf_conntrack_file or -r $ip_conntrack_file) {
+        print "yes\n";
+    } else {
+        print "no\n";
+    }
+    exit 0;
+}
+
+if ( defined($ARGV[0]) and $ARGV[0] eq "config" ) {
+    print <<EOF;
+graph_title Connections through firewall
+graph_vlabel Connections
+graph_category network
+graph_args -l 0
+established.label Established
+established.type GAUGE
+established.draw AREA
+fin_wait.label FIN_WAIT
+fin_wait.type GAUGE
+fin_wait.draw STACK
+time_wait.label TIME_WAIT
+time_wait.type GAUGE
+time_wait.draw STACK
+syn_sent.label SYN_SENT
+syn_sent.type GAUGE
+syn_sent.draw STACK
+udp.label UDP connections
+udp.type GAUGE
+udp.draw STACK
+assured.label Assured
+assured.type GAUGE
+assured.draw LINE2
+nated.label NATed
+nated.type GAUGE
+nated.draw LINE1
+total.label Total
+total.type GAUGE
+total.graph no
+EOF
+    my $max;
+    foreach (@conntrack_max_files) {
+        if ( -r $_) {
+            chomp($max = `cat $_`);
+            last;
+        }
+    }
+    if ($max) {
+        print "total.warning ", $max * 8 / 10, "\n";
+        print "total.critical ", $max * 9 / 10, "\n";
+    }
+    exit 0;
+}
+
+my $command;
+if ( -x $conntrack) {
+    $command = "$conntrack -L -o extended -f ipv4 2>/dev/null; $conntrack -L -o extended -f ipv6 2>/dev/null";
+} elsif ( -r $nf_conntrack_file ) {
+    $command = "cat $nf_conntrack_file";
+} else {
+    $command = "cat $ip_conntrack_file";
+}
+
+my %state = (
+    'ESTABLISHED' => 0,
+    'FIN_WAIT' => 0,
+    'TIME_WAIT' => 0,
+    'SYN_SENT' => 0,
+    'UDP' => 0,
+    'ASSURED' => 0,
+    'NATTED' => 0,
+    'TOTAL' => 0
+);
+open CMD, "$command|";
+while (<CMD>) {
+    $state{'TOTAL'} ++;
+    $state{'UDP'} ++ if /udp /;
+    $state{'ASSURED'} ++ if /ASSURED/;
+    if (/tcp \s*\d+\s+\d+\s+(\S+)/) {
+         $state{$1} ++;
+    }
+    if (/src=(\S+)\s+dst=(\S+)\s+sport.*src=(\S+)\s+dst=(\S+)/) {
+        $state{'NATTED'} ++ if $1 ne $4 or $2 ne $3;
+    }
+}
+close CMD;
+
+print "established.value $state{'ESTABLISHED'}\n";
+print "fin_wait.value $state{'FIN_WAIT'}\n";
+print "time_wait.value $state{'TIME_WAIT'}\n";
+print "syn_sent.value $state{'SYN_SENT'}\n";
+print "udp.value $state{'UDP'}\n";
+print "assured.value $state{'ASSURED'}\n";
+print "nated.value $state{'NATTED'}\n";
+print "total.value $state{'TOTAL'}\n";

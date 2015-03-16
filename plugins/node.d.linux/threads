@@ -1,0 +1,50 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: ft=sh
+
+: << =cut
+
+=head1 NAME
+
+threads - Plugin to monitor the number of threads on Linux
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Lars Strand
+
+=head1 LICENSE
+
+GNU GPL
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+if [ "$1" = "autoconf" ]; then
+    grep -q '^Threads' /proc/$$/status && echo "yes" || echo "no"
+    exit 0
+fi
+
+if [ "$1" = "config" ]; then
+    echo 'graph_title Number of threads'
+    #echo 'graph_args --base 1000 -l 0 '
+    echo 'graph_vlabel number of threads'
+    echo 'graph_category processes'
+    echo 'graph_info This graph shows the number of threads.'
+    echo 'threads.label threads'
+    echo 'threads.info The current number of threads.'
+    exit 0
+fi
+
+# -s suppresses errors about files that vanished before they could
+# be read.  It isn't entirely portable, but GNU grep should be a given on
+# Linux.  Sadly awk has no such equivalent option or we could skip grep
+# altogether
+grep -s '^Threads' /proc/[0-9]*/status | awk '{ sum += $2; } END { print "threads.value", sum; }'

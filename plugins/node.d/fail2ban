@@ -1,0 +1,147 @@
+#!/bin/bash
+# -*- sh -*-
+: <<=cut
+
+=head1 NAME
+
+fail2ban - Plugin to monitor fail2ban blacklists
+
+=head1 APPLICABLE SYSTEMS
+
+All systems with "bash" and "fail2ban"
+
+=head1 CONFIGURATION
+
+The following is the default configuration
+
+  [fail2ban]
+  env.client /usr/bin/fail2ban-client
+
+The user running this plugin needs read and write access to the
+fail2ban communications socket.  You will need to add this:
+
+  [fail2ban]
+  user root
+
+=head1 INTERPRETATION
+
+This plugin shows a graph with one line per active fail2ban jail, each
+showing the number of blacklisted addresses for that jail.
+
+In addition, a line with the total number of blacklisted addresses is
+displayed.
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 VERSION
+
+  1.0.20090423
+
+=head1 BUGS
+
+Needs bash. Uses bashisms ${parm/?/pat/string} and $'...' to avoid
+running external programs.
+
+=head1 AUTHOR
+
+Stig Sandbeck Mathisen <ssm@fnord.no>
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+
+##############################
+# Configurable variables
+client=${client:-/usr/bin/fail2ban-client}
+
+##############################
+# Functions
+
+# List jails, one on each line
+list_jails() {
+    ${client} status | while read line
+    do
+        case $line in
+            *'Jail list:'*)
+                line="${line##*Jail list*:}"
+                line="${line//[ $'\t']/}"
+                [ -n "$line" ] && printf "${line//,/$'\n'}\n"
+                ;;
+        esac
+    done
+}
+
+# Print the munin values
+values() {
+    list_jails | while read jail
+    do
+        ${client} status ${jail} | while read line
+        do
+            case $line in
+                *'Currently banned'*)
+                    line="${line##*Currently banned:}"
+                    num="${line//[ $'\t']/}"
+                    echo ${jail//[^0-9A-Za-z]/_}.value ${num}
+                    ;;
+            esac
+        done
+    done
+}
+
+# Print the munin config
+config() {
+    echo 'graph_title Hosts blacklisted by fail2ban'
+    echo 'graph_info This graph shows the number of host blacklisted by fail2ban'
+    echo 'graph_category network'
+    echo 'graph_vlabel Number of hosts'
+
+    echo 'graph_args --base 1000 -l 0'
+    echo 'graph_total total'
+
+    list_jails | while read jail
+    do
+        echo ${jail//[^0-9A-Za-z]/_}.label $jail
+    done
+}
+
+# Print autoconfiguration hint
+autoconf() {
+    if [ -e ${client} ]
+    then
+        if [ -x ${client} ]
+        then
+            if ${client} ping >/dev/null
+            then
+                echo "yes"
+            else
+                echo "no (fail2ban-server does not respond to ping)"
+            fi
+        else
+            echo "no (${client} is not executable)"
+        fi
+    else
+        echo "no (${client} not found)"
+    fi
+    exit
+}
+
+##############################
+# Main
+
+case $1 in
+    config)
+        config
+        ;;
+    autoconf)
+        autoconf
+        ;;
+    *)
+        values
+        ;;
+esac

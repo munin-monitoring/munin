@@ -1,0 +1,222 @@
+#!/usr/bin/perl -w
+# -*- perl -*-
+#
+# Plugin to monitor packages that should be installed on systems using
+# apt-get (mostly Debian, but also RedHat)
+#
+
+# Usage: place in /etc/munin/node.d/ (or link it there using ln -s)
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#	update <maxinterval> <probability>
+#		Updates the APT database randomly, guaranteeing there
+#		won't be more than <maxinterval> seconds between each
+#		update.  Otherwise, there is a a 1 in <probability>
+#		chance that an update will occur.
+#
+
+=head1 NAME
+
+apt - Monitor the packages that should be installed on systems using apt-get.
+
+=head1 APPLICABLE SYSTEMS
+
+Mostly Debian and Ubuntu but also RedHat and other distributions which now use apt.
+
+=head1 CONFIGURATION
+
+This plugin needs a cronjob that runs 'apt-get update' every hour or so
+
+ /etc/cron.d/munin-plugin-apt
+ 53 * * * *	root	apt-get update > /dev/null 2>&1
+ 23 08 * * * 	root	apt-get update > /dev/null
+
+Remember to randomize when these cronjobs are run on your servers
+
+=head1 USAGE
+
+Link this plugin in /etc/munin/plugins/ and restart the munin-node.
+
+=head1 NOTES
+
+This plugin does not actually draw graphs; it is rather designed to
+generated warnings.  To get a graph showing the number of available
+packages, please see the "apt_all" plugin.
+
+=head1 MAGIC MARKERS
+
+ #%# family=manual
+ #%# capabilities=autoconf
+
+=head1 BUGS
+
+None known.
+
+=head1 VERSION
+
+$Id$
+
+=head1 AUTHOR
+
+Unknown
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+# Now for the real work...
+
+use strict;
+
+$ENV{'LANG'}="C";
+$ENV{'LC_ALL'}="C";
+$ENV{'MUNIN_PLUGSTATE'} ||= '/var/lib/munin-node/plugin-state/root';
+my $statefile = $ENV{MUNIN_PLUGSTATE} . "/plugin-apt.state";
+
+sub update_state() {
+	if(-l $statefile) {
+		die("$statefile is a symbolic link, refusing to touch it.");
+	}
+	open(STATE, ">$statefile")
+		or die("Couldn't open state file $statefile for writing.");
+	print STATE "Last update: " . localtime() . "\n";
+	close(STATE);
+}
+
+sub update_helpandexit() {
+	print("apt update <maxinterval> <probability> -- update apt databases randomly\n\n",
+	      " maxinterval:\n",
+	      "  Enforce the updating of the apt database if it has\n",
+	      "  been more than (maxinterval many seconds since the last update.\n\n",
+	      " probability:\n",
+	      "  There's a 1 in (probability) chance that the database\n",
+	      "  will be updated.\n");
+	exit(1);
+}
+
+if ($ARGV[0] and $ARGV[0] eq "autoconf")
+{
+	`apt-get -v >/dev/null 2>/dev/null`;
+	if ($? eq "0")
+	{
+		print "yes\n";
+		exit 0;
+	}
+	else
+	{
+		print "no (apt-get not found)\n";
+		exit 0;
+	}
+}
+
+if ($ARGV[0] and $ARGV[0] eq "config")
+{
+
+        print "graph_title Pending packages\n";
+        print "graph_category security\n";
+        print "graph no\n";
+        print "pending.label pending\n";
+        print "pending.warning 0:0\n";
+        print "hold.label hold\n";
+        exit 0;
+}
+
+if ($ARGV[0] and $ARGV[0] eq "update")
+{
+	my $maxinterval = $ARGV[1] ? $ARGV[1] : update_helpandexit;
+	my $probability = $ARGV[2] ? $ARGV[2] : update_helpandexit;
+	
+	# if it's been $probability seconds since the last update, do
+	# it now.
+	if(-e $statefile &&
+	   (stat($statefile))[10] + $maxinterval < time()) {
+		update_state();
+		exec("/usr/bin/apt-get update")
+			or die("Unable to exec() apt-get");
+	}
+
+	# if the state-file doesn't exist, create it.
+	if(!-e $statefile) {
+		update_state();
+	}
+
+	# update the database if the 1 in $probability check hits.
+	if(!int(rand($probability))) {
+		update_state();
+		exec("/usr/bin/apt-get update")
+			or die("Unable to exec() apt-get");
+	}
+	exit(0);
+}
+
+open (APT, "apt-get -u dist-upgrade --print-uris --yes |") or exit 22;
+
+my @pending = ();
+my $hold    = 0;
+my @remove  = ();
+my @install = ();
+
+while (<APT>)
+{
+	if (/^The following packages will be REMOVED:/)
+	{
+		my $where = 0;
+		while (<APT>)
+		{
+			last if (/^\S/);
+			foreach my $package (split /\s+/)
+			{
+				next unless ($package =~ /\S/);
+				push (@remove, "-$package");
+			}
+		}
+	}
+	if (/^The following NEW packages will be installed:/)
+	{
+		my $where = 0;
+		while (<APT>)
+		{
+			last if (/^\S/);
+			foreach my $package (split /\s+/)
+			{
+				next unless ($package =~ /\S/);
+				push (@install, "+$package");
+			}
+		}
+	}
+	if (/^The following packages will be upgraded/)
+	{
+		my $where = 0;
+		while (<APT>)
+		{
+			last if (/^\S/);
+			foreach my $package (split /\s+/)
+			{
+				next unless ($package =~ /\S/);
+				push (@pending, $package);
+			}
+		}
+	}
+	if (/^\d+\supgraded,\s\d+\snewly installed, \d+ to remove and (\d+) not upgraded/) {
+		$hold = $1;
+	}
+}
+
+push (@pending, @install) if @install;
+push (@pending, @remove ) if @remove;
+close APT;
+
+print "pending.value ", scalar (@pending), "\n";
+if (@pending)
+{
+	print "pending.extinfo ", join (' ', @pending), "\n";
+}
+print "hold.value $hold\n";
+exit 0;
+
+# vim:syntax=perl

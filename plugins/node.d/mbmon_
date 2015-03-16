@@ -1,0 +1,106 @@
+#!/bin/sh
+# -*- sh -*-
+#
+# Plugin to monitor Motherboard temparature using mbmon
+#  (http://www.nt.phys.kyushu-u.ac.jp/shimizu/download/download.html)
+
+# Copyright (c) 2005 Arne Schwabe
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms are freely
+# permitted provided that the above copyright notice and this
+# paragraph and the following disclaimer are duplicated in all
+# such forms.
+#
+# This software is provided "AS IS" and without any express or
+# implied warranties, including, without limitation, the implied
+# warranties of merchantability and fitness for a particular
+# purpose.
+#
+
+#%# family=contrib
+#%# capabilities=autoconf suggest
+
+what=`basename $0 | sed 's/^mbmon_//g'`
+
+if [ "$1" = "suggest" ]; then
+	printf "TEMP\nFAN\nVoltage\n"
+	exit 0
+fi
+
+if [ "$1" = "autoconf" ]; then
+	if $mbmon -c 1 > /dev/null 2>/dev/null ; then
+		printf "yes\n"
+		exit 0
+	else
+		if [ $?=127 ] ;then
+			echo "no (executable not found)"
+		else
+			echo "no (mbmon could not read sensor values)"
+		fi
+		exit 0
+	fi
+	exit 0
+fi
+
+
+
+if [ "$1" = "config" ]; then
+case $what in
+	TEMP)
+		echo 'graph_title Motherboard Temperature'
+		echo 'graph_order TEMP0 TEMP2 TEMP1'
+		echo 'graph_category sensors'
+		echo 'graph_vlabel C'
+		echo 'graph_scale no'
+		echo 'TEMP0.label Temperature 1'
+		echo 'TEMP1.label Temperature 2'
+		echo 'TEMP2.label Temperature 3'
+		exit 0
+		;;
+	Voltage)
+		echo 'graph_title Motherboard Voltages'
+		echo 'graph_category sensors'
+		echo 'graph_order VC0 VC1 V33 V50P V12P V12N V50N'
+		echo 'graph_vlabel V'
+		echo 'graph_scale no'
+		echo 'VC0.label VC0'
+		echo 'VC1.label VC1'
+		echo 'V33.label +3,3V'
+		echo 'V50P.label +5V'
+		echo 'V12P.label +12V'
+		echo 'V12N.label -12V'
+		echo 'V50N.label -5V'
+		exit 0
+		;;
+	FAN)
+		echo 'graph_title Motherboard Fans'
+		echo 'graph_category sensors' 
+		echo 'graph_order FAN0 FAN1 FAN2'
+		echo 'graph_vlabel rpm'
+		echo 'FAN0.label Fan 1'
+		echo 'FAN1.label Fan 2'
+		echo 'FAN2.label Fan 3'
+		exit 0
+		;;
+esac
+fi
+
+case $what in
+	TEMP)
+		$mbmon -c 1 -r | sed -e "s/ *: */.value /"  |grep TEMP
+		exit 0
+		;;
+	Voltage)
+		$mbmon -c 1 -r | sed -e "s/ *: */.value /"  |grep V
+		exit 0
+		;;
+	FAN)
+		$mbmon -c 1 -r | sed -e "s/ *: */.value /"  |grep FAN
+		exit 0
+		;;
+esac
+
+
+
+

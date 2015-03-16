@@ -1,0 +1,188 @@
+#!/usr/bin/perl
+# -*- cperl -*-
+
+=head1 NAME
+
+df - Munin plugin to monitor disk or inode usage
+
+=head1 APPLICABLE SYSTEMS
+
+Every Linux system with df installed.
+
+=head1 CONFIGURATION
+
+The plugin excludes per default the following special, read-only or
+dynamically allocating file systems from graphing:
+
+  none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root
+
+Additionally, when graphing inode usage, C<nilfs2> will be ignored as
+well.
+
+To change this set the environment variable "exclude" with a list of
+space separated fs types.  The environment variables "warning" and
+"critical" sets the percentage from which Munin starts to warn about
+the disk usage.
+
+This configuration snipplet is an example with the defaults:
+
+  [df]
+    env.exclude none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root devtmpfs
+    env.warning 92
+    env.critical 98
+
+Put it in a file in /etc/munin/plugin-conf.d/ and restart the munin-node.
+
+You may specify filesystem specific warning and critical levels:
+
+    env._dev_sda2_warning 98
+    env._dev_sda2_critical 99
+
+Devices can be explicitly included or excluded based on their mountpoint or
+device name using the include_re and exclude_re environment variables.  These
+environment variables are parsed as whitespace separated regular expressions.
+For example, if you wish to ignore the filesystem on /dev/sda2 and all
+filesystems mounted under /var except /var/tmp, these rules would achieve this:
+
+    env.include_re ^/var/tmp$
+    env.exclude_re /dev/sda2 ^/var/
+
+Please note that these expressions are tried against both mountpoints and
+device names, therefore broad matches could potentially filter out desired
+devices.  Anchoring is also useful for avoiding false positives (as seen in the
+example), but not strictly necessary.  Testing with munin-run is always a good
+idea.
+
+Also note that a mountpoint that is excluded by filesystem type but included by
+RE will not be included.
+
+By default, only local filesystems will be included. In case you want to
+monitor network filesystems too, you can set the commandline options for "df"
+manually in the configuration file. The default options are "-P -l".  For
+example, if you want to monitor a mounted GlusterFS, you can omit the "-l"
+parameter in the config file:
+
+    env.dfopts -P
+
+Please note that this will also add other shares you've mounted on your
+computer (Samba/CIFS, etc). If you don't want them, you can exclude them, using
+the "env.include/env.exclude" settings mentioned above.
+
+
+=head1 USAGE
+
+Link this plugin to /etc/munin/plugins/ and restart the
+munin-node. If you want to monitor inode usage instead of disk usage,
+just link the plugin as C<df_inode>.
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 BUGS
+
+Uses device names instead of mount points to identify mounted
+filesystems.
+
+=head1 AUTHOR
+
+Copyright (C) 2013 Diego Elio Pettenò
+Based on the original plugin by Ingvar Hagelund
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+use strict;
+use warnings;
+use Munin::Plugin;
+
+# Reset locale to C
+$ENV{LC_ALL} = 'C';
+
+# For these devices use the mount point, the device is useless
+my %usemntpt = ( tmpfs => 1, none => 1, udev => 1, simfs => 1 );
+
+my @exclude = qw(none unknown rootfs iso9660 squashfs udf romfs ramfs debugfs cgroup_root devtmpfs);
+my $dfopts  = $ENV{'dfopts'} || "-P -l ";
+my $title = "Disk usage";
+
+if ( $Munin::Plugin::me eq "df_inode" ) {
+  $title = "Inode usage";
+  $dfopts .= "-i ";
+  push(@exclude, 'nilfs2', 'reiserfs');
+}
+
+@exclude = split(/\s+/, $ENV{exclude}) if $ENV{exclude};
+
+$dfopts .= join(' ', map { "-x" . $_ } @exclude);
+
+my $mode = ($ARGV[0] or "print");
+
+# Compile REs from env
+my (@include_re, @exclude_re);
+@include_re = map(qr/$_/, split(/\s+/, $ENV{include_re})) if ($ENV{include_re});
+@exclude_re = map(qr/$_/, split(/\s+/, $ENV{exclude_re})) if ($ENV{exclude_re});
+
+sub split_and_skip {
+  my ($line) = @_;
+
+  # Parse the output
+  chomp($_);
+  my ($name, undef, undef, undef, $capacity, $mountpt) = split(/\s+/, $_, 6);
+
+  return undef if $name eq 'Filesystem';
+
+  foreach my $re (@include_re) {
+    return undef if ($name =~ $re or $mountpt =~ $re);
+  }
+
+  foreach my $re (@exclude_re) {
+    return undef if ($name =~ $re or $mountpt =~ $re);
+  }
+
+  $name = $mountpt if $usemntpt{$name};
+
+  $capacity =~ s/%$//;
+
+  return [clean_fieldname($name), $mountpt, $capacity];
+}
+
+my @df_output = grep(defined($_), map(split_and_skip, split("\n", `df $dfopts 2>/dev/null`)));
+
+if ($mode eq 'autoconf' ) {
+  if ( scalar(@df_output) ) {
+    print "no (no device to monitor)\n";
+  } else {
+    print "yes\n";
+  }
+  exit 0;
+} elsif ($mode eq 'config' ) {
+  print <<END;
+graph_title $title in percent
+graph_args --upper-limit 100 -l 0
+graph_vlabel %
+graph_scale no
+graph_category disk
+END
+
+  foreach my $df (@df_output) {
+    my ($name, $mountpt) = @{$df};
+    print $name, ".label ", $mountpt, "\n";
+    print_thresholds($name, undef, undef, 92, 98);
+  }
+
+  unless ( ($ENV{MUNIN_CAP_DIRTYCONFIG} || 0) == 1 ) {
+    exit 0;
+  }
+}
+
+foreach my $df (@df_output) {
+  my ($name, undef, $percent) = @{$df};
+  print $name, ".value ", $percent, "\n";
+}
+
+# vim: ft=perl : sw=2 : ts=2 : et

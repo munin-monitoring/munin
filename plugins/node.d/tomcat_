@@ -1,0 +1,312 @@
+#!/usr/bin/ruby
+@dummyvar = <<-'=cut'
+
+=head1 NAME
+
+tomcat_ - Munin plugin to monitor tomcat servers.
+
+=head1 APPLICABLE SYSTEMS
+
+Tomcat 5.0 or higher with the default tomcat manager webapp.
+
+=head1 USAGE
+
+Needs access to http://<user>:<password>@localhost:8080/manager/status?XML=true (or modify the address for another host). 
+
+A munin-user in $CATALINA_HOME/conf/tomcat-users.xml should be set up for this to work.
+
+Tip: To see if it's already set up correctly, just run this plugin with the parameter "autoconf". If you get a "yes", everything should work like a charm already.
+
+tomcat-users.xml example:
+  <user username="munin" password="<set this>"
+        roles="standard,manager"/>
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+=over 4
+
+=item host
+
+Destination host
+
+=item port
+
+Connector post number (legacy parameter, use connector instead)
+
+=item timeout
+
+Connection timeout
+
+=item request
+
+Override default status-url
+
+=item user
+
+Manager username 
+
+=item password
+
+Manager password 
+
+=item connector
+
+Connector to query, defaults to "http-".$port
+
+=back
+
+=head2 CONFIGURATION EXAMPLE
+
+  [tomcat_*]
+  env.host 127.0.0.1
+  env.port 8080
+  env.request /manager/status?XML=true
+  env.user munin
+  env.password pass
+  env.timeout 30
+  env.connector jk-8009
+
+=head1 AUTHORS
+
+  Based on plugins by Rune Nordboe Skillingstad <runesk@linpro.no>
+  Rewrite and expansion in ruby: laxis <laxis@magex.hu> 2008.05
+  Converted to rexml and integrated as default tomcat plugin
+  by Erik Inge Bolsoe <knan@redpill-linpro.com> 2009.09
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
+
+require 'net/http'
+require 'rexml/document'
+
+@host = ENV.member?('host') ? ENV['host']: "127.0.0.1"
+@port = ENV.member?('port') ? ENV['port']: 8080
+@request = ENV.member?('request') ? ENV['request']: "/manager/status?XML=true"
+@user = ENV.member?('user') ? ENV['user']: "munin"
+@password = ENV.member?('password') ? ENV['password']: "munin"
+@timeout = ENV.member?('timeout') ? ENV['timeout']: 30
+@connector = ENV.member?('connector') ? ENV['connector']: "http-#{@port}";
+
+# hash
+w = {
+    "jvm" =>  { "max" => "U",
+                "free" => "U",
+                "used" => "U" },
+    "threads" =>  { "busy" => "U",
+                    "idle" => "U",
+                    "max" => "U" },
+    "maxtime" => { "maxtime" => "U" },
+    "avgtime" => { "avgtime" => "U" },
+    "access" => { "accesses" => "U",
+                  "errors" => "U" },
+    "volume" => { "volume" => "U",
+                  "volumein" => "U" }
+    }
+
+# http request
+def getstat()
+    Net::HTTP.start(@host, @port) do |http|
+	http.open_timeout = @timeout
+	req = Net::HTTP::Get.new(@request)
+	req.basic_auth @user, @password
+	response = http.request(req)
+	response.value()
+    return response.body
+    end rescue begin
+	return false
+    end
+end
+
+def autoconf()
+    begin
+        if getstat()
+            puts "yes"
+            return 0
+        else
+            puts "no"
+            return 1
+        end
+    rescue
+        puts "no (#{$!})"
+        return 1
+    end
+end
+
+if ARGV[0] == "autoconf"
+    autoconf()
+    exit 0
+end
+
+if ARGV[0] == "suggest"
+    exit 1 if !getstat()
+    w.each { |k, v|
+      print "#{k}\n"
+    }
+    exit
+end
+
+# open stderr
+e = IO.new(2, "w")
+
+mode = $0.gsub /.*\/tomcat_/, ""
+if mode =~ /tomcat/ then
+    e.puts "Invalid mode"
+    exit 1
+end
+
+# munin config request
+if ARGV[0] == "config"
+    case mode
+        when "jvm"
+            puts "graph_title Tomcat JVM memory"
+            puts "graph_category tomcat"
+            puts "graph_args --base 1024 -l 0"
+            puts "graph_vlabel Bytes"
+	    puts "graph_order free used max"
+            puts "free.label free bytes";
+            puts "free.draw AREA";
+            puts "used.label used bytes";
+            puts "used.draw STACK";
+            puts "max.label maximum bytes";
+            puts "max.draw LINE2";
+        when "access"
+            puts "graph_title Tomcat accesses"
+            puts "graph_category tomcat"
+            puts "graph_args --base 1000"
+	    puts "graph_order accesses errors"
+            puts "graph_vlabel accesses / ${graph_period}"
+	    w[mode].each { |k, v|
+                puts "#{k}.label #{k}"
+                puts "#{k}.type DERIVE"
+                puts "#{k}.min 0"
+                puts "#{k}.draw AREA" if k == "accesses"
+                puts "#{k}.draw LINE2" if k != "accesses"
+            }
+        when "volume"
+            puts "graph_title Tomcat volume"
+            puts "graph_category tomcat"
+            puts "graph_args --base 1000"
+	    puts "graph_vlabel bytes in (-) / out (+) per ${graph_period}"
+            puts "graph_order volumein volume"
+            puts "volume.label bytes"
+            puts "volume.type DERIVE"
+            puts "volume.min 0"
+            puts "volume.max 1000000000"
+            puts "volume.negative volumein"
+            puts "volumein.label bytes"
+            puts "volumein.type DERIVE"
+            puts "volumein.min 0"
+            puts "volumein.max 1000000000"
+            puts "volumein.graph no"
+        when "maxtime"
+            puts "graph_title Tomcat max processing time for a request"
+            puts "graph_category tomcat"
+            puts "graph_args --base 1000 -l 0"
+            puts "graph_vlabel ms"
+	    w[mode].each { |k, v|
+                puts "#{k}.label #{k}"
+                puts "#{k}.min 0"
+                puts "#{k}.draw LINE2"
+            }
+        when "avgtime"
+            puts "graph_title Tomcat average processing time / request"
+            puts "graph_category tomcat"
+            puts "graph_args --base 1000 -l 0"
+            puts "graph_vlabel ms / request (avg)"
+	    w[mode].each { |k, v|
+                puts "#{k}.label #{k}"
+                puts "#{k}.min 0"
+                puts "#{k}.draw LINE2"
+            }
+        when "threads"
+            puts "graph_title Tomcat threads"
+            puts "graph_category tomcat"
+            puts "graph_args --base 1000 -l 0"
+            puts "graph_vlabel threads"
+            puts "graph_order busy idle max"
+            puts "busy.label busy threads"
+            puts "busy.draw AREA"
+            puts "idle.label idle threads"
+            puts "idle.draw STACK"
+            puts "max.label max threads"
+            puts "max.draw LINE2"
+    end
+    exit 0
+end
+
+
+# XML parsolasa
+begin
+    doc = REXML::Document.new(getstat())
+end rescue begin
+    e.puts "Parse error"
+    exit 1
+end
+
+# root element kivalasztasa
+root = doc.root
+if root.name != "status"
+    e.puts "Invalid XML"
+    exit 1
+end
+
+# copy jvm memory datas to hash
+node = REXML::XPath.first(doc, '//status/jvm/memory')
+w["jvm"]["max"] = node.attributes["max"]
+w["jvm"]["used"] = node.attributes["total"].to_i - node.attributes["free"].to_i
+w["jvm"]["free"] = node.attributes["free"]
+
+# copy connector datas to hash
+node = REXML::XPath.first(doc, "//status/connector[@name='" + @connector + "']/threadInfo")
+if node
+	w["threads"]["max"] = node.attributes["maxThreads"]
+	w["threads"]["idle"] = node.attributes["currentThreadCount"].to_i - node.attributes["currentThreadsBusy"].to_i
+	w["threads"]["busy"] = node.attributes["currentThreadsBusy"]
+end
+node = REXML::XPath.first(doc, "//status/connector[@name='" + @connector + "']/requestInfo")
+if node
+	w["maxtime"]["maxtime"] = node.attributes["maxTime"]
+	w["avgtime"]["avgtime"] = sprintf "%.2f", (node.attributes["processingTime"].to_f / node.attributes["requestCount"].to_f / 1000)
+	w["access"]["accesses"] = node.attributes["requestCount"]
+	w["access"]["errors"] = node.attributes["errorCount"]
+	w["volume"]["volumein"] = node.attributes["bytesReceived"]
+	w["volume"]["volume"] = node.attributes["bytesSent"]
+end
+
+# print result
+w[mode].each do |k, v|
+    printf "#{k}.value %s\n", v
+end
+
+# XML Output:
+#<?xml version="1.0" encoding="utf-8"?>
+#<?xml-stylesheet type="text/xsl" href="/manager/xform.xsl" ?>
+#<status>
+#    <jvm>
+#	<memory free='110552760' total='257425408' max='1034027008'/>
+#    </jvm>
+#    <connector name='http-8080'>
+#	<threadInfo  maxThreads="40" currentThreadCount="1" currentThreadsBusy="1" />
+#	<requestInfo  maxTime="14" processingTime="2619" requestCount="1911" errorCount="5" bytesReceived="0" bytesSent="3294996" />
+#	<workers>
+#	    <worker stage="S" requestProcessingTime="0" requestBytesSent="0" requestBytesReceived="0" remoteAddr="127.0.0.1" virtualHost="localhost" method="GET" currentUri="/manager/status" currentQueryString="XML=true" protocol="HTTP/1.0" />
+#	</workers>
+#    </connector>
+#    <connector name='jk-8009'>
+#	<threadInfo maxThreads="200" currentThreadCount="8" currentThreadsBusy="6" />
+#	<requestInfo maxTime="36961" processingTime="273750" requestCount="5485" errorCount="43" bytesReceived="0" bytesSent="57138822" />
+#	<workers>
+#	    <worker stage="K" requestProcessingTime="22683456" requestBytesSent="0" requestBytesReceived="0" remoteAddr="86.101.240.226" virtualHost="?" method="&#63;" currentUri="&#63;" currentQueryString="&#63;" protocol="&#63;" />
+#	    <worker stage="K" requestProcessingTime="35807" requestBytesSent="0" requestBytesReceived="0" remoteAddr="217.20.130.27" virtualHost="?" method="&#63;" currentUri="&#63;" currentQueryString="&#63;" protocol="&#63;" />
+#	    <worker stage="K" requestProcessingTime="32247045" requestBytesSent="0" requestBytesReceived="0" remoteAddr="89.147.76.234" virtualHost="?" method="&#63;" currentUri="&#63;" currentQueryString="&#63;" protocol="&#63;" />
+#	    <worker stage="K" requestProcessingTime="95860" requestBytesSent="0" requestBytesReceived="0" remoteAddr="217.20.130.27" virtualHost="?" method="&#63;" currentUri="&#63;" currentQueryString="&#63;" protocol="&#63;" />
+#	    <worker stage="K" requestProcessingTime="155940" requestBytesSent="0" requestBytesReceived="0" remoteAddr="217.20.130.27" virtualHost="?" method="&#63;" currentUri="&#63;" currentQueryString="&#63;" protocol="&#63;" />
+#	</workers>
+#    </connector>
+#</status>

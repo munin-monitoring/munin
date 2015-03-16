@@ -1,0 +1,116 @@
+#!/bin/sh
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+apc_envunit_ - plugin to monitor temperature and humidity
+
+=head1 APPLICABLE SYSTEMS
+
+Hosts which can use SNMP to connect to an APC environmental unit
+
+=head1 CONFIGURATION
+
+The following environment variables are available
+
+ units     - DNS names of environmental units
+ oid       - OID Prefix for humidity probes
+ community - SNMP community to use to access the APC unit
+
+The following shows a typical configuration:
+
+ [apc_envunit_*]
+   env.units foo.example.org bar.example.org
+   env.community 123secret
+
+=head1 INTERPRETATION
+
+Shows a graph with either temperature or humidity for a number of
+environmental units.
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=head1 BUGS
+
+None known. Should be snmp__apc_.
+
+=head1 AUTHOR
+
+Xavier Redon
+
+=head1 LICENSE
+
+Unknown
+
+=cut
+
+type=`echo $0 | sed -e 's/.*_\(.*\)/\1/'`
+if [ "${type}" = temperature ] ; then
+  TOID="enterprises.318.1.1.10.3.13.1.1.3"
+  NAME="temperature"
+  LABEL="Celsius Degrees"
+  LETTER="t"
+else
+  if [ "${type}" = humidity ] ; then
+   TOID="enterprises.318.1.1.10.3.13.1.1.6"
+   NAME="humidity"
+   LABEL="Humidity %"
+   LETTER="h"
+  fi
+fi
+
+UNITS=""
+COMMUNITY="public"
+SNMPGET=`which snmpget 2>/dev/null`
+
+if [ "$units" ]; then UNITS=$units ; fi
+if [ "$oid" ]; then TOID=$oid ; fi
+if [ "$community" ]; then COMMUNITY=$community ; fi
+
+SNMPOPTS="-Ov -Oq -v1 -c ${COMMUNITY}"
+
+
+
+if [ "$1" = "autoconf" ]; then
+  if [ -z "${UNITS}" ] ; then echo "no (no units to monitor)" ; exit 0 ; fi
+  if [ -z "$SNMPGET" -o ! -x "$SNMPGET" ] ; then 
+      echo "no (no snmpget executable)"
+      exit 0
+  fi
+
+  for m in ${UNITS} ; do
+    if ping -c1 -q $m >/dev/null 2>&1 ; then continue ; fi
+    echo "no (can't reach $m)" ; exit 0
+  done
+  echo "yes" ; exit 0
+fi
+
+if [ "$1" = "suggest" ]; then
+    echo temperature
+    echo humidity
+    exit 0
+fi
+
+if [ "$1" = "config" ]; then
+  echo "graph_title Environmental units (${NAME} probes)"
+  echo "graph_vlabel ${LABEL}"
+  for m in ${UNITS} ; do
+    mm=`echo ${m} | tr '-' '_'`
+    echo "${mm}_${LETTER}1.label $m ${NAME} #1"
+    echo "${mm}_${LETTER}2.label $m ${NAME} #2"
+  done
+  exit 0
+fi
+
+for m in ${UNITS} ; do
+  v1=`${SNMPGET} ${SNMPOPTS} $m ${TOID}.1`
+  v2=`${SNMPGET} ${SNMPOPTS} $m ${TOID}.2`
+  mm=`echo ${m} | tr '-' '_'`
+  echo "${mm}_${LETTER}1.value $v1"
+  echo "${mm}_${LETTER}2.value $v2"
+done

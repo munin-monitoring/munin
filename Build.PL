@@ -1,11 +1,89 @@
 #!/usr/bin/env perl
 
+=head1 NAME
+
+Build - Build, test and install Munin
+
+=head1 SYNOPSIS
+
+  perl Build.PL [options]
+  ./Build test
+  ./Build install
+
+=head1 DESCRIPTION
+
+Installs Munin and its components, using Module::Build. Some files are generated using templates.
+
+=head1 OPTIONS
+
+Note: options are "sticky". Options set at C<perl Build.PL> are re-used for calls to C<./Build>
+later.
+
+=over
+
+=item --debug
+
+Enables debugging
+
+=item --installpaths, --install_base, --install_path
+
+Configures how munin is installed.
+
+=back
+
+=head1 EXAMPLES
+
+=over
+
+=item Set base install location
+
+Handled by Module::Build standard.  Overall options
+
+* C<--installpaths site>, installs under /usr/local (this is the default)
+
+* C<--installpaths vendor>, installs under /usr (used for packaging)
+
+* C<--installbase /opt/munin>, installs under the named directory. You are responsible for making
+  sure the perl library path is set.
+
+=item Override etcdir
+
+Override install path with C<--install_path etc=/path/to/etc>
+
+=item Override vardir
+
+Override install path with C<--install_path var=/path/to/var>
+
+=item Override sharedir
+
+Override install path with C<--install_path share=/path/to/share>
+
+Note: This affects plugins. Available plugins are installed to C</path/to/share/plugins/>, and
+C<>munin-node-configure> will look in this directory.
+
+=back
+
+=head1 PLUGINS
+
+Plugins are installed from:
+
+* plugins/node.d/ - Generic plugins for common applications, which should work on all platforms.
+
+* plugins/node.d.$^O/ - Specific plugins for the platform where Munin is built. (for the value of
+  $^O for your platform, see http://perldoc.perl.org/perlport.html)
+
+=cut
+
 use strict;
 use warnings;
 
 use Module::Build;
+use File::Find;
+use Config;
 
 my ( $version, $release_status );
+my $plugins_files = {};
+my $web_files     = {};
 
 $version = qx{./getversion};
 chomp $version;
@@ -49,76 +127,18 @@ my $build = Module::Build->new(
         'lib/Munin/Common/Defaults.pm.PL' => 'lib/Munin/Common/Defaults.pm',
         'master/munin.conf.PL'            => 'master/munin.conf',
         'node/munin-node.conf.PL'         => 'node/munin-node.conf',
+        'script/munin-cron.PL'            => 'script/munin-cron',
     },
     etc_files => {
-        'master/munin.conf'             => 'conf/munin.conf',
-        'node/munin-node.conf'          => 'conf/munin-node.conf',
-        'master/static/style-new.css'   => 'conf/static/style-new.css',
-        'master/static/jquery-1.8.3.js' => 'conf/static/jquery-1.8.3.js',
-        'master/static/logo.png'        => 'conf/static/logo.png',
-        'master/static/logo-h-neg.png'  => 'conf/static/logo-h-neg.png',
-        'master/static/querystring.js'  => 'conf/static/querystring.js',
-        'master/static/style.css'       => 'conf/static/style.css',
-        'master/static/style-2.1.css'   => 'conf/static/style-2.1.css',
-        'master/static/jquery.lazyload-1.9.3.js' =>
-            'conf/static/jquery.lazyload-1.9.3.js',
-        'master/static/definitions.html' => 'conf/static/definitions.html',
-        'master/static/zoom.js'          => 'conf/static/zoom.js',
-        'master/static/favicon.ico'      => 'conf/static/favicon.ico',
-        'master/static/logo-h.png'       => 'conf/static/logo-h.png',
-        'master/static/formatdate.js'    => 'conf/static/formatdate.js',
-        'master/static/placeholder.gif'  => 'conf/static/placeholder.gif',
-        'master/static/style-1.2.css'    => 'conf/static/style-1.2.css',
-        'master/static/dynazoom.html'    => 'conf/static/dynazoom.html',
-        'master/static/style.lazyload.css' =>
-            'conf/static/style.lazyload.css',
-        'master/www/partial/path.tmpl' => 'conf/templates/partial/path.tmpl',
-        'master/www/partial/logo_navigation.tmpl' =>
-            'conf/templates/partial/logo_navigation.tmpl',
-        'master/www/partial/footer.tmpl' =>
-            'conf/templates/partial/footer.tmpl',
-        'master/www/partial/logo_path.tmpl' =>
-            'conf/templates/partial/logo_path.tmpl',
-        'master/www/partial/navigation.tmpl' =>
-            'conf/templates/partial/navigation.tmpl',
-        'master/www/partial/head.tmpl' => 'conf/templates/partial/head.tmpl',
-        'master/www/partial/bottom_navigation.tmpl' =>
-            'conf/templates/partial/bottom_navigation.tmpl',
-        'master/www/partial/logo_navigation_comparison.tmpl' =>
-            'conf/templates/partial/logo_navigation_comparison.tmpl',
-        'master/www/partial/generated_by.tmpl' =>
-            'conf/templates/partial/generated_by.tmpl',
-        'master/www/partial/logo_navigation_problem.tmpl' =>
-            'conf/templates/partial/logo_navigation_problem.tmpl',
-        'master/www/munin-domainview.tmpl' =>
-            'conf/templates/munin-domainview.tmpl',
-        'master/www/munin-problemview.tmpl' =>
-            'conf/templates/munin-problemview.tmpl',
-        'master/www/munin-serviceview.tmpl' =>
-            'conf/templates/munin-serviceview.tmpl',
-        'master/www/munin-categoryview.tmpl' =>
-            'conf/templates/munin-categoryview.tmpl',
-        'master/www/munin-comparison-day.tmpl' =>
-            'conf/templates/munin-comparison-day.tmpl',
-        'master/www/munin-comparison-week.tmpl' =>
-            'conf/templates/munin-comparison-week.tmpl',
-        'master/www/munin-comparison-month.tmpl' =>
-            'conf/templates/munin-comparison-month.tmpl',
-        'master/www/munin-dynazoom.tmpl' =>
-            'conf/templates/munin-dynazoom.tmpl',
-        'master/www/munin-comparison-year.tmpl' =>
-            'conf/templates/munin-comparison-year.tmpl',
-        'master/www/munin-overview.tmpl' =>
-            'conf/templates/munin-overview.tmpl',
-        'master/www/munin-nodeview.tmpl' =>
-            'conf/templates/munin-nodeview.tmpl',
-        'master/www/munin-htaccess.in' => 'conf/templates/munin-htaccess.in',
+        'master/munin.conf'    => 'etc/munin.conf',
+        'node/munin-node.conf' => 'etc/munin-node.conf',
     },
-    script_files => [
+    plugins_files => $plugins_files,
+    web_files     => $web_files,
+    script_files  => [
         qw(
             script/munin-async
             script/munin-asyncd
-            script/munin-check
             script/munin-cron
             script/munin-doc
             script/munin-datafile2storable
@@ -135,16 +155,27 @@ my $build = Module::Build->new(
             )
     ],
     test_requires => {
-        'IO::Scalar'        => '0',
-        'Test::Differences' => '0.62',
-        'Test::MockModule'  => '0',
-        'Test::MockObject'  => '0',
-        'Test::Deep'        => '0',
-        'Test::LongString'  => '0',
-        'File::Slurp'       => '9999.19',
+        'IO::Scalar'          => '0',
+        'Test::Differences'   => '0.62',
+        'Test::MockModule'    => '0',
+        'Test::MockObject'    => '0',
+        'Test::Deep'          => '0',
+        'Test::LongString'    => '0',
+        'File::Slurp'         => '9999.19',
+        'File::ReadBackwards' => '0',
+        'XML::Parser'         => '0',
+        'DBD::Pg'             => '0',
+        'Net::DNS'            => '0',
+        'Net::IP'             => '0',
+        'XML::LibXML'         => '0',
     },
 
 );
+
+##############################
+## Build element "etc"
+#
+# Contains generated configuration files
 
 $build->add_build_element('etc');
 
@@ -160,7 +191,10 @@ if ( not $build->install_path('etc') ) {
     }
 }
 
-$build->add_build_element('share');
+##############################
+## Path "share"
+#
+# Used as root for other parts of munin, like "plugins"
 
 if ( not $build->install_path('share') ) {
     if ( $build->install_base ) {
@@ -174,6 +208,9 @@ if ( not $build->install_path('share') ) {
     }
 }
 
+##############################
+## Path "var"
+
 if ( not $build->install_path('var') ) {
     if ( $build->install_base ) {
         $build->install_path( 'var' => $build->install_base . '/var' );
@@ -184,18 +221,79 @@ if ( not $build->install_path('var') ) {
 }
 
 ##############################
+## Build element "plugins"
+#
+# Contains munin plugins.  Installed under the "share" path by default.
+
+$build->add_build_element('plugins');
+
+if ( not $build->install_path('plugins') ) {
+    $build->install_path(
+        'plugins' => $build->install_path('share') . '/plugins' );
+}
+
+File::Find::find( { wanted => \&_find_plugins_wanted },
+    'plugins/node.d', "plugins/node.d.$^O" );
+
+sub _find_plugins_wanted {
+
+    # Assume all plugins are located on the same directory level
+    my $dirlevel = scalar( split( '/', $File::Find::dir ) );
+    return unless $dirlevel == 2;
+
+    if ( ( lstat($_) ) && -f _ && -x _ ) {
+        my $src = $File::Find::name;
+        my $dst = join( '/', 'plugins', $_ );
+
+        $plugins_files->{$src} = $dst;
+    }
+}
+
+##############################
+## Build element "web"
+#
+# Contains static files and templates. Installed under the "etc" path by default.
+
+$build->add_build_element('web');
+
+if ( not $build->install_path('web') ) {
+    $build->install_path( 'web' => $build->install_path('etc') );
+}
+
+File::Find::find( { wanted => \&_find_web_templates_wanted }, 'master/www' );
+File::Find::find( { wanted => \&_find_web_static_wanted }, 'master/static' );
+
+sub _find_web_templates_wanted {
+    if ( lstat && -f _ && /\.tmpl$/ ) {
+        my $src = $File::Find::name;
+        my $dst = join( '/', 'web/templates', $_ );
+        $web_files->{$src} = $dst;
+    }
+}
+
+sub _find_web_static_wanted {
+    if ( lstat && -f _ ) {
+        my $src = $File::Find::name;
+        my $dst = join( '/', 'web/static', $_ );
+        $web_files->{$src} = $dst;
+    }
+}
+
+##############################
 # Add generated variables to be used from .PL files
 
 # sharedir (aka libdir)
 $build->install_path( 'MUNIN_SHAREDIR' => $build->install_path('share') );
 
-# conf
+# etc
 $build->install_path( 'MUNIN_CONFDIR' => $build->install_path('etc') );
 
 # runstate
 
 # var
 if ( $build->install_base ) {
+    $build->install_path(
+        'MUNIN_BINDIR' => $build->install_base . '/bin' );
     $build->install_path(
         'MUNIN_RUNDIR' => $build->install_path('var') . '/run' );
     $build->install_path(
@@ -212,6 +310,12 @@ if ( $build->install_base ) {
         'MUNIN_PLUGSTATE' => $build->install_path('var') . '/plugin-state' );
 }
 else {
+	if ($build->installdirs eq 'site') {
+		$build->install_path( 'MUNIN_BINDIR' => $Config{installsitebin} );
+	}
+	else {
+		$build->install_path( 'MUNIN_BINDIR' => $Config{installvendorbin} );
+	}
     $build->install_path(
         'MUNIN_RUNDIR' => $build->install_path('var') . '/run/munin' );
     $build->install_path(

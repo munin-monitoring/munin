@@ -1,0 +1,46 @@
+#!/bin/sh
+# -*- sh -*-
+#
+# Folding@Home
+#
+# Parameters:
+#
+#   config   (required)
+#   autoconf (optional - only used by munin-config)
+#
+# Magic markers (optional - used by munin-config and some installation
+# scripts):
+#%# family=contrib
+#%# capabilities=autoconf
+
+PATH=/usr/local/fah
+FILE=${file:=unitinfo.txt}
+
+if [ "$1" = "autoconf" ]; then
+    if ( cat $PATH/$FILE 2>/dev/null >/dev/null ); then
+        echo yes
+        exit 0
+    else
+        if [ $? -eq 127 ]
+        then
+            echo "no (F@H not found)"
+            exit 0
+        else
+            echo no
+            exit 0
+        fi
+    fi
+fi
+
+if [ "$1" = "config" ]; then
+
+    echo 'graph_title Folding@Home'
+    echo 'graph_args -l 0 --base 1000'
+    echo 'graph_vlabel % finished'
+    echo 'done.label done folding'
+    echo 'done.type GAUGE'
+    echo 'done.max 100'''
+    exit 0
+fi
+
+echo `/bin/grep "Progress" $PATH/$FILE | /bin/sed 's/^.*: \(.*\)%.*/done.value \1/'`

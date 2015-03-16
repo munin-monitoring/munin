@@ -1,0 +1,162 @@
+#!/usr/bin/perl
+# -*- cperl -*-
+
+=head1 NAME
+
+procsys - Plugin to monitor kernel sysctl data
+
+=head1 INTERPRETATION
+
+The pluign will create multiple graphs for:
+
+=over 4
+
+=item entropy
+
+Monitors the random entropy (for the kernel's PRNG) available in the
+system.
+
+=item open_files
+
+Monitors the file handles open in the kernel.
+
+=item open_inodes
+
+Monitors the inodes open in the kernel.
+
+=back
+
+=head1 CONFIGURATION
+
+The only available configurations are the warning/critical limits for
+some of the fields. The following is the default configuration:
+
+[procsys]
+  env.entropy_warning 5%
+  env.entropy_critical 2%
+
+  env.open_files_warning 92%
+  env.open_files_critical 98%
+
+=head1 AUTHOR
+
+Copyright (C) 2013 Diego Elio Pettenò
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+use Munin::Plugin::Framework;
+use Munin::Plugin;
+
+my $plugin = Munin::Plugin::Framework->new;
+
+my ($random_entropy) = readarray("/proc/sys/kernel/random/entropy_avail");
+my ($random_poolsize) = readarray("/proc/sys/kernel/random/poolsize");
+
+if (defined($random_entropy)) {
+  $plugin->add_graphs
+    (
+     entropy =>
+     {
+      title => "Available entropy",
+      vlabel => "bytes",
+      args => "--base 1024 -l 0" . (defined($random_poolsize) ? " -u $random_poolsize" : ""),
+      category => "system",
+      fields =>
+      {
+       entropy =>
+       {
+	min => 0,
+	info => "The number of random bytes available. This is typically consumed by cryptographic applications and process spawning.",
+	value => $random_entropy,
+       }
+      }
+     }
+    );
+}
+
+if ( -r "/proc/sys/fs/file-nr" ) {
+  my ($files_used, $files_free, $files_max) = readarray("/proc/sys/fs/file-nr");
+  my ($warning, $critical) = get_thresholds("open_files") || ('92%', '98%');
+
+  $plugin->add_graphs
+    (
+     open_files =>
+     {
+      title => "File table usage",
+      args => "--base 1000 -l 0",
+      vlabel => "file-handles",
+      category => "system",
+      order => "used free max",
+      fields =>
+      {
+       used =>
+       {
+	label => "open handles",
+	info => "The number of currently in-use file handles",
+	draw => "AREASTACK",
+	value => $files_used - $files_free,
+	warning => adjust_threshold($warning, $files_max),
+	critical => adjust_threshold($critical, $files_max),
+       },
+       free =>
+       {
+	label => "free handles",
+	info => "The number of allocated but free file handles (usually 0)",
+	draw => "AREASTACK",
+	value => $files_free,
+       },
+       max =>
+       {
+	label => "handles limit",
+	info => "The configured maximum number of file handles",
+	value => $files_max,
+       }
+      }
+     }
+    );
+}
+
+if ( -r "/proc/sys/fs/inode-nr" ) {
+  my ($inodes_nr, $inodes_free) = readarray("/proc/sys/fs/inode-nr");
+
+  $plugin->add_graphs
+    (
+     open_inodes =>
+     {
+      title => "Inode table usage",
+      args => "--base 1000 -l 0",
+      vlabel => "inodes",
+      category => "system",
+      order => "used free max",
+      fields =>
+      {
+       inuse =>
+       {
+	label => "In-use inodes",
+	info => "The number of currently open inodes",
+	draw => "AREASTACK",
+	value => $inodes_nr - $inodes_free,
+       },
+       free =>
+       {
+	label => "Free inodes",
+	info => "The number of currently free inodes, that have been allocated",
+	draw => "AREASTACK",
+	value => $inodes_free
+       },
+      }
+     }
+    );
+}
+
+$plugin->run;

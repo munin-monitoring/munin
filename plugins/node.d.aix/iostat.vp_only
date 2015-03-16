@@ -1,0 +1,135 @@
+#!/usr/bin/perl -w
+# -*- perl -*-
+
+=head1 NAME
+
+iostat.vp_only - Plugin for watching io-bound traffic (in KiloBytes) on disks
+
+=head1 NOTES
+
+=head2 DESCRIPTION
+
+Similar to the iostat script, but will only report usage on vpaths.
+
+=head2 RESTRICTIONS
+
+Same as the iostat script, see its RESTRICTIONS.
+
+This gathers information on virtual paths ONLY, typical if you have
+fiber cards installed and are attached to an ESS (Shark) or large disk
+array.
+
+This will combine the I/O for all hdisks associated with a vpath so
+you get global statistics for a vpath.  This is to avoid having a list
+of hdisks that spans multiple pages.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+use POSIX;
+
+my($arg) = shift;
+
+if($arg && $arg eq "autoconf") {
+    if ( (-e "/usr/bin/iostat" && -X "/usr/bin/iostat") &&
+	 (-e '/usr/sbin/lspv' && -X '/usr/sbin/lspv')) {
+        print "yes\n";
+        exit 0;
+    } else {
+        print "no (need /usr/bin/iostat and /usr/sbin/lspv executables)\n";
+        exit 0;
+      }
+  }
+ 
+if($arg && $arg eq "config")
+  {
+    print "graph_title IOstat (VPaths Only)\n";
+    print "graph_args --base 1024 --logarithmic\n";
+    print "graph_vlabel KB / \${graph_period}\n";
+    print "graph_category disk\n";
+    my(@info) = getDiskIO("disk only");
+    my($line);
+    foreach $line (@info)
+      {
+        print "$line.label $line\n";
+        print "$line.type COUNTER\n";
+        print "$line.max 100000\n";
+      }
+    exit 0;
+  }
+  
+my($line);
+my @info = processVPaths();
+foreach $line (@info)
+  {print "$line";}
+  
+    
+sub getDiskIO
+{
+  my($diskOnly) = @_;
+  my($line,@lineArray,@diskArray,$writes,$reads,$diskLine);
+  if($diskOnly && $diskOnly eq 'disk only')
+    {
+      open DISKLIST, "/usr/sbin/lspv|grep vpath|grep -v none|";
+      while($line = <DISKLIST>)
+        {
+          @lineArray = split(/ +/,$line);
+          push(@diskArray,"$lineArray[0]_read","$lineArray[0]_write");
+        }
+    }
+  return @diskArray
+}
+
+sub processVPaths
+{
+  open DISKLIST, "/usr/sbin/lspv|grep vpath|";
+  my($line,$hdiskLine,@diskArray,$reads,$writes);
+  while($line = <DISKLIST>)
+    {
+      my(@vpathArr) = split(/ +/,$line);
+      my($vpathNum) = substr($vpathArr[0],index($vpathArr[0],"h")+1);
+      open VPATHINFO, "/usr/bin/datapath query device $vpathNum|grep hdisk|";
+      $reads = 0;
+      $writes = 0;
+      while($hdiskLine = <VPATHINFO>)
+        {
+          my(@hdiskInfo) = split(/ +/,$hdiskLine);
+          my($hdisk) = substr($hdiskInfo[2],index($hdiskInfo[2],"/")+1);
+          my($diskLine) = `/usr/bin/iostat|grep $hdisk`;
+          my(@lineArray) = split(/ +/,$diskLine);
+          $reads += $lineArray[4];
+          $writes += $lineArray[5];
+        }
+      push(@diskArray,$vpathArr[0]."_read.value $reads\n",$vpathArr[0]."_write.value $writes\n");
+    }
+  return @diskArray;
+}
+
+sub printArray
+{
+  my($array,$spacer,$useNums,@labels) = @_;
+  my($item,);
+  my($count) = 0;
+
+  foreach $item (@{$array})
+    {
+      if($useNums == 1)
+        {print $count.substr($spacer,0,length($spacer)-length($count)).$item."\n";}
+      else
+        {print $labels[$count].substr($spacer,0,length($spacer)-length($labels[$count])).$item."\n";}
+      $count++;
+    }
+}      

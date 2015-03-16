@@ -1,0 +1,178 @@
+#!/usr/bin/perl -w
+# -*- perl -*-
+
+=head1 NAME
+
+postfix_mailstats - Plugin to monitor the number of mails delivered and
+rejected by postfix
+
+=head1 CONFIGURATION
+
+Configuration parameters for /etc/munin/postfix_mailstats,
+if you need to override the defaults below:
+
+ [postfix_mailstats]
+  env.logdir  - Which logfile to use
+  env.logfile - What file to read in logdir
+
+=head2 DEFAULT CONFIGURATION
+
+ [postfix_mailstats]
+  env.logdir  /var/log
+  env.logfile mail.log
+
+=head1 AUTHOR
+
+Records show that the plugin was contributed by Nicolai Langfeldt in
+2003.  Nicolai can't find anything in his email about this and expects
+the plugin is based on the corresponding exim plugin - to which it now
+bears no resemblance.
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+=begin comment
+
+These magic markers are used by munin-node-configure when installing
+munin-node.
+
+=end comment
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+
+use Munin::Plugin;
+
+my $pos;
+my $delivered;
+my $rejects = ();
+my $LOGDIR  = (defined($ENV{'logdir'}) ? $ENV{'logdir'} : '/var/log');
+my $LOGFILE = (defined($ENV{'logdir'}) ? $ENV{'logfile'} : 'mail.log');
+
+my $logfile = "$LOGDIR/$LOGFILE";
+
+if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" )
+{
+    if (-d $LOGDIR)
+    {
+	if (-f $logfile)
+	{
+            if (-r $logfile)
+            {
+                print "yes\n";
+                exit 0;
+            }
+            else
+            {
+                print "no (logfile '$logfile' not readable)\n";
+            }
+	}
+	else
+	{
+	    print "no (logfile '$logfile' not found)\n";
+	}
+    }
+    else
+    {
+        print "no (could not find logdir '$LOGDIR')\n";
+    }
+
+    exit 0;
+}
+
+my @state = restore_state();
+
+$pos = shift @state;
+$delivered = shift @state;
+
+$pos = 0 unless defined($pos);
+$delivered = 0 unless defined($delivered);
+
+my %rejects = @state;
+
+if (! -f $logfile)
+{
+    print "delivered.value U\n";
+    foreach my $i (sort keys %rejects)
+    {
+    	print "r$i.value U\n";
+    }
+    exit 0;
+}
+
+
+my $startsize = (stat $logfile)[7];
+
+if (!defined $pos)
+{
+    # Initial run.
+    $pos = $startsize;
+}
+
+$pos = parseLogfile($logfile, $pos, $startsize);
+
+if ( $ARGV[0] and $ARGV[0] eq "config" )
+{
+    print "graph_title Postfix message throughput\n";
+    print "graph_args --base 1000 -l 0\n";
+    print "graph_vlabel mails / \${graph_period}\n";
+    print "graph_scale  no\n";
+    print "graph_total  Total\n";
+    print "graph_category mail\n";
+    print "graph_period minute\n";
+    print "delivered.label delivered\n";
+    print "delivered.type DERIVE\n";
+    print "delivered.draw AREA\n";
+    print "delivered.min 0\n";
+    foreach my $i (sort keys %rejects)
+    {
+	    print "r$i.label reject $i\n";
+	    print "r$i.type DERIVE\n";
+	    print "r$i.draw STACK\n";
+	    print "r$i.min 0\n";
+    }
+    exit 0;
+}
+
+print "delivered.value $delivered\n";
+foreach my $i (sort keys %rejects)
+{
+	print "r$i.value ", $rejects{$i}, "\n";
+}
+
+save_state($pos, $delivered, %rejects);
+
+sub parseLogfile 
+{    
+    my ($fname, $start, $stop) = @_;
+
+	my ($logfd, $reset) = tail_open($fname, $start);
+
+    while (tell($logfd) < $stop) 
+    {
+	my $line = <$logfd>;
+	chomp ($line);
+
+	if ($line =~ / to=.*, status=sent /)
+	{
+	    $delivered++;
+	} 
+	elsif ($line =~ /postfix\/smtpd.*proxy-reject: \S+ (\S+)/ ||
+	       $line =~ /postfix\/smtpd.*reject: \S+ \S+ \S+ (\S+)/ ||
+	       $line =~ /postfix\/postscreen.*reject: \S+ \S+ \S+ (\S+)/ ||
+	       $line =~ /postfix\/cleanup.* reject: (\S+)/)
+	{
+	    $rejects{$1}++;
+	}
+    }
+    return tail_close($logfd);
+}
+
+# vim:syntax=perl

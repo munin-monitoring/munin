@@ -1,0 +1,98 @@
+#!/usr/bin/perl
+# -*- cperl -*-
+#
+# Copyright (C) 2009 Magnus Hagander, Redpill Linpro AB
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+=head1 NAME
+
+postgres_size_ - Plugin to monitor PostgreSQL database size.
+
+=head1 CONFIGURATION
+
+Configuration is done through libpq environment variables, for example
+PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugin::Pgsql>.
+
+To monitor a specific database, link to postgres_size_<databasename>.
+To monitor all databases, link to postgres_size_ALL.
+To monitor several instances, link to postgres_<tag>_size_<databasename|ALL>
+The <tag> can be what you want but without "_". It allows you to define several
+database configuration.
+
+Example :
+  [postgres_pg91_*]
+  env.PGPORT 5432
+  [postgres_pg92_*]
+  env.PGPORT 5432
+
+Since munin 2.0.18, this graph starts at 0 (zero) on the y-axis. If you want
+to restore the old behaviour, then set in the plugin config:
+
+ [postgres_size_*]
+ env.legacy_y_axis yes
+
+=head1 SEE ALSO
+
+L<Munin::Plugin::Pgsql>
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=head1 AUTHOR
+
+Magnus Hagander <magnus@hagander.net>, Redpill Linpro AB
+
+=head1 COPYRIGHT/License.
+
+Copyright (c) 2009 Magnus Hagander, Redpill Linpro AB
+
+All rights reserved. This program is free software; you can
+redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+=cut
+
+use strict;
+use warnings;
+
+use Munin::Plugin::Pgsql;
+
+my $graphmin = ($ENV{'legacy_y_axis'} ? undef : '0');
+
+my $pg = Munin::Plugin::Pgsql->new(
+    basename => 'postgres_[^_]*_?size_',
+    title    => 'PostgreSQL database size',
+    info     => 'Size of database',
+    vlabel   => 'Size',
+    basequery =>
+        "SELECT datname,pg_database_size(oid) FROM pg_database %%FILTER%% ORDER BY 1",
+    wildcardfilter => "WHERE datname=?",
+    configquery    => "SELECT datname,datname FROM pg_database %%FILTER%% ORDER BY 1",
+    suggestquery =>
+        "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate AND NOT datname='postgres' UNION ALL SELECT 'ALL' ORDER BY 1 LIMIT 10",
+    graphdraw => 'AREA',
+    stack     => 1,
+    base      => 1024,
+    graphmin  => $graphmin
+);
+
+$pg->Process();
+exit(0);
+

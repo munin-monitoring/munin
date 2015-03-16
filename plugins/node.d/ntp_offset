@@ -1,0 +1,120 @@
+#!/bin/sh
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+ntp_offset - Plugin to monitor NTP time offset
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+ nodelay - add "delay_graph no" to RRD graph configuration
+
+=head2 EXAMPLE CONFIGURATION
+
+ [ntp_*]
+  env.nodelay 1       - Set to 1 to remove delay
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 NOTES
+
+Loosely based on ntp_ plugin, but reworked to shell.
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+do_autoconf () {
+    ntpq -c help >/dev/null 2>&1 || { echo 'no (no ntpq program)'; exit 0; }
+
+    case "$(ntpq -n -p 2>/dev/null | wc -l)" in
+	0)
+            echo 'no (unable to list peers)'
+	    exit 0
+	    ;;
+    	1|2)
+	    echo 'no (no peers?)'
+	    exit 0
+	    ;;
+	*)
+	    echo yes
+	    exit 0
+	    ;;
+    esac
+}
+
+do_config () {
+    syspeer="$(ntpq -n -p | grep '^[*o]')"
+
+    set - $syspeer
+
+    peer=$1
+    # Times in ms, therefore cdefs to divide to obtain seconds
+    # delay=$8
+    # offset=$9
+    # jitter=$10
+
+    cat <<EOF
+graph_title NTP timing statistics for system peer
+graph_args --base 1000 --vertical-label seconds --lower-limit 0
+graph_category time
+graph_info Currently our peer is $peer.  Please refer to ntp docs and ntpc docs for further explanations of these numbers.
+delay.label Delay
+delay.cdef delay,1000,/
+offset.label Offset
+offset.cdef offset,1000,/
+jitter.label Jitter
+jitter.cdef jitter,1000,/
+EOF
+    case $nodelay in
+	1) echo "delay.graph no";;
+    esac
+}
+
+do_ () {
+    # Fetch operation
+    syspeer="$(ntpq -n -p | grep '^[*o]')"
+
+    set - $syspeer
+
+    # peer=$1
+    # Times in ms, therefore cdefs to divide to obtain seconds
+    shift # Avoid having to use $10
+    delay=${7:-U}
+    offset=${8:-U}
+    jitter=${9:-U}
+    cat <<EOF
+delay.value $delay
+offset.value $offset
+jitter.value $jitter
+EOF
+}
+
+case $1 in
+    autoconf|config|'')
+       do_$1
+       exit $?
+       ;;
+    *)
+       echo "Don't know how to do that" >&2
+       exit 1
+       ;;
+esac
+
+echo 'What am I doing here?' >&2
+exit 1
+
+# vim:syntax=sh

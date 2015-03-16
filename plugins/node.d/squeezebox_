@@ -1,0 +1,213 @@
+#!/bin/bash
+# -*- sh -*-
+
+: <<=cut
+
+=head1 NAME
+
+squeezebox_ - plugin to monitor a SqueezeCenter and associated
+players.
+
+=head1 APPLICABLE SYSTEMS
+
+Probably any system running SqueezeCenter. Change the host to allow
+for remote monitoring.
+
+=head1 CONFIGURATION
+
+No configuration should be required if run on the same server as
+SqueezeCenter. If the plugin is run from another unit or in a
+non-default configuration, please use the environment variables
+'squeezebox_host' and 'squeezebox_port' to connect. Also, if your
+nc(1) binary is not called "nc", or not the one in $PATH, please define it
+in the plugin's environment file (/etc/munin/squeezebox or similar).
+
+Sample follows:
+
+ [squeezebox_*]
+  env.squeezebox_host 192.168.100.10
+  env.squeezebox_port 9095
+  env.netcat /usr/local/bin/nc
+
+=head1 INTERPRETATION
+
+The "volume" graphs only graphs the player's volume, not the amplifier
+or whatever the player is connected to.
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=head1 VERSION
+
+ $Id$
+
+=head1 BUGS
+
+None known
+
+=head1 AUTHOR
+
+Bjørn Ruberg
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+HOST=${squeezecenter_host:-localhost}
+PORT=${squeezecenter_port:-9090}
+NC=${netcat:-nc}
+
+if [ "$1" = "autoconf" ]; then
+        if [ ! "which $NC 1>/dev/null 2>&1" ]; then
+		echo "no (no netcat/nc binary found)"
+		exit 0
+	fi
+	echo exit | $NC $HOST $PORT 1>/dev/null 2>&1
+	RET=$?
+	if [ "$RET" != "0" ]; then
+		echo "no (no connection on $HOST port $PORT)"
+		exit 0
+	fi
+	VERSION=$(printf "%b" "version ?\nexit\n" | $NC $HOST $PORT 2>/dev/null)
+	if [ "$VERSION" != "" ]; then
+		echo "yes"
+		exit 0
+	else
+		echo "no (socket responding but version not found: something is weird)"
+		exit 0
+	fi
+fi
+
+if [ "$1" = "suggest" ]; then
+	echo "songs"
+	echo "artists"
+	echo "albums"
+	echo "genres"
+	echo "years"
+	echo "signalstrength"
+	echo "volume"
+	exit 0
+fi
+
+# Add this plugin to a cron job with the argument "update"
+# Adjust the interval to your own tempo for adding/deleting
+# music :-)
+#
+# example: 5 * * * * /usr/share/munin/plugins/squeezebox_ update
+
+if [ "$1" = "update" ]; then
+	printf "%b" "rescan\nexit\n" | $NC $HOST $PORT >/dev/null
+	exit 0
+fi
+
+
+CHECK=$(echo $0 | cut -d _ -f 2-)
+case "$CHECK" in
+	songs)
+		ATTR="songs"
+		;;
+	artists)
+		ATTR="artists"
+		;;
+	albums)
+		ATTR="albums"
+		;;
+	genres)
+		ATTR="genres"
+		;;
+	years)
+		CMD="years"
+		;;
+	signalstrength)
+		CMD="signalstrength"
+		TITLE="Signal strength"
+		;;
+	volume)
+		CMD="mixer volume"
+		TITLE="Mixer volume"
+		;;
+	*)
+		echo "Can't run without a proper symlink. Exiting."
+		echo "Try running munin-node-configure --suggest."
+		exit 1
+		;;
+esac
+
+if [ "$ATTR" = "" -a "$CMD" = "" ]; then
+	echo "Urk"
+	exit 2
+fi
+
+if [ "$CMD" = "years" ]; then
+	no_of_years=$(printf "%b" "years\nexit\n" | $NC $HOST $PORT | sed 's/%3A/:/g' | cut -d ':' -f 2)
+	years_array=$(printf "%b" "years 0 $no_of_years\nexit\n" | $NC $HOST $PORT | sed 's/%3A/:/g' | cut -d ' ' -f 4- | sed 's/year://g' | cut -d ' ' -f -$no_of_years)
+	arr1=( `echo "$years_array" | tr -s ' ' ' '` )
+	(( no_of_years-- )) # We don't need that last entry in the array
+	if [ "$1" = "config" ]; then
+                echo "graph_title Number of years"
+                echo "graph_category Squeezebox"
+		echo "graph_args --base 1000 -l 0"
+		# echo -n "graph_order "
+		# echo $years_array | tr '[:space:]' " y"
+		# echo "graph_order y0"
+		printf "graph_order y"
+        echo $years_array | sed 's/ / y/g'
+
+		for i in `seq 0 $no_of_years`; do
+			year=$(echo ${arr1[$i]})
+			if [ $year = 0 ]; then
+				echo y0.label No year
+			else
+				echo y${year}.label $year
+			fi
+			if [ $i = 0 ]; then
+				echo y${year}.draw AREA
+			else
+				echo y${year}.draw STACK
+			fi
+		done
+		exit 0
+	fi
+	for i in `seq 0 $no_of_years`; do
+		year=$(echo ${arr1[$i]})
+		printf "y%s.value " ${year}
+		printf "%b" "albums 0 0 year:${year}\nexit\n" | $NC $HOST $PORT | sed 's/%3A/:/g' | cut -d ':' -f 3
+	done
+elif [ "$CMD" = "signalstrength" -o "$CMD" = "mixer volume" ]; then
+        if [ "$1" = "config" ]; then
+            echo "graph_title $TITLE"
+            echo "graph_category Squeezebox"
+            COUNT=$(printf "%b" "player count ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 3)
+            (( COUNT-- ))
+            for ID in $(seq 0 $COUNT); do
+                MAC=$(printf "%b" "player id $ID ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 4 | sed 's/%3A/:/g')
+		NAME=$(printf "%b" "player name $MAC ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 4 | sed 's/%20/ /g')
+		MAC2=$(echo $MAC | sed 's/://g; s/\./_/g')
+	        echo "$MAC2.label $NAME"
+            done
+            exit 0
+        fi
+        COUNT=$(printf "%b" "player count ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 3)
+        (( COUNT-- ))
+        for ID in $(seq 0 $COUNT); do
+            MAC=$(printf "%b" "player id $ID ?\nexit\n" | $NC $HOST $PORT | cut -d " " -f 4 | sed 's/%3A/:/g')
+            VAL=$(printf "%b" "$MAC $CMD ?\nexit\n"| $NC $HOST $PORT | cut -d " " -f 2- | sed "s/$CMD //")
+            MAC2=$(echo $MAC| sed 's/://g')
+            echo "$MAC2.value $VAL"
+	done
+else
+	if [ "$1" = "config" ]; then
+		echo "graph_title Number of $ATTR"
+		echo "graph_scale no"
+		echo "graph_category Squeezebox"
+		echo "$ATTR.label $ATTR"
+		exit 0
+	fi
+	CMD="info total $ATTR "
+	echo -n "$ATTR.value "
+	printf "%b" "$CMD ?\nexit\n" | $NC $HOST $PORT | sed "s/^$CMD//"
+fi

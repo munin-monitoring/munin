@@ -1,0 +1,292 @@
+#!/usr/bin/perl
+# -*- cperl -*-
+
+=head1 NAME
+
+procfs - Plugin to monitor general system statistics
+
+=head1 APPLICABLE SYSTEMS
+
+All Linux systems where /proc is accessible.
+
+=head1 CONFIGURATION
+
+The following is default configuration
+
+  [cpu]
+	env.HZ	100
+
+=over 4
+
+=item C<env.HZ>
+
+Some combinations of hardware and Linux (probably only 2.4 kernels)
+use 1000 units/second in /proc/stat corresponding to the systems
+HZ. (see /usr/src/linux/include/asm/param.h). But Almost all systems
+use 100 units/second and this is our default. Even if
+Documentation/proc.txt in the kernel source says otherwise. - Finding
+and fix by dz@426.ch
+
+=back
+
+=head2 EXAMPLE WARNING AND CRITICAL SETTINGS
+
+You can also set warning and critical levels for each of the data
+series the plugin reports.  The following environment variables are
+used as default for all fields:
+
+  env.warning
+  env.critical
+
+But each field can be controlled separately. The available fields for
+the CPU graph are:
+
+  system, user, nice, idle, iowait, irq, softirq, steal, guest,
+  guest_nice
+
+=head1 INTERPRETATION
+
+=head2 CPU
+
+The plugin shows cpu usage in percent. In case of more than one core
+it displays 100% for each core.
+
+If a core is 100% busy there will be no "iowait" showing, that only
+shows if the CPU has nothing else to do while it waits on IO.
+Therefore a 100% busy core can hide a lot of iowait.  Please refer to
+the IO latency and other disk related graphs for further information
+about IO performance.
+
+=head2 INTERRUPTS
+
+The plugin monitors the number of interrupts and context switches on a
+system.
+
+=head2 FORKS
+
+The plugin monitors the number of forks per second on the machine
+
+=head1 LOAD
+
+The plugin monitors the load average of the system (at 1, 5 and 15
+minutes). The following fiends can be configured for warning and
+critical: C<load1>, C<load> and C<load15>, configuring the limit
+respectively for 1, 5 and 15 minutes average load.
+
+=head1 UPTIME
+
+The plugin measures the uptime of the system in days.
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 AUTHOR
+
+Copyright (C) 2013 Diego Elio Pettenò
+Rewritten from multiple plugins, integrating work by:
+
+ - Ragnar Wisløff
+ - Nicolas Salles
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+use strict;
+use Munin::Plugin::Framework;
+use Munin::Plugin;
+
+my $plugin = Munin::Plugin::Framework->new;
+
+my $HZ = $ENV{HZ} || 100;
+
+sub _parse_stat_file {
+  my ($file) = @_;
+
+  my %hash;
+  foreach my $line (split(/\r?\n/, readfile($file))) {
+    my @line_s = split(/\s+/, $line);
+    my $name = shift(@line_s);
+    $hash{$name} = \@line_s;
+  }
+
+  return %hash;
+}
+
+my %stat = _parse_stat_file("/proc/stat");
+my %vmstat = _parse_stat_file("/proc/vmstat");
+
+my $cpu_limit = (scalar(grep(/^cpu[0-9]+$/, keys %stat))) * 100;
+my @cpu_fields = qw(system user nice idle iowait irq softirq steal guest guest_nice);
+
+if ( %stat ) {
+  $plugin->add_graphs
+    (
+     interrupts =>
+     {
+      args     => "--base 1000 -l 0",
+      category => "system",
+      info     => "This graph shows the number of interrupts and context switches on the system. These are typically high on a busy system.",
+      title    => "Interrupts and context switches",
+      vlabel   => "events per \${graph_period}",
+      fields   =>
+      {
+       intr =>
+       {
+	label => "Interrupts",
+	type  => "DERIVE",
+	max   => 100000,
+	min   => 0,
+	info  => "Interrupts are events that alter sequence of instructions executed by a processor. They can come from either hardware (exceptions, NMI, IRQ) or software",
+	value => $stat{intr}[0],
+       },
+       ctxt =>
+       {
+	label => "Context switches",
+	type  => "DERIVE",
+	max   => 100000,
+	min   => 0,
+	info  => "A context switch occurs when a multitasking operatings system suspends the currently running process, and starts executing another.",
+	value => $stat{ctxt}[0],
+       },
+      }
+     },
+     forks =>
+     {
+      title    => "Fork rate",
+      args     => "--base 1000 -l 0",
+      vlabel   => "forks per \${graph_period}",
+      info     => "This graph shows the number of forks (new processes started) per second.",
+      category => "system",
+      fields   =>
+      {
+       forks =>
+       {
+	type  => "DERIVE",
+	min   => 0,
+	max   => 100000,
+	value => $stat{processes}[0],
+       },
+      },
+     },
+     cpu =>
+     {
+      title    => "CPU usage",
+      args     => "--base 1000 -l 0 -u $cpu_limit -r",
+      vlabel   => "%",
+      scale    => "no",
+      info     => "This graph shows how CPU time is spent.",
+      category => "system",
+      order    => join(" ", @cpu_fields),
+      fields =>
+      {
+       system     => { info => "CPU time spent by the kernel in system activities" },
+       user       => { info => "CPU time spent by normal programs and daemons" },
+       nice       => { info => "CPU time spent by nice(1)d programs" },
+       idle       => { info => "Idle CPU time" },
+       iowait     => { info => "CPU time spent waiting for I/O operations to finish when there is nothing else to do" },
+       irq        => { info => "CPU time spent handling interrupts" },
+       softirq    => { info => "CPU time spent handling \"batched\" interrupts" },
+       steal      => { info => "The time that a virtual CPU had runnable tasks, but the virtual CPU itself was not running" },
+       guest      => { info => "The time spent running a virtual CPU for guest operating systems" },
+       guest_nice => { info => "The time spent running a virtual CPU for a niced guest operating system" },
+      }
+     }
+    );
+
+  for (my $i = 0; $i < scalar(@cpu_fields); $i++) {
+    my $field = $cpu_fields[$i];
+    $plugin->{graphs}->{cpu}->{fields}->{$field}->{min} = 0;
+    $plugin->{graphs}->{cpu}->{fields}->{$field}->{max} = $cpu_limit;
+    $plugin->{graphs}->{cpu}->{fields}->{$field}->{draw} = "AREASTACK";
+    $plugin->{graphs}->{cpu}->{fields}->{$field}->{type} = "DERIVE";
+    $plugin->{graphs}->{cpu}->{fields}->{$field}->{value} = ${@stat{cpu}}[$i] * 100 / $HZ;
+
+    my ($warning, $critical) = get_thresholds($field);
+    $plugin->{graphs}->{cpu}->{fields}->{$field}->{warning} = adjust_threshold($warning, $cpu_limit);
+    $plugin->{graphs}->{cpu}->{fields}->{$field}->{critical} = adjust_threshold($critical, $cpu_limit);
+  }
+}
+
+# the swap graph might not always be possible, as the kernel might not
+# support swap at all, in which case we just avoid preparing it at all
+if ( -r "/proc/swaps" ) {
+  $plugin->add_graphs
+    ( swap =>
+      {
+       title    => "Swap in/out",
+       args     => "--base 1000 -l 0",
+       vlabel   => "page per \${graph_period} in (-) / out (+)",
+       category => "system",
+       fields   =>
+       {
+	swap_in =>
+	{
+	 type  => "DERIVE",
+	 min   => 0,
+	 graph => "no",
+	 value => $vmstat{pswpin}[0]  || $stat{swap}[0],
+	},
+	swap_out =>
+	{
+	 label    => "swap",
+	 type     => "DERIVE",
+	 min      => "0",
+	 negative => "swap_in",
+	 value    => $vmstat{pswpout}[0] || $stat{swap}[1]
+	},
+       },
+      }
+    );
+}
+
+# uptime should always be prsent, but we make it optional for safety
+my ($uptime) = readarray("/proc/uptime");
+if ( defined($uptime) ) {
+  $plugin->add_graphs
+    ( uptime =>
+      {
+       title => "System uptime",
+       args => "--base 1000 -l 0",
+       scale => "no",		# it's expressed in days
+       category => "system",
+       fields =>
+       {
+	uptime =>
+	{
+	 draw => "AREA",
+	 min  => "0",
+	 value => sprintf("%.2f", $uptime/86400),
+	}
+       }
+      }
+    );
+}
+
+my ($load1, $load5, $load15) = readarray("/proc/loadavg");
+if ( defined($load1) ) {
+  $plugin->add_graphs
+    ( load =>
+      {
+       title    => "Load average",
+       args     => "--base 1000 -l 0",
+       vlabel   => "load",
+       scale    => "no",
+       category => "system",
+       info     => "The load average of the machine describes how many processes are in the run-queue (scheduled to run \"immediately\").",
+       order    => "load1 load load15",
+       fields =>
+       {
+	load1  => { label => "1-minute average", value => $load1 },
+	load   => { label => "5-minutes average", value => $load5 },
+	load15 => { label => "15-minutes average", value => $load15 },
+       },
+      }
+    );
+}
+
+$plugin->run;

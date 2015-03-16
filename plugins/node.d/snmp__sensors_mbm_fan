@@ -1,0 +1,215 @@
+#!/usr/bin/perl -w
+# -*- perl -*-
+
+=head1 NAME
+
+snmp__sensors_mbm_fan - Plugin to fetch sensor data from Windows boxes
+running Motherboard Monitor <http://mbm.livewiredev.com/> and
+SNMP-Informant - MBM agent <http://www.snmp-informant.com/>.
+
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+ host      - SNMP host (default taken from plugin link name)
+ port      - SNMP port (default 161)
+ community - SNMP community (default "private")
+
+=head1 AUTHOR
+
+Copyright (C) 2004 Jimmy Olsen
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 dated June, 1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301 USA.
+
+=head1 MAGIC MARKERS
+
+ #%# family=snmpauto
+ #%# capabilities=snmpconf
+
+=cut
+
+use strict;
+use Net::SNMP;
+
+my $MAXLABEL = 20;
+
+my $host      = $ENV{host}      || undef;
+my $port      = $ENV{port}      || 161;
+my $community = $ENV{community} || "public";
+
+my $response;
+
+if (defined $ARGV[0] and $ARGV[0] eq "snmpconf")
+{
+	print "require 1.3.6.1.4.1.9600.1.10.6.1.1.\n";
+	print "require 1.3.6.1.4.1.9600.1.10.6.1.3. 3\n"; # Type=fan
+	print "require 1.3.6.1.4.1.9600.1.10.6.1.7. [1-9]\n"; # Low value != 0
+	print "require 1.3.6.1.4.1.9600.1.10.6.1.9. [1-9]\n"; # High value != 0
+
+	exit 0;
+}
+
+if ($0 =~ /^(?:|.*\/)snmp_([^_]+)_sensors_mbm_fan$/)
+{
+	$host  = $1;
+	if ($host =~ /^([^:]+):(\d+)$/)
+	{
+		$host = $1;
+		$port = $2;
+	}
+}
+elsif (!defined($host))
+{
+	print "# Debug: $0 -- $1\n" if $Munin::Plugin::SNMP::DEBUG;
+	die "# Error: couldn't understand what I'm supposed to monitor.";
+}
+
+# The OIDs we're after
+my $mbmDeviceType    = "1.3.6.1.4.1.9600.1.10.6.1.3."; # Should be 3 (fan)
+my $mbmHighWatermark = "1.3.6.1.4.1.9600.1.10.6.1.7."; # Should be non-zero
+my $mbmLowWatermark  = "1.3.6.1.4.1.9600.1.10.6.1.9."; # Should be non-zero
+my $mbmName          = "1.3.6.1.4.1.9600.1.10.6.1.2."; # Name of sensor
+my $mbmValue         = "1.3.6.1.4.1.9600.1.10.6.1.6."; # Data point
+
+my ($session, $error) = Net::SNMP->session(
+		-hostname  => $host,
+		-community => $community,
+		-port      => $port
+	);
+
+if (!defined ($session))
+{
+	die "Croaking: $error";
+}
+
+# First we want to find the harddisks...
+my $correct_type      = get_by_regex ($session, $mbmDeviceType, "^3\$");
+my $correct_high      = get_by_regex ($session, $mbmHighWatermark, "[1-9]");
+my $correct_low       = get_by_regex ($session, $mbmLowWatermark, "[1-9]");
+
+my @keep = ();
+
+foreach my $id (keys %$correct_type)
+{
+	if (exists $correct_high->{$id} and
+	    exists $correct_low->{$id})
+	{
+	    push (@keep, $id);
+	}
+}
+
+my %sensors;
+
+foreach my $kept (@keep) # For each temp sensor...
+{
+    $sensors{$kept}{name} = get_single ($session, $mbmName . "$kept");
+}
+
+if (defined $ARGV[0] and $ARGV[0] eq "config")
+{
+	print "host_name $host\n" unless $host eq 'localhost';
+	print "graph_title Fan speed\n";
+	print "graph_args --upper-limit 100 -l 0\n";
+	print "graph_vlabel RPM\n";
+	print "graph_category sensors\n";
+	print "graph_info This graph shows the rounds per minute of the fans in the machine.\n";
+
+	foreach my $sensor (keys %sensors)
+	{
+		print (&get_name_by_sensor ($sensors{$sensor}{name}), ".label ");
+		print (length($sensors{$sensor}{name})<=$MAXLABEL ? $sensors{$sensor}{name} : "...".substr($sensors{$sensor}{name},-($MAXLABEL-3)));
+		print ("\n");
+		print (&get_name_by_sensor ($sensors{$sensor}{name}), ".info RPM readout from the motherboard sensor \"$sensors{$sensor}{name}\".\n");
+	}
+	exit 0;
+}
+
+foreach my $sensor (keys %sensors)
+{
+    my $val = get_single ($session, $mbmValue . $sensor);
+    print (&get_name_by_sensor ($sensors{$sensor}{name}), ".value $val\n");
+}
+
+sub get_single
+{
+	my $handle = shift;
+	my $oid    = shift;
+
+	print "# Getting single \"$oid\"..." if $Munin::Plugin::SNMP::DEBUG;
+
+	$response = $handle->get_request ($oid);
+
+	if (!defined $response->{$oid})
+	{
+	    print "undef\n" if $Munin::Plugin::SNMP::DEBUG;
+	    return undef;
+	}
+	else
+	{
+	    print "\"$response->{$oid}\"\n" if $Munin::Plugin::SNMP::DEBUG;
+	    return $response->{$oid};
+	}
+}
+
+sub get_by_regex
+{
+	my $handle = shift;
+	my $oid    = shift;
+	my $regex  = shift;
+	my $result = {};
+	my $num    = 0;
+	my $ret    = $oid . "0";
+	my $response;
+
+	print "# Starting browse of $oid...\n" if $Munin::Plugin::SNMP::DEBUG;
+
+	while (1)
+	{
+		if ($num == 0)
+		{
+			print "# Checking for $ret...\n" if $Munin::Plugin::SNMP::DEBUG;
+			$response = $handle->get_request ($ret);
+		}
+		if ($num or !defined $response)
+		{
+			print "# Checking for sibling of $ret...\n" if $Munin::Plugin::SNMP::DEBUG;
+			$response = $handle->get_next_request ($ret);
+		}
+		if (!$response)
+		{
+			return undef;
+		}
+		my @keys = keys %$response;
+		$ret = $keys[0];
+		print "# Analyzing $ret (compared to $oid)...\n" if $Munin::Plugin::SNMP::DEBUG;
+		last unless ($ret =~ /^$oid/);
+		$num++;
+		next unless ($response->{$ret} =~ /$regex/);
+		@keys = split (/\./, $ret);
+		$result->{$keys[-1]} = $response->{$ret};;
+		print "# Index $num: ", $keys[-1], " (", $response->{$ret}, ")\n" if $Munin::Plugin::SNMP::DEBUG;
+	};
+	return $result;
+}
+
+sub get_name_by_sensor
+{
+    my $mp = shift;
+    $mp =~ s/[^a-z0-9_]/_/gi;
+    $mp =~ tr/A-Z/a-z/;
+    return "p" . $mp;
+}

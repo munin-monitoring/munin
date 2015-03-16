@@ -1,0 +1,91 @@
+#!/bin/sh
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+if_ - Wildcard plugin to monitor traffic network interfaces
+
+=head1 CONFIGURATION
+
+=head2 ENVIRONMENT VARIABLES
+
+This plugin does not use environment variables
+
+=head2 WILDCARD PLUGIN
+
+This is a wildcard plugin. To monitor an interface, link
+if_<interface> to this file. E.g.
+
+  ln -s /usr/share/munin/plugins/if_ \
+        /etc/munin/node.d/if_eth0
+
+...will monitor eth0.
+
+Any device found in /usr/bin/kstat can be monitored.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+INTERFACE=${0##*/if_}
+
+if [ "$1" = "autoconf" ]; then
+	if [ -x /usr/bin/kstat ]; then
+		echo yes
+		exit 0
+	else
+		echo "no (/usr/bin/kstat not found)"
+		exit 0
+	fi
+fi
+
+if [ "$1" = "suggest" ]; then
+	if [ -x /usr/bin/kstat ]; then
+		kstat -p -s rbytes64 | awk -F: '$3 != "mac" { print $3 }'
+		exit 0
+	else
+		exit 1
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo "graph_order rbytes obytes" 
+	echo "graph_title $INTERFACE traffic"
+	echo 'graph_args --base 1000'
+	echo 'graph_vlabel bits per ${graph_period} in (-) / out (+)'
+	echo 'graph_category network'
+	echo 'rbytes.label received'
+	echo 'rbytes.type DERIVE'
+	echo 'rbytes.graph no'
+	echo 'rbytes.cdef rbytes,8,*'
+	echo 'rbytes.min 0'
+	print_warning rbytes
+	print_critical rbytes
+	echo 'obytes.label bps'
+	echo 'obytes.type DERIVE'
+	echo 'obytes.negative rbytes'
+	echo 'obytes.cdef obytes,8,*'
+	echo 'obytes.min 0'
+	print_warning obytes
+	print_critical obytes
+	exit 0
+fi;
+
+kstat -p -n $INTERFACE -s '*bytes64' | sed \
+	's/.*\(.bytes\)64./\1.value /'

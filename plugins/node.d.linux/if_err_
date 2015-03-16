@@ -1,0 +1,113 @@
+#!/bin/sh
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+if_err_ - Wildcard plugin to monitor errors, packet drops, and
+collisions of network interfaces
+
+=head1 CONFIGURATION
+
+This is a wildcard plugin. To monitor an interface, link
+if_err_<interface> to this file. E.g.
+
+  ln -s /usr/share/munin/plugins/if_err_ \
+        /etc/munin/plugins/if_err_eth0
+
+...will monitor eth0.
+
+This plugin does not use environment variables.
+
+=head1 USAGE
+
+Any device found in /proc/net/dev can be monitored. Examples include
+ipsec*, eth*, irda* and lo.
+
+Please note that aliases cannot be monitored with this plugin.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+INTERFACE=${0##*/if_err_}
+
+if [ "$1" = "autoconf" ]; then
+        if [ -r /proc/net/dev ]; then
+                echo yes
+                exit 0
+        else
+                echo "no (/proc/net/dev not found)"
+                exit 0
+        fi
+fi
+
+if [ "$1" = "suggest" ]; then
+    if [ -r /proc/net/dev ]; then
+        sed -rne '/^[[:space:]]*(lo|sit[[:digit:]]+):/d;s,^[[:space:]]*([^:]+):.*,\1,p' /proc/net/dev
+    fi
+    exit 0
+fi
+
+if [ "$1" = "config" ]; then
+    echo "graph_order rcvd trans"
+    echo "graph_title $INTERFACE errors"
+    echo 'graph_args --base 1000'
+    echo 'graph_vlabel packets in (-) / out (+) per ${graph_period}'
+    echo 'graph_category network'
+    echo "graph_info This graph shows the amount of errors, packet drops, and collisions on the $INTERFACE network interface."
+    echo 'rcvd.label errors'
+    echo 'rcvd.type COUNTER'
+    echo 'rcvd.graph no'
+    echo 'rcvd.warning 1'
+    echo 'trans.label errors'
+    echo 'trans.type COUNTER'
+    echo 'trans.negative rcvd'
+    echo 'trans.warning 1'
+    echo 'rxdrop.label drops'
+    echo 'rxdrop.type COUNTER'
+    echo 'rxdrop.graph no'
+    echo 'txdrop.label drops'
+    echo 'txdrop.type COUNTER'
+    echo 'txdrop.negative rxdrop'
+    echo 'collisions.label collisions'
+    echo 'collisions.type COUNTER'
+    print_warning rcvd
+    print_critical rcvd
+    print_warning trans
+    print_critical trans
+    exit 0
+fi;
+
+# Escape dots in the interface name (eg. vlans) before using it as a regex
+if [ -r /sys/class/net/$INTERFACE/statistics/rx_bytes ]; then
+    echo "rcvd.value $(cat /sys/class/net/$INTERFACE/statistics/rx_errors)"
+    echo "trans.value $(cat /sys/class/net/$INTERFACE/statistics/tx_errors)"
+    echo "rxdrop.value $(cat /sys/class/net/$INTERFACE/statistics/rx_dropped)"
+    echo "txdrop.value $(cat /sys/class/net/$INTERFACE/statistics/tx_dropped)"
+    echo "collisions.value $(cat /sys/class/net/$INTERFACE/statistics/collisions)"
+else
+    awk -v interface="$INTERFACE" \
+        'BEGIN { gsub(/\./, "\\.", interface) } \
+        $1 ~ "^" interface ":" {
+            split($0, a, /: */); $0 = a[2]; \
+            print "rcvd.value " $3 "\ntrans.value " $11; \
+            print "rxdrop.value " $4 "\ntxdrop.value " $12; \
+            print "collisions.value " $14; \
+        }' \
+        /proc/net/dev
+fi

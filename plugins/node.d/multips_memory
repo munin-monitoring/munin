@@ -1,0 +1,145 @@
+#!/bin/sh
+# -*- sh -*-
+
+: <<=cut
+
+=head1 NAME
+
+multips_memory - Munin plugin to monitor memory usage of processes. Which
+processes are configured in a file in plugin-conf.d.
+
+=head1 APPLICABLE SYSTEMS
+
+Any system with a compatible SysV style ps command that understands
+
+  ps -eo rss,comm
+
+=head1 CONFIGURATION
+
+You must specify what process names to monitor:
+
+  [multips_memory]
+     env.names apache2 mysqld php-cgi
+
+The names are are matched with awk.  Any regular expression meta
+characters in each of the words on the names list are "active" in the
+regular expression.
+
+
+The by default RSS is monitored, but other sizes provided by your ps
+is directly usable (the plugin assumes all sizes reported by ps is in
+KB).  Candidates on Linux are rss, size, resident, share, vsize.  See
+your ps man page for more information especially with regards to
+interpretation of the values.  You can change what is monitored by
+
+  [multips_memory]
+      env.monitor vsize
+
+You cannot specify multiple sizes. The plugin handles only one.
+
+If for some reason you want separate graphs, you can make separately
+named symlinks in the plugins directory on the node (most often either
+/etc/munin/plugins or /etc/opt/munin/plugins), eg. multips_memory_rss and
+multips_memory_vsize as symlinks to multips_memory and configure them thus:
+
+  [multips_memory*]
+      env.names apache2 mysqld php-cgi
+
+  [multips_memory_rss]
+      env.monitor rss
+
+  [multips_memory_vsize]
+      env.monitor vsize
+
+They can of course also have different process names as well.  Eg. one
+list for the "LAMP" stack and one for the Java/Oracle stack in
+separate graphs.
+
+
+=head1 INTERPRETATION
+
+This plugin adds up the RSS (or other memory size if configured) of
+all processes matching the process name, as reported by ps.
+
+=head1 MAGIC MARKERS
+
+  #%# family=manual
+  #%# capabilities=autoconf
+
+=head1 VERSION
+
+  0.1 first release, based on multips as distributed in Debian.
+
+  $Id $
+
+=head1 BUGS AND RESTRICTIONS
+
+Only the executable name is matched against (ps -eo comm)1, and it must
+be a full string match to the executable base name, not substring,
+unless you enter a name such as ".*apache" since RE meta characters in
+the names are active.
+
+You cannot specify multiple sizes. The plugin handles only one.
+
+=head1 AUTHOR
+
+Originally: Unknown.
+
+Made into multimemory by: github.com/dominics github.com/yhager.
+
+Renamed to multips_memory when included in official munin trunk.
+
+Thanks to: wix
+
+Some further work to make more generic by Nicolai Langfeldt
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+if [ "$1" = "autoconf" ]; then
+    if [ -z "$names" ]; then
+	echo "no (Configuration required)"
+	exit 0
+    fi
+
+    echo yes
+    exit 0
+fi
+
+if [ -z "$names" ]; then
+    echo "(Configuration required)"
+    exit 1
+fi
+
+monitor=${monitor:-rss}
+
+if [ "$1" = "config" ]; then
+	echo graph_title Process $monitor summed by name
+	echo 'graph_category processes'
+	echo 'graph_args --base 1024 -l 0'
+	echo 'graph_vlabel memory'
+	echo "graph_info This plugin shows $monitor memory usage for commands matching the respective regular expressions"
+	for name in $names; do
+	    	fieldname="$(clean_fieldname "$name")"
+		eval REGEX='^$name$';
+
+		echo "$fieldname.label $name"
+		echo "$fieldname.info For /$REGEX/"
+	done
+	exit 0
+fi
+
+for name in $names; do
+        fieldname="$(clean_fieldname "$name")"
+
+	ps -eo $monitor,comm | gawk '
+BEGIN              { total = "U"; } # U = Unknown. 
+/grep/             { next; }
+$2 ~ /^'"$name"'$/ { total = total + ($1*1024); }
+END                { print "'"$fieldname"'.value", total; }'
+done

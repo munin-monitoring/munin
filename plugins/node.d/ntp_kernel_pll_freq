@@ -1,0 +1,75 @@
+#!/bin/sh
+# -*- sh -*-
+
+: <<EOF
+
+=head1 NAME
+
+ntp_kernel_pll_freq - Plugin to monitor the kernel's PLL frequency for
+the NTP status
+
+=head1 CONFIGURATION
+
+No configuration
+
+This plugin optionally reads the file /etc/munin/ntp-freq-comp, which
+should contain a number to be added to the frequency read by ntpdc.
+
+=head1 AUTHORS
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 BUGS
+
+Handling of $fcomp is unquoted, and may cause trouble.
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+EOF
+
+export PATH=/usr/local/sbin:$PATH
+
+if [ "$1" = "autoconf" ]; then
+    { ntpq -c kerninfo; ntpdc -c kerninfo; } 2>/dev/null |
+    awk 'BEGIN { ev=1; }
+         /^pll frequency:/ { ev=0; }
+         END { if (ev == 0) { print "yes";} else { print "no"; } exit ev; }'
+    exit 0
+fi
+
+if [ -f /etc/munin/ntp-freq-comp ]; then
+    fcomp=`cat /etc/munin/ntp-freq-comp`
+else
+    fcomp=0
+fi
+
+if [ "$1" = "config" ]; then
+    echo 'graph_title NTP kernel PLL frequency (ppm +' ${fcomp}')'
+    echo 'graph_args --alt-autoscale'
+    echo 'graph_vlabel PLL frequency (ppm +' ${fcomp}')'
+    echo 'graph_category time'
+    echo 'graph_info The frequency for the kernel phase-locked loop used by NTP.'
+    echo 'ntp_pll_freq.label pll-freq'
+    echo 'ntp_pll_freq.info Phase-locked loop frequency in parts per million'
+    exit 0
+fi
+
+printf 'ntp_pll_freq.value '
+
+if [ $(ntpq -c version | grep --extended-regexp --only-matching '[[:digit:]]\.[[:digit:]]\.[[:digit:]]' | tr -d '.') -ge 427 ]
+then
+    cmd=ntpq
+else
+    cmd=ntpdc
+fi
+
+$cmd -c kerninfo | awk -v fcomp=$fcomp '/^pll frequency:/ { print $3 + fcomp }'

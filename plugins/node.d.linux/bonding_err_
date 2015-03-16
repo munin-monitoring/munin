@@ -1,0 +1,103 @@
+#!/bin/sh
+# -*- sh -*-
+
+: <<EOF
+
+=head1 NAME
+
+bonding_err_ - Wildcard plugin to graph bonding interface errors
+
+=head1 CONFIGURATION
+
+This is a wildcard plugin.  The link name extension is the bonding
+interface to monitor.
+
+=head1 AUTHORS
+
+Copyright Bjørn Ruberg 2009
+
+=head1 LICENSE
+
+Gnu GPLv2
+
+=begin comment
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 dated June, 1991.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+=end comment
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
+
+EOF
+
+# Source plugin library functions
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+PROCDIR="/proc/net/bonding"
+MYSELF=$(basename $0)
+FILENAME="bonding_err_"
+
+if [ "$1" = "autoconf" ]; then
+  if [ -d "${PROCDIR}" ]; then
+    echo "yes"
+  else
+    echo "no (No ${PROCDIR})"
+  fi
+  exit 0
+fi
+
+if [ "$1" = "suggest" ]; then
+  ls -1 ${PROCDIR}
+  exit 0
+fi
+
+if [ "$1" = "config" ]; then
+  if [ "$MYSELF" = "$FILENAME" ]; then
+    echo "Can't run config on un-symlinked plugin. Please run the plugin with 'suggest' before attempting this."
+    exit 0
+  else 
+    BONDINGIF=$(echo $MYSELF | sed "s/^$FILENAME//")
+    echo "graph_title Bonding interface errors for $BONDINGIF"
+    echo "graph_category Network"
+    echo "graph_args --base 1000 -l 0"
+    grep "^Slave Interface:" ${PROCDIR}/${BONDINGIF} | while read a b if; do
+      fieldname=$(clean_fieldname "$if")
+      echo "if_${fieldname}.label ${if}"
+      echo "if_${fieldname}.type DERIVE"
+      echo "if_${fieldname}.min 0"
+      echo "if_${fieldname}.warning 0"
+    done
+  fi
+  exit 0
+fi
+
+if [ "$MYSELF" = "$FILENAME" ]; then
+  echo "Can't run an un-symlinked plugin. Please run the plugin with 'suggest' before attempting this."
+  exit 0
+fi
+
+BONDINGIF=$(echo $MYSELF | sed "s/^$FILENAME//")
+grep "^Slave Interface:" ${PROCDIR}/${BONDINGIF} | while read a b if; do
+  fieldname=$(clean_fieldname "$if")
+  echo -n "if_${fieldname}.value "
+  grep -A 4 "^Slave Interface: ${if}" ${PROCDIR}/${BONDINGIF} | grep "Link Failure Count:" | cut -d " " -f 4
+done
+
+
+# vim: syntax=sh ts=2 et

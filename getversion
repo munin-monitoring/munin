@@ -43,6 +43,7 @@ generate_version_string() {
             git describe
             ;;
         *)
+            branch=$(echo $branch | sed -e 's/[^0-9A-Za-z\.\-\_]/_/g' )
             # "foo | read VAR" does *not* work
             # workaround stolen from http://www.etalabs.net/sh_tricks.html
             read VERSION COMMITS HASH <<EOF

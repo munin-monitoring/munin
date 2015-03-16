@@ -80,11 +80,6 @@ OSTYPE     := $(shell uname | tr '[A-Z]' '[a-z]')
 # files)
 HOSTNAME   := $(shell hostname)
 
-# What is the safest way to create a tempfile.
-# Default is to figure it out by testing various methods.
-# Replace this with a known platform-specific method
-MKTEMP     := $(shell ./test-mktemp)
-
 # Munin version number.
 VERSION    := $(shell ./getversion)
 

@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# $Id$
+#
+# Script to monitor disk usage.
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional - used by munin-config)
+#
+# Environment:
+#       warning  Warning percentage, default 92
+#       critical Critical percentage, default 98
+#
+# Magic markers (optional - used by munin-config and installation
+# scripts):
+#
+#%# family=auto
+#%# capabilities=autoconf
+
+if [ "$1" = "autoconf" ]; then
+	echo yes
+	exit 0
+fi
+
+EXCLUDEDFS="-t noprocfs,devfs,fdescfs,linprocfs,linsysfs,nfs,nullfs,cd9660"
+
+if [ $(uname -s) = "GNU/kFreeBSD" ]; then
+	EXCLUDEDFS=$(echo $EXCLUDEDFS | sed 's/^-t /-x /; s/,/ -x /g')
+fi
+
+if [ "$1" = "config" ]; then
+	echo 'graph_title Disk usage in percent'
+	echo 'graph_args --upper-limit 100 -l 0'
+	echo 'graph_vlabel %'
+	echo 'graph_category disk'
+	echo 'graph_scale no'
+	echo 'graph_info This graph shows disk usage on the machine.'
+	mfs=0
+	/bin/df -P $EXCLUDEDFS | tail -n +2 | grep -v '^/sys' | grep -v "//" | while read i; do
+		case $i in
+		mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
+		*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
+		esac
+		echo -n "$name.label "
+		echo $i | awk '{ print $6 }'
+		echo "$name.warning ${warning:-92}"
+		echo "$name.critical ${critical:-98}"
+	done
+	exit 0
+fi
+
+mfs=0
+/bin/df -P $EXCLUDEDFS | tail -n +2 | grep -v '^/sys' | grep -v "//" | while read i; do
+	case $i in
+	mfs:*) name=mfs$mfs; mfs=`expr $mfs + 1`;;
+	*) name=`echo $i | awk '{ gsub("[^a-zA-Z0-9_]", "_", $1); print $1 }'` ;;
+	esac
+	echo -n "$name.value "
+	echo $i | awk '{ print $5 }' | cut -f1 -d%
+done

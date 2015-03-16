@@ -1,0 +1,118 @@
+#!/usr/bin/perl -w
+# -*- perl -*-
+
+=head1 NAME
+
+users - Munin plugin to monitor the number of users logged in to a Unix box.
+
+=head1 APPLICABLE SYSTEMS
+
+Should work on any Unix that has the L<who>(1) command.
+
+=head1 CONFIGURATION
+
+None needed
+
+=head1 INTERPRETATION
+
+The plugin simply runs the L<who>(1) command and counts the number of
+users logged in by different methods (tty, pty, X, etc).
+
+=head1 BUGS
+
+Logins or sessions that are not registered in C</var/run/utmp> as part
+of the session setup will not be counted (this is a feature, not a
+bug).
+
+Only tested extensively on Linux.
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 VERSION
+
+  $Id$
+
+=head1 AUTHOR
+
+Copyright (C) 2004-2008.
+
+Original version by Michael Kaiser tools (at) micha (dot) de.
+Modified and made more generic by Nicolai Langfeldt, 2006
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+use Munin::Plugin;
+
+if ( defined($ARGV[0])) {
+    if ($ARGV[0] eq 'autoconf') {
+	print "yes\n";
+	exit 0;
+    }
+
+    if ( $ARGV[0] eq "config" ) {
+	print "graph_title Logged in users\n";
+	print "graph_args --base 1000 -l 0\n";
+	print "graph_vlabel Users\n";
+	print "graph_scale no\n";
+	print "graph_category system\n";
+	print "graph_printf %3.0lf\n";
+	print "tty.label tty\n";
+	print "tty.draw AREASTACK\n";
+	print "tty.colour 00FF00\n";
+	print "pty.label pty\n";
+	print "pty.draw AREASTACK\n";
+        print "pty.colour 0000FF\n";
+	print "pts.label pts\n";
+	print "pts.draw AREASTACK\n";
+	print "pts.colour 00FFFF\n";
+	print "X.label X displays\n";
+	print "X.draw AREASTACK\n";
+	print "X.info Users logged in on an X display\n";
+	print "X.colour 000000\n";
+	print "other.label Other users\n";
+	print "other.info Users logged in by indeterminate method\n";
+	print "other.colour FF0000\n";
+	foreach my $field (qw(tty pty pts X other)) {
+		print_thresholds($field);
+	}
+	exit 0;
+    }
+}
+
+$tty = 0;
+$pty = 0;
+$pts = 0;
+$X   = 0;
+$unc = 0;  # Unclassified
+
+open (WHO,"who |");
+
+foreach (<WHO>) {
+    (undef,$_,undef) = split /[\/ ]+/;
+    $tty++,next if /ttyv?/; # Linux virtual console tty (on some hosts)
+    $pty++,next if /pty|ttyp/;
+    $pts++,next if /pts/;
+    $tty++,next if /tty/;   # Regular tty
+
+    $X++,next if (/:\d+/); # Linux style X screen
+    $X++,next if (/X[0-9a-fA-F]*/); # Solaris style (ifi.uio.no only?)
+
+    $unc++;
+}
+
+close (WHO);
+
+print "tty.value $tty\n";
+print "pty.value $pty\n";
+print "pts.value $pts\n";
+print "X.value $X\n";
+print "other.value $unc\n";
+
+# vim:syntax=perl

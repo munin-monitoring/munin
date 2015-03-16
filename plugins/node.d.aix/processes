@@ -1,0 +1,93 @@
+#!/usr/bin/perl
+# -*- perl -*-
+
+=head1 NAME
+
+processes - Plugin to monitor the number of processes on the machine.
+Using "ps | wc -l".
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 NOTES
+
+=head2 DESCRIPTION
+
+This will report back the number of processes currently running on a
+server.  By defualt it will report back the total number of processes
+running (global).  Optionally you can edit the script and add items to
+look for to the "lookFor" array.  These should be simple things that
+can be grep'd for.
+
+=head2 RESCTRICTIONS
+
+None known.  /usr/bin/ps should be executable by everyone by default.
+
+Optionally you can add items to the lookFor array, and those items
+will be graphed as well.  This can be useful for watching how many
+processes of a particular type are running.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=contrib
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+
+
+my(@lookFor) = ("root");
+
+if($ARGV[0] && $ARGV[0] eq "autoconf")
+  {
+    if(-e "/usr/bin/ps" && -X "/usr/bin/ps")
+      {
+        print "yes\n";
+        exit 0;
+      }
+    else
+      {
+        print "no\n";
+        exit 0;
+      }
+  }
+
+my($item);  
+if($ARGV[0] && $ARGV[0] eq "config")
+  {
+    print "graph_title Number of Processes\n";
+    print "graph_args --base 1000 -l 0 \n";
+    print "graph_vlabel number of processes\n";
+    print "graph_category processes\n";
+    print "global.label global\n";
+    print "global.draw LINE2\n";
+    
+    foreach $item (@lookFor)
+      {
+        print "$item.label $item\n";
+        print "$item.draw LINE2\n";
+      }
+  }
+ 
+my($procNum); 
+foreach $item (@lookFor)
+  {
+    $procNum = `/usr/bin/ps -ef|grep $item|grep -v grep |wc -l`;
+    chomp($procNum);
+    
+    print "$item.value $procNum\n";
+  }
+  
+$procNum = `/usr/bin/ps -ef|grep -v grep|wc -l`;
+chomp($procNum);
+print "global.value $procNum\n";

@@ -1,0 +1,137 @@
+#!/bin/sh
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+memory - Show memory stats based on top output
+
+=head1 Applicable systems
+
+Solaris systems with the package SUNWtop or other package containint
+top installed.
+
+=head1 CONFIGURATION
+
+The following shows the default settings for this plugin:
+
+  [memory]
+     env.top /usr/local/bin/top
+
+You can also set warning and critical limits with these env settings:
+
+     real_warning
+     real_critical
+     used_warning
+     used_critical
+     swapt_warning
+     swapu_warning
+
+All sizes are calculated and warned against in MB.
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 BUGS
+
+=over 4
+
+=item Reporting size
+
+Fixme: Reporting size in MB is Wrong. Report bytes and let rrd scale units
+
+=item Should use kstat
+
+Fixme: Using kstat would be much better
+
+=back
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+TOP=${top:-/usr/local/bin/top}
+
+if [ "$1" = "autoconf" ]; then
+    if [ -x $TOP ] ; then
+	echo yes
+	exit 0
+    else
+	echo "no (no executable: $TOP)"
+	exit 0
+    fi
+fi
+
+if [ "$1" = "config" ]; then
+  echo "graph_title Memory usage (in MB)"
+	echo 'graph_category system'
+	echo "real.label Physical mem"
+	echo "used.label Mem used"
+	echo "swapt.label Total swap"
+	echo "swapu.label Swap used"
+	print_warning real
+	print_critical real
+	print_warning used
+	print_critical used
+	print_warning swapt
+	print_critical swapt
+	print_warning swapu
+	print_critical swapu
+        exit 0
+fi
+
+# Linjen som grep'es ut kan se ut som dette:
+#
+# Memory: 320M real, 142M free, 129M swap in use, 1095M swap free
+
+$TOP -n -u | nawk '
+function scale(value) {
+  if (value ~ /G$/) { sub("G", "", value); value *= 1024 }
+  else if (value ~ /M$/) sub("M", "", value)
+  else if (value ~ /K$/) { sub("K", "", value); value /= 1024 }
+  else value /= 1024 * 1024;
+  return value;
+}
+# Memory: 8184M real, 6147M free, 992M swap in use, 13G swap free
+/^Memory: .* real, .* free, .* swap in use, .* swap free/ {
+  real  = scale($2);
+  free  = scale($4);
+  swapu = scale($6);
+  swapf = scale($10);
+
+  memused = real - free
+  swapt = swapu + swapf
+
+  print "real.value", real
+  print "used.value", memused
+  print "swapt.value", swapt
+  print "swapu.value", swapu
+}
+# Memory: 8190M phys mem, 1827M free mem, 8205M swap, 8192M free swap
+/^Memory: .* phys mem, .* free mem, .* swap, .* free swap/ {
+  real  = scale($2);
+  free  = scale($5);
+  swapt = scale($8);
+  swapf = scale($10);
+
+  memused = real - free
+  swapu = swapt - swapf
+
+  print "real.value", real
+  print "used.value", memused
+  print "swapt.value", swapt
+  print "swapu.value", swapu
+}'
+
+# vim: syntax=sh ts=2 et

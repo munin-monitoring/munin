@@ -1,4 +1,4 @@
-#!@@PERL@@ -w
+#!/usr/bin/perl -w
 # -*- cperl -*-
 #
 # Copyright (C) 2002-2009 Jimmy Olsen, Audun Ytterdal

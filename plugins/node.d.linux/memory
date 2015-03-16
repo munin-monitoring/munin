@@ -1,0 +1,325 @@
+#!/usr/bin/perl -w
+# -*- perl -*-
+
+=head1 NAME
+
+memory - Plugin to monitor memory usage
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head2 Warning and Critical Values
+
+Warning and critical values can be passed in environment variables as byte
+values or they can be percentages using a % sign and the value will be
+calculated dynamically by the plugin. Thus, to warn on swap at 50% the
+configuration is:
+
+	[memory]
+	env.swap_warning 50%
+
+Note that swap is calculated against the total swap amount (SwapTotal), and all
+other fields are calculated against the total amount of memory (MemTotal).
+
+
+=head1 AUTHORS
+
+Original Author: Jimmy Olsen
+
+=head2 CONTRIBUTORS
+
+=over 4
+
+=item Mike Fedyk
+
+Slab, SwapCached, PageTables, VmallocUsed, Mapped, Active, Inactive,
+2.4 Rmap & 2.6
+
+=item Juha-Matti Tapio
+
+Input on swap_cache and VMalloc Used on 64 bit machines.
+
+=item Nicolai Langfeldt
+
+Editor
+
+=back
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+use Munin::Plugin;
+
+if ($ARGV[0] and $ARGV[0] eq "autoconf") {
+    if (-r "/proc/meminfo") {
+	print "yes\n";
+	exit 0;
+    } else {
+	print "no (/proc/meminfo not found)\n";
+	exit 0;
+    }
+}
+
+my %mems;
+&fetch_meminfo;
+
+if ($ARGV[0] and $ARGV[0] eq "config") {
+    print "graph_args --base 1024 -l 0 --upper-limit ",$mems{'MemTotal'},"\n";
+    print "graph_vlabel Bytes\n";
+    print "graph_title Memory usage\n";
+    print "graph_category system\n";
+    print "graph_info This graph shows what the machine uses memory for.\n";
+    print "graph_order ",
+      "apps ";
+    print "page_tables " if exists $mems{'PageTables'};
+
+    print "swap_cache " if exists $mems{'SwapCached'};
+
+    #print "vmalloc_used " if exists $mems{'VmallocUsed'};
+
+    print "slab " if exists $mems{'Slab'};
+
+    print "cached ",
+      "buffers ",
+	"free ",
+	  "swap ",
+	    "\n";
+
+    print "apps.label apps\n";
+    print "apps.draw AREA\n";
+    print "apps.info Memory used by user-space applications.\n";
+    print "buffers.label buffers\n";
+    print "buffers.draw STACK\n";
+    print "buffers.info Block device (e.g. harddisk) cache. ",
+      "Also where \"dirty\" blocks are stored until written.\n";
+    print "swap.label swap\n";
+    print "swap.draw STACK\n";
+    print "swap.info Swap space used.\n";
+    print "cached.label cache\n";
+    print "cached.draw STACK\n";
+    print "cached.info Parked file data (file content) cache.\n";
+    print "free.label unused\n";
+    print "free.draw STACK\n";
+    print "free.info Wasted memory. Memory that is not ",
+      "used for anything at all.\n";
+    if (exists $mems{'Slab'}) {
+	print "slab.label slab_cache\n";
+	print "slab.draw STACK\n";
+	print "slab.info Memory used by the kernel (major users ",
+	  " are caches like inode, dentry, etc).\n";
+    }
+    if (exists $mems{'SwapCached'}) {
+	print "swap_cache.label swap_cache\n";
+	print "swap_cache.draw STACK\n";
+	print "swap_cache.info A piece of memory that keeps track of pages ",
+	  "that have been fetched from swap but not yet been modified.\n";
+    }
+    if (exists $mems{'PageTables'}) {
+	print "page_tables.label page_tables\n";
+	print "page_tables.draw STACK\n";
+	print "page_tables.info Memory used to map between virtual and ",
+	  "physical memory addresses.\n"
+    }
+    if (exists $mems{'VmallocUsed'}) {
+	print "vmalloc_used.label vmalloc_used\n";
+	# print "vmalloc_used.draw STACK\n";
+	print "vmalloc_used.draw LINE2\n";
+	print "vmalloc_used.info 'VMalloc' (kernel) memory used\n"
+    }
+    if (exists $mems{'Committed_AS'}) {
+	print "committed.label committed\n";
+	print "committed.draw LINE2\n";
+
+	# Linux machines frequently overcommit - this is not a error
+	# condition or even worrying.  But sometimes overcommit shows
+	# memory leaks so we want to graph it.
+
+	# print "committed.warning ", $mems{'SwapTotal'} + $mems{'MemTotal'}, "\n";
+	print "committed.info The amount of memory allocated to programs. ",
+	  "Overcommitting is normal, but may indicate memory leaks.\n";
+    }
+    if (exists $mems{'Mapped'}) {
+	print "mapped.label mapped\n";
+	print "mapped.draw LINE2\n";
+	print "mapped.info All mmap()ed pages.\n";
+    }
+    if (exists $mems{'Active'}) {
+	print "active.label active\n";
+	print "active.draw LINE2\n";
+	print "active.info Memory recently used. Not reclaimed unless ",
+	  "absolutely necessary.\n";
+    }
+    if (exists $mems{'ActiveAnon'}) {
+	print "active_anon.label active_anon\n";
+	print "active_anon.draw LINE1\n";
+    }
+    if (exists $mems{'ActiveCache'}) {
+	print "active_cache.label active_cache\n";
+	print "active_cache.draw LINE1\n";
+    }
+    if (exists $mems{'Inactive'}) {
+	print "inactive.label inactive\n";
+	print "inactive.draw LINE2\n";
+	print "inactive.info Memory not currently used.\n";
+    }
+    if (exists $mems{'Inact_dirty'}) {
+	print "inact_dirty.label inactive_dirty\n";
+	print "inact_dirty.draw LINE1\n";
+	print "inact_dirty.info Memory not currently used, but in need of ",
+	  "being written to disk.\n";
+    }
+    if (exists $mems{'Inact_laundry'}) {
+	print "inact_laundry.label inactive_laundry\n";
+	print "inact_laundry.draw LINE1\n";
+    }
+    if (exists $mems{'Inact_clean'}) {
+	print "inact_clean.label inactive_clean\n";
+	print "inact_clean.draw LINE1\n";
+	print "inact_clean.info Memory not currently used.\n";
+    }
+    for my $field (qw(apps buffers swap cached free slab swap_cache page_tables vmalloc_used committed mapped active active_anon active_cache inactive inact_dirty inact_laundry inact_clean)) {
+    	my ($warning, $critical) = get_thresholds($field);
+	my $total = $mems{MemTotal};
+	$total = $mems{SwapTotal} if($field eq "swap");
+
+	$warning = adjust_threshold($warning, $total);
+	$critical = adjust_threshold($critical, $total);
+
+	print "$field.warning $warning\n" if defined $warning;
+	print "$field.critical $critical\n" if defined $critical;
+    }
+    exit 0;
+}
+
+# Any optional value needs to be initialized to zero if it's used in a calculation below
+# and is has not been set by &fetch_meminfo
+
+if (exists $mems{'Slab'}) {
+    print "slab.value ", $mems{'Slab'}, "\n";
+} else {
+    $mems{'Slab'} = 0;
+}
+
+if (exists $mems{'SwapCached'}) {
+    print "swap_cache.value ", $mems{'SwapCached'}, "\n";
+} else {
+    $mems{'SwapCached'} = 0;
+}
+
+if (exists $mems{'PageTables'}) {
+    print "page_tables.value ", $mems{'PageTables'}, "\n";
+} else {
+    $mems{'PageTables'} = 0;
+}
+
+if (exists $mems{'VmallocUsed'}) {
+    print "vmalloc_used.value ", $mems{'VmallocUsed'}, "\n";
+} else {
+    $mems{'VmallocUsed'} = 0;
+}
+
+# Having default values for mandatory fields, even when they are not on the system
+$mems{'MemFree'} ||= 0;
+$mems{'Buffers'} ||= 0;
+$mems{'Cached'} ||= 0;
+$mems{'Slab'} ||= 0;
+$mems{'PageTables'} ||= 0;
+$mems{'SwapCached'} ||= 0;
+$mems{'SwapFree'} ||= 0;
+$mems{'SwapTotal'} ||= 0;
+
+print "apps.value ", $mems{'MemTotal'}
+	-$mems{'MemFree'}
+	-$mems{'Buffers'}
+	-$mems{'Cached'}
+	-$mems{'Slab'}
+	-$mems{'PageTables'}
+        -$mems{'SwapCached'}
+	,"\n";
+
+print "free.value ", $mems{'MemFree'}, "\n";
+print "buffers.value ", $mems{'Buffers'}, "\n";
+print "cached.value ", $mems{'Cached'}, "\n";
+print "swap.value ", $mems{'SwapTotal'} - $mems{'SwapFree'}, "\n";
+
+print "committed.value ", $mems{'Committed_AS'}, "\n"
+  if exists $mems{'Committed_AS'};
+
+print "mapped.value ", $mems{'Mapped'}, "\n"
+  if exists $mems{'Mapped'};
+
+print "active.value ", $mems{'Active'}, "\n"
+  if exists $mems{'Active'};
+
+print "active_anon.value ", $mems{'ActiveAnon'}, "\n"
+  if exists $mems{'ActiveAnon'};
+
+print "active_cache.value ", $mems{'ActiveCache'}, "\n"
+  if exists $mems{'ActiveCache'};
+
+print "inactive.value ", $mems{'Inactive'}, "\n"
+  if exists $mems{'Inactive'};
+
+print "inact_dirty.value ", $mems{'Inact_dirty'}, "\n"
+  if exists $mems{'Inact_dirty'};
+
+print "inact_laundry.value ", $mems{'Inact_laundry'}, "\n"
+  if exists $mems{'Inact_laundry'};
+
+print "inact_clean.value ", $mems{'Inact_clean'}, "\n"
+  if exists $mems{'Inact_clean'};
+
+exit 0;
+
+sub fetch_meminfo {
+    open (IN, "/proc/meminfo") ||
+      die "Could not open /proc/meminfo for reading: $!";
+    while (<IN>) {
+	if (/^(\w+):\s*(\d+)\s+kb/i) {
+	    $mems{"$1"} = $2 * 1024;
+	}
+    }
+    close (IN);
+
+    # Only 2.6 and above has slab reported in meminfo, so read
+    # slabinfo if it isn't in meminfo
+    if (!$mems{Slab}) {
+	&fetch_slabinfo;
+    }
+    # Support 2.4 Rmap VM based kernels
+    if (!$mems{'Inactive'} && $mems{'Inact_dirty'} &&
+      $mems{'Inact_laundry'} && $mems{'Inact_clean'}) {
+	$mems{'Inactive'} = $mems{'Inact_dirty'} +
+	  $mems{'Inact_laundry'} + $mems{'Inact_clean'};
+    }
+}
+
+sub fetch_slabinfo {
+    # In 2.0 there is no slabinfo file, so return if the file doesn't open
+    open (IN, "/proc/slabinfo") || return;
+    my @slabinfo;
+    my $tot_slab_pages = 0;
+    my $slab_version = <IN>;
+    if ($slab_version =~ /^slabinfo - version: 1.1/) {
+	while (<IN>) {
+	    if (!/^slabinfo/) {
+		@slabinfo = split;
+		$tot_slab_pages += $slabinfo[5];
+	    }
+	}
+    }
+    close (IN);
+
+    $mems{'Slab'} = $tot_slab_pages * 4096 if $tot_slab_pages gt 0;
+}
+
+# vim:syntax=perl:ts=8

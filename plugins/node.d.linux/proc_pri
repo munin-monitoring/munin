@@ -1,0 +1,67 @@
+#!/bin/sh
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+proc_pri - Munin-plugin to monitor the processes priority on a Linux
+machine
+
+=head1 CONFIGURATION
+
+No configuration
+
+=head1 AUTHOR
+
+Lars Strand
+
+=head1 LICENSE
+
+GNU GPL
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+if [ "$1" = "autoconf" ]; then
+	echo yes
+	exit 0
+fi
+
+if [ "$1" = "config" ]; then
+    echo 'graph_title Processes priority'
+    echo 'graph_order low high locked'
+    echo 'graph_category processes'
+    echo 'graph_info This graph shows number of processes at each priority'
+    echo 'graph_args --base 1000 -l 0'
+    echo 'graph_vlabel Number of processes'
+    echo 'high.label high priority'
+    echo 'high.draw STACK'
+    echo 'high.info The number of high-priority processes (tasks)'
+    print_warning high
+    print_critical high
+    echo 'low.label low priority'
+    echo 'low.draw AREA'
+    echo 'low.info The number of low-priority processes (tasks)'
+    print_warning low
+    print_critical low
+    echo 'locked.label locked in memory'
+    echo 'locked.draw STACK'
+    echo 'locked.info The number of processes that have pages locked into memory (for real-time and custom IO)'
+    print_warning locked
+    print_critical locked
+    exit 0
+fi
+
+echo -n "high.value "
+ps --no-header -eo stat | grep \< | wc -l
+echo -n "low.value "
+ps --no-header -eo stat | grep N | wc -l
+echo -n "locked.value "
+ps --no-header -eo stat | grep L | wc -l

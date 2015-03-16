@@ -1,0 +1,93 @@
+#!/usr/bin/perl -w
+
+=head1 NAME
+
+fw_forwarded_local - Plugin to monitor network connections.
+
+=head1 CONFIGURATION
+
+This plugin must run with root privileges
+
+=head2 CONFIGURATION EXAMPLE
+
+/etc/munin/plugin-conf.d/global or other file in that dir must contain:
+
+ [fw_*]
+  user root
+
+=head1 NOTES
+
+=over
+
+=item * forward: number of connections forwarded
+
+=item * local: number of connections for the host itself
+
+=back
+
+=head1 AUTHORS
+
+2011.09.23: Perl version by Alex Tomlins
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+use Munin::Plugin;
+
+my $conntrack = '/usr/sbin/conntrack';
+my $nf_conntrack_file = '/proc/net/nf_conntrack';
+my $ip_conntrack_file = '/proc/net/ip_conntrack';
+
+if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" ) {
+    if ( -x $conntrack or -r $nf_conntrack_file or -r $ip_conntrack_file) {
+        print "yes\n";
+    } else {
+        print "no\n";
+    }
+    exit 0;
+}
+
+if ( defined($ARGV[0]) and $ARGV[0] eq "config" ) {
+    print "graph_title ipconntrack\n";
+    print "graph_args -l 0 --base 1000\n";
+    print "graph_vlabel established connections\n";
+    print "graph_category network\n";
+    print "forward.label forward\n";
+    print "forward.type GAUGE\n";
+    print "local.label local\n";
+    print "local.type GAUGE\n";
+    exit 0;
+}
+
+my $command;
+if ( -x $conntrack) {
+    $command = "$conntrack -L -o extended 2>/dev/null";
+} elsif ( -r $nf_conntrack_file ) {
+    $command = "cat $nf_conntrack_file";
+} elsif (-r $ip_conntrack_file ) {
+    $command = "cat $ip_conntrack_file";
+} else {
+    die "Can't find conntrack information\n";
+}
+
+my $local = 0;
+my $forward = 0;
+open CMD, "$command|";
+while (<CMD>) {
+    if (/ESTABLISHED\s+src=(\S+)\s+dst=(\S+)\s+sport.*src=(\S+)\s+dst=(\S+)/) {
+        if ($1 eq $4) {
+            $local++;
+        } else {
+            $forward++;
+        }
+    }
+}
+close CMD;
+
+print "forward.value $forward\n";
+print "local.value $local\n"

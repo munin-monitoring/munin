@@ -1,8 +1,10 @@
 # -*- makefile -*-
 
-# This is the top level Makefile for Munin.
+# This Makefile provides convenience targets for common build/test/install cases, as well as rules
+# for the release manager.
 
-# Some actions are handled by Build.PL (see perldoc Module::Build).
+# In the interest of keeping this Makefile simple, it does not attempt to provide the flexibility
+# provided by using Build.PL directly. (See perldoc Module::Build).
 
 # Defaults/paths. Allows $(CONFIG) to be overrided by
 # make command line
@@ -12,13 +14,12 @@ CONFIG = Makefile.config
 include $(DEFAULTS)
 include $(CONFIG)
 
-PLUGINS		 := $(wildcard plugins/node.d.$(OSTYPE)/* plugins/node.d/* $(JAVA_PLUGINS))
-
 .PHONY: default build install clean test testcover testpod testpodcoverage tar
 
-default: build-munin
+default: blib
 
-build-munin: Build
+blib: Build
+	./Build
 
 install: Build
 	./Build install --destdir=$(DESTDIR) --verbose
@@ -62,8 +63,3 @@ tar:
 	tar rf ../munin-$(RELEASE).tar --owner=root --group=root munin-$(RELEASE)/RELEASE
 	rm -rf munin-$(RELEASE)
 	gzip -f -9 ../munin-$(RELEASE).tar
-
-
-##############################
-# java plugin
-include Makefile.javaplugin

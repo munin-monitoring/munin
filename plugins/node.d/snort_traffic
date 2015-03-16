@@ -1,0 +1,94 @@
+#!/bin/sh
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+snort_traffic - Plugin to monitor Snort traffic in Mbites per second
+
+=head1 CONFIGURATION
+
+The following configuration variables are used by this plugin
+
+ [snort_traffic]
+  env.statsfile - Logfile to Snort's perfmonitor logfile
+  env.warning - Warning percentage
+  env.critical - Critical percentage
+
+=head2 DEFAULT CONFIGURATION
+
+ [snort_traffic]
+  env.statsfile=/var/snort/snort.stats
+
+=head1 AUTHORS
+
+Copyright (C) 2009 Edward Bjarte Fjellskål
+
+Copyright (C) 2010 Rado Rovny
+
+=head1 LICENSE
+
+GNU GPLv2
+
+=begin comment
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 dated June,
+1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+=end comment
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=cut
+
+
+if [ -z $statsfile  ]; then
+        _target=/var/snort/snort.stats
+else
+        _target=$statsfile
+fi
+
+if [ "$1" = "autoconf" ]; then
+        if [ -f $_target ]; then
+                echo yes
+        else
+                echo "no ($_target not readable)"
+        fi
+        exit 0
+fi
+
+if [ "$1" = "config" ]; then
+        echo 'graph_title Snort Traffic'
+        echo 'graph_args --base 1000 -l 0'
+        echo 'graph_vlabel Mbits / second'
+        echo 'graph_scale no'
+        echo 'traffic.label Mbits/second'
+	if [ -n "$warning" ]; then
+		echo "traffic.warning $warning"
+	fi
+	if [ -n "$critical" ]; then
+		echo "traffic.critical $critical"
+	fi
+        echo 'traffic.info Traffic in Mbites per second'
+        echo 'graph_category Snort'
+
+        exit 0
+fi
+
+printf "traffic.value "
+echo $(tail -n1 $_target| awk -F, '{ print $3 }')

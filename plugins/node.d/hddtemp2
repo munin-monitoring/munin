@@ -1,0 +1,96 @@
+#!/usr/bin/perl
+# -*- perl -*-
+#
+# Plugin to monitor hard drive temperatures.
+#
+# This plugin is an alternative to the hddtemp_smartctl, which is the 
+# preferred one.
+#
+# Requirements:
+# 	- S.M.A.R.T. to be turned on for your hard drives
+# 	- hddtemp program installed and in path
+#
+# Parameters supported:
+#
+# 	config
+# 	autoconf
+#
+# Configurable variables
+#
+# 	hddtemp		- Override default program
+# 	ignore		- Disks will not be touched
+#                         "/dev/sdX /dev/sdY /dev/hdZ"
+#
+# Revision 0.1  2004/02/24 Andrew Radke
+#
+# Magic markers:
+#%# family=contrib
+#%# capabilities=autoconf
+
+use strict;
+
+$ENV{'LANG'} = "C"; # Hardcode lang so the hddtemp program to ease parsing of hddtemp-output.
+$ENV{'LC_ALL'} = "C"; # Hardcode lang so the hddtemp program to ease parsing of hddtemp-output.
+my $HDDTEMP = $ENV{'hddtemp'} || 'hddtemp';
+my %config = (
+	regex => qr/^\/dev\/([^:]+):\s*([^:]+):\s*([\d.]+) C/m,
+	title => "Temperatures (Hard Disks)",
+	vlabel => 'Degrees Celsius',
+	warning => 50,
+	critical => 60,
+	graph_args => '--base 1000'
+);
+
+my @disks = (glob("/dev/hd?"), glob("/dev/sd?"));
+if (exists $ENV{ignore}) {
+  $ENV{ignore} =~ s/["']//g;
+  my %ignore = map {$_ => 1} split(' ', $ENV{ignore});
+  @disks = grep {! exists $ignore{$_} } @disks;
+}
+
+$HDDTEMP .= ' -q '.join(' ', @disks).' 2>/dev/null';
+
+if ( defined $ARGV[0] and $ARGV[0] eq 'autoconf' ) {
+  # Now see if "hddtemp" can run
+  my $text = `$HDDTEMP`;
+  if ($?) {
+    if ($? == -1) {
+      print "no (program $HDDTEMP not found)\n";
+    } else {
+      print "no (program $HDDTEMP died)\n";
+    }
+    exit 0;
+  }
+
+  unless ($text =~ / C/) {
+    print "no (no temperature readings)\n";
+    exit 0;
+  }
+
+  print "yes\n";
+  exit 0;
+}
+
+if ( defined $ARGV[0] and $ARGV[0] eq 'config' ) {
+  print "graph_title $config{title}\n";
+  print "graph_vlabel $config{vlabel}\n";
+  print "graph_args --base 1000\n";
+  print "graph_category sensors\n";
+  my $text = `$HDDTEMP`;
+  while ($text =~ /$config{regex}/g) {
+    my ($dev, $type, $temp) = ($1, $2, $3);
+    $type =~ s/ {2,}/ /g;
+    $type =~ s/ +$//g;
+    print "hdd$dev.label $dev ($type)\n";
+    print "hdd$dev.warning $config{warning}\n";
+    print "hdd$dev.critical $config{critical}\n";
+  }
+  exit 0;
+}
+
+my $text = `$HDDTEMP`;
+while ($text =~ /$config{regex}/g) {
+  print "hdd$1.value $3\n";
+}
+
+# vim:syntax=perl

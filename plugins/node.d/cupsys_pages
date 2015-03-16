@@ -1,0 +1,161 @@
+#!/usr/bin/perl -w
+# -*- perl -*-
+
+=encoding utf8
+
+=head1 NAME
+
+cupsys_pages - Plugin to monitor number of pages pr printer printed by
+CUPS
+
+=head1 CONFIGURATION
+
+The following environment variables are used
+
+ logdir   - Which logfile to use
+ logfile  - What file to read in logdir
+ maxlabel - Maximum printers to plot
+
+=head1 AUTHOR
+
+Copyright 2004 Rune Nordbøe Skillingstad <rune@skillingstad.no>
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+use strict;
+use Munin::Plugin;
+
+my $statefile = "$ENV{MUNIN_PLUGSTATE}/munin-cupsys-pages.state";
+my $pos       = undef;
+my %printers  = ();
+
+my $LOGDIR    = $ENV{'logdir'}   || '/var/log/cups';
+my $LOGFILE   = $ENV{'logfile'}  || 'page_log';
+my $MAXLABEL  = $ENV{'maxlabel'} || 20;
+
+if($ARGV[0] and $ARGV[0] eq 'autoconf' ) {
+    my $logfile;
+    if(-d $LOGDIR) {
+	$logfile = "$LOGDIR/$LOGFILE";
+	if(-f $logfile) {
+	    if(-r $logfile) {
+		print "yes\n";
+		exit 0;
+	    } else {
+		print "no (logfile not readable)\n";
+	    }
+	} else {
+	    print "no (logfile not found)\n";
+	}
+    } else {
+	print "no (could not find logdir)\n";
+    }
+    exit 0;
+}
+
+my $logfile = "$LOGDIR/$LOGFILE";
+my $rotlogfile = $logfile . ".0";
+if (-f "$logfile.0") {
+    $rotlogfile = $logfile . ".0";
+} elsif (-f "$logfile.1") {
+    $rotlogfile = $logfile . ".1";
+} elsif (-f "$logfile.01") {
+    $rotlogfile = $logfile . ".01";
+}
+
+if (! -f $logfile and ! -f $rotlogfile) {
+    print "pages.value $logfile $rotlogfile U\n";
+    exit 0;
+}
+
+if (-f $statefile) {
+    open(IN, $statefile) or die "Could not open $statefile for reading: $!\n";
+    if(<IN> =~ /^(\d+)$/) {
+	$pos = $1;
+    }
+    LINE: while(<IN>) {
+	if(/^([^:]+):(\d+)$/) {
+	    $printers{$1} = $2;
+	}
+	if(keys(%printers) >= $MAXLABEL) {
+	    last LINE;
+	}
+    }
+    close(IN);
+}
+
+my $startsize = (stat $logfile)[7];
+
+if (!defined $pos) {
+    # Initial run.
+    $pos = $startsize;
+    $pos = 0;
+}
+if ($startsize < $pos) {
+    # Log rotated
+    parselogfile ($rotlogfile, $pos, (stat $rotlogfile)[7]);
+    $pos = 0;
+}
+
+parselogfile($logfile, $pos, $startsize);
+$pos = $startsize;
+
+# Write back to state file
+open (STATFILE, ">$statefile") or
+  die "Could not open $statefile for writing: $!\n";
+print STATFILE "$pos\n";
+foreach my $printer (sort(keys %printers)) {
+    print STATFILE "$printer:".$printers{$printer}."\n";
+}
+close(STATFILE);
+
+if($ARGV[0] and $ARGV[0] eq "config") {
+    print "host_name $ENV{FQDN}\n";
+    print "graph_title CUPS pages printed\n";
+    print "graph_args --base 1000 -l 0\n";
+    print "graph_vlabel pages/\${graph_period}\n";
+    print "graph_category printing\n";
+    foreach my $printer (sort(keys %printers)) {
+	# Convert printername to something legal
+	my $p = $printer;
+	$printer = clean_fieldname($printer);
+	print "$printer.label $p\n";
+	print "$printer.type DERIVE\n";
+	print "$printer.min 0\n";
+    }
+    exit 0;
+} else {
+    foreach my $printer (sort(keys %printers)) {
+	my $p = $printer;
+	$printer = clean_fieldname($printer);
+	print "$printer.value ".$printers{$p}."\n";
+    }
+    exit 0;
+}
+
+sub parselogfile {
+    my ($fname, $start, $stop) = @_;
+    open (LOGFILE, $fname) or die "No logfile $fname: $!\n";
+    seek (LOGFILE, $start, 0) or die "Could not seek in logfile $fname: $!\n";
+    while (tell(LOGFILE) < $stop) {
+	my $line = <LOGFILE>;
+	chomp ($line);
+	if ($line =~ /^(\S+)\s+\S+\s+\d+\s+\[[^\]]+\]\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)/) {
+	    if(!defined($printers{$1}) && keys(%printers) < $MAXLABEL) {
+		$printers{$1} += int($2)*int($3);
+	    } elsif(defined($printers{$1})) {
+		$printers{$1} += int($2)*int($3);
+	    }
+	} 
+    }
+    close(LOGFILE);
+}

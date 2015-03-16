@@ -1,0 +1,125 @@
+#!/usr/bin/perl
+# -*- cperl -*-
+#
+# Copyright (C) 2009 Magnus Hagander, Redpill Linpro AB
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+=head1 NAME
+
+postgres_connections_ - Plugin to monitor PostgreSQL connections.
+
+=head1 CONFIGURATION
+
+Configuration is done through libpq environment variables, for example
+PGUSER, PGDATABASE, etc. For more information, see L<Munin::Plugin::Pgsql>.
+
+To monitor a specific database, link to postgres_connections_<databasename>.
+To monitor all databases, link to postgres_connections_ALL.
+To monitor several instances, link to postgres_<tag>_connections_<databasename|ALL>
+The <tag> can be what you want but without "_". It allows you to define several
+database configuration.
+
+Example :
+  [postgres_pg91_*]
+  env.PGPORT 5432
+  [postgres_pg92_*]
+  env.PGPORT 5432
+
+=head1 SEE ALSO
+
+L<Munin::Plugin::Pgsql>
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=head1 AUTHOR
+
+Magnus Hagander <magnus@hagander.net>, Redpill Linpro AB
+
+=head1 COPYRIGHT/License.
+
+Copyright (c) 2009 Magnus Hagander, Redpill Linpro AB
+
+All rights reserved. This program is free software; you can
+redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+=cut
+
+use strict;
+use warnings;
+
+use Munin::Plugin::Pgsql;
+
+my $pg = Munin::Plugin::Pgsql->new(
+    basename  => 'postgres_[^_]*_?connections_',
+    title     => 'PostgreSQL connections',
+    info      => 'Number of connections',
+    vlabel    => 'Connections',
+    basequery => [
+        "SELECT tmp.mstate AS state,COALESCE(count,0) FROM
+                 (VALUES ('active'),('waiting'),('idle'),('idletransaction'),('unknown')) AS tmp(mstate)
+                LEFT JOIN
+                 (SELECT CASE WHEN waiting THEN 'waiting' WHEN state='idle' THEN 'idle' WHEN state LIKE 'idle in transaction%' THEN 'idletransaction' WHEN state='disabled' THEN 'unknown' WHEN query='<insufficient privilege>' THEN 'unknown' ELSE 'active' END AS mstate,
+                 count(*) AS count
+                 FROM pg_stat_activity WHERE pid != pg_backend_pid() %%FILTER%%
+                 GROUP BY CASE WHEN waiting THEN 'waiting' WHEN state='idle' THEN 'idle' WHEN state LIKE 'idle in transaction%' THEN 'idletransaction' WHEN state='disabled' THEN 'unknown' WHEN query='<insufficient privilege>' THEN 'unknown' ELSE 'active' END
+                 ) AS tmp2
+                ON tmp.mstate=tmp2.mstate
+                ORDER BY 1;
+		",
+            [ 9.1, "SELECT tmp.state,COALESCE(count,0) FROM
+                 (VALUES ('active'),('waiting'),('idle'),('idletransaction'),('unknown')) AS tmp(state)
+	        LEFT JOIN
+                 (SELECT CASE WHEN waiting THEN 'waiting' WHEN current_query='<IDLE>' THEN 'idle' WHEN current_query='<IDLE> in transaction' THEN 'idletransaction' WHEN current_query='<insufficient privilege>' THEN 'unknown' ELSE 'active' END AS state,
+                 count(*) AS count
+                 FROM pg_stat_activity WHERE procpid != pg_backend_pid() %%FILTER%%
+                 GROUP BY CASE WHEN waiting THEN 'waiting' WHEN current_query='<IDLE>' THEN 'idle' WHEN current_query='<IDLE> in transaction' THEN 'idletransaction' WHEN current_query='<insufficient privilege>' THEN 'unknown' ELSE 'active' END
+                 ) AS tmp2
+                ON tmp.state=tmp2.state
+                ORDER BY 1
+		" ],
+            [ 8.1, "SELECT tmp.state,COALESCE(count,0) FROM
+                 (SELECT 'active' UNION ALL SELECT 'idle' UNION ALL SELECT 'idletransaction' UNION ALL SELECT 'unknown') AS tmp(state)
+	        LEFT JOIN
+                 (SELECT CASE WHEN current_query='<IDLE>' THEN 'idle' WHEN current_query='<IDLE> in transaction' THEN 'idletransaction' WHEN current_query='<insufficient privilege>' THEN 'unknown' ELSE 'active' END AS state,
+                 count(*) AS count
+                 FROM pg_stat_activity WHERE procpid != pg_backend_pid() %%FILTER%%
+                 GROUP BY CASE WHEN current_query='<IDLE>' THEN 'idle' WHEN current_query='<IDLE> in transaction' THEN 'idletransaction' WHEN current_query='<insufficient privilege>' THEN 'unknown' ELSE 'active' END
+                 ) AS tmp2
+                ON tmp.state=tmp2.state
+                ORDER BY 1" ]
+    ],
+    wildcardfilter => " AND datname=?",
+    configquery    => [
+        "VALUES ('active','Active'),('waiting','Waiting for lock'),('idle','Idle'),('idletransaction','Idle in transaction'),('unknown','Unknown')",
+        [
+            8.1,
+            "SELECT 'active','Active' UNION ALL SELECT 'idle','Idle' UNION ALL SELECT 'idletransaction','Idle in transaction' UNION ALL SELECT 'unknown','Unknown'"
+        ]
+    ],
+    suggestquery =>
+        "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate AND NOT datname='postgres' UNION ALL SELECT 'ALL' ORDER BY 1 LIMIT 10",
+    graphdraw => 'AREA',
+    stack => 1
+);
+
+$pg->Process();
+

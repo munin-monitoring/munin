@@ -1,0 +1,115 @@
+#!/bin/sh
+# -*- sh -*-
+
+: << =cut
+
+=head1 NAME
+
+df_inode - Plugin to monitor disk usage (measuring inode usage in percent)
+
+=head1 CONFIGURATION
+
+This shows the default configuration
+
+  [df*]
+    env.df /usr/sbin/df
+    env.warning 92
+    env.critical 98
+
+A device specific warning/critical level is also supported.  Append
+the munin label (shown in the plugin display page) and append _warning
+or _critical respectively to get the (environment variable) name.
+
+To limit the monitored filesystems, configure the "only" environment variable.
+For example, to only monitor /, one would add to plugin-conf.d:
+
+  [df*]
+    env.only /
+
+
+=back
+
+=head1 AUTHOR
+
+Unknown author
+
+=head1 LICENSE
+
+GPLv2
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf
+
+=cut
+
+. $MUNIN_LIBDIR/plugins/plugin.sh
+
+DF=${df:-/usr/sbin/df}
+TAIL=/usr/bin/tail
+warning=${warning:-92}
+critical=${critical:-98}
+
+# Figure out correct way to invoke df and what output to use
+if $DF -P -l -i $only >/dev/null 2>&1; then
+	DF="$DF -P -l -i $only"
+	FSNAME=6
+else
+	DF="$DF -F ufs -oi $only 2>/dev/null"
+	FSNAME=5
+	PCNT=4
+fi
+
+
+if [ "$1" = 'autoconf' ]; then
+    echo yes
+    exit 0
+fi
+
+if [ "$1" = "config" ]; then
+
+    echo 'graph_title Inode usage in percent'
+    echo 'graph_args --upper-limit 100'
+    echo 'graph_category disk'
+    echo 'graph_scale no'
+    echo 'graph_info This graph shows the number of free inodes on the systems filesystem.  Please note that with ZFS there is no limit on the number of inodes and the df included in Solaris will not report any numbers to graph.  On ZFS only filesystems there will be no graph.  GNU df will report numbers and result in a graph but for ZFS filesystems the numbers will have limited usability.'
+
+    # Using the mount point as name is silly as / becomes '' after
+    # the needed substitutions.  So in this incarnation we use the
+    # device name.  Since the plugin already changed names this
+    # should be ok.
+
+    eval $DF | $TAIL +2 | while read dev two three four five six; do
+	case $FSNAME in
+	    5) mnt=$five;;
+	    6) mnt=$six;;
+	esac
+	case $dev:$mnt in
+	    /usr/lib*|ctfs:*|objfs:*|mnttab:*|sharefs:*|*:/cdrom/*|*:/media/*) continue;;
+	    swap:*) name=$(clean_fieldname $mnt);;
+	    *)      name=$(clean_fieldname $dev);;
+	esac
+        echo "$name.label $mnt"
+	print_warning "$name"
+	print_critical "$name"
+    done
+    exit 0
+fi
+
+eval $DF | $TAIL +2 | while read dev two three four five six; do
+    case $PCNT in
+	5) pct=$five;;
+	4) pct=$four;;
+    esac
+    case $FSNAME in
+	5) mnt=$five;;
+	6) mnt=$six;;
+    esac
+    case $dev in
+	/usr/lib*|ctfs:*|objfs:*|mnttab:*|sharefs:*|*:/cdrom/*|*:/media/*) continue;;
+	swap:*) name=$(clean_fieldname $mnt);;
+	*)    name=$(clean_fieldname $dev);;
+    esac
+    echo "$name.value $pct" | cut -f1 -d% 
+done

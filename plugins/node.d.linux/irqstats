@@ -1,0 +1,179 @@
+#!/usr/bin/perl -w
+# -*- cperl -*-
+
+=head1 NAME
+
+irqstats - Munin plugin to monitor individual interrupts on a Linux machine
+
+=head1 APPLICABLE SYSTEMS
+
+Any Linux system
+
+=head1 CONFIGURATION
+
+Specified devices may be skipped.
+
+   [irqstats]
+   env.skipdevs blkif,vif
+
+None needed
+
+=head1 USAGE
+
+Link this plugin to /etc/munin/plugins/ and restart the munin-node.
+
+=head1 INTERPRETATION
+
+The plugin simply shows the number of interrupts on each interrupt
+line.  The lines are identified by the attached equipment rather than
+the IRQ numbers.
+
+High interrupt rates may coincide with high loads on disk, network or
+other I/O, this is normal.
+
+=head1 MAGIC MARKERS
+
+  #%# family=auto
+  #%# capabilities=autoconf
+
+=head1 VERSION
+
+  $Id$
+
+=head1 BUGS
+
+None known
+
+=head1 AUTHOR
+
+Unknown
+
+=head1 LICENSE
+
+GPLv2
+
+=cut
+
+use Munin::Plugin;
+use Scalar::Util qw(looks_like_number);
+use strict;
+
+my $skipdevs = $ENV{'skipdevs'} || "";
+
+if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
+    if(-r '/proc/interrupts') {
+	print "yes\n";
+	exit(0);
+    } else {
+	print "no\n";
+	exit(1);
+    }
+}
+
+my $sun;
+$sun = 1 if (`uname -m` =~ /sparc/);
+
+my $in;
+my @cpus;
+my $cpus;
+
+if ($sun) {
+    @cpus = grep (/^cpu\d+/, `cat /proc/stat`);
+    $cpus = scalar @cpus;
+} else {
+    open $in, '<', '/proc/interrupts'
+      or die "Can't open /proc/interrupts: $!\n";
+    @cpus = split(' ', <$in>);
+    $cpus = scalar @cpus;
+}
+
+my $cpu;
+
+if ($0 =~ /(?:.*\/)?irqstats_(.+)/) {
+    $cpu = $1;
+    if ($cpu > $#cpus) {
+	die "Requested CPU $cpu out of bounds (0..$#cpus)\n";
+    }
+}
+my @irqs;
+
+
+sub sum (@) {
+    my $sum = 0;
+    $sum += (looks_like_number($_) ? $_ : 0) || 0 for @_;	# Avoid complaints about empty strings
+    return $sum;
+}
+
+LINE: while (my $line = <$in>) {
+    my ($irq, $label, $type);
+    my @data;
+    if ($sun) {
+	@data = split (' ', $line, $cpus + 2);
+    } else {
+	@data = split(' ', $line, $cpus + 3);
+    }
+    chomp @data;
+    $irq = shift @data;
+    next unless defined($irq) and length $irq;
+    chop $irq;
+    if ($irq =~ /^\d+$/) {
+	# For numbered interrupts the format is set
+	$label = pop @data;
+	$type = pop @data;
+    } else {
+	# For named interrupts it's more confusing, slice and dice
+	# to divorce data from commentary
+	$label = join(" ",@data[$cpus..$#data]);
+	@data = @data[0..$cpus-1];
+    }
+
+    # skip devices specified in config
+    foreach my $skipdev (split(',', $skipdevs)) {
+        next LINE if ($label =~ $skipdev);
+    }
+
+    # Skip non-per-cpu values for per-cpu stats
+    # This will ignore ERR: and MIS: lines on multi cpu systems
+    # (checked on 2.6.22, 2.6.24)
+    # next if defined($cpu) and $cpus > @data;
+
+    push @irqs, {
+		 irq => $irq,
+		 label => $label,
+		 count => defined($cpu) ? $data[$cpu] : sum(@data)
+		};
+}
+close $in;
+
+if (defined $ARGV[0] && $ARGV[0] eq 'config') {
+    print 'graph_title Individual interrupts',
+      defined($cpu) ? " on CPU $cpu\n" : "\n";
+    print <<EOM;
+graph_args --base 1000 --logarithmic
+graph_vlabel interrupts / \${graph_period}
+graph_category system
+graph_info Shows the number of different IRQs received by the kernel.  High disk or network traffic can cause a high number of interrupts (with good hardware and drivers this will be less so). Sudden high interrupt activity with no associated higher system activity is not normal.
+
+EOM
+    print join(' ', 'graph_order', map {"i" . $_->{irq}} @irqs), "\n";
+    for my $irq (@irqs) {
+	my $f = ($irq->{label} || $irq->{irq});
+	$f = $irq->{irq} if (length ($f) > 47);
+	print "i", $irq->{irq}, '.label ', $f, "\n";
+	if ( $irq->{label} ) {
+	  print "i", $irq->{irq}, '.info Interrupt ', $irq->{irq}, ', for device(s): ', $irq->{label}, "\n"
+	} elsif ( $irq->{irq} =~ /NMI/i ) {
+	  print "i", $irq->{irq}, ".info Nonmaskable interrupt. Either 0 or quite high. If it's normaly 0 then just one NMI will often mark some hardware failure.\n";
+	} elsif ( $irq->{irq} =~ /LOC/i ) {
+	  print "i", $irq->{irq}, ".info Local (pr. CPU core) APIC timer interrupt.  Until 2.6.21 normaly 250 or 1000 pr second. On modern 'tickless' kernels it more or less reflects how busy the machine is.\n";
+	}
+
+	print "i", $irq->{irq}, ".type DERIVE\n";
+	print "i", $irq->{irq}, ".min 0\n";
+	print_thresholds("i$irq->{irq}");
+    }
+} else {
+    print "i", $_->{irq}, '.value ', $_->{count}, "\n" for @irqs;
+}
+
+__END__
