@@ -276,17 +276,16 @@ File::Find::find( { wanted => \&_find_plugins_wanted },
     'plugins/node.d', "plugins/node.d.$^O" );
 
 sub _find_plugins_wanted {
-    my ( $dev, $ino, $mode, $nlink, $uid, $gid );
 
     # Assume all plugins are located on the same directory level
     my $dirlevel = scalar( split( '/', $File::Find::dir ) );
     return unless $dirlevel == 2;
 
-    if ( ( ( $dev, $ino, $mode, $nlink, $uid, $gid ) = lstat($_) ) && -f _ ) {
-        my $dst = $File::Find::name;
-        my $src = join( '/', 'plugins', $_ );
+    if ( ( lstat($_) ) && -f _ && -x _ ) {
+        my $src = $File::Find::name;
+        my $dst = join( '/', 'plugins', $_ );
 
-        $plugins_files->{$dst} = $src;
+        $plugins_files->{$src} = $dst;
     }
 }
 
