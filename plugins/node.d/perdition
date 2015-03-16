@@ -49,14 +49,11 @@ Unknown
 
 =cut
 
-mktempfile () {
-@@MKTEMP@@
-}
-
 # Set the location of the perdition logs
 PERDITION_LOG=${logfile:-/var/log/perdition.log}
 OFFSET_FILE=${MUNIN_PLUGSTATE}/perdition.offset
 LOGTAIL=${logtail:-/usr/sbin/logtail}
+mktemp_command="${mktemp_command:-/bin/mktemp}"
 
 case $1 in
     autoconf|detect)
@@ -101,11 +98,8 @@ if [ $? = 66 ]; then
     fi
 fi
 
-TEMP_FILE=`mktempfile munin-perdition.XXXXXX`
-
-if [ -z "$TEMP_FILE" -o ! -f "$TEMP_FILE" ]; then
-    exit 3
-fi
+TEMP_FILE=$($mktemp_command) || exit 73
+trap 'rm -f "$TEMP_FILE"' EXIT
 
 if [ $ARGS != 0 ]; then
     ${LOGTAIL} -f ${PERDITION_LOG} -o ${OFFSET_FILE} > ${TEMP_FILE}
@@ -119,8 +113,6 @@ imaps=`grep 'port="993" status="ok"' ${TEMP_FILE} | wc -l`
 pop=`grep 'port="110" status="ok"' ${TEMP_FILE} | wc -l`
 pops=`grep 'port="995" status="ok"' ${TEMP_FILE} | wc -l`
 fatal=`grep 'Fatal [e|E]rror' ${TEMP_FILE} | wc -l`
-
-rm ${TEMP_FILE}
 
 echo "connection.value ${connection}"
 echo "disconnected.value ${disconnected}"

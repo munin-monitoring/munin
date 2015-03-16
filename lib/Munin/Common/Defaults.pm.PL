@@ -66,7 +66,6 @@ our \$MUNIN_PERL       = '/usr/bin/perl';
 # our \$MUNIN_RUBY       = '';
 # our \$MUNIN_OSTYPE     = '';
 # our \$MUNIN_HOSTNAME   = '';
-# our \$MUNIN_MKTEMP     = '';
 our \$MUNIN_HASSETR    = '';
 EOF
 

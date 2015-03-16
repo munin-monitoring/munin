@@ -33,7 +33,7 @@ plugin usually runs at.  To enable log reading it needs to run as a
 group or user that has read access, as shown above.
 
 By default the logtail program is started without any explicit path,
-but if it is not found in the system $PATH then you'll need to specify
+but if it is not found in the system $PATH then you will need to specify
 the full path for the program.
 
 =head2 EXAMPLE CONFIGURATION
@@ -44,6 +44,13 @@ The following shows a typical configuration:
      env.amavislog     /var/log/mail/mail.info
      env.logtail       /usr/bin/logtail
      group adm
+
+=head2 DEFAULT CONFIGURATION
+
+This is the default configuration:
+
+  [amavis]
+    env.mktemp_command /bin/mktemp
 
 =head1 INTERPRETATION
 
@@ -76,14 +83,10 @@ GPLv2
 
 =cut
 
-mktempfile () {
-    cmd=`echo $MUNIN_MKTEMP | sed s/\\$1/$1/`
-    $cmd
-}
-
 AMAVIS_LOG=${amavislog:-/var/log/mail/mail.info}
 LOGTAIL=${logtail:-logtail}
 STATEFILE=$MUNIN_PLUGSTATE/amavis.offset
+mktemp_command="${mktemp_command:-/bin/mktemp}"
 
 if [ "$1" = "autoconf" ]; then
         if [ -f "${AMAVIS_LOG}" -a -n "${LOGTAIL}" -a -x "${LOGTAIL}" ] ; then
@@ -124,7 +127,8 @@ virus=U
 spamm=U
 spams=U
 
-TEMP_FILE=$(mktempfile munin-amavis.XXXXXX)
+TEMP_FILE=$($mktemp_command) || exit 73
+trap 'rm -f "$TEMP_FILE"' EXIT
 
 if [ -n "$TEMP_FILE" -a -f "$TEMP_FILE" ]
 then
@@ -138,7 +142,6 @@ then
 	spamm=$(grep -c 'SPAMMY.*Hits:' ${TEMP_FILE})
 	spams=$(grep -c 'SPAM .*Hits:' ${TEMP_FILE})
 
-	/bin/rm -f $TEMP_FILE
 fi
 
 echo "virus.value ${virus}"

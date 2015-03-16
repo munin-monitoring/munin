@@ -30,6 +30,7 @@ The default configuration is:
   env.logtail /usr/sbin/logtail
   env.logfile /var/log/mail.log
   env.service <Whatever follows "courier_" in the file name>
+  env.mktemp_command /bin/mktemp
 
 =head1 MAGIC MARKERS
 
@@ -56,10 +57,7 @@ COURIER_LOG=${logfile:-/var/log/mail.log}
 SERVICE=${service:-`basename $0 | sed 's/^courier_//g'`}
 OFFSET_FILE=${MUNIN_PLUGSTATE}/courier_${SERVICE}.offset
 LOGTAIL=${logtail:-/usr/sbin/logtail}
-
-mktempfile () {
-@@MKTEMP@@
-}
+mktemp_command="${mktemp_command:-/bin/mktemp}"
 
 case $1 in
     autoconf|detect)
@@ -97,11 +95,8 @@ if [ $? = 66 ]; then
     fi
 fi
 
-TEMP_FILE=`mktempfile munin-courier.XXXXXX`
-
-if [ -z "$TEMP_FILE" -o ! -f "$TEMP_FILE" ]; then
-    exit 3
-fi
+TEMP_FILE=$($mktemp_command) || exit 73
+trap 'rm -f "$TEMP_FILE"' EXIT
 
 if [ $ARGS != 0 ]; then
     ${LOGTAIL} -f ${COURIER_LOG} -o ${OFFSET_FILE} | grep "$SERVICE" > ${TEMP_FILE}
@@ -112,8 +107,6 @@ connection=`grep Connection ${TEMP_FILE} | wc -l`
 disconnected=`grep DISCONNECTED ${TEMP_FILE} | wc -l`
 login=`grep LOGIN ${TEMP_FILE} | wc -l`
 logout=`grep LOGOUT ${TEMP_FILE} | wc -l`
-
-rm ${TEMP_FILE}
 
 echo "connection.value ${connection}"
 echo "disconnected.value ${disconnected}"

@@ -18,8 +18,11 @@ Example shell plugin
 
   #!/bin/sh
 
-  # make a temporary file, and ensure it is removed after exit
-  my_tempfile=$(mktemp)
+  # Allow others to override mktemp command with env.mktemp_command in the plugin config
+  mktemp_command="${mktemp_command:-/bin/mktemp}"
+
+  # make a temporary file, exit if something goes wrong, and ensure it is removed after exit
+  my_tempfile=$(mktemp_command) || exit 73
   trap 'rm -f "$my_tempfile"' EXIT
 
   # rest of the plugin…
