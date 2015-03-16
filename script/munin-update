@@ -49,7 +49,7 @@ sub configure {
     my %args = parse_args();
 
     # Uses default file if config_file is not defined by arguments.
-    $config->parse_config_from_file($args{config_file});
+    $config->parse_config_from_file($args{config});
 
     if (defined $config->{'includedir'}) {
 	my $dirname = $config->{'includedir'};
