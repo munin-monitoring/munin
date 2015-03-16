@@ -1,6 +1,5 @@
 package Munin::Node::ProxySpooler;
 
-# $Id$
 
 use strict;
 use warnings;

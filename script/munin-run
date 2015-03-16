@@ -17,7 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# $Id$
 #
 
 use strict;
@@ -240,7 +239,6 @@ Show version information.
 
 This is munin-run (munin-node) v@@VERSION@@
 
-$Id$
 
 =head1 AUTHORS
 

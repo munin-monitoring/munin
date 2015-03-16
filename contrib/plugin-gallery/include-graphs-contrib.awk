@@ -1,7 +1,6 @@
 # This script includes the example graph images 
 # into the HTML pages of the Munin Gallery
 #
-# $Id$
 # Author: Gabriele Pohl (contact@dipohl.de)
 # Date: 2014-09-03
 # 

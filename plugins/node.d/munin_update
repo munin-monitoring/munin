@@ -58,10 +58,6 @@ Munin-update removes the "domain" information on all hosts.  If there
 are two hosts with the same host name in different domains then one of
 them will be disappeared by the munin-update collection process.
 
-=head1 VERSION
-
-  $Id$
-
 =head1 AUTHOR
 
 The munin_update plugin has been included in munin for many years (at

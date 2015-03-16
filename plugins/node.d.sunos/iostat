@@ -23,10 +23,6 @@ To be written...
   #%# family=auto
   #%# capabilities=autoconf
 
-=head1 VERSION
-
-  $Id $
-
 =head1 AUTHORS
 
 Nicolai Langfeldt (janl@linpro.no) 17/10/2003.  Based on work done by

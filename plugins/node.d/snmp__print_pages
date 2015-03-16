@@ -36,10 +36,6 @@ information.
   #%# family=snmpauto
   #%# capabilities=snmpconf
     
-=head1 VERSION
-    
- $Id: $
-      
 =head1 BUGS
       
 For printers having duplex module: pages != number of sheets

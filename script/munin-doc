@@ -25,7 +25,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 # ---
 #
-# $Id: munin-update.in 1420 2008-01-30 12:17:43Z janl $
 
 require 5;
 

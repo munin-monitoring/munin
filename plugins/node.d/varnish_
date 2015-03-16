@@ -65,10 +65,6 @@ Each graph uses data from varnishstat.
  #%# family=auto
  #%# capabilities=autoconf suggest
 
-=head1 VERSION
-
- $Id$
-
 =head1 BUGS
 
 The hit_rate graph requires munin r2040 or newer to display

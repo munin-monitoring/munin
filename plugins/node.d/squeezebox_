@@ -39,10 +39,6 @@ or whatever the player is connected to.
  #%# family=auto
  #%# capabilities=autoconf suggest
 
-=head1 VERSION
-
- $Id$
-
 =head1 BUGS
 
 None known

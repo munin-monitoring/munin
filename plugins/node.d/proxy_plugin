@@ -23,10 +23,6 @@ The following environment settings are the default configuration.
 
   #%# family=manual
 
-=head1 VERSION
-
-  $Id$
-
 =head1 BUGS
 
 The plugin is currently hardcoded to require multigraph. There may be usecases

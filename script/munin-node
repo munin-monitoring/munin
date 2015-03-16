@@ -18,7 +18,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# $Id$
 #
 
 use strict;
@@ -213,7 +212,6 @@ may enable debugging. [--nopidebug]
 
 This is munin-node v@@VERSION@@
 
-$Id$
 
 =head1 AUTHORS
 

@@ -1,6 +1,5 @@
 #!/bin/sh
 #
-# $Id$
 #
 # Script to monitor disk usage.
 #

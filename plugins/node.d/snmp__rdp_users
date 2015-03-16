@@ -44,10 +44,6 @@ reports the hrSWRunName column of hrSWRunTable.
   #%# family=snmpauto
   #%# capabilities=snmpconf
 
-=head1 VERSION
-
-  $Id$
-
 =head1 BUGS
 
 Unlikely to work on non-Windows RDP servers, since it relies on the

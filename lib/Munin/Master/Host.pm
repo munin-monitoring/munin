@@ -2,7 +2,6 @@ package Munin::Master::Host;
 
 use base qw(Munin::Master::Group);
 
-# $Id$
 
 use warnings;
 use strict;

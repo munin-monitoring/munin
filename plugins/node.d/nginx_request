@@ -37,10 +37,6 @@ compiled, and secondly it must be configured like this:
   #%# family=auto
   #%# capabilities=autoconf
 
-=head1 VERSION
-
-  $Id$
-
 =head1 BUGS
 
 None known

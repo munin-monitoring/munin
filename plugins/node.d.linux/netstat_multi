@@ -42,10 +42,6 @@ Each graph uses data from the proc filesystem.
  #%# family=contrib
  #%# capabilities=autoconf multigraph
 
-=head1 VERSION
-
- $Id$
-
 =head1 PATCHES-TO
 
 The munin-project.
