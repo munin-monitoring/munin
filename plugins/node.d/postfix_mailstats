@@ -173,5 +173,3 @@ sub parseLogfile
     }
     return tail_close($logfd);
 }
-
-# vim:syntax=perl

@@ -416,5 +416,3 @@ L<Munin::Node::Service> for a comprehensive description.)
 =back
 
 =cut
-
-# vim: sw=4 : ts=4 : expandtab

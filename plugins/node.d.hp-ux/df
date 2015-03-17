@@ -108,5 +108,3 @@ foreach(@bdf) {
     $pct_used =~ s/%//g;
     print "$name.value $pct_used\n";
 }
-
-# vim:syntax=perl

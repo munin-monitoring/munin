@@ -212,4 +212,3 @@ Returns the names of the currently-loaded plugins.
 =back
 
 =cut
-# vim: sw=4 : ts=4 : expandtab

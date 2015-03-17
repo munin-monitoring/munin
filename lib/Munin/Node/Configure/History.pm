@@ -142,4 +142,3 @@ is user-contributed, etc).
 =back
 
 =cut
-# vim: sw=4 : ts=4 : expandtab

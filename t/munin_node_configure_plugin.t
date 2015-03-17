@@ -944,6 +944,3 @@ sub run_snmpconf_tests
     $p->log_error("Doing it wrong\n");
     is_deeply([ @{$p->{errors}} ], [ 'Faking it', 'Doing it wrong' ], 'Added an error with a trailing newline');
 }
-
-
-# vim: sw=4 : ts=4 : expandtab

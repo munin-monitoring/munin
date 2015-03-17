@@ -163,5 +163,3 @@ sub parse_log {
     close($logfh);
     return $size;
 }
-
-# vim:syntax=perl

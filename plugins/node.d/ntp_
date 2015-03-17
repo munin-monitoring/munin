@@ -179,5 +179,3 @@ jitter.value $jitter
 EOT
 
 exit 0;
-
-# vim:syntax=perl

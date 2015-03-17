@@ -117,5 +117,3 @@ foreach my $log (@logs) {
         print "$log.value $time\n";
     }
 }
-
-# vim: ft=perl : ts=4 : expandtab

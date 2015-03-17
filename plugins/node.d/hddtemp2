@@ -91,5 +91,3 @@ my $text = `$HDDTEMP`;
 while ($text =~ /$config{regex}/g) {
   print "hdd$1.value $3\n";
 }
-
-# vim:syntax=perl

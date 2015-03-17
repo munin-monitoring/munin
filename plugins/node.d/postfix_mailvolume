@@ -130,5 +130,3 @@ if (!defined($volume)) {
 print "volume.value $volume\n";
 
 save_state($pos,$volume);
-
-# vim:syntax=perl

@@ -203,4 +203,3 @@ count_tcp6_ports(ST_ESTABLISHED, \%ports) if (-r "/proc/net/tcp6");
 $ports{$port} = 0 if (!exists $ports{$port}) or ($ports{$port} eq '');
 
 print "count.value ", $ports{$port}, "\n";
-# vim:syntax=perl

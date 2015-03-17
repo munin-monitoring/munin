@@ -259,4 +259,3 @@ foreach my $k ( sort(keys %vars) ) {
 	defined($value) or $value = 'U';
 	print "$k.value ".$value."\n";
 }
-# vim:syntax=perl ts=4 sw=4:

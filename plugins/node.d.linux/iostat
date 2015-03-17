@@ -204,4 +204,3 @@ sub fetch_detailed() {
 	close (DETAILED);
     }
 }
-# vim:syntax=perl

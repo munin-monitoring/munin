@@ -133,6 +133,3 @@ if (defined($ARGV[0]) and ($ARGV[0] eq 'config')) {
 }
 
 do_stats;
-
-
-# vim:syntax=perl

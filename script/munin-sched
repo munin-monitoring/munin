@@ -221,7 +221,4 @@ installed plugins.
 The network protocol is documented at
 L<http://munin-monitoring.org/wiki/network-protocol>
 
-
 =cut
-
-# vim: sw=4 : ts=4 : expandtab

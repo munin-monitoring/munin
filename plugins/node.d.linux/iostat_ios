@@ -217,6 +217,3 @@ sub get_state {
     };
     return($R);
 }
-
-
-# vim: ft=perl : ts=4 : sw=4 : et

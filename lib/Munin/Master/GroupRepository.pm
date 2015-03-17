@@ -51,4 +51,3 @@ C<< Munin::Master::Config->instance()->{config}{groups}; >>
 =back
 
 =cut
-# vim: ts=4 : sw=4 : et

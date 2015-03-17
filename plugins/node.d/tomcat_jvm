@@ -123,5 +123,3 @@ if($xml->{'jvm'}->{'memory'}->{'free'} &&
     print "used.value U\n";
     print "max.value U\n";
 }
-
-# vim:syntax=perl

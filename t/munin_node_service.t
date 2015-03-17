@@ -262,6 +262,3 @@ $ENV{MUNIN_MASTER_IP} = '';
 	my $ret = $services->fork_service('foo');
 	is($ret->{retval} >> 8, 42, 'Attempted to run non-existent service');
 }
-
-
-# vim: sw=4 : ts=4 : et

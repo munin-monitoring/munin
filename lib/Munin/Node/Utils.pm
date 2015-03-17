@@ -64,4 +64,3 @@ Returns the list of elements common to arrayrefs \@a and \@b.
 =back
 
 =cut
-# vim: ts=4 : et

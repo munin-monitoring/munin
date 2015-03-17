@@ -397,5 +397,3 @@ sub proc_graph
 }
 
 proc_graph(\%graphs, "", 0);
-
-# vim:syntax=perl

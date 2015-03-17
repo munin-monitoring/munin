@@ -198,5 +198,3 @@ is_dirtyconfig () {
 # janl_: so... ... "exec 4>&2" to restore?
 # james: Actually you can do: exec 4>&2- ... which closes 4 afterwards ...
 #        I think that's historical behaviour and not a newish extension
-
-# vim: ft=sh sw=4 ts=4 et

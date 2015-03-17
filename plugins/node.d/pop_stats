@@ -98,6 +98,3 @@ sub parsePopfile
 	}
 	close(LOGFILE);    
 }
-
-
-# vim:syntax=perl

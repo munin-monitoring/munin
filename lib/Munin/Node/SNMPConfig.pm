@@ -342,4 +342,3 @@ $plugins should be a Munin::Node::Configure::PluginList object.
 =back
 
 =cut
-# vim: ts=4 : sw=4 : expandtab

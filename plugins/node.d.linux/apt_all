@@ -205,5 +205,3 @@ if ($ARGV[0] and $ARGV[0] eq "config") {
 print_state ();
 
 exit 0;
-
-# vim:syntax=perl

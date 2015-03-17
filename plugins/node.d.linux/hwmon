@@ -171,5 +171,3 @@ foreach my $devdir (@devdirs) {
 }
 
 $plugin->run;
-
-# vim:syntax=perl

@@ -109,5 +109,3 @@ print "pty.value $pty\n";
 print "pts.value $pts\n";
 print "X.value $X\n";
 print "other.value $unc\n";
-
-# vim:syntax=perl

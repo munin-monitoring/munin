@@ -124,5 +124,3 @@ if($xml->{'connector'}->{$CONNECTOR}->{'requestInfo'}->[0]->{'bytesSent'}) {
 } else {
     print "volume.value U\n";
 }
-
-# vim:syntax=perl

@@ -1,4 +1,3 @@
-# vim: ts=4 : sw=4 : et
 #
 # Copyright (C) 2004-2009 Dagfinn Ilmari Mannsaaker, Nicolai Langfeldt,
 # Linpro AS

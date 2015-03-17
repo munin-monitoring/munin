@@ -106,5 +106,3 @@ if($xml->{'connector'}->{$CONNECTOR}->{'requestInfo'}->[0]->{'requestCount'}) {
 } else {
     print "accesses.value U\n";
 }
-
-# vim:syntax=perl

@@ -268,5 +268,3 @@ sub setup {
         'Fetch service data'
     );
 }
-
-# vim: sw=8 : ts=4 : et

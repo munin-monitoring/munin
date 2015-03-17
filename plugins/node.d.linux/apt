@@ -213,5 +213,3 @@ if (@pending)
 }
 print "hold.value $hold\n";
 exit 0;
-
-# vim:syntax=perl

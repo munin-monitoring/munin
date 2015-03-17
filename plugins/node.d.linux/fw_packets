@@ -84,5 +84,3 @@ while (<F>) {
     }
 }
 close(F);
-
-# vim:syntax=perl

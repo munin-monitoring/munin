@@ -96,4 +96,3 @@ while ($content =~ /\n([^,]+),([^,]+),[^,]+,[^,]+,[^,]+,[^,]+,[^,]*,([^,]+),[^,]
 foreach my $be (keys %backends) {
 	print "s$be.value ", $backends{$be}, "\n";
 }
-# vim:syntax=perl

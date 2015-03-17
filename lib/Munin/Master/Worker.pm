@@ -66,5 +66,3 @@ Returns a unique string representation of the worker.
 =back
 
 =cut
-
-# vim: ts=4 : sw=4 : et

@@ -961,5 +961,3 @@ For information on configuration options, please refer to the man page for
 F<munin.conf>.
 
 =cut
-
-# vim:syntax=perl:ts=8

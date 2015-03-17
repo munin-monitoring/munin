@@ -185,4 +185,3 @@ sub ipvs {
     close (IPVS) or return undef;
     return $ipvs;
 }
-# vim:syntax=perl
