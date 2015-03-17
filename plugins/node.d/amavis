@@ -1,6 +1,4 @@
 #!/bin/sh
-# -*- sh -*-
-# vim: ft=sh
 
 : <<=cut
 
@@ -62,10 +60,6 @@ classify more spam as "surley spam" and so be able to eliminate it.
 
   #%# family=auto
   #%# capabilities=autoconf
-
-=head1 VERSION
-
-  $Id$
 
 =head1 BUGS
 

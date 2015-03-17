@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- cperl -*-
 
 =head1 NAME
 
@@ -172,5 +171,3 @@ foreach my $devdir (@devdirs) {
 }
 
 $plugin->run;
-
-# vim:syntax=perl

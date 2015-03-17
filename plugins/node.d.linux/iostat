@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# -*- cperl -*-
 =head1 NAME
 
 iostat - Munin plugin to monitor io-bound traffic (in blocks) on disks
@@ -35,10 +34,6 @@ To be written...
 
  #%# family=legacy
  #%# capabilities=autoconf
-
-=head1 VERSION
-
-  $Id$
 
 =head1 AUTHOR
 
@@ -209,4 +204,3 @@ sub fetch_detailed() {
 	close (DETAILED);
     }
 }
-# vim:syntax=perl

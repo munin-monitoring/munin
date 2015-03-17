@@ -1,4 +1,3 @@
-# -*- cperl -*-
 #
 # Copyright (C) 2007-2008 Nicolai Langfeldt
 #
@@ -16,7 +15,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 #
-# $Id$
 #
 
 package Munin::Plugin;
@@ -689,4 +687,3 @@ There is some test stuff in this module.
 # _test();
 
 1;
-# vim: ts=4 : sw=4 : et

@@ -1,7 +1,6 @@
 package Munin::Node::Config;
 use base qw(Munin::Common::Config);
 
-# $Id$
 
 use strict;
 use warnings;
@@ -418,4 +417,3 @@ See L<http://munin-monitoring.org/wiki/Priority_and_inheritance>
 =back
 
 =cut
-# vim: sw=4 : ts=4 : et

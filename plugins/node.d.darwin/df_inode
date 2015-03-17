@@ -1,6 +1,5 @@
 #!/bin/sh
 #
-# $Id$
 #
 # Plugin to monitor inode-usage.
 #

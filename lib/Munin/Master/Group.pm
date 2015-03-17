@@ -2,7 +2,6 @@ package Munin::Master::Group;
 
 use base qw(Munin::Master::GroupRepository);
 
-# $Id$
 
 use warnings;
 use strict;
@@ -138,4 +137,3 @@ belonging to any sub-groups.
 =back
 
 =cut
-# vim: ts=4 : sw=4 : et

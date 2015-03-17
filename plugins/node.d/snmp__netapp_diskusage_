@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- perl -*-
 
 =head1 NAME
 
@@ -45,8 +44,6 @@ Network Appliance. It reports the content of the DfEntry OID.
 =head1 VERSION
 
 v1.0 - 06/22/2009 14:05:03 CEST Initial revision
-
-  $Id$
 
 =head1 AUTHOR
 

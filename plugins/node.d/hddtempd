@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# -*- perl -*-
 #
 # Munin plugin to monitor hdd temperature from a hddtemp daemon.
 #
@@ -130,5 +129,3 @@ sub get_data {
 
 	return @data;
 }
-
-# vim:syntax=perl

@@ -3,7 +3,6 @@ package Munin::Master::HTMLOld;
 =encoding utf-8
 
 =begin comment
--*- perl -*-
 
 This is Munin::Master::HTMLOld, a minimal package shell to make
 munin-html modular (so it can loaded persistently in
@@ -30,7 +29,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301 USA.
 
-$Id$
 
 
 This is the hierarchy of templates
@@ -963,5 +961,3 @@ For information on configuration options, please refer to the man page for
 F<munin.conf>.
 
 =cut
-
-# vim:syntax=perl:ts=8

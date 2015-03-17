@@ -1,7 +1,6 @@
 use warnings;
 use strict;
 
-# $Id$
 
 package Munin::Common::Timeout;
 use base qw(Exporter);
@@ -132,4 +131,3 @@ by $block are propagated.
 =back
 
 =cut
-# vim: ts=4 : sw=4 : et

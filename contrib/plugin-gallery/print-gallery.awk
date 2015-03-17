@@ -1,6 +1,5 @@
 # This script prints the HTML pages of the Munin Gallery
 #
-# $Id: print-gallery.awk,v 1.4 2014/08/24 10:04:16 gap Exp gap $
 # Author: Gabriele Pohl (contact@dipohl.de)
 # Date: 2014-08-23
 # 

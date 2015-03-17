@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- perl -*-
 #
 # varnish_ - Munin plugin to for Varnish
 # Copyright (C) 2009  Redpill Linpro AS
@@ -64,10 +63,6 @@ Each graph uses data from varnishstat.
 
  #%# family=auto
  #%# capabilities=autoconf suggest
-
-=head1 VERSION
-
- $Id$
 
 =head1 BUGS
 

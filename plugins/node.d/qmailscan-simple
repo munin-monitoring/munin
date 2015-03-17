@@ -1,5 +1,4 @@
 #!/bin/sh
-# -*- sh -*-
 #
 # Plugin to count the daily amount of Virii (qmailscan)
 #

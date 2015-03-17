@@ -1,4 +1,3 @@
-# vim: sw=4 : et : ts=4
 use warnings;
 use strict;
 

@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# -*- perl -*-
 
 =head1 NAME
 
@@ -85,5 +84,3 @@ while (<F>) {
     }
 }
 close(F);
-
-# vim:syntax=perl

@@ -1,6 +1,5 @@
 package Munin::Node::Configure::Debug;
 
-# $Id$
 
 use strict;
 use warnings;
@@ -44,4 +43,3 @@ $message should not have a leading '# ', or trailing newline.
 =back
 
 =cut
-# vim: ts=4 : sw=4 : expandtab

@@ -1,6 +1,5 @@
 package Munin::Node::Configure::HostEnumeration;
 
-# $Id$
 
 use strict;
 use warnings;
@@ -125,4 +124,3 @@ Currently only IPv4 addresses are supported.
 =back
 
 =cut
-# vim: ts=4 : sw=4 : expandtab

@@ -1,6 +1,5 @@
 package Munin::Node::Configure::Plugin;
 
-# $Id$
 
 use strict;
 use warnings;
@@ -475,4 +474,3 @@ debugging output is enabled.
 =back
 
 =cut
-# vim: sw=4 : ts=4 : expandtab

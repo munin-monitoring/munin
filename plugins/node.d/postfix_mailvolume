@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# -*- perl -*-
 
 =head1 NAME
 
@@ -31,10 +30,6 @@ the postfix installation.
 =head1 BUGS
 
 None known
-
-=head1 VERSION
-
- $Id$
 
 =head1 AUTHOR
 
@@ -135,5 +130,3 @@ if (!defined($volume)) {
 print "volume.value $volume\n";
 
 save_state($pos,$volume);
-
-# vim:syntax=perl

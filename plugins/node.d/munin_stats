@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- perl -*-
 #
 # Copyright (C) 2006-2009 Rodolphe Quiedeville <rodolphe@quiedeville.org>
 #
@@ -17,7 +16,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# $Id$
 #
 # Magic markers (used by munin-node-configure and some installation scripts):
 #%# family=auto
@@ -119,5 +117,3 @@ foreach my $log (@logs) {
         print "$log.value $time\n";
     }
 }
-
-# vim: ft=perl : ts=4 : expandtab

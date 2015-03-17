@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# -*- perl -*-
 
 =head1 NAME
 
@@ -174,5 +173,3 @@ sub parseLogfile
     }
     return tail_close($logfd);
 }
-
-# vim:syntax=perl

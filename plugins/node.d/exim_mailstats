@@ -1,6 +1,4 @@
 #!/usr/bin/perl -w
-# -*- perl -*-
-# vim:syntax=perl
 
 =head1 NAME
 
@@ -43,10 +41,6 @@ Need some input from an exim postmaster here.
 =head1 BUGS
 
 None known
-
-=head1 VERSION
-
-  $Id$
 
 =head1 AUTHOR
 

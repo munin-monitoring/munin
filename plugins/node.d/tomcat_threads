@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- perl -*-
 
 =head1 NAME
 
@@ -115,5 +114,3 @@ if($xml->{'connector'}->{$CONNECTOR}->{'threadInfo'}->[0]->{'currentThreadsBusy'
     print "idle.value U\n";
     print "total.value U\n";
 }
-
-# vim:syntax=perl

@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# -*- cperl -*-
 
 =head1 NAME
 
@@ -37,7 +36,6 @@ iowait reporting works to fully understand that number.
 
 =head1 VERSION
 
-  $Id$
 
 =head1 BUGS
 
@@ -219,6 +217,3 @@ sub get_state {
     };
     return($R);
 }
-
-
-# vim: ft=perl : ts=4 : sw=4 : et

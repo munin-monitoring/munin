@@ -1,4 +1,3 @@
-# -*- cperl -*-
 #
 # Copyright (C) 2013 Diego Elio Pettenò
 #

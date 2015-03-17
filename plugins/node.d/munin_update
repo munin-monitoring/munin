@@ -1,5 +1,4 @@
 #!/bin/sh
-# -*- sh -*-
 
 : <<=cut
 
@@ -57,10 +56,6 @@ munin-update.old-stats, which is not currently even made.
 Munin-update removes the "domain" information on all hosts.  If there
 are two hosts with the same host name in different domains then one of
 them will be disappeared by the munin-update collection process.
-
-=head1 VERSION
-
-  $Id$
 
 =head1 AUTHOR
 

@@ -2,7 +2,6 @@ package Munin::Master::Config;
 
 use base qw(Munin::Common::Config);
 
-# $Id$
 
 # Notes about config data structure:
 # 
@@ -640,5 +639,3 @@ Sets the keys and values in $config to those in %attrs.
 =back
 
 =cut
-
-# vim: ts=8 : sw=4 : et

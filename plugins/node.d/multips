@@ -1,5 +1,4 @@
 #!/bin/sh
-# -*- sh -*-
 
 : <<=cut
 
@@ -34,10 +33,6 @@ interpreted by "grep" (and not egrep or perl).
 
   #%# family=manual
   #%# capabilities=autoconf
-
-=head1 VERSION
-
-  $Id$
 
 =head1 BUGS
 

@@ -1,6 +1,5 @@
 package Munin::Node::SpoolReader;
 
-# $Id$
 
 use strict;
 use warnings;
@@ -215,5 +214,3 @@ to be sent straight over the wire.
 =back
 
 =cut
-
-# vim: sw=4 : ts=4 : et

@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*-  perl -*-
 
 =head1 NAME
 
@@ -31,10 +30,6 @@ Link this plugin to /etc/munin/plugins/ and restart the munin-node.
 =head1 BUGS
 
 None known.
-
-=head1 VERSION
-
-  $Id$
 
 =head1 AUTHOR
 
@@ -219,5 +214,3 @@ EOF
         }
     }
 }
-
-# vim: ft=perl sw=4 ts=4 et

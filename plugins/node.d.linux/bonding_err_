@@ -1,5 +1,4 @@
 #!/bin/sh
-# -*- sh -*-
 
 : <<EOF
 
@@ -98,6 +97,3 @@ grep "^Slave Interface:" ${PROCDIR}/${BONDINGIF} | while read a b if; do
   echo -n "if_${fieldname}.value "
   grep -A 4 "^Slave Interface: ${if}" ${PROCDIR}/${BONDINGIF} | grep "Link Failure Count:" | cut -d " " -f 4
 done
-
-
-# vim: syntax=sh ts=2 et

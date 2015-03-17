@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# -*- mode: cperl; cperl-indent-level: 8; -*-
 
 =head1 NAME
 
@@ -188,5 +187,3 @@ if (exists $ENV{"show_syspeer_stratum"} ) {
 }
 
 exit 0;
-
-# vim:syntax=perl

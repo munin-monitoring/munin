@@ -32,5 +32,3 @@ my $config = Munin::Node::Config->instance;
     ok($debug_message, 'Debug message was printed when DEBUG is enabled') or next;
     is($debug_message, "# debug message\n", 'Debug message is correctly formatted');
 }
-
-# vim: ts=4 : sw=4 : et

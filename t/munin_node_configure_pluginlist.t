@@ -88,5 +88,3 @@ SKIP: {
     is_deeply([ sort $plugins->names ], [ sort @plugins ], 'All plugin names are returned');
 }
 =cut
-
-# vim: sw=4 : ts=4 : et

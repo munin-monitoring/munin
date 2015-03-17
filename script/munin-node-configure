@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- cperl -*-
 #
 # Copyright (C) 2003-2006 Jimmy Olsen, Nicolai Langfeldt.
 #
@@ -658,7 +657,6 @@ not this works with any particular device, we do not know.
 
 This is munin-node-configure (munin-node) v@@VERSION@@.
 
-$Id$
 
 =head1 AUTHORS
 
@@ -681,5 +679,3 @@ PURPOSE.
 This program is released under the GNU General Public License
 
 =cut
-
-# vim: sw=4 : ts=4 : expandtab

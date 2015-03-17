@@ -1,6 +1,4 @@
 #!/usr/bin/perl
-# -*- perl -*-
-# vim: ft=perl
 
 =head1 NAME
 
@@ -43,10 +41,6 @@ reports the hrSWRunName column of hrSWRunTable.
 
   #%# family=snmpauto
   #%# capabilities=snmpconf
-
-=head1 VERSION
-
-  $Id$
 
 =head1 BUGS
 

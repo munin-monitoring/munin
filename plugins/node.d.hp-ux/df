@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# -*- cperl -*-
 
 =head1 NAME
 
@@ -30,10 +29,6 @@ The plugin aims to be a functional equivalent to the Linux df plugin.
 
   #%# family=auto
   #%# capabilities=autoconf
-
-=head1 VERSION
-
-  $Id$
 
 =head1 BUGS
 
@@ -113,5 +108,3 @@ foreach(@bdf) {
     $pct_used =~ s/%//g;
     print "$name.value $pct_used\n";
 }
-
-# vim:syntax=perl

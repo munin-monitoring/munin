@@ -1,6 +1,5 @@
 package Munin::Node::Configure::PluginList;
 
-# $Id$
 
 use strict;
 use warnings;
@@ -213,4 +212,3 @@ Returns the names of the currently-loaded plugins.
 =back
 
 =cut
-# vim: sw=4 : ts=4 : expandtab

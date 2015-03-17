@@ -102,7 +102,3 @@ public class Beans {
         bs.printBeans();
     }
 }
-
-
-
-// vim: ts=4:et:ai

@@ -1,6 +1,5 @@
 package Munin::Node::OS;
 
-# $Id$
 
 use warnings;
 use strict;
@@ -381,4 +380,3 @@ Only call right before exec-ing a plugin.
 =back
 
 =cut
-# vim: ts=4 : sw=4 : et

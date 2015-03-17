@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# -*- perl -*-
 
 =head1 NAME
 
@@ -321,5 +320,3 @@ sub fetch_slabinfo {
 
     $mems{'Slab'} = $tot_slab_pages * 4096 if $tot_slab_pages gt 0;
 }
-
-# vim:syntax=perl:ts=8

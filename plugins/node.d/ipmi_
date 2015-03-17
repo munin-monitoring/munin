@@ -1,5 +1,4 @@
 #!/bin/bash
-# -*- sh -*-
 
 : << =cut
 
@@ -173,5 +172,3 @@ END {
         printf "%s",VALUE;
 }
 '
-
-# vim: syntax=sh ts=4 et

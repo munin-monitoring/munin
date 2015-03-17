@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# -*- perl -*-
 
 =head1 NAME
 
@@ -137,5 +136,3 @@ if(defined $ARGV[0] and $ARGV[0] eq "config") {
 } else {
     fetch();
 }
-
-# vim: ts=4:ai:et:syntax=perl

@@ -1,5 +1,4 @@
 #!/bin/sh
-# -*- sh -*-
 
 : << =cut
 
@@ -116,5 +115,3 @@ esac
 
 echo 'What am I doing here?' >&2
 exit 1
-
-# vim:syntax=sh

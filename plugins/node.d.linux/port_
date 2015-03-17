@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- perl -*-
 
 =head1 NAME
 
@@ -22,10 +21,6 @@ a numeric port number.
 =head1 BUGS
 
 The plugin doesnt count the tcp6 connections if tcp and tcp6 is used.
-
-=head1 VERSION
-
-$Id$
 
 =head1 AUTHOR
 
@@ -208,4 +203,3 @@ count_tcp6_ports(ST_ESTABLISHED, \%ports) if (-r "/proc/net/tcp6");
 $ports{$port} = 0 if (!exists $ports{$port}) or ($ports{$port} eq '');
 
 print "count.value ", $ports{$port}, "\n";
-# vim:syntax=perl

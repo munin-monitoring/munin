@@ -85,4 +85,3 @@ while (<IN>)
 }
 close IN;
 die "Error running iptables. Dying\n" if $?;
-# vim:syntax=perl

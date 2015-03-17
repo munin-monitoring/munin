@@ -2,7 +2,6 @@ package Munin::Master::GroupRepository;
 
 use base qw(Munin::Master::Config);
 
-# $Id$
 
 use warnings;
 use strict;
@@ -52,4 +51,3 @@ C<< Munin::Master::Config->instance()->{config}{groups}; >>
 =back
 
 =cut
-# vim: ts=4 : sw=4 : et

@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- cperl  -*-
 #
 # Merge munin db (datafile{,.storable} / limits) for multi-update masters
 # environment
@@ -169,5 +168,3 @@ merge_datafile if ($config->{'merge_datafile'});
 merge_limits if ($config->{'merge_limits'});
 
 exit 0;
-
-# vim: syntax=perl ts=8

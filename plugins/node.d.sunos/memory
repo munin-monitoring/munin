@@ -1,5 +1,4 @@
 #!/bin/sh
-# -*- sh -*-
 
 : << =cut
 
@@ -133,5 +132,3 @@ function scale(value) {
   print "swapt.value", swapt
   print "swapu.value", swapu
 }'
-
-# vim: syntax=sh ts=2 et

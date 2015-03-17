@@ -47,5 +47,3 @@ Place a file with content like this under /etc/cron.d/
 # Create fresh build of the Munin Plugin Gallery
 10 22 * * * gap /home/gap/projects/munin/github/munin/contrib/plugin-gallery/gallery-build.sh
 ------ >8 ------
-
-$Id: INSTALL,v 1.1 2014/08/24 12:09:49 gap Exp gap $

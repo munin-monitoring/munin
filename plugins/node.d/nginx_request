@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# -*- cperl -*-
 
 =head1 NAME
 
@@ -36,10 +35,6 @@ compiled, and secondly it must be configured like this:
 
   #%# family=auto
   #%# capabilities=autoconf
-
-=head1 VERSION
-
-  $Id$
 
 =head1 BUGS
 

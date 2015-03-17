@@ -1,5 +1,4 @@
 #!/bin/sh
-# -*- sh -*-
 
 : <<=cut
 
@@ -70,7 +69,6 @@ all processes matching the process name, as reported by ps.
 
   0.1 first release, based on multips as distributed in Debian.
 
-  $Id $
 
 =head1 BUGS AND RESTRICTIONS
 

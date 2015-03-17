@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- perl -*-
 
 
 #%# family=contrib
@@ -99,6 +98,3 @@ sub parsePopfile
 	}
 	close(LOGFILE);    
 }
-
-
-# vim:syntax=perl

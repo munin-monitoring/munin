@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# -*- perl -*-
 
 =head1 NAME
 
@@ -30,10 +29,6 @@ Only tested extensively on Linux.
 
   #%# family=auto
   #%# capabilities=autoconf
-
-=head1 VERSION
-
-  $Id$
 
 =head1 AUTHOR
 
@@ -114,5 +109,3 @@ print "pty.value $pty\n";
 print "pts.value $pts\n";
 print "X.value $X\n";
 print "other.value $unc\n";
-
-# vim:syntax=perl

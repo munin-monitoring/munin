@@ -1,5 +1,4 @@
 #!/usr/bin/perl -T
-# -*- cperl -*-
 #
 # Copyright (C) 2002-2009 Audun Ytterdal, Jimmy Olsen, Tore Anderson,
 #    Nicolai Langfeldt
@@ -18,7 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# $Id$
 #
 
 use strict;
@@ -213,7 +211,6 @@ may enable debugging. [--nopidebug]
 
 This is munin-node v@@VERSION@@
 
-$Id$
 
 =head1 AUTHORS
 
@@ -245,7 +242,4 @@ installed plugins.
 The network protocol is documented at
 L<http://munin-monitoring.org/wiki/network-protocol>
 
-
 =cut
-
-# vim: sw=4 : ts=4 : expandtab

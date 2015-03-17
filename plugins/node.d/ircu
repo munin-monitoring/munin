@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- perl -*-
 
 =head1 NAME
 
@@ -128,5 +127,3 @@ $conn->add_global_handler('luserchannels', \&luserchannels);
 while(1) {
     $irc->do_one_loop();
 }		 
-
-# vim:syntax=perl

@@ -1,5 +1,4 @@
 #!/bin/sh
-# -*- sh -*-
 #
 # Plugin to show the amount of messages in the qmail queue
 #

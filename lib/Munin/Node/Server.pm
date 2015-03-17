@@ -1,6 +1,5 @@
 package Munin::Node::Server;
 
-# $Id$
 
 use base qw(Net::Server::Fork);
 
@@ -448,4 +447,3 @@ Processes the request.
 =back
 
 =cut
-vim: ts=4 : et : sw=4

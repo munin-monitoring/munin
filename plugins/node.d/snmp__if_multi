@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# -*- cperl -*-
 
 =head1 NAME
 
@@ -79,10 +78,6 @@ ifOutDiscards.
 
   #%# family=snmpauto
   #%# capabilities=snmpconf
-
-=head1 VERSION
-
-  $Id: snmp__if_.in 1818 2009-01-03 19:29:30Z janl $
 
 =head1 BUGS
 

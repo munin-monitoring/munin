@@ -1,5 +1,4 @@
 #!/bin/sh
-# -*- sh -*-
 #
 # Plugin for watching io-bound traffic (in transfers) on disks.
 #

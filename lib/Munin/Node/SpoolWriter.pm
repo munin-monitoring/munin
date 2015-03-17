@@ -1,6 +1,5 @@
 package Munin::Node::SpoolWriter;
 
-# $Id$
 
 use strict;
 use warnings;
@@ -183,5 +182,3 @@ Removes any items in the spool directory older than $timestamp.
 =back
 
 =cut
-
-# vim: sw=4 : ts=4 : et

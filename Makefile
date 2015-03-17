@@ -1,4 +1,3 @@
-# -*- makefile -*-
 
 # This Makefile provides convenience targets for common build/test/install cases, as well as rules
 # for the release manager.

@@ -1,6 +1,5 @@
 package Munin::Node::Configure::History;
 
-# $Id$
 
 use strict;
 use warnings;
@@ -143,4 +142,3 @@ is user-contributed, etc).
 =back
 
 =cut
-# vim: sw=4 : ts=4 : expandtab

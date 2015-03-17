@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- cperl -*-
 
 =head1 NAME
 
@@ -184,5 +183,3 @@ foreach my $df (@df_output) {
   my ($name, undef, $percent) = @{$df};
   print $name, ".value ", $percent, "\n";
 }
-
-# vim: ft=perl : sw=2 : ts=2 : et

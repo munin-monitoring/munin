@@ -1,6 +1,4 @@
 #!/usr/bin/perl -w
-# -*- perl -*-
-# vim: sts=4 sw=4 ts=8
 
 =head1 NAME
 
@@ -100,10 +98,6 @@ information about the C<numbers> involved in this module.
 
 L<http://www.westnet.com/~gsmith/content/linux-pdflush.htm> has a nice
 writeup about the pdflush daemon.
-
-=head1 VERSION
-
-  $Id$
 
 =head1 MAGIC MARKERS
 
