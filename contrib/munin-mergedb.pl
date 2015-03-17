@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- cperl  -*-
 #
 # Merge munin db (datafile{,.storable} / limits) for multi-update masters
 # environment

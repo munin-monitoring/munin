@@ -1,4 +1,3 @@
-# -*- cperl -*-
 use warnings;
 use strict;
 

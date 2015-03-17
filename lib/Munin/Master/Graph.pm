@@ -1,5 +1,4 @@
 #!/usr/bin/perl -T
-# -*- cperl -*-
 
 =begin comment
 

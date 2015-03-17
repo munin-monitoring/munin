@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- perl -*-
 #
 # Plugin to monitor UPS via the upsc command
 #

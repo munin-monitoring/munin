@@ -8,7 +8,6 @@ open my $fh, ">", $output_file or die "Can't open $output_file: $!";
 
 
 print $fh <<'EOF_HEADER';
-# -*- perl -*-
 
 =head1 NAME
 

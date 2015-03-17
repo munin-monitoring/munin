@@ -1,5 +1,4 @@
 #!/bin/sh
-# -*- sh -*-
 # 
 # Plugin to monitor the number of open files in the system.
 #

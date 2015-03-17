@@ -1,5 +1,4 @@
 #!/bin/sh
-# -*- sh -*-
 #
 # Plugin to monitor Motherboard temparature using mbmon
 #  (http://www.nt.phys.kyushu-u.ac.jp/shimizu/download/download.html)

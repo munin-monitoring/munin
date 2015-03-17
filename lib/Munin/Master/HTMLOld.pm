@@ -3,7 +3,6 @@ package Munin::Master::HTMLOld;
 =encoding utf-8
 
 =begin comment
--*- perl -*-
 
 This is Munin::Master::HTMLOld, a minimal package shell to make
 munin-html modular (so it can loaded persistently in

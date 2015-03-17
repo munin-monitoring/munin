@@ -1,6 +1,5 @@
 package Munin::Master::GraphOld;
 
-# -*- cperl -*-
 
 =encoding utf-8
 

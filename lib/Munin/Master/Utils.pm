@@ -1,5 +1,4 @@
 package Munin::Master::Utils;
-# -*- cperl -*-
 
 
 use strict;

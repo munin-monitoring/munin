@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# -*- perl -*-
 #
 # Plugin to monitor packages that should be installed on systems using
 # apt-get (mostly Debian, but also RedHat)

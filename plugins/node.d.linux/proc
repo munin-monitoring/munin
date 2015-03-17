@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- perl -*-
 #
 # proc_ - Munin plugin to for Process information
 # Copyright (C) 2009-2010 Redpill Linpro AS

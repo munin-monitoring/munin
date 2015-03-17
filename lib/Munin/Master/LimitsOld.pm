@@ -1,5 +1,4 @@
 package Munin::Master::LimitsOld;
-# -*- perl  -*-
 
 =begin comment
 

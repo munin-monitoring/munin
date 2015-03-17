@@ -1,4 +1,3 @@
-# -*- sh -*-
 # Support functions for shell munin plugins
 #
 

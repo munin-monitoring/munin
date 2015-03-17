@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# coding=utf-8
 #
 # Munin documentation build configuration file, created by
 # sphinx-quickstart on Sat Jun  9 11:12:29 2012.

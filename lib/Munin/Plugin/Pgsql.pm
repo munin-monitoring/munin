@@ -1,4 +1,3 @@
-# -*- cperl -*-
 #
 # Copyright (C) 2009 Magnus Hagander, Redpill Linpro AB
 #

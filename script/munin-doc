@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# -*- perl -*-
 #
 # This script provides the basis for a plugin documentation system for
 # munin.  Please see "man perlpod" for the reference manual to writing
