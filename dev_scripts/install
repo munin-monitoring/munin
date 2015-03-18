@@ -1,5 +1,18 @@
 #!/bin/bash
 
+cat <<EOF
+
+This script is currently broken.
+
+do "perl Build.PL" to configure. "make", "make test" and "make install" in the meantime.
+
+Use "perldoc Build.PL" for options
+
+EOF
+
+exit 0
+
+
 fakeroot()
 {
 	# We don't care about permission in dev_script files
