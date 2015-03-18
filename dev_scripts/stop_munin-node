@@ -1,14 +1,14 @@
-#!/bin/bash
+#!/bin/sh
+
+set -e
+set -u
 
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
-. $FINDBIN/common.sh
+. "${FINDBIN}/common.sh"
 
-cd $BASEDIR
-
-
-if [ -f $DESTDIR/var/run/munin/munin-node.pid ]; then
-    cat $DESTDIR/var/run/munin/munin-node.pid | xargs kill
-else 
-    echo "Pid file not found. Not stopping"
+echo "Stopping munin-node"
+if [ -f "${RUNDIR}/munin-node.pid" ]; then
+	xargs -n 1 -r kill < "${RUNDIR}/munin-node.pid"
+else
+	echo "Pid file not found. Not stopping"
 fi
-

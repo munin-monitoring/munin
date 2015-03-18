@@ -1,9 +1,10 @@
 #!/bin/bash
 
+set -e
+set -u
+
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
-. $FINDBIN/common.sh
+. "${FINDBIN}/common.sh"
 
-cd $BASEDIR
-
-perl -pi -e "s/^tls .*/tls disabled/" $DESTDIR/etc/opt/munin/munin-node.conf
-perl -pi -e "s/^tls .*/tls disabled/" $DESTDIR/etc/opt/munin/munin.conf
+perl -pi -e "s/^tls .*/tls disabled/" "${CONFDIR}/munin-node.conf"
+perl -pi -e "s/^tls .*/tls disabled/" "${CONFDIR}/munin.conf"

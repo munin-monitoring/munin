@@ -1,29 +1,23 @@
 #!/bin/bash
 
+set -e
+set -u
+
 FINDBIN=$(cd -- "$(dirname "$0")" && pwd)
-. $FINDBIN/common.sh
+. "${FINDBIN}/common.sh"
 
-cd $BASEDIR
-
+cd "$BASEDIR"
 
 usage() {
-    echo "Usage: $0 <NAME>"
-    exit 1
+	echo "Usage: $0 <NAME>"
+	exit 1
 }
 
-
 if [ -z "$1" ]; then
-    usage
+	usage
 fi
 
-
-RUN=$(find $DESTDIR -name $1 -type f -perm -a-rx)
-shift
-
-if [ -z "$RUN" ]; then
-    usage
-fi
-
-# Use -Mlib=/foo to work with tainted Perl
-# ... Run all dev in tainted mode, to enhance security
-perl -Mlib=$DESTDIR$PERLSITELIB -T $RUN "$@"
+command=$(command -v "$1")
+echo "Found: ${command}"
+echo "Command line: " "$@"
+exec "$@"
